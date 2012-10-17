@@ -20,7 +20,7 @@
  * \brief ???
  */
 
-/*#define TRACE_ON */
+/* #define TRACE_ON */
 #include <mpidimpl.h>
 
 static void scan_cb_done(void *ctxt, void *clientdata, pami_result_t err)
@@ -63,23 +63,29 @@ int MPIDO_Doscan(const void *sendbuf, void *recvbuf,
    pami_data_function pop;
    pami_type_t pdt;
    int rc;
-   pami_metadata_t *my_md;
+   const pami_metadata_t *my_md;
+#if ASSERT_LEVEL==0
+   /* We can't afford the tracing in ndebug/performance libraries */
+    const unsigned verbose = 0;
+#else
+    const unsigned verbose = (MPIDI_Process.verbose >= MPIDI_VERBOSE_DETAILS_ALL) && (comm_ptr->rank == 0);
+#endif
+   const struct MPIDI_Comm* const mpid = &(comm_ptr->mpid);
+   const int selected_type = mpid->user_selected_type[PAMI_XFER_SCAN];
 
    rc = MPIDI_Datatype_to_pami(datatype, &pdt, op, &pop, &mu);
-   if(unlikely(MPIDI_Process.verbose >= MPIDI_VERBOSE_DETAILS_0 && comm_ptr->rank == 0))
+   if(unlikely(verbose))
       fprintf(stderr,"rc %u, dt: %p, op: %p, mu: %u, selectedvar %u != %u (MPICH)\n",
          rc, pdt, pop, mu, 
-         (unsigned)comm_ptr->mpid.user_selected_type[PAMI_XFER_SCAN], MPID_COLL_USE_MPICH);
-
+         (unsigned)selected_type, MPID_COLL_USE_MPICH);
 
    pami_xfer_t scan;
    volatile unsigned scan_active = 1;
 
    if((sendbuf == MPI_IN_PLACE) || /* Disable until ticket #627 is fixed */
-      (comm_ptr->mpid.user_selected_type[PAMI_XFER_SCAN] == MPID_COLL_USE_MPICH || rc != MPI_SUCCESS))
-      
+      (selected_type == MPID_COLL_USE_MPICH || rc != MPI_SUCCESS))
    {
-      if(unlikely(MPIDI_Process.verbose >= MPIDI_VERBOSE_DETAILS_ALL && comm_ptr->rank == 0))
+      if(unlikely(verbose))
          fprintf(stderr,"Using MPICH scan algorithm (exflag %d)\n",exflag);
       if(exflag)
          return MPIR_Exscan(sendbuf, recvbuf, count, datatype, op, comm_ptr, mpierrno);
@@ -91,8 +97,8 @@ int MPIDO_Doscan(const void *sendbuf, void *recvbuf,
    rbuf = (char *)recvbuf + true_lb;
    if(sendbuf == MPI_IN_PLACE) 
    {
-     if(unlikely(MPIDI_Process.verbose >= MPIDI_VERBOSE_DETAILS_ALL))
-       fprintf(stderr,"scan MPI_IN_PLACE buffering\n");
+      if(unlikely(verbose))
+         fprintf(stderr,"scan MPI_IN_PLACE buffering\n");
       sbuf = rbuf;
    }
    else
@@ -102,15 +108,15 @@ int MPIDO_Doscan(const void *sendbuf, void *recvbuf,
 
    scan.cb_done = scan_cb_done;
    scan.cookie = (void *)&scan_active;
-   if(comm_ptr->mpid.user_selected_type[PAMI_XFER_SCAN] == MPID_COLL_OPTIMIZED)
+   if(selected_type == MPID_COLL_OPTIMIZED)
    {
-      scan.algorithm = comm_ptr->mpid.opt_protocol[PAMI_XFER_SCAN][0];
-      my_md = &comm_ptr->mpid.opt_protocol_md[PAMI_XFER_SCAN][0];
+      scan.algorithm = mpid->opt_protocol[PAMI_XFER_SCAN][0];
+      my_md = &mpid->opt_protocol_md[PAMI_XFER_SCAN][0];
    }
    else
    {
-      scan.algorithm = comm_ptr->mpid.user_selected[PAMI_XFER_SCAN];
-      my_md = &comm_ptr->mpid.user_metadata[PAMI_XFER_SCAN];
+      scan.algorithm = mpid->user_selected[PAMI_XFER_SCAN];
+      my_md = &mpid->user_metadata[PAMI_XFER_SCAN];
    }
    scan.cmd.xfer_scan.sndbuf = sbuf;
    scan.cmd.xfer_scan.rcvbuf = rbuf;
@@ -122,13 +128,13 @@ int MPIDO_Doscan(const void *sendbuf, void *recvbuf,
    scan.cmd.xfer_scan.exclusive = exflag;
 
 
-   if(comm_ptr->mpid.user_selected_type[PAMI_XFER_SCAN] == MPID_COLL_ALWAYS_QUERY ||
-      comm_ptr->mpid.user_selected_type[PAMI_XFER_SCAN] == MPID_COLL_CHECK_FN_REQUIRED)
+   if(selected_type == MPID_COLL_ALWAYS_QUERY ||
+      selected_type == MPID_COLL_CHECK_FN_REQUIRED)
    {
       metadata_result_t result = {0};
       TRACE_ERR("Querying scan protocol %s, type was %d\n",
          my_md->name,
-         comm_ptr->mpid.user_selected_type[PAMI_XFER_SCAN]);
+         selected_type);
       result = my_md->check_fn(&scan);
       TRACE_ERR("Bitmask: %#X\n", result.bitmask);
       if(!result.bitmask)
@@ -138,7 +144,7 @@ int MPIDO_Doscan(const void *sendbuf, void *recvbuf,
       }
    }
    
-   if(unlikely(MPIDI_Process.verbose >= MPIDI_VERBOSE_DETAILS_ALL && comm_ptr->rank == 0))
+   if(unlikely(verbose))
    {
       unsigned long long int threadID;
       MPIU_Thread_id_t tid;
@@ -154,10 +160,7 @@ int MPIDO_Doscan(const void *sendbuf, void *recvbuf,
    MPIDI_Context_post(MPIDI_Context[0], &scan_post.state,
                       MPIDI_Pami_post_wrapper, (void *)&scan);
    TRACE_ERR("Scan %s\n", MPIDI_Process.context_post.active>0?"posted":"invoked");
-
-   MPIDI_Update_last_algorithm(comm_ptr,
-      my_md->name);
-
+   MPIDI_Update_last_algorithm(comm_ptr, my_md->name);
    MPID_PROGRESS_WAIT_WHILE(scan_active);
    TRACE_ERR("Scan done\n");
    return rc;

@@ -20,7 +20,7 @@
  * \brief ???
  */
 
-/*#define TRACE_ON*/
+/* #define TRACE_ON */
 #include <mpidimpl.h>
 
 static void reduce_cb_done(void *ctxt, void *clientdata, pami_result_t err)
@@ -49,55 +49,66 @@ int MPIDO_Reduce(const void *sendbuf,
    pami_type_t pdt;
    int rc;
    int alg_selected = 0;
+#if ASSERT_LEVEL==0
+   /* We can't afford the tracing in ndebug/performance libraries */
+    const unsigned verbose = 0;
+#else
+    const unsigned verbose = (MPIDI_Process.verbose >= MPIDI_VERBOSE_DETAILS_ALL) && (comm_ptr->rank == 0);
+#endif
+   const struct MPIDI_Comm* const mpid = &(comm_ptr->mpid);
+   const int selected_type = mpid->user_selected_type[PAMI_XFER_REDUCE];
 
    rc = MPIDI_Datatype_to_pami(datatype, &pdt, op, &pop, &mu);
-   if(unlikely(MPIDI_Process.verbose >= MPIDI_VERBOSE_DETAILS_ALL && comm_ptr->rank == 0))
+   if(unlikely(verbose))
       fprintf(stderr,"reduce - rc %u, dt: %p, op: %p, mu: %u, selectedvar %u != %u (MPICH)\n",
          rc, pdt, pop, mu, 
-         (unsigned)comm_ptr->mpid.user_selected_type[PAMI_XFER_REDUCE], MPID_COLL_USE_MPICH);
-
+         (unsigned)selected_type, MPID_COLL_USE_MPICH);
 
    pami_xfer_t reduce;
-   pami_algorithm_t my_reduce;
-   pami_metadata_t *my_reduce_md;
+   pami_algorithm_t my_reduce=0;
+   const pami_metadata_t *my_reduce_md=NULL;
    int queryreq = 0;
    volatile unsigned reduce_active = 1;
 
-   if(comm_ptr->mpid.user_selected_type[PAMI_XFER_REDUCE] == MPID_COLL_USE_MPICH || rc != MPI_SUCCESS)
+   if(selected_type == MPID_COLL_USE_MPICH || rc != MPI_SUCCESS)
    {
-      if(unlikely(MPIDI_Process.verbose >= MPIDI_VERBOSE_DETAILS_ALL && comm_ptr->rank == 0))
+      if(unlikely(verbose))
          fprintf(stderr,"Using MPICH reduce algorithm\n");
       return MPIR_Reduce(sendbuf, recvbuf, count, datatype, op, root, comm_ptr, mpierrno);
    }
 
    MPIDI_Datatype_get_info(count, datatype, dt_contig, tsize, dt_null, true_lb);
    rbuf = (char *)recvbuf + true_lb;
+   sbuf = (char *)sendbuf + true_lb;
    if(sendbuf == MPI_IN_PLACE) 
    {
-      if(unlikely(MPIDI_Process.verbose >= MPIDI_VERBOSE_DETAILS_ALL))
+      if(unlikely(verbose))
          fprintf(stderr,"reduce MPI_IN_PLACE buffering\n");
       sbuf = rbuf;
    }
-   else
-      sbuf = (char *)sendbuf + true_lb;
 
    reduce.cb_done = reduce_cb_done;
    reduce.cookie = (void *)&reduce_active;
-   if(comm_ptr->mpid.user_selected_type[PAMI_XFER_REDUCE] == MPID_COLL_OPTIMIZED)
+   if(selected_type == MPID_COLL_OPTIMIZED)
    {
-      TRACE_ERR("Optimized Reduce (%s) was pre-selected\n",
-         comm_ptr->mpid.opt_protocol_md[PAMI_XFER_REDUCE][0].name);
-      my_reduce    = comm_ptr->mpid.opt_protocol[PAMI_XFER_REDUCE][0];
-      my_reduce_md = &comm_ptr->mpid.opt_protocol_md[PAMI_XFER_REDUCE][0];
-      queryreq     = comm_ptr->mpid.must_query[PAMI_XFER_REDUCE][0];
+      if((mpid->cutoff_size[PAMI_XFER_REDUCE][0] == 0) || 
+          (mpid->cutoff_size[PAMI_XFER_REDUCE][0] >= tsize && mpid->cutoff_size[PAMI_XFER_REDUCE][0] > 0))
+      {
+        TRACE_ERR("Optimized Reduce (%s) was pre-selected\n",
+         mpid->opt_protocol_md[PAMI_XFER_REDUCE][0].name);
+        my_reduce    = mpid->opt_protocol[PAMI_XFER_REDUCE][0];
+        my_reduce_md = &mpid->opt_protocol_md[PAMI_XFER_REDUCE][0];
+        queryreq     = mpid->must_query[PAMI_XFER_REDUCE][0];
+      }
+
    }
    else
    {
       TRACE_ERR("Optimized reduce (%s) was specified by user\n",
-         comm_ptr->mpid.user_metadata[PAMI_XFER_REDUCE].name);
-      my_reduce    =  comm_ptr->mpid.user_selected[PAMI_XFER_REDUCE];
-      my_reduce_md = &comm_ptr->mpid.user_metadata[PAMI_XFER_REDUCE];
-      queryreq     = comm_ptr->mpid.user_selected_type[PAMI_XFER_REDUCE];
+      mpid->user_metadata[PAMI_XFER_REDUCE].name);
+      my_reduce    =  mpid->user_selected[PAMI_XFER_REDUCE];
+      my_reduce_md = &mpid->user_metadata[PAMI_XFER_REDUCE];
+      queryreq     = selected_type;
    }
    reduce.algorithm = my_reduce;
    reduce.cmd.xfer_reduce.sndbuf = sbuf;
@@ -122,7 +133,7 @@ int MPIDO_Reduce(const void *sendbuf,
          TRACE_ERR("Bitmask: %#X\n", result.bitmask);
          if(result.bitmask)
          {
-            if(MPIDI_Process.verbose >= MPIDI_VERBOSE_DETAILS_ALL && comm_ptr->rank == 0)
+            if(verbose)
               fprintf(stderr,"Query failed for %s.\n",
                  my_reduce_md->name);
          }
@@ -138,7 +149,7 @@ int MPIDO_Reduce(const void *sendbuf,
 
    if(alg_selected)
    {
-      if(unlikely(MPIDI_Process.verbose >= MPIDI_VERBOSE_DETAILS_ALL && comm_ptr->rank == 0))
+      if(unlikely(verbose))
       {
          unsigned long long int threadID;
          MPIU_Thread_id_t tid;
@@ -158,14 +169,13 @@ int MPIDO_Reduce(const void *sendbuf,
    }
    else
    {
-      if(unlikely(MPIDI_Process.verbose >= MPIDI_VERBOSE_DETAILS_ALL && comm_ptr->rank == 0))
+      if(unlikely(verbose))
          fprintf(stderr,"Using MPICH reduce algorithm\n");
       return MPIR_Reduce(sendbuf, recvbuf, count, datatype, op, root, comm_ptr, mpierrno);
    }
 
    MPIDI_Update_last_algorithm(comm_ptr,
                                my_reduce_md->name);
-
    MPID_PROGRESS_WAIT_WHILE(reduce_active);
    TRACE_ERR("Reduce done\n");
    return 0;

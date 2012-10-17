@@ -19,7 +19,7 @@
  * \file src/coll/alltoallv/mpido_alltoallv.c
  * \brief ???
  */
-/*#define TRACE_ON*/
+/* #define TRACE_ON */
 
 #include <mpidimpl.h>
 
@@ -43,8 +43,7 @@ int MPIDO_Alltoallv(const void *sendbuf,
                    MPID_Comm *comm_ptr,
                    int *mpierrno)
 {
-   if(comm_ptr->rank == 0)
-      TRACE_ERR("Entering MPIDO_Alltoallv\n");
+   TRACE_ERR("Entering MPIDO_Alltoallv\n");
    volatile unsigned active = 1;
    int sndtypelen, rcvtypelen, snd_contig, rcv_contig;
    MPID_Datatype *sdt, *rdt;
@@ -53,6 +52,15 @@ int MPIDO_Alltoallv(const void *sendbuf,
    MPIDI_Post_coll_t alltoallv_post;
    int pamidt = 1;
    int tmp;
+   const int rank = comm_ptr->rank;
+#if ASSERT_LEVEL==0
+   /* We can't afford the tracing in ndebug/performance libraries */
+    const unsigned verbose = 0;
+#else
+    const unsigned verbose = (MPIDI_Process.verbose >= MPIDI_VERBOSE_DETAILS_ALL) && (rank == 0);
+#endif
+   const struct MPIDI_Comm* const mpid = &(comm_ptr->mpid);
+   const int selected_type = mpid->user_selected_type[PAMI_XFER_ALLTOALLV_INT];
 
    if(sendbuf == MPI_IN_PLACE) 
      pamidt = 0; /* Disable until ticket #632 is fixed */
@@ -61,42 +69,36 @@ int MPIDO_Alltoallv(const void *sendbuf,
    if(MPIDI_Datatype_to_pami(recvtype, &rtype, -1, NULL, &tmp) != MPI_SUCCESS)
       pamidt = 0;
 
-   if(
-      (comm_ptr->mpid.user_selected_type[PAMI_XFER_ALLTOALLV_INT] == 
-            MPID_COLL_USE_MPICH) ||
+   if((selected_type == MPID_COLL_USE_MPICH) ||
        pamidt == 0)
    {
-      if(unlikely(MPIDI_Process.verbose >= MPIDI_VERBOSE_DETAILS_ALL && comm_ptr->rank == 0))
+      if(unlikely(verbose))
          fprintf(stderr,"Using MPICH alltoallv algorithm\n");
-      if(!comm_ptr->rank)
-         TRACE_ERR("Using MPICH alltoallv\n");
       return MPIR_Alltoallv(sendbuf, sendcounts, senddispls, sendtype,
                             recvbuf, recvcounts, recvdispls, recvtype,
                             comm_ptr, mpierrno);
    }
-   if(!comm_ptr->rank)
-      TRACE_ERR("Using %s for alltoallv protocol\n", pname);
 
    MPIDI_Datatype_get_info(1, recvtype, rcv_contig, rcvtypelen, rdt, rdt_true_lb);
 
    pami_xfer_t alltoallv;
    pami_algorithm_t my_alltoallv;
-   pami_metadata_t *my_alltoallv_md;
+   const pami_metadata_t *my_alltoallv_md;
    int queryreq = 0;
 
-   if(comm_ptr->mpid.user_selected_type[PAMI_XFER_ALLTOALLV_INT] == MPID_COLL_OPTIMIZED)
+   if(selected_type == MPID_COLL_OPTIMIZED)
    {
       TRACE_ERR("Optimized alltoallv was selected\n");
-      my_alltoallv = comm_ptr->mpid.opt_protocol[PAMI_XFER_ALLTOALLV_INT][0];
-      my_alltoallv_md = &comm_ptr->mpid.opt_protocol_md[PAMI_XFER_ALLTOALLV_INT][0];
-      queryreq = comm_ptr->mpid.must_query[PAMI_XFER_ALLTOALLV_INT][0];
+      my_alltoallv = mpid->opt_protocol[PAMI_XFER_ALLTOALLV_INT][0];
+      my_alltoallv_md = &mpid->opt_protocol_md[PAMI_XFER_ALLTOALLV_INT][0];
+      queryreq = mpid->must_query[PAMI_XFER_ALLTOALLV_INT][0];
    }
    else
    { /* is this purely an else? or do i need to check for some other selectedvar... */
       TRACE_ERR("Alltoallv specified by user\n");
-      my_alltoallv = comm_ptr->mpid.user_selected[PAMI_XFER_ALLTOALLV_INT];
-      my_alltoallv_md = &comm_ptr->mpid.user_metadata[PAMI_XFER_ALLTOALLV_INT];
-      queryreq = comm_ptr->mpid.user_selected_type[PAMI_XFER_ALLTOALLV_INT];
+      my_alltoallv = mpid->user_selected[PAMI_XFER_ALLTOALLV_INT];
+      my_alltoallv_md = &mpid->user_metadata[PAMI_XFER_ALLTOALLV_INT];
+      queryreq = selected_type;
    }
    alltoallv.algorithm = my_alltoallv;
    char *pname = my_alltoallv_md->name;
@@ -107,7 +109,7 @@ int MPIDO_Alltoallv(const void *sendbuf,
    /* We won't bother with alltoallv since MPI is always going to be ints. */
    if(sendbuf == MPI_IN_PLACE)
    {
-      if(unlikely(MPIDI_Process.verbose >= MPIDI_VERBOSE_DETAILS_ALL))
+     if(unlikely(verbose))
          fprintf(stderr,"alltoallv MPI_IN_PLACE buffering\n");
       alltoallv.cmd.xfer_alltoallv_int.stype = rtype;
       alltoallv.cmd.xfer_alltoallv_int.sdispls = (int *) recvdispls;
@@ -136,11 +138,15 @@ int MPIDO_Alltoallv(const void *sendbuf,
       TRACE_ERR("bitmask: %#X\n", result.bitmask);
       if(!result.bitmask)
       {
-         fprintf(stderr,"Query failed for %s\n", pname);
+        if(unlikely(verbose))
+          fprintf(stderr,"Query failed for %s\n", pname);
+        return MPIR_Alltoallv(sendbuf, sendcounts, senddispls, sendtype,
+                              recvbuf, recvcounts, recvdispls, recvtype,
+                              comm_ptr, mpierrno);
       }
    }
 
-   if(unlikely(MPIDI_Process.verbose >= MPIDI_VERBOSE_DETAILS_ALL && comm_ptr->rank == 0))
+   if(unlikely(verbose))
    {
       unsigned long long int threadID;
       MPIU_Thread_id_t tid;
@@ -155,7 +161,7 @@ int MPIDO_Alltoallv(const void *sendbuf,
    MPIDI_Context_post(MPIDI_Context[0], &alltoallv_post.state,
                       MPIDI_Pami_post_wrapper, (void *)&alltoallv);
 
-   TRACE_ERR("%d waiting on active %d\n", comm_ptr->rank, active);
+   TRACE_ERR("%d waiting on active %d\n", rank, active);
    MPID_PROGRESS_WAIT_WHILE(active);
 
 

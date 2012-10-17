@@ -36,14 +36,14 @@ int MPIDO_Scatterv_bcast(void *sendbuf,
                          MPID_Comm *comm_ptr,
                          int *mpierrno)
 {
-  int rank = comm_ptr->rank;
-  int np = comm_ptr->local_size;
+  const int rank = comm_ptr->rank;
+  const int size = comm_ptr->local_size;
   char *tempbuf;
   int i, sum = 0, dtsize, rc=0, contig;
   MPID_Datatype *dt_ptr;
   MPI_Aint dt_lb;
 
-  for (i = 0; i < np; i++)
+  for (i = 0; i < size; i++)
     if (sendcounts > 0)
       sum += sendcounts[i];
 
@@ -94,8 +94,8 @@ int MPIDO_Scatterv_alltoallv(void * sendbuf,
                              MPID_Comm * comm_ptr,
                              int *mpierrno)
 {
-  int rank = comm_ptr->rank;
-  int size = comm_ptr->local_size;
+  const int rank = comm_ptr->rank;
+  const int size = comm_ptr->local_size;
 
   int *sdispls, *scounts;
   int *rdispls, *rcounts;
@@ -126,7 +126,6 @@ int MPIDO_Scatterv_alltoallv(void * sendbuf,
                                 MPI_ERR_OTHER,
                                 "**nomem", 0);
   }
-  /*   memset(rbuf, 0, rbytes * size * sizeof(char));*/
 
   if(rank == root)
   {
@@ -154,7 +153,6 @@ int MPIDO_Scatterv_alltoallv(void * sendbuf,
     }
     memset(sdispls, 0, size*sizeof(int));
     memset(scounts, 0, size*sizeof(int));
-    /*      memset(sbuf, 0, rbytes * sizeof(char));*/
   }
 
   rdispls = MPIU_Malloc(size * sizeof(int));
@@ -196,7 +194,6 @@ int MPIDO_Scatterv_alltoallv(void * sendbuf,
   }
   else
   {
-    /*      memcpy(recvbuf, rbuf+(root*rbytes), rbytes);*/
     memcpy(recvbuf, rbuf, rbytes);
     MPIU_Free(rbuf);
     MPIU_Free(rdispls);
@@ -246,10 +243,19 @@ int MPIDO_Scatterv(const void *sendbuf,
   pami_xfer_t allred;
   int optscatterv[3];
   pami_type_t stype, rtype;
+  const int rank = comm_ptr->rank;
+#if ASSERT_LEVEL==0
+   /* We can't afford the tracing in ndebug/performance libraries */
+    const unsigned verbose = 0;
+#else
+    const unsigned verbose = (MPIDI_Process.verbose >= MPIDI_VERBOSE_DETAILS_ALL) && (rank == 0);
+#endif
+   const struct MPIDI_Comm* const mpid = &(comm_ptr->mpid);
+   const int selected_type = mpid->user_selected_type[PAMI_XFER_SCATTERV_INT];
 
   allred.cb_done = allred_cb_done;
   allred.cookie = (void *)&allred_active;
-  allred.algorithm = comm_ptr->mpid.coll_algorithm[PAMI_XFER_ALLREDUCE][0][0];
+  allred.algorithm = mpid->coll_algorithm[PAMI_XFER_ALLREDUCE][0][0];
   allred.cmd.xfer_allreduce.sndbuf = (void *)optscatterv;
   allred.cmd.xfer_allreduce.stype = PAMI_TYPE_SIGNED_INT;
   allred.cmd.xfer_allreduce.rcvbuf = (void *)optscatterv;
@@ -259,9 +265,9 @@ int MPIDO_Scatterv(const void *sendbuf,
   allred.cmd.xfer_allreduce.op = PAMI_DATA_BAND;
 
 
-   if(comm_ptr->mpid.user_selected_type[PAMI_XFER_SCATTERV_INT] == MPID_COLL_USE_MPICH)
+   if(selected_type == MPID_COLL_USE_MPICH)
   {
-    if(unlikely(MPIDI_Process.verbose >= MPIDI_VERBOSE_DETAILS_ALL && comm_ptr->rank == 0))
+    if(unlikely(verbose))
       fprintf(stderr,"Using MPICH scatterv algorithm\n");
     MPIDI_Update_last_algorithm(comm_ptr, "SCATTERV_MPICH");
     return MPIR_Scatterv(sendbuf, sendcounts, displs, sendtype,
@@ -272,25 +278,25 @@ int MPIDO_Scatterv(const void *sendbuf,
 
    pami_xfer_t scatterv;
    pami_algorithm_t my_scatterv;
-   pami_metadata_t *my_scatterv_md;
+   const pami_metadata_t *my_scatterv_md;
    volatile unsigned scatterv_active = 1;
    int queryreq = 0;
 
-   if(comm_ptr->mpid.user_selected_type[PAMI_XFER_SCATTERV_INT] == MPID_COLL_OPTIMIZED)
+   if(selected_type == MPID_COLL_OPTIMIZED)
    {
       TRACE_ERR("Optimized scatterv %s was selected\n",
-         comm_ptr->mpid.opt_protocol_md[PAMI_XFER_SCATTERV_INT][0].name);
-      my_scatterv = comm_ptr->mpid.opt_protocol[PAMI_XFER_SCATTERV_INT][0];
-      my_scatterv_md = &comm_ptr->mpid.opt_protocol_md[PAMI_XFER_SCATTERV_INT][0];
-      queryreq = comm_ptr->mpid.must_query[PAMI_XFER_SCATTERV_INT][0];
+         mpid->opt_protocol_md[PAMI_XFER_SCATTERV_INT][0].name);
+      my_scatterv = mpid->opt_protocol[PAMI_XFER_SCATTERV_INT][0];
+      my_scatterv_md = &mpid->opt_protocol_md[PAMI_XFER_SCATTERV_INT][0];
+      queryreq = mpid->must_query[PAMI_XFER_SCATTERV_INT][0];
    }
    else
    {
       TRACE_ERR("User selected %s for scatterv\n",
-         comm_ptr->mpid.user_selected[PAMI_XFER_SCATTERV_INT]);
-      my_scatterv = comm_ptr->mpid.user_selected[PAMI_XFER_SCATTERV_INT];
-      my_scatterv_md = &comm_ptr->mpid.user_metadata[PAMI_XFER_SCATTERV_INT];
-      queryreq = comm_ptr->mpid.user_selected_type[PAMI_XFER_SCATTERV_INT];
+      mpid->user_selected[PAMI_XFER_SCATTERV_INT]);
+      my_scatterv = mpid->user_selected[PAMI_XFER_SCATTERV_INT];
+      my_scatterv_md = &mpid->user_metadata[PAMI_XFER_SCATTERV_INT];
+      queryreq = selected_type;
    }
 
    if((recvbuf != MPI_IN_PLACE) && MPIDI_Datatype_to_pami(recvtype, &rtype, -1, NULL, &tmp) != MPI_SUCCESS)
@@ -299,9 +305,9 @@ int MPIDO_Scatterv(const void *sendbuf,
    if(MPIDI_Datatype_to_pami(sendtype, &stype, -1, NULL, &tmp) != MPI_SUCCESS)
       pamidt = 0;
 
-   if(pamidt == 0 || comm_ptr->mpid.user_selected_type[PAMI_XFER_SCATTERV_INT] == MPID_COLL_USE_MPICH)
+   if(pamidt == 0 || selected_type == MPID_COLL_USE_MPICH)
    {
-     if(unlikely(MPIDI_Process.verbose >= MPIDI_VERBOSE_DETAILS_ALL && comm_ptr->rank == 0))
+     if(unlikely(verbose))
        fprintf(stderr,"Using MPICH scatterv algorithm\n");
       TRACE_ERR("Scatterv using MPICH\n");
       MPIDI_Update_last_algorithm(comm_ptr, "SCATTERV_MPICH");
@@ -314,13 +320,13 @@ int MPIDO_Scatterv(const void *sendbuf,
    sbuf = (char *)sendbuf + send_true_lb;
    rbuf = recvbuf;
 
-   if(comm_ptr->rank == root)
+   if(rank == root)
    {
       if(recvbuf == MPI_IN_PLACE) 
       {
-        if(unlikely(MPIDI_Process.verbose >= MPIDI_VERBOSE_DETAILS_ALL))
+        if(unlikely(verbose))
           fprintf(stderr,"scatterv MPI_IN_PLACE buffering\n");
-        rbuf = (char *)sendbuf + ssize*displs[comm_ptr->rank] + send_true_lb;
+        rbuf = (char *)sendbuf + ssize*displs[rank] + send_true_lb;
       }
       else
       {  
@@ -352,13 +358,18 @@ int MPIDO_Scatterv(const void *sendbuf,
       TRACE_ERR("bitmask: %#X\n", result.bitmask);
       if(!result.bitmask)
       {
-         fprintf(stderr,"Query failed for %s\n", my_scatterv_md->name);
+        if(unlikely(verbose))
+          fprintf(stderr,"Query failed for %s\n", my_scatterv_md->name);
+        MPIDI_Update_last_algorithm(comm_ptr, "SCATTERV_MPICH");
+        return MPIR_Scatterv(sendbuf, sendcounts, displs, sendtype,
+                             recvbuf, recvcount, recvtype,
+                             root, comm_ptr, mpierrno);
       }
    }
 
    MPIDI_Update_last_algorithm(comm_ptr, my_scatterv_md->name);
 
-   if(unlikely(MPIDI_Process.verbose >= MPIDI_VERBOSE_DETAILS_ALL && comm_ptr->rank == 0))
+   if(unlikely(verbose))
    {
       unsigned long long int threadID;
       MPIU_Thread_id_t tid;
@@ -398,8 +409,8 @@ int MPIDO_Scatterv(const void *sendbuf,
     * optscatterv[2] == sum of sendcounts
     */
 
-   optscatterv[0] = !comm_ptr->mpid.scattervs[0];
-   optscatterv[1] = !comm_ptr->mpid.scattervs[1];
+   optscatterv[0] = !mpid->scattervs[0];
+   optscatterv[1] = !mpid->scattervs[1];
    optscatterv[2] = 1;
 
    if(rank == root)
@@ -444,7 +455,7 @@ int MPIDO_Scatterv(const void *sendbuf,
   /* Make sure parameters are the same on all the nodes */
   /* specifically, noncontig on the receive */
   /* set the internal control flow to disable internal star tuning */
-   if(comm_ptr->mpid.preallreduces[MPID_SCATTERV_PREALLREDUCE])
+   if(mpid->preallreduces[MPID_SCATTERV_PREALLREDUCE])
    {
      TRACE_ERR("%s scatterv pre-allreduce\n", MPIDI_Process.context_post.active>0?"Posting":"Invoking");
      MPIDI_Post_coll_t allred_post;
@@ -499,7 +510,7 @@ int MPIDO_Scatterv(const void *sendbuf,
    } /* nothing valid to try, go to mpich */
    else
    {
-     if(unlikely(MPIDI_Process.verbose >= MPIDI_VERBOSE_DETAILS_ALL && comm_ptr->rank == 0))
+     if(unlikely(verbose))
        fprintf(stderr,"Using MPICH scatterv algorithm\n");
       MPIDI_Update_last_algorithm(comm_ptr, "SCATTERV_MPICH");
       return MPIR_Scatterv(sendbuf, sendcounts, displs, sendtype,

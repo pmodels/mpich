@@ -20,7 +20,7 @@
  * \brief ???
  */
 
-/*#define TRACE_ON*/
+/* #define TRACE_ON */
 #include <mpidimpl.h>
 
 static void cb_gatherv(void *ctxt, void *clientdata, pami_result_t err)
@@ -43,15 +43,24 @@ int MPIDO_Gatherv(const void *sendbuf,
 
 {
    TRACE_ERR("Entering MPIDO_Gatherv\n");
-   int contig, rsize, ssize;
+   int rc;
+   int contig, rsize=0, ssize=0;
    int pamidt = 1;
-   ssize = 0;
    MPID_Datatype *dt_ptr = NULL;
    MPI_Aint send_true_lb, recv_true_lb;
    char *sbuf, *rbuf;
    pami_type_t stype, rtype;
    int tmp;
    volatile unsigned gatherv_active = 1;
+   const int rank = comm_ptr->rank;
+#if ASSERT_LEVEL==0
+   /* We can't afford the tracing in ndebug/performance libraries */
+    const unsigned verbose = 0;
+#else
+    const unsigned verbose = (MPIDI_Process.verbose >= MPIDI_VERBOSE_DETAILS_ALL) && (rank == 0);
+#endif
+   const struct MPIDI_Comm* const mpid = &(comm_ptr->mpid);
+   const int selected_type = mpid->user_selected_type[PAMI_XFER_GATHERV_INT];
 
    /* Check for native PAMI types and MPI_IN_PLACE on sendbuf */
    /* MPI_IN_PLACE is a nonlocal decision. We will need a preallreduce if we ever have
@@ -61,9 +70,9 @@ int MPIDO_Gatherv(const void *sendbuf,
    if(MPIDI_Datatype_to_pami(recvtype, &rtype, -1, NULL, &tmp) != MPI_SUCCESS)
       pamidt = 0;
 
-   if(pamidt == 0 || comm_ptr->mpid.user_selected_type[PAMI_XFER_GATHERV_INT] == MPID_COLL_USE_MPICH)
+   if(pamidt == 0 || selected_type == MPID_COLL_USE_MPICH)
    {
-      if(unlikely(MPIDI_Process.verbose >= MPIDI_VERBOSE_DETAILS_ALL && comm_ptr->rank == 0))
+      if(unlikely(verbose))
          fprintf(stderr,"Using MPICH gatherv algorithm\n");
       TRACE_ERR("GATHERV using MPICH\n");
       MPIDI_Update_last_algorithm(comm_ptr, "GATHERV_MPICH");
@@ -90,15 +99,15 @@ int MPIDO_Gatherv(const void *sendbuf,
    gatherv.cmd.xfer_gatherv_int.stype = stype;
    gatherv.cmd.xfer_gatherv_int.stypecount = sendcount;
 
-   if(comm_ptr->rank == root)
+   if(rank == root)
    {
       if(sendbuf == MPI_IN_PLACE) 
       {
-         if(unlikely(MPIDI_Process.verbose >= MPIDI_VERBOSE_DETAILS_ALL))
+         if(unlikely(verbose))
             fprintf(stderr,"gatherv MPI_IN_PLACE buffering\n");
-         sbuf = (char*)rbuf + rsize*displs[comm_ptr->rank];
+         sbuf = (char*)rbuf + rsize*displs[rank];
          gatherv.cmd.xfer_gatherv_int.stype = rtype;
-         gatherv.cmd.xfer_gatherv_int.stypecount = recvcounts[comm_ptr->rank];
+         gatherv.cmd.xfer_gatherv_int.stypecount = recvcounts[rank];
       }
       else
       {
@@ -109,24 +118,24 @@ int MPIDO_Gatherv(const void *sendbuf,
    gatherv.cmd.xfer_gatherv_int.sndbuf = sbuf;
 
    pami_algorithm_t my_gatherv;
-   pami_metadata_t *my_gatherv_md;
+   const pami_metadata_t *my_gatherv_md;
    int queryreq = 0;
 
-   if(comm_ptr->mpid.user_selected_type[PAMI_XFER_GATHERV_INT] == MPID_COLL_OPTIMIZED)
+   if(selected_type == MPID_COLL_OPTIMIZED)
    {
       TRACE_ERR("Optimized gatherv %s was selected\n",
-         comm_ptr->mpid.opt_protocol_md[PAMI_XFER_GATHERV_INT][0].name);
-      my_gatherv = comm_ptr->mpid.opt_protocol[PAMI_XFER_GATHERV_INT][0];
-      my_gatherv_md = &comm_ptr->mpid.opt_protocol_md[PAMI_XFER_GATHERV_INT][0];
-      queryreq = comm_ptr->mpid.must_query[PAMI_XFER_GATHERV_INT][0];
+         mpid->opt_protocol_md[PAMI_XFER_GATHERV_INT][0].name);
+      my_gatherv = mpid->opt_protocol[PAMI_XFER_GATHERV_INT][0];
+      my_gatherv_md = &mpid->opt_protocol_md[PAMI_XFER_GATHERV_INT][0];
+      queryreq = mpid->must_query[PAMI_XFER_GATHERV_INT][0];
    }
    else
    {
       TRACE_ERR("Optimized gatherv %s was set by user\n",
-         comm_ptr->mpid.user_metadata[PAMI_XFER_GATHERV_INT].name);
-         my_gatherv = comm_ptr->mpid.user_selected[PAMI_XFER_GATHERV_INT];
-         my_gatherv_md = &comm_ptr->mpid.user_metadata[PAMI_XFER_GATHERV_INT];
-         queryreq = comm_ptr->mpid.user_selected_type[PAMI_XFER_GATHERV_INT];
+         mpid->user_metadata[PAMI_XFER_GATHERV_INT].name);
+         my_gatherv = mpid->user_selected[PAMI_XFER_GATHERV_INT];
+         my_gatherv_md = &mpid->user_metadata[PAMI_XFER_GATHERV_INT];
+         queryreq = selected_type;
    }
 
    gatherv.algorithm = my_gatherv;
@@ -141,13 +150,18 @@ int MPIDO_Gatherv(const void *sendbuf,
       TRACE_ERR("bitmask: %#X\n", result.bitmask);
       if(!result.bitmask)
       {
-         fprintf(stderr,"Query failed for %s\n", my_gatherv_md->name);
+         if(unlikely(verbose))
+            fprintf(stderr,"Query failed for %s\n", my_gatherv_md->name);
+         MPIDI_Update_last_algorithm(comm_ptr, "GATHERV_MPICH");
+         return MPIR_Gatherv(sendbuf, sendcount, sendtype,
+                             recvbuf, recvcounts, displs, recvtype,
+                             root, comm_ptr, mpierrno);
       }
    }
    
    MPIDI_Update_last_algorithm(comm_ptr, my_gatherv_md->name);
 
-   if(unlikely(MPIDI_Process.verbose >= MPIDI_VERBOSE_DETAILS_ALL && comm_ptr->rank == 0))
+   if(unlikely(verbose))
    {
       unsigned long long int threadID;
       MPIU_Thread_id_t tid;
