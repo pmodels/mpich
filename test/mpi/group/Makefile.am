@@ -20,6 +20,9 @@ noinst_PROGRAMS = \
     groupnullincl \
     gtranksperf
 
+# gtranksperf uses fabs, which may require -lm
+gtranksperf_LDADD = $(LDADD) -lm
+
 # glpid is a whitebox test that uses mpiimpl.h; it is unlikely to build with the
 # current build system setup
 #EXTRA_PROGRAMS = glpid
