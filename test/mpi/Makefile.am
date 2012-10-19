@@ -28,20 +28,3 @@ DISTCLEANFILES = config.system
 ## here are automakefile entries for the test/mpi/include dir
 noinst_HEADERS = include/mpitest.h include/mpitestcxx.h include/mpithreadtest.h
 nodist_noinst_HEADERS = include/mpitestconf.h
-
-# Need to patch some things up:
-# Make sure to disable rebuilding the autotools related files - the 
-# receiver of this distribution may not have the necessary tools and 
-# should not need them.  Finally, the distributed configure must disable
-# maintainer targets by default - otherwise, the unsuspecting user will
-# see automake et al attempt to rebuild the autotools, which is likely to 
-# fail unless the user has the correct versions of all of the tools
-dist-hook:
-	cd $(distdir) && \
-	    sed -e 's/AM_MAINTAINER_MODE.*/AM_MAINTAINER_MODE([disable])/' \
-	        configure.ac > conftmp.ac && mv conftmp.ac configure.ac
-	cd $(distdir) && $(AUTOMAKE) --add-missing
-	cd $(distdir) && $(AUTOMAKE) --foreign
-	cd $(distdir) && $(ACLOCAL) -Iconfdb
-	cd $(distdir) && $(AUTOCONF) -Iconfdb
-	cd $(distdir) && $(AUTOHEADER) -Iconfdb
