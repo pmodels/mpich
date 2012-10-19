@@ -1322,7 +1322,7 @@ int PMPI_Pack(const void*, int, MPI_Datatype, void *, int, int *,  MPI_Comm) MPI
 int PMPI_Unpack(const void*, int, int *, void *, int, MPI_Datatype, MPI_Comm) MPICH_ATTR_POINTER_WITH_TYPE_TAG(4,6);
 int PMPI_Pack_size(int, MPI_Datatype, MPI_Comm, int *);
 int PMPI_Barrier(MPI_Comm );
-int PMPI_Bcast(void* buffer, int, MPI_Datatype, int, MPI_Comm );
+int PMPI_Bcast(void* buffer, int, MPI_Datatype, int, MPI_Comm) MPICH_ATTR_POINTER_WITH_TYPE_TAG(1,3);
 int PMPI_Gather(const void* , int, MPI_Datatype, void*, int, MPI_Datatype, int, MPI_Comm) MPICH_ATTR_POINTER_WITH_TYPE_TAG(1,3) MPICH_ATTR_POINTER_WITH_TYPE_TAG(4,6);
 int PMPI_Gatherv(const void* , int, MPI_Datatype, void*, const int *, const int *, MPI_Datatype, int, MPI_Comm) MPICH_ATTR_POINTER_WITH_TYPE_TAG(1,3) MPICH_ATTR_POINTER_WITH_TYPE_TAG(4,7);
 int PMPI_Scatter(const void* , int, MPI_Datatype, void*, int, MPI_Datatype, int, MPI_Comm) MPICH_ATTR_POINTER_WITH_TYPE_TAG(1,3) MPICH_ATTR_POINTER_WITH_TYPE_TAG(4,6);
