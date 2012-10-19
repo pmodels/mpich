@@ -16,7 +16,6 @@ $logname = $ENV{"LOGNAME"};
 $tmpdir = "/sandbox/$logname";
 # rundir is the directory in which to run the tests.
 $rundir = "";
-$mpich1_dir = "$projects_dir/mpich1test";
 
 # By default, use random arguments for the tests
 $use_rand_args = 1;
@@ -53,19 +52,29 @@ $hasDemon   = 0;
 		  'error-messages;all;generic;class;none',
 		  'timer-type;linux86_cycle;gethrtime;clock_gettime;gettimeofday;linuxalpha_cycle',
 		  'timing;none;all;runtime;log;log_detailed',
-		  'g;none;all;handle;dbg;log;meminit',
-		  'fast',
+		  'g;none;all;handle;dbg;log;meminit;handlealloc;instr;mem;mutex;mutexnesting;memarena',
+		  'fast;nochkmsg;notiming;ndebug;all',
 		  'f77',
 		  'fc',
 		  'cxx',
 		  'romio',
 		  'coverage',
+                  'check-compiler-flags',
+                  'smpcoll',
 		  'strict;c99;posix',    #;posix
 		  'debuginfo', # Message queues
-		  'weak_symbols;no;yes',
-                  'threads;single;multiple',
- 		  'dependencies',
-		  'nmpi-as-mpi',
+		  'weak-symbols;no;yes',
+                  'threads;single;multiple;runtime',
+                  'thread-cs;global;per-object;lock-free',
+                  'refcount;lock;lock-free;none',
+                  'mutex-timing',
+                  'handle-allocation;tls;mutex',
+                  'multi-aliases',
+                  'wrapper-rpath',
+                  'predefined-refcount',
+                  'alloca',
+                  'yield;sched_yield;yield;select;usleep;sleep',
+                  'checkpointing',
 		  'runtimevalues',   # Fortran true/false
 );
 %chosenEnable = ();
@@ -170,6 +179,9 @@ foreach $_ (@ARGV) {
     elsif (/--?rundir=(.*)/) {
 	$rundir = $1;
     }
+    elsif (/--?projectsdir=(.*)/) {
+	$projects_dir = $1;
+    }
     elsif (/--?maxcount=(.*)/) {
 	# max count.  Set to -1 for infinity
 	$max_count = $1;
@@ -246,6 +258,9 @@ checkbuilds [ -enable-n=d ] [ -with-n=d ] [ -show ] [-envopt=name;value;... ]
 # Set directories that have not been chosen.
 if ($instdir eq "") {
     $instdir = "$tmpdir/cb/mpi2-inst";
+}
+if ($mpich1_dir eq "") {
+    $mpich1_dir = "$projects_dir/mpich1test";
 }
 # Make the builddir compatible with the installation directory
 if ($builddir eq "") {
@@ -568,6 +583,9 @@ sub RunTestSuites {
 	elsif ($testname eq "intel") {
 	    &RunIntelTestSuite;
 	}
+	elsif ($testname eq "testmpio") {
+	    &RunTestMPIOSuite;
+	}
 	elsif ($testname eq "mpicxx" && $has_cxx) {
 	    &RunCxxTestSuite;
 	}
@@ -781,6 +799,74 @@ sub RunCxxTestSuite {
     %ENV = %saveENV;
     chdir $cwd;
 }
+
+# Run the LLNL IO Test suite
+sub RunTestMPIOSuite {
+    my $nargs = 0;
+    my $testname = "testing";
+    $cwd = `pwd`;
+    chomp $cwd;
+
+    my @config;
+
+    if ($testmpio_test_dir eq "") {
+	$testmpio_test_dir = "$tmpdir/cb/testmpio";
+    }
+
+    $rc = chdir $testmpio_test_dir;
+    if (!$rc) {
+	#print STDERR "Cannot change to $testmpio_test_dir\n";
+	return;
+    }
+
+    # Switch to using the checked-in version of the Intel test
+    $config[$nargs++] = "$projects_dir/testmpio/configure";
+    $config[$nargs++] = "--enable-xml";
+    $config[$nargs++] = "CC=$instdir/bin/mpicc";
+    $config[$nargs++] = "MPIEXEC=$instdir/bin/mpiexec";
+    if (defined($ENV{"MAKE"})) {
+	$makepgm = $ENV{"MAKE"};
+    }
+    else {
+	$makepgm = "make";
+    }
+    %saveENV = %ENV;
+    # This timeout needs to be made uniform for all mpiruns
+    # 3 minutes is enough for some of our slower machines
+    $ENV{MPIEXEC_TIMEOUT} = "180";
+    $rc = &RunProgram( @config );
+    if ($rc == 0) {
+	if ($hasDemon) {
+	    &$StartDemon;
+	}
+	$rc = &RunProgram( "$makepgm $testname" );
+	$test_status = $rc;
+	if ($run_status == 0 && $rc != 0) { $run_status = $rc; }
+	if ($hasDemon) {
+	    &$StopDemon;
+	}
+	if ($test_status != 0) {
+	    # Try to figure out what went wrong.  
+	    if (-s "Test/test.results") { 
+		&CopyFileToOutput( "Test/test.results" );
+	    }
+	}
+    }
+    else {
+	$run_status = $rc;
+	print $OUTFD "Configure step for test failed\n";
+	print $OUTFD "Could not execute " . join(" ", @config) . "\n";
+	print $OUTFD "Environment was\n";
+	foreach $key (keys(%ENV)) {
+	    my $line = "$key = $ENV{$key}";
+	    if ($is_xml) { $line = &XMLify( $line ); }
+	    print $OUTFD "$line\n";
+	}
+    }
+    %ENV = %saveENV;
+    chdir $cwd;
+}
+
 
 sub RunIntelTestSuite {
     my $nargs = 0;

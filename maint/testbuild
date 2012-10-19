@@ -1,8 +1,9 @@
 #! /bin/sh
 #
 # This is a simple script that makes sure that checkbuilds can be 
-# created and then runs it
+# created and then runs it.
 # The cb suffix is for "check build"
+# Set defaults for the MPICH2 home
 srcdir=/home/MPI/testing/mpich2/mpich2
 if [ ! -d $srcdir ] ; then
     if [ -d /homes/MPI/testing/mpich2/mpich2 ] ; then
@@ -21,16 +22,18 @@ if [ ! -d $outdir ] ; then
         outdir=
     fi
 fi
-if [ -z "$tmpdir" ] ; then tmpdir=/sandbox/$LOGNAME ; fi
-if [ -z "$rundir" ] ; then rundir=$tmpdir/cb/mpich2 ; fi
-if [ -z "$mpichtestdir" ] ; then mpichtestdir=$tmpdir/cb/mpitest ; fi
-if [ -z "$mpicxxtestdir" ] ; then mpicxxtestdir=$tmpdir/cb/mpicxxtest ; fi
-if [ -z "$inteltestdir" ] ; then inteltestdir=$tmpdir/cb/MPITEST ; fi
+if [ -d "/home/MPI/testing/tsuites" ] ; then 
+    projectsdir="/home/MPI/testing/tsuites"
+elif [ -d "/homes/MPI/testing/tsuites" ] ; then
+    projectsdir="/homes/MPI/testing/tsuites"
+elif [ -d "/Users/$LOGNAME/projects/software/testing" ] ; then
+    projectsdir="/Users/$LOGNAME/projects/software/testing"
+fi
 
 date=`date "+%Y-%m-%d"`
 # default outfile
 outfile=testbuild.xml
-tests="mpich:mpicxx:intel:mpich2"
+tests="mpich:mpicxx:intel:testmpio:mpich2"
 #
 # Option options to checkbuild
 other_opts=""
@@ -50,7 +53,10 @@ for arg in "$@" ; do
     case $arg in 
     -outfile=*) outfile=$argval ;;
     -outdir=*)  outdir=$argval ;;
+    -srcdir=*)  srcdir=$argval ;;
     -tests=*)   tests=$argval ;;
+    -tmpdir=*)  tmpdir=$argval ;;
+    -projectsdir=*) projectsdir=$argval ;;  # directory containing test sources
     -echo) set -x ;;
     *) other_opts="$other_opts '$arg'" 
     envset=`echo A$arg | sed -e 's/A-env=\([A-Z]*\).*/\1/'`
@@ -66,10 +72,17 @@ for arg in "$@" ; do
     esac
 done
 
+if [ -z "$rundir" ] ; then rundir=$tmpdir/cb/mpich2 ; fi
+if [ -z "$mpichtestdir" ] ; then mpichtestdir=$tmpdir/cb/mpitest ; fi
+if [ -z "$mpicxxtestdir" ] ; then mpicxxtestdir=$tmpdir/cb/mpicxxtest ; fi
+if [ -z "$inteltestdir" ] ; then inteltestdir=$tmpdir/cb/MPITEST ; fi
+if [ -z "$testmpiodir" ] ; then testmpiodir=$tmpdir/cb/testmpio ; fi
+if [ -z "$tmpdir" ] ; then tmpdir=/sandbox/$LOGNAME ; fi
+
 # Construct the full outfile name from the dir and file
 outfile="$outdir/$outfile"
 if [ ! -d "$srcdir" ] ; then
-    echo "Could not find MPICH2 source dir"
+    echo "Could not find MPICH2 source dir $srcdir"
     exit 1
 fi
 if [ ! -d $rundir ] ; then 
@@ -88,6 +101,9 @@ if [ ! -d $mpichtestdir ] ; then
 fi
 if [ ! -d $mpicxxtestdir ] ; then
     mkdir $mpicxxtestdir
+fi
+if [ ! -d $testmpiodir ] ; then
+    mkdir $testmpiodir
 fi
 if [ ! -d $inteltestdir ] ; then
     mkdir $inteltestdir
@@ -118,6 +134,8 @@ if [ "$fcset" = no ] ; then
 fi
 #			  '-envopt="CC;cc;gcc"' '-envopt="FC;f77;g77"' 
 eval $rundir/maint/checkbuilds -rundir=$rundir \
+                        --srcdir=$srcdir \
+                        --projectsdir=$projectsdir \
 			$envargs \
 			  "-tests='""$tests""'" -tmpdir=$tmpdir \
 			  -xml -maxcount=1 -outfile=$outfile $other_opts
