@@ -82,7 +82,7 @@ void PREPEND_PREFIX(Dataloop_create)(MPI_Datatype type,
 	case MPI_COMBINER_HVECTOR_INTEGER:
 	case MPI_COMBINER_HVECTOR:
 	case MPI_COMBINER_INDEXED_BLOCK:
-	case MPIX_COMBINER_HINDEXED_BLOCK:
+	case MPI_COMBINER_HINDEXED_BLOCK:
 	case MPI_COMBINER_INDEXED:
 	case MPI_COMBINER_HINDEXED_INTEGER:
 	case MPI_COMBINER_HINDEXED:
@@ -207,7 +207,7 @@ void PREPEND_PREFIX(Dataloop_create)(MPI_Datatype type,
 							 dldepth_p,
 							 flag);
 	    break;
-	case MPIX_COMBINER_HINDEXED_BLOCK:
+	case MPI_COMBINER_HINDEXED_BLOCK:
             disps = (MPI_Aint *) DLOOP_Malloc(ints[0] * sizeof(MPI_Aint));
             for (i = 0; i < ints[0]; i++)
                 disps[i] = aints[i];

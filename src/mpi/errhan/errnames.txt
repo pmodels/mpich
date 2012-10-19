@@ -278,9 +278,9 @@ be in the range 0 to %d
 **request_invalid_kind %d:The supplied request was invalid (kind=%d)
 **request_invalid_kind %d %d:The supplied request in array element %d was \
  invalid (kind=%d)
-**reqnotmsg: Invalid MPIX_Message (MPI_Request passed)
-**msgnotreq: Invalid MPI_Request (MPIX_Message passed)
-**msgnotreq %d: Invalid MPI_Request at array index %d (MPIX_Message passed)
+**reqnotmsg: Invalid MPI_Message (MPI_Request passed)
+**msgnotreq: Invalid MPI_Request (MPI_Message passed)
+**msgnotreq %d: Invalid MPI_Request at array index %d (MPI_Message passed)
 **requestnull:Null MPI_Request 
 **requestnotpersist:Request is not persistent in MPI_Start or MPI_Startall.
 **requestpersistactive:Persistent request passed to MPI_Start or MPI_Startall is already active.
@@ -1064,8 +1064,8 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **mpi_comm_dup %C %p:MPI_Comm_dup(%C, new_comm=%p) failed
 **mpi_comm_create:MPI_Comm_create failed
 **mpi_comm_create %C %G %p:MPI_Comm_create(%C, %G, new_comm=%p) failed
-**mpi_comm_create_group:MPIX_Comm_create_group failed
-**mpi_comm_create_group %C %G %d %p:MPIX_Comm_create_group(%C, %G, %d, new_comm=%p) failed
+**mpi_comm_create_group:MPI_Comm_create_group failed
+**mpi_comm_create_group %C %G %d %p:MPI_Comm_create_group(%C, %G, %d, new_comm=%p) failed
 **mpi_comm_split:MPI_Comm_split failed
 **mpi_comm_split %C %d %d %p:MPI_Comm_split(%C, color=%d, key=%d, new_comm=%p) failed
 **mpi_comm_free:MPI_Comm_free failed
@@ -1183,8 +1183,8 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **mpi_put %p %d %D %d %d %d %D %W:MPI_Put(origin_addr=%p, origin_count=%d, %D, target_rank=%d, target_disp=%d, target_count=%d, %D, %W) failed
 **mpi_win_allocate_shared:MPI_Win_allocate_shared failed
 **mpi_win_allocate_shared %d %I %C %p %p:MPI_Win_allocate_shared(size=%d, %I, %C, baseptr=%p, win=%p) failed
-**mpix_win_shared_query:MPIX_Win_shared_query failed
-**mpix_win_shared_query %W %d %p %p:MPIX_Win_shared_query(win=%W, rank=%d, size=%p, baseptr=%p) failed
+**mpix_win_shared_query:MPI_Win_shared_query failed
+**mpix_win_shared_query %W %d %p %p:MPI_Win_shared_query(win=%W, rank=%d, size=%p, baseptr=%p) failed
 **mpi_win_complete:MPI_Win_complete failed
 **mpi_win_complete %W:MPI_Win_complete(%W) failed
 **mpi_win_create:MPI_Win_create failed
@@ -1341,8 +1341,8 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **mpi_type_create_hvector %d %d %d %D %p:MPI_Type_create_hvector(count=%d, blocklength=%d, stride=%d, %D, newtype=%p) failed
 **mpi_type_create_indexed_block:MPI_Type_create_indexed_block failed
 **mpi_type_create_indexed_block %d %d %p %D %p:MPI_Type_create_indexed_block(count=%d, blocklength=%d, array_of_displacements=%p, %D, newtype=%p) failed
-**mpi_type_create_hindexed_block:MPIX_Type_create_hindexed_block failed
-**mpi_type_create_hindexed_block %d %d %p %D %p:MPIX_Type_create_hindexed_block(count=%d, blocklength=%d, array_of_displacements=%p, %D, newtype=%p) failed
+**mpi_type_create_hindexed_block:MPI_Type_create_hindexed_block failed
+**mpi_type_create_hindexed_block %d %d %p %D %p:MPI_Type_create_hindexed_block(count=%d, blocklength=%d, array_of_displacements=%p, %D, newtype=%p) failed
 **mpi_type_create_resized:MPI_Type_create_resized failed
 **mpi_type_create_resized %D %L %L %p:MPI_Type_create_resized(%D, lb=%L, extent=%L, newtype=%p) failed
 **mpi_type_create_struct:MPI_Type_create_struct failed
@@ -1373,42 +1373,42 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **mpi_dist_graph_neighbors %C %d %p %p %d %p %p: MPI_Dist_graph_neighbors(%C, maxindegree=%d, sources=%p, sourceweights=%p, maxoutdegree=%d, destinations=%p, destweights=%p) failed
 
 # MPI-3 RMA Errors
-**mpix_get_accumulate:MPIX_Get_accumulate failed
-**mpix_get_accumulate %p %d %D %p %d %D %d %d %d %D %O %W:MPIX_Get_accumulate(origin_addr=%p, origin_count=%d, %D, result_addr=%p, result_count=%d, %D, target_rank=%d, target_disp=%d, target_count=%d, %D, %O, %W) failed
-**mpix_fetch_and_op:MPIX_Fetch_and_op failed
-**mpix_fetch_and_op %p %p %D %d %d %O %W:MPIX_Fetch_and_op(origin_addr=%p, result_addr=%p, %D, target_rank=%d, target_disp=%d, %O, %W) failed
-**mpix_compare_and_swap: MPIX_Compare_and_swap failed
-**mpix_compare_and_swap %p %p %p %D %d %d %W:MPIX_Compare_and_swap(origin_addr=%p, compare_addr=%p, result_addr=%p, %D, target_rank=%d, target_disp=%d, %W) failed
-**mpix_raccumulate:MPIX_Raccumulate failed
-**mpix_raccumulate %p %d %D %d %d %d %D %O %W %p:MPIX_Raccumulate(origin_addr=%p, origin_count=%d, %D, target_rank=%d, target_disp=%d, target_count=%d, %D, %O, %W, request=%p) failed
-**mpix_rget:MPIX_Rget failed
-**mpix_rget %p %d %D %d %d %d %D %W %p:MPIX_Rget(origin_addr=%p, origin_count=%d, %D, target_rank=%d, target_disp=%d, target_count=%d, %D, %W, request=%p) failed
-**mpix_rput:MPIX_Rput failed
-**mpix_rput %p %d %D %d %d %d %D %W %p:MPIX_Rput(origin_addr=%p, origin_count=%d, %D, target_rank=%d, target_disp=%d, target_count=%d, %D, %W, request=%p) failed
-**mpix_rget_accumulate:MPIX_Rget_accumulate failed
-**mpix_rget_accumulate %p %d %D %p %d %D %d %d %d %D %O %W %p:MPIX_Rget_accumulate(origin_addr=%p, origin_count=%d, %D, result_addr=%p, result_count=%d, %D, target_rank=%d, target_disp=%d, target_count=%d, %D, %O, %W, %p) failed
-**mpix_win_allocate:MPIX_Win_allocate failed
-**mpix_win_allocate %d %d %I %C %p %p:MPIX_Win_allocate(size=%d, disp_unit=%d, %I, %C, base=%p, win=%p) failed
-**mpix_win_create_dynamic:MPIX_Win_create_dynamic failed
-**mpix_win_create_dynamic %I %C %p:MPIX_Win_create_dynamic(%I, %C, win=%p) failed
-**mpix_win_attach:MPIX_Win_attach failed
-**mpix_win_attach %W %p %d:MPIX_Win_attach(%W, base=%p, size=%d) failed
-**mpix_win_detach:MPIX_Win_detach failed
-**mpix_win_detach %W %p:MPIX_Win_detach(%W, base=%p) failed
-**mpix_win_lock_all:MPIX_Win_lock_all failed
-**mpix_win_lock_all %A %W:MPIX_Win_lock_all(%A, %W) failed
-**mpix_win_unlock_all:MPIX_Win_unlock_all failed
-**mpix_win_unlock_all %W:MPIX_Win_unlock_all(%W) failed
-**mpix_win_flush:MPIX_Win_flush failed
-**mpix_win_flush %d %W:MPIX_Win_flush(target_rank=%d, %W) failed
-**mpix_win_flush_all:MPIX_Win_flush_all failed
-**mpix_win_flush_all %W:MPIX_Win_flush_all(%W) failed
-**mpix_win_flush_local:MPIX_Win_flush_local failed
-**mpix_win_flush_local %d %W:MPIX_Win_flush_local(target_rank=%d, %W) failed
-**mpix_win_flush_local_all:MPIX_Win_flush_local_all failed
-**mpix_win_flush_local_all %W:MPIX_Win_flush_local_all(%W) failed
-**mpix_win_sync:MPIX_Win_sync failed
-**mpix_win_sync %W:MPIX_Win_sync(%W) failed
+**mpix_get_accumulate:MPI_Get_accumulate failed
+**mpix_get_accumulate %p %d %D %p %d %D %d %d %d %D %O %W:MPI_Get_accumulate(origin_addr=%p, origin_count=%d, %D, result_addr=%p, result_count=%d, %D, target_rank=%d, target_disp=%d, target_count=%d, %D, %O, %W) failed
+**mpix_fetch_and_op:MPI_Fetch_and_op failed
+**mpix_fetch_and_op %p %p %D %d %d %O %W:MPI_Fetch_and_op(origin_addr=%p, result_addr=%p, %D, target_rank=%d, target_disp=%d, %O, %W) failed
+**mpix_compare_and_swap: MPI_Compare_and_swap failed
+**mpix_compare_and_swap %p %p %p %D %d %d %W:MPI_Compare_and_swap(origin_addr=%p, compare_addr=%p, result_addr=%p, %D, target_rank=%d, target_disp=%d, %W) failed
+**mpix_raccumulate:MPI_Raccumulate failed
+**mpix_raccumulate %p %d %D %d %d %d %D %O %W %p:MPI_Raccumulate(origin_addr=%p, origin_count=%d, %D, target_rank=%d, target_disp=%d, target_count=%d, %D, %O, %W, request=%p) failed
+**mpix_rget:MPI_Rget failed
+**mpix_rget %p %d %D %d %d %d %D %W %p:MPI_Rget(origin_addr=%p, origin_count=%d, %D, target_rank=%d, target_disp=%d, target_count=%d, %D, %W, request=%p) failed
+**mpix_rput:MPI_Rput failed
+**mpix_rput %p %d %D %d %d %d %D %W %p:MPI_Rput(origin_addr=%p, origin_count=%d, %D, target_rank=%d, target_disp=%d, target_count=%d, %D, %W, request=%p) failed
+**mpix_rget_accumulate:MPI_Rget_accumulate failed
+**mpix_rget_accumulate %p %d %D %p %d %D %d %d %d %D %O %W %p:MPI_Rget_accumulate(origin_addr=%p, origin_count=%d, %D, result_addr=%p, result_count=%d, %D, target_rank=%d, target_disp=%d, target_count=%d, %D, %O, %W, %p) failed
+**mpix_win_allocate:MPI_Win_allocate failed
+**mpix_win_allocate %d %d %I %C %p %p:MPI_Win_allocate(size=%d, disp_unit=%d, %I, %C, base=%p, win=%p) failed
+**mpix_win_create_dynamic:MPI_Win_create_dynamic failed
+**mpix_win_create_dynamic %I %C %p:MPI_Win_create_dynamic(%I, %C, win=%p) failed
+**mpix_win_attach:MPI_Win_attach failed
+**mpix_win_attach %W %p %d:MPI_Win_attach(%W, base=%p, size=%d) failed
+**mpix_win_detach:MPI_Win_detach failed
+**mpix_win_detach %W %p:MPI_Win_detach(%W, base=%p) failed
+**mpix_win_lock_all:MPI_Win_lock_all failed
+**mpix_win_lock_all %A %W:MPI_Win_lock_all(%A, %W) failed
+**mpix_win_unlock_all:MPI_Win_unlock_all failed
+**mpix_win_unlock_all %W:MPI_Win_unlock_all(%W) failed
+**mpix_win_flush:MPI_Win_flush failed
+**mpix_win_flush %d %W:MPI_Win_flush(target_rank=%d, %W) failed
+**mpix_win_flush_all:MPI_Win_flush_all failed
+**mpix_win_flush_all %W:MPI_Win_flush_all(%W) failed
+**mpix_win_flush_local:MPI_Win_flush_local failed
+**mpix_win_flush_local %d %W:MPI_Win_flush_local(target_rank=%d, %W) failed
+**mpix_win_flush_local_all:MPI_Win_flush_local_all failed
+**mpix_win_flush_local_all %W:MPI_Win_flush_local_all(%W) failed
+**mpix_win_sync:MPI_Win_sync failed
+**mpix_win_sync %W:MPI_Win_sync(%W) failed
 
 # pmi2 errors
 **bad_keyval:PMI2 received malformed key-value pair
@@ -1463,76 +1463,76 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **mpir_wingetattr %W %d %p %p:MPIR_WinGetAttr(%W, win_keyval=%d, attribute_val=%p, flag=%p) failed
 
 ## MPI-3 Mprobe routines
-**mpix_improbe: MPIX_Improbe failed
-**mpix_improbe %d %d %C %p %p %p: MPIX_Improbe(source=%d, tag=%d, comm=%C, flag=%p, message=%p, status=%p)
-**mpix_mprobe: MPIX_Mprobe failed
-**mpix_mprobe %d %d %C %p %p: MPIX_Mprobe(source=%d, tag=%d, comm=%C, message=%p, status=%p)
-**mpix_mrecv: MPIX_Mrecv failed
-**mpix_mrecv %p %d %D %p %p: MPIX_Mrecv(buf=%p, count=%d, datatype=%D, message=%p, status=%p)
-**mpix_imrecv: MPIX_Imrecv failed
-**mpix_imrecv %p %d %D %p %p: MPIX_Imrecv(buf=%p, count=%d, datatype=%D, message=%p, request=%p)
+**mpix_improbe: MPI_Improbe failed
+**mpix_improbe %d %d %C %p %p %p: MPI_Improbe(source=%d, tag=%d, comm=%C, flag=%p, message=%p, status=%p)
+**mpix_mprobe: MPI_Mprobe failed
+**mpix_mprobe %d %d %C %p %p: MPI_Mprobe(source=%d, tag=%d, comm=%C, message=%p, status=%p)
+**mpix_mrecv: MPI_Mrecv failed
+**mpix_mrecv %p %d %D %p %p: MPI_Mrecv(buf=%p, count=%d, datatype=%D, message=%p, status=%p)
+**mpix_imrecv: MPI_Imrecv failed
+**mpix_imrecv %p %d %D %p %p: MPI_Imrecv(buf=%p, count=%d, datatype=%D, message=%p, request=%p)
 
 ## MPI-3 nonblocking comm dup
-**mpix_comm_idup: MPIX_Comm_idup failed
-**mpix_comm_idup %C %p %p: MPIX_Comm_idup(comm=%C, newcomm=%p, request=%p)
+**mpix_comm_idup: MPI_Comm_idup failed
+**mpix_comm_idup %C %p %p: MPI_Comm_idup(comm=%C, newcomm=%p, request=%p)
 
 ## MPI-3 nonblocking collectives
-**mpix_ibarrier: MPIX_Ibarrier failed
-**mpix_ibarrier %C %p: MPIX_Ibarrier(comm=%C, request=%p)
-**mpix_ibcast: MPIX_Ibcast failed
-**mpix_ibcast %p %d %D %C %p: MPIX_Ibcast(buffer=%p, count=%d, datatype=%D, comm=%C, request=%p)
-**mpix_igather: MPIX_Igather failed
-**mpix_igather %p %d %D %p %d %D %d %C %p: MPIX_Igather(sendbuf=%p, sendcount=%d, sendtype=%D, recvbuf=%p, recvcount=%d, recvtype=%D, root=%d, comm=%C, request=%p)
-**mpix_igatherv: MPIX_Igatherv failed
-**mpix_igatherv %p %d %D %p %p %p %D %d %C %p: MPIX_Igatherv(sendbuf=%p, sendcount=%d, sendtype=%D, recvbuf=%p, recvcounts=%p, displs=%p, recvtype=%D, root=%d, comm=%C, request=%p)
-**mpix_iscatter: MPIX_Iscatter failed
-**mpix_iscatter %p %d %D %p %d %D %d %C %p: MPIX_Iscatter(sendbuf=%p, sendcount=%d, sendtype=%D, recvbuf=%p, recvcount=%d, recvtype=%D, root=%d, comm=%C, request=%p)
-**mpix_iscatterv: MPIX_Iscatterv failed
-**mpix_iscatterv %p %p %p %D %p %d %D %d %C %p: MPIX_Iscatterv(sendbuf=%p, sendcounts=%p, displs=%p, sendtype=%D, recvbuf=%p, recvcount=%d, recvtype=%D, root=%d, comm=%C, request=%p)
-**mpix_iallgather: MPIX_Iallgather failed
-**mpix_iallgather %p %d %D %p %d %D %C %p: MPIX_Iallgather(sendbuf=%p, sendcount=%d, sendtype=%D, recvbuf=%p, recvcount=%d, recvtype=%D, comm=%C, request=%p)
-**mpix_iallgatherv: MPIX_Iallgatherv failed
-**mpix_iallgatherv %p %d %D %p %p %p %D %C %p: MPIX_Iallgatherv(sendbuf=%p, sendcount=%d, sendtype=%D, recvbuf=%p, recvcounts=%p, displs=%p, recvtype=%D, comm=%C, request=%p)
-**mpix_ialltoall: MPIX_Ialltoall failed
-**mpix_ialltoall %p %d %D %p %d %D %C %p: MPIX_Ialltoall(sendbuf=%p, sendcount=%d, sendtype=%D, recvbuf=%p, recvcount=%d, recvtype=%D, comm=%C, request=%p)
-**mpix_ialltoallv: MPIX_Ialltoallv failed
-**mpix_ialltoallv %p %p %p %D %p %p %p %D %C %p: MPIX_Ialltoallv(sendbuf=%p, sendcounts=%p, sdispls=%p, sendtype=%D, recvbuf=%p, recvcounts=%p, rdispls=%p, recvtype=%D, comm=%C, request=%p)
-**mpix_ialltoallw: MPIX_Ialltoallw failed
-**mpix_ialltoallw %p %p %p %p %p %p %p %p %C %p: MPIX_Ialltoallw(sendbuf=%p, sendcounts=%p, sdispls=%p, sendtypes=%p, recvbuf=%p, recvcounts=%p, rdispls=%p, recvtypes=%p, comm=%C, request=%p)
-**mpix_ireduce: MPIX_Ireduce failed
-**mpix_ireduce %p %p %d %D %O %d %C %p: MPIX_Ireduce(sendbuf=%p, recvbuf=%p, count=%d, datatype=%D, op=%O, root=%d, comm=%C, request=%p)
-**mpix_iallreduce: MPIX_Iallreduce failed
-**mpix_iallreduce %p %p %d %D %O %C %p: MPIX_Iallreduce(sendbuf=%p, recvbuf=%p, count=%d, datatype=%D, op=%O, comm=%C, request=%p)
-**mpix_ireduce_scatter: MPIX_Ireduce_scatter failed
-**mpix_ireduce_scatter %p %p %p %D %O %C %p: MPIX_Ireduce_scatter(sendbuf=%p, recvbuf=%p, recvcounts=%p, datatype=%D, op=%O, comm=%C, request=%p)
-**mpix_ireduce_scatter_block: MPIX_Ireduce_scatter_block failed
-**mpix_ireduce_scatter_block %p %p %d %D %O %C %p: MPIX_Ireduce_scatter_block(sendbuf=%p, recvbuf=%p, recvcount=%d, datatype=%D, op=%O, comm=%C, request=%p)
-**mpix_iscan: MPIX_Iscan failed
-**mpix_iscan %p %p %d %D %O %C %p: MPIX_Iscan(sendbuf=%p, recvbuf=%p, count=%d, datatype=%D, op=%O, comm=%C, request=%p)
-**mpix_iexscan: MPIX_Iexscan failed
-**mpix_iexscan %p %p %d %D %O %C %p: MPIX_Iexscan(sendbuf=%p, recvbuf=%p, count=%d, datatype=%D, op=%O, comm=%C, request=%p)
+**mpix_ibarrier: MPI_Ibarrier failed
+**mpix_ibarrier %C %p: MPI_Ibarrier(comm=%C, request=%p)
+**mpix_ibcast: MPI_Ibcast failed
+**mpix_ibcast %p %d %D %C %p: MPI_Ibcast(buffer=%p, count=%d, datatype=%D, comm=%C, request=%p)
+**mpix_igather: MPI_Igather failed
+**mpix_igather %p %d %D %p %d %D %d %C %p: MPI_Igather(sendbuf=%p, sendcount=%d, sendtype=%D, recvbuf=%p, recvcount=%d, recvtype=%D, root=%d, comm=%C, request=%p)
+**mpix_igatherv: MPI_Igatherv failed
+**mpix_igatherv %p %d %D %p %p %p %D %d %C %p: MPI_Igatherv(sendbuf=%p, sendcount=%d, sendtype=%D, recvbuf=%p, recvcounts=%p, displs=%p, recvtype=%D, root=%d, comm=%C, request=%p)
+**mpix_iscatter: MPI_Iscatter failed
+**mpix_iscatter %p %d %D %p %d %D %d %C %p: MPI_Iscatter(sendbuf=%p, sendcount=%d, sendtype=%D, recvbuf=%p, recvcount=%d, recvtype=%D, root=%d, comm=%C, request=%p)
+**mpix_iscatterv: MPI_Iscatterv failed
+**mpix_iscatterv %p %p %p %D %p %d %D %d %C %p: MPI_Iscatterv(sendbuf=%p, sendcounts=%p, displs=%p, sendtype=%D, recvbuf=%p, recvcount=%d, recvtype=%D, root=%d, comm=%C, request=%p)
+**mpix_iallgather: MPI_Iallgather failed
+**mpix_iallgather %p %d %D %p %d %D %C %p: MPI_Iallgather(sendbuf=%p, sendcount=%d, sendtype=%D, recvbuf=%p, recvcount=%d, recvtype=%D, comm=%C, request=%p)
+**mpix_iallgatherv: MPI_Iallgatherv failed
+**mpix_iallgatherv %p %d %D %p %p %p %D %C %p: MPI_Iallgatherv(sendbuf=%p, sendcount=%d, sendtype=%D, recvbuf=%p, recvcounts=%p, displs=%p, recvtype=%D, comm=%C, request=%p)
+**mpix_ialltoall: MPI_Ialltoall failed
+**mpix_ialltoall %p %d %D %p %d %D %C %p: MPI_Ialltoall(sendbuf=%p, sendcount=%d, sendtype=%D, recvbuf=%p, recvcount=%d, recvtype=%D, comm=%C, request=%p)
+**mpix_ialltoallv: MPI_Ialltoallv failed
+**mpix_ialltoallv %p %p %p %D %p %p %p %D %C %p: MPI_Ialltoallv(sendbuf=%p, sendcounts=%p, sdispls=%p, sendtype=%D, recvbuf=%p, recvcounts=%p, rdispls=%p, recvtype=%D, comm=%C, request=%p)
+**mpix_ialltoallw: MPI_Ialltoallw failed
+**mpix_ialltoallw %p %p %p %p %p %p %p %p %C %p: MPI_Ialltoallw(sendbuf=%p, sendcounts=%p, sdispls=%p, sendtypes=%p, recvbuf=%p, recvcounts=%p, rdispls=%p, recvtypes=%p, comm=%C, request=%p)
+**mpix_ireduce: MPI_Ireduce failed
+**mpix_ireduce %p %p %d %D %O %d %C %p: MPI_Ireduce(sendbuf=%p, recvbuf=%p, count=%d, datatype=%D, op=%O, root=%d, comm=%C, request=%p)
+**mpix_iallreduce: MPI_Iallreduce failed
+**mpix_iallreduce %p %p %d %D %O %C %p: MPI_Iallreduce(sendbuf=%p, recvbuf=%p, count=%d, datatype=%D, op=%O, comm=%C, request=%p)
+**mpix_ireduce_scatter: MPI_Ireduce_scatter failed
+**mpix_ireduce_scatter %p %p %p %D %O %C %p: MPI_Ireduce_scatter(sendbuf=%p, recvbuf=%p, recvcounts=%p, datatype=%D, op=%O, comm=%C, request=%p)
+**mpix_ireduce_scatter_block: MPI_Ireduce_scatter_block failed
+**mpix_ireduce_scatter_block %p %p %d %D %O %C %p: MPI_Ireduce_scatter_block(sendbuf=%p, recvbuf=%p, recvcount=%d, datatype=%D, op=%O, comm=%C, request=%p)
+**mpix_iscan: MPI_Iscan failed
+**mpix_iscan %p %p %d %D %O %C %p: MPI_Iscan(sendbuf=%p, recvbuf=%p, count=%d, datatype=%D, op=%O, comm=%C, request=%p)
+**mpix_iexscan: MPI_Iexscan failed
+**mpix_iexscan %p %p %d %D %O %C %p: MPI_Iexscan(sendbuf=%p, recvbuf=%p, count=%d, datatype=%D, op=%O, comm=%C, request=%p)
 
 ## MPI-3 neighborhood collectives
-**mpix_ineighbor_allgather: MPIX_Ineighbor_allgather failed
-**mpix_ineighbor_allgather %p %d %D %p %d %D %C %p: MPIX_Ineighbor_allgather(sendbuf=%p, sendcount=%d, sendtype=%D, recvbuf=%p, recvcount=%d, recvtype=%D, comm=%C, request=%p)
-**mpix_ineighbor_allgatherv: MPIX_Ineighbor_allgatherv failed
-**mpix_ineighbor_allgatherv %p %d %D %p %p %p %D %C %p: MPIX_Ineighbor_allgatherv(sendbuf=%p, sendcount=%d, sendtype=%D, recvbuf=%p, recvcounts=%p, displs=%p, recvtype=%D, comm=%C, request=%p)
-**mpix_ineighbor_alltoall: MPIX_Ineighbor_alltoall failed
-**mpix_ineighbor_alltoall %p %d %D %p %d %D %C %p: MPIX_Ineighbor_alltoall(sendbuf=%p, sendcount=%d, sendtype=%D, recvbuf=%p, recvcount=%d, recvtype=%D, comm=%C, request=%p)
-**mpix_ineighbor_alltoallv: MPIX_Ineighbor_alltoallv failed
-**mpix_ineighbor_alltoallv %p %p %p %D %p %p %p %D %C %p: MPIX_Ineighbor_alltoallv(sendbuf=%p, sendcounts=%p, sdispls=%p, sendtype=%D, recvbuf=%p, recvcounts=%p, rdispls=%p, recvtype=%D, comm=%C, request=%p)
-**mpix_ineighbor_alltoallw: MPIX_Ineighbor_alltoallw failed
-**mpix_ineighbor_alltoallw %p %p %p %p %p %p %p %p %C %p: MPIX_Ineighbor_alltoallw(sendbuf=%p, sendcounts=%p, sdispls=%p, sendtypes=%p, recvbuf=%p, recvcounts=%p, rdispls=%p, recvtypes=%p, comm=%C, request=%p)
-**mpix_neighbor_allgather: MPIX_Neighbor_allgather failed
-**mpix_neighbor_allgather %p %d %D %p %d %D %C: MPIX_Neighbor_allgather(sendbuf=%p, sendcount=%d, sendtype=%D, recvbuf=%p, recvcount=%d, recvtype=%D, comm=%C)
-**mpix_neighbor_allgatherv: MPIX_Neighbor_allgatherv failed
-**mpix_neighbor_allgatherv %p %d %D %p %p %p %D %C: MPIX_Neighbor_allgatherv(sendbuf=%p, sendcount=%d, sendtype=%D, recvbuf=%p, recvcounts=%p, displs=%p, recvtype=%D, comm=%C)
-**mpix_neighbor_alltoall: MPIX_Neighbor_alltoall failed
-**mpix_neighbor_alltoall %p %d %D %p %d %D %C: MPIX_Neighbor_alltoall(sendbuf=%p, sendcount=%d, sendtype=%D, recvbuf=%p, recvcount=%d, recvtype=%D, comm=%C)
-**mpix_neighbor_alltoallv: MPIX_Neighbor_alltoallv failed
-**mpix_neighbor_alltoallv %p %p %p %D %p %p %p %D %C: MPIX_Neighbor_alltoallv(sendbuf=%p, sendcounts=%p, sdispls=%p, sendtype=%D, recvbuf=%p, recvcounts=%p, rdispls=%p, recvtype=%D, comm=%C)
-**mpix_neighbor_alltoallw: MPIX_Neighbor_alltoallw failed
-**mpix_neighbor_alltoallw %p %p %p %p %p %p %p %p %C: MPIX_Neighbor_alltoallw(sendbuf=%p, sendcounts=%p, sdispls=%p, sendtypes=%p, recvbuf=%p, recvcounts=%p, rdispls=%p, recvtypes=%p, comm=%C)
+**mpix_ineighbor_allgather: MPI_Ineighbor_allgather failed
+**mpix_ineighbor_allgather %p %d %D %p %d %D %C %p: MPI_Ineighbor_allgather(sendbuf=%p, sendcount=%d, sendtype=%D, recvbuf=%p, recvcount=%d, recvtype=%D, comm=%C, request=%p)
+**mpix_ineighbor_allgatherv: MPI_Ineighbor_allgatherv failed
+**mpix_ineighbor_allgatherv %p %d %D %p %p %p %D %C %p: MPI_Ineighbor_allgatherv(sendbuf=%p, sendcount=%d, sendtype=%D, recvbuf=%p, recvcounts=%p, displs=%p, recvtype=%D, comm=%C, request=%p)
+**mpix_ineighbor_alltoall: MPI_Ineighbor_alltoall failed
+**mpix_ineighbor_alltoall %p %d %D %p %d %D %C %p: MPI_Ineighbor_alltoall(sendbuf=%p, sendcount=%d, sendtype=%D, recvbuf=%p, recvcount=%d, recvtype=%D, comm=%C, request=%p)
+**mpix_ineighbor_alltoallv: MPI_Ineighbor_alltoallv failed
+**mpix_ineighbor_alltoallv %p %p %p %D %p %p %p %D %C %p: MPI_Ineighbor_alltoallv(sendbuf=%p, sendcounts=%p, sdispls=%p, sendtype=%D, recvbuf=%p, recvcounts=%p, rdispls=%p, recvtype=%D, comm=%C, request=%p)
+**mpix_ineighbor_alltoallw: MPI_Ineighbor_alltoallw failed
+**mpix_ineighbor_alltoallw %p %p %p %p %p %p %p %p %C %p: MPI_Ineighbor_alltoallw(sendbuf=%p, sendcounts=%p, sdispls=%p, sendtypes=%p, recvbuf=%p, recvcounts=%p, rdispls=%p, recvtypes=%p, comm=%C, request=%p)
+**mpix_neighbor_allgather: MPI_Neighbor_allgather failed
+**mpix_neighbor_allgather %p %d %D %p %d %D %C: MPI_Neighbor_allgather(sendbuf=%p, sendcount=%d, sendtype=%D, recvbuf=%p, recvcount=%d, recvtype=%D, comm=%C)
+**mpix_neighbor_allgatherv: MPI_Neighbor_allgatherv failed
+**mpix_neighbor_allgatherv %p %d %D %p %p %p %D %C: MPI_Neighbor_allgatherv(sendbuf=%p, sendcount=%d, sendtype=%D, recvbuf=%p, recvcounts=%p, displs=%p, recvtype=%D, comm=%C)
+**mpix_neighbor_alltoall: MPI_Neighbor_alltoall failed
+**mpix_neighbor_alltoall %p %d %D %p %d %D %C: MPI_Neighbor_alltoall(sendbuf=%p, sendcount=%d, sendtype=%D, recvbuf=%p, recvcount=%d, recvtype=%D, comm=%C)
+**mpix_neighbor_alltoallv: MPI_Neighbor_alltoallv failed
+**mpix_neighbor_alltoallv %p %p %p %D %p %p %p %D %C: MPI_Neighbor_alltoallv(sendbuf=%p, sendcounts=%p, sdispls=%p, sendtype=%D, recvbuf=%p, recvcounts=%p, rdispls=%p, recvtype=%D, comm=%C)
+**mpix_neighbor_alltoallw: MPI_Neighbor_alltoallw failed
+**mpix_neighbor_alltoallw %p %p %p %p %p %p %p %p %C: MPI_Neighbor_alltoallw(sendbuf=%p, sendcounts=%p, sdispls=%p, sendtypes=%p, recvbuf=%p, recvcounts=%p, rdispls=%p, recvtypes=%p, comm=%C)
 
 # SCIF netmod functions
 

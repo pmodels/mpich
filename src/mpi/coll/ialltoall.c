@@ -7,21 +7,21 @@
 #include "mpiimpl.h"
 #include "collutil.h"
 
-/* -- Begin Profiling Symbol Block for routine MPIX_Ialltoall */
+/* -- Begin Profiling Symbol Block for routine MPI_Ialltoall */
 #if defined(HAVE_PRAGMA_WEAK)
-#pragma weak MPIX_Ialltoall = PMPIX_Ialltoall
+#pragma weak MPI_Ialltoall = PMPI_Ialltoall
 #elif defined(HAVE_PRAGMA_HP_SEC_DEF)
-#pragma _HP_SECONDARY_DEF PMPIX_Ialltoall  MPIX_Ialltoall
+#pragma _HP_SECONDARY_DEF PMPI_Ialltoall  MPI_Ialltoall
 #elif defined(HAVE_PRAGMA_CRI_DUP)
-#pragma _CRI duplicate MPIX_Ialltoall as PMPIX_Ialltoall
+#pragma _CRI duplicate MPI_Ialltoall as PMPI_Ialltoall
 #endif
 /* -- End Profiling Symbol Block */
 
 /* Define MPICH_MPI_FROM_PMPI if weak symbols are not supported to build
    the MPI routines */
 #ifndef MPICH_MPI_FROM_PMPI
-#undef MPIX_Ialltoall
-#define MPIX_Ialltoall PMPIX_Ialltoall
+#undef MPI_Ialltoall
+#define MPI_Ialltoall PMPI_Ialltoall
 
 /* any non-MPI functions go here, especially non-static ones */
 
@@ -548,11 +548,11 @@ fn_fail:
 #endif /* MPICH_MPI_FROM_PMPI */
 
 #undef FUNCNAME
-#define FUNCNAME MPIX_Ialltoall
+#define FUNCNAME MPI_Ialltoall
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 /*@
-MPIX_Ialltoall - XXX description here
+MPI_Ialltoall - XXX description here
 
 Input Parameters:
 + sendbuf - starting address of the send buffer (choice)
@@ -572,14 +572,14 @@ Output Parameters:
 
 .N Errors
 @*/
-int MPIX_Ialltoall(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype, MPI_Comm comm, MPI_Request *request)
+int MPI_Ialltoall(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype, MPI_Comm comm, MPI_Request *request)
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_Comm *comm_ptr = NULL;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPIX_IALLTOALL);
+    MPID_MPI_STATE_DECL(MPID_STATE_MPI_IALLTOALL);
 
     MPIU_THREAD_CS_ENTER(ALLFUNC,);
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPIX_IALLTOALL);
+    MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_IALLTOALL);
 
     /* Validate parameters, especially handles needing to be converted */
 #   ifdef HAVE_ERROR_CHECKING
@@ -641,7 +641,7 @@ int MPIX_Ialltoall(const void *sendbuf, int sendcount, MPI_Datatype sendtype, vo
     /* ... end of body of routine ... */
 
 fn_exit:
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPIX_IALLTOALL);
+    MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_IALLTOALL);
     MPIU_THREAD_CS_EXIT(ALLFUNC,);
     return mpi_errno;
 

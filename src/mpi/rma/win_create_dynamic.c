@@ -8,29 +8,29 @@
 #include "mpiimpl.h"
 #include "rma.h"
 
-/* -- Begin Profiling Symbol Block for routine MPIX_Win_create_dynamic */
+/* -- Begin Profiling Symbol Block for routine MPI_Win_create_dynamic */
 #if defined(HAVE_PRAGMA_WEAK)
-#pragma weak MPIX_Win_create_dynamic = PMPIX_Win_create_dynamic
+#pragma weak MPI_Win_create_dynamic = PMPI_Win_create_dynamic
 #elif defined(HAVE_PRAGMA_HP_SEC_DEF)
-#pragma _HP_SECONDARY_DEF PMPIX_Win_create_dynamic  MPIX_Win_create_dynamic
+#pragma _HP_SECONDARY_DEF PMPI_Win_create_dynamic  MPI_Win_create_dynamic
 #elif defined(HAVE_PRAGMA_CRI_DUP)
-#pragma _CRI duplicate MPIX_Win_create_dynamic as PMPIX_Win_create_dynamic
+#pragma _CRI duplicate MPI_Win_create_dynamic as PMPI_Win_create_dynamic
 #endif
 /* -- End Profiling Symbol Block */
 
 /* Define MPICH_MPI_FROM_PMPI if weak symbols are not supported to build
    the MPI routines */
 #ifndef MPICH_MPI_FROM_PMPI
-#undef MPIX_Win_create_dynamic
-#define MPIX_Win_create_dynamic PMPIX_Win_create_dynamic
+#undef MPI_Win_create_dynamic
+#define MPI_Win_create_dynamic PMPI_Win_create_dynamic
 
 #endif
 
 #undef FUNCNAME
-#define FUNCNAME MPIX_Win_create_dynamic
+#define FUNCNAME MPI_Win_create_dynamic
 
 /*@
-   MPIX_Win_create_dynamic - Create an MPI Window object for one-sided communication
+   MPI_Win_create_dynamic - Create an MPI Window object for one-sided communication
 
    Input Parameters:
 + info - info argument (handle) 
@@ -50,19 +50,19 @@
 .N MPI_ERR_OTHER
 .N MPI_ERR_SIZE
 @*/
-int MPIX_Win_create_dynamic(MPI_Info info, MPI_Comm comm, MPI_Win *win)
+int MPI_Win_create_dynamic(MPI_Info info, MPI_Comm comm, MPI_Win *win)
 {
-    static const char FCNAME[] = "MPIX_Win_create_dynamic";
+    static const char FCNAME[] = "MPI_Win_create_dynamic";
     int mpi_errno = MPI_SUCCESS;
     MPID_Win *win_ptr = NULL;
     MPID_Comm *comm_ptr = NULL;
     MPID_Info *info_ptr = NULL;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPIX_WIN_CREATE_DYNAMIC);
+    MPID_MPI_STATE_DECL(MPID_STATE_MPI_WIN_CREATE_DYNAMIC);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
     MPIU_THREAD_CS_ENTER(ALLFUNC,);
-    MPID_MPI_RMA_FUNC_ENTER(MPID_STATE_MPIX_WIN_CREATE_DYNAMIC);
+    MPID_MPI_RMA_FUNC_ENTER(MPID_STATE_MPI_WIN_CREATE_DYNAMIC);
 
     /* Validate parameters, especially handles needing to be converted */
 #   ifdef HAVE_ERROR_CHECKING
@@ -110,7 +110,7 @@ int MPIX_Win_create_dynamic(MPI_Info info, MPI_Comm comm, MPI_Win *win)
     /* ... end of body of routine ... */
 
   fn_exit:
-    MPID_MPI_RMA_FUNC_EXIT(MPID_STATE_MPIX_WIN_CREATE_DYNAMIC);
+    MPID_MPI_RMA_FUNC_EXIT(MPID_STATE_MPI_WIN_CREATE_DYNAMIC);
     MPIU_THREAD_CS_EXIT(ALLFUNC,);
     return mpi_errno;
 

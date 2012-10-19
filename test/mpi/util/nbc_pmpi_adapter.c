@@ -5,7 +5,7 @@
  */
 
 /* A PMPI-based "adapter" that intercepts the traditional blocking collective
- * operations and implements them via PMPIX_Icollective/PMPI_Wait.  This permits
+ * operations and implements them via PMPI_Icollective/PMPI_Wait.  This permits
  * the use of a wide variety of MPI collective test suites and benchmarking
  * programs with the newer nonblocking collectives.
  *
@@ -22,7 +22,7 @@ int MPI_Barrier(MPI_Comm comm)
     int mpi_errno;
     MPI_Request req = MPI_REQUEST_NULL;
 
-    mpi_errno = PMPIX_Ibarrier(comm, &req);
+    mpi_errno = PMPI_Ibarrier(comm, &req);
     if (mpi_errno != MPI_SUCCESS) return mpi_errno;
     mpi_errno = PMPI_Wait(&req, MPI_STATUS_IGNORE);
     return mpi_errno;
@@ -33,7 +33,7 @@ int MPI_Bcast(void *buffer, int count, MPI_Datatype datatype, int root, MPI_Comm
     int mpi_errno;
     MPI_Request req = MPI_REQUEST_NULL;
 
-    mpi_errno = PMPIX_Ibcast(buffer, count, datatype, root, comm, &req);
+    mpi_errno = PMPI_Ibcast(buffer, count, datatype, root, comm, &req);
     if (mpi_errno != MPI_SUCCESS) return mpi_errno;
     mpi_errno = PMPI_Wait(&req, MPI_STATUS_IGNORE);
     return mpi_errno;
@@ -44,7 +44,7 @@ int MPI_Gather(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *
     int mpi_errno;
     MPI_Request req = MPI_REQUEST_NULL;
 
-    mpi_errno = PMPIX_Igather(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, root, comm, &req);
+    mpi_errno = PMPI_Igather(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, root, comm, &req);
     if (mpi_errno != MPI_SUCCESS) return mpi_errno;
     mpi_errno = PMPI_Wait(&req, MPI_STATUS_IGNORE);
     return mpi_errno;
@@ -55,7 +55,7 @@ int MPI_Gatherv(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void 
     int mpi_errno;
     MPI_Request req = MPI_REQUEST_NULL;
 
-    mpi_errno = PMPIX_Igatherv(sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, recvtype, root, comm, &req);
+    mpi_errno = PMPI_Igatherv(sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, recvtype, root, comm, &req);
     if (mpi_errno != MPI_SUCCESS) return mpi_errno;
     mpi_errno = PMPI_Wait(&req, MPI_STATUS_IGNORE);
     return mpi_errno;
@@ -66,7 +66,7 @@ int MPI_Scatter(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void 
     int mpi_errno;
     MPI_Request req = MPI_REQUEST_NULL;
 
-    mpi_errno = PMPIX_Iscatter(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, root, comm, &req);
+    mpi_errno = PMPI_Iscatter(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, root, comm, &req);
     if (mpi_errno != MPI_SUCCESS) return mpi_errno;
     mpi_errno = PMPI_Wait(&req, MPI_STATUS_IGNORE);
     return mpi_errno;
@@ -77,7 +77,7 @@ int MPI_Scatterv(const void *sendbuf, const int *sendcounts, const int *displs, 
     int mpi_errno;
     MPI_Request req = MPI_REQUEST_NULL;
 
-    mpi_errno = PMPIX_Iscatterv(sendbuf, sendcounts, displs, sendtype, recvbuf, recvcount, recvtype, root, comm, &req);
+    mpi_errno = PMPI_Iscatterv(sendbuf, sendcounts, displs, sendtype, recvbuf, recvcount, recvtype, root, comm, &req);
     if (mpi_errno != MPI_SUCCESS) return mpi_errno;
     mpi_errno = PMPI_Wait(&req, MPI_STATUS_IGNORE);
     return mpi_errno;
@@ -88,7 +88,7 @@ int MPI_Allgather(const void *sendbuf, int sendcount, MPI_Datatype sendtype, voi
     int mpi_errno;
     MPI_Request req = MPI_REQUEST_NULL;
 
-    mpi_errno = PMPIX_Iallgather(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm, &req);
+    mpi_errno = PMPI_Iallgather(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm, &req);
     if (mpi_errno != MPI_SUCCESS) return mpi_errno;
     mpi_errno = PMPI_Wait(&req, MPI_STATUS_IGNORE);
     return mpi_errno;
@@ -99,7 +99,7 @@ int MPI_Allgatherv(const void *sendbuf, int sendcount, MPI_Datatype sendtype, vo
     int mpi_errno;
     MPI_Request req = MPI_REQUEST_NULL;
 
-    mpi_errno = PMPIX_Iallgatherv(sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, recvtype, comm, &req);
+    mpi_errno = PMPI_Iallgatherv(sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, recvtype, comm, &req);
     if (mpi_errno != MPI_SUCCESS) return mpi_errno;
     mpi_errno = PMPI_Wait(&req, MPI_STATUS_IGNORE);
     return mpi_errno;
@@ -110,7 +110,7 @@ int MPI_Alltoall(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void
     int mpi_errno;
     MPI_Request req = MPI_REQUEST_NULL;
 
-    mpi_errno = PMPIX_Ialltoall(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm, &req);
+    mpi_errno = PMPI_Ialltoall(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, comm, &req);
     if (mpi_errno != MPI_SUCCESS) return mpi_errno;
     mpi_errno = PMPI_Wait(&req, MPI_STATUS_IGNORE);
     return mpi_errno;
@@ -121,7 +121,7 @@ int MPI_Alltoallv(const void *sendbuf, const int *sendcounts, const int *sdispls
     int mpi_errno;
     MPI_Request req = MPI_REQUEST_NULL;
 
-    mpi_errno = PMPIX_Ialltoallv(sendbuf, sendcounts, sdispls, sendtype, recvbuf, recvcounts, rdispls, recvtype, comm, &req);
+    mpi_errno = PMPI_Ialltoallv(sendbuf, sendcounts, sdispls, sendtype, recvbuf, recvcounts, rdispls, recvtype, comm, &req);
     if (mpi_errno != MPI_SUCCESS) return mpi_errno;
     mpi_errno = PMPI_Wait(&req, MPI_STATUS_IGNORE);
     return mpi_errno;
@@ -132,7 +132,7 @@ int MPI_Alltoallw(const void *sendbuf, const int *sendcounts, const int *sdispls
     int mpi_errno;
     MPI_Request req = MPI_REQUEST_NULL;
 
-    mpi_errno = PMPIX_Ialltoallw(sendbuf, sendcounts, sdispls, sendtypes, recvbuf, recvcounts, rdispls, recvtypes, comm, &req);
+    mpi_errno = PMPI_Ialltoallw(sendbuf, sendcounts, sdispls, sendtypes, recvbuf, recvcounts, rdispls, recvtypes, comm, &req);
     if (mpi_errno != MPI_SUCCESS) return mpi_errno;
     mpi_errno = PMPI_Wait(&req, MPI_STATUS_IGNORE);
     return mpi_errno;
@@ -143,7 +143,7 @@ int MPI_Reduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datat
     int mpi_errno;
     MPI_Request req = MPI_REQUEST_NULL;
 
-    mpi_errno = PMPIX_Ireduce(sendbuf, recvbuf, count, datatype, op, root, comm, &req);
+    mpi_errno = PMPI_Ireduce(sendbuf, recvbuf, count, datatype, op, root, comm, &req);
     if (mpi_errno != MPI_SUCCESS) return mpi_errno;
     mpi_errno = PMPI_Wait(&req, MPI_STATUS_IGNORE);
     return mpi_errno;
@@ -154,7 +154,7 @@ int MPI_Allreduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype da
     int mpi_errno;
     MPI_Request req = MPI_REQUEST_NULL;
 
-    mpi_errno = PMPIX_Iallreduce(sendbuf, recvbuf, count, datatype, op, comm, &req);
+    mpi_errno = PMPI_Iallreduce(sendbuf, recvbuf, count, datatype, op, comm, &req);
     if (mpi_errno != MPI_SUCCESS) return mpi_errno;
     mpi_errno = PMPI_Wait(&req, MPI_STATUS_IGNORE);
     return mpi_errno;
@@ -165,7 +165,7 @@ int MPI_Reduce_scatter(const void *sendbuf, void *recvbuf, const int *recvcounts
     int mpi_errno;
     MPI_Request req = MPI_REQUEST_NULL;
 
-    mpi_errno = PMPIX_Ireduce_scatter(sendbuf, recvbuf, recvcounts, datatype, op, comm, &req);
+    mpi_errno = PMPI_Ireduce_scatter(sendbuf, recvbuf, recvcounts, datatype, op, comm, &req);
     if (mpi_errno != MPI_SUCCESS) return mpi_errno;
     mpi_errno = PMPI_Wait(&req, MPI_STATUS_IGNORE);
     return mpi_errno;
@@ -176,7 +176,7 @@ int MPI_Reduce_scatter_block(const void *sendbuf, void *recvbuf, int recvcount, 
     int mpi_errno;
     MPI_Request req = MPI_REQUEST_NULL;
 
-    mpi_errno = PMPIX_Ireduce_scatter_block(sendbuf, recvbuf, recvcount, datatype, op, comm, &req);
+    mpi_errno = PMPI_Ireduce_scatter_block(sendbuf, recvbuf, recvcount, datatype, op, comm, &req);
     if (mpi_errno != MPI_SUCCESS) return mpi_errno;
     mpi_errno = PMPI_Wait(&req, MPI_STATUS_IGNORE);
     return mpi_errno;
@@ -187,7 +187,7 @@ int MPI_Scan(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatyp
     int mpi_errno;
     MPI_Request req = MPI_REQUEST_NULL;
 
-    mpi_errno = PMPIX_Iscan(sendbuf, recvbuf, count, datatype, op, comm, &req);
+    mpi_errno = PMPI_Iscan(sendbuf, recvbuf, count, datatype, op, comm, &req);
     if (mpi_errno != MPI_SUCCESS) return mpi_errno;
     mpi_errno = PMPI_Wait(&req, MPI_STATUS_IGNORE);
     return mpi_errno;
@@ -198,7 +198,7 @@ int MPI_Exscan(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datat
     int mpi_errno;
     MPI_Request req = MPI_REQUEST_NULL;
 
-    mpi_errno = PMPIX_Iexscan(sendbuf, recvbuf, count, datatype, op, comm, &req);
+    mpi_errno = PMPI_Iexscan(sendbuf, recvbuf, count, datatype, op, comm, &req);
     if (mpi_errno != MPI_SUCCESS) return mpi_errno;
     mpi_errno = PMPI_Wait(&req, MPI_STATUS_IGNORE);
     return mpi_errno;

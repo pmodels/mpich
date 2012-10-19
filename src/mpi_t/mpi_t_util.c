@@ -16,7 +16,7 @@
 static UT_array *all_pvars = NULL;
 
 /* Called by lower-level initialization code to add pvars to the global list.
- * Will cause the value returned by MPIX_T_pvar_get_num to be incremented and
+ * Will cause the value returned by MPI_T_pvar_get_num to be incremented and
  * sets up that new index to work with get_info, handle_alloc, etc. */
 int MPIR_T_pvar_add(const char *name,
                     enum MPIR_T_verbosity_t verbosity,

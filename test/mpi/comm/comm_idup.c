@@ -50,7 +50,7 @@ int main(int argc, char **argv)
 #ifdef TEST_IDUP
 
     /* test plan: make rank 0 wait in a blocking recv until all other processes
-     * have posted their MPIX_Comm_idup ops, then post last.  Should ensure that
+     * have posted their MPI_Comm_idup ops, then post last.  Should ensure that
      * idup doesn't block on the non-zero ranks, otherwise we'll get a deadlock.
      */
 
@@ -60,11 +60,11 @@ int main(int argc, char **argv)
             buf[1] = 0x89abcdef;
             MPI_Recv(buf, 2, MPI_INT, i, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
         }
-        MPIX_Comm_idup(MPI_COMM_WORLD, &newcomm, &rreq);
+        MPI_Comm_idup(MPI_COMM_WORLD, &newcomm, &rreq);
         MPI_Wait(&rreq, MPI_STATUS_IGNORE);
     }
     else {
-        MPIX_Comm_idup(MPI_COMM_WORLD, &newcomm, &rreq);
+        MPI_Comm_idup(MPI_COMM_WORLD, &newcomm, &rreq);
         buf[0] = rank;
         buf[1] = size + rank;
         MPI_Ssend(buf, 2, MPI_INT, 0, 0, MPI_COMM_WORLD);
@@ -96,11 +96,11 @@ int main(int argc, char **argv)
             buf[1] = 0x89abcdef;
             MPI_Recv(buf, 2, MPI_INT, i, 0, ic, MPI_STATUS_IGNORE);
         }
-        MPIX_Comm_idup(ic, &newcomm, &rreq);
+        MPI_Comm_idup(ic, &newcomm, &rreq);
         MPI_Wait(&rreq, MPI_STATUS_IGNORE);
     }
     else {
-        MPIX_Comm_idup(ic, &newcomm, &rreq);
+        MPI_Comm_idup(ic, &newcomm, &rreq);
         buf[0] = lrank;
         buf[1] = lsize + lrank;
         MPI_Ssend(buf, 2, MPI_INT, 0, 0, ic);

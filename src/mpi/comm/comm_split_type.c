@@ -8,21 +8,21 @@
 #include "mpiimpl.h"
 #include "mpicomm.h"
 
-/* -- Begin Profiling Symbol Block for routine MPIX_Comm_split_type */
+/* -- Begin Profiling Symbol Block for routine MPI_Comm_split_type */
 #if defined(HAVE_PRAGMA_WEAK)
-#pragma weak MPIX_Comm_split_type = PMPIX_Comm_split_type
+#pragma weak MPI_Comm_split_type = PMPI_Comm_split_type
 #elif defined(HAVE_PRAGMA_HP_SEC_DEF)
-#pragma _HP_SECONDARY_DEF PMPIX_Comm_split_type  MPIX_Comm_split_type
+#pragma _HP_SECONDARY_DEF PMPI_Comm_split_type  MPI_Comm_split_type
 #elif defined(HAVE_PRAGMA_CRI_DUP)
-#pragma _CRI duplicate MPIX_Comm_split_type as PMPIX_Comm_split_type
+#pragma _CRI duplicate MPI_Comm_split_type as PMPI_Comm_split_type
 #endif
 /* -- End Profiling Symbol Block */
 
 /* Define MPICH_MPI_FROM_PMPI if weak symbols are not supported to build
    the MPI routines */
 #ifndef MPICH_MPI_FROM_PMPI
-#undef MPIX_Comm_split_type
-#define MPIX_Comm_split_type PMPIX_Comm_split_type
+#undef MPI_Comm_split_type
+#define MPI_Comm_split_type PMPI_Comm_split_type
 #endif
 
 #undef FUNCNAME
@@ -34,7 +34,7 @@ int MPIR_Comm_split_type_impl(MPID_Comm * comm_ptr, int split_type, int key,
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPIU_Assert(split_type == MPIX_COMM_TYPE_SHARED);
+    MPIU_Assert(split_type == MPI_COMM_TYPE_SHARED);
 
     if (MPID_Comm_fns == NULL || MPID_Comm_fns->split_type == NULL) {
         /* Default implementation is to just return MPI_COMM_SELF */
@@ -55,12 +55,12 @@ int MPIR_Comm_split_type_impl(MPID_Comm * comm_ptr, int split_type, int key,
 
 
 #undef FUNCNAME
-#define FUNCNAME MPIX_Comm_split_type
+#define FUNCNAME MPI_Comm_split_type
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 /*@
 
-MPIX_Comm_split_type - Creates new communicators based on split types and keys
+MPI_Comm_split_type - Creates new communicators based on split types and keys
 
 Input Parameters:
 + comm - communicator (handle)
@@ -85,7 +85,7 @@ Notes:
 
 .seealso: MPI_Comm_free
 @*/
-int MPIX_Comm_split_type(MPI_Comm comm, int split_type, int key, MPI_Info info,
+int MPI_Comm_split_type(MPI_Comm comm, int split_type, int key, MPI_Info info,
                          MPI_Comm * newcomm)
 {
     int mpi_errno = MPI_SUCCESS;

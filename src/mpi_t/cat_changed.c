@@ -6,21 +6,21 @@
 
 #include "mpiimpl.h"
 
-/* -- Begin Profiling Symbol Block for routine MPIX_T_category_changed */
+/* -- Begin Profiling Symbol Block for routine MPI_T_category_changed */
 #if defined(HAVE_PRAGMA_WEAK)
-#pragma weak MPIX_T_category_changed = PMPIX_T_category_changed
+#pragma weak MPI_T_category_changed = PMPI_T_category_changed
 #elif defined(HAVE_PRAGMA_HP_SEC_DEF)
-#pragma _HP_SECONDARY_DEF PMPIX_T_category_changed  MPIX_T_category_changed
+#pragma _HP_SECONDARY_DEF PMPI_T_category_changed  MPI_T_category_changed
 #elif defined(HAVE_PRAGMA_CRI_DUP)
-#pragma _CRI duplicate MPIX_T_category_changed as PMPIX_T_category_changed
+#pragma _CRI duplicate MPI_T_category_changed as PMPI_T_category_changed
 #endif
 /* -- End Profiling Symbol Block */
 
 /* Define MPICH_MPI_FROM_PMPI if weak symbols are not supported to build
    the MPI routines */
 #ifndef MPICH_MPI_FROM_PMPI
-#undef MPIX_T_category_changed
-#define MPIX_T_category_changed PMPIX_T_category_changed
+#undef MPI_T_category_changed
+#define MPI_T_category_changed PMPI_T_category_changed
 
 /* any non-MPI functions go here, especially non-static ones */
 
@@ -43,11 +43,11 @@ fn_fail:
 #endif /* MPICH_MPI_FROM_PMPI */
 
 #undef FUNCNAME
-#define FUNCNAME MPIX_T_category_changed
+#define FUNCNAME MPI_T_category_changed
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 /*@
-MPIX_T_category_changed - XXX description here
+MPI_T_category_changed - XXX description here
 
 Output Parameters:
 . stamp - a virtual time stamp to indicate the last change to the categories (integer)
@@ -58,13 +58,13 @@ Output Parameters:
 
 .N Errors
 @*/
-int MPIX_T_category_changed(int *stamp)
+int MPI_T_category_changed(int *stamp)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPIX_T_CATEGORY_CHANGED);
+    MPID_MPI_STATE_DECL(MPID_STATE_MPI_T_CATEGORY_CHANGED);
 
     MPIU_THREAD_CS_ENTER(ALLFUNC,);
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPIX_T_CATEGORY_CHANGED);
+    MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_T_CATEGORY_CHANGED);
 
     /* Validate parameters, especially handles needing to be converted */
 #   ifdef HAVE_ERROR_CHECKING
@@ -101,7 +101,7 @@ int MPIX_T_category_changed(int *stamp)
     /* ... end of body of routine ... */
 
 fn_exit:
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPIX_T_CATEGORY_CHANGED);
+    MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_T_CATEGORY_CHANGED);
     MPIU_THREAD_CS_EXIT(ALLFUNC,);
     return mpi_errno;
 

@@ -6,21 +6,21 @@
 
 #include "mpiimpl.h"
 
-/* -- Begin Profiling Symbol Block for routine MPIX_Iscatter */
+/* -- Begin Profiling Symbol Block for routine MPI_Iscatter */
 #if defined(HAVE_PRAGMA_WEAK)
-#pragma weak MPIX_Iscatter = PMPIX_Iscatter
+#pragma weak MPI_Iscatter = PMPI_Iscatter
 #elif defined(HAVE_PRAGMA_HP_SEC_DEF)
-#pragma _HP_SECONDARY_DEF PMPIX_Iscatter  MPIX_Iscatter
+#pragma _HP_SECONDARY_DEF PMPI_Iscatter  MPI_Iscatter
 #elif defined(HAVE_PRAGMA_CRI_DUP)
-#pragma _CRI duplicate MPIX_Iscatter as PMPIX_Iscatter
+#pragma _CRI duplicate MPI_Iscatter as PMPI_Iscatter
 #endif
 /* -- End Profiling Symbol Block */
 
 /* Define MPICH_MPI_FROM_PMPI if weak symbols are not supported to build
    the MPI routines */
 #ifndef MPICH_MPI_FROM_PMPI
-#undef MPIX_Iscatter
-#define MPIX_Iscatter PMPIX_Iscatter
+#undef MPI_Iscatter
+#define MPI_Iscatter PMPI_Iscatter
 
 /* helper callbacks and associated state structures */
 struct shared_state {
@@ -575,11 +575,11 @@ fn_fail:
 #endif /* MPICH_MPI_FROM_PMPI */
 
 #undef FUNCNAME
-#define FUNCNAME MPIX_Iscatter
+#define FUNCNAME MPI_Iscatter
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 /*@
-MPIX_Iscatter - XXX description here
+MPI_Iscatter - XXX description here
 
 Input Parameters:
 + sendbuf - address of send buffer (significant only at root) (choice)
@@ -600,15 +600,15 @@ Output Parameters:
 
 .N Errors
 @*/
-int MPIX_Iscatter(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype, int root, MPI_Comm comm, MPI_Request *request)
+int MPI_Iscatter(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype, int root, MPI_Comm comm, MPI_Request *request)
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_Comm *comm_ptr = NULL;
     MPID_Datatype *sendtype_ptr, *recvtype_ptr;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPIX_ISCATTER);
+    MPID_MPI_STATE_DECL(MPID_STATE_MPI_ISCATTER);
 
     MPIU_THREAD_CS_ENTER(ALLFUNC,);
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPIX_ISCATTER);
+    MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_ISCATTER);
 
     /* Validate parameters, especially handles needing to be converted */
 #   ifdef HAVE_ERROR_CHECKING
@@ -712,7 +712,7 @@ int MPIX_Iscatter(const void *sendbuf, int sendcount, MPI_Datatype sendtype, voi
     /* ... end of body of routine ... */
 
 fn_exit:
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPIX_ISCATTER);
+    MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_ISCATTER);
     MPIU_THREAD_CS_EXIT(ALLFUNC,);
     return mpi_errno;
 

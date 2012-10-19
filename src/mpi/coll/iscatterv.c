@@ -6,21 +6,21 @@
 
 #include "mpiimpl.h"
 
-/* -- Begin Profiling Symbol Block for routine MPIX_Iscatterv */
+/* -- Begin Profiling Symbol Block for routine MPI_Iscatterv */
 #if defined(HAVE_PRAGMA_WEAK)
-#pragma weak MPIX_Iscatterv = PMPIX_Iscatterv
+#pragma weak MPI_Iscatterv = PMPI_Iscatterv
 #elif defined(HAVE_PRAGMA_HP_SEC_DEF)
-#pragma _HP_SECONDARY_DEF PMPIX_Iscatterv  MPIX_Iscatterv
+#pragma _HP_SECONDARY_DEF PMPI_Iscatterv  MPI_Iscatterv
 #elif defined(HAVE_PRAGMA_CRI_DUP)
-#pragma _CRI duplicate MPIX_Iscatterv as PMPIX_Iscatterv
+#pragma _CRI duplicate MPI_Iscatterv as PMPI_Iscatterv
 #endif
 /* -- End Profiling Symbol Block */
 
 /* Define MPICH_MPI_FROM_PMPI if weak symbols are not supported to build
    the MPI routines */
 #ifndef MPICH_MPI_FROM_PMPI
-#undef MPIX_Iscatterv
-#define MPIX_Iscatterv PMPIX_Iscatterv
+#undef MPI_Iscatterv
+#define MPI_Iscatterv PMPI_Iscatterv
 
 /* any non-MPI functions go here, especially non-static ones */
 
@@ -142,11 +142,11 @@ fn_fail:
 #endif /* MPICH_MPI_FROM_PMPI */
 
 #undef FUNCNAME
-#define FUNCNAME MPIX_Iscatterv
+#define FUNCNAME MPI_Iscatterv
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 /*@
-MPIX_Iscatterv - XXX description here
+MPI_Iscatterv - XXX description here
 
 Input Parameters:
 + sendbuf - address of send buffer (significant only at root) (choice)
@@ -168,14 +168,14 @@ Output Parameters:
 
 .N Errors
 @*/
-int MPIX_Iscatterv(const void *sendbuf, const int *sendcounts, const int *displs, MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype, int root, MPI_Comm comm, MPI_Request *request)
+int MPI_Iscatterv(const void *sendbuf, const int *sendcounts, const int *displs, MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype, int root, MPI_Comm comm, MPI_Request *request)
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_Comm *comm_ptr = NULL;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPIX_ISCATTERV);
+    MPID_MPI_STATE_DECL(MPID_STATE_MPI_ISCATTERV);
 
     MPIU_THREAD_CS_ENTER(ALLFUNC,);
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPIX_ISCATTERV);
+    MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_ISCATTERV);
 
     /* Validate parameters, especially handles needing to be converted */
 #   ifdef HAVE_ERROR_CHECKING
@@ -306,7 +306,7 @@ int MPIX_Iscatterv(const void *sendbuf, const int *sendcounts, const int *displs
     /* ... end of body of routine ... */
 
 fn_exit:
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPIX_ISCATTERV);
+    MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_ISCATTERV);
     MPIU_THREAD_CS_EXIT(ALLFUNC,);
     return mpi_errno;
 

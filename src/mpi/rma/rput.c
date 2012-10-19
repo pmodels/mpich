@@ -8,29 +8,29 @@
 #include "mpiimpl.h"
 
 #include "rma.h"
-/* -- Begin Profiling Symbol Block for routine MPIX_Rput */
+/* -- Begin Profiling Symbol Block for routine MPI_Rput */
 #if defined(HAVE_PRAGMA_WEAK)
-#pragma weak MPIX_Rput = PMPIX_Rput
+#pragma weak MPI_Rput = PMPI_Rput
 #elif defined(HAVE_PRAGMA_HP_SEC_DEF)
-#pragma _HP_SECONDARY_DEF PMPIX_Rput  MPIX_Rput
+#pragma _HP_SECONDARY_DEF PMPI_Rput  MPI_Rput
 #elif defined(HAVE_PRAGMA_CRI_DUP)
-#pragma _CRI duplicate MPIX_Rput as PMPIX_Rput
+#pragma _CRI duplicate MPI_Rput as PMPI_Rput
 #endif
 /* -- End Profiling Symbol Block */
 
 /* Define MPICH_MPI_FROM_PMPI if weak symbols are not supported to build
    the MPI routines */
 #ifndef MPICH_MPI_FROM_PMPI
-#undef MPIX_Rput
-#define MPIX_Rput PMPIX_Rput
+#undef MPI_Rput
+#define MPI_Rput PMPI_Rput
 
 #endif
 
 #undef FUNCNAME
-#define FUNCNAME MPIX_Rput
+#define FUNCNAME MPI_Rput
 
 /*@
-   MPIX_Rput - Put data into a memory window on a remote process
+   MPI_Rput - Put data into a memory window on a remote process
 
    Input Parameters:
 + origin_addr -initial address of origin buffer (choice) 
@@ -57,21 +57,21 @@
 .N MPI_ERR_TYPE
 .N MPI_ERR_WIN
 @*/
-int MPIX_Rput(const void *origin_addr, int origin_count, MPI_Datatype
+int MPI_Rput(const void *origin_addr, int origin_count, MPI_Datatype
             origin_datatype, int target_rank, MPI_Aint target_disp,
             int target_count, MPI_Datatype target_datatype, MPI_Win
             win, MPI_Request *request)
 {
-    static const char FCNAME[] = "MPIX_Rput";
+    static const char FCNAME[] = "MPI_Rput";
     int mpi_errno = MPI_SUCCESS;
     MPID_Win *win_ptr = NULL;
     MPID_Request *request_ptr = NULL;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPIX_RPUT);
+    MPID_MPI_STATE_DECL(MPID_STATE_MPI_RPUT);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
     MPIU_THREAD_CS_ENTER(ALLFUNC,);
-    MPID_MPI_RMA_FUNC_ENTER(MPID_STATE_MPIX_RPUT);
+    MPID_MPI_RMA_FUNC_ENTER(MPID_STATE_MPI_RPUT);
 
     /* Validate parameters, especially handles needing to be converted */
 #   ifdef HAVE_ERROR_CHECKING
@@ -102,7 +102,7 @@ int MPIX_Rput(const void *origin_addr, int origin_count, MPI_Datatype
             MPIR_ERRTEST_DATATYPE(origin_datatype, "origin_datatype", mpi_errno);
             MPIR_ERRTEST_COUNT(target_count, mpi_errno);
             MPIR_ERRTEST_DATATYPE(target_datatype, "target_datatype", mpi_errno);
-            if (win_ptr->create_flavor != MPIX_WIN_FLAVOR_DYNAMIC)
+            if (win_ptr->create_flavor != MPI_WIN_FLAVOR_DYNAMIC)
                 MPIR_ERRTEST_DISP(target_disp, mpi_errno);
 
             if (HANDLE_GET_KIND(origin_datatype) != HANDLE_KIND_BUILTIN)
@@ -150,7 +150,7 @@ int MPIX_Rput(const void *origin_addr, int origin_count, MPI_Datatype
     /* ... end of body of routine ... */
 
   fn_exit:
-    MPID_MPI_RMA_FUNC_EXIT(MPID_STATE_MPIX_RPUT);
+    MPID_MPI_RMA_FUNC_EXIT(MPID_STATE_MPI_RPUT);
     MPIU_THREAD_CS_EXIT(ALLFUNC,);
     return mpi_errno;
 

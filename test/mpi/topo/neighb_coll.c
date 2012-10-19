@@ -50,7 +50,7 @@ int main(int argc, char *argv[])
 
         /* should see one send to each neighbor (rank-1 and rank+1) and one receive
          * each from same */
-        MPIX_Neighbor_allgather(sendbuf, 1, MPI_INT, recvbuf, 1, MPI_INT, cart);
+        MPI_Neighbor_allgather(sendbuf, 1, MPI_INT, recvbuf, 1, MPI_INT, cart);
 
         if (wrank == 0)
             check(recvbuf[0] == 0xdeadbeef);
@@ -72,7 +72,7 @@ int main(int argc, char *argv[])
 
         /* should see one send to each neighbor (rank-1 and rank+1) and one receive
          * each from same, but put them in opposite slots in the buffer */
-        MPIX_Neighbor_allgatherv(sendbuf, 1, MPI_INT, recvbuf, recvcounts, displs, MPI_INT, cart);
+        MPI_Neighbor_allgatherv(sendbuf, 1, MPI_INT, recvbuf, recvcounts, displs, MPI_INT, cart);
 
         if (wrank == 0)
             check(recvbuf[1] == 0xdeadbeef);
@@ -92,7 +92,7 @@ int main(int argc, char *argv[])
 
         /* should see one send to each neighbor (rank-1 and rank+1) and one
          * receive each from same */
-        MPIX_Neighbor_alltoall(sendbuf, 1, MPI_INT, recvbuf, 1, MPI_INT, cart);
+        MPI_Neighbor_alltoall(sendbuf, 1, MPI_INT, recvbuf, 1, MPI_INT, cart);
 
         if (wrank == 0)
             check(recvbuf[0] == 0xdeadbeef);
@@ -116,7 +116,7 @@ int main(int argc, char *argv[])
 
         /* should see one send to each neighbor (rank-1 and rank+1) and one receive
          * each from same, but put them in opposite slots in the buffer */
-        MPIX_Neighbor_alltoallv(sendbuf, sendcounts, sdispls, MPI_INT,
+        MPI_Neighbor_alltoallv(sendbuf, sendcounts, sdispls, MPI_INT,
                                 recvbuf, recvcounts, rdispls, MPI_INT,
                                 cart);
 
@@ -144,7 +144,7 @@ int main(int argc, char *argv[])
 
         /* should see one send to each neighbor (rank-1 and rank+1) and one receive
          * each from same, but put them in opposite slots in the buffer */
-        MPIX_Neighbor_alltoallw(sendbuf, sendcounts, sdispls, sendtypes,
+        MPI_Neighbor_alltoallw(sendbuf, sendcounts, sdispls, sendtypes,
                                 recvbuf, recvcounts, rdispls, recvtypes,
                                 cart);
 

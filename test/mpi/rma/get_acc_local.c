@@ -33,7 +33,7 @@ int main(int argc, char **argv)
 
     for (i = 0; i < NITER; i++) {
         MPI_Win_lock(MPI_LOCK_SHARED, rank, 0, win);
-        MPIX_Get_accumulate(&acc_val, 1, MPI_INT, &out_val, 1, MPI_INT,
+        MPI_Get_accumulate(&acc_val, 1, MPI_INT, &out_val, 1, MPI_INT,
                             rank, 0, 1, MPI_INT, MPI_SUM, win);
         MPI_Win_unlock(rank, win);
 

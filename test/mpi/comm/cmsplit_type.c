@@ -9,7 +9,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-/* FIXME: This test only checks that the MPIX_Comm_split_type routine
+/* FIXME: This test only checks that the MPI_Comm_split_type routine
    doesn't fail.  It does not check for correct behavior */
 
 int main(int argc, char *argv[])
@@ -25,7 +25,7 @@ int main(int argc, char *argv[])
 
     MPI_Comm_rank( MPI_COMM_WORLD, &wrank );
 #if !defined(USE_STRICT_MPI) && defined(MPICH2)
-    MPIX_Comm_split_type(MPI_COMM_WORLD, MPIX_COMM_TYPE_SHARED, 0, MPI_INFO_NULL, &comm);
+    MPI_Comm_split_type(MPI_COMM_WORLD, MPI_COMM_TYPE_SHARED, 0, MPI_INFO_NULL, &comm);
 #else
     MPI_Comm_split(MPI_COMM_WORLD, 0, 0, &comm);
 #endif /* USE_STRICT_MPI */

@@ -3443,8 +3443,8 @@ enum MPIR_T_pvar_impl_kind {
 };
 
 /* These are descriptors that lower level intialization code creates and feeds
- * into the overall MPIX_T_pvar_ system in order to permit the upper level code
- * to implement MPIX_T_pvar_{get_num,get_info,handle_alloc}. */
+ * into the overall MPI_T_pvar_ system in order to permit the upper level code
+ * to implement MPI_T_pvar_{get_num,get_info,handle_alloc}. */
 struct MPIR_T_pvar_info {
     int idx; /* pvar index value for pvar_get_info and friends */
 
@@ -3498,7 +3498,7 @@ struct MPIR_T_pvar_hnd_vtable {
 };
 
 /* Called by lower-level initialization code to add pvars to the global list.
- * Will cause the value returned by MPIX_T_pvar_get_num to be incremented and
+ * Will cause the value returned by MPI_T_pvar_get_num to be incremented and
  * sets up that new index to work with get_info, handle_alloc, etc. */
 int MPIR_T_pvar_add(const char *name,
                     enum MPIR_T_verbosity_t verbosity,
@@ -4170,36 +4170,36 @@ int MPIR_Iexscan(const void *sendbuf, void *recvbuf, int count, MPI_Datatype dat
 int MPIR_Ialltoallw_intra(const void *sendbuf, const int *sendcounts, const int *sdispls, const MPI_Datatype *sendtypes, void *recvbuf, const int *recvcounts, const int *rdispls, const MPI_Datatype *recvtypes, MPID_Comm *comm_ptr, MPID_Sched_t s);
 int MPIR_Ialltoallw_inter(const void *sendbuf, const int *sendcounts, const int *sdispls, const MPI_Datatype *sendtypes, void *recvbuf, const int *recvcounts, const int *rdispls, const MPI_Datatype *recvtypes, MPID_Comm *comm_ptr, MPID_Sched_t s);
 
-/* begin impl functions for MPI_T (MPIX_T_ right now) */
+/* begin impl functions for MPI_T (MPI_T_ right now) */
 int MPIR_T_init_thread_impl(int required, int *provided);
 int MPIR_T_finalize_impl(void);
-int MPIR_T_enum_get_info_impl(MPIX_T_enum enumtype, int num, char *name, int *name_len);
-int MPIR_T_enum_get_item_impl(MPIX_T_enum enumtype, int num, int *value, char *name, int *name_len);
+int MPIR_T_enum_get_info_impl(MPI_T_enum enumtype, int num, char *name, int *name_len);
+int MPIR_T_enum_get_item_impl(MPI_T_enum enumtype, int num, int *value, char *name, int *name_len);
 int MPIR_T_cvar_get_num_impl(int *num_cvar);
-int MPIR_T_cvar_get_info_impl(int cvar_index, char *name, int *name_len, int *verbosity, MPI_Datatype *datatype, MPIX_T_enum *enumtype, char *desc, int *desc_len, int *binding, int *scope);
-int MPIR_T_cvar_handle_alloc_impl(int cvar_index, void *obj_handle, MPIX_T_cvar_handle *handle, int *count);
-int MPIR_T_cvar_handle_free_impl(MPIX_T_cvar_handle *handle);
-int MPIR_T_cvar_read_impl(MPIX_T_cvar_handle handle, void *buf);
-int MPIR_T_cvar_write_impl(MPIX_T_cvar_handle handle, void *buf);
+int MPIR_T_cvar_get_info_impl(int cvar_index, char *name, int *name_len, int *verbosity, MPI_Datatype *datatype, MPI_T_enum *enumtype, char *desc, int *desc_len, int *binding, int *scope);
+int MPIR_T_cvar_handle_alloc_impl(int cvar_index, void *obj_handle, MPI_T_cvar_handle *handle, int *count);
+int MPIR_T_cvar_handle_free_impl(MPI_T_cvar_handle *handle);
+int MPIR_T_cvar_read_impl(MPI_T_cvar_handle handle, void *buf);
+int MPIR_T_cvar_write_impl(MPI_T_cvar_handle handle, void *buf);
 int MPIR_T_pvar_get_num_impl(int *num_pvar);
-int MPIR_T_pvar_get_info_impl(int pvar_index, char *name, int *name_len, int *verbosity, int *var_class, MPI_Datatype *datatype, MPIX_T_enum *enumtype, char *desc, int *desc_len, int *binding, int *readonly, int *continuous, int *atomic);
-int MPIR_T_pvar_session_create_impl(MPIX_T_pvar_session *session);
-int MPIR_T_pvar_session_free_impl(MPIX_T_pvar_session *session);
-int MPIR_T_pvar_handle_alloc_impl(MPIX_T_pvar_session session, int pvar_index, void *obj_handle, MPIX_T_pvar_handle *handle, int *count);
-int MPIR_T_pvar_handle_free_impl(MPIX_T_pvar_session session, MPIX_T_pvar_handle *handle);
-int MPIR_T_pvar_start_impl(MPIX_T_pvar_session session, MPIX_T_pvar_handle handle);
-int MPIR_T_pvar_stop_impl(MPIX_T_pvar_session session, MPIX_T_pvar_handle handle);
-int MPIR_T_pvar_read_impl(MPIX_T_pvar_session session, MPIX_T_pvar_handle handle, void *buf);
-int MPIR_T_pvar_write_impl(MPIX_T_pvar_session session, MPIX_T_pvar_handle handle, void *buf);
-int MPIR_T_pvar_reset_impl(MPIX_T_pvar_session session, MPIX_T_pvar_handle handle);
-int MPIR_T_pvar_readreset_impl(MPIX_T_pvar_session session, MPIX_T_pvar_handle handle, void *buf);
+int MPIR_T_pvar_get_info_impl(int pvar_index, char *name, int *name_len, int *verbosity, int *var_class, MPI_Datatype *datatype, MPI_T_enum *enumtype, char *desc, int *desc_len, int *binding, int *readonly, int *continuous, int *atomic);
+int MPIR_T_pvar_session_create_impl(MPI_T_pvar_session *session);
+int MPIR_T_pvar_session_free_impl(MPI_T_pvar_session *session);
+int MPIR_T_pvar_handle_alloc_impl(MPI_T_pvar_session session, int pvar_index, void *obj_handle, MPI_T_pvar_handle *handle, int *count);
+int MPIR_T_pvar_handle_free_impl(MPI_T_pvar_session session, MPI_T_pvar_handle *handle);
+int MPIR_T_pvar_start_impl(MPI_T_pvar_session session, MPI_T_pvar_handle handle);
+int MPIR_T_pvar_stop_impl(MPI_T_pvar_session session, MPI_T_pvar_handle handle);
+int MPIR_T_pvar_read_impl(MPI_T_pvar_session session, MPI_T_pvar_handle handle, void *buf);
+int MPIR_T_pvar_write_impl(MPI_T_pvar_session session, MPI_T_pvar_handle handle, void *buf);
+int MPIR_T_pvar_reset_impl(MPI_T_pvar_session session, MPI_T_pvar_handle handle);
+int MPIR_T_pvar_readreset_impl(MPI_T_pvar_session session, MPI_T_pvar_handle handle, void *buf);
 int MPIR_T_category_get_num_impl(int *num_cat);
 int MPIR_T_category_get_info_impl(int cat_index, char *name, int *name_len, char *desc, int *desc_len, int *num_controlvars, int *num_pvars, int *num_categories);
 int MPIR_T_category_get_cvars_impl(int cat_index, int len, int indices[]);
 int MPIR_T_category_get_pvars_impl(int cat_index[], int len, int indices[]);
 int MPIR_T_category_get_categories_impl(int cat_index, int len, int indices[]);
 int MPIR_T_category_changed_impl(int *stamp);
-/* end impl functions for MPI_T (MPIX_T_ right now) */
+/* end impl functions for MPI_T (MPI_T_ right now) */
 
 int MPIR_T_is_initialized(void);
 

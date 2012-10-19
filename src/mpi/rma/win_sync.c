@@ -8,29 +8,29 @@
 #include "mpiimpl.h"
 #include "rma.h"
 
-/* -- Begin Profiling Symbol Block for routine MPIX_Win_sync */
+/* -- Begin Profiling Symbol Block for routine MPI_Win_sync */
 #if defined(HAVE_PRAGMA_WEAK)
-#pragma weak MPIX_Win_sync = PMPIX_Win_sync
+#pragma weak MPI_Win_sync = PMPI_Win_sync
 #elif defined(HAVE_PRAGMA_HP_SEC_DEF)
-#pragma _HP_SECONDARY_DEF PMPIX_Win_sync  MPIX_Win_sync
+#pragma _HP_SECONDARY_DEF PMPI_Win_sync  MPI_Win_sync
 #elif defined(HAVE_PRAGMA_CRI_DUP)
-#pragma _CRI duplicate MPIX_Win_sync as PMPIX_Win_sync
+#pragma _CRI duplicate MPI_Win_sync as PMPI_Win_sync
 #endif
 /* -- End Profiling Symbol Block */
 
 /* Define MPICH_MPI_FROM_PMPI if weak symbols are not supported to build
    the MPI routines */
 #ifndef MPICH_MPI_FROM_PMPI
-#undef MPIX_Win_sync
-#define MPIX_Win_sync PMPIX_Win_sync
+#undef MPI_Win_sync
+#define MPI_Win_sync PMPI_Win_sync
 
 #endif
 
 #undef FUNCNAME
-#define FUNCNAME MPIX_Win_sync
+#define FUNCNAME MPI_Win_sync
 
 /*@
-   MPIX_Win_sync - Synchronize public and private copies of the given window
+   MPI_Win_sync - Synchronize public and private copies of the given window
 
    Input Parameters:
 . win - window object (handle) 
@@ -47,17 +47,17 @@
 
 .seealso: MPI_Win_lock
 @*/
-int MPIX_Win_sync(MPI_Win win)
+int MPI_Win_sync(MPI_Win win)
 {
-    static const char FCNAME[] = "MPIX_Win_sync";
+    static const char FCNAME[] = "MPI_Win_sync";
     int mpi_errno = MPI_SUCCESS;
     MPID_Win *win_ptr = NULL;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPIX_WIN_SYNC);
+    MPID_MPI_STATE_DECL(MPID_STATE_MPI_WIN_SYNC);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
     MPIU_THREAD_CS_ENTER(ALLFUNC,);
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPIX_WIN_SYNC);
+    MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_WIN_SYNC);
 
     /* Validate parameters, especially handles needing to be converted */
 #   ifdef HAVE_ERROR_CHECKING
@@ -95,7 +95,7 @@ int MPIX_Win_sync(MPI_Win win)
     /* ... end of body of routine ... */
 
   fn_exit:
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPIX_WIN_SYNC);
+    MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_WIN_SYNC);
     MPIU_THREAD_CS_EXIT(ALLFUNC,);
     return mpi_errno;
 

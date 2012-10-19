@@ -42,7 +42,7 @@ int main(int argc, char **argv)
 
 #ifdef TEST_MPI3_ROUTINES
     if (!rank) {
-        MPIX_Type_create_hindexed_block(count, blocklength,
+        MPI_Type_create_hindexed_block(count, blocklength,
                                         displacements, MPI_INT,
                                         &t);
         MPI_Type_commit(&t);

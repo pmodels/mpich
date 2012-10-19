@@ -38,62 +38,58 @@ C
          types(ii)    = MPI_INTEGER
       enddo
 
-C     these are currently all "MPIX_" extensions to MPI, since MPI-3 hasn't
-C     been officially passed in its entirety by the MPI Forum.  This #ifndef
-C     change to a version check for >=3.0 once MPI-3 is official and these
-C     names change to an "MPI_" prefix..
-      call MPIX_Ibarrier(comm, req, ierr)
+      call MPI_Ibarrier(comm, req, ierr)
       call MPI_Wait(req, MPI_STATUS_IGNORE, ierr)
 
-      call MPIX_Ibcast(sbuf, NUM_INTS, MPI_INTEGER, 0, comm, req, ierr)
+      call MPI_Ibcast(sbuf, NUM_INTS, MPI_INTEGER, 0, comm, req, ierr)
       call MPI_Wait(req, MPI_STATUS_IGNORE, ierr)
 
-      call MPIX_Igather(sbuf, NUM_INTS, MPI_INTEGER,
+      call MPI_Igather(sbuf, NUM_INTS, MPI_INTEGER,
      .                  rbuf, NUM_INTS, MPI_INTEGER,
      .                  0, comm, req, ierr)
       call MPI_Wait(req, MPI_STATUS_IGNORE, ierr)
 
-      call MPIX_Igatherv(sbuf, NUM_INTS, MPI_INTEGER,
+      call MPI_Igatherv(sbuf, NUM_INTS, MPI_INTEGER,
      .                   rbuf, rcounts, rdispls, MPI_INTEGER,
      .                   0, comm, req, ierr)
       call MPI_Wait(req, MPI_STATUS_IGNORE, ierr)
 
-      call MPIX_Ialltoall(sbuf, NUM_INTS, MPI_INTEGER,
+      call MPI_Ialltoall(sbuf, NUM_INTS, MPI_INTEGER,
      .                    rbuf, NUM_INTS, MPI_INTEGER,
      .                    comm, req, ierr)
       call MPI_Wait(req, MPI_STATUS_IGNORE, ierr)
 
-      call MPIX_Ialltoallv(sbuf, scounts, sdispls, MPI_INTEGER,
+      call MPI_Ialltoallv(sbuf, scounts, sdispls, MPI_INTEGER,
      .                     rbuf, rcounts, rdispls, MPI_INTEGER,
      .                     comm, req, ierr)
       call MPI_Wait(req, MPI_STATUS_IGNORE, ierr)
 
-      call MPIX_Ialltoallw(sbuf, scounts, sdispls, types,
+      call MPI_Ialltoallw(sbuf, scounts, sdispls, types,
      .                     rbuf, rcounts, rdispls, types,
      .                     comm, req, ierr)
       call MPI_Wait(req, MPI_STATUS_IGNORE, ierr)
 
-      call MPIX_Ireduce(sbuf, rbuf, NUM_INTS, MPI_INTEGER,
+      call MPI_Ireduce(sbuf, rbuf, NUM_INTS, MPI_INTEGER,
      .                  MPI_SUM, 0, comm, req, ierr)
       call MPI_Wait(req, MPI_STATUS_IGNORE, ierr)
 
-      call MPIX_Iallreduce(sbuf, rbuf, NUM_INTS, MPI_INTEGER,
+      call MPI_Iallreduce(sbuf, rbuf, NUM_INTS, MPI_INTEGER,
      .                     MPI_SUM, comm, req, ierr)
       call MPI_Wait(req, MPI_STATUS_IGNORE, ierr)
 
-      call MPIX_Ireduce_scatter(sbuf, rbuf, rcounts, MPI_INTEGER,
+      call MPI_Ireduce_scatter(sbuf, rbuf, rcounts, MPI_INTEGER,
      .                          MPI_SUM, comm, req, ierr)
       call MPI_Wait(req, MPI_STATUS_IGNORE, ierr)
 
-      call MPIX_Ireduce_scatter_block(sbuf, rbuf, NUM_INTS, MPI_INTEGER,
+      call MPI_Ireduce_scatter_block(sbuf, rbuf, NUM_INTS, MPI_INTEGER,
      .                                MPI_SUM, comm, req, ierr)
       call MPI_Wait(req, MPI_STATUS_IGNORE, ierr)
 
-      call MPIX_Iscan(sbuf, rbuf, NUM_INTS, MPI_INTEGER,
+      call MPI_Iscan(sbuf, rbuf, NUM_INTS, MPI_INTEGER,
      .                MPI_SUM, comm, req, ierr)
       call MPI_Wait(req, MPI_STATUS_IGNORE, ierr)
 
-      call MPIX_Iexscan(sbuf, rbuf, NUM_INTS, MPI_INTEGER,
+      call MPI_Iexscan(sbuf, rbuf, NUM_INTS, MPI_INTEGER,
      .                  MPI_SUM, comm, req, ierr)
       call MPI_Wait(req, MPI_STATUS_IGNORE, ierr)
 

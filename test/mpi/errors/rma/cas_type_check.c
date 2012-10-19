@@ -31,7 +31,7 @@ do {                                                    \
     MPI_Win_set_errhandler( win, MPI_ERRORS_RETURN );   \
                                                         \
     MPI_Win_fence( MPI_MODE_NOPRECEDE, win );           \
-    err = MPIX_Compare_and_swap( &val, &cmp_val, &res,  \
+    err = MPI_Compare_and_swap( &val, &cmp_val, &res,  \
                                  mpi_type, 0, 0, win ); \
     MPI_Error_class( err, &err_class );                 \
     assert( err_class == expected_err );                \

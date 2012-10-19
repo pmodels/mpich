@@ -42,14 +42,14 @@ int main(int argc, char **argv) {
 
 #ifdef TEST_MPI3_ROUTINES
 
-    MPIX_Comm_split_type(MPI_COMM_WORLD, MPIX_COMM_TYPE_SHARED, rank, MPI_INFO_NULL, &shm_comm);
+    MPI_Comm_split_type(MPI_COMM_WORLD, MPI_COMM_TYPE_SHARED, rank, MPI_INFO_NULL, &shm_comm);
 
     MPI_Comm_rank(shm_comm, &shm_rank);
     MPI_Comm_size(shm_comm, &shm_nproc);
 
     /* Allocate ELEM_PER_PROC integers on each even rank process */
     my_size = (shm_rank % 2 == 0) ? sizeof(int)*ELEM_PER_PROC : 0;
-    MPIX_Win_allocate_shared(my_size, sizeof(int), alloc_shared_info,
+    MPI_Win_allocate_shared(my_size, sizeof(int), alloc_shared_info,
                              shm_comm, &my_base, &shm_win);
 
     for (i = 0; i < ELEM_PER_PROC; i++) {
@@ -69,7 +69,7 @@ int main(int argc, char **argv) {
         int      *base;
         MPI_Aint  size;
 
-        MPIX_Win_shared_query(shm_win, i, &size, &disp_unit, &base);
+        MPI_Win_shared_query(shm_win, i, &size, &disp_unit, &base);
 
         if (i % 2 == 0) {
             assert(size == ELEM_PER_PROC * sizeof(int));

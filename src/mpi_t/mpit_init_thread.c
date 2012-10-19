@@ -6,29 +6,29 @@
 
 #include "mpiimpl.h"
 
-/* -- Begin Profiling Symbol Block for routine MPIX_T_init_thread */
+/* -- Begin Profiling Symbol Block for routine MPI_T_init_thread */
 #if defined(HAVE_PRAGMA_WEAK)
-#pragma weak MPIX_T_init_thread = PMPIX_T_init_thread
+#pragma weak MPI_T_init_thread = PMPI_T_init_thread
 #elif defined(HAVE_PRAGMA_HP_SEC_DEF)
-#pragma _HP_SECONDARY_DEF PMPIX_T_init_thread  MPIX_T_init_thread
+#pragma _HP_SECONDARY_DEF PMPI_T_init_thread  MPI_T_init_thread
 #elif defined(HAVE_PRAGMA_CRI_DUP)
-#pragma _CRI duplicate MPIX_T_init_thread as PMPIX_T_init_thread
+#pragma _CRI duplicate MPI_T_init_thread as PMPI_T_init_thread
 #endif
 /* -- End Profiling Symbol Block */
 
 /* Define MPICH_MPI_FROM_PMPI if weak symbols are not supported to build
    the MPI routines */
 #ifndef MPICH_MPI_FROM_PMPI
-#undef MPIX_T_init_thread
-#define MPIX_T_init_thread PMPIX_T_init_thread
+#undef MPI_T_init_thread
+#define MPI_T_init_thread PMPI_T_init_thread
 
 /* any non-MPI functions go here, especially non-static ones */
 
 /* a counter that keeps track of the relative balance of calls to
- * MPIX_T_init_thread and MPIX_T_finalize */
+ * MPI_T_init_thread and MPI_T_finalize */
 int MPIR_T_init_balance = 0;
 
-/* returns true iff the MPIX_T_ interface is currently initialized */
+/* returns true iff the MPI_T_ interface is currently initialized */
 int MPIR_T_is_initialized(void)
 {
     return (MPIR_T_init_balance > 0);
@@ -65,11 +65,11 @@ fn_fail:
 #endif /* MPICH_MPI_FROM_PMPI */
 
 #undef FUNCNAME
-#define FUNCNAME MPIX_T_init_thread
+#define FUNCNAME MPI_T_init_thread
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 /*@
-MPIX_T_init_thread - XXX description here
+MPI_T_init_thread - XXX description here
 
 Input Parameters:
 . required - desired level of thread support (integer)
@@ -83,13 +83,13 @@ Output Parameters:
 
 .N Errors
 @*/
-int MPIX_T_init_thread(int required, int *provided)
+int MPI_T_init_thread(int required, int *provided)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPIX_T_INIT_THREAD);
+    MPID_MPI_STATE_DECL(MPID_STATE_MPI_T_INIT_THREAD);
 
     MPIU_THREAD_CS_ENTER(ALLFUNC,);
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPIX_T_INIT_THREAD);
+    MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_T_INIT_THREAD);
 
     /* Validate parameters, especially handles needing to be converted */
 #   ifdef HAVE_ERROR_CHECKING
@@ -126,7 +126,7 @@ int MPIX_T_init_thread(int required, int *provided)
     /* ... end of body of routine ... */
 
 fn_exit:
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPIX_T_INIT_THREAD);
+    MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_T_INIT_THREAD);
     MPIU_THREAD_CS_EXIT(ALLFUNC,);
     return mpi_errno;
 

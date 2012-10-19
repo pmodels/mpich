@@ -36,7 +36,7 @@ int main(int argc, char **argv)
     int sendbuf[8], recvbuf[8];
     int count;
 #ifdef TEST_MPROBE_ROUTINES
-    MPIX_Message msg;
+    MPI_Message msg;
 #endif
     MPI_Request rreq;
     MPI_Status s1, s2;
@@ -70,12 +70,12 @@ int main(int argc, char **argv)
         s1.MPI_ERROR = MPI_ERR_DIMS;
         s2.MPI_ERROR = MPI_ERR_TOPOLOGY;
 
-        msg = MPIX_MESSAGE_NULL;
-        MPIX_Mprobe(0, 5, MPI_COMM_WORLD, &msg, &s1);
+        msg = MPI_MESSAGE_NULL;
+        MPI_Mprobe(0, 5, MPI_COMM_WORLD, &msg, &s1);
         check(s1.MPI_SOURCE == 0);
         check(s1.MPI_TAG == 5);
         check(s1.MPI_ERROR == MPI_ERR_DIMS);
-        check(msg != MPIX_MESSAGE_NULL);
+        check(msg != MPI_MESSAGE_NULL);
 
         count = -1;
         MPI_Get_count(&s1, MPI_INT, &count);
@@ -83,13 +83,13 @@ int main(int argc, char **argv)
 
         recvbuf[0] = 0x01234567;
         recvbuf[1] = 0x89abcdef;
-        MPIX_Mrecv(recvbuf, count, MPI_INT, &msg, &s2);
+        MPI_Mrecv(recvbuf, count, MPI_INT, &msg, &s2);
         check(recvbuf[0] == 0xdeadbeef);
         check(recvbuf[1] == 0xfeedface);
         check(s2.MPI_SOURCE == 0);
         check(s2.MPI_TAG == 5);
         check(s2.MPI_ERROR == MPI_ERR_TOPOLOGY);
-        check(msg == MPIX_MESSAGE_NULL);
+        check(msg == MPI_MESSAGE_NULL);
     }
 
     /* test 1: simple send & mprobe+imrecv */
@@ -105,12 +105,12 @@ int main(int argc, char **argv)
         s1.MPI_ERROR = MPI_ERR_DIMS;
         s2.MPI_ERROR = MPI_ERR_TOPOLOGY;
 
-        msg = MPIX_MESSAGE_NULL;
-        MPIX_Mprobe(0, 5, MPI_COMM_WORLD, &msg, &s1);
+        msg = MPI_MESSAGE_NULL;
+        MPI_Mprobe(0, 5, MPI_COMM_WORLD, &msg, &s1);
         check(s1.MPI_SOURCE == 0);
         check(s1.MPI_TAG == 5);
         check(s1.MPI_ERROR == MPI_ERR_DIMS);
-        check(msg != MPIX_MESSAGE_NULL);
+        check(msg != MPI_MESSAGE_NULL);
 
         count = -1;
         MPI_Get_count(&s1, MPI_INT, &count);
@@ -119,7 +119,7 @@ int main(int argc, char **argv)
         rreq = MPI_REQUEST_NULL;
         recvbuf[0] = 0x01234567;
         recvbuf[1] = 0x89abcdef;
-        MPIX_Imrecv(recvbuf, count, MPI_INT, &msg, &rreq);
+        MPI_Imrecv(recvbuf, count, MPI_INT, &msg, &rreq);
         check(rreq != MPI_REQUEST_NULL);
         MPI_Wait(&rreq, &s2);
         check(recvbuf[0] == 0xdeadbeef);
@@ -127,7 +127,7 @@ int main(int argc, char **argv)
         check(s2.MPI_SOURCE == 0);
         check(s2.MPI_TAG == 5);
         check(s2.MPI_ERROR == MPI_ERR_TOPOLOGY);
-        check(msg == MPIX_MESSAGE_NULL);
+        check(msg == MPI_MESSAGE_NULL);
     }
 
     /* test 2: simple send & improbe+mrecv */
@@ -143,12 +143,12 @@ int main(int argc, char **argv)
         s1.MPI_ERROR = MPI_ERR_DIMS;
         s2.MPI_ERROR = MPI_ERR_TOPOLOGY;
 
-        msg = MPIX_MESSAGE_NULL;
+        msg = MPI_MESSAGE_NULL;
         do {
-            check(msg == MPIX_MESSAGE_NULL);
-            MPIX_Improbe(0, 5, MPI_COMM_WORLD, &found, &msg, &s1);
+            check(msg == MPI_MESSAGE_NULL);
+            MPI_Improbe(0, 5, MPI_COMM_WORLD, &found, &msg, &s1);
         } while (!found);
-        check(msg != MPIX_MESSAGE_NULL);
+        check(msg != MPI_MESSAGE_NULL);
         check(s1.MPI_SOURCE == 0);
         check(s1.MPI_TAG == 5);
         check(s1.MPI_ERROR == MPI_ERR_DIMS);
@@ -159,13 +159,13 @@ int main(int argc, char **argv)
 
         recvbuf[0] = 0x01234567;
         recvbuf[1] = 0x89abcdef;
-        MPIX_Mrecv(recvbuf, count, MPI_INT, &msg, &s2);
+        MPI_Mrecv(recvbuf, count, MPI_INT, &msg, &s2);
         check(recvbuf[0] == 0xdeadbeef);
         check(recvbuf[1] == 0xfeedface);
         check(s2.MPI_SOURCE == 0);
         check(s2.MPI_TAG == 5);
         check(s2.MPI_ERROR == MPI_ERR_TOPOLOGY);
-        check(msg == MPIX_MESSAGE_NULL);
+        check(msg == MPI_MESSAGE_NULL);
     }
 
     /* test 3: simple send & improbe+imrecv */
@@ -181,12 +181,12 @@ int main(int argc, char **argv)
         s1.MPI_ERROR = MPI_ERR_DIMS;
         s2.MPI_ERROR = MPI_ERR_TOPOLOGY;
 
-        msg = MPIX_MESSAGE_NULL;
+        msg = MPI_MESSAGE_NULL;
         do {
-            check(msg == MPIX_MESSAGE_NULL);
-            MPIX_Improbe(0, 5, MPI_COMM_WORLD, &found, &msg, &s1);
+            check(msg == MPI_MESSAGE_NULL);
+            MPI_Improbe(0, 5, MPI_COMM_WORLD, &found, &msg, &s1);
         } while (!found);
-        check(msg != MPIX_MESSAGE_NULL);
+        check(msg != MPI_MESSAGE_NULL);
         check(s1.MPI_SOURCE == 0);
         check(s1.MPI_TAG == 5);
         check(s1.MPI_ERROR == MPI_ERR_DIMS);
@@ -196,7 +196,7 @@ int main(int argc, char **argv)
         check(count == 2);
 
         rreq = MPI_REQUEST_NULL;
-        MPIX_Imrecv(recvbuf, count, MPI_INT, &msg, &rreq);
+        MPI_Imrecv(recvbuf, count, MPI_INT, &msg, &rreq);
         check(rreq != MPI_REQUEST_NULL);
         MPI_Wait(&rreq, &s2);
         check(recvbuf[0] == 0xdeadbeef);
@@ -204,7 +204,7 @@ int main(int argc, char **argv)
         check(s2.MPI_SOURCE == 0);
         check(s2.MPI_TAG == 5);
         check(s2.MPI_ERROR == MPI_ERR_TOPOLOGY);
-        check(msg == MPIX_MESSAGE_NULL);
+        check(msg == MPI_MESSAGE_NULL);
     }
 
     /* test 4: mprobe+mrecv with MPI_PROC_NULL */
@@ -215,12 +215,12 @@ int main(int argc, char **argv)
         s1.MPI_ERROR = MPI_ERR_DIMS;
         s2.MPI_ERROR = MPI_ERR_TOPOLOGY;
 
-        msg = MPIX_MESSAGE_NULL;
-        MPIX_Mprobe(MPI_PROC_NULL, 5, MPI_COMM_WORLD, &msg, &s1);
+        msg = MPI_MESSAGE_NULL;
+        MPI_Mprobe(MPI_PROC_NULL, 5, MPI_COMM_WORLD, &msg, &s1);
         check(s1.MPI_SOURCE == MPI_PROC_NULL);
         check(s1.MPI_TAG == MPI_ANY_TAG);
         check(s1.MPI_ERROR == MPI_ERR_DIMS);
-        check(msg == MPIX_MESSAGE_NO_PROC);
+        check(msg == MPI_MESSAGE_NO_PROC);
 
         count = -1;
         MPI_Get_count(&s1, MPI_INT, &count);
@@ -228,7 +228,7 @@ int main(int argc, char **argv)
 
         recvbuf[0] = 0x01234567;
         recvbuf[1] = 0x89abcdef;
-        MPIX_Mrecv(recvbuf, count, MPI_INT, &msg, &s2);
+        MPI_Mrecv(recvbuf, count, MPI_INT, &msg, &s2);
         /* recvbuf should remain unmodified */
         check(recvbuf[0] == 0x01234567);
         check(recvbuf[1] == 0x89abcdef);
@@ -236,7 +236,7 @@ int main(int argc, char **argv)
         check(s2.MPI_SOURCE == MPI_PROC_NULL);
         check(s2.MPI_TAG == MPI_ANY_TAG);
         check(s2.MPI_ERROR == MPI_ERR_TOPOLOGY);
-        check(msg == MPIX_MESSAGE_NULL);
+        check(msg == MPI_MESSAGE_NULL);
         count = -1;
         MPI_Get_count(&s2, MPI_INT, &count);
         check(count == 0);
@@ -250,12 +250,12 @@ int main(int argc, char **argv)
         s1.MPI_ERROR = MPI_ERR_DIMS;
         s2.MPI_ERROR = MPI_ERR_TOPOLOGY;
 
-        msg = MPIX_MESSAGE_NULL;
-        MPIX_Mprobe(MPI_PROC_NULL, 5, MPI_COMM_WORLD, &msg, &s1);
+        msg = MPI_MESSAGE_NULL;
+        MPI_Mprobe(MPI_PROC_NULL, 5, MPI_COMM_WORLD, &msg, &s1);
         check(s1.MPI_SOURCE == MPI_PROC_NULL);
         check(s1.MPI_TAG == MPI_ANY_TAG);
         check(s1.MPI_ERROR == MPI_ERR_DIMS);
-        check(msg == MPIX_MESSAGE_NO_PROC);
+        check(msg == MPI_MESSAGE_NO_PROC);
         count = -1;
         MPI_Get_count(&s1, MPI_INT, &count);
         check(count == 0);
@@ -263,7 +263,7 @@ int main(int argc, char **argv)
         rreq = MPI_REQUEST_NULL;
         recvbuf[0] = 0x01234567;
         recvbuf[1] = 0x89abcdef;
-        MPIX_Imrecv(recvbuf, count, MPI_INT, &msg, &rreq);
+        MPI_Imrecv(recvbuf, count, MPI_INT, &msg, &rreq);
         check(rreq != MPI_REQUEST_NULL);
         completed = 0;
         MPI_Test(&rreq, &completed, &s2); /* single test should always succeed */
@@ -275,7 +275,7 @@ int main(int argc, char **argv)
         check(s2.MPI_SOURCE == MPI_PROC_NULL);
         check(s2.MPI_TAG == MPI_ANY_TAG);
         check(s2.MPI_ERROR == MPI_ERR_TOPOLOGY);
-        check(msg == MPIX_MESSAGE_NULL);
+        check(msg == MPI_MESSAGE_NULL);
         count = -1;
         MPI_Get_count(&s2, MPI_INT, &count);
         check(count == 0);
@@ -289,11 +289,11 @@ int main(int argc, char **argv)
         s1.MPI_ERROR = MPI_ERR_DIMS;
         s2.MPI_ERROR = MPI_ERR_TOPOLOGY;
 
-        msg = MPIX_MESSAGE_NULL;
+        msg = MPI_MESSAGE_NULL;
         found = 0;
-        MPIX_Improbe(MPI_PROC_NULL, 5, MPI_COMM_WORLD, &found, &msg, &s1);
+        MPI_Improbe(MPI_PROC_NULL, 5, MPI_COMM_WORLD, &found, &msg, &s1);
         check(found);
-        check(msg == MPIX_MESSAGE_NO_PROC);
+        check(msg == MPI_MESSAGE_NO_PROC);
         check(s1.MPI_SOURCE == MPI_PROC_NULL);
         check(s1.MPI_TAG == MPI_ANY_TAG);
         check(s1.MPI_ERROR == MPI_ERR_DIMS);
@@ -303,7 +303,7 @@ int main(int argc, char **argv)
 
         recvbuf[0] = 0x01234567;
         recvbuf[1] = 0x89abcdef;
-        MPIX_Mrecv(recvbuf, count, MPI_INT, &msg, &s2);
+        MPI_Mrecv(recvbuf, count, MPI_INT, &msg, &s2);
         /* recvbuf should remain unmodified */
         check(recvbuf[0] == 0x01234567);
         check(recvbuf[1] == 0x89abcdef);
@@ -311,7 +311,7 @@ int main(int argc, char **argv)
         check(s2.MPI_SOURCE == MPI_PROC_NULL);
         check(s2.MPI_TAG == MPI_ANY_TAG);
         check(s2.MPI_ERROR == MPI_ERR_TOPOLOGY);
-        check(msg == MPIX_MESSAGE_NULL);
+        check(msg == MPI_MESSAGE_NULL);
         count = -1;
         MPI_Get_count(&s2, MPI_INT, &count);
         check(count == 0);
@@ -325,10 +325,10 @@ int main(int argc, char **argv)
         s1.MPI_ERROR = MPI_ERR_DIMS;
         s2.MPI_ERROR = MPI_ERR_TOPOLOGY;
 
-        msg = MPIX_MESSAGE_NULL;
-        MPIX_Improbe(MPI_PROC_NULL, 5, MPI_COMM_WORLD, &found, &msg, &s1);
+        msg = MPI_MESSAGE_NULL;
+        MPI_Improbe(MPI_PROC_NULL, 5, MPI_COMM_WORLD, &found, &msg, &s1);
         check(found);
-        check(msg == MPIX_MESSAGE_NO_PROC);
+        check(msg == MPI_MESSAGE_NO_PROC);
         check(s1.MPI_SOURCE == MPI_PROC_NULL);
         check(s1.MPI_TAG == MPI_ANY_TAG);
         check(s1.MPI_ERROR == MPI_ERR_DIMS);
@@ -337,7 +337,7 @@ int main(int argc, char **argv)
         check(count == 0);
 
         rreq = MPI_REQUEST_NULL;
-        MPIX_Imrecv(recvbuf, count, MPI_INT, &msg, &rreq);
+        MPI_Imrecv(recvbuf, count, MPI_INT, &msg, &rreq);
         check(rreq != MPI_REQUEST_NULL);
         completed = 0;
         MPI_Test(&rreq, &completed, &s2); /* single test should always succeed */
@@ -349,7 +349,7 @@ int main(int argc, char **argv)
         check(s2.MPI_SOURCE == MPI_PROC_NULL);
         check(s2.MPI_TAG == MPI_ANY_TAG);
         check(s2.MPI_ERROR == MPI_ERR_TOPOLOGY);
-        check(msg == MPIX_MESSAGE_NULL);
+        check(msg == MPI_MESSAGE_NULL);
         count = -1;
         MPI_Get_count(&s2, MPI_INT, &count);
         check(count == 0);
@@ -364,17 +364,17 @@ int main(int argc, char **argv)
      * in MPICH2 impl) */
     {
         MPI_Fint f_handle = 0xdeadbeef;
-        f_handle = MPIX_Message_c2f(MPIX_MESSAGE_NULL);
-        msg = MPIX_Message_f2c(f_handle);
+        f_handle = MPI_Message_c2f(MPI_MESSAGE_NULL);
+        msg = MPI_Message_f2c(f_handle);
         check(f_handle != 0xdeadbeef);
-        check(msg == MPIX_MESSAGE_NULL);
+        check(msg == MPI_MESSAGE_NULL);
 
-        /* PMPIX_ versions should also exists */
+        /* PMPI_ versions should also exists */
         f_handle = 0xdeadbeef;
-        f_handle = PMPIX_Message_c2f(MPIX_MESSAGE_NULL);
-        msg = PMPIX_Message_f2c(f_handle);
+        f_handle = PMPI_Message_c2f(MPI_MESSAGE_NULL);
+        msg = PMPI_Message_f2c(f_handle);
         check(f_handle != 0xdeadbeef);
-        check(msg == MPIX_MESSAGE_NULL);
+        check(msg == MPI_MESSAGE_NULL);
     }
 
 #endif /* TEST_MPROBE_ROUTINES */

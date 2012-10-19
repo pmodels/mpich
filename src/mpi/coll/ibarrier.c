@@ -6,21 +6,21 @@
 
 #include "mpiimpl.h"
 
-/* -- Begin Profiling Symbol Block for routine MPIX_Ibarrier */
+/* -- Begin Profiling Symbol Block for routine MPI_Ibarrier */
 #if defined(HAVE_PRAGMA_WEAK)
-#pragma weak MPIX_Ibarrier = PMPIX_Ibarrier
+#pragma weak MPI_Ibarrier = PMPI_Ibarrier
 #elif defined(HAVE_PRAGMA_HP_SEC_DEF)
-#pragma _HP_SECONDARY_DEF PMPIX_Ibarrier  MPIX_Ibarrier
+#pragma _HP_SECONDARY_DEF PMPI_Ibarrier  MPI_Ibarrier
 #elif defined(HAVE_PRAGMA_CRI_DUP)
-#pragma _CRI duplicate MPIX_Ibarrier as PMPIX_Ibarrier
+#pragma _CRI duplicate MPI_Ibarrier as PMPI_Ibarrier
 #endif
 /* -- End Profiling Symbol Block */
 
 /* Define MPICH_MPI_FROM_PMPI if weak symbols are not supported to build
    the MPI routines */
 #ifndef MPICH_MPI_FROM_PMPI
-#undef MPIX_Ibarrier
-#define MPIX_Ibarrier PMPIX_Ibarrier
+#undef MPI_Ibarrier
+#define MPI_Ibarrier PMPI_Ibarrier
 
 /* any non-MPI functions go here, especially non-static ones */
 
@@ -200,11 +200,11 @@ fn_fail:
 #endif /* MPICH_MPI_FROM_PMPI */
 
 #undef FUNCNAME
-#define FUNCNAME MPIX_Ibarrier
+#define FUNCNAME MPI_Ibarrier
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 /*@
-MPIX_Ibarrier - XXX description here
+MPI_Ibarrier - XXX description here
 
 Input Parameters:
 . comm - communicator (handle)
@@ -218,14 +218,14 @@ Output Parameters:
 
 .N Errors
 @*/
-int MPIX_Ibarrier(MPI_Comm comm, MPI_Request *request)
+int MPI_Ibarrier(MPI_Comm comm, MPI_Request *request)
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_Comm *comm_ptr = NULL;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPIX_IBARRIER);
+    MPID_MPI_STATE_DECL(MPID_STATE_MPI_IBARRIER);
 
     MPIU_THREAD_CS_ENTER(ALLFUNC,);
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPIX_IBARRIER);
+    MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_IBARRIER);
 
     /* Validate parameters, especially handles needing to be converted */
 #   ifdef HAVE_ERROR_CHECKING
@@ -265,7 +265,7 @@ int MPIX_Ibarrier(MPI_Comm comm, MPI_Request *request)
     /* ... end of body of routine ... */
 
 fn_exit:
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPIX_IBARRIER);
+    MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_IBARRIER);
     MPIU_THREAD_CS_EXIT(ALLFUNC,);
     return mpi_errno;
 

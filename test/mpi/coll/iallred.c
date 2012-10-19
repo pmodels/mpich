@@ -22,7 +22,7 @@ int main(int argc, char *argv[])
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     assert(size == 2);
 #if defined(TEST_NBC_ROUTINES)
-    MPIX_Iallreduce(&one,&isum,1,MPI_INT,MPI_SUM,MPI_COMM_WORLD,&request);
+    MPI_Iallreduce(&one,&isum,1,MPI_INT,MPI_SUM,MPI_COMM_WORLD,&request);
     MPI_Allreduce(&two,&sum,1,MPI_INT,MPI_SUM,MPI_COMM_WORLD);
     MPI_Wait(&request,MPI_STATUS_IGNORE);
 

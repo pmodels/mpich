@@ -8,29 +8,29 @@
 #include "mpiimpl.h"
 #include "rma.h"
 
-/* -- Begin Profiling Symbol Block for routine MPIX_Compare_and_swap */
+/* -- Begin Profiling Symbol Block for routine MPI_Compare_and_swap */
 #if defined(HAVE_PRAGMA_WEAK)
-#pragma weak MPIX_Compare_and_swap = PMPIX_Compare_and_swap
+#pragma weak MPI_Compare_and_swap = PMPI_Compare_and_swap
 #elif defined(HAVE_PRAGMA_HP_SEC_DEF)
-#pragma _HP_SECONDARY_DEF PMPIX_Compare_and_swap  MPIX_Compare_and_swap
+#pragma _HP_SECONDARY_DEF PMPI_Compare_and_swap  MPI_Compare_and_swap
 #elif defined(HAVE_PRAGMA_CRI_DUP)
-#pragma _CRI duplicate MPIX_Compare_and_swap as PMPIX_Compare_and_swap
+#pragma _CRI duplicate MPI_Compare_and_swap as PMPI_Compare_and_swap
 #endif
 /* -- End Profiling Symbol Block */
 
 /* Define MPICH_MPI_FROM_PMPI if weak symbols are not supported to build
    the MPI routines */
 #ifndef MPICH_MPI_FROM_PMPI
-#undef MPIX_Compare_and_swap
-#define MPIX_Compare_and_swap PMPIX_Compare_and_swap
+#undef MPI_Compare_and_swap
+#define MPI_Compare_and_swap PMPI_Compare_and_swap
 
 #endif
 
 #undef FUNCNAME
-#define FUNCNAME MPIX_Compare_and_swap
+#define FUNCNAME MPI_Compare_and_swap
 
 /*@
-   MPIX_Compare_and_swap - Accumulate one element of type datatype from the origin
+   MPI_Compare_and_swap - Accumulate one element of type datatype from the origin
    buffer (origin_addr) to the buffer at offset target_disp, in the target
    window specied by target_rank and win, using the operation op and return in
    the result buffer result_addr the content of the target buffer before the
@@ -59,19 +59,19 @@ Atomic with respect to other "accumulate" operations.
 .N MPI_ERR_TYPE
 .N MPI_ERR_WIN
 @*/
-int MPIX_Compare_and_swap(const void *origin_addr, const void *compare_addr,
+int MPI_Compare_and_swap(const void *origin_addr, const void *compare_addr,
         void *result_addr, MPI_Datatype datatype, int target_rank,
         MPI_Aint target_disp, MPI_Win win)
 {
-    static const char FCNAME[] = "MPIX_Compare_and_swap";
+    static const char FCNAME[] = "MPI_Compare_and_swap";
     int mpi_errno = MPI_SUCCESS;
     MPID_Win *win_ptr = NULL;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPIX_COMPARE_AND_SWAP);
+    MPID_MPI_STATE_DECL(MPID_STATE_MPI_COMPARE_AND_SWAP);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
     MPIU_THREAD_CS_ENTER(ALLFUNC,);
-    MPID_MPI_RMA_FUNC_ENTER(MPID_STATE_MPIX_COMPARE_AND_SWAP);
+    MPID_MPI_RMA_FUNC_ENTER(MPID_STATE_MPI_COMPARE_AND_SWAP);
 
     /* Validate parameters, especially handles needing to be converted */
 #   ifdef HAVE_ERROR_CHECKING
@@ -108,7 +108,7 @@ int MPIX_Compare_and_swap(const void *origin_addr, const void *compare_addr,
                logical, or byte, per the classes given on page 165. */
             MPIR_ERRTEST_TYPE_RMA_ATOMIC(datatype, "datatype", mpi_errno);
 
-            if (win_ptr->create_flavor != MPIX_WIN_FLAVOR_DYNAMIC)
+            if (win_ptr->create_flavor != MPI_WIN_FLAVOR_DYNAMIC)
                 MPIR_ERRTEST_DISP(target_disp, mpi_errno);
 
             comm_ptr = win_ptr->comm_ptr;
@@ -131,7 +131,7 @@ int MPIX_Compare_and_swap(const void *origin_addr, const void *compare_addr,
     /* ... end of body of routine ... */
 
   fn_exit:
-    MPID_MPI_RMA_FUNC_EXIT(MPID_STATE_MPIX_COMPARE_AND_SWAP);
+    MPID_MPI_RMA_FUNC_EXIT(MPID_STATE_MPI_COMPARE_AND_SWAP);
     MPIU_THREAD_CS_EXIT(ALLFUNC,);
     return mpi_errno;
 

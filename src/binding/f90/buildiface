@@ -107,6 +107,8 @@ $outfile_prefix = "mpi";
 	     'MPI_Win*' => 'INTEGER', # Never an array of win
 	     'MPI_File' => 'INTEGER',
 	     'MPI_File*' => 'INTEGER', # Never an array of files
+	     'MPI_Message' => 'INTEGER',
+	     'MPI_Message*' => 'INTEGER', # Never an array of messages
 	     );
 
 # special_args provides for handling of arguments that require special

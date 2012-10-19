@@ -7,21 +7,21 @@
 #include "mpiimpl.h"
 #include "collutil.h"
 
-/* -- Begin Profiling Symbol Block for routine MPIX_Iscan */
+/* -- Begin Profiling Symbol Block for routine MPI_Iscan */
 #if defined(HAVE_PRAGMA_WEAK)
-#pragma weak MPIX_Iscan = PMPIX_Iscan
+#pragma weak MPI_Iscan = PMPI_Iscan
 #elif defined(HAVE_PRAGMA_HP_SEC_DEF)
-#pragma _HP_SECONDARY_DEF PMPIX_Iscan  MPIX_Iscan
+#pragma _HP_SECONDARY_DEF PMPI_Iscan  MPI_Iscan
 #elif defined(HAVE_PRAGMA_CRI_DUP)
-#pragma _CRI duplicate MPIX_Iscan as PMPIX_Iscan
+#pragma _CRI duplicate MPI_Iscan as PMPI_Iscan
 #endif
 /* -- End Profiling Symbol Block */
 
 /* Define MPICH_MPI_FROM_PMPI if weak symbols are not supported to build
    the MPI routines */
 #ifndef MPICH_MPI_FROM_PMPI
-#undef MPIX_Iscan
-#define MPIX_Iscan PMPIX_Iscan
+#undef MPI_Iscan
+#define MPI_Iscan PMPI_Iscan
 
 /* any non-MPI functions go here, especially non-static ones */
 
@@ -347,11 +347,11 @@ fn_fail:
 #endif /* MPICH_MPI_FROM_PMPI */
 
 #undef FUNCNAME
-#define FUNCNAME MPIX_Iscan
+#define FUNCNAME MPI_Iscan
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 /*@
-MPIX_Iscan - XXX description here
+MPI_Iscan - XXX description here
 
 Input Parameters:
 + sendbuf - starting address of the send buffer (choice)
@@ -370,14 +370,14 @@ Output Parameters:
 
 .N Errors
 @*/
-int MPIX_Iscan(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPI_Comm comm, MPI_Request *request)
+int MPI_Iscan(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPI_Comm comm, MPI_Request *request)
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_Comm *comm_ptr = NULL;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPIX_ISCAN);
+    MPID_MPI_STATE_DECL(MPID_STATE_MPI_ISCAN);
 
     MPIU_THREAD_CS_ENTER(ALLFUNC,);
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPIX_ISCAN);
+    MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_ISCAN);
 
     /* Validate parameters, especially handles needing to be converted */
 #   ifdef HAVE_ERROR_CHECKING
@@ -440,7 +440,7 @@ int MPIX_Iscan(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datat
     /* ... end of body of routine ... */
 
 fn_exit:
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPIX_ISCAN);
+    MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_ISCAN);
     MPIU_THREAD_CS_EXIT(ALLFUNC,);
     return mpi_errno;
 

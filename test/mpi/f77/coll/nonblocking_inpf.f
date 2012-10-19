@@ -32,7 +32,7 @@ C
        do i=1,size
           rbuf(i) = (i-1) * size + rank
        enddo
-       call mpix_ialltoall( MPI_IN_PLACE, -1, MPI_DATATYPE_NULL,
+       call mpi_ialltoall( MPI_IN_PLACE, -1, MPI_DATATYPE_NULL,
      .                      rbuf, 1, MPI_INTEGER, comm, req, ierr )
        call mpi_wait( req, MPI_STATUS_IGNORE, ierr )
        do i=1,size
@@ -53,7 +53,7 @@ C
                rbuf(rdispls(i)+j+1) = 100 * rank + 10 * (i-1) + j
            enddo
        enddo
-       call mpix_ialltoallv( MPI_IN_PLACE, 0, 0, MPI_DATATYPE_NULL,
+       call mpi_ialltoallv( MPI_IN_PLACE, 0, 0, MPI_DATATYPE_NULL,
      .                       rbuf, rcounts, rdispls, MPI_INTEGER,
      .                       comm, req, ierr )
        call mpi_wait( req, MPI_STATUS_IGNORE, ierr )
@@ -82,7 +82,7 @@ C
      .                                        + 10 * (i-1) + j
            enddo
        enddo
-       call mpix_ialltoallw( MPI_IN_PLACE, 0, 0, MPI_DATATYPE_NULL,
+       call mpi_ialltoallw( MPI_IN_PLACE, 0, 0, MPI_DATATYPE_NULL,
      .                       rbuf, rcounts, rdispls, rtypes,
      .                       comm, req, ierr )
        call mpi_wait( req, MPI_STATUS_IGNORE, ierr )
@@ -105,7 +105,7 @@ C
        do i = 1, size
            rbuf(i) = rank + (i-1)
        enddo
-       call mpix_ireduce_scatter_block( MPI_IN_PLACE, rbuf, 1,
+       call mpi_ireduce_scatter_block( MPI_IN_PLACE, rbuf, 1,
      .                                  MPI_INTEGER, MPI_SUM, comm,
      .                                  req, ierr )
        call mpi_wait( req, MPI_STATUS_IGNORE, ierr )

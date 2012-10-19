@@ -6,21 +6,21 @@
 
 #include "mpiimpl.h"
 
-/* -- Begin Profiling Symbol Block for routine MPIX_T_pvar_session_create */
+/* -- Begin Profiling Symbol Block for routine MPI_T_pvar_session_create */
 #if defined(HAVE_PRAGMA_WEAK)
-#pragma weak MPIX_T_pvar_session_create = PMPIX_T_pvar_session_create
+#pragma weak MPI_T_pvar_session_create = PMPI_T_pvar_session_create
 #elif defined(HAVE_PRAGMA_HP_SEC_DEF)
-#pragma _HP_SECONDARY_DEF PMPIX_T_pvar_session_create  MPIX_T_pvar_session_create
+#pragma _HP_SECONDARY_DEF PMPI_T_pvar_session_create  MPI_T_pvar_session_create
 #elif defined(HAVE_PRAGMA_CRI_DUP)
-#pragma _CRI duplicate MPIX_T_pvar_session_create as PMPIX_T_pvar_session_create
+#pragma _CRI duplicate MPI_T_pvar_session_create as PMPI_T_pvar_session_create
 #endif
 /* -- End Profiling Symbol Block */
 
 /* Define MPICH_MPI_FROM_PMPI if weak symbols are not supported to build
    the MPI routines */
 #ifndef MPICH_MPI_FROM_PMPI
-#undef MPIX_T_pvar_session_create
-#define MPIX_T_pvar_session_create PMPIX_T_pvar_session_create
+#undef MPI_T_pvar_session_create
+#define MPI_T_pvar_session_create PMPI_T_pvar_session_create
 
 /* any non-MPI functions go here, especially non-static ones */
 
@@ -28,14 +28,14 @@
 #define FUNCNAME MPIR_T_pvar_session_create_impl
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPIR_T_pvar_session_create_impl(MPIX_T_pvar_session *session)
+int MPIR_T_pvar_session_create_impl(MPI_T_pvar_session *session)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIU_CHKPMEM_DECL(1);
 
-    *session = MPIX_T_PVAR_SESSION_NULL;
+    *session = MPI_T_PVAR_SESSION_NULL;
 
-    MPIU_CHKPMEM_MALLOC(*session, MPIX_T_pvar_session, sizeof(**session), mpi_errno, "performance var session");
+    MPIU_CHKPMEM_MALLOC(*session, MPI_T_pvar_session, sizeof(**session), mpi_errno, "performance var session");
 
     /* essential for utlist to work */
     (*session)->hlist = NULL;
@@ -51,11 +51,11 @@ fn_fail:
 #endif /* MPICH_MPI_FROM_PMPI */
 
 #undef FUNCNAME
-#define FUNCNAME MPIX_T_pvar_session_create
+#define FUNCNAME MPI_T_pvar_session_create
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 /*@
-MPIX_T_pvar_session_create - XXX description here
+MPI_T_pvar_session_create - XXX description here
 
 Output Parameters:
 . session - identifier of performance session (handle)
@@ -66,13 +66,13 @@ Output Parameters:
 
 .N Errors
 @*/
-int MPIX_T_pvar_session_create(MPIX_T_pvar_session *session)
+int MPI_T_pvar_session_create(MPI_T_pvar_session *session)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPIX_T_PVAR_SESSION_CREATE);
+    MPID_MPI_STATE_DECL(MPID_STATE_MPI_T_PVAR_SESSION_CREATE);
 
     MPIU_THREAD_CS_ENTER(ALLFUNC,);
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPIX_T_PVAR_SESSION_CREATE);
+    MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_T_PVAR_SESSION_CREATE);
 
     /* Validate parameters, especially handles needing to be converted */
 #   ifdef HAVE_ERROR_CHECKING
@@ -109,7 +109,7 @@ int MPIX_T_pvar_session_create(MPIX_T_pvar_session *session)
     /* ... end of body of routine ... */
 
 fn_exit:
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPIX_T_PVAR_SESSION_CREATE);
+    MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_T_PVAR_SESSION_CREATE);
     MPIU_THREAD_CS_EXIT(ALLFUNC,);
     return mpi_errno;
 

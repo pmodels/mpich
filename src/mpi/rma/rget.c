@@ -8,29 +8,29 @@
 #include "mpiimpl.h"
 #include "rma.h"
 
-/* -- Begin Profiling Symbol Block for routine MPIX_Rget */
+/* -- Begin Profiling Symbol Block for routine MPI_Rget */
 #if defined(HAVE_PRAGMA_WEAK)
-#pragma weak MPIX_Rget = PMPIX_Rget
+#pragma weak MPI_Rget = PMPI_Rget
 #elif defined(HAVE_PRAGMA_HP_SEC_DEF)
-#pragma _HP_SECONDARY_DEF PMPIX_Rget  MPIX_Rget
+#pragma _HP_SECONDARY_DEF PMPI_Rget  MPI_Rget
 #elif defined(HAVE_PRAGMA_CRI_DUP)
-#pragma _CRI duplicate MPIX_Rget as PMPIX_Rget
+#pragma _CRI duplicate MPI_Rget as PMPI_Rget
 #endif
 /* -- End Profiling Symbol Block */
 
 /* Define MPICH_MPI_FROM_PMPI if weak symbols are not supported to build
    the MPI routines */
 #ifndef MPICH_MPI_FROM_PMPI
-#undef MPIX_Rget
-#define MPIX_Rget PMPIX_Rget
+#undef MPI_Rget
+#define MPI_Rget PMPI_Rget
 
 #endif
 
 #undef FUNCNAME
-#define FUNCNAME MPIX_Rget
+#define FUNCNAME MPI_Rget
 
 /*@
-   MPIX_Rget - Get data from a memory window on a remote process
+   MPI_Rget - Get data from a memory window on a remote process
 
  Input Parameters:
 + origin_addr - Address of the buffer in which to receive the data
@@ -58,21 +58,21 @@
 .N MPI_ERR_TYPE
 .N MPI_ERR_WIN
 @*/
-int MPIX_Rget(void *origin_addr, int origin_count, MPI_Datatype
+int MPI_Rget(void *origin_addr, int origin_count, MPI_Datatype
             origin_datatype, int target_rank, MPI_Aint target_disp,
             int target_count, MPI_Datatype target_datatype, MPI_Win
             win, MPI_Request *request)
 {
-    static const char FCNAME[] = "MPIX_Rget";
+    static const char FCNAME[] = "MPI_Rget";
     int mpi_errno = MPI_SUCCESS;
     MPID_Win *win_ptr = NULL;
     MPID_Request *request_ptr = NULL;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPIX_RGET);
+    MPID_MPI_STATE_DECL(MPID_STATE_MPI_RGET);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
     MPIU_THREAD_CS_ENTER(ALLFUNC,);
-    MPID_MPI_RMA_FUNC_ENTER(MPID_STATE_MPIX_RGET);
+    MPID_MPI_RMA_FUNC_ENTER(MPID_STATE_MPI_RGET);
 
     /* Validate parameters, especially handles needing to be converted */
 #   ifdef HAVE_ERROR_CHECKING
@@ -103,7 +103,7 @@ int MPIX_Rget(void *origin_addr, int origin_count, MPI_Datatype
             MPIR_ERRTEST_DATATYPE(origin_datatype, "origin_datatype", mpi_errno);
             MPIR_ERRTEST_COUNT(target_count, mpi_errno);
             MPIR_ERRTEST_DATATYPE(target_datatype, "target_datatype", mpi_errno);
-            if (win_ptr->create_flavor != MPIX_WIN_FLAVOR_DYNAMIC)
+            if (win_ptr->create_flavor != MPI_WIN_FLAVOR_DYNAMIC)
                 MPIR_ERRTEST_DISP(target_disp, mpi_errno);
 
             if (HANDLE_GET_KIND(origin_datatype) != HANDLE_KIND_BUILTIN)
@@ -151,7 +151,7 @@ int MPIX_Rget(void *origin_addr, int origin_count, MPI_Datatype
     /* ... end of body of routine ... */
 
   fn_exit:
-    MPID_MPI_RMA_FUNC_EXIT(MPID_STATE_MPIX_RGET);
+    MPID_MPI_RMA_FUNC_EXIT(MPID_STATE_MPI_RGET);
     MPIU_THREAD_CS_EXIT(ALLFUNC,);
     return mpi_errno;
 

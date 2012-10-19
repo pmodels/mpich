@@ -113,11 +113,11 @@ int MPIR_WinGetAttr( MPI_Win win, int win_keyval, void *attribute_val,
 	    win_ptr->copyDispUnit = win_ptr->disp_unit;
 	    *attr_val_p = &win_ptr->copyDispUnit;
 	    break;
-	case MPIX_WIN_CREATE_FLAVOR:
+	case MPI_WIN_CREATE_FLAVOR:
 	    win_ptr->copyCreateFlavor = win_ptr->create_flavor;
 	    *attr_val_p = &win_ptr->copyCreateFlavor;
 	    break;
-	case MPIX_WIN_MODEL:
+	case MPI_WIN_MODEL:
 	    win_ptr->copyModel = win_ptr->model;
 	    *attr_val_p = &win_ptr->copyModel;
 	    break;
@@ -137,10 +137,10 @@ int MPIR_WinGetAttr( MPI_Win win, int win_keyval, void *attribute_val,
 	       not a pointer to the value */
 	    *attr_int = win_ptr->disp_unit;
 	    break;
-	case MPIR_ATTR_C_TO_FORTRAN(MPIX_WIN_CREATE_FLAVOR):
+	case MPIR_ATTR_C_TO_FORTRAN(MPI_WIN_CREATE_FLAVOR):
 	    *attr_int = win_ptr->create_flavor;
 	    break;
-	case MPIR_ATTR_C_TO_FORTRAN(MPIX_WIN_MODEL):
+	case MPIR_ATTR_C_TO_FORTRAN(MPI_WIN_MODEL):
 	    *attr_int = win_ptr->model;
 	    break;
 #endif

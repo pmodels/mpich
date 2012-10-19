@@ -42,7 +42,7 @@ int main(int argc, char *argv[])
 #if !defined(USE_STRICT_MPI) && defined(MPICH2)
     if (rank % 2 == 0) {
         /* Even processes create a group for themselves */
-        MPIX_Comm_create_group(MPI_COMM_WORLD, even_group, 0, &even_comm);
+        MPI_Comm_create_group(MPI_COMM_WORLD, even_group, 0, &even_comm);
         MPI_Barrier(even_comm);
         MPI_Comm_free(&even_comm);
     }

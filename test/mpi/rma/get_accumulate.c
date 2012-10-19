@@ -110,7 +110,7 @@ int main(int argc, char **argv) {
 
     for (i = 0; i < ITER; i++) {
         MPI_Win_lock(MPI_LOCK_EXCLUSIVE, rank, 0, win);
-        MPIX_Get_accumulate(val_ptr, COUNT, TYPE_MPI, res_ptr, COUNT, TYPE_MPI, 
+        MPI_Get_accumulate(val_ptr, COUNT, TYPE_MPI, res_ptr, COUNT, TYPE_MPI, 
                             rank, 0, COUNT, TYPE_MPI, MPI_SUM, win);
         MPI_Win_unlock(rank, win);
     }
@@ -131,7 +131,7 @@ int main(int argc, char **argv) {
 
     for (i = 0; i < ITER; i++) {
         MPI_Win_lock(MPI_LOCK_EXCLUSIVE, (rank+1)%nproc, 0, win);
-        MPIX_Get_accumulate(val_ptr, COUNT, TYPE_MPI, res_ptr, COUNT, TYPE_MPI, 
+        MPI_Get_accumulate(val_ptr, COUNT, TYPE_MPI, res_ptr, COUNT, TYPE_MPI, 
                             (rank+1)%nproc, 0, COUNT, TYPE_MPI, MPI_SUM, win);
         MPI_Win_unlock((rank+1)%nproc, win);
     }
@@ -155,7 +155,7 @@ int main(int argc, char **argv) {
     if (rank != 0) {
         for (i = 0; i < ITER; i++) {
             MPI_Win_lock(MPI_LOCK_EXCLUSIVE, 0, 0, win);
-            MPIX_Get_accumulate(val_ptr, COUNT, TYPE_MPI, res_ptr, COUNT, TYPE_MPI, 
+            MPI_Get_accumulate(val_ptr, COUNT, TYPE_MPI, res_ptr, COUNT, TYPE_MPI, 
                                 0, 0, COUNT, TYPE_MPI, MPI_SUM, win);
             MPI_Win_unlock(0, win);
         }
@@ -184,7 +184,7 @@ int main(int argc, char **argv) {
 
         MPI_Win_fence(MPI_MODE_NOPRECEDE, win);
         for (j = 0; j < nproc; j++) {
-            MPIX_Get_accumulate(val_ptr, COUNT, TYPE_MPI, &res_ptr[j*COUNT], COUNT, TYPE_MPI,
+            MPI_Get_accumulate(val_ptr, COUNT, TYPE_MPI, &res_ptr[j*COUNT], COUNT, TYPE_MPI,
                                 j, rank*COUNT, COUNT, TYPE_MPI, MPI_SUM, win);
         }
         MPI_Win_fence(MPI_MODE_NOSUCCEED, win);

@@ -8,29 +8,29 @@
 #include "mpiimpl.h"
 #include "rma.h"
 
-/* -- Begin Profiling Symbol Block for routine MPIX_Fetch_and_op */
+/* -- Begin Profiling Symbol Block for routine MPI_Fetch_and_op */
 #if defined(HAVE_PRAGMA_WEAK)
-#pragma weak MPIX_Fetch_and_op = PMPIX_Fetch_and_op
+#pragma weak MPI_Fetch_and_op = PMPI_Fetch_and_op
 #elif defined(HAVE_PRAGMA_HP_SEC_DEF)
-#pragma _HP_SECONDARY_DEF PMPIX_Fetch_and_op  MPIX_Fetch_and_op
+#pragma _HP_SECONDARY_DEF PMPI_Fetch_and_op  MPI_Fetch_and_op
 #elif defined(HAVE_PRAGMA_CRI_DUP)
-#pragma _CRI duplicate MPIX_Fetch_and_op as PMPIX_Fetch_and_op
+#pragma _CRI duplicate MPI_Fetch_and_op as PMPI_Fetch_and_op
 #endif
 /* -- End Profiling Symbol Block */
 
 /* Define MPICH_MPI_FROM_PMPI if weak symbols are not supported to build
    the MPI routines */
 #ifndef MPICH_MPI_FROM_PMPI
-#undef MPIX_Fetch_and_op
-#define MPIX_Fetch_and_op PMPIX_Fetch_and_op
+#undef MPI_Fetch_and_op
+#define MPI_Fetch_and_op PMPI_Fetch_and_op
 
 #endif
 
 #undef FUNCNAME
-#define FUNCNAME MPIX_Fetch_and_op
+#define FUNCNAME MPI_Fetch_and_op
 
 /*@
-   MPIX_Fetch_and_op - Accumulate one element of type datatype from the origin
+   MPI_Fetch_and_op - Accumulate one element of type datatype from the origin
    buffer (origin_addr) to the buffer at offset target_disp, in the target
    window specied by target_rank and win, using the operation op and return in
    the result buffer result_addr the content of the target buffer before the
@@ -59,19 +59,19 @@ Atomic with respect to other "accumulate" operations.
 .N MPI_ERR_TYPE
 .N MPI_ERR_WIN
 @*/
-int MPIX_Fetch_and_op(const void *origin_addr, void *result_addr,
+int MPI_Fetch_and_op(const void *origin_addr, void *result_addr,
         MPI_Datatype datatype, int target_rank, MPI_Aint target_disp,
         MPI_Op op, MPI_Win win)
 {
-    static const char FCNAME[] = "MPIX_Fetch_and_op";
+    static const char FCNAME[] = "MPI_Fetch_and_op";
     int mpi_errno = MPI_SUCCESS;
     MPID_Win *win_ptr = NULL;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPIX_FETCH_AND_OP);
+    MPID_MPI_STATE_DECL(MPID_STATE_MPI_FETCH_AND_OP);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
     MPIU_THREAD_CS_ENTER(ALLFUNC,);
-    MPID_MPI_RMA_FUNC_ENTER(MPID_STATE_MPIX_FETCH_AND_OP);
+    MPID_MPI_RMA_FUNC_ENTER(MPID_STATE_MPI_FETCH_AND_OP);
 
     /* Validate parameters, especially handles needing to be converted */
 #   ifdef HAVE_ERROR_CHECKING
@@ -98,7 +98,7 @@ int MPIX_Fetch_and_op(const void *origin_addr, void *result_addr,
             MPID_Win_valid_ptr( win_ptr, mpi_errno );
             if (mpi_errno) goto fn_fail;
 
-            if (op != MPIX_NO_OP) {
+            if (op != MPI_NO_OP) {
                 MPIR_ERRTEST_ARGNULL(origin_addr, "origin_addr", mpi_errno);
             }
 
@@ -110,7 +110,7 @@ int MPIX_Fetch_and_op(const void *origin_addr, void *result_addr,
                 MPIU_ERR_SETANDJUMP(mpi_errno, MPI_ERR_TYPE, "**typenotpredefined");
             }
 
-            if (win_ptr->create_flavor != MPIX_WIN_FLAVOR_DYNAMIC)
+            if (win_ptr->create_flavor != MPI_WIN_FLAVOR_DYNAMIC)
                 MPIR_ERRTEST_DISP(target_disp, mpi_errno);
 
             comm_ptr = win_ptr->comm_ptr;
@@ -140,7 +140,7 @@ int MPIX_Fetch_and_op(const void *origin_addr, void *result_addr,
     /* ... end of body of routine ... */
 
   fn_exit:
-    MPID_MPI_RMA_FUNC_EXIT(MPID_STATE_MPIX_FETCH_AND_OP);
+    MPID_MPI_RMA_FUNC_EXIT(MPID_STATE_MPI_FETCH_AND_OP);
     MPIU_THREAD_CS_EXIT(ALLFUNC,);
     return mpi_errno;
 

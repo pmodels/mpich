@@ -8,29 +8,29 @@
 #include "mpiimpl.h"
 #include "rma.h"
 
-/* -- Begin Profiling Symbol Block for routine MPIX_Rget_accumulate */
+/* -- Begin Profiling Symbol Block for routine MPI_Rget_accumulate */
 #if defined(HAVE_PRAGMA_WEAK)
-#pragma weak MPIX_Rget_accumulate = PMPIX_Rget_accumulate
+#pragma weak MPI_Rget_accumulate = PMPI_Rget_accumulate
 #elif defined(HAVE_PRAGMA_HP_SEC_DEF)
-#pragma _HP_SECONDARY_DEF PMPIX_Rget_accumulate  MPIX_Rget_accumulate
+#pragma _HP_SECONDARY_DEF PMPI_Rget_accumulate  MPI_Rget_accumulate
 #elif defined(HAVE_PRAGMA_CRI_DUP)
-#pragma _CRI duplicate MPIX_Rget_accumulate as PMPIX_Rget_accumulate
+#pragma _CRI duplicate MPI_Rget_accumulate as PMPI_Rget_accumulate
 #endif
 /* -- End Profiling Symbol Block */
 
 /* Define MPICH_MPI_FROM_PMPI if weak symbols are not supported to build
    the MPI routines */
 #ifndef MPICH_MPI_FROM_PMPI
-#undef MPIX_Rget_accumulate
-#define MPIX_Rget_accumulate PMPIX_Rget_accumulate
+#undef MPI_Rget_accumulate
+#define MPI_Rget_accumulate PMPI_Rget_accumulate
 
 #endif
 
 #undef FUNCNAME
-#define FUNCNAME MPIX_Rget_accumulate
+#define FUNCNAME MPI_Rget_accumulate
 
 /*@
-   MPIX_Rget_accumulate - Accumulate data into the target process using remote 
+   MPI_Rget_accumulate - Accumulate data into the target process using remote 
    memory access 
 
    Input Parameters:
@@ -65,22 +65,22 @@ predefined datatype (e.g., all 'MPI_INT' or all 'MPI_DOUBLE_PRECISION').
 .N MPI_ERR_TYPE
 .N MPI_ERR_WIN
 @*/
-int MPIX_Rget_accumulate(const void *origin_addr, int origin_count,
+int MPI_Rget_accumulate(const void *origin_addr, int origin_count,
         MPI_Datatype origin_datatype, void *result_addr, int result_count,
         MPI_Datatype result_datatype, int target_rank, MPI_Aint target_disp,
         int target_count, MPI_Datatype target_datatype, MPI_Op op, MPI_Win win,
         MPI_Request *request)
 {
-    static const char FCNAME[] = "MPIX_Rget_accumulate";
+    static const char FCNAME[] = "MPI_Rget_accumulate";
     int mpi_errno = MPI_SUCCESS;
     MPID_Win *win_ptr = NULL;
     MPID_Request *request_ptr = NULL;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPIX_RGET_ACCUMULATE);
+    MPID_MPI_STATE_DECL(MPID_STATE_MPI_RGET_ACCUMULATE);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
     MPIU_THREAD_CS_ENTER(ALLFUNC,);
-    MPID_MPI_RMA_FUNC_ENTER(MPID_STATE_MPIX_RGET_ACCUMULATE);
+    MPID_MPI_RMA_FUNC_ENTER(MPID_STATE_MPI_RGET_ACCUMULATE);
 
     /* Validate parameters, especially handles needing to be converted */
 #   ifdef HAVE_ERROR_CHECKING
@@ -113,7 +113,7 @@ int MPIX_Rget_accumulate(const void *origin_addr, int origin_count,
             MPIR_ERRTEST_DATATYPE(result_datatype, "result_datatype", mpi_errno);
             MPIR_ERRTEST_COUNT(target_count, mpi_errno);
             MPIR_ERRTEST_DATATYPE(target_datatype, "target_datatype", mpi_errno);
-            if (win_ptr->create_flavor != MPIX_WIN_FLAVOR_DYNAMIC)
+            if (win_ptr->create_flavor != MPI_WIN_FLAVOR_DYNAMIC)
                 MPIR_ERRTEST_DISP(target_disp, mpi_errno);
 
             if (HANDLE_GET_KIND(origin_datatype) != HANDLE_KIND_BUILTIN)
@@ -175,7 +175,7 @@ int MPIX_Rget_accumulate(const void *origin_addr, int origin_count,
     /* ... end of body of routine ... */
 
   fn_exit:
-    MPID_MPI_RMA_FUNC_EXIT(MPID_STATE_MPIX_RGET_ACCUMULATE);
+    MPID_MPI_RMA_FUNC_EXIT(MPID_STATE_MPI_RGET_ACCUMULATE);
     MPIU_THREAD_CS_EXIT(ALLFUNC,);
     return mpi_errno;
 

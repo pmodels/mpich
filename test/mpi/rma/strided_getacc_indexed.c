@@ -96,14 +96,14 @@ int main(int argc, char **argv) {
 
       /* PUT */
       MPI_Win_lock(MPI_LOCK_EXCLUSIVE, peer, 0, buf_win);
-      MPIX_Get_accumulate(src_buf, 1, src_type, dst_buf, 1, src_type, peer, 0,
+      MPI_Get_accumulate(src_buf, 1, src_type, dst_buf, 1, src_type, peer, 0,
                           1, dst_type, MPI_REPLACE, buf_win);
       MPI_Win_unlock(peer, buf_win);
 
       /* GET */
       MPI_Win_lock(MPI_LOCK_EXCLUSIVE, peer, 0, buf_win);
-      MPIX_Get_accumulate(src_buf, 1, src_type, dst_buf, 1, src_type, peer, 0,
-                          1, dst_type, MPIX_NO_OP, buf_win);
+      MPI_Get_accumulate(src_buf, 1, src_type, dst_buf, 1, src_type, peer, 0,
+                          1, dst_type, MPI_NO_OP, buf_win);
       MPI_Win_unlock(peer, buf_win);
 
       MPI_Type_free(&src_type);

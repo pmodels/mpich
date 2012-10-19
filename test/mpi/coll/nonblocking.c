@@ -81,60 +81,55 @@ int main(int argc, char **argv)
         types[i]    = MPI_INT;
     }
 
-    /* these are currently all "MPIX_" extensions to MPI, since MPI-3 hasn't
-     * been officially passed in its entirety by the MPI Forum.  This #ifndef
-     * change to a version check for >=3.0 once MPI-3 is official and these
-     * names change to an "MPI_" prefix.. */
-    /* int MPIX_Ibarrier(MPI_Comm comm, MPI_Request *request); */
-    MPIX_Ibarrier(comm, &req);
+    MPI_Ibarrier(comm, &req);
     MPI_Wait(&req, MPI_STATUS_IGNORE);
 
-    MPIX_Ibcast(sbuf, NUM_INTS, MPI_INT, 0, comm, &req);
+    MPI_Ibcast(sbuf, NUM_INTS, MPI_INT, 0, comm, &req);
     MPI_Wait(&req, MPI_STATUS_IGNORE);
 
-    MPIX_Igather(sbuf, NUM_INTS, MPI_INT, rbuf, NUM_INTS, MPI_INT, 0, comm, &req);
+    MPI_Igather(sbuf, NUM_INTS, MPI_INT, rbuf, NUM_INTS, MPI_INT, 0, comm, &req);
     MPI_Wait(&req, MPI_STATUS_IGNORE);
 
-    MPIX_Igatherv(sbuf, NUM_INTS, MPI_INT, rbuf, rcounts, rdispls, MPI_INT, 0, comm, &req);
+    MPI_Igatherv(sbuf, NUM_INTS, MPI_INT, rbuf, rcounts, rdispls, MPI_INT, 0, comm, &req);
     MPI_Wait(&req, MPI_STATUS_IGNORE);
 
-    MPIX_Iscatter(sbuf, NUM_INTS, MPI_INT, rbuf, NUM_INTS, MPI_INT, 0, comm, &req);
+    MPI_Iscatter(sbuf, NUM_INTS, MPI_INT, rbuf, NUM_INTS, MPI_INT, 0, comm, &req);
     MPI_Wait(&req, MPI_STATUS_IGNORE);
 
-    MPIX_Iscatterv(sbuf, scounts, sdispls, MPI_INT, rbuf, NUM_INTS, MPI_INT, 0, comm, &req);
+    MPI_Iscatterv(sbuf, scounts, sdispls, MPI_INT, rbuf, NUM_INTS, MPI_INT, 0, comm, &req);
     MPI_Wait(&req, MPI_STATUS_IGNORE);
 
-    MPIX_Iallgather(sbuf, NUM_INTS, MPI_INT, rbuf, NUM_INTS, MPI_INT, comm, &req);
+    MPI_Iallgather(sbuf, NUM_INTS, MPI_INT, rbuf, NUM_INTS, MPI_INT, comm, &req);
     MPI_Wait(&req, MPI_STATUS_IGNORE);
 
-    MPIX_Iallgatherv(sbuf, NUM_INTS, MPI_INT, rbuf, rcounts, rdispls, MPI_INT, comm, &req);
+    MPI_Iallgatherv(sbuf, NUM_INTS, MPI_INT, rbuf, rcounts, rdispls, MPI_INT, comm, &req);
     MPI_Wait(&req, MPI_STATUS_IGNORE);
 
-    MPIX_Ialltoall(sbuf, NUM_INTS, MPI_INT, rbuf, NUM_INTS, MPI_INT, comm, &req);
+    MPI_Ialltoall(sbuf, NUM_INTS, MPI_INT, rbuf, NUM_INTS, MPI_INT, comm, &req);
     MPI_Wait(&req, MPI_STATUS_IGNORE);
 
-    MPIX_Ialltoallv(sbuf, scounts, sdispls, MPI_INT, rbuf, rcounts, rdispls, MPI_INT, comm, &req);
+    MPI_Ialltoallv(sbuf, scounts, sdispls, MPI_INT, rbuf, rcounts, rdispls, MPI_INT, comm, &req);
     MPI_Wait(&req, MPI_STATUS_IGNORE);
 
-    MPIX_Ialltoallw(sbuf, scounts, sdispls, types, rbuf, rcounts, rdispls, types, comm, &req);
+    MPI_Ialltoallw(sbuf, scounts, sdispls, types, rbuf, rcounts, rdispls, types, comm, &req);
     MPI_Wait(&req, MPI_STATUS_IGNORE);
 
-    MPIX_Ireduce(sbuf, rbuf, NUM_INTS, MPI_INT, MPI_SUM, 0, comm, &req);
+    MPI_Ireduce(sbuf, rbuf, NUM_INTS, MPI_INT, MPI_SUM, 0, comm, &req);
     MPI_Wait(&req, MPI_STATUS_IGNORE);
 
-    MPIX_Iallreduce(sbuf, rbuf, NUM_INTS, MPI_INT, MPI_SUM, comm, &req);
+    MPI_Iallreduce(sbuf, rbuf, NUM_INTS, MPI_INT, MPI_SUM, comm, &req);
     MPI_Wait(&req, MPI_STATUS_IGNORE);
 
-    MPIX_Ireduce_scatter(sbuf, rbuf, rcounts, MPI_INT, MPI_SUM, comm, &req);
+    MPI_Ireduce_scatter(sbuf, rbuf, rcounts, MPI_INT, MPI_SUM, comm, &req);
     MPI_Wait(&req, MPI_STATUS_IGNORE);
 
-    MPIX_Ireduce_scatter_block(sbuf, rbuf, NUM_INTS, MPI_INT, MPI_SUM, comm, &req);
+    MPI_Ireduce_scatter_block(sbuf, rbuf, NUM_INTS, MPI_INT, MPI_SUM, comm, &req);
     MPI_Wait(&req, MPI_STATUS_IGNORE);
 
-    MPIX_Iscan(sbuf, rbuf, NUM_INTS, MPI_INT, MPI_SUM, comm, &req);
+    MPI_Iscan(sbuf, rbuf, NUM_INTS, MPI_INT, MPI_SUM, comm, &req);
     MPI_Wait(&req, MPI_STATUS_IGNORE);
 
-    MPIX_Iexscan(sbuf, rbuf, NUM_INTS, MPI_INT, MPI_SUM, comm, &req);
+    MPI_Iexscan(sbuf, rbuf, NUM_INTS, MPI_INT, MPI_SUM, comm, &req);
     MPI_Wait(&req, MPI_STATUS_IGNORE);
 
 #endif

@@ -6,21 +6,21 @@
 
 #include "mpiimpl.h"
 
-/* -- Begin Profiling Symbol Block for routine MPIX_Comm_idup */
+/* -- Begin Profiling Symbol Block for routine MPI_Comm_idup */
 #if defined(HAVE_PRAGMA_WEAK)
-#pragma weak MPIX_Comm_idup = PMPIX_Comm_idup
+#pragma weak MPI_Comm_idup = PMPI_Comm_idup
 #elif defined(HAVE_PRAGMA_HP_SEC_DEF)
-#pragma _HP_SECONDARY_DEF PMPIX_Comm_idup  MPIX_Comm_idup
+#pragma _HP_SECONDARY_DEF PMPI_Comm_idup  MPI_Comm_idup
 #elif defined(HAVE_PRAGMA_CRI_DUP)
-#pragma _CRI duplicate MPIX_Comm_idup as PMPIX_Comm_idup
+#pragma _CRI duplicate MPI_Comm_idup as PMPI_Comm_idup
 #endif
 /* -- End Profiling Symbol Block */
 
 /* Define MPICH_MPI_FROM_PMPI if weak symbols are not supported to build
    the MPI routines */
 #ifndef MPICH_MPI_FROM_PMPI
-#undef MPIX_Comm_idup
-#define MPIX_Comm_idup PMPIX_Comm_idup
+#undef MPI_Comm_idup
+#define MPI_Comm_idup PMPI_Comm_idup
 
 /* any non-MPI functions go here, especially non-static ones */
 
@@ -71,11 +71,11 @@ fn_fail:
 #endif /* MPICH_MPI_FROM_PMPI */
 
 #undef FUNCNAME
-#define FUNCNAME MPIX_Comm_idup
+#define FUNCNAME MPI_Comm_idup
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 /*@
-MPIX_Comm_idup - nonblocking communicator duplication
+MPI_Comm_idup - nonblocking communicator duplication
 
 Input Parameters:
 . comm - communicator (handle)
@@ -90,16 +90,16 @@ Output Parameters:
 
 .N Errors
 @*/
-int MPIX_Comm_idup(MPI_Comm comm, MPI_Comm *newcomm, MPI_Request *request)
+int MPI_Comm_idup(MPI_Comm comm, MPI_Comm *newcomm, MPI_Request *request)
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_Comm *comm_ptr = NULL;
     MPID_Comm *newcomm_ptr = NULL;
     MPID_Request *dreq = NULL;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPIX_COMM_IDUP);
+    MPID_MPI_STATE_DECL(MPID_STATE_MPI_COMM_IDUP);
 
     MPIU_THREAD_CS_ENTER(ALLFUNC,);
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPIX_COMM_IDUP);
+    MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_COMM_IDUP);
 
     /* Validate parameters, especially handles needing to be converted */
 #   ifdef HAVE_ERROR_CHECKING
@@ -147,7 +147,7 @@ int MPIX_Comm_idup(MPI_Comm comm, MPI_Comm *newcomm, MPI_Request *request)
     /* ... end of body of routine ... */
 
 fn_exit:
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPIX_COMM_IDUP);
+    MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_COMM_IDUP);
     MPIU_THREAD_CS_EXIT(ALLFUNC,);
     return mpi_errno;
 

@@ -9,21 +9,21 @@
 /* defined in mpit_init_thread.c */
 extern int MPIR_T_init_balance;
 
-/* -- Begin Profiling Symbol Block for routine MPIX_T_finalize */
+/* -- Begin Profiling Symbol Block for routine MPI_T_finalize */
 #if defined(HAVE_PRAGMA_WEAK)
-#pragma weak MPIX_T_finalize = PMPIX_T_finalize
+#pragma weak MPI_T_finalize = PMPI_T_finalize
 #elif defined(HAVE_PRAGMA_HP_SEC_DEF)
-#pragma _HP_SECONDARY_DEF PMPIX_T_finalize  MPIX_T_finalize
+#pragma _HP_SECONDARY_DEF PMPI_T_finalize  MPI_T_finalize
 #elif defined(HAVE_PRAGMA_CRI_DUP)
-#pragma _CRI duplicate MPIX_T_finalize as PMPIX_T_finalize
+#pragma _CRI duplicate MPI_T_finalize as PMPI_T_finalize
 #endif
 /* -- End Profiling Symbol Block */
 
 /* Define MPICH_MPI_FROM_PMPI if weak symbols are not supported to build
    the MPI routines */
 #ifndef MPICH_MPI_FROM_PMPI
-#undef MPIX_T_finalize
-#define MPIX_T_finalize PMPIX_T_finalize
+#undef MPI_T_finalize
+#define MPI_T_finalize PMPI_T_finalize
 
 /* any non-MPI functions go here, especially non-static ones */
 
@@ -53,11 +53,11 @@ fn_fail:
 #endif /* MPICH_MPI_FROM_PMPI */
 
 #undef FUNCNAME
-#define FUNCNAME MPIX_T_finalize
+#define FUNCNAME MPI_T_finalize
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 /*@
-MPIX_T_finalize - XXX description here
+MPI_T_finalize - XXX description here
 
 .N ThreadSafe
 
@@ -65,13 +65,13 @@ MPIX_T_finalize - XXX description here
 
 .N Errors
 @*/
-int MPIX_T_finalize(void)
+int MPI_T_finalize(void)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPIX_T_FINALIZE);
+    MPID_MPI_STATE_DECL(MPID_STATE_MPI_T_FINALIZE);
 
     MPIU_THREAD_CS_ENTER(ALLFUNC,);
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPIX_T_FINALIZE);
+    MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_T_FINALIZE);
 
     /* Validate parameters, especially handles needing to be converted */
 #   ifdef HAVE_ERROR_CHECKING
@@ -108,7 +108,7 @@ int MPIX_T_finalize(void)
     /* ... end of body of routine ... */
 
 fn_exit:
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPIX_T_FINALIZE);
+    MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_T_FINALIZE);
     MPIU_THREAD_CS_EXIT(ALLFUNC,);
     return mpi_errno;
 

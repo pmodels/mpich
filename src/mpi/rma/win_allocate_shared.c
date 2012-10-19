@@ -10,29 +10,29 @@
 
 /* -- Begin Profiling Symbol Block for routine MPI_Win_allocate_shared */
 #if defined(HAVE_PRAGMA_WEAK)
-#pragma weak MPIX_Win_allocate_shared = PMPIX_Win_allocate_shared
+#pragma weak MPI_Win_allocate_shared = PMPI_Win_allocate_shared
 #elif defined(HAVE_PRAGMA_HP_SEC_DEF)
-#pragma _HP_SECONDARY_DEF PMPIX_Win_allocate_shared  MPIX_Win_allocate_shared
+#pragma _HP_SECONDARY_DEF PMPI_Win_allocate_shared  MPI_Win_allocate_shared
 #elif defined(HAVE_PRAGMA_CRI_DUP)
-#pragma _CRI duplicate MPIX_Win_allocate_shared as PMPIX_Win_allocate_shared
+#pragma _CRI duplicate MPI_Win_allocate_shared as PMPI_Win_allocate_shared
 #endif
 /* -- End Profiling Symbol Block */
 
 /* Define MPICH_MPI_FROM_PMPI if weak symbols are not supported to build
    the MPI routines */
 #ifndef MPICH_MPI_FROM_PMPI
-#undef MPIX_Win_allocate_shared
-#define MPIX_Win_allocate_shared PMPIX_Win_allocate_shared
+#undef MPI_Win_allocate_shared
+#define MPI_Win_allocate_shared PMPI_Win_allocate_shared
 
 #endif
 
 #undef FUNCNAME
-#define FUNCNAME MPIX_Win_allocate_shared
+#define FUNCNAME MPI_Win_allocate_shared
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 
 /*@
-   MPIX_Win_allocate_shared - Create an MPI Window object for one-sided communication
+   MPI_Win_allocate_shared - Create an MPI Window object for one-sided communication
    and allocate memory at each process.
 
    Input Parameters:
@@ -55,19 +55,19 @@
 .N MPI_ERR_OTHER
 .N MPI_ERR_SIZE
 @*/
-int MPIX_Win_allocate_shared(MPI_Aint size, int disp_unit, MPI_Info info, MPI_Comm comm,
+int MPI_Win_allocate_shared(MPI_Aint size, int disp_unit, MPI_Info info, MPI_Comm comm,
                              void *baseptr, MPI_Win *win)
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_Win *win_ptr = NULL;
     MPID_Comm *comm_ptr = NULL;
     MPID_Info *info_ptr = NULL;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPIX_WIN_ALLOCATE_SHARED);
+    MPID_MPI_STATE_DECL(MPID_STATE_MPI_WIN_ALLOCATE_SHARED);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPIU_THREAD_CS_ENTER(ALLFUNC,);
-    MPID_MPI_RMA_FUNC_ENTER(MPID_STATE_MPIX_WIN_ALLOCATE_SHARED);
+    MPID_MPI_RMA_FUNC_ENTER(MPID_STATE_MPI_WIN_ALLOCATE_SHARED);
 
     /* Validate parameters, especially handles needing to be converted */
 #   ifdef HAVE_ERROR_CHECKING
@@ -127,7 +127,7 @@ int MPIX_Win_allocate_shared(MPI_Aint size, int disp_unit, MPI_Info info, MPI_Co
     /* ... end of body of routine ... */
 
   fn_exit:
-    MPID_MPI_RMA_FUNC_EXIT(MPID_STATE_MPIX_WIN_ALLOCATE_SHARED);
+    MPID_MPI_RMA_FUNC_EXIT(MPID_STATE_MPI_WIN_ALLOCATE_SHARED);
     MPIU_THREAD_CS_EXIT(ALLFUNC,);
     return mpi_errno;
 

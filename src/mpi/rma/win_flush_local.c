@@ -8,29 +8,29 @@
 #include "mpiimpl.h"
 #include "rma.h"
 
-/* -- Begin Profiling Symbol Block for routine MPIX_Win_flush_local */
+/* -- Begin Profiling Symbol Block for routine MPI_Win_flush_local */
 #if defined(HAVE_PRAGMA_WEAK)
-#pragma weak MPIX_Win_flush_local = PMPIX_Win_flush_local
+#pragma weak MPI_Win_flush_local = PMPI_Win_flush_local
 #elif defined(HAVE_PRAGMA_HP_SEC_DEF)
-#pragma _HP_SECONDARY_DEF PMPIX_Win_flush_local  MPIX_Win_flush_local
+#pragma _HP_SECONDARY_DEF PMPI_Win_flush_local  MPI_Win_flush_local
 #elif defined(HAVE_PRAGMA_CRI_DUP)
-#pragma _CRI duplicate MPIX_Win_flush_local as PMPIX_Win_flush_local
+#pragma _CRI duplicate MPI_Win_flush_local as PMPI_Win_flush_local
 #endif
 /* -- End Profiling Symbol Block */
 
 /* Define MPICH_MPI_FROM_PMPI if weak symbols are not supported to build
    the MPI routines */
 #ifndef MPICH_MPI_FROM_PMPI
-#undef MPIX_Win_flush_local
-#define MPIX_Win_flush_local PMPIX_Win_flush_local
+#undef MPI_Win_flush_local
+#define MPI_Win_flush_local PMPI_Win_flush_local
 
 #endif
 
 #undef FUNCNAME
-#define FUNCNAME MPIX_Win_flush_local
+#define FUNCNAME MPI_Win_flush_local
 
 /*@
-   MPIX_Win_flush_local - Comple locally all outstanding RMA operations at the given target
+   MPI_Win_flush_local - Comple locally all outstanding RMA operations at the given target
 
    Input Parameters:
 + rank - rank of window (nonnegative integer) 
@@ -48,17 +48,17 @@
 
 .seealso: MPI_Win_lock
 @*/
-int MPIX_Win_flush_local(int rank, MPI_Win win)
+int MPI_Win_flush_local(int rank, MPI_Win win)
 {
-    static const char FCNAME[] = "MPIX_Win_flush_local";
+    static const char FCNAME[] = "MPI_Win_flush_local";
     int mpi_errno = MPI_SUCCESS;
     MPID_Win *win_ptr = NULL;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPIX_WIN_FLUSH_LOCAL);
+    MPID_MPI_STATE_DECL(MPID_STATE_MPI_WIN_FLUSH_LOCAL);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
     MPIU_THREAD_CS_ENTER(ALLFUNC,);
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPIX_WIN_FLUSH_LOCAL);
+    MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_WIN_FLUSH_LOCAL);
 
     /* Validate parameters, especially handles needing to be converted */
 #   ifdef HAVE_ERROR_CHECKING
@@ -103,7 +103,7 @@ int MPIX_Win_flush_local(int rank, MPI_Win win)
     /* ... end of body of routine ... */
 
   fn_exit:
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPIX_WIN_FLUSH_LOCAL);
+    MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_WIN_FLUSH_LOCAL);
     MPIU_THREAD_CS_EXIT(ALLFUNC,);
     return mpi_errno;
 

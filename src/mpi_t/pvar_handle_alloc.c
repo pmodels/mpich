@@ -7,25 +7,25 @@
 #include "mpiimpl.h"
 #include "mpl_utlist.h"
 
-/* -- Begin Profiling Symbol Block for routine MPIX_T_pvar_handle_alloc */
+/* -- Begin Profiling Symbol Block for routine MPI_T_pvar_handle_alloc */
 #if defined(HAVE_PRAGMA_WEAK)
-#pragma weak MPIX_T_pvar_handle_alloc = PMPIX_T_pvar_handle_alloc
+#pragma weak MPI_T_pvar_handle_alloc = PMPI_T_pvar_handle_alloc
 #elif defined(HAVE_PRAGMA_HP_SEC_DEF)
-#pragma _HP_SECONDARY_DEF PMPIX_T_pvar_handle_alloc  MPIX_T_pvar_handle_alloc
+#pragma _HP_SECONDARY_DEF PMPI_T_pvar_handle_alloc  MPI_T_pvar_handle_alloc
 #elif defined(HAVE_PRAGMA_CRI_DUP)
-#pragma _CRI duplicate MPIX_T_pvar_handle_alloc as PMPIX_T_pvar_handle_alloc
+#pragma _CRI duplicate MPI_T_pvar_handle_alloc as PMPI_T_pvar_handle_alloc
 #endif
 /* -- End Profiling Symbol Block */
 
 /* Define MPICH_MPI_FROM_PMPI if weak symbols are not supported to build
    the MPI routines */
 #ifndef MPICH_MPI_FROM_PMPI
-#undef MPIX_T_pvar_handle_alloc
-#define MPIX_T_pvar_handle_alloc PMPIX_T_pvar_handle_alloc
+#undef MPI_T_pvar_handle_alloc
+#define MPI_T_pvar_handle_alloc PMPI_T_pvar_handle_alloc
 
 /* define storage for the ALL_HANDLES constant */
 struct MPIR_T_pvar_handle MPIR_T_pvar_all_handles_obj = {NULL, NULL, NULL, NULL, -1, -1, NULL, NULL};
-struct MPIR_T_pvar_handle * const MPIX_T_PVAR_ALL_HANDLES = &MPIR_T_pvar_all_handles_obj;
+struct MPIR_T_pvar_handle * const MPI_T_PVAR_ALL_HANDLES = &MPIR_T_pvar_all_handles_obj;
 
 /* any non-MPI functions go here, especially non-static ones */
 
@@ -33,19 +33,19 @@ struct MPIR_T_pvar_handle * const MPIX_T_PVAR_ALL_HANDLES = &MPIR_T_pvar_all_han
 #define FUNCNAME MPIR_T_pvar_handle_alloc_impl
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPIR_T_pvar_handle_alloc_impl(MPIX_T_pvar_session session, int pvar_index, void *obj_handle, MPIX_T_pvar_handle *handle, int *count)
+int MPIR_T_pvar_handle_alloc_impl(MPI_T_pvar_session session, int pvar_index, void *obj_handle, MPI_T_pvar_handle *handle, int *count)
 {
     int mpi_errno = MPI_SUCCESS;
     struct MPIR_T_pvar_info *info = NULL;
     MPIU_CHKPMEM_DECL(1);
 
-    *handle = MPIX_T_PVAR_HANDLE_NULL;
+    *handle = MPI_T_PVAR_HANDLE_NULL;
     *count = 0xdeadbeef;
 
     mpi_errno = MPIR_T_get_pvar_info_by_idx(pvar_index, &info);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
-    MPIU_CHKPMEM_MALLOC(*handle, MPIX_T_pvar_handle, sizeof(**handle), mpi_errno, "performance var handle");
+    MPIU_CHKPMEM_MALLOC(*handle, MPI_T_pvar_handle, sizeof(**handle), mpi_errno, "performance var handle");
 
     /* setup the common fields */
     (*handle)->session = session;
@@ -74,11 +74,11 @@ fn_fail:
 #endif /* MPICH_MPI_FROM_PMPI */
 
 #undef FUNCNAME
-#define FUNCNAME MPIX_T_pvar_handle_alloc
+#define FUNCNAME MPI_T_pvar_handle_alloc
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 /*@
-MPIX_T_pvar_handle_alloc - XXX description here
+MPI_T_pvar_handle_alloc - XXX description here
 
 Input Parameters:
 + session - identifier of performance experiment session (handle)
@@ -95,13 +95,13 @@ Output Parameters:
 
 .N Errors
 @*/
-int MPIX_T_pvar_handle_alloc(MPIX_T_pvar_session session, int pvar_index, void *obj_handle, MPIX_T_pvar_handle *handle, int *count)
+int MPI_T_pvar_handle_alloc(MPI_T_pvar_session session, int pvar_index, void *obj_handle, MPI_T_pvar_handle *handle, int *count)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPIX_T_PVAR_HANDLE_ALLOC);
+    MPID_MPI_STATE_DECL(MPID_STATE_MPI_T_PVAR_HANDLE_ALLOC);
 
     MPIU_THREAD_CS_ENTER(ALLFUNC,);
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPIX_T_PVAR_HANDLE_ALLOC);
+    MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_T_PVAR_HANDLE_ALLOC);
 
     /* Validate parameters, especially handles needing to be converted */
 #   ifdef HAVE_ERROR_CHECKING
@@ -139,7 +139,7 @@ int MPIX_T_pvar_handle_alloc(MPIX_T_pvar_session session, int pvar_index, void *
     /* ... end of body of routine ... */
 
 fn_exit:
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPIX_T_PVAR_HANDLE_ALLOC);
+    MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_T_PVAR_HANDLE_ALLOC);
     MPIU_THREAD_CS_EXIT(ALLFUNC,);
     return mpi_errno;
 

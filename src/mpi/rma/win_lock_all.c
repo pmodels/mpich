@@ -8,29 +8,29 @@
 #include "mpiimpl.h"
 #include "rma.h"
 
-/* -- Begin Profiling Symbol Block for routine MPIX_Win_lock_all */
+/* -- Begin Profiling Symbol Block for routine MPI_Win_lock_all */
 #if defined(HAVE_PRAGMA_WEAK)
-#pragma weak MPIX_Win_lock_all = PMPIX_Win_lock_all
+#pragma weak MPI_Win_lock_all = PMPI_Win_lock_all
 #elif defined(HAVE_PRAGMA_HP_SEC_DEF)
-#pragma _HP_SECONDARY_DEF PMPIX_Win_lock_all  MPIX_Win_lock_all
+#pragma _HP_SECONDARY_DEF PMPI_Win_lock_all  MPI_Win_lock_all
 #elif defined(HAVE_PRAGMA_CRI_DUP)
-#pragma _CRI duplicate MPIX_Win_lock_all as PMPIX_Win_lock_all
+#pragma _CRI duplicate MPI_Win_lock_all as PMPI_Win_lock_all
 #endif
 /* -- End Profiling Symbol Block */
 
 /* Define MPICH_MPI_FROM_PMPI if weak symbols are not supported to build
    the MPI routines */
 #ifndef MPICH_MPI_FROM_PMPI
-#undef MPIX_Win_lock_all
-#define MPIX_Win_lock_all PMPIX_Win_lock_all
+#undef MPI_Win_lock_all
+#define MPI_Win_lock_all PMPI_Win_lock_all
 
 #endif
 
 #undef FUNCNAME
-#define FUNCNAME MPIX_Win_lock_all
+#define FUNCNAME MPI_Win_lock_all
 
 /*@
-   MPIX_Win_lock_all - Begin an RMA access epoch at all processes on the 
+   MPI_Win_lock_all - Begin an RMA access epoch at all processes on the 
    given window.
 
    Input Parameters:
@@ -50,9 +50,9 @@
    be used portably only in such memory. 
 
    The 'assert' argument is used to indicate special conditions for the
-   fence that an implementation may use to optimize the 'MPIX_Win_lock_all' 
+   fence that an implementation may use to optimize the 'MPI_Win_lock_all' 
    operation.  The value zero is always correct.  Other assertion values
-   may be or''ed together.  Assertions that are valid for 'MPIX_Win_lock_all' are\:
+   may be or''ed together.  Assertions that are valid for 'MPI_Win_lock_all' are\:
 
 . MPI_MODE_NOCHECK - no other process holds, or will attempt to acquire a 
   conflicting lock, while the caller holds the window lock. This is useful 
@@ -70,17 +70,17 @@
 .N MPI_ERR_WIN
 .N MPI_ERR_OTHER
 @*/
-int MPIX_Win_lock_all(int assert, MPI_Win win)
+int MPI_Win_lock_all(int assert, MPI_Win win)
 {
-    static const char FCNAME[] = "MPIX_Win_lock_all";
+    static const char FCNAME[] = "MPI_Win_lock_all";
     int mpi_errno = MPI_SUCCESS;
     MPID_Win *win_ptr = NULL;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPIX_WIN_LOCK_ALL);
+    MPID_MPI_STATE_DECL(MPID_STATE_MPI_WIN_LOCK_ALL);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
     MPIU_THREAD_CS_ENTER(ALLFUNC,);
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPIX_WIN_LOCK_ALL);
+    MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_WIN_LOCK_ALL);
 
     /* Validate parameters, especially handles needing to be converted */
 #   ifdef HAVE_ERROR_CHECKING
@@ -137,7 +137,7 @@ int MPIX_Win_lock_all(int assert, MPI_Win win)
     /* ... end of body of routine ... */
 
   fn_exit:
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPIX_WIN_LOCK_ALL);
+    MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_WIN_LOCK_ALL);
     MPIU_THREAD_CS_EXIT(ALLFUNC,);
     return mpi_errno;
 

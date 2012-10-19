@@ -77,7 +77,7 @@ int main(int argc, char **argv)
     sendtypes  = malloc(size*sizeof(MPI_Datatype));
     recvtypes  = malloc(size*sizeof(MPI_Datatype));
 
-    /* MPIX_Ibcast */
+    /* MPI_Ibcast */
     for (i = 0; i < COUNT; ++i) {
         if (rank == 0) {
             buf[i] = i;
@@ -86,7 +86,7 @@ int main(int argc, char **argv)
             buf[i] = 0xdeadbeef;
         }
     }
-    MPIX_Ibcast(buf, COUNT, MPI_INT, 0, MPI_COMM_WORLD, &req);
+    MPI_Ibcast(buf, COUNT, MPI_INT, 0, MPI_COMM_WORLD, &req);
     MPI_Wait(&req, MPI_STATUS_IGNORE);
 
     for (i = 0; i < COUNT; ++i) {
@@ -95,7 +95,7 @@ int main(int argc, char **argv)
         my_assert(buf[i] == i);
     }
 
-    /* MPIX_Ibcast (again, but designed to stress scatter/allgather impls) */
+    /* MPI_Ibcast (again, but designed to stress scatter/allgather impls) */
     buf_alias = (char *)buf;
     my_assert(COUNT*size*sizeof(int) > PRIME); /* sanity */
     for (i = 0; i < PRIME; ++i) {
@@ -107,7 +107,7 @@ int main(int argc, char **argv)
     for (i = PRIME; i < COUNT * size * sizeof(int); ++i) {
         buf_alias[i] = 0xbf;
     }
-    MPIX_Ibcast(buf, PRIME, MPI_SIGNED_CHAR, 0, MPI_COMM_WORLD, &req);
+    MPI_Ibcast(buf, PRIME, MPI_SIGNED_CHAR, 0, MPI_COMM_WORLD, &req);
     MPI_Wait(&req, MPI_STATUS_IGNORE);
     for (i = 0; i < PRIME; ++i) {
         if (buf_alias[i] != i)
@@ -115,16 +115,16 @@ int main(int argc, char **argv)
         my_assert(buf_alias[i] == i);
     }
 
-    /* MPIX_Ibarrier */
-    MPIX_Ibarrier(MPI_COMM_WORLD, &req);
+    /* MPI_Ibarrier */
+    MPI_Ibarrier(MPI_COMM_WORLD, &req);
     MPI_Wait(&req, MPI_STATUS_IGNORE);
 
-    /* MPIX_Ireduce */
+    /* MPI_Ireduce */
     for (i = 0; i < COUNT; ++i) {
         buf[i] = rank + i;
         recvbuf[i] = 0xdeadbeef;
     }
-    MPIX_Ireduce(buf, recvbuf, COUNT, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD, &req);
+    MPI_Ireduce(buf, recvbuf, COUNT, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD, &req);
     MPI_Wait(&req, MPI_STATUS_IGNORE);
     if (rank == 0) {
         for (i = 0; i < COUNT; ++i) {
@@ -143,7 +143,7 @@ int main(int argc, char **argv)
             buf[i] = rank + i;
             recvbuf[i] = 0xdeadbeef;
         }
-        MPIX_Ireduce(buf, recvbuf, COUNT, MPI_INT, op, 0, MPI_COMM_WORLD, &req);
+        MPI_Ireduce(buf, recvbuf, COUNT, MPI_INT, op, 0, MPI_COMM_WORLD, &req);
         MPI_Op_free(&op);
         MPI_Wait(&req, MPI_STATUS_IGNORE);
         if (rank == 0) {
@@ -155,12 +155,12 @@ int main(int argc, char **argv)
         }
     }
 
-    /* MPIX_Iallreduce */
+    /* MPI_Iallreduce */
     for (i = 0; i < COUNT; ++i) {
         buf[i] = rank + i;
         recvbuf[i] = 0xdeadbeef;
     }
-    MPIX_Iallreduce(buf, recvbuf, COUNT, MPI_INT, MPI_SUM, MPI_COMM_WORLD, &req);
+    MPI_Iallreduce(buf, recvbuf, COUNT, MPI_INT, MPI_SUM, MPI_COMM_WORLD, &req);
     MPI_Wait(&req, MPI_STATUS_IGNORE);
     for (i = 0; i < COUNT; ++i) {
         if (recvbuf[i] != ((size * (size-1) / 2) + (i * size)))
@@ -168,7 +168,7 @@ int main(int argc, char **argv)
         my_assert(recvbuf[i] == ((size * (size-1) / 2) + (i * size)));
     }
 
-    /* MPIX_Ialltoallv (a weak test, neither irregular nor sparse) */
+    /* MPI_Ialltoallv (a weak test, neither irregular nor sparse) */
     for (i = 0; i < size; ++i) {
         sendcounts[i] = COUNT;
         recvcounts[i] = COUNT;
@@ -179,7 +179,7 @@ int main(int argc, char **argv)
             recvbuf[i*COUNT+j] = 0xdeadbeef;
         }
     }
-    MPIX_Ialltoallv(buf, sendcounts, sdispls, MPI_INT, recvbuf, recvcounts, rdispls, MPI_INT, MPI_COMM_WORLD, &req);
+    MPI_Ialltoallv(buf, sendcounts, sdispls, MPI_INT, recvbuf, recvcounts, rdispls, MPI_INT, MPI_COMM_WORLD, &req);
     MPI_Wait(&req, MPI_STATUS_IGNORE);
     for (i = 0; i < size; ++i) {
         for (j = 0; j < COUNT; ++j) {
@@ -188,12 +188,12 @@ int main(int argc, char **argv)
         }
     }
 
-    /* MPIX_Igather */
+    /* MPI_Igather */
     for (i = 0; i < size*COUNT; ++i) {
         buf[i] = rank + i;
         recvbuf[i] = 0xdeadbeef;
     }
-    MPIX_Igather(buf, COUNT, MPI_INT, recvbuf, COUNT, MPI_INT, 0, MPI_COMM_WORLD, &req);
+    MPI_Igather(buf, COUNT, MPI_INT, recvbuf, COUNT, MPI_INT, 0, MPI_COMM_WORLD, &req);
     MPI_Wait(&req, MPI_STATUS_IGNORE);
     if (rank == 0) {
         for (i = 0; i < size; ++i) {
@@ -217,7 +217,7 @@ int main(int argc, char **argv)
             buf[i] = rank + i;
             recvbuf[i] = 0xdeadbeef;
         }
-        MPIX_Igather(buf, COUNT, MPI_INT, recvbuf, COUNT, type, 0, MPI_COMM_WORLD, &req);
+        MPI_Igather(buf, COUNT, MPI_INT, recvbuf, COUNT, type, 0, MPI_COMM_WORLD, &req);
         MPI_Type_free(&type); /* should cause implementations that don't refcount
                                  correctly to blow up or hang in the wait */
         MPI_Wait(&req, MPI_STATUS_IGNORE);
@@ -235,7 +235,7 @@ int main(int argc, char **argv)
         }
     }
 
-    /* MPIX_Iscatter */
+    /* MPI_Iscatter */
     for (i = 0; i < size; ++i) {
         for (j = 0; j < COUNT; ++j) {
             if (rank == 0)
@@ -245,7 +245,7 @@ int main(int argc, char **argv)
             recvbuf[i*COUNT+j] = 0xdeadbeef;
         }
     }
-    MPIX_Iscatter(buf, COUNT, MPI_INT, recvbuf, COUNT, MPI_INT, 0, MPI_COMM_WORLD, &req);
+    MPI_Iscatter(buf, COUNT, MPI_INT, recvbuf, COUNT, MPI_INT, 0, MPI_COMM_WORLD, &req);
     MPI_Wait(&req, MPI_STATUS_IGNORE);
     for (j = 0; j < COUNT; ++j) {
         my_assert(recvbuf[j] == rank + j);
@@ -257,7 +257,7 @@ int main(int argc, char **argv)
         }
     }
 
-    /* MPIX_Iscatterv */
+    /* MPI_Iscatterv */
     for (i = 0; i < size; ++i) {
         /* weak test, just test the regular case where all counts are equal */
         sendcounts[i] = COUNT;
@@ -270,7 +270,7 @@ int main(int argc, char **argv)
             recvbuf[i*COUNT+j] = 0xdeadbeef;
         }
     }
-    MPIX_Iscatterv(buf, sendcounts, sdispls, MPI_INT, recvbuf, COUNT, MPI_INT, 0, MPI_COMM_WORLD, &req);
+    MPI_Iscatterv(buf, sendcounts, sdispls, MPI_INT, recvbuf, COUNT, MPI_INT, 0, MPI_COMM_WORLD, &req);
     MPI_Wait(&req, MPI_STATUS_IGNORE);
     for (j = 0; j < COUNT; ++j) {
         my_assert(recvbuf[j] == rank + j);
@@ -288,7 +288,7 @@ int main(int argc, char **argv)
         }
     }
 
-    /* MPIX_Ireduce_scatter */
+    /* MPI_Ireduce_scatter */
     for (i = 0; i < size; ++i) {
         recvcounts[i] = COUNT;
         for (j = 0; j < COUNT; ++j) {
@@ -296,7 +296,7 @@ int main(int argc, char **argv)
             recvbuf[i*COUNT+j] = 0xdeadbeef;
         }
     }
-    MPIX_Ireduce_scatter(buf, recvbuf, recvcounts, MPI_INT, MPI_SUM, MPI_COMM_WORLD, &req);
+    MPI_Ireduce_scatter(buf, recvbuf, recvcounts, MPI_INT, MPI_SUM, MPI_COMM_WORLD, &req);
     MPI_Wait(&req, MPI_STATUS_IGNORE);
     for (j = 0; j < COUNT; ++j) {
         my_assert(recvbuf[j] == (size * rank + ((size - 1) * size) / 2));
@@ -308,14 +308,14 @@ int main(int argc, char **argv)
         }
     }
 
-    /* MPIX_Ireduce_scatter_block */
+    /* MPI_Ireduce_scatter_block */
     for (i = 0; i < size; ++i) {
         for (j = 0; j < COUNT; ++j) {
             buf[i*COUNT+j] = rank + i;
             recvbuf[i*COUNT+j] = 0xdeadbeef;
         }
     }
-    MPIX_Ireduce_scatter_block(buf, recvbuf, COUNT, MPI_INT, MPI_SUM, MPI_COMM_WORLD, &req);
+    MPI_Ireduce_scatter_block(buf, recvbuf, COUNT, MPI_INT, MPI_SUM, MPI_COMM_WORLD, &req);
     MPI_Wait(&req, MPI_STATUS_IGNORE);
     for (j = 0; j < COUNT; ++j) {
         my_assert(recvbuf[j] == (size * rank + ((size - 1) * size) / 2));
@@ -327,7 +327,7 @@ int main(int argc, char **argv)
         }
     }
 
-    /* MPIX_Igatherv */
+    /* MPI_Igatherv */
     for (i = 0; i < size*COUNT; ++i) {
         buf[i] = 0xdeadbeef;
         recvbuf[i] = 0xdeadbeef;
@@ -339,7 +339,7 @@ int main(int argc, char **argv)
         recvcounts[i] = COUNT;
         rdispls[i] = i * COUNT;
     }
-    MPIX_Igatherv(buf, COUNT, MPI_INT, recvbuf, recvcounts, rdispls, MPI_INT, 0, MPI_COMM_WORLD, &req);
+    MPI_Igatherv(buf, COUNT, MPI_INT, recvbuf, recvcounts, rdispls, MPI_INT, 0, MPI_COMM_WORLD, &req);
     MPI_Wait(&req, MPI_STATUS_IGNORE);
     if (rank == 0) {
         for (i = 0; i < size; ++i) {
@@ -354,14 +354,14 @@ int main(int argc, char **argv)
         }
     }
 
-    /* MPIX_Ialltoall */
+    /* MPI_Ialltoall */
     for (i = 0; i < size; ++i) {
         for (j = 0; j < COUNT; ++j) {
             buf[i*COUNT+j] = rank + (i * j);
             recvbuf[i*COUNT+j] = 0xdeadbeef;
         }
     }
-    MPIX_Ialltoall(buf, COUNT, MPI_INT, recvbuf, COUNT, MPI_INT, MPI_COMM_WORLD, &req);
+    MPI_Ialltoall(buf, COUNT, MPI_INT, recvbuf, COUNT, MPI_INT, MPI_COMM_WORLD, &req);
     MPI_Wait(&req, MPI_STATUS_IGNORE);
     for (i = 0; i < size; ++i) {
         for (j = 0; j < COUNT; ++j) {
@@ -370,12 +370,12 @@ int main(int argc, char **argv)
         }
     }
 
-    /* MPIX_Iallgather */
+    /* MPI_Iallgather */
     for (i = 0; i < size*COUNT; ++i) {
         buf[i] = rank + i;
         recvbuf[i] = 0xdeadbeef;
     }
-    MPIX_Iallgather(buf, COUNT, MPI_INT, recvbuf, COUNT, MPI_INT, MPI_COMM_WORLD, &req);
+    MPI_Iallgather(buf, COUNT, MPI_INT, recvbuf, COUNT, MPI_INT, MPI_COMM_WORLD, &req);
     MPI_Wait(&req, MPI_STATUS_IGNORE);
     for (i = 0; i < size; ++i) {
         for (j = 0; j < COUNT; ++j) {
@@ -383,7 +383,7 @@ int main(int argc, char **argv)
         }
     }
 
-    /* MPIX_Iallgatherv */
+    /* MPI_Iallgatherv */
     for (i = 0; i < size; ++i) {
         for (j = 0; j < COUNT; ++j) {
             recvbuf[i*COUNT+j] = 0xdeadbeef;
@@ -393,7 +393,7 @@ int main(int argc, char **argv)
     }
     for (i = 0; i < COUNT; ++i)
         buf[i] = rank + i;
-    MPIX_Iallgatherv(buf, COUNT, MPI_INT, recvbuf, recvcounts, rdispls, MPI_INT, MPI_COMM_WORLD, &req);
+    MPI_Iallgatherv(buf, COUNT, MPI_INT, recvbuf, recvcounts, rdispls, MPI_INT, MPI_COMM_WORLD, &req);
     MPI_Wait(&req, MPI_STATUS_IGNORE);
     for (i = 0; i < size; ++i) {
         for (j = 0; j < COUNT; ++j) {
@@ -401,23 +401,23 @@ int main(int argc, char **argv)
         }
     }
 
-    /* MPIX_Iscan */
+    /* MPI_Iscan */
     for (i = 0; i < COUNT; ++i) {
         buf[i] = rank + i;
         recvbuf[i] = 0xdeadbeef;
     }
-    MPIX_Iscan(buf, recvbuf, COUNT, MPI_INT, MPI_SUM, MPI_COMM_WORLD, &req);
+    MPI_Iscan(buf, recvbuf, COUNT, MPI_INT, MPI_SUM, MPI_COMM_WORLD, &req);
     MPI_Wait(&req, MPI_STATUS_IGNORE);
     for (i = 0; i < COUNT; ++i) {
         my_assert(recvbuf[i] == ((rank * (rank+1) / 2) + (i * (rank + 1))));
     }
 
-    /* MPIX_Iexscan */
+    /* MPI_Iexscan */
     for (i = 0; i < COUNT; ++i) {
         buf[i] = rank + i;
         recvbuf[i] = 0xdeadbeef;
     }
-    MPIX_Iexscan(buf, recvbuf, COUNT, MPI_INT, MPI_SUM, MPI_COMM_WORLD, &req);
+    MPI_Iexscan(buf, recvbuf, COUNT, MPI_INT, MPI_SUM, MPI_COMM_WORLD, &req);
     MPI_Wait(&req, MPI_STATUS_IGNORE);
     for (i = 0; i < COUNT; ++i) {
         if (rank == 0)
@@ -426,7 +426,7 @@ int main(int argc, char **argv)
             my_assert(recvbuf[i] == ((rank * (rank+1) / 2) + (i * (rank + 1)) - (rank + i)));
     }
 
-    /* MPIX_Ialltoallw (a weak test, neither irregular nor sparse) */
+    /* MPI_Ialltoallw (a weak test, neither irregular nor sparse) */
     for (i = 0; i < size; ++i) {
         sendcounts[i] = COUNT;
         recvcounts[i] = COUNT;
@@ -439,7 +439,7 @@ int main(int argc, char **argv)
             recvbuf[i*COUNT+j] = 0xdeadbeef;
         }
     }
-    MPIX_Ialltoallw(buf, sendcounts, sdispls, sendtypes, recvbuf, recvcounts, rdispls, recvtypes, MPI_COMM_WORLD, &req);
+    MPI_Ialltoallw(buf, sendcounts, sdispls, sendtypes, recvbuf, recvcounts, rdispls, recvtypes, MPI_COMM_WORLD, &req);
     MPI_Wait(&req, MPI_STATUS_IGNORE);
     for (i = 0; i < size; ++i) {
         for (j = 0; j < COUNT; ++j) {

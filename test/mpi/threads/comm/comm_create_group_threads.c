@@ -42,7 +42,7 @@ MTEST_THREAD_RETURN_TYPE test_comm_create_group(void *arg)
 
 #ifndef USE_STRICT_MPI
         if (verbose) printf("%d: Thread %d - Comm_create_group %d start\n", rank, *(int*)arg, i);
-        MPIX_Comm_create_group(comms[*(int*)arg], world_group, *(int*)arg /* tag */, &comm);
+        MPI_Comm_create_group(comms[*(int*)arg], world_group, *(int*)arg /* tag */, &comm);
         MPI_Barrier(comm);
         MPI_Comm_free(&comm);
         if (verbose) printf("%d: Thread %d - Comm_create_group %d finish\n", rank, *(int*)arg, i);

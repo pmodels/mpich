@@ -6,21 +6,21 @@
 
 #include "mpiimpl.h"
 
-/* -- Begin Profiling Symbol Block for routine MPIX_Iallgather */
+/* -- Begin Profiling Symbol Block for routine MPI_Iallgather */
 #if defined(HAVE_PRAGMA_WEAK)
-#pragma weak MPIX_Iallgather = PMPIX_Iallgather
+#pragma weak MPI_Iallgather = PMPI_Iallgather
 #elif defined(HAVE_PRAGMA_HP_SEC_DEF)
-#pragma _HP_SECONDARY_DEF PMPIX_Iallgather  MPIX_Iallgather
+#pragma _HP_SECONDARY_DEF PMPI_Iallgather  MPI_Iallgather
 #elif defined(HAVE_PRAGMA_CRI_DUP)
-#pragma _CRI duplicate MPIX_Iallgather as PMPIX_Iallgather
+#pragma _CRI duplicate MPI_Iallgather as PMPI_Iallgather
 #endif
 /* -- End Profiling Symbol Block */
 
 /* Define MPICH_MPI_FROM_PMPI if weak symbols are not supported to build
    the MPI routines */
 #ifndef MPICH_MPI_FROM_PMPI
-#undef MPIX_Iallgather
-#define MPIX_Iallgather PMPIX_Iallgather
+#undef MPI_Iallgather
+#define MPI_Iallgather PMPI_Iallgather
 
 /* any non-MPI functions go here, especially non-static ones */
 
@@ -618,11 +618,11 @@ fn_fail:
 #endif /* MPICH_MPI_FROM_PMPI */
 
 #undef FUNCNAME
-#define FUNCNAME MPIX_Iallgather
+#define FUNCNAME MPI_Iallgather
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 /*@
-MPIX_Iallgather - XXX description here
+MPI_Iallgather - XXX description here
 
 Input Parameters:
 + sendbuf - starting address of the send buffer (choice)
@@ -642,14 +642,14 @@ Output Parameters:
 
 .N Errors
 @*/
-int MPIX_Iallgather(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype, MPI_Comm comm, MPI_Request *request)
+int MPI_Iallgather(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype, MPI_Comm comm, MPI_Request *request)
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_Comm *comm_ptr = NULL;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPIX_IALLGATHER);
+    MPID_MPI_STATE_DECL(MPID_STATE_MPI_IALLGATHER);
 
     MPIU_THREAD_CS_ENTER(ALLFUNC,);
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPIX_IALLGATHER);
+    MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_IALLGATHER);
 
     /* Validate parameters, especially handles needing to be converted */
 #   ifdef HAVE_ERROR_CHECKING
@@ -709,7 +709,7 @@ int MPIX_Iallgather(const void *sendbuf, int sendcount, MPI_Datatype sendtype, v
     /* ... end of body of routine ... */
 
 fn_exit:
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPIX_IALLGATHER);
+    MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_IALLGATHER);
     MPIU_THREAD_CS_EXIT(ALLFUNC,);
     return mpi_errno;
 

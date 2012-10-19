@@ -7,21 +7,21 @@
 #include "mpiimpl.h"
 #include "collutil.h"
 
-/* -- Begin Profiling Symbol Block for routine MPIX_Ibcast */
+/* -- Begin Profiling Symbol Block for routine MPI_Ibcast */
 #if defined(HAVE_PRAGMA_WEAK)
-#pragma weak MPIX_Ibcast = PMPIX_Ibcast
+#pragma weak MPI_Ibcast = PMPI_Ibcast
 #elif defined(HAVE_PRAGMA_HP_SEC_DEF)
-#pragma _HP_SECONDARY_DEF PMPIX_Ibcast  MPIX_Ibcast
+#pragma _HP_SECONDARY_DEF PMPI_Ibcast  MPI_Ibcast
 #elif defined(HAVE_PRAGMA_CRI_DUP)
-#pragma _CRI duplicate MPIX_Ibcast as PMPIX_Ibcast
+#pragma _CRI duplicate MPI_Ibcast as PMPI_Ibcast
 #endif
 /* -- End Profiling Symbol Block */
 
 /* Define MPICH_MPI_FROM_PMPI if weak symbols are not supported to build
    the MPI routines */
 #ifndef MPICH_MPI_FROM_PMPI
-#undef MPIX_Ibcast
-#define MPIX_Ibcast PMPIX_Ibcast
+#undef MPI_Ibcast
+#define MPI_Ibcast PMPI_Ibcast
 
 /* any non-MPI functions go here, especially non-static ones */
 
@@ -886,11 +886,11 @@ fn_fail:
 #endif /* MPICH_MPI_FROM_PMPI */
 
 #undef FUNCNAME
-#define FUNCNAME MPIX_Ibcast
+#define FUNCNAME MPI_Ibcast
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 /*@
-MPIX_Ibcast - XXX description here
+MPI_Ibcast - XXX description here
 
 Input/Output Parameters:
 . buffer - starting address of buffer (choice)
@@ -908,14 +908,14 @@ Output Parameters:
 
 .N Errors
 @*/
-int MPIX_Ibcast(void *buffer, int count, MPI_Datatype datatype, int root, MPI_Comm comm, MPI_Request *request)
+int MPI_Ibcast(void *buffer, int count, MPI_Datatype datatype, int root, MPI_Comm comm, MPI_Request *request)
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_Comm *comm_ptr = NULL;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPIX_IBCAST);
+    MPID_MPI_STATE_DECL(MPID_STATE_MPI_IBCAST);
 
     MPIU_THREAD_CS_ENTER(ALLFUNC,);
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPIX_IBCAST);
+    MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_IBCAST);
 
     /* Validate parameters, especially handles needing to be converted */
 #   ifdef HAVE_ERROR_CHECKING
@@ -966,7 +966,7 @@ int MPIX_Ibcast(void *buffer, int count, MPI_Datatype datatype, int root, MPI_Co
     /* ... end of body of routine ... */
 
 fn_exit:
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPIX_IBCAST);
+    MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_IBCAST);
     MPIU_THREAD_CS_EXIT(ALLFUNC,);
     return mpi_errno;
 

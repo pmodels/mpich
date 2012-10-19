@@ -57,7 +57,7 @@ int main(int argc, char **argv) {
     for (i = 0; i < ITER; i++) {
         int next = i + 1, result = -1;
         MPI_Win_lock(MPI_LOCK_EXCLUSIVE, rank, 0, win);
-        MPIX_Compare_and_swap(&next, &i, &result, MPI_INT, rank, 0, win);
+        MPI_Compare_and_swap(&next, &i, &result, MPI_INT, rank, 0, win);
         MPI_Win_unlock(rank, win);
         if (result != i) {
             SQUELCH( printf("%d->%d -- Error: next=%d compare=%d result=%d val=%d\n", rank,
@@ -77,7 +77,7 @@ int main(int argc, char **argv) {
     for (i = 0; i < ITER; i++) {
         int next = i + 1, result = -1;
         MPI_Win_lock(MPI_LOCK_EXCLUSIVE, (rank+1)%nproc, 0, win);
-        MPIX_Compare_and_swap(&next, &i, &result, MPI_INT, (rank+1)%nproc, 0, win);
+        MPI_Compare_and_swap(&next, &i, &result, MPI_INT, (rank+1)%nproc, 0, win);
         MPI_Win_unlock((rank+1)%nproc, win);
         if (result != i) {
             SQUELCH( printf("%d->%d -- Error: next=%d compare=%d result=%d val=%d\n", rank,
@@ -101,7 +101,7 @@ int main(int argc, char **argv) {
         for (i = 0; i < ITER; i++) {
             int next = i + 1, result = -1;
             MPI_Win_lock(MPI_LOCK_EXCLUSIVE, 0, 0, win);
-            MPIX_Compare_and_swap(&next, &i, &result, MPI_INT, 0, 0, win);
+            MPI_Compare_and_swap(&next, &i, &result, MPI_INT, 0, 0, win);
             MPI_Win_unlock(0, win);
         }
     }

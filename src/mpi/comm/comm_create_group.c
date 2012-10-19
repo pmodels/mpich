@@ -8,13 +8,13 @@
 #include "mpiimpl.h"
 #include "mpicomm.h"
 
-/* -- Begin Profiling Symbol Block for routine MPIX_Comm_create_group */
+/* -- Begin Profiling Symbol Block for routine MPI_Comm_create_group */
 #if defined(HAVE_PRAGMA_WEAK)
-#pragma weak MPIX_Comm_create_group = PMPIX_Comm_create_group
+#pragma weak MPI_Comm_create_group = PMPI_Comm_create_group
 #elif defined(HAVE_PRAGMA_HP_SEC_DEF)
-#pragma _HP_SECONDARY_DEF PMPIX_Comm_create_group  MPIX_Comm_create_group
+#pragma _HP_SECONDARY_DEF PMPI_Comm_create_group  MPI_Comm_create_group
 #elif defined(HAVE_PRAGMA_CRI_DUP)
-#pragma _CRI duplicate MPIX_Comm_create_group as PMPIX_Comm_create_group
+#pragma _CRI duplicate MPI_Comm_create_group as PMPI_Comm_create_group
 #endif
 /* -- End Profiling Symbol Block */
 
@@ -27,8 +27,8 @@ PMPI_LOCAL int MPIR_Comm_create_group(MPID_Comm * comm_ptr, MPID_Group * group_p
 /* Define MPICH_MPI_FROM_PMPI if weak symbols are not supported to build
    the MPI routines */
 #ifndef MPICH_MPI_FROM_PMPI
-#undef MPIX_Comm_create_group
-#define MPIX_Comm_create_group PMPIX_Comm_create_group
+#undef MPI_Comm_create_group
+#define MPI_Comm_create_group PMPI_Comm_create_group
 
 #undef FUNCNAME
 #define FUNCNAME MPIR_Comm_create_group
@@ -126,12 +126,12 @@ fn_fail:
 #endif /* !defined(MPICH_MPI_FROM_PMPI) */
 
 #undef FUNCNAME
-#define FUNCNAME MPIX_Comm_create_group
+#define FUNCNAME MPI_Comm_create_group
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 /*@
 
-MPIX_Comm_create_group - Creates a new communicator
+MPI_Comm_create_group - Creates a new communicator
 
 Input Parameters:
 + comm - communicator (handle)
@@ -152,17 +152,17 @@ Output Parameter:
 
 .seealso: MPI_Comm_free
 @*/
-int MPIX_Comm_create_group(MPI_Comm comm, MPI_Group group, int tag, MPI_Comm * newcomm)
+int MPI_Comm_create_group(MPI_Comm comm, MPI_Group group, int tag, MPI_Comm * newcomm)
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_Comm *comm_ptr = NULL, *newcomm_ptr;
     MPID_Group *group_ptr;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPIX_COMM_CREATE_GROUP);
+    MPID_MPI_STATE_DECL(MPID_STATE_MPI_COMM_CREATE_GROUP);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPIU_THREAD_CS_ENTER(ALLFUNC,);
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPIX_COMM_CREATE_GROUP);
+    MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_COMM_CREATE_GROUP);
 
     /* Validate parameters, and convert MPI object handles to object pointers */
 #   ifdef HAVE_ERROR_CHECKING
@@ -218,7 +218,7 @@ int MPIX_Comm_create_group(MPI_Comm comm, MPI_Group group, int tag, MPI_Comm * n
     /* ... end of body of routine ... */
 
   fn_exit:
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPIX_COMM_CREATE_GROUP);
+    MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_COMM_CREATE_GROUP);
     MPIU_THREAD_CS_EXIT(ALLFUNC,);
     return mpi_errno;
 

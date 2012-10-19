@@ -8,29 +8,29 @@
 #include "mpiimpl.h"
 #include "rma.h"
 
-/* -- Begin Profiling Symbol Block for routine MPIX_Win_attach */
+/* -- Begin Profiling Symbol Block for routine MPI_Win_attach */
 #if defined(HAVE_PRAGMA_WEAK)
-#pragma weak MPIX_Win_attach = PMPIX_Win_attach
+#pragma weak MPI_Win_attach = PMPI_Win_attach
 #elif defined(HAVE_PRAGMA_HP_SEC_DEF)
-#pragma _HP_SECONDARY_DEF PMPIX_Win_attach  MPIX_Win_attach
+#pragma _HP_SECONDARY_DEF PMPI_Win_attach  MPI_Win_attach
 #elif defined(HAVE_PRAGMA_CRI_DUP)
-#pragma _CRI duplicate MPIX_Win_attach as PMPIX_Win_attach
+#pragma _CRI duplicate MPI_Win_attach as PMPI_Win_attach
 #endif
 /* -- End Profiling Symbol Block */
 
 /* Define MPICH_MPI_FROM_PMPI if weak symbols are not supported to build
    the MPI routines */
 #ifndef MPICH_MPI_FROM_PMPI
-#undef MPIX_Win_attach
-#define MPIX_Win_attach PMPIX_Win_attach
+#undef MPI_Win_attach
+#define MPI_Win_attach PMPI_Win_attach
 
 #endif
 
 #undef FUNCNAME
-#define FUNCNAME MPIX_Win_attach
+#define FUNCNAME MPI_Win_attach
 
 /*@
-   MPIX_Win_attach - Attach memory to a dynamic window
+   MPI_Win_attach - Attach memory to a dynamic window
 
  Input Parameters:
 + size - size of memory to be attached in bytes
@@ -49,17 +49,17 @@
 .N MPI_ERR_TYPE
 .N MPI_ERR_WIN
 @*/
-int MPIX_Win_attach(MPI_Win win, void *base, MPI_Aint size)
+int MPI_Win_attach(MPI_Win win, void *base, MPI_Aint size)
 {
-    static const char FCNAME[] = "MPIX_Win_attach";
+    static const char FCNAME[] = "MPI_Win_attach";
     int mpi_errno = MPI_SUCCESS;
     MPID_Win *win_ptr = NULL;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPIX_WIN_ATTACH);
+    MPID_MPI_STATE_DECL(MPID_STATE_MPI_WIN_ATTACH);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
     MPIU_THREAD_CS_ENTER(ALLFUNC,);
-    MPID_MPI_RMA_FUNC_ENTER(MPID_STATE_MPIX_WIN_ATTACH);
+    MPID_MPI_RMA_FUNC_ENTER(MPID_STATE_MPI_WIN_ATTACH);
 
     /* Validate parameters, especially handles needing to be converted */
 #   ifdef HAVE_ERROR_CHECKING
@@ -116,7 +116,7 @@ int MPIX_Win_attach(MPI_Win win, void *base, MPI_Aint size)
     /* ... end of body of routine ... */
 
   fn_exit:
-    MPID_MPI_RMA_FUNC_EXIT(MPID_STATE_MPIX_WIN_ATTACH);
+    MPID_MPI_RMA_FUNC_EXIT(MPID_STATE_MPI_WIN_ATTACH);
     MPIU_THREAD_CS_EXIT(ALLFUNC,);
     return mpi_errno;
 

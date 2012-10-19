@@ -67,7 +67,7 @@ static unsigned int unexpected_qlen = 0;
 static MPI_Aint posted_recvq_match_attempts = 0;
 static MPI_Aint unexpected_recvq_match_attempts = 0;
 /* TODO add some code here and probably elsewhere to make these show up in the
- * MPIX_T_pvar_ interface */
+ * MPI_T_pvar_ interface */
 #define MPIR_T_INC(x) (++(x))
 #define MPIR_T_DEC(x) (--(x))
 
@@ -149,12 +149,12 @@ int MPIDI_CH3U_Recvq_init(void)
 #ifdef ENABLE_RECVQ_STATISTICS
     int idx = -1;
     mpi_errno = MPIR_T_pvar_add("posted_recvq_length",
-                                MPIX_T_VERBOSITY_USER_DETAIL,
-                                MPIX_T_PVAR_CLASS_LEVEL,
+                                MPI_T_VERBOSITY_USER_DETAIL,
+                                MPI_T_PVAR_CLASS_LEVEL,
                                 MPI_UNSIGNED,
-                                MPIX_T_ENUM_NULL,
+                                MPI_T_ENUM_NULL,
                                 "length of the posted message receive queue",
-                                MPIX_T_BIND_NO_OBJECT,
+                                MPI_T_BIND_NO_OBJECT,
                                 /*readonly=*/TRUE,
                                 /*continuous=*/TRUE,
                                 /*atomic=*/FALSE,
@@ -165,12 +165,12 @@ int MPIDI_CH3U_Recvq_init(void)
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
     mpi_errno = MPIR_T_pvar_add("unexpected_recvq_length",
-                                MPIX_T_VERBOSITY_USER_DETAIL,
-                                MPIX_T_PVAR_CLASS_LEVEL,
+                                MPI_T_VERBOSITY_USER_DETAIL,
+                                MPI_T_PVAR_CLASS_LEVEL,
                                 MPI_UNSIGNED,
-                                MPIX_T_ENUM_NULL,
+                                MPI_T_ENUM_NULL,
                                 "length of the unexpected messsage receive queue",
-                                MPIX_T_BIND_NO_OBJECT,
+                                MPI_T_BIND_NO_OBJECT,
                                 /*readonly=*/TRUE,
                                 /*continuous=*/TRUE,
                                 /*atomic=*/FALSE,
@@ -182,12 +182,12 @@ int MPIDI_CH3U_Recvq_init(void)
 
     /* posted receive queue failed matches */
     mpi_errno = MPIR_T_pvar_add("posted_recvq_match_attempts",
-                                MPIX_T_VERBOSITY_USER_DETAIL,
-                                MPIX_T_PVAR_CLASS_COUNTER,
+                                MPI_T_VERBOSITY_USER_DETAIL,
+                                MPI_T_PVAR_CLASS_COUNTER,
                                 MPI_AINT,
-                                MPIX_T_ENUM_NULL,
+                                MPI_T_ENUM_NULL,
                                 "number of search passes on the messsage receive queue",
-                                MPIX_T_BIND_NO_OBJECT,
+                                MPI_T_BIND_NO_OBJECT,
                                 /*readonly=*/FALSE,
                                 /*continuous=*/TRUE,
                                 /*atomic=*/FALSE,
@@ -199,12 +199,12 @@ int MPIDI_CH3U_Recvq_init(void)
 
     /* unexpected receive queue failed matches */
     mpi_errno = MPIR_T_pvar_add("unexpected_recvq_match_attempts",
-                                MPIX_T_VERBOSITY_USER_DETAIL,
-                                MPIX_T_PVAR_CLASS_COUNTER,
+                                MPI_T_VERBOSITY_USER_DETAIL,
+                                MPI_T_PVAR_CLASS_COUNTER,
                                 MPI_AINT,
-                                MPIX_T_ENUM_NULL,
+                                MPI_T_ENUM_NULL,
                                 "number of search passes on the messsage receive queue",
-                                MPIX_T_BIND_NO_OBJECT,
+                                MPI_T_BIND_NO_OBJECT,
                                 /*readonly=*/FALSE,
                                 /*continuous=*/TRUE,
                                 /*atomic=*/FALSE,

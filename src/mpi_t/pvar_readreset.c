@@ -6,21 +6,21 @@
 
 #include "mpiimpl.h"
 
-/* -- Begin Profiling Symbol Block for routine MPIX_T_pvar_readreset */
+/* -- Begin Profiling Symbol Block for routine MPI_T_pvar_readreset */
 #if defined(HAVE_PRAGMA_WEAK)
-#pragma weak MPIX_T_pvar_readreset = PMPIX_T_pvar_readreset
+#pragma weak MPI_T_pvar_readreset = PMPI_T_pvar_readreset
 #elif defined(HAVE_PRAGMA_HP_SEC_DEF)
-#pragma _HP_SECONDARY_DEF PMPIX_T_pvar_readreset  MPIX_T_pvar_readreset
+#pragma _HP_SECONDARY_DEF PMPI_T_pvar_readreset  MPI_T_pvar_readreset
 #elif defined(HAVE_PRAGMA_CRI_DUP)
-#pragma _CRI duplicate MPIX_T_pvar_readreset as PMPIX_T_pvar_readreset
+#pragma _CRI duplicate MPI_T_pvar_readreset as PMPI_T_pvar_readreset
 #endif
 /* -- End Profiling Symbol Block */
 
 /* Define MPICH_MPI_FROM_PMPI if weak symbols are not supported to build
    the MPI routines */
 #ifndef MPICH_MPI_FROM_PMPI
-#undef MPIX_T_pvar_readreset
-#define MPIX_T_pvar_readreset PMPIX_T_pvar_readreset
+#undef MPI_T_pvar_readreset
+#define MPI_T_pvar_readreset PMPI_T_pvar_readreset
 
 /* any non-MPI functions go here, especially non-static ones */
 
@@ -28,7 +28,7 @@
 #define FUNCNAME MPIR_T_pvar_readreset_impl
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPIR_T_pvar_readreset_impl(MPIX_T_pvar_session session, MPIX_T_pvar_handle handle, void *buf)
+int MPIR_T_pvar_readreset_impl(MPI_T_pvar_session session, MPI_T_pvar_handle handle, void *buf)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -43,11 +43,11 @@ fn_fail:
 #endif /* MPICH_MPI_FROM_PMPI */
 
 #undef FUNCNAME
-#define FUNCNAME MPIX_T_pvar_readreset
+#define FUNCNAME MPI_T_pvar_readreset
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 /*@
-MPIX_T_pvar_readreset - XXX description here
+MPI_T_pvar_readreset - XXX description here
 
 Input Parameters:
 + session - identifier of performance experiment session (handle)
@@ -62,13 +62,13 @@ Output Parameters:
 
 .N Errors
 @*/
-int MPIX_T_pvar_readreset(MPIX_T_pvar_session session, MPIX_T_pvar_handle handle, void *buf)
+int MPI_T_pvar_readreset(MPI_T_pvar_session session, MPI_T_pvar_handle handle, void *buf)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPIX_T_PVAR_READRESET);
+    MPID_MPI_STATE_DECL(MPID_STATE_MPI_T_PVAR_READRESET);
 
     MPIU_THREAD_CS_ENTER(ALLFUNC,);
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPIX_T_PVAR_READRESET);
+    MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_T_PVAR_READRESET);
 
     /* Validate parameters, especially handles needing to be converted */
 #   ifdef HAVE_ERROR_CHECKING
@@ -105,7 +105,7 @@ int MPIX_T_pvar_readreset(MPIX_T_pvar_session session, MPIX_T_pvar_handle handle
     /* ... end of body of routine ... */
 
 fn_exit:
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPIX_T_PVAR_READRESET);
+    MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_T_PVAR_READRESET);
     MPIU_THREAD_CS_EXIT(ALLFUNC,);
     return mpi_errno;
 

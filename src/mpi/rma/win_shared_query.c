@@ -8,29 +8,29 @@
 #include "mpiimpl.h"
 #include "rma.h"
 
-/* -- Begin Profiling Symbol Block for routine MPIX_Win_shared_query */
+/* -- Begin Profiling Symbol Block for routine MPI_Win_shared_query */
 #if defined(HAVE_PRAGMA_WEAK)
-#pragma weak MPIX_Win_shared_query = PMPIX_Win_shared_query
+#pragma weak MPI_Win_shared_query = PMPI_Win_shared_query
 #elif defined(HAVE_PRAGMA_HP_SEC_DEF)
-#pragma _HP_SECONDARY_DEF PMPIX_Win_shared_query  MPIX_Win_shared_query
+#pragma _HP_SECONDARY_DEF PMPI_Win_shared_query  MPI_Win_shared_query
 #elif defined(HAVE_PRAGMA_CRI_DUP)
-#pragma _CRI duplicate MPIX_Win_shared_query as PMPIX_Win_shared_query
+#pragma _CRI duplicate MPI_Win_shared_query as PMPI_Win_shared_query
 #endif
 /* -- End Profiling Symbol Block */
 
 /* Define MPICH_MPI_FROM_PMPI if weak symbols are not supported to build
    the MPI routines */
 #ifndef MPICH_MPI_FROM_PMPI
-#undef MPIX_Win_shared_query
-#define MPIX_Win_shared_query PMPIX_Win_shared_query
+#undef MPI_Win_shared_query
+#define MPI_Win_shared_query PMPI_Win_shared_query
 
 #endif
 
 #undef FUNCNAME
-#define FUNCNAME MPIX_Win_shared_query
+#define FUNCNAME MPI_Win_shared_query
 
 /*@
-   MPIX_Win_shared_query - Query the size and base pointer for a patch of a
+   MPI_Win_shared_query - Query the size and base pointer for a patch of a
    shared memory window
 
  Input Parameters:
@@ -52,17 +52,17 @@
 .N MPI_ERR_RANK
 .N MPI_ERR_WIN
 @*/
-int MPIX_Win_shared_query(MPI_Win win, int rank, MPI_Aint *size, int *disp_unit, void *baseptr)
+int MPI_Win_shared_query(MPI_Win win, int rank, MPI_Aint *size, int *disp_unit, void *baseptr)
 {
-    static const char FCNAME[] = "MPIX_Win_shared_query";
+    static const char FCNAME[] = "MPI_Win_shared_query";
     int mpi_errno = MPI_SUCCESS;
     MPID_Win *win_ptr = NULL;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPIX_WIN_SHARED_QUERY);
+    MPID_MPI_STATE_DECL(MPID_STATE_MPI_WIN_SHARED_QUERY);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
     MPIU_THREAD_CS_ENTER(ALLFUNC,);
-    MPID_MPI_RMA_FUNC_ENTER(MPID_STATE_MPIX_WIN_SHARED_QUERY);
+    MPID_MPI_RMA_FUNC_ENTER(MPID_STATE_MPI_WIN_SHARED_QUERY);
 
     /* Validate parameters, especially handles needing to be converted */
 #   ifdef HAVE_ERROR_CHECKING
@@ -109,7 +109,7 @@ int MPIX_Win_shared_query(MPI_Win win, int rank, MPI_Aint *size, int *disp_unit,
     /* ... end of body of routine ... */
 
   fn_exit:
-    MPID_MPI_RMA_FUNC_EXIT(MPID_STATE_MPIX_WIN_SHARED_QUERY);
+    MPID_MPI_RMA_FUNC_EXIT(MPID_STATE_MPI_WIN_SHARED_QUERY);
     MPIU_THREAD_CS_EXIT(ALLFUNC,);
     return mpi_errno;
 

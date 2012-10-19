@@ -38,22 +38,22 @@ int main( int argc, char *argv[] )
       buf = NULL;
 
     MPI_Win_create(buf, rank*ELEM_SIZE, 1, MPI_INFO_NULL, MPI_COMM_WORLD, &window);
-    MPI_Win_get_attr(window, MPIX_WIN_CREATE_FLAVOR, &flavor, &flag);
+    MPI_Win_get_attr(window, MPI_WIN_CREATE_FLAVOR, &flavor, &flag);
 
     if (!flag) {
       printf("%d: MPI_Win_create - Error, no flavor\n", rank);
       errors++;
-    } else if (*flavor != MPIX_WIN_FLAVOR_CREATE) {
+    } else if (*flavor != MPI_WIN_FLAVOR_CREATE) {
       printf("%d: MPI_Win_create - Error, bad flavor (%d)\n", rank, *flavor);
       errors++;
     }
 
-    MPI_Win_get_attr(window, MPIX_WIN_MODEL, &model, &flag);
+    MPI_Win_get_attr(window, MPI_WIN_MODEL, &model, &flag);
 
     if (!flag) {
       printf("%d: MPI_Win_create - Error, no model\n", rank);
       errors++;
-    } else if ( ! (*model == MPIX_WIN_SEPARATE || *model == MPIX_WIN_UNIFIED) ) {
+    } else if ( ! (*model == MPI_WIN_SEPARATE || *model == MPI_WIN_UNIFIED) ) {
       printf("%d: MPI_Win_create - Error, bad model (%d)\n", rank, *model);
       errors++;
     }
@@ -65,29 +65,29 @@ int main( int argc, char *argv[] )
 
     /** Create using MPI_Win_allocate() **/
 
-    MPIX_Win_allocate(rank*ELEM_SIZE, 1, MPI_INFO_NULL, MPI_COMM_WORLD, &buf, &window);
+    MPI_Win_allocate(rank*ELEM_SIZE, 1, MPI_INFO_NULL, MPI_COMM_WORLD, &buf, &window);
 
     if (rank > 0 && buf == NULL) {
       printf("%d: MPI_Win_allocate - Error, bad base pointer\n", rank);
       errors++;
     }
 
-    MPI_Win_get_attr(window, MPIX_WIN_CREATE_FLAVOR, &flavor, &flag);
+    MPI_Win_get_attr(window, MPI_WIN_CREATE_FLAVOR, &flavor, &flag);
 
     if (!flag) {
       printf("%d: MPI_Win_allocate - Error, no flavor\n", rank);
       errors++;
-    } else if (*flavor != MPIX_WIN_FLAVOR_ALLOCATE) {
+    } else if (*flavor != MPI_WIN_FLAVOR_ALLOCATE) {
       printf("%d: MPI_Win_allocate - Error, bad flavor (%d)\n", rank, *flavor);
       errors++;
     }
 
-    MPI_Win_get_attr(window, MPIX_WIN_MODEL, &model, &flag);
+    MPI_Win_get_attr(window, MPI_WIN_MODEL, &model, &flag);
 
     if (!flag) {
       printf("%d: MPI_Win_allocate - Error, no model\n", rank);
       errors++;
-    } else if (*model != MPIX_WIN_SEPARATE && *model != MPIX_WIN_UNIFIED) {
+    } else if (*model != MPI_WIN_SEPARATE && *model != MPI_WIN_UNIFIED) {
       printf("%d: MPI_Win_allocate - Error, bad model (%d)\n", rank, *model);
       errors++;
     }
@@ -96,24 +96,24 @@ int main( int argc, char *argv[] )
 
     /** Create using MPI_Win_create_dynamic() **/
 
-    MPIX_Win_create_dynamic(MPI_INFO_NULL, MPI_COMM_WORLD, &window);
+    MPI_Win_create_dynamic(MPI_INFO_NULL, MPI_COMM_WORLD, &window);
 
-    MPI_Win_get_attr(window, MPIX_WIN_CREATE_FLAVOR, &flavor, &flag);
+    MPI_Win_get_attr(window, MPI_WIN_CREATE_FLAVOR, &flavor, &flag);
 
     if (!flag) {
       printf("%d: MPI_Win_create_dynamic - Error, no flavor\n", rank);
       errors++;
-    } else if (*flavor != MPIX_WIN_FLAVOR_DYNAMIC) {
+    } else if (*flavor != MPI_WIN_FLAVOR_DYNAMIC) {
       printf("%d: MPI_Win_create_dynamic - Error, bad flavor (%d)\n", rank, *flavor);
       errors++;
     }
 
-    MPI_Win_get_attr(window, MPIX_WIN_MODEL, &model, &flag);
+    MPI_Win_get_attr(window, MPI_WIN_MODEL, &model, &flag);
 
     if (!flag) {
       printf("%d: MPI_Win_create_dynamic - Error, no model\n", rank);
       errors++;
-    } else if (*model != MPIX_WIN_SEPARATE && *model != MPIX_WIN_UNIFIED) {
+    } else if (*model != MPI_WIN_SEPARATE && *model != MPI_WIN_UNIFIED) {
       printf("%d: MPI_Win_create_dynamic - Error, bad model (%d)\n", rank, *model);
       errors++;
     }

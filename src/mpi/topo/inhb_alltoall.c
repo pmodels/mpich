@@ -7,21 +7,21 @@
 #include "mpiimpl.h"
 #include "topo.h"
 
-/* -- Begin Profiling Symbol Block for routine MPIX_Ineighbor_alltoall */
+/* -- Begin Profiling Symbol Block for routine MPI_Ineighbor_alltoall */
 #if defined(HAVE_PRAGMA_WEAK)
-#pragma weak MPIX_Ineighbor_alltoall = PMPIX_Ineighbor_alltoall
+#pragma weak MPI_Ineighbor_alltoall = PMPI_Ineighbor_alltoall
 #elif defined(HAVE_PRAGMA_HP_SEC_DEF)
-#pragma _HP_SECONDARY_DEF PMPIX_Ineighbor_alltoall  MPIX_Ineighbor_alltoall
+#pragma _HP_SECONDARY_DEF PMPI_Ineighbor_alltoall  MPI_Ineighbor_alltoall
 #elif defined(HAVE_PRAGMA_CRI_DUP)
-#pragma _CRI duplicate MPIX_Ineighbor_alltoall as PMPIX_Ineighbor_alltoall
+#pragma _CRI duplicate MPI_Ineighbor_alltoall as PMPI_Ineighbor_alltoall
 #endif
 /* -- End Profiling Symbol Block */
 
 /* Define MPICH_MPI_FROM_PMPI if weak symbols are not supported to build
    the MPI routines */
 #ifndef MPICH_MPI_FROM_PMPI
-#undef MPIX_Ineighbor_alltoall
-#define MPIX_Ineighbor_alltoall PMPIX_Ineighbor_alltoall
+#undef MPI_Ineighbor_alltoall
+#define MPI_Ineighbor_alltoall PMPI_Ineighbor_alltoall
 
 /* any non-MPI functions go here, especially non-static ones */
 
@@ -120,11 +120,11 @@ fn_fail:
 #endif /* MPICH_MPI_FROM_PMPI */
 
 #undef FUNCNAME
-#define FUNCNAME MPIX_Ineighbor_alltoall
+#define FUNCNAME MPI_Ineighbor_alltoall
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 /*@
-MPIX_Ineighbor_alltoall - Nonblocking version of MPIX_Neighbor_alltoall.
+MPI_Ineighbor_alltoall - Nonblocking version of MPI_Neighbor_alltoall.
 
 Input Parameters:
 + sendbuf - starting address of the send buffer (choice)
@@ -144,14 +144,14 @@ Output Parameters:
 
 .N Errors
 @*/
-int MPIX_Ineighbor_alltoall(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype, MPI_Comm comm, MPI_Request *request)
+int MPI_Ineighbor_alltoall(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype, MPI_Comm comm, MPI_Request *request)
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_Comm *comm_ptr = NULL;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPIX_INEIGHBOR_ALLTOALL);
+    MPID_MPI_STATE_DECL(MPID_STATE_MPI_INEIGHBOR_ALLTOALL);
 
     MPIU_THREAD_CS_ENTER(ALLFUNC,);
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPIX_INEIGHBOR_ALLTOALL);
+    MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_INEIGHBOR_ALLTOALL);
 
     /* Validate parameters, especially handles needing to be converted */
 #   ifdef HAVE_ERROR_CHECKING
@@ -211,7 +211,7 @@ int MPIX_Ineighbor_alltoall(const void *sendbuf, int sendcount, MPI_Datatype sen
     /* ... end of body of routine ... */
 
 fn_exit:
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPIX_INEIGHBOR_ALLTOALL);
+    MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_INEIGHBOR_ALLTOALL);
     MPIU_THREAD_CS_EXIT(ALLFUNC,);
     return mpi_errno;
 

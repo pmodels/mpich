@@ -6,27 +6,27 @@
 
 #include "mpiimpl.h"
 
-/* -- Begin Profiling Symbol Block for routine MPIX_Igather */
+/* -- Begin Profiling Symbol Block for routine MPI_Igather */
 #if defined(HAVE_PRAGMA_WEAK)
-#pragma weak MPIX_Igather = PMPIX_Igather
+#pragma weak MPI_Igather = PMPI_Igather
 #elif defined(HAVE_PRAGMA_HP_SEC_DEF)
-#pragma _HP_SECONDARY_DEF PMPIX_Igather  MPIX_Igather
+#pragma _HP_SECONDARY_DEF PMPI_Igather  MPI_Igather
 #elif defined(HAVE_PRAGMA_CRI_DUP)
-#pragma _CRI duplicate MPIX_Igather as PMPIX_Igather
+#pragma _CRI duplicate MPI_Igather as PMPI_Igather
 #endif
 /* -- End Profiling Symbol Block */
 
 /* Define MPICH_MPI_FROM_PMPI if weak symbols are not supported to build
    the MPI routines */
 #ifndef MPICH_MPI_FROM_PMPI
-#undef MPIX_Igather
-#define MPIX_Igather PMPIX_Igather
+#undef MPI_Igather
+#define MPI_Igather PMPI_Igather
 
 /* any non-MPI functions go here, especially non-static ones */
 
 /* This is the default implementation of igather. The algorithm is:
 
-   Algorithm: MPIX_Igather
+   Algorithm: MPI_Igather
 
    We use a binomial tree algorithm for both short and long
    messages. At nodes other than leaf nodes we need to allocate a
@@ -540,11 +540,11 @@ fn_fail:
 #endif /* MPICH_MPI_FROM_PMPI */
 
 #undef FUNCNAME
-#define FUNCNAME MPIX_Igather
+#define FUNCNAME MPI_Igather
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 /*@
-MPIX_Igather - XXX description here
+MPI_Igather - XXX description here
 
 Input Parameters:
 + sendbuf - starting address of the send buffer (choice)
@@ -565,14 +565,14 @@ Output Parameters:
 
 .N Errors
 @*/
-int MPIX_Igather(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype, int root, MPI_Comm comm, MPI_Request *request)
+int MPI_Igather(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype, int root, MPI_Comm comm, MPI_Request *request)
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_Comm *comm_ptr = NULL;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPIX_IGATHER);
+    MPID_MPI_STATE_DECL(MPID_STATE_MPI_IGATHER);
 
     MPIU_THREAD_CS_ENTER(ALLFUNC,);
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPIX_IGATHER);
+    MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_IGATHER);
 
     /* Validate parameters, especially handles needing to be converted */
 #   ifdef HAVE_ERROR_CHECKING
@@ -683,7 +683,7 @@ int MPIX_Igather(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void
     /* ... end of body of routine ... */
 
 fn_exit:
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPIX_IGATHER);
+    MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_IGATHER);
     MPIU_THREAD_CS_EXIT(ALLFUNC,);
     return mpi_errno;
 

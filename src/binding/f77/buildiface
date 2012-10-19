@@ -48,7 +48,7 @@ $within_fint = 0;        # This is set to 1 while generating code for the
                          # do_fint branch
 %fintToHandle = ( 'int' => 1, 'MPI_Request' => 1, 'MPI_Group' => 1, 
 		  'MPI_Win' => 1, 'MPI_Info' => 1, 'MPI_Errhandler' => 1, 
-		  'MPI_File' => 1, 'MPI_Op' => 1, 'MPIX_Message' => 1 );
+		  'MPI_File' => 1, 'MPI_Op' => 1, 'MPI_Message' => 1 );
 
 @arg_addresses = ();
 #
@@ -174,7 +174,7 @@ foreach $_ (@ARGV) {
 	   'MPI_Op' => 'MPI_Fint *',
 	   'MPI_Info' => 'MPI_Fint *',
 	   'MPI_Errhandler' => 'MPI_Fint *',
-	   'MPIX_Message' => 'MPI_Fint *',
+	   'MPI_Message' => 'MPI_Fint *',
 	   'MPI_Aint' => 'MPI_Fint *',   # Should be MPIR_FAint
 	   'MPI_FAintp' => 'MPI_Aint *', # Used to force an MPI_Aint*
 	   'MPI_Offset' => 'MPI_Offset *', # Should be MPIR_FOint
@@ -188,7 +188,7 @@ foreach $_ (@ARGV) {
 	   'MPI_Win*' => 'MPI_Fint *', 
 	   'MPI_Group*' => 'MPI_Fint *',
 	   'MPI_Request*' => 'MPI_Fint *',
-	   'MPIX_Message*' => 'MPI_Fint *',
+	   'MPI_Message*' => 'MPI_Fint *',
 	   'MPI_Aint*' => 'MPI_Fint *',   # Should be MPIR_FAint
 	   'int *' => 'MPI_Fint *',
 	   'int*' => 'MPI_Fint *',         # Catch missing space
@@ -241,7 +241,7 @@ foreach $_ (@ARGV) {
                   'MPI_Datatype *' => '(MPI_Datatype *)(ARG)',
 		  'MPI_Info *' => '(MPI_Info *)(ARG)',
 		  'MPI_Info' => '(MPI_Info)(ARG)',
-		  'MPIX_Message *' => '(MPIX_Message *)(ARG)',
+		  'MPI_Message *' => '(MPI_Message *)(ARG)',
 		  'int [][3]' => '(int (*)[3])(ARG)'
 );
 
@@ -3739,12 +3739,8 @@ if ($write_mpif) {
     foreach $key (NAMED, DUP, CONTIGUOUS, VECTOR, HVECTOR_INTEGER, HVECTOR, 
                   INDEXED, HINDEXED_INTEGER, HINDEXED, INDEXED_BLOCK, 
                   STRUCT_INTEGER, STRUCT, SUBARRAY, DARRAY, F90_REAL,
-                  F90_COMPLEX, F90_INTEGER, RESIZED) {
+                  F90_COMPLEX, F90_INTEGER, RESIZED, HINDEXED_BLOCK) {
 	&print_mpif_int( "MPI_COMBINER_$key" );
-    }
-    # FIXME: Merge with the above list when it's no longer MPIX_
-    foreach $key (HINDEXED_BLOCK) {
-	&print_mpif_int( "MPIX_COMBINER_$key" );
     }
     # Typeclasses
     foreach $key (REAL, INTEGER, COMPLEX) {
@@ -3758,10 +3754,10 @@ if ($write_mpif) {
 
     # comm_split_types
     foreach $type (SHARED) {
-	&print_mpif_int( "MPIX_COMM_TYPE_$type" );
+	&print_mpif_int( "MPI_COMM_TYPE_$type" );
     }
-    &print_mpif_int( "MPIX_MESSAGE_NULL" );
-    &print_mpif_int( "MPIX_MESSAGE_NO_PROC" );
+    &print_mpif_int( "MPI_MESSAGE_NULL" );
+    &print_mpif_int( "MPI_MESSAGE_NO_PROC" );
 
     # Thread values
     foreach my $threadlevel (SINGLE, FUNNELED, SERIALIZED, MULTIPLE) {

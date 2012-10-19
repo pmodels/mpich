@@ -6,32 +6,32 @@
 
 #include "mpiimpl.h"
 
-/* -- Begin Profiling Symbol Block for routine MPIX_Imrecv */
+/* -- Begin Profiling Symbol Block for routine MPI_Imrecv */
 #if defined(HAVE_PRAGMA_WEAK)
-#pragma weak MPIX_Imrecv = PMPIX_Imrecv
+#pragma weak MPI_Imrecv = PMPI_Imrecv
 #elif defined(HAVE_PRAGMA_HP_SEC_DEF)
-#pragma _HP_SECONDARY_DEF PMPIX_Imrecv  MPIX_Imrecv
+#pragma _HP_SECONDARY_DEF PMPI_Imrecv  MPI_Imrecv
 #elif defined(HAVE_PRAGMA_CRI_DUP)
-#pragma _CRI duplicate MPIX_Imrecv as PMPIX_Imrecv
+#pragma _CRI duplicate MPI_Imrecv as PMPI_Imrecv
 #endif
 /* -- End Profiling Symbol Block */
 
 /* Define MPICH_MPI_FROM_PMPI if weak symbols are not supported to build
    the MPI routines */
 #ifndef MPICH_MPI_FROM_PMPI
-#undef MPIX_Imrecv
-#define MPIX_Imrecv PMPIX_Imrecv
+#undef MPI_Imrecv
+#define MPI_Imrecv PMPI_Imrecv
 
 /* any non-MPI functions go here, especially non-static ones */
 
 #endif /* MPICH_MPI_FROM_PMPI */
 
 #undef FUNCNAME
-#define FUNCNAME MPIX_Imrecv
+#define FUNCNAME MPI_Imrecv
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 /*@
-MPIX_Imrecv - Nonblocking receive of message matched by MPIX_Mprobe or MPIX_Improbe.
+MPI_Imrecv - Nonblocking receive of message matched by MPI_Mprobe or MPI_Improbe.
 
 Input/Output Parameters:
 . message - message (handle)
@@ -50,15 +50,15 @@ Output Parameters:
 
 .N Errors
 @*/
-int MPIX_Imrecv(void *buf, int count, MPI_Datatype datatype, MPIX_Message *message, MPI_Request *request)
+int MPI_Imrecv(void *buf, int count, MPI_Datatype datatype, MPI_Message *message, MPI_Request *request)
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_Request *rreq = NULL;
     MPID_Request *msgp = NULL;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPIX_IMRECV);
+    MPID_MPI_STATE_DECL(MPID_STATE_MPI_IMRECV);
 
     MPIU_THREAD_CS_ENTER(ALLFUNC,);
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPIX_IMRECV);
+    MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_IMRECV);
 
     /* Validate parameters, especially handles needing to be converted */
 #   ifdef HAVE_ERROR_CHECKING
@@ -90,8 +90,8 @@ int MPIX_Imrecv(void *buf, int count, MPI_Datatype datatype, MPIX_Message *messa
                 if (mpi_errno != MPI_SUCCESS) goto fn_fail;
             }
 
-            /* MPIX_MESSAGE_NO_PROC should yield a "proc null" status */
-            if (*message != MPIX_MESSAGE_NO_PROC) {
+            /* MPI_MESSAGE_NO_PROC should yield a "proc null" status */
+            if (*message != MPI_MESSAGE_NO_PROC) {
                 MPID_Request_valid_ptr(msgp, mpi_errno);
                 if (mpi_errno) MPIU_ERR_POP(mpi_errno);
                 MPIU_ERR_CHKANDJUMP((msgp->kind != MPID_REQUEST_MPROBE),
@@ -112,12 +112,12 @@ int MPIX_Imrecv(void *buf, int count, MPI_Datatype datatype, MPIX_Message *messa
 
     MPIU_Assert(rreq != NULL);
     *request = rreq->handle;
-    *message = MPIX_MESSAGE_NULL;
+    *message = MPI_MESSAGE_NULL;
 
     /* ... end of body of routine ... */
 
 fn_exit:
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPIX_IMRECV);
+    MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_IMRECV);
     MPIU_THREAD_CS_EXIT(ALLFUNC,);
     return mpi_errno;
 

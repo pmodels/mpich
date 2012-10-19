@@ -42,32 +42,32 @@ int main(int argc, char **argv) {
 
 #ifdef TEST_MPI3_ROUTINES
 
-    MPIX_Comm_split_type(MPI_COMM_WORLD, MPIX_COMM_TYPE_SHARED, rank, MPI_INFO_NULL, &shm_comm);
+    MPI_Comm_split_type(MPI_COMM_WORLD, MPI_COMM_TYPE_SHARED, rank, MPI_INFO_NULL, &shm_comm);
 
     MPI_Comm_rank(shm_comm, &shm_rank);
     MPI_Comm_size(shm_comm, &shm_nproc);
 
     /* Allocate ELEM_PER_PROC integers for each process */
-    MPIX_Win_allocate_shared(sizeof(int)*ELEM_PER_PROC, sizeof(int), alloc_shared_info, 
+    MPI_Win_allocate_shared(sizeof(int)*ELEM_PER_PROC, sizeof(int), alloc_shared_info, 
                              shm_comm, &my_base, &shm_win);
 
-    MPIX_Win_lock_all(MPI_MODE_NOCHECK, shm_win);
+    MPI_Win_lock_all(MPI_MODE_NOCHECK, shm_win);
 
     /* Write to all my data */
     for (i = 0; i < ELEM_PER_PROC; i++) {
         my_base[i] = i;
     }
 
-    MPIX_Win_sync(shm_win);
+    MPI_Win_sync(shm_win);
     MPI_Barrier(shm_comm);
-    MPIX_Win_sync(shm_win);
+    MPI_Win_sync(shm_win);
 
     /* Read and verify everyone's data */
     for (i = 0; i < shm_nproc; i++) {
         int      *base;
         MPI_Aint  size;
 
-        MPIX_Win_shared_query(shm_win, i, &size, &disp_unit, &base);
+        MPI_Win_shared_query(shm_win, i, &size, &disp_unit, &base);
         assert(size == ELEM_PER_PROC * sizeof(int));
 
         for (j = 0; j < ELEM_PER_PROC; j++) {
@@ -79,7 +79,7 @@ int main(int argc, char **argv) {
         }
     }
 
-    MPIX_Win_unlock_all(shm_win);
+    MPI_Win_unlock_all(shm_win);
     MPI_Win_free(&shm_win);
     MPI_Comm_free(&shm_comm);
 

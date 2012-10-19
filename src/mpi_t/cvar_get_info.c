@@ -6,21 +6,21 @@
 
 #include "mpiimpl.h"
 
-/* -- Begin Profiling Symbol Block for routine MPIX_T_cvar_get_info */
+/* -- Begin Profiling Symbol Block for routine MPI_T_cvar_get_info */
 #if defined(HAVE_PRAGMA_WEAK)
-#pragma weak MPIX_T_cvar_get_info = PMPIX_T_cvar_get_info
+#pragma weak MPI_T_cvar_get_info = PMPI_T_cvar_get_info
 #elif defined(HAVE_PRAGMA_HP_SEC_DEF)
-#pragma _HP_SECONDARY_DEF PMPIX_T_cvar_get_info  MPIX_T_cvar_get_info
+#pragma _HP_SECONDARY_DEF PMPI_T_cvar_get_info  MPI_T_cvar_get_info
 #elif defined(HAVE_PRAGMA_CRI_DUP)
-#pragma _CRI duplicate MPIX_T_cvar_get_info as PMPIX_T_cvar_get_info
+#pragma _CRI duplicate MPI_T_cvar_get_info as PMPI_T_cvar_get_info
 #endif
 /* -- End Profiling Symbol Block */
 
 /* Define MPICH_MPI_FROM_PMPI if weak symbols are not supported to build
    the MPI routines */
 #ifndef MPICH_MPI_FROM_PMPI
-#undef MPIX_T_cvar_get_info
-#define MPIX_T_cvar_get_info PMPIX_T_cvar_get_info
+#undef MPI_T_cvar_get_info
+#define MPI_T_cvar_get_info PMPI_T_cvar_get_info
 
 /* any non-MPI functions go here, especially non-static ones */
 
@@ -28,7 +28,7 @@
 #define FUNCNAME MPIR_T_cvar_get_info_impl
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPIR_T_cvar_get_info_impl(int cvar_index, char *name, int *name_len, int *verbosity, MPI_Datatype *datatype, MPIX_T_enum *enumtype, char *desc, int *desc_len, int *binding, int *scope)
+int MPIR_T_cvar_get_info_impl(int cvar_index, char *name, int *name_len, int *verbosity, MPI_Datatype *datatype, MPI_T_enum *enumtype, char *desc, int *desc_len, int *binding, int *scope)
 {
     int mpi_errno = MPI_SUCCESS;
     struct MPIR_Param_t *p = NULL;
@@ -43,7 +43,7 @@ int MPIR_T_cvar_get_info_impl(int cvar_index, char *name, int *name_len, int *ve
 
     /* we do not currently have verbosity levels, so the draft standard says to
      * return USER_BASIC */
-    *verbosity = MPIX_T_VERBOSITY_USER_BASIC;
+    *verbosity = MPI_T_VERBOSITY_USER_BASIC;
 
     switch (p->default_val.type) {
         case MPIR_PARAM_TYPE_INT:
@@ -68,10 +68,10 @@ int MPIR_T_cvar_get_info_impl(int cvar_index, char *name, int *name_len, int *ve
             break;
     }
 
-    *binding = MPIX_T_BIND_NO_OBJECT;
+    *binding = MPI_T_BIND_NO_OBJECT;
 
     /* FIXME a bit of a fib, may not actually be true for any given cvar */
-    *scope = MPIX_T_SCOPE_LOCAL;
+    *scope = MPI_T_SCOPE_LOCAL;
 
 fn_exit:
     return mpi_errno;
@@ -82,11 +82,11 @@ fn_fail:
 #endif /* MPICH_MPI_FROM_PMPI */
 
 #undef FUNCNAME
-#define FUNCNAME MPIX_T_cvar_get_info
+#define FUNCNAME MPI_T_cvar_get_info
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 /*@
-MPIX_T_cvar_get_info - XXX description here
+MPI_T_cvar_get_info - XXX description here
 
 Input/Output Parameters:
 + name_len - length of the string and/or buffer for name (integer)
@@ -110,13 +110,13 @@ Output Parameters:
 
 .N Errors
 @*/
-int MPIX_T_cvar_get_info(int cvar_index, char *name, int *name_len, int *verbosity, MPI_Datatype *datatype, MPIX_T_enum *enumtype, char *desc, int *desc_len, int *binding, int *scope)
+int MPI_T_cvar_get_info(int cvar_index, char *name, int *name_len, int *verbosity, MPI_Datatype *datatype, MPI_T_enum *enumtype, char *desc, int *desc_len, int *binding, int *scope)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPIX_T_CVAR_GET_INFO);
+    MPID_MPI_STATE_DECL(MPID_STATE_MPI_T_CVAR_GET_INFO);
 
     MPIU_THREAD_CS_ENTER(ALLFUNC,);
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPIX_T_CVAR_GET_INFO);
+    MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_T_CVAR_GET_INFO);
 
     /* Validate parameters, especially handles needing to be converted */
 #   ifdef HAVE_ERROR_CHECKING
@@ -157,7 +157,7 @@ int MPIX_T_cvar_get_info(int cvar_index, char *name, int *name_len, int *verbosi
     /* ... end of body of routine ... */
 
 fn_exit:
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPIX_T_CVAR_GET_INFO);
+    MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_T_CVAR_GET_INFO);
     MPIU_THREAD_CS_EXIT(ALLFUNC,);
     return mpi_errno;
 

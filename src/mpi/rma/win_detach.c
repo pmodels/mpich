@@ -8,29 +8,29 @@
 #include "mpiimpl.h"
 #include "rma.h"
 
-/* -- Begin Profiling Symbol Block for routine MPIX_Win_detach */
+/* -- Begin Profiling Symbol Block for routine MPI_Win_detach */
 #if defined(HAVE_PRAGMA_WEAK)
-#pragma weak MPIX_Win_detach = PMPIX_Win_detach
+#pragma weak MPI_Win_detach = PMPI_Win_detach
 #elif defined(HAVE_PRAGMA_HP_SEC_DEF)
-#pragma _HP_SECONDARY_DEF PMPIX_Win_detach  MPIX_Win_detach
+#pragma _HP_SECONDARY_DEF PMPI_Win_detach  MPI_Win_detach
 #elif defined(HAVE_PRAGMA_CRI_DUP)
-#pragma _CRI duplicate MPIX_Win_detach as PMPIX_Win_detach
+#pragma _CRI duplicate MPI_Win_detach as PMPI_Win_detach
 #endif
 /* -- End Profiling Symbol Block */
 
 /* Define MPICH_MPI_FROM_PMPI if weak symbols are not supported to build
    the MPI routines */
 #ifndef MPICH_MPI_FROM_PMPI
-#undef MPIX_Win_detach
-#define MPIX_Win_detach PMPIX_Win_detach
+#undef MPI_Win_detach
+#define MPI_Win_detach PMPI_Win_detach
 
 #endif
 
 #undef FUNCNAME
-#define FUNCNAME MPIX_Win_detach
+#define FUNCNAME MPI_Win_detach
 
 /*@
-   MPIX_Win_detach - Detach memory from a dynamic window
+   MPI_Win_detach - Detach memory from a dynamic window
 
  Input Parameters:
 + base - initial address of memory to be detached 
@@ -48,17 +48,17 @@
 .N MPI_ERR_TYPE
 .N MPI_ERR_WIN
 @*/
-int MPIX_Win_detach(MPI_Win win, const void *base)
+int MPI_Win_detach(MPI_Win win, const void *base)
 {
-    static const char FCNAME[] = "MPIX_Win_detach";
+    static const char FCNAME[] = "MPI_Win_detach";
     int mpi_errno = MPI_SUCCESS;
     MPID_Win *win_ptr = NULL;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPIX_WIN_DETACH);
+    MPID_MPI_STATE_DECL(MPID_STATE_MPI_WIN_DETACH);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
     MPIU_THREAD_CS_ENTER(ALLFUNC,);
-    MPID_MPI_RMA_FUNC_ENTER(MPID_STATE_MPIX_WIN_DETACH);
+    MPID_MPI_RMA_FUNC_ENTER(MPID_STATE_MPI_WIN_DETACH);
 
     /* Validate parameters, especially handles needing to be converted */
 #   ifdef HAVE_ERROR_CHECKING
@@ -98,7 +98,7 @@ int MPIX_Win_detach(MPI_Win win, const void *base)
     /* ... end of body of routine ... */
 
   fn_exit:
-    MPID_MPI_RMA_FUNC_EXIT(MPID_STATE_MPIX_WIN_DETACH);
+    MPID_MPI_RMA_FUNC_EXIT(MPID_STATE_MPI_WIN_DETACH);
     MPIU_THREAD_CS_EXIT(ALLFUNC,);
     return mpi_errno;
 

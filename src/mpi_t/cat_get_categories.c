@@ -6,21 +6,21 @@
 
 #include "mpiimpl.h"
 
-/* -- Begin Profiling Symbol Block for routine MPIX_T_category_get_categories */
+/* -- Begin Profiling Symbol Block for routine MPI_T_category_get_categories */
 #if defined(HAVE_PRAGMA_WEAK)
-#pragma weak MPIX_T_category_get_categories = PMPIX_T_category_get_categories
+#pragma weak MPI_T_category_get_categories = PMPI_T_category_get_categories
 #elif defined(HAVE_PRAGMA_HP_SEC_DEF)
-#pragma _HP_SECONDARY_DEF PMPIX_T_category_get_categories  MPIX_T_category_get_categories
+#pragma _HP_SECONDARY_DEF PMPI_T_category_get_categories  MPI_T_category_get_categories
 #elif defined(HAVE_PRAGMA_CRI_DUP)
-#pragma _CRI duplicate MPIX_T_category_get_categories as PMPIX_T_category_get_categories
+#pragma _CRI duplicate MPI_T_category_get_categories as PMPI_T_category_get_categories
 #endif
 /* -- End Profiling Symbol Block */
 
 /* Define MPICH_MPI_FROM_PMPI if weak symbols are not supported to build
    the MPI routines */
 #ifndef MPICH_MPI_FROM_PMPI
-#undef MPIX_T_category_get_categories
-#define MPIX_T_category_get_categories PMPIX_T_category_get_categories
+#undef MPI_T_category_get_categories
+#define MPI_T_category_get_categories PMPI_T_category_get_categories
 
 /* any non-MPI functions go here, especially non-static ones */
 
@@ -43,11 +43,11 @@ fn_fail:
 #endif /* MPICH_MPI_FROM_PMPI */
 
 #undef FUNCNAME
-#define FUNCNAME MPIX_T_category_get_categories
+#define FUNCNAME MPI_T_category_get_categories
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 /*@
-MPIX_T_category_get_categories - XXX description here
+MPI_T_category_get_categories - XXX description here
 
 Input Parameters:
 + cat_index - index of the category to be queried, in the range [0,N-1] (integer)
@@ -62,13 +62,13 @@ Output Parameters:
 
 .N Errors
 @*/
-int MPIX_T_category_get_categories(int cat_index, int len, int indices[])
+int MPI_T_category_get_categories(int cat_index, int len, int indices[])
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPIX_T_CATEGORY_GET_CATEGORIES);
+    MPID_MPI_STATE_DECL(MPID_STATE_MPI_T_CATEGORY_GET_CATEGORIES);
 
     MPIU_THREAD_CS_ENTER(ALLFUNC,);
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPIX_T_CATEGORY_GET_CATEGORIES);
+    MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_T_CATEGORY_GET_CATEGORIES);
 
     /* Validate parameters, especially handles needing to be converted */
 #   ifdef HAVE_ERROR_CHECKING
@@ -105,7 +105,7 @@ int MPIX_T_category_get_categories(int cat_index, int len, int indices[])
     /* ... end of body of routine ... */
 
 fn_exit:
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPIX_T_CATEGORY_GET_CATEGORIES);
+    MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_T_CATEGORY_GET_CATEGORIES);
     MPIU_THREAD_CS_EXIT(ALLFUNC,);
     return mpi_errno;
 

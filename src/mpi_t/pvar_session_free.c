@@ -7,21 +7,21 @@
 #include "mpiimpl.h"
 #include "mpl_utlist.h"
 
-/* -- Begin Profiling Symbol Block for routine MPIX_T_pvar_session_free */
+/* -- Begin Profiling Symbol Block for routine MPI_T_pvar_session_free */
 #if defined(HAVE_PRAGMA_WEAK)
-#pragma weak MPIX_T_pvar_session_free = PMPIX_T_pvar_session_free
+#pragma weak MPI_T_pvar_session_free = PMPI_T_pvar_session_free
 #elif defined(HAVE_PRAGMA_HP_SEC_DEF)
-#pragma _HP_SECONDARY_DEF PMPIX_T_pvar_session_free  MPIX_T_pvar_session_free
+#pragma _HP_SECONDARY_DEF PMPI_T_pvar_session_free  MPI_T_pvar_session_free
 #elif defined(HAVE_PRAGMA_CRI_DUP)
-#pragma _CRI duplicate MPIX_T_pvar_session_free as PMPIX_T_pvar_session_free
+#pragma _CRI duplicate MPI_T_pvar_session_free as PMPI_T_pvar_session_free
 #endif
 /* -- End Profiling Symbol Block */
 
 /* Define MPICH_MPI_FROM_PMPI if weak symbols are not supported to build
    the MPI routines */
 #ifndef MPICH_MPI_FROM_PMPI
-#undef MPIX_T_pvar_session_free
-#define MPIX_T_pvar_session_free PMPIX_T_pvar_session_free
+#undef MPI_T_pvar_session_free
+#define MPI_T_pvar_session_free PMPI_T_pvar_session_free
 
 /* any non-MPI functions go here, especially non-static ones */
 
@@ -29,7 +29,7 @@
 #define FUNCNAME MPIR_T_pvar_session_free_impl
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPIR_T_pvar_session_free_impl(MPIX_T_pvar_session *session)
+int MPIR_T_pvar_session_free_impl(MPI_T_pvar_session *session)
 {
     int mpi_errno = MPI_SUCCESS;
     struct MPIR_T_pvar_handle *hnd, *tmp;
@@ -45,7 +45,7 @@ int MPIR_T_pvar_session_free_impl(MPIX_T_pvar_session *session)
         MPIU_Free(hnd);
     }
     MPIU_Free(*session);
-    *session = MPIX_T_PVAR_SESSION_NULL;
+    *session = MPI_T_PVAR_SESSION_NULL;
 
 fn_exit:
     return mpi_errno;
@@ -56,11 +56,11 @@ fn_fail:
 #endif /* MPICH_MPI_FROM_PMPI */
 
 #undef FUNCNAME
-#define FUNCNAME MPIX_T_pvar_session_free
+#define FUNCNAME MPI_T_pvar_session_free
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 /*@
-MPIX_T_pvar_session_free - XXX description here
+MPI_T_pvar_session_free - XXX description here
 
 Input/Output Parameters:
 . session - identifier of performance experiment session (handle)
@@ -71,13 +71,13 @@ Input/Output Parameters:
 
 .N Errors
 @*/
-int MPIX_T_pvar_session_free(MPIX_T_pvar_session *session)
+int MPI_T_pvar_session_free(MPI_T_pvar_session *session)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPIX_T_PVAR_SESSION_FREE);
+    MPID_MPI_STATE_DECL(MPID_STATE_MPI_T_PVAR_SESSION_FREE);
 
     MPIU_THREAD_CS_ENTER(ALLFUNC,);
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPIX_T_PVAR_SESSION_FREE);
+    MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_T_PVAR_SESSION_FREE);
 
     /* Validate parameters, especially handles needing to be converted */
 #   ifdef HAVE_ERROR_CHECKING
@@ -114,7 +114,7 @@ int MPIX_T_pvar_session_free(MPIX_T_pvar_session *session)
     /* ... end of body of routine ... */
 
 fn_exit:
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPIX_T_PVAR_SESSION_FREE);
+    MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_T_PVAR_SESSION_FREE);
     MPIU_THREAD_CS_EXIT(ALLFUNC,);
     return mpi_errno;
 

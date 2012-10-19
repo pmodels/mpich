@@ -19,7 +19,7 @@ int MPID_Mrecv(void *buf, int count, MPI_Datatype datatype,
     MPID_Request *rreq = NULL;
 
     if (message == NULL) {
-        /* treat as though MPIX_MESSAGE_NO_PROC was passed */
+        /* treat as though MPI_MESSAGE_NO_PROC was passed */
         MPIR_Status_set_procnull(status);
         goto fn_exit;
     }

@@ -998,9 +998,9 @@ static int MPIDI_CH3I_Send_immed_rmw_msg(MPIDI_RMA_ops *rma_op,
         fop_pkt->request_handle = resp_req->handle;
         fop_pkt->op = rma_op->op;
 
-        if (len <= sizeof(fop_pkt->origin_data) || rma_op->op == MPIX_NO_OP) {
+        if (len <= sizeof(fop_pkt->origin_data) || rma_op->op == MPI_NO_OP) {
             /* Embed FOP data in the packet header */
-            if (rma_op->op != MPIX_NO_OP) {
+            if (rma_op->op != MPI_NO_OP) {
                 MPIU_Memcpy( fop_pkt->origin_data, rma_op->origin_addr, len );
             }
 
@@ -2070,7 +2070,7 @@ int MPIDI_Win_lock_all(int assert, MPID_Win *win_ptr)
     MPIU_UNREFERENCED_ARG(assert);
 
     /* Currently defined only for shared memory windows */
-    MPIU_Assert(win_ptr->create_flavor == MPIX_WIN_FLAVOR_SHARED);
+    MPIU_Assert(win_ptr->create_flavor == MPI_WIN_FLAVOR_SHARED);
 
     MPIDI_Win_sync(win_ptr);
 
@@ -2099,7 +2099,7 @@ int MPIDI_Win_unlock_all(MPID_Win *win_ptr)
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_WIN_UNLOCK_ALL);
 
     /* Currently defined only for shared memory windows */
-    MPIU_Assert(win_ptr->create_flavor == MPIX_WIN_FLAVOR_SHARED);
+    MPIU_Assert(win_ptr->create_flavor == MPI_WIN_FLAVOR_SHARED);
     
     if (! (win_ptr->lock_granted && win_ptr->current_lock_type == MPID_LOCK_SHARED_ALL) ) {
         mpi_errno = MPI_ERR_LOCKTYPE;

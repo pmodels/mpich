@@ -6,21 +6,21 @@
 
 #include "mpiimpl.h"
 
-/* -- Begin Profiling Symbol Block for routine MPIX_T_cvar_handle_alloc */
+/* -- Begin Profiling Symbol Block for routine MPI_T_cvar_handle_alloc */
 #if defined(HAVE_PRAGMA_WEAK)
-#pragma weak MPIX_T_cvar_handle_alloc = PMPIX_T_cvar_handle_alloc
+#pragma weak MPI_T_cvar_handle_alloc = PMPI_T_cvar_handle_alloc
 #elif defined(HAVE_PRAGMA_HP_SEC_DEF)
-#pragma _HP_SECONDARY_DEF PMPIX_T_cvar_handle_alloc  MPIX_T_cvar_handle_alloc
+#pragma _HP_SECONDARY_DEF PMPI_T_cvar_handle_alloc  MPI_T_cvar_handle_alloc
 #elif defined(HAVE_PRAGMA_CRI_DUP)
-#pragma _CRI duplicate MPIX_T_cvar_handle_alloc as PMPIX_T_cvar_handle_alloc
+#pragma _CRI duplicate MPI_T_cvar_handle_alloc as PMPI_T_cvar_handle_alloc
 #endif
 /* -- End Profiling Symbol Block */
 
 /* Define MPICH_MPI_FROM_PMPI if weak symbols are not supported to build
    the MPI routines */
 #ifndef MPICH_MPI_FROM_PMPI
-#undef MPIX_T_cvar_handle_alloc
-#define MPIX_T_cvar_handle_alloc PMPIX_T_cvar_handle_alloc
+#undef MPI_T_cvar_handle_alloc
+#define MPI_T_cvar_handle_alloc PMPI_T_cvar_handle_alloc
 
 /* any non-MPI functions go here, especially non-static ones */
 
@@ -28,18 +28,18 @@
 #define FUNCNAME MPIR_T_cvar_handle_alloc_impl
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPIR_T_cvar_handle_alloc_impl(int cvar_index, void *obj_handle, MPIX_T_cvar_handle *handle, int *count)
+int MPIR_T_cvar_handle_alloc_impl(int cvar_index, void *obj_handle, MPI_T_cvar_handle *handle, int *count)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIU_CHKPMEM_DECL(1);
 
-    *handle = MPIX_T_CVAR_HANDLE_NULL;
+    *handle = MPI_T_CVAR_HANDLE_NULL;
 
     MPIU_Assert(cvar_index >= 0);
     MPIU_Assert(cvar_index < MPIR_PARAM_NUM_PARAMS);
 
     *handle = NULL;
-    MPIU_CHKPMEM_MALLOC(*handle, MPIX_T_cvar_handle, sizeof(**handle), mpi_errno, "control var handle");
+    MPIU_CHKPMEM_MALLOC(*handle, MPI_T_cvar_handle, sizeof(**handle), mpi_errno, "control var handle");
     (*handle)->p = &MPIR_Param_params[cvar_index];
 
     if ((*handle)->p->default_val.type == MPIR_PARAM_TYPE_RANGE) {
@@ -64,11 +64,11 @@ fn_fail:
 #endif /* MPICH_MPI_FROM_PMPI */
 
 #undef FUNCNAME
-#define FUNCNAME MPIX_T_cvar_handle_alloc
+#define FUNCNAME MPI_T_cvar_handle_alloc
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 /*@
-MPIX_T_cvar_handle_alloc - XXX description here
+MPI_T_cvar_handle_alloc - XXX description here
 
 Input Parameters:
 + cvar_index - index of control variable for which handle is to be allocated (index)
@@ -84,13 +84,13 @@ Output Parameters:
 
 .N Errors
 @*/
-int MPIX_T_cvar_handle_alloc(int cvar_index, void *obj_handle, MPIX_T_cvar_handle *handle, int *count)
+int MPI_T_cvar_handle_alloc(int cvar_index, void *obj_handle, MPI_T_cvar_handle *handle, int *count)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPIX_T_CVAR_HANDLE_ALLOC);
+    MPID_MPI_STATE_DECL(MPID_STATE_MPI_T_CVAR_HANDLE_ALLOC);
 
     MPIU_THREAD_CS_ENTER(ALLFUNC,);
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPIX_T_CVAR_HANDLE_ALLOC);
+    MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_T_CVAR_HANDLE_ALLOC);
 
     /* Validate parameters, especially handles needing to be converted */
 #   ifdef HAVE_ERROR_CHECKING
@@ -127,7 +127,7 @@ int MPIX_T_cvar_handle_alloc(int cvar_index, void *obj_handle, MPIX_T_cvar_handl
     /* ... end of body of routine ... */
 
 fn_exit:
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPIX_T_CVAR_HANDLE_ALLOC);
+    MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_T_CVAR_HANDLE_ALLOC);
     MPIU_THREAD_CS_EXIT(ALLFUNC,);
     return mpi_errno;
 

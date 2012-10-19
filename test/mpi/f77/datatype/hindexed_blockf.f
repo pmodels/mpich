@@ -81,7 +81,7 @@ C
       do i=1,10
          aintv(i)    = (i-1) * 3 * aint
       enddo
-      call mpix_type_create_hindexed_block( 10, 1, aintv,
+      call mpi_type_create_hindexed_block( 10, 1, aintv,
      &                               MPI_INTEGER, type5, ierr )
       call mpi_type_commit( type5, ierr )
 C

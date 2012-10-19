@@ -20,9 +20,9 @@
  *  IN THE SOFTWARE.
  */
 
-/* A simple test of the proposed MPI_T_ interface (as "MPIX_T") that queries all
- * of the control variables exposed by the MPI implememtation and prints them to
- * stdout.
+/* A simple test of the proposed MPI_T_ interface that queries all of
+ * the control variables exposed by the MPI implememtation and prints
+ * them to stdout.
  *
  * Author: Dave Goodell <goodell@mcs.anl.gov.
  */
@@ -53,11 +53,11 @@ int main(int argc, char **argv)
     int scope;
     int provided;
     int initialize_mpi = 0;
-    MPIX_T_cvar_handle handle;
-    MPIX_T_enum enumtype;
+    MPI_T_cvar_handle handle;
+    MPI_T_enum enumtype;
 
     provided = 0xdeadbeef;
-    MPIX_T_init_thread(MPI_THREAD_SINGLE, &provided);
+    MPI_T_init_thread(MPI_THREAD_SINGLE, &provided);
     assert(provided != 0xdeadbeef);
 
     if (initialize_mpi) {
@@ -67,48 +67,48 @@ int main(int argc, char **argv)
     }
 
     num = 0xdeadbeef;
-    MPIX_T_cvar_get_num(&num);
+    MPI_T_cvar_get_num(&num);
     printf("get_num=%d\n", num);
     assert(num != 0xdeadbeef);
     for (i = 0; i < num; ++i) {
         name_len = desc_len = STR_SZ;
-        MPIX_T_cvar_get_info(i, name, &name_len, &verb, &dtype, &enumtype, desc, &desc_len, &bind, &scope);
+        MPI_T_cvar_get_info(i, name, &name_len, &verb, &dtype, &enumtype, desc, &desc_len, &bind, &scope);
         printf("index=%d\n", i);
         printf("--> name='%s' name_len=%d desc='%s' desc_len=%d\n", name, name_len, desc, desc_len);
         printf("--> verb=%d dtype=%#x bind=%d scope=%d\n", verb, dtype, bind, scope);
 
-        MPIX_T_cvar_handle_alloc(i, NULL, &handle, &count);
+        MPI_T_cvar_handle_alloc(i, NULL, &handle, &count);
         printf("--> handle allocated: handle=%p count=%d\n", handle, count);
         if (dtype == MPI_INT) {
             int val = 0xdeadbeef;
-            MPIX_T_cvar_read(handle, &val);
+            MPI_T_cvar_read(handle, &val);
             printf("--> val=%d\n", val);
             ++val;
-            MPIX_T_cvar_write(handle, &val);
+            MPI_T_cvar_write(handle, &val);
             val = 0xdeadbeef;
-            MPIX_T_cvar_read(handle, &val);
+            MPI_T_cvar_read(handle, &val);
             printf("--> incremented val=%d\n", val);
         }
         else if (dtype == MPI_DOUBLE) {
             double val = NAN;
-            MPIX_T_cvar_read(handle, &val);
+            MPI_T_cvar_read(handle, &val);
             printf("--> val=%f\n", val);
             val *= 2.0;
-            MPIX_T_cvar_write(handle, &val);
+            MPI_T_cvar_write(handle, &val);
             val = NAN;
-            MPIX_T_cvar_read(handle, &val);
+            MPI_T_cvar_read(handle, &val);
             printf("--> doubled val=%f\n", val);
         }
         else if (dtype == MPI_CHAR) {
             char *str = malloc(count+1);
-            MPIX_T_cvar_read(handle, str);
+            MPI_T_cvar_read(handle, str);
             printf("--> str='%s'\n", str);
             /* just write the string back unmodified for now */
-            MPIX_T_cvar_write(handle, str);
-            MPIX_T_cvar_read(handle, str);
+            MPI_T_cvar_write(handle, str);
+            MPI_T_cvar_read(handle, str);
             printf("--> written-then-read str='%s'\n", str);
         }
-        MPIX_T_cvar_handle_free(&handle);
+        MPI_T_cvar_handle_free(&handle);
         printf("\n");
     }
 
@@ -116,7 +116,7 @@ int main(int argc, char **argv)
         MPI_Finalize();
     }
 
-    MPIX_T_finalize();
+    MPI_T_finalize();
 
     return 0;
 }

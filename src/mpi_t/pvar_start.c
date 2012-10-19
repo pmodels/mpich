@@ -6,21 +6,21 @@
 
 #include "mpiimpl.h"
 
-/* -- Begin Profiling Symbol Block for routine MPIX_T_pvar_start */
+/* -- Begin Profiling Symbol Block for routine MPI_T_pvar_start */
 #if defined(HAVE_PRAGMA_WEAK)
-#pragma weak MPIX_T_pvar_start = PMPIX_T_pvar_start
+#pragma weak MPI_T_pvar_start = PMPI_T_pvar_start
 #elif defined(HAVE_PRAGMA_HP_SEC_DEF)
-#pragma _HP_SECONDARY_DEF PMPIX_T_pvar_start  MPIX_T_pvar_start
+#pragma _HP_SECONDARY_DEF PMPI_T_pvar_start  MPI_T_pvar_start
 #elif defined(HAVE_PRAGMA_CRI_DUP)
-#pragma _CRI duplicate MPIX_T_pvar_start as PMPIX_T_pvar_start
+#pragma _CRI duplicate MPI_T_pvar_start as PMPI_T_pvar_start
 #endif
 /* -- End Profiling Symbol Block */
 
 /* Define MPICH_MPI_FROM_PMPI if weak symbols are not supported to build
    the MPI routines */
 #ifndef MPICH_MPI_FROM_PMPI
-#undef MPIX_T_pvar_start
-#define MPIX_T_pvar_start PMPIX_T_pvar_start
+#undef MPI_T_pvar_start
+#define MPI_T_pvar_start PMPI_T_pvar_start
 
 /* any non-MPI functions go here, especially non-static ones */
 
@@ -28,7 +28,7 @@
 #define FUNCNAME MPIR_T_pvar_start_impl
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPIR_T_pvar_start_impl(MPIX_T_pvar_session session, MPIX_T_pvar_handle handle)
+int MPIR_T_pvar_start_impl(MPI_T_pvar_session session, MPI_T_pvar_handle handle)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -43,11 +43,11 @@ fn_fail:
 #endif /* MPICH_MPI_FROM_PMPI */
 
 #undef FUNCNAME
-#define FUNCNAME MPIX_T_pvar_start
+#define FUNCNAME MPI_T_pvar_start
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 /*@
-MPIX_T_pvar_start - XXX description here
+MPI_T_pvar_start - XXX description here
 
 Input Parameters:
 + session - identifier of performance experiment session (handle)
@@ -59,13 +59,13 @@ Input Parameters:
 
 .N Errors
 @*/
-int MPIX_T_pvar_start(MPIX_T_pvar_session session, MPIX_T_pvar_handle handle)
+int MPI_T_pvar_start(MPI_T_pvar_session session, MPI_T_pvar_handle handle)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPIX_T_PVAR_START);
+    MPID_MPI_STATE_DECL(MPID_STATE_MPI_T_PVAR_START);
 
     MPIU_THREAD_CS_ENTER(ALLFUNC,);
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPIX_T_PVAR_START);
+    MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_T_PVAR_START);
 
     /* Validate parameters, especially handles needing to be converted */
 #   ifdef HAVE_ERROR_CHECKING
@@ -102,7 +102,7 @@ int MPIX_T_pvar_start(MPIX_T_pvar_session session, MPIX_T_pvar_handle handle)
     /* ... end of body of routine ... */
 
 fn_exit:
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPIX_T_PVAR_START);
+    MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_T_PVAR_START);
     MPIU_THREAD_CS_EXIT(ALLFUNC,);
     return mpi_errno;
 

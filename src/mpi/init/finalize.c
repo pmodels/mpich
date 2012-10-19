@@ -227,7 +227,7 @@ int MPI_Finalize( void )
        finalize callbacks */
 
     /* FIXME The init/finalize paths in general need a big overhaul in order
-     * to account for the new MPIX_T_ code. */
+     * to account for the new MPI_T_ code. */
     if (!MPIR_T_is_initialized()) {
         MPIR_T_finalize_pvars();
 

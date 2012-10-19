@@ -6,21 +6,21 @@
 
 #include "mpiimpl.h"
 
-/* -- Begin Profiling Symbol Block for routine MPIX_T_enum_get_item */
+/* -- Begin Profiling Symbol Block for routine MPI_T_enum_get_item */
 #if defined(HAVE_PRAGMA_WEAK)
-#pragma weak MPIX_T_enum_get_item = PMPIX_T_enum_get_item
+#pragma weak MPI_T_enum_get_item = PMPI_T_enum_get_item
 #elif defined(HAVE_PRAGMA_HP_SEC_DEF)
-#pragma _HP_SECONDARY_DEF PMPIX_T_enum_get_item  MPIX_T_enum_get_item
+#pragma _HP_SECONDARY_DEF PMPI_T_enum_get_item  MPI_T_enum_get_item
 #elif defined(HAVE_PRAGMA_CRI_DUP)
-#pragma _CRI duplicate MPIX_T_enum_get_item as PMPIX_T_enum_get_item
+#pragma _CRI duplicate MPI_T_enum_get_item as PMPI_T_enum_get_item
 #endif
 /* -- End Profiling Symbol Block */
 
 /* Define MPICH_MPI_FROM_PMPI if weak symbols are not supported to build
    the MPI routines */
 #ifndef MPICH_MPI_FROM_PMPI
-#undef MPIX_T_enum_get_item
-#define MPIX_T_enum_get_item PMPIX_T_enum_get_item
+#undef MPI_T_enum_get_item
+#define MPI_T_enum_get_item PMPI_T_enum_get_item
 
 /* any non-MPI functions go here, especially non-static ones */
 
@@ -28,7 +28,7 @@
 #define FUNCNAME MPIR_T_enum_get_item_impl
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPIR_T_enum_get_item_impl(MPIX_T_enum enumtype, int num, int *value, char *name, int *name_len)
+int MPIR_T_enum_get_item_impl(MPI_T_enum enumtype, int num, int *value, char *name, int *name_len)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -43,11 +43,11 @@ fn_fail:
 #endif /* MPICH_MPI_FROM_PMPI */
 
 #undef FUNCNAME
-#define FUNCNAME MPIX_T_enum_get_item
+#define FUNCNAME MPI_T_enum_get_item
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 /*@
-MPIX_T_enum_get_item - XXX description here
+MPI_T_enum_get_item - XXX description here
 
 Input/Output Parameters:
 . name_len - length of the string and/or buffer for name (integer)
@@ -66,13 +66,13 @@ Output Parameters:
 
 .N Errors
 @*/
-int MPIX_T_enum_get_item(MPIX_T_enum enumtype, int num, int *value, char *name, int *name_len)
+int MPI_T_enum_get_item(MPI_T_enum enumtype, int num, int *value, char *name, int *name_len)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPIX_T_ENUM_GET_ITEM);
+    MPID_MPI_STATE_DECL(MPID_STATE_MPI_T_ENUM_GET_ITEM);
 
     MPIU_THREAD_CS_ENTER(ALLFUNC,);
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPIX_T_ENUM_GET_ITEM);
+    MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_T_ENUM_GET_ITEM);
 
     /* Validate parameters, especially handles needing to be converted */
 #   ifdef HAVE_ERROR_CHECKING
@@ -110,7 +110,7 @@ int MPIX_T_enum_get_item(MPIX_T_enum enumtype, int num, int *value, char *name, 
     /* ... end of body of routine ... */
 
 fn_exit:
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPIX_T_ENUM_GET_ITEM);
+    MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_T_ENUM_GET_ITEM);
     MPIU_THREAD_CS_EXIT(ALLFUNC,);
     return mpi_errno;
 

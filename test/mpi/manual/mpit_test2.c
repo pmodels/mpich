@@ -20,11 +20,11 @@
  *  IN THE SOFTWARE.
  */
 
-/* A simple test of the proposed MPI_T_ interface (as "MPIX_T") that assumes the
+/* A simple test of the proposed MPI_T_ interface that assumes the
  * presence of two performance variables: "posted_recvq_length" and
- * "unexpected_recvq_length".  Some information about these variables is printed
- * to stdout and then a few messages are sent/received to show that theses
- * variables are reporting useful information.
+ * "unexpected_recvq_length".  Some information about these variables
+ * is printed to stdout and then a few messages are sent/received to
+ * show that theses variables are reporting useful information.
  *
  * Author: Dave Goodell <goodell@mcs.anl.gov.
  */
@@ -41,15 +41,15 @@
 
 static int posted_qlen, unexpected_qlen;
 static MPI_Aint posted_queue_match_attempts, unexpected_queue_match_attempts;
-static MPIX_T_pvar_handle pq_handle, uq_handle, pqm_handle, uqm_handle;
-static MPIX_T_pvar_session session;
+static MPI_T_pvar_handle pq_handle, uq_handle, pqm_handle, uqm_handle;
+static MPI_T_pvar_session session;
 
 static void print_vars(int idx)
 {
-    MPIX_T_pvar_read(session, pq_handle, &posted_qlen);
-    MPIX_T_pvar_read(session, uq_handle, &unexpected_qlen);
-    MPIX_T_pvar_read(session, pqm_handle, &posted_queue_match_attempts);
-    MPIX_T_pvar_read(session, uqm_handle, &unexpected_queue_match_attempts);
+    MPI_T_pvar_read(session, pq_handle, &posted_qlen);
+    MPI_T_pvar_read(session, uq_handle, &unexpected_qlen);
+    MPI_T_pvar_read(session, pqm_handle, &posted_queue_match_attempts);
+    MPI_T_pvar_read(session, uqm_handle, &unexpected_queue_match_attempts);
 
     printf("(%d) posted_qlen=%d unexpected_qlen=%d ", idx, posted_qlen, unexpected_qlen);
     printf("posted_queue_match_attempts=%lu unexpected_queue_match_attempts=%lu\n",
@@ -74,7 +74,7 @@ int main(int argc, char **argv)
     int varclass;
     int readonly, continuous, atomic;
     int provided;
-    MPIX_T_enum enumtype;
+    MPI_T_enum enumtype;
     int pq_idx = -1, uq_idx = -1, pqm_idx = -1, uqm_idx = -1;
     int pqm_writable = -1, uqm_writable = -1;
 
@@ -83,16 +83,16 @@ int main(int argc, char **argv)
     MPI_Comm_size(MPI_COMM_WORLD, &size);
 
     provided = 0xdeadbeef;
-    MPIX_T_init_thread(MPI_THREAD_SINGLE, &provided);
+    MPI_T_init_thread(MPI_THREAD_SINGLE, &provided);
     assert(provided != 0xdeadbeef);
 
     num = 0xdeadbeef;
-    MPIX_T_pvar_get_num(&num);
+    MPI_T_pvar_get_num(&num);
     printf("get_num=%d\n", num);
     assert(num != 0xdeadbeef);
     for (i = 0; i < num; ++i) {
         name_len = desc_len = STR_SZ;
-        MPIX_T_pvar_get_info(i, name, &name_len, &verb, &varclass, &dtype, &enumtype, desc, &desc_len, &bind, &readonly, &continuous, &atomic);
+        MPI_T_pvar_get_info(i, name, &name_len, &verb, &varclass, &dtype, &enumtype, desc, &desc_len, &bind, &readonly, &continuous, &atomic);
         printf("index=%d\n", i);
         printf("--> name='%s' name_len=%d desc='%s' desc_len=%d\n", name, name_len, desc, desc_len);
         printf("--> verb=%d varclass=%d dtype=%#x bind=%d readonly=%d continuous=%d atomic=%d\n",
@@ -117,29 +117,29 @@ int main(int argc, char **argv)
     printf("pq_idx=%d uq_idx=%d pqm_idx=%d uqm_idx=%d\n", pq_idx, uq_idx, pqm_idx, uqm_idx);
 
     /* setup a session and handles for the PQ and UQ length variables */
-    session = MPIX_T_PVAR_SESSION_NULL;
-    MPIX_T_pvar_session_create(&session);
-    assert(session != MPIX_T_PVAR_SESSION_NULL);
+    session = MPI_T_PVAR_SESSION_NULL;
+    MPI_T_pvar_session_create(&session);
+    assert(session != MPI_T_PVAR_SESSION_NULL);
 
-    pq_handle = MPIX_T_PVAR_HANDLE_NULL;
-    MPIX_T_pvar_handle_alloc(session, pq_idx, NULL, &pq_handle, &count);
+    pq_handle = MPI_T_PVAR_HANDLE_NULL;
+    MPI_T_pvar_handle_alloc(session, pq_idx, NULL, &pq_handle, &count);
     assert(count = 1);
-    assert(pq_handle != MPIX_T_PVAR_HANDLE_NULL);
+    assert(pq_handle != MPI_T_PVAR_HANDLE_NULL);
 
-    uq_handle = MPIX_T_PVAR_HANDLE_NULL;
-    MPIX_T_pvar_handle_alloc(session, uq_idx, NULL, &uq_handle, &count);
+    uq_handle = MPI_T_PVAR_HANDLE_NULL;
+    MPI_T_pvar_handle_alloc(session, uq_idx, NULL, &uq_handle, &count);
     assert(count = 1);
-    assert(uq_handle != MPIX_T_PVAR_HANDLE_NULL);
+    assert(uq_handle != MPI_T_PVAR_HANDLE_NULL);
 
-    pqm_handle = MPIX_T_PVAR_HANDLE_NULL;
-    MPIX_T_pvar_handle_alloc(session, pqm_idx, NULL, &pqm_handle, &count);
+    pqm_handle = MPI_T_PVAR_HANDLE_NULL;
+    MPI_T_pvar_handle_alloc(session, pqm_idx, NULL, &pqm_handle, &count);
     assert(count = 1);
-    assert(pqm_handle != MPIX_T_PVAR_HANDLE_NULL);
+    assert(pqm_handle != MPI_T_PVAR_HANDLE_NULL);
 
-    uqm_handle = MPIX_T_PVAR_HANDLE_NULL;
-    MPIX_T_pvar_handle_alloc(session, uqm_idx, NULL, &uqm_handle, &count);
+    uqm_handle = MPI_T_PVAR_HANDLE_NULL;
+    MPI_T_pvar_handle_alloc(session, uqm_idx, NULL, &uqm_handle, &count);
     assert(count = 1);
-    assert(uqm_handle != MPIX_T_PVAR_HANDLE_NULL);
+    assert(uqm_handle != MPI_T_PVAR_HANDLE_NULL);
 
     /* now send/recv some messages and track the lengths of the queues */
     {
@@ -185,22 +185,22 @@ int main(int argc, char **argv)
 
     if (pqm_writable) {
         posted_queue_match_attempts = 0;
-        MPIX_T_pvar_write(session, pqm_handle, &posted_queue_match_attempts);
+        MPI_T_pvar_write(session, pqm_handle, &posted_queue_match_attempts);
     }
     if (uqm_writable) {
         unexpected_queue_match_attempts = 0;
-        MPIX_T_pvar_write(session, uqm_handle, &unexpected_queue_match_attempts);
+        MPI_T_pvar_write(session, uqm_handle, &unexpected_queue_match_attempts);
     }
     print_vars(8);
 
     /* cleanup */
-    MPIX_T_pvar_handle_free(session, &uqm_handle);
-    MPIX_T_pvar_handle_free(session, &pqm_handle);
-    MPIX_T_pvar_handle_free(session, &uq_handle);
-    MPIX_T_pvar_handle_free(session, &pq_handle);
-    MPIX_T_pvar_session_free(&session);
+    MPI_T_pvar_handle_free(session, &uqm_handle);
+    MPI_T_pvar_handle_free(session, &pqm_handle);
+    MPI_T_pvar_handle_free(session, &uq_handle);
+    MPI_T_pvar_handle_free(session, &pq_handle);
+    MPI_T_pvar_session_free(&session);
 
-    MPIX_T_finalize();
+    MPI_T_finalize();
     MPI_Finalize();
 
     return 0;

@@ -47,8 +47,8 @@ C         the error fields are initialized for modification check.
           s1(MPI_ERROR) = MPI_ERR_DIMS
           s2(MPI_ERROR) = MPI_ERR_OTHER
 
-          msg = MPIX_MESSAGE_NULL
-          call MPIX_Mprobe(0, 5, MPI_COMM_WORLD, msg, s1, ierr)
+          msg = MPI_MESSAGE_NULL
+          call MPI_Mprobe(0, 5, MPI_COMM_WORLD, msg, s1, ierr)
           if (s1(MPI_SOURCE) .ne. 0) then
               errs = errs + 1
               print *, 's1(MPI_SOURCE) != 0 at T0 Mprobe().'
@@ -61,9 +61,9 @@ C         the error fields are initialized for modification check.
               errs = errs + 1
               print *, 's1(MPI_TAGS) != MPI_ERR_DIMS at T0 Mprobe().'
           endif
-          if (msg .eq. MPIX_MESSAGE_NULL) then
+          if (msg .eq. MPI_MESSAGE_NULL) then
               errs = errs + 1
-              print *, 'msg == MPIX_MESSAGE_NULL at T0 Mprobe().'
+              print *, 'msg == MPI_MESSAGE_NULL at T0 Mprobe().'
           endif
 
           count = -1
@@ -75,7 +75,7 @@ C         the error fields are initialized for modification check.
 
           recvbuf(1) = 19088743
           recvbuf(2) = 1309737967
-          call MPIX_Mrecv(recvbuf, count, MPI_INTEGER, msg, s2, ierr)
+          call MPI_Mrecv(recvbuf, count, MPI_INTEGER, msg, s2, ierr)
           if (recvbuf(1) .ne. 1735928559) then
               errs = errs + 1
               print *, 'recvbuf(1) is corrupted at T0 Mrecv().'
@@ -96,9 +96,9 @@ C         the error fields are initialized for modification check.
               errs = errs + 1
               print *, 's2(MPI_TAGS) != MPI_ERR_OTHER at T0 Mrecv().'
           endif
-          if (msg .ne. MPIX_MESSAGE_NULL) then
+          if (msg .ne. MPI_MESSAGE_NULL) then
               errs = errs + 1
-              print *, 'msg != MPIX_MESSAGE_NULL at T0 Mrecv().'
+              print *, 'msg != MPI_MESSAGE_NULL at T0 Mrecv().'
           endif
       endif
 
@@ -117,8 +117,8 @@ C         the error fields are initialized for modification check.
           s1(MPI_ERROR) = MPI_ERR_DIMS
           s2(MPI_ERROR) = MPI_ERR_OTHER
 
-          msg = MPIX_MESSAGE_NULL
-          call MPIX_Mprobe(0, 5, MPI_COMM_WORLD, msg, s1, ierr)
+          msg = MPI_MESSAGE_NULL
+          call MPI_Mprobe(0, 5, MPI_COMM_WORLD, msg, s1, ierr)
           if (s1(MPI_SOURCE) .ne. 0) then
               errs = errs + 1
               print *, 's1(MPI_SOURCE) != 0 at T1 Mprobe().'
@@ -131,9 +131,9 @@ C         the error fields are initialized for modification check.
               errs = errs + 1
               print *, 's1(MPI_TAGS) != MPI_ERR_DIMS at T1 Mprobe().'
           endif
-          if (msg .eq. MPIX_MESSAGE_NULL) then
+          if (msg .eq. MPI_MESSAGE_NULL) then
               errs = errs + 1
-              print *, 'msg == MPIX_MESSAGE_NULL at T1 Mprobe().'
+              print *, 'msg == MPI_MESSAGE_NULL at T1 Mprobe().'
           endif
 
           count = -1
@@ -146,7 +146,7 @@ C         the error fields are initialized for modification check.
           rreq = MPI_REQUEST_NULL
           recvbuf(1) = 19088743
           recvbuf(2) = 1309737967
-          call MPIX_Imrecv(recvbuf, count, MPI_INTEGER, msg, rreq, ierr)
+          call MPI_Imrecv(recvbuf, count, MPI_INTEGER, msg, rreq, ierr)
           if (rreq .eq. MPI_REQUEST_NULL) then
               errs = errs + 1
               print *, 'rreq is unmodified at T1 Imrecv().'
@@ -172,9 +172,9 @@ C         the error fields are initialized for modification check.
               errs = errs + 1
               print *, 's2(MPI_TAGS) != MPI_ERR_OTHER at T1 Imrecv().'
           endif
-          if (msg .ne. MPIX_MESSAGE_NULL) then
+          if (msg .ne. MPI_MESSAGE_NULL) then
               errs = errs + 1
-              print *, 'msg != MPIX_MESSAGE_NULL at T1 Imrecv().'
+              print *, 'msg != MPI_MESSAGE_NULL at T1 Imrecv().'
           endif
       endif
 
@@ -193,15 +193,15 @@ C         the error fields are initialized for modification check.
           s1(MPI_ERROR) = MPI_ERR_DIMS
           s2(MPI_ERROR) = MPI_ERR_OTHER
 
-          msg = MPIX_MESSAGE_NULL
-          call MPIX_Improbe(0, 5, MPI_COMM_WORLD, found, msg, s1, ierr)
+          msg = MPI_MESSAGE_NULL
+          call MPI_Improbe(0, 5, MPI_COMM_WORLD, found, msg, s1, ierr)
           do while (.not. found)
-              call MPIX_Improbe(0, 5, MPI_COMM_WORLD,
+              call MPI_Improbe(0, 5, MPI_COMM_WORLD,
      .                          found, msg, s1, ierr)
           enddo
-          if (msg .eq. MPIX_MESSAGE_NULL) then
+          if (msg .eq. MPI_MESSAGE_NULL) then
               errs = errs + 1
-              print *, 'msg == MPIX_MESSAGE_NULL at T2 Improbe().'
+              print *, 'msg == MPI_MESSAGE_NULL at T2 Improbe().'
           endif
           if (s1(MPI_SOURCE) .ne. 0) then
               errs = errs + 1
@@ -225,7 +225,7 @@ C         the error fields are initialized for modification check.
 
           recvbuf(1) = 19088743
           recvbuf(2) = 1309737967
-          call MPIX_Mrecv(recvbuf, count, MPI_INTEGER, msg, s2, ierr)
+          call MPI_Mrecv(recvbuf, count, MPI_INTEGER, msg, s2, ierr)
           if (recvbuf(1) .ne. 1735928559) then
               errs = errs + 1
               print *, 'recvbuf(1) is corrupted at T2 Mrecv().'
@@ -246,9 +246,9 @@ C         the error fields are initialized for modification check.
               errs = errs + 1
               print *, 's2(MPI_TAGS) != MPI_ERR_OTHER at T2 Mrecv().'
           endif
-          if (msg .ne. MPIX_MESSAGE_NULL) then
+          if (msg .ne. MPI_MESSAGE_NULL) then
               errs = errs + 1
-              print *, 'msg != MPIX_MESSAGE_NULL at T2 Mrecv().'
+              print *, 'msg != MPI_MESSAGE_NULL at T2 Mrecv().'
           endif
       endif
 
@@ -267,15 +267,15 @@ C         the error fields are initialized for modification check.
           s1(MPI_ERROR) = MPI_ERR_DIMS
           s2(MPI_ERROR) = MPI_ERR_OTHER
 
-          msg = MPIX_MESSAGE_NULL
-          call MPIX_Improbe(0, 5, MPI_COMM_WORLD, found, msg, s1, ierr)
+          msg = MPI_MESSAGE_NULL
+          call MPI_Improbe(0, 5, MPI_COMM_WORLD, found, msg, s1, ierr)
           do while (.not. found)
-              call MPIX_Improbe(0, 5, MPI_COMM_WORLD,
+              call MPI_Improbe(0, 5, MPI_COMM_WORLD,
      .                          found, msg, s1, ierr)
           enddo
-          if (msg .eq. MPIX_MESSAGE_NULL) then
+          if (msg .eq. MPI_MESSAGE_NULL) then
               errs = errs + 1
-              print *, 'msg == MPIX_MESSAGE_NULL at T3 Improbe().'
+              print *, 'msg == MPI_MESSAGE_NULL at T3 Improbe().'
           endif
           if (s1(MPI_SOURCE) .ne. 0) then
               errs = errs + 1
@@ -300,7 +300,7 @@ C         the error fields are initialized for modification check.
           rreq = MPI_REQUEST_NULL
           recvbuf(1) = 19088743
           recvbuf(2) = 1309737967
-          call MPIX_Imrecv(recvbuf, count, MPI_INTEGER, msg, rreq, ierr)
+          call MPI_Imrecv(recvbuf, count, MPI_INTEGER, msg, rreq, ierr)
           if (rreq .eq. MPI_REQUEST_NULL) then
               errs = errs + 1
               print *, 'rreq is unmodified at T3 Imrecv().'
@@ -326,9 +326,9 @@ C         the error fields are initialized for modification check.
               errs = errs + 1
               print *, 's2(MPI_TAGS) != MPI_ERR_OTHER at T3 Imrecv().'
           endif
-          if (msg .ne. MPIX_MESSAGE_NULL) then
+          if (msg .ne. MPI_MESSAGE_NULL) then
               errs = errs + 1
-              print *, 'msg != MPIX_MESSAGE_NULL at T3 Imrecv().'
+              print *, 'msg != MPI_MESSAGE_NULL at T3 Imrecv().'
           endif
       endif
 
@@ -342,8 +342,8 @@ C         the error fields are initialized for modification check.
           s1(MPI_ERROR) = MPI_ERR_DIMS
           s2(MPI_ERROR) = MPI_ERR_OTHER
 
-          msg = MPIX_MESSAGE_NULL
-          call MPIX_Mprobe(MPI_PROC_NULL, 5, MPI_COMM_WORLD,
+          msg = MPI_MESSAGE_NULL
+          call MPI_Mprobe(MPI_PROC_NULL, 5, MPI_COMM_WORLD,
      .                     msg, s1, ierr)
           if (s1(MPI_SOURCE) .ne. MPI_PROC_NULL) then
               errs = errs + 1
@@ -357,9 +357,9 @@ C         the error fields are initialized for modification check.
               errs = errs + 1
               print *, 's1(MPI_TAGS) != MPI_ERR_DIMS at T4 Mprobe().'
           endif
-          if (msg .ne. MPIX_MESSAGE_NO_PROC) then
+          if (msg .ne. MPI_MESSAGE_NO_PROC) then
               errs = errs + 1
-              print *, 'msg != MPIX_MESSAGE_NO_PROC at T4 Mprobe().'
+              print *, 'msg != MPI_MESSAGE_NO_PROC at T4 Mprobe().'
           endif
 
           count = -1
@@ -371,7 +371,7 @@ C         the error fields are initialized for modification check.
 
           recvbuf(1) = 19088743
           recvbuf(2) = 1309737967
-          call MPIX_Mrecv(recvbuf, count, MPI_INTEGER, msg, s2, ierr)
+          call MPI_Mrecv(recvbuf, count, MPI_INTEGER, msg, s2, ierr)
 C         recvbuf() should remain unmodified
           if (recvbuf(1) .ne. 19088743) then
               errs = errs + 1
@@ -393,9 +393,9 @@ C         recvbuf() should remain unmodified
               errs = errs + 1
               print *, 's2(MPI_TAGS) != MPI_ERR_OTHER at T4 Mrecv().'
           endif
-          if (msg .ne. MPIX_MESSAGE_NULL) then
+          if (msg .ne. MPI_MESSAGE_NULL) then
               errs = errs + 1
-              print *, 'msg != MPIX_MESSAGE_NULL at T4 Mrecv().'
+              print *, 'msg != MPI_MESSAGE_NULL at T4 Mrecv().'
           endif
 
           count = -1
@@ -416,8 +416,8 @@ C         the error fields are initialized for modification check.
           s1(MPI_ERROR) = MPI_ERR_DIMS
           s2(MPI_ERROR) = MPI_ERR_OTHER
 
-          msg = MPIX_MESSAGE_NULL
-          call MPIX_Mprobe(MPI_PROC_NULL, 5, MPI_COMM_WORLD,
+          msg = MPI_MESSAGE_NULL
+          call MPI_Mprobe(MPI_PROC_NULL, 5, MPI_COMM_WORLD,
      .                     msg, s1, ierr)
           if (s1(MPI_SOURCE) .ne. MPI_PROC_NULL) then
               errs = errs + 1
@@ -431,9 +431,9 @@ C         the error fields are initialized for modification check.
               errs = errs + 1
               print *, 's1(MPI_TAGS) != MPI_ERR_DIMS at T5 Mprobe().'
           endif
-          if (msg .ne. MPIX_MESSAGE_NO_PROC) then
+          if (msg .ne. MPI_MESSAGE_NO_PROC) then
               errs = errs + 1
-              print *, 'msg != MPIX_MESSAGE_NO_PROC at T5 Mprobe().'
+              print *, 'msg != MPI_MESSAGE_NO_PROC at T5 Mprobe().'
           endif
 
           count = -1
@@ -446,7 +446,7 @@ C         the error fields are initialized for modification check.
           rreq = MPI_REQUEST_NULL
           recvbuf(1) = 19088743
           recvbuf(2) = 1309737967
-          call MPIX_Imrecv(recvbuf, count, MPI_INTEGER, msg, rreq, ierr)
+          call MPI_Imrecv(recvbuf, count, MPI_INTEGER, msg, rreq, ierr)
           if (rreq .eq. MPI_REQUEST_NULL) then
               errs = errs + 1
               print *, 'rreq == MPI_REQUEST_NULL at T5 Imrecv().'
@@ -478,9 +478,9 @@ C         recvbuf() should remain unmodified
               errs = errs + 1
               print *, 's2(MPI_TAGS) != MPI_ERR_OTHER at T5 Imrecv().'
           endif
-          if (msg .ne. MPIX_MESSAGE_NULL) then
+          if (msg .ne. MPI_MESSAGE_NULL) then
               errs = errs + 1
-              print *, 'msg != MPIX_MESSAGE_NULL at T5 Imrecv().'
+              print *, 'msg != MPI_MESSAGE_NULL at T5 Imrecv().'
           endif
 
           count = -1
@@ -502,8 +502,8 @@ C         the error fields are initialized for modification check.
           s2(MPI_ERROR) = MPI_ERR_OTHER
 
           found = .false.
-          msg = MPIX_MESSAGE_NULL
-          call MPIX_Improbe(MPI_PROC_NULL, 5, MPI_COMM_WORLD,
+          msg = MPI_MESSAGE_NULL
+          call MPI_Improbe(MPI_PROC_NULL, 5, MPI_COMM_WORLD,
      .                      found, msg, s1, ierr)
           if (.not. found) then
               errs = errs + 1
@@ -521,9 +521,9 @@ C         the error fields are initialized for modification check.
               errs = errs + 1
               print *, 's1(MPI_TAGS) != MPI_ERR_DIMS at T6 Improbe().'
           endif
-          if (msg .ne. MPIX_MESSAGE_NO_PROC) then
+          if (msg .ne. MPI_MESSAGE_NO_PROC) then
               errs = errs + 1
-              print *, 'msg != MPIX_MESSAGE_NO_PROC at T6 Improbe().'
+              print *, 'msg != MPI_MESSAGE_NO_PROC at T6 Improbe().'
           endif
 
           count = -1
@@ -535,7 +535,7 @@ C         the error fields are initialized for modification check.
 
           recvbuf(1) = 19088743
           recvbuf(2) = 1309737967
-          call MPIX_Mrecv(recvbuf, count, MPI_INTEGER, msg, s2, ierr)
+          call MPI_Mrecv(recvbuf, count, MPI_INTEGER, msg, s2, ierr)
 C         recvbuf() should remain unmodified
           if (recvbuf(1) .ne. 19088743) then
               errs = errs + 1
@@ -557,9 +557,9 @@ C         recvbuf() should remain unmodified
               errs = errs + 1
               print *, 's2(MPI_TAGS) != MPI_ERR_OTHER at T6 Mrecv().'
           endif
-          if (msg .ne. MPIX_MESSAGE_NULL) then
+          if (msg .ne. MPI_MESSAGE_NULL) then
               errs = errs + 1
-              print *, 'msg != MPIX_MESSAGE_NULL at T6 Mrecv().'
+              print *, 'msg != MPI_MESSAGE_NULL at T6 Mrecv().'
           endif
 
           count = -1
@@ -581,8 +581,8 @@ C         the error fields are initialized for modification check.
           s2(MPI_ERROR) = MPI_ERR_OTHER
 
           found = .false.
-          msg = MPIX_MESSAGE_NULL
-          call MPIX_Improbe(MPI_PROC_NULL, 5, MPI_COMM_WORLD,
+          msg = MPI_MESSAGE_NULL
+          call MPI_Improbe(MPI_PROC_NULL, 5, MPI_COMM_WORLD,
      .                      found, msg, s1, ierr)
           if (.not. found) then
               errs = errs + 1
@@ -600,9 +600,9 @@ C         the error fields are initialized for modification check.
               errs = errs + 1
               print *, 's1(MPI_TAGS) != MPI_ERR_DIMS at T7 Improbe().'
           endif
-          if (msg .ne. MPIX_MESSAGE_NO_PROC) then
+          if (msg .ne. MPI_MESSAGE_NO_PROC) then
               errs = errs + 1
-              print *, 'msg != MPIX_MESSAGE_NO_PROC at T7 Improbe().'
+              print *, 'msg != MPI_MESSAGE_NO_PROC at T7 Improbe().'
           endif
 
           count = -1
@@ -615,7 +615,7 @@ C         the error fields are initialized for modification check.
           rreq = MPI_REQUEST_NULL
           recvbuf(1) = 19088743
           recvbuf(2) = 1309737967
-          call MPIX_Imrecv(recvbuf, count, MPI_INTEGER, msg, rreq, ierr)
+          call MPI_Imrecv(recvbuf, count, MPI_INTEGER, msg, rreq, ierr)
           if (rreq .eq. MPI_REQUEST_NULL) then
               errs = errs + 1
               print *, 'rreq == MPI_REQUEST_NULL at T7 Imrecv().'
@@ -647,9 +647,9 @@ C         recvbuf() should remain unmodified
               errs = errs + 1
               print *, 's2(MPI_TAGS) != MPI_ERR_OTHER at T7 Imrecv().'
           endif
-          if (msg .ne. MPIX_MESSAGE_NULL) then
+          if (msg .ne. MPI_MESSAGE_NULL) then
               errs = errs + 1
-              print *, 'msg != MPIX_MESSAGE_NULL at T7 Imrecv().'
+              print *, 'msg != MPI_MESSAGE_NULL at T7 Imrecv().'
           endif
 
           count = -1

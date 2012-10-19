@@ -7,21 +7,21 @@
 
 #include "mpiimpl.h"
 
-/* -- Begin Profiling Symbol Block for routine MPIX_Type_create_hindexed_block */
+/* -- Begin Profiling Symbol Block for routine MPI_Type_create_hindexed_block */
 #if defined(HAVE_PRAGMA_WEAK)
-#pragma weak MPIX_Type_create_hindexed_block = PMPIX_Type_create_hindexed_block
+#pragma weak MPI_Type_create_hindexed_block = PMPI_Type_create_hindexed_block
 #elif defined(HAVE_PRAGMA_HP_SEC_DEF)
-#pragma _HP_SECONDARY_DEF PMPIX_Type_create_hindexed_block  MPIX_Type_create_hindexed_block
+#pragma _HP_SECONDARY_DEF PMPI_Type_create_hindexed_block  MPI_Type_create_hindexed_block
 #elif defined(HAVE_PRAGMA_CRI_DUP)
-#pragma _CRI duplicate MPIX_Type_create_hindexed_block as PMPIX_Type_create_hindexed_block
+#pragma _CRI duplicate MPI_Type_create_hindexed_block as PMPI_Type_create_hindexed_block
 #endif
 /* -- End Profiling Symbol Block */
 
 /* Define MPICH_MPI_FROM_PMPI if weak symbols are not supported to build
    the MPI routines */
 #ifndef MPICH_MPI_FROM_PMPI
-#undef MPIX_Type_create_hindexed_block
-#define MPIX_Type_create_hindexed_block PMPIX_Type_create_hindexed_block
+#undef MPI_Type_create_hindexed_block
+#define MPI_Type_create_hindexed_block PMPI_Type_create_hindexed_block
 
 #undef FUNCNAME
 #define FUNCNAME MPIR_Type_create_hindexed_block_impl
@@ -46,7 +46,7 @@ int MPIR_Type_create_hindexed_block_impl(int count, int blocklength,
 
     MPID_Datatype_get_ptr(new_handle, new_dtp);
     mpi_errno = MPID_Datatype_set_contents(new_dtp,
-                                           MPIX_COMBINER_HINDEXED_BLOCK,
+                                           MPI_COMBINER_HINDEXED_BLOCK,
                                            2,     /* ints */
                                            count, /* aints */
                                            1,     /* types */
@@ -67,11 +67,11 @@ int MPIR_Type_create_hindexed_block_impl(int count, int blocklength,
 #endif
 
 #undef FUNCNAME
-#define FUNCNAME MPIX_Type_create_hindexed_block
+#define FUNCNAME MPI_Type_create_hindexed_block
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 /*@
-   MPIX_Type_create_hindexed_block - Create an hindexed
+   MPI_Type_create_hindexed_block - Create an hindexed
      datatype with constant-sized blocks
 
    Input Parameters:
@@ -92,7 +92,7 @@ int MPIR_Type_create_hindexed_block_impl(int count, int blocklength,
 .N MPI_ERR_TYPE
 .N MPI_ERR_ARG
 @*/
-int MPIX_Type_create_hindexed_block(int count,
+int MPI_Type_create_hindexed_block(int count,
                                     int blocklength,
                                     const MPI_Aint array_of_displacements[],
                                     MPI_Datatype oldtype, MPI_Datatype * newtype)

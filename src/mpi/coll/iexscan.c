@@ -7,27 +7,27 @@
 #include "mpiimpl.h"
 #include "collutil.h"
 
-/* -- Begin Profiling Symbol Block for routine MPIX_Iexscan */
+/* -- Begin Profiling Symbol Block for routine MPI_Iexscan */
 #if defined(HAVE_PRAGMA_WEAK)
-#pragma weak MPIX_Iexscan = PMPIX_Iexscan
+#pragma weak MPI_Iexscan = PMPI_Iexscan
 #elif defined(HAVE_PRAGMA_HP_SEC_DEF)
-#pragma _HP_SECONDARY_DEF PMPIX_Iexscan  MPIX_Iexscan
+#pragma _HP_SECONDARY_DEF PMPI_Iexscan  MPI_Iexscan
 #elif defined(HAVE_PRAGMA_CRI_DUP)
-#pragma _CRI duplicate MPIX_Iexscan as PMPIX_Iexscan
+#pragma _CRI duplicate MPI_Iexscan as PMPI_Iexscan
 #endif
 /* -- End Profiling Symbol Block */
 
 /* Define MPICH_MPI_FROM_PMPI if weak symbols are not supported to build
    the MPI routines */
 #ifndef MPICH_MPI_FROM_PMPI
-#undef MPIX_Iexscan
-#define MPIX_Iexscan PMPIX_Iexscan
+#undef MPI_Iexscan
+#define MPI_Iexscan PMPI_Iexscan
 
 /* any non-MPI functions go here, especially non-static ones */
 
 /* This is the default implementation of exscan. The algorithm is:
 
-   Algorithm: MPIX_Iexscan
+   Algorithm: MPI_Iexscan
 
    We use a lgp recursive doubling algorithm. The basic algorithm is
    given below. (You can replace "+" with any other scan operator.)
@@ -213,11 +213,11 @@ fn_fail:
 #endif /* MPICH_MPI_FROM_PMPI */
 
 #undef FUNCNAME
-#define FUNCNAME MPIX_Iexscan
+#define FUNCNAME MPI_Iexscan
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 /*@
-MPIX_Iexscan - XXX description here
+MPI_Iexscan - XXX description here
 
 Input Parameters:
 + sendbuf - starting address of the send buffer (choice)
@@ -236,14 +236,14 @@ Output Parameters:
 
 .N Errors
 @*/
-int MPIX_Iexscan(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPI_Comm comm, MPI_Request *request)
+int MPI_Iexscan(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPI_Comm comm, MPI_Request *request)
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_Comm *comm_ptr = NULL;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPIX_IEXSCAN);
+    MPID_MPI_STATE_DECL(MPID_STATE_MPI_IEXSCAN);
 
     MPIU_THREAD_CS_ENTER(ALLFUNC,);
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPIX_IEXSCAN);
+    MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_IEXSCAN);
 
     /* Validate parameters, especially handles needing to be converted */
 #   ifdef HAVE_ERROR_CHECKING
@@ -304,7 +304,7 @@ int MPIX_Iexscan(const void *sendbuf, void *recvbuf, int count, MPI_Datatype dat
     /* ... end of body of routine ... */
 
 fn_exit:
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPIX_IEXSCAN);
+    MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_IEXSCAN);
     MPIU_THREAD_CS_EXIT(ALLFUNC,);
     return mpi_errno;
 

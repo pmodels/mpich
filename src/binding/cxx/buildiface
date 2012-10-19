@@ -1861,7 +1861,7 @@ extern Datatype TWOINTEGER;
     # Modes for comm_split_type
     foreach $int (SHARED) {
 	print $OUTFD "${extern}const int COMM_TYPE_$int";
-	if ($giveValue) { print $OUTFD " = MPIX_COMM_TYPE_$int;\n"; }
+	if ($giveValue) { print $OUTFD " = MPI_COMM_TYPE_$int;\n"; }
 	else            { print $OUTFD ";\n"; }
     }
 
@@ -1869,15 +1869,9 @@ extern Datatype TWOINTEGER;
     foreach $int (CONTIGUOUS, DARRAY, DUP, F90_COMPLEX, F90_INTEGER, 
 		  F90_REAL, HINDEXED_INTEGER, HINDEXED, HVECTOR_INTEGER,
 		  HVECTOR, INDEXED_BLOCK, INDEXED, NAMED, RESIZED, 
-		  STRUCT_INTEGER, STRUCT, SUBARRAY, VECTOR) {
+		  STRUCT_INTEGER, STRUCT, SUBARRAY, VECTOR, HINDEXED_BLOCK) {
 	print $OUTFD "${extern}const int COMBINER_$int";
 	if ($giveValue) { print $OUTFD " = MPI_COMBINER_$int;\n"; }
-	else            { print $OUTFD ";\n"; }
-    }
-    # FIXME: Merge with the above list when it's no longer MPIX_
-    foreach $int (HINDEXED_BLOCK) {
-	print $OUTFD "${extern}const int COMBINER_$int";
-	if ($giveValue) { print $OUTFD " = MPIX_COMBINER_$int;\n"; }
 	else            { print $OUTFD ";\n"; }
     }
 

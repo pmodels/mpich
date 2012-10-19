@@ -7,25 +7,25 @@
 #include "mpiimpl.h"
 #include "collutil.h"
 
-/* -- Begin Profiling Symbol Block for routine MPIX_Ireduce_scatter */
+/* -- Begin Profiling Symbol Block for routine MPI_Ireduce_scatter */
 #if defined(HAVE_PRAGMA_WEAK)
-#pragma weak MPIX_Ireduce_scatter = PMPIX_Ireduce_scatter
+#pragma weak MPI_Ireduce_scatter = PMPI_Ireduce_scatter
 #elif defined(HAVE_PRAGMA_HP_SEC_DEF)
-#pragma _HP_SECONDARY_DEF PMPIX_Ireduce_scatter  MPIX_Ireduce_scatter
+#pragma _HP_SECONDARY_DEF PMPI_Ireduce_scatter  MPI_Ireduce_scatter
 #elif defined(HAVE_PRAGMA_CRI_DUP)
-#pragma _CRI duplicate MPIX_Ireduce_scatter as PMPIX_Ireduce_scatter
+#pragma _CRI duplicate MPI_Ireduce_scatter as PMPI_Ireduce_scatter
 #endif
 /* -- End Profiling Symbol Block */
 
 /* Define MPICH_MPI_FROM_PMPI if weak symbols are not supported to build
    the MPI routines */
 #ifndef MPICH_MPI_FROM_PMPI
-#undef MPIX_Ireduce_scatter
-#define MPIX_Ireduce_scatter PMPIX_Ireduce_scatter
+#undef MPI_Ireduce_scatter
+#define MPI_Ireduce_scatter PMPI_Ireduce_scatter
 
 /* any non-MPI functions go here, especially non-static ones */
 
-/* A recursive halving MPIX_Ireduce_scatter algorithm.  Requires that op is
+/* A recursive halving MPI_Ireduce_scatter algorithm.  Requires that op is
  * commutative.  Typically yields better performance for shorter messages. */
 #undef FUNCNAME
 #define FUNCNAME MPIR_Ireduce_scatter_rec_hlv
@@ -1031,11 +1031,11 @@ fn_fail:
 #endif /* MPICH_MPI_FROM_PMPI */
 
 #undef FUNCNAME
-#define FUNCNAME MPIX_Ireduce_scatter
+#define FUNCNAME MPI_Ireduce_scatter
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 /*@
-MPIX_Ireduce_scatter - XXX description here
+MPI_Ireduce_scatter - XXX description here
 
 Input Parameters:
 + sendbuf - starting address of the send buffer (choice)
@@ -1054,14 +1054,14 @@ Output Parameters:
 
 .N Errors
 @*/
-int MPIX_Ireduce_scatter(const void *sendbuf, void *recvbuf, const int *recvcounts, MPI_Datatype datatype, MPI_Op op, MPI_Comm comm, MPI_Request *request)
+int MPI_Ireduce_scatter(const void *sendbuf, void *recvbuf, const int *recvcounts, MPI_Datatype datatype, MPI_Op op, MPI_Comm comm, MPI_Request *request)
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_Comm *comm_ptr = NULL;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPIX_IREDUCE_SCATTER);
+    MPID_MPI_STATE_DECL(MPID_STATE_MPI_IREDUCE_SCATTER);
 
     MPIU_THREAD_CS_ENTER(ALLFUNC,);
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPIX_IREDUCE_SCATTER);
+    MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_IREDUCE_SCATTER);
 
     /* Validate parameters, especially handles needing to be converted */
 #   ifdef HAVE_ERROR_CHECKING
@@ -1124,7 +1124,7 @@ int MPIX_Ireduce_scatter(const void *sendbuf, void *recvbuf, const int *recvcoun
     /* ... end of body of routine ... */
 
 fn_exit:
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPIX_IREDUCE_SCATTER);
+    MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_IREDUCE_SCATTER);
     MPIU_THREAD_CS_EXIT(ALLFUNC,);
     return mpi_errno;
 

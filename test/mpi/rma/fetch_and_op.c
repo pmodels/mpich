@@ -105,7 +105,7 @@ int main(int argc, char **argv) {
     for (i = 0; i < ITER; i++) {
         TYPE_C one = 1, result = -1;
         MPI_Win_lock(MPI_LOCK_EXCLUSIVE, rank, 0, win);
-        MPIX_Fetch_and_op(&one, &result, TYPE_MPI, rank, 0, MPI_SUM, win);
+        MPI_Fetch_and_op(&one, &result, TYPE_MPI, rank, 0, MPI_SUM, win);
         MPI_Win_unlock(rank, win);
     }
 
@@ -123,7 +123,7 @@ int main(int argc, char **argv) {
     for (i = 0; i < ITER; i++) {
         TYPE_C one = 1, result = -1;
         MPI_Win_lock(MPI_LOCK_EXCLUSIVE, (rank+1)%nproc, 0, win);
-        MPIX_Fetch_and_op(&one, &result, TYPE_MPI, (rank+1)%nproc, 0, MPI_SUM, win);
+        MPI_Fetch_and_op(&one, &result, TYPE_MPI, (rank+1)%nproc, 0, MPI_SUM, win);
         MPI_Win_unlock((rank+1)%nproc, win);
         if ( CMP(result, i) ) {
             SQUELCH( printf("%d->%d -- NEIGHBOR[%d]: expected result "TYPE_FMT", got "TYPE_FMT"\n", (rank+1)%nproc, rank, i, (TYPE_C) i, result); );
@@ -148,7 +148,7 @@ int main(int argc, char **argv) {
         for (i = 0; i < ITER; i++) {
             TYPE_C one = 1, result;
             MPI_Win_lock(MPI_LOCK_EXCLUSIVE, 0, 0, win);
-            MPIX_Fetch_and_op(&one, &result, TYPE_MPI, 0, 0, MPI_SUM, win);
+            MPI_Fetch_and_op(&one, &result, TYPE_MPI, 0, 0, MPI_SUM, win);
             MPI_Win_unlock(0, win);
         }
     }
@@ -174,7 +174,7 @@ int main(int argc, char **argv) {
         MPI_Win_fence(MPI_MODE_NOPRECEDE, win);
         for (j = 0; j < nproc; j++) {
             TYPE_C rank_cnv = (TYPE_C) rank;
-            MPIX_Fetch_and_op(&rank_cnv, &res_ptr[j], TYPE_MPI, j, rank, MPI_SUM, win);
+            MPI_Fetch_and_op(&rank_cnv, &res_ptr[j], TYPE_MPI, j, rank, MPI_SUM, win);
             res_ptr[j] = i*rank;
         }
         MPI_Win_fence(MPI_MODE_NOSUCCEED, win);

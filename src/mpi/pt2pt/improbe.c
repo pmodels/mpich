@@ -6,32 +6,32 @@
 
 #include "mpiimpl.h"
 
-/* -- Begin Profiling Symbol Block for routine MPIX_Improbe */
+/* -- Begin Profiling Symbol Block for routine MPI_Improbe */
 #if defined(HAVE_PRAGMA_WEAK)
-#pragma weak MPIX_Improbe = PMPIX_Improbe
+#pragma weak MPI_Improbe = PMPI_Improbe
 #elif defined(HAVE_PRAGMA_HP_SEC_DEF)
-#pragma _HP_SECONDARY_DEF PMPIX_Improbe  MPIX_Improbe
+#pragma _HP_SECONDARY_DEF PMPI_Improbe  MPI_Improbe
 #elif defined(HAVE_PRAGMA_CRI_DUP)
-#pragma _CRI duplicate MPIX_Improbe as PMPIX_Improbe
+#pragma _CRI duplicate MPI_Improbe as PMPI_Improbe
 #endif
 /* -- End Profiling Symbol Block */
 
 /* Define MPICH_MPI_FROM_PMPI if weak symbols are not supported to build
    the MPI routines */
 #ifndef MPICH_MPI_FROM_PMPI
-#undef MPIX_Improbe
-#define MPIX_Improbe PMPIX_Improbe
+#undef MPI_Improbe
+#define MPI_Improbe PMPI_Improbe
 
 /* any non-MPI functions go here, especially non-static ones */
 
 #endif /* MPICH_MPI_FROM_PMPI */
 
 #undef FUNCNAME
-#define FUNCNAME MPIX_Improbe
+#define FUNCNAME MPI_Improbe
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 /*@
-MPIX_Improbe - Nonblocking matched probe.
+MPI_Improbe - Nonblocking matched probe.
 
 Input Parameters:
 + source - rank of source or MPI_ANY_SOURCE (integer)
@@ -49,15 +49,15 @@ Output Parameters:
 
 .N Errors
 @*/
-int MPIX_Improbe(int source, int tag, MPI_Comm comm, int *flag, MPIX_Message *message, MPI_Status *status)
+int MPI_Improbe(int source, int tag, MPI_Comm comm, int *flag, MPI_Message *message, MPI_Status *status)
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_Request *msgp = NULL;
     MPID_Comm *comm_ptr = NULL;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPIX_IMPROBE);
+    MPID_MPI_STATE_DECL(MPID_STATE_MPI_IMPROBE);
 
     MPIU_THREAD_CS_ENTER(ALLFUNC,);
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPIX_IMPROBE);
+    MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_IMPROBE);
 
     /* Validate parameters, especially handles needing to be converted */
 #   ifdef HAVE_ERROR_CHECKING
@@ -92,14 +92,14 @@ int MPIX_Improbe(int source, int tag, MPI_Comm comm, int *flag, MPIX_Message *me
 
     /* ... body of routine ...  */
 
-    *message = MPIX_MESSAGE_NULL;
+    *message = MPI_MESSAGE_NULL;
     mpi_errno = MPID_Improbe(source, tag, comm_ptr, MPID_CONTEXT_INTRA_PT2PT, flag, &msgp, status);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
     if (*flag) {
 	if (msgp == NULL) {
 	    MPIU_Assert(source == MPI_PROC_NULL);
-	    *message = MPIX_MESSAGE_NO_PROC;
+	    *message = MPI_MESSAGE_NO_PROC;
 	}
 	else {
 	    *message = msgp->handle;
@@ -109,7 +109,7 @@ int MPIX_Improbe(int source, int tag, MPI_Comm comm, int *flag, MPIX_Message *me
     /* ... end of body of routine ... */
 
 fn_exit:
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPIX_IMPROBE);
+    MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_IMPROBE);
     MPIU_THREAD_CS_EXIT(ALLFUNC,);
     return mpi_errno;
 

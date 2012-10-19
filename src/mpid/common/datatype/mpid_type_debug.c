@@ -415,7 +415,7 @@ char *MPIDU_Datatype_combiner_to_string(int combiner)
     if (combiner == MPI_COMBINER_HVECTOR_INTEGER)  return c_hvector_integer;
     if (combiner == MPI_COMBINER_HINDEXED_INTEGER) return c_hindexed_integer;
     if (combiner == MPI_COMBINER_INDEXED_BLOCK)    return c_indexed_block;
-    if (combiner == MPIX_COMBINER_HINDEXED_BLOCK)  return c_hindexed_block;
+    if (combiner == MPI_COMBINER_HINDEXED_BLOCK)   return c_hindexed_block;
     if (combiner == MPI_COMBINER_STRUCT_INTEGER)   return c_struct_integer;
     if (combiner == MPI_COMBINER_SUBARRAY)         return c_subarray;
     if (combiner == MPI_COMBINER_DARRAY)           return c_darray;

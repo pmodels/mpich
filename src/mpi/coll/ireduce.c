@@ -7,21 +7,21 @@
 #include "mpiimpl.h"
 #include "collutil.h"
 
-/* -- Begin Profiling Symbol Block for routine MPIX_Ireduce */
+/* -- Begin Profiling Symbol Block for routine MPI_Ireduce */
 #if defined(HAVE_PRAGMA_WEAK)
-#pragma weak MPIX_Ireduce = PMPIX_Ireduce
+#pragma weak MPI_Ireduce = PMPI_Ireduce
 #elif defined(HAVE_PRAGMA_HP_SEC_DEF)
-#pragma _HP_SECONDARY_DEF PMPIX_Ireduce  MPIX_Ireduce
+#pragma _HP_SECONDARY_DEF PMPI_Ireduce  MPI_Ireduce
 #elif defined(HAVE_PRAGMA_CRI_DUP)
-#pragma _CRI duplicate MPIX_Ireduce as PMPIX_Ireduce
+#pragma _CRI duplicate MPI_Ireduce as PMPI_Ireduce
 #endif
 /* -- End Profiling Symbol Block */
 
 /* Define MPICH_MPI_FROM_PMPI if weak symbols are not supported to build
    the MPI routines */
 #ifndef MPICH_MPI_FROM_PMPI
-#undef MPIX_Ireduce
-#define MPIX_Ireduce PMPIX_Ireduce
+#undef MPI_Ireduce
+#define MPI_Ireduce PMPI_Ireduce
 
 /* any non-MPI functions go here, especially non-static ones */
 
@@ -791,11 +791,11 @@ fn_fail:
 #endif /* MPICH_MPI_FROM_PMPI */
 
 #undef FUNCNAME
-#define FUNCNAME MPIX_Ireduce
+#define FUNCNAME MPI_Ireduce
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 /*@
-MPIX_Ireduce - XXX description here
+MPI_Ireduce - XXX description here
 
 Input Parameters:
 + sendbuf - address of the send buffer (choice)
@@ -815,14 +815,14 @@ Output Parameters:
 
 .N Errors
 @*/
-int MPIX_Ireduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, int root, MPI_Comm comm, MPI_Request *request)
+int MPI_Ireduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, int root, MPI_Comm comm, MPI_Request *request)
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_Comm *comm_ptr = NULL;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPIX_IREDUCE);
+    MPID_MPI_STATE_DECL(MPID_STATE_MPI_IREDUCE);
 
     MPIU_THREAD_CS_ENTER(ALLFUNC,);
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPIX_IREDUCE);
+    MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_IREDUCE);
 
     /* Validate parameters, especially handles needing to be converted */
 #   ifdef HAVE_ERROR_CHECKING
@@ -882,7 +882,7 @@ int MPIX_Ireduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype dat
     /* ... end of body of routine ... */
 
 fn_exit:
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPIX_IREDUCE);
+    MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_IREDUCE);
     MPIU_THREAD_CS_EXIT(ALLFUNC,);
     return mpi_errno;
 

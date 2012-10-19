@@ -6,21 +6,21 @@
 
 #include "mpiimpl.h"
 
-/* -- Begin Profiling Symbol Block for routine MPIX_T_cvar_write */
+/* -- Begin Profiling Symbol Block for routine MPI_T_cvar_write */
 #if defined(HAVE_PRAGMA_WEAK)
-#pragma weak MPIX_T_cvar_write = PMPIX_T_cvar_write
+#pragma weak MPI_T_cvar_write = PMPI_T_cvar_write
 #elif defined(HAVE_PRAGMA_HP_SEC_DEF)
-#pragma _HP_SECONDARY_DEF PMPIX_T_cvar_write  MPIX_T_cvar_write
+#pragma _HP_SECONDARY_DEF PMPI_T_cvar_write  MPI_T_cvar_write
 #elif defined(HAVE_PRAGMA_CRI_DUP)
-#pragma _CRI duplicate MPIX_T_cvar_write as PMPIX_T_cvar_write
+#pragma _CRI duplicate MPI_T_cvar_write as PMPI_T_cvar_write
 #endif
 /* -- End Profiling Symbol Block */
 
 /* Define MPICH_MPI_FROM_PMPI if weak symbols are not supported to build
    the MPI routines */
 #ifndef MPICH_MPI_FROM_PMPI
-#undef MPIX_T_cvar_write
-#define MPIX_T_cvar_write PMPIX_T_cvar_write
+#undef MPI_T_cvar_write
+#define MPI_T_cvar_write PMPI_T_cvar_write
 
 /* any non-MPI functions go here, especially non-static ones */
 
@@ -28,7 +28,7 @@
 #define FUNCNAME MPIR_T_cvar_write_impl
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPIR_T_cvar_write_impl(MPIX_T_cvar_handle handle, void *buf)
+int MPIR_T_cvar_write_impl(MPI_T_cvar_handle handle, void *buf)
 {
     int mpi_errno = MPI_SUCCESS;
     struct MPIR_Param_t *p = handle->p;
@@ -83,11 +83,11 @@ fn_fail:
 #endif /* MPICH_MPI_FROM_PMPI */
 
 #undef FUNCNAME
-#define FUNCNAME MPIX_T_cvar_write
+#define FUNCNAME MPI_T_cvar_write
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 /*@
-MPIX_T_cvar_write - XXX description here
+MPI_T_cvar_write - XXX description here
 
 Input Parameters:
 + handle - handle of the control variable to be written (handle)
@@ -99,13 +99,13 @@ Input Parameters:
 
 .N Errors
 @*/
-int MPIX_T_cvar_write(MPIX_T_cvar_handle handle, void *buf)
+int MPI_T_cvar_write(MPI_T_cvar_handle handle, void *buf)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPIX_T_CVAR_WRITE);
+    MPID_MPI_STATE_DECL(MPID_STATE_MPI_T_CVAR_WRITE);
 
     MPIU_THREAD_CS_ENTER(ALLFUNC,);
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPIX_T_CVAR_WRITE);
+    MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_T_CVAR_WRITE);
 
     /* Validate parameters, especially handles needing to be converted */
 #   ifdef HAVE_ERROR_CHECKING
@@ -142,7 +142,7 @@ int MPIX_T_cvar_write(MPIX_T_cvar_handle handle, void *buf)
     /* ... end of body of routine ... */
 
 fn_exit:
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPIX_T_CVAR_WRITE);
+    MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_T_CVAR_WRITE);
     MPIU_THREAD_CS_EXIT(ALLFUNC,);
     return mpi_errno;
 

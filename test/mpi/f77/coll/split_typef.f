@@ -20,7 +20,7 @@ C
 
       call mpi_comm_dup( MPI_COMM_WORLD, comm, ierr )
 
-      call mpix_comm_split_type( comm, MPIX_COMM_TYPE_SHARED, rank,
+      call mpi_comm_split_type( comm, MPI_COMM_TYPE_SHARED, rank,
      &     MPI_INFO_NULL, newcomm, ierr )
       call mpi_comm_rank( newcomm, rank, ierr )
       call mpi_comm_size( newcomm, size, ierr )

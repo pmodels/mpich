@@ -7,21 +7,21 @@
 #include "mpiimpl.h"
 #include "collutil.h"
 
-/* -- Begin Profiling Symbol Block for routine MPIX_Iallreduce */
+/* -- Begin Profiling Symbol Block for routine MPI_Iallreduce */
 #if defined(HAVE_PRAGMA_WEAK)
-#pragma weak MPIX_Iallreduce = PMPIX_Iallreduce
+#pragma weak MPI_Iallreduce = PMPI_Iallreduce
 #elif defined(HAVE_PRAGMA_HP_SEC_DEF)
-#pragma _HP_SECONDARY_DEF PMPIX_Iallreduce  MPIX_Iallreduce
+#pragma _HP_SECONDARY_DEF PMPI_Iallreduce  MPI_Iallreduce
 #elif defined(HAVE_PRAGMA_CRI_DUP)
-#pragma _CRI duplicate MPIX_Iallreduce as PMPIX_Iallreduce
+#pragma _CRI duplicate MPI_Iallreduce as PMPI_Iallreduce
 #endif
 /* -- End Profiling Symbol Block */
 
 /* Define MPICH_MPI_FROM_PMPI if weak symbols are not supported to build
    the MPI routines */
 #ifndef MPICH_MPI_FROM_PMPI
-#undef MPIX_Iallreduce
-#define MPIX_Iallreduce PMPIX_Iallreduce
+#undef MPI_Iallreduce
+#define MPI_Iallreduce PMPI_Iallreduce
 
 /* any non-MPI functions go here, especially non-static ones */
 
@@ -676,11 +676,11 @@ fn_fail:
 #endif /* MPICH_MPI_FROM_PMPI */
 
 #undef FUNCNAME
-#define FUNCNAME MPIX_Iallreduce
+#define FUNCNAME MPI_Iallreduce
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 /*@
-MPIX_Iallreduce - XXX description here
+MPI_Iallreduce - XXX description here
 
 Input Parameters:
 + sendbuf - starting address of the send buffer (choice)
@@ -699,14 +699,14 @@ Output Parameters:
 
 .N Errors
 @*/
-int MPIX_Iallreduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPI_Comm comm, MPI_Request *request)
+int MPI_Iallreduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, MPI_Comm comm, MPI_Request *request)
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_Comm *comm_ptr = NULL;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPIX_IALLREDUCE);
+    MPID_MPI_STATE_DECL(MPID_STATE_MPI_IALLREDUCE);
 
     MPIU_THREAD_CS_ENTER(ALLFUNC,);
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPIX_IALLREDUCE);
+    MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_IALLREDUCE);
 
     /* Validate parameters, especially handles needing to be converted */
 #   ifdef HAVE_ERROR_CHECKING
@@ -772,7 +772,7 @@ int MPIX_Iallreduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype 
     /* ... end of body of routine ... */
 
 fn_exit:
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPIX_IALLREDUCE);
+    MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_IALLREDUCE);
     MPIU_THREAD_CS_EXIT(ALLFUNC,);
     return mpi_errno;
 
