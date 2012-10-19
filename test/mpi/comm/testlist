@@ -15,17 +15,15 @@ cmfree 4
 cmsplit 4
 cmsplit2 12
 probe-intercomm 2
-# Eventually, the comm_split_type and comm_create_group tests should
-# be changed to use mpiversion=3.0
-cmsplit_type 4
-comm_create_group 4
-comm_create_group 8
-comm_group_half 2
-comm_group_half 4
-comm_group_half 8
-comm_group_rand 2
-comm_group_rand 4
-comm_group_rand 8
-comm_idup 2
-comm_idup 4
-comm_idup 9
+cmsplit_type 4 mpiversion=3.0
+comm_create_group 4 mpiversion=3.0
+comm_create_group 8 mpiversion=3.0
+comm_group_half 2 mpiversion=3.0
+comm_group_half 4 mpiversion=3.0
+comm_group_half 8 mpiversion=3.0
+comm_group_rand 2 mpiversion=3.0
+comm_group_rand 4 mpiversion=3.0
+comm_group_rand 8 mpiversion=3.0
+comm_idup 2 mpiversion=3.0
+comm_idup 4 mpiversion=3.0
+comm_idup 9 mpiversion=3.0
