@@ -1,4 +1,4 @@
 statusesf 1
 greqf 1
 allpairf 2
-mprobef 2 strict=false
+mprobef 2 mpiversion=3.0

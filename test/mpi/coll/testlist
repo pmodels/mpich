@@ -125,23 +125,22 @@ opmin 4
 opminloc 4
 opmax 5
 opmaxloc 5
-# Eventually, the nonblocking tests should be changed to use mpiversion=3.0
-nonblocking 4 strict=false
-nonblocking 5 strict=false
-nonblocking 10 strict=false
-nonblocking2 1 strict=false
-nonblocking2 4 strict=false
-nonblocking2 5 strict=false
-nonblocking2 10 timeLimit=420 strict=false
-nonblocking3 1 strict=false
-nonblocking3 4 strict=false
-nonblocking3 5 strict=false
-nonblocking3 10 timeLimit=600 strict=false
-iallred 2 strict=false
+nonblocking 4 mpiversion=3.0
+nonblocking 5 mpiversion=3.0
+nonblocking 10 mpiversion=3.0
+nonblocking2 1 mpiversion=3.0
+nonblocking2 4 mpiversion=3.0
+nonblocking2 5 mpiversion=3.0
+nonblocking2 10 timeLimit=420 mpiversion=3.0
+nonblocking3 1 mpiversion=3.0
+nonblocking3 4 mpiversion=3.0
+nonblocking3 5 mpiversion=3.0
+nonblocking3 10 timeLimit=600 mpiversion=3.0
+iallred 2 mpiversion=3.0
 # run some of the tests, relinked with the nbc_pmpi_adaptor.o file
-nballtoall1 8 strict=false
-nbcoll2 5     strict=false
-nbredscat 4   strict=false
-nbredscat 8   strict=false
-nbredscat3 8  strict=false
-nbredscatinter 8 strict=false
+nballtoall1 8 mpiversion=3.0
+nbcoll2 5     mpiversion=3.0
+nbredscat 4   mpiversion=3.0
+nbredscat 8   mpiversion=3.0
+nbredscat3 8  mpiversion=3.0
+nbredscatinter 8 mpiversion=3.0
