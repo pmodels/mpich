@@ -104,6 +104,7 @@ strided_acc_indexed_LDADD       = $(LDADD) -lm
 strided_acc_onelock_LDADD       = $(LDADD) -lm
 strided_acc_subarray_LDADD      = $(LDADD) -lm
 strided_get_indexed_LDADD       = $(LDADD) -lm
+strided_getacc_indexed_LDADD    = $(LDADD) -lm
 strided_putget_indexed_LDADD    = $(LDADD) -lm
 
 fetch_and_op_char_CPPFLAGS       = -DFOP_TYPE_CHAR $(AM_CPPFLAGS)
