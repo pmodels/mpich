@@ -404,13 +404,14 @@ AC_COMPILE_IFELSE([],[
 #   f95 -YMOD_OUT_DIR=${dir}   ## the Absoft fortran compiler
 #   lf95 -Am -mod ${dir}    ## the Lahey/Fujitsu fortran compiler
 #   f90 -moddir=${dir}   ## the Sun f90 compiler
+#   g95 -fmod=${dir}
 #
 # If there are any compilers still out there that are totally brain-dead and
 # don't support an output directory flag, we can write a wrapper script to tell
 # users to use.  Alternatively they can use an older version of MPICH2.
 
 pac_cv_fc_module_outflag=
-for mod_flag in '-J' '-J ' '-qmoddir=' '-module ' '-YMOD_OUT_DIR=' '-mdir ' '-moddir=' ; do
+for mod_flag in '-J' '-J ' '-qmoddir=' '-module ' '-YMOD_OUT_DIR=' '-mdir ' '-moddir=' '-fmod=' ; do
     rm -f conftestdir/NONEXISTENT conftestdir/*
     PAC_PUSH_FLAG([FCFLAGS])
     FCFLAGS="$FCFLAGS ${mod_flag}conftestdir"
