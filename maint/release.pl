@@ -220,7 +220,7 @@ print("done\n");
 # Remove unnecessary files
 print("===> Removing unnecessary files in the main package... ");
 chdir("${root}/${pack}-${version}");
-run_cmd("rm -rf README.vin maint/config.log maint/config.status unusederr.txt src/mpe2/src/slog2sdk/doc/jumpshot-4/tex");
+run_cmd("rm -rf README.vin maint/config.log maint/config.status unusederr.txt");
 run_cmd("find . -name autom4te.cache | xargs rm -rf");
 print("done\n");
 
@@ -238,7 +238,7 @@ chdir("${root}/${pack}-${version}-tmp");
     $cmd .= " --with-automake=$with_automake" if $with_automake;
     run_cmd($cmd);
 }
-run_cmd("./configure --disable-mpe --disable-fc --disable-f77 --disable-cxx");
+run_cmd("./configure --disable-fc --disable-f77 --disable-cxx");
 run_cmd("(make mandoc && make htmldoc && make latexdoc)");
 print("done\n");
 
@@ -260,12 +260,6 @@ chdir("${root}/${pack}-${version}/src/mpi");
 chdir("romio/doc");
 run_cmd("make");
 run_cmd("rm -f users-guide.blg users-guide.toc users-guide.aux users-guide.bbl users-guide.log users-guide.dvi");
-print("done\n");
-
-print( "===> Creating MPE docs... ");
-chdir("${root}/${pack}-${version}/src");
-chdir("mpe2/maint");
-run_cmd("make -f Makefile4man");
 print("done\n");
 
 # Create the tarball

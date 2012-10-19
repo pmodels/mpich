@@ -7,11 +7,6 @@
 
 AM_CPPFLAGS += -I$(top_srcdir)/src/include
 
-if BUILD_SRC_MPE2
-DIST_SUBDIRS += src/mpe2
-SUBDIRS += src/mpe2
-endif BUILD_SRC_MPE2
-
 include $(top_srcdir)/src/mpi/Makefile.mk
 include $(top_srcdir)/src/util/Makefile.mk
 include $(top_srcdir)/src/binding/Makefile.mk

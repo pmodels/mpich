@@ -486,8 +486,6 @@ commonly used options.
 \begin{verbatim}
   --with-pm=hydra:gforker:remshell
 \end{verbatim}
-\item[--without-mpe]Configure MPICH2 without the MPE package of
-  program development tools (including the Jumpshot performance viewer)
 \item[--with-java]Set the location of Java installation.  This option
 is necessary only if the default Java installation in your PATH does
 not contain a valid Java installation for Jumpshot, e.g.
@@ -875,17 +873,6 @@ destination buffer.  An example of this from the MPI-1 standard illustrates
 the use of MPI datatypes to transpose a matrix ``on the fly,'' and one test in
 \texttt{test/mpi/perf} checks that the MPI implementation performs well in
 this case.
-
-\section{MPE}
-\label{sec:mpe}
-
-MPICH2 comes with the same MPE (Multi-Processing Environment) tools that are
-included with MPICH1.  These include several trace libraries for recording the
-execution of MPI programs and the Jumpshot and SLOG tools for performance
-visualization.  The MPE tools are built and installed by default and should be
-available without requiring any additional steps.  The installation of MPE
-is documented in \texttt{mpich2/src/mpe2/INSTALL} and the usage of MPE is
-documented in \texttt{mpich2/src/mpe2/README} and MPICH2 user's guide.
 
 \section{Windows Version}
 \label{sec:windows}

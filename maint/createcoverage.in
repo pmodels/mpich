@@ -249,10 +249,9 @@ fi
 if [ $build_mpich = yes ] ; then
     echo "------ Build MPICH2 ------" >&6
     cd $blddir
-    # Build without MPE for simplicity
     $srcdir/configure --enable-coverage --with-pm=$pm --enable-romio \
     		--with-device=$device \
-		  -prefix=$mpiinstalldir --without-mpe $extra_opts >&6 2>&6
+		  -prefix=$mpiinstalldir $extra_opts >&6 2>&6
     rc=$?
     if [ "$rc" != 0 ] ; then 
 	echo "$srcdir/configure failed with return code $rc"

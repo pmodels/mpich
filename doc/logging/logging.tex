@@ -28,8 +28,7 @@ This manual assumes that MPICH2 has already been installed.  For
 instructions on how to install MPICH2, see the MPICH2 Installer's Guide,
 or the README in the top-level MPICH2 directory.  This manual will
 explain how the internal logging macros are generated and how the user
-can generate log files viewable in Jumpshot.  Use of Jumpshot is 
-described in the mpe documentation.
+can generate log files viewable in Jumpshot.
 
 
 \section{Configuring mpich2 to create log files}
@@ -42,7 +41,7 @@ configure options to control logging.
 \item[\texttt{--enable-timing=<timing\_type>}]\mbox{}\\
 Add this option to enable timing.  The two options for timing\_type are 
 \texttt{log} and \texttt{log\_detailed}.  The \texttt{log} option will log 
-only the MPI functions just like the MPE logging interface does.  The 
+only the MPI functions.  The 
 \texttt{log\_detailed} will log every function in mpich2.  This option gives 
 fine grained logging information and also creates large log files.  It must 
 be used in conjunction with a timer-type that can log very short intervals 

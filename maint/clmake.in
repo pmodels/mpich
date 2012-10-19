@@ -56,7 +56,6 @@ $rootSrcDir = "";
 	      "Copying Upshot",
 	      "Cleaning directory",
 	      "[*][*][*][*] Making .*\.\.\.\.",
-	      "Making .*\.\.\.\.",        # mpe writes this
 	      "Making upshot", "\\s*\$", );
 
 # OtherNoise is an array of patterns that describe blocks of

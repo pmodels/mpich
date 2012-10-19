@@ -496,7 +496,7 @@ configure options can be used:
   ./configure --host=powerpc64-bgq-linux --target=powerpc64-bgq-linux --build=powerpc64-linux-gnu
 	      --with-device=pamid:BGQ --with-file-system=bg+bglockless --enable-timer-type=device
 	      --with-fwrapname=fmpich --with-cross=src/mpid/pamid/cross/bgq8
-	      --with-pm=none --with-mpe=no --enable-timing=no --disable-collchk
+	      --with-pm=none --enable-timing=no --disable-collchk
 	      --disable-graphics --disable-rlog --disable-sample --disable-rpath
 	      --with-aint-size=8 --with-assert-level=2 --enable-fast=O3
 	      --enable-error-messages --disable-debuginfo

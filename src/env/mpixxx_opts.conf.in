@@ -12,8 +12,6 @@ Available $MYCMD options:
     -link-info    - Show how to link a program.
     -v            - Version info of $MYCMD and its native compiler $NC.
     -help         - Give this help message.
-    -mpe=XXX      - Build with MPE option, XXX.
-                    See "$MYCMD -mpe=help" for more information.
     -profile=XXX  - Use profiling configuration file,
                     $sysconfdir/XXX.conf
                     As a special case, libXXX.so or libXXX.la may be used

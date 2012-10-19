@@ -482,18 +482,6 @@ AC_ARG_WITH(logging,
 	AC_HELP_STRING([--with-logging=name], [Specify the logging library for MPICH]),
 	[if test -z "$withval" ; then with_logging=rlog ; fi],with_logging=none)
 
-dnl both --without-mpe and --disable-mpe are supported
-dnl AC_ARG_ENABLE(mpe) is used only when --with(out)-mpe is not used.
-AC_ARG_WITH(mpe,
-	AC_HELP_STRING([--with-mpe], [Build the MPE (MPI Parallel Environment) routines]),,
-	with_mpe=default)
-if test "$with_mpe" = "default" ; then
-    AC_ARG_ENABLE(mpe,
-	AC_HELP_STRING([--enable-mpe], [Build the MPE (MPI Parallel Environment) routines]),
-	with_mpe=$enableval,with_mpe=default)
-fi
-
-dnl
 dnl The default option needs to be defined in terms of a specific choice 
 dnl (runtime in this case).  Note that the default choice is the same as
 dnl runtime only for certain devices - not for every device.
@@ -1476,7 +1464,7 @@ if test "$enable_romio" = "yes" ; then
        # make it possible to "#include" mpio.h at build time
        #
        # This ought to be sufficient, but there is also a symlink setup in
-       # src/include to accomodate current mpicc and MPE2 limitations.  See
+       # src/include to accomodate current mpicc limitations.  See
        # src/mpi/Makefile.mk for more info.
        PAC_APPEND_FLAG([-I${master_top_builddir}/src/mpi/romio/include],[CPPFLAGS])
 
@@ -1669,54 +1657,6 @@ for this_pm_name in $pm_names ; do
 	. $use_top_srcdir/src/pm/$this_pm_name/setup_pm
     fi
 done
-
-# ----------------------------------------------------------------------------
-if test $with_mpe != no ; then
-    if test ! -d $use_top_srcdir/src/mpe2 ; then
-        if test $with_mpe = yes ; then
-	    # No warning message on the default
-            AC_MSG_WARN([No MPE directory available])
-        fi
-    elif test ! -x $use_top_srcdir/src/mpe2/configure ; then
-        if test $with_mpe = yes ; then
-	    # No warning message on the default
-            AC_MSG_WARN([No configure available for MPE])
-        fi
-    else
-        subsystems="$subsystems src/mpe2"
-
-        # for AM_CONDITIONAL
-        build_src_mpe2=yes
-
-	# Temporarily replace the default NONE value for exec_prefix
-	# and prefix with the actual, default values.
-	savePrefix=$prefix
-	saveExecprefix=$exec_prefix
-	test "x$prefix" = xNONE && prefix=$ac_default_prefix
-	test "x$exec_prefix" = xNONE && exec_prefix=$prefix
-	eval actualbindir=$bindir
-	# MPI_CC and MPIF77 must use the local (build) bin dir, not
-	# the installation bin dir
-	#MPI_CC=$actualbindir/mpicc
-	#MPI_F77=$actualbindir/mpif77
-	#eval actuallibdir=$libdir
-	#MPI_LIBS="-L$actuallibdir -lmpich -lpmpich"
-	buildbindir=`pwd`/bin
-	#MPI_CC=$buildbindir/mpicc
-	#MPI_F77=$buildbindir/mpif77
-	prefix=$savePrefix
-	exec_prefix=$saveExecprefix
-	# NOTE: You must append LIBS to MPI_LIBS before invoking the mpe
-	# configure
-	#export MPI_CC
-	#export MPI_F77
-	#export MPI_LIBS
-        export use_top_srcdir
-        top_build_dir=`pwd`
-        export top_build_dir
-    fi
-fi
-AM_CONDITIONAL([BUILD_SRC_MPE2],[test "X$build_src_mpe2" = "Xyes"])
 
 # Check for whether the compiler defines a symbol that contains the 
 # function name.  The MPICH2 code, for greater portability, defines
@@ -5272,8 +5212,8 @@ void f1(void *a) { return; }],
 	;;
 esac
 
-# Define and export the selected thread library so that other packages, 
-# such as MPE, will know what's used in MPICH2
+# Define and export the selected thread library so that other packages
+# know what's used in MPICH2
 export MPICH2_THREAD_PACKAGE
 AC_DEFINE_UNQUOTED([MPIU_THREAD_PACKAGE_NAME],[$MPIU_THREAD_PACKAGE_NAME],[set to the name of the thread package])
 
@@ -5441,17 +5381,6 @@ if test "$DEBUG_SUBDIR_CACHE" = yes -a "$enable_echo" != yes ; then
 fi
 dnl PAC_SUBDIR_CACHE_CLEANUP
 
-## The MPE configure requires MPI_LIBS, and that requires all of the LIBS
-#MPI_LIBS="$MPI_LIBS $LIBS"
-#
-# Get any localdefs that the subsystems created. Use a guard in case
-# the list is empty
-#for dir in $subsystems /dev/null ; do 
-#    if test -f $dir/localdefs ; then
-#        . $dir/localdefs
-#    fi
-#done
-#
 # Make subsystems available to makefiles.
 # FIXME does the makefile actually need this?
 subsystems="$devsubsystems $subsystems $bindingsubsystems"

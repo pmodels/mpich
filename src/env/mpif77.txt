@@ -27,8 +27,6 @@
                 mpif77.
 .  -profile=name - Use the MPI profiling given by name.  See below for
                 details
-.  -mpe=name  - Use an MPE profiling library.  The behavior is similar
-                to using '-profile=mpe_name.conf'.
 .  -echo      - Show exactly what this program is doing.
                 This option should normally not be used.
 -  others     - are passed to the compiler or linker.  For example, '-c'

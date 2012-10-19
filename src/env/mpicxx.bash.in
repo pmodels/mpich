@@ -151,14 +151,6 @@ for arg in "$@" ; do
     addarg=no
     # Loading the profConf file is handled below
     ;;
-    -mpe=*)
-    # Pass the name of a profiling configuration; this is a special
-    # case for the MPE libs.  See -profile
-    profConf=`echo A$arg | sed -e 's/A-mpe=//g'`
-    profConf="mpe_$profConf"
-    addarg=no
-    # Loading the profConf file is handled below
-    ;;
     -nativelinking)
     # Internal option to use native compiler for linking without MPI libraries
     nativelinking=yes

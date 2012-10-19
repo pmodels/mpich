@@ -649,11 +649,6 @@ that want to create windows from the root process that are visible to the intera
 user.  The smpd process manager creates processes in a hidden service desktop
 where you cannot interact with any GUI.
 
-\item \texttt{-log}
-This option is a short cut to selecting the MPE wrapper library to log the MPI
-application.  When the job finishes there will be a .clog2 file created that
-can be viewed in Jumpshot.
-
 \item \texttt{-logon}
 Prompt for user credentials to launch the job under.
 
@@ -1103,28 +1098,6 @@ Variables to control debugging output when enabled:
 \item \texttt{MPICH\_DEBUG\_ITEM}
 \end{itemize}
 
-The following variables affect the MPE logging library:
-\begin{itemize}
-\item \texttt{MPE\_LOGFILE\_PREFIX}
-name of the clog file to create without the extension
-\item \texttt{MPE\_DELETE\_LOCALFILE}
-true,false - delete or not the local clog file
-\item \texttt{MPE\_LOG\_OVERHEAD}
-I think this one adds an event to the clog files representing the time it takes to write a clog buffer to disk
-\item \texttt{CLOG\_BLOCK\_SIZE}
-number of bytes in a clog block
-\item \texttt{CLOG\_BUFFERED\_BLOCKS}
-number of blocks
-\item \texttt{MPE\_CLOCKS\_SYNC}
-yes/no - synchronize clocks
-
-directories to store temporary files:
-\item \texttt{MPE\_TMPDIR}
-\item \texttt{TMPDIR}
-\item \texttt{TMP}
-\item \texttt{TEMP}
-\end{itemize}
-
 PMI environment variables created by smpd are described in the smpd documentation:
 \begin{itemize}
 \item \texttt{PMI\_DLL\_NAME}
@@ -1217,152 +1190,5 @@ like this: \texttt{mpi\_init\_\_}.  Add the library that matches your Fortran co
 
 \subsubsection{Cygwin and MinGW GNU compilers}
 You can compile your MPI programs using gcc/g++/g77/gfortran from Cygwin or MinGW using the MPICH2 header files/libraries installed with MPICH2 on windows. Compile using the header files in \texttt{C:$\backslash$Program Files$\backslash$MPICH2$\backslash$include} and link using the libs, lib*.a, in \texttt{C:$\backslash$Program Files$\backslash$MPICH2$\backslash$lib}. Note that you should use the ``-localroot'' option when running programs compiled using gcc/g++ from Cygwin.
-
-\subsection{Performance Analysis}
-MPICH2 includes the Multi-Processing Environment (MPE), which is a
-suite of performance analysis tools comprising profiling libraries,
-utility programs, a set of graphical tools, and a collective checking library. 
-
-The first set of tools to be used with user MPI programs is profiling libraries
-which provide a collection of routines that create log files.  These log files
-can be created manually by inserting MPE calls in the MPI program, or
-automatically by linking with the appropriate MPE libraries, or by combining
-the above two methods.  Currently, MPE offers the following four profiling
-libraries.
-
-\begin{enumerate}
-   \item Tracing Library: Traces all MPI calls.  Each MPI call is preceded by a
-      line that contains the rank in \texttt{MPI\_COMM\_WORLD} of the calling process,
-      and followed by another line indicating that the call has completed.
-      Most send and receive routines also indicate the values of count, tag,
-      and partner (destination for sends, source for receives).  Output is to
-      standard output.
-
-   \item Animation Libraries: A simple form of real-time program animation
-      that requires X window routines (Currently not available on windows).
-
-   \item Logging Libraries: The most useful and widely used profiling libraries
-      in MPE.  These libraries form the basis for generating log files from
-      user MPI programs.  Several different log file formats are
-      available in MPE.  The default log file format is CLOG2.  It is a low
-      overhead logging format, a simple collection of single timestamp events.
-      The old format ALOG, which is not being developed for years, is not
-      distributed here.  The powerful visualization format is SLOG-2, stands
-      for Scalable LOGfile format version II, which is a total redesign of the
-      original SLOG format.  SLOG-2 allows for much improved scalability for
-      visualization purpose. A CLOG2 file can be easily converted to
-      SLOG-2 file through the new SLOG-2 viewer, Jumpshot-4.
-
-   \item Collective and datatype checking library: An argument consistency
-      checking library for MPI collective calls.  It checks for datatype, root,
-      and various argument consistency in MPI collective calls (Currently not
-      available on Windows).
-\end{enumerate}
-
-The set of utility programs in MPE includes log format converter (e.g.
-clogTOslog2) and logfile viewer and convertor (e.g. Jumpshot).  These new 
-tools, clog2TOslog2 and Jumpshot (Jumpshot-4) replace old tools, clog2slog, 
-slog\_print and logviewer (i.e. Jumpshot-2 and Jumpshot-3).  
-
-\subsubsection{Tracing MPI calls using the MPIEXEC Wrapper}
-A developer can trace MPI calls by using the tracing functionality of the mpiexec
-wrapper (wmpiexec.exe). A step by step process is given below. 
-
-\begin{enumerate}
-	\item Launch the mpiexec wrapper application (wmpiexec.exe).
-	
-	\item After launching the mpiexec wrapper, select the application that you would
-			like to run and select the number of
-			processes. Now click on the ``more options''
-			checkbox to show the extended options for mpiexec.
-
-	\item Check the ``produce clog2 file'' checkbox so that the clog2 file is generated 
-			when the application is run.
-
-	\item Check ``run in an separate window'' checkbox to enable your program to run in
-			a separate window (for user interaction).
-
-	\item Run your application by clicking on the ``Execute'' button.
-	
-	\item Once the application exits, click on the ``Jumpshot'' button to launch Jumpshot 
-			(the logfile viewer). 
-
-	\item Open your logfile (the default name of the logfile is \texttt{<APPLICATION NAME>.clog2}) 
-			using Jumpshot. Jumpshot will ask for converting the logfile to slog2 format.
-			Click ``Convert'' button in Jumpshot to convert your logfile to slog2 format.
-
-	\item Now click on ``OK'' button in Jumpshot to view the logfile.
-\end{enumerate}
-
-\subsubsection{Tracing MPI calls from the command line}
-
-\begin{enumerate}
-	\item Run your application using the ``-log'' option to the mpiexec command. 
-
-	\item Launch Jumpshot using the java command. 
-(eg: \texttt{java -jar "c:$\backslash$Program Files$\backslash$MPICH2$\backslash$bin$\backslash$jumpshot.jar"})
-	\item Follow the steps mentioned in the previous section to convert the logfile to slog2
-			format and view the log.
-\end{enumerate}
-
-\subsubsection{Customizing logfiles}
-In addition to using the predefined MPE logging libraries to log all MPI
-calls, MPE logging calls can be inserted into the user's MPI program to define
-and log states.  These states are called user-defined states.  States may
-be nested, allowing one to define a state describing a user routine that
-contains several MPI calls, and display both the user-defined state and
-the MPI operations contained within it.
-
-The simplest way to insert user-defined states is as follows:
-\begin{enumerate}
-\item Get handles from MPE logging library. \texttt{MPE\_Log\_get\_state\_eventIDs}
-   must be used to get unique event IDs (MPE logging handles).
-   This is important if you are writing a library that uses
-   the MPE logging routines from the MPE system.
-   Hardwiring the eventIDs is considered a bad idea since it may cause
-   eventID confict and so the practice isn't supported. The older MPE library
-   provides \texttt{MPE\_Log\_get\_event\_number}, which is still being supported but
-   has been deprecated; users are strongly urged to use
-   \texttt{MPE\_Log\_get\_state\_eventIDs} instead.
-
-\item Set the logged state's characteristics. \texttt{MPE\_Describe\_state} sets the
-   name and color of the states.
-
-\item Log the events of the logged states. \texttt{MPE\_Log\_event} is called twice
-   to log the user-defined states.
-\end{enumerate}
-
-Below is a simple example that uses the three steps outlined above.
-
-\begin{verbatim}
-int eventID_begin, eventID_end;
-...
-MPE_Log_get_state_eventIDs( &eventID_begin, &eventID_end );
-...
-MPE_Describe_state( eventID_begin, eventID_end, "Multiplication", "red" );
-...
-MyAmult( Matrix m, Vector v )
-{
-    /* Log the start event along with the size of the matrix */
-    MPE_Log_event( eventID_begin, 0, NULL );
-    ... Amult code, including MPI calls ...
-    MPE_Log_event( eventID_end, 0, NULL );
-}
-\end{verbatim}
-
-The logfile generated by this code will have the MPI routines nested within
-the routine \texttt{MyAmult}.
-
-Besides user-defined state, MPE2 also provides support for user-defined
-events, which can be defined through use of \texttt{MPE\_Log\_get\_solo\_eventID}
-and \texttt{MPE\_Describe\_event}.  For more details, see cpilog.c.
-
-For undefined user-defined state (where the corresponding \texttt{MPE\_Describe\_state}
-has not been issued), the new Jumpshot (Jumpshot-4) may display the legend name as
-``UnknownType-INDEX'' where INDEX is the internal MPE category index.
-
-An example program, cpilog.c, is provided in the ``examples'' directory of your
-MPICH2 installation. This program can be used as a reference for customizing
-logfiles.
 
 \end{document}
