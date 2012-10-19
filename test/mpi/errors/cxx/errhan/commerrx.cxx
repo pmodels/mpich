@@ -33,7 +33,7 @@ int testCommCall( MPI::Comm &comm )
     }
     if (!sawException) {
 	int len;
-	char commname[MPI::MAX_OBJECT_NAME];
+	char commname[MPI_MAX_OBJECT_NAME];
 	comm.Get_name( commname, len );
 	std::cout << "Did not see MPI exception on invalid call on communicator " <<
 	    commname << "\n";
