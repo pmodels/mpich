@@ -1838,30 +1838,33 @@ int MPIDI_Win_lock(int lock_type, int dest, int assert, MPID_Win *win_ptr)
 	}
 	/* local lock acquired. local puts, gets, accumulates will be done 
 	   directly without queueing. */
+        win_ptr->remote_lock_state = MPIDI_CH3_WIN_LOCK_GRANTED;
     }
     else {
-	/* target is some other process. add the lock request to rma_ops_list */
-	MPIU_INSTR_DURATION_START(rmaqueue_alloc);
-	MPIU_CHKPMEM_MALLOC(new_ptr, MPIDI_RMA_ops *, sizeof(MPIDI_RMA_ops), 
-			    mpi_errno, "RMA operation entry");
-	MPIU_INSTR_DURATION_END(rmaqueue_alloc);
-            
-	MPIU_Assert( !win_ptr->rma_ops_list_head );
-	win_ptr->rma_ops_list_head = new_ptr;
-	win_ptr->rma_ops_list_tail = new_ptr;
-        
-	MPIU_INSTR_DURATION_START(rmaqueue_set);
-	new_ptr->next = NULL;  
-	new_ptr->type = MPIDI_RMA_LOCK;
-	new_ptr->target_rank = dest;
-	new_ptr->lock_type = lock_type;
-	MPIU_INSTR_DURATION_END(rmaqueue_set);
-
         /* TODO: Make this mode of operation available through an assert
            argument or info key. */
         if (MPIR_PARAM_RMA_LOCK_IMMED) {
             mpi_errno = MPIDI_CH3I_Send_lock_msg(dest, lock_type, win_ptr);
             MPIU_ERR_CHKANDJUMP(mpi_errno != MPI_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**winRMAmessage");
+        }
+        else {
+            /* target is some other process. add the lock request to rma_ops_list */
+            MPIU_INSTR_DURATION_START(rmaqueue_alloc);
+            MPIU_CHKPMEM_MALLOC(new_ptr, MPIDI_RMA_ops *, sizeof(MPIDI_RMA_ops),
+                                mpi_errno, "RMA operation entry");
+            MPIU_INSTR_DURATION_END(rmaqueue_alloc);
+
+            MPIU_Assert( win_ptr->rma_ops_list_head == NULL &&
+                         win_ptr->rma_ops_list_tail == NULL );
+            win_ptr->rma_ops_list_head = new_ptr;
+            win_ptr->rma_ops_list_tail = new_ptr;
+
+            MPIU_INSTR_DURATION_START(rmaqueue_set);
+            new_ptr->next = NULL;
+            new_ptr->type = MPIDI_RMA_LOCK;
+            new_ptr->target_rank = dest;
+            new_ptr->lock_type = lock_type;
+            MPIU_INSTR_DURATION_END(rmaqueue_set);
         }
     }
 
@@ -1898,6 +1901,7 @@ int MPIDI_Win_unlock(int dest, MPID_Win *win_ptr)
 	MPIU_Assert(!win_ptr->rma_ops_list_head);
 	mpi_errno = MPIDI_CH3I_Release_lock(win_ptr);
 	if (mpi_errno != MPI_SUCCESS) goto fn_exit;
+        win_ptr->remote_lock_state = MPIDI_CH3_WIN_LOCK_NONE;
 	mpi_errno = MPID_Progress_poke();
 	goto fn_exit;
     }
@@ -1907,12 +1911,12 @@ int MPIDI_Win_unlock(int dest, MPID_Win *win_ptr)
     rma_op = win_ptr->rma_ops_list_head;
     
     /* win_lock was not called. return error */
-    if ( (rma_op == NULL) || ( rma_op->type != MPIDI_RMA_LOCK &&
-                               win_ptr->remote_lock_state == MPIDI_CH3_WIN_LOCK_NONE ) ) {
+    if ( win_ptr->remote_lock_state == MPIDI_CH3_WIN_LOCK_NONE &&
+         ( rma_op == NULL || rma_op->type != MPIDI_RMA_LOCK ) ) {
 	MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**rmasync");
     }
         
-    if (rma_op->target_rank != dest) {
+    if (rma_op && rma_op->target_rank != dest) {
 	/* The target rank is different from the one passed to win_lock! */
 	MPIU_ERR_SETANDJUMP2(mpi_errno,MPI_ERR_OTHER,"**winunlockrank", 
 		     "**winunlockrank %d %d", dest, rma_op->target_rank);
@@ -1920,7 +1924,7 @@ int MPIDI_Win_unlock(int dest, MPID_Win *win_ptr)
 
     /* Only win_lock+unlock called, no put/get/acc. If we haven't requested the
        lock, we can do nothing and return. */
-    if (rma_op->type == MPIDI_RMA_LOCK && rma_op->next == NULL &&
+    if (rma_op && rma_op->type == MPIDI_RMA_LOCK && rma_op->next == NULL &&
         win_ptr->remote_lock_state == MPIDI_CH3_WIN_LOCK_NONE) {
 	MPIU_Free(rma_op);
 	win_ptr->rma_ops_list_head = NULL;
@@ -1935,7 +1939,7 @@ int MPIDI_Win_unlock(int dest, MPID_Win *win_ptr)
     /* TODO: MPI-3: Add lock->cas->unlock optimization */
     /* LOCK-OP-UNLOCK Optimization -- This optimization can't be used if we
        have already requested the lock. */
-    if ( win_ptr->remote_lock_state == MPIDI_CH3_WIN_LOCK_NONE  &&
+    if ( rma_op && win_ptr->remote_lock_state == MPIDI_CH3_WIN_LOCK_NONE  &&
          rma_op->next->next == NULL &&
          rma_op->next->type != MPIDI_RMA_COMPARE_AND_SWAP &&
          rma_op->next->type != MPIDI_RMA_FETCH_AND_OP &&
@@ -2146,6 +2150,13 @@ static int MPIDI_CH3I_Do_passive_target_rma(MPID_Win *win_ptr,
            there is no third-party communication issue. */
         *wait_for_rma_done_pkt = 0;
     }
+    else if (win_ptr->rma_ops_list_head == NULL) {
+        /* Shared lock -- The ops list is empty.  Any issued ops are already
+           remote complete; done packet is not needed for safe third party
+           communication. */
+        MPIU_Assert(win_ptr->rma_ops_list_tail == NULL);
+        *wait_for_rma_done_pkt = 0;
+    }
     else {
         /* shared lock. check if any of the rma ops is a get. If so, move it 
            to the end of the list and do it last, in which case an rma done 
@@ -2190,7 +2201,7 @@ static int MPIDI_CH3I_Do_passive_target_rma(MPID_Win *win_ptr,
     curr_ptr = win_ptr->rma_ops_list_head;
 
     /* Remove the lock operation if it's still on the head of the list */
-    if (curr_ptr->type == MPIDI_RMA_LOCK) {
+    if (curr_ptr && curr_ptr->type == MPIDI_RMA_LOCK) {
         if (win_ptr->rma_ops_list_tail == win_ptr->rma_ops_list_head) {
             MPIU_Assert(curr_ptr->next == NULL);
             win_ptr->rma_ops_list_tail = NULL;
