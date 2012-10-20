@@ -2291,10 +2291,15 @@ static int MPIDI_CH3I_Do_passive_target_rma(MPID_Win *win_ptr,
         else {
             /* go through the list and move the first get operation 
                (if there is one) to the end.  Note that the first
-	       operation must be a lock, so we can skip it */
+	       operation may be a lock, so we can skip it */
             
-            curr_ptr = win_ptr->rma_ops_list_head->next;
-            prevNextPtr = &(win_ptr->rma_ops_list_head->next);
+            if (win_ptr->rma_ops_list_head->type == MPIDI_RMA_LOCK) {
+                curr_ptr = win_ptr->rma_ops_list_head->next;
+                prevNextPtr = &win_ptr->rma_ops_list_head->next;
+            } else {
+                curr_ptr = win_ptr->rma_ops_list_head;
+                prevNextPtr = &win_ptr->rma_ops_list_head;
+            }
             
             *wait_for_rma_done_pkt = 1;
             
