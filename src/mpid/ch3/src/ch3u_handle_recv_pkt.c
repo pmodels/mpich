@@ -580,6 +580,8 @@ int MPIDI_CH3_PktHandler_Init( MPIDI_CH3_PktHandler_Fcn *pktArray[],
 	MPIDI_CH3_PktHandler_LockGranted;
     pktArray[MPIDI_CH3_PKT_UNLOCK] =
         MPIDI_CH3_PktHandler_Unlock;
+    pktArray[MPIDI_CH3_PKT_FLUSH] =
+        MPIDI_CH3_PktHandler_Flush;
     pktArray[MPIDI_CH3_PKT_PT_RMA_DONE] = 
 	MPIDI_CH3_PktHandler_PtRMADone;
     pktArray[MPIDI_CH3_PKT_LOCK_PUT_UNLOCK] = 

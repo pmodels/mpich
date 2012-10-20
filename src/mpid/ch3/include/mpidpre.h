@@ -185,7 +185,8 @@ typedef struct MPIDI_VC * MPID_VCR;
 enum MPIDI_CH3_Lock_states_e {
     MPIDI_CH3_WIN_LOCK_NONE = 0,
     MPIDI_CH3_WIN_LOCK_REQUESTED,
-    MPIDI_CH3_WIN_LOCK_GRANTED
+    MPIDI_CH3_WIN_LOCK_GRANTED,
+    MPIDI_CH3_WIN_LOCK_FLUSH
 };
 
 #define MPIDI_DEV_WIN_DECL                                               \
