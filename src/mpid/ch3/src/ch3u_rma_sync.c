@@ -96,6 +96,8 @@ static MPIU_INSTR_Duration_count *list_block;     /* Inner; while waiting */
 
 #define SYNC_POST_TAG 100
 
+static int MPIDI_CH3I_Send_lock_msg(int dest, int lock_type, MPID_Win *win_ptr);
+static int MPIDI_CH3I_Wait_for_lock_granted(MPID_Win *win_ptr);
 static int MPIDI_CH3I_Send_rma_msg(MPIDI_RMA_ops * rma_op, MPID_Win * win_ptr, 
 				   MPI_Win source_win_handle, 
 				   MPI_Win target_win_handle, 
@@ -1875,9 +1877,6 @@ int MPIDI_Win_unlock(int dest, MPID_Win *win_ptr)
     int single_op_opt, type_size;
     MPIDI_RMA_ops *rma_op, *curr_op;
     MPID_Comm *comm_ptr;
-    MPID_Request *req=NULL; 
-    MPIDI_CH3_Pkt_t upkt;
-    MPIDI_CH3_Pkt_lock_t *lock_pkt = &upkt.lock;
     MPIDI_VC_t * vc;
     int wait_for_rma_done_pkt = 0, predefined;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_WIN_UNLOCK);
@@ -1958,57 +1957,12 @@ int MPIDI_Win_unlock(int dest, MPID_Win *win_ptr)
     }
         
     if (single_op_opt == 0) {
-	
-	/* Send a lock packet over to the target. wait for the lock_granted
-	 * reply. Then do all the RMA ops. */ 
-	
-	MPIDI_Pkt_init(lock_pkt, MPIDI_CH3_PKT_LOCK);
-	lock_pkt->target_win_handle = win_ptr->all_win_handles[dest];
-	lock_pkt->source_win_handle = win_ptr->handle;
-	lock_pkt->lock_type = rma_op->lock_type;
-	
-	/* Set the lock granted flag to 0 */
-	win_ptr->lock_granted = 0;
-	
-	MPIU_THREAD_CS_ENTER(CH3COMM,vc);
-	mpi_errno = MPIDI_CH3_iStartMsg(vc, lock_pkt, sizeof(*lock_pkt), &req);
-	MPIU_THREAD_CS_EXIT(CH3COMM,vc);
-	if (mpi_errno != MPI_SUCCESS) {
-	    MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**winRMAmessage");
-	}
-	
-	/* release the request returned by iStartMsg */
-	if (req != NULL)
-	{
-	    MPID_Request_release(req);
-	}
-	
-	/* After the target grants the lock, it sends a lock_granted
-	 * packet. This packet is received in ch3u_handle_recv_pkt.c.
-	 * The handler for the packet sets the win_ptr->lock_granted flag to 1.
-	 */
-	
-	/* poke the progress engine until lock_granted flag is set to 1 */
-	if (win_ptr->lock_granted == 0)
-	{
-	    MPID_Progress_state progress_state;
-	    
-	    MPIU_INSTR_DURATION_START(winunlock_getlock);
-	    MPID_Progress_start(&progress_state);
-	    while (win_ptr->lock_granted == 0)
-	    {
-		mpi_errno = MPID_Progress_wait(&progress_state);
-		/* --BEGIN ERROR HANDLING-- */
-		if (mpi_errno != MPI_SUCCESS) {
-		    MPID_Progress_end(&progress_state);
-		    MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**winnoprogress");
-		}
-		/* --END ERROR HANDLING-- */
-	    }
-	    MPID_Progress_end(&progress_state);
-	    MPIU_INSTR_DURATION_END(winunlock_getlock);
-	}
-	
+
+        mpi_errno = MPIDI_CH3I_Send_lock_msg(dest, rma_op->lock_type, win_ptr);
+        if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
+        mpi_errno = MPIDI_CH3I_Wait_for_lock_granted(win_ptr);
+        if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
+
 	/* Now do all the RMA operations */
 	mpi_errno = MPIDI_CH3I_Do_passive_target_rma(win_ptr, 
 						     &wait_for_rma_done_pkt);
@@ -2329,6 +2283,97 @@ static int MPIDI_CH3I_Do_passive_target_rma(MPID_Win *win_ptr,
     return mpi_errno;
     /* --BEGIN ERROR HANDLING-- */
  fn_fail:
+    goto fn_exit;
+    /* --END ERROR HANDLING-- */
+}
+
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_CH3I_Send_lock_msg
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
+static int MPIDI_CH3I_Send_lock_msg(int dest, int lock_type, MPID_Win *win_ptr) {
+    int mpi_errno = MPI_SUCCESS;
+    MPIDI_CH3_Pkt_t upkt;
+    MPIDI_CH3_Pkt_lock_t *lock_pkt = &upkt.lock;
+    MPID_Request *req=NULL;
+    MPIDI_VC_t *vc;
+    MPIDI_STATE_DECL(MPID_STATE_MPIDI_SEND_LOCK_MSG);
+    MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_SEND_LOCK_MSG);
+
+    MPIDI_Comm_get_vc_set_active(win_ptr->comm_ptr, dest, &vc);
+
+    /* Send a lock packet over to the target. wait for the lock_granted
+     * reply. Then do all the RMA ops. */
+
+    MPIDI_Pkt_init(lock_pkt, MPIDI_CH3_PKT_LOCK);
+    lock_pkt->target_win_handle = win_ptr->all_win_handles[dest];
+    lock_pkt->source_win_handle = win_ptr->handle;
+    lock_pkt->lock_type = lock_type;
+
+    /* Set the lock granted flag to 0 */
+    win_ptr->lock_granted = 0;
+
+    MPIU_THREAD_CS_ENTER(CH3COMM,vc);
+    mpi_errno = MPIDI_CH3_iStartMsg(vc, lock_pkt, sizeof(*lock_pkt), &req);
+    MPIU_THREAD_CS_EXIT(CH3COMM,vc);
+    MPIU_ERR_CHKANDJUMP(mpi_errno != MPI_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**winRMAmessage");
+
+    /* release the request returned by iStartMsg */
+    if (req != NULL) {
+        MPID_Request_release(req);
+    }
+
+ fn_exit:
+    MPIDI_RMA_FUNC_EXIT(MPID_STATE_MPIDI_SEND_LOCK_MSG);
+    return mpi_errno;
+    /* --BEGIN ERROR HANDLING-- */
+ fn_fail:
+    goto fn_exit;
+    /* --END ERROR HANDLING-- */
+}
+
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_CH3I_Wait_for_lock_granted
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
+static int MPIDI_CH3I_Wait_for_lock_granted(MPID_Win *win_ptr) {
+    int mpi_errno = MPI_SUCCESS;
+    MPIDI_STATE_DECL(MPID_STATE_MPIDI_WAIT_FOR_LOCK_GRANTED);
+    MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_WAIT_FOR_LOCK_GRANTED);
+
+    /* After the target grants the lock, it sends a lock_granted
+     * packet. This packet is received in ch3u_handle_recv_pkt.c.
+     * The handler for the packet sets the win_ptr->lock_granted flag to 1.
+     */
+
+    /* poke the progress engine until lock_granted flag is set to 1 */
+    if (win_ptr->lock_granted == 0)
+    {
+        MPID_Progress_state progress_state;
+
+        MPIU_INSTR_DURATION_START(winunlock_getlock);
+        MPID_Progress_start(&progress_state);
+        while (win_ptr->lock_granted == 0)
+        {
+            mpi_errno = MPID_Progress_wait(&progress_state);
+            /* --BEGIN ERROR HANDLING-- */
+            if (mpi_errno != MPI_SUCCESS) {
+                MPID_Progress_end(&progress_state);
+                MPIU_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**winnoprogress");
+            }
+            /* --END ERROR HANDLING-- */
+        }
+        MPID_Progress_end(&progress_state);
+        MPIU_INSTR_DURATION_END(winunlock_getlock);
+    }
+
+ fn_exit:
+    MPIDI_RMA_FUNC_EXIT(MPID_STATE_MPIDI_WAIT_FOR_LOCK_GRANTED);
+    return mpi_errno;
+    /* --BEGIN ERROR HANDLING-- */
+fn_fail:
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }
