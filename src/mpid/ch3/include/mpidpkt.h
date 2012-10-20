@@ -75,6 +75,7 @@ typedef enum MPIDI_CH3_Pkt_type
     MPIDI_CH3_PKT_ACCUMULATE,
     MPIDI_CH3_PKT_LOCK,
     MPIDI_CH3_PKT_LOCK_GRANTED,
+    MPIDI_CH3_PKT_UNLOCK,
     MPIDI_CH3_PKT_PT_RMA_DONE,
     MPIDI_CH3_PKT_LOCK_PUT_UNLOCK, /* optimization for single puts */
     MPIDI_CH3_PKT_LOCK_GET_UNLOCK, /* optimization for single gets */
@@ -336,6 +337,7 @@ typedef struct MPIDI_CH3_Pkt_lock_granted
 MPIDI_CH3_Pkt_lock_granted_t;
 
 typedef MPIDI_CH3_Pkt_lock_granted_t MPIDI_CH3_Pkt_pt_rma_done_t;
+typedef MPIDI_CH3_Pkt_lock_t MPIDI_CH3_Pkt_unlock_t;
 
 typedef struct MPIDI_CH3_Pkt_lock_put_unlock
 {
@@ -405,6 +407,7 @@ typedef union MPIDI_CH3_Pkt
     MPIDI_CH3_Pkt_accum_immed_t accum_immed;
     MPIDI_CH3_Pkt_lock_t lock;
     MPIDI_CH3_Pkt_lock_granted_t lock_granted;
+    MPIDI_CH3_Pkt_unlock_t unlock;
     MPIDI_CH3_Pkt_pt_rma_done_t pt_rma_done;    
     MPIDI_CH3_Pkt_lock_put_unlock_t lock_put_unlock;
     MPIDI_CH3_Pkt_lock_get_unlock_t lock_get_unlock;

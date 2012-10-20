@@ -218,6 +218,14 @@ parameters:
         but may run the risk of exceeding the available number of requests
         or other internal resources.
 
+    - category    : rma
+      name        : RMA_LOCK_IMMED
+      type        : boolean
+      default     : 0
+      description : >-
+        Issue a request for the passive target RMA lock immediately.  Default
+        behavior is to defer the lock request until the call to MPI_Win_unlock.
+
     ##############################################################
     # intranode communication parameters
     - category    : intranode

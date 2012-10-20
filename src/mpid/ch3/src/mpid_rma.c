@@ -65,7 +65,7 @@ static int win_init(MPI_Aint size, int disp_unit, int create_flavor, int model,
 
 
 #undef FUNCNAME
-#define FUNCNAME MPID_Win_create
+#define FUNCNAME MPID_Win_create \
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 int MPID_Win_create(void *base, MPI_Aint size, int disp_unit, MPID_Info *info, 
@@ -273,7 +273,7 @@ static int win_init(MPI_Aint size, int disp_unit, int create_flavor, int model,
     /* (*win_ptr)->all_win_handles[] is set by caller; */
     (*win_ptr)->rma_ops_list_head   = NULL;
     (*win_ptr)->rma_ops_list_tail   = NULL;
-    (*win_ptr)->lock_granted        = 0;
+    (*win_ptr)->remote_lock_state   = MPIDI_CH3_WIN_LOCK_NONE;
     (*win_ptr)->current_lock_type   = MPID_LOCK_NONE;
     (*win_ptr)->shared_lock_ref_cnt = 0;
     (*win_ptr)->lock_queue          = NULL;

@@ -182,6 +182,12 @@ typedef struct MPIDI_VC * MPID_VCR;
 #   define MPIDI_REQUEST_SEQNUM
 #endif
 
+enum MPIDI_CH3_Lock_states_e {
+    MPIDI_CH3_WIN_LOCK_NONE = 0,
+    MPIDI_CH3_WIN_LOCK_REQUESTED,
+    MPIDI_CH3_WIN_LOCK_GRANTED
+};
+
 #define MPIDI_DEV_WIN_DECL                                               \
     volatile int my_counter;  /* completion counter for operations       \
                                  targeting this window */                \
@@ -193,9 +199,15 @@ typedef struct MPIDI_VC * MPID_VCR;
     struct MPIDI_RMA_ops *rma_ops_list_head; /* list of outstanding \
                                                 RMA requests */ \
     struct MPIDI_RMA_ops *rma_ops_list_tail; \
-    volatile int lock_granted;  /* flag to indicate whether lock has     \
-                                   been granted to this process (as source) for         \
-                                   passive target rma */                 \
+    volatile enum MPIDI_CH3_Lock_states_e remote_lock_state;             \
+                                /* Indicates the state of the target     \
+                                   process' "lock" for passive target    \
+                                   RMA. */                               \
+    volatile int remote_lock_mode;                                       \
+                                /* Indicates the access mode             \
+                                   (shared/exclusive) of the target      \
+                                   process for passive target RMA. Valid \
+                                   whenever state != NONE. */            \
     volatile int current_lock_type;   /* current lock type on this window (as target)   \
                               * (none, shared, exclusive) */             \
     volatile int shared_lock_ref_cnt;                                    \
@@ -208,6 +220,7 @@ typedef struct MPIDI_VC * MPID_VCR;
                                           that this process has          \
                                           completed as target */         \
     MPI_Aint *sizes;      /* array of sizes of all windows */            \
+
  
 #ifdef MPIDI_CH3_WIN_DECL
 #define MPID_DEV_WIN_DECL \
