@@ -84,3 +84,4 @@ get_accumulate_long_derived 4 mpiversion=3.0
 get_accumulate_short 4 mpiversion=3.0
 get_accumulate_short_derived 4 mpiversion=3.0
 strided_getacc_indexed 4 mpiversion=3.0
+flush 4 mpiversion=3.0
