@@ -45,7 +45,7 @@ C
      &              MPI_SUBVERSION
           print *, 'Version in get_version is ', iv, '.', isubv
        endif
-       if (iv .lt. 1 .or. iv .gt. 2) then
+       if (iv .lt. 1 .or. iv .gt. 3) then
           errs = errs + 1
           print *, 'Version of MPI is invalid (=', iv, ')'
        endif
