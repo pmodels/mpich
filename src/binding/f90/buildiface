@@ -165,6 +165,7 @@ $outfile_prefix = "mpi";
 		  'Dist_graph_create_adjacent-9' => 'bool',
 		  'Dist_graph_neighbors_count-4' => 'bool',
 		  'Iprobe-4' => 'bool',
+		  'Improbe-4' => 'bool',
 		  'Test-2' => 'bool',
 		  'Testall-3' => 'bool',
 		  'Testany-4' => 'bool',
