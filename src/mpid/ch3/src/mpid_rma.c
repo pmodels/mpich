@@ -65,7 +65,7 @@ static int win_init(MPI_Aint size, int disp_unit, int create_flavor, int model,
 
 
 #undef FUNCNAME
-#define FUNCNAME MPID_Win_create \
+#define FUNCNAME MPID_Win_create
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 int MPID_Win_create(void *base, MPI_Aint size, int disp_unit, MPID_Info *info, 
