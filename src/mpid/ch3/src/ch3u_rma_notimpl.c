@@ -82,26 +82,6 @@ int MPIDI_Rget_accumulate(const void *origin_addr, int origin_count,
 
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_Win_flush_local
-#undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
-int MPIDI_Win_flush_local(int rank, MPID_Win *win)
-{
-    MPIDI_FUNC_NOTIMPL(WIN_FLUSH_LOCAL)
-}
-
-
-#undef FUNCNAME
-#define FUNCNAME MPIDI_Win_flush_local_all
-#undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
-int MPIDI_Win_flush_local_all(MPID_Win *win)
-{
-    MPIDI_FUNC_NOTIMPL(WIN_FLUSH_LOCAL_ALL)
-}
-
-
-#undef FUNCNAME
 #define FUNCNAME MPIDI_Win_shared_query
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)

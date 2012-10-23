@@ -2113,6 +2113,26 @@ int MPIDI_Win_flush(int rank, MPID_Win *win_ptr)
 
 
 #undef FUNCNAME
+#define FUNCNAME MPIDI_Win_flush_local
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
+int MPIDI_Win_flush_local(int rank, MPID_Win *win_ptr)
+{
+    return MPIU_RMA_CALL(win_ptr, Win_flush(rank, win_ptr));
+}
+
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_Win_flush_local_all
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
+int MPIDI_Win_flush_local_all(MPID_Win *win_ptr)
+{
+    return MPIU_RMA_CALL(win_ptr, Win_flush_all(win_ptr));
+}
+
+
+#undef FUNCNAME
 #define FUNCNAME MPIDI_Win_lock_all
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
