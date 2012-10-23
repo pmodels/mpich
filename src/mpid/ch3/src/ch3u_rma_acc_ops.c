@@ -28,9 +28,7 @@ int MPIDI_Get_accumulate(const void *origin_addr, int origin_count,
     int dt_contig ATTRIBUTE((unused));
     MPI_Aint dt_true_lb ATTRIBUTE((unused));
     MPID_Datatype *dtp;
-    MPIDI_RMA_ops *new_ptr;
     MPIU_CHKLMEM_DECL(2);
-    MPIU_CHKPMEM_DECL(1);
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_GET_ACCUMULATE);
 
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_GET_ACCUMULATE);
@@ -154,21 +152,17 @@ int MPIDI_Get_accumulate(const void *origin_addr, int origin_count,
         }
     }
     else {
+        MPIDI_RMA_ops *new_ptr = NULL;
+
         /* Append the operation to the window's RMA ops queue */
         MPIU_INSTR_DURATION_START(rmaqueue_alloc);
-        MPIU_CHKPMEM_MALLOC(new_ptr, MPIDI_RMA_ops *, sizeof(MPIDI_RMA_ops),
-                            mpi_errno, "RMA operation entry");
+        mpi_errno = MPIDI_CH3I_Win_ops_alloc_tail(win_ptr, &new_ptr);
         MPIU_INSTR_DURATION_END(rmaqueue_alloc);
-        if (win_ptr->rma_ops_list_tail)
-            win_ptr->rma_ops_list_tail->next = new_ptr;
-        else
-            win_ptr->rma_ops_list_head = new_ptr;
-        win_ptr->rma_ops_list_tail = new_ptr;
+        if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
 
         /* TODO: Can we use the MPIDI_RMA_ACC_CONTIG optimization? */
 
         MPIU_INSTR_DURATION_START(rmaqueue_set);
-        new_ptr->next = NULL;
         new_ptr->type = MPIDI_RMA_GET_ACCUMULATE;
         /* Cast away const'ness for origin_address as MPIDI_RMA_ops
          * contain both PUT and GET like ops */
@@ -202,14 +196,12 @@ int MPIDI_Get_accumulate(const void *origin_addr, int origin_count,
     }
 
  fn_exit:
-    MPIU_CHKPMEM_COMMIT();
     MPIU_CHKLMEM_FREEALL();
     MPIDI_RMA_FUNC_EXIT(MPID_STATE_MPIDI_GET_ACCUMULATE);
     return mpi_errno;
 
     /* --BEGIN ERROR HANDLING-- */
   fn_fail:
-    MPIU_CHKPMEM_REAP();
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }
@@ -225,9 +217,6 @@ int MPIDI_Compare_and_swap(const void *origin_addr, const void *compare_addr,
 {
     int mpi_errno = MPI_SUCCESS;
     int rank;
-    MPIDI_RMA_ops *new_ptr;
-
-    MPIU_CHKPMEM_DECL(1);
 
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_COMPARE_AND_SWAP);
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_COMPARE_AND_SWAP);
@@ -256,19 +245,15 @@ int MPIDI_Compare_and_swap(const void *origin_addr, const void *compare_addr,
         goto fn_exit;
     }
     else {
+        MPIDI_RMA_ops *new_ptr = NULL;
+
         /* Append this operation to the RMA ops queue */
         MPIU_INSTR_DURATION_START(rmaqueue_alloc);
-        MPIU_CHKPMEM_MALLOC(new_ptr, MPIDI_RMA_ops *, sizeof(MPIDI_RMA_ops), 
-                            mpi_errno, "RMA operation entry");
+        mpi_errno = MPIDI_CH3I_Win_ops_alloc_tail(win_ptr, &new_ptr);
         MPIU_INSTR_DURATION_END(rmaqueue_alloc);
-        if (win_ptr->rma_ops_list_tail) 
-            win_ptr->rma_ops_list_tail->next = new_ptr;
-        else
-            win_ptr->rma_ops_list_head = new_ptr;
-        win_ptr->rma_ops_list_tail = new_ptr;
+        if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
 
         MPIU_INSTR_DURATION_START(rmaqueue_set);
-        new_ptr->next = NULL;
         new_ptr->type = MPIDI_RMA_COMPARE_AND_SWAP;
         new_ptr->origin_addr = (void *) origin_addr;
         new_ptr->origin_count = 1;
@@ -287,12 +272,10 @@ int MPIDI_Compare_and_swap(const void *origin_addr, const void *compare_addr,
     }
 
 fn_exit:
-    MPIU_CHKPMEM_COMMIT();
     MPIDI_RMA_FUNC_EXIT(MPID_STATE_MPIDI_COMPARE_AND_SWAP);
     return mpi_errno;
     /* --BEGIN ERROR HANDLING-- */
 fn_fail:
-    MPIU_CHKPMEM_REAP();
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }
@@ -308,9 +291,6 @@ int MPIDI_Fetch_and_op(const void *origin_addr, void *result_addr,
 {
     int mpi_errno = MPI_SUCCESS;
     int rank;
-    MPIDI_RMA_ops *new_ptr;
-
-    MPIU_CHKPMEM_DECL(1);
 
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_FETCH_AND_OP);
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_FETCH_AND_OP);
@@ -340,19 +320,15 @@ int MPIDI_Fetch_and_op(const void *origin_addr, void *result_addr,
         goto fn_exit;
     }
     else {
+        MPIDI_RMA_ops *new_ptr = NULL;
+
         /* Append this operation to the RMA ops queue */
         MPIU_INSTR_DURATION_START(rmaqueue_alloc);
-        MPIU_CHKPMEM_MALLOC(new_ptr, MPIDI_RMA_ops *, sizeof(MPIDI_RMA_ops), 
-                            mpi_errno, "RMA operation entry");
+        mpi_errno = MPIDI_CH3I_Win_ops_alloc_tail(win_ptr, &new_ptr);
         MPIU_INSTR_DURATION_END(rmaqueue_alloc);
-        if (win_ptr->rma_ops_list_tail) 
-            win_ptr->rma_ops_list_tail->next = new_ptr;
-        else
-            win_ptr->rma_ops_list_head = new_ptr;
-        win_ptr->rma_ops_list_tail = new_ptr;
+        if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
 
         MPIU_INSTR_DURATION_START(rmaqueue_set);
-        new_ptr->next = NULL;
         new_ptr->type = MPIDI_RMA_FETCH_AND_OP;
         new_ptr->origin_addr = (void *) origin_addr;
         new_ptr->origin_count = 1;
@@ -369,12 +345,10 @@ int MPIDI_Fetch_and_op(const void *origin_addr, void *result_addr,
     }
 
 fn_exit:
-    MPIU_CHKPMEM_COMMIT();
     MPIDI_RMA_FUNC_EXIT(MPID_STATE_MPIDI_FETCH_AND_OP);
     return mpi_errno;
     /* --BEGIN ERROR HANDLING-- */
 fn_fail:
-    MPIU_CHKPMEM_REAP();
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

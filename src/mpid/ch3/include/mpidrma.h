@@ -103,4 +103,118 @@ typedef struct MPIDI_Win_lock_queue {
 /* Routine use to tune RMA optimizations */
 void MPIDI_CH3_RMA_SetAccImmed( int flag );
 
+/*** RMA OPS LIST HELPER ROUTINES ***/
+
+/* Return nonzero if the RMA operations list is empty.
+ */
+#undef FUNCNAME
+#define FUNCNAME MPIDI_CH3I_Win_ops_isempty
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
+static inline int MPIDI_CH3I_Win_ops_isempty(MPID_Win *win_ptr)
+{
+    return win_ptr->rma_ops_list_head == NULL;
+}
+
+
+/* Allocate a new element on the tail of the RMA operations list.
+ *
+ * @param IN    win_ptr   Window containing the RMA ops list
+ * @param OUT   curr_ptr  Pointer to the element to the element that was
+ *                        updated.
+ * @return                MPI error class
+ */
+#undef FUNCNAME
+#define FUNCNAME MPIDI_CH3I_Win_ops_alloc_tail
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
+static inline int MPIDI_CH3I_Win_ops_alloc_tail(MPID_Win *win_ptr,
+                                                MPIDI_RMA_ops **curr_ptr)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIDI_RMA_ops *tmp_ptr;
+    MPIU_CHKPMEM_DECL(1);
+
+    /* This assertion can fail because the tail pointer is not maintainted (see
+       free_and_next).  If this happens, consider refactoring to a previous
+       element pointer (instead of prevNext) or a better list. */
+    MPIU_Assert(win_ptr->rma_ops_list_tail != NULL);
+
+    /* FIXME: We should use a pool allocator here */
+    MPIU_CHKPMEM_MALLOC(tmp_ptr, MPIDI_RMA_ops *, sizeof(MPIDI_RMA_ops),
+                        mpi_errno, "RMA operation entry");
+
+    tmp_ptr->next = NULL;
+    tmp_ptr->dataloop = NULL;
+
+    if (MPIDI_CH3I_Win_ops_isempty(win_ptr))
+        win_ptr->rma_ops_list_head = tmp_ptr;
+    else
+        win_ptr->rma_ops_list_tail->next = tmp_ptr;
+
+    win_ptr->rma_ops_list_tail = tmp_ptr;
+    *curr_ptr = tmp_ptr;
+
+ fn_exit:
+    MPIU_CHKPMEM_COMMIT();
+    return mpi_errno;
+ fn_fail:
+    MPIU_CHKPMEM_REAP();
+    goto fn_exit;
+}
+
+
+/* Free an element in the RMA operations list.
+ *
+ * NOTE: It is not currently possible (singly-linked list) for this operation
+ * to maintain the rma_ops_list_tail pointer.  If the freed element was at the
+ * tail, the tail pointer will become stale.  One should not rely a correct
+ * value of rma_ops_list_tail after calling this function -- specifically, one
+ * should be wary of calling alloc_tail unless the free operation emptied the
+ * list.
+ *
+ * @param IN    win_ptr   Window containing the RMA ops list
+ * @param INOUT curr_ptr  Pointer to the element to be freed.  Will be updated
+ *                        to point to the element following the element that
+ *                        was freed.
+ * @param IN    prev_next_ptr Pointer to the previous operation's next pointer.
+ *                        Used to unlink the element reference by curr_ptr.
+ */
+#undef FUNCNAME
+#define FUNCNAME MPIDI_CH3I_Win_ops_free_and_next
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
+static inline void MPIDI_CH3I_Win_ops_free_and_next(MPID_Win *win_ptr,
+                                                    MPIDI_RMA_ops **curr_ptr,
+                                                    MPIDI_RMA_ops **prev_next_ptr)
+{
+    MPIDI_RMA_ops *tmp_ptr = *curr_ptr;
+
+    MPIU_Assert(tmp_ptr != NULL && *prev_next_ptr == tmp_ptr);
+
+    /* Check if we are down to one element in the ops list */
+    if (win_ptr->rma_ops_list_head->next == NULL) {
+        MPIU_Assert(tmp_ptr == win_ptr->rma_ops_list_head);
+        win_ptr->rma_ops_list_tail = NULL;
+        win_ptr->rma_ops_list_head = NULL;
+    }
+
+    /* Check if this free invalidates the tail pointer.  If so, set it to NULL
+       for safety. */
+    if (win_ptr->rma_ops_list_tail == *curr_ptr)
+        win_ptr->rma_ops_list_tail = NULL;
+
+    /* Unlink the element */
+    *curr_ptr = tmp_ptr->next;
+    *prev_next_ptr = tmp_ptr->next;
+
+    /* Check if we allocated a dataloop for this op (see send/recv_rma_msg) */
+    if (tmp_ptr->dataloop != NULL)
+        MPIU_Free(tmp_ptr->dataloop);
+    MPIU_Free( tmp_ptr );
+}
+
+#undef FUNCNAME
+#undef FCNAME
+
 #endif

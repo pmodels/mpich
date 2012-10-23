@@ -121,11 +121,9 @@ int MPIDI_Put(const void *origin_addr, int origin_count, MPI_Datatype
 {
     int mpi_errno = MPI_SUCCESS;
     int dt_contig ATTRIBUTE((unused)), rank, predefined;
-    MPIDI_RMA_ops *new_ptr;
     MPID_Datatype *dtp;
     MPI_Aint dt_true_lb ATTRIBUTE((unused));
     MPIDI_msg_sz_t data_sz;
-    MPIU_CHKPMEM_DECL(1);
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_PUT);
         
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_PUT);
@@ -150,21 +148,16 @@ int MPIDI_Put(const void *origin_addr, int origin_count, MPI_Datatype
     }
     else
     {
+        MPIDI_RMA_ops *new_ptr = NULL;
+
 	/* queue it up */
-	/* FIXME: For short operations, should we use a (per-thread) pool? */
-	MPIU_INSTR_DURATION_START(rmaqueue_alloc);
-	MPIU_CHKPMEM_MALLOC(new_ptr, MPIDI_RMA_ops *, sizeof(MPIDI_RMA_ops), 
-			    mpi_errno, "RMA operation entry");
-	MPIU_INSTR_DURATION_END(rmaqueue_alloc);
-	if (win_ptr->rma_ops_list_tail) 
-	    win_ptr->rma_ops_list_tail->next = new_ptr;
-	else
-	    win_ptr->rma_ops_list_head = new_ptr;
-	win_ptr->rma_ops_list_tail = new_ptr;
+        MPIU_INSTR_DURATION_START(rmaqueue_alloc);
+        mpi_errno = MPIDI_CH3I_Win_ops_alloc_tail(win_ptr, &new_ptr);
+        MPIU_INSTR_DURATION_END(rmaqueue_alloc);
+        if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
 
 	MPIU_INSTR_DURATION_START(rmaqueue_set);
 	/* FIXME: For contig and very short operations, use a streamlined op */
-	new_ptr->next = NULL;  
 	new_ptr->type = MPIDI_RMA_PUT;
         /* Cast away const'ness for the origin address, as the
          * MPIDI_RMA_ops structure is used for both PUT and GET like
@@ -200,7 +193,6 @@ int MPIDI_Put(const void *origin_addr, int origin_count, MPI_Datatype
 
     /* --BEGIN ERROR HANDLING-- */
   fn_fail:
-    MPIU_CHKPMEM_REAP();
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }
@@ -219,9 +211,7 @@ int MPIDI_Get(void *origin_addr, int origin_count, MPI_Datatype
     MPIDI_msg_sz_t data_sz;
     int dt_contig ATTRIBUTE((unused)), rank, predefined;
     MPI_Aint dt_true_lb ATTRIBUTE((unused));
-    MPIDI_RMA_ops *new_ptr;
     MPID_Datatype *dtp;
-    MPIU_CHKPMEM_DECL(1);
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_GET);
         
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_GET);
@@ -248,20 +238,16 @@ int MPIDI_Get(void *origin_addr, int origin_count, MPI_Datatype
     }
     else
     {
+        MPIDI_RMA_ops *new_ptr = NULL;
+
 	/* queue it up */
-	MPIU_INSTR_DURATION_START(rmaqueue_alloc);
-	MPIU_CHKPMEM_MALLOC(new_ptr, MPIDI_RMA_ops *, sizeof(MPIDI_RMA_ops), 
-			    mpi_errno, "RMA operation entry");
-	MPIU_INSTR_DURATION_END(rmaqueue_alloc);
-	if (win_ptr->rma_ops_list_tail) 
-	    win_ptr->rma_ops_list_tail->next = new_ptr;
-	else
-	    win_ptr->rma_ops_list_head = new_ptr;
-	win_ptr->rma_ops_list_tail = new_ptr;
-            
+        MPIU_INSTR_DURATION_START(rmaqueue_alloc);
+        mpi_errno = MPIDI_CH3I_Win_ops_alloc_tail(win_ptr, &new_ptr);
+        MPIU_INSTR_DURATION_END(rmaqueue_alloc);
+        if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
+
 	MPIU_INSTR_DURATION_START(rmaqueue_set);
 	/* FIXME: For contig and very short operations, use a streamlined op */
-	new_ptr->next = NULL;  
 	new_ptr->type = MPIDI_RMA_GET;
 	new_ptr->origin_addr = origin_addr;
 	new_ptr->origin_count = origin_count;
@@ -294,7 +280,6 @@ int MPIDI_Get(void *origin_addr, int origin_count, MPI_Datatype
 
     /* --BEGIN ERROR HANDLING-- */
   fn_fail:
-    MPIU_CHKPMEM_REAP();
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }
@@ -314,10 +299,8 @@ int MPIDI_Accumulate(const void *origin_addr, int origin_count, MPI_Datatype
     MPIDI_msg_sz_t data_sz;
     int dt_contig ATTRIBUTE((unused)), rank, origin_predefined, target_predefined;
     MPI_Aint dt_true_lb ATTRIBUTE((unused));
-    MPIDI_RMA_ops *new_ptr;
     MPID_Datatype *dtp;
     MPIU_CHKLMEM_DECL(2);
-    MPIU_CHKPMEM_DECL(1);
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_ACCUMULATE);
     
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_ACCUMULATE);
@@ -441,21 +424,17 @@ int MPIDI_Accumulate(const void *origin_addr, int origin_count, MPI_Datatype
     }
     else
     {
+        MPIDI_RMA_ops *new_ptr = NULL;
+
 	/* queue it up */
-	MPIU_INSTR_DURATION_START(rmaqueue_alloc);
-	MPIU_CHKPMEM_MALLOC(new_ptr, MPIDI_RMA_ops *, sizeof(MPIDI_RMA_ops), 
-			    mpi_errno, "RMA operation entry");
-	MPIU_INSTR_DURATION_END(rmaqueue_alloc);
-	if (win_ptr->rma_ops_list_tail) 
-	    win_ptr->rma_ops_list_tail->next = new_ptr;
-	else
-	    win_ptr->rma_ops_list_head = new_ptr;
-	win_ptr->rma_ops_list_tail = new_ptr;
+        MPIU_INSTR_DURATION_START(rmaqueue_alloc);
+        mpi_errno = MPIDI_CH3I_Win_ops_alloc_tail(win_ptr, &new_ptr);
+        MPIU_INSTR_DURATION_END(rmaqueue_alloc);
+        if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
 
 	/* If predefined and contiguous, use a simplified element */
 	if (origin_predefined && target_predefined && enableShortACC) {
 	    MPIU_INSTR_DURATION_START(rmaqueue_set);
-	    new_ptr->next = NULL;
 	    new_ptr->type = MPIDI_RMA_ACC_CONTIG;
 	    /* Only the information needed for the contig/predefined acc */
             /* Cast away const'ness for origin_address as
@@ -473,7 +452,6 @@ int MPIDI_Accumulate(const void *origin_addr, int origin_count, MPI_Datatype
 	}
 
 	MPIU_INSTR_DURATION_START(rmaqueue_set);
-	new_ptr->next = NULL;  
 	new_ptr->type = MPIDI_RMA_ACCUMULATE;
         /* Cast away const'ness for origin_address as MPIDI_RMA_ops
          * contain both PUT and GET like ops */
@@ -508,7 +486,6 @@ int MPIDI_Accumulate(const void *origin_addr, int origin_count, MPI_Datatype
 
     /* --BEGIN ERROR HANDLING-- */
   fn_fail:
-    MPIU_CHKPMEM_REAP();
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }
