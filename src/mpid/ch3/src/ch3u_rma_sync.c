@@ -2015,9 +2015,9 @@ int MPIDI_Win_flush(int rank, MPID_Win *win_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
     int wait_for_rma_done_pkt = 0;
-    MPIDI_STATE_DECL(MPID_STATE_MPIDI_WIN_FLUSH_ALL);
+    MPIDI_STATE_DECL(MPID_STATE_MPIDI_WIN_FLUSH);
 
-    MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_WIN_FLUSH_ALL);
+    MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_WIN_FLUSH);
 
     /* Local flush: ops are performed immediately on the local process */
     if (rank == win_ptr->comm_ptr->rank) {
@@ -2103,7 +2103,7 @@ int MPIDI_Win_flush(int rank, MPID_Win *win_ptr)
 
  fn_exit:
     MPIU_Assert(MPIDI_CH3I_Win_ops_isempty(win_ptr));
-    MPIDI_RMA_FUNC_EXIT(MPID_STATE_MPIDI_WIN_FLUSH_ALL);
+    MPIDI_RMA_FUNC_EXIT(MPID_STATE_MPIDI_WIN_FLUSH);
     return mpi_errno;
     /* --BEGIN ERROR HANDLING-- */
  fn_fail:
