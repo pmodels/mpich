@@ -6,7 +6,6 @@
  */
 
 #include "mpiimpl.h"
-#include "rma.h"
 
 /* -- Begin Profiling Symbol Block for routine MPI_Fetch_and_op */
 #if defined(HAVE_PRAGMA_WEAK)

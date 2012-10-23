@@ -7,7 +7,6 @@
 
 #include "mpiimpl.h"
 
-#include "rma.h"
 /* -- Begin Profiling Symbol Block for routine MPI_Put */
 #if defined(HAVE_PRAGMA_WEAK)
 #pragma weak MPI_Put = PMPI_Put
