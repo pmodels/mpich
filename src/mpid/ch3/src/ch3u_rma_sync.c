@@ -1888,7 +1888,7 @@ int MPIDI_Win_unlock(int dest, MPID_Win *win_ptr)
        lock, we can do nothing and return. */
     if (rma_op && rma_op->type == MPIDI_RMA_LOCK && rma_op->next == NULL &&
         win_ptr->remote_lock_state == MPIDI_CH3_WIN_LOCK_NONE) {
-        MPIDI_CH3I_Win_ops_free_and_next(win_ptr, &win_ptr->rma_ops_list_head, &win_ptr->rma_ops_list_head);
+        MPIDI_CH3I_Win_ops_free(win_ptr);
 	goto fn_exit;
     }
         
@@ -2770,12 +2770,7 @@ static int MPIDI_CH3I_Send_lock_put_or_acc(MPID_Win *win_ptr)
 
     /* Free MPIDI_RMA_ops_list - the lock packet should still be in place, so
      * we have to free two elements. */
-    {
-        MPIDI_RMA_ops *tmpptr = win_ptr->rma_ops_list_head;
-        MPIDI_CH3I_Win_ops_free_and_next(win_ptr, &tmpptr, &win_ptr->rma_ops_list_head);
-        MPIDI_CH3I_Win_ops_free_and_next(win_ptr, &tmpptr, &win_ptr->rma_ops_list_head);
-        MPIU_Assert(MPIDI_CH3I_Win_ops_isempty(win_ptr));
-    }
+    MPIDI_CH3I_Win_ops_free(win_ptr);
 
  fn_fail:
     MPIDI_RMA_FUNC_EXIT(MPID_STATE_MPIDI_CH3I_SEND_LOCK_PUT_OR_ACC);
@@ -2894,12 +2889,7 @@ static int MPIDI_CH3I_Send_lock_get(MPID_Win *win_ptr)
 
     /* Free MPIDI_RMA_ops_list - the lock packet should still be in place, so
      * we have to free two elements. */
-    {
-        MPIDI_RMA_ops *tmpptr = win_ptr->rma_ops_list_head;
-        MPIDI_CH3I_Win_ops_free_and_next(win_ptr, &tmpptr, &win_ptr->rma_ops_list_head);
-        MPIDI_CH3I_Win_ops_free_and_next(win_ptr, &tmpptr, &win_ptr->rma_ops_list_head);
-        MPIU_Assert(MPIDI_CH3I_Win_ops_isempty(win_ptr));
-    }
+    MPIDI_CH3I_Win_ops_free(win_ptr);
 
  fn_fail:
     MPIDI_RMA_FUNC_EXIT(MPID_STATE_MPIDI_CH3I_SEND_LOCK_GET);

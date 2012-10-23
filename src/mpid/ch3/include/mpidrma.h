@@ -137,8 +137,9 @@ static inline int MPIDI_CH3I_Win_ops_alloc_tail(MPID_Win *win_ptr,
 
     /* This assertion can fail because the tail pointer is not maintainted (see
        free_and_next).  If this happens, consider refactoring to a previous
-       element pointer (instead of prevNext) or a better list. */
-    MPIU_Assert(win_ptr->rma_ops_list_tail != NULL);
+       element pointer (instead of a pointer to the prevous next pointer) or a
+       doubly-linked list. */
+    MPIU_Assert(MPIDI_CH3I_Win_ops_isempty(win_ptr) || win_ptr->rma_ops_list_tail != NULL);
 
     /* FIXME: We should use a pool allocator here */
     MPIU_CHKPMEM_MALLOC(tmp_ptr, MPIDI_RMA_ops *, sizeof(MPIDI_RMA_ops),
@@ -213,6 +214,33 @@ static inline void MPIDI_CH3I_Win_ops_free_and_next(MPID_Win *win_ptr,
         MPIU_Free(tmp_ptr->dataloop);
     MPIU_Free( tmp_ptr );
 }
+
+
+/* Free the entire RMA operations list.
+ */
+#undef FUNCNAME
+#define FUNCNAME MPIDI_CH3I_Win_ops_free
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
+static inline void MPIDI_CH3I_Win_ops_free(MPID_Win *win_ptr)
+{
+    MPIDI_RMA_ops *curr_ptr = win_ptr->rma_ops_list_head;
+
+    while (curr_ptr != NULL) {
+        MPIDI_RMA_ops *tmp_ptr = curr_ptr->next;
+
+        /* Free this ops list entry */
+        if (curr_ptr->dataloop != NULL)
+            MPIU_Free(tmp_ptr->dataloop);
+        MPIU_Free( curr_ptr );
+
+        curr_ptr = tmp_ptr;
+    }
+
+    win_ptr->rma_ops_list_tail = NULL;
+    win_ptr->rma_ops_list_head = NULL;
+}
+
 
 #undef FUNCNAME
 #undef FCNAME
