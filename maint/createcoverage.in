@@ -13,17 +13,6 @@ weblocprefix=""
 blddir=/tmp/$LOGNAME/mpich2-cov
 mpiinstalldir=/tmp/$LOGNAME/mpich2-cinst
 
-# These are the settings used by the MPICH2 group internally to 
-# produce the coverage.  This points the tests at a directory that contains
-# five separate test suites.
-#
-#srcdir=/home/MPI/testing/mpich2/mpich2
-#tsuites=/home/MPI/testing/tsuites
-#weblocbase=/mcs/www/mpi/mpich2/todo/coverage
-#weblocprefix="http://www.mcs.anl.gov/mpi/mpich2/todo/coverage"
-#blddir=/sandbox/$LOGNAME/mpich2-cov
-#mpiinstalldir=/sandbox/$LOGNAME/mpich2-cinst
-
 logfile=""
 # set pm=mpd if mpd is available
 #pm=gforker
