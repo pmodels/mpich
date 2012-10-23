@@ -20,7 +20,6 @@ lib_lib@MPILIBNAME@_la_SOURCES +=				\
     src/mpid/ch3/channels/nemesis/src/ch3i_eagernoncontig.c	\
     src/mpid/ch3/channels/nemesis/src/mpid_nem_alloc.c		\
     src/mpid/ch3/channels/nemesis/src/mpid_nem_init.c		\
-    src/mpid/ch3/channels/nemesis/src/mpid_nem_queue.c		\
     src/mpid/ch3/channels/nemesis/src/mpid_nem_barrier.c	\
     src/mpid/ch3/channels/nemesis/src/mpid_nem_mpich2.c		\
     src/mpid/ch3/channels/nemesis/src/mpid_nem_ckpt.c		\
