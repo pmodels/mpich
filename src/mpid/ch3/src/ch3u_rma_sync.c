@@ -2003,7 +2003,7 @@ int MPIDI_Win_unlock(int dest, MPID_Win *win_ptr)
 int MPIDI_Win_flush_all(MPID_Win *win_ptr)
 {
     /* TODO: Currently only one rank can be locked. */
-    return MPIDI_Win_flush(win_ptr->lockRank, win_ptr);
+    return MPIU_RMA_CALL(win_ptr, Win_flush(win_ptr->lockRank, win_ptr));
 }
 
 
