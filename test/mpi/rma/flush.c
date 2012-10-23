@@ -47,7 +47,7 @@ int main( int argc, char *argv[] )
 
     /* Test flush of an empty epoch */
     MPI_Win_lock(MPI_LOCK_SHARED, 0, 0, window);
-    MPIX_Win_flush_all(window);
+    MPI_Win_flush_all(window);
     MPI_Win_unlock(0, window);
 
     MPI_Barrier(MPI_COMM_WORLD);
@@ -65,8 +65,8 @@ int main( int argc, char *argv[] )
             MPI_Recv(NULL, 0, MPI_BYTE, rank-1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
         }
 
-        MPIX_Get_accumulate(&rank, 1, MPI_INT, &val, 1, MPI_INT, 0, 0, 1, MPI_INT, MPI_REPLACE, window);
-        MPIX_Win_flush(0, window);
+        MPI_Get_accumulate(&rank, 1, MPI_INT, &val, 1, MPI_INT, 0, 0, 1, MPI_INT, MPI_REPLACE, window);
+        MPI_Win_flush(0, window);
 
         exp = (rank + nproc-1) % nproc;
 
