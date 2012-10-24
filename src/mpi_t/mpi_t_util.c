@@ -133,17 +133,19 @@ int MPIR_T_finalize_pvars(void)
  */
 void MPIU_Tool_strncpy(char *dst, const char *src, int *len)
 {
-    MPIU_Assert(len);
-    MPIU_Assert(*len >= 0);
+    /* std. says to ignore str arg if len arg is NULL (MPI-3, p.563) */
+    if (len) {
+        MPIU_Assert(*len >= 0);
 
-    if (!dst || !len) {
-        /* just return the space needed to hold src, including the terminator */
-        *len = strlen(src);
-    }
-    else {
-        /* MPL_strncpy will always terminate the string */
-        MPL_strncpy(dst, src, *len);
-        *len = strlen(dst);
+        if (!dst || !*len) {
+            /* just return the space needed to hold src, including the terminator */
+            *len = strlen(src) + 1;
+        }
+        else {
+            /* MPL_strncpy will always terminate the string */
+            MPL_strncpy(dst, src, *len);
+            *len = strlen(dst) + 1;
+        }
     }
 }
 
