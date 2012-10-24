@@ -80,12 +80,7 @@ MIPS=0
 BITS=0
 
 AC_ARG_VAR([FROM_MPICH],[set to "yes" if building ROMIO inside of MPICH])
-AC_ARG_VAR([FROM_MPICH],[set to "yes" if building ROMIO inside of MPICH])
 FROM_MPICH=${FROM_MPICH:-no}
-FROM_MPICH=${FROM_MPICH:-no}
-if test "$FROM_MPICH" = yes -a "$FROM_MPICH" = yes ; then
-    AC_MSG_WARN([Both FROM_MPICH and FROM_MPICH set to yes; at most one should be yes])
-fi
 
 AC_ARG_VAR([FROM_LAM],[set to "yes" if building ROMIO inside of LAM])
 FROM_LAM=${FROM_LAM:-no}
@@ -274,7 +269,7 @@ AC_SUBST(htmldir)
 
 # If we are building within a known MPI implementation, we must avoid the
 # tests about an existing implementation
-if test "$FROM_MPICH" != no -o "$FROM_MPICH" != no -o "$FROM_LAM" != no ; then
+if test "$FROM_MPICH" != no -o "$FROM_LAM" != no ; then
     WITHIN_KNOWN_MPI_IMPL=yes
 else
     WITHIN_KNOWN_MPI_IMPL=no
@@ -643,7 +638,6 @@ if test -n "$arch_IRIX"; then
    elif test $osversion = 6 ; then
 	if test -z "$MPI_IMPL"; then
 	    if test "$FROM_MPICH" = "yes" ; then
-	        # Building with MPICH.  Distinguish from MPICH-1
 		MPI_IMPL=mpich
 		mpi_mpich=1
             elif test -f "/usr/include/mpi.h" ; then
@@ -653,10 +647,6 @@ if test -n "$arch_IRIX"; then
                 AC_MSG_WARN([assuming that you want to use ROMIO with the SGI MPI])
                 MPI_IMPL=sgi
                 mpi_sgi=1
-            else 
-	        AC_MSG_WARN([assuming that you want to use ROMIO with MPICH])
-                MPI_IMPL=mpich
-                mpi_mpich=1
             fi            
 	fi
         RANLIB=":"
@@ -1832,14 +1822,12 @@ AC_SUBST(master_topbuild_dir)
 
 # The following definitions are needed within adio/common/status_setb.c
 if test "$FROM_MPICH" = yes ; then
-   AC_DEFINE(MPICH,1,[Define if compiling within MPICH])
-elif test "$FROM_MPICH" = yes ; then 
    AC_DEFINE(ROMIO_INSIDE_MPICH,1,[Define if compiling within MPICH])
 elif test "$FROM_MPILAM" = yes ; then
    AC_DEFINE(MPILAM,1,[Define if compiling within LAM/MPI])
 fi
 
-if test "$FROM_MPICH" = no -a "$FROM_MPICH" = no ; then 
+if test "$FROM_MPICH" = no ; then
     if test -z "$LIBNAME"; then
         LIBNAME="$top_build_dir/lib/libmpio.a"
     fi
@@ -1894,38 +1882,7 @@ fi
 #
 TEST_LIBNAME=$LIBNAME
 MPIRUN=mpirun
-#
-# if MPICH, use mpicc in test programs
-#
-if test "$FROM_MPICH" = yes ; then
-   MPICH_HOME=`dirname $ROMIO_HOME`
-   if test -z "$MPI_BIN_DIR" ; then MPI_BIN_DIR=$MPICH_HOME/bin ; fi
-   TEST_CC=$MPI_BIN_DIR/mpicc
-   MPI_LIB=""
-   ROMIO_INCLUDE=""
-   USER_CFLAGS=""
-   USER_FFLAGS=""
-   TEST_LIBNAME=""
-   MPIRUN=$MPI_BIN_DIR/mpirun
-   if test -n "$arch_SX4" || test -n "$arch_hpux" ; then
-      TEST_F77=$MPI_BIN_DIR/mpif90
-   else
-      TEST_F77=$MPI_BIN_DIR/mpif77
-   fi
-   CC=$MPI_BIN_DIR/mpicc
-   # A later test will insert the mpi2-other/info and array directories based
-   # on the value of BUILD_MPI_xxxx.  This lets MPICH turn these off,
-   # since MPICH provides these routines elsewhere
-   EXTRA_DIRS="mpi-io/fortran"
-   # Some older implementations of the ADI do not include the 
-   # MPID_Status_set_bytes routine.   This uses either the 
-   # environment variable ADI3_WITHOUT_SET_BYTES or the
-   # with arg --without-setbytes
-   if test "$ADI2_WITHOUT_SET_BYTES" != yes -a \
-           "$with_setbytes" != no ; then
-       AC_DEFINE(HAVE_STATUS_SET_BYTES,1,[Define if have MPIR_Status_set_bytes])
-   fi
-elif test $FROM_LAM = yes ; then
+if test $FROM_LAM = yes ; then
    # LAM does have the status set bytes functionality
    AC_DEFINE(HAVE_STATUS_SET_BYTES,1,[Define if have MPIR_Status_set_bytes])
         
@@ -2132,7 +2089,6 @@ AC_SUBST(F77MPIOINC)
 AC_SUBST(FTESTDEFINE)
 AC_SUBST(FORTRAN_MPI_OFFSET)
 AC_SUBST(FROM_MPICH)
-AC_SUBST(FROM_MPICH)
 AC_SUBST(FROM_LAM)
 AC_SUBST(WITHIN_KNOWN_MPI_IMPL)
 AC_SUBST(NEEDS_MPI_FINT)
@@ -2212,7 +2168,7 @@ AC_OUTPUT
 #
 rm -f *.o
 
-if test $FROM_MPICH = no -a $FROM_MPICH = no ; then
+if test $FROM_MPICH = no ; then
    AC_MSG_RESULT([Configure done. Now type make.])
 fi
 dnl PAC_SUBDIR_CACHE_CLEANUP

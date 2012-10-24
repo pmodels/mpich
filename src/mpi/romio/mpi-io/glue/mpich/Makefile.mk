@@ -7,6 +7,6 @@
 
 if MPIO_GLUE_MPICH
 romio_other_sources +=             \
-    mpi-io/glue/mpich2/mpio_file.c \
-    mpi-io/glue/mpich2/mpio_err.c
+    mpi-io/glue/mpich/mpio_file.c \
+    mpi-io/glue/mpich/mpio_err.c
 endif MPIO_GLUE_MPICH

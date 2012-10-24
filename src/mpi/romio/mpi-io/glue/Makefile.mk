@@ -6,5 +6,4 @@
 ##
 
 include $(top_srcdir)/mpi-io/glue/default/Makefile.mk
-include $(top_srcdir)/mpi-io/glue/mpich2/Makefile.mk
-
+include $(top_srcdir)/mpi-io/glue/mpich/Makefile.mk
