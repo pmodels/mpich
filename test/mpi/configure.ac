@@ -1313,6 +1313,7 @@ AC_OUTPUT(maint/testmerge \
           info/Makefile \
           init/Makefile \
           pt2pt/Makefile \
+          mpi_t/Makefile \
           rma/Makefile \
           spawn/Makefile \
           topo/Makefile \

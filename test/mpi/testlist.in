@@ -9,6 +9,7 @@ errhan
 group
 info
 init
+mpi_t
 pt2pt
 @rmadir@
 @spawndir@
