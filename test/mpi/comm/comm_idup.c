@@ -34,7 +34,7 @@ int main(int argc, char **argv)
     int i;
     int rank, size, lrank, lsize, rsize;
     int buf[2];
-    MPI_Comm newcomm, ic, localcomm;
+    MPI_Comm newcomm, ic, localcomm, stagger_comm;
     MPI_Request rreq;
 
     MPI_Init(&argc, &argv);
@@ -82,7 +82,14 @@ int main(int argc, char **argv)
     /* now construct an intercomm and make sure we can dup that too */
     MPI_Comm_split(MPI_COMM_WORLD, rank % 2, rank, &localcomm);
     MPI_Intercomm_create(localcomm, 0, MPI_COMM_WORLD, (rank == 0 ? 1 : 0), 1234, &ic);
-    MPI_Comm_free(&localcomm);
+
+    /* Create a communicator on just the "right hand group" of the intercomm in
+     * order to make it more likely to catch bugs related to incorrectly
+     * swapping the context_id and recvcontext_id in the idup code. */
+    stagger_comm = MPI_COMM_NULL;
+    if (rank % 2) {
+        MPI_Comm_dup(localcomm, &stagger_comm);
+    }
 
     MPI_Comm_rank(ic, &lrank);
     MPI_Comm_size(ic, &lsize);
@@ -113,6 +120,13 @@ int main(int argc, char **argv)
     MPI_Allreduce(&buf[0], &buf[1], 1, MPI_INT, MPI_SUM, newcomm);
     check(buf[1] == (rsize * (rsize-1) / 2));
 
+    /* free this down here, not before idup, otherwise it will undo our
+     * stagger_comm work */
+    MPI_Comm_free(&localcomm);
+
+    if (stagger_comm != MPI_COMM_NULL) {
+        MPI_Comm_free(&stagger_comm);
+    }
     MPI_Comm_free(&newcomm);
     MPI_Comm_free(&ic);
 

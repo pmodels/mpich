@@ -1276,21 +1276,21 @@ int MPIR_Get_intercomm_contextid_nonblock(MPID_Comm *comm_ptr, MPID_Comm *newcom
     /* add some entries to it */
 
     /* first get a context ID over the local comm */
-    mpi_errno = gcn_sch(lcomm, &newcommp->context_id, NULL, s);
+    mpi_errno = gcn_sch(lcomm, &newcommp->recvcontext_id, NULL, s);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
     MPID_SCHED_BARRIER(s);
 
     if (comm_ptr->rank == 0) {
         newcommp->recvcontext_id = -1;
-        mpi_errno = MPID_Sched_recv(&newcommp->recvcontext_id, 1, MPIR_CONTEXT_ID_T_DATATYPE, 0, comm_ptr, s);
+        mpi_errno = MPID_Sched_recv(&newcommp->context_id, 1, MPIR_CONTEXT_ID_T_DATATYPE, 0, comm_ptr, s);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-        mpi_errno = MPID_Sched_send(&newcommp->context_id, 1, MPIR_CONTEXT_ID_T_DATATYPE, 0, comm_ptr, s);
+        mpi_errno = MPID_Sched_send(&newcommp->recvcontext_id, 1, MPIR_CONTEXT_ID_T_DATATYPE, 0, comm_ptr, s);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
         MPID_SCHED_BARRIER(s);
     }
 
-    mpi_errno = lcomm->coll_fns->Ibcast(&newcommp->recvcontext_id, 1,
+    mpi_errno = lcomm->coll_fns->Ibcast(&newcommp->context_id, 1,
                                         MPIR_CONTEXT_ID_T_DATATYPE, 0, lcomm, s);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
