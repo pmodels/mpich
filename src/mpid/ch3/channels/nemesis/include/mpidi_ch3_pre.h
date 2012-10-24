@@ -31,7 +31,7 @@ MPIDI_CH3I_VC_state_t;
 
 /* size of private data area in vc and req for network modules */
 #define MPID_NEM_VC_NETMOD_AREA_LEN 128
-#define MPID_NEM_REQ_NETMOD_AREA_LEN 64
+#define MPID_NEM_REQ_NETMOD_AREA_LEN 192
 
 struct MPIDI_CH3I_Request
 {
