@@ -354,16 +354,6 @@ fi
 #
 C_DEBUG_FLAG="-g"
 F77_DEBUG_FLAG="-g"
-# C_OPT_FLAG=${CFLAGS:-"-O"}
-# MPICH1 uses OPTFLAGS and OPTFLAGSC to specify separate optimization
-# flags for the C compiler (this is better that adding it to the
-# undifferentiated CFLAGS, at least on input).
-if test -n "$OPTFLAGS" ; then
-    C_OPT_FLAG="$C_OPT_FLAG $OPTFLAGS"
-fi
-if test -n "$OPTFLAGSC" ; then
-    C_OPT_FLAG="$C_OPT_FLAG $OPTFLAGSC"
-fi
 case $ARCH in 
      solaris|solaris86)
      CC=${CC:-cc}
@@ -2048,14 +2038,11 @@ EXTRA_SRC_DIRS=""
 mpio_glue=""
 if test "$FROM_MPICH2" = yes -o "${MPI_IMPL}_mpi" = "mpich2_mpi"; then
     mpio_glue=mpich2
-elif test "$FROM_MPICH" = yes -o "${MPI_IMPL}_mpi" = "mpich_mpi"; then
-    mpio_glue=mpich1
 else
     mpio_glue=default
 fi
 
 AM_CONDITIONAL([MPIO_GLUE_MPICH2],[test "X$mpio_glue" = "Xmpich2"])
-AM_CONDITIONAL([MPIO_GLUE_MPICH1],[test "X$mpio_glue" = "Xmpich1"])
 AM_CONDITIONAL([MPIO_GLUE_DEFAULT],[test "X$mpio_glue" = "Xdefault"])
 
 if test "$BUILD_MPI_INFO" = 1 ; then
