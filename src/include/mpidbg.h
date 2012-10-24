@@ -10,6 +10,8 @@
 #include "mpibase.h"
 /*
  * Multilevel debugging and tracing macros.
+ * The design is discussed at
+ * http://wiki.mcs.anl.gov/mpich2/index.php/Debug_Event_Logging
  *
  * Basically, this provide a way to place debugging messages into
  * groups (called *classes*), with levels of detail, and arbitrary
