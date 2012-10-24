@@ -120,11 +120,11 @@
 #if defined(MPL_VG_AVAILABLE)
 #  if defined(VALGRIND_MAKE_MEM_DEFINED)
 /* this valgrind is version 3.2.0 or later */
-#  define MPL_VG_MAKE_MEM_DEFINED(addr_,len_)         VALGRIND_MAKE_MEM_DEFINED((addr_),(len_))
-#  define MPL_VG_MAKE_MEM_NOACCESS(addr_,len_)        VALGRIND_MAKE_MEM_NOACCESS((addr_),(len_))
-#  define MPL_VG_MAKE_MEM_UNDEFINED(addr_,len_)       VALGRIND_MAKE_MEM_UNDEFINED((addr_),(len_))
-#  define MPL_VG_CHECK_MEM_IS_DEFINED(addr_,len_)     VALGRIND_CHECK_MEM_IS_DEFINED((addr_),(len_))
-#  define MPL_VG_CHECK_MEM_IS_ADDRESSABLE(addr_,len_) VALGRIND_CHECK_MEM_IS_ADDRESSABLE((addr_),(len_))
+#  define MPL_VG_MAKE_MEM_DEFINED(addr_,len_)         ((void)VALGRIND_MAKE_MEM_DEFINED((addr_),(len_)))
+#  define MPL_VG_MAKE_MEM_NOACCESS(addr_,len_)        ((void)VALGRIND_MAKE_MEM_NOACCESS((addr_),(len_)))
+#  define MPL_VG_MAKE_MEM_UNDEFINED(addr_,len_)       ((void)VALGRIND_MAKE_MEM_UNDEFINED((addr_),(len_)))
+#  define MPL_VG_CHECK_MEM_IS_DEFINED(addr_,len_)     ((void)VALGRIND_CHECK_MEM_IS_DEFINED((addr_),(len_)))
+#  define MPL_VG_CHECK_MEM_IS_ADDRESSABLE(addr_,len_) ((void)VALGRIND_CHECK_MEM_IS_ADDRESSABLE((addr_),(len_)))
 #  else
 /* this is an older version of valgrind.  Use the older (subtly misleading) names */
 #    define MPL_VG_MAKE_MEM_DEFINED(addr_,len_)         VALGRIND_MAKE_READABLE((addr_),(len_))
@@ -133,7 +133,7 @@
 #    define MPL_VG_CHECK_MEM_IS_DEFINED(addr_,len_)     VALGRIND_CHECK_READABLE((addr_),(len_))
 #    define MPL_VG_CHECK_MEM_IS_ADDRESSABLE(addr_,len_) VALGRIND_CHECK_WRITABLE((addr_),(len_))
 #  endif
-#  define MPL_VG_CREATE_BLOCK(addr_,len_,desc_)       VALGRIND_CREATE_BLOCK((addr_),(len_),(desc_))
+#  define MPL_VG_CREATE_BLOCK(addr_,len_,desc_)       ((void)VALGRIND_CREATE_BLOCK((addr_),(len_),(desc_)))
 #  define MPL_VG_RUNNING_ON_VALGRIND()                RUNNING_ON_VALGRIND
 #  define MPL_VG_PRINTF_BACKTRACE                     VALGRIND_PRINTF_BACKTRACE
 
