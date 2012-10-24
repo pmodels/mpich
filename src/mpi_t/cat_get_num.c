@@ -32,7 +32,8 @@ int MPIR_T_category_get_num_impl(int *num_cat)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    /* TODO implement this function */
+    /* we don't support any categories right now */
+    *num_cat = 0;
 
 fn_exit:
     return mpi_errno;
