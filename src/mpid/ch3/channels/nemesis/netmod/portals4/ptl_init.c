@@ -23,7 +23,6 @@ ptl_pt_index_t  MPIDI_nem_ptl_control_pt; /* portal for MPICH control messages *
 ptl_handle_eq_t MPIDI_nem_ptl_eq;
 ptl_handle_md_t MPIDI_nem_ptl_global_md;
 
-extern ptl_handle_md_t MPIDI_nem_ptl_global_md;
 static int ptl_init(MPIDI_PG_t *pg_p, int pg_rank, char **bc_val_p, int *val_max_sz_p);
 static int ptl_finalize(void);
 static int get_business_card(int my_rank, char **bc_val_p, int *val_max_sz_p);
@@ -83,8 +82,9 @@ static int ptl_init(MPIDI_PG_t *pg_p, int pg_rank, char **bc_val_p, int *val_max
 
     MPIDI_FUNC_ENTER(MPID_STATE_PTL_INIT);
 
-    /* first make sure that our private fields in the vc fit into the area provided  */
+    /* first make sure that our private fields in the vc and req fit into the area provided  */
     MPIU_Assert(sizeof(MPID_nem_ptl_vc_area) <= MPID_NEM_VC_NETMOD_AREA_LEN);
+    MPIU_Assert(sizeof(MPID_nem_ptl_req_area) <= MPID_NEM_REQ_NETMOD_AREA_LEN);
 
     /* Make sure our IOV is the same as portals4's IOV */
     MPIU_Assert(sizeof(ptl_iovec_t) == sizeof(MPID_IOV));

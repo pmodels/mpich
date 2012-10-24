@@ -10,7 +10,7 @@
 #define BUFLEN  (sizeof(MPIDI_CH3_Pkt_t) + PTL_MAX_EAGER)
 
 #define OVERFLOW_LENGTH (1024*1024)
-#define NUM_OVERFLOW_ME 5
+#define NUM_OVERFLOW_ME 50
 
 #if 0
 static char recvbuf[BUFLEN][NUMBUFS];
@@ -186,6 +186,8 @@ int MPID_nem_ptl_poll(int is_blocking_poll)
         case PTL_EVENT_REPLY:
         case PTL_EVENT_SEARCH: {
             MPID_Request * const req = event.user_ptr;
+            MPIU_DBG_MSG_P(CH3_CHANNEL, VERBOSE, "req = %p", req);
+            MPIU_DBG_MSG_P(CH3_CHANNEL, VERBOSE, "REQ_PTL(req)->event_handler = %p", REQ_PTL(req)->event_handler);
             mpi_errno = REQ_PTL(req)->event_handler(&event);
             if (mpi_errno) MPIU_ERR_POP(mpi_errno);
             break;
@@ -201,7 +203,7 @@ int MPID_nem_ptl_poll(int is_blocking_poll)
             /* ignore */
             break;
         default:
-            MPIDI_err_printf(FCNAME, "Received unexpected event type: %d", event.type);
+            MPIDI_err_printf(FCNAME, "Received unexpected event type: %d %s", event.type, MPID_nem_ptl_strevent(&event));
             MPIU_ERR_INTERNALANDJUMP(mpi_errno, "Unexpected event type");
         }
     }

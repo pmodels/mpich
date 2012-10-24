@@ -51,7 +51,7 @@ static int handler_recv_complete(const ptl_event_t *e)
 
     MPIDI_FUNC_ENTER(MPID_STATE_HANDLER_RECV_COMPLETE);
     
-    MPIU_Assert(e->type == PTL_EVENT_REPLY || e->type == PTL_EVENT_PUT);
+    MPIU_Assert(e->type == PTL_EVENT_REPLY || e->type == PTL_EVENT_PUT || e->type == PTL_EVENT_PUT_OVERFLOW);
     
     if (REQ_PTL(rreq)->md != PTL_INVALID_HANDLE) {
         ret = PtlMDRelease(REQ_PTL(rreq)->md);
@@ -156,7 +156,7 @@ static int handler_recv_dequeue_unpack_complete(const ptl_event_t *e)
 
     MPIDI_FUNC_ENTER(MPID_STATE_HANDLER_RECV_DEQUEUE_UNPACK_COMPLETE);
     
-    MPIU_Assert(e->type == PTL_EVENT_PUT);
+    MPIU_Assert(e->type == PTL_EVENT_PUT || e->type == PTL_EVENT_PUT_OVERFLOW);
 
     dequeue_req(e);
     mpi_errno = handler_recv_unpack_complete(e);

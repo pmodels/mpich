@@ -812,12 +812,17 @@ static int send_msg(ptl_hdr_data_t ssend_flag, struct MPIDI_VC *vc, const void *
         /* Small message.  Send all data eagerly */
         if (dt_contig) {
             REQ_PTL(sreq)->event_handler = handler_send_complete;
+            MPIU_DBG_MSG_P(CH3_CHANNEL, VERBOSE, "&REQ_PTL(sreq)->event_handler = %p", &(REQ_PTL(sreq)->event_handler));
             ret = PtlPut(MPIDI_nem_ptl_global_md, (ptl_size_t)buf, data_sz, PTL_ACK_REQ, vc_ptl->id, vc_ptl->pt,
                          NPTL_MATCH(tag, comm->context_id + context_offset, comm->rank), 0, sreq,
                          NPTL_HEADER(ssend_flag, 0, data_sz));
             MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlput", "**ptlput %s", MPID_nem_ptl_strerror(ret));
             DBG_MSG_PUT("global", data_sz, vc->pg_rank, NPTL_MATCH(tag, comm->context_id + context_offset, comm->rank), NPTL_HEADER(ssend_flag, 0, data_sz));
-            goto fn_exit;
+            MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE, "id.nid = %#x", vc_ptl->id.phys.nid);
+            MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE, "id.pid = %#x", vc_ptl->id.phys.pid);
+            MPIU_DBG_MSG_P(CH3_CHANNEL, VERBOSE, "sreq = %p", sreq);
+            MPIU_DBG_MSG_P(CH3_CHANNEL, VERBOSE, "REQ_PTL(sreq)->event_handler = %p", REQ_PTL(sreq)->event_handler);
+           goto fn_exit;
         }
         
         /* noncontig data */
