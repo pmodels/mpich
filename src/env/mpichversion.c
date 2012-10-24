@@ -5,6 +5,7 @@
  */
 
 #include "mpi.h"
+#include "mpiimpl.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -25,15 +26,6 @@
  * libraries, this will give the information about the currently installed
  * shared library.
  */
-
-extern const char MPIR_Version_string[];
-extern const char MPIR_Version_date[];
-extern const char MPIR_Version_configure[];
-extern const char MPIR_Version_device[];
-extern const char MPIR_Version_CC[];
-extern const char MPIR_Version_CXX[];
-extern const char MPIR_Version_F77[];
-extern const char MPIR_Version_FC[];
 
 typedef enum { Version_number=0, Date=1, 
 	       Patches=2, Configure_args=3, Device=4,

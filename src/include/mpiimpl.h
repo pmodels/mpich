@@ -4396,6 +4396,15 @@ static inline int MPIR_Request_complete_fastpath(MPI_Request *request, MPID_Requ
     return mpi_errno;
 }
 
+extern const char MPIR_Version_string[];
+extern const char MPIR_Version_date[];
+extern const char MPIR_Version_configure[];
+extern const char MPIR_Version_device[];
+extern const char MPIR_Version_CC[];
+extern const char MPIR_Version_CXX[];
+extern const char MPIR_Version_F77[];
+extern const char MPIR_Version_FC[];
+
 /* avoid conflicts in source files with old-style "char FCNAME[]" vars */
 #undef FUNCNAME
 #undef FCNAME

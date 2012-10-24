@@ -551,6 +551,7 @@ foreach $_ (@ARGV) {
                  'Group_translate_ranks-3' => 'in:fint2int_array:*v2',
                  'Group_translate_ranks-5' => 'out:fint2int_array:*v2',
     'Get_processor_name' => '1', 'Get_processor_name-1' => 'out:blankpad',
+    'Get_library_version' => '1', 'Get_library_version-1' => 'out:blankpad',
     'Error_string' => '2', 'Error_string-2' => 'out:blankpad',
     'Errhandler_free' => '1', 
                'Errhandler_free-1' => 'inout:handle::MPI_Errhandler', 

@@ -307,6 +307,7 @@ static const MPI_Datatype mpich_mpi_datatype_null MPICH_ATTR_TYPE_TAG_MUST_BE_NU
 
 /* These are only guesses; make sure you change them in mpif.h as well */
 #define MPI_MAX_PROCESSOR_NAME @MPI_MAX_PROCESSOR_NAME@
+#define MPI_MAX_LIBRARY_VERSION_STRING @MPI_MAX_LIBRARY_VERSION_STRING@
 #define MPI_MAX_ERROR_STRING   @MPI_MAX_ERROR_STRING@
 #define MPI_MAX_PORT_NAME      256
 #define MPI_MAX_OBJECT_NAME    128
@@ -924,6 +925,7 @@ int MPI_Cart_map(MPI_Comm, int, const int *, const int *, int *);
 int MPI_Graph_map(MPI_Comm, int, const int *, const int *, int *);
 int MPI_Get_processor_name(char *, int *);
 int MPI_Get_version(int *, int *);
+int MPI_Get_library_version(char *, int *);
 int MPI_Errhandler_create(MPI_Handler_function *, MPI_Errhandler *);
 int MPI_Errhandler_set(MPI_Comm, MPI_Errhandler);
 int MPI_Errhandler_get(MPI_Comm, MPI_Errhandler *);
@@ -1394,6 +1396,7 @@ int PMPI_Cart_map(MPI_Comm, int, const int *, const int *, int *);
 int PMPI_Graph_map(MPI_Comm, int, const int *, const int *, int *);
 int PMPI_Get_processor_name(char *, int *);
 int PMPI_Get_version(int *, int *);
+int PMPI_Get_library_version(char *, int *);
 int PMPI_Errhandler_create(MPI_Handler_function *, MPI_Errhandler *);
 int PMPI_Errhandler_set(MPI_Comm, MPI_Errhandler);
 int PMPI_Errhandler_get(MPI_Comm, MPI_Errhandler *);
