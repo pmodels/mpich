@@ -118,10 +118,8 @@ int MPI_T_pvar_get_info(int pvar_index, char *name, int *name_len, int *verbosit
     {
         MPID_BEGIN_ERROR_CHECKS
         {
-            MPIR_ERRTEST_ARGNULL(name_len, "name_len", mpi_errno);
             MPIR_ERRTEST_ARGNULL(verbosity, "verbosity", mpi_errno);
             MPIR_ERRTEST_ARGNULL(var_class, "var_class", mpi_errno);
-            MPIR_ERRTEST_ARGNULL(desc_len, "desc_len", mpi_errno);
             MPIR_ERRTEST_ARGNULL(binding, "binding", mpi_errno);
             MPIR_ERRTEST_ARGNULL(readonly, "readonly", mpi_errno);
             MPIR_ERRTEST_ARGNULL(continuous, "continuous", mpi_errno);
