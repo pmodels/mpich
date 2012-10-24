@@ -19,6 +19,6 @@ noinst_PROGRAMS = \
     exitst3       \
     initstat      \
     version       \
+    library_version \
     timeout       \
     finalized
-
