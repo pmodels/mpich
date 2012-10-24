@@ -113,12 +113,12 @@ inline int MPID_nem_gm_recv()
 	    DO_PAPI (PAPI_reset (PAPI_EventSet));
 
             pkt = (volatile MPID_nem_pkt_t *)gm_ntohp(e->recv.message);
-            msg_len = pkt->mpich2.datalen;
-            MPIU_Assert(msg_len ==  gm_ntoh_u32(e->recv.length) - MPID_NEM_MPICH2_HEAD_LEN);
-            MPIDI_PG_Get_vc_set_active (MPIDI_Process.my_pg, pkt->mpich2.source, &vc);
+            msg_len = pkt->mpich.datalen;
+            MPIU_Assert(msg_len ==  gm_ntoh_u32(e->recv.length) - MPID_NEM_MPICH_HEAD_LEN);
+            MPIDI_PG_Get_vc_set_active (MPIDI_Process.my_pg, pkt->mpich.source, &vc);
 
-            MPIU_DBG_MSG_FMT(CH3_CHANNEL, VERBOSE, (MPIU_DBG_FDEST, "Recvd pkt src=%d len=%d\n", pkt->mpich2.source, msg_len));
-            mpi_errno = MPID_nem_handle_pkt(vc, (char *)pkt->mpich2.payload, msg_len);
+            MPIU_DBG_MSG_FMT(CH3_CHANNEL, VERBOSE, (MPIU_DBG_FDEST, "Recvd pkt src=%d len=%d\n", pkt->mpich.source, msg_len));
+            mpi_errno = MPID_nem_handle_pkt(vc, (char *)pkt->mpich.payload, msg_len);
             if (mpi_errno) MPIU_ERR_POP(mpi_errno);
             
             RECVBUF_S_PUSH(PKT_TO_RECVBUF((volatile MPID_nem_pkt_t *)gm_ntohp(e->recv.buffer)));
@@ -129,12 +129,12 @@ inline int MPID_nem_gm_recv()
 	case GM_PEER_RECV_EVENT:
 	case GM_RECV_EVENT:
             pkt = (volatile MPID_nem_pkt_t *)gm_ntohp(e->recv.buffer);
-            msg_len = pkt->mpich2.datalen;
-            MPIU_Assert(msg_len ==  gm_ntoh_u32(e->recv.length) - MPID_NEM_MPICH2_HEAD_LEN);
-            MPIDI_PG_Get_vc_set_active (MPIDI_Process.my_pg, pkt->mpich2.source, &vc);
+            msg_len = pkt->mpich.datalen;
+            MPIU_Assert(msg_len ==  gm_ntoh_u32(e->recv.length) - MPID_NEM_MPICH_HEAD_LEN);
+            MPIDI_PG_Get_vc_set_active (MPIDI_Process.my_pg, pkt->mpich.source, &vc);
             
-            MPIU_DBG_MSG_FMT(CH3_CHANNEL, VERBOSE, (MPIU_DBG_FDEST, "Recvd pkt src=%d len=%d\n", pkt->mpich2.source, msg_len));
-            mpi_errno = MPID_nem_handle_pkt(vc, (char *)pkt->mpich2.payload, msg_len);
+            MPIU_DBG_MSG_FMT(CH3_CHANNEL, VERBOSE, (MPIU_DBG_FDEST, "Recvd pkt src=%d len=%d\n", pkt->mpich.source, msg_len));
+            mpi_errno = MPID_nem_handle_pkt(vc, (char *)pkt->mpich.payload, msg_len);
             if (mpi_errno) MPIU_ERR_POP(mpi_errno);
             
             RECVBUF_S_PUSH(PKT_TO_RECVBUF(pkt));

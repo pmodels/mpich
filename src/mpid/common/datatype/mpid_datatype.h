@@ -648,7 +648,7 @@ void MPID_Dataloop_dup(DLOOP_Dataloop *old_loop,
 		       DLOOP_Dataloop **new_loop_p);
 void MPID_Dataloop_free(struct MPID_Dataloop **dataloop);
 
-/* Segment functions specific to MPICH2 */
+/* Segment functions specific to MPICH */
 void MPID_Segment_pack_vector(struct DLOOP_Segment *segp,
 			      DLOOP_Offset first,
 			      DLOOP_Offset *lastp,

@@ -54,7 +54,7 @@ CLEANFILES = mtv.so
 # if configured with wrong prefix, use:
 #     make prefix=new_install_dir install
 # Note the conditional test for files in PYTHON_SOURCE; this is to allow
-# us to install Zeroconf if present (it is not part of the MPICH2 release
+# us to install Zeroconf if present (it is not part of the MPICH release
 # in order to avoid Copyright problems).
 install-exec-local:
 if PRIMARY_PM_MPD
@@ -99,7 +99,7 @@ if PRIMARY_PM_MPD
 else !PRIMARY_PM_MPD
 ## This is the former body of the "install-alt" target
 ## The purpose of this "target" is to allow users to use mpiexec.mpd to run
-## MPICH2 programs using the MPD process manager when they configure MPICH2
+## MPICH programs using the MPD process manager when they configure MPICH
 ## to build multiple process managers.
 	@echo "MPD alternate PM installation"
 	@echo "copying python files/links into " $(DESTDIR)${bindir}
@@ -171,20 +171,20 @@ uninstall-local:
 	-rm -f $(DESTDIR)${bindir}/mpirun.py
 
 ## DJG: these two rules seem to be unused...
-mpich2-mpdroot: mpich2-mpdroot.o
-	$(C_LINK) -o mpich2-mpdroot mpich2-mpdroot.o $(LIBS)
-	rm -f mpich2-mpdroot.o
+mpich-mpdroot: mpich-mpdroot.o
+	$(C_LINK) -o mpich-mpdroot mpich-mpdroot.o $(LIBS)
+	rm -f mpich-mpdroot.o
 
-mpich2-mpdroot.o: ${srcdir}/mpdroot.c ${srcdir}/mpdroot.h mpdconf.h
-	${INSTALL} -m 644 ${srcdir}/mpdroot.c mpich2-mpdroot.c
-	${C_COMPILE} -DSYSCONFDIR=\"$(sysconfdir)\" -c mpich2-mpdroot.c
-	rm -f mpich2-mpdroot.c
+mpich-mpdroot.o: ${srcdir}/mpdroot.c ${srcdir}/mpdroot.h mpdconf.h
+	${INSTALL} -m 644 ${srcdir}/mpdroot.c mpich-mpdroot.c
+	${C_COMPILE} -DSYSCONFDIR=\"$(sysconfdir)\" -c mpich-mpdroot.c
+	rm -f mpich-mpdroot.c
 
-# Empty documentations targets (MPICH2 wants this target)
+# Empty documentations targets (MPICH wants this target)
 htmldoc:
 latexdoc:
 
-# make MPICH2 happy
+# make MPICH happy
 coverage:
 
 # EXPERIMENTAL TOTALVIEW STUFF

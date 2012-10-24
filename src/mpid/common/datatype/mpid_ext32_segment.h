@@ -54,7 +54,7 @@
 #error This code assumes that __BYTE_ORDER and __BIG_ENDIAN are defined
 #endif
 /* FIXME: "BLENDIAN" is a non-conforming name - it could conflict with some
-   other definition in a non-mpich2 header file */
+   other definition in a non-mpich header file */
 #if ((defined(_BIG_ENDIAN) && !defined(ntohl)) || (__BYTE_ORDER == __BIG_ENDIAN))
 #define BLENDIAN 0 /* detected host arch byte order is big endian */
 #else

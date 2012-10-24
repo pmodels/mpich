@@ -1,7 +1,7 @@
 #! @PERL@ -w
 # -*- Mode: perl; -*-
 #
-# Test the commands provided as part of MPICH2
+# Test the commands provided as part of MPICH
 #
 # mpicc, mpicxx - handle -Dname="foo bar" and -Dname='"foo bar"'
 # (not done yet - see mpich1 test/command/runtests)

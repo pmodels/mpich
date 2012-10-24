@@ -49,7 +49,7 @@
  * time to specify which dataloop to use.
  *
  * Note: The flag to MPID_Segment_init() was originally simply "hetero"
- * and was a boolean value (0 meaning homogeneous). Some MPICH2 code
+ * and was a boolean value (0 meaning homogeneous). Some MPICH code
  * may still rely on HOMOGENEOUS being "0" and HETEROGENEOUS being "1".
  */
 #define DLOOP_DATALOOP_HOMOGENEOUS   0

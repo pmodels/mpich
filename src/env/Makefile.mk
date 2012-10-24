@@ -9,15 +9,15 @@ bin_SCRIPTS +=           \
     src/env/mpicc        \
     src/env/parkill
 
-bin_PROGRAMS += src/env/mpich2version
+bin_PROGRAMS += src/env/mpichversion
 
-src_env_mpich2version_SOURCES = src/env/mpich2version.c
-src_env_mpich2version_LDADD = lib/lib@MPILIBNAME@.la
+src_env_mpichversion_SOURCES = src/env/mpichversion.c
+src_env_mpichversion_LDADD = lib/lib@MPILIBNAME@.la
 if BUILD_PROFILING_LIB
-src_env_mpich2version_LDADD += lib/lib@PMPILIBNAME@.la
+src_env_mpichversion_LDADD += lib/lib@PMPILIBNAME@.la
 endif BUILD_PROFILING_LIB
 
-src_env_mpich2version_LDFLAGS = $(mpich_libtool_static_flag)
+src_env_mpichversion_LDFLAGS = $(mpich_libtool_static_flag)
 
 sysconf_DATA += src/env/mpicc.conf
 

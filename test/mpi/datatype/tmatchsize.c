@@ -132,7 +132,7 @@ int main( int argc, char *argv[] )
     }
 #endif
 
-    /* COMPLEX is a FORTRAN type.  The MPICH2 Type_match_size attempts
+    /* COMPLEX is a FORTRAN type.  The MPICH Type_match_size attempts
        to give a valid datatype, but if Fortran is not available,
        MPI_COMPLEX and MPI_DOUBLE_COMPLEX are not supported.  
        Allow this case by testing for MPI_DATATYPE_NULL */

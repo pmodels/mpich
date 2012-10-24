@@ -25,7 +25,7 @@ int main( int argc, char *argv[] )
     MPI_Recv(imessage, 33, MPI_CHAR, 0, 0, MPI_COMM_WORLD, &recvstatus);
     MPI_Wait(&request, &sendstatus);
     
-    /* In versions of MPICH2 through 1.0.7, this call would segfault on
+    /* In versions of MPICH through 1.0.7, this call would segfault on
        some platforms (at least on BlueGene).  On others, it would fail
        to report an error.  
        It should return an error (it is invalid to use a different type 

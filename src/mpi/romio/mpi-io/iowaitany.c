@@ -50,7 +50,7 @@ int MPIO_Waitany(int count, MPIO_Request requests[], int *index,
     }
     if (i == count) {
 	*index = MPI_UNDEFINED;
-#ifdef MPICH2
+#ifdef MPICH
 	/* need to set empty status */
 	if (status != MPI_STATUS_IGNORE) {
 	    status->MPI_SOURCE = MPI_ANY_SOURCE;

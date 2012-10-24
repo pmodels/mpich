@@ -383,8 +383,8 @@ static void DLOOP_Dataloop_create_named(MPI_Datatype type,
      * note: not dealing with MPI_2INT because size == extent
      *       in all cases for that type.
      *
-     * note: MPICH2 always precreates these, so we will never call
-     *       Dataloop_create_pairtype() from here in the MPICH2
+     * note: MPICH always precreates these, so we will never call
+     *       Dataloop_create_pairtype() from here in the MPICH
      *       case.
      */
     if (type == MPI_FLOAT_INT || type == MPI_DOUBLE_INT ||

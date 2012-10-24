@@ -15,7 +15,7 @@
 #include "mpi.h"
 #include "mpitest.h"
 
-#if !defined(USE_STRICT_MPI) && defined(MPICH2)
+#if !defined(USE_STRICT_MPI) && defined(MPICH)
 
 int MPI_Barrier(MPI_Comm comm)
 {

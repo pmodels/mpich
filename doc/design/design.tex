@@ -2,7 +2,7 @@
 \usepackage{graphics}
 \usepackage[dvipdfm]{hyperref}
 %
-% This is the new (September 2005) MPICH2 design document.  The plan is
+% This is the new (September 2005) MPICH design document.  The plan is
 % to make this available both as a PDF document and split on the web in
 % an easy to read fashion.  We can use latex2html to tohtml to provide a 
 % simple version of this, and that may be enough.  However, to retain the
@@ -18,7 +18,7 @@
 
 \markright{MPICH Design Document}
 
-\title{MPICH2 Design Document}
+\title{MPICH Design Document}
 \author{William D. Gropp and Rajeev Thakur}
 \maketitle
 
@@ -36,10 +36,10 @@
 \pagenumbering{arabic}
 \pagestyle{headings}
 
-\part{MPICH2 organization for users}
+\part{MPICH organization for users}
 
 \chapter{Overview}
-     <<up here, explain that MPICH2 is a framework for MPI implementation with many possible choices, including specialized communication devices and interfaces to process managers, not ch3+mpd.  Duplicate this discussion in the top-level entry for developers>>
+     <<up here, explain that MPICH is a framework for MPI implementation with many possible choices, including specialized communication devices and interfaces to process managers, not ch3+mpd.  Duplicate this discussion in the top-level entry for developers>>
 
 \chapter{Communication Devices}
 
@@ -57,12 +57,12 @@
 \section{Buglist archives}
 
 
-\part{MPICH2 organization for developers and hackers}
+\part{MPICH organization for developers and hackers}
 
 
     <<each section (as appropriate) contains a rationale for the choices and a brief discussion of alternatives and why they were not chosen>>
 
-\chapter{Goals of MPICH2}
+\chapter{Goals of MPICH}
 
 
 \section{Principles}
@@ -218,14 +218,14 @@ special args used to allow singleton init.
 
           Components still evolving (a placeholder for things that we want to do)
 
-\chapter{Working with MPICH2 itself}
-          <<for people that edit MPICH2 rather than use the component interface>>
+\chapter{Working with MPICH itself}
+          <<for people that edit MPICH rather than use the component interface>>
           Coding standards
           Keeping configure clean
           Keeping MPICH modular
           
 
-\section{Parameters within the MPICH2 code}
+\section{Parameters within the MPICH code}
 
    The purpose of this part is to enable the configure, compile, and
    run-time control of parameters in the collective implementation.
@@ -260,7 +260,7 @@ special args used to allow singleton init.
 \item Environment variable on the process with rank 0 in MPI\_COMM\_WORLD.
 \item Value is user-specified parameter file (e.g., ~/.mpichrc)
 \item Value in site-specified parameter file (e.g.,
-      /usr/local/mpich2/.mpichrc)
+      /usr/local/mpich/.mpichrc)
 \item Compile-time value set at configure time (e.g.,
       --enable-collective-config=file) 
 \item Compile-time value set within the collective code (the
@@ -458,7 +458,7 @@ automate the collection of registration information from the source code.
 %%        b) Environment variable on rank-0 communicator 
 %%        c) Value is user-specified parameter file (e.g., ~/.mpichrc) 
 %%        d) Value in site-specified parameter file (e.g., 
-%%        /usr/local/mpich2/.mpichrc) 
+%%        /usr/local/mpich/.mpichrc) 
 %%        e) Compile-time value set at configure time (e.g., 
 %%        --enable-collective-config=file) 
 %%        f) Compile-time value set within the collective code (the 

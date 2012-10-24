@@ -20,7 +20,7 @@
 
 /* 
  * Additional tests for lock contention.  These are designed to exercise
- * some of the optimizations within MPICH2, but all are valid MPI programs.
+ * some of the optimizations within MPICH, but all are valid MPI programs.
  * Tests structure includes
  *    lock local (must happen at this time since application can use load
  *                store after the lock)

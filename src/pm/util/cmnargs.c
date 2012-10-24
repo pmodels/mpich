@@ -185,7 +185,7 @@ int MPIE_Args( int argc, char *argv[], ProcessUniverse *mypUniv,
 		mpiexec_usage( "Missing argument to -configfile" );
 	    optionCmdline = 1;
 	} 
-/* Here begins the MPICH2 mpiexec extension for singleton init */	
+/* Here begins the MPICH mpiexec extension for singleton init */	
  	else if ( strncmp( argv[i], "-pmi_args", 8 ) == 0) {
 	    if (i+4 < argc ) {
 		mypUniv->fromSingleton   = 1;
@@ -199,7 +199,7 @@ int MPIE_Args( int argc, char *argv[], ProcessUniverse *mypUniv,
 		mpiexec_usage( "Missing argument to -pmi_args" );
 	    optionArgs = 1;
 	}
-/* Here begin the MPICH2 mpiexec common extensions for 
+/* Here begin the MPICH mpiexec common extensions for 
     -usize n   - Universe size
     -l         - label stdout/err
     -maxtime n - set a timelimit of n seconds
@@ -250,7 +250,7 @@ int MPIE_Args( int argc, char *argv[], ProcessUniverse *mypUniv,
 			   channame );
 	    MPIE_Putenv( mypUniv->worlds, envstring );
 	}
-/* End of the MPICH2 mpiexec common extentions */
+/* End of the MPICH mpiexec common extentions */
 
 	else if (argv[i][0] != '-') {
 	    exename = argv[i];

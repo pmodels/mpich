@@ -14,7 +14,7 @@
 #  include <inttypes.h>
 #endif
 
-/* Likely/Unlikely macros borrowed from MPICH2:
+/* Likely/Unlikely macros borrowed from MPICH:
  */
 
 /* These likely/unlikely macros provide static branch prediction hints to the

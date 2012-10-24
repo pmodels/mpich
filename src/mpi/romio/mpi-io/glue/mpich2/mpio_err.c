@@ -10,9 +10,9 @@
 #include "mpioimpl.h"
 #include "adio_extern.h"
 
-/* MPICH2 error handling implementation */
+/* MPICH error handling implementation */
 /* FIXME: These external prototypes should be included from 
-   mpich2/src/include/mpiext.h */
+   mpich/src/include/mpiext.h */
 int MPIR_Err_create_code_valist(int, int, const char [], int, int, 
 				const char [], const char [], va_list );
 int MPIR_Err_is_fatal(int);
@@ -72,10 +72,10 @@ int MPIO_Err_return_file(MPI_File mpi_fh, int error_code)
 	e = fh->err_handler;
     }
 
-    /* Actually, e is just the value provide by the MPICH2 routines
+    /* Actually, e is just the value provide by the MPICH routines
        file_set_errhandler.  This is actually a *pointer* to the
        errhandler structure.  We don't know that, so we ask
-       the MPICH2 code to translate this object into an error handler.
+       the MPICH code to translate this object into an error handler.
        kind = 0: errors are fatal
        kind = 1: errors return
        kind = 2: errors call function
@@ -111,7 +111,7 @@ int MPIO_Err_return_file(MPI_File mpi_fh, int error_code)
 
 int MPIO_Err_return_comm(MPI_Comm mpi_comm, int error_code)
 {
-    /* note: MPI calls inside the MPICH2 implementation are prefixed
+    /* note: MPI calls inside the MPICH implementation are prefixed
      * with an "N", indicating a nested call.
      */
     MPI_Comm_call_errhandler(mpi_comm, error_code);

@@ -12,19 +12,19 @@
 #define FNAME_TEMPLATE "/tmp/SHAR_TMPXXXXXX"
 
 #undef FUNCNAME
-#define FUNCNAME MPID_nem_mpich2_alloc_win
+#define FUNCNAME MPID_nem_mpich_alloc_win
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 int
-MPID_nem_mpich2_alloc_win (void **buf, int len, MPID_nem_mpich2_win_t **win)
+MPID_nem_mpich_alloc_win (void **buf, int len, MPID_nem_mpich_win_t **win)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIU_CHKPMEM_DECL(1);
-    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_MPICH2_ALLOC_WIN);
+    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_MPICH_ALLOC_WIN);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_MPICH2_ALLOC_WIN);
+    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_MPICH_ALLOC_WIN);
 
-    MPIU_CHKPMEM_MALLOC (*win, MPID_nem_mpich2_win_t *, sizeof (MPID_nem_mpich2_win_t), mpi_errno, "rma win object");
+    MPIU_CHKPMEM_MALLOC (*win, MPID_nem_mpich_win_t *, sizeof (MPID_nem_mpich_win_t), mpi_errno, "rma win object");
 
     mpi_errno = MPID_nem_allocate_shared_memory ((char **)buf, len, &(*win)->handle);
     if (mpi_errno) MPIU_ERR_POP (mpi_errno);
@@ -36,7 +36,7 @@ MPID_nem_mpich2_alloc_win (void **buf, int len, MPID_nem_mpich2_win_t **win)
 
     MPIU_CHKPMEM_COMMIT();
  fn_exit:
-    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_MPICH2_ALLOC_WIN);
+    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_MPICH_ALLOC_WIN);
     return mpi_errno;
  fn_fail:
     MPIU_CHKPMEM_REAP();
@@ -44,16 +44,16 @@ MPID_nem_mpich2_alloc_win (void **buf, int len, MPID_nem_mpich2_win_t **win)
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPID_nem_mpich2_free_win
+#define FUNCNAME MPID_nem_mpich_free_win
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 int
-MPID_nem_mpich2_free_win (MPID_nem_mpich2_win_t *win)
+MPID_nem_mpich_free_win (MPID_nem_mpich_win_t *win)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_MPICH2_FREE_WIN);
+    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_MPICH_FREE_WIN);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_MPICH2_FREE_WIN);
+    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_MPICH_FREE_WIN);
 
     MPIU_Assert (win->proc == MPID_nem_mem_region.rank);
 
@@ -67,23 +67,23 @@ MPID_nem_mpich2_free_win (MPID_nem_mpich2_win_t *win)
     MPIU_Free (win);
 
  fn_exit:
-    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_MPICH2_FREE_WIN);
+    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_MPICH_FREE_WIN);
     return mpi_errno;
  fn_fail:
     goto fn_exit;
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPID_nem_mpich2_attach_win
+#define FUNCNAME MPID_nem_mpich_attach_win
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 int
-MPID_nem_mpich2_attach_win (void **buf, MPID_nem_mpich2_win_t *remote_win)
+MPID_nem_mpich_attach_win (void **buf, MPID_nem_mpich_win_t *remote_win)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_MPICH2_ATTACH_WIN);
+    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_MPICH_ATTACH_WIN);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_MPICH2_ATTACH_WIN);
+    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_MPICH_ATTACH_WIN);
 
     if (remote_win->proc == MPID_nem_mem_region.rank)
     {
@@ -99,23 +99,23 @@ MPID_nem_mpich2_attach_win (void **buf, MPID_nem_mpich2_win_t *remote_win)
     remote_win->local_address = *buf;
 
  fn_exit:
-    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_MPICH2_ATTACH_WIN);
+    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_MPICH_ATTACH_WIN);
     return mpi_errno;
  fn_fail:
     goto fn_exit;
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPID_nem_mpich2_detach_win
+#define FUNCNAME MPID_nem_mpich_detach_win
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 int
-MPID_nem_mpich2_detach_win (MPID_nem_mpich2_win_t *remote_win)
+MPID_nem_mpich_detach_win (MPID_nem_mpich_win_t *remote_win)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_MPICH2_DETACH_WIN);
+    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_MPICH_DETACH_WIN);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_MPICH2_DETACH_WIN);
+    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_MPICH_DETACH_WIN);
 
     if (remote_win->proc != MPID_nem_mem_region.rank)
     {
@@ -125,24 +125,24 @@ MPID_nem_mpich2_detach_win (MPID_nem_mpich2_win_t *remote_win)
     }
 
  fn_exit:
-    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_MPICH2_DETACH_WIN);
+    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_MPICH_DETACH_WIN);
     return mpi_errno;
  fn_fail:
     goto fn_exit;
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPID_nem_mpich2_win_put
+#define FUNCNAME MPID_nem_mpich_win_put
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 int
-MPID_nem_mpich2_win_put (void *s_buf, void *d_buf, int len, MPID_nem_mpich2_win_t *remote_win)
+MPID_nem_mpich_win_put (void *s_buf, void *d_buf, int len, MPID_nem_mpich_win_t *remote_win)
 {
     int mpi_errno = MPI_SUCCESS;
     char *_d_buf = d_buf;
-    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_MPICH2_WIN_PUT);
+    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_MPICH_WIN_PUT);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_MPICH2_WIN_PUT);
+    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_MPICH_WIN_PUT);
 
     _d_buf += (char *)remote_win->local_address - (char *)remote_win->home_address;
 
@@ -152,25 +152,25 @@ MPID_nem_mpich2_win_put (void *s_buf, void *d_buf, int len, MPID_nem_mpich2_win_
     MPIU_Memcpy (_d_buf, s_buf, len);
 
  fn_exit:
-    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_MPICH2_WIN_PUT);
+    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_MPICH_WIN_PUT);
     return mpi_errno;
  fn_fail:
     goto fn_exit;
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPID_nem_mpich2_win_putv
+#define FUNCNAME MPID_nem_mpich_win_putv
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 int
-MPID_nem_mpich2_win_putv (struct iovec **s_iov, int *s_niov, struct iovec **d_iov, int *d_niov, MPID_nem_mpich2_win_t *remote_win)
+MPID_nem_mpich_win_putv (struct iovec **s_iov, int *s_niov, struct iovec **d_iov, int *d_niov, MPID_nem_mpich_win_t *remote_win)
 {
     int mpi_errno = MPI_SUCCESS;
     size_t diff;
     int len;
-    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_MPICH2_WIN_PUTV);
+    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_MPICH_WIN_PUTV);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_MPICH2_WIN_PUTV);
+    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_MPICH_WIN_PUTV);
 
     diff = (char *)remote_win->local_address - (char *)remote_win->home_address;
 
@@ -222,24 +222,24 @@ MPID_nem_mpich2_win_putv (struct iovec **s_iov, int *s_niov, struct iovec **d_io
     }
 
  fn_exit:
-    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_MPICH2_WIN_PUTV);
+    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_MPICH_WIN_PUTV);
     return mpi_errno;
  fn_fail:
     goto fn_exit;
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPID_nem_mpich2_win_get
+#define FUNCNAME MPID_nem_mpich_win_get
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 int
-MPID_nem_mpich2_win_get (void *s_buf, void *d_buf, int len, MPID_nem_mpich2_win_t *remote_win)
+MPID_nem_mpich_win_get (void *s_buf, void *d_buf, int len, MPID_nem_mpich_win_t *remote_win)
 {
     int mpi_errno = MPI_SUCCESS;
     char *_s_buf = s_buf;
-    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_MPICH2_WIN_GET);
+    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_MPICH_WIN_GET);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_MPICH2_WIN_GET);
+    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_MPICH_WIN_GET);
 
     _s_buf += (char *)remote_win->local_address - (char *)remote_win->home_address;
 
@@ -249,25 +249,25 @@ MPID_nem_mpich2_win_get (void *s_buf, void *d_buf, int len, MPID_nem_mpich2_win_
     MPIU_Memcpy (d_buf, _s_buf, len);
 
  fn_exit:
-    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_MPICH2_WIN_GET);
+    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_MPICH_WIN_GET);
     return mpi_errno;
  fn_fail:
     goto fn_exit;
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPID_nem_mpich2_win_getv
+#define FUNCNAME MPID_nem_mpich_win_getv
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 int
-MPID_nem_mpich2_win_getv (struct iovec **s_iov, int *s_niov, struct iovec **d_iov, int *d_niov, MPID_nem_mpich2_win_t *remote_win)
+MPID_nem_mpich_win_getv (struct iovec **s_iov, int *s_niov, struct iovec **d_iov, int *d_niov, MPID_nem_mpich_win_t *remote_win)
 {
     int mpi_errno = MPI_SUCCESS;
     size_t diff;
     int len;
-    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_MPICH2_WIN_GETV);
+    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_MPICH_WIN_GETV);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_MPICH2_WIN_GETV);
+    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_MPICH_WIN_GETV);
 
     diff = (char *)remote_win->local_address - (char *)remote_win->home_address;
 
@@ -319,7 +319,7 @@ MPID_nem_mpich2_win_getv (struct iovec **s_iov, int *s_niov, struct iovec **d_io
     }
 
  fn_exit:
-    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_MPICH2_WIN_GETV);
+    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_MPICH_WIN_GETV);
     return mpi_errno;
  fn_fail:
     goto fn_exit;
@@ -332,20 +332,20 @@ MPID_nem_mpich2_win_getv (struct iovec **s_iov, int *s_niov, struct iovec **d_io
 #define WIN_LOCAL_ADDR_KEY "localaddr"
 
 #undef FUNCNAME
-#define FUNCNAME MPID_nem_mpich2_serialize_win
+#define FUNCNAME MPID_nem_mpich_serialize_win
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 int
-MPID_nem_mpich2_serialize_win (void *buf, int buf_len, MPID_nem_mpich2_win_t *win, int *len)
+MPID_nem_mpich_serialize_win (void *buf, int buf_len, MPID_nem_mpich_win_t *win, int *len)
 {
     int mpi_errno = MPI_SUCCESS;
     int str_errno;
     int bl = buf_len;
     char *b = (char *)buf;
     int handle_len;
-    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_MPICH2_SERIALIZE_WIN);
+    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_MPICH_SERIALIZE_WIN);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_MPICH2_SERIALIZE_WIN);
+    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_MPICH_SERIALIZE_WIN);
 
     handle_len = strlen (win->handle);
     str_errno = MPIU_Str_add_int_arg (&b, &bl, WIN_HANLEN_KEY, handle_len);
@@ -367,18 +367,18 @@ MPID_nem_mpich2_serialize_win (void *buf, int buf_len, MPID_nem_mpich2_win_t *wi
     *len = buf_len - bl;
 
  fn_exit:
-    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_MPICH2_SERIALIZE_WIN);
+    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_MPICH_SERIALIZE_WIN);
     return mpi_errno;
  fn_fail:
     goto fn_exit;
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPID_nem_mpich2_serialize_win
+#define FUNCNAME MPID_nem_mpich_serialize_win
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 int
-MPID_nem_mpich2_deserialize_win (void *buf, int buf_len, MPID_nem_mpich2_win_t **win)
+MPID_nem_mpich_deserialize_win (void *buf, int buf_len, MPID_nem_mpich_win_t **win)
 {
     int mpi_errno = MPI_SUCCESS;
     int str_errno;
@@ -386,11 +386,11 @@ MPID_nem_mpich2_deserialize_win (void *buf, int buf_len, MPID_nem_mpich2_win_t *
     char *b = (char *)buf;
     int handle_len;
     MPIU_CHKPMEM_DECL(2);
-    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_MPICH2_DESERIALIZE_WIN);
+    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_MPICH_DESERIALIZE_WIN);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_MPICH2_DESERIALIZE_WIN);
+    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_MPICH_DESERIALIZE_WIN);
 
-    MPIU_CHKPMEM_MALLOC (*win, MPID_nem_mpich2_win_t *, sizeof (MPID_nem_mpich2_win_t), mpi_errno, "win object");
+    MPIU_CHKPMEM_MALLOC (*win, MPID_nem_mpich_win_t *, sizeof (MPID_nem_mpich_win_t), mpi_errno, "win object");
 
     str_errno = MPIU_Str_get_int_arg (b, WIN_HANLEN_KEY, &handle_len);
     MPIU_ERR_CHKANDJUMP (str_errno == MPIU_STR_NOMEM, mpi_errno, MPI_ERR_OTHER, "**nomem");
@@ -414,7 +414,7 @@ MPID_nem_mpich2_deserialize_win (void *buf, int buf_len, MPID_nem_mpich2_win_t *
 
     MPIU_CHKPMEM_COMMIT();
  fn_exit:
-    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_MPICH2_DESERIALIZE_WIN);
+    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_MPICH_DESERIALIZE_WIN);
     return mpi_errno;
  fn_fail:
     MPIU_CHKPMEM_REAP();
@@ -422,58 +422,58 @@ MPID_nem_mpich2_deserialize_win (void *buf, int buf_len, MPID_nem_mpich2_win_t *
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPID_nem_mpich2_register_memory
+#define FUNCNAME MPID_nem_mpich_register_memory
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 int
-MPID_nem_mpich2_register_memory (void *buf, int len)
+MPID_nem_mpich_register_memory (void *buf, int len)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_MPICH2_REGISTER_MEMORY);
+    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_MPICH_REGISTER_MEMORY);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_MPICH2_REGISTER_MEMORY);
+    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_MPICH_REGISTER_MEMORY);
 
 /*     if (MPID_NEM_NET_MODULE == MPID_NEM_GM_MODULE) */
 /*     { */
 /* 	/\*return MPID_nem_gm_module_register_mem (buf, len);*\/ */
 /*     } */
 
-    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_MPICH2_REGISTER_MEMORY);
+    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_MPICH_REGISTER_MEMORY);
     return mpi_errno;
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPID_nem_mpich2_deregister_memory
+#define FUNCNAME MPID_nem_mpich_deregister_memory
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 int
-MPID_nem_mpich2_deregister_memory (void *buf, int len)
+MPID_nem_mpich_deregister_memory (void *buf, int len)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_MPICH2_DEREGISTER_MEMORY);
+    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_MPICH_DEREGISTER_MEMORY);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_MPICH2_DEREGISTER_MEMORY);
+    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_MPICH_DEREGISTER_MEMORY);
 
 /*     if (MPID_NEM_NET_MODULE == MPID_NEM_GM_MODULE) */
 /*     { */
 /* 	/\*return MPID_nem_gm_module_deregister_mem (buf, len);*\/ */
 /*     } */
 
-    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_MPICH2_DEREGISTER_MEMORY);
+    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_MPICH_DEREGISTER_MEMORY);
     return mpi_errno;
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPID_nem_mpich2_put
+#define FUNCNAME MPID_nem_mpich_put
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 int
-MPID_nem_mpich2_put (void *s_buf, void *d_buf, int len, int proc, int *completion_ctr)
+MPID_nem_mpich_put (void *s_buf, void *d_buf, int len, int proc, int *completion_ctr)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_MPICH2_PUT);
+    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_MPICH_PUT);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_MPICH2_PUT);
+    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_MPICH_PUT);
 
     if (MPID_NEM_IS_LOCAL (proc))
     {
@@ -495,25 +495,25 @@ MPID_nem_mpich2_put (void *s_buf, void *d_buf, int len, int proc, int *completio
       */
     }
  fn_exit:
-    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_MPICH2_PUT);
+    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_MPICH_PUT);
     return mpi_errno;
  fn_fail:
     goto fn_exit;
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPID_nem_mpich2_putv
+#define FUNCNAME MPID_nem_mpich_putv
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 int
-MPID_nem_mpich2_putv (struct iovec **s_iov, int *s_niov, struct iovec **d_iov, int *d_niov, int proc,
+MPID_nem_mpich_putv (struct iovec **s_iov, int *s_niov, struct iovec **d_iov, int *d_niov, int proc,
 		   int *completion_ctr)
 {
     int mpi_errno = MPI_SUCCESS;
     /* int len;*/
-    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_MPICH2_PUTV);
+    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_MPICH_PUTV);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_MPICH2_PUTV);
+    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_MPICH_PUTV);
 
     if (MPID_NEM_IS_LOCAL (proc))
     {
@@ -572,23 +572,23 @@ MPID_nem_mpich2_putv (struct iovec **s_iov, int *s_niov, struct iovec **d_iov, i
       */
     }
  fn_exit:
-    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_MPICH2_PUTV);
+    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_MPICH_PUTV);
     return mpi_errno;
  fn_fail:
     goto fn_exit;
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPID_nem_mpich2_get
+#define FUNCNAME MPID_nem_mpich_get
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 int
-MPID_nem_mpich2_get (void *s_buf, void *d_buf, int len, int proc, int *completion_ctr)
+MPID_nem_mpich_get (void *s_buf, void *d_buf, int len, int proc, int *completion_ctr)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_MPICH2_GET);
+    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_MPICH_GET);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_MPICH2_GET);
+    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_MPICH_GET);
 
     if (MPID_NEM_IS_LOCAL (proc))
     {
@@ -610,25 +610,25 @@ MPID_nem_mpich2_get (void *s_buf, void *d_buf, int len, int proc, int *completio
       */
     }
  fn_exit:
-    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_MPICH2_GET);
+    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_MPICH_GET);
     return mpi_errno;
  fn_fail:
     goto fn_exit;
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPID_nem_mpich2_getv
+#define FUNCNAME MPID_nem_mpich_getv
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 int
-MPID_nem_mpich2_getv (struct iovec **s_iov, int *s_niov, struct iovec **d_iov, int *d_niov, int proc,
+MPID_nem_mpich_getv (struct iovec **s_iov, int *s_niov, struct iovec **d_iov, int *d_niov, int proc,
 		   int *completion_ctr)
 {
     int mpi_errno = MPI_SUCCESS;
     /* int len; */
-    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_MPICH2_GETV);
+    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_MPICH_GETV);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_MPICH2_GETV);
+    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_MPICH_GETV);
 
     if (MPID_NEM_IS_LOCAL (proc))
     {
@@ -687,7 +687,7 @@ MPID_nem_mpich2_getv (struct iovec **s_iov, int *s_niov, struct iovec **d_iov, i
       */
     }
  fn_exit:
-    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_MPICH2_GETV);
+    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_MPICH_GETV);
     return mpi_errno;
  fn_fail:
     goto fn_exit;

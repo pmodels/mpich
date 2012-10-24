@@ -13,7 +13,7 @@
 /* This is a temporary #ifdef to control whether we test this functionality.  A
  * configure-test or similar would be better.  Eventually the MPI-3 standard
  * will be released and this can be gated on a MPI_VERSION check */
-#if !defined(USE_STRICT_MPI) && defined(MPICH2)
+#if !defined(USE_STRICT_MPI) && defined(MPICH)
 #define TEST_MPROBE_ROUTINES 1
 #endif
 
@@ -361,7 +361,7 @@ int main(int argc, char **argv)
      * program */
 
     /* simple test to ensure that c2f/f2c routines are present (initially missed
-     * in MPICH2 impl) */
+     * in MPICH impl) */
     {
         MPI_Fint f_handle = 0xdeadbeef;
         f_handle = MPI_Message_c2f(MPI_MESSAGE_NULL);

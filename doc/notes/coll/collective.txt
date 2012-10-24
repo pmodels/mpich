@@ -1,7 +1,7 @@
 MPI-2 : Communication
 
 /***** Point to point discussion that lead to collective communication ******/
-toonen/Projects/MPICH2-Design/pt2pt.txt
+toonen/Projects/MPICH-Design/pt2pt.txt
 Brian's notes from this file:
 
 - David suggested that we might be able to use the xfer interface for

@@ -47,9 +47,9 @@ static void initLogFile(void)
    is the same for any MPI implementation, for a given debugger 
    (a more precise name might be mpi_tv_interface.h) */
 #include "mpi_interface.h"
-/* mpich2_dll_defs.h defines the structures for a particular MPI 
-   implementation (MPICH2 in this case) */
-#include "mpich2_dll_defs.h"
+/* mpich_dll_defs.h defines the structures for a particular MPI 
+   implementation (MPICH in this case) */
+#include "mpich_dll_defs.h"
 
 /* style: allow:strncpy:1 sig:0 */
 
@@ -167,7 +167,7 @@ int mqs_version_compatibility ( void )
 
 char *mqs_version_string ( void )
 {
-    return (char *)"MPICH message queue support for MPICH2 " MPICH2_VERSION " compiled on " __DATE__;
+    return (char *)"MPICH message queue support for MPICH " MPICH_VERSION " compiled on " __DATE__;
 } 
 
 /* Allow the debugger to discover the size of an address type */
@@ -188,9 +188,9 @@ int mqs_dll_taddr_width (void)
 
    The function mqs_image_has_queues initializes the image structure.  
    Much of the information that is saved in the image structure is information
-   about the relative offset to data within an MPICH2 data structure.
+   about the relative offset to data within an MPICH data structure.
    These offsets allow the debugger to retrieve information about the
-   MPICH2 structures.  The debugger routine dbgr_find_type is used to 
+   MPICH structures.  The debugger routine dbgr_find_type is used to 
    find information on an named type, and dbgr_field_offset is used 
    to get the offset of a named field within a type.
 
@@ -271,7 +271,7 @@ int mqs_image_has_queues (mqs_image *image, char **message)
 
     /* Find the various global variables and structure definitions 
        that describe the communicator and message queue structures for
-       the MPICH2 implementation */
+       the MPICH implementation */
 
     /* First, the communicator information.  This is in two parts:
        MPIR_All_Communicators - a structure containing the head of the
@@ -580,7 +580,7 @@ int mqs_setup_operation_iterator (mqs_process *proc, int op)
 }
 
 /* Fetch the next operation on the current communicator, from the 
-   selected queue. Since MPICH2 does not (normally) use separate queues 
+   selected queue. Since MPICH does not (normally) use separate queues 
    for each communicator, we must compare the queue items with the
    current communicator.
 */
@@ -963,7 +963,7 @@ static int rebuild_communicator_list (mqs_process *proc)
 
 	char *name = (char *)"--unnamed--";
 	char namebuffer[64];
-	/* In MPICH2, the name is preallocated and of size MPI_MAX_OBJECT_NAME */
+	/* In MPICH, the name is preallocated and of size MPI_MAX_OBJECT_NAME */
 	if (dbgr_fetch_data( proc, comm_base+i_info->comm_name_offs,64,
 			     namebuffer) == mqs_ok && namebuffer[0] != 0) {
 	    name = namebuffer;

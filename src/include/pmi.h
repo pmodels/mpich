@@ -11,7 +11,7 @@
 #error This header file defines the PMI v1 API, but PMI2 was selected
 #endif
 
-/* prototypes for the PMI interface in MPICH2 */
+/* prototypes for the PMI interface in MPICH */
 
 #if defined(__cplusplus)
 extern "C" {

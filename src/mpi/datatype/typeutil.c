@@ -291,7 +291,7 @@ int MPIR_Datatype_builtin_fillin(void)
     return mpi_errno;
 }
 
-/* This will eventually be removed once ROMIO knows more about MPICH2 */
+/* This will eventually be removed once ROMIO knows more about MPICH */
 void MPIR_Datatype_iscontig(MPI_Datatype datatype, int *flag)
 {
     MPID_Datatype *datatype_ptr;

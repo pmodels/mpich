@@ -11,7 +11,7 @@ AC_CONFIG_HEADER(pick a headef file name)
 dnl
 dnl Set the directory that contains support scripts such as install-sh and
 dnl config.guess
-AC_CONFIG_AUX_DIR(refer to the confdb at the top of MPICH2)
+AC_CONFIG_AUX_DIR(refer to the confdb at the top of MPICH)
 dnl
 dnl Use AC_ARG_ENABLE to look for --enable-feature and AC_ARG_WITH to look for
 dnl --with-capability

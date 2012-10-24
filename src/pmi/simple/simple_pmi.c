@@ -13,7 +13,7 @@
  * reporting error codes to which messages are attached.  
  *
  * In v2, we should require a PMI client interface to use MPI error codes
- * to provide better integration with MPICH2.  
+ * to provide better integration with MPICH.  
  */
 /***************************************************************************/
 
@@ -416,7 +416,7 @@ int PMI_KVS_Get( const char kvsname[], const char key[], char value[],
     /* Connect to the PM if we haven't already.  This is needed in case
        we're doing an MPI_Comm_join or MPI_Comm_connect/accept from
        the singleton init case.  This test is here because, in the way in 
-       which MPICH2 uses PMI, this is where the test needs to be. */
+       which MPICH uses PMI, this is where the test needs to be. */
     if (PMIi_InitIfSingleton() != 0) return -1;
 
     rc = MPIU_Snprintf( buf, PMIU_MAXLINE, "cmd=get kvsname=%s key=%s\n", 

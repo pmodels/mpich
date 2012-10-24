@@ -44,7 +44,7 @@ int MPID_Comm_spawn_multiple(int count, char *array_of_commands[],
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_COMM_SPAWN_MULTIPLE);
 
     /* We allow an empty implementation of this function to 
-       simplify building MPICH2 on systems that have difficulty
+       simplify building MPICH on systems that have difficulty
        supporing process creation */
 #   ifndef MPIDI_CH3_HAS_NO_DYNAMIC_PROCESS
     mpi_errno = MPIDI_Comm_spawn_multiple(count, array_of_commands, 

@@ -5,13 +5,13 @@
 Major Changes in this version:
 ------------------------------
 * Fixed performance problems with the darray and subarray datatypes
-  when using MPICH2.
+  when using MPICH.
 
-* Better support for building against existing MPICH and MPICH2 versions.
+* Better support for building against existing MPICH and MPICH versions.
 
   When building against an existing MPICH installation, use the
-  "--with-mpi=mpich" option to ROMIO configure.  For MPICH2, use the
-  "--with-mpi=mpich2" option.  These will allow ROMIO to take advantage
+  "--with-mpi=mpich" option to ROMIO configure.  For MPICH, use the
+  "--with-mpi=mpich" option.  These will allow ROMIO to take advantage
   of internal features of these implementations.
 
 * Deprecation of SFS, HFS, and PIOFS implementations.

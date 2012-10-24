@@ -2,7 +2,7 @@
 # -*- Mode: perl; -*-
 # @configure_input@
 #
-# Configure and build mpich2 with some of the options
+# Configure and build mpich with some of the options
 #
 # Set default values
 $projects_dir = "/home/MPI/testing/tsuites";
@@ -11,7 +11,7 @@ $altprojects_dir = "/homes/MPI/testing/tsuites";
 if (! -d $projects_dir && -d $altprojects_dir ) {
     $projects_dir = $altprojects_dir;
 }
-$srcdir  = "/home/MPI/testing/mpich2/mpich2";
+$srcdir  = "/home/MPI/testing/mpich/mpich";
 $logname = $ENV{"LOGNAME"};
 $tmpdir = "/sandbox/$logname";
 # rundir is the directory in which to run the tests.
@@ -261,7 +261,7 @@ if ($instdir eq "") {
 }
 # Make the builddir compatible with the installation directory
 if ($builddir eq "") {
-    $builddir = "$tmpdir/cb/mpich2";
+    $builddir = "$tmpdir/cb/mpich";
 }
 
 # ---------------------------------------------------------------------------
@@ -422,7 +422,7 @@ sub RunTest {
 # Deleted this test because it is no longer a design goal for MPICH
 # that it have no nonconforming global symbols
 
-# Deleted this test because it is no longer a design goal for MPICH2
+# Deleted this test because it is no longer a design goal for MPICH
 # to have a minimum memory and routine footprint.
 
 		# Install the libraries
@@ -586,8 +586,8 @@ sub RunTestSuites {
 	elsif ($testname eq "mpicxx" && $has_cxx) {
 	    &RunCxxTestSuite;
 	}
-	elsif ($testname eq "mpich2") {
-	    &RunMPICH2TestSuite;
+	elsif ($testname eq "mpich") {
+	    &RunMPICHTestSuite;
 	}
 	else {
 	    print $OUTFD "checkbuilds: Unrecognized test $testname\n";
@@ -675,7 +675,7 @@ sub RunMpichTestSuite {
 	$config[$nargs++] = "-fc=$fcname -I$instdir/include -L$instdir/lib";
     }
     # Add $config[$nargs++] = "--enable-coverage"; 
-    # if we build mpich2 with the coverage switch.
+    # if we build mpich with the coverage switch.
 
     if (defined($ENV{"MAKE"})) {
 	$makepgm = $ENV{"MAKE"};
@@ -878,7 +878,7 @@ sub RunIntelTestSuite {
 
     # Switch to using the checked-in version of the Intel test
     $config[$nargs++] = "$projects_dir/IntelMPITEST/configure";
-    $config[$nargs++] = "--with-mpich2=$instdir";
+    $config[$nargs++] = "--with-mpich=$instdir";
     # The Absoft Fortran compiler fails some tests if MAX_RANKS
     # (used to dimension some arrays) is too large.  Since the 
     # default tests never use more than 6 processes, setting a 
@@ -917,11 +917,11 @@ sub RunIntelTestSuite {
 	    if (-s "Test/test.results") { 
 		&CopyFileToOutput( "Test/test.results" );
 	    }
-	    if (! -s "lib/libmpitestf_mpich2.a" && 
+	    if (! -s "lib/libmpitestf_mpich.a" && 
 		-s "lib/makeflib.log") {
 		&CopyFileToOutput( "lib/makeflib.log" );
 	    }
-	    if (! -s "lib/libmpitest_mpich2.a" && 
+	    if (! -s "lib/libmpitest_mpich.a" && 
 		-s "lib/makeclib.log") {
 		&CopyFileToOutput( "lib/makeclib.log" );
 	    }
@@ -943,26 +943,26 @@ sub RunIntelTestSuite {
     chdir $cwd;
 }
 
-sub RunMPICH2TestSuite {
+sub RunMPICHTestSuite {
     my $nargs = 0;
     my $makepgm;
 
     $cwd = `pwd`;
     chomp $cwd;
 
-    # This must match the directory into which mpich2 was built for
+    # This must match the directory into which mpich was built for
     # us to use the configure there.
-    if ($mpich2_test_dir eq "") {
-	$mpich2_test_dir = "$builddir/test/mpi";
+    if ($mpich_test_dir eq "") {
+	$mpich_test_dir = "$builddir/test/mpi";
     }
 
-    $rc = chdir $mpich2_test_dir;
+    $rc = chdir $mpich_test_dir;
     if (!$rc) {
-	#print STDERR "Cannot change to $mpich2_test_dir\n";
+	#print STDERR "Cannot change to $mpich_test_dir\n";
 	return;
     }
 
-    # MPICH2 tests are already built, so no configure step required
+    # MPICH tests are already built, so no configure step required
     %saveENV = %ENV;
     #
     # Make sure that there a no leftovers
@@ -981,7 +981,7 @@ sub RunMPICH2TestSuite {
     if ($hasDemon) {
 	&$StartDemon;
     }
-    # The MPICH2 test suite has a program for running the tests
+    # The MPICH test suite has a program for running the tests
     $rc = &RunProgram( "./runtests -mpiexec=$instdir/bin/mpiexec -srcdir=$srcdir/test/mpi -tests=testlist -xmlfile=summary.xml" );
     $test_status = $rc;
     if ($run_status == 0 && $rc != 0) { $run_status = $rc; }
@@ -1191,7 +1191,7 @@ if ($outfile ne "") {
     if ($is_xml) {
 	print $OUTFD "<?xml version='1.0' ?>\n";
 	print $OUTFD "<?xml-stylesheet href=\"build.xsl\" type=\"text/xsl\" ?>\n";
-	print $OUTFD "<MPICH2BUILD>\n";
+	print $OUTFD "<MPICHBUILD>\n";
     }
 }
 else {
@@ -1214,7 +1214,7 @@ for ($test_count = 0;
     &RunTest;
 }
 if ($is_xml) {
-    print $OUTFD "</MPICH2BUILD>\n";
+    print $OUTFD "</MPICHBUILD>\n";
 }
 close $OUTFD;
 

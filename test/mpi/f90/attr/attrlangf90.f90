@@ -83,7 +83,7 @@
 ! the proper bytes are used in the value).
 !
 ! Use the same keyval for attributes used in both C and Fortran (both
-! modes).  This found an error in MPICH2, where the type of the
+! modes).  This found an error in MPICH, where the type of the
 ! attribute (e.g., pointer, integer, or address-sized integer) needs
 ! to be saved.
 !

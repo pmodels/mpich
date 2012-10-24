@@ -734,7 +734,7 @@ void ADIOI_Flatten(MPI_Datatype datatype, ADIOI_Flatlist_node *flat,
 int ADIOI_Count_contiguous_blocks(MPI_Datatype datatype, int *curr_index)
 {
 #ifdef HAVE_MPIR_TYPE_GET_CONTIG_BLOCKS
-    /* MPICH2 can get us this value without all the envelope/contents calls */
+    /* MPICH can get us this value without all the envelope/contents calls */
     int blks;
     MPIR_Type_get_contig_blocks(datatype, &blks);
     *curr_index = blks;

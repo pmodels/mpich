@@ -24,18 +24,18 @@ MPID_nem_cell_ptr_t MPID_nem_prefetched_cell = 0;
 unsigned short *MPID_nem_recv_seqno = 0;
 
 #undef FUNCNAME
-#define FUNCNAME MPID_nem_mpich2_init
+#define FUNCNAME MPID_nem_mpich_init
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 int
-MPID_nem_mpich2_init(void)
+MPID_nem_mpich_init(void)
 {
     int mpi_errno = MPI_SUCCESS;
     int i;
     MPIU_CHKPMEM_DECL (2);
-    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_MPICH2_INIT);
+    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_MPICH_INIT);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_MPICH2_INIT);
+    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_MPICH_INIT);
 
     MPID_nem_prefetched_cell = NULL;
 
@@ -55,7 +55,7 @@ MPID_nem_mpich2_init(void)
         MPID_nem_fboxq_elem_list[i].prev = NULL;
         MPID_nem_fboxq_elem_list[i].next = NULL;
         MPID_nem_fboxq_elem_list[i].grank = MPID_nem_mem_region.local_procs[i];
-        MPID_nem_fboxq_elem_list[i].fbox = &MPID_nem_mem_region.mailboxes.in[i]->mpich2;
+        MPID_nem_fboxq_elem_list[i].fbox = &MPID_nem_mem_region.mailboxes.in[i]->mpich;
     }
 	
     MPID_nem_fboxq_head = NULL;
@@ -66,7 +66,7 @@ MPID_nem_mpich2_init(void)
 
     MPIU_CHKPMEM_COMMIT();
 fn_exit:
-    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_MPICH2_INIT);
+    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_MPICH_INIT);
     return mpi_errno;
 fn_fail:
     /* --BEGIN ERROR HANDLING-- */

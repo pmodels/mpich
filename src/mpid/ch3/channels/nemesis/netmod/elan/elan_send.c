@@ -19,7 +19,7 @@ MPID_nem_elan_send (MPIDI_VC_t *vc, MPID_nem_cell_ptr_t cell, int datalen)
    MPID_nem_elan_cell_ptr_t elan_event_cell;
    int                      mpi_errno  = MPI_SUCCESS;
    
-   MPIU_Assert (datalen <= MPID_NEM_MPICH2_DATA_LEN);
+   MPIU_Assert (datalen <= MPID_NEM_MPICH_DATA_LEN);
    if ( MPID_nem_elan_event_queue_empty(MPID_nem_module_elan_pending_event_queue))
      {
 	ELAN_EVENT     *elan_event_ptr = NULL; 

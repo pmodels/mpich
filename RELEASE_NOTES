@@ -52,7 +52,7 @@
    reasons.  A workaround is to use GNU Make instead.  See the following
    ticket for more information:
 
-     http://trac.mcs.anl.gov/projects/mpich2/ticket/1122
+     https://trac.mcs.anl.gov/projects/mpich2/ticket/1122
 
  * Build fails with Intel compiler suite 13.0, because of weak symbol
    issues in the compiler.  A workaround is to disable weak symbol

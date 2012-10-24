@@ -706,7 +706,7 @@ int MTestGetDatatypes( MTestDatatype *sendtype, MTestDatatype *recvtype,
 	    MTestError( "Out of memory in type init\n" );
 	}
 	/* Make the sizes larger (4 ints) to help push the total
-	   size to over 256k in some cases, as the MPICH2 code as of
+	   size to over 256k in some cases, as the MPICH code as of
 	   10/1/06 used large internal buffers for packing non-contiguous
 	   messages */
 	for (i=0; i<sendtype->nelm; i++) {
@@ -785,7 +785,7 @@ int MTestGetDatatypes( MTestDatatype *sendtype, MTestDatatype *recvtype,
 	    MTestError( "Out of memory in type recv init\n" );
 	}
 	/* Make the sizes larger (4 ints) to help push the total
-	   size to over 256k in some cases, as the MPICH2 code as of
+	   size to over 256k in some cases, as the MPICH code as of
 	   10/1/06 used large internal buffers for packing non-contiguous
 	   messages */
 	/* Note that there are gaps in the indexed type */

@@ -113,7 +113,7 @@ case "$enable_sharedlibs" in
     C_LINK_SHL='${CC} -dynamiclib -undefined suppress -single_module -flat_namespace'
     CC_SHL='${CC} -fPIC'
     # No way in osx to specify the location of the shared libraries at link
-    # time (see the code in createshlib in mpich2/src/util)
+    # time (see the code in createshlib in mpich/src/util)
     # As of 10.5, -Wl,-rpath,dirname should work .  The dirname 
     # must be a single directory, not a colon-separated list (use multiple
     # -Wl,-rpath,path for each of the paths in the list).  However, os x
@@ -410,8 +410,8 @@ dnl PAC_COMPILER_SHLIB_FLAGS(compiler-var,output-file)
 dnl
 dnl Uses confdb/config.rpath to determine important linking flags and
 dnl information.  This is mainly intended to support the compiler wrapper
-dnl scripts in MPICH2 ("mpicc" and friends) which cannot directly use libtool to
-dnl handle linking.  MPICH2's compiler wrappers attempt to link executables with
+dnl scripts in MPICH ("mpicc" and friends) which cannot directly use libtool to
+dnl handle linking.  MPICH's compiler wrappers attempt to link executables with
 dnl an rpath by default.  The resulting variable assignment statements will be
 dnl placed into "output-file", which is then suitable for AC_SUBST_FILE or
 dnl sourcing in a shell script (including configure itself).

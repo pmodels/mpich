@@ -28,7 +28,7 @@
 #include <errno.h>
 #include "simple_pmiutil2.h"
 
-/* Use the MPI error message routines from mpich2/src/include */
+/* Use the MPI error message routines from mpich/src/include */
 #include "mpibase.h"
 
 #define MAXVALLEN 1024

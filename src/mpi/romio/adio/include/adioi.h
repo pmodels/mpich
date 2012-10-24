@@ -115,7 +115,7 @@ typedef struct ADIOI_Fl_node {
 #endif
 typedef struct ADIOI_AIO_req_str {
 	/* very wierd: if this MPI_Request is a pointer, some C++ compilers
-	 * will clobber it when the MPICH2 C++ bindings are used */
+	 * will clobber it when the MPICH C++ bindings are used */
 	MPI_Request req;
 	MPI_Offset nbytes;
 	/* should probably make this a union */
@@ -814,7 +814,7 @@ int  ADIOI_MPE_iwrite_a;
 int  ADIOI_MPE_iwrite_b;
 #endif
 
-#ifdef ROMIO_INSIDE_MPICH2
+#ifdef ROMIO_INSIDE_MPICH
 /* Assert that this MPI_Aint value can be cast to a ptr value without problem.*/
 /* Basic idea is the value should be unchanged after casting 
    (no loss of (meaningful) high order bytes in 8 byte MPI_Aint 

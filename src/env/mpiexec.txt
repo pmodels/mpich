@@ -29,7 +29,7 @@ The MPI standard specifies the following arguments and their meanings\:
    mpiexec input, but with ":" replaced with a newline.  That is,
    the configfile contains lines with -soft, -n etc.
 
-   Additional arguments that are specific to the MPICH2 implementation
+   Additional arguments that are specific to the MPICH implementation
    are discussed below.
 
    Note that not all of these parameters are meaningful for all 
@@ -46,9 +46,9 @@ The MPI standard specifies the following arguments and their meanings\:
 .ve
 
          
-   MPICH2-Specific Arguments:
+   MPICH-Specific Arguments:
    
-   Many of the implementations of process managers in MPICH2 support the
+   Many of the implementations of process managers in MPICH support the
    following arguments to 'mpiexec'\:
 
 + -np <num> - A synonym for the standard '-n' argument

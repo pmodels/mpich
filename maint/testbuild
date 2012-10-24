@@ -3,11 +3,11 @@
 # This is a simple script that makes sure that checkbuilds can be 
 # created and then runs it.
 # The cb suffix is for "check build"
-# Set defaults for the MPICH2 home
-srcdir=/home/MPI/testing/mpich2/mpich2
+# Set defaults for the MPICH home
+srcdir=/home/MPI/testing/mpich/mpich
 if [ ! -d $srcdir ] ; then
-    if [ -d /homes/MPI/testing/mpich2/mpich2 ] ; then
-        srcdir=/homes/MPI/testing/mpich2/mpich2
+    if [ -d /homes/MPI/testing/mpich/mpich ] ; then
+        srcdir=/homes/MPI/testing/mpich/mpich
     else
         # We'll check for it later, after the args
         srcdir=
@@ -33,7 +33,7 @@ fi
 date=`date "+%Y-%m-%d"`
 # default outfile
 outfile=testbuild.xml
-tests="mpich:mpicxx:intel:testmpio:mpich2"
+tests="mpich:mpicxx:intel:testmpio:mpich"
 #
 # Option options to checkbuild
 other_opts=""
@@ -72,7 +72,7 @@ for arg in "$@" ; do
     esac
 done
 
-if [ -z "$rundir" ] ; then rundir=$tmpdir/cb/mpich2 ; fi
+if [ -z "$rundir" ] ; then rundir=$tmpdir/cb/mpich ; fi
 if [ -z "$mpichtestdir" ] ; then mpichtestdir=$tmpdir/cb/mpitest ; fi
 if [ -z "$mpicxxtestdir" ] ; then mpicxxtestdir=$tmpdir/cb/mpicxxtest ; fi
 if [ -z "$inteltestdir" ] ; then inteltestdir=$tmpdir/cb/MPITEST ; fi
@@ -82,7 +82,7 @@ if [ -z "$tmpdir" ] ; then tmpdir=/sandbox/$LOGNAME ; fi
 # Construct the full outfile name from the dir and file
 outfile="$outdir/$outfile"
 if [ ! -d "$srcdir" ] ; then
-    echo "Could not find MPICH2 source dir $srcdir"
+    echo "Could not find MPICH source dir $srcdir"
     exit 1
 fi
 if [ ! -d $rundir ] ; then 
@@ -108,7 +108,7 @@ fi
 if [ ! -d $inteltestdir ] ; then
     mkdir $inteltestdir
 fi
-# We don't need to build the mpich2testdir because it is part of the mpich2
+# We don't need to build the mpichtestdir because it is part of the mpich
 # distribution
 # Build the current version of checkbuilds
 (cd $rundir/maint && $srcdir/maint/configure 2>&1 >/dev/null)

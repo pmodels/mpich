@@ -395,7 +395,7 @@ $specialReturnType{"intra-Dup"} = "Intracomm";
 #
 # Here are the MPI-2 methods
 # WARNING: These are incomplete.  They primarily define only the
-# MPI-2 routines implemented by MPICH2.
+# MPI-2 routines implemented by MPICH.
 %class_mpi2base = ( 'Alloc_mem' => '3;void *:2',
 		    'Free_mem' => '0', 
 		    'Open_port' => '1',
@@ -1317,7 +1317,7 @@ sub printDefineChecks {
 #ifdef __GNUC__ 
 # if __GNUC__ >= \@GNUCXX_VERSION\@ 
 #  if __GNUC_MINOR__ > 2 && \@GNUCXX_MINORVERSION\@ == 2 
-#  error 'Please use the same version of GCC and g++ for compiling MPICH2 and user MPI programs'
+#  error 'Please use the same version of GCC and g++ for compiling MPICH and user MPI programs'
 #  endif
 # endif     
 #endif\n";

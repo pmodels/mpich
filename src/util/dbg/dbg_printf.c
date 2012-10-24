@@ -95,7 +95,7 @@ int MPIU_dbg_init(int rank)
 	   than once */
 	if (MPIU_dbg_fp == NULL)
 	{
-	    MPIU_Snprintf(fn, 128, "mpich2-dbg-%d.log", dbg_rank);
+	    MPIU_Snprintf(fn, 128, "mpich-dbg-%d.log", dbg_rank);
 	    MPIU_dbg_fp = fopen(fn, "w");
 	    setvbuf(MPIU_dbg_fp, NULL, _IONBF, 0);
 	}

@@ -11,8 +11,8 @@
  * user would pack manually; in that case, there is a consistency check.
  */
 
-#ifdef MPICH2
-/* MPICH2 (as of 6/2012) packs the native bytes */
+#ifdef MPICH
+/* MPICH (as of 6/2012) packs the native bytes */
 #define PACK_IS_NATIVE
 #endif
 
@@ -55,9 +55,9 @@ int main( int argc, char **argv )
 				   &itype1 );
     MPI_Type_commit( &itype1 );
     
-#if defined(MPICH2) && defined(PRINT_DATATYPE_INTERNALS)
+#if defined(MPICH) && defined(PRINT_DATATYPE_INTERNALS)
     /* To use MPIDU_Datatype_debug to print the datatype internals,
-       you must configure MPICH2 with --enable-g=log */
+       you must configure MPICH with --enable-g=log */
     if (verbose) {
 	printf( "Block index datatype:\n" );
 	MPIDU_Datatype_debug( itype1, 10 );

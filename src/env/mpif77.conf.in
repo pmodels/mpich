@@ -21,7 +21,7 @@ F77CPP="@F77CPP@"
 FFLAGS="@WRAPPER_FFLAGS@"
 LDFLAGS="@WRAPPER_LDFLAGS@"
 LIBS="@WRAPPER_LIBS@"
-MPICH2_VERSION="@MPICH2_VERSION@"
+MPICH_VERSION="@MPICH_VERSION@"
 #
 # ----------------------------------------------------------------------------
 # We also keep track of properties of the compilation system.  These

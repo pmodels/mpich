@@ -280,7 +280,7 @@ $ucoutfile_prefix = uc( $outfile_prefix );
 if ( -s "../../mpi/romio/include/mpio.h.in" && $build_io) { 
 #    %skipBlocks = ( 'HAVE_MPI_DARRAY_SUBARRAY' => 1, 
 #		   'HAVE_MPI_INFO' => 1,
-#		    'MPICH2' => 1 );
+#		    'MPICH' => 1 );
     &ReadInterface( "../../mpi/romio/include/mpio.h.in", $routine_prefix,
 	$routine_pattern, "mpi_routines" );
 #    %skipBlocks = ();
@@ -372,7 +372,7 @@ foreach $routine (keys(%mpi_routines)) {
 # Some Fortran 90 compilers permit REAL*8; for some systems, this is
 # preferable to DOUBLE PRECISION (in cases where the user is permitted
 # to change the size of these basic types(!)).  This script must produce
-# a standard-conforming file.  The top-level configure (in mpich2/configure)
+# a standard-conforming file.  The top-level configure (in mpich/configure)
 # will replace DOUBLE PRECISION with REAL*8 if the Fortran compiler 
 # supports REAL*8.
 if ($is_MPI) {
@@ -981,7 +981,7 @@ sub createModSteps {
     # Attempt to deal with Fortran module files in a mostly sane way.  Quick
     # overview for the less Fortran literate:
     # 
-    # MPICH2 has four Fortran modules: mpi, mpi_constants, mpi_sizeofs, and
+    # MPICH has four Fortran modules: mpi, mpi_constants, mpi_sizeofs, and
     # mpi_base.  Each module is produced as a side effect of compiling the
     # corresponding .f90 file into a .lo.  The .lo is produced by libtool and is
     # actually just a text file pointing at the one or two object files that

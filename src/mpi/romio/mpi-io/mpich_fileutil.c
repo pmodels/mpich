@@ -6,7 +6,7 @@
 #include "mpioimpl.h"
 #include "adio_extern.h"
 
-#ifdef MPICH2
+#ifdef MPICH
 
 /* Forward ref for the routine to extract and set the error handler
    in a ROMIO File structure.  FIXME: These should be imported from a common
@@ -18,8 +18,8 @@ void MPIR_Get_file_error_routine( MPI_Errhandler,
 				  void (**)(MPI_File *, int *, ...), 
 				  int * );
 
-/* These next two routines are used to allow MPICH2 to access/set the
-   error handers in the MPI_File structure until MPICH2 knows about the
+/* These next two routines are used to allow MPICH to access/set the
+   error handers in the MPI_File structure until MPICH knows about the
    file structure, and to handle the errhandler structure, which 
    includes a reference count.  Not currently used. */
 int MPIR_ROMIO_Set_file_errhand( MPI_File file_ptr, MPI_Errhandler e )
@@ -57,4 +57,4 @@ int MPIR_ROMIO_Get_file_errhand( MPI_File file_ptr, MPI_Errhandler *e )
     return 0;
 }
 
-#endif /* MPICH2 */
+#endif /* MPICH */

@@ -18,11 +18,11 @@ void MPID_nem_dbg_dump_cell (volatile struct MPID_nem_cell *cell)
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_DBG_DUMP_CELL);
 
-    MPIU_DBG_MSG_D (ALL, TERSE, "  src = %6d", cell->pkt.mpich2.source);
-    MPIU_DBG_MSG_D (ALL, TERSE, "  dst = %6d", cell->pkt.mpich2.dest);
-    MPIU_DBG_MSG_D (ALL, TERSE, "  len = %6d", cell->pkt.mpich2.datalen);
-    MPIU_DBG_MSG_D (ALL, TERSE, "  sqn = %6d", cell->pkt.mpich2.seqno);
-    MPIU_DBG_MSG_D (ALL, TERSE, "  typ = %6d", cell->pkt.mpich2.type);
+    MPIU_DBG_MSG_D (ALL, TERSE, "  src = %6d", cell->pkt.mpich.source);
+    MPIU_DBG_MSG_D (ALL, TERSE, "  dst = %6d", cell->pkt.mpich.dest);
+    MPIU_DBG_MSG_D (ALL, TERSE, "  len = %6d", cell->pkt.mpich.datalen);
+    MPIU_DBG_MSG_D (ALL, TERSE, "  sqn = %6d", cell->pkt.mpich.seqno);
+    MPIU_DBG_MSG_D (ALL, TERSE, "  typ = %6d", cell->pkt.mpich.type);
 
     MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_DBG_DUMP_CELL);
 }

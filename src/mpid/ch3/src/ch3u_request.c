@@ -651,7 +651,7 @@ int MPIDI_CH3U_Request_unpack_uebuf(MPID_Request * rreq)
 
 /* 
  * Export the function to set a request as completed for use by
- * the generalized request functions in mpich2/src/pt2pt/greq_complete.c
+ * the generalized request functions in mpich/src/pt2pt/greq_complete.c
  */
 void MPID_Request_set_completed( MPID_Request *req )
 {

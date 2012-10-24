@@ -53,7 +53,7 @@ int MPIO_Testall(int count, MPIO_Request requests[], int *flag,
 	if (err) goto fn_exit;
       }
       else {
-#ifdef MPICH2
+#ifdef MPICH
 	  /* need to set empty status */
 	  if (statuses != MPI_STATUSES_IGNORE) {
 	      statuses[i].MPI_SOURCE = MPI_ANY_SOURCE;

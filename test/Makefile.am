@@ -10,7 +10,7 @@
 ##SUBDIRS = mpi mpid util basic commands .
 SUBDIRS = mpi commands .
 
-# Test both the MPI routines and the MPICH2 command scripts
+# Test both the MPI routines and the MPICH command scripts
 testing:
 	(NOXMLCLOSE=YES && export NOXMLCLOSE && cd mpi && $(MAKE) testing)
 	(XMLFILE=../mpi/summary.xml && XMLCONTINUE=YES && \

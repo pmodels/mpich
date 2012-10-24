@@ -19,8 +19,8 @@
 # make coverage
 # maint/getcoverage src/mpi src/util > coverage.txt
 #
-# The script in mpich2-tests/getcoverage will perform all of these steps 
-# (this script is not yet included with the MPICH2 distribution)
+# The script in mpich-tests/getcoverage will perform all of these steps 
+# (this script is not yet included with the MPICH distribution)
 #
 # As an option, create HTML versions of the files with the uncovered code
 # highlighted with a different background color (e.g., pale red).  These
@@ -83,7 +83,7 @@ $lineLeader4 = '^\s*[0-9-]+:\s*\d+:\s*[\{\}]?\s*';
 #    OPTIONALINIT - Code that provides for lazy initialization of 
 #         datastructures, particularly function tables.  
 #    HETEROGENEOUS - Code that provides for heterogenous data representations
-#         Note that MPICH2 current does not support such code, and it is
+#         Note that MPICH current does not support such code, and it is
 #         more correct for any such experimental code to be ifdef'ed out
 #         the the #ifdef MPID_HAS_HETERO ... #endif
 #  Code that is executed only with erroneous input (e.g., user errors) or
@@ -107,7 +107,7 @@ for (@ARGV) {
 	# Create the coverage in default web pages for the device
 	# named as an argument (e.g., maint/getcoverage -webpages=ch3:sock)
 	my $device = $1;
-	my $weblocbase = "@abs_mpich2srcdir@/www/coverage";
+	my $weblocbase = "@abs_mpichsrcdir@/www/coverage";
 	my $webloc     = $weblocbase . "/$device";
 	$annoteSrcDir = $webloc;
 	$annoteFiles  = 1;
@@ -904,8 +904,8 @@ sub OutputFileTable {
 }
 #
 # To generate a summary
-# cd mpich2/src 
-# ~/projects/mpich2/maint/getcoverage mpi/*/*.gcov mpi/romio/mpi-io/*.gcov \
+# cd mpich/src 
+# ~/projects/mpich/maint/getcoverage mpi/*/*.gcov mpi/romio/mpi-io/*.gcov \
 # mpi/romio/adio/ad_nfs/*.gcov mpi/romio/adio/ad_ufs/*.gcov \
 # util/info/*.gcov \
 # mpid/ch3/src/*.gcov mpid/ch3/channels/sock/src/*.gcov > coverage.txt

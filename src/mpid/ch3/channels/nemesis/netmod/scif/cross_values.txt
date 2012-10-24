@@ -1,5 +1,5 @@
 # The Fortran related cross compilation values.
-# This file is generated with mpich2/maint/fcrosscompile/configure 
+# This file is generated with mpich/maint/fcrosscompile/configure 
 # with CC/F77/FC set to "icc/ifort -mmic".
 CROSS_F77_SIZEOF_INTEGER="4"
 CROSS_F77_SIZEOF_REAL="4"

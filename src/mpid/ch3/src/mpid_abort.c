@@ -117,11 +117,11 @@ static int MPIDI_CH3I_PMI_Abort(int exit_code, const char *error_msg)
     
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3I_PMI_ABORT);
 
-    /* Dumping the error message in MPICH2 and passing the same
+    /* Dumping the error message in MPICH and passing the same
      * message to the PM as well. This might cause duplicate messages,
      * but it is better to have two messages than none. Note that the
      * PM is in a better position to throw the message (e.g., in case
-     * where the stdout/stderr pipes from MPICH2 to the PM are
+     * where the stdout/stderr pipes from MPICH to the PM are
      * broken), but not all PMs might display respect the message
      * (this problem was noticed with SLURM). */
     MPIU_Error_printf("%s\n", error_msg);

@@ -14,7 +14,7 @@
 <xsl:template match="/">
 <html>
     <head>
-        <title>MPICH2 Error Report</title>
+        <title>MPICH Error Report</title>
         <style type="text/css">
             table      { border-collapse:collapse; }
             th, td     { border:2px solid blue; padding:2px; }
@@ -25,7 +25,7 @@
         </style>
     </head>
     <body>
-        <h1>MPICH2 Error Report</h1>
+        <h1>MPICH Error Report</h1>
         <xsl:apply-templates select="MPITESTRESULTS"/>
     </body>
 </html>

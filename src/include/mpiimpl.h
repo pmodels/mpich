@@ -116,7 +116,7 @@ int usleep(useconds_t usec);
 /* 
    Include the implementation definitions (e.g., error reporting, thread
    portability)
-   More detailed documentation is contained in the MPICH2 and ADI3 manuals.
+   More detailed documentation is contained in the MPICH and ADI3 manuals.
  */
 /* FIXME: ... to do ... */
 #include "mpitypedefs.h"
@@ -171,7 +171,7 @@ static MPIU_DBG_INLINE_KEYWORD void MPIUI_Memcpy(void * dst, const void * src, s
    FIXME: Document all of these macros
 
    NOTE: These macros and values are deprecated.  See 
-   www.mcs.anl.gov/mpi/mpich2/developer/design/debugmsg.htm for 
+   www.mcs.anl.gov/mpi/mpich/developer/design/debugmsg.htm for 
    the new design (only partially implemented at this time).
    
    The implementation is in mpidbg.h
@@ -792,7 +792,7 @@ extern MPID_Errhandler MPID_Errhandler_direct[];
   field of the 'keyval'.
 
   Because 'MPI_Comm', 'MPI_Win', and 'MPI_Datatype' are all 'int's in 
-  MPICH2, we use a single C copy function rather than have separate
+  MPICH, we use a single C copy function rather than have separate
   ones for the Communicator, Window, and Datatype attributes.
 
   There are no corresponding typedefs for the Fortran functions.  The 
@@ -838,7 +838,7 @@ typedef struct MPID_Copy_function {
   field of the 'keyval'.
 
   Because 'MPI_Comm', 'MPI_Win', and 'MPI_Datatype' are all 'int's in 
-  MPICH2, we use a single C delete function rather than have separate
+  MPICH, we use a single C delete function rather than have separate
   ones for the Communicator, Window, and Datatype attributes.
 
   There are no corresponding typedefs for the Fortran functions.  The 
@@ -1664,7 +1664,7 @@ typedef struct MPID_Win {
 				    the rank that we locked */
 #ifdef USE_THREADED_WINDOW_CODE
     /* These were causing compilation errors.  We need to figure out how to
-       integrate threads into MPICH2 before including these fields. */
+       integrate threads into MPICH before including these fields. */
     /* FIXME: The test here should be within a test for threaded support */
 #ifdef HAVE_PTHREAD_H
     pthread_t wait_thread_id; /* id of thread handling MPI_Win_wait */
@@ -2127,7 +2127,7 @@ typedef struct MPICH_PerProcess_t {
 extern MPICH_PerProcess_t MPIR_Process;
 
 /* ------------------------------------------------------------------------- */
-/* In MPICH2, each function has an "enter" and "exit" macro.  These can be 
+/* In MPICH, each function has an "enter" and "exit" macro.  These can be 
  * used to add various features to each function at compile time, or they
  * can be set to empty to provide the fastest possible production version.
  *
@@ -2444,7 +2444,7 @@ int MPIR_Grequest_waitall(int count, MPID_Request * const *  request_ptrs);
   line arguments are used to control the behavior of the implementation. 
   Many of these values must be determined at the time that 'MPID_Init' 
   is called.  These all should be considered in the context of the 
-  parameter routines described in the MPICH2 Design Document.
+  parameter routines described in the MPICH Design Document.
 
   Are there recommended environment variable names?  For example, in ADI-2,
   there are many debugging options that are part of the common device.

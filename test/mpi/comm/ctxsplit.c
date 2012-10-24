@@ -14,7 +14,7 @@
  * This check is intended to fail if there is a leak of context ids.  
  * Because this is trying to exhaust the number of context ids, it needs
  * to run for a longer time than many tests.  The for loop uses 100,000 
- * iterations, which is adequate for MPICH2 (with only about 1k context ids
+ * iterations, which is adequate for MPICH (with only about 1k context ids
  * available).
  */
 

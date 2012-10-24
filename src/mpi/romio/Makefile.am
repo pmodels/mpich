@@ -5,7 +5,7 @@
 #
 
 ## TODO: need to write an automakefile that handles two primary cases:
-## 1) that ROMIO is being embedded within the MPI library, as in MPICH2 or Open
+## 1) that ROMIO is being embedded within the MPI library, as in MPICH or Open
 ##    MPI
 ## 2) that ROMIO is being built standalone, old-school style.  This case is
 ##    basically unused in modern practice.
@@ -26,7 +26,7 @@ doc1_src_txt =
 # variables to be populated by the included Makefile.mk fragments:
 
 # These are files that contain MPI routines (e.g., MPI_File_open).
-# In MPICH2 these will have an MPI_ and a PMPI_ version.  Other implementations
+# In MPICH these will have an MPI_ and a PMPI_ version.  Other implementations
 # (like OMPI) only want these to be MPI_ routines, possibly with some
 # name-shifting prefix.
 romio_mpi_sources = 
@@ -39,7 +39,7 @@ romio_other_sources =
 glue_sources = 
 
 # ------------------------------------------------------------------------
-# when building under MPICH2 we must be able to find mpi.h
+# when building under MPICH we must be able to find mpi.h
 AM_CPPFLAGS += $(MPI_H_INCLUDE)
 
 # ------------------------------------------------------------------------
@@ -68,17 +68,17 @@ libromio_la_SOURCES = $(romio_mpi_sources) $(romio_other_sources) $(glue_sources
 
 ## NOTE: ROMIO's old build system builds a bunch of _foo.o objects that contain
 ## PMPI_ implementations as well as calls to only other PMPI routines.  In
-## MPICH2, these are the objects that need to go into libmpich, while the foo.o
+## MPICH, these are the objects that need to go into libmpich, while the foo.o
 ## objects should go into libpmpich.  Furthermore, the -D option for ROMIO's
 ## source files is different and inverted (in the boolean sense) compared with
-## MPICH2's defintion.  And ROMIO was dumping all of the symbols into the main
+## MPICH's defintion.  And ROMIO was dumping all of the symbols into the main
 ## libmpich library, regardless of the separate profiling library's existence.
 ##
 ## Annoying, right?
 if BUILD_PROFILING_LIB
 # The current best strategy for now is to build the PMPI symbols as a separate
 # convenience lib to permit adding the special "-D..." argument for all objects.
-# MPICH2 will then link in both convenience library into libmpich, since it
+# MPICH will then link in both convenience library into libmpich, since it
 # won't work very well the other way around.
 noinst_LTLIBRARIES += libpromio.la
 libpromio_la_SOURCES = $(romio_mpi_sources)
@@ -121,7 +121,7 @@ doctexthtml_verbose_ = $(doctexthtml_verbose_$(AM_DEFAULT_VERBOSITY))
 doctexthtml_verbose_0 = @echo "   DOCTEXTHTML  " $@;
 
 # Build dir paths where the man pages will be created.  Will usually be
-# overridden by MPICH2 make.
+# overridden by MPICH make.
 mandoc_path1=$(abs_top_builddir)/man/man1
 mandoc_path3=$(abs_top_builddir)/man/man3
 htmldoc_path1=$(abs_top_builddir)/www/www1

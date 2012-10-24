@@ -17,13 +17,13 @@
 #include "mpid_nem_nets.h"
 #include "mpid_nem_queue.h"
 
-#define MPID_NEM__BYPASS_Q_MAX_VAL  ((MPID_NEM_MPICH2_DATA_LEN) - (sizeof(MPIDI_CH3_Pkt_t)))
+#define MPID_NEM__BYPASS_Q_MAX_VAL  ((MPID_NEM_MPICH_DATA_LEN) - (sizeof(MPIDI_CH3_Pkt_t)))
 
 int MPIDI_CH3I_Seg_alloc(size_t len, void **ptr_p);
 int MPIDI_CH3I_Seg_commit(MPID_nem_seg_ptr_t memory, int num_local, int local_rank);
 int MPIDI_CH3I_Seg_destroy(void);
 int MPID_nem_check_alloc(int);
-int MPID_nem_mpich2_init(void);
+int MPID_nem_mpich_init(void);
 int MPID_nem_coll_init (void);
 int MPID_nem_send_iov(MPIDI_VC_t *vc, MPID_Request **sreq_ptr, MPID_IOV *iov, int n_iov);
 int MPID_nem_lmt_pkthandler_init(MPIDI_CH3_PktHandler_Fcn *pktArray[], int arraySize);
@@ -33,8 +33,8 @@ int MPIDI_CH3I_comm_create(MPID_Comm *comm, void *param);
 int MPIDI_CH3I_comm_destroy(MPID_Comm *comm, void *param);
 
 
-#define MPID_nem_mpich2_release_fbox(cell)                                                                     \
-    (OPA_store_release_int(&MPID_nem_mem_region.mailboxes.in[(cell)->pkt.mpich2.source]->mpich2.flag.value, 0), \
+#define MPID_nem_mpich_release_fbox(cell)                                                                     \
+    (OPA_store_release_int(&MPID_nem_mem_region.mailboxes.in[(cell)->pkt.mpich.source]->mpich.flag.value, 0), \
      MPI_SUCCESS)
 
 /* initialize shared-memory MPI_Barrier variables */

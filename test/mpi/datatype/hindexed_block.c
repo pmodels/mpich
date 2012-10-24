@@ -11,7 +11,7 @@
 #include <string.h>
 #endif
 
-#if !defined(USE_STRICT_MPI) && defined(MPICH2)
+#if !defined(USE_STRICT_MPI) && defined(MPICH)
 #define TEST_HINDEXED_BLOCK 1
 #endif
 

@@ -54,7 +54,7 @@ static void free_status_index(int index)
 }
 
 
-/* Opens the knem device and sets knem_fd accordingly.  Uses mpich2 errhandling
+/* Opens the knem device and sets knem_fd accordingly.  Uses mpich errhandling
    conventions. */
 #undef FUNCNAME
 #define FUNCNAME open_knem_dev

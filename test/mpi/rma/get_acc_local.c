@@ -29,7 +29,7 @@ int main(int argc, char **argv)
                    MPI_COMM_WORLD, &win);
 
 /* Allow MPI-3 functionality tests to be switched off. */
-#if !defined(USE_STRICT_MPI) && defined(MPICH2)
+#if !defined(USE_STRICT_MPI) && defined(MPICH)
 
     for (i = 0; i < NITER; i++) {
         MPI_Win_lock(MPI_LOCK_SHARED, rank, 0, win);

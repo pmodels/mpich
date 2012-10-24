@@ -1,4 +1,4 @@
-/* MPICH2 notes:
+/* MPICH notes:
  * - The file name has been changed to avoid conflicts with any system-installed
  *   "utlist.h" header files.
  * - malloc/free/realloc usages have been substituted with utarray_malloc_
@@ -48,7 +48,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <string.h>  /* memset, etc */
 #include <stdlib.h>  /* exit */
 
-/* MPICH2 modification: override these to change what malloc/free/realloc
+/* MPICH modification: override these to change what malloc/free/realloc
  * routines are used by the utarray code */
 #define utarray_malloc_(x_)     MPIU_Malloc(x_)
 #define utarray_free_(x_)       MPIU_Free(x_)
@@ -244,7 +244,7 @@ static void utarray_str_dtor(void *elt) {
 static const UT_icd ut_str_icd _UNUSED_ = {sizeof(char*),NULL,utarray_str_cpy,utarray_str_dtor};
 static const UT_icd ut_int_icd _UNUSED_ = {sizeof(int),NULL,NULL,NULL};
 
-/* MPICH2 additions: */
+/* MPICH additions: */
 static const UT_icd ut_ptr_icd _UNUSED_ = {sizeof(void*),NULL,NULL,NULL};
 
 /* These are convenience macros for directly accessing the array.

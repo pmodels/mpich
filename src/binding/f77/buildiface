@@ -246,7 +246,7 @@ foreach $_ (@ARGV) {
 );
 
 ##
-## For implementations other than MPICH2, we'll need to consider using
+## For implementations other than MPICH, we'll need to consider using
 ## MPI_C2f_<name> and MPI_F2c_<name>, as in 
 ## 'MPI_Info' => 'MPI_F2c_info(ARG)'
 ##
@@ -932,7 +932,7 @@ if ($build_prototypes) {
 if ( -s "../../mpi/romio/include/mpio.h.in" && $build_io) { 
     %skipBlocks = ( 'HAVE_MPI_DARRAY_SUBARRAY' => 1, 
  	 	    'HAVE_MPI_INFO' => 1,
-		    'MPICH2' => 1 );
+		    'MPICH' => 1 );
     &ReadAndProcessInterface( "../../mpi/romio/include/mpio.h.in", 1 );
     %skipBlocks = ();
 }
@@ -1006,7 +1006,7 @@ EOT
     &AddFwrapDefs;
     print MAKEFD <<EOT;
 # FIXME tension here: MPIFLIBNAME is always "mpich", so we don't want to
-# clobber flags set by other parts of MPICH2, and we don't want to re-add that
+# clobber flags set by other parts of MPICH, and we don't want to re-add that
 # lib to the lib_LTLIBRARIES list
 #lib_LTLIBRARIES += lib/lib\@MPIFLIBNAME\@.la
 #lib_lib\@MPIFLIBNAME\@_la_SOURCES = \$(mpi_f77_sources) src/binding/f77/setbot.c src/binding/f77/setbotf.f src/binding/f77/fdebug.c
@@ -1025,7 +1025,7 @@ noinst_HEADERS += src/binding/f77/fproto.h src/binding/f77/mpi_fortimpl.h
 
 if BUILD_PROFILING_LIB
 # FIXME tension here: PMPIFLIBNAME is always "pmpich", so we don't want to
-# clobber flags set by other parts of MPICH2, and we don't want to re-add that
+# clobber flags set by other parts of MPICH, and we don't want to re-add that
 # lib to the lib_LTLIBRARIES list
 #lib_LTLIBRARIES += lib/lib\@PMPIFLIBNAME\@.la
 #lib_lib\@PMPIFLIBNAME\@_la_SOURCES += \$(mpi_f77_sources)
@@ -2305,7 +2305,7 @@ sub attrint_ctof {
     my $cvar = $_[1];
     my $flagarg = 4; # get from option
     # The strange cast is due to the following:
-    # The MPICH2 attribute code returns an int in the void *.  In
+    # The MPICH attribute code returns an int in the void *.  In
     # little-endian, a cast to an int is all that's necessary.  In 
     # big-endian, to interpret the first sizeof(int) bytes as an int,
     # we must first cast as pointer to int, then dereference it.
@@ -2343,7 +2343,7 @@ sub attrint_out_arg {
 # FIXME: This is no longer correct if the BlueGene definition for MPI_Aint
 # is used (as an integer big enough for an MPI_Offset and larger than
 # sizeof(void*), since this stores the result into the argument.  The
-# definitions here and in the MPICH2 attribute code must match.
+# definitions here and in the MPICH attribute code must match.
 #in:addraint
 #out:attraint:4
 sub addraint_ftoc {
@@ -3561,7 +3561,7 @@ sub print_special_decls {
 if ( -s "../../mpi/romio/include/mpio.h.in" && $build_io) { 
     %skipBlocks = ( 'HAVE_MPI_DARRAY_SUBARRAY' => 1, 
 		   'HAVE_MPI_INFO' => 1,
-		    'MPICH2' => 1 );
+		    'MPICH' => 1 );
     &ReadInterfaceForDefinitions( "../../mpi/romio/include/mpio.h.in" );
     %skipBlocks = ();
 }
@@ -3813,7 +3813,7 @@ if ($write_mpif) {
     # to be used with such compilers, those compilers allow the
     # use of the non-standard real*8 to force exactly 8 bytes.
     # WARNING: REAL*8 is not standard and must not be used here. 
-    # Instead, the top level configure (in mpich2/configure) will
+    # Instead, the top level configure (in mpich/configure) will
     # replace DOUBLE PRECISION with REAL*8 where the Fortran compiler 
     # supports it.  
     print MPIFFD "       DOUBLE PRECISION MPI_WTIME, MPI_WTICK\n";

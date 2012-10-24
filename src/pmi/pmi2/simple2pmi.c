@@ -503,7 +503,7 @@ cmd=spawn;thrid=string;ncmds=count;preputcount=n;ppkey0=name;ppval0=string;...;\
     freepairs(pairs_p, npairs);
     pairs_p = NULL;
 
-    /* XXX DJG TODO release any upper level MPICH2 critical sections */
+    /* XXX DJG TODO release any upper level MPICH critical sections */
     rc = PMIi_ReadCommandExp(PMI2_fd, &resp_cmd, "spawn-response", &spawn_rc, &errmsg);
     if (rc != 0) { return PMI2_FAIL; }
 

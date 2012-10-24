@@ -54,7 +54,7 @@ MPIU_DLL_SPEC MPI_Fint *MPI_F_STATUS_IGNORE = 0;
 MPIU_DLL_SPEC MPI_Fint *MPI_F_STATUSES_IGNORE = 0;
 
 /* This will help force the load of initinfo.o, which contains data about
-   how MPICH2 was configured. */
+   how MPICH was configured. */
 extern const char MPIR_Version_device[];
 
 /* Make sure the Fortran symbols are initialized unless it will cause problems

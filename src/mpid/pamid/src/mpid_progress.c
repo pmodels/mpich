@@ -146,7 +146,7 @@ MPIDI_Progress_async_poll (pami_context_t context, void *cookie)
     {
       /* There is a simplifying assertion when in the 'global' mpich lock mode
        * that only a single context is supported. See the discussion in
-       * mpich2/src/mpid/pamid/src/mpid_init.c for more information.
+       * mpich/src/mpid/pamid/src/mpid_init.c for more information.
        */
       rc = PAMI_Context_advancev (MPIDI_Context, 1, loop_count);
       MPID_assert( (rc == PAMI_SUCCESS) || (rc == PAMI_EAGAIN) );

@@ -5,8 +5,8 @@
 //
 // This is a *very* simple tool for basic coverage analysis.  
 // This is intended as a stop-gap until gcov works with the C++ files
-// used in the MPICH2 binding of C++ (as of 2/23/2004, gcov aborts when
-// processing the coverage files produced by g++ for the MPICH2 C++
+// used in the MPICH binding of C++ (as of 2/23/2004, gcov aborts when
+// processing the coverage files produced by g++ for the MPICH C++
 // binding).
 //
 

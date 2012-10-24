@@ -11,7 +11,7 @@
 
 void ADIOI_PANFS_SetInfo(ADIO_File fd, MPI_Info users_info, int *error_code)
 {
-#if defined(MPICH2) || !defined(PRINT_ERR_MSG)
+#if defined(MPICH) || !defined(PRINT_ERR_MSG)
     static char myname[] = "ADIOI_PANFS_SETINFO";
 #endif
     char* value;

@@ -31,7 +31,7 @@ extern MPIR_Comm_list MPIR_All_communicators;
 /* 
    This file contains emulation routines for the methods and functions normally
    provided by the debugger.  This file is only used for testing the 
-   dll_mpich2.c debugger interface.
+   dll_mpich.c debugger interface.
  */
 
 /* These are mock-ups of the find type and find offset routines.  Since 
@@ -49,7 +49,7 @@ enum { TYPE_UNKNOWN = 0,
        TYPE_MPIDI_MESSAGE_MATCH_PARTS = 7,
 } KnownTypes;
 
-/* The dll_mpich2.c has a few places where it doesn't always use the most 
+/* The dll_mpich.c has a few places where it doesn't always use the most 
    recent type, so a static current type will not work.  Instead, we
    have an example of each type, and return that value. */
 

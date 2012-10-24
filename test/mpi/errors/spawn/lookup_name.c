@@ -10,7 +10,7 @@
 #include "mpitest.h"
 
 /* calling lookup_name 15 times in a loop when the name has not been
-   been published used to cause MPICH2 to crash. Adding this as a 
+   been published used to cause MPICH to crash. Adding this as a 
    regression test */
 
 int main( int argc, char *argv[] )

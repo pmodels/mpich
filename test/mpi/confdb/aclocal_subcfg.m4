@@ -1,6 +1,6 @@
 dnl PAC_RESET_ALL_FLAGS - Reset precious flags to those set by the user
 AC_DEFUN([PAC_RESET_ALL_FLAGS],[
-	if test "$FROM_MPICH2" = "yes" ; then
+	if test "$FROM_MPICH" = "yes" ; then
 	   CFLAGS="$USER_CFLAGS"
 	   CPPFLAGS="$USER_CPPFLAGS"
 	   CXXFLAGS="$USER_CXXFLAGS"
@@ -13,7 +13,7 @@ AC_DEFUN([PAC_RESET_ALL_FLAGS],[
 
 dnl PAC_RESET_LINK_FLAGS - Reset precious link flags to those set by the user
 AC_DEFUN([PAC_RESET_LINK_FLAGS],[
-	if test "$FROM_MPICH2" = "yes" ; then
+	if test "$FROM_MPICH" = "yes" ; then
 	   LDFLAGS="$USER_LDFLAGS"
 	   LIBS="$USER_LIBS"
 	fi
@@ -51,8 +51,8 @@ AC_DEFUN([PAC_CONFIG_SUBDIR_ARGS],[
 	   . $pac_abs_srcdir/$1/setup
 	fi
 
-        # Adapted for MPICH2 from the autoconf-2.67 implementation of
-        # AC_CONFIG_SUBDIRS.  Search for "MPICH2 note:" for relevant commentary and
+        # Adapted for MPICH from the autoconf-2.67 implementation of
+        # AC_CONFIG_SUBDIRS.  Search for "MPICH note:" for relevant commentary and
         # local modifications.
       
         # Remove --cache-file, --srcdir, and --disable-option-checking arguments
@@ -89,7 +89,7 @@ AC_DEFUN([PAC_CONFIG_SUBDIR_ARGS],[
           --disable-option-checking)
             ;;
           *)
-            # MPICH2 note: this is a more robust version of the "precious
+            # MPICH note: this is a more robust version of the "precious
             # variable" propagation code that was present in the previous
             # incarnation of this macro
             for pac_pvar in $ac_precious_vars ; do
@@ -118,7 +118,7 @@ AC_DEFUN([PAC_CONFIG_SUBDIR_ARGS],[
       
         # Always prepend --prefix to ensure using the same prefix
         # in subdir configurations.
-        # MPICH2 note: see tt#983 for an example of why this is necessary
+        # MPICH note: see tt#983 for an example of why this is necessary
         pac_arg="--prefix=$prefix"
         case $pac_arg in
         *\'*) pac_arg=`AS_ECHO(["$pac_arg"]) | sed "s/'/'\\\\\\\\''/g"` ;;
@@ -140,12 +140,12 @@ AC_DEFUN([PAC_CONFIG_SUBDIR_ARGS],[
         # parts of a large source tree are present.
         test -d "$srcdir/$pac_dir" || continue
       
-        # MPICH2 note: modified to remove the internal "_AS_*" macro usage, also
+        # MPICH note: modified to remove the internal "_AS_*" macro usage, also
         # msg is already printed at top
 dnl        _AS_ECHO_LOG([$pac_msg])
 dnl        _AS_ECHO([$pac_msg])
         AS_MKDIR_P(["$pac_dir"])
-        # MPICH2 note: we leave this internal macro reference for now.  We can clone
+        # MPICH note: we leave this internal macro reference for now.  We can clone
         # the macro locally if this turns out to be non-portable across several autoconf
         # versions.  It sets the following variables: ac_builddir,
         # ac_top_builddir_sub, ac_top_build_prefix, ac_srcdir, ac_top_srcdir,
@@ -169,7 +169,7 @@ dnl        _AS_ECHO([$pac_msg])
 
         # The recursion is here.
         if test -n "$pac_sub_configure"; then
-          # MPICH2 note: overriding the cache file on purpose to prevent strange
+          # MPICH note: overriding the cache file on purpose to prevent strange
           # issues resulting from inter-dir caching
 dnl          # Make the cache file name correct relative to the subdirectory.
 dnl          case $cache_file in
@@ -181,7 +181,7 @@ dnl          esac
 
           AC_MSG_NOTICE([running $SHELL $pac_sub_configure $pac_sub_configure_args --cache-file=$pac_sub_cache_file --srcdir=$ac_srcdir])
           # The eval makes quoting arguments work.
-          # MPICH2 note: we want to execute the provided actions, not be silent
+          # MPICH note: we want to execute the provided actions, not be silent
           # or error out if the subconfigure succeeded/failed
 dnl          eval "\$SHELL \"\$pac_sub_configure\" $pac_sub_configure_args \
 dnl               --cache-file=\"\$pac_sub_cache_file\" --srcdir=\"\$ac_srcdir\"" ||

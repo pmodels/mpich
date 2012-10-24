@@ -5,7 +5,7 @@
 	<Configurations>
 		<Configuration Name="fortDebug|Win32" DeleteExtensionsOnClean="*.obj;*.mod;*.pdb;*.asm;*.map;*.dyn;*.dpi;*.tmp;*.log;*.lib;$(TargetPath)" ConfigurationType="typeStaticLibrary">
 				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" DebugInformationFormat="debugEnabled" Optimization="optimizeDisabled" ExternalNameInterpretation="extNameUpperCase" CallingConvention="callConventionCRef" ModulePath="$(INTDIR)/" ObjectFile="$(INTDIR)/" Traceback="true" BoundsCheck="true" RuntimeLibrary="rtMultiThreadedDebug" DisableDefaultLibSearch="true"/>
-				<Tool Name="VFLibrarianTool" OutputFile="../../../lib/mpich2ffd.lib"/>
+				<Tool Name="VFLibrarianTool" OutputFile="../../../lib/mpichffd.lib"/>
 				<Tool Name="VFResourceCompilerTool"/>
 				<Tool Name="VFMidlTool" SuppressStartupBanner="true" TypeLibraryName="$(IntDir)/$(InputName).tlb"/>
 				<Tool Name="VFCustomBuildTool"/>
@@ -14,7 +14,7 @@
 				<Tool Name="VFPostBuildEventTool"/></Configuration>
 		<Configuration Name="fortRelease|Win32" DeleteExtensionsOnClean="*.obj;*.mod;*.pdb;*.asm;*.map;*.dyn;*.dpi;*.tmp;*.log;*.lib;$(TargetPath)" ConfigurationType="typeStaticLibrary">
 				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" F77RuntimeCompatibility="true" ExternalNameInterpretation="extNameUpperCase" CallingConvention="callConventionCRef" ModulePath="$(INTDIR)/" ObjectFile="$(INTDIR)/" DisableDefaultLibSearch="true"/>
-				<Tool Name="VFLibrarianTool" OutputFile="../../../lib/mpich2ff.lib"/>
+				<Tool Name="VFLibrarianTool" OutputFile="../../../lib/mpichff.lib"/>
 				<Tool Name="VFResourceCompilerTool"/>
 				<Tool Name="VFMidlTool" SuppressStartupBanner="true" TypeLibraryName="$(IntDir)/$(InputName).tlb"/>
 				<Tool Name="VFCustomBuildTool"/>
@@ -23,7 +23,7 @@
 				<Tool Name="VFPostBuildEventTool"/></Configuration>
 		<Configuration Name="gfortDebug|Win32" DeleteExtensionsOnClean="*.obj;*.mod;*.pdb;*.asm;*.map;*.dyn;*.dpi;*.tmp;*.log;*.lib;$(TargetPath)" ConfigurationType="typeStaticLibrary">
 				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" DebugInformationFormat="debugEnabled" Optimization="optimizeDisabled" ExternalNameInterpretation="extNameLowerCase" CallingConvention="callConventionCRef" ExternalNameUnderscore="true" ModulePath="$(INTDIR)/" ObjectFile="$(INTDIR)/" Traceback="true" BoundsCheck="true" RuntimeLibrary="rtMultiThreadedDebug" DisableDefaultLibSearch="true"/>
-				<Tool Name="VFLibrarianTool" OutputFile="../../../lib/mpich2ffgd.lib"/>
+				<Tool Name="VFLibrarianTool" OutputFile="../../../lib/mpichffgd.lib"/>
 				<Tool Name="VFResourceCompilerTool"/>
 				<Tool Name="VFMidlTool" SuppressStartupBanner="true" TypeLibraryName="$(IntDir)/$(InputName).tlb"/>
 				<Tool Name="VFCustomBuildTool"/>
@@ -32,7 +32,7 @@
 				<Tool Name="VFPostBuildEventTool"/></Configuration>
 		<Configuration Name="gfortRelease|Win32" DeleteExtensionsOnClean="*.obj;*.mod;*.pdb;*.asm;*.map;*.dyn;*.dpi;*.tmp;*.log;*.lib;$(TargetPath)" ConfigurationType="typeStaticLibrary">
 				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" ExternalNameInterpretation="extNameLowerCase" CallingConvention="callConventionCRef" ExternalNameUnderscore="true" ModulePath="$(INTDIR)/" ObjectFile="$(INTDIR)/" DisableDefaultLibSearch="true"/>
-				<Tool Name="VFLibrarianTool" OutputFile="../../../lib/mpich2ffg.lib"/>
+				<Tool Name="VFLibrarianTool" OutputFile="../../../lib/mpichffg.lib"/>
 				<Tool Name="VFResourceCompilerTool"/>
 				<Tool Name="VFMidlTool" SuppressStartupBanner="true" TypeLibraryName="$(IntDir)/$(InputName).tlb"/>
 				<Tool Name="VFCustomBuildTool"/>
@@ -41,7 +41,7 @@
 				<Tool Name="VFPostBuildEventTool"/></Configuration>
 		<Configuration Name="sfortDebug|Win32" DeleteExtensionsOnClean="*.obj;*.mod;*.pdb;*.asm;*.map;*.dyn;*.dpi;*.tmp;*.log;*.lib;$(TargetPath)" ConfigurationType="typeStaticLibrary">
 				<Tool Name="VFFortranCompilerTool" AdditionalOptions="/names:uppercase" SuppressStartupBanner="true" DebugInformationFormat="debugEnabled" Optimization="optimizeDisabled" ExternalNameInterpretation="extNameUpperCase" CallingConvention="callConventionStdCall" ModulePath="$(INTDIR)/" ObjectFile="$(INTDIR)/" Traceback="true" BoundsCheck="true" RuntimeLibrary="rtMultiThreadedDebug" DisableDefaultLibSearch="true"/>
-				<Tool Name="VFLibrarianTool" OutputFile="../../../lib/mpich2ffsd.lib"/>
+				<Tool Name="VFLibrarianTool" OutputFile="../../../lib/mpichffsd.lib"/>
 				<Tool Name="VFResourceCompilerTool"/>
 				<Tool Name="VFMidlTool" SuppressStartupBanner="true" TypeLibraryName="$(IntDir)/$(InputName).tlb"/>
 				<Tool Name="VFCustomBuildTool"/>
@@ -50,43 +50,43 @@
 				<Tool Name="VFPostBuildEventTool"/></Configuration>
 		<Configuration Name="sfortRelease|Win32" DeleteExtensionsOnClean="*.obj;*.mod;*.pdb;*.asm;*.map;*.dyn;*.dpi;*.tmp;*.log;*.lib;$(TargetPath)" ConfigurationType="typeStaticLibrary">
 				<Tool Name="VFFortranCompilerTool" AdditionalOptions="/names:uppercase" SuppressStartupBanner="true" ExternalNameInterpretation="extNameUpperCase" CallingConvention="callConventionStdCall" ModulePath="$(INTDIR)/" ObjectFile="$(INTDIR)/"/>
-				<Tool Name="VFLibrarianTool" OutputFile="../../../lib/mpich2ffs.lib"/>
+				<Tool Name="VFLibrarianTool" OutputFile="../../../lib/mpichffs.lib"/>
 				<Tool Name="VFResourceCompilerTool"/>
 				<Tool Name="VFMidlTool" SuppressStartupBanner="true" TypeLibraryName="$(IntDir)/$(InputName).tlb"/>
 				<Tool Name="VFCustomBuildTool"/>
 				<Tool Name="VFPreLinkEventTool"/>
 				<Tool Name="VFPreBuildEventTool"/>
 				<Tool Name="VFPostBuildEventTool"/></Configuration>
-		<Configuration Name="ch3shm_mpich2ReleaseConfig_1_0_4|Win32" DeleteExtensionsOnClean="*.obj;*.mod;*.pdb;*.asm;*.map;*.dyn;*.dpi;*.tmp;*.log;*.lib;$(TargetPath)" ConfigurationType="typeStaticLibrary">
+		<Configuration Name="ch3shm_mpichReleaseConfig_1_0_4|Win32" DeleteExtensionsOnClean="*.obj;*.mod;*.pdb;*.asm;*.map;*.dyn;*.dpi;*.tmp;*.log;*.lib;$(TargetPath)" ConfigurationType="typeStaticLibrary">
 				<Tool Name="VFFortranCompilerTool" AdditionalOptions="/names:uppercase" SuppressStartupBanner="true" CallingConvention="callConventionStdCall" ModulePath="$(INTDIR)/" ObjectFile="$(INTDIR)/" DisableDefaultLibSearch="true"/>
-				<Tool Name="VFLibrarianTool" OutputFile="../../../lib/mpich2ffs.lib"/>
+				<Tool Name="VFLibrarianTool" OutputFile="../../../lib/mpichffs.lib"/>
 				<Tool Name="VFResourceCompilerTool"/>
 				<Tool Name="VFMidlTool" SuppressStartupBanner="true" TypeLibraryName="$(IntDir)/$(InputName).tlb"/>
 				<Tool Name="VFCustomBuildTool"/>
 				<Tool Name="VFPreLinkEventTool"/>
 				<Tool Name="VFPreBuildEventTool"/>
 				<Tool Name="VFPostBuildEventTool"/></Configuration>
-		<Configuration Name="mpich2sshm_mpich2ReleaseConfig_1_0_4|Win32" DeleteExtensionsOnClean="*.obj;*.mod;*.pdb;*.asm;*.map;*.dyn;*.dpi;*.tmp;*.log;*.lib;$(TargetPath)" ConfigurationType="typeStaticLibrary">
+		<Configuration Name="mpichsshm_mpichReleaseConfig_1_0_4|Win32" DeleteExtensionsOnClean="*.obj;*.mod;*.pdb;*.asm;*.map;*.dyn;*.dpi;*.tmp;*.log;*.lib;$(TargetPath)" ConfigurationType="typeStaticLibrary">
 				<Tool Name="VFFortranCompilerTool" AdditionalOptions="/names:uppercase" SuppressStartupBanner="true" CallingConvention="callConventionStdCall" ModulePath="$(INTDIR)/" ObjectFile="$(INTDIR)/" DisableDefaultLibSearch="true"/>
-				<Tool Name="VFLibrarianTool" OutputFile="../../../lib/mpich2ffs.lib"/>
+				<Tool Name="VFLibrarianTool" OutputFile="../../../lib/mpichffs.lib"/>
 				<Tool Name="VFResourceCompilerTool"/>
 				<Tool Name="VFMidlTool" SuppressStartupBanner="true" TypeLibraryName="$(IntDir)/$(InputName).tlb"/>
 				<Tool Name="VFCustomBuildTool"/>
 				<Tool Name="VFPreLinkEventTool"/>
 				<Tool Name="VFPreBuildEventTool"/>
 				<Tool Name="VFPostBuildEventTool"/></Configuration>
-		<Configuration Name="mpich2ssm_mpich2ReleaseConfig_1_0_4|Win32" DeleteExtensionsOnClean="*.obj;*.mod;*.pdb;*.asm;*.map;*.dyn;*.dpi;*.tmp;*.log;*.lib;$(TargetPath)" ConfigurationType="typeStaticLibrary">
+		<Configuration Name="mpichssm_mpichReleaseConfig_1_0_4|Win32" DeleteExtensionsOnClean="*.obj;*.mod;*.pdb;*.asm;*.map;*.dyn;*.dpi;*.tmp;*.log;*.lib;$(TargetPath)" ConfigurationType="typeStaticLibrary">
 				<Tool Name="VFFortranCompilerTool" AdditionalOptions="/names:uppercase" SuppressStartupBanner="true" CallingConvention="callConventionStdCall" ModulePath="$(INTDIR)/" ObjectFile="$(INTDIR)/" DisableDefaultLibSearch="true"/>
-				<Tool Name="VFLibrarianTool" OutputFile="../../../lib/mpich2ffs.lib"/>
+				<Tool Name="VFLibrarianTool" OutputFile="../../../lib/mpichffs.lib"/>
 				<Tool Name="VFResourceCompilerTool"/>
 				<Tool Name="VFMidlTool" SuppressStartupBanner="true" TypeLibraryName="$(IntDir)/$(InputName).tlb"/>
 				<Tool Name="VFCustomBuildTool"/>
 				<Tool Name="VFPreLinkEventTool"/>
 				<Tool Name="VFPreBuildEventTool"/>
 				<Tool Name="VFPostBuildEventTool"/></Configuration>
-		<Configuration Name="mt_mpich2ReleaseConfig_1_0_4|Win32" DeleteExtensionsOnClean="*.obj;*.mod;*.pdb;*.asm;*.map;*.dyn;*.dpi;*.tmp;*.log;*.lib;$(TargetPath)" ConfigurationType="typeStaticLibrary">
+		<Configuration Name="mt_mpichReleaseConfig_1_0_4|Win32" DeleteExtensionsOnClean="*.obj;*.mod;*.pdb;*.asm;*.map;*.dyn;*.dpi;*.tmp;*.log;*.lib;$(TargetPath)" ConfigurationType="typeStaticLibrary">
 				<Tool Name="VFFortranCompilerTool" AdditionalOptions="/names:uppercase" SuppressStartupBanner="true" CallingConvention="callConventionStdCall" ModulePath="$(INTDIR)/" ObjectFile="$(INTDIR)/" DisableDefaultLibSearch="true"/>
-				<Tool Name="VFLibrarianTool" OutputFile="../../../lib/mpich2ffs.lib"/>
+				<Tool Name="VFLibrarianTool" OutputFile="../../../lib/mpichffs.lib"/>
 				<Tool Name="VFResourceCompilerTool"/>
 				<Tool Name="VFMidlTool" SuppressStartupBanner="true" TypeLibraryName="$(IntDir)/$(InputName).tlb"/>
 				<Tool Name="VFCustomBuildTool"/>
@@ -95,16 +95,16 @@
 				<Tool Name="VFPostBuildEventTool"/></Configuration>
 		<Configuration Name="testrelease|Win32" DeleteExtensionsOnClean="*.obj;*.mod;*.pdb;*.asm;*.map;*.dyn;*.dpi;*.tmp;*.log;*.lib;$(TargetPath)" ConfigurationType="typeStaticLibrary">
 				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" ExternalNameInterpretation="extNameLowerCase" CallingConvention="callConventionCRef" ExternalNameUnderscore="true" ModulePath="$(INTDIR)/" ObjectFile="$(INTDIR)/" DisableDefaultLibSearch="true"/>
-				<Tool Name="VFLibrarianTool" OutputFile="../../../lib/mpich2ffg.lib"/>
+				<Tool Name="VFLibrarianTool" OutputFile="../../../lib/mpichffg.lib"/>
 				<Tool Name="VFResourceCompilerTool"/>
 				<Tool Name="VFMidlTool" SuppressStartupBanner="true" TypeLibraryName="$(IntDir)/$(InputName).tlb"/>
 				<Tool Name="VFCustomBuildTool"/>
 				<Tool Name="VFPreLinkEventTool"/>
 				<Tool Name="VFPreBuildEventTool"/>
 				<Tool Name="VFPostBuildEventTool"/></Configuration>
-		<Configuration Name="mpich2DebugConfig_1_0_5|Win32" DeleteExtensionsOnClean="*.obj;*.mod;*.pdb;*.asm;*.map;*.dyn;*.dpi;*.tmp;*.log;*.lib;$(TargetPath)" ConfigurationType="typeStaticLibrary">
+		<Configuration Name="mpichDebugConfig_1_0_5|Win32" DeleteExtensionsOnClean="*.obj;*.mod;*.pdb;*.asm;*.map;*.dyn;*.dpi;*.tmp;*.log;*.lib;$(TargetPath)" ConfigurationType="typeStaticLibrary">
 				<Tool Name="VFFortranCompilerTool" AdditionalOptions="/names:uppercase" SuppressStartupBanner="true" ExternalNameInterpretation="extNameUpperCase" CallingConvention="callConventionStdCall" ModulePath="$(INTDIR)/" ObjectFile="$(INTDIR)/"/>
-				<Tool Name="VFLibrarianTool" OutputFile="../../../lib/mpich2ffs.lib"/>
+				<Tool Name="VFLibrarianTool" OutputFile="../../../lib/mpichffs.lib"/>
 				<Tool Name="VFResourceCompilerTool"/>
 				<Tool Name="VFMidlTool" SuppressStartupBanner="true" TypeLibraryName="$(IntDir)/$(InputName).tlb"/>
 				<Tool Name="VFCustomBuildTool"/>
@@ -113,7 +113,7 @@
 				<Tool Name="VFPostBuildEventTool"/></Configuration>
 		<Configuration Name="fortDebugConfig_1_0_5|Win32" DeleteExtensionsOnClean="*.obj;*.mod;*.pdb;*.asm;*.map;*.dyn;*.dpi;*.tmp;*.log;*.lib;$(TargetPath)" ConfigurationType="typeStaticLibrary">
 				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" DebugInformationFormat="debugEnabled" Optimization="optimizeDisabled" F77RuntimeCompatibility="true" ExternalNameInterpretation="extNameUpperCase" CallingConvention="callConventionCRef" ModulePath="$(INTDIR)/" ObjectFile="$(INTDIR)/" DisableDefaultLibSearch="true"/>
-				<Tool Name="VFLibrarianTool" OutputFile="../../../lib/mpich2ff.lib"/>
+				<Tool Name="VFLibrarianTool" OutputFile="../../../lib/mpichff.lib"/>
 				<Tool Name="VFResourceCompilerTool"/>
 				<Tool Name="VFMidlTool" SuppressStartupBanner="true" TypeLibraryName="$(IntDir)/$(InputName).tlb"/>
 				<Tool Name="VFCustomBuildTool"/>
@@ -122,7 +122,7 @@
 				<Tool Name="VFPostBuildEventTool"/></Configuration>
 		<Configuration Name="ch3nemesisPRelease|Win32" DeleteExtensionsOnClean="*.obj;*.mod;*.pdb;*.asm;*.map;*.dyn;*.dpi;*.tmp;*.log;*.lib;$(TargetPath)" ConfigurationType="typeStaticLibrary">
 				<Tool Name="VFFortranCompilerTool" AdditionalOptions="/names:uppercase" SuppressStartupBanner="true" CallingConvention="callConventionStdCall" ModulePath="$(INTDIR)/" ObjectFile="$(INTDIR)/" DisableDefaultLibSearch="true"/>
-				<Tool Name="VFLibrarianTool" OutputFile="../../../lib/mpich2ffs.lib"/>
+				<Tool Name="VFLibrarianTool" OutputFile="../../../lib/mpichffs.lib"/>
 				<Tool Name="VFResourceCompilerTool"/>
 				<Tool Name="VFMidlTool" SuppressStartupBanner="true" TypeLibraryName="$(IntDir)/$(InputName).tlb"/>
 				<Tool Name="VFCustomBuildTool"/>
@@ -131,7 +131,7 @@
 				<Tool Name="VFPostBuildEventTool"/></Configuration>
 		<Configuration Name="fortPRelease|Win32" DeleteExtensionsOnClean="*.obj;*.mod;*.pdb;*.asm;*.map;*.dyn;*.dpi;*.tmp;*.log;*.lib;$(TargetPath)" ConfigurationType="typeStaticLibrary">
 				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" F77RuntimeCompatibility="true" ExternalNameInterpretation="extNameUpperCase" CallingConvention="callConventionCRef" ModulePath="$(INTDIR)/" ObjectFile="$(INTDIR)/" DisableDefaultLibSearch="true"/>
-				<Tool Name="VFLibrarianTool" OutputFile="../../../lib/mpich2ff.lib"/>
+				<Tool Name="VFLibrarianTool" OutputFile="../../../lib/mpichff.lib"/>
 				<Tool Name="VFResourceCompilerTool"/>
 				<Tool Name="VFMidlTool" SuppressStartupBanner="true" TypeLibraryName="$(IntDir)/$(InputName).tlb"/>
 				<Tool Name="VFCustomBuildTool"/>

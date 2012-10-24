@@ -12,7 +12,7 @@
 #ifndef DATALOOP_H
 #define DATALOOP_H
 
-/* This is specific to MPICH2 */
+/* This is specific to MPICH */
 #include "mpid_dataloop.h"
 #include "mpiimpl.h"
 

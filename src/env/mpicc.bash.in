@@ -8,7 +8,7 @@
 # This script knows the default flags and libraries, and can handle
 # alternative C compilers and the associated flags and libraries.
 # The important terms are:
-#    includedir, libdir - Directories containing an *installed* mpich2
+#    includedir, libdir - Directories containing an *installed* mpich
 #    prefix, execprefix - Often used to define includedir and libdir
 #    CC                 - C compiler
 #    WRAPPER_CFLAGS        - Any special flags needed to compile 
@@ -41,7 +41,7 @@ CFLAGS="@WRAPPER_CFLAGS@"
 CPPFLAGS="@WRAPPER_CPPFLAGS@"
 LDFLAGS="@WRAPPER_LDFLAGS@"
 LIBS="@WRAPPER_LIBS@"
-MPICH2_VERSION="@MPICH2_VERSION@"
+MPICH_VERSION="@MPICH_VERSION@"
 
 enable_wrapper_rpath="@enable_wrapper_rpath@"
 @cc_shlib_conf@
@@ -136,7 +136,7 @@ for arg in "$@" ; do
     ;;
     -v)
     # Pass this argument to the compiler as well.
-    echo "mpicc for MPICH2 version $MPICH2_VERSION"
+    echo "mpicc for MPICH version $MPICH_VERSION"
     # if there is only 1 argument, it must be -v.
     if [ "$#" -eq "1" ] ; then
         linking=no

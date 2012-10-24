@@ -67,7 +67,7 @@ while (<>) {
     # Automatically choose the default filename trim
     if ($filenameTrim eq "default") {
 	$filenameTrim = $file;
-	$filenameTrim =~ s/(.*\/mpich2[^\/]*\/src\/).*/\1/;
+	$filenameTrim =~ s/(.*\/mpich[^\/]*\/src\/).*/\1/;
     }
     if ($filenameTrim ne "" && $file =~ /^$filenameTrim/) {
 	$file =~ s/^$filenameTrim//;

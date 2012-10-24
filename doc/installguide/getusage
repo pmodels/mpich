@@ -4,7 +4,7 @@
 # discards the top boilerplate and lists just the features added by these
 # packages.  Use
 #    find . -name configure -exec `pwd`/maint/getusage \{\} \;
-# to generate a list for all configures in mpich2
+# to generate a list for all configures in mpich
 # Removes the most common options (enable-echo, cache, and strict)
 dir=$1
 if [ -z "$dir" ] ; then dir=. ; fi

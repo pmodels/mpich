@@ -22,7 +22,7 @@ void ADIOI_LUSTRE_Open(ADIO_File fd, int *error_code)
     struct lov_user_md *lum = NULL;
     char *value;
 
-#if defined(MPICH2) || !defined(PRINT_ERR_MSG)
+#if defined(MPICH) || !defined(PRINT_ERR_MSG)
     static char myname[] = "ADIOI_LUSTRE_OPEN";
 #endif
 

@@ -17,10 +17,10 @@
 /*
  * This program reports on properties of the MPICH library, such as the
  * version, device, and what patches have been applied.  This is available
- * only since MPICH2 1.0.6.  
+ * only since MPICH 1.0.6.  
  *
  * The reason that this program doesn't directly include the info is that it
- * can be compiled and then linked with the MPICH2 library to discover
+ * can be compiled and then linked with the MPICH library to discover
  * the information about the version of the library.  If built with shared
  * libraries, this will give the information about the currently installed
  * shared library.
@@ -41,7 +41,7 @@ typedef enum { Version_number=0, Date=1,
              } fields;
 
 /*D
-  mpich2version - Report on the MPICH version
+  mpichversion - Report on the MPICH version
 
   Command Line Arguments:
 + -version - Show the version of MPICH
@@ -98,22 +98,22 @@ int main( int argc, char *argv[] )
 
     /* Print out the information, one item per line */
     if (flags[Version_number]) {
-	printf( "MPICH2 Version:    \t%s\n", MPIR_Version_string );
+	printf( "MPICH Version:    \t%s\n", MPIR_Version_string );
     }
     if (flags[Date]) {
-	printf( "MPICH2 Release date:\t%s\n", MPIR_Version_date );
+	printf( "MPICH Release date:\t%s\n", MPIR_Version_date );
     }
     if (flags[Device]) {
-	printf( "MPICH2 Device:    \t%s\n", MPIR_Version_device );
+	printf( "MPICH Device:    \t%s\n", MPIR_Version_device );
     }
     if (flags[Configure_args]) {
-	printf( "MPICH2 configure: \t%s\n", MPIR_Version_configure );
+	printf( "MPICH configure: \t%s\n", MPIR_Version_configure );
     }
     if (flags[Compilers]) {
-	printf( "MPICH2 CC: \t%s\n", MPIR_Version_CC );
-	printf( "MPICH2 CXX: \t%s\n", MPIR_Version_CXX );
-	printf( "MPICH2 F77: \t%s\n", MPIR_Version_F77 );
-	printf( "MPICH2 FC: \t%s\n", MPIR_Version_FC );
+	printf( "MPICH CC: \t%s\n", MPIR_Version_CC );
+	printf( "MPICH CXX: \t%s\n", MPIR_Version_CXX );
+	printf( "MPICH F77: \t%s\n", MPIR_Version_F77 );
+	printf( "MPICH FC: \t%s\n", MPIR_Version_FC );
     }
 
     return 0;

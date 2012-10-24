@@ -4,7 +4,7 @@
 # the inline list or map forms and don't try to use any really fancy
 # features like tagging or anchors.
 #
-# It is used to generate parameter-handling code for MPICH2.
+# It is used to generate parameter-handling code for MPICH.
 # See the maint/genparams script for more information.
 #
 # The only tricky bit is that long reflowed text (such as a description)
@@ -25,7 +25,7 @@ categories:
     - name        : intranode
       description : intranode communication parameters
     - name        : developer
-      description : useful for developers working on MPICH2 itself
+      description : useful for developers working on MPICH itself
     - name        : memory
       description : affects memory allocation and usage, including MPI object handles
     - name        : error_handling
@@ -156,7 +156,7 @@ parameters:
       name        : GATHERV_INTER_SSEND_MIN_PROCS
       # backwards compatibility
       abs-alt-env :
-                    - MPICH2_GATHERV_MIN_PROCS
+                    - MPICH_GATHERV_MIN_PROCS
       type        : int
       default     : 32
       description : >-
@@ -265,7 +265,7 @@ parameters:
       type        : boolean
       default     : true
       description : >-
-        If true, list any memory that was allocated by MPICH2 and that
+        If true, list any memory that was allocated by MPICH and that
         remains allocated when MPI_Finalize completes.
 
     - category    : debugger
@@ -289,7 +289,7 @@ parameters:
       default     : true
       description : >-
         If true, perform checks for errors, typically to verify valid inputs
-        to MPI routines.  Only effective when MPICH2 is configured with
+        to MPI routines.  Only effective when MPICH is configured with
         --enable-error-checking=runtime .
 
     - category    : error_handling
@@ -434,7 +434,7 @@ parameters:
         handles have been leaked.  For example, if MPI_Comm_dup is called
         without calling a corresponding MPI_Comm_free.  For uninteresting
         reasons, enabling this option may prevent all known object leaks from
-        being reported.  MPICH2 must have been configure with
+        being reported.  MPICH must have been configure with
         "--enable-g=handlealloc" or better in order for this functionality to
         work.
 
@@ -449,7 +449,7 @@ parameters:
       description : >-
         The MPICH_PORT_RANGE environment variable allows you to
         specify the range of TCP ports to be used by the process
-        manager and the MPICH2 library. The format of this variable is
+        manager and the MPICH library. The format of this variable is
         <low>:<high>.
 
   ############################

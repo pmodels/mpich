@@ -16,7 +16,7 @@ void ADIOI_HFS_Resize(ADIO_File fd, ADIO_Offset size, int *error_code)
     
     err = ftruncate64(fd->fd_sys, size);
     if (err == -1) {
-#ifdef MPICH2
+#ifdef MPICH
 	*error_code = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, myname, __LINE__, MPI_ERR_IO, "**io",
 	    "**io %s", strerror(errno));
 #elif defined(PRINT_ERR_MSG)

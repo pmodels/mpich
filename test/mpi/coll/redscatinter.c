@@ -5,7 +5,7 @@
  */
 /* 
  * Test of reduce scatter with large data on an intercommunicator
- * (needed in MPICH2 to trigger the long-data algorithm)
+ * (needed in MPICH to trigger the long-data algorithm)
  *
  * Each processor contributes its rank + the index to the reduction, 
  * then receives the ith sum

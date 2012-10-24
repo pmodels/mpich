@@ -387,7 +387,7 @@ int MPIDI_CH3_PktHandler_EagerShortSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 		/* user buffer is not contiguous.  Use the segment
 		   code to unpack it, handling various errors and 
 		   exceptional cases */
-		/* FIXME: The MPICH2 tests do not exercise this branch */
+		/* FIXME: The MPICH tests do not exercise this branch */
 		/* printf( "Surprise!\n" ); fflush(stdout);*/
 		rreq->dev.segment_ptr = MPID_Segment_alloc( );
                 MPIU_ERR_CHKANDJUMP1((rreq->dev.segment_ptr == NULL), mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s", "MPID_Segment_alloc");

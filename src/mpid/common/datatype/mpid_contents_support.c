@@ -20,7 +20,7 @@ void MPID_Type_access_contents(MPI_Datatype type,
 
     MPIR_Type_get_envelope_impl(type, &nr_ints, &nr_aints, &nr_types, &combiner);
 
-    /* hardcoded handling of MPICH2 contents format... */
+    /* hardcoded handling of MPICH contents format... */
     MPID_Datatype_get_ptr(type, dtp);
     DLOOP_Assert(dtp != NULL);
 
@@ -49,7 +49,7 @@ void MPID_Type_access_contents(MPI_Datatype type,
     *types_p = (MPI_Datatype *) (((char *) cp) + struct_sz);
     *ints_p  = (int *) (((char *) (*types_p)) + types_sz);
     *aints_p = (MPI_Aint *) (((char *) (*ints_p)) + ints_sz);
-    /* end of hardcoded handling of MPICH2 contents format */
+    /* end of hardcoded handling of MPICH contents format */
 
     return;
 }

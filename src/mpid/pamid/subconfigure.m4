@@ -1,9 +1,9 @@
 [#] start of __file__
-dnl MPICH2_SUBCFG_BEFORE=src/mpid/common/sched
-dnl MPICH2_SUBCFG_BEFORE=src/mpid/common/datatype
-dnl MPICH2_SUBCFG_BEFORE=src/mpid/common/thread
+dnl MPICH_SUBCFG_BEFORE=src/mpid/common/sched
+dnl MPICH_SUBCFG_BEFORE=src/mpid/common/datatype
+dnl MPICH_SUBCFG_BEFORE=src/mpid/common/thread
 
-dnl _PREREQ handles the former role of mpich2prereq, setup_device, etc
+dnl _PREREQ handles the former role of mpichprereq, setup_device, etc
 [#] expansion is: PAC_SUBCFG_PREREQ_[]PAC_SUBCFG_AUTO_SUFFIX
 AC_DEFUN([PAC_SUBCFG_PREREQ_]PAC_SUBCFG_AUTO_SUFFIX,[
 AM_CONDITIONAL([BUILD_PAMID],[test "$device_name" = "pamid"])
@@ -120,7 +120,7 @@ if test "${pamid_platform}" = "BGQ" ; then
   # of libstdc++.so unless this '-all-static' option is used. This seems to
   # be a problem specific to libstdc++.
   #
-  # Only the 'cpi' and 'mpich2version' executables have this problem.
+  # Only the 'cpi' and 'mpichversion' executables have this problem.
   MPID_LIBTOOL_STATIC_FLAG="-all-static"
 fi
 

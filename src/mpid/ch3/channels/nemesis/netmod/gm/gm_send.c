@@ -31,10 +31,10 @@ send_cell (int node_id, int port_id, MPID_nem_cell_ptr_t cell, int datalen)
 {
     MPID_nem_pkt_t *pkt = (MPID_nem_pkt_t *)MPID_NEM_CELL_TO_PACKET (cell);
 
-    MPIU_Assert (datalen <= MPID_NEM_MPICH2_DATA_LEN);
+    MPIU_Assert (datalen <= MPID_NEM_MPICH_DATA_LEN);
 
     DO_PAPI (PAPI_reset (PAPI_EventSet));
-    gm_send_with_callback (MPID_nem_module_gm_port, pkt, PACKET_SIZE, datalen + MPID_NEM_MPICH2_HEAD_LEN, GM_LOW_PRIORITY, node_id,
+    gm_send_with_callback (MPID_nem_module_gm_port, pkt, PACKET_SIZE, datalen + MPID_NEM_MPICH_HEAD_LEN, GM_LOW_PRIORITY, node_id,
 			   port_id, send_callback, (void *)cell);
     DO_PAPI (PAPI_accum_var (PAPI_EventSet, PAPI_vvalues4));
     return MPI_SUCCESS;
@@ -70,10 +70,10 @@ MPID_nem_send_from_queue()
 	switch (e->type)
 	{
 	case SEND_TYPE_CELL:
-	    mpi_errno = send_cell (e->node_id, e->port_id, e->u.cell, e->u.cell->pkt.mpich2.datalen);
+	    mpi_errno = send_cell (e->node_id, e->port_id, e->u.cell, e->u.cell->pkt.mpich.datalen);
             if (mpi_errno) MPIU_ERR_POP (mpi_errno);
 	    --MPID_nem_module_gm_num_send_tokens;
-            MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE, "Sent pkt from queue len=%d\n", e->u.cell->pkt.mpich2.datalen);
+            MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE, "Sent pkt from queue len=%d\n", e->u.cell->pkt.mpich.datalen);
 	    break;
 	case SEND_TYPE_RDMA:
 	    switch (e->u.rdma.type)
@@ -139,8 +139,8 @@ MPID_nem_gm_send (MPIDI_VC_t *vc, MPID_nem_cell_ptr_t cell, int datalen)
 	e->type = SEND_TYPE_CELL;
 	e->u.cell = (MPID_nem_cell_t *)cell;
 	
-	cell->pkt.mpich2.source = MPID_nem_mem_region.rank;
-	cell->pkt.mpich2.datalen = datalen;
+	cell->pkt.mpich.source = MPID_nem_mem_region.rank;
+	cell->pkt.mpich.datalen = datalen;
 	
 	MPID_nem_gm_queue_enqueue (send, e);
 	mpi_errno = MPID_nem_send_from_queue();

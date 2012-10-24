@@ -15,7 +15,7 @@ static int MPIU_INSTR_Finalize( void *p );
 
 /* */
 /*
- * Basic but general support for instrumentation hooks in MPICH2
+ * Basic but general support for instrumentation hooks in MPICH
  *
  * Most actions are handled by MPIU_INSTR_xxx macros (to permit both lowest
  * overhead and to allow instrumentation to be selected at compile time.

@@ -11,13 +11,13 @@ fi
 AC_SUBST(VERSION)
 AC_PATH_PROG(PERL,perl)
 
-# Find the location of the mpich2 sources
+# Find the location of the mpich sources
 if test -z "$abs_srcdir" ; then
     abs_srcdir=`cd $srcdir && pwd`
 fi
-abs_mpich2srcdir=`cd $abs_srcdir && cd .. && pwd`
+abs_mpichsrcdir=`cd $abs_srcdir && cd .. && pwd`
 
-AC_SUBST(abs_mpich2srcdir)
+AC_SUBST(abs_mpichsrcdir)
 
 # Does xargs need the -r option to handle the case where the input 
 # is empty (gnu utils do, Mac OSX does not accept -r)

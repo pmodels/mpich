@@ -7,7 +7,7 @@
 
 /*
  * This file provides the very basic definitions for use in a component
- * that is to work with MPICH2.  This defines (by inclusion) the 
+ * that is to work with MPICH.  This defines (by inclusion) the 
  * MPI error reporting routines, memory access routines, and common types.
  * Using this include (instead of the comprehensive mpiimpl.h file) is 
  * appropriate for modules that perform more basic functions, such as

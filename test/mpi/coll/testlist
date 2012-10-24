@@ -108,7 +108,7 @@ icalltoallv 5
 icalltoallv 7
 icalltoallw 5
 icalltoallw 7
-# the opxxx tests look at optional types, and are included for MPICH2 testing.
+# the opxxx tests look at optional types, and are included for MPICH testing.
 # MPI implementations may instead signal errors for these types
 opland 4
 oplor 4

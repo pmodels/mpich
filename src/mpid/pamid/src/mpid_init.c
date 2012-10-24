@@ -200,7 +200,7 @@ static void
 MPIDI_PAMI_client_init(int* rank, int* size, int threading)
 {
   /* ------------------------------------ */
-  /*  Initialize the MPICH2->PAMI Client  */
+  /*  Initialize the MPICH->PAMI Client  */
   /* ------------------------------------ */
   pami_configuration_t config;
   pami_result_t        rc = PAMI_ERROR;
@@ -280,7 +280,7 @@ MPIDI_PAMI_context_init(int* threading)
        * requested contexts by this value.
        */
       unsigned possible_contexts = PAMIX_Client_query(MPIDI_Client, PAMI_CLIENT_NUM_CONTEXTS).value.intval;
-      TRACE_ERR("PAMI allows up to %u contexts; MPICH2 allows up to %u\n",
+      TRACE_ERR("PAMI allows up to %u contexts; MPICH allows up to %u\n",
                 possible_contexts, MPIDI_Process.avail_contexts);
       if (MPIDI_Process.avail_contexts > possible_contexts)
         MPIDI_Process.avail_contexts = possible_contexts;
@@ -540,10 +540,10 @@ MPIDI_PAMI_init(int* rank, int* size, int* threading)
 #else
       printf("ASSERT_LEVEL            : not defined\n");
 #endif
-#ifdef MPICH2_LIBDIR
-      printf("MPICH2_LIBDIR           : %s\n", MPICH2_LIBDIR);
+#ifdef MPICH_LIBDIR
+      printf("MPICH_LIBDIR           : %s\n", MPICH_LIBDIR);
 #else
-      printf("MPICH2_LIBDIR           : not defined\n");
+      printf("MPICH_LIBDIR           : not defined\n");
 #endif
       printEnvVars("MPICH_");
       printEnvVars("PAMID_");
@@ -601,7 +601,7 @@ MPIDI_VCRT_init(int rank, int size)
 
 
 /**
- * \brief Initialize MPICH2 at ADI level.
+ * \brief Initialize MPICH at ADI level.
  * \param[in,out] argc Unused
  * \param[in,out] argv Unused
  * \param[in]     requested The thread model requested by the user.
@@ -771,7 +771,7 @@ int MPIDI_Banner(char * bufPtr) {
     strcpy(type, "32bit (MPI over PAMI)");
 #endif
 
-    sprintf(msgBuf,"MPICH2 library was compiled on");
+    sprintf(msgBuf,"MPICH library was compiled on");
 
     tmx=MPIU_Malloc(sizeof(struct tm));
     sprintf(buf,__DATE__" "__TIME__);

@@ -34,7 +34,7 @@ if test "X$pac_lib_mpi_is_building" != "Xyes" ; then
      fi
   fi
   # Look for MPILIB first if it is defined
-  AC_SEARCH_LIBS(MPI_Init,$MPILIB mpi mpich mpich2)
+  AC_SEARCH_LIBS(MPI_Init,$MPILIB mpi mpich mpich)
   if test "$ac_cv_search_MPI_Init" = "no" ; then
     ifelse($2,,
     AC_MSG_ERROR([Could not find MPI library]),[$2])
@@ -125,8 +125,8 @@ AC_DEFUN([PAC_ARG_MPI_KNOWN_TYPES],[
 AC_ARG_WITH(mpich,
 [--with-mpich=path  - Assume that we are building with MPICH],
 ac_mpi_type=mpich)
-# Allow MPICH2 as well as MPICH
-AC_ARG_WITH(mpich2,
+# Allow MPICH as well as MPICH
+AC_ARG_WITH(mpich,
 [--with-mpich=path  - Assume that we are building with MPICH],
 ac_mpi_type=mpich)
 AC_ARG_WITH(lammpi,
@@ -436,7 +436,7 @@ case $ac_mpi_type in
         LDFLAGS="$LDFLAGS -L$with_mpichnt/lib"
         AC_CHECK_LIB(mpich,MPI_Init,found="yes",found="no")
         if test "$found" = "no" ; then
-          AC_CHECK_LIB(mpich2,MPI_Init,found="yes",found="no")
+          AC_CHECK_LIB(mpich,MPI_Init,found="yes",found="no")
         fi
 	if test "$enable_cxx" != no ; then
 	    AC_PROG_CXX
@@ -470,7 +470,7 @@ case $ac_mpi_type in
 	;;
 
     generic)
-	AC_SEARCH_LIBS(MPI_Init,mpi mpich2 mpich)
+	AC_SEARCH_LIBS(MPI_Init,mpi mpich mpich)
 	if test "$ac_cv_lib_mpi_MPI_Init" = "yes" ; then
 	    MPILIBNAME="mpi"
 	fi	

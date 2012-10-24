@@ -15,7 +15,7 @@ nodist_include_HEADERS += src/include/mpi.h
 ## important because they contain lots of info that is computed by configure.
 nodist_noinst_HEADERS +=     \
     src/include/glue_romio.h \
-    src/include/mpich2info.h \
+    src/include/mpichinfo.h \
     src/include/mpichconf.h  \
     src/include/mpichtimer.h
 

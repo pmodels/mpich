@@ -77,7 +77,7 @@ char *MPIU_Strdup( const char * );
 
 /* ---------------------------------------------------------------------- */
 /* FIXME - The string routines do not belong in the memory header file  */
-/* FIXME - The string error code such be MPICH2-usable error codes */
+/* FIXME - The string error code such be MPICH-usable error codes */
 #define MPIU_STR_SUCCESS    0
 #define MPIU_STR_FAIL      -1
 #define MPIU_STR_NOMEM      1

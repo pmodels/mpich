@@ -58,7 +58,7 @@ require "$maintdir/extractstrings";
                     'MPID_STATE_MPIDU_SOCK_LISTEN',   # used in sock code
                     'MPID_STATE_MPIDU_SOCK_ACCEPT',
                     'MPID_STATE_POLL'   => 'poll',
-                    # MPICH2 internal implementation routines
+                    # MPICH internal implementation routines
                     'MPID_STATE_UPDATE_REQUEST' => 'update_request',
                     'MPID_STATE_CREATE_REQUEST' => 'create_request',
                     'MPID_STATE_MPIDU_YIELD'       => 'MPIDU_Yield',
@@ -197,7 +197,7 @@ open DC, ">src/util/logging/common/state_names.h" ||
 # Print header
 # Note that we include only mpiallstates.h .  It is important not to
 # include mpiimpl.h, since this file may be used in code that wants to
-# be well modularized and not be entangled with the general MPICH2 
+# be well modularized and not be entangled with the general MPICH 
 # implementation header.
 print DC "/* -*- Mode: C; c-basic-offset:4 ; -*- */
 /*  
@@ -327,7 +327,7 @@ sub findStateDecl {
 	    $state =~ s/\s+//g;   # Remove blanks
 	    $candidateLine .= $state;
 	    # Check for special cases (mostly system calls embedded within
-	    # other routines that are not implemented by MPICH2.
+	    # other routines that are not implemented by MPICH.
 	    # In the long run, these should use a different macro instead
 	    # of MPIxxx_STATE_DECL
 	    if (!$inDecls) { $lastState = ""; }

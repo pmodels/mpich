@@ -27,7 +27,7 @@ implementations varies.  As of August, 2011 the following MPI implementations ar
 known to work correctly with ARMCI-MPI:
 
  + MVAPICH2 1.6
- + MPICH2
+ + MPICH
  + Cray MPI on Cray XE6
  + IBM MPI on BG/P (set ARMCI_STRIDED_METHOD=IOV and ARMCI_IOV_METHOD=BATCHED)
  + OpenMPI 1.5.4 (set ARMCI_STRIDED_METHOD=IOV and ARMCI_IOV_METHOD=BATCHED)
@@ -65,9 +65,9 @@ Progress semantics:
 
  * On some MPI implementations and networks you may need to enable implicit
    progress.  In many cases this is done through an environment variable.  For
-   MPICH2: set MPICH_ASYNC_PROGRESS; for MVAPICH2 recompile with
+   MPICH: set MPICH_ASYNC_PROGRESS; for MVAPICH2 recompile with
    --enable-async-progress and set MPICH_ASYNC_PROGRESS; set DCMF_INTERRUPTS=1
-   for MPICH2-BG; etc.
+   for MPICH-BG; etc.
 
 ===============================================================================
 Environment Variables:

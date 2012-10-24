@@ -9,7 +9,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-/* Test sent in by Avery Ching to report a bug in MPICH2. 
+/* Test sent in by Avery Ching to report a bug in MPICH. 
    Adding it as a regression test. */
 
 /*
@@ -91,7 +91,7 @@ int main(int argc, char **argv)
     MPI_Unpack(unpack_buf, unpack_buf_sz, &buf_pos,
 	       mem_buf, 2, mem_dtype, MPI_COMM_SELF);
     /* Note: Unpack without a Pack is not technically correct, but should work
-     * with MPICH2. */
+     * with MPICH. */
 
     /* print_char_buf("mem_buf after unpack", mem_buf, 2 * mem_dtype_ext);
        print_char_buf("correct buffer should be", 

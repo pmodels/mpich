@@ -152,7 +152,7 @@ print PARAM_README <<EOT;
     See COPYRIGHT in top-level directory.
 
 This file lists the various environment variables available to change the
-behavior of the MPICH2 library.  These are intended to be used by advanced
+behavior of the MPICH library.  These are intended to be used by advanced
 users.
 ---------------------------------------------------------------------------
 

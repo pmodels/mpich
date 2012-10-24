@@ -625,7 +625,7 @@ sub AddMPIProgram {
 	&$InitForTest();
     }
 
-    # For non-MPICH2 versions of mpiexec, a timeout may require a different
+    # For non-MPICH versions of mpiexec, a timeout may require a different
     # environment variable or command line option (e.g., for Cray aprun, 
     # the option -t <sec> must be given, there is no environment variable 
     # to set the timeout.

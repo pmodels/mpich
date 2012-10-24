@@ -72,7 +72,7 @@
  * synchronization.
  *
  * So for the moment, we only provide a minimal set of annotations that seems to
- * be both common between the tools and useful in MPICH2.
+ * be both common between the tools and useful in MPICH.
  */
 
 #define MPL_VG_THREAD_INVALID  0
@@ -115,7 +115,7 @@
 #endif
 
 /* This is only a modest subset of all of the available client requests defined
-   in the valgrind headers.  As MPICH2 is modified to use more of them, this
+   in the valgrind headers.  As MPICH is modified to use more of them, this
    list should be expanded appropriately. */
 #if defined(MPL_VG_AVAILABLE)
 #  if defined(VALGRIND_MAKE_MEM_DEFINED)

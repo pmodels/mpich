@@ -5,7 +5,7 @@
  */
 
 /* This file contains glue code that ROMIO needs to call/use in order to access
- * certain internals of MPICH2.  This allows us stop using "mpiimpl.h" (and all
+ * certain internals of MPICH.  This allows us stop using "mpiimpl.h" (and all
  * the headers it includes) directly inside of ROMIO. */
 
 #include "mpiimpl.h"
@@ -37,7 +37,7 @@ int MPIR_Ext_assert_fail(const char *cond, const char *file_name, int line_num)
 
 /* These two routines export the ALLFUNC CS_ENTER/EXIT macros as functions so
  * that ROMIO can use them.  These routines only support the GLOBAL granularity
- * of MPICH2 threading; other accommodations must be made for finer-grained
+ * of MPICH threading; other accommodations must be made for finer-grained
  * threading strategies. */
 void MPIR_Ext_cs_enter_allfunc(void)
 {

@@ -9,7 +9,7 @@ MPI_SIZEOF) that exist only in F90, and on the F90 extended support)
  Sections 10.2.4 and 10.2.5 in the MPI-2 Standard.  Full support for these
  features `cannot` be efficiently implemented within the Fortran 90 
  language and would require a nonportable interation with specific 
- Fortran 90 compilers.  MPICH2 has chosen to offer many of the features
+ Fortran 90 compilers.  MPICH has chosen to offer many of the features
  of the extended Fortran support, but there are limitations.  
  For example, some routines may accept only scalars or one-dimensional 
  arrays.  

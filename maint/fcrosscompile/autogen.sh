@@ -9,7 +9,7 @@ rm -f configure && \
 rm -rf autom4te.cache)
 
 (cd $pgmdir && \
-# autoconf -I $HOME/mpich2_work/mpich2/confdb && \
+# autoconf -I $HOME/mpich_work/mpich/confdb && \
 # autoheader -I ../../confdb && \
 autoconf -I ../../confdb && \
 rm -fr config.log config.status autom4te.cache)

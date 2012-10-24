@@ -1,17 +1,17 @@
 #! /bin/sh
 #
-# Get coverage information for mpich2
+# Get coverage information for mpich
 #
 #set -x
-# The default approach is to prepare the coverage for this MPICH2 
+# The default approach is to prepare the coverage for this MPICH 
 # distribution and to place the coverage web pages into a 
-# (mpich2src)/www/coverage
-srcdir=@abs_mpich2srcdir@
+# (mpichsrc)/www/coverage
+srcdir=@abs_mpichsrcdir@
 tsuites=$srcdir/tests/mpi
 weblocbase=$srcdir/www/coverage
 weblocprefix=""
-blddir=/tmp/$LOGNAME/mpich2-cov
-mpiinstalldir=/tmp/$LOGNAME/mpich2-cinst
+blddir=/tmp/$LOGNAME/mpich-cov
+mpiinstalldir=/tmp/$LOGNAME/mpich-cinst
 
 logfile=""
 # set pm=mpd if mpd is available
@@ -22,11 +22,11 @@ pm=mpd
 device="ch3:sock"
 
 test_intel=yes
-test_mpich2=yes
+test_mpich=yes
 test_mpich1=yes
 test_cxx=yes
 test_io=yes
-testNames="intel mpich1 mpich2 cxx io"
+testNames="intel mpich1 mpich cxx io"
 build_mpich=yes
 alltest=yes
 update_web=yes
@@ -75,7 +75,7 @@ for arg ; do
         alltest=no
 	test_intel=no
 	test_mpich1=no
-	test_mpich2=no
+	test_mpich=no
 	test_io=no
 	test_cxx=no
     fi
@@ -94,7 +94,7 @@ for arg ; do
     alltest=no
     test_intel=no
     test_mpich1=no
-    test_mpich2=no
+    test_mpich=no
     test_io=no
     test_cxx=no
     ;;
@@ -119,7 +119,7 @@ createcoverage [ -srcdir=sourcedir ] [ -blddir=builddir ]
                [ -test=onetest ] [ -notest=skiptest ]
                [ -device=device ] [ -nobuild ] [ -quiet ] [ -pm=pm ]
                [ -[no]updateweb ] [ -webdir=webdir ]
-     sourcedir   - Directory containing the source  for MPICH2.
+     sourcedir   - Directory containing the source  for MPICH.
                    Default is $srcdir
      blddir      - Directory where the coverage tests should be built.
                    Default is $blddir
@@ -167,7 +167,7 @@ if [ -n "$weblocprefix" ] ; then
 fi
 annoteindex=$webloc/index.htm
 # Locations of the test directories
-mpich2srcdir=$srcdir/Test/mpi
+mpichsrcdir=$srcdir/Test/mpi
 intelsrcdir=$tsuites/IntelMPITEST
 mpich1srcdir=$tsuites/mpich1test
 cxxsrcdir=$tsuites/mpicxxtest
@@ -236,7 +236,7 @@ fi
 
 # Build with the coverage options
 if [ $build_mpich = yes ] ; then
-    echo "------ Build MPICH2 ------" >&6
+    echo "------ Build MPICH ------" >&6
     cd $blddir
     $srcdir/configure --enable-coverage --with-pm=$pm --enable-romio \
     		--with-device=$device \
@@ -258,20 +258,20 @@ if [ $build_mpich = yes ] ; then
         echo "Make step failed with return code $rc"
 	exit 1
     fi
-    echo "------ Install MPICH2 ------" >&6
+    echo "------ Install MPICH ------" >&6
     make install >&6 2>&6
     rc=$?
     if [ "$rc" != 0 ] ; then
 	echo "Make install step failed with return code $rc"
         exit 1
     fi
-    echo "------ End of Install MPICH2 ------" >&6
+    echo "------ End of Install MPICH ------" >&6
 fi
 #
 # Run the tests
-if [ $test_mpich2 = yes ] ; then
-    # The mpich2 tests are easy
-    echo "------ Run MPICH2 Tests ------" >&6
+if [ $test_mpich = yes ] ; then
+    # The mpich tests are easy
+    echo "------ Run MPICH Tests ------" >&6
     if [ "$pm" = mpd ] ; then
         # Start by running the mpd demon
         ($mpiinstalldir/bin/mpd -d & ) >&6 2>&6
@@ -282,7 +282,7 @@ if [ $test_mpich2 = yes ] ; then
         # Stop the mpd demon
         ($mpiinstalldir/bin/mpdallexit) >&6 2>&6
     fi
-    echo "------ End Run MPICH2 Tests ------" >&6
+    echo "------ End Run MPICH Tests ------" >&6
 fi
 
 if [ ! -d $blddir/othertest ] ; then
@@ -304,7 +304,7 @@ if [ $test_intel = yes ] ; then
     fi
     cd $blddir/othertest/intel
     $intelsrcdir/configure --enable-coverage \
-	--with-mpich2=$mpiinstalldir >&6 2>&6
+	--with-mpich=$mpiinstalldir >&6 2>&6
     make clean >&6 2>&6
     make testing >&6 2>&6
     if [ "$pm" = mpd ] ; then
@@ -444,7 +444,7 @@ if [ "$update_web" = yes ] ; then
     fi
 fi
 #
-# From mpich2 build directory:
+# From mpich build directory:
 # make coverage >/dev/null 2>&1
 #   The above step creates the *.gcov files
 # maint/getcoverage.in src/mpi/*.gcov src/util/info/*.gcov \

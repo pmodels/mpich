@@ -34,7 +34,7 @@
 #include <math.h>
 #include "mpitestconf.h"
 
-#if !defined(USE_STRICT_MPI) && defined(MPICH2)
+#if !defined(USE_STRICT_MPI) && defined(MPICH)
 int main(int argc, char **argv)
 {
     int i;
@@ -122,7 +122,7 @@ int main(int argc, char **argv)
 }
 
 #else
-/* Simple null program to allow building this file with non-MPICH2 
+/* Simple null program to allow building this file with non-MPICH 
    implementations */
 int main(int argc, char **argv)
 {

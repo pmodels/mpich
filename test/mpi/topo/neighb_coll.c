@@ -10,7 +10,7 @@
 #include <mpi.h>
 #include "mpitest.h"
 
-#if !defined(USE_STRICT_MPI) && defined(MPICH2)
+#if !defined(USE_STRICT_MPI) && defined(MPICH)
 #define TEST_NEIGHB_COLL 1
 #endif
 

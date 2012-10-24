@@ -1,7 +1,7 @@
 Information on the debugger interface
 
 The debugger interface runs *in the debugger*.  The file dll_mpich.c
-is used to create a library libtvmpich2.a .  This library must be a
+is used to create a library libtvmpich.a .  This library must be a
 dynamically loadable shared library.
 
 The debugger provides a number of functions that are used by the

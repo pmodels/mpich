@@ -5,7 +5,7 @@ AC_PREREQ(2.62)
 #
 
 m4_include([version.m4])
-AC_INIT([Hydra], MPICH2_VERSION_m4)
+AC_INIT([Hydra], MPICH_VERSION_m4)
 
 AC_CONFIG_AUX_DIR(confdb)
 AC_CONFIG_MACRO_DIR(confdb)
@@ -16,7 +16,7 @@ AC_CANONICAL_TARGET
 AC_ARG_PROGRAM
 AC_USE_SYSTEM_EXTENSIONS
 # Define -D_DARWIN_C_SOURCE on OS/X to ensure that hwloc will build even if we
-# are building under MPICH2 with --enable-strict that defined _POSIX_C_SOURCE.
+# are building under MPICH with --enable-strict that defined _POSIX_C_SOURCE.
 # Some standard Darwin headers don't build correctly under a strict posix
 # environment.
 AS_CASE([$host],
@@ -66,8 +66,8 @@ PAC_CC_FUNCTION_NAME_SYMBOL
 
 # Build information
 # these values come from the m4_include above
-HYDRA_VERSION="MPICH2_VERSION_m4"
-HYDRA_RELEASE_DATE="MPICH2_RELEASE_DATE_m4"
+HYDRA_VERSION="MPICH_VERSION_m4"
+HYDRA_RELEASE_DATE="MPICH_RELEASE_DATE_m4"
 if test -z "$HYDRA_VERSION" ; then
     AC_MSG_ERROR([Version information not found. Configuration aborted.])
 fi
@@ -101,10 +101,10 @@ PAC_POP_ALL_FLAGS
 
 AC_DEFINE_UNQUOTED(HYDRA_CONFIGURE_ARGS_CLEAN,"`echo $ac_configure_args`",[Configure arguments])
 
-# Dirty hack -- If we are compiling within MPICH2, use the MPL in the
+# Dirty hack -- If we are compiling within MPICH, use the MPL in the
 # src/mpl directory. If not, use the one we checked out separately for
 # Hydra.
-if test "$FROM_MPICH2" = "yes" ; then
+if test "$FROM_MPICH" = "yes" ; then
    mpl_srcdir="../../mpl"
    mpl_dist_srcdir=
 else

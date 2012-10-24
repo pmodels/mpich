@@ -42,7 +42,7 @@ static inline void DLOOP_Stackelm_load(struct DLOOP_Dataloop_stackelm *elmp,
  *
  * Notes:
  * - Assumes that the segment has been allocated.
- * - Older MPICH2 code may pass "0" to indicate HETEROGENEOUS or "1" to
+ * - Older MPICH code may pass "0" to indicate HETEROGENEOUS or "1" to
  *   indicate HETEROGENEOUS.
  *
  */

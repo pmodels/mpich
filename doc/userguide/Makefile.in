@@ -1,12 +1,12 @@
 ALL: all-redirect
 SHELL = @SHELL@
 srcdir = @srcdir@
-MPICH2_VERSION = @MPICH2_VERSION@
+MPICH_VERSION = @MPICH_VERSION@
 .SUFFIXES: .pdf .ps .dvi .tex
 
 # Set these to the location of the web and ftp locations for the documents
-WEBDIR = /mcs/www/mpi/mpich2/docs
-FTPDIR = /home/ftp/pub/mpi/mpich2
+WEBDIR = /mcs/www/mpi/mpich/docs
+FTPDIR = /home/ftp/pub/mpi/mpich
 
 @VPATH@
 
@@ -15,9 +15,9 @@ BIBTEX     = BIBINPUTS=".:$(srcdir):" ; export BIBINPUTS ; bibtex
 DVIPDFM    = TEXINPUTS=".:$(srcdir):" ; export TEXINPUTS ; dvipdfm
 LATEX2HTML = latex2html
 
-# Update the %MPICH2_VERSION% in user.tex with current version string.
+# Update the %MPICH_VERSION% in user.tex with current version string.
 user.tex: user.tex.vin
-	sed -e "s/%MPICH2_VERSION%/${MPICH2_VERSION}/g" $? > $@
+	sed -e "s/%MPICH_VERSION%/${MPICH_VERSION}/g" $? > $@
 
 user.dvi: user.tex user.bib
 	-$(LATEX) user.tex

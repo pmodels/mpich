@@ -139,7 +139,7 @@ static void help_help_fn(void)
     printf
         ("    -nameserver                      name server information (host:port format)\n");
     printf("    -disable-auto-cleanup            don't cleanup processes on error\n");
-    printf("    -disable-hostname-propagation    let MPICH2 auto-detect the hostname\n");
+    printf("    -disable-hostname-propagation    let MPICH auto-detect the hostname\n");
     printf("    -order-nodes                     order nodes as ascending/descending cores\n");
     printf("    -localhost                       local hostname for the launching node\n");
     printf("    -usize                           universe size (SYSTEM, INFINITE, <value>)\n");
@@ -1353,8 +1353,8 @@ static HYD_status auto_cleanup_fn(char *arg, char ***argv)
 static void hostname_propagation_help_fn(void)
 {
     printf("\n");
-    printf("-disable-hostname-propagation: Let MPICH2 auto-detect the hostname\n");
-    printf("-enable-hostname-propagation: Pass user hostnames to MPICH2 (default)\n\n");
+    printf("-disable-hostname-propagation: Let MPICH auto-detect the hostname\n");
+    printf("-enable-hostname-propagation: Pass user hostnames to MPICH (default)\n\n");
 }
 
 static HYD_status hostname_propagation_fn(char *arg, char ***argv)

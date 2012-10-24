@@ -1,4 +1,4 @@
-MPICH2 Test Suite
+MPICH Test Suite
 
 This test suite is a *supplement* to other test suites, including the
 original MPICH testsuite, the Intel testsuite, and the IBM MPI test suite 
@@ -107,7 +107,7 @@ sendflood 8 timeLimit=600
 
 says to build and run the program sendflood with 8 MPI processes and
 permit the test to run for 600 seconds (by default, at least for
-MPICH2, the default timelimit is 180 seconds).  Other key=value pairs
+MPICH, the default timelimit is 180 seconds).  Other key=value pairs
 can be used to select whether a program should be run at all,
 depending on the abilities of the MPI implementation (this is
 particularly important for Fortran programs, since preprocessor
@@ -143,7 +143,7 @@ strict=bool : If bool is false, only build and run the program if
 
               Says that this test is not valid for a strict MPI implementation;
               it contains extensions to the standard, or in the case of some
-	      MPICH2 development, MPIX routines
+	      MPICH development, MPIX routines
 
 resultTest=proc : This is used to change the way in which the success or 
                   failure of a test is evaluated.  proc is one of several 

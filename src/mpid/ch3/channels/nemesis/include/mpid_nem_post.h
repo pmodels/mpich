@@ -42,7 +42,7 @@ int MPIDI_nem_ckpt_pkthandler_init(int (*pktArray[])(struct MPIDI_VC *vc, union 
 
 /* one-sided */
 
-typedef struct MPID_nem_mpich2_win
+typedef struct MPID_nem_mpich_win
 {
     char *handle;               /* shared-memory segment handle */
     int   proc;                 /* rank of owner */
@@ -50,32 +50,32 @@ typedef struct MPID_nem_mpich2_win
     int   len;                  /* size of window */
     void *local_address;        /* address of window at this process */
 }
-MPID_nem_mpich2_win_t;
+MPID_nem_mpich_win_t;
 
-int MPID_nem_mpich2_alloc_win (void **buf, int len, MPID_nem_mpich2_win_t **win);
-int MPID_nem_mpich2_free_win (MPID_nem_mpich2_win_t *win);
-int MPID_nem_mpich2_attach_win (void **buf, MPID_nem_mpich2_win_t *remote_win);
-int MPID_nem_mpich2_detach_win (MPID_nem_mpich2_win_t *remote_win);
-int MPID_nem_mpich2_serialize_win (void *buf, int buf_len, MPID_nem_mpich2_win_t *win, int *len);
-int MPID_nem_mpich2_deserialize_win (void *buf, int buf_len, MPID_nem_mpich2_win_t **win);
+int MPID_nem_mpich_alloc_win (void **buf, int len, MPID_nem_mpich_win_t **win);
+int MPID_nem_mpich_free_win (MPID_nem_mpich_win_t *win);
+int MPID_nem_mpich_attach_win (void **buf, MPID_nem_mpich_win_t *remote_win);
+int MPID_nem_mpich_detach_win (MPID_nem_mpich_win_t *remote_win);
+int MPID_nem_mpich_serialize_win (void *buf, int buf_len, MPID_nem_mpich_win_t *win, int *len);
+int MPID_nem_mpich_deserialize_win (void *buf, int buf_len, MPID_nem_mpich_win_t **win);
 
-int MPID_nem_mpich2_win_put (void *s_buf, void *d_buf, int len, MPID_nem_mpich2_win_t *remote_win);
-int MPID_nem_mpich2_win_putv (MPID_IOV **s_iov, int *s_niov, MPID_IOV **d_iov, int *d_niov, MPID_nem_mpich2_win_t *remote_win);
-int MPID_nem_mpich2_win_get (void *s_buf, void *d_buf, int len, MPID_nem_mpich2_win_t *remote_win);
-int MPID_nem_mpich2_win_getv (MPID_IOV **s_iov, int *s_niov, MPID_IOV **d_iov, int *d_niov, MPID_nem_mpich2_win_t *remote_win);
+int MPID_nem_mpich_win_put (void *s_buf, void *d_buf, int len, MPID_nem_mpich_win_t *remote_win);
+int MPID_nem_mpich_win_putv (MPID_IOV **s_iov, int *s_niov, MPID_IOV **d_iov, int *d_niov, MPID_nem_mpich_win_t *remote_win);
+int MPID_nem_mpich_win_get (void *s_buf, void *d_buf, int len, MPID_nem_mpich_win_t *remote_win);
+int MPID_nem_mpich_win_getv (MPID_IOV **s_iov, int *s_niov, MPID_IOV **d_iov, int *d_niov, MPID_nem_mpich_win_t *remote_win);
 
-int MPID_nem_mpich2_register_memory (void *buf, int len);
-int MPID_nem_mpich2_deregister_memory (void *buf, int len);
+int MPID_nem_mpich_register_memory (void *buf, int len);
+int MPID_nem_mpich_deregister_memory (void *buf, int len);
 
-int MPID_nem_mpich2_put (void *s_buf, void *d_buf, int len, int proc, int *completion_ctr);
-int MPID_nem_mpich2_putv (MPID_IOV **s_iov, int *s_niov, MPID_IOV **d_iov, int *d_niov, int proc,
+int MPID_nem_mpich_put (void *s_buf, void *d_buf, int len, int proc, int *completion_ctr);
+int MPID_nem_mpich_putv (MPID_IOV **s_iov, int *s_niov, MPID_IOV **d_iov, int *d_niov, int proc,
 		       int *completion_ctr);
-int MPID_nem_mpich2_get (void *s_buf, void *d_buf, int len, int proc, int *completion_ctr);
-int MPID_nem_mpich2_getv (MPID_IOV **s_iov, int *s_niov, MPID_IOV **d_iov, int *d_niov, int proc,
+int MPID_nem_mpich_get (void *s_buf, void *d_buf, int len, int proc, int *completion_ctr);
+int MPID_nem_mpich_getv (MPID_IOV **s_iov, int *s_niov, MPID_IOV **d_iov, int *d_niov, int proc,
 		       int *completion_ctr);
 
      
-#define MPID_nem_mpich2_win_put_val(val, d_buf, remote_win) do {			\
+#define MPID_nem_mpich_win_put_val(val, d_buf, remote_win) do {			\
     char *_d_buf = d_buf;								\
 											\
     _d_buf += (char *)(remote_win)->local_address - (char *)(remote_win)->home_address;	\
@@ -83,7 +83,7 @@ int MPID_nem_mpich2_getv (MPID_IOV **s_iov, int *s_niov, MPID_IOV **d_iov, int *
     *(typeof (val) *)_d_buf = val;							\
 } while (0)
      
-#define MPID_nem_mpich2_win_get_val(s_buf, val, remote_win) do {			\
+#define MPID_nem_mpich_win_get_val(s_buf, val, remote_win) do {			\
     char *_s_buf = s_buf;								\
 											\
     _s_buf += (char *)(remote_win)->local_address - (char *)(remote_win)->home_address;	\
@@ -93,19 +93,19 @@ int MPID_nem_mpich2_getv (MPID_IOV **s_iov, int *s_niov, MPID_IOV **d_iov, int *
 
 
 #if !defined (MPID_NEM_INLINE) || !MPID_NEM_INLINE
-int MPID_nem_mpich2_send_header(void* buf, int size, struct MPIDI_VC *vc, int *again);
-int MPID_nem_mpich2_sendv(MPID_IOV **iov, int *n_iov, struct MPIDI_VC *vc, int *again);
-int MPID_nem_mpich2_sendv_header(MPID_IOV **iov, int *n_iov, struct MPIDI_VC *vc, int *again);
-void MPID_nem_mpich2_send_seg(MPID_Segment segment, MPIDI_msg_sz_t *segment_first, MPIDI_msg_sz_t segment_sz, struct MPIDI_VC *vc, int *again);
-void MPID_nem_mpich2_send_seg_header(MPID_Segment segment, MPIDI_msg_sz_t *segment_first, MPIDI_msg_sz_t segment_size,
+int MPID_nem_mpich_send_header(void* buf, int size, struct MPIDI_VC *vc, int *again);
+int MPID_nem_mpich_sendv(MPID_IOV **iov, int *n_iov, struct MPIDI_VC *vc, int *again);
+int MPID_nem_mpich_sendv_header(MPID_IOV **iov, int *n_iov, struct MPIDI_VC *vc, int *again);
+void MPID_nem_mpich_send_seg(MPID_Segment segment, MPIDI_msg_sz_t *segment_first, MPIDI_msg_sz_t segment_sz, struct MPIDI_VC *vc, int *again);
+void MPID_nem_mpich_send_seg_header(MPID_Segment segment, MPIDI_msg_sz_t *segment_first, MPIDI_msg_sz_t segment_size,
                                      void *header, MPIDI_msg_sz_t header_sz, struct MPIDI_VC *vc, int *again);
-int MPID_nem_mpich2_test_recv(MPID_nem_cell_ptr_t *cell, int *in_fbox, int in_blocking_progress);
-int MPID_nem_mpich2_test_recv_wait(MPID_nem_cell_ptr_t *cell, int *in_fbox, int timeout);
+int MPID_nem_mpich_test_recv(MPID_nem_cell_ptr_t *cell, int *in_fbox, int in_blocking_progress);
+int MPID_nem_mpich_test_recv_wait(MPID_nem_cell_ptr_t *cell, int *in_fbox, int timeout);
 int MPID_nem_recv_seqno_matches(MPID_nem_queue_ptr_t qhead) ;
-int MPID_nem_mpich2_blocking_recv(MPID_nem_cell_ptr_t *cell, int *in_fbox);
-int MPID_nem_mpich2_release_cell(MPID_nem_cell_ptr_t cell, struct MPIDI_VC *vc);
-int MPID_nem_mpich2_enqueue_fastbox(int local_rank);
-int MPID_nem_mpich2_dequeue_fastbox(int local_rank);
+int MPID_nem_mpich_blocking_recv(MPID_nem_cell_ptr_t *cell, int *in_fbox);
+int MPID_nem_mpich_release_cell(MPID_nem_cell_ptr_t cell, struct MPIDI_VC *vc);
+int MPID_nem_mpich_enqueue_fastbox(int local_rank);
+int MPID_nem_mpich_dequeue_fastbox(int local_rank);
 #endif /* MPID_NEM_INLINE */
 
 

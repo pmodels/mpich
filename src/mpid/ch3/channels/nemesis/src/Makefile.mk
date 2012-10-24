@@ -21,7 +21,7 @@ lib_lib@MPILIBNAME@_la_SOURCES +=				\
     src/mpid/ch3/channels/nemesis/src/mpid_nem_alloc.c		\
     src/mpid/ch3/channels/nemesis/src/mpid_nem_init.c		\
     src/mpid/ch3/channels/nemesis/src/mpid_nem_barrier.c	\
-    src/mpid/ch3/channels/nemesis/src/mpid_nem_mpich2.c		\
+    src/mpid/ch3/channels/nemesis/src/mpid_nem_mpich.c		\
     src/mpid/ch3/channels/nemesis/src/mpid_nem_ckpt.c		\
     src/mpid/ch3/channels/nemesis/src/mpid_nem_finalize.c	\
     src/mpid/ch3/channels/nemesis/src/mpid_nem_network_poll.c	\

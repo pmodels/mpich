@@ -6,7 +6,7 @@
 
 #include "mpiimpl.h"
 
-/* mpiext.h contains the prototypes for functions to interface MPICH2
+/* mpiext.h contains the prototypes for functions to interface MPICH
    and ROMIO */
 #include "mpiext.h"
 
@@ -89,7 +89,7 @@ int MPI_File_call_errhandler(MPI_File fh, int errorcode)
 	MPID_Errhandler_get_ptr( eh, e );
     }
 
-    /* Note that, unlike the rest of MPICH2, MPI_File objects are pointers,
+    /* Note that, unlike the rest of MPICH, MPI_File objects are pointers,
        not integers.  */
 
     if (e->handle == MPI_ERRORS_RETURN) {
@@ -144,7 +144,7 @@ int MPI_File_call_errhandler(MPI_File fh, int errorcode)
 
 #ifndef MPICH_MPI_FROM_PMPI
 /* This is a glue routine that can be used by ROMIO 
-   (see mpi-io/glue/mpich2/mpio_err.c) to properly invoke the C++ 
+   (see mpi-io/glue/mpich/mpio_err.c) to properly invoke the C++ 
    error handler */
 #undef FUNCNAME
 #define FUNCNAME MPIR_File_call_cxx_errhandler

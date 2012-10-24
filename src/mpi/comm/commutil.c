@@ -578,7 +578,7 @@ int MPIR_Comm_is_node_consecutive(MPID_Comm * comm)
 
 /*
  * Here are the routines to find a new context id.  The algorithm is discussed 
- * in detail in the mpich2 coding document.  There are versions for
+ * in detail in the mpich coding document.  There are versions for
  * single threaded and multithreaded MPI.
  *
  * Both the threaded and non-threaded routines use the same mask of

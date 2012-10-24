@@ -1,5 +1,5 @@
 [#] start of __file__
-dnl MPICH2_SUBCFG_AFTER=src/mpid/ch3/channels/nemesis
+dnl MPICH_SUBCFG_AFTER=src/mpid/ch3/channels/nemesis
 
 AC_DEFUN([PAC_SUBCFG_PREREQ_]PAC_SUBCFG_AUTO_SUFFIX,[
     #check for NewMadeleine options 

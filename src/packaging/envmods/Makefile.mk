@@ -5,6 +5,6 @@
 ##     See COPYRIGHT in top-level directory.
 ##
 
-# Commented out the installation of mpich2.module till Deji has a
-# complete solution how mpich2.module could be used with modules.
-#sysconf_DATA += src/packaging/envmods/mpich2.module
+# Commented out the installation of mpich.module till Deji has a
+# complete solution how mpich.module could be used with modules.
+#sysconf_DATA += src/packaging/envmods/mpich.module

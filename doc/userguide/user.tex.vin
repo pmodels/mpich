@@ -36,13 +36,13 @@
 %                        (setq TeX-command "latex")))
    
 \begin{document}
-\markright{MPICH2 User's Guide}
-\title{\textbf{MPICH2 User's Guide}\thanks{This work was supported by the Mathematical,
+\markright{MPICH User's Guide}
+\title{\textbf{MPICH User's Guide}\thanks{This work was supported by the Mathematical,
     Information, and Computational Sciences Division subprogram of the
     Office of Advanced Scientific Computing Research, SciDAC Program,
     Office of Science, U.S. Department of Energy, under Contract
     DE-AC02-06CH11357.}\\
-Version %MPICH2_VERSION%\\
+Version %MPICH_VERSION%\\
 Mathematics and Computer Science Division\\
 Argonne National Laboratory}
 
@@ -79,23 +79,23 @@ Brian Toonen
 \section{Introduction}
 \label{sec:introduction}
 
-This manual assumes that MPICH2 has already been installed.  For
-instructions on how to install MPICH2, see the \emph{MPICH2
-  Installer's Guide}, or the \texttt{README} in the top-level MPICH2
+This manual assumes that MPICH has already been installed.  For
+instructions on how to install MPICH, see the \emph{MPICH
+  Installer's Guide}, or the \texttt{README} in the top-level MPICH
 directory.  This manual explains how to compile, link, and run MPI
-applications, and use certain tools that come with MPICH2.  This is a
+applications, and use certain tools that come with MPICH.  This is a
 preliminary version and some sections are not complete yet.  However,
-there should be enough here to get you started with MPICH2.
+there should be enough here to get you started with MPICH.
 
 
-\section{Getting Started with MPICH2}
+\section{Getting Started with MPICH}
 \label{sec:migrating}
 
-MPICH2 is a high-performance and widely portable implementation of the
+MPICH is a high-performance and widely portable implementation of the
 MPI Standard, designed to implement all of MPI-1 and MPI-2 (including
 dynamic process management, one-sided operations, parallel I/O, and
-other extensions). The \emph{MPICH2 Installer's Guide} provides some
-information on MPICH2 with respect to configuring and installing
+other extensions). The \emph{MPICH Installer's Guide} provides some
+information on MPICH with respect to configuring and installing
 it. Details on compiling, linking, and running MPI programs are
 described below.
 
@@ -103,14 +103,14 @@ described below.
 \subsection{Default Runtime Environment}
 \label{sec:default-environment}
 
-MPICH2 provides a separation of process management and communication.
-The default runtime environment in MPICH2 is called Hydra. Other
+MPICH provides a separation of process management and communication.
+The default runtime environment in MPICH is called Hydra. Other
 process managers are also available.
 
 \subsection{Starting Parallel Jobs}
 \label{sec:startup}
 
-MPICH2 implements \texttt{mpiexec} and all of its standard arguments,
+MPICH implements \texttt{mpiexec} and all of its standard arguments,
 together with some extensions. See Section~\ref{sec:mpiexec-standard}
 for standard arguments to \texttt{mpiexec} and various subsections of
 Section~\ref{sec:mpiexec} for extensions particular to various process
@@ -125,7 +125,7 @@ command line arguments in all application programs, including Fortran
 ones, and MPICH1's \texttt{configure} devoted some effort to finding
 the libraries that contained the right versions of \texttt{iargc} and
 \texttt{getarg} and including those libraries with which the
-\texttt{mpif77} script linked MPI programs.  Since MPICH2 does not
+\texttt{mpif77} script linked MPI programs.  Since MPICH does not
 require access to command line arguments to applications, these
 functions are optional, and \texttt{configure} does nothing special
 with them.  If you need them in your applications, you will have to
@@ -135,64 +135,64 @@ using.
 \section{Quick Start}
 \label{sec:quickstart}
 
-To use MPICH2, you will have to know the directory where MPICH2 has
+To use MPICH, you will have to know the directory where MPICH has
 been installed.  (Either you installed it there yourself, or your
 systems administrator has installed it.  One place to look in this
-case might be \texttt{/usr/local}.  If MPICH2 has not yet been
-installed, see the \emph{MPICH2 Installer's Guide}.)  We suggest that
+case might be \texttt{/usr/local}.  If MPICH has not yet been
+installed, see the \emph{MPICH Installer's Guide}.)  We suggest that
 you put the \texttt{bin} subdirectory of that directory into your
-path.  This will give you access to assorted MPICH2 commands to
+path.  This will give you access to assorted MPICH commands to
 compile, link, and run your programs conveniently.  Other commands in
 this directory manage parts of the run-time environment and execute
 tools.
 
-One of the first commands you might run is \texttt{mpich2version} to
-find out the exact version and configuration of MPICH2 you are working
+One of the first commands you might run is \texttt{mpichversion} to
+find out the exact version and configuration of MPICH you are working
 with. Some of the material in this manual depends on just what version
-of MPICH2 you are using and how it was configured at installation
+of MPICH you are using and how it was configured at installation
 time.
 
 You should now be able to run an MPI program.  Let us assume that the
-directory where MPICH2 has been installed is
-\texttt{/home/you/mpich2-installed}, and that you have added that directory to
+directory where MPICH has been installed is
+\texttt{/home/you/mpich-installed}, and that you have added that directory to
 your path, using 
 \begin{verbatim}
-    setenv PATH /home/you/mpich2-installed/bin:$PATH
+    setenv PATH /home/you/mpich-installed/bin:$PATH
 \end{verbatim}
 for \texttt{tcsh} and \texttt{csh}, or 
 \begin{verbatim}
-    export PATH=/home/you/mpich2-installed/bin:$PATH
+    export PATH=/home/you/mpich-installed/bin:$PATH
 \end{verbatim}
 for \texttt{bash} or \texttt{sh}.
 Then to run an MPI program, albeit only on one machine, you can do:
 \begin{verbatim}
-    cd  /home/you/mpich2-installed/examples
+    cd  /home/you/mpich-installed/examples
     mpiexec -n 3 ./cpi
 \end{verbatim}
 
 Details for these commands are provided below, but if you can
 successfully execute them here, then you have a correctly installed
-MPICH2 and have run an MPI program. 
+MPICH and have run an MPI program. 
 
 \section{Compiling and Linking}
 \label{sec:compiling}
 
 A convenient way to compile and link your program is by using scripts
-that use the same compiler that MPICH2 was built with.  These are
+that use the same compiler that MPICH was built with.  These are
 \texttt{mpicc}, \texttt{mpicxx}, \texttt{mpif77}, and \texttt{mpif90},
 for C, C++, Fortran 77, and Fortran 90 programs, respectively.  If any
-of these commands are missing, it means that MPICH2 was configured
+of these commands are missing, it means that MPICH was configured
 without support for that particular language.
 
 %% Pavan Balaji (12/27/2009): I'm commenting out this part as this is
-%% broken in the current MPICH2 stack (see ticket #502).
+%% broken in the current MPICH stack (see ticket #502).
 
 %% \subsection{Specifying Compilers}
 %% \label{sec:specifying-compilers}
 
-%% You need not use the same compiler that MPICH2 was built with, but not
+%% You need not use the same compiler that MPICH was built with, but not
 %% all compilers are compatible.  You can also specify the compiler for
-%% building MPICH2 itself, as reported by \texttt{mpich2version}, just by
+%% building MPICH itself, as reported by \texttt{mpichversion}, just by
 %% using the compiling and linking commands from the previous section.
 %% The environment variables \texttt{MPICH_CC}, \texttt{MPICH_CXX},
 %% \texttt{MPICH_F77}, and \texttt{MPICH_F90} may be used to specify
@@ -226,7 +226,7 @@ etc. to be skipped).
 \subsection{Special Issues for Fortran}
 \label{sec:fortran}
 
-MPICH2 provides two kinds of support for Fortran programs.  For
+MPICH provides two kinds of support for Fortran programs.  For
 Fortran 77 programmers, the file \texttt{mpif.h} provides the
 definitions of the MPI constants such as \texttt{MPI\_COMM\_WORLD}.
 Fortran 90 programmers should use the \texttt{MPI} module instead;
@@ -241,7 +241,7 @@ are not provided.
 \label{sec:mpiexec}
 
 The MPI-2 Standard describes \texttt{mpiexec} as a suggested way to
-run MPI programs. MPICH2 implements the \texttt{mpiexec} standard, and
+run MPI programs. MPICH implements the \texttt{mpiexec} standard, and
 also provides some extensions.
 
 \subsection{Standard \texttt{mpiexec}}
@@ -271,7 +271,7 @@ It is also possible to start a one process MPI job (with a
 \texttt{MPI\_COMM\_WORLD} whose size is equal to 1), without using
 \texttt{mpiexec}.  This process will become an MPI process when it
 calls \texttt{MPI\_Init}, and it may then call other MPI functions.
-Currently, MPICH2 does not fully support calling the dynamic process
+Currently, MPICH does not fully support calling the dynamic process
 routines from MPI-2 (e.g., \texttt{MPI\_Comm\_spawn} or
 \texttt{MPI\_Comm\_accept}) from processes that are not started with
 \texttt{mpiexec}.
@@ -288,8 +288,8 @@ For the time being we will document these separately.
 
 \subsection{\texttt{mpiexec} Extensions for the Hydra Process Manager}
 
-MPICH2 provides a number of process management systems. Hydra is the
-default process manager in MPICH2. More details on Hydra and its
+MPICH provides a number of process management systems. Hydra is the
+default process manager in MPICH. More details on Hydra and its
 extensions to mpiexec can be found at
 \url{http://wiki.mcs.anl.gov/mpich2/index.php/Using\_the\_Hydra\_Process\_Manager}
 
@@ -514,20 +514,20 @@ machines listed to satisfy the requested number of processes; you can list the
 same machine name multiple times if necessary.  
 
 
-\subsection{Using MPICH2 with SLURM and PBS}
+\subsection{Using MPICH with SLURM and PBS}
 \label{sec:external_pm}
 
-There are multiple ways of using MPICH2 with SLURM or PBS. Hydra
+There are multiple ways of using MPICH with SLURM or PBS. Hydra
 provides native support for both SLURM and PBS, and is likely the
-easiest way to use MPICH2 on these systems (see the Hydra
+easiest way to use MPICH on these systems (see the Hydra
 documentation above for more details).
 
-Alternatively, SLURM also provides compatibility with MPICH2's
+Alternatively, SLURM also provides compatibility with MPICH's
 internal process management interface. To use this, you need to
-configure MPICH2 with SLURM support, and then use the {\texttt srun}
+configure MPICH with SLURM support, and then use the {\texttt srun}
 job launching utility provided by SLURM.
 
-For PBS, MPICH2 jobs can be launched in two ways: (i) use Hydra's
+For PBS, MPICH jobs can be launched in two ways: (i) use Hydra's
 mpiexec with the appropriate options corresponding to PBS, or (ii)
 using the OSC mpiexec.
 
@@ -536,7 +536,7 @@ using the OSC mpiexec.
 \label{sec:osc_mpiexec}
 
 Pete Wyckoff from the Ohio Supercomputer Center provides a alternate
-utility called OSC mpiexec to launch MPICH2 jobs on PBS systems. More
+utility called OSC mpiexec to launch MPICH jobs on PBS systems. More
 information about this can be found here:
 \url{http://www.osc.edu/~pw/mpiexec}
 
@@ -546,13 +546,13 @@ information about this can be found here:
 
 Debugging parallel programs is notoriously difficult.  Here we describe
 a number of approaches, some of which depend on the exact version of
-MPICH2 you are using. 
+MPICH you are using. 
 
 
 \subsection{TotalView}
 \label{sec:totalview}
 
-MPICH2 supports use of the TotalView debugger from Etnus.  If MPICH2
+MPICH supports use of the TotalView debugger from Etnus.  If MPICH
 has been configured to enable debugging with TotalView then one can
 debug an MPI program using
 
@@ -568,24 +568,24 @@ the \texttt{main} function.  TotalView will show that the program (all
 processes) are stopped in the call to \texttt{MPI\_Init}.
 
 If you have TotalView 8.1.0 or later, you can use a TotalView feature
-called indirect launch with MPICH2. Invoke TotalView as:
+called indirect launch with MPICH. Invoke TotalView as:
 
 \begin{verbatim}
     totalview <program> -a <program args>
 \end{verbatim}
 
 Then select the Process/Startup Parameters command. Choose the
-Parallel tab in the resulting dialog box and choose MPICH2 as the
+Parallel tab in the resulting dialog box and choose MPICH as the
 parallel system. Then set the number of tasks using the Tasks field
 and enter other needed mpiexec arguments into the Additional Starter
 Arguments field.
 
 \section{Checkpointing}
 \label{sec:checkpointing}
-MPICH2 supports checkpoint/rollback fault tolerance when used with the
+MPICH supports checkpoint/rollback fault tolerance when used with the
 Hydra process manager.  Currently only the BLCR checkpointing library
 is supported.  BLCR needs to be installed separately.  Below we
-describe how to enable the feature in MPICH2 and how to use it.  This
+describe how to enable the feature in MPICH and how to use it.  This
 information can also be found on the MPICH Wiki:
 \url{http://wiki.mcs.anl.gov/mpich2/index.php/Checkpointing}
 
@@ -602,7 +602,7 @@ following two options to your configure command:
 \end{small}
 
 If BLCR is not installed in the default system location, you'll need
-to tell MPICH2's configure where to find it.  You might also need to
+to tell MPICH's configure where to find it.  You might also need to
 set the \texttt{LD\_LIBRARY\_PATH} environment variable so that BLCR's shared
 libraries can be found.  In this case add the following options to your
 configure command:
@@ -674,12 +674,12 @@ checkpoint, so in most cases, the checkpoint number should be
 specified.
 
 
-\section{Other Tools Provided with MPICH2}
+\section{Other Tools Provided with MPICH}
 \label{sec:other-tools}
-MPICH2 also includes a test suite for MPI-1 and MPI-2 functionality; this
-suite may be found in the \texttt{mpich2/test/mpi} source directory and can be
+MPICH also includes a test suite for MPI-1 and MPI-2 functionality; this
+suite may be found in the \texttt{mpich/test/mpi} source directory and can be
 run with the command \texttt{make testing}.  This test suite should work with
-any MPI implementation, not just MPICH2.
+any MPI implementation, not just MPICH.
 
 \section{MPICH2 under Windows}
 \label{sec:windows}

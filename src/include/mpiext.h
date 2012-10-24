@@ -17,7 +17,7 @@
    (value == 1), MPI_ERRORS_ARE_FATAL (value == 0), a valid user-function
    (value == 2), or a valid user-function that is a C++ routine (value == 3)
 
-   This routine is implemented in mpich2/src/mpi/errhan/file_set_errhandler.c
+   This routine is implemented in mpich/src/mpi/errhan/file_set_errhandler.c
 */
 void MPIR_Get_file_error_routine( MPI_Errhandler, 
 				  void (**)(MPI_File *, int *, ...), 
@@ -25,7 +25,7 @@ void MPIR_Get_file_error_routine( MPI_Errhandler,
 
 /* Invoke the C++ error handler (this invokes a special C++ routine that
  in turn calls the provided function.  That special routine also 
- resets the errorcode to MPI_SUCCESS to prevent the MPICH2 C++ error handling
+ resets the errorcode to MPI_SUCCESS to prevent the MPICH C++ error handling
  code from throwing an exception when the user routine returns.
 */
 int MPIR_File_call_cxx_errhandler( MPI_File *, int *, 

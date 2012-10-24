@@ -9,8 +9,8 @@
 #include "mpitest.h"
 
 /* 
- * Tests for lock contention, including special cases within the MPICH2 code 
- * (any MPI implementation should pass these tests; in the MPICH2 case, our
+ * Tests for lock contention, including special cases within the MPICH code 
+ * (any MPI implementation should pass these tests; in the MPICH case, our
  * coverage analysis showed that the lockcontention.c test was not covering
  * all cases, and in fact, this test revealed a bug in the code).
  *

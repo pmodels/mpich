@@ -30,8 +30,8 @@ my $root = $ENV{PWD};
 my $with_autoconf = "";
 my $with_automake = "";
 
-# Default to MPICH2
-my $pack = "mpich2";
+# Default to MPICH
+my $pack = "mpich";
 
 my $logfile = "release.log";
 
@@ -146,8 +146,8 @@ check_autotools_version("automake", "1.11.1");
 check_autotools_version("libtool", "2.4");
 print("\n");
 
-my $current_ver = `svn cat ${source}/maint/version.m4 | grep MPICH2_VERSION_m4 | \
-                   sed -e 's/^.*\\[MPICH2_VERSION_m4\\],\\[\\(.*\\)\\].*/\\1/g'`;
+my $current_ver = `svn cat ${source}/maint/version.m4 | grep MPICH_VERSION_m4 | \
+                   sed -e 's/^.*\\[MPICH_VERSION_m4\\],\\[\\(.*\\)\\].*/\\1/g'`;
 if ("$current_ver" ne "$version\n") {
     print("\tWARNING: Version mismatch\n\n");
 }
@@ -181,8 +181,8 @@ chdir("${root}/${pack}-${version}");
 
 my $date = `date`;
 chomp $date;
-system(qq(perl -p -i -e 's/\\[MPICH2_RELEASE_DATE_m4\\],\\[unreleased development copy\\]/[MPICH2_RELEASE_DATE_m4],[$date]/g' ./maint/version.m4));
-system(qq(perl -p -i -e 's/\\[MPICH2_RELEASE_DATE_m4\\],\\[unreleased development copy\\]/[MPICH2_RELEASE_DATE_m4],[$date]/g' ./src/pm/hydra/version.m4));
+system(qq(perl -p -i -e 's/\\[MPICH_RELEASE_DATE_m4\\],\\[unreleased development copy\\]/[MPICH_RELEASE_DATE_m4],[$date]/g' ./maint/version.m4));
+system(qq(perl -p -i -e 's/\\[MPICH_RELEASE_DATE_m4\\],\\[unreleased development copy\\]/[MPICH_RELEASE_DATE_m4],[$date]/g' ./src/pm/hydra/version.m4));
 print("done\n");
 
 # Remove packages that are not being released

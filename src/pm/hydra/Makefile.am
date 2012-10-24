@@ -32,7 +32,7 @@ include ui/Makefile.mk
 
 # External subdirs should be built first, as we might depend on them
 SUBDIRS = ${external_subdirs} .
-# see note in MPICH2 Makefile.am about our usage of DIST_SUBDIRS
+# see note in MPICH Makefile.am about our usage of DIST_SUBDIRS
 DIST_SUBDIRS = ${external_dist_subdirs}
 
 # Provide an alias for mpirun to support tools that assume that

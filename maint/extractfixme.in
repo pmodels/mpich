@@ -56,7 +56,7 @@ foreach $arg (@ARGV) {
 $eol = "\r\n";
 if ($htmlOutput) {
     if ($htmlFullpage) {
-	print STDOUT "<html><head><title>FIXME Items for MPICH2</title></head>$eol";
+	print STDOUT "<html><head><title>FIXME Items for MPICH</title></head>$eol";
 	print STDOUT "<body bgcolor=\"ffffff\">$eol";
     }
     print STDOUT "<table><tr><th width=20%>File</th><th>FIXME Note</th></tr>$eol";

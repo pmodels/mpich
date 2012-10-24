@@ -16,7 +16,7 @@ print "odd tests---------------------------------------------------"
 clusterHosts = [ 'bp4%02d' % (i)  for i in range(0,8) ]
 print "clusterHosts=", clusterHosts
 
-MPIDir = "/home/rbutler/mpich2"
+MPIDir = "/home/rbutler/mpich"
 MPI_1_Dir = "/home/rbutler/mpich1i"
 
 # test: singleton init (cpi)

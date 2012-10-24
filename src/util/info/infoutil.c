@@ -48,7 +48,7 @@ void MPIU_Info_free( MPID_Info *info_ptr )
 
 /* Allocate and initialize an MPID_Info object.
  *
- * Returns MPICH2 error codes */
+ * Returns MPICH error codes */
 #undef FUNCNAME
 #define FUNCNAME MPIU_Info_alloc
 #undef FCNAME

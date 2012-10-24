@@ -28,12 +28,12 @@
         }                                                                 \
     } while (0)
 
-/* Since MPICH2 is currently the only NBC implementation in existence, just use
+/* Since MPICH is currently the only NBC implementation in existence, just use
  * this quick-and-dirty #ifdef to decide whether to test the nonblocking
  * collectives.  Eventually we can add a configure option or configure test, or
  * the MPI-3 standard will be released and these can be gated on a MPI_VERSION
  * check */
-#if !defined(USE_STRICT_MPI) && defined(MPICH2)
+#if !defined(USE_STRICT_MPI) && defined(MPICH)
 #define TEST_NBC_ROUTINES 1
 #endif
 

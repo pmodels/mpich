@@ -16,7 +16,7 @@ print "mpi tests---------------------------------------------------"
 clusterHosts = [ 'bp4%02d' % (i)  for i in range(0,8) ]
 print "clusterHosts=", clusterHosts
 
-MPIDir = "/home/rbutler/mpich2"
+MPIDir = "/home/rbutler/mpich"
 
 # test: cpi
 print "TEST cpi"

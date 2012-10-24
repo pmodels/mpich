@@ -85,7 +85,7 @@ for arg in "$@" ; do
     cat <<EOF
     updatefiles [ --with-autoconf=dir ] [ -do=stepname ]
 
-    Update the files in the MPICH2 build tree.  This file builds the 
+    Update the files in the MPICH build tree.  This file builds the 
     configure files, creates the Makefile.in files (using the autotools),
     and extracts the error messages.
 
@@ -256,7 +256,7 @@ fi
 if [ -n "$error_summary" ] ; then
     echo " "
     echo "Problems encountered while running updatefiles."
-    echo "These may cause problems when configuring or building MPICH2."
+    echo "These may cause problems when configuring or building MPICH."
     echo "$error_summary"
 fi
 case $finalStatus in 

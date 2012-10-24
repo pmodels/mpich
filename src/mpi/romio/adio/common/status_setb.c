@@ -8,7 +8,7 @@
 #include "adio.h"
 #include "mpi.h"
 
-#if defined(MPICH2)
+#if defined(MPICH)
 /* Not quite correct, but much closer for MPI2 */
 /* TODO: still needs to handle partial datatypes and situations where the mpi
  * implementation fills status with something other than bytes (globus2 might

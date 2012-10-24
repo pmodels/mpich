@@ -5,7 +5,7 @@
 %hyperref - do not remove this comment
 
 \begin{document}
-\title{A Name Publishing Interface for MPICH2}
+\title{A Name Publishing Interface for MPICH}
 \author{William Gropp}
 \maketitle
 
@@ -22,7 +22,7 @@ MPI provides three routines to allow MPI applications to exchange the
 applications.  These routines are shown below in a modified C binding;
 \code{const} is used to indicate input arguments and array notation is
 used instead of pointer notation for character strings (this follows
-the MPICH2 coding recommendations).
+the MPICH coding recommendations).
 \begin{verbatim}
 MPI_Publish_name( const char service_name[], const MPI_Info info, 
                   const char port_name[] )
@@ -83,7 +83,7 @@ handle of type \code{MPID_NS_Handle} that is used in all of the other
 calls.  As in other MPI calls, the free routine takes a pointer to the
 handle so that the handle can be set to null when the free routine
 succeeds.  Each of these routines returns either \code{MPI_SUCCESS} or
-a valid MPI error code; implementations may either use the MPICH2
+a valid MPI error code; implementations may either use the MPICH
 error code mechanism or, for external packages, use the MPI-2 routines
 for adding error codes and classes.
 

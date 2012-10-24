@@ -56,7 +56,7 @@ int MPIDI_CH3_iStartMsg (MPIDI_VC_t *vc, void *hdr, MPIDI_msg_sz_t hdr_sz, MPID_
        /* MT */
     {
 	MPIU_DBG_MSG_D (CH3_CHANNEL, VERBOSE, "iStartMsg %d", (int) hdr_sz);
-	mpi_errno = MPID_nem_mpich2_send_header (hdr, hdr_sz, vc, &again);
+	mpi_errno = MPID_nem_mpich_send_header (hdr, hdr_sz, vc, &again);
         if (mpi_errno) MPIU_ERR_POP (mpi_errno);
 	if (again)
 	{

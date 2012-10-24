@@ -34,7 +34,7 @@ MPIDI_Context_hash(pami_task_t rank, unsigned ctxt, unsigned bias, unsigned ncon
   return (( rank + ctxt + bias ) & (ncontexts-1));
 #else
   /* The 'global' mpich lock mode only supports a single context. See
-   * discussion in mpich2/src/mpid/pamid/src/mpid_init.c for more information.
+   * discussion in mpich/src/mpid/pamid/src/mpid_init.c for more information.
    */
   return 0;
 #endif

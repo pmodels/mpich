@@ -10,12 +10,12 @@
 #include "mpitest.h"
 
 /*
-static char MTEST_Descrip[] = "Test MPI_LAND operations on optional datatypes dupported by MPICH2";
+static char MTEST_Descrip[] = "Test MPI_LAND operations on optional datatypes dupported by MPICH";
 */
 
 /*
  * This test looks at the handling of logical and for types that are not 
- * integers or are not required integers (e.g., long long).  MPICH2 allows
+ * integers or are not required integers (e.g., long long).  MPICH allows
  * these as well.  A strict MPI test should not include this test.
  */
 int main( int argc, char *argv[] )

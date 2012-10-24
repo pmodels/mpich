@@ -1,7 +1,7 @@
 #! /bin/sh
 #
 ################################################################################
-# MPICH2 custom modifications:
+# MPICH custom modifications:
 #
 # This is the latest git version of config.rpath from gnulib as of 2011-06-16.
 # The only modifications can be found at the bottom of the script where all of
@@ -15,7 +15,7 @@
 # was the "official" upstream source of this script for a while, but it appears
 # that gnulib is now where the most up-to-date version can be found.
 #
-# See PAC_COMPILER_SHLIB_FLAGS in confdb/aclocal_shl.m4 for MPICH2's use of this
+# See PAC_COMPILER_SHLIB_FLAGS in confdb/aclocal_shl.m4 for MPICH's use of this
 # script.  [goodell@ 2011-06-16]
 ################################################################################
 #
@@ -680,7 +680,7 @@ escaped_hardcode_libdir_flag_spec=`echo "X$hardcode_libdir_flag_spec" | sed -e '
 : ${PAC_CC_PREFIX=acl_cv_}
 LC_ALL=C sed -e 's/^\([a-zA-Z0-9_]*\)=/'"$PAC_CC_PREFIX"'\1=/' <<EOF
 
-# MPICH2 ADDITION
+# MPICH ADDITION
 # Shared library suffix, including any period (normally "so").
 shrext="$shrext"
 

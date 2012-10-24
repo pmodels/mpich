@@ -11,7 +11,7 @@
 
 /* 
  * Below are the "safe" versions of the various string and printf
- * operations. They are directly taken from MPICH2, with MPIU replaced by ADIOI.
+ * operations. They are directly taken from MPICH, with MPIU replaced by ADIOI.
  */
 
 /*

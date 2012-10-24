@@ -3,7 +3,7 @@
  *  (C) 2009 by Argonne National Laboratory.
  *      See COPYRIGHT in top-level directory.
  */
-/* Regression test for MPICH2 trac ticket #972, originally written by
+/* Regression test for MPICH trac ticket #972, originally written by
  * Rob Latham <robl@mcs.anl.gov> as a simplification of a type
  * encountered by the HDF5 library.
  *
@@ -12,7 +12,7 @@
 #include <stdio.h>
 #include "mpi.h"
 
-/* uncomment to use debugging routine in MPICH2
+/* uncomment to use debugging routine in MPICH
 extern int MPIDU_Datatype_debug(MPI_Datatype type, int depth);
 */
 

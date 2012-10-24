@@ -118,7 +118,7 @@ static HYD_status check_pmi_cmd(char **buf, int *pmi_version, int *repeat)
      * We initialize to whatever PMI version we detect while reading
      * the PMI command, instead of relying on what the init command
      * gave us. This part of the code should not know anything about
-     * PMI-1 vs. PMI-2. But the simple PMI client-side code in MPICH2
+     * PMI-1 vs. PMI-2. But the simple PMI client-side code in MPICH
      * is so hacked up, that commands can arrive out-of-order and this
      * is necessary. This was discussed in the group and we felt that
      * it is unsafe to change the order of the PMI command arrival in

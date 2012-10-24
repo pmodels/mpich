@@ -17,7 +17,7 @@
  * error codes will not load any of this code.  
  * 
  * ROMIO has been customized to provide error messages with the same tools
- * as the rest of MPICH2 and will not rely on the dynamically assigned
+ * as the rest of MPICH and will not rely on the dynamically assigned
  * error classes.  This leaves all of the classes and codes for the user.
  *
  * Because we have customized ROMIO, we do not need to implement 

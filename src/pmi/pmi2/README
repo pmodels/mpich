@@ -1,6 +1,6 @@
 This directory contains an experimental, version 2 PMI interface.  Both
 the client API and the wire protocol for this version are different than
-PMI version 1.  This version is not yet in use in MPICH2, and is 
+PMI version 1.  This version is not yet in use in MPICH, and is 
 being developed to prototype the changes proposed.  In particular, this version
 adds support for better thread-safe behavior.
 

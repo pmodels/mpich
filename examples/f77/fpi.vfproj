@@ -6,7 +6,7 @@
 	<Configurations>
 		<Configuration Name="Debug|Win32" DeleteExtensionsOnClean="*.obj;*.mod;*.pdb;*.asm;*.map;*.dyn;*.dpi;*.tmp;*.log;*.ilk;*.exe;$(TargetPath)">
 				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" DebugInformationFormat="debugEnabled" Optimization="optimizeDisabled" AdditionalIncludeDirectories="..\..\src\include;..\..\src\include\win32" ModulePath="$(INTDIR)/" ObjectFile="$(INTDIR)/" Traceback="true" BoundsCheck="true" RuntimeLibrary="rtMultiThreadedDebug"/>
-				<Tool Name="VFLinkerTool" OutputFile="$(OUTDIR)/fpi.exe" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" AdditionalLibraryDirectories="..\..\lib" GenerateDebugInformation="true" ProgramDatabaseFile="$(OUTDIR)/fpi.pdb" SubSystem="subSystemConsole" AdditionalDependencies="fmpich2d.lib"/>
+				<Tool Name="VFLinkerTool" OutputFile="$(OUTDIR)/fpi.exe" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" AdditionalLibraryDirectories="..\..\lib" GenerateDebugInformation="true" ProgramDatabaseFile="$(OUTDIR)/fpi.pdb" SubSystem="subSystemConsole" AdditionalDependencies="fmpichd.lib"/>
 				<Tool Name="VFResourceCompilerTool"/>
 				<Tool Name="VFMidlTool" SuppressStartupBanner="true" HeaderFileName="$(InputName).h" TypeLibraryName="$(IntDir)/$(InputName).tlb"/>
 				<Tool Name="VFCustomBuildTool"/>
@@ -15,7 +15,7 @@
 				<Tool Name="VFPostBuildEventTool"/></Configuration>
 		<Configuration Name="Release|Win32" DeleteExtensionsOnClean="*.obj;*.mod;*.pdb;*.asm;*.map;*.dyn;*.dpi;*.tmp;*.log;*.ilk;*.exe;$(TargetPath)">
 				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" AdditionalIncludeDirectories="..\..\src\include;..\..\src\include\win32" ModulePath="$(INTDIR)/" ObjectFile="$(INTDIR)/"/>
-				<Tool Name="VFLinkerTool" OutputFile="$(OUTDIR)/fpi.exe" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" AdditionalLibraryDirectories="..\..\lib" SubSystem="subSystemConsole" AdditionalDependencies="fmpich2.lib"/>
+				<Tool Name="VFLinkerTool" OutputFile="$(OUTDIR)/fpi.exe" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" AdditionalLibraryDirectories="..\..\lib" SubSystem="subSystemConsole" AdditionalDependencies="fmpich.lib"/>
 				<Tool Name="VFResourceCompilerTool"/>
 				<Tool Name="VFMidlTool" SuppressStartupBanner="true" HeaderFileName="$(InputName).h" TypeLibraryName="$(IntDir)/$(InputName).tlb"/>
 				<Tool Name="VFCustomBuildTool"/>
@@ -24,7 +24,7 @@
 				<Tool Name="VFPostBuildEventTool"/></Configuration>
 		<Configuration Name="Debug|x64" DeleteExtensionsOnClean="*.obj;*.mod;*.pdb;*.asm;*.map;*.dyn;*.dpi;*.tmp;*.log;*.ilk;*.exe;$(TargetPath)">
 				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" DebugInformationFormat="debugEnabled" Optimization="optimizeDisabled" AdditionalIncludeDirectories="..\..\src\include;..\..\src\include\win32" ModulePath="$(INTDIR)/" ObjectFile="$(INTDIR)/" Traceback="true" BoundsCheck="true" RuntimeLibrary="rtMultiThreadedDebug"/>
-				<Tool Name="VFLinkerTool" OutputFile="$(OUTDIR)/fpi.exe" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" AdditionalLibraryDirectories="..\..\lib" GenerateDebugInformation="true" ProgramDatabaseFile="$(OUTDIR)/fpi.pdb" SubSystem="subSystemConsole" AdditionalDependencies="fmpich2d.lib"/>
+				<Tool Name="VFLinkerTool" OutputFile="$(OUTDIR)/fpi.exe" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" AdditionalLibraryDirectories="..\..\lib" GenerateDebugInformation="true" ProgramDatabaseFile="$(OUTDIR)/fpi.pdb" SubSystem="subSystemConsole" AdditionalDependencies="fmpichd.lib"/>
 				<Tool Name="VFResourceCompilerTool"/>
 				<Tool Name="VFMidlTool" SuppressStartupBanner="true" TargetEnvironment="midlTargetAMD64" HeaderFileName="$(InputName).h" TypeLibraryName="$(IntDir)/$(InputName).tlb"/>
 				<Tool Name="VFCustomBuildTool"/>
@@ -33,7 +33,7 @@
 				<Tool Name="VFPostBuildEventTool"/></Configuration>
 		<Configuration Name="Release|x64" DeleteExtensionsOnClean="*.obj;*.mod;*.pdb;*.asm;*.map;*.dyn;*.dpi;*.tmp;*.log;*.ilk;*.exe;$(TargetPath)">
 				<Tool Name="VFFortranCompilerTool" SuppressStartupBanner="true" AdditionalIncludeDirectories="..\..\src\include;..\..\src\include\win64" ModulePath="$(INTDIR)/" ObjectFile="$(INTDIR)/"/>
-				<Tool Name="VFLinkerTool" OutputFile="$(OUTDIR)/fpi.exe" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" AdditionalLibraryDirectories="..\..\winbuild\x64\Release\fortran" SubSystem="subSystemConsole" AdditionalDependencies="fmpich2.lib"/>
+				<Tool Name="VFLinkerTool" OutputFile="$(OUTDIR)/fpi.exe" LinkIncremental="linkIncrementalNo" SuppressStartupBanner="true" AdditionalLibraryDirectories="..\..\winbuild\x64\Release\fortran" SubSystem="subSystemConsole" AdditionalDependencies="fmpich.lib"/>
 				<Tool Name="VFResourceCompilerTool"/>
 				<Tool Name="VFMidlTool" SuppressStartupBanner="true" TargetEnvironment="midlTargetAMD64" HeaderFileName="$(InputName).h" TypeLibraryName="$(IntDir)/$(InputName).tlb"/>
 				<Tool Name="VFCustomBuildTool"/>

@@ -1,7 +1,7 @@
 #! /bin/sh
 
-if [ -n "$MPICH2_AUTOTOOLS_DIR" ] ; then
-    autoreconf=${MPICH2_AUTOTOOLS_DIR}/autoreconf
+if [ -n "$MPICH_AUTOTOOLS_DIR" ] ; then
+    autoreconf=${MPICH_AUTOTOOLS_DIR}/autoreconf
 else
     autoreconf=${AUTORECONF:-autoreconf}
 fi

@@ -43,7 +43,7 @@ int main(int argc, char **argv)
 
     /* intentionally not using MTest_Init/MTest_Finalize in order to make it
      * easy to take this test and use it as an NBC sanity test outside of the
-     * MPICH2 test suite */
+     * MPICH test suite */
     MPI_Init(&argc, &argv);
 
     comm = MPI_COMM_WORLD;
@@ -51,7 +51,7 @@ int main(int argc, char **argv)
     MPI_Comm_size(comm, &size);
     MPI_Comm_rank(comm, &rank);
 
-#if !defined(USE_STRICT_MPI) && defined(MPICH2)
+#if !defined(USE_STRICT_MPI) && defined(MPICH)
     /* enough space for every process to contribute at least NUM_INTS ints to any
      * collective operation */
     sbuf = malloc(NUM_INTS*size*sizeof(int));

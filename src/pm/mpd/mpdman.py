@@ -98,7 +98,7 @@ class MPDMan(object):
         # FIXME This snippet causes problems on Fedora Core 12.  FC12's python
         # opens a file object to /etc/abrt/pyhook.conf.  Closing the fd out from
         # under the higher level object causes problems at exit time when the
-        # higher level object is garbage collected.  See MPICH2 ticket #902 for
+        # higher level object is garbage collected.  See MPICH ticket #902 for
         # more information.
         #for fd in range(3,max_fds):
         #    if fd == self.mpdSock.fileno()  or  fd == self.listenRingSock.fileno():
@@ -262,7 +262,7 @@ class MPDMan(object):
                 self.ring.rhsSock.send_dict_msg(msg)
             ## NOTE: if you spawn a non-MPI job, it may not send this msg
             ## in which case the pgm will hang; the reason for this is that
-            ## mpich2 does an Accept after the PMI_Spawn_multiple and a non-mpi
+            ## mpich does an Accept after the PMI_Spawn_multiple and a non-mpi
             ## pgm will never do the expected Connect.
             self.stdoutToConSock = MPDSock(name='stdout_to_console')
             self.stdoutToConSock.connect((self.conIfhn,self.conPort))

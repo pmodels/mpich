@@ -2,18 +2,18 @@
 # (C) 2011 by Argonne National Laboratory.
 #     See COPYRIGHT in top-level directory.
 
-# This script scavenges the MPICH2 source tree looking for "subconfigure.m4"
+# This script scavenges the MPICH source tree looking for "subconfigure.m4"
 # files.  It then analyzes the dependencies between them and emits a
 # "subsys_include.m4" file that "m4_include"s them all in the correct order and
 # writes an autoconf macro that is suitable for expanding subsys macros in the
 # correct order.
 #
-# Finding a "dnl MPICH2_SUBCFG_BEFORE=BAR" statement inside of
+# Finding a "dnl MPICH_SUBCFG_BEFORE=BAR" statement inside of
 # FOO/subconfigure.m4 means that FOO depends on BAR and that FOO's macros should
 # be emitted *before* BAR's macros so that FOO can influence BAR's
 # configuration.
 #
-# Finding a "dnl MPICH2_SUBCFG_AFTER=QUUX" statement inside of
+# Finding a "dnl MPICH_SUBCFG_AFTER=QUUX" statement inside of
 # BAZ/subconfigure.m4 means that BAZ uses QUUX and that BAZ's macros be emitted
 # *after* QUUX's macros so that BAZ can utilize information exported by QUUX's
 # configuration macros.
@@ -177,7 +177,7 @@ foreach my $k (keys %found_files) {
     # now process the file and add any explicit edges
     open FILE, '<', $k;
     while (my $line = <FILE>) {
-        if ($line =~ m/^\s*dnl +MPICH2_SUBCFG_([A-Z_]*)=(.*)\s*$/) {
+        if ($line =~ m/^\s*dnl +MPICH_SUBCFG_([A-Z_]*)=(.*)\s*$/) {
             my $bef_aft = $1;
             my $arg = $2;
 
@@ -198,7 +198,7 @@ foreach my $k (keys %found_files) {
                 add_edge(\%dag, $arg => $k);
             }
             else {
-                die "unrecognized structured comment ('MPICH2_SUBCFG_${bef_aft}')\n".
+                die "unrecognized structured comment ('MPICH_SUBCFG_${bef_aft}')\n".
                     "at $k:$., possible typo?  Stopped";
             }
         }

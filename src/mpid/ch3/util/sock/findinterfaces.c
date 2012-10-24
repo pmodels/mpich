@@ -69,7 +69,7 @@ static int GetLocalIPs(int32_t *pIP, int max)
 
    WHAT IS APPARENTLY NEEDED (SEE /usr/include/features.h ON A LINUX 
    SYSTEM) IS EITHER _BSD_SOURCE OR _SVID_SOURCE; THIS MUST BE SET
-   CONSISTENTLY FOR ALL FILES COMPILED AS PART OF MPICH2
+   CONSISTENTLY FOR ALL FILES COMPILED AS PART OF MPICH
  */
 #define __USE_MISC /* This must be defined to get struct ifreq defined */
 #endif

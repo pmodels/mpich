@@ -56,7 +56,7 @@ external_libs = -lmpl -lopa
 # The automake manual recommends thinking of DIST_SUBDIRS as the list of all
 # *configured* subdirectories.  The normal autotools model involves
 # unconditional configure steps for all/most directories with conditional make
-# steps (i.e., conditional inclusion in SUBDIRS).  But in the MPICH2 case we
+# steps (i.e., conditional inclusion in SUBDIRS).  But in the MPICH case we
 # almost always configure exactly the directories that will be included in
 # SUBDIRS.  So most additions to DIST_SUBDIRS should be conditional on the same
 # condition as the corresponding SUBDIRS addition.
@@ -65,7 +65,7 @@ SUBDIRS = ${external_subdirs}
 
 
 # lib/lib@MPILIBNAME@.la always contains the "PMPI_" functions and all of the
-# functions and symbols that actually make up the MPICH2 implementation.  If
+# functions and symbols that actually make up the MPICH implementation.  If
 # weak symbols are fully supported (such as on Linux), then this library also
 # contains weak symbols for "MPI_" aliasing the "PMPI_" symbols.  This lib also
 # always contains the F77 bindings, but not the F90 or C++ bindings.
@@ -257,7 +257,7 @@ coverage-clean:
 
 else !BUILD_COVERAGE
 coverage:
-	@echo 'ERROR: MPICH2 was not configured with "--enable-coverage"'
+	@echo 'ERROR: MPICH was not configured with "--enable-coverage"'
 	exit 1
 endif !BUILD_COVERAGE
 

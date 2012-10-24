@@ -77,7 +77,7 @@ int MPID_Startall(int count, MPID_Request * requests[])
                                   BSEND_INIT,
                                   &preq->partner_request);
             /*
-             * MPICH2 maintains an independant reference to the child,
+             * MPICH maintains an independant reference to the child,
              * but doesn't refcount it.  Since they actually call
              * MPI_Test() on the child request (which will release a
              * ref iff the request is complete), we have to increment

@@ -13,7 +13,7 @@
 /* This is a temporary #ifdef to control whether we test this functionality.  A
  * configure-test or similar would be better.  Eventually the MPI-3 standard
  * will be released and this can be gated on a MPI_VERSION check */
-#if !defined(USE_STRICT_MPI) && defined(MPICH2)
+#if !defined(USE_STRICT_MPI) && defined(MPICH)
 #define TEST_IDUP 1
 #endif
 

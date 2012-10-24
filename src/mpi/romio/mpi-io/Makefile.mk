@@ -70,7 +70,7 @@ romio_mpi_sources +=          \
 
 # non-MPI/PMPI sources that will be included in libromio
 romio_other_sources +=       \
-    mpi-io/mpich2_fileutil.c \
+    mpi-io/mpich_fileutil.c \
     mpi-io/mpir-mpioinit.c   \
     mpi-io/mpiu_greq.c \
     mpi-io/mpiu_external32.c
@@ -92,12 +92,12 @@ mpio_extra_sources =  \
     mpi-io/get_errh.c \
     mpi-io/set_errh.c
 
-# not used in MPICH2, we use generalized requests instead
+# not used in MPICH, we use generalized requests instead
 if BUILD_MPIO_REQUEST
 romio_other_sources += $(mpio_request_sources)
 endif BUILD_MPIO_REQUEST
 
-# not used in MPICH2
+# not used in MPICH
 if BUILD_MPIO_ERRHAN
 romio_other_sources += $(mpio_request_sources)
 endif BUILD_MPIO_ERRHAN

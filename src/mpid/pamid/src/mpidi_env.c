@@ -545,7 +545,7 @@ MPIDI_Env_setup(int rank, int requested)
      * mode is the 'trigger' async progress mode. Also, the 'global' mpich lock
      * mode only supports a single context.
      *
-     * See discussions in mpich2/src/mpid/pamid/src/mpid_init.c and
+     * See discussions in mpich/src/mpid/pamid/src/mpid_init.c and
      * src/mpid/pamid/src/mpid_progress.h for more information.
      */
     if (value == 1)      /* force on  */
@@ -571,14 +571,14 @@ MPIDI_Env_setup(int rank, int requested)
     {
 #if (MPIU_THREAD_GRANULARITY != MPIU_THREAD_GRANULARITY_PER_OBJECT)
       /* The 'global' mpich lock mode only supports a single context.
-       * See discussion in mpich2/src/mpid/pamid/src/mpid_init.c for more
+       * See discussion in mpich/src/mpid/pamid/src/mpid_init.c for more
        * information.
        */
       if (value > 1)
       {
         found_deprecated_env_var++;
         if (MPIDI_Process.verbose >= MPIDI_VERBOSE_SUMMARY_0 && rank == 0)
-          fprintf(stderr, "The environment variable \"PAMID_CONTEXT_MAX\" is invalid as this mpich2 library was configured.\n");
+          fprintf(stderr, "The environment variable \"PAMID_CONTEXT_MAX\" is invalid as this mpich library was configured.\n");
       }
 #endif
       if (value == 0)
@@ -607,7 +607,7 @@ MPIDI_Env_setup(int rank, int requested)
 #else
       found_deprecated_env_var++;
       if (MPIDI_Process.verbose >= MPIDI_VERBOSE_SUMMARY_0 && rank == 0)
-        fprintf(stderr, "The environment variable \"PAMID_CONTEXT_POST\" is invalid as this mpich2 library was configured.\n");
+        fprintf(stderr, "The environment variable \"PAMID_CONTEXT_POST\" is invalid as this mpich library was configured.\n");
 #endif
     }
     TRACE_ERR("MPIDI_Process.perobj.context_post.requested=%u\n", MPIDI_Process.perobj.context_post.requested);
@@ -649,7 +649,7 @@ MPIDI_Env_setup(int rank, int requested)
            */
           found_deprecated_env_var++;
           if (MPIDI_Process.verbose >= MPIDI_VERBOSE_SUMMARY_0 && rank == 0)
-            fprintf(stderr, "The environment variable \"PAMID_ASYNC_PROGRESS=1\" is invalid as this mpich2 library was configured.\n");
+            fprintf(stderr, "The environment variable \"PAMID_ASYNC_PROGRESS=1\" is invalid as this mpich library was configured.\n");
 
         }
 #endif

@@ -10,7 +10,7 @@
 /* 
  * This file contains two of the routines from the "safe" versions of the 
  * various string routines in src/util/mem/safestr.c .  These are duplicated
- * here because the MPICH2 utility routines can no longer be used by other
+ * here because the MPICH utility routines can no longer be used by other
  * applications.
  */
 

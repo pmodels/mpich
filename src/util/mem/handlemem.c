@@ -86,7 +86,7 @@ static const char *MPIR_ObjectName( MPIU_Object_alloc_t * );
 	The rationale for this approach is that this approach can 
 	handle large amounts of memory; however, relatively little
 	memory is used unless needed.  The definitions in 
-        mpich2/src/include/mpihandlemem.h define defaults for the
+        mpich/src/include/mpihandlemem.h define defaults for the
         indirect_num_blocks (HANDLE_NUM_BLOCKS = 512) and
         indirect_num_indices (HANDLE_NUM_INDICES = 16384) that permits
         the allocation of 8 Mi objects.
@@ -133,7 +133,7 @@ static int MPIU_Handle_free( void *((*indirect)[]), int indirect_size )
         if (MPL_VG_RUNNING_ON_VALGRIND()) {                                                     \
             char desc_str[256];                                                                  \
             MPIU_Snprintf(desc_str, sizeof(desc_str)-1,                                          \
-                          "[MPICH2 handle: objptr=%p handle=0x%x %s/%s]",                        \
+                          "[MPICH handle: objptr=%p handle=0x%x %s/%s]",                        \
                           (objptr_), (objptr_)->handle,                                          \
                           ((is_direct_) ? "DIRECT" : "INDIRECT"),                                \
                           MPIU_Handle_get_kind_str(handle_type_));                               \

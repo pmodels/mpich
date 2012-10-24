@@ -5,9 +5,8 @@
 ##     See COPYRIGHT in top-level directory.
 ##
 
-if MPIO_GLUE_MPICH2
+if MPIO_GLUE_MPICH
 romio_other_sources +=             \
     mpi-io/glue/mpich2/mpio_file.c \
     mpi-io/glue/mpich2/mpio_err.c
-endif MPIO_GLUE_MPICH2
-
+endif MPIO_GLUE_MPICH

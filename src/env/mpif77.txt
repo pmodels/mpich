@@ -48,8 +48,8 @@
     compilers are compatible and may be used interchangably.  There are 
     exceptions; if you use the 'MPICH_F77' environment variable or the 
     '-f77=name' command-line argument to override the choice of compiler 
-    and encounter problems, try reconfiguring MPICH2 with the new compiler 
-    and installing MPICH2 in a separate location.  See the installation manual 
+    and encounter problems, try reconfiguring MPICH with the new compiler 
+    and installing MPICH in a separate location.  See the installation manual 
     for more details.
 
     Examples:

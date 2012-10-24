@@ -408,7 +408,7 @@ AC_COMPILE_IFELSE([],[
 #
 # If there are any compilers still out there that are totally brain-dead and
 # don't support an output directory flag, we can write a wrapper script to tell
-# users to use.  Alternatively they can use an older version of MPICH2.
+# users to use.  Alternatively they can use an older version of MPICH.
 
 pac_cv_fc_module_outflag=
 for mod_flag in '-J' '-J ' '-qmoddir=' '-module ' '-YMOD_OUT_DIR=' '-mdir ' '-moddir=' '-fmod=' ; do

@@ -11,7 +11,7 @@
 !  WDG.
 !
 ! It was further modified to use MPI_Get_address instead of MPI_Address
-! for MPICH2, and to fit in the MPICH2 test harness - WDG
+! for MPICH, and to fit in the MPICH test harness - WDG
 !
       program bustit
       use mpi

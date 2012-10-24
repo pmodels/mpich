@@ -20,7 +20,7 @@
 \renewcommand{\floatpagefraction}{0.9}
 
 \begin{document}
-\title{{\bf Process Management in MPICH2}\\[.2in] DRAFT 2.1}
+\title{{\bf Process Management in MPICH}\\[.2in] DRAFT 2.1}
 \author{The MPICH Team\\Argonne National Laboratory}
 \maketitle
 
@@ -29,20 +29,20 @@
   used by MPI implementations and other parallel processing libraries
   yet be independent of both.  We define the specific interface we are
   developing, called PMI (Process Manager Interface) in the context of
-  MPICH2.  We describe the interface itself and a number of
-  implementations.  We show how an MPI implementation built on MPICH2
+  MPICH.  We describe the interface itself and a number of
+  implementations.  We show how an MPI implementation built on MPICH
   can use PMI to make itself independent of the environment in which it
   executes, and how a process management environment can support MPI
-  implementations based on MPICH2.
+  implementations based on MPICH.
 \end{abstract}
 
 \section{Introduction}
 \label{sec:introduction}
 
-This informal paper is intended to be useful for those using MPICH2 as the
+This informal paper is intended to be useful for those using MPICH as the
 basis of their own MPI implementations, or providing a process
 management environment which will run MPI jobs that are linked against
-MPICH2 itself or an MPICH2-derived MPI implementation.  At the time of
+MPICH itself or an MPICH-derived MPI implementation.  At the time of
 writing, this audience potentially includes groups at IBM (for BG/L), Livermore
 (SLURM process management), Cray (MPI implementation for Red Storm, with
 YOD), Myricom (MPICH-GM), Viridian (PBSPro), and Globus/Teragrid
@@ -50,7 +50,7 @@ implementors (MPICH-G2).  Others are welcome to contribute suggestions.
 
 This paper is incomplete in the sense that it describes an interface
 still being defined.  The part that is currently in use in the MPI-1
-part of MPICH2 has proved adequate for our needs and has several
+part of MPICH has proved adequate for our needs and has several
 implementations.  We will refer to it as ``Part 1.''  That part of the
 interface that is required for the dynamic process management part of
 MPI-2 is still under development, and we will refer to it here as ``Part
@@ -59,7 +59,7 @@ to support an MPI implementation that does not include dynamic process
 management.
 
 We describe the problem we are trying to solve in
-Section~\ref{sec:problem}, the approach we have taken so far in MPICH2
+Section~\ref{sec:problem}, the approach we have taken so far in MPICH
 in Section~\ref{sec:approach}, the PMI interface itself in
 Section~\ref{sec:interface} as it has been defined so far, and
 implementations in Section~\ref{sec:implementing}.  In
@@ -87,7 +87,7 @@ implementations, have been integrated with process management mechanisms
 (LAM, MPICH1 with ch\_p4 device, POE) in order to solve this problem.
 After a preliminary exploration of separating the library from the
 process manager in MPICH-1 with the {\tt ch\_p4mpd} device we have decided to
-update the interface and then commit to this approach in MPICH2.  We are
+update the interface and then commit to this approach in MPICH.  We are
 motivated by the challenges of implementing MPI-2 in a
 system-independent way, but many of the ideas here might prove useful in
 a non-MPI environment as well, either for other parallel libraries (such
@@ -105,7 +105,7 @@ The problem to be addressed has several components:
   for implementing {\tt MPI\_Comm\_Spawn}, {\tt MPI\_Comm\_\{Connect/Accept\}},
   {\tt MPI\_\{Publish/Lookup\}\_name}, etc.
 \item The interface should be simple and straightforward, particularly
-  in the absence of dynamic process management.  MPICH2 will implement
+  in the absence of dynamic process management.  MPICH will implement
   dynamic process management, but some other MPI implementations may
   not.
 \item The interface must allow a scalable implementation for
@@ -115,7 +115,7 @@ The problem to be addressed has several components:
 An earlier, similar version of this approach was described
 in~\cite{butler-lusk-gropp:mpd-parcomp}, where the interface is called
 BNR, incorporated in the {\tt ch\_p4mpd} device in the original MPICH.  PMI
-represents an evolution of that interface and its implementation in MPICH2.
+represents an evolution of that interface and its implementation in MPICH.
 
 Note that existing process managers often do a scalable job of starting
 processes, and this part of existing systems can be kept.  What is
@@ -131,10 +131,10 @@ lines is outlined in Section~\ref{sec:adding}.
 \label{sec:approach}
 
 The approach we have taken to the problem is to define a Process
-Management Interface (PMI).  The MPICH2 implementation of MPI will be
+Management Interface (PMI).  The MPICH implementation of MPI will be
 implemented in terms of PMI rather than in terms of any particular
 process management environment.  Multiple implementations of PMI will
-then be possible, independently of the MPICH2 implementation of MPI.
+then be possible, independently of the MPICH implementation of MPI.
 The key to a good design for PMI is to specify it in a way that allows for
 scalable implementation without dictating any details of the
 implementations.  This has worked out well so far, and in
@@ -147,9 +147,9 @@ implementations of the interfaces described in Section~\ref{sec:interface}.
 We present the interface in two parts.  The first part is sufficient for
 the implementation of MPI-1 and many parts of MPI-2.  The second part is
 required for implementing the dynamic process management part of MPI-2.
-MPICH2 is now using the first part, with multiple PMI implementations,
+MPICH is now using the first part, with multiple PMI implementations,
 so we consider it relatively final at this point.  Since we have not yet
-implemented the dynamic process management functions in MPICH2, some
+implemented the dynamic process management functions in MPICH, some
 evolution of Part 2 of PMI may take place as we do so.
 
 The fundamental idea of Part 1 is the {\em key-value space}, or KVS,
@@ -379,8 +379,8 @@ about the interface itself and not any specific implementation, it might
 be useful to understand the alternatives that we have explored and are
 in current use.  Also, the very existence of multiple implementations
 demonstrates that PMI is a real interface with a purpose, not just a
-design for part of MPICH2.  All implementations are distributed with
-MPICH2, as described at the end of Section~\ref{sec:implications}.
+design for part of MPICH.  All implementations are distributed with
+MPICH, as described at the end of Section~\ref{sec:implications}.
 
 It is useful to think of a PMI implementation as having two parts: a 
 {\em client\/} side and a {\em server\/} side.  The client side is the
@@ -393,7 +393,7 @@ or be part of the client side; multiple architectures for PMI
 implementations already exist.  In the following subsection we describe some
 existing client-side PMI implementations.  In the next section we
 describe some server-side implementations.  Currently most of these are
-part of the MPICH2 distribution~\cite{mpich2-web-page}.
+part of the MPICH distribution~\cite{mpich-web-page}.
 
 
 \subsection{Client Side}
@@ -608,10 +608,10 @@ MPICH or MPICH-derived MPI implementations.
 
 MPI and other library implementors are recommended to use the PMI
 functions to exchange data with other processes related to the setting
-up of the primary communication mechanism.  MPICH2 does this already for
+up of the primary communication mechanism.  MPICH does this already for
 setting up TCP connections in the CH3 implementation of the Abstract
 Device Interface (ADI-3).  If one links with the ``simple''
-implementation of the client side of the PMI implementation in MPICH2,
+implementation of the client side of the PMI implementation in MPICH,
 then MPI jobs can be started by any process management environment,
 including MPD2, that implements the server side.
 
@@ -630,12 +630,12 @@ In the long run implementations may prefer to implement both sides
 themselves, meaning that one would link one's application with a PBS- or
 SLURM- or Myricom-specific object file implementing the client side.
 
-The PMI-related code described here is available in the current MPICH2
-distribution~\cite{mpich2-web-page}, in the {\tt
+The PMI-related code described here is available in the current MPICH
+distribution~\cite{mpich-web-page}, in the {\tt
   src/pmi/\{simple,uni,winmpd\}} (client side) and {\tt
   src/pm/\{forker,mpd,winmpd\}} (server side) subdirectories.
 Different process managers (the server side) and different PMI
-implementations can be chosen when MPICH2 is configured.  The default is
+implementations can be chosen when MPICH is configured.  The default is
 as if one had specified
 \begin{verbatim}
      configure --with-pmi=simple --with-pm=mpd

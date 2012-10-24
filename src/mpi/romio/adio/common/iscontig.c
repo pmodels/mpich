@@ -9,18 +9,18 @@
 #include "mpisgi2.h"
 #endif */
 
-#if (defined(MPICH) || defined(MPICH2))
-/* MPICH2 also provides this routine */
+#if (defined(MPICH) || defined(MPICH))
+/* MPICH also provides this routine */
 void MPIR_Datatype_iscontig(MPI_Datatype datatype, int *flag);
 
 void ADIOI_Datatype_iscontig(MPI_Datatype datatype, int *flag)
 {
     MPIR_Datatype_iscontig(datatype, flag);
 
-    /* if it is MPICH2 and the datatype is reported as contigous,
+    /* if it is MPICH and the datatype is reported as contigous,
        check if the true_lb is non-zero, and if so, mark the 
        datatype as noncontiguous */
-#ifdef MPICH2
+#ifdef MPICH
     if (*flag) {
         MPI_Aint true_extent, true_lb;
         

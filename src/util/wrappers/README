@@ -1,4 +1,4 @@
-This directory contains wrappers funcs to provide platform independence to MPICH2 source code. Currently used only in NEMESIS channel. The util functions are MPIU* and not MPIDU* since atleast the process managers might need to use the OS wrapper funcs.
+This directory contains wrappers funcs to provide platform independence to MPICH source code. Currently used only in NEMESIS channel. The util functions are MPIU* and not MPIDU* since atleast the process managers might need to use the OS wrapper funcs.
 
 TODO
 ------

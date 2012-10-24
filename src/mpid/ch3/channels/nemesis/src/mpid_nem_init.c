@@ -80,7 +80,7 @@ MPID_nem_init(int pg_rank, MPIDI_PG_t *pg_p, int has_parent ATTRIBUTE((unused)))
     MPIU_Assert(MPID_NEM_CELL_PAYLOAD_LEN + MPID_NEM_CELL_HEAD_LEN == sizeof(MPID_nem_cell_t));
     MPIU_Assert(sizeof(MPID_nem_cell_t) == sizeof(MPID_nem_abs_cell_t));
     /* Make sure payload is aligned on a double */
-    MPIU_Assert(MPID_NEM_ALIGNED(&((MPID_nem_cell_t*)0)->pkt.mpich2.payload[0], sizeof(double)));
+    MPIU_Assert(MPID_NEM_ALIGNED(&((MPID_nem_cell_t*)0)->pkt.mpich.payload[0], sizeof(double)));
 
     /* Initialize the business card */
     mpi_errno = MPIDI_CH3I_BCInit( &bc_val, &val_max_remaining );
@@ -328,7 +328,7 @@ MPID_nem_init(int pg_rank, MPIDI_PG_t *pg_p, int has_parent ATTRIBUTE((unused)))
 
     mpi_errno = MPID_nem_barrier();
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-    mpi_errno = MPID_nem_mpich2_init();
+    mpi_errno = MPID_nem_mpich_init();
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     mpi_errno = MPID_nem_barrier();
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
@@ -409,8 +409,8 @@ MPID_nem_vc_init (MPIDI_VC_t *vc)
     {
         MPIDI_CHANGE_VC_STATE(vc, ACTIVE);
         
-	vc_ch->fbox_out = &MPID_nem_mem_region.mailboxes.out[MPID_nem_mem_region.local_ranks[vc->lpid]]->mpich2;
-	vc_ch->fbox_in = &MPID_nem_mem_region.mailboxes.in[MPID_nem_mem_region.local_ranks[vc->lpid]]->mpich2;
+	vc_ch->fbox_out = &MPID_nem_mem_region.mailboxes.out[MPID_nem_mem_region.local_ranks[vc->lpid]]->mpich;
+	vc_ch->fbox_in = &MPID_nem_mem_region.mailboxes.in[MPID_nem_mem_region.local_ranks[vc->lpid]]->mpich;
 	vc_ch->recv_queue = MPID_nem_mem_region.RecvQ[vc->lpid];
 
         /* override nocontig send function */
@@ -467,7 +467,7 @@ MPID_nem_vc_init (MPIDI_VC_t *vc)
         vc_ch->lmt_enqueued        = FALSE;
 
         if (MPIR_PARAM_SHM_EAGER_MAX_SZ == -1)
-            vc->eager_max_msg_sz = MPID_NEM_MPICH2_DATA_LEN - sizeof(MPIDI_CH3_Pkt_t);
+            vc->eager_max_msg_sz = MPID_NEM_MPICH_DATA_LEN - sizeof(MPIDI_CH3_Pkt_t);
         else
             vc->eager_max_msg_sz = MPIR_PARAM_SHM_EAGER_MAX_SZ;
 

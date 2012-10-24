@@ -1,4 +1,0 @@
-#! /bin/sh
-#
-echo "Executing mpich2prereq in $devicedir/channels/nemesis"
-MPID_MAX_THREAD_LEVEL=MPI_THREAD_MULTIPLE

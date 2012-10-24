@@ -99,7 +99,7 @@
 
 /* 
  * 12/6/09 - Note that many of the "char *" should be "const char *"; 
- * The dll_mpich2.c file contains many casts to (char *) to suppress
+ * The dll_mpich.c file contains many casts to (char *) to suppress
  * compiler warnings.
  */
 

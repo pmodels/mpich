@@ -10,7 +10,7 @@
 #include <assert.h>
 
 /* Tests MPI_Get_elements with a contiguous datatype that triggered a bug in
- * past versions of MPICH2.  See ticket #1467 for more info. */
+ * past versions of MPICH.  See ticket #1467 for more info. */
 
 struct test_struct {
     char a;
@@ -35,7 +35,7 @@ int main(int argc, char **argv)
      * (A) a type that contains more than one element type (the struct portion)
      * (B) a type that has an odd number of ints in its "type contents" (1 in
      *     this case)
-     * This triggers a specific bug in some versions of MPICH2. */
+     * This triggers a specific bug in some versions of MPICH. */
     blens[0]  = 1;
     displs[0] = offsetof(struct test_struct, a);
     types[0]  = MPI_CHAR;

@@ -13,12 +13,12 @@
  * This test may be used to confirm that memory is properly recovered from
  * freed datatypes.  To test this, build the MPI implementation with memory
  * leak checking.  As this program may be run with a single process, it should
- * also be easy to run it under valgrind or a similar program.  With MPICH2,
+ * also be easy to run it under valgrind or a similar program.  With MPICH,
  * you can configure with the option
  *
  *   --enable-g=mem
  *
- * to turn on MPICH2's internal memory checking.
+ * to turn on MPICH's internal memory checking.
  */
 
 int main( int argc, char *argv[] )

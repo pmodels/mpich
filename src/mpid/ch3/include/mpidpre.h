@@ -73,7 +73,7 @@ typedef MPIR_Rank_t MPID_Node_id_t;
    in this optimized case, the "whole" field can be used for
    comparisons.
 
-   Note that the MPICH2 code (in src/mpi) uses int for rank (and usually for 
+   Note that the MPICH code (in src/mpi) uses int for rank (and usually for 
    contextids, though some work is needed there).  
 
    Note:  We need to check for truncation of rank in MPID_Init - it should 
@@ -82,7 +82,7 @@ typedef MPIR_Rank_t MPID_Node_id_t;
    size of the communicator is within range.
 
    If any part of the definition of this type is changed, those changes
-   must be reflected in the debugger interface in src/mpi/debugger/dll_mpich2.c
+   must be reflected in the debugger interface in src/mpi/debugger/dll_mpich.c
    and dbgstub.c
 */
 typedef struct MPIDI_Message_match_parts {
@@ -262,7 +262,7 @@ typedef struct MPIDI_Request {
     /* OnDataAvail is the action to take when data is now available.
        For example, when an operation described by an iov has 
        completed.  This replaces the MPIDI_CA_t (completion action)
-       field used through MPICH2 1.0.4. */
+       field used through MPICH 1.0.4. */
     int (*OnDataAvail)( struct MPIDI_VC *, struct MPID_Request *, int * );
     /* OnFinal is used in the following case:
        OnDataAvail is set to a function, and that function has processed
@@ -343,7 +343,7 @@ MPID_REQUEST_DECL
 
 /* FIXME: This ifndef test is a temp until mpidpre is cleaned of
    all items that do not belong (e.g., all items not needed by the
-   top layers of MPICH2) */
+   top layers of MPICH) */
 /* FIXME: The progress routines will be made into ch3-common definitions, not
    channel specific.  Channels that need more will need to piggy back or 
    otherwise override */

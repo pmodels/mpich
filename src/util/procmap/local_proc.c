@@ -221,7 +221,7 @@ fn_fail:
 /* maps rank r in comm_ptr to the rank of the leader for r's node in
    comm_ptr->node_roots_comm and returns this value.
   
-   This function does NOT use mpich2 error handling.
+   This function does NOT use mpich error handling.
  */
 #undef FUNCNAME
 #define FUNCNAME MPIU_Get_internode_rank
@@ -242,7 +242,7 @@ int MPIU_Get_internode_rank(MPID_Comm *comm_ptr, int r)
 /* maps rank r in comm_ptr to the rank in comm_ptr->node_comm or -1 if r is not
    a member of comm_ptr->node_comm.
   
-   This function does NOT use mpich2 error handling.
+   This function does NOT use mpich error handling.
  */
 #undef FUNCNAME
 #define FUNCNAME MPIU_Get_intranode_rank

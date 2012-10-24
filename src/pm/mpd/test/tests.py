@@ -10,7 +10,7 @@ from mpdlib import MPDTest    # do this AFTER extending sys.path
 
 clusterHosts = []
 # clusterHosts = ['bp400','bp401','bp402','bp403']
-MPI_srcdir = "/home/rbutler/mpich2"
+MPI_srcdir = "/home/rbutler/mpich"
 MPI_1_dir  = "/home/rbutler/mpich1i"
 USER_INSTALL_DIR = "/tmp/usermpd"
 ROOT_INSTALL_DIR = "/tmp/rootmpd"

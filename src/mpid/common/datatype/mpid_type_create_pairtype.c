@@ -34,7 +34,7 @@
   This function is different from the other MPID_Type_create functions in that
   it fills in an already- allocated MPID_Datatype.  This is important for
   allowing configure-time determination of the MPI type values (these types
-  are stored in the "direct" space, for those familiar with how MPICH2 deals
+  are stored in the "direct" space, for those familiar with how MPICH deals
   with type allocation).
 
   Input Parameters:

@@ -99,9 +99,9 @@ if test "!" -f $svn_externals_sanity_file ; then
 
 ERROR: The file '$svn_externals_sanity_file'
 is not present, indicating that you do not have a complete source tree.
-This is usually caused by checking out MPICH2 with an SVN client version
+This is usually caused by checking out MPICH with an SVN client version
 less than v1.6.  Please check your SVN client version (with
-"svn --version") and use a newer version if necessary to obtain MPICH2.
+"svn --version") and use a newer version if necessary to obtain MPICH.
 
 If you do have a modern SVN client and believe that you have reached
 this error case for some other reason, please file a ticket at:
@@ -250,7 +250,7 @@ for arg in "$@" ; do
                 [ -atvercheck=[yes|no] ] \\
                 [ --verbose-autoreconf ] \\
                 [ --do=stepname ] [ -distrib ]
-    Update the files in the MPICH2 build tree.  This file builds the 
+    Update the files in the MPICH build tree.  This file builds the 
     configure files, creates the Makefile.in files, extracts the error
     messages.
 
@@ -294,7 +294,7 @@ done
 ########################################################################
 
 if [ -z "$autotoolsdir" ] ; then
-    autotoolsdir=$MPICH2_AUTOTOOLS_DIR
+    autotoolsdir=$MPICH_AUTOTOOLS_DIR
 fi
 
 if [ -n "$autotoolsdir" ] ; then
@@ -618,7 +618,7 @@ fi
 echo_n "Updating the README... "
 . ./maint/Version
 if [ -f README.vin ] ; then
-    sed -e "s/%VERSION%/${MPICH2_VERSION}/g" README.vin > README
+    sed -e "s/%VERSION%/${MPICH_VERSION}/g" README.vin > README
     echo "done"
 else
     echo "error"

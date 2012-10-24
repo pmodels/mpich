@@ -42,7 +42,7 @@ void ADIOI_PIOFS_WriteContig(ADIO_File fd, void *buf, int count,
 #endif
 
     if (err == -1) {
-#ifdef MPICH2
+#ifdef MPICH
 	*error_code = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, myname, __LINE__, MPI_ERR_IO, "**io",
 	    "**io %s", strerror(errno));
 #elif defined(PRINT_ERR_MSG)
@@ -148,7 +148,7 @@ void ADIOI_PIOFS_WriteStrided(ADIO_File fd, void *buf, int count,
 
 	ADIOI_Free(iov);
 	if (err_flag) {
-#ifdef MPICH2
+#ifdef MPICH
 	    *error_code = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, myname, __LINE__, MPI_ERR_IO, "**io",
 		"**io %s", strerror(errno));
 #elif defined(PRINT_ERR_MSG) 
@@ -314,7 +314,7 @@ void ADIOI_PIOFS_WriteStrided(ADIO_File fd, void *buf, int count,
 
         if (file_ptr_type == ADIO_INDIVIDUAL) fd->fp_ind = off;
 	if (err_flag) {
-#ifdef MPICH2
+#ifdef MPICH
 	    *error_code = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, myname, __LINE__, MPI_ERR_IO, "**io",
 		"**io %s", strerror(errno));
 #elif defined(PRINT_ERR_MSG)

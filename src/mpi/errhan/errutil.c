@@ -773,7 +773,7 @@ fn_exit:
 }
 
 /* 
- * If the error message level is all, MPICH2 supports instance-specific
+ * If the error message level is all, MPICH supports instance-specific
  * error messages.  Details above
  */
 #if MPICH_ERROR_MSG_LEVEL == MPICH_ERROR_MSG_ALL

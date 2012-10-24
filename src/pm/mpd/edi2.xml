@@ -1,8 +1,8 @@
 <PMRequests>
     <create-process-group
             totalprocs='5'
-            exec='/home/lusk/mpich2/src/pmi/impls/mpd/proxy' 
-            path='/home/lusk/mpich2/src/pmi/impls/mpd:/usr/bin:/usr/local/bin'
+            exec='/home/lusk/mpich/src/pmi/impls/mpd/proxy' 
+            path='/home/lusk/mpich/src/pmi/impls/mpd:/usr/bin:/usr/local/bin'
             user='lusk' 
             cwd='/home/lusk'
             args = ''

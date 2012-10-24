@@ -1279,7 +1279,7 @@ class MPDConClientSock(MPDSock):
                     print '    mpd &'
                     print 'and you will be able to run jobs just on this host.'
                     print 'For more details on starting mpds on a set of hosts, see'
-                    print 'the MPICH2 Installation Guide.'
+                    print 'the MPICH Installation Guide.'
                     sys.exit(-1)
                 msgToSend = { 'cmd' : 'con_init' }
                 self.sock.send_dict_msg(msgToSend)
@@ -1308,7 +1308,7 @@ class MPDConClientSock(MPDSock):
             print '    mpd &'
             print 'and you will be able to run jobs just on this host.'
             print 'For more details on starting mpds on a set of hosts, see'
-            print 'the MPICH2 Installation Guide.'
+            print 'the MPICH Installation Guide.'
             sys.exit(-1)
 
 class MPDParmDB(dict):

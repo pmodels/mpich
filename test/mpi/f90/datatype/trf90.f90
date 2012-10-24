@@ -3,7 +3,7 @@
 !  (C) 2011 by Argonne National Laboratory.
 !      See COPYRIGHT in top-level directory.
 !
-! Based on a sample program that triggered a segfault in MPICH2
+! Based on a sample program that triggered a segfault in MPICH
 program testf90_mpi
   use mpi
   implicit none

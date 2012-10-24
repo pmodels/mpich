@@ -411,14 +411,14 @@ typedef int (MPI_Delete_function) ( MPI_Comm, int, void *, void * );
 #define MPI_VERSION    3
 #define MPI_SUBVERSION 0
 #define MPICH_NAME     3
-#define MPICH2         1
+#define MPICH         1
 #define MPICH_HAS_C2F  1
 
 
-/* MPICH2_VERSION is the version string. MPICH2_NUMVERSION is the
+/* MPICH_VERSION is the version string. MPICH_NUMVERSION is the
  * numeric version that can be used in numeric comparisons.
  *
- * MPICH2_VERSION uses the following format:
+ * MPICH_VERSION uses the following format:
  * Version: [MAJ].[MIN].[REV][EXT][EXT_NUMBER]
  * Example: 1.0.7rc1 has
  *          MAJ = 1
@@ -427,7 +427,7 @@ typedef int (MPI_Delete_function) ( MPI_Comm, int, void *, void * );
  *          EXT = rc
  *          EXT_NUMBER = 1
  *
- * MPICH2_NUMVERSION will convert EXT to a format number:
+ * MPICH_NUMVERSION will convert EXT to a format number:
  *          ALPHA (a) = 0
  *          BETA (b)  = 1
  *          RC (rc)   = 2
@@ -438,15 +438,15 @@ typedef int (MPI_Delete_function) ( MPI_Comm, int, void *, void * );
  * digits for REV, 1 digit for EXT and 2 digits for EXT_NUMBER. So,
  * 1.0.7rc1 will have the numeric version 10007201.
  */
-#define MPICH2_VERSION "@MPICH2_VERSION@"
-#define MPICH2_NUMVERSION @MPICH2_NUMVERSION@
+#define MPICH_VERSION "@MPICH_VERSION@"
+#define MPICH_NUMVERSION @MPICH_NUMVERSION@
 
-#define MPICH2_RELEASE_TYPE_ALPHA  0
-#define MPICH2_RELEASE_TYPE_BETA   1
-#define MPICH2_RELEASE_TYPE_RC     2
-#define MPICH2_RELEASE_TYPE_PATCH  3
+#define MPICH_RELEASE_TYPE_ALPHA  0
+#define MPICH_RELEASE_TYPE_BETA   1
+#define MPICH_RELEASE_TYPE_RC     2
+#define MPICH_RELEASE_TYPE_PATCH  3
 
-#define MPICH2_CALC_VERSION(MAJOR, MINOR, REVISION, TYPE, PATCH) \
+#define MPICH_CALC_VERSION(MAJOR, MINOR, REVISION, TYPE, PATCH) \
     (((MAJOR) * 10000000) + ((MINOR) * 100000) + ((REVISION) * 1000) + ((TYPE) * 100) + (PATCH))
 
 /* for the datatype decoders */
@@ -550,7 +550,7 @@ extern struct MPIR_T_pvar_handle * const MPI_T_PVAR_ALL_HANDLES;
 /* the MPI_T_ interface requires that these VERBOSITY constants occur in this
  * relative order with increasing values */
 enum MPIR_T_verbosity_t {
-    /* don't name-shift this if/when MPI_T_ is accepted, this is an MPICH2-only
+    /* don't name-shift this if/when MPI_T_ is accepted, this is an MPICH-only
      * extension */
     MPIX_T_VERBOSITY_INVALID = 0,
 
@@ -569,7 +569,7 @@ enum MPIR_T_verbosity_t {
 };
 
 enum MPIR_T_bind_t {
-    /* don't name-shift this if/when MPI_T_ is accepted, this is an MPICH2-only
+    /* don't name-shift this if/when MPI_T_ is accepted, this is an MPICH-only
      * extension */
     MPIX_T_BIND_INVALID = 0,
 
@@ -588,7 +588,7 @@ enum MPIR_T_bind_t {
 };
 
 enum MPIR_T_scope_t {
-    /* don't name-shift this if/when MPI_T_ is accepted, this is an MPICH2-only
+    /* don't name-shift this if/when MPI_T_ is accepted, this is an MPICH-only
      * extension */
     MPIX_T_SCOPE_INVALID = 0,
 
@@ -602,7 +602,7 @@ enum MPIR_T_scope_t {
 };
 
 enum MPIR_T_pvar_class_t {
-    /* don't name-shift this if/when MPI_T_ is accepted, this is an MPICH2-only
+    /* don't name-shift this if/when MPI_T_ is accepted, this is an MPICH-only
      * extension */
     MPIX_T_PVAR_CLASS_INVALID = 0,
 

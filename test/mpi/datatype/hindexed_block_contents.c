@@ -5,7 +5,7 @@
  */
 
 /* test based on a bug report from Lisandro Dalcin:
- * http://lists.mcs.anl.gov/pipermail/mpich2-dev/2012-October/000978.html */
+ * http://lists.mcs.anl.gov/pipermail/mpich-dev/2012-October/000978.html */
 
 #include <mpi.h>
 #include <stdlib.h>
@@ -13,7 +13,7 @@
 /* USE_STRICT_MPI may be defined in mpitestconf.h */
 #include "mpitestconf.h"
 
-#if !defined(USE_STRICT_MPI) && defined(MPICH2)
+#if !defined(USE_STRICT_MPI) && defined(MPICH)
 #  define TEST_MPI3_ROUTINES 1
 #endif
 

@@ -24,7 +24,7 @@
 /* MPI-3 is not yet standardized -- allow MPI-3 routines to be switched off.
  */
 
-#if !defined(USE_STRICT_MPI) && defined(MPICH2)
+#if !defined(USE_STRICT_MPI) && defined(MPICH)
 #  define TEST_MPI3_ROUTINES 1
 #endif
 

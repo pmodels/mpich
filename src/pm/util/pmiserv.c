@@ -7,7 +7,7 @@
 /*
  * This is a simple PMI server implementation.  This file implements
  * the PMI calls, including the PMI key value spaces.  This implements the
- * "server" end of the interface defined in mpich2/src/pmi/simple .
+ * "server" end of the interface defined in mpich/src/pmi/simple .
  */
 
 #include "mpichconf.h"

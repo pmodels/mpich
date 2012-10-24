@@ -18,7 +18,7 @@
 /* Make the CPP definition that will be used to control whether threaded
    code is supported.  Test ONLY on whether MPICH_IS_THREADED is defined.
 
-   Rather than embed a conditional test in the MPICH2 code, we define a
+   Rather than embed a conditional test in the MPICH code, we define a
    single value on which we can test
  */
 #if !defined(MPICH_THREAD_LEVEL) || !defined(MPI_THREAD_MULTIPLE)
@@ -65,7 +65,7 @@ enum MPIU_Thread_cs_name {
 typedef struct MPICH_ThreadInfo_t {
     int               thread_provided;  /* Provided level of thread support */
     /* This is a special case for is_thread_main, which must be
-       implemented even if MPICH2 itself is single threaded.  */
+       implemented even if MPICH itself is single threaded.  */
 #if (MPICH_THREAD_LEVEL >= MPI_THREAD_SERIALIZED)
 #  if !defined(MPIU_TLS_SPECIFIER)
     MPID_Thread_tls_t thread_storage;   /* Id for perthread data */
@@ -117,7 +117,7 @@ extern MPICH_ThreadInfo_t MPIR_ThreadInfo;
 /* This macro used to take an argument of one or more statements that
  * would be wrapped in a conditional.  However it was not used anywhere
  * in part because it looked unnatural.  This version takes no arguments
- * and evaluates to a boolean expression that is true if MPICH2 is
+ * and evaluates to a boolean expression that is true if MPICH is
  * threaded (including any runtime check if needed) and false otherwise.
  * MPIU_THREAD_CHECK_{BEGIN,END} should probably still be used if you
  * don't have any other conditions that you need to check in order to
@@ -189,7 +189,7 @@ typedef struct MPICH_PerThread_t {
 extern MPICH_PerThread_t MPIR_Thread;
 
 /* The following three macros define a way to portably access thread-private
-   storage in MPICH2, and avoid extra overhead when MPICH2 is single
+   storage in MPICH, and avoid extra overhead when MPICH is single
    threaded
    INITKEY - Create the key.  Must happen *before* the other threads
              are created
@@ -364,7 +364,7 @@ extern MPIU_TLS_SPECIFIER MPICH_PerThread_t MPIR_Thread;
  *   INIT - entered before MPID_Init and exited near the end of MPI_Init(_thread)
  * See the analysis of the MPI routines for thread usage properties.  Those
  * routines considered "Access Only" do not require ALLFUNC.  That analysis
- * was very general; in MPICH2, some routines may have internal shared
+ * was very general; in MPICH, some routines may have internal shared
  * state that isn't required by the MPI specification.  Perhaps the
  * best example of this is the MPI_ERROR_STRING routine, where the 
  * instance-specific error messages make use of shared state, and hence

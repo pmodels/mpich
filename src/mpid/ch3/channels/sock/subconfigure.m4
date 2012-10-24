@@ -1,8 +1,8 @@
 [#] start of __file__
-dnl MPICH2_SUBCFG_BEFORE=src/mpid/common/sock
-dnl MPICH2_SUBCFG_BEFORE=src/mpid/ch3/util/sock
+dnl MPICH_SUBCFG_BEFORE=src/mpid/common/sock
+dnl MPICH_SUBCFG_BEFORE=src/mpid/ch3/util/sock
 
-dnl _PREREQ handles the former role of mpich2prereq, setup_device, etc
+dnl _PREREQ handles the former role of mpichprereq, setup_device, etc
 AC_DEFUN([PAC_SUBCFG_PREREQ_]PAC_SUBCFG_AUTO_SUFFIX,[
     AM_CONDITIONAL([BUILD_CH3_SOCK],[test "X$device_name" = "Xch3" -a "X$channel_name" = "Xsock"])
     AM_COND_IF([BUILD_CH3_SOCK],[
@@ -36,7 +36,7 @@ AC_DEFUN([PAC_SUBCFG_PREREQ_]PAC_SUBCFG_AUTO_SUFFIX,[
         fi
         
         # FIXME: The setup file has a weird requirement that it needs to be
-        # run *before* the MPICH2 device (not the setup directory itself) is
+        # run *before* the MPICH device (not the setup directory itself) is
         # configured, but the actual configuration of the associated directory
         # needs to be done *after* the device is configured.
         file=${master_top_srcdir}/src/mpid/common/sock/setup

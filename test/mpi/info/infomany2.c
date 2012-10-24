@@ -38,7 +38,7 @@ int main( int argc, char *argv[] )
 
     /* We create max_info items, then delete the middle third of them,
        then recreate them, then check them, then 
-       delete them all.  This checks that the MPICH2 algorithm for 
+       delete them all.  This checks that the MPICH algorithm for 
        handling large numbers of items works correctly; other MPI 
        implementations should also be able to handle this */
 

@@ -7,7 +7,7 @@
 
 #include "mpiimpl.h"
 
-/* mpiext.h contains the prototypes for functions to interface MPICH2
+/* mpiext.h contains the prototypes for functions to interface MPICH
    and ROMIO */
 #include "mpiext.h"
 

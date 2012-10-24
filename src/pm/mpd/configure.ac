@@ -7,7 +7,7 @@ AC_CONFIG_AUX_DIR(../../../confdb)
 m4_include([../../../maint/version.m4])
 dnl 2nd arg is intentionally underquoted
 AC_INIT([MPD],
-        MPICH2_VERSION_m4,
+        MPICH_VERSION_m4,
         [mpich-discuss@mcs.anl.gov],
         [mpd],
         [http://www.mcs.anl.gov/research/projects/mpich2/])

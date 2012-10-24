@@ -39,7 +39,7 @@ int main(int argc, char *argv[])
     MPI_Group_excl(world_group, size / 2, excl, &even_group);
     MPI_Group_free(&world_group);
 
-#if !defined(USE_STRICT_MPI) && defined(MPICH2)
+#if !defined(USE_STRICT_MPI) && defined(MPICH)
     if (rank % 2 == 0) {
         /* Even processes create a group for themselves */
         MPI_Comm_create_group(MPI_COMM_WORLD, even_group, 0, &even_comm);

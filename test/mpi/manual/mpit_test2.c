@@ -37,7 +37,7 @@
 #include <string.h>
 #include "mpitestconf.h"
 
-#if !defined(USE_STRICT_MPI) && defined(MPICH2)
+#if !defined(USE_STRICT_MPI) && defined(MPICH)
 
 static int posted_qlen, unexpected_qlen;
 static MPI_Aint posted_queue_match_attempts, unexpected_queue_match_attempts;
@@ -206,7 +206,7 @@ int main(int argc, char **argv)
     return 0;
 }
 #else
-/* Simple null program to allow building this file with non-MPICH2 
+/* Simple null program to allow building this file with non-MPICH 
    implementations */
 int main(int argc, char **argv)
 {

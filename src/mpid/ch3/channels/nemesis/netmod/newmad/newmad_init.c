@@ -50,7 +50,7 @@ static MPIDI_Comm_ops_t comm_ops = {
 #define MPIDI_CH3I_URL_KEY "url_id"
 
 static int         mpid_nem_newmad_myrank;
-static const char *label="mpich2";
+static const char *label="mpich";
 static const char *local_session_url = NULL;
 nm_session_t       mpid_nem_newmad_session;
 
@@ -61,7 +61,7 @@ nm_session_t       mpid_nem_newmad_session;
 static int init_mad( MPIDI_PG_t *pg_p )
 {
     int   mpi_errno = MPI_SUCCESS;
-    char *dummy_argv[2] = {"mpich2",NULL};
+    char *dummy_argv[2] = {"mpich",NULL};
     int   dummy_argc    = 1;
     int   ret;
 

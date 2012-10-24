@@ -12,7 +12,7 @@ dnl The file name here refers to a file in the source being configured
 dnl FIXME this is the old style, needs updating to new style
 dnl AC_INIT(include/mpitest.h)
 dnl FIXME duplication with VERSION variable below
-AC_INIT([mpich2-testsuite],[1.2])
+AC_INIT([mpich-testsuite],[1.2])
 AC_CONFIG_HEADER(include/mpitestconf.h)
 AH_TOP([/* -*- Mode: C; c-basic-offset:4 ; -*- */
 /*  
@@ -25,7 +25,7 @@ AH_TOP([/* -*- Mode: C; c-basic-offset:4 ; -*- */
 AH_BOTTOM([#endif])
 # This version is the version of the test suite.
 # 1.0: Initial version (all versions) before independent release
-# 1.1: Initial version that is independent of MPICH2  11/08
+# 1.1: Initial version that is independent of MPICH  11/08
 # 1.2: Automake replaces simplemake
 VERSION=1.2
 AC_SUBST(VERSION)
@@ -43,7 +43,7 @@ AM_PROG_AR
 # Non-verbose make by default
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 
-if test -z "$mpich2_top_srcdir" ; then 
+if test -z "$mpich_top_srcdir" ; then 
     if test -z "$top_srcdir" ; then
        use_top_srcdir=$srcdir   
     else
@@ -56,15 +56,15 @@ if test -z "$mpich2_top_srcdir" ; then
         ;;        
     esac
     if test -f $use_top_srcdir/../../maint/version.m4 ; then 
-        mpich2_top_srcdir=`cd $use_top_srcdir && cd ../.. && pwd`
+        mpich_top_srcdir=`cd $use_top_srcdir && cd ../.. && pwd`
     fi
 fi
-AC_SUBST(mpich2_top_srcdir)
+AC_SUBST(mpich_top_srcdir)
 
 # these (in particular master_top_srcdir) are needed to regenerate
 # the f90 files from the f77 files
-AC_ARG_VAR([master_top_builddir],[path to the MPICH2 top-level build directory (if present)])
-AC_ARG_VAR([master_top_srcdir],[path to the MPICH2 top-level source directory (if present)])
+AC_ARG_VAR([master_top_builddir],[path to the MPICH top-level build directory (if present)])
+AC_ARG_VAR([master_top_srcdir],[path to the MPICH top-level source directory (if present)])
 
 # Ensure that master_top_srcdir is set if maintainer mode for is set, 
 # since some of the Makefile targets require it.
@@ -166,7 +166,7 @@ AC_ARG_ENABLE(threads,
 	specified, the level is set to multiple.  If disabled, the
 	level is set to single.  If the environment variable
 	MPICH_THREAD_LEVEL is set, that thread level is used (this is
-	to let MPICH2 build for the correct thread support without
+	to let MPICH build for the correct thread support without
 	requiring a specific --enable-threads argument.],,
 	[enable_threads=default])
 
@@ -221,11 +221,11 @@ if test -n "$F90" -o -n "$F90FLAGS" ; then
 fi
 
 # ------------------------------------------------------------------------
-dnl use AC_ARG_VAR to mark FROM_MPICH2 as "precious" to autoconf so that
+dnl use AC_ARG_VAR to mark FROM_MPICH as "precious" to autoconf so that
 dnl automatic re-runs of config.status preserve its value correctly
-AC_ARG_VAR([FROM_MPICH2],[should be set to "yes" if this configure script is being invoked by the main MPICH2 configure])
+AC_ARG_VAR([FROM_MPICH],[should be set to "yes" if this configure script is being invoked by the main MPICH configure])
 AC_ARG_VAR([MPICH_THREAD_LEVEL],
-           [the MPI thread level supported by the enclosing MPICH2 build (when built within MPICH2)])
+           [the MPI thread level supported by the enclosing MPICH build (when built within MPICH)])
 # ------------------------------------------------------------------------
 
 if test "$enable_threads" = "yes" ; then 
@@ -258,9 +258,9 @@ if test "$enable_fast" = "yes" ; then
         enable_checkerrors=no
     fi
 fi
-# default for MPICH2 is to check error handling; for other cases it
+# default for MPICH is to check error handling; for other cases it
 # is to only check correct programs.
-if test "$FROM_MPICH2" = "yes" ; then
+if test "$FROM_MPICH" = "yes" ; then
     if test "$enable_checkerrors" = "default" -a "$MPICH_FAST" != "YES" ; then
          enable_checkerrors=yes
     else 
@@ -299,25 +299,25 @@ MPILIBLOC=""
 AC_SUBST(MPILIBLOC)
 
 # more variables that must be marked precious for proper re-configure operation
-AC_ARG_VAR([MPICH2_ENABLE_F77],["yes" if the enclosing MPICH2 build supports Fortran 77])
-AC_ARG_VAR([MPICH2_ENABLE_FC],["yes" if the enclosing MPICH2 build supports modern Fortran])
-AC_ARG_VAR([MPICH2_ENABLE_CXX],["yes" if the enclosing MPICH2 build supports C++])
+AC_ARG_VAR([MPICH_ENABLE_F77],["yes" if the enclosing MPICH build supports Fortran 77])
+AC_ARG_VAR([MPICH_ENABLE_FC],["yes" if the enclosing MPICH build supports modern Fortran])
+AC_ARG_VAR([MPICH_ENABLE_CXX],["yes" if the enclosing MPICH build supports C++])
 
-# If we're building from MPICH2, check the MPICH2_ENABLE_xxx environment
+# If we're building from MPICH, check the MPICH_ENABLE_xxx environment
 # variables for enable defaults
-if test "$FROM_MPICH2" = yes ; then
-    if test -n "$MPICH2_ENABLE_F77" ; then
-        enable_f77=$MPICH2_ENABLE_F77
+if test "$FROM_MPICH" = yes ; then
+    if test -n "$MPICH_ENABLE_F77" ; then
+        enable_f77=$MPICH_ENABLE_F77
     fi
-    if test -n "$MPICH2_ENABLE_FC" ; then
-        enable_fc=$MPICH2_ENABLE_FC
+    if test -n "$MPICH_ENABLE_FC" ; then
+        enable_fc=$MPICH_ENABLE_FC
     fi
-    if test -n "$MPICH2_ENABLE_CXX" ; then
-        enable_cxx=$MPICH2_ENABLE_CXX
+    if test -n "$MPICH_ENABLE_CXX" ; then
+        enable_cxx=$MPICH_ENABLE_CXX
     fi
 fi
 
-# Some MPI-2 implementations (including some of the MPICH2 shared-memory
+# Some MPI-2 implementations (including some of the MPICH shared-memory
 # channels and BG/L) leave out the dynamic process routines.  This
 # allows tests to avoid reporting failure for these routines.  
 # This can be controlled by either a --disable-spawn argument or by
@@ -354,14 +354,14 @@ if test "$enable_strictmpi" = "yes" ; then
     AC_DEFINE(USE_STRICT_MPI,1,[Define if only operations defined in MPI should be tested])
 fi
 #
-# At this writing, MPICH2 has many MPIX routines, and the test suite includes
+# At this writing, MPICH has many MPIX routines, and the test suite includes
 # them.  As these are not MPI routines (yet), they are invalid and incorrect
 # when this test suite is used for other MPI implementations, including those
-# based on earlier versions of MPICH2.
+# based on earlier versions of MPICH.
 MPI_HAS_MPIX=no
 #
-# Hack to detect build from within MPICH2.  Ensure strictmpi not selected.
-if test "$FROM_MPICH2" = "yes" -a "$enable_strictmpi" = "no" ; then
+# Hack to detect build from within MPICH.  Ensure strictmpi not selected.
+if test "$FROM_MPICH" = "yes" -a "$enable_strictmpi" = "no" ; then
    MPI_HAS_MPIX=yes
 fi
 AC_SUBST(MPI_HAS_MPIX)
@@ -375,9 +375,9 @@ AC_ARG_VAR([WRAPPER_FFLAGS],[])
 AC_ARG_VAR([WRAPPER_FCFLAGS],[])
 AC_ARG_VAR([WRAPPER_CXXFLAGS],[])
 
-if test "$FROM_MPICH2" = "yes" ; then
+if test "$FROM_MPICH" = "yes" ; then
     # perform configure tests with the normal compilers ($CC/$F77/etc), but use
-    # the WRAPPER_xFLAGS computed by MPICH2 as our flags instead.  Then at the
+    # the WRAPPER_xFLAGS computed by MPICH as our flags instead.  Then at the
     # end of configure we will empty out these flags and set our compilers to
     # the installed compiler wrappers
     CFLAGS="$WRAPPER_CFLAGS"
@@ -390,7 +390,7 @@ if test "$FROM_MPICH2" = "yes" ; then
     # WRAPPER_LIBS contains currently non-existent libs like "-lopa" and "-lmpl"
     # right now, so set LIBS to the user-specified libs for now.
     # FIXME Does this need to be an AC_ARG_VAR?
-    LIBS="$MPICH2_LIBS"
+    LIBS="$MPICH_LIBS"
 
 elif test -n "$with_mpi" ; then
     if test -z "$MPICC" ; then
@@ -454,13 +454,13 @@ PAC_PROG_CC
 
 # Note that some versions of autoconf will insist that the compiler 
 # produce executables at this point, which is why we must do something
-# special for building within MPICH2
+# special for building within MPICH
 
 # Ensure that we can compile an MPI program before we go any further
 # We don't use a cached value here because this is a sanity check
 # The exception is if we are executing this configure from within the 
-# MPICH2 configure - in that case, the 
-if test "$FROM_MPICH2" != "yes" ; then
+# MPICH configure - in that case, the 
+if test "$FROM_MPICH" != "yes" ; then
     AC_MSG_CHECKING([whether we can compile and link MPI programs in C])
     AC_LINK_IFELSE([
 AC_LANG_PROGRAM([#include "mpi.h"],[MPI_Init(0,0);MPI_Finalize();])
@@ -473,7 +473,7 @@ AC_MSG_RESULT($mpi_compile_works)
 fi
 dnl We cannot use AC_C_LONG_DOUBLE
 dnl because it does not support cross-compilation.  Instead, we use the
-dnl same test in the MPICH2 configure.
+dnl same test in the MPICH configure.
 # Check on support for long double and long long types.  Do this before the
 # structure alignment test because it will test for including those
 # types as well
@@ -510,8 +510,8 @@ AC_C_RESTRICT
 AC_ARG_ENABLE(stricttest,
 AC_HELP_STRING([--enable-stricttest], [Turn on strict GCC compilation]))
 dnl Initialize enable_strict_done so PAC_CC_STRICT won't exit right away
-dnl When it is configuring from within MPICH2, because enable_strict_done=yes
-dnl is set in the environment by MPICH2.
+dnl When it is configuring from within MPICH, because enable_strict_done=yes
+dnl is set in the environment by MPICH.
 enable_strict_done=no
 PAC_CC_STRICT($enable_stricttest)
 # -Wfloat-equal isn't meaningful in testsuite,
@@ -551,12 +551,12 @@ if test "$threadsdir" = "threads" ; then
 
     # we shouldn't actually need to do this, but we are dodging the chicken/egg
     # problem b/c we don't have a working mpicc yet and we temporarily discarded
-    # the MPICH2-set LIBS (probably the wrong thing to do)
+    # the MPICH-set LIBS (probably the wrong thing to do)
     AC_SEARCH_LIBS([pthread_create],[pthread])
     AC_SEARCH_LIBS([pthread_barrier_init],[pthread])
 
     AC_CHECK_FUNCS(pthread_create pthread_yield pthread_barrier_init pthread_barrier_wait)
-    if test "$FROM_MPICH2" != yes ; then
+    if test "$FROM_MPICH" != yes ; then
         AC_CHECK_FUNCS(MPI_Init_thread)
     fi    
 fi
@@ -583,7 +583,7 @@ AC_CHECK_FUNCS(getrusage)
 # Check for the MPI Version.  This test assumes at least MPI 2.0.  For
 # some tests, we need to know if we are MPI 2.1 or MPI 2.2,
 # particularly for new routines in Fortran
-if test "$FROM_MPICH2" != "yes" ; then
+if test "$FROM_MPICH" != "yes" ; then
     AC_CACHE_CHECK([that MPI program can be compiled],pac_cv_mpi_compile_ok,[
 AC_COMPILE_IFELSE([AC_LANG_PROGRAM([#include "mpi.h"],[MPI_Init(0,0);MPI_Finalize();])],pac_cv_mpi_compile_ok=yes,pac_cv_mpi_compile_ok=no)])
     if test "$pac_cv_mpi_compile_ok" != yes ; then
@@ -609,14 +609,14 @@ done
 MPI_VERSION=$pac_cv_mpi_major_version
 MPI_SUBVERSION=$pac_cv_mpi_minor_version
 else
-    # We are within the MPICH2 build.  Extract the MPI versions from 
+    # We are within the MPICH build.  Extract the MPI versions from 
     # mpi.h.in	
-    if test ! -f $mpich2_top_srcdir/src/include/mpi.h.in ; then
+    if test ! -f $mpich_top_srcdir/src/include/mpi.h.in ; then
         AC_MSG_ERROR([Could not find the required mpi.h.in file!])
     fi
-    MPI_VERSION=`grep MPI_VERSION $mpich2_top_srcdir/src/include/mpi.h.in | \
+    MPI_VERSION=`grep MPI_VERSION $mpich_top_srcdir/src/include/mpi.h.in | \
     		      sed -e 's/#define *MPI_VERSION *\([0-4]\).*/\1/g'`
-    MPI_SUBVERSION=`grep MPI_SUBVERSION $mpich2_top_srcdir/src/include/mpi.h.in | \
+    MPI_SUBVERSION=`grep MPI_SUBVERSION $mpich_top_srcdir/src/include/mpi.h.in | \
     		      sed -e 's/#define *MPI_SUBVERSION *\([0-9]\).*/\1/g'`
 fi
 
@@ -632,11 +632,11 @@ if test "$enable_f77" = yes ; then
     fi    
 fi
 # Simple tests for which other languages we can handle.  
-# Use these only when configuring separate from an MPICH2 build
+# Use these only when configuring separate from an MPICH build
 f77dir="#"
 AC_SUBST(f77dir)
 buildingF77=no
-if test "$FROM_MPICH2" = yes ; then
+if test "$FROM_MPICH" = yes ; then
     if test "$enable_f77" = yes ; then
        # Assume success
         otherlangs="$otherlangs f77"
@@ -943,7 +943,7 @@ fi
 f90dir="#"
 AC_SUBST(f90dir)
 # First, see if we have an f90 compiler.  This uses code similar to that
-# in the MPICH2 top-level configure
+# in the MPICH top-level configure
 if test "$enable_fc" = yes -a "$enable_f77" = yes ; then
     PAC_PROG_FC_WORKS
     if test -z "$FC" -o "$pac_cv_prog_fc_works" != yes ; then
@@ -957,11 +957,11 @@ if test "$enable_fc" = yes ; then
     # Make sure that the compilers are compatible.  This 
     # will also make sure that the program named in FC is
     # a working Fortran 90 compiler
-    # Only check if we're *not* building within MPICH2 
-    # (MPICH2 will have made the test)
+    # Only check if we're *not* building within MPICH 
+    # (MPICH will have made the test)
     # FIXME: Do we want to check only simple routine names 
     # (those without an underscore?)
-    if test "$FROM_MPICH2" != yes ; then
+    if test "$FROM_MPICH" != yes ; then
         PAC_FC_AND_F77_COMPATIBLE(enable_fc=yes,enable_fc=no)
     fi
 fi
@@ -1025,7 +1025,7 @@ if test "$enable_fc" = yes ; then
     PAC_FC_MODULE
 fi
 #
-if test "$FROM_MPICH2" = yes ; then
+if test "$FROM_MPICH" = yes ; then
     if test "$enable_fc" = yes ; then
         otherlangs="$otherlangs f90"
         f90dir=f90
@@ -1063,7 +1063,7 @@ fi
 # Simple tests for which other languages we can handle
 cxxdir="#"
 AC_SUBST(cxxdir)
-if test "$FROM_MPICH2" = yes ; then
+if test "$FROM_MPICH" = yes ; then
     if test "$enable_cxx" = yes ; then
         otherlangs="$otherlangs cxx"
         cxxdir=cxx
@@ -1129,8 +1129,8 @@ iodir="#"
 if test "$enable_romio" != no ; then
     iodir=io
     AC_DEFINE(HAVE_MPI_IO,1,[Define if MPI-IO (really ROMIO) is included])
-    if test "$FROM_MPICH2" = yes ; then
-        # MPICH2 no longer uses and MPIO_Request
+    if test "$FROM_MPICH" = yes ; then
+        # MPICH no longer uses and MPIO_Request
         pac_cv_have_mpio_request=no
     else 
         AC_CACHE_CHECK([whether MPIO_Request is defined for MPI IO],
@@ -1150,8 +1150,8 @@ AC_SUBST(iodir)
 # MPI_INTEGER16 is mentioned in only one place in MPI 2.1, and some
 # implementations may have missed it.  Check to see if it is available in 
 # C.
-if test "$FROM_MPICH2" = yes ; then
-   # MPICH2 correctly includes this type.
+if test "$FROM_MPICH" = yes ; then
+   # MPICH correctly includes this type.
    pac_cv_have_mpi_integer16=yes
 else
     AC_CACHE_CHECK([whether MPI_INTEGER16 is available],
@@ -1240,7 +1240,7 @@ dnl the location of the source of the MPI implementation into the XML
 dnl summary file
 AC_SUBST(MPI_SOURCE)
 
-if test "$FROM_MPICH2" = yes ; then
+if test "$FROM_MPICH" = yes ; then
     # Set compilers/flags to be substituted in output files, e.g. Makefiles.
     LDFLAGS="$saveLDFLAGS"
     # note that the default definition of bindir is 

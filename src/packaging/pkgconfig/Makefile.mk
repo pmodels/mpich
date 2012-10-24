@@ -5,5 +5,5 @@
 ##     See COPYRIGHT in top-level directory.
 ##
 
-nodist_pkgconfig_DATA += src/packaging/pkgconfig/mpich2.pc
+nodist_pkgconfig_DATA += src/packaging/pkgconfig/mpich.pc
 

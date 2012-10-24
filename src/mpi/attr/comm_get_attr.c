@@ -197,7 +197,7 @@ int MPIR_CommGetAttr( MPI_Comm comm, int comm_keyval, void *attribute_val,
 	   since we've set the output value as the pointer to these, we need 
 	   to dereference it here. We must also be very careful of the 3 
 	   different output cases, since the two Fortran cases correspond
-	   to MPI_Fint and MPIR_FAint (an internal MPICH2 typedef for C 
+	   to MPI_Fint and MPIR_FAint (an internal MPICH typedef for C 
 	   version of INTEGER (KIND=MPI_ADDRESS_KIND) ) */
 	if (*flag) {
             /* Use the internal pointer-sized-int for systems (e.g., BG/P)

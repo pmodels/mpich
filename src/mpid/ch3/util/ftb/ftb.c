@@ -41,8 +41,8 @@ int MPIDU_Ftb_init(void)
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDU_FTB_INIT);
 
-    MPIU_Strncpy(ci.event_space, "ftb.mpi.mpich2", sizeof(ci.event_space));
-    MPIU_Strncpy(ci.client_name, "mpich2 " MPICH2_VERSION, sizeof(ci.client_name));
+    MPIU_Strncpy(ci.event_space, "ftb.mpi.mpich", sizeof(ci.event_space));
+    MPIU_Strncpy(ci.client_name, "mpich " MPICH_VERSION, sizeof(ci.client_name));
     MPIU_Strncpy(ci.client_subscription_style, "FTB_SUBSCRIPTION_NONE", sizeof(ci.client_subscription_style));
     ci.client_polling_queue_len = -1;
     

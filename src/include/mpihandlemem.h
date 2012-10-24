@@ -10,7 +10,7 @@
   MPI Opaque Objects:
 
   MPI Opaque objects such as 'MPI_Comm' or 'MPI_Datatype' are specified by 
-  integers (in the MPICH2 implementation); the MPI standard calls these
+  integers (in the MPICH implementation); the MPI standard calls these
   handles.  
   Out of range values are invalid; the value 0 is reserved.
   For most (with the possible exception of 
@@ -19,7 +19,7 @@
   passed where a communicator is expected) and important properties of the 
   object.  Even the 'MPI_xxx_NULL' values should be encoded so that 
   different null handles can be distinguished.  The details of the encoding
-  of the handles is covered in more detail in the MPICH2 Design Document.
+  of the handles is covered in more detail in the MPICH Design Document.
   For the most part, the ADI uses pointers to the underlying structures
   rather than the handles themselves.  However, each structure contains an 
   'handle' field that is the corresponding integer handle for the MPI object.
@@ -41,7 +41,7 @@
   multiple types (for example, we may want a universal error handler for 
   errors return).  This is also used to indicate the type of MPI object a 
   MPI handle represents.  It is an enum because only this applies only the
-  the MPI and internal MPICH2 objects.
+  the MPI and internal MPICH objects.
 
   The 'MPID_PROCGROUP' kind is used to manage process groups (different
   from MPI Groups) that are used to keep track of collections of
@@ -364,7 +364,7 @@ typedef OPA_int_t MPIU_Handle_ref_count;
 /* ------------------------------------------------------------------------- */
 
 /* This macro defines structure fields that are needed in order to use the
- * reference counting and object allocation macros/functions in MPICH2.  This
+ * reference counting and object allocation macros/functions in MPICH.  This
  * allows us to avoid casting and violating C's strict aliasing rules in most
  * cases.
  *

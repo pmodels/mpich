@@ -24,13 +24,13 @@ endif BUILD_ROMIO
 
 cpi_DEPENDENCIES =
 
-# This directory of examples conceptually lives "outside" of the real MPICH2
-# build and so we add "-lblah" for MPICH2 libs instead of specifying
+# This directory of examples conceptually lives "outside" of the real MPICH
+# build and so we add "-lblah" for MPICH libs instead of specifying
 # "../lib/libblah.la" (this invocation of make has no way to cause it to be
 # rebuilt).
 #
-# FIXME we add the core MPICH2 libs explicitly to cpi_DEPENDENCIES to force cpi
-# to get rebuilt whenever MPICH2's core libraries are rebuilt, but perhaps there
+# FIXME we add the core MPICH libs explicitly to cpi_DEPENDENCIES to force cpi
+# to get rebuilt whenever MPICH's core libraries are rebuilt, but perhaps there
 # is a better system?
 
 # the make-time instances of libpmpich.la and libmpich.la live here
