@@ -240,29 +240,6 @@ void MPIR_WaitForDebugger( void )
     /* After we exit the MPIR_Breakpoint routine, the debugger may have
        set variables such as MPIR_being_debugged */
 
-#if 0
-    /* Check to see if we're not the master,
-     * and wait for the debugger to attach if we're 
-     * a slave. The debugger will reset the debug_gate.
-     * There is no code in the library which will do it !
-     * 
-     * THIS IS OLD CODE FROM MPICH1.  It is no longer needed for the 
-     * MPIEXEC is starter process mode.
-     */
-    if (MPIR_being_debugged && rank != 0) {
-	while (MPIR_debug_gate == 0) {
-	    /* Wait to be attached to, select avoids 
-	     * signaling and allows a smaller timeout than 
-	     * sleep(1)
-	     */
-	    struct timeval timeout;
-	    timeout.tv_sec  = 0;
-	    timeout.tv_usec = 250000;
-	    select( 0, (void *)0, (void *)0, (void *)0,
-		    &timeout );
-	}
-    }
-#endif
     /* Initialize the sendq support */
     SendqInit();
 

@@ -259,9 +259,6 @@ checkbuilds [ -enable-n=d ] [ -with-n=d ] [ -show ] [-envopt=name;value;... ]
 if ($instdir eq "") {
     $instdir = "$tmpdir/cb/mpi2-inst";
 }
-if ($mpich1_dir eq "") {
-    $mpich1_dir = "$projects_dir/mpich1test";
-}
 # Make the builddir compatible with the installation directory
 if ($builddir eq "") {
     $builddir = "$tmpdir/cb/mpich2";
@@ -631,13 +628,7 @@ sub RunMpichTestSuite {
     # A special hack for the io part 
     # If there is no link or io directory, create one and populate it
     if (! -f "io/Mfile.in") {
-	if (-s "$mpich1_dir/io/Mfile.in") {
-	    if (! -d "io" && ! -l "io") { 
-		`mkdir "io"`;
-	    }
-	    `cp $mpich1_dir/io/*.in io`;
-	}
-	elsif (-s "$srcdir/src/mpi/romio/test/Mfile.in") {
+	if (-s "$srcdir/src/mpi/romio/test/Mfile.in") {
 	    if (! -d "io" && ! -l "io") { 
 		`mkdir "io"`;
 	    }
@@ -649,7 +640,6 @@ sub RunMpichTestSuite {
 
     # Create the arguments for the configure step
     $nargs = 0;
-    $config[$nargs++] = "$mpich1_dir/configure";
     $config[$nargs++] = "--prefix=$instdir";
     $config[$nargs++] = "-mpilibname=mpich";
     if (defined($chosenEnable{"romio"})) {

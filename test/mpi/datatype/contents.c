@@ -116,8 +116,6 @@ int builtin_float_test(void)
  * integers, and treating the array as a 3x3 2D array, this will grab the 
  * corners.
  *
- * MPICH1 fails this test because it converts the vectors into hvectors.
- *
  * Returns the number of errors encountered.
  */
 int vector_of_vectors_test(void)
@@ -489,8 +487,6 @@ int indexed_of_basics_test(void)
 /* indexed_of_vectors_test()
  *
  * Builds an indexed type of vectors of ints.
- *
- * MPICH1 fails this test because it converts the vectors into hvectors.
  *
  * Returns the number of errors encountered.
  */
