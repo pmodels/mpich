@@ -40,6 +40,7 @@ include $(top_srcdir)/src/mpid/pamid/src/pt2pt/Makefile.mk
 
 lib_lib@MPILIBNAME@_la_SOURCES +=               \
     src/mpid/pamid/src/mpid_buffer.c            \
+    src/mpid/pamid/src/mpidi_bufmm.c            \
     src/mpid/pamid/src/mpid_finalize.c          \
     src/mpid/pamid/src/mpid_init.c              \
     src/mpid/pamid/src/mpid_iprobe.c            \

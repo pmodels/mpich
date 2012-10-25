@@ -81,6 +81,10 @@ typedef struct
     MPIDI_pt2pt_limits_t limits;
   } pt2pt;
   unsigned disable_internal_eager_scale; /**< The number of tasks at which point eager will be disabled */
+#if TOKEN_FLOW_CONTROL
+  unsigned long long mp_buf_mem;
+  unsigned is_token_flow_control_on;
+#endif
 #if (MPIDI_STATISTICS || MPIDI_PRINTENV)
   unsigned mp_infolevel;
   unsigned mp_statistics;     /* print pamid statistcs data                           */
@@ -164,6 +168,7 @@ typedef enum
     MPIDI_CONTROL_CANCEL_ACKNOWLEDGE,
     MPIDI_CONTROL_CANCEL_NOT_ACKNOWLEDGE,
     MPIDI_CONTROL_RENDEZVOUS_ACKNOWLEDGE,
+    MPIDI_CONTROL_RETURN_TOKENS,
   } MPIDI_CONTROL;
 
 
@@ -206,11 +211,17 @@ typedef struct
       unsigned control:3;  /**< message type for control protocols */
       unsigned isSync:1;   /**< set for sync sends     */
       unsigned isRzv :1;   /**< use pt2pt rendezvous   */
+      unsigned    noRDMA:1;    /**< msg sent via shm or mem reg. fails */
+      unsigned    reserved:6;  /**< unused bits                        */
+      unsigned    tokens:4;    /** tokens need to be returned          */
     } __attribute__ ((__packed__));
   };
 
 #ifdef OUT_OF_ORDER_HANDLING
   unsigned    MPIseqno;    /**< match seqno            */
+#endif
+#if TOKEN_FLOW_CONTROL
+  unsigned    alltokens;   /* control:MPIDI_CONTROL_RETURN_TOKENS  */
 #endif
 } MPIDI_MsgInfo;
 

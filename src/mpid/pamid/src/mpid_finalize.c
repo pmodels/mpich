@@ -22,6 +22,9 @@
 #include <mpidimpl.h>
 
 
+#if TOKEN_FLOW_CONTROL
+extern void MPIDI_close_mm();
+#endif
 
 #ifdef MPIDI_STATISTICS
 extern pami_extension_t pe_extension;
@@ -85,6 +88,19 @@ int MPID_Finalize()
   MPIU_Free(MPIDI_In_cntr);
   MPIU_Free(MPIDI_Out_cntr);
 #endif
+
+ if (TOKEN_FLOW_CONTROL_ON)
+   {
+     #if TOKEN_FLOW_CONTROL
+     extern char *EagerLimit;
+     
+     if (EagerLimit) MPIU_Free(EagerLimit);
+     MPIU_Free(MPIDI_Token_cntr);
+     MPIDI_close_mm();
+     #else
+     MPID_assert_always(0);
+     #endif
+   }
 
   return MPI_SUCCESS;
 }

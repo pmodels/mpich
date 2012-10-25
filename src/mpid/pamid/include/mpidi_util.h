@@ -83,6 +83,7 @@ typedef struct {
         int interrupts;
         uint  polling_interval;
         int eager_limit;
+        int use_token_flow_control;
         char wait_mode[8];
         int use_shmem;
         uint retransmit_interval;

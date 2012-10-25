@@ -38,7 +38,10 @@
 
 
 extern MPIU_Object_alloc_t MPID_Request_mem;
-
+#if TOKEN_FLOW_CONTROL
+extern void MPIDI_mm_free(void *,size_t);
+#endif
+typedef enum {mpiuMalloc=1,mpidiBufMM} MPIDI_mallocType;
 
 void    MPIDI_Request_uncomplete(MPID_Request *req);
 #if (MPIU_HANDLE_ALLOCATION_METHOD == MPIU_HANDLE_ALLOCATION_THREAD_LOCAL) && defined(__BGQ__)
@@ -263,7 +266,16 @@ MPID_Request_release_inline(MPID_Request *req)
     if (req->comm)              MPIR_Comm_release(req->comm, 0);
     if (req->greq_fns)          MPIU_Free(req->greq_fns);
     if (req->mpid.datatype_ptr) MPID_Datatype_release(req->mpid.datatype_ptr);
-    if (req->mpid.uebuf_malloc) MPIU_Free(req->mpid.uebuf);
+    if (req->mpid.uebuf_malloc== mpiuMalloc) {
+        MPIU_Free(req->mpid.uebuf);
+    }
+#if TOKEN_FLOW_CONTROL
+    else if (req->mpid.uebuf_malloc == mpidiBufMM) {
+        MPIU_THREAD_CS_ENTER(MSGQUEUE,0);
+        MPIDI_mm_free(req->mpid.uebuf,req->mpid.uebuflen);
+        MPIU_THREAD_CS_EXIT(MSGQUEUE,0);
+    }
+#endif
     MPIDI_Request_tls_free(req);
   }
 }
@@ -273,7 +285,16 @@ MPID_Request_release_inline(MPID_Request *req)
 static inline void
 MPID_Request_discard_inline(MPID_Request *req)
 {
-    if (req->mpid.uebuf_malloc) MPIU_Free(req->mpid.uebuf);
+    if (req->mpid.uebuf_malloc == mpiuMalloc) {
+        MPIU_Free(req->mpid.uebuf);
+    }
+#if TOKEN_FLOW_CONTROL
+    else if (req->mpid.uebuf_malloc == mpidiBufMM) {
+        MPIU_THREAD_CS_ENTER(MSGQUEUE,0);
+        MPIDI_mm_free(req->mpid.uebuf,req->mpid.uebuflen);
+        MPIU_THREAD_CS_EXIT(MSGQUEUE,0);
+    }
+#endif
     MPIDI_Request_tls_free(req);
 }
 

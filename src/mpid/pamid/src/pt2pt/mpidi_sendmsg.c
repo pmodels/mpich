@@ -20,7 +20,24 @@
  * \brief Funnel point for starting all MPI messages
  */
 #include <mpidimpl.h>
+#ifndef min
+#define min(a,b) (((a) < (b)) ? (a) : (b))
+#endif
 
+#if TOKEN_FLOW_CONTROL
+#define MPIDI_Piggy_back_tokens    MPIDI_Piggy_back_tokens_inline
+static inline void *
+MPIDI_Piggy_back_tokens_inline(int dest,MPID_Request *shd,size_t len)
+  {
+         int rettoks=0;
+         if (MPIDI_Token_cntr[dest].rettoks)
+         {
+             rettoks=min(MPIDI_Token_cntr[dest].rettoks, TOKENS_BITMASK);
+             MPIDI_Token_cntr[dest].rettoks -= rettoks;
+             shd->mpid.envelope.msginfo.tokens = rettoks;
+          }
+  }
+#endif
 
 static inline void
 MPIDI_SendMsg_short(pami_context_t    context,
@@ -57,12 +74,12 @@ MPIDI_SendMsg_short(pami_context_t    context,
 #endif
   MPID_assert(rc == PAMI_SUCCESS);
 #ifdef MPIDI_TRACE
-  MPIDI_Out_cntr[dest].S[(sreq->mpid.idx)].mode=params.dispatch;
+ MPIDI_Trace_buf[dest].S[(sreq->mpid.idx)].mode=params.dispatch;
  if (!isSync) {
-     MPIDI_Out_cntr[dest].S[(sreq->mpid.idx)].NoComp=1;
-     MPIDI_Out_cntr[dest].S[(sreq->mpid.idx)].sendShort=1;
+     MPIDI_Trace_buf[dest].S[(sreq->mpid.idx)].NoComp=1;
+     MPIDI_Trace_buf[dest].S[(sreq->mpid.idx)].sendShort=1;
  } else
-     MPIDI_Out_cntr[dest].S[(sreq->mpid.idx)].sendEnvelop=1;
+     MPIDI_Trace_buf[dest].S[(sreq->mpid.idx)].sendEnvelop=1;
 
 #endif
 
@@ -112,8 +129,8 @@ MPIDI_SendMsg_eager(pami_context_t    context,
   rc = PAMI_Send(context, &params);
   MPID_assert(rc == PAMI_SUCCESS);
 #ifdef MPIDI_TRACE
-  MPIDI_Out_cntr[dest].S[(sreq->mpid.idx)].mode=MPIDI_Protocols_Eager;
-  MPIDI_Out_cntr[dest].S[(sreq->mpid.idx)].sendEager=1;
+  MPIDI_Trace_buf[dest].S[(sreq->mpid.idx)].mode=MPIDI_Protocols_Eager;
+  MPIDI_Trace_buf[dest].S[(sreq->mpid.idx)].sendEager=1;
 #endif
 }
 
@@ -162,7 +179,7 @@ MPIDI_SendMsg_rzv(pami_context_t    context,
 #else
   sreq->mpid.envelope.memregion_used = 0;
 #ifdef OUT_OF_ORDER_HANDLING
-  if ((!MPIDI_Process.mp_s_use_pami_get) && (!sreq->mpid.shm))
+  if ((!MPIDI_Process.mp_s_use_pami_get) && (!sreq->mpid.envelope.msginfo.noRDMA))
 #else
   if (!MPIDI_Process.mp_s_use_pami_get)
 #endif
@@ -185,7 +202,9 @@ MPIDI_SendMsg_rzv(pami_context_t    context,
 	  sreq->mpid.envelope.memregion_used = 1;
 	}
         sreq->mpid.envelope.data   = sndbuf;
-    } else {
+    }
+    else
+    {
       TRACE_ERR("RZV send (failed registration for sreq=%p addr=%p *addr[0]=%#016llx *addr[1]=%#016llx bytes=%u\n",
 		sreq,sndbuf,
 		*(((unsigned long long*)sndbuf)+0),
@@ -221,12 +240,12 @@ MPIDI_SendMsg_rzv(pami_context_t    context,
   rc = PAMI_Send_immediate(context, &params);
   MPID_assert(rc == PAMI_SUCCESS);
 #ifdef MPIDI_TRACE
-  MPIDI_Out_cntr[dest].S[(sreq->mpid.idx)].bufaddr=sreq->mpid.envelope.data;
-  MPIDI_Out_cntr[dest].S[(sreq->mpid.idx)].mode=MPIDI_Protocols_RVZ;
-  MPIDI_Out_cntr[dest].S[(sreq->mpid.idx)].sendRzv=1;
-  MPIDI_Out_cntr[dest].S[(sreq->mpid.idx)].sendEnvelop=1;
-  MPIDI_Out_cntr[dest].S[(sreq->mpid.idx)].memRegion=sreq->mpid.envelope.memregion_used;
-  MPIDI_Out_cntr[dest].S[(sreq->mpid.idx)].use_pami_get=MPIDI_Process.mp_s_use_pami_get;
+  MPIDI_Trace_buf[dest].S[(sreq->mpid.idx)].bufaddr=sreq->mpid.envelope.data;
+  MPIDI_Trace_buf[dest].S[(sreq->mpid.idx)].mode=MPIDI_Protocols_RVZ;
+  MPIDI_Trace_buf[dest].S[(sreq->mpid.idx)].sendRzv=1;
+  MPIDI_Trace_buf[dest].S[(sreq->mpid.idx)].sendEnvelop=1;
+  MPIDI_Trace_buf[dest].S[(sreq->mpid.idx)].memRegion=sreq->mpid.envelope.memregion_used;
+  MPIDI_Trace_buf[dest].S[(sreq->mpid.idx)].use_pami_get=MPIDI_Process.mp_s_use_pami_get;
 #endif
 }
 
@@ -336,7 +355,7 @@ MPIDI_SendMsg_process_userdefined_dt(MPID_Request      * sreq,
           MPID_Abort(NULL, MPI_ERR_NO_SPACE, -1,
                      "Unable to allocate non-contiguous buffer");
         }
-      sreq->mpid.uebuf_malloc = 1;
+      sreq->mpid.uebuf_malloc = mpiuMalloc;
 
       DLOOP_Offset last = data_sz;
       MPID_Segment_init(sreq->mpid.userbuf,
@@ -397,7 +416,7 @@ MPIDI_SendMsg(pami_context_t   context,
   MPIU_THREAD_CS_EXIT(MSGQUEUE,0);
   MPIDI_Request_setMatchSeq(sreq, out_cntr->nMsgs);
 #endif
-
+if (!TOKEN_FLOW_CONTROL_ON) {
   size_t   data_sz;
   void   * sndbuf;
   if (likely(HANDLE_GET_KIND(sreq->mpid.datatype) == HANDLE_KIND_BUILTIN))
@@ -411,11 +430,11 @@ MPIDI_SendMsg(pami_context_t   context,
     }
 #ifdef MPIDI_TRACE
    sreq->mpid.partner_id=dest;
-   GET_REC_S(sreq,context,isSync,data_sz)
+   MPIDI_GET_S_REC(sreq,context,isSync,data_sz);
 #endif
 
 #ifdef OUT_OF_ORDER_HANDLING
-  sreq->mpid.shm=0;
+  sreq->mpid.envelope.msginfo.noRDMA=0;
 #endif
 
   const unsigned isLocal = PAMIX_Task_is_local(dest_tid);
@@ -460,7 +479,7 @@ MPIDI_SendMsg(pami_context_t   context,
     {
       TRACE_ERR("Sending(rendezvous%s%s) bytes=%u (eager_limit=%u)\n", isInternal==1?",internal":"", isLocal==1?",intranode":"", data_sz, MPIDI_PT2PT_EAGER_LIMIT(isInternal,isLocal));
 #ifdef OUT_OF_ORDER_HANDLING
-      sreq->mpid.shm=isLocal;
+      sreq->mpid.envelope.msginfo.noRDMA=isLocal;
 #endif
       if (likely(data_sz > 0))
         {
@@ -482,6 +501,134 @@ MPIDI_SendMsg(pami_context_t   context,
         }
 #endif
     }
+    }
+  else
+    {  /* TOKEN_FLOW_CONTROL_ON  */
+    #if TOKEN_FLOW_CONTROL
+    if (!(sreq->mpid.userbufcount))
+       {
+#ifdef MPIDI_TRACE
+        sreq->mpid.partner_id=dest;
+        MPIDI_GET_S_REC(sreq,context,isSync,0);
+#endif
+        TRACE_ERR("Sending(short,intranode) bytes=%u (short_limit=%u)\n", data_sz, MPIDI_Process.short_limit);
+        MPIU_THREAD_CS_ENTER(MSGQUEUE,0);
+        MPIDI_Piggy_back_tokens(dest,sreq,0);
+        MPIU_THREAD_CS_EXIT(MSGQUEUE,0);
+        MPIDI_SendMsg_short(context,
+                            sreq,
+                            dest,
+                            sreq->mpid.userbuf,
+                            0,
+                            isSync);
+       }
+     else
+       {
+       size_t   data_sz;
+       void   * sndbuf;
+       int      noRDMA=0;
+       if (likely(HANDLE_GET_KIND(sreq->mpid.datatype) == HANDLE_KIND_BUILTIN))
+         {
+           sndbuf   = sreq->mpid.userbuf;
+           data_sz  = sreq->mpid.userbufcount * MPID_Datatype_get_basic_size(sreq->mpid.datatype);
+         }
+       else
+        {
+          MPIDI_SendMsg_process_userdefined_dt(sreq, &sndbuf, &data_sz);
+         }
+#ifdef MPIDI_TRACE
+       sreq->mpid.partner_id=dest;
+       MPIDI_GET_S_REC(sreq,context,isSync,data_sz);
+#endif
+       if (unlikely(PAMIX_Task_is_local(dest_tid) != 0))  noRDMA=1;
+
+       MPIU_THREAD_CS_ENTER(MSGQUEUE,0);
+       if ((!isSync) && MPIDI_Token_cntr[dest].tokens >= 1)
+        {
+          if (data_sz <= MPIDI_Process.pt2pt.limits.application.immediate.remote)
+             {
+             TRACE_ERR("Sending(short,intranode) bytes=%u (short_limit=%u)\n", data_sz,MPIDI_Process.pt2pt.limits.application.immediate.remote);
+             --MPIDI_Token_cntr[dest].tokens;
+             MPIDI_Piggy_back_tokens(dest,sreq,data_sz);
+             MPIU_THREAD_CS_EXIT(MSGQUEUE,0);
+             MPIDI_SendMsg_short(context,
+                                 sreq,
+                                 dest,
+                                 sndbuf,
+                                 data_sz,
+                                 isSync);
+             }
+           else if (data_sz <= MPIDI_Process.pt2pt.limits.application.eager.remote)
+             {
+              TRACE_ERR("Sending(eager) bytes=%u (eager_limit=%u)\n", data_sz, MPIDI_Process.pt2pt.limits.application.eager.remote);
+              --MPIDI_Token_cntr[dest].tokens;
+              MPIDI_Piggy_back_tokens(dest,sreq,data_sz);
+              MPIU_THREAD_CS_EXIT(MSGQUEUE,0);
+              MPIDI_SendMsg_eager(context,
+                                 sreq,
+                                 dest,
+                                 sndbuf,
+                                 data_sz);
+#ifdef MPIDI_STATISTICS
+                    if (MPID_cc_is_complete(&sreq->cc)) {
+                        MPID_NSTAT(mpid_statp->sendsComplete);
+                    }
+#endif
+
+              }
+            else   /* rendezvous message  */
+              {
+                TRACE_ERR("Sending(RZV) bytes=%u (eager_limit=%u)\n", data_sz, MPIDI_Process.pt2pt.limits.application.eager.remote);
+                MPIDI_Piggy_back_tokens(dest,sreq,data_sz);
+                MPIU_THREAD_CS_EXIT(MSGQUEUE,0);
+                sreq->mpid.envelope.msginfo.noRDMA=noRDMA;
+                MPIDI_SendMsg_rzv(context,
+                                  sreq,
+                                  dest,
+                                  sndbuf,
+                                  data_sz);
+#ifdef MPIDI_STATISTICS
+                       if (MPID_cc_is_complete(&sreq->cc))
+                       {
+                          MPID_NSTAT(mpid_statp->sendsComplete);
+                       }
+#endif
+              }
+       }
+     else
+      {   /* no tokens, all messages use rendezvous protocol */
+        if ((data_sz <= MPIDI_Process.pt2pt.limits.application.eager.remote) && (!isSync)) {
+             ++MPIDI_Token_cntr[dest].n_tokenStarved;
+              sreq->mpid.envelope.msginfo.noRDMA=1;
+        }
+        else sreq->mpid.envelope.msginfo.noRDMA=noRDMA;
+        MPIDI_Piggy_back_tokens(dest,sreq,data_sz);
+        MPIU_THREAD_CS_EXIT(MSGQUEUE,0);
+        TRACE_ERR("Sending(RZV) bytes=%u (eager_limit=%u)\n", data_sz, MPIDI_Process.pt2pt.limits.application.eager.remote);
+        if (likely(data_sz > 0))
+           {
+             MPIDI_SendMsg_rzv(context,
+                                  sreq,
+                                  dest,
+                                sndbuf,
+                              data_sz);
+           }
+          else
+            {
+              MPIDI_SendMsg_rzv_zerobyte(context, sreq, dest);
+            }
+#ifdef MPIDI_STATISTICS
+               if (MPID_cc_is_complete(&sreq->cc))
+                {
+                   MPID_NSTAT(mpid_statp->sendsComplete);
+                }
+#endif
+    }
+  }
+    #else
+    MPID_assert_always(0);
+    #endif /* TOKEN_FLOW_CONTROL */
+ }
 }
 
 

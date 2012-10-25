@@ -45,6 +45,10 @@ MPIDI_RecvRzvCB_impl(pami_context_t    context,
 
   MPID_Request * rreq = NULL;
   int found;
+  pami_task_t source;
+#if TOKEN_FLOW_CONTROL
+  int  rettoks=0;
+#endif
 
   /* -------------------- */
   /*  Match the request.  */
@@ -55,10 +59,11 @@ MPIDI_RecvRzvCB_impl(pami_context_t    context,
 
   MPID_Request *newreq = MPIDI_Request_create2();
   MPIU_THREAD_CS_ENTER(MSGQUEUE,0);
+  source = PAMIX_Endpoint_query(sender);
+  MPIDI_Receive_tokens(msginfo,source);
 #ifndef OUT_OF_ORDER_HANDLING
   rreq = MPIDI_Recvq_FDP_or_AEU(newreq, rank, tag, context_id, &found);
 #else
-  pami_task_t source = PAMIX_Endpoint_query(sender);
   rreq = MPIDI_Recvq_FDP_or_AEU(newreq, rank, source, tag, context_id, msginfo->MPIseqno, &found);
 #endif
   TRACE_ERR("RZV CB for req=%p remote-mr=0x%llx bytes=%zu (%sfound)\n",
@@ -112,6 +117,15 @@ MPIDI_RecvRzvCB_impl(pami_context_t    context,
       MPIDI_In_cntr[source].R[(rreq->mpid.idx)].rlen=envelope->length;
       MPIDI_In_cntr[source].R[(rreq->mpid.idx)].sync=msginfo->isSync;
 #endif
+     if ((TOKEN_FLOW_CONTROL_ON) && (MPIDI_MUST_RETURN_TOKENS(sender)))
+       {
+         #if TOKEN_FLOW_CONTROL
+         rettoks=MPIDI_Token_cntr[sender].rettoks;
+         MPIDI_Token_cntr[sender].rettoks=0;
+         #else
+         MPID_assert_always(0);
+         #endif
+       }
     }
   /* ----------------------------------------- */
   /* figure out target buffer for request data */
@@ -166,7 +180,9 @@ MPIDI_RecvRzvCB_impl(pami_context_t    context,
 #endif
       MPIU_THREAD_CS_EXIT(MSGQUEUE,0);
     }
-
+#if TOKEN_FLOW_CONTROL
+  MPIDI_Return_tokens(context, source, rettoks);
+#endif
   /* ---------------------------------------- */
   /*  Signal that the recv has been started.  */
   /* ---------------------------------------- */

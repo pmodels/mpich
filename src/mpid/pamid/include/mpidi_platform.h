@@ -76,6 +76,7 @@
 #define PAMIX_IS_LOCAL_TASK
 #define PAMIX_IS_LOCAL_TASK_STRIDE  (4)
 #define PAMIX_IS_LOCAL_TASK_SHIFT   (6)
+#define TOKEN_FLOW_CONTROL    0
 
 /*
  * Enable both the 'internal vs application' and the 'local vs remote'
@@ -107,6 +108,8 @@ static const char _ibm_release_version_[] = "V1R2M0";
 #ifdef __PE__
 #undef USE_PAMI_CONSISTENCY
 #define USE_PAMI_CONSISTENCY PAMI_HINT_DISABLE
+#undef  MPIDI_SHORT_LIMIT
+#define MPIDI_SHORT_LIMIT 256 - sizeof(MPIDI_MsgInfo)
 #undef  MPIDI_EAGER_LIMIT
 #define MPIDI_EAGER_LIMIT 65536
 #undef  MPIDI_EAGER_LIMIT_LOCAL
@@ -119,6 +122,7 @@ static const char _ibm_release_version_[] = "V1R2M0";
 #define RDMA_FAILOVER
 #define MPIDI_BANNER          1
 #define MPIDI_NO_ASSERT       1
+#define TOKEN_FLOW_CONTROL    1
 
 /* 'is local task' extension and limits */
 #define PAMIX_IS_LOCAL_TASK
@@ -155,5 +159,17 @@ static const char _ibm_release_version_[] = "%W%";
 
 #endif
 
+#if TOKEN_FLOW_CONTROL
+#define BUFFER_MEM_DEFAULT (1<<26)          /* 64MB                         */
+#define BUFFER_MEM_MAX     (1<<26)          /* 64MB                         */
+#define ONE_SHARED_SEGMENT (1<<28)          /* 256MB                        */
+#define EAGER_LIMIT_DEFAULT     65536
+#define MAX_BUF_BKT_SIZE        (1<<18)     /* Max eager_limit is 256K     */
+#define MIN_BUF_BKT_SIZE        (64)
+#define TOKENS_BIT         (4)              /* 4 bits piggy back to sender */
+                                            /* should be consistent with tokens
+                                               defined in MPIDI_MsgInfo    */
+#define TOKENS_BITMASK ((1 << TOKENS_BIT)-1)
+#endif
 
 #endif

@@ -52,6 +52,7 @@ void MPIDI_Set_mpich_env(int rank, int size) {
      mpich_env->this_task = rank;
      mpich_env->nprocs  = size;
      mpich_env->eager_limit=MPIDI_Process.pt2pt.limits.application.eager.remote;
+     mpich_env->use_token_flow_control=MPIDI_Process.is_token_flow_control_on;
      mpich_env->mp_statistics=MPIDI_Process.mp_statistics;
      if (mpich_env->polling_interval == 0) {
             mpich_env->polling_interval = 400000;
@@ -595,6 +596,7 @@ int MPIDI_Print_mpenv(int rank,int size)
         sender.mp_statistics = mpich_env->mp_statistics;
         sender.polling_interval = mpich_env->polling_interval;
         sender.eager_limit = mpich_env->eager_limit;
+        sender.use_token_flow_control=MPIDI_Process.is_token_flow_control_on;
         sender.retransmit_interval = mpich_env->retransmit_interval;
 
         /* Get shared memory  */
@@ -737,6 +739,7 @@ int MPIDI_Print_mpenv(int rank,int size)
                 MATCHB(interrupts,"Adapter Interrupts Enabled (MP_CSS_INTERRUPT):");
                 MATCHI(polling_interval,"Polling Interval (MP_POLLING_INTERVAL/usec):");
                 MATCHI(eager_limit,"Message Eager Limit (MP_EAGER_LIMIT/Bytes):");
+                MATCHI(use_token_flow_control,"Use token flow control:");
                 MATCHC(wait_mode,"Message Wait Mode(MP_WAIT_MODE):",8);
                 MATCHI(retransmit_interval,"Retransmit Interval (MP_RETRANSMIT_INTERVAL/count):");
                 MATCHB(use_shmem,"Shared Memory Enabled (MP_SHARED_MEMORY):");

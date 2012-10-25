@@ -44,6 +44,11 @@ MPIDI_RecvCB(pami_context_t    context,
              pami_recv_t     * recv)
 {
   const MPIDI_MsgInfo *msginfo = (const MPIDI_MsgInfo *)_msginfo;
+#if TOKEN_FLOW_CONTROL
+  int          rettoks=0;
+  void         *uebuf;
+  int          source;
+#endif
   if (recv == NULL)
     {
       if (msginfo->isSync)
@@ -81,11 +86,29 @@ MPIDI_RecvCB(pami_context_t    context,
   unsigned context_id = msginfo->MPIctxt;
 
   MPIU_THREAD_CS_ENTER(MSGQUEUE,0);
+  if (TOKEN_FLOW_CONTROL_ON)
+    {
+      #if TOKEN_FLOW_CONTROL
+      source=PAMIX_Endpoint_query(sender);
+      MPIDI_Receive_tokens(msginfo,source);
+      #else
+      MPID_assert_always(0);
+      #endif
+    }
 #ifndef OUT_OF_ORDER_HANDLING
   rreq = MPIDI_Recvq_FDP(rank, tag, context_id);
 #else
   rreq = MPIDI_Recvq_FDP(rank, PAMIX_Endpoint_query(sender), tag, context_id, msginfo->MPIseqno);
 #endif
+  if ((TOKEN_FLOW_CONTROL_ON) && (MPIDI_MUST_RETURN_TOKENS(sender)))
+    {
+      #if TOKEN_FLOW_CONTROL
+      rettoks=MPIDI_Token_cntr[sender].rettoks;
+      MPIDI_Token_cntr[sender].rettoks=0;
+      #else
+      MPID_assert_always(0);
+      #endif
+    }
 
   /* Match not found */
   if (unlikely(rreq == NULL))
@@ -97,14 +120,38 @@ MPIDI_RecvCB(pami_context_t    context,
       MPIU_THREAD_CS_EXIT(MSGQUEUE,0);
       MPID_Request *newreq = MPIDI_Request_create2();
       MPID_assert(newreq != NULL);
+      if (TOKEN_FLOW_CONTROL_ON)
+        {
+          #if TOKEN_FLOW_CONTROL
+          MPIU_THREAD_CS_ENTER(MSGQUEUE,0);
+          #else
+          MPID_assert_always(0);
+          #endif
+        }
+
       if (sndlen)
       {
         newreq->mpid.uebuflen = sndlen;
-        newreq->mpid.uebuf = MPIU_Malloc(sndlen);
+        if (!(TOKEN_FLOW_CONTROL_ON))
+          {
+            newreq->mpid.uebuf = MPIU_Malloc(sndlen);
+            newreq->mpid.uebuf_malloc = mpiuMalloc ;
+          }
+        else
+          {
+            #if TOKEN_FLOW_CONTROL
+            newreq->mpid.uebuf = MPIDI_mm_alloc(sndlen);
+            newreq->mpid.uebuf_malloc = mpidiBufMM;
+            #else
+            MPID_assert_always(0);
+            #endif
+          }
         MPID_assert(newreq->mpid.uebuf != NULL);
-        newreq->mpid.uebuf_malloc = 1;
       }
-      MPIU_THREAD_CS_ENTER(MSGQUEUE,0);
+      if (!TOKEN_FLOW_CONTROL_ON)
+        {
+          MPIU_THREAD_CS_ENTER(MSGQUEUE,0);
+        }
 #ifndef OUT_OF_ORDER_HANDLING
       rreq = MPIDI_Recvq_FDP(rank, tag, context_id);
 #else
@@ -115,6 +162,14 @@ MPIDI_RecvCB(pami_context_t    context,
       {
         MPIDI_Callback_process_unexp(newreq, context, msginfo, sndlen, sender, sndbuf, recv, msginfo->isSync);
         int completed = MPID_Request_is_complete(newreq);
+        if (TOKEN_FLOW_CONTROL_ON)
+          {
+            #if TOKEN_FLOW_CONTROL
+            MPIDI_Token_cntr[sender].unmatched++;
+            #else
+            MPID_assert_always(0);
+            #endif
+          }
         MPIU_THREAD_CS_EXIT(MSGQUEUE,0);
         if (completed) MPID_Request_release(newreq);
         goto fn_exit_eager;
@@ -128,8 +183,16 @@ MPIDI_RecvCB(pami_context_t    context,
   else
     {
 #if (MPIDI_STATISTICS)
-        MPID_NSTAT(mpid_statp->earlyArrivalsMatched);
+      MPID_NSTAT(mpid_statp->earlyArrivalsMatched);
 #endif
+      if (TOKEN_FLOW_CONTROL_ON)
+        {
+          #if TOKEN_FLOW_CONTROL
+          MPIDI_Update_rettoks(sender);
+          #else
+          MPID_assert_always(0);
+          #endif
+        }
       MPIU_THREAD_CS_EXIT(MSGQUEUE,0);
     }
 
@@ -219,9 +282,21 @@ MPIDI_RecvCB(pami_context_t    context,
       rreq->mpid.uebuflen = sndlen;
       if (sndlen)
         {
-          rreq->mpid.uebuf    = MPIU_Malloc(sndlen);
+          if (!TOKEN_FLOW_CONTROL_ON)
+            {
+              rreq->mpid.uebuf    = MPIU_Malloc(sndlen);
+              rreq->mpid.uebuf_malloc = mpiuMalloc;
+            }
+          else
+            {
+              #if TOKEN_FLOW_CONTROL
+              MPIDI_Alloc_lock(&rreq->mpid.uebuf,sndlen);
+              rreq->mpid.uebuf_malloc = mpidiBufMM;
+              #else
+              MPID_assert_always(0);
+              #endif
+            }
           MPID_assert(rreq->mpid.uebuf != NULL);
-          rreq->mpid.uebuf_malloc = 1;
         }
       /* -------------------------------------------------- */
       /*  Let PAMI know where to put the rest of the data.  */
@@ -234,6 +309,7 @@ MPIDI_RecvCB(pami_context_t    context,
 #endif
 
  fn_exit_eager:
+ MPIDI_Return_tokens(context, source, rettoks);
   /* ---------------------------------------- */
   /*  Signal that the recv has been started.  */
   /* ---------------------------------------- */

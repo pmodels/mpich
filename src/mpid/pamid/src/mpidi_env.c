@@ -337,6 +337,13 @@ extern MPIDI_printenv_t  *mpich_env;
 #endif
 
 #define ENV_Deprecated(a, b, c, d, e) ENV_Deprecated__(a, b, c, d, e)
+
+#ifdef TOKEN_FLOW_CONTORL
+ extern void MPIDI_get_buf_mem(unsigned long *);
+ extern int MPIDI_atoi(char* , int* );
+#endif
+ extern int application_set_eager_limit;
+
 static inline void
 ENV_Deprecated__(char* name[], unsigned num_supported, unsigned* deprecated, int rank, int NA)
 {
@@ -694,6 +701,16 @@ MPIDI_Env_setup(int rank, int requested)
     ENV_Unsigned(names, &MPIDI_Process.pt2pt.limits.application.eager.remote, 3, &found_deprecated_env_var, rank);
     ENV_Unsigned(names, &MPIDI_Process.pt2pt.limits.internal.eager.remote, 3, NULL, rank);
   }
+#if TOKEN_FLOW_CONTROL
+  /* Determine if users set eager limit  */
+  {
+    MPIDI_set_eager_limit(&MPIDI_Process.pt2pt.limits.application.eager.remote);
+  }
+  /* Determine buffer memory for early arrivals */
+  {
+    MPIDI_get_buf_mem(&MPIDI_Process.mp_buf_mem);
+  }
+#endif
 
   /*
    * Determine 'local' eager limit
@@ -981,6 +998,14 @@ MPIDI_Env_setup(int rank, int requested)
     }
 #endif
   }
+    {
+#if TOKEN_FLOW_CONTROL
+      char* names[] = {"MP_USE_TOKEN_FLOW_CONTROL", NULL};
+      ENV_Char(names, &MPIDI_Process.is_token_flow_control_on);
+      if (!MPIDI_Process.is_token_flow_control_on)
+           MPIDI_Process.mp_buf_mem=0;
+#endif
+    }
   /* Exit if any deprecated environment variables were specified. */
   if (found_deprecated_env_var)
     {
@@ -994,3 +1019,61 @@ MPIDI_Env_setup(int rank, int requested)
       }
     }
 }
+
+
+int  MPIDI_set_eager_limit(unsigned int *eager_limit)
+{
+     char *cp;
+     int  val;
+     cp = getenv("MP_EAGER_LIMIT");
+     if (cp)
+       {
+         application_set_eager_limit=1;
+         if ( MPIDI_atoi(cp, &val) == 0 )
+           *eager_limit=val;
+       }
+     return 0;
+}
+
+#if TOKEN_FLOW_CONTROL
+   /*****************************************************************/
+   /* Check for MP_BUFFER_MEM, if the value is not set by the user, */
+   /* then set the value with the default of 64 MB.                 */
+   /*****************************************************************/
+int  MPIDI_get_buf_mem(unsigned long *buf_mem) {
+     char *cp;
+     int  i;
+     int args_in_error=0;
+     char pre_alloc_buf[25], buf_max[25];
+     char *buf_max_cp;
+     int pre_alloc_val;
+     unsigned long buf_max_val;
+     int  has_error = 0;
+
+     if (cp = getenv("MP_BUFFER_MEM")) {
+         pre_alloc_buf[24] = '\0';
+         buf_max[24] = '\0';
+         if ( (buf_max_cp = strchr(cp, ',')) ) {
+              printf("No max buffer mem support in MPICH2 \n"); fflush(stdout);
+         } else {
+            /* Old single value format  */
+            if ( MPIDI_atoi(cp, &pre_alloc_val) == 0 )
+               buf_max_val = (unsigned long)pre_alloc_val;
+            else
+               has_error = 1;
+         }
+         if ( has_error == 0) {
+              *buf_mem     = (int) pre_alloc_val;
+             if (buf_max_val > ONE_SHARED_SEGMENT)
+                 *buf_mem = ONE_SHARED_SEGMENT;
+         } else {
+            args_in_error += 1;
+            printf("ERROR in MP_BUFFER_MEM %s(%d)\n",__FILE__,__LINE__); fflush(stdout);
+         }
+     } else {
+         /* MP_BUFFER_MEM is not specified by the user*/
+         *buf_mem     = BUFFER_MEM_DEFAULT;
+     }
+  return 0;
+}
+#endif

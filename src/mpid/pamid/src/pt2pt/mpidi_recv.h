@@ -31,6 +31,80 @@
 #endif*/
 
 
+#if TOKEN_FLOW_CONTROL
+extern MPIDI_Out_cntr_t *MPIDI_Out_cntr;
+extern int MPIDI_tfctrl_hwmark;
+extern void *MPIDI_mm_alloc(size_t);
+extern void  MPIDI_mm_free(void *, size_t);
+extern int tfctrl_enabled;
+extern char *EagerLimit;
+#define MPIDI_Return_tokens        MPIDI_Return_tokens_inline
+#define MPIDI_Receive_tokens       MPIDI_Receive_tokens_inline
+#define MPIDI_Update_rettoks       MPIDI_Update_rettoks_inline
+#define MPIDI_Alloc_lock           MPIDI_Alloc_lock_inline
+
+#define MPIDI_MUST_RETURN_TOKENS(dd)                                          \
+    (MPIDI_Token_cntr[(dd)].rettoks                                           \
+     && (MPIDI_Token_cntr[(dd)].rettoks + MPIDI_Token_cntr[(dd)].unmatched    \
+         >= MPIDI_tfctrl_hwmark))
+
+static inline void *
+MPIDI_Return_tokens_inline(pami_context_t context, int dest, int tokens)
+{
+   MPIDI_MsgInfo  tokenInfo;
+   if (tokens) {
+       memset(&tokenInfo,0, sizeof(MPIDI_MsgInfo));
+       tokenInfo.control=MPIDI_CONTROL_RETURN_TOKENS;
+       tokenInfo.alltokens=tokens;
+       pami_send_immediate_t params = {
+           .dispatch = MPIDI_Protocols_Control,
+           .dest     = dest,
+           .header   = {
+              .iov_base = &tokenInfo,
+              .iov_len  = sizeof(MPIDI_MsgInfo),
+           },
+           .data     = {
+             .iov_base = NULL,
+             .iov_len  = 0,
+           },
+         };
+         pami_result_t rc;
+         rc = PAMI_Send_immediate(context, &params);
+         MPID_assert(rc == PAMI_SUCCESS);
+     }
+}
+
+static inline void *
+MPIDI_Receive_tokens_inline(const MPIDI_MsgInfo *m, int dest)
+    {
+      if ((m)->tokens)
+      {
+          MPIDI_Token_cntr[dest].tokens += (m)->tokens;
+      }
+    }
+
+static inline void *
+MPIDI_Update_rettoks_inline(int source) 
+ {
+     MPIDI_Token_cntr[source].rettoks++;
+ }
+
+static inline void *
+MPIDI_Alloc_lock_inline(void **buf,size_t size)
+ {
+       MPIU_THREAD_CS_ENTER(MSGQUEUE,0);
+       (*buf) = (void *) MPIDI_mm_alloc(size);
+       MPIU_THREAD_CS_EXIT(MSGQUEUE,0);
+ }
+
+#else
+#define MPIDI_Return_tokens(x,y,z)
+#define MPIDI_Receive_tokens(x,y)
+#define MPIDI_Update_rettoks(x)
+#define MPIDI_MUST_RETURN_TOKENS(x) (0)
+#define MPIDI_Alloc_lock(x,y)
+#endif
+
 /**
  * \brief ADI level implemenation of MPI_(I)Recv()
  *
@@ -127,6 +201,16 @@ MPIDI_Recv(void          * buf,
     {
       MPIDI_RecvMsg_Unexp(rreq, buf, count, datatype);
       mpi_errno = rreq->status.MPI_ERROR;
+      if (TOKEN_FLOW_CONTROL_ON) {
+         #if TOKEN_FLOW_CONTROL
+         if ((rreq->mpid.uebuflen) && (!(rreq->mpid.envelope.msginfo.isRzv))) {
+           MPIDI_Token_cntr[(rreq->mpid.peer_pami)].unmatched--;
+           MPIDI_Update_rettoks(rreq->mpid.peer_pami);
+         }
+         #else
+         MPID_assert_always(0);
+         #endif
+      }
       MPIU_THREAD_CS_EXIT(MSGQUEUE,0);
       MPID_Request_discard(newreq);
     }
@@ -147,11 +231,12 @@ MPIDI_Recv(void          * buf,
   *request = rreq;
   if (status != MPI_STATUS_IGNORE)
     *status = rreq->status;
-  #ifdef MPIDI_STATISTICS
-    if (!(MPID_cc_is_complete(&rreq->cc))) {
+#ifdef MPIDI_STATISTICS
+    if (!(MPID_cc_is_complete(&rreq->cc)))
+    {
         MPID_NSTAT(mpid_statp->recvWaitsComplete);
     }
-  #endif
+#endif
 
   return mpi_errno;
 }
