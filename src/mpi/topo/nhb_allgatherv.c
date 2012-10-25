@@ -168,7 +168,7 @@ fn_fail:
     {
         mpi_errno = MPIR_Err_create_code(
             mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
-            "**mpix_neighbor_allgatherv", "**mpix_neighbor_allgatherv %p %d %D %p %p %p %D %C", sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, recvtype, comm);
+            "**mpi_neighbor_allgatherv", "**mpi_neighbor_allgatherv %p %d %D %p %p %p %D %C", sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, recvtype, comm);
     }
 #   endif
     mpi_errno = MPIR_Err_return_comm(NULL, FCNAME, mpi_errno);

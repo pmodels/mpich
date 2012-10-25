@@ -126,7 +126,7 @@ fn_fail:
     {
         mpi_errno = MPIR_Err_create_code(
             mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
-            "**mpix_t_category_get_info", "**mpix_t_category_get_info %d %p %p %p %p %p %p %p", cat_index, name, name_len, desc, desc_len, num_controlvars, num_pvars, num_categories);
+            "**mpi_t_category_get_info", "**mpi_t_category_get_info %d %p %p %p %p %p %p %p", cat_index, name, name_len, desc, desc_len, num_controlvars, num_pvars, num_categories);
     }
 #   endif
     mpi_errno = MPIR_Err_return_comm(NULL, FCNAME, mpi_errno);

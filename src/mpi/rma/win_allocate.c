@@ -147,8 +147,8 @@ int MPI_Win_allocate(MPI_Aint size, int disp_unit, MPI_Info info,
 #   ifdef HAVE_ERROR_CHECKING
     {
         mpi_errno = MPIR_Err_create_code(
-            mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, "**mpix_win_allocate", 
-            "**mpix_win_allocate %d %d %I %C %p %p", size, disp_unit, info, comm, baseptr, win);
+            mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, "**mpi_win_allocate",
+            "**mpi_win_allocate %d %d %I %C %p %p", size, disp_unit, info, comm, baseptr, win);
     }
 #   endif
     mpi_errno = MPIR_Err_return_comm( comm_ptr, FCNAME, mpi_errno );

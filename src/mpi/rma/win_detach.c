@@ -106,7 +106,7 @@ int MPI_Win_detach(MPI_Win win, const void *base)
 #   ifdef HAVE_ERROR_CHECKING
     {
         mpi_errno = MPIR_Err_create_code(
-            mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, "**mpix_win_detach", "**mpix_win_detach %W %p",
+            mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, "**mpi_win_detach", "**mpi_win_detach %W %p",
             win, base);
     }
 #   endif

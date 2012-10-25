@@ -1134,7 +1134,7 @@ fn_fail:
     {
         mpi_errno = MPIR_Err_create_code(
             mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
-            "**mpix_ireduce_scatter", "**mpix_ireduce_scatter %p %p %p %D %O %C %p", sendbuf, recvbuf, recvcounts, datatype, op, comm, request);
+            "**mpi_ireduce_scatter", "**mpi_ireduce_scatter %p %p %p %D %O %C %p", sendbuf, recvbuf, recvcounts, datatype, op, comm, request);
     }
 #   endif
     mpi_errno = MPIR_Err_return_comm(comm_ptr, FCNAME, mpi_errno);

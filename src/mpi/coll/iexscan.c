@@ -314,7 +314,7 @@ fn_fail:
     {
         mpi_errno = MPIR_Err_create_code(
             mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
-            "**mpix_iexscan", "**mpix_iexscan %p %p %d %D %O %C %p", sendbuf, recvbuf, count, datatype, op, comm, request);
+            "**mpi_iexscan", "**mpi_iexscan %p %p %d %D %O %C %p", sendbuf, recvbuf, count, datatype, op, comm, request);
     }
 #   endif
     mpi_errno = MPIR_Err_return_comm(comm_ptr, FCNAME, mpi_errno);

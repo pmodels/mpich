@@ -157,7 +157,7 @@ fn_fail:
     {
         mpi_errno = MPIR_Err_create_code(
             mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
-            "**mpix_comm_idup", "**mpix_comm_idup %C %p %p", comm, newcomm, request);
+            "**mpi_comm_idup", "**mpi_comm_idup %C %p %p", comm, newcomm, request);
     }
 #   endif
     mpi_errno = MPIR_Err_return_comm(NULL, FCNAME, mpi_errno);

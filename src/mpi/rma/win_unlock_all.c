@@ -120,8 +120,8 @@ int MPI_Win_unlock_all(MPI_Win win)
 #   ifdef HAVE_ERROR_CHECKING
     {
         mpi_errno = MPIR_Err_create_code(
-            mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, "**mpix_win_unlock_all", 
-            "**mpix_win_unlock_all %W", win);
+            mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, "**mpi_win_unlock_all",
+            "**mpi_win_unlock_all %W", win);
     }
 #   endif
     mpi_errno = MPIR_Err_return_win( win_ptr, FCNAME, mpi_errno );

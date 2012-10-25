@@ -117,7 +117,7 @@ int MPI_Win_shared_query(MPI_Win win, int rank, MPI_Aint *size, int *disp_unit, 
 #   ifdef HAVE_ERROR_CHECKING
     {
         mpi_errno = MPIR_Err_create_code(
-            mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, "**mpix_win_shared_query", "**mpix_win_shared_query %W %d %p %p",
+            mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, "**mpi_win_shared_query", "**mpi_win_shared_query %W %d %p %p",
             win, rank, size, baseptr);
     }
 #   endif

@@ -124,7 +124,7 @@ int MPI_Win_attach(MPI_Win win, void *base, MPI_Aint size)
 #   ifdef HAVE_ERROR_CHECKING
     {
         mpi_errno = MPIR_Err_create_code(
-            mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, "**mpix_win_attach", "**mpix_win_attach %W %p %d",
+            mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, "**mpi_win_attach", "**mpi_win_attach %W %p %d",
             size, base, win);
     }
 #   endif

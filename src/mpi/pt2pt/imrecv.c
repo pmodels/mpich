@@ -127,7 +127,7 @@ fn_fail:
     {
         mpi_errno = MPIR_Err_create_code(
             mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
-            "**mpix_imrecv", "**mpix_imrecv %p %d %D %p %p", buf, count, datatype, message, request);
+            "**mpi_imrecv", "**mpi_imrecv %p %d %D %p %p", buf, count, datatype, message, request);
     }
 #   endif
     mpi_errno = MPIR_Err_return_comm(NULL, FCNAME, mpi_errno);

@@ -119,7 +119,7 @@ fn_fail:
     {
         mpi_errno = MPIR_Err_create_code(
             mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
-            "**mpix_t_pvar_session_create", "**mpix_t_pvar_session_create %p", session);
+            "**mpi_t_pvar_session_create", "**mpi_t_pvar_session_create %p", session);
     }
 #   endif
     mpi_errno = MPIR_Err_return_comm(NULL, FCNAME, mpi_errno);

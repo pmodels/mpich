@@ -148,7 +148,7 @@ fn_fail:
     {
         mpi_errno = MPIR_Err_create_code(
             mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
-            "**mpix_t_pvar_get_info", "**mpix_t_pvar_get_info %d %p %p %p %p %p %p %p %p %p %p %p %p", pvar_index, name, name_len, verbosity, var_class, datatype, enumtype, desc, desc_len, binding, readonly, continuous, atomic);
+            "**mpi_t_pvar_get_info", "**mpi_t_pvar_get_info %d %p %p %p %p %p %p %p %p %p %p %p %p", pvar_index, name, name_len, verbosity, var_class, datatype, enumtype, desc, desc_len, binding, readonly, continuous, atomic);
     }
 #   endif
     mpi_errno = MPIR_Err_return_comm(NULL, FCNAME, mpi_errno);

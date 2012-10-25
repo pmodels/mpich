@@ -111,8 +111,8 @@ int MPI_Win_flush(int rank, MPI_Win win)
 #   ifdef HAVE_ERROR_CHECKING
     {
         mpi_errno = MPIR_Err_create_code(
-            mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, "**mpix_win_flush", 
-            "**mpix_win_flush %d %W", rank, win);
+            mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, "**mpi_win_flush",
+            "**mpi_win_flush %d %W", rank, win);
     }
 #   endif
     mpi_errno = MPIR_Err_return_win( win_ptr, FCNAME, mpi_errno );

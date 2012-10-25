@@ -159,7 +159,7 @@ int MPI_Rget(void *origin_addr, int origin_count, MPI_Datatype
 #   ifdef HAVE_ERROR_CHECKING
     {
         mpi_errno = MPIR_Err_create_code(
-            mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, "**mpix_rget", "**mpix_rget %p %d %D %d %d %d %D %W %p",
+            mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, "**mpi_rget", "**mpi_rget %p %d %D %d %d %d %D %W %p",
             origin_addr, origin_count, origin_datatype, target_rank, target_disp, target_count, target_datatype, win, request);
     }
 #   endif

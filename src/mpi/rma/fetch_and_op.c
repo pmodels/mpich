@@ -148,8 +148,8 @@ int MPI_Fetch_and_op(const void *origin_addr, void *result_addr,
 #   ifdef HAVE_ERROR_CHECKING
     {
         mpi_errno = MPIR_Err_create_code(
-            mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, "**mpix_fetch_and_op",
-            "**mpix_fetch_and_op %p %p %D %d %d %O %W", origin_addr, 
+            mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, "**mpi_fetch_and_op",
+            "**mpi_fetch_and_op %p %p %D %d %d %O %W", origin_addr,
             result_addr, datatype, target_rank, target_disp, op, win);
     }
 #   endif

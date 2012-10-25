@@ -111,8 +111,8 @@ int MPIX_Comm_group_failed(MPI_Comm comm, MPI_Group *failed_group)
 #   ifdef HAVE_ERROR_CHECKING
     {
 	mpi_errno = MPIR_Err_create_code(
-	    mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, "**mpi_comm_group_failed",
-	    "**mpi_comm_group_failed %C %p", comm, failed_group);
+	    mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, "**mpix_comm_group_failed",
+	    "**mpix_comm_group_failed %C %p", comm, failed_group);
     }
 #   endif
     mpi_errno = MPIR_Err_return_comm( comm_ptr, FCNAME, mpi_errno );

@@ -111,7 +111,7 @@ fn_fail:
     {
         mpi_errno = MPIR_Err_create_code(
             mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
-            "**mpix_t_cvar_get_num", "**mpix_t_cvar_get_num %p", num_cvar);
+            "**mpi_t_cvar_get_num", "**mpi_t_cvar_get_num %p", num_cvar);
     }
 #   endif
     mpi_errno = MPIR_Err_return_comm(NULL, FCNAME, mpi_errno);

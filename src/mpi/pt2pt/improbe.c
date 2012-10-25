@@ -119,7 +119,7 @@ fn_fail:
     {
         mpi_errno = MPIR_Err_create_code(
             mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
-            "**mpix_improbe", "**mpix_improbe %d %d %C %p %p %p", source, tag, comm, flag, message, status);
+            "**mpi_improbe", "**mpi_improbe %d %d %C %p %p %p", source, tag, comm, flag, message, status);
     }
 #   endif
     mpi_errno = MPIR_Err_return_comm(NULL, FCNAME, mpi_errno);
