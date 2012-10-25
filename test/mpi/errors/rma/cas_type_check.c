@@ -9,13 +9,6 @@
 #include <assert.h>
 #include "mpitest.h"
 
-/* MPI-3 is not yet standardized -- allow MPI-3 routines to be switched off.
- */
-
-#if !defined(USE_STRICT_MPI) && defined(MPICH)
-#  define TEST_MPI3_ROUTINES 1
-#endif
-
 #define CAS_CHECK_TYPE(c_type, mpi_type, expected_err)  \
 do {                                                    \
     int            err, err_class;                      \
@@ -48,8 +41,6 @@ int main( int argc, char *argv[] )
 
     MPI_Init( &argc, &argv );
     MPI_Comm_rank( MPI_COMM_WORLD, &rank );
-
-#ifdef TEST_MPI3_ROUTINES
 
     /* C Integer */
     CAS_CHECK_TYPE(signed char,         MPI_SIGNED_CHAR,        MPI_SUCCESS);
@@ -94,8 +85,6 @@ int main( int argc, char *argv[] )
         CAS_CHECK_TYPE(long double,         MPI_LONG_DOUBLE,        MPI_ERR_TYPE);
     }
 #endif
-
-#endif /* TEST_MPI3_ROUTINES */
 
     if (rank == 0) printf(" No Errors\n");
     MPI_Finalize();

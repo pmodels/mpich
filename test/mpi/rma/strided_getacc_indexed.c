@@ -21,13 +21,6 @@
 #include <mpi.h>
 #include "mpitest.h"
 
-/* MPI-3 is not yet standardized -- allow MPI-3 routines to be switched off.
- */
-
-#if !defined(USE_STRICT_MPI) && defined(MPICH)
-#  define TEST_MPI3_ROUTINES 1
-#endif
-
 #define XDIM 8
 #define YDIM 1024
 #define SUB_XDIM 1
@@ -73,8 +66,6 @@ int main(int argc, char **argv) {
     MPI_Win_create(win_buf, bufsize, 1, MPI_INFO_NULL, MPI_COMM_WORLD, &buf_win);
 
     peer = (rank+1) % nranks;
-
-#ifdef TEST_MPI3_ROUTINES
 
     /* Perform ITERATIONS strided accumulate operations */
 
@@ -153,8 +144,6 @@ int main(int argc, char **argv) {
       }
     }
     MPI_Win_unlock(rank, buf_win);
-
-#endif /* TEST_MPI3_ROUTINES */
 
     MPI_Win_free(&buf_win);
     MPI_Free_mem(win_buf);

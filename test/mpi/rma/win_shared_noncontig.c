@@ -11,13 +11,6 @@
 #include <mpi.h>
 #include "mpitest.h"
 
-/* MPI-3 is not yet standardized -- allow MPI-3 routines to be switched off.
- */
-
-#if !defined(USE_STRICT_MPI) && defined(MPICH)
-#  define TEST_MPI3_ROUTINES 1
-#endif
-
 #define ELEM_PER_PROC 10000
 
 const int verbose = 0;
@@ -39,8 +32,6 @@ int main(int argc, char **argv) {
 
     MPI_Info_create(&alloc_shared_info);
     MPI_Info_set(alloc_shared_info, "alloc_shared_noncontig", "true");
-
-#ifdef TEST_MPI3_ROUTINES
 
     MPI_Comm_split_type(MPI_COMM_WORLD, MPI_COMM_TYPE_SHARED, rank, MPI_INFO_NULL, &shm_comm);
 
@@ -82,8 +73,6 @@ int main(int argc, char **argv) {
     MPI_Win_unlock_all(shm_win);
     MPI_Win_free(&shm_win);
     MPI_Comm_free(&shm_comm);
-
-#endif /* TEST_MPI3_ROUTINES */
 
     MPI_Info_free(&alloc_shared_info);
 

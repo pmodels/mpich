@@ -13,10 +13,6 @@
 /* USE_STRICT_MPI may be defined in mpitestconf.h */
 #include "mpitestconf.h"
 
-#if !defined(USE_STRICT_MPI) && defined(MPICH)
-#  define TEST_MPI3_ROUTINES 1
-#endif
-
 /* assert-like macro that bumps the err count and emits a message */
 #define check(x_)                                                                 \
     do {                                                                          \
@@ -40,7 +36,6 @@ int main(int argc, char **argv)
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-#ifdef TEST_MPI3_ROUTINES
     if (!rank) {
         MPI_Type_create_hindexed_block(count, blocklength,
                                         displacements, MPI_INT,
@@ -69,7 +64,6 @@ int main(int argc, char **argv)
 
         MPI_Type_free(&t);
     }
-#endif /* defined(TEST_MPI3_ROUTINES) */
 
     if (rank == 0) {
         if (errs) {

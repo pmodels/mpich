@@ -11,13 +11,6 @@
 #include <mpi.h>
 #include "mpitest.h"
 
-/* MPI-3 is not yet standardized -- allow MPI-3 routines to be switched off.
- */
-
-#if !defined(USE_STRICT_MPI) && defined(MPICH)
-#  define TEST_MPI3_ROUTINES 1
-#endif
-
 static const int SQ_LIMIT = 10;
 static       int SQ_COUNT = 0;
 
@@ -95,8 +88,6 @@ int main(int argc, char **argv) {
     res_ptr = malloc(sizeof(TYPE_C)*nproc);
 
     MPI_Win_create(val_ptr, sizeof(TYPE_C)*nproc, sizeof(TYPE_C), MPI_INFO_NULL, MPI_COMM_WORLD, &win);
-
-#ifdef TEST_MPI3_ROUTINES
 
     /* Test self communication */
 
@@ -197,8 +188,6 @@ int main(int argc, char **argv) {
         }
     }
     MPI_Win_unlock(rank, win);
-
-#endif /* TEST_MPI3_ROUTINES */
 
     MPI_Win_free(&win);
 

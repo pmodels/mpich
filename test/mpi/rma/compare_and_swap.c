@@ -11,13 +11,6 @@
 #include <mpi.h>
 #include "mpitest.h"
 
-/* MPI-3 is not yet standardized -- allow MPI-3 routines to be switched off.
- */
-
-#if !defined(USE_STRICT_MPI) && defined(MPICH)
-#  define TEST_MPI3_ROUTINES 1
-#endif
-
 static const int SQ_LIMIT = 10;
 static       int SQ_COUNT = 0;
 
@@ -49,8 +42,6 @@ int main(int argc, char **argv) {
     *val_ptr = 0;
 
     MPI_Win_create(val_ptr, sizeof(int), sizeof(int), MPI_INFO_NULL, MPI_COMM_WORLD, &win);
-
-#ifdef TEST_MPI3_ROUTINES
 
     /* Test self communication */
 
@@ -114,8 +105,6 @@ int main(int argc, char **argv) {
             errors++;
         }
     }
-
-#endif /* TEST_MPI3_ROUTINES */
 
     MPI_Win_free(&win);
 

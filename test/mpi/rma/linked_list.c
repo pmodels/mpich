@@ -24,13 +24,6 @@
 #include <assert.h>
 #include "mpitest.h"
 
-/* MPI-3 is not yet standardized -- allow MPI-3 routines to be switched off.
- */
-
-#if !defined(USE_STRICT_MPI) && defined(MPICH)
-#  define TEST_MPI3_ROUTINES 1
-#endif
-
 #define NUM_ELEMS 32
 #define NPROBE    100
 #define ELEM_PER_ROW 16
@@ -55,7 +48,6 @@ static llist_elem_t **my_elems = NULL;
 static int my_elems_size  = 0;
 static int my_elems_count = 0;
 
-#ifdef TEST_MPI3_ROUTINES
 /* Allocate a new shared linked list element */
 MPI_Aint alloc_elem(int value, MPI_Win win) {
     MPI_Aint disp;
@@ -78,7 +70,6 @@ MPI_Aint alloc_elem(int value, MPI_Win win) {
     MPI_Get_address(elem_ptr, &disp);
     return disp;
 }
-#endif
 
 int main(int argc, char **argv) {
     int           procid, nproc, i;
@@ -89,8 +80,6 @@ int main(int argc, char **argv) {
 
     MPI_Comm_rank(MPI_COMM_WORLD, &procid);
     MPI_Comm_size(MPI_COMM_WORLD, &nproc);
-
-#ifdef TEST_MPI3_ROUTINES
 
     MPI_Win_create_dynamic(MPI_INFO_NULL, MPI_COMM_WORLD, &llist_win);
 
@@ -233,11 +222,6 @@ int main(int argc, char **argv) {
     /* Free all the elements in the list */
     for ( ; my_elems_count > 0; my_elems_count--)
         MPI_Free_mem(my_elems[my_elems_count-1]);
-
-#else /* ! TEST_MPI3_ROUTINES */
-    if (procid == 0)
-        printf(" No Errors\n");
-#endif
 
     MPI_Finalize();
     return 0;

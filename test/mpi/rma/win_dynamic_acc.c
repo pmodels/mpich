@@ -11,13 +11,6 @@
 #include <mpi.h>
 #include "mpitest.h"
 
-/* MPI-3 is not yet standardized -- allow MPI-3 routines to be switched off.
- */
-
-#if !defined(USE_STRICT_MPI) && defined(MPICH)
-#  define TEST_MPI3_ROUTINES 1
-#endif
-
 #define ITER 100
 
 const int verbose = 0;
@@ -40,8 +33,6 @@ int main(int argc, char **argv) {
     MPI_Allgather(MPI_IN_PLACE, 0, MPI_DATATYPE_NULL, val_ptrs, 1, MPI_AINT,
                   MPI_COMM_WORLD);
 
-#ifdef TEST_MPI3_ROUTINES
-
     MPI_Win_create_dynamic(MPI_INFO_NULL, MPI_COMM_WORLD, &dyn_win);
     MPI_Win_attach(dyn_win, &one, sizeof(int));
 
@@ -61,8 +52,6 @@ int main(int argc, char **argv) {
 
     MPI_Win_detach(dyn_win, &one);
     MPI_Win_free(&dyn_win);
-
-#endif /* TEST_MPI3_ROUTINES */
 
     MPI_Reduce(&errors, &all_errors, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
 
