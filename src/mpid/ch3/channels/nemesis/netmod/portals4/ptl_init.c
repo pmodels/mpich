@@ -11,7 +11,7 @@
 #error Checkpointing not implemented
 #endif
 
-#define EQ_COUNT 100
+#define EQ_COUNT 1024
 #define NID_KEY  "NID"
 #define PID_KEY  "PID"
 #define PTI_KEY  "PTI"

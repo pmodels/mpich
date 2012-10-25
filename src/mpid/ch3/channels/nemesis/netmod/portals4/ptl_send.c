@@ -664,6 +664,10 @@ static int handler_large(const ptl_event_t *e)
 
     MPIDI_FUNC_ENTER(MPID_STATE_HANDLER_LARGE);
 
+#warning DARIUS
+    if (e->type != PTL_EVENT_ACK) printf("Received bad event %s ni_fail=%s list=%s user_ptr=%p hdr_data=%#lx\n",
+                                         MPID_nem_ptl_strevent(e), MPID_nem_ptl_strnifail(e->ni_fail_type),
+                                         MPID_nem_ptl_strlist(e->ptl_list), e->user_ptr, e->hdr_data);
     MPIU_Assert(e->type == PTL_EVENT_ACK);
 
     if (e->mlength < PTL_LARGE_THRESHOLD) {

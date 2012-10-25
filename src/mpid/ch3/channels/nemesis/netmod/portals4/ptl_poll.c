@@ -135,7 +135,7 @@ static int append_overflow(int i)
     me.ct_handle = PTL_CT_NONE;
     me.uid = PTL_UID_ANY;
     me.options = ( PTL_ME_OP_PUT | PTL_ME_MANAGE_LOCAL | PTL_ME_NO_TRUNCATE | PTL_ME_MAY_ALIGN |
-                   PTL_ME_IS_ACCESSIBLE | PTL_ME_EVENT_LINK_DISABLE | PTL_ME_EVENT_UNLINK_DISABLE );
+                   PTL_ME_IS_ACCESSIBLE | PTL_ME_EVENT_LINK_DISABLE );
     me.match_id = id_any;
     me.match_bits = 0;
     me.ignore_bits = ~((ptl_match_bits_t)0);
@@ -172,7 +172,7 @@ int MPID_nem_ptl_poll(int is_blocking_poll)
             break;
         MPIU_ERR_CHKANDJUMP(ret == PTL_EQ_DROPPED, mpi_errno, MPI_ERR_OTHER, "**eqdropped");
         MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptleqget", "**ptleqget %s", MPID_nem_ptl_strerror(ret));
-        MPIU_DBG_MSG_FMT(CH3_CHANNEL, VERBOSE, (MPIU_DBG_FDEST, "Received event %s ni_fail=%s list=%s user_ptr=%p hdr_data=%#lx\n",
+        MPIU_DBG_MSG_FMT(CH3_CHANNEL, VERBOSE, (MPIU_DBG_FDEST, "Received event %s ni_fail=%s list=%s user_ptr=%p hdr_data=%#lx",
                                                 MPID_nem_ptl_strevent(&event), MPID_nem_ptl_strnifail(event.ni_fail_type),
                                                 MPID_nem_ptl_strlist(event.ptl_list), event.user_ptr, event.hdr_data));
         
