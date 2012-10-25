@@ -81,6 +81,10 @@ if [ -z "$tmpdir" ] ; then tmpdir=/sandbox/$LOGNAME ; fi
 
 # Construct the full outfile name from the dir and file
 outfile="$outdir/$outfile"
+if [ -z "$srcdir" ] ; then
+    echo "Source directory for MPICH not specified!"
+    exit 1
+fi
 if [ ! -d "$srcdir" ] ; then
     echo "Could not find MPICH source dir $srcdir"
     exit 1
