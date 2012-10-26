@@ -4320,6 +4320,12 @@ int MPIR_Grequest_start_impl(MPI_Grequest_query_function *query_fn,
                              MPI_Grequest_free_function *free_fn,
                              MPI_Grequest_cancel_function *cancel_fn,
                              void *extra_state, MPID_Request **request_ptr);
+int MPIX_Grequest_start_impl(MPI_Grequest_query_function *,
+                             MPI_Grequest_free_function *,
+                             MPI_Grequest_cancel_function *,
+                             MPIX_Grequest_poll_function *,
+                             MPIX_Grequest_wait_function *, void *,
+                             MPID_Request **);
 int MPIR_Graph_map_impl(const MPID_Comm *comm_ptr, int nnodes,
                         const int indx[], const int edges[], int *newrank);
 int MPIR_Type_commit_impl(MPI_Datatype *datatype);
