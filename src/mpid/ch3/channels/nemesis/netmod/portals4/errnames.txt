@@ -34,3 +34,5 @@
 **ptlget %s:PtlGet() failed (%s)
 **eqdropped:Event queue overflowed
 **badbusinesscard:Invalid business card
+**ptlni_fail:communication failure
+**ptlni_fail %s %s:communication failure event=%s fail_type=%s

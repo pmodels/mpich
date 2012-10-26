@@ -13,6 +13,7 @@ lib_lib@MPILIBNAME@_la_SOURCES +=					\
     src/mpid/ch3/channels/nemesis/netmod/portals4/ptl_poll.c		\
     src/mpid/ch3/channels/nemesis/netmod/portals4/ptl_probe.c		\
     src/mpid/ch3/channels/nemesis/netmod/portals4/ptl_recv.c		\
+    src/mpid/ch3/channels/nemesis/netmod/portals4/ptl_nm_send.c	        \
     src/mpid/ch3/channels/nemesis/netmod/portals4/ptl_send.c 
 
 noinst_HEADERS +=                                                \

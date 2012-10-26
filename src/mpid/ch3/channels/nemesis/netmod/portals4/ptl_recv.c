@@ -216,7 +216,7 @@ static int handler_recv_dequeue_large(const ptl_event_t *e)
         
         REQ_PTL(rreq)->event_handler = handler_recv_complete;
         ret = PtlGet(MPIDI_nem_ptl_global_md, (ptl_size_t)rreq->dev.user_buf + PTL_LARGE_THRESHOLD, data_sz - PTL_LARGE_THRESHOLD,
-                     vc_ptl->id, vc_ptl->ptc, NPTL_HEADER_GET_SEQNUM(e->hdr_data), 0, rreq);
+                     vc_ptl->id, vc_ptl->ptg, e->match_bits, 0, rreq);
         MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlget", "**ptlget %s", MPID_nem_ptl_strerror(ret));
         goto fn_exit;
     }
@@ -250,8 +250,8 @@ static int handler_recv_dequeue_large(const ptl_event_t *e)
         MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlmdbind", "**ptlmdbind %s", MPID_nem_ptl_strerror(ret));
 
         REQ_PTL(rreq)->event_handler = handler_recv_complete;
-        ret = PtlGet(REQ_PTL(rreq)->md, 0, rreq->dev.segment_size - rreq->dev.segment_first, vc_ptl->id, vc_ptl->ptc,
-                     NPTL_HEADER_GET_SEQNUM(e->hdr_data), 0, rreq);
+        ret = PtlGet(REQ_PTL(rreq)->md, 0, rreq->dev.segment_size - rreq->dev.segment_first, vc_ptl->id, vc_ptl->ptg,
+                     e->match_bits, 0, rreq);
         MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlget", "**ptlget %s", MPID_nem_ptl_strerror(ret));
         goto fn_exit;
     }
@@ -262,8 +262,7 @@ static int handler_recv_dequeue_large(const ptl_event_t *e)
 
     REQ_PTL(rreq)->event_handler = handler_recv_unpack_complete;
     ret = PtlGet(MPIDI_nem_ptl_global_md, (ptl_size_t)REQ_PTL(rreq)->chunk_buffer[0],
-                 rreq->dev.segment_size - rreq->dev.segment_first, vc_ptl->id, vc_ptl->ptc,
-                 NPTL_HEADER_GET_SEQNUM(e->hdr_data), 0, rreq);
+                 rreq->dev.segment_size - rreq->dev.segment_first, vc_ptl->id, vc_ptl->ptg, e->match_bits, 0, rreq);
     MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlget", "**ptlget %s", MPID_nem_ptl_strerror(ret));
 
  fn_exit:
@@ -323,8 +322,7 @@ static int handler_recv_dequeue_unpack_large(const ptl_event_t *e)
     
     REQ_PTL(rreq)->event_handler = handler_recv_unpack_complete;
     ret = PtlGet(MPIDI_nem_ptl_global_md, (ptl_size_t)REQ_PTL(rreq)->chunk_buffer[0],
-                 rreq->dev.segment_size - rreq->dev.segment_first, vc_ptl->id, vc_ptl->ptc,
-                 NPTL_HEADER_GET_SEQNUM(e->hdr_data), 0, rreq);
+                 rreq->dev.segment_size - rreq->dev.segment_first, vc_ptl->id, vc_ptl->ptg, e->match_bits, 0, rreq);
     MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlget", "**ptlget %s", MPID_nem_ptl_strerror(ret));
 
  fn_exit:

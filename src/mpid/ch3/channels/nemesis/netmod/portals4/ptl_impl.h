@@ -16,6 +16,7 @@
 
 extern ptl_handle_ni_t MPIDI_nem_ptl_ni;
 extern ptl_pt_index_t  MPIDI_nem_ptl_pt;
+extern ptl_pt_index_t  MPIDI_nem_ptl_get_pt; /* portal for gets by receiver */
 extern ptl_pt_index_t  MPIDI_nem_ptl_control_pt; /* portal for MPICH control messages */
 extern ptl_handle_eq_t MPIDI_nem_ptl_eq;
 
@@ -84,6 +85,7 @@ typedef struct {
 typedef struct {
     ptl_process_t id;
     ptl_pt_index_t pt;
+    ptl_pt_index_t ptg;
     ptl_pt_index_t ptc;
     int id_initialized; /* TRUE iff id and pt have been initialized */
     MPIDI_msg_sz_t num_queued_sends; /* number of reqs for this vc in sendq */
@@ -98,26 +100,20 @@ typedef struct {
    63    single/multiple
    62    large/small
    61    ssend
-   32-60 seqnum for large messages (29 bits)
-   0-31  length
+   0-60  length
 
    Note: This means we support no more than 2^24 processes.
 */
-#define NPTL_LENGTH_OFFSET                          0
-#define NPTL_SEQNUM_OFFSET                         32
 #define NPTL_SSEND             ((ptl_hdr_data_t)1<<61)
 #define NPTL_LARGE             ((ptl_hdr_data_t)1<<62)
 #define NPTL_MULTIPLE          ((ptl_hdr_data_t)1<<63)
 
-#define NPTL_LENGTH_MASK     ((((ptl_hdr_data_t)1<<32)-1)<<NPTL_LENGTH_OFFSET)
-#define NPTL_SEQNUM_MASK     ((((ptl_hdr_data_t)1<<29)-1)<<NPTL_SEQNUM_OFFSET)
+#define NPTL_LENGTH_MASK     (((ptl_hdr_data_t)1<<61)-1)
 
-#define NPTL_HEADER(flags_, large_seqnum_, length_) ((flags_) |                                              \
-                                                     ((ptl_hdr_data_t)(large_seqnum_))<<NPTL_SEQNUM_OFFSET | \
-                                                     ((ptl_hdr_data_t)(length_))<<NPTL_LENGTH_OFFSET)
+#define NPTL_HEADER(flags_, length_) ((flags_) | (ptl_hdr_data_t)(length_))
+#define NPTL_HEADER_GET_LENGTH(hdr_) ((hdr_) & NPTL_LENGTH_MASK)
 
-#define NPTL_HEADER_GET_SEQNUM(hdr_) (((hdr_) & NPTL_SEQNUM_MASK)>>NPTL_SEQNUM_OFFSET)
-#define NPTL_HEADER_GET_LENGTH(hdr_) (((hdr_) & NPTL_LENGTH_MASK)>>NPTL_LENGTH_OFFSET)
+#define NPTL_MAX_LENGTH NPTL_LENGTH_MASK
 
 /* The comm_world rank of the sender is stored in the match_bits, but they are
    ignored when matching.
@@ -143,9 +139,9 @@ typedef struct {
 #define NPTL_MATCH_GET_CTX(match_bits_) (((match_bits_) & NPTL_MATCH_CTX_MASK) >> NPTL_MATCH_CTX_OFFSET)
 #define NPTL_MATCH_GET_TAG(match_bits_) ((match_bits_) >> NPTL_MATCH_TAG_OFFSET)
 
-int MPID_nem_ptl_send_init(void);
-int MPID_nem_ptl_send_finalize(void);
-int MPID_nem_ptl_ev_send_handler(const ptl_event_t *e);
+int MPID_nem_ptl_nm_init(void);
+int MPID_nem_ptl_nm_finalize(void);
+int MPID_nem_ptl_nm_event_handler(const ptl_event_t *e);
 int MPID_nem_ptl_sendq_complete_with_error(MPIDI_VC_t *vc, int req_errno);
 int MPID_nem_ptl_SendNoncontig(MPIDI_VC_t *vc, MPID_Request *sreq, void *hdr, MPIDI_msg_sz_t hdr_sz);
 int MPID_nem_ptl_iStartContigMsg(MPIDI_VC_t *vc, void *hdr, MPIDI_msg_sz_t hdr_sz, void *data, MPIDI_msg_sz_t data_sz,
@@ -156,7 +152,8 @@ int MPID_nem_ptl_poll_init(void);
 int MPID_nem_ptl_poll_finalize(void);
 int MPID_nem_ptl_poll(int is_blocking_poll);
 int MPID_nem_ptl_vc_terminated(MPIDI_VC_t *vc);
-int MPID_nem_ptl_get_id_from_bc(const char *business_card, ptl_process_t *id, ptl_pt_index_t *pt, ptl_pt_index_t *ptc);
+int MPID_nem_ptl_get_id_from_bc(const char *business_card, ptl_process_t *id, ptl_pt_index_t *pt, ptl_pt_index_t *ptg,
+                                ptl_pt_index_t *ptc);
 void MPI_nem_ptl_pack_byte(MPID_Segment *segment, MPI_Aint first, MPI_Aint last, void *buf,
                            MPID_nem_ptl_pack_overflow_t *overflow);
 int MPID_nem_ptl_unpack_byte(MPID_Segment *segment, MPI_Aint first, MPI_Aint last, void *buf,
@@ -195,11 +192,11 @@ const char *MPID_nem_ptl_strlist(ptl_list_t list);
         MPIU_DBG_MSG_FMT(CH3_CHANNEL, VERBOSE, (MPIU_DBG_FDEST, "PtlPut: md=%s data_sz=%lu pg_rank=%d", md_, data_sz_, pg_rank_));          \
         MPIU_DBG_MSG_FMT(CH3_CHANNEL, VERBOSE, (MPIU_DBG_FDEST, "        tag=%#lx ctx=%#lx rank=%ld match=%#lx",                            \
                                                 NPTL_MATCH_GET_TAG(match_), NPTL_MATCH_GET_CTX(match_), NPTL_MATCH_GET_RANK(match_), match_)); \
-        MPIU_DBG_MSG_FMT(CH3_CHANNEL, VERBOSE, (MPIU_DBG_FDEST, "        flags=%c%c%c seqnum=%ld data_sz=%ld header=%#lx",                  \
+        MPIU_DBG_MSG_FMT(CH3_CHANNEL, VERBOSE, (MPIU_DBG_FDEST, "        flags=%c%c%c data_sz=%ld header=%#lx",                             \
                                                 header_ & NPTL_SSEND ? 'S':' ',                                                             \
                                                 header_ & NPTL_LARGE ? 'L':' ',                                                             \
                                                 header_ & NPTL_MULTIPLE ? 'M':' ',                                                          \
-                                                NPTL_HEADER_GET_SEQNUM(header_), NPTL_HEADER_GET_LENGTH(header_), header_));                \
+                                                NPTL_HEADER_GET_LENGTH(header_), header_));                                                 \
                                                                                                                                             \
     } while(0)
 
