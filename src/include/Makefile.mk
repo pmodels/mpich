@@ -63,7 +63,8 @@ noinst_HEADERS +=                   \
     src/include/pmi2.h              \
     src/include/rlog.h              \
     src/include/rlog_macros.h       \
-    src/include/oputil.h
+    src/include/oputil.h            \
+    src/include/mpiinfo.h
 
 src/include/param_vals.h: src/util/param/params.yml
 	$(top_srcdir)/maint/genparams

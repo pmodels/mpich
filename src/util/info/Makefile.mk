@@ -19,6 +19,3 @@ mpi_sources +=                     \
     src/util/info/info_getvallen.c \
     src/util/info/info_set.c
 
-noinst_HEADERS += src/util/info/mpiinfo.h
-
-
