@@ -6,6 +6,7 @@
 
 #include "mpid_nem_impl.h"
 #include "mpidimpl.h"
+#include "mpiinfo.h"
 #include "mpidrma.h"
 
 /* FIXME: get this from OS */
@@ -51,16 +52,20 @@ static int MPIDI_CH3I_Win_allocate_shared(MPI_Aint size, int disp_unit, MPID_Inf
     MPI_Aint *tmp_buf;
     int errflag = FALSE;
     int noncontig = FALSE;
-    char key[] = "alloc_shared_noncontig";
     MPIU_CHKPMEM_DECL(6);
     MPIU_CHKLMEM_DECL(1);
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3I_WIN_ALLOCATE_SHARED);
 
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_CH3I_WIN_ALLOCATE_SHARED);
 
+    /* Check if we are allowed to allocate space non-contiguously */
+    if (info != NULL) {
+        MPIR_Info_get_impl(info, "alloc_shared_noncontig", 0, NULL,
+                           &(*win_ptr)->info_args.alloc_shared_noncontig);
+    }
+
     /* see if we can allocate all windows contiguously */
-    if (info)
-        MPIR_Info_get_impl(info, key, 0, NULL, &noncontig);
+    noncontig = (*win_ptr)->info_args.alloc_shared_noncontig;
 
     (*win_ptr)->shm_allocated = TRUE;
 
