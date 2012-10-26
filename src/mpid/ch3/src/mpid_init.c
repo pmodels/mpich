@@ -296,7 +296,7 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided,
 	    MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER, 
 				"**ch3|get_parent_port");
 	}
-	MPIU_DBG_MSG_S(CH3_CONNECT,VERBOSE,"Parent port is %s\n", parent_port);
+	MPIU_DBG_MSG_S(CH3_CONNECT,VERBOSE,"Parent port is %s", parent_port);
 	    
 	mpi_errno = MPID_Comm_connect(parent_port, NULL, 0, 
 				      MPIR_Process.comm_world, &comm);

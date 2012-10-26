@@ -514,7 +514,7 @@ int MPIDI_CH3U_Get_business_card_sock(int myRank,
 	}
     }
 
-    MPIU_DBG_MSG_S(CH3_CONNECT,TYPICAL,"business card is %s\n", bc_orig );
+    MPIU_DBG_MSG_S(CH3_CONNECT,TYPICAL,"business card is %s", bc_orig );
 
  fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3U_GET_BUSINESS_CARD_SOCK);

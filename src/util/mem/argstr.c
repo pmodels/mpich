@@ -99,7 +99,7 @@ static int decode_buffer(const char *str, char *dest, int length,
 	str++;
 	sscanf(hex, "%X", &value);
 	*dest = (char)value;
-	/*MPIU_DBG_MSG_FMT(OTHER,VERBOSE,(MPIU_DBG_FDEST," %s = %c\n", 
+	/*MPIU_DBG_MSG_FMT(OTHER,VERBOSE,(MPIU_DBG_FDEST," %s = %c",
 	  hex, *dest));*/
 	dest++;
 	n++;
