@@ -99,7 +99,8 @@ noinst_PROGRAMS =          \
     get_accumulate_double_derived  \
     get_accumulate_int_derived     \
     strided_getacc_indexed \
-    flush
+    flush                  \
+    reqops
 
 strided_acc_indexed_LDADD       = $(LDADD) -lm
 strided_acc_onelock_LDADD       = $(LDADD) -lm
