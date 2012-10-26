@@ -682,7 +682,7 @@ static int DLOOP_Dataloop_create_flattened_struct(int count,
 	MPIU_DBG_OUT(DATATYPE,"--- start of flattened type ---");
         for (i=0; i < nr_blks; i++) {
 	MPIU_DBG_OUT_FMT(DATATYPE,(MPIU_DBG_FDEST,
-				   "a[%d] = (%d, " DLOOP_OFFSET_FMT_DEC_SPEC ")\n", i,
+				   "a[%d] = (%d, " DLOOP_OFFSET_FMT_DEC_SPEC ")", i,
 				   tmp_blklens[i], tmp_disps[i]));
 	}
 	MPIU_DBG_OUT(DATATYPE,"--- end of flattened type ---");

@@ -170,7 +170,7 @@ int MPIR_Datatype_init_names(void)
 	    }
 
 	    MPIU_DBG_MSG_FMT(DATATYPE,VERBOSE,(MPIU_DBG_FDEST,
-		   "mpi_names[%d].name = %p\n", i, mpi_names[i].name));
+		   "mpi_names[%d].name = %p", i, mpi_names[i].name));
 
 	    MPIU_Strncpy(datatype_ptr->name, mpi_names[i].name,
 			 MPI_MAX_OBJECT_NAME);

@@ -235,7 +235,7 @@ static int MPID_Segment_contig_pack_to_iov(DLOOP_Offset *blocks_p,
     size = *blocks_p * (DLOOP_Offset) el_size;
 
     MPIU_DBG_MSG_FMT(DATATYPE,VERBOSE,(MPIU_DBG_FDEST,
-             "\t[contig to vec: do=" MPI_AINT_FMT_DEC_SPEC ", dp=%p, ind=%d, sz=%d, blksz=" MPI_AINT_FMT_DEC_SPEC "]\n",
+             "\t[contig to vec: do=" MPI_AINT_FMT_DEC_SPEC ", dp=%p, ind=%d, sz=%d, blksz=" MPI_AINT_FMT_DEC_SPEC "]",
 		    (MPI_Aint) rel_off,
 		    bufp,
 		    paramp->u.pack_vector.index,
@@ -316,7 +316,7 @@ static int MPID_Segment_vector_pack_to_iov(DLOOP_Offset *blocks_p,
              ", len=%d, ind=%d, ct=%d, blksz=%d"
              ", str=" MPI_AINT_FMT_DEC_SPEC
              ", blks=" MPI_AINT_FMT_DEC_SPEC
-             "]\n",
+             "]",
 		    (MPI_Aint) rel_off,
 		    bufp,
 		    paramp->u.pack_vector.length,
