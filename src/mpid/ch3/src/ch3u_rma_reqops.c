@@ -121,6 +121,7 @@ int MPIDI_Rput(const void *origin_addr, int origin_count,
     int mpi_errno = MPI_SUCCESS;
     MPIDI_CH3I_Rma_req_state_t *req_state;
     MPIU_CHKPMEM_DECL(1);
+    MPIDI_STATE_DECL(MPID_STATE_MPIDI_RPUT);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_RPUT);
 
@@ -171,6 +172,7 @@ int MPIDI_Rget(void *origin_addr, int origin_count,
     int mpi_errno = MPI_SUCCESS;
     MPIDI_CH3I_Rma_req_state_t *req_state;
     MPIU_CHKPMEM_DECL(1);
+    MPIDI_STATE_DECL(MPID_STATE_MPIDI_RGET);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_RGET);
 
@@ -221,6 +223,7 @@ int MPIDI_Raccumulate(const void *origin_addr, int origin_count,
     int mpi_errno = MPI_SUCCESS;
     MPIDI_CH3I_Rma_req_state_t *req_state;
     MPIU_CHKPMEM_DECL(1);
+    MPIDI_STATE_DECL(MPID_STATE_MPIDI_RACCUMULATE);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_RACCUMULATE);
 
@@ -272,6 +275,7 @@ int MPIDI_Rget_accumulate(const void *origin_addr, int origin_count,
     int mpi_errno = MPI_SUCCESS;
     MPIDI_CH3I_Rma_req_state_t *req_state;
     MPIU_CHKPMEM_DECL(1);
+    MPIDI_STATE_DECL(MPID_STATE_MPIDI_RGET_ACCUMULATE);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_RGET_ACCUMULATE);
 
