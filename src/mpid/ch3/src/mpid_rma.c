@@ -32,6 +32,9 @@ static int win_init(MPI_Aint size, int disp_unit, int create_flavor, int model,
         ftable->Win_detach          = MPIDI_Win_detach;         \
         ftable->Win_shared_query    = MPIDI_Win_shared_query;   \
                                                                 \
+        ftable->Win_set_info        = MPIDI_Win_set_info;       \
+        ftable->Win_get_info        = MPIDI_Win_get_info;       \
+                                                                \
         ftable->Put                 = MPIDI_Put;                \
         ftable->Get                 = MPIDI_Get;                \
         ftable->Accumulate          = MPIDI_Accumulate;         \
@@ -278,11 +281,63 @@ static int win_init(MPI_Aint size, int disp_unit, int create_flavor, int model,
     (*win_ptr)->pt_rma_puts_accs    = NULL;
     (*win_ptr)->my_pt_rma_puts_accs = 0;
 
+    /* Initialize the info flags */
+    (*win_ptr)->info_args.no_locks            = 0;
+    (*win_ptr)->info_args.accumulate_ordering = MPIDI_ACC_ORDER_RAR | MPIDI_ACC_ORDER_RAW |
+                                                MPIDI_ACC_ORDER_WAR | MPIDI_ACC_ORDER_WAW;
+    (*win_ptr)->info_args.accumulate_ops      = MPIDI_ACC_OPS_SAME_OP_NO_OP;
+    (*win_ptr)->info_args.same_size           = 0;
+    (*win_ptr)->info_args.alloc_shared_noncontig = 0;
+
     MPID_WIN_FTABLE_SET_DEFAULTS(win_ptr);
 
 fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_WIN_INIT);
     return mpi_errno;
 fn_fail:
+    goto fn_exit;
+}
+
+
+#undef FUNCNAME
+#define FUNCNAME MPID_Win_set_info
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
+int MPID_Win_set_info(MPID_Win *win, MPID_Info *info)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIDI_STATE_DECL(MPID_STATE_MPID_WIN_SET_INFO);
+
+    MPIDI_FUNC_ENTER(MPID_STATE_MPID_WIN_SET_INFO);
+
+    mpi_errno = win->RMAFns.Win_set_info(win, info);
+    if (mpi_errno != MPI_SUCCESS) { MPIU_ERR_POP(mpi_errno); }
+
+ fn_exit:
+    MPIDI_FUNC_EXIT(MPID_STATE_MPID_WIN_SET_INFO);
+    return mpi_errno;
+ fn_fail:
+    goto fn_exit;
+}
+
+
+#undef FUNCNAME
+#define FUNCNAME MPID_Win_get_info
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
+int MPID_Win_get_info(MPID_Win *win, MPID_Info **info_used)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIDI_STATE_DECL(MPID_STATE_MPID_WIN_GET_INFO);
+
+    MPIDI_FUNC_ENTER(MPID_STATE_MPID_WIN_GET_INFO);
+
+    mpi_errno = win->RMAFns.Win_get_info(win, info_used);
+    if (mpi_errno != MPI_SUCCESS) { MPIU_ERR_POP(mpi_errno); }
+
+ fn_exit:
+    MPIDI_FUNC_EXIT(MPID_STATE_MPID_WIN_GET_INFO);
+    return mpi_errno;
+ fn_fail:
     goto fn_exit;
 }

@@ -997,6 +997,8 @@ int MPI_Win_shared_query(MPI_Win win, int rank, MPI_Aint *size, int *disp_unit, 
 int MPI_Win_create_dynamic(MPI_Info info, MPI_Comm comm, MPI_Win *win);
 int MPI_Win_attach(MPI_Win win, void *base, MPI_Aint size);
 int MPI_Win_detach(MPI_Win win, const void *base);
+int MPI_Win_get_info(MPI_Win win, MPI_Info *info_used);
+int MPI_Win_set_info(MPI_Win win, MPI_Info info);
 
 int MPI_Get_accumulate(const void *origin_addr, int origin_count,
                         MPI_Datatype origin_datatype, void *result_addr, int result_count,
@@ -1458,6 +1460,8 @@ int PMPI_Win_shared_query(MPI_Win win, int rank, MPI_Aint *size, int *disp_unit,
 int PMPI_Win_create_dynamic(MPI_Info info, MPI_Comm comm, MPI_Win *win);
 int PMPI_Win_attach(MPI_Win win, void *base, MPI_Aint size);
 int PMPI_Win_detach(MPI_Win win, const void *base);
+int PMPI_Win_get_info(MPI_Win win, MPI_Info *info_used);
+int PMPI_Win_set_info(MPI_Win win, MPI_Info info);
 
 int PMPI_Get_accumulate(const void *origin_addr, int origin_count,
                          MPI_Datatype origin_datatype, void *result_addr, int result_count,

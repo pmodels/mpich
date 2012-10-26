@@ -5,6 +5,7 @@
  */
 
 #include "mpidimpl.h"
+#include "mpiinfo.h"
 #include "mpidrma.h"
 
 #ifdef USE_MPIU_INSTR
@@ -51,6 +52,9 @@ int MPIDI_CH3U_Win_create_gather( void *base, MPI_Aint size, int disp_unit,
 
     comm_size = (*win_ptr)->comm_ptr->local_size;
     rank      = (*win_ptr)->comm_ptr->rank;
+
+    /* RMA handlers should be set before calling this function */
+    mpi_errno = (*win_ptr)->RMAFns.Win_set_info(*win_ptr, info);
 
     MPIU_INSTR_DURATION_START(wincreate_allgather);
     /* allocate memory for the base addresses, disp_units, and
@@ -269,4 +273,98 @@ fn_fail:
     MPIU_CHKPMEM_REAP();
     goto fn_exit;
     /* --END ERROR HANDLING-- */
+}
+
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_Win_set_info
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
+int MPIDI_Win_set_info(MPID_Win *win, MPID_Info *info)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIDI_STATE_DECL(MPID_STATE_MPIDI_WIN_SET_INFO);
+
+    MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_WIN_SET_INFO);
+
+    /* No op, info arguments are ignored by default */
+
+ fn_exit:
+    MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_WIN_SET_INFO);
+    return mpi_errno;
+ fn_fail:
+    goto fn_exit;
+}
+
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_Win_get_info
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
+int MPIDI_Win_get_info(MPID_Win *win, MPID_Info **info_used)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIDI_STATE_DECL(MPID_STATE_MPIDI_WIN_GET_INFO);
+
+    MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_WIN_GET_INFO);
+
+    /* Allocate an empty info object */
+    mpi_errno = MPIU_Info_alloc(info_used);
+    if (mpi_errno != MPI_SUCCESS) { MPIU_ERR_POP(mpi_errno); }
+
+    /* Populate the predefined info keys */
+    if (win->info_args.no_locks)
+        mpi_errno = MPI_Info_set((*info_used)->handle, "no_locks", "true");
+    else
+        mpi_errno = MPI_Info_set((*info_used)->handle, "no_locks", "");
+
+    if (mpi_errno != MPI_SUCCESS) { MPIU_ERR_POP(mpi_errno); }
+
+    {
+#define BUFSIZE 32
+        char buf[BUFSIZE];
+        int c = 0;
+        if (win->info_args.accumulate_ordering & MPIDI_ACC_ORDER_RAR)
+            c += snprintf(buf+c, BUFSIZE-c, "%srar", (c > 0) ? "," : "");
+        if (win->info_args.accumulate_ordering & MPIDI_ACC_ORDER_RAW)
+            c += snprintf(buf+c, BUFSIZE-c, "%sraw", (c > 0) ? "," : "");
+        if (win->info_args.accumulate_ordering & MPIDI_ACC_ORDER_WAR)
+            c += snprintf(buf+c, BUFSIZE-c, "%swar", (c > 0) ? "," : "");
+        if (win->info_args.accumulate_ordering & MPIDI_ACC_ORDER_WAW)
+            c += snprintf(buf+c, BUFSIZE-c, "%swaw", (c > 0) ? "," : "");
+
+        MPI_Info_set((*info_used)->handle, "accumulate_ordering", buf);
+        if (mpi_errno != MPI_SUCCESS) { MPIU_ERR_POP(mpi_errno); }
+#undef BUFSIZE
+    }
+
+    if (win->info_args.accumulate_ordering == MPIDI_ACC_OPS_SAME_OP)
+        mpi_errno = MPI_Info_set((*info_used)->handle, "accumulate_ops", "same_op");
+    else
+        mpi_errno = MPI_Info_set((*info_used)->handle, "accumulate_ops", "same_op_no_op");
+
+    if (mpi_errno != MPI_SUCCESS) { MPIU_ERR_POP(mpi_errno); }
+
+    if (win->create_flavor == MPI_WIN_FLAVOR_SHARED) {
+        if (win->info_args.alloc_shared_noncontig)
+            mpi_errno = MPI_Info_set((*info_used)->handle, "alloc_shared_noncontig", "true");
+        else
+            mpi_errno = MPI_Info_set((*info_used)->handle, "alloc_shared_noncontig", "");
+
+        if (mpi_errno != MPI_SUCCESS) { MPIU_ERR_POP(mpi_errno); }
+    }
+    else if (win->create_flavor == MPI_WIN_FLAVOR_ALLOCATE) {
+        if (win->info_args.same_size)
+            mpi_errno = MPI_Info_set((*info_used)->handle, "same_size", "true");
+        else
+            mpi_errno = MPI_Info_set((*info_used)->handle, "same_size", "");
+
+        if (mpi_errno != MPI_SUCCESS) { MPIU_ERR_POP(mpi_errno); }
+    }
+
+ fn_exit:
+    MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_WIN_GET_INFO);
+    return mpi_errno;
+ fn_fail:
+    goto fn_exit;
 }

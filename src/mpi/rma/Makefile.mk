@@ -32,10 +32,12 @@ mpi_sources +=                          \
     src/mpi/rma/win_flush_local_all.c   \
     src/mpi/rma/win_free.c              \
     src/mpi/rma/win_get_group.c         \
+    src/mpi/rma/win_get_info.c          \
     src/mpi/rma/win_get_name.c          \
     src/mpi/rma/win_lock.c              \
     src/mpi/rma/win_lock_all.c          \
     src/mpi/rma/win_post.c              \
+    src/mpi/rma/win_set_info.c          \
     src/mpi/rma/win_set_name.c          \
     src/mpi/rma/win_shared_query.c      \
     src/mpi/rma/win_start.c             \

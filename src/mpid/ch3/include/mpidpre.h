@@ -189,6 +189,26 @@ enum MPIDI_CH3_Lock_states_e {
     MPIDI_CH3_WIN_LOCK_FLUSH
 };
 
+enum MPIDI_Win_info_arv_vals_accumulate_ordering_e {
+    MPIDI_ACC_ORDER_RAR = 1,
+    MPIDI_ACC_ORDER_RAW = 2,
+    MPIDI_ACC_ORDER_WAR = 4,
+    MPIDI_ACC_ORDER_WAW = 8
+};
+
+enum MPIDI_Win_info_arg_vals_accumulate_ops_e {
+    MPIDI_ACC_OPS_SAME_OP,
+    MPIDI_ACC_OPS_SAME_OP_NO_OP
+};
+
+struct MPIDI_Win_info_args_s {
+    int no_locks;               /* valid flavor = all */
+    int accumulate_ordering;
+    int accumulate_ops;
+    int same_size;              /* valid flavor = allocate */
+    int alloc_shared_noncontig; /* valid flavor = allocate shared */
+};
+
 #define MPIDI_DEV_WIN_DECL                                               \
     volatile int my_counter;  /* completion counter for operations       \
                                  targeting this window */                \
@@ -221,8 +241,8 @@ enum MPIDI_CH3_Lock_states_e {
                                           that this process has          \
                                           completed as target */         \
     MPI_Aint *sizes;      /* array of sizes of all windows */            \
+    struct MPIDI_Win_info_args_s info_args;                              \
 
- 
 #ifdef MPIDI_CH3_WIN_DECL
 #define MPID_DEV_WIN_DECL \
 MPIDI_DEV_WIN_DECL \

@@ -1575,6 +1575,9 @@ typedef struct MPID_RMA_Ops {
     int (*Win_detach)(struct MPID_Win *, const void *);
     int (*Win_shared_query)(struct MPID_Win *, int, MPI_Aint *, int *, void *);
 
+    int (*Win_set_info)(struct MPID_Win *, MPID_Info *);
+    int (*Win_get_info)(struct MPID_Win *, MPID_Info **);
+
     int (*Win_lock_all)(int, struct MPID_Win *);
     int (*Win_unlock_all)(struct MPID_Win *);
 
@@ -3255,6 +3258,8 @@ int MPID_Win_shared_query(MPID_Win *win, int rank, MPI_Aint *size, int *disp_uni
 int MPID_Win_create_dynamic(MPID_Info *info, MPID_Comm *comm, MPID_Win **win);
 int MPID_Win_attach(MPID_Win *win, void *base, MPI_Aint size);
 int MPID_Win_detach(MPID_Win *win, const void *base);
+int MPID_Win_get_info(MPID_Win *win, MPID_Info **info_used);
+int MPID_Win_set_info(MPID_Win *win, MPID_Info *info);
 
 int MPID_Get_accumulate(const void *origin_addr, int origin_count,
                         MPI_Datatype origin_datatype, void *result_addr, int result_count,
