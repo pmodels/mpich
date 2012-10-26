@@ -378,6 +378,8 @@ be in the range 0 to %d
 **rmasize:Invalid size argument in RMA call
 **rmasize %d:Invalid size argument in RMA call (value is %d)
 **rmadisp:Invalid displacement argument in RMA call 
+**rmareqcancel:Request-based RMA operation cannot be cancelled
+**rmareqop:Error in request-based RMA operation
 **assert:Invalid assert argument
 **lockassertval:Invalid assert argument passed to MPI_Win_lock
 **lockassertval %d: Invalid assert argument (%d) passed to MPI_Win_lock

@@ -19,6 +19,7 @@ lib_lib@MPILIBNAME@_la_SOURCES +=                          \
     src/mpid/ch3/src/ch3u_rma_notimpl.c                    \
     src/mpid/ch3/src/ch3u_rma_acc_ops.c                    \
     src/mpid/ch3/src/ch3u_rma_ops.c                        \
+    src/mpid/ch3/src/ch3u_rma_reqops.c                     \
     src/mpid/ch3/src/ch3u_rma_sync.c                       \
     src/mpid/ch3/src/ch3u_rndv.c                           \
     src/mpid/ch3/src/ch3u_eager.c                          \
