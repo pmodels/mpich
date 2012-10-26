@@ -7,9 +7,9 @@
 # Set defaults
 #
 do_tests=yes
-builddir=/sandbox/$LOGNAME/mpich
+builddir=/sandbox/$LOGNAME/mpich2
 instdir=/sandbox/$LOGNAME/mpi2-inst
-srcdir=/home/MPI/testing/mpich/mpich
+srcdir=/home/MPI/testing/mpich2/mpich2
 # ----------------------------------------------------------------------------
 # Get arguments
 for arg in "$@" ; do
@@ -37,8 +37,8 @@ done
 # Validate arguments
 #
 if [ ! -d $srcdir ] ; then
-    if [ -d /homes/MPI/testing/mpich/mpich ] ; then
-        srcdir=/homes/MPI/testing/mpich/mpich
+    if [ -d /homes/MPI/testing/mpich2/mpich2 ] ; then
+        srcdir=/homes/MPI/testing/mpich2/mpich2
     else
 	echo "Cannot find source directory"
 	exit 1
@@ -71,7 +71,7 @@ fi
 # sed -e 's/>/-AMP-gt;/g' -e 's/</-AMP-lt;/g' -e 's/\&/-AMP-amp;/g' | \
 # sed -e 's/-AMP-/&/g'
 #
-BuildMPICH () {
+BuildMPICH2 () {
 echo "<BUILDTEST NAME=\"$testname\">"
 echo "<CONFIG>"
 if $srcdir/configure --prefix=$instdir $config_args ; then
@@ -128,7 +128,7 @@ echo "</BUILDTEST>"
 }
 # ---------------------------------------------------------------------------
 # Preamble
-echo "<MPICHBUILD>"
+echo "<MPICH2BUILD>"
 echo "<DATE>"
 date
 echo "</DATE>"
@@ -137,56 +137,56 @@ echo "</DATE>"
 testname="basic"
 config_args=""
 use_mpd=yes
-BuildMPICH
+BuildMPICH2
 
 #
 # No Fortran or C++
 testname="no f77/c++"
 config_args="--disable-f77 --disable-cxx"
 use_mpd=yes
-BuildMPICH
+BuildMPICH2
 
 #
 # No Weak symbols
 testname="no weak symbols"
 config_args="--disable-weak-symbols"
 use_mpd=yes
-BuildMPICH
+BuildMPICH2
 
 #
 # --enable-fast
 testname="fast"
 config_args="--enable-fast"
 use_mpd=yes
-BuildMPICH
+BuildMPICH2
 
 #
 # forker pm, strict
 testname="strict and forker"
 config_args="--enable-strict --with-pm=forker"
 use_mpd=no
-BuildMPICH
+BuildMPICH2
 
 #
 # Build and link with a logging library
 testname="logging with lwlog"
 config_args="--with-logging=lwlog --with-pm=forker"
 use_mpd=no
-BuildMPICH
+BuildMPICH2
 
 #
 # Build with memory checking
 testname="memory tests"
 config_args="--enable-g=all --enable-strict"
 use_mpd=yes
-BuildMPICH
+BuildMPICH2
 
 #
 # Build with shared libraries
 testname="sharedlibs"
 config_args="--enable-sharedlibs=gcc"
 use_mpd=yes
-BuildMPICH
+BuildMPICH2
 
 #
 # Build with PVFS if available
@@ -196,8 +196,8 @@ if [ -d /pvfs ] ; then
     testname="pvfs"
     config_args="--with-romio=--with-file-system=ufs+nfs+testfs+pvfs"
     use_mpd=yes
-    BuildMPICH
+    BuildMPICH2
 fi
 # ---------------------------------------------------------------------------
 # Postamble
-echo "</MPICHBUILD>"
+echo "</MPICH2BUILD>"
