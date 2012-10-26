@@ -4,7 +4,7 @@
 
  # OVERALL: Added support for ARM-v7 native atomics
 
- # MPE: MPE is now separated out of MPICH2 and can be downloaded/used
+ # MPE: MPE is now separated out of MPICH and can be downloaded/used
    as a separate package.
 
  # Several other minor bug fixes, memory leak fixes, and code cleanup.
