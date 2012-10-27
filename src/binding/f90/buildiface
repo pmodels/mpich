@@ -1,5 +1,18 @@
 #! /usr/bin/env perl
 
+# FIXME:
+# TODO:
+# For MPI-3 (See 17.1.3 for details), need to add (for mpi module; mpi_f08 
+# module will require different system entirely):
+# *ALL* functions declared
+#    This will require the use of non-standard, compiler-specific options,
+#    and may require overriding user choices about warning levels and options
+#    in order to handle the choice arguments
+# Provide DERIVED TYPES for MPI_STATUS and all handles (as in the mpi_f08
+#     module).  For all handle types, provide overloads for .EQ., .NE., == 
+#     and /= operators (Partially done)
+# Check on MPI_F_SYNC_REG, mentioned on page 598.
+
 use warnings;
 
 # binding.sub provides the routines for reading the prototype file
@@ -19,6 +32,7 @@ $gDebug = 0;
 
 $prototype_file = "../../include/mpi.h.in";
 $is_MPI = 1;
+$buildMPIX = 0;
 $routine_prefix = "MPI_";
 $routine_pattern = "[A-Z][a-z0-9_]*";
 $out_prefix="MPI_";
@@ -89,6 +103,8 @@ $outfile_prefix = "mpi";
 	     'MPI_Errhandler*' => 'INTEGER', # Never an array of errhandlers
 	     'MPI_Op' => 'INTEGER',
 	     'MPI_Op*' => 'INTEGER', # Never an array of ops
+	     'MPI_Message' => 'INTEGER',
+	     'MPI_Message*' => 'INTEGER', # Never an array of messages
 	     'MPI_Status*' => 'INTEGER %name%(MPI_STATUS_SIZE)',
 	     'MPI_Status[]' => 'INTEGER %name%(MPI_STATUS_SIZE,*)',
 	     'MPI_Aint' => 'INTEGER(KIND=MPI_ADDRESS_KIND)',
@@ -284,6 +300,9 @@ if ( -s "../../mpi/romio/include/mpio.h.in" && $build_io) {
     &ReadInterface( "../../mpi/romio/include/mpio.h.in", $routine_prefix,
 	$routine_pattern, "mpi_routines" );
 #    %skipBlocks = ();
+}
+if ( $buildMPIX ) {
+    &ReadInterface( $prototype_file, "MPIX_", $routine_pattern, "mpi_routines" );
 }
 
 #
@@ -499,10 +518,10 @@ if ($buildScalarVector) {
     # Create the interface modules
     foreach my $routine (keys(%scalarVectorRoutines)) {
 	$ucname = uc($routine);
-	print MPIBASEFD "       INTERFACE MPI_$ucname\n";
-        print MPIBASEFD "           MODULE PROCEDURE MPI_${ucname}_S\n";
-        print MPIBASEFD "           MODULE PROCEDURE MPI_${ucname}_V\n";
-	print MPIBASEFD "       END INTERFACE ! MPI_$ucname\n\n";
+	print MPIBASEFD "       INTERFACE ${out_prefix}$ucname\n";
+        print MPIBASEFD "           MODULE PROCEDURE ${out_prefix}${ucname}_S\n";
+        print MPIBASEFD "           MODULE PROCEDURE ${out_prefix}${ucname}_V\n";
+	print MPIBASEFD "       END INTERFACE ! ${out_prefix}$ucname\n\n";
         
     }
     print MPIBASEFD "\n        CONTAINS\n";
@@ -513,36 +532,36 @@ if ($buildScalarVector) {
 	@parms  = split(/,/, $args );
 	$svArgs = $scalarVectorRoutines{$routine};
 	# The scalar version
-        print MPIBASEFD "       SUBROUTINE MPI_${ucname}_S(";
+        print MPIBASEFD "       SUBROUTINE ${out_prefix}${ucname}_S(";
         for ($i=0; $i<=$#parms; $i++) {
 	    print MPIBASEFD "v$i,";
         }
         print MPIBASEFD "ierror)\n";
 	&PrintArgDecls( $routine, 1, $svArgs );
-	print MPIBASEFD "       EXTERNAL MPI_${ucname}\n";
-	print MPIBASEFD "       call MPI_$ucname(";
+	print MPIBASEFD "       EXTERNAL ${out_prefix}${ucname}\n";
+	print MPIBASEFD "       call ${out_prefix}$ucname(";
         for ($i=0; $i<=$#parms; $i++) {
 	    print MPIBASEFD "v$i,";
         }
 	print MPIBASEFD "ierror)\n";
 
-	print MPIBASEFD "       END SUBROUTINE MPI_${ucname}_S\n\n";
+	print MPIBASEFD "       END SUBROUTINE ${out_prefix}${ucname}_S\n\n";
 
 	# The vector version
-        print MPIBASEFD "       SUBROUTINE MPI_${ucname}_V(";
+        print MPIBASEFD "       SUBROUTINE ${out_prefix}${ucname}_V(";
         for ($i=0; $i<=$#parms; $i++) {
 	    print MPIBASEFD "v$i,";
         }
         print MPIBASEFD "ierror)\n";
 	&PrintArgDecls( $routine, 0, "" );
-	print MPIBASEFD "       EXTERNAL MPI_${ucname}\n";
-	print MPIBASEFD "       call MPI_$ucname(";
+	print MPIBASEFD "       EXTERNAL ${out_prefix}${ucname}\n";
+	print MPIBASEFD "       call ${out_prefix}$ucname(";
         for ($i=0; $i<=$#parms; $i++) {
 	    print MPIBASEFD "v$i,";
         }
 	print MPIBASEFD "ierror)\n";
 
-	print MPIBASEFD "       END SUBROUTINE MPI_${ucname}_V\n\n";
+	print MPIBASEFD "       END SUBROUTINE ${out_prefix}${ucname}_V\n\n";
 
     }
 }
@@ -557,8 +576,87 @@ print MPIFD "!     -*- Mode: Fortran; -*-
 !       See COPYRIGHT in top-level directory.
         MODULE ${ucoutfile_prefix}_CONSTANTS
         IMPLICIT NONE
-        INCLUDE 'mpifnoext.h'
-        END MODULE ${ucoutfile_prefix}_CONSTANTS\n";
+        INCLUDE 'mpifnoext.h'\n";
+# MPI-3 Requires that even the MPI module (not just mpi_f08) include
+# the MPI_Status type, as well as handle types
+# WARNING: If there is and "EXTRA_STATUS_DECL", this declaration is
+# erroneous
+# WARNING: INTEGER is incorrect; it should be INTEGER(C_INT) if this
+# is to be used directly by a C routine.  That may also require using
+# USE ISO_C_BINDING, ONLY :: C_INT
+# Note that by using Fortran types with BIND(C), some compilers will
+# general warnings about not being interoperable with C.
+# See page 611, lines 3-13 in MPI-3.  SEQUENCE is used for pre
+# Fortran 2003 compilers.
+# QUESTION: With BIND(C), all of these will generate warning statements
+# because they don't use C integers, and they are not equivalent to the
+# C types.  Was that intended (even for Status?)
+# Pick one of these two:
+$BINDACCESS="";
+$BINDDEF = "SEQUENCE";
+#$BINDACCESS = ", BIND(C)";
+#$BINDDEF ="";
+print MPIFD "        TYPE$BINDACCESS :: MPI_Status
+           $BINDDEF
+           INTEGER, PRIVATE :: count, cancelled
+           INTEGER, PUBLIC :: MPI_SOURCE, MPI_TAG, MPI_ERROR
+        END TYPE MPI_Status\n";
+
+%handles = ( 'comm' => 'Comm', 'datatype' => 'Datatype', 
+	     'group' => 'Group', 'win' => 'Win', 
+	     'file' => 'File', 'op' => 'Op', 'errhandler' => 'Errhandler',
+	     'request' => 'Request', 'message' => 'Message', 
+	     'info' => 'Info' );
+
+foreach $handle (keys(%handles)) {
+    $mpitype = $handles{$handle};
+    print MPIFD "       TYPE$BINDACCESS :: MPI_$mpitype
+          $BINDDEF
+          INTEGER, PUBLIC :: MPI_VAL
+       END TYPE MPI_$mpitype\n";
+}
+
+print MPIFD "        INTERFACE OPERATOR(.EQ.)\n";
+foreach $handle (keys(%handles)) {
+    print MPIFD "            MODULE PROCEDURE ${handle}eq\n";
+}
+print MPIFD "        END INTERFACE\n";
+
+# == and .EQ. appear to be synonyms, not separate names
+#print MPIFD "        INTERFACE OPERATOR(==)\n";
+#foreach $handle (keys(%handles)) {
+#    print MPIFD "            MODULE PROCEDURE ${handle}eq\n";
+#}
+#print MPIFD "        END INTERFACE\n";
+
+print MPIFD "        INTERFACE OPERATOR(.NE.)\n";
+foreach $handle (keys(%handles)) {
+    print MPIFD "            MODULE PROCEDURE ${handle}neq\n";
+}
+print MPIFD "        END INTERFACE\n";
+
+# /= and .NE. appear to be synonyms, not separate names
+#
+#print MPIFD "        INTERFACE OPERATOR(/=)\n";
+#foreach $handle (keys(%handles)) {
+#    print MPIFD "            MODULE PROCEDURE ${handle}neq\n";
+#}
+#print MPIFD "        END INTERFACE\n";
+
+print MPIFD "        CONTAINS\n";
+foreach $handle (keys(%handles)) {
+    $mpitype = $handles{$handle};
+    print MPIFD "            LOGICAL FUNCTION ${handle}eq(lhs,rhs)
+            TYPE(MPI_$mpitype), INTENT(IN) :: lhs, rhs
+            ${handle}eq = lhs%MPI_VAL .EQ. rhs%MPI_VAL
+            END FUNCTION ${handle}eq
+            LOGICAL FUNCTION ${handle}neq(lhs,rhs)
+            TYPE(MPI_$mpitype), INTENT(IN) :: lhs, rhs
+            ${handle}neq = lhs%MPI_VAL .NE. rhs%MPI_VAL
+            END FUNCTION ${handle}neq\n";
+}
+
+print MPIFD "        END MODULE ${ucoutfile_prefix}_CONSTANTS\n";
 close MPIFD;
 &ReplaceIfDifferent( "${outfile_prefix}_constants.f90", "${outfile_prefix}_constants.f90.new" );
 
@@ -596,10 +694,10 @@ print MPIFD "!     -*- Mode: Fortran; -*-
 foreach $routine (keys(%mpi_choice_routines)) {
     $ucname = uc($routine);
 
-    print MPIFD "        PUBLIC :: MPI_$ucname\n";
-    print MPIFD "        INTERFACE MPI_$ucname\n";
-    print MPIFD "           MODULE PROCEDURE MPI_${ucname}_T\n";
-    print MPIFD "        END INTERFACE MPI_$ucname\n\n";
+    print MPIFD "        PUBLIC :: ${out_prefix}$ucname\n";
+    print MPIFD "        INTERFACE ${out_prefix}$ucname\n";
+    print MPIFD "           MODULE PROCEDURE ${out_prefix}${ucname}_T\n";
+    print MPIFD "        END INTERFACE ${out_prefix}$ucname\n\n";
 }
 
 # MPI_Sizeof has its own module
@@ -612,14 +710,14 @@ foreach $routine (keys(%mpi_choice_routines)) {
     $args   = $mpi_routines{$routine};
     @parms  = split(/,/, $args );
 
-    print MPIFD "        SUBROUTINE MPI_${ucname}_T(";
+    print MPIFD "        SUBROUTINE ${out_prefix}${ucname}_T(";
     for ($i=0; $i<=$#parms; $i++) {
 	print MPIFD "v$i,";
     }
     print MPIFD "ierror)\n";
 
     if (defined($NeedConstants{$routine})) {
-	print MPIFD "       USE MPI_CONSTANTS,ONLY:";
+	print MPIFD "       USE ${out_prefix}CONSTANTS,ONLY:";
 	$sep = "";
 	foreach $name (split(/\s+/,$NeedConstants{$routine})) {
 	    print MPIFD "$sep$name";
@@ -672,13 +770,13 @@ foreach $routine (keys(%mpi_choice_routines)) {
 	}
     }
     print MPIFD "        INTEGER ierror\n";
-    print MPIFD "        EXTERNAL MPI_${ucname}\n";
-    print MPIFD "        CALL MPI_${ucname}(";
+    print MPIFD "        EXTERNAL ${out_prefix}${ucname}\n";
+    print MPIFD "        CALL ${out_prefix}${ucname}(";
     for ($i=0; $i<=$#parms; $i++) {
 	print MPIFD "v$i,";
     }
     print MPIFD "ierror)\n";
-    print MPIFD "        END SUBROUTINE MPI_${ucname}_T\n\n";
+    print MPIFD "        END SUBROUTINE ${out_prefix}${ucname}_T\n\n";
 }
 
 # The base sizeof's are handled separately now in their own file
@@ -1102,6 +1200,9 @@ sub PrintArgDecls {
 	$cparm =~ s/\s+//g;
 	$fparm = $parmc2f{$cparm};
 	# Now, does this type contain an MPI constant?
+	if (!defined($fparm)) {
+	    print "$cparm value has no matching fortran parm\n";
+	}
 	if ($fparm =~ /(MPI_[A-Z_]*)/) {
 	    $use_constants{$1} = 1;
 	    $found_constants = 1;

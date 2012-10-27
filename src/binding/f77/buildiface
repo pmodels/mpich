@@ -3659,7 +3659,8 @@ if ($write_mpif) {
     # Other maximum values
     foreach $key (MAX_ERROR_STRING, MAX_PORT_NAME, 
 		  MAX_OBJECT_NAME, MAX_INFO_KEY, MAX_INFO_VAL,
-		  MAX_PROCESSOR_NAME, MAX_DATAREP_STRING ) {
+		  MAX_PROCESSOR_NAME, MAX_DATAREP_STRING, 
+		  MAX_LIBRARY_VERSION_STRING ) {
 	&print_mpif_int( "MPI_$key", -1 );
     }
     
@@ -3786,6 +3787,12 @@ if ($write_mpif) {
 	}
 	&print_mpif_int( "MPI_DISPLACEMENT_CURRENT", 0,
 			 "\@FORTRAN_MPI_OFFSET\@" );
+    }
+    #
+    # Fortran08 capability
+    foreach $f08feature (SUBARRAYS_SUPPORTED, ASYNC_PROTECTS_NONBLOCKING) {
+	print MPIFFD "       LOGICAL MPI_$f08feature\n";
+	print MPIFFD "       PARAMETER(MPI_$f08feature=.FALSE.)\n";
     }
     # 
     # Finally, the special symbols
