@@ -15,7 +15,11 @@
 #include "mpi.h"
 #include "mpitest.h"
 
-#if !defined(USE_STRICT_MPI) && defined(MPICH)
+/* The test on the MPI_VERISON is needed to check for pre MPI-3 versions
+   of MPICH or MPICH2, which will not include const in declarations or 
+   the non-blocking collectives.  
+ */
+#if !defined(USE_STRICT_MPI) && defined(MPICH) && MPI_VERSION >= 3
 
 int MPI_Barrier(MPI_Comm comm)
 {
