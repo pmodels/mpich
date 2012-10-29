@@ -4281,6 +4281,7 @@ void MPIR_Info_get_impl(MPID_Info *info_ptr, const char *key, int valuelen, char
 void MPIR_Info_get_nkeys_impl(MPID_Info *info_ptr, int *nkeys);
 int MPIR_Info_get_nthkey_impl(MPID_Info *info, int n, char *key);
 void MPIR_Info_get_valuelen_impl(MPID_Info *info_ptr, const char *key, int *valuelen, int *flag);
+int MPIR_Info_set_impl(MPID_Info *info_ptr, const char *key, const char *value);
 int MPIR_Comm_delete_attr_impl(MPID_Comm *comm_ptr, MPID_Keyval *keyval_ptr);
 int MPIR_Comm_create_keyval_impl(MPI_Comm_copy_attr_function *comm_copy_attr_fn,
                                  MPI_Comm_delete_attr_function *comm_delete_attr_fn,

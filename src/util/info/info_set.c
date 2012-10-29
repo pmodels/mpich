@@ -51,7 +51,7 @@ int MPI_Info_set( MPI_Info info, const char *key, const char *value )
 {
     static const char FCNAME[] = "MPI_Info_set";
     int mpi_errno = MPI_SUCCESS;
-    MPID_Info *info_ptr=0, *curr_ptr, *prev_ptr;
+    MPID_Info *info_ptr = NULL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_INFO_SET);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
@@ -99,32 +99,7 @@ int MPI_Info_set( MPI_Info info, const char *key, const char *value )
 #   endif /* HAVE_ERROR_CHECKING */
 
     /* ... body of routine ...  */
-    
-    prev_ptr = info_ptr;
-    curr_ptr = info_ptr->next;
-
-    while (curr_ptr) {
-	if (!strncmp(curr_ptr->key, key, MPI_MAX_INFO_KEY)) {
-	    /* Key already present; replace value */
-	    MPIU_Free(curr_ptr->value);  
-	    curr_ptr->value = MPIU_Strdup(value);
-	    break;
-	}
-	prev_ptr = curr_ptr;
-	curr_ptr = curr_ptr->next;
-    }
-
-    if (!curr_ptr) {
-	/* Key not present, insert value */
-        mpi_errno = MPIU_Info_alloc(&curr_ptr);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-
-	/*printf( "Inserting new elm %x at %x\n", curr_ptr->id, prev_ptr->id );*/
-	prev_ptr->next   = curr_ptr;
-	curr_ptr->key    = MPIU_Strdup(key);
-	curr_ptr->value  = MPIU_Strdup(value);
-    }
-    
+    MPIR_Info_set_impl(info_ptr, key, value);
     /* ... end of body of routine ... */
 
   fn_exit:
@@ -145,3 +120,53 @@ int MPI_Info_set( MPI_Info info, const char *key, const char *value )
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }
+
+
+#ifndef MPICH_MPI_FROM_PMPI
+
+#undef FUNCNAME
+#define FUNCNAME MPIR_Info_set_impl
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
+int MPIR_Info_set_impl(MPID_Info *info_ptr, const char *key, const char *value)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPID_Info *curr_ptr, *prev_ptr;
+    MPID_MPI_STATE_DECL(MPID_STATE_MPIR_INFO_SET_IMPL);
+
+    MPID_MPI_FUNC_ENTER(MPID_STATE_MPIR_INFO_SET_IMPL);
+
+    prev_ptr = info_ptr;
+    curr_ptr = info_ptr->next;
+
+    while (curr_ptr) {
+        if (!strncmp(curr_ptr->key, key, MPI_MAX_INFO_KEY)) {
+            /* Key already present; replace value */
+            MPIU_Free(curr_ptr->value);
+            curr_ptr->value = MPIU_Strdup(value);
+            break;
+        }
+        prev_ptr = curr_ptr;
+        curr_ptr = curr_ptr->next;
+    }
+
+    if (!curr_ptr) {
+        /* Key not present, insert value */
+        mpi_errno = MPIU_Info_alloc(&curr_ptr);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
+        /*printf( "Inserting new elm %x at %x\n", curr_ptr->id, prev_ptr->id );*/
+        prev_ptr->next   = curr_ptr;
+        curr_ptr->key    = MPIU_Strdup(key);
+        curr_ptr->value  = MPIU_Strdup(value);
+    }
+
+fn_exit:
+    MPID_MPI_FUNC_EXIT(MPID_STATE_MPIR_INFO_SET_IMPL);
+    return mpi_errno;
+
+fn_fail:
+    goto fn_exit;
+}
+
+#endif /* MPICH_MPI_FROM_PMPI */
