@@ -314,9 +314,9 @@ int MPIDI_Win_get_info(MPID_Win *win, MPID_Info **info_used)
 
     /* Populate the predefined info keys */
     if (win->info_args.no_locks)
-        mpi_errno = MPI_Info_set((*info_used)->handle, "no_locks", "true");
+        mpi_errno = MPIR_Info_set_impl(*info_used, "no_locks", "true");
     else
-        mpi_errno = MPI_Info_set((*info_used)->handle, "no_locks", "");
+        mpi_errno = MPIR_Info_set_impl(*info_used, "no_locks", "");
 
     if (mpi_errno != MPI_SUCCESS) { MPIU_ERR_POP(mpi_errno); }
 
@@ -333,31 +333,31 @@ int MPIDI_Win_get_info(MPID_Win *win, MPID_Info **info_used)
         if (win->info_args.accumulate_ordering & MPIDI_ACC_ORDER_WAW)
             c += snprintf(buf+c, BUFSIZE-c, "%swaw", (c > 0) ? "," : "");
 
-        MPI_Info_set((*info_used)->handle, "accumulate_ordering", buf);
+        MPIR_Info_set_impl(*info_used, "accumulate_ordering", buf);
         if (mpi_errno != MPI_SUCCESS) { MPIU_ERR_POP(mpi_errno); }
 #undef BUFSIZE
     }
 
     if (win->info_args.accumulate_ordering == MPIDI_ACC_OPS_SAME_OP)
-        mpi_errno = MPI_Info_set((*info_used)->handle, "accumulate_ops", "same_op");
+        mpi_errno = MPIR_Info_set_impl(*info_used, "accumulate_ops", "same_op");
     else
-        mpi_errno = MPI_Info_set((*info_used)->handle, "accumulate_ops", "same_op_no_op");
+        mpi_errno = MPIR_Info_set_impl(*info_used, "accumulate_ops", "same_op_no_op");
 
     if (mpi_errno != MPI_SUCCESS) { MPIU_ERR_POP(mpi_errno); }
 
     if (win->create_flavor == MPI_WIN_FLAVOR_SHARED) {
         if (win->info_args.alloc_shared_noncontig)
-            mpi_errno = MPI_Info_set((*info_used)->handle, "alloc_shared_noncontig", "true");
+            mpi_errno = MPIR_Info_set_impl(*info_used, "alloc_shared_noncontig", "true");
         else
-            mpi_errno = MPI_Info_set((*info_used)->handle, "alloc_shared_noncontig", "");
+            mpi_errno = MPIR_Info_set_impl(*info_used, "alloc_shared_noncontig", "");
 
         if (mpi_errno != MPI_SUCCESS) { MPIU_ERR_POP(mpi_errno); }
     }
     else if (win->create_flavor == MPI_WIN_FLAVOR_ALLOCATE) {
         if (win->info_args.same_size)
-            mpi_errno = MPI_Info_set((*info_used)->handle, "same_size", "true");
+            mpi_errno = MPIR_Info_set_impl(*info_used, "same_size", "true");
         else
-            mpi_errno = MPI_Info_set((*info_used)->handle, "same_size", "");
+            mpi_errno = MPIR_Info_set_impl(*info_used, "same_size", "");
 
         if (mpi_errno != MPI_SUCCESS) { MPIU_ERR_POP(mpi_errno); }
     }
