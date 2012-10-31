@@ -1447,6 +1447,7 @@ sub print_args {
     }
 
     # Output the list
+    print "special args at: $special_args\n" if $gDebug;
     print $OUTFD "( ";
     foreach $parm (@parms) {
 	$pos_check = ":" . $count . ":";
@@ -1648,19 +1649,41 @@ sub print_attr {
 sub clean_args {
     my $newargs = "";
     my $comma = "";
+    my $qualifier = "";
     for $parm (split(',',$args)) {
+        $saveparm = $parm;
+	$qualifier = "";
 	# Remove any leading or trailing spaces
-	$parm =~ s/^const\s//;  # Remove const if present
+	#$parm =~ s/^const\s//;  # Remove const if present
+	# In MPI-2, we needed to remove const in a few places.
+	# In MPI-3, we need to preserve the const, since these values
+	# are used to perform the necessary casts
 	$parm =~ s/^\s*//;
 	$parm =~ s/\s*$//;
+	# First, strip off (but remember!) any qualifiers.  These
+	# could be const or restrict, though for MPI, only restrict 
+	# is used.
+	if ($parm =~ /^(const\s+)(.*)/) {
+	    $qualifier = $1;
+	    $parm     = $2;
+	}
 	# Handle parameters with parameter names
-	# First if handles "int foo", second handles "int *foo"
+	# Handle these cases:
+	#    <type> name
+	#    <type> *name
+	#    <type> name[]
 	if ( ($parm =~ /^([A-Za-z0-9_]+)\s+[A-Za-z0-9_]+$/) ) {
 	    $parm = $1;
 	}
 	elsif ( ($parm =~ /^([A-Za-z0-9_]+\s*\*)\s*[A-Za-z0-9_]+$/) ) {
 	    $parm = $1;
 	}
+	elsif ( ($parm =~ /^([A-Za-z0-9_]+\s)\s*[A-Za-z0-9_]+\s*\[\]$/) ) {
+	    $parm = "$1 []";
+	}
+	# Restore qualifier, if any
+	$parm = $qualifier.$parm;
+        print "$saveparm -> $parm\n" if $gDebug;
 	$newargs .= "$comma$parm";
 	$comma = ",";
     }
@@ -3250,6 +3273,7 @@ sub ReadInterface {
 	    else {
 		# Clear variables
 		$clean_up = "";
+   		print "$routine_name:\n" if $gDebug;
 		&clean_args;
 		$mpi_routine{$routine_name} = $args;
 		print "Saving $routine_name ( $args )\n" if $gDebug;
@@ -3667,8 +3691,13 @@ sub PrintRoutineDefNoStatus {
     ($cArgs, $Croutine) = &GetCArgs( $class, $routine );
 
     $SavecArgs = $cArgs;
+    # Also remove MPI_Status [] (Waitall/some; Testall/some)
+    $cArgs =~ s/,\s*MPI_Status\s*\[\]//g;
+    $cArgs =~ s/\s*MPI_Status\s*\[\]\s*,//g;
+    # Remove MPI_Status and MPI_Status *
     $cArgs =~ s/,\s*MPI_Status\s*\*?//g;
     $cArgs =~ s/\s*MPI_Status\s*\*?\s*,//g;
+    
 
     &PrintMethodDef( $OUTFD, $class, $routine, $arginfo, $cArgs );    
     
@@ -4066,7 +4095,7 @@ sub const_in_methoddecl {
 	}
 	else {
 	    print $OUTFD "const $lparm v$count";
-	    print "const added to $lparm, argument $count for $routine(class $class)\n" if $debug;
+	    print "const added to $lparm, argument $count for $routine(class $class)\n" if $gDebug;
 	}
     }
 }
@@ -4074,7 +4103,7 @@ sub const_in_methoddecl {
 sub const_in_call {
     my $count = $_[0];
     my $lparm = $parm;
-    if ($lparm =~ /(\w*)\s*\[\]/) {
+    if ($lparm =~ /^\s*([\w\s]+)\s*\[\]/) {
 	my $basetype = $1;
 	# ISO C++ forbids casting to an array type, but we can
 	# cast to a pointer

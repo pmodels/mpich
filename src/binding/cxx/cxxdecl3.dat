@@ -13,7 +13,7 @@ dtype-Create_subarray Datatype (, ,in:const ,in:const ,in:const , ,return) const
 dtype-Get_extent void (, , ) const
 dtype-Get_true_extent void (, , ) const
 dtype-Pack_external void (,in:const ,in:const , , , , ) const
-dtype-Pack_external_size Aint (,in:const , ,return) const
+dtype-Pack_external_size Aint (, , ,return) const
 dtype-Create_resized Datatype (,in:const ,in:const ,return) const
 dtype-Unpack_external void (,in:const ,in:const , , , , ) const
 # Errhandler creation requires special routines
