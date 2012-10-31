@@ -594,12 +594,21 @@ print MPIFD "!     -*- Mode: Fortran; -*-
 # Pick one of these two:
 $BINDACCESS="";
 $BINDDEF = "SEQUENCE";
+# PUBLIC and PRIVATE were not present in the original F90; at least one
+# compiler, the Absoft Fortran (from 2009) installed at ANL will not
+# accept these qualifiers.  Thus, we make these optional (but disabled
+# by default).
+# Use these to describe which fields are accessible to the user.
+# Define these as empty to with early Fortran 90/95 compilers
+#$PUBLICVAR = ", PUBLIC";
+#$PRIVATEVAR = ", PRIVATE";
+#
 #$BINDACCESS = ", BIND(C)";
 #$BINDDEF ="";
 print MPIFD "        TYPE$BINDACCESS :: MPI_Status
            $BINDDEF
-           INTEGER, PRIVATE :: count, cancelled
-           INTEGER, PUBLIC :: MPI_SOURCE, MPI_TAG, MPI_ERROR
+           INTEGER$PRIVATEVAR :: count, cancelled
+           INTEGER$PUBLICVAR :: MPI_SOURCE, MPI_TAG, MPI_ERROR
         END TYPE MPI_Status\n";
 
 %handles = ( 'comm' => 'Comm', 'datatype' => 'Datatype', 
