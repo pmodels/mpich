@@ -1385,10 +1385,6 @@ sub print_args {
 	    $parm =~ s/restrict\s+//;
 	    $arg_qualifiers[$count] .= "restrict ";
 	}
-	if ($parm =~ /^const\s+/) {
-	    $parm =~ s/const\s+//g;
-	    $arg_qualifiers[$count] .= "const ";
-	}
 	# Remove arg names from array types
 	if ($parm =~ /(\w+)\s+(\w+)\s*\[\]/) {
 	    # Assume that this is <type> <name>[]; convert to
@@ -1565,7 +1561,6 @@ sub print_call_args {
     }
 
     foreach $parm (@parms) {
-	$parm =~ s/^const\s+//;  # Remove const if present
 	$parm =~ s/^const\s+//;  # Remove const if present
 	# Remove variable name if present in an array arg
 	if ($parm =~ /(.*)\s+(\w+)\[\]/) {
