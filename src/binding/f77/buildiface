@@ -188,12 +188,14 @@ foreach $_ (@ARGV) {
 	   'MPI_Win*' => 'MPI_Fint *', 
 	   'MPI_Group*' => 'MPI_Fint *',
 	   'MPI_Request*' => 'MPI_Fint *',
+	   'MPI_Request[]' => 'MPI_Fint',
 	   'MPI_Message*' => 'MPI_Fint *',
 	   'MPI_Aint*' => 'MPI_Fint *',   # Should be MPIR_FAint
 	   'int *' => 'MPI_Fint *',
 	   'int*' => 'MPI_Fint *',         # Catch missing space
 	   'MPI_Op*' => 'MPI_Fint *',
 	   'MPI_Status*' => 'MPI_Fint *',
+	   'MPI_Status[]' => 'MPI_Fint',
 	   'MPI_Info*' => 'MPI_Fint *',
 	   'MPI_Info[]' => 'MPI_Fint',
 	   'MPI_Errhandler*' => 'MPI_Fint *',
@@ -234,6 +236,7 @@ foreach $_ (@ARGV) {
 
 %argsneedcast = ( 'MPI_Request *' => '(MPI_Request *)(ARG)',
 		  'MPI_Status *'  => '(MPI_Status *)(ARG)',
+		  'MPI_Status []' => '(MPI_Status [])(ARG)',
 		  'MPI_File' => 'MPI_File_f2c(ARG)',
 		  'MPI_Comm' => '(MPI_Comm)(ARG)',
 		  'MPI_Comm *' => '(MPI_Comm *)(ARG)',
