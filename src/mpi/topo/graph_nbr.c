@@ -30,7 +30,7 @@
 #define FUNCNAME MPIR_Graph_neighbors_impl
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPIR_Graph_neighbors_impl(MPID_Comm *comm_ptr, int rank, int maxneighbors, int *neighbors)
+int MPIR_Graph_neighbors_impl(MPID_Comm *comm_ptr, int rank, int maxneighbors, int neighbors[])
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Topology *graph_ptr;
@@ -88,7 +88,7 @@ Output Parameters:
 .N MPI_ERR_RANK
 @*/
 int MPI_Graph_neighbors(MPI_Comm comm, int rank, int maxneighbors, 
-			int *neighbors)
+			int neighbors[])
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_Comm *comm_ptr = NULL;

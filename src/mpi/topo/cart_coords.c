@@ -53,7 +53,7 @@ Output Parameter:
 .N MPI_ERR_DIMS
 .N MPI_ERR_ARG
 @*/
-int MPI_Cart_coords(MPI_Comm comm, int rank, int maxdims, int *coords)
+int MPI_Cart_coords(MPI_Comm comm, int rank, int maxdims, int coords[])
 {
     static const char FCNAME[] = "MPI_Cart_coords";
     int mpi_errno = MPI_SUCCESS;

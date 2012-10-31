@@ -210,7 +210,7 @@ PMPI_LOCAL int MPIR_ChooseFactors( int nfactors, Factors factors[],
     return 0;
 }
 
-int MPIR_Dims_create( int nnodes, int ndims, int *dims )
+int MPIR_Dims_create( int nnodes, int ndims, int dims[] )
 {
     Factors factors[MAX_FACTORS];
     int chosen[MAX_DIMS];
@@ -381,7 +381,7 @@ int MPIR_Dims_create( int nnodes, int ndims, int *dims )
 .N Errors
 .N MPI_SUCCESS
 @*/
-int MPI_Dims_create(int nnodes, int ndims, int *dims)
+int MPI_Dims_create(int nnodes, int ndims, int dims[])
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_DIMS_CREATE);

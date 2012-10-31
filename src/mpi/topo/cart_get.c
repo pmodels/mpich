@@ -56,8 +56,8 @@ Output Parameters:
 .N MPI_ERR_COMM
 .N MPI_ERR_ARG
 @*/
-int MPI_Cart_get(MPI_Comm comm, int maxdims, int *dims, int *periods, 
-                 int *coords)
+int MPI_Cart_get(MPI_Comm comm, int maxdims, int dims[], int periods[],
+                 int coords[])
 {
     static const char FCNAME[] = "MPI_Cart_get";
     int mpi_errno = MPI_SUCCESS;

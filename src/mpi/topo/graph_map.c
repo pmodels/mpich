@@ -99,7 +99,7 @@ calling process does not belong to graph (integer)
 .N MPI_ERR_COMM
 .N MPI_ERR_ARG
 @*/
-int MPI_Graph_map(MPI_Comm comm_old, int nnodes, const int *indx, const int *edges,
+int MPI_Graph_map(MPI_Comm comm_old, int nnodes, const int indx[], const int edges[],
                   int *newrank)
 {
     int mpi_errno = MPI_SUCCESS;
