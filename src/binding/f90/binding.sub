@@ -89,8 +89,18 @@ sub clean_args {
 	# Remove any leading or trailing spaces
 	$parm =~ s/^\s*//;
 	$parm =~ s/\s*$//;
+	# Remove and remember qualifiers
+	$qualifier = "";
+	if ($parm =~ /^const\s+(.*)/) {
+	    $qualifier = "const ";
+	    $parm = $1;
+	}
+	# Question: What to do with the qualifier?
 	# Handle parameters with parameter names
-	# First if handles "int foo", second handles "int *foo"
+	# 1. "int foo"
+        # 2. "int *foo"
+        # 3. "int foo[]"
+        # 4. "int *foo[]"
 	if ( ($parm =~ /^([A-Za-z0-9_]+)\s+[A-Za-z0-9_]+$/) ) {
 	    $parm = $1;
 	}

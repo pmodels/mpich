@@ -116,6 +116,7 @@ $outfile_prefix = "mpi";
 	     'MPI_Info*' => 'INTEGER', # Never an array of info
 	     'MPI_Info[]' => 'INTEGER %name%(*)',
 	     'char*' => 'CHARACTER (LEN=*)',
+	     'char[]' => 'CHARACTER (LEN=*)',
 	     'char*[]' => 'CHARACTER (LEN=*) %name%(*)',
 	     'char**[]' => 'CHARACTER (LEN=*) %name%(v0,*)',  #special case
 				# from Comm_Spawn_multiple
@@ -602,6 +603,10 @@ $BINDDEF = "SEQUENCE";
 # Define these as empty to with early Fortran 90/95 compilers
 #$PUBLICVAR = ", PUBLIC";
 #$PRIVATEVAR = ", PRIVATE";
+# Use the following for compilers that do not support pubilc and private
+# qualifiers on declarations in derived types.
+$PUBLICVAR = "";
+$PRIVATEVAR = "";
 #
 #$BINDACCESS = ", BIND(C)";
 #$BINDDEF ="";

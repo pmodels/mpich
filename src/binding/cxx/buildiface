@@ -103,7 +103,7 @@ $routine_list = "";
 foreach $_ (@ARGV) {
     if (/--?feature=(.*)/) {
 	foreach $feature (split(/:/,$1)) {
-	    print STDERR "Processing feature $feature\n" if $gDebug;
+	    print "Processing feature $feature\n" if $gDebug;
 	    # Feature values are foo=on,off
 	    ($name,$value) = split(/=/,$feature);
 	    if ($value eq "on") { $value = 1; } 
@@ -287,10 +287,11 @@ $specialReturnType{"cart-Dup"} = "Cartcomm";
 $specialReturnType{"cart-Sub"} = "Cartcomm";
 $specialReturnType{"cart-Split"} = "Cartcomm";
 
+# Create_struct, Pack, and Unpack are handled through definitions elsewhere
 %class_mpi1dtype = ( 'Create_contiguous' => 'MPI_Datatype',
 		     'Create_vector' => 'MPI_Datatype', 
 		     'Create_indexed' => 'MPI_Datatype', 
- 		     'Create_struct' => 'static:5:4',
+# 		     'Create_struct' => 'static:5:4',
 		     'Get_size' => 2, 
 		     'Commit' => 0,
 		     'Free' => 0, 
@@ -1148,7 +1149,7 @@ typedef int MPI_File;\
         $mpiclass = "$mpilevel$class";
         $class_hash = "class_$mpiclass";
 	foreach $routine (keys(%$class_hash)) {
-	    print STDERR "processing $routine\n" if $gDebug;
+	    print "processing $routine\n" if $gDebug;
 
 	    # info describes the return parameter and any special
 	    # processing for this routine.
@@ -1423,7 +1424,7 @@ sub print_args {
     }
 
     # Special case: if the only parm is "void", remove it from the list
-    print STDERR "Nparms = $#parms, parms = " . join(',',@parms) . "\n" if $gDebug;
+    print "Nparms = $#parms, parms = " . join(',',@parms) . "\n" if $gDebug;
     if ($#parms == 0 && $parms[0] eq "void") {
 	&debugPrint( $routine, "Setting nparms to -1" );
 	$#parms = -1;
@@ -1477,6 +1478,12 @@ sub print_args {
 	    else { print $OUTFD ", "; }
 	    
 	    if ($parm =~/\[/) {
+		print "Processing array argument ...\n" if $gDebug;
+		$qualifier = "";
+		if ($parm =~ /^\s*const\s+(.*)/) {
+		    $qualifier = "const ";
+		    $parm = $1;
+		}
 		# Argument type is array, so we need to 
 		#  a) place parameter correctly
 		# Split into raw type and []
@@ -1497,7 +1504,7 @@ sub print_args {
 		if ($extrabracks =~ /(\[[\d\s]*\])/) {
 		    $otherdims = $1;
 		}
-		print $OUTFD "$basetype v$count\[\]$otherdims";
+		print $OUTFD "$qualifier$basetype v$count\[\]$otherdims";
 	    }
 	    elsif ($parm =~ /\.\.\./) {
 		# Special case for varargs.  Only ints!
@@ -1687,7 +1694,7 @@ sub clean_args {
 	$newargs .= "$comma$parm";
 	$comma = ",";
     }
-    print STDERR "$newargs\n" if $gDebug;
+    print "$newargs\n" if $gDebug;
     $args = $newargs;
 }
 
@@ -2118,7 +2125,7 @@ void operator delete[](void *p) {
      print $OUTFD "\
     }\n";
 
-    print $OUTFD "Aint Get_address( void *ptr )
+    print $OUTFD "Aint Get_address( const void *ptr )
     {
     MPI_Aint a;\n";
      &printCoverageStart( $OUTFD, "Get_address", 2 );
@@ -3841,8 +3848,8 @@ sub GetCArgs {
     $mpi_routine_name = $routine;
     if ($args eq "") {
 	# Check for an alternate name
-	print STDERR "Checking for $class-$routine\n" if $gDebug;
-	print STDERR "Trial = $trial_name\n" if $gDebug;
+	print "Checking for $class-$routine\n" if $gDebug;
+	print "Trial = $trial_name\n" if $gDebug;
 	if (defined($mpi_routine{$trial_name})) {
 	    $mpi_routine_name = $trial_name;
 	    $args = $mpi_routine{$mpi_routine_name};
@@ -4786,7 +4793,7 @@ sub ReadFuncSpec {
 		    $argnum ++;
 		}
 		else {
-		    print STDERR "I'm confused!\n";
+		    print STDERR "Input line from $filename not recognized: $line\n";
 		    last;
 		}
 	    }
@@ -4825,7 +4832,7 @@ sub ReadFuncSpec {
 		    }
 		    my $oldval = $$classVar{$routine};
 		    if ($oldval ne $newval) {
-			print STDERR "Changing $classVar\{$routine\} from $oldval to $newval\n" if $gDebug;
+			print "Changing $classVar\{$routine\} from $oldval to $newval\n" if $gDebug;
 		    }
 		}
 		$$classVar{$routine} = $funcops . $specialPos;

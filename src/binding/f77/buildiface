@@ -1413,7 +1413,7 @@ sub print_args {
 		print $OUTFD "$argsep$parm v$count";
 	    }
 	}
-	elsif ($parm =~ /char\s*\*/) {
+	elsif ($parm =~ /char\s*\*/ || $parm =~ /char\s*\[\s*\]/) {
 	    # char's go out at char *v FORT_MIXED_LEN(d) 
 	    # and FORT_END_LEN(d) at the end
 	    # (even if an array, because at the Fortran level, it
