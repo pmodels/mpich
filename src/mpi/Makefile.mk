@@ -12,6 +12,7 @@ include $(top_srcdir)/src/mpi/datatype/Makefile.mk
 include $(top_srcdir)/src/mpi/debugger/Makefile.mk
 include $(top_srcdir)/src/mpi/errhan/Makefile.mk
 include $(top_srcdir)/src/mpi/group/Makefile.mk
+include $(top_srcdir)/src/mpi/info/Makefile.mk
 include $(top_srcdir)/src/mpi/init/Makefile.mk
 include $(top_srcdir)/src/mpi/misc/Makefile.mk
 include $(top_srcdir)/src/mpi/pt2pt/Makefile.mk

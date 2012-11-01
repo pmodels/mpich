@@ -6,7 +6,6 @@
 ##
 
 include $(top_srcdir)/src/util/dbg/Makefile.mk
-include $(top_srcdir)/src/util/info/Makefile.mk
 include $(top_srcdir)/src/util/instrm/Makefile.mk
 include $(top_srcdir)/src/util/logging/Makefile.mk
 include $(top_srcdir)/src/util/mem/Makefile.mk
