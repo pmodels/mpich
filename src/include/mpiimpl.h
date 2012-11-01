@@ -1976,50 +1976,95 @@ typedef struct MPID_Collops {
 
     /* MPI-3 nonblocking collectives */
     int (*Ibarrier)(MPID_Comm *comm_ptr, MPID_Sched_t s);
+    int (*Ibarrier_optimized)(MPID_Comm *comm_ptr, MPID_Request **request);
     int (*Ibcast)(void *buffer, int count, MPI_Datatype datatype, int root,
                   MPID_Comm *comm_ptr, MPID_Sched_t s);
+    int (*Ibcast_optimized)(void *buffer, int count, MPI_Datatype datatype, int root,
+                            MPID_Comm *comm_ptr, MPID_Request **request);
     int (*Igather)(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf,
                    int recvcount, MPI_Datatype recvtype, int root, MPID_Comm *comm_ptr,
                    MPID_Sched_t s);
+    int (*Igather_optimized)(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf,
+                             int recvcount, MPI_Datatype recvtype, int root, MPID_Comm *comm_ptr,
+                             MPID_Request **request);
     int (*Igatherv)(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf,
                     const int *recvcounts, const int *displs, MPI_Datatype recvtype, int root,
                     MPID_Comm *comm_ptr, MPID_Sched_t s);
+    int (*Igatherv_optimized)(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf,
+                              const int *recvcounts, const int *displs, MPI_Datatype recvtype, int root,
+                              MPID_Comm *comm_ptr, MPID_Request **request);
     int (*Iscatter)(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf,
                     int recvcount, MPI_Datatype recvtype, int root, MPID_Comm *comm_ptr,
                     MPID_Sched_t s);
+    int (*Iscatter_optimized)(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf,
+                              int recvcount, MPI_Datatype recvtype, int root, MPID_Comm *comm_ptr,
+                              MPID_Request **request);
     int (*Iscatterv)(const void *sendbuf, const int *sendcounts, const int *displs,
                      MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype,
                      int root, MPID_Comm *comm_ptr, MPID_Sched_t s);
+    int (*Iscatterv_optimized)(const void *sendbuf, const int *sendcounts, const int *displs,
+                               MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype,
+                               int root, MPID_Comm *comm_ptr, MPID_Request **request);
     int (*Iallgather)(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf,
                       int recvcount, MPI_Datatype recvtype, MPID_Comm *comm_ptr,
                       MPID_Sched_t s);
+    int (*Iallgather_optimized)(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf,
+                                int recvcount, MPI_Datatype recvtype, MPID_Comm *comm_ptr,
+                                MPID_Request **request);
     int (*Iallgatherv)(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf,
                        const int *recvcounts, const int *displs, MPI_Datatype recvtype,
                        MPID_Comm *comm_ptr, MPID_Sched_t s);
+    int (*Iallgatherv_optimized)(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf,
+                                 const int *recvcounts, const int *displs, MPI_Datatype recvtype,
+                                 MPID_Comm *comm_ptr, MPID_Request ** request);
     int (*Ialltoall)(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf,
                      int recvcount, MPI_Datatype recvtype, MPID_Comm *comm_ptr,
                      MPID_Sched_t s);
+    int (*Ialltoall_optimized)(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf,
+                               int recvcount, MPI_Datatype recvtype, MPID_Comm *comm_ptr,
+                               MPID_Request **request);
     int (*Ialltoallv)(const void *sendbuf, const int *sendcounts, const int *sdispls,
                       MPI_Datatype sendtype, void *recvbuf, const int *recvcounts,
                       const int *rdispls, MPI_Datatype recvtype, MPID_Comm *comm_ptr,
                       MPID_Sched_t s);
+    int (*Ialltoallv_optimized)(const void *sendbuf, const int *sendcounts, const int *sdispls,
+                                MPI_Datatype sendtype, void *recvbuf, const int *recvcounts,
+                                const int *rdispls, MPI_Datatype recvtype, MPID_Comm *comm_ptr,
+                                MPID_Request **request);
     int (*Ialltoallw)(const void *sendbuf, const int *sendcounts, const int *sdispls,
                       const MPI_Datatype *sendtypes, void *recvbuf, const int *recvcounts,
                       const int *rdispls, const MPI_Datatype *recvtypes,
                       MPID_Comm *comm_ptr, MPID_Sched_t s);
+    int (*Ialltoallw_optimized)(const void *sendbuf, const int *sendcounts, const int *sdispls,
+                                const MPI_Datatype *sendtypes, void *recvbuf, const int *recvcounts,
+                                const int *rdispls, const MPI_Datatype *recvtypes,
+                                MPID_Comm *comm_ptr, MPID_Request **request);
     int (*Ireduce)(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op,
                    int root, MPID_Comm *comm_ptr, MPID_Sched_t s);
+    int (*Ireduce_optimized)(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op,
+                   int root, MPID_Comm *comm_ptr, MPID_Request **request);
     int (*Iallreduce)(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
                       MPI_Op op, MPID_Comm *comm_ptr, MPID_Sched_t s);
+    int (*Iallreduce_optimized)(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
+                                MPI_Op op, MPID_Comm *comm_ptr, MPID_Request **request);
     int (*Ireduce_scatter)(const void *sendbuf, void *recvbuf, const int *recvcounts,
                            MPI_Datatype datatype, MPI_Op op, MPID_Comm *comm_ptr, MPID_Sched_t s);
+    int (*Ireduce_scatter_optimized)(const void *sendbuf, void *recvbuf, const int *recvcounts,
+                                     MPI_Datatype datatype, MPI_Op op, MPID_Comm *comm_ptr, MPID_Request **request);
     int (*Ireduce_scatter_block)(const void *sendbuf, void *recvbuf, int recvcount,
                                  MPI_Datatype datatype, MPI_Op op, MPID_Comm *comm_ptr,
                                  MPID_Sched_t s);
+    int (*Ireduce_scatter_block_optimized)(const void *sendbuf, void *recvbuf, int recvcount,
+                                           MPI_Datatype datatype, MPI_Op op, MPID_Comm *comm_ptr,
+                                           MPID_Request **request);
     int (*Iscan)(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op,
                  MPID_Comm *comm_ptr, MPID_Sched_t s);
+    int (*Iscan_optimized)(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op,
+                           MPID_Comm *comm_ptr, MPID_Request **request);
     int (*Iexscan)(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op,
                    MPID_Comm *comm_ptr, MPID_Sched_t s);
+    int (*Iexscan_optimized)(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op,
+                             MPID_Comm *comm_ptr, MPID_Request **request);
 
     struct MPID_Collops *prev_coll_fns; /* when overriding this table, set this to point to the old table */
 

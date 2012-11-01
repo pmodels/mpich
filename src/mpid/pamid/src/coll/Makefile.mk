@@ -33,7 +33,10 @@ include $(top_srcdir)/src/mpid/pamid/src/coll/alltoallv/Makefile.mk
 include $(top_srcdir)/src/mpid/pamid/src/coll/gatherv/Makefile.mk
 include $(top_srcdir)/src/mpid/pamid/src/coll/scan/Makefile.mk
 include $(top_srcdir)/src/mpid/pamid/src/coll/reduce/Makefile.mk
-
+include $(top_srcdir)/src/mpid/pamid/src/coll/alltoallw/Makefile.mk
+include $(top_srcdir)/src/mpid/pamid/src/coll/exscan/Makefile.mk
+include $(top_srcdir)/src/mpid/pamid/src/coll/ired_scat_block/Makefile.mk
+include $(top_srcdir)/src/mpid/pamid/src/coll/ired_scat/Makefile.mk
 
 lib_lib@MPILIBNAME@_la_SOURCES +=               \
     src/mpid/pamid/src/coll/coll_utils.c

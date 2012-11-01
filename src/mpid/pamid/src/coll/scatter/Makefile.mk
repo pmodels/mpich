@@ -22,7 +22,8 @@ if BUILD_PAMID
 
 
 lib_lib@MPILIBNAME@_la_SOURCES +=                                    \
-    src/mpid/pamid/src/coll/scatter/mpido_scatter.c
+    src/mpid/pamid/src/coll/scatter/mpido_scatter.c                  \
+    src/mpid/pamid/src/coll/scatter/mpido_iscatter.c
 
 
 endif BUILD_PAMID

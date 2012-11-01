@@ -690,6 +690,49 @@ void MPIDI_Comm_coll_query(MPID_Comm *comm)
    comm->coll_fns->Scan         = MPIDO_Scan;
    comm->coll_fns->Exscan       = MPIDO_Exscan;
 
+   /* MPI-3 Support, no optimized collectives hooked in yet */
+   comm->coll_fns->Ibarrier              = MPIR_Ibarrier_intra;
+   comm->coll_fns->Ibcast                = MPIR_Ibcast_intra;
+   comm->coll_fns->Igather               = MPIR_Igather_intra;
+   comm->coll_fns->Igatherv              = MPIR_Igatherv;
+   comm->coll_fns->Iscatter              = MPIR_Iscatter_intra;
+   comm->coll_fns->Iscatterv             = MPIR_Iscatterv;
+   comm->coll_fns->Iallgather            = MPIR_Iallgather_intra;
+   comm->coll_fns->Iallgatherv           = MPIR_Iallgatherv_intra;
+   comm->coll_fns->Ialltoall             = MPIR_Ialltoall_intra;
+   comm->coll_fns->Ialltoallv            = MPIR_Ialltoallv_intra;
+   comm->coll_fns->Ialltoallw            = MPIR_Ialltoallw_intra;
+   comm->coll_fns->Iallreduce            = MPIR_Iallreduce_intra;
+   comm->coll_fns->Ireduce               = MPIR_Ireduce_intra;
+   comm->coll_fns->Ireduce_scatter       = MPIR_Ireduce_scatter_intra;
+   comm->coll_fns->Ireduce_scatter_block = MPIR_Ireduce_scatter_block_intra;
+   comm->coll_fns->Iscan                 = MPIR_Iscan_rec_dbl;
+   comm->coll_fns->Iexscan               = MPIR_Iexscan;
+   comm->coll_fns->Neighbor_allgather    = MPIR_Neighbor_allgather_default;
+   comm->coll_fns->Neighbor_allgatherv   = MPIR_Neighbor_allgatherv_default;
+   comm->coll_fns->Neighbor_alltoall     = MPIR_Neighbor_alltoall_default;
+   comm->coll_fns->Neighbor_alltoallv    = MPIR_Neighbor_alltoallv_default;
+   comm->coll_fns->Neighbor_alltoallw    = MPIR_Neighbor_alltoallw_default;
+
+   /* MPI-3 Support, optimized collectives hooked in */
+   comm->coll_fns->Ibarrier_optimized              = MPIDO_Ibarrier;
+   comm->coll_fns->Ibcast_optimized                = MPIDO_Ibcast;
+   comm->coll_fns->Iallgather_optimized            = MPIDO_Iallgather;
+   comm->coll_fns->Iallgatherv_optimized           = MPIDO_Iallgatherv;
+   comm->coll_fns->Iallreduce_optimized            = MPIDO_Iallreduce;
+   comm->coll_fns->Ialltoall_optimized             = MPIDO_Ialltoall;
+   comm->coll_fns->Ialltoallv_optimized            = MPIDO_Ialltoallv;
+   comm->coll_fns->Ialltoallw_optimized            = MPIDO_Ialltoallw;
+   comm->coll_fns->Iexscan_optimized               = MPIDO_Iexscan;
+   comm->coll_fns->Igather_optimized               = MPIDO_Igather;
+   comm->coll_fns->Igatherv_optimized              = MPIDO_Igatherv;
+   comm->coll_fns->Ireduce_scatter_block_optimized = MPIDO_Ireduce_scatter_block;
+   comm->coll_fns->Ireduce_scatter_optimized       = MPIDO_Ireduce_scatter;
+   comm->coll_fns->Ireduce_optimized               = MPIDO_Ireduce;
+   comm->coll_fns->Iscan_optimized                 = MPIDO_Iscan;
+   comm->coll_fns->Iscatter_optimized              = MPIDO_Iscatter;
+   comm->coll_fns->Iscatterv_optimized             = MPIDO_Iscatterv;
+
    TRACE_ERR("MPIDI_Comm_coll_query exit\n");
 }
 

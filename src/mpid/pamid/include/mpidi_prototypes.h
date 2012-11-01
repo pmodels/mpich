@@ -238,20 +238,27 @@ void MPIDI_Coll_register    (void);
 int MPIDO_Bcast(void *buffer, int count, MPI_Datatype dt, int root, MPID_Comm *comm_ptr, int *mpierrno);
 int MPIDO_Bcast_simple(void *buffer, int count, MPI_Datatype dt, int root, MPID_Comm *comm_ptr, int *mpierrno);
 int MPIDO_CSWrapper_bcast(pami_xfer_t *bcast, void *comm);
+int MPIDO_Ibcast(void *buffer, int count, MPI_Datatype datatype, int root, MPID_Comm *comm_ptr, MPID_Request **request);
 int MPIDO_Barrier(MPID_Comm *comm_ptr, int *mpierrno);
 int MPIDO_Barrier_simple(MPID_Comm *comm_ptr, int *mpierrno);
 int MPIDO_CSWrapper_barrier(pami_xfer_t *barrier, void *comm);
+int MPIDO_Ibarrier(MPID_Comm *comm_ptr, MPID_Request **request);
 
 int MPIDO_Allreduce(const void *sbuffer, void *rbuffer, int count,
                     MPI_Datatype datatype, MPI_Op op, MPID_Comm *comm_ptr, int *mpierrno);
 int MPIDO_Allreduce_simple(const void *sbuffer, void *rbuffer, int count,
                     MPI_Datatype datatype, MPI_Op op, MPID_Comm *comm_ptr, int *mpierrno);
 int MPIDO_CSWrapper_allreduce(pami_xfer_t *allreduce, void *comm);
+int MPIDO_Iallreduce(const void *sbuffer, void *rbuffer, int count,
+                     MPI_Datatype datatype, MPI_Op op, MPID_Comm *comm_ptr,
+                     MPID_Request ** request);
 int MPIDO_Reduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, 
                  MPI_Op op, int root, MPID_Comm *comm_ptr, int *mpierrno);
 int MPIDO_Reduce_simple(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, 
                  MPI_Op op, int root, MPID_Comm *comm_ptr, int *mpierrno);
 int MPIDO_CSWrapper_reduce(pami_xfer_t *reduce, void *comm);
+int MPIDO_Ireduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
+                  MPI_Op op, int root, MPID_Comm *comm_ptr, MPID_Request **request);
 int MPIDO_Allgather(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                     void *recvbuf, int recvcount, MPI_Datatype recvtype,
                     MPID_Comm *comm_ptr, int *mpierrno);
@@ -259,6 +266,9 @@ int MPIDO_Allgather_simple(const void *sendbuf, int sendcount, MPI_Datatype send
                     void *recvbuf, int recvcount, MPI_Datatype recvtype,
                     MPID_Comm *comm_ptr, int *mpierrno);
 int MPIDO_CSWrapper_allgather(pami_xfer_t *allgather, void *comm);
+int MPIDO_Iallgather(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf,
+                     int recvcount, MPI_Datatype recvtype, MPID_Comm *comm_ptr,
+                     MPID_Request **request);
 
 int MPIDO_Allgatherv(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                      void *recvbuf, const int *recvcounts, const int *displs,
@@ -279,6 +289,9 @@ int MPIDO_Gather_simple(const void *sendbuf, int sendcount, MPI_Datatype sendtyp
                  void *recvbuf, int recvcount, MPI_Datatype recvtype,
                  int root, MPID_Comm * comm_ptr, int *mpierrno);
 int MPIDO_CSWrapper_gather(pami_xfer_t *gather, void *comm);
+int MPIDO_Igather(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+                  void *recvbuf, int recvcount, MPI_Datatype recvtype,
+                  int root, MPID_Comm * comm_ptr, MPID_Request **request);
 
 int MPIDO_Gatherv(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                   void *recvbuf, const int *recvcounts, const int *displs, MPI_Datatype recvtype,
@@ -287,17 +300,24 @@ int MPIDO_Gatherv_simple(const void *sendbuf, int sendcount, MPI_Datatype sendty
                   void *recvbuf, const int *recvcounts, const int *displs, MPI_Datatype recvtype,
                   int root, MPID_Comm * comm_ptr, int *mpierrno);
 int MPIDO_CSWrapper_gatherv(pami_xfer_t *gatherv, void *comm);
+int MPIDO_Igatherv(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+                   void *recvbuf, const int *recvcounts, const int *displs, MPI_Datatype recvtype,
+                   int root, MPID_Comm * comm_ptr, MPID_Request **request);
 
 int MPIDO_Scan(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
                MPI_Op op, MPID_Comm * comm_ptr, int *mpierrno);
 int MPIDO_Scan_simple(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
                MPI_Op op, MPID_Comm * comm_ptr, int *mpierrno);
 int MPIDO_CSWrapper_scan(pami_xfer_t *scan, void *comm);
+int MPIDO_Iscan(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
+               MPI_Op op, MPID_Comm * comm_ptr, MPID_Request **request);
 
 int MPIDO_Exscan(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
                MPI_Op op, MPID_Comm * comm_ptr, int *mpierrno);
 int MPIDO_Exscan_simple(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
                MPI_Op op, MPID_Comm * comm_ptr, int *mpierrno);
+int MPIDO_Iexscan(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
+                  MPI_Op op, MPID_Comm * comm_ptr, MPID_Request **request);
 
 int MPIDO_Scatter(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                   void *recvbuf, int recvcount, MPI_Datatype recvtype,
@@ -306,6 +326,9 @@ int MPIDO_Scatter_simple(const void *sendbuf, int sendcount, MPI_Datatype sendty
                   void *recvbuf, int recvcount, MPI_Datatype recvtype,
                   int root, MPID_Comm * comm_ptr, int *mpierrno);
 int MPIDO_CSWrapper_scatter(pami_xfer_t *scatter, void *comm);
+int MPIDO_Iscatter(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+                   void *recvbuf, int recvcount, MPI_Datatype recvtype,
+                   int root, MPID_Comm * comm_ptr, MPID_Request **request);
 
 int MPIDO_Scatterv(const void *sendbuf, const int *sendcounts, const int *displs,
                    MPI_Datatype sendtype,
@@ -316,6 +339,10 @@ int MPIDO_Scatterv_simple(const void *sendbuf, const int *sendcounts, const int 
                    void *recvbuf, int recvcount, MPI_Datatype recvtype,
                    int root, MPID_Comm * comm_ptr, int *mpierrno);
 int MPIDO_CSWrapper_scatterv(pami_xfer_t *scatterv, void *comm);
+int MPIDO_Iscatterv(const void *sendbuf, const int *sendcounts, const int *displs,
+                    MPI_Datatype sendtype,
+                    void *recvbuf, int recvcount, MPI_Datatype recvtype,
+                    int root, MPID_Comm * comm_ptr, MPID_Request **request);
 
 int MPIDO_Alltoallv(const void *sendbuf, const int *sendcounts, const int *senddispls,
                     MPI_Datatype sendtype,
@@ -328,6 +355,11 @@ int MPIDO_Alltoallv_simple(const void *sendbuf, const int *sendcounts, const int
                     MPI_Datatype recvtype,
                     MPID_Comm *comm_ptr, int *mpierrno);
 int MPIDO_CSWrapper_alltoallv(pami_xfer_t *alltoallv, void *comm);
+int MPIDO_Ialltoallv(const void *sendbuf, const int *sendcounts, const int *senddispls,
+                     MPI_Datatype sendtype,
+                     void *recvbuf, const int *recvcounts, const int *recvdispls,
+                     MPI_Datatype recvtype,
+                     MPID_Comm *comm_ptr, MPID_Request **request);
 
 int MPIDO_Alltoall(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                    void *recvbuf, int recvcount, MPI_Datatype recvtype,
@@ -336,6 +368,22 @@ int MPIDO_Alltoall_simple(const void *sendbuf, int sendcount, MPI_Datatype sendt
                    void *recvbuf, int recvcount, MPI_Datatype recvtype,
                    MPID_Comm *comm_ptr, int *mpierrno);
 int MPIDO_CSWrapper_alltoall(pami_xfer_t *alltoall, void *comm);
+int MPIDO_Ialltoall(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+                    void *recvbuf, int recvcount, MPI_Datatype recvtype,
+                    MPID_Comm *comm_ptr, MPID_Request **request);
+
+int MPIDO_Ialltoallw(const void *sendbuf, const int *sendcounts, const int *senddispls,
+                     const MPI_Datatype * sendtypes,
+                     void *recvbuf, const int *recvcounts, const int *recvdispls,
+                     const MPI_Datatype * recvtypes,
+                     MPID_Comm *comm_ptr, MPID_Request **request);
+
+int MPIDO_Ireduce_scatter_block(const void *sendbuf, void *recvbuf, int recvcount,
+                                MPI_Datatype datatype, MPI_Op op, MPID_Comm *comm_ptr,
+                                MPID_Request **request);
+
+int MPIDO_Ireduce_scatter(const void *sendbuf, void *recvbuf, const int *recvcounts,
+                          MPI_Datatype datatype, MPI_Op op, MPID_Comm *comm_ptr, MPID_Request **request);
 
 int MPIDI_Datatype_to_pami(MPI_Datatype        dt,
                            pami_type_t        *pdt,

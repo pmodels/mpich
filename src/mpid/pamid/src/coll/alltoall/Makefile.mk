@@ -22,7 +22,8 @@ if BUILD_PAMID
 
 
 lib_lib@MPILIBNAME@_la_SOURCES +=                                    \
-    src/mpid/pamid/src/coll/alltoall/mpido_alltoall.c
+    src/mpid/pamid/src/coll/alltoall/mpido_alltoall.c                \
+    src/mpid/pamid/src/coll/alltoall/mpido_ialltoall.c
 
 
 endif BUILD_PAMID

@@ -22,7 +22,8 @@ if BUILD_PAMID
 
 
 lib_lib@MPILIBNAME@_la_SOURCES +=                                    \
-    src/mpid/pamid/src/coll/barrier/mpido_barrier.c
+    src/mpid/pamid/src/coll/barrier/mpido_barrier.c                  \
+    src/mpid/pamid/src/coll/barrier/mpido_ibarrier.c
 
 
 endif BUILD_PAMID
