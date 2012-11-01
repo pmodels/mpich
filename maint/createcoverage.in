@@ -189,15 +189,13 @@ done
 
 # Compute the appropriate device directories
 # Base directories
-ch3sock="src/mpid/common/sock/poll src/mpid/ch3/util/sock"
 case $device in
     ch3|ch3:nemesis)
-    # FIXME: Add the other directories
-    devsrcdirs="src/mpid/ch3/channels/nemesis/src src/mpid/ch3/src src/mpid/ch3/channels/nemesis/nemesis/netmod/tcp src/mpid/ch3/channels/nemesis/nemesis/src"
+    devsrcdirs="src/mpid/ch3/channels/nemesis/src src/mpid/ch3/src src/mpid/ch3/channels/nemesis/netmod/tcp src/mpid/ch3/channels/nemesis/netmod/none"
     extra_opts="$extra_opts --enable-nemesis-dbg-localoddeven"
     ;;
     ch3:sock)
-    devsrcdirs="src/mpid/ch3/channels/sock/src src/mpid/ch3/src $ch3sock"
+    devsrcdirs="src/mpid/ch3/channels/sock/src src/mpid/ch3/src src/mpid/common/sock/poll src/mpid/ch3/util/sock"
     ;;
     ch3*)
     devsrcdirs="src/mpid/ch3/src"
