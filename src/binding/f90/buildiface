@@ -626,7 +626,7 @@ foreach $handle (keys(%handles)) {
     $mpitype = $handles{$handle};
     print MPIFD "       TYPE$BINDACCESS :: MPI_$mpitype
           $BINDDEF
-          INTEGER, PUBLIC :: MPI_VAL
+          INTEGER$PUBLICVAR :: MPI_VAL
        END TYPE MPI_$mpitype\n";
 }
 
