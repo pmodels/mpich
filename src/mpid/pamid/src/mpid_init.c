@@ -111,6 +111,8 @@ MPIDI_Process_t  MPIDI_Process = {
     .subcomms            = 1,
     .select_colls        = 2,
   },
+
+  .mpir_nbc              = 0,
 };
 
 
@@ -597,7 +599,8 @@ MPIDI_PAMI_init(int* rank, int* size, int* threading)
 #endif
              "  optimized.collectives : %u\n"
              "  optimized.select_colls: %u\n"
-             "  optimized.subcomms    : %u\n",
+             "  optimized.subcomms    : %u\n"
+             "  mpir_nbc              : %u\n",
              MPIDI_Process.verbose,
              MPIDI_Process.statistics,
              MPIDI_Process.avail_contexts,
@@ -629,7 +632,8 @@ MPIDI_PAMI_init(int* rank, int* size, int* threading)
 #endif
              MPIDI_Process.optimized.collectives,
              MPIDI_Process.optimized.select_colls,
-             MPIDI_Process.optimized.subcomms);
+             MPIDI_Process.optimized.subcomms,
+             MPIDI_Process.mpir_nbc);
       switch (*threading)
         {
           case MPI_THREAD_MULTIPLE:
@@ -828,6 +832,7 @@ int MPID_Init(int * argc,
  */
 int MPID_InitCompleted()
 {
+  MPIDI_NBC_init();
   MPIDI_Progress_init();
   return MPI_SUCCESS;
 }

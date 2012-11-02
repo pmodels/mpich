@@ -847,6 +847,12 @@ MPIDI_Env_setup(int rank, int requested)
     ENV_Unsigned(names, &MPIDI_Process.shmem_pt2pt, 2, &found_deprecated_env_var, rank);
   }
 
+  /* Enable MPIR_* implementations of non-blocking collectives */
+  {
+    char* names[] = {"PAMID_MPIR_NBC", NULL};
+    ENV_Unsigned(names, &MPIDI_Process.mpir_nbc, 1, &found_deprecated_env_var, rank);
+  }
+
   /* Check for deprecated collectives environment variables. These variables are
    * used in src/mpid/pamid/src/comm/mpid_selectcolls.c */
   {

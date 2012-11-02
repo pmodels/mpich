@@ -130,6 +130,7 @@ typedef struct
     } context_post;
   } perobj;                  /**< This structure is only used in the 'perobj' mpich lock mode. */
 
+  unsigned mpir_nbc;         /**< Enable MPIR_* non-blocking collectives implementations. */
 } MPIDI_Process_t;
 
 

@@ -56,7 +56,8 @@ lib_lib@MPILIBNAME@_la_SOURCES +=               \
     src/mpid/pamid/src/mpid_mrecv.c             \
     src/mpid/pamid/src/mpid_mprobe.c            \
     src/mpid/pamid/src/mpid_imrecv.c            \
-    src/mpid/pamid/src/mpid_improbe.c
+    src/mpid/pamid/src/mpid_improbe.c           \
+    src/mpid/pamid/src/mpidi_nbc_sched.c
 
 endif BUILD_PAMID
 

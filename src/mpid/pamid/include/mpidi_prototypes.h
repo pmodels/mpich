@@ -263,4 +263,8 @@ int MPIDI_Datatype_to_pami(MPI_Datatype        dt,
 void MPIDI_Op_to_string(MPI_Op op, char *string);
 pami_result_t MPIDI_Pami_post_wrapper(pami_context_t context, void *cookie);
 
+
+void MPIDI_NBC_init ();
+
+
 #endif
