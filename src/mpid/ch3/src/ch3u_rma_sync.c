@@ -3680,7 +3680,7 @@ int MPIDI_CH3_PktHandler_FOP( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 
     req = MPID_Request_create();
     MPIU_ERR_CHKANDJUMP(req == NULL, mpi_errno, MPI_ERR_OTHER, "**nomemreq");
-    MPIU_Object_set_ref(req, 2);
+    MPIU_Object_set_ref(req, 1);
     *rreqp = NULL;
 
     req->dev.user_buf = NULL; /* will be set later */
