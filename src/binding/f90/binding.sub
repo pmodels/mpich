@@ -104,25 +104,25 @@ sub clean_args {
 	if ( ($parm =~ /^([A-Za-z0-9_]+)\s+[A-Za-z0-9_]+$/) ) {
 	    $parm = $1;
 	}
-	elsif ( ($parm =~ /([A-Za-z0-9_]+\s*\*)\s*[A-Za-z0-9_]+$/) ) {
+	elsif ( ($parm =~ /^([A-Za-z0-9_]+\s*\*)\s*[A-Za-z0-9_]+$/) ) {
 	    $parm = $1;
 	}
-	elsif ( ($parm =~ /([A-Za-z0-9_]+)\s*[A-Za-z0-9_]+(\[.*\])\s*$/) ) {
+	elsif ( ($parm =~ /^([A-Za-z0-9_]+)\s*[A-Za-z0-9_]+(\[.*\])\s*$/) ) {
 	    my $basename = $1;
 	    my $arrayarg = $2;
 	    #if ($arrayarg =~ /\[\s*\]/) { $arrayarg = "*"; }
 	    $parm = $basename . $arrayarg;
 	}
-	elsif ( ($parm =~ /([A-Za-z0-9_]+)\s\*?\s*[A-Za-z0-9_]+(\[.*\])\s*$/) ) {
+	elsif ( ($parm =~ /^([A-Za-z0-9_]+)\s(\*?\*?)\s*[A-Za-z0-9_]+(\[.*\])\s*$/) ) {
 	    my $basename = $1;
-	    my $arrayarg = $2;
+	    my $arrayarg = $2 . $3;
 	    #if ($arrayarg =~ /\[\s*\]/) { $arrayarg = "*"; }
 	    $parm = $basename . $arrayarg;
 	}
 	$newargs .= "$comma$parm";
 	$comma = ",";
     }
-    print STDERR "$newargs\n" if $gDebug;
+    print "$newargs\n" if $gDebug;
     $args = $newargs;
     return $args;
 }
