@@ -38,7 +38,7 @@
 
  Output Parameters:
 + size - size of the segment at the given rank
-- baseptr - base pointer in the calling process' address space of the shared
+- baseptr - base pointer in the calling process'' address space of the shared
   segment belonging to the target rank.
 
 .N ThreadSafe

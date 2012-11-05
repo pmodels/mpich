@@ -40,7 +40,6 @@
 
 .N Errors
 .N MPI_SUCCESS
-.N 
 @*/
 int MPI_Info_delete( MPI_Info info, const char *key )
 {

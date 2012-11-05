@@ -33,7 +33,7 @@
    with win.  The call is collective on the group of win. The info object may
    be different on each process, but any info entries that an implementation
    requires to be the same on all processes must appear with the same value in
-   each process's info object.
+   each process'' info object.
 
    Input Parameters:
 + win - window object (handle)
