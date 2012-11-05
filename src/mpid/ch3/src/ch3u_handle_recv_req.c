@@ -543,10 +543,12 @@ int MPIDI_CH3_ReqHandler_FOPComplete( MPIDI_VC_t *vc,
     }
 
     /* Apply the op */
-    uop = MPIR_OP_HDL_TO_FN(rreq->dev.op);
-    one = 1;
+    if (rreq->dev.op != MPI_NO_OP) {
+        uop = MPIR_OP_HDL_TO_FN(rreq->dev.op);
+        one = 1;
 
-    (*uop)(rreq->dev.user_buf, rreq->dev.real_user_buf, &one, &rreq->dev.datatype);
+        (*uop)(rreq->dev.user_buf, rreq->dev.real_user_buf, &one, &rreq->dev.datatype);
+    }
 
     /* Send back the original data.  We do this here to ensure that the
        operation is remote complete before responding to the origin. */
@@ -575,7 +577,7 @@ int MPIDI_CH3_ReqHandler_FOPComplete( MPIDI_VC_t *vc,
     }
 
     /* Free temporary buffer allocated in PktHandler_FOP */
-    if (len > sizeof(int) * MPIDI_RMA_FOP_IMMED_INTS) {
+    if (len > sizeof(int) * MPIDI_RMA_FOP_IMMED_INTS && rreq->dev.op != MPI_NO_OP) {
         MPIU_Free(rreq->dev.user_buf);
     }
 

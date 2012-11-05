@@ -3730,7 +3730,7 @@ int MPIDI_CH3_PktHandler_FOP( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
     MPIU_Assert(len <= sizeof(MPIDI_CH3_FOP_Immed_u));
 
     /* Set up the user buffer and receive data if needed */
-    if (len <= sizeof(fop_pkt->origin_data)) {
+    if (len <= sizeof(fop_pkt->origin_data) || fop_pkt->op == MPI_NO_OP) {
         req->dev.user_buf = fop_pkt->origin_data;
         *buflen = sizeof(MPIDI_CH3_Pkt_t);
         data_complete = 1;
