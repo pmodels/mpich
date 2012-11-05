@@ -2059,6 +2059,12 @@ int MPIDI_Win_flush(int rank, MPID_Win *win_ptr)
     if (rank == win_ptr->comm_ptr->rank) {
         MPIU_Assert(win_ptr->targets[rank].remote_lock_state == MPIDI_CH3_WIN_LOCK_GRANTED);
         MPIU_Assert(MPIDI_CH3I_RMA_Ops_isempty(&win_ptr->targets[rank].rma_ops_list));
+
+        /* If flush is used as a part of polling for incoming data, we can
+         * deadlock, since local RMA calls never poke the progress engine.  So,
+         * make extra progress here to avoid this problem. */
+        mpi_errno = MPIDI_CH3_Progress_poke();
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
         goto fn_exit;
     }
 
