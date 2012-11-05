@@ -182,26 +182,26 @@ typedef struct MPIDI_VC * MPID_VCR;
 #   define MPIDI_REQUEST_SEQNUM
 #endif
 
-enum MPIDI_CH3_Lock_states_e {
+enum MPIDI_CH3_Lock_states {
     MPIDI_CH3_WIN_LOCK_NONE = 0,
     MPIDI_CH3_WIN_LOCK_REQUESTED,
     MPIDI_CH3_WIN_LOCK_GRANTED,
     MPIDI_CH3_WIN_LOCK_FLUSH
 };
 
-enum MPIDI_Win_info_arv_vals_accumulate_ordering_e {
+enum MPIDI_Win_info_arv_vals_accumulate_ordering {
     MPIDI_ACC_ORDER_RAR = 1,
     MPIDI_ACC_ORDER_RAW = 2,
     MPIDI_ACC_ORDER_WAR = 4,
     MPIDI_ACC_ORDER_WAW = 8
 };
 
-enum MPIDI_Win_info_arg_vals_accumulate_ops_e {
+enum MPIDI_Win_info_arg_vals_accumulate_ops {
     MPIDI_ACC_OPS_SAME_OP,
     MPIDI_ACC_OPS_SAME_OP_NO_OP
 };
 
-struct MPIDI_Win_info_args_s {
+struct MPIDI_Win_info_args {
     int no_locks;               /* valid flavor = all */
     int accumulate_ordering;
     int accumulate_ops;
@@ -209,10 +209,10 @@ struct MPIDI_Win_info_args_s {
     int alloc_shared_noncontig; /* valid flavor = allocate shared */
 };
 
-struct MPIDI_Win_target_state_s {
-    struct MPIDI_RMA_Op_s *rma_ops_list;                                 \
+struct MPIDI_Win_target_state {
+    struct MPIDI_RMA_Op *rma_ops_list;                                   \
                                 /* list of outstanding RMA operations */ \
-    volatile enum MPIDI_CH3_Lock_states_e remote_lock_state;             \
+    volatile enum MPIDI_CH3_Lock_states remote_lock_state;               \
                                 /* Indicates the state of the target     \
                                    process' "lock" for passive target    \
                                    RMA. */                               \
@@ -242,8 +242,8 @@ struct MPIDI_Win_target_state_s {
                                           that this process has          \
                                           completed as target */         \
     MPI_Aint *sizes;      /* array of sizes of all windows */            \
-    struct MPIDI_Win_info_args_s info_args;                              \
-    struct MPIDI_Win_target_state_s *targets;                            \
+    struct MPIDI_Win_info_args info_args;                                \
+    struct MPIDI_Win_target_state *targets;                              \
 
 #ifdef MPIDI_CH3_WIN_DECL
 #define MPID_DEV_WIN_DECL \

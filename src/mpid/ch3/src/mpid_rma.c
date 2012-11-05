@@ -280,8 +280,8 @@ static int win_init(MPI_Aint size, int disp_unit, int create_flavor, int model,
     (*win_ptr)->my_pt_rma_puts_accs = 0;
 
     /* Initialize the passive target lock state */
-    MPIU_CHKPMEM_MALLOC((*win_ptr)->targets, struct MPIDI_Win_target_state_s *,
-                        sizeof(struct MPIDI_Win_target_state_s)*MPIR_Comm_size(win_comm_ptr),
+    MPIU_CHKPMEM_MALLOC((*win_ptr)->targets, struct MPIDI_Win_target_state *,
+                        sizeof(struct MPIDI_Win_target_state)*MPIR_Comm_size(win_comm_ptr),
                         mpi_errno, "RMA target states array");
 
     for (i = 0; i < MPIR_Comm_size(win_comm_ptr); i++) {

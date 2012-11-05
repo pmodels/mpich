@@ -317,7 +317,7 @@ static const MPI_Datatype mpich_mpi_datatype_null MPICH_ATTR_TYPE_TAG_MUST_BE_NU
 #define MPI_KEYVAL_INVALID 0x24000000
 
 /* MPI-3 window flavors */
-typedef enum MPIR_Win_flavor_e {
+typedef enum MPIR_Win_flavor {
     MPI_WIN_FLAVOR_CREATE      = 1,
     MPI_WIN_FLAVOR_ALLOCATE    = 2,
     MPI_WIN_FLAVOR_DYNAMIC     = 3,
@@ -325,7 +325,7 @@ typedef enum MPIR_Win_flavor_e {
 } MPIR_Win_flavor_t;
 
 /* MPI-3 window consistency models */
-typedef enum MPIR_Win_model_e {
+typedef enum MPIR_Win_model {
     MPI_WIN_SEPARATE   = 1,
     MPI_WIN_UNIFIED    = 2
 } MPIR_Win_model_t;

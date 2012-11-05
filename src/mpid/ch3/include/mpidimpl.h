@@ -1117,7 +1117,7 @@ int MPIDI_CH3U_Comm_FinishPending( MPID_Comm * );
  * which can optionally override any defaults already set by CH3.
  */
 
-typedef struct MPIDI_CH3U_Win_fns_s {
+typedef struct {
     int (*create)(void *, MPI_Aint, int, MPID_Info *, MPID_Comm *, MPID_Win **);
     int (*allocate)(MPI_Aint, int, MPID_Info *, MPID_Comm *, void *, MPID_Win **);
     int (*allocate_shared)(MPI_Aint, int, MPID_Info *, MPID_Comm *, void **, MPID_Win **);

@@ -8,7 +8,7 @@
 
 #include "mpl_utlist.h"
 
-typedef enum MPIDI_RMA_Op_type_e {
+typedef enum MPIDI_RMA_Op_type {
     MPIDI_RMA_PUT               = 23,
     MPIDI_RMA_GET               = 24,
     MPIDI_RMA_ACCUMULATE        = 25,
@@ -21,12 +21,12 @@ typedef enum MPIDI_RMA_Op_type_e {
 
 /* Special case RMA operations */
 
-enum MPIDI_RMA_Datatype_e {
+enum MPIDI_RMA_Datatype {
     MPIDI_RMA_DATATYPE_BASIC    = 50,
     MPIDI_RMA_DATATYPE_DERIVED  = 51
 };
 
-enum MPID_Lock_state_e {
+enum MPID_Lock_state {
     MPID_LOCK_NONE              = 0,
     MPID_LOCK_SHARED_ALL        = 1
 };
@@ -54,9 +54,9 @@ typedef struct MPIDI_RMA_dtype_info { /* for derived datatypes */
 } MPIDI_RMA_dtype_info;
 
 /* for keeping track of RMA ops, which will be executed at the next sync call */
-typedef struct MPIDI_RMA_Op_s {
-    struct MPIDI_RMA_Op_s *prev;  /* pointer to next element in list */
-    struct MPIDI_RMA_Op_s *next;  /* pointer to next element in list */
+typedef struct MPIDI_RMA_Op {
+    struct MPIDI_RMA_Op *prev;  /* pointer to next element in list */
+    struct MPIDI_RMA_Op *next;  /* pointer to next element in list */
     /* FIXME: It would be better to setup the packet that will be sent, at 
        least in most cases (if, as a result of the sync/ops/sync sequence,
        a different packet type is needed, it can be extracted from the 
