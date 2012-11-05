@@ -1880,10 +1880,13 @@ int MPIDI_Win_unlock(int dest, MPID_Win *win_ptr)
 	/* local lock. release the lock on the window, grant the next one
 	 * in the queue, and return. */
         MPIU_Assert(MPIDI_CH3I_RMA_Ops_isempty(&win_ptr->targets[dest].rma_ops_list));
+
 	mpi_errno = MPIDI_CH3I_Release_lock(win_ptr);
-	if (mpi_errno != MPI_SUCCESS) goto fn_exit;
+        if (mpi_errno != MPI_SUCCESS) { MPIU_ERR_POP(mpi_errno); }
         win_ptr->targets[dest].remote_lock_state = MPIDI_CH3_WIN_LOCK_NONE;
+
 	mpi_errno = MPID_Progress_poke();
+        if (mpi_errno != MPI_SUCCESS) { MPIU_ERR_POP(mpi_errno); }
 	goto fn_exit;
     }
         
@@ -2031,7 +2034,11 @@ int MPIDI_Win_flush_all(MPID_Win *win_ptr)
      * Ideally, we should be able to use the same infrastructure that's used by
      * active target to complete all operations. */
 
-    for (i = 0; i < MPIR_Comm_size(win_ptr->comm_ptr); i++) {
+    /* Note: Local RMA calls don't poke the progress engine.  This routine
+     * should poke the progress engine when the local target is flushed to help
+     * make asynchronous progress.  Currently this is handled by Win_flush().
+     */
+     for (i = 0; i < MPIR_Comm_size(win_ptr->comm_ptr); i++) {
         if (win_ptr->targets[i].remote_lock_state != MPIDI_CH3_WIN_LOCK_NONE) {
             mpi_errno = win_ptr->RMAFns.Win_flush(i, win_ptr);
             if (mpi_errno != MPI_SUCCESS) { MPIU_ERR_POP(mpi_errno); }
@@ -2165,6 +2172,11 @@ int MPIDI_Win_flush(int rank, MPID_Win *win_ptr)
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 int MPIDI_Win_flush_local(int rank, MPID_Win *win_ptr)
 {
+    /* Note: Local RMA calls don't poke the progress engine.  This routine
+     * should poke the progress engine when the local target is flushed to help
+     * make asynchronous progress.  Currently this is handled by Win_flush().
+     */
+
     return win_ptr->RMAFns.Win_flush(rank, win_ptr);
 }
 
@@ -2175,6 +2187,11 @@ int MPIDI_Win_flush_local(int rank, MPID_Win *win_ptr)
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 int MPIDI_Win_flush_local_all(MPID_Win *win_ptr)
 {
+    /* Note: Local RMA calls don't poke the progress engine.  This routine
+     * should poke the progress engine when the local target is flushed to help
+     * make asynchronous progress.  Currently this is handled by Win_flush().
+     */
+
     return win_ptr->RMAFns.Win_flush_all(win_ptr);
 }
 
