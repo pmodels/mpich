@@ -114,7 +114,9 @@ static int MPIDI_CH3I_Send_contig_acc_msg(MPIDI_RMA_ops *, MPID_Win *,
 					  MPI_Win, MPI_Win, MPID_Request ** );
 static int MPIDI_CH3I_Send_immed_rmw_msg(MPIDI_RMA_ops *, MPID_Win *,
                                          MPI_Win, MPI_Win, MPID_Request ** );
-static int MPIDI_CH3I_Do_passive_target_rma(MPID_Win *, int *, int);
+static int MPIDI_CH3I_Do_passive_target_rma(MPID_Win *win_ptr, int target_rank,
+                                            int *wait_for_rma_done_pkt,
+                                            int unlock_target);
 static int MPIDI_CH3I_Send_lock_put_or_acc(MPID_Win *);
 static int MPIDI_CH3I_Send_lock_get(MPID_Win *);
 static int MPIDI_CH3I_RMAListComplete(MPID_Win *);
@@ -1943,7 +1945,7 @@ int MPIDI_Win_unlock(int dest, MPID_Win *win_ptr)
         if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
 
 	/* Now do all the RMA operations */
-        mpi_errno = MPIDI_CH3I_Do_passive_target_rma(win_ptr, &wait_for_rma_done_pkt,
+        mpi_errno = MPIDI_CH3I_Do_passive_target_rma(win_ptr, dest, &wait_for_rma_done_pkt,
                                                      1 /* unlock the target */);
 	if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
     }
@@ -2079,7 +2081,7 @@ int MPIDI_Win_flush(int rank, MPID_Win *win_ptr)
     }
 
     win_ptr->remote_lock_state = MPIDI_CH3_WIN_LOCK_FLUSH;
-    mpi_errno = MPIDI_CH3I_Do_passive_target_rma(win_ptr, &wait_for_rma_done_pkt,
+    mpi_errno = MPIDI_CH3I_Do_passive_target_rma(win_ptr, rank, &wait_for_rma_done_pkt,
                                                  0 /* don't unlock the target */);
     if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
 
@@ -2240,7 +2242,7 @@ int MPIDI_Win_sync(MPID_Win *win_ptr)
 #define FUNCNAME MPIDI_CH3I_Do_passive_target_rma
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-static int MPIDI_CH3I_Do_passive_target_rma(MPID_Win *win_ptr,
+static int MPIDI_CH3I_Do_passive_target_rma(MPID_Win *win_ptr, int target_rank,
                                             int *wait_for_rma_done_pkt, int unlock_target)
 {
     int mpi_errno = MPI_SUCCESS, nops;
@@ -2341,7 +2343,7 @@ static int MPIDI_CH3I_Do_passive_target_rma(MPID_Win *win_ptr,
 
         /* Assertion: (curr_ptr != NULL) => (nops > 0) */
         MPIU_Assert(nops > 0);
-        MPIU_Assert(curr_ptr->target_rank == win_ptr->lockRank);
+        MPIU_Assert(curr_ptr->target_rank == target_rank);
 
         if (curr_ptr->next == NULL && unlock_target)
             source_win_handle = win_ptr->handle;
@@ -2417,7 +2419,7 @@ static int MPIDI_CH3I_Do_passive_target_rma(MPID_Win *win_ptr,
     else if (unlock_target) {
         /* No communication operations were left to process, but the RMA epoch
            is open.  Send an unlock message to release the lock at the target.  */
-        mpi_errno = MPIDI_CH3I_Send_unlock_msg(win_ptr->lockRank, win_ptr);
+        mpi_errno = MPIDI_CH3I_Send_unlock_msg(target_rank, win_ptr);
         MPIU_ERR_CHKANDJUMP(mpi_errno != MPI_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**winRMAmessage");
     }
 
