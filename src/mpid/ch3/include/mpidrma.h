@@ -6,6 +6,8 @@
 #if !defined(MPICH_MPIDRMA_H_INCLUDED)
 #define MPICH_MPIDRMA_H_INCLUDED
 
+#include "mpl_utlist.h"
+
 typedef enum MPIDI_RMA_Op_type_e {
     MPIDI_RMA_PUT               = 23,
     MPIDI_RMA_GET               = 24,
@@ -53,6 +55,7 @@ typedef struct MPIDI_RMA_dtype_info { /* for derived datatypes */
 
 /* for keeping track of RMA ops, which will be executed at the next sync call */
 typedef struct MPIDI_RMA_ops {
+    struct MPIDI_RMA_ops *prev;  /* pointer to next element in list */
     struct MPIDI_RMA_ops *next;  /* pointer to next element in list */
     /* FIXME: It would be better to setup the packet that will be sent, at 
        least in most cases (if, as a result of the sync/ops/sync sequence,
@@ -105,41 +108,76 @@ void MPIDI_CH3_RMA_SetAccImmed( int flag );
 
 /*** RMA OPS LIST HELPER ROUTINES ***/
 
+typedef MPIDI_RMA_ops * MPIDI_RMA_Ops_list_t;
+
 /* Return nonzero if the RMA operations list is empty.
  */
 #undef FUNCNAME
-#define FUNCNAME MPIDI_CH3I_Win_ops_isempty
+#define FUNCNAME MPIDI_CH3I_RMA_Ops_isempty
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-static inline int MPIDI_CH3I_Win_ops_isempty(MPID_Win *win_ptr)
+static inline int MPIDI_CH3I_RMA_Ops_isempty(MPIDI_RMA_Ops_list_t *list)
 {
-    return win_ptr->rma_ops_list_head == NULL;
+    return *list == NULL;
+}
+
+
+/* Return a pointer to the first element in the list.
+ */
+#undef FUNCNAME
+#define FUNCNAME MPIDI_CH3I_RMA_Ops_head
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
+static inline MPIDI_RMA_ops *MPIDI_CH3I_RMA_Ops_head(MPIDI_RMA_Ops_list_t *list)
+{
+    return *list;
+}
+
+
+/* Return a pointer to the last element in the list.
+ */
+#undef FUNCNAME
+#define FUNCNAME MPIDI_CH3I_RMA_Ops_tail
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
+static inline MPIDI_RMA_ops *MPIDI_CH3I_RMA_Ops_tail(MPIDI_RMA_Ops_list_t *list)
+{
+    return (*list) ? (*list)->prev : NULL;
+}
+
+
+/* Append an element to the tail of the RMA ops list
+ *
+ * @param IN    list      Pointer to the RMA ops list
+ * @param IN    elem      Pointer to the element to be appended
+ */
+#undef FUNCNAME
+#define FUNCNAME MPIDI_CH3I_RMA_Ops_append
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
+static inline void MPIDI_CH3I_RMA_Ops_append(MPIDI_RMA_Ops_list_t *list,
+                                             MPIDI_RMA_ops *elem)
+{
+    MPL_DL_APPEND(*list, elem);
 }
 
 
 /* Allocate a new element on the tail of the RMA operations list.
  *
- * @param IN    win_ptr   Window containing the RMA ops list
- * @param OUT   curr_ptr  Pointer to the element to the element that was
- *                        updated.
+ * @param IN    list      Pointer to the RMA ops list
+ * @param OUT   new_ptr   Pointer to the element that was allocated
  * @return                MPI error class
  */
 #undef FUNCNAME
-#define FUNCNAME MPIDI_CH3I_Win_ops_alloc_tail
+#define FUNCNAME MPIDI_CH3I_RMA_Ops_alloc_tail
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-static inline int MPIDI_CH3I_Win_ops_alloc_tail(MPID_Win *win_ptr,
-                                                MPIDI_RMA_ops **curr_ptr)
+static inline int MPIDI_CH3I_RMA_Ops_alloc_tail(MPIDI_RMA_Ops_list_t *list,
+                                                MPIDI_RMA_ops **new_elem)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_RMA_ops *tmp_ptr;
     MPIU_CHKPMEM_DECL(1);
-
-    /* This assertion can fail because the tail pointer is not maintainted (see
-       free_and_next).  If this happens, consider refactoring to a previous
-       element pointer (instead of a pointer to the prevous next pointer) or a
-       doubly-linked list. */
-    MPIU_Assert(MPIDI_CH3I_Win_ops_isempty(win_ptr) || win_ptr->rma_ops_list_tail != NULL);
 
     /* FIXME: We should use a pool allocator here */
     MPIU_CHKPMEM_MALLOC(tmp_ptr, MPIDI_RMA_ops *, sizeof(MPIDI_RMA_ops),
@@ -148,66 +186,53 @@ static inline int MPIDI_CH3I_Win_ops_alloc_tail(MPID_Win *win_ptr,
     tmp_ptr->next = NULL;
     tmp_ptr->dataloop = NULL;
 
-    if (MPIDI_CH3I_Win_ops_isempty(win_ptr))
-        win_ptr->rma_ops_list_head = tmp_ptr;
-    else
-        win_ptr->rma_ops_list_tail->next = tmp_ptr;
+    MPL_DL_APPEND(*list, tmp_ptr);
 
-    win_ptr->rma_ops_list_tail = tmp_ptr;
-    *curr_ptr = tmp_ptr;
+    *new_elem = tmp_ptr;
 
  fn_exit:
     MPIU_CHKPMEM_COMMIT();
     return mpi_errno;
  fn_fail:
     MPIU_CHKPMEM_REAP();
+    *new_elem = NULL;
     goto fn_exit;
+}
+
+
+/* Unlink an element from the RMA ops list
+ *
+ * @param IN    list      Pointer to the RMA ops list
+ * @param IN    elem      Pointer to the element to be unlinked
+ */
+#undef FUNCNAME
+#define FUNCNAME MPIDI_CH3I_RMA_Ops_unlink
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
+static inline void MPIDI_CH3I_RMA_Ops_unlink(MPIDI_RMA_Ops_list_t *list,
+                                             MPIDI_RMA_ops *elem)
+{
+    MPL_DL_DELETE(*list, elem);
 }
 
 
 /* Free an element in the RMA operations list.
  *
- * NOTE: It is not currently possible (singly-linked list) for this operation
- * to maintain the rma_ops_list_tail pointer.  If the freed element was at the
- * tail, the tail pointer will become stale.  One should not rely a correct
- * value of rma_ops_list_tail after calling this function -- specifically, one
- * should be wary of calling alloc_tail unless the free operation emptied the
- * list.
- *
- * @param IN    win_ptr   Window containing the RMA ops list
- * @param INOUT curr_ptr  Pointer to the element to be freed.  Will be updated
- *                        to point to the element following the element that
- *                        was freed.
- * @param IN    prev_next_ptr Pointer to the previous operation's next pointer.
- *                        Used to unlink the element reference by curr_ptr.
+ * @param IN    list      Pointer to the RMA ops list
+ * @param IN    curr_ptr  Pointer to the element to be freed.
  */
 #undef FUNCNAME
-#define FUNCNAME MPIDI_CH3I_Win_ops_free_and_next
+#define FUNCNAME MPIDI_CH3I_RMA_Ops_free_elem
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-static inline void MPIDI_CH3I_Win_ops_free_and_next(MPID_Win *win_ptr,
-                                                    MPIDI_RMA_ops **curr_ptr,
-                                                    MPIDI_RMA_ops **prev_next_ptr)
+static inline void MPIDI_CH3I_RMA_Ops_free_elem(MPIDI_RMA_Ops_list_t *list,
+                                                MPIDI_RMA_ops *curr_ptr)
 {
-    MPIDI_RMA_ops *tmp_ptr = *curr_ptr;
+    MPIDI_RMA_ops *tmp_ptr = curr_ptr;
 
-    MPIU_Assert(tmp_ptr != NULL && *prev_next_ptr == tmp_ptr);
+    MPIU_Assert(curr_ptr != NULL);
 
-    /* Check if we are down to one element in the ops list */
-    if (win_ptr->rma_ops_list_head->next == NULL) {
-        MPIU_Assert(tmp_ptr == win_ptr->rma_ops_list_head);
-        win_ptr->rma_ops_list_tail = NULL;
-        win_ptr->rma_ops_list_head = NULL;
-    }
-
-    /* Check if this free invalidates the tail pointer.  If so, set it to NULL
-       for safety. */
-    if (win_ptr->rma_ops_list_tail == *curr_ptr)
-        win_ptr->rma_ops_list_tail = NULL;
-
-    /* Unlink the element */
-    *curr_ptr = tmp_ptr->next;
-    *prev_next_ptr = tmp_ptr->next;
+    MPL_DL_DELETE(*list, curr_ptr);
 
     /* Check if we allocated a dataloop for this op (see send/recv_rma_msg) */
     if (tmp_ptr->dataloop != NULL)
@@ -216,29 +241,40 @@ static inline void MPIDI_CH3I_Win_ops_free_and_next(MPID_Win *win_ptr,
 }
 
 
+/* Free an element in the RMA operations list.
+ *
+ * @param IN    list      Pointer to the RMA ops list
+ * @param INOUT curr_ptr  Pointer to the element to be freed.  Will be updated
+ *                        to point to the element following the element that
+ *                        was freed.
+ */
+#undef FUNCNAME
+#define FUNCNAME MPIDI_CH3I_RMA_Ops_free_and_next
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
+static inline void MPIDI_CH3I_RMA_Ops_free_and_next(MPIDI_RMA_Ops_list_t *list,
+                                                    MPIDI_RMA_ops **curr_ptr)
+{
+    MPIDI_RMA_ops *next_ptr = (*curr_ptr)->next;
+
+    MPIDI_CH3I_RMA_Ops_free_elem(list, *curr_ptr);
+    *curr_ptr = next_ptr;
+}
+
+
 /* Free the entire RMA operations list.
  */
 #undef FUNCNAME
-#define FUNCNAME MPIDI_CH3I_Win_ops_free
+#define FUNCNAME MPIDI_CH3I_RMA_Ops_free
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-static inline void MPIDI_CH3I_Win_ops_free(MPID_Win *win_ptr)
+static inline void MPIDI_CH3I_RMA_Ops_free(MPIDI_RMA_Ops_list_t *list)
 {
-    MPIDI_RMA_ops *curr_ptr = win_ptr->rma_ops_list_head;
+    MPIDI_RMA_ops *curr_ptr, *tmp_ptr;
 
-    while (curr_ptr != NULL) {
-        MPIDI_RMA_ops *tmp_ptr = curr_ptr->next;
-
-        /* Free this ops list entry */
-        if (curr_ptr->dataloop != NULL)
-            MPIU_Free(tmp_ptr->dataloop);
-        MPIU_Free( curr_ptr );
-
-        curr_ptr = tmp_ptr;
+    MPL_DL_FOREACH_SAFE(*list, curr_ptr, tmp_ptr) {
+        MPIDI_CH3I_RMA_Ops_free_elem(list, curr_ptr);
     }
-
-    win_ptr->rma_ops_list_tail = NULL;
-    win_ptr->rma_ops_list_head = NULL;
 }
 
 

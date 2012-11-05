@@ -272,8 +272,7 @@ static int win_init(MPI_Aint size, int disp_unit, int create_flavor, int model,
     /* (*win_ptr)->sizes[] is set by caller; */
     /* (*win_ptr)->disp_units[] is set by caller; */
     /* (*win_ptr)->all_win_handles[] is set by caller; */
-    (*win_ptr)->rma_ops_list_head   = NULL;
-    (*win_ptr)->rma_ops_list_tail   = NULL;
+    (*win_ptr)->rma_ops_list        = NULL;
     (*win_ptr)->remote_lock_state   = MPIDI_CH3_WIN_LOCK_NONE;
     (*win_ptr)->current_lock_type   = MPID_LOCK_NONE;
     (*win_ptr)->shared_lock_ref_cnt = 0;

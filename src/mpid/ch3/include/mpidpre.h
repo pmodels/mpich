@@ -217,9 +217,8 @@ struct MPIDI_Win_info_args_s {
     int *disp_units;      /* array of displacement units of all windows */\
     MPI_Win *all_win_handles;    /* array of handles to the window objects\
                                           of all processes */            \
-    struct MPIDI_RMA_ops *rma_ops_list_head; /* list of outstanding \
-                                                RMA requests */ \
-    struct MPIDI_RMA_ops *rma_ops_list_tail; \
+    struct MPIDI_RMA_ops *rma_ops_list; /* list of outstanding RMA       \
+                                           operations */                 \
     volatile enum MPIDI_CH3_Lock_states_e remote_lock_state;             \
                                 /* Indicates the state of the target     \
                                    process' "lock" for passive target    \

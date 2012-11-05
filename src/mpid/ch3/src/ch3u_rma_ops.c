@@ -152,7 +152,7 @@ int MPIDI_Put(const void *origin_addr, int origin_count, MPI_Datatype
 
 	/* queue it up */
         MPIU_INSTR_DURATION_START(rmaqueue_alloc);
-        mpi_errno = MPIDI_CH3I_Win_ops_alloc_tail(win_ptr, &new_ptr);
+        mpi_errno = MPIDI_CH3I_RMA_Ops_alloc_tail(&win_ptr->rma_ops_list, &new_ptr);
         MPIU_INSTR_DURATION_END(rmaqueue_alloc);
         if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
 
@@ -242,7 +242,7 @@ int MPIDI_Get(void *origin_addr, int origin_count, MPI_Datatype
 
 	/* queue it up */
         MPIU_INSTR_DURATION_START(rmaqueue_alloc);
-        mpi_errno = MPIDI_CH3I_Win_ops_alloc_tail(win_ptr, &new_ptr);
+        mpi_errno = MPIDI_CH3I_RMA_Ops_alloc_tail(&win_ptr->rma_ops_list, &new_ptr);
         MPIU_INSTR_DURATION_END(rmaqueue_alloc);
         if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
 
@@ -428,7 +428,7 @@ int MPIDI_Accumulate(const void *origin_addr, int origin_count, MPI_Datatype
 
 	/* queue it up */
         MPIU_INSTR_DURATION_START(rmaqueue_alloc);
-        mpi_errno = MPIDI_CH3I_Win_ops_alloc_tail(win_ptr, &new_ptr);
+        mpi_errno = MPIDI_CH3I_RMA_Ops_alloc_tail(&win_ptr->rma_ops_list, &new_ptr);
         MPIU_INSTR_DURATION_END(rmaqueue_alloc);
         if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
 

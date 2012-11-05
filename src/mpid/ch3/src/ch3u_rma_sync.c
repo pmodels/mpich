@@ -194,7 +194,6 @@ int MPIDI_Win_fence(int assert, MPID_Win *win_ptr)
     }
     else
     {
-	MPIDI_RMA_ops **prevNextPtr;
 	int nRequest = 0;
 	int nRequestNew = 0;
 	MPIU_INSTR_DURATION_START(winfence_rs);
@@ -219,7 +218,7 @@ int MPIDI_Win_fence(int assert, MPID_Win *win_ptr)
 	/* set rma_target_proc[i] to 1 if rank i is a target of RMA
 	   ops from this process */
 	total_op_count = 0;
-	curr_ptr = win_ptr->rma_ops_list_head;
+        curr_ptr = MPIDI_CH3I_RMA_Ops_head(&win_ptr->rma_ops_list);
 	while (curr_ptr != NULL)
 	{
 	    total_op_count++;
@@ -257,8 +256,7 @@ int MPIDI_Win_fence(int assert, MPID_Win *win_ptr)
 	MPIU_INSTR_DURATION_MAX(winfence_issue,1,total_op_count);
 	MPIU_INSTR_COUNTER_RESET(winfence_reqs);
 	i = 0;
-	curr_ptr    = win_ptr->rma_ops_list_head;
-	prevNextPtr = &win_ptr->rma_ops_list_head;
+        curr_ptr = MPIDI_CH3I_RMA_Ops_head(&win_ptr->rma_ops_list);
 	while (curr_ptr != NULL)
 	{
 	    /* The completion counter at the target is decremented only on 
@@ -312,12 +310,11 @@ int MPIDI_Win_fence(int assert, MPID_Win *win_ptr)
 	    curr_ops_cnt[curr_ptr->target_rank]++;
 	    /* If the request is null, we can remove it immediately */
 	    if (!curr_ptr->request) {
-                MPIDI_CH3I_Win_ops_free_and_next(win_ptr, &curr_ptr, prevNextPtr);
+                MPIDI_CH3I_RMA_Ops_free_and_next(&win_ptr->rma_ops_list, &curr_ptr);
 	    }
 	    else  {
 		nRequest++;
 		MPIU_INSTR_COUNTER_INCR(winfence_reqs,1);
-		prevNextPtr = &curr_ptr->next;
 		curr_ptr    = curr_ptr->next;
 		/* The test on the difference is to reduce the number
 		   of times the partial complete routine is called. Without
@@ -354,7 +351,7 @@ int MPIDI_Win_fence(int assert, MPID_Win *win_ptr)
 	    mpi_errno = MPIDI_CH3I_RMAListComplete(win_ptr);
 	}
 
-        MPIU_Assert( MPIDI_CH3I_Win_ops_isempty(win_ptr) );
+        MPIU_Assert(MPIDI_CH3I_RMA_Ops_isempty(&win_ptr->rma_ops_list));
 	
 	/* wait for all operations from other processes to finish */
 	if (win_ptr->my_counter)
@@ -1415,7 +1412,7 @@ int MPIDI_Win_complete(MPID_Win *win_ptr)
     int mpi_errno = MPI_SUCCESS;
     int comm_size, *nops_to_proc, src, new_total_op_count;
     int i, j, dst, total_op_count, *curr_ops_cnt;
-    MPIDI_RMA_ops *curr_ptr, **prevNextPtr;
+    MPIDI_RMA_ops *curr_ptr;
     MPID_Comm *comm_ptr;
     MPI_Win source_win_handle, target_win_handle;
     MPID_Group *win_grp_ptr;
@@ -1514,7 +1511,7 @@ int MPIDI_Win_complete(MPID_Win *win_ptr)
     for (i=0; i<comm_size; i++) nops_to_proc[i] = 0;
 
     total_op_count = 0;
-    curr_ptr = win_ptr->rma_ops_list_head;
+    curr_ptr = MPIDI_CH3I_RMA_Ops_head(&win_ptr->rma_ops_list);
     while (curr_ptr != NULL)
     {
 	nops_to_proc[curr_ptr->target_rank]++;
@@ -1534,8 +1531,7 @@ int MPIDI_Win_complete(MPID_Win *win_ptr)
     for (i=0; i<comm_size; i++) curr_ops_cnt[i] = 0;
         
     i = 0;
-    prevNextPtr = &win_ptr->rma_ops_list_head;
-    curr_ptr    = win_ptr->rma_ops_list_head;
+    curr_ptr = MPIDI_CH3I_RMA_Ops_head(&win_ptr->rma_ops_list);
     while (curr_ptr != NULL)
     {
 	/* The completion counter at the target is decremented only on 
@@ -1590,12 +1586,11 @@ int MPIDI_Win_complete(MPID_Win *win_ptr)
 	curr_ops_cnt[curr_ptr->target_rank]++;
 	/* If the request is null, we can remove it immediately */
 	if (!curr_ptr->request) {
-            MPIDI_CH3I_Win_ops_free_and_next(win_ptr, &curr_ptr, prevNextPtr);
+            MPIDI_CH3I_RMA_Ops_free_and_next(&win_ptr->rma_ops_list, &curr_ptr);
 	}
 	else  {
 	    nRequest++;
 	    MPIU_INSTR_COUNTER_INCR(wincomplete_reqs,1);
-	    prevNextPtr = &curr_ptr->next;
 	    curr_ptr    = curr_ptr->next;
 	    if (nRequest > MPIR_PARAM_RMA_NREQUEST_THRESHOLD && 
 		nRequest - nRequestNew > MPIR_PARAM_RMA_NREQUEST_NEW_THRESHOLD) {
@@ -1650,7 +1645,7 @@ int MPIDI_Win_complete(MPID_Win *win_ptr)
 		MPIDI_RMA_ops *new_ptr = NULL;
 
                 MPIU_INSTR_DURATION_START(rmaqueue_alloc);
-                mpi_errno = MPIDI_CH3I_Win_ops_alloc_tail(win_ptr, &new_ptr);
+                mpi_errno = MPIDI_CH3I_RMA_Ops_alloc_tail(&win_ptr->rma_ops_list, &new_ptr);
                 MPIU_INSTR_DURATION_END(rmaqueue_alloc);
                 if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
 
@@ -1670,7 +1665,7 @@ int MPIDI_Win_complete(MPID_Win *win_ptr)
 	mpi_errno = MPIDI_CH3I_RMAListComplete(win_ptr);
     }
 
-    MPIU_Assert( MPIDI_CH3I_Win_ops_isempty(win_ptr) );
+    MPIU_Assert(MPIDI_CH3I_RMA_Ops_isempty(&win_ptr->rma_ops_list));
     
     mpi_errno = MPIR_Group_free_impl(win_grp_ptr);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
@@ -1819,7 +1814,7 @@ int MPIDI_Win_lock(int lock_type, int dest, int assert, MPID_Win *win_ptr)
 
             /* target is some other process. add the lock request to rma_ops_list */
             MPIU_INSTR_DURATION_START(rmaqueue_alloc);
-            mpi_errno = MPIDI_CH3I_Win_ops_alloc_tail(win_ptr, &new_ptr);
+            mpi_errno = MPIDI_CH3I_RMA_Ops_alloc_tail(&win_ptr->rma_ops_list, &new_ptr);
             MPIU_INSTR_DURATION_END(rmaqueue_alloc);
             if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
 
@@ -1860,7 +1855,7 @@ int MPIDI_Win_unlock(int dest, MPID_Win *win_ptr)
     if (dest == win_ptr->myrank) {
 	/* local lock. release the lock on the window, grant the next one
 	 * in the queue, and return. */
-	MPIU_Assert(MPIDI_CH3I_Win_ops_isempty(win_ptr));
+        MPIU_Assert(MPIDI_CH3I_RMA_Ops_isempty(&win_ptr->rma_ops_list));
 	mpi_errno = MPIDI_CH3I_Release_lock(win_ptr);
 	if (mpi_errno != MPI_SUCCESS) goto fn_exit;
         win_ptr->remote_lock_state = MPIDI_CH3_WIN_LOCK_NONE;
@@ -1870,7 +1865,7 @@ int MPIDI_Win_unlock(int dest, MPID_Win *win_ptr)
         
     comm_ptr = win_ptr->comm_ptr;
         
-    rma_op = win_ptr->rma_ops_list_head;
+    rma_op = MPIDI_CH3I_RMA_Ops_head(&win_ptr->rma_ops_list);
     
     /* win_lock was not called. return error */
     if ( win_ptr->remote_lock_state == MPIDI_CH3_WIN_LOCK_NONE &&
@@ -1888,7 +1883,7 @@ int MPIDI_Win_unlock(int dest, MPID_Win *win_ptr)
        lock, we can do nothing and return. */
     if (rma_op && rma_op->type == MPIDI_RMA_LOCK && rma_op->next == NULL &&
         win_ptr->remote_lock_state == MPIDI_CH3_WIN_LOCK_NONE) {
-        MPIDI_CH3I_Win_ops_free(win_ptr);
+        MPIDI_CH3I_RMA_Ops_free(&win_ptr->rma_ops_list);
 	goto fn_exit;
     }
         
@@ -1986,7 +1981,7 @@ int MPIDI_Win_unlock(int dest, MPID_Win *win_ptr)
     }
     
  fn_exit:
-    MPIU_Assert( MPIDI_CH3I_Win_ops_isempty(win_ptr) );
+    MPIU_Assert(MPIDI_CH3I_RMA_Ops_isempty(&win_ptr->rma_ops_list));
     MPIDI_RMA_FUNC_EXIT(MPID_STATE_MPIDI_WIN_UNLOCK);
     return mpi_errno;
     /* --BEGIN ERROR HANDLING-- */
@@ -2022,7 +2017,7 @@ int MPIDI_Win_flush(int rank, MPID_Win *win_ptr)
     /* Local flush: ops are performed immediately on the local process */
     if (rank == win_ptr->comm_ptr->rank) {
         MPIU_Assert(win_ptr->remote_lock_state == MPIDI_CH3_WIN_LOCK_GRANTED);
-        MPIU_Assert(MPIDI_CH3I_Win_ops_isempty(win_ptr));
+        MPIU_Assert(MPIDI_CH3I_RMA_Ops_isempty(&win_ptr->rma_ops_list));
         goto fn_exit;
     }
 
@@ -2050,11 +2045,11 @@ int MPIDI_Win_flush(int rank, MPID_Win *win_ptr)
 
     if (win_ptr->remote_lock_state == MPIDI_CH3_WIN_LOCK_NONE) {
         /* Ensure that win_lock is waiting at the head of the ops list */
-        MPIU_ERR_CHKANDJUMP(MPIDI_CH3I_Win_ops_isempty(win_ptr) ||
-                            win_ptr->rma_ops_list_head->type != MPIDI_RMA_LOCK,
+        MPIU_ERR_CHKANDJUMP(MPIDI_CH3I_RMA_Ops_isempty(&win_ptr->rma_ops_list) ||
+                            MPIDI_CH3I_RMA_Ops_head(&win_ptr->rma_ops_list)->type != MPIDI_RMA_LOCK,
                             mpi_errno, MPI_ERR_OTHER, "**rmasync");
-        mpi_errno = MPIDI_CH3I_Send_lock_msg(win_ptr->rma_ops_list_head->target_rank,
-                                             win_ptr->rma_ops_list_head->lock_type, win_ptr);
+        mpi_errno = MPIDI_CH3I_Send_lock_msg(MPIDI_CH3I_RMA_Ops_head(&win_ptr->rma_ops_list)->target_rank,
+                                             MPIDI_CH3I_RMA_Ops_head(&win_ptr->rma_ops_list)->lock_type, win_ptr);
         if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
     }
 
@@ -2102,7 +2097,7 @@ int MPIDI_Win_flush(int rank, MPID_Win *win_ptr)
     }
 
  fn_exit:
-    MPIU_Assert(MPIDI_CH3I_Win_ops_isempty(win_ptr));
+    MPIU_Assert(MPIDI_CH3I_RMA_Ops_isempty(&win_ptr->rma_ops_list));
     MPIDI_RMA_FUNC_EXIT(MPID_STATE_MPIDI_WIN_FLUSH);
     return mpi_errno;
     /* --BEGIN ERROR HANDLING-- */
@@ -2230,7 +2225,6 @@ static int MPIDI_CH3I_Do_passive_target_rma(MPID_Win *win_ptr,
 {
     int mpi_errno = MPI_SUCCESS, nops;
     MPIDI_RMA_ops *curr_ptr;
-    MPIDI_RMA_ops **prevNextPtr;
     MPI_Win source_win_handle, target_win_handle = MPI_WIN_NULL;
     int nRequest=0, nRequestNew=0;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3I_DO_PASSIVE_TARGET_RMA);
@@ -2247,11 +2241,11 @@ static int MPIDI_CH3I_Do_passive_target_rma(MPID_Win *win_ptr,
            there is no third-party communication issue. */
         *wait_for_rma_done_pkt = 0;
     }
-    else if (MPIDI_CH3I_Win_ops_isempty(win_ptr)) {
+    else if (MPIDI_CH3I_RMA_Ops_isempty(&win_ptr->rma_ops_list)) {
         /* Shared lock -- The ops list is empty.  Any issued ops are already
            remote complete; done packet is not needed for safe third party
            communication. */
-        MPIU_Assert(MPIDI_CH3I_Win_ops_isempty(win_ptr));
+        MPIU_Assert(MPIDI_CH3I_RMA_Ops_isempty(&win_ptr->rma_ops_list));
         *wait_for_rma_done_pkt = 0;
     }
     else {
@@ -2259,25 +2253,25 @@ static int MPIDI_CH3I_Do_passive_target_rma(MPID_Win *win_ptr,
            to the end of the list and do it last, in which case an rma done 
            pkt is not needed. If there is no get, rma done pkt is needed */
 
-        if (win_ptr->rma_ops_list_tail->type == MPIDI_RMA_GET ||
-            win_ptr->rma_ops_list_tail->type == MPIDI_RMA_COMPARE_AND_SWAP ||
-            win_ptr->rma_ops_list_tail->type == MPIDI_RMA_FETCH_AND_OP ||
-            win_ptr->rma_ops_list_tail->type == MPIDI_RMA_GET_ACCUMULATE) {
+        if (MPIDI_CH3I_RMA_Ops_tail(&win_ptr->rma_ops_list)->type == MPIDI_RMA_GET ||
+            MPIDI_CH3I_RMA_Ops_tail(&win_ptr->rma_ops_list)->type == MPIDI_RMA_COMPARE_AND_SWAP ||
+            MPIDI_CH3I_RMA_Ops_tail(&win_ptr->rma_ops_list)->type == MPIDI_RMA_FETCH_AND_OP ||
+            MPIDI_CH3I_RMA_Ops_tail(&win_ptr->rma_ops_list)->type == MPIDI_RMA_GET_ACCUMULATE) {
             /* last operation sends a response message. no need to wait
                for an additional rma done pkt */
             *wait_for_rma_done_pkt = 0;
         }
         else {
+            MPIDI_RMA_ops *head = MPIDI_CH3I_RMA_Ops_head(&win_ptr->rma_ops_list);
+
             /* go through the list and move the first get operation 
                (if there is one) to the end.  Note that the first
 	       operation may be a lock, so we can skip it */
             
-            if (win_ptr->rma_ops_list_head->type == MPIDI_RMA_LOCK) {
-                curr_ptr = win_ptr->rma_ops_list_head->next;
-                prevNextPtr = &win_ptr->rma_ops_list_head->next;
+            if (head->type == MPIDI_RMA_LOCK) {
+                curr_ptr = head->next;
             } else {
-                curr_ptr = win_ptr->rma_ops_list_head;
-                prevNextPtr = &win_ptr->rma_ops_list_head;
+                curr_ptr = head;
             }
             
             *wait_for_rma_done_pkt = 1;
@@ -2286,26 +2280,24 @@ static int MPIDI_CH3I_Do_passive_target_rma(MPID_Win *win_ptr,
                 if (curr_ptr->type == MPIDI_RMA_GET) {
 		    /* Found a GET, move it to the end */
                     *wait_for_rma_done_pkt = 0;
-		    win_ptr->rma_ops_list_tail->next = curr_ptr;
-		    *prevNextPtr = curr_ptr->next;
-		    curr_ptr->next = NULL;
-		    win_ptr->rma_ops_list_tail = curr_ptr;
+
+                    MPIDI_CH3I_RMA_Ops_unlink(&win_ptr->rma_ops_list, curr_ptr);
+                    MPIDI_CH3I_RMA_Ops_append(&win_ptr->rma_ops_list, curr_ptr);
                     break;
                 }
                 else {
-                    prevNextPtr = &(curr_ptr->next);
                     curr_ptr    = curr_ptr->next;
                 }
             }
         }
     }
 
-    prevNextPtr = &win_ptr->rma_ops_list_head;
-    curr_ptr    = win_ptr->rma_ops_list_head;
+    curr_ptr = MPIDI_CH3I_RMA_Ops_head(&win_ptr->rma_ops_list);
 
     /* Remove the lock operation if it's still on the head of the list */
-    if (!MPIDI_CH3I_Win_ops_isempty(win_ptr) && win_ptr->rma_ops_list_head->type == MPIDI_RMA_LOCK)
-        MPIDI_CH3I_Win_ops_free_and_next(win_ptr, &curr_ptr, prevNextPtr);
+    if (!MPIDI_CH3I_RMA_Ops_isempty(&win_ptr->rma_ops_list) &&
+        MPIDI_CH3I_RMA_Ops_head(&win_ptr->rma_ops_list)->type == MPIDI_RMA_LOCK)
+        MPIDI_CH3I_RMA_Ops_free_and_next(&win_ptr->rma_ops_list, &curr_ptr);
 
     nops = 0;
     while (curr_ptr != NULL) {
@@ -2315,7 +2307,7 @@ static int MPIDI_CH3I_Do_passive_target_rma(MPID_Win *win_ptr,
 
     MPIU_INSTR_DURATION_START(winunlock_issue);
 
-    curr_ptr = win_ptr->rma_ops_list_head;
+    curr_ptr = MPIDI_CH3I_RMA_Ops_head(&win_ptr->rma_ops_list);
 
     if (curr_ptr != NULL) {
         target_win_handle = win_ptr->all_win_handles[curr_ptr->target_rank];
@@ -2378,12 +2370,11 @@ static int MPIDI_CH3I_Do_passive_target_rma(MPID_Win *win_ptr,
 
 	/* If the request is null, we can remove it immediately */
 	if (!curr_ptr->request) {
-            MPIDI_CH3I_Win_ops_free_and_next(win_ptr, &curr_ptr, prevNextPtr);
+            MPIDI_CH3I_RMA_Ops_free_and_next(&win_ptr->rma_ops_list, &curr_ptr);
 	}
 	else  {
 	    nRequest++;
 	    MPIU_INSTR_COUNTER_INCR(winunlock_reqs,1);
-	    prevNextPtr = &curr_ptr->next;
 	    curr_ptr    = curr_ptr->next;
 	    if (nRequest > MPIR_PARAM_RMA_NREQUEST_THRESHOLD && 
 		nRequest - nRequestNew > MPIR_PARAM_RMA_NREQUEST_NEW_THRESHOLD) {
@@ -2410,7 +2401,7 @@ static int MPIDI_CH3I_Do_passive_target_rma(MPID_Win *win_ptr,
         MPIU_ERR_CHKANDJUMP(mpi_errno != MPI_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**winRMAmessage");
     }
 
-    MPIU_Assert( MPIDI_CH3I_Win_ops_isempty(win_ptr) );
+    MPIU_Assert(MPIDI_CH3I_RMA_Ops_isempty(&win_ptr->rma_ops_list));
 
  fn_exit:
     MPIDI_RMA_FUNC_EXIT(MPID_STATE_MPIDI_CH3I_DO_PASSIVE_TARGET_RMA);
@@ -2621,9 +2612,9 @@ static int MPIDI_CH3I_Send_lock_put_or_acc(MPID_Win *win_ptr)
 
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_CH3I_SEND_LOCK_PUT_OR_ACC);
 
-    lock_type = win_ptr->rma_ops_list_head->lock_type;
+    lock_type = MPIDI_CH3I_RMA_Ops_head(&win_ptr->rma_ops_list)->lock_type;
 
-    rma_op = win_ptr->rma_ops_list_head->next;
+    rma_op = MPIDI_CH3I_RMA_Ops_head(&win_ptr->rma_ops_list)->next;
 
     win_ptr->pt_rma_puts_accs[rma_op->target_rank]++;
 
@@ -2790,7 +2781,7 @@ static int MPIDI_CH3I_Send_lock_put_or_acc(MPID_Win *win_ptr)
 
     /* Free MPIDI_RMA_ops_list - the lock packet should still be in place, so
      * we have to free two elements. */
-    MPIDI_CH3I_Win_ops_free(win_ptr);
+    MPIDI_CH3I_RMA_Ops_free(&win_ptr->rma_ops_list);
 
  fn_fail:
     MPIDI_RMA_FUNC_EXIT(MPID_STATE_MPIDI_CH3I_SEND_LOCK_PUT_OR_ACC);
@@ -2818,9 +2809,9 @@ static int MPIDI_CH3I_Send_lock_get(MPID_Win *win_ptr)
 
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_CH3I_SEND_LOCK_GET);
 
-    lock_type = win_ptr->rma_ops_list_head->lock_type;
+    lock_type = MPIDI_CH3I_RMA_Ops_head(&win_ptr->rma_ops_list)->lock_type;
 
-    rma_op = win_ptr->rma_ops_list_head->next;
+    rma_op = MPIDI_CH3I_RMA_Ops_head(&win_ptr->rma_ops_list)->next;
 
     /* create a request, store the origin buf, cnt, datatype in it,
        and pass a handle to it in the get packet. When the get
@@ -2909,7 +2900,7 @@ static int MPIDI_CH3I_Send_lock_get(MPID_Win *win_ptr)
 
     /* Free MPIDI_RMA_ops_list - the lock packet should still be in place, so
      * we have to free two elements. */
-    MPIDI_CH3I_Win_ops_free(win_ptr);
+    MPIDI_CH3I_RMA_Ops_free(&win_ptr->rma_ops_list);
 
  fn_fail:
     MPIDI_RMA_FUNC_EXIT(MPID_STATE_MPIDI_CH3I_SEND_LOCK_GET);
@@ -4545,16 +4536,14 @@ static int MPIDI_CH3I_RMAListComplete( MPID_Win *win_ptr )
     int ntimes = 0, mpi_errno=0;
     MPIDI_RMA_ops *curr_ptr;
     MPID_Progress_state progress_state;
-    MPIDI_RMA_ops **prevNextPtr;
 
     MPIU_INSTR_DURATION_START_VAR(list_complete);
     MPID_Progress_start(&progress_state);
     /* Process all operations until they are complete */
-    while (!MPIDI_CH3I_Win_ops_isempty(win_ptr)) {
+    while (!MPIDI_CH3I_RMA_Ops_isempty(&win_ptr->rma_ops_list)) {
 	int loopcount = 0;
-	prevNextPtr = &win_ptr->rma_ops_list_head;
 	ntimes++;
-	curr_ptr = win_ptr->rma_ops_list_head;
+        curr_ptr = MPIDI_CH3I_RMA_Ops_head(&win_ptr->rma_ops_list);
 	do {
 	    if (MPID_Request_is_complete(curr_ptr->request)) {
 		/* Once we find a complete request, we complete
@@ -4569,7 +4558,7 @@ static int MPIDI_CH3I_RMAListComplete( MPID_Win *win_ptr )
 		    }
 		    /* --END ERROR HANDLING-- */
 		    MPID_Request_release(curr_ptr->request);
-                    MPIDI_CH3I_Win_ops_free_and_next(win_ptr, &curr_ptr, prevNextPtr);
+                    MPIDI_CH3I_RMA_Ops_free_and_next(&win_ptr->rma_ops_list, &curr_ptr);
 		}
 		while (curr_ptr &&
 		       MPID_Request_is_complete(curr_ptr->request));
@@ -4584,7 +4573,6 @@ static int MPIDI_CH3I_RMAListComplete( MPID_Win *win_ptr )
 		   list */
 		if (loopcount++ > 4) /* FIXME: threshold as parameter */
 		    break;  /* wait for an event */
-		prevNextPtr = &curr_ptr->next;
 		curr_ptr    = curr_ptr->next;
 	    }
 	} while (curr_ptr);
@@ -4592,7 +4580,7 @@ static int MPIDI_CH3I_RMAListComplete( MPID_Win *win_ptr )
 	/* Wait for something to arrive*/
 	/* In some tests, this hung unless the test ensured that 
 	   there was an incomplete request. */
-	curr_ptr = win_ptr->rma_ops_list_head;
+        curr_ptr = MPIDI_CH3I_RMA_Ops_head(&win_ptr->rma_ops_list);
 	if (curr_ptr && !MPID_Request_is_complete(curr_ptr->request) ) {
 	    MPIU_INSTR_DURATION_START_VAR(list_block);
 	    mpi_errno = MPID_Progress_wait(&progress_state);
@@ -4630,14 +4618,12 @@ static int MPIDI_CH3I_RMAListPartialComplete( MPID_Win *win_ptr,
     int mpi_errno=0;
     MPIDI_RMA_ops *curr_ptr;
     MPID_Progress_state progress_state;
-    MPIDI_RMA_ops **prevNextPtr;
     int nComplete = 0;
 
     MPIU_INSTR_DURATION_START_VAR(list_complete);
     MPID_Progress_start(&progress_state);
 
-    prevNextPtr = &win_ptr->rma_ops_list_head;
-    curr_ptr    = win_ptr->rma_ops_list_head;
+    curr_ptr = MPIDI_CH3I_RMA_Ops_head(&win_ptr->rma_ops_list);
     MPID_Progress_poke();
     do {
 	if (MPID_Request_is_complete(curr_ptr->request)) {
@@ -4654,7 +4640,7 @@ static int MPIDI_CH3I_RMAListPartialComplete( MPID_Win *win_ptr,
 		}
 		/* --END ERROR HANDLING-- */
 		MPID_Request_release(curr_ptr->request);
-                MPIDI_CH3I_Win_ops_free_and_next(win_ptr, &curr_ptr, prevNextPtr);
+                MPIDI_CH3I_RMA_Ops_free_and_next(&win_ptr->rma_ops_list, &curr_ptr);
 	    }
 	    while (curr_ptr && curr_ptr != last_elm && 
 		   MPID_Request_is_complete(curr_ptr->request)) ;
@@ -4665,7 +4651,6 @@ static int MPIDI_CH3I_RMAListPartialComplete( MPID_Win *win_ptr,
 	}
 	else {
 	    /* proceed to the next entry.  */
-	    prevNextPtr = &curr_ptr->next;
 	    curr_ptr    = curr_ptr->next;
 	}
     } while (curr_ptr && curr_ptr != last_elm);
