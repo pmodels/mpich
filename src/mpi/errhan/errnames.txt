@@ -213,6 +213,8 @@ be in the range 0 to %d
 **opnull:Null MPI_Op
 **opundefined:MPI_Op operation not defined for this datatype 
 **opundefined %s:MPI_Op %s operation not defined for this datatype 
+**opnotallowed:MPI_Op operation is not allowed in this routine
+**opnotallowed %d:MPI_Op operation is not allowed in this routine (op = %d)
 **topology:Invalid topology
 **dims:Invalid dimension argument
 **dims %d:Invalid dimension argument (value is %d)

@@ -317,13 +317,47 @@
     }
 /* --END ERROR MACROS-- */
 
-#define MPIR_ERRTEST_OP(op,err)                                         \
-    if (op == MPI_OP_NULL) {                                            \
-        MPIU_ERR_SETANDSTMT(err,MPI_ERR_OP,goto fn_fail,"**opnull");    \
-    }                                                                   \
-    else {                                                              \
-        MPIR_ERRTEST_VALID_HANDLE(op,MPID_OP,err,MPI_ERR_OP,"**op");    \
-    }
+#define MPIR_ERRTEST_OP(op,err)                                                 \
+    do {                                                                        \
+        if (op == MPI_OP_NULL) {                                                \
+            MPIU_ERR_SETANDSTMT(err,MPI_ERR_OP,goto fn_fail,"**opnull");        \
+        }                                                                       \
+        else if (op == MPI_NO_OP || op == MPI_REPLACE) {                        \
+            MPIU_ERR_SETANDSTMT(err,MPI_ERR_OP,goto fn_fail,"**opnotallowed");  \
+        }                                                                       \
+        else {                                                                  \
+            MPIR_ERRTEST_VALID_HANDLE(op,MPID_OP,err,MPI_ERR_OP,"**op");        \
+        }                                                                       \
+    } while (0)
+
+#define MPIR_ERRTEST_OP_ACC(op,err)                                             \
+    do {                                                                        \
+        if (op == MPI_OP_NULL) {                                                \
+            MPIU_ERR_SETANDSTMT(err,MPI_ERR_OP,goto fn_fail,"**opnull");        \
+        }                                                                       \
+        else if (op == MPI_NO_OP) {                                             \
+            MPIU_ERR_SETANDSTMT(err,MPI_ERR_OP,goto fn_fail,"**opnotallowed");  \
+        }                                                                       \
+        else {                                                                  \
+            MPIR_ERRTEST_VALID_HANDLE(op,MPID_OP,err,MPI_ERR_OP,"**op");        \
+        }                                                                       \
+        if (HANDLE_GET_KIND(op) != HANDLE_KIND_BUILTIN) {                       \
+            MPIU_ERR_SETANDSTMT(err,MPI_ERR_OP,goto fn_fail,"**opnotpredefined"); \
+        }                                                                       \
+    } while (0)
+
+#define MPIR_ERRTEST_OP_GACC(op,err)                                            \
+    do {                                                                        \
+        if (op == MPI_OP_NULL) {                                                \
+            MPIU_ERR_SETANDSTMT(err,MPI_ERR_OP,goto fn_fail,"**opnull");        \
+        }                                                                       \
+        else {                                                                  \
+            MPIR_ERRTEST_VALID_HANDLE(op,MPID_OP,err,MPI_ERR_OP,"**op");        \
+        }                                                                       \
+        if (HANDLE_GET_KIND(op) != HANDLE_KIND_BUILTIN) {                       \
+            MPIU_ERR_SETANDSTMT(err,MPI_ERR_OP,goto fn_fail,"**opnotpredefined"); \
+        }                                                                       \
+    } while (0)
 
 #define MPIR_ERRTEST_GROUP(group,err)                                   \
     if (group == MPI_GROUP_NULL) {                                      \

@@ -115,7 +115,7 @@ int MPI_Fetch_and_op(const void *origin_addr, void *result_addr,
             comm_ptr = win_ptr->comm_ptr;
             MPIR_ERRTEST_SEND_RANK(comm_ptr, target_rank, mpi_errno);
 
-            MPIR_ERRTEST_OP(op, mpi_errno);
+            MPIR_ERRTEST_OP_GACC(op, mpi_errno);
 
             if (HANDLE_GET_KIND(op) != HANDLE_KIND_BUILTIN)
             {
