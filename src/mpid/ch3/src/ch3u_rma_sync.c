@@ -119,9 +119,11 @@ static int MPIDI_CH3I_Do_passive_target_rma(MPID_Win *win_ptr, int target_rank,
                                             int unlock_target);
 static int MPIDI_CH3I_Send_lock_put_or_acc(MPID_Win *, int);
 static int MPIDI_CH3I_Send_lock_get(MPID_Win *, int);
-static int MPIDI_CH3I_RMAListComplete(MPID_Win *, MPIDI_RMA_Ops_list_t *);
-static int MPIDI_CH3I_RMAListPartialComplete( MPID_Win *, MPIDI_RMA_Ops_list_t *,
-                                              MPIDI_RMA_Op_t *, int * );
+static int MPIDI_CH3I_RMAListComplete(MPID_Win *win_ptr,
+                                      MPIDI_RMA_Ops_list_t *ops_list);
+static int MPIDI_CH3I_RMAListPartialComplete(MPID_Win *win_ptr,
+                                             MPIDI_RMA_Ops_list_t *ops_list,
+                                             MPIDI_RMA_Op_t *last_elm, int *nDone);
 
 static int create_datatype(const MPIDI_RMA_dtype_info *dtype_info,
                            const void *dataloop, MPI_Aint dataloop_sz,
@@ -2094,13 +2096,12 @@ int MPIDI_Win_flush(int rank, MPID_Win *win_ptr)
        reply, and perform the RMA ops. */
 
     if (win_ptr->targets[rank].remote_lock_state == MPIDI_CH3_WIN_LOCK_NONE) {
+        MPIDI_RMA_Op_t *head = MPIDI_CH3I_RMA_Ops_head(&win_ptr->targets[rank].rma_ops_list);
+
         /* Ensure that win_lock is waiting at the head of the ops list */
         MPIU_ERR_CHKANDJUMP(MPIDI_CH3I_RMA_Ops_isempty(&win_ptr->targets[rank].rma_ops_list) ||
-                            MPIDI_CH3I_RMA_Ops_head(&win_ptr->targets[rank].rma_ops_list)->type != MPIDI_RMA_LOCK,
-                            mpi_errno, MPI_ERR_RMA_SYNC, "**rmasync");
-        mpi_errno =
-            MPIDI_CH3I_Send_lock_msg(MPIDI_CH3I_RMA_Ops_head(&win_ptr->targets[rank].rma_ops_list)->target_rank,
-                                     MPIDI_CH3I_RMA_Ops_head(&win_ptr->targets[rank].rma_ops_list)->lock_type, win_ptr);
+                            head->type != MPIDI_RMA_LOCK, mpi_errno, MPI_ERR_RMA_SYNC, "**rmasync");
+        mpi_errno = MPIDI_CH3I_Send_lock_msg(head->target_rank, head->lock_type, win_ptr);
         if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
     }
 
@@ -2291,14 +2292,17 @@ static int MPIDI_CH3I_Do_passive_target_rma(MPID_Win *win_ptr, int target_rank,
         *wait_for_rma_done_pkt = 0;
     }
     else {
+        MPIDI_RMA_Op_t *tail = MPIDI_CH3I_RMA_Ops_tail(&win_ptr->targets[target_rank].rma_ops_list);
+
         /* shared lock. check if any of the rma ops is a get. If so, move it 
            to the end of the list and do it last, in which case an rma done 
            pkt is not needed. If there is no get, rma done pkt is needed */
 
-        if (MPIDI_CH3I_RMA_Ops_tail(&win_ptr->targets[target_rank].rma_ops_list)->type == MPIDI_RMA_GET ||
-            MPIDI_CH3I_RMA_Ops_tail(&win_ptr->targets[target_rank].rma_ops_list)->type == MPIDI_RMA_COMPARE_AND_SWAP ||
-            MPIDI_CH3I_RMA_Ops_tail(&win_ptr->targets[target_rank].rma_ops_list)->type == MPIDI_RMA_FETCH_AND_OP ||
-            MPIDI_CH3I_RMA_Ops_tail(&win_ptr->targets[target_rank].rma_ops_list)->type == MPIDI_RMA_GET_ACCUMULATE) {
+        if (tail->type == MPIDI_RMA_GET ||
+            tail->type == MPIDI_RMA_COMPARE_AND_SWAP ||
+            tail->type == MPIDI_RMA_FETCH_AND_OP ||
+            tail->type == MPIDI_RMA_GET_ACCUMULATE)
+        {
             /* last operation sends a response message. no need to wait
                for an additional rma done pkt */
             *wait_for_rma_done_pkt = 0;
@@ -2339,7 +2343,9 @@ static int MPIDI_CH3I_Do_passive_target_rma(MPID_Win *win_ptr, int target_rank,
     /* Remove the lock operation if it's still on the head of the list */
     if (!MPIDI_CH3I_RMA_Ops_isempty(&win_ptr->targets[target_rank].rma_ops_list) &&
         MPIDI_CH3I_RMA_Ops_head(&win_ptr->targets[target_rank].rma_ops_list)->type == MPIDI_RMA_LOCK)
+    {
         MPIDI_CH3I_RMA_Ops_free_and_next(&win_ptr->targets[target_rank].rma_ops_list, &curr_ptr);
+    }
 
     nops = 0;
     while (curr_ptr != NULL) {
