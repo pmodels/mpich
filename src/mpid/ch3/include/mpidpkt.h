@@ -327,6 +327,8 @@ typedef struct MPIDI_CH3_Pkt_lock
     int lock_type;
     MPI_Win target_win_handle;
     MPI_Win source_win_handle;
+    int target_rank;            /* Used in unluck/flush response to look up the
+                                   target state at the origin. */
 }
 MPIDI_CH3_Pkt_lock_t;
 
@@ -334,6 +336,8 @@ typedef struct MPIDI_CH3_Pkt_lock_granted
 {
     MPIDI_CH3_Pkt_type_t type;
     MPI_Win source_win_handle;
+    int target_rank;            /* Used in pt_rma_done response to look up the
+                                   target state at the origin. */
 }
 MPIDI_CH3_Pkt_lock_granted_t;
 

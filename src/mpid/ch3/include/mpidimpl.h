@@ -1226,8 +1226,8 @@ int MPIDI_Free_mem(void *ptr);
 /* internal */
 int MPIDI_CH3I_Release_lock(MPID_Win * win_ptr);
 int MPIDI_CH3I_Try_acquire_win_lock(MPID_Win * win_ptr, int requested_lock);
-int MPIDI_CH3I_Send_lock_granted_pkt(MPIDI_VC_t * vc, int source_win_ptr);
-int MPIDI_CH3I_Send_pt_rma_done_pkt(MPIDI_VC_t * vc, int source_win_ptr);
+int MPIDI_CH3I_Send_lock_granted_pkt(MPIDI_VC_t * vc, MPID_Win *win_ptr, int source_win_hdl);
+int MPIDI_CH3I_Send_pt_rma_done_pkt(MPIDI_VC_t * vc, MPID_Win *win_ptr, int source_win_hdl);
 
 #define MPIDI_CH3I_DATATYPE_IS_PREDEFINED(type, predefined) \
     if ((HANDLE_GET_KIND(type) == HANDLE_KIND_BUILTIN) || \

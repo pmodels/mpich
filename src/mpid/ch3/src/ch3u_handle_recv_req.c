@@ -172,7 +172,7 @@ int MPIDI_CH3_ReqHandler_PutAccumRespComplete( MPIDI_VC_t *vc,
 	else {
 	    if ((win_ptr->current_lock_type == MPI_LOCK_SHARED) ||
 		(rreq->dev.single_op_opt == 1)) {
-		mpi_errno = MPIDI_CH3I_Send_pt_rma_done_pkt(vc, 
+                mpi_errno = MPIDI_CH3I_Send_pt_rma_done_pkt(vc, win_ptr,
 				    rreq->dev.source_win_handle);
 		if (mpi_errno) {
 		    MPIU_ERR_POP(mpi_errno);
@@ -466,7 +466,7 @@ int MPIDI_CH3_ReqHandler_SinglePutAccumComplete( MPIDI_VC_t *vc,
 	win_ptr->my_pt_rma_puts_accs++;
 	
 	/* send done packet */
-	mpi_errno = MPIDI_CH3I_Send_pt_rma_done_pkt(vc, 
+        mpi_errno = MPIDI_CH3I_Send_pt_rma_done_pkt(vc, win_ptr,
 				    lock_queue_entry->source_win_handle);
 	if (mpi_errno) {
 	    MPIU_ERR_POP(mpi_errno);
@@ -1023,7 +1023,7 @@ int MPIDI_CH3I_Release_lock(MPID_Win *win_ptr)
 				win_ptr->my_pt_rma_puts_accs++;
 				
 				mpi_errno = 
-				    MPIDI_CH3I_Send_pt_rma_done_pkt(lock_queue->vc, 
+                                    MPIDI_CH3I_Send_pt_rma_done_pkt(lock_queue->vc, win_ptr,
 								    lock_queue->source_win_handle);
 				if (mpi_errno != MPI_SUCCESS) goto fn_exit;
 				
@@ -1071,7 +1071,7 @@ int MPIDI_CH3I_Release_lock(MPID_Win *win_ptr)
 			else {
 			    /* send lock granted packet. */
 			    mpi_errno = 
-				MPIDI_CH3I_Send_lock_granted_pkt(lock_queue->vc,
+                                MPIDI_CH3I_Send_lock_granted_pkt(lock_queue->vc, win_ptr,
 								 lock_queue->source_win_handle);
 			    
 			    /* dequeue entry from lock queue */
@@ -1105,7 +1105,8 @@ int MPIDI_CH3I_Release_lock(MPID_Win *win_ptr)
 #define FUNCNAME MPIDI_CH3I_Send_pt_rma_done_pkt
 #undef FCNAME 
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-int MPIDI_CH3I_Send_pt_rma_done_pkt(MPIDI_VC_t *vc, MPI_Win source_win_handle)
+int MPIDI_CH3I_Send_pt_rma_done_pkt(MPIDI_VC_t *vc, MPID_Win *win_ptr,
+                                    MPI_Win source_win_handle)
 {
     MPIDI_CH3_Pkt_t upkt;
     MPIDI_CH3_Pkt_pt_rma_done_t *pt_rma_done_pkt = &upkt.pt_rma_done;
@@ -1117,6 +1118,7 @@ int MPIDI_CH3I_Send_pt_rma_done_pkt(MPIDI_VC_t *vc, MPI_Win source_win_handle)
 
     MPIDI_Pkt_init(pt_rma_done_pkt, MPIDI_CH3_PKT_PT_RMA_DONE);
     pt_rma_done_pkt->source_win_handle = source_win_handle;
+    pt_rma_done_pkt->target_rank = win_ptr->comm_ptr->rank;
 
     /* Because this is in a packet handler, it is already within a critical section */	
     /* MPIU_THREAD_CS_ENTER(CH3COMM,vc); */

@@ -2951,7 +2951,8 @@ static int MPIDI_CH3I_Send_lock_get(MPID_Win *win_ptr, int target_rank)
 #define FUNCNAME MPIDI_CH3I_Send_lock_granted_pkt
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-int MPIDI_CH3I_Send_lock_granted_pkt(MPIDI_VC_t *vc, MPI_Win source_win_handle)
+int MPIDI_CH3I_Send_lock_granted_pkt(MPIDI_VC_t *vc, MPID_Win *win_ptr,
+                                     MPI_Win source_win_handle)
 {
     MPIDI_CH3_Pkt_t upkt;
     MPIDI_CH3_Pkt_lock_granted_t *lock_granted_pkt = &upkt.lock_granted;
@@ -2964,6 +2965,7 @@ int MPIDI_CH3I_Send_lock_granted_pkt(MPIDI_VC_t *vc, MPI_Win source_win_handle)
     /* send lock granted packet */
     MPIDI_Pkt_init(lock_granted_pkt, MPIDI_CH3_PKT_LOCK_GRANTED);
     lock_granted_pkt->source_win_handle = source_win_handle;
+    lock_granted_pkt->target_rank = win_ptr->comm_ptr->rank;
 
     MPIU_DBG_MSG_FMT(CH3_OTHER,VERBOSE,
                      (MPIU_DBG_FDEST, "sending lock granted pkt on vc=%p, source_win_handle=%#08x",
@@ -3533,7 +3535,7 @@ int MPIDI_CH3_PktHandler_Accumulate_Immed( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 	    else {
 		if ((win_ptr->current_lock_type == MPI_LOCK_SHARED) ||
 		    (/*rreq->dev.single_op_opt*/ 0 == 1)) {
-		    mpi_errno = MPIDI_CH3I_Send_pt_rma_done_pkt(vc, 
+                    mpi_errno = MPIDI_CH3I_Send_pt_rma_done_pkt(vc, win_ptr,
 					accum_pkt->source_win_handle);
 		    if (mpi_errno) {
 			    MPIU_ERR_POP(mpi_errno);
@@ -3916,7 +3918,7 @@ int MPIDI_CH3_PktHandler_Lock( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 					lock_pkt->lock_type) == 1)
     {
 	/* send lock granted packet. */
-	mpi_errno = MPIDI_CH3I_Send_lock_granted_pkt(vc,
+        mpi_errno = MPIDI_CH3I_Send_lock_granted_pkt(vc, win_ptr,
 					     lock_pkt->source_win_handle);
     }
 
@@ -4432,8 +4434,7 @@ int MPIDI_CH3_PktHandler_LockGranted( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 
     MPID_Win_get_ptr(lock_granted_pkt->source_win_handle, win_ptr);
     /* set the remote_lock_state flag in the window */
-    /* FIXME: pg_rank is only valid when win_ptr->comm_ptr == MPI_COMM_WORLD */
-    win_ptr->targets[vc->pg_rank].remote_lock_state = MPIDI_CH3_WIN_LOCK_GRANTED;
+    win_ptr->targets[lock_granted_pkt->target_rank].remote_lock_state = MPIDI_CH3_WIN_LOCK_GRANTED;
     
     *rreqp = NULL;
     MPIDI_CH3_Progress_signal_completion();	
@@ -4461,11 +4462,10 @@ int MPIDI_CH3_PktHandler_PtRMADone( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 
     MPID_Win_get_ptr(pt_rma_done_pkt->source_win_handle, win_ptr);
 
-    /* FIXME: pg_rank is only valid when win_ptr->comm_ptr == MPI_COMM_WORLD */
-    if (win_ptr->targets[vc->pg_rank].remote_lock_state == MPIDI_CH3_WIN_LOCK_FLUSH)
-        win_ptr->targets[vc->pg_rank].remote_lock_state = MPIDI_CH3_WIN_LOCK_GRANTED;
+    if (win_ptr->targets[pt_rma_done_pkt->target_rank].remote_lock_state == MPIDI_CH3_WIN_LOCK_FLUSH)
+        win_ptr->targets[pt_rma_done_pkt->target_rank].remote_lock_state = MPIDI_CH3_WIN_LOCK_GRANTED;
     else
-        win_ptr->targets[vc->pg_rank].remote_lock_state = MPIDI_CH3_WIN_LOCK_NONE;
+        win_ptr->targets[pt_rma_done_pkt->target_rank].remote_lock_state = MPIDI_CH3_WIN_LOCK_NONE;
 
     *rreqp = NULL;
     MPIDI_CH3_Progress_signal_completion();	
@@ -4532,7 +4532,10 @@ int MPIDI_CH3_PktHandler_Flush( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
     if (flush_pkt->target_win_handle != MPI_WIN_NULL) {
         MPID_Request *req=NULL;
 
+        MPID_Win_get_ptr(flush_pkt->target_win_handle, win_ptr);
+
         flush_pkt->target_win_handle = MPI_WIN_NULL;
+        flush_pkt->target_rank = win_ptr->comm_ptr->rank;
 
         MPIU_THREAD_CS_ENTER(CH3COMM,vc);
         mpi_errno = MPIDI_CH3_iStartMsg(vc, flush_pkt, sizeof(*flush_pkt), &req);
@@ -4548,8 +4551,7 @@ int MPIDI_CH3_PktHandler_Flush( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
     /* This is a flush response packet */
     else {
         MPID_Win_get_ptr(flush_pkt->source_win_handle, win_ptr);
-        /* FIXME: pg_rank is only valid when win_ptr->comm_ptr == MPI_COMM_WORLD */
-        win_ptr->targets[vc->pg_rank].remote_lock_state = MPIDI_CH3_WIN_LOCK_GRANTED;
+        win_ptr->targets[flush_pkt->target_rank].remote_lock_state = MPIDI_CH3_WIN_LOCK_GRANTED;
         MPIDI_CH3_Progress_signal_completion();
     }
 
