@@ -210,7 +210,16 @@ struct MPIDI_Win_info_args_s {
 };
 
 struct MPIDI_Win_target_state_s {
-    struct MPIDI_RMA_ops *rma_ops_list; /* list of outstanding RMA operations */
+    struct MPIDI_RMA_ops *rma_ops_list;                                  \
+                                /* list of outstanding RMA operations */ \
+    volatile enum MPIDI_CH3_Lock_states_e remote_lock_state;             \
+                                /* Indicates the state of the target     \
+                                   process' "lock" for passive target    \
+                                   RMA. */                               \
+    int remote_lock_mode;       /* Indicates the access mode             \
+                                   (shared/exclusive) of the target      \
+                                   process for passive target RMA. Valid \
+                                   whenever state != NONE. */            \
 };
 
 #define MPIDI_DEV_WIN_DECL                                               \
@@ -221,15 +230,6 @@ struct MPIDI_Win_target_state_s {
     int *disp_units;      /* array of displacement units of all windows */\
     MPI_Win *all_win_handles;    /* array of handles to the window objects\
                                           of all processes */            \
-    volatile enum MPIDI_CH3_Lock_states_e remote_lock_state;             \
-                                /* Indicates the state of the target     \
-                                   process' "lock" for passive target    \
-                                   RMA. */                               \
-    volatile int remote_lock_mode;                                       \
-                                /* Indicates the access mode             \
-                                   (shared/exclusive) of the target      \
-                                   process for passive target RMA. Valid \
-                                   whenever state != NONE. */            \
     volatile int current_lock_type;   /* current lock type on this window (as target)   \
                               * (none, shared, exclusive) */             \
     volatile int shared_lock_ref_cnt;                                    \
