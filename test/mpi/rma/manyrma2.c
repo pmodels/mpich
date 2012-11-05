@@ -15,7 +15,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define MAX_COUNT 65536*4
+#define MAX_COUNT 65536*4/16
 #define MAX_RMA_SIZE 2 /* 16 in manyrma performance test */
 #define MAX_RUNS 10
 
