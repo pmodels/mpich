@@ -248,6 +248,48 @@ int main(int argc, char **argv) {
     }
     MPI_Win_unlock(rank, win);
 
+    /* Test all-to-all communication (lock-all+flush) */
+
+    reset_bufs(win_ptr, res_ptr, val_ptr, rank, win);
+
+    for (i = 0; i < ITER; i++) {
+        int j;
+
+        MPI_Win_lock_all(0, win);
+        for (j = 0; j < nproc; j++) {
+            MPI_Get_accumulate(val_ptr, COUNT, TYPE_MPI, &res_ptr[j*COUNT], COUNT, TYPE_MPI,
+                                j, rank*COUNT, COUNT, TYPE_MPI, MPI_SUM, win);
+            MPI_Win_flush(j, win);
+        }
+        MPI_Win_unlock_all(win);
+        MPI_Barrier(MPI_COMM_WORLD);
+
+        for (j = 0; j < nproc; j++) {
+            int c;
+            for (c = 0; c < COUNT; c++) {
+                if (res_ptr[j*COUNT+c] != i*rank) {
+                    SQUELCH( printf("%d->%d -- ALL-TO-ALL (LOCK-ALL+FLUSH) [%d]: iter %d, expected result "TYPE_FMT", got "TYPE_FMT"\n", 
+                                    rank, j, c, i, (TYPE_C) i*rank, res_ptr[j*COUNT+c]); );
+                    errors++;
+                }
+            }
+        }
+    }
+
+    MPI_Barrier(MPI_COMM_WORLD);
+    MPI_Win_lock(MPI_LOCK_EXCLUSIVE, rank, 0, win);
+    for (i = 0; i < nproc; i++) {
+        int c;
+        for (c = 0; c < COUNT; c++) {
+            if (win_ptr[i*COUNT+c] != ITER*i) {
+                SQUELCH( printf("%d->%d -- ALL-TO-ALL (LOCK-ALL+FLUSH): expected "TYPE_FMT", got "TYPE_FMT"\n", 
+                                i, rank, (TYPE_C) ITER*i, win_ptr[i*COUNT+c]); );
+                errors++;
+            }
+        }
+    }
+    MPI_Win_unlock(rank, win);
+
     MPI_Win_free(&win);
 
     MPI_Reduce(&errors, &all_errors, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
