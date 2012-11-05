@@ -197,12 +197,17 @@ const char *MPID_nem_ptl_strlist(ptl_list_t list);
                                                 header_ & NPTL_LARGE ? 'L':' ',                                                             \
                                                 header_ & NPTL_MULTIPLE ? 'M':' ',                                                          \
                                                 NPTL_HEADER_GET_LENGTH(header_), header_));                                                 \
-                                                                                                                                            \
+    } while(0)
+
+#define DBG_MSG_GET(md_, data_sz_, pg_rank_, match_) do {                                                                                   \
+        MPIU_DBG_MSG_FMT(CH3_CHANNEL, VERBOSE, (MPIU_DBG_FDEST, "PtlGet: md=%s data_sz=%lu pg_rank=%d", md_, data_sz_, pg_rank_));          \
+        MPIU_DBG_MSG_FMT(CH3_CHANNEL, VERBOSE, (MPIU_DBG_FDEST, "        tag=%#lx ctx=%#lx rank=%ld match=%#lx",                            \
+                                                NPTL_MATCH_GET_TAG(match_), NPTL_MATCH_GET_CTX(match_), NPTL_MATCH_GET_RANK(match_), match_)); \
     } while(0)
 
 #define DBG_MSG_MEAPPEND(pt_, pg_rank_, me_, usr_ptr_) do {                                                                                 \
-        MPIU_DBG_MSG_FMT(CH3_CHANNEL, VERBOSE, (MPIU_DBG_FDEST, "PtlMEAppend: pt=%s pg_rank=%d me.length=%lu IOV=%d usr_ptr=%p",            \
-                                                pt_, pg_rank_, me_.length, me_.options & PTL_IOVEC, usr_ptr_));                             \
+        MPIU_DBG_MSG_FMT(CH3_CHANNEL, VERBOSE, (MPIU_DBG_FDEST, "PtlMEAppend: pt=%s pg_rank=%d me.start=%p me.length=%lu is_IOV=%d usr_ptr=%p", \
+                                                pt_, pg_rank_, me_.start, me_.length, me_.options & PTL_IOVEC, usr_ptr_));                  \
         MPIU_DBG_MSG_FMT(CH3_CHANNEL, VERBOSE, (MPIU_DBG_FDEST, "             tag=%#lx ctx=%#lx rank=%ld match=%#lx ignore=%#lx",           \
                                                 NPTL_MATCH_GET_TAG(me_.match_bits), NPTL_MATCH_GET_CTX(me_.match_bits),                     \
                                                 NPTL_MATCH_GET_RANK(me_.match_bits), me_.match_bits, me_.ignore_bits));                     \

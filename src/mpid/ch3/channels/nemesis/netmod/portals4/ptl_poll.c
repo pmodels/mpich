@@ -135,9 +135,9 @@ int MPID_nem_ptl_poll(int is_blocking_poll)
             break;
         MPIU_ERR_CHKANDJUMP(ret == PTL_EQ_DROPPED, mpi_errno, MPI_ERR_OTHER, "**eqdropped");
         MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptleqget", "**ptleqget %s", MPID_nem_ptl_strerror(ret));
-        MPIU_DBG_MSG_FMT(CH3_CHANNEL, VERBOSE, (MPIU_DBG_FDEST, "Received event %s ni_fail=%s list=%s user_ptr=%p hdr_data=%#lx",
+        MPIU_DBG_MSG_FMT(CH3_CHANNEL, VERBOSE, (MPIU_DBG_FDEST, "Received event %s ni_fail=%s list=%s user_ptr=%p hdr_data=%#lx mlength=%lu",
                                                 MPID_nem_ptl_strevent(&event), MPID_nem_ptl_strnifail(event.ni_fail_type),
-                                                MPID_nem_ptl_strlist(event.ptl_list), event.user_ptr, event.hdr_data));
+                                                MPID_nem_ptl_strlist(event.ptl_list), event.user_ptr, event.hdr_data, event.mlength));
 
         MPIU_ERR_CHKANDJUMP2(event.ni_fail_type != PTL_NI_OK && event.ni_fail_type != PTL_NI_NO_MATCH, mpi_errno, MPI_ERR_OTHER, "**ptlni_fail", "**ptlni_fail %s %s", MPID_nem_ptl_strevent(&event), MPID_nem_ptl_strnifail(event.ni_fail_type));
         
@@ -171,6 +171,7 @@ int MPID_nem_ptl_poll(int is_blocking_poll)
         case PTL_EVENT_AUTO_UNLINK:
             overflow_me_handle[(size_t)event.user_ptr] = PTL_INVALID_HANDLE;
             break;
+        case PTL_EVENT_LINK:
         case PTL_EVENT_SEND:
             /* ignore */
             break;

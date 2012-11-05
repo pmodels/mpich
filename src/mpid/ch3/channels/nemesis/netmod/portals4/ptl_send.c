@@ -199,10 +199,12 @@ static int send_msg(ptl_hdr_data_t ssend_flag, struct MPIDI_VC *vc, const void *
     }
     
     MPIDI_Datatype_get_info(count, datatype, dt_contig, data_sz, dt_ptr, dt_true_lb);
-
+    MPIU_DBG_MSG_FMT(CH3_CHANNEL, VERBOSE, (MPIU_DBG_FDEST, "count=%d datatype=%#x contig=%d data_sz=%lu", count, datatype, dt_contig, data_sz));
+    
     if (data_sz < PTL_LARGE_THRESHOLD) {
         /* Small message.  Send all data eagerly */
         if (dt_contig) {
+            MPIU_DBG_MSG(CH3_CHANNEL, VERBOSE, "Small contig message");
             REQ_PTL(sreq)->event_handler = handler_send_complete;
             MPIU_DBG_MSG_P(CH3_CHANNEL, VERBOSE, "&REQ_PTL(sreq)->event_handler = %p", &(REQ_PTL(sreq)->event_handler));
             ret = PtlPut(MPIDI_nem_ptl_global_md, (ptl_size_t)buf, data_sz, PTL_ACK_REQ, vc_ptl->id, vc_ptl->pt,
@@ -213,11 +215,13 @@ static int send_msg(ptl_hdr_data_t ssend_flag, struct MPIDI_VC *vc, const void *
             MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE, "id.nid = %#x", vc_ptl->id.phys.nid);
             MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE, "id.pid = %#x", vc_ptl->id.phys.pid);
             MPIU_DBG_MSG_P(CH3_CHANNEL, VERBOSE, "sreq = %p", sreq);
+            MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE, "vc_ptl->pt = %d", vc_ptl->pt);
             MPIU_DBG_MSG_P(CH3_CHANNEL, VERBOSE, "REQ_PTL(sreq)->event_handler = %p", REQ_PTL(sreq)->event_handler);
            goto fn_exit;
         }
         
         /* noncontig data */
+        MPIU_DBG_MSG(CH3_CHANNEL, VERBOSE, "Small noncontig message");
         sreq->dev.segment_ptr = MPID_Segment_alloc();
         MPIU_ERR_CHKANDJUMP1(sreq->dev.segment_ptr == NULL, mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s", "MPID_Segment_alloc");
         MPID_Segment_init(buf, count, datatype, sreq->dev.segment_ptr, 0);
@@ -230,6 +234,7 @@ static int send_msg(ptl_hdr_data_t ssend_flag, struct MPIDI_VC *vc, const void *
 
         if (last == sreq->dev.segment_size) {
             /* IOV is able to describe entire message */
+            MPIU_DBG_MSG(CH3_CHANNEL, VERBOSE, "    entire message fits in IOV");
             md.start = sreq->dev.iov;
             md.length = sreq->dev.iov_count;
             md.options = PTL_IOVEC;
@@ -248,6 +253,7 @@ static int send_msg(ptl_hdr_data_t ssend_flag, struct MPIDI_VC *vc, const void *
         }
         
         /* IOV is not long enough to describe entire message */
+        MPIU_DBG_MSG(CH3_CHANNEL, VERBOSE, "    IOV too long: using bounce buffer");
         MPIU_CHKPMEM_MALLOC(REQ_PTL(sreq)->chunk_buffer[0], void *, data_sz, mpi_errno, "chunk_buffer");
         sreq->dev.segment_first = 0;
         last = data_sz;
@@ -265,8 +271,9 @@ static int send_msg(ptl_hdr_data_t ssend_flag, struct MPIDI_VC *vc, const void *
     /* Large message.  Send first chunk of data and let receiver get the rest */
     if (dt_contig) {
         /* create ME for buffer so receiver can issue a GET for the data */
-        me.start = (void *)buf; /* cast away const */
-        me.length = data_sz;
+        MPIU_DBG_MSG(CH3_CHANNEL, VERBOSE, "Large contig message");
+        me.start = (char *)buf + PTL_LARGE_THRESHOLD;
+        me.length = data_sz - PTL_LARGE_THRESHOLD;
         me.ct_handle = PTL_CT_NONE;
         me.uid = PTL_UID_ANY;
         me.options = ( PTL_ME_OP_PUT | PTL_ME_OP_GET | PTL_ME_USE_ONCE | PTL_ME_IS_ACCESSIBLE | PTL_ME_EVENT_LINK_DISABLE |
@@ -292,7 +299,7 @@ static int send_msg(ptl_hdr_data_t ssend_flag, struct MPIDI_VC *vc, const void *
     }
     
     /* Large noncontig data */
-     
+    MPIU_DBG_MSG(CH3_CHANNEL, VERBOSE, "Large noncontig message");
     sreq->dev.segment_ptr = MPID_Segment_alloc();
     MPIU_ERR_CHKANDJUMP1(sreq->dev.segment_ptr == NULL, mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s", "MPID_Segment_alloc");
     MPID_Segment_init(buf, count, datatype, sreq->dev.segment_ptr, 0);
@@ -308,7 +315,7 @@ static int send_msg(ptl_hdr_data_t ssend_flag, struct MPIDI_VC *vc, const void *
 
     if (last == PTL_LARGE_THRESHOLD) {
         /* first chunk of message fits into IOV */
-
+        MPIU_DBG_MSG(CH3_CHANNEL, VERBOSE, "    first chunk fits in IOV");
         if (initial_iov_count < MPID_IOV_LIMIT) {
             /* There may be space for the rest of the message in this IOV */
             sreq->dev.iov_count = MPID_IOV_LIMIT - sreq->dev.iov_count;
@@ -320,7 +327,7 @@ static int send_msg(ptl_hdr_data_t ssend_flag, struct MPIDI_VC *vc, const void *
 
             if (last == sreq->dev.segment_size) {
                 /* Entire message fit in one IOV */
-
+                MPIU_DBG_MSG(CH3_CHANNEL, VERBOSE, "    rest of message fits in one IOV");
                 /* Create ME for remaining data */
                 me.start = &sreq->dev.iov[initial_iov_count];
                 me.length = remaining_iov_count;
@@ -363,6 +370,7 @@ static int send_msg(ptl_hdr_data_t ssend_flag, struct MPIDI_VC *vc, const void *
     }
 
     /* Message doesn't fit in IOV, pack into buffers */
+    MPIU_DBG_MSG(CH3_CHANNEL, VERBOSE, "    Message doesn't fit in IOV: use bounce buffer");
 
     /* FIXME: For now, allocate a single large buffer to hold entire message */
     MPIU_CHKPMEM_MALLOC(REQ_PTL(sreq)->chunk_buffer[0], void *, data_sz, mpi_errno, "chunk_buffer");
@@ -379,10 +387,10 @@ static int send_msg(ptl_hdr_data_t ssend_flag, struct MPIDI_VC *vc, const void *
     me.match_bits = NPTL_MATCH(tag, comm->context_id + context_offset, comm->rank);
     me.ignore_bits = 0;
     me.min_free = 0;
-    
+
+    DBG_MSG_MEAPPEND("CTL", vc->pg_rank, me, sreq);
     ret = PtlMEAppend(MPIDI_nem_ptl_ni, MPIDI_nem_ptl_get_pt, &me, PTL_PRIORITY_LIST, sreq, &REQ_PTL(sreq)->me);
     MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlmeappend", "**ptlmeappend %s", MPID_nem_ptl_strerror(ret));
-    DBG_MSG_MEAPPEND("CTL", vc->pg_rank, me, sreq);
 
     REQ_PTL(sreq)->large = TRUE;
     
