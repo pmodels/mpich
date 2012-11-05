@@ -223,7 +223,9 @@ static int win_init(MPI_Aint size, int disp_unit, int create_flavor, int model,
                           MPID_Comm *comm_ptr, MPID_Win **win_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
+    int i;
     MPID_Comm *win_comm_ptr;
+    MPIU_CHKPMEM_DECL(1);
     MPIDI_STATE_DECL(MPID_STATE_WIN_INIT);
 
     MPIDI_FUNC_ENTER(MPID_STATE_WIN_INIT);
@@ -271,13 +273,21 @@ static int win_init(MPI_Aint size, int disp_unit, int create_flavor, int model,
     /* (*win_ptr)->sizes[] is set by caller; */
     /* (*win_ptr)->disp_units[] is set by caller; */
     /* (*win_ptr)->all_win_handles[] is set by caller; */
-    (*win_ptr)->rma_ops_list        = NULL;
     (*win_ptr)->remote_lock_state   = MPIDI_CH3_WIN_LOCK_NONE;
     (*win_ptr)->current_lock_type   = MPID_LOCK_NONE;
     (*win_ptr)->shared_lock_ref_cnt = 0;
     (*win_ptr)->lock_queue          = NULL;
     (*win_ptr)->pt_rma_puts_accs    = NULL;
     (*win_ptr)->my_pt_rma_puts_accs = 0;
+
+    /* Initialize the passive target lock state */
+    MPIU_CHKPMEM_MALLOC((*win_ptr)->targets, struct MPIDI_Win_target_state_s *,
+                        sizeof(struct MPIDI_Win_target_state_s)*MPIR_Comm_size(win_comm_ptr),
+                        mpi_errno, "RMA target states array");
+
+    for (i = 0; i < MPIR_Comm_size(win_comm_ptr); i++) {
+        (*win_ptr)->targets[i].rma_ops_list = NULL;
+    }
 
     /* Initialize the info flags */
     (*win_ptr)->info_args.no_locks            = 0;
@@ -293,6 +303,7 @@ fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_WIN_INIT);
     return mpi_errno;
 fn_fail:
+    MPIU_CHKPMEM_REAP();
     goto fn_exit;
 }
 

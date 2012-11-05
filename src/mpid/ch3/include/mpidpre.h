@@ -209,6 +209,10 @@ struct MPIDI_Win_info_args_s {
     int alloc_shared_noncontig; /* valid flavor = allocate shared */
 };
 
+struct MPIDI_Win_target_state_s {
+    struct MPIDI_RMA_ops *rma_ops_list; /* list of outstanding RMA operations */
+};
+
 #define MPIDI_DEV_WIN_DECL                                               \
     volatile int my_counter;  /* completion counter for operations       \
                                  targeting this window */                \
@@ -217,8 +221,6 @@ struct MPIDI_Win_info_args_s {
     int *disp_units;      /* array of displacement units of all windows */\
     MPI_Win *all_win_handles;    /* array of handles to the window objects\
                                           of all processes */            \
-    struct MPIDI_RMA_ops *rma_ops_list; /* list of outstanding RMA       \
-                                           operations */                 \
     volatile enum MPIDI_CH3_Lock_states_e remote_lock_state;             \
                                 /* Indicates the state of the target     \
                                    process' "lock" for passive target    \
@@ -241,6 +243,7 @@ struct MPIDI_Win_info_args_s {
                                           completed as target */         \
     MPI_Aint *sizes;      /* array of sizes of all windows */            \
     struct MPIDI_Win_info_args_s info_args;                              \
+    struct MPIDI_Win_target_state_s *targets;                            \
 
 #ifdef MPIDI_CH3_WIN_DECL
 #define MPID_DEV_WIN_DECL \

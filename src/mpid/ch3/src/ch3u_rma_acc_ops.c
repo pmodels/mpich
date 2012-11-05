@@ -156,7 +156,7 @@ int MPIDI_Get_accumulate(const void *origin_addr, int origin_count,
 
         /* Append the operation to the window's RMA ops queue */
         MPIU_INSTR_DURATION_START(rmaqueue_alloc);
-        mpi_errno = MPIDI_CH3I_RMA_Ops_alloc_tail(&win_ptr->rma_ops_list, &new_ptr);
+        mpi_errno = MPIDI_CH3I_RMA_Ops_alloc_tail(&win_ptr->targets[target_rank].rma_ops_list, &new_ptr);
         MPIU_INSTR_DURATION_END(rmaqueue_alloc);
         if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
 
@@ -249,7 +249,7 @@ int MPIDI_Compare_and_swap(const void *origin_addr, const void *compare_addr,
 
         /* Append this operation to the RMA ops queue */
         MPIU_INSTR_DURATION_START(rmaqueue_alloc);
-        mpi_errno = MPIDI_CH3I_RMA_Ops_alloc_tail(&win_ptr->rma_ops_list, &new_ptr);
+        mpi_errno = MPIDI_CH3I_RMA_Ops_alloc_tail(&win_ptr->targets[target_rank].rma_ops_list, &new_ptr);
         MPIU_INSTR_DURATION_END(rmaqueue_alloc);
         if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
 
@@ -324,7 +324,7 @@ int MPIDI_Fetch_and_op(const void *origin_addr, void *result_addr,
 
         /* Append this operation to the RMA ops queue */
         MPIU_INSTR_DURATION_START(rmaqueue_alloc);
-        mpi_errno = MPIDI_CH3I_RMA_Ops_alloc_tail(&win_ptr->rma_ops_list, &new_ptr);
+        mpi_errno = MPIDI_CH3I_RMA_Ops_alloc_tail(&win_ptr->targets[target_rank].rma_ops_list, &new_ptr);
         MPIU_INSTR_DURATION_END(rmaqueue_alloc);
         if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
 

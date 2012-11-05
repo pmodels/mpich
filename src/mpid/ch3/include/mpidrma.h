@@ -278,6 +278,40 @@ static inline void MPIDI_CH3I_RMA_Ops_free(MPIDI_RMA_Ops_list_t *list)
 }
 
 
+/* Concatenate RMA ops to all targets into a single list.
+ */
+#undef FUNCNAME
+#define FUNCNAME MPIDI_CH3I_RMA_Ops_concat_all
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
+static inline MPIDI_RMA_ops * MPIDI_CH3I_RMA_Ops_concat_all(MPID_Win *win_ptr)
+{
+    int i;
+    MPIDI_RMA_ops *root = NULL;
+
+    for (i = 0; i < MPIR_Comm_size(win_ptr->comm_ptr); i++) {
+        MPIDI_RMA_ops *head = win_ptr->targets[i].rma_ops_list;
+
+        /* Attach this list to the end of the aggregate list */
+        if (head != NULL) {
+            if (root == NULL)
+                root = head;
+            else {
+                MPIDI_RMA_ops *old_tail = root->prev;
+
+                old_tail->next = head;
+                root->prev     = head; /* new tail pointer */
+                head->prev     = old_tail;
+            }
+
+            win_ptr->targets[i].rma_ops_list = NULL;
+        }
+    }
+
+    return root;
+}
+
+
 #undef FUNCNAME
 #undef FCNAME
 
