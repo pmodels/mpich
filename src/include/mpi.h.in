@@ -1003,30 +1003,41 @@ int MPI_Win_set_info(MPI_Win win, MPI_Info info);
 int MPI_Get_accumulate(const void *origin_addr, int origin_count,
                         MPI_Datatype origin_datatype, void *result_addr, int result_count,
                         MPI_Datatype result_datatype, int target_rank, MPI_Aint target_disp,
-                        int target_count, MPI_Datatype target_datatype, MPI_Op op, MPI_Win win);
+                        int target_count, MPI_Datatype target_datatype, MPI_Op op, MPI_Win win)
+                        MPICH_ATTR_POINTER_WITH_TYPE_TAG(1,3)
+                        MPICH_ATTR_POINTER_WITH_TYPE_TAG(4,6);
 int MPI_Fetch_and_op(const void *origin_addr, void *result_addr,
                       MPI_Datatype datatype, int target_rank, MPI_Aint target_disp,
-                      MPI_Op op, MPI_Win win);
+                      MPI_Op op, MPI_Win win)
+                      MPICH_ATTR_POINTER_WITH_TYPE_TAG(1,3);
 int MPI_Compare_and_swap(const void *origin_addr, const void *compare_addr,
                           void *result_addr, MPI_Datatype datatype, int target_rank,
-                          MPI_Aint target_disp, MPI_Win win);
+                          MPI_Aint target_disp, MPI_Win win)
+                          MPICH_ATTR_POINTER_WITH_TYPE_TAG(1,4)
+                          MPICH_ATTR_POINTER_WITH_TYPE_TAG(2,4)
+                          MPICH_ATTR_POINTER_WITH_TYPE_TAG(3,4);
 int MPI_Rput(const void *origin_addr, int origin_count,
               MPI_Datatype origin_datatype, int target_rank, MPI_Aint target_disp,
               int target_count, MPI_Datatype target_datatype, MPI_Win win,
-              MPI_Request *request);
+              MPI_Request *request)
+              MPICH_ATTR_POINTER_WITH_TYPE_TAG(1,3);
 int MPI_Rget(void *origin_addr, int origin_count,
               MPI_Datatype origin_datatype, int target_rank, MPI_Aint target_disp,
               int target_count, MPI_Datatype target_datatype, MPI_Win win,
-              MPI_Request *request);
+              MPI_Request *request)
+              MPICH_ATTR_POINTER_WITH_TYPE_TAG(1,3);
 int MPI_Raccumulate(const void *origin_addr, int origin_count,
                      MPI_Datatype origin_datatype, int target_rank, MPI_Aint target_disp,
                      int target_count, MPI_Datatype target_datatype, MPI_Op op, MPI_Win win,
-                     MPI_Request *request);
+                     MPI_Request *request)
+                     MPICH_ATTR_POINTER_WITH_TYPE_TAG(1,3);
 int MPI_Rget_accumulate(const void *origin_addr, int origin_count,
                          MPI_Datatype origin_datatype, void *result_addr, int result_count,
                          MPI_Datatype result_datatype, int target_rank, MPI_Aint target_disp,
                          int target_count, MPI_Datatype target_datatype, MPI_Op op, MPI_Win win,
-                         MPI_Request *request);
+                         MPI_Request *request)
+                         MPICH_ATTR_POINTER_WITH_TYPE_TAG(1,3)
+                         MPICH_ATTR_POINTER_WITH_TYPE_TAG(4,6);
 
 int MPI_Win_lock_all(int assert, MPI_Win win);
 int MPI_Win_unlock_all(MPI_Win win);
@@ -1466,30 +1477,41 @@ int PMPI_Win_set_info(MPI_Win win, MPI_Info info);
 int PMPI_Get_accumulate(const void *origin_addr, int origin_count,
                          MPI_Datatype origin_datatype, void *result_addr, int result_count,
                          MPI_Datatype result_datatype, int target_rank, MPI_Aint target_disp,
-                         int target_count, MPI_Datatype target_datatype, MPI_Op op, MPI_Win win);
+                         int target_count, MPI_Datatype target_datatype, MPI_Op op, MPI_Win win)
+                         MPICH_ATTR_POINTER_WITH_TYPE_TAG(1,3)
+                         MPICH_ATTR_POINTER_WITH_TYPE_TAG(4,6);
 int PMPI_Fetch_and_op(const void *origin_addr, void *result_addr,
                        MPI_Datatype datatype, int target_rank, MPI_Aint target_disp,
-                       MPI_Op op, MPI_Win win);
+                       MPI_Op op, MPI_Win win)
+                       MPICH_ATTR_POINTER_WITH_TYPE_TAG(1,3);
 int PMPI_Compare_and_swap(const void *origin_addr, const void *compare_addr,
                            void *result_addr, MPI_Datatype datatype, int target_rank,
-                           MPI_Aint target_disp, MPI_Win win);
+                           MPI_Aint target_disp, MPI_Win win)
+                           MPICH_ATTR_POINTER_WITH_TYPE_TAG(1,4)
+                           MPICH_ATTR_POINTER_WITH_TYPE_TAG(2,4)
+                           MPICH_ATTR_POINTER_WITH_TYPE_TAG(3,4);
 int PMPI_Rput(const void *origin_addr, int origin_count,
                MPI_Datatype origin_datatype, int target_rank, MPI_Aint target_disp,
                int target_count, MPI_Datatype target_datatype, MPI_Win win,
-               MPI_Request *request);
+               MPI_Request *request)
+               MPICH_ATTR_POINTER_WITH_TYPE_TAG(1,3);
 int PMPI_Rget(void *origin_addr, int origin_count,
                MPI_Datatype origin_datatype, int target_rank, MPI_Aint target_disp,
                int target_count, MPI_Datatype target_datatype, MPI_Win win,
-               MPI_Request *request);
+               MPI_Request *request)
+               MPICH_ATTR_POINTER_WITH_TYPE_TAG(1,3);
 int PMPI_Raccumulate(const void *origin_addr, int origin_count,
                       MPI_Datatype origin_datatype, int target_rank, MPI_Aint target_disp,
                       int target_count, MPI_Datatype target_datatype, MPI_Op op, MPI_Win win,
-                      MPI_Request *request);
+                      MPI_Request *request)
+                      MPICH_ATTR_POINTER_WITH_TYPE_TAG(1,3);
 int PMPI_Rget_accumulate(const void *origin_addr, int origin_count,
                           MPI_Datatype origin_datatype, void *result_addr, int result_count,
                           MPI_Datatype result_datatype, int target_rank, MPI_Aint target_disp,
                           int target_count, MPI_Datatype target_datatype, MPI_Op op, MPI_Win win,
-                          MPI_Request *request);
+                          MPI_Request *request)
+                          MPICH_ATTR_POINTER_WITH_TYPE_TAG(1,3)
+                          MPICH_ATTR_POINTER_WITH_TYPE_TAG(4,6);
 
 int PMPI_Win_lock_all(int assert, MPI_Win win);
 int PMPI_Win_unlock_all(MPI_Win win);
