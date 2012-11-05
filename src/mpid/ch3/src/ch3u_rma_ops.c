@@ -33,8 +33,8 @@ extern void MPIDI_CH3_RMA_InitInstr(void);
  *       thread/process; free in Finalize handler.  Option to use for
  *       single-threaded to avoid thread overheads)
  * Possible interface
- *    int MPIDI_RMAListAlloc(MPIDI_RMA_ops **a,MPID_Win *win)
- *    int MPIDI_RMAListFree(MPIDI_RMA_ops *a, MPID_Win *win)
+ *    int MPIDI_RMAListAlloc(MPIDI_RMA_Op_t **a,MPID_Win *win)
+ *    int MPIDI_RMAListFree(MPIDI_RMA_Op_t *a, MPID_Win *win)
  *    return value is error code (e.g., allocation failure).
  */
 
@@ -149,7 +149,7 @@ int MPIDI_Put(const void *origin_addr, int origin_count, MPI_Datatype
     }
     else
     {
-        MPIDI_RMA_ops *new_ptr = NULL;
+        MPIDI_RMA_Op_t *new_ptr = NULL;
 
 	/* queue it up */
         MPIU_INSTR_DURATION_START(rmaqueue_alloc);
@@ -161,7 +161,7 @@ int MPIDI_Put(const void *origin_addr, int origin_count, MPI_Datatype
 	/* FIXME: For contig and very short operations, use a streamlined op */
 	new_ptr->type = MPIDI_RMA_PUT;
         /* Cast away const'ness for the origin address, as the
-         * MPIDI_RMA_ops structure is used for both PUT and GET like
+         * MPIDI_RMA_Op_t structure is used for both PUT and GET like
          * operations */
 	new_ptr->origin_addr = (void *) origin_addr;
 	new_ptr->origin_count = origin_count;
@@ -239,7 +239,7 @@ int MPIDI_Get(void *origin_addr, int origin_count, MPI_Datatype
     }
     else
     {
-        MPIDI_RMA_ops *new_ptr = NULL;
+        MPIDI_RMA_Op_t *new_ptr = NULL;
 
 	/* queue it up */
         MPIU_INSTR_DURATION_START(rmaqueue_alloc);
@@ -425,7 +425,7 @@ int MPIDI_Accumulate(const void *origin_addr, int origin_count, MPI_Datatype
     }
     else
     {
-        MPIDI_RMA_ops *new_ptr = NULL;
+        MPIDI_RMA_Op_t *new_ptr = NULL;
 
 	/* queue it up */
         MPIU_INSTR_DURATION_START(rmaqueue_alloc);
@@ -439,7 +439,7 @@ int MPIDI_Accumulate(const void *origin_addr, int origin_count, MPI_Datatype
 	    new_ptr->type = MPIDI_RMA_ACC_CONTIG;
 	    /* Only the information needed for the contig/predefined acc */
             /* Cast away const'ness for origin_address as
-             * MPIDI_RMA_ops contain both PUT and GET like ops */
+             * MPIDI_RMA_Op_t contain both PUT and GET like ops */
 	    new_ptr->origin_addr = (void *) origin_addr;
 	    new_ptr->origin_count = origin_count;
 	    new_ptr->origin_datatype = origin_datatype;
@@ -454,7 +454,7 @@ int MPIDI_Accumulate(const void *origin_addr, int origin_count, MPI_Datatype
 
 	MPIU_INSTR_DURATION_START(rmaqueue_set);
 	new_ptr->type = MPIDI_RMA_ACCUMULATE;
-        /* Cast away const'ness for origin_address as MPIDI_RMA_ops
+        /* Cast away const'ness for origin_address as MPIDI_RMA_Op_t
          * contain both PUT and GET like ops */
 	new_ptr->origin_addr = (void *) origin_addr;
 	new_ptr->origin_count = origin_count;

@@ -152,7 +152,7 @@ int MPIDI_Get_accumulate(const void *origin_addr, int origin_count,
         }
     }
     else {
-        MPIDI_RMA_ops *new_ptr = NULL;
+        MPIDI_RMA_Op_t *new_ptr = NULL;
 
         /* Append the operation to the window's RMA ops queue */
         MPIU_INSTR_DURATION_START(rmaqueue_alloc);
@@ -164,7 +164,7 @@ int MPIDI_Get_accumulate(const void *origin_addr, int origin_count,
 
         MPIU_INSTR_DURATION_START(rmaqueue_set);
         new_ptr->type = MPIDI_RMA_GET_ACCUMULATE;
-        /* Cast away const'ness for origin_address as MPIDI_RMA_ops
+        /* Cast away const'ness for origin_address as MPIDI_RMA_Op_t
          * contain both PUT and GET like ops */
         new_ptr->origin_addr = (void *) origin_addr;
         new_ptr->origin_count = origin_count;
@@ -245,7 +245,7 @@ int MPIDI_Compare_and_swap(const void *origin_addr, const void *compare_addr,
         goto fn_exit;
     }
     else {
-        MPIDI_RMA_ops *new_ptr = NULL;
+        MPIDI_RMA_Op_t *new_ptr = NULL;
 
         /* Append this operation to the RMA ops queue */
         MPIU_INSTR_DURATION_START(rmaqueue_alloc);
@@ -320,7 +320,7 @@ int MPIDI_Fetch_and_op(const void *origin_addr, void *result_addr,
         goto fn_exit;
     }
     else {
-        MPIDI_RMA_ops *new_ptr = NULL;
+        MPIDI_RMA_Op_t *new_ptr = NULL;
 
         /* Append this operation to the RMA ops queue */
         MPIU_INSTR_DURATION_START(rmaqueue_alloc);

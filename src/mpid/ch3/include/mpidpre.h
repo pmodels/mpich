@@ -210,7 +210,7 @@ struct MPIDI_Win_info_args_s {
 };
 
 struct MPIDI_Win_target_state_s {
-    struct MPIDI_RMA_ops *rma_ops_list;                                  \
+    struct MPIDI_RMA_Op_s *rma_ops_list;                                 \
                                 /* list of outstanding RMA operations */ \
     volatile enum MPIDI_CH3_Lock_states_e remote_lock_state;             \
                                 /* Indicates the state of the target     \

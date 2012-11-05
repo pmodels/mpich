@@ -54,9 +54,9 @@ typedef struct MPIDI_RMA_dtype_info { /* for derived datatypes */
 } MPIDI_RMA_dtype_info;
 
 /* for keeping track of RMA ops, which will be executed at the next sync call */
-typedef struct MPIDI_RMA_ops {
-    struct MPIDI_RMA_ops *prev;  /* pointer to next element in list */
-    struct MPIDI_RMA_ops *next;  /* pointer to next element in list */
+typedef struct MPIDI_RMA_Op_s {
+    struct MPIDI_RMA_Op_s *prev;  /* pointer to next element in list */
+    struct MPIDI_RMA_Op_s *next;  /* pointer to next element in list */
     /* FIXME: It would be better to setup the packet that will be sent, at 
        least in most cases (if, as a result of the sync/ops/sync sequence,
        a different packet type is needed, it can be extracted from the 
@@ -81,7 +81,7 @@ typedef struct MPIDI_RMA_ops {
     void *compare_addr;
     int compare_count;
     MPI_Datatype compare_datatype;
-} MPIDI_RMA_ops;
+} MPIDI_RMA_Op_t;
 
 typedef struct MPIDI_PT_single_op {
     int type;  /* put, get, or accum. */
@@ -108,7 +108,7 @@ void MPIDI_CH3_RMA_SetAccImmed( int flag );
 
 /*** RMA OPS LIST HELPER ROUTINES ***/
 
-typedef MPIDI_RMA_ops * MPIDI_RMA_Ops_list_t;
+typedef MPIDI_RMA_Op_t * MPIDI_RMA_Ops_list_t;
 
 /* Return nonzero if the RMA operations list is empty.
  */
@@ -128,7 +128,7 @@ static inline int MPIDI_CH3I_RMA_Ops_isempty(MPIDI_RMA_Ops_list_t *list)
 #define FUNCNAME MPIDI_CH3I_RMA_Ops_head
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-static inline MPIDI_RMA_ops *MPIDI_CH3I_RMA_Ops_head(MPIDI_RMA_Ops_list_t *list)
+static inline MPIDI_RMA_Op_t *MPIDI_CH3I_RMA_Ops_head(MPIDI_RMA_Ops_list_t *list)
 {
     return *list;
 }
@@ -140,7 +140,7 @@ static inline MPIDI_RMA_ops *MPIDI_CH3I_RMA_Ops_head(MPIDI_RMA_Ops_list_t *list)
 #define FUNCNAME MPIDI_CH3I_RMA_Ops_tail
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-static inline MPIDI_RMA_ops *MPIDI_CH3I_RMA_Ops_tail(MPIDI_RMA_Ops_list_t *list)
+static inline MPIDI_RMA_Op_t *MPIDI_CH3I_RMA_Ops_tail(MPIDI_RMA_Ops_list_t *list)
 {
     return (*list) ? (*list)->prev : NULL;
 }
@@ -156,7 +156,7 @@ static inline MPIDI_RMA_ops *MPIDI_CH3I_RMA_Ops_tail(MPIDI_RMA_Ops_list_t *list)
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 static inline void MPIDI_CH3I_RMA_Ops_append(MPIDI_RMA_Ops_list_t *list,
-                                             MPIDI_RMA_ops *elem)
+                                             MPIDI_RMA_Op_t *elem)
 {
     MPL_DL_APPEND(*list, elem);
 }
@@ -173,14 +173,14 @@ static inline void MPIDI_CH3I_RMA_Ops_append(MPIDI_RMA_Ops_list_t *list,
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 static inline int MPIDI_CH3I_RMA_Ops_alloc_tail(MPIDI_RMA_Ops_list_t *list,
-                                                MPIDI_RMA_ops **new_elem)
+                                                MPIDI_RMA_Op_t **new_elem)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_RMA_ops *tmp_ptr;
+    MPIDI_RMA_Op_t *tmp_ptr;
     MPIU_CHKPMEM_DECL(1);
 
     /* FIXME: We should use a pool allocator here */
-    MPIU_CHKPMEM_MALLOC(tmp_ptr, MPIDI_RMA_ops *, sizeof(MPIDI_RMA_ops),
+    MPIU_CHKPMEM_MALLOC(tmp_ptr, MPIDI_RMA_Op_t *, sizeof(MPIDI_RMA_Op_t),
                         mpi_errno, "RMA operation entry");
 
     tmp_ptr->next = NULL;
@@ -210,7 +210,7 @@ static inline int MPIDI_CH3I_RMA_Ops_alloc_tail(MPIDI_RMA_Ops_list_t *list,
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 static inline void MPIDI_CH3I_RMA_Ops_unlink(MPIDI_RMA_Ops_list_t *list,
-                                             MPIDI_RMA_ops *elem)
+                                             MPIDI_RMA_Op_t *elem)
 {
     MPL_DL_DELETE(*list, elem);
 }
@@ -226,9 +226,9 @@ static inline void MPIDI_CH3I_RMA_Ops_unlink(MPIDI_RMA_Ops_list_t *list,
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 static inline void MPIDI_CH3I_RMA_Ops_free_elem(MPIDI_RMA_Ops_list_t *list,
-                                                MPIDI_RMA_ops *curr_ptr)
+                                                MPIDI_RMA_Op_t *curr_ptr)
 {
-    MPIDI_RMA_ops *tmp_ptr = curr_ptr;
+    MPIDI_RMA_Op_t *tmp_ptr = curr_ptr;
 
     MPIU_Assert(curr_ptr != NULL);
 
@@ -253,9 +253,9 @@ static inline void MPIDI_CH3I_RMA_Ops_free_elem(MPIDI_RMA_Ops_list_t *list,
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 static inline void MPIDI_CH3I_RMA_Ops_free_and_next(MPIDI_RMA_Ops_list_t *list,
-                                                    MPIDI_RMA_ops **curr_ptr)
+                                                    MPIDI_RMA_Op_t **curr_ptr)
 {
-    MPIDI_RMA_ops *next_ptr = (*curr_ptr)->next;
+    MPIDI_RMA_Op_t *next_ptr = (*curr_ptr)->next;
 
     MPIDI_CH3I_RMA_Ops_free_elem(list, *curr_ptr);
     *curr_ptr = next_ptr;
@@ -270,7 +270,7 @@ static inline void MPIDI_CH3I_RMA_Ops_free_and_next(MPIDI_RMA_Ops_list_t *list,
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 static inline void MPIDI_CH3I_RMA_Ops_free(MPIDI_RMA_Ops_list_t *list)
 {
-    MPIDI_RMA_ops *curr_ptr, *tmp_ptr;
+    MPIDI_RMA_Op_t *curr_ptr, *tmp_ptr;
 
     MPL_DL_FOREACH_SAFE(*list, curr_ptr, tmp_ptr) {
         MPIDI_CH3I_RMA_Ops_free_elem(list, curr_ptr);
@@ -287,7 +287,7 @@ static inline void MPIDI_CH3I_RMA_Ops_free(MPIDI_RMA_Ops_list_t *list)
 static inline MPIDI_RMA_Ops_list_t MPIDI_CH3I_RMA_Ops_concat_all(MPID_Win *win_ptr)
 {
     int i;
-    MPIDI_RMA_ops *root = NULL;
+    MPIDI_RMA_Op_t *root = NULL;
 
     for (i = 0; i < MPIR_Comm_size(win_ptr->comm_ptr); i++) {
         /* Attach this list to the end of the aggregate list */
