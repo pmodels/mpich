@@ -1564,7 +1564,6 @@ int MPIDI_Win_complete(MPID_Win *win_ptr)
 	
 	target_win_handle = win_ptr->all_win_handles[curr_ptr->target_rank];
 
-	curr_ptr->dataloop = 0;
 	switch (curr_ptr->type)
 	{
 	case (MPIDI_RMA_PUT):
@@ -2367,7 +2366,6 @@ static int MPIDI_CH3I_Do_passive_target_rma(MPID_Win *win_ptr, int target_rank,
         else 
             source_win_handle = MPI_WIN_NULL;
         
-	curr_ptr->dataloop = 0;
         switch (curr_ptr->type)
         {
         case (MPIDI_RMA_PUT):  /* same as accumulate */
