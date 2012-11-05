@@ -87,3 +87,4 @@ strided_getacc_indexed 4 mpiversion=3.0
 flush 4 mpiversion=3.0
 reqops 4 mpiversion=3.0
 win_info 4 mpiversion=3.0
+linked_list_lockall 4 mpiversion=3.0

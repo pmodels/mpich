@@ -84,6 +84,7 @@ noinst_PROGRAMS =          \
     compare_and_swap       \
     linked_list            \
     linked_list_fop        \
+    linked_list_lockall    \
     fetch_and_op_char      \
     fetch_and_op_short     \
     fetch_and_op_int       \
