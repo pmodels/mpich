@@ -1872,7 +1872,7 @@ int MPIDI_Win_unlock(int dest, MPID_Win *win_ptr)
     /* win_lock was not called. return error */
     if ( win_ptr->remote_lock_state == MPIDI_CH3_WIN_LOCK_NONE &&
          ( rma_op == NULL || rma_op->type != MPIDI_RMA_LOCK ) ) {
-	MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**rmasync");
+	MPIU_ERR_SETANDJUMP(mpi_errno, MPI_ERR_RMA_SYNC, "**rmasync");
     }
         
     if (rma_op && rma_op->target_rank != dest) {
@@ -2069,7 +2069,7 @@ int MPIDI_Win_flush(int rank, MPID_Win *win_ptr)
         /* Ensure that win_lock is waiting at the head of the ops list */
         MPIU_ERR_CHKANDJUMP(MPIDI_CH3I_RMA_Ops_isempty(&win_ptr->rma_ops_list) ||
                             MPIDI_CH3I_RMA_Ops_head(&win_ptr->rma_ops_list)->type != MPIDI_RMA_LOCK,
-                            mpi_errno, MPI_ERR_OTHER, "**rmasync");
+                            mpi_errno, MPI_ERR_RMA_SYNC, "**rmasync");
         mpi_errno = MPIDI_CH3I_Send_lock_msg(MPIDI_CH3I_RMA_Ops_head(&win_ptr->rma_ops_list)->target_rank,
                                              MPIDI_CH3I_RMA_Ops_head(&win_ptr->rma_ops_list)->lock_type, win_ptr);
         if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
