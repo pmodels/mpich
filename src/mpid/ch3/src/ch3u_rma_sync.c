@@ -1997,8 +1997,28 @@ int MPIDI_Win_unlock(int dest, MPID_Win *win_ptr)
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 int MPIDI_Win_flush_all(MPID_Win *win_ptr)
 {
-    /* TODO: Currently only one rank can be locked. */
-    return MPIU_RMA_CALL(win_ptr, Win_flush(win_ptr->lockRank, win_ptr));
+    int mpi_errno = MPI_SUCCESS;
+    int i;
+    MPIDI_STATE_DECL(MPIDI_STATE_MPIDI_WIN_FLUSH_ALL);
+
+    MPIDI_RMA_FUNC_ENTER(MPIDI_STATE_MPIDI_WIN_FLUSH_ALL);
+
+    /* FIXME: Performance -- we should not process the ops separately.
+     * Ideally, we should be able to use the same infrastructure that's used by
+     * active target to complete all operations. */
+
+    for (i = 0; i < MPIR_Comm_size(win_ptr->comm_ptr); i++) {
+        mpi_errno = MPIU_RMA_CALL(win_ptr, Win_flush(i, win_ptr));
+        if (mpi_errno != MPI_SUCCESS) { MPIU_ERR_POP(mpi_errno); }
+    }
+
+ fn_exit:
+    MPIDI_RMA_FUNC_EXIT(MPIDI_STATE_MPIDI_WIN_FLUSH_ALL);
+    return mpi_errno;
+    /* --BEGIN ERROR HANDLING-- */
+ fn_fail:
+    goto fn_exit;
+    /* --END ERROR HANDLING-- */
 }
 
 
