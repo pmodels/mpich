@@ -111,11 +111,7 @@ int MPI_Win_lock_all(int assert, MPI_Win win)
                 if (mpi_errno) goto fn_fail;
             }
 
-            if (win_ptr->lockRank != MPID_WIN_STATE_UNLOCKED) {
-                MPIU_ERR_SET1(mpi_errno,MPI_ERR_OTHER, 
-                             "**lockwhilelocked", 
-                             "**lockwhilelocked %d", win_ptr->lockRank );
-            }
+            /* TODO: Validate that window is not already locked */
 
             /* TODO: Validate that window is not already in active mode */
             if (mpi_errno) goto fn_fail;
@@ -129,9 +125,6 @@ int MPI_Win_lock_all(int assert, MPI_Win win)
     mpi_errno = MPIU_RMA_CALL(win_ptr,
                               Win_lock_all(assert, win_ptr));
     if (mpi_errno != MPI_SUCCESS) goto fn_fail;
-
-    /* If the lock succeeded, remember which one with locked */
-    win_ptr->lockRank = MPID_WIN_STATE_LOCKED_ALL;
 
     /* ... end of body of routine ... */
 

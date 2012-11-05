@@ -1663,8 +1663,6 @@ typedef struct MPID_Win {
     MPID_Comm *comm_ptr;         /* Pointer to comm of window (dup) */
     int         myrank;          /* Rank of this process in comm (used to 
 				    detect operations on self) */
-    int lockRank;                /* If within an MPI_Win_lock epoch, 
-				    the rank that we locked */
 #ifdef USE_THREADED_WINDOW_CODE
     /* These were causing compilation errors.  We need to figure out how to
        integrate threads into MPICH before including these fields. */
@@ -1706,12 +1704,6 @@ typedef struct MPID_Win {
 extern MPIU_Object_alloc_t MPID_Win_mem;
 /* Preallocated win objects */
 extern MPID_Win MPID_Win_direct[];
-
-enum MPID_Win_lock_states { 
-    /* LOCKED = 0, 1, ... */
-    MPID_WIN_STATE_UNLOCKED   = -1,
-    MPID_WIN_STATE_LOCKED_ALL = -2
-};
 
 /* ------------------------------------------------------------------------- */
 /* also in mpirma.h ?*/
