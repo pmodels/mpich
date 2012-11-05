@@ -33,7 +33,7 @@ int MPIDI_Get_accumulate(const void *origin_addr, int origin_count,
 
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_GET_ACCUMULATE);
 
-    MPIDI_Datatype_get_info(origin_count, origin_datatype, dt_contig, data_sz,
+    MPIDI_Datatype_get_info(target_count, target_datatype, dt_contig, data_sz,
                             dtp, dt_true_lb);
 
     if ((data_sz == 0) || (target_rank == MPI_PROC_NULL)) {
@@ -42,7 +42,10 @@ int MPIDI_Get_accumulate(const void *origin_addr, int origin_count,
 
     rank = win_ptr->myrank;
 
-    MPIDI_CH3I_DATATYPE_IS_PREDEFINED(origin_datatype, origin_predefined);
+    origin_predefined = TRUE; /* quiet uninitialized warnings (b/c goto) */
+    if (op != MPI_NO_OP) {
+        MPIDI_CH3I_DATATYPE_IS_PREDEFINED(origin_datatype, origin_predefined);
+    }
     MPIDI_CH3I_DATATYPE_IS_PREDEFINED(result_datatype, result_predefined);
     MPIDI_CH3I_DATATYPE_IS_PREDEFINED(target_datatype, target_predefined);
 
@@ -55,6 +58,10 @@ int MPIDI_Get_accumulate(const void *origin_addr, int origin_count,
                                    target_disp, target_count, target_datatype,
                                    result_addr, result_count, result_datatype);
         if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
+
+        /* NO_OP: Don't perform the accumulate */
+        if (op == MPI_NO_OP)
+            goto fn_exit;
 
         if (op == MPI_REPLACE) {
             mpi_errno = MPIR_Localcopy(origin_addr, origin_count, origin_datatype,
