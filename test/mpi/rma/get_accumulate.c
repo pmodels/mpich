@@ -54,6 +54,8 @@ const int verbose = 0;
 void reset_bufs(TYPE_C *win_ptr, TYPE_C *res_ptr, TYPE_C *val_ptr, TYPE_C value, MPI_Win win) {
     int rank, nproc, i;
 
+    MPI_Barrier(MPI_COMM_WORLD);
+
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &nproc);
 
@@ -289,6 +291,118 @@ int main(int argc, char **argv) {
         }
     }
     MPI_Win_unlock(rank, win);
+
+    /* Test NO_OP (neighbor communication) */
+
+    reset_bufs(win_ptr, res_ptr, val_ptr, 1, win);
+
+    MPI_Win_lock(MPI_LOCK_EXCLUSIVE, rank, 0, win);
+    for (i = 0; i < COUNT*nproc; i++)
+        win_ptr[i] = (TYPE_C) rank;
+    MPI_Win_unlock(rank, win);
+    MPI_Barrier(MPI_COMM_WORLD);
+
+    for (i = 0; i < ITER; i++) {
+        int j, target = (rank+1) % nproc;
+
+        /* Test: origin_buf = NULL */
+        MPI_Win_lock(MPI_LOCK_EXCLUSIVE, target, 0, win);
+        MPI_Get_accumulate(NULL, COUNT, TYPE_MPI, res_ptr, COUNT, TYPE_MPI,
+                            target, 0, COUNT, TYPE_MPI, MPI_NO_OP, win);
+        MPI_Win_unlock(target, win);
+
+        for (j = 0; j < COUNT; j++) {
+            if (res_ptr[j] != (TYPE_C) target) {
+                SQUELCH( printf("%d->%d -- NOP(1)[%d]: expected "TYPE_FMT", got "TYPE_FMT"\n",
+                                target, rank, i, (TYPE_C) target, res_ptr[i]); );
+                errors++;
+            }
+        }
+
+        /* Test: origin_buf = NULL, origin_count = 0 */
+        MPI_Win_lock(MPI_LOCK_EXCLUSIVE, target, 0, win);
+        MPI_Get_accumulate(NULL, 0, TYPE_MPI, res_ptr, COUNT, TYPE_MPI,
+                            target, 0, COUNT, TYPE_MPI, MPI_NO_OP, win);
+        MPI_Win_unlock(target, win);
+
+        for (j = 0; j < COUNT; j++) {
+            if (res_ptr[j] != (TYPE_C) target) {
+                SQUELCH( printf("%d->%d -- NOP(2)[%d]: expected "TYPE_FMT", got "TYPE_FMT"\n",
+                                target, rank, i, (TYPE_C) target, res_ptr[i]); );
+                errors++;
+            }
+        }
+
+        /* Test: origin_buf = NULL, origin_count = 0, origin_dtype = NULL */
+        MPI_Win_lock(MPI_LOCK_EXCLUSIVE, target, 0, win);
+        MPI_Get_accumulate(NULL, 0, MPI_DATATYPE_NULL, res_ptr, COUNT, TYPE_MPI,
+                            target, 0, COUNT, TYPE_MPI, MPI_NO_OP, win);
+        MPI_Win_unlock(target, win);
+
+        for (j = 0; j < COUNT; j++) {
+            if (res_ptr[j] != (TYPE_C) target) {
+                SQUELCH( printf("%d->%d -- NOP(2)[%d]: expected "TYPE_FMT", got "TYPE_FMT"\n",
+                                target, rank, i, (TYPE_C) target, res_ptr[i]); );
+                errors++;
+            }
+        }
+    }
+
+    /* Test NO_OP (self communication) */
+
+    reset_bufs(win_ptr, res_ptr, val_ptr, 1, win);
+
+    MPI_Win_lock(MPI_LOCK_EXCLUSIVE, rank, 0, win);
+    for (i = 0; i < COUNT*nproc; i++)
+        win_ptr[i] = (TYPE_C) rank;
+    MPI_Win_unlock(rank, win);
+    MPI_Barrier(MPI_COMM_WORLD);
+
+    for (i = 0; i < ITER; i++) {
+        int j, target = rank;
+
+        /* Test: origin_buf = NULL */
+        MPI_Win_lock(MPI_LOCK_EXCLUSIVE, target, 0, win);
+        MPI_Get_accumulate(NULL, COUNT, TYPE_MPI, res_ptr, COUNT, TYPE_MPI,
+                            target, 0, COUNT, TYPE_MPI, MPI_NO_OP, win);
+        MPI_Win_unlock(target, win);
+
+        for (j = 0; j < COUNT; j++) {
+            if (res_ptr[j] != (TYPE_C) target) {
+                SQUELCH( printf("%d->%d -- NOP_SELF(1)[%d]: expected "TYPE_FMT", got "TYPE_FMT"\n",
+                                target, rank, i, (TYPE_C) target, res_ptr[i]); );
+                errors++;
+            }
+        }
+
+        /* Test: origin_buf = NULL, origin_count = 0 */
+        MPI_Win_lock(MPI_LOCK_EXCLUSIVE, target, 0, win);
+        MPI_Get_accumulate(NULL, 0, TYPE_MPI, res_ptr, COUNT, TYPE_MPI,
+                            target, 0, COUNT, TYPE_MPI, MPI_NO_OP, win);
+        MPI_Win_unlock(target, win);
+
+        for (j = 0; j < COUNT; j++) {
+            if (res_ptr[j] != (TYPE_C) target) {
+                SQUELCH( printf("%d->%d -- NOP_SELF(2)[%d]: expected "TYPE_FMT", got "TYPE_FMT"\n",
+                                target, rank, i, (TYPE_C) target, res_ptr[i]); );
+                errors++;
+            }
+        }
+
+        /* Test: origin_buf = NULL, origin_count = 0, origin_dtype = NULL */
+        MPI_Win_lock(MPI_LOCK_EXCLUSIVE, target, 0, win);
+        MPI_Get_accumulate(NULL, 0, MPI_DATATYPE_NULL, res_ptr, COUNT, TYPE_MPI,
+                            target, 0, COUNT, TYPE_MPI, MPI_NO_OP, win);
+        MPI_Win_unlock(target, win);
+
+        for (j = 0; j < COUNT; j++) {
+            if (res_ptr[j] != (TYPE_C) target) {
+                SQUELCH( printf("%d->%d -- NOP_SELF(2)[%d]: expected "TYPE_FMT", got "TYPE_FMT"\n",
+                                target, rank, i, (TYPE_C) target, res_ptr[i]); );
+                errors++;
+            }
+        }
+    }
 
     MPI_Win_free(&win);
 

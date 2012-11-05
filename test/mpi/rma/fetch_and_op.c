@@ -258,6 +258,56 @@ int main(int argc, char **argv) {
     }
     MPI_Win_unlock(rank, win);
 
+    /* Test NO_OP (neighbor communication) */
+
+    MPI_Barrier(MPI_COMM_WORLD);
+    reset_vars(val_ptr, res_ptr, win);
+
+    MPI_Win_lock(MPI_LOCK_EXCLUSIVE, rank, 0, win);
+    for (i = 0; i < nproc; i++)
+        val_ptr[i] = (TYPE_C) rank;
+    MPI_Win_unlock(rank, win);
+    MPI_Barrier(MPI_COMM_WORLD);
+
+    for (i = 0; i < ITER; i++) {
+        int target = (rank+1) % nproc;
+
+        MPI_Win_lock(MPI_LOCK_EXCLUSIVE, target, 0, win);
+        MPI_Fetch_and_op(NULL, res_ptr, TYPE_MPI, target, 0, MPI_NO_OP, win);
+        MPI_Win_unlock(target, win);
+
+        if (res_ptr[0] != (TYPE_C) target) {
+            SQUELCH( printf("%d->%d -- NOP[%d]: expected "TYPE_FMT", got "TYPE_FMT"\n",
+                            target, rank, i, (TYPE_C) target, res_ptr[0]); );
+            errors++;
+        }
+    }
+
+    /* Test NO_OP (self communication) */
+
+    MPI_Barrier(MPI_COMM_WORLD);
+    reset_vars(val_ptr, res_ptr, win);
+
+    MPI_Win_lock(MPI_LOCK_EXCLUSIVE, rank, 0, win);
+    for (i = 0; i < nproc; i++)
+        val_ptr[i] = (TYPE_C) rank;
+    MPI_Win_unlock(rank, win);
+    MPI_Barrier(MPI_COMM_WORLD);
+
+    for (i = 0; i < ITER; i++) {
+        int target = rank;
+
+        MPI_Win_lock(MPI_LOCK_EXCLUSIVE, target, 0, win);
+        MPI_Fetch_and_op(NULL, res_ptr, TYPE_MPI, target, 0, MPI_NO_OP, win);
+        MPI_Win_unlock(target, win);
+
+        if (res_ptr[0] != (TYPE_C) target) {
+            SQUELCH( printf("%d->%d -- NOP_SELF[%d]: expected "TYPE_FMT", got "TYPE_FMT"\n",
+                            target, rank, i, (TYPE_C) target, res_ptr[0]); );
+            errors++;
+        }
+    }
+
     MPI_Win_free(&win);
 
     MPI_Reduce(&errors, &all_errors, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
