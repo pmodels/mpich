@@ -155,7 +155,7 @@ int main(int argc, char **argv) {
     }
     MPI_Win_unlock(rank, win);
 
-    /* Test all-to-all communication */
+    /* Test all-to-all communication (fence) */
 
     reset_vars(val_ptr, res_ptr, win);
 
@@ -173,7 +173,7 @@ int main(int argc, char **argv) {
 
         for (j = 0; j < nproc; j++) {
             if ( CMP(res_ptr[j], i*rank) ) {
-                SQUELCH( printf("%d->%d -- ALL-TO-ALL[%d]: expected result "TYPE_FMT", got "TYPE_FMT"\n", rank, j, i, (TYPE_C) i*rank, res_ptr[j]); );
+                SQUELCH( printf("%d->%d -- ALL-TO-ALL (FENCE) [%d]: expected result "TYPE_FMT", got "TYPE_FMT"\n", rank, j, i, (TYPE_C) i*rank, res_ptr[j]); );
                 errors++;
             }
         }
@@ -183,7 +183,41 @@ int main(int argc, char **argv) {
     MPI_Win_lock(MPI_LOCK_EXCLUSIVE, rank, 0, win);
     for (i = 0; i < nproc; i++) {
         if ( CMP(val_ptr[i], ITER*i) ) {
-            SQUELCH( printf("%d->%d -- ALL-TO-ALL: expected "TYPE_FMT", got "TYPE_FMT"\n", i, rank, (TYPE_C) ITER*i, val_ptr[i]); );
+            SQUELCH( printf("%d->%d -- ALL-TO-ALL (FENCE): expected "TYPE_FMT", got "TYPE_FMT"\n", i, rank, (TYPE_C) ITER*i, val_ptr[i]); );
+            errors++;
+        }
+    }
+    MPI_Win_unlock(rank, win);
+
+    /* Test all-to-all communication (lock-all) */
+
+    reset_vars(val_ptr, res_ptr, win);
+
+    for (i = 0; i < ITER; i++) {
+        int j;
+
+        MPI_Win_lock_all(0, win);
+        for (j = 0; j < nproc; j++) {
+            TYPE_C rank_cnv = (TYPE_C) rank;
+            MPI_Fetch_and_op(&rank_cnv, &res_ptr[j], TYPE_MPI, j, rank, MPI_SUM, win);
+            res_ptr[j] = i*rank;
+        }
+        MPI_Win_unlock_all(win);
+        MPI_Barrier(MPI_COMM_WORLD);
+
+        for (j = 0; j < nproc; j++) {
+            if ( CMP(res_ptr[j], i*rank) ) {
+                SQUELCH( printf("%d->%d -- ALL-TO-ALL (LOCK-ALL) [%d]: expected result "TYPE_FMT", got "TYPE_FMT"\n", rank, j, i, (TYPE_C) i*rank, res_ptr[j]); );
+                errors++;
+            }
+        }
+    }
+
+    MPI_Barrier(MPI_COMM_WORLD);
+    MPI_Win_lock(MPI_LOCK_EXCLUSIVE, rank, 0, win);
+    for (i = 0; i < nproc; i++) {
+        if ( CMP(val_ptr[i], ITER*i) ) {
+            SQUELCH( printf("%d->%d -- ALL-TO-ALL (LOCK-ALL): expected "TYPE_FMT", got "TYPE_FMT"\n", i, rank, (TYPE_C) ITER*i, val_ptr[i]); );
             errors++;
         }
     }
