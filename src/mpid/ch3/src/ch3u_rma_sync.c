@@ -2028,7 +2028,7 @@ int MPIDI_Win_flush_all(MPID_Win *win_ptr)
 
     for (i = 0; i < MPIR_Comm_size(win_ptr->comm_ptr); i++) {
         if (win_ptr->targets[i].remote_lock_state != MPIDI_CH3_WIN_LOCK_NONE) {
-            mpi_errno = MPIU_RMA_CALL(win_ptr, Win_flush(i, win_ptr));
+            mpi_errno = win_ptr->RMAFns.Win_flush(i, win_ptr);
             if (mpi_errno != MPI_SUCCESS) { MPIU_ERR_POP(mpi_errno); }
         }
     }
@@ -2161,7 +2161,7 @@ int MPIDI_Win_flush(int rank, MPID_Win *win_ptr)
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 int MPIDI_Win_flush_local(int rank, MPID_Win *win_ptr)
 {
-    return MPIU_RMA_CALL(win_ptr, Win_flush(rank, win_ptr));
+    return win_ptr->RMAFns.Win_flush(rank, win_ptr);
 }
 
 
@@ -2171,7 +2171,7 @@ int MPIDI_Win_flush_local(int rank, MPID_Win *win_ptr)
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 int MPIDI_Win_flush_local_all(MPID_Win *win_ptr)
 {
-    return MPIU_RMA_CALL(win_ptr, Win_flush_all(win_ptr));
+    return win_ptr->RMAFns.Win_flush_all(win_ptr);
 }
 
 
@@ -2191,7 +2191,7 @@ int MPIDI_Win_lock_all(int assert, MPID_Win *win_ptr)
      * It would be more efficient to set a flag indicating that lock_all was
      * called. */
     for (i = 0; i < MPIR_Comm_size(win_ptr->comm_ptr); i++) {
-        mpi_errno = MPIU_RMA_CALL(win_ptr, Win_lock(MPI_LOCK_SHARED, i, assert, win_ptr));
+        mpi_errno = win_ptr->RMAFns.Win_lock(MPI_LOCK_SHARED, i, assert, win_ptr);
         if (mpi_errno != MPI_SUCCESS) { MPIU_ERR_POP(mpi_errno); }
     }
 
@@ -2218,7 +2218,7 @@ int MPIDI_Win_unlock_all(MPID_Win *win_ptr)
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_WIN_UNLOCK_ALL);
 
     for (i = 0; i < MPIR_Comm_size(win_ptr->comm_ptr); i++) {
-        mpi_errno = MPIU_RMA_CALL(win_ptr, Win_unlock(i, win_ptr));
+        mpi_errno = win_ptr->RMAFns.Win_unlock(i, win_ptr);
         if (mpi_errno != MPI_SUCCESS) { MPIU_ERR_POP(mpi_errno); }
     }
 
