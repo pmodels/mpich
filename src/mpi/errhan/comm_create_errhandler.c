@@ -27,7 +27,7 @@
 #define FUNCNAME MPIR_Comm_create_errhandler_impl
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPIR_Comm_create_errhandler_impl(MPI_Comm_errhandler_function *function, 
+int MPIR_Comm_create_errhandler_impl(MPI_Comm_errhandler_function *comm_errhandler_fn,
                                      MPI_Errhandler *errhandler)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -39,7 +39,7 @@ int MPIR_Comm_create_errhandler_impl(MPI_Comm_errhandler_function *function,
     errhan_ptr->language = MPID_LANG_C;
     errhan_ptr->kind	 = MPID_COMM;
     MPIU_Object_set_ref(errhan_ptr,1);
-    errhan_ptr->errfn.C_Comm_Handler_function = function;
+    errhan_ptr->errfn.C_Comm_Handler_function = comm_errhandler_fn;
 
     MPIU_OBJ_PUBLISH_HANDLE(*errhandler, errhan_ptr->handle);
  fn_exit:
@@ -59,7 +59,7 @@ int MPIR_Comm_create_errhandler_impl(MPI_Comm_errhandler_function *function,
    MPI_Comm_create_errhandler - Create a communicator error handler
 
    Input Parameter:
-. function - user defined error handling procedure (function) 
+. comm_errhandler_fn - user defined error handling procedure (function)
 
    Output Parameter:
 . errhandler - MPI error handler (handle) 
@@ -73,7 +73,7 @@ int MPIR_Comm_create_errhandler_impl(MPI_Comm_errhandler_function *function,
 .N MPI_ERR_COMM
 .N MPI_ERR_OTHER
 @*/
-int MPI_Comm_create_errhandler(MPI_Comm_errhandler_function *function, 
+int MPI_Comm_create_errhandler(MPI_Comm_errhandler_function *comm_errhandler_fn,
                                MPI_Errhandler *errhandler)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -89,7 +89,7 @@ int MPI_Comm_create_errhandler(MPI_Comm_errhandler_function *function,
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
-	    MPIR_ERRTEST_ARGNULL(function, "function", mpi_errno);
+	    MPIR_ERRTEST_ARGNULL(comm_errhandler_fn, "comm_errhandler_fn", mpi_errno);
 	    MPIR_ERRTEST_ARGNULL(errhandler, "errhandler", mpi_errno);
         }
         MPID_END_ERROR_CHECKS;
@@ -98,7 +98,7 @@ int MPI_Comm_create_errhandler(MPI_Comm_errhandler_function *function,
     
     /* ... body of routine ...  */
     
-    mpi_errno = MPIR_Comm_create_errhandler_impl(function, errhandler);
+    mpi_errno = MPIR_Comm_create_errhandler_impl(comm_errhandler_fn, errhandler);
     if (mpi_errno) goto fn_fail;
     
     /* ... end of body of routine ... */
@@ -114,7 +114,7 @@ int MPI_Comm_create_errhandler(MPI_Comm_errhandler_function *function,
     {
 	mpi_errno = MPIR_Err_create_code(
 	    mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, "**mpi_comm_create_errhandler",
-	    "**mpi_comm_create_errhandler %p %p", function, errhandler);
+	    "**mpi_comm_create_errhandler %p %p", comm_errhandler_fn, errhandler);
     }
 #   endif
     mpi_errno = MPIR_Err_return_comm( NULL, FCNAME, mpi_errno );
