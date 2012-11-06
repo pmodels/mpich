@@ -35,12 +35,12 @@ Output Parameters:
 
 .N fortran
 @*/
-int MPI_File_write_at_all_end(MPI_File mpi_fh, const void *buf, MPI_Status *status)
+int MPI_File_write_at_all_end(MPI_File fh, const void *buf, MPI_Status *status)
 {
     int error_code;
     static char myname[] = "MPI_FILE_WRITE_AT_ALL_END";
 
-    error_code = MPIOI_File_write_all_end(mpi_fh, buf, myname, status);
+    error_code = MPIOI_File_write_all_end(fh, buf, myname, status);
 
     return error_code;
 }

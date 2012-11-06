@@ -33,7 +33,7 @@ Input Parameters:
 Return Value:
   Fortran file handle (integer)
 @*/
-MPI_Fint MPI_File_c2f(MPI_File mpi_fh)
+MPI_Fint MPI_File_c2f(MPI_File fh)
 {
-    return MPIO_File_c2f(mpi_fh);
+    return MPIO_File_c2f(fh);
 }

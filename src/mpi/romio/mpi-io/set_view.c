@@ -36,27 +36,27 @@ Input Parameters:
 
 .N fortran
 @*/
-int MPI_File_set_view(MPI_File mpi_fh, MPI_Offset disp, MPI_Datatype etype,
+int MPI_File_set_view(MPI_File fh, MPI_Offset disp, MPI_Datatype etype,
 		      MPI_Datatype filetype, const char *datarep, MPI_Info info)
 {
     int filetype_size, etype_size, error_code;
     static char myname[] = "MPI_FILE_SET_VIEW";
     ADIO_Offset shared_fp, byte_off;
-    ADIO_File fh;
+    ADIO_File adio_fh;
 
     MPIU_THREAD_CS_ENTER(ALLFUNC,);
 
-    fh = MPIO_File_resolve(mpi_fh);
+    adio_fh = MPIO_File_resolve(fh);
 
     /* --BEGIN ERROR HANDLING-- */
-    MPIO_CHECK_FILE_HANDLE(fh, myname, error_code);
+    MPIO_CHECK_FILE_HANDLE(adio_fh, myname, error_code);
 
     if ((disp < 0) && (disp != MPI_DISPLACEMENT_CURRENT))
     {
 	error_code = MPIO_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
 					  myname, __LINE__, MPI_ERR_ARG, 
 					  "**iobaddisp", 0);
-	error_code = MPIO_Err_return_file(fh, error_code);
+	error_code = MPIO_Err_return_file(adio_fh, error_code);
 	goto fn_exit;
     }
 
@@ -65,7 +65,7 @@ int MPI_File_set_view(MPI_File mpi_fh, MPI_Offset disp, MPI_Datatype etype,
 	error_code = MPIO_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
 					  myname, __LINE__, MPI_ERR_ARG,
 					  "**ioetype", 0);
-	error_code = MPIO_Err_return_file(fh, error_code);
+	error_code = MPIO_Err_return_file(adio_fh, error_code);
 	goto fn_exit;
     }
 
@@ -73,27 +73,27 @@ int MPI_File_set_view(MPI_File mpi_fh, MPI_Offset disp, MPI_Datatype etype,
 	error_code = MPIO_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
 					  myname, __LINE__, MPI_ERR_ARG,
 					  "**iofiletype", 0);
-	error_code = MPIO_Err_return_file(fh, error_code);
+	error_code = MPIO_Err_return_file(adio_fh, error_code);
 	goto fn_exit;
     }
 
-    if ((fh->access_mode & MPI_MODE_SEQUENTIAL) &&
+    if ((adio_fh->access_mode & MPI_MODE_SEQUENTIAL) &&
 	(disp != MPI_DISPLACEMENT_CURRENT))
     {
 	error_code = MPIO_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
 					  myname, __LINE__, MPI_ERR_ARG, 
 					  "**iodispifseq", 0);
-	error_code = MPIO_Err_return_file(fh, error_code);
+	error_code = MPIO_Err_return_file(adio_fh, error_code);
 	goto fn_exit;
     }
 
     if ((disp == MPI_DISPLACEMENT_CURRENT) &&
-	!(fh->access_mode & MPI_MODE_SEQUENTIAL))
+	!(adio_fh->access_mode & MPI_MODE_SEQUENTIAL))
     {
 	error_code = MPIO_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
 					  myname, __LINE__, MPI_ERR_ARG, 
 					  "**iodispifseq", 0);
-	error_code = MPIO_Err_return_file(fh, error_code);
+	error_code = MPIO_Err_return_file(adio_fh, error_code);
 	goto fn_exit;
     }
     /* --END ERROR HANDLING-- */
@@ -107,7 +107,7 @@ int MPI_File_set_view(MPI_File mpi_fh, MPI_Offset disp, MPI_Datatype etype,
 	error_code = MPIO_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
 					  myname, __LINE__, MPI_ERR_ARG,
 					  "**iofiletype", 0);
-	error_code = MPIO_Err_return_file(fh, error_code);
+	error_code = MPIO_Err_return_file(adio_fh, error_code);
 	goto fn_exit;
     }
 
@@ -122,35 +122,35 @@ int MPI_File_set_view(MPI_File mpi_fh, MPI_Offset disp, MPI_Datatype etype,
 					  myname, __LINE__,
 					  MPI_ERR_UNSUPPORTED_DATAREP, 
 					  "**unsupporteddatarep",0);
-	error_code = MPIO_Err_return_file(fh, error_code);
+	error_code = MPIO_Err_return_file(adio_fh, error_code);
 	goto fn_exit;
     }
     /* --END ERROR HANDLING-- */
 
     if (disp == MPI_DISPLACEMENT_CURRENT) {
-	MPI_Barrier(fh->comm);
-	ADIO_Get_shared_fp(fh, 0, &shared_fp, &error_code);
+	MPI_Barrier(adio_fh->comm);
+	ADIO_Get_shared_fp(adio_fh, 0, &shared_fp, &error_code);
 	/* TODO: check error code */
 
-	MPI_Barrier(fh->comm); 
-	ADIOI_Get_byte_offset(fh, shared_fp, &byte_off);
+	MPI_Barrier(adio_fh->comm);
+	ADIOI_Get_byte_offset(adio_fh, shared_fp, &byte_off);
 	/* TODO: check error code */
 
 	disp = byte_off;
     }
 
-    ADIO_Set_view(fh, disp, etype, filetype, info, &error_code);
+    ADIO_Set_view(adio_fh, disp, etype, filetype, info, &error_code);
 
     /* --BEGIN ERROR HANDLING-- */
     if (error_code != MPI_SUCCESS) {
-	error_code = MPIO_Err_return_file(fh, error_code);
+	error_code = MPIO_Err_return_file(adio_fh, error_code);
 	goto fn_exit;
     }
     /* --END ERROR HANDLING-- */
 
     /* reset shared file pointer to zero */
-    if (ADIO_Feature(fh, ADIO_SHARED_FP) && 
-        (fh->shared_fp_fd != ADIO_FILE_NULL))
+    if (ADIO_Feature(adio_fh, ADIO_SHARED_FP) &&
+        (adio_fh->shared_fp_fd != ADIO_FILE_NULL))
     {
 	/* only one process needs to set it to zero, but I don't want to 
 	   create the shared-file-pointer file if shared file pointers have 
@@ -161,21 +161,21 @@ int MPI_File_set_view(MPI_File mpi_fh, MPI_Offset disp, MPI_Datatype etype,
 	   relative to the current view, whereas indiv. file pointer is
 	   stored in bytes. */
 
-	ADIO_Set_shared_fp(fh, 0, &error_code);
+	ADIO_Set_shared_fp(adio_fh, 0, &error_code);
 	/* --BEGIN ERROR HANDLING-- */
 	if (error_code != MPI_SUCCESS)
-	    error_code = MPIO_Err_return_file(fh, error_code);
+	    error_code = MPIO_Err_return_file(adio_fh, error_code);
 	/* --END ERROR HANDLING-- */
     }
 
-    if (ADIO_Feature(fh, ADIO_SHARED_FP))
+    if (ADIO_Feature(adio_fh, ADIO_SHARED_FP))
     {
-	MPI_Barrier(fh->comm); /* for above to work correctly */
+	MPI_Barrier(adio_fh->comm); /* for above to work correctly */
     }
     if (strcmp(datarep, "external32") && strcmp(datarep, "EXTERNAL32"))
-	fh->is_external32 = 0;
+	adio_fh->is_external32 = 0;
     else
-	fh->is_external32 = 1;
+	adio_fh->is_external32 = 1;
 
 fn_exit:
     MPIU_THREAD_CS_EXIT(ALLFUNC,);

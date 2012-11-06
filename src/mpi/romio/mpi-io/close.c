@@ -31,38 +31,38 @@ Input Parameters:
 
 .N fortran
 @*/
-int MPI_File_close(MPI_File *mpi_fh)
+int MPI_File_close(MPI_File *fh)
 {
     int error_code;
-    ADIO_File fh;
+    ADIO_File adio_fh;
     static char myname[] = "MPI_FILE_CLOSE";
 #ifdef MPI_hpux
     int fl_xmpi;
 
-    HPMP_IO_WSTART(fl_xmpi, BLKMPIFILECLOSE, TRDTBLOCK, *fh);
+    HPMP_IO_WSTART(fl_xmpi, BLKMPIFILECLOSE, TRDTBLOCK, *adio_fh);
 #endif /* MPI_hpux */
 
     MPIU_THREAD_CS_ENTER(ALLFUNC,);
 
-    fh = MPIO_File_resolve(*mpi_fh);
+    adio_fh = MPIO_File_resolve(*fh);
 
     /* --BEGIN ERROR HANDLING-- */
-    MPIO_CHECK_FILE_HANDLE(fh, myname, error_code);
+    MPIO_CHECK_FILE_HANDLE(adio_fh, myname, error_code);
     /* --END ERROR HANDLING-- */
 
-    if (ADIO_Feature(fh, ADIO_SHARED_FP)) 
+    if (ADIO_Feature(adio_fh, ADIO_SHARED_FP))
     {
-	ADIOI_Free((fh)->shared_fp_fname);
+	ADIOI_Free((adio_fh)->shared_fp_fname);
 	/* POSIX semantics say a deleted file remains available until all
 	 * processes close the file.  But since when was NFS posix-compliant?
 	 */
-	if (!ADIO_Feature(fh, ADIO_UNLINK_AFTER_CLOSE)) {
-		MPI_Barrier((fh)->comm);
+	if (!ADIO_Feature(adio_fh, ADIO_UNLINK_AFTER_CLOSE)) {
+		MPI_Barrier((adio_fh)->comm);
 	}
-	if ((fh)->shared_fp_fd != ADIO_FILE_NULL) {
-	    MPI_File *mpi_fh_shared = &(fh->shared_fp_fd);
-	    ADIO_Close((fh)->shared_fp_fd, &error_code);
-    	    MPIO_File_free(mpi_fh_shared);
+	if ((adio_fh)->shared_fp_fd != ADIO_FILE_NULL) {
+	    MPI_File *fh_shared = &(adio_fh->shared_fp_fd);
+	    ADIO_Close((adio_fh)->shared_fp_fd, &error_code);
+            MPIO_File_free(fh_shared);
 	    /* --BEGIN ERROR HANDLING-- */
 	    if (error_code != MPI_SUCCESS) goto fn_fail;
 	    /* --END ERROR HANDLING-- */
@@ -74,11 +74,11 @@ int MPI_File_close(MPI_File *mpi_fh)
      * somehow inform the MPI library that we no longer hold a reference to any
      * user defined error handler.  We do this by setting the errhandler at this
      * point to MPI_ERRORS_RETURN. */
-    error_code = PMPI_File_set_errhandler(*mpi_fh, MPI_ERRORS_RETURN);
+    error_code = PMPI_File_set_errhandler(*fh, MPI_ERRORS_RETURN);
     if (error_code != MPI_SUCCESS) goto fn_fail;
 
-    ADIO_Close(fh, &error_code);
-    MPIO_File_free(mpi_fh);
+    ADIO_Close(adio_fh, &error_code);
+    MPIO_File_free(fh);
     /* --BEGIN ERROR HANDLING-- */
     if (error_code != MPI_SUCCESS) goto fn_fail;
     /* --END ERROR HANDLING-- */
@@ -92,7 +92,7 @@ fn_exit:
     return error_code;
 fn_fail:
     /* --BEGIN ERROR HANDLING-- */
-    error_code = MPIO_Err_return_file(fh, error_code);
+    error_code = MPIO_Err_return_file(adio_fh, error_code);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }

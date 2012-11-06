@@ -36,13 +36,13 @@ Output Parameters:
 
 .N fortran
 @*/
-int MPI_File_read_at_all_end(MPI_File mpi_fh, void *buf, MPI_Status *status)
+int MPI_File_read_at_all_end(MPI_File fh, void *buf, MPI_Status *status)
 {
     int error_code;
     static char myname[] = "MPI_FILE_READ_AT_ALL_END";
 
 
-    error_code = MPIOI_File_read_all_end(mpi_fh, buf, myname, status);
+    error_code = MPIOI_File_read_all_end(fh, buf, myname, status);
 
     return error_code;
 }

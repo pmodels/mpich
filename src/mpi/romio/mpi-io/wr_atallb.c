@@ -36,13 +36,13 @@ Input Parameters:
 
 .N fortran
 @*/
-int MPI_File_write_at_all_begin(MPI_File mpi_fh, MPI_Offset offset, const void *buf,
+int MPI_File_write_at_all_begin(MPI_File fh, MPI_Offset offset, const void *buf,
 				int count, MPI_Datatype datatype)
 {
     int error_code;
     static char myname[] = "MPI_FILE_WRITE_AT_ALL_BEGIN";
 
-    error_code = MPIOI_File_write_all_begin(mpi_fh, offset,
+    error_code = MPIOI_File_write_all_begin(fh, offset,
 					    ADIO_EXPLICIT_OFFSET,
 					    buf, count, datatype, myname);
 
