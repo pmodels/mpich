@@ -80,6 +80,21 @@ int MPIDI_CH3_SHM_Win_free(MPID_Win **win_ptr)
         MPIU_SHMW_Hnd_finalize(&(*win_ptr)->shm_segment_handle);
     }
 
+    /* Free shared process mutex memory region */
+    if ((*win_ptr)->shm_mutex) {
+
+        if ((*win_ptr)->myrank == 0) {
+            MPIDI_CH3I_SHM_MUTEX_DESTROY(*win_ptr);
+        }
+
+        /* detach from shared memory segment */
+        mpi_errno = MPIU_SHMW_Seg_detach((*win_ptr)->shm_mutex_segment_handle, (char **)&(*win_ptr)->shm_mutex,
+                                         sizeof(MPIDI_CH3I_SHM_MUTEX));
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
+        MPIU_SHMW_Hnd_finalize(&(*win_ptr)->shm_mutex_segment_handle);
+    }
+
     mpi_errno = MPIDI_Win_free(win_ptr);
     if (mpi_errno != MPI_SUCCESS) { MPIU_ERR_POP(mpi_errno); }
 

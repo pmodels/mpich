@@ -177,6 +177,57 @@ static int MPIDI_CH3I_Win_allocate_shared(MPI_Aint size, int disp_unit, MPID_Inf
         MPIU_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
     }
 
+    /* Allocated the interprocess mutex segment. */
+    mpi_errno = MPIU_SHMW_Hnd_init(&(*win_ptr)->shm_mutex_segment_handle);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
+    if (rank == 0) {
+        char *serialized_hnd_ptr = NULL;
+
+        /* create shared memory region for all processes in win and map */
+        mpi_errno = MPIU_SHMW_Seg_create_and_attach((*win_ptr)->shm_mutex_segment_handle, sizeof(MPIDI_CH3I_SHM_MUTEX),
+                                                    (char **)&(*win_ptr)->shm_mutex, 0);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
+        MPIDI_CH3I_SHM_MUTEX_INIT(*win_ptr);
+
+        /* serialize handle and broadcast it to the other processes in win */
+        mpi_errno = MPIU_SHMW_Hnd_get_serialized_by_ref((*win_ptr)->shm_mutex_segment_handle, &serialized_hnd_ptr);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
+        mpi_errno = MPIR_Bcast_impl(serialized_hnd_ptr, MPIU_SHMW_GHND_SZ, MPI_CHAR, 0, (*win_ptr)->comm_ptr, &errflag);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        MPIU_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
+
+        /* wait for other processes to attach to win */
+        mpi_errno = MPIR_Barrier_impl((*win_ptr)->comm_ptr, &errflag);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        MPIU_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
+
+        /* unlink shared memory region so it gets deleted when all processes exit */
+        mpi_errno = MPIU_SHMW_Seg_remove((*win_ptr)->shm_mutex_segment_handle);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    } else {
+        char serialized_hnd[MPIU_SHMW_GHND_SZ] = {0};
+
+        /* get serialized handle from rank 0 and deserialize it */
+        mpi_errno = MPIR_Bcast_impl(serialized_hnd, MPIU_SHMW_GHND_SZ, MPI_CHAR, 0, (*win_ptr)->comm_ptr, &errflag);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        MPIU_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
+
+        mpi_errno = MPIU_SHMW_Hnd_deserialize((*win_ptr)->shm_mutex_segment_handle, serialized_hnd, strlen(serialized_hnd));
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
+        /* attach to shared memory region created by rank 0 */
+        mpi_errno = MPIU_SHMW_Seg_attach((*win_ptr)->shm_mutex_segment_handle, sizeof(MPIDI_CH3I_SHM_MUTEX),
+                                         (char **)&(*win_ptr)->shm_mutex, 0);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
+        mpi_errno = MPIR_Barrier_impl((*win_ptr)->comm_ptr, &errflag);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        MPIU_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
+    }
+
     /* compute the base addresses of each process within the shared memory segment */
     {
         char *cur_base = (*win_ptr)->shm_base_addr;

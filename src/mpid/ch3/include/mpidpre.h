@@ -257,6 +257,9 @@ struct MPIDI_Win_target_state {
                                  targeting this window */                \
     void **base_addrs;     /* array of base addresses of the windows of  \
                               all processes */                           \
+    void **shm_base_addrs; /* shared memory windows -- array of base     \
+                              addresses of the windows of all processes  \
+                              in this process's address space */         \
     int *disp_units;      /* array of displacement units of all windows */\
     MPI_Win *all_win_handles;    /* array of handles to the window objects\
                                           of all processes */            \

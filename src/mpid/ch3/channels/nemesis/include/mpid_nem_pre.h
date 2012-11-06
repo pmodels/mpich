@@ -11,14 +11,22 @@
 #include "mpid_nem_defs.h"
 #include "mpid_nem_memdefs.h"
 
+#if defined(HAVE_PTHREAD_H)
+#include <pthread.h>
+#endif
+
+typedef pthread_mutex_t MPIDI_CH3I_SHM_MUTEX;
+
 #define MPIDI_CH3_WIN_DECL                                                              \
     int shm_allocated;          /* flag: TRUE iff this window has a shared memory       \
                                    region associated with it */                         \
     void *shm_base_addr;        /* base address of shared memory region */              \
     MPI_Aint shm_segment_len;   /* size of shared memory region */                      \
-    void **shm_base_addrs;      /* array of base addresses of the windows of            \
-                                   all processes in this process's address space */     \
     MPIU_SHMW_Hnd_t shm_segment_handle; /* handle to shared memory region */            \
+    MPIDI_CH3I_SHM_MUTEX *shm_mutex;    /* shared memory windows -- lock for            \
+                                           accumulate/atomic operations */              \
+    MPIU_SHMW_Hnd_t shm_mutex_segment_handle; /* handle to interprocess mutex memory    \
+                                                 region */                              \
 
 
 #endif /* MPID_NEM_PRE_H */

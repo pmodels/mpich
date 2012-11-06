@@ -778,6 +778,12 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **pthread_create %d:pthread_create failed with status (%d)
 **pthread_cancel:pthread_cancel failed
 **pthread_cancel %s:pthread_cancel failed (%s)
+**pthread_lock:pthread_lock failed
+**pthread_lock %s:pthread_lock failed (%s)
+**pthread_unlock:pthread_unlock failed
+**pthread_unlock %s:pthread_unlock failed (%s)
+**pthread_mutex:pthread mutex routine failed
+**pthread_mutex %s:pthread mutex routine failed (%s)
 **badportrange:MPICH_PORT_RANGE - invalid range specified
 **argstr_missingifname:Missing ifname or invalid host/port description in business card
 **rtspkt:failure occurred while attempting to send RTS packet
