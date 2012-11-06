@@ -28,7 +28,7 @@
 #define FUNCNAME MPIR_Group_excl_impl
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPIR_Group_excl_impl(MPID_Group *group_ptr, int n, const int *ranks, MPID_Group **new_group_ptr)
+int MPIR_Group_excl_impl(MPID_Group *group_ptr, int n, const int ranks[], MPID_Group **new_group_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
     int size, i, newi;
@@ -114,7 +114,7 @@ function is erroneous.
 
 .seealso: MPI_Group_free
 @*/
-int MPI_Group_excl(MPI_Group group, int n, const int *ranks, MPI_Group *newgroup)
+int MPI_Group_excl(MPI_Group group, int n, const int ranks[], MPI_Group *newgroup)
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_Group *group_ptr = NULL, *new_group_ptr;

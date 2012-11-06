@@ -28,8 +28,8 @@
 #define FUNCNAME MPIR_Group_translate_ranks_impl
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPIR_Group_translate_ranks_impl(MPID_Group *gp1, int n, const int *ranks1,
-                                    MPID_Group *gp2, int *ranks2)
+int MPIR_Group_translate_ranks_impl(MPID_Group *gp1, int n, const int ranks1[],
+                                    MPID_Group *gp2, int ranks2[])
 {
     int mpi_errno = MPI_SUCCESS;
     int i, g2_idx, l1_pid, l2_pid;
@@ -134,8 +134,8 @@ fn_fail:
 .N Errors
 .N MPI_SUCCESS
 @*/
-int MPI_Group_translate_ranks(MPI_Group group1, int n, const int *ranks1,
-			      MPI_Group group2, int *ranks2)
+int MPI_Group_translate_ranks(MPI_Group group1, int n, const int ranks1[],
+			      MPI_Group group2, int ranks2[])
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_Group *group_ptr1 = NULL;
