@@ -67,7 +67,7 @@ int main(int argc, char **argv) {
         for (j = 0; j < ELEM_PER_PROC; j++) {
             if ( base[i*ELEM_PER_PROC + j] != j ) {
                 errors++;
-                printf("%d -- Got %d at rMPI_COMM_WORLoank %d index %d, expected %d\n", shm_rank, 
+                printf("%d -- Got %d at rank %d index %d, expected %d\n", shm_rank,
                        base[i*ELEM_PER_PROC + j], i, j, j);
             }
         }
