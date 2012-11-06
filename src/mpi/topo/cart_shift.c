@@ -28,7 +28,7 @@
 #define FUNCNAME MPIR_Cart_shift_impl
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPIR_Cart_shift_impl(MPID_Comm *comm_ptr, int direction, int displ, int *source, int *dest)
+int MPIR_Cart_shift_impl(MPID_Comm *comm_ptr, int direction, int disp, int *rank_source, int *rank_dest)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Topology *cart_ptr;
@@ -43,8 +43,8 @@ int MPIR_Cart_shift_impl(MPID_Comm *comm_ptr, int direction, int displ, int *sou
                          "**dimsmany %d %d", cart_ptr->topo.cart.ndims, direction);
 
     /* Check for the case of a 0 displacement */
-    if (displ == 0) {
-        *source = *dest = comm_ptr->rank;
+    if (disp == 0) {
+        *rank_source = *rank_dest = comm_ptr->rank;
     }
     else {
         /* To support advanced implementations that support MPI_Cart_create,
@@ -56,24 +56,24 @@ int MPIR_Cart_shift_impl(MPID_Comm *comm_ptr, int direction, int displ, int *sou
         }
         /* We must return MPI_PROC_NULL if shifted over the edge of a
            non-periodic mesh */
-        pos[direction] += displ;
+        pos[direction] += disp;
         if (!cart_ptr->topo.cart.periodic[direction] &&
             (pos[direction] >= cart_ptr->topo.cart.dims[direction] ||
              pos[direction] < 0)) {
-            *dest = MPI_PROC_NULL;
+            *rank_dest = MPI_PROC_NULL;
         }
         else {
-            MPIR_Cart_rank_impl( cart_ptr, pos, dest );
+            MPIR_Cart_rank_impl( cart_ptr, pos, rank_dest );
         }
 
-        pos[direction] = cart_ptr->topo.cart.position[direction] - displ;
+        pos[direction] = cart_ptr->topo.cart.position[direction] - disp;
         if (!cart_ptr->topo.cart.periodic[direction] &&
             (pos[direction] >= cart_ptr->topo.cart.dims[direction] ||
              pos[direction] < 0)) {
-            *source = MPI_PROC_NULL;
+            *rank_source = MPI_PROC_NULL;
         }
         else {
-            MPIR_Cart_rank_impl( cart_ptr, pos, source );
+            MPIR_Cart_rank_impl( cart_ptr, pos, rank_source );
         }
     }
 
@@ -97,11 +97,11 @@ MPI_Cart_shift - Returns the shifted source and destination ranks, given a
 Input Parameters:
 + comm - communicator with cartesian structure (handle) 
 . direction - coordinate dimension of shift (integer) 
-- displ - displacement (> 0: upwards shift, < 0: downwards shift) (integer) 
+- disp - displacement (> 0: upwards shift, < 0: downwards shift) (integer)
 
 Output Parameters:
-+ source - rank of source process (integer) 
-- dest - rank of destination process (integer) 
++ rank_source - rank of source process (integer)
+- rank_dest - rank of destination process (integer)
 
 Notes:
 The 'direction' argument is in the range '[0,n-1]' for an n-dimensional 
@@ -117,8 +117,8 @@ Cartesian mesh.
 .N MPI_ERR_COMM
 .N MPI_ERR_ARG
 @*/
-int MPI_Cart_shift(MPI_Comm comm, int direction, int displ, int *source, 
-		   int *dest)
+int MPI_Cart_shift(MPI_Comm comm, int direction, int disp, int *rank_source,
+		   int *rank_dest)
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_Comm *comm_ptr = NULL;
@@ -152,8 +152,8 @@ int MPI_Cart_shift(MPI_Comm comm, int direction, int displ, int *source,
             if (mpi_errno) goto fn_fail;
 	    /* If comm_ptr is not valid, it will be reset to null */
 
-	    MPIR_ERRTEST_ARGNULL( source, "source", mpi_errno );
-	    MPIR_ERRTEST_ARGNULL( dest, "dest", mpi_errno );
+	    MPIR_ERRTEST_ARGNULL( rank_source, "rank_source", mpi_errno );
+	    MPIR_ERRTEST_ARGNULL( rank_dest, "rank_dest", mpi_errno );
 	    MPIR_ERRTEST_ARGNEG( direction, "direction", mpi_errno );
 	    /* Nothing in the standard indicates that a zero displacement 
 	       is not valid, so we don't check for a zero shift */
@@ -164,7 +164,7 @@ int MPI_Cart_shift(MPI_Comm comm, int direction, int displ, int *source,
 
     /* ... body of routine ...  */
 
-    mpi_errno = MPIR_Cart_shift_impl(comm_ptr, direction, displ, source, dest);
+    mpi_errno = MPIR_Cart_shift_impl(comm_ptr, direction, disp, rank_source, rank_dest);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
     /* ... end of body of routine ... */
@@ -179,7 +179,7 @@ int MPI_Cart_shift(MPI_Comm comm, int direction, int displ, int *source,
     {
 	mpi_errno = MPIR_Err_create_code(
 	    mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, "**mpi_cart_shift",
-	    "**mpi_cart_shift %C %d %d %p %p", comm, direction, displ, source, dest);
+	    "**mpi_cart_shift %C %d %d %p %p", comm, direction, disp, rank_source, rank_dest);
     }
 #   endif
     mpi_errno = MPIR_Err_return_comm( comm_ptr, FCNAME, mpi_errno );

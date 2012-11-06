@@ -55,7 +55,7 @@ process (handle)
 .N MPI_ERR_COMM
 .N MPI_ERR_ARG
 @*/
-int MPI_Cart_sub(MPI_Comm comm, const int remain_dims[], MPI_Comm *comm_new)
+int MPI_Cart_sub(MPI_Comm comm, const int remain_dims[], MPI_Comm *newcomm)
 {
     int mpi_errno = MPI_SUCCESS, all_false;
     int ndims, key, color, ndims_in_subcomm, nnodes_in_subcomm, i, j, rank;
@@ -120,7 +120,7 @@ int MPI_Cart_sub(MPI_Comm comm, const int remain_dims[], MPI_Comm *comm_new)
     if (all_false) {
         /* ndims=0, or all entries in remain_dims are false.
            MPI 2.1 says return a 0D Cartesian topology. */
-	mpi_errno = MPIR_Cart_create_impl(comm_ptr, 0, NULL, NULL, 0, comm_new);
+	mpi_errno = MPIR_Cart_create_impl(comm_ptr, 0, NULL, NULL, 0, newcomm);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     } else {
 	/* Determine the number of remaining dimensions */
@@ -150,7 +150,7 @@ int MPI_Cart_sub(MPI_Comm comm, const int remain_dims[], MPI_Comm *comm_new)
 	mpi_errno = MPIR_Comm_split_impl( comm_ptr, color, key, &newcomm_ptr );
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
-        *comm_new = newcomm_ptr->handle;
+        *newcomm = newcomm_ptr->handle;
 	
 	/* Save the topology of this new communicator */
 	MPIU_CHKPMEM_MALLOC(toponew_ptr,MPIR_Topology*,sizeof(MPIR_Topology),
@@ -207,7 +207,7 @@ int MPI_Cart_sub(MPI_Comm comm, const int remain_dims[], MPI_Comm *comm_new)
     {
 	mpi_errno = MPIR_Err_create_code(
 	    mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, "**mpi_cart_sub",
-	    "**mpi_cart_sub %C %p %p", comm, remain_dims, comm_new);
+	    "**mpi_cart_sub %C %p %p", comm, remain_dims, newcomm);
     }
 #   endif
     mpi_errno = MPIR_Err_return_comm( comm_ptr, FCNAME, mpi_errno );

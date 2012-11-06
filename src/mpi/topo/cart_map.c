@@ -125,7 +125,7 @@ Output Parameter:
 .N MPI_ERR_DIMS
 .N MPI_ERR_ARG
 @*/
-int MPI_Cart_map(MPI_Comm comm_old, int ndims, const int dims[], const int periods[],
+int MPI_Cart_map(MPI_Comm comm, int ndims, const int dims[], const int periods[],
 		 int *newrank)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -141,14 +141,14 @@ int MPI_Cart_map(MPI_Comm comm_old, int ndims, const int dims[], const int perio
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
-	    MPIR_ERRTEST_COMM(comm_old, mpi_errno);
+	    MPIR_ERRTEST_COMM(comm, mpi_errno);
         }
         MPID_END_ERROR_CHECKS;
     }
 #   endif
     
     /* Convert MPI object handles to object pointers */
-    MPID_Comm_get_ptr( comm_old, comm_ptr );
+    MPID_Comm_get_ptr( comm, comm_ptr );
 
     /* Validate parameters and objects (post conversion) */
 #   ifdef HAVE_ERROR_CHECKING
@@ -192,7 +192,7 @@ int MPI_Cart_map(MPI_Comm comm_old, int ndims, const int dims[], const int perio
 	mpi_errno = MPIR_Err_create_code(
 	    mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, 
 	    "**mpi_cart_map",
-	    "**mpi_cart_map %C %d %p %p %p", comm_old, ndims, dims, periods, 
+	    "**mpi_cart_map %C %d %p %p %p", comm, ndims, dims, periods,
 	    newrank);
     }
 #   endif

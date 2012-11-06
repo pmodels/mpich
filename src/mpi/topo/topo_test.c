@@ -52,7 +52,7 @@ Output Parameter:
 
 .seealso: MPI_Graph_create, MPI_Cart_create
 @*/
-int MPI_Topo_test(MPI_Comm comm, int *topo_type)
+int MPI_Topo_test(MPI_Comm comm, int *status)
 {
 #ifdef HAVE_ERROR_CHECKING
     static const char FCNAME[] = "MPI_Topo_test";
@@ -89,7 +89,7 @@ int MPI_Topo_test(MPI_Comm comm, int *topo_type)
             MPID_Comm_valid_ptr( comm_ptr, mpi_errno );
             if (mpi_errno) goto fn_fail;
 	    /* If comm_ptr is not valid, it will be reset to null */
-	    MPIR_ERRTEST_ARGNULL(topo_type, "topo_type", mpi_errno);
+	    MPIR_ERRTEST_ARGNULL(status, "status", mpi_errno);
         }
         MPID_END_ERROR_CHECKS;
     }
@@ -100,11 +100,11 @@ int MPI_Topo_test(MPI_Comm comm, int *topo_type)
     topo_ptr = MPIR_Topology_get( comm_ptr );
     if (topo_ptr)
     { 
-	*topo_type = (int)(topo_ptr->kind);
+	*status = (int)(topo_ptr->kind);
     }
     else
     { 
-	*topo_type = MPI_UNDEFINED;
+	*status = MPI_UNDEFINED;
     }
     
     /* ... end of body of routine ... */
@@ -122,7 +122,7 @@ int MPI_Topo_test(MPI_Comm comm, int *topo_type)
 	mpi_errno = MPIR_Err_create_code(
 	    mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, 
 	    "**mpi_topo_test",
-	    "**mpi_topo_test %C %p", comm, topo_type);
+	    "**mpi_topo_test %C %p", comm, status);
     }
     mpi_errno = MPIR_Err_return_comm( comm_ptr, FCNAME, mpi_errno );
     goto fn_exit;
