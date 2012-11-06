@@ -934,10 +934,6 @@ int MPI_Error_string(int, char *, int *);
 int MPI_Error_class(int, int *);
 double MPI_Wtime(void);
 double MPI_Wtick(void);
-#ifndef MPI_Wtime
-double PMPI_Wtime(void);
-double PMPI_Wtick(void);
-#endif
 int MPI_Init(int *, char ***);
 int MPI_Finalize(void);
 int MPI_Initialized(int *);
@@ -1099,26 +1095,6 @@ int MPI_Win_get_attr(MPI_Win, int, void *, int *);
 int MPI_Win_get_name(MPI_Win, char *, int *);
 int MPI_Win_set_attr(MPI_Win, int, void *);
 int MPI_Win_set_name(MPI_Win, const char *);
-
-/* Miscellany */
-#ifdef FOO
-MPI_Comm MPI_Comm_f2c(MPI_Fint);
-MPI_Datatype MPI_Type_f2c(MPI_Fint);
-MPI_File MPI_File_f2c(MPI_Fint);
-MPI_Fint MPI_Comm_c2f(MPI_Comm);
-MPI_Fint MPI_File_c2f(MPI_File);
-MPI_Fint MPI_Group_c2f(MPI_Group);
-MPI_Fint MPI_Info_c2f(MPI_Info);
-MPI_Fint MPI_Op_c2f(MPI_Op);
-MPI_Fint MPI_Request_c2f(MPI_Request);
-MPI_Fint MPI_Type_c2f(MPI_Datatype);
-MPI_Fint MPI_Win_c2f(MPI_Win);
-MPI_Group MPI_Group_f2c(MPI_Fint);
-MPI_Info MPI_Info_f2c(MPI_Fint);
-MPI_Op MPI_Op_f2c(MPI_Fint);
-MPI_Request MPI_Request_f2c(MPI_Fint);
-MPI_Win MPI_Win_f2c(MPI_Fint);
-#endif
 
 int MPI_Alloc_mem(MPI_Aint, MPI_Info info, void *baseptr);
 int MPI_Comm_create_errhandler(MPI_Comm_errhandler_function *, MPI_Errhandler *);
