@@ -28,7 +28,7 @@
 #define FUNCNAME MPIR_T_enum_get_item_impl
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPIR_T_enum_get_item_impl(MPI_T_enum enumtype, int num, int *value, char *name, int *name_len)
+int MPIR_T_enum_get_item_impl(MPI_T_enum enumtype, int indx, int *value, char *name, int *name_len)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -56,7 +56,7 @@ Input Parameters:
 . enumtype - enumeration to be queried (handle)
 
 Output Parameters:
-+ num - number of the value to be queried in this enumeration (integer)
++ indx - number of the value to be queried in this enumeration (integer)
 . value - variable value (integer)
 - name - buffer to return the string containing the name of the enumeration item (string)
 
@@ -66,7 +66,7 @@ Output Parameters:
 
 .N Errors
 @*/
-int MPI_T_enum_get_item(MPI_T_enum enumtype, int num, int *value, char *name, int *name_len)
+int MPI_T_enum_get_item(MPI_T_enum enumtype, int indx, int *value, char *name, int *name_len)
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_T_ENUM_GET_ITEM);
@@ -104,7 +104,7 @@ int MPI_T_enum_get_item(MPI_T_enum enumtype, int num, int *value, char *name, in
 
     /* ... body of routine ...  */
 
-    mpi_errno = MPIR_T_enum_get_item_impl(enumtype, num, value, name, name_len);
+    mpi_errno = MPIR_T_enum_get_item_impl(enumtype, indx, value, name, name_len);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
     /* ... end of body of routine ... */
@@ -120,7 +120,7 @@ fn_fail:
     {
         mpi_errno = MPIR_Err_create_code(
             mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
-            "**mpi_t_enum_get_item", "**mpi_t_enum_get_item %p %d %p %p %p", enumtype, num, value, name, name_len);
+            "**mpi_t_enum_get_item", "**mpi_t_enum_get_item %p %d %p %p %p", enumtype, indx, value, name, name_len);
     }
 #   endif
     mpi_errno = MPIR_Err_return_comm(NULL, FCNAME, mpi_errno);

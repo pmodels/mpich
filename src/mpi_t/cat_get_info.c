@@ -28,7 +28,7 @@
 #define FUNCNAME MPIR_T_category_get_info_impl
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPIR_T_category_get_info_impl(int cat_index, char *name, int *name_len, char *desc, int *desc_len, int *num_controlvars, int *num_pvars, int *num_categories)
+int MPIR_T_category_get_info_impl(int cat_index, char *name, int *name_len, char *desc, int *desc_len, int *num_cvars, int *num_pvars, int *num_categories)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -59,7 +59,7 @@ Input Parameters:
 Output Parameters:
 + name - buffer to return the string containing the name of the category (string)
 . desc - buffer to return the string containing the description of the category (string)
-. num_controlvars - number of control variables contained in the category (integer)
+. num_cvars - number of control variables contained in the category (integer)
 . num_pvars - number of performance variables contained in the category (integer)
 - num_categories - number of categories contained in the category (integer)
 
@@ -69,7 +69,7 @@ Output Parameters:
 
 .N Errors
 @*/
-int MPI_T_category_get_info(int cat_index, char *name, int *name_len, char *desc, int *desc_len, int *num_controlvars, int *num_pvars, int *num_categories)
+int MPI_T_category_get_info(int cat_index, char *name, int *name_len, char *desc, int *desc_len, int *num_cvars, int *num_pvars, int *num_categories)
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_T_CATEGORY_GET_INFO);
@@ -99,7 +99,7 @@ int MPI_T_category_get_info(int cat_index, char *name, int *name_len, char *desc
         {
             MPIR_ERRTEST_ARGNULL(name_len, "name_len", mpi_errno);
             MPIR_ERRTEST_ARGNULL(desc_len, "desc_len", mpi_errno);
-            MPIR_ERRTEST_ARGNULL(num_controlvars, "num_controlvars", mpi_errno);
+            MPIR_ERRTEST_ARGNULL(num_cvars, "num_cvars", mpi_errno);
             MPIR_ERRTEST_ARGNULL(num_pvars, "num_pvars", mpi_errno);
             MPIR_ERRTEST_ARGNULL(num_categories, "num_categories", mpi_errno);
             /* TODO more checks may be appropriate (counts, in_place, buffer aliasing, etc) */
@@ -110,7 +110,7 @@ int MPI_T_category_get_info(int cat_index, char *name, int *name_len, char *desc
 
     /* ... body of routine ...  */
 
-    mpi_errno = MPIR_T_category_get_info_impl(cat_index, name, name_len, desc, desc_len, num_controlvars, num_pvars, num_categories);
+    mpi_errno = MPIR_T_category_get_info_impl(cat_index, name, name_len, desc, desc_len, num_cvars, num_pvars, num_categories);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
     /* ... end of body of routine ... */
@@ -126,7 +126,7 @@ fn_fail:
     {
         mpi_errno = MPIR_Err_create_code(
             mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
-            "**mpi_t_category_get_info", "**mpi_t_category_get_info %d %p %p %p %p %p %p %p", cat_index, name, name_len, desc, desc_len, num_controlvars, num_pvars, num_categories);
+            "**mpi_t_category_get_info", "**mpi_t_category_get_info %d %p %p %p %p %p %p %p", cat_index, name, name_len, desc, desc_len, num_cvars, num_pvars, num_categories);
     }
 #   endif
     mpi_errno = MPIR_Err_return_comm(NULL, FCNAME, mpi_errno);
