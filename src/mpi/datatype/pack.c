@@ -31,7 +31,7 @@ int MPIR_Pack_impl(const void *inbuf,
                    int incount,
                    MPI_Datatype datatype,
                    void *outbuf,
-                   int outcount,
+                   int outsize,
                    int *position)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -116,7 +116,7 @@ int MPIR_Pack_impl(const void *inbuf,
 +  inbuf - input buffer start (choice)
 .  incount - number of input data items (non-negative integer)
 .  datatype - datatype of each input data item (handle)
-.  outcount - output buffer size, in bytes (non-negative integer)
+.  outsize - output buffer size, in bytes (non-negative integer)
 -  comm - communicator for packed message (handle)
 
   Output Parameter:
@@ -146,7 +146,7 @@ int MPI_Pack(const void *inbuf,
 	     int incount,
 	     MPI_Datatype datatype,
 	     void *outbuf,
-	     int outcount,
+	     int outsize,
 	     int *position,
 	     MPI_Comm comm)
 {
@@ -179,7 +179,7 @@ int MPI_Pack(const void *inbuf,
         MPID_BEGIN_ERROR_CHECKS;
         {
 	    MPIR_ERRTEST_COUNT(incount,mpi_errno);
-	    MPIR_ERRTEST_COUNT(outcount,mpi_errno);
+	    MPIR_ERRTEST_COUNT(outsize,mpi_errno);
 	    /* NOTE: inbuf could be null (MPI_BOTTOM) */
 	    if (incount > 0) {
 		MPIR_ERRTEST_ARGNULL(outbuf, "output buffer", mpi_errno);
@@ -214,15 +214,15 @@ int MPI_Pack(const void *inbuf,
 	/* Verify that there is space in the buffer to pack the type */
 	MPID_Datatype_get_size_macro(datatype, tmp_sz);
 
-	if (tmp_sz * incount > outcount - *position) {
+	if (tmp_sz * incount > outsize - *position) {
 	    if (*position < 0) {
 		MPIU_ERR_SETANDJUMP1(mpi_errno,MPI_ERR_ARG,
 				     "**argposneg","**argposneg %d",
 				     *position);
 	    }
-	    else if (outcount < 0) {
+	    else if (outsize < 0) {
 		MPIU_ERR_SETANDJUMP2(mpi_errno,MPI_ERR_ARG,"**argneg",
-				     "**argneg %s %d","outcount",outcount);
+				     "**argneg %s %d","outsize",outsize);
 	    }
 	    else if (incount < 0) {
 		MPIU_ERR_SETANDJUMP2(mpi_errno,MPI_ERR_ARG,"**argneg",
@@ -231,7 +231,7 @@ int MPI_Pack(const void *inbuf,
 	    else {
 		MPIU_ERR_SETANDJUMP2(mpi_errno,MPI_ERR_ARG,"**argpackbuf",
 				     "**argpackbuf %d %d", tmp_sz * incount,
-				     outcount - *position);
+				     outsize - *position);
 	    }
 	}
 	MPID_END_ERROR_CHECKS;
@@ -240,7 +240,7 @@ int MPI_Pack(const void *inbuf,
 
     /* ... body of routine ... */
 
-    mpi_errno = MPIR_Pack_impl(inbuf, incount, datatype, outbuf, outcount, position);
+    mpi_errno = MPIR_Pack_impl(inbuf, incount, datatype, outbuf, outsize, position);
     if (mpi_errno) goto fn_fail;
     
    /* ... end of body of routine ... */
@@ -255,7 +255,7 @@ int MPI_Pack(const void *inbuf,
     {
 	mpi_errno = MPIR_Err_create_code(
 	    mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, "**mpi_pack",
-	    "**mpi_pack %p %d %D %p %d %p %C", inbuf, incount, datatype, outbuf, outcount, position, comm);
+	    "**mpi_pack %p %d %D %p %d %p %C", inbuf, incount, datatype, outbuf, outsize, position, comm);
     }
 #   endif
     mpi_errno = MPIR_Err_return_comm(comm_ptr, FCNAME, mpi_errno);

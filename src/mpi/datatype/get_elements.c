@@ -303,7 +303,7 @@ Output Parameter:
 .N Errors
 .N MPI_SUCCESS
 @*/
-int MPI_Get_elements(const MPI_Status *status, MPI_Datatype datatype, int *elements)
+int MPI_Get_elements(const MPI_Status *status, MPI_Datatype datatype, int *count)
 {
     int mpi_errno = MPI_SUCCESS, byte_count;
     MPID_Datatype *datatype_ptr = NULL;
@@ -334,7 +334,7 @@ int MPI_Get_elements(const MPI_Status *status, MPI_Datatype datatype, int *eleme
         MPID_BEGIN_ERROR_CHECKS;
         {
 	    MPIR_ERRTEST_ARGNULL(status, "status", mpi_errno);
-	    MPIR_ERRTEST_ARGNULL(elements, "elements", mpi_errno);
+	    MPIR_ERRTEST_ARGNULL(count, "count", mpi_errno);
             /* Validate datatype_ptr */
 	    if (HANDLE_GET_KIND(datatype) != HANDLE_KIND_BUILTIN) {
 		MPID_Datatype_get_ptr(datatype, datatype_ptr);
@@ -368,7 +368,7 @@ int MPI_Get_elements(const MPI_Status *status, MPI_Datatype datatype, int *eleme
 	 * be in bytes
 	 */
 	if (HANDLE_GET_KIND(datatype) != HANDLE_KIND_BUILTIN) {
-	    *elements = MPIR_Type_get_basic_type_elements(&byte_count,
+	    *count = MPIR_Type_get_basic_type_elements(&byte_count,
 							  -1,
 							  datatype_ptr->eltype);
 	}
@@ -377,9 +377,9 @@ int MPI_Get_elements(const MPI_Status *status, MPI_Datatype datatype, int *eleme
 	    int size;
 	    MPID_Datatype_get_size_macro(datatype, size);
             if ((byte_count % size) != 0)
-                *elements = MPI_UNDEFINED;
+                *count = MPI_UNDEFINED;
             else
-                *elements = MPIR_Type_get_basic_type_elements(&byte_count,
+                *count = MPIR_Type_get_basic_type_elements(&byte_count,
 							      -1,
 							      datatype);
 	}
@@ -391,7 +391,7 @@ int MPI_Get_elements(const MPI_Status *status, MPI_Datatype datatype, int *eleme
 
 	    /* datatype size of zero and count > 0 should never happen. */
 
-	    (*elements) = MPI_UNDEFINED;
+	    (*count) = MPI_UNDEFINED;
 	    /* --END ERROR HANDLING-- */
 	}
 	else {
@@ -399,14 +399,14 @@ int MPI_Get_elements(const MPI_Status *status, MPI_Datatype datatype, int *eleme
 	     * reached a consensus that this is the correct return
 	     * value
 	     */
-	    (*elements) = 0;
+	    (*count) = 0;
 	}
     }
     else /* derived type with weird element type or weird size */ {
 	MPIU_Assert(datatype_ptr->element_size == -1);
 
 	byte_count = status->count;
-	*elements = MPIR_Type_get_elements(&byte_count, -1, datatype);
+	*count = MPIR_Type_get_elements(&byte_count, -1, datatype);
     }
 
     /* ... end of body of routine ... */
@@ -424,7 +424,7 @@ int MPI_Get_elements(const MPI_Status *status, MPI_Datatype datatype, int *eleme
 	mpi_errno = MPIR_Err_create_code(
 	    mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
 	    "**mpi_get_elements",
-	    "**mpi_get_elements %p %D %p", status, datatype, elements);
+	    "**mpi_get_elements %p %D %p", status, datatype, count);
     }
     mpi_errno = MPIR_Err_return_comm(0, FCNAME, mpi_errno);
     goto fn_exit;

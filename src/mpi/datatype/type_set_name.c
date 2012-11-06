@@ -35,7 +35,7 @@
    MPI_Type_set_name - set datatype name
 
    Input Parameters:
-+ type - datatype whose identifier is to be set (handle) 
++ datatype - datatype whose identifier is to be set (handle)
 - type_name - the character string which is remembered as the name (string) 
 
 .N Fortran
@@ -46,7 +46,7 @@
 .N MPI_ERR_TYPE
 .N MPI_ERR_OTHER
 @*/
-int MPI_Type_set_name(MPI_Datatype type, const char *type_name)
+int MPI_Type_set_name(MPI_Datatype datatype, const char *type_name)
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_Datatype *datatype_ptr = NULL;
@@ -62,14 +62,14 @@ int MPI_Type_set_name(MPI_Datatype type, const char *type_name)
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
-	    MPIR_ERRTEST_DATATYPE(type, "datatype", mpi_errno);
+	    MPIR_ERRTEST_DATATYPE(datatype, "datatype", mpi_errno);
         }
         MPID_END_ERROR_CHECKS;
     }
 #   endif
     
     /* Convert MPI object handles to object pointers */
-    MPID_Datatype_get_ptr( type, datatype_ptr );
+    MPID_Datatype_get_ptr( datatype, datatype_ptr );
 
     /* Validate parameters and objects (post conversion) */
 #   ifdef HAVE_ERROR_CHECKING
@@ -119,7 +119,7 @@ int MPI_Type_set_name(MPI_Datatype type, const char *type_name)
 	mpi_errno = MPIR_Err_create_code(
 	    mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, 
 	    "**mpi_type_set_name",
-	    "**mpi_type_set_name %D %s", type, type_name);
+	    "**mpi_type_set_name %D %s", datatype, type_name);
     }
     mpi_errno = MPIR_Err_return_comm( NULL, FCNAME, mpi_errno );
     goto fn_exit;

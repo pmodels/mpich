@@ -27,8 +27,9 @@
 #define FUNCNAME MPIR_Type_indexed_impl
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPIR_Type_indexed_impl(int count, const int blocklens[], const int indices[],
-                           MPI_Datatype old_type, MPI_Datatype *newtype)
+int MPIR_Type_indexed_impl(int count, const int *array_of_blocklengths,
+                           const int *array_of_displacements,
+                           MPI_Datatype oldtype, MPI_Datatype *newtype)
 {
     int mpi_errno = MPI_SUCCESS;
     MPI_Datatype new_handle;
@@ -37,10 +38,10 @@ int MPIR_Type_indexed_impl(int count, const int blocklens[], const int indices[]
     MPIU_CHKLMEM_DECL(1);
 
     mpi_errno = MPID_Type_indexed(count,
-				  blocklens,
-				  indices,
+				  array_of_blocklengths,
+				  array_of_displacements,
 				  0, /* displacements not in bytes */
-				  old_type,
+				  oldtype,
 				  &new_handle);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     
@@ -52,10 +53,10 @@ int MPIR_Type_indexed_impl(int count, const int blocklens[], const int indices[]
     ints[0] = count;
 
     for (i=0; i < count; i++) {
-	ints[i+1] = blocklens[i];
+	ints[i+1] = array_of_blocklengths[i];
     }
     for (i=0; i < count; i++) {
-	ints[i + count + 1] = indices[i];
+	ints[i + count + 1] = array_of_displacements[i];
     }
     MPID_Datatype_get_ptr(new_handle, new_dtp);
     mpi_errno = MPID_Datatype_set_contents(new_dtp,
@@ -65,7 +66,7 @@ int MPIR_Type_indexed_impl(int count, const int blocklens[], const int indices[]
 					   1, /* types */
 					   ints,
 					   NULL,
-					   &old_type);
+					   &oldtype);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     
     MPIU_OBJ_PUBLISH_HANDLE(*newtype, new_handle);
@@ -88,11 +89,11 @@ int MPIR_Type_indexed_impl(int count, const int blocklens[], const int indices[]
     MPI_Type_indexed - Creates an indexed datatype
 
 Input Parameters:
-+ count - number of blocks -- also number of entries in indices and blocklens
-. blocklens - number of elements in each block (array of nonnegative integers) 
-. indices - displacement of each block in multiples of old_type (array of 
++ count - number of blocks -- also number of entries in array_of_displacements and array_of_blocklengths
+. array_of_blocklengths - number of elements in each block (array of nonnegative integers)
+. array_of_displacements - displacement of each block in multiples of oldtype (array of
   integers)
-- old_type - old datatype (handle) 
+- oldtype - old datatype (handle)
 
 Output Parameter:
 . newtype - new datatype (handle) 
@@ -101,23 +102,23 @@ Output Parameter:
 
 .N Fortran
 
-The indices are displacements, and are based on a zero origin.  A common error
+The array_of_displacements are displacements, and are based on a zero origin.  A common error
 is to do something like to following
 .vb
     integer a(100)
-    integer blens(10), indices(10)
+    integer array_of_blocklengths(10), array_of_displacements(10)
     do i=1,10
-         blens(i)   = 1
-10       indices(i) = 1 + (i-1)*10
-    call MPI_TYPE_INDEXED(10,blens,indices,MPI_INTEGER,newtype,ierr)
+         array_of_blocklengths(i)   = 1
+10       array_of_displacements(i) = 1 + (i-1)*10
+    call MPI_TYPE_INDEXED(10,array_of_blocklengths,array_of_displacements,MPI_INTEGER,newtype,ierr)
     call MPI_TYPE_COMMIT(newtype,ierr)
     call MPI_SEND(a,1,newtype,...)
 .ve
-expecting this to send 'a(1),a(11),...' because the indices have values 
+expecting this to send 'a(1),a(11),...' because the array_of_displacements have values
 '1,11,...'.   Because these are `displacements` from the beginning of 'a',
 it actually sends 'a(1+1),a(1+11),...'.
 
-If you wish to consider the displacements as indices into a Fortran array,
+If you wish to consider the displacements as array_of_displacements into a Fortran array,
 consider declaring the Fortran array with a zero origin
 .vb
     integer a(0:99)
@@ -130,9 +131,9 @@ consider declaring the Fortran array with a zero origin
 .N MPI_ERR_EXHAUSTED
 @*/
 int MPI_Type_indexed(int count,
-		     const int blocklens[],
-		     const int indices[],
-		     MPI_Datatype old_type,
+		     const int *array_of_blocklengths,
+		     const int *array_of_displacements,
+		     MPI_Datatype oldtype,
 		     MPI_Datatype *newtype)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -153,18 +154,18 @@ int MPI_Type_indexed(int count,
 
 	    MPIR_ERRTEST_COUNT(count,mpi_errno);
 	    if (count > 0) {
-		MPIR_ERRTEST_ARGNULL(blocklens, "blocklens", mpi_errno);
-		MPIR_ERRTEST_ARGNULL(indices, "indices", mpi_errno);
+		MPIR_ERRTEST_ARGNULL(array_of_blocklengths, "array_of_blocklengths", mpi_errno);
+		MPIR_ERRTEST_ARGNULL(array_of_displacements, "array_of_displacements", mpi_errno);
 	    }
-	    MPIR_ERRTEST_DATATYPE(old_type, "datatype", mpi_errno);
+	    MPIR_ERRTEST_DATATYPE(oldtype, "datatype", mpi_errno);
 
-            if (HANDLE_GET_KIND(old_type) != HANDLE_KIND_BUILTIN) {
-                MPID_Datatype_get_ptr( old_type, datatype_ptr );
+            if (HANDLE_GET_KIND(oldtype) != HANDLE_KIND_BUILTIN) {
+                MPID_Datatype_get_ptr( oldtype, datatype_ptr );
                 MPID_Datatype_valid_ptr( datatype_ptr, mpi_errno );
             }
             /* verify that all blocklengths are >= 0 */
             for (j=0; j < count; j++) {
-                MPIR_ERRTEST_ARGNEG(blocklens[j], "blocklen", mpi_errno);
+                MPIR_ERRTEST_ARGNEG(array_of_blocklengths[j], "blocklength", mpi_errno);
             }
 
 	    MPIR_ERRTEST_ARGNULL(newtype, "newtype", mpi_errno);
@@ -175,7 +176,7 @@ int MPI_Type_indexed(int count,
 
     /* ... body of routine ...  */
 
-    mpi_errno = MPIR_Type_indexed_impl(count, blocklens, indices, old_type, newtype);
+    mpi_errno = MPIR_Type_indexed_impl(count, array_of_blocklengths, array_of_displacements, oldtype, newtype);
     if (mpi_errno) goto fn_fail;
     
     /* ... end of body of routine ... */
@@ -191,7 +192,7 @@ int MPI_Type_indexed(int count,
     {
 	mpi_errno = MPIR_Err_create_code(
 	    mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, "**mpi_type_indexed",
-	    "**mpi_type_indexed %d %p %p %D %p", count,blocklens, indices, old_type, newtype);
+	    "**mpi_type_indexed %d %p %p %D %p", count,array_of_blocklengths, array_of_displacements, oldtype, newtype);
     }
 #   endif
     mpi_errno = MPIR_Err_return_comm( NULL, FCNAME, mpi_errno );

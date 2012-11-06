@@ -37,7 +37,7 @@
 . inbuf - input buffer start (choice)
 . incount - number of input data items (integer)
 . datatype - datatype of each input data item (handle)
-- outcount - output buffer size, in bytes (address integer)
+- outsize - output buffer size, in bytes (address integer)
 
    Output Parameter:
 . outbuf - output buffer start (choice)
@@ -55,12 +55,12 @@
 .N MPI_ERR_ARG
 .N MPI_ERR_COUNT
 @*/
-int MPI_Pack_external(const char *datarep,
+int MPI_Pack_external(const char datarep[],
 		      const void *inbuf,
 		      int incount,
 		      MPI_Datatype datatype,
 		      void *outbuf,
-		      MPI_Aint outcount,
+		      MPI_Aint outsize,
 		      MPI_Aint *position)
 {
     static const char FCNAME[] = "MPI_Pack_external";
@@ -80,7 +80,7 @@ int MPI_Pack_external(const char *datarep,
         MPID_BEGIN_ERROR_CHECKS;
         {
 	    MPIR_ERRTEST_COUNT(incount, mpi_errno);
-	    MPIR_ERRTEST_COUNT(outcount, mpi_errno);
+	    MPIR_ERRTEST_COUNT(outsize, mpi_errno);
 	    /* NOTE: inbuf could be null (MPI_BOTTOM) */
 	    if (incount > 0) {
 		MPIR_ERRTEST_ARGNULL(outbuf, "output buffer", mpi_errno);
@@ -156,7 +156,7 @@ int MPI_Pack_external(const char *datarep,
     {
 	mpi_errno = MPIR_Err_create_code(
 	    mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, "**mpi_pack_external",
-	    "**mpi_pack_external %s %p %d %D %p %d %p", datarep, inbuf, incount, datatype, outbuf, outcount, position);
+	    "**mpi_pack_external %s %p %d %D %p %d %p", datarep, inbuf, incount, datatype, outbuf, outsize, position);
     }
 #   endif
     mpi_errno = MPIR_Err_return_comm(0, FCNAME, mpi_errno);

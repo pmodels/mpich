@@ -28,15 +28,15 @@
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIR_Type_contiguous_impl(int count,
-                              MPI_Datatype old_type,
-                              MPI_Datatype *new_type_p)
+                              MPI_Datatype oldtype,
+                              MPI_Datatype *newtype)
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_Datatype *new_dtp;
     MPI_Datatype new_handle;
     
     mpi_errno = MPID_Type_contiguous(count,
-				     old_type,
+				     oldtype,
 				     &new_handle);
 
     if (mpi_errno != MPI_SUCCESS) goto fn_fail;
@@ -49,11 +49,11 @@ int MPIR_Type_contiguous_impl(int count,
 				           1,
 				           &count,
 				           NULL,
-				           &old_type);
+				           &oldtype);
 
     if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 
-    MPIU_OBJ_PUBLISH_HANDLE(*new_type_p, new_handle);
+    MPIU_OBJ_PUBLISH_HANDLE(*newtype, new_handle);
 
  fn_exit:
     return mpi_errno;
@@ -90,8 +90,8 @@ Output Parameter:
 .N MPI_ERR_EXHAUSTED
 @*/
 int MPI_Type_contiguous(int count,
-			MPI_Datatype old_type,
-			MPI_Datatype *new_type_p)
+			MPI_Datatype oldtype,
+			MPI_Datatype *newtype)
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_TYPE_CONTIGUOUS);
@@ -108,10 +108,10 @@ int MPI_Type_contiguous(int count,
             MPID_Datatype *datatype_ptr = NULL;
 
 	    MPIR_ERRTEST_COUNT(count, mpi_errno);
-            MPIR_ERRTEST_DATATYPE(old_type, "datatype", mpi_errno);
+            MPIR_ERRTEST_DATATYPE(oldtype, "datatype", mpi_errno);
 	    
-            if (HANDLE_GET_KIND(old_type) != HANDLE_KIND_BUILTIN) {
-                MPID_Datatype_get_ptr(old_type, datatype_ptr);
+            if (HANDLE_GET_KIND(oldtype) != HANDLE_KIND_BUILTIN) {
+                MPID_Datatype_get_ptr(oldtype, datatype_ptr);
                 MPID_Datatype_valid_ptr(datatype_ptr, mpi_errno);
                 if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 	    }
@@ -122,7 +122,7 @@ int MPI_Type_contiguous(int count,
 
     /* ... body of routine ... */
 
-    mpi_errno = MPIR_Type_contiguous_impl(count, old_type, new_type_p);
+    mpi_errno = MPIR_Type_contiguous_impl(count, oldtype, newtype);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
     /* ... end of body of routine ... */
@@ -138,7 +138,7 @@ int MPI_Type_contiguous(int count,
     {
     mpi_errno = MPIR_Err_create_code(
 	mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, "**mpi_type_contiguous",
-	"**mpi_type_contiguous %d %D %p", count, old_type, new_type_p);
+	"**mpi_type_contiguous %d %D %p", count, oldtype, newtype);
     }
 #   endif
     mpi_errno = MPIR_Err_return_comm( NULL, FCNAME, mpi_errno );

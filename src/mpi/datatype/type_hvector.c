@@ -27,7 +27,7 @@
 #define FUNCNAME MPIR_Type_hvector_impl
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPIR_Type_hvector_impl(int count, int blocklen, MPI_Aint stride, MPI_Datatype old_type, MPI_Datatype *newtype_p)
+int MPIR_Type_hvector_impl(int count, int blocklength, MPI_Aint stride, MPI_Datatype oldtype, MPI_Datatype *newtype)
 {
     int mpi_errno = MPI_SUCCESS;
     MPI_Datatype new_handle;
@@ -35,27 +35,27 @@ int MPIR_Type_hvector_impl(int count, int blocklen, MPI_Aint stride, MPI_Datatyp
     int ints[2];
     
     mpi_errno = MPID_Type_vector(count,
-				 blocklen,
+				 blocklength,
 				 (MPI_Aint) stride,
 				 1, /* stride in bytes */
-				 old_type,
+				 oldtype,
 				 &new_handle);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
     ints[0] = count;
-    ints[1] = blocklen;
+    ints[1] = blocklength;
     MPID_Datatype_get_ptr(new_handle, new_dtp);
     mpi_errno = MPID_Datatype_set_contents(new_dtp,
 				           MPI_COMBINER_HVECTOR,
-    				           2, /* ints (count, blocklen) */
+                                           2, /* ints (count, blocklength) */
 				           1, /* aints */
 				           1, /* types */
 				           ints,
 				           &stride,
-				           &old_type);
+				           &oldtype);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     
-    MPIU_OBJ_PUBLISH_HANDLE(*newtype_p, new_handle);
+    MPIU_OBJ_PUBLISH_HANDLE(*newtype, new_handle);
 
  fn_exit:
     return mpi_errno;
@@ -81,7 +81,7 @@ Input Parameters:
 - oldtype - old datatype (handle) 
 
 Output Parameter:
-. newtype_p - new datatype (handle) 
+. newtype - new datatype (handle)
 
    Notes:
 
@@ -91,10 +91,10 @@ Output Parameter:
 .N MPI_SUCCESS
 @*/
 int MPI_Type_hvector(int count,
-		     int blocklen,
+		     int blocklength,
 		     MPI_Aint stride,
-		     MPI_Datatype old_type,
-		     MPI_Datatype *newtype_p)
+		     MPI_Datatype oldtype,
+		     MPI_Datatype *newtype)
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_TYPE_HVECTOR);
@@ -111,16 +111,16 @@ int MPI_Type_hvector(int count,
 	    MPID_Datatype *datatype_ptr = NULL;
 
 	    MPIR_ERRTEST_COUNT(count, mpi_errno);
-	    MPIR_ERRTEST_ARGNEG(blocklen,"blocklen",mpi_errno);
-	    MPIR_ERRTEST_DATATYPE(old_type, "datatype", mpi_errno);
+	    MPIR_ERRTEST_ARGNEG(blocklength,"blocklength",mpi_errno);
+	    MPIR_ERRTEST_DATATYPE(oldtype, "datatype", mpi_errno);
 
-            if (HANDLE_GET_KIND(old_type) != HANDLE_KIND_BUILTIN) {
-                MPID_Datatype_get_ptr(old_type, datatype_ptr);
+            if (HANDLE_GET_KIND(oldtype) != HANDLE_KIND_BUILTIN) {
+                MPID_Datatype_get_ptr(oldtype, datatype_ptr);
                 MPID_Datatype_valid_ptr(datatype_ptr, mpi_errno);
                 if (mpi_errno) goto fn_fail;
             }
 
-	    MPIR_ERRTEST_ARGNULL(newtype_p, "newtype", mpi_errno);
+	    MPIR_ERRTEST_ARGNULL(newtype, "newtype", mpi_errno);
         }
         MPID_END_ERROR_CHECKS;
     }
@@ -128,7 +128,7 @@ int MPI_Type_hvector(int count,
 
     /* ... body of routine ...  */
 
-    mpi_errno = MPIR_Type_hvector_impl(count, blocklen, stride, old_type, newtype_p);
+    mpi_errno = MPIR_Type_hvector_impl(count, blocklength, stride, oldtype, newtype);
     if (mpi_errno) goto fn_fail;
     
     /* ... end of body of routine ... */
@@ -144,7 +144,7 @@ int MPI_Type_hvector(int count,
     {
 	mpi_errno = MPIR_Err_create_code(
 	    mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, "**mpi_type_hvector",
-	    "**mpi_type_hvector %d %d %d %D %p", count, blocklen, stride, old_type, newtype_p);
+	    "**mpi_type_hvector %d %d %d %D %p", count, blocklength, stride, oldtype, newtype);
     }
 #   endif
     mpi_errno = MPIR_Err_return_comm(NULL, FCNAME, mpi_errno);

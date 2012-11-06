@@ -26,8 +26,9 @@
 #define FUNCNAME MPIR_Type_struct_impl
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPIR_Type_struct_impl(int count, const int blocklens[], const MPI_Aint indices[],
-                          const MPI_Datatype old_types[], MPI_Datatype *newtype)
+int MPIR_Type_struct_impl(int count, const int *array_of_blocklengths,
+                          const MPI_Aint *array_of_displacements,
+                          const MPI_Datatype *array_of_types, MPI_Datatype *newtype)
 {
     int mpi_errno = MPI_SUCCESS;
     MPI_Datatype new_handle;
@@ -36,9 +37,9 @@ int MPIR_Type_struct_impl(int count, const int blocklens[], const MPI_Aint indic
     MPIU_CHKLMEM_DECL(1);
 
     mpi_errno = MPID_Type_struct(count,
-				 blocklens,
-				 indices,
-				 old_types,
+				 array_of_blocklengths,
+				 array_of_displacements,
+				 array_of_types,
 				 &new_handle);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
@@ -47,7 +48,7 @@ int MPIR_Type_struct_impl(int count, const int blocklens[], const MPI_Aint indic
 
     ints[0] = count;
     for (i=0; i < count; i++) {
-        ints[i+1] = blocklens[i];
+        ints[i+1] = array_of_blocklengths[i];
     }
     
     MPID_Datatype_get_ptr(new_handle, new_dtp);
@@ -57,8 +58,8 @@ int MPIR_Type_struct_impl(int count, const int blocklens[], const MPI_Aint indic
                                            count, /* aints (displacements) */
                                            count, /* types */
                                            ints,
-                                           indices,
-                                           old_types);
+                                           array_of_displacements,
+                                           array_of_types);
     
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
@@ -84,9 +85,9 @@ Input Parameters:
 + count - number of blocks (integer) -- also number of 
 entries in arrays array_of_types ,
 array_of_displacements  and array_of_blocklengths  
-. blocklens - number of elements in each block (array)
-. indices - byte displacement of each block (array)
-- old_types - type of elements in each block (array 
+. array_of_blocklengths - number of elements in each block (array)
+. array_of_displacements - byte displacement of each block (array)
+- array_of_types - type of elements in each block (array
 of handles to datatype objects) 
 
 Output Parameter:
@@ -127,10 +128,10 @@ multiple items, you should explicitly include an 'MPI_UB' entry as the
 last member of the structure.  For example, the following code can be used
 for the structure foo
 .vb
-    blen[0] = 1; indices[0] = 0; oldtypes[0] = MPI_INT;
-    blen[1] = 1; indices[1] = &foo.b - &foo; oldtypes[1] = MPI_CHAR;
-    blen[2] = 1; indices[2] = sizeof(foo); oldtypes[2] = MPI_UB;
-    MPI_Type_struct( 3, blen, indices, oldtypes, &newtype );
+    blen[0] = 1; array_of_displacements[0] = 0; oldtypes[0] = MPI_INT;
+    blen[1] = 1; array_of_displacements[1] = &foo.b - &foo; oldtypes[1] = MPI_CHAR;
+    blen[2] = 1; array_of_displacements[2] = sizeof(foo); oldtypes[2] = MPI_UB;
+    MPI_Type_struct( 3, blen, array_of_displacements, oldtypes, &newtype );
 .ve
 
 .N ThreadSafe
@@ -144,9 +145,9 @@ for the structure foo
 .N MPI_ERR_EXHAUSTED
 @*/
 int MPI_Type_struct(int count,
-		    const int blocklens[],
-		    const MPI_Aint indices[],
-		    const MPI_Datatype old_types[],
+		    const int *array_of_blocklengths,
+		    const MPI_Aint *array_of_displacements,
+		    const MPI_Datatype *array_of_types,
 		    MPI_Datatype *newtype)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -167,18 +168,18 @@ int MPI_Type_struct(int count,
 
 	    MPIR_ERRTEST_COUNT(count,mpi_errno);
 	    if (count > 0) {
-		MPIR_ERRTEST_ARGNULL(blocklens, "blocklens", mpi_errno);
-		MPIR_ERRTEST_ARGNULL(indices, "indices", mpi_errno);
-		MPIR_ERRTEST_ARGNULL(old_types, "types", mpi_errno);
+		MPIR_ERRTEST_ARGNULL(array_of_blocklengths, "array_of_blocklengths", mpi_errno);
+		MPIR_ERRTEST_ARGNULL(array_of_displacements, "array_of_displacements", mpi_errno);
+		MPIR_ERRTEST_ARGNULL(array_of_types, "array_of_types", mpi_errno);
 	    }
 
             for (i=0; i < count; i++) {
-                MPIR_ERRTEST_ARGNEG(blocklens[i], "blocklen", mpi_errno);
-                MPIR_ERRTEST_DATATYPE(old_types[i], "datatype[i]", mpi_errno);
+                MPIR_ERRTEST_ARGNEG(array_of_blocklengths[i], "blocklength", mpi_errno);
+                MPIR_ERRTEST_DATATYPE(array_of_types[i], "datatype[i]", mpi_errno);
 
-                if (old_types[i] != MPI_DATATYPE_NULL &&
-                    HANDLE_GET_KIND(old_types[i]) != HANDLE_KIND_BUILTIN) {
-                    MPID_Datatype_get_ptr(old_types[i], datatype_ptr);
+                if (array_of_types[i] != MPI_DATATYPE_NULL &&
+                    HANDLE_GET_KIND(array_of_types[i]) != HANDLE_KIND_BUILTIN) {
+                    MPID_Datatype_get_ptr(array_of_types[i], datatype_ptr);
                     MPID_Datatype_valid_ptr(datatype_ptr, mpi_errno);
                 }
 	    }
@@ -190,7 +191,7 @@ int MPI_Type_struct(int count,
 
     /* ... body of routine ...  */
 
-    mpi_errno = MPIR_Type_struct_impl(count, blocklens, indices, old_types, newtype);
+    mpi_errno = MPIR_Type_struct_impl(count, array_of_blocklengths, array_of_displacements, array_of_types, newtype);
     if (mpi_errno) goto fn_fail;
     
     /* ... end of body of routine ... */
@@ -206,7 +207,7 @@ int MPI_Type_struct(int count,
     {
 	mpi_errno = MPIR_Err_create_code(
 	    mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, "**mpi_type_struct",
-	    "**mpi_type_struct %d %p %p %p %p", count, blocklens, indices, old_types, newtype);
+	    "**mpi_type_struct %d %p %p %p %p", count, array_of_blocklengths, array_of_displacements, array_of_types, newtype);
     }
 #   endif
     mpi_errno = MPIR_Err_return_comm( NULL, FCNAME, mpi_errno );

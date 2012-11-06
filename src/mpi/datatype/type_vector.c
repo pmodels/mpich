@@ -27,7 +27,7 @@
 #define FUNCNAME MPIR_Type_vector_impl
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPIR_Type_vector_impl(int count, int blocklength, int stride, MPI_Datatype old_type, MPI_Datatype *newtype_p)
+int MPIR_Type_vector_impl(int count, int blocklength, int stride, MPI_Datatype oldtype, MPI_Datatype *newtype)
 {
     int mpi_errno = MPI_SUCCESS;
     MPI_Datatype new_handle;
@@ -38,7 +38,7 @@ int MPIR_Type_vector_impl(int count, int blocklength, int stride, MPI_Datatype o
 				 blocklength,
 				 (MPI_Aint) stride,
 				 0, /* stride not in bytes, in extents */
-				 old_type,
+				 oldtype,
 				 &new_handle);
 
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
@@ -54,10 +54,10 @@ int MPIR_Type_vector_impl(int count, int blocklength, int stride, MPI_Datatype o
                                            1, /* types */
                                            ints,
                                            NULL,
-                                           &old_type);
+                                           &oldtype);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
-    MPIU_OBJ_PUBLISH_HANDLE(*newtype_p, new_handle);
+    MPIU_OBJ_PUBLISH_HANDLE(*newtype, new_handle);
     
  fn_exit:
     return mpi_errno;
@@ -78,11 +78,11 @@ Input Parameters:
 + count - number of blocks (nonnegative integer) 
 . blocklength - number of elements in each block 
   (nonnegative integer)
-. stride - number of elements between start of each block (integer) 
-- oldtype - old datatype (handle) 
+. stride - number of elements between start of each block (integer)
+- oldtype - old datatype (handle)
 
 Output Parameter:
-. newtype_p - new datatype (handle) 
+. newtype - new datatype (handle)
 
 .N ThreadSafe
 
@@ -96,8 +96,8 @@ Output Parameter:
 int MPI_Type_vector(int count,
 		    int blocklength,
 		    int stride, 
-		    MPI_Datatype old_type,
-		    MPI_Datatype *newtype_p)
+		    MPI_Datatype oldtype,
+		    MPI_Datatype *newtype)
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_TYPE_VECTOR);
@@ -116,10 +116,10 @@ int MPI_Type_vector(int count,
 
 	    MPIR_ERRTEST_COUNT(count, mpi_errno);
 	    MPIR_ERRTEST_ARGNEG(blocklength, "blocklen", mpi_errno);
-	    MPIR_ERRTEST_DATATYPE(old_type, "datatype", mpi_errno);
+	    MPIR_ERRTEST_DATATYPE(oldtype, "datatype", mpi_errno);
 	    
-	    if (old_type != MPI_DATATYPE_NULL && HANDLE_GET_KIND(old_type) != HANDLE_KIND_BUILTIN) {
-		MPID_Datatype_get_ptr(old_type, old_ptr);
+	    if (oldtype != MPI_DATATYPE_NULL && HANDLE_GET_KIND(oldtype) != HANDLE_KIND_BUILTIN) {
+		MPID_Datatype_get_ptr(oldtype, old_ptr);
 		MPID_Datatype_valid_ptr(old_ptr, mpi_errno);
                 if (mpi_errno) goto fn_fail;
 	    }
@@ -130,7 +130,7 @@ int MPI_Type_vector(int count,
 
     /* ... body of routine ...  */
 
-    mpi_errno = MPIR_Type_vector_impl(count, blocklength, stride, old_type, newtype_p);
+    mpi_errno = MPIR_Type_vector_impl(count, blocklength, stride, oldtype, newtype);
     if (mpi_errno) goto fn_fail;
     
     /* ... end of body of routine ... */
@@ -146,7 +146,7 @@ int MPI_Type_vector(int count,
     {
 	mpi_errno = MPIR_Err_create_code(
 	    mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, "**mpi_type_vector",
-	    "**mpi_type_vector %d %d %d %D %p", count, blocklength, stride, old_type, newtype_p);
+	    "**mpi_type_vector %d %d %d %D %p", count, blocklength, stride, oldtype, newtype);
     }
 #   endif
     mpi_errno = MPIR_Err_return_comm( NULL, FCNAME, mpi_errno );

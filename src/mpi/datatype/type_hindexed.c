@@ -32,10 +32,10 @@
     MPI_Type_hindexed - Creates an indexed datatype with offsets in bytes
 
 Input Parameters:
-+ count - number of blocks -- also number of entries in indices and blocklens
-. blocklens - number of elements in each block (array of nonnegative integers) 
-. indices - byte displacement of each block (array of MPI_Aint) 
-- old_type - old datatype (handle) 
++ count - number of blocks -- also number of entries in array_of_displacements and array_of_blocklengths
+. array_of_blocklengths - number of elements in each block (array of nonnegative integers)
+. array_of_displacements - byte displacement of each block (array of MPI_Aint)
+- oldtype - old datatype (handle)
 
 Output Parameter:
 . newtype - new datatype (handle) 
@@ -47,23 +47,23 @@ This routine is replaced by 'MPI_Type_create_hindexed'.
 
 .N Fortran
 
-The indices are displacements, and are based on a zero origin.  A common error
+The array_of_displacements are displacements, and are based on a zero origin.  A common error
 is to do something like to following
 .vb
     integer a(100)
-    integer blens(10), indices(10)
+    integer array_of_blocklengths(10), array_of_displacements(10)
     do i=1,10
-         blens(i)   = 1
-10       indices(i) = (1 + (i-1)*10) * sizeofint
-    call MPI_TYPE_HINDEXED(10,blens,indices,MPI_INTEGER,newtype,ierr)
+         array_of_blocklengths(i)   = 1
+10       array_of_displacements(i) = (1 + (i-1)*10) * sizeofint
+    call MPI_TYPE_HINDEXED(10,array_of_blocklengths,array_of_displacements,MPI_INTEGER,newtype,ierr)
     call MPI_TYPE_COMMIT(newtype,ierr)
     call MPI_SEND(a,1,newtype,...)
 .ve
-expecting this to send 'a(1),a(11),...' because the indices have values 
+expecting this to send 'a(1),a(11),...' because the array_of_displacements have values
 '1,11,...'.   Because these are `displacements` from the beginning of 'a',
 it actually sends 'a(1+1),a(1+11),...'.
 
-If you wish to consider the displacements as indices into a Fortran array,
+If you wish to consider the displacements as array_of_displacements into a Fortran array,
 consider declaring the Fortran array with a zero origin
 .vb
     integer a(0:99)
@@ -77,9 +77,9 @@ consider declaring the Fortran array with a zero origin
 .N MPI_ERR_ARG
 @*/
 int MPI_Type_hindexed(int count,
-		      const int blocklens[],
-		      const MPI_Aint indices[],
-		      MPI_Datatype old_type,
+		      const int *array_of_blocklengths,
+		      const MPI_Aint *array_of_displacements,
+		      MPI_Datatype oldtype,
 		      MPI_Datatype *newtype)
 {
     static const char FCNAME[] = "MPI_Type_hindexed";
@@ -103,20 +103,20 @@ int MPI_Type_hindexed(int count,
 	    MPID_Datatype *datatype_ptr = NULL;
 
 	    MPIR_ERRTEST_COUNT(count, mpi_errno);
-	    MPIR_ERRTEST_DATATYPE(old_type, "datatype", mpi_errno);
+	    MPIR_ERRTEST_DATATYPE(oldtype, "datatype", mpi_errno);
 	    if (count > 0) {
-		MPIR_ERRTEST_ARGNULL(blocklens, "blocklens", mpi_errno);
-		MPIR_ERRTEST_ARGNULL(indices, "indices", mpi_errno);
+		MPIR_ERRTEST_ARGNULL(array_of_blocklengths, "array_of_blocklengths", mpi_errno);
+		MPIR_ERRTEST_ARGNULL(array_of_displacements, "array_of_displacements", mpi_errno);
 	    }
 
-            if (HANDLE_GET_KIND(old_type) != HANDLE_KIND_BUILTIN) {
-                MPID_Datatype_get_ptr( old_type, datatype_ptr );
+            if (HANDLE_GET_KIND(oldtype) != HANDLE_KIND_BUILTIN) {
+                MPID_Datatype_get_ptr( oldtype, datatype_ptr );
                 MPID_Datatype_valid_ptr(datatype_ptr, mpi_errno);
                 if (mpi_errno != MPI_SUCCESS) goto fn_fail;
             }
             /* verify that all blocklengths are >= 0 */
             for (j=0; j < count; j++) {
-                MPIR_ERRTEST_ARGNEG(blocklens[j], "blocklen", mpi_errno);
+                MPIR_ERRTEST_ARGNEG(array_of_blocklengths[j], "blocklength", mpi_errno);
             }
 
 	    MPIR_ERRTEST_ARGNULL(newtype, "newtype", mpi_errno);
@@ -128,10 +128,10 @@ int MPI_Type_hindexed(int count,
     /* ... body of routine ...  */
     
     mpi_errno = MPID_Type_indexed(count,
-				  blocklens,
-				  indices,
+				  array_of_blocklengths,
+				  array_of_displacements,
 				  1, /* displacements in bytes */
-				  old_type,
+				  oldtype,
 				  &new_handle);
     if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 
@@ -141,7 +141,7 @@ int MPI_Type_hindexed(int count,
     ints[0] = count;
     for (i=0; i < count; i++)
     {
-	ints[i+1] = blocklens[i];
+	ints[i+1] = array_of_blocklengths[i];
     }
 
     MPID_Datatype_get_ptr(new_handle, new_dtp);
@@ -151,8 +151,8 @@ int MPI_Type_hindexed(int count,
 				           count, /* aints (displs) */
 				           1, /* types */
 				           ints,
-				           indices,
-				           &old_type);
+				           array_of_displacements,
+				           &oldtype);
     if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 
     MPIU_OBJ_PUBLISH_HANDLE(*newtype, new_handle);
@@ -170,7 +170,7 @@ int MPI_Type_hindexed(int count,
     {
 	mpi_errno = MPIR_Err_create_code(
 	    mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, "**mpi_type_hindexed",
-	    "**mpi_type_hindexed %d %p %p %D %p", count, blocklens, indices, old_type, newtype);
+	    "**mpi_type_hindexed %d %p %p %D %p", count, array_of_blocklengths, array_of_displacements, oldtype, newtype);
     }
 #   endif
     mpi_errno = MPIR_Err_return_comm( NULL, FCNAME, mpi_errno );

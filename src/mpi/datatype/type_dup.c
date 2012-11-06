@@ -32,7 +32,7 @@
    MPI_Type_dup - Duplicate a datatype
 
    Input Parameter:
-. type - datatype (handle) 
+. oldtype - datatype (handle)
 
    Output Parameter:
 . newtype - copy of type (handle) 
@@ -45,7 +45,7 @@
 .N MPI_SUCCESS
 .N MPI_ERR_TYPE
 @*/
-int MPI_Type_dup(MPI_Datatype datatype, MPI_Datatype *newtype)
+int MPI_Type_dup(MPI_Datatype oldtype, MPI_Datatype *newtype)
 {
     static const char FCNAME[] = "MPI_Type_dup";
     int mpi_errno = MPI_SUCCESS;
@@ -64,14 +64,14 @@ int MPI_Type_dup(MPI_Datatype datatype, MPI_Datatype *newtype)
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
-	    MPIR_ERRTEST_DATATYPE(datatype, "datatype", mpi_errno);
+	    MPIR_ERRTEST_DATATYPE(oldtype, "datatype", mpi_errno);
         }
         MPID_END_ERROR_CHECKS;
     }
 #   endif
     
     /* Convert MPI object handles to object pointers */
-    MPID_Datatype_get_ptr( datatype, datatype_ptr );
+    MPID_Datatype_get_ptr( oldtype, datatype_ptr );
     
     /* Convert MPI object handles to object pointers */
 #   ifdef HAVE_ERROR_CHECKING
@@ -89,7 +89,7 @@ int MPI_Type_dup(MPI_Datatype datatype, MPI_Datatype *newtype)
 
     /* ... body of routine ...  */
     
-    mpi_errno = MPID_Type_dup(datatype, &new_handle);
+    mpi_errno = MPID_Type_dup(oldtype, &new_handle);
 
     if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 
@@ -101,7 +101,7 @@ int MPI_Type_dup(MPI_Datatype datatype, MPI_Datatype *newtype)
 				           1, /* types */
 				           NULL,
 				           NULL,
-				           &datatype);
+				           &oldtype);
 
     mpi_errno = MPID_Type_commit(&new_handle);
     if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
@@ -115,7 +115,7 @@ int MPI_Type_dup(MPI_Datatype datatype, MPI_Datatype *newtype)
     if (mpi_errno == MPI_SUCCESS && MPIR_Process.attr_dup)
     {
 	new_dtp->attributes = 0;
-	mpi_errno = MPIR_Process.attr_dup( datatype, 
+	mpi_errno = MPIR_Process.attr_dup( oldtype,
 	    datatype_ptr->attributes, 
 	    &new_dtp->attributes );
 	if (mpi_errno)
@@ -142,7 +142,7 @@ int MPI_Type_dup(MPI_Datatype datatype, MPI_Datatype *newtype)
     {
 	mpi_errno = MPIR_Err_create_code(
 	    mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, "**mpi_type_dup",
-	    "**mpi_type_dup %D %p", datatype, newtype);
+	    "**mpi_type_dup %D %p", oldtype, newtype);
     }
 #   endif
     mpi_errno = MPIR_Err_return_comm( NULL, FCNAME, mpi_errno );
