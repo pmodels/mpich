@@ -27,7 +27,7 @@
 #undef FUNCNAME
 #define FUNCNAME MPIR_TypeGetAttr
 
-int MPIR_TypeGetAttr( MPI_Datatype type, int type_keyval, void *attribute_val, 
+int MPIR_TypeGetAttr( MPI_Datatype datatype, int type_keyval, void *attribute_val,
 		      int *flag, MPIR_AttrType outAttrType )
 {
 #ifdef HAVE_ERROR_CHECKING
@@ -48,7 +48,7 @@ int MPIR_TypeGetAttr( MPI_Datatype type, int type_keyval, void *attribute_val,
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
-	    MPIR_ERRTEST_DATATYPE(type, "datatype", mpi_errno);
+	    MPIR_ERRTEST_DATATYPE(datatype, "datatype", mpi_errno);
 	    MPIR_ERRTEST_KEYVAL(type_keyval, MPID_DATATYPE, "datatype", mpi_errno);
 #           ifdef NEEDS_POINTER_ALIGNMENT_ADJUST
             /* A common user error is to pass the address of a 4-byte
@@ -66,7 +66,7 @@ int MPIR_TypeGetAttr( MPI_Datatype type, int type_keyval, void *attribute_val,
 #   endif
 
     /* Convert MPI object handles to object pointers */
-    MPID_Datatype_get_ptr( type, type_ptr );
+    MPID_Datatype_get_ptr( datatype, type_ptr );
     
     /* Validate parameters and objects (post conversion) */
 #   ifdef HAVE_ERROR_CHECKING
@@ -139,7 +139,7 @@ int MPIR_TypeGetAttr( MPI_Datatype type, int type_keyval, void *attribute_val,
 	    mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, 
 	    "**mpir_type_get_attr",
 	    "**mpir_type_get_attr %D %d %p %p", 
-	    type, type_keyval, attribute_val, flag);
+	    datatype, type_keyval, attribute_val, flag);
     }
     mpi_errno = MPIR_Err_return_comm( NULL, FCNAME, mpi_errno );
     goto fn_exit;
@@ -157,7 +157,7 @@ int MPIR_TypeGetAttr( MPI_Datatype type, int type_keyval, void *attribute_val,
    MPI_Type_get_attr - Retrieves attribute value by key
 
    Input Parameters:
-+ type - datatype to which the attribute is attached (handle) 
++ datatype - datatype to which the attribute is attached (handle)
 - type_keyval - key value (integer) 
 
    Output Parameters:
@@ -183,7 +183,7 @@ Notes for C:
 .N MPI_ERR_KEYVAL
 .N MPI_ERR_ARG
 @*/
-int MPI_Type_get_attr(MPI_Datatype type, int type_keyval, void *attribute_val, 
+int MPI_Type_get_attr(MPI_Datatype datatype, int type_keyval, void *attribute_val,
 		      int *flag)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -194,7 +194,7 @@ int MPI_Type_get_attr(MPI_Datatype type, int type_keyval, void *attribute_val,
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_TYPE_GET_ATTR);
     
     /* ... body of routine ...  */
-    mpi_errno = MPIR_TypeGetAttr( type, type_keyval, attribute_val, flag, 
+    mpi_errno = MPIR_TypeGetAttr( datatype, type_keyval, attribute_val, flag,
 				  MPIR_ATTR_PTR );
     if (mpi_errno) goto fn_fail;
     
@@ -212,7 +212,7 @@ int MPI_Type_get_attr(MPI_Datatype type, int type_keyval, void *attribute_val,
 	    mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, 
 	    "**mpi_type_get_attr",
 	    "**mpi_type_get_attr %D %d %p %p", 
-	    type, type_keyval, attribute_val, flag);
+	    datatype, type_keyval, attribute_val, flag);
     }
 #endif
     mpi_errno = MPIR_Err_return_comm( NULL, FCNAME, mpi_errno );

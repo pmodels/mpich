@@ -26,7 +26,7 @@
 
 #undef FUNCNAME
 #define FUNCNAME MPIR_TypeSetAttr
-int MPIR_TypeSetAttr(MPI_Datatype type, int type_keyval, void *attribute_val,
+int MPIR_TypeSetAttr(MPI_Datatype datatype, int type_keyval, void *attribute_val,
 		     MPIR_AttrType attrType )
 {
     static const char FCNAME[] = "MPIR_TypeSetAttr";
@@ -48,7 +48,7 @@ int MPIR_TypeSetAttr(MPI_Datatype type, int type_keyval, void *attribute_val,
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
-	    MPIR_ERRTEST_DATATYPE(type, "datatype", mpi_errno);
+	    MPIR_ERRTEST_DATATYPE(datatype, "datatype", mpi_errno);
 	    MPIR_ERRTEST_KEYVAL(type_keyval, MPID_DATATYPE, "datatype", mpi_errno);
 	    MPIR_ERRTEST_KEYVAL_PERM(type_keyval, mpi_errno);
         }
@@ -57,7 +57,7 @@ int MPIR_TypeSetAttr(MPI_Datatype type, int type_keyval, void *attribute_val,
 #   endif
 
     /* Convert MPI object handles to object pointers */
-    MPID_Datatype_get_ptr( type, type_ptr );
+    MPID_Datatype_get_ptr( datatype, type_ptr );
     MPID_Keyval_get_ptr( type_keyval, keyval_ptr );
     
     /* Validate parameters and objects (post conversion) */
@@ -87,7 +87,7 @@ int MPIR_TypeSetAttr(MPI_Datatype type, int type_keyval, void *attribute_val,
 	if (p->keyval->handle == keyval_ptr->handle) {
 	    /* If found, call the delete function before replacing the 
 	       attribute */
-	    mpi_errno = MPIR_Call_attr_delete( type, p );
+	    mpi_errno = MPIR_Call_attr_delete( datatype, p );
 	    /* --BEGIN ERROR HANDLING-- */
 	    if (mpi_errno) { 
 		goto fn_fail;
@@ -148,7 +148,7 @@ int MPIR_TypeSetAttr(MPI_Datatype type, int type_keyval, void *attribute_val,
     {
 	mpi_errno = MPIR_Err_create_code(
 	    mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, "**mpi_type_set_attr", 
-	    "**mpi_type_set_attr %D %d %p", type, type_keyval, attribute_val);
+	    "**mpi_type_set_attr %D %d %p", datatype, type_keyval, attribute_val);
     }
 #   endif
     mpi_errno = MPIR_Err_return_comm( NULL, FCNAME, mpi_errno );
@@ -165,7 +165,7 @@ int MPIR_TypeSetAttr(MPI_Datatype type, int type_keyval, void *attribute_val,
    MPI_Type_set_attr - Stores attribute value associated with a key
 
 Input Parameters:
-+ type - MPI Datatype to which attribute will be attached (handle) 
++ datatype - MPI Datatype to which attribute will be attached (handle)
 . keyval - key value, as returned by  'MPI_Type_create_keyval' (integer) 
 - attribute_val - attribute value 
 
@@ -184,7 +184,7 @@ corresponding keyval was created) will be called.
 .N MPI_ERR_TYPE
 .N MPI_ERR_KEYVAL
 @*/
-int MPI_Type_set_attr(MPI_Datatype type, int type_keyval, void *attribute_val)
+int MPI_Type_set_attr(MPI_Datatype datatype, int type_keyval, void *attribute_val)
 {
     static const char FCNAME[] = "MPI_Type_set_attr";
     int mpi_errno = MPI_SUCCESS;
@@ -194,7 +194,7 @@ int MPI_Type_set_attr(MPI_Datatype type, int type_keyval, void *attribute_val)
     
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_TYPE_SET_ATTR);
 
-    mpi_errno = MPIR_TypeSetAttr( type, type_keyval, attribute_val, 
+    mpi_errno = MPIR_TypeSetAttr( datatype, type_keyval, attribute_val,
 				  MPIR_ATTR_PTR );
     if (mpi_errno) goto fn_fail;
 
@@ -208,7 +208,7 @@ int MPI_Type_set_attr(MPI_Datatype type, int type_keyval, void *attribute_val)
     {
 	mpi_errno = MPIR_Err_create_code(
 	    mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, "**mpi_type_set_attr", 
-	    "**mpi_type_set_attr %D %d %p", type, type_keyval, attribute_val);
+	    "**mpi_type_set_attr %D %d %p", datatype, type_keyval, attribute_val);
     }
 #   endif
     mpi_errno = MPIR_Err_return_comm( NULL, FCNAME, mpi_errno );

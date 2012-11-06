@@ -37,7 +37,7 @@ Input Parameters:
 - keyval - key value (integer) 
 
 Output Parameters:
-+ attr_value - attribute value, unless 'flag' = false 
++ attribute_val - attribute value, unless 'flag' = false
 - flag -  true if an attribute value was extracted;  false if no attribute is
   associated with the key 
 
@@ -46,7 +46,7 @@ Notes:
     in with 'MPI_ATTR_PUT'.  The notes for C and Fortran below explain why.
 
 Notes for C:
-    Even though the 'attr_value' arguement is declared as 'void *', it is
+    Even though the 'attribute_val' arguement is declared as 'void *', it is
     really the address of a void pointer (i.e., a 'void **').  Using
     a 'void *', however, is more in keeping with C idiom and allows the
     pointer to be passed without additional casts.
@@ -59,7 +59,7 @@ Notes for C:
 
 .N Fortran
 
-    The 'attr_value' in Fortran is a pointer to a Fortran integer, not
+    The 'attribute_val' in Fortran is a pointer to a Fortran integer, not
     a pointer to a 'void *'.  
 
 .N Errors
@@ -69,7 +69,7 @@ Notes for C:
 
 .seealso MPI_Attr_put, MPI_Keyval_create, MPI_Attr_delete, MPI_Comm_get_attr
 @*/
-int MPI_Attr_get(MPI_Comm comm, int keyval, void *attr_value, int *flag)
+int MPI_Attr_get(MPI_Comm comm, int keyval, void *attribute_val, int *flag)
 {
     static const char FCNAME[] = "MPI_Attr_get";
     int mpi_errno = MPI_SUCCESS;
@@ -93,7 +93,7 @@ int MPI_Attr_get(MPI_Comm comm, int keyval, void *attr_value, int *flag)
 	       should have been used.  We can test for this specific
 	       case.  Note that this code assumes sizeof(MPIR_Pint) is 
 	       a power of 2. */
-            MPIU_ERR_CHKANDJUMP((MPIR_Pint)attr_value & (sizeof(MPIR_Pint)-1),
+            MPIU_ERR_CHKANDJUMP((MPIR_Pint)attribute_val & (sizeof(MPIR_Pint)-1),
                                 mpi_errno,MPI_ERR_ARG,"**attrnotptr");
 #           endif
         }
@@ -112,7 +112,7 @@ int MPI_Attr_get(MPI_Comm comm, int keyval, void *attr_value, int *flag)
             /* Validate comm_ptr */
             MPID_Comm_valid_ptr( comm_ptr, mpi_errno );
 	    /* If comm_ptr is not valid, it will be reset to null */
-	    MPIR_ERRTEST_ARGNULL(attr_value, "attr_value", mpi_errno);
+	    MPIR_ERRTEST_ARGNULL(attribute_val, "attribute_val", mpi_errno);
 	    MPIR_ERRTEST_ARGNULL(flag, "flag", mpi_errno);
         }
         MPID_END_ERROR_CHECKS;
@@ -121,7 +121,7 @@ int MPI_Attr_get(MPI_Comm comm, int keyval, void *attr_value, int *flag)
 
     /* ... body of routine ...  */
 
-    mpi_errno = MPIR_CommGetAttr( comm, keyval, attr_value, flag, MPIR_ATTR_PTR);
+    mpi_errno = MPIR_CommGetAttr( comm, keyval, attribute_val, flag, MPIR_ATTR_PTR);
     if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 
     /* ... end of body of routine ... */
@@ -137,7 +137,7 @@ int MPI_Attr_get(MPI_Comm comm, int keyval, void *attr_value, int *flag)
     {
 	mpi_errno = MPIR_Err_create_code(
 	    mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, "**mpi_attr_get",
-	    "**mpi_attr_get %C %d %p %p", comm, keyval, attr_value, flag);
+	    "**mpi_attr_get %C %d %p %p", comm, keyval, attribute_val, flag);
     }
 #   endif
     mpi_errno = MPIR_Err_return_comm( comm_ptr, FCNAME, mpi_errno );

@@ -46,7 +46,7 @@
 .N MPI_ERR_OTHER
 .N MPI_ERR_KEYVAL
 @*/
-int MPI_Type_delete_attr(MPI_Datatype type, int type_keyval)
+int MPI_Type_delete_attr(MPI_Datatype datatype, int type_keyval)
 {
     static const char FCNAME[] = "MPI_Type_delete_attr";
     int mpi_errno = MPI_SUCCESS;
@@ -67,7 +67,7 @@ int MPI_Type_delete_attr(MPI_Datatype type, int type_keyval)
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
-	    MPIR_ERRTEST_DATATYPE(type, "datatype", mpi_errno);
+	    MPIR_ERRTEST_DATATYPE(datatype, "datatype", mpi_errno);
 	    MPIR_ERRTEST_KEYVAL(type_keyval, MPID_DATATYPE, "datatype", mpi_errno);
 	    MPIR_ERRTEST_KEYVAL_PERM(type_keyval, mpi_errno);
         }
@@ -76,7 +76,7 @@ int MPI_Type_delete_attr(MPI_Datatype type, int type_keyval)
 #   endif
 
     /* Validate parameters and objects (post conversion) */
-    MPID_Datatype_get_ptr( type, type_ptr );
+    MPID_Datatype_get_ptr( datatype, type_ptr );
     MPID_Keyval_get_ptr( type_keyval, keyval_ptr );
 
     /* Validate parameters and objects (post conversion) */
@@ -118,7 +118,7 @@ int MPI_Type_delete_attr(MPI_Datatype type, int type_keyval)
     {
 	/* Run the delete function, if any, and then free the attribute 
 	   storage */
-	mpi_errno = MPIR_Call_attr_delete( type, p );
+	mpi_errno = MPIR_Call_attr_delete( datatype, p );
 
 	/* --BEGIN ERROR HANDLING-- */
 	if (!mpi_errno)
@@ -153,7 +153,7 @@ int MPI_Type_delete_attr(MPI_Datatype type, int type_keyval)
 	mpi_errno = MPIR_Err_create_code(
 	    mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
 	    "**mpi_type_delete_attr",
-	    "**mpi_type_delete_attr %D %d", type, type_keyval);
+	    "**mpi_type_delete_attr %D %d", datatype, type_keyval);
     }
 #   endif
     mpi_errno = MPIR_Err_return_comm( NULL, FCNAME, mpi_errno );
