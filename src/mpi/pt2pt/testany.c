@@ -41,7 +41,7 @@ Input Parameters:
 - array_of_requests - array of requests (array of handles) 
 
 Output Parameters:
-+ index - index of operation that completed, or 'MPI_UNDEFINED'  if none 
++ indx - index of operation that completed, or 'MPI_UNDEFINED'  if none
   completed (integer) 
 . flag - true if one of the operations is complete (logical) 
 - status - status object (Status).  May be 'MPI_STATUS_IGNORE'.
@@ -61,7 +61,7 @@ program to unexecpectedly terminate or produce incorrect results.
 .N Errors
 .N MPI_SUCCESS
 @*/
-int MPI_Testany(int count, MPI_Request array_of_requests[], int *index, 
+int MPI_Testany(int count, MPI_Request array_of_requests[], int *indx,
 		int *flag, MPI_Status *status)
 {
     static const char FCNAME[] = "MPI_Testany";
@@ -91,7 +91,7 @@ int MPI_Testany(int count, MPI_Request array_of_requests[], int *index,
 		/* NOTE: MPI_STATUS_IGNORE != NULL */
 		MPIR_ERRTEST_ARGNULL(status, "status", mpi_errno);
 	    }
-	    MPIR_ERRTEST_ARGNULL(index, "index", mpi_errno);
+	    MPIR_ERRTEST_ARGNULL(indx, "indx", mpi_errno);
 	    MPIR_ERRTEST_ARGNULL(flag, "flag", mpi_errno);
 	    
 	    for (i = 0; i < count; i++) {
@@ -138,14 +138,14 @@ int MPI_Testany(int count, MPI_Request array_of_requests[], int *index,
     if (n_inactive == count)
     {
 	*flag = TRUE;
-	*index = MPI_UNDEFINED;
+	*indx = MPI_UNDEFINED;
 	if (status != NULL)  /* could be null if count=0 */
 	    MPIR_Status_set_empty(status);
 	goto fn_exit;
     }
     
     *flag = FALSE;
-    *index = MPI_UNDEFINED;
+    *indx = MPI_UNDEFINED;
     
     mpi_errno = MPID_Progress_test();
     /* --BEGIN ERROR HANDLING-- */
@@ -173,7 +173,7 @@ int MPI_Testany(int count, MPI_Request array_of_requests[], int *index,
 	    if (active_flag)
 	    {
 		*flag = TRUE;
-		*index = i;
+		*indx = i;
 		goto fn_exit;
 	    }
 	    else
@@ -186,7 +186,7 @@ int MPI_Testany(int count, MPI_Request array_of_requests[], int *index,
     if (n_inactive == count)
     {
 	*flag = TRUE;
-	*index = MPI_UNDEFINED;
+	*indx = MPI_UNDEFINED;
 	/* status set to empty by MPIR_Request_complete() */
     }
     
@@ -208,7 +208,7 @@ int MPI_Testany(int count, MPI_Request array_of_requests[], int *index,
     {
 	mpi_errno = MPIR_Err_create_code(
 	    mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, "**mpi_testany",
-	    "**mpi_testany %d %p %p %p %p", count, array_of_requests, index, flag, status);
+	    "**mpi_testany %d %p %p %p %p", count, array_of_requests, indx, flag, status);
     }
 #   endif
     mpi_errno = MPIR_Err_return_comm(NULL, FCNAME, mpi_errno);
