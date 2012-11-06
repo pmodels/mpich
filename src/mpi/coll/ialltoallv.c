@@ -28,7 +28,10 @@
 #define FUNCNAME MPIR_Ialltoallv_intra
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPIR_Ialltoallv_intra(const void *sendbuf, const int *sendcounts, const int *sdispls, MPI_Datatype sendtype, void *recvbuf, const int *recvcounts, const int *rdispls, MPI_Datatype recvtype, MPID_Comm *comm_ptr, MPID_Sched_t s)
+int MPIR_Ialltoallv_intra(const void *sendbuf, const int sendcounts[], const int sdispls[],
+                          MPI_Datatype sendtype, void *recvbuf, const int recvcounts[],
+                          const int rdispls[], MPI_Datatype recvtype, MPID_Comm *comm_ptr,
+                          MPID_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int comm_size;
@@ -153,7 +156,10 @@ fn_fail:
 #define FUNCNAME MPIR_Ialltoallv_inter
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPIR_Ialltoallv_inter(const void *sendbuf, const int *sendcounts, const int *sdispls, MPI_Datatype sendtype, void *recvbuf, const int *recvcounts, const int *rdispls, MPI_Datatype recvtype, MPID_Comm *comm_ptr, MPID_Sched_t s)
+int MPIR_Ialltoallv_inter(const void *sendbuf, const int sendcounts[], const int sdispls[],
+                          MPI_Datatype sendtype, void *recvbuf, const int recvcounts[],
+                          const int rdispls[], MPI_Datatype recvtype, MPID_Comm *comm_ptr,
+                          MPID_Sched_t s)
 {
 /* Intercommunicator alltoallv. We use a pairwise exchange algorithm
    similar to the one used in intracommunicator alltoallv. Since the
@@ -233,7 +239,10 @@ fn_fail:
 #define FUNCNAME MPIR_Ialltoallv_impl
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPIR_Ialltoallv_impl(const void *sendbuf, const int *sendcounts, const int *sdispls, MPI_Datatype sendtype, void *recvbuf, const int *recvcounts, const int *rdispls, MPI_Datatype recvtype, MPID_Comm *comm_ptr, MPI_Request *request)
+int MPIR_Ialltoallv_impl(const void *sendbuf, const int sendcounts[], const int sdispls[],
+                         MPI_Datatype sendtype, void *recvbuf, const int recvcounts[],
+                         const int rdispls[], MPI_Datatype recvtype, MPID_Comm *comm_ptr,
+                         MPI_Request *request)
 {
     int mpi_errno = MPI_SUCCESS;
     int tag = -1;
@@ -292,7 +301,9 @@ Output Parameters:
 
 .N Errors
 @*/
-int MPI_Ialltoallv(const void *sendbuf, const int *sendcounts, const int *sdispls, MPI_Datatype sendtype, void *recvbuf, const int *recvcounts, const int *rdispls, MPI_Datatype recvtype, MPI_Comm comm, MPI_Request *request)
+int MPI_Ialltoallv(const void *sendbuf, const int sendcounts[], const int sdispls[],
+                   MPI_Datatype sendtype, void *recvbuf, const int recvcounts[],
+                   const int rdispls[], MPI_Datatype recvtype, MPI_Comm comm, MPI_Request *request)
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_Comm *comm_ptr = NULL;

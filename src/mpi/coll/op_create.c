@@ -69,7 +69,7 @@ void MPIR_Op_set_fc( MPI_Op op )
   MPI_Op_create - Creates a user-defined combination function handle
 
   Input Parameters:
-+ function - user defined function (function) 
++ user_fn - user defined function (function)
 - commute -  true if commutative;  false otherwise. (logical)
 
   Output Parameter:
@@ -97,7 +97,7 @@ void MPIR_Op_set_fc( MPI_Op op )
 
 .seealso: MPI_Op_free
 @*/
-int MPI_Op_create(MPI_User_function *function, int commute, MPI_Op *op)
+int MPI_Op_create(MPI_User_function *user_fn, int commute, MPI_Op *op)
 {
     static const char FCNAME[] = "MPI_Op_create";
     MPID_Op *op_ptr;
@@ -124,7 +124,7 @@ int MPI_Op_create(MPI_User_function *function, int commute, MPI_Op *op)
     op_ptr->language = MPID_LANG_C;
     op_ptr->kind     = commute ? MPID_OP_USER : MPID_OP_USER_NONCOMMUTE;
     op_ptr->function.c_function = (void (*)(const void *, void *, 
-				   const int *, const MPI_Datatype *))function;
+				   const int *, const MPI_Datatype *))user_fn;
     MPIU_Object_set_ref(op_ptr,1);
 
     MPIU_OBJ_PUBLISH_HANDLE(*op, op_ptr->handle);
@@ -141,7 +141,7 @@ int MPI_Op_create(MPI_User_function *function, int commute, MPI_Op *op)
     {
 	mpi_errno = MPIR_Err_create_code(
 	    mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, "**mpi_op_create",
-	    "**mpi_op_create %p %d %p", function, commute, op);
+	    "**mpi_op_create %p %d %p", user_fn, commute, op);
     }
 #   endif
     mpi_errno = MPIR_Err_return_comm( 0, FCNAME, mpi_errno );

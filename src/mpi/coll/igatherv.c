@@ -28,7 +28,9 @@
 #define FUNCNAME MPIR_Igatherv
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPIR_Igatherv(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, const int *recvcounts, const int *displs, MPI_Datatype recvtype, int root, MPID_Comm *comm_ptr, MPID_Sched_t s)
+int MPIR_Igatherv(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf,
+                  const int recvcounts[], const int displs[], MPI_Datatype recvtype, int root,
+                  MPID_Comm *comm_ptr, MPID_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int i;
@@ -102,7 +104,9 @@ fn_fail:
 #define FUNCNAME MPIR_Igatherv_impl
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPIR_Igatherv_impl(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, const int *recvcounts, const int *displs, MPI_Datatype recvtype, int root, MPID_Comm *comm_ptr, MPI_Request *request)
+int MPIR_Igatherv_impl(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf,
+                       const int recvcounts[], const int displs[], MPI_Datatype recvtype,
+                       int root, MPID_Comm *comm_ptr, MPI_Request *request)
 {
     int mpi_errno = MPI_SUCCESS;
     int tag = -1;
@@ -161,7 +165,9 @@ Output Parameters:
 
 .N Errors
 @*/
-int MPI_Igatherv(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf, const int *recvcounts, const int *displs, MPI_Datatype recvtype, int root, MPI_Comm comm, MPI_Request *request)
+int MPI_Igatherv(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf,
+                 const int recvcounts[], const int displs[], MPI_Datatype recvtype, int root,
+                 MPI_Comm comm, MPI_Request *request)
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_Comm *comm_ptr = NULL;

@@ -33,14 +33,9 @@
 #define FUNCNAME MPIR_Reduce_scatter_noncomm
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-static int MPIR_Reduce_scatter_noncomm (
-    const void *sendbuf,
-    void *recvbuf,
-    const int *recvcnts,
-    MPI_Datatype datatype,
-    MPI_Op op,
-    MPID_Comm *comm_ptr,
-    int *errflag )
+static int MPIR_Reduce_scatter_noncomm(const void *sendbuf, void *recvbuf, const int recvcounts[],
+                                       MPI_Datatype datatype, MPI_Op op, MPID_Comm *comm_ptr,
+                                       int *errflag)
 {
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
@@ -72,12 +67,12 @@ static int MPIR_Reduce_scatter_noncomm (
     MPIU_Assert(pof2 == comm_size); /* FIXME this version only works for power of 2 procs */
 
     for (i = 0; i < (comm_size - 1); ++i) {
-        MPIU_Assert(recvcnts[i] == recvcnts[i+1]);
+        MPIU_Assert(recvcounts[i] == recvcounts[i+1]);
     }
     /* end error checking */
 
     /* size of a block (count of datatype per block, NOT bytes per block) */
-    block_size = recvcnts[0];
+    block_size = recvcounts[0];
     total_count = block_size * comm_size;
 
     MPIU_CHKLMEM_MALLOC(tmp_buf0, void *, true_extent * total_count, mpi_errno, "tmp_buf0");
@@ -151,7 +146,7 @@ static int MPIR_Reduce_scatter_noncomm (
         send_offset = recv_offset;
     }
 
-    MPIU_Assert(size == recvcnts[rank]);
+    MPIU_Assert(size == recvcounts[rank]);
 
     /* copy the reduced data to the recvbuf */
     result_ptr = (char *)(buf0_was_inout ? tmp_buf0 : tmp_buf1) + recv_offset * true_extent;
@@ -223,14 +218,8 @@ fn_fail:
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 
 /* not declared static because a machine-specific function may call this one in some cases */
-int MPIR_Reduce_scatter_intra ( 
-    const void *sendbuf,
-    void *recvbuf,
-    const int *recvcnts,
-    MPI_Datatype datatype,
-    MPI_Op op,
-    MPID_Comm *comm_ptr,
-    int *errflag )
+int MPIR_Reduce_scatter_intra(const void *sendbuf, void *recvbuf, const int recvcounts[],
+                              MPI_Datatype datatype, MPI_Op op, MPID_Comm *comm_ptr, int *errflag)
 {
     int   rank, comm_size, i;
     MPI_Aint extent, true_extent, true_lb; 
@@ -277,7 +266,7 @@ int MPIR_Reduce_scatter_intra (
     total_count = 0;
     for (i=0; i<comm_size; i++) {
         disps[i] = total_count;
-        total_count += recvcnts[i];
+        total_count += recvcounts[i];
     }
     
     if (total_count == 0) {
@@ -373,7 +362,7 @@ int MPIR_Reduce_scatter_intra (
             newrank = rank - rem;
 
         if (newrank != -1) {
-            /* recalculate the recvcnts and disps arrays because the
+            /* recalculate the recvcounts and disps arrays because the
                even-numbered processes who no longer participate will
                have their result calculated by the process to their
                right (rank+1). */
@@ -387,10 +376,10 @@ int MPIR_Reduce_scatter_intra (
                 if (old_i < 2*rem) {
                     /* This process has to also do its left neighbor's
                        work */
-                    newcnts[i] = recvcnts[old_i] + recvcnts[old_i-1];
+                    newcnts[i] = recvcounts[old_i] + recvcounts[old_i-1];
                 }
                 else
-                    newcnts[i] = recvcnts[old_i];
+                    newcnts[i] = recvcounts[old_i];
             }
             
             newdisps[0] = 0;
@@ -472,11 +461,11 @@ int MPIR_Reduce_scatter_intra (
             }
 
             /* copy this process's result from tmp_results to recvbuf */
-            if (recvcnts[rank]) {
+            if (recvcounts[rank]) {
                 mpi_errno = MPIR_Localcopy((char *)tmp_results +
                                            disps[rank]*extent, 
-                                           recvcnts[rank], datatype, recvbuf,
-                                           recvcnts[rank], datatype);
+                                           recvcounts[rank], datatype, recvbuf,
+                                           recvcounts[rank], datatype);
                 if (mpi_errno) MPIU_ERR_POP(mpi_errno);
             }
             
@@ -487,9 +476,9 @@ int MPIR_Reduce_scatter_intra (
            calculated for that process */
         if (rank < 2*rem) {
             if (rank % 2) { /* odd */
-                if (recvcnts[rank-1]) {
+                if (recvcounts[rank-1]) {
                     mpi_errno = MPIC_Send_ft((char *) tmp_results +
-                                             disps[rank-1]*extent, recvcnts[rank-1],
+                                             disps[rank-1]*extent, recvcounts[rank-1],
                                              datatype, rank-1,
                                              MPIR_REDUCE_SCATTER_TAG, comm, errflag);
                     if (mpi_errno) {
@@ -501,8 +490,8 @@ int MPIR_Reduce_scatter_intra (
                 }
             }
             else  {   /* even */
-                if (recvcnts[rank]) {
-                    mpi_errno = MPIC_Recv_ft(recvbuf, recvcnts[rank],
+                if (recvcounts[rank]) {
+                    mpi_errno = MPIC_Recv_ft(recvbuf, recvcounts[rank],
                                              datatype, rank+1,
                                              MPIR_REDUCE_SCATTER_TAG, comm,
                                              MPI_STATUS_IGNORE, errflag);
@@ -525,13 +514,13 @@ int MPIR_Reduce_scatter_intra (
         if (sendbuf != MPI_IN_PLACE) {
             /* copy local data into recvbuf */
             mpi_errno = MPIR_Localcopy(((char *)sendbuf+disps[rank]*extent),
-                                       recvcnts[rank], datatype, recvbuf,
-                                       recvcnts[rank], datatype);
+                                       recvcounts[rank], datatype, recvbuf,
+                                       recvcounts[rank], datatype);
             if (mpi_errno) MPIU_ERR_POP(mpi_errno);
         }
         
         /* allocate temporary buffer to store incoming data */
-        MPIU_CHKLMEM_MALLOC(tmp_recvbuf, void *, recvcnts[rank]*(MPIR_MAX(true_extent,extent))+1, mpi_errno, "tmp_recvbuf");
+        MPIU_CHKLMEM_MALLOC(tmp_recvbuf, void *, recvcounts[rank]*(MPIR_MAX(true_extent,extent))+1, mpi_errno, "tmp_recvbuf");
         /* adjust for potential negative lower bound in datatype */
         tmp_recvbuf = (void *)((char*)tmp_recvbuf - true_lb);
         
@@ -543,16 +532,16 @@ int MPIR_Reduce_scatter_intra (
                needs from src into tmp_recvbuf */
             if (sendbuf != MPI_IN_PLACE) 
                 mpi_errno = MPIC_Sendrecv_ft(((char *)sendbuf+disps[dst]*extent), 
-                                             recvcnts[dst], datatype, dst,
+                                             recvcounts[dst], datatype, dst,
                                              MPIR_REDUCE_SCATTER_TAG, tmp_recvbuf,
-                                             recvcnts[rank], datatype, src,
+                                             recvcounts[rank], datatype, src,
                                              MPIR_REDUCE_SCATTER_TAG, comm,
                                              MPI_STATUS_IGNORE, errflag);
             else
                 mpi_errno = MPIC_Sendrecv_ft(((char *)recvbuf+disps[dst]*extent), 
-                                             recvcnts[dst], datatype, dst,
+                                             recvcounts[dst], datatype, dst,
                                              MPIR_REDUCE_SCATTER_TAG, tmp_recvbuf,
-                                             recvcnts[rank], datatype, src,
+                                             recvcounts[rank], datatype, src,
                                              MPIR_REDUCE_SCATTER_TAG, comm,
                                              MPI_STATUS_IGNORE, errflag);
             
@@ -566,13 +555,13 @@ int MPIR_Reduce_scatter_intra (
             if (is_commutative || (src < rank)) {
                 if (sendbuf != MPI_IN_PLACE) {
 		    mpi_errno = MPIR_Reduce_local_impl( 
-			       tmp_recvbuf, recvbuf, recvcnts[rank], 
+			       tmp_recvbuf, recvbuf, recvcounts[rank],
                                datatype, op ); 
                 }
                 else {
 		    mpi_errno = MPIR_Reduce_local_impl( 
 			tmp_recvbuf, ((char *)recvbuf+disps[rank]*extent), 
-			recvcnts[rank], datatype, op); 
+			recvcounts[rank], datatype, op);
                     /* we can't store the result at the beginning of
                        recvbuf right here because there is useful data
                        there that other process/processes need. at the
@@ -583,23 +572,23 @@ int MPIR_Reduce_scatter_intra (
             else {
                 if (sendbuf != MPI_IN_PLACE) {
 		    mpi_errno = MPIR_Reduce_local_impl( 
-		       recvbuf, tmp_recvbuf, recvcnts[rank], datatype, op); 
+		       recvbuf, tmp_recvbuf, recvcounts[rank], datatype, op);
                     /* copy result back into recvbuf */
-                    mpi_errno = MPIR_Localcopy(tmp_recvbuf, recvcnts[rank], 
+                    mpi_errno = MPIR_Localcopy(tmp_recvbuf, recvcounts[rank],
                                                datatype, recvbuf,
-                                               recvcnts[rank], datatype);
+                                               recvcounts[rank], datatype);
                     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
                 }
                 else {
 		    mpi_errno = MPIR_Reduce_local_impl( 
                         ((char *)recvbuf+disps[rank]*extent),
-			tmp_recvbuf, recvcnts[rank], datatype, op);   
+			tmp_recvbuf, recvcounts[rank], datatype, op);
                     /* copy result back into recvbuf */
-                    mpi_errno = MPIR_Localcopy(tmp_recvbuf, recvcnts[rank], 
+                    mpi_errno = MPIR_Localcopy(tmp_recvbuf, recvcounts[rank],
                                                datatype, 
                                                ((char *)recvbuf +
                                                 disps[rank]*extent), 
-                                               recvcnts[rank], datatype);
+                                               recvcounts[rank], datatype);
                     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
                 }
             }
@@ -610,9 +599,9 @@ int MPIR_Reduce_scatter_intra (
         if ((sendbuf == MPI_IN_PLACE) && (rank != 0)) {
             mpi_errno = MPIR_Localcopy(((char *)recvbuf +
                                         disps[rank]*extent),  
-                                       recvcnts[rank], datatype, 
+                                       recvcounts[rank], datatype,
                                        recvbuf, 
-                                       recvcnts[rank], datatype); 
+                                       recvcounts[rank], datatype);
             if (mpi_errno) MPIU_ERR_POP(mpi_errno);
         }
     }
@@ -620,7 +609,7 @@ int MPIR_Reduce_scatter_intra (
     if (!is_commutative) {
         int is_block_regular = 1;
         for (i = 0; i < (comm_size - 1); ++i) {
-            if (recvcnts[i] != recvcnts[i+1]) {
+            if (recvcounts[i] != recvcounts[i+1]) {
                 is_block_regular = 0;
                 break;
             }
@@ -632,7 +621,7 @@ int MPIR_Reduce_scatter_intra (
 
         if (pof2 == comm_size && is_block_regular) {
             /* noncommutative, pof2 size, and block regular */
-            mpi_errno = MPIR_Reduce_scatter_noncomm(sendbuf, recvbuf, recvcnts, datatype, op, comm_ptr, errflag);
+            mpi_errno = MPIR_Reduce_scatter_noncomm(sendbuf, recvbuf, recvcounts, datatype, op, comm_ptr, errflag);
             if (mpi_errno) {
                 /* for communication errors, just record the error but continue */
                 *errflag = TRUE;
@@ -687,14 +676,14 @@ int MPIR_Reduce_scatter_intra (
                 /* calculate sendtype */
                 blklens[0] = blklens[1] = 0;
                 for (j=0; j<my_tree_root; j++)
-                    blklens[0] += recvcnts[j];
+                    blklens[0] += recvcounts[j];
                 for (j=my_tree_root+mask; j<comm_size; j++)
-                    blklens[1] += recvcnts[j];
+                    blklens[1] += recvcounts[j];
 
                 dis[0] = 0;
                 dis[1] = blklens[0];
                 for (j=my_tree_root; (j<my_tree_root+mask) && (j<comm_size); j++)
-                    dis[1] += recvcnts[j];
+                    dis[1] += recvcounts[j];
 
                 mpi_errno = MPIR_Type_indexed_impl(2, blklens, dis, datatype, &sendtype);
                 if (mpi_errno) MPIU_ERR_POP(mpi_errno);
@@ -705,14 +694,14 @@ int MPIR_Reduce_scatter_intra (
                 /* calculate recvtype */
                 blklens[0] = blklens[1] = 0;
                 for (j=0; j<dst_tree_root && j<comm_size; j++)
-                    blklens[0] += recvcnts[j];
+                    blklens[0] += recvcounts[j];
                 for (j=dst_tree_root+mask; j<comm_size; j++)
-                    blklens[1] += recvcnts[j];
+                    blklens[1] += recvcounts[j];
 
                 dis[0] = 0;
                 dis[1] = blklens[0];
                 for (j=dst_tree_root; (j<dst_tree_root+mask) && (j<comm_size); j++)
-                    dis[1] += recvcnts[j];
+                    dis[1] += recvcounts[j];
 
                 mpi_errno = MPIR_Type_indexed_impl(2, blklens, dis, datatype, &recvtype);
                 if (mpi_errno) MPIU_ERR_POP(mpi_errno);
@@ -853,8 +842,8 @@ int MPIR_Reduce_scatter_intra (
 
             /* now copy final results from tmp_results to recvbuf */
             mpi_errno = MPIR_Localcopy(((char *)tmp_results+disps[rank]*extent),
-                                       recvcnts[rank], datatype, recvbuf,
-                                       recvcnts[rank], datatype); 
+                                       recvcounts[rank], datatype, recvbuf,
+                                       recvcounts[rank], datatype);
             if (mpi_errno) MPIU_ERR_POP(mpi_errno);
         }
     }
@@ -884,14 +873,9 @@ fn_fail:
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 
 /* not declared static because a machine-specific function may call this one in some cases */
-int MPIR_Reduce_scatter_inter ( 
-    const void *sendbuf,
-    void *recvbuf,
-    const int *recvcnts,
-    MPI_Datatype datatype,
-    MPI_Op op,
-    MPID_Comm *comm_ptr,
-    int *errflag )
+int MPIR_Reduce_scatter_inter(const void *sendbuf, void *recvbuf, const int recvcounts[],
+                              MPI_Datatype datatype, MPI_Op op, MPID_Comm *comm_ptr,
+                              int *errflag)
 {
 /* Intercommunicator Reduce_scatter.
    We first do an intercommunicator reduce to rank 0 on left group,
@@ -911,7 +895,7 @@ int MPIR_Reduce_scatter_inter (
     local_size = comm_ptr->local_size;
 
     total_count = 0;
-    for (i=0; i<local_size; i++) total_count += recvcnts[i];
+    for (i=0; i<local_size; i++) total_count += recvcounts[i];
 
     if (rank == 0) {
         /* In each group, rank 0 allocates a temp. buffer for the 
@@ -922,7 +906,7 @@ int MPIR_Reduce_scatter_inter (
         total_count = 0;
         for (i=0; i<local_size; i++) {
             disps[i] = total_count;
-            total_count += recvcnts[i];
+            total_count += recvcounts[i];
         }
 
         MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
@@ -991,8 +975,8 @@ int MPIR_Reduce_scatter_inter (
 
     newcomm_ptr = comm_ptr->local_comm;
 
-    mpi_errno = MPIR_Scatterv(tmp_buf, recvcnts, disps, datatype, recvbuf,
-                              recvcnts[rank], datatype, 0, newcomm_ptr, errflag);
+    mpi_errno = MPIR_Scatterv(tmp_buf, recvcounts, disps, datatype, recvbuf,
+                              recvcounts[rank], datatype, 0, newcomm_ptr, errflag);
     if (mpi_errno) {
         /* for communication errors, just record the error but continue */
         *errflag = TRUE;
@@ -1020,19 +1004,19 @@ int MPIR_Reduce_scatter_inter (
 #define FUNCNAME MPIR_Reduce_scatter
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPIR_Reduce_scatter(const void *sendbuf, void *recvbuf, const int *recvcnts,
+int MPIR_Reduce_scatter(const void *sendbuf, void *recvbuf, const int recvcounts[],
                         MPI_Datatype datatype, MPI_Op op, MPID_Comm *comm_ptr, int *errflag)
 {
     int mpi_errno = MPI_SUCCESS;
         
     if (comm_ptr->comm_kind == MPID_INTRACOMM) {
         /* intracommunicator */
-        mpi_errno = MPIR_Reduce_scatter_intra(sendbuf, recvbuf, recvcnts,
+        mpi_errno = MPIR_Reduce_scatter_intra(sendbuf, recvbuf, recvcounts,
                                               datatype, op, comm_ptr, errflag);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     } else {
         /* intercommunicator */
-        mpi_errno = MPIR_Reduce_scatter_inter(sendbuf, recvbuf, recvcnts,
+        mpi_errno = MPIR_Reduce_scatter_inter(sendbuf, recvbuf, recvcounts,
                                               datatype, op, comm_ptr, errflag);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     }
@@ -1051,7 +1035,7 @@ int MPIR_Reduce_scatter(const void *sendbuf, void *recvbuf, const int *recvcnts,
 #define FUNCNAME MPIR_Reduce_scatter_impl
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPIR_Reduce_scatter_impl(const void *sendbuf, void *recvbuf, const int *recvcnts,
+int MPIR_Reduce_scatter_impl(const void *sendbuf, void *recvbuf, const int recvcounts[],
                              MPI_Datatype datatype, MPI_Op op, MPID_Comm *comm_ptr, int *errflag)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -1059,12 +1043,12 @@ int MPIR_Reduce_scatter_impl(const void *sendbuf, void *recvbuf, const int *recv
     if (comm_ptr->coll_fns != NULL && 
 	comm_ptr->coll_fns->Reduce_scatter != NULL) {
 	/* --BEGIN USEREXTENSION-- */
-	mpi_errno = comm_ptr->coll_fns->Reduce_scatter(sendbuf, recvbuf, recvcnts,
+	mpi_errno = comm_ptr->coll_fns->Reduce_scatter(sendbuf, recvbuf, recvcounts,
                                                        datatype, op, comm_ptr, errflag);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 	/* --END USEREXTENSION-- */
     } else {
-        mpi_errno = MPIR_Reduce_scatter(sendbuf, recvbuf, recvcnts,
+        mpi_errno = MPIR_Reduce_scatter(sendbuf, recvbuf, recvcounts,
                                         datatype, op, comm_ptr, errflag);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     }
@@ -1112,7 +1096,7 @@ Output Parameter:
 .N MPI_ERR_OP
 .N MPI_ERR_BUFFER_ALIAS
 @*/
-int MPI_Reduce_scatter(const void *sendbuf, void *recvbuf, const int *recvcnts,
+int MPI_Reduce_scatter(const void *sendbuf, void *recvbuf, const int recvcounts[],
 		       MPI_Datatype datatype, MPI_Op op, MPI_Comm comm)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -1152,12 +1136,12 @@ int MPI_Reduce_scatter(const void *sendbuf, void *recvbuf, const int *recvcnts,
             if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 
             size = comm_ptr->local_size; 
-            /* even in intercomm. case, recvcnts is of size local_size */
+            /* even in intercomm. case, recvcounts is of size local_size */
 
             sum = 0;
 	    for (i=0; i<size; i++) {
-		MPIR_ERRTEST_COUNT(recvcnts[i],mpi_errno);
-                sum += recvcnts[i];
+		MPIR_ERRTEST_COUNT(recvcounts[i],mpi_errno);
+                sum += recvcounts[i];
 	    }
 
 	    MPIR_ERRTEST_DATATYPE(datatype, "datatype", mpi_errno);
@@ -1169,11 +1153,11 @@ int MPI_Reduce_scatter(const void *sendbuf, void *recvbuf, const int *recvcnts,
                 if (mpi_errno != MPI_SUCCESS) goto fn_fail;
             }
 
-            MPIR_ERRTEST_RECVBUF_INPLACE(recvbuf, recvcnts[comm_ptr->rank], mpi_errno);
+            MPIR_ERRTEST_RECVBUF_INPLACE(recvbuf, recvcounts[comm_ptr->rank], mpi_errno);
 	    if (comm_ptr->comm_kind == MPID_INTERCOMM) 
                 MPIR_ERRTEST_SENDBUF_INPLACE(sendbuf, sum, mpi_errno);
 
-            MPIR_ERRTEST_USERBUFFER(recvbuf,recvcnts[comm_ptr->rank],datatype,mpi_errno);
+            MPIR_ERRTEST_USERBUFFER(recvbuf,recvcounts[comm_ptr->rank],datatype,mpi_errno);
             MPIR_ERRTEST_USERBUFFER(sendbuf,sum,datatype,mpi_errno); 
 	    MPIR_ERRTEST_OP(op, mpi_errno);
 
@@ -1193,7 +1177,7 @@ int MPI_Reduce_scatter(const void *sendbuf, void *recvbuf, const int *recvcnts,
 
     /* ... body of routine ...  */
 
-    mpi_errno = MPIR_Reduce_scatter_impl(sendbuf, recvbuf, recvcnts,
+    mpi_errno = MPIR_Reduce_scatter_impl(sendbuf, recvbuf, recvcounts,
                                          datatype, op, comm_ptr, &errflag);
     if (mpi_errno) goto fn_fail;
 
@@ -1210,7 +1194,7 @@ int MPI_Reduce_scatter(const void *sendbuf, void *recvbuf, const int *recvcnts,
     {
 	mpi_errno = MPIR_Err_create_code(
 	    mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, "**mpi_reduce_scatter",
-	    "**mpi_reduce_scatter %p %p %p %D %O %C", sendbuf, recvbuf, recvcnts, datatype, op, comm);
+	    "**mpi_reduce_scatter %p %p %p %D %O %C", sendbuf, recvbuf, recvcounts, datatype, op, comm);
     }
 #   endif
     mpi_errno = MPIR_Err_return_comm( comm_ptr, FCNAME, mpi_errno );

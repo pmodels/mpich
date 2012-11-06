@@ -45,7 +45,9 @@
 #define FUNCNAME MPIR_Iscatterv
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPIR_Iscatterv(const void *sendbuf, const int *sendcounts, const int *displs, MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype, int root, MPID_Comm *comm_ptr, MPID_Sched_t s)
+int MPIR_Iscatterv(const void *sendbuf, const int sendcounts[], const int displs[],
+                   MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype,
+                   int root, MPID_Comm *comm_ptr, MPID_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
     int rank, comm_size;
@@ -109,7 +111,9 @@ fn_fail:
 #define FUNCNAME MPIR_Iscatterv_impl
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPIR_Iscatterv_impl(const void *sendbuf, const int *sendcounts, const int *displs, MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype, int root, MPID_Comm *comm_ptr, MPI_Request *request)
+int MPIR_Iscatterv_impl(const void *sendbuf, const int sendcounts[], const int displs[],
+                        MPI_Datatype sendtype, void *recvbuf, int recvcount,
+                        MPI_Datatype recvtype, int root, MPID_Comm *comm_ptr, MPI_Request *request)
 {
     int mpi_errno = MPI_SUCCESS;
     int tag = -1;
@@ -168,7 +172,9 @@ Output Parameters:
 
 .N Errors
 @*/
-int MPI_Iscatterv(const void *sendbuf, const int *sendcounts, const int *displs, MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype, int root, MPI_Comm comm, MPI_Request *request)
+int MPI_Iscatterv(const void *sendbuf, const int sendcounts[], const int displs[],
+                  MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype,
+                  int root, MPI_Comm comm, MPI_Request *request)
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_Comm *comm_ptr = NULL;
