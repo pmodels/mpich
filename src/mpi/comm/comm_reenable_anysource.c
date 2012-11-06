@@ -33,10 +33,10 @@
 
 MPIX_Comm_reenable_anysource - Re-enable the ability to post receives using MPI_ANY_SOURCE on the communicator 
 
-Input Parameter:
+Input Parameters:
 . comm - Communicator (handle)
 
-Output Parameter:
+Output Parameters:
 . failed_group - Group of failed processes communicator (handle)
 
 Notes:

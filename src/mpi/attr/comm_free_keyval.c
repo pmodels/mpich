@@ -54,7 +54,7 @@ void MPIR_Comm_free_keyval_impl(int keyval)
 /*@
    MPI_Comm_free_keyval - Frees an attribute key for communicators
 
-Input Parameter:
+Input Parameters:
 . comm_keyval - Frees the integer key value (integer) 
 
    Notes:

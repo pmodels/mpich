@@ -365,11 +365,11 @@ int MPIR_Dims_create( int nnodes, int ndims, int dims[] )
 /*@
     MPI_Dims_create - Creates a division of processors in a cartesian grid
 
- Input Parameters:
+Input Parameters:
 + nnodes - number of nodes in a grid (integer) 
 - ndims - number of cartesian dimensions (integer) 
 
- In/Out Parameter:   
+Input/Output Parameters:
 . dims - integer array of size  'ndims' specifying the number of nodes in each 
  dimension.  A value of 0 indicates that 'MPI_Dims_create' should fill in a
  suitable value.

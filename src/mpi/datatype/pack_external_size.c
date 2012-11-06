@@ -34,12 +34,12 @@
   MPI_Pack_external_size - Returns the upper bound on the amount of
   space needed to pack a message using MPI_Pack_external.
 
-   Input Parameters:
+Input Parameters:
 + datarep - data representation (string)
 . incount - number of input data items (integer)
 - datatype - datatype of each input data item (handle)
 
-   Output Parameters:
+Output Parameters:
 . size - output buffer size, in bytes (address integer)
 
 .N ThreadSafe

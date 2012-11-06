@@ -126,7 +126,7 @@ int MPIR_Cancel_impl(MPID_Request *request_ptr)
 /*@
     MPI_Cancel - Cancels a communication request
 
-Input Parameter:
+Input Parameters:
 . request - communication request (handle) 
 
 Notes:

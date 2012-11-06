@@ -94,7 +94,7 @@ static void MPIR_Init_err_dyncodes( void )
 /*
   MPIR_Err_set_msg - Change the message for an error code or class
 
-  Input Parameter:
+Input Parameters:
 + code - Error code or class
 - msg  - New message to use
 
@@ -223,7 +223,7 @@ int MPIR_Err_add_class(void)
   MPIR_Err_add_code - Create a new error code that is associated with an 
   existing error class
 
-  Input Parameters:
+Input Parameters:
 . class - Error class to which the code belongs.
 
   Return value:
@@ -266,7 +266,7 @@ int MPIR_Err_add_code( int class )
   MPIR_Err_get_dynerr_string - Get the message string that corresponds to a
   dynamically created error class or code
 
-  Input Parameter:
+Input Parameters:
 + code - An error class or code.  If a code, it must have been created by 
   'MPIR_Err_create_code'.
 

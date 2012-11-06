@@ -32,17 +32,17 @@
    MPI_Unpack_external - Unpack a buffer (packed with MPI_Pack_external)
    according to a datatype into contiguous memory
 
-   Input Parameters:
+Input Parameters:
 + datarep - data representation (string)
 . inbuf - input buffer start (choice)
 . insize - input buffer size, in bytes (address integer)
 . outcount - number of output data items (integer)
 . datatype - datatype of output data item (handle)
 
-   Input/Output Parameter:
+Input/Output Parameters:
 . position - current position in buffer, in bytes (address integer)
 
-   Output Parameter:
+Output Parameters:
 . outbuf - output buffer start (choice)
 
 .N ThreadSafe

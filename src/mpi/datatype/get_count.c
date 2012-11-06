@@ -70,7 +70,7 @@ Input Parameters:
 + status - return status of receive operation (Status) 
 - datatype - datatype of each receive buffer element (handle) 
 
-Output Parameter:
+Output Parameters:
 . count - number of received elements (integer) 
 Notes:
 If the size of the datatype is zero, this routine will return a count of

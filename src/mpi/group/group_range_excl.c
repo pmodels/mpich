@@ -127,7 +127,7 @@ Input Parameters:
 form (first rank, last rank, stride), indicating the ranks in
 'group'  of processes to be excluded from the output group 'newgroup' .  
 
-Output Parameter:
+Output Parameters:
 . newgroup - new group derived from above, preserving the 
 order in 'group'  (handle) 
 

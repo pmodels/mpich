@@ -31,7 +31,7 @@
 /*@
    MPI_Win_detach - Detach memory from a dynamic window
 
- Input Parameters:
+Input Parameters:
 + base - initial address of memory to be detached 
 - win - window object used for communication (handle) 
 

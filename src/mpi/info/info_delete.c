@@ -30,7 +30,7 @@
 /*@
   MPI_Info_delete - Deletes a (key,value) pair from info
 
-  Input Parameters:
+Input Parameters:
 + info - info object (handle)
 - key - key (string)
 

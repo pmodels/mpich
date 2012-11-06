@@ -83,7 +83,7 @@ Input Parameters:
 - ranks - ranks of processes in 'group' to appear in 'newgroup' (array of 
 integers) 
 
-Output Parameter:
+Output Parameters:
 . newgroup - new group derived from above, in the order defined by 'ranks' 
 (handle) 
 

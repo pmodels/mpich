@@ -129,13 +129,13 @@ static int MPID_Type_struct_alignsize(int count,
 /*@
   MPID_Type_struct - create a struct datatype
 
-  Input Parameters:
+Input Parameters:
 + count - number of blocks in vector
 . blocklength_array - number of elements in each block
 . displacement_array - offsets of blocks from start of type in bytes
 - oldtype_array - types (using handle) of datatypes on which vector is based
 
-  Output Parameters:
+Output Parameters:
 . newtype - handle of new struct datatype
 
   Return Value:

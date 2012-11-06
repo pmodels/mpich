@@ -36,7 +36,7 @@
    MPI_File_call_errhandler - Call the error handler installed on a 
    file
 
-   Input Parameters:
+Input Parameters:
 + fh - MPI file with error handler (handle) 
 - errorcode - error code (integer) 
 

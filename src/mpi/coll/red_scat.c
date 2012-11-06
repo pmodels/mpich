@@ -1078,7 +1078,7 @@ Array must be identical on all calling processes.
 . op - operation (handle) 
 - comm - communicator (handle) 
 
-Output Parameter:
+Output Parameters:
 . recvbuf - starting address of receive buffer (choice) 
 
 .N ThreadSafe

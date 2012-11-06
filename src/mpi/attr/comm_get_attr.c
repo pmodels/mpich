@@ -319,10 +319,10 @@ int MPIR_CommGetAttr_fort(MPI_Comm comm, int comm_keyval, void *attribute_val,
 
 Input Parameters:
 + comm - communicator to which attribute is attached (handle) 
-- keyval - key value (integer) 
+- comm_keyval - key value (integer)
 
 Output Parameters:
-+ attr_value - attribute value, unless 'flag' = false 
++ attribute_val - attribute value, unless 'flag' = false
 - flag -  true if an attribute value was extracted;  false if no attribute is
   associated with the key 
 

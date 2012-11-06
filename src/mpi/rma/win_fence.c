@@ -31,7 +31,7 @@
 /*@
    MPI_Win_fence - Perform an MPI fence synchronization on a MPI window
 
-   Input Parameters:
+Input Parameters:
 + assert - program assertion (integer) 
 - win - window object (handle) 
 

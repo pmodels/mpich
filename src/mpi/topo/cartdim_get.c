@@ -34,10 +34,10 @@
 MPI_Cartdim_get - Retrieves Cartesian topology information associated with a 
                   communicator
 
-Input Parameter:
+Input Parameters:
 . comm - communicator with cartesian structure (handle) 
 
-Output Parameter:
+Output Parameters:
 . ndims - number of dimensions of the cartesian structure (integer) 
 
 .N SignalSafe

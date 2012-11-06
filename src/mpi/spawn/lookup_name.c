@@ -38,12 +38,12 @@ MPID_NS_Handle MPIR_Namepub = 0;
 /*@
    MPI_Lookup_name - Lookup a port given a service name
 
-   Input Parameters:
+Input Parameters:
 + service_name - a service name (string) 
 - info - implementation-specific information (handle) 
 
 
-   Output Parameter:
+Output Parameters:
 .  port_name - a port name (string) 
 
 Notes:

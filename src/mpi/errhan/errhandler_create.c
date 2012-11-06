@@ -31,10 +31,10 @@
 /*@
   MPI_Errhandler_create - Creates an MPI-style errorhandler
 
-Input Parameter:
+Input Parameters:
 . function - user defined error handling procedure 
 
-Output Parameter:
+Output Parameters:
 . errhandler - MPI error handler (handle) 
 
 Notes:

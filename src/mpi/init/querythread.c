@@ -30,7 +30,7 @@
    MPI_Query_thread - Return the level of thread support provided by the MPI 
     library
 
-   Output Parameter:
+Output Parameters:
 .  provided - Level of thread support provided.  This is the same value
    that was returned in the 'provided' argument in 'MPI_Init_thread'.
 

@@ -30,7 +30,7 @@
    MPI_Is_thread_main - Returns a flag indicating whether this thread called 
                         'MPI_Init' or 'MPI_Init_thread'
 
-   Output Parameter:
+Output Parameters:
 . flag - Flag is true if 'MPI_Init' or 'MPI_Init_thread' has been called by 
          this thread and false otherwise.  (logical)
 

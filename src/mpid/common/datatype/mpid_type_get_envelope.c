@@ -13,10 +13,10 @@
 /*@
   MPID_Type_get_envelope - get envelope information from datatype
 
-  Input Parameters:
+Input Parameters:
 . datatype - MPI datatype
 
-  Output Parameters:
+Output Parameters:
 + num_integers - number of integers used to create datatype
 . num_addresses - number of MPI_Aints used to create datatype
 . num_datatypes - number of MPI_Datatypes used to create datatype

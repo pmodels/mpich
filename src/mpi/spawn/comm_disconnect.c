@@ -31,7 +31,7 @@
 /*@
    MPI_Comm_disconnect - Disconnect from a communicator
 
-   Input Parameter:
+Input Parameters:
 .  comm - communicator (handle) 
 
 Notes:

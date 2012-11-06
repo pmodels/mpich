@@ -32,14 +32,14 @@
    MPI_Type_create_hindexed - Create a datatype for an indexed datatype with
    displacements in bytes
 
-   Input Parameters:
+Input Parameters:
 + count - number of blocks --- also number of entries in
   array_of_displacements and array_of_blocklengths (integer)
 . array_of_blocklengths - number of elements in each block (array of nonnegative integers)
 . array_of_displacements - byte displacement of each block (array of address integers)
 - oldtype - old datatype (handle)
 
-   Output Parameter:
+Output Parameters:
 . newtype - new datatype (handle)
 
 .N ThreadSafe

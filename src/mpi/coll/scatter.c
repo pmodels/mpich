@@ -635,7 +635,7 @@ only at 'root')
 . root - rank of sending process (integer) 
 - comm - communicator (handle) 
 
-Output Parameter:
+Output Parameters:
 . recvbuf - address of receive buffer (choice) 
 
 .N ThreadSafe

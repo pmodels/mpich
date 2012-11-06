@@ -229,7 +229,7 @@ Input Parameters:
 + count - list length (integer) 
 - array_of_requests - array of request handles (array of handles)
 
-Output Parameter:
+Output Parameters:
 . array_of_statuses - array of status objects (array of Statuses).  May be
   'MPI_STATUSES_IGNORE'.
 

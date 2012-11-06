@@ -31,10 +31,10 @@
 /*@
    MPI_Win_get_group - Get the MPI Group of the window object
 
-   Input Parameter:
+Input Parameters:
 . win - window object (handle) 
 
-   Output Parameter:
+Output Parameters:
 . group - group of processes which share access to the window (handle) 
 
    Notes:

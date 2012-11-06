@@ -32,7 +32,7 @@
 /*@
    MPI_Win_free_keyval - Frees an attribute key for MPI RMA windows
 
-   Input Parameter:
+Input Parameters:
 . win_keyval - key value (integer) 
 
 .N ThreadSafe

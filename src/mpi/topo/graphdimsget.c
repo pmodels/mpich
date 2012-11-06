@@ -34,7 +34,7 @@
 MPI_Graphdims_get - Retrieves graph topology information associated with a 
                     communicator
 
-Input Parameter:
+Input Parameters:
 . comm - communicator for group with graph structure (handle) 
 
 Output Parameters:

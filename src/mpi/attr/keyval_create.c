@@ -37,7 +37,7 @@ Input Parameters:
 . delete_fn - Delete callback function for 'keyval' 
 - extra_state - Extra state for callback functions 
 
-Output Parameter:
+Output Parameters:
 . keyval - key value for future access (integer) 
 
 Notes:

@@ -90,7 +90,7 @@ array_of_displacements  and array_of_blocklengths
 - array_of_types - type of elements in each block (array
 of handles to datatype objects) 
 
-Output Parameter:
+Output Parameters:
 . newtype - new datatype (handle) 
 
 .N Deprecated

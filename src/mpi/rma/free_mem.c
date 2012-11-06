@@ -31,7 +31,7 @@
 /*@
    MPI_Free_mem - Free memory allocated with MPI_Alloc_mem
 
-   Input Parameter:
+Input Parameters:
 .  base - initial address of memory segment allocated by 'MPI_ALLOC_MEM' 
        (choice) 
 

@@ -33,10 +33,10 @@
 /*@
    MPI_Win_get_name - Get the print name associated with the MPI RMA window
 
-   Input Parameter:
+Input Parameters:
 . win - window whose name is to be returned (handle) 
 
-   Output Parameters:
+Output Parameters:
 + win_name - the name previously stored on the window, or a empty string if 
   no such name exists (string) 
 - resultlen - length of returned name (integer) 

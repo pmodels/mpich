@@ -32,12 +32,13 @@
    MPI_Win_shared_query - Query the size and base pointer for a patch of a
    shared memory window
 
- Input Parameters:
-+ rank - target rank
-- win - window object used for communication (handle) 
+Input Parameters:
++ win - window object used for communication (handle)
+- rank - target rank
 
- Output Parameters:
+Output Parameters:
 + size - size of the segment at the given rank
+. disp_unit - local unit size for displacements, in bytes (positive integer)
 - baseptr - base pointer in the calling process'' address space of the shared
   segment belonging to the target rank.
 

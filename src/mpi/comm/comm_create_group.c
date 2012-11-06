@@ -138,7 +138,7 @@ Input Parameters:
 . group - group, which is a subset of the group of 'comm'  (handle)
 - tag - safe tag unused by other communication
 
-Output Parameter:
+Output Parameters:
 . newcomm - new communicator (handle)
 
 .N ThreadSafe

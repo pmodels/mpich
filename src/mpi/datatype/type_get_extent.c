@@ -51,10 +51,10 @@ void MPIR_Type_get_extent_impl(MPI_Datatype datatype, MPI_Aint *lb, MPI_Aint *ex
 /*@
    MPI_Type_get_extent - Get the lower bound and extent for a Datatype
 
-   Input Parameter:
+Input Parameters:
 . datatype - datatype to get information on (handle)
 
-   Output Parameters:
+Output Parameters:
 + lb - lower bound of datatype (address integer)
 - extent - extent of datatype (address integer)
 

@@ -32,7 +32,7 @@
 /*@
    MPI_Request_get_status - Nondestructive test for the completion of a Request
 
-Input Parameter:
+Input Parameters:
 .  request - request (handle).  May be 'MPI_REQUEST_NULL'.
 
 Output Parameters:

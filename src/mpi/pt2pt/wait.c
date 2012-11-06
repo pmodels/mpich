@@ -91,10 +91,10 @@ int MPIR_Wait_impl(MPI_Request *request, MPI_Status *status)
 /*@
     MPI_Wait - Waits for an MPI request to complete
 
-Input Parameter:
+Input Parameters:
 . request - request (handle) 
 
-Output Parameter:
+Output Parameters:
 . status - status object (Status).  May be 'MPI_STATUS_IGNORE'.
 
 .N waitstatus

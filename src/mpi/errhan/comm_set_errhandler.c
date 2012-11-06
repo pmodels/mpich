@@ -60,7 +60,7 @@ void MPIR_Comm_set_errhandler_impl(MPID_Comm *comm_ptr, MPID_Errhandler *errhand
 /*@
    MPI_Comm_set_errhandler - Set the error handler for a communicator
 
-   Input Parameters:
+Input Parameters:
 + comm - communicator (handle) 
 - errhandler - new error handler for communicator (handle) 
 

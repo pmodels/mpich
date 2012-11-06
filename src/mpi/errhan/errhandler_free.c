@@ -31,7 +31,7 @@
 /*@
   MPI_Errhandler_free - Frees an MPI-style errorhandler
 
-Input Parameter:
+Input Parameters:
 . errhandler - MPI error handler (handle).  Set to 'MPI_ERRHANDLER_NULL' on 
 exit.
 

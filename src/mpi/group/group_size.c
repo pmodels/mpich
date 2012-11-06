@@ -36,7 +36,8 @@ MPI_Group_size - Returns the size of a group
 
 Input Parameters:
 + group - group (handle) 
-Output Parameter:
+
+Output Parameters:
 - size - number of processes in the group (integer) 
 
 .N SignalSafe

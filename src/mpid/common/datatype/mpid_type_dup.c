@@ -17,10 +17,10 @@
 /*@
   MPID_Type_dup - create a copy of a datatype
  
-  Input Parameters:
+Input Parameters:
 - oldtype - handle of original datatype
 
-  Output Parameters:
+Output Parameters:
 . newtype - handle of newly created copy of datatype
 
   Return Value:

@@ -28,7 +28,7 @@
 /*@
    MPI_Get_library_version - Return the version number of MPI library
 
-   Output Parameters:
+Output Parameters:
 +  version - Version of MPI
 -  resultlen - Length of the MPI library version string
 

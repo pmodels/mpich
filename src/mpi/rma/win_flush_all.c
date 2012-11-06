@@ -31,7 +31,7 @@
 /*@
    MPI_Win_flush_all - Comple all outstanding RMA operations at all targets
 
-   Input Parameters:
+Input Parameters:
 . win - window object (handle) 
 
 .N ThreadSafe

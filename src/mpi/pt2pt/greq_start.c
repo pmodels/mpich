@@ -127,7 +127,7 @@ Input Parameters:
 . cancel_fn - callback function invoked when request is cancelled (function) 
 - extra_state - Extra state passed to the above functions.
 
-Output Parameter:
+Output Parameters:
 .  request - Generalized request (handle)
 
  Notes on the callback functions:

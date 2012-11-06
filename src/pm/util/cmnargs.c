@@ -62,13 +62,13 @@ static int ReadConfigFile( const char *, ProcessUniverse * );
 
 /*@ MPIE_Args - Process the arguments for mpiexec.  
   
-    Input Parameters:
+Input Parameters:
 +   argc,argv - Argument count and vector
 .   ProcessArg - Routine that is called with any unrecognized argument.  
     Returns 0 if the argument is successfully handled, non-zero otherwise.   
 -   extraData - Pointer passed to 'ProcessArg' routine
 
-    Output Parameter:
+Output Parameters:
 .   mypUniv - The elements of the 'ProcessUniverse' structure are filled in.
 
     Notes:
@@ -369,7 +369,7 @@ int MPIE_Args( int argc, char *argv[], ProcessUniverse *mypUniv,
 /*@
   MPIE_CheckEnv - Check the environment for parameters and default values
 
-  Output Parameter:
+Output Parameters:
 . mypUniv - Process universe structure; some fields are set (see notes)
 
   Notes:
@@ -440,7 +440,7 @@ const char *MPIE_ArgDescription( void )
 /*@ MPIE_PrintProcessUniverse - Debugging routine used to print out the 
     results from MPIE_Args
     
-    Input Parameters:
+Input Parameters:
 +   fp - File for output
 -   mypUniv - Process Univers
  @*/
@@ -460,7 +460,7 @@ void MPIE_PrintProcessUniverse( FILE *fp, ProcessUniverse *mypUniv )
 
 /*@ MPIE_PrintProcessWorld - Print a ProcessWorld structure
     
-    Input Parameters:
+Input Parameters:
 +   fp - File for output
 -   pWorld - Process World
  @*/

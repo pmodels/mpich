@@ -111,7 +111,7 @@ Input Parameters:
 - periods - logical array of size 'ndims' specifying the periodicity 
   specification in each coordinate direction 
 
-Output Parameter:
+Output Parameters:
 . newrank - reordered rank of the calling process; 'MPI_UNDEFINED' if 
   calling process does not belong to grid (integer) 
 

@@ -27,7 +27,7 @@
   MPI_Register_datarep - Register functions for user-defined data 
                          representations
 
-  Input Parameters:
+Input Parameters:
 + datarep - data representation name (string)
 . read_conversion_fn - function invoked to convert from file representation to
                  native representation (function)

@@ -36,7 +36,7 @@
 Input Parameters:
 . datatype - datatype (handle) 
 
-Output Parameter:
+Output Parameters:
 . size - datatype size (integer) 
 
 .N SignalSafe

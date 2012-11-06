@@ -289,7 +289,7 @@ Input Parameters:
 + status - return status of receive operation (Status)
 - datatype - datatype used by receive operation (handle)
 
-Output Parameter:
+Output Parameters:
 . count - number of received basic elements (integer)
 
    Notes:

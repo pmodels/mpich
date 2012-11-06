@@ -31,7 +31,7 @@
 /*@
    MPI_Win_set_name - Set the print name for an MPI RMA window
 
-   Input Parameters:
+Input Parameters:
 + win - window whose identifier is to be set (handle) 
 - win_name - the character string which is remembered as the name (string) 
 

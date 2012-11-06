@@ -33,7 +33,7 @@
    MPI_Add_error_string - Associates an error string with an MPI error code or 
    class
 
-   Input Parameters:
+Input Parameters:
 + errorcode - error code or class (integer) 
 - string - text corresponding to errorcode (string) 
 

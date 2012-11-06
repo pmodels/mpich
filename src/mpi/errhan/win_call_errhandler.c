@@ -34,7 +34,7 @@
    MPI_Win_call_errhandler - Call the error handler installed on a 
    window object
 
-   Input Parameters:
+Input Parameters:
 + win - window with error handler (handle) 
 - errorcode - error code (integer) 
 

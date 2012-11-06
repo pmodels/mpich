@@ -96,10 +96,10 @@ int MPIR_Comm_group_impl(MPID_Comm *comm_ptr, MPID_Group **group_ptr)
 
 MPI_Comm_group - Accesses the group associated with given communicator
 
-Input Parameter:
+Input Parameters:
 . comm - Communicator (handle)
 
-Output Parameter:
+Output Parameters:
 . group - Group in communicator (handle)
 
 Notes:

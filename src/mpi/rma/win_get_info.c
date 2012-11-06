@@ -36,11 +36,11 @@
    contains no key/value pair. The user is responsible for freeing info_used
    via MPI_INFO_FREE.
 
-   Input Parameters:
+Input Parameters:
 . win - window object (handle)
 
-   Output Parameters:
-. info - new info argument (handle)
+Output Parameters:
+. info_used - new info argument (handle)
 
 .N ThreadSafe
 .N Fortran

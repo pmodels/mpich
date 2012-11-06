@@ -78,7 +78,7 @@ int MPID_Open_port(MPID_Info *info_ptr, char *port_name)
 /*@
    MPID_Close_port - Close port
 
-   Input Parameter:
+Input Parameters:
 .  port_name - Name of MPI port to close
 
    Notes:

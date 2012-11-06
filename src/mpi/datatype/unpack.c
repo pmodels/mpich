@@ -112,10 +112,10 @@ Input Parameters:
 . datatype - datatype of each output data item (handle)
 - comm - communicator for packed message (handle)
 
-Output Parameter:
+Output Parameters:
 . outbuf - output buffer start (choice)
 
-Inout/Output Parameter:
+Inout/Output Parameters:
 . position - current position in bytes (integer)
 
 

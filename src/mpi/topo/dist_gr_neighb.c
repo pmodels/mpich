@@ -70,7 +70,7 @@ Input Parameters:
 . maxindegree - size of sources and sourceweights arrays (non-negative integer)
 - maxoutdegree - size of destinations and destweights arrays (non-negative integer)
 
-Output Parameter:
+Output Parameters:
 + sources - processes for which the calling process is a destination (array of non-negative integers)
 . sourceweights - weights of the edges into the calling process (array of non-negative integers)
 . destinations - processes for which the calling process is a source (array of non-negative integers)

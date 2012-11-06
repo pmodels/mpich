@@ -14,11 +14,11 @@
 /*@
   MPID_Type_contiguous - create a contiguous datatype
 
-  Input Parameters:
+Input Parameters:
 + count - number of elements in the contiguous block
 - oldtype - type (using handle) of datatype on which vector is based
 
-  Output Parameters:
+Output Parameters:
 . newtype - handle of new contiguous datatype
 
   Return Value:

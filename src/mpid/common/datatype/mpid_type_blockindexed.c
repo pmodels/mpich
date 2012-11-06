@@ -14,7 +14,7 @@
 /*@
   MPID_Type_blockindexed - create a block indexed datatype
 
-  Input Parameters:
+Input Parameters:
 + count - number of blocks in type
 . blocklength - number of elements in each block
 . displacement_array - offsets of blocks from start of type (see next
@@ -23,7 +23,7 @@
   they in terms of extent of oldtype
 - oldtype - type (using handle) of datatype on which new type is based
 
-  Output Parameters:
+Output Parameters:
 . newtype - handle of new block indexed datatype
 
   Return Value:

@@ -35,10 +35,10 @@
 MPI_Comm_remote_size - Determines the size of the remote group 
                        associated with an inter-communictor
 
-Input Parameter:
+Input Parameters:
 . comm - communicator (handle) 
 
-Output Parameter:
+Output Parameters:
 . size - number of processes in the remote group of 'comm'  (integer) 
 
 .N SignalSafe

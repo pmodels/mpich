@@ -36,7 +36,7 @@ Input Parameters:
 . tag - tag value or 'MPI_ANY_TAG' (integer) 
 - comm - communicator (handle) 
 
-Output Parameter:
+Output Parameters:
 . status - status object (Status) 
 
 .N ThreadSafe

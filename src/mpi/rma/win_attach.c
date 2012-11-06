@@ -31,7 +31,7 @@
 /*@
    MPI_Win_attach - Attach memory to a dynamic window
 
- Input Parameters:
+Input Parameters:
 + size - size of memory to be attached in bytes
 . base - initial address of memory to be attached 
 - win - window object used for communication (handle) 

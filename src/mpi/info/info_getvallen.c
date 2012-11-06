@@ -52,11 +52,11 @@ void MPIR_Info_get_valuelen_impl(MPID_Info *info_ptr, const char *key, int *valu
     MPI_Info_get_valuelen - Retrieves the length of the value associated with 
     a key
 
-    Input Parameters:
+Input Parameters:
 + info - info object (handle)
 - key - key (string)
 
-    Output Parameters:
+Output Parameters:
 + valuelen - length of value argument (integer)
 - flag - true if key defined, false if not (boolean)
 

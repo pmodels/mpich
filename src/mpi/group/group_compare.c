@@ -91,7 +91,7 @@ Input Parameters:
 + group1 - group1 (handle) 
 - group2 - group2 (handle) 
 
-Output Parameter:
+Output Parameters:
 . result - integer which is 'MPI_IDENT' if the order and members of
 the two groups are the same, 'MPI_SIMILAR' if only the members are the same,
 and 'MPI_UNEQUAL' otherwise

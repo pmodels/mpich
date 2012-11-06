@@ -31,11 +31,11 @@
 /*@
    MPI_Win_create_dynamic - Create an MPI Window object for one-sided communication
 
-   Input Parameters:
+Input Parameters:
 + info - info argument (handle) 
 - comm - communicator (handle) 
 
-  Output Parameter:
+Output Parameters:
 . win - window object returned by the call (handle) 
 
 .N ThreadSafe

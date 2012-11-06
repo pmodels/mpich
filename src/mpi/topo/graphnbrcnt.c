@@ -66,7 +66,7 @@ Input Parameters:
 + comm - communicator with graph topology (handle) 
 - rank - rank of process in group of 'comm' (integer) 
 
-Output Parameter:
+Output Parameters:
 . nneighbors - number of neighbors of specified process (integer) 
 
 .N SignalSafe

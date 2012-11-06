@@ -31,7 +31,7 @@
 /*@
    MPI_Get_version - Return the version number of MPI
 
-   Output Parameters:
+Output Parameters:
 +  version - Version of MPI
 -  subversion - Subversion of MPI
 

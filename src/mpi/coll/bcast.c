@@ -1424,7 +1424,7 @@ int MPIR_Bcast(void *buffer, int count, MPI_Datatype datatype, int root, MPID_Co
 MPI_Bcast - Broadcasts a message from the process with rank "root" to
             all other processes of the communicator
 
-Input/Output Parameter:
+Input/Output Parameters:
 . buffer - starting address of buffer (choice) 
 
 Input Parameters:

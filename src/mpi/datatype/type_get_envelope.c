@@ -67,12 +67,14 @@ void MPIR_Type_get_envelope_impl(MPI_Datatype datatype,
 /*@
    MPI_Type_get_envelope - get type envelope
 
-   Arguments:
-+  MPI_Datatype datatype - datatype
-.  int *num_integers - num integers
-.  int *num_addresses - num addresses
-.  int *num_datatypes - num datatypes
--  int *combiner - combiner
+Input Parameters:
+.  datatype - datatype to access (handle)
+
+Output Parameters:
++  num_integers - number of input integers used in the call constructing combiner (non-negative integer)
+.  num_addresses - number of input addresses used in the call constructing combiner (non-negative integer)
+.  num_datatypes - number of input datatypes used in the call constructing combiner (non-negative integer)
+-  combiner - combiner (state)
 
    Notes:
 

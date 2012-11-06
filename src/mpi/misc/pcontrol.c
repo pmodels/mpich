@@ -31,7 +31,7 @@
 /*@
   MPI_Pcontrol - Controls profiling
 
-  Input Parameters:
+Input Parameters:
 + level - Profiling level 
 -  ... - other arguments (see notes)
 

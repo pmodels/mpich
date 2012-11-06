@@ -37,7 +37,7 @@
   are stored in the "direct" space, for those familiar with how MPICH deals
   with type allocation).
 
-  Input Parameters:
+Input Parameters:
 + type - name of pair type (e.g. MPI_FLOAT_INT)
 - new_dtp - pointer to previously allocated datatype structure, which is
             filled in by this function

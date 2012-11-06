@@ -173,7 +173,7 @@ int MPIR_WinSetAttr( MPI_Win win, int win_keyval, void *attribute_val,
 
 Input Parameters:
 + win - MPI window object to which attribute will be attached (handle) 
-. keyval - key value, as returned by  'MPI_Win_create_keyval' (integer) 
+. win_keyval - key value, as returned by  'MPI_Win_create_keyval' (integer)
 - attribute_val - attribute value 
 
 Notes:

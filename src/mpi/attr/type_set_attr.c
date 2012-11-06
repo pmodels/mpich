@@ -166,7 +166,7 @@ int MPIR_TypeSetAttr(MPI_Datatype datatype, int type_keyval, void *attribute_val
 
 Input Parameters:
 + datatype - MPI Datatype to which attribute will be attached (handle)
-. keyval - key value, as returned by  'MPI_Type_create_keyval' (integer) 
+. type_keyval - key value, as returned by  'MPI_Type_create_keyval' (integer)
 - attribute_val - attribute value 
 
 Notes:

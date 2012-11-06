@@ -31,7 +31,7 @@
 /*@
     MPI_Start - Initiates a communication with a persistent request handle
 
-Input Parameter:
+Input Parameters:
 . request - communication request (handle) 
 
 .N ThreadSafe

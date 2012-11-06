@@ -40,7 +40,7 @@ Input Parameters:
 . tag - message tag (integer) 
 - comm - communicator (handle) 
 
-Output Parameter:
+Output Parameters:
 . request - communication request (handle) 
 
 .N Fortran

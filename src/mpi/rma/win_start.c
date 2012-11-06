@@ -31,7 +31,7 @@
 /*@
    MPI_Win_start - Start an RMA access epoch for MPI
 
-  Input Parameters:
+Input Parameters:
 + group - group of target processes (handle) 
 . assert - Used to optimize this call; zero may be used as a default.
   See notes. (integer) 

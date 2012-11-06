@@ -13,13 +13,13 @@
 /*@
   MPID_Type_get_contents - get content information from datatype
 
-  Input Parameters:
+Input Parameters:
 + datatype - MPI datatype
 . max_integers - size of array_of_integers
 . max_addresses - size of array_of_addresses
 - max_datatypes - size of array_of_datatypes
 
-  Output Parameters:
+Output Parameters:
 + array_of_integers - integers used in creating type
 . array_of_addresses - MPI_Aints used in creating type
 - array_of_datatypes - MPI_Datatypes used in creating type

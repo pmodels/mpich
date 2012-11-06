@@ -34,10 +34,10 @@
 
 MPI_Comm_test_inter - Tests to see if a comm is an inter-communicator
 
-Input Parameter:
+Input Parameters:
 . comm - communicator to test (handle) 
 
-Output Parameter:
+Output Parameters:
 . flag - true if this is an inter-communicator(logical) 
 
 .N SignalSafe

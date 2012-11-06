@@ -31,7 +31,7 @@
    MPI_Type_create_subarray - Create a datatype for a subarray of a regular,
     multidimensional array
 
-   Input Parameters:
+Input Parameters:
 + ndims - number of array dimensions (positive integer)
 . array_of_sizes - number of elements of type oldtype in each dimension of the
   full array (array of positive integers)
@@ -42,7 +42,7 @@
 . order - array storage order flag (state)
 - oldtype - array element datatype (handle)
 
-   Output Parameter:
+Output Parameters:
 . newtype - new datatype (handle)
 
 .N ThreadSafe

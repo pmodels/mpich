@@ -392,7 +392,7 @@ int MPIR_Alltoallw_impl(const void *sendbuf, const int sendcounts[], const int s
    MPI_Alltoallw - Generalized all-to-all communication allowing different
    datatypes, counts, and displacements for each partner
 
-   Input Parameters:
+Input Parameters:
 + sendbuf - starting address of send buffer (choice) 
 . sendcounts - integer array equal to the group size specifying the number of 
   elements to send to each processor (integer) 
@@ -410,7 +410,7 @@ int MPIR_Alltoallw_impl(const void *sendbuf, const int sendcounts[], const int s
   the type of data received from process i (handle) 
 - comm - communicator (handle) 
 
- Output Parameter:
+Output Parameters:
 . recvbuf - address of receive buffer (choice) 
 
 .N ThreadSafe

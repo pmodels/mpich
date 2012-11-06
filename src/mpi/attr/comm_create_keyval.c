@@ -85,11 +85,11 @@ int MPIR_Comm_create_keyval_impl(MPI_Comm_copy_attr_function *comm_copy_attr_fn,
    MPI_Comm_create_keyval - Create a new attribute key 
 
 Input Parameters:
-+ copy_fn - Copy callback function for 'keyval' 
-. delete_fn - Delete callback function for 'keyval' 
++ comm_copy_attr_fn - Copy callback function for 'keyval'
+. comm_delete_attr_fn - Delete callback function for 'keyval'
 - extra_state - Extra state for callback functions 
 
-Output Parameter:
+Output Parameters:
 . comm_keyval - key value for future access (integer) 
 
 Notes:

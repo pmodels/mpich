@@ -31,10 +31,10 @@
 /*@
    MPI_File_create_errhandler - Create a file error handler
 
-   Input Parameter:
+Input Parameters:
 . file_errhandler_fn - user defined error handling procedure (function)
 
-   Output Parameter:
+Output Parameters:
 . errhandler - MPI error handler (handle) 
 
 .N ThreadSafe

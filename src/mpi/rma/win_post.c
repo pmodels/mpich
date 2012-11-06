@@ -31,7 +31,7 @@
 /*@
    MPI_Win_post - Start an RMA exposure epoch
 
-   Input parameters:
+Input Parameters:
 + group - group of origin processes (handle) 
 . assert - Used to optimize this call; zero may be used as a default.
   See notes. (integer) 

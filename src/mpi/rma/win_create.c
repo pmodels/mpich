@@ -31,14 +31,14 @@
 /*@
    MPI_Win_create - Create an MPI Window object for one-sided communication
 
-   Input Parameters:
+Input Parameters:
 + base - initial address of window (choice) 
 . size - size of window in bytes (nonnegative integer) 
 . disp_unit - local unit size for displacements, in bytes (positive integer) 
 . info - info argument (handle) 
 - comm - communicator (handle) 
 
-  Output Parameter:
+Output Parameters:
 . win - window object returned by the call (handle) 
 
 .N ThreadSafe

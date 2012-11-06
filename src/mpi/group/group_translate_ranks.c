@@ -114,13 +114,13 @@ fn_fail:
  MPI_Group_translate_ranks - Translates the ranks of processes in one group to 
                              those in another group
 
-  Input Parameters:
+Input Parameters:
 + group1 - group1 (handle) 
 . n - number of ranks in  'ranks1' and 'ranks2'  arrays (integer) 
 . ranks1 - array of zero or more valid ranks in 'group1' 
 - group2 - group2 (handle) 
 
-  Output Parameter:
+Output Parameters:
 . ranks2 - array of corresponding ranks in group2,  'MPI_UNDEFINED'  when no 
   correspondence exists. 
 

@@ -37,7 +37,7 @@ Input Parameters:
 . array_of_displacements - byte displacement of each block (array of MPI_Aint)
 - oldtype - old datatype (handle)
 
-Output Parameter:
+Output Parameters:
 . newtype - new datatype (handle) 
 
 .N Deprecated

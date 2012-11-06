@@ -34,12 +34,13 @@
    MPI_Win_allocate_shared - Create an MPI Window object for one-sided communication
    and allocate memory at each process.
 
-   Input Parameters:
+Input Parameters:
 . size - size of window in bytes (nonnegative integer)
+. disp_unit - local unit size for displacements, in bytes (positive integer)
 . info - info argument (handle)
 - comm - communicator (handle)
 
-  Output Parameter:
+Output Parameters:
 . baseptr - initial address of window (choice)
 - win - window object returned by the call (handle)
 

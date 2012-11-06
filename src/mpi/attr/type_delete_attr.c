@@ -33,8 +33,8 @@
    MPI_Type_delete_attr - Deletes an attribute value associated with a key on 
    a datatype
 
-   Input Parameters:
-+  type - MPI datatype to which attribute is attached (handle)
+Input Parameters:
++  datatype - MPI datatype to which attribute is attached (handle)
 -  type_keyval - The key value of the deleted attribute (integer) 
 
 .N ThreadSafe

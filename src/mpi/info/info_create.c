@@ -30,7 +30,7 @@
 /*@
     MPI_Info_create - Creates a new info object
 
-   Output Parameter:
+Output Parameters:
 . info - info object created (handle)
 
 .N ThreadSafe

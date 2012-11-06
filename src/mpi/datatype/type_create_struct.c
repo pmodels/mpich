@@ -84,15 +84,15 @@ int MPIR_Type_create_struct_impl(int count,
    MPI_Type_create_struct - Create an MPI datatype from a general set of
    datatypes, displacements, and block sizes
 
-   Input Parameters:
+Input Parameters:
 + count - number of blocks (integer) --- also number of entries in arrays
   array_of_types, array_of_displacements and array_of_blocklengths
-. array_of_blocklength - number of elements in each block (array of integer)
+. array_of_blocklengths - number of elements in each block (array of integer)
 . array_of_displacements - byte displacement of each block (array of address integer)
 - array_of_types - type of elements in each block (array of handles to
   datatype objects)
 
-   Output Parameter:
+Output Parameters:
 . newtype - new datatype (handle)
 
 .N ThreadSafe

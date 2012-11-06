@@ -53,7 +53,7 @@ int MPIR_Group_free_impl(MPID_Group *group_ptr)
 
 MPI_Group_free - Frees a group
 
-Input Parameter:
+Input Parameters:
 . group - group to free (handle) 
 
 Notes:

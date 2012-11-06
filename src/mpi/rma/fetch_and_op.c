@@ -35,7 +35,7 @@
    the result buffer result_addr the content of the target buffer before the
    accumulation.
 
-   Input Parameters:
+Input Parameters:
 + origin_addr - initial address of buffer (choice) 
 . result_addr - initial address of result buffer (choice)
 . datatype - datatype of the entry in origin, result, and target buffers (handle)

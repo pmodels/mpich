@@ -124,7 +124,7 @@ Input Parameters:
 . datatype - data type of elements in the buffers (handle)
 - op - reduction operation (handle)
 
-Output Parameter:
+Output Parameters:
 . inoutbuf - address of input-output buffer (choice)
 
 .N ThreadSafe

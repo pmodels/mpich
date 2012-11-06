@@ -31,14 +31,16 @@
 /*@
    MPI_Type_get_contents - get type contents
 
-   Arguments:
-+  MPI_Datatype datatype - datatype
-.  int max_integers - max integers
-.  int max_addresses - max addresses
-.  int max_datatypes - max datatypes
-.  int array_of_integers[] - integers
-.  MPI_Aint array_of_addresses[] - addresses
--  MPI_Datatype array_of_datatypes[] - datatypes
+Input Parameters:
++  datatype - datatype to access (handle)
+.  max_integers - number of elements in array_of_integers (non-negative integer)
+.  max_addresses - number of elements in array_of_addresses (non-negative integer)
+-  max_datatypes - number of elements in array_of_datatypes (non-negative integer)
+
+Output Parameters:
++  array_of_integers - contains integer arguments used in constructing the datatype (array of integers)
+.  array_of_addresses - contains address arguments used in constructing the datatype (array of integers)
+-  array_of_datatypes - contains datatype arguments used in constructing the datatype (array of handles)
 
    Notes:
 

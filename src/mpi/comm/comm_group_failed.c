@@ -34,11 +34,11 @@
 
 MPIX_Comm_group_failed - Accesses the group associated with given communicator
 
-Input Parameter:
+Input Parameters:
 . comm - Communicator (handle)
 
-Output Parameter:
-. group - Group of failed processes communicator (handle)
+Output Parameters:
+. failed_group - Group of failed processes communicator (handle)
 
 Notes:
 .N COMMNULL

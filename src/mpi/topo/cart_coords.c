@@ -38,7 +38,7 @@ Input Parameters:
 . rank - rank of a process within group of 'comm' (integer) 
 - maxdims - length of vector 'coords' in the calling program (integer) 
 
-Output Parameter:
+Output Parameters:
 . coords - integer array (of size 'ndims') containing the Cartesian 
   coordinates of specified process (integer) 
 

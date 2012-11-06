@@ -275,7 +275,7 @@ void MPIU_Handle_obj_alloc_complete(MPIU_Object_alloc_t *objmem,
 /*+
   MPIU_Handle_obj_alloc - Create an object using the handle allocator
 
-  Input Parameter:
+Input Parameters:
 . objmem - Pointer to object memory block.
 
   Return Value:
@@ -420,7 +420,7 @@ void *MPIU_Handle_obj_alloc_unsafe(MPIU_Object_alloc_t *objmem)
 /*+
   MPIU_Handle_obj_free - Free an object allocated with MPID_Handle_obj_new
 
-  Input Parameters:
+Input Parameters:
 + objmem - Pointer to object block
 - object - Object to delete
 

@@ -33,10 +33,10 @@
 /*@
     MPI_Address - Gets the address of a location in memory
 
-Input Parameter:
+Input Parameters:
 . location - location in caller memory (choice)
 
-Output Parameter:
+Output Parameters:
 . address - address of location (address integer)
 
     Note:

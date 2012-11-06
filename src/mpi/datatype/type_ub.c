@@ -36,7 +36,7 @@
 Input Parameters:
 . datatype - datatype (handle)
 
-Output Parameter:
+Output Parameters:
 . displacement - displacement of upper bound from origin,
                              in bytes (address integer)
 

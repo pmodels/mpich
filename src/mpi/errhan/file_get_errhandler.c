@@ -35,10 +35,10 @@
 /*@
    MPI_File_get_errhandler - Get the error handler attached to a file
 
-   Input Parameter:
+Input Parameters:
 . file - MPI file (handle) 
 
-   Output Parameter:
+Output Parameters:
 . errhandler - handler currently associated with file (handle) 
 
 .N ThreadSafeNoUpdate

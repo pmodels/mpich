@@ -30,7 +30,7 @@
 /*@
     MPI_Info_free - Frees an info object
 
-Input Parameter:
+Input Parameters:
 . info - info object to be freed (handle)
 
 .N ThreadSafe

@@ -63,7 +63,7 @@ Input Parameters:
 - n - key number (integer)
 
 Output Parameters:
-. keys - key (string).  The maximum number of characters is 'MPI_MAX_INFO_KEY'.
+. key - key (string).  The maximum number of characters is 'MPI_MAX_INFO_KEY'.
 
 .N ThreadSafeInfoRead
 

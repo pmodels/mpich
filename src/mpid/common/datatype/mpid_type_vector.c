@@ -14,7 +14,7 @@
 /*@
   MPID_Type_vector - create a vector datatype
 
-  Input Parameters:
+Input Parameters:
 + count - number of blocks in vector
 . blocklength - number of elements in each block
 . stride - distance from beginning of one block to the next (see next
@@ -23,7 +23,7 @@
   is in terms of extent of oldtype
 - oldtype - type (using handle) of datatype on which vector is based
 
-  Output Parameters:
+Output Parameters:
 . newtype - handle of new vector datatype
 
   Return Value:

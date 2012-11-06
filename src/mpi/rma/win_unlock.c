@@ -31,7 +31,7 @@
 /*@
    MPI_Win_unlock - Completes an RMA access epoch at the target process
 
-   Input Parameters:
+Input Parameters:
 + rank - rank of window (nonnegative integer) 
 - win - window object (handle) 
 

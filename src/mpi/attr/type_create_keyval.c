@@ -41,12 +41,12 @@
 /*@
    MPI_Type_create_keyval - Create an attribute keyval for MPI datatypes
 
-   Input Parameters:
+Input Parameters:
 + type_copy_attr_fn - copy callback function for type_keyval (function) 
 . type_delete_attr_fn - delete callback function for type_keyval (function) 
 - extra_state - extra state for callback functions 
 
-   Output Parameter:
+Output Parameters:
 . type_keyval - key value for future access (integer) 
 
 Notes:

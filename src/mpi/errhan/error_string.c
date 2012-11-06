@@ -35,7 +35,7 @@
 Input Parameters:
 . errorcode - Error code returned by an MPI routine or an MPI error class
 
-Output Parameter:
+Output Parameters:
 + string - Text that corresponds to the errorcode 
 - resultlen - Length of string 
 

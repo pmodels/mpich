@@ -32,10 +32,10 @@
 /*@
   MPI_Op_commute - Queries an MPI reduction operation for its commutativity.
 
-  Input Parameter:
+Input Parameters:
 . op - operation (handle)
 
-  Output Parameter:
+Output Parameters:
 . commute - Flag is true if 'op' is a commutative operation. (logical)
 
 .N NULL

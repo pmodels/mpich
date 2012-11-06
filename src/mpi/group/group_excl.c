@@ -92,7 +92,7 @@ Input Parameters:
 . n - number of elements in array 'ranks' (integer) 
 - ranks - array of integer ranks in 'group' not to appear in 'newgroup' 
 
-Output Parameter:
+Output Parameters:
 . newgroup - new group derived from above, preserving the order defined by 
  'group' (handle) 
 

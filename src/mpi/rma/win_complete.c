@@ -31,7 +31,7 @@
 /*@
    MPI_Win_complete - Completes an RMA operations begun after an MPI_Win_start.
 
-   Input Parameter:
+Input Parameters:
 . win - window object (handle) 
 
 .N ThreadSafe

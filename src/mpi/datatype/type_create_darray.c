@@ -325,7 +325,7 @@ PMPI_LOCAL int MPIR_Type_cyclic(const int *array_of_gsizes,
 /*@
    MPI_Type_create_darray - Create a datatype representing a distributed array
 
-   Input Parameters:
+Input Parameters:
 + size - size of process group (positive integer)
 . rank - rank in process group (nonnegative integer)
 . ndims - number of array dimensions as well as process grid dimensions (positive integer)
@@ -336,7 +336,7 @@ PMPI_LOCAL int MPIR_Type_cyclic(const int *array_of_gsizes,
 . order - array storage order flag (state)
 - oldtype - old datatype (handle)
 
-    Output Parameter:
+Output Parameters:
 . newtype - new datatype (handle)
 
 .N ThreadSafe

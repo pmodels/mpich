@@ -31,10 +31,10 @@
 /*@
    MPI_Type_dup - Duplicate a datatype
 
-   Input Parameter:
+Input Parameters:
 . oldtype - datatype (handle)
 
-   Output Parameter:
+Output Parameters:
 . newtype - copy of type (handle) 
 
 .N ThreadSafe

@@ -34,7 +34,7 @@
 /*@
    MPI_Type_set_name - set datatype name
 
-   Input Parameters:
+Input Parameters:
 + datatype - datatype whose identifier is to be set (handle)
 - type_name - the character string which is remembered as the name (string) 
 

@@ -32,10 +32,10 @@
 /*@
    MPI_Add_error_code - Add and MPI error code to an MPI error class
 
-   Input Parameter:
+Input Parameters:
 .  errorclass - Error class to add an error code.
 
-   Output Parameter:
+Output Parameters:
 .  errorcode - New error code for this error class.
 
 .N ThreadSafe

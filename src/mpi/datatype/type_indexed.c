@@ -95,7 +95,7 @@ Input Parameters:
   integers)
 - oldtype - old datatype (handle)
 
-Output Parameter:
+Output Parameters:
 . newtype - new datatype (handle) 
 
 .N ThreadSafe

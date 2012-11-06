@@ -35,7 +35,7 @@
    requires to be the same on all processes must appear with the same value in
    each process'' info object.
 
-   Input Parameters:
+Input Parameters:
 + win - window object (handle)
 - info - info argument (handle)
 

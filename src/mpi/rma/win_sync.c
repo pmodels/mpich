@@ -31,7 +31,7 @@
 /*@
    MPI_Win_sync - Synchronize public and private copies of the given window
 
-   Input Parameters:
+Input Parameters:
 . win - window object (handle) 
 
 .N ThreadSafe

@@ -33,7 +33,7 @@
   MPI_Buffer_detach - Removes an existing buffer (for use in MPI_Bsend etc)
 
 Output Parameters:
-+ buffer - initial buffer address (choice) 
++ buffer_addr - initial buffer address (choice)
 - size - buffer size, in bytes (integer) 
 
 Notes:

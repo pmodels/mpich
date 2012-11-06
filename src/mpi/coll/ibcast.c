@@ -897,6 +897,8 @@ Input/Output Parameters:
 
 Input Parameters:
 + count - number of entries in buffer (non-negative integer)
+. datatype - datatype of buffer (handle)
+. root - rank of broadcast root (integer)
 - comm - communicator (handle)
 
 Output Parameters:

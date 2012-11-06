@@ -503,12 +503,12 @@ fn_fail:
 /*@
    MPI_Init_thread - Initialize the MPI execution environment
 
-   Input Parameters:
+Input Parameters:
 +  argc - Pointer to the number of arguments 
 .  argv - Pointer to the argument vector
 -  required - Level of desired thread support
 
-   Output Parameter:
+Output Parameters:
 .  provided - Level of provided thread support
 
    Command line arguments:

@@ -33,7 +33,7 @@
 /*@
    MPI_Status_set_elements - Set the number of elements in a status
 
-   Input Parameters:
+Input Parameters:
 + status - status to associate count with (Status) 
 . datatype - datatype associated with count (handle) 
 - count - number of elements to associate with status (integer) 

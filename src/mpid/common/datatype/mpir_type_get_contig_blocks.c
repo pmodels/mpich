@@ -12,10 +12,10 @@
 /*@
   MPIR_Type_get_contig_blocks
  
-  Input Parameters:
+Input Parameters:
 . type - MPI Datatype (must have been committed)
 
-  Output Parameters:
+Output Parameters:
 . nr_blocks_p - pointer to int in which to store the number of contiguous blocks in the type
 
 

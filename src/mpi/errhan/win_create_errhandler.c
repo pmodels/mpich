@@ -32,10 +32,10 @@
    MPI_Win_create_errhandler - Create an error handler for use with MPI window
    objects
 
-   Input Parameter:
+Input Parameters:
 . win_errhandler_fn - user defined error handling procedure (function)
 
-   Output Parameter:
+Output Parameters:
 . errhandler - MPI error handler (handle) 
 
 .N ThreadSafe

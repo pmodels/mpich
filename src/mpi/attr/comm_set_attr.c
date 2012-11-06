@@ -185,7 +185,7 @@ int MPIR_CommSetAttr( MPI_Comm comm, int comm_keyval, void *attribute_val,
 
 Input Parameters:
 + comm - communicator to which attribute will be attached (handle) 
-. keyval - key value, as returned by  'MPI_Comm_create_keyval' (integer) 
+. comm_keyval - key value, as returned by  'MPI_Comm_create_keyval' (integer)
 - attribute_val - attribute value 
 
 Notes:

@@ -31,7 +31,7 @@
 /*@
    MPI_Win_wait - Completes an RMA exposure epoch begun with MPI_Win_post
 
-   Input Parameter:
+Input Parameters:
 . win - window object (handle) 
 
 .N ThreadSafe

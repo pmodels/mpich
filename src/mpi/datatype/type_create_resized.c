@@ -32,12 +32,12 @@
    MPI_Type_create_resized - Create a datatype with a new lower bound and
      extent from an existing datatype
 
-   Input Parameters:
+Input Parameters:
 + oldtype - input datatype (handle)
 . lb - new lower bound of datatype (address integer)
 - extent - new extent of datatype (address integer)
 
-   Output Parameter:
+Output Parameters:
 . newtype - output datatype (handle)
 
 .N ThreadSafe

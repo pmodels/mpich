@@ -298,11 +298,11 @@ int PMIServAcceptFromPort( int fd, int rdwr, void *data )
 }
 /*
  * Setup a port and register the handler on which to listen.
- * Input Parameter:
+ * Input Parameters:
  *   mypUniv - Pointer to a process universe.  This is passed to the
  *             routine that is called to handle connection requests to the port
  *
- * Output Parameter:
+ * Output Parameters:
  *   portString - Name of the port (of maximum size portLen)
  *
  * Return Value:

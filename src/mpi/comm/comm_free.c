@@ -41,7 +41,7 @@ int MPIR_Comm_free_impl(MPID_Comm * comm_ptr)
 /*@
 MPI_Comm_free - Marks the communicator object for deallocation
 
-Input Parameter:
+Input Parameters:
 . comm - Communicator to be destroyed (handle) 
 
 Notes:

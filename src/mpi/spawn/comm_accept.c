@@ -43,13 +43,13 @@ int MPIR_Comm_accept_impl(const char * port_name, MPID_Info * info_ptr, int root
 /*@
    MPI_Comm_accept - Accept a request to form a new intercommunicator
 
- Input Parameters:
+Input Parameters:
 + port_name - port name (string, used only on root) 
 . info - implementation-dependent information (handle, used only on root) 
 . root - rank in comm of root node (integer) 
-- IN - comm intracommunicator over which call is collective (handle) 
+- comm - intracommunicator over which call is collective (handle)
 
- Output Parameter:
+Output Parameters:
 . newcomm - intercommunicator with client as remote group (handle) 
 
 .N ThreadSafe

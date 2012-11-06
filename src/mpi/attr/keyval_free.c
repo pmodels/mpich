@@ -33,7 +33,7 @@
 
 MPI_Keyval_free - Frees an attribute key for communicators
 
-Input Parameter:
+Input Parameters:
 . keyval - Frees the integer key value (integer) 
 
 Note:

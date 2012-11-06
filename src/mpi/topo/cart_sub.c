@@ -41,7 +41,7 @@ Input Parameters:
 dimension is kept in the subgrid (true) or is dropped (false) (logical 
 vector) 
 
-Output Parameter:
+Output Parameters:
 . newcomm - communicator containing the subgrid that includes the calling 
 process (handle) 
 

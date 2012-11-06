@@ -184,7 +184,7 @@ void MPL_trinit(int rank)
 /*+C
     MPL_trmalloc - Malloc with tracing
 
-    Input Parameters:
+Input Parameters:
 +   a   - number of bytes to allocate
 .   lineno - line number where used.  Use __LINE__ for this
 -   fname  - file name where used.  Use __FILE__ for this
@@ -276,7 +276,7 @@ void *MPL_trmalloc(unsigned int a, int lineno, const char fname[])
 /*+C
    MPL_trfree - Free with tracing
 
-   Input Parameters:
+Input Parameters:
 +  a    - pointer to a block allocated with trmalloc
 .  line - line in file where called
 -  file - Name of file where called
@@ -419,7 +419,7 @@ void MPL_trfree(void *a_ptr, int line, const char file[])
    MPL_trvalid - test the allocated blocks for validity.  This can be used to
    check for memory overwrites.
 
-   Input Parameter:
+Input Parameters:
 .  str - string to write out only if an error is detected.
 
    Return value:
@@ -525,7 +525,7 @@ void MPL_trspace(int *space, int *fr)
 /*+C
   MPL_trdump - Dump the allocated memory blocks to a file
 
-  Input Parameter:
+Input Parameters:
 +  fp  - file pointer.  If fp is NULL, stderr is assumed.
 -  minid - Only print allocated memory blocks whose id is at least 'minid'
 
@@ -594,7 +594,7 @@ static volatile FILE *TRFP = 0;
 /*+C
   MPL_trSummary - Summarize the allocate memory blocks by id
 
-  Input Parameter:
+Input Parameters:
 +  fp  - file pointer.  If fp is NULL, stderr is assumed.
 -  minid - Only print allocated memory blocks whose id is at least 'minid'
 
@@ -664,7 +664,7 @@ void MPL_trid(int id)
 /*+C
   MPL_trlevel - Set the level of output to be used by the tracing routines
 
-  Input Parameters:
+Input Parameters:
 . level = 0 - notracing
 . level = 1 - trace mallocs
 . level = 2 - trace frees
@@ -682,7 +682,7 @@ void MPL_trlevel(int level)
     MPL_trDebugLevel - set the level of debugging for the space management
     routines
 
-    Input Parameter:
+Input Parameters:
 .   level - level of debugging.  Currently, either 0 (no checking) or 1
     (use MPL_trvalid at each MPL_trmalloc or MPL_trfree).
 +*/
@@ -694,7 +694,7 @@ void MPL_trDebugLevel(int level)
 /*+C
     MPL_trcalloc - Calloc with tracing
 
-    Input Parameters:
+Input Parameters:
 .   nelem  - number of elements to allocate
 .   elsize - size of each element
 .   lineno - line number where used.  Use __LINE__ for this
@@ -718,7 +718,7 @@ void *MPL_trcalloc(unsigned int nelem, unsigned int elsize, int lineno, const ch
 /*+C
     MPL_trrealloc - Realloc with tracing
 
-    Input Parameters:
+Input Parameters:
 .   p      - pointer to old storage
 .   size   - number of bytes to allocate
 .   lineno - line number where used.  Use __LINE__ for this
@@ -785,7 +785,7 @@ void *MPL_trrealloc(void *p, int size, int lineno, const char fname[])
 /*+C
     MPL_trstrdup - Strdup with tracing
 
-    Input Parameters:
+Input Parameters:
 .   str    - string to duplicate
 .   lineno - line number where used.  Use __LINE__ for this
 .   fname  - file name where used.  Use __FILE__ for this

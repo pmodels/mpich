@@ -32,17 +32,17 @@
    MPI_Pack_external - Packs a datatype into contiguous memory, using the
      external32 format
 
-   Input Parameters:
+Input Parameters:
 + datarep - data representation (string)
 . inbuf - input buffer start (choice)
 . incount - number of input data items (integer)
 . datatype - datatype of each input data item (handle)
 - outsize - output buffer size, in bytes (address integer)
 
-   Output Parameter:
+Output Parameters:
 . outbuf - output buffer start (choice)
 
-   Input/Output Parameter:
+Input/Output Parameters:
 . position - current position in buffer, in bytes (address integer)
 
 .N ThreadSafe

@@ -31,7 +31,7 @@
 /*@
     MPI_Request_free - Frees a communication request object
 
-Input Parameter:
+Input Parameters:
 . request - communication request (handle) 
 
 Notes:

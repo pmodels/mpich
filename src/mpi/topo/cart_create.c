@@ -217,7 +217,7 @@ Input Parameters:
   periodic (true) or not (false) in each dimension 
 - reorder - ranking may be reordered (true) or not (false) (logical) 
 
-Output Parameter:
+Output Parameters:
 . comm_cart - communicator with new cartesian topology (handle) 
 
 Algorithm:

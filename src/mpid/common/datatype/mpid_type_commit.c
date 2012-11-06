@@ -11,10 +11,10 @@
 /*@
   MPID_Type_commit
  
-  Input Parameters:
+Input Parameters:
 . datatype_p - pointer to MPI datatype
 
-  Output Parameters:
+Output Parameters:
 
   Return Value:
   0 on success, -1 on failure.

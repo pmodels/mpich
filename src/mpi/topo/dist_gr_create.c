@@ -51,7 +51,7 @@ Input Parameters:
 . info - hints on optimization and interpretation of weights (handle)
 - reorder - the process may be reordered (true) or not (false) (logical)
 
-Output Parameter:
+Output Parameters:
 . comm_dist_graph - communicator with distributed graph topology added (handle)
 
 .N ThreadSafe

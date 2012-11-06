@@ -31,12 +31,12 @@
 /*@
    MPI_Type_match_size - Find an MPI datatype matching a specified size
 
-   Input Parameters:
+Input Parameters:
 + typeclass - generic type specifier (integer) 
 - size - size, in bytes, of representation (integer) 
 
-   Output Parameter:
-. type - datatype with correct type, size (handle) 
+Output Parameters:
+. datatype - datatype with correct type, size (handle)
 
 Notes:
 'typeclass' is one of 'MPI_TYPECLASS_REAL', 'MPI_TYPECLASS_INTEGER' and 

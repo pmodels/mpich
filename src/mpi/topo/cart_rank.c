@@ -68,7 +68,7 @@ Input Parameters:
     the Cartesian topology associated with 'comm') specifying the cartesian 
   coordinates of a process 
 
-Output Parameter:
+Output Parameters:
 . rank - rank of specified process (integer) 
 
 Notes:

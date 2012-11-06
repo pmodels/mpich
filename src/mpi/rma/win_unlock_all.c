@@ -32,7 +32,7 @@
    MPI_Win_unlock_all - Completes an RMA access epoch all processes on the
    given window
 
-   Input Parameters:
+Input Parameters:
 . win - window object (handle) 
 
 .N ThreadSafe

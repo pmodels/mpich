@@ -81,7 +81,7 @@ Input Parameters:
 . stride - number of elements between start of each block (integer)
 - oldtype - old datatype (handle)
 
-Output Parameter:
+Output Parameters:
 . newtype - new datatype (handle)
 
 .N ThreadSafe

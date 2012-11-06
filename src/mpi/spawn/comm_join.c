@@ -107,10 +107,10 @@ PMPI_LOCAL int MPIR_fd_recv(int fd, void *buffer, int length)
    MPI_Comm_join - Create a communicator by joining two processes connected by 
      a socket.
 
-   Input Parameter:
+Input Parameters:
 . fd - socket file descriptor 
 
-   Output Parameter:
+Output Parameters:
 . intercomm - new intercommunicator (handle) 
 
  Notes:

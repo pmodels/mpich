@@ -68,11 +68,11 @@ void MPIR_Op_set_fc( MPI_Op op )
 /*@
   MPI_Op_create - Creates a user-defined combination function handle
 
-  Input Parameters:
+Input Parameters:
 + user_fn - user defined function (function)
 - commute -  true if commutative;  false otherwise. (logical)
 
-  Output Parameter:
+Output Parameters:
 . op - operation (handle) 
 
   Notes on the user function:

@@ -399,12 +399,12 @@ static void token_hide(char *token)
 /*@ MPIU_Str_get_string_arg - Extract an option from a string with a 
   maximum length
   
-    Input Parameters:
+Input Parameters:
 +   str - Source string
 .   key - key
 -   maxlen - Maximum total length of 'val'
 
-    Output Parameter:
+Output Parameters:
 .   val - output string
 
     Return value:
@@ -452,12 +452,12 @@ int MPIU_Str_get_string_arg(const char *str, const char *flag, char *val,
 /*@ MPIU_Str_get_binary_arg - Extract an option from a string with a maximum 
   length
   
-    Input Parameters:
+Input Parameters:
 +   str - Source string
 .   key - key
 -   maxlen - Maximum total length of 'buffer'
 
-    Output Parameter:
+Output Parameters:
 +   buffer - output buffer
 -   out_length - output length
 
@@ -509,11 +509,11 @@ int MPIU_Str_get_binary_arg(const char *str, const char *flag, char *buffer,
 /*@ MPIU_Str_hide_string_arg - Over-write the value of an string option 
   with * characters
   
-    Input Parameters:
+Input Parameters:
 +   str - input string
 -   key - key
 
-    Output Parameter:
+Output Parameters:
 .   str - The string data is modified if the key is found in the string
 
     Return value:
@@ -557,11 +557,11 @@ MPIU_BOOL MPIU_Str_hide_string_arg(char *str, const char *flag)
 
 /*@ MPIU_Str_get_int_arg - Extract an option from a string
   
-    Input Parameters:
+Input Parameters:
 +   str - Source string
 -   key - key
 
-    Output Parameter:
+Output Parameters:
 .   val_ptr - pointer to the output integer
 
     Return value:
@@ -632,12 +632,12 @@ static int quoted_printf(char *str, int maxlen, const char *val)
 
 /*@ MPIU_Str_add_string - Add a string to a string
   
-    Input Parameters:
+Input Parameters:
 +   str_ptr - pointer to the destination string
 .   maxlen_ptr - pointer to the maximum length of '*str_ptr'
 -   val - string to add
 
-    Output Parameter:
+Output Parameters:
 +   str_ptr - The string pointer is updated to the next available location in 
     the string
 -   maxlen_ptr - maxlen is decremented by the amount str_ptr is incremented
@@ -712,11 +712,11 @@ int MPIU_Str_add_string(char **str_ptr, int *maxlen_ptr, const char *val)
 
 /*@ MPIU_Str_get_string - Get the next string from a string
   
-    Input Parameters:
+Input Parameters:
 +   str_ptr - pointer to the destination string
 -   maxlen_ptr - pointer to the maximum length of '*str_ptr'
 
-    Output Parameter:
+Output Parameters:
 +   str_ptr - location of the next string
 -   val - location to store the string
 
@@ -779,13 +779,13 @@ int MPIU_Str_get_string(char **str_ptr, char *val, int maxlen)
 
 /*@ MPIU_Str_add_string_arg - Add an option to a string with a maximum length
   
-    Input Parameters:
+Input Parameters:
 +   str_ptr - Pointer to the destination string
 .   maxlen_ptr - Pointer to the maximum total length of '*str_ptr'
 .   key - key
 -   val - input string
 
-    Output Parameter:
+Output Parameters:
 +   str_ptr - The string pointer is updated to the next available location in
     the string
 -   maxlen_ptr - maxlen is reduced by the number of characters written
@@ -884,13 +884,13 @@ int MPIU_Str_add_string_arg(char **str_ptr, int *maxlen_ptr, const char *flag,
 
 /*@ MPIU_Str_add_int_arg - Add an option to a string with a maximum length
   
-    Input Parameters:
+Input Parameters:
 +   str_ptr - Pointer to the destination string
 .   maxlen_ptr - Pointer to the maximum total length of '*str_ptr'
 .   key - key
 -   val - input integer
 
-    Output Parameter:
+Output Parameters:
 +   str_ptr - The string pointer is updated to the next available location in 
     the string
 -   maxlen_ptr - maxlen is reduced by the number of characters written
@@ -914,14 +914,14 @@ int MPIU_Str_add_int_arg(char **str_ptr, int *maxlen_ptr, const char *flag,
 
 /*@ MPIU_Str_add_binary_arg - Add an option to a string with a maximum length
   
-    Input Parameters:
+Input Parameters:
 +   str_ptr - Pointer to the destination string
 .   maxlen_ptr - Pointer to the maximum total length of '*str_ptr'
 .   key - key
 .   val - input data
 -   length - length of the input data
 
-    Output Parameter:
+Output Parameters:
 +   str_ptr - The string pointer is updated to the next available location in 
     the string
 -   maxlen_ptr - maxlen is reduced by the number of characters written

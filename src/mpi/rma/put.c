@@ -31,7 +31,7 @@
 /*@
    MPI_Put - Put data into a memory window on a remote process
 
-   Input Parameters:
+Input Parameters:
 + origin_addr -initial address of origin buffer (choice) 
 . origin_count -number of entries in origin buffer (nonnegative integer) 
 . origin_datatype -datatype of each entry in origin buffer (handle) 

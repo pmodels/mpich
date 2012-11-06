@@ -32,10 +32,10 @@
 
 MPI_Comm_size - Determines the size of the group associated with a communicator
 
-Input Parameter:
+Input Parameters:
 . comm - communicator (handle) 
 
-Output Parameter:
+Output Parameters:
 . size - number of processes in the group of 'comm'  (integer) 
 
 Notes:

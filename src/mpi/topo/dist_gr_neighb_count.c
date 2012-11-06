@@ -59,7 +59,7 @@ MPI_Dist_graph_neighbors_count - Provides adjacency information for a distribute
 Input Parameters:
 . comm - communicator with distributed graph topology (handle)
 
-Output Parameter:
+Output Parameters:
 + indegree - number of edges into this process (non-negative integer)
 . outdegree - number of edges out of this process (non-negative integer)
 - weighted - false if MPI_UNWEIGHTED was supplied during creation, true otherwise (logical)

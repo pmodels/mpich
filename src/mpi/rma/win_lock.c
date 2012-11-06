@@ -31,7 +31,7 @@
 /*@
    MPI_Win_lock - Begin an RMA access epoch at the target process.
 
-   Input Parameters:
+Input Parameters:
 + lock_type - Indicates whether other processes may access the target 
    window at the same time (if 'MPI_LOCK_SHARED') or not ('MPI_LOCK_EXCLUSIVE')
 . rank - rank of locked window (nonnegative integer) 

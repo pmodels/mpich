@@ -37,11 +37,11 @@ int MPIR_Open_port_impl(MPID_Info *info_ptr, char *port_name)
    MPI_Open_port - Establish an address that can be used to establish 
    connections between groups of MPI processes
 
- Input Parameter:
+Input Parameters:
 . info - implementation-specific information on how to establish a 
    port for 'MPI_Comm_accept' (handle) 
 
- Output Parameter:
+Output Parameters:
 . port_name - newly established port (string) 
 
 Notes:

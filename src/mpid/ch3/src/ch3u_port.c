@@ -1136,7 +1136,7 @@ fn_fail:
    new intercommunicator
 -  remote_pg - array of remote process groups
 
-   Input/Output Parameter:
+Input/Output Parameters:
 .  intercomm - New intercommunicator.  The intercommunicator must already
    have been allocated; this routine initializes many of the fields
 

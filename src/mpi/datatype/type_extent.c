@@ -35,7 +35,7 @@
 Input Parameters:
 . datatype - datatype (handle)
 
-Output Parameter:
+Output Parameters:
 . extent - datatype extent (address integer)
 
 .N SignalSafe

@@ -68,7 +68,7 @@ Input Parameters:
 . key - control of rank assigment (integer)
 - info - hints to improve communicator creation (handle)
 
-Output Parameter:
+Output Parameters:
 . newcomm - new communicator (handle)
 
 Notes:

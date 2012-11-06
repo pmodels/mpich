@@ -55,7 +55,7 @@ static int maxFD = -1;
 /*@ 
   MPIE_IORegister - Register a handler for an FD
 
-  Input Parameters:
+Input Parameters:
 
   Notes:
   Keeps track of the largest fd seen (in 'maxFD').
@@ -90,7 +90,7 @@ int MPIE_IORegister( int fd, int rdwr,
 /*@ 
   MPIE_IODeregister - Remove a handler for an FD
 
-  Input Parameters:
+Input Parameters:
 . fd - fd to deregister  
   @*/
 int MPIE_IODeregister( int fd )
@@ -127,7 +127,7 @@ int MPIE_IODeregister( int fd )
 /*@
   MPIE_IOLoop - Handle all registered I/O
 
-  Input Parameters:
+Input Parameters:
 .  timeoutSeconds - Seconds until this routine should return with a 
    timeout error.  If negative, no timeout.  If 0, return immediatedly
    after a nonblocking check for I/O.

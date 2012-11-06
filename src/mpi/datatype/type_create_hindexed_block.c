@@ -74,13 +74,13 @@ int MPIR_Type_create_hindexed_block_impl(int count, int blocklength,
    MPI_Type_create_hindexed_block - Create an hindexed
      datatype with constant-sized blocks
 
-   Input Parameters:
+Input Parameters:
 + count - length of array of displacements (integer)
 . blocklength - size of block (integer)
 . array_of_displacements - array of displacements (array of integer)
 - oldtype - old datatype (handle)
 
-    Output Parameter:
+Output Parameters:
 . newtype - new datatype (handle)
 
 .N ThreadSafe

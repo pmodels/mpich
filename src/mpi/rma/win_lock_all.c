@@ -32,7 +32,7 @@
    MPI_Win_lock_all - Begin an RMA access epoch at all processes on the 
    given window.
 
-   Input Parameters:
+Input Parameters:
 + assert - Used to optimize this call; zero may be used as a default.
   See notes. (integer) 
 - win - window object (handle) 

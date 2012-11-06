@@ -32,10 +32,10 @@
 /*@
   MPI_Test_cancelled - Tests to see if a request was cancelled
 
-Input Parameter:
+Input Parameters:
 . status - status object (Status) 
 
-Output Parameter:
+Output Parameters:
 . flag - true if the request was cancelled, false otherwise (logical) 
 
 .N ThreadSafe

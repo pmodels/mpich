@@ -86,13 +86,13 @@ int MPIR_Type_create_indexed_block_impl(int count,
    MPI_Type_create_indexed_block - Create an indexed
      datatype with constant-sized blocks
 
-   Input Parameters:
+Input Parameters:
 + count - length of array of displacements (integer) 
 . blocklength - size of block (integer) 
 . array_of_displacements - array of displacements (array of integer) 
 - oldtype - old datatype (handle) 
 
-    Output Parameter:
+Output Parameters:
 . newtype - new datatype (handle) 
 
 Notes:

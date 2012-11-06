@@ -156,11 +156,11 @@ int MPIR_TypeGetAttr( MPI_Datatype datatype, int type_keyval, void *attribute_va
 /*@
    MPI_Type_get_attr - Retrieves attribute value by key
 
-   Input Parameters:
+Input Parameters:
 + datatype - datatype to which the attribute is attached (handle)
 - type_keyval - key value (integer) 
 
-   Output Parameters:
+Output Parameters:
 + attribute_val - attribute value, unless flag = false 
 - flag - false if no attribute is associated with the key (logical) 
 

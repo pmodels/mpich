@@ -445,8 +445,8 @@ Input Parameters:
   precisely, ensure that the local and remote leaders are using different
   tags for each 'MPI_intercomm_create').
 
-Output Parameter:
-. comm_out - Created intercommunicator
+Output Parameters:
+. newintercomm - Created intercommunicator
 
 Notes:
    'peer_comm' is significant only for the process designated the 

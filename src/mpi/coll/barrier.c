@@ -351,7 +351,7 @@ int MPIR_Barrier_impl(MPID_Comm *comm_ptr, int *errflag)
 MPI_Barrier - Blocks until all processes in the communicator have
 reached this routine.  
 
-Input Parameter:
+Input Parameters:
 . comm - communicator (handle) 
 
 Notes:

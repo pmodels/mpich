@@ -31,7 +31,7 @@
 /*@
    MPI_Comm_spawn_multiple - short description
 
-   Input Parameters:
+Input Parameters:
 + count - number of commands (positive integer, significant to MPI only at 
   root 
 . array_of_commands - programs to be executed (array of strings, significant 
@@ -45,7 +45,7 @@
 . root - rank of process in which previous arguments are examined (integer) 
 - comm - intracommunicator containing group of spawning processes (handle) 
 
-  Output Parameters:
+Output Parameters:
 + intercomm - intercommunicator between original group and newly spawned group
   (handle) 
 - array_of_errcodes - one error code per process (array of integer) 

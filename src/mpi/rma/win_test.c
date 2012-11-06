@@ -31,10 +31,10 @@
 /*@
    MPI_Win_test - Test whether an RMA exposure epoch has completed
 
-   Input Parameter:
+Input Parameters:
 . win - window object (handle) 
 
-   Output Parameter:
+Output Parameters:
 . flag - success flag (logical) 
 
    Notes:

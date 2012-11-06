@@ -66,7 +66,7 @@ static void MPIE_InstallSigHandler( int sig, void (*handler)(int) );
 /*@
   MPIE_ForkProcesses - Create new processes for a comm_world
 
-  Input Parameters:
+Input Parameters:
 + pWorld - Pointer to a 'ProcessWorld' structure, containing one or more
            'ProcessApp' structures.  Each 'ProcessApp' specifies how many
 	   processes to create.
@@ -189,7 +189,7 @@ int MPIE_ForkProcesses( ProcessWorld *pWorld, char *envp[],
   return status of all processes in the process universe; returns the
   maximum value seen.
 
-  Output Parameter:
+Output Parameters:
 . signaled - 0 if the process was `not` signaled, otherwise the signal 
   that terminated the process.
 
@@ -666,10 +666,10 @@ int MPIE_WaitForProcesses( ProcessUniverse *mypUniv, int timeout )
   MPIE_InitWorldWithSoft - Initialize a process world from any 
   soft specifications
 
-  Input Parameter:
+Input Parameters:
 . maxnp - The maximum number of processes to allow.
 
-  Input/Output Parameter:
+Input/Output Parameters:
 . world - Process world.  On return, the 'ProcessState' fields for
   any soft specifications have been initialized 
   @*/

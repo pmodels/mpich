@@ -35,7 +35,7 @@
 /*@
    MPI_File_set_errhandler - Set the error handler for an MPI file
 
-   Input Parameters:
+Input Parameters:
 + file - MPI file (handle) 
 - errhandler - new error handler for file (handle) 
 

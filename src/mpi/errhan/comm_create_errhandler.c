@@ -58,10 +58,10 @@ int MPIR_Comm_create_errhandler_impl(MPI_Comm_errhandler_function *comm_errhandl
 /*@
    MPI_Comm_create_errhandler - Create a communicator error handler
 
-   Input Parameter:
+Input Parameters:
 . comm_errhandler_fn - user defined error handling procedure (function)
 
-   Output Parameter:
+Output Parameters:
 . errhandler - MPI error handler (handle) 
 
 .N ThreadSafe

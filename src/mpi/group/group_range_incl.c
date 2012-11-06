@@ -112,7 +112,7 @@ Input Parameters:
 form (first rank, last rank, stride) indicating ranks in
 'group'  or processes to be included in 'newgroup'.
 
-Output Parameter:
+Output Parameters:
 . newgroup - new group derived from above, in the 
 order defined by  'ranges' (handle)
 

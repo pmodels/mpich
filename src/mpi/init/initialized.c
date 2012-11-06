@@ -29,7 +29,7 @@
 /*@
    MPI_Initialized - Indicates whether 'MPI_Init' has been called.
 
-Output Argument:
+Output Parameters:
 . flag - Flag is true if 'MPI_Init' or 'MPI_Init_thread' has been called and 
          false otherwise.  
 

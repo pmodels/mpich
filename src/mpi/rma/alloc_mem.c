@@ -31,11 +31,11 @@
 /*@
    MPI_Alloc_mem - Allocate memory for message passing and RMA
 
-  Input Parameters:
+Input Parameters:
 + size - size of memory segment in bytes (nonnegative integer) 
 - info - info argument (handle) 
 
-  Output Parameter:
+Output Parameters:
 . baseptr - pointer to beginning of memory segment allocated 
 
    Notes:

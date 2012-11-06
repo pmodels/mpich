@@ -15,11 +15,11 @@
 
   MPID_Datatype_free
 
-  Input Parameters:
+Input Parameters:
 . MPID_Datatype ptr - pointer to MPID datatype structure that is no longer
   referenced
 
-  Output Parameters:
+Output Parameters:
   none
 
   Return Value:

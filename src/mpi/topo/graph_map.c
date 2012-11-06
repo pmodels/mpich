@@ -85,7 +85,7 @@ Input Parameters:
 . indx - integer array specifying the graph structure, see 'MPI_GRAPH_CREATE' 
 - edges - integer array specifying the graph structure 
 
-Output Parameter:
+Output Parameters:
 . newrank - reordered rank of the calling process; 'MPI_UNDEFINED' if the 
 calling process does not belong to graph (integer) 
 

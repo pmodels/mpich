@@ -31,7 +31,7 @@
 /*@
    MPI_Win_set_errhandler - Set window error handler
 
-   Input Parameters:
+Input Parameters:
 + win - window (handle) 
 - errhandler - new error handler for window (handle) 
 

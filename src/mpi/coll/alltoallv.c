@@ -415,7 +415,7 @@ which to place the incoming data from process  'i'
 . recvtype - data type of receive buffer elements (handle) 
 - comm - communicator (handle) 
 
-Output Parameter:
+Output Parameters:
 . recvbuf - address of receive buffer (choice) 
 
 .N ThreadSafe

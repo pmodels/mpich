@@ -31,14 +31,13 @@
 /*@
    MPI_Win_allocate - Create and allocate an MPI Window object for one-sided communication
 
-   Input Parameters:
-+ base - initial address of window (choice) 
+Input Parameters:
 . size - size of window in bytes (nonnegative integer) 
 . disp_unit - local unit size for displacements, in bytes (positive integer) 
 . info - info argument (handle) 
 - comm - communicator (handle) 
 
-  Output Parameter:
+Output Parameters:
 . baseptr - base address of the window in local memory
 . win - window object returned by the call (handle) 
 

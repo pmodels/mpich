@@ -39,7 +39,7 @@ int MPIR_async_thread_initialized = 0;
 /*@
    MPI_Init - Initialize the MPI execution environment
 
-   Input Parameters:
+Input Parameters:
 +  argc - Pointer to the number of arguments 
 -  argv - Pointer to the argument vector
 

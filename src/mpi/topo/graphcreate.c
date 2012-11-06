@@ -144,7 +144,7 @@ Input Parameters:
 . edges - array of integers describing graph edges (see below) 
 - reorder - ranking may be reordered (true) or not (false) (logical) 
 
-Output Parameter:
+Output Parameters:
 . comm_graph - communicator with graph topology added (handle) 
 
 Notes:

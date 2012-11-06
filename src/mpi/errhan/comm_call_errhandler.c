@@ -34,7 +34,7 @@
    MPI_Comm_call_errhandler - Call the error handler installed on a 
    communicator
 
- Input Parameters:
+Input Parameters:
 + comm - communicator with error handler (handle) 
 - errorcode - error code (integer) 
 

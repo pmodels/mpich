@@ -76,7 +76,7 @@ Input Parameters:
 + count - replication count (nonnegative integer) 
 - oldtype - old datatype (handle) 
 
-Output Parameter:
+Output Parameters:
 . newtype - new datatype (handle) 
 
 .N ThreadSafe

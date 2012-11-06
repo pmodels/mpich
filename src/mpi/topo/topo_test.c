@@ -34,11 +34,11 @@
 MPI_Topo_test - Determines the type of topology (if any) associated with a 
                 communicator
 
-Input Parameter:
+Input Parameters:
 . comm - communicator (handle) 
 
-Output Parameter:
-. top_type - topology type of communicator 'comm' (integer).  If the 
+Output Parameters:
+. status - topology type of communicator 'comm' (integer).  If the
   communicator has no associated topology, returns 'MPI_UNDEFINED'.
 
 .N SignalSafe

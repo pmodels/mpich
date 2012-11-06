@@ -1062,7 +1062,7 @@ Input Parameters:
 . root - rank of root process (integer) 
 - comm - communicator (handle) 
 
-Output Parameter:
+Output Parameters:
 . recvbuf - address of receive buffer (choice, 
  significant only at 'root') 
 

@@ -187,15 +187,15 @@ int MPIR_Intercomm_merge_impl(MPID_Comm *comm_ptr, int high, MPID_Comm **new_int
 MPI_Intercomm_merge - Creates an intracommuncator from an intercommunicator
 
 Input Parameters:
-+ comm - Intercommunicator (handle)
++ intercomm - Intercommunicator (handle)
 - high - Used to order the groups within comm (logical)
   when creating the new communicator.  This is a boolean value; the group
   that sets high true has its processes ordered `after` the group that sets 
   this value to false.  If all processes in the intercommunicator provide
   the same value, the choice of which group is ordered first is arbitrary.
 
-Output Parameter:
-. comm_out - Created intracommunicator (handle)
+Output Parameters:
+. newintracomm - Created intracommunicator (handle)
 
 Notes:
  While all processes may provide the same value for the 'high' parameter,

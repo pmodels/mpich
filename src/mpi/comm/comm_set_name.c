@@ -33,9 +33,9 @@
 /*@
    MPI_Comm_set_name - Sets the print name for a communicator
 
-   Input Parameters:
-+  MPI_Comm comm - communicator to name (handle)
--  char *comm_name - Name for communicator
+Input Parameters:
++  comm - communicator to name (handle)
+-  comm_name - Name for communicator
 
 .N ThreadSafeNoUpdate
 

@@ -223,11 +223,11 @@ int MPIR_WinGetAttr( MPI_Win win, int win_keyval, void *attribute_val,
 /*@
    MPI_Win_get_attr - Get attribute cached on an MPI window object
 
-   Input Parameters:
+Input Parameters:
 + win - window to which the attribute is attached (handle) 
 - win_keyval - key value (integer) 
 
-   Output Parameters:
+Output Parameters:
 + attribute_val - attribute value, unless flag is false 
 - flag - false if no attribute is associated with the key (logical) 
 

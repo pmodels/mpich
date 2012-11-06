@@ -38,7 +38,7 @@ int MPIR_Close_port_impl(const char *port_name)
 /*@
    MPI_Close_port - close port
 
-   Input Parameter:
+Input Parameters:
 .  port_name - a port name (string)
 
 .N NotThreadSafe

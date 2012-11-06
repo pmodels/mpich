@@ -50,7 +50,7 @@ void MPIR_Grequest_complete_impl(MPID_Request *request_ptr)
 /*@
    MPI_Grequest_complete - Notify MPI that a user-defined request is complete
 
-   Input Parameter:
+Input Parameters:
 .  request - Generalized request to mark as complete
 
 .N ThreadSafe

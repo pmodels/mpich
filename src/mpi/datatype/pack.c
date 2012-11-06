@@ -112,17 +112,17 @@ int MPIR_Pack_impl(const void *inbuf,
 /*@
     MPI_Pack - Packs a datatype into contiguous memory
 
-   Input Parameters:
+Input Parameters:
 +  inbuf - input buffer start (choice)
 .  incount - number of input data items (non-negative integer)
 .  datatype - datatype of each input data item (handle)
 .  outsize - output buffer size, in bytes (non-negative integer)
 -  comm - communicator for packed message (handle)
 
-  Output Parameter:
+Output Parameters:
 .  outbuf - output buffer start (choice)
 
-  Input/Output Parameter:
+Input/Output Parameters:
 .  position - current position in buffer, in bytes (integer)
 
   Notes (from the specifications):

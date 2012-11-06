@@ -42,10 +42,10 @@ typedef struct intModel {
    MPI_Type_create_f90_integer - Return a predefined type that matches 
    the specified range
 
-   Input Arguments:
+Input Parameters:
 .  range - Decimal range (number of digits) desired
 
-   Output Arguments:
+Output Parameters:
 .  newtype - A predefine MPI Datatype that matches the range.
 
    Notes:

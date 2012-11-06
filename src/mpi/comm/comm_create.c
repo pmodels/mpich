@@ -504,7 +504,7 @@ Input Parameters:
 + comm - communicator (handle) 
 - group - group, which is a subset of the group of 'comm'  (handle) 
 
-Output Parameter:
+Output Parameters:
 . newcomm - new communicator (handle)
 
 .N ThreadSafe

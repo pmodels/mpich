@@ -31,7 +31,7 @@
 /*@
    MPI_Rput - Put data into a memory window on a remote process
 
-   Input Parameters:
+Input Parameters:
 + origin_addr -initial address of origin buffer (choice) 
 . origin_count -number of entries in origin buffer (nonnegative integer) 
 . origin_datatype -datatype of each entry in origin buffer (handle) 
@@ -41,7 +41,7 @@
 . target_datatype -datatype of each entry in target buffer (handle) 
 - win - window object used for communication (handle) 
 
-   Output Parameter:
+Output Parameters:
 . request -RMA request (handle)
 
 .N ThreadSafe

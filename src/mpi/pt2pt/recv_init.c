@@ -39,7 +39,7 @@ Input Parameters:
 . tag - message tag or 'MPI_ANY_TAG' (integer) 
 - comm - communicator (handle) 
 
-Output Parameter:
+Output Parameters:
 . request - communication request (handle) 
 
 .N ThreadSafe

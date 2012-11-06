@@ -155,7 +155,7 @@ Input Parameters:
 + group1 - first group (handle) 
 - group2 - second group (handle) 
 
-Output Parameter:
+Output Parameters:
 . newgroup - union group (handle) 
 
 .N ThreadSafe

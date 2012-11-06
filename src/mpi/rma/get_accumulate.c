@@ -32,7 +32,7 @@
    MPI_Get_accumulate - Accumulate data into the target process using remote 
    memory access 
 
-   Input Parameters:
+Input Parameters:
 + origin_addr - initial address of buffer (choice) 
 . origin_count - number of entries in buffer (nonnegative integer) 
 . origin_datatype - datatype of each buffer entry (handle) 

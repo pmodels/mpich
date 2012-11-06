@@ -31,7 +31,7 @@
 /*@
    MPI_Rget - Get data from a memory window on a remote process
 
- Input Parameters:
+Input Parameters:
 + origin_addr - Address of the buffer in which to receive the data
 . origin_count - number of entries in origin buffer (nonnegative integer) 
 . origin_datatype - datatype of each entry in origin buffer (handle) 
@@ -42,7 +42,7 @@
 . target_datatype - datatype of each entry in target buffer (handle) 
 - win - window object used for communication (handle) 
 
- Output Parameter:
+Output Parameters:
 . request - RMA request (handle)
 
 .N ThreadSafe

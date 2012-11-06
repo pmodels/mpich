@@ -58,7 +58,7 @@ int MPIR_Type_commit_impl(MPI_Datatype *datatype)
 /*@
     MPI_Type_commit - Commits the datatype
 
-Input Parameter:
+Input Parameters:
 . datatype - datatype (handle) 
 
 .N ThreadSafe

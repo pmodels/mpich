@@ -26,7 +26,7 @@ MPID_Group *MPIDI_Failed_procs_group = NULL;
 /*@
   MPIDI_CH3U_Handle_connection - handle connection event
 
-  Input Parameters:
+Input Parameters:
 + vc - virtual connection
 . event - connection event
 
@@ -201,7 +201,7 @@ fn_fail:
 /*@
   MPIDI_CH3U_VC_SendClose - Initiate a close on a virtual connection
   
-  Input Parameters:
+Input Parameters:
 + vc - Virtual connection to close
 - i  - rank of virtual connection within a process group (used for debugging)
 

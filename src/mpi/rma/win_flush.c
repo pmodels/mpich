@@ -31,7 +31,7 @@
 /*@
    MPI_Win_flush - Comple all outstanding RMA operations at the given target
 
-   Input Parameters:
+Input Parameters:
 + rank - rank of window (nonnegative integer) 
 - win - window object (handle) 
 

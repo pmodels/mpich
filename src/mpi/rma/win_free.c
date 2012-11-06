@@ -31,7 +31,7 @@
 /*@
    MPI_Win_free - Free an MPI RMA window
 
-   Input Parameter:
+Input Parameters:
 . win - window object (handle) 
 
    Notes:

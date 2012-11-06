@@ -53,10 +53,10 @@ void MPIR_Type_get_true_extent_impl(MPI_Datatype datatype, MPI_Aint *true_lb, MP
    MPI_Type_get_true_extent - Get the true lower bound and extent for a
      datatype
 
-   Input Parameter:
+Input Parameters:
 . datatype - datatype to get information on (handle)
 
-   Output Parameters:
+Output Parameters:
 + true_lb - true lower bound of datatype (address integer)
 - true_extent - true size of datatype (address integer)
 

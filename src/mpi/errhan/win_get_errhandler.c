@@ -31,10 +31,10 @@
 /*@
    MPI_Win_get_errhandler - Get the error handler for the MPI RMA window
 
-   Input Parameter:
+Input Parameters:
 . win - window (handle) 
 
-   Output Parameter:
+Output Parameters:
 . errhandler - error handler currently associated with window (handle) 
 
 .N ThreadSafe

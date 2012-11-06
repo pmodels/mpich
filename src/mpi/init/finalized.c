@@ -29,7 +29,7 @@
 /*@
    MPI_Finalized - Indicates whether 'MPI_Finalize' has been called.
 
-Output Parameter:
+Output Parameters:
 . flag - Flag is true if 'MPI_Finalize' has been called and false otherwise. 
      (logical)
 

@@ -832,7 +832,7 @@ Input Parameters:
 . recvtype - data type of receive buffer elements (handle) 
 - comm - communicator (handle) 
 
-Output Parameter:
+Output Parameters:
 . recvbuf - address of receive buffer (choice) 
 
 Notes:

@@ -205,10 +205,10 @@ int MPIR_Datatype_init_names(void)
 /*@
    MPI_Type_get_name - Get the print name for a datatype
 
-   Input Parameter:
-. type - datatype whose name is to be returned (handle)
+Input Parameters:
+. datatype - datatype whose name is to be returned (handle)
 
-   Output Parameters:
+Output Parameters:
 + type_name - the name previously stored on the datatype, or a empty string
   if no such name exists (string)
 - resultlen - length of returned name (integer)

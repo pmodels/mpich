@@ -14,10 +14,10 @@
 /*@
   MPID_Type_zerolen - create an empty datatype
  
-  Input Parameters:
+Input Parameters:
 . none
 
-  Output Parameters:
+Output Parameters:
 . newtype - handle of new contiguous datatype
 
   Return Value:

@@ -31,7 +31,7 @@
 /*@
   MPI_Op_free - Frees a user-defined combination function handle
  
-  Input Parameter:
+Input Parameters:
 . op - operation (handle) 
 
   Notes:

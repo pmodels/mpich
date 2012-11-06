@@ -32,7 +32,7 @@
 /*@
    MPI_Add_error_class - Add an MPI error class to the known classes
 
-   Output Parameter:
+Output Parameters:
 .  errorclass - New error class
 
 .N ThreadSafe

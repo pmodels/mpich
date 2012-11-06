@@ -32,10 +32,10 @@
 /*@
    MPI_Error_class - Converts an error code into an error class
 
-Input Parameter:
+Input Parameters:
 . errorcode - Error code returned by an MPI routine 
 
-Output Parameter:
+Output Parameters:
 . errorclass - Error class associated with 'errorcode'
 
 .N SignalSafe

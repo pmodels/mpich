@@ -33,7 +33,7 @@
    MPI_Unpublish_name - Unpublish a service name published with 
    MPI_Publish_name
 
- Input Parameters:
+Input Parameters:
 + service_name - a service name (string) 
 . info - implementation-specific information (handle) 
 - port_name - a port name (string) 

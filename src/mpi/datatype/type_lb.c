@@ -50,7 +50,7 @@ void MPIR_Type_lb_impl(MPI_Datatype datatype, MPI_Aint *displacement)
 Input Parameters:
 . datatype - datatype (handle)
 
-Output Parameter:
+Output Parameters:
 . displacement - displacement of lower bound from origin,
                              in bytes (address integer)
 

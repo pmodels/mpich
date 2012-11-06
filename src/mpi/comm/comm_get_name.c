@@ -41,10 +41,10 @@ void MPIR_Comm_get_name_impl(MPID_Comm *comm_ptr, char *comm_name, int *resultle
 /*@
   MPI_Comm_get_name - Return the print name from the communicator
 
-  Input Parameter:
+Input Parameters:
 . comm - Communicator to get name of (handle)
 
-  Output Parameters:
+Output Parameters:
 + comm_name - On output, contains the name of the communicator.  It must
   be an array of size at least 'MPI_MAX_OBJECT_NAME'.
 - resultlen - Number of characters in name
