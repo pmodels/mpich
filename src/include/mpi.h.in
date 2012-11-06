@@ -1227,9 +1227,9 @@ int MPI_Win_set_errhandler(MPI_Win win, MPI_Errhandler errhandler);
 /* Fortran 90-related functions.  These routines are available only if
    Fortran 90 support is enabled 
 */
-int MPI_Type_create_f90_integer(int r, MPI_Datatype *newtype);
-int MPI_Type_create_f90_real(int p, int r, MPI_Datatype *newtype);
-int MPI_Type_create_f90_complex(int p, int r, MPI_Datatype *newtype);
+int MPI_Type_create_f90_integer(int range, MPI_Datatype *newtype);
+int MPI_Type_create_f90_real(int precision, int range, MPI_Datatype *newtype);
+int MPI_Type_create_f90_complex(int precision, int range, MPI_Datatype *newtype);
 
 int MPI_Reduce_local(const void *inbuf, void *inoutbuf, int count, MPI_Datatype datatype,
                      MPI_Op op)
