@@ -372,9 +372,9 @@ int MPIX_Grequest_class_allocate(MPIX_Grequest_class greq_class,
 #undef FUNCNAME
 #define FUNCNAME MPIX_Grequest_start
 
-int MPIX_Grequest_start( MPI_Grequest_query_function *query_fn, 
-			MPI_Grequest_free_function *free_fn, 
-			MPI_Grequest_cancel_function *cancel_fn, 
+int MPIX_Grequest_start( MPI_Grequest_query_function *query_fn,
+			MPI_Grequest_free_function *free_fn,
+			MPI_Grequest_cancel_function *cancel_fn,
 			MPIX_Grequest_poll_function *poll_fn,
 			MPIX_Grequest_wait_function *wait_fn,
 			void *extra_state, MPI_Request *request )
