@@ -476,6 +476,7 @@ if test "$enable_strict_done" != "yes" ; then
     pac_common_strict_flags="
         -Wall
         -Wextra
+        -Wshorten-64-to-32
         -Wno-missing-field-initializers
         -Wstrict-prototypes
         -Wmissing-prototypes
