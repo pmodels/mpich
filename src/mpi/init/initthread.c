@@ -14,6 +14,7 @@
  */
 
 #include "mpiimpl.h"
+#include "mpiinfo.h"
 #include "datatype.h"
 #include "mpi_init.h"
 #ifdef HAVE_CRTDBG_H
@@ -56,6 +57,8 @@ MPIU_DLL_SPEC MPI_Fint *MPI_F_STATUSES_IGNORE = 0;
 /* This will help force the load of initinfo.o, which contains data about
    how MPICH was configured. */
 extern const char MPIR_Version_device[];
+
+MPI_Info MPI_INFO_ENV = MPI_INFO_NULL;
 
 /* Make sure the Fortran symbols are initialized unless it will cause problems
    for C programs linked with the C compilers (i.e., not using the 
@@ -259,6 +262,7 @@ int MPIR_Init_thread(int * argc, char ***argv, int required, int * provided)
     int has_env;
     int thread_provided;
     int exit_init_cs_on_failure = 0;
+    MPID_Info *info_ptr;
 
     /* For any code in the device that wants to check for runtime 
        decisions on the value of isThreaded, set a provisional
@@ -414,6 +418,12 @@ int MPIR_Init_thread(int * argc, char ***argv, int required, int * provided)
      * earlier the basic data structures haven't been initialized */
     MPIU_THREAD_CS_ENTER(INIT,required);
     exit_init_cs_on_failure = 1;
+
+    mpi_errno = MPIU_Info_alloc(&info_ptr);
+    if (mpi_errno)
+        goto fn_fail;
+
+    MPI_INFO_ENV = info_ptr->handle;
 
     mpi_errno = MPID_Init(argc, argv, required, &thread_provided, 
 			  &has_args, &has_env);

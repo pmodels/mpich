@@ -479,6 +479,8 @@ typedef int MPI_Info;
 #define MPI_MAX_INFO_KEY       255
 #define MPI_MAX_INFO_VAL      1024
 
+extern MPI_Info MPI_INFO_ENV;
+
 /* for subarray and darray constructors */
 #define MPI_ORDER_C              56
 #define MPI_ORDER_FORTRAN        57
