@@ -62,7 +62,8 @@ $(top_srcdir)/src/mpi/errhan/defmsg.h: $(errnames_txt_files) src/mpi/errhan/base
 	  ./maint/extracterrmsgs -careful=unusederr.txt \
 				 -skip=src/util/multichannel/mpi.c \
 				 `cat maint/errmsgdirs` > .tmp 2>.err )
-	( cd $(top_srcdir) && test ! -s .err -a -s .tmp && mv .tmp src/mpi/errhan/defmsg.h )
+	( cd $(top_srcdir) && if test -s .err ; then cat .err ; exit 1 ; fi )
+	( cd $(top_srcdir) && test -s .tmp && mv .tmp src/mpi/errhan/defmsg.h )
 
 endif MAINTAINER_MODE
 
