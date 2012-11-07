@@ -80,10 +80,9 @@ int MPI_Status_set_elements(MPI_Status *status, MPI_Datatype datatype,
 #   endif /* HAVE_ERROR_CHECKING */
 
     /* ... body of routine ... */
-    
-    MPID_Datatype_get_size_macro(datatype, size);
-    /* FIXME: The device may want something else here */
-    status->count = count * size;
+
+    mpi_errno = MPIR_Status_set_elements_x_impl(status, datatype, (MPI_Count)count);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
     /* ... end of body of routine ... */
 

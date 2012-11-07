@@ -31,8 +31,17 @@
 int MPIR_Status_set_elements_x_impl(MPI_Status *status, MPI_Datatype datatype, MPI_Count count)
 {
     int mpi_errno = MPI_SUCCESS;
+    MPI_Count size_x;
 
-    /* TODO implement this function */
+    MPID_Datatype_get_size_macro(datatype, size_x);
+
+    /* overflow check, should probably be a real error check? */
+    if (count != 0) {
+        MPIU_Assert(size_x >= 0 && count > 0);
+        MPIU_Assert(size_x < MPIR_COUNT_MAX / count);
+    }
+
+    status->count = size_x * count;
 
 fn_exit:
     return mpi_errno;
