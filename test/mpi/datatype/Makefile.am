@@ -32,6 +32,7 @@ noinst_PROGRAMS =           \
     hindexed_block          \
     hindexed_block_contents \
     indexed-misc            \
+    large-count             \
     lbub                    \
     localpack               \
     longdouble              \
