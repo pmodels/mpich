@@ -30,3 +30,4 @@ comm_idup 9 mpiversion=3.0
 dup_with_info 2 mpiversion=3.0
 dup_with_info 4 mpiversion=3.0
 dup_with_info 9 mpiversion=3.0
+comm_info 6 mpiversion=3.0

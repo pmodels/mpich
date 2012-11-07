@@ -34,5 +34,5 @@ noinst_PROGRAMS =     \
     comm_group_half   \
     comm_group_rand   \
     probe-intercomm   \
-    comm_idup
-
+    comm_idup         \
+    comm_info
