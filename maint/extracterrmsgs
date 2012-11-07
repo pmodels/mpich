@@ -483,6 +483,11 @@ sub AddTestCall {
 		print TESTFD "    int i$narg = MPI_ERRORS_RETURN;\n";
 		$args[$#args+1] = "i$narg";
 	    }
+            elsif ($type eq "c")
+            {
+                print TESTFD "    MPI_Count i$narg = $narg;\n";
+                $args[$#args+1] = "i$narg";
+            }
 	    else
 	    {
 		print STDERR "Unrecognized format type $type for $fullformat in $filename\n";
@@ -771,7 +776,7 @@ sub ProcessFile
 		    if ($followchar ne "%") {
 			$nargs ++;
 		    }
-                    if (! ($followchar =~ /[%sdxitpDCRWOEIGFALX]/) ) {
+                    if (! ($followchar =~ /[%sdxitpcDCRWOEIGFALX]/) ) {
 			print STDERR "Warning: Unrecognized format specifier in specific message $specific_msg in $filename\n";
 		    }
 		}

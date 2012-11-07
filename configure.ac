@@ -5537,6 +5537,30 @@ export MPI_OFFSET_DATATYPE
 MPI_F77_OFFSET=`expr 1275068484 '+' '(' 256 '*' $MPI_SIZEOF_OFFSET ')'`
 AC_SUBST(MPI_F77_OFFSET)
 export MPI_F77_OFFSET
+
+# ----------------------------------------------------------------------------
+# MPI_COUNT datatype
+# ----------------------------------------------------------------------------
+# quick sanity checking to avoid a bad test immediately below
+AS_IF([test -z "$MPI_SIZEOF_AINT"],
+      [AC_MSG_ERROR([size of MPI_Aint is unknown at this stage])])
+AS_IF([test -z "$MPI_SIZEOF_OFFSET"],
+      [AC_MSG_ERROR([size of MPI_Offset is unknown at this stage])])
+
+AS_IF([test "$MPI_SIZEOF_AINT" -gt "$MPI_SIZEOF_OFFSET"],
+      [# an unlikely case, but I suppose it's theoretically possible
+       MPI_COUNT="$MPI_AINT"
+       COUNT_KIND="$ADDRESS_KIND"
+       MPIR_COUNT_MAX="$MPIR_AINT_MAX"],
+      [# don't bother checking whether Aint or Offset are larger than int, they
+       # surely will be
+       MPI_COUNT="$MPI_OFFSET"
+       COUNT_KIND="$OFFSET_KIND"
+       MPIR_COUNT_MAX="$MPIR_OFFSET_MAX"])
+AC_SUBST([MPI_COUNT])
+AC_SUBST([COUNT_KIND])
+AC_DEFINE_UNQUOTED([MPIR_COUNT_MAX],[$MPIR_COUNT_MAX],[limits.h _MAX constant for MPI_Count])
+
 # ----------------------------------------------------------------------------
 
 dnl Extra status information, from device subsystem, to be included in the

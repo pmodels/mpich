@@ -110,6 +110,8 @@ $outfile_prefix = "mpi";
 	     'MPI_Aint' => 'INTEGER(KIND=MPI_ADDRESS_KIND)',
 	     'MPI_Aint*' => 'INTEGER(KIND=MPI_ADDRESS_KIND)',
 	     'MPI_Aint[]' => 'INTEGER(KIND=MPI_ADDRESS_KIND) %name%(*)',
+             'MPI_Count' => 'INTEGER(KIND=MPI_COUNT_KIND)',
+             'MPI_Count*' => 'INTEGER(KIND=MPI_COUNT_KIND)',
 	     'MPI_Offset' => 'INTEGER(KIND=MPI_OFFSET_KIND)',
 	     'MPI_Offset*' => 'INTEGER(KIND=MPI_OFFSET_KIND)',
 	     'MPI_Info' => 'INTEGER',

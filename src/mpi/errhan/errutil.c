@@ -1205,6 +1205,7 @@ static int vsnprintf_mpi(char *str, size_t maxlen, const char *fmt_orig,
     char *s;
     int t, i, d, mpi_errno=MPI_SUCCESS;
     long long ll;
+    MPI_Count c;
     void *p;
 
     fmt = MPIU_Strdup(fmt_orig);
@@ -1410,6 +1411,11 @@ static int vsnprintf_mpi(char *str, size_t maxlen, const char *fmt_orig,
 		MPIU_Snprintf(str, maxlen, "errh=0x%x", E);
 	    }
 	    break;
+        case (int)'c':
+            c = va_arg(list, MPI_Count);
+            MPIU_Assert(sizeof(long long) >= sizeof(MPI_Count));
+            MPIU_Snprintf(str, maxlen, "%lld", (long long)c);
+            break;
 	default:
 	    /* Error: unhandled output type */
 	    return 0;
