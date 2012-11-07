@@ -91,7 +91,7 @@ int MPI_Comm_set_info(MPI_Comm comm, MPI_Info info)
 
     /* Convert MPI object handles to object pointers */
     MPID_Comm_get_ptr(comm, comm_ptr);
-    MPID_Comm_get_ptr(info, info_ptr);
+    MPID_Info_get_ptr(info, info_ptr);
 
     /* Validate parameters and objects (post conversion) */
 #ifdef HAVE_ERROR_CHECKING
