@@ -1826,6 +1826,19 @@ int MPIDI_Win_lock(int lock_type, int dest, int assert, MPID_Win *win_ptr)
         win_ptr->targets[dest].remote_lock_state = MPIDI_CH3_WIN_LOCK_GRANTED;
         win_ptr->targets[dest].remote_lock_mode = lock_type;
     }
+    else if (win_ptr->create_flavor == MPI_WIN_FLAVOR_SHARED) {
+        /* Lock must be taken immediately for shared memory windows because of
+         * load/store access */
+
+        /* FIXME: We may be able to make this just a read or write barrier */
+        OPA_read_write_barrier();
+
+        mpi_errno = MPIDI_CH3I_Send_lock_msg(dest, lock_type, win_ptr);
+        if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
+
+        mpi_errno = MPIDI_CH3I_Wait_for_lock_granted(win_ptr, dest);
+        if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
+    }
     else {
         /* TODO: Make this mode of operation available through an assert
            argument or info key. */
@@ -1876,6 +1889,12 @@ int MPIDI_Win_unlock(int dest, MPID_Win *win_ptr)
 
     if (dest == MPI_PROC_NULL) goto fn_exit;
         
+    /* Ensure that load/store operations are visible. */
+    if (win_ptr->create_flavor == MPI_WIN_FLAVOR_SHARED) {
+        /* FIXME: We may be able to make this just a read or write barrier */
+        OPA_read_write_barrier();
+    }
+
     if (dest == win_ptr->myrank) {
 	/* local lock. release the lock on the window, grant the next one
 	 * in the queue, and return. */
@@ -2153,6 +2172,16 @@ int MPIDI_Win_flush(int rank, MPID_Win *win_ptr)
     }
     else {
         win_ptr->targets[rank].remote_lock_state = MPIDI_CH3_WIN_LOCK_GRANTED;
+    }
+
+    /* FIXME: All flush and req-based operations are currently implemented in
+       terms of this operation.  When this changes, those operations will also
+       need to insert this read/write memory fence for shared memory windows. */
+
+    /* Ensure that load/store operations are visible. */
+    if (win_ptr->create_flavor == MPI_WIN_FLAVOR_SHARED) {
+        /* FIXME: We may be able to make this just a read or write barrier */
+        OPA_read_write_barrier();
     }
 
  fn_exit:
