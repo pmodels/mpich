@@ -29,17 +29,11 @@
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 void MPIR_Type_get_extent_impl(MPI_Datatype datatype, MPI_Aint *lb, MPI_Aint *extent)
 {
-    MPID_Datatype *datatype_ptr = NULL;
+    MPI_Count lb_x, extent_x;
 
-    MPID_Datatype_get_ptr(datatype, datatype_ptr);
-
-    if (HANDLE_GET_KIND(datatype) == HANDLE_KIND_BUILTIN) {
-	*lb     = 0;
-	*extent = MPID_Datatype_get_basic_size(datatype);
-    } else {
-	*lb     = datatype_ptr->lb;
-	*extent = datatype_ptr->extent; /* derived, should be same as ub - lb */
-    }
+    MPIR_Type_get_extent_x_impl(datatype, &lb_x, &extent_x);
+    *lb = (lb_x > MPIR_AINT_MAX) ? MPI_UNDEFINED : (MPI_Aint)lb_x;
+    *extent = (extent_x > MPIR_AINT_MAX) ? MPI_UNDEFINED : (MPI_Aint)extent_x;
 }
 
 #endif
