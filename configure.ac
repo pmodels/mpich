@@ -3748,61 +3748,6 @@ dnl     len_doublecplx=$hexlen
 	fi
     fi
 
-    #
-    # Set size of MPI_Status.  We may need sizeof_int here as well
-    #
-
-    #
-    # The size of MPI_Status is needed for the Fortran interface. 
-    # This is not quite right unless the device setup script, executed above,
-    # sets the EXTRA_STATUS_DECL that will be used in defining a status.
-    # The default size assumes that there are 5 ints
-    AC_CACHE_CHECK([for size of MPI_Status],pac_cv_sizeof_mpi_status,[
-        rm -f pac_mpi_status.h
-        cat > pac_mpi_status.h <<_EOF
-typedef struct {
-    int count;
-    int cancelled;
-    int MPI_SOURCE;
-    int MPI_TAG;
-    int MPI_ERROR;
-    $EXTRA_STATUS_DECL
-} MPI_Status;
-_EOF
-        dnl another alternative is to use AC_CHECK_SIZEOF as follows:
-        dnl AC_CHECK_SIZEOF([MPI_Status],[], [#include "pac_status.h"])
-        dnl But AC_CHECK_SIZEOF has its own AC_MSG_CHECKING, so can't use
-        dnl AC_CACHE_CHECK, so use AC_COMPUTE_INT here.
-        default_status_size=`expr 5 \* $ac_cv_sizeof_int`
-        AC_COMPUTE_INT([pac_cv_sizeof_mpi_status],
-                       [sizeof(MPI_Status)],
-                       [#include "pac_mpi_status.h"],
-                       [pac_cv_sizeof_mpi_status=$default_status_size])
-        rm -f pac_mpi_status.h
-    ])
-
-    SIZEOF_MPI_STATUS=$pac_cv_sizeof_mpi_status
-    export SIZEOF_MPI_STATUS
-    AC_SUBST(SIZEOF_MPI_STATUS)
-
-    if test -z "$MPI_STATUS_SIZE" ; then
-        if test -n "$SIZEOF_MPI_STATUS" ; then
-            # compute from the C sizeof
-            MPI_STATUS_SIZE=`expr $SIZEOF_MPI_STATUS / $ac_cv_sizeof_int`
-            if test "$MPI_STATUS_SIZE" = "0" ; then
-                AC_MSG_WARN([Could not compute the size of MPI_Status])
-                MPI_STATUS_SIZE=5
-            fi
-        else
-            AC_MSG_WARN([MPI_STATUS_SIZE was not defined!])
-            # The default size is 5.  See mpi.h.in
-            MPI_STATUS_SIZE=5
-        fi
-    fi
-    AC_SUBST(MPI_STATUS_SIZE)
-    MPIF_STATUS_SIZE=$MPI_STATUS_SIZE
-    AC_DEFINE_UNQUOTED(MPIF_STATUS_SIZE,$MPIF_STATUS_SIZE,[Size of an MPI_STATUS, in Fortran, in Fortran integers])
-
     # We must convert all hex values to decimal (!).
     # This is for the C types so they are also available in Fortran
     for var in CHAR SIGNED_CHAR UNSIGNED_CHAR WCHAR SHORT \
@@ -5560,6 +5505,76 @@ AS_IF([test "$MPI_SIZEOF_AINT" -gt "$MPI_SIZEOF_OFFSET"],
 AC_SUBST([MPI_COUNT])
 AC_SUBST([COUNT_KIND])
 AC_DEFINE_UNQUOTED([MPIR_COUNT_MAX],[$MPIR_COUNT_MAX],[limits.h _MAX constant for MPI_Count])
+
+# ----------------------------------------------------------------------------
+
+#
+# Set size of MPI_Status.  Must come after MPI_Count determination.
+#
+
+#
+# The size of MPI_Status is needed for the Fortran interface. 
+# This is not quite right unless the device prereq macro, expanded above,
+# sets the EXTRA_STATUS_DECL that will be used in defining a status.
+#
+# WARNING!!! this is a spot where we duplicate code from mpi.h.in and it *must*
+# be kept in sync in order to make a proper computation
+AC_CACHE_CHECK([for size of MPI_Status],[pac_cv_sizeof_mpi_status],[
+dnl "double-quote" (in m4), otherwise you end up with a heinous bug because of
+dnl the array subscripting below
+[
+    rm -f pac_mpi_status.h
+    cat > pac_mpi_status.h <<_EOF
+typedef struct {
+    int MPI_SOURCE;
+    int MPI_TAG;
+    int MPI_ERROR;
+    $MPI_COUNT count;
+    int cancelled;
+    int abi_slush_fund[2];
+    $EXTRA_STATUS_DECL
+} MPI_Status;
+_EOF
+]
+
+dnl just compute it, since a 1s-complement or sign-and-magnitude machine is
+dnl *highly* unlikely.  Users will report the error if it is ever dnl
+dnl encountered, which will be safer than attempting some never-tested
+dnl default fallback.
+    AC_COMPUTE_INT([pac_cv_sizeof_mpi_status],
+                   [sizeof(MPI_Status)],
+                   [#include "pac_mpi_status.h"],
+                   [AC_MSG_ERROR([unable to compute status size, are you compiling on a non-2s-complement host?])])
+    rm -f pac_mpi_status.h
+])
+
+SIZEOF_MPI_STATUS=$pac_cv_sizeof_mpi_status
+export SIZEOF_MPI_STATUS
+AC_SUBST([SIZEOF_MPI_STATUS])
+
+if test -z "$MPI_STATUS_SIZE" ; then
+    if test -n "$SIZEOF_MPI_STATUS" ; then
+        # compute from the C sizeof
+        # FIXME shouldn't these calculations be based on the size of a Fortran
+        # 'INTEGER' rather than a C 'int'?
+        AS_VAR_ARITH([MPI_STATUS_SIZE],[$SIZEOF_MPI_STATUS / $ac_cv_sizeof_int])
+        if test "$MPI_STATUS_SIZE" = "0" ; then
+            AC_MSG_ERROR([Could not compute the size of MPI_Status])
+        fi
+
+        # sanity: otherwise we have a problem in Fortran where we must implement
+        # MPI_STATUS as an array of INTEGERs with MPI_STATUS_SIZE elements
+        AS_VAR_ARITH([status_int_rem],[$SIZEOF_MPI_STATUS '%' $ac_cv_sizeof_int])
+        AS_IF([test "$status_int_rem" -gt 0],
+              [AC_MSG_ERROR([status size does not divide evenly by the integer size])])
+        AS_UNSET([status_int_rem])
+    else
+        AC_MSG_ERROR([MPI_STATUS_SIZE was not defined!])
+    fi
+fi
+AC_SUBST([MPI_STATUS_SIZE])
+MPIF_STATUS_SIZE=$MPI_STATUS_SIZE
+AC_DEFINE_UNQUOTED([MPIF_STATUS_SIZE],[$MPIF_STATUS_SIZE],[Size of an MPI_STATUS, in Fortran, in Fortran integers])
 
 # ----------------------------------------------------------------------------
 

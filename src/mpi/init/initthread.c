@@ -429,6 +429,9 @@ int MPIR_Init_thread(int * argc, char ***argv, int required, int * provided)
     /* Assert: tag_ub is at least the minimum asked for in the MPI spec */
     MPIU_Assert( MPIR_Process.attrs.tag_ub >= 32767 );
 
+    /* very nasty bugs will occur if this does not hold */
+    MPIU_Assert(sizeof(MPI_Status) == MPIF_STATUS_SIZE*sizeof(MPI_Fint));
+
     /* Capture the level of thread support provided */
     MPIR_ThreadInfo.thread_provided = thread_provided;
     if (provided) *provided = thread_provided;

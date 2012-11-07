@@ -642,11 +642,15 @@ $PRIVATEVAR = "";
 #
 #$BINDACCESS = ", BIND(C)";
 #$BINDDEF ="";
-print MPIFD "        TYPE$BINDACCESS :: MPI_Status
+print MPIFD <<EOT;
+        TYPE$BINDACCESS :: MPI_Status
            $BINDDEF
-           INTEGER$PRIVATEVAR :: count, cancelled
            INTEGER$PUBLICVAR :: MPI_SOURCE, MPI_TAG, MPI_ERROR
-        END TYPE MPI_Status\n";
+           INTEGER$PRIVATEVAR(KIND=MPI_COUNT_KIND) :: count
+           INTEGER$PRIVATEVAR :: cancelled
+           INTEGER$PRIVATEVAR(2) :: abi_slush_fund
+        END TYPE MPI_Status
+EOT
 
 %handles = ( 'comm' => 'Comm', 'datatype' => 'Datatype', 
 	     'group' => 'Group', 'win' => 'Win', 
