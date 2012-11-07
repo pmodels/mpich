@@ -4909,23 +4909,28 @@ for type in int long long_long short ; do
             int)
                 MPI_AINT_FMT_DEC_SPEC="%d"
                 MPI_AINT_FMT_HEX_SPEC="%x"
+                MPIR_AINT_MAX="INT_MAX"
                 ;;
             long)
                 MPI_AINT_FMT_DEC_SPEC="%ld"
                 MPI_AINT_FMT_HEX_SPEC="%lx"
+                MPIR_AINT_MAX="LONG_MAX"
                 ;;
             long_long)
                 MPI_AINT_FMT_DEC_SPEC="%lld"
                 MPI_AINT_FMT_HEX_SPEC="%llx"
+                MPIR_AINT_MAX="LLONG_MAX"
                 ;;
             short)
                 MPI_AINT_FMT_DEC_SPEC="%hd"
                 MPI_AINT_FMT_HEX_SPEC="%hx"
+                MPIR_AINT_MAX="SHRT_MAX"
                 ;;
             *)
                 AC_MSG_WARN([unable to determine format specifiers for MPI_Aint, defaulting to int])
                 MPI_AINT_FMT_DEC_SPEC="%d"
                 MPI_AINT_FMT_HEX_SPEC="%x"
+                MPIR_AINT_MAX="INT_MAX"
             ;;
         esac
         export MPI_AINT_FMT_DEC_SPEC MPI_AINT_FMT_HEX_SPEC
@@ -4935,6 +4940,7 @@ done
 AC_SUBST(MPI_AINT)
 AC_SUBST(MPI_AINT_FMT_DEC_SPEC)
 AC_SUBST(MPI_AINT_FMT_HEX_SPEC)
+AC_DEFINE_UNQUOTED([MPIR_AINT_MAX],[$MPIR_AINT_MAX],[limits.h _MAX constant for MPI_Aint])
 
 # If sizeof(mpi_aint) = sizeof(int), set this value
 if test "$ac_cv_sizeof_int" = "$aint_size" ; then
@@ -5461,7 +5467,15 @@ else
     export MPI_SIZEOF_OFFSET
 fi
 AC_SUBST(MPI_OFFSET)
-#
+
+AS_CASE([$MPI_OFFSET],
+        [int],         [MPIR_OFFSET_MAX="INT_MAX"],
+        [long],        [MPIR_OFFSET_MAX="LONG_MAX"],
+        ['long long'], [MPIR_OFFSET_MAX="LLONG_MAX"],
+        [short],       [MPIR_OFFSET_MAX="SHRT_MAX"],
+        [AC_MSG_ERROR([unable to determine MPIR_OFFSET_MAX for MPI_Offset])])
+AC_DEFINE_UNQUOTED([MPIR_OFFSET_MAX],[$MPIR_OFFSET_MAX],[limits.h _MAX constant for MPI_Offset])
+
 # FIXME: we need an explanation of why we need both MPI_OFFSET and 
 # MPI_OFFSET_TYPEDEF.   Why is MPI_OFFSET_TYPEDEF necessary?
 # This appears to be used by the Windows "winconfigure.wsf" which is used
