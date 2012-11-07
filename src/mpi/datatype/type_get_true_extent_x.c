@@ -30,9 +30,18 @@
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 void MPIR_Type_get_true_extent_x_impl(MPI_Datatype datatype, MPI_Count *true_lb, MPI_Count *true_extent)
 {
+    MPID_Datatype *datatype_ptr = NULL;
 
-    /* TODO implement this function */
+    MPID_Datatype_get_ptr(datatype, datatype_ptr);
 
+    if (HANDLE_GET_KIND(datatype) == HANDLE_KIND_BUILTIN) {
+        *true_lb     = 0;
+        *true_extent = MPID_Datatype_get_basic_size(datatype);
+    }
+    else {
+        *true_lb     = datatype_ptr->true_lb;
+        *true_extent = datatype_ptr->true_ub - datatype_ptr->true_lb;
+    }
 }
 
 #endif /* MPICH_MPI_FROM_PMPI */
