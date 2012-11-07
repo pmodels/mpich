@@ -19,5 +19,5 @@ noinst_PROGRAMS = \
     infoorder     \
     infomany      \
     infomany2     \
-    infotest
-
+    infotest      \
+    info_env
