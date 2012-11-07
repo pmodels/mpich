@@ -71,9 +71,12 @@ noinst_PROGRAMS =          \
     selfrma                \
     strided_acc_onelock    \
     strided_putget_indexed \
+    strided_putget_indexed_shared \
     strided_acc_indexed    \
     strided_acc_subarray   \
     strided_get_indexed    \
+    strided_getacc_indexed \
+    strided_getacc_indexed_shared \
     window_creation        \
     win_flavors            \
     win_shared             \
@@ -99,7 +102,6 @@ noinst_PROGRAMS =          \
     get_accumulate_long_derived    \
     get_accumulate_double_derived  \
     get_accumulate_int_derived     \
-    strided_getacc_indexed \
     flush                  \
     reqops                 \
     win_info
@@ -110,6 +112,8 @@ strided_acc_subarray_LDADD      = $(LDADD) -lm
 strided_get_indexed_LDADD       = $(LDADD) -lm
 strided_getacc_indexed_LDADD    = $(LDADD) -lm
 strided_putget_indexed_LDADD    = $(LDADD) -lm
+strided_getacc_indexed_shared_LDADD = $(LDADD) -lm
+strided_putget_indexed_shared_LDADD = $(LDADD) -lm
 
 fetch_and_op_char_CPPFLAGS       = -DFOP_TYPE_CHAR $(AM_CPPFLAGS)
 fetch_and_op_short_CPPFLAGS      = -DFOP_TYPE_SHORT $(AM_CPPFLAGS)

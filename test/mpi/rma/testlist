@@ -53,7 +53,10 @@ strided_acc_indexed 2
 strided_acc_onelock 2
 strided_acc_subarray 2
 strided_get_indexed 2
-strided_putget_indexed 2
+strided_putget_indexed 4
+strided_putget_indexed_shared 4 mpiversion=3.0
+strided_getacc_indexed 4 mpiversion=3.0
+strided_getacc_indexed_shared 4 mpiversion=3.0
 window_creation 2
 contention_put 4
 contention_putget 4
@@ -83,7 +86,6 @@ get_accumulate_long 4 mpiversion=3.0
 get_accumulate_long_derived 4 mpiversion=3.0
 get_accumulate_short 4 mpiversion=3.0
 get_accumulate_short_derived 4 mpiversion=3.0
-strided_getacc_indexed 4 mpiversion=3.0
 flush 4 mpiversion=3.0
 reqops 4 mpiversion=3.0
 win_info 4 mpiversion=3.0
