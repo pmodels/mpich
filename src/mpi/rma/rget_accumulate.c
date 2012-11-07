@@ -106,16 +106,21 @@ int MPI_Rget_accumulate(const void *origin_addr, int origin_count,
             MPID_Win_valid_ptr( win_ptr, mpi_errno );
             if (mpi_errno) goto fn_fail;
 
-            MPIR_ERRTEST_COUNT(origin_count, mpi_errno);
-            MPIR_ERRTEST_DATATYPE(origin_datatype, "origin_datatype", mpi_errno);
+            if (op != MPI_NO_OP) {
+                MPIR_ERRTEST_COUNT(origin_count, mpi_errno);
+                MPIR_ERRTEST_DATATYPE(origin_datatype, "origin_datatype", mpi_errno);
+                MPIR_ERRTEST_ARGNULL(origin_addr, "origin_addr", mpi_errno);
+            }
             MPIR_ERRTEST_COUNT(result_count, mpi_errno);
             MPIR_ERRTEST_DATATYPE(result_datatype, "result_datatype", mpi_errno);
+            MPIR_ERRTEST_ARGNULL(result_addr, "result_addr", mpi_errno);
             MPIR_ERRTEST_COUNT(target_count, mpi_errno);
             MPIR_ERRTEST_DATATYPE(target_datatype, "target_datatype", mpi_errno);
             if (win_ptr->create_flavor != MPI_WIN_FLAVOR_DYNAMIC)
                 MPIR_ERRTEST_DISP(target_disp, mpi_errno);
 
-            if (HANDLE_GET_KIND(origin_datatype) != HANDLE_KIND_BUILTIN)
+            if (op != MPI_NO_OP &&
+                HANDLE_GET_KIND(origin_datatype) != HANDLE_KIND_BUILTIN)
             {
                 MPID_Datatype *datatype_ptr = NULL;
                 
@@ -150,7 +155,7 @@ int MPI_Rget_accumulate(const void *origin_addr, int origin_count,
 
             comm_ptr = win_ptr->comm_ptr;
             MPIR_ERRTEST_SEND_RANK(comm_ptr, target_rank, mpi_errno);
-            MPIR_ERRTEST_OP(op, mpi_errno);
+            MPIR_ERRTEST_OP_GACC(op, mpi_errno);
         }
         MPID_END_ERROR_CHECKS;
     }
