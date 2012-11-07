@@ -4223,6 +4223,13 @@ int MPIR_T_category_get_categories_impl(int cat_index, int len, int indices[]);
 int MPIR_T_category_changed_impl(int *stamp);
 /* end impl functions for MPI_T (MPI_T_ right now) */
 
+/* MPI-3 "large count" impl routines */
+int MPIR_Get_elements_x_impl(const MPI_Status *status, MPI_Datatype datatype, MPI_Count *count);
+int MPIR_Status_set_elements_x_impl(MPI_Status *status, MPI_Datatype datatype, MPI_Count count);
+void MPIR_Type_get_extent_x_impl(MPI_Datatype datatype, MPI_Count *lb, MPI_Count *extent);
+void MPIR_Type_get_true_extent_x_impl(MPI_Datatype datatype, MPI_Count *true_lb, MPI_Count *true_extent);
+int MPIR_Type_size_x_impl(MPI_Datatype datatype, MPI_Count *size);
+
 int MPIR_T_is_initialized(void);
 
 /* random initializers */

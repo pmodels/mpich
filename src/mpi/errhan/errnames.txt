@@ -1531,6 +1531,18 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **mpi_neighbor_alltoallw: MPI_Neighbor_alltoallw failed
 **mpi_neighbor_alltoallw %p %p %p %p %p %p %p %p %C: MPI_Neighbor_alltoallw(sendbuf=%p, sendcounts=%p, sdispls=%p, sendtypes=%p, recvbuf=%p, recvcounts=%p, rdispls=%p, recvtypes=%p, comm=%C)
 
+## MPI-3 "large count" functions
+**mpi_type_size_x: MPI_Type_size_x failed
+**mpi_type_size_x %D %p: MPI_Type_size_x(datatype=%D, size=%p)
+**mpi_type_get_extent_x: MPI_Type_get_extent_x failed
+**mpi_type_get_extent_x %D %p %p: MPI_Type_get_extent_x(datatype=%D, lb=%p, extent=%p)
+**mpi_type_get_true_extent_x: MPI_Type_get_true_extent_x failed
+**mpi_type_get_true_extent_x %D %p %p: MPI_Type_get_true_extent_x(datatype=%D, lb=%p, extent=%p)
+**mpi_get_elements_x: MPI_Get_elements_x failed
+**mpi_get_elements_x %p %D %p: MPI_Get_elements_x(status=%p, datatype=%D, count=%p)
+**mpi_status_set_elements_x: MPI_Status_set_elements_x failed
+**mpi_status_set_elements_x %p %D %c: MPI_Status_set_elements_x(status=%p, datatype=%D, count=%c)
+
 # SCIF netmod functions
 
 **scif_open:scif_open failed

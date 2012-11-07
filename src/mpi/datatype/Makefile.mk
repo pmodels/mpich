@@ -13,13 +13,16 @@ mpi_sources +=                                   \
     src/mpi/datatype/get_address.c               \
     src/mpi/datatype/get_count.c                 \
     src/mpi/datatype/get_elements.c              \
+    src/mpi/datatype/get_elements_x.c            \
     src/mpi/datatype/pack.c                      \
     src/mpi/datatype/unpack.c                    \
     src/mpi/datatype/pack_size.c                 \
     src/mpi/datatype/status_set_elements.c       \
+    src/mpi/datatype/status_set_elements_x.c     \
     src/mpi/datatype/type_get_name.c             \
     src/mpi/datatype/type_set_name.c             \
     src/mpi/datatype/type_size.c                 \
+    src/mpi/datatype/type_size_x.c               \
     src/mpi/datatype/type_extent.c               \
     src/mpi/datatype/type_vector.c               \
     src/mpi/datatype/type_commit.c               \
@@ -35,7 +38,9 @@ mpi_sources +=                                   \
     src/mpi/datatype/type_ub.c                   \
     src/mpi/datatype/type_lb.c                   \
     src/mpi/datatype/type_get_extent.c           \
+    src/mpi/datatype/type_get_extent_x.c         \
     src/mpi/datatype/type_get_true_extent.c      \
+    src/mpi/datatype/type_get_true_extent_x.c    \
     src/mpi/datatype/type_match_size.c           \
     src/mpi/datatype/type_create_struct.c        \
     src/mpi/datatype/type_create_hindexed.c      \
