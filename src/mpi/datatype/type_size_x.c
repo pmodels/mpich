@@ -32,7 +32,7 @@ int MPIR_Type_size_x_impl(MPI_Datatype datatype, MPI_Count *size)
 {
     int mpi_errno = MPI_SUCCESS;
 
-    /* TODO implement this function */
+    MPID_Datatype_get_size_macro(datatype, *size);
 
 fn_exit:
     return mpi_errno;
@@ -47,7 +47,8 @@ fn_fail:
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 /*@
-MPI_Type_size_x - XXX description here
+MPI_Type_size_x - Return the number of bytes occupied by entries
+                  in the datatype
 
 Input Parameters:
 . datatype - datatype (handle)
