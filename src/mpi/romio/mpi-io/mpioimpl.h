@@ -14,6 +14,7 @@
 
 #include "adio.h"
 #include "mpio.h"
+#include "mpiu_external32.h"
 
 #ifdef ROMIO_INSIDE_MPICH
 #include "glue_romio.h"
