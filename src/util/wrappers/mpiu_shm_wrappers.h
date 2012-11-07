@@ -610,7 +610,7 @@ static inline int MPIU_SHMW_Seg_create_attach_templ(
             MPIU_OSW_Strerror(MPIU_OSW_Get_errno()));
 
         MPIU_SHMW_Lhnd_set(hnd, lhnd);
-        rc = lseek(lhnd, seg_sz - 1, SEEK_SET);
+        rc = (int)lseek(lhnd, seg_sz - 1, SEEK_SET);
         MPIU_ERR_CHKANDJUMP1((rc == -1), mpi_errno,
             MPI_ERR_OTHER, "**lseek", "**lseek %s",
             MPIU_OSW_Strerror(MPIU_OSW_Get_errno()));
