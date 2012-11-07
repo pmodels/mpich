@@ -4292,6 +4292,7 @@ int MPIR_Comm_connect_impl(const char * port_name, MPID_Info * info_ptr, int roo
 int MPIR_Comm_create_errhandler_impl(MPI_Comm_errhandler_function *function,
                                      MPI_Errhandler *errhandler);
 int MPIR_Comm_dup_impl(MPID_Comm *comm_ptr, MPID_Comm **newcomm_ptr);
+int MPIR_Comm_dup_with_info_impl(MPID_Comm *comm_ptr, MPID_Info *info_ptr, MPID_Comm **newcomm_ptr);
 int MPIR_Comm_free_impl(MPID_Comm * comm_ptr);
 void MPIR_Comm_free_keyval_impl(int keyval);
 void MPIR_Comm_get_errhandler_impl(MPID_Comm *comm_ptr, MPID_Errhandler **errhandler_ptr);

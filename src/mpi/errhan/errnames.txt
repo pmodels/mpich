@@ -1053,6 +1053,8 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **mpi_comm_compare %C %C %p:MPI_Comm_compare(%C, %C, result=%p) failed
 **mpi_comm_dup:MPI_Comm_dup failed
 **mpi_comm_dup %C %p:MPI_Comm_dup(%C, new_comm=%p) failed
+**mpi_comm_dup_with_info:MPI_Comm_dup_with_info failed
+**mpi_comm_dup_with_info %C %I %p:MPI_Comm_dup(%C, %I, new_comm=%p) failed
 **mpi_comm_create:MPI_Comm_create failed
 **mpi_comm_create %C %G %p:MPI_Comm_create(%C, %G, new_comm=%p) failed
 **mpi_comm_create_group:MPI_Comm_create_group failed
