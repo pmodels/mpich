@@ -8,13 +8,6 @@
 #include <stdio.h>
 #include "mpitest.h"
 
-/* MPI-3 is not yet standardized -- allow MPI-3 routines to be switched off.
- */
-
-#if !defined(USE_STRICT_MPI) && defined(MPICH2)
-#  define TEST_MPI3_ROUTINES 1
-#endif
-
 #define ITER 100
 
 int main( int argc, char *argv[] )
@@ -34,8 +27,6 @@ int main( int argc, char *argv[] )
     }
 
     /** Create using MPI_Win_create() **/
-
-#ifdef TEST_MPI3_ROUTINES
 
     if (rank == 0) {
       MPI_Alloc_mem(sizeof(int), MPI_INFO_NULL, &buf);
@@ -153,8 +144,6 @@ int main( int argc, char *argv[] )
 
     MPI_Win_free(&window);
     if (buf) MPI_Free_mem(buf);
-
-#endif /* TEST_MPI3_ROUTINES */
 
     MPI_Reduce(&errors, &all_errors, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
 
