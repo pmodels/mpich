@@ -8,8 +8,10 @@
 #include "topo.h"
 
 static int unweighted_dummy = 0x46618;
+static int weights_empty_dummy = 0x022284;
 /* cannot ==NULL, would be ambiguous */
 int * const MPI_UNWEIGHTED = &unweighted_dummy;
+int * const MPI_WEIGHTS_EMPTY = &weights_empty_dummy;
 
 /* Keyval for topology information */
 static int MPIR_Topology_keyval = MPI_KEYVAL_INVALID;  

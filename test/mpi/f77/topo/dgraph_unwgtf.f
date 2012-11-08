@@ -152,6 +152,18 @@ C     the nearest neighbors that within a ring.
       endif
       call MPI_Comm_free(dgraph_comm, ierr)
 
+C now create one with MPI_WEIGHTS_EMPTY
+      degs(1) = 0;
+      call MPI_Dist_graph_create(MPI_COMM_WORLD, 1, srcs, degs, dests,
+     &                           MPI_WEIGHTS_EMPTY, MPI_INFO_NULL,
+     &                          .true., dgraph_comm, ierr)
+      if (ierr .ne. MPI_SUCCESS) then
+          write(6,*) "MPI_Dist_graph_create() fails!"
+          call MPI_Abort(MPI_COMM_WORLD, 1, ierr)
+          stop
+      endif
+      call MPI_Comm_free(dgraph_comm, ierr)
+
       src_sz   = 2
       srcs(1)  = ring_rank(world_size, world_rank-1)
       srcs(2)  = ring_rank(world_size, world_rank+1)
@@ -173,6 +185,23 @@ C     the nearest neighbors that within a ring.
       if (.not. validate_dgraph(dgraph_comm)) then
           write(6,*) "MPI_Dist_graph_create_adjacent() does not create"
      &               //"a bidirectional ring graph!"
+          call MPI_Abort(MPI_COMM_WORLD, 1, ierr)
+          stop
+      endif
+      call MPI_Comm_free(dgraph_comm, ierr)
+
+C now create one with MPI_WEIGHTS_EMPTY
+      src_sz   = 0
+      dest_sz  = 0
+      call MPI_Dist_graph_create_adjacent(MPI_COMM_WORLD,
+     &                                    src_sz, srcs,
+     &                                    MPI_WEIGHTS_EMPTY,
+     &                                    dest_sz, dests,
+     &                                    MPI_WEIGHTS_EMPTY,
+     &                                    MPI_INFO_NULL, .true.,
+     &                                    dgraph_comm, ierr)
+      if (ierr .ne. MPI_SUCCESS) then
+          write(6,*) "MPI_Dist_graph_create_adjacent() fails!"
           call MPI_Abort(MPI_COMM_WORLD, 1, ierr)
           stop
       endif

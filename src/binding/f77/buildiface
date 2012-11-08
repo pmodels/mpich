@@ -1759,24 +1759,42 @@ sub unweighted_in_ftoc {
     my $count = $_[0];
     &specialInitStatement( $OUTFD );
     if ($within_fint) {
-	print $OUTFD "    if (v$count == MPIR_F_MPI_UNWEIGHTED) l$count = MPI_UNWEIGHTED;
+        print $OUTFD <<EOT;
+    if (v$count == MPIR_F_MPI_UNWEIGHTED) {
+        l$count = MPI_UNWEIGHTED;
+    }
+    else if (v$count == MPIR_F_MPI_WEIGHTS_EMPTY) {
+        l$count = MPI_WEIGHTS_EMPTY;
+    }
     else {
         int li;
         l$count = (int *)$malloc( $Array_size * sizeof(int) );
         for (li=0; li<$Array_size; li++) l$count\[li\] = v$count\[li\];
-    }\n";
+    }
+EOT
 	$clean_up .= "    if (l$count != MPI_UNWEIGHTED) {$free(l$count);}\n";
     }
     else {
-	print $OUTFD "    if (v$count == MPIR_F_MPI_UNWEIGHTED) v$count = MPI_UNWEIGHTED;\n";
+        print $OUTFD "    if      (v$count == MPIR_F_MPI_UNWEIGHTED) v$count = MPI_UNWEIGHTED;\n";
+        print $OUTFD "    else if (v$count == MPIR_F_MPI_WEIGHTS_EMPTY) v$count = MPI_WEIGHTS_EMPTY;\n";
     }
 }
 sub unweighted_out_ftoc {
     my $count = $_[0];
     &specialInitStatement( $OUTFD );
     if ($within_fint) {
-	print $OUTFD "    if (v$count == MPIR_F_MPI_UNWEIGHTED) { l$count = MPI_UNWEIGHTED; }\n    else { l$count = (int *)$malloc( $Array_size * sizeof(int) ); }\n";
-	$clean_up .= "    if (l$count != MPI_UNWEIGHTED) {$free(l$count);}\n";
+        print $OUTFD <<EOT;
+    if (v$count == MPIR_F_MPI_UNWEIGHTED) {
+        l$count = MPI_UNWEIGHTED;
+    }
+    else if (v$count == MPIR_F_MPI_WEIGHTS_EMPTY) {
+        l$count = MPI_WEIGHTS_EMPTY;
+    }
+    else {
+        l$count = (int *)$malloc( $Array_size * sizeof(int) );
+    }
+EOT
+        $clean_up .= "    if (l$count != MPI_UNWEIGHTED && l$count != MPI_WEIGHTS_EMPTY) {$free(l$count);}\n";
     }
 }
 sub unweighted_in_decl {
@@ -1810,6 +1828,7 @@ sub unweighted_out_ctof {
     my $outvar  = $_[1];
 
     if ($within_fint) {
+        # MPI_WEIGHTS_EMPTY should never be an output value from the MPI library
 	print $OUTFD "
     if ($coutvar != MPI_UNWEIGHTED && $errparmlval == MPI_SUCCESS) {
 	int li;
@@ -3811,6 +3830,7 @@ if ($write_mpif) {
     # 
     # Finally, the special symbols
     print MPIFFD "       INTEGER MPI_BOTTOM, MPI_IN_PLACE, MPI_UNWEIGHTED\n";
+    print MPIFFD "       INTEGER MPI_WEIGHTS_EMPTY\n";
 
     # And the external names.  This are necessary to 
     # ensure that these are passed as routines, not implicitly-defined 
@@ -3880,9 +3900,10 @@ if ($write_mpif) {
        COMMON /MPIFCMB6/ MPI_ERRCODES_IGNORE
        COMMON /MPIFCMB7/ MPI_ARGVS_NULL, PADS_A
        COMMON /MPIFCMB8/ MPI_ARGV_NULL, PADS_B
+       COMMON /MPIFCMB9/ MPI_WEIGHTS_EMPTY
        SAVE /MPIFCMB1/,/MPIFCMB2/
        SAVE /MPIFCMB3/,/MPIFCMB4/,/MPIFCMB5/,/MPIFCMB6/
-       SAVE /MPIFCMB7/,/MPIFCMB8/\n";
+       SAVE /MPIFCMB7/,/MPIFCMB8/,/MPIFCMB9/\n";
 
     close( MPIFFD );
     &ReplaceIfDifferent( "mpif.h.in", "mpif.h.in.new" );

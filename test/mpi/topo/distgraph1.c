@@ -425,6 +425,22 @@ int main(int argc, char *argv[])
         MPI_Comm_free(&comm);
     }
 
+    /* MPI_Dist_graph_create() with no graph -- passing MPI_WEIGHTS_EMPTY instead */
+    if (rank == 0) {
+        DPRINTF(("testing MPI_Dist_graph_create w/ no graph\n"));
+    }
+    for (reorder = 0; reorder <= 1; reorder++) {
+        MPI_Dist_graph_create(MPI_COMM_WORLD, 0, sources, degrees,
+                              destinations, MPI_WEIGHTS_EMPTY, MPI_INFO_NULL, reorder, &comm);
+        MPI_Dist_graph_neighbors_count(comm, &check_indegree, &check_outdegree, &check_weighted);
+        if (!check_weighted) {
+            fprintf(stderr, "expected weighted == TRUE for the \"no graph -- MPI_WEIGHTS_EMPTY\" case\n");
+            ++errs;
+        }
+        MPI_Comm_free(&comm);
+    }
+
+
     /* MPI_Dist_graph_create() with no graph -- passing NULLs instead */
     if (rank == 0) {
         DPRINTF(("testing MPI_Dist_graph_create w/ no graph -- NULLs\n"));
@@ -471,6 +487,21 @@ int main(int argc, char *argv[])
         MPI_Dist_graph_neighbors_count(comm, &check_indegree, &check_outdegree, &check_weighted);
         if (!check_weighted) {
             fprintf(stderr, "expected weighted == TRUE for the \"no graph\" case\n");
+            ++errs;
+        }
+        MPI_Comm_free(&comm);
+    }
+
+    /* MPI_Dist_graph_create_adjacent() with no graph -- passing MPI_WEIGHTS_EMPTY instead */
+    if (rank == 0) {
+        DPRINTF(("testing MPI_Dist_graph_create_adjacent w/ no graph -- MPI_WEIGHTS_EMPTY\n"));
+    }
+    for (reorder = 0; reorder <= 1; reorder++) {
+        MPI_Dist_graph_create_adjacent(MPI_COMM_WORLD, 0, sources, MPI_WEIGHTS_EMPTY,
+                              0, destinations, MPI_WEIGHTS_EMPTY, MPI_INFO_NULL, reorder, &comm);
+        MPI_Dist_graph_neighbors_count(comm, &check_indegree, &check_outdegree, &check_weighted);
+        if (!check_weighted) {
+            fprintf(stderr, "expected weighted == TRUE for the \"no graph -- MPI_WEIGHTS_EMPTY\" case\n");
             ++errs;
         }
         MPI_Comm_free(&comm);
