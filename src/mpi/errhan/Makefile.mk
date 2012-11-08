@@ -56,13 +56,13 @@ MAINTAINERCLEANFILES += $(top_srcdir)/src/mpi/errhan/defmsg.h
 # FIXME DUPLICATION
 # This code is lifted from autogen.sh.  This extra logic should just be
 # rolled up into the extracterrmsgs script itself.
-$(top_srcdir)/src/mpi/errhan/defmsg.h: $(errnames_txt_files) src/mpi/errhan/baseerrnames.txt
+$(top_srcdir)/src/mpi/errhan/defmsg.h: $(top_srcdir)/maint/errmsgdirs $(errnames_txt_files) src/mpi/errhan/baseerrnames.txt
 	( cd $(top_srcdir) && rm -f .err unusederr.txt ; rm -rf .tmp )
 	( cd $(top_srcdir) && \
 	  ./maint/extracterrmsgs -careful=unusederr.txt \
 				 -skip=src/util/multichannel/mpi.c \
 				 `cat maint/errmsgdirs` > .tmp 2>.err )
-	( cd $(top_srcdir) && if test -s .err ; then cat .err ; exit 1 ; fi )
+	( cd $(top_srcdir) && if test -s .err ; then rm -f .tmp ; cat .err ; exit 1 ; fi )
 	( cd $(top_srcdir) && test -s .tmp && mv .tmp src/mpi/errhan/defmsg.h )
 
 endif MAINTAINER_MODE
