@@ -2387,6 +2387,9 @@ int MPIDI_Win_lock_all(int assert, MPID_Win *win_ptr)
     if (win_ptr->create_flavor == MPI_WIN_FLAVOR_SHARED) {
         /* Immediately lock all targets for load/store access */
 
+        /* FIXME: We may be able to make this just a read or write barrier */
+        OPA_read_write_barrier();
+
         for (i = 0; i < MPIR_Comm_size(win_ptr->comm_ptr); i++) {
             /* Local process is already locked */
             if (i == win_ptr->myrank) continue;
@@ -2424,6 +2427,9 @@ int MPIDI_Win_unlock_all(MPID_Win *win_ptr)
 
     MPIU_ERR_CHKANDJUMP(win_ptr->epoch_state != MPIDI_EPOCH_LOCK_ALL,
                         mpi_errno, MPI_ERR_RMA_SYNC, "**rmasync");
+
+    /* Note: Win_unlock currently provides a fence for shared memory windows.
+     * If the implementation changes, a fence is needed here. */
 
     for (i = 0; i < MPIR_Comm_size(win_ptr->comm_ptr); i++) {
         mpi_errno = win_ptr->RMAFns.Win_unlock(i, win_ptr);
