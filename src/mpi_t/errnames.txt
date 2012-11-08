@@ -1,7 +1,6 @@
 **mpi_t_init_thread: MPI_T_init_thread failed
 **mpi_t_init_thread %d %p: MPI_T_init_thread(required=%d, provided=%p)
 **mpi_t_finalize: MPI_T_finalize failed
-**mpi_t_finalize NULL: MPI_T_finalize()
 **mpi_t_enum_get_info: MPI_T_enum_get_info failed
 **mpi_t_enum_get_info %p %p %p %p: MPI_T_enum_get_info(enumtype=%p, num=%p, name=%p, name_len=%p)
 **mpi_t_enum_get_item: MPI_T_enum_get_item failed
