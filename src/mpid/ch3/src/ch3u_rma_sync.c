@@ -253,20 +253,20 @@ int MPIDI_Win_fence(int assert, MPID_Win *win_ptr)
        in the window's group if any specify it */
     if (assert & MPI_MODE_NOPRECEDE)
     {
-	win_ptr->fence_cnt = (assert & MPI_MODE_NOSUCCEED) ? 0 : 1;
+	win_ptr->fence_issued = (assert & MPI_MODE_NOSUCCEED) ? 0 : 1;
 	goto fn_exit;
     }
     
-    if (win_ptr->fence_cnt == 0)
+    if (win_ptr->fence_issued == 0)
     {
-	/* win_ptr->fence_cnt == 0 means either this is the very first
+	/* win_ptr->fence_issued == 0 means either this is the very first
 	   call to fence or the preceding fence had the
 	   MPI_MODE_NOSUCCEED assert. 
 
            If this fence has MPI_MODE_NOSUCCEED, do nothing and return.
 	   Otherwise just increment the fence count and return. */
 
-	if (!(assert & MPI_MODE_NOSUCCEED)) win_ptr->fence_cnt = 1;
+	if (!(assert & MPI_MODE_NOSUCCEED)) win_ptr->fence_issued = 1;
     }
     else
     {
@@ -427,7 +427,7 @@ int MPIDI_Win_fence(int assert, MPID_Win *win_ptr)
 	
 	if (assert & MPI_MODE_NOSUCCEED)
 	{
-	    win_ptr->fence_cnt = 0;
+	    win_ptr->fence_issued = 0;
 	}
     }
 
@@ -1286,7 +1286,7 @@ int MPIDI_Win_post(MPID_Group *post_grp_ptr, int assert, MPID_Win *win_ptr)
     /* Even though we would want to reset the fence counter to keep
      * the user from using the previous fence to mark the beginning of
      * a fence epoch if he switched from fence to lock-unlock
-     * synchronization, we cannot do this because fence_cnt must be
+     * synchronization, we cannot do this because fence_issued must be
      * updated collectively */
 
     /* In case this process was previously the target of passive target rma
@@ -1436,7 +1436,7 @@ int MPIDI_Win_start(MPID_Group *group_ptr, int assert, MPID_Win *win_ptr)
     /* Even though we would want to reset the fence counter to keep
      * the user from using the previous fence to mark the beginning of
      * a fence epoch if he switched from fence to lock-unlock
-     * synchronization, we cannot do this because fence_cnt must be
+     * synchronization, we cannot do this because fence_issued must be
      * updated collectively */
 
     /* In case this process was previously the target of passive target rma
@@ -1857,7 +1857,7 @@ int MPIDI_Win_lock(int lock_type, int dest, int assert, MPID_Win *win_ptr)
     /* Even though we would want to reset the fence counter to keep
      * the user from using the previous fence to mark the beginning of
      * a fence epoch if he switched from fence to lock-unlock
-     * synchronization, we cannot do this because fence_cnt must be
+     * synchronization, we cannot do this because fence_issued must be
      * updated collectively */
 
     if (dest == MPI_PROC_NULL) goto fn_exit;

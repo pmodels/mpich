@@ -132,7 +132,7 @@ int MPIDI_Put(const void *origin_addr, int origin_count, MPI_Datatype
         
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_PUT);
 
-    if (win_ptr->epoch_state == MPIDI_EPOCH_NONE && win_ptr->fence_cnt) {
+    if (win_ptr->epoch_state == MPIDI_EPOCH_NONE && win_ptr->fence_issued) {
         win_ptr->epoch_state = MPIDI_EPOCH_FENCE;
     }
 
@@ -227,7 +227,7 @@ int MPIDI_Get(void *origin_addr, int origin_count, MPI_Datatype
         
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_GET);
 
-    if (win_ptr->epoch_state == MPIDI_EPOCH_NONE && win_ptr->fence_cnt) {
+    if (win_ptr->epoch_state == MPIDI_EPOCH_NONE && win_ptr->fence_issued) {
         win_ptr->epoch_state = MPIDI_EPOCH_FENCE;
     }
 
@@ -323,7 +323,7 @@ int MPIDI_Accumulate(const void *origin_addr, int origin_count, MPI_Datatype
     
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_ACCUMULATE);
 
-    if (win_ptr->epoch_state == MPIDI_EPOCH_NONE && win_ptr->fence_cnt) {
+    if (win_ptr->epoch_state == MPIDI_EPOCH_NONE && win_ptr->fence_issued) {
         win_ptr->epoch_state = MPIDI_EPOCH_FENCE;
     }
 

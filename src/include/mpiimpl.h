@@ -1651,8 +1651,8 @@ typedef struct MPID_RMA_Ops {
   S*/
 typedef struct MPID_Win {
     MPIU_OBJECT_HEADER; /* adds handle and ref_count fields */
-    int fence_cnt;     /* 0 = no fence has been called; 
-                          1 = fence has been called */ 
+    int fence_issued;   /* Indicates if fence has been called, and if an
+                           active target fence epoch is possible. */
     MPID_Errhandler *errhandler;  /* Pointer to the error handler structure */
     void *base;
     MPI_Aint    size;        

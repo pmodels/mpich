@@ -37,7 +37,7 @@ int MPIDI_Get_accumulate(const void *origin_addr, int origin_count,
         goto fn_exit;
     }
 
-    if (win_ptr->epoch_state == MPIDI_EPOCH_NONE && win_ptr->fence_cnt) {
+    if (win_ptr->epoch_state == MPIDI_EPOCH_NONE && win_ptr->fence_issued) {
         win_ptr->epoch_state = MPIDI_EPOCH_FENCE;
     }
 
@@ -243,7 +243,7 @@ int MPIDI_Compare_and_swap(const void *origin_addr, const void *compare_addr,
         goto fn_exit;
     }
 
-    if (win_ptr->epoch_state == MPIDI_EPOCH_NONE && win_ptr->fence_cnt) {
+    if (win_ptr->epoch_state == MPIDI_EPOCH_NONE && win_ptr->fence_issued) {
         win_ptr->epoch_state = MPIDI_EPOCH_FENCE;
     }
 
@@ -324,7 +324,7 @@ int MPIDI_Fetch_and_op(const void *origin_addr, void *result_addr,
         goto fn_exit;
     }
 
-    if (win_ptr->epoch_state == MPIDI_EPOCH_NONE && win_ptr->fence_cnt) {
+    if (win_ptr->epoch_state == MPIDI_EPOCH_NONE && win_ptr->fence_issued) {
         win_ptr->epoch_state = MPIDI_EPOCH_FENCE;
     }
 

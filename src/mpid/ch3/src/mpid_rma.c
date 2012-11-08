@@ -255,7 +255,7 @@ static int win_init(MPI_Aint size, int disp_unit, int create_flavor, int model,
 
     MPIU_Object_set_ref(*win_ptr, 1);
 
-    (*win_ptr)->fence_cnt           = 0;
+    (*win_ptr)->fence_issued        = 0;
     /* (*win_ptr)->errhandler is set by upper level; */
     /* (*win_ptr)->base is set by caller; */
     (*win_ptr)->size                = size;
