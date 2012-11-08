@@ -72,6 +72,9 @@ int main(int argc, char *argv[])
      * of the type, hence the more complicated calculation below */
     imx4i_true_extent = 3LL*4LL*sizeof(int)*((INT_MAX/2)-1) + 4LL*sizeof(int);
 
+    /* sanity check that the MPI_COUNT predefined named datatype exists */
+    MPI_Send(&imx4i_true_extent, 1, MPI_COUNT, MPI_PROC_NULL, 0, MPI_COMM_SELF);
+
     /* the same oversized type but with goofy extents */
     MPI_Type_create_resized(imx4i, /*lb=*/INT_MAX, /*extent=*/-1024, &imx4i_rsz);
     MPI_Type_commit(&imx4i_rsz);

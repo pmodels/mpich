@@ -5496,15 +5496,30 @@ AS_IF([test "$MPI_SIZEOF_AINT" -gt "$MPI_SIZEOF_OFFSET"],
       [# an unlikely case, but I suppose it's theoretically possible
        MPI_COUNT="$MPI_AINT"
        COUNT_KIND="$ADDRESS_KIND"
-       MPIR_COUNT_MAX="$MPIR_AINT_MAX"],
+       MPIR_COUNT_MAX="$MPIR_AINT_MAX"
+       MPI_SIZEOF_COUNT="$MPI_SIZEOF_AINT"],
       [# don't bother checking whether Aint or Offset are larger than int, they
        # surely will be
        MPI_COUNT="$MPI_OFFSET"
        COUNT_KIND="$OFFSET_KIND"
-       MPIR_COUNT_MAX="$MPIR_OFFSET_MAX"])
+       MPIR_COUNT_MAX="$MPIR_OFFSET_MAX"
+       MPI_SIZEOF_COUNT="$MPI_SIZEOF_OFFSET"])
 AC_SUBST([MPI_COUNT])
 AC_SUBST([COUNT_KIND])
 AC_DEFINE_UNQUOTED([MPIR_COUNT_MAX],[$MPIR_COUNT_MAX],[limits.h _MAX constant for MPI_Count])
+
+AS_CASE([$MPI_SIZEOF_COUNT],
+        [4], [len_mpi_count=04],
+        [8], [len_mpi_count=08],
+        [16],[len_mpi_count=10],
+        [AC_MSG_ERROR([Unable to convert MPI_SIZEOF_COUNT to a hex string!])])
+MPI_COUNT_DATATYPE=0x4c00${len_mpi_count}45
+AC_SUBST([MPI_COUNT_DATATYPE])
+
+# 0x4c000045 is 1275068485 in decimal, add ($MPI_SIZEOF_COUNT * 256) and you get
+# the decimal equivalent of the hex number
+MPI_F77_COUNT=`expr 1275068484 '+' '(' 256 '*' $MPI_SIZEOF_OFFSET ')'`
+AC_SUBST([MPI_F77_COUNT])
 
 # ----------------------------------------------------------------------------
 

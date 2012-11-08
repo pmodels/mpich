@@ -178,6 +178,8 @@ foreach $_ (@ARGV) {
 	   'MPI_Aint' => 'MPI_Fint *',   # Should be MPIR_FAint
 	   'MPI_FAintp' => 'MPI_Aint *', # Used to force an MPI_Aint*
 	   'MPI_Offset' => 'MPI_Offset *', # Should be MPIR_FOint
+	   'MPI_Count' => 'MPI_Count *', # Should be MPIR_FCint?
+	   'MPI_Count*' => 'MPI_Count *', # Should be MPIR_FCint?
 	   'int' => 'MPI_Fint *',
 	   'int[]' => 'MPI_Fint',        # no * because we'll use array form
 	   'int[][3]' => 'MPI_Fint',     # no * because we'll use array form
@@ -3736,6 +3738,11 @@ if ($write_mpif) {
     foreach $key (INT8_T, INT16_T, INT32_T, INT64_T, UINT8_T, UINT16_T, 
 		  UINT32_T, UINT64_T, C_BOOL, C_FLOAT_COMPLEX, C_COMPLEX,
 		  C_DOUBLE_COMPLEX, C_LONG_DOUBLE_COMPLEX, AINT, OFFSET) {
+	print MPIFFD "       INTEGER MPI_$key\n";
+	print MPIFFD "       PARAMETER (MPI_$key=\@MPI_F77_$key\@)\n";
+    }
+    # C types added in MPI 3.0
+    foreach $key (qw(COUNT)) {
 	print MPIFFD "       INTEGER MPI_$key\n";
 	print MPIFFD "       PARAMETER (MPI_$key=\@MPI_F77_$key\@)\n";
     }
