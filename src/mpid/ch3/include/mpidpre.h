@@ -251,7 +251,11 @@ struct MPIDI_Win_target_state {
                                           completed as target */         \
     MPI_Aint *sizes;      /* array of sizes of all windows */            \
     struct MPIDI_Win_info_args info_args;                                \
-    struct MPIDI_Win_target_state *targets;                              \
+    struct MPIDI_Win_target_state *targets; /* Target state and ops      \
+                                               lists for passive target  \
+                                               mode of operation */      \
+    struct MPIDI_RMA_Op *at_rma_ops_list; /* Ops list for active target  \
+                                             mode of operation. */       \
     enum MPIDI_Win_epoch_states epoch_state;                             \
     int epoch_count;                                                     \
     int fence_issued;   /* Indicates if fence has been called, and if an \

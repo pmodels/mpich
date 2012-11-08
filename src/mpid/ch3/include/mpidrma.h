@@ -278,26 +278,27 @@ static inline void MPIDI_CH3I_RMA_Ops_free(MPIDI_RMA_Ops_list_t *list)
 }
 
 
-/* Concatenate RMA ops to all targets into a single list.
+/* Retrieve the RMA ops list pointer from the window.  This routine detects
+ * whether we are in an active or passive target epoch and returns the correct
+ * ops list; we use a shared list for active target and separate per-target
+ * lists for passive target.
  */
 #undef FUNCNAME
-#define FUNCNAME MPIDI_CH3I_RMA_Ops_concat_all
+#define FUNCNAME MPIDI_CH3I_RMA_Get_ops_list
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-static inline MPIDI_RMA_Ops_list_t MPIDI_CH3I_RMA_Ops_concat_all(MPID_Win *win_ptr)
+static inline MPIDI_RMA_Ops_list_t *MPIDI_CH3I_RMA_Get_ops_list(MPID_Win *win_ptr,
+                                                                int target)
 {
-    int i;
-    MPIDI_RMA_Op_t *root = NULL;
-
-    for (i = 0; i < MPIR_Comm_size(win_ptr->comm_ptr); i++) {
-        /* Attach this list to the end of the aggregate list */
-        MPL_DL_CONCAT(root, win_ptr->targets[i].rma_ops_list);
-        win_ptr->targets[i].rma_ops_list = NULL;
+    if (win_ptr->epoch_state == MPIDI_EPOCH_FENCE ||
+        win_ptr->epoch_state == MPIDI_EPOCH_GAT)
+    {
+        return &win_ptr->at_rma_ops_list;
     }
-
-    return root;
+    else {
+        return &win_ptr->targets[target].rma_ops_list;
+    }
 }
-
 
 #undef FUNCNAME
 #undef FCNAME

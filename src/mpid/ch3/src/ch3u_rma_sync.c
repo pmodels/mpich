@@ -208,7 +208,7 @@ int MPIDI_Win_fence(int assert, MPID_Win *win_ptr)
     int comm_size;
     int *rma_target_proc, *nops_to_proc, i, total_op_count, *curr_ops_cnt;
     MPIDI_RMA_Op_t *curr_ptr;
-    MPIDI_RMA_Ops_list_t ops_list;
+    MPIDI_RMA_Ops_list_t *ops_list;
     MPID_Comm *comm_ptr;
     MPI_Win source_win_handle, target_win_handle;
     MPID_Progress_state progress_state;
@@ -291,17 +291,14 @@ int MPIDI_Win_fence(int assert, MPID_Win *win_ptr)
 			    mpi_errno, "nops_to_proc");
 	for (i=0; i<comm_size; i++) nops_to_proc[i] = 0;
 
-        /* FIXME: This is a temporary hack to keep active target working with
-         * the new ops list structure.  This should be replaced with iteration
-         * over the targets/ops lists inside of the ops processing code.
-         * Ideally, we should issue ops breadth-first across targets. */
-
-        ops_list = MPIDI_CH3I_RMA_Ops_concat_all(win_ptr);
+        /* Note, active target uses the following ops list, and passive
+           target uses win_ptr->targets[..] */
+        ops_list = &win_ptr->at_rma_ops_list;
 
 	/* set rma_target_proc[i] to 1 if rank i is a target of RMA
 	   ops from this process */
 	total_op_count = 0;
-        curr_ptr = MPIDI_CH3I_RMA_Ops_head(&ops_list);
+        curr_ptr = MPIDI_CH3I_RMA_Ops_head(ops_list);
 	while (curr_ptr != NULL)
 	{
 	    total_op_count++;
@@ -339,7 +336,7 @@ int MPIDI_Win_fence(int assert, MPID_Win *win_ptr)
 	MPIU_INSTR_DURATION_MAX(winfence_issue,1,total_op_count);
 	MPIU_INSTR_COUNTER_RESET(winfence_reqs);
 	i = 0;
-        curr_ptr = MPIDI_CH3I_RMA_Ops_head(&ops_list);
+        curr_ptr = MPIDI_CH3I_RMA_Ops_head(ops_list);
 	while (curr_ptr != NULL)
 	{
 	    /* The completion counter at the target is decremented only on 
@@ -362,7 +359,7 @@ int MPIDI_Win_fence(int assert, MPID_Win *win_ptr)
 	    curr_ops_cnt[curr_ptr->target_rank]++;
 	    /* If the request is null, we can remove it immediately */
 	    if (!curr_ptr->request) {
-                MPIDI_CH3I_RMA_Ops_free_and_next(&ops_list, &curr_ptr);
+                MPIDI_CH3I_RMA_Ops_free_and_next(ops_list, &curr_ptr);
 	    }
 	    else  {
 		nRequest++;
@@ -376,7 +373,7 @@ int MPIDI_Win_fence(int assert, MPID_Win *win_ptr)
 		if (nRequest > MPIR_PARAM_RMA_NREQUEST_THRESHOLD && 
 		    nRequest - nRequestNew > MPIR_PARAM_RMA_NREQUEST_NEW_THRESHOLD) {
 		    int nDone = 0;
-                    MPIDI_CH3I_RMAListPartialComplete(win_ptr, &ops_list, curr_ptr, &nDone);
+                    MPIDI_CH3I_RMAListPartialComplete(win_ptr, ops_list, curr_ptr, &nDone);
 		    /* if (nDone > 0) printf( "nDone = %d\n", nDone ); */
 		    nRequest -= nDone;
 		    nRequestNew = nRequest;
@@ -400,10 +397,10 @@ int MPIDI_Win_fence(int assert, MPID_Win *win_ptr)
 	{ 
 	    MPIU_INSTR_STMT(list_complete=MPIU_INSTR_GET_VAR(winfence_complete));
 	    MPIU_INSTR_STMT(list_block=MPIU_INSTR_GET_VAR(winfence_block));
-            mpi_errno = MPIDI_CH3I_RMAListComplete(win_ptr, &ops_list);
+            mpi_errno = MPIDI_CH3I_RMAListComplete(win_ptr, ops_list);
 	}
 
-        MPIU_Assert(MPIDI_CH3I_RMA_Ops_isempty(&ops_list));
+        MPIU_Assert(MPIDI_CH3I_RMA_Ops_isempty(ops_list));
 	
 	/* wait for all operations from other processes to finish */
 	if (win_ptr->my_counter)
@@ -1489,7 +1486,7 @@ int MPIDI_Win_complete(MPID_Win *win_ptr)
     int comm_size, *nops_to_proc, src, new_total_op_count;
     int i, j, dst, total_op_count, *curr_ops_cnt;
     MPIDI_RMA_Op_t *curr_ptr;
-    MPIDI_RMA_Ops_list_t ops_list;
+    MPIDI_RMA_Ops_list_t *ops_list;
     MPID_Comm *comm_ptr;
     MPI_Win source_win_handle, target_win_handle;
     MPID_Group *win_grp_ptr;
@@ -1591,19 +1588,16 @@ int MPIDI_Win_complete(MPID_Win *win_ptr)
 
     MPIU_INSTR_DURATION_START(wincomplete_issue);
 
-    /* FIXME: This is a temporary hack to keep active target working with
-     * the new ops list structure.  This should be replaced with iteration
-     * over the targets/ops lists inside of the ops processing code.
-     * Ideally, we should issue ops breadth-first across targets. */
-
-    ops_list = MPIDI_CH3I_RMA_Ops_concat_all(win_ptr);
+    /* Note, active target uses the following ops list, and passive
+       target uses win_ptr->targets[..] */
+    ops_list = &win_ptr->at_rma_ops_list;
 
     MPIU_CHKLMEM_MALLOC(nops_to_proc, int *, comm_size*sizeof(int), 
 			mpi_errno, "nops_to_proc");
     for (i=0; i<comm_size; i++) nops_to_proc[i] = 0;
 
     total_op_count = 0;
-    curr_ptr = MPIDI_CH3I_RMA_Ops_head(&ops_list);
+    curr_ptr = MPIDI_CH3I_RMA_Ops_head(ops_list);
     while (curr_ptr != NULL)
     {
 	nops_to_proc[curr_ptr->target_rank]++;
@@ -1623,7 +1617,7 @@ int MPIDI_Win_complete(MPID_Win *win_ptr)
     for (i=0; i<comm_size; i++) curr_ops_cnt[i] = 0;
         
     i = 0;
-    curr_ptr = MPIDI_CH3I_RMA_Ops_head(&ops_list);
+    curr_ptr = MPIDI_CH3I_RMA_Ops_head(ops_list);
     while (curr_ptr != NULL)
     {
 	/* The completion counter at the target is decremented only on 
@@ -1646,7 +1640,7 @@ int MPIDI_Win_complete(MPID_Win *win_ptr)
 	curr_ops_cnt[curr_ptr->target_rank]++;
 	/* If the request is null, we can remove it immediately */
 	if (!curr_ptr->request) {
-            MPIDI_CH3I_RMA_Ops_free_and_next(&ops_list, &curr_ptr);
+            MPIDI_CH3I_RMA_Ops_free_and_next(ops_list, &curr_ptr);
 	}
 	else  {
 	    nRequest++;
@@ -1655,7 +1649,7 @@ int MPIDI_Win_complete(MPID_Win *win_ptr)
 	    if (nRequest > MPIR_PARAM_RMA_NREQUEST_THRESHOLD && 
 		nRequest - nRequestNew > MPIR_PARAM_RMA_NREQUEST_NEW_THRESHOLD) {
 		int nDone = 0;
-                MPIDI_CH3I_RMAListPartialComplete(win_ptr, &ops_list, curr_ptr, &nDone);
+                MPIDI_CH3I_RMAListPartialComplete(win_ptr, ops_list, curr_ptr, &nDone);
 		nRequest -= nDone;
 		nRequestNew = nRequest;
 	    }
@@ -1705,7 +1699,7 @@ int MPIDI_Win_complete(MPID_Win *win_ptr)
                 MPIDI_RMA_Op_t *new_ptr = NULL;
 
                 MPIU_INSTR_DURATION_START(rmaqueue_alloc);
-                mpi_errno = MPIDI_CH3I_RMA_Ops_alloc_tail(&ops_list, &new_ptr);
+                mpi_errno = MPIDI_CH3I_RMA_Ops_alloc_tail(ops_list, &new_ptr);
                 MPIU_INSTR_DURATION_END(rmaqueue_alloc);
                 if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
 
@@ -1722,10 +1716,10 @@ int MPIDI_Win_complete(MPID_Win *win_ptr)
     {
 	MPIU_INSTR_STMT(list_complete=MPIU_INSTR_GET_VAR(wincomplete_complete));
 	MPIU_INSTR_STMT(list_block=MPIU_INSTR_GET_VAR(wincomplete_block));
-        mpi_errno = MPIDI_CH3I_RMAListComplete(win_ptr, &ops_list);
+        mpi_errno = MPIDI_CH3I_RMAListComplete(win_ptr, ops_list);
     }
 
-    MPIU_Assert(MPIDI_CH3I_RMA_Ops_isempty(&ops_list));
+    MPIU_Assert(MPIDI_CH3I_RMA_Ops_isempty(ops_list));
     
     mpi_errno = MPIR_Group_free_impl(win_grp_ptr);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
