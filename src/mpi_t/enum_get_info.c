@@ -28,7 +28,7 @@
 #define FUNCNAME MPIR_T_enum_get_info_impl
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPIR_T_enum_get_info_impl(MPI_T_enum enumtype, int num, char *name, int *name_len)
+int MPIR_T_enum_get_info_impl(MPI_T_enum enumtype, int *num, char *name, int *name_len)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -65,7 +65,7 @@ Output Parameters:
 
 .N Errors
 @*/
-int MPI_T_enum_get_info(MPI_T_enum enumtype, int num, char *name, int *name_len)
+int MPI_T_enum_get_info(MPI_T_enum enumtype, int *num, char *name, int *name_len)
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_T_ENUM_GET_INFO);
@@ -93,8 +93,9 @@ int MPI_T_enum_get_info(MPI_T_enum enumtype, int num, char *name, int *name_len)
     {
         MPID_BEGIN_ERROR_CHECKS
         {
-            MPIR_ERRTEST_ARGNULL(name_len, "name_len", mpi_errno);
+            MPIR_ERRTEST_ARGNULL(num, "num", mpi_errno);
             /* TODO more checks may be appropriate (counts, in_place, buffer aliasing, etc) */
+            if (mpi_errno != MPI_SUCCESS) goto fn_fail;
         }
         MPID_END_ERROR_CHECKS
     }
@@ -118,7 +119,7 @@ fn_fail:
     {
         mpi_errno = MPIR_Err_create_code(
             mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
-            "**mpi_t_enum_get_info", "**mpi_t_enum_get_info %p %d %p %p", enumtype, num, name, name_len);
+            "**mpi_t_enum_get_info", "**mpi_t_enum_get_info %p %p %p %p", enumtype, num, name, name_len);
     }
 #   endif
     mpi_errno = MPIR_Err_return_comm(NULL, FCNAME, mpi_errno);

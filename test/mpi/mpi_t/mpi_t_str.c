@@ -96,6 +96,14 @@ int main(int argc, char **argv)
             check(name[j] == j % CHAR_MAX);
             check(desc[j] == j % CHAR_MAX);
         }
+
+        /* not much of a string test, just need a quick spot to stick a test for
+         * the existence of the correct MPI_T prototype (tt#1727) */
+        if (enumtype != MPI_T_ENUM_NULL) {
+            int num_enumtype = -1;
+            name_len = STR_SZ;
+            MPI_T_enum_get_info(enumtype, &num_enumtype, name, name_len);
+        }
     }
 
     /* check string handling for performance variables */
@@ -192,6 +200,13 @@ int main(int argc, char **argv)
         for (j = 0; j < STR_SZ; ++j) {
             check(name[j] == j % CHAR_MAX);
             check(desc[j] == j % CHAR_MAX);
+        }
+
+        /* not really a string test, just need a quick spot to stick a test for the
+         * existence of the correct MPI_T prototype (tt#1727) */
+        {
+            int indices[1];
+            MPI_T_category_get_pvars(i, 1, indices);
         }
     }
 

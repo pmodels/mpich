@@ -28,7 +28,7 @@
 #define FUNCNAME MPIR_T_category_get_pvars_impl
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPIR_T_category_get_pvars_impl(int cat_index[], int len, int indices[])
+int MPIR_T_category_get_pvars_impl(int cat_index, int len, int indices[])
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -62,7 +62,7 @@ Output Parameters:
 
 .N Errors
 @*/
-int MPI_T_category_get_pvars(int cat_index[], int len, int indices[])
+int MPI_T_category_get_pvars(int cat_index, int len, int indices[])
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_T_CATEGORY_GET_PVARS);
@@ -115,7 +115,7 @@ fn_fail:
     {
         mpi_errno = MPIR_Err_create_code(
             mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
-            "**mpi_t_category_get_pvars", "**mpi_t_category_get_pvars %p %d %p", cat_index, len, indices);
+            "**mpi_t_category_get_pvars", "**mpi_t_category_get_pvars %d %d %p", cat_index, len, indices);
     }
 #   endif
     mpi_errno = MPIR_Err_return_comm(NULL, FCNAME, mpi_errno);

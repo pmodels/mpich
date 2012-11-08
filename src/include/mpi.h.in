@@ -1409,7 +1409,7 @@ int MPIX_Comm_reenable_anysource(MPI_Comm comm, MPI_Group *failed_group);
 /* Begin Skip Prototypes */
 int MPI_T_init_thread(int required, int *provided);
 int MPI_T_finalize(void);
-int MPI_T_enum_get_info(MPI_T_enum enumtype, int num, char *name, int *name_len);
+int MPI_T_enum_get_info(MPI_T_enum enumtype, int *num, char *name, int *name_len);
 int MPI_T_enum_get_item(MPI_T_enum enumtype, int indx, int *value, char *name, int *name_len);
 int MPI_T_cvar_get_num(int *num_cvar);
 int MPI_T_cvar_get_info(int cvar_index, char *name, int *name_len, int *verbosity,
@@ -1439,7 +1439,7 @@ int MPI_T_category_get_num(int *num_cat);
 int MPI_T_category_get_info(int cat_index, char *name, int *name_len, char *desc, int *desc_len,
                             int *num_cvars, int *num_pvars, int *num_categories);
 int MPI_T_category_get_cvars(int cat_index, int len, int indices[]);
-int MPI_T_category_get_pvars(int cat_index[], int len, int indices[]);
+int MPI_T_category_get_pvars(int cat_index, int len, int indices[]);
 int MPI_T_category_get_categories(int cat_index, int len, int indices[]);
 int MPI_T_category_changed(int *stamp);
 /* End Skip Prototypes */
@@ -2045,7 +2045,7 @@ int PMPIX_Comm_reenable_anysource(MPI_Comm comm, MPI_Group *failed_group);
 /* Begin Skip Prototypes */
 int PMPI_T_init_thread(int required, int *provided);
 int PMPI_T_finalize(void);
-int PMPI_T_enum_get_info(MPI_T_enum enumtype, int num, char *name, int *name_len);
+int PMPI_T_enum_get_info(MPI_T_enum enumtype, int *num, char *name, int *name_len);
 int PMPI_T_enum_get_item(MPI_T_enum enumtype, int indx, int *value, char *name, int *name_len);
 int PMPI_T_cvar_get_num(int *num_cvar);
 int PMPI_T_cvar_get_info(int cvar_index, char *name, int *name_len, int *verbosity,
@@ -2075,7 +2075,7 @@ int PMPI_T_category_get_num(int *num_cat);
 int PMPI_T_category_get_info(int cat_index, char *name, int *name_len, char *desc, int *desc_len,
                              int *num_cvars, int *num_pvars, int *num_categories);
 int PMPI_T_category_get_cvars(int cat_index, int len, int indices[]);
-int PMPI_T_category_get_pvars(int cat_index[], int len, int indices[]);
+int PMPI_T_category_get_pvars(int cat_index, int len, int indices[]);
 int PMPI_T_category_get_categories(int cat_index, int len, int indices[]);
 int PMPI_T_category_changed(int *stamp);
 /* End Skip Prototypes */

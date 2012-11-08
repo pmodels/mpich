@@ -4195,7 +4195,7 @@ int MPIR_Ialltoallw_inter(const void *sendbuf, const int *sendcounts, const int 
 /* begin impl functions for MPI_T (MPI_T_ right now) */
 int MPIR_T_init_thread_impl(int required, int *provided);
 int MPIR_T_finalize_impl(void);
-int MPIR_T_enum_get_info_impl(MPI_T_enum enumtype, int num, char *name, int *name_len);
+int MPIR_T_enum_get_info_impl(MPI_T_enum enumtype, int *num, char *name, int *name_len);
 int MPIR_T_enum_get_item_impl(MPI_T_enum enumtype, int num, int *value, char *name, int *name_len);
 int MPIR_T_cvar_get_num_impl(int *num_cvar);
 int MPIR_T_cvar_get_info_impl(int cvar_index, char *name, int *name_len, int *verbosity, MPI_Datatype *datatype, MPI_T_enum *enumtype, char *desc, int *desc_len, int *binding, int *scope);
@@ -4218,7 +4218,7 @@ int MPIR_T_pvar_readreset_impl(MPI_T_pvar_session session, MPI_T_pvar_handle han
 int MPIR_T_category_get_num_impl(int *num_cat);
 int MPIR_T_category_get_info_impl(int cat_index, char *name, int *name_len, char *desc, int *desc_len, int *num_controlvars, int *num_pvars, int *num_categories);
 int MPIR_T_category_get_cvars_impl(int cat_index, int len, int indices[]);
-int MPIR_T_category_get_pvars_impl(int cat_index[], int len, int indices[]);
+int MPIR_T_category_get_pvars_impl(int cat_index, int len, int indices[]);
 int MPIR_T_category_get_categories_impl(int cat_index, int len, int indices[]);
 int MPIR_T_category_changed_impl(int *stamp);
 /* end impl functions for MPI_T (MPI_T_ right now) */
