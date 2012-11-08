@@ -295,7 +295,8 @@ typedef struct {
 #define MPIR_OP_TYPE_GROUP_FORTRAN_INTEGER                                            \
     MPIR_OP_TYPE_MACRO_HAVE_FORTRAN(MPI_INTEGER, MPI_Fint, mpir_typename_integer)     \
     MPIR_OP_TYPE_MACRO(MPI_AINT, MPI_Aint, mpir_typename_aint)                        \
-    MPIR_OP_TYPE_MACRO(MPI_OFFSET, MPI_Offset, mpir_typename_offset)
+    MPIR_OP_TYPE_MACRO(MPI_OFFSET, MPI_Offset, mpir_typename_offset)                  \
+    MPIR_OP_TYPE_MACRO(MPI_COUNT, MPI_Count, mpir_typename_count)
 /* The MPI Standard doesn't include these types in the Fortran integer group for
    predefined operations but MPICH supports them when possible. */
 #define MPIR_OP_TYPE_GROUP_FORTRAN_INTEGER_EXTRA                                                      \

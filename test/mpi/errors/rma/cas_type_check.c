@@ -57,10 +57,7 @@ int main( int argc, char *argv[] )
     /* Multilanguage Types */
     CAS_CHECK_TYPE(MPI_Aint,            MPI_AINT,               MPI_SUCCESS);
     CAS_CHECK_TYPE(MPI_Offset,          MPI_OFFSET,             MPI_SUCCESS);
-    /* TODO: MPI_Count support needed */
-    /*
     CAS_CHECK_TYPE(MPI_Count,           MPI_COUNT,              MPI_SUCCESS);
-    */
 
     /* Byte */
     CAS_CHECK_TYPE(char,                MPI_BYTE,               MPI_SUCCESS);

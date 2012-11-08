@@ -280,6 +280,14 @@ struct double_test { double a; int b; };
 #define test_types_set_mpi_2_2_integer(op,post) do { } while (0)
 #endif
 
+#if MTEST_HAVE_MIN_MPI_VERSION(3,0)
+#define test_types_set_mpi_3_0_integer(op,post) do {                \
+        op##_test##post(MPI_Count, MPI_COUNT);                      \
+    } while (0)
+#else
+#define test_types_set_mpi_3_0_integer(op,post) do { } while (0)
+#endif
+
 #define test_types_set1(op, post)                                   \
     {                                                               \
         op##_test##post(int, MPI_INT);                              \
@@ -290,6 +298,7 @@ struct double_test { double a; int b; };
         op##_test##post(unsigned long, MPI_UNSIGNED_LONG);          \
         op##_test##post(unsigned char, MPI_UNSIGNED_CHAR);          \
         test_types_set_mpi_2_2_integer(op,post);                    \
+        test_types_set_mpi_3_0_integer(op,post);                    \
     }
 
 #define test_types_set2(op, post)               \
