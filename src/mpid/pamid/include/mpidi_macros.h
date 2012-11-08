@@ -111,8 +111,19 @@ _dt_contig_out, _data_sz_out, _dt_ptr, _dt_true_lb)             \
 
 #define MPID_VCR_GET_LPID(vcr, index)           \
 ({                                              \
-  vcr[index];                                   \
+  vcr[index]->taskid;                           \
 })
+
+
+#define MPID_VCR_GET_LPIDS(comm, taskids)                      \
+({                                                             \
+  int i;                                                       \
+  taskids=MPIU_Malloc((comm->local_size)*sizeof(pami_task_t)); \
+  MPID_assert(taskids != NULL);                                \
+  for(i=0; i<comm->local_size; i++)                            \
+    taskids[i] = comm->vcr[i]->taskid;                         \
+})
+
 
 #define MPID_GPID_Get(comm_ptr, rank, gpid)             \
 ({                                                      \

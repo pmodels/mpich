@@ -127,7 +127,6 @@ void MPIDI_RecvRzvCB_zerobyte (pami_context_t    context,
                                size_t            sndlen,
                                pami_endpoint_t   sender,
                                pami_recv_t     * recv);
-
 void MPIDI_RecvDoneCB        (pami_context_t    context,
                               void            * clientdata,
                               pami_result_t     result);
@@ -140,6 +139,16 @@ void MPIDI_RecvRzvDoneCB     (pami_context_t    context,
 void MPIDI_RecvRzvDoneCB_zerobyte (pami_context_t    context,
                                    void            * cookie,
                                    pami_result_t     result);
+#ifdef DYNAMIC_TASKING
+void MPIDI_Recvfrom_remote_world (pami_context_t    context,
+                                  void            * cookie,
+                                  const void      * _msginfo,
+                                  size_t            msginfo_size,
+                                  const void      * sndbuf,
+                                  size_t            sndlen,
+                                  pami_endpoint_t   sender,
+                                  pami_recv_t     * recv);
+#endif
 #ifdef OUT_OF_ORDER_HANDLING
 void MPIDI_Recvq_process_out_of_order_msgs(pami_task_t src, pami_context_t context);
 int MPIDI_Recvq_search_recv_posting_queue(int src, int tag, int context_id,

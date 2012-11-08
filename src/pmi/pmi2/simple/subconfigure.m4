@@ -1,14 +1,14 @@
 [#] start of __file__
-dnl MPICH_SUBCFG_AFTER=src/pmi
+dnl MPICH2_SUBCFG_AFTER=src/pmi
 
 AC_DEFUN([PAC_SUBCFG_PREREQ_]PAC_SUBCFG_AUTO_SUFFIX,[
 ])
 
 AC_DEFUN([PAC_SUBCFG_BODY_]PAC_SUBCFG_AUTO_SUFFIX,[
 
-AM_CONDITIONAL([BUILD_PMI_PMI2],[test "x$pmi_name" = "xpmi2"])
+AM_CONDITIONAL([BUILD_PMI_PMI2_SIMPLE],[test "x$pmi_name" = "xpmi2/simple"])
 
-AM_COND_IF([BUILD_PMI_PMI2],[
+AM_COND_IF([BUILD_PMI_PMI2_SIMPLE],[
 if test "$enable_pmiport" != "no" ; then
    enable_pmiport=yes
 fi
@@ -16,10 +16,6 @@ fi
 dnl causes USE_PMI2_API to be AC_DEFINE'ed by the top-level configure.ac
 USE_PMI2_API=yes
 
-# common ARG_ENABLE, shared by "simple" and "poe"
-AC_ARG_ENABLE(pmiport,
-[--enable-pmiport - Allow PMI interface to use a host-port pair to contact
-                   for PMI services],,enable_pmiport=default)
 AC_CHECK_HEADERS([unistd.h string.h stdlib.h sys/socket.h strings.h assert.h])
 dnl Use snprintf if possible when creating messages
 AC_CHECK_FUNCS(snprintf)
@@ -51,7 +47,7 @@ if test "$enable_pmiport" = "yes" ; then
     AC_SEARCH_LIBS(gethostbyname,nsl)
     missing_functions=no
     AC_CHECK_FUNCS(socket setsockopt gethostbyname,,missing_functions=yes)
-    
+
     if test "$missing_functions" = "no" ; then
         AC_DEFINE(USE_PMI_PORT,1,[Define if access to PMI information through a port rather than just an fd is allowed])
     else

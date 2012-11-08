@@ -21,6 +21,7 @@
  */
 #include <mpidimpl.h>
 
+#ifndef DYNAMIC_TASKING
 int MPID_Close_port(const char *port_name)
 {
   MPID_abort();
@@ -69,7 +70,7 @@ int MPID_Comm_spawn_multiple(int count,
   MPID_abort();
   return 0;
 }
-
+#endif
 
 int MPID_Comm_reenable_anysource(MPID_Comm *comm,
                                  MPID_Group **failed_group_ptr)

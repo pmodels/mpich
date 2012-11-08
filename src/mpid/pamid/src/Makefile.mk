@@ -36,6 +36,7 @@ include $(top_srcdir)/src/mpid/pamid/src/mpix/Makefile.mk
 include $(top_srcdir)/src/mpid/pamid/src/onesided/Makefile.mk
 include $(top_srcdir)/src/mpid/pamid/src/pamix/Makefile.mk
 include $(top_srcdir)/src/mpid/pamid/src/pt2pt/Makefile.mk
+include $(top_srcdir)/src/mpid/pamid/src/dyntask/Makefile.mk
 
 
 lib_lib@MPILIBNAME@_la_SOURCES +=               \

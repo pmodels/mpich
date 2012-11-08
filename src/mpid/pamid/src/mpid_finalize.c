@@ -29,6 +29,9 @@ extern void MPIDI_close_mm();
 #ifdef MPIDI_STATISTICS
 extern pami_extension_t pe_extension;
 
+extern int mpidi_dynamic_tasking;
+int mpidi_finalized = 0;
+
 
 void MPIDI_close_pe_extension() {
      int rc;
@@ -58,6 +61,24 @@ int MPID_Finalize()
   }
   MPIDI_close_pe_extension();
 #endif
+
+#ifdef DYNAMIC_TASKING
+  mpidi_finalized = 1;
+  if(mpidi_dynamic_tasking) {
+    /* Tell the process group code that we're done with the process groups.
+       This will notify PMI (with PMI_Finalize) if necessary.  It
+       also frees all PG structures, including the PG for COMM_WORLD, whose
+       pointer is also saved in MPIDI_Process.my_pg */
+    mpierrno = MPIDI_PG_Finalize();
+    if (mpierrno) {
+	TRACE_ERR("MPIDI_PG_Finalize returned with mpierrno=%d\n", mpierrno);
+    }
+
+    MPIDI_FreeParentPort();
+  }
+#endif
+
+
   /* ------------------------- */
   /* shutdown request queues   */
   /* ------------------------- */
@@ -93,7 +114,7 @@ int MPID_Finalize()
    {
      #if TOKEN_FLOW_CONTROL
      extern char *EagerLimit;
-     
+
      if (EagerLimit) MPIU_Free(EagerLimit);
      MPIU_Free(MPIDI_Token_cntr);
      MPIDI_close_mm();

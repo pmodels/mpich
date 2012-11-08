@@ -131,6 +131,10 @@ typedef struct
   } perobj;                  /**< This structure is only used in the 'perobj' mpich lock mode. */
 
   unsigned mpir_nbc;         /**< Enable MPIR_* non-blocking collectives implementations. */
+#ifdef DYNAMIC_TASKING
+  struct MPIDI_PG_t * my_pg; /**< Process group I belong to */
+  int                 my_pg_rank; /**< Rank in process group */
+#endif
 } MPIDI_Process_t;
 
 
@@ -145,6 +149,9 @@ enum
     MPIDI_Protocols_WinCtrl,
     MPIDI_Protocols_WinAccum,
     MPIDI_Protocols_RVZ_zerobyte,
+#ifdef DYNAMIC_TASKING
+    MPIDI_Protocols_Dyntask,
+#endif
     MPIDI_Protocols_COUNT,
   };
 
@@ -306,7 +313,7 @@ struct MPIDI_Comm
    * allocating pointers on the stack
    */
   /* For create_taskrange */
-  pami_geometry_range_t *ranges;
+  pami_geometry_range_t range;
   /* For create_tasklist/endpoints if we ever use it */
   pami_task_t *tasks;
   pami_endpoint_t *endpoints;
@@ -341,6 +348,9 @@ struct MPIDI_Comm
     pami_task_t *tasks;
     pami_endpoint_t *endpoints;
   } tasks_descriptor;
+#ifdef DYNAMIC_TASKING
+  int *world_ids;      /* ids of worlds that composed this communicator (inter communicator created for dynamic tasking */
+#endif
 };
 
 

@@ -403,7 +403,7 @@ MPIDI_SendMsg(pami_context_t   context,
   pami_endpoint_t dest;
   MPIDI_Context_endpoint(sreq, &dest);
   pami_task_t  dest_tid;
-  dest_tid=sreq->comm->vcr[rank];
+  dest_tid=sreq->comm->vcr[rank]->taskid;
 #if (MPIDI_STATISTICS)
   MPID_NSTAT(mpid_statp->sends);
 #endif

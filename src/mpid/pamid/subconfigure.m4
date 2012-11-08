@@ -20,6 +20,10 @@ pamid_platform=${device_args}
 
 # Set a value for the maximum processor name.
 MPID_MAX_PROCESSOR_NAME=128
+PM_REQUIRES_PMI=pmi2
+if test "${pamid_platform}" = "PE" ; then
+        PM_REQUIRES_PMI=pmi2/poe
+fi
 
 MPID_DEVICE_TIMER_TYPE=double
 MPID_MAX_THREAD_LEVEL=MPI_THREAD_MULTIPLE
