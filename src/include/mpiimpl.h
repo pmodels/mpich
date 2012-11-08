@@ -1651,15 +1651,12 @@ typedef struct MPID_RMA_Ops {
   S*/
 typedef struct MPID_Win {
     MPIU_OBJECT_HEADER; /* adds handle and ref_count fields */
-    int fence_issued;   /* Indicates if fence has been called, and if an
-                           active target fence epoch is possible. */
     MPID_Errhandler *errhandler;  /* Pointer to the error handler structure */
     void *base;
     MPI_Aint    size;        
     int          disp_unit;      /* Displacement unit of *local* window */
     MPID_Attribute *attributes;
     MPID_Group *start_group_ptr; /* group passed in MPI_Win_start */
-    int start_assert;            /* assert passed to MPI_Win_start */
     MPID_Comm *comm_ptr;         /* Pointer to comm of window (dup) */
     int         myrank;          /* Rank of this process in comm (used to 
 				    detect operations on self) */

@@ -254,6 +254,9 @@ struct MPIDI_Win_target_state {
     struct MPIDI_Win_target_state *targets;                              \
     enum MPIDI_Win_epoch_states epoch_state;                             \
     int epoch_count;                                                     \
+    int fence_issued;   /* Indicates if fence has been called, and if an \
+                           active target fence epoch is possible. */     \
+    int start_assert;   /* assert passed to MPI_Win_start */             \
 
 #ifdef MPIDI_CH3_WIN_DECL
 #define MPID_DEV_WIN_DECL \
