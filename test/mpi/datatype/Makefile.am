@@ -23,6 +23,7 @@ noinst_PROGRAMS =           \
     contents                \
     contig-zero-count       \
     contigstruct            \
+    cxx-types               \
     darray-pack             \
     gaddress                \
     get-elements            \

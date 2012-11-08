@@ -3742,7 +3742,12 @@ if ($write_mpif) {
 	print MPIFFD "       PARAMETER (MPI_$key=\@MPI_F77_$key\@)\n";
     }
     # C types added in MPI 3.0
-    foreach $key (qw(COUNT)) {
+    foreach $key (qw(COUNT
+                     CXX_BOOL
+                     CXX_FLOAT_COMPLEX
+                     CXX_DOUBLE_COMPLEX
+                     CXX_LONG_DOUBLE_COMPLEX))
+    {
 	print MPIFFD "       INTEGER MPI_$key\n";
 	print MPIFFD "       PARAMETER (MPI_$key=\@MPI_F77_$key\@)\n";
     }

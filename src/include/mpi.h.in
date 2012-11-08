@@ -221,6 +221,12 @@ static const MPI_Datatype mpich_mpi_c_long_double_complex MPICH_ATTR_TYPE_TAG_C9
 #define MPI_OFFSET        ((MPI_Datatype)@MPI_OFFSET_DATATYPE@)
 #define MPI_COUNT         ((MPI_Datatype)@MPI_COUNT_DATATYPE@)
 
+/* MPI-3 C++ types */
+#define MPI_CXX_BOOL                ((MPI_Datatype)@MPIR_CXX_BOOL@)
+#define MPI_CXX_FLOAT_COMPLEX       ((MPI_Datatype)@MPIR_CXX_COMPLEX@)
+#define MPI_CXX_DOUBLE_COMPLEX      ((MPI_Datatype)@MPIR_CXX_DOUBLE_COMPLEX@)
+#define MPI_CXX_LONG_DOUBLE_COMPLEX ((MPI_Datatype)@MPIR_CXX_LONG_DOUBLE_COMPLEX@)
+
 /* typeclasses */
 #define MPI_TYPECLASS_REAL 1
 #define MPI_TYPECLASS_INTEGER 2
