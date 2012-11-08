@@ -100,6 +100,7 @@ static int MPIDI_CH3I_Send_lock_msg(int dest, int lock_type, MPID_Win *win_ptr);
 static int MPIDI_CH3I_Send_unlock_msg(int dest, MPID_Win *win_ptr);
 static int MPIDI_CH3I_Send_flush_msg(int dest, MPID_Win *win_ptr);
 static int MPIDI_CH3I_Wait_for_lock_granted(MPID_Win *win_ptr, int target_rank);
+static int MPIDI_CH3I_Acquire_local_lock(MPID_Win *win_ptr, int lock_mode);
 static int MPIDI_CH3I_Send_rma_msg(MPIDI_RMA_Op_t * rma_op, MPID_Win * win_ptr,
 				   MPI_Win source_win_handle, 
 				   MPI_Win target_win_handle, 
@@ -1796,35 +1797,13 @@ int MPIDI_Win_lock(int lock_type, int dest, int assert, MPID_Win *win_ptr)
      * updated collectively */
 
     if (dest == MPI_PROC_NULL) goto fn_exit;
-        
+
     if (dest == win_ptr->myrank) {
-	/* The target is this process itself. We must block until the lock
-	 * is acquired. */
-            
-	/* poke the progress engine until lock is granted */
-	if (MPIDI_CH3I_Try_acquire_win_lock(win_ptr, lock_type) == 0)
-	{
-	    MPID_Progress_state progress_state;
-	    
-	    MPIU_INSTR_DURATION_START(winlock_getlocallock);
-	    MPID_Progress_start(&progress_state);
-	    while (MPIDI_CH3I_Try_acquire_win_lock(win_ptr, lock_type) == 0) 
-	    {
-		mpi_errno = MPID_Progress_wait(&progress_state);
-		/* --BEGIN ERROR HANDLING-- */
-		if (mpi_errno != MPI_SUCCESS) {
-		    MPID_Progress_end(&progress_state);
-		    MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**winnoprogress");
-		}
-		/* --END ERROR HANDLING-- */
-	    }
-	    MPID_Progress_end(&progress_state);
-	    MPIU_INSTR_DURATION_END(winlock_getlocallock);
-	}
-	/* local lock acquired. local puts, gets, accumulates will be done 
-	   directly without queueing. */
-        win_ptr->targets[dest].remote_lock_state = MPIDI_CH3_WIN_LOCK_GRANTED;
-        win_ptr->targets[dest].remote_lock_mode = lock_type;
+        /* The target is this process itself. We must block until the lock
+         * is acquired.  Once it is acquired, local puts, gets, accumulates
+         * will be done directly without queueing. */
+        mpi_errno = MPIDI_CH3I_Acquire_local_lock(win_ptr, lock_type);
+        if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
     }
     else if (win_ptr->create_flavor == MPI_WIN_FLAVOR_SHARED) {
         /* Lock must be taken immediately for shared memory windows because of
@@ -2518,6 +2497,49 @@ static int MPIDI_CH3I_Send_lock_msg(int dest, int lock_type, MPID_Win *win_ptr) 
     return mpi_errno;
     /* --BEGIN ERROR HANDLING-- */
  fn_fail:
+    goto fn_exit;
+    /* --END ERROR HANDLING-- */
+}
+
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_CH3I_Acquire_local_lock
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
+static int MPIDI_CH3I_Acquire_local_lock(MPID_Win *win_ptr, int lock_type) {
+    int mpi_errno = MPI_SUCCESS;
+    MPIDI_STATE_DECL(MPID_STATE_MPIDI_ACQUIRE_LOCAL_LOCK);
+    MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_ACQUIRE_LOCAL_LOCK);
+
+    /* poke the progress engine until the local lock is granted */
+    if (MPIDI_CH3I_Try_acquire_win_lock(win_ptr, lock_type) == 0)
+    {
+        MPID_Progress_state progress_state;
+
+        MPIU_INSTR_DURATION_START(winlock_getlocallock);
+        MPID_Progress_start(&progress_state);
+        while (MPIDI_CH3I_Try_acquire_win_lock(win_ptr, lock_type) == 0)
+        {
+            mpi_errno = MPID_Progress_wait(&progress_state);
+            /* --BEGIN ERROR HANDLING-- */
+            if (mpi_errno != MPI_SUCCESS) {
+                MPID_Progress_end(&progress_state);
+                MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**winnoprogress");
+            }
+            /* --END ERROR HANDLING-- */
+        }
+        MPID_Progress_end(&progress_state);
+        MPIU_INSTR_DURATION_END(winlock_getlocallock);
+    }
+
+    win_ptr->targets[win_ptr->myrank].remote_lock_state = MPIDI_CH3_WIN_LOCK_GRANTED;
+    win_ptr->targets[win_ptr->myrank].remote_lock_mode = lock_type;
+
+ fn_exit:
+    MPIDI_RMA_FUNC_EXIT(MPID_STATE_MPIDI_ACQUIRE_LOCAL_LOCK);
+    return mpi_errno;
+    /* --BEGIN ERROR HANDLING-- */
+fn_fail:
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }
