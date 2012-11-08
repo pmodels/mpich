@@ -20,4 +20,4 @@ noinst_PROGRAMS = \
     infomany      \
     infomany2     \
     infotest      \
-    info_env
+    infoenv
