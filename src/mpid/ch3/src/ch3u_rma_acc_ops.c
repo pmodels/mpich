@@ -33,10 +33,21 @@ int MPIDI_Get_accumulate(const void *origin_addr, int origin_count,
 
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_GET_ACCUMULATE);
 
+    if (target_rank == MPI_PROC_NULL) {
+        goto fn_exit;
+    }
+
+    if (win_ptr->epoch_state == MPIDI_EPOCH_NONE && win_ptr->fence_cnt) {
+        win_ptr->epoch_state = MPIDI_EPOCH_FENCE;
+    }
+
+    MPIU_ERR_CHKANDJUMP(win_ptr->epoch_state == MPIDI_EPOCH_NONE,
+                        mpi_errno, MPI_ERR_RMA_SYNC, "**rmasync");
+
     MPIDI_Datatype_get_info(target_count, target_datatype, dt_contig, data_sz,
                             dtp, dt_true_lb);
 
-    if ((data_sz == 0) || (target_rank == MPI_PROC_NULL)) {
+    if (data_sz == 0) {
         goto fn_exit;
     }
 
@@ -232,6 +243,13 @@ int MPIDI_Compare_and_swap(const void *origin_addr, const void *compare_addr,
         goto fn_exit;
     }
 
+    if (win_ptr->epoch_state == MPIDI_EPOCH_NONE && win_ptr->fence_cnt) {
+        win_ptr->epoch_state = MPIDI_EPOCH_FENCE;
+    }
+
+    MPIU_ERR_CHKANDJUMP(win_ptr->epoch_state == MPIDI_EPOCH_NONE,
+                        mpi_errno, MPI_ERR_RMA_SYNC, "**rmasync");
+
     rank = win_ptr->myrank;
 
     /* The datatype must be predefined, and one of: C integer, Fortran integer,
@@ -305,6 +323,13 @@ int MPIDI_Fetch_and_op(const void *origin_addr, void *result_addr,
     if (target_rank == MPI_PROC_NULL) {
         goto fn_exit;
     }
+
+    if (win_ptr->epoch_state == MPIDI_EPOCH_NONE && win_ptr->fence_cnt) {
+        win_ptr->epoch_state = MPIDI_EPOCH_FENCE;
+    }
+
+    MPIU_ERR_CHKANDJUMP(win_ptr->epoch_state == MPIDI_EPOCH_NONE,
+                        mpi_errno, MPI_ERR_RMA_SYNC, "**rmasync");
 
     rank = win_ptr->myrank;
 

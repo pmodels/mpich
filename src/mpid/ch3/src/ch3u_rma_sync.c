@@ -218,6 +218,10 @@ int MPIDI_Win_fence(int assert, MPID_Win *win_ptr)
 
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_WIN_FENCE);
 
+    MPIU_ERR_CHKANDJUMP(win_ptr->epoch_state != MPIDI_EPOCH_NONE &&
+                        win_ptr->epoch_state != MPIDI_EPOCH_FENCE,
+                        mpi_errno, MPI_ERR_RMA_SYNC, "**rmasync");
+
     /* In case this process was previously the target of passive target rma
      * operations, we need to take care of the following...
      * Since we allow MPI_Win_unlock to return without a done ack from
@@ -428,6 +432,11 @@ int MPIDI_Win_fence(int assert, MPID_Win *win_ptr)
     }
 
  fn_exit:
+    /* Reset the epoch state if this fence completed an epoch */
+    if (win_ptr->epoch_state == MPIDI_EPOCH_FENCE && mpi_errno == MPI_SUCCESS) {
+        win_ptr->epoch_state = MPIDI_EPOCH_NONE;
+    }
+
     MPIU_CHKLMEM_FREEALL();
     MPIDI_RMA_FUNC_EXIT(MPID_STATE_MPIDI_WIN_FENCE);
     return mpi_errno;
@@ -1263,6 +1272,17 @@ int MPIDI_Win_post(MPID_Group *post_grp_ptr, int assert, MPID_Win *win_ptr)
 
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_WIN_POST);
 
+    /* FIXME: Can we further restrict the ordering or quantity of generalized
+       active target calls?  E.g. post must precede start, start/complete may
+       be called once, etc? */
+    MPIU_ERR_CHKANDJUMP(win_ptr->epoch_state != MPIDI_EPOCH_NONE &&
+                        win_ptr->epoch_state != MPIDI_EPOCH_GAT,
+                        mpi_errno, MPI_ERR_RMA_SYNC, "**rmasync");
+
+    /* Track access epoch state */
+    win_ptr->epoch_state = MPIDI_EPOCH_GAT;
+    win_ptr->epoch_count++;
+
     /* Even though we would want to reset the fence counter to keep
      * the user from using the previous fence to mark the beginning of
      * a fence epoch if he switched from fence to lock-unlock
@@ -1405,6 +1425,14 @@ int MPIDI_Win_start(MPID_Group *group_ptr, int assert, MPID_Win *win_ptr)
 
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_WIN_START);
 
+    MPIU_ERR_CHKANDJUMP(win_ptr->epoch_state != MPIDI_EPOCH_NONE &&
+                        win_ptr->epoch_state != MPIDI_EPOCH_GAT,
+                        mpi_errno, MPI_ERR_RMA_SYNC, "**rmasync");
+
+    /* Track access epoch state */
+    win_ptr->epoch_state = MPIDI_EPOCH_GAT;
+    win_ptr->epoch_count++;
+
     /* Even though we would want to reset the fence counter to keep
      * the user from using the previous fence to mark the beginning of
      * a fence epoch if he switched from fence to lock-unlock
@@ -1472,6 +1500,14 @@ int MPIDI_Win_complete(MPID_Win *win_ptr)
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_WIN_COMPLETE);
 
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_WIN_COMPLETE);
+
+    MPIU_ERR_CHKANDJUMP(win_ptr->epoch_state != MPIDI_EPOCH_GAT,
+                        mpi_errno, MPI_ERR_RMA_SYNC, "**rmasync");
+
+    /* Track access epoch state */
+    win_ptr->epoch_count--;
+    if (win_ptr->epoch_count == 0)
+        win_ptr->epoch_state = MPIDI_EPOCH_NONE;
 
     comm_ptr = win_ptr->comm_ptr;
     comm_size = comm_ptr->local_size;
@@ -1722,6 +1758,14 @@ int MPIDI_Win_wait(MPID_Win *win_ptr)
 
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_WIN_WAIT);
 
+    MPIU_ERR_CHKANDJUMP(win_ptr->epoch_state != MPIDI_EPOCH_GAT,
+                        mpi_errno, MPI_ERR_RMA_SYNC, "**rmasync");
+
+    /* Track access epoch state */
+    win_ptr->epoch_count--;
+    if (win_ptr->epoch_count == 0)
+        win_ptr->epoch_state = MPIDI_EPOCH_NONE;
+
     /* wait for all operations from other processes to finish */
     if (win_ptr->my_counter)
     {
@@ -1746,8 +1790,13 @@ int MPIDI_Win_wait(MPID_Win *win_ptr)
 	MPIU_INSTR_DURATION_END(winwait_wait);
     } 
 
+ fn_exit:
     MPIDI_RMA_FUNC_EXIT(MPID_STATE_MPIDI_WIN_WAIT);
     return mpi_errno;
+    /* --BEGIN ERROR HANDLING-- */
+ fn_fail:
+    goto fn_exit;
+    /* --END ERROR HANDLING-- */
 }
 
 #undef FUNCNAME
@@ -1762,6 +1811,9 @@ int MPIDI_Win_test(MPID_Win *win_ptr, int *flag)
 
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_WIN_TEST);
 
+    MPIU_ERR_CHKANDJUMP(win_ptr->epoch_state != MPIDI_EPOCH_GAT,
+                        mpi_errno, MPI_ERR_RMA_SYNC, "**rmasync");
+
     mpi_errno = MPID_Progress_test();
     if (mpi_errno != MPI_SUCCESS) {
 	MPIU_ERR_POP(mpi_errno);
@@ -1769,9 +1821,20 @@ int MPIDI_Win_test(MPID_Win *win_ptr, int *flag)
 
     *flag = (win_ptr->my_counter) ? 0 : 1;
 
- fn_fail:
+    /* Track access epoch state */
+    if (*flag) {
+        win_ptr->epoch_count--;
+        if (win_ptr->epoch_count == 0)
+            win_ptr->epoch_state = MPIDI_EPOCH_NONE;
+    }
+
+ fn_exit:
     MPIDI_RMA_FUNC_EXIT(MPID_STATE_MPIDI_WIN_TEST);
     return mpi_errno;
+    /* --BEGIN ERROR HANDLING-- */
+ fn_fail:
+    goto fn_exit;
+    /* --END ERROR HANDLING-- */
 }
 
 
@@ -1784,6 +1847,7 @@ int MPIDI_Win_test(MPID_Win *win_ptr, int *flag)
 int MPIDI_Win_lock(int lock_type, int dest, int assert, MPID_Win *win_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
+    MPIDI_RMA_Op_t *rma_op = NULL;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_WIN_LOCK);
 
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_WIN_LOCK);
@@ -1797,6 +1861,25 @@ int MPIDI_Win_lock(int lock_type, int dest, int assert, MPID_Win *win_ptr)
      * updated collectively */
 
     if (dest == MPI_PROC_NULL) goto fn_exit;
+
+    MPIU_ERR_CHKANDJUMP(win_ptr->epoch_state != MPIDI_EPOCH_NONE &&
+                        win_ptr->epoch_state != MPIDI_EPOCH_LOCK,
+                        mpi_errno, MPI_ERR_RMA_SYNC, "**rmasync");
+
+#ifdef HAVE_ERROR_CHECKING
+    rma_op = MPIDI_CH3I_RMA_Ops_head(&win_ptr->targets[dest].rma_ops_list);
+
+    /* Check if a lock has already been issued (in the ops list or already issued) */
+    MPIU_ERR_CHKANDJUMP((rma_op != NULL && rma_op->type == MPIDI_RMA_LOCK) ||
+                        win_ptr->targets[dest].remote_lock_state != MPIDI_CH3_WIN_LOCK_NONE,
+                        mpi_errno, MPI_ERR_RMA_SYNC, "**rmasync");
+#endif /* HAVE_ERROR_CHECKING */
+
+    /* Track access epoch state */
+    if (win_ptr->epoch_state != MPIDI_EPOCH_LOCK_ALL) {
+        win_ptr->epoch_count++;
+        win_ptr->epoch_state = MPIDI_EPOCH_LOCK;
+    }
 
     if (dest == win_ptr->myrank) {
         /* The target is this process itself. We must block until the lock
@@ -1868,6 +1951,17 @@ int MPIDI_Win_unlock(int dest, MPID_Win *win_ptr)
 
     if (dest == MPI_PROC_NULL) goto fn_exit;
         
+    MPIU_ERR_CHKANDJUMP(win_ptr->epoch_state != MPIDI_EPOCH_LOCK &&
+                        win_ptr->epoch_state != MPIDI_EPOCH_LOCK_ALL,
+                        mpi_errno, MPI_ERR_RMA_SYNC, "**rmasync");
+
+    /* Track access epoch state */
+    if (win_ptr->epoch_state == MPIDI_EPOCH_LOCK) {
+        win_ptr->epoch_count--;
+        if (win_ptr->epoch_count == 0)
+            win_ptr->epoch_state = MPIDI_EPOCH_NONE;
+    }
+
     /* Ensure that load/store operations are visible. */
     if (win_ptr->create_flavor == MPI_WIN_FLAVOR_SHARED) {
         /* FIXME: We may be able to make this just a read or write barrier */
@@ -1894,7 +1988,9 @@ int MPIDI_Win_unlock(int dest, MPID_Win *win_ptr)
     
     /* win_lock was not called. return error */
     if ( win_ptr->targets[dest].remote_lock_state == MPIDI_CH3_WIN_LOCK_NONE &&
-         ( rma_op == NULL || rma_op->type != MPIDI_RMA_LOCK ) ) {
+         ( rma_op == NULL || rma_op->type != MPIDI_RMA_LOCK ) &&
+         win_ptr->epoch_state != MPIDI_EPOCH_LOCK_ALL )
+    {
 	MPIU_ERR_SETANDJUMP(mpi_errno, MPI_ERR_RMA_SYNC, "**rmasync");
     }
         
@@ -1916,10 +2012,11 @@ int MPIDI_Win_unlock(int dest, MPID_Win *win_ptr)
 
     MPIDI_Comm_get_vc_set_active(comm_ptr, dest, &vc);
 
-    /* TODO: MPI-3: Add lock->cas->unlock optimization */
+    /* TODO: MPI-3: Add lock->cas/fop/gacc->unlock optimization.  */
+    /* TODO: MPI-3: Add lock_all->op optimization. */
     /* LOCK-OP-UNLOCK Optimization -- This optimization can't be used if we
        have already requested the lock. */
-    if ( rma_op && win_ptr->targets[dest].remote_lock_state == MPIDI_CH3_WIN_LOCK_NONE  &&
+    if ( rma_op && rma_op->type == MPIDI_RMA_LOCK &&
          rma_op->next->next == NULL &&
          rma_op->next->type != MPIDI_RMA_COMPARE_AND_SWAP &&
          rma_op->next->type != MPIDI_RMA_FETCH_AND_OP &&
@@ -1960,7 +2057,14 @@ int MPIDI_Win_unlock(int dest, MPID_Win *win_ptr)
            reply. Then do all the RMA ops. */
 
         if (win_ptr->targets[dest].remote_lock_state == MPIDI_CH3_WIN_LOCK_NONE) {
-            mpi_errno = MPIDI_CH3I_Send_lock_msg(dest, rma_op->lock_type, win_ptr);
+            int lock_type;
+
+            if (win_ptr->epoch_state == MPIDI_EPOCH_LOCK_ALL)
+                lock_type = MPI_LOCK_SHARED;
+            else
+                lock_type = rma_op->lock_type;
+
+            mpi_errno = MPIDI_CH3I_Send_lock_msg(dest, lock_type, win_ptr);
             if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
         }
 
@@ -2028,6 +2132,10 @@ int MPIDI_Win_flush_all(MPID_Win *win_ptr)
 
     MPIDI_RMA_FUNC_ENTER(MPIDI_STATE_MPIDI_WIN_FLUSH_ALL);
 
+    MPIU_ERR_CHKANDJUMP(win_ptr->epoch_state != MPIDI_EPOCH_LOCK &&
+                        win_ptr->epoch_state != MPIDI_EPOCH_LOCK_ALL,
+                        mpi_errno, MPI_ERR_RMA_SYNC, "**rmasync");
+
     /* FIXME: Performance -- we should not process the ops separately.
      * Ideally, we should be able to use the same infrastructure that's used by
      * active target to complete all operations. */
@@ -2065,6 +2173,10 @@ int MPIDI_Win_flush(int rank, MPID_Win *win_ptr)
 
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_WIN_FLUSH);
 
+    MPIU_ERR_CHKANDJUMP(win_ptr->epoch_state != MPIDI_EPOCH_LOCK &&
+                        win_ptr->epoch_state != MPIDI_EPOCH_LOCK_ALL,
+                        mpi_errno, MPI_ERR_RMA_SYNC, "**rmasync");
+
     /* Local flush: ops are performed immediately on the local process */
     if (rank == win_ptr->comm_ptr->rank) {
         MPIU_Assert(win_ptr->targets[rank].remote_lock_state == MPIDI_CH3_WIN_LOCK_GRANTED);
@@ -2101,12 +2213,22 @@ int MPIDI_Win_flush(int rank, MPID_Win *win_ptr)
        reply, and perform the RMA ops. */
 
     if (win_ptr->targets[rank].remote_lock_state == MPIDI_CH3_WIN_LOCK_NONE) {
-        MPIDI_RMA_Op_t *head = MPIDI_CH3I_RMA_Ops_head(&win_ptr->targets[rank].rma_ops_list);
+        int lock_type;
+        if (win_ptr->epoch_state == MPIDI_EPOCH_LOCK_ALL) {
+            lock_type = MPI_LOCK_SHARED;
+        }
+        else {
+            MPIDI_RMA_Op_t *head = MPIDI_CH3I_RMA_Ops_head(&win_ptr->targets[rank].rma_ops_list);
 
-        /* Ensure that win_lock is waiting at the head of the ops list */
-        MPIU_ERR_CHKANDJUMP(MPIDI_CH3I_RMA_Ops_isempty(&win_ptr->targets[rank].rma_ops_list) ||
-                            head->type != MPIDI_RMA_LOCK, mpi_errno, MPI_ERR_RMA_SYNC, "**rmasync");
-        mpi_errno = MPIDI_CH3I_Send_lock_msg(head->target_rank, head->lock_type, win_ptr);
+            /* Ensure that win_lock is waiting at the head of the ops list */
+            MPIU_ERR_CHKANDJUMP(MPIDI_CH3I_RMA_Ops_isempty(&win_ptr->targets[rank].rma_ops_list) ||
+                                head->type != MPIDI_RMA_LOCK || head->target_rank != rank,
+                                mpi_errno, MPI_ERR_RMA_SYNC, "**rmasync");
+
+            lock_type = head->lock_type;
+        }
+
+        mpi_errno = MPIDI_CH3I_Send_lock_msg(rank, lock_type, win_ptr);
         if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
     }
 
@@ -2180,12 +2302,30 @@ int MPIDI_Win_flush(int rank, MPID_Win *win_ptr)
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 int MPIDI_Win_flush_local(int rank, MPID_Win *win_ptr)
 {
+    int mpi_errno = MPI_SUCCESS;
+    MPIDI_STATE_DECL(MPID_STATE_MPIDI_WIN_FLUSH_LOCAL);
+
+    MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_WIN_FLUSH_LOCAL);
+
+    MPIU_ERR_CHKANDJUMP(win_ptr->epoch_state != MPIDI_EPOCH_LOCK &&
+                        win_ptr->epoch_state != MPIDI_EPOCH_LOCK_ALL,
+                        mpi_errno, MPI_ERR_RMA_SYNC, "**rmasync");
+
     /* Note: Local RMA calls don't poke the progress engine.  This routine
      * should poke the progress engine when the local target is flushed to help
      * make asynchronous progress.  Currently this is handled by Win_flush().
      */
 
-    return win_ptr->RMAFns.Win_flush(rank, win_ptr);
+    mpi_errno = win_ptr->RMAFns.Win_flush(rank, win_ptr);
+    if (mpi_errno != MPI_SUCCESS) { MPIU_ERR_POP(mpi_errno); }
+
+fn_exit:
+    MPIDI_RMA_FUNC_EXIT(MPID_STATE_MPIDI_WIN_FLUSH_LOCAL);
+    return mpi_errno;
+    /* --BEGIN ERROR HANDLING-- */
+fn_fail:
+    goto fn_exit;
+    /* --END ERROR HANDLING-- */
 }
 
 
@@ -2195,12 +2335,30 @@ int MPIDI_Win_flush_local(int rank, MPID_Win *win_ptr)
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 int MPIDI_Win_flush_local_all(MPID_Win *win_ptr)
 {
+    int mpi_errno = MPI_SUCCESS;
+    MPIDI_STATE_DECL(MPID_STATE_MPIDI_WIN_FLUSH_LOCAL_ALL);
+
+    MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_WIN_FLUSH_LOCAL_ALL);
+
+    MPIU_ERR_CHKANDJUMP(win_ptr->epoch_state != MPIDI_EPOCH_LOCK &&
+                        win_ptr->epoch_state != MPIDI_EPOCH_LOCK_ALL,
+                        mpi_errno, MPI_ERR_RMA_SYNC, "**rmasync");
+
     /* Note: Local RMA calls don't poke the progress engine.  This routine
      * should poke the progress engine when the local target is flushed to help
      * make asynchronous progress.  Currently this is handled by Win_flush().
      */
 
-    return win_ptr->RMAFns.Win_flush_all(win_ptr);
+    mpi_errno = win_ptr->RMAFns.Win_flush_all(win_ptr);
+    if (mpi_errno != MPI_SUCCESS) { MPIU_ERR_POP(mpi_errno); }
+
+fn_exit:
+    MPIDI_RMA_FUNC_EXIT(MPID_STATE_MPIDI_WIN_FLUSH_LOCAL_ALL);
+    return mpi_errno;
+    /* --BEGIN ERROR HANDLING-- */
+fn_fail:
+    goto fn_exit;
+    /* --END ERROR HANDLING-- */
 }
 
 
@@ -2216,12 +2374,30 @@ int MPIDI_Win_lock_all(int assert, MPID_Win *win_ptr)
 
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_WIN_LOCK_ALL);
 
-    /* FIXME: Performance -- we should not issue a lock op for every target.
-     * It would be more efficient to set a flag indicating that lock_all was
-     * called. */
-    for (i = 0; i < MPIR_Comm_size(win_ptr->comm_ptr); i++) {
-        mpi_errno = win_ptr->RMAFns.Win_lock(MPI_LOCK_SHARED, i, assert, win_ptr);
-        if (mpi_errno != MPI_SUCCESS) { MPIU_ERR_POP(mpi_errno); }
+    MPIU_ERR_CHKANDJUMP(win_ptr->epoch_state != MPIDI_EPOCH_NONE,
+                        mpi_errno, MPI_ERR_RMA_SYNC, "**rmasync");
+
+    /* Track access epoch state */
+    win_ptr->epoch_state = MPIDI_EPOCH_LOCK_ALL;
+
+    /* Immediately lock the local process for load/store access */
+    mpi_errno = MPIDI_CH3I_Acquire_local_lock(win_ptr, MPI_LOCK_SHARED);
+    if (mpi_errno != MPI_SUCCESS) { MPIU_ERR_POP(mpi_errno); }
+
+    if (win_ptr->create_flavor == MPI_WIN_FLAVOR_SHARED) {
+        /* Immediately lock all targets for load/store access */
+
+        for (i = 0; i < MPIR_Comm_size(win_ptr->comm_ptr); i++) {
+            /* Local process is already locked */
+            if (i == win_ptr->myrank) continue;
+
+            mpi_errno = MPIDI_CH3I_Send_lock_msg(i, MPI_LOCK_SHARED, win_ptr);
+            if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
+
+            mpi_errno = MPIDI_CH3I_Wait_for_lock_granted(win_ptr, i);
+            if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
+        }
+
     }
 
 fn_exit:
@@ -2246,10 +2422,16 @@ int MPIDI_Win_unlock_all(MPID_Win *win_ptr)
 
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_WIN_UNLOCK_ALL);
 
+    MPIU_ERR_CHKANDJUMP(win_ptr->epoch_state != MPIDI_EPOCH_LOCK_ALL,
+                        mpi_errno, MPI_ERR_RMA_SYNC, "**rmasync");
+
     for (i = 0; i < MPIR_Comm_size(win_ptr->comm_ptr); i++) {
         mpi_errno = win_ptr->RMAFns.Win_unlock(i, win_ptr);
         if (mpi_errno != MPI_SUCCESS) { MPIU_ERR_POP(mpi_errno); }
     }
+
+    /* Track access epoch state */
+    win_ptr->epoch_state = MPIDI_EPOCH_NONE;
 
 fn_exit:
     MPIDI_RMA_FUNC_EXIT(MPID_STATE_MPIDI_WIN_UNLOCK_ALL);
@@ -2271,6 +2453,10 @@ int MPIDI_Win_sync(MPID_Win *win_ptr)
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_WIN_SYNC);
 
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_WIN_SYNC);
+
+    MPIU_ERR_CHKANDJUMP(win_ptr->epoch_state != MPIDI_EPOCH_LOCK &&
+                        win_ptr->epoch_state != MPIDI_EPOCH_LOCK_ALL,
+                        mpi_errno, MPI_ERR_RMA_SYNC, "**rmasync");
 
     OPA_read_write_barrier();
 

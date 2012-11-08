@@ -201,6 +201,14 @@ enum MPIDI_Win_info_arg_vals_accumulate_ops {
     MPIDI_ACC_OPS_SAME_OP_NO_OP
 };
 
+enum MPIDI_Win_epoch_states {
+    MPIDI_EPOCH_NONE = 0,
+    MPIDI_EPOCH_FENCE,
+    MPIDI_EPOCH_GAT,    /* Generalized active target (Post, Start, ...) */
+    MPIDI_EPOCH_LOCK,
+    MPIDI_EPOCH_LOCK_ALL
+};
+
 struct MPIDI_Win_info_args {
     int no_locks;               /* valid flavor = all */
     int accumulate_ordering;
@@ -244,6 +252,8 @@ struct MPIDI_Win_target_state {
     MPI_Aint *sizes;      /* array of sizes of all windows */            \
     struct MPIDI_Win_info_args info_args;                                \
     struct MPIDI_Win_target_state *targets;                              \
+    enum MPIDI_Win_epoch_states epoch_state;                             \
+    int epoch_count;                                                     \
 
 #ifdef MPIDI_CH3_WIN_DECL
 #define MPID_DEV_WIN_DECL \

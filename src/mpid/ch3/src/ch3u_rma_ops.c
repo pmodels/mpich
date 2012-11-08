@@ -51,7 +51,10 @@ int MPIDI_Win_free(MPID_Win **win_ptr)
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_WIN_FREE);
         
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_WIN_FREE);
-        
+
+    MPIU_ERR_CHKANDJUMP((*win_ptr)->epoch_state != MPIDI_EPOCH_NONE,
+                        mpi_errno, MPI_ERR_RMA_SYNC, "**rmasync");
+
     comm_ptr = (*win_ptr)->comm_ptr;
     MPIU_INSTR_DURATION_START(winfree_rs);
     mpi_errno = MPIR_Reduce_scatter_block_impl((*win_ptr)->pt_rma_puts_accs, 
@@ -128,6 +131,13 @@ int MPIDI_Put(const void *origin_addr, int origin_count, MPI_Datatype
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_PUT);
         
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_PUT);
+
+    if (win_ptr->epoch_state == MPIDI_EPOCH_NONE && win_ptr->fence_cnt) {
+        win_ptr->epoch_state = MPIDI_EPOCH_FENCE;
+    }
+
+    MPIU_ERR_CHKANDJUMP(win_ptr->epoch_state == MPIDI_EPOCH_NONE,
+                        mpi_errno, MPI_ERR_RMA_SYNC, "**rmasync");
 
     MPIDI_Datatype_get_info(origin_count, origin_datatype,
 			    dt_contig, data_sz, dtp,dt_true_lb); 
@@ -217,6 +227,13 @@ int MPIDI_Get(void *origin_addr, int origin_count, MPI_Datatype
         
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_GET);
 
+    if (win_ptr->epoch_state == MPIDI_EPOCH_NONE && win_ptr->fence_cnt) {
+        win_ptr->epoch_state = MPIDI_EPOCH_FENCE;
+    }
+
+    MPIU_ERR_CHKANDJUMP(win_ptr->epoch_state == MPIDI_EPOCH_NONE,
+                        mpi_errno, MPI_ERR_RMA_SYNC, "**rmasync");
+
     MPIDI_Datatype_get_info(origin_count, origin_datatype,
 			    dt_contig, data_sz, dtp, dt_true_lb); 
 
@@ -305,6 +322,13 @@ int MPIDI_Accumulate(const void *origin_addr, int origin_count, MPI_Datatype
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_ACCUMULATE);
     
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_ACCUMULATE);
+
+    if (win_ptr->epoch_state == MPIDI_EPOCH_NONE && win_ptr->fence_cnt) {
+        win_ptr->epoch_state = MPIDI_EPOCH_FENCE;
+    }
+
+    MPIU_ERR_CHKANDJUMP(win_ptr->epoch_state == MPIDI_EPOCH_NONE,
+                        mpi_errno, MPI_ERR_RMA_SYNC, "**rmasync");
 
     MPIDI_Datatype_get_info(origin_count, origin_datatype,
 			    dt_contig, data_sz, dtp, dt_true_lb);  
