@@ -217,6 +217,8 @@ struct MPIDI_Win_info_args {
     int alloc_shared_noncontig; /* valid flavor = allocate shared */
 };
 
+struct MPIDI_RMA_op;            /* forward decl from mpidrma.h */
+
 struct MPIDI_Win_target_state {
     struct MPIDI_RMA_Op *rma_ops_list;                                   \
                                 /* list of outstanding RMA operations */ \
