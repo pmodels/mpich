@@ -204,7 +204,7 @@ enum MPIDI_Win_info_arg_vals_accumulate_ops {
 enum MPIDI_Win_epoch_states {
     MPIDI_EPOCH_NONE = 0,
     MPIDI_EPOCH_FENCE,
-    MPIDI_EPOCH_GAT,    /* Generalized active target (Post, Start, ...) */
+    MPIDI_EPOCH_PSCW,    /* Post/Complete, Start/Wait  */
     MPIDI_EPOCH_LOCK,
     MPIDI_EPOCH_LOCK_ALL
 };

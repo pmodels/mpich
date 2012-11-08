@@ -1273,11 +1273,11 @@ int MPIDI_Win_post(MPID_Group *post_grp_ptr, int assert, MPID_Win *win_ptr)
        active target calls?  E.g. post must precede start, start/complete may
        be called once, etc? */
     MPIU_ERR_CHKANDJUMP(win_ptr->epoch_state != MPIDI_EPOCH_NONE &&
-                        win_ptr->epoch_state != MPIDI_EPOCH_GAT,
+                        win_ptr->epoch_state != MPIDI_EPOCH_PSCW,
                         mpi_errno, MPI_ERR_RMA_SYNC, "**rmasync");
 
     /* Track access epoch state */
-    win_ptr->epoch_state = MPIDI_EPOCH_GAT;
+    win_ptr->epoch_state = MPIDI_EPOCH_PSCW;
     win_ptr->epoch_count++;
 
     /* Even though we would want to reset the fence counter to keep
@@ -1423,11 +1423,11 @@ int MPIDI_Win_start(MPID_Group *group_ptr, int assert, MPID_Win *win_ptr)
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_WIN_START);
 
     MPIU_ERR_CHKANDJUMP(win_ptr->epoch_state != MPIDI_EPOCH_NONE &&
-                        win_ptr->epoch_state != MPIDI_EPOCH_GAT,
+                        win_ptr->epoch_state != MPIDI_EPOCH_PSCW,
                         mpi_errno, MPI_ERR_RMA_SYNC, "**rmasync");
 
     /* Track access epoch state */
-    win_ptr->epoch_state = MPIDI_EPOCH_GAT;
+    win_ptr->epoch_state = MPIDI_EPOCH_PSCW;
     win_ptr->epoch_count++;
 
     /* Even though we would want to reset the fence counter to keep
@@ -1498,7 +1498,7 @@ int MPIDI_Win_complete(MPID_Win *win_ptr)
 
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_WIN_COMPLETE);
 
-    MPIU_ERR_CHKANDJUMP(win_ptr->epoch_state != MPIDI_EPOCH_GAT,
+    MPIU_ERR_CHKANDJUMP(win_ptr->epoch_state != MPIDI_EPOCH_PSCW,
                         mpi_errno, MPI_ERR_RMA_SYNC, "**rmasync");
 
     /* Track access epoch state */
@@ -1752,7 +1752,7 @@ int MPIDI_Win_wait(MPID_Win *win_ptr)
 
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_WIN_WAIT);
 
-    MPIU_ERR_CHKANDJUMP(win_ptr->epoch_state != MPIDI_EPOCH_GAT,
+    MPIU_ERR_CHKANDJUMP(win_ptr->epoch_state != MPIDI_EPOCH_PSCW,
                         mpi_errno, MPI_ERR_RMA_SYNC, "**rmasync");
 
     /* Track access epoch state */
@@ -1805,7 +1805,7 @@ int MPIDI_Win_test(MPID_Win *win_ptr, int *flag)
 
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_WIN_TEST);
 
-    MPIU_ERR_CHKANDJUMP(win_ptr->epoch_state != MPIDI_EPOCH_GAT,
+    MPIU_ERR_CHKANDJUMP(win_ptr->epoch_state != MPIDI_EPOCH_PSCW,
                         mpi_errno, MPI_ERR_RMA_SYNC, "**rmasync");
 
     mpi_errno = MPID_Progress_test();
