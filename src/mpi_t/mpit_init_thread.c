@@ -136,7 +136,7 @@ fn_fail:
     {
         mpi_errno = MPIR_Err_create_code(
             mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
-            "**mpi_t_init_thread", "**mpi_t_init_thread %d %d", required, provided);
+            "**mpi_t_init_thread", "**mpi_t_init_thread %d %p", required, provided);
     }
 #   endif
     mpi_errno = MPIR_Err_return_comm(NULL, FCNAME, mpi_errno);
