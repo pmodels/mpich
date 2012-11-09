@@ -773,7 +773,7 @@ void MPIDI_print_statistics() {
   if ((MPIDI_Process.mp_statistics) ||
        (MPIDI_Process.mp_printenv)) {
        if (MPIDI_Process.mp_statistics) {
-           MPIX_Statistics_write(stdout);
+           MPIDI_Statistics_write(stdout);
            if (mpid_statp) MPIU_Free(mpid_statp);
        }
     if (MPIDI_Process.mp_printenv) {

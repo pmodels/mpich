@@ -147,7 +147,6 @@ typedef struct {
 } MPIX_stats_t;
 
 extern MPIDI_printenv_t *mpich_env;
-extern MPIX_stats_t mpid_statistics;
 extern MPIX_stats_t *mpid_statp;
 extern int   prtStat;
 extern int   prtEnv;
@@ -155,6 +154,7 @@ extern void set_mpich_env(int *,int*);
 extern int numTasks;
 extern void MPIDI_open_pe_extension();
 extern void MPIDI_close_pe_extension();
+extern MPIDI_Statistics_write(FILE *);
 /*************************************************************
  *    MPIDI_STATISTICS
  *************************************************************/

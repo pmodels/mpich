@@ -160,15 +160,24 @@ MPIX_Hardware(MPIX_Hardware_t *hw)
 }
 
 #if (MPIDI_PRINTENV || MPIDI_STATISTICS || MPIDI_BANNER)
+void mpc_statistics_write() __attribute__ ((alias("MPIX_statistics_write")));
+void mp_statistics_write() __attribute__ ((alias("MPIXF_statistics_write")));
+void mp_statistics_write_() __attribute__ ((alias("MPIXF_statistics_write")));
+void mp_statistics_write__() __attribute__ ((alias("MPIXF_statistics_write")));
+void mpc_statistics_zero() __attribute__ ((alias("MPIX_statistics_zero")));
+void mp_statistics_zero() __attribute__ ((alias("MPIXF_statistics_zero")));
+void mp_statistics_zero_() __attribute__ ((alias("MPIXF_statistics_zero")));
+void mp_statistics_zero__() __attribute__ ((alias("MPIXF_statistics_zero")));
+
   /* ------------------------------------------- */
-  /* - mpid_statistics_zero  and        -------- */
-  /* - mpid_statistics_write can be     -------- */
-  /* - called during init and finalize  -------- */
-  /* - PE utiliti routines              -------- */
-  /* ------------------------------------------- */
+  /* - MPIDI_Statistics_zero  and        -------- */
+  /* - MPIDI_Statistics_write can be     -------- */
+  /* - called during init and finalize   -------- */
+  /* - PE utiliti routines               -------- */
+  /* -------------------------------------------- */
 
 int
-MPIX_Statistics_zero(void)
+MPIDI_Statistics_zero(void)
 {
     int rc=0;
 
@@ -184,8 +193,41 @@ MPIX_Statistics_zero(void)
 
    return (rc); /* to map with current PE support */
 }
+ /***************************************************************************
+ Function Name: _MPIX_statistics_zero
+
+ Description: Call the corresponding MPIDI_statistics_zero function to initialize/clear
+              statistics counter.
+
+ Parameters:
+ Name               Type         I/O
+ void
+ int                >0           Success
+                    <0           statistics not enable
+ ***************************************************************************/
+
+int _MPIX_statistics_zero (void)
+{
+    int rc = MPIDI_Statistics_zero();
+    if (rc < 0) {
+        MPID_assert(rc == PAMI_SUCCESS);
+    }
+    return(rc);
+}
+
+int MPIX_statistics_zero(void)
+{
+    return(_MPIX_statistics_zero());
+}
+
+void MPIXF_statistics_zero(int *rc)
+{
+    *rc = _MPIX_statistics_zero();
+}
+
+
 int
-MPIX_Statistics_write (FILE *statfile) {
+MPIDI_Statistics_write(FILE *statfile) {
 
     int rc=-1;
     int i;
@@ -206,15 +248,15 @@ MPIX_Statistics_write (FILE *statfile) {
     sprintf(time_buf, __DATE__" "__TIME__);
     mpid_statp->sendWaitsComplete =  mpid_statp->sends - mpid_statp->sendsComplete;
     fprintf(statfile,"Start of task (pid=%d) statistics at %s \n", getpid(), time_buf);
-    fprintf(statfile, "PAMID: sends = %ld\n", mpid_statp->sends);
-    fprintf(statfile, "PAMID: sendsComplete = %ld\n", mpid_statp->sendsComplete);
-    fprintf(statfile, "PAMID: sendWaitsComplete = %ld\n", mpid_statp->sendWaitsComplete);
-    fprintf(statfile, "PAMID: recvs = %ld\n", mpid_statp->recvs);
-    fprintf(statfile, "PAMID: recvWaitsComplete = %ld\n", mpid_statp->recvWaitsComplete);
-    fprintf(statfile, "PAMID: earlyArrivals = %ld\n", mpid_statp->earlyArrivals);
-    fprintf(statfile, "PAMID: earlyArrivalsMatched = %ld\n", mpid_statp->earlyArrivalsMatched);
-    fprintf(statfile, "PAMID: lateArrivals = %ld\n", mpid_statp->lateArrivals);
-    fprintf(statfile, "PAMID: unorderedMsgs = %ld\n", mpid_statp->unorderedMsgs);
+    fprintf(statfile, "MPICH: sends = %ld\n", mpid_statp->sends);
+    fprintf(statfile, "MPICH: sendsComplete = %ld\n", mpid_statp->sendsComplete);
+    fprintf(statfile, "MPICH: sendWaitsComplete = %ld\n", mpid_statp->sendWaitsComplete);
+    fprintf(statfile, "MPICH: recvs = %ld\n", mpid_statp->recvs);
+    fprintf(statfile, "MPICH: recvWaitsComplete = %ld\n", mpid_statp->recvWaitsComplete);
+    fprintf(statfile, "MPICH: earlyArrivals = %ld\n", mpid_statp->earlyArrivals);
+    fprintf(statfile, "MPICH: earlyArrivalsMatched = %ld\n", mpid_statp->earlyArrivalsMatched);
+    fprintf(statfile, "MPICH: lateArrivals = %ld\n", mpid_statp->lateArrivals);
+    fprintf(statfile, "MPICH: unorderedMsgs = %ld\n", mpid_statp->unorderedMsgs);
     fflush(statfile);
     memset(&query_stat,0, sizeof(query_stat));
     query_stat.name =  (pami_attribute_name_t)PAMI_CONTEXT_STATISTICS ;
@@ -262,8 +304,79 @@ n",rc);
         }
    return (rc);
 }
+ /***************************************************************************
+ Function Name: _MPIX_statistics_write
+ Description: Call MPIDI_Statistics_write  to write statistical
+              information to specified file descriptor.   
+ Parameters:
+ Name               Type         I/O
+ fptr               FILE*        I    File pointer, can be stdout or stderr.
+                                      If it is to a file, user has to open
+                                      the file.
+ rc (Fortran only)  int          0    Return sum from MPIDI_Statistics_write calls
+ <returns> (C only)  0                Both MPICH and PAMI statistics
+ ***************************************************************************/
+int _MPIX_statistics_write(FILE* fptr)
+{
+    int rc = MPIDI_Statistics_write(fptr);
+    if (rc < 0) {
+        MPID_assert(rc == PAMI_SUCCESS);
+    }
+    return(rc);
+}
 
+int MPIX_statistics_write(FILE* fptr)
+{
+    return(_MPIX_statistics_write(fptr));
+}
+
+/* Fortran:  fdes is pointer to a file descriptor.
+ *           rc   is pointer to buffer for storing return code.
+ *
+ * Note: Fortran app. will convert a Fortran I/O unit to a file
+ *       descriptor by calling Fortran utilities, flush_ and getfd.
+ *       When fdes=1, output is to STDOUT.  When fdes=2, output is to STDERR.
+ */
+
+void MPIXF_statistics_write(int *fdes, int *rc)
+{
+    FILE *fp;
+    int  dup_fd;
+    int  closefp=0;
+
+    /* Convert the DUP file descriptor to a FILE pointer */
+    dup_fd = dup(*fdes);
+    if ( (fp = fdopen(dup_fd, "a")) != NULL )
+       closefp = 1;
+    else
+       fp = stdout;    /* If fdopen failed then default to stdout */
+
+    *rc = _MPIX_statistics_write(fp);
+
+    /* The check is because I don't want to close stdout. */
+    if ( closefp ) fclose(fp);
+}
+
+void MPIXF_statistics_write_(int *fdes, int *rc)
+{
+    FILE *fp;
+    int  dup_fd;
+    int  closefp=0;
+
+    /* Convert the DUP file descriptor to a FILE pointer */
+    dup_fd = dup(*fdes);
+    if ( (fp = fdopen(dup_fd, "a")) != NULL )
+       closefp = 1;
+    else
+       fp = stdout;    /* If fdopen failed then default to stdout */
+
+    *rc = _MPIX_statistics_write(fp);
+
+    /* The check is because I don't want to close stdout. */
+    if ( closefp ) fclose(fp);
+}
 #endif
+
 
 #ifdef __BGQ__
 
