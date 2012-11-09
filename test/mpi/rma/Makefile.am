@@ -104,6 +104,7 @@ noinst_PROGRAMS =          \
     get_accumulate_int_derived     \
     flush                  \
     reqops                 \
+    req_example            \
     win_info
 
 strided_acc_indexed_LDADD       = $(LDADD) -lm

@@ -88,5 +88,6 @@ get_accumulate_short 4 mpiversion=3.0
 get_accumulate_short_derived 4 mpiversion=3.0
 flush 4 mpiversion=3.0
 reqops 4 mpiversion=3.0
+req_example 4 mpiversion=3.0
 win_info 4 mpiversion=3.0
 linked_list_lockall 4 mpiversion=3.0
