@@ -52,6 +52,29 @@ static int MPIDI_CH3I_Rma_req_poll(void *state, MPI_Status *status)
 
 
 #undef FUNCNAME
+#define FUNCNAME MPIDI_CH3I_Rma_req_wait
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
+static int MPIDI_CH3I_Rma_req_wait(int count, void **states, double timeout,
+                                   MPI_Status *status)
+{
+    int mpi_errno = MPI_SUCCESS;
+    int i;
+
+    for (i = 0; i < count; i++) {
+        /* Call poll to complete the operation */
+        mpi_errno = MPIDI_CH3I_Rma_req_poll(states[i], status);
+        if (mpi_errno != MPI_SUCCESS) { MPIU_ERR_POP(mpi_errno); }
+    }
+
+ fn_exit:
+    return mpi_errno;
+ fn_fail:
+    goto fn_exit;
+}
+
+
+#undef FUNCNAME
 #define FUNCNAME MPIDI_CH3I_Rma_req_query
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
@@ -144,7 +167,8 @@ int MPIDI_Rput(const void *origin_addr, int origin_count,
                                          MPIDI_CH3I_Rma_req_free,
                                          MPIDI_CH3I_Rma_req_cancel,
                                          MPIDI_CH3I_Rma_req_poll,
-                                         NULL, req_state, &req_state->request);
+                                         MPIDI_CH3I_Rma_req_wait,
+                                         req_state, &req_state->request);
 
     if (mpi_errno != MPI_SUCCESS) { MPIU_ERR_POP(mpi_errno); }
 
@@ -195,7 +219,8 @@ int MPIDI_Rget(void *origin_addr, int origin_count,
                                          MPIDI_CH3I_Rma_req_free,
                                          MPIDI_CH3I_Rma_req_cancel,
                                          MPIDI_CH3I_Rma_req_poll,
-                                         NULL, req_state, &req_state->request);
+                                         MPIDI_CH3I_Rma_req_wait,
+                                         req_state, &req_state->request);
 
     if (mpi_errno != MPI_SUCCESS) { MPIU_ERR_POP(mpi_errno); }
 
@@ -246,7 +271,8 @@ int MPIDI_Raccumulate(const void *origin_addr, int origin_count,
                                          MPIDI_CH3I_Rma_req_free,
                                          MPIDI_CH3I_Rma_req_cancel,
                                          MPIDI_CH3I_Rma_req_poll,
-                                         NULL, req_state, &req_state->request);
+                                         MPIDI_CH3I_Rma_req_wait,
+                                         req_state, &req_state->request);
 
     if (mpi_errno != MPI_SUCCESS) { MPIU_ERR_POP(mpi_errno); }
 
@@ -300,7 +326,8 @@ int MPIDI_Rget_accumulate(const void *origin_addr, int origin_count,
                                          MPIDI_CH3I_Rma_req_free,
                                          MPIDI_CH3I_Rma_req_cancel,
                                          MPIDI_CH3I_Rma_req_poll,
-                                         NULL, req_state, &req_state->request);
+                                         MPIDI_CH3I_Rma_req_wait,
+                                         req_state, &req_state->request);
 
     if (mpi_errno != MPI_SUCCESS) { MPIU_ERR_POP(mpi_errno); }
 
