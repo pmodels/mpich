@@ -2,6 +2,9 @@
                                Changes in 3.0
 ===============================================================================
 
+ # MPI-3: All MPI-3 features are now implemented and the MPI_VERSION
+   bumped up to 3.0.
+
  # OVERALL: Added support for ARM-v7 native atomics
 
  # MPE: MPE is now separated out of MPICH and can be downloaded/used
