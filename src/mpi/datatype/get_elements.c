@@ -110,14 +110,11 @@ int MPI_Get_elements(const MPI_Status *status, MPI_Datatype datatype, int *count
 
     /* ... end of body of routine ... */
 
-#ifdef HAVE_ERROR_CHECKING
   fn_exit:
-#endif
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_GET_ELEMENTS);
     return mpi_errno;
 
     /* --BEGIN ERROR HANDLING-- */
-#   ifdef HAVE_ERROR_CHECKING
   fn_fail:
     {
 	mpi_errno = MPIR_Err_create_code(
@@ -127,6 +124,5 @@ int MPI_Get_elements(const MPI_Status *status, MPI_Datatype datatype, int *count
     }
     mpi_errno = MPIR_Err_return_comm(0, FCNAME, mpi_errno);
     goto fn_exit;
-#   endif
     /* --END ERROR HANDLING-- */
 }
