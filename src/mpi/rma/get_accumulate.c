@@ -29,27 +29,54 @@
 #define FUNCNAME MPI_Get_accumulate
 
 /*@
-   MPI_Get_accumulate - Accumulate data into the target process using remote 
-   memory access 
+MPI_Get_accumulate - Perform an atomic, one-sided read-and-accumulate operation.
+
+
+Accumulate origin_count elements of type origin_datatype from the origin buffer
+(origin_addr) to the buffer at offset target_disp, in the target window
+specified by target_rank and win, using the operation op and return in the
+result buffer result_addr the content of the target buffer before the
+accumulation.
 
 Input Parameters:
-+ origin_addr - initial address of buffer (choice) 
-. origin_count - number of entries in buffer (nonnegative integer) 
-. origin_datatype - datatype of each buffer entry (handle) 
++ origin_addr - initial address of buffer (choice)
+. origin_count - number of entries in buffer (nonnegative integer)
+. origin_datatype - datatype of each buffer entry (handle)
 . result_addr - initial address of result buffer (choice)
 . result_count - number of entries in result buffer (non-negative integer)
 . result_datatype - datatype of each entry in result buffer (handle)
-. target_rank - rank of target (nonnegative integer) 
-. target_disp - displacement from start of window to beginning of target 
-  buffer (nonnegative integer)  
-. target_count - number of entries in target buffer (nonnegative integer) 
-. target_datatype - datatype of each entry in target buffer (handle) 
-. op - predefined reduce operation (handle) 
-- win - window object (handle) 
+. target_rank - rank of target (nonnegative integer)
+. target_disp - displacement from start of window to beginning of target
+  buffer (nonnegative integer)
+. target_count - number of entries in target buffer (nonnegative integer)
+. target_datatype - datatype of each entry in target buffer (handle)
+. op - predefined reduce operation (handle)
+- win - window object (handle)
 
-   Notes:
-The basic components of both the origin and target datatype must be the same 
-predefined datatype (e.g., all 'MPI_INT' or all 'MPI_DOUBLE_PRECISION').
+Notes:
+This operations is atomic with respect to other "accumulate" operations.
+
+The get and accumulate steps are executed atomically for each basic element in
+the datatype (see MPI 3.0 Section 11.7 for details). The predefined operation
+'MPI_REPLACE' provides fetch-and-set behavior.
+
+The origin and result buffers (origin_addr and result_addr) must be disjoint.
+Each datatype argument must be a predefined datatype or a derived datatype
+where all basic components are of the same predefined datatype. All datatype
+arguments must be constructed from the same predefined datatype. The
+operation op applies to elements of that predefined type. target_datatype must
+not specify overlapping entries, and the target buffer must fit in the target
+window or in attached memory in a dynamic window.
+
+Any of the predefined operations for 'MPI_Reduce,' as well as 'MPI_NO_OP' or
+'MPI_REPLACE' can be specified as op. User-defined functions cannot be used. A
+new predefined operation, 'MPI_NO_OP,' is defined. It corresponds to the
+associative function f (a, b) = a; i.e., the current value in the target memory
+is returned in the result buffer at the origin and no operation is performed on
+the target buffer. 'MPI_NO_OP' can be used only in 'MPI_Get_accumulate,'
+'MPI_Rget_accumulate,' and 'MPI_Fetch_and_op.' 'MPI_NO_OP' cannot be used in
+'MPI_Accumulate,' 'MPI_Raccumulate,' or collective reduction operations, such as
+'MPI_Reduce' and others.
 
 .N Fortran
 
@@ -60,6 +87,8 @@ predefined datatype (e.g., all 'MPI_INT' or all 'MPI_DOUBLE_PRECISION').
 .N MPI_ERR_RANK
 .N MPI_ERR_TYPE
 .N MPI_ERR_WIN
+
+.seealso: MPI_Rget_accumulate MPI_Fetch_and_op
 @*/
 int MPI_Get_accumulate(const void *origin_addr, int origin_count,
         MPI_Datatype origin_datatype, void *result_addr, int result_count,

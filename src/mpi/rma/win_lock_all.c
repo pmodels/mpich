@@ -29,35 +29,39 @@
 #define FUNCNAME MPI_Win_lock_all
 
 /*@
-   MPI_Win_lock_all - Begin an RMA access epoch at all processes on the 
-   given window.
+MPI_Win_lock_all - Begin an RMA access epoch at all processes on the given window.
+
+
+Starts an RMA access epoch to all processes in win, with a lock type of
+'MPI_Lock_shared.' During the epoch, the calling process can access the window
+memory on all processes in win by using RMA operations. A window locked with
+'MPI_Win_lock_all' must be unlocked with 'MPI_Win_unlock_all.' This routine is not
+collective — the ALL refers to a lock on all members of the group of the
+window.
 
 Input Parameters:
 + assert - Used to optimize this call; zero may be used as a default.
-  See notes. (integer) 
-- win - window object (handle) 
+  See notes. (integer)
+- win - window object (handle)
 
-   Notes:
+Notes:
 
-   The name of this routine is misleading.  In particular, this
-   routine need not block, except when the target process is the calling 
-   process.  
+This call is not collective.
 
-   Implementations may restrict the use of RMA communication that is 
-   synchronized
-   by lock calls to windows in memory allocated by 'MPI_Alloc_mem'. Locks can 
-   be used portably only in such memory. 
+The 'assert' argument is used to indicate special conditions for the fence that
+an implementation may use to optimize the 'MPI_Win_lock_all' operation.  The
+value zero is always correct.  Other assertion values may be or''ed together.
+Assertions that are valid for 'MPI_Win_lock_all' are\:
 
-   The 'assert' argument is used to indicate special conditions for the
-   fence that an implementation may use to optimize the 'MPI_Win_lock_all' 
-   operation.  The value zero is always correct.  Other assertion values
-   may be or''ed together.  Assertions that are valid for 'MPI_Win_lock_all' are\:
+. 'MPI_MODE_NOCHECK' - No other process holds, or will attempt to acquire a
+  conflicting lock, while the caller holds the window lock. This is useful
+  when mutual exclusion is achieved by other means, but the coherence
+  operations that may be attached to the lock and unlock calls are still
+  required.
 
-. MPI_MODE_NOCHECK - no other process holds, or will attempt to acquire a 
-  conflicting lock, while the caller holds the window lock. This is useful 
-  when mutual exclusion is achieved by other means, but the coherence 
-  operations that may be attached to the lock and unlock calls are still 
-  required. 
+There may be additional overheads associated with using 'MPI_Win_lock' and
+'MPI_Win_lock_all' concurrently on the same window. These overheads could be
+avoided by specifying the assertion 'MPI_MODE_NOCHECK' when possible
 
 .N ThreadSafe
 
@@ -68,6 +72,8 @@ Input Parameters:
 .N MPI_ERR_RANK
 .N MPI_ERR_WIN
 .N MPI_ERR_OTHER
+
+.seealso: MPI_Win_unlock_all
 @*/
 int MPI_Win_lock_all(int assert, MPI_Win win)
 {

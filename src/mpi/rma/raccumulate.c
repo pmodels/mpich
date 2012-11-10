@@ -29,26 +29,34 @@
 #define FUNCNAME MPI_Raccumulate
 
 /*@
-   MPI_Raccumulate - Accumulate data into the target process using remote 
-   memory access 
+MPI_Raccumulate - Accumulate data into the target process using remote memory
+access and return a request handle for the operation.
+
+
+'MPI_Raccumulate' is similar to 'MPI_Accumulate', except that it allocates a
+communication request object and associates it with the request handle (the
+argument request) that can be used to wait or test for completion.  The
+completion of an 'MPI_Raccumulate' operation indicates that the origin buffer is
+free to be updated. It does not indicate that the operation has completed at
+the target window.
 
 Input Parameters:
-+ origin_addr - initial address of buffer (choice) 
-. origin_count - number of entries in buffer (nonnegative integer) 
-. origin_datatype - datatype of each buffer entry (handle) 
-. target_rank - rank of target (nonnegative integer) 
-. target_disp - displacement from start of window to beginning of target 
-  buffer (nonnegative integer)  
-. target_count - number of entries in target buffer (nonnegative integer) 
-. target_datatype - datatype of each entry in target buffer (handle) 
-. op - predefined reduce operation (handle) 
-- win - window object (handle) 
++ origin_addr - initial address of buffer (choice)
+. origin_count - number of entries in buffer (nonnegative integer)
+. origin_datatype - datatype of each buffer entry (handle)
+. target_rank - rank of target (nonnegative integer)
+. target_disp - displacement from start of window to beginning of target
+  buffer (nonnegative integer)
+. target_count - number of entries in target buffer (nonnegative integer)
+. target_datatype - datatype of each entry in target buffer (handle)
+. op - predefined reduce operation (handle)
+- win - window object (handle)
 
 Output Parameters:
 . request - RMA request (handle)
 
-   Notes:
-The basic components of both the origin and target datatype must be the same 
+Notes:
+The basic components of both the origin and target datatype must be the same
 predefined datatype (e.g., all 'MPI_INT' or all 'MPI_DOUBLE_PRECISION').
 
 .N Fortran
@@ -60,6 +68,8 @@ predefined datatype (e.g., all 'MPI_INT' or all 'MPI_DOUBLE_PRECISION').
 .N MPI_ERR_RANK
 .N MPI_ERR_TYPE
 .N MPI_ERR_WIN
+
+.seealso: MPI_Accumulate
 @*/
 int MPI_Raccumulate(const void *origin_addr, int origin_count, MPI_Datatype
                    origin_datatype, int target_rank, MPI_Aint

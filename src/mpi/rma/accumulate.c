@@ -57,6 +57,8 @@ predefined datatype (e.g., all 'MPI_INT' or all 'MPI_DOUBLE_PRECISION').
 .N MPI_ERR_RANK
 .N MPI_ERR_TYPE
 .N MPI_ERR_WIN
+
+.seealso: MPI_Raccumulate
 @*/
 int MPI_Accumulate(const void *origin_addr, int origin_count, MPI_Datatype
                    origin_datatype, int target_rank, MPI_Aint

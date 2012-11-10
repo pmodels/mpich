@@ -29,10 +29,17 @@
 #define FUNCNAME MPI_Win_sync
 
 /*@
-   MPI_Win_sync - Synchronize public and private copies of the given window
+MPI_Win_sync - Synchronize public and private copies of the given window.
+
+
+The call 'MPI_Win_sync' synchronizes the private and public window copies of win.
+For the purposes of synchronizing the private and public window, 'MPI_Win_sync'
+has the effect of ending and reopening an access and exposure epoch on the
+window (note that it does not actually end an epoch or complete any pending MPI
+RMA operations).
 
 Input Parameters:
-. win - window object (handle) 
+. win - window object (handle)
 
 .N ThreadSafe
 
@@ -44,7 +51,7 @@ Input Parameters:
 .N MPI_ERR_WIN
 .N MPI_ERR_OTHER
 
-.seealso: MPI_Win_lock
+.seealso: MPI_Win_flush MPI_Win_flush_all MPI_Win_flush_local MPI_Win_flush_local_all
 @*/
 int MPI_Win_sync(MPI_Win win)
 {

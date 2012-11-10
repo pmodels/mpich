@@ -29,18 +29,26 @@
 #define FUNCNAME MPI_Rget
 
 /*@
-   MPI_Rget - Get data from a memory window on a remote process
+MPI_Rget - Get data from a memory window on a remote process
+
+
+'MPI_Rget' is similar to 'MPI_Get', except that it allocates a communication
+request object and associates it with the request handle (the argument request)
+that can be used to wait or test for completion. The completion of an 'MPI_Rget'
+operation indicates that the data is available in the origin buffer. If
+origin_addr points to memory attached to a window, then the data becomes
+available in the private copy of this window.
 
 Input Parameters:
 + origin_addr - Address of the buffer in which to receive the data
-. origin_count - number of entries in origin buffer (nonnegative integer) 
-. origin_datatype - datatype of each entry in origin buffer (handle) 
-. target_rank - rank of target (nonnegative integer) 
-. target_disp - displacement from window start to the beginning of the 
-  target buffer (nonnegative integer) 
-. target_count - number of entries in target buffer (nonnegative integer) 
-. target_datatype - datatype of each entry in target buffer (handle) 
-- win - window object used for communication (handle) 
+. origin_count - number of entries in origin buffer (nonnegative integer)
+. origin_datatype - datatype of each entry in origin buffer (handle)
+. target_rank - rank of target (nonnegative integer)
+. target_disp - displacement from window start to the beginning of the
+  target buffer (nonnegative integer)
+. target_count - number of entries in target buffer (nonnegative integer)
+. target_datatype - datatype of each entry in target buffer (handle)
+- win - window object used for communication (handle)
 
 Output Parameters:
 . request - RMA request (handle)
@@ -56,6 +64,8 @@ Output Parameters:
 .N MPI_ERR_RANK
 .N MPI_ERR_TYPE
 .N MPI_ERR_WIN
+
+.seealso: MPI_Get
 @*/
 int MPI_Rget(void *origin_addr, int origin_count, MPI_Datatype
             origin_datatype, int target_rank, MPI_Aint target_disp,

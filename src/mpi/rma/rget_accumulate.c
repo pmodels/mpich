@@ -29,29 +29,43 @@
 #define FUNCNAME MPI_Rget_accumulate
 
 /*@
-   MPI_Rget_accumulate - Accumulate data into the target process using remote 
-   memory access 
+MPI_Rget_accumulate - Perform an atomic, one-sided read-and-accumulate
+operation and return a request handle for the operation.
+
+
+'MPI_Rget_accumulate' is similar to 'MPI_Get_accumulate', except that it allocates
+a communication request object and associates it with the request handle (the
+argument request) that can be used to wait or test for completion. The
+completion of an 'MPI_Rget_accumulate' operation indicates that the data is
+available in the result buffer and the origin buffer is free to be updated. It
+does not indicate that the operation has been completed at the target window.
 
 Input Parameters:
-+ origin_addr - initial address of buffer (choice) 
-. origin_count - number of entries in buffer (nonnegative integer) 
-. origin_datatype - datatype of each buffer entry (handle) 
++ origin_addr - initial address of buffer (choice)
+. origin_count - number of entries in buffer (nonnegative integer)
+. origin_datatype - datatype of each buffer entry (handle)
 . result_addr - initial address of result buffer (choice)
 . result_count - number of entries in result buffer (non-negative integer)
 . result_datatype - datatype of each entry in result buffer (handle)
-. target_rank - rank of target (nonnegative integer) 
-. target_disp - displacement from start of window to beginning of target 
-  buffer (nonnegative integer)  
-. target_count - number of entries in target buffer (nonnegative integer) 
-. target_datatype - datatype of each entry in target buffer (handle) 
-. op - predefined reduce operation (handle) 
-- win - window object (handle) 
+. target_rank - rank of target (nonnegative integer)
+. target_disp - displacement from start of window to beginning of target
+  buffer (nonnegative integer)
+. target_count - number of entries in target buffer (nonnegative integer)
+. target_datatype - datatype of each entry in target buffer (handle)
+. op - predefined reduce operation (handle)
+- win - window object (handle)
 
 Output Parameters:
 . request - RMA request (handle)
 
-   Notes:
-The basic components of both the origin and target datatype must be the same 
+Notes:
+This operations is atomic with respect to other "accumulate" operations.
+
+The get and accumulate steps are executed atomically for each basic element in
+the datatype (see MPI 3.0 Section 11.7 for details). The predefined operation
+'MPI_REPLACE' provides fetch-and-set behavior.
+
+The basic components of both the origin and target datatype must be the same
 predefined datatype (e.g., all 'MPI_INT' or all 'MPI_DOUBLE_PRECISION').
 
 .N Fortran
@@ -63,6 +77,8 @@ predefined datatype (e.g., all 'MPI_INT' or all 'MPI_DOUBLE_PRECISION').
 .N MPI_ERR_RANK
 .N MPI_ERR_TYPE
 .N MPI_ERR_WIN
+
+.seealso: MPI_Get_accumulate MPI_Fetch_and_op
 @*/
 int MPI_Rget_accumulate(const void *origin_addr, int origin_count,
         MPI_Datatype origin_datatype, void *result_addr, int result_count,

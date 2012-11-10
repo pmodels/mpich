@@ -29,11 +29,18 @@
 #define FUNCNAME MPI_Win_unlock_all
 
 /*@
-   MPI_Win_unlock_all - Completes an RMA access epoch all processes on the
-   given window
+MPI_Win_unlock_all - Completes an RMA access epoch at all processes on the given window.
+
+
+Completes a shared RMA access epoch started by a call to
+'MPI_Win_lock_all(assert, win).' RMA operations issued during this epoch will
+have completed both at the origin and at the target when the call returns.
 
 Input Parameters:
-. win - window object (handle) 
+. win - window object (handle)
+
+Notes:
+This call is not collective.
 
 .N ThreadSafe
 

@@ -29,14 +29,46 @@
 #define FUNCNAME MPI_Win_create_dynamic
 
 /*@
-   MPI_Win_create_dynamic - Create an MPI Window object for one-sided communication
+MPI_Win_create_dynamic - Create an MPI Window object for one-sided
+communication.  This window allows memory to be dynamically exposed and
+un-exposed for RMA operations.
+
+
+This is a collective call executed by all processes in the group of comm. It
+returns a window win without memory attached. Existing process memory can be
+attached as described below. This routine returns a window object that can be
+used by these processes to perform RMA operations on attached memory. Because
+this window has special properties, it will sometimes be referred to as a
+dynamic window.  The info argument can be used to specify hints similar to the
+info argument for 'MPI_Win_create'.
+
+In the case of a window created with 'MPI_Win_create_dynamic,' the target_disp
+for all RMA functions is the address at the target; i.e., the effective
+window_base is 'MPI_BOTTOM' and the disp_unit is one. For dynamic windows, the
+target_disp argument to RMA communication operations is not restricted to
+non-negative values. Users should use 'MPI_Get_address' at the target process to
+determine the address of a target memory location and communicate this address
+to the origin process.
 
 Input Parameters:
-+ info - info argument (handle) 
-- comm - communicator (handle) 
++ info - info argument (handle)
+- comm - communicator (handle)
 
 Output Parameters:
-. win - window object returned by the call (handle) 
+. win - window object returned by the call (handle)
+
+Notes:
+
+Users are cautioned that displacement arithmetic can overflow in variables of
+type 'MPI_Aint' and result in unexpected values on some platforms. This issue may
+be addressed in a future version of MPI.
+
+Memory in this window may not be used as the target of one-sided accesses in
+this window until it is attached using the function 'MPI_Win_attach'. That is, in
+addition to using 'MPI_Win_create_dynamic' to create an MPI window, the user must
+use 'MPI_Win_attach' before any local memory may be the target of an MPI RMA
+operation. Only memory that is currently accessible may be attached.
+
 
 .N ThreadSafe
 .N Fortran
@@ -48,6 +80,8 @@ Output Parameters:
 .N MPI_ERR_INFO
 .N MPI_ERR_OTHER
 .N MPI_ERR_SIZE
+
+.seealso: MPI_Win_attach MPI_Win_detach MPI_Win_allocate MPI_Win_allocate_shared MPI_Win_create MPI_Win_free
 @*/
 int MPI_Win_create_dynamic(MPI_Info info, MPI_Comm comm, MPI_Win *win)
 {

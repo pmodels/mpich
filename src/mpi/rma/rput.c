@@ -29,17 +29,28 @@
 #define FUNCNAME MPI_Rput
 
 /*@
-   MPI_Rput - Put data into a memory window on a remote process
+MPI_Rput - Put data into a memory window on a remote process and return a
+request handle for the operation.
+
+
+'MPI_Rput' is similar to 'MPI_Put,' except that it allocates a
+communication request object and associates it with the request handle (the
+argument request). The completion of an 'MPI_Rput' operation (i.e., after the
+corresponding test or wait) indicates that the sender is now free to update
+the locations in the origin buffer. It does not indicate that the data is
+available at the target window. If remote completion is required,
+'MPI_Win_flush,' 'MPI_Win_flush_all,' 'MPI_Win_unlock,' or 'MPI_Win_unlock_all' can be
+used.
 
 Input Parameters:
-+ origin_addr -initial address of origin buffer (choice) 
-. origin_count -number of entries in origin buffer (nonnegative integer) 
-. origin_datatype -datatype of each entry in origin buffer (handle) 
-. target_rank -rank of target (nonnegative integer) 
-. target_disp -displacement from start of window to target buffer (nonnegative integer) 
-. target_count -number of entries in target buffer (nonnegative integer) 
-. target_datatype -datatype of each entry in target buffer (handle) 
-- win - window object used for communication (handle) 
++ origin_addr -initial address of origin buffer (choice)
+. origin_count -number of entries in origin buffer (nonnegative integer)
+. origin_datatype -datatype of each entry in origin buffer (handle)
+. target_rank -rank of target (nonnegative integer)
+. target_disp -displacement from start of window to target buffer (nonnegative integer)
+. target_count -number of entries in target buffer (nonnegative integer)
+. target_datatype -datatype of each entry in target buffer (handle)
+- win - window object used for communication (handle)
 
 Output Parameters:
 . request -RMA request (handle)
@@ -55,6 +66,8 @@ Output Parameters:
 .N MPI_ERR_RANK
 .N MPI_ERR_TYPE
 .N MPI_ERR_WIN
+
+.seealso: MPI_Put
 @*/
 int MPI_Rput(const void *origin_addr, int origin_count, MPI_Datatype
             origin_datatype, int target_rank, MPI_Aint target_disp,

@@ -29,10 +29,15 @@
 #define FUNCNAME MPI_Win_flush_all
 
 /*@
-   MPI_Win_flush_all - Comple all outstanding RMA operations at all targets
+MPI_Win_flush_all - Complete all outstanding RMA operations at all targets
+
+
+All RMA operations issued by the calling process to any target on the specified
+window prior to this call and in the specified window will have completed
+both at the origin and at the target when this call returns.
 
 Input Parameters:
-. win - window object (handle) 
+. win - window object (handle)
 
 .N ThreadSafe
 
@@ -44,7 +49,7 @@ Input Parameters:
 .N MPI_ERR_WIN
 .N MPI_ERR_OTHER
 
-.seealso: MPI_Win_lock
+.seealso: MPI_Win_flush MPI_Win_flush_local MPI_Win_flush_local_all MPI_Win_lock MPI_Win_lock_all
 @*/
 int MPI_Win_flush_all(MPI_Win win)
 {

@@ -31,8 +31,27 @@
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 
 /*@
-   MPI_Win_allocate_shared - Create an MPI Window object for one-sided communication
-   and allocate memory at each process.
+MPI_Win_allocate_shared - Create an MPI Window object for one-sided
+communication and shared memory access, and allocate memory at each process.
+
+This is a collective call executed by all processes in the group of comm. On
+each process i, it allocates memory of at least size bytes that is shared among
+all processes in comm, and returns a pointer to the locally allocated segment
+in baseptr that can be used for load/store accesses on the calling process. The
+locally allocated memory can be the target of load/store accesses by remote
+processes; the base pointers for other processes can be queried using the
+function 'MPI_Win_shared_query'.
+
+The call also returns a window object that can be used by all processes in comm
+to perform RMA operations. The size argument may be different at each process
+and size = 0 is valid. It is the user''s responsibility to ensure that the
+communicator comm represents a group of processes that can create a shared
+memory segment that can be accessed by all processes in the group. The
+allocated memory is contiguous across process ranks unless the info key
+alloc_shared_noncontig is specified. Contiguous across process ranks means that
+the first address in the memory segment of process i is consecutive with the
+last address in the memory segment of process i − 1.  This may enable the user
+to calculate remote address offsets with local information only.
 
 Input Parameters:
 . size - size of window in bytes (nonnegative integer)
@@ -54,6 +73,8 @@ Output Parameters:
 .N MPI_ERR_INFO
 .N MPI_ERR_OTHER
 .N MPI_ERR_SIZE
+
+.seealso: MPI_Win_allocate MPI_Win_create MPI_Win_create_dynamic MPI_Win_free MPI_Win_shared_query
 @*/
 int MPI_Win_allocate_shared(MPI_Aint size, int disp_unit, MPI_Info info, MPI_Comm comm,
                              void *baseptr, MPI_Win *win)

@@ -29,11 +29,19 @@
 #define FUNCNAME MPI_Win_detach
 
 /*@
-   MPI_Win_detach - Detach memory from a dynamic window
+MPI_Win_detach - Detach memory from a dynamic window
+
+
+Detaches a previously attached memory region beginning at base. The arguments
+base and win must match the arguments passed to a previous call to
+'MPI_Win_attach.'
 
 Input Parameters:
-+ base - initial address of memory to be detached 
-- win - window object used for communication (handle) 
++ base - initial address of memory to be detached
+- win - window object used for communication (handle)
+
+Notes:
+Memory also becomes detached when the associated dynamic memory window is freed.
 
 .N ThreadSafe
 
@@ -46,6 +54,8 @@ Input Parameters:
 .N MPI_ERR_RANK
 .N MPI_ERR_TYPE
 .N MPI_ERR_WIN
+
+.seealso: MPI_Win_create_dynamic MPI_Win_attach
 @*/
 int MPI_Win_detach(MPI_Win win, const void *base)
 {

@@ -29,12 +29,20 @@
 #define FUNCNAME MPI_Win_attach
 
 /*@
-   MPI_Win_attach - Attach memory to a dynamic window
+MPI_Win_attach - Attach memory to a dynamic window.
+
+
+Attaches a local memory region beginning at base for remote access within the
+given window. The memory region specified must not contain any part that is
+already attached to the window win, that is, attaching overlapping memory
+concurrently within the same window is erroneous. The argument win must be a
+window that was created with 'MPI_Win_create_dynamic'. Multiple (but
+non-overlapping) memory regions may be attached to the same window.
 
 Input Parameters:
 + size - size of memory to be attached in bytes
-. base - initial address of memory to be attached 
-- win - window object used for communication (handle) 
+. base - initial address of memory to be attached
+- win - window object used for communication (handle)
 
 .N ThreadSafe
 
@@ -47,6 +55,8 @@ Input Parameters:
 .N MPI_ERR_RANK
 .N MPI_ERR_TYPE
 .N MPI_ERR_WIN
+
+.seealso: MPI_Win_create_dynamic MPI_Win_detach
 @*/
 int MPI_Win_attach(MPI_Win win, void *base, MPI_Aint size)
 {

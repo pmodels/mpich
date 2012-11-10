@@ -29,15 +29,25 @@
 #define FUNCNAME MPI_Win_set_info
 
 /*@
-   MPI_Win_set_info - Set new values for the hints of the window associated
-   with win.  The call is collective on the group of win. The info object may
-   be different on each process, but any info entries that an implementation
-   requires to be the same on all processes must appear with the same value in
-   each process'' info object.
+MPI_Win_set_info - Set new values for the hints of the window associated with
+win.
+
+
+The call is collective on the group of win. The info object may be different on
+each process, but any info entries that an implementation requires to be the
+same on all processes must appear with the same value in each process'' info
+object.
 
 Input Parameters:
 + win - window object (handle)
 - info - info argument (handle)
+
+Notes:
+
+Some info items that an implementation can use when it creates a window cannot
+easily be changed once the window has been created. Thus, an implementation may
+ignore hints issued in this call that it would have accepted in a creation
+call.
 
 .N ThreadSafe
 .N Fortran
@@ -48,6 +58,8 @@ Input Parameters:
 .N MPI_ERR_WIN
 .N MPI_ERR_INFO
 .N MPI_ERR_OTHER
+
+.seealso: MPI_Win_get_info
 @*/
 int MPI_Win_set_info(MPI_Win win, MPI_Info info)
 {

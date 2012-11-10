@@ -29,8 +29,23 @@
 #define FUNCNAME MPI_Win_shared_query
 
 /*@
-   MPI_Win_shared_query - Query the size and base pointer for a patch of a
-   shared memory window
+MPI_Win_shared_query - Query the size and base pointer for a patch of a shared
+memory window.
+
+
+This function queries the process-local address for remote memory segments
+created with 'MPI_Win_allocate_shared.' This function can return different
+process-local addresses for the same physical memory on different processes.
+
+The returned memory can be used for load/store accesses subject to the
+constraints defined in MPI 3.0, Section 11.7. This function can only be called
+with windows of type 'MPI_Win_flavor_shared.' If the passed window is not of
+flavor 'MPI_Win_flavor_shared,' the error 'MPI_ERR_RMA_FLAVOR' is raised. When rank
+is 'MPI_PROC_NULL,' the pointer, disp_unit, and size returned are the pointer,
+disp_unit, and size of the memory segment belonging the lowest rank that
+specified size > 0. If all processes in the group attached to the window
+specified size = 0, then the call returns size = 0 and a baseptr as if
+'MPI_Alloc_mem' was called with size = 0.
 
 Input Parameters:
 + win - window object used for communication (handle)
@@ -51,6 +66,8 @@ Output Parameters:
 .N MPI_ERR_ARG
 .N MPI_ERR_RANK
 .N MPI_ERR_WIN
+
+.seealso: MPI_Win_allocate_shared
 @*/
 int MPI_Win_shared_query(MPI_Win win, int rank, MPI_Aint *size, int *disp_unit, void *baseptr)
 {

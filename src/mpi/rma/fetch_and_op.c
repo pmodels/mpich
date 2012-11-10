@@ -29,23 +29,35 @@
 #define FUNCNAME MPI_Fetch_and_op
 
 /*@
-   MPI_Fetch_and_op - Accumulate one element of type datatype from the origin
-   buffer (origin_addr) to the buffer at offset target_disp, in the target
-   window specied by target_rank and win, using the operation op and return in
-   the result buffer result_addr the content of the target buffer before the
-   accumulation.
+MPI_Fetch_and_op - Perform one-sided read-modify-write.
+
+
+Accumulate one element of type datatype from the origin buffer (origin_addr) to
+the buffer at offset target_disp, in the target window specified by target_rank
+and win, using the operation op and return in the result buffer result_addr the
+content of the target buffer before the accumulation.
 
 Input Parameters:
-+ origin_addr - initial address of buffer (choice) 
++ origin_addr - initial address of buffer (choice)
 . result_addr - initial address of result buffer (choice)
 . datatype - datatype of the entry in origin, result, and target buffers (handle)
-. target_rank - rank of target (nonnegative integer) 
+. target_rank - rank of target (nonnegative integer)
 . target_disp - displacement from start of window to beginning of target buffer (non-negative integer)
-. op - reduce operation (handle) 
-- win - window object (handle) 
+. op - reduce operation (handle)
+- win - window object (handle)
 
-   Notes:
-Atomic with respect to other "accumulate" operations.
+Notes:
+This operations is atomic with respect to other "accumulate" operations.
+
+The generic functionality of 'MPI_Get_accumulate' might limit the performance of
+fetch-and-increment or fetch-and-add calls that might be supported by special
+hardware operations. 'MPI_Fetch_and_op' thus allows for a fast implementation
+of a commonly used subset of the functionality of 'MPI_Get_accumulate.'
+
+The origin and result buffers (origin_addr and result_addr) must be disjoint.
+Any of the predefined operations for 'MPI_Reduce,' as well as 'MPI_NO_OP' or
+'MPI_REPLACE,' can be specified as op; user-defined functions cannot be used. The
+datatype argument must be a predefined datatype.
 
 .N Fortran
 
@@ -57,6 +69,8 @@ Atomic with respect to other "accumulate" operations.
 .N MPI_ERR_RANK
 .N MPI_ERR_TYPE
 .N MPI_ERR_WIN
+
+.seealso: MPI_Get_accumulate
 @*/
 int MPI_Fetch_and_op(const void *origin_addr, void *result_addr,
         MPI_Datatype datatype, int target_rank, MPI_Aint target_disp,

@@ -29,17 +29,28 @@
 #define FUNCNAME MPI_Win_allocate
 
 /*@
-   MPI_Win_allocate - Create and allocate an MPI Window object for one-sided communication
+MPI_Win_allocate - Create and allocate an MPI Window object for one-sided communication.
+
+
+This is a collective call executed by all processes in the group of comm. On
+each process, it allocates memory of at least size bytes, returns a pointer to
+it, and returns a window object that can be used by all processes in comm to
+perform RMA operations. The returned memory consists of size bytes local to
+each process, starting at address baseptr and is associated with the window as
+if the user called 'MPI_Win_create' on existing memory. The size argument may be
+different at each process and size = 0 is valid; however, a library might
+allocate and expose more memory in order to create a fast, globally symmetric
+allocation.
 
 Input Parameters:
-. size - size of window in bytes (nonnegative integer) 
-. disp_unit - local unit size for displacements, in bytes (positive integer) 
-. info - info argument (handle) 
-- comm - communicator (handle) 
+. size - size of window in bytes (nonnegative integer)
+. disp_unit - local unit size for displacements, in bytes (positive integer)
+. info - info argument (handle)
+- comm - communicator (handle)
 
 Output Parameters:
 . baseptr - base address of the window in local memory
-. win - window object returned by the call (handle) 
+. win - window object returned by the call (handle)
 
 .N ThreadSafe
 .N Fortran
@@ -51,6 +62,8 @@ Output Parameters:
 .N MPI_ERR_INFO
 .N MPI_ERR_OTHER
 .N MPI_ERR_SIZE
+
+.seealso MPI_Win_allocate_shared MPI_Win_create MPI_Win_create_dynamic MPI_Win_free
 @*/
 int MPI_Win_allocate(MPI_Aint size, int disp_unit, MPI_Info info, 
                   MPI_Comm comm, void *baseptr, MPI_Win *win)

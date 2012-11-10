@@ -29,23 +29,32 @@
 #define FUNCNAME MPI_Compare_and_swap
 
 /*@
-   MPI_Compare_and_swap - Accumulate one element of type datatype from the origin
-   buffer (origin_addr) to the buffer at offset target_disp, in the target
-   window specied by target_rank and win, using the operation op and return in
-   the result buffer result_addr the content of the target buffer before the
-   accumulation.
+MPI_Compare_and_swap - Perform one-sided atomic compare-and-swap.
+
+
+This function compares one element of type datatype in the compare buffer
+compare_addr with the buffer at offset target_disp in the target window
+specified by target_rank and win and replaces the value at the target with the
+value in the origin buffer origin_addr if the compare buffer and the target
+buffer are identical. The original value at the target is returned in the
+buffer result_addr.
 
 Input Parameters:
-+ origin_addr - initial address of buffer (choice) 
++ origin_addr - initial address of buffer (choice)
 . compare_addr - initial address of compare buffer (choice)
 . result_addr - initial address of result buffer (choice)
 . datatype - datatype of the entry in origin, result, and target buffers (handle)
-. target_rank - rank of target (nonnegative integer) 
+. target_rank - rank of target (nonnegative integer)
 . target_disp - displacement from start of window to beginning of target buffer (non-negative integer)
-- win - window object (handle) 
+- win - window object (handle)
 
-   Notes:
-Atomic with respect to other "accumulate" operations.
+Notes:
+This operation is atomic with respect to other "accumulate" operations.
+
+The parameter datatype must belong to one of the following categories of
+predefined datatypes: C integer, Fortran integer, Logical, Multi-language
+types, or Byte as specified in Section 5.9.2 on page 176. The origin and result
+buffers (origin_addr and result_addr) must be disjoint.
 
 .N Fortran
 

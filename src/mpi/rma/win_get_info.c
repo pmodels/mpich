@@ -29,18 +29,28 @@
 #define FUNCNAME MPI_Win_get_info
 
 /*@
-   MPI_Win_get_info - Returns a new info object containing the hints of the
-   window associated with win. The current setting of all hints actually used
-   by the system related to this window is returned in info_used. If no such
-   hints exist, a handle to a newly created info object is returned that
-   contains no key/value pair. The user is responsible for freeing info_used
-   via MPI_INFO_FREE.
+MPI_Win_get_info - Returns a new info object containing the hints of the window
+associated with win.
+
+
+The current setting of all hints actually used by the system related to this
+window is returned in info_used. If no such hints exist, a handle to a newly
+created info object is returned that contains no key/value pair. The user is
+responsible for freeing info_used via 'MPI_Info_free'.
 
 Input Parameters:
 . win - window object (handle)
 
 Output Parameters:
 . info_used - new info argument (handle)
+
+Notes:
+
+The info object returned in info_used will contain all hints currently active
+for this window. This set of hints may be greater or smaller than the set of
+hints specified when the window was created, as the system may not recognize
+some hints set by the user, and may recognize other hints that the user has not
+set.
 
 .N ThreadSafe
 .N Fortran
@@ -51,6 +61,8 @@ Output Parameters:
 .N MPI_ERR_WIN
 .N MPI_ERR_INFO
 .N MPI_ERR_OTHER
+
+.seealso: MPI_Win_set_info
 @*/
 int MPI_Win_get_info(MPI_Win win, MPI_Info *info_used)
 {
