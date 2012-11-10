@@ -141,9 +141,9 @@ print("\n");
 ## IMPORTANT: Changing the autotools versions can result in ABI
 ## breakage. So make sure the ABI string in the release tarball is
 ## updated when you do that.
-check_autotools_version("autoconf", "2.68");
-check_autotools_version("automake", "1.11.1");
-check_autotools_version("libtool", "2.4");
+check_autotools_version("autoconf", "2.69");
+check_autotools_version("automake", "1.12.4");
+check_autotools_version("libtool", "2.4.2");
 print("\n");
 
 my $current_ver = `svn cat ${source}/maint/version.m4 | grep MPICH_VERSION_m4 | \
