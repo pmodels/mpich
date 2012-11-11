@@ -110,7 +110,6 @@ int MPI_Type_size(MPI_Datatype datatype, int *size)
     return mpi_errno;
 
     /* --BEGIN ERROR HANDLING-- */
-#   ifdef HAVE_ERROR_CHECKING
   fn_fail:
     {
 	mpi_errno = MPIR_Err_create_code(
@@ -120,6 +119,5 @@ int MPI_Type_size(MPI_Datatype datatype, int *size)
     }
     mpi_errno = MPIR_Err_return_comm( NULL, FCNAME, mpi_errno );
     goto fn_exit;
-#   endif
     /* --END ERROR HANDLING-- */
 }
