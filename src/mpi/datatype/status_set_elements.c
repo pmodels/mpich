@@ -51,7 +51,6 @@ int MPI_Status_set_elements(MPI_Status *status, MPI_Datatype datatype,
 			    int count)
 {
     int mpi_errno = MPI_SUCCESS;
-    int size;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_STATUS_SET_ELEMENTS);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
