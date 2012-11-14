@@ -137,9 +137,14 @@ int PREPEND_PREFIX(Dataloop_create_indexed)(int icount,
      */
     if (contig_count == 1)
     {
+        const void *disp_arr_tmp; /* no ternary assignment to avoid clang warnings */
+        if (dispinbytes)
+            disp_arr_tmp = &(((const MPI_Aint *)displacement_array)[first]);
+        else
+            disp_arr_tmp = &(((const int *)displacement_array)[first]);
 	err = PREPEND_PREFIX(Dataloop_create_blockindexed)(1,
 							   (int) old_type_count,
-							   &(((int *)displacement_array)[first]),
+							   disp_arr_tmp,
 							   dispinbytes,
 							   oldtype,
 							   dlp_p,
@@ -166,9 +171,14 @@ int PREPEND_PREFIX(Dataloop_create_indexed)(int icount,
     }
     if (blksz == blocklength_array[first])
     {
+        const void *disp_arr_tmp; /* no ternary assignment to avoid clang warnings */
+        if (dispinbytes)
+            disp_arr_tmp = &(((const MPI_Aint *)displacement_array)[first]);
+        else
+            disp_arr_tmp = &(((const int *)displacement_array)[first]);
 	err = PREPEND_PREFIX(Dataloop_create_blockindexed)(icount-first,
 							   blksz,
-							   &(((int *)displacement_array)[first]),
+							   disp_arr_tmp,
 							   dispinbytes,
 							   oldtype,
 							   dlp_p,
