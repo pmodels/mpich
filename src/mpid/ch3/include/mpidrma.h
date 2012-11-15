@@ -12,7 +12,7 @@ typedef enum MPIDI_RMA_Op_type {
     MPIDI_RMA_PUT               = 23,
     MPIDI_RMA_GET               = 24,
     MPIDI_RMA_ACCUMULATE        = 25,
-    MPIDI_RMA_LOCK              = 26,
+ /* REMOVED: MPIDI_RMA_LOCK     = 26, */
     MPIDI_RMA_ACC_CONTIG        = 27,
     MPIDI_RMA_GET_ACCUMULATE    = 28,
     MPIDI_RMA_COMPARE_AND_SWAP  = 29,
@@ -70,7 +70,6 @@ typedef struct MPIDI_RMA_Op {
     int target_count;
     MPI_Datatype target_datatype;
     MPI_Op op;  /* for accumulate */
-    int lock_type;  /* for win_lock */
     /* Used to complete operations */
     struct MPID_Request *request;
     MPIDI_RMA_dtype_info dtype_info;

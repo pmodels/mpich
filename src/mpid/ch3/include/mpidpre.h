@@ -202,6 +202,7 @@ typedef struct MPIDI_VC * MPID_VCR;
 
 enum MPIDI_CH3_Lock_states {
     MPIDI_CH3_WIN_LOCK_NONE = 0,
+    MPIDI_CH3_WIN_LOCK_CALLED,
     MPIDI_CH3_WIN_LOCK_REQUESTED,
     MPIDI_CH3_WIN_LOCK_GRANTED,
     MPIDI_CH3_WIN_LOCK_FLUSH
@@ -250,6 +251,8 @@ struct MPIDI_Win_target_state {
                                    (shared/exclusive) of the target
                                    process for passive target RMA. Valid
                                    whenever state != NONE. */
+    int remote_lock_assert;     /* Assertion value provided in the call
+                                   to Lock */
 };
 
 #define MPIDI_DEV_WIN_DECL                                               \
