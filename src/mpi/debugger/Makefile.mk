@@ -44,5 +44,8 @@ src/mpi/debugger/tvtest.o: src/mpi/debugger/tvtest.c
 src/mpi/debugger/qdemo: src/mpi/debugger/qdemo.c
 	$(bindir)/mpicc -o $@ $?
 
+src/mpi/debugger/allcommdbg: src/mpi/debugger/allcommdbg.c
+	$(bindir)/mpicc -o $@ $?
+
 endif BUILD_DEBUGGER_DLL
 
