@@ -942,7 +942,9 @@ static char *rank_val_to_str(int rank, char *out, int max)
     }
     return out;
 }
+/* --END ERROR HANDLING-- */
 
+/* --BEGIN DEBUG-- */
 /* satisfy the compiler */
 void MPIDI_CH3U_Dbg_print_recvq(FILE *stream);
 
@@ -999,7 +1001,7 @@ void MPIDI_CH3U_Dbg_print_recvq(FILE *stream)
     }
     fprintf(stream, "========================================\n");
 }
-/* --END ERROR HANDLING-- */
+/* --END DEBUG-- */
 
 /* returns the number of elements in the unexpected queue */
 #undef FUNCNAME
