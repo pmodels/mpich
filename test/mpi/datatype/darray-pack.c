@@ -291,6 +291,9 @@ static int pack_and_unpack(char *typebuf,
 	return errs;
     }
 
+    /* FIXME: the pack size returned need not be the type_size - this will
+       only be true if the pack routine simply moves the bytes but does
+       no other transformations of the data */
     position = 0;
     err = MPI_Pack(typebuf,
 		   count,
