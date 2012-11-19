@@ -46,6 +46,11 @@ int main( int argc, char *argv[] )
 
 	    for (i=0; i<nmsg; i++) {
 		buf[i] = (int *)malloc( msgSize );
+		if (!buf[i]) {
+		    fprintf( stderr, "Unable to allocate %d bytes\n", 
+			     msgSize );
+		    MPI_Abort( MPI_COMM_WORLD, 1 );
+		}
 	    }
 	    partner = (rank + 1) % size;
 
