@@ -125,6 +125,9 @@ opmin 4
 opminloc 4
 opmax 5
 opmaxloc 5
+uoplong 4
+uoplong 11
+uoplong 16
 nonblocking 4 mpiversion=3.0
 nonblocking 5 mpiversion=3.0
 nonblocking 10 mpiversion=3.0

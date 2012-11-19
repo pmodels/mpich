@@ -99,6 +99,7 @@ noinst_PROGRAMS =      \
     scatter3           \
     scattern           \
     scatterv           \
+    uoplong            \
     nballtoall1        \
     nbredscat          \
     nbredscat3	       \
