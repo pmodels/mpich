@@ -206,7 +206,13 @@ else {
 #
 # Process any files
 if ($listfiles eq "") {
-    &ProcessImplicitList;
+    if ($batchRun) {
+	print STDERR "An implicit list of tests is not permitted in batch mode\n";
+	exit(1);
+    } 
+    else {
+	&ProcessImplicitList;
+    }
 }
 elsif (-d $listfiles) { 
     print STDERR "Testing by directories not yet supported\n";
@@ -376,7 +382,7 @@ sub RunList {
 	# test (use strict=false for tests that use non-standard extensions)
 	if ($requiresStrict eq "false" && $testIsStrict eq "true") { next; }
 
-	if ($requiresMPIX eq "true" && $MPIHasMPIX eq "false") { next; }
+	if ($requiresMPIX eq "true" && $MPIHasMPIX eq "no") { next; }
 
 	if ($np eq "") { $np = $np_default; }
 	if ($np_max > 0 && $np > $np_max) { $np = $np_max; }
@@ -420,6 +426,8 @@ sub RunList {
 sub ProcessImplicitList {
     # The default is to run every file in the current directory.
     # If there are no built programs, build and run every file
+    # WARNING: This assumes that anything executable should be run as
+    # an MPI test.
     $found_exec = 0;
     $found_src  = 0;
     open (PGMS, "ls -1 |" ) || die "Cannot list directory\n";
@@ -428,6 +436,9 @@ sub ProcessImplicitList {
 	$programname = $_;
 	if (-d $programname) { next; }  # Ignore directories
 	if ($programname eq "runtests") { next; } # Ignore self
+	if ($programname eq "checktests") { next; } # Ignore helper
+	if ($programname eq "configure") { next; } # Ignore configure script
+	if ($programname eq "config.status") { next; } # Ignore configure helper
 	if (-x $programname) { $found_exec++; }
 	if ($programname =~ /\.[cf]$/) { $found_src++; } 
     }
