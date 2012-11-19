@@ -251,7 +251,7 @@ int Foo(int a) { return a; }
 # only within a single object file!  This tests that case.
 # Note that there is an extern int PFoo declaration before the
 # pragma.  Some compilers require this in order to make the weak symbol
-# extenally visible.  
+# externally visible.  
 if test "$has_pragma_weak" = yes ; then
     PAC_COMPLINK_IFELSE([
         AC_LANG_SOURCE([
