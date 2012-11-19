@@ -15,10 +15,6 @@
 #define NUM_GRAPHS 10
 #define MAX_WEIGHT 100
 
-
-/* #define DPRINTF(arg_list_) printf arg_list_ */
-#define DPRINTF(arg_list_)
-
 /* convenience globals */
 int size, rank;
 
@@ -250,12 +246,12 @@ int main(int argc, char *argv[])
     for (i = 0; i < NUM_GRAPHS; i++) {
         create_graph_layout(i);
         if (rank == 0) {
-            DPRINTF(("using graph layout '%s'\n", graph_layout_name));
+            MTestPrintfMsg( 1, "using graph layout '%s'\n", graph_layout_name );
         }
 
         /* MPI_Dist_graph_create_adjacent */
         if (rank == 0) {
-            DPRINTF(("testing MPI_Dist_graph_create_adjacent\n"));
+            MTestPrintfMsg( 1, "testing MPI_Dist_graph_create_adjacent\n" );
         }
         indegree = 0;
         k = 0;
@@ -299,7 +295,8 @@ int main(int argc, char *argv[])
         /* MPI_Dist_graph_create() where each process specifies its
          * outgoing edges */
         if (rank == 0) {
-            DPRINTF(("testing MPI_Dist_graph_create w/ outgoing only\n"));
+            MTestPrintfMsg( 1, 
+                          "testing MPI_Dist_graph_create w/ outgoing only\n" );
         }
         sources[0] = rank;
         k = 0;
@@ -322,7 +319,8 @@ int main(int argc, char *argv[])
         /* MPI_Dist_graph_create() where each process specifies its
          * incoming edges */
         if (rank == 0) {
-            DPRINTF(("testing MPI_Dist_graph_create w/ incoming only\n"));
+            MTestPrintfMsg( 1, 
+                         "testing MPI_Dist_graph_create w/ incoming only\n" );
         }
         k = 0;
         for (j = 0; j < size; j++) {
@@ -345,7 +343,8 @@ int main(int argc, char *argv[])
         /* MPI_Dist_graph_create() where rank 0 specifies the entire
          * graph */
         if (rank == 0) {
-            DPRINTF(("testing MPI_Dist_graph_create w/ rank 0 specifies only\n"));
+            MTestPrintfMsg( 1, 
+               "testing MPI_Dist_graph_create w/ rank 0 specifies only\n" );
         }
         p = 0;
         for (j = 0; j < size; j++) {
@@ -370,7 +369,8 @@ int main(int argc, char *argv[])
          * graph and all other ranks pass NULL.  Can catch implementation
          * problems when MPI_UNWEIGHTED==NULL. */
         if (rank == 0) {
-            DPRINTF(("testing MPI_Dist_graph_create w/ rank 0 specifies only -- NULLs\n"));
+            MTestPrintfMsg( 1, 
+           "testing MPI_Dist_graph_create w/ rank 0 specifies only -- NULLs\n");
         }
         p = 0;
         for (j = 0; j < size; j++) {
@@ -412,7 +412,7 @@ int main(int argc, char *argv[])
 
     /* MPI_Dist_graph_create() with no graph */
     if (rank == 0) {
-        DPRINTF(("testing MPI_Dist_graph_create w/ no graph\n"));
+        MTestPrintfMsg( 1, "testing MPI_Dist_graph_create w/ no graph\n" );
     }
     for (reorder = 0; reorder <= 1; reorder++) {
         MPI_Dist_graph_create(MPI_COMM_WORLD, 0, sources, degrees,
@@ -425,9 +425,14 @@ int main(int argc, char *argv[])
         MPI_Comm_free(&comm);
     }
 
-    /* MPI_Dist_graph_create() with no graph -- passing MPI_WEIGHTS_EMPTY instead */
+    /* MPI_Dist_graph_create() with no graph -- passing MPI_WEIGHTS_EMPTY 
+       instead */
+    /* NOTE that MPI_WEIGHTS_EMPTY was added in MPI-3 and does not 
+       appear before then.  This part of the test thus requires a check
+       on the MPI major version */
+#if MPI_VERSION >= 3
     if (rank == 0) {
-        DPRINTF(("testing MPI_Dist_graph_create w/ no graph\n"));
+        MTestPrintfMsg( 1, "testing MPI_Dist_graph_create w/ no graph\n" );
     }
     for (reorder = 0; reorder <= 1; reorder++) {
         MPI_Dist_graph_create(MPI_COMM_WORLD, 0, sources, degrees,
@@ -439,11 +444,12 @@ int main(int argc, char *argv[])
         }
         MPI_Comm_free(&comm);
     }
-
+#endif
 
     /* MPI_Dist_graph_create() with no graph -- passing NULLs instead */
     if (rank == 0) {
-        DPRINTF(("testing MPI_Dist_graph_create w/ no graph -- NULLs\n"));
+        MTestPrintfMsg( 1, 
+                      "testing MPI_Dist_graph_create w/ no graph -- NULLs\n" );
     }
     for (reorder = 0; reorder <= 1; reorder++) {
         MPI_Dist_graph_create(MPI_COMM_WORLD, 0, NULL, NULL,
@@ -461,7 +467,8 @@ int main(int argc, char *argv[])
 
     /* MPI_Dist_graph_create() with no graph -- passing NULLs+MPI_UNWEIGHTED instead */
     if (rank == 0) {
-        DPRINTF(("testing MPI_Dist_graph_create w/ no graph -- NULLs+MPI_UNWEIGHTED\n"));
+        MTestPrintfMsg( 1, 
+        "testing MPI_Dist_graph_create w/ no graph -- NULLs+MPI_UNWEIGHTED\n" );
     }
     for (reorder = 0; reorder <= 1; reorder++) {
         MPI_Dist_graph_create(MPI_COMM_WORLD, 0, NULL, NULL,
@@ -479,7 +486,8 @@ int main(int argc, char *argv[])
 
     /* MPI_Dist_graph_create_adjacent() with no graph */
     if (rank == 0) {
-        DPRINTF(("testing MPI_Dist_graph_create_adjacent w/ no graph\n"));
+        MTestPrintfMsg( 1, 
+                     "testing MPI_Dist_graph_create_adjacent w/ no graph\n" );
     }
     for (reorder = 0; reorder <= 1; reorder++) {
         MPI_Dist_graph_create_adjacent(MPI_COMM_WORLD, 0, sources, sweights,
@@ -493,8 +501,13 @@ int main(int argc, char *argv[])
     }
 
     /* MPI_Dist_graph_create_adjacent() with no graph -- passing MPI_WEIGHTS_EMPTY instead */
+    /* NOTE that MPI_WEIGHTS_EMPTY was added in MPI-3 and does not 
+       appear before then.  This part of the test thus requires a check
+       on the MPI major version */
+#if MPI_VERSION >= 3
     if (rank == 0) {
-        DPRINTF(("testing MPI_Dist_graph_create_adjacent w/ no graph -- MPI_WEIGHTS_EMPTY\n"));
+        MTestPrintfMsg( 1, 
+  "testing MPI_Dist_graph_create_adjacent w/ no graph -- MPI_WEIGHTS_EMPTY\n" );
     }
     for (reorder = 0; reorder <= 1; reorder++) {
         MPI_Dist_graph_create_adjacent(MPI_COMM_WORLD, 0, sources, MPI_WEIGHTS_EMPTY,
@@ -506,10 +519,12 @@ int main(int argc, char *argv[])
         }
         MPI_Comm_free(&comm);
     }
+#endif
 
     /* MPI_Dist_graph_create_adjacent() with no graph -- passing NULLs instead */
     if (rank == 0) {
-        DPRINTF(("testing MPI_Dist_graph_create_adjacent w/ no graph -- NULLs\n"));
+        MTestPrintfMsg( 1, 
+              "testing MPI_Dist_graph_create_adjacent w/ no graph -- NULLs\n" );
     }
     for (reorder = 0; reorder <= 1; reorder++) {
         MPI_Dist_graph_create_adjacent(MPI_COMM_WORLD, 0, NULL, NULL,
@@ -527,7 +542,8 @@ int main(int argc, char *argv[])
 
     /* MPI_Dist_graph_create_adjacent() with no graph -- passing NULLs+MPI_UNWEIGHTED instead */
     if (rank == 0) {
-        DPRINTF(("testing MPI_Dist_graph_create_adjacent w/ no graph -- NULLs+MPI_UNWEIGHTED\n"));
+        MTestPrintfMsg( 1, 
+"testing MPI_Dist_graph_create_adjacent w/ no graph -- NULLs+MPI_UNWEIGHTED\n");
     }
     for (reorder = 0; reorder <= 1; reorder++) {
         MPI_Dist_graph_create_adjacent(MPI_COMM_WORLD, 0, NULL, MPI_UNWEIGHTED,
