@@ -650,6 +650,18 @@ dnl Also, DO NOT attempt to place shell conditionals (either manually or via
 dnl AS_IF) around these macros in an effort to save configure time.  It will
 dnl lead to weird AM_CONDITIONAL errors and potentially other problems.
 
+# Before attempting to find valid compilers, set the corresponding precious
+# shell variable to "false" (the program/builtin that always fails) for any
+# languages that have been disabled by the user with "--disable-LANG".  This
+# should save a bit of configure time and also prevent user complaints like
+# ticket #1570.
+AS_IF([test "x$enable_f77" = "xno"],[F77=false])
+AS_IF([test "x$enable_fc"  = "xno"],[FC=false])
+# Set CXXCPP=$CPP so that we don't fail the (fatal) preprocessor sanity check.
+# At least as of autoconf-2.69, this sanity test does not check for any
+# C++-specific headers.
+AS_IF([test "x$enable_cxx" = "xno"],[CXX=false ; CXXCPP=$CPP])
+
 # suppress default "-g -O2" from AC_PROG_CXX
 : ${CXXFLAGS=""}
 AC_PROG_CXX([PAC_CXX_SEARCH_LIST])
