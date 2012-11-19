@@ -27,6 +27,7 @@ subarray 2
 darray-pack 1
 darray-pack 9
 # darray-pack 72
+darray-cyclic 12
 pairtype-size-extent 1
 simple-commit 1
 simple-size-extent 1

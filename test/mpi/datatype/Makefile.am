@@ -25,6 +25,7 @@ noinst_PROGRAMS =           \
     contigstruct            \
     cxx-types               \
     darray-pack             \
+    darray-cyclic           \
     gaddress                \
     get-elements            \
     get-elements-pairtype   \
