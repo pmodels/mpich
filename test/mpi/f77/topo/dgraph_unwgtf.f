@@ -153,6 +153,10 @@ C     the nearest neighbors that within a ring.
       call MPI_Comm_free(dgraph_comm, ierr)
 
 C now create one with MPI_WEIGHTS_EMPTY
+C NOTE that MPI_WEIGHTS_EMPTY was added in MPI-3 and does not 
+C appear before then.  Incluing this test means that this test cannot
+C be compiled if the MPI version is less than 3 (see the testlist file)
+
       degs(1) = 0;
       call MPI_Dist_graph_create(MPI_COMM_WORLD, 1, srcs, degs, dests,
      &                           MPI_WEIGHTS_EMPTY, MPI_INFO_NULL,
