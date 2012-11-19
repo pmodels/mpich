@@ -79,7 +79,7 @@ int MPI_Get_library_version(char *version, int *resultlen)
                  MPIR_Version_configure, MPIR_Version_CC, MPIR_Version_CXX,
                  MPIR_Version_F77, MPIR_Version_FC);
 
-    *resultlen = strlen(version);
+    *resultlen = (int)strlen(version);
 
     /* ... end of body of routine ... */
 
