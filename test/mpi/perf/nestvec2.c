@@ -18,6 +18,9 @@
 #include <string.h>
 
 #include "mpitestconf.h"
+#ifdef HAVE_STDINT_H
+#include <stdint.h>
+#endif
 
 #ifdef MPICH
 /* MPICH (as of 6/2012) packs the native bytes */
