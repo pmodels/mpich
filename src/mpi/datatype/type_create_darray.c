@@ -403,9 +403,11 @@ int MPI_Type_create_darray(int size,
         MPID_BEGIN_ERROR_CHECKS;
         {
 	    /* Check parameters */
-	    MPIR_ERRTEST_ARGNEG(rank, "rank", mpi_errno);
-	    MPIR_ERRTEST_ARGNONPOS(size, "size", mpi_errno);
-	    MPIR_ERRTEST_ARGNONPOS(ndims, "ndims", mpi_errno);
+	    MPIR_ERRTEST_ARGNONPOS(size, "size", mpi_errno, MPI_ERR_ARG);
+            /* use MPI_ERR_RANK class for PE-MPI compatibility */
+            MPIU_ERR_CHKANDJUMP3((rank < 0 || rank >= size), mpi_errno, MPI_ERR_RANK,
+                                 "**argrange", "**argrange %s %d %d", "rank", rank, (size-1));
+	    MPIR_ERRTEST_ARGNONPOS(ndims, "ndims", mpi_errno, MPI_ERR_DIMS);
 
 	    MPIR_ERRTEST_ARGNULL(array_of_gsizes, "array_of_gsizes", mpi_errno);
 	    MPIR_ERRTEST_ARGNULL(array_of_distribs, "array_of_distribs", mpi_errno);
@@ -423,6 +425,7 @@ int MPI_Type_create_darray(int size,
                 goto fn_fail;
 	    }
 
+            tmp_size = 1;
 	    for (i=0; mpi_errno == MPI_SUCCESS && i < ndims; i++) {
 		MPIR_ERRTEST_ARGNONPOS(array_of_gsizes[i], "gsize", mpi_errno);
 		MPIR_ERRTEST_ARGNONPOS(array_of_psizes[i], "psize", mpi_errno);
@@ -468,7 +471,12 @@ int MPI_Type_create_darray(int size,
 						     i, array_of_psizes[i]);
                     goto fn_fail;
 		}
+
+                tmp_size *= array_of_psizes[i];
 	    }
+
+            MPIU_ERR_CHKANDJUMP1((tmp_size != size), mpi_errno, MPI_ERR_ARG,
+                                 "**arg", "**arg %s", "array_of_psizes");
 
 	    /* TODO: GET THIS CHECK IN ALSO */
 
