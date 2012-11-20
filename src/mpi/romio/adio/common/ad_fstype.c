@@ -264,18 +264,24 @@ static void ADIO_FileSysType_fncall(const char *filename, int *fstype, int *erro
 	err = statvfs(filename, &vfsbuf);
     } while (err && (errno == ESTALE));
 
-    if (err && (errno == ENOENT)) {
+    if (err) {
 	/* ENOENT may be returned in two cases:
 	 * 1) no directory entry for "filename"
 	 * 2) "filename" is a dangling symbolic link
 	 *
 	 * ADIO_FileSysType_parentdir tries to deal with both cases.
 	 */
-        char *dir;
-	ADIO_FileSysType_parentdir(filename, &dir);
-	err = statvfs(dir, &vfsbuf);
+	if (errno == ENOENT) {
+	    char *dir;
+	    ADIO_FileSysType_parentdir(filename, &dir);
+	    err = statvfs(dir, &vfsbuf);
 
-	ADIOI_Free(dir);
+	    ADIOI_Free(dir);
+	}
+	else {
+	    *error_code = ADIOI_Err_create_code(myname, filename, errno);
+	    if(*error_code != MPI_SUCCESS) return;
+	}
     }
 
     /* --BEGIN ERROR HANDLING-- */
@@ -315,11 +321,17 @@ static void ADIO_FileSysType_fncall(const char *filename, int *fstype, int *erro
 	err = statfs(filename, &fsbuf);
     } while (err && (errno == ESTALE));
 
-    if (err && (errno == ENOENT)) {
-        char *dir;
-	ADIO_FileSysType_parentdir(filename, &dir);
-	err = statfs(dir, &fsbuf);
-	ADIOI_Free(dir);
+    if (err) {
+	if(errno == ENOENT) {
+	    char *dir;
+	    ADIO_FileSysType_parentdir(filename, &dir);
+	    err = statfs(dir, &fsbuf);
+	    ADIOI_Free(dir);
+	}
+	else {
+	    *error_code = ADIOI_Err_create_code(myname, filename, errno);
+	    if(*error_code != MPI_SUCCESS) return;
+	}
     }
 
     /* --BEGIN ERROR HANDLING-- */
@@ -428,11 +440,17 @@ static void ADIO_FileSysType_fncall(const char *filename, int *fstype, int *erro
 	err = stat(filename, &sbuf);
     } while (err && (errno == ESTALE));
 
-    if (err && (errno == ENOENT)) {
-        char *dir;
-	ADIO_FileSysType_parentdir(filename, &dir);
-	err = stat(dir, &sbuf);
-	ADIOI_Free(dir);
+    if (err) {
+	if(errno == ENOENT) {
+	    char *dir;
+	    ADIO_FileSysType_parentdir(filename, &dir);
+	    err = stat(dir, &sbuf);
+	    ADIOI_Free(dir);
+	}
+	else{
+	    *error_code = ADIOI_Err_create_code(myname, filename, errno);
+	    if(*error_code != MPI_SUCCESS) return;
+	}
     }
     
     if (err) {
