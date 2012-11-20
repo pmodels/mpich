@@ -108,6 +108,7 @@ offset = (r * n + k * n * s) * sizeof(int);
 # collective I/O and independent file I/O without seek
 <setcontigview>
 filetype = MPI::INT.Create_vector( b, n, n*s );
+filetype.Commit();
 offset = r * n * sizeof(int);
 fh.Set_view( offset, MPI::INT, filetype, "native", MPI::INFO_NULL );
 filetype.Free();
