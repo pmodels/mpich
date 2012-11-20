@@ -140,7 +140,7 @@ static int simple_aint_creator(void *obj_handle,
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_CH3U_Recvq_FU
+#define FUNCNAME MPIDI_CH3U_Recvq_init
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIDI_CH3U_Recvq_init(void)

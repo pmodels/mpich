@@ -178,7 +178,7 @@ fn_fail:
  *
  * mapping[i] is the index in the old vcr of index i in the new vcr */
 #undef FUNCNAME
-#define FUNCNAME MPIR_Comm_create_and_map_vcrt
+#define FUNCNAME MPIR_Comm_create_create_and_map_vcrt
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIR_Comm_create_create_and_map_vcrt(int         n,
