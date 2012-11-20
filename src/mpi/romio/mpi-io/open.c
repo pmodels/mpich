@@ -116,7 +116,7 @@ int MPI_File_open(MPI_Comm comm, const char *filename, int amode,
 
     if (tmp_amode == ADIO_AMODE_NOMATCH) {
 	error_code = MPIO_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
-			myname, __LINE__, MPI_ERR_AMODE,
+			myname, __LINE__, MPI_ERR_NOT_SAME,
 			"**fileamodediff", 0);
 	goto fn_fail;
     }
