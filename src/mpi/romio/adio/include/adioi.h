@@ -78,6 +78,13 @@ struct ADIOI_Hints_struct {
 
 };
 
+#define ADIOI_IS_AGG_LEADER(fh_, is_agg_p_)              \
+    do {                                                 \
+        int rank_;                                       \
+        MPI_Comm_rank((fh_)->comm, &rank_);              \
+        *(is_agg_p_) = ((fh_)->hints->ranklist[0] == 0); \
+    } while (0)
+
 typedef struct ADIOI_Datarep {
     char *name;
     void *state;
