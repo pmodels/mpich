@@ -427,8 +427,8 @@ int MPI_Type_create_darray(int size,
 
             tmp_size = 1;
 	    for (i=0; mpi_errno == MPI_SUCCESS && i < ndims; i++) {
-		MPIR_ERRTEST_ARGNONPOS(array_of_gsizes[i], "gsize", mpi_errno);
-		MPIR_ERRTEST_ARGNONPOS(array_of_psizes[i], "psize", mpi_errno);
+		MPIR_ERRTEST_ARGNONPOS(array_of_gsizes[i], "gsize", mpi_errno, MPI_ERR_ARG);
+		MPIR_ERRTEST_ARGNONPOS(array_of_psizes[i], "psize", mpi_errno, MPI_ERR_ARG);
 
 		if ((array_of_distribs[i] != MPI_DISTRIBUTE_NONE) &&
 		    (array_of_distribs[i] != MPI_DISTRIBUTE_BLOCK) &&

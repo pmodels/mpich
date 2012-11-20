@@ -107,7 +107,7 @@ int MPI_Comm_spawn_multiple(int count, char *array_of_commands[],
 	    if (comm_ptr->rank == root) {
 		MPIR_ERRTEST_ARGNULL(array_of_commands, "array_of_commands", mpi_errno);
 		MPIR_ERRTEST_ARGNULL(array_of_maxprocs, "array_of_maxprocs", mpi_errno);
-		MPIR_ERRTEST_ARGNONPOS(count, "count", mpi_errno);
+		MPIR_ERRTEST_ARGNONPOS(count, "count", mpi_errno, MPI_ERR_COUNT);
 		for (i = 0; i < count; i++)
 		{
 		    MPIR_ERRTEST_INFO_OR_NULL(array_of_info[i], mpi_errno);

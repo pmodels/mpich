@@ -136,7 +136,7 @@ int MPI_Graph_map(MPI_Comm comm, int nnodes, const int indx[], const int edges[]
 	    MPIR_ERRTEST_ARGNULL(newrank,"newrank",mpi_errno);
 	    MPIR_ERRTEST_ARGNULL(indx,"indx",mpi_errno);
 	    MPIR_ERRTEST_ARGNULL(edges,"edges",mpi_errno);
-	    MPIR_ERRTEST_ARGNONPOS(nnodes,"nnodes",mpi_errno);
+	    MPIR_ERRTEST_ARGNONPOS(nnodes,"nnodes",mpi_errno, MPI_ERR_ARG);
         }
         MPID_END_ERROR_CHECKS;
     }

@@ -96,13 +96,13 @@ int MPI_Type_create_subarray(int ndims,
         MPID_BEGIN_ERROR_CHECKS;
         {
 	    /* Check parameters */
-	    MPIR_ERRTEST_ARGNONPOS(ndims, "ndims", mpi_errno);
+	    MPIR_ERRTEST_ARGNONPOS(ndims, "ndims", mpi_errno, MPI_ERR_DIMS);
 	    MPIR_ERRTEST_ARGNULL(array_of_sizes, "array_of_sizes", mpi_errno);
 	    MPIR_ERRTEST_ARGNULL(array_of_subsizes, "array_of_subsizes", mpi_errno);
 	    MPIR_ERRTEST_ARGNULL(array_of_starts, "array_of_starts", mpi_errno);
 	    for (i=0; mpi_errno == MPI_SUCCESS && i < ndims; i++) {
-		MPIR_ERRTEST_ARGNONPOS(array_of_sizes[i], "size", mpi_errno);
-		MPIR_ERRTEST_ARGNONPOS(array_of_subsizes[i], "subsize", mpi_errno);
+		MPIR_ERRTEST_ARGNONPOS(array_of_sizes[i], "size", mpi_errno, MPI_ERR_ARG);
+		MPIR_ERRTEST_ARGNONPOS(array_of_subsizes[i], "subsize", mpi_errno, MPI_ERR_ARG);
 		MPIR_ERRTEST_ARGNEG(array_of_starts[i], "start", mpi_errno);
 		if (array_of_subsizes[i] > array_of_sizes[i]) {
 		    mpi_errno = MPIR_Err_create_code(MPI_SUCCESS,
