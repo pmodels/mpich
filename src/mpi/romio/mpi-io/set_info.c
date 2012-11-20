@@ -48,14 +48,13 @@ int MPI_File_set_info(MPI_File fh, MPI_Info info)
 
     /* set new info */
     ADIO_SetInfo(adio_fh, info, &error_code);
-    /* TODO: what to do with error code? */
 
+fn_exit:
     /* --BEGIN ERROR HANDLING-- */
     if (error_code != MPI_SUCCESS)
 	error_code = MPIO_Err_return_file(adio_fh, error_code);
     /* --END ERROR HANDLING-- */
 
-fn_exit:
     MPIU_THREAD_CS_EXIT(ALLFUNC,);
 
     return error_code;

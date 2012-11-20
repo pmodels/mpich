@@ -21,6 +21,21 @@ if ((fh <= (ADIO_File) 0) ||					\
     goto fn_exit;                                               \
 }
 
+/* TODO could add more glue code to help check for handle validity, or perhaps
+ * do some sort of always-safe attribute/info call to check for handle validity */
+#define MPIO_CHECK_COMM(comm_, myname_, error_code_)                          \
+    do {                                                                      \
+        if ((comm_) == MPI_COMM_NULL) {                                       \
+            error_code = MPIO_Err_create_code(MPI_SUCCESS,                    \
+                                              MPIR_ERR_RECOVERABLE,           \
+                                              (myname_), __LINE__,            \
+                                              MPI_ERR_COMM,                   \
+                                              "**commnull", 0);               \
+            error_code_ = MPIO_Err_return_file(MPI_FILE_NULL, (error_code_)); \
+            goto fn_exit;                                                     \
+        }                                                                     \
+    } while (0)
+
 #define MPIO_CHECK_COUNT(fh, count, myname, error_code)         \
 if (count < 0) {						\
     error_code = MPIO_Err_create_code(MPI_SUCCESS,		\

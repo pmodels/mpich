@@ -60,13 +60,7 @@ int MPI_File_open(MPI_Comm comm, const char *filename, int amode,
     MPIU_THREAD_CS_ENTER(ALLFUNC,);
 
     /* --BEGIN ERROR HANDLING-- */
-    if (comm == MPI_COMM_NULL)
-    {
-	error_code = MPIO_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
-					  myname, __LINE__, MPI_ERR_COMM,
-					  "**comm", 0);
-	goto fn_fail;
-    }
+    MPIO_CHECK_COMM(comm, myname, error_code);
     /* --END ERROR HANDLING-- */
 
     MPI_Comm_test_inter(comm, &flag);

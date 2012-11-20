@@ -61,6 +61,7 @@ int MPI_File_set_size(MPI_File fh, MPI_Offset size)
 	error_code = MPIO_Err_return_file(adio_fh, error_code);
 	goto fn_exit;
     }
+    MPIO_CHECK_WRITABLE(fh, myname, error_code);
     /* --END ERROR HANDLING-- */
 
     tmp_sz = size;
