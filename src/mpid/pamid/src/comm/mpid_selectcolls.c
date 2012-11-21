@@ -79,8 +79,13 @@ static void MPIDI_Update_coll(pami_algorithm_t coll,
       {
          /* For now, if there's a check_fn we will always call it and not cache.
             We *could* be smarter about this eventually.                        */
-         TRACE_ERR("Protocol %s setting to always query\n", comm->mpid.coll_metadata[coll][type][index].name);
-         comm->mpid.user_selected_type[coll] = MPID_COLL_ALWAYS_QUERY;
+         TRACE_ERR("Protocol %s setting to always query/call check_fn\n", comm->mpid.coll_metadata[coll][type][index].name);
+         comm->mpid.user_selected_type[coll] = MPID_COLL_CHECK_FN_REQUIRED;
+      } 
+      else
+      {
+	TRACE_ERR("Protocol %s setting to always query/no check_fn\n", comm->mpid.coll_metadata[coll][type][index].name);
+	comm->mpid.user_selected_type[coll] = MPID_COLL_ALWAYS_QUERY;
       }
 
    }

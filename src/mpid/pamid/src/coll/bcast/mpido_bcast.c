@@ -176,7 +176,7 @@ int MPIDO_Bcast(void *buffer,
    }
    else
    {
-      TRACE_ERR("Optimized bcast (%s) was specified by user\n",
+      TRACE_ERR("Bcast (%s) was specified by user\n",
          mpid->user_metadata[PAMI_XFER_BROADCAST].name);
       my_bcast =  mpid->user_selected[PAMI_XFER_BROADCAST];
       my_bcast_md = &mpid->user_metadata[PAMI_XFER_BROADCAST];
@@ -185,17 +185,34 @@ int MPIDO_Bcast(void *buffer,
 
    bcast.algorithm = my_bcast;
 
-   if(queryreq == MPID_COLL_ALWAYS_QUERY || queryreq == MPID_COLL_CHECK_FN_REQUIRED)
+   if(queryreq == MPID_COLL_ALWAYS_QUERY)
+   {
+     metadata_result_t result = {0};
+     TRACE_ERR("querying bcast protocol %s, type was: %d\n",
+	       my_bcast_md->name, queryreq);
+     // TODO check bits?
+     TRACE_ERR("bitmask: %#X\n", result.bitmask);
+     result.check.nonlocal = 0; /* #warning REMOVE THIS WHEN IMPLEMENTED */
+     if(result.bitmask)
+     {
+       if(unlikely(verbose))
+	 fprintf(stderr,"Using MPICH bcast algorithm - query bits failed\n");
+       MPIDI_Update_last_algorithm(comm_ptr,"MPICH");
+       return MPIR_Bcast_intra(buffer, count, datatype, root, comm_ptr, mpierrno);
+     }
+   }
+   else if(queryreq == MPID_COLL_CHECK_FN_REQUIRED)
    {
       metadata_result_t result = {0};
       TRACE_ERR("querying bcast protocol %s, type was: %d\n",
          my_bcast_md->name, queryreq);
       result = my_bcast_md->check_fn(&bcast);
       TRACE_ERR("bitmask: %#X\n", result.bitmask);
-      if(!result.bitmask)
+      result.check.nonlocal = 0; /* #warning REMOVE THIS WHEN IMPLEMENTED */
+      if(result.bitmask)
       {
          if(unlikely(verbose))
-            fprintf(stderr,"Using MPICH bcast algorithm\n");
+            fprintf(stderr,"Using MPICH bcast algorithm - query fn failed\n");
          MPIDI_Update_last_algorithm(comm_ptr,"MPICH");
          return MPIR_Bcast_intra(buffer, count, datatype, root, comm_ptr, mpierrno);
       }
