@@ -1388,7 +1388,10 @@ static int PMIUBufferedReadLine( PMIProcess *pentry, char *buf, int maxlen )
     while (curlen < maxlen) {
 	if (nextChar == endChar) {
 	    do {
-		n = read( fd, readbuf, sizeof(readbuf)-1 );
+                /* Carefully read data into buffer.  This could be
+                   written to read more at one time, but would then
+                   need to know the size of the readbuf */
+		n = read( fd, readbuf, 1 );
 	    } while (n == -1 && errno == EINTR);
 	    if (n == 0) {
 		/* EOF */
