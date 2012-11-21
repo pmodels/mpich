@@ -21,7 +21,7 @@ int MPIU_write_external32_conversion_fn (void *userbuf, MPI_Datatype datatype,
     int mpi_errno = MPI_SUCCESS;
     int is_contig = 0;
 
-    MPIR_Datatype_iscontig(datatype, &is_contig);
+    ADIOI_Datatype_iscontig(datatype, &is_contig);
     mpi_errno = MPI_Pack_external_size("external32", count, datatype, &bytes);
     if (mpi_errno != MPI_SUCCESS)
         goto fn_exit;
@@ -74,7 +74,7 @@ int MPIU_read_external32_conversion_fn(void *userbuf, MPI_Datatype datatype,
     int mpi_errno = MPI_SUCCESS;
     int is_contig = 0;
 
-    MPIR_Datatype_iscontig(datatype, &is_contig);
+    ADIOI_Datatype_iscontig(datatype, &is_contig);
     mpi_errno = MPI_Pack_external_size("external32", count, datatype, &bytes);
     if (mpi_errno != MPI_SUCCESS)
         goto fn_exit;
