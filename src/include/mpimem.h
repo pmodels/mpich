@@ -23,6 +23,11 @@ extern "C" {
 /* ensure that we weren't included out of order */
 #include "mpibase.h"
 
+/* Define attribute as empty if it has no definition */
+#ifndef ATTRIBUTE
+#define ATTRIBUTE(a)
+#endif
+
 /* ------------------------------------------------------------------------- */
 /* mpimem.h */
 /* ------------------------------------------------------------------------- */
@@ -298,7 +303,7 @@ extern char *strdup( const char * );
 /* Define decl with a dummy definition to allow us to put a semi-colon
    after the macro without causing the declaration block to end (restriction
    imposed by C) */
-#define MPIU_CHKLMEM_DECL(n_) int dummy_
+#define MPIU_CHKLMEM_DECL(n_) int dummy_ ATTRIBUTE((unused))
 #define MPIU_CHKLMEM_FREEALL()
 #define MPIU_CHKLMEM_MALLOC_ORSTMT(pointer_,type_,nbytes_,rc_,name_,stmt_) \
 {pointer_ = (type_)alloca(nbytes_); \
@@ -428,11 +433,6 @@ if (pointer_) { \
         MPIU_ERR_CHKANDJUMP2(!realloc_tmp_,rc_,MPIU_CHKMEM_ISFATAL,"**nomem2","**nomem2 %d %s",(size_),MPIU_QUOTE(ptr_)); \
     (ptr_) = realloc_tmp_; \
 } while (0)
-
-/* Define attribute as empty if it has no definition */
-#ifndef ATTRIBUTE
-#define ATTRIBUTE(a)
-#endif
 
 #if defined(HAVE_STRNCASECMP)
 #   define MPIU_Strncasecmp strncasecmp
