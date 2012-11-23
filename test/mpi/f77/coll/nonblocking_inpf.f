@@ -9,7 +9,6 @@ C
        implicit none
        include 'mpif.h'
        integer SIZEOFINT
-       parameter (SIZEOFINT=4)
        integer MAX_SIZE
        parameter (MAX_SIZE=1024)
        integer rbuf(MAX_SIZE)
@@ -25,6 +24,7 @@ C
        comm = MPI_COMM_WORLD
        call mpi_comm_rank( comm, rank, ierr )
        call mpi_comm_size( comm, size, ierr )
+       call mpi_type_size( MPI_INTEGER, SIZEOFINT, ierr )
 
        do i=1,MAX_SIZE
            rbuf(i) = -1

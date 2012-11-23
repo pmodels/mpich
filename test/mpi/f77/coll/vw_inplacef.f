@@ -9,7 +9,6 @@ C
        implicit none
        include 'mpif.h'
        integer SIZEOFINT
-       parameter (SIZEOFINT=4)
        integer MAX_SIZE
        parameter (MAX_SIZE=1024)
        integer rbuf(MAX_SIZE)
@@ -26,7 +25,13 @@ C
        comm = MPI_COMM_WORLD
        call mpi_comm_rank( comm, rank, ierr )
        call mpi_comm_size( comm, size, ierr )
+       call mpi_type_size( MPI_INTEGER, SIZEOFINT, ierr )
 
+       if (size .gt. MAX_SIZE) then
+          print *, ' At most ', MAX_SIZE, ' processes allowed'
+          call mpi_abort( MPI_COMM_WORLD, 1, ierr )
+       endif
+C
        do i=1,MAX_SIZE
            rbuf(i) = -1
        enddo
