@@ -5606,7 +5606,10 @@ if test -z "$MPI_STATUS_SIZE" ; then
         # compute from the C sizeof
         # FIXME shouldn't these calculations be based on the size of a Fortran
         # 'INTEGER' rather than a C 'int'?
-        AS_VAR_ARITH([MPI_STATUS_SIZE],[$SIZEOF_MPI_STATUS / $ac_cv_sizeof_int])
+	if test -z "$pac_cv_f77_sizeof_integer" ; then 
+	    AC_MSG_ERROR([Sizeof Fortran INTEGER (MPI_Fint) is not available])
+	fi
+        AS_VAR_ARITH([MPI_STATUS_SIZE],[$SIZEOF_MPI_STATUS / $pac_cv_f77_sizeof_integer])
         if test "$MPI_STATUS_SIZE" = "0" ; then
             AC_MSG_ERROR([Could not compute the size of MPI_Status])
         fi
