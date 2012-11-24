@@ -18,18 +18,20 @@ C
       call mpi_init( ierr )
       if (ierr .ne. MPI_SUCCESS) then
           errs = errs + 1
-          print *, 'Unexpected return from MPI_INIT', ierr 
+          print *, ' Unexpected return from MPI_INIT', ierr 
       endif
 
       call mpi_comm_rank( MPI_COMM_WORLD, rank, ierr )
       call mpi_comm_size( MPI_COMM_WORLD, size, ierr )
       if (size .lt. 2) then
           errs = errs + 1
-          print *, 'this test requires at least 2 processes' 
+          print *, ' This test requires at least 2 processes' 
+C         Abort now - do not continue in this case.          
+          call mpi_abort( MPI_COMM_WORLD, 1, ierr )
       endif
       if (size .gt. 2) then
-          print *, 'this test is running with ', size, ' processes,'
-          print *, 'only 2 processes are used.' 
+          print *, ' This test is running with ', size, ' processes,'
+          print *, ' only 2 processes are used.' 
       endif
 
 C Test 0: simple Send and Mprobe+Mrecv.
@@ -55,11 +57,11 @@ C         the error fields are initialized for modification check.
           endif
           if (s1(MPI_TAG) .ne. 5) then
               errs = errs + 1
-              print *, 's1(MPI_TAGS) != 5 at T0 Mprobe().'
+              print *, 's1(MPI_TAG) != 5 at T0 Mprobe().'
           endif
           if (s1(MPI_ERROR) .ne. MPI_ERR_DIMS) then
               errs = errs + 1
-              print *, 's1(MPI_TAGS) != MPI_ERR_DIMS at T0 Mprobe().'
+              print *, 's1(MPI_ERROR) != MPI_ERR_DIMS at T0 Mprobe().'
           endif
           if (msg .eq. MPI_MESSAGE_NULL) then
               errs = errs + 1
@@ -90,11 +92,11 @@ C         the error fields are initialized for modification check.
           endif
           if (s2(MPI_TAG) .ne. 5) then
               errs = errs + 1
-              print *, 's2(MPI_TAGS) != 5 at T0 Mrecv().'
+              print *, 's2(MPI_TAG) != 5 at T0 Mrecv().'
           endif
           if (s2(MPI_ERROR) .ne. MPI_ERR_OTHER) then
               errs = errs + 1
-              print *, 's2(MPI_TAGS) != MPI_ERR_OTHER at T0 Mrecv().'
+              print *, 's2(MPI_ERROR) != MPI_ERR_OTHER at T0 Mrecv().'
           endif
           if (msg .ne. MPI_MESSAGE_NULL) then
               errs = errs + 1
@@ -125,11 +127,11 @@ C         the error fields are initialized for modification check.
           endif
           if (s1(MPI_TAG) .ne. 5) then
               errs = errs + 1
-              print *, 's1(MPI_TAGS) != 5 at T1 Mprobe().'
+              print *, 's1(MPI_TAG) != 5 at T1 Mprobe().'
           endif
           if (s1(MPI_ERROR) .ne. MPI_ERR_DIMS) then
               errs = errs + 1
-              print *, 's1(MPI_TAGS) != MPI_ERR_DIMS at T1 Mprobe().'
+              print *, 's1(MPI_ERROR) != MPI_ERR_DIMS at T1 Mprobe().'
           endif
           if (msg .eq. MPI_MESSAGE_NULL) then
               errs = errs + 1
@@ -166,11 +168,11 @@ C         the error fields are initialized for modification check.
           endif
           if (s2(MPI_TAG) .ne. 5) then
               errs = errs + 1
-              print *, 's2(MPI_TAGS) != 5 at T1 Imrecv().'
+              print *, 's2(MPI_TAG) != 5 at T1 Imrecv().'
           endif
           if (s2(MPI_ERROR) .ne. MPI_ERR_OTHER) then
               errs = errs + 1
-              print *, 's2(MPI_TAGS) != MPI_ERR_OTHER at T1 Imrecv().'
+              print *, 's2(MPI_ERROR) != MPI_ERR_OTHER at T1 Imrecv().'
           endif
           if (msg .ne. MPI_MESSAGE_NULL) then
               errs = errs + 1
@@ -209,11 +211,11 @@ C         the error fields are initialized for modification check.
           endif
           if (s1(MPI_TAG) .ne. 5) then
               errs = errs + 1
-              print *, 's1(MPI_TAGS) != 5 at T2 Improbe().'
+              print *, 's1(MPI_TAG) != 5 at T2 Improbe().'
           endif
           if (s1(MPI_ERROR) .ne. MPI_ERR_DIMS) then
               errs = errs + 1
-              print *, 's1(MPI_TAGS) != MPI_ERR_DIMS at T2 Improbe().'
+              print *, 's1(MPI_ERROR) != MPI_ERR_DIMS at T2 Improbe().'
           endif
 
           count = -1
@@ -240,11 +242,11 @@ C         the error fields are initialized for modification check.
           endif
           if (s2(MPI_TAG) .ne. 5) then
               errs = errs + 1
-              print *, 's2(MPI_TAGS) != 5 at T2 Mrecv().'
+              print *, 's2(MPI_TAG) != 5 at T2 Mrecv().'
           endif
           if (s2(MPI_ERROR) .ne. MPI_ERR_OTHER) then
               errs = errs + 1
-              print *, 's2(MPI_TAGS) != MPI_ERR_OTHER at T2 Mrecv().'
+              print *, 's2(MPI_ERROR) != MPI_ERR_OTHER at T2 Mrecv().'
           endif
           if (msg .ne. MPI_MESSAGE_NULL) then
               errs = errs + 1
@@ -283,11 +285,11 @@ C         the error fields are initialized for modification check.
           endif
           if (s1(MPI_TAG) .ne. 5) then
               errs = errs + 1
-              print *, 's1(MPI_TAGS) != 5 at T3 Improbe().'
+              print *, 's1(MPI_TAG) != 5 at T3 Improbe().'
           endif
           if (s1(MPI_ERROR) .ne. MPI_ERR_DIMS) then
               errs = errs + 1
-              print *, 's1(MPI_TAGS) != MPI_ERR_DIMS at T3 Improbe().'
+              print *, 's1(MPI_ERROR) != MPI_ERR_DIMS at T3 Improbe().'
           endif
 
           count = -1
@@ -320,11 +322,11 @@ C         the error fields are initialized for modification check.
           endif
           if (s2(MPI_TAG) .ne. 5) then
               errs = errs + 1
-              print *, 's2(MPI_TAGS) != 5 at T3 Imrecv().'
+              print *, 's2(MPI_TAG) != 5 at T3 Imrecv().'
           endif
           if (s2(MPI_ERROR) .ne. MPI_ERR_OTHER) then
               errs = errs + 1
-              print *, 's2(MPI_TAGS) != MPI_ERR_OTHER at T3 Imrecv().'
+              print *, 's2(MPI_ERROR) != MPI_ERR_OTHER at T3 Imrecv().'
           endif
           if (msg .ne. MPI_MESSAGE_NULL) then
               errs = errs + 1
@@ -351,11 +353,11 @@ C         the error fields are initialized for modification check.
           endif
           if (s1(MPI_TAG) .ne. MPI_ANY_TAG) then
               errs = errs + 1
-              print *, 's1(MPI_TAGS) != MPI_ANY_TAG at T4 Mprobe().'
+              print *, 's1(MPI_TAG) != MPI_ANY_TAG at T4 Mprobe().'
           endif
           if (s1(MPI_ERROR) .ne. MPI_ERR_DIMS) then
               errs = errs + 1
-              print *, 's1(MPI_TAGS) != MPI_ERR_DIMS at T4 Mprobe().'
+              print *, 's1(MPI_ERROR) != MPI_ERR_DIMS at T4 Mprobe().'
           endif
           if (msg .ne. MPI_MESSAGE_NO_PROC) then
               errs = errs + 1
@@ -387,11 +389,11 @@ C         recvbuf() should remain unmodified
           endif
           if (s2(MPI_TAG) .ne. MPI_ANY_TAG) then
               errs = errs + 1
-              print *, 's2(MPI_TAGS) != MPI_ANY_TAG at T4 Mrecv().'
+              print *, 's2(MPI_TAG) != MPI_ANY_TAG at T4 Mrecv().'
           endif
           if (s2(MPI_ERROR) .ne. MPI_ERR_OTHER) then
               errs = errs + 1
-              print *, 's2(MPI_TAGS) != MPI_ERR_OTHER at T4 Mrecv().'
+              print *, 's2(MPI_ERROR) != MPI_ERR_OTHER at T4 Mrecv().'
           endif
           if (msg .ne. MPI_MESSAGE_NULL) then
               errs = errs + 1
@@ -425,11 +427,11 @@ C         the error fields are initialized for modification check.
           endif
           if (s1(MPI_TAG) .ne. MPI_ANY_TAG) then
               errs = errs + 1
-              print *, 's1(MPI_TAGS) != MPI_ANY_TAG at T5 Mprobe().'
+              print *, 's1(MPI_TAG) != MPI_ANY_TAG at T5 Mprobe().'
           endif
           if (s1(MPI_ERROR) .ne. MPI_ERR_DIMS) then
               errs = errs + 1
-              print *, 's1(MPI_TAGS) != MPI_ERR_DIMS at T5 Mprobe().'
+              print *, 's1(MPI_ERROR) != MPI_ERR_DIMS at T5 Mprobe().'
           endif
           if (msg .ne. MPI_MESSAGE_NO_PROC) then
               errs = errs + 1
@@ -472,11 +474,11 @@ C         recvbuf() should remain unmodified
           endif
           if (s2(MPI_TAG) .ne. MPI_ANY_TAG) then
               errs = errs + 1
-              print *, 's2(MPI_TAGS) != MPI_ANY_TAG at T5 Imrecv().'
+              print *, 's2(MPI_TAG) != MPI_ANY_TAG at T5 Imrecv().'
           endif
           if (s2(MPI_ERROR) .ne. MPI_ERR_OTHER) then
               errs = errs + 1
-              print *, 's2(MPI_TAGS) != MPI_ERR_OTHER at T5 Imrecv().'
+              print *, 's2(MPI_ERROR) != MPI_ERR_OTHER at T5 Imrecv().'
           endif
           if (msg .ne. MPI_MESSAGE_NULL) then
               errs = errs + 1
@@ -515,11 +517,11 @@ C         the error fields are initialized for modification check.
           endif
           if (s1(MPI_TAG) .ne. MPI_ANY_TAG) then
               errs = errs + 1
-              print *, 's1(MPI_TAGS) != MPI_ANY_TAG at T6 Improbe().'
+              print *, 's1(MPI_TAG) != MPI_ANY_TAG at T6 Improbe().'
           endif
           if (s1(MPI_ERROR) .ne. MPI_ERR_DIMS) then
               errs = errs + 1
-              print *, 's1(MPI_TAGS) != MPI_ERR_DIMS at T6 Improbe().'
+              print *, 's1(MPI_ERROR) != MPI_ERR_DIMS at T6 Improbe().'
           endif
           if (msg .ne. MPI_MESSAGE_NO_PROC) then
               errs = errs + 1
@@ -551,11 +553,11 @@ C         recvbuf() should remain unmodified
           endif
           if (s2(MPI_TAG) .ne. MPI_ANY_TAG) then
               errs = errs + 1
-              print *, 's2(MPI_TAGS) != MPI_ANY_TAG at T6 Mrecv().'
+              print *, 's2(MPI_TAG) != MPI_ANY_TAG at T6 Mrecv().'
           endif
           if (s2(MPI_ERROR) .ne. MPI_ERR_OTHER) then
               errs = errs + 1
-              print *, 's2(MPI_TAGS) != MPI_ERR_OTHER at T6 Mrecv().'
+              print *, 's2(MPI_ERROR) != MPI_ERR_OTHER at T6 Mrecv().'
           endif
           if (msg .ne. MPI_MESSAGE_NULL) then
               errs = errs + 1
@@ -594,11 +596,11 @@ C         the error fields are initialized for modification check.
           endif
           if (s1(MPI_TAG) .ne. MPI_ANY_TAG) then
               errs = errs + 1
-              print *, 's1(MPI_TAGS) != MPI_ANY_TAG at T7 Improbe().'
+              print *, 's1(MPI_TAG) != MPI_ANY_TAG at T7 Improbe().'
           endif
           if (s1(MPI_ERROR) .ne. MPI_ERR_DIMS) then
               errs = errs + 1
-              print *, 's1(MPI_TAGS) != MPI_ERR_DIMS at T7 Improbe().'
+              print *, 's1(MPI_ERROR) != MPI_ERR_DIMS at T7 Improbe().'
           endif
           if (msg .ne. MPI_MESSAGE_NO_PROC) then
               errs = errs + 1
@@ -641,11 +643,11 @@ C         recvbuf() should remain unmodified
           endif
           if (s2(MPI_TAG) .ne. MPI_ANY_TAG) then
               errs = errs + 1
-              print *, 's2(MPI_TAGS) != MPI_ANY_TAG at T7 Imrecv().'
+              print *, 's2(MPI_TAG) != MPI_ANY_TAG at T7 Imrecv().'
           endif
           if (s2(MPI_ERROR) .ne. MPI_ERR_OTHER) then
               errs = errs + 1
-              print *, 's2(MPI_TAGS) != MPI_ERR_OTHER at T7 Imrecv().'
+              print *, 's2(MPI_ERROR) != MPI_ERR_OTHER at T7 Imrecv().'
           endif
           if (msg .ne. MPI_MESSAGE_NULL) then
               errs = errs + 1
