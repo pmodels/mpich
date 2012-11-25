@@ -3864,23 +3864,6 @@ dnl     len_doublecplx=$hexlen
     # not yet support it.  
     PAC_F77_LOGICALS_IN_C([$MPI_FINT])
 
-    # Check if multiple __attribute__((alias)) is available
-    if test "$enable_multi_aliases" = "yes" ; then
-        PAC_C_MULTI_ATTR_ALIAS
-        if test "$pac_c_multi_attr_alias" = "yes" ; then
-            PAC_F2C_ATTR_ALIGNED_SIZE([1],[CMB_1INT_ALIGNMENT])
-            AC_SUBST(CMB_1INT_ALIGNMENT)
-            PAC_F2C_ATTR_ALIGNED_SIZE([$MPI_STATUS_SIZE],[CMB_STATUS_ALIGNMENT],
-                                      [32])
-            AC_SUBST(CMB_STATUS_ALIGNMENT)
-            if test "X$CMB_1INT_ALIGNMENT" != "X" \
-                 -a "X$CMB_STATUS_ALIGNMENT" != "X" ; then
-                AC_DEFINE(HAVE_C_MULTI_ATTR_ALIAS, 1,
-                    [Define if multiple __attribute__((alias)) are supported])
-            fi
-        fi
-    fi
-
     # Get the INTEGER_KIND, ADDRESS_KIND and OFFSET_KIND if possible
     #
     # For Fortran 90, we'll also need MPI_ADDRESS_KIND and MPI_OFFSET_KIND
@@ -5587,7 +5570,7 @@ _EOF
 ]
 
 dnl just compute it, since a 1s-complement or sign-and-magnitude machine is
-dnl *highly* unlikely.  Users will report the error if it is ever dnl
+dnl *highly* unlikely.  Users will report the error if it is ever 
 dnl encountered, which will be safer than attempting some never-tested
 dnl default fallback.
     AC_COMPUTE_INT([pac_cv_sizeof_mpi_status],
@@ -5601,11 +5584,11 @@ SIZEOF_MPI_STATUS=$pac_cv_sizeof_mpi_status
 export SIZEOF_MPI_STATUS
 AC_SUBST([SIZEOF_MPI_STATUS])
 
-if test -z "$MPI_STATUS_SIZE" ; then
+if test "$enable_f77" = yes -a -z "$MPI_STATUS_SIZE" ; then
     if test -n "$SIZEOF_MPI_STATUS" ; then
         # compute from the C sizeof
-        # FIXME shouldn't these calculations be based on the size of a Fortran
-        # 'INTEGER' rather than a C 'int'?
+	# Note that these *must* use the size of a Fortran INTEGER, 
+	# not a C int - as those two types might not be the same size.
 	if test -z "$pac_cv_f77_sizeof_integer" ; then 
 	    AC_MSG_ERROR([Sizeof Fortran INTEGER (MPI_Fint) is not available])
 	fi
@@ -5627,6 +5610,27 @@ fi
 AC_SUBST([MPI_STATUS_SIZE])
 MPIF_STATUS_SIZE=$MPI_STATUS_SIZE
 AC_DEFINE_UNQUOTED([MPIF_STATUS_SIZE],[$MPIF_STATUS_SIZE],[Size of an MPI_STATUS, in Fortran, in Fortran integers])
+
+if test "$enable_f77" = yes ; then
+    # Check if multiple __attribute__((alias)) is available
+    # This test requires MPI_STATUS_SIZE, and thus must be made after 
+    # MPI_STATUS_SIZE is determined
+    if test "$enable_multi_aliases" = "yes" ; then
+        PAC_C_MULTI_ATTR_ALIAS
+        if test "$pac_c_multi_attr_alias" = "yes" ; then
+            PAC_F2C_ATTR_ALIGNED_SIZE([1],[CMB_1INT_ALIGNMENT])
+            AC_SUBST(CMB_1INT_ALIGNMENT)
+            PAC_F2C_ATTR_ALIGNED_SIZE([$MPI_STATUS_SIZE],[CMB_STATUS_ALIGNMENT],
+                                      [32])
+            AC_SUBST(CMB_STATUS_ALIGNMENT)
+            if test "X$CMB_1INT_ALIGNMENT" != "X" \
+                 -a "X$CMB_STATUS_ALIGNMENT" != "X" ; then
+                AC_DEFINE(HAVE_C_MULTI_ATTR_ALIAS, 1,
+                    [Define if multiple __attribute__((alias)) are supported])
+            fi
+        fi
+    fi
+fi
 
 # ----------------------------------------------------------------------------
 
