@@ -248,6 +248,7 @@ MPIDO_Allgather(const void *sendbuf,
    volatile unsigned allgather_active = 1;
    pami_xfer_t allred;
    const int rank = comm_ptr->rank;
+   int queryreq = 0;
 #if ASSERT_LEVEL==0
    /* We can't afford the tracing in ndebug/performance libraries */
     const unsigned verbose = 0;
@@ -372,10 +373,11 @@ MPIDO_Allgather(const void *sendbuf,
       if(selected_type == MPID_COLL_OPTIMIZED)
       {
         if((mpid->cutoff_size[PAMI_XFER_ALLGATHER][0] == 0) || 
-	    (mpid->cutoff_size[PAMI_XFER_ALLGATHER][0] > 0 && mpid->cutoff_size[PAMI_XFER_ALLGATHER][0] >= send_size))
+           (mpid->cutoff_size[PAMI_XFER_ALLGATHER][0] > 0 && mpid->cutoff_size[PAMI_XFER_ALLGATHER][0] >= send_size))
         {
            allgather.algorithm = mpid->opt_protocol[PAMI_XFER_ALLGATHER][0];
            my_md = &mpid->opt_protocol_md[PAMI_XFER_ALLGATHER][0];
+           queryreq     = mpid->must_query[PAMI_XFER_ALLGATHER][0];
         }
         else
         {
@@ -388,22 +390,30 @@ MPIDO_Allgather(const void *sendbuf,
       {
          allgather.algorithm = mpid->user_selected[PAMI_XFER_ALLGATHER];
          my_md = &mpid->user_metadata[PAMI_XFER_ALLGATHER];
+         queryreq     = selected_type;
       }
 
-      if(unlikely( selected_type == MPID_COLL_ALWAYS_QUERY ||
-                   selected_type == MPID_COLL_CHECK_FN_REQUIRED))
+      if(unlikely( queryreq == MPID_COLL_ALWAYS_QUERY ||
+                   queryreq == MPID_COLL_CHECK_FN_REQUIRED))
       {
          metadata_result_t result = {0};
          TRACE_ERR("Querying allgather protocol %s, type was: %d\n",
             my_md->name,
             selected_type);
-         result = my_md->check_fn(&allgather);
-         TRACE_ERR("bitmask: %#X\n", result.bitmask);
-         if(!result.bitmask)
+         if(queryreq == MPID_COLL_ALWAYS_QUERY)
          {
-      if(unlikely(verbose))
-            fprintf(stderr,"Query failed for %s.\n",
-               my_md->name);
+           /* process metadata bits */
+         }
+         else /* (queryreq == MPID_COLL_CHECK_FN_REQUIRED - calling the check fn is sufficient */
+           result = my_md->check_fn(&allgather);
+         TRACE_ERR("bitmask: %#X\n", result.bitmask);
+         result.check.nonlocal = 0; /* #warning REMOVE THIS WHEN IMPLEMENTED */
+         if(result.bitmask)
+         {
+           if(unlikely(verbose))
+             fprintf(stderr,"Query failed for %s.\n",
+                     my_md->name);
+           MPIDI_Update_last_algorithm(comm_ptr, "ALLGATHER_MPICH");
            return MPIR_Allgather(sendbuf, sendcount, sendtype,
                        recvbuf, recvcount, recvtype,
                        comm_ptr, mpierrno);

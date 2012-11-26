@@ -349,14 +349,21 @@ int MPIDO_Scatterv(const void *sendbuf,
    scatterv.cmd.xfer_scatterv_int.rtypecount = recvcount;
    scatterv.cmd.xfer_scatterv_int.sdispls = (int *) displs;
 
-   if(unlikely(queryreq == MPID_COLL_ALWAYS_QUERY || queryreq == MPID_COLL_CHECK_FN_REQUIRED))
+   if(unlikely(queryreq == MPID_COLL_ALWAYS_QUERY || 
+               queryreq == MPID_COLL_CHECK_FN_REQUIRED))
    {
       metadata_result_t result = {0};
       TRACE_ERR("querying scatterv protocol %s, type was %d\n",
          my_scatterv_md->name, queryreq);
-      result = my_scatterv_md->check_fn(&scatterv);
+      if(queryreq == MPID_COLL_ALWAYS_QUERY)
+      {
+        /* process metadata bits */
+      }
+      else /* (queryreq == MPID_COLL_CHECK_FN_REQUIRED - calling the check fn is sufficient */
+        result = my_scatterv_md->check_fn(&scatterv);
       TRACE_ERR("bitmask: %#X\n", result.bitmask);
-      if(!result.bitmask)
+      result.check.nonlocal = 0; /* #warning REMOVE THIS WHEN IMPLEMENTED */
+      if(result.bitmask)
       {
         if(unlikely(verbose))
           fprintf(stderr,"Query failed for %s\n", my_scatterv_md->name);

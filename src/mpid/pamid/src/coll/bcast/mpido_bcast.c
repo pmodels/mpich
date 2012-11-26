@@ -104,7 +104,7 @@ int MPIDO_Bcast(void *buffer,
    {
      if(unlikely(verbose))
        fprintf(stderr,"Using MPICH bcast algorithm\n");
-      MPIDI_Update_last_algorithm(comm_ptr,"MPICH");
+      MPIDI_Update_last_algorithm(comm_ptr,"BCAST_MPICH");
       return MPIR_Bcast_intra(buffer, count, datatype, root, comm_ptr, mpierrno);
    }
 
@@ -185,35 +185,25 @@ int MPIDO_Bcast(void *buffer,
 
    bcast.algorithm = my_bcast;
 
-   if(queryreq == MPID_COLL_ALWAYS_QUERY)
-   {
-     metadata_result_t result = {0};
-     TRACE_ERR("querying bcast protocol %s, type was: %d\n",
-	       my_bcast_md->name, queryreq);
-     // TODO check bits?
-     TRACE_ERR("bitmask: %#X\n", result.bitmask);
-     result.check.nonlocal = 0; /* #warning REMOVE THIS WHEN IMPLEMENTED */
-     if(result.bitmask)
-     {
-       if(unlikely(verbose))
-	 fprintf(stderr,"Using MPICH bcast algorithm - query bits failed\n");
-       MPIDI_Update_last_algorithm(comm_ptr,"MPICH");
-       return MPIR_Bcast_intra(buffer, count, datatype, root, comm_ptr, mpierrno);
-     }
-   }
-   else if(queryreq == MPID_COLL_CHECK_FN_REQUIRED)
+   if(unlikely(queryreq == MPID_COLL_ALWAYS_QUERY ||
+               queryreq == MPID_COLL_CHECK_FN_REQUIRED))
    {
       metadata_result_t result = {0};
       TRACE_ERR("querying bcast protocol %s, type was: %d\n",
          my_bcast_md->name, queryreq);
-      result = my_bcast_md->check_fn(&bcast);
+      if(queryreq == MPID_COLL_ALWAYS_QUERY)
+      {
+        /* process metadata bits */
+      }
+      else /* (queryreq == MPID_COLL_CHECK_FN_REQUIRED - calling the check fn is sufficient */
+         result = my_bcast_md->check_fn(&bcast);
       TRACE_ERR("bitmask: %#X\n", result.bitmask);
       result.check.nonlocal = 0; /* #warning REMOVE THIS WHEN IMPLEMENTED */
       if(result.bitmask)
       {
          if(unlikely(verbose))
             fprintf(stderr,"Using MPICH bcast algorithm - query fn failed\n");
-         MPIDI_Update_last_algorithm(comm_ptr,"MPICH");
+         MPIDI_Update_last_algorithm(comm_ptr,"BCAST_MPICH");
          return MPIR_Bcast_intra(buffer, count, datatype, root, comm_ptr, mpierrno);
       }
    }

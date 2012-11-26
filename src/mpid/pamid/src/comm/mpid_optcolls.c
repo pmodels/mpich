@@ -145,6 +145,7 @@ void MPIDI_Comm_coll_select(MPID_Comm *comm_ptr)
 {
    TRACE_ERR("Entering MPIDI_Comm_coll_select\n");
    int opt_proto = -1;
+   int mustquery = 0;
    int i;
    int use_threaded_collectives = 1;
 
@@ -201,16 +202,19 @@ void MPIDI_Comm_coll_select(MPID_Comm *comm_ptr)
       MPIDI_Coll_comm_check_FCA("GATHERV","I1:GathervInt:FCA:FCA",PAMI_XFER_GATHERV_INT,MPID_COLL_NOQUERY, 0, comm_ptr);
    }
 
+   opt_proto = -1;
+   mustquery = 0;
    /* So, several protocols are really easy. Tackle them first. */
    if(comm_ptr->mpid.user_selected_type[PAMI_XFER_ALLGATHERV_INT] == MPID_COLL_NOSELECTION)
    {
       TRACE_ERR("No allgatherv[int] env var, so setting optimized allgatherv[int]\n");
       /* Use I0:RectangleDput */
-      for(i = 0; i < comm_ptr->mpid.coll_count[PAMI_XFER_ALLGATHERV_INT][0]; i++)
+      for(i = 0; i < comm_ptr->mpid.coll_count[PAMI_XFER_ALLGATHERV_INT][1]; i++)
       {
          if(strcasecmp(comm_ptr->mpid.coll_metadata[PAMI_XFER_ALLGATHERV_INT][0][i].name, "I0:RectangleDput:SHMEM:MU") == 0)
          {
             opt_proto = i;
+            mustquery = 1;
             break;
          }
       }
@@ -218,13 +222,13 @@ void MPIDI_Comm_coll_select(MPID_Comm *comm_ptr)
       {
          TRACE_ERR("Memcpy protocol type %d number %d (%s) to optimized protocol\n",
             PAMI_XFER_ALLGATHERV_INT, opt_proto,
-            comm_ptr->mpid.coll_metadata[PAMI_XFER_ALLGATHERV_INT][0][opt_proto].name);
+            comm_ptr->mpid.coll_metadata[PAMI_XFER_ALLGATHERV_INT][mustquery][opt_proto].name);
          comm_ptr->mpid.opt_protocol[PAMI_XFER_ALLGATHERV_INT][0] =
-                comm_ptr->mpid.coll_algorithm[PAMI_XFER_ALLGATHERV_INT][0][opt_proto];
+                comm_ptr->mpid.coll_algorithm[PAMI_XFER_ALLGATHERV_INT][mustquery][opt_proto];
          memcpy(&comm_ptr->mpid.opt_protocol_md[PAMI_XFER_ALLGATHERV_INT][0], 
-                &comm_ptr->mpid.coll_metadata[PAMI_XFER_ALLGATHERV_INT][0][opt_proto], 
+                &comm_ptr->mpid.coll_metadata[PAMI_XFER_ALLGATHERV_INT][mustquery][opt_proto], 
                 sizeof(pami_metadata_t));
-         comm_ptr->mpid.must_query[PAMI_XFER_ALLGATHERV_INT][0] = MPID_COLL_NOQUERY;
+         comm_ptr->mpid.must_query[PAMI_XFER_ALLGATHERV_INT][0] = mustquery?MPID_COLL_ALWAYS_QUERY:MPID_COLL_NOQUERY;
          comm_ptr->mpid.user_selected_type[PAMI_XFER_ALLGATHERV_INT] = MPID_COLL_OPTIMIZED;
       }
       else
@@ -237,7 +241,7 @@ void MPIDI_Comm_coll_select(MPID_Comm *comm_ptr)
    }
 
    opt_proto = -1;
-
+   mustquery = 0;
    /* Alltoall */
    /* If the user has forced a selection, don't bother setting it here */
    if(comm_ptr->mpid.user_selected_type[PAMI_XFER_ALLTOALL] == MPID_COLL_NOSELECTION)
@@ -247,11 +251,12 @@ void MPIDI_Comm_coll_select(MPID_Comm *comm_ptr)
        * displacement array memory issues today.... */
       /* Loop over the protocols until we find the one we want */
       if(use_threaded_collectives)
-       for(i = 0; i < comm_ptr->mpid.coll_count[PAMI_XFER_ALLTOALL][0]; i++)
+       for(i = 0; i < comm_ptr->mpid.coll_count[PAMI_XFER_ALLTOALL][1]; i++)
        {
-         if(strcasecmp(comm_ptr->mpid.coll_metadata[PAMI_XFER_ALLTOALL][0][i].name, "I0:M2MComposite:MU:MU") == 0)
+         if(strcasecmp(comm_ptr->mpid.coll_metadata[PAMI_XFER_ALLTOALL][1][i].name, "I0:M2MComposite:MU:MU") == 0)
          {
             opt_proto = i;
+            mustquery = 1;
             break;
          }
        }
@@ -259,13 +264,13 @@ void MPIDI_Comm_coll_select(MPID_Comm *comm_ptr)
       {
          TRACE_ERR("Memcpy protocol type %d, number %d (%s) to optimized protocol\n",
             PAMI_XFER_ALLTOALL, opt_proto, 
-            comm_ptr->mpid.coll_metadata[PAMI_XFER_ALLTOALL][0][opt_proto].name);
+            comm_ptr->mpid.coll_metadata[PAMI_XFER_ALLTOALL][mustquery][opt_proto].name);
          comm_ptr->mpid.opt_protocol[PAMI_XFER_ALLTOALL][0] =
-                comm_ptr->mpid.coll_algorithm[PAMI_XFER_ALLTOALL][0][opt_proto];
+                comm_ptr->mpid.coll_algorithm[PAMI_XFER_ALLTOALL][mustquery][opt_proto];
          memcpy(&comm_ptr->mpid.opt_protocol_md[PAMI_XFER_ALLTOALL][0], 
-                &comm_ptr->mpid.coll_metadata[PAMI_XFER_ALLTOALL][0][opt_proto], 
+                &comm_ptr->mpid.coll_metadata[PAMI_XFER_ALLTOALL][mustquery][opt_proto], 
                 sizeof(pami_metadata_t));
-         comm_ptr->mpid.must_query[PAMI_XFER_ALLTOALL][0] = MPID_COLL_NOQUERY;
+         comm_ptr->mpid.must_query[PAMI_XFER_ALLTOALL][0] = mustquery?MPID_COLL_ALWAYS_QUERY:MPID_COLL_NOQUERY;
          comm_ptr->mpid.user_selected_type[PAMI_XFER_ALLTOALL] = MPID_COLL_OPTIMIZED;
       }
       else
@@ -279,6 +284,7 @@ void MPIDI_Comm_coll_select(MPID_Comm *comm_ptr)
 
 
    opt_proto = -1;
+   mustquery = 0;
    /* Alltoallv */
    if(comm_ptr->mpid.user_selected_type[PAMI_XFER_ALLTOALLV_INT] == MPID_COLL_NOSELECTION)
    {
@@ -287,11 +293,12 @@ void MPIDI_Comm_coll_select(MPID_Comm *comm_ptr)
        * displacement array memory issues today.... */
       /* Loop over the protocols until we find the one we want */
       if(use_threaded_collectives)
-       for(i = 0; i <comm_ptr->mpid.coll_count[PAMI_XFER_ALLTOALLV_INT][0]; i++)
+       for(i = 0; i <comm_ptr->mpid.coll_count[PAMI_XFER_ALLTOALLV_INT][1]; i++)
        {
-         if(strcasecmp(comm_ptr->mpid.coll_metadata[PAMI_XFER_ALLTOALLV_INT][0][i].name, "I0:M2MComposite:MU:MU") == 0)
+         if(strcasecmp(comm_ptr->mpid.coll_metadata[PAMI_XFER_ALLTOALLV_INT][1][i].name, "I0:M2MComposite:MU:MU") == 0)
          {
             opt_proto = i;
+            mustquery = 1;
             break;
          }
        }
@@ -299,13 +306,13 @@ void MPIDI_Comm_coll_select(MPID_Comm *comm_ptr)
       {
          TRACE_ERR("Memcpy protocol type %d, number %d (%s) to optimized protocol\n",
             PAMI_XFER_ALLTOALLV_INT, opt_proto, 
-            comm_ptr->mpid.coll_metadata[PAMI_XFER_ALLTOALLV_INT][0][opt_proto].name);
+            comm_ptr->mpid.coll_metadata[PAMI_XFER_ALLTOALLV_INT][mustquery][opt_proto].name);
          comm_ptr->mpid.opt_protocol[PAMI_XFER_ALLTOALLV_INT][0] =
-                comm_ptr->mpid.coll_algorithm[PAMI_XFER_ALLTOALLV_INT][0][opt_proto];
+                comm_ptr->mpid.coll_algorithm[PAMI_XFER_ALLTOALLV_INT][mustquery][opt_proto];
          memcpy(&comm_ptr->mpid.opt_protocol_md[PAMI_XFER_ALLTOALLV_INT][0], 
-                &comm_ptr->mpid.coll_metadata[PAMI_XFER_ALLTOALLV_INT][0][opt_proto], 
+                &comm_ptr->mpid.coll_metadata[PAMI_XFER_ALLTOALLV_INT][mustquery][opt_proto], 
                 sizeof(pami_metadata_t));
-         comm_ptr->mpid.must_query[PAMI_XFER_ALLTOALLV_INT][0] = MPID_COLL_NOQUERY;
+         comm_ptr->mpid.must_query[PAMI_XFER_ALLTOALLV_INT][0] = mustquery?MPID_COLL_ALWAYS_QUERY:MPID_COLL_NOQUERY;
          comm_ptr->mpid.user_selected_type[PAMI_XFER_ALLTOALLV_INT] = MPID_COLL_OPTIMIZED;
       }
       else
@@ -318,6 +325,7 @@ void MPIDI_Comm_coll_select(MPID_Comm *comm_ptr)
    }
    
    opt_proto = -1;
+   mustquery = 0;
    /* Barrier */
    if(comm_ptr->mpid.user_selected_type[PAMI_XFER_BARRIER] == MPID_COLL_NOSELECTION)
    {
@@ -405,6 +413,7 @@ void MPIDI_Comm_coll_select(MPID_Comm *comm_ptr)
    }
 
    opt_proto = -1;
+   mustquery = 0;
 
    /* This becomes messy when we have to message sizes. If we were gutting the 
     * existing framework, it might be easier, but I think the existing framework
@@ -435,7 +444,6 @@ void MPIDI_Comm_coll_select(MPID_Comm *comm_ptr)
       /* I0:RankBased_Binomial:-:ShortMU is good on irregular for <256 bytes */
       /* I0:MultiCast:SHMEM:- is good at 1 node/16ppn, which is a SOW point */
       TRACE_ERR("No bcast env var, so setting optimized bcast\n");
-      int mustquery = 0;
 
       if(use_threaded_collectives)
        for(i = 0 ; i < comm_ptr->mpid.coll_count[PAMI_XFER_BROADCAST][1]; i++)
@@ -529,12 +537,11 @@ void MPIDI_Comm_coll_select(MPID_Comm *comm_ptr)
          comm_ptr->mpid.opt_protocol[PAMI_XFER_BROADCAST][0] = 0;
       }
 
-      mustquery = 0;
-
       TRACE_ERR("Done setting optimized bcast 0\n");
 
       /* Now, look into large message bcasts */
       opt_proto = -1;
+      mustquery = 0;
       /* If bcast0 is I0:MultiCastDput:-:MU, and I0:RectangleDput:MU:MU is available, use
        * it for 64k messages */
       if(comm_ptr->mpid.user_selected_type[PAMI_XFER_BROADCAST] != MPID_COLL_USE_MPICH)
@@ -616,14 +623,14 @@ void MPIDI_Comm_coll_select(MPID_Comm *comm_ptr)
             memcpy(&comm_ptr->mpid.opt_protocol_md[PAMI_XFER_BROADCAST][1], 
                    &comm_ptr->mpid.opt_protocol_md[PAMI_XFER_BROADCAST][0],
                    sizeof(pami_metadata_t));
-            comm_ptr->mpid.must_query[PAMI_XFER_BROADCAST][1] = 
-	      comm_ptr->mpid.must_query[PAMI_XFER_BROADCAST][0];
+            comm_ptr->mpid.must_query[PAMI_XFER_BROADCAST][1] = comm_ptr->mpid.must_query[PAMI_XFER_BROADCAST][0];
          }
       }
       TRACE_ERR("Done with bcast protocol selection\n");
    }
 
    opt_proto = -1;
+   mustquery = 0;
    /* The most fun... allreduce */
    /* 512-way data: */
    /* For starters, Amith's protocol works on doubles on sum/min/max. Because

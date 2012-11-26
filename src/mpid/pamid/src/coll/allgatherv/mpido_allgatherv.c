@@ -268,6 +268,7 @@ MPIDO_Allgatherv(const void *sendbuf,
   char *sbuf, *rbuf;
   const int rank = comm_ptr->rank;
   const struct MPIDI_Comm* const mpid = &(comm_ptr->mpid);
+  int queryreq = 0;
 
 #if ASSERT_LEVEL==0
    /* We can't afford the tracing in ndebug/performance libraries */
@@ -396,10 +397,11 @@ MPIDO_Allgatherv(const void *sendbuf,
       if(selected_type == MPID_COLL_OPTIMIZED)
       {
         if((mpid->cutoff_size[PAMI_XFER_ALLGATHERV_INT][0] == 0) || 
-	    (mpid->cutoff_size[PAMI_XFER_ALLGATHERV_INT][0] > 0 && mpid->cutoff_size[PAMI_XFER_ALLGATHERV_INT][0] >= send_size))
+           (mpid->cutoff_size[PAMI_XFER_ALLGATHERV_INT][0] > 0 && mpid->cutoff_size[PAMI_XFER_ALLGATHERV_INT][0] >= send_size))
         {		
           allgatherv.algorithm = mpid->opt_protocol[PAMI_XFER_ALLGATHERV_INT][0];
           my_md = &mpid->opt_protocol_md[PAMI_XFER_ALLGATHERV_INT][0];
+          queryreq     = mpid->must_query[PAMI_XFER_ALLGATHERV_INT][0];
         }
         else
           return MPIR_Allgatherv(sendbuf, sendcount, sendtype,
@@ -410,6 +412,7 @@ MPIDO_Allgatherv(const void *sendbuf,
       {  
         allgatherv.algorithm = mpid->user_selected[PAMI_XFER_ALLGATHERV_INT];
         my_md = &mpid->user_metadata[PAMI_XFER_ALLGATHERV_INT];
+        queryreq     = selected_type;
       }
       
       allgatherv.cmd.xfer_allgatherv_int.sndbuf = sbuf;
@@ -421,15 +424,21 @@ MPIDO_Allgatherv(const void *sendbuf,
       allgatherv.cmd.xfer_allgatherv_int.rtypecounts = (int *) recvcounts;
       allgatherv.cmd.xfer_allgatherv_int.rdispls = (int *) displs;
 
-      if(unlikely (selected_type == MPID_COLL_ALWAYS_QUERY ||
-                   selected_type == MPID_COLL_CHECK_FN_REQUIRED))
+      if(unlikely (queryreq == MPID_COLL_ALWAYS_QUERY ||
+                   queryreq == MPID_COLL_CHECK_FN_REQUIRED))
       {
          metadata_result_t result = {0};
          TRACE_ERR("Querying allgatherv_int protocol %s, type was %d\n", my_md->name,
             selected_type);
-         result = my_md->check_fn(&allgatherv);
+         if(queryreq == MPID_COLL_ALWAYS_QUERY)
+         {
+           /* process metadata bits */
+         }
+         else /* (queryreq == MPID_COLL_CHECK_FN_REQUIRED - calling the check fn is sufficient */
+           result = my_md->check_fn(&allgatherv);
          TRACE_ERR("Allgatherv bitmask: %#X\n", result.bitmask);
-         if(!result.bitmask)
+         result.check.nonlocal = 0; /* #warning REMOVE THIS WHEN IMPLEMENTED */
+         if(result.bitmask)
          {
            if(unlikely(verbose))
              fprintf(stderr,"Query failed for %s\n", my_md->name);

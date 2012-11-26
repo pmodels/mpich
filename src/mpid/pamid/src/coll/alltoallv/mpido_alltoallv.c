@@ -129,16 +129,24 @@ int MPIDO_Alltoallv(const void *sendbuf,
    alltoallv.cmd.xfer_alltoallv_int.rtypecounts = (int *) recvcounts;
    alltoallv.cmd.xfer_alltoallv_int.rtype = rtype;
 
-   if(unlikely(queryreq == MPID_COLL_ALWAYS_QUERY || queryreq == MPID_COLL_CHECK_FN_REQUIRED))
+   if(unlikely(queryreq == MPID_COLL_ALWAYS_QUERY || 
+               queryreq == MPID_COLL_CHECK_FN_REQUIRED))
    {
       metadata_result_t result = {0};
       TRACE_ERR("querying alltoallv protocol %s, type was %d\n", pname, queryreq);
-      result = my_alltoallv_md->check_fn(&alltoallv);
+      if(queryreq == MPID_COLL_ALWAYS_QUERY)
+      {
+        /* process metadata bits */
+      }
+      else /* (queryreq == MPID_COLL_CHECK_FN_REQUIRED - calling the check fn is sufficient */
+         result = my_alltoallv_md->check_fn(&alltoallv);
       TRACE_ERR("bitmask: %#X\n", result.bitmask);
-      if(!result.bitmask)
+      result.check.nonlocal = 0; /* #warning REMOVE THIS WHEN IMPLEMENTED */
+      if(result.bitmask)
       {
         if(unlikely(verbose))
           fprintf(stderr,"Query failed for %s\n", pname);
+        MPIDI_Update_last_algorithm(comm_ptr, "ALLTOALLV_MPICH");
         return MPIR_Alltoallv(sendbuf, sendcounts, senddispls, sendtype,
                               recvbuf, recvcounts, recvdispls, recvtype,
                               comm_ptr, mpierrno);

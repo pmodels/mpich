@@ -132,20 +132,28 @@ int MPIDO_Alltoall(const void *sendbuf,
    alltoall.cmd.xfer_alltoall.rtypecount = recvcount;
    alltoall.cmd.xfer_alltoall.rtype = rtype;
 
-   if(unlikely(queryreq == MPID_COLL_ALWAYS_QUERY || queryreq == MPID_COLL_CHECK_FN_REQUIRED))
+   if(unlikely(queryreq == MPID_COLL_ALWAYS_QUERY || 
+               queryreq == MPID_COLL_CHECK_FN_REQUIRED))
    {
       metadata_result_t result = {0};
       TRACE_ERR("querying alltoall protocol %s, query level was %d\n", pname,
          queryreq);
-      result = my_alltoall_md->check_fn(&alltoall);
-      TRACE_ERR("bitmask: %#X\n", result.bitmask);
-      if(!result.bitmask)
+      if(queryreq == MPID_COLL_ALWAYS_QUERY)
       {
-      if(unlikely(verbose))
-         fprintf(stderr,"Query failed for %s\n", pname);
-      return MPIR_Alltoall_intra(sendbuf, sendcount, sendtype,
-                                 recvbuf, recvcount, recvtype,
-                                 comm_ptr, mpierrno);
+        /* process metadata bits */
+      }
+      else /* (queryreq == MPID_COLL_CHECK_FN_REQUIRED - calling the check fn is sufficient */
+         result = my_alltoall_md->check_fn(&alltoall);
+      TRACE_ERR("bitmask: %#X\n", result.bitmask);
+      result.check.nonlocal = 0; /* #warning REMOVE THIS WHEN IMPLEMENTED */
+      if(result.bitmask)
+      {
+        if(unlikely(verbose))
+           fprintf(stderr,"Query failed for %s\n", pname);
+        MPIDI_Update_last_algorithm(comm_ptr, "ALLTOALL_MPICH");
+        return MPIR_Alltoall_intra(sendbuf, sendcount, sendtype,
+                                   recvbuf, recvcount, recvtype,
+                                   comm_ptr, mpierrno);
       }
    }
 

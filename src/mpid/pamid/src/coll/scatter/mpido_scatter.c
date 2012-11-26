@@ -236,9 +236,15 @@ int MPIDO_Scatter(const void *sendbuf,
       metadata_result_t result = {0};
       TRACE_ERR("querying scatter protoocl %s, type was %d\n",
          my_scatter_md->name, queryreq);
-      result = my_scatter_md->check_fn(&scatter);
+      if(queryreq == MPID_COLL_ALWAYS_QUERY)
+      {
+        /* process metadata bits */
+      }
+      else /* (queryreq == MPID_COLL_CHECK_FN_REQUIRED - calling the check fn is sufficient */
+        result = my_scatter_md->check_fn(&scatter);
       TRACE_ERR("bitmask: %#X\n", result.bitmask);
-      if(!result.bitmask)
+      result.check.nonlocal = 0; /* #warning REMOVE THIS WHEN IMPLEMENTED */
+      if(result.bitmask)
       {
         if(unlikely(verbose))
           fprintf(stderr,"query failed for %s\n", my_scatter_md->name);

@@ -141,14 +141,21 @@ int MPIDO_Gatherv(const void *sendbuf,
    gatherv.algorithm = my_gatherv;
 
 
-   if(unlikely(queryreq == MPID_COLL_ALWAYS_QUERY || queryreq == MPID_COLL_CHECK_FN_REQUIRED))
+   if(unlikely(queryreq == MPID_COLL_ALWAYS_QUERY || 
+               queryreq == MPID_COLL_CHECK_FN_REQUIRED))
    {
       metadata_result_t result = {0};
       TRACE_ERR("querying gatherv protocol %s, type was %d\n", 
          my_gatherv_md->name, queryreq);
-      result = my_gatherv_md->check_fn(&gatherv);
+      if(queryreq == MPID_COLL_ALWAYS_QUERY)
+      {
+        /* process metadata bits */
+      }
+      else /* (queryreq == MPID_COLL_CHECK_FN_REQUIRED - calling the check fn is sufficient */
+         result = my_gatherv_md->check_fn(&gatherv);
       TRACE_ERR("bitmask: %#X\n", result.bitmask);
-      if(!result.bitmask)
+      result.check.nonlocal = 0; /* #warning REMOVE THIS WHEN IMPLEMENTED */
+      if(result.bitmask)
       {
          if(unlikely(verbose))
             fprintf(stderr,"Query failed for %s\n", my_gatherv_md->name);

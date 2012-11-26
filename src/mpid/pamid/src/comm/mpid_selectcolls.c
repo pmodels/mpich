@@ -82,10 +82,10 @@ static void MPIDI_Update_coll(pami_algorithm_t coll,
          TRACE_ERR("Protocol %s setting to always query/call check_fn\n", comm->mpid.coll_metadata[coll][type][index].name);
          comm->mpid.user_selected_type[coll] = MPID_COLL_CHECK_FN_REQUIRED;
       } 
-      else
+      else /* No check fn but we still need to check metadata bits (query protocol)  */
       {
-	TRACE_ERR("Protocol %s setting to always query/no check_fn\n", comm->mpid.coll_metadata[coll][type][index].name);
-	comm->mpid.user_selected_type[coll] = MPID_COLL_ALWAYS_QUERY;
+         TRACE_ERR("Protocol %s setting to always query/no check_fn\n", comm->mpid.coll_metadata[coll][type][index].name);
+         comm->mpid.user_selected_type[coll] = MPID_COLL_ALWAYS_QUERY;
       }
 
    }

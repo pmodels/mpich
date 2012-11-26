@@ -121,7 +121,8 @@ int MPIDO_Reduce(const void *sendbuf,
    reduce.cmd.xfer_reduce.root = MPID_VCR_GET_LPID(comm_ptr->vcr, root);
 
 
-   if(queryreq == MPID_COLL_ALWAYS_QUERY || queryreq == MPID_COLL_CHECK_FN_REQUIRED)
+   if(unlikely(queryreq == MPID_COLL_ALWAYS_QUERY || 
+               queryreq == MPID_COLL_CHECK_FN_REQUIRED))
    {
       if(my_reduce_md->check_fn != NULL)
       {
@@ -129,8 +130,14 @@ int MPIDO_Reduce(const void *sendbuf,
          TRACE_ERR("Querying reduce protocol %s, type was %d\n",
             my_reduce_md->name,
             queryreq);
-         result = my_reduce_md->check_fn(&reduce);
+         if(queryreq == MPID_COLL_ALWAYS_QUERY)
+         {
+            /* process metadata bits */
+         }
+         else /* (queryreq == MPID_COLL_CHECK_FN_REQUIRED - calling the check fn is sufficient */
+            result = my_reduce_md->check_fn(&reduce);
          TRACE_ERR("Bitmask: %#X\n", result.bitmask);
+         result.check.nonlocal = 0; /* #warning REMOVE THIS WHEN IMPLEMENTED */
          if(result.bitmask)
          {
             if(verbose)
@@ -169,6 +176,7 @@ int MPIDO_Reduce(const void *sendbuf,
    }
    else
    {
+      MPIDI_Update_last_algorithm(comm_ptr, "REDUCE_MPICH");
       if(unlikely(verbose))
          fprintf(stderr,"Using MPICH reduce algorithm\n");
       return MPIR_Reduce(sendbuf, recvbuf, count, datatype, op, root, comm_ptr, mpierrno);

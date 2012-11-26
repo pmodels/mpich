@@ -261,12 +261,19 @@ int MPIDO_Gather(const void *sendbuf,
       metadata_result_t result = {0};
       TRACE_ERR("querying gather protocol %s, type was %d\n",
          my_gather_md->name, queryreq);
-      result = my_gather_md->check_fn(&gather);
+      if(queryreq == MPID_COLL_ALWAYS_QUERY)
+      {
+        /* process metadata bits */
+      }
+      else /* (queryreq == MPID_COLL_CHECK_FN_REQUIRED - calling the check fn is sufficient */
+        result = my_gather_md->check_fn(&gather);
       TRACE_ERR("bitmask: %#X\n", result.bitmask);
-      if(!result.bitmask)
+      result.check.nonlocal = 0; /* #warning REMOVE THIS WHEN IMPLEMENTED */
+      if(result.bitmask)
       {
         if(unlikely(verbose))
           fprintf(stderr,"query failed for %s\n", my_gather_md->name);
+        MPIDI_Update_last_algorithm(comm_ptr, "GATHER_MPICH");
         return MPIR_Gather(sendbuf, sendcount, sendtype,
                            recvbuf, recvcount, recvtype,
                            root, comm_ptr, mpierrno);
