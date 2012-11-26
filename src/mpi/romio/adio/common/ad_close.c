@@ -14,8 +14,7 @@
 
 void ADIO_Close(ADIO_File fd, int *error_code)
 {
-    int err = MPI_SUCCESS;
-    int i, j, k, combiner, myrank, is_contig;
+    int i, j, k, combiner, myrank, err, is_contig;
     static char myname[] = "ADIO_CLOSE";
 
     if (fd->async_count) {
@@ -48,21 +47,14 @@ void ADIO_Close(ADIO_File fd, int *error_code)
     }
 
     if (fd->access_mode & ADIO_DELETE_ON_CLOSE) {
-        int is_agg_ldr = 0;
-        ADIOI_IS_AGG_LEADER(fd, &is_agg_ldr);
 	/* if we are doing aggregation and deferred open, then it's possible
 	 * that rank 0 does not have access to the file. make sure only an
 	 * aggregator deletes the file.*/
 	MPI_Comm_rank(fd->comm, &myrank);
-	if (is_agg_ldr) {
-            ADIO_Delete(fd->filename, &err);
+	if (myrank == fd->hints->ranklist[0]) {
+		ADIO_Delete(fd->filename, &err);
 	}
 	MPI_Barrier(fd->comm);
-	MPI_Bcast(&err, 1, MPI_INT, fd->hints->ranklist[0], fd->comm);
-	if (err != MPI_SUCCESS) {
-            *error_code = err;
-            return;
-	}
     }
 
     if (fd->fortran_handle != -1) {
