@@ -36,9 +36,6 @@ echo "RUNNING CONFIGURE FOR MPI TESTS"
 
 AM_INIT_AUTOMAKE([-Wall -Werror foreign 1.12.3 silent-rules subdir-objects])
 AM_MAINTAINER_MODE([enable])
-# not using libtool for the test suite, so no LT_INIT
-AC_PROG_RANLIB
-AM_PROG_AR
 
 # Non-verbose make by default
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
@@ -505,6 +502,11 @@ fi
 # Check for const and restrict (used in some of the performance tests)
 AC_C_CONST
 AC_C_RESTRICT
+
+# not using libtool for the test suite, so no LT_INIT.  Instead, test here
+# for Library programs
+AC_PROG_RANLIB
+AM_PROG_AR
 
 # Enable STRICT CFLAGS
 AC_ARG_ENABLE(stricttest,
