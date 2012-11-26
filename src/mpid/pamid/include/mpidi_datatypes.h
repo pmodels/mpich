@@ -321,29 +321,21 @@ struct MPIDI_Comm
   /* For create_tasklist/endpoints if we ever use it */
   pami_task_t *tasks;
   pami_endpoint_t *endpoints;
-   /* There are some protocols where the optimized protocol always works and
-    * is the best performance */
-   /* Assume we have small vs large cutoffs vs medium for some protocols */
-   pami_algorithm_t opt_protocol[PAMI_XFER_COUNT][2];
-   int must_query[PAMI_XFER_COUNT][2];
-   pami_metadata_t opt_protocol_md[PAMI_XFER_COUNT][2];
-   int cutoff_size[PAMI_XFER_COUNT][2];
-   /* Our best allreduce double protocol only works on 
-    * doubles and sum/min/max. Since that is a common
-    * occurance let's cache that protocol and call
-    * it without checking */
-   pami_algorithm_t cached_allred_dsmm; /*dsmm = double, sum/min/max */
-   pami_metadata_t cached_allred_dsmm_md;
-   int query_allred_dsmm; 
-
-   /* We have some integer optimized protocols that only work on
-    * sum/min/max but also have datasize/ppn <= 8k limitations */
-   /* Using Amith's protocol, these work on int/min/max/sum of SMALL messages */
-   pami_algorithm_t cached_allred_ismm;
-   pami_metadata_t cached_allred_ismm_md;
-   /* Because this only works at select message sizes, this will have to be
-    * nonzero */
-   int query_allred_ismm;
+  /* There are some protocols where the optimized protocol always works and
+   * is the best performance */
+  /* Assume we have small vs large cutoffs vs medium for some protocols */
+  pami_algorithm_t opt_protocol[PAMI_XFER_COUNT][2];
+  int must_query[PAMI_XFER_COUNT][2];
+  pami_metadata_t opt_protocol_md[PAMI_XFER_COUNT][2];
+  int cutoff_size[PAMI_XFER_COUNT][2];
+  /* Our best allreduce protocol always works on 
+   * doubles and sum/min/max. Since that is a common
+   * occurance let's cache that protocol and call
+   * it without checking.  Any other dt/op must be 
+   * checked */ 
+  pami_algorithm_t cached_allreduce;
+  pami_metadata_t cached_allreduce_md;
+  int query_cached_allreduce; 
 
   union tasks_descrip_t {
     /* For create_taskrange */

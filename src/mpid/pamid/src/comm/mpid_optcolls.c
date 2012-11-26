@@ -28,7 +28,7 @@
 #include <mpidimpl.h>
 
 
-static int MPIDI_Check_FCA_envvar(char *string)
+static int MPIDI_Check_FCA_envvar(char *string, int *user_range_hi)
 {
    char *env = getenv("MP_MPI_PAMI_FOR");
    if(env != NULL)
@@ -36,19 +36,38 @@ static int MPIDI_Check_FCA_envvar(char *string)
       if(strcasecmp(env, "ALL") == 0)
          return 1;
       int len = strlen(env);
+      len++;
       char *temp = MPIU_Malloc(sizeof(char) * len);
       char *ptrToFree = temp;
       strcpy(temp, env);
       char *sepptr;
       for(sepptr = temp; (sepptr = strsep(&temp, ",")) != NULL ; )
       {
-         if(strcasecmp(sepptr, string) == 0)
+         char *subsepptr, *temp_sepptr;
+         temp_sepptr = sepptr;
+         subsepptr = strsep(&temp_sepptr, ":");
+         if(temp_sepptr != NULL)/* SSS: There is a a colon for this collective */
          {
-            MPIU_Free(ptrToFree);
-            return 1;
+             if(strcasecmp(subsepptr, string) == 0)
+             {
+                *user_range_hi = atoi(temp_sepptr);
+                MPIU_Free(ptrToFree);
+                return 1;
+             }
+             else
+                sepptr++;
          }
          else
-            sepptr++;
+         { 
+             if(strcasecmp(sepptr, string) == 0)
+             {
+                *user_range_hi = -1;
+                MPIU_Free(ptrToFree);
+                return 1;
+             }
+             else
+                sepptr++;
+         }
       }
       /* We didn't find it, but the end var was set, so return 0 */
       MPIU_Free(ptrToFree);
@@ -71,11 +90,12 @@ MPIDI_Coll_comm_check_FCA(char *coll_name,
 {                        
    int opt_proto = -1;
    int i;
+   int user_range_hi = -1;/* SSS: By default we assume user hasn't defined a range_hi (cutoff_size) */
 #ifdef TRACE_ON
    char *envstring = getenv("MP_MPI_PAMI_FOR");
 #endif
    TRACE_ERR("Checking for %s in %s\n", coll_name, envstring);
-   int check_var = MPIDI_Check_FCA_envvar(coll_name);
+   int check_var = MPIDI_Check_FCA_envvar(coll_name, &user_range_hi);
    if(check_var == 1)
    {
       TRACE_ERR("Found %s\n",coll_name);
@@ -99,6 +119,10 @@ MPIDI_Coll_comm_check_FCA(char *coll_name,
                   &comm_ptr->mpid.coll_metadata[pami_xfer][0][opt_proto],
                   sizeof(pami_metadata_t));
             comm_ptr->mpid.must_query[pami_xfer][proto_num] = query_type;
+            if(user_range_hi != -1)
+              comm_ptr->mpid.cutoff_size[pami_xfer][proto_num] = user_range_hi;
+            else
+              comm_ptr->mpid.cutoff_size[pami_xfer][proto_num] = 0;
             comm_ptr->mpid.user_selected_type[pami_xfer] = MPID_COLL_OPTIMIZED;
       }                                                                                           
       else /* see if it is in the must query list instead */
@@ -122,6 +146,10 @@ MPIDI_Coll_comm_check_FCA(char *coll_name,
                   &comm_ptr->mpid.coll_metadata[pami_xfer][1][opt_proto],
                   sizeof(pami_metadata_t));
             comm_ptr->mpid.must_query[pami_xfer][proto_num] = query_type;
+            if(user_range_hi != -1)
+              comm_ptr->mpid.cutoff_size[pami_xfer][proto_num] = user_range_hi;
+            else
+              comm_ptr->mpid.cutoff_size[pami_xfer][proto_num] = 0;
             comm_ptr->mpid.user_selected_type[pami_xfer] = MPID_COLL_OPTIMIZED;
          }
          else /* that protocol doesn't exist */
@@ -642,42 +670,41 @@ void MPIDI_Comm_coll_select(MPID_Comm *comm_ptr)
    if(comm_ptr->mpid.user_selected_type[PAMI_XFER_ALLREDUCE] == MPID_COLL_NOSELECTION)
    {
       /* the user hasn't selected a protocol, so we can NULL the protocol/metadatas */
-      comm_ptr->mpid.query_allred_dsmm = MPID_COLL_USE_MPICH;
-      comm_ptr->mpid.query_allred_ismm = MPID_COLL_USE_MPICH;
+      comm_ptr->mpid.query_cached_allreduce = MPID_COLL_USE_MPICH;
 
-      comm_ptr->mpid.cutoff_size[PAMI_XFER_ALLREDUCE][0] = 128;
-      /* 1ppn: I0:MultiCombineDput:-:MU if it is available, but it has a check_fn
-       * since it is MU-based*/
-      /* Next best is I1:ShortAllreduce:P2P:P2P for short messages, then MPICH is best*/
-      /* I0:MultiCombineDput:-:MU could be used in the i/dsmm cached protocols, so we'll do that */
-      /* First, look in the 'must query' list and see i I0:MultiCombine:Dput:-:MU is there */
+      comm_ptr->mpid.cutoff_size[PAMI_XFER_ALLREDUCE][0] = 0;
+      /* For BGQ */
+      /*  1ppn: I0:MultiCombineDput:-:MU if it is available, but it has a check_fn
+       *  since it is MU-based*/
+      /*  Next best is I1:ShortAllreduce:P2P:P2P for short messages, then MPICH is best*/
+      /*  I0:MultiCombineDput:-:MU could be used in the i/dsmm cached protocols, so we'll do that */
+      /*  First, look in the 'must query' list and see i I0:MultiCombine:Dput:-:MU is there */
+
+      char *pname="...none...";
+      int user_range_hi = -1;
+      int fca_enabled = 0;
+      if((fca_enabled = MPIDI_Check_FCA_envvar("ALLREDUCE", &user_range_hi)) == 1)
+         pname = "I1:Allreduce:FCA:FCA";
+      else if(use_threaded_collectives)
+         pname = "I0:MultiCombineDput:-:MU";
+      /*SSS: Any "MU" protocol will not be available on non-BG systems. I just need to check for FCA in the 
+                   first if only. No need to do another check since the second if will never succeed for PE systems*/
       for(i = 0; i < comm_ptr->mpid.coll_count[PAMI_XFER_ALLREDUCE][1]; i++)
       {
-         char *pname="...none...";
-         if(MPIDI_Check_FCA_envvar("ALLREDUCE") == 1)
-            pname = "I1:Allreduce:FCA:FCA";
-         else if(use_threaded_collectives)
-            pname = "I0:MultiCombineDput:-:MU";
-         /*SSS: Any "MU" protocol will not be available on non-BG systems. I just need to check for FCA in the 
-                first if only. No need to do another check since the second if will never succeed for PE systems*/
          if(strcasecmp(comm_ptr->mpid.coll_metadata[PAMI_XFER_ALLREDUCE][1][i].name, pname) == 0)
          {
             /* So, this should be fine for the i/dsmm protocols. everything else needs to call the check function */
             /* This also works for all message sizes, so no need to deal with it specially for query */
-            comm_ptr->mpid.cached_allred_dsmm = 
+            comm_ptr->mpid.cached_allreduce = 
                    comm_ptr->mpid.coll_algorithm[PAMI_XFER_ALLREDUCE][1][i];
-            memcpy(&comm_ptr->mpid.cached_allred_dsmm_md,
+            memcpy(&comm_ptr->mpid.cached_allreduce_md,
                    &comm_ptr->mpid.coll_metadata[PAMI_XFER_ALLREDUCE][1][i],
                   sizeof(pami_metadata_t));
-            comm_ptr->mpid.query_allred_dsmm = MPID_COLL_QUERY;
+            comm_ptr->mpid.query_cached_allreduce = MPID_COLL_QUERY;
 
-            comm_ptr->mpid.cached_allred_ismm =
-                   comm_ptr->mpid.coll_algorithm[PAMI_XFER_ALLREDUCE][1][i];
-            memcpy(&comm_ptr->mpid.cached_allred_ismm_md,
-                   &comm_ptr->mpid.coll_metadata[PAMI_XFER_ALLREDUCE][1][i],
-                  sizeof(pami_metadata_t));
-            comm_ptr->mpid.query_allred_ismm = MPID_COLL_QUERY;
             comm_ptr->mpid.user_selected_type[PAMI_XFER_ALLREDUCE] = MPID_COLL_OPTIMIZED;
+            if(fca_enabled && user_range_hi != -1)
+              comm_ptr->mpid.cutoff_size[PAMI_XFER_ALLREDUCE][0] = user_range_hi;
             opt_proto = i;
 
          }
@@ -685,39 +712,30 @@ void MPIDI_Comm_coll_select(MPID_Comm *comm_ptr)
          if(strcasecmp(comm_ptr->mpid.coll_metadata[PAMI_XFER_ALLREDUCE][1][i].name, "I0:MultiCombineDput:SHMEM:MU") == 0)
          {
             /* This works well for doubles sum/min/max but has trouble with int > 8k/ppn */
-            comm_ptr->mpid.cached_allred_dsmm =
+            comm_ptr->mpid.cached_allreduce =
                    comm_ptr->mpid.coll_algorithm[PAMI_XFER_ALLREDUCE][1][i];
-            memcpy(&comm_ptr->mpid.cached_allred_dsmm_md,
+            memcpy(&comm_ptr->mpid.cached_allreduce_md,
                    &comm_ptr->mpid.coll_metadata[PAMI_XFER_ALLREDUCE][1][i],
                   sizeof(pami_metadata_t));
-            comm_ptr->mpid.query_allred_dsmm = MPID_COLL_QUERY;
+            comm_ptr->mpid.query_cached_allreduce = MPID_COLL_CHECK_FN_REQUIRED;
 
-            comm_ptr->mpid.cached_allred_ismm =
-                   comm_ptr->mpid.coll_algorithm[PAMI_XFER_ALLREDUCE][1][i];
-            memcpy(&comm_ptr->mpid.cached_allred_ismm_md,
-                   &comm_ptr->mpid.coll_metadata[PAMI_XFER_ALLREDUCE][1][i],
-                  sizeof(pami_metadata_t));
-            comm_ptr->mpid.query_allred_ismm = MPID_COLL_CHECK_FN_REQUIRED;
             comm_ptr->mpid.user_selected_type[PAMI_XFER_ALLREDUCE] = MPID_COLL_OPTIMIZED;
-            /* I don't think MPIX_HW is initialized yet, so keep this at 128 for now, which 
-             * is the upper lower limit anyway (8192 / 64) */
-            /* comm_ptr->mpid.cutoff_size[PAMI_XFER_ALLREDUCE][0] = 8192 / ppn; */
             opt_proto = i;
          }
       }
       /* At this point, if opt_proto != -1, we have must-query protocols in the i/dsmm caches */
       /* We should pick a backup, non-must query */
       /* I0:ShortAllreduce:P2P:P2P < 128, then mpich*/
+
+      /*SSS: ShortAllreduce is available on both BG and PE. I have to pick just one to check for in this case. 
+                  However, I need to add FCA for both opt_protocol[0]and[1] to cover all data sizes*/
+      if(fca_enabled == 1)
+         pname = "I1:Allreduce:FCA:FCA";
+      else 
+         pname = "I1:ShortAllreduce:P2P:P2P";
+
       for(i = 0; i < comm_ptr->mpid.coll_count[PAMI_XFER_ALLREDUCE][1]; i++)
       {
-         char *pname;
-         int pickFCA = MPIDI_Check_FCA_envvar("ALLREDUCE");
-         if(pickFCA == 1)
-            pname = "I1:Allreduce:FCA:FCA";
-         else 
-            pname = "I1:ShortAllreduce:P2P:P2P";
-         /*SSS: ShortAllreduce is available on both BG and PE. I have to pick just one to check for in this case. 
-                However, I need to add FCA for both opt_protocol[0]and[1] to cover all data sizes*/
          if(strcasecmp(comm_ptr->mpid.coll_metadata[PAMI_XFER_ALLREDUCE][1][i].name, pname) == 0)
          {
             comm_ptr->mpid.opt_protocol[PAMI_XFER_ALLREDUCE][0] =
@@ -725,20 +743,20 @@ void MPIDI_Comm_coll_select(MPID_Comm *comm_ptr)
             memcpy(&comm_ptr->mpid.opt_protocol_md[PAMI_XFER_ALLREDUCE][0],
                    &comm_ptr->mpid.coll_metadata[PAMI_XFER_ALLREDUCE][1][i],
                    sizeof(pami_metadata_t));
-            if(pickFCA == 1)
+            if(fca_enabled == 1)
             {
               comm_ptr->mpid.must_query[PAMI_XFER_ALLREDUCE][0] = MPID_COLL_CHECK_FN_REQUIRED;
-              comm_ptr->mpid.cutoff_size[PAMI_XFER_ALLREDUCE][0] = 0;/*SSS: Always use opt_protocol[0] for FCA*/
+              if(user_range_hi != -1)
+                comm_ptr->mpid.cutoff_size[PAMI_XFER_ALLREDUCE][0] = user_range_hi;
               /*SSS: Otherwise another protocol may get selected in mpido_allreduce if we don't set this flag here*/
               comm_ptr->mpid.must_query[PAMI_XFER_ALLREDUCE][1] = MPID_COLL_CHECK_FN_REQUIRED;
             }
             else
             {
-              /*SSS: (on BG) MPICH is actually better at > 128 bytes for 1/16/64ppn at 512 nodes */
-              comm_ptr->mpid.must_query[PAMI_XFER_ALLREDUCE][1] = MPID_COLL_USE_MPICH;
               /* Short is good for up to 512 bytes... but it's a query protocol */
               comm_ptr->mpid.must_query[PAMI_XFER_ALLREDUCE][0] = MPID_COLL_QUERY;
-              comm_ptr->mpid.cutoff_size[PAMI_XFER_ALLREDUCE][0] = 512;
+              /* MPICH above that ... when short query fails */
+              comm_ptr->mpid.must_query[PAMI_XFER_ALLREDUCE][1] = MPID_COLL_USE_MPICH;
             }
             comm_ptr->mpid.user_selected_type[PAMI_XFER_ALLREDUCE] = MPID_COLL_OPTIMIZED;
 
@@ -748,7 +766,7 @@ void MPIDI_Comm_coll_select(MPID_Comm *comm_ptr)
       if(opt_proto == -1)
       {
          if(MPIDI_Process.verbose >= MPIDI_VERBOSE_DETAILS_0 && comm_ptr->rank == 0)
-            fprintf(stderr,"Opt to MPICH\n");
+            fprintf(stderr,"Optimized allreduce falls back to MPICH\n");
          comm_ptr->mpid.must_query[PAMI_XFER_ALLREDUCE][0] = MPID_COLL_USE_MPICH;
          comm_ptr->mpid.must_query[PAMI_XFER_ALLREDUCE][1] = MPID_COLL_USE_MPICH;
       }
@@ -780,7 +798,7 @@ void MPIDI_Comm_coll_select(MPID_Comm *comm_ptr)
       if(comm_ptr->mpid.user_selected_type[PAMI_XFER_ALLGATHERV_INT] == MPID_COLL_OPTIMIZED)
          fprintf(stderr,"Selecting %s for opt allgatherv comm %p\n", comm_ptr->mpid.opt_protocol_md[PAMI_XFER_ALLGATHERV_INT][0].name, comm_ptr);
       if(comm_ptr->mpid.must_query[PAMI_XFER_ALLGATHERV_INT][0] == MPID_COLL_USE_MPICH)
-         fprintf(stderr,"Selecting MPICH for allgatherv below %d size comm %p\n", comm_ptr->mpid.cutoff_size[PAMI_XFER_ALLREDUCE][0], comm_ptr);
+         fprintf(stderr,"Selecting MPICH for allgatherv below %d size comm %p\n", comm_ptr->mpid.cutoff_size[PAMI_XFER_ALLGATHERV_INT][0], comm_ptr);
       if(comm_ptr->mpid.user_selected_type[PAMI_XFER_BROADCAST] == MPID_COLL_OPTIMIZED)
          fprintf(stderr,"Selecting %s for opt bcast up to size %d comm %p\n", comm_ptr->mpid.opt_protocol_md[PAMI_XFER_BROADCAST][0].name,
             comm_ptr->mpid.cutoff_size[PAMI_XFER_BROADCAST][0], comm_ptr);
@@ -798,17 +816,12 @@ void MPIDI_Comm_coll_select(MPID_Comm *comm_ptr)
          fprintf(stderr,"Selecting MPICH for allreduce below %d size comm %p\n", comm_ptr->mpid.cutoff_size[PAMI_XFER_ALLREDUCE][0], comm_ptr);
       else
       {
-         if(comm_ptr->mpid.query_allred_ismm != MPID_COLL_USE_MPICH)
+         if(comm_ptr->mpid.query_cached_allreduce != MPID_COLL_USE_MPICH)
          {
-            fprintf(stderr,"Selecting %s for integer sum/min/max ops, query: %d comm %p\n",
-               comm_ptr->mpid.cached_allred_ismm_md.name, comm_ptr->mpid.query_allred_ismm, comm_ptr);
+            fprintf(stderr,"Selecting %s for double sum/min/max ops allreduce, query: %d comm %p\n",
+               comm_ptr->mpid.cached_allreduce_md.name, comm_ptr->mpid.query_cached_allreduce, comm_ptr);
          }
-         if(comm_ptr->mpid.query_allred_dsmm != MPID_COLL_USE_MPICH)
-         {
-            fprintf(stderr,"Selecting %s for double sum/min/max ops, query: %d comm %p\n",
-               comm_ptr->mpid.cached_allred_dsmm_md.name, comm_ptr->mpid.query_allred_dsmm, comm_ptr);
-         }
-         fprintf(stderr,"Selecting %s for other operations up to %d comm %p\n",
+         fprintf(stderr,"Selecting %s for other operations allreduce up to %d comm %p\n",
                comm_ptr->mpid.opt_protocol_md[PAMI_XFER_ALLREDUCE][0].name, 
                comm_ptr->mpid.cutoff_size[PAMI_XFER_ALLREDUCE][0], comm_ptr);
       }
@@ -816,31 +829,19 @@ void MPIDI_Comm_coll_select(MPID_Comm *comm_ptr)
          fprintf(stderr,"Selecting MPICH for allreduce above %d size comm %p\n", comm_ptr->mpid.cutoff_size[PAMI_XFER_ALLREDUCE][0], comm_ptr);
       else
       {
-         if(comm_ptr->mpid.query_allred_ismm != MPID_COLL_USE_MPICH)
+         if(comm_ptr->mpid.query_cached_allreduce != MPID_COLL_USE_MPICH)
          {
-            fprintf(stderr,"Selecting %s for integer sum/min/max ops, above %d query: %d comm %p\n",
-               comm_ptr->mpid.cached_allred_ismm_md.name, 
+            fprintf(stderr,"Selecting %s for double sum/min/max ops allreduce, above %d query: %d comm %p\n",
+               comm_ptr->mpid.cached_allreduce_md.name, 
                comm_ptr->mpid.cutoff_size[PAMI_XFER_ALLREDUCE][0],
-               comm_ptr->mpid.query_allred_ismm, comm_ptr);
+               comm_ptr->mpid.query_cached_allreduce, comm_ptr);
          }
          else
          {
-            fprintf(stderr,"Selecting MPICH for integer sum/min/max ops above %d size comm %p\n",
+            fprintf(stderr,"Selecting MPICH for double sum/min/max ops allreduce, above %d size comm %p\n",
                comm_ptr->mpid.cutoff_size[PAMI_XFER_ALLREDUCE][0], comm_ptr);
          }
-         if(comm_ptr->mpid.query_allred_dsmm != MPID_COLL_USE_MPICH)
-         {
-            fprintf(stderr,"Selecting %s for double sum/min/max ops, above %d query: %d comm %p\n",
-               comm_ptr->mpid.cached_allred_dsmm_md.name, 
-               comm_ptr->mpid.cutoff_size[PAMI_XFER_ALLREDUCE][0],
-               comm_ptr->mpid.query_allred_dsmm, comm_ptr);
-         }
-         else
-         {
-            fprintf(stderr,"Selecting MPICH for double sum/min/max ops above %d size comm %p\n",
-               comm_ptr->mpid.cutoff_size[PAMI_XFER_ALLREDUCE][0], comm_ptr);
-         }
-         fprintf(stderr,"Selecting %s for other operations over %d comm %p\n",
+         fprintf(stderr,"Selecting %s for other operations allreduce over %d comm %p\n",
             comm_ptr->mpid.opt_protocol_md[PAMI_XFER_ALLREDUCE][1].name,
             comm_ptr->mpid.cutoff_size[PAMI_XFER_ALLREDUCE][0], comm_ptr);
       }
