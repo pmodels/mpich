@@ -10,17 +10,7 @@
 #include <string.h>
 #include <mpi.h>
 #include "mpitest.h"
-
-static const int SQ_LIMIT = 10;
-static       int SQ_COUNT = 0;
-
-#define SQUELCH(X)                              \
-  do {                                          \
-    if (SQ_COUNT < SQ_LIMIT || verbose) {       \
-      SQ_COUNT++;                               \
-      X                                         \
-    }                                           \
-  } while (0)
+#include "squelch.h"
 
 #define ITER  100
 #define COUNT 5
@@ -48,8 +38,6 @@ static       int SQ_COUNT = 0;
 #else
 #  define TYPE_MPI TYPE_MPI_BASE
 #endif
-
-const int verbose = 0;
 
 void reset_bufs(TYPE_C *win_ptr, TYPE_C *res_ptr, TYPE_C *val_ptr, TYPE_C value, MPI_Win win) {
     int rank, nproc, i;

@@ -20,25 +20,13 @@
 #include <math.h>
 #include <mpi.h>
 #include "mpitest.h"
+#include "squelch.h"
 
 #define XDIM 8
 #define YDIM 1024
 #define SUB_XDIM 8
 #define SUB_YDIM 255
 #define ITERATIONS 10
-
-static const int SQ_LIMIT = 10;
-static       int SQ_COUNT = 0;
-
-#define SQUELCH(X)                      \
-  do {                                  \
-    if (SQ_COUNT < SQ_LIMIT) {          \
-      SQ_COUNT++;                       \
-      X                                 \
-    }                                   \
-  } while (0)
-
-static int verbose = 0;
 
 int main(int argc, char **argv) {
     int rank, nranks, rank_world, nranks_world;
@@ -60,9 +48,6 @@ int main(int argc, char **argv) {
     bufsize = XDIM * YDIM * sizeof(double);
     MPI_Alloc_mem(bufsize, MPI_INFO_NULL, &src_buf);
     MPI_Alloc_mem(bufsize, MPI_INFO_NULL, &dst_buf);
-
-    if (rank == 0)
-        if (verbose) printf("MPI RMA Strided Accumulate Test (shared memory window):\n");
 
     MPI_Win_allocate_shared(bufsize, 1, MPI_INFO_NULL, shr_comm, &win_buf, &buf_win);
 

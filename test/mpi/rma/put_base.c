@@ -24,25 +24,13 @@
 #include <stdint.h>
 #include <mpi.h>
 #include "mpitest.h"
+#include "squelch.h"
 
 #define XDIM 1024
 #define YDIM 1024
 #define SUB_XDIM 1024
 #define SUB_YDIM 1024
 #define ITERATIONS 10
-
-static const int SQ_LIMIT = 10;
-static       int SQ_COUNT = 0;
-
-#define SQUELCH(X)                      \
-  do {                                  \
-    if (SQ_COUNT < SQ_LIMIT) {          \
-      SQ_COUNT++;                       \
-      X                                 \
-    }                                   \
-  } while (0)
-
-static int verbose = 0;
 
 int main(int argc, char **argv) {
     int i, j, rank, nranks, peer, bufsize, errors;
@@ -60,9 +48,6 @@ int main(int argc, char **argv) {
        just for the Win_create memory */
     MPI_Alloc_mem(bufsize, MPI_INFO_NULL, &src_buf);
     MPI_Alloc_mem(bufsize, MPI_INFO_NULL, &dst_buf);
-
-    if (rank == 0)
-        if (verbose) printf("MPI RMA Strided Put Test:\n");
 
     for (i = 0; i < XDIM*YDIM; i++) {
         *(win_buf  + i) = 1.0 + rank;
@@ -85,9 +70,6 @@ int main(int argc, char **argv) {
       MPI_Aint base_int;
 
       MPI_Get_address(base_ptr, &base_int);
-
-      if (rank == 0)
-        if (verbose) printf(" + iteration %d\n", i);
 
       for (j = 0; j < SUB_YDIM; j++) {
         MPI_Get_address(&src_buf[j*XDIM], &idx_loc[j]);

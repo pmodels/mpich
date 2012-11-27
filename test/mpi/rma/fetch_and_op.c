@@ -10,21 +10,9 @@
 #include <assert.h>
 #include <mpi.h>
 #include "mpitest.h"
-
-static const int SQ_LIMIT = 10;
-static       int SQ_COUNT = 0;
-
-#define SQUELCH(X)                      \
-  do {                                  \
-    if (SQ_COUNT < SQ_LIMIT || verbose) { \
-      SQ_COUNT++;                       \
-      X                                 \
-    }                                   \
-  } while (0)
+#include "squelch.h"
 
 #define ITER 100
-
-const int verbose = 0;
 
 #if defined (FOP_TYPE_CHAR)
 #  define TYPE_C   char
