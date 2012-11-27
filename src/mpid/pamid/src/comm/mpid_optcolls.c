@@ -208,11 +208,6 @@ void MPIDI_Comm_coll_select(MPID_Comm *comm_ptr)
    if(comm_ptr->mpid.user_selected_type[PAMI_XFER_ALLGATHERV_INT] == MPID_COLL_NOSELECTION)
    {
       MPIDI_Coll_comm_check_FCA("ALLGATHERV","I1:AllgathervInt:FCA:FCA",PAMI_XFER_ALLGATHERV_INT,MPID_COLL_NOQUERY, 0, comm_ptr);
-      if(comm_ptr->mpid.user_selected_type[PAMI_XFER_ALLGATHERV_INT] != MPID_COLL_OPTIMIZED)
-      {
-        /* SSS: FCA not selected, then punt to mpich (avoiding rectangledput from running */
-        comm_ptr->mpid.user_selected_type[PAMI_XFER_ALLGATHERV_INT] = MPID_COLL_USE_MPICH;
-      }
    }
    if(comm_ptr->mpid.user_selected_type[PAMI_XFER_BROADCAST] == MPID_COLL_NOSELECTION)
    {
