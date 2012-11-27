@@ -1269,16 +1269,15 @@ int MPIDI_Win_post(MPID_Group *post_grp_ptr, int assert, MPID_Win *win_ptr)
 
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_WIN_POST);
 
-    /* FIXME: Can we further restrict the ordering or quantity of generalized
-       active target calls?  E.g. post must precede start, start/complete may
-       be called once, etc? */
     MPIU_ERR_CHKANDJUMP(win_ptr->epoch_state != MPIDI_EPOCH_NONE &&
-                        win_ptr->epoch_state != MPIDI_EPOCH_PSCW,
+                        win_ptr->epoch_state != MPIDI_EPOCH_START,
                         mpi_errno, MPI_ERR_RMA_SYNC, "**rmasync");
 
     /* Track access epoch state */
-    win_ptr->epoch_state = MPIDI_EPOCH_PSCW;
-    win_ptr->epoch_count++;
+    if (win_ptr->epoch_state == MPIDI_EPOCH_START)
+        win_ptr->epoch_state = MPIDI_EPOCH_PSCW;
+    else
+        win_ptr->epoch_state = MPIDI_EPOCH_POST;
 
     /* Even though we would want to reset the fence counter to keep
      * the user from using the previous fence to mark the beginning of
@@ -1423,12 +1422,14 @@ int MPIDI_Win_start(MPID_Group *group_ptr, int assert, MPID_Win *win_ptr)
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_WIN_START);
 
     MPIU_ERR_CHKANDJUMP(win_ptr->epoch_state != MPIDI_EPOCH_NONE &&
-                        win_ptr->epoch_state != MPIDI_EPOCH_PSCW,
+                        win_ptr->epoch_state != MPIDI_EPOCH_POST,
                         mpi_errno, MPI_ERR_RMA_SYNC, "**rmasync");
 
     /* Track access epoch state */
-    win_ptr->epoch_state = MPIDI_EPOCH_PSCW;
-    win_ptr->epoch_count++;
+    if (win_ptr->epoch_state == MPIDI_EPOCH_POST)
+        win_ptr->epoch_state = MPIDI_EPOCH_PSCW;
+    else
+        win_ptr->epoch_state = MPIDI_EPOCH_START;
 
     /* Even though we would want to reset the fence counter to keep
      * the user from using the previous fence to mark the beginning of
@@ -1498,12 +1499,14 @@ int MPIDI_Win_complete(MPID_Win *win_ptr)
 
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_WIN_COMPLETE);
 
-    MPIU_ERR_CHKANDJUMP(win_ptr->epoch_state != MPIDI_EPOCH_PSCW,
+    MPIU_ERR_CHKANDJUMP(win_ptr->epoch_state != MPIDI_EPOCH_PSCW &&
+                        win_ptr->epoch_state != MPIDI_EPOCH_START,
                         mpi_errno, MPI_ERR_RMA_SYNC, "**rmasync");
 
     /* Track access epoch state */
-    win_ptr->epoch_count--;
-    if (win_ptr->epoch_count == 0)
+    if (win_ptr->epoch_state == MPIDI_EPOCH_PSCW)
+        win_ptr->epoch_state = MPIDI_EPOCH_POST;
+    else
         win_ptr->epoch_state = MPIDI_EPOCH_NONE;
 
     comm_ptr = win_ptr->comm_ptr;
@@ -1752,12 +1755,14 @@ int MPIDI_Win_wait(MPID_Win *win_ptr)
 
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_WIN_WAIT);
 
-    MPIU_ERR_CHKANDJUMP(win_ptr->epoch_state != MPIDI_EPOCH_PSCW,
+    MPIU_ERR_CHKANDJUMP(win_ptr->epoch_state != MPIDI_EPOCH_PSCW &&
+                        win_ptr->epoch_state != MPIDI_EPOCH_POST,
                         mpi_errno, MPI_ERR_RMA_SYNC, "**rmasync");
 
     /* Track access epoch state */
-    win_ptr->epoch_count--;
-    if (win_ptr->epoch_count == 0)
+    if (win_ptr->epoch_state == MPIDI_EPOCH_PSCW)
+        win_ptr->epoch_state = MPIDI_EPOCH_START;
+    else
         win_ptr->epoch_state = MPIDI_EPOCH_NONE;
 
     /* wait for all operations from other processes to finish */
@@ -1805,7 +1810,8 @@ int MPIDI_Win_test(MPID_Win *win_ptr, int *flag)
 
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_WIN_TEST);
 
-    MPIU_ERR_CHKANDJUMP(win_ptr->epoch_state != MPIDI_EPOCH_PSCW,
+    MPIU_ERR_CHKANDJUMP(win_ptr->epoch_state != MPIDI_EPOCH_PSCW &&
+                        win_ptr->epoch_state != MPIDI_EPOCH_POST,
                         mpi_errno, MPI_ERR_RMA_SYNC, "**rmasync");
 
     mpi_errno = MPID_Progress_test();
@@ -1817,8 +1823,9 @@ int MPIDI_Win_test(MPID_Win *win_ptr, int *flag)
 
     /* Track access epoch state */
     if (*flag) {
-        win_ptr->epoch_count--;
-        if (win_ptr->epoch_count == 0)
+        if (win_ptr->epoch_state == MPIDI_EPOCH_PSCW)
+            win_ptr->epoch_state = MPIDI_EPOCH_START;
+        else
             win_ptr->epoch_state = MPIDI_EPOCH_NONE;
     }
 

@@ -291,6 +291,7 @@ static inline MPIDI_RMA_Ops_list_t *MPIDI_CH3I_RMA_Get_ops_list(MPID_Win *win_pt
                                                                 int target)
 {
     if (win_ptr->epoch_state == MPIDI_EPOCH_FENCE ||
+        win_ptr->epoch_state == MPIDI_EPOCH_START ||
         win_ptr->epoch_state == MPIDI_EPOCH_PSCW)
     {
         return &win_ptr->at_rma_ops_list;
