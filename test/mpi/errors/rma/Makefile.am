@@ -22,5 +22,6 @@ noinst_PROGRAMS =       \
     win_sync_complete   \
     win_sync_lock_at    \
     win_sync_lock_pt    \
+    win_sync_nested     \
     win_sync_op
 

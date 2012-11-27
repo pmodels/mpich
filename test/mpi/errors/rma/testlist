@@ -7,4 +7,5 @@ win_sync_free_at 2
 win_sync_complete 2
 win_sync_lock_at 2
 win_sync_lock_pt 2
+win_sync_nested 2
 win_sync_op 2
