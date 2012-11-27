@@ -33,7 +33,9 @@ static int MPIDI_CH3I_Rma_req_poll(void *state, MPI_Status *status)
     /* If this is a local operation, it's already complete.  Otherwise, call
      * flush to complete the operation */
     /* FIXME: We still may need to flush or sync for shared memory windows */
-    if (req_state->target_rank != req_state->win_ptr->comm_ptr->rank) {
+    if (req_state->target_rank != req_state->win_ptr->comm_ptr->rank &&
+        req_state->target_rank != MPI_PROC_NULL)
+    {
         mpi_errno = req_state->win_ptr->RMAFns.Win_flush(req_state->target_rank,
                                                          req_state->win_ptr);
 

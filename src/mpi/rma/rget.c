@@ -147,8 +147,6 @@ int MPI_Rget(void *origin_addr, int origin_count, MPI_Datatype
 
     /* ... body of routine ...  */
     
-    if (target_rank == MPI_PROC_NULL) goto fn_exit;
-
     mpi_errno = MPIU_RMA_CALL(win_ptr,
                               Rget(origin_addr, origin_count, origin_datatype,
                                   target_rank, target_disp, target_count,
