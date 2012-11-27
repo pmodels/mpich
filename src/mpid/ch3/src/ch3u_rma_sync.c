@@ -253,6 +253,10 @@ int MPIDI_Win_fence(int assert, MPID_Win *win_ptr)
        in the window's group if any specify it */
     if (assert & MPI_MODE_NOPRECEDE)
     {
+        /* Error: Operations were issued and the user claimed NOPRECEDE */
+        MPIU_ERR_CHKANDJUMP(win_ptr->epoch_state == MPIDI_EPOCH_FENCE,
+                            mpi_errno, MPI_ERR_RMA_SYNC, "**rmasync");
+
 	win_ptr->fence_issued = (assert & MPI_MODE_NOSUCCEED) ? 0 : 1;
 	goto fn_exit;
     }
@@ -426,14 +430,11 @@ int MPIDI_Win_fence(int assert, MPID_Win *win_ptr)
 	{
 	    win_ptr->fence_issued = 0;
 	}
-    }
 
- fn_exit:
-    /* Reset the epoch state if this fence completed an epoch */
-    if (win_ptr->epoch_state == MPIDI_EPOCH_FENCE && mpi_errno == MPI_SUCCESS) {
         win_ptr->epoch_state = MPIDI_EPOCH_NONE;
     }
 
+ fn_exit:
     MPIU_CHKLMEM_FREEALL();
     MPIDI_RMA_FUNC_EXIT(MPID_STATE_MPIDI_WIN_FENCE);
     return mpi_errno;
