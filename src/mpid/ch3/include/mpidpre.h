@@ -222,16 +222,16 @@ struct MPIDI_Win_info_args {
 struct MPIDI_RMA_op;            /* forward decl from mpidrma.h */
 
 struct MPIDI_Win_target_state {
-    struct MPIDI_RMA_Op *rma_ops_list;                                   \
-                                /* list of outstanding RMA operations */ \
-    volatile enum MPIDI_CH3_Lock_states remote_lock_state;               \
-                                /* Indicates the state of the target     \
-                                   process' "lock" for passive target    \
-                                   RMA. */                               \
-    int remote_lock_mode;       /* Indicates the access mode             \
-                                   (shared/exclusive) of the target      \
-                                   process for passive target RMA. Valid \
-                                   whenever state != NONE. */            \
+    struct MPIDI_RMA_Op *rma_ops_list;
+                                /* List of outstanding RMA operations */
+    volatile enum MPIDI_CH3_Lock_states remote_lock_state;
+                                /* Indicates the state of the target
+                                   process' "lock" for passive target
+                                   RMA. */
+    int remote_lock_mode;       /* Indicates the access mode
+                                   (shared/exclusive) of the target
+                                   process for passive target RMA. Valid
+                                   whenever state != NONE. */
 };
 
 #define MPIDI_DEV_WIN_DECL                                               \
