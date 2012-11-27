@@ -15,7 +15,7 @@
 /*                                                                  */
 /* end_generated_IBM_copyright_prolog                               */
 /*  (C)Copyright IBM Corp.  2007, 2011  */
-/**
+/**  
  * \file src/coll/alltoallv/mpido_alltoallv.c
  * \brief ???
  */
