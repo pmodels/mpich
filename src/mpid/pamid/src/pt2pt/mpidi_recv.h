@@ -213,6 +213,10 @@ MPIDI_Recv(void          * buf,
       }
       MPIU_THREAD_CS_EXIT(MSGQUEUE,0);
       MPID_Request_discard(newreq);
+#ifdef OUT_OF_ORDER_HANDLING
+      if ((MPIDI_In_cntr[rreq->mpid.peer_pami].n_OutOfOrderMsgs>0))
+          MPIDI_Recvq_process_out_of_order_msgs(rreq->mpid.peer_pami, MPIDI_Context[0]);
+#endif
     }
   else
     {

@@ -157,7 +157,7 @@ MPIDI_RecvCB(pami_context_t    context,
 #else
       rreq = MPIDI_Recvq_FDP(rank, PAMIX_Endpoint_query(sender), tag, context_id, msginfo->MPIseqno);
 #endif
-      
+
       if (unlikely(rreq == NULL))
       {
         MPIDI_Callback_process_unexp(newreq, context, msginfo, sndlen, sender, sndbuf, recv, msginfo->isSync);
@@ -306,6 +306,12 @@ MPIDI_RecvCB(pami_context_t    context,
 #ifdef MPIDI_TRACE
    MPIDI_In_cntr[(PAMIX_Endpoint_query(sender))].R[(rreq->mpid.idx)].comp_in_HH=2;
    MPIDI_In_cntr[(PAMIX_Endpoint_query(sender))].R[(rreq->mpid.idx)].bufadd=rreq->mpid.userbuf;
+#endif
+
+#ifdef OUT_OF_ORDER_HANDLING
+  if (MPIDI_In_cntr[PAMIX_Endpoint_query(sender)].n_OutOfOrderMsgs > 0) {
+    MPIDI_Recvq_process_out_of_order_msgs(PAMIX_Endpoint_query(sender), context);
+  }
 #endif
 
  fn_exit_eager:
