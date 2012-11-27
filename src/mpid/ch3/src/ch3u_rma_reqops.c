@@ -150,6 +150,10 @@ int MPIDI_Rput(const void *origin_addr, int origin_count,
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_RPUT);
 
+    MPIU_ERR_CHKANDJUMP(win_ptr->epoch_state != MPIDI_EPOCH_LOCK &&
+                        win_ptr->epoch_state != MPIDI_EPOCH_LOCK_ALL,
+                        mpi_errno, MPI_ERR_RMA_SYNC, "**rmasync");
+
     MPIU_CHKPMEM_MALLOC(req_state, MPIDI_CH3I_Rma_req_state_t*,
                         sizeof(MPIDI_CH3I_Rma_req_state_t), mpi_errno,
                         "req-based RMA state");
@@ -176,9 +180,8 @@ int MPIDI_Rput(const void *origin_addr, int origin_count,
 
     *request = req_state->request;
 
-    MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_RPUT);
-
  fn_exit:
+    MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_RPUT);
     return mpi_errno;
  fn_fail:
     MPIU_CHKPMEM_REAP();
@@ -201,6 +204,10 @@ int MPIDI_Rget(void *origin_addr, int origin_count,
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_RGET);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_RGET);
+
+    MPIU_ERR_CHKANDJUMP(win_ptr->epoch_state != MPIDI_EPOCH_LOCK &&
+                        win_ptr->epoch_state != MPIDI_EPOCH_LOCK_ALL,
+                        mpi_errno, MPI_ERR_RMA_SYNC, "**rmasync");
 
     MPIU_CHKPMEM_MALLOC(req_state, MPIDI_CH3I_Rma_req_state_t*,
                         sizeof(MPIDI_CH3I_Rma_req_state_t), mpi_errno,
@@ -228,9 +235,8 @@ int MPIDI_Rget(void *origin_addr, int origin_count,
 
     *request = req_state->request;
 
-    MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_RGET);
-
  fn_exit:
+    MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_RGET);
     return mpi_errno;
  fn_fail:
     MPIU_CHKPMEM_REAP();
@@ -253,6 +259,10 @@ int MPIDI_Raccumulate(const void *origin_addr, int origin_count,
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_RACCUMULATE);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_RACCUMULATE);
+
+    MPIU_ERR_CHKANDJUMP(win_ptr->epoch_state != MPIDI_EPOCH_LOCK &&
+                        win_ptr->epoch_state != MPIDI_EPOCH_LOCK_ALL,
+                        mpi_errno, MPI_ERR_RMA_SYNC, "**rmasync");
 
     MPIU_CHKPMEM_MALLOC(req_state, MPIDI_CH3I_Rma_req_state_t*,
                         sizeof(MPIDI_CH3I_Rma_req_state_t), mpi_errno,
@@ -280,9 +290,8 @@ int MPIDI_Raccumulate(const void *origin_addr, int origin_count,
 
     *request = req_state->request;
 
-    MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_RACCUMULATE);
-
  fn_exit:
+    MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_RACCUMULATE);
     return mpi_errno;
  fn_fail:
     MPIU_CHKPMEM_REAP();
@@ -306,6 +315,10 @@ int MPIDI_Rget_accumulate(const void *origin_addr, int origin_count,
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_RGET_ACCUMULATE);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_RGET_ACCUMULATE);
+
+    MPIU_ERR_CHKANDJUMP(win_ptr->epoch_state != MPIDI_EPOCH_LOCK &&
+                        win_ptr->epoch_state != MPIDI_EPOCH_LOCK_ALL,
+                        mpi_errno, MPI_ERR_RMA_SYNC, "**rmasync");
 
     MPIU_CHKPMEM_MALLOC(req_state, MPIDI_CH3I_Rma_req_state_t*,
                         sizeof(MPIDI_CH3I_Rma_req_state_t), mpi_errno,
@@ -335,9 +348,8 @@ int MPIDI_Rget_accumulate(const void *origin_addr, int origin_count,
 
     *request = req_state->request;
 
-    MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_RGET_ACCUMULATE);
-
  fn_exit:
+    MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_RGET_ACCUMULATE);
     return mpi_errno;
  fn_fail:
     MPIU_CHKPMEM_REAP();
