@@ -30,19 +30,12 @@ static int MPIDI_CH3I_Rma_req_poll(void *state, MPI_Status *status)
 
     MPIU_UNREFERENCED_ARG(status);
 
-    /* If this is a local operation, it's already complete.  Otherwise, call
-     * flush to complete the operation */
-    /* FIXME: We still may need to flush or sync for shared memory windows */
-    if (req_state->target_rank != req_state->win_ptr->comm_ptr->rank &&
-        req_state->target_rank != MPI_PROC_NULL)
-    {
-        mpi_errno = req_state->win_ptr->RMAFns.Win_flush(req_state->target_rank,
-                                                         req_state->win_ptr);
+    /* Call flush to complete the operation */
+    /* FIXME: We need per-operation completion to make this more efficient. */
+    mpi_errno = req_state->win_ptr->RMAFns.Win_flush(req_state->target_rank,
+                                                     req_state->win_ptr);
 
-        if (mpi_errno != MPI_SUCCESS) {
-            MPIU_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**rmareqop");
-        }
-    }
+    if (mpi_errno != MPI_SUCCESS) { MPIU_ERR_POP(mpi_errno); }
 
     MPIR_Grequest_complete_impl(req_state->request);
 
@@ -161,22 +154,38 @@ int MPIDI_Rput(const void *origin_addr, int origin_count,
     req_state->win_ptr = win_ptr;
     req_state->target_rank = target_rank;
 
-    /* Enqueue the RMA operation */
-    mpi_errno = win_ptr->RMAFns.Put(origin_addr, origin_count,
-                                    origin_datatype, target_rank,
-                                    target_disp, target_count,
-                                    target_datatype, win_ptr);
+    /* Enqueue or perform the RMA operation */
+    if (target_rank != MPI_PROC_NULL) {
+        mpi_errno = win_ptr->RMAFns.Put(origin_addr, origin_count,
+                                        origin_datatype, target_rank,
+                                        target_disp, target_count,
+                                        target_datatype, win_ptr);
 
-    if (mpi_errno != MPI_SUCCESS) { MPIU_ERR_POP(mpi_errno); }
+        if (mpi_errno != MPI_SUCCESS) { MPIU_ERR_POP(mpi_errno); }
+    }
 
-    mpi_errno = MPIX_Grequest_start_impl(MPIDI_CH3I_Rma_req_query,
-                                         MPIDI_CH3I_Rma_req_free,
-                                         MPIDI_CH3I_Rma_req_cancel,
-                                         MPIDI_CH3I_Rma_req_poll,
-                                         MPIDI_CH3I_Rma_req_wait,
-                                         req_state, &req_state->request);
+    /* If the operation is already complete, return a completed request.
+     * Otherwise, generate a grequest. */
+    /* FIXME: We still may need to flush or sync for shared memory windows */
+    if (target_rank == MPI_PROC_NULL || target_rank == win_ptr->myrank) {
+        mpi_errno = MPIR_Grequest_start_impl(MPIDI_CH3I_Rma_req_query,
+                                             MPIDI_CH3I_Rma_req_free,
+                                             MPIDI_CH3I_Rma_req_cancel,
+                                             req_state, &req_state->request);
+        if (mpi_errno != MPI_SUCCESS) { MPIU_ERR_POP(mpi_errno); }
 
-    if (mpi_errno != MPI_SUCCESS) { MPIU_ERR_POP(mpi_errno); }
+        MPIR_Grequest_complete_impl(req_state->request);
+    }
+    else {
+        mpi_errno = MPIX_Grequest_start_impl(MPIDI_CH3I_Rma_req_query,
+                                             MPIDI_CH3I_Rma_req_free,
+                                             MPIDI_CH3I_Rma_req_cancel,
+                                             MPIDI_CH3I_Rma_req_poll,
+                                             MPIDI_CH3I_Rma_req_wait,
+                                             req_state, &req_state->request);
+
+        if (mpi_errno != MPI_SUCCESS) { MPIU_ERR_POP(mpi_errno); }
+    }
 
     *request = req_state->request;
 
@@ -216,22 +225,38 @@ int MPIDI_Rget(void *origin_addr, int origin_count,
     req_state->win_ptr = win_ptr;
     req_state->target_rank = target_rank;
 
-    /* Enqueue the RMA operation */
-    mpi_errno = win_ptr->RMAFns.Get(origin_addr, origin_count,
-                                    origin_datatype, target_rank,
-                                    target_disp, target_count,
-                                    target_datatype, win_ptr);
+    /* Enqueue or perform the RMA operation */
+    if (target_rank != MPI_PROC_NULL) {
+        mpi_errno = win_ptr->RMAFns.Get(origin_addr, origin_count,
+                                        origin_datatype, target_rank,
+                                        target_disp, target_count,
+                                        target_datatype, win_ptr);
 
-    if (mpi_errno != MPI_SUCCESS) { MPIU_ERR_POP(mpi_errno); }
+        if (mpi_errno != MPI_SUCCESS) { MPIU_ERR_POP(mpi_errno); }
+    }
 
-    mpi_errno = MPIX_Grequest_start_impl(MPIDI_CH3I_Rma_req_query,
-                                         MPIDI_CH3I_Rma_req_free,
-                                         MPIDI_CH3I_Rma_req_cancel,
-                                         MPIDI_CH3I_Rma_req_poll,
-                                         MPIDI_CH3I_Rma_req_wait,
-                                         req_state, &req_state->request);
+    /* If the operation is already complete, return a completed request.
+     * Otherwise, generate a grequest. */
+    /* FIXME: We still may need to flush or sync for shared memory windows */
+    if (target_rank == MPI_PROC_NULL || target_rank == win_ptr->myrank) {
+        mpi_errno = MPIR_Grequest_start_impl(MPIDI_CH3I_Rma_req_query,
+                                             MPIDI_CH3I_Rma_req_free,
+                                             MPIDI_CH3I_Rma_req_cancel,
+                                             req_state, &req_state->request);
+        if (mpi_errno != MPI_SUCCESS) { MPIU_ERR_POP(mpi_errno); }
 
-    if (mpi_errno != MPI_SUCCESS) { MPIU_ERR_POP(mpi_errno); }
+        MPIR_Grequest_complete_impl(req_state->request);
+    }
+    else {
+        mpi_errno = MPIX_Grequest_start_impl(MPIDI_CH3I_Rma_req_query,
+                                             MPIDI_CH3I_Rma_req_free,
+                                             MPIDI_CH3I_Rma_req_cancel,
+                                             MPIDI_CH3I_Rma_req_poll,
+                                             MPIDI_CH3I_Rma_req_wait,
+                                             req_state, &req_state->request);
+
+        if (mpi_errno != MPI_SUCCESS) { MPIU_ERR_POP(mpi_errno); }
+    }
 
     *request = req_state->request;
 
@@ -271,22 +296,37 @@ int MPIDI_Raccumulate(const void *origin_addr, int origin_count,
     req_state->win_ptr = win_ptr;
     req_state->target_rank = target_rank;
 
-    /* Enqueue the RMA operation */
-    mpi_errno = win_ptr->RMAFns.Accumulate(origin_addr, origin_count,
-                                           origin_datatype, target_rank,
-                                           target_disp, target_count,
-                                           target_datatype, op, win_ptr);
+    /* Enqueue or perform the RMA operation */
+    if (target_rank != MPI_PROC_NULL) {
+        mpi_errno = win_ptr->RMAFns.Accumulate(origin_addr, origin_count,
+                                               origin_datatype, target_rank,
+                                               target_disp, target_count,
+                                               target_datatype, op, win_ptr);
+        if (mpi_errno != MPI_SUCCESS) { MPIU_ERR_POP(mpi_errno); }
+    }
 
-    if (mpi_errno != MPI_SUCCESS) { MPIU_ERR_POP(mpi_errno); }
+    /* If the operation is already complete, return a completed request.
+     * Otherwise, generate a grequest. */
+    /* FIXME: We still may need to flush or sync for shared memory windows */
+    if (target_rank == MPI_PROC_NULL || target_rank == win_ptr->myrank) {
+        mpi_errno = MPIR_Grequest_start_impl(MPIDI_CH3I_Rma_req_query,
+                                             MPIDI_CH3I_Rma_req_free,
+                                             MPIDI_CH3I_Rma_req_cancel,
+                                             req_state, &req_state->request);
+        if (mpi_errno != MPI_SUCCESS) { MPIU_ERR_POP(mpi_errno); }
 
-    mpi_errno = MPIX_Grequest_start_impl(MPIDI_CH3I_Rma_req_query,
-                                         MPIDI_CH3I_Rma_req_free,
-                                         MPIDI_CH3I_Rma_req_cancel,
-                                         MPIDI_CH3I_Rma_req_poll,
-                                         MPIDI_CH3I_Rma_req_wait,
-                                         req_state, &req_state->request);
+        MPIR_Grequest_complete_impl(req_state->request);
+    }
+    else {
+        mpi_errno = MPIX_Grequest_start_impl(MPIDI_CH3I_Rma_req_query,
+                                             MPIDI_CH3I_Rma_req_free,
+                                             MPIDI_CH3I_Rma_req_cancel,
+                                             MPIDI_CH3I_Rma_req_poll,
+                                             MPIDI_CH3I_Rma_req_wait,
+                                             req_state, &req_state->request);
 
-    if (mpi_errno != MPI_SUCCESS) { MPIU_ERR_POP(mpi_errno); }
+        if (mpi_errno != MPI_SUCCESS) { MPIU_ERR_POP(mpi_errno); }
+    }
 
     *request = req_state->request;
 
@@ -327,24 +367,39 @@ int MPIDI_Rget_accumulate(const void *origin_addr, int origin_count,
     req_state->win_ptr = win_ptr;
     req_state->target_rank = target_rank;
 
-    /* Enqueue the RMA operation */
-    mpi_errno = win_ptr->RMAFns.Get_accumulate(origin_addr, origin_count,
-                                               origin_datatype, result_addr,
-                                               result_count, result_datatype,
-                                               target_rank, target_disp,
-                                               target_count, target_datatype,
-                                               op, win_ptr);
+    /* Enqueue or perform the RMA operation */
+    if (target_rank != MPI_PROC_NULL) {
+        mpi_errno = win_ptr->RMAFns.Get_accumulate(origin_addr, origin_count,
+                                                   origin_datatype, result_addr,
+                                                   result_count, result_datatype,
+                                                   target_rank, target_disp,
+                                                   target_count, target_datatype,
+                                                   op, win_ptr);
+        if (mpi_errno != MPI_SUCCESS) { MPIU_ERR_POP(mpi_errno); }
+    }
 
-    if (mpi_errno != MPI_SUCCESS) { MPIU_ERR_POP(mpi_errno); }
+    /* If the operation is already complete, return a completed request.
+     * Otherwise, generate a grequest. */
+    /* FIXME: We still may need to flush or sync for shared memory windows */
+    if (target_rank == MPI_PROC_NULL || target_rank == win_ptr->myrank) {
+        mpi_errno = MPIR_Grequest_start_impl(MPIDI_CH3I_Rma_req_query,
+                                             MPIDI_CH3I_Rma_req_free,
+                                             MPIDI_CH3I_Rma_req_cancel,
+                                             req_state, &req_state->request);
+        if (mpi_errno != MPI_SUCCESS) { MPIU_ERR_POP(mpi_errno); }
 
-    mpi_errno = MPIX_Grequest_start_impl(MPIDI_CH3I_Rma_req_query,
-                                         MPIDI_CH3I_Rma_req_free,
-                                         MPIDI_CH3I_Rma_req_cancel,
-                                         MPIDI_CH3I_Rma_req_poll,
-                                         MPIDI_CH3I_Rma_req_wait,
-                                         req_state, &req_state->request);
+        MPIR_Grequest_complete_impl(req_state->request);
+    }
+    else {
+        mpi_errno = MPIX_Grequest_start_impl(MPIDI_CH3I_Rma_req_query,
+                                             MPIDI_CH3I_Rma_req_free,
+                                             MPIDI_CH3I_Rma_req_cancel,
+                                             MPIDI_CH3I_Rma_req_poll,
+                                             MPIDI_CH3I_Rma_req_wait,
+                                             req_state, &req_state->request);
 
-    if (mpi_errno != MPI_SUCCESS) { MPIU_ERR_POP(mpi_errno); }
+        if (mpi_errno != MPI_SUCCESS) { MPIU_ERR_POP(mpi_errno); }
+    }
 
     *request = req_state->request;
 
