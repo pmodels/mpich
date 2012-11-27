@@ -6,6 +6,7 @@
  */
 #include <mpi.h>
 #include <stdio.h>
+#include <assert.h>
 #include "mpitest.h"
 
 #define ITER 100
@@ -29,12 +30,36 @@ int main( int argc, char *argv[] )
     /** Create using MPI_Win_create() **/
 
     if (rank == 0) {
-      MPI_Alloc_mem(sizeof(int), MPI_INFO_NULL, &buf);
+      MPI_Alloc_mem(4*sizeof(int), MPI_INFO_NULL, &buf);
       *buf = nproc-1;
     } else
       buf = NULL;
 
-    MPI_Win_create(buf, sizeof(int)*(rank == 0), 1, MPI_INFO_NULL, MPI_COMM_WORLD, &window);
+    MPI_Win_create(buf, 4*sizeof(int)*(rank == 0), 1, MPI_INFO_NULL, MPI_COMM_WORLD, &window);
+
+    /* PROC_NULL Communication */
+    {
+        MPI_Request pn_req[4];
+        int val[4], res;
+
+        MPI_Win_lock_all(0, window);
+
+        MPI_Rget_accumulate(&val[0], 1, MPI_INT, &res, 1, MPI_INT, MPI_PROC_NULL, 0, 1, MPI_INT, MPI_REPLACE, window, &pn_req[0]);
+        MPI_Rget(&val[1], 1, MPI_INT, MPI_PROC_NULL, 1, 1, MPI_INT, window, &pn_req[1]);
+        MPI_Rput(&val[2], 1, MPI_INT, MPI_PROC_NULL, 2, 1, MPI_INT, window, &pn_req[2]);
+        MPI_Raccumulate(&val[3], 1, MPI_INT, MPI_PROC_NULL, 3, 1, MPI_INT, MPI_REPLACE, window, &pn_req[3]);
+
+        assert(pn_req[0] != MPI_REQUEST_NULL);
+        assert(pn_req[1] != MPI_REQUEST_NULL);
+        assert(pn_req[2] != MPI_REQUEST_NULL);
+        assert(pn_req[3] != MPI_REQUEST_NULL);
+
+        MPI_Win_unlock_all(window);
+
+        MPI_Waitall(4, pn_req, MPI_STATUSES_IGNORE);
+    }
+
+    MPI_Barrier(MPI_COMM_WORLD);
 
     MPI_Win_lock(MPI_LOCK_SHARED, 0, 0, window);
 
@@ -51,6 +76,7 @@ int main( int argc, char *argv[] )
         }
 
         MPI_Rget_accumulate(&rank, 1, MPI_INT, &val, 1, MPI_INT, 0, 0, 1, MPI_INT, MPI_REPLACE, window, &gacc_req);
+        assert(gacc_req != MPI_REQUEST_NULL);
         MPI_Wait(&gacc_req, MPI_STATUS_IGNORE);
 
         exp = (rank + nproc-1) % nproc;
@@ -85,9 +111,11 @@ int main( int argc, char *argv[] )
         }
 
         MPI_Rget(&val, 1, MPI_INT, 0, 0, 1, MPI_INT, window, &req);
+        assert(req != MPI_REQUEST_NULL);
         MPI_Wait(&req, MPI_STATUS_IGNORE);
 
         MPI_Rput(&rank, 1, MPI_INT, 0, 0, 1, MPI_INT, window, &req);
+        assert(req != MPI_REQUEST_NULL);
         MPI_Wait(&req, MPI_STATUS_IGNORE);
 
         exp = (rank + nproc-1) % nproc;
@@ -122,9 +150,11 @@ int main( int argc, char *argv[] )
         }
 
         MPI_Rget(&val, 1, MPI_INT, 0, 0, 1, MPI_INT, window, &req);
+        assert(req != MPI_REQUEST_NULL);
         MPI_Wait(&req, MPI_STATUS_IGNORE);
 
         MPI_Raccumulate(&rank, 1, MPI_INT, 0, 0, 1, MPI_INT, MPI_REPLACE, window, &req);
+        assert(req != MPI_REQUEST_NULL);
         MPI_Wait(&req, MPI_STATUS_IGNORE);
 
         exp = (rank + nproc-1) % nproc;
