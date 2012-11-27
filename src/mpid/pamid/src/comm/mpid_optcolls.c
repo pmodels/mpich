@@ -234,7 +234,7 @@ void MPIDI_Comm_coll_select(MPID_Comm *comm_ptr)
       /* Use I0:RectangleDput */
       for(i = 0; i < comm_ptr->mpid.coll_count[PAMI_XFER_ALLGATHERV_INT][1]; i++)
       {
-         if(strcasecmp(comm_ptr->mpid.coll_metadata[PAMI_XFER_ALLGATHERV_INT][0][i].name, "I0:RectangleDput:SHMEM:MU") == 0)
+         if(strcasecmp(comm_ptr->mpid.coll_metadata[PAMI_XFER_ALLGATHERV_INT][1][i].name, "I0:RectangleDput:SHMEM:MU") == 0)
          {
             opt_proto = i;
             mustquery = 1;
@@ -254,11 +254,12 @@ void MPIDI_Comm_coll_select(MPID_Comm *comm_ptr)
          comm_ptr->mpid.must_query[PAMI_XFER_ALLGATHERV_INT][0] = mustquery?MPID_COLL_ALWAYS_QUERY:MPID_COLL_NOQUERY;
          comm_ptr->mpid.user_selected_type[PAMI_XFER_ALLGATHERV_INT] = MPID_COLL_OPTIMIZED;
       }
-      else
+      else /* no optimized allgatherv? */
       {
          TRACE_ERR("Couldn't find optimial allgatherv[int] protocol\n");
          comm_ptr->mpid.user_selected_type[PAMI_XFER_ALLGATHERV_INT] = MPID_COLL_USE_MPICH;
          comm_ptr->mpid.opt_protocol[PAMI_XFER_ALLGATHERV_INT][0] = 0;
+         comm_ptr->mpid.allgathervs[0] = 1; /* Use GLUE_ALLREDUCE */
       }
       TRACE_ERR("Done setting optimized allgatherv[int]\n");
    }

@@ -82,25 +82,25 @@ int MPIDO_Alltoallv(const void *sendbuf,
 
    pami_xfer_t alltoallv;
    pami_algorithm_t my_alltoallv;
-   const pami_metadata_t *my_alltoallv_md;
+   const pami_metadata_t *my_md = (pami_metadata_t *)NULL;
    int queryreq = 0;
 
    if(selected_type == MPID_COLL_OPTIMIZED)
    {
       TRACE_ERR("Optimized alltoallv was selected\n");
       my_alltoallv = mpid->opt_protocol[PAMI_XFER_ALLTOALLV_INT][0];
-      my_alltoallv_md = &mpid->opt_protocol_md[PAMI_XFER_ALLTOALLV_INT][0];
+      my_md = &mpid->opt_protocol_md[PAMI_XFER_ALLTOALLV_INT][0];
       queryreq = mpid->must_query[PAMI_XFER_ALLTOALLV_INT][0];
    }
    else
    { /* is this purely an else? or do i need to check for some other selectedvar... */
       TRACE_ERR("Alltoallv specified by user\n");
       my_alltoallv = mpid->user_selected[PAMI_XFER_ALLTOALLV_INT];
-      my_alltoallv_md = &mpid->user_metadata[PAMI_XFER_ALLTOALLV_INT];
+      my_md = &mpid->user_metadata[PAMI_XFER_ALLTOALLV_INT];
       queryreq = selected_type;
    }
    alltoallv.algorithm = my_alltoallv;
-   char *pname = my_alltoallv_md->name;
+   char *pname = my_md->name;
 
 
    alltoallv.cb_done = cb_alltoallv;
@@ -137,19 +137,28 @@ int MPIDO_Alltoallv(const void *sendbuf,
       if(queryreq == MPID_COLL_ALWAYS_QUERY)
       {
         /* process metadata bits */
+         if((!my_md->check_correct.values.inplace) && (sendbuf == MPI_IN_PLACE))
+            result.check.unspecified = 1;
       }
       else /* (queryreq == MPID_COLL_CHECK_FN_REQUIRED - calling the check fn is sufficient */
-         result = my_alltoallv_md->check_fn(&alltoallv);
+         result = my_md->check_fn(&alltoallv);
       TRACE_ERR("bitmask: %#X\n", result.bitmask);
       result.check.nonlocal = 0; /* #warning REMOVE THIS WHEN IMPLEMENTED */
       if(result.bitmask)
       {
         if(unlikely(verbose))
-          fprintf(stderr,"Query failed for %s\n", pname);
+          fprintf(stderr,"Query failed for %s. Using MPICH alltoallv\n", pname);
         MPIDI_Update_last_algorithm(comm_ptr, "ALLTOALLV_MPICH");
         return MPIR_Alltoallv(sendbuf, sendcounts, senddispls, sendtype,
                               recvbuf, recvcounts, recvdispls, recvtype,
                               comm_ptr, mpierrno);
+      }
+      if(my_md->check_correct.values.asyncflowctl) 
+      { /* need better flow control than a barrier every time */
+         int tmpmpierrno;   
+         if(unlikely(verbose))
+            fprintf(stderr,"Query barrier required for %s\n", pname);
+         MPIR_Barrier(comm_ptr, &tmpmpierrno);
       }
    }
 
@@ -161,7 +170,7 @@ int MPIDO_Alltoallv(const void *sendbuf,
       threadID = (unsigned long long int)tid;
       fprintf(stderr,"<%llx> Using protocol %s for alltoallv on %u\n", 
               threadID,
-              my_alltoallv_md->name,
+              my_md->name,
               (unsigned) comm_ptr->context_id);
    }
 

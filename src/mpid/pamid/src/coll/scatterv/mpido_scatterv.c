@@ -278,7 +278,7 @@ int MPIDO_Scatterv(const void *sendbuf,
 
    pami_xfer_t scatterv;
    pami_algorithm_t my_scatterv;
-   const pami_metadata_t *my_scatterv_md;
+   const pami_metadata_t *my_md = (pami_metadata_t *)NULL;
    volatile unsigned scatterv_active = 1;
    int queryreq = 0;
 
@@ -287,7 +287,7 @@ int MPIDO_Scatterv(const void *sendbuf,
       TRACE_ERR("Optimized scatterv %s was selected\n",
          mpid->opt_protocol_md[PAMI_XFER_SCATTERV_INT][0].name);
       my_scatterv = mpid->opt_protocol[PAMI_XFER_SCATTERV_INT][0];
-      my_scatterv_md = &mpid->opt_protocol_md[PAMI_XFER_SCATTERV_INT][0];
+      my_md = &mpid->opt_protocol_md[PAMI_XFER_SCATTERV_INT][0];
       queryreq = mpid->must_query[PAMI_XFER_SCATTERV_INT][0];
    }
    else
@@ -295,7 +295,7 @@ int MPIDO_Scatterv(const void *sendbuf,
       TRACE_ERR("User selected %s for scatterv\n",
       mpid->user_selected[PAMI_XFER_SCATTERV_INT]);
       my_scatterv = mpid->user_selected[PAMI_XFER_SCATTERV_INT];
-      my_scatterv_md = &mpid->user_metadata[PAMI_XFER_SCATTERV_INT];
+      my_md = &mpid->user_metadata[PAMI_XFER_SCATTERV_INT];
       queryreq = selected_type;
    }
 
@@ -354,19 +354,21 @@ int MPIDO_Scatterv(const void *sendbuf,
    {
       metadata_result_t result = {0};
       TRACE_ERR("querying scatterv protocol %s, type was %d\n",
-         my_scatterv_md->name, queryreq);
+         my_md->name, queryreq);
       if(queryreq == MPID_COLL_ALWAYS_QUERY)
       {
         /* process metadata bits */
+        if((!my_md->check_correct.values.inplace) && (recvbuf == MPI_IN_PLACE))
+           result.check.unspecified = 1;
       }
       else /* (queryreq == MPID_COLL_CHECK_FN_REQUIRED - calling the check fn is sufficient */
-        result = my_scatterv_md->check_fn(&scatterv);
+        result = my_md->check_fn(&scatterv);
       TRACE_ERR("bitmask: %#X\n", result.bitmask);
       result.check.nonlocal = 0; /* #warning REMOVE THIS WHEN IMPLEMENTED */
       if(result.bitmask)
       {
         if(unlikely(verbose))
-          fprintf(stderr,"Query failed for %s\n", my_scatterv_md->name);
+          fprintf(stderr,"Query failed for %s. Using MPICH scatterv.\n", my_md->name);
         MPIDI_Update_last_algorithm(comm_ptr, "SCATTERV_MPICH");
         return MPIR_Scatterv(sendbuf, sendcounts, displs, sendtype,
                              recvbuf, recvcount, recvtype,
@@ -374,7 +376,7 @@ int MPIDO_Scatterv(const void *sendbuf,
       }
    }
 
-   MPIDI_Update_last_algorithm(comm_ptr, my_scatterv_md->name);
+   MPIDI_Update_last_algorithm(comm_ptr, my_md->name);
 
    if(unlikely(verbose))
    {
@@ -384,11 +386,10 @@ int MPIDO_Scatterv(const void *sendbuf,
       threadID = (unsigned long long int)tid;
       fprintf(stderr,"<%llx> Using protocol %s for scatterv on %u\n", 
               threadID,
-              my_scatterv_md->name,
+              my_md->name,
               (unsigned) comm_ptr->context_id);
    }
    MPIDI_Post_coll_t scatterv_post;
-   TRACE_ERR("%s scatterv\n", MPIDI_Process.context_post.active>0?"Posting":"Invoking");
    MPIDI_Context_post(MPIDI_Context[0], &scatterv_post.state,
                       MPIDI_Pami_post_wrapper, (void *)&scatterv);
 
@@ -554,7 +555,6 @@ int MPIDO_Scatterv_simple(const void *sendbuf,
   /* set the internal control flow to disable internal star tuning */
    if(mpid->preallreduces[MPID_SCATTERV_PREALLREDUCE])
    {
-     TRACE_ERR("%s scatterv pre-allreduce\n", MPIDI_Process.context_post.active>0?"Posting":"Invoking");
      MPIDI_Post_coll_t allred_post;
      rc = MPIDI_Context_post(MPIDI_Context[0], &allred_post.state,
                              MPIDI_Pami_post_wrapper, (void *)&allred);

@@ -258,7 +258,7 @@ MPIDO_Allgather(const void *sendbuf,
    const int selected_type = mpid->user_selected_type[PAMI_XFER_ALLGATHER];
 
    for (i=0;i<6;i++) config[i] = 1;
-   const pami_metadata_t *my_md;
+   const pami_metadata_t *my_md = (pami_metadata_t *)NULL;
 
 
    allred.cb_done = allred_cb_done;
@@ -403,6 +403,8 @@ MPIDO_Allgather(const void *sendbuf,
          if(queryreq == MPID_COLL_ALWAYS_QUERY)
          {
            /* process metadata bits */
+           if((!my_md->check_correct.values.inplace) && (sendbuf == MPI_IN_PLACE))
+              result.check.unspecified = 1;
          }
          else /* (queryreq == MPID_COLL_CHECK_FN_REQUIRED - calling the check fn is sufficient */
            result = my_md->check_fn(&allgather);
@@ -411,7 +413,7 @@ MPIDO_Allgather(const void *sendbuf,
          if(result.bitmask)
          {
            if(unlikely(verbose))
-             fprintf(stderr,"Query failed for %s.\n",
+             fprintf(stderr,"Query failed for %s.  Using MPICH allgather\n",
                      my_md->name);
            MPIDI_Update_last_algorithm(comm_ptr, "ALLGATHER_MPICH");
            return MPIR_Allgather(sendbuf, sendcount, sendtype,
@@ -434,7 +436,6 @@ MPIDO_Allgather(const void *sendbuf,
       TRACE_ERR("Calling PAMI_Collective with allgather structure\n");
       MPIDI_Post_coll_t allgather_post;
       MPIDI_Context_post(MPIDI_Context[0], &allgather_post.state, MPIDI_Pami_post_wrapper, (void *)&allgather);
-      TRACE_ERR("Allgather %s\n", MPIDI_Process.context_post.active>0?"posted":"invoked");
 
       MPIDI_Update_last_algorithm(comm_ptr, my_md->name);
       MPID_PROGRESS_WAIT_WHILE(allgather_active);

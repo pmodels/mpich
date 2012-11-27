@@ -212,7 +212,7 @@ int MPIDO_Gather(const void *sendbuf,
 
 
    pami_algorithm_t my_gather;
-   const pami_metadata_t *my_gather_md;
+   const pami_metadata_t *my_md = (pami_metadata_t *)NULL;
    int queryreq = 0;
    volatile unsigned active = 1;
 
@@ -242,7 +242,7 @@ int MPIDO_Gather(const void *sendbuf,
       TRACE_ERR("Optimized gather (%s) was pre-selected\n",
          mpid->opt_protocol_md[PAMI_XFER_GATHER][0].name);
       my_gather = mpid->opt_protocol[PAMI_XFER_GATHER][0];
-      my_gather_md = &mpid->opt_protocol_md[PAMI_XFER_GATHER][0];
+      my_md = &mpid->opt_protocol_md[PAMI_XFER_GATHER][0];
       queryreq = mpid->must_query[PAMI_XFER_GATHER][0];
    }
    else
@@ -250,7 +250,7 @@ int MPIDO_Gather(const void *sendbuf,
       TRACE_ERR("Optimized gather (%s) was specified by user\n",
       mpid->user_metadata[PAMI_XFER_GATHER].name);
       my_gather = mpid->user_selected[PAMI_XFER_GATHER];
-      my_gather_md = &mpid->user_metadata[PAMI_XFER_GATHER];
+      my_md = &mpid->user_metadata[PAMI_XFER_GATHER];
       queryreq = selected_type;
    }
 
@@ -260,19 +260,21 @@ int MPIDO_Gather(const void *sendbuf,
    {
       metadata_result_t result = {0};
       TRACE_ERR("querying gather protocol %s, type was %d\n",
-         my_gather_md->name, queryreq);
+         my_md->name, queryreq);
       if(queryreq == MPID_COLL_ALWAYS_QUERY)
       {
         /* process metadata bits */
+        if((!my_md->check_correct.values.inplace) && (sendbuf == MPI_IN_PLACE))
+           result.check.unspecified = 1;
       }
       else /* (queryreq == MPID_COLL_CHECK_FN_REQUIRED - calling the check fn is sufficient */
-        result = my_gather_md->check_fn(&gather);
+        result = my_md->check_fn(&gather);
       TRACE_ERR("bitmask: %#X\n", result.bitmask);
       result.check.nonlocal = 0; /* #warning REMOVE THIS WHEN IMPLEMENTED */
       if(result.bitmask)
       {
         if(unlikely(verbose))
-          fprintf(stderr,"query failed for %s\n", my_gather_md->name);
+          fprintf(stderr,"query failed for %s\n", my_md->name);
         MPIDI_Update_last_algorithm(comm_ptr, "GATHER_MPICH");
         return MPIR_Gather(sendbuf, sendcount, sendtype,
                            recvbuf, recvcount, recvtype,
@@ -292,11 +294,10 @@ int MPIDO_Gather(const void *sendbuf,
       threadID = (unsigned long long int)tid;
       fprintf(stderr,"<%llx> Using protocol %s for gather on %u\n", 
               threadID,
-              my_gather_md->name,
+              my_md->name,
               (unsigned) comm_ptr->context_id);
    }
 
-   TRACE_ERR("%s gather\n", MPIDI_Process.context_post.active>0?"Posting":"Invoking");
    MPIDI_Context_post(MPIDI_Context[0], &gather_post.state,
                       MPIDI_Pami_post_wrapper, (void *)&gather);
 

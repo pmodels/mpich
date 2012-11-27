@@ -39,7 +39,7 @@ int MPIDO_Barrier(MPID_Comm *comm_ptr, int *mpierrno)
    MPIDI_Post_coll_t barrier_post;
    pami_xfer_t barrier;
    pami_algorithm_t my_barrier;
-   const pami_metadata_t *my_barrier_md;
+   const pami_metadata_t *my_md = (pami_metadata_t *)NULL;
    int queryreq = 0;
    const struct MPIDI_Comm* const mpid = &(comm_ptr->mpid);
    const int selected_type = mpid->user_selected_type[PAMI_XFER_BARRIER];
@@ -64,14 +64,14 @@ int MPIDO_Barrier(MPID_Comm *comm_ptr, int *mpierrno)
    {
       TRACE_ERR("Optimized barrier (%s) was pre-selected\n", mpid->opt_protocol_md[PAMI_XFER_BARRIER][0].name);
       my_barrier = mpid->opt_protocol[PAMI_XFER_BARRIER][0];
-      my_barrier_md = &mpid->opt_protocol_md[PAMI_XFER_BARRIER][0];
+      my_md = &mpid->opt_protocol_md[PAMI_XFER_BARRIER][0];
       queryreq = mpid->must_query[PAMI_XFER_BARRIER][0];
    }
    else
    {
       TRACE_ERR("Barrier (%s) was specified by user\n", mpid->user_metadata[PAMI_XFER_BARRIER].name);
       my_barrier = mpid->user_selected[PAMI_XFER_BARRIER];
-      my_barrier_md = &mpid->user_metadata[PAMI_XFER_BARRIER];
+      my_md = &mpid->user_metadata[PAMI_XFER_BARRIER];
       queryreq = selected_type;
    }
 
@@ -88,16 +88,14 @@ int MPIDO_Barrier(MPID_Comm *comm_ptr, int *mpierrno)
       threadID = (unsigned long long int)tid;
      fprintf(stderr,"<%llx> Using protocol %s for barrier on %u\n", 
              threadID,
-             my_barrier_md->name,
+             my_md->name,
             (unsigned) comm_ptr->context_id);
    }
-   TRACE_ERR("%s barrier\n", MPIDI_Process.context_post.active>0?"posting":"invoking");
    MPIDI_Context_post(MPIDI_Context[0], &barrier_post.state,
                       MPIDI_Pami_post_wrapper, (void *)&barrier);
-   TRACE_ERR("barrier %s rc: %d\n", MPIDI_Process.context_post.active>0?"posted":"invoked", rc);
 
    TRACE_ERR("advance spinning\n");
-   MPIDI_Update_last_algorithm(comm_ptr, my_barrier_md->name);
+   MPIDI_Update_last_algorithm(comm_ptr, my_md->name);
    MPID_PROGRESS_WAIT_WHILE(active);
    TRACE_ERR("exiting mpido_barrier\n");
    return 0;

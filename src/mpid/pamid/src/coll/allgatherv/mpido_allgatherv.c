@@ -283,7 +283,7 @@ MPIDO_Allgatherv(const void *sendbuf,
   volatile unsigned allgatherv_active = 1;
   pami_type_t stype, rtype;
   int tmp;
-  const pami_metadata_t *my_md;
+  const pami_metadata_t *my_md = (pami_metadata_t *)NULL;
 
   for(i=0;i<6;i++) config[i] = 1;
 
@@ -301,7 +301,6 @@ MPIDO_Allgatherv(const void *sendbuf,
    use_alltoall = mpid->allgathervs[2];
    use_tree_reduce = mpid->allgathervs[0];
    use_bcast = mpid->allgathervs[1];
-   /* Assuming PAMI doesn't support MPI_IN_PLACE */
    use_pami = selected_type != MPID_COLL_USE_MPICH;
 	 
    if((sendbuf != MPI_IN_PLACE) && (MPIDI_Datatype_to_pami(sendtype, &stype, -1, NULL, &tmp) != MPI_SUCCESS))
@@ -433,6 +432,8 @@ MPIDO_Allgatherv(const void *sendbuf,
          if(queryreq == MPID_COLL_ALWAYS_QUERY)
          {
            /* process metadata bits */
+           if((!my_md->check_correct.values.inplace) && (sendbuf == MPI_IN_PLACE))
+              result.check.unspecified = 1;
          }
          else /* (queryreq == MPID_COLL_CHECK_FN_REQUIRED - calling the check fn is sufficient */
            result = my_md->check_fn(&allgatherv);
@@ -441,7 +442,7 @@ MPIDO_Allgatherv(const void *sendbuf,
          if(result.bitmask)
          {
            if(unlikely(verbose))
-             fprintf(stderr,"Query failed for %s\n", my_md->name);
+             fprintf(stderr,"Query failed for %s. Using MPICH allgatherv.\n", my_md->name);
            MPIDI_Update_last_algorithm(comm_ptr, "ALLGATHERV_MPICH");
            return MPIR_Allgatherv(sendbuf, sendcount, sendtype,
                                   recvbuf, recvcounts, displs, recvtype,
@@ -460,7 +461,6 @@ MPIDO_Allgatherv(const void *sendbuf,
                  my_md->name,
               (unsigned) comm_ptr->context_id);
       }
-      TRACE_ERR("Calling allgatherv via %s()\n", MPIDI_Process.context_post.active>0?"PAMI_Collective":"PAMI_Context_post");
       MPIDI_Post_coll_t allgatherv_post;
       MPIDI_Context_post(MPIDI_Context[0], &allgatherv_post.state,
                          MPIDI_Pami_post_wrapper, (void *)&allgatherv);

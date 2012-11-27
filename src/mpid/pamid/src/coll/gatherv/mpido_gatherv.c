@@ -118,7 +118,7 @@ int MPIDO_Gatherv(const void *sendbuf,
    gatherv.cmd.xfer_gatherv_int.sndbuf = sbuf;
 
    pami_algorithm_t my_gatherv;
-   const pami_metadata_t *my_gatherv_md;
+   const pami_metadata_t *my_md = (pami_metadata_t *)NULL;
    int queryreq = 0;
 
    if(selected_type == MPID_COLL_OPTIMIZED)
@@ -126,7 +126,7 @@ int MPIDO_Gatherv(const void *sendbuf,
       TRACE_ERR("Optimized gatherv %s was selected\n",
          mpid->opt_protocol_md[PAMI_XFER_GATHERV_INT][0].name);
       my_gatherv = mpid->opt_protocol[PAMI_XFER_GATHERV_INT][0];
-      my_gatherv_md = &mpid->opt_protocol_md[PAMI_XFER_GATHERV_INT][0];
+      my_md = &mpid->opt_protocol_md[PAMI_XFER_GATHERV_INT][0];
       queryreq = mpid->must_query[PAMI_XFER_GATHERV_INT][0];
    }
    else
@@ -134,7 +134,7 @@ int MPIDO_Gatherv(const void *sendbuf,
       TRACE_ERR("Optimized gatherv %s was set by user\n",
          mpid->user_metadata[PAMI_XFER_GATHERV_INT].name);
          my_gatherv = mpid->user_selected[PAMI_XFER_GATHERV_INT];
-         my_gatherv_md = &mpid->user_metadata[PAMI_XFER_GATHERV_INT];
+         my_md = &mpid->user_metadata[PAMI_XFER_GATHERV_INT];
          queryreq = selected_type;
    }
 
@@ -146,19 +146,21 @@ int MPIDO_Gatherv(const void *sendbuf,
    {
       metadata_result_t result = {0};
       TRACE_ERR("querying gatherv protocol %s, type was %d\n", 
-         my_gatherv_md->name, queryreq);
+         my_md->name, queryreq);
       if(queryreq == MPID_COLL_ALWAYS_QUERY)
       {
-        /* process metadata bits */
+         /* process metadata bits */
+         if((!my_md->check_correct.values.inplace) && (sendbuf == MPI_IN_PLACE))
+            result.check.unspecified = 1;
       }
       else /* (queryreq == MPID_COLL_CHECK_FN_REQUIRED - calling the check fn is sufficient */
-         result = my_gatherv_md->check_fn(&gatherv);
+         result = my_md->check_fn(&gatherv);
       TRACE_ERR("bitmask: %#X\n", result.bitmask);
       result.check.nonlocal = 0; /* #warning REMOVE THIS WHEN IMPLEMENTED */
       if(result.bitmask)
       {
          if(unlikely(verbose))
-            fprintf(stderr,"Query failed for %s\n", my_gatherv_md->name);
+            fprintf(stderr,"Query failed for %s. Using MPICH gatherv.\n", my_md->name);
          MPIDI_Update_last_algorithm(comm_ptr, "GATHERV_MPICH");
          return MPIR_Gatherv(sendbuf, sendcount, sendtype,
                              recvbuf, recvcounts, displs, recvtype,
@@ -166,7 +168,7 @@ int MPIDO_Gatherv(const void *sendbuf,
       }
    }
    
-   MPIDI_Update_last_algorithm(comm_ptr, my_gatherv_md->name);
+   MPIDI_Update_last_algorithm(comm_ptr, my_md->name);
 
    if(unlikely(verbose))
    {
@@ -176,15 +178,13 @@ int MPIDO_Gatherv(const void *sendbuf,
       threadID = (unsigned long long int)tid;
       fprintf(stderr,"<%llx> Using protocol %s for gatherv on %u\n", 
               threadID,
-              my_gatherv_md->name,
+              my_md->name,
               (unsigned) comm_ptr->context_id);
    }
 
    MPIDI_Post_coll_t gatherv_post;
-   TRACE_ERR("%s gatherv\n", MPIDI_Process.context_post.active>0?"Posting":"Invoking");
    MPIDI_Context_post(MPIDI_Context[0], &gatherv_post.state,
                       MPIDI_Pami_post_wrapper, (void *)&gatherv);
-   TRACE_ERR("Gatherv %s\n", MPIDI_Process.context_post.active>0?"posted":"invoked");
    
    TRACE_ERR("Waiting on active %d\n", gatherv_active);
    MPID_PROGRESS_WAIT_WHILE(gatherv_active);

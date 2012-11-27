@@ -63,7 +63,7 @@ int MPIDO_Doscan(const void *sendbuf, void *recvbuf,
    pami_data_function pop;
    pami_type_t pdt;
    int rc;
-   const pami_metadata_t *my_md;
+   const pami_metadata_t *my_md = (pami_metadata_t *)NULL;
    int queryreq = 0;
 #if ASSERT_LEVEL==0
    /* We can't afford the tracing in ndebug/performance libraries */
@@ -140,6 +140,8 @@ int MPIDO_Doscan(const void *sendbuf, void *recvbuf,
       if(queryreq == MPID_COLL_ALWAYS_QUERY)
       {
         /* process metadata bits */
+         if((!my_md->check_correct.values.inplace) && (sendbuf == MPI_IN_PLACE))
+            result.check.unspecified = 1;
       }
       else /* (queryreq == MPID_COLL_CHECK_FN_REQUIRED - calling the check fn is sufficient */
          result = my_md->check_fn(&scan);
@@ -147,8 +149,9 @@ int MPIDO_Doscan(const void *sendbuf, void *recvbuf,
       result.check.nonlocal = 0; /* #warning REMOVE THIS WHEN IMPLEMENTED */
       if(result.bitmask)
       {
-         fprintf(stderr,"Query failed for %s.\n",
-            my_md->name);
+         if(unlikely(verbose))
+            fprintf(stderr,"Query failed for %s.  Using MPICH scan\n",
+                    my_md->name);
          MPIDI_Update_last_algorithm(comm_ptr, "SCAN_MPICH");
          if(exflag)
             return MPIR_Exscan(sendbuf, recvbuf, count, datatype, op, comm_ptr, mpierrno);
@@ -172,7 +175,6 @@ int MPIDO_Doscan(const void *sendbuf, void *recvbuf,
    MPIDI_Post_coll_t scan_post;
    MPIDI_Context_post(MPIDI_Context[0], &scan_post.state,
                       MPIDI_Pami_post_wrapper, (void *)&scan);
-   TRACE_ERR("Scan %s\n", MPIDI_Process.context_post.active>0?"posted":"invoked");
    MPIDI_Update_last_algorithm(comm_ptr, my_md->name);
    MPID_PROGRESS_WAIT_WHILE(scan_active);
    TRACE_ERR("Scan done\n");

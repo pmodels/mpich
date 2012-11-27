@@ -129,7 +129,7 @@ int MPIDO_Bcast(void *buffer,
 
    pami_xfer_t bcast;
    pami_algorithm_t my_bcast;
-   const pami_metadata_t *my_bcast_md;
+   const pami_metadata_t *my_md = (pami_metadata_t *)NULL;
    int queryreq = 0;
 
    bcast.cb_done = cb_bcast;
@@ -152,7 +152,7 @@ int MPIDO_Bcast(void *buffer,
         if(data_size <= mpid->cutoff_size[PAMI_XFER_BROADCAST][1])
         {
           my_bcast = mpid->opt_protocol[PAMI_XFER_BROADCAST][1];
-          my_bcast_md = &mpid->opt_protocol_md[PAMI_XFER_BROADCAST][1];
+          my_md = &mpid->opt_protocol_md[PAMI_XFER_BROADCAST][1];
           queryreq = mpid->must_query[PAMI_XFER_BROADCAST][1];
         }
         else
@@ -164,13 +164,13 @@ int MPIDO_Bcast(void *buffer,
       if(data_size > mpid->cutoff_size[PAMI_XFER_BROADCAST][0])
       {
          my_bcast = mpid->opt_protocol[PAMI_XFER_BROADCAST][1];
-         my_bcast_md = &mpid->opt_protocol_md[PAMI_XFER_BROADCAST][1];
+         my_md = &mpid->opt_protocol_md[PAMI_XFER_BROADCAST][1];
          queryreq = mpid->must_query[PAMI_XFER_BROADCAST][1];
       }
       else
       {
          my_bcast = mpid->opt_protocol[PAMI_XFER_BROADCAST][0];
-         my_bcast_md = &mpid->opt_protocol_md[PAMI_XFER_BROADCAST][0];
+         my_md = &mpid->opt_protocol_md[PAMI_XFER_BROADCAST][0];
          queryreq = mpid->must_query[PAMI_XFER_BROADCAST][0];
       }
    }
@@ -179,7 +179,7 @@ int MPIDO_Bcast(void *buffer,
       TRACE_ERR("Bcast (%s) was specified by user\n",
          mpid->user_metadata[PAMI_XFER_BROADCAST].name);
       my_bcast =  mpid->user_selected[PAMI_XFER_BROADCAST];
-      my_bcast_md = &mpid->user_metadata[PAMI_XFER_BROADCAST];
+      my_md = &mpid->user_metadata[PAMI_XFER_BROADCAST];
       queryreq = selected_type;
    }
 
@@ -190,13 +190,13 @@ int MPIDO_Bcast(void *buffer,
    {
       metadata_result_t result = {0};
       TRACE_ERR("querying bcast protocol %s, type was: %d\n",
-         my_bcast_md->name, queryreq);
+         my_md->name, queryreq);
       if(queryreq == MPID_COLL_ALWAYS_QUERY)
       {
         /* process metadata bits */
       }
       else /* (queryreq == MPID_COLL_CHECK_FN_REQUIRED - calling the check fn is sufficient */
-         result = my_bcast_md->check_fn(&bcast);
+         result = my_md->check_fn(&bcast);
       TRACE_ERR("bitmask: %#X\n", result.bitmask);
       result.check.nonlocal = 0; /* #warning REMOVE THIS WHEN IMPLEMENTED */
       if(result.bitmask)
@@ -216,12 +216,12 @@ int MPIDO_Bcast(void *buffer,
       threadID = (unsigned long long int)tid;
       fprintf(stderr,"<%llx> Using protocol %s for bcast on %u\n", 
               threadID,
-              my_bcast_md->name,
+              my_md->name,
               (unsigned) comm_ptr->context_id);
    }
 
    MPIDI_Context_post(MPIDI_Context[0], &bcast_post.state, MPIDI_Pami_post_wrapper, (void *)&bcast);
-   MPIDI_Update_last_algorithm(comm_ptr, my_bcast_md->name);
+   MPIDI_Update_last_algorithm(comm_ptr, my_md->name);
    MPID_PROGRESS_WAIT_WHILE(active);
    TRACE_ERR("bcast done\n");
 

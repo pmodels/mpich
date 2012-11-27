@@ -185,7 +185,7 @@ int MPIDO_Scatter(const void *sendbuf,
    pami_xfer_t scatter;
    MPIDI_Post_coll_t scatter_post;
    pami_algorithm_t my_scatter;
-   const pami_metadata_t *my_scatter_md;
+   const pami_metadata_t *my_md = (pami_metadata_t *)NULL;
    volatile unsigned scatter_active = 1;
    int queryreq = 0;
 
@@ -194,7 +194,7 @@ int MPIDO_Scatter(const void *sendbuf,
       TRACE_ERR("Optimized scatter %s was selected\n",
          mpid->opt_protocol_md[PAMI_XFER_SCATTER][0].name);
       my_scatter = mpid->opt_protocol[PAMI_XFER_SCATTER][0];
-      my_scatter_md = &mpid->opt_protocol_md[PAMI_XFER_SCATTER][0];
+      my_md = &mpid->opt_protocol_md[PAMI_XFER_SCATTER][0];
       queryreq = mpid->must_query[PAMI_XFER_SCATTER][0];
    }
    else
@@ -202,7 +202,7 @@ int MPIDO_Scatter(const void *sendbuf,
       TRACE_ERR("Optimized scatter %s was set by user\n",
          mpid->user_metadata[PAMI_XFER_SCATTER].name);
       my_scatter = mpid->user_selected[PAMI_XFER_SCATTER];
-      my_scatter_md = &mpid->user_metadata[PAMI_XFER_SCATTER];
+      my_md = &mpid->user_metadata[PAMI_XFER_SCATTER];
       queryreq = selected_type;
    }
  
@@ -235,19 +235,21 @@ int MPIDO_Scatter(const void *sendbuf,
    {
       metadata_result_t result = {0};
       TRACE_ERR("querying scatter protoocl %s, type was %d\n",
-         my_scatter_md->name, queryreq);
+         my_md->name, queryreq);
       if(queryreq == MPID_COLL_ALWAYS_QUERY)
       {
         /* process metadata bits */
+        if((!my_md->check_correct.values.inplace) && (recvbuf == MPI_IN_PLACE))
+           result.check.unspecified = 1;
       }
       else /* (queryreq == MPID_COLL_CHECK_FN_REQUIRED - calling the check fn is sufficient */
-        result = my_scatter_md->check_fn(&scatter);
+        result = my_md->check_fn(&scatter);
       TRACE_ERR("bitmask: %#X\n", result.bitmask);
       result.check.nonlocal = 0; /* #warning REMOVE THIS WHEN IMPLEMENTED */
       if(result.bitmask)
       {
         if(unlikely(verbose))
-          fprintf(stderr,"query failed for %s\n", my_scatter_md->name);
+          fprintf(stderr,"query failed for %s\n", my_md->name);
         MPIDI_Update_last_algorithm(comm_ptr, "SCATTER_MPICH");
         return MPIR_Scatter(sendbuf, sendcount, sendtype,
                             recvbuf, recvcount, recvtype,
@@ -263,10 +265,9 @@ int MPIDO_Scatter(const void *sendbuf,
       threadID = (unsigned long long int)tid;
       fprintf(stderr,"<%llx> Using protocol %s for scatter on %u\n", 
               threadID,
-              my_scatter_md->name,
+              my_md->name,
               (unsigned) comm_ptr->context_id);
    }
-   TRACE_ERR("%s scatter\n", MPIDI_Process.context_post.active>0?"Posting":"Invoking");
    MPIDI_Context_post(MPIDI_Context[0], &scatter_post.state,
                       MPIDI_Pami_post_wrapper, (void *)&scatter);
    TRACE_ERR("Waiting on active %d\n", scatter_active);

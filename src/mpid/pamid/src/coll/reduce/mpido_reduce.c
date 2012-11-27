@@ -66,7 +66,7 @@ int MPIDO_Reduce(const void *sendbuf,
 
    pami_xfer_t reduce;
    pami_algorithm_t my_reduce=0;
-   const pami_metadata_t *my_reduce_md=NULL;
+   const pami_metadata_t *my_md = (pami_metadata_t *)NULL;
    int queryreq = 0;
    volatile unsigned reduce_active = 1;
 
@@ -97,7 +97,7 @@ int MPIDO_Reduce(const void *sendbuf,
         TRACE_ERR("Optimized Reduce (%s) was pre-selected\n",
          mpid->opt_protocol_md[PAMI_XFER_REDUCE][0].name);
         my_reduce    = mpid->opt_protocol[PAMI_XFER_REDUCE][0];
-        my_reduce_md = &mpid->opt_protocol_md[PAMI_XFER_REDUCE][0];
+        my_md = &mpid->opt_protocol_md[PAMI_XFER_REDUCE][0];
         queryreq     = mpid->must_query[PAMI_XFER_REDUCE][0];
       }
 
@@ -107,7 +107,7 @@ int MPIDO_Reduce(const void *sendbuf,
       TRACE_ERR("Optimized reduce (%s) was specified by user\n",
       mpid->user_metadata[PAMI_XFER_REDUCE].name);
       my_reduce    =  mpid->user_selected[PAMI_XFER_REDUCE];
-      my_reduce_md = &mpid->user_metadata[PAMI_XFER_REDUCE];
+      my_md = &mpid->user_metadata[PAMI_XFER_REDUCE];
       queryreq     = selected_type;
    }
    reduce.algorithm = my_reduce;
@@ -124,25 +124,27 @@ int MPIDO_Reduce(const void *sendbuf,
    if(unlikely(queryreq == MPID_COLL_ALWAYS_QUERY || 
                queryreq == MPID_COLL_CHECK_FN_REQUIRED))
    {
-      if(my_reduce_md->check_fn != NULL)
+      if(my_md->check_fn != NULL)
       {
          metadata_result_t result = {0};
          TRACE_ERR("Querying reduce protocol %s, type was %d\n",
-            my_reduce_md->name,
+            my_md->name,
             queryreq);
          if(queryreq == MPID_COLL_ALWAYS_QUERY)
          {
             /* process metadata bits */
+            if((!my_md->check_correct.values.inplace) && (sendbuf == MPI_IN_PLACE))
+               result.check.unspecified = 1;
          }
          else /* (queryreq == MPID_COLL_CHECK_FN_REQUIRED - calling the check fn is sufficient */
-            result = my_reduce_md->check_fn(&reduce);
+            result = my_md->check_fn(&reduce);
          TRACE_ERR("Bitmask: %#X\n", result.bitmask);
          result.check.nonlocal = 0; /* #warning REMOVE THIS WHEN IMPLEMENTED */
          if(result.bitmask)
          {
-            if(verbose)
-              fprintf(stderr,"Query failed for %s.\n",
-                 my_reduce_md->name);
+            if(unlikely(verbose))
+              fprintf(stderr,"Query failed for %s.  Using MPICH reduce.\n",
+                 my_md->name);
          }
          else alg_selected = 1;
       }
@@ -164,15 +166,12 @@ int MPIDO_Reduce(const void *sendbuf,
          threadID = (unsigned long long int)tid;
          fprintf(stderr,"<%llx> Using protocol %s for reduce on %u\n", 
                  threadID,
-                 my_reduce_md->name,
+                 my_md->name,
               (unsigned) comm_ptr->context_id);
       }
-      TRACE_ERR("%s reduce, context %d, algoname: %s, exflag: %d\n", MPIDI_Process.context_post.active>0?"Posting":"Invoking", 0,
-                my_reduce_md->name, exflag);
       MPIDI_Post_coll_t reduce_post;
       MPIDI_Context_post(MPIDI_Context[0], &reduce_post.state,
                          MPIDI_Pami_post_wrapper, (void *)&reduce);
-      TRACE_ERR("Reduce %s\n", MPIDI_Process.context_post.active>0?"posted":"invoked");
    }
    else
    {
@@ -183,7 +182,7 @@ int MPIDO_Reduce(const void *sendbuf,
    }
 
    MPIDI_Update_last_algorithm(comm_ptr,
-                               my_reduce_md->name);
+                               my_md->name);
    MPID_PROGRESS_WAIT_WHILE(reduce_active);
    TRACE_ERR("Reduce done\n");
    return 0;

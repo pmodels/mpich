@@ -91,23 +91,23 @@ int MPIDO_Alltoall(const void *sendbuf,
 
    pami_xfer_t alltoall;
    pami_algorithm_t my_alltoall;
-   const pami_metadata_t *my_alltoall_md;
+   const pami_metadata_t *my_md = (pami_metadata_t *)NULL;
    int queryreq = 0;
    if(selected_type == MPID_COLL_OPTIMIZED)
    {
       TRACE_ERR("Optimized alltoall was pre-selected\n");
       my_alltoall = mpid->opt_protocol[PAMI_XFER_ALLTOALL][0];
-      my_alltoall_md = &mpid->opt_protocol_md[PAMI_XFER_ALLTOALL][0];
+      my_md = &mpid->opt_protocol_md[PAMI_XFER_ALLTOALL][0];
       queryreq = mpid->must_query[PAMI_XFER_ALLTOALL][0];
    }
    else
    {
       TRACE_ERR("Alltoall was specified by user\n");
       my_alltoall = mpid->user_selected[PAMI_XFER_ALLTOALL];
-      my_alltoall_md = &mpid->user_metadata[PAMI_XFER_ALLTOALL];
+      my_md = &mpid->user_metadata[PAMI_XFER_ALLTOALL];
       queryreq = selected_type;
    }
-   char *pname = my_alltoall_md->name;
+   char *pname = my_md->name;
    TRACE_ERR("Using alltoall protocol %s\n", pname);
 
    alltoall.cb_done = cb_alltoall;
@@ -141,15 +141,17 @@ int MPIDO_Alltoall(const void *sendbuf,
       if(queryreq == MPID_COLL_ALWAYS_QUERY)
       {
         /* process metadata bits */
+         if((!my_md->check_correct.values.inplace) && (sendbuf == MPI_IN_PLACE))
+            result.check.unspecified = 1;
       }
       else /* (queryreq == MPID_COLL_CHECK_FN_REQUIRED - calling the check fn is sufficient */
-         result = my_alltoall_md->check_fn(&alltoall);
+         result = my_md->check_fn(&alltoall);
       TRACE_ERR("bitmask: %#X\n", result.bitmask);
       result.check.nonlocal = 0; /* #warning REMOVE THIS WHEN IMPLEMENTED */
       if(result.bitmask)
       {
         if(unlikely(verbose))
-           fprintf(stderr,"Query failed for %s\n", pname);
+           fprintf(stderr,"Query failed for %s. Using MPICH alltoall.\n", pname);
         MPIDI_Update_last_algorithm(comm_ptr, "ALLTOALL_MPICH");
         return MPIR_Alltoall_intra(sendbuf, sendcount, sendtype,
                                    recvbuf, recvcount, recvtype,
@@ -165,7 +167,7 @@ int MPIDO_Alltoall(const void *sendbuf,
       threadID = (unsigned long long int)tid;
       fprintf(stderr,"<%llx> Using protocol %s for alltoall on %u\n", 
               threadID,
-              my_alltoall_md->name,
+              my_md->name,
               (unsigned) comm_ptr->context_id);
    }
 
