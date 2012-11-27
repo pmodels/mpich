@@ -7,6 +7,7 @@
 #include "stdio.h"
 #include "stdlib.h"
 #include "mpitest.h"
+#include "squelch.h"
 
 /* tests passive target RMA on 2 processes. tests the lock-single_op-unlock 
    optimization. */
@@ -55,7 +56,7 @@ int main(int argc, char *argv[])
 
             for (i=0; i<SIZE1; i++)
                 if (B[i] != (-4)*(i+SIZE1)) {
-                    printf("Get Error: B[%d] is %d, should be %d\n", i, B[i], (-4)*(i+SIZE1));
+                    SQUELCH( printf("Get Error: B[%d] is %d, should be %d\n", i, B[i], (-4)*(i+SIZE1)); );
                     errs++;
                 }
         }
@@ -67,7 +68,7 @@ int main(int argc, char *argv[])
 
             for (i=0; i<SIZE1; i++) {
                 if (B[i] != i) {
-                    printf("Put Error: B[%d] is %d, should be %d\n", i, B[i], i);
+                    SQUELCH( printf("Put Error: B[%d] is %d, should be %d\n", i, B[i], i); );
                     errs++;
                 }
             }

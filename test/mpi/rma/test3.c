@@ -7,6 +7,7 @@
 #include "stdio.h"
 #include "stdlib.h"
 #include "mpitest.h"
+#include "squelch.h"
 
 /* Tests the example in Fig 6.8, pg 142, MPI-2 standard. Process 1 has
    a blocking MPI_Recv between the Post and Wait. Therefore, this
@@ -76,11 +77,11 @@ int main(int argc, char *argv[])
 
             for (i=0; i<SIZE; i++) {
                 if (B[i] != i) {
-                    printf("Rank 1: Put Error: B[i] is %d, should be %d\n", B[i], i);
+                    SQUELCH( printf("Rank 1: Put Error: B[i] is %d, should be %d\n", B[i], i); );
                     errs++;
                 }
                 if (A[i] != SIZE + i) {
-                    printf("Rank 1: Send/Recv Error: A[i] is %d, should be %d\n", A[i], SIZE+i);
+                    SQUELCH( printf("Rank 1: Send/Recv Error: A[i] is %d, should be %d\n", A[i], SIZE+i); );
                     errs++;
                 }
             }

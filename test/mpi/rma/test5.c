@@ -6,6 +6,7 @@
 #include "mpi.h" 
 #include "stdio.h"
 #include "mpitest.h"
+#include "squelch.h"
 
 /* tests a series of Gets. Run on 2 processes. */
 
@@ -43,7 +44,7 @@ int main(int argc, char *argv[])
             MPI_Win_fence(0, win);
             for (i=0; i<SIZE; i++)
                 if (A[i] != 1000 + i) {
-                    printf("Rank 0: A[%d] is %d, should be %d\n", i, A[i], 1000+i);
+                    SQUELCH( printf("Rank 0: A[%d] is %d, should be %d\n", i, A[i], 1000+i); );
                     errs++;
                 }
         }
@@ -59,7 +60,7 @@ int main(int argc, char *argv[])
             MPI_Win_fence(0, win);
             for (i=0; i<SIZE; i++)
                 if (B[i] != 500 + i) {
-                    printf("Rank 1: B[%d] is %d, should be %d\n", i, B[i], 500+i);
+                    SQUELCH( printf("Rank 1: B[%d] is %d, should be %d\n", i, B[i], 500+i); );
                     errs++;
                 }
         }

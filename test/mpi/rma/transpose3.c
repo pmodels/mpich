@@ -6,6 +6,7 @@
 #include "mpi.h" 
 #include "stdio.h"
 #include "mpitest.h"
+#include "squelch.h"
 
 /* transposes a matrix using post/start/complete/wait and derived
    datatypes. Uses  vector and hvector (Example 3.32 from MPI 1.1
@@ -82,8 +83,8 @@ int main(int argc, char *argv[])
                     {
                         if (errs < 50)
                         {
-                            printf("Error: A[%d][%d]=%d should be %d\n", j, i,
-                                   A[j][i], i*NCOLS + j);
+                            SQUELCH( printf("Error: A[%d][%d]=%d should be %d\n", j, i,
+                                            A[j][i], i*NCOLS + j); );
                         }
                         errs++;
                     }

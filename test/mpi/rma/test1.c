@@ -6,6 +6,7 @@
 #include "mpi.h" 
 #include "stdio.h"
 #include "mpitest.h"
+#include "squelch.h"
 
 /* tests a series of puts, gets, and accumulate on 2 processes using fence */
 
@@ -60,14 +61,14 @@ int main(int argc, char *argv[])
         if (rank == 1) {
             for (i=0; i<SIZE-1; i++) {
                 if (A[i] != B[i]) {
-                    printf("Put/Get Error: A[i]=%d, B[i]=%d\n", A[i], B[i]);
+                    SQUELCH( printf("Put/Get Error: A[i]=%d, B[i]=%d\n", A[i], B[i]); );
                     errs++;
  	            }
             }
         }
         else {
             if (B[SIZE-1] != SIZE - 1 - 3*(SIZE-1)) {
-                printf("Accumulate Error: B[SIZE-1] is %d, should be %d\n", B[SIZE-1], SIZE - 1 - 3*(SIZE-1));
+                SQUELCH( printf("Accumulate Error: B[SIZE-1] is %d, should be %d\n", B[SIZE-1], SIZE - 1 - 3*(SIZE-1)); );
                 errs++;
             }
  	   }
