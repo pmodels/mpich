@@ -75,7 +75,8 @@ int MPIDO_Allreduce(const void *sendbuf,
   {
     rc = MPI_SUCCESS;
     pdt = PAMI_TYPE_DOUBLE;
-    if(likely(selected_type == MPID_COLL_OPTIMIZED))
+    if(likely(selected_type == MPID_COLL_OPTIMIZED) &&
+       (mpid->query_cached_allreduce != MPID_COLL_USE_MPICH))
     {
       /* double protocol works on all message sizes */
       my_allred = mpid->cached_allreduce;
