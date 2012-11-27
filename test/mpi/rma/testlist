@@ -91,3 +91,4 @@ reqops 4 mpiversion=3.0
 req_example 4 mpiversion=3.0
 win_info 4 mpiversion=3.0
 linked_list_lockall 4 mpiversion=3.0
+pscw_ordering 4 mpiversion=3.0

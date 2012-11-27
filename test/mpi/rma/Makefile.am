@@ -105,7 +105,8 @@ noinst_PROGRAMS =          \
     flush                  \
     reqops                 \
     req_example            \
-    win_info
+    win_info               \
+    pscw_ordering
 
 strided_acc_indexed_LDADD       = $(LDADD) -lm
 strided_acc_onelock_LDADD       = $(LDADD) -lm
