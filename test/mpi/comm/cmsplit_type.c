@@ -24,15 +24,35 @@ int main(int argc, char *argv[])
         verbose = 1;
 
     MPI_Comm_rank( MPI_COMM_WORLD, &wrank );
+
+    /* Check to see if MPI_COMM_TYPE_SHARED works correctly */
     MPI_Comm_split_type(MPI_COMM_WORLD, MPI_COMM_TYPE_SHARED, 0, MPI_INFO_NULL, &comm);
+    if (comm == MPI_COMM_NULL)
+        printf("Expected a non-null communicator, but got MPI_COMM_NULL\n");
+    else {
+        MPI_Comm_rank(comm, &rank);
+        MPI_Comm_size(comm, &size);
+        if (rank == 0 && verbose)
+            printf("Created subcommunicator of size %d\n", size);
+        MPI_Comm_free(&comm);
+    }
 
-    MPI_Comm_rank(comm, &rank);
-    MPI_Comm_size(comm, &size);
-
-    if (rank == 0 && verbose)
-        printf("Created subcommunicator of size %d\n", size);
-
-    MPI_Comm_free(&comm);
+    /* Check to see if MPI_UNDEFINED is respected */
+    MPI_Comm_split_type(MPI_COMM_WORLD, (wrank % 2 == 0) ? MPI_COMM_TYPE_SHARED : MPI_UNDEFINED,
+                        0, MPI_INFO_NULL, &comm);
+    if ((wrank % 2) && (comm != MPI_COMM_NULL))
+        printf("Expected MPI_COMM_NULL, but did not get one\n");
+    if (wrank % 2 == 0) {
+        if (comm == MPI_COMM_NULL)
+            printf("Expected a non-null communicator, but got MPI_COMM_NULL\n");
+        else {
+            MPI_Comm_rank(comm, &rank);
+            MPI_Comm_size(comm, &size);
+            if (rank == 0 && verbose)
+                printf("Created subcommunicator of size %d\n", size);
+            MPI_Comm_free(&comm);
+        }
+    }
 
     /* Use wrank because Comm_split_type may return more than one communicator
        across the job, and if so, each will have a rank 0 entry.  Test 
