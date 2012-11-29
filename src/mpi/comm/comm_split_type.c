@@ -91,7 +91,7 @@ Notes:
 .seealso: MPI_Comm_free
 @*/
 int MPI_Comm_split_type(MPI_Comm comm, int split_type, int key, MPI_Info info,
-                         MPI_Comm * newcomm)
+                        MPI_Comm * newcomm)
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_Comm *comm_ptr = NULL, *newcomm_ptr;
