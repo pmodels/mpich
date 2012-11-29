@@ -24,11 +24,7 @@ int main(int argc, char *argv[])
         verbose = 1;
 
     MPI_Comm_rank( MPI_COMM_WORLD, &wrank );
-#if !defined(USE_STRICT_MPI) && defined(MPICH)
     MPI_Comm_split_type(MPI_COMM_WORLD, MPI_COMM_TYPE_SHARED, 0, MPI_INFO_NULL, &comm);
-#else
-    MPI_Comm_split(MPI_COMM_WORLD, 0, 0, &comm);
-#endif /* USE_STRICT_MPI */
 
     MPI_Comm_rank(comm, &rank);
     MPI_Comm_size(comm, &size);
