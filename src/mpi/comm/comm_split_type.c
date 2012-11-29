@@ -34,11 +34,16 @@ int MPIR_Comm_split_type_impl(MPID_Comm * comm_ptr, int split_type, int key,
 {
     int mpi_errno = MPI_SUCCESS;
 
-    MPIU_Assert(split_type == MPI_COMM_TYPE_SHARED);
+    /* Only MPI_COMM_TYPE_SHARED and MPI_UNDEFINED are supported */
+    MPIU_Assert(split_type == MPI_COMM_TYPE_SHARED || split_type == MPI_UNDEFINED);
 
     if (MPID_Comm_fns == NULL || MPID_Comm_fns->split_type == NULL) {
-        /* Default implementation is to just return MPI_COMM_SELF */
-        mpi_errno = MPIR_Comm_split_impl(comm_ptr, comm_ptr->rank, key, newcomm_ptr);
+        int color = (split_type == MPI_COMM_TYPE_SHARED) ? comm_ptr->rank : MPI_UNDEFINED;
+
+        /* The default implementation is to either pass MPI_UNDEFINED
+         * or the local rank as the color (in which case a dup of
+         * MPI_COMM_SELF is returned) */
+        mpi_errno = MPIR_Comm_split_impl(comm_ptr, color, key, newcomm_ptr);
     }
     else {
         mpi_errno =

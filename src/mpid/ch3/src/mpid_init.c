@@ -55,7 +55,7 @@ static int split_type(MPID_Comm * comm_ptr, int stype, int key,
     mpi_errno = MPID_Get_node_id(comm_ptr, comm_ptr->rank, &id);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
-    nid = id;
+    nid = (stype == MPI_COMM_TYPE_SHARED) ? id : MPI_UNDEFINED;
     mpi_errno = MPIR_Comm_split_impl(comm_ptr, nid, key, newcomm_ptr);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
