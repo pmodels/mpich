@@ -35,7 +35,7 @@ MPIDI_SendDoneCB(pami_context_t   context,
 {
 #ifdef MPIDI_TRACE
   MPID_Request * req = (MPID_Request *) clientdata;
-  MPIDI_Out_cntr[(req->mpid.partner_id)].S[(req->mpid.idx)].sendComp=1;
+  MPIDI_Trace_buf[(req->mpid.partner_id)].S[(req->mpid.idx)].sendComp=1;
 #endif
   MPIDI_SendDoneCB_inline(context,
                           clientdata,
@@ -198,8 +198,9 @@ void MPIDI_Recvq_process_out_of_order_msgs(pami_task_t src, pami_context_t conte
           }
 
 #ifdef MPIDI_TRACE
-       MPIDI_In_cntr[src].R[(rreq->mpid.idx)].matchedInOOL=1;
-       MPIDI_In_cntr[src].R[(rreq->mpid.idx)].rlen=dt_size;
+       rreq->mpid.idx = ooreq->mpid.idx;
+       MPIDI_Trace_buf[src].R[(rreq->mpid.idx)].matchedInOOL=1;
+       MPIDI_Trace_buf[src].R[(rreq->mpid.idx)].rlen=dt_size;
 #endif
         ooreq->comm = rreq->comm;
         MPIR_Comm_add_ref(ooreq->comm);

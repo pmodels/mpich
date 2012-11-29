@@ -102,6 +102,7 @@ MPIDI_Process_t  MPIDI_Process = {
   .disable_internal_eager_scale = MPIDI_DISABLE_INTERNAL_EAGER_SCALE,
 #if TOKEN_FLOW_CONTROL
   .mp_buf_mem          = BUFFER_MEM_DEFAULT,
+  .mp_buf_mem_max      = BUFFER_MEM_DEFAULT,
   .is_token_flow_control_on = 0,
 #endif
 #if (MPIDI_STATISTICS || MPIDI_PRINTENV)
@@ -120,6 +121,7 @@ MPIDI_Process_t  MPIDI_Process = {
   },
 
   .mpir_nbc              = 0,
+  .numTasks              = 0,
 };
 
 
@@ -364,9 +366,7 @@ MPIDI_PAMI_context_init(int* threading, int *size)
 {
   int requested_thread_level;
   requested_thread_level = *threading;
-#ifdef OUT_OF_ORDER_HANDLING
-  extern int numTasks;
-#endif
+  int  numTasks;
 
 #if (MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_PER_OBJECT)
   /*
@@ -455,8 +455,8 @@ MPIDI_PAMI_context_init(int* threading, int *size)
 
   TRACE_ERR ("Thread-level=%d, requested=%d\n", *threading, requested_thread_level);
 
+  MPIDI_Process.numTasks= numTasks = PAMIX_Client_query(MPIDI_Client, PAMI_CLIENT_NUM_TASKS).value.intval;
 #ifdef OUT_OF_ORDER_HANDLING
-  numTasks  = PAMIX_Client_query(MPIDI_Client, PAMI_CLIENT_NUM_TASKS).value.intval;
   MPIDI_In_cntr = MPIU_Calloc0(numTasks, MPIDI_In_cntr_t);
   if(MPIDI_In_cntr == NULL)
     MPID_abort();
@@ -467,21 +467,6 @@ MPIDI_PAMI_context_init(int* threading, int *size)
   memset((void *) MPIDI_Out_cntr,0, sizeof(MPIDI_Out_cntr_t));
 #endif
 
-if (TOKEN_FLOW_CONTROL_ON)
-  {
-    #if TOKEN_FLOW_CONTROL
-    int i;
-    MPIDI_mm_init(numTasks,&MPIDI_Process.pt2pt.limits.application.eager.remote,&MPIDI_Process.mp_buf_mem);
-    MPIDI_Token_cntr = MPIU_Calloc0(numTasks, MPIDI_Token_cntr_t);
-    memset((void *) MPIDI_Token_cntr,0, (sizeof(MPIDI_Token_cntr_t) * numTasks));
-    for (i=0; i < numTasks; i++)
-      {
-        MPIDI_Token_cntr[i].tokens=MPIDI_tfctrl_enabled;
-      }
-    #else
-    MPID_assert_always(0);
-    #endif
-}
 
 #ifdef MPIDI_TRACE
       int i; 
@@ -621,6 +606,22 @@ MPIDI_PAMI_dispath_init()
 
   if (MPIDI_Process.pt2pt.limits.internal.immediate.local > send_immediate_max_bytes)
     MPIDI_Process.pt2pt.limits.internal.immediate.local = send_immediate_max_bytes;
+
+  if (TOKEN_FLOW_CONTROL_ON)
+     {
+       #if TOKEN_FLOW_CONTROL
+        int i;
+        MPIDI_mm_init(MPIDI_Process.numTasks,&MPIDI_Process.pt2pt.limits.application.eager.remote,&MPIDI_Process.mp_buf_mem);
+        MPIDI_Token_cntr = MPIU_Calloc0(MPIDI_Process.numTasks, MPIDI_Token_cntr_t);
+        memset((void *) MPIDI_Token_cntr,0, (sizeof(MPIDI_Token_cntr_t) * MPIDI_Process.numTasks));
+        for (i=0; i < MPIDI_Process.numTasks; i++)
+        {
+          MPIDI_Token_cntr[i].tokens=MPIDI_tfctrl_enabled;
+        }
+        #else
+         MPID_assert_always(0);
+        #endif
+     }
 }
 
 
@@ -670,8 +671,11 @@ MPIDI_PAMI_init(int* rank, int* size, int* threading)
              "  rma_pending           : %u\n"
              "  shmem_pt2pt           : %u\n"
              "  disable_internal_eager_scale : %u\n"
+#if TOKEN_FLOW_CONTROL
              "  mp_buf_mem               : %u\n"
+             "  mp_buf_mem_max           : %u\n"
              "  is_token_flow_control_on : %u\n"
+#endif
 #if (MPIDI_STATISTICS || MPIDI_PRINTENV)
              "  mp_infolevel : %u\n"
              "  mp_statistics: %u\n"
@@ -681,7 +685,8 @@ MPIDI_PAMI_init(int* rank, int* size, int* threading)
              "  optimized.collectives : %u\n"
              "  optimized.select_colls: %u\n"
              "  optimized.subcomms    : %u\n"
-             "  mpir_nbc              : %u\n",
+             "  mpir_nbc              : %u\n" 
+             "  numTasks              : %u\n",
              MPIDI_Process.verbose,
              MPIDI_Process.statistics,
              MPIDI_Process.avail_contexts,
@@ -700,10 +705,8 @@ MPIDI_PAMI_init(int* rank, int* size, int* threading)
              MPIDI_Process.disable_internal_eager_scale,
 #if TOKEN_FLOW_CONTROL             
              MPIDI_Process.mp_buf_mem,
+             MPIDI_Process.mp_buf_mem_max,
              MPIDI_Process.is_token_flow_control_on,
-#else
-             0,
-             0,
 #endif
 #if (MPIDI_STATISTICS || MPIDI_PRINTENV)
              MPIDI_Process.mp_infolevel,
@@ -714,7 +717,8 @@ MPIDI_PAMI_init(int* rank, int* size, int* threading)
              MPIDI_Process.optimized.collectives,
              MPIDI_Process.optimized.select_colls,
              MPIDI_Process.optimized.subcomms,
-             MPIDI_Process.mpir_nbc);
+             MPIDI_Process.mpir_nbc, 
+             MPIDI_Process.numTasks);
       switch (*threading)
         {
           case MPI_THREAD_MULTIPLE:

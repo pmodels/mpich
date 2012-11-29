@@ -82,6 +82,8 @@ typedef struct {
         int timeout;
         int interrupts;
         uint  polling_interval;
+        unsigned long buffer_mem;
+        long long buffer_mem_max;
         int eager_limit;
         int use_token_flow_control;
         char wait_mode[8];
@@ -133,7 +135,7 @@ typedef struct {
     long lateArrivals;       /* Count of msgs received for which a recv
                                         was posted                      */
     long unorderedMsgs;      /* Total number of out of order msgs  */
-    long pamid_reserve_11;
+    long buffer_mem_hwmark;
     long pamid_reserve_10;
     long pamid_reserve_9;
     long pamid_reserve_8;
@@ -151,7 +153,6 @@ extern MPIX_stats_t *mpid_statp;
 extern int   prtStat;
 extern int   prtEnv;
 extern void set_mpich_env(int *,int*);
-extern int numTasks;
 extern void MPIDI_open_pe_extension();
 extern void MPIDI_close_pe_extension();
 extern MPIDI_Statistics_write(FILE *);

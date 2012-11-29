@@ -331,7 +331,7 @@
 #if (MPIDI_STATISTICS || MPIDI_PRINTENV)
 int prtStat=0;
 int prtEnv=0;
-int numTasks=0;
+
 MPIX_stats_t *mpid_statp=NULL;
 extern MPIDI_printenv_t  *mpich_env;
 #endif
@@ -339,7 +339,7 @@ extern MPIDI_printenv_t  *mpich_env;
 #define ENV_Deprecated(a, b, c, d, e) ENV_Deprecated__(a, b, c, d, e)
 
 #ifdef TOKEN_FLOW_CONTORL
- extern void MPIDI_get_buf_mem(unsigned long *);
+ extern int MPIDI_get_buf_mem(unsigned long *);
  extern int MPIDI_atoi(char* , int* );
 #endif
  extern int application_set_eager_limit;
@@ -708,7 +708,9 @@ MPIDI_Env_setup(int rank, int requested)
   }
   /* Determine buffer memory for early arrivals */
   {
-    MPIDI_get_buf_mem(&MPIDI_Process.mp_buf_mem);
+    int rc;
+    rc=MPIDI_get_buf_mem(&MPIDI_Process.mp_buf_mem,&MPIDI_Process.mp_buf_mem_max);
+    MPID_assert_always(rc == MPI_SUCCESS);
   }
 #endif
 
@@ -1026,11 +1028,12 @@ MPIDI_Env_setup(int rank, int requested)
     }
 }
 
-
+#if TOKEN_FLOW_CONTROL
 int  MPIDI_set_eager_limit(unsigned int *eager_limit)
 {
      char *cp;
      int  val;
+     int  numTasks=MPIDI_Process.numTasks;
      cp = getenv("MP_EAGER_LIMIT");
      if (cp)
        {
@@ -1038,21 +1041,54 @@ int  MPIDI_set_eager_limit(unsigned int *eager_limit)
          if ( MPIDI_atoi(cp, &val) == 0 )
            *eager_limit=val;
        }
+     else
+       {
+        /*  set default
+        *  Number of tasks      MP_EAGER_LIMIT
+        * -----------------     --------------
+        *      1  -    256         32768
+        *    257  -    512         16384
+        *    513  -   1024          8192
+        *   1025  -   2048          4096
+        *   2049  -   4096          2048
+        *   4097  &  above          1024
+        */
+       if      (numTasks <  257) *eager_limit = 32768;
+       else if (numTasks <  513) *eager_limit = 16384;
+       else if (numTasks < 1025) *eager_limit =  8192;
+       else if (numTasks < 2049) *eager_limit =  4096;
+       else if (numTasks < 4097) *eager_limit =  2048;
+       else                      *eager_limit =  1024;
+
+       }
      return 0;
 }
 
-#if TOKEN_FLOW_CONTROL
-   /*****************************************************************/
-   /* Check for MP_BUFFER_MEM, if the value is not set by the user, */
-   /* then set the value with the default of 64 MB.                 */
-   /*****************************************************************/
-int  MPIDI_get_buf_mem(unsigned long *buf_mem) {
+   /******************************************************************/
+   /*                                                                */
+   /* Check for MP_BUFFER_MEM, if the value is not set by the user,  */
+   /* then set the value with the default of 64 MB.                  */
+   /* MP_BUFFER_MEM supports the following format:                   */
+   /* MP_BUFFER_MEM=xxM                                              */
+   /* MP_BUFFER_MEM=xxM,yyyM                                         */
+   /* MP_BUFFER_MEM=xxM,yyyG                                         */
+   /* MP_BUFFER_MEM=,yyyM                                            */
+   /* xx:  pre allocated size  the max. allowable value is 256 MB    */
+   /*      the space is allocated during the initialization.         */
+   /*      the default is 64 MB                                      */
+   /* yyy: maximum size - the maximum size to which the early arrival*/
+   /*      buffer can temporarily grow when the preallocated portion */
+   /*      of the EA buffer has been filled.                         */
+   /*                                                                */
+   /******************************************************************/
+int  MPIDI_get_buf_mem(unsigned long *buf_mem,unsigned long *buf_mem_max)
+    {
      char *cp;
      int  i;
      int args_in_error=0;
      char pre_alloc_buf[25], buf_max[25];
      char *buf_max_cp;
-     int pre_alloc_val;
+     int pre_alloc_val=0;
      unsigned long buf_max_val;
      int  has_error = 0;
 
@@ -1060,8 +1096,38 @@ int  MPIDI_get_buf_mem(unsigned long *buf_mem) {
          pre_alloc_buf[24] = '\0';
          buf_max[24] = '\0';
          if ( (buf_max_cp = strchr(cp, ',')) ) {
-              printf("No max buffer mem support in MPICH2 \n"); fflush(stdout);
-         } else {
+           if ( *(++buf_max_cp)  == '\0' ) {
+              /* Error: missing buffer_mem_max */
+              has_error = 1;
+           }
+           else if ( cp[0] == ',' ) {
+              /* Pre_alloc value is default -- use default   */
+              pre_alloc_val = -1;
+              strncpy(buf_max, buf_max_cp, 24);
+              if ( MPIDI_atoll(buf_max, &buf_max_val) != 0 )
+                 has_error = 1;
+           }
+           else {
+              /* both values are present */
+              for (i=0; ; i++ ) {
+                 if ( (cp[i] != ',') && (i<24) )
+                    pre_alloc_buf[i] = cp[i];
+                 else {
+                    pre_alloc_buf[i] = '\0';
+                    break;
+                 }
+              }
+              strncpy(buf_max, buf_max_cp, 24);
+              if ( MPIDI_atoi(pre_alloc_buf, &pre_alloc_val) == 0 ) {
+                 if ( MPIDI_atoll(buf_max, &buf_max_val) != 0 )
+                    has_error = 1;
+              }
+              else
+                 has_error = 1;
+           }
+        }
+        else
+         {
             /* Old single value format  */
             if ( MPIDI_atoi(cp, &pre_alloc_val) == 0 )
                buf_max_val = (unsigned long)pre_alloc_val;
@@ -1069,17 +1135,22 @@ int  MPIDI_get_buf_mem(unsigned long *buf_mem) {
                has_error = 1;
          }
          if ( has_error == 0) {
-              *buf_mem     = (int) pre_alloc_val;
+             if ((int) pre_alloc_val != -1)  /* MP_BUFFER_MEM=,128MB  */
+                 *buf_mem     = (int) pre_alloc_val;
              if (buf_max_val > ONE_SHARED_SEGMENT)
                  *buf_mem = ONE_SHARED_SEGMENT;
+             if (buf_max_val  > *buf_mem_max)
+                  *buf_mem_max = buf_max_val;
          } else {
             args_in_error += 1;
-            printf("ERROR in MP_BUFFER_MEM %s(%d)\n",__FILE__,__LINE__); fflush(stdout);
+            TRACE_ERR("ERROR in MP_BUFFER_MEM %s(%d)\n",__FILE__,__LINE__);
+            return 1;
          }
      } else {
          /* MP_BUFFER_MEM is not specified by the user*/
          *buf_mem     = BUFFER_MEM_DEFAULT;
+         TRACE_ERR("buffer_mem=%d  buffer_mem_max=%d\n",*buf_mem,*buf_mem_max);
+         return 0;
      }
-  return 0;
 }
 #endif

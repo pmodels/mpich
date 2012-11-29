@@ -127,8 +127,8 @@ static size_t flex_size;                  /* size for flex slot           */
 static char  *buddy_heap_ptr;             /* ptr points to beg. of buddy  */
 static char  *end_heap_ptr;               /* ptr points to end of buddy   */
 static char  *heap;                       /* begin. address of flex stack */
-static uint mem_inuse;                    /* memory in use                */
-static uint mem_hwmark;                   /* highest memory usage         */
+static long mem_inuse;                    /* memory in use                */
+long mem_hwmark;                          /* highest memory usage         */
 
 
 static int  sizetable[TAB_SIZE + 1];      /* from bucket to size            */
@@ -158,7 +158,10 @@ void MPIDI_calc_tokens(int nTasks,uint *eager_limit_in, unsigned long *buf_mem_i
  int  i;
 
        /* Round up passed eager limit to power of 2 */
-    buf_mem_max= *buf_mem_in;
+    if (MPIDI_Process.mp_buf_mem_max > *buf_mem_in) 
+        buf_mem_max = MPIDI_Process.mp_buf_mem_max;
+    else 
+        buf_mem_max= *buf_mem_in;
 
     if (*eager_limit_in != 0) {
        for (val=1 ; val < *eager_limit_in ; val *= 2);
@@ -196,7 +199,7 @@ void MPIDI_calc_tokens(int nTasks,uint *eager_limit_in, unsigned long *buf_mem_i
                  val = MIN_BUF_BKT_SIZE;
                  buf_mem_max = new_buf_mem_max;
                  if ( application_set_buf_mem ) {
-                     printf("informational messge \n"); fflush(stdout);
+                     TRACE_ERR("informational messge \n");
                  }
              }
              else {
@@ -211,8 +214,7 @@ void MPIDI_calc_tokens(int nTasks,uint *eager_limit_in, unsigned long *buf_mem_i
        if ( *eager_limit_in != val ) {
           if ( application_set_eager_limit && (*eager_limit_in > val)) {
              /* Only give warning on reduce. */
-             printf("warning message if eager limit is reduced \n"); fflush(stdout);
-             fflush(stderr);
+             printf("ATTENTION: eager limit is reduced from %d to %d \n",*eager_limit_in,val); fflush(stdout);
           }
           *eager_limit_in = val;
 
@@ -223,7 +225,7 @@ void MPIDI_calc_tokens(int nTasks,uint *eager_limit_in, unsigned long *buf_mem_i
           sprintf(EagerLimit, "MP_EAGER_LIMIT=%d",val);
           rc = putenv(EagerLimit);
           if (rc !=0) {
-              printf("PUTENV with Eager Limit failed \n"); fflush(stdout);
+              TRACE_ERR("PUTENV with Eager Limit failed \n"); 
           }
        }
       }
@@ -235,6 +237,12 @@ void MPIDI_calc_tokens(int nTasks,uint *eager_limit_in, unsigned long *buf_mem_i
     /* user may want to set MP_EAGER_LIMIT to 0 or less than 256 */
     if (*eager_limit_in < MPIDI_Process.pt2pt.limits.application.immediate.remote)
         MPIDI_Process.pt2pt.limits.application.immediate.remote= *eager_limit_in;
+    if (*eager_limit_in < MPIDI_Process.pt2pt.limits.application.eager.remote)
+        MPIDI_Process.pt2pt.limits.application.eager.remote= *eager_limit_in;
+#   ifdef DUMP_MM
+     printf("MPIDI_tfctrl_enabled=%d eager_limit=%d  buf_mem=%d  buf_mem_max=%d\n",
+             MPIDI_tfctrl_enabled,*eager_limit_in,*buf_mem_in,buf_mem_max); fflush(stdout);
+#   endif 
 
 }
 
@@ -371,9 +379,9 @@ static void MPIDI_init_buddy(unsigned long buf_mem)
     size = (size == 0) ? 1 : (size > MAX_BUDDIES) ? MAX_BUDDIES : size;
     MPIDI_alloc_buddies(size,&space);
     if ( space == NO ) {
-        printf("ERROR  line=%d\n",__LINE__); fflush(stdout);
+        TRACE_ERR("out of memory %s(%d)\n",__FILE__,__LINE__); 
+        MPID_abort();
     }
-/*    printf("MPI-MM flex=%ld  #buddy=%ld\n",flex_size,size); */
 }
 
 
@@ -601,29 +609,47 @@ static void MPIDI_buddy_free(void *ptr)
    bud->free =1;
    MPIDI_add_head(bud,bud->bucket);
 }
+#  ifdef TRACE
+   int nAllocs =0;   /* number of times MPIDI_mm_alloc() is called */
+   int nFree =0;   /* number of times MPIDI_mm_free() is called */
+   int nM=0;       /* number of times MPIU_Malloc() is called   */
+   int nF=0;       /* number of times MPIU_Free() is called     */
+#  endif 
 void *MPIDI_mm_alloc(size_t size)
 {
    void *pt;
    int bucket,tmp;
-   int  nTimes=0;
 
    MPID_assert(size <= max_size);
    tmp = NORMSIZE(size);
    tmp =bucket =sizetrans[tmp];
    if(bucket >flex_count || (pt =MPIDI_flex_alloc(tmp)) ==NULL) {
       pt =MPIDI_buddy_alloc(bucket);
-      nTimes++;
+      if (MPIDI_Process.mp_statistics) {
+          mem_inuse = mem_inuse + sizetable[tmp];
+          if (mem_inuse > mem_hwmark) {
+              mem_hwmark = mem_inuse;
+          }
+       }
    }
    if (pt == NULL) {
+       MPIU_THREAD_CS_ENTER(MSGQUEUE,0);
        pt=MPIU_Malloc(size);
-       if (MPIDI_Process.statistics) {
+       MPIU_THREAD_CS_EXIT(MSGQUEUE,0);
+       if (MPIDI_Process.mp_statistics) {
            mem_inuse = mem_inuse + sizetable[tmp];
-          if (mem_inuse > mem_hwmark)
+          if (mem_inuse > mem_hwmark) {
              mem_hwmark = mem_inuse;
+          }
        }
+#      ifdef TRACE
+       nM++;
        if (pt == NULL) {
            printf("ERROR  line=%d\n",__LINE__); fflush(stdout);
+       } else {
+         printf("malloc nM=%d size=%d pt=0x%p \n",nM,size,pt); fflush(stdout);
        }
+#      endif
    }
 #  ifdef TRACE
    printf("MPIDI_mm_alloc(%4d): %p\n",size,pt);
@@ -637,8 +663,8 @@ void MPIDI_mm_free(void *ptr, size_t size)
    int tmp,bucket;
 
    if (size > MAX_SIZE) {
-      printf("ERROR  line=%d\n",__LINE__); fflush(stdout);
-      exit(1);
+      TRACE_ERR("Out of memory in %s(%d)\n",__FILE__,__LINE__);
+      MPID_abort(); 
    }
    if ((ptr >= (void *) heap) && (ptr < (void *)end_heap_ptr)) {
      if(*((char *)ptr -OVERHEAD) ==FLEX){
@@ -646,8 +672,34 @@ void MPIDI_mm_free(void *ptr, size_t size)
      }
      else
         MPIDI_buddy_free(ptr);
+     if (MPIDI_Process.mp_statistics) {
+         tmp = NORMSIZE(size);
+         bucket =sizetrans[tmp];
+         mem_inuse = mem_inuse - sizetable[bucket];
+         if (mem_inuse > mem_hwmark) {
+             mem_hwmark = mem_inuse;
+         }
+     }
    } else {
-       printf("ERROR free %s(%d)\n",__FILE__,__LINE__); fflush(stdout);
+     if (!ptr) {
+        TRACE_ERR("NULL ptr passed MPIDI_mm_free() in %s(%d)\n",__FILE__,__LINE__);
+        MPID_abort();
+     }
+     if (MPIDI_Process.mp_statistics) {
+        tmp = NORMSIZE(size);
+        bucket =sizetrans[tmp];
+         mem_inuse = mem_inuse - sizetable[bucket];
+         if (mem_inuse > mem_hwmark) {
+             mem_hwmark = mem_inuse;
+         }
+     }
+     MPIU_THREAD_CS_ENTER(MSGQUEUE,0);
+#    ifdef TRACE
+     nF++;
+     printf("free nF=%d size=%d ptr=0x%p \n",nF,sizetable[bucket],ptr); fflush(stdout);
+#    endif
+     MPIU_Free(ptr);
+     MPIU_THREAD_CS_EXIT(MSGQUEUE,0);
    }
 #  ifdef TRACE
    nFrees++;

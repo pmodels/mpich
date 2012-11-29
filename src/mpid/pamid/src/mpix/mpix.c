@@ -243,9 +243,11 @@ MPIDI_Statistics_write(FILE *statfile) {
     long long Tot_pkt_recv_cnt=0;
     long long Tot_data_sent=0;
     long long Tot_data_recv=0;
+    extern long mem_hwmark;
 
     memset(&time_buf,0, 201);
     sprintf(time_buf, __DATE__" "__TIME__);
+    mpid_statp->buffer_mem_hwmark =  mem_hwmark;
     mpid_statp->sendWaitsComplete =  mpid_statp->sends - mpid_statp->sendsComplete;
     fprintf(statfile,"Start of task (pid=%d) statistics at %s \n", getpid(), time_buf);
     fprintf(statfile, "MPICH: sends = %ld\n", mpid_statp->sends);
@@ -257,6 +259,7 @@ MPIDI_Statistics_write(FILE *statfile) {
     fprintf(statfile, "MPICH: earlyArrivalsMatched = %ld\n", mpid_statp->earlyArrivalsMatched);
     fprintf(statfile, "MPICH: lateArrivals = %ld\n", mpid_statp->lateArrivals);
     fprintf(statfile, "MPICH: unorderedMsgs = %ld\n", mpid_statp->unorderedMsgs);
+    fprintf(statfile, "MPICH: buffer_mem_hwmark = %ld\n", mpid_statp->buffer_mem_hwmark);
     fflush(statfile);
     memset(&query_stat,0, sizeof(query_stat));
     query_stat.name =  (pami_attribute_name_t)PAMI_CONTEXT_STATISTICS ;

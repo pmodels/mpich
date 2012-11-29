@@ -66,6 +66,8 @@ void MPIDI_Set_mpich_env(int rank, int size) {
                     mpich_env->retransmit_interval); /* microseconds */
             rc = putenv(polling_buf);
      }
+     mpich_env->buffer_mem=MPIDI_Process.mp_buf_mem;
+     mpich_env->buffer_mem_max=MPIDI_Process.mp_buf_mem_max;
 }
 
 
@@ -598,6 +600,8 @@ int MPIDI_Print_mpenv(int rank,int size)
         sender.eager_limit = mpich_env->eager_limit;
         sender.use_token_flow_control=MPIDI_Process.is_token_flow_control_on;
         sender.retransmit_interval = mpich_env->retransmit_interval;
+        sender.buffer_mem = mpich_env->buffer_mem;
+        sender.buffer_mem_max = mpich_env->buffer_mem_max;
 
         /* Get shared memory  */
         sender.shmem_pt2pt = MPIDI_Process.shmem_pt2pt;
@@ -685,7 +689,7 @@ int MPIDI_Print_mpenv(int rank,int size)
         #ifdef _DEBUG
         printf("task_count = %d\n", task_count);
         printf("calling _mpi_gather(%p,%d,%d,%p,%d,%d,%d,%d,%p,%d)\n",
-            &sender,sizeof(_printenv_t),MPI_BYTE,gatherer,sizeof(_printenv_t),MPI_BYTE,
+            &sender,sizeof(MPIDI_printenv_t),MPI_BYTE,gatherer,sizeof(MPIDI_printenv_t),MPI_BYTE,
             0, MPI_COMM_WORLD,NULL,0);
         fflush(stdout);
         #endif
@@ -738,6 +742,8 @@ int MPIDI_Print_mpenv(int rank,int size)
                 MATCHI(timeout,"Connection Timeout (MP_TIMEOUT/sec):");
                 MATCHB(interrupts,"Adapter Interrupts Enabled (MP_CSS_INTERRUPT):");
                 MATCHI(polling_interval,"Polling Interval (MP_POLLING_INTERVAL/usec):");
+                MATCHI(buffer_mem,"Buffer Memory (MP_BUFFER_MEM/Bytes):");
+                MATCHLL(buffer_mem_max,"Max. Buffer Memory (MP_BUFFER_MEM_MAX/Bytes):");
                 MATCHI(eager_limit,"Message Eager Limit (MP_EAGER_LIMIT/Bytes):");
                 MATCHI(use_token_flow_control,"Use token flow control:");
                 MATCHC(wait_mode,"Message Wait Mode(MP_WAIT_MODE):",8);
@@ -1148,3 +1154,105 @@ int MPIDI_atoi(char* str_in, unsigned int* val)
 
    return retval;
 }
+
+ /***************************************************************************
+  Name:           MPIDI_checkll()
+  
+  Function:       Determine whether a given number and units
+                  value are valid. If they are valid, the
+                  multiplication of the number and the units
+                  will be returned as an unsigned int. If the
+                  number and units are invalid, a 1 will be returned.
+
+  Description:    if units is G
+                    multiplier is 1G
+                  else if units is M
+                    multiplier is 1M
+                  else if units is K
+                    multiplier is 1K
+                  else
+                    return error
+
+                    multiply value by multiplier
+                    return result
+  Parameters:     A0 = MPIDI_checkll(A1, A2, A3)
+
+                  A1    given value                   int
+                  A2    given units                   char *
+                  A3    result                        long long *
+
+                  A0    Return Code                   int
+
+  Return Codes:   0 OK
+                  1 bad value
+ ***************************************************************************/
+
+int MPIDI_checkll(int myval, char myunits, long long *mygoodval)
+{
+  int multiplier;                   /* units multiplier for entered value */
+
+  if (myunits == 'G') {             /* if units is G */
+     multiplier = ONEG;
+  }
+  else if (myunits == 'M') {        /* if units is M */
+     multiplier = ONEM;
+  }
+  else if (myunits == 'K') {        /* if units is K */
+     multiplier = ONEK;
+  }
+  else
+     return 1;                      /* Unkonwn unit */
+
+  *mygoodval = (long long) myval * multiplier;  /* do multiplication */
+  return 0;                         /* good return */
+}
+
+
+int MPIDI_atoll(char* str_in, long long* val)
+{
+   char tempbuf[256];
+   char size_mult;                 /* multiplier for size strings */
+   int  i, tempval;
+   int  letter=0, retval=0;
+
+   /*****************************************/
+   /* Check for letter, if none, MPIDI_atoi */
+   /*****************************************/
+   for (i=0; i<strlen(str_in); i++) {
+      if (!isdigit(str_in[i])) {
+         letter = 1;
+         break;
+      }
+   }
+   if (!letter) {   /* only digits */
+      errno = 0;
+      *val = atoll(str_in);
+      if (errno) {
+         retval = errno;
+      }
+   }
+   else {
+      /***********************************/
+      /* Check for K or M.               */
+      /***********************************/
+      MPIDI_toupper(str_in);
+      retval= MPIDI_scan_str3(str_in, 'G', 'M', 'K', &size_mult, tempbuf);
+
+      if ( retval == 0) {
+         tempval = atoi(tempbuf);
+
+         /***********************************/
+         /* If 0 K or 0 M entered, set to 0 */
+         /* otherwise, do conversion.       */
+         /***********************************/
+         if (tempval != 0)
+            retval = MPIDI_checkll(tempval, size_mult, val);
+         else
+            *val = 0;
+      }
+   }
+
+   return retval;
+}
+
+

@@ -83,6 +83,7 @@ typedef struct
   unsigned disable_internal_eager_scale; /**< The number of tasks at which point eager will be disabled */
 #if TOKEN_FLOW_CONTROL
   unsigned long long mp_buf_mem;
+  unsigned long long mp_buf_mem_max;
   unsigned is_token_flow_control_on;
 #endif
 #if (MPIDI_STATISTICS || MPIDI_PRINTENV)
@@ -131,6 +132,7 @@ typedef struct
   } perobj;                  /**< This structure is only used in the 'perobj' mpich lock mode. */
 
   unsigned mpir_nbc;         /**< Enable MPIR_* non-blocking collectives implementations. */
+  int  numTasks;             /* total number of tasks on a job                            */
 #ifdef DYNAMIC_TASKING
   struct MPIDI_PG_t * my_pg; /**< Process group I belong to */
   int                 my_pg_rank; /**< Rank in process group */
