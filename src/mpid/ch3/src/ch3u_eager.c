@@ -5,6 +5,7 @@
  */
 
 #include "mpidimpl.h"
+#include "mpidi_recvq_statistics.h"
 
 /*
  * Send an eager message.  To optimize for the important, short contiguous
@@ -435,6 +436,7 @@ int MPIDI_CH3_PktHandler_EagerShortSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
                a buffer that we've allocated). */
 	    /* printf( "Allocating into tmp\n" ); fflush(stdout); */
 	    recv_data_sz = rreq->dev.recv_data_sz;
+            MPIR_T_ADD(MPIDI_CH3I_unexpected_recvq_buffer_size, recv_data_sz);
 	    rreq->dev.tmpbuf = MPIU_Malloc(recv_data_sz);
 	    if (!rreq->dev.tmpbuf) {
 		MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**nomem");
