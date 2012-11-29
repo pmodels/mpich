@@ -1540,6 +1540,11 @@ static HYD_status set_default_values(void)
     if (HYD_uii_mpx_exec_list == NULL && HYD_server_info.user_global.ckpoint_prefix == NULL)
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "no executable provided\n");
 
+    /* If hostname propagation is not set on the command-line, check
+     * for the environment variable */
+    if (hostname_propagation == -1)
+        MPL_env2bool("HYDRA_HOSTNAME_PROPAGATION", &hostname_propagation);
+
     /* If an interface is provided, set that */
     if (HYD_server_info.user_global.iface) {
         if (hostname_propagation == 1) {
