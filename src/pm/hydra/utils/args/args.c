@@ -402,7 +402,8 @@ HYD_status HYDU_send_strlist(int fd, char **strlist)
 
     /* Check how many arguments we have */
     list_len = HYDU_strlist_lastidx(strlist);
-    status = HYDU_sock_write(fd, &list_len, sizeof(int), &sent, &closed);
+    status =
+        HYDU_sock_write(fd, &list_len, sizeof(int), &sent, &closed, HYDU_SOCK_COMM_MSGWAIT);
     HYDU_ERR_POP(status, "unable to write data to proxy\n");
     HYDU_ASSERT(!closed, status);
 
@@ -410,11 +411,12 @@ HYD_status HYDU_send_strlist(int fd, char **strlist)
     for (i = 0; strlist[i]; i++) {
         len = strlen(strlist[i]) + 1;
 
-        status = HYDU_sock_write(fd, &len, sizeof(int), &sent, &closed);
+        status =
+            HYDU_sock_write(fd, &len, sizeof(int), &sent, &closed, HYDU_SOCK_COMM_MSGWAIT);
         HYDU_ERR_POP(status, "unable to write data to proxy\n");
         HYDU_ASSERT(!closed, status);
 
-        status = HYDU_sock_write(fd, strlist[i], len, &sent, &closed);
+        status = HYDU_sock_write(fd, strlist[i], len, &sent, &closed, HYDU_SOCK_COMM_MSGWAIT);
         HYDU_ERR_POP(status, "unable to write data to proxy\n");
         HYDU_ASSERT(!closed, status);
     }

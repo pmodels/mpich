@@ -59,12 +59,12 @@ static HYD_status stdoe_cb(int fd, HYD_event_t events, void *userp)
             int upstream_sock_closed;
 
             status = HYDU_sock_write(HYD_pmcd_pmip.upstream.control, &hdr, sizeof(hdr), &sent,
-                                     &upstream_sock_closed);
+                                     &upstream_sock_closed, HYDU_SOCK_COMM_MSGWAIT);
             HYDU_ERR_POP(status, "sock write error\n");
             HYDU_ASSERT(!upstream_sock_closed, status);
 
             status = HYDU_sock_write(HYD_pmcd_pmip.upstream.control, buf, recvd, &sent,
-                                     &upstream_sock_closed);
+                                     &upstream_sock_closed, HYDU_SOCK_COMM_MSGWAIT);
             HYDU_ERR_POP(status, "sock write error\n");
             HYDU_ASSERT(!upstream_sock_closed, status);
         }
@@ -281,7 +281,7 @@ static HYD_status pmi_cb(int fd, HYD_event_t events, void *userp)
                 hdr.cmd = PROCESS_TERMINATED;
                 hdr.pid = HYD_pmcd_pmip.downstream.pmi_rank[pid];
                 status = HYDU_sock_write(HYD_pmcd_pmip.upstream.control, &hdr, sizeof(hdr),
-                                         &sent, &closed);
+                                         &sent, &closed, HYDU_SOCK_COMM_MSGWAIT);
                 HYDU_ERR_POP(status, "unable to send PMI header upstream\n");
                 HYDU_ASSERT(!closed, status);
             }
@@ -340,12 +340,14 @@ static HYD_status pmi_cb(int fd, HYD_event_t events, void *userp)
         hdr.pid = fd;
         hdr.buflen = strlen(buf);
         status =
-            HYDU_sock_write(HYD_pmcd_pmip.upstream.control, &hdr, sizeof(hdr), &sent, &closed);
+            HYDU_sock_write(HYD_pmcd_pmip.upstream.control, &hdr, sizeof(hdr), &sent, &closed,
+                            HYDU_SOCK_COMM_MSGWAIT);
         HYDU_ERR_POP(status, "unable to send PMI header upstream\n");
         HYDU_ASSERT(!closed, status);
 
         status =
-            HYDU_sock_write(HYD_pmcd_pmip.upstream.control, buf, hdr.buflen, &sent, &closed);
+            HYDU_sock_write(HYD_pmcd_pmip.upstream.control, buf, hdr.buflen, &sent, &closed,
+                            HYDU_SOCK_COMM_MSGWAIT);
         HYDU_ERR_POP(status, "unable to send PMI command upstream\n");
         HYDU_ASSERT(!closed, status);
 
@@ -399,7 +401,7 @@ static HYD_status handle_pmi_response(int fd, struct HYD_pmcd_hdr hdr)
                   pmi_cmd);
     }
 
-    status = HYDU_sock_write(hdr.pid, buf, hdr.buflen, &sent, &closed);
+    status = HYDU_sock_write(hdr.pid, buf, hdr.buflen, &sent, &closed, HYDU_SOCK_COMM_MSGWAIT);
     HYDU_ERR_POP(status, "unable to forward PMI response to MPI process\n");
 
     if (HYD_pmcd_pmip.user_global.auto_cleanup) {
@@ -727,14 +729,15 @@ static HYD_status launch_procs(void)
     HYD_pmcd_init_header(&hdr);
     hdr.cmd = PID_LIST;
     status =
-        HYDU_sock_write(HYD_pmcd_pmip.upstream.control, &hdr, sizeof(hdr), &sent, &closed);
+        HYDU_sock_write(HYD_pmcd_pmip.upstream.control, &hdr, sizeof(hdr), &sent, &closed,
+                        HYDU_SOCK_COMM_MSGWAIT);
     HYDU_ERR_POP(status, "unable to send PID_LIST command upstream\n");
     HYDU_ASSERT(!closed, status);
 
     status = HYDU_sock_write(HYD_pmcd_pmip.upstream.control,
                              HYD_pmcd_pmip.downstream.pid,
                              HYD_pmcd_pmip.local.proxy_process_count * sizeof(int), &sent,
-                             &closed);
+                             &closed, HYDU_SOCK_COMM_MSGWAIT);
     HYDU_ERR_POP(status, "unable to send PID list upstream\n");
     HYDU_ASSERT(!closed, status);
 
@@ -929,7 +932,7 @@ HYD_status HYD_pmcd_pmip_control_cmd_cb(int fd, HYD_event_t events, void *userp)
             HYDU_ASSERT(!closed, status);
 
             status = HYDU_sock_write(HYD_pmcd_pmip.downstream.in, buf, hdr.buflen, &count,
-                                     &closed);
+                                     &closed, HYDU_SOCK_COMM_MSGWAIT);
             HYDU_ERR_POP(status, "unable to write to downstream stdin\n");
 
             if (HYD_pmcd_pmip.user_global.auto_cleanup) {

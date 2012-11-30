@@ -304,7 +304,7 @@ static HYD_status stdoe_cb(int _fd, int pgid, int proxy_id, int rank, void *_buf
     }
 
     if (HYD_ui_info.prepend_pattern == NULL) {
-        status = HYDU_sock_write(fd, buf, buflen, &sent, &closed);
+        status = HYDU_sock_write(fd, buf, buflen, &sent, &closed, HYDU_SOCK_COMM_MSGWAIT);
         HYDU_ERR_POP(status, "unable to write data to stdout/stderr\n");
         HYDU_ASSERT(!closed, status);
     }
@@ -318,10 +318,11 @@ static HYD_status stdoe_cb(int _fd, int pgid, int proxy_id, int rank, void *_buf
             if (buf[i] == '\n' || i == buflen - 1) {
                 if (prepend[0] != '\0') {       /* sock_write barfs on maxlen==0 */
                     status = HYDU_sock_write(fd, (const void *) prepend,
-                                             strlen(prepend), &sent, &closed);
+                                             strlen(prepend), &sent, &closed,
+                                             HYDU_SOCK_COMM_MSGWAIT);
                 }
                 status = HYDU_sock_write(fd, (const void *) &buf[mark], i - mark + 1,
-                                         &sent, &closed);
+                                         &sent, &closed, HYDU_SOCK_COMM_MSGWAIT);
                 HYDU_ERR_POP(status, "unable to write data to stdout/stderr\n");
                 HYDU_ASSERT(!closed, status);
                 mark = i + 1;

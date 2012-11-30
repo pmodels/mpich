@@ -101,12 +101,12 @@ static HYD_status cmd_response(int fd, const char *str)
 
     HYDU_FUNC_ENTER();
 
-    status = HYDU_sock_write(fd, &len, sizeof(int), &sent, &closed);
+    status = HYDU_sock_write(fd, &len, sizeof(int), &sent, &closed, HYDU_SOCK_COMM_MSGWAIT);
     HYDU_ERR_POP(status, "error sending publish info\n");
     HYDU_ASSERT(!closed, status);
 
     if (len) {
-        status = HYDU_sock_write(fd, str, len, &sent, &closed);
+        status = HYDU_sock_write(fd, str, len, &sent, &closed, HYDU_SOCK_COMM_MSGWAIT);
         HYDU_ERR_POP(status, "error sending publish info\n");
         HYDU_ASSERT(!closed, status);
     }

@@ -26,7 +26,8 @@ static HYD_status send_cmd_to_proxies(struct HYD_pmcd_hdr hdr)
 
     /* Send the command to all proxies */
     for (proxy = pg->proxy_list; proxy; proxy = proxy->next) {
-        status = HYDU_sock_write(proxy->control_fd, &hdr, sizeof(hdr), &sent, &closed);
+        status = HYDU_sock_write(proxy->control_fd, &hdr, sizeof(hdr), &sent, &closed,
+                                 HYDU_SOCK_COMM_MSGWAIT);
         HYDU_ERR_POP(status, "unable to send checkpoint message\n");
         HYDU_ASSERT(!closed, status);
     }

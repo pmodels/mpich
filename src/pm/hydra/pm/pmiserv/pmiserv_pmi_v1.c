@@ -24,7 +24,7 @@ static HYD_status cmd_response(int fd, int pid, const char *cmd)
     hdr.pid = pid;
     hdr.pmi_version = 1;
     hdr.buflen = strlen(cmd);
-    status = HYDU_sock_write(fd, &hdr, sizeof(hdr), &sent, &closed);
+    status = HYDU_sock_write(fd, &hdr, sizeof(hdr), &sent, &closed, HYDU_SOCK_COMM_MSGWAIT);
     HYDU_ERR_POP(status, "unable to send PMI_RESPONSE header to proxy\n");
     HYDU_ASSERT(!closed, status);
 
@@ -32,7 +32,7 @@ static HYD_status cmd_response(int fd, int pid, const char *cmd)
         HYDU_dump(stdout, "PMI response to fd %d pid %d: %s", fd, pid, cmd);
     }
 
-    status = HYDU_sock_write(fd, cmd, strlen(cmd), &sent, &closed);
+    status = HYDU_sock_write(fd, cmd, strlen(cmd), &sent, &closed, HYDU_SOCK_COMM_MSGWAIT);
     HYDU_ERR_POP(status, "unable to send response to command\n");
     HYDU_ASSERT(!closed, status);
 

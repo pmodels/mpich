@@ -86,12 +86,14 @@ static HYD_status stdio_cb(int fd, HYD_event_t events, void *userp)
         hdr.io_type = HYDT_PERSIST_STDOUT;
         hdr.buflen = count;
 
-        status = HYDU_sock_write(private.client_fd, &hdr, sizeof(hdr), &sent, &closed);
+        status = HYDU_sock_write(private.client_fd, &hdr, sizeof(hdr), &sent, &closed,
+                                 HYDU_SOCK_COMM_MSGWAIT);
         HYDU_ERR_POP(status, "error sending header to client\n");
         HYDU_ASSERT(!closed, status);
 
         if (hdr.buflen) {
-            status = HYDU_sock_write(private.client_fd, buf, count, &sent, &closed);
+            status = HYDU_sock_write(private.client_fd, buf, count, &sent, &closed,
+                                     HYDU_SOCK_COMM_MSGWAIT);
             HYDU_ERR_POP(status, "error sending stdout to client\n");
             HYDU_ASSERT(!closed, status);
         }
@@ -115,12 +117,14 @@ static HYD_status stdio_cb(int fd, HYD_event_t events, void *userp)
         hdr.io_type = HYDT_PERSIST_STDOUT;
         hdr.buflen = count;
 
-        status = HYDU_sock_write(private.client_fd, &hdr, sizeof(hdr), &sent, &closed);
+        status = HYDU_sock_write(private.client_fd, &hdr, sizeof(hdr), &sent, &closed,
+                                 HYDU_SOCK_COMM_MSGWAIT);
         HYDU_ERR_POP(status, "error sending header to client\n");
         HYDU_ASSERT(!closed, status);
 
         if (hdr.buflen) {
-            status = HYDU_sock_write(private.client_fd, buf, count, &sent, &closed);
+            status = HYDU_sock_write(private.client_fd, buf, count, &sent, &closed,
+                                     HYDU_SOCK_COMM_MSGWAIT);
             HYDU_ERR_POP(status, "error sending stdout to client\n");
             HYDU_ASSERT(!closed, status);
         }

@@ -165,7 +165,8 @@ HYD_status HYD_pmcd_pmiserv_send_signal(struct HYD_proxy *proxy, int signum)
     hdr.cmd = SIGNAL;
     hdr.signum = signum;
 
-    status = HYDU_sock_write(proxy->control_fd, &hdr, sizeof(hdr), &sent, &closed);
+    status = HYDU_sock_write(proxy->control_fd, &hdr, sizeof(hdr), &sent, &closed,
+                             HYDU_SOCK_COMM_MSGWAIT);
     HYDU_ERR_POP(status, "unable to write data to proxy\n");
     HYDU_ASSERT(!closed, status);
 
@@ -309,12 +310,14 @@ static HYD_status control_cb(int fd, HYD_event_t events, void *userp)
 
         hdr.buflen = count;
 
-        HYDU_sock_write(proxy->control_fd, &hdr, sizeof(hdr), &count, &closed);
+        HYDU_sock_write(proxy->control_fd, &hdr, sizeof(hdr), &count, &closed,
+                        HYDU_SOCK_COMM_MSGWAIT);
         HYDU_ERR_POP(status, "error writing to control socket\n");
         HYDU_ASSERT(!closed, status);
 
         if (hdr.buflen) {
-            HYDU_sock_write(proxy->control_fd, buf, hdr.buflen, &count, &closed);
+            HYDU_sock_write(proxy->control_fd, buf, hdr.buflen, &count, &closed,
+                            HYDU_SOCK_COMM_MSGWAIT);
             HYDU_ERR_POP(status, "error writing to control socket\n");
             HYDU_ASSERT(!closed, status);
 
@@ -479,7 +482,8 @@ static HYD_status send_exec_info(struct HYD_proxy *proxy)
 
     HYD_pmcd_init_header(&hdr);
     hdr.cmd = PROC_INFO;
-    status = HYDU_sock_write(proxy->control_fd, &hdr, sizeof(hdr), &sent, &closed);
+    status = HYDU_sock_write(proxy->control_fd, &hdr, sizeof(hdr), &sent, &closed,
+                             HYDU_SOCK_COMM_MSGWAIT);
     HYDU_ERR_POP(status, "unable to write data to proxy\n");
     HYDU_ASSERT(!closed, status);
 
@@ -556,7 +560,8 @@ HYD_status HYD_pmcd_pmiserv_proxy_init_cb(int fd, HYD_event_t events, void *user
         else {
             hdr.cmd = STDIN;
             hdr.buflen = 0;
-            HYDU_sock_write(proxy->control_fd, &hdr, sizeof(hdr), &count, &closed);
+            HYDU_sock_write(proxy->control_fd, &hdr, sizeof(hdr), &count, &closed,
+                            HYDU_SOCK_COMM_MSGWAIT);
             HYDU_ERR_POP(status, "error writing to control socket\n");
             HYDU_ASSERT(!closed, status);
         }

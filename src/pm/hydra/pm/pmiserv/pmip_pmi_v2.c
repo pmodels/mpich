@@ -43,7 +43,8 @@ static HYD_status send_cmd_upstream(const char *start, int fd, char *args[])
     hdr.buflen = strlen(buf);
     hdr.pmi_version = 2;
     status =
-        HYDU_sock_write(HYD_pmcd_pmip.upstream.control, &hdr, sizeof(hdr), &sent, &closed);
+        HYDU_sock_write(HYD_pmcd_pmip.upstream.control, &hdr, sizeof(hdr), &sent, &closed,
+                        HYDU_SOCK_COMM_MSGWAIT);
     HYDU_ERR_POP(status, "unable to send PMI header upstream\n");
     HYDU_ASSERT(!closed, status);
 
@@ -51,7 +52,8 @@ static HYD_status send_cmd_upstream(const char *start, int fd, char *args[])
         HYDU_dump(stdout, "forwarding command (%s) upstream\n", buf);
     }
 
-    status = HYDU_sock_write(HYD_pmcd_pmip.upstream.control, buf, hdr.buflen, &sent, &closed);
+    status = HYDU_sock_write(HYD_pmcd_pmip.upstream.control, buf, hdr.buflen, &sent, &closed,
+                             HYDU_SOCK_COMM_MSGWAIT);
     HYDU_ERR_POP(status, "unable to send PMI command upstream\n");
     HYDU_ASSERT(!closed, status);
 
@@ -72,7 +74,7 @@ static HYD_status send_cmd_downstream(int fd, const char *cmd)
     HYDU_FUNC_ENTER();
 
     HYDU_snprintf(cmdlen, 7, "%6u", (unsigned) strlen(cmd));
-    status = HYDU_sock_write(fd, cmdlen, 6, &sent, &closed);
+    status = HYDU_sock_write(fd, cmdlen, 6, &sent, &closed, HYDU_SOCK_COMM_MSGWAIT);
     HYDU_ERR_POP(status, "error writing PMI line\n");
     /* FIXME: We cannot abort when we are not able to send data
      * downstream. The upper layer needs to handle this based on
@@ -83,7 +85,7 @@ static HYD_status send_cmd_downstream(int fd, const char *cmd)
         HYDU_dump(stdout, "PMI response: %s\n", cmd);
     }
 
-    status = HYDU_sock_write(fd, cmd, strlen(cmd), &sent, &closed);
+    status = HYDU_sock_write(fd, cmd, strlen(cmd), &sent, &closed, HYDU_SOCK_COMM_MSGWAIT);
     HYDU_ERR_POP(status, "error writing PMI line\n");
     HYDU_ASSERT(!closed, status);
 
