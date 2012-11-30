@@ -711,6 +711,9 @@ static HYD_status launch_procs(void)
                                          process_id);
             HYDU_ERR_POP(status, "create process returned error\n");
 
+            status = HYDU_sock_set_nonblock(HYD_pmcd_pmip.downstream.in);
+            HYDU_ERR_POP(status, "unable to set stdin socket to non-blocking\n");
+
             HYDU_free_strlist(client_args);
 
             if (pmi_fds[1] != HYD_FD_UNSET) {
@@ -920,9 +923,6 @@ HYD_status HYD_pmcd_pmip_control_cmd_cb(int fd, HYD_event_t events, void *userp)
         int count;
 
         if (hdr.buflen) {
-            if (HYD_pmcd_pmip.downstream.in == HYD_FD_CLOSED)
-                goto fn_exit;
-
             HYDU_MALLOC(buf, char *, hdr.buflen, status);
             HYDU_ERR_POP(status, "unable to allocate memory\n");
 
@@ -931,9 +931,19 @@ HYD_status HYD_pmcd_pmip_control_cmd_cb(int fd, HYD_event_t events, void *userp)
             HYDU_ERR_POP(status, "unable to read from control socket\n");
             HYDU_ASSERT(!closed, status);
 
+            if (HYD_pmcd_pmip.downstream.in == HYD_FD_CLOSED) {
+                HYDU_FREE(buf);
+                goto fn_exit;
+            }
+
             status = HYDU_sock_write(HYD_pmcd_pmip.downstream.in, buf, hdr.buflen, &count,
-                                     &closed, HYDU_SOCK_COMM_MSGWAIT);
+                                     &closed, HYDU_SOCK_COMM_NONE);
             HYDU_ERR_POP(status, "unable to write to downstream stdin\n");
+
+            HYDU_ERR_CHKANDJUMP(status, count != hdr.buflen, HYD_INTERNAL_ERROR,
+                                "process reading stdin too slowly; can't keep up\n");
+
+            HYDU_ASSERT(count == hdr.buflen, status);
 
             if (HYD_pmcd_pmip.user_global.auto_cleanup) {
                 HYDU_ASSERT(!closed, status);

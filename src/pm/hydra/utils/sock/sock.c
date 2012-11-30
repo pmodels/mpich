@@ -306,7 +306,7 @@ HYD_status HYDU_sock_write(int fd, const void *buf, int maxlen, int *sent, int *
     goto fn_exit;
 }
 
-static HYD_status set_nonblock(int fd)
+HYD_status HYDU_sock_set_nonblock(int fd)
 {
     int flags;
     HYD_status status = HYD_SUCCESS;
@@ -343,10 +343,10 @@ static HYD_status alloc_fwd_hash(struct fwd_hash **fwd_hash, int in, int out)
 
     (*fwd_hash)->next = NULL;
 
-    status = set_nonblock(in);
+    status = HYDU_sock_set_nonblock(in);
     HYDU_ERR_POP(status, "unable to set out-socket to non-blocking\n");
 
-    status = set_nonblock(out);
+    status = HYDU_sock_set_nonblock(out);
     HYDU_ERR_POP(status, "unable to set out-socket to non-blocking\n");
 
   fn_exit:
