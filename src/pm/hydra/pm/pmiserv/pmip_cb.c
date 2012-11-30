@@ -15,8 +15,8 @@
 struct HYD_pmcd_pmip HYD_pmcd_pmip;
 struct HYD_pmcd_pmip_pmi_handle *HYD_pmcd_pmip_pmi_handle = { 0 };
 
-static int storage_len = 0;
-static char storage[HYD_TMPBUF_SIZE], *sptr = storage, r[HYD_TMPBUF_SIZE];
+static int pmi_storage_len = 0;
+static char pmi_storage[HYD_TMPBUF_SIZE], *sptr = pmi_storage, r[HYD_TMPBUF_SIZE];
 
 static HYD_status stdio_cb(int fd, HYD_event_t events, void *userp)
 {
@@ -109,7 +109,7 @@ static HYD_status check_pmi_cmd(char **buf, int *pmi_version, int *repeat)
 
     /* We need to read at least 6 bytes before we can decide if this
      * is PMI-1 or PMI-2 */
-    if (storage_len < 6)
+    if (pmi_storage_len < 6)
         goto fn_exit;
 
     /* FIXME: This should really be a "FIXME" for the client, since
@@ -135,7 +135,7 @@ static HYD_status check_pmi_cmd(char **buf, int *pmi_version, int *repeat)
 
         if (!strncmp(sptr, "cmd=", strlen("cmd="))) {
             /* A newline marks the end of the command */
-            for (bufptr = sptr; bufptr < sptr + storage_len; bufptr++) {
+            for (bufptr = sptr; bufptr < sptr + pmi_storage_len; bufptr++) {
                 if (*bufptr == '\n') {
                     full_command = 1;
                     break;
@@ -143,7 +143,7 @@ static HYD_status check_pmi_cmd(char **buf, int *pmi_version, int *repeat)
             }
         }
         else {  /* multi commands */
-            for (bufptr = sptr; bufptr < sptr + storage_len - strlen("endcmd\n") + 1; bufptr++) {
+            for (bufptr = sptr; bufptr < sptr + pmi_storage_len - strlen("endcmd\n") + 1; bufptr++) {
                 if (bufptr[0] == 'e' && bufptr[1] == 'n' && bufptr[2] == 'd' &&
                     bufptr[3] == 'c' && bufptr[4] == 'm' && bufptr[5] == 'd' &&
                     bufptr[6] == '\n') {
@@ -162,7 +162,7 @@ static HYD_status check_pmi_cmd(char **buf, int *pmi_version, int *repeat)
         lenptr[6] = 0;
         cmdlen = atoi(lenptr);
 
-        if (storage_len >= cmdlen + 6) {
+        if (pmi_storage_len >= cmdlen + 6) {
             full_command = 1;
             bufptr = sptr + 6 + cmdlen - 1;
         }
@@ -174,11 +174,11 @@ static HYD_status check_pmi_cmd(char **buf, int *pmi_version, int *repeat)
         HYDU_MALLOC(*buf, char *, buflen, status);
         memcpy(*buf, sptr, buflen);
         sptr += buflen;
-        storage_len -= buflen;
+        pmi_storage_len -= buflen;
         (*buf)[buflen - 1] = '\0';
 
-        if (storage_len == 0)
-            sptr = storage;
+        if (pmi_storage_len == 0)
+            sptr = pmi_storage;
         else
             *repeat = 1;
     }
@@ -189,10 +189,10 @@ static HYD_status check_pmi_cmd(char **buf, int *pmi_version, int *repeat)
         /* FIXME: This dual memcpy is crazy and needs to be
          * fixed. Single memcpy should be possible, but we need to be
          * a bit careful not to corrupt the buffer. */
-        if (sptr != storage) {
-            memcpy(r, sptr, storage_len);
-            memcpy(storage, r, storage_len);
-            sptr = storage;
+        if (sptr != pmi_storage) {
+            memcpy(r, sptr, pmi_storage_len);
+            memcpy(pmi_storage, r, pmi_storage_len);
+            sptr = pmi_storage;
         }
         *buf = NULL;
     }
@@ -222,7 +222,7 @@ static HYD_status pmi_cb(int fd, HYD_event_t events, void *userp)
      * we can, parse out full PMI commands from it, and process
      * them. When we don't have a full PMI command, we store the
      * rest. */
-    status = HYDU_sock_read(fd, storage + storage_len, HYD_TMPBUF_SIZE - storage_len,
+    status = HYDU_sock_read(fd, pmi_storage + pmi_storage_len, HYD_TMPBUF_SIZE - pmi_storage_len,
                             &linelen, &closed, HYDU_SOCK_COMM_NONE);
     HYDU_ERR_POP(status, "unable to read PMI command\n");
 
@@ -287,8 +287,8 @@ static HYD_status pmi_cb(int fd, HYD_event_t events, void *userp)
         goto fn_exit;
     }
     else {
-        storage_len += linelen;
-        storage[storage_len] = 0;
+        pmi_storage_len += linelen;
+        pmi_storage[pmi_storage_len] = 0;
     }
 
     /* We were able to read the PMI command correctly. If we were able
