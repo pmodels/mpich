@@ -933,7 +933,7 @@ HYD_status HYD_pmcd_pmip_control_cmd_cb(int fd, HYD_event_t events, void *userp)
             if (HYD_pmcd_pmip.user_global.auto_cleanup) {
                 HYDU_ASSERT(!closed, status);
             }
-            else {
+            else if (closed) {
                 close(HYD_pmcd_pmip.downstream.in);
                 HYD_pmcd_pmip.downstream.in = HYD_FD_CLOSED;
             }
@@ -942,6 +942,7 @@ HYD_status HYD_pmcd_pmip_control_cmd_cb(int fd, HYD_event_t events, void *userp)
         }
         else {
             close(HYD_pmcd_pmip.downstream.in);
+            HYD_pmcd_pmip.downstream.in = HYD_FD_CLOSED;
         }
     }
     else {
