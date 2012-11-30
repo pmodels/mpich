@@ -18,7 +18,7 @@ struct HYD_pmcd_pmip_pmi_handle *HYD_pmcd_pmip_pmi_handle = { 0 };
 static int pmi_storage_len = 0;
 static char pmi_storage[HYD_TMPBUF_SIZE], *sptr = pmi_storage, r[HYD_TMPBUF_SIZE];
 
-static HYD_status stdio_cb(int fd, HYD_event_t events, void *userp)
+static HYD_status stdoe_cb(int fd, HYD_event_t events, void *userp)
 {
     int closed, i, sent, recvd, stdfd;
     char buf[HYD_TMPBUF_SIZE];
@@ -742,12 +742,12 @@ static HYD_status launch_procs(void)
     /* Everything is spawned, register the required FDs  */
     status = HYDT_dmx_register_fd(HYD_pmcd_pmip.local.proxy_process_count,
                                   HYD_pmcd_pmip.downstream.out, HYD_POLLIN,
-                                  (void *) (size_t) STDOUT_FILENO, stdio_cb);
+                                  (void *) (size_t) STDOUT_FILENO, stdoe_cb);
     HYDU_ERR_POP(status, "unable to register fd\n");
 
     status = HYDT_dmx_register_fd(HYD_pmcd_pmip.local.proxy_process_count,
                                   HYD_pmcd_pmip.downstream.err, HYD_POLLIN,
-                                  (void *) (size_t) STDERR_FILENO, stdio_cb);
+                                  (void *) (size_t) STDERR_FILENO, stdoe_cb);
     HYDU_ERR_POP(status, "unable to register fd\n");
 
   fn_exit:
