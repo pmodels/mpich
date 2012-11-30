@@ -12,6 +12,7 @@ struct HYDT_dmxu_callback *HYDT_dmxu_cb_list = NULL;
 struct HYDT_dmxu_fns HYDT_dmxu_fns = { 0 };
 
 static int got_sigttin = 0;
+static int stdin_valid;
 
 #if defined(SIGTTIN)
 static void signal_cb(int sig)
@@ -62,6 +63,9 @@ HYD_status HYDT_dmx_init(char **demux)
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
                             "cannot find an appropriate demux engine\n");
     }
+
+    status = HYDT_dmxu_fns.stdin_valid(&stdin_valid);
+    HYDU_ERR_POP(status, "error checking for stdin validity\n");
 
   fn_exit:
     HYDU_FUNC_EXIT();
@@ -277,5 +281,7 @@ HYD_status HYDT_dmxi_stdin_valid(int *out)
 
 HYD_status HYDT_dmx_stdin_valid(int *out)
 {
-    return HYDT_dmxu_fns.stdin_valid(out);
+    *out = stdin_valid;
+
+    return HYD_SUCCESS;
 }

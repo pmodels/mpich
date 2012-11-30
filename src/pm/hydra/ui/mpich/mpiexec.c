@@ -144,17 +144,12 @@ int main(int argc, char **argv)
     status = HYDU_set_common_signals(signal_cb);
     HYDU_ERR_POP(status, "unable to set signal\n");
 
-    if (pipe(HYD_server_info.cmd_pipe) < 0)
-        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "pipe error\n");
-
     status = HYDT_ftb_init();
     HYDU_ERR_POP(status, "unable to initialize FTB\n");
-
 
     /* Get user preferences */
     status = HYD_uii_mpx_get_parameters(argv);
     HYDU_ERR_POP(status, "error parsing parameters\n");
-
 
     /* Now we initialize engines that require us to know user
      * preferences */
@@ -163,6 +158,10 @@ int main(int argc, char **argv)
         alarm(HYD_ui_mpich_info.ckpoint_int);
 #endif /* HAVE_ALARM */
 
+    /* The demux engine should be initialized before any sockets are
+     * created, since it checks for STDIN's validity.  If STDIN was
+     * closed and we opened a socket that got the same fd as STDIN,
+     * this test will not be possible. */
     status = HYDT_dmx_init(&HYD_server_info.user_global.demux);
     HYDU_ERR_POP(status, "unable to initialize the demux engine\n");
 
@@ -317,6 +316,10 @@ int main(int argc, char **argv)
     /* Add the stdout/stderr callback handlers */
     HYD_server_info.stdout_cb = HYD_uiu_stdout_cb;
     HYD_server_info.stderr_cb = HYD_uiu_stderr_cb;
+
+    /* Create a pipe connection to wake up the process manager */
+    if (pipe(HYD_server_info.cmd_pipe) < 0)
+        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "pipe error\n");
 
     /* Launch the processes */
     status = HYD_pmci_launch_procs();
