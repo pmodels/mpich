@@ -143,7 +143,8 @@ static HYD_status check_pmi_cmd(char **buf, int *pmi_version, int *repeat)
             }
         }
         else {  /* multi commands */
-            for (bufptr = sptr; bufptr < sptr + pmi_storage_len - strlen("endcmd\n") + 1; bufptr++) {
+            for (bufptr = sptr; bufptr < sptr + pmi_storage_len - strlen("endcmd\n") + 1;
+                 bufptr++) {
                 if (bufptr[0] == 'e' && bufptr[1] == 'n' && bufptr[2] == 'd' &&
                     bufptr[3] == 'c' && bufptr[4] == 'm' && bufptr[5] == 'd' &&
                     bufptr[6] == '\n') {
@@ -222,8 +223,9 @@ static HYD_status pmi_cb(int fd, HYD_event_t events, void *userp)
      * we can, parse out full PMI commands from it, and process
      * them. When we don't have a full PMI command, we store the
      * rest. */
-    status = HYDU_sock_read(fd, pmi_storage + pmi_storage_len, HYD_TMPBUF_SIZE - pmi_storage_len,
-                            &linelen, &closed, HYDU_SOCK_COMM_NONE);
+    status =
+        HYDU_sock_read(fd, pmi_storage + pmi_storage_len, HYD_TMPBUF_SIZE - pmi_storage_len,
+                       &linelen, &closed, HYDU_SOCK_COMM_NONE);
     HYDU_ERR_POP(status, "unable to read PMI command\n");
 
     /* Try to find the PMI FD */

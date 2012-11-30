@@ -1440,7 +1440,8 @@ static void usize_help_fn(void)
 {
     printf("\n");
     printf("-usize: Universe size (SYSTEM, INFINITE, <value>\n");
-    printf("   SYSTEM: Number of cores passed to mpiexec through hostfile or resource manager\n");
+    printf
+        ("   SYSTEM: Number of cores passed to mpiexec through hostfile or resource manager\n");
     printf("   INFINITE: No limit\n");
     printf("   <value>: Numeric value >= 0\n\n");
 }
