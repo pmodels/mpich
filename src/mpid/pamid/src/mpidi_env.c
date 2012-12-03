@@ -845,8 +845,14 @@ MPIDI_Env_setup(int rank, int requested)
 
   /* Set the status of the optimized shared memory point-to-point functions */
   {
-    char* names[] = {"PAMID_SHMEM_PT2PT", "MP_SHMEM_PT2PT", "PAMI_SHMEM_PT2PT", NULL};
+    char* names[] = {"PAMID_SHMEM_PT2PT", "PAMI_SHMEM_PT2PT", NULL};
     ENV_Unsigned(names, &MPIDI_Process.shmem_pt2pt, 2, &found_deprecated_env_var, rank);
+  }
+
+  /* MP_SHMEM_PT2PT = yes or no       */
+  {
+    char* names[] = {"MP_SHMEM_PT2PT", NULL};
+      ENV_Char(names, &MPIDI_Process.shmem_pt2pt);
   }
 
   /* Enable MPIR_* implementations of non-blocking collectives */
