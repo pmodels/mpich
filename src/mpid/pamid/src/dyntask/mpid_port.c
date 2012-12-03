@@ -7,7 +7,6 @@
 #include "mpidimpl.h"
 #include "netdb.h"
 #include <net/if.h>
-#include <linux/sockios.h>
 
 
 #ifdef DYNAMIC_TASKING

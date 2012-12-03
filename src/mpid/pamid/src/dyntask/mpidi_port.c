@@ -636,6 +636,7 @@ int MPIDI_Comm_connect(const char *port_name, MPID_Info *info, int root,
     }
 
 fn_exit:
+    if(local_translation) MPIU_Free(local_translation);
     return mpi_errno;
 
 fn_fail:
@@ -812,39 +813,6 @@ static int MPIDI_ReceivePGAndDistribute( struct MPID_Comm *tmp_comm, struct MPID
 }
 
 
-/**
- * This routine adds the remote world (wid) to local known world linked list
- * if there is no record of it before, or increment the reference count
- * associated with world (wid) if it is known before
- */
-void MPIDI_Parse_connection_info(int n_remote_pgs, MPIDI_PG_t **remote_pg) {
-  int i, p, ref_count=0;
-  int jobIdSize=8;
-  char jobId[jobIdSize];
-  char *pginfo_sav, *pgid_taskid_sav, *pgid, *pgid_taskid[20], *pginfo_tmp, *cp3, *cp2;
-  pami_task_t *taskids;
-  int n_rem_wids=0;
-  int mpi_errno = MPI_SUCCESS;
-  MPIDI_PG_t *existing_pg;
-
-  for(p=0; p<n_remote_pgs; p++) {
-        TRACE_ERR("call MPIDI_PG_Find to find %s\n", (char*)(remote_pg[p]->id));
-        mpi_errno = MPIDI_PG_Find(remote_pg[p]->id, &existing_pg);
-        if (mpi_errno) TRACE_ERR("MPIDI_PG_Find failed\n");
-
-         if (existing_pg != NULL) {
-	  taskids = MPIU_Malloc((existing_pg->size)*sizeof(pami_task_t));
-          for(i=0; i<existing_pg->size; i++) {
-             taskids[i]=existing_pg->vct[i].taskid;
-	     TRACE_ERR("id=%s taskids[%d]=%d\n", (char*)(remote_pg[p]->id), i, taskids[i]);
-          }
-          MPIDI_Add_connection_info(atoi((char*)(remote_pg[p]->id)), existing_pg->size, taskids);
-	  MPIU_Free(taskids);
-        }
-  }
-}
-
-
 void MPIDI_Add_connection_info(int wid, int wsize, pami_task_t *taskids) {
   int jobIdSize=64;
   char jobId[jobIdSize];
@@ -923,6 +891,39 @@ void MPIDI_Add_connection_info(int wid, int wsize, pami_task_t *taskids) {
     TRACE_ERR("REM WORLD=%d ref_count=%d", tmp_node1->rem_world_id,tmp_node1->ref_count);
 
     tmp_node1 = tmp_node1->next;
+  }
+}
+
+
+/**
+ * This routine adds the remote world (wid) to local known world linked list
+ * if there is no record of it before, or increment the reference count
+ * associated with world (wid) if it is known before
+ */
+void MPIDI_Parse_connection_info(int n_remote_pgs, MPIDI_PG_t **remote_pg) {
+  int i, p, ref_count=0;
+  int jobIdSize=8;
+  char jobId[jobIdSize];
+  char *pginfo_sav, *pgid_taskid_sav, *pgid, *pgid_taskid[20], *pginfo_tmp, *cp3, *cp2;
+  pami_task_t *taskids;
+  int n_rem_wids=0;
+  int mpi_errno = MPI_SUCCESS;
+  MPIDI_PG_t *existing_pg;
+
+  for(p=0; p<n_remote_pgs; p++) {
+        TRACE_ERR("call MPIDI_PG_Find to find %s\n", (char*)(remote_pg[p]->id));
+        mpi_errno = MPIDI_PG_Find(remote_pg[p]->id, &existing_pg);
+        if (mpi_errno) TRACE_ERR("MPIDI_PG_Find failed\n");
+
+         if (existing_pg != NULL) {
+	  taskids = MPIU_Malloc((existing_pg->size)*sizeof(pami_task_t));
+          for(i=0; i<existing_pg->size; i++) {
+             taskids[i]=existing_pg->vct[i].taskid;
+	     TRACE_ERR("id=%s taskids[%d]=%d\n", (char*)(remote_pg[p]->id), i, taskids[i]);
+          }
+          MPIDI_Add_connection_info(atoi((char*)(remote_pg[p]->id)), existing_pg->size, taskids);
+	  MPIU_Free(taskids);
+        }
   }
 }
 
@@ -1176,6 +1177,7 @@ int MPIDI_Comm_accept(const char *port_name, MPID_Info *info, int root,
     }
 
 fn_exit:
+    if(local_translation) MPIU_Free(local_translation);
     return mpi_errno;
 
 fn_fail:
@@ -1317,6 +1319,8 @@ static int MPIDI_SetupNewIntercomm( struct MPID_Comm *comm_ptr, int remote_comm_
    }
 
  fn_exit:
+    if(remote_pg) MPIU_Free(remote_pg);
+    if(remote_translation) MPIU_Free(remote_translation);
     return mpi_errno;
 
  fn_fail:
@@ -1345,7 +1349,7 @@ int MPIDI_Acceptq_dequeue(MPID_VCR * vcr, int port_name_tag)
 	    else
 		prev->next = q_item->next;
 
-	    /*MPIU_Free(q_item); */
+	    MPIU_Free(q_item);
 	    AcceptQueueSize--;
 	    break;;
 	}

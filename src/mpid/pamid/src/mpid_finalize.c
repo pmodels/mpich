@@ -31,6 +31,9 @@ extern pami_extension_t pe_extension;
 
 extern int mpidi_dynamic_tasking;
 int mpidi_finalized = 0;
+#ifdef DYNAMIC_TASKING
+extern conn_info  *_conn_info_list;
+#endif
 
 
 void MPIDI_close_pe_extension() {
@@ -76,6 +79,8 @@ int MPID_Finalize()
 
     MPIDI_FreeParentPort();
   }
+  if(_conn_info_list) 
+    MPIU_Free(_conn_info_list);
 #endif
 
 

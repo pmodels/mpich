@@ -332,7 +332,7 @@ int MPIDI_PG_Destroy(MPIDI_PG_t * pg)
 	    TRACE_ERR("destroying pg->vct=%x\n", pg->vct);
 	    MPIU_Free(pg->vct);
 	    TRACE_ERR("after destroying pg->vct=%x\n", pg->vct);
-#if 0
+
 	    if (pg->connData) {
 		if (pg->freeConnInfo) {
                     TRACE_ERR("calling freeConnInfo on pg\n");
@@ -343,7 +343,7 @@ int MPIDI_PG_Destroy(MPIDI_PG_t * pg)
 		    MPIU_Free(pg->connData);
 		}
 	    }
-#endif
+
 	    TRACE_ERR("final destroying pg\n");
 	    MPIU_Free(pg);
 

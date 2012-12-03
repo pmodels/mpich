@@ -306,8 +306,10 @@ int MPIDI_Comm_spawn_multiple(int count, char **commands,
  fn_exit:
     if (info_keyval_vectors) {
 	MPIDI_free_pmi_keyvals(info_keyval_vectors, count, info_keyval_sizes);
-	MPIU_Free(info_keyval_sizes);
 	MPIU_Free(info_keyval_vectors);
+    }
+    if (info_keyval_sizes) {
+	MPIU_Free(info_keyval_sizes);
     }
     if (pmi_errcodes) {
 	MPIU_Free(pmi_errcodes);
