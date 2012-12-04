@@ -88,6 +88,9 @@ noinst_PROGRAMS =          \
     linked_list            \
     linked_list_fop        \
     linked_list_lockall    \
+    linked_list_bench_lock_all  \
+    linked_list_bench_lock_excl \
+    linked_list_bench_lock_shr  \
     fetch_and_op_char      \
     fetch_and_op_short     \
     fetch_and_op_int       \
