@@ -132,6 +132,13 @@ MPIDI_RecvRzvDoneCB_zerobyte(pami_context_t  context,
   MPIDI_Request_setControl(rreq, original_value);
 
   MPIDI_RecvDoneCB(context, rreq, PAMI_SUCCESS);
+#ifdef MPIDI_TRACE
+  pami_task_t source;
+  source = MPIDI_Request_getPeerRank_pami(rreq);
+  MPIDI_Trace_buf[source].R[(rreq->mpid.idx)].sync_com_in_HH=1;
+  MPIDI_Trace_buf[source].R[(rreq->mpid.idx)].matchedInHH=1;
+  MPIDI_Trace_buf[source].R[(rreq->mpid.idx)].bufadd=rreq->mpid.userbuf;
+#endif
   MPID_Request_release(rreq);
 }
 

@@ -299,6 +299,14 @@ MPIDI_SendMsg_rzv_zerobyte(pami_context_t    context,
 
   rc = PAMI_Send_immediate(context, &params);
   MPID_assert(rc == PAMI_SUCCESS);
+#ifdef MPIDI_TRACE
+  MPIDI_Trace_buf[dest].S[(sreq->mpid.idx)].bufaddr=sreq->mpid.envelope.data;
+  MPIDI_Trace_buf[dest].S[(sreq->mpid.idx)].mode=MPIDI_Protocols_RVZ_zerobyte;
+  MPIDI_Trace_buf[dest].S[(sreq->mpid.idx)].sendRzv=1;
+  MPIDI_Trace_buf[dest].S[(sreq->mpid.idx)].sendEnvelop=1;
+  MPIDI_Trace_buf[dest].S[(sreq->mpid.idx)].memRegion=sreq->mpid.envelope.memregion_used;
+  MPIDI_Trace_buf[dest].S[(sreq->mpid.idx)].use_pami_get=MPIDI_Process.mp_s_use_pami_get;
+#endif
 }
 
 
