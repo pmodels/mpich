@@ -1240,6 +1240,8 @@ static int MPIDI_SetupNewIntercomm( struct MPID_Comm *comm_ptr, int remote_comm_
     intercomm->local_vcrt = comm_ptr->vcrt;
     MPID_VCRT_Add_ref(comm_ptr->vcrt);
     intercomm->local_vcr  = comm_ptr->vcr;
+    for(i=0; i<comm_ptr->local_size; i++)
+	TRACE_ERR("intercomm->local_vcr[%d]->pg_rank=%d comm_ptr->vcr[%d].pg_rank=%d intercomm->local_vcr[%d]->taskid=%d comm_ptr->vcr[%d]->taskid=%d\n", i, intercomm->local_vcr[i]->pg_rank, i, comm_ptr->vcr[i]->pg_rank, i, intercomm->local_vcr[i]->taskid, i, comm_ptr->vcr[i]->taskid);
 
     /* Set up VC reference table */
     mpi_errno = MPID_VCRT_Create(intercomm->remote_size, &intercomm->vcrt);
@@ -1453,5 +1455,93 @@ void MPIDI_delete_conn_record(int wid) {
     tmp_node1 = tmp_node1->next;
   }
   MPIU_THREAD_CS_EXIT(MSGQUEUE,0);
+}
+
+
+int MPID_PG_BCast( MPID_Comm *peercomm_p, MPID_Comm *comm_p, int root )
+{
+    int n_local_pgs=0, mpi_errno = MPI_SUCCESS;
+    pg_translation *local_translation = 0;
+    pg_node *pg_list, *pg_next, *pg_head = 0;
+    int rank, i, peer_comm_size;
+    int errflag = FALSE;
+    MPIU_CHKLMEM_DECL(1);
+
+    peer_comm_size = comm_p->local_size;
+    rank            = comm_p->rank;
+
+    local_translation = (pg_translation*)MPIU_Malloc(peer_comm_size*sizeof(pg_translation));
+    if (rank == root) {
+	/* Get the process groups known to the *peercomm* */
+	MPIDI_ExtractLocalPGInfo( peercomm_p, local_translation, &pg_head,
+			    &n_local_pgs );
+    }
+
+    /* Now, broadcast the number of local pgs */
+    mpi_errno = MPIR_Bcast_impl( &n_local_pgs, 1, MPI_INT, root, comm_p, &errflag);
+
+    pg_list = pg_head;
+    for (i=0; i<n_local_pgs; i++) {
+	int len, flag;
+	char *pg_str=0;
+	MPIDI_PG_t *pgptr;
+
+	if (rank == root) {
+	    if (!pg_list) {
+		/* FIXME: Error, the pg_list is broken */
+		printf( "Unexpected end of pg_list\n" ); fflush(stdout);
+		break;
+	    }
+	    pg_str  = pg_list->str;
+	    len     = pg_list->lenStr;
+	    pg_list = pg_list->next;
+	}
+	mpi_errno = MPIR_Bcast_impl( &len, 1, MPI_INT, root, comm_p, &errflag);
+	if (rank != root) {
+	    pg_str = (char *)MPIU_Malloc(len);
+	    if (!pg_str) {
+		goto fn_exit;
+	    }
+	}
+	mpi_errno = MPIR_Bcast_impl( pg_str, len, MPI_CHAR, root, comm_p, &errflag);
+	if (mpi_errno) {
+	    if (rank != root)
+		MPIU_Free( pg_str );
+	}
+
+	if (rank != root) {
+	    /* flag is true if the pg was created, false if it
+	       already existed. This step
+	       also initializes the created process group  */
+	    MPIDI_PG_Create_from_string( pg_str, &pgptr, &flag );
+	    if (flag) {
+		/*printf( "[%d]Added pg named %s to list\n", rank,
+			(char *)pgptr->id );
+			fflush(stdout); */
+	    }
+	    MPIU_Free( pg_str );
+	}
+    }
+
+    /* Free pg_list */
+    pg_list = pg_head;
+
+    /* FIXME: We should use the PG destroy function for this, and ensure that
+       the PG fields are valid for that function */
+    while (pg_list) {
+	pg_next = pg_list->next;
+	MPIU_Free( pg_list->str );
+	if (pg_list->pg_id ) {
+	    MPIU_Free( pg_list->pg_id );
+	}
+	MPIU_Free( pg_list );
+	pg_list = pg_next;
+    }
+
+ fn_exit:
+    MPIU_Free(local_translation);
+    return mpi_errno;
+ fn_fail:
+    goto fn_exit;
 }
 #endif

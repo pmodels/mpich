@@ -37,4 +37,9 @@
 #include "../src/pt2pt/mpid_send.h"
 #include "../src/pt2pt/mpid_irecv.h"
 
+#ifdef DYNAMIC_TASKING
+#define MPID_ICCREATE_REMOTECOMM_HOOK(_p,_c,_np,_gp,_r) \
+     MPID_PG_ForwardPGInfo(_p,_c,_np,_gp,_r)
+#endif
+
 #endif

@@ -798,6 +798,7 @@ MPIDI_VCRT_init(int rank, int size, char *world_tasks, MPIDI_PG_t *pg)
   if(mpidi_dynamic_tasking) {
     comm->vcr[0]->pg=pg->vct[0].pg;
     comm->vcr[0]->pg_rank=pg->vct[0].pg_rank;
+    pg->vct[0].taskid = comm->vcr[0]->taskid;
     if(comm->vcr[0]->pg) {
       TRACE_ERR("Adding ref for comm=%x vcr=%x pg=%x\n", comm, comm->vcr[0], comm->vcr[0]->pg);
       MPIDI_PG_add_ref(comm->vcr[0]->pg);
@@ -842,11 +843,13 @@ MPIDI_VCRT_init(int rank, int size, char *world_tasks, MPIDI_PG_t *pg)
     {
 	  comm->vcr[p]->pg=pg->vct[p].pg;
           comm->vcr[p]->pg_rank=pg->vct[p].pg_rank;
+          pg->vct[p].taskid = comm->vcr[p]->taskid;
 	  if(comm->vcr[p]->pg) {
-		TRACE_ERR("Adding ref for comm=%x vcr=%x pg=%x\n", comm, comm->vcr[p], comm->vcr[p]->pg);
-		MPIDI_PG_add_ref(comm->vcr[p]->pg);
+            TRACE_ERR("Adding ref for comm=%x vcr=%x pg=%x\n", comm, comm->vcr[p], comm->vcr[p]->pg);
+            MPIDI_PG_add_ref(comm->vcr[p]->pg);
 	  }
        /* MPID_VCR_Dup(&pg->vct[p], &(comm->vcr[p]));*/
+	  TRACE_ERR("comm->vcr[%d]->pg->id=%s comm->vcr[%d]->pg_rank=%d\n", p, comm->vcr[p]->pg->id, p, comm->vcr[p]->pg_rank);
 	  TRACE_ERR("TASKID -- comm->vcr[%d]=%d\n", p, comm->vcr[p]->taskid);
     }
 

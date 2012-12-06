@@ -12,6 +12,8 @@
 
 #ifdef DYNAMIC_TASKING
 
+extern int mpidi_dynamic_tasking;
+
 #define MAX_JOBID_LEN 1024
 
 /* FIXME: These routines need a description.  What is their purpose?  Who
@@ -458,6 +460,7 @@ int MPIDI_PG_Create_from_string(const char * str, MPIDI_PG_t ** pg_pptr,
     int vct_sz, i;
     MPIDI_PG_t *existing_pg, *pg_ptr=0;
 
+    TRACE_ERR("MPIDI_PG_Create_from_string - str=%s\n", str);
     /* The pg_id is at the beginning of the string, so we can just pass
        it to the find routine */
     /* printf( "Looking for pg with id %s\n", str );fflush(stdout); */
@@ -477,13 +480,22 @@ int MPIDI_PG_Create_from_string(const char * str, MPIDI_PG_t ** pg_pptr,
     p = str;
     while (*p) p++; p++;
     vct_sz = atoi(p);
+
+    p++;p++;
+    TRACE_ERR("before MPIDI_PG_Create - p=%s\n", p);
+    char *p_tmp = MPIU_Strdup(p);
     mpi_errno = MPIDI_PG_Create(vct_sz, (void *)str, pg_pptr);
     if (mpi_errno != MPI_SUCCESS) {
 	TRACE_ERR("MPIDI_PG_Create returned with mpi_errno=%d\n", mpi_errno);
     }
 
     pg_ptr = *pg_pptr;
+    pg_ptr->vct[0].taskid=atoi(strtok(p_tmp,":"));
+    for(i=1; i<vct_sz; i++) {
+	pg_ptr->vct[i].taskid=atoi(strtok(NULL,":"));
+    }
     TRACE_ERR("pg_ptr->id = %s\n",(*pg_pptr)->id);
+    MPIU_Free(p_tmp);
 
     if(verbose)
       MPIU_PG_Printall(stderr);
@@ -575,7 +587,7 @@ int MPIDI_connToStringKVS( char **buf_p, int *slen, MPIDI_PG_t *pg )
 					     the pg id is a string */
     char buf[MPIDI_MAX_KVS_VALUE_LEN];
     int   i, j, vallen, rc, mpi_errno = MPI_SUCCESS, len;
-    int   curSlen;
+    int   curSlen, nChars;
 
     /* Make an initial allocation of a string with an estimate of the
        needed space */
@@ -591,7 +603,13 @@ int MPIDI_connToStringKVS( char **buf_p, int *slen, MPIDI_PG_t *pg )
     /* Add the size of the pg */
     MPIU_Snprintf( &string[len], curSlen - len, "%d", pg->size );
     while (string[len]) len++;
-    len++;
+    string[len++] = 0;
+
+    /* add the taskids of the pg */
+    for(i = 0; i < pg->size; i++) {
+      nChars = MPIU_Snprintf(&string[len], curSlen - len, "%d:", pg->vct[i].taskid);
+      len+=nChars;
+    }
 
 #if 0
     for (i=0; i<pg->size; i++) {
@@ -923,13 +941,11 @@ int MPIU_PG_Printall( FILE *fp )
         /* XXX DJG FIXME-MT should we be checking this? */
 	fprintf( fp, "size = %d, refcount = %d, id = %s\n",
 		 pg->size, MPIU_Object_get_ref(pg), (char *)pg->id );
-#if 0
 	for (i=0; i<pg->size; i++) {
-	    fprintf( fp, "\tVCT rank = %d, refcount = %d, taskid = %d, state = %d \n",
-		     pg->vct[i].pg_rank, MPIU_Object_get_ref(&pg->vct[i]),
-		     pg->vct[i].taskid, (int)pg->vct[i].state );
+	    fprintf( fp, "\tVCT rank = %d, refcount = %d, taskid = %d\n",
+		     pg->vct[i].pg_rank, MPIU_Object_get_ref(pg),
+		     pg->vct[i].taskid );
 	}
-#endif
 	fflush(fp);
 	pg = pg->next;
     }
@@ -957,5 +973,64 @@ int MPIU_PG_Printall( FILE *fp )
 void MPIDI_PG_IdToNum( MPIDI_PG_t *pg, int *id )
 {
     *id = atoi((char *)pg->id);
+}
+
+
+int MPID_PG_ForwardPGInfo( MPID_Comm *peer_ptr, MPID_Comm *comm_ptr,
+			   int nPGids, const int gpids[],
+			   int root )
+{
+    int mpi_errno = MPI_SUCCESS;
+    int i, allfound = 1, pgid, pgidWorld;
+    MPIDI_PG_t *pg = 0;
+    MPIDI_PG_iterator iter;
+    int errflag = FALSE;
+
+    if(mpidi_dynamic_tasking) {
+    /* Get the pgid for CommWorld (always attached to the first process
+       group) */
+    MPIDI_PG_Get_iterator(&iter);
+    MPIDI_PG_Get_next( &iter, &pg );
+    MPIDI_PG_IdToNum( pg, &pgidWorld );
+
+    /* Extract the unique process groups */
+    for (i=0; i<nPGids && allfound; i++) {
+	if (gpids[0] != pgidWorld) {
+	    /* Add this gpid to the list of values to check */
+	    /* FIXME: For testing, we just test in place */
+            MPIDI_PG_Get_iterator(&iter);
+	    do {
+                MPIDI_PG_Get_next( &iter, &pg );
+		if (!pg) {
+		    /* We don't know this pgid */
+		    allfound = 0;
+		    break;
+		}
+		MPIDI_PG_IdToNum( pg, &pgid );
+	    } while (pgid != gpids[0]);
+	}
+	gpids += 2;
+    }
+
+    /* See if everyone is happy */
+    mpi_errno = MPIR_Allreduce_impl( MPI_IN_PLACE, &allfound, 1, MPI_INT, MPI_LAND, comm_ptr, &errflag );
+
+    if (allfound) return MPI_SUCCESS;
+
+    /* FIXME: We need a cleaner way to handle this case than using an ifdef.
+       We could have an empty version of MPID_PG_BCast in ch3u_port.c, but
+       that's a rather crude way of addressing this problem.  Better is to
+       make the handling of local and remote PIDS for the dynamic process
+       case part of the dynamic process "module"; devices that don't support
+       dynamic processes (and hence have only COMM_WORLD) could optimize for
+       that case */
+    /* We need to share the process groups.  We use routines
+       from ch3u_port.c */
+    MPID_PG_BCast( peer_ptr, comm_ptr, root );
+    }
+ fn_exit:
+    return MPI_SUCCESS;
+ fn_fail:
+    goto fn_exit;
 }
 #endif

@@ -146,7 +146,7 @@ int MPID_VCR_CommFromLpids( MPID_Comm *newcomm_ptr,
     MPID_VCRT_Create( size, &newcomm_ptr->vcrt );
     MPID_VCRT_Get_ptr( newcomm_ptr->vcrt, &newcomm_ptr->vcr );
     if(mpidi_dynamic_tasking) {
-    for (i=0; i<size; i++) {
+      for (i=0; i<size; i++) {
 	MPID_VCR *vc = 0;
 
 	/* For rank i in the new communicator, find the corresponding
@@ -156,10 +156,12 @@ int MPID_VCR_CommFromLpids( MPID_Comm *newcomm_ptr,
 	*/
 	/* printf( "[%d] Remote rank %d has lpid %d\n",
 	   MPIR_Process.comm_world->rank, i, lpids[i] ); */
+#if 0
 	if (lpids[i] < commworld_ptr->remote_size) {
 	    *vc = commworld_ptr->vcr[lpids[i]];
 	}
 	else {
+#endif
 	    /* We must find the corresponding vcr for a given lpid */
 	    /* For now, this means iterating through the process groups */
 	    MPIDI_PG_t *pg = 0;
@@ -185,16 +187,18 @@ int MPID_VCR_CommFromLpids( MPID_Comm *newcomm_ptr,
 		    }
 		}
 	    } while (!vc);
+#if 0
 	}
+#endif
 
 	/* printf( "about to dup vc %x for lpid = %d in another pg\n",
 	   (int)vc, lpids[i] ); */
 	/* Note that his will increment the ref count for the associate
 	   PG if necessary.  */
-	MPID_VCR_Dup( *vc, &newcomm_ptr->vcr[i] );
-    }
+	MPID_VCR_Dup( vc, &newcomm_ptr->vcr[i] );
+      }
     } else  {
-    for (i=0; i<size; i++) {
+      for (i=0; i<size; i++) {
         /* For rank i in the new communicator, find the corresponding
            rank in the comm world (FIXME FOR MPI2) */
         /* printf( "[%d] Remote rank %d has lpid %d\n",
@@ -209,7 +213,7 @@ int MPID_VCR_CommFromLpids( MPID_Comm *newcomm_ptr,
             return 1;
             /* MPID_VCR_Dup( ???, &newcomm_ptr->vcr[i] ); */
         }
-    }
+      }
 
     }
 fn_exit:
@@ -231,7 +235,7 @@ int MPID_GPID_ToLpidArray( int size, int gpid[], int lpid[] )
     MPIDI_PG_iterator iter;
 
     if(mpidi_dynamic_tasking) {
-    for (i=0; i<size; i++) {
+      for (i=0; i<size; i++) {
         MPIDI_PG_Get_iterator(&iter);
 	do {
 	    MPIDI_PG_Get_next( &iter, &pg );
@@ -267,12 +271,12 @@ int MPID_GPID_ToLpidArray( int size, int gpid[], int lpid[] )
 	    }
 	} while (1);
 	gpid += 2;
-    }
+      }
     } else {
-    for (i=0; i<size; i++) {
+      for (i=0; i<size; i++) {
         lpid[i] = *++gpid;  gpid++;
-    }
-    return 0;
+      }
+      return 0;
 
     }
 
@@ -296,33 +300,32 @@ int MPID_GPID_GetAllInComm( MPID_Comm *comm_ptr, int local_size,
     MPIU_Assert(comm_ptr->local_size == local_size);
 
     if(mpidi_dynamic_tasking) {
-    *singlePG = 1;
-    for (i=0; i<comm_ptr->local_size; i++) {
-	vc = comm_ptr->vcr[i];
+      *singlePG = 1;
+      for (i=0; i<comm_ptr->local_size; i++) {
+	  vc = comm_ptr->vcr[i];
 
-	/* Get the process group id as an int */
-	MPIDI_PG_IdToNum( vc->pg, &pgid );
+	  /* Get the process group id as an int */
+	  MPIDI_PG_IdToNum( vc->pg, &pgid );
 
-	*gpid++ = pgid;
-	if (lastPGID != pgid) {
-	    if (lastPGID != -1)
-		*singlePG = 0;
-	    lastPGID = pgid;
-	}
-	*gpid++ = vc->pg_rank;
+	  *gpid++ = pgid;
+	  if (lastPGID != pgid) {
+	      if (lastPGID != -1)
+                 *singlePG = 0;
+	      lastPGID = pgid;
+	  }
+	  *gpid++ = vc->pg_rank;
 
-        MPIU_DBG_MSG_FMT(COMM,VERBOSE, (MPIU_DBG_FDEST,
-                         "pgid=%d vc->pg_rank=%d",
-                         pgid, vc->pg_rank));
-    }
+          MPIU_DBG_MSG_FMT(COMM,VERBOSE, (MPIU_DBG_FDEST,
+                           "pgid=%d vc->pg_rank=%d",
+                           pgid, vc->pg_rank));
+      }
     } else {
-    for (i=0; i<comm_ptr->local_size; i++) {
+      for (i=0; i<comm_ptr->local_size; i++) {
         *gpid++ = 0;
         (void)MPID_VCR_Get_lpid( comm_ptr->vcr[i], gpid );
         gpid++;
-    }
-    *singlePG = 1;
-
+      }
+      *singlePG = 1;
     }
 
     return mpi_errno;
@@ -334,4 +337,6 @@ int MPIDI_VC_Init( MPID_VCR vcr, MPIDI_PG_t *pg, int rank )
     vcr->pg      = pg;
     vcr->pg_rank = rank;
 }
+
+
 #endif

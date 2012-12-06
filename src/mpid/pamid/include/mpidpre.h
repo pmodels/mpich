@@ -62,5 +62,8 @@
 #include "mpidi_trace.h"
 #endif
 
+#ifdef DYNAMIC_TASKING
+#define HAVE_GPID_ROUTINES
+#endif
 
 #endif
