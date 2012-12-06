@@ -115,6 +115,12 @@ static mpi_names_t mpi_names[] = {
     /* added in MPI-2.2 */
     { MPI_C_LONG_DOUBLE_COMPLEX, "MPI_C_LONG_DOUBLE_COMPLEX" },
 #endif
+#if MTEST_HAVE_MIN_MPI_VERSION(3,0)
+    /* added in MPI 3 */
+    { MPI_COUNT, "MPI_COUNT" },
+    { MPI_AINT,  "MPI_AINT"  },
+    { MPI_OFFSET, "MPI_OFFSET" },
+#endif
     { 0, (char *)0 },  /* Sentinal used to indicate the last element */
 };
 
