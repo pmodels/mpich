@@ -3746,16 +3746,21 @@ if ($write_mpif) {
     foreach $key (IDENT,CONGRUENT,SIMILAR,UNEQUAL) {
 	&print_mpif_int( "MPI_$key" );
     }
+    # Window flavor and model
+    foreach $key (FLAVOR_CREATE,FLAVOR_ALLOCATE,FLAVOR_DYNAMIC,FLAVOR_SHARED,
+	          SEPARATE, UNIFIED) {
+	&print_mpif_int( "MPI_WIN_$key" );
+    }
     # Collective operations
-    foreach $key (MAX, MIN, SUM, PROD, LAND, BAND, LOR, BOR, LXOR, BXOR, MINLOC, MAXLOC, REPLACE ) {
+    foreach $key (MAX, MIN, SUM, PROD, LAND, BAND, LOR, BOR, LXOR, BXOR, MINLOC, MAXLOC, REPLACE, NO_OP ) {
 	&print_mpif_int( "MPI_$key" );
     }
     # Objects
-    foreach $key ('COMM_WORLD', 'COMM_SELF', 'GROUP_EMPTY', 'COMM_NULL', 'WIN_NULL', 'FILE_NULL', 'GROUP_NULL', 'OP_NULL', 'DATATYPE_NULL', 'REQUEST_NULL', 'ERRHANDLER_NULL', 'INFO_NULL', ) {
+    foreach $key ('COMM_WORLD', 'COMM_SELF', 'GROUP_EMPTY', 'COMM_NULL', 'WIN_NULL', 'FILE_NULL', 'GROUP_NULL', 'OP_NULL', 'DATATYPE_NULL', 'REQUEST_NULL', 'ERRHANDLER_NULL', 'INFO_NULL', 'INFO_ENV' ) {
 	&print_mpif_int( "MPI_$key" );
     }
     # Attributes
-    foreach $key (TAG_UB, HOST, IO, WTIME_IS_GLOBAL, UNIVERSE_SIZE, LASTUSEDCODE, APPNUM, WIN_BASE, WIN_SIZE, WIN_DISP_UNIT ) {
+    foreach $key (TAG_UB, HOST, IO, WTIME_IS_GLOBAL, UNIVERSE_SIZE, LASTUSEDCODE, APPNUM, WIN_BASE, WIN_SIZE, WIN_DISP_UNIT, WIN_CREATE_FLAVOR, WIN_MODEL ) {
 	# Special cast:  The Fortran versions of these attributes have 
 	# value 1 greater than the C versions
 	$attrval = $mpidef{"MPI_$key"};
@@ -3768,7 +3773,7 @@ if ($write_mpif) {
 	&print_mpif_int( "MPI_$key" );
     } 
     # String sizes
-    # See MPI-2 2.6.2 and 4.12.9; the constants for string lenghts are
+    # See MPI-2 2.6.2 and 4.12.9; the constants for string lengths are
     # defined as one less than the C/C++ version
 
     # Missing - max processor name!
@@ -3805,10 +3810,14 @@ if ($write_mpif) {
     #
     # Datatypes
     # These are determined and set at configure time
-    foreach $key (COMPLEX, DOUBLE_COMPLEX, LOGICAL, REAL, DOUBLE_PRECISION, INTEGER, '2INTEGER', '2COMPLEX', '2DOUBLE_PRECISION', '2REAL', '2DOUBLE_COMPLEX', CHARACTER) {
+    foreach $key (COMPLEX, DOUBLE_COMPLEX, LOGICAL, REAL, DOUBLE_PRECISION, INTEGER, '2INTEGER', '2DOUBLE_PRECISION', '2REAL', CHARACTER) {
 	print MPIFFD "       INTEGER MPI_$key\n";
 	print MPIFFD "       PARAMETER (MPI_$key=\@MPI_$key\@)\n";
     }
+    # 2COMPLEX and 2DOUBLE_COMPLEX were defined in MPI 1 and removed in 
+    # MPI 1.1.  Don't define them for the Fortran interface.
+    #foreach $key ('2COMPLEX', '2DOUBLE_COMPLEX') {
+    #}
     # Value of MPI_BYTE from top level configure!
     $mpidef{"MPI_BYTE"} = hex "0x4c00010d";
     foreach $key (BYTE, UB, LB, PACKED) {
@@ -4918,9 +4927,12 @@ sub ReadInterfaceForDefinitions {
 	    # Eat until we find the closing right brace
 	    $enum_line = $1;
 	    while (! ($enum_line =~ /}/)) { 
-	        $enum_line .= <MPIFD>; 
+	        my $newline = <MPIFD>;
+	        $newline =~ s/\r*\n//;
+	        $enum_line .= $newline;
                 $linecount++;
             }
+	    print "Handling enum $enum_line...\n" if $debug;
 	    # Now process for names and values
 	    while (($enum_line =~ /\s*(MPI[X]*_[A-Z_0-9]*)\s*=\s*([a-fx0-9]*)(.*)/)) {
 		$mpidef{$1} = $2;

@@ -111,6 +111,7 @@ static mpi_names_t mpi_names[] = {
     /* address/offset types */
     type_name_entry(MPI_AINT),
     type_name_entry(MPI_OFFSET),
+    type_name_entry(MPI_COUNT),
 
     { 0, (char *) 0 },  /* Sentinel used to indicate the last element */
 };

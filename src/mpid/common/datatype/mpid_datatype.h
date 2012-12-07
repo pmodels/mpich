@@ -427,7 +427,9 @@ extern MPIU_Object_alloc_t MPID_Datatype_mem;
  * here. */
 /* FIXME calculating this value this way is foolish, we should make this more
  * automatic and less error prone */
-#define MPID_DATATYPE_N_BUILTIN 68
+/* FIXME: Given that this is relatively static, an adequate alternative is
+   to provide a check that this value is valid. */
+#define MPID_DATATYPE_N_BUILTIN 69
 extern MPID_Datatype MPID_Datatype_builtin[MPID_DATATYPE_N_BUILTIN + 1];
 extern MPID_Datatype MPID_Datatype_direct[];
 

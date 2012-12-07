@@ -73,9 +73,10 @@ static MPI_Datatype mpi_dtypes[] = {
     MPI_C_DOUBLE_COMPLEX,
     MPI_C_LONG_DOUBLE_COMPLEX,
 
-    /* address/offset types */
+    /* address/offset/count types */
     MPI_AINT,
     MPI_OFFSET,
+    MPI_COUNT,
 
     /* Fortran types */
     MPI_COMPLEX,
@@ -219,7 +220,6 @@ int MPIR_Datatype_builtin_fillin(void)
     MPID_Datatype *dptr;
     MPI_Datatype  d = MPI_DATATYPE_NULL;
     static int is_init = 0;
-    char error_msg[1024];
 
     /* FIXME: This is actually an error, since this routine 
        should only be called once */
@@ -246,14 +246,11 @@ int MPIR_Datatype_builtin_fillin(void)
 	    if (dptr < MPID_Datatype_builtin || 
 		dptr > MPID_Datatype_builtin + MPID_DATATYPE_N_BUILTIN)
 		{
-		    MPIU_Snprintf(error_msg, 1024,
-				  "%dth builtin datatype handle references invalid memory",
-				  i);
 		    mpi_errno = MPIR_Err_create_code(MPI_SUCCESS,
 						     MPIR_ERR_FATAL, FCNAME,
 						     __LINE__, MPI_ERR_INTERN,
-						     "**fail", "**fail %s",
-						     error_msg);
+						     "**typeinitbadmem", "**typeinitbadmem %d",
+						     i);
 		    return mpi_errno;
 		}
 	    /* --END ERROR HANDLING-- */
@@ -274,16 +271,11 @@ int MPIR_Datatype_builtin_fillin(void)
 	/* --BEGIN ERROR HANDLING-- */
  	if (d != -1 && i < sizeof(mpi_dtypes)/sizeof(*mpi_dtypes) && mpi_dtypes[i] != -1) { 
 	    /* We did not hit the end-of-list */
-	    /*MPIU_Internal_error_printf( "Did not initialize all of the predefined datatypes (only did first %d)\n", i-1 );*/
-	    MPIU_Snprintf(error_msg, 1024,
-			  "Did not initialize all of the predefined datatypes (only did first %d)\n",
-			      i-1);
-
-		mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL,
-						 FCNAME, __LINE__,
-						 MPI_ERR_INTERN, "**fail",
-						 "**fail %s", error_msg);
-		return mpi_errno;
+            mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL,
+                                             FCNAME, __LINE__,
+                                             MPI_ERR_INTERN, "**typeinitfail",
+                                             "**typeinitfail %d", i-1);
+            return mpi_errno;
 	}
 	/* --END ERROR HANDLING-- */
 	is_init = 1;

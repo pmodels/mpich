@@ -4260,10 +4260,23 @@ int main(int argc, char **argv )
 fi
 
 # Get the size for the bsendoverhead
-AC_CHECK_SIZEOF(MPIR_Bsend_data_t,128,[
+AC_CHECK_SIZEOF(MPIR_Bsend_data_t,0,[
 #define MPI_Datatype int
+#ifdef HAVE_STDLIB_H
+#include <stdlib.h>
+#endif
+#ifdef HAVE_STDINT_H
+#include <stdint.h>
+#endif
 #include "${master_top_srcdir}/src/include/mpibsend.h"]
 )
+if test "$ac_cv_sizeof_MPIR_Bsend_data_t" = "0" ; then
+    AC_MSG_ERROR([Unable to determine the size of MPI_BSEND_OVERHEAD"])
+    # In the past, a default of 128 was used (still likely good enough),
+    # but the autoconf SIZEOF macro has been changed to ignore the second
+    # argument, so code that depended on the prior defined behavior now
+    # silently breaks.
+fi
 BSEND_OVERHEAD=$ac_cv_sizeof_MPIR_Bsend_data_t
 export BSEND_OVERHEAD
 AC_SUBST(BSEND_OVERHEAD)
@@ -5356,16 +5369,16 @@ subsystems="$devsubsystems $subsystems $bindingsubsystems"
 # Find the size of OPA_ptr_t. This step needs to come after the OPA
 # configure above in order to get the size OPA_ptr_t evaluated for
 # this platform.
-AC_CHECK_SIZEOF(OPA_ptr_t,-1,[
+AC_CHECK_SIZEOF(OPA_ptr_t,0,[
 #include "${master_top_srcdir}/src/openpa/src/opa_primitives.h"
 pthread_mutex_t *OPA_emulation_lock;
 ])
 
 if test "$enable_f77" != "yes" ; then
     # These are Fortran datatypes ONLY.  Set to null if no Fortran compiler.
+    # Removed the invalid 2COMPLEX and 2DOUBLE_COMPLEX
     for name in CHARACTER INTEGER REAL LOGICAL COMPLEX DOUBLE_PRECISION \
-	2INTEGER 2REAL DOUBLE_COMPLEX 2COMPLEX 2DOUBLE_PRECISION \
-	2DOUBLE_COMPLEX ; do
+	2INTEGER 2REAL DOUBLE_COMPLEX 2DOUBLE_PRECISION ; do
 	fullname="MPI_$name"
 	eval $fullname=MPI_DATATYPE_NULL
     done
@@ -5384,8 +5397,8 @@ AC_SUBST(MPI_2INTEGER)
 AC_SUBST(MPI_2REAL)
 AC_SUBST(MPI_DOUBLE_COMPLEX)
 AC_SUBST(MPI_2DOUBLE_PRECISION)
-AC_SUBST(MPI_2COMPLEX)
-AC_SUBST(MPI_2DOUBLE_COMPLEX)
+dnl AC_SUBST(MPI_2COMPLEX)
+dnl AC_SUBST(MPI_2DOUBLE_COMPLEX)
 AC_SUBST(MPI_FINT)
 
 # If ROMIO was successfully configured, then ROMIO will have exported the
@@ -5535,7 +5548,7 @@ AC_SUBST([MPI_COUNT_DATATYPE])
 
 # 0x4c000045 is 1275068485 in decimal, add ($MPI_SIZEOF_COUNT * 256) and you get
 # the decimal equivalent of the hex number
-MPI_F77_COUNT=`expr 1275068484 '+' '(' 256 '*' $MPI_SIZEOF_OFFSET ')'`
+MPI_F77_COUNT=`expr 1275068485 '+' '(' 256 '*' $MPI_SIZEOF_OFFSET ')'`
 AC_SUBST([MPI_F77_COUNT])
 
 # ----------------------------------------------------------------------------
