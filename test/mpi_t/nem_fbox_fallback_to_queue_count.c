@@ -154,7 +154,8 @@ void recv_first_test()
 int main(int argc, char *argv[])
 {
     int i, size, num, name_len, desc_len, count, verb, thread_support;
-    int varclass, bind, readonly, continuous, atomic, fbox_idx;
+    int varclass, bind, readonly, continuous, atomic;
+    int fbox_idx = -1;
     char name[STR_LEN], desc[STR_LEN];
     MPI_Datatype dtype;
     MPI_T_enum enumtype;
@@ -182,6 +183,9 @@ int main(int argc, char *argv[])
         if (strcmp(name, "nem_fbox_fall_back_to_queue_count") == 0)
             fbox_idx = i;
     }
+
+    /* Ensure variable was registered by the runtime */
+    assert(fbox_idx != -1);
 
     /* Initialize MPIT session & variable handle. */
     MPI_T_pvar_session_create(&session);

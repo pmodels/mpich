@@ -67,7 +67,16 @@ static MPI_Aint unexpected_recvq_match_attempts = 0;
 static double time_failed_matching_postedq = 0.0;
 static double time_matching_unexpectedq = 0.0;
 uint64_t MPIDI_CH3I_unexpected_recvq_buffer_size = 0;    /* used in ch3u_eager.c and ch3u_handle_recv_pkt.c */
-#endif /* defined(ENABLE_RECVQ_STATISTICS) */
+#else 
+extern unsigned int posted_qlen;
+extern unsigned int unexpected_qlen;
+extern MPI_Aint posted_recvq_match_attempts;
+extern MPI_Aint unexpected_recvq_match_attempts;
+extern double time_failed_matching_postedq;
+extern double time_matching_unexpectedq;
+extern uint64_t MPIDI_CH3I_unexpected_recvq_buffer_size;
+#endif  /* ENABLE_RECVQ_STATISTICS */ 
+
 
 /* If the MPIDI_Message_match structure fits into a pointer size, we
  * can directly work on it */
@@ -114,7 +123,7 @@ MPIR_T_SIMPLE_HANDLE_CREATOR(simple_double_creator, double, 1)
 int MPIDI_CH3U_Recvq_init(void)
 {
     int mpi_errno = MPI_SUCCESS;
-#ifdef ENABLE_RECVQ_STATISTICS
+#if ENABLE_RECVQ_STATISTICS
     int idx = -1;
     mpi_errno = MPIR_T_pvar_add("posted_recvq_length",
                                 MPI_T_VERBOSITY_USER_DETAIL,
@@ -282,14 +291,14 @@ int MPIDI_CH3U_Recvq_FU(int source, int tag, int context_id, MPI_Status *s)
     match.parts.rank = source;
 
     if (tag != MPI_ANY_TAG && source != MPI_ANY_SOURCE) {
-        MPIR_T_START_TIMER(timer_start);
+        MPIR_T_START_TIMER(RECVQ_STATISTICS, timer_start);
 	while (rreq != NULL) {
-            MPIR_T_INC(unexpected_recvq_match_attempts);
+            MPIR_T_INC(RECVQ_STATISTICS, unexpected_recvq_match_attempts);
 	    if (MATCH_WITH_NO_MASK(rreq->dev.match, match))
 		break;
 	    rreq = rreq->dev.next;
 	}
-        MPIR_T_END_TIMER(timer_start, time_matching_unexpectedq);
+        MPIR_T_END_TIMER(RECVQ_STATISTICS, timer_start, time_matching_unexpectedq);
     }
     else {
 	mask.parts.context_id = mask.parts.rank = mask.parts.tag = ~0;
@@ -298,14 +307,14 @@ int MPIDI_CH3U_Recvq_FU(int source, int tag, int context_id, MPI_Status *s)
 	if (source == MPI_ANY_SOURCE)
 	    match.parts.rank = mask.parts.rank = 0;
 
-        MPIR_T_START_TIMER(timer_start);
+        MPIR_T_START_TIMER(RECVQ_STATISTICS, timer_start);
 	while (rreq != NULL) {
-            MPIR_T_INC(unexpected_recvq_match_attempts);
+            MPIR_T_INC(RECVQ_STATISTICS, unexpected_recvq_match_attempts);
 	    if (MATCH_WITH_LEFT_MASK(rreq->dev.match, match, mask))
 		break;
 	    rreq = rreq->dev.next;
 	}
-        MPIR_T_END_TIMER(timer_start, time_matching_unexpectedq);
+        MPIR_T_END_TIMER(RECVQ_STATISTICS, timer_start, time_matching_unexpectedq);
     }
 
     /* Save the information about the request before releasing the 
@@ -365,14 +374,17 @@ MPID_Request * MPIDI_CH3U_Recvq_FDU(MPI_Request sreq_id,
     /* FIXME: Why doesn't this exit after it finds the first match? */
     cur_rreq = recvq_unexpected_head;
     while (cur_rreq != NULL) {
-        MPIR_T_START_TIMER(timer_start);
-	if (cur_rreq->dev.sender_req_id == sreq_id &&
-            MPIR_T_INC(unexpected_recvq_match_attempts) &&
-	    (MATCH_WITH_NO_MASK(cur_rreq->dev.match, *match))) {
-	    matching_prev_rreq = prev_rreq;
-	    matching_cur_rreq = cur_rreq;
+        MPIR_T_START_TIMER(RECVQ_STATISTICS, timer_start);
+
+        if (cur_rreq->dev.sender_req_id == sreq_id) {
+            MPIR_T_INC(RECVQ_STATISTICS, unexpected_recvq_match_attempts);
+
+            if (MATCH_WITH_NO_MASK(cur_rreq->dev.match, *match)) {
+                matching_prev_rreq = prev_rreq;
+                matching_cur_rreq = cur_rreq;
+            }
 	}
-        MPIR_T_END_TIMER(timer_start, time_matching_unexpectedq);
+        MPIR_T_END_TIMER(RECVQ_STATISTICS, timer_start, time_matching_unexpectedq);
 
 	prev_rreq = cur_rreq;
 	cur_rreq = cur_rreq->dev.next;
@@ -390,10 +402,10 @@ MPID_Request * MPIDI_CH3U_Recvq_FDU(MPI_Request sreq_id,
 	    recvq_unexpected_tail = matching_prev_rreq;
 	}
 
-        MPIR_T_DEC(unexpected_qlen);
+        MPIR_T_DEC(RECVQ_STATISTICS, unexpected_qlen);
 	rreq = matching_cur_rreq;
 
-        MPIR_T_SUBTRACT(MPIDI_CH3I_unexpected_recvq_buffer_size, rreq->dev.tmpbuf_sz);
+        MPIR_T_SUBTRACT(RECVQ_STATISTICS, MPIDI_CH3I_unexpected_recvq_buffer_size, rreq->dev.tmpbuf_sz);
     }
     else {
 	rreq = NULL;
@@ -425,7 +437,7 @@ MPID_Request * MPIDI_CH3U_Recvq_FDU_matchonly(int source, int tag, int context_i
     MPIU_THREAD_CS_ASSERT_HELD(MSGQUEUE);
 
     /* Store how much time is spent traversing the queue */
-    MPIR_T_START_TIMER(timer_start);
+    MPIR_T_START_TIMER(RECVQ_STATISTICS, timer_start);
 
     /* Optimize this loop for an empty unexpected receive queue */
     rreq = recvq_unexpected_head;
@@ -438,7 +450,7 @@ MPID_Request * MPIDI_CH3U_Recvq_FDU_matchonly(int source, int tag, int context_i
 
         if (tag != MPI_ANY_TAG && source != MPI_ANY_SOURCE) {
             do {
-                MPIR_T_INC(unexpected_recvq_match_attempts);
+                MPIR_T_INC(RECVQ_STATISTICS, unexpected_recvq_match_attempts);
                 if (MATCH_WITH_NO_MASK(rreq->dev.match, match)) {
                     if (prev_rreq != NULL) {
                         prev_rreq->dev.next = rreq->dev.next;
@@ -450,8 +462,8 @@ MPID_Request * MPIDI_CH3U_Recvq_FDU_matchonly(int source, int tag, int context_i
                     if (rreq->dev.next == NULL) {
                         recvq_unexpected_tail = prev_rreq;
                     }
-                    MPIR_T_DEC(unexpected_qlen);
-                    MPIR_T_SUBTRACT(MPIDI_CH3I_unexpected_recvq_buffer_size, rreq->dev.tmpbuf_sz);
+                    MPIR_T_DEC(RECVQ_STATISTICS, unexpected_qlen);
+                    MPIR_T_SUBTRACT(RECVQ_STATISTICS, MPIDI_CH3I_unexpected_recvq_buffer_size, rreq->dev.tmpbuf_sz);
 
                     rreq->comm = comm;
                     MPIR_Comm_add_ref(comm);
@@ -472,7 +484,7 @@ MPID_Request * MPIDI_CH3U_Recvq_FDU_matchonly(int source, int tag, int context_i
                 match.parts.rank = mask.parts.rank = 0;
 
             do {
-                MPIR_T_INC(unexpected_recvq_match_attempts);
+                MPIR_T_INC(RECVQ_STATISTICS, unexpected_recvq_match_attempts);
                 if (MATCH_WITH_LEFT_MASK(rreq->dev.match, match, mask)) {
                     if (prev_rreq != NULL) {
                         prev_rreq->dev.next = rreq->dev.next;
@@ -483,8 +495,8 @@ MPID_Request * MPIDI_CH3U_Recvq_FDU_matchonly(int source, int tag, int context_i
                     if (rreq->dev.next == NULL) {
                         recvq_unexpected_tail = prev_rreq;
                     }
-                    MPIR_T_DEC(unexpected_qlen);
-                    MPIR_T_SUBTRACT(MPIDI_CH3I_unexpected_recvq_buffer_size, rreq->dev.tmpbuf_sz);
+                    MPIR_T_DEC(RECVQ_STATISTICS, unexpected_qlen);
+                    MPIR_T_SUBTRACT(RECVQ_STATISTICS, MPIDI_CH3I_unexpected_recvq_buffer_size, rreq->dev.tmpbuf_sz);
 
                     rreq->comm                 = comm;
                     MPIR_Comm_add_ref(comm);
@@ -500,7 +512,7 @@ MPID_Request * MPIDI_CH3U_Recvq_FDU_matchonly(int source, int tag, int context_i
     }
 
 lock_exit:
-    MPIR_T_END_TIMER(timer_start, time_matching_unexpectedq);
+    MPIR_T_END_TIMER(RECVQ_STATISTICS, timer_start, time_matching_unexpectedq);
 
     *foundp = found;
 
@@ -542,7 +554,7 @@ MPID_Request * MPIDI_CH3U_Recvq_FDU_or_AEP(int source, int tag,
     MPIU_THREAD_CS_ASSERT_HELD(MSGQUEUE);
 
     /* Store how much time is spent traversing the queue */
-    MPIR_T_START_TIMER(timer_start);
+    MPIR_T_START_TIMER(RECVQ_STATISTICS, timer_start);
 
     /* Optimize this loop for an empty unexpected receive queue */
     rreq = recvq_unexpected_head;
@@ -555,7 +567,7 @@ MPID_Request * MPIDI_CH3U_Recvq_FDU_or_AEP(int source, int tag,
 
 	if (tag != MPI_ANY_TAG && source != MPI_ANY_SOURCE) {
 	    do {
-                MPIR_T_INC(unexpected_recvq_match_attempts);
+                MPIR_T_INC(RECVQ_STATISTICS, unexpected_recvq_match_attempts);
 		if (MATCH_WITH_NO_MASK(rreq->dev.match, match)) {
 		    if (prev_rreq != NULL) {
 			prev_rreq->dev.next = rreq->dev.next;
@@ -567,10 +579,10 @@ MPID_Request * MPIDI_CH3U_Recvq_FDU_or_AEP(int source, int tag,
 		    if (rreq->dev.next == NULL) {
 			recvq_unexpected_tail = prev_rreq;
 		    }
-                    MPIR_T_DEC(unexpected_qlen);
+                    MPIR_T_DEC(RECVQ_STATISTICS, unexpected_qlen);
 
                     if (MPIDI_Request_get_msg_type(rreq) == MPIDI_REQUEST_EAGER_MSG)
-                        MPIR_T_SUBTRACT(MPIDI_CH3I_unexpected_recvq_buffer_size, rreq->dev.tmpbuf_sz);
+                        MPIR_T_SUBTRACT(RECVQ_STATISTICS, MPIDI_CH3I_unexpected_recvq_buffer_size, rreq->dev.tmpbuf_sz);
 
 		    rreq->comm = comm;
 		    MPIR_Comm_add_ref(comm);
@@ -592,7 +604,7 @@ MPID_Request * MPIDI_CH3U_Recvq_FDU_or_AEP(int source, int tag,
 		match.parts.rank = mask.parts.rank = 0;
 
 	    do {
-                MPIR_T_INC(unexpected_recvq_match_attempts);
+                MPIR_T_INC(RECVQ_STATISTICS, unexpected_recvq_match_attempts);
 		if (MATCH_WITH_LEFT_MASK(rreq->dev.match, match, mask)) {
 		    if (prev_rreq != NULL) {
 			prev_rreq->dev.next = rreq->dev.next;
@@ -603,10 +615,10 @@ MPID_Request * MPIDI_CH3U_Recvq_FDU_or_AEP(int source, int tag,
 		    if (rreq->dev.next == NULL) {
 			recvq_unexpected_tail = prev_rreq;
 		    }
-                    MPIR_T_DEC(unexpected_qlen);
+                    MPIR_T_DEC(RECVQ_STATISTICS, unexpected_qlen);
 
                     if (MPIDI_Request_get_msg_type(rreq) == MPIDI_REQUEST_EAGER_MSG)
-                        MPIR_T_SUBTRACT(MPIDI_CH3I_unexpected_recvq_buffer_size, rreq->dev.tmpbuf_sz);
+                        MPIR_T_SUBTRACT(RECVQ_STATISTICS, MPIDI_CH3I_unexpected_recvq_buffer_size, rreq->dev.tmpbuf_sz);
 
 		    rreq->comm                 = comm;
 		    MPIR_Comm_add_ref(comm);
@@ -621,7 +633,7 @@ MPID_Request * MPIDI_CH3U_Recvq_FDU_or_AEP(int source, int tag,
 	    } while (rreq);
 	}
     }
-    MPIR_T_END_TIMER(timer_start, time_matching_unexpectedq);
+    MPIR_T_END_TIMER(RECVQ_STATISTICS, timer_start, time_matching_unexpectedq);
 
     /* A matching request was not found in the unexpected queue, so we 
        need to allocate a new request and add it to the posted queue */
@@ -679,7 +691,7 @@ MPID_Request * MPIDI_CH3U_Recvq_FDU_or_AEP(int source, int tag,
 	    recvq_posted_head = rreq;
 	}
 	recvq_posted_tail = rreq;
-        MPIR_T_INC(posted_qlen);
+        MPIR_T_INC(RECVQ_STATISTICS, posted_qlen);
 	MPIDI_POSTED_RECV_ENQUEUE_HOOK(rreq);
     }
     
@@ -688,7 +700,7 @@ MPID_Request * MPIDI_CH3U_Recvq_FDU_or_AEP(int source, int tag,
 
     /* If a match was not found, the timer was stopped after the traversal */
     if (found)
-        MPIR_T_END_TIMER(timer_start, time_matching_unexpectedq);
+        MPIR_T_END_TIMER(RECVQ_STATISTICS, timer_start, time_matching_unexpectedq);
     
     MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3U_RECVQ_FDU_OR_AEP);
     return rreq;
@@ -723,7 +735,7 @@ int MPIDI_CH3U_Recvq_DP(MPID_Request * rreq)
 
     /* MT FIXME is this right? or should the caller do this? */
     MPIU_THREAD_CS_ENTER(MSGQUEUE,);
-    MPIR_T_START_TIMER(timer_start);
+    MPIR_T_START_TIMER(RECVQ_STATISTICS, timer_start);
     cur_rreq = recvq_posted_head;
     while (cur_rreq != NULL) {
 	if (cur_rreq == rreq) {
@@ -736,7 +748,7 @@ int MPIDI_CH3U_Recvq_DP(MPID_Request * rreq)
 	    if (cur_rreq->dev.next == NULL) {
 		recvq_posted_tail = prev_rreq;
 	    }
-            MPIR_T_DEC(posted_qlen);
+            MPIR_T_DEC(RECVQ_STATISTICS, posted_qlen);
             /* Notify channel that rreq has been dequeued and check if
                it has already matched rreq, fail if so */
 	    dequeue_failed = MPIDI_POSTED_RECV_DEQUEUE_HOOK(rreq);
@@ -749,7 +761,7 @@ int MPIDI_CH3U_Recvq_DP(MPID_Request * rreq)
 	cur_rreq = cur_rreq->dev.next;
     }
     if (!found)
-        MPIR_T_END_TIMER(timer_start, time_failed_matching_postedq);
+        MPIR_T_END_TIMER(RECVQ_STATISTICS, timer_start, time_failed_matching_postedq);
 
     MPIU_THREAD_CS_EXIT(MSGQUEUE,);
 
@@ -799,9 +811,9 @@ MPID_Request * MPIDI_CH3U_Recvq_FDP_or_AEU(MPIDI_Message_match * match,
 
     rreq = recvq_posted_head;
 
-    MPIR_T_START_TIMER(timer_start);
+    MPIR_T_START_TIMER(RECVQ_STATISTICS, timer_start);
     while (rreq != NULL) {
-        MPIR_T_INC(posted_recvq_match_attempts);
+        MPIR_T_INC(RECVQ_STATISTICS, posted_recvq_match_attempts);
 	if (MATCH_WITH_LEFT_RIGHT_MASK(rreq->dev.match, *match, rreq->dev.mask)) {
 	    if (prev_rreq != NULL) {
 		prev_rreq->dev.next = rreq->dev.next;
@@ -812,7 +824,7 @@ MPID_Request * MPIDI_CH3U_Recvq_FDP_or_AEU(MPIDI_Message_match * match,
 	    if (rreq->dev.next == NULL) {
 		recvq_posted_tail = prev_rreq;
 	    }
-            MPIR_T_DEC(posted_qlen);
+            MPIR_T_DEC(RECVQ_STATISTICS, posted_qlen);
 
             /* give channel a chance to match the request, try again if so */
 	    channel_matched = MPIDI_POSTED_RECV_DEQUEUE_HOOK(rreq);
@@ -825,7 +837,7 @@ MPID_Request * MPIDI_CH3U_Recvq_FDP_or_AEU(MPIDI_Message_match * match,
 	prev_rreq = rreq;
 	rreq = rreq->dev.next;
     }
-    MPIR_T_END_TIMER(timer_start, time_failed_matching_postedq);
+    MPIR_T_END_TIMER(RECVQ_STATISTICS, timer_start, time_failed_matching_postedq);
 
     /* A matching request was not found in the posted queue, so we 
        need to allocate a new request and add it to the unexpected queue */
@@ -844,7 +856,7 @@ MPID_Request * MPIDI_CH3U_Recvq_FDP_or_AEU(MPIDI_Message_match * match,
 	    recvq_unexpected_head = rreq;
 	}
 	recvq_unexpected_tail = rreq;
-        MPIR_T_INC(unexpected_qlen);
+        MPIR_T_INC(RECVQ_STATISTICS, unexpected_qlen);
     }
     
     found = FALSE;
@@ -891,7 +903,7 @@ static inline void dequeue_and_set_error(MPID_Request **req,  MPID_Request *prev
     if (recvq_posted_tail == *req)
         recvq_posted_tail = prev_req;
 
-    MPIR_T_DEC(posted_qlen);
+    MPIR_T_DEC(RECVQ_STATISTICS, posted_qlen);
 
     /* set error and complete */
     (*req)->status.MPI_ERROR = *error;

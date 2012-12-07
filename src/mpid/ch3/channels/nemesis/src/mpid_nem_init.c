@@ -37,6 +37,7 @@ static int get_local_procs(MPIDI_PG_t *pg, int our_pg_rank, int *num_local_p,
 
 char *MPID_nem_asymm_base_addr = 0;
 
+#if ENABLE_NEM_STATISTICS
 /* MPIT support */
 MPIR_T_SIMPLE_HANDLE_CREATOR(fbox_count_creator, uint64_t, MPID_nem_mem_region.num_local)
 
@@ -75,6 +76,7 @@ static int MPID_nem_init_stats(int n_local_ranks)
 fn_fail:
     return mpi_errno;
 }
+#endif  /* ENABLE_NEM_STATISTICS */
 
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_init

@@ -372,6 +372,16 @@ AC_ARG_ENABLE(g,
         all      - All of the above choices
 ],,enable_g=none)
 
+AC_ARG_ENABLE(mpit_pvars,
+[--enable-mpit-pvars=list - Selectively enable MPIT performance variables.
+                         list is a comma-separated list of variable names,
+                         including
+        none     - No performance info recorded
+        recvq    - All message queue-related
+        nem      - All nemesis-related
+        all      - All variables above
+],,enable_mpit_pvars=none)
+
 dnl We may want to force MPI_Aint to be the same size as MPI_Offset, 
 dnl particularly on 32 bit systems with large (64 bit) file systems.
 AC_ARG_WITH(aint-size,
@@ -1714,6 +1724,52 @@ $MKDIR_P src/env
 cc_shlib_conf=src/env/cc_shlib.conf
 PAC_COMPILER_SHLIB_FLAGS([CC],[$cc_shlib_conf])
 AC_SUBST_FILE([cc_shlib_conf])
+
+# ---------------------------------------------------------------------------
+# Support for MPIT performance variables
+
+# enable-mpit-pvars
+# strip off multiple options, separated by commas
+save_IFS="$IFS"
+IFS=","
+for var in $enable_mpit_pvars ; do
+    case "$var" in 
+        nem)
+        enable_nem_pvars=yes
+	;;
+        recvq)
+        enable_recvq_pvars=yes
+	;;
+	all|yes)
+        enable_nem_pvars=yes
+        enable_recvq_pvars=yes
+	;;
+        no|none)
+	;;
+	*)
+	IFS=$save_IFS
+	AC_MSG_WARN([Unknown value $option for enable-mpit-pvars])
+	IFS=","
+	;;
+    esac
+done
+IFS="$save_IFS"
+
+if test -n "$enable_nem_pvars" ; then
+    status_nem_pvars=1
+else
+    status_nem_pvars=0
+fi
+AC_DEFINE_UNQUOTED(ENABLE_NEM_STATISTICS,$status_nem_pvars,
+          [Define to 1 to enable nemesis-related MPIT performance variables])
+
+if test -n "$enable_recvq_pvars" ; then
+    status_recvq_pvars=1
+else
+    status_recvq_pvars=0
+fi
+AC_DEFINE_UNQUOTED(ENABLE_RECVQ_STATISTICS,$status_recvq_pvars,
+          [Define to 1 to enable message receive queue-related MPIT performance variables])
 
 # ---------------------------------------------------------------------------
 # Support for the language bindings: Fortran 77, Fortran 90, and C++
