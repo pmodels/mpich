@@ -253,6 +253,18 @@ void MPIDI_Comm_coll_envvars(MPID_Comm *comm)
       char* names[] = {"PAMID_COLLECTIVE_ALLTOALL", NULL};
       MPIDI_Check_protocols(names, comm, "alltoall", PAMI_XFER_ALLTOALL);
    }
+   comm->mpid.optreduce = 0;
+   envopts = getenv("PAMID_COLLECTIVE_REDUCE");
+   if(envopts != NULL)
+   {
+      if(strcasecmp(envopts, "GLUE_ALLREDUCE") == 0)
+      {
+         if(MPIDI_Process.verbose >= MPIDI_VERBOSE_DETAILS_0 && comm->rank == 0)
+            fprintf(stderr,"Selecting glue allreduce for reduce\n");
+         comm->mpid.optreduce = 1;
+      }
+   }
+   /* In addition to glue protocols, check for other PAMI protocols and check for PE now */
    {
       TRACE_ERR("Checking reduce\n");
       char* names[] = {"PAMID_COLLECTIVE_REDUCE", "MP_S_MPI_REDUCE", NULL};
@@ -394,7 +406,7 @@ void MPIDI_Comm_coll_envvars(MPID_Comm *comm)
       if(strcasecmp(envopts, "GLUE_REDUCE") == 0)
       {
          if(MPIDI_Process.verbose >= MPIDI_VERBOSE_DETAILS_0 && comm->rank == 0)
-            fprintf(stderr,"using glue_reduce for gather\n");
+            fprintf(stderr,"Selecting glue reduce for gather\n");
          comm->mpid.optgather = 1;
       }
    }
@@ -571,6 +583,10 @@ void MPIDI_Comm_coll_query(MPID_Comm *comm)
             if(i == PAMI_XFER_SCATTER)
             {
                fprintf(stderr,"comm[%p] coll type %d (%s), \"glue\" algorithm: GLUE_BCAST\n", comm, i, MPIDI_Coll_type_name(i));
+            }
+            if(i == PAMI_XFER_REDUCE)
+            {
+               fprintf(stderr,"comm[%p] coll type %d (%s), \"glue\" algorithm: GLUE_ALLREDUCE\n", comm, i, MPIDI_Coll_type_name(i));
             }
          }
       }

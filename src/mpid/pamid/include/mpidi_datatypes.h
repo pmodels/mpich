@@ -310,7 +310,7 @@ struct MPIDI_Comm
   char allgathers[4];
   char allgathervs[4];
   char scattervs[2];
-  char optgather, optscatter;
+  char optgather, optscatter, optreduce;
 
   /* These need to be freed at geom destroy, so we need to store them
    * inside the communicator struct until destroy time rather than

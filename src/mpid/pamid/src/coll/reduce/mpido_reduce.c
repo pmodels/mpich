@@ -49,33 +49,27 @@ int MPIDO_Reduce(const void *sendbuf,
    pami_type_t pdt;
    int rc;
    int alg_selected = 0;
+   const int rank = comm_ptr->rank;
 #if ASSERT_LEVEL==0
    /* We can't afford the tracing in ndebug/performance libraries */
     const unsigned verbose = 0;
 #else
-    const unsigned verbose = (MPIDI_Process.verbose >= MPIDI_VERBOSE_DETAILS_ALL) && (comm_ptr->rank == 0);
+    const unsigned verbose = (MPIDI_Process.verbose >= MPIDI_VERBOSE_DETAILS_ALL) && (rank == 0);
 #endif
    const struct MPIDI_Comm* const mpid = &(comm_ptr->mpid);
    const int selected_type = mpid->user_selected_type[PAMI_XFER_REDUCE];
 
    rc = MPIDI_Datatype_to_pami(datatype, &pdt, op, &pop, &mu);
    if(unlikely(verbose))
-      fprintf(stderr,"reduce - rc %u, dt: %p, op: %p, mu: %u, selectedvar %u != %u (MPICH)\n",
-         rc, pdt, pop, mu, 
-         (unsigned)selected_type, MPID_COLL_USE_MPICH);
+      fprintf(stderr,"reduce - rc %u, root %u, count %d, dt: %p, op: %p, mu: %u, selectedvar %u != %u (MPICH) sendbuf %p, recvbuf %p\n",
+	      rc, root, count, pdt, pop, mu, 
+	      (unsigned)selected_type, MPID_COLL_USE_MPICH,sendbuf, recvbuf);
 
    pami_xfer_t reduce;
    pami_algorithm_t my_reduce=0;
    const pami_metadata_t *my_md = (pami_metadata_t *)NULL;
    int queryreq = 0;
    volatile unsigned reduce_active = 1;
-
-   if(selected_type == MPID_COLL_USE_MPICH || rc != MPI_SUCCESS)
-   {
-      if(unlikely(verbose))
-         fprintf(stderr,"Using MPICH reduce algorithm\n");
-      return MPIR_Reduce(sendbuf, recvbuf, count, datatype, op, root, comm_ptr, mpierrno);
-   }
 
    MPIDI_Datatype_get_info(count, datatype, dt_contig, tsize, dt_null, true_lb);
    rbuf = (char *)recvbuf + true_lb;
@@ -89,6 +83,35 @@ int MPIDO_Reduce(const void *sendbuf,
 
    reduce.cb_done = reduce_cb_done;
    reduce.cookie = (void *)&reduce_active;
+   if(mpid->optreduce) /* GLUE_ALLREDUCE */
+   {
+      char* tbuf = NULL;
+      if(unlikely(verbose))
+         fprintf(stderr,"Using protocol GLUE_ALLREDUCE for reduce (%d,%d)\n",count,tsize);
+      MPIDI_Update_last_algorithm(comm_ptr, "REDUCE_OPT_ALLREDUCE");
+      void *destbuf = recvbuf;
+      if(rank != root) /* temp buffer for non-root destbuf */
+      {
+         tbuf = destbuf = MPIU_Malloc(tsize);
+      }
+      MPIDO_Allreduce(sendbuf,
+                      destbuf,
+                      count,
+                      datatype,
+                      op,
+                      comm_ptr,
+                      mpierrno);
+      if(tbuf)
+         MPIU_Free(tbuf);
+      return 0;
+   }
+   if(selected_type == MPID_COLL_USE_MPICH || rc != MPI_SUCCESS)
+   {
+      if(unlikely(verbose))
+         fprintf(stderr,"Using MPICH reduce algorithm\n");
+      return MPIR_Reduce(sendbuf, recvbuf, count, datatype, op, root, comm_ptr, mpierrno);
+   }
+
    if(selected_type == MPID_COLL_OPTIMIZED)
    {
       if((mpid->cutoff_size[PAMI_XFER_REDUCE][0] == 0) || 
