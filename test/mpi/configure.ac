@@ -984,6 +984,12 @@ if test "$enable_fc" = yes ; then
     # The Fortran90 tests rely on free-form input which needs to be tested
     # before any test that may modify FCFLAGS, e.g. the cray-pointer test.
     # The order of the tests is important in compiler like g95.
+    # Recent experience showed that the IBM xlf compiler, at least on 
+    # some systems, requires -qfree=f90 instead of -qfree .  At this
+    # writing (11/27/12), this Autoconf macro still uses -qfree and has
+    # no mechanism for extension.  This test may fail in that case; if
+    # you encounter a problem, document it and submit it to the autoconf
+    # bug list, not the MPICH bug list.
     AC_FC_FREEFORM
 
     # See if the compiler supports the Cray-style pointers
