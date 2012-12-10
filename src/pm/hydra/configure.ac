@@ -349,6 +349,7 @@ m4_include([tools/topo/hwloc/hwloc/config/hwloc.m4])
 m4_include([tools/topo/hwloc/hwloc/config/hwloc_check_attributes.m4])
 m4_include([tools/topo/hwloc/hwloc/config/hwloc_check_visibility.m4])
 m4_include([tools/topo/hwloc/hwloc/config/hwloc_check_vendor.m4])
+m4_include([tools/topo/hwloc/hwloc/config/hwloc_components.m4])
 m4_include([tools/topo/hwloc/hwloc/config/hwloc_pkg.m4])
 
 have_hwloc=no
