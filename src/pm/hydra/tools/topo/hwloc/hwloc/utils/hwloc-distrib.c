@@ -1,6 +1,6 @@
 /*
  * Copyright © 2009 CNRS
- * Copyright © 2009-2010 inria.  All rights reserved.
+ * Copyright © 2009-2012 Inria.  All rights reserved.
  * Copyright © 2009-2010 Université Bordeaux 1
  * Copyright © 2009-2011 Cisco Systems, Inc.  All rights reserved.
  * See COPYING in top-level directory.
@@ -30,7 +30,7 @@ void usage(const char *callname __hwloc_attribute_unused, FILE *where)
   fprintf(where, "  --single         Singlify each output to a single CPU\n");
   fprintf(where, "  --taskset        Show taskset-specific cpuset strings\n");
   fprintf(where, "Miscellaneous options:\n");
-  fprintf(where, "  -v               Show verbose messages\n");
+  fprintf(where, "  -v --verbose     Show verbose messages\n");
   fprintf(where, "  --version        Report version and exit\n");
 }
 
@@ -45,7 +45,6 @@ int main(int argc, char *argv[])
   int verbose = 0;
   char *restrictstring = NULL;
   hwloc_obj_type_t from_type = (hwloc_obj_type_t) -1, to_type = (hwloc_obj_type_t) -1;
-  char **orig_argv = argv;
   hwloc_topology_t topology;
   int opt;
   int err;
@@ -56,8 +55,8 @@ int main(int argc, char *argv[])
 
   hwloc_topology_init(&topology);
 
-  /* skip argv[0], handle options */
   callname = argv[0];
+  /* skip argv[0], handle options */
   argv++;
   argc--;
 
@@ -77,7 +76,7 @@ int main(int argc, char *argv[])
 	taskset = 1;
 	goto next;
       }
-      if (!strcmp(argv[0], "-v")) {
+      if (!strcmp(argv[0], "-v") || !strcmp(argv[0], "--verbose")) {
 	verbose = 1;
 	goto next;
       }
@@ -93,7 +92,7 @@ int main(int argc, char *argv[])
 	goto next;
       }
       else if (!strcmp (argv[0], "--ignore")) {
-	if (argc <= 2) {
+	if (argc < 2) {
 	  usage(callname, stdout);
 	  exit(EXIT_FAILURE);
 	}
@@ -103,7 +102,7 @@ int main(int argc, char *argv[])
 	goto next;
       }
       else if (!strcmp (argv[0], "--from")) {
-	if (argc <= 2) {
+	if (argc < 2) {
 	  usage(callname, stdout);
 	  exit(EXIT_FAILURE);
 	}
@@ -113,7 +112,7 @@ int main(int argc, char *argv[])
 	goto next;
       }
       else if (!strcmp (argv[0], "--to")) {
-	if (argc <= 2) {
+	if (argc < 2) {
 	  usage(callname, stdout);
 	  exit(EXIT_FAILURE);
 	}
@@ -123,7 +122,7 @@ int main(int argc, char *argv[])
 	goto next;
       }
       else if (!strcmp (argv[0], "--at")) {
-	if (argc <= 2) {
+	if (argc < 2) {
 	  usage(callname, stdout);
 	  exit(EXIT_FAILURE);
 	}
@@ -133,7 +132,7 @@ int main(int argc, char *argv[])
 	goto next;
       }
       else if (!strcmp (argv[0], "--restrict")) {
-	if (argc <= 2) {
+	if (argc < 2) {
 	  usage (callname, stdout);
 	  exit(EXIT_FAILURE);
 	}
@@ -143,7 +142,7 @@ int main(int argc, char *argv[])
 	goto next;
       }
       else if (!strcmp (argv[0], "--version")) {
-          printf("%s %s\n", orig_argv[0], VERSION);
+          printf("%s %s\n", callname, VERSION);
           exit(EXIT_SUCCESS);
       }
 

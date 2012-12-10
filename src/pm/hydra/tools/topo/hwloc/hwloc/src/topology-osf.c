@@ -1,6 +1,6 @@
 /*
  * Copyright © 2009 CNRS
- * Copyright © 2009-2011 inria.  All rights reserved.
+ * Copyright © 2009-2012 Inria.  All rights reserved.
  * Copyright © 2009-2011 Université Bordeaux 1
  * Copyright © 2011 Cisco Systems, Inc.  All rights reserved.
  * See COPYING in top-level directory.
@@ -41,7 +41,7 @@
  */
 
 static int
-prepare_radset(hwloc_topology_t topology, radset_t *radset, hwloc_const_bitmap_t hwloc_set)
+prepare_radset(hwloc_topology_t topology __hwloc_attribute_unused, radset_t *radset, hwloc_const_bitmap_t hwloc_set)
 {
   unsigned cpu;
   cpuset_t target_cpuset;
@@ -49,6 +49,7 @@ prepare_radset(hwloc_topology_t topology, radset_t *radset, hwloc_const_bitmap_t
   radid_t radid;
   int ret = 0;
   int ret_errno = 0;
+  int nbnodes = rad_get_num();
 
   cpusetcreate(&target_cpuset);
   cpuemptyset(target_cpuset);
@@ -58,7 +59,7 @@ prepare_radset(hwloc_topology_t topology, radset_t *radset, hwloc_const_bitmap_t
 
   cpusetcreate(&cpuset);
   cpusetcreate(&xor_cpuset);
-  for (radid = 0; radid < topology->backend_params.osf.nbnodes; radid++) {
+  for (radid = 0; radid < nbnodes; radid++) {
     cpuemptyset(cpuset);
     if (rad_get_cpus(radid, cpuset)==-1) {
       fprintf(stderr,"rad_get_cpus(%d) failed: %s\n",radid,strerror(errno));
@@ -236,9 +237,10 @@ hwloc_osf_alloc_membind(hwloc_topology_t topology, size_t len, hwloc_const_nodes
   return ptr;
 }
 
-void
-hwloc_look_osf(struct hwloc_topology *topology)
+static int
+hwloc_look_osf(struct hwloc_backend *backend)
 {
+  struct hwloc_topology *topology = backend->topology;
   cpu_cursor_t cursor;
   unsigned nbnodes;
   radid_t radid, radid2;
@@ -248,7 +250,13 @@ hwloc_look_osf(struct hwloc_topology *topology)
   struct hwloc_obj *obj;
   unsigned distance;
 
-  topology->backend_params.osf.nbnodes = nbnodes = rad_get_num();
+  if (topology->levels[0][0]->cpuset)
+    /* somebody discovered things */
+    return 0;
+
+  hwloc_alloc_obj_cpusets(topology->levels[0][0]);
+
+  nbnodes = rad_get_num();
 
   cpusetcreate(&cpuset);
   radsetcreate(&radset);
@@ -276,11 +284,11 @@ hwloc_look_osf(struct hwloc_topology *topology)
       indexes[radid] = radid;
       nodes[radid] = obj = hwloc_alloc_setup_object(HWLOC_OBJ_NODE, radid);
       obj->cpuset = hwloc_bitmap_alloc();
-      obj->memory.local_memory = rad_get_physmem(radid) * getpagesize();
+      obj->memory.local_memory = rad_get_physmem(radid) * hwloc_getpagesize();
       obj->memory.page_types_len = 2;
       obj->memory.page_types = malloc(2*sizeof(*obj->memory.page_types));
       memset(obj->memory.page_types, 0, 2*sizeof(*obj->memory.page_types));
-      obj->memory.page_types[0].size = getpagesize();
+      obj->memory.page_types[0].size = hwloc_getpagesize();
 #ifdef HAVE__SC_LARGE_PAGESIZE
       obj->memory.page_types[1].size = sysconf(_SC_LARGE_PAGESIZE);
 #endif
@@ -327,21 +335,55 @@ hwloc_look_osf(struct hwloc_topology *topology)
   hwloc_setup_pu_level(topology, hwloc_fallback_nbprocessors(topology));
 
   hwloc_obj_add_info(topology->levels[0][0], "Backend", "OSF");
+  if (topology->is_thissystem)
+    hwloc_add_uname_info(topology);
+  return 1;
 }
 
 void
-hwloc_set_osf_hooks(struct hwloc_topology *topology)
+hwloc_set_osf_hooks(struct hwloc_binding_hooks *hooks,
+		    struct hwloc_topology_support *support)
 {
-  topology->set_thread_cpubind = hwloc_osf_set_thread_cpubind;
-  topology->set_thisthread_cpubind = hwloc_osf_set_thisthread_cpubind;
-  topology->set_proc_cpubind = hwloc_osf_set_proc_cpubind;
-  topology->set_thisproc_cpubind = hwloc_osf_set_thisproc_cpubind;
-  topology->set_area_membind = hwloc_osf_set_area_membind;
-  topology->alloc_membind = hwloc_osf_alloc_membind;
-  topology->alloc = hwloc_alloc_mmap;
-  topology->free_membind = hwloc_free_mmap;
-  topology->support.membind->firsttouch_membind = 1;
-  topology->support.membind->bind_membind = 1;
-  topology->support.membind->interleave_membind = 1;
-  topology->support.membind->replicate_membind = 1;
+  hooks->set_thread_cpubind = hwloc_osf_set_thread_cpubind;
+  hooks->set_thisthread_cpubind = hwloc_osf_set_thisthread_cpubind;
+  hooks->set_proc_cpubind = hwloc_osf_set_proc_cpubind;
+  hooks->set_thisproc_cpubind = hwloc_osf_set_thisproc_cpubind;
+  hooks->set_area_membind = hwloc_osf_set_area_membind;
+  hooks->alloc_membind = hwloc_osf_alloc_membind;
+  hooks->alloc = hwloc_alloc_mmap;
+  hooks->free_membind = hwloc_free_mmap;
+  support->membind->firsttouch_membind = 1;
+  support->membind->bind_membind = 1;
+  support->membind->interleave_membind = 1;
+  support->membind->replicate_membind = 1;
 }
+
+static struct hwloc_backend *
+hwloc_osf_component_instantiate(struct hwloc_disc_component *component,
+				const void *_data1 __hwloc_attribute_unused,
+				const void *_data2 __hwloc_attribute_unused,
+				const void *_data3 __hwloc_attribute_unused)
+{
+  struct hwloc_backend *backend;
+  backend = hwloc_backend_alloc(component);
+  if (!backend)
+    return NULL;
+  backend->discover = hwloc_look_osf;
+  return backend;
+}
+
+static struct hwloc_disc_component hwloc_osf_disc_component = {
+  HWLOC_DISC_COMPONENT_TYPE_CPU,
+  "osf",
+  HWLOC_DISC_COMPONENT_TYPE_GLOBAL,
+  hwloc_osf_component_instantiate,
+  50,
+  NULL
+};
+
+const struct hwloc_component hwloc_osf_component = {
+  HWLOC_COMPONENT_ABI,
+  HWLOC_COMPONENT_TYPE_DISC,
+  0,
+  &hwloc_osf_disc_component
+};

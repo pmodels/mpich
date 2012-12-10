@@ -1,7 +1,7 @@
 /*
  * Copyright © 2009 CNRS
- * Copyright © 2009-2012 inria.  All rights reserved.
- * Copyright © 2009-2011 Université Bordeaux 1
+ * Copyright © 2009-2012 Inria.  All rights reserved.
+ * Copyright © 2009-2012 Université Bordeaux 1
  * Copyright © 2009-2011 Cisco Systems, Inc.  All rights reserved.
  * See COPYING in top-level directory.
  */
@@ -22,9 +22,10 @@
 #include <private/private.h>
 #include <private/debug.h>
 
-void
-hwloc_look_darwin(struct hwloc_topology *topology)
+static int
+hwloc_look_darwin(struct hwloc_backend *backend)
 {
+  struct hwloc_topology *topology = backend->topology;
   int64_t _nprocs;
   unsigned nprocs;
   int64_t _npackages;
@@ -36,13 +37,24 @@ hwloc_look_darwin(struct hwloc_topology *topology)
   int64_t l2cachesize;
   int64_t cachelinesize;
   int64_t memsize;
+  char cpumodel[64];
+
+  if (topology->levels[0][0]->cpuset)
+    /* somebody discovered things */
+    return 0;
+
+  hwloc_alloc_obj_cpusets(topology->levels[0][0]);
 
   if (hwloc_get_sysctlbyname("hw.ncpu", &_nprocs) || _nprocs <= 0)
-    return;
+    return -1;
   nprocs = _nprocs;
   topology->support.discovery->pu = 1;
 
   hwloc_debug("%u procs\n", nprocs);
+
+  size = sizeof(cpumodel);
+  if (sysctlbyname("machdep.cpu.brand_string", cpumodel, &size, NULL, 0))
+    cpumodel[0] = '\0';
 
   if (!hwloc_get_sysctlbyname("hw.packages", &_npackages) && _npackages > 0) {
     unsigned npackages = _npackages;
@@ -70,8 +82,14 @@ hwloc_look_darwin(struct hwloc_topology *topology)
 
         hwloc_debug_1arg_bitmap("package %u has cpuset %s\n",
                    i, obj->cpuset);
+
+        if (cpumodel[0] != '\0')
+          hwloc_obj_add_info(obj, "CPUModel", cpumodel);
         hwloc_insert_object_by_cpuset(topology, obj);
       }
+    else
+      if (cpumodel[0] != '\0')
+        hwloc_obj_add_info(topology->levels[0][0], "CPUModel", cpumodel);
 
     if (!hwloc_get_sysctlbyname("machdep.cpu.cores_per_package", &_cores_per_package) && _cores_per_package > 0) {
       unsigned cores_per_package = _cores_per_package;
@@ -91,7 +109,9 @@ hwloc_look_darwin(struct hwloc_topology *topology)
           hwloc_insert_object_by_cpuset(topology, obj);
         }
     }
-  }
+  } else
+    if (cpumodel[0] != '\0')
+      hwloc_obj_add_info(topology->levels[0][0], "CPUModel", cpumodel);
 
   if (hwloc_get_sysctlbyname("hw.l1dcachesize", &l1dcachesize))
     l1dcachesize = 0;
@@ -245,9 +265,43 @@ hwloc_look_darwin(struct hwloc_topology *topology)
   hwloc_setup_pu_level(topology, nprocs);
 
   hwloc_obj_add_info(topology->levels[0][0], "Backend", "Darwin");
+  if (topology->is_thissystem)
+    hwloc_add_uname_info(topology);
+  return 1;
 }
 
 void
-hwloc_set_darwin_hooks(struct hwloc_topology *topology __hwloc_attribute_unused)
+hwloc_set_darwin_hooks(struct hwloc_binding_hooks *hooks __hwloc_attribute_unused,
+		       struct hwloc_topology_support *support __hwloc_attribute_unused)
 {
 }
+
+static struct hwloc_backend *
+hwloc_darwin_component_instantiate(struct hwloc_disc_component *component,
+				   const void *_data1 __hwloc_attribute_unused,
+				   const void *_data2 __hwloc_attribute_unused,
+				   const void *_data3 __hwloc_attribute_unused)
+{
+  struct hwloc_backend *backend;
+  backend = hwloc_backend_alloc(component);
+  if (!backend)
+    return NULL;
+  backend->discover = hwloc_look_darwin;
+  return backend;
+}
+
+static struct hwloc_disc_component hwloc_darwin_disc_component = {
+  HWLOC_DISC_COMPONENT_TYPE_CPU,
+  "darwin",
+  HWLOC_DISC_COMPONENT_TYPE_GLOBAL,
+  hwloc_darwin_component_instantiate,
+  50,
+  NULL
+};
+
+const struct hwloc_component hwloc_darwin_component = {
+  HWLOC_COMPONENT_ABI,
+  HWLOC_COMPONENT_TYPE_DISC,
+  0,
+  &hwloc_darwin_disc_component
+};

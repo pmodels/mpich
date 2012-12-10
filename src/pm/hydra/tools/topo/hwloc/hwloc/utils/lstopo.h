@@ -1,7 +1,7 @@
 /*
  * Copyright © 2009 CNRS
  * Copyright © 2009-2010 inria.  All rights reserved.
- * Copyright © 2009-2010 Université Bordeaux 1
+ * Copyright © 2009-2010, 2012 Université Bordeaux 1
  * Copyright © 2011 Cisco Systems, Inc.  All rights reserved.
  * See COPYING in top-level directory.
  */
@@ -14,6 +14,7 @@
 extern hwloc_obj_type_t show_only;
 extern int show_cpuset;
 extern int taskset;
+extern int pid_number;
 extern hwloc_pid_t pid;
 
 typedef void output_method (struct hwloc_topology *topology, const char *output, int logical, int legend, int verbose_mode);
@@ -45,5 +46,29 @@ extern void output_draw(struct draw_methods *draw_methods, int logical, int lege
 
 int rgb_to_color(int r, int g, int b) __hwloc_attribute_const;
 int declare_color(int r, int g, int b);
+
+static __hwloc_inline int lstopo_pu_offline(hwloc_obj_t l)
+{
+  return !hwloc_bitmap_isset(l->online_cpuset, l->os_index);
+}
+
+static __hwloc_inline int lstopo_pu_forbidden(hwloc_obj_t l)
+{
+  return !hwloc_bitmap_isset(l->allowed_cpuset, l->os_index);
+}
+
+static __hwloc_inline int lstopo_pu_running(hwloc_topology_t topology, hwloc_obj_t l)
+{
+  hwloc_bitmap_t bind = hwloc_bitmap_alloc();
+  int res;
+  if (pid_number != -1 && pid_number != 0)
+    hwloc_get_proc_cpubind(topology, pid, bind, 0);
+  else if (pid_number == 0)
+    hwloc_get_cpubind(topology, bind, 0);
+  res = bind && hwloc_bitmap_isset(bind, l->os_index);
+  hwloc_bitmap_free(bind);
+  return res;
+}
+
 
 #endif /* UTILS_LSTOPO_H */

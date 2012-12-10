@@ -1,6 +1,6 @@
 /*
  * Copyright © 2009 CNRS
- * Copyright © 2009-2012 inria.  All rights reserved.
+ * Copyright © 2009-2012 Inria.  All rights reserved.
  * Copyright © 2009-2012 Université Bordeaux 1
  * Copyright © 2011 Cisco Systems, Inc.  All rights reserved.
  * See COPYING in top-level directory.
@@ -472,9 +472,10 @@ hwloc_win_get_area_membind(hwloc_topology_t topology __hwloc_attribute_unused, c
   }
 }
 
-void
-hwloc_look_windows(struct hwloc_topology *topology)
+static int
+hwloc_look_windows(struct hwloc_backend *backend)
 {
+  struct hwloc_topology *topology = backend->topology;
   BOOL (WINAPI *GetLogicalProcessorInformationProc)(PSYSTEM_LOGICAL_PROCESSOR_INFORMATION Buffer, PDWORD ReturnLength);
   BOOL (WINAPI *GetLogicalProcessorInformationExProc)(LOGICAL_PROCESSOR_RELATIONSHIP relationship, PSYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX Buffer, PDWORD ReturnLength);
   BOOL (WINAPI *GetNumaAvailableMemoryNodeProc)(UCHAR Node, PULONGLONG AvailableBytes);
@@ -484,6 +485,12 @@ hwloc_look_windows(struct hwloc_topology *topology)
   DWORD length;
 
   HMODULE kernel32;
+
+  if (topology->levels[0][0]->cpuset)
+    /* somebody discovered things */
+    return 0;
+
+  hwloc_alloc_obj_cpusets(topology->levels[0][0]);
 
   GetSystemInfo(&SystemInfo);
 
@@ -508,7 +515,7 @@ hwloc_look_windows(struct hwloc_topology *topology)
 	if (GetLogicalProcessorInformationProc(procInfo, &length))
 	  break;
 	if (GetLastError() != ERROR_INSUFFICIENT_BUFFER)
-	  return;
+	  return -1;
 	procInfo = realloc(procInfo, length);
       }
 
@@ -615,7 +622,7 @@ hwloc_look_windows(struct hwloc_topology *topology)
 	if (GetLogicalProcessorInformationExProc(RelationAll, procInfoTotal, &length))
 	  break;
 	if (GetLastError() != ERROR_INSUFFICIENT_BUFFER)
-	  return;
+	  return -1;
         procInfoTotal = realloc(procInfoTotal, length);
       }
 
@@ -738,32 +745,66 @@ hwloc_look_windows(struct hwloc_topology *topology)
   hwloc_setup_pu_level(topology, hwloc_fallback_nbprocessors(topology));
 
   hwloc_obj_add_info(topology->levels[0][0], "Backend", "Windows");
+  if (topology->is_thissystem)
+    hwloc_add_uname_info(topology);
+  return 1;
 }
 
 void
-hwloc_set_windows_hooks(struct hwloc_topology *topology)
+hwloc_set_windows_hooks(struct hwloc_binding_hooks *hooks,
+			struct hwloc_topology_support *support)
 {
-  topology->set_proc_cpubind = hwloc_win_set_proc_cpubind;
-  topology->get_proc_cpubind = hwloc_win_get_proc_cpubind;
-  topology->set_thread_cpubind = hwloc_win_set_thread_cpubind;
-  topology->set_thisproc_cpubind = hwloc_win_set_thisproc_cpubind;
-  topology->get_thisproc_cpubind = hwloc_win_get_thisproc_cpubind;
-  topology->set_thisthread_cpubind = hwloc_win_set_thisthread_cpubind;
+  hooks->set_proc_cpubind = hwloc_win_set_proc_cpubind;
+  hooks->get_proc_cpubind = hwloc_win_get_proc_cpubind;
+  hooks->set_thread_cpubind = hwloc_win_set_thread_cpubind;
+  hooks->set_thisproc_cpubind = hwloc_win_set_thisproc_cpubind;
+  hooks->get_thisproc_cpubind = hwloc_win_get_thisproc_cpubind;
+  hooks->set_thisthread_cpubind = hwloc_win_set_thisthread_cpubind;
   /* TODO: get_last_cpu_location: use GetCurrentProcessorNumber */
 
-  topology->set_proc_membind = hwloc_win_set_proc_membind;
-  topology->get_proc_membind = hwloc_win_get_proc_membind;
-  topology->set_thisproc_membind = hwloc_win_set_thisproc_membind;
-  topology->get_thisproc_membind = hwloc_win_get_thisproc_membind;
-  topology->set_thisthread_membind = hwloc_win_set_thisthread_membind;
+  hooks->set_proc_membind = hwloc_win_set_proc_membind;
+  hooks->get_proc_membind = hwloc_win_get_proc_membind;
+  hooks->set_thisproc_membind = hwloc_win_set_thisproc_membind;
+  hooks->get_thisproc_membind = hwloc_win_get_thisproc_membind;
+  hooks->set_thisthread_membind = hwloc_win_set_thisthread_membind;
 
   if (!hwloc_win_get_VirtualAllocExNumaProc()) {
-    topology->alloc_membind = hwloc_win_alloc_membind;
-    topology->alloc = hwloc_win_alloc;
-    topology->free_membind = hwloc_win_free_membind;
-    topology->support.membind->bind_membind = 1;
+    hooks->alloc_membind = hwloc_win_alloc_membind;
+    hooks->alloc = hwloc_win_alloc;
+    hooks->free_membind = hwloc_win_free_membind;
+    support->membind->bind_membind = 1;
   }
 
   if (!hwloc_win_get_QueryWorkingSetExProc())
-    topology->get_area_membind = hwloc_win_get_area_membind;
+    hooks->get_area_membind = hwloc_win_get_area_membind;
 }
+
+static struct hwloc_backend *
+hwloc_windows_component_instantiate(struct hwloc_disc_component *component,
+				    const void *_data1 __hwloc_attribute_unused,
+				    const void *_data2 __hwloc_attribute_unused,
+				    const void *_data3 __hwloc_attribute_unused)
+{
+  struct hwloc_backend *backend;
+  backend = hwloc_backend_alloc(component);
+  if (!backend)
+    return NULL;
+  backend->discover = hwloc_look_windows;
+  return backend;
+}
+
+static struct hwloc_disc_component hwloc_windows_disc_component = {
+  HWLOC_DISC_COMPONENT_TYPE_CPU,
+  "windows",
+  HWLOC_DISC_COMPONENT_TYPE_GLOBAL,
+  hwloc_windows_component_instantiate,
+  50,
+  NULL
+};
+
+const struct hwloc_component hwloc_windows_component = {
+  HWLOC_COMPONENT_ABI,
+  HWLOC_COMPONENT_TYPE_DISC,
+  0,
+  &hwloc_windows_disc_component
+};

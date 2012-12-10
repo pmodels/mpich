@@ -1,6 +1,6 @@
 /*
  * Copyright © 2009 CNRS
- * Copyright © 2009-2012 inria.  All rights reserved.
+ * Copyright © 2009-2012 Inria.  All rights reserved.
  * Copyright © 2009-2010 Université Bordeaux 1
  * Copyright © 2009-2011 Cisco Systems, Inc.  All rights reserved.
  * See COPYING in top-level directory.
@@ -18,11 +18,22 @@
 #include <strings.h>
 #endif
 
-/* Read from DESCRIPTION a series of integers describing a symmetrical
-   topology and update `topology->synthetic_description' accordingly.  On
+struct hwloc_synthetic_backend_data_s {
+  /* synthetic backend parameters */
+  char *string;
+#define HWLOC_SYNTHETIC_MAX_DEPTH 128
+  unsigned arity[HWLOC_SYNTHETIC_MAX_DEPTH];
+  hwloc_obj_type_t type[HWLOC_SYNTHETIC_MAX_DEPTH];
+  unsigned id[HWLOC_SYNTHETIC_MAX_DEPTH];
+  unsigned depth[HWLOC_SYNTHETIC_MAX_DEPTH]; /* For cache/misc */
+};
+
+/* Read from description a series of integers describing a symmetrical
+   topology and update the hwloc_synthetic_backend_data_s accordingly.  On
    success, return zero.  */
-int
-hwloc_backend_synthetic_init(struct hwloc_topology *topology, const char *description)
+static int
+hwloc_backend_synthetic_init(struct hwloc_synthetic_backend_data_s *data,
+			     const char *description)
 {
   const char *pos, *next_pos;
   unsigned long item, count;
@@ -35,8 +46,6 @@ hwloc_backend_synthetic_init(struct hwloc_topology *topology, const char *descri
 
   if (env)
     verbose = atoi(env);
-
-  assert(topology->backend_type == HWLOC_BACKEND_NONE);
 
   for (pos = description, count = 1; *pos; pos = next_pos) {
 #define HWLOC_OBJ_TYPE_UNKNOWN ((hwloc_obj_type_t) -1)
@@ -98,8 +107,8 @@ hwloc_backend_synthetic_init(struct hwloc_topology *topology, const char *descri
       return -1;
     }
 
-    topology->backend_params.synthetic.arity[count-1] = (unsigned)item;
-    topology->backend_params.synthetic.type[count] = type;
+    data->arity[count-1] = (unsigned)item;
+    data->type[count] = type;
     count++;
   }
 
@@ -113,13 +122,13 @@ hwloc_backend_synthetic_init(struct hwloc_topology *topology, const char *descri
   for(i=count-1; i>0; i--) {
     hwloc_obj_type_t type;
 
-    type = topology->backend_params.synthetic.type[i];
+    type = data->type[i];
 
     if (type == HWLOC_OBJ_TYPE_UNKNOWN) {
       if (i == count-1)
 	type = HWLOC_OBJ_PU;
       else {
-	switch (topology->backend_params.synthetic.type[i+1]) {
+	switch (data->type[i+1]) {
 	case HWLOC_OBJ_PU: type = HWLOC_OBJ_CORE; break;
 	case HWLOC_OBJ_CORE: type = HWLOC_OBJ_CACHE; break;
 	case HWLOC_OBJ_CACHE: type = HWLOC_OBJ_SOCKET; break;
@@ -132,7 +141,7 @@ hwloc_backend_synthetic_init(struct hwloc_topology *topology, const char *descri
 	  assert(0);
 	}
       }
-      topology->backend_params.synthetic.type[i] = type;
+      data->type[i] = type;
     }
     switch (type) {
       case HWLOC_OBJ_PU:
@@ -188,9 +197,9 @@ hwloc_backend_synthetic_init(struct hwloc_topology *topology, const char *descri
   }
 
   if (nb_machine_levels)
-    topology->backend_params.synthetic.type[0] = HWLOC_OBJ_SYSTEM;
+    data->type[0] = HWLOC_OBJ_SYSTEM;
   else {
-    topology->backend_params.synthetic.type[0] = HWLOC_OBJ_MACHINE;
+    data->type[0] = HWLOC_OBJ_MACHINE;
     nb_machine_levels++;
   }
 
@@ -199,28 +208,18 @@ hwloc_backend_synthetic_init(struct hwloc_topology *topology, const char *descri
     cache_depth = 2;
 
   for (i=0; i<count; i++) {
-    hwloc_obj_type_t type = topology->backend_params.synthetic.type[i];
+    hwloc_obj_type_t type = data->type[i];
 
     if (type == HWLOC_OBJ_GROUP)
-      topology->backend_params.synthetic.depth[i] = group_depth--;
+      data->depth[i] = group_depth--;
     else if (type == HWLOC_OBJ_CACHE)
-      topology->backend_params.synthetic.depth[i] = cache_depth--;
+      data->depth[i] = cache_depth--;
   }
 
-  topology->backend_type = HWLOC_BACKEND_SYNTHETIC;
-  topology->backend_params.synthetic.string = strdup(description);
-  topology->backend_params.synthetic.arity[count-1] = 0;
-  topology->is_thissystem = 0;
+  data->string = strdup(description);
+  data->arity[count-1] = 0;
 
   return 0;
-}
-
-void
-hwloc_backend_synthetic_exit(struct hwloc_topology *topology)
-{
-  assert(topology->backend_type == HWLOC_BACKEND_SYNTHETIC);
-  free(topology->backend_params.synthetic.string);
-  topology->backend_type = HWLOC_BACKEND_NONE;
 }
 
 /*
@@ -233,12 +232,13 @@ hwloc_backend_synthetic_exit(struct hwloc_topology *topology)
  */
 static unsigned
 hwloc__look_synthetic(struct hwloc_topology *topology,
-    int level, unsigned first_cpu,
-    hwloc_bitmap_t parent_cpuset)
+		      struct hwloc_synthetic_backend_data_s *data,
+		      int level, unsigned first_cpu,
+		      hwloc_bitmap_t parent_cpuset)
 {
   hwloc_obj_t obj;
   unsigned i;
-  hwloc_obj_type_t type = topology->backend_params.synthetic.type[level];
+  hwloc_obj_type_t type = data->type[level];
 
   /* pre-hooks */
   switch (type) {
@@ -271,14 +271,14 @@ hwloc__look_synthetic(struct hwloc_topology *topology,
       break;
   }
 
-  obj = hwloc_alloc_setup_object(type, topology->backend_params.synthetic.id[level]++);
+  obj = hwloc_alloc_setup_object(type, data->id[level]++);
   obj->cpuset = hwloc_bitmap_alloc();
 
-  if (!topology->backend_params.synthetic.arity[level]) {
+  if (!data->arity[level]) {
     hwloc_bitmap_set(obj->cpuset, first_cpu++);
   } else {
-    for (i = 0; i < topology->backend_params.synthetic.arity[level]; i++)
-      first_cpu = hwloc__look_synthetic(topology, level + 1, first_cpu, obj->cpuset);
+    for (i = 0; i < data->arity[level]; i++)
+      first_cpu = hwloc__look_synthetic(topology, data, level + 1, first_cpu, obj->cpuset);
   }
 
   if (type == HWLOC_OBJ_NODE) {
@@ -293,7 +293,7 @@ hwloc__look_synthetic(struct hwloc_topology *topology,
     case HWLOC_OBJ_MISC:
       break;
     case HWLOC_OBJ_GROUP:
-      obj->attr->group.depth = topology->backend_params.synthetic.depth[level];
+      obj->attr->group.depth = data->depth[level];
       break;
     case HWLOC_OBJ_SYSTEM:
     case HWLOC_OBJ_BRIDGE:
@@ -315,7 +315,7 @@ hwloc__look_synthetic(struct hwloc_topology *topology,
     case HWLOC_OBJ_SOCKET:
       break;
     case HWLOC_OBJ_CACHE:
-      obj->attr->cache.depth = topology->backend_params.synthetic.depth[level];
+      obj->attr->cache.depth = data->depth[level];
       obj->attr->cache.linesize = 64;
       if (obj->attr->cache.depth == 1) {
 	/* 32Kb in L1d */
@@ -342,29 +342,103 @@ hwloc__look_synthetic(struct hwloc_topology *topology,
   return first_cpu;
 }
 
-void
-hwloc_look_synthetic(struct hwloc_topology *topology)
+static int
+hwloc_look_synthetic(struct hwloc_backend *backend)
 {
+  struct hwloc_topology *topology = backend->topology;
+  struct hwloc_synthetic_backend_data_s *data = backend->private_data;
   hwloc_bitmap_t cpuset = hwloc_bitmap_alloc();
   unsigned first_cpu = 0, i;
+
+  assert(!topology->levels[0][0]->cpuset);
+
+  hwloc_alloc_obj_cpusets(topology->levels[0][0]);
 
   topology->support.discovery->pu = 1;
 
   /* start with id=0 for each level */
-  for (i = 0; topology->backend_params.synthetic.arity[i] > 0; i++)
-    topology->backend_params.synthetic.id[i] = 0;
+  for (i = 0; data->arity[i] > 0; i++)
+    data->id[i] = 0;
   /* ... including the last one */
-  topology->backend_params.synthetic.id[i] = 0;
+  data->id[i] = 0;
 
   /* update first level type according to the synthetic type array */
-  topology->levels[0][0]->type = topology->backend_params.synthetic.type[0];
+  topology->levels[0][0]->type = data->type[0];
 
-  for (i = 0; i < topology->backend_params.synthetic.arity[0]; i++)
-    first_cpu = hwloc__look_synthetic(topology, 1, first_cpu, cpuset);
+  for (i = 0; i < data->arity[0]; i++)
+    first_cpu = hwloc__look_synthetic(topology, data, 1, first_cpu, cpuset);
 
   hwloc_bitmap_free(cpuset);
 
   hwloc_obj_add_info(topology->levels[0][0], "Backend", "Synthetic");
-  hwloc_obj_add_info(topology->levels[0][0], "SyntheticDescription", topology->backend_params.synthetic.string);
+  hwloc_obj_add_info(topology->levels[0][0], "SyntheticDescription", data->string);
+  return 1;
 }
 
+static void
+hwloc_synthetic_backend_disable(struct hwloc_backend *backend)
+{
+  struct hwloc_synthetic_backend_data_s *data = backend->private_data;
+  free(data->string);
+  free(data);
+}
+
+static struct hwloc_backend *
+hwloc_synthetic_component_instantiate(struct hwloc_disc_component *component,
+				      const void *_data1,
+				      const void *_data2 __hwloc_attribute_unused,
+				      const void *_data3 __hwloc_attribute_unused)
+{
+  struct hwloc_backend *backend;
+  struct hwloc_synthetic_backend_data_s *data;
+  int err;
+
+  if (!_data1) {
+    errno = EINVAL;
+    goto out;
+  }
+
+  backend = hwloc_backend_alloc(component);
+  if (!backend)
+    goto out;
+
+  data = malloc(sizeof(*data));
+  if (!data) {
+    errno = ENOMEM;
+    goto out_with_backend;
+  }
+
+  err = hwloc_backend_synthetic_init(data, (const char *) _data1);
+  if (err < 0)
+    goto out_with_data;
+
+  backend->private_data = data;
+  backend->discover = hwloc_look_synthetic;
+  backend->disable = hwloc_synthetic_backend_disable;
+  backend->is_thissystem = 0;
+
+  return backend;
+
+ out_with_data:
+  free(data);
+ out_with_backend:
+  free(backend);
+ out:
+  return NULL;
+}
+
+static struct hwloc_disc_component hwloc_synthetic_disc_component = {
+  HWLOC_DISC_COMPONENT_TYPE_GLOBAL,
+  "synthetic",
+  HWLOC_DISC_COMPONENT_TYPE_CPU | HWLOC_DISC_COMPONENT_TYPE_GLOBAL | HWLOC_DISC_COMPONENT_TYPE_ADDITIONAL,
+  hwloc_synthetic_component_instantiate,
+  30,
+  NULL
+};
+
+const struct hwloc_component hwloc_synthetic_component = {
+  HWLOC_COMPONENT_ABI,
+  HWLOC_COMPONENT_TYPE_DISC,
+  0,
+  &hwloc_synthetic_disc_component
+};

@@ -1,5 +1,5 @@
 .\" -*- nroff -*-
-.\" Copyright © 2010 inria.  All rights reserved.
+.\" Copyright © 2010-2012 Inria.  All rights reserved.
 .\" Copyright © 2009 Cisco Systems, Inc.  All rights reserved.
 .\" See COPYING in top-level directory.
 .TH HWLOC-CALC "1" "#HWLOC_DATE#" "#PACKAGE_VERSION#" "#PACKAGE_NAME#"
@@ -110,7 +110,11 @@ The <specification> string must end with a number of PUs.
 Enforce the input in the given format, among \fBxml\fR, \fBfsroot\fR
 and \fBsynthetic\fR.
 .TP
-\fB\-v\fR
+\fB\-q\fR \fB\-\-quiet\fR
+Hide non-fatal error messages.
+It mostly includes locations pointing to non-existing objects.
+.TP
+\fB\-v\fR \fB\-\-verbose\fR
 Verbose output.
 .TP
 \fB\-\-version\fR

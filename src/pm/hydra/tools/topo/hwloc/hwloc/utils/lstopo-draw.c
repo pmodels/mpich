@@ -1,7 +1,7 @@
 /*
  * Copyright © 2009 CNRS
- * Copyright © 2009-2010 inria.  All rights reserved.
- * Copyright © 2009-2011 Université Bordeaux 1
+ * Copyright © 2009-2012 Inria.  All rights reserved.
+ * Copyright © 2009-2012 Université Bordeaux 1
  * Copyright © 2009-2011 Cisco Systems, Inc.  All rights reserved.
  * See COPYING in top-level directory.
  */
@@ -251,7 +251,9 @@ RECURSE_BEGIN(obj, border) \
     } else { \
       unsigned found = 0; \
       /* Try to find a fitting rectangle */ \
-      for (rows = floor(sqrt(numsubobjs)); rows >= ceil(pow(numsubobjs,0.33)) && rows > 1; rows--) { \
+      for (rows = (unsigned) floor(sqrt(numsubobjs)); \
+	   rows >= (unsigned) ceil(pow(numsubobjs,0.33)) && rows > 1; \
+	   rows--) { \
         columns = numsubobjs / rows; \
         if (columns > 1 && columns * rows == numsubobjs) { \
           found = 1; \
@@ -266,7 +268,7 @@ RECURSE_BEGIN(obj, border) \
         float idealtotheight = (float) sqrt(area/RATIO); \
         float under_ratio, over_ratio; \
         /* approximation of number of rows */ \
-        rows = idealtotheight / obj_avgheight; \
+        rows = (unsigned) (idealtotheight / obj_avgheight); \
         columns = rows ? (numsubobjs + rows - 1) / rows : 1; \
         /* Ratio obtained by underestimation */ \
         under_ratio = (float) (columns * obj_avgwidth) / (rows * obj_avgheight); \
@@ -499,7 +501,10 @@ bridge_draw(hwloc_topology_t topology, struct draw_methods *methods, int logical
           speed = subobjs[i]->attr->bridge.upstream.pci.linkspeed;
         if (speed != 0.) {
           char text[4];
-          snprintf(text, sizeof(text), "%0.1f", subobjs[i]->attr->pcidev.linkspeed);
+          if (speed >= 10.)
+	    snprintf(text, sizeof(text), "%.0f", subobjs[i]->attr->pcidev.linkspeed);
+	  else
+	    snprintf(text, sizeof(text), "%0.1f", subobjs[i]->attr->pcidev.linkspeed);
           methods->text(output, 0, 0, 0, fontsize, depth-1, x + 2*gridsize + gridsize, y + totheight, text);
         }
       }
@@ -528,23 +533,14 @@ pu_draw(hwloc_topology_t topology, struct draw_methods *methods, int logical, hw
 
   RECURSE_RECT(level, &null_draw_methods, 0, gridsize);
 
-  if (hwloc_bitmap_isset(level->online_cpuset, level->os_index))
-    if (!hwloc_bitmap_isset(level->allowed_cpuset, level->os_index))
-      methods->box(output, FORBIDDEN_R_COLOR, FORBIDDEN_G_COLOR, FORBIDDEN_B_COLOR, depth, x, *retwidth, y, *retheight);
-    else {
-      hwloc_bitmap_t bind = hwloc_bitmap_alloc();
-      if (pid != (hwloc_pid_t) -1 && pid != 0)
-        hwloc_get_proc_cpubind(topology, pid, bind, 0);
-      else if (pid == 0)
-        hwloc_get_cpubind(topology, bind, 0);
-      if (bind && hwloc_bitmap_isset(bind, level->os_index))
-        methods->box(output, RUNNING_R_COLOR, RUNNING_G_COLOR, RUNNING_B_COLOR, depth, x, *retwidth, y, *retheight);
-      else
-        methods->box(output, THREAD_R_COLOR, THREAD_G_COLOR, THREAD_B_COLOR, depth, x, *retwidth, y, *retheight);
-      hwloc_bitmap_free(bind);
-    }
-  else
+  if (lstopo_pu_offline(level))
     methods->box(output, OFFLINE_R_COLOR, OFFLINE_G_COLOR, OFFLINE_B_COLOR, depth, x, *retwidth, y, *retheight);
+  else if (lstopo_pu_forbidden(level))
+    methods->box(output, FORBIDDEN_R_COLOR, FORBIDDEN_G_COLOR, FORBIDDEN_B_COLOR, depth, x, *retwidth, y, *retheight);
+  else if (lstopo_pu_running(topology, level))
+    methods->box(output, RUNNING_R_COLOR, RUNNING_G_COLOR, RUNNING_B_COLOR, depth, x, *retwidth, y, *retheight);
+  else
+    methods->box(output, THREAD_R_COLOR, THREAD_G_COLOR, THREAD_B_COLOR, depth, x, *retwidth, y, *retheight);
 
   if (fontsize) {
     char text[64];

@@ -1,5 +1,5 @@
 all-local:
-	@echo Existing targets: 'needed' and 'useless'
+	@echo Existing targets: 'needed' and 'useless' (and 'restore' once done)
 
 prepare:
 	@echo
@@ -11,12 +11,22 @@ prepare:
 		-e '/^#define HWLOC_SYM_PREFIX_CAPS HWLOC_/s/HWLOC_/FOOBAR_/2'	\
 		-i $(abs_top_builddir)/include/hwloc/autogen/config.h $(abs_top_builddir)/include/private/autogen/config.h
 
+restore:
+	@echo
+	@echo "###############################"
+	@echo Restoring original headers...
+	@echo
+	sed	-e '/^#define HWLOC_SYM_TRANSFORM 1/s/1/0/'			\
+		-e '/^#define HWLOC_SYM_PREFIX foobar_/s/foobar_/hwloc_/1'	\
+		-e '/^#define HWLOC_SYM_PREFIX_CAPS FOOBAR_/s/FOOBAR_/HWLOC_/2'	\
+		-i $(abs_top_builddir)/include/hwloc/autogen/config.h $(abs_top_builddir)/include/private/autogen/config.h
+
 needed: prepare
 	@echo
 	@echo "###########################"
 	@echo Finding missing renaming...
 	@echo
-	cpp $(srcdir)/main.c -I $(abs_top_srcdir)/include -I $(abs_top_builddir)/include \
+	cpp $(CPPFLAGS) $(srcdir)/main.c -I $(abs_top_srcdir)/include -I $(abs_top_builddir)/include \
 		| egrep -i '(^| |\*)hwloc_'
 
 useless: prepare

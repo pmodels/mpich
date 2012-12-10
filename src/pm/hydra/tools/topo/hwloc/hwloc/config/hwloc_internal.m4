@@ -1,6 +1,6 @@
 dnl -*- Autoconf -*-
 dnl
-dnl Copyright (c) 2009 inria.  All rights reserved.
+dnl Copyright (c) 2009-2012 Inria.  All rights reserved.
 dnl Copyright (c) 2009, 2011 Université Bordeaux 1
 dnl Copyright (c) 2004-2005 The Trustees of Indiana University and Indiana
 dnl                         University Research and Technology
@@ -69,6 +69,11 @@ AC_DEFUN([HWLOC_DEFINE_ARGS],[
     AC_ARG_ENABLE([libnuma],
                   AS_HELP_STRING([--disable-libnuma],
                                  [Disable the Linux libnuma]))
+
+    # Plugins
+    AC_ARG_ENABLE([plugins],
+                  AS_HELP_STRING([--enable-plugins=name,...],
+                                 [Build the given components as dynamically-loaded plugins]))
 
 ])dnl
 
@@ -201,7 +206,7 @@ EOF
         add="$add -Wmissing-prototypes -Wstrict-prototypes"
         add="$add -Wcomment -pedantic"
 
-        CFLAGS="$CFLAGS $add"
+        HWLOC_CFLAGS="$HWLOC_CFLAGS $add"
     fi
 
     # Generate some files for the docs
@@ -220,8 +225,6 @@ AC_DEFUN([HWLOC_SETUP_UTILS],[
 ### Configuring hwloc command line utilities
 ###
 EOF
-
-    hwloc_build_utils=yes
 
     # Cairo support
     hwloc_cairo_happy=no
@@ -328,8 +331,6 @@ AC_DEFUN([HWLOC_SETUP_TESTS],[
 ###
 EOF
 
-    hwloc_build_tests=yes
-
     AC_CHECK_LIB([pthread], [pthread_self], [hwloc_have_pthread=yes])
 
     # linux-libnuma.h testing requires libnuma with numa_bitmask_alloc()
@@ -386,6 +387,19 @@ EOF
 
     AC_CHECK_PROGS(BUNZIPP, bunzip2, false)
 
+    AC_MSG_CHECKING(if CXX works)
+    AC_LANG_PUSH([C++])
+    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+#include <iostream>
+using namespace std;
+int foo(void) {
+  cout << "test" << endl;
+  return 0;
+}
+	]])], [hwloc_have_cxx=yes], [hwloc_have_cxx=no])
+    AC_LANG_POP([C++])
+    AC_MSG_RESULT([$hwloc_have_cxx])
+
     _HWLOC_CHECK_DIFF_U
 
     # Only generate these files if we're making the tests
@@ -400,14 +414,17 @@ EOF
         hwloc_config_prefix[tests/linux/gather/test-gather-topology.sh]
         hwloc_config_prefix[tests/linux/test-topology.sh]
         hwloc_config_prefix[tests/xml/test-topology.sh]
+        hwloc_config_prefix[tests/wrapper.sh]
         hwloc_config_prefix[utils/hwloc-assembler-remote]
+        hwloc_config_prefix[utils/test-hwloc-annotate.sh]
         hwloc_config_prefix[utils/test-hwloc-assembler.sh]
         hwloc_config_prefix[utils/test-hwloc-calc.sh]
         hwloc_config_prefix[utils/test-hwloc-distances.sh]
         hwloc_config_prefix[utils/test-hwloc-distrib.sh]
-        hwloc_config_prefix[utils/test-hwloc-ls.sh])
+        hwloc_config_prefix[utils/test-hwloc-ls.sh]
+        hwloc_config_prefix[utils/test-fake-plugin.sh])
 
-    AC_CONFIG_COMMANDS([chmoding-scripts], [chmod +x ]hwloc_config_prefix[tests/linux/test-topology.sh ]hwloc_config_prefix[tests/xml/test-topology.sh ]hwloc_config_prefix[tests/linux/hwloc-gather-topology ]hwloc_config_prefix[tests/linux/gather/test-gather-topology.sh ]hwloc_config_prefix[utils/hwloc-assembler-remote ]hwloc_config_prefix[utils/test-hwloc-assembler.sh ]hwloc_config_prefix[utils/test-hwloc-calc.sh ]hwloc_config_prefix[utils/test-hwloc-distances.sh ]hwloc_config_prefix[utils/test-hwloc-distrib.sh ]hwloc_config_prefix[utils/test-hwloc-ls.sh])
+    AC_CONFIG_COMMANDS([chmoding-scripts], [chmod +x ]hwloc_config_prefix[tests/linux/test-topology.sh ]hwloc_config_prefix[tests/xml/test-topology.sh ]hwloc_config_prefix[tests/linux/hwloc-gather-topology ]hwloc_config_prefix[tests/linux/gather/test-gather-topology.sh ]hwloc_config_prefix[tests/wrapper.sh ]hwloc_config_prefix[utils/hwloc-assembler-remote ]hwloc_config_prefix[utils/test-hwloc-annotate.sh ]hwloc_config_prefix[utils/test-hwloc-assembler.sh ]hwloc_config_prefix[utils/test-hwloc-calc.sh ]hwloc_config_prefix[utils/test-hwloc-distances.sh ]hwloc_config_prefix[utils/test-hwloc-distrib.sh ]hwloc_config_prefix[utils/test-hwloc-ls.sh ]hwloc_config_prefix[utils/test-fake-plugin.sh])
 
     # These links are only needed in standalone mode.  It would
     # be nice to m4 foreach this somehow, but whenever I tried

@@ -1,7 +1,7 @@
 /*
  * Copyright © 2009 CNRS
- * Copyright © 2009-2012 inria.  All rights reserved.
- * Copyright © 2009-2010 Université Bordeaux 1
+ * Copyright © 2009-2012 Inria.  All rights reserved.
+ * Copyright © 2009-2010, 2012 Université Bordeaux 1
  * Copyright © 2009 Cisco Systems, Inc.  All rights reserved.
  * See COPYING in top-level directory.
  */
@@ -15,9 +15,11 @@
 #endif
 #include <errno.h>
 
-static void usage(FILE *where)
+#include "misc.h"
+
+void usage(const char *name, FILE *where)
 {
-  fprintf(where, "Usage: hwloc-bind [options] <location> -- command ...\n");
+  fprintf(where, "Usage: %s [options] <location> -- command ...\n", name);
   fprintf(where, " <location> may be a space-separated list of cpusets or objects\n");
   fprintf(where, "            as supported by the hwloc-calc utility, e.g:\n");
   hwloc_calc_locations_usage(where);
@@ -35,7 +37,9 @@ static void usage(FILE *where)
 		 "                 Retrieve the last processors where the current process ran\n");
   fprintf(where, "  --pid <pid>    Operate on process <pid>\n");
   fprintf(where, "  --taskset      Use taskset-specific format when displaying cpuset strings\n");
-  fprintf(where, "  -v             Show verbose messages\n");
+  fprintf(where, "  -f --force     Launch the command even if binding failed\n");
+  fprintf(where, "  -q --quiet     Hide non-fatal error messages\n");
+  fprintf(where, "  -v --verbose   Show verbose messages\n");
   fprintf(where, "  --version      Report version and exit\n");
 }
 
@@ -44,9 +48,11 @@ int main(int argc, char *argv[])
   hwloc_topology_t topology;
   unsigned depth;
   hwloc_bitmap_t cpubind_set, membind_set;
-  int cpubind = 1; /* membind if 0 */
+  int got_cpubind = 0, got_membind = 0;
+  int working_on_cpubind = 1; /* membind if 0 */
   int get_binding = 0;
   int get_last_cpu_location = 0;
+  int force = 0;
   int single = 0;
   int verbose = 0;
   int logical = 1;
@@ -56,8 +62,9 @@ int main(int argc, char *argv[])
   int membind_flags = 0;
   int opt;
   int ret;
-  hwloc_pid_t pid = 0;
-  char **orig_argv = argv;
+  int pid_number = 0;
+  hwloc_pid_t pid;
+  char *callname;
 
   cpubind_set = hwloc_bitmap_alloc();
   membind_set = hwloc_bitmap_alloc();
@@ -67,6 +74,7 @@ int main(int argc, char *argv[])
   hwloc_topology_load(topology);
   depth = hwloc_topology_get_depth(topology);
 
+  callname = argv[0];
   /* skip argv[0], handle options */
   argv++;
   argc--;
@@ -81,16 +89,24 @@ int main(int argc, char *argv[])
     opt = 0;
 
     if (*argv[0] == '-') {
-      if (!strcmp(argv[0], "-v")) {
-	verbose = 1;
+      if (!strcmp(argv[0], "-v") || !strcmp(argv[0], "--verbose")) {
+	verbose++;
+	goto next;
+      }
+      else if (!strcmp(argv[0], "-q") || !strcmp(argv[0], "--quiet")) {
+	verbose--;
 	goto next;
       }
       else if (!strcmp(argv[0], "--help")) {
-	usage(stdout);
+        usage("hwloc-bind", stdout);
 	return EXIT_SUCCESS;
       }
       else if (!strcmp(argv[0], "--single")) {
 	single = 1;
+	goto next;
+      }
+      else if (!strcmp(argv[0], "-f") || !strcmp(argv[0], "--force")) {
+	force = 1;
 	goto next;
       }
       else if (!strcmp(argv[0], "--strict")) {
@@ -100,15 +116,15 @@ int main(int argc, char *argv[])
       }
       else if (!strcmp(argv[0], "--pid")) {
         if (argc < 2) {
-          usage (stderr);
+          usage ("hwloc-bind", stderr);
           exit(EXIT_FAILURE);
         }
-        pid = atoi(argv[1]);
+        pid_number = atoi(argv[1]);
         opt = 1;
         goto next;
       }
       else if (!strcmp (argv[0], "--version")) {
-          printf("%s %s\n", orig_argv[0], VERSION);
+          printf("%s %s\n", callname, VERSION);
           exit(EXIT_SUCCESS);
       }
       if (!strcmp(argv[0], "-l") || !strcmp(argv[0], "--logical")) {
@@ -132,11 +148,11 @@ int main(int argc, char *argv[])
 	goto next;
       }
       else if (!strcmp (argv[0], "--cpubind")) {
-	  cpubind = 1;
+	  working_on_cpubind = 1;
 	  goto next;
       }
       else if (!strcmp (argv[0], "--membind")) {
-	  cpubind = 0;
+	  working_on_cpubind = 0;
 	  goto next;
       }
       else if (!strcmp (argv[0], "--mempolicy")) {
@@ -154,7 +170,7 @@ int main(int argc, char *argv[])
 	  membind_policy = HWLOC_MEMBIND_NEXTTOUCH;
 	else {
 	  fprintf(stderr, "Unrecognized memory binding policy %s\n", argv[1]);
-          usage (stderr);
+          usage ("hwloc-bind", stderr);
           exit(EXIT_FAILURE);
 	}
 	opt = 1;
@@ -162,44 +178,50 @@ int main(int argc, char *argv[])
       }
 
       fprintf (stderr, "Unrecognized option: %s\n", argv[0]);
-      usage(stderr);
+      usage("hwloc-bind", stderr);
       return EXIT_FAILURE;
     }
 
     ret = hwloc_calc_process_arg(topology, depth, argv[0], logical,
-				 cpubind ? cpubind_set : membind_set,
+				 working_on_cpubind ? cpubind_set : membind_set,
 				 verbose);
     if (ret < 0) {
-      if (verbose)
+      if (verbose > 0)
 	fprintf(stderr, "assuming the command starts at %s\n", argv[0]);
       break;
     }
+    if (working_on_cpubind)
+      got_cpubind = 1;
+    else
+      got_membind = 1;
 
   next:
     argc -= opt+1;
     argv += opt+1;
   }
 
+  pid = hwloc_pid_from_number(pid_number, !(get_binding || get_last_cpu_location));
+
   if (get_binding || get_last_cpu_location) {
     char *s;
     const char *policystr = NULL;
     int err;
-    if (cpubind) {
+    if (working_on_cpubind) {
       if (get_last_cpu_location) {
-	if (pid)
+	if (pid_number)
 	  err = hwloc_get_proc_last_cpu_location(topology, pid, cpubind_set, 0);
 	else
 	  err = hwloc_get_last_cpu_location(topology, cpubind_set, 0);
       } else {
-	if (pid)
+	if (pid_number)
 	  err = hwloc_get_proc_cpubind(topology, pid, cpubind_set, 0);
 	else
 	  err = hwloc_get_cpubind(topology, cpubind_set, 0);
       }
       if (err) {
 	const char *errmsg = strerror(errno);
-	if (pid)
-	  fprintf(stderr, "hwloc_get_proc_%s %ld failed (errno %d %s)\n", get_last_cpu_location ? "last_cpu_location" : "cpubind", (long) pid, errno, errmsg);
+	if (pid_number)
+	  fprintf(stderr, "hwloc_get_proc_%s %d failed (errno %d %s)\n", get_last_cpu_location ? "last_cpu_location" : "cpubind", pid_number, errno, errmsg);
 	else
 	  fprintf(stderr, "hwloc_get_%s failed (errno %d %s)\n", get_last_cpu_location ? "last_cpu_location" : "cpubind", errno, errmsg);
 	return EXIT_FAILURE;
@@ -210,14 +232,14 @@ int main(int argc, char *argv[])
 	hwloc_bitmap_asprintf(&s, cpubind_set);
     } else {
       hwloc_membind_policy_t policy;
-      if (pid)
+      if (pid_number)
 	err = hwloc_get_proc_membind(topology, pid, membind_set, &policy, 0);
       else
 	err = hwloc_get_membind(topology, membind_set, &policy, 0);
       if (err) {
 	const char *errmsg = strerror(errno);
-        if (pid)
-          fprintf(stderr, "hwloc_get_proc_membind %ld failed (errno %d %s)\n", (long) pid, errno, errmsg);
+        if (pid_number)
+          fprintf(stderr, "hwloc_get_proc_membind %d failed (errno %d %s)\n", pid_number, errno, errmsg);
         else
 	  fprintf(stderr, "hwloc_get_membind failed (errno %d %s)\n", errno, errmsg);
 	return EXIT_FAILURE;
@@ -244,8 +266,14 @@ int main(int argc, char *argv[])
     return EXIT_SUCCESS;
   }
 
-  if (!hwloc_bitmap_iszero(membind_set)) {
-    if (verbose) {
+  if (got_membind) {
+    if (hwloc_bitmap_iszero(membind_set)) {
+      if (verbose >= 0)
+	fprintf(stderr, "cannot membind to empty set\n");
+      if (!force)
+	goto failed_binding;
+    }
+    if (verbose > 0) {
       char *s;
       hwloc_bitmap_asprintf(&s, membind_set);
       fprintf(stderr, "binding on memory set %s\n", s);
@@ -253,25 +281,33 @@ int main(int argc, char *argv[])
     }
     if (single)
       hwloc_bitmap_singlify(membind_set);
-    if (pid)
+    if (pid_number)
       ret = hwloc_set_proc_membind(topology, pid, membind_set, membind_policy, membind_flags);
     else
       ret = hwloc_set_membind(topology, membind_set, membind_policy, membind_flags);
-    if (ret) {
+    if (ret && verbose >= 0) {
       int bind_errno = errno;
       const char *errmsg = strerror(bind_errno);
       char *s;
       hwloc_bitmap_asprintf(&s, membind_set);
-      if (pid)
-        fprintf(stderr, "hwloc_set_proc_membind %s %ld failed (errno %d %s)\n", s, (long) pid, bind_errno, errmsg);
+      if (pid_number)
+        fprintf(stderr, "hwloc_set_proc_membind %s %d failed (errno %d %s)\n", s, pid_number, bind_errno, errmsg);
       else
         fprintf(stderr, "hwloc_set_membind %s failed (errno %d %s)\n", s, bind_errno, errmsg);
       free(s);
     }
+    if (ret && !force)
+      goto failed_binding;
   }
 
-  if (!hwloc_bitmap_iszero(cpubind_set)) {
-    if (verbose) {
+  if (got_cpubind) {
+    if (hwloc_bitmap_iszero(cpubind_set)) {
+      if (verbose >= 0)
+	fprintf(stderr, "cannot cpubind to empty set\n");
+      if (!force)
+	goto failed_binding;
+    }
+    if (verbose > 0) {
       char *s;
       hwloc_bitmap_asprintf(&s, cpubind_set);
       fprintf(stderr, "binding on cpu set %s\n", s);
@@ -279,21 +315,23 @@ int main(int argc, char *argv[])
     }
     if (single)
       hwloc_bitmap_singlify(cpubind_set);
-    if (pid)
+    if (pid_number)
       ret = hwloc_set_proc_cpubind(topology, pid, cpubind_set, cpubind_flags);
     else
       ret = hwloc_set_cpubind(topology, cpubind_set, cpubind_flags);
-    if (ret) {
+    if (ret && verbose >= 0) {
       int bind_errno = errno;
       const char *errmsg = strerror(bind_errno);
       char *s;
       hwloc_bitmap_asprintf(&s, cpubind_set);
-      if (pid)
-        fprintf(stderr, "hwloc_set_proc_cpubind %s %ld failed (errno %d %s)\n", s, (long) pid, bind_errno, errmsg);
+      if (pid_number)
+        fprintf(stderr, "hwloc_set_proc_cpubind %s %d failed (errno %d %s)\n", s, pid_number, bind_errno, errmsg);
       else
         fprintf(stderr, "hwloc_set_cpubind %s failed (errno %d %s)\n", s, bind_errno, errmsg);
       free(s);
     }
+    if (ret && !force)
+      goto failed_binding;
   }
 
   hwloc_bitmap_free(cpubind_set);
@@ -301,19 +339,26 @@ int main(int argc, char *argv[])
 
   hwloc_topology_destroy(topology);
 
-  if (pid)
+  if (pid_number)
     return EXIT_SUCCESS;
 
   if (0 == argc) {
-    fprintf(stderr, "%s: nothing to do!\n", orig_argv[0]);
+    fprintf(stderr, "%s: nothing to do!\n", callname);
     return EXIT_FAILURE;
   }
 
   ret = execvp(argv[0], argv);
   if (ret) {
       fprintf(stderr, "%s: Failed to launch executable \"%s\"\n", 
-              orig_argv[0], argv[0]);
+              callname, argv[0]);
       perror("execvp");
   }
+  return EXIT_FAILURE;
+
+
+failed_binding:
+  hwloc_bitmap_free(cpubind_set);
+  hwloc_bitmap_free(membind_set);
+  hwloc_topology_destroy(topology);
   return EXIT_FAILURE;
 }

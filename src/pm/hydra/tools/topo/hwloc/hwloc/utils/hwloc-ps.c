@@ -1,6 +1,6 @@
 /*
- * Copyright © 2009-2010 inria.  All rights reserved.
- * Copyright © 2009-2011 Université Bordeaux 1
+ * Copyright © 2009-2012 Inria.  All rights reserved.
+ * Copyright © 2009-2012 Université Bordeaux 1
  * Copyright © 2009-2011 Cisco Systems, Inc.  All rights reserved.
  * See COPYING in top-level directory.
  */
@@ -19,26 +19,30 @@
 #endif
 #include <fcntl.h>
 
+#include "misc.h"
+
 static int show_cpuset = 0;
 static int logical = 1;
 
-static void usage(char *name, FILE *where)
+void usage(const char *name, FILE *where)
 {
   fprintf (where, "Usage: %s [ options ] ...\n", name);
   fprintf (where, "Options:\n");
-  fprintf (where, "  -a             Show all processes, including those that are not bound\n");
-  fprintf (where, "  -l --logical   Use logical object indexes (default)\n");
-  fprintf (where, "  -p --physical  Use physical object indexes\n");
-  fprintf (where, "  -c --cpuset    Show cpuset instead of objects\n");
-  fprintf (where, "  -t --threads   Show threads\n");
-  fprintf (where, "  --whole-system Do not consider administration limitations\n");
+  fprintf (where, "  -a               Show all processes, including those that are not bound\n");
+  fprintf (where, "  -l --logical     Use logical object indexes (default)\n");
+  fprintf (where, "  -p --physical    Use physical object indexes\n");
+  fprintf (where, "  -c --cpuset      Show cpuset instead of objects\n");
+  fprintf (where, "  -t --threads     Show threads\n");
+  fprintf (where, "  --pid-cmd <cmd>  Append the output of <cmd> <pid> to each PID line\n");
+  fprintf (where, "  --whole-system   Do not consider administration limitations\n");
 }
 
 static void print_task(hwloc_topology_t topology,
-		       long pid, const char *name, hwloc_bitmap_t cpuset,
+		       long pid_number, const char *name, hwloc_bitmap_t cpuset,
+		       char *pidoutput,
 		       int thread)
 {
-  printf("%s%ld\t", thread ? " " : "", pid);
+  printf("%s%ld\t", thread ? " " : "", pid_number);
 
   if (show_cpuset) {
     char *cpuset_str = NULL;
@@ -64,7 +68,7 @@ static void print_task(hwloc_topology_t topology,
     hwloc_bitmap_free(remaining);
   }
 
-  printf("\t\t%s\n", name);
+  printf("\t\t%s%s%s\n", name, pidoutput ? "\t" : "", pidoutput ? pidoutput : "");
 }
 
 int main(int argc, char *argv[])
@@ -79,6 +83,7 @@ int main(int argc, char *argv[])
   int show_all = 0;
   int show_threads = 0;
   char *callname;
+  char *pidcmd = NULL;
   int err;
   int opt;
 
@@ -87,27 +92,37 @@ int main(int argc, char *argv[])
     callname = argv[0];
   else
     callname++;
+  /* skip argv[0], handle options */
+  argc--;
+  argv++;
 
-  while (argc >= 2) {
+  while (argc >= 1) {
     opt = 0;
-    if (!strcmp(argv[1], "-a"))
+    if (!strcmp(argv[0], "-a"))
       show_all = 1;
-    else if (!strcmp(argv[1], "-l") || !strcmp(argv[1], "--logical")) {
+    else if (!strcmp(argv[0], "-l") || !strcmp(argv[0], "--logical")) {
       logical = 1;
-    } else if (!strcmp(argv[1], "-p") || !strcmp(argv[1], "--physical")) {
+    } else if (!strcmp(argv[0], "-p") || !strcmp(argv[0], "--physical")) {
       logical = 0;
-    } else if (!strcmp(argv[1], "-c") || !strcmp(argv[1], "--cpuset")) {
+    } else if (!strcmp(argv[0], "-c") || !strcmp(argv[0], "--cpuset")) {
       show_cpuset = 1;
-    } else if (!strcmp(argv[1], "-t") || !strcmp(argv[1], "--threads")) {
+    } else if (!strcmp(argv[0], "-t") || !strcmp(argv[0], "--threads")) {
 #ifdef HWLOC_LINUX_SYS
       show_threads = 1;
 #else
       fprintf (stderr, "Listing threads is currently only supported on Linux\n");
 #endif
-    } else if (!strcmp (argv[1], "--whole-system")) {
+    } else if (!strcmp (argv[0], "--whole-system")) {
       flags |= HWLOC_TOPOLOGY_FLAG_WHOLE_SYSTEM;
+    } else if (!strcmp (argv[0], "--pid-cmd")) {
+      if (argc < 2) {
+	usage(callname, stdout);
+	exit(EXIT_FAILURE);
+      }
+      pidcmd = argv[1];
+      opt = 1;
     } else {
-      fprintf (stderr, "Unrecognized option: %s\n", argv[1]);
+      fprintf (stderr, "Unrecognized option: %s\n", argv[0]);
       usage (callname, stderr);
       exit(EXIT_FAILURE);
     }
@@ -141,7 +156,9 @@ int main(int argc, char *argv[])
     goto out_with_dir;
 
   while ((dirent = readdir(dir))) {
-    long pid;
+    long pid_number;
+    hwloc_pid_t pid;
+    char pidoutput[1024];
     char *end;
     char name[64] = "";
     /* management of threads */
@@ -149,10 +166,12 @@ int main(int argc, char *argv[])
     long *tids = NULL; /* NULL if process is not threaded */
     hwloc_bitmap_t *tidcpusets = NULL;
 
-    pid = strtol(dirent->d_name, &end, 10);
+    pid_number = strtol(dirent->d_name, &end, 10);
     if (*end)
       /* Not a number */
       continue;
+
+    pid = hwloc_pid_from_number(pid_number, 0);
 
 #ifdef HWLOC_LINUX_SYS
     {
@@ -249,12 +268,31 @@ int main(int argc, char *argv[])
     if (hwloc_bitmap_isequal(cpuset, topocpuset) && (!tids || !boundthreads) && !show_all)
       continue;
 
+    pidoutput[0] = '\0';
+    if (pidcmd) {
+      char *cmd;
+      FILE *file;
+      char *end;
+      cmd = malloc(strlen(pidcmd)+1+5+2+1);
+      sprintf(cmd, "%s %u", pidcmd, pid);
+      file = popen(cmd, "r");
+      if (file) {
+	if (fgets(pidoutput, sizeof(pidoutput), file)) {
+	  end = strchr(pidoutput, '\n');
+	  if (end)
+	    *end = '\0';
+	}
+	pclose(file);
+      }
+      free(cmd);
+    }
+
     /* print the process */
-    print_task(topology, pid, name, cpuset, 0);
+    print_task(topology, pid_number, name, cpuset, pidoutput[0] == '\0' ? NULL : pidoutput, 0);
     if (tids)
       /* print each tid we found (it's tidcpuset isn't NULL anymore) */
       for(i=0; tidcpusets[i] != NULL; i++) {
-	print_task(topology, tids[i], "", tidcpusets[i], 1);
+	print_task(topology, tids[i], "", tidcpusets[i], NULL, 1);
 	hwloc_bitmap_free(tidcpusets[i]);
       }
 

@@ -1,7 +1,7 @@
 /*
  * Copyright © 2009 CNRS
- * Copyright © 2009-2012 inria.  All rights reserved.
- * Copyright © 2009-2011 Université Bordeaux 1
+ * Copyright © 2009-2012 Inria.  All rights reserved.
+ * Copyright © 2009-2012 Université Bordeaux 1
  * Copyright © 2009-2011 Cisco Systems, Inc.  All rights reserved.
  * See COPYING in top-level directory.
  */
@@ -63,7 +63,7 @@ Since it uses standard Operating System information, hwloc's support is mostly
 independant from the processor type (x86, powerpc, ...) and just relies on the
 Operating System support. The only exception to this is kFreeBSD, which does
 not support topology information, and hwloc thus uses an x86-only CPUID-based
-backend (which could be used for other OSes too).
+backend (which can be used for other OSes too, see the \ref plugins section).
 
 To check whether hwloc works on a particular machine, just try to build it
 and run <tt>lstopo</tt> or <tt>lstopo-no-graphics</tt>. If some things do not look right
@@ -151,6 +151,10 @@ The hwloc core may also benefit from the following development packages:
     XML files that were exported by the same hwloc release).
     See \ref xml for details.</li>
 </ul>
+libpci and libxml2 support may be statically built inside the main
+hwloc library, or as separate dynamically-loaded plugins
+(see the \ref plugins section).
+
 
 
 \htmlonly
@@ -590,9 +594,12 @@ The documentation chapters include
 <li> \ref cpu_mem_bind
 <li> \ref iodevices
 <li> \ref multinode
+<li> \ref attributes
 <li> \ref xml
+<li> \ref synthetic
 <li> \ref interoperability
 <li> \ref threadsafety
+<li> \ref plugins
 <li> \ref embed
 <li> \ref faq
 </ul>
@@ -684,7 +691,7 @@ Make sure to have had a look at those too!
   object.  This may be completely arbitrary, non-unique, non-contiguous, not
   representative of logical proximity, and may depend on the BIOS
   configuration. That is why hwloc almost never uses them, only in the default
-  lstopo output (<tt>P#x</tt>) and cpuset masks.</dd>
+  lstopo output (<tt>P\#x</tt>) and cpuset masks.</dd>
 
 <dt>Logical index</dt>
   <dd>Index to uniquely identify objects of the same type and depth,
@@ -692,7 +699,7 @@ Make sure to have had a look at those too!
   logical proximity in a generic way, i.e. objects which have adjacent logical
   indexes are adjacent in the topology. That is why hwloc almost always uses
   it in its API, since it expresses logical proximity. They can be shown (as
-  <tt>L#x</tt>) by <tt>lstopo</tt> thanks to the <tt>-l</tt> option.  This index
+  <tt>L\#x</tt>) by <tt>lstopo</tt> thanks to the <tt>-l</tt> option.  This index
   is always linear and in
   the range [0, num_objs_same_type_same_level-1].  Think of it as ``cousin
   rank.'' The ordering is based on topology first, and then on OS CPU numbers,
@@ -703,14 +710,19 @@ Make sure to have had a look at those too!
   index (as computed according to logical proximity by hwloc).
   </dd>
 
-<dt>Logical processor</dt>
 <dt>Processing unit</dt>
   <dd>The smallest processing element that can be represented by a hwloc
   object. It may be a single-core processor, a core of a multicore
-  processor, or a single thread in SMT processor.
+  processor, or a single thread in a SMT processor.
+  hwloc's PU acronym stands for Processing Unit.
+  </dd>
+
+<!-- don't use a single <dd> for both PU and logicalproc <dt> because
+ it may be rendered poorly (big vfill between the <dt> lines -->
+<dt>Logical processor</dt>
+  <dd>Synonym of "Processing unit".
   "Logical processor" should not be confused with "Logical index of a
-  processor". "Logical processor" is only one of the names which can be found in
-  various documentations to designate a processing unit.
+  processor".
   </dd>
 
 </dl>
@@ -816,6 +828,13 @@ prints matrices that cover the entire topology while
 hwloc-distances also displays matrices that ignore part
 of the topology.
 
+\section cli_hwloc_annotate hwloc-annotate
+
+hwloc-annotate may add object attributes such as string
+information (see \ref attributes_info for details).
+It reads an input topology from a XML file and outputs
+the annotated topology as another XML file.
+
 \section cli_hwloc_assembler hwloc-assembler
 
 hwloc-assembler combines several XML topology files into a single
@@ -861,6 +880,7 @@ following environment variables.
   understanding failures to parse input XML topologies.
   Similarly, enabling verbose messages in the synthetic topology
   backend can help understand why the description string is invalid.
+  See also \ref synthetic.
   </dd>
 
 <dt>HWLOC_FSROOT=/path/to/linux/filesystem-root/</dt>
@@ -963,10 +983,49 @@ following environment variables.
   of the corresponding host bridge.
   </dd>
 
+<dt>HWLOC_PLUGINS_PATH=/path/to/hwloc/plugins/:...</dt>
+  <dd>changes the default search directory for plugins.
+  By default, <tt>$libdir/hwloc</tt> is used.
+  The variable may contain several colon-separated directories.
+  </dd>
+
+<dt>HWLOC_PLUGINS_VERBOSE=1</dt>
+  <dd>display verbose information about plugins.
+  List which directories are scanned, which files are loaded,
+  and which components are successfully loaded.
+  </dd>
+
+<dt>HWLOC_COMPONENTS=list,of,components</dt>
+  <dd>forces a list of components to enable.
+  Enable the given comma-separated list of components
+   (if they do not conflict with each other).
+  Once the end of the list is reached, hwloc falls back to
+  enabling the remaining components (sorted by priority) that do not
+  conflict with the already enabled ones.
+  If <tt>stop</tt> is met, the enabling loop immediately stops, no
+  more component is enabled.
+  If the variable is set to an empty string, no specific component is
+  loaded first, all components are loaded in priority order,
+  this is strictly identical to not specifying any variable.
+  The <tt>xml</tt> component name may be followed by a XML file to
+  load (<tt>xml=file.xml</tt>).
+  The synthetic component may be followed by a synthetic topology
+  description (<tt>synthetic=node:2 pu:3</tt>).
+  See \ref plugins for details.
+  </dd>
+
+<dt>HWLOC_COMPONENTS_VERBOSE=1</dt>
+  <dd>display verbose information about components.
+  Display messages when components are registered or enabled.
+  This is the recommended way to list the available components
+  with their priority
+  (all of them are <em>registered</em> at startup).
+  </dd>
+
 </dl>
 
 <!-- not documented:
- HWLOC_FORCE_FSROOT/XMLFILE/THISSYSTEM
+ HWLOC_FORCE_FSROOT/XMLFILE
   force backend anyway (while variables without FORCE in their name do not
   force the backend if the default was already changed)
  HWLOC_LINUX_USE_CPUINFO
@@ -976,8 +1035,6 @@ following environment variables.
   run sanity checks during discovery, as if --enable-debug was passed but
   without debug messages
   may be useful in the doc for debugging?
- add a HWLOC_USE_x86_BACKEND?
-  to force testing of the x86 backend
 -->
 
 
@@ -1369,6 +1426,89 @@ hwloc_topology_load(global);
 
 
 
+\page attributes Object attributes
+
+\section attributes_normal Normal attributes
+
+hwloc objects have many attributes.
+The ::hwloc_obj structure contains a common set of attributes that
+are available for object types, for instance their <tt>type</tt> or
+<tt>logical_index</tt>.
+
+Each object also contains an <tt>attr</tt> field that, if non NULL,
+points to a union ::hwloc_obj_attr_u of type-specific attribute
+structures.
+For instance, a Cache object <tt>obj</tt> contains cache-specific
+information in <tt>obj->attr->cache</tt>, such as its size and
+associativity.
+See ::hwloc_obj_attr_u for details.
+
+\section attributes_info Custom string infos
+
+Aside from the <tt>name</tt> field of each object, hwloc annotates
+many objects with string attributes that are made of a key and a
+value.
+Each object contains a list of such pairs that may be consulted
+manually (looking at the object <tt>infos</tt> array field)
+or using the hwloc_obj_get_info_by_name().
+The user may additionally add new key-value pairs to any object using
+::hwloc_obj_add_info() or the \ref cli_hwloc_annotate program.
+
+Here is a non-exhaustive list of attributes that may be automatically
+added by hwloc (with the usual corresponding object in parentheses).
+Note that these attributes heavily depend on the ability of the
+operating system to report them.
+Many of them will therefore be missing on some OS.
+<dl>
+<dt>OSName, OSRelease, OSVersion, HostName, Architecture
+(Machine object)</dt>
+<dd>The operating system name, release, version, the hostname and the
+architecture name, as reported by the Unix <tt>uname</tt> command.
+</dd>
+<dt>Backend (Machine object or topology root object)</dt>
+<dd>The name of the hwloc backend/component that filled the topology.
+If several components were combined, multiple Backend keys may exist,
+with different values, for instance <tt>x86</tt>, <tt>Linux</tt>
+and <tt>libpci</tt>.
+</dd>
+<dt>LinuxCgroup (Machine object)</dt>
+<dd>The name the Linux control group where the calling process is
+placed.
+</dd>
+<dt>SyntheticDescription (topology root object)</dt>
+<dd>The description string that was given to hwloc to build this
+synthetic topology.
+</dd>
+<dt>CPUModel, CPUType (Socket or Machine)</dt>
+<dd>The processor model name,
+and a more-general processor type name when applicable (Solaris/Sparc).
+These attributes are usually added to Socket objects.
+However, when hwloc cannot detect the number of sockets but still
+knows their (same) model, the attribute may be added to the Machine
+object instead.
+</dd>
+<dt>PCIVendor, PCIDevice (PCI devices and bridges)</dt>
+<dd>The vendor and device names of the PCI device.
+</dd>
+<dt>DMIBoardVendor, DMIBoardName, etc. (Machine object)</dt>
+<dd>DMI hardware information such as the motherboard and chassis
+models and vendors, the BIOS revision, etc.,
+as reported by Linux under <tt>/sys/class/dmi/id/</tt>.
+</dd>
+<dt>Address, Port (Network interface OS devices)</dt>
+<dd>The MAC address and the port number of a software network
+interface, such as <tt>eth4</tt> on Linux.
+</dd>
+<dt>NodeGUID, SysImageGUID, Port3LID, Port4LMC, Port5GID6
+(OpenFabrics OS devices)</dt>
+<dd>The node GUID and GUID mask, the LID and LID mask count of a given
+port, and a GID of a port.
+</dd>
+</dl>
+
+
+
+
 \page xml Importing and exporting topologies from/to XML files
 
 hwloc offers the ability to export topologies to XML files and reload
@@ -1417,6 +1557,14 @@ release (even if using the libxml2 backend).
 Its advantage is however to always be available without requiring
 any external dependency.
 
+If libxml2 is available but the core hwloc library should not directly
+depend on it, the libxml2 support may be built as a dynamicall-loaded
+plugin.
+One should pass <tt>--enable-plugins</tt> to enable plugin support
+(when supported) and build as plugins all component that support it.
+Or pass <tt>--enable-plugins=xml_libxml</tt> to only build this
+libxml2 support as a plugin.
+
 \section xml_errors XML import error management
 
 Importing XML files can fail at least because of file access errors,
@@ -1431,6 +1579,101 @@ later when loading the topology with hwloc_topology_load().
 It is therefore strongly recommended to check the return value of
 both hwloc_topology_set_xml() (or hwloc_topology_set_xmlbuffer())
 and hwloc_topology_load() to handle all these errors.
+
+
+
+
+\page synthetic Synthetic topologies
+
+hwloc may load fake or remote topologies so as to consult them
+without having the underlying hardware available.
+Aside from loading XML topologies, hwloc also enables the building of
+<em>synthetic</em> topologies that are described by a single string
+listing the arity of each levels.
+
+For instance, lstopo may create a topology made of 2 NUMA nodes,
+containing a single socket each, with one cache above two
+single-threaded cores:
+
+\verbatim
+$ lstopo -i "node:2 sock:1 cache:1 core:2 pu:1" -
+Machine (2048MB)
+  NUMANode L#0 (P#0 1024MB) + Socket L#0 + L2 L#0 (4096KB)
+    Core L#0 + PU L#0 (P#0)
+    Core L#1 + PU L#1 (P#1)
+  NUMANode L#1 (P#1 1024MB) + Socket L#1 + L2 L#1 (4096KB)
+    Core L#2 + PU L#2 (P#2)
+    Core L#3 + PU L#3 (P#3)
+\endverbatim
+
+Replacing <tt>-</tt> with <tt>file.xml</tt> in this command line
+will export this topology to XML as usual.
+
+\section synthetic_string Synthetic description string
+
+Each item in the description string gives the type of the level and
+the number of such children under each object of the previous level.
+That is why the above topology contains 4 cores (2 cores times 2 nodes).
+
+These type names must be written as
+<tt>machine</tt>, <tt>node</tt>, <tt>socket</tt>, <tt>core</tt>,
+<tt>cache</tt>, <tt>pu</tt>, <tt>misc</tt>, <tt>group</tt>.
+They do not need to be written case-sensitively, nor entirely (2
+characters such as <tt>ma</tt> select a Machine level).
+Note that I/O objects are not available.
+
+The root object does not appear in the string.
+A Machine object is used by default, and a System object replaces it
+if a Machine level is specified in the string.
+
+Cache level depths are automatically chosen by hwloc (only a L2 first,
+then a L1 under it, then L3 above, then L4 etc.).
+Memory and cache sizes are also automatically chosen.
+The only way to modifying them is to export to XML and manually modify
+the file.
+
+\section synthetic_use Loading a synthetic topology
+
+Aside from lstopo, the hwloc programming interface offers the same
+ability by passing the synthetic description string to
+::hwloc_topology_set_synthetic() before hwloc_topology_load().
+
+Synthetic topologies are created by the <tt>synthetic</tt> component.
+This component may be enabled by force by setting the HWLOC_COMPONENTS
+environment variable to something such as
+<tt>synthetic="node:2 core:3 pu:4"</tt>.
+
+Loading a synthetic topology disables binding support since the
+topology usually does not match the underlying hardware.
+Binding may be reenabled as usual by setting HWLOC_THISSYSTEM=1 in the
+environment or by setting the HWLOC_TOPOLOGY_FLAG_IS_THISSYSTEM
+topology flag.
+
+\section synthetic_export Exporting a topology as a synthetic string
+
+lstopo may export a topology as a synthetic string by forcing its
+output format. 
+It offers a convenient way to quickly describe the contents of a
+machine.
+
+\verbatim
+$ lstopo --of synthetic --no-io
+Socket:1 Cache:1 Cache:2 Cache:1 Cache:1 Core:1 PU:2 
+\endverbatim
+
+The exported string may be passed back to hwloc for recreating
+another similar topology.
+The entire tree will be similar, but cache types and memory sizes
+may be different from the originals.
+
+Such an export is only possible if the topology is totally symmetric,
+which means the <tt>symmetric_subtree</tt> field of the root object
+is set.
+This usually implies that I/O objects are disabled since attaching I/O
+busses often cause the topology to become assymetric.
+Passing <tt>--no-io</tt> to lstopo is therefore often useful to make
+synthetic export work (as well as not passing any I/O topology flag
+when using ::hwloc_topology_set_synthetic() manually).
 
 
 
@@ -1582,6 +1825,152 @@ For reference, \ref hwloc_topology_t modification operations include
   threads are only read the current topology.  </dd>
 
 </dl>
+
+
+
+\page plugins Components and plugins
+
+hwloc is organized in components that are responsible for discovering
+objects.
+Depending on the topology configuration, some components will be used,
+some will be ignored.
+The usual default is to enable the native operating system component,
+(e.g. <tt>linux</tt> or <tt>solaris</tt>) and the
+<tt>libpci</tt> additional component.
+If available, an architecture-specific component (such as <tt>x86</tt>)
+may also improve the topology detection.
+
+If a XML topology is loaded, the <tt>xml</tt> discovery  component
+will be used instead of all other components.
+It internally uses a specific class of components for the actual XML
+import/export routines (<tt>xml_libxml</tt> and <tt>xml_nolibxml</tt>)
+but these will not be discussed here (see \ref xml_backends).
+
+\section plugins_default Components enabled by default
+
+The hwloc core contains a list of components sorted by priority.
+Each one is enabled as long as it does not conflict with the
+previously enabled ones.
+This includes native operating system components,
+architecture-specific ones, and if available, I/O components
+such as <tt>libpci</tt>.
+
+Usually the native operating system component
+(when it exists, e.g. <tt>linux</tt> or <tt>aix</tt>)
+is enabled first.
+Then hwloc looks for an architecture specific component
+(e.g. <tt>x86</tt>).
+Finally these also exist a basic component (<tt>no_os</tt>)
+that just tries to discover the number of PUs in the system.
+
+Each component discovers as much topology information as possible.
+Most of them, including most native OS components, do nothing
+unless the topology is still empty.
+Some others, such as <tt>x86</tt> and <tt>libpci</tt>,
+can complete and annotate what other backends still earlier.
+
+Default priorities ensure that clever components are invoked first.
+Native operating system components have higher priorities,
+and are therefore invoked first, because they likely offer
+very detailed topology information.
+If needed, it will be later extended by architecture-specific
+information (e.g. from the <tt>x86</tt> component).
+
+If any configuration function such as hwloc_topology_set_xml()
+is used before loading the topology, the corresponding component
+is enabled first.
+Then, as usual, hwloc enables any other component (based on
+priorities) that does not conflict.
+
+Certain components that manage a virtual topology, for instance XML
+topology import, synthetic topology description, or custom building,
+conflict with all other components.
+Therefore, one of them may only be loaded
+(e.g. with <tt>hwloc_topology_set_xml()</tt>)
+if no other component is enabled.
+
+The environment variable <tt>HWLOC_COMPONENTS_VERBOSE</tt>
+may be set to get verbose messages about component registration
+(including their priority) and enabling.
+
+\section plugins_select Selecting which components to use
+
+Aside from topology configuration function such as
+<tt>hwloc_topology_set_custom()</tt>, the default priority order may
+be changed through the  <tt>HWLOC_COMPONENTS</tt> environment
+variable (component names must be separated by commas).
+
+Specifying <tt>x86</tt> in this variable will cause the <tt>x86</tt>
+component to take precedence over any other component,
+including the native operating system component.
+It is therefore loaded first, before hwloc tries to load all remaining
+non-conflicting components.
+In this case, <tt>x86</tt> would take care of discovering everything
+it supports, instead of only completing what the native OS information.
+This may be useful if the native component is buggy on some platforms.
+
+It is possible to prevent all remaining components from being loaded
+by placing <tt>stop</tt> in the environment variable.
+Only the components listed before this keyword will be enabled.
+
+Certain component names (<tt>xml</tt> and <tt>synthetic</tt>)
+accept an argument (e.g. <tt>xml=file.xml</tt>).
+These arguments behave exactly as if the corresponding string had
+been passed to <tt>hwloc_topology_set_xml()</tt>
+or <tt>hwloc_topology_set_synthetic()</tt>.
+
+\section plugins_config Building components as plugins
+
+Components may optionally be built as plugins so that the hwloc core
+library does not directly depend on their dependencies (for instance
+the <tt>libpci</tt> library).
+Plugin support may be enabled with the <tt>--enable-plugins</tt>
+configure option.
+All components buildable as plugins will then be built as plugins.
+The configure option may be given a comma-separated list of component
+names to specify the exact list of components to build as plugins.
+
+Plugins are built as independent dynamic libraries that are installed
+in <tt>$libdir/hwloc</tt>.
+All plugins found in this directory are loaded during
+<tt>topology_init()</tt>.
+A specific list of directories (colon-separated) to scan may be
+specified in the <tt>HWLOC_PLUGINS_PATH</tt> environment variable.
+
+Plugin filenames must start with <tt>hwloc_</tt>.
+For instance the <tt>libpci</tt> plugin is usually built as
+<tt>hwloc_libpci.so</tt>.
+
+Note that loading a plugin just means that the corresponding component
+is registered to the hwloc core.
+Components are then only enabled if the topology configuration
+requests it, as explained in the previous sections.
+
+\section plugins_adding Adding new discovery components and plugins
+
+Each new discovery component requires a new <tt>hwloc_component</tt>
+structure to be exported to the hwloc core with name
+<tt>hwloc_&lt;name&gt;_component</tt>.
+The configure script should then be modified to add
+<tt>&lt;name&gt;</tt> to the <tt>hwloc_components</tt>
+variable so that the component is actually available at runtime.
+
+If the new component may be built as a plugin, the configure script
+should also define <tt>hwloc_&lt;name&gt;_component_maybeplugin=1</tt>.
+If the configure scripts decides to enable the component as a plugin,
+the variable <tt>hwloc_&lt;name&gt;_component</tt>
+will be set to <tt>plugin</tt>.
+The build system may then use this variable to actually
+change the way the component is built.
+
+The component structure contains a data field that points to an
+<tt>hwloc_disc_component</tt> which defines an <tt>instantiate</tt>
+callback.
+This function is invoked when this component is actually used by a topology.
+It creates a <tt>backend</tt> structure that usually contains a
+<tt>discover</tt> and/or <tt>notify_new_object</tt> callback taking
+care of the actual topology discovery.
+
 
 
 
@@ -1917,16 +2306,24 @@ do not belong to the same horizontal levels).</strong>
 \section faq_annotate How do I annotate the topology with private notes?
 
 Each hwloc object contains a <tt>userdata</tt> field that may be used by
-applications to store private pointers. This field is kept intact as long
-as the object is valid, which means as long as topology objects are not
-modified by reloading or restricting the topology.
+applications to store private pointers. This field is only valid
+during the lifetime of these container object and topology.
+It becomes invalid as soon the topology is reloaded or destroyed,
+or as soon as the object disappears, for instance when restricting
+the topology.
+The userdata field is not exported/imported to/from XML by default since
+hwloc does not know what it contains.
+This behavior may be changed by specifying application-specific callbacks
+with <tt>hwloc_topology_set_userdata_export_callback()</tt>
+and <tt>hwloc_topology_set_userdata_import_callback()</tt>.
 
 Each object may also contain some <em>info</em> attributes
-(key name and value) that are setup by hwloc and may be extended
-by the user with <tt>hwloc_obj_add_info()</tt>.
+(key name and value) that are setup by hwloc during discovery
+and that may be extended by the user with
+<tt>hwloc_obj_add_info()</tt> (see also \ref attributes).
 Contrary to the <tt>userdata</tt> field which is unique, multiple info
 attributes may exist for each object, even with the same name.
-These attributes are also exported to XML together with the topology.
+These attributes are always exported to XML.
 However only character strings may be used as key names and values.
 
 It is also possible to insert Misc objects with custom names anywhere

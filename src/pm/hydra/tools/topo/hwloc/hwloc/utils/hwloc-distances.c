@@ -1,5 +1,5 @@
 /*
- * Copyright © 2009-2011 inria.  All rights reserved.
+ * Copyright © 2009-2012 Inria.  All rights reserved.
  * Copyright © 2009-2010 Université Bordeaux 1
  * Copyright © 2009-2011 Cisco Systems, Inc.  All rights reserved.
  * See COPYING in top-level directory.
@@ -26,7 +26,7 @@ void usage(const char *callname __hwloc_attribute_unused, FILE *where)
   fprintf(where, "  --restrict <set> Restrict the topology to processors listed in <set>\n");
   hwloc_utils_input_format_usage(where, 0);
   fprintf(where, "Miscellaneous options:\n");
-  fprintf(where, "  -v               Show verbose messages\n");
+  fprintf(where, "  -v --verbose     Show verbose messages\n");
   fprintf(where, "  --version        Report version and exit\n");
 }
 
@@ -49,8 +49,8 @@ int main(int argc, char *argv[])
 
   hwloc_topology_init(&topology);
 
-  /* skip argv[0], handle options */
   callname = argv[0];
+  /* skip argv[0], handle options */
   argv++;
   argc--;
 
@@ -66,7 +66,7 @@ int main(int argc, char *argv[])
 	usage(callname, stdout);
 	return EXIT_SUCCESS;
       }
-      if (!strcmp(argv[0], "-v")) {
+      if (!strcmp(argv[0], "-v") || !strcmp(argv[0], "--verbose")) {
 	verbose++;
 	goto next;
       }
@@ -86,7 +86,7 @@ int main(int argc, char *argv[])
 	goto next;
       }
       else if (!strcmp (argv[0], "--restrict")) {
-	if (argc <= 2) {
+	if (argc < 2) {
 	  usage (callname, stdout);
 	  exit(EXIT_FAILURE);
 	}

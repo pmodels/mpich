@@ -1,5 +1,5 @@
 Copyright © 2009 CNRS
-Copyright © 2009-2012 inria.  All rights reserved.
+Copyright © 2009-2012 Inria.  All rights reserved.
 Copyright © 2009-2012 Université Bordeaux 1
 Copyright © 2009-2011 Cisco Systems, Inc.  All rights reserved.
 
@@ -15,6 +15,76 @@ This file contains the main features as well as overviews of specific
 bug fixes (and other actions) for each version of hwloc since version
 0.9 (as initially released as "libtopology", then re-branded to "hwloc"
 in v0.9.1).
+
+Version 1.6.0
+-------------
+* Major changes
+  + Reorganize the backend infrastructure to support dynamic selection
+    of components and dynamic loading of plugins. For details, see the
+    new documentation section Components and plugins.
+    - The HWLOC_COMPONENTS variable lets one replace the default discovery
+      components.
+    - Dynamic loading of plugins may be enabled with --enable-plugins
+      (except on AIX and Windows). It will build libxml2 and libpci
+      support as separated modules. This helps reducing the dependencies
+      of the core hwloc library when distributed as a binary package.
+* Backends
+  + Add CPUModel detection on Darwin and x86/FreeBSD.
+    Thanks to Robin Scher for providing ways to implement this.
+  + The x86 backend now adds CPUModel info attributes to socket objects
+    created by other backends that do not natively support this attribute.
+  + Fix detection on FreeBSD in case of cpuset restriction. Thanks to
+    Sebastian Kuzminsky for reporting the problem.
+* XML
+  + Add hwloc_topology_set_userdata_import/export_callback(),
+    hwloc_export_obj_userdata() and _userdata_base64() to let
+    applications specify how to save/restore the custom data they placed
+    in the userdata private pointer field of hwloc objects.
+* Tools
+  + Add hwloc-annotate program to add string info attributes to XML
+    topologies.
+  + Add --pid-cmd to hwloc-ps to append the output of a command to each
+    PID line. May be used for showing Open MPI process ranks, see the
+    hwloc-ps(1) manpage for details.
+  + hwloc-bind now exits with an error if binding fails; the executable
+    is not launched unless binding suceeeded or --force was given.
+  + Add --quiet to hwloc-calc and hwloc-bind to hide non-fatal error
+    messages.
+  + Fix command-line pid support in windows tools.
+  + All programs accept --verbose as a synonym to -v.
+* Misc
+  + Fix some DIR descriptor leaks on Linux.
+  + Fix I/O device lists when some were filtered out after a XML import.
+  + Fix the removal of I/O objects when importing a I/O-enabled XML topology
+    without any I/O topology flag.
+  + When merging objects with HWLOC_IGNORE_TYPE_KEEP_STRUCTURE or
+    lstopo --merge, compare object types before deciding which one of two
+    identical object to remove (e.g. keep sockets in favor of caches).
+  + Add some GUID- and LID-related info attributes to OpenFabrics
+    OS devices.
+  + Only add CPUType socket attributes on Solaris/Sparc. Other cases
+    don't report reliable information (Solaris/x86), and a replacement
+    is available as the Architecture string info in the Machine object.
+  + Add missing Backend string info on Solaris in most cases.
+  + Document object attributes and string infos in a new Attributes
+    section in the documentation.
+  + Add a section about Synthetic topologies in the documentation.
+
+
+Version 1.5.1
+-------------
+* Fix block OS device detection on Linux kernel 3.3 and later.
+  Thanks to Guy Streeter for reporting the problem and testing the fix.
+* Fix the cpuid code in the x86 backend (for FreeBSD). Thanks to
+  Sebastian Kuzminsky for reporting problems and testing patches.
+* Fix 64bit detection on FreeBSD.
+* Fix some corner cases in the management of the thissystem flag with
+  respect to topology flags and environment variables.
+* Fix some corner cases in command-line parsing checks in hwloc-distrib
+  and hwloc-distances.
+* Make sure we do not miss some block OS devices on old Linux kernels
+  when a single PCI device has multiple IDE hosts/devices behind it.
+* Do not disable I/O devices or instruction caches in hwloc-assembler output.
 
 
 Version 1.5.0

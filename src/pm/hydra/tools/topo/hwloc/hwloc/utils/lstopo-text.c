@@ -46,7 +46,7 @@
  */
 
 static void
-output_console_obj (hwloc_obj_t l, FILE *output, int logical, int verbose_mode)
+output_console_obj (hwloc_topology_t topology, hwloc_obj_t l, FILE *output, int logical, int verbose_mode)
 {
   char type[32], *attr, phys[32] = "";
   unsigned idx = logical ? l->logical_index : l->os_index;
@@ -92,6 +92,16 @@ output_console_obj (hwloc_obj_t l, FILE *output, int logical, int verbose_mode)
     fprintf(output, "%s", cpusetstr);
     free(cpusetstr);
   }
+
+  /* annotate if the PU is forbidden/offline/running */
+  if (l->type == HWLOC_OBJ_PU && verbose_mode >= 2) {
+    if (lstopo_pu_offline(l))
+      printf(" (offline)");
+    else if (lstopo_pu_forbidden(l))
+      printf(" (forbidden)");
+    else if (lstopo_pu_running(topology, l))
+      printf(" (running)");
+  }
 }
 
 /* Recursively output topology in a console fashion */
@@ -111,7 +121,7 @@ output_topology (hwloc_topology_t topology, hwloc_obj_t l, hwloc_obj_t parent, F
     indent (output, 2*i);
     i++;
   }
-  output_console_obj(l, output, logical, verbose_mode);
+  output_console_obj(topology, l, output, logical, verbose_mode);
   if (l->arity || (!i && !l->arity))
     {
       for (x=0; x<l->arity; x++)
@@ -125,7 +135,7 @@ output_only (hwloc_topology_t topology, hwloc_obj_t l, FILE *output, int logical
 {
   unsigned x;
   if (show_only == l->type) {
-    output_console_obj (l, output, logical, verbose_mode);
+    output_console_obj (topology, l, output, logical, verbose_mode);
     fprintf (output, "\n");
   }
   for (x=0; x<l->arity; x++)
@@ -164,7 +174,7 @@ void output_console(hwloc_topology_t topology, const char *filename, int logical
     fprintf(output, "\n");
   }
 
-  if (verbose_mode > 1 || !verbose_mode) {
+  if ((verbose_mode > 1 || !verbose_mode) && show_only == (hwloc_obj_type_t)-1) {
     unsigned depth, nbobjs;
     for (depth = 0; depth < topodepth; depth++) {
       hwloc_obj_t obj = hwloc_get_obj_by_depth(topology, depth, 0);
@@ -189,7 +199,7 @@ void output_console(hwloc_topology_t topology, const char *filename, int logical
 	       HWLOC_TYPE_DEPTH_OS_DEVICE, nbobjs, "OS Device", HWLOC_OBJ_OS_DEVICE);
   }
 
-  if (verbose_mode > 1) {
+  if (verbose_mode > 1 && show_only == (hwloc_obj_type_t)-1) {
     const struct hwloc_distances_s * distances;
     unsigned depth;
 
@@ -205,7 +215,7 @@ void output_console(hwloc_topology_t topology, const char *filename, int logical
     }
   }
 
-  if (verbose_mode > 1) {
+  if (verbose_mode > 1 && show_only == (hwloc_obj_type_t)-1) {
     hwloc_const_bitmap_t complete = hwloc_topology_get_complete_cpuset(topology);
     hwloc_const_bitmap_t topo = hwloc_topology_get_topology_cpuset(topology);
     hwloc_const_bitmap_t online = hwloc_topology_get_online_cpuset(topology);
@@ -278,7 +288,8 @@ void output_synthetic(hwloc_topology_t topology, const char *filename, int logic
   }
 
   if (!obj->symmetric_subtree) {
-    fprintf(stderr, "Cannot output assymetric topology in synthetic format\n");
+    fprintf(stderr, "Cannot output assymetric topology in synthetic format.\n");
+    fprintf(stderr, "Adding --no-io may help making the topology symmetric.\n");
     return;
   }
 

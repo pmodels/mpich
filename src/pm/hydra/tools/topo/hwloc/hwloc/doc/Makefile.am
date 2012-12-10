@@ -1,4 +1,4 @@
-# Copyright © 2009-2012 inria.  All rights reserved.
+# Copyright © 2009-2012 Inria.  All rights reserved.
 # Copyright © 2009-2012 Université Bordeaux 1
 # Copyright © 2009-2010 Cisco Systems, Inc.  All rights reserved.
 # See COPYING in top-level directory.
@@ -236,6 +236,9 @@ if HWLOC_INSTALL_DOXYGEN
 # in _DATA suffix names, because AM won't allow us to do things like
 # man3_extra_MANS = ...group...
 
+# When adding a new _DATA line below, remember to add it to the
+# list of dependencies too.
+
 man3_MANS = \
         $(DOX_MAN_DIR)/man3/hwlocality_api_version.3 \
         $(DOX_MAN_DIR)/man3/HWLOC_API_VERSION.3 \
@@ -344,12 +347,20 @@ man3_configuration_DATA = \
         $(DOX_MAN_DIR)/man3/hwloc_topology_support.3 \
         $(DOX_MAN_DIR)/man3/hwloc_topology_get_support.3
 
-man3_tinkerdir = $(man3dir)
-man3_tinker_DATA = \
-        $(DOX_MAN_DIR)/man3/hwlocality_tinker.3 \
+man3_xmlexportdir = $(man3dir)
+man3_xmlexport_DATA = \
+        $(DOX_MAN_DIR)/man3/hwlocality_xmlexport.3 \
         $(DOX_MAN_DIR)/man3/hwloc_topology_export_xml.3 \
         $(DOX_MAN_DIR)/man3/hwloc_topology_export_xmlbuffer.3 \
         $(DOX_MAN_DIR)/man3/hwloc_free_xmlbuffer.3 \
+        $(DOX_MAN_DIR)/man3/hwloc_topology_set_userdata_export_callback.3 \
+        $(DOX_MAN_DIR)/man3/hwloc_export_obj_userdata.3 \
+        $(DOX_MAN_DIR)/man3/hwloc_export_obj_userdata_base64.3 \
+        $(DOX_MAN_DIR)/man3/hwloc_topology_set_userdata_import_callback.3
+
+man3_tinkerdir = $(man3dir)
+man3_tinker_DATA = \
+        $(DOX_MAN_DIR)/man3/hwlocality_tinker.3 \
         $(DOX_MAN_DIR)/man3/hwloc_topology_insert_misc_object_by_cpuset.3 \
         $(DOX_MAN_DIR)/man3/hwloc_topology_insert_misc_object_by_parent.3 \
         $(DOX_MAN_DIR)/man3/HWLOC_RESTRICT_FLAG_ADAPT_DISTANCES.3 \
@@ -670,6 +681,8 @@ if HWLOC_BUILD_DOXYGEN
 # *first* before we can try to process/install man pages, the HTML,
 # run pdflatex, .etc.).
 
+# The list below should match the list of _DATA lines above
+
 $(man3_MANS): $(DOX_TAG)
 $(man3_topology_DATA): $(DOX_TAG)
 $(man3_sets_DATA): $(DOX_TAG)
@@ -677,6 +690,7 @@ $(man3_types_DATA): $(DOX_TAG)
 $(man3_objects_DATA): $(DOX_TAG)
 $(man3_creation_DATA): $(DOX_TAG)
 $(man3_configuration_DATA): $(DOX_TAG)
+$(man3_xmlexport_DATA): $(DOX_TAG)
 $(man3_tinker_DATA): $(DOX_TAG)
 $(man3_information_DATA): $(DOX_TAG)
 $(man3_traversal_DATA): $(DOX_TAG)
@@ -688,8 +702,8 @@ $(man3_bitmap_DATA): $(DOX_TAG)
 $(man3_helper_types_DATA): $(DOX_TAG)
 $(man3_helper_traversal_basic_DATA): $(DOX_TAG)
 $(man3_helper_find_inside_DATA): $(DOX_TAG)
-$(man3_helper_find_coverings_DATA): $(DOX_TAG)
 $(man3_helper_find_covering_DATA): $(DOX_TAG)
+$(man3_helper_find_coverings_DATA): $(DOX_TAG)
 $(man3_helper_find_cache_DATA): $(DOX_TAG)
 $(man3_helper_traversal_DATA): $(DOX_TAG)
 $(man3_helper_binding_DATA): $(DOX_TAG)
@@ -720,10 +734,12 @@ endif
 # Make sure that the documentation example works
 #
 
-if HWLOC_BUILD_TESTS
-TESTS = hwloc-hello hwloc-hello-cpp
+TESTS = hwloc-hello
+if HWLOC_HAVE_CXX
+TESTS += hwloc-hello-cpp
+endif HWLOC_HAVE_CXX
+
 check_PROGRAMS = $(TESTS)
-endif HWLOC_BUILD_TESTS
 
 hwloc-hello-cpp.cpp: $(srcdir)/hwloc-hello.c
 	cp -f $(srcdir)/hwloc-hello.c $@

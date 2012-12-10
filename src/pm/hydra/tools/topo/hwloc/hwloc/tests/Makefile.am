@@ -1,4 +1,4 @@
-# Copyright © 2009-2011 inria.  All rights reserved.
+# Copyright © 2009-2012 Inria.  All rights reserved.
 # Copyright © 2009-2012 Université Bordeaux 1
 # Copyright © 2009-2010 Cisco Systems, Inc.  All rights reserved.
 # See COPYING in top-level directory.
@@ -16,8 +16,10 @@ endif HWLOC_HAVE_LINUX
 
 LDADD =
 
-if HWLOC_BUILD_TESTS
-check_PROGRAMS = hwloc_bitmap \
+TESTS_ENVIRONMENT = $(builddir)/wrapper.sh
+
+check_PROGRAMS = hwloc_list_components \
+	hwloc_bitmap \
 	hwloc_bitmap_string \
 	hwloc_get_closest_objs \
 	hwloc_get_obj_covering_cpuset \
@@ -36,6 +38,7 @@ check_PROGRAMS = hwloc_bitmap \
 	hwloc_synthetic \
 	hwloc_custom \
 	hwloc_backends \
+	hwloc_pci_backend \
 	hwloc_is_thissystem \
 	hwloc_distances \
 	hwloc_groups \
@@ -93,8 +96,6 @@ hwloc_bind_LDADD = $(LDADD)
 if HWLOC_HAVE_PTHREAD
 hwloc_bind_LDADD += -lpthread
 endif
-
-endif HWLOC_BUILD_TESTS
 
 # ship the embedded test code but don't actually let automake ever
 # look at it because we have another configure stuff in there

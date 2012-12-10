@@ -1,6 +1,6 @@
 /*
  * Copyright © 2009 CNRS
- * Copyright © 2009-2012 inria.  All rights reserved.
+ * Copyright © 2009-2012 Inria.  All rights reserved.
  * Copyright © 2009-2011 Université Bordeaux 1
  * Copyright © 2011 Cisco Systems, Inc.  All rights reserved.
  * See COPYING in top-level directory.
@@ -613,7 +613,7 @@ look_rset(int sdl, hwloc_obj_type_t type, struct hwloc_topology *topology, int l
 	obj->memory.page_types_len = 2;
 	obj->memory.page_types = malloc(2*sizeof(*obj->memory.page_types));
 	memset(obj->memory.page_types, 0, 2*sizeof(*obj->memory.page_types));
-	obj->memory.page_types[0].size = getpagesize();
+	obj->memory.page_types[0].size = hwloc_getpagesize();
 #ifdef HAVE__SC_LARGE_PAGESIZE
 	obj->memory.page_types[1].size = sysconf(_SC_LARGE_PAGESIZE);
 #endif
@@ -674,10 +674,18 @@ look_rset(int sdl, hwloc_obj_type_t type, struct hwloc_topology *topology, int l
   rs_free(rad);
 }
 
-void
-hwloc_look_aix(struct hwloc_topology *topology)
+static int
+hwloc_look_aix(struct hwloc_backend *backend)
 {
+  struct hwloc_topology *topology = backend->topology;
   int i;
+
+  if (topology->levels[0][0]->cpuset)
+    /* somebody discovered things */
+    return 0;
+
+  hwloc_alloc_obj_cpusets(topology->levels[0][0]);
+
   /* TODO: R_LGPGDEF/R_LGPGFREE for large pages */
 
   hwloc_debug("Note: SMPSDL is at %d\n", rs_getinfo(NULL, R_SMPSDL, 0));
@@ -739,50 +747,84 @@ hwloc_look_aix(struct hwloc_topology *topology)
     }
 
   hwloc_obj_add_info(topology->levels[0][0], "Backend", "AIX");
+  if (topology->is_thissystem)
+    hwloc_add_uname_info(topology);
+  return 1;
 }
 
 void
-hwloc_set_aix_hooks(struct hwloc_topology *topology)
+hwloc_set_aix_hooks(struct hwloc_binding_hooks *hooks,
+		    struct hwloc_topology_support *support __hwloc_attribute_unused)
 {
-  topology->set_proc_cpubind = hwloc_aix_set_proc_cpubind;
-  topology->get_proc_cpubind = hwloc_aix_get_proc_cpubind;
+  hooks->set_proc_cpubind = hwloc_aix_set_proc_cpubind;
+  hooks->get_proc_cpubind = hwloc_aix_get_proc_cpubind;
 #ifdef R_THREAD
 #ifdef HWLOC_HAVE_PTHREAD_GETTHRDS_NP
-  topology->set_thread_cpubind = hwloc_aix_set_thread_cpubind;
-  topology->get_thread_cpubind = hwloc_aix_get_thread_cpubind;
+  hooks->set_thread_cpubind = hwloc_aix_set_thread_cpubind;
+  hooks->get_thread_cpubind = hwloc_aix_get_thread_cpubind;
 #endif /* HWLOC_HAVE_PTHREAD_GETTHRDS_NP */
 #endif /* R_THREAD */
-  topology->set_thisproc_cpubind = hwloc_aix_set_thisproc_cpubind;
-  topology->get_thisproc_cpubind = hwloc_aix_get_thisproc_cpubind;
+  hooks->set_thisproc_cpubind = hwloc_aix_set_thisproc_cpubind;
+  hooks->get_thisproc_cpubind = hwloc_aix_get_thisproc_cpubind;
 #ifdef R_THREAD
-  topology->set_thisthread_cpubind = hwloc_aix_set_thisthread_cpubind;
-  topology->get_thisthread_cpubind = hwloc_aix_get_thisthread_cpubind;
+  hooks->set_thisthread_cpubind = hwloc_aix_set_thisthread_cpubind;
+  hooks->get_thisthread_cpubind = hwloc_aix_get_thisthread_cpubind;
 #endif /* R_THREAD */
-  topology->get_thisthread_last_cpu_location = hwloc_aix_get_thisthread_last_cpu_location;
+  hooks->get_thisthread_last_cpu_location = hwloc_aix_get_thisthread_last_cpu_location;
   /* TODO: get_last_cpu_location: mycpu() only works for the current thread? */
 #ifdef P_DEFAULT
-  topology->set_proc_membind = hwloc_aix_set_proc_membind;
-  topology->get_proc_membind = hwloc_aix_get_proc_membind;
+  hooks->set_proc_membind = hwloc_aix_set_proc_membind;
+  hooks->get_proc_membind = hwloc_aix_get_proc_membind;
 #ifdef R_THREAD
 #if 0 /* def HWLOC_HAVE_PTHREAD_GETTHRDS_NP */
   /* Does it really make sense to set the memory binding of another thread? */
-  topology->set_thread_membind = hwloc_aix_set_thread_membind;
-  topology->get_thread_membind = hwloc_aix_get_thread_membind;
+  hooks->set_thread_membind = hwloc_aix_set_thread_membind;
+  hooks->get_thread_membind = hwloc_aix_get_thread_membind;
 #endif /* HWLOC_HAVE_PTHREAD_GETTHRDS_NP */
 #endif /* R_THREAD */
-  topology->set_thisproc_membind = hwloc_aix_set_thisproc_membind;
-  topology->get_thisproc_membind = hwloc_aix_get_thisproc_membind;
+  hooks->set_thisproc_membind = hwloc_aix_set_thisproc_membind;
+  hooks->get_thisproc_membind = hwloc_aix_get_thisproc_membind;
 #ifdef R_THREAD
-  topology->set_thisthread_membind = hwloc_aix_set_thisthread_membind;
-  topology->get_thisthread_membind = hwloc_aix_get_thisthread_membind;
+  hooks->set_thisthread_membind = hwloc_aix_set_thisthread_membind;
+  hooks->get_thisthread_membind = hwloc_aix_get_thisthread_membind;
 #endif /* R_THREAD */
-  /* topology->set_area_membind = hwloc_aix_set_area_membind; */
+  /* hooks->set_area_membind = hwloc_aix_set_area_membind; */
   /* get_area_membind is not available */
-  topology->alloc_membind = hwloc_aix_alloc_membind;
-  topology->alloc = hwloc_alloc_mmap;
-  topology->free_membind = hwloc_free_mmap;
-  topology->support.membind->firsttouch_membind = 1;
-  topology->support.membind->bind_membind = 1;
-  topology->support.membind->interleave_membind = 1;
+  hooks->alloc_membind = hwloc_aix_alloc_membind;
+  hooks->alloc = hwloc_alloc_mmap;
+  hooks->free_membind = hwloc_free_mmap;
+  support->membind->firsttouch_membind = 1;
+  support->membind->bind_membind = 1;
+  support->membind->interleave_membind = 1;
 #endif /* P_DEFAULT */
 }
+
+static struct hwloc_backend *
+hwloc_aix_component_instantiate(struct hwloc_disc_component *component,
+				const void *_data1 __hwloc_attribute_unused,
+				const void *_data2 __hwloc_attribute_unused,
+				const void *_data3 __hwloc_attribute_unused)
+{
+  struct hwloc_backend *backend;
+  backend = hwloc_backend_alloc(component);
+  if (!backend)
+    return NULL;
+  backend->discover = hwloc_look_aix;
+  return backend;
+}
+
+static struct hwloc_disc_component hwloc_aix_disc_component = {
+  HWLOC_DISC_COMPONENT_TYPE_CPU,
+  "aix",
+  HWLOC_DISC_COMPONENT_TYPE_GLOBAL,
+  hwloc_aix_component_instantiate,
+  50,
+  NULL
+};
+
+const struct hwloc_component hwloc_aix_component = {
+  HWLOC_COMPONENT_ABI,
+  HWLOC_COMPONENT_TYPE_DISC,
+  0,
+  &hwloc_aix_disc_component
+};

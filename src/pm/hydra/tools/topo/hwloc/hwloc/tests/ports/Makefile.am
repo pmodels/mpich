@@ -9,11 +9,9 @@ AM_LDFLAGS = $(HWLOC_LDFLAGS)
 
 SRC = $(HWLOC_top_srcdir)/src
 
-if HWLOC_BUILD_TESTS
 if HWLOC_HAVE_LINUX
 check_LTLIBRARIES = libhwloc-ports.la
 endif HWLOC_HAVE_LINUX
-endif HWLOC_BUILD_TESTS
 
 # Note that AC_CONFIG_LINKS sets up the sym links for the files in
 # this directory (back to the $top_srcdir/src directory).  So if you
@@ -62,7 +60,7 @@ libhwloc_ports_la_CPPFLAGS = \
         -DHWLOC_OSF_SYS \
         -DHWLOC_WIN_SYS \
         -DHWLOC_DARWIN_SYS \
-        -DHWLOC_FREEBSD_SYS -DHAVE_SYS_CPUSET_H \
+        -DHWLOC_FREEBSD_SYS -DHAVE_SYS_CPUSET_H -DHAVE_CPUSET_SETID \
         -DHWLOC_HPUX_SYS \
         -DHWLOC_INSIDE_LIBHWLOC
 

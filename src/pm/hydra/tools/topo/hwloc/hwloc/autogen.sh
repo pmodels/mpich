@@ -1,2 +1,2 @@
 :
-autoreconf ${autoreconf_args:-"-vif"}
+autoreconf -ivf
