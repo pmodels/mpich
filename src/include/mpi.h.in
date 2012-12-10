@@ -782,10 +782,10 @@ typedef int (MPIX_Grequest_wait_function)(int, void **, double, MPI_Status *);
 
 #define MPIX_ERR_PROC_FAIL_STOP 54   /* Process failure */
 
-#define MPI_ERR_RMA_RANGE  55      /* */
-#define MPI_ERR_RMA_ATTACH 56      /* */
-#define MPI_ERR_RMA_SHARED 57      /* */
-#define MPI_ERR_RMA_WRONG_FLAVOR 58    /* */
+#define MPI_ERR_RMA_RANGE  55       /* */
+#define MPI_ERR_RMA_ATTACH 56       /* */
+#define MPI_ERR_RMA_SHARED 57       /* */
+#define MPI_ERR_RMA_FLAVOR 58       /* */
 
 #define MPI_ERR_LASTCODE    0x3fffffff  /* Last valid error code for a 
 					   predefined error class */
