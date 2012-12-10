@@ -2507,7 +2507,6 @@ static int MPIDI_CH3I_Do_passive_target_rma(MPID_Win *win_ptr, int target_rank,
         /* Shared lock -- The ops list is empty.  Any issued ops are already
            remote complete; done packet is not needed for safe third party
            communication. */
-        MPIU_Assert(MPIDI_CH3I_RMA_Ops_isempty(&win_ptr->targets[target_rank].rma_ops_list));
         *wait_for_rma_done_pkt = 0;
     }
     else {
