@@ -172,3 +172,88 @@ int MPIDO_Alltoall(const void *sendbuf,
    TRACE_ERR("Leaving alltoall\n");
   return PAMI_SUCCESS;
 }
+
+
+int MPIDO_Alltoall_simple(const void *sendbuf,
+                   int sendcount,
+                   MPI_Datatype sendtype,
+                   void *recvbuf,
+                   int recvcount,
+                   MPI_Datatype recvtype,
+                   MPID_Comm *comm_ptr,
+                   int *mpierrno)
+{
+   TRACE_ERR("Entering MPIDO_Alltoall_optimized\n");
+   volatile unsigned active = 1;
+   MPID_Datatype *sdt, *rdt;
+   pami_type_t stype, rtype;
+   MPI_Aint sdt_true_lb=0, rdt_true_lb;
+   MPIDI_Post_coll_t alltoall_post;
+   int sndlen, rcvlen, snd_contig, rcv_contig, pamidt=1;
+   int tmp;
+
+   const struct MPIDI_Comm* const mpid = &(comm_ptr->mpid);
+
+   MPIDI_Datatype_get_info(1, sendtype, snd_contig, sndlen, sdt, sdt_true_lb);
+   if(!snd_contig) pamidt = 0;
+   MPIDI_Datatype_get_info(1, recvtype, rcv_contig, rcvlen, rdt, rdt_true_lb);
+   if(!rcv_contig) pamidt = 0;
+
+   /* Alltoall is much simpler if bytes are required because we don't need to
+    * malloc displ/count arrays and copy things
+    */
+
+
+   /* Is it a built in type? If not, send to MPICH */
+   if(MPIDI_Datatype_to_pami(sendtype, &stype, -1, NULL, &tmp) != MPI_SUCCESS)
+      pamidt = 0;
+   if(MPIDI_Datatype_to_pami(recvtype, &rtype, -1, NULL, &tmp) != MPI_SUCCESS)
+      pamidt = 0;
+
+   if(sendbuf ==  MPI_IN_PLACE)
+      pamidt = 0;
+
+   if(pamidt == 0)
+   {
+      return MPIR_Alltoall_intra(sendbuf, sendcount, sendtype,
+                      recvbuf, recvcount, recvtype,
+                      comm_ptr, mpierrno);
+
+   }
+
+   pami_xfer_t alltoall;
+   const pami_metadata_t *my_alltoall_md;
+   my_alltoall_md = &mpid->coll_metadata[PAMI_XFER_ALLTOALL][0][0];
+
+   char *pname = my_alltoall_md->name;
+   TRACE_ERR("Using alltoall protocol %s\n", pname);
+
+   alltoall.cb_done = cb_alltoall;
+   alltoall.cookie = (void *)&active;
+   alltoall.algorithm = mpid->coll_algorithm[PAMI_XFER_ALLTOALL][0][0];
+   if(sendbuf == MPI_IN_PLACE)
+   {
+      alltoall.cmd.xfer_alltoall.stype = rtype;
+      alltoall.cmd.xfer_alltoall.stypecount = recvcount;
+      alltoall.cmd.xfer_alltoall.sndbuf = (char *)recvbuf + rdt_true_lb;
+   }
+   else
+   {
+      alltoall.cmd.xfer_alltoall.stype = stype;
+      alltoall.cmd.xfer_alltoall.stypecount = sendcount;
+      alltoall.cmd.xfer_alltoall.sndbuf = (char *)sendbuf + sdt_true_lb;
+   }
+   alltoall.cmd.xfer_alltoall.rcvbuf = (char *)recvbuf + rdt_true_lb;
+
+   alltoall.cmd.xfer_alltoall.rtypecount = recvcount;
+   alltoall.cmd.xfer_alltoall.rtype = rtype;
+
+   MPIDI_Context_post(MPIDI_Context[0], &alltoall_post.state,
+                      MPIDI_Pami_post_wrapper, (void *)&alltoall);
+
+   TRACE_ERR("Waiting on active\n");
+   MPID_PROGRESS_WAIT_WHILE(active);
+
+   TRACE_ERR("Leaving MPIDO_Alltoall_optimized\n");
+   return MPI_SUCCESS;
+}

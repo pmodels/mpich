@@ -517,3 +517,107 @@ MPIDO_Allgatherv(const void *sendbuf,
                        recvbuf, recvcounts, displs, recvtype,
                        comm_ptr, mpierrno);
 }
+
+int
+MPIDO_Allgatherv_simple(const void *sendbuf,
+		 int sendcount,
+		 MPI_Datatype sendtype,
+		 void *recvbuf,
+		 const int *recvcounts,
+		 const int *displs,
+		 MPI_Datatype recvtype,
+		 MPID_Comm * comm_ptr,
+                 int *mpierrno)
+{
+   TRACE_ERR("Entering MPIDO_Allgatherv_optimized\n");
+  /* function pointer to be used to point to approperiate algorithm */
+  /* Check the nature of the buffers */
+  MPID_Datatype *dt_null = NULL;
+  MPI_Aint send_true_lb  = 0;
+  MPI_Aint recv_true_lb  = 0;
+  size_t   send_size     = 0;
+  size_t   recv_size     = 0;
+  int snd_data_contig = 0, rcv_data_contig = 0;
+  void *snd_noncontig_buff = NULL, *rcv_noncontig_buff = NULL;
+  int scount=sendcount;
+
+  char *sbuf, *rbuf;
+  pami_type_t stype, rtype;
+  const int rank = comm_ptr->rank;
+  const struct MPIDI_Comm* const mpid = &(comm_ptr->mpid);
+
+  volatile unsigned allgatherv_active = 1;
+  int tmp;
+  const pami_metadata_t *my_md;
+
+   if((sendbuf != MPI_IN_PLACE) && (MPIDI_Datatype_to_pami(sendtype, &stype, -1, NULL, &tmp) != MPI_SUCCESS))
+   {
+     return MPIR_Allgatherv(sendbuf, sendcount, sendtype,
+                       recvbuf, recvcounts, displs, recvtype,
+                       comm_ptr, mpierrno);
+   }
+   if(MPIDI_Datatype_to_pami(recvtype, &rtype, -1, NULL, &tmp) != MPI_SUCCESS)
+   {
+     return MPIR_Allgatherv(sendbuf, sendcount, sendtype,
+                       recvbuf, recvcounts, displs, recvtype,
+                       comm_ptr, mpierrno);
+   }
+   MPIDI_Datatype_get_info(1,
+			  recvtype,
+			  rcv_data_contig,
+			  recv_size,
+			  dt_null,
+			  recv_true_lb);
+
+   if(sendbuf == MPI_IN_PLACE)
+   {
+     sbuf = (char *)recvbuf+displs[rank]*recv_size;
+     send_true_lb = recv_true_lb;
+     scount = recvcounts[rank];
+     send_size = recv_size * scount; 
+   }
+   else
+   {
+      MPIDI_Datatype_get_info(sendcount,
+                              sendtype,
+                              snd_data_contig,
+                              send_size,
+                              dt_null,
+                              send_true_lb);
+       sbuf = (char *)sendbuf+send_true_lb;
+   }
+
+   rbuf = (char *)recvbuf+recv_true_lb;
+
+   if(!snd_data_contig || !rcv_data_contig)
+   {
+      return MPIR_Allgatherv(sendbuf, sendcount, sendtype,
+                       recvbuf, recvcounts, displs, recvtype,
+                       comm_ptr, mpierrno);
+   }
+
+   pami_xfer_t allgatherv;
+   allgatherv.cb_done = allgatherv_cb_done;
+   allgatherv.cookie = (void *)&allgatherv_active;
+   allgatherv.cmd.xfer_allgatherv_int.sndbuf = sbuf;
+   allgatherv.cmd.xfer_allgatherv_int.rcvbuf = rbuf;
+   allgatherv.cmd.xfer_allgatherv_int.stype = stype;
+   allgatherv.cmd.xfer_allgatherv_int.rtype = rtype;
+   allgatherv.cmd.xfer_allgatherv_int.stypecount = scount;
+   allgatherv.cmd.xfer_allgatherv_int.rtypecounts = (int *) recvcounts;
+   allgatherv.cmd.xfer_allgatherv_int.rdispls = (int *) displs;
+   allgatherv.algorithm = mpid->coll_algorithm[PAMI_XFER_ALLGATHERV_INT][0][0];
+   my_md = &mpid->coll_metadata[PAMI_XFER_ALLGATHERV_INT][0][0];
+
+   TRACE_ERR("Calling allgatherv via %s()\n", MPIDI_Process.context_post.active>0?"PAMI_Collective":"PAMI_Context_post");
+   MPIDI_Post_coll_t allgatherv_post;
+   MPIDI_Context_post(MPIDI_Context[0], &allgatherv_post.state,
+                      MPIDI_Pami_post_wrapper, (void *)&allgatherv);
+
+   MPIDI_Update_last_algorithm(comm_ptr, my_md->name);
+
+   TRACE_ERR("Rank %d waiting on active %d\n", rank, allgatherv_active);
+   MPID_PROGRESS_WAIT_WHILE(allgatherv_active);
+
+   return MPI_SUCCESS;
+}

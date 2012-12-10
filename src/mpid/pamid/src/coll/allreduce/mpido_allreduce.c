@@ -377,3 +377,79 @@ int MPIDO_Allreduce(const void *sendbuf,
    return MPI_SUCCESS;
 }
 
+int MPIDO_Allreduce_simple(const void *sendbuf,
+                    void *recvbuf,
+                    int count,
+                    MPI_Datatype dt,
+                    MPI_Op op,
+                    MPID_Comm *comm_ptr,
+                    int *mpierrno)
+{
+   void *sbuf;
+   TRACE_ERR("Entering MPIDO_Allreduce_optimized\n");
+   pami_type_t pdt;
+   pami_data_function pop;
+   int mu;
+   int rc;
+#ifdef TRACE_ON
+    int len; 
+    char op_str[255]; 
+    char dt_str[255]; 
+    MPIDI_Op_to_string(op, op_str); 
+    PMPI_Type_get_name(dt, dt_str, &len); 
+#endif
+   volatile unsigned active = 1;
+   pami_xfer_t allred;
+   const pami_metadata_t *my_allred_md = (pami_metadata_t *)NULL;
+   const int rank = comm_ptr->rank;
+   const struct MPIDI_Comm* const mpid = &(comm_ptr->mpid);
+   MPID_Datatype *data_ptr;
+   MPI_Aint data_true_lb = 0;
+   int data_size, data_contig;
+
+   rc = MPIDI_Datatype_to_pami(dt, &pdt, op, &pop, &mu);
+
+      /* convert to metadata query */
+  /* Punt count 0 allreduce to MPICH. Let them do whatever's 'right' */
+  if(unlikely(rc != MPI_SUCCESS || (count==0)))
+   {
+      MPIDI_Update_last_algorithm(comm_ptr, "ALLREDUCE_MPICH");
+      return MPIR_Allreduce(sendbuf, recvbuf, count, dt, op, comm_ptr, mpierrno);
+   }
+   MPIDI_Datatype_get_info(1, dt,
+			   data_contig, data_size, data_ptr, data_true_lb);
+
+   if(!data_contig)
+   {
+      MPIDI_Update_last_algorithm(comm_ptr, "ALLREDUCE_MPICH");
+      return MPIR_Allreduce(sendbuf, recvbuf, count, dt, op, comm_ptr, mpierrno);
+   }
+
+  sbuf = (void *)sendbuf;
+  if(unlikely(sendbuf == MPI_IN_PLACE))
+  {
+     sbuf = recvbuf;
+  }
+
+  allred.cb_done = cb_allreduce;
+  allred.cookie = (void *)&active;
+  allred.cmd.xfer_allreduce.sndbuf = sbuf;
+  allred.cmd.xfer_allreduce.stype = pdt;
+  allred.cmd.xfer_allreduce.rcvbuf = recvbuf;
+  allred.cmd.xfer_allreduce.rtype = pdt;
+  allred.cmd.xfer_allreduce.stypecount = count;
+  allred.cmd.xfer_allreduce.rtypecount = count;
+  allred.cmd.xfer_allreduce.op = pop;
+  allred.algorithm = mpid->coll_algorithm[PAMI_XFER_ALLREDUCE][0][0];
+  my_allred_md = &mpid->coll_metadata[PAMI_XFER_ALLREDUCE][0][0];
+
+  MPIDI_Post_coll_t allred_post;
+  MPIDI_Context_post(MPIDI_Context[0], &allred_post.state,
+                      MPIDI_Pami_post_wrapper, (void *)&allred);
+
+  MPID_assert(rc == PAMI_SUCCESS);
+  MPIDI_Update_last_algorithm(comm_ptr,my_allred_md->name);
+  MPID_PROGRESS_WAIT_WHILE(active);
+  TRACE_ERR("Allreduce done\n");
+  return MPI_SUCCESS;
+}

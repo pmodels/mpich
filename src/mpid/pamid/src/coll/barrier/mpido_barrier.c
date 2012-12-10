@@ -102,3 +102,33 @@ int MPIDO_Barrier(MPID_Comm *comm_ptr, int *mpierrno)
    TRACE_ERR("exiting mpido_barrier\n");
    return 0;
 }
+
+
+int MPIDO_Barrier_simple(MPID_Comm *comm_ptr, int *mpierrno)
+{
+   TRACE_ERR("Entering MPIDO_Barrier_optimized\n");
+   volatile unsigned active=1;
+   MPIDI_Post_coll_t barrier_post;
+   pami_xfer_t barrier;
+   pami_algorithm_t my_barrier;
+   const pami_metadata_t *my_barrier_md;
+   const struct MPIDI_Comm* const mpid = &(comm_ptr->mpid);
+ 
+   barrier.cb_done = cb_barrier;
+   barrier.cookie = (void *)&active;
+   my_barrier = mpid->coll_algorithm[PAMI_XFER_BARRIER][0][0];
+   my_barrier_md = &mpid->coll_metadata[PAMI_XFER_BARRIER][0][0];
+   barrier.algorithm = my_barrier;
+
+
+   TRACE_ERR("%s barrier\n", MPIDI_Process.context_post.active>0?"posting":"invoking");
+   MPIDI_Context_post(MPIDI_Context[0], &barrier_post.state,
+                      MPIDI_Pami_post_wrapper, (void *)&barrier);
+   TRACE_ERR("barrier %s rc: %d\n", MPIDI_Process.context_post.active>0?"posted":"invoked", rc);
+
+   TRACE_ERR("advance spinning\n");
+   MPIDI_Update_last_algorithm(comm_ptr, my_barrier_md->name);
+   MPID_PROGRESS_WAIT_WHILE(active);
+   TRACE_ERR("Exiting MPIDO_Barrier_optimized\n");
+   return 0;
+}

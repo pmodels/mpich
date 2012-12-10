@@ -185,3 +185,111 @@ int MPIDO_Gatherv(const void *sendbuf,
    TRACE_ERR("Leaving MPIDO_Gatherv\n");
    return 0;
 }
+
+
+int MPIDO_Gatherv_simple(const void *sendbuf, 
+                  int sendcount, 
+                  MPI_Datatype sendtype,
+                  void *recvbuf, 
+                  const int *recvcounts, 
+                  const int *displs, 
+                  MPI_Datatype recvtype,
+                  int root, 
+                  MPID_Comm * comm_ptr, 
+                  int *mpierrno)
+
+{
+   TRACE_ERR("Entering MPIDO_Gatherv_optimized\n");
+   int rc;
+   int contig, rsize=0, ssize=0;
+   int pamidt = 1;
+   MPID_Datatype *dt_ptr = NULL;
+   MPI_Aint send_true_lb, recv_true_lb;
+   char *sbuf, *rbuf;
+   pami_type_t stype, rtype;
+   int tmp;
+   volatile unsigned gatherv_active = 1;
+   const int rank = comm_ptr->rank;
+
+   const struct MPIDI_Comm* const mpid = &(comm_ptr->mpid);
+
+
+   /* Check for native PAMI types and MPI_IN_PLACE on sendbuf */
+   /* MPI_IN_PLACE is a nonlocal decision. We will need a preallreduce if we ever have
+    * multiple "good" gathervs that work on different counts for example */
+   if((MPIDI_Datatype_to_pami(sendtype, &stype, -1, NULL, &tmp) != MPI_SUCCESS))
+      pamidt = 0;
+   if(MPIDI_Datatype_to_pami(recvtype, &rtype, -1, NULL, &tmp) != MPI_SUCCESS)
+      pamidt = 0;
+
+   MPIDI_Datatype_get_info(1, recvtype, contig, rsize, dt_ptr, recv_true_lb);
+   if(!contig) pamidt = 0;
+
+   rbuf = (char *)recvbuf + recv_true_lb;
+   sbuf = (void *) sendbuf;
+   pami_xfer_t gatherv;
+   if(rank == root)
+   {
+      if(sendbuf == MPI_IN_PLACE) 
+      {
+         sbuf = (char*)rbuf + rsize*displs[rank];
+         gatherv.cmd.xfer_gatherv_int.stype = rtype;
+         gatherv.cmd.xfer_gatherv_int.stypecount = recvcounts[rank];
+      }
+      else
+      {
+         MPIDI_Datatype_get_info(1, sendtype, contig, ssize, dt_ptr, send_true_lb);
+		 if(!contig) pamidt = 0;
+         sbuf = (char *)sbuf + send_true_lb;
+         gatherv.cmd.xfer_gatherv_int.stype = stype;
+         gatherv.cmd.xfer_gatherv_int.stypecount = sendcount;
+      }
+   }
+   else
+   {
+      gatherv.cmd.xfer_gatherv_int.stype = stype;
+      gatherv.cmd.xfer_gatherv_int.stypecount = sendcount;     
+   }
+
+   if(pamidt == 0)
+   {
+      TRACE_ERR("GATHERV using MPICH\n");
+      MPIDI_Update_last_algorithm(comm_ptr, "GATHERV_MPICH");
+      return MPIR_Gatherv(sendbuf, sendcount, sendtype,
+               recvbuf, recvcounts, displs, recvtype,
+               root, comm_ptr, mpierrno);
+   }
+
+
+
+
+
+   gatherv.cb_done = cb_gatherv;
+   gatherv.cookie = (void *)&gatherv_active;
+   gatherv.cmd.xfer_gatherv_int.root = MPID_VCR_GET_LPID(comm_ptr->vcr, root);
+   gatherv.cmd.xfer_gatherv_int.rcvbuf = rbuf;
+   gatherv.cmd.xfer_gatherv_int.rtype = rtype;
+   gatherv.cmd.xfer_gatherv_int.rtypecounts = (int *) recvcounts;
+   gatherv.cmd.xfer_gatherv_int.rdispls = (int *) displs;
+
+   gatherv.cmd.xfer_gatherv_int.sndbuf = sbuf;
+
+   const pami_metadata_t *my_gatherv_md;
+
+   gatherv.algorithm = mpid->coll_algorithm[PAMI_XFER_GATHERV_INT][0][0];
+   my_gatherv_md = &mpid->coll_metadata[PAMI_XFER_GATHERV_INT][0][0];
+
+   MPIDI_Update_last_algorithm(comm_ptr, my_gatherv_md->name);
+
+   MPIDI_Post_coll_t gatherv_post;
+   TRACE_ERR("%s gatherv\n", MPIDI_Process.context_post.active>0?"Posting":"Invoking");
+   MPIDI_Context_post(MPIDI_Context[0], &gatherv_post.state,
+                      MPIDI_Pami_post_wrapper, (void *)&gatherv);
+   TRACE_ERR("Gatherv %s\n", MPIDI_Process.context_post.active>0?"posted":"invoked");
+   
+   TRACE_ERR("Waiting on active %d\n", gatherv_active);
+   MPID_PROGRESS_WAIT_WHILE(gatherv_active);
+
+   TRACE_ERR("Leaving MPIDO_Gatherv_optimized\n");
+   return MPI_SUCCESS;
+}

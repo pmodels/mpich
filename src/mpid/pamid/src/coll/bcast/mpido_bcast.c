@@ -229,3 +229,82 @@ int MPIDO_Bcast(void *buffer,
    TRACE_ERR("leaving bcast\n");
    return 0;
 }
+
+
+int MPIDO_Bcast_simple(void *buffer,
+                int count,
+                MPI_Datatype datatype,
+                int root,
+                MPID_Comm *comm_ptr,
+                int *mpierrno)
+{
+   TRACE_ERR("Entering MPIDO_Bcast_optimized\n");
+
+   int data_contig;
+   void *data_buffer    = NULL,
+        *noncontig_buff = NULL;
+   volatile unsigned active = 1;
+   MPI_Aint data_true_lb = 0;
+   MPID_Datatype *data_ptr;
+   MPID_Segment segment;
+   MPIDI_Post_coll_t bcast_post;
+   const struct MPIDI_Comm* const mpid = &(comm_ptr->mpid);
+   const int rank = comm_ptr->rank;
+
+
+   /* Must calculate data_size based on count=1 in case it's total size is > integer */
+   int data_size_one;
+   MPIDI_Datatype_get_info(1, datatype,
+			   data_contig, data_size_one, data_ptr, data_true_lb);
+
+   const int data_size = data_size_one*(size_t)count;
+
+   data_buffer = (char *)buffer + data_true_lb;
+
+   if(!data_contig)
+   {
+      noncontig_buff = MPIU_Malloc(data_size);
+      data_buffer = noncontig_buff;
+      if(noncontig_buff == NULL)
+      {
+         MPID_Abort(NULL, MPI_ERR_NO_SPACE, 1,
+            "Fatal:  Cannot allocate pack buffer");
+      }
+      if(rank == root)
+      {
+         DLOOP_Offset last = data_size;
+         MPID_Segment_init(buffer, count, datatype, &segment, 0);
+         MPID_Segment_pack(&segment, 0, &last, noncontig_buff);
+      }
+   }
+
+   pami_xfer_t bcast;
+   const pami_metadata_t *my_bcast_md;
+   int queryreq = 0;
+
+   bcast.cb_done = cb_bcast;
+   bcast.cookie = (void *)&active;
+   bcast.cmd.xfer_broadcast.root = MPID_VCR_GET_LPID(comm_ptr->vcr, root);
+   bcast.algorithm = mpid->coll_algorithm[PAMI_XFER_BROADCAST][0][0];
+   bcast.cmd.xfer_broadcast.buf = data_buffer;
+   bcast.cmd.xfer_broadcast.type = PAMI_TYPE_BYTE;
+   /* Needs to be sizeof(type)*count since we are using bytes as * the generic type */
+   bcast.cmd.xfer_broadcast.typecount = data_size;
+   my_bcast_md = &mpid->coll_metadata[PAMI_XFER_BROADCAST][0][0];
+
+   MPIDI_Context_post(MPIDI_Context[0], &bcast_post.state, MPIDI_Pami_post_wrapper, (void *)&bcast);
+   MPIDI_Update_last_algorithm(comm_ptr, my_bcast_md->name);
+   MPID_PROGRESS_WAIT_WHILE(active);
+   TRACE_ERR("bcast done\n");
+
+   if(!data_contig)
+   {
+      if(rank != root)
+         MPIR_Localcopy(noncontig_buff, data_size, MPI_CHAR,
+                        buffer,         count,     datatype);
+      MPIU_Free(noncontig_buff);
+   }
+
+   TRACE_ERR("Exiting MPIDO_Bcast_optimized\n");
+   return 0;
+}

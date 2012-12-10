@@ -842,6 +842,29 @@ MPIDI_Env_setup(int rank, int requested)
       TRACE_ERR("MPIDI_Process.optimized.select_colls=%u\n", MPIDI_Process.optimized.select_colls);
    }
 
+   /* Finally, if MP_COLLECTIVE_SELECTION is "on", then we want to overwrite any other setting */
+   {
+      unsigned temp;
+      temp = 0;
+      char* names[] = {"MP_COLLECTIVE_SELECTION", NULL};
+      ENV_Char(names, &temp);
+      if(temp)
+      {
+         pami_extension_t extension;
+         pami_result_t status = PAMI_ERROR;
+         status = PAMI_Extension_open (MPIDI_Client, "EXT_collsel", &extension);
+         if(status == PAMI_SUCCESS)
+         {
+
+           MPIDI_Process.optimized.auto_select_colls = MPID_AUTO_SELECT_COLLS_ALL; /* All collectives will be using auto coll sel. 
+                                                                                    We will check later on each individual coll. */ 
+           MPIDI_Process.optimized.collectives       = 1;                          /* Enable optimized collectives so we can create PAMI Geometry */
+         }
+      }
+      else
+         MPIDI_Process.optimized.auto_select_colls = MPID_AUTO_SELECT_COLLS_NONE;/* Auto coll sel is disabled for all */ 
+   }
+   
 
   /* Set the status of the optimized shared memory point-to-point functions */
   {

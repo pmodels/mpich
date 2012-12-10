@@ -170,3 +170,94 @@ int MPIDO_Alltoallv(const void *sendbuf,
 
    return 0;
 }
+
+
+int MPIDO_Alltoallv_simple(const void *sendbuf,
+                   const int *sendcounts,
+                   const int *senddispls,
+                   MPI_Datatype sendtype,
+                   void *recvbuf,
+                   const int *recvcounts,
+                   const int *recvdispls,
+                   MPI_Datatype recvtype,
+                   MPID_Comm *comm_ptr,
+                   int *mpierrno)
+{
+   TRACE_ERR("Entering MPIDO_Alltoallv_optimized\n");
+   volatile unsigned active = 1;
+   int sndtypelen, rcvtypelen, snd_contig, rcv_contig;
+   MPID_Datatype *sdt, *rdt;
+   pami_type_t stype, rtype;
+   MPI_Aint sdt_true_lb, rdt_true_lb;
+   MPIDI_Post_coll_t alltoallv_post;
+   int pamidt = 1;
+   int tmp;
+   const int rank = comm_ptr->rank;
+
+   const struct MPIDI_Comm* const mpid = &(comm_ptr->mpid);
+
+   if(MPIDI_Datatype_to_pami(sendtype, &stype, -1, NULL, &tmp) != MPI_SUCCESS)
+      pamidt = 0;
+   if(MPIDI_Datatype_to_pami(recvtype, &rtype, -1, NULL, &tmp) != MPI_SUCCESS)
+      pamidt = 0;
+
+
+   MPIDI_Datatype_get_info(1, sendtype, snd_contig, sndtypelen, sdt, sdt_true_lb);
+   if(!snd_contig) pamidt = 0;
+   MPIDI_Datatype_get_info(1, recvtype, rcv_contig, rcvtypelen, rdt, rdt_true_lb);
+   if(!rcv_contig) pamidt = 0;
+
+   if(sendbuf ==  MPI_IN_PLACE)
+      pamidt = 0;
+
+   if(pamidt == 0)
+   {
+      return MPIR_Alltoallv(sendbuf, sendcounts, senddispls, sendtype,
+                              recvbuf, recvcounts, recvdispls, recvtype,
+                              comm_ptr, mpierrno);
+
+   }   
+
+   pami_xfer_t alltoallv;
+   const pami_metadata_t *my_alltoallv_md;
+   my_alltoallv_md = &mpid->coll_metadata[PAMI_XFER_ALLTOALLV_INT][0][0];
+
+   alltoallv.algorithm = mpid->coll_algorithm[PAMI_XFER_ALLTOALLV_INT][0][0];
+   char *pname = my_alltoallv_md->name;
+
+   alltoallv.cb_done = cb_alltoallv;
+   alltoallv.cookie = (void *)&active;
+   /* We won't bother with alltoallv since MPI is always going to be ints. */
+   if(sendbuf == MPI_IN_PLACE)
+   {
+      alltoallv.cmd.xfer_alltoallv_int.stype = rtype;
+      alltoallv.cmd.xfer_alltoallv_int.sdispls = (int *) recvdispls;
+      alltoallv.cmd.xfer_alltoallv_int.stypecounts = (int *) recvcounts;
+      alltoallv.cmd.xfer_alltoallv_int.sndbuf = (char *)recvbuf+rdt_true_lb;
+   }
+   else
+   {
+      alltoallv.cmd.xfer_alltoallv_int.stype = stype;
+      alltoallv.cmd.xfer_alltoallv_int.sdispls = (int *) senddispls;
+      alltoallv.cmd.xfer_alltoallv_int.stypecounts = (int *) sendcounts;
+      alltoallv.cmd.xfer_alltoallv_int.sndbuf = (char *)sendbuf+sdt_true_lb;
+   }
+   alltoallv.cmd.xfer_alltoallv_int.rcvbuf = (char *)recvbuf+rdt_true_lb;
+      
+   alltoallv.cmd.xfer_alltoallv_int.rdispls = (int *) recvdispls;
+   alltoallv.cmd.xfer_alltoallv_int.rtypecounts = (int *) recvcounts;
+   alltoallv.cmd.xfer_alltoallv_int.rtype = rtype;
+
+
+   MPIDI_Context_post(MPIDI_Context[0], &alltoallv_post.state,
+                      MPIDI_Pami_post_wrapper, (void *)&alltoallv);
+
+   TRACE_ERR("%d waiting on active %d\n", rank, active);
+   MPID_PROGRESS_WAIT_WHILE(active);
+
+
+   TRACE_ERR("Leaving alltoallv\n");
+
+
+   return MPI_SUCCESS;
+}

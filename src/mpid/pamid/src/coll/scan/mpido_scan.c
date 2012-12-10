@@ -165,3 +165,85 @@ int MPIDO_Doscan(const void *sendbuf, void *recvbuf,
    TRACE_ERR("Scan done\n");
    return rc;
 }
+
+
+int MPIDO_Doscan_simple(const void *sendbuf, void *recvbuf, 
+               int count, MPI_Datatype datatype,
+               MPI_Op op, MPID_Comm * comm_ptr, int *mpierrno, int exflag)
+{
+   MPID_Datatype *dt_null = NULL;
+   MPI_Aint true_lb = 0;
+   int dt_contig, tsize;
+   int mu;
+   char *sbuf, *rbuf;
+   pami_data_function pop;
+   pami_type_t pdt;
+   int rc;
+   const pami_metadata_t *my_md;
+
+   const struct MPIDI_Comm* const mpid = &(comm_ptr->mpid);
+
+   rc = MPIDI_Datatype_to_pami(datatype, &pdt, op, &pop, &mu);
+
+   pami_xfer_t scan;
+   volatile unsigned scan_active = 1;
+   MPIDI_Datatype_get_info(count, datatype, dt_contig, tsize, dt_null, true_lb);
+   
+   if(rc != MPI_SUCCESS || !dt_contig)
+   {
+      if(exflag)
+         return MPIR_Exscan(sendbuf, recvbuf, count, datatype, op, comm_ptr, mpierrno);
+      else
+         return MPIR_Scan(sendbuf, recvbuf, count, datatype, op, comm_ptr, mpierrno);
+   }
+
+
+   rbuf = (char *)recvbuf + true_lb;
+   if(sendbuf == MPI_IN_PLACE) 
+   {
+      sbuf = rbuf;
+   }
+   else
+   {
+      sbuf = (char *)sendbuf + true_lb;
+   }
+
+   scan.cb_done = scan_cb_done;
+   scan.cookie = (void *)&scan_active;
+   scan.algorithm = mpid->coll_algorithm[PAMI_XFER_SCAN][0][0];
+   my_md = &mpid->coll_metadata[PAMI_XFER_SCAN][0][0];
+   scan.cmd.xfer_scan.sndbuf = sbuf;
+   scan.cmd.xfer_scan.rcvbuf = rbuf;
+   scan.cmd.xfer_scan.stype = pdt;
+   scan.cmd.xfer_scan.rtype = pdt;
+   scan.cmd.xfer_scan.stypecount = count;
+   scan.cmd.xfer_scan.rtypecount = count;
+   scan.cmd.xfer_scan.op = pop;
+   scan.cmd.xfer_scan.exclusive = exflag;
+   
+   MPIDI_Post_coll_t scan_post;
+   MPIDI_Context_post(MPIDI_Context[0], &scan_post.state,
+                      MPIDI_Pami_post_wrapper, (void *)&scan);
+   TRACE_ERR("Scan %s\n", MPIDI_Process.context_post.active>0?"posted":"invoked");
+   MPIDI_Update_last_algorithm(comm_ptr, my_md->name);
+   MPID_PROGRESS_WAIT_WHILE(scan_active);
+   TRACE_ERR("Scan done\n");
+   return rc;
+}
+
+
+int MPIDO_Exscan_simple(const void *sendbuf, void *recvbuf, 
+               int count, MPI_Datatype datatype,
+               MPI_Op op, MPID_Comm * comm_ptr, int *mpierrno)
+{
+   return MPIDO_Doscan_simple(sendbuf, recvbuf, count, datatype,
+                op, comm_ptr, mpierrno, 1);
+}
+
+int MPIDO_Scan_simple(const void *sendbuf, void *recvbuf, 
+               int count, MPI_Datatype datatype,
+               MPI_Op op, MPID_Comm * comm_ptr, int *mpierrno)
+{
+   return MPIDO_Doscan_simple(sendbuf, recvbuf, count, datatype,
+                op, comm_ptr, mpierrno, 0);
+}

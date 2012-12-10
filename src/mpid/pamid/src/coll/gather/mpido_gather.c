@@ -299,3 +299,87 @@ int MPIDO_Gather(const void *sendbuf,
    TRACE_ERR("Leaving MPIDO_Gather\n");
    return 0;
 }
+
+
+int MPIDO_Gather_simple(const void *sendbuf,
+                 int sendcount,
+                 MPI_Datatype sendtype,
+                 void *recvbuf,
+                 int recvcount,
+                 MPI_Datatype recvtype,
+                 int root,
+                 MPID_Comm *comm_ptr,
+		 int *mpierrno)
+{
+  MPID_Datatype * data_ptr;
+  MPI_Aint true_lb = 0;
+  pami_xfer_t gather;
+  MPIDI_Post_coll_t gather_post;
+  int success = 1, contig, send_bytes=-1, recv_bytes = 0;
+  const int rank = comm_ptr->rank;
+  const int size = comm_ptr->local_size;
+  const struct MPIDI_Comm* const mpid = &(comm_ptr->mpid);
+
+  MPIDI_Datatype_get_info(sendcount, sendtype, contig,
+                            send_bytes, data_ptr, true_lb);
+  if (!contig)
+      success = 0;
+
+  if (success && rank == root)
+  {
+    if (recvtype != MPI_DATATYPE_NULL && recvcount >= 0)
+    {
+      MPIDI_Datatype_get_info(recvcount, recvtype, contig,
+                              recv_bytes, data_ptr, true_lb);
+      if (!contig) success = 0;
+    }
+    else
+      success = 0;
+  }
+
+  MPIDI_Update_last_algorithm(comm_ptr, "GATHER_MPICH");
+  if(!success)
+  {
+    return MPIR_Gather(sendbuf, sendcount, sendtype,
+                       recvbuf, recvcount, recvtype,
+                       root, comm_ptr, mpierrno);
+  }
+
+
+   const pami_metadata_t *my_gather_md;
+   volatile unsigned active = 1;
+
+   gather.cb_done = cb_gather;
+   gather.cookie = (void *)&active;
+   gather.cmd.xfer_gather.root = MPID_VCR_GET_LPID(comm_ptr->vcr, root);
+   if(sendbuf == MPI_IN_PLACE) 
+   {
+     gather.cmd.xfer_gather.stypecount = recv_bytes;
+     gather.cmd.xfer_gather.sndbuf = (char *)recvbuf + recv_bytes*rank;
+   }
+   else
+   {
+     gather.cmd.xfer_gather.stypecount = send_bytes;
+     gather.cmd.xfer_gather.sndbuf = (void *)sendbuf;
+   }
+   gather.cmd.xfer_gather.stype = PAMI_TYPE_BYTE;
+   gather.cmd.xfer_gather.rcvbuf = (void *)recvbuf;
+   gather.cmd.xfer_gather.rtype = PAMI_TYPE_BYTE;
+   gather.cmd.xfer_gather.rtypecount = recv_bytes;
+   gather.algorithm = mpid->coll_algorithm[PAMI_XFER_GATHER][0][0];
+   my_gather_md = &mpid->coll_metadata[PAMI_XFER_GATHER][0][0];
+
+   MPIDI_Update_last_algorithm(comm_ptr,
+            my_gather_md->name);
+
+
+   TRACE_ERR("%s gather\n", MPIDI_Process.context_post.active>0?"Posting":"Invoking");
+   MPIDI_Context_post(MPIDI_Context[0], &gather_post.state,
+                      MPIDI_Pami_post_wrapper, (void *)&gather);
+
+   TRACE_ERR("Waiting on active: %d\n", active);
+   MPID_PROGRESS_WAIT_WHILE(active);
+
+   TRACE_ERR("Leaving MPIDO_Gather_optimized\n");
+   return MPI_SUCCESS;
+}

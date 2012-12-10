@@ -392,7 +392,94 @@ int MPIDO_Scatterv(const void *sendbuf,
    return 0;
 }
 
+int MPIDO_Scatterv_simple(const void *sendbuf,
+                   const int *sendcounts,
+                   const int *displs,
+                   MPI_Datatype sendtype,
+                   void *recvbuf,
+                   int recvcount,
+                   MPI_Datatype recvtype,
+                   int root,
+                   MPID_Comm *comm_ptr,
+                   int *mpierrno)
+{
+  int snd_contig, rcv_contig, tmp, pamidt = 1;
+  int ssize, rsize;
+  MPID_Datatype *dt_ptr = NULL;
+  MPI_Aint send_true_lb=0, recv_true_lb;
+  char *sbuf, *rbuf;
+  pami_type_t stype, rtype;
+  const int rank = comm_ptr->rank;
+  const struct MPIDI_Comm* const mpid = &(comm_ptr->mpid);
 
+   pami_xfer_t scatterv;
+   const pami_metadata_t *my_scatterv_md;
+   volatile unsigned scatterv_active = 1;
+
+
+   if((recvbuf != MPI_IN_PLACE) && MPIDI_Datatype_to_pami(recvtype, &rtype, -1, NULL, &tmp) != MPI_SUCCESS)
+      pamidt = 0;
+
+   if(MPIDI_Datatype_to_pami(sendtype, &stype, -1, NULL, &tmp) != MPI_SUCCESS)
+      pamidt = 0;
+   MPIDI_Datatype_get_info(1, sendtype, snd_contig, ssize, dt_ptr, send_true_lb);
+   MPIDI_Datatype_get_info(1, recvtype, rcv_contig, rsize, dt_ptr, recv_true_lb);
+
+   if(pamidt == 0 || !snd_contig || !rcv_contig)
+   {
+      TRACE_ERR("Scatterv using MPICH\n");
+      MPIDI_Update_last_algorithm(comm_ptr, "SCATTERV_MPICH");
+      return MPIR_Scatterv(sendbuf, sendcounts, displs, sendtype,
+                           recvbuf, recvcount, recvtype,
+                           root, comm_ptr, mpierrno);
+   }
+
+
+   sbuf = (char *)sendbuf + send_true_lb;
+   rbuf = recvbuf;
+
+   if(rank == root)
+   {
+      if(recvbuf == MPI_IN_PLACE) 
+      {
+        rbuf = (char *)sendbuf + ssize*displs[rank] + send_true_lb;
+      }
+      else
+      {
+        rbuf = (char *)recvbuf + recv_true_lb;
+      }
+   }
+
+   scatterv.cb_done = cb_scatterv;
+   scatterv.cookie = (void *)&scatterv_active;
+   scatterv.cmd.xfer_scatterv_int.root = MPID_VCR_GET_LPID(comm_ptr->vcr, root);
+
+   scatterv.algorithm = mpid->coll_algorithm[PAMI_XFER_SCATTERV_INT][0][0];
+   my_scatterv_md = &mpid->coll_metadata[PAMI_XFER_SCATTERV][0][0];
+   
+   scatterv.cmd.xfer_scatterv_int.rcvbuf = rbuf;
+   scatterv.cmd.xfer_scatterv_int.sndbuf = sbuf;
+   scatterv.cmd.xfer_scatterv_int.stype = stype;
+   scatterv.cmd.xfer_scatterv_int.rtype = rtype;
+   scatterv.cmd.xfer_scatterv_int.stypecounts = (int *) sendcounts;
+   scatterv.cmd.xfer_scatterv_int.rtypecount = recvcount;
+   scatterv.cmd.xfer_scatterv_int.sdispls = (int *) displs;
+
+
+   MPIDI_Update_last_algorithm(comm_ptr, my_scatterv_md->name);
+
+
+   MPIDI_Post_coll_t scatterv_post;
+   TRACE_ERR("%s scatterv\n", MPIDI_Process.context_post.active>0?"Posting":"Invoking");
+   MPIDI_Context_post(MPIDI_Context[0], &scatterv_post.state,
+                      MPIDI_Pami_post_wrapper, (void *)&scatterv);
+
+   TRACE_ERR("Waiting on active %d\n", scatterv_active);
+   MPID_PROGRESS_WAIT_WHILE(scatterv_active);
+
+   TRACE_ERR("Leaving MPIDO_Scatterv_optimized\n");
+   return MPI_SUCCESS;
+}
 
 
 #if 0

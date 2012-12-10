@@ -273,6 +273,118 @@ int MPIDO_Scatter(const void *sendbuf,
 }
 
 
+int MPIDO_Scatter_simple(const void *sendbuf,
+                  int sendcount,
+                  MPI_Datatype sendtype,
+                  void *recvbuf,
+                  int recvcount,
+                  MPI_Datatype recvtype,
+                  int root,
+                  MPID_Comm *comm_ptr,
+                  int *mpierrno)
+{
+  MPID_Datatype * data_ptr;
+  MPI_Aint true_lb = 0;
+  int contig, nbytes = 0;
+  const int rank = comm_ptr->rank;
+  int success = 1;
+  pami_type_t stype, rtype;
+  int tmp;
+  int use_pami = 1;
+  const struct MPIDI_Comm* const mpid = &(comm_ptr->mpid);
+
+  if(MPIDI_Datatype_to_pami(sendtype, &stype, -1, NULL, &tmp) != MPI_SUCCESS)
+    use_pami = 0;
+  if(MPIDI_Datatype_to_pami(recvtype, &rtype, -1, NULL, &tmp) != MPI_SUCCESS)
+    use_pami = 0;
+
+
+  if (rank == root)
+  {
+    if (recvtype != MPI_DATATYPE_NULL && recvcount >= 0)/* Should this be send or recv? */
+    {
+      MPIDI_Datatype_get_info(sendcount, sendtype, contig,
+                              nbytes, data_ptr, true_lb);
+      if (!contig) success = 0;
+    }
+    else
+      success = 0;
+
+    if (success)
+    {
+      if (recvtype != MPI_DATATYPE_NULL && recvcount >= 0)
+      {
+        MPIDI_Datatype_get_info(recvcount, recvtype, contig,
+                                nbytes, data_ptr, true_lb);
+        if (!contig) success = 0;
+      }
+      else success = 0;
+    }
+  }
+
+  else
+  {
+    if (sendtype != MPI_DATATYPE_NULL && sendcount >= 0)/* Should this be send or recv? */
+    {
+      MPIDI_Datatype_get_info(recvcount, recvtype, contig,
+                              nbytes, data_ptr, true_lb);
+      if (!contig) success = 0;
+    }
+    else
+      success = 0;
+  }
+  
+  if(!use_pami || !success)
+  {
+    MPIDI_Update_last_algorithm(comm_ptr, "SCATTER_MPICH");
+    return MPIR_Scatter(sendbuf, sendcount, sendtype,
+                        recvbuf, recvcount, recvtype,
+                        root, comm_ptr, mpierrno);
+  }
+
+   pami_xfer_t scatter;
+   MPIDI_Post_coll_t scatter_post;
+   const pami_metadata_t *my_scatter_md;
+   volatile unsigned scatter_active = 1;
+
+ 
+   scatter.algorithm = mpid->coll_algorithm[PAMI_XFER_SCATTER][0][0];
+   my_scatter_md = &mpid->coll_metadata[PAMI_XFER_SCATTER][0][0];
+
+   scatter.cb_done = cb_scatter;
+   scatter.cookie = (void *)&scatter_active;
+   scatter.cmd.xfer_scatter.root = MPID_VCR_GET_LPID(comm_ptr->vcr, root);
+   scatter.cmd.xfer_scatter.sndbuf = (void *)sendbuf;
+   scatter.cmd.xfer_scatter.stype = stype;
+   scatter.cmd.xfer_scatter.stypecount = sendcount;
+   if(recvbuf == MPI_IN_PLACE) 
+   {
+     MPIDI_Datatype_get_info(sendcount, sendtype, contig,
+                             nbytes, data_ptr, true_lb);
+     scatter.cmd.xfer_scatter.rcvbuf = (char *)sendbuf + nbytes*rank;
+     scatter.cmd.xfer_scatter.rtype = stype;
+     scatter.cmd.xfer_scatter.rtypecount = sendcount;
+   }
+   else
+   {
+     scatter.cmd.xfer_scatter.rcvbuf = (void *)recvbuf;
+     scatter.cmd.xfer_scatter.rtype = rtype;
+     scatter.cmd.xfer_scatter.rtypecount = recvcount;
+   }
+
+
+   TRACE_ERR("%s scatter\n", MPIDI_Process.context_post.active>0?"Posting":"Invoking");
+   MPIDI_Context_post(MPIDI_Context[0], &scatter_post.state,
+                      MPIDI_Pami_post_wrapper, (void *)&scatter);
+   TRACE_ERR("Waiting on active %d\n", scatter_active);
+   MPID_PROGRESS_WAIT_WHILE(scatter_active);
+
+
+   TRACE_ERR("Leaving MPIDO_Scatter_optimized\n");
+
+   return MPI_SUCCESS;
+}
+
 
 #if 0 /* old glue-based scatter-via-bcast */
 

@@ -180,3 +180,73 @@ int MPIDO_Reduce(const void *sendbuf,
    TRACE_ERR("Reduce done\n");
    return 0;
 }
+
+
+int MPIDO_Reduce_simple(const void *sendbuf, 
+                 void *recvbuf, 
+                 int count, 
+                 MPI_Datatype datatype,
+                 MPI_Op op, 
+                 int root, 
+                 MPID_Comm *comm_ptr, 
+                 int *mpierrno)
+
+{
+   MPID_Datatype *dt_null = NULL;
+   MPI_Aint true_lb = 0;
+   int dt_contig, tsize;
+   int mu;
+   char *sbuf, *rbuf;
+   pami_data_function pop;
+   pami_type_t pdt;
+   int rc;
+   int alg_selected = 0;
+
+   const struct MPIDI_Comm* const mpid = &(comm_ptr->mpid);
+
+   rc = MPIDI_Datatype_to_pami(datatype, &pdt, op, &pop, &mu);
+
+   pami_xfer_t reduce;
+   const pami_metadata_t *my_reduce_md=NULL;
+   volatile unsigned reduce_active = 1;
+
+   MPIDI_Datatype_get_info(count, datatype, dt_contig, tsize, dt_null, true_lb);
+   if(rc != MPI_SUCCESS || !dt_contig)
+   {
+      return MPIR_Reduce(sendbuf, recvbuf, count, datatype, op, root, comm_ptr, mpierrno);
+   }
+
+
+   rbuf = (char *)recvbuf + true_lb;
+   sbuf = (char *)sendbuf + true_lb;
+   if(sendbuf == MPI_IN_PLACE) 
+   {
+      sbuf = rbuf;
+   }
+
+   reduce.cb_done = reduce_cb_done;
+   reduce.cookie = (void *)&reduce_active;
+   reduce.algorithm = mpid->coll_algorithm[PAMI_XFER_REDUCE][0][0];
+   reduce.cmd.xfer_reduce.sndbuf = sbuf;
+   reduce.cmd.xfer_reduce.rcvbuf = rbuf;
+   reduce.cmd.xfer_reduce.stype = pdt;
+   reduce.cmd.xfer_reduce.rtype = pdt;
+   reduce.cmd.xfer_reduce.stypecount = count;
+   reduce.cmd.xfer_reduce.rtypecount = count;
+   reduce.cmd.xfer_reduce.op = pop;
+   reduce.cmd.xfer_reduce.root = MPID_VCR_GET_LPID(comm_ptr->vcr, root);
+   my_reduce_md = &mpid->coll_metadata[PAMI_XFER_REDUCE][0][0];
+
+   TRACE_ERR("%s reduce, context %d, algoname: %s, exflag: %d\n", MPIDI_Process.context_post.active>0?"Posting":"Invoking", 0,
+                my_reduce_md->name, exflag);
+   MPIDI_Post_coll_t reduce_post;
+   MPIDI_Context_post(MPIDI_Context[0], &reduce_post.state,
+                         MPIDI_Pami_post_wrapper, (void *)&reduce);
+   TRACE_ERR("Reduce %s\n", MPIDI_Process.context_post.active>0?"posted":"invoked");
+
+   MPIDI_Update_last_algorithm(comm_ptr,
+                               my_reduce_md->name);
+   MPID_PROGRESS_WAIT_WHILE(reduce_active);
+   TRACE_ERR("Reduce done\n");
+   return MPI_SUCCESS;
+}

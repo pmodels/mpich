@@ -473,3 +473,118 @@ MPIDO_Allgather(const void *sendbuf,
                          recvbuf, recvcount, recvtype,
                          comm_ptr, mpierrno);
 }
+
+
+int
+MPIDO_Allgather_simple(const void *sendbuf,
+                int sendcount,
+                MPI_Datatype sendtype,
+                void *recvbuf,
+                int recvcount,
+                MPI_Datatype recvtype,
+                MPID_Comm * comm_ptr,
+                int *mpierrno)
+{
+     /* *********************************
+   * Check the nature of the buffers
+   * *********************************
+   */
+   const struct MPIDI_Comm* const mpid = &(comm_ptr->mpid);
+   MPID_Datatype * dt_null = NULL;
+   void *snd_noncontig_buff = NULL, *rcv_noncontig_buff = NULL;
+   MPI_Aint send_true_lb = 0;
+   MPI_Aint recv_true_lb = 0;
+   int snd_data_contig, rcv_data_contig;
+   size_t send_size = 0;
+   size_t recv_size = 0;
+   MPID_Segment segment;
+   volatile unsigned allgather_active = 1;
+   const int rank = comm_ptr->rank;
+
+   const pami_metadata_t *my_md;
+
+
+   char *rbuf = NULL, *sbuf = NULL;
+
+
+   if ((sendcount < 1 && sendbuf != MPI_IN_PLACE) || recvcount < 1)
+      return MPI_SUCCESS;
+
+   /* Gather datatype information */
+   MPIDI_Datatype_get_info(recvcount,
+			  recvtype,
+			  rcv_data_contig,
+			  recv_size,
+			  dt_null,
+			  recv_true_lb);
+
+   send_size = recv_size;
+   rbuf = (char *)recvbuf+recv_true_lb;
+
+   if(!rcv_data_contig)
+   {
+      rcv_noncontig_buff = MPIU_Malloc(recv_size);
+      rbuf = rcv_noncontig_buff;
+      if(rcv_noncontig_buff == NULL)
+      {
+         MPID_Abort(NULL, MPI_ERR_NO_SPACE, 1,
+            "Fatal:  Cannot allocate pack buffer");
+      }
+   }
+
+   MPIDI_Datatype_get_info(sendcount,
+                         sendtype,
+                         snd_data_contig,
+                         send_size,
+                         dt_null,
+                         send_true_lb);
+
+   sbuf = (char *)sendbuf+send_true_lb;
+   if(sendbuf == MPI_IN_PLACE) 
+     sbuf = (char *)recvbuf+recv_size*rank;
+
+   if(!snd_data_contig)
+   {
+      snd_noncontig_buff = MPIU_Malloc(send_size);
+      sbuf = snd_noncontig_buff;
+      if(snd_noncontig_buff == NULL)
+      {
+         MPID_Abort(NULL, MPI_ERR_NO_SPACE, 1,
+            "Fatal:  Cannot allocate pack buffer");
+      }
+      DLOOP_Offset last = send_size;
+      MPID_Segment_init(sendbuf != MPI_IN_PLACE?sendbuf:(void*)((char *)recvbuf+recv_size*rank), 
+	                    sendcount, sendtype, &segment, 0);
+      MPID_Segment_pack(&segment, 0, &last, snd_noncontig_buff);
+   }
+
+   TRACE_ERR("Using PAMI-level allgather protocol\n");
+   pami_xfer_t allgather;
+   allgather.cb_done = allgather_cb_done;
+   allgather.cookie = (void *)&allgather_active;
+   allgather.cmd.xfer_allgather.rcvbuf = rbuf;
+   allgather.cmd.xfer_allgather.sndbuf = sbuf;
+   allgather.cmd.xfer_allgather.stype = PAMI_TYPE_BYTE;
+   allgather.cmd.xfer_allgather.rtype = PAMI_TYPE_BYTE;
+   allgather.cmd.xfer_allgather.stypecount = send_size;
+   allgather.cmd.xfer_allgather.rtypecount = recv_size;
+   allgather.algorithm = mpid->coll_algorithm[PAMI_XFER_ALLGATHER][0][0];
+   my_md = &mpid->coll_metadata[PAMI_XFER_ALLGATHER][0][0];
+
+   TRACE_ERR("Calling PAMI_Collective with allgather structure\n");
+   MPIDI_Post_coll_t allgather_post;
+   MPIDI_Context_post(MPIDI_Context[0], &allgather_post.state, MPIDI_Pami_post_wrapper, (void *)&allgather);
+   TRACE_ERR("Allgather %s\n", MPIDI_Process.context_post.active>0?"posted":"invoked");
+
+   MPIDI_Update_last_algorithm(comm_ptr, my_md->name);
+   MPID_PROGRESS_WAIT_WHILE(allgather_active);
+   if(!rcv_data_contig)
+   {
+      MPIR_Localcopy(rcv_noncontig_buff, recv_size, MPI_CHAR,
+                        recvbuf,         recvcount,     recvtype);
+      MPIU_Free(rcv_noncontig_buff);   
+   }
+   if(!snd_data_contig)  MPIU_Free(snd_noncontig_buff);
+   TRACE_ERR("Allgather done\n");
+   return MPI_SUCCESS;
+}
