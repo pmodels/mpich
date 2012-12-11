@@ -77,7 +77,7 @@ int main( int argc, char *argv[] )
 		}
 		continue;
 	    }
-	    MPI_Info_get( infos[i], key, 64, value, &flag );
+	    MPI_Info_get( infos[i], key, sizeof(value), value, &flag );
 	    if (!flag) {
 		errs++;
 		if (errs < MAX_ERRORS) {
