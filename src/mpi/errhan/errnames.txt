@@ -698,14 +698,6 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **remove_shar_mem %s %s:unable to remove shared memory - %s %s
 **detach_shar_mem:unable to detach shared memory
 **detach_shar_mem %s %s:unable to detach shared memory - %s %s
-**gm_init:gm_init failed
-**gm_init %d:gm_init failed gm_status=%d
-**gm_regmem:gm_register_memory failed
-**gm_regmem %d:gm_register_memory failed gm_status=%d
-**gm_get_unique_board_id:gm_get_unique_board_id failed
-**gm_get_unique_board_id %d:gm_get_unique_board_id failed status=%d
-**gm_incompatible_lib:GM library and driver are different versions
-**gm_no_port:unable to find a free GM port
 **read %d %s:read from socket failed - nread=%d %s
 **winput_oob:target pointer for win_put is out of bounds
 **winget_oob:source pointer for win_get is out of bounds
