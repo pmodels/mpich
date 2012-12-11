@@ -29,7 +29,7 @@ static int verbose = 0;
 
 /* Key track of the process group corresponding to the MPI_COMM_WORLD
    of this process */
-static MPIDI_PG_t *pg_world = NULL;
+MPIDI_PG_t *pg_world = NULL;
 
 #define MPIDI_MAX_KVS_KEY_LEN      256
 
@@ -97,8 +97,12 @@ int MPIDI_PG_Finalize(void)
    my_max_worldid  = -1;
 
    while(NULL != conn_node) {
-     if(conn_node->rem_world_id>my_max_worldid && conn_node->ref_count>0)
+     if(conn_node->rem_world_id>my_max_worldid && conn_node->ref_count>0) {
+       TRACE_ERR("conn_node->rem_world_id=%d conn_node->ref_count=%d\n", conn_node->rem_world_id, conn_node->ref_count);
        my_max_worldid = conn_node->rem_world_id;
+     } else {
+       TRACE_ERR("conn_node->rem_world_id=%d conn_node->ref_count=%d\n", conn_node->rem_world_id, conn_node->ref_count);
+     }
      conn_node = conn_node->next;
    }
    MPIR_Allreduce_impl( &my_max_worldid, &world_max_worldid, 1, MPI_INT, MPI_MAX,   MPIR_Process.comm_world, &mpi_errno);
@@ -111,6 +115,7 @@ int MPIDI_PG_Finalize(void)
     * dont add 1, then the bit array will be size 1 byte, and when
     * we try to set bit in position 8, we will get segfault.
     */
+   TRACE_ERR("my_max_worldid=%d world_max_worldid=%d\n", my_max_worldid, world_max_worldid);
    if(world_max_worldid != -1) {
      world_max_worldid++;
      wid_bit_array_size = (world_max_worldid + CHAR_BIT -1) / CHAR_BIT;
@@ -141,8 +146,6 @@ int MPIDI_PG_Finalize(void)
      MPIU_Snprintf(key, PMI2_MAX_KEYLEN-1, "%s", "ROOTWIDARRAY");
      MPIU_Snprintf(value, PMI2_MAX_VALLEN-1, "%s", root_wid_barray);
      TRACE_ERR("root_wid_barray=%s\n", value);
-     key[strlen(key)+1]='\0';
-     value[strlen(value)+1]='\0';
      mpi_errno = PMI2_KVS_Put(key, value);
      TRACE_ERR("PMI2_KVS_Put returned with mpi_errno=%d\n", mpi_errno);
 

@@ -46,7 +46,7 @@ static int  MPIDI_mpi_to_pmi_keyvals( MPID_Info *info_ptr, PMI_keyval_t **kv_ptr
 	kv[i].key = MPIU_Strdup(key);
 	kv[i].val = MPIU_Malloc( vallen + 1 );
 	MPIR_Info_get_impl( info_ptr, key, vallen+1, kv[i].val, &flag );
-	TRACE_OUT(("key: <%s>, value: <%s>\n", kv[i].key, kv[i].val));
+	TRACE_OUT("key: <%s>, value: <%s>\n", kv[i].key, kv[i].val);
     }
 
  fn_fail:

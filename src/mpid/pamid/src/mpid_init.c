@@ -31,6 +31,8 @@
 #define PAMIX_CLIENT_DYNAMIC_TASKING 1032
 #define PAMIX_CLIENT_WORLD_TASKS     1033
 #define MAX_JOBID_LEN                1024
+int     world_rank;
+int     world_size;
 #endif
 int mpidi_dynamic_tasking = 0;
 
@@ -310,8 +312,8 @@ MPIDI_PAMI_client_init(int* rank, int* size, int* mpidi_dynamic_tasking, char **
               config2[1].value.intval,
               config2[2].value.intval,
               config2[3].value.chararray);
-    *rank = config2[0].value.intval;
-    *size = config2[1].value.intval;
+    *rank = world_rank = config2[0].value.intval;
+    *size = world_size = config2[1].value.intval;
     *mpidi_dynamic_tasking  = config2[2].value.intval;
     *world_tasks = config2[3].value.chararray;
   }
