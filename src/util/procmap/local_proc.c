@@ -84,6 +84,8 @@ int MPIU_Find_local_and_external(MPID_Comm *comm, int *local_size_p, int *local_
        node to the list. */
     
     /* these two will be realloc'ed later to the appropriate size (currently unknown) */
+    /* FIXME: realloc doesn't guarantee that the allocated area will be 
+       shrunk - so using realloc is not an appropriate strategy. */
     MPIU_CHKPMEM_MALLOC (external_ranks, int *, sizeof(int) * comm->remote_size, mpi_errno, "external_ranks");
     MPIU_CHKPMEM_MALLOC (local_ranks, int *, sizeof(int) * comm->remote_size, mpi_errno, "local_ranks");
 

@@ -102,7 +102,8 @@ int MPIE_ArgsCheckForEnv( int argc, char *argv[], ProcessWorld *pWorld,
 	while (*lPtr) {
 	    name = lPtr++;
 	    while (*lPtr && *lPtr != ',') lPtr++;
-	    namelen = lPtr - name;
+            /* The length of any environment string will fit in an int */
+	    namelen       = (int)(lPtr - name);
 	    p             = (EnvData *)MPIU_Malloc( sizeof(EnvData) );
 	    p->value      = 0;
 	    p->name       = (const char *)MPIU_Malloc( namelen + 1 );
@@ -243,7 +244,8 @@ int MPIE_EnvInitData( EnvData *elist, int getValue )
 {
     const char *value;
     char       *str;
-    int        slen, rc;
+    int        rc;
+    size_t     slen;
 
     while (elist) {
 	/* Skip variables that already have value strings */

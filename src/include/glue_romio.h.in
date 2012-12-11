@@ -54,10 +54,10 @@ void MPIR_Ext_cs_enter_allfunc(void);
 void MPIR_Ext_cs_exit_allfunc(void);
 
 /* prototypes for the mem tracing routines */
-void *MPIU_trmalloc(unsigned int a, int lineno, const char fname[]);
+void *MPIU_trmalloc(size_t a, int lineno, const char fname[]);
 void MPIU_trfree(void *a_ptr, int line, const char fname[]);
-void *MPIU_trcalloc(unsigned int nelem, unsigned int elsize, int lineno, const char fname[]);
-void *MPIU_trrealloc(void *p, int size, int lineno, const char fname[]);
+void *MPIU_trcalloc(size_t nelem, size_t elsize, int lineno, const char fname[]);
+void *MPIU_trrealloc(void *p, size_t size, int lineno, const char fname[]);
 void *MPIU_trstrdup(const char *str, int lineno, const char fname[]);
 
 #endif /* defined(GLUE_ROMIO_H_INCLUDED) */

@@ -12,7 +12,7 @@
    does not alias any pointer prior to the call.
  */
 void MPL_trinit(int);
-void *MPL_trmalloc(unsigned int, int, const char[]);
+void *MPL_trmalloc(size_t, int, const char[]);
 void MPL_trfree(void *, int, const char[]);
 int MPL_trvalid(const char[]);
 int MPL_trvalid2(const char[],int,const char[]);
@@ -20,10 +20,10 @@ void MPL_trspace(int *, int *);
 void MPL_trid(int);
 void MPL_trlevel(int);
 void MPL_trDebugLevel(int);
-void *MPL_trcalloc(unsigned int, unsigned int, int, const char[]);
-void *MPL_trrealloc(void *, int, int, const char[]);
+void *MPL_trcalloc(size_t, size_t, int, const char[]);
+void *MPL_trrealloc(void *, size_t, int, const char[]);
 void *MPL_trstrdup(const char *, int, const char[]);
-void MPL_TrSetMaxMem(int);
+void MPL_TrSetMaxMem(size_t);
 
 /* Make sure that FILE is defined */
 #include <stdio.h>

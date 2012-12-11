@@ -209,7 +209,7 @@ static int IOLabelSetLabelText( const char pattern[], char label[],
 	    switch (*pin) {
 	    case '%': *pout++ = '%'; lenleft--; break;
 	    case 'd': 
-		dlen = strlen( rankAsChar );
+		dlen = (int)strlen( rankAsChar );
 		if (dlen < lenleft) {
 		    MPIU_Strncpy( pout, rankAsChar, lenleft );
 		    pout += dlen;
@@ -221,7 +221,7 @@ static int IOLabelSetLabelText( const char pattern[], char label[],
 		}
 		break;
 	    case 'w':
-		dlen = strlen(worldnumAsChar);
+		dlen = (int)strlen(worldnumAsChar);
 		if (dlen < lenleft) {
 		    MPIU_Strncpy( pout, worldnumAsChar, lenleft );
 		    pout += dlen;
@@ -248,7 +248,7 @@ static int IOLabelSetLabelText( const char pattern[], char label[],
 			/* Recursively invoke the label routine */
 			IOLabelSetLabelText( wPattern, wLabel, sizeof(wLabel), 
 					     rank, worldnum );
-			dlen = strlen(wLabel);
+			dlen = (int)strlen(wLabel);
 			if (dlen < lenleft) {
 			    MPIU_Strncpy( pout, wLabel, lenleft );
 			    pout    += dlen;

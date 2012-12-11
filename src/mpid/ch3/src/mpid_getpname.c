@@ -84,7 +84,7 @@ static inline void setupProcessorName( void )
 static inline void setupProcessorName( void )
 {
     if (gethostname(processorName, MPI_MAX_PROCESSOR_NAME) == 0) {
-	processorNameLen = strlen( processorName );
+	processorNameLen = (int)strlen( processorName );
     }
 }
 
@@ -92,7 +92,7 @@ static inline void setupProcessorName( void )
 static inline void setupProcessorName( void );
 {
     if (sysinfo(SI_HOSTNAME, processorName, MPI_MAX_PROCESSOR_NAME) == 0) {
-	processorNameLen = strlen( processorName );
+	processorNameLen = (int)strlen( processorName );
     }
 }
 
@@ -102,6 +102,6 @@ static inline void setupProcessorName( void );
     /* Set the name as the rank of the process */
     MPIU_Snprintf( processorName, MPI_MAX_PROCESSOR_NAME, "%d", 
 		   MPIDI_Process.my_pg_rank );
-    processorNameLen = strlen( processorName );
+    processorNameLen = (int)strlen( processorName );
 }
 #endif

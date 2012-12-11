@@ -22,7 +22,7 @@ void MPIU_trdump(FILE *fp, int minid)
     MPIU_THREAD_CS_EXIT(MEMALLOC,);
 }
 
-void *MPIU_trmalloc(unsigned int a, int lineno, const char fname[])
+void *MPIU_trmalloc(size_t a, int lineno, const char fname[])
 {
     void *retval;
     MPIU_THREAD_CS_ENTER(MEMALLOC,);
@@ -75,7 +75,7 @@ void MPIU_trDebugLevel(int level)
     MPIU_THREAD_CS_EXIT(MEMALLOC,);
 }
 
-void *MPIU_trcalloc(unsigned int nelem, unsigned int elsize, int lineno, const char fname[])
+void *MPIU_trcalloc(size_t nelem, size_t elsize, int lineno, const char fname[])
 {
     void *retval;
     MPIU_THREAD_CS_ENTER(MEMALLOC,);
@@ -84,7 +84,7 @@ void *MPIU_trcalloc(unsigned int nelem, unsigned int elsize, int lineno, const c
     return retval;
 }
 
-void *MPIU_trrealloc(void *p, int size, int lineno, const char fname[])
+void *MPIU_trrealloc(void *p, size_t size, int lineno, const char fname[])
 {
     void *retval;
     MPIU_THREAD_CS_ENTER(MEMALLOC,);
@@ -102,7 +102,7 @@ void *MPIU_trstrdup(const char *str, int lineno, const char fname[])
     return retval;
 }
 
-void MPIU_TrSetMaxMem(int size)
+void MPIU_TrSetMaxMem(size_t size)
 {
     MPIU_THREAD_CS_ENTER(MEMALLOC,);
     MPL_TrSetMaxMem(size);

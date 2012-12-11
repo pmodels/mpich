@@ -238,7 +238,7 @@ void TimeoutInit( int seconds )
 #ifdef HAVE_TIME
     time_t t;
     t = time( NULL );
-    end_time = seconds + t;
+    end_time = seconds + (int)t;
 #elif defined(HAVE_GETTIMEOFDAY)
     struct timeval tp;
     gettimeofday( &tp, NULL );
@@ -264,7 +264,7 @@ int TimeoutGetRemaining( void )
 #ifdef HAVE_TIME
     time_t t;
     t = time( NULL );
-    time_left = end_time - t;
+    time_left = end_time - (int)t;
 #elif defined(HAVE_GETTIMEOFDAY)
     struct timeval tp;
     gettimeofday( &tp, NULL );

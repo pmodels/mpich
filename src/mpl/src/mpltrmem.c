@@ -202,7 +202,7 @@ Input Parameters:
     double aligned pointer to requested storage, or null if not
     available.
  +*/
-void *MPL_trmalloc(unsigned int a, int lineno, const char fname[])
+void *MPL_trmalloc(size_t a, int lineno, const char fname[])
 {
     TRSPACE *head;
     char *new = NULL;
@@ -753,11 +753,11 @@ Input Parameters:
     Double aligned pointer to requested storage, or null if not
     available.
  +*/
-void *MPL_trcalloc(unsigned int nelem, unsigned int elsize, int lineno, const char fname[])
+void *MPL_trcalloc(size_t nelem, size_t elsize, int lineno, const char fname[])
 {
     void *p;
 
-    p = MPL_trmalloc((unsigned) (nelem * elsize), lineno, fname);
+    p = MPL_trmalloc(nelem * elsize, lineno, fname);
     if (p) {
         memset(p, 0, nelem * elsize);
     }
@@ -778,7 +778,7 @@ Input Parameters:
     available.  This implementation ALWAYS allocates new space and copies
     the contents into the new space.
  +*/
-void *MPL_trrealloc(void *p, int size, int lineno, const char fname[])
+void *MPL_trrealloc(void *p, size_t size, int lineno, const char fname[])
 {
     void *pnew;
     size_t nsize;
@@ -809,7 +809,7 @@ void *MPL_trrealloc(void *p, int size, int lineno, const char fname[])
         return NULL;
     }
 
-    pnew = MPL_trmalloc((unsigned) size, lineno, fname);
+    pnew = MPL_trmalloc(size, lineno, fname);
 
     if (p && pnew) {
         nsize = size;
@@ -846,7 +846,7 @@ void *MPL_trstrdup(const char *str, int lineno, const char fname[])
     void *p;
     size_t len = strlen(str) + 1;
 
-    p = MPL_trmalloc((unsigned)len, lineno, (char *) fname);
+    p = MPL_trmalloc(len, lineno, fname);
     if (p) {
         memcpy(p, str, len);
     }
@@ -991,7 +991,7 @@ void MPL_trdumpGrouped(FILE * fp, int minid)
     fflush(fp);
 }
 
-void MPL_TrSetMaxMem(int size)
+void MPL_TrSetMaxMem(size_t size)
 {
     TRMaxMemAllow = size;
 }

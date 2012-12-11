@@ -6,6 +6,10 @@
 #ifndef MPIMEM_H_INCLUDED
 #define MPIMEM_H_INCLUDED
 
+#ifndef MPICHCONF_H_INCLUDED
+#error 'mpimem.h requires that mpichconf.h be included first'
+#endif
+
 /* Make sure that we have the definitions for the malloc routines and size_t */
 #include <stdio.h>
 #include <stdlib.h>
@@ -138,17 +142,17 @@ int MPIU_Str_get_string(char **str_ptr, char *val, int maxlen);
 /* ------------------------------------------------------------------------- */
 
 void MPIU_trinit(int);
-void *MPIU_trmalloc(unsigned int, int, const char []);
+void *MPIU_trmalloc(size_t, int, const char []);
 void MPIU_trfree(void *, int, const char []);
 int MPIU_trvalid(const char []);
 void MPIU_trspace(int *, int *);
 void MPIU_trid(int);
 void MPIU_trlevel(int);
 void MPIU_trDebugLevel(int);
-void *MPIU_trcalloc(unsigned int, unsigned int, int, const char []);
-void *MPIU_trrealloc(void *, int, int, const char[]);
+void *MPIU_trcalloc(size_t, size_t, int, const char []);
+void *MPIU_trrealloc(void *, size_t, int, const char[]);
 void *MPIU_trstrdup(const char *, int, const char[]);
-void MPIU_TrSetMaxMem(int);
+void MPIU_TrSetMaxMem(size_t);
 void MPIU_trdump(FILE *, int);
 
 #ifdef USE_MEMORY_TRACING
@@ -173,7 +177,7 @@ void MPIU_trdump(FILE *, int);
 .ve
   However, it can also be defined as 
 .vb
-  #define MPIU_Malloc(n) MPIU_trmalloc(n,__FILE__,__LINE__)
+  #define MPIU_Malloc(n) MPIU_trmalloc(n,__LINE__,__FILE__)
 .ve
   where 'MPIU_trmalloc' is a tracing version of 'malloc' that is included with 
   MPICH.
@@ -181,7 +185,7 @@ void MPIU_trdump(FILE *, int);
   Module:
   Utility
   M*/
-#define MPIU_Malloc(a)    MPIU_trmalloc((unsigned)(a),__LINE__,__FILE__)
+#define MPIU_Malloc(a)    MPIU_trmalloc((a),__LINE__,__FILE__)
 
 /*M
   MPIU_Calloc - Allocate memory that is initialized to zero.
@@ -203,7 +207,7 @@ void MPIU_trdump(FILE *, int);
   Utility
   M*/
 #define MPIU_Calloc(a,b)  \
-    MPIU_trcalloc((unsigned)(a),(unsigned)(b),__LINE__,__FILE__)
+    MPIU_trcalloc((a),(b),__LINE__,__FILE__)
 
 /*M
   MPIU_Free - Free memory
@@ -224,7 +228,7 @@ void MPIU_trdump(FILE *, int);
 .ve
   However, it can also be defined as 
 .vb
-  #define MPIU_Free(n) MPIU_trfree(n,__FILE__,__LINE__)
+  #define MPIU_Free(n) MPIU_trfree(n,__LINE__,__FILE__)
 .ve
   where 'MPIU_trfree' is a tracing version of 'free' that is included with 
   MPICH.

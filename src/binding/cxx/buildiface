@@ -1955,17 +1955,19 @@ int _mpi_lineno = __LINE__;
 // header isn't C++ clean.  Instead, we just include a definition
 // for size_t.  If this is not the correct size, then edit this line
 // (Note that this is needed only when memory tracing is enabled)
+// FIXME: determine whether the type definition is needed, and include the
+// correct definition.
 typedef unsigned int size_t;
-extern \"C\" void *MPIU_trmalloc( unsigned int, int, const char [] );
+extern \"C\" void *MPIU_trmalloc( size_t, int, const char [] );
 extern \"C\" void MPIU_trfree( void *, int, const char [] );
 extern \"C\" void MPIU_trdump( void *, int );
 void *operator new(size_t size) {
-    void *p = MPIU_trmalloc( (unsigned int) size, _mpi_lineno, __FILE__ );
+    void *p = MPIU_trmalloc( size, _mpi_lineno, __FILE__ );
     return p;}
 void operator delete(void *p) {
     MPIU_trfree( p, _mpi_lineno, __FILE__ );}
 void *operator new[]( size_t size) {
-    void *p = MPIU_trmalloc( (unsigned int) size, _mpi_lineno, __FILE__ );
+    void *p = MPIU_trmalloc( size, _mpi_lineno, __FILE__ );
     return p;}
 void operator delete[](void *p) {
     MPIU_trfree( p, _mpi_lineno, __FILE__ );}

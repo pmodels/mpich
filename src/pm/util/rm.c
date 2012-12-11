@@ -210,7 +210,8 @@ MachineTable *MPIE_ReadMachines( const char *arch, int nNeeded,
     char dirname[PATH_MAX];
     const char *path=getenv("MPIEXEC_MACHINES_PATH");
     MachineTable *mt;
-    int len, nFound = 0;
+    size_t len;
+    int    nFound = 0;
     
     /* Try to open the machines file.  arch may be null, in which 
        case we open the default file */
@@ -341,13 +342,14 @@ MachineTable *MPIE_ReadMachines( const char *arch, int nNeeded,
 	    mt->desc[nFound].login = 0;
 	if (npstring) {
 	    char *newp;
-	    int n = strtol( npstring, &newp, 0 );
+	    size_t n = strtol( npstring, &newp, 0 );
 	    if (newp == npstring) {
 		/* This indicates an error in the file.  How do we
 		   report that? */
 		n = 1;
 	    }
-	    mt->desc[nFound].np      = n;
+            /* Length of hostname will fit in an int. */
+	    mt->desc[nFound].np      = (int)n;
 	}
 	else 
 	    mt->desc[nFound].np      = 1;

@@ -730,9 +730,9 @@ static int connToStringKVS( char **buf_p, int *slen, MPIDI_PG_t *pg )
     char *string = 0;
     char *pg_idStr = (char *)pg->id;      /* In the PMI/KVS space,
 					     the pg id is a string */
-    char buf[MPIDI_MAX_KVS_VALUE_LEN];
-    int   i, j, vallen, rc, mpi_errno = MPI_SUCCESS, len;
-    int   curSlen;
+    char   buf[MPIDI_MAX_KVS_VALUE_LEN];
+    int    i, j, rc, mpi_errno = MPI_SUCCESS, len;
+    size_t vallen, curSlen;
 
     /* Make an initial allocation of a string with an estimate of the
        needed space */
@@ -782,7 +782,7 @@ static int connToStringKVS( char **buf_p, int *slen, MPIDI_PG_t *pg )
 	if (len + vallen + 1 >= curSlen) {
 	    char *nstring = 0;
             curSlen += (pg->size - i) * (vallen + 1 );
-	    nstring = MPIU_Realloc( string, curSlen);
+	    nstring = MPIU_Realloc( string, curSlen );
 	    if (!nstring) {
 		MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**nomem");
 	    }

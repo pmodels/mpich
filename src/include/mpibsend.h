@@ -53,7 +53,7 @@ struct MPID_Comm;
    request is not currently available */
 typedef struct MPIR_Bsend_msg {
     void         *msgbuf;
-    int          count;
+    int          count;     /* int type to match needs of Pack routine */
     MPI_Datatype dtype;
     int          tag;
     struct MPID_Comm    *comm_ptr;
@@ -62,14 +62,14 @@ typedef struct MPIR_Bsend_msg {
 
 /* BsendData describes a bsend request */
 typedef struct MPIR_Bsend_data {
-    int              size;             /* size that is available for data */
-    int              total_size;       /* total size of this segment,
+    size_t            size;            /* size that is available for data */
+    size_t            total_size;      /* total size of this segment,
                                           including all headers */
     struct MPIR_Bsend_data *next, *prev;
     MPIR_Bsend_kind_t kind;
     struct MPID_Request  *request;
-    MPIR_Bsend_msg_t       msg;
-    double           alignpad;         /* make sure that the struct
+    MPIR_Bsend_msg_t  msg;
+    double            alignpad;        /* make sure that the struct
                                           shares double alignment */
 } MPIR_Bsend_data_t;
 

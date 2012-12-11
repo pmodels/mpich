@@ -57,10 +57,10 @@ static void MPIR_Bsend_dump( void );
 static struct BsendBuffer {
     void               *buffer;        /* Pointer to the begining of the user-
 					  provided buffer */
-    int                buffer_size;    /* Size of the user-provided buffer */
+    size_t             buffer_size;    /* Size of the user-provided buffer */
     void               *origbuffer;    /* Pointer to the buffer provided by
 					  the user */
-    int                origbuffer_size; /* Size of the buffer as provided 
+    size_t             origbuffer_size;/* Size of the buffer as provided 
 					    by the user */
     MPIR_Bsend_data_t  *avail;         /* Pointer to the first available block
 					  of space */
@@ -157,7 +157,9 @@ int MPIR_Bsend_attach( void *buffer, int buffer_size )
 
 /* 
  * Detach a buffer.  This routine must wait until any pending bsends 
- * are complete.
+ * are complete.  Note that MPI specifies the type of the returned "size"
+ * argument as an "int" (the definition predates that of ssize_t as a 
+ * standard type).
  */
 #undef FUNCNAME
 #define FUNCNAME MPIR_Bsend_detach
@@ -183,7 +185,9 @@ int MPIR_Bsend_detach( void *bufferp, int *size )
 
 /* Note that this works even when the buffer does not exist */
     *(void **) bufferp  = BsendBuffer.origbuffer;
-    *size = BsendBuffer.origbuffer_size;
+    /* This cast to int will work because the user must use an int to describe
+       the buffer size */
+    *size = (int)BsendBuffer.origbuffer_size;
     BsendBuffer.origbuffer = NULL;
     BsendBuffer.origbuffer_size = 0;
     BsendBuffer.buffer  = 0;

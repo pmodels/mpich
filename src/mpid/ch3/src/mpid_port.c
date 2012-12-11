@@ -245,7 +245,7 @@ static int get_port_name_tag(int * port_name_tag)
 		port_name_tag_mask[i]) {
 		/* Mark the appropriate bit as used and return that */
 		port_name_tag_mask[i] |= (1 << ((8 * sizeof(int)) - j - 1));
-		*port_name_tag = ((i * 8 * sizeof(int)) + j);
+		*port_name_tag = ((i * 8 * (int)sizeof(int)) + j);
 		goto fn_exit;
 	    }
 	}
@@ -268,8 +268,8 @@ static void free_port_name_tag(int tag)
 {
     int idx, rem_tag;
 
-    idx = tag / (sizeof(int) * 8);
-    rem_tag = tag - (idx * sizeof(int) * 8);
+    idx = tag / ((int)sizeof(int) * 8);
+    rem_tag = tag - (int)(idx * sizeof(int) * 8);
 
     port_name_tag_mask[idx] &= ~(1 << ((8 * sizeof(int)) - 1 - rem_tag));
 }
