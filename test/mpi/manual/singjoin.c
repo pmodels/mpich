@@ -81,11 +81,19 @@ SOCKET_FD_TYPE server_routine(int portnum)
 		return -1;
 	}
 
-	listen(listenfd, 1024);
+	ret = listen(listenfd, 1024);
+        if (ret < 0) {
+            perror( "server listen" );
+            return -1;
+        }
 
 	peer_addr_size = sizeof(peer_addr);
 	peer_fd = accept(listenfd, (struct sockaddr *)&peer_addr, &peer_addr_size);
 
+        if (peer_fd < 0) {
+            perror( "server accept" );
+            return -1;
+        }
 	return peer_fd;
 }
 
