@@ -221,7 +221,7 @@ parameters:
     - category    : rma
       name        : RMA_LOCK_IMMED
       type        : boolean
-      default     : 0
+      default     : false
       description : >-
         Issue a request for the passive target RMA lock immediately.  Default
         behavior is to defer the lock request until the call to MPI_Win_unlock.
