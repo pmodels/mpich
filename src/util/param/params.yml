@@ -226,6 +226,14 @@ parameters:
         Issue a request for the passive target RMA lock immediately.  Default
         behavior is to defer the lock request until the call to MPI_Win_unlock.
 
+    - category    : rma
+      name        : RMA_MERGE_LOCK_OP_UNLOCK
+      type        : boolean
+      default     : true
+      description : >-
+        Enable/disable an optimization that merges lock, op, and unlock
+        messages, for single-operation passive target epochs.
+
     ##############################################################
     # intranode communication parameters
     - category    : intranode

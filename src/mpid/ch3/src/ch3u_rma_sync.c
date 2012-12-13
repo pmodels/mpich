@@ -2018,7 +2018,8 @@ int MPIDI_Win_unlock(int dest, MPID_Win *win_ptr)
     /* TODO: MPI-3: Add lock_all->op optimization. */
     /* LOCK-OP-UNLOCK Optimization -- This optimization can't be used if we
        have already requested the lock. */
-    if ( rma_op && rma_op->type == MPIDI_RMA_LOCK &&
+    if ( MPIR_PARAM_RMA_MERGE_LOCK_OP_UNLOCK &&
+         rma_op && rma_op->type == MPIDI_RMA_LOCK &&
          rma_op->next->next == NULL &&
          rma_op->next->type != MPIDI_RMA_COMPARE_AND_SWAP &&
          rma_op->next->type != MPIDI_RMA_FETCH_AND_OP &&
