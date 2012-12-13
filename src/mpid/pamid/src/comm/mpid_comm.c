@@ -231,6 +231,14 @@ void MPIDI_Coll_comm_create(MPID_Comm *comm)
 
       TRACE_ERR("Waiting for geom create to finish\n");
       MPID_PROGRESS_WAIT_WHILE(geom_init);
+
+      if(comm->mpid.geometry == NULL)
+      {
+         if(unlikely(MPIDI_Process.verbose >= MPIDI_VERBOSE_DETAILS_0 && comm->rank == 0))
+            fprintf(stderr,"Created unoptimized communicator id=%u, size=%u\n", (unsigned) comm->context_id,comm->local_size);
+         MPIU_TestFree(&comm->coll_fns);
+         return;
+      }
    }
 
    TRACE_ERR("Querying protocols\n");

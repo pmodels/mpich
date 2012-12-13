@@ -261,13 +261,31 @@ int MPIDO_Gather(const void *sendbuf,
       metadata_result_t result = {0};
       TRACE_ERR("querying gather protocol %s, type was %d\n",
          my_md->name, queryreq);
-      if(queryreq == MPID_COLL_ALWAYS_QUERY)
+      if(my_md->check_fn == NULL)
       {
         /* process metadata bits */
         if((!my_md->check_correct.values.inplace) && (sendbuf == MPI_IN_PLACE))
            result.check.unspecified = 1;
+        if(my_md->check_correct.values.rangeminmax)
+        {
+          if((my_md->range_lo <= recv_bytes) &&
+             (my_md->range_hi >= recv_bytes))
+            ; /* ok, algorithm selected */
+          else
+          {
+            result.check.range = 1;
+            if(unlikely(verbose))
+            {   
+              fprintf(stderr,"message size (%u) outside range (%zu<->%zu) for %s.\n",
+                      recv_bytes,
+                      my_md->range_lo,
+                      my_md->range_hi,
+                      my_md->name);
+            }
+          }
+        }
       }
-      else /* (queryreq == MPID_COLL_CHECK_FN_REQUIRED - calling the check fn is sufficient */
+      else /* calling the check fn is sufficient */
         result = my_md->check_fn(&gather);
       TRACE_ERR("bitmask: %#X\n", result.bitmask);
       result.check.nonlocal = 0; /* #warning REMOVE THIS WHEN IMPLEMENTED */

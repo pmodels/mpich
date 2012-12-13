@@ -242,8 +242,8 @@ MPIDO_Allgather(const void *sendbuf,
    MPI_Aint send_true_lb = 0;
    MPI_Aint recv_true_lb = 0;
    int rc, comm_size = comm_ptr->local_size;
-   size_t send_size = 0;
-   size_t recv_size = 0;
+   size_t send_bytes = 0;
+   size_t recv_bytes = 0;
    volatile unsigned allred_active = 1;
    volatile unsigned allgather_active = 1;
    pami_xfer_t allred;
@@ -303,11 +303,11 @@ MPIDO_Allgather(const void *sendbuf,
    MPIDI_Datatype_get_info(recvcount,
 			  recvtype,
         config[MPID_RECV_CONTIG],
-			  recv_size,
+			  recv_bytes,
 			  dt_null,
 			  recv_true_lb);
 
-   send_size = recv_size;
+   send_bytes = recv_bytes;
    rbuf = (char *)recvbuf+recv_true_lb;
 
    sbuf = PAMI_IN_PLACE;
@@ -318,7 +318,7 @@ MPIDO_Allgather(const void *sendbuf,
       MPIDI_Datatype_get_info(sendcount,
                             sendtype,
                             config[MPID_SEND_CONTIG],
-                            send_size,
+                            send_bytes,
                             dt_null,
                             send_true_lb);
       sbuf = (char *)sendbuf+send_true_lb;
@@ -347,12 +347,12 @@ MPIDO_Allgather(const void *sendbuf,
        use_alltoall = allgathers[2] &&
             config[MPID_RECV_CONTIG] && config[MPID_SEND_CONTIG];;
 
-      /* Note: some of the glue protocols use recv_size*comm_size rather than 
-       * recv_size so we use that for comparison here, plus we pass that in
+      /* Note: some of the glue protocols use recv_bytes*comm_size rather than 
+       * recv_bytes so we use that for comparison here, plus we pass that in
        * to those protocols. */
        use_tree_reduce =  allgathers[0] &&
          config[MPID_RECV_CONTIG] && config[MPID_SEND_CONTIG] &&
-         config[MPID_RECV_CONTINUOUS] && (recv_size*comm_size%sizeof(unsigned)) == 0;
+         config[MPID_RECV_CONTINUOUS] && (recv_bytes*comm_size%sizeof(unsigned)) == 0;
 
        use_bcast = allgathers[1];
 
@@ -368,12 +368,12 @@ MPIDO_Allgather(const void *sendbuf,
       allgather.cmd.xfer_allgather.sndbuf = sbuf;
       allgather.cmd.xfer_allgather.stype = PAMI_TYPE_BYTE;
       allgather.cmd.xfer_allgather.rtype = PAMI_TYPE_BYTE;
-      allgather.cmd.xfer_allgather.stypecount = send_size;
-      allgather.cmd.xfer_allgather.rtypecount = recv_size;
+      allgather.cmd.xfer_allgather.stypecount = send_bytes;
+      allgather.cmd.xfer_allgather.rtypecount = recv_bytes;
       if(selected_type == MPID_COLL_OPTIMIZED)
       {
         if((mpid->cutoff_size[PAMI_XFER_ALLGATHER][0] == 0) || 
-           (mpid->cutoff_size[PAMI_XFER_ALLGATHER][0] > 0 && mpid->cutoff_size[PAMI_XFER_ALLGATHER][0] >= send_size))
+           (mpid->cutoff_size[PAMI_XFER_ALLGATHER][0] > 0 && mpid->cutoff_size[PAMI_XFER_ALLGATHER][0] >= send_bytes))
         {
            allgather.algorithm = mpid->opt_protocol[PAMI_XFER_ALLGATHER][0];
            my_md = &mpid->opt_protocol_md[PAMI_XFER_ALLGATHER][0];
@@ -400,13 +400,31 @@ MPIDO_Allgather(const void *sendbuf,
          TRACE_ERR("Querying allgather protocol %s, type was: %d\n",
             my_md->name,
             selected_type);
-         if(queryreq == MPID_COLL_ALWAYS_QUERY)
+         if(my_md->check_fn == NULL)
          {
            /* process metadata bits */
            if((!my_md->check_correct.values.inplace) && (sendbuf == MPI_IN_PLACE))
               result.check.unspecified = 1;
+           if(my_md->check_correct.values.rangeminmax)
+           {
+             if((my_md->range_lo <= recv_bytes) &&
+                (my_md->range_hi >= recv_bytes))
+                ; /* ok, algorithm selected */
+             else
+             {
+               result.check.range = 1;
+               if(unlikely(verbose))
+               {   
+                 fprintf(stderr,"message size (%zu) outside range (%zu<->%zu) for %s.\n",
+                         recv_bytes,
+                         my_md->range_lo,
+                         my_md->range_hi,
+                         my_md->name);
+               }
+             }
+           }
          }
-         else /* (queryreq == MPID_COLL_CHECK_FN_REQUIRED - calling the check fn is sufficient */
+         else /* calling the check fn is sufficient */
            result = my_md->check_fn(&allgather);
          TRACE_ERR("bitmask: %#X\n", result.bitmask);
          result.check.nonlocal = 0; /* #warning REMOVE THIS WHEN IMPLEMENTED */
@@ -451,7 +469,7 @@ MPIDO_Allgather(const void *sendbuf,
       MPIDI_Update_last_algorithm(comm_ptr, "ALLGATHER_OPT_ALLREDUCE");
      return MPIDO_Allgather_allreduce(sendbuf, sendcount, sendtype,
                                recvbuf, recvcount, recvtype,
-                               send_true_lb, recv_true_lb, send_size, recv_size*comm_size, comm_ptr, mpierrno);
+                               send_true_lb, recv_true_lb, send_bytes, recv_bytes*comm_size, comm_ptr, mpierrno);
    }
    if(use_alltoall)
    {
@@ -461,7 +479,7 @@ MPIDO_Allgather(const void *sendbuf,
       MPIDI_Update_last_algorithm(comm_ptr, "ALLGATHER_OPT_ALLTOALL");
      return MPIDO_Allgather_alltoall(sendbuf, sendcount, sendtype,
                                recvbuf, recvcount, recvtype,
-                               send_true_lb, recv_true_lb, send_size, recv_size*comm_size, comm_ptr, mpierrno);
+                               send_true_lb, recv_true_lb, send_bytes, recv_bytes*comm_size, comm_ptr, mpierrno);
    }
 
    if(use_bcast)
@@ -472,7 +490,7 @@ MPIDO_Allgather(const void *sendbuf,
      MPIDI_Update_last_algorithm(comm_ptr, "ALLGATHER_OPT_BCAST");
      return MPIDO_Allgather_bcast(sendbuf, sendcount, sendtype,
                                recvbuf, recvcount, recvtype,
-                               send_true_lb, recv_true_lb, send_size, recv_size*comm_size, comm_ptr, mpierrno);
+                               send_true_lb, recv_true_lb, send_bytes, recv_bytes*comm_size, comm_ptr, mpierrno);
    }
    
    /* Nothing used yet; dump to MPICH */

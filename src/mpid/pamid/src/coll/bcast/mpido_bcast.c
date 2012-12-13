@@ -190,15 +190,38 @@ int MPIDO_Bcast(void *buffer,
    {
       metadata_result_t result = {0};
       TRACE_ERR("querying bcast protocol %s, type was: %d\n",
-         my_md->name, queryreq);
-      if(queryreq == MPID_COLL_ALWAYS_QUERY)
+                my_md->name, queryreq);
+      if(my_md->check_fn != NULL) /* calling the check fn is sufficient */
       {
-        /* process metadata bits */
-      }
-      else /* (queryreq == MPID_COLL_CHECK_FN_REQUIRED - calling the check fn is sufficient */
+         metadata_result_t result = {0};
          result = my_md->check_fn(&bcast);
+         result.check.nonlocal = 0; /* #warning REMOVE THIS WHEN IMPLEMENTED */
+      } 
+      else /* no check_fn, manually look at the metadata fields */
+      {
+         TRACE_ERR("Optimzed selection line %d\n",__LINE__);
+         /* Check if the message range if restricted */
+         if(my_md->check_correct.values.rangeminmax)
+         {
+            if((my_md->range_lo <= data_size) &&
+               (my_md->range_hi >= data_size))
+               ; /* ok, algorithm selected */
+            else
+            {
+               result.check.range = 1;
+               if(unlikely(verbose))
+               {   
+                  fprintf(stderr,"message size (%u) outside range (%zu<->%zu) for %s.\n",
+                          data_size,
+                          my_md->range_lo,
+                          my_md->range_hi,
+                          my_md->name);
+               }
+            }
+         }
+         /* \todo check the rest of the metadata */
+      }
       TRACE_ERR("bitmask: %#X\n", result.bitmask);
-      result.check.nonlocal = 0; /* #warning REMOVE THIS WHEN IMPLEMENTED */
       if(result.bitmask)
       {
          if(unlikely(verbose))
