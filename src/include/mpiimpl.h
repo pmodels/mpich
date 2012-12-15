@@ -417,7 +417,7 @@ int MPIU_Handle_free( void *((*)[]), int );
 #define MPID_File_get_ptr(a,ptr)       MPID_Get_ptr(File,a,ptr)
 #define MPID_Errhandler_get_ptr(a,ptr) MPID_Getb_ptr(Errhandler,a,0x3,ptr)
 #define MPID_Op_get_ptr(a,ptr)         MPID_Getb_ptr(Op,a,0x000000ff,ptr)
-#define MPID_Info_get_ptr(a,ptr)       MPID_Get_ptr(Info,a,ptr)
+#define MPID_Info_get_ptr(a,ptr)       MPID_Getb_ptr(Info,a,0x03ffffff,ptr)
 #define MPID_Win_get_ptr(a,ptr)        MPID_Get_ptr(Win,a,ptr)
 #define MPID_Request_get_ptr(a,ptr)    MPID_Get_ptr(Request,a,ptr)
 #define MPID_Grequest_class_get_ptr(a,ptr) MPID_Get_ptr(Grequest_class,a,ptr)
@@ -584,6 +584,8 @@ typedef struct MPID_Info {
 } MPID_Info;
 extern MPIU_Object_alloc_t MPID_Info_mem;
 /* Preallocated info objects */
+#define MPID_INFO_N_BUILTIN 2
+extern MPID_Info MPID_Info_builtin[MPID_INFO_N_BUILTIN];
 extern MPID_Info MPID_Info_direct[];
 /* ------------------------------------------------------------------------- */
 

@@ -15,6 +15,7 @@
 #endif
 
 /* Preallocated info objects */
+MPID_Info MPID_Info_builtin[MPID_INFO_N_BUILTIN] = { { 0 } };
 MPID_Info MPID_Info_direct[MPID_INFO_PREALLOC] = { { 0 } };
 MPIU_Object_alloc_t MPID_Info_mem = { 0, 0, 0, 0, MPID_INFO, 
 				      sizeof(MPID_Info), MPID_Info_direct,

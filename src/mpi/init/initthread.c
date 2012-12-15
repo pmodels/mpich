@@ -58,8 +58,6 @@ MPIU_DLL_SPEC MPI_Fint *MPI_F_STATUSES_IGNORE = 0;
    how MPICH was configured. */
 extern const char MPIR_Version_device[];
 
-MPI_Info MPI_INFO_ENV = MPI_INFO_NULL;
-
 /* Make sure the Fortran symbols are initialized unless it will cause problems
    for C programs linked with the C compilers (i.e., not using the 
    compilation scripts).  These provide the declarations for the initialization
@@ -419,12 +417,17 @@ int MPIR_Init_thread(int * argc, char ***argv, int required, int * provided)
     MPIU_THREAD_CS_ENTER(INIT,required);
     exit_init_cs_on_failure = 1;
 
-    mpi_errno = MPIU_Info_alloc(&info_ptr);
-    if (mpi_errno)
-        goto fn_fail;
-
-    MPI_INFO_ENV = info_ptr->handle;
-
+    /* create MPI_INFO_NULL object */
+    /* FIXME: Currently this info object is empty, we need to add data to this
+       as defined by the standard. */
+    info_ptr = MPID_Info_builtin + 1;
+    info_ptr->handle = MPI_INFO_ENV;
+    MPIU_Object_set_ref(info_ptr, 1);
+    MPIU_THREAD_MPI_OBJ_INIT(info_ptr);
+    info_ptr->next  = NULL;
+    info_ptr->key   = NULL;
+    info_ptr->value = NULL;
+    
     mpi_errno = MPID_Init(argc, argv, required, &thread_provided, 
 			  &has_args, &has_env);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);

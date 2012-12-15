@@ -6,7 +6,6 @@
 /* style: allow:fprintf:1 sig:0 */
 
 #include "mpiimpl.h"
-#include "mpiinfo.h"
 #include "mpi_init.h"
 
 /* -- Begin Profiling Symbol Block for routine MPI_Finalize */
@@ -116,7 +115,6 @@ int MPI_Finalize( void )
 {
     static const char FCNAME[] = "MPI_Finalize";
     int mpi_errno = MPI_SUCCESS;
-    MPID_Info *info_ptr;
 #if defined(HAVE_USLEEP) && defined(USE_COVERAGE)
     int rank=0;
 #endif
@@ -215,10 +213,6 @@ int MPI_Finalize( void )
 	MPIU_ERR_POP(mpi_errno);
     }
 
-    MPID_Info_get_ptr(MPI_INFO_ENV, info_ptr);
-    MPIU_Info_free(info_ptr);
-    MPI_INFO_ENV = MPI_INFO_NULL;
-    
     /* Call the low-priority (post Finalize) callbacks */
     MPIR_Call_finalize_callbacks( 0, MPIR_FINALIZE_CALLBACK_PRIO-1 );
 
