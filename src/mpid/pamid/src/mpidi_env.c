@@ -1175,6 +1175,7 @@ int  MPIDI_get_buf_mem(unsigned long *buf_mem,unsigned long *buf_mem_max)
             TRACE_ERR("ERROR in MP_BUFFER_MEM %s(%d)\n",__FILE__,__LINE__);
             return 1;
          }
+        return 0;
      } else {
          /* MP_BUFFER_MEM is not specified by the user*/
          *buf_mem     = BUFFER_MEM_DEFAULT;
