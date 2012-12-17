@@ -386,9 +386,9 @@ int MPIDI_CH3I_Progress (MPID_Progress_state *progress_state, int is_blocking)
 
                     MPIDI_PG_Get_vc_set_active(MPIDI_Process.my_pg, MPID_NEM_FBOX_SOURCE(cell), &vc);
 		   
-		    MPIU_Assert(VC_CH(vc)->recv_active == NULL &&
-                                VC_CH(vc)->pending_pkt_len == 0);
-                    vc_ch = VC_CH(vc);
+		    MPIU_Assert(vc->ch.recv_active == NULL &&
+                                vc->ch.pending_pkt_len == 0);
+                    vc_ch = &vc->ch;
 
                     /* invalid pkt data will result in unpredictable behavior */
                     MPIU_Assert(pkt->type >= 0 && pkt->type < MPIDI_NEM_PKT_END);
@@ -615,7 +615,7 @@ int MPID_nem_handle_pkt(MPIDI_VC_t *vc, char *buf, MPIDI_msg_sz_t buflen)
     int mpi_errno = MPI_SUCCESS;
     MPID_Request *rreq = NULL;
     int complete;
-    MPIDI_CH3I_VC *vc_ch = VC_CH(vc);
+    MPIDI_CH3I_VC *vc_ch = &vc->ch;
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_HANDLE_PKT);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_HANDLE_PKT);
@@ -903,14 +903,14 @@ static int shm_connection_terminated(MPIDI_VC_t * vc)
 
     MPIDI_FUNC_ENTER(MPID_STATE_SHM_CONNECTION_TERMINATED);
 
-    if (VC_CH(vc)->lmt_vc_terminated) {
-        mpi_errno = VC_CH(vc)->lmt_vc_terminated(vc);
+    if (vc->ch.lmt_vc_terminated) {
+        mpi_errno = vc->ch.lmt_vc_terminated(vc);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     }
     
-    mpi_errno = MPIU_SHMW_Hnd_finalize(&(VC_CH(vc)->lmt_copy_buf_handle));
+    mpi_errno = MPIU_SHMW_Hnd_finalize(&(vc->ch.lmt_copy_buf_handle));
     if(mpi_errno != MPI_SUCCESS) { MPIU_ERR_POP(mpi_errno); }
-    mpi_errno = MPIU_SHMW_Hnd_finalize(&(VC_CH(vc)->lmt_recv_copy_buf_handle));
+    mpi_errno = MPIU_SHMW_Hnd_finalize(&(vc->ch.lmt_recv_copy_buf_handle));
     if(mpi_errno != MPI_SUCCESS) { MPIU_ERR_POP(mpi_errno); }
     
     mpi_errno = MPIDI_CH3U_Handle_connection(vc, MPIDI_VC_EVENT_TERMINATED);
@@ -944,7 +944,7 @@ int MPIDI_CH3_Connection_terminate(MPIDI_VC_t * vc)
         vc->state == MPIDI_VC_STATE_INACTIVE_CLOSED)
         goto fn_exit;
 
-    if (VC_CH(vc)->is_local) {
+    if (vc->ch.is_local) {
         MPIU_DBG_MSG(CH3_DISCONNECT, TYPICAL, "VC is local");
 
         if (vc->state != MPIDI_VC_STATE_CLOSED) {
@@ -1055,7 +1055,7 @@ static int pkt_NETMOD_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, MPIDI_msg_sz
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_nem_pkt_netmod_t * const netmod_pkt = (MPID_nem_pkt_netmod_t *)pkt;
-    MPIDI_CH3I_VC *vc_ch = VC_CH(vc);
+    MPIDI_CH3I_VC *vc_ch = &vc->ch;
     MPIDI_STATE_DECL(MPID_STATE_PKT_NETMOD_HANDLER);
 
     MPIDI_FUNC_ENTER(MPID_STATE_PKT_NETMOD_HANDLER);
@@ -1193,7 +1193,7 @@ void MPIDI_CH3I_Posted_recv_enqueued(MPID_Request *rreq)
             goto fn_exit;
 
         /* don't enqueue non-local processes */
-        if (!VC_CH(vc)->is_local)
+        if (!vc->ch.is_local)
             goto fn_exit;
 
         /* Translate the communicator rank to a local rank.  Note that there is an
@@ -1239,7 +1239,7 @@ int MPIDI_CH3I_Posted_recv_dequeued(MPID_Request *rreq)
         /* don't use MPID_NEM_IS_LOCAL, it doesn't handle dynamic processes */
         MPIDI_Comm_get_vc(rreq->comm, rreq->dev.match.parts.rank, &vc);
         MPIU_Assert(vc != NULL);
-        if (!VC_CH(vc)->is_local)
+        if (!vc->ch.is_local)
             goto fn_exit;
 
         /* Translate the communicator rank to a local rank.  Note that there is an

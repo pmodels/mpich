@@ -37,7 +37,7 @@ typedef struct {
 } MPID_nem_scif_vc_area;
 
 /* macro for scif private in VC */
-#define VC_SCIF(vc) ((MPID_nem_scif_vc_area *)VC_CH((vc))->netmod_area.padding)
+#define VC_SCIF(vc) ((MPID_nem_scif_vc_area *)vc->ch.netmod_area.padding)
 
 typedef struct {
     uint64_t seqno;

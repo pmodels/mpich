@@ -796,20 +796,6 @@ typedef struct MPIDI_VC
     MPIDI_Comm_ops_t *comm_ops;
 #endif
 
-    /* Rather than have each channel define its own fields for the 
-       channel-specific data, we provide a fixed-sized scratchpad.  Currently,
-       this has a very generous size, though this may shrink later (a channel
-       can always allocate storage and hang it off of the end).  This 
-       is necessary to allow dynamic loading of channels at MPI_Init time. */
-    /* The ssm channel needed a *huge* space for the VC.  But now that it's
-       gone, we need to determine the appropriate smaller size to use instead. */
-    /* Note also that for dynamically-loaded channels, the VCs must all be the
-       same size, so MPIDI_CH3_VC_SIZE should not be overridden when building
-       multiple channels that will be used together */
-#ifndef MPIDI_CH3_VC_SIZE
-#define MPIDI_CH3_VC_SIZE 256
-#endif
-    int32_t channel_private[MPIDI_CH3_VC_SIZE];
 # if defined(MPIDI_CH3_VC_DECL)
     MPIDI_CH3_VC_DECL
 # endif
@@ -1823,18 +1809,6 @@ int MPIDI_CH3_PktHandler_Close( MPIDI_VC_t *, MPIDI_CH3_Pkt_t *,
 int MPIDI_CH3_PktHandler_EndCH3( MPIDI_VC_t *, MPIDI_CH3_Pkt_t *,
 				 MPIDI_msg_sz_t *, MPID_Request ** );
 
-/* PktHandler function:
-   vc  (INPUT) -- vc on which the packet was received
-   pkt (INPUT) -- pointer to packet header at beginning of receive buffer
-   buflen (I/O) -- IN: number of bytes received into receive buffer
-                   OUT: number of bytes processed by the handler function
-   req (OUTPUT) -- NULL, if the whole message has been processed by the handler
-                   function, otherwise, pointer to the receive request for this
-                   message.  The IOV will be set describing where the rest of the
-                   message should be received.
-*/
-typedef int MPIDI_CH3_PktHandler_Fcn(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
-				     MPIDI_msg_sz_t *buflen, MPID_Request **req );
 int MPIDI_CH3_PktHandler_Init( MPIDI_CH3_PktHandler_Fcn *[], int );
 
 #ifdef MPICH_DBG_OUTPUT

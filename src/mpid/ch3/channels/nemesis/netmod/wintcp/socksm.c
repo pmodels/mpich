@@ -2287,7 +2287,7 @@ static int MPID_nem_newtcp_module_recv_success_handler(MPIU_EXOVERLAPPED *rd_ov)
     MPIU_Assert(sc != NULL);
 
     bytes_recvd = ex_read_progress_update(sc, &complete);
-    rreq = ((MPIDI_CH3I_VC *)sc->vc->channel_private)->recv_active;
+    rreq = sc->vc->ch.recv_active;
 
     if (rreq == NULL){
         /* Received a new message on scratch pad, sc->tmp_buf */
@@ -2324,7 +2324,7 @@ static int MPID_nem_newtcp_module_recv_success_handler(MPIU_EXOVERLAPPED *rd_ov)
 
         /* The pkt handlers can sever the conn btw sc and vc - eg: when vc is terminated*/
         if(sc->vc != NULL){
-            rreq = ((MPIDI_CH3I_VC *)sc->vc->channel_private)->recv_active;
+            rreq = sc->vc->ch.recv_active;
             if (rreq == NULL){
                 /* The packets were completely consumed - post read on scratch pad recv buf */
                 MPIU_DBG_MSG_FMT(CH3_CHANNEL, VERBOSE, (MPIU_DBG_FDEST, "Packets (bytes = %d) on (fd=%d, vc=%p, sc=%p) completely consumed", bytes_recvd, sc->fd, sc->vc, sc));
@@ -2374,7 +2374,7 @@ static int MPID_nem_newtcp_module_recv_success_handler(MPIU_EXOVERLAPPED *rd_ov)
                 MPIU_Assert(MPIDI_Request_get_type(rreq) != MPIDI_REQUEST_TYPE_GET_RESP);
                 MPIDI_CH3U_Request_complete(rreq);
                 MPIU_DBG_MSG(CH3_CHANNEL, VERBOSE, "Req complete...");
-                ((MPIDI_CH3I_VC *)sc->vc->channel_private)->recv_active = NULL;
+                sc->vc->ch.recv_active = NULL;
                 req_complete = 1;
             }
             else{
@@ -2385,7 +2385,7 @@ static int MPID_nem_newtcp_module_recv_success_handler(MPIU_EXOVERLAPPED *rd_ov)
 
                 if (req_complete){
                     MPIU_DBG_MSG(CH3_CHANNEL, VERBOSE, "Req complete...");
-                    ((MPIDI_CH3I_VC *)sc->vc->channel_private)->recv_active = NULL;
+                    sc->vc->ch.recv_active = NULL;
                 }
                 else{
                     MPIU_DBG_MSG(CH3_CHANNEL, VERBOSE, "Req not complete...");

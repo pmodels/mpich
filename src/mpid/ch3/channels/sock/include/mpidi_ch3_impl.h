@@ -10,17 +10,6 @@
 #include "mpidimpl.h"
 #include "ch3usock.h"
 
-/* Define the channel-private data structures; these are overlaid on the
-   channel_private scratchpads */
-typedef struct MPIDI_CH3I_VC
-{
-    struct MPID_Request * sendq_head;
-    struct MPID_Request * sendq_tail;
-    MPIDI_CH3I_VC_state_t state;
-    struct MPIDU_Sock *sock;
-    struct MPIDI_CH3I_Connection * conn;
-}
-MPIDI_CH3I_VC;
 
 /* This is all socket connection definitions */
 

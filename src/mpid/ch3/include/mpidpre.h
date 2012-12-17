@@ -26,6 +26,24 @@ typedef MPIR_Pint MPIDI_msg_sz_t;
 /* FIXME: Include here? */
 #include "opa_primitives.h"
 
+union MPIDI_CH3_Pkt;
+struct MPIDI_VC;
+struct MPID_Request;
+
+/* PktHandler function:
+   vc  (INPUT) -- vc on which the packet was received
+   pkt (INPUT) -- pointer to packet header at beginning of receive buffer
+   buflen (I/O) -- IN: number of bytes received into receive buffer
+                   OUT: number of bytes processed by the handler function
+   req (OUTPUT) -- NULL, if the whole message has been processed by the handler
+                   function, otherwise, pointer to the receive request for this
+                   message.  The IOV will be set describing where the rest of the
+                   message should be received.
+   (This decl needs to come before mpidi_ch3_pre.h)
+*/
+typedef int MPIDI_CH3_PktHandler_Fcn(struct MPIDI_VC *vc, union MPIDI_CH3_Pkt *pkt,
+				     MPIDI_msg_sz_t *buflen, struct MPID_Request **req );
+
 /* Include definitions from the channel which must exist before items in this 
    file (mpidpre.h) or the file it includes (mpiimpl.h) can be defined. */
 #include "mpidi_ch3_pre.h"

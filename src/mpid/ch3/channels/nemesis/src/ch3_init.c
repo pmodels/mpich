@@ -32,8 +32,6 @@ int MPIDI_CH3_Init(int has_parent, MPIDI_PG_t *pg_p, int pg_rank)
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3_INIT);
 
-    MPIU_Assert(sizeof(MPIDI_CH3I_VC) <= sizeof(((MPIDI_VC_t*)0)->channel_private));
-
     mpi_errno = MPID_nem_init (pg_rank, pg_p, has_parent);
     if (mpi_errno) MPIU_ERR_POP (mpi_errno);
 
@@ -132,7 +130,7 @@ int MPIDI_CH3_VC_Init( MPIDI_VC_t *vc )
     if (vc->pg == MPIDI_CH3I_my_pg && vc->pg_rank == MPIDI_CH3I_my_rank)
         goto fn_exit;
 
-    VC_CH(vc)->recv_active = NULL;
+    vc->ch.recv_active = NULL;
 
     mpi_errno = MPID_nem_vc_init (vc);
     if (mpi_errno) MPIU_ERR_POP (mpi_errno);
@@ -194,7 +192,7 @@ int MPIDI_CH3_Connect_to_root (const char *port_name, MPIDI_VC_t **new_vc)
 
     /* init channel portion of vc */
     MPIU_ERR_CHKINTERNAL(!nemesis_initialized, mpi_errno, "Nemesis not initialized");
-    VC_CH(vc)->recv_active = NULL;
+    vc->ch.recv_active = NULL;
     MPIDI_CHANGE_VC_STATE(vc, ACTIVE);
 
     *new_vc = vc; /* we now have a valid, disconnected, temp VC */

@@ -61,7 +61,7 @@ int MPIDI_CH3U_Init_sock(int has_parent, MPIDI_PG_t *pg_p, int pg_rank,
     /* FIXME: Why isn't this MPIDI_VC_Init( vc, NULL, 0 )? */
     for (p = 0; p < pg_size; p++)
     {
-	MPIDI_CH3I_VC *vcch = (MPIDI_CH3I_VC *)pg_p->vct[p].channel_private;
+	MPIDI_CH3I_VC *vcch = &pg_p->vct[p].ch;
 	vcch->sendq_head = NULL;
 	vcch->sendq_tail = NULL;
 	vcch->state      = MPIDI_CH3I_VC_STATE_UNCONNECTED;
@@ -95,7 +95,7 @@ int MPIDI_CH3U_Init_sock(int has_parent, MPIDI_PG_t *pg_p, int pg_rank,
 /* This routine initializes Sock-specific elements of the VC */
 int MPIDI_VC_InitSock( MPIDI_VC_t *vc ) 
 {
-    MPIDI_CH3I_VC *vcch = VC_CH(vc);
+    MPIDI_CH3I_VC *vcch = &vc->ch;
     vcch->sock               = MPIDU_SOCK_INVALID_SOCK;
     vcch->conn               = NULL;
     return 0;

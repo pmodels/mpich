@@ -31,7 +31,7 @@ int MPID_nem_tcp_module_lmt_pre_send (MPIDI_VC_t *vc, MPID_Request *req, MPID_IO
     int dt_contig;
     MPI_Aint dt_true_lb;
     MPID_Datatype * dt_ptr;
-    MPIDI_CH3I_VC *vc_ch = (MPIDI_CH3I_VC *)vc->channel_private;
+    MPIDI_CH3I_VC *vc_ch = &vc->ch;
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_TCP_MODULE_LMT_PRE_SEND);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_TCP_MODULE_LMT_PRE_SEND);
@@ -65,7 +65,7 @@ int MPID_nem_tcp_module_lmt_pre_recv (MPIDI_VC_t *vc, MPID_Request *req, MPID_IO
     int dt_contig;
     MPI_Aint dt_true_lb;
     MPID_Datatype * dt_ptr;
-    MPIDI_CH3I_VC *vc_ch = (MPIDI_CH3I_VC *)vc->channel_private;
+    MPIDI_CH3I_VC *vc_ch = &vc->ch;
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_TCP_MODULE_LMT_PRE_RECV);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_TCP_MODULE_LMT_PRE_RECV);
@@ -135,7 +135,7 @@ int MPID_nem_tcp_module_lmt_start_send (MPIDI_VC_t *vc, MPID_Request *req, MPID_
     int r_len;
     int r_port;
     char *r_hostname;
-    MPIDI_CH3I_VC *vc_ch = (MPIDI_CH3I_VC *)vc->channel_private;
+    MPIDI_CH3I_VC *vc_ch = &vc->ch;
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_TCP_MODULE_LMT_START_SEND);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_TCP_MODULE_LMT_START_SEND);
@@ -272,7 +272,7 @@ int MPID_nem_tcp_module_lmt_start_recv (MPIDI_VC_t *vc, MPID_Request *req)
     MPIDI_msg_sz_t last;
     int nb;
     int r_len;
-    MPIDI_CH3I_VC *vc_ch = (MPIDI_CH3I_VC *)vc->channel_private;
+    MPIDI_CH3I_VC *vc_ch = &vc->ch;
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_TCP_MODULE_LMT_START_RECV);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_TCP_MODULE_LMT_START_RECV);

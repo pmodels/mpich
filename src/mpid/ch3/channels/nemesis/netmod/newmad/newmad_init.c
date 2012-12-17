@@ -238,7 +238,7 @@ MPID_nem_newmad_connect_to_root (const char *business_card, MPIDI_VC_t *new_vc)
 int
 MPID_nem_newmad_vc_init (MPIDI_VC_t *vc)
 {
-   MPIDI_CH3I_VC *vc_ch = VC_CH(vc);
+   MPIDI_CH3I_VC *vc_ch = &vc->ch;
    char          *business_card;
    int            mpi_errno = MPI_SUCCESS;   
    int            val_max_sz;

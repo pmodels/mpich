@@ -92,7 +92,7 @@ typedef struct {
 } MPID_nem_ptl_vc_area;
 
 /* macro for ptl private in VC */
-#define VC_PTL(vc) ((MPID_nem_ptl_vc_area *)VC_CH((vc))->netmod_area.padding)
+#define VC_PTL(vc) ((MPID_nem_ptl_vc_area *)vc->ch.netmod_area.padding)
 
 /* Header bit fields
    bit   field

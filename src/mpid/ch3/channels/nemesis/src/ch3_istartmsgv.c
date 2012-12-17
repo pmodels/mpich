@@ -43,16 +43,16 @@ int MPIDI_CH3_iStartMsgv (MPIDI_VC_t *vc, MPID_IOV *iov, int n_iov, MPID_Request
 
     MPIU_ERR_CHKANDJUMP1(vc->state == MPIDI_VC_STATE_MORIBUND, mpi_errno, MPIX_ERR_PROC_FAIL_STOP, "**comm_fail", "**comm_fail %d", vc->pg_rank);
 
-    if (VC_CH(vc)->iStartContigMsg)
+    if (vc->ch.iStartContigMsg)
     {
         MPIU_Assert (n_iov > 0);
         switch (n_iov)
         {
         case 1:
-            mpi_errno = VC_CH(vc)->iStartContigMsg(vc, iov[0].MPID_IOV_BUF, iov[0].MPID_IOV_LEN, NULL, 0, sreq_ptr);
+            mpi_errno = vc->ch.iStartContigMsg(vc, iov[0].MPID_IOV_BUF, iov[0].MPID_IOV_LEN, NULL, 0, sreq_ptr);
             break;
         case 2:
-            mpi_errno = VC_CH(vc)->iStartContigMsg(vc, iov[0].MPID_IOV_BUF, iov[0].MPID_IOV_LEN,
+            mpi_errno = vc->ch.iStartContigMsg(vc, iov[0].MPID_IOV_BUF, iov[0].MPID_IOV_LEN,
                                                iov[1].MPID_IOV_BUF, iov[1].MPID_IOV_LEN, sreq_ptr);
             break;
         default:

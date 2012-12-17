@@ -271,7 +271,7 @@ static int connect_to_root(const char *business_card, MPIDI_VC_t *new_vc)
 static int vc_init(MPIDI_VC_t *vc)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_CH3I_VC *const vc_ch = VC_CH(vc);
+    MPIDI_CH3I_VC *const vc_ch = &vc->ch;
     MPID_nem_ptl_vc_area *const vc_ptl = VC_PTL(vc);
     MPIDI_STATE_DECL(MPID_STATE_VC_INIT);
 

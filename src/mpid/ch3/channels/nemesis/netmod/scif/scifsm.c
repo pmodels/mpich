@@ -26,7 +26,7 @@ static int MPID_nem_scif_recv_handler(scifconn_t * const sc)
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_SCIF_RECV_HANDLER);
 
-    if (VC_CH(sc_vc)->recv_active == NULL) {
+    if (sc_vc->ch.recv_active == NULL) {
         /* receive a new message */
         bytes_recvd =
             MPID_nem_scif_read(sc_fd, sc_ch, MPID_nem_scif_recv_buf,
@@ -46,7 +46,7 @@ static int MPID_nem_scif_recv_handler(scifconn_t * const sc)
     else {
         /* there is a pending receive, receive it directly into the
          * user buffer */
-        MPIDI_CH3I_VC *const sc_vc_ch = VC_CH(sc_vc);
+        MPIDI_CH3I_VC *const sc_vc_ch = &sc_vc->ch;
         MPID_Request *const rreq = sc_vc_ch->recv_active;
         MPID_IOV *iov = &rreq->dev.iov[rreq->dev.iov_offset];
         int (*reqFn) (MPIDI_VC_t *, MPID_Request *, int *);

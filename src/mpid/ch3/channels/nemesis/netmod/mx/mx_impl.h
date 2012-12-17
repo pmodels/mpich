@@ -97,7 +97,7 @@ typedef struct
 } MPID_nem_mx_vc_area;
 
 /* accessor macro to private fields in VC */
-#define VC_FIELD(vcp, field) (((MPID_nem_mx_vc_area *)VC_CH(((vcp)))->netmod_area.padding)->field)
+#define VC_FIELD(vcp, field) (((MPID_nem_mx_vc_area *)vcp->ch.netmod_area.padding)->field)
 
 /* The req provides a generic buffer in which network modules can store
    private fields This removes all dependencies from the req structure
