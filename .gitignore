@@ -1,0 +1,1173 @@
+# Lines that start with '#' are comments.  See gitignore(5) for more info.
+
+# objects and archives
+*.[oa]
+# libtool objects
+*.lo
+# backup files that many editors create
+*~
+# vim swap files
+*.sw[a-z]
+# darwin debug info dirs
+*.dSYM/
+
+# almost always derived from a Makefile.am now that ROMIO is converted and MPE
+# is a separate package
+Makefile.in
+Makefile
+
+# a lot of generic patterns for generated files
+*-cache
+*.MOD
+*.aps
+*.aux
+*.bb
+*.bbg
+*.bbl
+*.blg
+*.cache
+*.clog
+*.clw
+*.d
+*.da
+*.dot
+*.dsp
+*.dsw
+*.dvi
+*.eps
+*.exe
+*.exe.stackdump
+*.gcda
+*.gcno
+*.gcov
+*.htm
+*.idx
+*.ilg
+*.ind
+*.jar.log
+*.la
+*.lo
+*.log
+*.mod
+*.ncb
+*.no
+*.o
+*.opt
+*.out
+*.pdf
+*.pf
+*.plg
+*.po
+*.ps
+*.pyc
+*.s
+*.safe
+*.slog
+*.so
+*.stackdump
+*.suo
+*.toc
+*.user
+*.vcproj
+*.vfproj
+*conf.h
+*conf.h.in
+*fs.c
+*old*.pdf
+.*-cache
+.deps
+.dirstamp
+.libs
+.libstamp*
+.libstamp0
+.state-cache
+TAGS
+confdefs.h
+config.h.in
+config.log
+config.status
+config.system
+configure
+configure.lineno
+hydra_config.h*
+localdefs
+mpe_*.conf
+mpich*pgrs.html
+mpid_config.h.in
+mpiexec
+old
+old*_pngs
+stamp-h1
+summary.xml
+tags
+
+# the hooks dir shouldn't be accidentally committed
+/maint/hooks
+
+# directories copied by autogen.sh from other directories and (generally) should
+# not have any contents added directly to them
+/src/armci/m4
+/src/mpi/romio/confdb
+/src/mpl/confdb
+/src/pm/hydra/confdb
+/src/pm/hydra/mpl
+/src/pm/hydra/mpl/confdb
+/test/mpi/confdb
+/src/mpi/romio/version.m4
+/src/pm/hydra/version.m4
+
+# created by the build process in the test dirs
+gen-src-stamp
+Makefile.am-stamp
+
+# created by maint/gen_subcfg_m4
+/subsys_include.m4
+
+# root confdb/ contents
+/confdb/ar-lib
+/confdb/compile
+/confdb/config.guess
+/confdb/config.sub
+/confdb/depcomp
+/confdb/install-sh
+/confdb/libtool.m4
+/confdb/ltmain.sh
+/confdb/ltoptions.m4
+/confdb/ltsugar.m4
+/confdb/ltversion.m4
+/confdb/lt~obsolete.m4
+/confdb/missing
+
+# random stuff
+/maint/gcovmerge
+/test/mpi/f90/ext/ctypesfromc.c
+/src/binding/f77/buildiface-stamp
+/src/binding/f90/buildiface-stamp
+/src/binding/cxx/buildiface-stamp
+
+# script-generated f90 test files
+/test/mpi/f90/attr/Makefile.am
+/test/mpi/f90/datatype/Makefile.am
+/test/mpi/f90/datatype/hindex1f90.f90
+/test/mpi/f90/datatype/hindexed_blockf90.f90
+/test/mpi/f90/ext/Makefile.am
+/test/mpi/f90/ext/stamp-Makefile.am
+/test/mpi/f90/io/Makefile.am
+/test/mpi/f90/rma/Makefile.am
+
+# created solely from the f77 counterpart dirs
+/test/mpi/f90/coll/
+/test/mpi/f90/comm/
+/test/mpi/f90/info/
+/test/mpi/f90/init/
+/test/mpi/f90/pt2pt/
+/test/mpi/f90/spawn/
+/test/mpi/f90/topo/
+
+# dirs created by the local install of OPA & MPL
+/share
+/include
+
+# random additions
+/README.envvar
+/maint/extracterrmsgs
+/src/binding/f90/mpi_base.f90.in
+/src/env/mpixxx_opts.conf
+/src/mpi/romio/include/mpio.h
+/src/mpi/romio/include/mpiof.h
+/src/mpid/ch3/channels/nemesis/include/mpid_nem_net_module_defs.h
+/src/packaging/envmods/mpich2.module
+/src/packaging/pkgconfig/mpich2-c.pc
+/src/packaging/pkgconfig/mpich2-ch3.pc
+/src/packaging/pkgconfig/mpich2-cxx.pc
+/src/packaging/pkgconfig/mpich2-f77.pc
+/src/packaging/pkgconfig/mpich2-f90.pc
+/src/packaging/spec/fedora.spec
+/test/mpi/coll/gdb.script
+/test/mpi/coll/redscat2
+/test/mpi/coll/reduce_local
+/test/mpi/coll/summary.xml
+/test/mpi/f90/attr/attrmpi1f90.f90
+/test/mpi/f90/ext/allocmemf290.f90
+/test/mpi/threads/testlist
+
+# random additions 2
+/mpich-doxygen
+/src/env/mpicc.sh
+/src/env/mpichversion
+/src/env/mpicxx.sh
+/src/env/mpif77.sh
+/src/env/mpif90.sh
+/src/include/glue_romio.h
+/src/include/mpichinfo.h
+/src/packaging/envmods/mpich.module
+/src/packaging/pkgconfig/mpich.pc
+/test/mpi/checktests
+/test/mpi/f77/spawn/testlist
+/test/mpi/f90/datatype/typename3f90.f90
+
+# stamp "witness" files from the new build system
+/src/binding/f90/buildiface.stamp
+/src/binding/f90/mpi.mod-stamp
+/src/binding/f90/mpi_base.mod-stamp
+/src/binding/f90/mpi_constants.mod-stamp
+/src/binding/f90/mpi_sizeofs.mod-stamp
+
+/src/mpe2/src/callstack/bin/bt2line
+
+# MPL build products
+/src/mpl/_configs.sed
+/src/mpl/aclocal.m4
+/src/mpl/confdb
+/src/mpl/libtool
+/src/mpl/include/mplconfig.h
+/src/mpl/include/stamp-h1
+/src/mpl/include/config.h
+/src/mpl/include/stamp-h2
+
+# ARMCI-MPI
+/src/armci/aclocal.m4
+
+/examples/f77/stdio.f
+
+# artifacts created by the build system overhaul
+/aclocal.m4
+/config.lt
+/src/mpi/romio/aclocal.m4
+/src/mpi/romio/libtool
+/src/pm/mpd/aclocal.m4
+/test/mpi/aclocal.m4
+/src/pm/gforker/mpiexec.gforker
+/src/env/cc_shlib.conf
+/src/env/cxx_shlib.conf
+/src/env/f77_shlib.conf
+/src/env/fc_shlib.conf
+/maint/Version
+/src/binding/f77/Makefile.mk
+/src/binding/f90/Makefile.mk
+
+# MPICH2 parameter handling
+/src/include/mpich_param_vals.h
+/src/util/param/param_vals.c
+
+/test/mpi/f77/init/checksizes.c
+/test/mpi/f90/datatype/allctypesf90.f90
+/test/mpi/io/test.ord
+/test/mpi/threads/pt2pt/greq_test
+/test/mpi/threads/pt2pt/greq_wait
+/test/mpi/threads/pt2pt/multisend
+/test/mpi/threads/pt2pt/multisend2
+/test/mpi/threads/pt2pt/multisend3
+/test/mpi/threads/pt2pt/multisend4
+
+################################################################################
+# stuff added a long time ago by `git svn show-ignore` from one of Dave's
+# git-svn-clone repositories.  Some of this stuff may be stale and/or redundant
+# with the more hand-written rules above.
+################################################################################
+
+# /
+/cache.base
+/.mpich2
+/libtool
+/mpich2-doxygen
+/lib
+/mpich2.ncb
+/mpich2.opt
+/mpich2.plg
+/mpich2.suo
+/coverage*
+/bin
+/.err
+/unusederr.txt
+/www
+/cscope.out
+/cscope.files
+/winbuild
+/man
+/README
+
+# /confdb/
+/confdb/www
+/confdb/amdb
+/confdb/tex
+/confdb/pac.log
+/confdb/pac.aux
+/confdb/acconfig.h
+/confdb/configure.in
+/confdb/pac.ps
+/confdb/pac.pdf
+
+# /doc/
+
+# /doc/design/
+/doc/design/design.pdf
+
+# /doc/faq/
+/doc/faq/faq.htm
+/doc/faq/faq.tex
+
+# /doc/installguide/
+/doc/installguide/install.pdf
+/doc/installguide/config.options
+
+# /doc/logging/
+/doc/logging/logging.pdf
+
+# /doc/mansrc/
+/doc/mansrc/createhtmlindex
+
+# /doc/namepub/
+/doc/namepub/namepub.ps
+/doc/namepub/namepub.dvi
+/doc/namepub/twopm.eps
+
+# /doc/pmi/
+/doc/pmi/paper.ps
+/doc/pmi/paper.pdf
+/doc/pmi/pmi.pdf
+/doc/pmi/pmi.ps
+/doc/pmi/pmiman
+/doc/pmi/pmipdf.tex
+
+# /doc/refman/
+/doc/refman/MPI_*.tex
+
+# DJG-added
+/doc/installguide/install.tex
+/doc/userguide/user.tex
+/doc/windev/windev.tex
+
+# /doc/smpd/
+/doc/smpd/smpd_pmi.pdf
+
+# /doc/userguide/
+/doc/userguide/user.pdf
+/doc/userguide/user
+/doc/userguide/faqsum.tex
+
+# /doc/windev/
+/doc/windev/windev.pdf
+/doc/windev/config.options
+
+# /examples/
+/examples/hellow
+/examples/sr
+/examples/srtest
+/examples/srvec
+/examples/bcasttest
+/examples/allred
+/examples/spawntest
+/examples/spawner
+/examples/spawnee
+/examples/cpi
+/examples/pm2
+/examples/cm2
+/examples/icpi
+/examples/child
+/examples/parent
+/examples/spawn_merge_child1
+/examples/spawn_merge_child2
+/examples/spawn_merge_parent
+
+# /examples/cxx/
+/examples/cxx/cxxpi
+
+# /examples/f77/
+/examples/f77/fpi
+
+# /examples/f90/
+/examples/f90/pi3f90
+
+
+# /examples/windows/pmandel_vis/
+/examples/windows/pmandel_vis/pman_vis.ncb
+/examples/windows/pmandel_vis/pman_vis.aps
+/examples/windows/pmandel_vis/pman_vis.suo
+
+# /examples/windows/pmandel_vis_net/
+/examples/windows/pmandel_vis_net/bin
+/examples/windows/pmandel_vis_net/MandelViewer.csproj.user
+/examples/windows/pmandel_vis_net/obj
+
+# /examples/windows/pmitest/
+/examples/windows/pmitest/pmitest.ncb
+/examples/windows/pmitest/pmitest.suo
+
+# /examples/windows/skeleton/
+/examples/windows/skeleton/skeleton.ncb
+/examples/windows/skeleton/skeleton.suo
+
+# /maint/
+/maint/genstates
+/maint/simplemake
+/maint/checkbuilds
+/maint/findfixme
+/maint/getstates
+/maint/getcoverage
+/maint/createcoverage
+/maint/showsizes
+/maint/getcross
+/maint/f77tof90
+/maint/makerpm
+/maint/clmake
+/maint/conftimestamp
+/maint/extractstrings
+/maint/extractstates
+/maint/extractfixme
+/maint/structalign
+
+# /src/
+
+# /src/binding/
+
+# /src/binding/cxx/
+/src/binding/cxx/Makefile.sm
+/src/binding/cxx/mpicxx
+/src/binding/cxx/mpicxx.h
+/src/binding/cxx/mpicxx.h.in
+/src/binding/cxx/mpicxx.conf
+/src/binding/cxx/initcxx.cpp
+/src/binding/cxx/initcxx.cxx
+/src/binding/cxx/cov.dat
+/src/binding/cxx/cov2html
+/src/binding/cxx/*.h
+
+# /src/binding/f77/
+/src/binding/f77/include
+/src/binding/f77/Makefile.sm
+/src/binding/f77/mpif_bottom.h
+/src/binding/f77/setbotf.f
+/src/binding/f77/setbot.c
+/src/binding/f77/mpif77.conf
+/src/binding/f77/mpif77
+/src/binding/f77/*.c
+/src/binding/f77/fproto.h
+/src/binding/f77/mpif.h
+/src/binding/f77/mpif.h.in
+/src/binding/f77/fprotos.h
+
+# /src/binding/f90/
+/src/binding/f90/mpi_base.f90.orig
+/src/binding/f90/mpi_base.f90.new
+/src/binding/f90/mpif.h
+/src/binding/f90/Makefile.sm
+/src/binding/f90/mpi.f90
+/src/binding/f90/mpi_t1.f90
+/src/binding/f90/mpimod.pcl
+/src/binding/f90/mpi_sizeofs.f90
+/src/binding/f90/mpi_base.f90
+/src/binding/f90/mpif90model.h
+/src/binding/f90/mpif90type.h
+/src/binding/f90/mpi_constants.f90
+/src/binding/f90/typef90intf.c
+/src/binding/f90/typef90realf.c
+/src/binding/f90/typef90cmplxf.c
+/src/binding/f90/mpifnoext.h
+
+# /src/env/
+/src/env/mpicc
+/src/env/mpicc.bash
+/src/env/mpicc.conf
+/src/env/mpicxx
+/src/env/mpicxx.bash
+/src/env/mpicxx.conf
+/src/env/mpif77
+/src/env/mpif77.bash
+/src/env/mpif77.conf
+/src/env/mpif90
+/src/env/mpif90.bash
+/src/env/mpif90.conf
+/src/env/mpich2version
+/src/env/parkill
+
+# /src/include/
+/src/include/mpi.h
+/src/include/mpif.h
+/src/include/mpichtimer.h
+#/src/include/mpe_thread.h
+/src/include/mpimod.pcl
+/src/include/mpid_datatype.h
+/src/include/mpid_dataloop.h
+/src/include/gen_dataloop.h
+/src/include/mpich2info.h
+/src/include/mpio.h
+/src/include/mpicxx.h
+/src/include/mpimcxx.h
+/src/include/mpiallstates.h
+/src/include/lwnames.h
+/src/include/mpitest.h
+/src/include/win32
+/src/include/win64
+
+# /src/mpi/debugger/
+/src/mpi/debugger/tvtest
+/src/mpi/debugger/qdemo
+
+# /src/mpi/errhan/
+/src/mpi/errhan/defmsg.h
+
+# /src/mpi/romio/
+/src/mpi/romio/configure2
+/src/mpi/romio/lib
+/src/mpi/romio/bin
+/src/mpi/romio/misc
+/src/mpi/romio/cscope.files
+/src/mpi/romio/cscope.out
+
+# /src/mpi/romio/include/
+/src/mpi/romio/include/mpio.h mpiof.h
+
+# /src/mpi/romio/mpi-io/
+
+# /src/mpi/romio/mpi-io/fortran/
+/src/mpi/romio/mpi-io/fortran/g77
+/src/mpi/romio/mpi-io/fortran/intel
+
+# /src/mpi/romio/test/
+/src/mpi/romio/test/runtests
+/src/mpi/romio/test/misc.c
+/src/mpi/romio/test/fmisc.f
+/src/mpi/romio/test/large_file.c
+/src/mpi/romio/test/fcoll_test.f
+/src/mpi/romio/test/fperf.f
+/src/mpi/romio/test/pfcoll_test.f
+/src/mpi/romio/test/romiotests
+
+# /src/mpi/romio/test-internal/
+
+# /src/mpi/romio/util/
+/src/mpi/romio/util/romioinstall
+
+# /src/mpi/spawn/
+
+# /src/mpi/timer/
+/src/mpi/timer/mpichtimer.h
+
+# /src/mpid/ch3/channels/nemesis/nemesis/src/
+/src/mpid/ch3/channels/nemesis/src/mpid_nem_net_array.c
+
+# /src/nameserv/test/
+/src/nameserv/test/testnd
+
+# /src/pm/mpd/
+/src/pm/mpd/pmitest0
+/src/pm/mpd/mpdroot
+
+# /src/pm/smpd/
+/src/pm/smpd/smpd
+/src/pm/smpd/smpd_version.h
+
+# /src/pm/smpd/wmpiconfig/
+/src/pm/smpd/wmpiconfig/bin
+/src/pm/smpd/wmpiconfig/obj
+
+# /src/pm/smpd/wmpiexec/
+/src/pm/smpd/wmpiexec/bin
+/src/pm/smpd/wmpiexec/obj
+
+# /src/pm/smpd/wmpiregister/
+/src/pm/smpd/wmpiregister/bin
+/src/pm/smpd/wmpiregister/obj
+
+# /src/pm/util/test/
+/src/pm/util/test/argstest
+/src/pm/util/test/forktest
+
+# /src/util/dbg/
+/src/util/dbg/getfuncstack
+
+# /src/util/logging/common/
+/src/util/logging/common/describe_states.c
+/src/util/logging/common/state_names.h
+
+# /src/util/logging/rlog/
+/src/util/logging/rlog/rlogconf.*
+/src/util/logging/rlog/printrlog
+/src/util/logging/rlog/printirlog
+/src/util/logging/rlog/pprintirlog
+/src/util/logging/rlog/irlog2rlog
+/src/util/logging/rlog/trace_impl.h
+
+# /test/
+/test/runtests
+
+# /test/commands/
+/test/commands/cmdtests
+/test/commands/stdintest
+/test/commands/stdintest2
+/test/commands/stdiotest
+/test/commands/checkenv1
+
+# /test/mpi/
+/test/mpi/testlist
+/test/mpi/runtests
+/test/mpi/results.txt
+/test/mpi/test.sln
+/test/mpi/test.ncb
+/test/mpi/test.suo
+
+# /test/mpi/attr/
+/test/mpi/attr/attrt
+/test/mpi/attr/attrerr
+/test/mpi/attr/attrerrcomm
+/test/mpi/attr/attrerrtype
+/test/mpi/attr/attric
+/test/mpi/attr/attrorder
+/test/mpi/attr/attrordercomm
+/test/mpi/attr/attrordertype
+/test/mpi/attr/attrorderwin
+/test/mpi/attr/baseattr2
+/test/mpi/attr/baseattrcomm
+/test/mpi/attr/baseattrwin
+/test/mpi/attr/fkeyval
+/test/mpi/attr/fkeyvalcomm
+/test/mpi/attr/fkeyvaltype
+/test/mpi/attr/fkeyvalwin
+
+# /test/mpi/basic/
+/test/mpi/basic/simple
+/test/mpi/basic/sendrecv
+/test/mpi/basic/wtime
+/test/mpi/basic/netpipe
+/test/mpi/basic/patterns
+/test/mpi/basic/srtest
+/test/mpi/basic/self
+/test/mpi/basic/adapt
+/test/mpi/basic/allmpi
+/test/mpi/basic/Netpipe.out
+
+# /test/mpi/coll/
+/test/mpi/coll/bcasttest
+/test/mpi/coll/allred
+/test/mpi/coll/alltoallv
+/test/mpi/coll/coll8
+/test/mpi/coll/coll13
+/test/mpi/coll/alltoallv
+/test/mpi/coll/redscat
+/test/mpi/coll/coll9
+/test/mpi/coll/coll7
+/test/mpi/coll/coll6
+/test/mpi/coll/coll5
+/test/mpi/coll/coll4
+/test/mpi/coll/coll3
+/test/mpi/coll/coll2
+/test/mpi/coll/allredmany
+/test/mpi/coll/scantst
+/test/mpi/coll/longuser
+/test/mpi/coll/coll10
+/test/mpi/coll/coll11
+/test/mpi/coll/coll12
+/test/mpi/coll/scatterv
+/test/mpi/coll/scattern
+/test/mpi/coll/rerr
+/test/mpi/coll/bcast2
+/test/mpi/coll/bcast3
+/test/mpi/coll/exscan2
+/test/mpi/coll/exscan
+/test/mpi/coll/icallgather
+/test/mpi/coll/icallgatherv
+/test/mpi/coll/icallreduce
+/test/mpi/coll/icalltoall
+/test/mpi/coll/icbarrier
+/test/mpi/coll/icbcast
+/test/mpi/coll/icgather
+/test/mpi/coll/icgatherv
+/test/mpi/coll/icreduce
+/test/mpi/coll/icscatter
+/test/mpi/coll/icscatterv
+/test/mpi/coll/allgatherv2
+/test/mpi/coll/alltoallv0
+
+# /test/mpi/comm/
+/test/mpi/comm/dup
+/test/mpi/comm/ic1
+/test/mpi/comm/cfree
+/test/mpi/comm/commname
+/test/mpi/comm/dupic
+/test/mpi/comm/ctxalloc
+
+# /test/mpi/cxx/
+/test/mpi/cxx/testlist
+
+# /test/mpi/cxx/coll/
+/test/mpi/cxx/coll/uallreduce
+/test/mpi/cxx/coll/ureduce
+/test/mpi/cxx/coll/uscan
+/test/mpi/cxx/coll/uexscan
+/test/mpi/cxx/coll/icbcastx
+/test/mpi/cxx/coll/icbarrierx
+/test/mpi/cxx/coll/icgatherx
+/test/mpi/cxx/coll/icgathervx
+/test/mpi/cxx/coll/icscatterx
+/test/mpi/cxx/coll/icscattervx
+/test/mpi/cxx/coll/icallgatherx
+/test/mpi/cxx/coll/icallgathervx
+/test/mpi/cxx/coll/icallreducex
+
+# /test/mpi/cxx/io/
+/test/mpi/cxx/io/iwritex.cxx
+/test/mpi/cxx/io/iwriteatx.cxx
+/test/mpi/cxx/io/iwriteshx.cxx
+/test/mpi/cxx/io/writex.cxx
+/test/mpi/cxx/io/writeatx.cxx
+/test/mpi/cxx/io/writeallx.cxx
+/test/mpi/cxx/io/writeordx.cxx
+/test/mpi/cxx/io/writeordbex.cxx
+/test/mpi/cxx/io/writeshx.cxx
+/test/mpi/cxx/io/writeatallx.cxx
+/test/mpi/cxx/io/writeatallbex.cxx
+/test/mpi/cxx/io/writeallbex.cxx
+/test/mpi/cxx/io/iwritenosx.cxx
+/test/mpi/cxx/io/iwriteatnosx.cxx
+/test/mpi/cxx/io/iwriteshnosx.cxx
+/test/mpi/cxx/io/writenosx.cxx
+/test/mpi/cxx/io/writeatnosx.cxx
+/test/mpi/cxx/io/writeallnosx.cxx
+/test/mpi/cxx/io/writeordnosx.cxx
+/test/mpi/cxx/io/writeordbenosx.cxx
+/test/mpi/cxx/io/writeshnosx.cxx
+/test/mpi/cxx/io/writeatallnosx.cxx
+/test/mpi/cxx/io/writeatallbenosx.cxx
+/test/mpi/cxx/io/writeallbenosx.cxx
+/test/mpi/cxx/io/iwritex
+/test/mpi/cxx/io/iwriteatx
+/test/mpi/cxx/io/writex
+/test/mpi/cxx/io/writeatx
+/test/mpi/cxx/io/writeallx
+/test/mpi/cxx/io/writeordx
+/test/mpi/cxx/io/writeordbex
+/test/mpi/cxx/io/writeshx
+/test/mpi/cxx/io/writeatallx
+/test/mpi/cxx/io/writeatallbex
+/test/mpi/cxx/io/writeallbex
+/test/mpi/cxx/io/iwritenosx
+/test/mpi/cxx/io/iwriteatnosx
+/test/mpi/cxx/io/writenosx
+/test/mpi/cxx/io/writeatnosx
+/test/mpi/cxx/io/writeallnosx
+/test/mpi/cxx/io/writeordnosx
+/test/mpi/cxx/io/writeordbenosx
+/test/mpi/cxx/io/writeshnosx
+/test/mpi/cxx/io/writeatallnosx
+/test/mpi/cxx/io/writeatallbenosx
+/test/mpi/cxx/io/writeallbenosx
+
+# /test/mpi/cxx/pt2pt/
+/test/mpi/cxx/pt2pt/bsend1cxx
+
+# /test/mpi/cxx/spawn/
+/test/mpi/cxx/spawn/namepubx
+/test/mpi/cxx/spawn/spawnintrax
+/test/mpi/cxx/spawn/spawnintrax
+/test/mpi/cxx/spawn/spawnargvx
+/test/mpi/cxx/spawn/selfconaccx
+
+# /test/mpi/datatype/
+/test/mpi/datatype/segtest
+/test/mpi/datatype/typename
+/test/mpi/datatype/contents
+/test/mpi/datatype/struct-pack
+/test/mpi/datatype/triangular-pack
+/test/mpi/datatype/slice-pack
+/test/mpi/datatype/simple-pack
+/test/mpi/datatype/transpose-pack
+/test/mpi/datatype/lbub
+/test/mpi/datatype/bsend1
+/test/mpi/datatype/getpartelm
+/test/mpi/datatype/localpack
+/test/mpi/datatype/zeroparms
+
+# /test/mpi/errhan/
+/test/mpi/errhan/errstring
+/test/mpi/errhan/errcode.c
+/test/mpi/errhan/errcode
+/test/mpi/errhan/adderr
+/test/mpi/errhan/errring
+
+# /test/mpi/errors/
+/test/mpi/errors/testlist
+
+# /test/mpi/errors/coll/
+/test/mpi/errors/coll/noalias
+/test/mpi/errors/coll/rerr
+/test/mpi/errors/coll/bcastlength
+
+# /test/mpi/errors/cxx/
+/test/mpi/errors/cxx/testlist
+
+# /test/mpi/errors/errhan/
+/test/mpi/errors/errhan/errstring
+/test/mpi/errors/errhan/errcode.c
+/test/mpi/errors/errhan/errcode
+/test/mpi/errors/errhan/adderr
+/test/mpi/errors/errhan/errring
+
+# /test/mpi/errors/group/
+/test/mpi/errors/group/rerr
+
+# /test/mpi/errors/io/
+/test/mpi/errors/io/fileerrret
+
+# /test/mpi/errors/pt2pt/
+/test/mpi/errors/pt2pt/proberank
+/test/mpi/errors/pt2pt/truncmsg2
+
+# /test/mpi/errors/spawn/
+/test/mpi/errors/spawn/badport
+
+# /test/mpi/errors/topo/
+/test/mpi/errors/topo/cartsmall
+
+# /test/mpi/f77/
+/test/mpi/f77/testlist
+
+# /test/mpi/f77/attr/
+/test/mpi/f77/attr/baseattr
+/test/mpi/f77/attr/attraints.h
+
+# /test/mpi/f77/datatype/
+/test/mpi/f77/datatype/typeaints.h
+
+# /test/mpi/f77/ext/
+/test/mpi/f77/ext/add1size.h
+/test/mpi/f77/ext/c2f2cf
+/test/mpi/f77/ext/testlist
+
+# /test/mpi/f77/info/
+/test/mpi/f77/info/infotest
+
+# /test/mpi/f77/io/
+/test/mpi/f77/io/iwritef.f
+/test/mpi/f77/io/iwriteatf.f
+/test/mpi/f77/io/iwriteshf.f
+/test/mpi/f77/io/writef.f
+/test/mpi/f77/io/writeatf.f
+/test/mpi/f77/io/writeallf.f
+/test/mpi/f77/io/writeordf.f
+/test/mpi/f77/io/writeordbef.f
+/test/mpi/f77/io/writeshf.f
+/test/mpi/f77/io/writeatallf.f
+/test/mpi/f77/io/writeatallbef.f
+/test/mpi/f77/io/writeallbef.f
+/test/mpi/f77/io/iwritef
+/test/mpi/f77/io/iwriteatf
+/test/mpi/f77/io/writef
+/test/mpi/f77/io/writeatf
+/test/mpi/f77/io/writeallf
+/test/mpi/f77/io/writeordf
+/test/mpi/f77/io/writeordbef
+/test/mpi/f77/io/writeshf
+/test/mpi/f77/io/writeatall
+/test/mpi/f77/io/writeatallbef
+/test/mpi/f77/io/writeallbef
+/test/mpi/f77/io/iooffset.h
+/test/mpi/f77/io/iodisp.h
+/test/mpi/f77/io/ioaint.h
+
+# /test/mpi/f77/pt2pt/
+/test/mpi/f77/pt2pt/attr1aints.h
+
+# /test/mpi/f77/rma/
+/test/mpi/f77/rma/addsize.h
+
+# /test/mpi/f77/spawn/
+/test/mpi/f77/spawn/type1aint.h
+/test/mpi/f77/spawn/connaccf
+/test/mpi/f77/spawn/namepubf
+/test/mpi/f77/spawn/spawnargvf
+/test/mpi/f77/spawn/spawnmultf
+/test/mpi/f77/spawn/spawnf
+/test/mpi/f77/spawn/spawnmult2f
+
+# /test/mpi/f90/
+/test/mpi/f90/testlist
+/test/mpi/f90/util
+
+# /test/mpi/f90/attr/
+/test/mpi/f90/attr/baseattrf90.f90
+/test/mpi/f90/attr/baseattr2f90.f90
+/test/mpi/f90/attr/baseattrwinf90.f90
+/test/mpi/f90/attr/commattrf90.f90
+/test/mpi/f90/attr/commattr2f90.f90
+/test/mpi/f90/attr/commattr3f90.f90
+/test/mpi/f90/attr/typeattrf90.f90
+/test/mpi/f90/attr/typeattr2f90.f90
+/test/mpi/f90/attr/typeattr3f90.f90
+/test/mpi/f90/attr/winattrf90.f90
+/test/mpi/f90/attr/winattr2f90.f90
+/test/mpi/f90/attr/Makefile.sm
+/test/mpi/f90/attr/testlist
+
+# /test/mpi/f90/coll/
+/test/mpi/f90/coll/uallreducef90.f90
+/test/mpi/f90/coll/alltoallwf90.f90
+/test/mpi/f90/coll/exscanf90.f90
+/test/mpi/f90/coll/inplacef90.f90
+/test/mpi/f90/coll/allredint8f90.f90
+/test/mpi/f90/coll/allredopttf90.f90
+/test/mpi/f90/coll/Makefile.sm
+/test/mpi/f90/coll/testlist
+
+# /test/mpi/f90/comm/
+/test/mpi/f90/comm/Makefile.sm
+/test/mpi/f90/comm/testlist
+/test/mpi/f90/comm/commerrf90.f90
+/test/mpi/f90/comm/commnamef90.f90
+
+# /test/mpi/f90/datatype/
+/test/mpi/f90/datatype/Makefile.sm
+/test/mpi/f90/datatype/testlist
+/test/mpi/f90/datatype/typenamef90.f90
+/test/mpi/f90/datatype/packef90.f90
+/test/mpi/f90/datatype/typecntsf90.f90
+/test/mpi/f90/datatype/typem2f90.f90
+/test/mpi/f90/datatype/typesnamef90.f90
+/test/mpi/f90/datatype/typesubf90.f90
+/test/mpi/f90/datatype/gaddressf90.f90
+/test/mpi/f90/datatype/indtype
+
+# /test/mpi/f90/ext/
+/test/mpi/f90/ext/Makefile.sm
+/test/mpi/f90/ext/testlist
+/test/mpi/f90/ext/testlist.in
+/test/mpi/f90/ext/allocmemf90.f90
+/test/mpi/f90/ext/allocmem90.f90
+/test/mpi/f90/ext/c2f2cf90.f90
+/test/mpi/f90/ext/c2f902c.c
+/test/mpi/f90/ext/c2f90mult.c
+/test/mpi/f90/ext/ctypesf90romc.c
+/test/mpi/f90/ext/ctypesinf90.f90
+
+# /test/mpi/f90/f90types/
+
+# /test/mpi/f90/info/
+/test/mpi/f90/info/Makefile.sm
+/test/mpi/f90/info/infotestf90.f90
+/test/mpi/f90/info/infotest2f90.f90
+/test/mpi/f90/info/infotest
+/test/mpi/f90/info/testlist
+
+# /test/mpi/f90/init/
+/test/mpi/f90/init/Makefile.sm
+/test/mpi/f90/init/testlist
+/test/mpi/f90/init/baseenvf90.f90
+
+# /test/mpi/f90/io/
+/test/mpi/f90/io/shpositionf90.f90
+/test/mpi/f90/io/fileerrf90.f90
+/test/mpi/f90/io/fileinfof90.f90
+/test/mpi/f90/io/miscfilef90.f90
+/test/mpi/f90/io/atomicityf90.f90
+/test/mpi/f90/io/setviewcurf90.f90
+/test/mpi/f90/io/iwritef90.f90
+/test/mpi/f90/io/iwriteatf90.f90
+/test/mpi/f90/io/iwriteshf90.f90
+/test/mpi/f90/io/writef90.f90
+/test/mpi/f90/io/writeatf90.f90
+/test/mpi/f90/io/writeallf90.f90
+/test/mpi/f90/io/writeordf90.f90
+/test/mpi/f90/io/writeordbef90.f90
+/test/mpi/f90/io/writeshf90.f90
+/test/mpi/f90/io/writeatallf90.f90
+/test/mpi/f90/io/writeatallbef90.f90
+/test/mpi/f90/io/writeallbef90.f90
+/test/mpi/f90/io/c2f2ciof90.f90
+/test/mpi/f90/io/c2f902cio.c
+/test/mpi/f90/io/c2f90multio.c
+/test/mpi/f90/io/Makefile.sm
+/test/mpi/f90/io/testlist
+/test/mpi/f90/io/ioharness.defn
+/test/mpi/f90/io/ioharness.tlt
+
+# /test/mpi/f90/misc/
+/test/mpi/f90/misc/sizeof
+/test/mpi/f90/misc/f77tof90
+
+# /test/mpi/f90/pt2pt/
+/test/mpi/f90/pt2pt/Makefile.sm
+/test/mpi/f90/pt2pt/testlist
+/test/mpi/f90/pt2pt/statusesf90.f90
+/test/mpi/f90/pt2pt/greqf90.f90
+/test/mpi/f90/pt2pt/greqf90
+/test/mpi/f90/pt2pt/statusesf90
+
+# /test/mpi/f90/rma/
+/test/mpi/f90/rma/Makefile.sm
+/test/mpi/f90/rma/testlist
+/test/mpi/f90/rma/winaccf90.f90
+/test/mpi/f90/rma/winerrf90.f90
+/test/mpi/f90/rma/winfencef90.f90
+/test/mpi/f90/rma/wingetf90.f90
+/test/mpi/f90/rma/wingroupf90.f90
+/test/mpi/f90/rma/winnamef90.f90
+/test/mpi/f90/rma/winscale1f90.f90
+/test/mpi/f90/rma/winscale2f90.f90
+/test/mpi/f90/rma/winaccf90
+/test/mpi/f90/rma/winerrf90
+/test/mpi/f90/rma/winfencef90
+/test/mpi/f90/rma/wingetf90
+/test/mpi/f90/rma/wingroupf90
+/test/mpi/f90/rma/winnamef90
+/test/mpi/f90/rma/winscale1f90
+/test/mpi/f90/rma/winscale2f90
+/test/mpi/f90/rma/c2f2cwinf90.f90
+/test/mpi/f90/rma/c2f902cwin.c
+
+# /test/mpi/f90/spawn/
+/test/mpi/f90/spawn/Makefile.sm
+/test/mpi/f90/spawn/testlist
+/test/mpi/f90/spawn/namepubf90.f90
+/test/mpi/f90/spawn/spawnf90.f90
+/test/mpi/f90/spawn/spawnargvf90.f90
+/test/mpi/f90/spawn/spawnmultf90.f90
+/test/mpi/f90/spawn/spawnmult2f90.f90
+/test/mpi/f90/spawn/connaccf90.f90
+/test/mpi/f90/spawn/namepubf90
+/test/mpi/f90/spawn/connaccf90
+/test/mpi/f90/spawn/spawnargvf90
+/test/mpi/f90/spawn/spawnf90
+/test/mpi/f90/spawn/spawnmult2f90
+/test/mpi/f90/spawn/spawnmultf90
+
+# /test/mpi/f90/timer/
+/test/mpi/f90/timer/testlist
+/test/mpi/f90/timer/wtimef90
+
+# /test/mpi/f90/topo/
+/test/mpi/f90/topo/Makefile.sm
+/test/mpi/f90/topo/testlist
+/test/mpi/f90/topo/cartcrf90.f90
+
+# /test/mpi/group/
+/test/mpi/group/errstring
+/test/mpi/group/grouptest
+/test/mpi/group/groupcreate
+/test/mpi/group/grouptest2
+/test/mpi/group/glpid
+/test/mpi/group/groupnullincl
+/test/mpi/group/gtranks
+
+# /test/mpi/info/
+/test/mpi/info/infodel
+/test/mpi/info/infodup
+/test/mpi/info/infoorder
+/test/mpi/info/infovallen
+
+# /test/mpi/init/
+/test/mpi/init/exitst1
+/test/mpi/init/exitst2
+/test/mpi/init/initstat
+/test/mpi/init/timeout
+/test/mpi/init/version
+
+# /test/mpi/io/
+/test/mpi/io/rdwrord
+/test/mpi/io/testfile*
+/test/mpi/io/async
+/test/mpi/io/async_any
+/test/mpi/io/getextent
+/test/mpi/io/i_noncontig
+/test/mpi/io/rdwrzero
+/test/mpi/io/setinfo
+/test/mpi/io/setviewcur
+/test/mpi/io/userioerr
+
+# /test/mpi/maint/
+/test/mpi/maint/testmerge
+/test/mpi/maint/conftimestamp
+/test/mpi/maint/f77tof90
+
+# /test/mpi/manual/
+/test/mpi/manual/singjoin
+/test/mpi/manual/testconnect
+/test/mpi/manual/manyconnect
+/test/mpi/manual/dimsbalanced
+/test/mpi/manual/test-port
+
+# /test/mpi/perf/
+/test/mpi/perf/transp-datatype
+/test/mpi/perf/twovec
+/test/mpi/perf/sendrecvl
+
+# /test/mpi/pt2pt/
+/test/mpi/pt2pt/dup
+/test/mpi/pt2pt/bsend1
+/test/mpi/pt2pt/bsend2
+/test/mpi/pt2pt/bsend3
+/test/mpi/pt2pt/bsend4
+/test/mpi/pt2pt/isendself
+/test/mpi/pt2pt/bsendfrag
+/test/mpi/pt2pt/cancelrecv
+/test/mpi/pt2pt/errinstatta
+/test/mpi/pt2pt/errinstatts
+/test/mpi/pt2pt/errinstatwa
+/test/mpi/pt2pt/errinstatws
+/test/mpi/pt2pt/inactivereq
+
+# /test/mpi/rma/
+/test/mpi/rma/ircpi
+/test/mpi/rma/test1
+/test/mpi/rma/test2
+/test/mpi/rma/test3
+/test/mpi/rma/test4
+/test/mpi/rma/test5
+/test/mpi/rma/transpose1
+/test/mpi/rma/transpose2
+/test/mpi/rma/transpose3
+/test/mpi/rma/transpose4
+/test/mpi/rma/transpose5
+/test/mpi/rma/transpose6
+/test/mpi/rma/transpose7
+/test/mpi/rma/fetchandadd
+/test/mpi/rma/fetchandadd_tree
+/test/mpi/rma/winname
+/test/mpi/rma/accfence1
+/test/mpi/rma/accfence2
+/test/mpi/rma/allocmem
+/test/mpi/rma/getfence1
+/test/mpi/rma/getgroup
+/test/mpi/rma/putfence1
+/test/mpi/rma/putpscw1
+/test/mpi/rma/wintest
+
+# /test/mpi/spawn/
+/test/mpi/spawn/namepub
+/test/mpi/spawn/disconnect3
+/test/mpi/spawn/spaiccreate
+/test/mpi/spawn/spawn1
+/test/mpi/spawn/spawn2
+
+# /test/mpi/threads/pt2pt/
+/test/mpi/threads/pt2pt/threaded_sr
+/test/mpi/threads/pt2pt/alltoall
+/test/mpi/threads/pt2pt/sendselfth
+
+# /test/mpi/threads/spawn/
+/test/mpi/threads/spawn/threaded_sr
+/test/mpi/threads/spawn/alltoall
+/test/mpi/threads/spawn/sendselfth
+
+# /test/mpi/topo/
+/test/mpi/topo/cartmap1
+/test/mpi/topo/cartshift1
+/test/mpi/topo/cartsuball
+/test/mpi/topo/dims1
+/test/mpi/topo/graphmap1
+/test/mpi/topo/topodup
+/test/mpi/topo/topotest
+
+# /test/mpid/
+/test/mpid/atomic
+/test/mpid/dluse
+
+# /test/mpid/ch3/
+/test/mpid/ch3/reorder
+
+# /test/util/info/
+/test/util/info/infotest
+/test/util/info/infomany
+
+# /test/util/timer/
+/test/util/timer/timertest
+
