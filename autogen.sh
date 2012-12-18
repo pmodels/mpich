@@ -172,41 +172,6 @@ echo "done"
 
 
 ########################################################################
-## Version checks for svn in developer builds
-########################################################################
-
-# Sanity check that any relative path svn:externals are present.  An
-# SVN version >=1.5 is needed to understand the relative path
-# externals format.  Such externals are used in particular for mpl in
-# hydra and all non-root confdbs.
-#
-# Check for a particular file, not just the directory because several
-# autotools steps (such as libtoolize) will create the aux/macro dir.
-echo_n "Checking for svn checkout errors... "
-svn_externals_sanity_file="src/pm/hydra/version.m4"
-# Note that -e is not an available option for test in the Bourne shell, though
-# some systems that pretend that ksh is the same as sh will accept it.
-if test "!" -f $svn_externals_sanity_file ; then
-    cat <<EOT
-
-ERROR: The file '$svn_externals_sanity_file'
-is not present, indicating that you do not have a complete source tree.
-This is usually caused by checking out MPICH with an SVN client version
-less than v1.6.  Please check your SVN client version (with
-"svn --version") and use a newer version if necessary to obtain MPICH.
-
-If you do have a modern SVN client and believe that you have reached
-this error case for some other reason, please file a ticket at:
-
-  https://trac.mpich.org/projects/mpich/newticket
-
-EOT
-    exit 1
-fi
-echo "done"
-
-
-########################################################################
 ## Initialize variables to default values (possibly from the environment)
 ########################################################################
 
