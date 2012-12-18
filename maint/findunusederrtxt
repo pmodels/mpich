@@ -15,8 +15,7 @@ foreach $errname (sort(keys(%errkeys))) {
     print "About to run on $errname ($location)\n";
     open FDG, "grep -R '\"\\\*\\\*$errname\"' src 2>&1 |";
     while (<FDG>) {
-	# Skip those svn files
-	if (/\/\.svn\//) { next; }
+	if (/^\.git\//) { next; }
 	# Skip the definition file
 	if (/errnames\.txt/) { next; }
 	if (/errnames-old\.txt/) { next; }

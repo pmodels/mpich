@@ -6,11 +6,7 @@
 #
 # Known limitations:
 #
-#    1. This script assumes that it is the only client accessing the
-#    svn server. Version number verifications, diffs for ABI
-#    mismatches and other checks are run assuming atomicity.
-#
-#    2. ABI mismatch checks are run using an svn diff in mpi.h.in and
+#    1. ABI mismatch checks are run using a git diff in mpi.h.in and
 #    the binding directory. This can come up with false positives, and
 #    is only meant to be a worst-case guess.
 #
@@ -18,17 +14,19 @@
 use strict;
 use warnings;
 
-use Cwd qw( getcwd realpath );
+use Cwd qw( cwd getcwd realpath );
 use Getopt::Long;
+use File::Temp qw( tempdir );
 
 my $arg = 0;
 my $source = "";
 my $psource = "";
 my $version = "";
-my $append_svnrev;
-my $root = $ENV{PWD};
+my $append_commit_id;
+my $root = cwd();
 my $with_autoconf = "";
 my $with_automake = "";
+my $git_repo_path = ".";
 
 # Default to MPICH
 my $pack = "mpich";
@@ -40,11 +38,8 @@ sub usage
     print "Usage: $0 [OPTIONS]\n\n";
     print "OPTIONS:\n";
 
-    # Source svn repository from where the package needs to be downloaded from
-    print "\t--source          source svn repository (required)\n";
-
-    # svn repository for the previous source in this series to ensure ABI compliance
-    print "\t--psource         source repo for the previous version for ABI compliance (required)\n";
+    print "\t--source          git tree-ish specifying source to be packaged\n";
+    print "\t--psource         git tree-ish for the previous version source for ABI compliance (required)\n";
 
     # what package we are creating
     print "\t--package         package to create (optional)\n";
@@ -52,12 +47,14 @@ sub usage
     # version string associated with the tarball
     print "\t--version         tarball version (required)\n";
 
-    # append svn revision
-    print "\t--append-svnrev   append svn revision number (optional)\n";
+    # append a valid git commit ID (SHA1 or git-describe output)
+    print "\t--append-commit-id   append git commit ID (optional)\n";
+
+    print "\t--git-repository  path to root of the git repository\n";
 
     print "\n";
 
-    exit;
+    exit 1;
 }
 
 sub check_package
@@ -100,6 +97,42 @@ sub check_autotools_version
     }
 }
 
+# will also chdir to the top level of the git repository
+sub check_git_repo {
+    my $repo_path = shift;
+
+    print "===> chdir to $repo_path";
+    chdir $repo_path;
+
+    print "===> Checking git repository sanity... ";
+    unless (`git rev-parse --is-inside-work-tree 2> /dev/null` eq "true\n") {
+        print "ERROR: $repo_path is not a git repository\n";
+        exit 1;
+    }
+    unless (`git rev-parse --is-bare-repository 2> /dev/null` eq "true\n") {
+        print "ERROR: $repo_path is a *bare* repository (need working tree)\n";
+        exit 1;
+    }
+
+    # last sanity check
+    unless (-e "maint/extracterrmsgs") {
+        print "ERROR: does not appear to be a valid MPICH repository\n" .
+              "(missing maint/extracterrmsgs)\n";
+        exit 1;
+    }
+
+    # a dirty working copy and/or index could cause problems for us
+    my $status = `git status --porcelain`;
+    chomp $status;
+    unless ($status eq "") {
+        print "ERROR: repository contains uncommitted/untracked changes (see 'git status')\n";
+        exit 1;
+    }
+
+    print "done\n";
+}
+
+
 sub run_cmd
 {
     my $cmd = shift;
@@ -116,10 +149,15 @@ GetOptions(
     "psource=s" => \$psource,
     "package:s"  => \$pack,
     "version=s" => \$version,
-    "append-svnrev!" => \$append_svnrev,
+    "append-commit-id!" => \$append_commit_id,
     "with-autoconf" => \$with_autoconf,
     "with-automake" => \$with_automake,
+    "git-repository=s" => \$git_repo_path,
     "help"     => \&usage,
+
+    # old deprecated args, retained with usage() to help catch non-updated cron
+    # jobs and other stale scripts/users
+    "append-svnrev!" => sub {usage();},
 ) or die "unable to parse options, stopped";
 
 if (scalar(@ARGV) != 0) {
@@ -132,7 +170,7 @@ if (!$source || !$version || !$psource) {
 
 check_package("doctext");
 check_package("txt2man");
-check_package("svn");
+check_package("git");
 check_package("latex");
 check_package("autoconf");
 check_package("automake");
@@ -146,7 +184,11 @@ check_autotools_version("automake", "1.12.4");
 check_autotools_version("libtool", "2.4.2");
 print("\n");
 
-my $current_ver = `svn cat ${source}/maint/version.m4 | grep MPICH_VERSION_m4 | \
+# chdirs to $git_repo_path if valid
+check_git_repo($git_repo_path);
+print("\n");
+
+my $current_ver = `cat ${source}/maint/version.m4 | grep MPICH_VERSION_m4 | \
                    sed -e 's/^.*\\[MPICH_VERSION_m4\\],\\[\\(.*\\)\\].*/\\1/g'`;
 if ("$current_ver" ne "$version\n") {
     print("\tWARNING: Version mismatch\n\n");
@@ -154,17 +196,18 @@ if ("$current_ver" ne "$version\n") {
 
 if ($psource) {
     # Check diff
-    my $d = `svn diff ${psource}/src/include/mpi.h.in ${source}/src/include/mpi.h.in`;
-    $d .= `svn diff ${psource}/src/binding ${source}/src/binding`;
+    my $d = `git diff ${psource}:src/include/mpi.h.in ${source}:src/include/mpi.h.in`;
+    $d .= `git diff ${psource}:src/binding ${source}:src/binding`;
     if ("$d" ne "") {
 	print("\tWARNING: ABI mismatch\n\n");
     }
 }
 
-if ($append_svnrev) {
-    $version .= "-r";
-    $version .= `svn info ${source} | grep ^Revision: | cut -f2 -d' ' | xargs echo -n`;
+if ($append_commit_id) {
+    $version .= '-' . `git describe --tags --always`;
 }
+
+my $tdir = tempdir(CLEANUP => 1);
 
 # Clean up the log file
 system("rm -f ${root}/$logfile");
@@ -172,12 +215,13 @@ system("rm -f ${root}/$logfile");
 # Check out the appropriate source
 print("===> Checking out $pack SVN source... ");
 run_cmd("rm -rf ${pack}-${version}");
-run_cmd("svn export -q ${source} ${pack}-${version}");
-run_cmd("find ${pack}-${version} -name .gitignore | xargs rm -f");
+my $expdir = "${tdir}/${pack}-${version}";
+run_cmd("mkdir -p ${expdir}");
+run_cmd("git archive master --prefix='${pack}-${version}/' | tar -x -C $tdir");
 print("done\n");
 
 print("===> Create release date and version information... ");
-chdir("${root}/${pack}-${version}");
+chdir($expdir);
 
 my $date = `date`;
 chomp $date;
@@ -187,10 +231,10 @@ print("done\n");
 
 # Remove packages that are not being released
 print("===> Removing packages that are not being released... ");
-chdir("${root}/${pack}-${version}");
+chdir($expdir);
 run_cmd("rm -rf doc/notes src/pm/mpd/Zeroconf.py");
 
-chdir("${root}/${pack}-${version}/src/mpid/ch3/channels/nemesis/nemesis/netmod");
+chdir("${expdir}/src/mpid/ch3/channels/nemesis/nemesis/netmod");
 my @nem_modules = qw(elan);
 run_cmd("rm -rf ".join(' ', @nem_modules));
 for my $module (@nem_modules) {
@@ -201,7 +245,7 @@ print("done\n");
 
 # Create configure
 print("===> Creating configure in the main package... ");
-chdir("${root}/${pack}-${version}");
+chdir($expdir);
 {
     my $cmd = "./autogen.sh";
     $cmd .= " --with-autoconf=$with_autoconf" if $with_autoconf;
@@ -212,7 +256,7 @@ print("done\n");
 
 # Disable unnecessary tests in the release tarball
 print("===> Disabling unnecessary tests in the main package... ");
-chdir("${root}/${pack}-${version}");
+chdir($expdir);
 run_cmd("perl -p -i -e 's/^perf\$/#perf/' test/mpi/testlist.in");
 run_cmd("perl -p -i -e 's/^large_message /#large_message /' test/mpi/pt2pt/testlist");
 run_cmd("perl -p -i -e 's/^large-count /#large-count /' test/mpi/datatype/testlist");
@@ -220,19 +264,18 @@ print("done\n");
 
 # Remove unnecessary files
 print("===> Removing unnecessary files in the main package... ");
-chdir("${root}/${pack}-${version}");
+chdir($expdir);
 run_cmd("rm -rf README.vin maint/config.log maint/config.status unusederr.txt");
 run_cmd("find . -name autom4te.cache | xargs rm -rf");
 print("done\n");
 
 # Get docs
 print("===> Creating secondary package for the docs... ");
-chdir("${root}");
-run_cmd("cp -a ${pack}-${version} ${pack}-${version}-tmp");
+run_cmd("cp -a ${expdir} ${expdir}-tmp");
 print("done\n");
 
 print("===> Configuring and making the secondary package... ");
-chdir("${root}/${pack}-${version}-tmp");
+chdir("${expdir}-tmp");
 {
     my $cmd = "./autogen.sh";
     $cmd .= " --with-autoconf=$with_autoconf" if $with_autoconf;
@@ -244,20 +287,19 @@ run_cmd("(make mandoc && make htmldoc && make latexdoc)");
 print("done\n");
 
 print("===> Copying docs over... ");
-chdir("${root}/${pack}-${version}-tmp");
-run_cmd("cp -a man ${root}/${pack}-${version}");
-run_cmd("cp -a www ${root}/${pack}-${version}");
-run_cmd("cp -a doc/userguide/user.pdf ${root}/${pack}-${version}/doc/userguide");
-run_cmd("cp -a doc/installguide/install.pdf ${root}/${pack}-${version}/doc/installguide");
-run_cmd("cp -a doc/smpd/smpd_pmi.pdf ${root}/${pack}-${version}/doc/smpd");
-run_cmd("cp -a doc/logging/logging.pdf ${root}/${pack}-${version}/doc/logging");
-run_cmd("cp -a doc/windev/windev.pdf ${root}/${pack}-${version}/doc/windev");
-chdir("${root}");
-run_cmd("rm -rf ${pack}-${version}-tmp");
+chdir("${expdir}-tmp");
+run_cmd("cp -a man ${expdir}");
+run_cmd("cp -a www ${expdir}");
+run_cmd("cp -a doc/userguide/user.pdf ${expdir}/doc/userguide");
+run_cmd("cp -a doc/installguide/install.pdf ${expdir}/doc/installguide");
+run_cmd("cp -a doc/smpd/smpd_pmi.pdf ${expdir}/doc/smpd");
+run_cmd("cp -a doc/logging/logging.pdf ${expdir}/doc/logging");
+run_cmd("cp -a doc/windev/windev.pdf ${expdir}/doc/windev");
+run_cmd("rm -rf ${expdir}-tmp");
 print("done\n");
 
 print("===> Creating ROMIO docs... ");
-chdir("${root}/${pack}-${version}/src/mpi");
+chdir("${expdir}/src/mpi");
 chdir("romio/doc");
 run_cmd("make");
 run_cmd("rm -f users-guide.blg users-guide.toc users-guide.aux users-guide.bbl users-guide.log users-guide.dvi");
@@ -265,7 +307,8 @@ print("done\n");
 
 # Create the tarball
 print("===> Creating the final ${pack} tarball... ");
-chdir("${root}");
+chdir("${tdir}");
 run_cmd("tar -czvf ${pack}-${version}.tar.gz ${pack}-${version}");
-run_cmd("rm -rf ${pack}-${version}");
+run_cmd("rm -rf ${expdir}");
+run_cmd("cp -a ${pack}-${version}.tar.gz ${root}/");
 print("done\n\n");
