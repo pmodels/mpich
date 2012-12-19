@@ -704,10 +704,8 @@ static HYD_status launch_procs(void)
                                          process_id);
             HYDU_ERR_POP(status, "create process returned error\n");
 
-            if (HYD_pmcd_pmip.downstream.in != HYD_FD_UNSET) {
-                status = HYDU_sock_set_nonblock(HYD_pmcd_pmip.downstream.in);
-                HYDU_ERR_POP(status, "unable to set stdin socket to non-blocking\n");
-            }
+            status = HYDU_sock_set_nonblock(HYD_pmcd_pmip.downstream.in);
+            HYDU_ERR_POP(status, "unable to set stdin socket to non-blocking\n");
 
             HYDU_free_strlist(client_args);
 

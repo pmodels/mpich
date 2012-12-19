@@ -1,8 +1,8 @@
 			MPICH Release %VERSION%
 
 MPICH is a high-performance and widely portable implementation of the
-MPI-3.0 standard from the Argonne National Laboratory.  This release
-has all MPI 3.0 functions and features required by the standard with
+MPI-2.2 standard from the Argonne National Laboratory. This release
+has all MPI 2.2 functions and features required by the standard with
 the exception of support for the "external32" portable I/O format and
 user-defined data representations for I/O.
 
@@ -185,10 +185,10 @@ shared memory), Hydra process management) of MPICH up and running.
     process managers; the default is called Hydra.
 
     Now we will run an MPI job, using the mpiexec command as specified
-    in the MPI standard. There are some examples in the install
+    in the MPI-2 standard. There are some examples in the install
     directory, which you have already put in your path, as well as in
-    the directory mpich-%VERSION%/examples. One of them is the classic
-    CPI example, which computes the value of pi by numerical
+    the directory mpich-%VERSION%/examples. One of them is the
+    classic CPI example, which computes the value of pi by numerical
     integration in parallel.
 
     To run the CPI example with 'n' processes on your local machine,

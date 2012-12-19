@@ -694,7 +694,7 @@ This flag is used in conjunction with the \texttt{-rsh} flag.  With this flag
 specified there need not be any smpd process manager running on any of the nodes
 used in the job.  \texttt{mpiexec} provides the PMI interface and the remote
 shell command is used to start the processes.  Using these flags allows jobs to
-be started without any process managers running but the MPI dynamic process
+be started without any process managers running but the MPI-2 dynamic process
 functions like MPI\_Comm\_spawn are consequently not available.
 
 \item \texttt{-noprompt}
@@ -974,7 +974,7 @@ set PMI_ROOT_HOST=%COMPUTERNAME%
 to set the variable to the hostname where the root process will be started instead
 of the local host name.
 
-The limitation of this method of starting processes is that MPI spawning operations
+The limitation of this method of starting processes is that MPI-2 spawning operations
 are not supported.  If your application calls MPI\_Comm\_spawn it will produce
 an error.
 
