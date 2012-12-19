@@ -1772,6 +1772,7 @@ HYD_status HYD_uii_mpx_get_parameters(char **t_argv)
 static struct HYD_arg_match_table match_table[] = {
     /* help options */
     {"help", help_fn, help_help_fn},
+    {"h", help_fn, help_help_fn},
 
     /* Global environment options */
     {"genv", genv_fn, genv_help_fn},
