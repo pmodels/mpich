@@ -620,13 +620,6 @@ static HYD_status launch_procs(void)
             HYDU_ERR_POP(status, "unable to add env to list\n");
         }
 
-        /* Job ID information */
-        if (HYD_pmcd_pmip.system_global.jobid) {
-            status = HYDU_append_env_to_list("HYDRA_JOBID", HYD_pmcd_pmip.system_global.jobid,
-                                             &force_env);
-            HYDU_ERR_POP(status, "unable to add env to list\n");
-        }
-
         /* Set the interface hostname based on what the user provided */
         if (HYD_pmcd_pmip.local.iface_ip_env_name) {
             if (HYD_pmcd_pmip.user_global.iface) {

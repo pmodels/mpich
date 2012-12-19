@@ -33,9 +33,6 @@ static HYD_status external_rmk_init(void)
     if (HYDT_bsci_fns.query_native_int == NULL)
         HYDT_bsci_fns.query_native_int = HYDT_bscd_external_query_native_int;
 
-    if (HYDT_bsci_fns.query_jobid == NULL)
-        HYDT_bsci_fns.query_jobid = HYDT_bscd_external_query_jobid;
-
     HYDU_FUNC_EXIT();
 
     return status;

@@ -21,7 +21,6 @@ HYD_status HYDT_bsci_rmk_slurm_init(void)
 {
     HYDT_bsci_fns.query_node_list = HYDT_bscd_slurm_query_node_list;
     HYDT_bsci_fns.query_native_int = HYDT_bscd_slurm_query_native_int;
-    HYDT_bsci_fns.query_jobid = HYDT_bscd_slurm_query_jobid;
 
     return HYD_SUCCESS;
 }

@@ -33,7 +33,6 @@ struct HYD_pmcd_pmip {
         } pmi_id_map;
 
         int global_process_count;
-        char *jobid;
 
         /* PMI */
         char *pmi_fd;

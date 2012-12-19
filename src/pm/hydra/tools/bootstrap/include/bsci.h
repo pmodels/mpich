@@ -45,9 +45,6 @@ struct HYDT_bsci_fns {
     /** \brief Query for node list information */
     HYD_status(*query_node_list) (struct HYD_node ** node_list);
 
-    /** \brief Query for job ID information */
-    HYD_status(*query_jobid) (char **jobid);
-
     /** \brief Finalize the RMK */
     HYD_status(*rmk_finalize) (void);
 
@@ -145,16 +142,6 @@ HYD_status HYDT_bsci_wait_for_completion(int timeout);
  * nodes.
  */
 HYD_status HYDT_bsci_query_node_list(struct HYD_node **node_list);
-
-
-/**
- * \brief HYDT_bsci_query_jobid - Query for Job ID information
- *
- * \param[out] jobid       Job ID
- *
- * This function allows the upper layers to query the job ID.
- */
-HYD_status HYDT_bsci_query_jobid(char **jobid);
 
 
 /**

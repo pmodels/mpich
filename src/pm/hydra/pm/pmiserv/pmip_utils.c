@@ -724,11 +724,6 @@ HYD_status HYD_pmcd_pmip_get_params(char **t_argv)
         HYDU_ERR_POP(status, "unable to query launcher for proxy ID\n");
     }
 
-    if (HYD_pmcd_pmip.system_global.jobid == NULL) {
-        status = HYDT_bsci_query_jobid(&HYD_pmcd_pmip.system_global.jobid);
-        HYDU_ERR_POP(status, "unable to query launcher for job ID\n");
-    }
-
     if (HYD_pmcd_pmip.local.id == -1)
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "proxy ID not available\n");
 
