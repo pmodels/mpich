@@ -12,6 +12,7 @@ noinst_HEADERS +=                     \
     tools/bootstrap/external/rsh.h    \
     tools/bootstrap/external/sge.h    \
     tools/bootstrap/external/slurm.h  \
+    tools/bootstrap/external/cobalt.h \
     tools/bootstrap/external/ssh.h
 
 libhydra_la_SOURCES += $(top_srcdir)/tools/bootstrap/external/external_common.c \
@@ -47,7 +48,9 @@ libhydra_la_SOURCES += $(top_srcdir)/tools/bootstrap/external/external_common.c 
 	$(top_srcdir)/tools/bootstrap/external/sge_env.c \
 	$(top_srcdir)/tools/bootstrap/external/pbs_init.c \
 	$(top_srcdir)/tools/bootstrap/external/pbs_query_native_int.c \
-	$(top_srcdir)/tools/bootstrap/external/pbs_query_node_list.c
+	$(top_srcdir)/tools/bootstrap/external/pbs_query_node_list.c \
+	$(top_srcdir)/tools/bootstrap/external/cobalt_query_native_int.c \
+	$(top_srcdir)/tools/bootstrap/external/cobalt_query_node_list.c
 
 if hydra_pbs_launcher
 libhydra_la_SOURCES += \

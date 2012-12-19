@@ -200,6 +200,7 @@ HYD_status HYDT_bsci_rmk_ll_init(void);
 HYD_status HYDT_bsci_rmk_lsf_init(void);
 HYD_status HYDT_bsci_rmk_sge_init(void);
 HYD_status HYDT_bsci_rmk_pbs_init(void);
+HYD_status HYDT_bsci_rmk_cobalt_init(void);
 HYD_status HYDT_bsci_rmk_user_init(void);
 #endif /* HAVE_BSS_EXTERNAL */
 
