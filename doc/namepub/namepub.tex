@@ -11,7 +11,7 @@
 
 \section{Introduction}
 
-MPI-2 defines a set of routines for exchanging data with other MPI
+MPI defines a set of routines for exchanging data with other MPI
 programs.  The intent of these is to allow MPI applications to 
 exchange the data that is needed for the \code{port} argument in the
 \code{MPI_Comm_connect} and \code{MPI_Comm_accept} calls.  
@@ -84,7 +84,7 @@ calls.  As in other MPI calls, the free routine takes a pointer to the
 handle so that the handle can be set to null when the free routine
 succeeds.  Each of these routines returns either \code{MPI_SUCCESS} or
 a valid MPI error code; implementations may either use the MPICH
-error code mechanism or, for external packages, use the MPI-2 routines
+error code mechanism or, for external packages, use the MPI routines
 for adding error codes and classes.
 
 \begin{verbatim}

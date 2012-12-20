@@ -92,12 +92,12 @@ there should be enough here to get you started with MPICH.
 \label{sec:migrating}
 
 MPICH is a high-performance and widely portable implementation of the
-MPI Standard, designed to implement all of MPI-1 and MPI-2 (including
-dynamic process management, one-sided operations, parallel I/O, and
-other extensions). The \emph{MPICH Installer's Guide} provides some
-information on MPICH with respect to configuring and installing
-it. Details on compiling, linking, and running MPI programs are
-described below.
+MPI Standard, designed to implement all of MPI-1, MPI-2, and MPI-3
+(including dynamic process management, one-sided operations, parallel
+I/O, and other extensions).  The \emph{MPICH Installer's Guide}
+provides some information on MPICH with respect to configuring and
+installing it. Details on compiling, linking, and running MPI programs
+are described below.
 
 
 \subsection{Default Runtime Environment}
@@ -210,7 +210,7 @@ Some users may get error messages such as
 \end{small}
 The problem is that both \texttt{stdio.h} and the MPI C++ interface use
 \texttt{SEEK\_SET}, \texttt{SEEK\_CUR}, and \texttt{SEEK\_END}.  This is really a bug
-in the MPI-2 standard.  You can try adding 
+in the MPI standard.  You can try adding
 \begin{verbatim}
     #undef SEEK_SET
     #undef SEEK_END
@@ -240,16 +240,16 @@ are not provided.
 \section{Running Programs with \texttt{mpiexec}}
 \label{sec:mpiexec}
 
-The MPI-2 Standard describes \texttt{mpiexec} as a suggested way to
-run MPI programs. MPICH implements the \texttt{mpiexec} standard, and
-also provides some extensions.
+The MPI Standard describes \texttt{mpiexec} as a suggested way to run
+MPI programs. MPICH implements the \texttt{mpiexec} standard, and also
+provides some extensions.
 
 \subsection{Standard \texttt{mpiexec}}
 \label{sec:mpiexec-standard}
 
-Here we describe the standard \texttt{mpiexec} arguments from the MPI-2
-Standard~\cite{mpi-forum:mpi2-journal}.  The simplest form of a command
-to start an MPI job is 
+Here we describe the standard \texttt{mpiexec} arguments from the MPI
+Standard~\cite{mpi-forum:mpi2-journal}.  The simplest form of a
+command to start an MPI job is
 
 \begin{verbatim}
    mpiexec -f machinefile -n 32 a.out
@@ -272,7 +272,7 @@ It is also possible to start a one process MPI job (with a
 \texttt{mpiexec}.  This process will become an MPI process when it
 calls \texttt{MPI\_Init}, and it may then call other MPI functions.
 Currently, MPICH does not fully support calling the dynamic process
-routines from MPI-2 (e.g., \texttt{MPI\_Comm\_spawn} or
+routines from the MPI standard (e.g., \texttt{MPI\_Comm\_spawn} or
 \texttt{MPI\_Comm\_accept}) from processes that are not started with
 \texttt{mpiexec}.
 
@@ -306,7 +306,7 @@ It can launch jobs across both platforms if the binary formats match
 \subsubsection{\texttt{mpiexec} arguments for SMPD}
 \label{sec:mpiexec-smpd}
 
-\texttt{mpiexec} for smpd accepts the standard MPI-2 \texttt{mpiexec}
+\texttt{mpiexec} for smpd accepts the standard MPI \texttt{mpiexec}
 options.  Execute
 \begin{verbatim}
     mpiexec
@@ -676,10 +676,10 @@ specified.
 
 \section{Other Tools Provided with MPICH}
 \label{sec:other-tools}
-MPICH also includes a test suite for MPI-1 and MPI-2 functionality; this
-suite may be found in the \texttt{mpich/test/mpi} source directory and can be
-run with the command \texttt{make testing}.  This test suite should work with
-any MPI implementation, not just MPICH.
+MPICH also includes a test suite for MPI functionality; this suite may
+be found in the \texttt{mpich/test/mpi} source directory and can be
+run with the command \texttt{make testing}.  This test suite should
+work with any MPI implementation, not just MPICH.
 
 \section{MPICH2 under Windows}
 \label{sec:windows}
