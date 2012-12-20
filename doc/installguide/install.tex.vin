@@ -101,7 +101,7 @@ Brian Toonen
 
 \section{Introduction}
 \label{sec:intro}
-This manual describes how to obtain and install MPICH, the MPI-2
+This manual describes how to obtain and install MPICH, the MPI
 implementation from Argonne National Laboratory.  (Of course, if you are
 reading this, chances are good that you have already obtained it and
 found this document, among others, in its \texttt{doc} subdirectory.)
@@ -324,7 +324,7 @@ executable on.
 
 \item
 Now we will run an MPI job, using the \texttt{mpiexec} command as specified
-in the MPI-2 standard.  
+in the MPI standard.
 
 As part of the build process for MPICH, a simple program to compute the value
 of $\pi$ by numerical integration is created in the
