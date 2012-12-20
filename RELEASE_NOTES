@@ -93,8 +93,5 @@
  * The MPI datatypes corresponding to Fortran datatypes are not
    available (e.g., no MPI::DOUBLE_PRECISION).
 
- * The C++ binding does not implement a separate profiling interface,
-   as allowed by the MPI-2 Standard (Section 10.1.10 Profiling).
-
  * MPI::ERRORS_RETURN may still throw exceptions in the event of an
    error rather than silently returning.
