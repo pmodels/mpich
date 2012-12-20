@@ -109,7 +109,7 @@ N*/
  The sizes of MPI strings in Fortran are one less than the sizes of that 
  string in C/C++ because the C/C++ versions provide room for the trailing
  null character required by C/C++.  For example, 'MPI_MAX_ERROR_STRING' is 
- 'mpif.h' is one smaller than the same value in 'mpi.h'.  See the MPI-2 
+ 'mpif.h' is one smaller than the same value in 'mpi.h'.  See the MPI
  standard, sections 2.6.2 and 4.12.9.
 
 N*/
