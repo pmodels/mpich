@@ -427,12 +427,16 @@ int indexed_contig_leading_zero_test(void)
     len[2] = 0;
     /* use *_MAX vars to improve our chances of hitting any pointer-casting
      * bugs in a big way (segfaults, etc.) */
+    /* FIXME: This should also look at long, or use a different approach */
+#if defined(HAVE_LONG_LONG) && defined(LLONG_MAX)
     if (sizeof(MPI_Aint) == sizeof(long long)) {
         adisp[0] = (MPI_Aint)LLONG_MAX;
         adisp[1] = 2*sizeof(int);
         adisp[2] = (MPI_Aint)LLONG_MAX;
     }
-    else {
+    else 
+#endif
+    {
         adisp[0] = (MPI_Aint)INT_MAX;
         adisp[1] = 2*sizeof(int);
         adisp[2] = (MPI_Aint)INT_MAX;
@@ -466,6 +470,7 @@ int indexed_contig_leading_zero_test(void)
         check(buf[i] == expected);
     }
     free(buf);
+
 
     /* -------------------------------------------------------------------- */
     /* A more rigorous test of the hindexed type.  Use a hard-to-optimize struct
