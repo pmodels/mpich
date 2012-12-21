@@ -160,3 +160,14 @@ if ((fh->file_system == ADIO_PIOFS) ||					\
 #define ADIOI_TEST_DEFERRED(fh, myname, error_code)\
     if(! (fh)->is_open ) {\
 	    ADIO_ImmediateOpen((fh), (error_code)); }
+
+/* Check MPI_Info object by calling MPI_Info_dup, if the info object is valid
+then the dup operation will succeed */
+#define MPIO_CHECK_INFO(info, error_code) {     \
+    MPI_Info dupinfo;                           \
+    error_code = MPI_Info_dup(info, &dupinfo);  \
+    if(error_code != MPI_SUCCESS) goto fn_fail; \
+    if (dupinfo != MPI_INFO_NULL) {             \
+        MPI_Info_free(&dupinfo);                \
+    }                                           \
+}
