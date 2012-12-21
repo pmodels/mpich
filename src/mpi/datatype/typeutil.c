@@ -324,3 +324,4 @@ void MPIR_DatatypeAttrFinalize( void )
 			  MPIR_FINALIZE_CALLBACK_PRIO-1);
     }
 }
+

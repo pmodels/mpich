@@ -68,6 +68,11 @@ int MPI_File_set_view(MPI_File fh, MPI_Offset disp, MPI_Datatype etype,
 	error_code = MPIO_Err_return_file(adio_fh, error_code);
 	goto fn_exit;
     }
+    MPIO_DATATYPE_ISCOMMITTED(etype, error_code);
+    if (error_code != MPI_SUCCESS) {
+        error_code = MPIO_Err_return_file(adio_fh, error_code);
+        goto fn_exit;
+    }
 
     if (filetype == MPI_DATATYPE_NULL) {
 	error_code = MPIO_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
@@ -75,6 +80,11 @@ int MPI_File_set_view(MPI_File fh, MPI_Offset disp, MPI_Datatype etype,
 					  "**iofiletype", 0);
 	error_code = MPIO_Err_return_file(adio_fh, error_code);
 	goto fn_exit;
+    }
+    MPIO_DATATYPE_ISCOMMITTED(filetype, error_code);
+    if (error_code != MPI_SUCCESS) {
+        error_code = MPIO_Err_return_file(adio_fh, error_code);
+        goto fn_exit;
     }
 
     if ((adio_fh->access_mode & MPI_MODE_SEQUENTIAL) &&
@@ -102,7 +112,7 @@ int MPI_File_set_view(MPI_File fh, MPI_Offset disp, MPI_Datatype etype,
     MPI_Type_size(etype, &etype_size);
 
     /* --BEGIN ERROR HANDLING-- */
-    if (filetype_size % etype_size != 0)
+    if (etype_size != 0 && filetype_size % etype_size != 0)
     {
 	error_code = MPIO_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
 					  myname, __LINE__, MPI_ERR_ARG,

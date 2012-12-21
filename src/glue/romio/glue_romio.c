@@ -49,4 +49,30 @@ void MPIR_Ext_cs_exit_allfunc(void)
     MPIU_THREAD_CS_EXIT(ALLFUNC,);
 }
 
+/* will consider MPI_DATATYPE_NULL to be an error */
+#undef FUNCNAME
+#define FUNCNAME MPIR_Ext_datatype_iscommitted
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+int MPIR_Ext_datatype_iscommitted(MPI_Datatype datatype)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    MPIR_ERRTEST_DATATYPE(datatype, "datatype", mpi_errno);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
+    if (HANDLE_GET_KIND(datatype) != HANDLE_KIND_BUILTIN) {
+        MPID_Datatype *datatype_ptr = NULL;
+        MPID_Datatype_get_ptr(datatype, datatype_ptr);
+
+        MPID_Datatype_valid_ptr(datatype_ptr, mpi_errno);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
+        MPID_Datatype_committed_ptr(datatype_ptr, mpi_errno);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    }
+
+fn_fail:
+    return mpi_errno;
+}
 

@@ -58,16 +58,23 @@ if (count*datatype_size != (ADIO_Offset)(unsigned)count*(ADIO_Offset)(unsigned)d
     goto fn_exit;                                               \
 }
 
-#define MPIO_CHECK_DATATYPE(fh, datatype, myname, error_code)   \
-if (datatype == MPI_DATATYPE_NULL) {				\
-    error_code = MPIO_Err_create_code(MPI_SUCCESS,		\
-				      MPIR_ERR_RECOVERABLE,	\
-				      myname, __LINE__,		\
-				      MPI_ERR_TYPE, 		\
-				      "**dtypenull", 0);	\
-    error_code = MPIO_Err_return_file(fh, error_code);		\
-    goto fn_exit;                                               \
-}
+#define MPIO_CHECK_DATATYPE(fh, datatype, myname, error_code)       \
+    do {                                                            \
+        if (datatype == MPI_DATATYPE_NULL) {                        \
+            error_code = MPIO_Err_create_code(MPI_SUCCESS,          \
+                                              MPIR_ERR_RECOVERABLE, \
+                                              myname, __LINE__,     \
+                                              MPI_ERR_TYPE,         \
+                                              "**dtypenull", 0);    \
+        }                                                           \
+        else {                                                      \
+            MPIO_DATATYPE_ISCOMMITTED(datatype, error_code);        \
+        }                                                           \
+        if (error_code != MPI_SUCCESS) {                            \
+            error_code = MPIO_Err_return_file(fh, error_code);      \
+            goto fn_exit;                                           \
+        }                                                           \
+    } while (0)
 
 #define MPIO_CHECK_READABLE(fh, myname, error_code)		\
 if (fh->access_mode & ADIO_WRONLY) {			\

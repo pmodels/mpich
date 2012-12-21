@@ -24,6 +24,12 @@
 #define MPIU_THREAD_CS_ENTER_ALLFUNC(ctx_) MPIR_Ext_cs_enter_allfunc()
 #define MPIU_THREAD_CS_EXIT_ALLFUNC(ctx_) MPIR_Ext_cs_exit_allfunc()
 
+/* committed datatype checking support in ROMIO */
+#define MPIO_DATATYPE_ISCOMMITTED(dtype_, err_)        \
+    do {                                               \
+        err_ =  MPIR_Ext_datatype_iscommitted(dtype_); \
+    } while (0)
+
 #else /* not ROMIO_INSIDE_MPICH */
 /* Any MPI implementation that wishes to follow the thread-safety and
    error reporting features provided by MPICH must implement these 
@@ -31,6 +37,7 @@
    of correct programs */
 #define MPIU_THREAD_CS_ENTER(x,y)
 #define MPIU_THREAD_CS_EXIT(x,y)
+#define MPIO_DATATYPE_ISCOMMITTED(dtype_, err_) do {} while (0)
 #ifdef HAVE_WINDOWS_H
 #define MPIU_UNREFERENCED_ARG(a) a
 #else
