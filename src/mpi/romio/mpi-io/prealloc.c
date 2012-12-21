@@ -38,7 +38,7 @@ int MPI_File_preallocate(MPI_File fh, MPI_Offset size)
     int error_code=0, mynod=0;
     ADIO_File adio_fh;
     static char myname[] = "MPI_FILE_PREALLOCATE";
-    MPI_Offset tmp_sz;
+    MPI_Offset tmp_sz, max_sz, min_sz;
 #ifdef MPI_hpux
     int fl_xmpi;
 
@@ -62,9 +62,10 @@ int MPI_File_preallocate(MPI_File fh, MPI_Offset size)
     }
 
     tmp_sz = size;
-    MPI_Bcast(&tmp_sz, 1, ADIO_OFFSET, 0, adio_fh->comm);
+    MPI_Allreduce(&tmp_sz, &max_sz, 1, ADIO_OFFSET, MPI_MAX, adio_fh->comm);
+    MPI_Allreduce(&tmp_sz, &min_sz, 1, ADIO_OFFSET, MPI_MIN, adio_fh->comm);
 
-    if (tmp_sz != size) {
+    if (max_sz != min_sz) {
 	error_code = MPIO_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
 					  myname, __LINE__, MPI_ERR_ARG,
 					  "**notsame", 0);
