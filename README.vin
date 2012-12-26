@@ -27,7 +27,7 @@ on bug fixes and new releases.
 8.  Fault Tolerance
 9.  Environment Variables
 10. Developer Builds
-11. Installing MPICH2 on windows
+11. Installing MPICH on windows
 12. Multiple Fortran compiler support
 
 
@@ -213,7 +213,7 @@ shared memory), Hydra process management) of MPICH up and running.
     nothing is specified, ':1' is assumed.
 
     More details on interacting with Hydra can be found at
-    http://wiki.mcs.anl.gov/mpich2/index.php/Using_the_Hydra_Process_Manager
+    http://wiki.mpich.org/mpich/index.php/Using_the_Hydra_Process_Manager
 
 If you have completed all of the above steps, you have successfully
 installed MPICH and run an MPI example.
@@ -231,7 +231,7 @@ environments as well as our partner institutes. If you have problems
 with the installation or usage of MPICH, please follow these steps:
 
 1. First see the Frequently Asked Questions (FAQ) page at
-http://wiki.mcs.anl.gov/mpich2/index.php/Frequently_Asked_Questions to
+http://wiki.mpich.org/mpich/index.php/Frequently_Asked_Questions to
 see if the problem you are facing has a simple solution. Many common
 problems and their solutions are listed here.
 
@@ -275,7 +275,7 @@ application or benchmark and send that along in your bug report.
 
 4. If you have found a bug in MPICH, we request that you report it at
 our bug tracking system:
-(https://trac.mcs.anl.gov/projects/mpich2/newticket). Even if you
+(https://trac.mpich.org/projects/mpich/newticket). Even if you
 believe you have found a bug, we recommend you sending an email to
 mpich-discuss@mcs.anl.gov first.
 
@@ -517,7 +517,7 @@ hydra
 Hydra is the default process management framework that uses existing
 daemons on nodes (e.g., ssh, pbs, slurm, sge) to start MPI
 processes. More information on Hydra can be found at
-http://wiki.mcs.anl.gov/mpich2/index.php/Using_the_Hydra_Process_Manager
+http://wiki.mpich.org/mpich/index.php/Using_the_Hydra_Process_Manager
 
 mpd
 ---
@@ -531,7 +531,7 @@ smpd
 SMPD is a process manager for interoperability between Microsoft
 Windows and UNIX, where some processes are running on Windows and
 others are running on a variant of UNIX. For more information, please
-see mpich2-%VERSION%/src/pm/smpd/README.
+see mpich-%VERSION%/src/pm/smpd/README.
 
 gforker
 -------
@@ -825,7 +825,7 @@ where <N> is the checkpoint number you want to restart from.
 
 These instructions can also be found on the MPICH wiki:
 
-  http://wiki.mcs.anl.gov/mpich2/index.php/Checkpointing
+  http://wiki.mpich.org/mpich/index.php/Checkpointing
 
 -------------------------------------------------------------------------
 
@@ -859,14 +859,14 @@ For MPICH developers who want to directly work on the svn, there are
 a few additional steps involved (people using the release tarballs do
 not have to follow these steps). Details about these steps can be
 found here:
-http://wiki.mcs.anl.gov/mpich2/index.php/Getting_And_Building_MPICH
+http://wiki.mpich.org/mpich/index.php/Getting_And_Building_MPICH
 
 -------------------------------------------------------------------------
 
-11. Installing MPICH2 on Windows
+11. Installing MPICH on Windows
 ================================
 
-Here are the instructions for setting up MPICH2 on a Windows machine:
+Here are the instructions for setting up MPICH on a Windows machine:
 
 (a) Install:
     Microsoft Developer Studio 2003 or later
@@ -875,16 +875,16 @@ Here are the instructions for setting up MPICH2 on a Windows machine:
 	choose the dos file format option
 	install perl and svn
 
-(b) Checkout mpich2:
+(b) Checkout mpich:
 
     Bring up a command prompt.
     (replace "yourname" with your MCS login name):
-    svn co https://svn.mcs.anl.gov/repos/mpi/mpich2/trunk mpich2
+    svn co https://svn.mcs.anl.gov/repos/mpi/mpich2/trunk mpich
 
 (c) Generate *.h.in
 
     Bring up a cygwin bash shell.
-    cd mpich2
+    cd mpich
     ./autogen.sh
     exit
 
@@ -892,38 +892,38 @@ Here are the instructions for setting up MPICH2 on a Windows machine:
 
 (e) Open Developer Studio
 
-    open mpich2\mpich2.sln
-    build the ch3sockDebug mpich2 solution
-    build the ch3sockDebug mpich2s project
-    build the ch3sockRelease mpich2 solution
-    build the ch3sockRelease mpich2s project
-    build the Debug mpich2 solution
-    build the Release mpich2 solution
-    build the fortDebug mpich2 solution
-    build the fortRelease mpich2 solution
-    build the gfortDebug mpich2 solution
-    build the gfortRelease mpich2 solution
-    build the sfortDebug mpich2 solution
-    build the sfortRelease mpich2 solution
+    open mpich\mpich.sln
+    build the ch3sockDebug mpich solution
+    build the ch3sockDebug mpichs project
+    build the ch3sockRelease mpich solution
+    build the ch3sockRelease mpichs project
+    build the Debug mpich solution
+    build the Release mpich solution
+    build the fortDebug mpich solution
+    build the fortRelease mpich solution
+    build the gfortDebug mpich solution
+    build the gfortRelease mpich solution
+    build the sfortDebug mpich solution
+    build the sfortRelease mpich solution
 
 (f) Open a command prompt
 
-    cd to mpich2\maint
+    cd to mpich\maint
     execute "makegcclibs.bat"
 
 (g) Open another Developer Studio instance
 
-    open mpich2\examples\examples.sln
+    open mpich\examples\examples.sln
     build the Release target of the cpi project
 
-(h) Return to Developer Studio with the mpich2 solution
+(h) Return to Developer Studio with the mpich solution
 
     set the version numbers in the Installer project
-    build the Installer mpich2 solution
+    build the Installer mpich solution
 
-(i) Test and distribute mpich2\maint\ReleaseMSI\mpich2.msi
+(i) Test and distribute mpich\maint\ReleaseMSI\mpich.msi
 
-    mpich2.msi can be renamed, eg mpich2-1.1.msi
+    mpich.msi can be renamed, eg mpich-1.1.msi
 
 (j) To install the launcher:
 
@@ -932,10 +932,10 @@ Here are the instructions for setting up MPICH2 on a Windows machine:
 
 (k) Compile and run an MPI application:
 
-    Compile an mpi application.  Use mpi.h from mpich2\src\include\win32 
-    and mpi.lib in mpich2\lib
+    Compile an mpi application.  Use mpi.h from mpich\src\include\win32
+    and mpi.lib in mpich\lib
     
-    Place your executable along with the mpich2 dlls somewhere accessable
+    Place your executable along with the mpich dlls somewhere accessable
     to all the machines.
     
     Execute a job by running something like: mpiexec -n 3 myapp.exe

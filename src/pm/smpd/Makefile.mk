@@ -48,9 +48,9 @@ if PRIMARY_PM_SMPD
 
 ## SMPD is built in a totally disgusting way, in the sense that it links
 ## directly against libmpich and the other libraries that make up the core of
-## MPICH2.  This is slightly easier to manage now in the flattened automake
+## MPICH.  This is slightly easier to manage now in the flattened automake
 ## implementation, but the real fix is that SMPD shouldn't be using
-## MPICH2-interal routines directly.  Linking against only MPL makes much more
+## MPICH-interal routines directly.  Linking against only MPL makes much more
 ## sense.
 
 # this shouldn't be necessary, ideally, but the smpd PMI impl wants to

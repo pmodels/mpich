@@ -30,13 +30,13 @@
  * Windows only mpi binding
  *
  * This file implements an mpi binding that calls another dynamically loaded mpi binding.
- * The environment variables MPI_DLL_NAME and MPICH2_CHANNEL control which library should be loaded.
- * The default library is mpich2.dll or mpich2d.dll.
+ * The environment variables MPI_DLL_NAME and MPICH_CHANNEL control which library should be loaded.
+ * The default library is mpich.dll or mpichd.dll.
  * A wrapper dll can also be named to replace only the MPI functions using the MPI_WRAP_DLL_NAME
  * environment variable.
  *
  * The motivation for this binding is to allow compiled mpi applications to be able
- * to use different implementations of mpich2 at run-time without re-linking the application.
+ * to use different implementations of mpich at run-time without re-linking the application.
  * This way mpiexec or the user can choose the best channel to use at run-time.
  *
  * For example, mpiexec may choose the shm channel for up to 8 processes on a single node
@@ -52,37 +52,37 @@
  * PMPI interface.
  *
  * The user can run a job and then decide to run the job again and produce a log file.  All that
- * needs to be done is specify the logged version of the mpich2 channel or a wrapper dll like mpe
+ * needs to be done is specify the logged version of the mpich channel or a wrapper dll like mpe
  * and a log file will be produced.
  * Examples:
  * mpiexec -n 4 cpi
- * mpiexec -env MPICH2_CHANNEL ib -n 4 cpi
- * mpiexec -env MPI_DLL_NAME mpich2p.dll -n 4 cpi
- * mpiexec -env MPI_WRAP_DLL_NAME mpich2mped.dll -n 4 cpi
- * mpiexec -env MPICH2_CHANNEL ib -env MPI_WRAP_DLL_NAME mpich2mped.dll -n 4 cpi
+ * mpiexec -env MPICH_CHANNEL ib -n 4 cpi
+ * mpiexec -env MPI_DLL_NAME mpichp.dll -n 4 cpi
+ * mpiexec -env MPI_WRAP_DLL_NAME mpichmped.dll -n 4 cpi
+ * mpiexec -env MPICH_CHANNEL ib -env MPI_WRAP_DLL_NAME mpichmped.dll -n 4 cpi
  *
  */
 
 #define MPI_ENV_DLL_NAME          "MPI_DLL_NAME"
 #define MPI_ENV_DLL_PATH          "MPI_DLL_PATH"
-#define MPI_ENV_CHANNEL_NAME      "MPICH2_CHANNEL"
+#define MPI_ENV_CHANNEL_NAME      "MPICH_CHANNEL"
 #define MPI_ENV_MPIWRAP_DLL_NAME  "MPI_WRAP_DLL_NAME"
 #ifdef _DEBUG
-#define MPI_DEFAULT_DLL_NAME      "mpich2nemesisd.dll"
-#define MPI_DEFAULT_WRAP_DLL_NAME "mpich2mped.dll"
-#define DLL_FORMAT_STRING         "mpich2%sd.dll"
+#define MPI_DEFAULT_DLL_NAME      "mpichnemesisd.dll"
+#define MPI_DEFAULT_WRAP_DLL_NAME "mpichmped.dll"
+#define DLL_FORMAT_STRING         "mpich%sd.dll"
 #else
-#define MPI_DEFAULT_DLL_NAME      "mpich2nemesis.dll"
-#define MPI_DEFAULT_WRAP_DLL_NAME "mpich2mpe.dll"
-#define DLL_FORMAT_STRING         "mpich2%s.dll"
+#define MPI_DEFAULT_DLL_NAME      "mpichnemesis.dll"
+#define MPI_DEFAULT_WRAP_DLL_NAME "mpichmpe.dll"
+#define DLL_FORMAT_STRING         "mpich%s.dll"
 #endif
 #define MAX_DLL_NAME              100
 
 /* FIXME: Remove dlls without a channel token string */
 #ifdef _DEBUG
-#define MPI_SOCK_CHANNEL_DLL_NAME   "mpich2d.dll"
+#define MPI_SOCK_CHANNEL_DLL_NAME   "mpichd.dll"
 #else
-#define MPI_SOCK_CHANNEL_DLL_NAME   "mpich2.dll"
+#define MPI_SOCK_CHANNEL_DLL_NAME   "mpich.dll"
 #endif
 
 MPIU_DLL_SPEC MPI_Fint *MPI_F_STATUS_IGNORE = 0;
@@ -1766,7 +1766,7 @@ BOOL LoadMPILibrary()
 	channel = getenv(MPI_ENV_CHANNEL_NAME);
 	if (channel != NULL)
 	{
-	    /* ignore the sock channel since it is the default and is not named mpich2sock.dll */
+	    /* ignore the sock channel since it is the default and is not named mpichsock.dll */
 	    if (strncmp(channel, "sock", 5))
 	    {
 		MPIU_Snprintf(name, MAX_DLL_NAME, DLL_FORMAT_STRING, channel);
@@ -1843,7 +1843,7 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpReserved)
 #define MPICH_CHECK_INIT(a) if ((fn. a) == NULL && LoadMPILibrary() == FALSE) return MPI_ERR_INTERN;
 #define MPICH_CHECK_INIT_VOID(a) if ((fn. a) == NULL && LoadMPILibrary() == FALSE) ExitProcess(MPI_ERR_INTERN);
 
-/* Extra exported internal functions to mpich2 */
+/* Extra exported internal functions to mpich */
 #undef FCNAME
 #define FCNAME MPIR_Err_create_code
 int MPIR_Err_create_code(int lastcode, int fatal, const char fcname[], int line, int error_class, const char generic_msg[], const char specific_msg[], ...)

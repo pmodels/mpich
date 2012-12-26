@@ -106,7 +106,7 @@ less than v1.6.  Please check your SVN client version (with
 If you do have a modern SVN client and believe that you have reached
 this error case for some other reason, please file a ticket at:
 
-  https://trac.mcs.anl.gov/projects/mpich2/newticket
+  https://trac.mpich.org/projects/mpich/newticket
 
 EOT
     exit 1
@@ -632,7 +632,7 @@ fi
 
 if [ "$do_smpdversion" = yes ] ; then
     echo_n "Creating src/pm/smpd/smpd_version.h... "
-    smpdVersion=${MPICH2_VERSION}
+    smpdVersion=${MPICH_VERSION}
     cat >src/pm/smpd/smpd_version.h <<EOF
 /* -*- Mode: C; c-basic-offset:4 ; -*- */
 /*  

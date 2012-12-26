@@ -116,7 +116,7 @@ AC_INIT([MPICH],
         MPICH_VERSION_m4,
         [mpich-discuss@mcs.anl.gov],
         [mpich],
-        [http://www.mcs.anl.gov/research/projects/mpich2/])
+        [http://www.mpich.org/])
 
 if test "x$prefix" != "xNONE" && test -d "$prefix"; then 
     if test "x`(cd \"$prefix\"; echo \"$PWD\")`" = "x`(cd \"$srcdir\"; echo \"$PWD\")`" ||\
@@ -5180,7 +5180,7 @@ void f1(void *a) { return; }],
 	;;
     win|windows)
         with_thread_package=win
-        MPICH2_THREAD_PACKAGE=win
+        MPICH_THREAD_PACKAGE=win
         MPIU_THREAD_PACKAGE_NAME=MPIU_THREAD_PACKAGE_WIN
         AC_MSG_ERROR([The 'win' thread package is not supported via autoconf builds at this time.])
         ;;

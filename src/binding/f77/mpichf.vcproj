@@ -2,9 +2,9 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="8.00"
-	Name="mpich2f"
+	Name="mpichf"
 	ProjectGUID="{D45A7472-5ECD-481D-A26D-98D88ED44305}"
-	RootNamespace="mpich2f"
+	RootNamespace="mpichf"
 	Keyword="Win32Proj"
 	>
 	<Platforms>
@@ -63,10 +63,10 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="mpid.lib mpich2ffsd.lib"
-				OutputFile="../../../lib/fmpich2sd.dll"
+				AdditionalDependencies="mpid.lib mpichffsd.lib"
+				OutputFile="../../../lib/fmpichsd.dll"
 				AdditionalLibraryDirectories="../../../lib"
-				ModuleDefinitionFile="mpich2fs.def"
+				ModuleDefinitionFile="mpichfs.def"
 				GenerateDebugInformation="true"
 			/>
 			<Tool
@@ -92,8 +92,8 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				Description="copying fmpich2sd.dll to the system32 directory"
-				CommandLine="copy ..\..\..\lib\fmpich2sd.dll %SystemRoot%\system32\fmpich2sd.dll"
+				Description="copying fmpichsd.dll to the system32 directory"
+				CommandLine="copy ..\..\..\lib\fmpichsd.dll %SystemRoot%\system32\fmpichsd.dll"
 			/>
 		</Configuration>
 		<Configuration
@@ -145,10 +145,10 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="mpi.lib mpich2ffs.lib"
-				OutputFile="../../../lib/fmpich2s.dll"
+				AdditionalDependencies="mpi.lib mpichffs.lib"
+				OutputFile="../../../lib/fmpichs.dll"
 				AdditionalLibraryDirectories="../../../lib"
-				ModuleDefinitionFile="mpich2fs.def"
+				ModuleDefinitionFile="mpichfs.def"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -175,8 +175,8 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				Description="copying fmpich2s.dll to the system32 directory"
-				CommandLine="copy ..\..\..\lib\fmpich2s.dll %SystemRoot%\system32\fmpich2s.dll"
+				Description="copying fmpichs.dll to the system32 directory"
+				CommandLine="copy ..\..\..\lib\fmpichs.dll %SystemRoot%\system32\fmpichs.dll"
 			/>
 		</Configuration>
 		<Configuration
@@ -224,10 +224,10 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="fmpich2p.lib mpi.lib mpich2ff.lib"
-				OutputFile="../../../lib/fmpich2.dll"
+				AdditionalDependencies="fmpichp.lib mpi.lib mpichff.lib"
+				OutputFile="../../../lib/fmpich.dll"
 				AdditionalLibraryDirectories="../../../lib"
-				ModuleDefinitionFile="mpich2f.def"
+				ModuleDefinitionFile="mpichf.def"
 				GenerateDebugInformation="false"
 			/>
 			<Tool
@@ -306,10 +306,10 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="mpid.lib mpich2ffd.lib"
-				OutputFile="../../../lib/fmpich2d.dll"
+				AdditionalDependencies="mpid.lib mpichffd.lib"
+				OutputFile="../../../lib/fmpichd.dll"
 				AdditionalLibraryDirectories="../../../lib"
-				ModuleDefinitionFile="mpich2f.def"
+				ModuleDefinitionFile="mpichf.def"
 				GenerateDebugInformation="true"
 				ProgramDatabaseFile="$(OutDir)/$(ProjectName).pdb"
 			/>
@@ -336,8 +336,8 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				Description="copying fmpich2d.dll to the system32 directory"
-				CommandLine="copy ..\..\..\lib\fmpich2d.dll %SystemRoot%\system32\fmpich2d.dll"
+				Description="copying fmpichd.dll to the system32 directory"
+				CommandLine="copy ..\..\..\lib\fmpichd.dll %SystemRoot%\system32\fmpichd.dll"
 			/>
 		</Configuration>
 		<Configuration
@@ -388,10 +388,10 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="mpid.lib mpich2ffgd.lib"
-				OutputFile="../../../lib/fmpich2gd.dll"
+				AdditionalDependencies="mpid.lib mpichffgd.lib"
+				OutputFile="../../../lib/fmpichgd.dll"
 				AdditionalLibraryDirectories="../../../lib"
-				ModuleDefinitionFile="mpich2fg.def"
+				ModuleDefinitionFile="mpichfg.def"
 				GenerateDebugInformation="true"
 			/>
 			<Tool
@@ -417,8 +417,8 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				Description="copying fmpich2gd.dll to the system32 directory"
-				CommandLine="copy ..\..\..\lib\fmpich2gd.dll %SystemRoot%\system32\fmpich2gd.dll"
+				Description="copying fmpichgd.dll to the system32 directory"
+				CommandLine="copy ..\..\..\lib\fmpichgd.dll %SystemRoot%\system32\fmpichgd.dll"
 			/>
 		</Configuration>
 		<Configuration
@@ -465,10 +465,10 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="mpi.lib mpich2ffg.lib"
-				OutputFile="../../../lib/fmpich2g.dll"
+				AdditionalDependencies="mpi.lib mpichffg.lib"
+				OutputFile="../../../lib/fmpichg.dll"
 				AdditionalLibraryDirectories="../../../lib"
-				ModuleDefinitionFile="mpich2fg.def"
+				ModuleDefinitionFile="mpichfg.def"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -495,12 +495,12 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				Description="copying fmpich2g.dll to the system32 directory"
-				CommandLine="copy ..\..\..\lib\fmpich2g.dll %SystemRoot%\system32\fmpich2g.dll"
+				Description="copying fmpichg.dll to the system32 directory"
+				CommandLine="copy ..\..\..\lib\fmpichg.dll %SystemRoot%\system32\fmpichg.dll"
 			/>
 		</Configuration>
 		<Configuration
-			Name="mpich2DebugConfig_1_0_4|Win32"
+			Name="mpichDebugConfig_1_0_4|Win32"
 			OutputDirectory="$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="2"
@@ -547,10 +547,10 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="mpid.lib mpich2ffgd.lib"
-				OutputFile="../../../lib/fmpich2gd.dll"
+				AdditionalDependencies="mpid.lib mpichffgd.lib"
+				OutputFile="../../../lib/fmpichgd.dll"
 				AdditionalLibraryDirectories="../../../lib"
-				ModuleDefinitionFile="mpich2fg.def"
+				ModuleDefinitionFile="mpichfg.def"
 				GenerateDebugInformation="true"
 			/>
 			<Tool
@@ -576,12 +576,12 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				Description="copying fmpich2gd.dll to the system32 directory"
-				CommandLine="copy ..\..\..\lib\fmpich2gd.dll %SystemRoot%\system32\fmpich2gd.dll"
+				Description="copying fmpichgd.dll to the system32 directory"
+				CommandLine="copy ..\..\..\lib\fmpichgd.dll %SystemRoot%\system32\fmpichgd.dll"
 			/>
 		</Configuration>
 		<Configuration
-			Name="mpich2ReleaseConfig_1_0_4|Win32"
+			Name="mpichReleaseConfig_1_0_4|Win32"
 			OutputDirectory="$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="2"
@@ -628,10 +628,10 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="mpi.lib mpich2ffg.lib"
-				OutputFile="../../../lib/fmpich2g.dll"
+				AdditionalDependencies="mpi.lib mpichffg.lib"
+				OutputFile="../../../lib/fmpichg.dll"
 				AdditionalLibraryDirectories="../../../lib"
-				ModuleDefinitionFile="mpich2fg.def"
+				ModuleDefinitionFile="mpichfg.def"
 				GenerateDebugInformation="false"
 			/>
 			<Tool
@@ -657,12 +657,12 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				Description="copying fmpich2gd.dll to the system32 directory"
-				CommandLine="copy ..\..\..\lib\fmpich2gd.dll %SystemRoot%\system32\fmpich2gd.dll"
+				Description="copying fmpichgd.dll to the system32 directory"
+				CommandLine="copy ..\..\..\lib\fmpichgd.dll %SystemRoot%\system32\fmpichgd.dll"
 			/>
 		</Configuration>
 		<Configuration
-			Name="ch3shm_mpich2ReleaseConfig_1_0_4|Win32"
+			Name="ch3shm_mpichReleaseConfig_1_0_4|Win32"
 			OutputDirectory="$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="2"
@@ -709,10 +709,10 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="mpi.lib mpich2ffg.lib"
-				OutputFile="../../../lib/fmpich2g.dll"
+				AdditionalDependencies="mpi.lib mpichffg.lib"
+				OutputFile="../../../lib/fmpichg.dll"
 				AdditionalLibraryDirectories="../../../lib"
-				ModuleDefinitionFile="mpich2fg.def"
+				ModuleDefinitionFile="mpichfg.def"
 				GenerateDebugInformation="false"
 			/>
 			<Tool
@@ -740,12 +740,12 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				Description="copying fmpich2gd.dll to the system32 directory"
-				CommandLine="copy ..\..\..\lib\fmpich2gd.dll %SystemRoot%\system32\fmpich2gd.dll"
+				Description="copying fmpichgd.dll to the system32 directory"
+				CommandLine="copy ..\..\..\lib\fmpichgd.dll %SystemRoot%\system32\fmpichgd.dll"
 			/>
 		</Configuration>
 		<Configuration
-			Name="mpich2sshm_mpich2ReleaseConfig_1_0_4|Win32"
+			Name="mpichsshm_mpichReleaseConfig_1_0_4|Win32"
 			OutputDirectory="$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="2"
@@ -792,10 +792,10 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="mpi.lib mpich2ffg.lib"
-				OutputFile="../../../lib/fmpich2g.dll"
+				AdditionalDependencies="mpi.lib mpichffg.lib"
+				OutputFile="../../../lib/fmpichg.dll"
 				AdditionalLibraryDirectories="../../../lib"
-				ModuleDefinitionFile="mpich2fg.def"
+				ModuleDefinitionFile="mpichfg.def"
 				GenerateDebugInformation="false"
 			/>
 			<Tool
@@ -821,12 +821,12 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				Description="copying fmpich2gd.dll to the system32 directory"
-				CommandLine="copy ..\..\..\lib\fmpich2gd.dll %SystemRoot%\system32\fmpich2gd.dll"
+				Description="copying fmpichgd.dll to the system32 directory"
+				CommandLine="copy ..\..\..\lib\fmpichgd.dll %SystemRoot%\system32\fmpichgd.dll"
 			/>
 		</Configuration>
 		<Configuration
-			Name="mpich2ssm_mpich2ReleaseConfig_1_0_4|Win32"
+			Name="mpichssm_mpichReleaseConfig_1_0_4|Win32"
 			OutputDirectory="$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="2"
@@ -873,10 +873,10 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="mpi.lib mpich2ffg.lib"
-				OutputFile="../../../lib/fmpich2g.dll"
+				AdditionalDependencies="mpi.lib mpichffg.lib"
+				OutputFile="../../../lib/fmpichg.dll"
 				AdditionalLibraryDirectories="../../../lib"
-				ModuleDefinitionFile="mpich2fg.def"
+				ModuleDefinitionFile="mpichfg.def"
 				GenerateDebugInformation="false"
 			/>
 			<Tool
@@ -902,12 +902,12 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				Description="copying fmpich2gd.dll to the system32 directory"
-				CommandLine="copy ..\..\..\lib\fmpich2gd.dll %SystemRoot%\system32\fmpich2gd.dll"
+				Description="copying fmpichgd.dll to the system32 directory"
+				CommandLine="copy ..\..\..\lib\fmpichgd.dll %SystemRoot%\system32\fmpichgd.dll"
 			/>
 		</Configuration>
 		<Configuration
-			Name="mt_mpich2ReleaseConfig_1_0_4|Win32"
+			Name="mt_mpichReleaseConfig_1_0_4|Win32"
 			OutputDirectory="$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="2"
@@ -954,10 +954,10 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="mpi.lib mpich2ffg.lib"
-				OutputFile="../../../lib/fmpich2g.dll"
+				AdditionalDependencies="mpi.lib mpichffg.lib"
+				OutputFile="../../../lib/fmpichg.dll"
 				AdditionalLibraryDirectories="../../../lib"
-				ModuleDefinitionFile="mpich2fg.def"
+				ModuleDefinitionFile="mpichfg.def"
 				GenerateDebugInformation="true"
 			/>
 			<Tool
@@ -983,8 +983,8 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				Description="copying fmpich2gd.dll to the system32 directory"
-				CommandLine="copy ..\..\..\lib\fmpich2gd.dll %SystemRoot%\system32\fmpich2gd.dll"
+				Description="copying fmpichgd.dll to the system32 directory"
+				CommandLine="copy ..\..\..\lib\fmpichgd.dll %SystemRoot%\system32\fmpichgd.dll"
 			/>
 		</Configuration>
 		<Configuration
@@ -1031,10 +1031,10 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="mpi.lib mpich2ffg.lib"
-				OutputFile="../../../lib/fmpich2g.dll"
+				AdditionalDependencies="mpi.lib mpichffg.lib"
+				OutputFile="../../../lib/fmpichg.dll"
 				AdditionalLibraryDirectories="../../../lib"
-				ModuleDefinitionFile="mpich2fg.def"
+				ModuleDefinitionFile="mpichfg.def"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -1059,12 +1059,12 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				Description="copying fmpich2g.dll to the system32 directory"
-				CommandLine="copy ..\..\..\lib\fmpich2g.dll %SystemRoot%\system32\fmpich2g.dll"
+				Description="copying fmpichg.dll to the system32 directory"
+				CommandLine="copy ..\..\..\lib\fmpichg.dll %SystemRoot%\system32\fmpichg.dll"
 			/>
 		</Configuration>
 		<Configuration
-			Name="mpich2DebugConfig_1_0_5|Win32"
+			Name="mpichDebugConfig_1_0_5|Win32"
 			OutputDirectory="$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="2"
@@ -1111,10 +1111,10 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="mpi.lib mpich2ffg.lib"
-				OutputFile="../../../lib/fmpich2g.dll"
+				AdditionalDependencies="mpi.lib mpichffg.lib"
+				OutputFile="../../../lib/fmpichg.dll"
 				AdditionalLibraryDirectories="../../../lib"
-				ModuleDefinitionFile="mpich2fg.def"
+				ModuleDefinitionFile="mpichfg.def"
 				GenerateDebugInformation="false"
 			/>
 			<Tool
@@ -1140,8 +1140,8 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				Description="copying fmpich2gd.dll to the system32 directory"
-				CommandLine="copy ..\..\..\lib\fmpich2gd.dll %SystemRoot%\system32\fmpich2gd.dll"
+				Description="copying fmpichgd.dll to the system32 directory"
+				CommandLine="copy ..\..\..\lib\fmpichgd.dll %SystemRoot%\system32\fmpichgd.dll"
 			/>
 		</Configuration>
 		<Configuration
@@ -1189,10 +1189,10 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="mpi.lib mpich2ff.lib"
-				OutputFile="../../../lib/fmpich2.dll"
+				AdditionalDependencies="mpi.lib mpichff.lib"
+				OutputFile="../../../lib/fmpich.dll"
 				AdditionalLibraryDirectories="../../../lib"
-				ModuleDefinitionFile="mpich2f.def"
+				ModuleDefinitionFile="mpichf.def"
 				GenerateDebugInformation="true"
 			/>
 			<Tool
@@ -1218,8 +1218,8 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				Description="copying fmpich2.dll to the system32 directory"
-				CommandLine="copy ..\..\..\lib\fmpich2.dll %SystemRoot%\system32\fmpich2.dll"
+				Description="copying fmpich.dll to the system32 directory"
+				CommandLine="copy ..\..\..\lib\fmpich.dll %SystemRoot%\system32\fmpich.dll"
 			/>
 		</Configuration>
 		<Configuration
@@ -1270,10 +1270,10 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="mpi.lib mpich2ffg.lib"
-				OutputFile="../../../lib/fmpich2g.dll"
+				AdditionalDependencies="mpi.lib mpichffg.lib"
+				OutputFile="../../../lib/fmpichg.dll"
 				AdditionalLibraryDirectories="../../../lib"
-				ModuleDefinitionFile="mpich2fg.def"
+				ModuleDefinitionFile="mpichfg.def"
 				GenerateDebugInformation="false"
 			/>
 			<Tool
@@ -1299,8 +1299,8 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				Description="copying fmpich2gd.dll to the system32 directory"
-				CommandLine="copy ..\..\..\lib\fmpich2gd.dll %SystemRoot%\system32\fmpich2gd.dll"
+				Description="copying fmpichgd.dll to the system32 directory"
+				CommandLine="copy ..\..\..\lib\fmpichgd.dll %SystemRoot%\system32\fmpichgd.dll"
 			/>
 		</Configuration>
 		<Configuration
@@ -1348,7 +1348,7 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
-				OutputFile="..\..\..\lib\fmpich2p.lib"
+				OutputFile="..\..\..\lib\fmpichp.lib"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -1422,7 +1422,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2DebugConfig_1_0_4|Win32"
+					Name="mpichDebugConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -1430,7 +1430,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -1438,7 +1438,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="ch3shm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="ch3shm_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -1446,7 +1446,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2sshm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichsshm_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -1454,7 +1454,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2ssm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichssm_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -1462,7 +1462,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mt_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mt_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -1478,7 +1478,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2DebugConfig_1_0_5|Win32"
+					Name="mpichDebugConfig_1_0_5|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -1566,7 +1566,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2DebugConfig_1_0_4|Win32"
+					Name="mpichDebugConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -1574,7 +1574,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -1582,7 +1582,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="ch3shm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="ch3shm_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -1590,7 +1590,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2sshm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichsshm_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -1598,7 +1598,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2ssm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichssm_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -1606,7 +1606,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mt_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mt_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -1622,7 +1622,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2DebugConfig_1_0_5|Win32"
+					Name="mpichDebugConfig_1_0_5|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -1694,7 +1694,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2DebugConfig_1_0_4|Win32"
+					Name="mpichDebugConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -1702,7 +1702,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -1710,7 +1710,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="ch3shm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="ch3shm_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -1718,7 +1718,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2sshm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichsshm_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -1726,7 +1726,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2ssm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichssm_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -1734,7 +1734,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mt_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mt_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -1750,7 +1750,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2DebugConfig_1_0_5|Win32"
+					Name="mpichDebugConfig_1_0_5|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -1826,7 +1826,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2DebugConfig_1_0_4|Win32"
+					Name="mpichDebugConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -1834,7 +1834,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -1842,7 +1842,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="ch3shm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="ch3shm_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -1850,7 +1850,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2sshm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichsshm_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -1858,7 +1858,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2ssm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichssm_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -1866,7 +1866,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mt_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mt_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -1882,7 +1882,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2DebugConfig_1_0_5|Win32"
+					Name="mpichDebugConfig_1_0_5|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -1954,7 +1954,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2DebugConfig_1_0_4|Win32"
+					Name="mpichDebugConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -1962,7 +1962,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -1970,7 +1970,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="ch3shm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="ch3shm_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -1978,7 +1978,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2sshm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichsshm_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -1986,7 +1986,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2ssm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichssm_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -1994,7 +1994,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mt_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mt_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -2010,7 +2010,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2DebugConfig_1_0_5|Win32"
+					Name="mpichDebugConfig_1_0_5|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -2082,7 +2082,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2DebugConfig_1_0_4|Win32"
+					Name="mpichDebugConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -2090,7 +2090,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -2098,7 +2098,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="ch3shm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="ch3shm_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -2106,7 +2106,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2sshm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichsshm_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -2114,7 +2114,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2ssm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichssm_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -2122,7 +2122,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mt_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mt_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -2138,7 +2138,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2DebugConfig_1_0_5|Win32"
+					Name="mpichDebugConfig_1_0_5|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -2210,7 +2210,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2DebugConfig_1_0_4|Win32"
+					Name="mpichDebugConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -2218,7 +2218,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -2226,7 +2226,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="ch3shm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="ch3shm_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -2234,7 +2234,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2sshm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichsshm_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -2242,7 +2242,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2ssm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichssm_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -2250,7 +2250,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mt_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mt_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -2266,7 +2266,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2DebugConfig_1_0_5|Win32"
+					Name="mpichDebugConfig_1_0_5|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -2354,7 +2354,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2DebugConfig_1_0_4|Win32"
+					Name="mpichDebugConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -2362,7 +2362,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -2370,7 +2370,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="ch3shm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="ch3shm_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -2378,7 +2378,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2sshm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichsshm_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -2386,7 +2386,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2ssm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichssm_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -2394,7 +2394,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mt_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mt_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -2410,7 +2410,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2DebugConfig_1_0_5|Win32"
+					Name="mpichDebugConfig_1_0_5|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -2482,7 +2482,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2DebugConfig_1_0_4|Win32"
+					Name="mpichDebugConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -2490,7 +2490,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -2498,7 +2498,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="ch3shm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="ch3shm_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -2506,7 +2506,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2sshm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichsshm_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -2514,7 +2514,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2ssm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichssm_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -2522,7 +2522,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mt_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mt_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -2538,7 +2538,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2DebugConfig_1_0_5|Win32"
+					Name="mpichDebugConfig_1_0_5|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -2610,7 +2610,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2DebugConfig_1_0_4|Win32"
+					Name="mpichDebugConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -2618,7 +2618,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -2626,7 +2626,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="ch3shm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="ch3shm_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -2634,7 +2634,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2sshm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichsshm_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -2642,7 +2642,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2ssm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichssm_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -2650,7 +2650,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mt_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mt_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -2666,7 +2666,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2DebugConfig_1_0_5|Win32"
+					Name="mpichDebugConfig_1_0_5|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -2738,7 +2738,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2DebugConfig_1_0_4|Win32"
+					Name="mpichDebugConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -2746,7 +2746,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -2754,7 +2754,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="ch3shm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="ch3shm_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -2762,7 +2762,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2sshm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichsshm_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -2770,7 +2770,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2ssm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichssm_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -2778,7 +2778,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mt_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mt_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -2794,7 +2794,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2DebugConfig_1_0_5|Win32"
+					Name="mpichDebugConfig_1_0_5|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -2866,7 +2866,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2DebugConfig_1_0_4|Win32"
+					Name="mpichDebugConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -2874,7 +2874,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -2882,7 +2882,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="ch3shm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="ch3shm_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -2890,7 +2890,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2sshm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichsshm_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -2898,7 +2898,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2ssm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichssm_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -2906,7 +2906,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mt_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mt_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -2922,7 +2922,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2DebugConfig_1_0_5|Win32"
+					Name="mpichDebugConfig_1_0_5|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -3206,7 +3206,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2DebugConfig_1_0_4|Win32"
+					Name="mpichDebugConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -3214,7 +3214,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -3222,7 +3222,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="ch3shm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="ch3shm_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -3230,7 +3230,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2sshm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichsshm_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -3238,7 +3238,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2ssm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichssm_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -3246,7 +3246,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mt_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mt_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -3262,7 +3262,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2DebugConfig_1_0_5|Win32"
+					Name="mpichDebugConfig_1_0_5|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -3566,7 +3566,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2DebugConfig_1_0_4|Win32"
+					Name="mpichDebugConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -3574,7 +3574,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -3582,7 +3582,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="ch3shm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="ch3shm_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -3590,7 +3590,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2sshm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichsshm_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -3598,7 +3598,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2ssm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichssm_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -3606,7 +3606,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mt_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mt_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -3622,7 +3622,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2DebugConfig_1_0_5|Win32"
+					Name="mpichDebugConfig_1_0_5|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -3694,7 +3694,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2DebugConfig_1_0_4|Win32"
+					Name="mpichDebugConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -3702,7 +3702,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -3710,7 +3710,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="ch3shm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="ch3shm_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -3718,7 +3718,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2sshm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichsshm_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -3726,7 +3726,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2ssm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichssm_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -3734,7 +3734,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mt_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mt_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -3750,7 +3750,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2DebugConfig_1_0_5|Win32"
+					Name="mpichDebugConfig_1_0_5|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -3838,7 +3838,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2DebugConfig_1_0_4|Win32"
+					Name="mpichDebugConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -3846,7 +3846,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -3854,7 +3854,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="ch3shm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="ch3shm_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -3862,7 +3862,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2sshm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichsshm_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -3870,7 +3870,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2ssm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichssm_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -3878,7 +3878,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mt_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mt_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -3894,7 +3894,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2DebugConfig_1_0_5|Win32"
+					Name="mpichDebugConfig_1_0_5|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -4050,7 +4050,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2DebugConfig_1_0_4|Win32"
+					Name="mpichDebugConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -4058,7 +4058,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -4066,7 +4066,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="ch3shm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="ch3shm_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -4074,7 +4074,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2sshm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichsshm_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -4082,7 +4082,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2ssm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichssm_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -4090,7 +4090,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mt_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mt_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -4106,7 +4106,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2DebugConfig_1_0_5|Win32"
+					Name="mpichDebugConfig_1_0_5|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -4238,7 +4238,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2DebugConfig_1_0_4|Win32"
+					Name="mpichDebugConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -4246,7 +4246,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -4254,7 +4254,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="ch3shm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="ch3shm_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -4262,7 +4262,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2sshm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichsshm_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -4270,7 +4270,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2ssm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichssm_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -4278,7 +4278,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mt_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mt_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -4294,7 +4294,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2DebugConfig_1_0_5|Win32"
+					Name="mpichDebugConfig_1_0_5|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -4366,7 +4366,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2DebugConfig_1_0_4|Win32"
+					Name="mpichDebugConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -4374,7 +4374,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -4382,7 +4382,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="ch3shm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="ch3shm_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -4390,7 +4390,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2sshm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichsshm_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -4398,7 +4398,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2ssm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichssm_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -4406,7 +4406,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mt_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mt_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -4422,7 +4422,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2DebugConfig_1_0_5|Win32"
+					Name="mpichDebugConfig_1_0_5|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -4494,7 +4494,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2DebugConfig_1_0_4|Win32"
+					Name="mpichDebugConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -4502,7 +4502,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -4510,7 +4510,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="ch3shm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="ch3shm_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -4518,7 +4518,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2sshm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichsshm_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -4526,7 +4526,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2ssm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichssm_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -4534,7 +4534,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mt_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mt_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -4550,7 +4550,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2DebugConfig_1_0_5|Win32"
+					Name="mpichDebugConfig_1_0_5|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -4622,7 +4622,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2DebugConfig_1_0_4|Win32"
+					Name="mpichDebugConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -4630,7 +4630,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -4638,7 +4638,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="ch3shm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="ch3shm_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -4646,7 +4646,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2sshm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichsshm_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -4654,7 +4654,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2ssm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichssm_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -4662,7 +4662,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mt_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mt_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -4678,7 +4678,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2DebugConfig_1_0_5|Win32"
+					Name="mpichDebugConfig_1_0_5|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -4727,7 +4727,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\mpich2f.def"
+				RelativePath=".\mpichf.def"
 				>
 				<FileConfiguration
 					Name="gfortDebug|Win32"
@@ -4746,7 +4746,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2DebugConfig_1_0_4|Win32"
+					Name="mpichDebugConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -4754,7 +4754,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -4762,7 +4762,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="ch3shm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="ch3shm_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -4770,7 +4770,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2sshm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichsshm_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -4778,7 +4778,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2ssm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichssm_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -4786,7 +4786,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mt_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mt_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -4802,7 +4802,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2DebugConfig_1_0_5|Win32"
+					Name="mpichDebugConfig_1_0_5|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -4819,7 +4819,7 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath=".\mpich2fg.def"
+				RelativePath=".\mpichfg.def"
 				>
 				<FileConfiguration
 					Name="sfortDebug|Win32"
@@ -4871,7 +4871,7 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath=".\mpich2fs.def"
+				RelativePath=".\mpichfs.def"
 				>
 			</File>
 			<File
@@ -4986,7 +4986,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2DebugConfig_1_0_4|Win32"
+					Name="mpichDebugConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -4994,7 +4994,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -5002,7 +5002,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="ch3shm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="ch3shm_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -5010,7 +5010,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2sshm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichsshm_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -5018,7 +5018,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2ssm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichssm_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -5026,7 +5026,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mt_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mt_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -5042,7 +5042,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2DebugConfig_1_0_5|Win32"
+					Name="mpichDebugConfig_1_0_5|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -5118,7 +5118,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2DebugConfig_1_0_4|Win32"
+					Name="mpichDebugConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -5126,7 +5126,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -5134,7 +5134,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="ch3shm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="ch3shm_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -5142,7 +5142,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2sshm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichsshm_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -5150,7 +5150,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2ssm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichssm_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -5158,7 +5158,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mt_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mt_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -5174,7 +5174,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2DebugConfig_1_0_5|Win32"
+					Name="mpichDebugConfig_1_0_5|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -5246,7 +5246,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2DebugConfig_1_0_4|Win32"
+					Name="mpichDebugConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -5254,7 +5254,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -5262,7 +5262,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="ch3shm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="ch3shm_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -5270,7 +5270,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2sshm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichsshm_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -5278,7 +5278,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2ssm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichssm_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -5286,7 +5286,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mt_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mt_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -5302,7 +5302,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2DebugConfig_1_0_5|Win32"
+					Name="mpichDebugConfig_1_0_5|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -5374,7 +5374,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2DebugConfig_1_0_4|Win32"
+					Name="mpichDebugConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -5382,7 +5382,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -5390,7 +5390,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="ch3shm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="ch3shm_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -5398,7 +5398,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2sshm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichsshm_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -5406,7 +5406,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2ssm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichssm_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -5414,7 +5414,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mt_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mt_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -5430,7 +5430,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2DebugConfig_1_0_5|Win32"
+					Name="mpichDebugConfig_1_0_5|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -5506,7 +5506,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2DebugConfig_1_0_4|Win32"
+					Name="mpichDebugConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -5514,7 +5514,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -5522,7 +5522,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="ch3shm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="ch3shm_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -5530,7 +5530,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2sshm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichsshm_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -5538,7 +5538,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2ssm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichssm_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -5546,7 +5546,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mt_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mt_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -5562,7 +5562,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2DebugConfig_1_0_5|Win32"
+					Name="mpichDebugConfig_1_0_5|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -5646,7 +5646,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2DebugConfig_1_0_4|Win32"
+					Name="mpichDebugConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -5654,7 +5654,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -5662,7 +5662,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="ch3shm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="ch3shm_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -5670,7 +5670,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2sshm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichsshm_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -5678,7 +5678,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2ssm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichssm_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -5686,7 +5686,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mt_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mt_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -5702,7 +5702,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2DebugConfig_1_0_5|Win32"
+					Name="mpichDebugConfig_1_0_5|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -5774,7 +5774,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2DebugConfig_1_0_4|Win32"
+					Name="mpichDebugConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -5782,7 +5782,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -5790,7 +5790,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="ch3shm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="ch3shm_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -5798,7 +5798,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2sshm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichsshm_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -5806,7 +5806,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2ssm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichssm_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -5814,7 +5814,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mt_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mt_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -5830,7 +5830,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2DebugConfig_1_0_5|Win32"
+					Name="mpichDebugConfig_1_0_5|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -5902,7 +5902,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2DebugConfig_1_0_4|Win32"
+					Name="mpichDebugConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -5910,7 +5910,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -5918,7 +5918,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="ch3shm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="ch3shm_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -5926,7 +5926,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2sshm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichsshm_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -5934,7 +5934,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2ssm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichssm_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -5942,7 +5942,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mt_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mt_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -5958,7 +5958,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2DebugConfig_1_0_5|Win32"
+					Name="mpichDebugConfig_1_0_5|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -6030,7 +6030,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2DebugConfig_1_0_4|Win32"
+					Name="mpichDebugConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -6038,7 +6038,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -6046,7 +6046,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="ch3shm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="ch3shm_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -6054,7 +6054,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2sshm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichsshm_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -6062,7 +6062,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2ssm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichssm_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -6070,7 +6070,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mt_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mt_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -6086,7 +6086,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2DebugConfig_1_0_5|Win32"
+					Name="mpichDebugConfig_1_0_5|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -6158,7 +6158,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2DebugConfig_1_0_4|Win32"
+					Name="mpichDebugConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -6166,7 +6166,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -6174,7 +6174,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="ch3shm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="ch3shm_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -6182,7 +6182,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2sshm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichsshm_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -6190,7 +6190,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2ssm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichssm_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -6198,7 +6198,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mt_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mt_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -6214,7 +6214,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2DebugConfig_1_0_5|Win32"
+					Name="mpichDebugConfig_1_0_5|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -6286,7 +6286,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2DebugConfig_1_0_4|Win32"
+					Name="mpichDebugConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -6294,7 +6294,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -6302,7 +6302,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="ch3shm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="ch3shm_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -6310,7 +6310,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2sshm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichsshm_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -6318,7 +6318,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2ssm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichssm_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -6326,7 +6326,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mt_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mt_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -6342,7 +6342,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2DebugConfig_1_0_5|Win32"
+					Name="mpichDebugConfig_1_0_5|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -6414,7 +6414,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2DebugConfig_1_0_4|Win32"
+					Name="mpichDebugConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -6422,7 +6422,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -6430,7 +6430,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="ch3shm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="ch3shm_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -6438,7 +6438,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2sshm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichsshm_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -6446,7 +6446,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2ssm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichssm_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -6454,7 +6454,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mt_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mt_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -6470,7 +6470,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2DebugConfig_1_0_5|Win32"
+					Name="mpichDebugConfig_1_0_5|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -6542,7 +6542,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2DebugConfig_1_0_4|Win32"
+					Name="mpichDebugConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -6550,7 +6550,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -6558,7 +6558,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="ch3shm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="ch3shm_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -6566,7 +6566,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2sshm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichsshm_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -6574,7 +6574,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2ssm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichssm_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -6582,7 +6582,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mt_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mt_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -6598,7 +6598,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2DebugConfig_1_0_5|Win32"
+					Name="mpichDebugConfig_1_0_5|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -6674,7 +6674,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2DebugConfig_1_0_4|Win32"
+					Name="mpichDebugConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -6682,7 +6682,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -6690,7 +6690,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="ch3shm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="ch3shm_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -6698,7 +6698,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2sshm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichsshm_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -6706,7 +6706,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2ssm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichssm_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -6714,7 +6714,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mt_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mt_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -6730,7 +6730,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2DebugConfig_1_0_5|Win32"
+					Name="mpichDebugConfig_1_0_5|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -6806,7 +6806,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2DebugConfig_1_0_4|Win32"
+					Name="mpichDebugConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -6814,7 +6814,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -6822,7 +6822,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="ch3shm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="ch3shm_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -6830,7 +6830,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2sshm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichsshm_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -6838,7 +6838,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2ssm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichssm_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -6846,7 +6846,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mt_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mt_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -6862,7 +6862,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2DebugConfig_1_0_5|Win32"
+					Name="mpichDebugConfig_1_0_5|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -6934,7 +6934,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2DebugConfig_1_0_4|Win32"
+					Name="mpichDebugConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -6942,7 +6942,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -6950,7 +6950,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="ch3shm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="ch3shm_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -6958,7 +6958,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2sshm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichsshm_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -6966,7 +6966,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2ssm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichssm_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -6974,7 +6974,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mt_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mt_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -6990,7 +6990,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2DebugConfig_1_0_5|Win32"
+					Name="mpichDebugConfig_1_0_5|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -7282,7 +7282,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2DebugConfig_1_0_4|Win32"
+					Name="mpichDebugConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -7290,7 +7290,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -7298,7 +7298,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="ch3shm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="ch3shm_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -7306,7 +7306,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2sshm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichsshm_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -7314,7 +7314,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2ssm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichssm_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -7322,7 +7322,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mt_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mt_mpichReleaseConfig_1_0_4|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -7338,7 +7338,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2DebugConfig_1_0_5|Win32"
+					Name="mpichDebugConfig_1_0_5|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -7502,7 +7502,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2DebugConfig_1_0_4|Win32"
+					Name="mpichDebugConfig_1_0_4|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -7510,7 +7510,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichReleaseConfig_1_0_4|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -7518,7 +7518,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="ch3shm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="ch3shm_mpichReleaseConfig_1_0_4|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -7526,7 +7526,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2sshm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichsshm_mpichReleaseConfig_1_0_4|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -7534,7 +7534,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2ssm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichssm_mpichReleaseConfig_1_0_4|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -7542,7 +7542,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mt_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mt_mpichReleaseConfig_1_0_4|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -7558,7 +7558,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2DebugConfig_1_0_5|Win32"
+					Name="mpichDebugConfig_1_0_5|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -7642,7 +7642,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2DebugConfig_1_0_4|Win32"
+					Name="mpichDebugConfig_1_0_4|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -7650,7 +7650,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichReleaseConfig_1_0_4|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -7658,7 +7658,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="ch3shm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="ch3shm_mpichReleaseConfig_1_0_4|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -7666,7 +7666,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2sshm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichsshm_mpichReleaseConfig_1_0_4|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -7674,7 +7674,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2ssm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichssm_mpichReleaseConfig_1_0_4|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -7682,7 +7682,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mt_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mt_mpichReleaseConfig_1_0_4|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -7698,7 +7698,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2DebugConfig_1_0_5|Win32"
+					Name="mpichDebugConfig_1_0_5|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"

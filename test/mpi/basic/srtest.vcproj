@@ -32,7 +32,7 @@
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="mpich2d.lib"
+				AdditionalDependencies="mpichd.lib"
 				OutputFile="$(OutDir)/srtest.exe"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="..\..\..\lib"
@@ -80,7 +80,7 @@
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="mpich2.lib"
+				AdditionalDependencies="mpich.lib"
 				OutputFile="$(OutDir)/srtest.exe"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="..\..\..\lib"

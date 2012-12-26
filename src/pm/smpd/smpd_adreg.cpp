@@ -793,7 +793,7 @@ fn_exit:
  * If hostname is null the function removes scp for SMPD running
  * on localhost
  */
-#define SMPD_SERVICE_LDAP_COMMON_NAME   "cn=mpich2_smpd"
+#define SMPD_SERVICE_LDAP_COMMON_NAME   "cn=mpich_smpd"
 #define SMPD_INIT_LDAP_SERVICE_NAME(fq_service_name, length, fq_hostname)    \
     _sntprintf_s(fq_service_name, length, length - 1, TEXT("%s,%s"), TEXT(SMPD_SERVICE_LDAP_COMMON_NAME), fq_hostname)
 

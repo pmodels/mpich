@@ -1,4 +1,4 @@
-exe c:\Program Files\MPICH2\Examples\cpi.exe
+exe c:\Program Files\MPICH\Examples\cpi.exe
 n 4
 wdir c:\temp
 hosts localhost

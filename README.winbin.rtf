@@ -51,7 +51,7 @@
 \jcompress\viewkind4\viewscale100\nolnhtadjtbl\rsidroot3749324 \fet0\sectd \linex0\sectdefaultcl\sftnbj {\*\pnseclvl1\pnucrm\pnstart1\pnindent720\pnhang {\pntxta .}}{\*\pnseclvl2\pnucltr\pnstart1\pnindent720\pnhang {\pntxta .}}{\*\pnseclvl3
 \pndec\pnstart1\pnindent720\pnhang {\pntxta .}}{\*\pnseclvl4\pnlcltr\pnstart1\pnindent720\pnhang {\pntxta )}}{\*\pnseclvl5\pndec\pnstart1\pnindent720\pnhang {\pntxtb (}{\pntxta )}}{\*\pnseclvl6\pnlcltr\pnstart1\pnindent720\pnhang {\pntxtb (}{\pntxta )}}
 {\*\pnseclvl7\pnlcrm\pnstart1\pnindent720\pnhang {\pntxtb (}{\pntxta )}}{\*\pnseclvl8\pnlcltr\pnstart1\pnindent720\pnhang {\pntxtb (}{\pntxta )}}{\*\pnseclvl9\pnlcrm\pnstart1\pnindent720\pnhang {\pntxtb (}{\pntxta )}}\pard\plain 
-\ql \li0\ri0\nowidctlpar\faauto\outlinelevel0\rin0\lin0\itap0\pararsid289831 \fs24\lang1033\langfe1033\cgrid\langnp1033\langfenp1033 {\f2\fs20\insrsid5849808 MPICH2 for Microsoft Windows
+\ql \li0\ri0\nowidctlpar\faauto\outlinelevel0\rin0\lin0\itap0\pararsid289831 \fs24\lang1033\langfe1033\cgrid\langnp1033\langfenp1033 {\f2\fs20\insrsid5849808 MPICH for Microsoft Windows
 \par }\pard \ql \li0\ri0\nowidctlpar\faauto\rin0\lin0\itap0 {\f2\fs20\insrsid5849808 Email bugs and error reports to:
 \par mpich-discuss@mcs.anl.gov
 \par 
@@ -67,16 +67,16 @@
 \par }\pard \ql \li0\ri0\nowidctlpar\faauto\outlinelevel0\rin0\lin0\itap0\pararsid289831 {\f2\fs20\insrsid5849808 THE INSTALLER:
 \par }\pard \ql \li0\ri0\nowidctlpar\faauto\rin0\lin0\itap0 {\f2\fs20\insrsid5849808 
 \par 
-\par You must install MPICH2 on all machines that you want to run MPI programs on. }{\f2\fs20\insrsid3749324  Run the installer}{\f2\fs20\insrsid5849808  on each machine individually.
+\par You must install MPICH on all machines that you want to run MPI programs on. }{\f2\fs20\insrsid3749324  Run the installer}{\f2\fs20\insrsid5849808  on each machine individually.
 \par 
-\par The installer creates the following mpich2 directory structure on your machine:
-\par mpich2\\bin
-\par mpich2\\include
-\par mpich2\\lib
+\par The installer creates the following mpich directory structure on your machine:
+\par mpich\\bin
+\par mpich\\include
+\par mpich\\lib
 \par 
-\par The include and lib directories contain the libraries needed to compile MPI programs.  The mpich2 dlls are copied to the Windows\\
-system32 directory.  The bin directory contains smpd.exe which is the MPICH2 process manager used to launch MPI programs.  mpiexec.exe}{\f2\fs20\insrsid9724047 ,}{\f2\fs20\insrsid5849808  also found in the bin directory}{\f2\fs20\insrsid9724047 ,}{
-\f2\fs20\insrsid5849808  is used to start MPICH2 jobs.
+\par The include and lib directories contain the libraries needed to compile MPI programs.  The mpich dlls are copied to the Windows\\
+system32 directory.  The bin directory contains smpd.exe which is the MPICH process manager used to launch MPI programs.  mpiexec.exe}{\f2\fs20\insrsid9724047 ,}{\f2\fs20\insrsid5849808  also found in the bin directory}{\f2\fs20\insrsid9724047 ,}{
+\f2\fs20\insrsid5849808  is used to start MPICH jobs.
 \par 
 \par 
 \par }\pard \ql \li0\ri0\nowidctlpar\faauto\outlinelevel0\rin0\lin0\itap0\pararsid289831 {\f2\fs20\insrsid5849808 COMPILING:
@@ -85,25 +85,25 @@ system32 directory.  The bin directory contains smpd.exe which is the MPICH2 pro
 \par Compiling an MPI program:
 \par {\listtext\pard\plain\f2\fs20\insrsid5849808 \hich\af2\dbch\af0\loch\f2 1)\tab}}\pard \ql \fi-360\li720\ri0\nowidctlpar\jclisttab\tx720\faauto\ls3\rin0\lin720\itap0\pararsid10776424 {\f2\fs20\insrsid5849808 
 Create a project for Visual Studio 2003, or Intel Fortran 8.0
-\par {\listtext\pard\plain\f2\fs20\insrsid5849808 \hich\af2\dbch\af0\loch\f2 2)\tab}Add mpich2\\include to the include path
-\par {\listtext\pard\plain\f2\fs20\insrsid5849808 \hich\af2\dbch\af0\loch\f2 3)\tab}Add mpich2\\lib to the library path
+\par {\listtext\pard\plain\f2\fs20\insrsid5849808 \hich\af2\dbch\af0\loch\f2 2)\tab}Add mpich\\include to the include path
+\par {\listtext\pard\plain\f2\fs20\insrsid5849808 \hich\af2\dbch\af0\loch\f2 3)\tab}Add mpich\\lib to the library path
 \par {\listtext\pard\plain\f2\fs20\insrsid289831 \hich\af2\dbch\af0\loch\f2 4)\tab}}{\f2\fs20\insrsid289831 For C applications a}{\f2\fs20\insrsid5849808 dd mpi.lib to your target link command.
-\par {\listtext\pard\plain\f2\fs20\insrsid289831 \hich\af2\dbch\af0\loch\f2 5)\tab}}{\f2\fs20\insrsid289831 For }{\f2\fs20\insrsid5849808 Fortran applications add }{\f2\fs20\insrsid9724047 f}{\f2\fs20\insrsid5849808 mpich2.lib to the link command.
+\par {\listtext\pard\plain\f2\fs20\insrsid289831 \hich\af2\dbch\af0\loch\f2 5)\tab}}{\f2\fs20\insrsid289831 For }{\f2\fs20\insrsid5849808 Fortran applications add }{\f2\fs20\insrsid9724047 f}{\f2\fs20\insrsid5849808 mpich.lib to the link command.
 \par {\listtext\pard\plain\f2\fs20\insrsid5849808 \hich\af2\dbch\af0\loch\f2 6)\tab}Compile
 \par {\listtext\pard\plain\f2\fs20\insrsid5849808 \hich\af2\dbch\af0\loch\f2 7)\tab}Place your application and all the dlls it depends on in a shared location or copy them to all the nodes.
 \par {\listtext\pard\plain\f2\fs20\insrsid5849808 \hich\af2\dbch\af0\loch\f2 8)\tab}Run the application using mpiexec
 \par }\pard \ql \li0\ri0\nowidctlpar\faauto\rin0\lin0\itap0 {\f2\fs20\insrsid5849808 
-\par }{\f2\fs20\insrsid9307247 For Visual Fortran 6 use }{\f2\fs20\insrsid9724047 f}{\f2\fs20\insrsid9307247 mpich2s.lib:
+\par }{\f2\fs20\insrsid9307247 For Visual Fortran 6 use }{\f2\fs20\insrsid9724047 f}{\f2\fs20\insrsid9307247 mpichs.lib:
 \par {\listtext\pard\plain\f3\fs20\insrsid9724047 \loch\af3\dbch\af0\hich\f3 \'b7\tab}}\pard \ql \fi-360\li720\ri0\nowidctlpar\jclisttab\tx720\faauto\ls1\rin0\lin720\itap0\pararsid9307247 {\f2\fs20\insrsid9724047 f}{\f2\fs20\insrsid9307247 
-mpich2.lib contains all caps cdecl: MPI_INIT
-\par {\listtext\pard\plain\f3\fs20\insrsid9724047 \loch\af3\dbch\af0\hich\f3 \'b7\tab}}{\f2\fs20\insrsid9724047 f}{\f2\fs20\insrsid9307247 mpich2s.lib contains all caps stdcall: MPI_INIT@4
-\par {\listtext\pard\plain\f3\fs20\insrsid9724047 \loch\af3\dbch\af0\hich\f3 \'b7\tab}}{\f2\fs20\insrsid9724047 f}{\f2\fs20\insrsid9307247 mpich2g.lib or }{\f2\fs20\insrsid9724047 f}{\f2\fs20\insrsid9307247 mpich2g.a contain lowercase cdecl: mpi_init__
+mpich.lib contains all caps cdecl: MPI_INIT
+\par {\listtext\pard\plain\f3\fs20\insrsid9724047 \loch\af3\dbch\af0\hich\f3 \'b7\tab}}{\f2\fs20\insrsid9724047 f}{\f2\fs20\insrsid9307247 mpichs.lib contains all caps stdcall: MPI_INIT@4
+\par {\listtext\pard\plain\f3\fs20\insrsid9724047 \loch\af3\dbch\af0\hich\f3 \'b7\tab}}{\f2\fs20\insrsid9724047 f}{\f2\fs20\insrsid9307247 mpichg.lib or }{\f2\fs20\insrsid9724047 f}{\f2\fs20\insrsid9307247 mpichg.a contain lowercase cdecl: mpi_init__
 \par }\pard \ql \li0\ri0\nowidctlpar\faauto\outlinelevel0\rin0\lin0\itap0\pararsid289831 {\f2\fs20\insrsid9307247 For gcc/g77
 \par {\listtext\pard\plain\f2\fs20\insrsid9307247 \hich\af2\dbch\af0\loch\f2 1)\tab}}\pard \ql \fi-360\li720\ri0\nowidctlpar\jclisttab\tx720\faauto\ls2\rin0\lin720\itap0\pararsid9307247 {\f2\fs20\insrsid9307247 create a makefile
-\par {\listtext\pard\plain\f2\fs20\insrsid9307247 \hich\af2\dbch\af0\loch\f2 2)\tab}add \endash I\'85mpich2\\include
-\par {\listtext\pard\plain\f2\fs20\insrsid9307247 \hich\af2\dbch\af0\loch\f2 3)\tab}add \endash L\'85mpich2\\lib
+\par {\listtext\pard\plain\f2\fs20\insrsid9307247 \hich\af2\dbch\af0\loch\f2 2)\tab}add \endash I\'85mpich\\include
+\par {\listtext\pard\plain\f2\fs20\insrsid9307247 \hich\af2\dbch\af0\loch\f2 3)\tab}add \endash L\'85mpich\\lib
 \par {\listtext\pard\plain\f2\fs20\insrsid9307247 \hich\af2\dbch\af0\loch\f2 4)\tab}}\pard \ql \fi-360\li720\ri0\nowidctlpar\jclisttab\tx720\faauto\ls2\rin0\lin720\itap0\pararsid9724047 {\f2\fs20\insrsid9307247 add \endash lmpi}{\f2\fs20\insrsid10776424 
- (for g77: -l}{\f2\fs20\insrsid9724047 f}{\f2\fs20\insrsid10776424 mpich2g)}{\f2\fs20\insrsid12541554 
+ (for g77: -l}{\f2\fs20\insrsid9724047 f}{\f2\fs20\insrsid10776424 mpichg)}{\f2\fs20\insrsid12541554 
 \par {\listtext\pard\plain\f2\fs20\insrsid9307247 \hich\af2\dbch\af0\loch\f2 5)\tab}}\pard \ql \fi-360\li720\ri0\nowidctlpar\jclisttab\tx720\faauto\ls2\rin0\lin720\itap0\pararsid9307247 {\f2\fs20\insrsid9307247 add the rules for your source files
 \par {\listtext\pard\plain\f2\fs20\insrsid9307247 \hich\af2\dbch\af0\loch\f2 6)\tab}same as 6,7,8 above
 \par }\pard \ql \li0\ri0\nowidctlpar\faauto\rin0\lin0\itap0\pararsid9307247 {\f2\fs20\insrsid9307247 
@@ -122,15 +122,15 @@ mpich2.lib contains all caps cdecl: MPI_INIT
 \par 
 \par If you want to have worker nodes that do not have any tools on them, you can simply copy smpd.exe to each node and execute "smpd.exe -install".  
 \par 
-\par smpd.exe is the only application required on each machine to launch MPICH2 jobs}{\f2\fs20\insrsid9724047 . }{\f2\fs20\insrsid5849808  }{\f2\fs20\insrsid9724047 B}{\f2\fs20\insrsid5849808 ut}{\f2\fs20\insrsid9724047 ,}{\f2\fs20\insrsid5849808 
- MPICH2 applications require the mpich2 dlls.  This requirement can be satisfied by copying the mpich2 dlls to the windows\\
-system32 directory on each node.  Then any mpich2 application can run on those systems.  This is what the installer does.  If you don't want to copy the mpich2 dlls to e
+\par smpd.exe is the only application required on each machine to launch MPICH jobs}{\f2\fs20\insrsid9724047 . }{\f2\fs20\insrsid5849808  }{\f2\fs20\insrsid9724047 B}{\f2\fs20\insrsid5849808 ut}{\f2\fs20\insrsid9724047 ,}{\f2\fs20\insrsid5849808 
+ MPICH applications require the mpich dlls.  This requirement can be satisfied by copying the mpich dlls to the windows\\
+system32 directory on each node.  Then any mpich application can run on those systems.  This is what the installer does.  If you don't want to copy the mpich dlls to e
 ach machine, then you need to place the dlls in the same location as the executable you are going to launch.
 \par 
-\par For example, if you have a directory called \\\\myserver\\mysharedfolder and you have myapp.exe and }{\f2\fs20\insrsid3147644 *}{\f2\fs20\insrsid5849808 mpich2}{\f2\fs20\insrsid3147644 *}{\f2\fs20\insrsid5849808 .dll in that directory then you can execu
+\par For example, if you have a directory called \\\\myserver\\mysharedfolder and you have myapp.exe and }{\f2\fs20\insrsid3147644 *}{\f2\fs20\insrsid5849808 mpich}{\f2\fs20\insrsid3147644 *}{\f2\fs20\insrsid5849808 .dll in that directory then you can execu
 te this command:  "mpiexec -n 4 \\\\myserver\\mysharedfolder\\myapp.exe"
 \par 
-\par Note: There are several mpich2 dlls and depending on your build target (Fortran, C, Debug or Release) you will need the corresponding dll}{\f2\fs20\insrsid9724047 s}{\f2\fs20\insrsid5849808  in the application directory.
+\par Note: There are several mpich dlls and depending on your build target (Fortran, C, Debug or Release) you will need the corresponding dll}{\f2\fs20\insrsid9724047 s}{\f2\fs20\insrsid5849808  in the application directory.
 \par 
 \par }{\f2\fs20\insrsid10776424 
 \par }}

@@ -541,7 +541,7 @@ static int PMIi_InitSingleton(void ){
         MPIU_Snprintf(err_msg, PMII_MAX_ERR_MSG_LENGTH, "launchMpiexecProcess failed\n");
 	    PMII_ERR_SETPRINTANDJUMP(err_msg, result);
     }
-    /* FIXME: Switch to PMI v2 to recognize non-MPICH2 mpiexecs */
+    /* FIXME: Switch to PMI v2 to recognize non-MPICH mpiexecs */
     /* SMPD state machine will accept connection from mpiexec & get information about the PM */
     result = smpd_enter_at_state(singleton_client_set, SMPD_SINGLETON_CLIENT_LISTENING);
     if (result != SMPD_SUCCESS) {
@@ -863,8 +863,8 @@ static int rPMI_Init(int *spawned)
     }
     else
     {
-	strncpy(pmi_process.domain_name, "mpich2", PMI_MAX_KVS_NAME_LENGTH);
-	strncpy(smpd_process.domain_name, "mpich2", PMI_MAX_KVS_NAME_LENGTH);
+	strncpy(pmi_process.domain_name, "mpich", PMI_MAX_KVS_NAME_LENGTH);
+	strncpy(smpd_process.domain_name, "mpich", PMI_MAX_KVS_NAME_LENGTH);
     }
 
     p = getenv("PMI_RANK");
@@ -1253,7 +1253,7 @@ int iPMI_Init(int *spawned)
     }
     else
     {
-	strncpy(pmi_process.domain_name, "mpich2", PMI_MAX_KVS_NAME_LENGTH);
+	strncpy(pmi_process.domain_name, "mpich", PMI_MAX_KVS_NAME_LENGTH);
     }
 
     p = getenv("PMI_RANK");
@@ -2526,9 +2526,9 @@ int iPMI_Spawn_multiple(int count,
             if(pmi_process.rpmi == PMI_TRUE){
                 /* Add channel environment for rpmi/singleton_init procs */
                 char *env, env_str[SMPD_MAX_ENV_LENGTH];
-                env = getenv("MPICH2_CHANNEL");
+                env = getenv("MPICH_CHANNEL");
                 if(env != NULL){
-                    snprintf(env_str, SMPD_MAX_ENV_LENGTH, "MPICH2_CHANNEL=%s", env);
+                    snprintf(env_str, SMPD_MAX_ENV_LENGTH, "MPICH_CHANNEL=%s", env);
                     keyval_buf[0] = '\0';
                     iter2 = keyval_buf;
                     maxlen2 = SMPD_MAX_CMD_LENGTH;

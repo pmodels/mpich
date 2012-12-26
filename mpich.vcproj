@@ -2,9 +2,9 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="8.00"
-	Name="mpich2"
+	Name="mpich"
 	ProjectGUID="{0FACD81A-FE33-4845-ACF6-A1D50BD35991}"
-	RootNamespace="mpich2"
+	RootNamespace="mpich"
 	>
 	<Platforms>
 		<Platform
@@ -42,7 +42,7 @@
 				MkTypLibCompatible="true"
 				SuppressStartupBanner="true"
 				TargetEnvironment="1"
-				TypeLibraryName=".\$(ConfigurationName)/mpich2.tlb"
+				TypeLibraryName=".\$(ConfigurationName)/mpich.tlb"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
@@ -53,7 +53,7 @@
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
 				UsePrecompiledHeader="0"
-				PrecompiledHeaderFile=".\$(ConfigurationName)/mpich2.pch"
+				PrecompiledHeaderFile=".\$(ConfigurationName)/mpich.pch"
 				AssemblerListingLocation=".\$(ConfigurationName)/"
 				ObjectFile=".\$(ConfigurationName)/"
 				ProgramDataBaseFileName=".\$(ConfigurationName)/"
@@ -78,14 +78,14 @@
 				Name="VCLinkerTool"
 				AdditionalOptions="/MACHINE:I386"
 				AdditionalDependencies="activeds.lib adsiid.lib netapi32.lib ntdsapi.lib secur32.lib ch3shmd.lib cxxd.lib dbgd.lib pmid.lib smpd_utild.lib sockd.lib mswsock.lib ws2_32.lib odbc32.lib odbccp32.lib rpcrt4.lib mpr.lib crypt32.lib"
-				OutputFile="lib/mpich2shmd.dll"
+				OutputFile="lib/mpichshmd.dll"
 				LinkIncremental="2"
 				SuppressStartupBanner="true"
 				AdditionalLibraryDirectories="lib"
-				ModuleDefinitionFile=".\mpich2.def"
+				ModuleDefinitionFile=".\mpich.def"
 				GenerateDebugInformation="true"
-				ProgramDatabaseFile=".\$(ConfigurationName)/mpich2shmd.pdb"
-				ImportLibrary=".\$(ConfigurationName)/mpich2shmd.lib"
+				ProgramDatabaseFile=".\$(ConfigurationName)/mpichshmd.pdb"
+				ImportLibrary=".\$(ConfigurationName)/mpichshmd.lib"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -110,8 +110,8 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				Description="copying mpich2shmd.dll to system32 directory"
-				CommandLine="copy lib\mpich2shmd.dll %SystemRoot%\system32\mpich2shmd.dll&#x0D;&#x0A;copy $(ConfigurationName)\mpich2shmd.lib lib\mpich2shmd.lib&#x0D;&#x0A;"
+				Description="copying mpichshmd.dll to system32 directory"
+				CommandLine="copy lib\mpichshmd.dll %SystemRoot%\system32\mpichshmd.dll&#x0D;&#x0A;copy $(ConfigurationName)\mpichshmd.lib lib\mpichshmd.lib&#x0D;&#x0A;"
 			/>
 		</Configuration>
 		<Configuration
@@ -142,7 +142,7 @@
 				MkTypLibCompatible="true"
 				SuppressStartupBanner="true"
 				TargetEnvironment="1"
-				TypeLibraryName=".\$(ConfigurationName)/mpich2.tlb"
+				TypeLibraryName=".\$(ConfigurationName)/mpich.tlb"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
@@ -156,7 +156,7 @@
 				BufferSecurityCheck="false"
 				EnableFunctionLevelLinking="true"
 				UsePrecompiledHeader="0"
-				PrecompiledHeaderFile=".\$(ConfigurationName)/mpich2.pch"
+				PrecompiledHeaderFile=".\$(ConfigurationName)/mpich.pch"
 				AssemblerListingLocation=".\$(ConfigurationName)/"
 				ObjectFile=".\$(ConfigurationName)/"
 				ProgramDataBaseFileName=".\$(ConfigurationName)/"
@@ -180,13 +180,13 @@
 				Name="VCLinkerTool"
 				AdditionalOptions="/MACHINE:I386"
 				AdditionalDependencies="activeds.lib adsiid.lib netapi32.lib ntdsapi.lib secur32.lib mpl.lib smpd_util.lib sock.lib ch3shm.lib cxx.lib dbg.lib pmi.lib mswsock.lib ws2_32.lib odbc32.lib odbccp32.lib rpcrt4.lib mpr.lib crypt32.lib"
-				OutputFile="lib/mpich2shm.dll"
+				OutputFile="lib/mpichshm.dll"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
 				AdditionalLibraryDirectories="lib"
-				ModuleDefinitionFile=".\mpich2.def"
-				ProgramDatabaseFile=".\$(ConfigurationName)/mpich2shm.pdb"
-				ImportLibrary=".\$(ConfigurationName)/mpich2shm.lib"
+				ModuleDefinitionFile=".\mpich.def"
+				ProgramDatabaseFile=".\$(ConfigurationName)/mpichshm.pdb"
+				ImportLibrary=".\$(ConfigurationName)/mpichshm.lib"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -213,8 +213,8 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				Description="copying mpich2shm.dll to system32 directory"
-				CommandLine="copy lib\mpich2shm.dll %SystemRoot%\system32\mpich2shm.dll&#x0D;&#x0A;copy $(ConfigurationName)\mpich2shm.lib lib\mpich2shm.lib&#x0D;&#x0A;"
+				Description="copying mpichshm.dll to system32 directory"
+				CommandLine="copy lib\mpichshm.dll %SystemRoot%\system32\mpichshm.dll&#x0D;&#x0A;copy $(ConfigurationName)\mpichshm.lib lib\mpichshm.lib&#x0D;&#x0A;"
 			/>
 		</Configuration>
 		<Configuration
@@ -245,7 +245,7 @@
 				MkTypLibCompatible="true"
 				SuppressStartupBanner="true"
 				TargetEnvironment="1"
-				TypeLibraryName=".\$(ConfigurationName)/mpich2.tlb"
+				TypeLibraryName=".\$(ConfigurationName)/mpich.tlb"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
@@ -255,7 +255,7 @@
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
 				UsePrecompiledHeader="0"
-				PrecompiledHeaderFile=".\$(ConfigurationName)/mpich2.pch"
+				PrecompiledHeaderFile=".\$(ConfigurationName)/mpich.pch"
 				AssemblerListingLocation=".\$(ConfigurationName)/"
 				ObjectFile=".\$(ConfigurationName)/"
 				ProgramDataBaseFileName=".\$(ConfigurationName)/"
@@ -280,14 +280,14 @@
 				Name="VCLinkerTool"
 				AdditionalOptions="/MACHINE:I386"
 				AdditionalDependencies="activeds.lib adsiid.lib netapi32.lib ntdsapi.lib secur32.lib smpd_utild.lib dbgd.lib sockd.lib ch3ssmd.lib pmid.lib mswsock.lib ws2_32.lib odbc32.lib odbccp32.lib rpcrt4.lib mpr.lib crypt32.lib"
-				OutputFile="lib/mpich2ssmd.dll"
+				OutputFile="lib/mpichssmd.dll"
 				LinkIncremental="2"
 				SuppressStartupBanner="true"
 				AdditionalLibraryDirectories="lib"
-				ModuleDefinitionFile=".\mpich2.def"
+				ModuleDefinitionFile=".\mpich.def"
 				GenerateDebugInformation="true"
-				ProgramDatabaseFile=".\$(ConfigurationName)/mpich2ssmd.pdb"
-				ImportLibrary=".\$(ConfigurationName)/mpich2ssmd.lib"
+				ProgramDatabaseFile=".\$(ConfigurationName)/mpichssmd.pdb"
+				ImportLibrary=".\$(ConfigurationName)/mpichssmd.lib"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -312,8 +312,8 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				Description="copying mpich2ssmd.dll to system32 directory"
-				CommandLine="copy lib\mpich2ssmd.dll %SystemRoot%\system32\mpich2ssmd.dll&#x0D;&#x0A;copy $(ConfigurationName)\mpich2ssmd.lib lib\mpich2ssmd.lib&#x0D;&#x0A;"
+				Description="copying mpichssmd.dll to system32 directory"
+				CommandLine="copy lib\mpichssmd.dll %SystemRoot%\system32\mpichssmd.dll&#x0D;&#x0A;copy $(ConfigurationName)\mpichssmd.lib lib\mpichssmd.lib&#x0D;&#x0A;"
 			/>
 		</Configuration>
 		<Configuration
@@ -344,7 +344,7 @@
 				MkTypLibCompatible="true"
 				SuppressStartupBanner="true"
 				TargetEnvironment="1"
-				TypeLibraryName=".\$(ConfigurationName)/mpich2.tlb"
+				TypeLibraryName=".\$(ConfigurationName)/mpich.tlb"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
@@ -355,7 +355,7 @@
 				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"
 				UsePrecompiledHeader="0"
-				PrecompiledHeaderFile=".\$(ConfigurationName)/mpich2.pch"
+				PrecompiledHeaderFile=".\$(ConfigurationName)/mpich.pch"
 				AssemblerListingLocation=".\$(ConfigurationName)/"
 				ObjectFile=".\$(ConfigurationName)/"
 				ProgramDataBaseFileName=".\$(ConfigurationName)/"
@@ -379,13 +379,13 @@
 				Name="VCLinkerTool"
 				AdditionalOptions="/MACHINE:I386"
 				AdditionalDependencies="activeds.lib adsiid.lib netapi32.lib ntdsapi.lib secur32.lib mpl.lib smpd_util.lib dbg.lib sock.lib ch3ssm.lib pmi.lib mswsock.lib ws2_32.lib odbc32.lib odbccp32.lib rpcrt4.lib mpr.lib crypt32.lib"
-				OutputFile="lib/mpich2ssm.dll"
+				OutputFile="lib/mpichssm.dll"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
 				AdditionalLibraryDirectories="lib"
-				ModuleDefinitionFile=".\mpich2.def"
-				ProgramDatabaseFile=".\$(ConfigurationName)/mpich2ssm.pdb"
-				ImportLibrary=".\$(ConfigurationName)/mpich2ssm.lib"
+				ModuleDefinitionFile=".\mpich.def"
+				ProgramDatabaseFile=".\$(ConfigurationName)/mpichssm.pdb"
+				ImportLibrary=".\$(ConfigurationName)/mpichssm.lib"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -412,8 +412,8 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				Description="copying mpich2ssm.dll to system32 directory"
-				CommandLine="copy lib\mpich2ssm.dll %SystemRoot%\system32\mpich2ssm.dll&#x0D;&#x0A;copy $(ConfigurationName)\mpich2ssm.lib lib\mpich2ssm.lib&#x0D;&#x0A;"
+				Description="copying mpichssm.dll to system32 directory"
+				CommandLine="copy lib\mpichssm.dll %SystemRoot%\system32\mpichssm.dll&#x0D;&#x0A;copy $(ConfigurationName)\mpichssm.lib lib\mpichssm.lib&#x0D;&#x0A;"
 			/>
 		</Configuration>
 		<Configuration
@@ -444,7 +444,7 @@
 				MkTypLibCompatible="true"
 				SuppressStartupBanner="true"
 				TargetEnvironment="1"
-				TypeLibraryName=".\$(ConfigurationName)/mpich2.tlb"
+				TypeLibraryName=".\$(ConfigurationName)/mpich.tlb"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
@@ -454,7 +454,7 @@
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
 				UsePrecompiledHeader="0"
-				PrecompiledHeaderFile=".\$(ConfigurationName)/mpich2.pch"
+				PrecompiledHeaderFile=".\$(ConfigurationName)/mpich.pch"
 				AssemblerListingLocation=".\$(ConfigurationName)/"
 				ObjectFile=".\$(ConfigurationName)/"
 				ProgramDataBaseFileName=".\$(ConfigurationName)/"
@@ -479,16 +479,16 @@
 				Name="VCLinkerTool"
 				AdditionalOptions="/MACHINE:I386"
 				AdditionalDependencies="activeds.lib adsiid.lib netapi32.lib ntdsapi.lib secur32.lib smpd_utild.lib dbgd.lib sockd.lib ch3nemesisd.lib pmid.lib mswsock.lib ws2_32.lib odbc32.lib odbccp32.lib rpcrt4.lib mpr.lib crypt32.lib"
-				OutputFile="lib/mpich2d.dll"
+				OutputFile="lib/mpichd.dll"
 				LinkIncremental="2"
 				SuppressStartupBanner="true"
 				AdditionalLibraryDirectories="lib"
 				IgnoreAllDefaultLibraries="false"
 				IgnoreDefaultLibraryNames="libcd.lib"
-				ModuleDefinitionFile=".\mpich2.def"
+				ModuleDefinitionFile=".\mpich.def"
 				GenerateDebugInformation="true"
-				ProgramDatabaseFile=".\$(ConfigurationName)/mpich2d.pdb"
-				ImportLibrary=".\$(ConfigurationName)/mpich2d.lib"
+				ProgramDatabaseFile=".\$(ConfigurationName)/mpichd.pdb"
+				ImportLibrary=".\$(ConfigurationName)/mpichd.lib"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -513,8 +513,8 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				Description="copying mpich2d.dll to system32 directory"
-				CommandLine="copy lib\mpich2d.dll %SystemRoot%\system32\mpich2d.dll&#x0D;&#x0A;copy $(ConfigurationName)\mpich2d.lib lib\mpich2d.lib&#x0D;&#x0A;"
+				Description="copying mpichd.dll to system32 directory"
+				CommandLine="copy lib\mpichd.dll %SystemRoot%\system32\mpichd.dll&#x0D;&#x0A;copy $(ConfigurationName)\mpichd.lib lib\mpichd.lib&#x0D;&#x0A;"
 			/>
 		</Configuration>
 		<Configuration
@@ -545,7 +545,7 @@
 				MkTypLibCompatible="true"
 				SuppressStartupBanner="true"
 				TargetEnvironment="1"
-				TypeLibraryName=".\$(ConfigurationName)/mpich2.tlb"
+				TypeLibraryName=".\$(ConfigurationName)/mpich.tlb"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
@@ -559,7 +559,7 @@
 				BufferSecurityCheck="false"
 				EnableFunctionLevelLinking="true"
 				UsePrecompiledHeader="0"
-				PrecompiledHeaderFile=".\$(ConfigurationName)/mpich2.pch"
+				PrecompiledHeaderFile=".\$(ConfigurationName)/mpich.pch"
 				AssemblerListingLocation=".\$(ConfigurationName)/"
 				ObjectFile=".\$(ConfigurationName)/"
 				ProgramDataBaseFileName=".\$(ConfigurationName)/"
@@ -583,17 +583,17 @@
 				Name="VCLinkerTool"
 				AdditionalOptions="/MACHINE:I386"
 				AdditionalDependencies="activeds.lib adsiid.lib netapi32.lib ntdsapi.lib secur32.lib smpd_util.lib dbg.lib sock.lib ch3sock.lib pmi.lib mswsock.lib ws2_32.lib odbc32.lib odbccp32.lib rpcrt4.lib mpr.lib crypt32.lib"
-				OutputFile="lib/mpich2.dll"
+				OutputFile="lib/mpich.dll"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
 				AdditionalLibraryDirectories="lib"
 				IgnoreDefaultLibraryNames="libc.lib"
-				ModuleDefinitionFile=".\mpich2.def"
+				ModuleDefinitionFile=".\mpich.def"
 				GenerateDebugInformation="false"
-				ProgramDatabaseFile=".\$(ConfigurationName)/mpich2.pdb"
+				ProgramDatabaseFile=".\$(ConfigurationName)/mpich.pdb"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"
-				ImportLibrary=".\$(ConfigurationName)/mpich2.lib"
+				ImportLibrary=".\$(ConfigurationName)/mpich.lib"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -618,8 +618,8 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				Description="copying mpich2.dll to system32 directory"
-				CommandLine="copy lib\mpich2.dll %SystemRoot%\system32\mpich2.dll&#x0D;&#x0A;copy $(ConfigurationName)\mpich2.lib lib\mpich2.lib&#x0D;&#x0A;"
+				Description="copying mpich.dll to system32 directory"
+				CommandLine="copy lib\mpich.dll %SystemRoot%\system32\mpich.dll&#x0D;&#x0A;copy $(ConfigurationName)\mpich.lib lib\mpich.lib&#x0D;&#x0A;"
 			/>
 		</Configuration>
 		<Configuration
@@ -650,7 +650,7 @@
 				MkTypLibCompatible="true"
 				SuppressStartupBanner="true"
 				TargetEnvironment="1"
-				TypeLibraryName=".\$(ConfigurationName)/mpich2.tlb"
+				TypeLibraryName=".\$(ConfigurationName)/mpich.tlb"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
@@ -664,7 +664,7 @@
 				BufferSecurityCheck="false"
 				EnableFunctionLevelLinking="true"
 				UsePrecompiledHeader="0"
-				PrecompiledHeaderFile=".\$(ConfigurationName)/mpich2.pch"
+				PrecompiledHeaderFile=".\$(ConfigurationName)/mpich.pch"
 				AssemblerListingLocation=".\$(ConfigurationName)/"
 				ObjectFile=".\$(ConfigurationName)/"
 				ProgramDataBaseFileName=".\$(ConfigurationName)/"
@@ -688,16 +688,16 @@
 				Name="VCLinkerTool"
 				AdditionalOptions="/MACHINE:I386"
 				AdditionalDependencies="activeds.lib adsiid.lib netapi32.lib ntdsapi.lib secur32.lib smpd_util.lib dbg.lib sockp.lib ch3sockp.lib pmi.lib rlog.lib mswsock.lib ws2_32.lib odbc32.lib odbccp32.lib rpcrt4.lib mpr.lib crypt32.lib"
-				OutputFile="lib/mpich2p.dll"
+				OutputFile="lib/mpichp.dll"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
 				AdditionalLibraryDirectories="lib"
 				IgnoreDefaultLibraryNames="libc.lib"
-				ModuleDefinitionFile=".\mpich2.def"
-				ProgramDatabaseFile=".\$(ConfigurationName)/mpich2p.pdb"
+				ModuleDefinitionFile=".\mpich.def"
+				ProgramDatabaseFile=".\$(ConfigurationName)/mpichp.pdb"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"
-				ImportLibrary=".\$(ConfigurationName)/mpich2p.lib"
+				ImportLibrary=".\$(ConfigurationName)/mpichp.lib"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -724,8 +724,8 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				Description="copying mpich2p.dll to system32 directory"
-				CommandLine="copy lib\mpich2p.dll %SystemRoot%\system32\mpich2p.dll&#x0D;&#x0A;copy $(ConfigurationName)\mpich2p.lib lib\mpich2p.lib&#x0D;&#x0A;"
+				Description="copying mpichp.dll to system32 directory"
+				CommandLine="copy lib\mpichp.dll %SystemRoot%\system32\mpichp.dll&#x0D;&#x0A;copy $(ConfigurationName)\mpichp.lib lib\mpichp.lib&#x0D;&#x0A;"
 			/>
 		</Configuration>
 		<Configuration
@@ -756,7 +756,7 @@
 				MkTypLibCompatible="true"
 				SuppressStartupBanner="true"
 				TargetEnvironment="1"
-				TypeLibraryName=".\$(ConfigurationName)/mpich2.tlb"
+				TypeLibraryName=".\$(ConfigurationName)/mpich.tlb"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
@@ -766,7 +766,7 @@
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
 				UsePrecompiledHeader="0"
-				PrecompiledHeaderFile=".\$(ConfigurationName)/mpich2.pch"
+				PrecompiledHeaderFile=".\$(ConfigurationName)/mpich.pch"
 				AssemblerListingLocation=".\$(ConfigurationName)/"
 				ObjectFile=".\$(ConfigurationName)/"
 				ProgramDataBaseFileName=".\$(ConfigurationName)/"
@@ -791,14 +791,14 @@
 				Name="VCLinkerTool"
 				AdditionalOptions="/MACHINE:I386"
 				AdditionalDependencies="activeds.lib adsiid.lib netapi32.lib ntdsapi.lib secur32.lib smpd_utild.lib dbgd.lib rlogd.lib sockpd.lib ch3ssmpd.lib pmid.lib mswsock.lib ws2_32.lib odbc32.lib odbccp32.lib rpcrt4.lib mpr.lib crypt32.lib"
-				OutputFile="lib/mpich2ssmpd.dll"
+				OutputFile="lib/mpichssmpd.dll"
 				LinkIncremental="2"
 				SuppressStartupBanner="true"
 				AdditionalLibraryDirectories="lib"
-				ModuleDefinitionFile=".\mpich2.def"
+				ModuleDefinitionFile=".\mpich.def"
 				GenerateDebugInformation="true"
-				ProgramDatabaseFile=".\$(ConfigurationName)/mpich2ssmpd.pdb"
-				ImportLibrary=".\$(ConfigurationName)/mpich2ssmpd.lib"
+				ProgramDatabaseFile=".\$(ConfigurationName)/mpichssmpd.pdb"
+				ImportLibrary=".\$(ConfigurationName)/mpichssmpd.lib"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -823,8 +823,8 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				Description="copying mpich2ssmpd.dll to system32 directory"
-				CommandLine="copy lib\mpich2ssmpd.dll %SystemRoot%\system32\mpich2ssmpd.dll&#x0D;&#x0A;copy $(ConfigurationName)\mpich2ssmpd.lib lib\mpich2ssmpd.lib&#x0D;&#x0A;"
+				Description="copying mpichssmpd.dll to system32 directory"
+				CommandLine="copy lib\mpichssmpd.dll %SystemRoot%\system32\mpichssmpd.dll&#x0D;&#x0A;copy $(ConfigurationName)\mpichssmpd.lib lib\mpichssmpd.lib&#x0D;&#x0A;"
 			/>
 		</Configuration>
 		<Configuration
@@ -855,7 +855,7 @@
 				MkTypLibCompatible="true"
 				SuppressStartupBanner="true"
 				TargetEnvironment="1"
-				TypeLibraryName=".\$(ConfigurationName)/mpich2.tlb"
+				TypeLibraryName=".\$(ConfigurationName)/mpich.tlb"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
@@ -869,7 +869,7 @@
 				BufferSecurityCheck="false"
 				EnableFunctionLevelLinking="true"
 				UsePrecompiledHeader="0"
-				PrecompiledHeaderFile=".\$(ConfigurationName)/mpich2.pch"
+				PrecompiledHeaderFile=".\$(ConfigurationName)/mpich.pch"
 				AssemblerListingLocation=".\$(ConfigurationName)/"
 				ObjectFile=".\$(ConfigurationName)/"
 				ProgramDataBaseFileName=".\$(ConfigurationName)/"
@@ -893,16 +893,16 @@
 				Name="VCLinkerTool"
 				AdditionalOptions="/MACHINE:I386"
 				AdditionalDependencies="activeds.lib adsiid.lib netapi32.lib ntdsapi.lib secur32.lib smpd_util.lib dbg.lib sockpl.lib ch3sockpl.lib pmi.lib rlog.lib mswsock.lib ws2_32.lib odbc32.lib odbccp32.lib rpcrt4.lib mpr.lib crypt32.lib"
-				OutputFile="lib/mpich2pl.dll"
+				OutputFile="lib/mpichpl.dll"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
 				AdditionalLibraryDirectories="lib"
 				IgnoreDefaultLibraryNames="libc.lib"
-				ModuleDefinitionFile=".\mpich2.def"
-				ProgramDatabaseFile=".\$(ConfigurationName)/mpich2pl.pdb"
+				ModuleDefinitionFile=".\mpich.def"
+				ProgramDatabaseFile=".\$(ConfigurationName)/mpichpl.pdb"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"
-				ImportLibrary=".\$(ConfigurationName)/mpich2pl.lib"
+				ImportLibrary=".\$(ConfigurationName)/mpichpl.lib"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -927,8 +927,8 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				Description="copying mpich2pl.dll to system32 directory"
-				CommandLine="copy lib\mpich2pl.dll %SystemRoot%\system32\mpich2pl.dll&#x0D;&#x0A;copy $(ConfigurationName)\mpich2pl.lib lib\mpich2pl.lib&#x0D;&#x0A;"
+				Description="copying mpichpl.dll to system32 directory"
+				CommandLine="copy lib\mpichpl.dll %SystemRoot%\system32\mpichpl.dll&#x0D;&#x0A;copy $(ConfigurationName)\mpichpl.lib lib\mpichpl.lib&#x0D;&#x0A;"
 			/>
 		</Configuration>
 		<Configuration
@@ -959,7 +959,7 @@
 				MkTypLibCompatible="true"
 				SuppressStartupBanner="true"
 				TargetEnvironment="1"
-				TypeLibraryName=".\$(ConfigurationName)/mpich2.tlb"
+				TypeLibraryName=".\$(ConfigurationName)/mpich.tlb"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
@@ -969,7 +969,7 @@
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
 				UsePrecompiledHeader="0"
-				PrecompiledHeaderFile=".\$(ConfigurationName)/mpich2.pch"
+				PrecompiledHeaderFile=".\$(ConfigurationName)/mpich.pch"
 				AssemblerListingLocation=".\$(ConfigurationName)/"
 				ObjectFile=".\$(ConfigurationName)/"
 				ProgramDataBaseFileName=".\$(ConfigurationName)/"
@@ -994,14 +994,14 @@
 				Name="VCLinkerTool"
 				AdditionalOptions="/MACHINE:I386"
 				AdditionalDependencies="activeds.lib adsiid.lib netapi32.lib ntdsapi.lib secur32.lib smpd_utild.lib sockd.lib dbgd.lib ch3sshmd.lib pmid.lib mswsock.lib ws2_32.lib odbc32.lib odbccp32.lib rpcrt4.lib mpr.lib crypt32.lib"
-				OutputFile="lib/mpich2sshmd.dll"
+				OutputFile="lib/mpichsshmd.dll"
 				LinkIncremental="2"
 				SuppressStartupBanner="true"
 				AdditionalLibraryDirectories="lib"
-				ModuleDefinitionFile=".\mpich2.def"
+				ModuleDefinitionFile=".\mpich.def"
 				GenerateDebugInformation="true"
-				ProgramDatabaseFile=".\$(ConfigurationName)/mpich2sshmd.pdb"
-				ImportLibrary=".\$(ConfigurationName)/mpich2sshmd.lib"
+				ProgramDatabaseFile=".\$(ConfigurationName)/mpichsshmd.pdb"
+				ImportLibrary=".\$(ConfigurationName)/mpichsshmd.lib"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -1026,8 +1026,8 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				Description="copying mpich2sshmd.dll to system32 directory"
-				CommandLine="copy lib\mpich2sshmd.dll %SystemRoot%\system32\mpich2sshmd.dll&#x0D;&#x0A;copy $(ConfigurationName)\mpich2sshmd.lib lib\mpich2sshmd.lib&#x0D;&#x0A;"
+				Description="copying mpichsshmd.dll to system32 directory"
+				CommandLine="copy lib\mpichsshmd.dll %SystemRoot%\system32\mpichsshmd.dll&#x0D;&#x0A;copy $(ConfigurationName)\mpichsshmd.lib lib\mpichsshmd.lib&#x0D;&#x0A;"
 			/>
 		</Configuration>
 		<Configuration
@@ -1058,7 +1058,7 @@
 				MkTypLibCompatible="true"
 				SuppressStartupBanner="true"
 				TargetEnvironment="1"
-				TypeLibraryName=".\$(ConfigurationName)/mpich2.tlb"
+				TypeLibraryName=".\$(ConfigurationName)/mpich.tlb"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
@@ -1068,7 +1068,7 @@
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
 				UsePrecompiledHeader="0"
-				PrecompiledHeaderFile=".\$(ConfigurationName)/mpich2.pch"
+				PrecompiledHeaderFile=".\$(ConfigurationName)/mpich.pch"
 				AssemblerListingLocation=".\$(ConfigurationName)/"
 				ObjectFile=".\$(ConfigurationName)/"
 				ProgramDataBaseFileName=".\$(ConfigurationName)/"
@@ -1093,14 +1093,14 @@
 				Name="VCLinkerTool"
 				AdditionalOptions="/MACHINE:I386"
 				AdditionalDependencies="activeds.lib adsiid.lib netapi32.lib ntdsapi.lib secur32.lib smpd_utild.lib sockpd.lib dbgd.lib rlogd.lib ch3sshmpd.lib pmid.lib mswsock.lib ws2_32.lib odbc32.lib odbccp32.lib rpcrt4.lib mpr.lib crypt32.lib"
-				OutputFile="lib/mpich2sshmpd.dll"
+				OutputFile="lib/mpichsshmpd.dll"
 				LinkIncremental="2"
 				SuppressStartupBanner="true"
 				AdditionalLibraryDirectories="lib"
-				ModuleDefinitionFile=".\mpich2.def"
+				ModuleDefinitionFile=".\mpich.def"
 				GenerateDebugInformation="true"
-				ProgramDatabaseFile=".\$(ConfigurationName)/mpich2sshmpd.pdb"
-				ImportLibrary=".\$(ConfigurationName)/mpich2sshmpd.lib"
+				ProgramDatabaseFile=".\$(ConfigurationName)/mpichsshmpd.pdb"
+				ImportLibrary=".\$(ConfigurationName)/mpichsshmpd.lib"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -1125,8 +1125,8 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				Description="copying mpich2sshmpd.dll to system32 directory"
-				CommandLine="copy lib\mpich2sshmpd.dll %SystemRoot%\system32\mpich2sshmpd.dll&#x0D;&#x0A;copy $(ConfigurationName)\mpich2sshmpd.lib lib\mpich2sshmpd.lib&#x0D;&#x0A;"
+				Description="copying mpichsshmpd.dll to system32 directory"
+				CommandLine="copy lib\mpichsshmpd.dll %SystemRoot%\system32\mpichsshmpd.dll&#x0D;&#x0A;copy $(ConfigurationName)\mpichsshmpd.lib lib\mpichsshmpd.lib&#x0D;&#x0A;"
 			/>
 		</Configuration>
 		<Configuration
@@ -1157,7 +1157,7 @@
 				MkTypLibCompatible="true"
 				SuppressStartupBanner="true"
 				TargetEnvironment="1"
-				TypeLibraryName=".\$(ConfigurationName)/mpich2.tlb"
+				TypeLibraryName=".\$(ConfigurationName)/mpich.tlb"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
@@ -1168,7 +1168,7 @@
 				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"
 				UsePrecompiledHeader="0"
-				PrecompiledHeaderFile=".\$(ConfigurationName)/mpich2.pch"
+				PrecompiledHeaderFile=".\$(ConfigurationName)/mpich.pch"
 				AssemblerListingLocation=".\$(ConfigurationName)/"
 				ObjectFile=".\$(ConfigurationName)/"
 				ProgramDataBaseFileName=".\$(ConfigurationName)/"
@@ -1192,13 +1192,13 @@
 				Name="VCLinkerTool"
 				AdditionalOptions="/MACHINE:I386"
 				AdditionalDependencies="activeds.lib adsiid.lib netapi32.lib ntdsapi.lib secur32.lib smpd_util.lib sock.lib dbg.lib ch3sshm.lib pmi.lib mswsock.lib ws2_32.lib odbc32.lib odbccp32.lib rpcrt4.lib mpr.lib crypt32.lib"
-				OutputFile="lib/mpich2sshm.dll"
+				OutputFile="lib/mpichsshm.dll"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
 				AdditionalLibraryDirectories="lib"
-				ModuleDefinitionFile=".\mpich2.def"
-				ProgramDatabaseFile=".\$(ConfigurationName)/mpich2sshm.pdb"
-				ImportLibrary=".\$(ConfigurationName)/mpich2sshm.lib"
+				ModuleDefinitionFile=".\mpich.def"
+				ProgramDatabaseFile=".\$(ConfigurationName)/mpichsshm.pdb"
+				ImportLibrary=".\$(ConfigurationName)/mpichsshm.lib"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -1223,8 +1223,8 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				Description="copying mpich2sshm.dll to system32 directory"
-				CommandLine="copy lib\mpich2sshm.dll %SystemRoot%\system32\mpich2sshm.dll&#x0D;&#x0A;copy $(ConfigurationName)\mpich2sshm.lib lib\mpich2sshm.lib&#x0D;&#x0A;"
+				Description="copying mpichsshm.dll to system32 directory"
+				CommandLine="copy lib\mpichsshm.dll %SystemRoot%\system32\mpichsshm.dll&#x0D;&#x0A;copy $(ConfigurationName)\mpichsshm.lib lib\mpichsshm.lib&#x0D;&#x0A;"
 			/>
 		</Configuration>
 		<Configuration
@@ -1255,7 +1255,7 @@
 				MkTypLibCompatible="true"
 				SuppressStartupBanner="true"
 				TargetEnvironment="1"
-				TypeLibraryName=".\$(ConfigurationName)/mpich2.tlb"
+				TypeLibraryName=".\$(ConfigurationName)/mpich.tlb"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
@@ -1265,7 +1265,7 @@
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
 				UsePrecompiledHeader="0"
-				PrecompiledHeaderFile=".\$(ConfigurationName)/mpich2.pch"
+				PrecompiledHeaderFile=".\$(ConfigurationName)/mpich.pch"
 				AssemblerListingLocation=".\$(ConfigurationName)/"
 				ObjectFile=".\$(ConfigurationName)/"
 				ProgramDataBaseFileName=".\$(ConfigurationName)/"
@@ -1290,16 +1290,16 @@
 				Name="VCLinkerTool"
 				AdditionalOptions="/MACHINE:I386"
 				AdditionalDependencies="activeds.lib adsiid.lib netapi32.lib ntdsapi.lib secur32.lib smpd_utild.lib sockd.lib dbgd.lib ch3ibd.lib pmid.lib mswsock.lib ws2_32.lib odbc32.lib odbccp32.lib rpcrt4.lib mpr.lib vapi.lib vapi_common.lib crypt32.lib"
-				OutputFile="lib/mpich2ibd.dll"
+				OutputFile="lib/mpichibd.dll"
 				LinkIncremental="2"
 				SuppressStartupBanner="true"
 				AdditionalLibraryDirectories="lib,c:\mellanox\lib\debug"
 				IgnoreAllDefaultLibraries="false"
 				IgnoreDefaultLibraryNames="libcd.lib"
-				ModuleDefinitionFile=".\mpich2.def"
+				ModuleDefinitionFile=".\mpich.def"
 				GenerateDebugInformation="true"
-				ProgramDatabaseFile=".\$(ConfigurationName)/mpich2ibd.pdb"
-				ImportLibrary=".\$(ConfigurationName)/mpich2ibd.lib"
+				ProgramDatabaseFile=".\$(ConfigurationName)/mpichibd.pdb"
+				ImportLibrary=".\$(ConfigurationName)/mpichibd.lib"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -1324,8 +1324,8 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				Description="copying mpich2ibd.dll to system32 directory"
-				CommandLine="copy lib\mpich2ibd.dll %SystemRoot%\system32\mpich2ibd.dll&#x0D;&#x0A;copy $(ConfigurationName)\mpich2ibd.lib lib\mpich2ibd.lib&#x0D;&#x0A;"
+				Description="copying mpichibd.dll to system32 directory"
+				CommandLine="copy lib\mpichibd.dll %SystemRoot%\system32\mpichibd.dll&#x0D;&#x0A;copy $(ConfigurationName)\mpichibd.lib lib\mpichibd.lib&#x0D;&#x0A;"
 			/>
 		</Configuration>
 		<Configuration
@@ -1356,7 +1356,7 @@
 				MkTypLibCompatible="true"
 				SuppressStartupBanner="true"
 				TargetEnvironment="1"
-				TypeLibraryName=".\$(ConfigurationName)/mpich2.tlb"
+				TypeLibraryName=".\$(ConfigurationName)/mpich.tlb"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
@@ -1370,7 +1370,7 @@
 				BufferSecurityCheck="false"
 				EnableFunctionLevelLinking="true"
 				UsePrecompiledHeader="0"
-				PrecompiledHeaderFile=".\$(ConfigurationName)/mpich2.pch"
+				PrecompiledHeaderFile=".\$(ConfigurationName)/mpich.pch"
 				AssemblerListingLocation=".\$(ConfigurationName)/"
 				ObjectFile=".\$(ConfigurationName)/"
 				ProgramDataBaseFileName=".\$(ConfigurationName)/"
@@ -1394,16 +1394,16 @@
 				Name="VCLinkerTool"
 				AdditionalOptions="/MACHINE:I386"
 				AdditionalDependencies="activeds.lib adsiid.lib netapi32.lib ntdsapi.lib secur32.lib smpd_util.lib dbg.lib sock.lib ch3ib.lib pmi.lib mswsock.lib ws2_32.lib odbc32.lib odbccp32.lib rpcrt4.lib mpr.lib vapi.lib vapi_common.lib crypt32.lib"
-				OutputFile="lib/mpich2ib.dll"
+				OutputFile="lib/mpichib.dll"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
 				AdditionalLibraryDirectories="lib,c:\mellanox\lib\release"
 				IgnoreDefaultLibraryNames="libc.lib"
-				ModuleDefinitionFile=".\mpich2.def"
-				ProgramDatabaseFile=".\$(ConfigurationName)/mpich2ib.pdb"
+				ModuleDefinitionFile=".\mpich.def"
+				ProgramDatabaseFile=".\$(ConfigurationName)/mpichib.pdb"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"
-				ImportLibrary=".\$(ConfigurationName)/mpich2ib.lib"
+				ImportLibrary=".\$(ConfigurationName)/mpichib.lib"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -1428,8 +1428,8 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				Description="copying mpich2ib.dll to system32 directory"
-				CommandLine="copy lib\mpich2ib.dll %SystemRoot%\system32\mpich2ib.dll&#x0D;&#x0A;copy $(ConfigurationName)\mpich2ib.lib lib\mpich2ib.lib&#x0D;&#x0A;"
+				Description="copying mpichib.dll to system32 directory"
+				CommandLine="copy lib\mpichib.dll %SystemRoot%\system32\mpichib.dll&#x0D;&#x0A;copy $(ConfigurationName)\mpichib.lib lib\mpichib.lib&#x0D;&#x0A;"
 			/>
 		</Configuration>
 		<Configuration
@@ -1460,7 +1460,7 @@
 				MkTypLibCompatible="true"
 				SuppressStartupBanner="true"
 				TargetEnvironment="1"
-				TypeLibraryName=".\$(ConfigurationName)/mpich2.tlb"
+				TypeLibraryName=".\$(ConfigurationName)/mpich.tlb"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
@@ -1474,7 +1474,7 @@
 				BufferSecurityCheck="false"
 				EnableFunctionLevelLinking="true"
 				UsePrecompiledHeader="0"
-				PrecompiledHeaderFile=".\$(ConfigurationName)/mpich2.pch"
+				PrecompiledHeaderFile=".\$(ConfigurationName)/mpich.pch"
 				AssemblerListingLocation=".\$(ConfigurationName)/"
 				ObjectFile=".\$(ConfigurationName)/"
 				ProgramDataBaseFileName=".\$(ConfigurationName)/"
@@ -1498,13 +1498,13 @@
 				Name="VCLinkerTool"
 				AdditionalOptions="/MACHINE:I386"
 				AdditionalDependencies="activeds.lib adsiid.lib netapi32.lib ntdsapi.lib secur32.lib rlog.lib smpd_util.lib sockp.lib ch3shmp.lib cxx.lib dbg.lib pmi.lib mswsock.lib ws2_32.lib odbc32.lib odbccp32.lib rpcrt4.lib mpr.lib crypt32.lib"
-				OutputFile="lib/mpich2shmp.dll"
+				OutputFile="lib/mpichshmp.dll"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
 				AdditionalLibraryDirectories="lib"
-				ModuleDefinitionFile=".\mpich2.def"
-				ProgramDatabaseFile=".\$(ConfigurationName)/mpich2shmp.pdb"
-				ImportLibrary=".\$(ConfigurationName)/mpich2shmp.lib"
+				ModuleDefinitionFile=".\mpich.def"
+				ProgramDatabaseFile=".\$(ConfigurationName)/mpichshmp.pdb"
+				ImportLibrary=".\$(ConfigurationName)/mpichshmp.lib"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -1529,8 +1529,8 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				Description="copying mpich2shmp.dll to system32 directory"
-				CommandLine="copy lib\mpich2shmp.dll %SystemRoot%\system32\mpich2shmp.dll&#x0D;&#x0A;copy $(ConfigurationName)\mpich2shmp.lib lib\mpich2shmp.lib&#x0D;&#x0A;"
+				Description="copying mpichshmp.dll to system32 directory"
+				CommandLine="copy lib\mpichshmp.dll %SystemRoot%\system32\mpichshmp.dll&#x0D;&#x0A;copy $(ConfigurationName)\mpichshmp.lib lib\mpichshmp.lib&#x0D;&#x0A;"
 			/>
 		</Configuration>
 		<Configuration
@@ -1561,7 +1561,7 @@
 				MkTypLibCompatible="true"
 				SuppressStartupBanner="true"
 				TargetEnvironment="1"
-				TypeLibraryName=".\$(ConfigurationName)/mpich2.tlb"
+				TypeLibraryName=".\$(ConfigurationName)/mpich.tlb"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
@@ -1572,7 +1572,7 @@
 				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"
 				UsePrecompiledHeader="0"
-				PrecompiledHeaderFile=".\$(ConfigurationName)/mpich2.pch"
+				PrecompiledHeaderFile=".\$(ConfigurationName)/mpich.pch"
 				AssemblerListingLocation=".\$(ConfigurationName)/"
 				ObjectFile=".\$(ConfigurationName)/"
 				ProgramDataBaseFileName=".\$(ConfigurationName)/"
@@ -1596,13 +1596,13 @@
 				Name="VCLinkerTool"
 				AdditionalOptions="/MACHINE:I386"
 				AdditionalDependencies="activeds.lib adsiid.lib netapi32.lib ntdsapi.lib secur32.lib mpl.lib rlog.lib smpd_util.lib dbg.lib sockp.lib ch3ssmp.lib pmi.lib mswsock.lib ws2_32.lib odbc32.lib odbccp32.lib rpcrt4.lib mpr.lib crypt32.lib"
-				OutputFile="lib/mpich2ssmp.dll"
+				OutputFile="lib/mpichssmp.dll"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
 				AdditionalLibraryDirectories="lib"
-				ModuleDefinitionFile=".\mpich2.def"
-				ProgramDatabaseFile=".\$(ConfigurationName)/mpich2ssmp.pdb"
-				ImportLibrary=".\$(ConfigurationName)/mpich2ssmp.lib"
+				ModuleDefinitionFile=".\mpich.def"
+				ProgramDatabaseFile=".\$(ConfigurationName)/mpichssmp.pdb"
+				ImportLibrary=".\$(ConfigurationName)/mpichssmp.lib"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -1629,8 +1629,8 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				Description="copying mpich2ssmp.dll to system32 directory"
-				CommandLine="copy lib\mpich2ssmp.dll %SystemRoot%\system32\mpich2ssmp.dll&#x0D;&#x0A;copy $(ConfigurationName)\mpich2ssmp.lib lib\mpich2ssmp.lib&#x0D;&#x0A;"
+				Description="copying mpichssmp.dll to system32 directory"
+				CommandLine="copy lib\mpichssmp.dll %SystemRoot%\system32\mpichssmp.dll&#x0D;&#x0A;copy $(ConfigurationName)\mpichssmp.lib lib\mpichssmp.lib&#x0D;&#x0A;"
 			/>
 		</Configuration>
 		<Configuration
@@ -1661,7 +1661,7 @@
 				MkTypLibCompatible="true"
 				SuppressStartupBanner="true"
 				TargetEnvironment="1"
-				TypeLibraryName=".\$(ConfigurationName)/mpich2.tlb"
+				TypeLibraryName=".\$(ConfigurationName)/mpich.tlb"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
@@ -1672,7 +1672,7 @@
 				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"
 				UsePrecompiledHeader="0"
-				PrecompiledHeaderFile=".\$(ConfigurationName)/mpich2.pch"
+				PrecompiledHeaderFile=".\$(ConfigurationName)/mpich.pch"
 				AssemblerListingLocation=".\$(ConfigurationName)/"
 				ObjectFile=".\$(ConfigurationName)/"
 				ProgramDataBaseFileName=".\$(ConfigurationName)/"
@@ -1696,13 +1696,13 @@
 				Name="VCLinkerTool"
 				AdditionalOptions="/MACHINE:I386"
 				AdditionalDependencies="activeds.lib adsiid.lib netapi32.lib ntdsapi.lib secur32.lib rlog.lib smpd_util.lib sockp.lib dbg.lib ch3sshmp.lib pmi.lib mswsock.lib ws2_32.lib odbc32.lib odbccp32.lib rpcrt4.lib mpr.lib crypt32.lib"
-				OutputFile="lib/mpich2sshmp.dll"
+				OutputFile="lib/mpichsshmp.dll"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
 				AdditionalLibraryDirectories="lib"
-				ModuleDefinitionFile=".\mpich2.def"
-				ProgramDatabaseFile=".\$(ConfigurationName)/mpich2sshmp.pdb"
-				ImportLibrary=".\$(ConfigurationName)/mpich2sshmp.lib"
+				ModuleDefinitionFile=".\mpich.def"
+				ProgramDatabaseFile=".\$(ConfigurationName)/mpichsshmp.pdb"
+				ImportLibrary=".\$(ConfigurationName)/mpichsshmp.lib"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -1727,8 +1727,8 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				Description="copying mpich2sshmp.dll to system32 directory"
-				CommandLine="copy lib\mpich2sshmp.dll %SystemRoot%\system32\mpich2sshmp.dll&#x0D;&#x0A;copy $(ConfigurationName)\mpich2sshmp.lib lib\mpich2sshmp.lib&#x0D;&#x0A;"
+				Description="copying mpichsshmp.dll to system32 directory"
+				CommandLine="copy lib\mpichsshmp.dll %SystemRoot%\system32\mpichsshmp.dll&#x0D;&#x0A;copy $(ConfigurationName)\mpichsshmp.lib lib\mpichsshmp.lib&#x0D;&#x0A;"
 			/>
 		</Configuration>
 		<Configuration
@@ -1759,7 +1759,7 @@
 				MkTypLibCompatible="true"
 				SuppressStartupBanner="true"
 				TargetEnvironment="1"
-				TypeLibraryName=".\$(ConfigurationName)/mpich2.tlb"
+				TypeLibraryName=".\$(ConfigurationName)/mpich.tlb"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
@@ -1773,7 +1773,7 @@
 				BufferSecurityCheck="false"
 				EnableFunctionLevelLinking="true"
 				UsePrecompiledHeader="0"
-				PrecompiledHeaderFile=".\$(ConfigurationName)/mpich2.pch"
+				PrecompiledHeaderFile=".\$(ConfigurationName)/mpich.pch"
 				AssemblerListingLocation=".\$(ConfigurationName)/"
 				ObjectFile=".\$(ConfigurationName)/"
 				ProgramDataBaseFileName=".\$(ConfigurationName)/"
@@ -1797,16 +1797,16 @@
 				Name="VCLinkerTool"
 				AdditionalOptions="/MACHINE:I386"
 				AdditionalDependencies="activeds.lib adsiid.lib netapi32.lib ntdsapi.lib secur32.lib rlog.lib smpd_util.lib dbg.lib sockp.lib ch3ibp.lib pmi.lib mswsock.lib ws2_32.lib odbc32.lib odbccp32.lib rpcrt4.lib mpr.lib vapi.lib vapi_common.lib crypt32.lib"
-				OutputFile="lib/mpich2ibp.dll"
+				OutputFile="lib/mpichibp.dll"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
 				AdditionalLibraryDirectories="lib,c:\mellanox\lib\release"
 				IgnoreDefaultLibraryNames="libc.lib"
-				ModuleDefinitionFile=".\mpich2.def"
-				ProgramDatabaseFile=".\$(ConfigurationName)/mpich2ibp.pdb"
+				ModuleDefinitionFile=".\mpich.def"
+				ProgramDatabaseFile=".\$(ConfigurationName)/mpichibp.pdb"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"
-				ImportLibrary=".\$(ConfigurationName)/mpich2ibp.lib"
+				ImportLibrary=".\$(ConfigurationName)/mpichibp.lib"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -1831,8 +1831,8 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				Description="copying mpich2ibp.dll to system32 directory"
-				CommandLine="copy lib\mpich2ibp.dll %SystemRoot%\system32\mpich2ibp.dll&#x0D;&#x0A;copy $(ConfigurationName)\mpich2ibp.lib lib\mpich2ibp.lib&#x0D;&#x0A;"
+				Description="copying mpichibp.dll to system32 directory"
+				CommandLine="copy lib\mpichibp.dll %SystemRoot%\system32\mpichibp.dll&#x0D;&#x0A;copy $(ConfigurationName)\mpichibp.lib lib\mpichibp.lib&#x0D;&#x0A;"
 			/>
 		</Configuration>
 		<Configuration
@@ -1863,7 +1863,7 @@
 				MkTypLibCompatible="true"
 				SuppressStartupBanner="true"
 				TargetEnvironment="1"
-				TypeLibraryName=".\$(ConfigurationName)/mpich2.tlb"
+				TypeLibraryName=".\$(ConfigurationName)/mpich.tlb"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
@@ -1873,7 +1873,7 @@
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
 				UsePrecompiledHeader="0"
-				PrecompiledHeaderFile=".\$(ConfigurationName)/mpich2.pch"
+				PrecompiledHeaderFile=".\$(ConfigurationName)/mpich.pch"
 				AssemblerListingLocation=".\$(ConfigurationName)/"
 				ObjectFile=".\$(ConfigurationName)/"
 				ProgramDataBaseFileName=".\$(ConfigurationName)/"
@@ -1898,14 +1898,14 @@
 				Name="VCLinkerTool"
 				AdditionalOptions="/MACHINE:I386"
 				AdditionalDependencies="activeds.lib adsiid.lib netapi32.lib ntdsapi.lib secur32.lib smpd_utild.lib dbgmtd.lib sockmtd.lib ch3essmd.lib pmid.lib mswsock.lib ws2_32.lib odbc32.lib odbccp32.lib rpcrt4.lib mpr.lib crypt32.lib"
-				OutputFile="lib/mpich2essmd.dll"
+				OutputFile="lib/mpichessmd.dll"
 				LinkIncremental="2"
 				SuppressStartupBanner="true"
 				AdditionalLibraryDirectories="lib"
-				ModuleDefinitionFile=".\mpich2.def"
+				ModuleDefinitionFile=".\mpich.def"
 				GenerateDebugInformation="true"
-				ProgramDatabaseFile=".\$(ConfigurationName)/mpich2essmd.pdb"
-				ImportLibrary=".\$(ConfigurationName)/mpich2essmd.lib"
+				ProgramDatabaseFile=".\$(ConfigurationName)/mpichessmd.pdb"
+				ImportLibrary=".\$(ConfigurationName)/mpichessmd.lib"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -1930,8 +1930,8 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				Description="copying mpich2essmd.dll to system32 directory"
-				CommandLine="copy lib\mpich2essmd.dll %SystemRoot%\system32\mpich2essmd.dll&#x0D;&#x0A;copy $(ConfigurationName)\mpich2essmd.lib lib\mpich2essmd.lib&#x0D;&#x0A;"
+				Description="copying mpichessmd.dll to system32 directory"
+				CommandLine="copy lib\mpichessmd.dll %SystemRoot%\system32\mpichessmd.dll&#x0D;&#x0A;copy $(ConfigurationName)\mpichessmd.lib lib\mpichessmd.lib&#x0D;&#x0A;"
 			/>
 		</Configuration>
 		<Configuration
@@ -1962,7 +1962,7 @@
 				MkTypLibCompatible="true"
 				SuppressStartupBanner="true"
 				TargetEnvironment="1"
-				TypeLibraryName=".\$(ConfigurationName)/mpich2.tlb"
+				TypeLibraryName=".\$(ConfigurationName)/mpich.tlb"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
@@ -1973,7 +1973,7 @@
 				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"
 				UsePrecompiledHeader="0"
-				PrecompiledHeaderFile=".\$(ConfigurationName)/mpich2.pch"
+				PrecompiledHeaderFile=".\$(ConfigurationName)/mpich.pch"
 				AssemblerListingLocation=".\$(ConfigurationName)/"
 				ObjectFile=".\$(ConfigurationName)/"
 				ProgramDataBaseFileName=".\$(ConfigurationName)/"
@@ -1997,13 +1997,13 @@
 				Name="VCLinkerTool"
 				AdditionalOptions="/MACHINE:I386"
 				AdditionalDependencies="activeds.lib adsiid.lib netapi32.lib ntdsapi.lib secur32.lib smpd_util.lib dbgmt.lib sockmt.lib ch3essm.lib pmi.lib mswsock.lib ws2_32.lib odbc32.lib odbccp32.lib rpcrt4.lib mpr.lib crypt32.lib"
-				OutputFile="lib/mpich2essm.dll"
+				OutputFile="lib/mpichessm.dll"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
 				AdditionalLibraryDirectories="lib"
-				ModuleDefinitionFile=".\mpich2.def"
-				ProgramDatabaseFile=".\$(ConfigurationName)/mpich2essm.pdb"
-				ImportLibrary=".\$(ConfigurationName)/mpich2essm.lib"
+				ModuleDefinitionFile=".\mpich.def"
+				ProgramDatabaseFile=".\$(ConfigurationName)/mpichessm.pdb"
+				ImportLibrary=".\$(ConfigurationName)/mpichessm.lib"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -2028,8 +2028,8 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				Description="copying mpich2essm.dll to system32 directory"
-				CommandLine="copy lib\mpich2essm.dll %SystemRoot%\system32\mpich2essm.dll&#x0D;&#x0A;copy $(ConfigurationName)\mpich2essm.lib lib\mpich2essm.lib&#x0D;&#x0A;"
+				Description="copying mpichessm.dll to system32 directory"
+				CommandLine="copy lib\mpichessm.dll %SystemRoot%\system32\mpichessm.dll&#x0D;&#x0A;copy $(ConfigurationName)\mpichessm.lib lib\mpichessm.lib&#x0D;&#x0A;"
 			/>
 		</Configuration>
 		<Configuration
@@ -2060,7 +2060,7 @@
 				MkTypLibCompatible="true"
 				SuppressStartupBanner="true"
 				TargetEnvironment="1"
-				TypeLibraryName=".\$(ConfigurationName)/mpich2.tlb"
+				TypeLibraryName=".\$(ConfigurationName)/mpich.tlb"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
@@ -2071,7 +2071,7 @@
 				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"
 				UsePrecompiledHeader="0"
-				PrecompiledHeaderFile=".\$(ConfigurationName)/mpich2.pch"
+				PrecompiledHeaderFile=".\$(ConfigurationName)/mpich.pch"
 				AssemblerListingLocation=".\$(ConfigurationName)/"
 				ObjectFile=".\$(ConfigurationName)/"
 				ProgramDataBaseFileName=".\$(ConfigurationName)/"
@@ -2095,13 +2095,13 @@
 				Name="VCLinkerTool"
 				AdditionalOptions="/MACHINE:I386"
 				AdditionalDependencies="activeds.lib adsiid.lib netapi32.lib ntdsapi.lib secur32.lib rlog.lib smpd_util.lib dbgmt.lib sockp3.lib ch3essmp.lib pmi.lib mswsock.lib ws2_32.lib odbc32.lib odbccp32.lib rpcrt4.lib mpr.lib crypt32.lib"
-				OutputFile="lib/mpich2essmp.dll"
+				OutputFile="lib/mpichessmp.dll"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
 				AdditionalLibraryDirectories="lib"
-				ModuleDefinitionFile=".\mpich2.def"
-				ProgramDatabaseFile=".\$(ConfigurationName)/mpich2essmp.pdb"
-				ImportLibrary=".\$(ConfigurationName)/mpich2essmp.lib"
+				ModuleDefinitionFile=".\mpich.def"
+				ProgramDatabaseFile=".\$(ConfigurationName)/mpichessmp.pdb"
+				ImportLibrary=".\$(ConfigurationName)/mpichessmp.lib"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -2126,8 +2126,8 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				Description="copying mpich2essmp.dll to system32 directory"
-				CommandLine="copy lib\mpich2essmp.dll %SystemRoot%\system32\mpich2essmp.dll&#x0D;&#x0A;copy $(ConfigurationName)\mpich2essmp.lib lib\mpich2essmp.lib&#x0D;&#x0A;"
+				Description="copying mpichessmp.dll to system32 directory"
+				CommandLine="copy lib\mpichessmp.dll %SystemRoot%\system32\mpichessmp.dll&#x0D;&#x0A;copy $(ConfigurationName)\mpichessmp.lib lib\mpichessmp.lib&#x0D;&#x0A;"
 			/>
 		</Configuration>
 		<Configuration
@@ -2158,7 +2158,7 @@
 				MkTypLibCompatible="true"
 				SuppressStartupBanner="true"
 				TargetEnvironment="1"
-				TypeLibraryName=".\$(ConfigurationName)/mpich2.tlb"
+				TypeLibraryName=".\$(ConfigurationName)/mpich.tlb"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
@@ -2168,7 +2168,7 @@
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
 				UsePrecompiledHeader="0"
-				PrecompiledHeaderFile=".\$(ConfigurationName)/mpich2.pch"
+				PrecompiledHeaderFile=".\$(ConfigurationName)/mpich.pch"
 				AssemblerListingLocation=".\$(ConfigurationName)/"
 				ObjectFile=".\$(ConfigurationName)/"
 				ProgramDataBaseFileName=".\$(ConfigurationName)/"
@@ -2193,16 +2193,16 @@
 				Name="VCLinkerTool"
 				AdditionalOptions="/MACHINE:I386"
 				AdditionalDependencies="activeds.lib adsiid.lib netapi32.lib ntdsapi.lib secur32.lib smpd_utild.lib dbgmtd.lib sockmtd.lib ch3sockmtd.lib pmid.lib mswsock.lib ws2_32.lib odbc32.lib odbccp32.lib rpcrt4.lib mpr.lib crypt32.lib"
-				OutputFile="lib/mpich2mtd.dll"
+				OutputFile="lib/mpichmtd.dll"
 				LinkIncremental="2"
 				SuppressStartupBanner="true"
 				AdditionalLibraryDirectories="lib"
 				IgnoreAllDefaultLibraries="false"
 				IgnoreDefaultLibraryNames="libcd.lib"
-				ModuleDefinitionFile=".\mpich2.def"
+				ModuleDefinitionFile=".\mpich.def"
 				GenerateDebugInformation="true"
-				ProgramDatabaseFile=".\$(ConfigurationName)/mpich2mtd.pdb"
-				ImportLibrary=".\$(ConfigurationName)/mpich2mtd.lib"
+				ProgramDatabaseFile=".\$(ConfigurationName)/mpichmtd.pdb"
+				ImportLibrary=".\$(ConfigurationName)/mpichmtd.lib"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -2227,8 +2227,8 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				Description="copying mpich2mtd.dll to system32 directory"
-				CommandLine="copy lib\mpich2mtd.dll %SystemRoot%\system32\mpich2mtd.dll&#x0D;&#x0A;copy $(ConfigurationName)\mpich2mtd.lib lib\mpich2mtd.lib&#x0D;&#x0A;"
+				Description="copying mpichmtd.dll to system32 directory"
+				CommandLine="copy lib\mpichmtd.dll %SystemRoot%\system32\mpichmtd.dll&#x0D;&#x0A;copy $(ConfigurationName)\mpichmtd.lib lib\mpichmtd.lib&#x0D;&#x0A;"
 			/>
 		</Configuration>
 		<Configuration
@@ -2259,7 +2259,7 @@
 				MkTypLibCompatible="true"
 				SuppressStartupBanner="true"
 				TargetEnvironment="1"
-				TypeLibraryName=".\$(ConfigurationName)/mpich2.tlb"
+				TypeLibraryName=".\$(ConfigurationName)/mpich.tlb"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
@@ -2273,7 +2273,7 @@
 				BufferSecurityCheck="false"
 				EnableFunctionLevelLinking="true"
 				UsePrecompiledHeader="0"
-				PrecompiledHeaderFile=".\$(ConfigurationName)/mpich2.pch"
+				PrecompiledHeaderFile=".\$(ConfigurationName)/mpich.pch"
 				AssemblerListingLocation=".\$(ConfigurationName)/"
 				ObjectFile=".\$(ConfigurationName)/"
 				ProgramDataBaseFileName=".\$(ConfigurationName)/"
@@ -2297,16 +2297,16 @@
 				Name="VCLinkerTool"
 				AdditionalOptions="/MACHINE:I386"
 				AdditionalDependencies="activeds.lib adsiid.lib netapi32.lib ntdsapi.lib secur32.lib smpd_util.lib dbgmt.lib sockmt.lib ch3sockmt.lib mpl.lib pmi.lib mswsock.lib ws2_32.lib odbc32.lib odbccp32.lib rpcrt4.lib mpr.lib crypt32.lib"
-				OutputFile="lib/mpich2mt.dll"
+				OutputFile="lib/mpichmt.dll"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
 				AdditionalLibraryDirectories="lib"
 				IgnoreDefaultLibraryNames="libc.lib"
-				ModuleDefinitionFile=".\mpich2.def"
-				ProgramDatabaseFile=".\$(ConfigurationName)/mpich2mt.pdb"
+				ModuleDefinitionFile=".\mpich.def"
+				ProgramDatabaseFile=".\$(ConfigurationName)/mpichmt.pdb"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"
-				ImportLibrary=".\$(ConfigurationName)/mpich2mt.lib"
+				ImportLibrary=".\$(ConfigurationName)/mpichmt.lib"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -2333,8 +2333,8 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				Description="copying mpich2mt.dll to system32 directory"
-				CommandLine="copy lib\mpich2mt.dll %SystemRoot%\system32\mpich2mt.dll&#x0D;&#x0A;copy $(ConfigurationName)\mpich2mt.lib lib\mpich2mt.lib&#x0D;&#x0A;"
+				Description="copying mpichmt.dll to system32 directory"
+				CommandLine="copy lib\mpichmt.dll %SystemRoot%\system32\mpichmt.dll&#x0D;&#x0A;copy $(ConfigurationName)\mpichmt.lib lib\mpichmt.lib&#x0D;&#x0A;"
 			/>
 		</Configuration>
 		<Configuration
@@ -2365,7 +2365,7 @@
 				MkTypLibCompatible="true"
 				SuppressStartupBanner="true"
 				TargetEnvironment="1"
-				TypeLibraryName=".\$(ConfigurationName)/mpich2.tlb"
+				TypeLibraryName=".\$(ConfigurationName)/mpich.tlb"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
@@ -2379,7 +2379,7 @@
 				BufferSecurityCheck="false"
 				EnableFunctionLevelLinking="true"
 				UsePrecompiledHeader="0"
-				PrecompiledHeaderFile=".\$(ConfigurationName)/mpich2.pch"
+				PrecompiledHeaderFile=".\$(ConfigurationName)/mpich.pch"
 				AssemblerListingLocation=".\$(ConfigurationName)/"
 				ObjectFile=".\$(ConfigurationName)/"
 				ProgramDataBaseFileName=".\$(ConfigurationName)/"
@@ -2403,16 +2403,16 @@
 				Name="VCLinkerTool"
 				AdditionalOptions="/MACHINE:I386"
 				AdditionalDependencies="activeds.lib adsiid.lib netapi32.lib ntdsapi.lib secur32.lib mpl.lib rlog.lib smpd_util.lib dbgmtp.lib sockmtp.lib ch3sockmtp.lib pmi.lib mswsock.lib ws2_32.lib odbc32.lib odbccp32.lib rpcrt4.lib mpr.lib crypt32.lib"
-				OutputFile="lib/mpich2mtp.dll"
+				OutputFile="lib/mpichmtp.dll"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
 				AdditionalLibraryDirectories="lib"
 				IgnoreDefaultLibraryNames="libc.lib"
-				ModuleDefinitionFile=".\mpich2.def"
-				ProgramDatabaseFile=".\$(ConfigurationName)/mpich2mtp.pdb"
+				ModuleDefinitionFile=".\mpich.def"
+				ProgramDatabaseFile=".\$(ConfigurationName)/mpichmtp.pdb"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"
-				ImportLibrary=".\$(ConfigurationName)/mpich2mtp.lib"
+				ImportLibrary=".\$(ConfigurationName)/mpichmtp.lib"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -2439,8 +2439,8 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				Description="copying mpich2mtp.dll to system32 directory"
-				CommandLine="copy lib\mpich2mtp.dll %SystemRoot%\system32\mpich2mtp.dll&#x0D;&#x0A;copy $(ConfigurationName)\mpich2mtp.lib lib\mpich2mtp.lib&#x0D;&#x0A;"
+				Description="copying mpichmtp.dll to system32 directory"
+				CommandLine="copy lib\mpichmtp.dll %SystemRoot%\system32\mpichmtp.dll&#x0D;&#x0A;copy $(ConfigurationName)\mpichmtp.lib lib\mpichmtp.lib&#x0D;&#x0A;"
 			/>
 		</Configuration>
 		<Configuration
@@ -2471,7 +2471,7 @@
 				MkTypLibCompatible="true"
 				SuppressStartupBanner="true"
 				TargetEnvironment="1"
-				TypeLibraryName=".\$(ConfigurationName)/mpich2.tlb"
+				TypeLibraryName=".\$(ConfigurationName)/mpich.tlb"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
@@ -2481,7 +2481,7 @@
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
 				UsePrecompiledHeader="0"
-				PrecompiledHeaderFile=".\$(ConfigurationName)/mpich2.pch"
+				PrecompiledHeaderFile=".\$(ConfigurationName)/mpich.pch"
 				AssemblerListingLocation=".\$(ConfigurationName)/"
 				ObjectFile=".\$(ConfigurationName)/"
 				ProgramDataBaseFileName=".\$(ConfigurationName)/"
@@ -2506,16 +2506,16 @@
 				Name="VCLinkerTool"
 				AdditionalOptions="/MACHINE:I386"
 				AdditionalDependencies="activeds.lib adsiid.lib netapi32.lib ntdsapi.lib secur32.lib smpd_utild.lib sockd.lib dbgd.lib ch3ibd.lib pmid.lib mswsock.lib ws2_32.lib odbc32.lib odbccp32.lib rpcrt4.lib mpr.lib ibal.lib complib.lib crypt32.lib"
-				OutputFile="lib/mpich2ibd.dll"
+				OutputFile="lib/mpichibd.dll"
 				LinkIncremental="2"
 				SuppressStartupBanner="true"
 				AdditionalLibraryDirectories="lib,c:\ibal\Install\x86"
 				IgnoreAllDefaultLibraries="false"
 				IgnoreDefaultLibraryNames="libcd.lib"
-				ModuleDefinitionFile=".\mpich2.def"
+				ModuleDefinitionFile=".\mpich.def"
 				GenerateDebugInformation="true"
-				ProgramDatabaseFile=".\$(ConfigurationName)/mpich2ibd.pdb"
-				ImportLibrary=".\$(ConfigurationName)/mpich2ibd.lib"
+				ProgramDatabaseFile=".\$(ConfigurationName)/mpichibd.pdb"
+				ImportLibrary=".\$(ConfigurationName)/mpichibd.lib"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -2540,8 +2540,8 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				Description="copying mpich2ibd.dll to system32 directory"
-				CommandLine="copy lib\mpich2ibd.dll %SystemRoot%\system32\mpich2ibd.dll&#x0D;&#x0A;copy $(ConfigurationName)\mpich2ibd.lib lib\mpich2ibd.lib&#x0D;&#x0A;"
+				Description="copying mpichibd.dll to system32 directory"
+				CommandLine="copy lib\mpichibd.dll %SystemRoot%\system32\mpichibd.dll&#x0D;&#x0A;copy $(ConfigurationName)\mpichibd.lib lib\mpichibd.lib&#x0D;&#x0A;"
 			/>
 		</Configuration>
 		<Configuration
@@ -2572,7 +2572,7 @@
 				MkTypLibCompatible="true"
 				SuppressStartupBanner="true"
 				TargetEnvironment="1"
-				TypeLibraryName=".\$(ConfigurationName)/mpich2.tlb"
+				TypeLibraryName=".\$(ConfigurationName)/mpich.tlb"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
@@ -2586,7 +2586,7 @@
 				BufferSecurityCheck="false"
 				EnableFunctionLevelLinking="true"
 				UsePrecompiledHeader="0"
-				PrecompiledHeaderFile=".\$(ConfigurationName)/mpich2.pch"
+				PrecompiledHeaderFile=".\$(ConfigurationName)/mpich.pch"
 				AssemblerListingLocation=".\$(ConfigurationName)/"
 				ObjectFile=".\$(ConfigurationName)/"
 				ProgramDataBaseFileName=".\$(ConfigurationName)/"
@@ -2610,16 +2610,16 @@
 				Name="VCLinkerTool"
 				AdditionalOptions="/MACHINE:I386"
 				AdditionalDependencies="activeds.lib adsiid.lib netapi32.lib ntdsapi.lib secur32.lib rlog.lib smpd_util.lib dbg.lib sockp.lib ch3ibp.lib pmi.lib mswsock.lib ws2_32.lib odbc32.lib odbccp32.lib rpcrt4.lib mpr.lib ibal.lib complib.lib crypt32.lib"
-				OutputFile="lib/mpich2ibp.dll"
+				OutputFile="lib/mpichibp.dll"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
 				AdditionalLibraryDirectories="lib,c:\ibal\Install\x86"
 				IgnoreDefaultLibraryNames="libc.lib"
-				ModuleDefinitionFile=".\mpich2.def"
-				ProgramDatabaseFile=".\$(ConfigurationName)/mpich2ibp.pdb"
+				ModuleDefinitionFile=".\mpich.def"
+				ProgramDatabaseFile=".\$(ConfigurationName)/mpichibp.pdb"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"
-				ImportLibrary=".\$(ConfigurationName)/mpich2ibp.lib"
+				ImportLibrary=".\$(ConfigurationName)/mpichibp.lib"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -2644,8 +2644,8 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				Description="copying mpich2ibp.dll to system32 directory"
-				CommandLine="copy lib\mpich2ibp.dll %SystemRoot%\system32\mpich2ibp.dll&#x0D;&#x0A;copy $(ConfigurationName)\mpich2ibp.lib lib\mpich2ibp.lib&#x0D;&#x0A;"
+				Description="copying mpichibp.dll to system32 directory"
+				CommandLine="copy lib\mpichibp.dll %SystemRoot%\system32\mpichibp.dll&#x0D;&#x0A;copy $(ConfigurationName)\mpichibp.lib lib\mpichibp.lib&#x0D;&#x0A;"
 			/>
 		</Configuration>
 		<Configuration
@@ -2676,7 +2676,7 @@
 				MkTypLibCompatible="true"
 				SuppressStartupBanner="true"
 				TargetEnvironment="1"
-				TypeLibraryName=".\$(ConfigurationName)/mpich2.tlb"
+				TypeLibraryName=".\$(ConfigurationName)/mpich.tlb"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
@@ -2690,7 +2690,7 @@
 				BufferSecurityCheck="false"
 				EnableFunctionLevelLinking="true"
 				UsePrecompiledHeader="0"
-				PrecompiledHeaderFile=".\$(ConfigurationName)/mpich2.pch"
+				PrecompiledHeaderFile=".\$(ConfigurationName)/mpich.pch"
 				AssemblerListingLocation=".\$(ConfigurationName)/"
 				ObjectFile=".\$(ConfigurationName)/"
 				ProgramDataBaseFileName=".\$(ConfigurationName)/"
@@ -2714,16 +2714,16 @@
 				Name="VCLinkerTool"
 				AdditionalOptions="/MACHINE:I386"
 				AdditionalDependencies="activeds.lib adsiid.lib netapi32.lib ntdsapi.lib secur32.lib smpd_util.lib dbg.lib sock.lib ch3ib.lib pmi.lib mswsock.lib ws2_32.lib odbc32.lib odbccp32.lib rpcrt4.lib mpr.lib ibal.lib complib.lib crypt32.lib"
-				OutputFile="lib/mpich2ib.dll"
+				OutputFile="lib/mpichib.dll"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
 				AdditionalLibraryDirectories="lib,c:\ibal\Install\x86"
 				IgnoreDefaultLibraryNames="libc.lib"
-				ModuleDefinitionFile=".\mpich2.def"
-				ProgramDatabaseFile=".\$(ConfigurationName)/mpich2ib.pdb"
+				ModuleDefinitionFile=".\mpich.def"
+				ProgramDatabaseFile=".\$(ConfigurationName)/mpichib.pdb"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"
-				ImportLibrary=".\$(ConfigurationName)/mpich2ib.lib"
+				ImportLibrary=".\$(ConfigurationName)/mpichib.lib"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -2748,12 +2748,12 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				Description="copying mpich2ib.dll to system32 directory"
-				CommandLine="copy lib\mpich2ib.dll %SystemRoot%\system32\mpich2ib.dll&#x0D;&#x0A;copy $(ConfigurationName)\mpich2ib.lib lib\mpich2ib.lib&#x0D;&#x0A;"
+				Description="copying mpichib.dll to system32 directory"
+				CommandLine="copy lib\mpichib.dll %SystemRoot%\system32\mpichib.dll&#x0D;&#x0A;copy $(ConfigurationName)\mpichib.lib lib\mpichib.lib&#x0D;&#x0A;"
 			/>
 		</Configuration>
 		<Configuration
-			Name="mpich2DebugConfig_1_0_4|Win32"
+			Name="mpichDebugConfig_1_0_4|Win32"
 			OutputDirectory="$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="2"
@@ -2780,7 +2780,7 @@
 				MkTypLibCompatible="true"
 				SuppressStartupBanner="true"
 				TargetEnvironment="1"
-				TypeLibraryName=".\$(ConfigurationName)/mpich2.tlb"
+				TypeLibraryName=".\$(ConfigurationName)/mpich.tlb"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
@@ -2790,7 +2790,7 @@
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
 				UsePrecompiledHeader="0"
-				PrecompiledHeaderFile=".\$(ConfigurationName)/mpich2.pch"
+				PrecompiledHeaderFile=".\$(ConfigurationName)/mpich.pch"
 				AssemblerListingLocation=".\$(ConfigurationName)/"
 				ObjectFile=".\$(ConfigurationName)/"
 				ProgramDataBaseFileName=".\$(ConfigurationName)/"
@@ -2815,16 +2815,16 @@
 				Name="VCLinkerTool"
 				AdditionalOptions="/MACHINE:I386"
 				AdditionalDependencies="activeds.lib adsiid.lib netapi32.lib ntdsapi.lib secur32.lib smpd_utild.lib dbgd.lib sockd.lib ch3sockd.lib pmid.lib mswsock.lib ws2_32.lib odbc32.lib odbccp32.lib rpcrt4.lib mpr.lib crypt32.lib"
-				OutputFile="lib/mpich2d.dll"
+				OutputFile="lib/mpichd.dll"
 				LinkIncremental="2"
 				SuppressStartupBanner="true"
 				AdditionalLibraryDirectories="lib"
 				IgnoreAllDefaultLibraries="false"
 				IgnoreDefaultLibraryNames="libcd.lib"
-				ModuleDefinitionFile=".\mpich2.def"
+				ModuleDefinitionFile=".\mpich.def"
 				GenerateDebugInformation="true"
-				ProgramDatabaseFile=".\$(ConfigurationName)/mpich2d.pdb"
-				ImportLibrary=".\$(ConfigurationName)/mpich2d.lib"
+				ProgramDatabaseFile=".\$(ConfigurationName)/mpichd.pdb"
+				ImportLibrary=".\$(ConfigurationName)/mpichd.lib"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -2849,12 +2849,12 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				Description="copying mpich2d.dll to system32 directory"
-				CommandLine="copy lib\mpich2d.dll %SystemRoot%\system32\mpich2d.dll&#x0D;&#x0A;copy $(ConfigurationName)\mpich2d.lib lib\mpich2d.lib&#x0D;&#x0A;"
+				Description="copying mpichd.dll to system32 directory"
+				CommandLine="copy lib\mpichd.dll %SystemRoot%\system32\mpichd.dll&#x0D;&#x0A;copy $(ConfigurationName)\mpichd.lib lib\mpichd.lib&#x0D;&#x0A;"
 			/>
 		</Configuration>
 		<Configuration
-			Name="mpich2ReleaseConfig_1_0_4|Win32"
+			Name="mpichReleaseConfig_1_0_4|Win32"
 			OutputDirectory="$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="2"
@@ -2881,7 +2881,7 @@
 				MkTypLibCompatible="true"
 				SuppressStartupBanner="true"
 				TargetEnvironment="1"
-				TypeLibraryName=".\$(ConfigurationName)/mpich2.tlb"
+				TypeLibraryName=".\$(ConfigurationName)/mpich.tlb"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
@@ -2891,7 +2891,7 @@
 				BasicRuntimeChecks="0"
 				RuntimeLibrary="1"
 				UsePrecompiledHeader="0"
-				PrecompiledHeaderFile=".\$(ConfigurationName)/mpich2.pch"
+				PrecompiledHeaderFile=".\$(ConfigurationName)/mpich.pch"
 				AssemblerListingLocation=".\$(ConfigurationName)/"
 				ObjectFile=".\$(ConfigurationName)/"
 				ProgramDataBaseFileName=".\$(ConfigurationName)/"
@@ -2916,16 +2916,16 @@
 				Name="VCLinkerTool"
 				AdditionalOptions="/MACHINE:I386"
 				AdditionalDependencies="activeds.lib adsiid.lib netapi32.lib ntdsapi.lib secur32.lib smpd_util.lib dbg.lib sock.lib ch3sock.lib pmi.lib mswsock.lib ws2_32.lib odbc32.lib odbccp32.lib rpcrt4.lib mpr.lib crypt32.lib"
-				OutputFile="lib/mpich2.dll"
+				OutputFile="lib/mpich.dll"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
 				AdditionalLibraryDirectories="lib"
 				IgnoreAllDefaultLibraries="false"
 				IgnoreDefaultLibraryNames="libcd.lib"
-				ModuleDefinitionFile=".\mpich2.def"
+				ModuleDefinitionFile=".\mpich.def"
 				GenerateDebugInformation="true"
-				ProgramDatabaseFile=".\$(ConfigurationName)/mpich2.pdb"
-				ImportLibrary=".\$(ConfigurationName)/mpich2.lib"
+				ProgramDatabaseFile=".\$(ConfigurationName)/mpich.pdb"
+				ImportLibrary=".\$(ConfigurationName)/mpich.lib"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -2950,12 +2950,12 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				Description="copying mpich2d.dll to system32 directory"
-				CommandLine="copy lib\mpich2.dll %SystemRoot%\system32\mpich2.dll&#x0D;&#x0A;copy $(ConfigurationName)\mpich2.lib lib\mpich2.lib&#x0D;&#x0A;"
+				Description="copying mpichd.dll to system32 directory"
+				CommandLine="copy lib\mpich.dll %SystemRoot%\system32\mpich.dll&#x0D;&#x0A;copy $(ConfigurationName)\mpich.lib lib\mpich.lib&#x0D;&#x0A;"
 			/>
 		</Configuration>
 		<Configuration
-			Name="ch3shm_mpich2ReleaseConfig_1_0_4|Win32"
+			Name="ch3shm_mpichReleaseConfig_1_0_4|Win32"
 			OutputDirectory="$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="2"
@@ -2982,7 +2982,7 @@
 				MkTypLibCompatible="true"
 				SuppressStartupBanner="true"
 				TargetEnvironment="1"
-				TypeLibraryName=".\$(ConfigurationName)/mpich2.tlb"
+				TypeLibraryName=".\$(ConfigurationName)/mpich.tlb"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
@@ -2992,7 +2992,7 @@
 				BasicRuntimeChecks="0"
 				RuntimeLibrary="1"
 				UsePrecompiledHeader="0"
-				PrecompiledHeaderFile=".\$(ConfigurationName)/mpich2.pch"
+				PrecompiledHeaderFile=".\$(ConfigurationName)/mpich.pch"
 				AssemblerListingLocation=".\$(ConfigurationName)/"
 				ObjectFile=".\$(ConfigurationName)/"
 				ProgramDataBaseFileName=".\$(ConfigurationName)/"
@@ -3017,16 +3017,16 @@
 				Name="VCLinkerTool"
 				AdditionalOptions="/MACHINE:I386"
 				AdditionalDependencies="activeds.lib adsiid.lib netapi32.lib ntdsapi.lib secur32.lib smpd_util.lib dbg.lib sock.lib ch3shm.lib pmi.lib mswsock.lib ws2_32.lib odbc32.lib odbccp32.lib rpcrt4.lib mpr.lib crypt32.lib"
-				OutputFile="lib/mpich2shm.dll"
+				OutputFile="lib/mpichshm.dll"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
 				AdditionalLibraryDirectories="lib"
 				IgnoreAllDefaultLibraries="false"
 				IgnoreDefaultLibraryNames="libcd.lib"
-				ModuleDefinitionFile=".\mpich2.def"
+				ModuleDefinitionFile=".\mpich.def"
 				GenerateDebugInformation="false"
-				ProgramDatabaseFile=".\$(ConfigurationName)/mpich2shm.pdb"
-				ImportLibrary=".\$(ConfigurationName)/mpich2shm.lib"
+				ProgramDatabaseFile=".\$(ConfigurationName)/mpichshm.pdb"
+				ImportLibrary=".\$(ConfigurationName)/mpichshm.lib"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -3051,12 +3051,12 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				Description="copying mpich2d.dll to system32 directory"
-				CommandLine="rem copy lib\mpich2.dll %SystemRoot%\system32\mpich2.dll&#x0D;&#x0A;rem copy $(ConfigurationName)\mpich2.lib lib\mpich2.lib&#x0D;&#x0A;"
+				Description="copying mpichd.dll to system32 directory"
+				CommandLine="rem copy lib\mpich.dll %SystemRoot%\system32\mpich.dll&#x0D;&#x0A;rem copy $(ConfigurationName)\mpich.lib lib\mpich.lib&#x0D;&#x0A;"
 			/>
 		</Configuration>
 		<Configuration
-			Name="mpich2sshm_mpich2ReleaseConfig_1_0_4|Win32"
+			Name="mpichsshm_mpichReleaseConfig_1_0_4|Win32"
 			OutputDirectory="$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="2"
@@ -3083,7 +3083,7 @@
 				MkTypLibCompatible="true"
 				SuppressStartupBanner="true"
 				TargetEnvironment="1"
-				TypeLibraryName=".\$(ConfigurationName)/mpich2.tlb"
+				TypeLibraryName=".\$(ConfigurationName)/mpich.tlb"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
@@ -3093,7 +3093,7 @@
 				BasicRuntimeChecks="0"
 				RuntimeLibrary="1"
 				UsePrecompiledHeader="0"
-				PrecompiledHeaderFile=".\$(ConfigurationName)/mpich2.pch"
+				PrecompiledHeaderFile=".\$(ConfigurationName)/mpich.pch"
 				AssemblerListingLocation=".\$(ConfigurationName)/"
 				ObjectFile=".\$(ConfigurationName)/"
 				ProgramDataBaseFileName=".\$(ConfigurationName)/"
@@ -3118,16 +3118,16 @@
 				Name="VCLinkerTool"
 				AdditionalOptions="/MACHINE:I386"
 				AdditionalDependencies="activeds.lib adsiid.lib netapi32.lib ntdsapi.lib secur32.lib smpd_util.lib dbg.lib sock.lib ch3sshm.lib pmi.lib mswsock.lib ws2_32.lib odbc32.lib odbccp32.lib rpcrt4.lib mpr.lib crypt32.lib"
-				OutputFile="lib/mpich2sshm.dll"
+				OutputFile="lib/mpichsshm.dll"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
 				AdditionalLibraryDirectories="lib"
 				IgnoreAllDefaultLibraries="false"
 				IgnoreDefaultLibraryNames="libcd.lib"
-				ModuleDefinitionFile=".\mpich2.def"
+				ModuleDefinitionFile=".\mpich.def"
 				GenerateDebugInformation="false"
-				ProgramDatabaseFile=".\$(ConfigurationName)/mpich2sshm.pdb"
-				ImportLibrary=".\$(ConfigurationName)/mpich2sshm.lib"
+				ProgramDatabaseFile=".\$(ConfigurationName)/mpichsshm.pdb"
+				ImportLibrary=".\$(ConfigurationName)/mpichsshm.lib"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -3152,12 +3152,12 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				Description="copying mpich2d.dll to system32 directory"
-				CommandLine="rem copy lib\mpich2.dll %SystemRoot%\system32\mpich2.dll&#x0D;&#x0A;rem copy $(ConfigurationName)\mpich2.lib lib\mpich2.lib&#x0D;&#x0A;"
+				Description="copying mpichd.dll to system32 directory"
+				CommandLine="rem copy lib\mpich.dll %SystemRoot%\system32\mpich.dll&#x0D;&#x0A;rem copy $(ConfigurationName)\mpich.lib lib\mpich.lib&#x0D;&#x0A;"
 			/>
 		</Configuration>
 		<Configuration
-			Name="mpich2ssm_mpich2ReleaseConfig_1_0_4|Win32"
+			Name="mpichssm_mpichReleaseConfig_1_0_4|Win32"
 			OutputDirectory="$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="2"
@@ -3184,7 +3184,7 @@
 				MkTypLibCompatible="true"
 				SuppressStartupBanner="true"
 				TargetEnvironment="1"
-				TypeLibraryName=".\$(ConfigurationName)/mpich2.tlb"
+				TypeLibraryName=".\$(ConfigurationName)/mpich.tlb"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
@@ -3194,7 +3194,7 @@
 				BasicRuntimeChecks="0"
 				RuntimeLibrary="1"
 				UsePrecompiledHeader="0"
-				PrecompiledHeaderFile=".\$(ConfigurationName)/mpich2.pch"
+				PrecompiledHeaderFile=".\$(ConfigurationName)/mpich.pch"
 				AssemblerListingLocation=".\$(ConfigurationName)/"
 				ObjectFile=".\$(ConfigurationName)/"
 				ProgramDataBaseFileName=".\$(ConfigurationName)/"
@@ -3219,16 +3219,16 @@
 				Name="VCLinkerTool"
 				AdditionalOptions="/MACHINE:I386"
 				AdditionalDependencies="activeds.lib adsiid.lib netapi32.lib ntdsapi.lib secur32.lib ch3ssm.lib dbgssm.lib smpd_util.lib sock.lib pmi.lib mswsock.lib ws2_32.lib odbc32.lib odbccp32.lib rpcrt4.lib mpr.lib crypt32.lib"
-				OutputFile="lib/mpich2ssm.dll"
+				OutputFile="lib/mpichssm.dll"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
 				AdditionalLibraryDirectories="lib"
 				IgnoreAllDefaultLibraries="false"
 				IgnoreDefaultLibraryNames="libcd.lib"
-				ModuleDefinitionFile=".\mpich2.def"
+				ModuleDefinitionFile=".\mpich.def"
 				GenerateDebugInformation="false"
-				ProgramDatabaseFile=".\$(ConfigurationName)/mpich2ssm.pdb"
-				ImportLibrary=".\$(ConfigurationName)/mpich2ssm.lib"
+				ProgramDatabaseFile=".\$(ConfigurationName)/mpichssm.pdb"
+				ImportLibrary=".\$(ConfigurationName)/mpichssm.lib"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -3253,12 +3253,12 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				Description="copying mpich2d.dll to system32 directory"
-				CommandLine="rem copy lib\mpich2.dll %SystemRoot%\system32\mpich2.dll&#x0D;&#x0A;rem copy $(ConfigurationName)\mpich2.lib lib\mpich2.lib&#x0D;&#x0A;"
+				Description="copying mpichd.dll to system32 directory"
+				CommandLine="rem copy lib\mpich.dll %SystemRoot%\system32\mpich.dll&#x0D;&#x0A;rem copy $(ConfigurationName)\mpich.lib lib\mpich.lib&#x0D;&#x0A;"
 			/>
 		</Configuration>
 		<Configuration
-			Name="mt_mpich2ReleaseConfig_1_0_4|Win32"
+			Name="mt_mpichReleaseConfig_1_0_4|Win32"
 			OutputDirectory="$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="2"
@@ -3285,7 +3285,7 @@
 				MkTypLibCompatible="true"
 				SuppressStartupBanner="true"
 				TargetEnvironment="1"
-				TypeLibraryName=".\$(ConfigurationName)/mpich2.tlb"
+				TypeLibraryName=".\$(ConfigurationName)/mpich.tlb"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
@@ -3295,7 +3295,7 @@
 				BasicRuntimeChecks="0"
 				RuntimeLibrary="1"
 				UsePrecompiledHeader="0"
-				PrecompiledHeaderFile=".\$(ConfigurationName)/mpich2.pch"
+				PrecompiledHeaderFile=".\$(ConfigurationName)/mpich.pch"
 				AssemblerListingLocation=".\$(ConfigurationName)/"
 				ObjectFile=".\$(ConfigurationName)/"
 				ProgramDataBaseFileName=".\$(ConfigurationName)/"
@@ -3320,16 +3320,16 @@
 				Name="VCLinkerTool"
 				AdditionalOptions="/MACHINE:I386"
 				AdditionalDependencies="activeds.lib adsiid.lib netapi32.lib ntdsapi.lib secur32.lib smpd_utilmt.lib dbgmt.lib sockmt.lib ch3sockmt.lib pmi.lib mswsock.lib ws2_32.lib odbc32.lib odbccp32.lib rpcrt4.lib mpr.lib crypt32.lib"
-				OutputFile="lib/mpich2mt.dll"
+				OutputFile="lib/mpichmt.dll"
 				LinkIncremental="2"
 				SuppressStartupBanner="true"
 				AdditionalLibraryDirectories="lib"
 				IgnoreAllDefaultLibraries="false"
 				IgnoreDefaultLibraryNames="libcd.lib"
-				ModuleDefinitionFile=".\mpich2.def"
+				ModuleDefinitionFile=".\mpich.def"
 				GenerateDebugInformation="true"
-				ProgramDatabaseFile=".\$(ConfigurationName)/mpich2mt.pdb"
-				ImportLibrary=".\$(ConfigurationName)/mpich2mt.lib"
+				ProgramDatabaseFile=".\$(ConfigurationName)/mpichmt.pdb"
+				ImportLibrary=".\$(ConfigurationName)/mpichmt.lib"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -3354,8 +3354,8 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				Description="copying mpich2d.dll to system32 directory"
-				CommandLine="rem copy lib\mpich2.dll %SystemRoot%\system32\mpich2.dll&#x0D;&#x0A;rem copy $(ConfigurationName)\mpich2.lib lib\mpich2.lib&#x0D;&#x0A;"
+				Description="copying mpichd.dll to system32 directory"
+				CommandLine="rem copy lib\mpich.dll %SystemRoot%\system32\mpich.dll&#x0D;&#x0A;rem copy $(ConfigurationName)\mpich.lib lib\mpich.lib&#x0D;&#x0A;"
 			/>
 		</Configuration>
 		<Configuration
@@ -3386,7 +3386,7 @@
 				MkTypLibCompatible="true"
 				SuppressStartupBanner="true"
 				TargetEnvironment="1"
-				TypeLibraryName=".\$(ConfigurationName)/mpich2.tlb"
+				TypeLibraryName=".\$(ConfigurationName)/mpich.tlb"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
@@ -3400,7 +3400,7 @@
 				BufferSecurityCheck="false"
 				EnableFunctionLevelLinking="true"
 				UsePrecompiledHeader="0"
-				PrecompiledHeaderFile=".\$(ConfigurationName)/mpich2.pch"
+				PrecompiledHeaderFile=".\$(ConfigurationName)/mpich.pch"
 				AssemblerListingLocation=".\$(ConfigurationName)/"
 				ObjectFile=".\$(ConfigurationName)/"
 				ProgramDataBaseFileName=".\$(ConfigurationName)/"
@@ -3424,16 +3424,16 @@
 				Name="VCLinkerTool"
 				AdditionalOptions="/MACHINE:I386"
 				AdditionalDependencies="activeds.lib adsiid.lib netapi32.lib ntdsapi.lib secur32.lib smpd_util.lib dbg.lib sock.lib ch3sock.lib pmi.lib mswsock.lib ws2_32.lib odbc32.lib odbccp32.lib rpcrt4.lib mpr.lib crypt32.lib"
-				OutputFile="lib/mpich2.dll"
+				OutputFile="lib/mpich.dll"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
 				AdditionalLibraryDirectories="lib"
 				IgnoreDefaultLibraryNames="libc.lib"
-				ModuleDefinitionFile=".\mpich2.def"
-				ProgramDatabaseFile=".\$(ConfigurationName)/mpich2.pdb"
+				ModuleDefinitionFile=".\mpich.def"
+				ProgramDatabaseFile=".\$(ConfigurationName)/mpich.pdb"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"
-				ImportLibrary=".\$(ConfigurationName)/mpich2.lib"
+				ImportLibrary=".\$(ConfigurationName)/mpich.lib"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -3458,12 +3458,12 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				Description="copying mpich2.dll to system32 directory"
-				CommandLine="copy lib\mpich2.dll %SystemRoot%\system32\mpich2.dll&#x0D;&#x0A;copy $(ConfigurationName)\mpich2.lib lib\mpich2.lib&#x0D;&#x0A;"
+				Description="copying mpich.dll to system32 directory"
+				CommandLine="copy lib\mpich.dll %SystemRoot%\system32\mpich.dll&#x0D;&#x0A;copy $(ConfigurationName)\mpich.lib lib\mpich.lib&#x0D;&#x0A;"
 			/>
 		</Configuration>
 		<Configuration
-			Name="mpich2DebugConfig_1_0_5|Win32"
+			Name="mpichDebugConfig_1_0_5|Win32"
 			OutputDirectory="$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="2"
@@ -3490,7 +3490,7 @@
 				MkTypLibCompatible="true"
 				SuppressStartupBanner="true"
 				TargetEnvironment="1"
-				TypeLibraryName=".\$(ConfigurationName)/mpich2.tlb"
+				TypeLibraryName=".\$(ConfigurationName)/mpich.tlb"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
@@ -3500,7 +3500,7 @@
 				BasicRuntimeChecks="0"
 				RuntimeLibrary="1"
 				UsePrecompiledHeader="0"
-				PrecompiledHeaderFile=".\$(ConfigurationName)/mpich2.pch"
+				PrecompiledHeaderFile=".\$(ConfigurationName)/mpich.pch"
 				AssemblerListingLocation=".\$(ConfigurationName)/"
 				ObjectFile=".\$(ConfigurationName)/"
 				ProgramDataBaseFileName=".\$(ConfigurationName)/"
@@ -3525,16 +3525,16 @@
 				Name="VCLinkerTool"
 				AdditionalOptions="/MACHINE:I386"
 				AdditionalDependencies="activeds.lib adsiid.lib netapi32.lib ntdsapi.lib secur32.lib smpd_util.lib dbg.lib sock.lib ch3sock.lib pmi.lib mswsock.lib ws2_32.lib odbc32.lib odbccp32.lib rpcrt4.lib mpr.lib crypt32.lib"
-				OutputFile="lib/mpich2.dll"
+				OutputFile="lib/mpich.dll"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
 				AdditionalLibraryDirectories="lib"
 				IgnoreAllDefaultLibraries="false"
 				IgnoreDefaultLibraryNames="libcd.lib"
-				ModuleDefinitionFile=".\mpich2.def"
+				ModuleDefinitionFile=".\mpich.def"
 				GenerateDebugInformation="true"
-				ProgramDatabaseFile=".\$(ConfigurationName)/mpich2.pdb"
-				ImportLibrary=".\$(ConfigurationName)/mpich2.lib"
+				ProgramDatabaseFile=".\$(ConfigurationName)/mpich.pdb"
+				ImportLibrary=".\$(ConfigurationName)/mpich.lib"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -3559,8 +3559,8 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				Description="copying mpich2d.dll to system32 directory"
-				CommandLine="copy lib\mpich2.dll %SystemRoot%\system32\mpich2.dll&#x0D;&#x0A;copy $(ConfigurationName)\mpich2.lib lib\mpich2.lib&#x0D;&#x0A;"
+				Description="copying mpichd.dll to system32 directory"
+				CommandLine="copy lib\mpich.dll %SystemRoot%\system32\mpich.dll&#x0D;&#x0A;copy $(ConfigurationName)\mpich.lib lib\mpich.lib&#x0D;&#x0A;"
 			/>
 		</Configuration>
 		<Configuration
@@ -3591,7 +3591,7 @@
 				MkTypLibCompatible="true"
 				SuppressStartupBanner="true"
 				TargetEnvironment="1"
-				TypeLibraryName=".\$(ConfigurationName)/mpich2.tlb"
+				TypeLibraryName=".\$(ConfigurationName)/mpich.tlb"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
@@ -3605,7 +3605,7 @@
 				BufferSecurityCheck="false"
 				EnableFunctionLevelLinking="true"
 				UsePrecompiledHeader="0"
-				PrecompiledHeaderFile=".\$(ConfigurationName)/mpich2.pch"
+				PrecompiledHeaderFile=".\$(ConfigurationName)/mpich.pch"
 				AssemblerListingLocation=".\$(ConfigurationName)/"
 				ObjectFile=".\$(ConfigurationName)/"
 				ProgramDataBaseFileName=".\$(ConfigurationName)/"
@@ -3629,17 +3629,17 @@
 				Name="VCLinkerTool"
 				AdditionalOptions="/MACHINE:I386"
 				AdditionalDependencies="activeds.lib adsiid.lib netapi32.lib ntdsapi.lib secur32.lib smpd_util.lib dbg.lib sock.lib ch3sock.lib pmi.lib mswsock.lib ws2_32.lib odbc32.lib odbccp32.lib rpcrt4.lib mpr.lib crypt32.lib"
-				OutputFile="lib/mpich2.dll"
+				OutputFile="lib/mpich.dll"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
 				AdditionalLibraryDirectories="lib"
 				IgnoreDefaultLibraryNames="libc.lib"
-				ModuleDefinitionFile=".\mpich2.def"
+				ModuleDefinitionFile=".\mpich.def"
 				GenerateDebugInformation="true"
-				ProgramDatabaseFile=".\$(ConfigurationName)/mpich2.pdb"
+				ProgramDatabaseFile=".\$(ConfigurationName)/mpich.pdb"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"
-				ImportLibrary=".\$(ConfigurationName)/mpich2.lib"
+				ImportLibrary=".\$(ConfigurationName)/mpich.lib"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -3664,8 +3664,8 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				Description="copying mpich2.dll to system32 directory"
-				CommandLine="copy lib\mpich2.dll %SystemRoot%\system32\mpich2.dll&#x0D;&#x0A;copy $(ConfigurationName)\mpich2.lib lib\mpich2.lib&#x0D;&#x0A;"
+				Description="copying mpich.dll to system32 directory"
+				CommandLine="copy lib\mpich.dll %SystemRoot%\system32\mpich.dll&#x0D;&#x0A;copy $(ConfigurationName)\mpich.lib lib\mpich.lib&#x0D;&#x0A;"
 			/>
 		</Configuration>
 		<Configuration
@@ -3696,7 +3696,7 @@
 				MkTypLibCompatible="true"
 				SuppressStartupBanner="true"
 				TargetEnvironment="1"
-				TypeLibraryName=".\$(ConfigurationName)/mpich2.tlb"
+				TypeLibraryName=".\$(ConfigurationName)/mpich.tlb"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
@@ -3707,7 +3707,7 @@
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
 				UsePrecompiledHeader="0"
-				PrecompiledHeaderFile=".\$(ConfigurationName)/mpich2.pch"
+				PrecompiledHeaderFile=".\$(ConfigurationName)/mpich.pch"
 				AssemblerListingLocation=".\$(ConfigurationName)/"
 				ObjectFile=".\$(ConfigurationName)/"
 				ProgramDataBaseFileName=".\$(ConfigurationName)/"
@@ -3732,14 +3732,14 @@
 				Name="VCLinkerTool"
 				AdditionalOptions="/MACHINE:I386"
 				AdditionalDependencies="activeds.lib adsiid.lib netapi32.lib ntdsapi.lib secur32.lib cxxd.lib dbgd.lib pmid.lib smpd_utild.lib sockd.lib ch3nemesisd.lib mswsock.lib ws2_32.lib odbc32.lib odbccp32.lib rpcrt4.lib mpr.lib crypt32.lib"
-				OutputFile="lib/mpich2nemesisd.dll"
+				OutputFile="lib/mpichnemesisd.dll"
 				LinkIncremental="2"
 				SuppressStartupBanner="true"
 				AdditionalLibraryDirectories="lib"
-				ModuleDefinitionFile=".\mpich2.def"
+				ModuleDefinitionFile=".\mpich.def"
 				GenerateDebugInformation="true"
-				ProgramDatabaseFile=".\$(ConfigurationName)/mpich2nemesisd.pdb"
-				ImportLibrary=".\$(ConfigurationName)/mpich2nemesisd.lib"
+				ProgramDatabaseFile=".\$(ConfigurationName)/mpichnemesisd.pdb"
+				ImportLibrary=".\$(ConfigurationName)/mpichnemesisd.lib"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -3766,8 +3766,8 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				Description="copying mpich2nemesisd.dll to system32 directory"
-				CommandLine="copy lib\mpich2nemesisd.dll %SystemRoot%\system32\mpich2nemesisd.dll&#x0D;&#x0A;copy $(ConfigurationName)\mpich2nemesisd.lib lib\mpich2nemesisd.lib&#x0D;&#x0A;"
+				Description="copying mpichnemesisd.dll to system32 directory"
+				CommandLine="copy lib\mpichnemesisd.dll %SystemRoot%\system32\mpichnemesisd.dll&#x0D;&#x0A;copy $(ConfigurationName)\mpichnemesisd.lib lib\mpichnemesisd.lib&#x0D;&#x0A;"
 			/>
 		</Configuration>
 		<Configuration
@@ -3798,7 +3798,7 @@
 				MkTypLibCompatible="true"
 				SuppressStartupBanner="true"
 				TargetEnvironment="1"
-				TypeLibraryName=".\$(ConfigurationName)/mpich2.tlb"
+				TypeLibraryName=".\$(ConfigurationName)/mpich.tlb"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
@@ -3809,7 +3809,7 @@
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
 				UsePrecompiledHeader="0"
-				PrecompiledHeaderFile=".\$(ConfigurationName)/mpich2.pch"
+				PrecompiledHeaderFile=".\$(ConfigurationName)/mpich.pch"
 				AssemblerListingLocation=".\$(ConfigurationName)/"
 				ObjectFile=".\$(ConfigurationName)/"
 				ProgramDataBaseFileName=".\$(ConfigurationName)/"
@@ -3834,14 +3834,14 @@
 				Name="VCLinkerTool"
 				AdditionalOptions="/MACHINE:I386"
 				AdditionalDependencies="activeds.lib adsiid.lib netapi32.lib ntdsapi.lib secur32.lib rlogd.lib cxxd.lib dbgd.lib pmid.lib smpd_utild.lib sockd.lib ch3nemesispd.lib mswsock.lib ws2_32.lib odbc32.lib odbccp32.lib rpcrt4.lib mpr.lib crypt32.lib"
-				OutputFile="lib/mpich2nemesispd.dll"
+				OutputFile="lib/mpichnemesispd.dll"
 				LinkIncremental="2"
 				SuppressStartupBanner="true"
 				AdditionalLibraryDirectories="lib"
-				ModuleDefinitionFile=".\mpich2.def"
+				ModuleDefinitionFile=".\mpich.def"
 				GenerateDebugInformation="true"
-				ProgramDatabaseFile=".\$(ConfigurationName)/mpich2nemesisd.pdb"
-				ImportLibrary=".\$(ConfigurationName)/mpich2nemesisd.lib"
+				ProgramDatabaseFile=".\$(ConfigurationName)/mpichnemesisd.pdb"
+				ImportLibrary=".\$(ConfigurationName)/mpichnemesisd.lib"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -3912,9 +3912,9 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="activeds.lib adsiid.lib netapi32.lib ntdsapi.lib secur32.lib mswsock.lib ws2_32.lib odbc32.lib odbccp32.lib rpcrt4.lib mpr.lib crypt32.lib"
-				OutputFile="lib\mpich2nemesis.dll"
+				OutputFile="lib\mpichnemesis.dll"
 				AdditionalLibraryDirectories="lib"
-				ModuleDefinitionFile="mpich2.def"
+				ModuleDefinitionFile="mpich.def"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -3986,9 +3986,9 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalDependencies="activeds.lib adsiid.lib netapi32.lib ntdsapi.lib secur32.lib mswsock.lib ws2_32.lib odbc32.lib odbccp32.lib rpcrt4.lib mpr.lib crypt32.lib"
-				OutputFile="lib\mpich2nemesisp.dll"
+				OutputFile="lib\mpichnemesisp.dll"
 				AdditionalLibraryDirectories="lib"
-				ModuleDefinitionFile="mpich2.def"
+				ModuleDefinitionFile="mpich.def"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -4043,7 +4043,7 @@
 				MkTypLibCompatible="true"
 				SuppressStartupBanner="true"
 				TargetEnvironment="1"
-				TypeLibraryName=".\$(ConfigurationName)/mpich2.tlb"
+				TypeLibraryName=".\$(ConfigurationName)/mpich.tlb"
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
@@ -4057,7 +4057,7 @@
 				BufferSecurityCheck="false"
 				EnableFunctionLevelLinking="true"
 				UsePrecompiledHeader="0"
-				PrecompiledHeaderFile=".\$(ConfigurationName)/mpich2.pch"
+				PrecompiledHeaderFile=".\$(ConfigurationName)/mpich.pch"
 				AssemblerListingLocation=".\$(ConfigurationName)/"
 				ObjectFile=".\$(ConfigurationName)/"
 				ProgramDataBaseFileName=".\$(ConfigurationName)/"
@@ -4081,17 +4081,17 @@
 				Name="VCLinkerTool"
 				AdditionalOptions="/MACHINE:I386"
 				AdditionalDependencies="activeds.lib adsiid.lib netapi32.lib ntdsapi.lib secur32.lib smpd_util.lib dbg.lib sock.lib ch3sock.lib pmi.lib mswsock.lib ws2_32.lib odbc32.lib odbccp32.lib rpcrt4.lib mpr.lib crypt32.lib"
-				OutputFile="lib/mpich2.dll"
+				OutputFile="lib/mpich.dll"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
 				AdditionalLibraryDirectories="lib"
 				IgnoreDefaultLibraryNames="libc.lib"
-				ModuleDefinitionFile=".\mpich2.def"
+				ModuleDefinitionFile=".\mpich.def"
 				GenerateDebugInformation="false"
-				ProgramDatabaseFile=".\$(ConfigurationName)/mpich2.pdb"
+				ProgramDatabaseFile=".\$(ConfigurationName)/mpich.pdb"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"
-				ImportLibrary=".\$(ConfigurationName)/mpich2.lib"
+				ImportLibrary=".\$(ConfigurationName)/mpich.lib"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -4116,8 +4116,8 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				Description="copying mpich2.dll to system32 directory"
-				CommandLine="copy lib\mpich2.dll %SystemRoot%\system32\mpich2.dll&#x0D;&#x0A;copy $(ConfigurationName)\mpich2.lib lib\mpich2.lib&#x0D;&#x0A;"
+				Description="copying mpich.dll to system32 directory"
+				CommandLine="copy lib\mpich.dll %SystemRoot%\system32\mpich.dll&#x0D;&#x0A;copy $(ConfigurationName)\mpich.lib lib\mpich.lib&#x0D;&#x0A;"
 			/>
 		</Configuration>
 	</Configurations>
@@ -4188,7 +4188,7 @@
 					>
 					<Tool
 						Name="VCCLCompilerTool"
-						PreprocessorDefinitions="_CRT_SECURE_NO_DEPRECATE;ROMIO_INSIDE_MPICH2"
+						PreprocessorDefinitions="_CRT_SECURE_NO_DEPRECATE;ROMIO_INSIDE_MPICH"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -4196,7 +4196,7 @@
 					>
 					<Tool
 						Name="VCCLCompilerTool"
-						PreprocessorDefinitions="_CRT_SECURE_NO_DEPRECATE;ROMIO_INSIDE_MPICH2"
+						PreprocessorDefinitions="_CRT_SECURE_NO_DEPRECATE;ROMIO_INSIDE_MPICH"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -4204,7 +4204,7 @@
 					>
 					<Tool
 						Name="VCCLCompilerTool"
-						PreprocessorDefinitions="_CRT_SECURE_NO_DEPRECATE;ROMIO_INSIDE_MPICH2"
+						PreprocessorDefinitions="_CRT_SECURE_NO_DEPRECATE;ROMIO_INSIDE_MPICH"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -4212,7 +4212,7 @@
 					>
 					<Tool
 						Name="VCCLCompilerTool"
-						PreprocessorDefinitions="_CRT_SECURE_NO_DEPRECATE;ROMIO_INSIDE_MPICH2"
+						PreprocessorDefinitions="_CRT_SECURE_NO_DEPRECATE;ROMIO_INSIDE_MPICH"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -4220,7 +4220,7 @@
 					>
 					<Tool
 						Name="VCCLCompilerTool"
-						PreprocessorDefinitions="_CRT_SECURE_NO_DEPRECATE;ROMIO_INSIDE_MPICH2"
+						PreprocessorDefinitions="_CRT_SECURE_NO_DEPRECATE;ROMIO_INSIDE_MPICH"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -4228,7 +4228,7 @@
 					>
 					<Tool
 						Name="VCCLCompilerTool"
-						PreprocessorDefinitions="_CRT_SECURE_NO_DEPRECATE;ROMIO_INSIDE_MPICH2"
+						PreprocessorDefinitions="_CRT_SECURE_NO_DEPRECATE;ROMIO_INSIDE_MPICH"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -4236,7 +4236,7 @@
 					>
 					<Tool
 						Name="VCCLCompilerTool"
-						PreprocessorDefinitions="_CRT_SECURE_NO_DEPRECATE;ROMIO_INSIDE_MPICH2"
+						PreprocessorDefinitions="_CRT_SECURE_NO_DEPRECATE;ROMIO_INSIDE_MPICH"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -4244,7 +4244,7 @@
 					>
 					<Tool
 						Name="VCCLCompilerTool"
-						PreprocessorDefinitions="_CRT_SECURE_NO_DEPRECATE;ROMIO_INSIDE_MPICH2"
+						PreprocessorDefinitions="_CRT_SECURE_NO_DEPRECATE;ROMIO_INSIDE_MPICH"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -4252,7 +4252,7 @@
 					>
 					<Tool
 						Name="VCCLCompilerTool"
-						PreprocessorDefinitions="_CRT_SECURE_NO_DEPRECATE;ROMIO_INSIDE_MPICH2"
+						PreprocessorDefinitions="_CRT_SECURE_NO_DEPRECATE;ROMIO_INSIDE_MPICH"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -4260,7 +4260,7 @@
 					>
 					<Tool
 						Name="VCCLCompilerTool"
-						PreprocessorDefinitions="_CRT_SECURE_NO_DEPRECATE;ROMIO_INSIDE_MPICH2"
+						PreprocessorDefinitions="_CRT_SECURE_NO_DEPRECATE;ROMIO_INSIDE_MPICH"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -4268,7 +4268,7 @@
 					>
 					<Tool
 						Name="VCCLCompilerTool"
-						PreprocessorDefinitions="_CRT_SECURE_NO_DEPRECATE;ROMIO_INSIDE_MPICH2"
+						PreprocessorDefinitions="_CRT_SECURE_NO_DEPRECATE;ROMIO_INSIDE_MPICH"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -4276,7 +4276,7 @@
 					>
 					<Tool
 						Name="VCCLCompilerTool"
-						PreprocessorDefinitions="_CRT_SECURE_NO_DEPRECATE;ROMIO_INSIDE_MPICH2"
+						PreprocessorDefinitions="_CRT_SECURE_NO_DEPRECATE;ROMIO_INSIDE_MPICH"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -4284,7 +4284,7 @@
 					>
 					<Tool
 						Name="VCCLCompilerTool"
-						PreprocessorDefinitions="_CRT_SECURE_NO_DEPRECATE;ROMIO_INSIDE_MPICH2"
+						PreprocessorDefinitions="_CRT_SECURE_NO_DEPRECATE;ROMIO_INSIDE_MPICH"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -4292,7 +4292,7 @@
 					>
 					<Tool
 						Name="VCCLCompilerTool"
-						PreprocessorDefinitions="_CRT_SECURE_NO_DEPRECATE;ROMIO_INSIDE_MPICH2"
+						PreprocessorDefinitions="_CRT_SECURE_NO_DEPRECATE;ROMIO_INSIDE_MPICH"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -4300,7 +4300,7 @@
 					>
 					<Tool
 						Name="VCCLCompilerTool"
-						PreprocessorDefinitions="_CRT_SECURE_NO_DEPRECATE;ROMIO_INSIDE_MPICH2"
+						PreprocessorDefinitions="_CRT_SECURE_NO_DEPRECATE;ROMIO_INSIDE_MPICH"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -4308,7 +4308,7 @@
 					>
 					<Tool
 						Name="VCCLCompilerTool"
-						PreprocessorDefinitions="_CRT_SECURE_NO_DEPRECATE;ROMIO_INSIDE_MPICH2"
+						PreprocessorDefinitions="_CRT_SECURE_NO_DEPRECATE;ROMIO_INSIDE_MPICH"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -4316,7 +4316,7 @@
 					>
 					<Tool
 						Name="VCCLCompilerTool"
-						PreprocessorDefinitions="_CRT_SECURE_NO_DEPRECATE;ROMIO_INSIDE_MPICH2"
+						PreprocessorDefinitions="_CRT_SECURE_NO_DEPRECATE;ROMIO_INSIDE_MPICH"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -4324,7 +4324,7 @@
 					>
 					<Tool
 						Name="VCCLCompilerTool"
-						PreprocessorDefinitions="_CRT_SECURE_NO_DEPRECATE;ROMIO_INSIDE_MPICH2"
+						PreprocessorDefinitions="_CRT_SECURE_NO_DEPRECATE;ROMIO_INSIDE_MPICH"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -4332,7 +4332,7 @@
 					>
 					<Tool
 						Name="VCCLCompilerTool"
-						PreprocessorDefinitions="_CRT_SECURE_NO_DEPRECATE;ROMIO_INSIDE_MPICH2"
+						PreprocessorDefinitions="_CRT_SECURE_NO_DEPRECATE;ROMIO_INSIDE_MPICH"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -4340,7 +4340,7 @@
 					>
 					<Tool
 						Name="VCCLCompilerTool"
-						PreprocessorDefinitions="_CRT_SECURE_NO_DEPRECATE;ROMIO_INSIDE_MPICH2"
+						PreprocessorDefinitions="_CRT_SECURE_NO_DEPRECATE;ROMIO_INSIDE_MPICH"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -4348,7 +4348,7 @@
 					>
 					<Tool
 						Name="VCCLCompilerTool"
-						PreprocessorDefinitions="_CRT_SECURE_NO_DEPRECATE;ROMIO_INSIDE_MPICH2"
+						PreprocessorDefinitions="_CRT_SECURE_NO_DEPRECATE;ROMIO_INSIDE_MPICH"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -4356,7 +4356,7 @@
 					>
 					<Tool
 						Name="VCCLCompilerTool"
-						PreprocessorDefinitions="_CRT_SECURE_NO_DEPRECATE;ROMIO_INSIDE_MPICH2"
+						PreprocessorDefinitions="_CRT_SECURE_NO_DEPRECATE;ROMIO_INSIDE_MPICH"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -4364,7 +4364,7 @@
 					>
 					<Tool
 						Name="VCCLCompilerTool"
-						PreprocessorDefinitions="_CRT_SECURE_NO_DEPRECATE;ROMIO_INSIDE_MPICH2"
+						PreprocessorDefinitions="_CRT_SECURE_NO_DEPRECATE;ROMIO_INSIDE_MPICH"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -4372,7 +4372,7 @@
 					>
 					<Tool
 						Name="VCCLCompilerTool"
-						PreprocessorDefinitions="_CRT_SECURE_NO_DEPRECATE;ROMIO_INSIDE_MPICH2"
+						PreprocessorDefinitions="_CRT_SECURE_NO_DEPRECATE;ROMIO_INSIDE_MPICH"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -4380,7 +4380,7 @@
 					>
 					<Tool
 						Name="VCCLCompilerTool"
-						PreprocessorDefinitions="_CRT_SECURE_NO_DEPRECATE;ROMIO_INSIDE_MPICH2"
+						PreprocessorDefinitions="_CRT_SECURE_NO_DEPRECATE;ROMIO_INSIDE_MPICH"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -4388,7 +4388,7 @@
 					>
 					<Tool
 						Name="VCCLCompilerTool"
-						PreprocessorDefinitions="_CRT_SECURE_NO_DEPRECATE;ROMIO_INSIDE_MPICH2"
+						PreprocessorDefinitions="_CRT_SECURE_NO_DEPRECATE;ROMIO_INSIDE_MPICH"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -4396,55 +4396,55 @@
 					>
 					<Tool
 						Name="VCCLCompilerTool"
-						PreprocessorDefinitions="_CRT_SECURE_NO_DEPRECATE;ROMIO_INSIDE_MPICH2"
+						PreprocessorDefinitions="_CRT_SECURE_NO_DEPRECATE;ROMIO_INSIDE_MPICH"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2DebugConfig_1_0_4|Win32"
+					Name="mpichDebugConfig_1_0_4|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
-						PreprocessorDefinitions="_CRT_SECURE_NO_DEPRECATE;ROMIO_INSIDE_MPICH2"
+						PreprocessorDefinitions="_CRT_SECURE_NO_DEPRECATE;ROMIO_INSIDE_MPICH"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichReleaseConfig_1_0_4|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
-						PreprocessorDefinitions="_CRT_SECURE_NO_DEPRECATE;ROMIO_INSIDE_MPICH2"
+						PreprocessorDefinitions="_CRT_SECURE_NO_DEPRECATE;ROMIO_INSIDE_MPICH"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="ch3shm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="ch3shm_mpichReleaseConfig_1_0_4|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
-						PreprocessorDefinitions="_CRT_SECURE_NO_DEPRECATE;ROMIO_INSIDE_MPICH2"
+						PreprocessorDefinitions="_CRT_SECURE_NO_DEPRECATE;ROMIO_INSIDE_MPICH"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2sshm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichsshm_mpichReleaseConfig_1_0_4|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
-						PreprocessorDefinitions="_CRT_SECURE_NO_DEPRECATE;ROMIO_INSIDE_MPICH2"
+						PreprocessorDefinitions="_CRT_SECURE_NO_DEPRECATE;ROMIO_INSIDE_MPICH"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2ssm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichssm_mpichReleaseConfig_1_0_4|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
-						PreprocessorDefinitions="_CRT_SECURE_NO_DEPRECATE;ROMIO_INSIDE_MPICH2"
+						PreprocessorDefinitions="_CRT_SECURE_NO_DEPRECATE;ROMIO_INSIDE_MPICH"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mt_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mt_mpichReleaseConfig_1_0_4|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
-						PreprocessorDefinitions="_CRT_SECURE_NO_DEPRECATE;ROMIO_INSIDE_MPICH2"
+						PreprocessorDefinitions="_CRT_SECURE_NO_DEPRECATE;ROMIO_INSIDE_MPICH"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -4452,15 +4452,15 @@
 					>
 					<Tool
 						Name="VCCLCompilerTool"
-						PreprocessorDefinitions="_CRT_SECURE_NO_DEPRECATE;ROMIO_INSIDE_MPICH2"
+						PreprocessorDefinitions="_CRT_SECURE_NO_DEPRECATE;ROMIO_INSIDE_MPICH"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2DebugConfig_1_0_5|Win32"
+					Name="mpichDebugConfig_1_0_5|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
-						PreprocessorDefinitions="_CRT_SECURE_NO_DEPRECATE;ROMIO_INSIDE_MPICH2"
+						PreprocessorDefinitions="_CRT_SECURE_NO_DEPRECATE;ROMIO_INSIDE_MPICH"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -4468,7 +4468,7 @@
 					>
 					<Tool
 						Name="VCCLCompilerTool"
-						PreprocessorDefinitions="_CRT_SECURE_NO_DEPRECATE;ROMIO_INSIDE_MPICH2"
+						PreprocessorDefinitions="_CRT_SECURE_NO_DEPRECATE;ROMIO_INSIDE_MPICH"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -4476,7 +4476,7 @@
 					>
 					<Tool
 						Name="VCCLCompilerTool"
-						PreprocessorDefinitions="_CRT_SECURE_NO_DEPRECATE;ROMIO_INSIDE_MPICH2"
+						PreprocessorDefinitions="_CRT_SECURE_NO_DEPRECATE;ROMIO_INSIDE_MPICH"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -4484,7 +4484,7 @@
 					>
 					<Tool
 						Name="VCCLCompilerTool"
-						PreprocessorDefinitions="_CRT_SECURE_NO_DEPRECATE;ROMIO_INSIDE_MPICH2"
+						PreprocessorDefinitions="_CRT_SECURE_NO_DEPRECATE;ROMIO_INSIDE_MPICH"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -4492,7 +4492,7 @@
 					>
 					<Tool
 						Name="VCCLCompilerTool"
-						PreprocessorDefinitions="_CRT_SECURE_NO_DEPRECATE;ROMIO_INSIDE_MPICH2"
+						PreprocessorDefinitions="_CRT_SECURE_NO_DEPRECATE;ROMIO_INSIDE_MPICH"
 					/>
 				</FileConfiguration>
 			</File>
@@ -5276,7 +5276,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2DebugConfig_1_0_4|Win32"
+					Name="mpichDebugConfig_1_0_4|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -5284,7 +5284,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichReleaseConfig_1_0_4|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -5292,7 +5292,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="ch3shm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="ch3shm_mpichReleaseConfig_1_0_4|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -5300,7 +5300,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2sshm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichsshm_mpichReleaseConfig_1_0_4|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -5308,7 +5308,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2ssm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichssm_mpichReleaseConfig_1_0_4|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -5316,7 +5316,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mt_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mt_mpichReleaseConfig_1_0_4|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -5332,7 +5332,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2DebugConfig_1_0_5|Win32"
+					Name="mpichDebugConfig_1_0_5|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -5560,7 +5560,7 @@
 				RelativePath=".\src\mpi\coll\helper_fns.c"
 				>
 				<FileConfiguration
-					Name="mpich2ssm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichssm_mpichReleaseConfig_1_0_4|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -5884,7 +5884,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2DebugConfig_1_0_4|Win32"
+					Name="mpichDebugConfig_1_0_4|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -5892,7 +5892,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichReleaseConfig_1_0_4|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -5900,7 +5900,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="ch3shm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="ch3shm_mpichReleaseConfig_1_0_4|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -5908,7 +5908,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2sshm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichsshm_mpichReleaseConfig_1_0_4|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -5916,7 +5916,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2ssm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichssm_mpichReleaseConfig_1_0_4|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -5924,7 +5924,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mt_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mt_mpichReleaseConfig_1_0_4|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -5940,7 +5940,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2DebugConfig_1_0_5|Win32"
+					Name="mpichDebugConfig_1_0_5|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -6105,11 +6105,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\mpich2.def"
+				RelativePath=".\mpich.def"
 				>
 			</File>
 			<File
-				RelativePath=".\src\mpi\romio\mpi-io\mpich2_fileutil.c"
+				RelativePath=".\src\mpi\romio\mpi-io\mpich_fileutil.c"
 				>
 			</File>
 			<File
@@ -6197,11 +6197,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\src\mpi\romio\mpi-io\glue\mpich2\mpio_err.c"
+				RelativePath=".\src\mpi\romio\mpi-io\glue\mpich\mpio_err.c"
 				>
 			</File>
 			<File
-				RelativePath=".\src\mpi\romio\mpi-io\glue\mpich2\mpio_file.c"
+				RelativePath=".\src\mpi\romio\mpi-io\glue\mpich\mpio_file.c"
 				>
 			</File>
 			<File
@@ -6484,7 +6484,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2DebugConfig_1_0_4|Win32"
+					Name="mpichDebugConfig_1_0_4|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -6492,7 +6492,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichReleaseConfig_1_0_4|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -6500,7 +6500,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="ch3shm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="ch3shm_mpichReleaseConfig_1_0_4|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -6508,7 +6508,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2sshm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichsshm_mpichReleaseConfig_1_0_4|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -6516,7 +6516,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2ssm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichssm_mpichReleaseConfig_1_0_4|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -6524,7 +6524,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mt_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mt_mpichReleaseConfig_1_0_4|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -6540,7 +6540,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2DebugConfig_1_0_5|Win32"
+					Name="mpichDebugConfig_1_0_5|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -6800,7 +6800,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2DebugConfig_1_0_4|Win32"
+					Name="mpichDebugConfig_1_0_4|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -6808,7 +6808,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichReleaseConfig_1_0_4|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -6816,7 +6816,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="ch3shm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="ch3shm_mpichReleaseConfig_1_0_4|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -6824,7 +6824,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2sshm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichsshm_mpichReleaseConfig_1_0_4|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -6832,7 +6832,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2ssm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichssm_mpichReleaseConfig_1_0_4|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -6840,7 +6840,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mt_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mt_mpichReleaseConfig_1_0_4|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -6856,7 +6856,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2DebugConfig_1_0_5|Win32"
+					Name="mpichDebugConfig_1_0_5|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -7116,7 +7116,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2DebugConfig_1_0_4|Win32"
+					Name="mpichDebugConfig_1_0_4|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -7124,7 +7124,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichReleaseConfig_1_0_4|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -7132,7 +7132,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="ch3shm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="ch3shm_mpichReleaseConfig_1_0_4|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -7140,7 +7140,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2sshm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichsshm_mpichReleaseConfig_1_0_4|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -7148,7 +7148,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2ssm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichssm_mpichReleaseConfig_1_0_4|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -7156,7 +7156,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mt_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mt_mpichReleaseConfig_1_0_4|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -7172,7 +7172,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2DebugConfig_1_0_5|Win32"
+					Name="mpichDebugConfig_1_0_5|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -7503,7 +7503,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2DebugConfig_1_0_4|Win32"
+					Name="mpichDebugConfig_1_0_4|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -7512,7 +7512,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichReleaseConfig_1_0_4|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -7521,7 +7521,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="ch3shm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="ch3shm_mpichReleaseConfig_1_0_4|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -7530,7 +7530,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2sshm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichsshm_mpichReleaseConfig_1_0_4|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -7539,7 +7539,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2ssm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichssm_mpichReleaseConfig_1_0_4|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -7548,7 +7548,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mt_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mt_mpichReleaseConfig_1_0_4|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -7566,7 +7566,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2DebugConfig_1_0_5|Win32"
+					Name="mpichDebugConfig_1_0_5|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"

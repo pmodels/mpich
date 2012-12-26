@@ -39,7 +39,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions="/MACHINE:I386"
-				AdditionalDependencies="mpich2.lib odbc32.lib odbccp32.lib"
+				AdditionalDependencies="mpich.lib odbc32.lib odbccp32.lib"
 				OutputFile=".\Release/patterns.exe"
 				LinkIncremental="1"
 				SuppressStartupBanner="TRUE"
@@ -99,7 +99,7 @@
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions="/MACHINE:I386"
-				AdditionalDependencies="mpich2d.lib odbc32.lib odbccp32.lib"
+				AdditionalDependencies="mpichd.lib odbc32.lib odbccp32.lib"
 				OutputFile=".\Debug/patterns.exe"
 				LinkIncremental="2"
 				SuppressStartupBanner="TRUE"

@@ -1,7 +1,7 @@
 <package>
 <job id="winconfigure">
     <runtime>
-        <description>This script generates files for building MPICH2</description>
+        <description>This script generates files for building MPICH</description>
         <unnamed
             name = "--force"
             helpstring = "Force the creation of new files, overwriting the old"
@@ -204,7 +204,7 @@ Function printMsg(level, str)
 	End Select	
 End Function
 
-printMsg "STATUS", "Configuring MPICH2 for windows..."
+printMsg "STATUS", "Configuring MPICH for windows..."
 
 x64 = True
 bVS2005 = False
@@ -1290,8 +1290,8 @@ end if
 
 Function DecorateMPIFuncs(str)
 	' uncomment out the HAVE_EXPORTS_MPI_API block
-	'str = ReplaceBetweenTags(str, "/*", "HAVE_EXPORT_MPI_API", "*/", "#ifdef MPICH2_STATIC_LIBRARY" & vbCrLf & "#define EXPORT_MPI_API" & vbCrLf & "#else" & vbCrLf & "#ifdef MPICH2_EXPORTS" & vbCrLf & "#define EXPORT_MPI_API __declspec(dllexport)" & vbCrLf & "#else" & vbCrLf & "#define EXPORT_MPI_API __declspec(dllimport)" & vbCrLf & "#endif" & vbCrLf & "#endif" & vbCrLf & "#ifndef MPI_CALL" & vbCrLf & "#define MPI_CALL __cdecl" & vbCrLf & "#endif" & vbCrLf)
-	str = Replace(str, "/* --Insert Additional Definitions Here-- */", "#ifdef MPICH2_STATIC_LIBRARY" & vbCrLf & "#define EXPORT_MPI_API" & vbCrLf & "#else" & vbCrLf & "#ifdef MPICH2_EXPORTS" & vbCrLf & "#define EXPORT_MPI_API __declspec(dllexport)" & vbCrLf & "#else" & vbCrLf & "#define EXPORT_MPI_API __declspec(dllimport)" & vbCrLf & "#endif" & vbCrLf & "#endif" & vbCrLf & "#ifndef MPI_CALL" & vbCrLf & "#define MPI_CALL __cdecl" & vbCrLf & "#endif" & vbCrLf)
+	'str = ReplaceBetweenTags(str, "/*", "HAVE_EXPORT_MPI_API", "*/", "#ifdef MPICH_STATIC_LIBRARY" & vbCrLf & "#define EXPORT_MPI_API" & vbCrLf & "#else" & vbCrLf & "#ifdef MPICH_EXPORTS" & vbCrLf & "#define EXPORT_MPI_API __declspec(dllexport)" & vbCrLf & "#else" & vbCrLf & "#define EXPORT_MPI_API __declspec(dllimport)" & vbCrLf & "#endif" & vbCrLf & "#endif" & vbCrLf & "#ifndef MPI_CALL" & vbCrLf & "#define MPI_CALL __cdecl" & vbCrLf & "#endif" & vbCrLf)
+	str = Replace(str, "/* --Insert Additional Definitions Here-- */", "#ifdef MPICH_STATIC_LIBRARY" & vbCrLf & "#define EXPORT_MPI_API" & vbCrLf & "#else" & vbCrLf & "#ifdef MPICH_EXPORTS" & vbCrLf & "#define EXPORT_MPI_API __declspec(dllexport)" & vbCrLf & "#else" & vbCrLf & "#define EXPORT_MPI_API __declspec(dllimport)" & vbCrLf & "#endif" & vbCrLf & "#endif" & vbCrLf & "#ifndef MPI_CALL" & vbCrLf & "#define MPI_CALL __cdecl" & vbCrLf & "#endif" & vbCrLf)
 	' add dllspec and calling convention to the MPI api
 	first_index = InStr(str, "#ifndef MPICH_SUPPRESS_PROTOTYPES")
 	last_index = InStr(str, "#endif /* MPICH_SUPPRESS_PROTOTYPES */")
@@ -1318,12 +1318,12 @@ Function DecorateMPIFuncs(str)
 End Function
 
 '
-' Get MPICH2 Version & ABI Version
+' Get MPICH Version & ABI Version
 '
-Function GetMPICH2Versions(ByRef mpich2Version, ByRef mpich2ABIVersion, ByRef mpich2ReleaseDate)
-    mpich2Version = "0.0"
-    mpich2ABIVersion = "0.0"
-    mpich2ReleaseDate = "0/0/0"
+Function GetMPICHVersions(ByRef mpichVersion, ByRef mpichABIVersion, ByRef mpichReleaseDate)
+    mpichVersion = "0.0"
+    mpichABIVersion = "0.0"
+    mpichReleaseDate = "0/0/0"
     if f.FileExists("maint\Version") then
         Dim fin, str
         Set fin = f.OpenTextFile("maint\Version")
@@ -1336,29 +1336,29 @@ Function GetMPICH2Versions(ByRef mpich2Version, ByRef mpich2ABIVersion, ByRef mp
             Else
                 strTokenArr = Split(str, "=", -1 , 1)
                 If UBound(strTokenArr, 1) = 1 Then
-                    If(StrComp(Left(strTokenArr(0), 14), "MPICH2_VERSION") = 0) Then
-                        mpich2Version = strTokenArr(1)
-                    ElseIf(StrComp(Left(strTokenArr(0), 17), "MPICH2_ABIVERSION") = 0) Then
-                        mpich2ABIVersion = Replace(strTokenArr(1), ":", ".")
-                    ElseIf(StrComp(Left(strTokenArr(0), 19), "MPICH2_RELEASE_DATE") = 0) Then
-                        mpich2ReleaseDate = strTokenArr(1)
+                    If(StrComp(Left(strTokenArr(0), 14), "MPICH_VERSION") = 0) Then
+                        mpichVersion = strTokenArr(1)
+                    ElseIf(StrComp(Left(strTokenArr(0), 17), "MPICH_ABIVERSION") = 0) Then
+                        mpichABIVersion = Replace(strTokenArr(1), ":", ".")
+                    ElseIf(StrComp(Left(strTokenArr(0), 19), "MPICH_RELEASE_DATE") = 0) Then
+                        mpichReleaseDate = strTokenArr(1)
                     ElseIf(StrComp(Left(strTokenArr(0), 19), "libmpich_so_version") = 0) Then
                         'Ignore libmpich so version
                     Else
-                        printMsg "ERROR", "Invalid String """ & str & """ found in mpich2 Version file"
+                        printMsg "ERROR", "Invalid String """ & str & """ found in mpich Version file"
                     End If
                 Else
-                    printMsg "ERROR", "Invalid format in mpich2 Version file. Expected: ""MPICH2_VERSION_NAME MPICH2_VERSION"" format"
+                    printMsg "ERROR", "Invalid format in mpich Version file. Expected: ""MPICH_VERSION_NAME MPICH_VERSION"" format"
                 End If
             End If
         Loop
         fin.Close()
     end if
-    ' We only care about MPICH2 version for now
-    If (StrComp(mpich2Version, "0.0") <> 0) Then
-        GetMPICH2Versions = True
+    ' We only care about MPICH version for now
+    If (StrComp(mpichVersion, "0.0") <> 0) Then
+        GetMPICHVersions = True
     Else
-        GetMPICH2Versions = False
+        GetMPICHVersions = False
     End If
 End Function
 
@@ -1413,7 +1413,7 @@ End Function
 ' We also support version numbers with a missing REV number like
 '   [MAJ].[MIN][EXT][EXT_NUMBER]
 
-Function GetMPICH2NumVersion(ver)
+Function GetMPICHNumVersion(ver)
 	Dim verTokenArray, numVer, majorVer, minorVer, revNum, ext, extNum, tmpStr
 	Dim verTokenArrayIndex, verTokenArrayLastIndex, minorOrRevNum
 	Dim regExpObj, matchesCollection, verHasRev, verHasExt
@@ -1421,7 +1421,7 @@ Function GetMPICH2NumVersion(ver)
 	regExpObj.Global = True
 	regExpObj.IgnoreCase = True
 
-	GetMPICH2NumVersion = 0
+	GetMPICHNumVersion = 0
 	verTokenArrayIndex = 0
 	verTokenArray = Split(ver, ".", -1, 1)
         verTokenArrayLastIndex = UBound(verTokenArray, 1)
@@ -1440,13 +1440,13 @@ Function GetMPICH2NumVersion(ver)
 		if Not IsIntString(majorVer) then
 			printMsg "ERROR","Error: " & ver & " not in expected format - eg: 1.0.7rc1"
 			printMsg "ERROR", "Major version :" & majorVer & " is not an int"
-			GetMPICH2NumVersion = 0
+			GetMPICHNumVersion = 0
 			Exit Function
 		end if
 	else
 		printMsg "ERROR", "Error: " & ver & " not in expected format - eg: 1.0.7rc1"
 		printMsg "ERROR", "Major ver not in range [0-9]"
-		GetMPICH2NumVersion = 0
+		GetMPICHNumVersion = 0
 		Exit Function
 	end if
 	
@@ -1460,7 +1460,7 @@ Function GetMPICH2NumVersion(ver)
 			end if 
 			verTokenArrayIndex = verTokenArrayIndex + 1
                         if(verTokenArrayIndex > verTokenArrayLastIndex) then
-'                           The MPICH2 version only has a [MAJ] & [MIN] version numbers
+'                           The MPICH version only has a [MAJ] & [MIN] version numbers
                             verHasRev = False
                             verHasExt = False
                         else
@@ -1468,7 +1468,7 @@ Function GetMPICH2NumVersion(ver)
 			    verHasRev = True
                         end if
 		else
-'                       The MPICH2 version has no rev number, the field for minor ver contains [EXT]
+'                       The MPICH version has no rev number, the field for minor ver contains [EXT]
 			verHasRev = False
                         verHasExt = True
 		end if
@@ -1511,8 +1511,8 @@ Function GetMPICH2NumVersion(ver)
                     Exit Function
             end if
 
-'           If MPICH2 ver has [REV] we are parsing [REV][EXT][EXT_NUM]
-'           If MPICH2 ver does not have [REV], but has [EXT], we are parsing [MIN][EXT][EXT_NUM]
+'           If MPICH ver has [REV] we are parsing [REV][EXT][EXT_NUM]
+'           If MPICH ver does not have [REV], but has [EXT], we are parsing [MIN][EXT][EXT_NUM]
             minorOrRevNum = matchesCollection(0)
             if Not ((Len(minorOrRevNum) < 0) Or (Len(minorOrRevNum) > 2)) then
                     if IsIntString(minorOrRevNum) then
@@ -1571,13 +1571,13 @@ Function GetMPICH2NumVersion(ver)
 	end if
 
 	numVer = majorVer & minorVer & revNum & ext & extNum
-	GetMPICH2NumVersion = 0 + numVer
-	printMsg "VERBOSE", " MPICH2 NUM VERSION " & numVer
+	GetMPICHNumVersion = 0 + numVer
+	printMsg "VERBOSE", " MPICH NUM VERSION " & numVer
 End Function
 
-GetMPICH2Versions mpich2Version, mpich2ABIVersion, mpich2ReleaseDate
-printMsg "VERBOSE", "MPICH2_VERSION = " & mpich2Version & " MPICH2_RELEASE_DATE = " & mpich2ReleaseDate
-mpich2NumVersion = GetMPICH2NumVersion(mpich2Version)
+GetMPICHVersions mpichVersion, mpichABIVersion, mpichReleaseDate
+printMsg "VERBOSE", "MPICH_VERSION = " & mpichVersion & " MPICH_RELEASE_DATE = " & mpichReleaseDate
+mpichNumVersion = GetMPICHNumVersion(mpichVersion)
 
 Function RegExpFind(pattern, str)
    Dim regEx, Match, Matches           ' Create variable.
@@ -2193,8 +2193,8 @@ Function ReplaceAts( str, use_f77, b64 )
 			' Config options 
 			Case "@CONFIGURE_ARGS_CLEAN@"
 				str = Replace(str, "@CONFIGURE_ARGS_CLEAN@", "Check winconfigure.wsf for config options")
-			Case "@MPICH2_RELEASE_DATE@"
-				str = Replace(str, "@MPICH2_RELEASE_DATE@", Date)
+			Case "@MPICH_RELEASE_DATE@"
+				str = Replace(str, "@MPICH_RELEASE_DATE@", Date)
 			Case "@DEVICE@"
 				str = Replace(str, "@DEVICE@", "ch3")
 			Case "@CC@"
@@ -2217,10 +2217,10 @@ Function ReplaceAts( str, use_f77, b64 )
 			Case "@FCFLAGS@"
 				' FIXME: Not the complete list of FCFLAGS --- only some listed
 				str = Replace(str, "@FCFLAGS@", "/names:lowercase /iface:cref /assume:underscore")
-			Case "@MPICH2_VERSION@"
-				str = Replace(str, "@MPICH2_VERSION@", mpich2Version)
-			Case "@MPICH2_NUMVERSION@"
-				str = Replace(str, "@MPICH2_NUMVERSION@", mpich2NumVersion)
+			Case "@MPICH_VERSION@"
+				str = Replace(str, "@MPICH_VERSION@", mpichVersion)
+			Case "@MPICH_NUMVERSION@"
+				str = Replace(str, "@MPICH_NUMVERSION@", mpichNumVersion)
 			Case "@nemesis_nets_macro_defs@"
 				str = Replace(str, "@nemesis_nets_macro_defs@", "#define MPIDI_NEM_NEWTCP_MODULE 0" + vbCrLf + "#define MPIDI_NEM_ND_MODULE 1")
 			Case "@nemesis_nets_func_decl@"
@@ -3211,7 +3211,7 @@ Sub AddDefinitions( fout, filename, b64 )
 					fout.WriteLine("#define MPIU_THREAD_GRANULARITY MPIU_THREAD_GRANULARITY_SINGLE")
 					fout.WriteLine("#endif")
                                 Case "MPIU_THREAD_SUPPRESS_PREDEFINED_REFCOUNTS"
-                                        ' Currently we only build MPICH2 with global lock 
+                                        ' Currently we only build MPICH with global lock 
                                         ' -Introduce this option when building lock-free version
                                         fout.WriteLine("/* #undef MPIU_THREAD_SUPPRESS_PREDEFINED_REFCOUNTS */")
                                 Case "MPIU_TLS_SPECIFIER"
@@ -3452,8 +3452,8 @@ Sub AddDefinitions( fout, filename, b64 )
 					fout.WriteLine("/* #undef ROMIO_HAVE_WORKING_AIO */")
 				Case "ROMIO_HFS"
 					fout.WriteLine("/* #undef ROMIO_HFS */")
-				Case "ROMIO_INSIDE_MPICH2"
-					fout.WriteLine("#define ROMIO_INSIDE_MPICH2 1")
+				Case "ROMIO_INSIDE_MPICH"
+					fout.WriteLine("#define ROMIO_INSIDE_MPICH 1")
 				Case "ROMIO_NFS"
 					fout.WriteLine("/* #undef ROMIO_NFS */")
 				Case "ROMIO_PANFS"
@@ -3722,8 +3722,8 @@ Sub AddDefinitions( fout, filename, b64 )
                                         fout.WriteLine("/* #undef LINUX86_CYCLE_CPUID_RDTSC64 */")
                                 Case "HAVE_MACH_ABSOLUTE_TIME"
                                         fout.WriteLine("/* #undef HAVE_MACH_ABSOLUTE_TIME */")
-				Case "MPICH2_LIBDIR"
-					fout.WriteLine("#undef MPICH2_LIBDIR")
+				Case "MPICH_LIBDIR"
+					fout.WriteLine("#undef MPICH_LIBDIR")
                                 Case "MPICH_DEBUG_MUTEXNESTING"
                                         fout.WriteLine("/* #undef MPICH_DEBUG_MUTEXNESTING */")
 				Case "MPICH_DEBUG_MEMARENA"
@@ -3894,14 +3894,14 @@ Sub AddDefinitions( fout, filename, b64 )
 	End If
 End Sub
 
-printMsg "STATUS", "Checking MPICH2 dependencies..."
+printMsg "STATUS", "Checking MPICH dependencies..."
 if not f.FolderExists("C:\Program Files\Microsoft HPC Pack 2008 SDK") then
     printMsg "ERROR", "Unable to find Microsoft HPC SDK"
     WScript.Quit
 else
     printMsg "VERBOSE", "Found MS HPC SDK "
 end if
-printMsg "STATUS", "Creating MPICH2 header files..."
+printMsg "STATUS", "Creating MPICH header files..."
 printMsg "STATUS", "Creating generic header files..."
 
 '
@@ -3935,8 +3935,8 @@ if bAddDllDecoration then
 	contents32 = DecorateMPIFuncs(contents32)
 	contents64 = DecorateMPIFuncs(contents64)
 '	' uncomment out the HAVE_EXPORTS_MPI_API block
-'	'contents = ReplaceBetweenTags(contents, "/*", "HAVE_EXPORT_MPI_API", "*/", "#ifdef MPICH2_STATIC_LIBRARY" & vbCrLf & "#define EXPORT_MPI_API" & vbCrLf & "#else" & vbCrLf & "#ifdef MPICH2_EXPORTS" & vbCrLf & "#define EXPORT_MPI_API __declspec(dllexport)" & vbCrLf & "#else" & vbCrLf & "#define EXPORT_MPI_API __declspec(dllimport)" & vbCrLf & "#endif" & vbCrLf & "#endif" & vbCrLf & "#ifndef MPI_CALL" & vbCrLf & "#define MPI_CALL __cdecl" & vbCrLf & "#endif" & vbCrLf)
-'	contents = Replace(contents, "/* --Insert Additional Definitions Here-- */", "#ifdef MPICH2_STATIC_LIBRARY" & vbCrLf & "#define EXPORT_MPI_API" & vbCrLf & "#else" & vbCrLf & "#ifdef MPICH2_EXPORTS" & vbCrLf & "#define EXPORT_MPI_API __declspec(dllexport)" & vbCrLf & "#else" & vbCrLf & "#define EXPORT_MPI_API __declspec(dllimport)" & vbCrLf & "#endif" & vbCrLf & "#endif" & vbCrLf & "#ifndef MPI_CALL" & vbCrLf & "#define MPI_CALL __cdecl" & vbCrLf & "#endif" & vbCrLf)
+'	'contents = ReplaceBetweenTags(contents, "/*", "HAVE_EXPORT_MPI_API", "*/", "#ifdef MPICH_STATIC_LIBRARY" & vbCrLf & "#define EXPORT_MPI_API" & vbCrLf & "#else" & vbCrLf & "#ifdef MPICH_EXPORTS" & vbCrLf & "#define EXPORT_MPI_API __declspec(dllexport)" & vbCrLf & "#else" & vbCrLf & "#define EXPORT_MPI_API __declspec(dllimport)" & vbCrLf & "#endif" & vbCrLf & "#endif" & vbCrLf & "#ifndef MPI_CALL" & vbCrLf & "#define MPI_CALL __cdecl" & vbCrLf & "#endif" & vbCrLf)
+'	contents = Replace(contents, "/* --Insert Additional Definitions Here-- */", "#ifdef MPICH_STATIC_LIBRARY" & vbCrLf & "#define EXPORT_MPI_API" & vbCrLf & "#else" & vbCrLf & "#ifdef MPICH_EXPORTS" & vbCrLf & "#define EXPORT_MPI_API __declspec(dllexport)" & vbCrLf & "#else" & vbCrLf & "#define EXPORT_MPI_API __declspec(dllimport)" & vbCrLf & "#endif" & vbCrLf & "#endif" & vbCrLf & "#ifndef MPI_CALL" & vbCrLf & "#define MPI_CALL __cdecl" & vbCrLf & "#endif" & vbCrLf)
 '	' add dllspec and calling convention to the MPI api
 '	first_index = InStr(contents, "#ifndef MPICH_SUPPRESS_PROTOTYPES")
 '	last_index = InStr(contents, "#endif /* MPICH_SUPPRESS_PROTOTYPES */")
@@ -4240,11 +4240,11 @@ fin.Close()
 fout.Close()
 
 '
-' Generate mpich2info.h
+' Generate mpichinfo.h
 '
-printMsg "VERBOSE", "Creating src\include\mpich2info.h"
-set fout = f.CreateTextFile("src\include\mpich2info.h")
-set fin  = f.OpenTextFile("src\include\mpich2info.h.in")
+printMsg "VERBOSE", "Creating src\include\mpichinfo.h"
+set fout = f.CreateTextFile("src\include\mpichinfo.h")
+set fin  = f.OpenTextFile("src\include\mpichinfo.h.in")
 contents = fin.ReadAll()
 contents = ReplaceAts(contents, false, false)
 fout.Write(contents)
@@ -5052,7 +5052,7 @@ End If
 '
 
 
-printMsg "STATUS", "Creating *conf.h header files for MPICH2..."
+printMsg "STATUS", "Creating *conf.h header files for MPICH..."
 '
 ' Generate the conf.h files
 '
@@ -6104,7 +6104,7 @@ Function ConfigureTestDir
 
 End Function
 
-printMsg "STATUS", "Configuring MPICH2 test directory..."
+printMsg "STATUS", "Configuring MPICH test directory..."
 ConfigureTestDir()
 
 '
@@ -6134,7 +6134,7 @@ Function GenerateMPICC()
 	fout.WriteLine(vbLessThan & "package" & vbGreaterThan)
 	fout.WriteLine(vbLessThan & "job id=""mpicc""" & vbGreaterThan)
 	fout.WriteLine("    " & vbLessThan & "runtime" & vbGreaterThan)
-	fout.WriteLine("        " & vbLessThan & "description" & vbGreaterThan & "This script compiles C console MPICH2 applications" & vbLessThan & "/description" & vbGreaterThan)
+	fout.WriteLine("        " & vbLessThan & "description" & vbGreaterThan & "This script compiles C console MPICH applications" & vbLessThan & "/description" & vbGreaterThan)
 	fout.WriteLine("        " & vbLessThan & "unnamed")
 	fout.WriteLine("            name = ""file""")
 	fout.WriteLine("            helpstring = ""List the source files to compile""")
@@ -6538,8 +6538,8 @@ Function GenBuild()
 	mfile.WriteLine("fc = ifort")
 	mfile.WriteLine("!ENDIF")
 	mfile.WriteLine
-	mfile.WriteLine("!IFDEF MPICH2_CFLAGS")
-	mfile.WriteLine("common_cflags = $(common_cflags) $(MPICH2_CFLAGS)")
+	mfile.WriteLine("!IFDEF MPICH_CFLAGS")
+	mfile.WriteLine("common_cflags = $(common_cflags) $(MPICH_CFLAGS)")
 	mfile.WriteLine("!ENDIF")
 	mfile.WriteLine
 	mfile.WriteLine("!IF ""$(CPU)"" == ""x86""")
@@ -6566,7 +6566,7 @@ Function GenBuild()
 	mfile.WriteLine("common_cflags = $(common_cflags) -Oi -D_WINNT -D_WIN32_WINNT=$(NMAKE_WINVER)")
 	mfile.WriteLine
         mfile.WriteLine("# Set USE_MTDLL_RUNLIB env variable to 1 if you need to use")
-        mfile.WriteLine("# Multithreaded dynamic link runtime library to build MPICH2")
+        mfile.WriteLine("# Multithreaded dynamic link runtime library to build MPICH")
         mfile.WriteLine("# Default is multithreaded static run lib")
                         ' IF (NODEBUG)
 	mfile.WriteLine("!IFDEF NODEBUG")
@@ -6640,7 +6640,7 @@ Function GenBuild()
 	mfile.WriteLine(" /DHAVE_WINDOWS_H \")
 	mfile.WriteLine(" /DUSE_WINCONF_H \")
 	mfile.WriteLine(" /DMPIO_BUILD_PROFILING \")
-	mfile.WriteLine(" /DROMIO_INSIDE_MPICH2")
+	mfile.WriteLine(" /DROMIO_INSIDE_MPICH")
 	mfile.WriteLine
 	mfile.WriteLine("!IF ""$(NO_FORTRAN)"" == """"")
 	mfile.WriteLine("common_cflags = $(common_cflags) /DHAVE_FORTRAN_BINDING")
@@ -6762,7 +6762,7 @@ Function GenBuild()
 '	mfile.WriteLine("cflags = $(cflags) /DMPICH_MULTITHREADED")
 '	mfile.WriteLine("!ENDIF")
 	mfile.WriteLine
-	mfile.WriteLine("mpich2_libs = activeds.lib adsiid.lib netapi32.lib ntdsapi.lib secur32.lib mswsock.lib ws2_32.lib mpr.lib rpcrt4.lib crypt32.lib gdi32.lib kernel32.lib advapi32.lib comsupp.lib")
+	mfile.WriteLine("mpich_libs = activeds.lib adsiid.lib netapi32.lib ntdsapi.lib secur32.lib mswsock.lib ws2_32.lib mpr.lib rpcrt4.lib crypt32.lib gdi32.lib kernel32.lib advapi32.lib comsupp.lib")
 	mfile.WriteLine("!IF ""$(CPU)"" != ""x86""")
 	mfile.WriteLine("# common_libs = bufferoverflowU.lib")
 	mfile.WriteLine("!ENDIF")
@@ -6770,19 +6770,19 @@ Function GenBuild()
 	mfile.WriteLine("!IF ""$(CHANNEL)"" == ""ib""")
 	mfile.WriteLine("!IF ""$(IB)"" == ""IBAL""")
 	mfile.WriteLine("!IF ""$(IB_PATH_LIB)"" == """"")
-	mfile.WriteLine("mpich2_libs = $(mpich2_libs) ibal.lib complib.lib /LIBPATH:$(IB_PATH)\lib")
+	mfile.WriteLine("mpich_libs = $(mpich_libs) ibal.lib complib.lib /LIBPATH:$(IB_PATH)\lib")
 	mfile.WriteLine("!ELSE")
 	mfile.WriteLine("!IF ""$(CPU)"" != ""x86""")
-	mfile.WriteLine("mpich2_libs = $(mpich2_libs) ibal.lib complib.lib /LIBPATH:$(IB_PATH_LIB)\AMD64")
+	mfile.WriteLine("mpich_libs = $(mpich_libs) ibal.lib complib.lib /LIBPATH:$(IB_PATH_LIB)\AMD64")
 	mfile.WriteLine("!ELSE")
-	mfile.WriteLine("mpich2_libs = $(mpich2_libs) ibal.lib complib.lib /LIBPATH:$(IB_PATH_LIB)\x86")
+	mfile.WriteLine("mpich_libs = $(mpich_libs) ibal.lib complib.lib /LIBPATH:$(IB_PATH_LIB)\x86")
 	mfile.WriteLine("!ENDIF")
 	mfile.WriteLine("!ENDIF")
 	mfile.WriteLine("!ELSE")
 	mfile.WriteLine("!IF ""$(IB_PATH_LIB)"" == """"")
-	mfile.WriteLine("mpich2_libs = $(mpich2_libs) vapi.lib vapi_common.lib /LIBPATH:$(IB_PATH)\lib\release")
+	mfile.WriteLine("mpich_libs = $(mpich_libs) vapi.lib vapi_common.lib /LIBPATH:$(IB_PATH)\lib\release")
 	mfile.WriteLine("!ELSE")
-	mfile.WriteLine("mpich2_libs = $(mpich2_libs) vapi.lib vapi_common.lib /LIBPATH:$(IB_PATH_LIB)")
+	mfile.WriteLine("mpich_libs = $(mpich_libs) vapi.lib vapi_common.lib /LIBPATH:$(IB_PATH_LIB)")
 	mfile.WriteLine("!ENDIF")
 	mfile.WriteLine("!ENDIF")
 	mfile.WriteLine("!ENDIF")
@@ -6892,7 +6892,7 @@ Function GenBuild()
 	trimlength = Len(f.GetFolder(".").Path) + 1
 
 	mfile.WriteLine
-	mfile.WriteLine("# MPICH2")
+	mfile.WriteLine("# MPICH")
 	mfile.WriteLine
 	CreateRules f.GetFolder("src\mpi"), trimlength
 	CreateRules f.GetFolder("src\binding\f90"), trimlength
@@ -6933,7 +6933,7 @@ Function GenBuild()
 	mfile.WriteLine("{..\src\mpi\romio\mpi-io}.c{$(OUTDIR)}.obj:")
 	mfile.WriteLine("    $(cc) $(cflags) /Fo""$(OUTDIR)\\"" /Fd""$(OUTDIR)\\"" $**")
 	mfile.WriteLine
-	mfile.WriteLine("{..\src\mpi\romio\mpi-io\glue\mpich2}.c{$(OUTDIR)}.obj:")
+	mfile.WriteLine("{..\src\mpi\romio\mpi-io\glue\mpich}.c{$(OUTDIR)}.obj:")
 	mfile.WriteLine("    $(cc) $(cflags) /Fo""$(OUTDIR)\\"" /Fd""$(OUTDIR)\\"" $**")
 	mfile.WriteLine
 	mfile.WriteLine("{..\src\mpi\romio\mpi2-other\array}.c{$(OUTDIR)}.obj:")
@@ -6942,27 +6942,27 @@ Function GenBuild()
 	mfile.WriteLine("$(OUTDIR)\rlogtime.obj: ..\src\util\logging\rlog\rlogtime.c")
 	mfile.WriteLine("	$(cc) $(cflags) /I..\src\util\logging\common /Fo""$(OUTDIR)\\"" /Fd""$(OUTDIR)\\"" ..\src\util\logging\rlog\rlogtime.c")
 	mfile.WriteLine
-	CreateObjs "mpich2", f.GetFolder("src\mpi"), trimlength, true, false
-	CreateObjs "mpich2", f.GetFolder("src\mpid\common\datatype"), trimlength, false, false
-	CreateObjs "mpich2", f.GetFolder("src\util\mem"), trimlength, false, false
-	CreateObjs "mpich2", f.GetFolder("src\util\dbg"), trimlength, false, false
-	CreateObjs "mpich2", f.GetFolder("src\util\msgs"), trimlength, false, false
-	CreateObjs "mpich2", f.GetFolder("src\util\procmap"), trimlength, false, false
-	CreateObjs "mpich2", f.GetFolder("src\util\ex"), trimlength, false, false
-	CreateObjs "mpich2", f.GetFolder("src\pmi\smpd"), trimlength, false, false
-	CreateObjs "mpich2", f.GetFolder("src\pm\smpd"), trimlength, false, false
+	CreateObjs "mpich", f.GetFolder("src\mpi"), trimlength, true, false
+	CreateObjs "mpich", f.GetFolder("src\mpid\common\datatype"), trimlength, false, false
+	CreateObjs "mpich", f.GetFolder("src\util\mem"), trimlength, false, false
+	CreateObjs "mpich", f.GetFolder("src\util\dbg"), trimlength, false, false
+	CreateObjs "mpich", f.GetFolder("src\util\msgs"), trimlength, false, false
+	CreateObjs "mpich", f.GetFolder("src\util\procmap"), trimlength, false, false
+	CreateObjs "mpich", f.GetFolder("src\util\ex"), trimlength, false, false
+	CreateObjs "mpich", f.GetFolder("src\pmi\smpd"), trimlength, false, false
+	CreateObjs "mpich", f.GetFolder("src\pm\smpd"), trimlength, false, false
 	mfile.Write(" \" & vbCrLF & "	$(" & outdir & ")\smpd_adreg.obj")
-	CreateObjs "mpich2", f.GetFolder("src\nameserv\pmi"), trimlength, false, false
-	CreateObjs "mpich2", f.GetFolder("src\mpid\ch3\src"), trimlength, false, false
-	CreateObjs "mpich2", f.GetFolder("src\mpid\common\locks"), trimlength, false, false
-	CreateObjs "mpich2", f.GetFolder("src\mpid\common\sock\iocp"), trimlength, false, false
-	CreateObjs "mpich2", f.GetFolder("src\mpid\common\sched"), trimlength, false, false
-	CreateObjs "mpich2", f.GetFolder("src\util\info"), trimlength, false, false
-'	CreateObjs "mpich2", f.GetFolder("src\util\timing"), trimlength, false, false
-	CreateObjs "mpich2", f.GetFolder("src\util\logging\common"), trimlength, false, false
-	CreateObjs "mpich2", f.GetFolder("src\util\param"), trimlength, false, false
-        CreateObjs "mpich2", f.GetFolder("src\util\thread"), trimlength, false, false
-        CreateObjs "mpich2", f.GetFolder("src\util\other"), trimlength, false, false
+	CreateObjs "mpich", f.GetFolder("src\nameserv\pmi"), trimlength, false, false
+	CreateObjs "mpich", f.GetFolder("src\mpid\ch3\src"), trimlength, false, false
+	CreateObjs "mpich", f.GetFolder("src\mpid\common\locks"), trimlength, false, false
+	CreateObjs "mpich", f.GetFolder("src\mpid\common\sock\iocp"), trimlength, false, false
+	CreateObjs "mpich", f.GetFolder("src\mpid\common\sched"), trimlength, false, false
+	CreateObjs "mpich", f.GetFolder("src\util\info"), trimlength, false, false
+'	CreateObjs "mpich", f.GetFolder("src\util\timing"), trimlength, false, false
+	CreateObjs "mpich", f.GetFolder("src\util\logging\common"), trimlength, false, false
+	CreateObjs "mpich", f.GetFolder("src\util\param"), trimlength, false, false
+        CreateObjs "mpich", f.GetFolder("src\util\thread"), trimlength, false, false
+        CreateObjs "mpich", f.GetFolder("src\util\other"), trimlength, false, false
 	mfile.WriteLine(" \" & vbCrLf & "	$(OUTDIR)\ad_ntfs.obj \")
 	mfile.WriteLine("	$(OUTDIR)\ad_ntfs_close.obj \")
 	mfile.WriteLine("	$(OUTDIR)\ad_ntfs_done.obj \")
@@ -7051,7 +7051,7 @@ Function GenBuild()
 	mfile.WriteLine("	$(OUTDIR)\iwrite.obj \")
 	mfile.WriteLine("	$(OUTDIR)\iwrite_at.obj \")
 	mfile.WriteLine("	$(OUTDIR)\iwrite_sh.obj \")
-	mfile.WriteLine("	$(OUTDIR)\mpich2_fileutil.obj \")
+	mfile.WriteLine("	$(OUTDIR)\mpich_fileutil.obj \")
 	mfile.WriteLine("	$(OUTDIR)\mpiu_greq.obj \")
 	mfile.WriteLine("	$(OUTDIR)\open.obj \")
 	mfile.WriteLine("	$(OUTDIR)\prealloc.obj \")
@@ -7098,7 +7098,7 @@ Function GenBuild()
         mfile.WriteLine("   $(OUTDIR)\create_f90_complex.obj")
 	mfile.WriteLine
 	mfile.WriteLine("!IFDEF RLOG")
-	mfile.WriteLine("mpich2_objs = $(mpich2_objs) $(OUTDIR)\rlogtime.obj")
+	mfile.WriteLine("mpich_objs = $(mpich_objs) $(OUTDIR)\rlogtime.obj")
 	mfile.WriteLine("!ENDIF")
 
 	mfile.WriteLine
@@ -7144,11 +7144,11 @@ Function GenBuild()
 	mfile.WriteLine
 	mfile.WriteLine("!IF ""$(CHANNEL)"" == ""sock""")
 	mfile.WriteLine
-	mfile.WriteLine("ch3sock: $(SOCK_OUTDIR)\mpich2$(P)$(D).dll")
+	mfile.WriteLine("ch3sock: $(SOCK_OUTDIR)\mpich$(P)$(D).dll")
 	mfile.WriteLine
-	mfile.WriteLine("$(SOCK_OUTDIR)\mpich2$(P)$(D).dll: $(ch3sock_objs) $(mpich2_objs) $(PLIB_DEP)")
-	mfile.WriteLine("	$(link) $(dlllflags) $(ch3sock_objs) $(mpich2_objs) $(mpich2_libs) $(rlog_libs) $(common_libs) -out:$(SOCK_OUTDIR)\mpich2$(P)$(D).dll /DEF:..\mpich2.def")
-	mfile.WriteLine("	if exist $(SOCK_OUTDIR)\mpich2$(P)$(D).dll.manifest mt.exe -manifest $(SOCK_OUTDIR)\mpich2$(P)$(D).dll.manifest -outputresource:$(SOCK_OUTDIR)\mpich2$(P)$(D).dll;2")
+	mfile.WriteLine("$(SOCK_OUTDIR)\mpich$(P)$(D).dll: $(ch3sock_objs) $(mpich_objs) $(PLIB_DEP)")
+	mfile.WriteLine("	$(link) $(dlllflags) $(ch3sock_objs) $(mpich_objs) $(mpich_libs) $(rlog_libs) $(common_libs) -out:$(SOCK_OUTDIR)\mpich$(P)$(D).dll /DEF:..\mpich.def")
+	mfile.WriteLine("	if exist $(SOCK_OUTDIR)\mpich$(P)$(D).dll.manifest mt.exe -manifest $(SOCK_OUTDIR)\mpich$(P)$(D).dll.manifest -outputresource:$(SOCK_OUTDIR)\mpich$(P)$(D).dll;2")
 	mfile.WriteLine
 	mfile.WriteLine("!ELSE")
 	mfile.WriteLine
@@ -7160,56 +7160,56 @@ Function GenBuild()
 	mfile.WriteLine("!ERROR Invalid channel selected - $(CHANNEL)")
 	mfile.WriteLine("!ENDIF")
 	mfile.WriteLine
-	mfile.WriteLine("ch3$(CHANNEL): $(OUTDIR)\mpich2$(CHANNEL)$(P)$(D).dll")
+	mfile.WriteLine("ch3$(CHANNEL): $(OUTDIR)\mpich$(CHANNEL)$(P)$(D).dll")
 	mfile.WriteLine
-	mfile.WriteLine("$(OUTDIR)\mpich2$(CHANNEL)$(P)$(D).dll: $(channel_objs) $(mpich2_objs) $(PLIB_DEP)")
-	mfile.WriteLine("	$(link) $(dlllflags) $(channel_objs) $(mpich2_objs) $(mpich2_libs) $(rlog_libs) $(common_libs) -out:$(OUTDIR)\mpich2$(CHANNEL)$(P)$(D).dll /DEF:..\mpich2.def")
-	mfile.WriteLine("	if exist $(OUTDIR)\mpich2$(CHANNEL)$(P)$(D).dll.manifest mt.exe -manifest $(OUTDIR)\mpich2$(CHANNEL)$(P)$(D).dll.manifest -outputresource:$(OUTDIR)\mpich2$(CHANNEL)$(P)$(D).dll;2")
+	mfile.WriteLine("$(OUTDIR)\mpich$(CHANNEL)$(P)$(D).dll: $(channel_objs) $(mpich_objs) $(PLIB_DEP)")
+	mfile.WriteLine("	$(link) $(dlllflags) $(channel_objs) $(mpich_objs) $(mpich_libs) $(rlog_libs) $(common_libs) -out:$(OUTDIR)\mpich$(CHANNEL)$(P)$(D).dll /DEF:..\mpich.def")
+	mfile.WriteLine("	if exist $(OUTDIR)\mpich$(CHANNEL)$(P)$(D).dll.manifest mt.exe -manifest $(OUTDIR)\mpich$(CHANNEL)$(P)$(D).dll.manifest -outputresource:$(OUTDIR)\mpich$(CHANNEL)$(P)$(D).dll;2")
 	mfile.WriteLine
 	mfile.WriteLine("!ENDIF")
 
 	'mfile.WriteLine
 	'mfile.WriteLine("!IF ""$(CHANNEL)"" == ""sock""")
-	'mfile.WriteLine("ch3sock: $(SOCK_OUTDIR)\mpich2$(P)$(D).dll")
+	'mfile.WriteLine("ch3sock: $(SOCK_OUTDIR)\mpich$(P)$(D).dll")
 	'mfile.WriteLine
-	'mfile.WriteLine("$(SOCK_OUTDIR)\mpich2$(P)$(D).dll: $(ch3sock_objs) $(mpich2_objs)")
-	'mfile.WriteLine("	$(link) $(dlllflags) $(ch3sock_objs) $(mpich2_objs) $(rlog_libs) $(common_libs) -out:$(SOCK_OUTDIR)\mpich2$(P)$(D).dll")
+	'mfile.WriteLine("$(SOCK_OUTDIR)\mpich$(P)$(D).dll: $(ch3sock_objs) $(mpich_objs)")
+	'mfile.WriteLine("	$(link) $(dlllflags) $(ch3sock_objs) $(mpich_objs) $(rlog_libs) $(common_libs) -out:$(SOCK_OUTDIR)\mpich$(P)$(D).dll")
 	'mfile.WriteLine
 	'mfile.WriteLine("!ELSEIF ""$(CHANNEL)"" == ""ssm""")
-	'mfile.WriteLine("ch3ssm: $(SSM_OUTDIR)\mpich2$(CHANNEL)$(P)$(D).dll")
+	'mfile.WriteLine("ch3ssm: $(SSM_OUTDIR)\mpich$(CHANNEL)$(P)$(D).dll")
 	'mfile.WriteLine
-	'mfile.WriteLine("$(SSM_OUTDIR)\mpich2$(CHANNEL)$(P)$(D).dll: $(ch3ssm_objs) $(mpich2_objs)")
-	'mfile.WriteLine("	$(link) $(dlllflags) $(ch3ssm_objs) $(mpich2_objs) $(rlog_libs) $(common_libs) -out:$(SSM_OUTDIR)\mpich2$(CHANNEL)$(P)$(D).dll")
+	'mfile.WriteLine("$(SSM_OUTDIR)\mpich$(CHANNEL)$(P)$(D).dll: $(ch3ssm_objs) $(mpich_objs)")
+	'mfile.WriteLine("	$(link) $(dlllflags) $(ch3ssm_objs) $(mpich_objs) $(rlog_libs) $(common_libs) -out:$(SSM_OUTDIR)\mpich$(CHANNEL)$(P)$(D).dll")
 	'mfile.WriteLine
 	'mfile.WriteLine("!ELSEIF ""$(CHANNEL)"" == ""shm""")
-	'mfile.WriteLine("ch3shm: $(SHM_OUTDIR)\mpich2$(CHANNEL)$(P)$(D).dll")
+	'mfile.WriteLine("ch3shm: $(SHM_OUTDIR)\mpich$(CHANNEL)$(P)$(D).dll")
 	'mfile.WriteLine
-	'mfile.WriteLine("$(SHM_OUTDIR)\mpich2$(CHANNEL)$(P)$(D).dll: $(ch3shm_objs) $(mpich2_objs)")
-	'mfile.WriteLine("	$(link) $(dlllflags) $(ch3shm_objs) $(mpich2_objs) $(rlog_libs) $(common_libs) -out:$(SHM_OUTDIR)\mpich2$(CHANNEL)$(P)$(D).dll")
+	'mfile.WriteLine("$(SHM_OUTDIR)\mpich$(CHANNEL)$(P)$(D).dll: $(ch3shm_objs) $(mpich_objs)")
+	'mfile.WriteLine("	$(link) $(dlllflags) $(ch3shm_objs) $(mpich_objs) $(rlog_libs) $(common_libs) -out:$(SHM_OUTDIR)\mpich$(CHANNEL)$(P)$(D).dll")
 	'mfile.WriteLine
 	'mfile.WriteLine("!ELSEIF ""$(CHANNEL)"" == ""sshm""")
-	'mfile.WriteLine("ch3sshm: $(SSHM_OUTDIR)\mpich2$(CHANNEL)$(P)$(D).dll")
+	'mfile.WriteLine("ch3sshm: $(SSHM_OUTDIR)\mpich$(CHANNEL)$(P)$(D).dll")
 	'mfile.WriteLine
-	'mfile.WriteLine("$(SSHM_OUTDIR)\mpich2$(CHANNEL)$(P)$(D).dll: $(ch3sshm_objs) $(mpich2_objs)")
-	'mfile.WriteLine("	$(link) $(dlllflags) $(ch3sshm_objs) $(mpich2_objs) $(rlog_libs) $(common_libs) -out:$(SSHM_OUTDIR)\mpich2$(CHANNEL)$(P)$(D).dll")
+	'mfile.WriteLine("$(SSHM_OUTDIR)\mpich$(CHANNEL)$(P)$(D).dll: $(ch3sshm_objs) $(mpich_objs)")
+	'mfile.WriteLine("	$(link) $(dlllflags) $(ch3sshm_objs) $(mpich_objs) $(rlog_libs) $(common_libs) -out:$(SSHM_OUTDIR)\mpich$(CHANNEL)$(P)$(D).dll")
 	'mfile.WriteLine
 	'mfile.WriteLine("!ELSEIF ""$(CHANNEL)"" == ""essm""")
-	'mfile.WriteLine("ch3essm: $(ESSM_OUTDIR)\mpich2$(CHANNEL)$(P)$(D).dll")
+	'mfile.WriteLine("ch3essm: $(ESSM_OUTDIR)\mpich$(CHANNEL)$(P)$(D).dll")
 	'mfile.WriteLine
-	'mfile.WriteLine("$(ESSM_OUTDIR)\mpich2$(CHANNEL)$(P)$(D).dll: $(ch3essm_objs) $(mpich2_objs)")
-	'mfile.WriteLine("	$(link) $(dlllflags) $(ch3essm_objs) $(mpich2_objs) $(rlog_libs) $(common_libs) -out:$(ESSM_OUTDIR)\mpich2$(CHANNEL)$(P)$(D).dll")
+	'mfile.WriteLine("$(ESSM_OUTDIR)\mpich$(CHANNEL)$(P)$(D).dll: $(ch3essm_objs) $(mpich_objs)")
+	'mfile.WriteLine("	$(link) $(dlllflags) $(ch3essm_objs) $(mpich_objs) $(rlog_libs) $(common_libs) -out:$(ESSM_OUTDIR)\mpich$(CHANNEL)$(P)$(D).dll")
 	'mfile.WriteLine
 	'mfile.WriteLine("!ELSEIF ""$(CHANNEL)"" == ""ib""")
-	'mfile.WriteLine("ch3ib: $(IB_OUTDIR)\mpich2$(CHANNEL)$(P)$(D).dll")
+	'mfile.WriteLine("ch3ib: $(IB_OUTDIR)\mpich$(CHANNEL)$(P)$(D).dll")
 	'mfile.WriteLine
-	'mfile.WriteLine("$(IB_OUTDIR)\mpich2$(CHANNEL)$(P)$(D).dll: $(ch3ib_objs) $(mpich2_objs)")
-	'mfile.WriteLine("	$(link) $(dlllflags) $(ch3ib_objs) $(mpich2_objs) $(rlog_libs) $(common_libs) -out:$(IB_OUTDIR)\mpich2$(CHANNEL)$(P)$(D).dll")
+	'mfile.WriteLine("$(IB_OUTDIR)\mpich$(CHANNEL)$(P)$(D).dll: $(ch3ib_objs) $(mpich_objs)")
+	'mfile.WriteLine("	$(link) $(dlllflags) $(ch3ib_objs) $(mpich_objs) $(rlog_libs) $(common_libs) -out:$(IB_OUTDIR)\mpich$(CHANNEL)$(P)$(D).dll")
 	'mfile.WriteLine
 	'mfile.WriteLine("!ELSEIF ""$(CHANNEL)"" == ""mt""")
-	'mfile.WriteLine("ch3mt: $(MT_OUTDIR)\mpich2$(CHANNEL)$(P)$(D).dll")
+	'mfile.WriteLine("ch3mt: $(MT_OUTDIR)\mpich$(CHANNEL)$(P)$(D).dll")
 	'mfile.WriteLine
-	'mfile.WriteLine("$(MT_OUTDIR)\mpich2$(CHANNEL)$(P)$(D).dll: $(ch3mt_objs) $(mpich2_objs)")
-	'mfile.WriteLine("	$(link) $(dlllflags) $(ch3mt_objs) $(mpich2_objs) $(rlog_libs) $(common_libs) -out:$(MT_OUTDIR)\mpich2$(CHANNEL)$(P)$(D).dll")
+	'mfile.WriteLine("$(MT_OUTDIR)\mpich$(CHANNEL)$(P)$(D).dll: $(ch3mt_objs) $(mpich_objs)")
+	'mfile.WriteLine("	$(link) $(dlllflags) $(ch3mt_objs) $(mpich_objs) $(rlog_libs) $(common_libs) -out:$(MT_OUTDIR)\mpich$(CHANNEL)$(P)$(D).dll")
 	'mfile.WriteLine
 	'mfile.WriteLine("!ELSE")
 	'mfile.WriteLine("!ERROR No channel selected")
@@ -7232,11 +7232,11 @@ Function GenBuild()
         mfile.WriteLine("   $(FORT_OUTDIR)\typef90cmplxf.obj")
         mfile.WriteLine
 
-	mfile.WriteLine("$(FORT_OUTDIR)\fmpich2$(D).dll: $(fort_objs)")
-	mfile.WriteLine("	$(link) $(dlllflags) $(fort_objs) $(FORTP_OUTDIR)\fmpich2p$(D).lib $(MPI_OUTDIR)\mpi$(D).lib $(common_libs) /DEF:..\src\binding\f77\mpich2f.def -out:$(FORT_OUTDIR)\fmpich2$(D).dll")
-	mfile.WriteLine("	if exist $(FORT_OUTDIR)\fmpich2$(D).dll.manifest mt.exe -manifest $(FORT_OUTDIR)\fmpich2$(D).dll.manifest -outputresource:$(FORT_OUTDIR)\fmpich2$(D).dll;2")
+	mfile.WriteLine("$(FORT_OUTDIR)\fmpich$(D).dll: $(fort_objs)")
+	mfile.WriteLine("	$(link) $(dlllflags) $(fort_objs) $(FORTP_OUTDIR)\fmpichp$(D).lib $(MPI_OUTDIR)\mpi$(D).lib $(common_libs) /DEF:..\src\binding\f77\mpichf.def -out:$(FORT_OUTDIR)\fmpich$(D).dll")
+	mfile.WriteLine("	if exist $(FORT_OUTDIR)\fmpich$(D).dll.manifest mt.exe -manifest $(FORT_OUTDIR)\fmpich$(D).dll.manifest -outputresource:$(FORT_OUTDIR)\fmpich$(D).dll;2")
 	mfile.WriteLine
-	mfile.WriteLine("fort: fortp $(FORT_OUTDIR) $(FORT_OUTDIR)\fmpich2$(D).dll")
+	mfile.WriteLine("fort: fortp $(FORT_OUTDIR) $(FORT_OUTDIR)\fmpich$(D).dll")
 	mfile.WriteLine
 	outdir = "FORTP_OUTDIR"
         'extra_flags = "$(fpcflags)"
@@ -7252,10 +7252,10 @@ Function GenBuild()
         mfile.WriteLine("   $(FORTP_OUTDIR)\typef90cmplxf.obj")
         mfile.WriteLine
 
-	mfile.WriteLine("$(FORTP_OUTDIR)\fmpich2p$(D).lib: $(fortp_objs)")
-	mfile.WriteLine("	$(implib) $(liblflags) $(fortp_objs) $(MPI_OUTDIR)\mpi$(D).lib $(common_libs) -out:$(FORTP_OUTDIR)\fmpich2p$(D).lib")
+	mfile.WriteLine("$(FORTP_OUTDIR)\fmpichp$(D).lib: $(fortp_objs)")
+	mfile.WriteLine("	$(implib) $(liblflags) $(fortp_objs) $(MPI_OUTDIR)\mpi$(D).lib $(common_libs) -out:$(FORTP_OUTDIR)\fmpichp$(D).lib")
 	mfile.WriteLine
-	mfile.WriteLine("fortp: $(FORTP_OUTDIR) $(FORTP_OUTDIR)\fmpich2p$(D).lib")
+	mfile.WriteLine("fortp: $(FORTP_OUTDIR) $(FORTP_OUTDIR)\fmpichp$(D).lib")
 
 	mfile.WriteLine
         ' Adding rules for F90 mod files
@@ -7282,11 +7282,11 @@ Function GenBuild()
 	CreateRules f.GetFolder("src\binding\f77"), trimlength
         ResetCompileFlags()
 	CreateObjs "gfort", f.GetFolder("src\binding\f77"), trimlength, true, true
-	mfile.WriteLine("$(GFORT_OUTDIR)\fmpich2g$(D).dll: $(gfort_objs)")
-	mfile.WriteLine("	$(link) $(dlllflags) $(gfort_objs) $(MPI_OUTDIR)\mpi$(D).lib $(common_libs) /DEF:..\src\binding\f77\mpich2fg.def -out:$(GFORT_OUTDIR)\fmpich2g$(D).dll")
-	mfile.WriteLine("	if exist $(GFORT_OUTDIR)\fmpich2g$(D).dll.manifest mt.exe -manifest $(GFORT_OUTDIR)\fmpich2g$(D).dll.manifest -outputresource:$(GFORT_OUTDIR)\fmpich2g$(D).dll;2")
+	mfile.WriteLine("$(GFORT_OUTDIR)\fmpichg$(D).dll: $(gfort_objs)")
+	mfile.WriteLine("	$(link) $(dlllflags) $(gfort_objs) $(MPI_OUTDIR)\mpi$(D).lib $(common_libs) /DEF:..\src\binding\f77\mpichfg.def -out:$(GFORT_OUTDIR)\fmpichg$(D).dll")
+	mfile.WriteLine("	if exist $(GFORT_OUTDIR)\fmpichg$(D).dll.manifest mt.exe -manifest $(GFORT_OUTDIR)\fmpichg$(D).dll.manifest -outputresource:$(GFORT_OUTDIR)\fmpichg$(D).dll;2")
 	mfile.WriteLine
-	mfile.WriteLine("gfort: $(GFORT_OUTDIR) $(GFORT_OUTDIR)\fmpich2g$(D).dll")
+	mfile.WriteLine("gfort: $(GFORT_OUTDIR) $(GFORT_OUTDIR)\fmpichg$(D).dll")
 	mfile.WriteLine
 	mfile.WriteLine("!IF ""$(CPU)"" != ""x86""")
 	mfile.WriteLine("# We don't build sfort for non-x86 platforms")
@@ -7340,11 +7340,11 @@ Function GenBuild()
 	mfile.WriteLine("	$(SFORT_OUTDIR)\ssend_initfs.obj \")
 	mfile.WriteLine("	$(SFORT_OUTDIR)\win_createfs.obj")
 	mfile.WriteLine
-	mfile.WriteLine("$(SFORT_OUTDIR)\fmpich2s$(D).dll: $(sfort_objs)")
-	mfile.WriteLine("	$(link) $(dlllflags) $(sfort_objs) $(MPI_OUTDIR)\mpi$(D).lib $(common_libs) /DEF:..\src\binding\f77\mpich2fs.def -out:$(SFORT_OUTDIR)\fmpich2s$(D).dll")
-	mfile.WriteLine("	if exist $(SFORT_OUTDIR)\fmpich2s$(D).dll.manifest mt.exe -manifest $(SFORT_OUTDIR)\fmpich2s$(D).dll.manifest -outputresource:$(SFORT_OUTDIR)\fmpich2s$(D).dll;2")
+	mfile.WriteLine("$(SFORT_OUTDIR)\fmpichs$(D).dll: $(sfort_objs)")
+	mfile.WriteLine("	$(link) $(dlllflags) $(sfort_objs) $(MPI_OUTDIR)\mpi$(D).lib $(common_libs) /DEF:..\src\binding\f77\mpichfs.def -out:$(SFORT_OUTDIR)\fmpichs$(D).dll")
+	mfile.WriteLine("	if exist $(SFORT_OUTDIR)\fmpichs$(D).dll.manifest mt.exe -manifest $(SFORT_OUTDIR)\fmpichs$(D).dll.manifest -outputresource:$(SFORT_OUTDIR)\fmpichs$(D).dll;2")
 	mfile.WriteLine
-	mfile.WriteLine("sfort: $(SFORT_OUTDIR) $(SFORT_OUTDIR)\fmpich2s$(D).dll")
+	mfile.WriteLine("sfort: $(SFORT_OUTDIR) $(SFORT_OUTDIR)\fmpichs$(D).dll")
 	mfile.WriteLine
 	mfile.WriteLine("!ENDIF")
 	extra_flags = ""
@@ -7356,11 +7356,11 @@ Function GenBuild()
 	outdir = "MPI_OUTDIR"
 	CreateRules f.GetFolder("src\util\multichannel"), trimlength
 	CreateObjs "mpi", f.GetFolder("src\util\multichannel"), trimlength, true, true
-	mfile.WriteLine("$(MPI_OUTDIR)\mpich2mpi$(D).dll: $(mpi_objs)")
-	mfile.WriteLine("	$(link) $(dlllflags) $(mpi_objs) $(common_libs) /DEF:..\mpi.def -out:$(MPI_OUTDIR)\mpich2mpi$(D).dll /IMPLIB:$(MPI_OUTDIR)\mpi$(D).lib")
-	mfile.WriteLine("	if exist $(MPI_OUTDIR)\mpich2mpi$(D).dll.manifest mt.exe -manifest $(MPI_OUTDIR)\mpich2mpi$(D).dll.manifest -outputresource:$(MPI_OUTDIR)\mpich2mpi$(D).dll;2")
+	mfile.WriteLine("$(MPI_OUTDIR)\mpichmpi$(D).dll: $(mpi_objs)")
+	mfile.WriteLine("	$(link) $(dlllflags) $(mpi_objs) $(common_libs) /DEF:..\mpi.def -out:$(MPI_OUTDIR)\mpichmpi$(D).dll /IMPLIB:$(MPI_OUTDIR)\mpi$(D).lib")
+	mfile.WriteLine("	if exist $(MPI_OUTDIR)\mpichmpi$(D).dll.manifest mt.exe -manifest $(MPI_OUTDIR)\mpichmpi$(D).dll.manifest -outputresource:$(MPI_OUTDIR)\mpichmpi$(D).dll;2")
 	mfile.WriteLine
-	mfile.WriteLine("mpi: $(MPI_OUTDIR) $(MPI_OUTDIR)\mpich2mpi$(D).dll")
+	mfile.WriteLine("mpi: $(MPI_OUTDIR) $(MPI_OUTDIR)\mpichmpi$(D).dll")
 
 	mfile.WriteLine
 	mfile.WriteLine("# C++")
@@ -7426,11 +7426,11 @@ Function GenBuild()
 	mfile.WriteLine("	$(MPE_WRAP_OUTDIR)\log_mpi_util.obj \")
 	mfile.WriteLine("	$(MPE_WRAP_OUTDIR)\log_mpi_core.obj")
 	mfile.WriteLine
-	mfile.WriteLine("$(MPE_WRAP_OUTDIR)\mpich2mpe$(D).dll: $(mpe_wrap_objs)")
-	mfile.WriteLine("	$(link) $(dlllflags) $(mpe_wrap_objs) $(MPI_OUTDIR)\mpi$(D).lib $(MPE_OUTDIR)\mpe$(D).lib $(common_libs) /DEF:..\src\mpe2\src\wrappers\mpewrap.def -out:$(MPE_WRAP_OUTDIR)\mpich2mpe$(D).dll /IMPLIB:$(MPE_WRAP_OUTDIR)\mpich2mpe$(D).lib")
-	mfile.WriteLine("	if exist $(MPE_WRAP_OUTDIR)\mpich2mpe$(D).dll.manifest mt.exe -manifest $(MPE_WRAP_OUTDIR)\mpich2mpe$(D).dll.manifest -outputresource:$(MPE_WRAP_OUTDIR)\mpich2mpe$(D).dll;2")
+	mfile.WriteLine("$(MPE_WRAP_OUTDIR)\mpichmpe$(D).dll: $(mpe_wrap_objs)")
+	mfile.WriteLine("	$(link) $(dlllflags) $(mpe_wrap_objs) $(MPI_OUTDIR)\mpi$(D).lib $(MPE_OUTDIR)\mpe$(D).lib $(common_libs) /DEF:..\src\mpe2\src\wrappers\mpewrap.def -out:$(MPE_WRAP_OUTDIR)\mpichmpe$(D).dll /IMPLIB:$(MPE_WRAP_OUTDIR)\mpichmpe$(D).lib")
+	mfile.WriteLine("	if exist $(MPE_WRAP_OUTDIR)\mpichmpe$(D).dll.manifest mt.exe -manifest $(MPE_WRAP_OUTDIR)\mpichmpe$(D).dll.manifest -outputresource:$(MPE_WRAP_OUTDIR)\mpichmpe$(D).dll;2")
 	mfile.WriteLine
-	mfile.WriteLine("mpe_wrap: $(MPE_WRAP_OUTDIR) $(MPE_WRAP_OUTDIR)\mpich2mpe$(D).dll")
+	mfile.WriteLine("mpe_wrap: $(MPE_WRAP_OUTDIR) $(MPE_WRAP_OUTDIR)\mpichmpe$(D).dll")
 
 	mfile.WriteLine
 	mfile.WriteLine("# RLOG")
@@ -7451,8 +7451,8 @@ Function GenBuild()
 	mfile.WriteLine("irlog_objs = \")
 	mfile.WriteLine("	$(RLOG_OUTDIR)\irlog2rlog.obj")
 	mfile.WriteLine
-	mfile.WriteLine("$(RLOG_OUTDIR)\irlog2rlog.exe: $(irlog_objs) $(rlog_objs) $(mpich2_objs)")
-	mfile.WriteLine("	$(link) $(conlflags) $(irlog_objs) $(rlog_objs) $(mpich2_objs) $(ch3sock_objs) $(common_libs) -out:""$(RLOG_OUTDIR)\irlog2rlog.exe"" $(mpich2_libs)")
+	mfile.WriteLine("$(RLOG_OUTDIR)\irlog2rlog.exe: $(irlog_objs) $(rlog_objs) $(mpich_objs)")
+	mfile.WriteLine("	$(link) $(conlflags) $(irlog_objs) $(rlog_objs) $(mpich_objs) $(ch3sock_objs) $(common_libs) -out:""$(RLOG_OUTDIR)\irlog2rlog.exe"" $(mpich_libs)")
 	mfile.WriteLine("	if exist $(RLOG_OUTDIR)\irlog2rlog.exe.manifest mt.exe -manifest $(RLOG_OUTDIR)\irlog2rlog.exe.manifest -outputresource:$(RLOG_OUTDIR)\irlog2rlog.exe;1")
 	mfile.WriteLine
 	mfile.WriteLine("# create special rules for the TraceInput.dll source files since they need to include Java paths")
@@ -7466,8 +7466,8 @@ Function GenBuild()
 	mfile.WriteLine("	$(RLOG_OUTDIR)\logformat_trace_InputLog.obj \")
 	mfile.WriteLine("	$(RLOG_OUTDIR)\trace_input.obj")
 	mfile.WriteLine
-	mfile.WriteLine("$(RLOG_OUTDIR)\TraceInput.dll: $(trace_input_objs) $(rlog_objs) $(mpich2_objs)")
-	mfile.WriteLine("	$(link) $(dlllflags) $(trace_input_objs) $(rlog_objs) $(mpich2_objs) $(ch3sock_objs) $(common_libs) -out:$(RLOG_OUTDIR)\TraceInput.dll /IMPLIB:$(RLOG_OUTDIR)\TraceInput.lib $(mpich2_libs)")
+	mfile.WriteLine("$(RLOG_OUTDIR)\TraceInput.dll: $(trace_input_objs) $(rlog_objs) $(mpich_objs)")
+	mfile.WriteLine("	$(link) $(dlllflags) $(trace_input_objs) $(rlog_objs) $(mpich_objs) $(ch3sock_objs) $(common_libs) -out:$(RLOG_OUTDIR)\TraceInput.dll /IMPLIB:$(RLOG_OUTDIR)\TraceInput.lib $(mpich_libs)")
 	mfile.WriteLine("	if exist $(RLOG_OUTDIR)\TraceInput.dll.manifest mt.exe -manifest $(RLOG_OUTDIR)\TraceInput.dll.manifest -outputresource:$(RLOG_OUTDIR)\TraceInput.dll;2")
 	mfile.WriteLine
 	mfile.WriteLine("TraceInput: $(RLOG_OUTDIR) $(RLOG_OUTDIR)\TraceInput.dll")
@@ -7493,8 +7493,8 @@ Function GenBuild()
 	mfile.WriteLine("	$(OUTDIR)\mp_parse_command_line.obj \")
 	mfile.WriteLine("	$(OUTDIR)\mp_parse_oldconfig.obj")
 	mfile.WriteLine
-	mfile.WriteLine("$(BIN_OUTDIR)\mpiexec.exe: $(mpiexec_objs) $(mpich2_objs)")
-	mfile.WriteLine("	$(link) $(conlflags) $(mpiexec_objs) $(mpich2_objs) $(ch3sock_objs) $(common_libs) -out:$(BIN_OUTDIR)\mpiexec.exe $(mpich2_libs)")
+	mfile.WriteLine("$(BIN_OUTDIR)\mpiexec.exe: $(mpiexec_objs) $(mpich_objs)")
+	mfile.WriteLine("	$(link) $(conlflags) $(mpiexec_objs) $(mpich_objs) $(ch3sock_objs) $(common_libs) -out:$(BIN_OUTDIR)\mpiexec.exe $(mpich_libs)")
 	mfile.WriteLine("	if exist $(BIN_OUTDIR)\mpiexec.exe.manifest mt.exe -manifest $(BIN_OUTDIR)\mpiexec.exe.manifest -outputresource:$(BIN_OUTDIR)\mpiexec.exe;1")
 	mfile.WriteLine
 	mfile.WriteLine("mpiexec: $(BIN_OUTDIR) $(BIN_OUTDIR)\mpiexec.exe")
@@ -7517,8 +7517,8 @@ Function GenBuild()
 	mfile.WriteLine("	$(OUTDIR)\smpd_service.obj \")
 	mfile.WriteLine("	$(OUTDIR)\smpd_watchprocs.obj")
 	mfile.WriteLine
-	mfile.WriteLine("$(BIN_OUTDIR)\smpd.exe: $(smpd_objs) $(mpich2_objs)")
-	mfile.WriteLine("	$(link) $(conlflags) $(smpd_objs) $(mpich2_objs) $(ch3sock_objs) $(common_libs) -out:$(BIN_OUTDIR)\smpd.exe $(mpich2_libs)")
+	mfile.WriteLine("$(BIN_OUTDIR)\smpd.exe: $(smpd_objs) $(mpich_objs)")
+	mfile.WriteLine("	$(link) $(conlflags) $(smpd_objs) $(mpich_objs) $(ch3sock_objs) $(common_libs) -out:$(BIN_OUTDIR)\smpd.exe $(mpich_libs)")
 	mfile.WriteLine("	if exist $(BIN_OUTDIR)\smpd.exe.manifest mt.exe -manifest $(BIN_OUTDIR)\smpd.exe.manifest -outputresource:$(BIN_OUTDIR)\smpd.exe;1")
 	mfile.WriteLine
 	mfile.WriteLine("smpd: $(BIN_OUTDIR) $(BIN_OUTDIR)\smpd.exe")
@@ -7541,18 +7541,18 @@ Function GenBuild()
 	mfile.WriteLine
 	mfile.WriteLine("!ELSE")
 	mfile.WriteLine("gcc_libs: impgen")
-	mfile.WriteLine("	IF EXIST ""$(GCC_OUTDIR)\mpich2gcc$(D).def"" del $(GCC_OUTDIR)\mpich2gcc$(D).def")
-	mfile.WriteLine("	$(GCC_OUTDIR)\impgen.exe $(SOCK_OUTDIR)\mpich2$(D).dll > $(GCC_OUTDIR)\mpich2gcc$(D).def")
-	mfile.WriteLine("	dlltool --dllname mpich2$(D).dll --def $(GCC_OUTDIR)\mpich2gcc$(D).def --output-lib $(GCC_OUTDIR)\libmpich2$(D).a")
-	mfile.WriteLine("	del $(GCC_OUTDIR)\mpich2gcc$(D).def")
-	mfile.WriteLine("	IF EXIST ""$(GCC_OUTDIR)\mpich2mpi$(D).def"" del $(GCC_OUTDIR)\mpich2mpi$(D).def")
-	mfile.WriteLine("	$(GCC_OUTDIR)\impgen.exe $(MPI_OUTDIR)\mpich2mpi$(D).dll > $(GCC_OUTDIR)\mpich2mpi$(D).def")
-	mfile.WriteLine("	dlltool --dllname mpich2mpi$(D).dll --def $(GCC_OUTDIR)\mpich2mpi$(D).def --output-lib $(GCC_OUTDIR)\libmpi$(D).a")
-	mfile.WriteLine("	del $(GCC_OUTDIR)\mpich2mpi$(D).def")
-	mfile.WriteLine("	IF EXIST ""$(GCC_OUTDIR)\fmpich2gcc$(D).def"" del $(GCC_OUTDIR)\fmpich2gcc$(D).def")
-	mfile.WriteLine("	$(GCC_OUTDIR)\impgen.exe $(GFORT_OUTDIR)\fmpich2g$(D).dll > $(GCC_OUTDIR)\fmpich2gcc$(D).def")
-	mfile.WriteLine("	dlltool --dllname fmpich2g$(D).dll --def $(GCC_OUTDIR)\fmpich2gcc$(D).def --output-lib $(GCC_OUTDIR)\libfmpich2g$(D).a")
-	mfile.WriteLine("	del $(GCC_OUTDIR)\fmpich2gcc$(D).def")
+	mfile.WriteLine("	IF EXIST ""$(GCC_OUTDIR)\mpichgcc$(D).def"" del $(GCC_OUTDIR)\mpichgcc$(D).def")
+	mfile.WriteLine("	$(GCC_OUTDIR)\impgen.exe $(SOCK_OUTDIR)\mpich$(D).dll > $(GCC_OUTDIR)\mpichgcc$(D).def")
+	mfile.WriteLine("	dlltool --dllname mpich$(D).dll --def $(GCC_OUTDIR)\mpichgcc$(D).def --output-lib $(GCC_OUTDIR)\libmpich$(D).a")
+	mfile.WriteLine("	del $(GCC_OUTDIR)\mpichgcc$(D).def")
+	mfile.WriteLine("	IF EXIST ""$(GCC_OUTDIR)\mpichmpi$(D).def"" del $(GCC_OUTDIR)\mpichmpi$(D).def")
+	mfile.WriteLine("	$(GCC_OUTDIR)\impgen.exe $(MPI_OUTDIR)\mpichmpi$(D).dll > $(GCC_OUTDIR)\mpichmpi$(D).def")
+	mfile.WriteLine("	dlltool --dllname mpichmpi$(D).dll --def $(GCC_OUTDIR)\mpichmpi$(D).def --output-lib $(GCC_OUTDIR)\libmpi$(D).a")
+	mfile.WriteLine("	del $(GCC_OUTDIR)\mpichmpi$(D).def")
+	mfile.WriteLine("	IF EXIST ""$(GCC_OUTDIR)\fmpichgcc$(D).def"" del $(GCC_OUTDIR)\fmpichgcc$(D).def")
+	mfile.WriteLine("	$(GCC_OUTDIR)\impgen.exe $(GFORT_OUTDIR)\fmpichg$(D).dll > $(GCC_OUTDIR)\fmpichgcc$(D).def")
+	mfile.WriteLine("	dlltool --dllname fmpichg$(D).dll --def $(GCC_OUTDIR)\fmpichgcc$(D).def --output-lib $(GCC_OUTDIR)\libfmpichg$(D).a")
+	mfile.WriteLine("	del $(GCC_OUTDIR)\fmpichgcc$(D).def")
 	mfile.WriteLine
 	mfile.WriteLine("!ENDIF")
 
@@ -7570,7 +7570,7 @@ Function GenBuild()
 	mfile.Close()
 End Function
 
-printMsg "STATUS", "Creating makefile & build scripts for MPICH2..."
+printMsg "STATUS", "Creating makefile & build scripts for MPICH..."
 GenBuild()
 
 Function ParseDirs(filename)
@@ -7745,9 +7745,9 @@ Function GenBuildFiles(dirname)
 			srcs_fout.WriteLine
 			srcs_fout.WriteLine("TARGETTYPE=LIBRARY")'DYNLINK")
 			srcs_fout.WriteLine
-			srcs_fout.WriteLine("TARGETNAME=mpich2")
+			srcs_fout.WriteLine("TARGETNAME=mpich")
 			srcs_fout.WriteLine
-			srcs_fout.WriteLine("DLLDEF=" & dotdots & "mpich2.def")
+			srcs_fout.WriteLine("DLLDEF=" & dotdots & "mpich.def")
 			srcs_fout.WriteLine
 			includes = dotdots & "src\include;" & _
 				dotdots & "src\include\win32;" & _
@@ -7766,7 +7766,7 @@ Function GenBuildFiles(dirname)
 				dotdots & "src\binding\f77"
 			srcs_fout.WriteLine("INCLUDES=$(INCLUDES);" & includes)
 			srcs_fout.WriteLine
-			srcs_fout.WriteLine("C_DEFINES=$(C_DEFINES) -DHAVE_WINDOWS_H -DUSE_WINCONF_H -DMPIO_BUILD_PROFILING -DROMIO_INSIDE_MPICH2 -DHAVE_FORTRAN_BINDING -DMPICH_SKIP_MPICXX")
+			srcs_fout.WriteLine("C_DEFINES=$(C_DEFINES) -DHAVE_WINDOWS_H -DUSE_WINCONF_H -DMPIO_BUILD_PROFILING -DROMIO_INSIDE_MPICH -DHAVE_FORTRAN_BINDING -DMPICH_SKIP_MPICXX")
 			srcs_fout.WriteLine
 			srcs_fout.WriteLine("MSC_WARNING_LEVEL= /W4")
 			srcs_fout.WriteLine
@@ -7820,13 +7820,13 @@ If bRemoveFortran Then
 	regEx.IgnoreCase = False
 	regEx.Global = True
 
-	' mpich2.def
+	' mpich.def
 	'  remove:
 	'	MPIPRIV
 	'	MPIR_Keyval_set_fortran
 	'	MPIR_Keyval_set_fortran90
 	'	MPIR_Grequest_set_lang_f77
-	Set fin = f.OpenTextFile("mpich2.def")
+	Set fin = f.OpenTextFile("mpich.def")
 	contents = fin.ReadAll()
 	fin.Close()
 	regEx.Pattern = "(.*MPIPRIV.*)"
@@ -7849,16 +7849,16 @@ If bRemoveFortran Then
 	contents = regEx.Replace(contents, ";$1")
 	regEx.Pattern = "(.*[P]?MPI_Status_f2c)"
 	contents = regEx.Replace(contents, ";$1")
-	'cEcho "Creating mpich2.def"
-	gEcho "Creating mpich2.def"
-	Set fout = f.CreateTextFile( "mpich2.def" )
+	'cEcho "Creating mpich.def"
+	gEcho "Creating mpich.def"
+	Set fout = f.CreateTextFile( "mpich.def" )
 	fout.Write(contents)
 	fout.Close()
 
-	' mpich2.sln
+	' mpich.sln
 	'  remove:
-	'	Project(..."mpich2f"...EndProject
-	'   Project(..."mpich2ff"...EndProject
+	'	Project(..."mpichf"...EndProject
+	'   Project(..."mpichff"...EndProject
 	'   fortDebug = fortDebug
 	'   fortRelease = fortRelease
 	'   gfortDebug = gfortDebug
@@ -7878,13 +7878,13 @@ If bRemoveFortran Then
 	'   *= sfortDebug|Win32
 	'   *= sfortRelease|Win32
 	if bVS2005 then
-	    Set fin = f.OpenTextFile( "mpich2.vs05.sln" )
+	    Set fin = f.OpenTextFile( "mpich.vs05.sln" )
 	else
-	    Set fin = f.OpenTextFile( "mpich2.sln" )
+	    Set fin = f.OpenTextFile( "mpich.sln" )
 	end if
 	contents = fin.ReadAll()
 	fin.Close()
-	regEx.Pattern = "Project\(.*""mpich2ff?"".*\s*.*\s*.*\s*.*EndProject[\r\n]*"
+	regEx.Pattern = "Project\(.*""mpichff?"".*\s*.*\s*.*\s*.*EndProject[\r\n]*"
 	contents = regEx.Replace(contents, "")
 	regEx.Pattern = ".*[gs]?fortDebug = [gs]?fortDebug.*[\r\n]*"
 	contents = regEx.Replace(contents, "")
@@ -7899,33 +7899,33 @@ If bRemoveFortran Then
 	regEx.Pattern = ".*= [gs]?fortRelease\|Win32[\r\n]*"
 	contents = regEx.Replace(contents, "")
 	if bVS2005 then
-		'cEcho "Creating mpich2.vs05.sln"
-		gEcho "Creating mpich2.vs05.sln"
-	    Set fout = f.CreateTextFile( "mpich2.vs05.sln" )
+		'cEcho "Creating mpich.vs05.sln"
+		gEcho "Creating mpich.vs05.sln"
+	    Set fout = f.CreateTextFile( "mpich.vs05.sln" )
 	else
-		'cEcho "Creating mpich2.sln"
-		gEcho "Creating mpich2.sln"
-	    Set fout = f.CreateTextFile( "mpich2.sln" )
+		'cEcho "Creating mpich.sln"
+		gEcho "Creating mpich.sln"
+	    Set fout = f.CreateTextFile( "mpich.sln" )
 	end if
 	fout.Write(contents)
 	fout.Close()
 	
-	' mpich2.vcproj
+	' mpich.vcproj
 	'  remove:
 	'   ,HAVE_FORTRAN_BINDING
-	'   mpich2ffd.lib
-	'   mpich2ff.lib
+	'   mpichffd.lib
+	'   mpichff.lib
 	if bVS2005 then
-	    Set fin = f.OpenTextFile( "mpich2.vs05.vcproj" )
+	    Set fin = f.OpenTextFile( "mpich.vs05.vcproj" )
 	else
-	    Set fin = f.OpenTextFile( "mpich2.vcproj" )
+	    Set fin = f.OpenTextFile( "mpich.vcproj" )
 	end if
 	contents = fin.ReadAll()
 	fin.Close()
 	contents = Replace(contents, ",HAVE_FORTRAN_BINDING", "")
 	contents = Replace(contents, ";HAVE_FORTRAN_BINDING", "")
-	contents = Replace(contents, "mpich2ffd.lib", "")
-	contents = Replace(contents, "mpich2ff.lib", "")
+	contents = Replace(contents, "mpichffd.lib", "")
+	contents = Replace(contents, "mpichff.lib", "")
 	'regEx.Pattern = ".*<File.*\s*.*c2f\.c\s*.*</File>.*[\r\n]*"
 	'contents = regEx.Replace(contents, "")
 	'regEx.Pattern = ".*<File.*\s*.*f2c\.c\s*.*</File>.*[\r\n]*"
@@ -7936,32 +7936,32 @@ If bRemoveFortran Then
 	contents = ReplaceBetweenTags(contents, "<File", "statusf2c.c", "</File>", "")
 	contents = ReplaceBetweenTags(contents, "<File", "setbot.c", "</File>", "")
 	if bVS2005 then
-		'cEcho "Creating mpich2.vs05.vcproj"
-		gEcho "Creating mpich2.vs05.vcproj"
-	    Set fout = f.CreateTextFile( "mpich2.vs05.vcproj" )
+		'cEcho "Creating mpich.vs05.vcproj"
+		gEcho "Creating mpich.vs05.vcproj"
+	    Set fout = f.CreateTextFile( "mpich.vs05.vcproj" )
 	else
-		'cEcho "Creating mpich2.vcproj"
-		gEcho "Creating mpich2.vcproj"
-	    Set fout = f.CreateTextFile( "mpich2.vcproj" )
+		'cEcho "Creating mpich.vcproj"
+		gEcho "Creating mpich.vcproj"
+	    Set fout = f.CreateTextFile( "mpich.vcproj" )
 	end if
 	fout.Write(contents)
 	fout.Close()
 
-	' mpich2s.vcproj
+	' mpichs.vcproj
 	'  remove:
-	'   lib\mpich2ffd.lib
-	'   lib\mpich2ff.lib
+	'   lib\mpichffd.lib
+	'   lib\mpichff.lib
 	if bVS2005 then
-	    Set fin = f.OpenTextFile( "mpich2s.vs05.vcproj" )
+	    Set fin = f.OpenTextFile( "mpichs.vs05.vcproj" )
 	else
-	    Set fin = f.OpenTextFile( "mpich2s.vcproj" )
+	    Set fin = f.OpenTextFile( "mpichs.vcproj" )
 	end if
 	contents = fin.ReadAll()
 	fin.Close()
 	contents = Replace(contents, ",HAVE_FORTRAN_BINDING", "")
 	contents = Replace(contents, ";HAVE_FORTRAN_BINDING", "")
-	contents = Replace(contents, "lib\mpich2ffd.lib", "")
-	contents = Replace(contents, "lib\mpich2ff.lib", "")
+	contents = Replace(contents, "lib\mpichffd.lib", "")
+	contents = Replace(contents, "lib\mpichff.lib", "")
 	'regEx.Pattern = ".*<File.*\s*.*c2f\.c\s*.*</File>.*[\r\n]*"
 	'contents = regEx.Replace(contents, "")
 	'regEx.Pattern = ".*<File.*\s*.*f2c\.c\s*.*</File>.*[\r\n]*"
@@ -7972,27 +7972,27 @@ If bRemoveFortran Then
 	contents = ReplaceBetweenTags(contents, "<File", "statusf2c.c", "</File>", "")
 	contents = ReplaceBetweenTags(contents, "<File", "setbot.c", "</File>", "")
 	if bVS2005 then
-		'cEcho "Creating mpich2s.vs05.vcproj"
-		gEcho "Creating mpich2s.vs05.vcproj"
-	    Set fout = f.CreateTextFile( "mpich2s.vs05.vcproj" )
+		'cEcho "Creating mpichs.vs05.vcproj"
+		gEcho "Creating mpichs.vs05.vcproj"
+	    Set fout = f.CreateTextFile( "mpichs.vs05.vcproj" )
 	else
-		'cEcho "Creating mpich2s.vcproj"
-		gEcho "Creating mpich2s.vcproj"
-	    Set fout = f.CreateTextFile( "mpich2s.vcproj" )
+		'cEcho "Creating mpichs.vcproj"
+		gEcho "Creating mpichs.vcproj"
+	    Set fout = f.CreateTextFile( "mpichs.vcproj" )
 	end if
 	fout.Write(contents)
 	fout.Close()
 
-	' maint\mpich2i.vdproj
+	' maint\mpichi.vdproj
 	'  remove:
 	'   lots of stuff
 End If
 
 Sub UpdateSMPDVersion
-        GetMPICH2Versions mpich2VerStr, mpich2ABIVerStr, mpich2ReleaseDate
+        GetMPICHVersions mpichVerStr, mpichABIVerStr, mpichReleaseDate
 	printMsg "VERBOSE", "Creating src\pm\smpd\smpd_version.h"
 	Set fout = f.CreateTextFile("src\pm\smpd\smpd_version.h", true)
-	fout.WriteLine("#define SMPD_VERSION """ & mpich2VerStr & """")
+	fout.WriteLine("#define SMPD_VERSION """ & mpichVerStr & """")
 	fout.Close()
 End Sub
 
@@ -8011,7 +8011,7 @@ If unhandled_ats <> "" Then
 	printMsg "ERROR", "ERROR: " & unhandled_ats_count & " @foo@'s not handled"
 	printMsg "ERROR", "(" & unhandled_ats_instances & " instances of unhandled @foo@'s)"
 End If
-printMsg "STATUS", "Configuring MPICH2 completed"
+printMsg "STATUS", "Configuring MPICH completed"
 printMsgFlush
 
 </script>

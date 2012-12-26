@@ -662,7 +662,7 @@ Currently three process managers are distributed with MPICH
 \item[hydra] This is the default process manager tha natively uses the
 existing daemons on the system such as ssh, slurm, pbs.
 \item[smpd] This one can be used for both Linux and Windows.  It is the
-  only process manager that supports the Windows version of MPICH2.
+  only process manager that supports the Windows version of MPICH.
 \item[gforker] This is a simple process manager that creates all
   processes on a single machine.  It is useful both for debugging and
   for running on shared memory multiprocessors.
@@ -782,7 +782,7 @@ Other MPI test suites are available from
 \url{http://www.mcs.anl.gov/mpi/mpi-test/tsuite.html}.  As part of the MPICH
 development, we run the MPICH1, MPICH, C++, and Intel test suites every night
 and post the results on
-\url{http://www.mcs.anl.gov/research/projects/mpich2/nightly/old/}.
+\url{http://www.mpich.org/static/cron/tests/}.
 Other tests are run on an occasional basis.  
 
 % \subsection{Using the Intel Test Suite}
@@ -881,10 +881,10 @@ this case.
 \label{sec:winbin}
 
 The Windows binary distribution uses the Microsoft Installer.  Download and 
-execute \texttt{mpich2-1.x.xxx.msi} to install the binary distribution.  The default 
-installation path is \texttt{C:$\backslash$Program Files$\backslash$MPICH2}. 
+execute \texttt{mpich-xxx.msi} to install the binary distribution.  The default 
+installation path is \texttt{C:$\backslash$Program Files$\backslash$MPICH}. 
 You must have administrator privileges to install
-\texttt{mpich2-1.x.xxx.msi}.  The installer  
+\texttt{mpich-xxx.msi}.  The installer  
 installs a Windows service to launch MPICH applications and only administrators
 may install services.  This process manager is called smpd.exe.  Access to 
 the process manager is passphrase protected.  The installer asks for this 
@@ -896,11 +896,11 @@ Under the installation directory are three sub-directories: \texttt{include},
 directories contain the header files and libraries necessary to compile MPI 
 applications.  The \texttt{bin} directory contains the process manager, 
 \texttt{smpd.exe}, and the the MPI job launcher, \texttt{mpiexec.exe}.  The
-dlls that implement MPICH2 are copied to the Windows system32 directory.
+dlls that implement MPICH are copied to the Windows system32 directory.
 
 You can install MPICH in unattended mode by executing 
 \begin{verbatim}
-    msiexec /q /I mpich2-1.x.xxx.msi
+    msiexec /q /I mpich-1.x.xxx.msi
 \end{verbatim}
 
 The smpd process manager for Windows runs as a service that can launch jobs 
@@ -925,13 +925,13 @@ run on each node individualy by a domain administrator.
 \subsection{Source distribution}
 \label{sec:winsrc}
 
-In order to build MPICH2 from the source distribution under Windows, 
+In order to build MPICH from the source distribution under Windows, 
 you must have MS Developer Studio .NET 2003 or later, perl and optionally 
 Intel Fortran 8 or later.
 
 \begin{itemize}
 \item
-Download \texttt{mpich2-1.x.y.tar.gz} and unzip it.
+Download \texttt{mpich-x.y.z.tar.gz} and unzip it.
 \item
 Bring up a Visual Studio Command prompt with the compiler environment 
 variables set.
@@ -941,31 +941,31 @@ Run \texttt{winconfigure.wsf}. If you don't have a Fortran compiler add the
 projects and dependencies.  Execute \texttt{winconfigure.wsf /?} to see all
 available options.
 \item 
-    open \texttt{mpich2$\backslash$mpich2.sln}
+    open \texttt{mpich$\backslash$mpich.sln}
 %\item
-%    build the \texttt{ch3sockDebug mpich2} solution
+%    build the \texttt{ch3sockDebug mpich} solution
 %\item
-%    build the \texttt{ch3sockDebug mpich2s} project
+%    build the \texttt{ch3sockDebug mpichs} project
 \item
-    build the ch3sockRelease mpich2 solution
+    build the ch3sockRelease mpich solution
 \item
-    build the ch3sockRelease mpich2s project
+    build the ch3sockRelease mpichs project
 %\item
-%    build the Debug mpich2 solution
+%    build the Debug mpich solution
 \item
-    build the Release mpich2 solution
+    build the Release mpich solution
 %\item
-%    build the fortDebug mpich2 solution
+%    build the fortDebug mpich solution
 \item
-    build the fortRelease mpich2 solution
+    build the fortRelease mpich solution
 %\item
-%    build the gfortDebug mpich2 solution
+%    build the gfortDebug mpich solution
 \item
-    build the gfortRelease mpich2 solution
+    build the gfortRelease mpich solution
 %\item
-%    build the sfortDebug mpich2 solution
+%    build the sfortDebug mpich solution
 \item
-    build the sfortRelease mpich2 solution
+    build the sfortRelease mpich solution
 \item
     build the channel of your choice.  The options are \texttt{sock} and
     \texttt{nemesis}.
@@ -979,19 +979,19 @@ compete for individual processors.
 \subsection{\texttt{cygwin}}
 \label{sec:cygwin}
 
-MPICH2 can also be built under \texttt{cygwin} using the source
+MPICH can also be built under \texttt{cygwin} using the source
 distribution and the Unix commands described in previous sections.  This
 will not build the same libraries as described in this section.  It will 
 build a ``Unix'' distribution that runs under \texttt{cygwin}.
 
 It is best to use paths that do not contain embedded spaces when
-building MPICH2 under \texttt{cygwin}.  For example, consider using 
+building MPICH under \texttt{cygwin}.  For example, consider using 
 \begin{verbatim}
-   c:\programFiles\mpich2%MPICH2_VERSION%
+   c:\programFiles\mpich%MPICH_VERSION%
 \end{verbatim}
 instead of 
 \begin{verbatim}
-   c:\Program Files\mpich2%MPICH2_VERSION%
+   c:\Program Files\mpich%MPICH_VERSION%
 \end{verbatim}
 It may also help to have \texttt{cygwin} installed into a path with no
 embedded blanks.
@@ -1009,7 +1009,7 @@ Account Control.
 \item
     You can install MPICH from the administrator command prompt by executing 
 \begin{verbatim}
-    msiexec /I mpich2-1.x.xxx.msi
+    msiexec /I mpich-1.x.xxx.msi
 \end{verbatim}
 \end{enumerate}
 

@@ -9,9 +9,9 @@ m4_include([version.m4])
 dnl 2nd arg is intentionally underquoted
 AC_INIT([ROMIO],
         MPICH_VERSION_m4,
-        [mpich-discuss@mcs.anl.gov],
+        [discuss@mpich.org],
         [romio],
-        [http://www.mcs.anl.gov/research/projects/mpich2/])
+        [http://www.mpich.org/])
 
 dnl AC_CONFIG_AUX_DIR(../../../confdb)
 dnl Set the directory that contains the required install-sh, config.sub,

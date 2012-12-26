@@ -2,7 +2,7 @@
 # -*- Mode: perl; -*-
 # @configure_input@
 #
-# Configure and build mpich2 with some of the options
+# Configure and build mpich with some of the options
 #
 # Set default values
 $projects_dir = "/home/MPI/testing/tsuites";

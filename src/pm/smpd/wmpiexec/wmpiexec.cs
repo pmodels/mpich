@@ -1106,7 +1106,7 @@ namespace wmpiexec
 			object obj;
 			try
 			{
-				RegistryKey key = Registry.LocalMachine.OpenSubKey(@"Software\MPICH2");
+				RegistryKey key = Registry.LocalMachine.OpenSubKey(@"Software\MPICH");
 				if (key != null)
 				{
 					obj = key.GetValue("Path");
@@ -1263,7 +1263,7 @@ namespace wmpiexec
 			object obj;
 			try
 			{
-				RegistryKey key = Registry.LocalMachine.OpenSubKey(@"Software\MPICH2");
+				RegistryKey key = Registry.LocalMachine.OpenSubKey(@"Software\MPICH");
 				if (key != null)
 				{
 					obj = key.GetValue("Path");
@@ -1358,7 +1358,7 @@ namespace wmpiexec
 				channel_comboBox.Text = channel_comboBox.Text.Trim();
 				if (channel_comboBox.Text != "default" && channel_comboBox.Text != "auto" && channel_comboBox.Text != "")
 				{
-					cmd = cmd + " -env MPICH2_CHANNEL " + channel_comboBox.Text;
+					cmd = cmd + " -env MPICH_CHANNEL " + channel_comboBox.Text;
 				}
 				env_textBox.Text = env_textBox.Text.Trim();
 				if (env_textBox.Text.Length > 0)

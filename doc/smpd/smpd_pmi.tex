@@ -1,6 +1,6 @@
 %
 %  This is a latex file that generates a reference manual for
-%  the wire protocol between an mpich2 process and a smpd manager.
+%  the wire protocol between an mpich process and a smpd manager.
 %
 \documentclass[dvipdfm,11pt]{article}
 \usepackage[dvipdfm]{hyperref} % Upgraded url package
@@ -32,16 +32,16 @@ Argonne National Laboratory}
 
 \section{Introduction}
 
-When a user builds MPICH2 they have the option to choose the SMPD process
-manager to launch and manage processes in MPICH2 jobs.  MPICH2 provides
-an implementation of smpd and mpiexec to launch MPICH2 jobs.  MPICH2 
+When a user builds MPICH they have the option to choose the SMPD process
+manager to launch and manage processes in MPICH jobs.  MPICH provides
+an implementation of smpd and mpiexec to launch MPICH jobs.  MPICH
 applications communicate with the process manager using the PMI interface.
 The PMI library for smpd provides an implementation of PMI for communicating
 with SMPD process managers. This document describes the environment and wire
-protocol between the MPICH2 application and the SMPD manager.
+protocol between the MPICH application and the SMPD manager.
 
 If a process manager implementor replicates the environment and protocol
-described in this document, they would be able to launch and manage MPICH2 
+described in this document, they would be able to launch and manage MPICH
 jobs compiled for SMPD.
 
 An SMPD manager communicates with its child process through environment
@@ -49,7 +49,7 @@ variables and a socket.  This document describes the environment and the
 wire protocol on that socket.
 
 \section{SMPD manager topology}
-This section describes how SMPD is organized in MPICH2.  An implementation
+This section describes how SMPD is organized in MPICH.  An implementation
 of a process manager that uses the protocol described in this document is 
 not required to use this topology.  It is provided for reference.
 
@@ -71,8 +71,8 @@ provides the context id to the child when it launches a process.
 \end{figure}
 
 \section{Child process environment}
-SMPD managers launch and manage child processes in an MPICH2 job.
-MPICH2 processes compiled with the SMPD PMI library expect the following
+SMPD managers launch and manage child processes in an MPICH job.
+MPICH processes compiled with the SMPD PMI library expect the following
 environment variables to be set:
 
 \begin{description}

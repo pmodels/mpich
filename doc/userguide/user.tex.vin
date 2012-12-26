@@ -291,7 +291,7 @@ For the time being we will document these separately.
 MPICH provides a number of process management systems. Hydra is the
 default process manager in MPICH. More details on Hydra and its
 extensions to mpiexec can be found at
-\url{http://wiki.mcs.anl.gov/mpich2/index.php/Using\_the\_Hydra\_Process\_Manager}
+\url{http://wiki.mpich.org/mpich/index.php/Using\_the\_Hydra\_Process\_Manager}
 
 
 \subsection{Extensions for SMPD Process Management Environment}
@@ -587,7 +587,7 @@ Hydra process manager.  Currently only the BLCR checkpointing library
 is supported.  BLCR needs to be installed separately.  Below we
 describe how to enable the feature in MPICH and how to use it.  This
 information can also be found on the MPICH Wiki:
-\url{http://wiki.mcs.anl.gov/mpich2/index.php/Checkpointing}
+\url{http://wiki.mpich.org/mpich/index.php/Checkpointing}
 
 \subsection{Configuring for checkpointing}
 \label{sec:conf-checkp}
@@ -681,20 +681,20 @@ be found in the \texttt{mpich/test/mpi} source directory and can be
 run with the command \texttt{make testing}.  This test suite should
 work with any MPI implementation, not just MPICH.
 
-\section{MPICH2 under Windows}
+\section{MPICH under Windows}
 \label{sec:windows}
 
 \subsection{Directories}
 \label{sec:windir}
 
-The default installation of MPICH2 is in
-\texttt{C:$\backslash$Program Files$\backslash$MPICH2}. Under the installation
+The default installation of MPICH is in
+\texttt{C:$\backslash$Program Files$\backslash$MPICH}. Under the installation
 directory are three sub-directories: \texttt{include}, \texttt{bin}, and
 \texttt{lib}.  The \texttt{include} and \texttt{lib} directories contain
 the header files and libraries necessary to compile MPI applications.  
 The \texttt{bin} directory contains the process manager, \texttt{smpd.exe},
 and the MPI job launcher, \texttt{mpiexec.exe}.  The dlls that implement
-MPICH2 are copied to the Windows system32 directory.
+MPICH are copied to the Windows system32 directory.
 
 \subsection{Compiling}
 \label{sec:wincompile}
@@ -707,20 +707,20 @@ create user applications.  \texttt{gcc} and \texttt{g77} for \texttt{cygwin} can
 
 For MS Developer Studio users: Create a project and add
 \begin{verbatim}
-    C:\Program Files\MPICH2\include
+    C:\Program Files\MPICH\include
 \end{verbatim}
 to the include path and
 \begin{verbatim}
-    C:\Program Files\MPICH2\lib
+    C:\Program Files\MPICH\lib
 \end{verbatim}
 to
 the library path.  Add \texttt{mpi.lib} and \texttt{cxx.lib} to the
 link command.  Add \texttt{cxxd.lib} to the Debug target link instead of
 \texttt{cxx.lib}.
 
-Intel Fortran 8 users should add \texttt{fmpich2.lib} to the link command. 
+Intel Fortran 8 users should add \texttt{fmpich.lib} to the link command. 
 
-Cygwin users should use \texttt{libmpich2.a} \texttt{libfmpich2g.a}.
+Cygwin users should use \texttt{libmpich.a} \texttt{libfmpichg.a}.
 
 \subsection{Running}
 \label{sec:winrun}
@@ -735,7 +735,7 @@ for a description of the options to \texttt{mpiexec}.
 \section{Frequently Asked Questions}
 
 The frequently asked questions are maintained online
-here:\url{http://wiki.mcs.anl.gov/mpich2/index.php/Frequently_Asked_Questions}
+here:\url{http://wiki.mpich.org/mpich/index.php/Frequently_Asked_Questions}
 
 \bibliographystyle{plain}
 \bibliography{user}

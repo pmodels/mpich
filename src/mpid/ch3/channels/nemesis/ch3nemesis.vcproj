@@ -742,7 +742,7 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath=".\nemesis\src\mpid_nem_mpich2.c"
+				RelativePath=".\nemesis\src\mpid_nem_mpich.c"
 				>
 			</File>
 			<File

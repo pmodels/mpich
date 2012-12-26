@@ -229,7 +229,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="Secur32.lib mpich2ssmsd.lib smpd_utild.lib ws2_32.lib mswsock.lib mpr.lib Rpcrt4.lib crypt32.lib"
+				AdditionalDependencies="Secur32.lib mpichssmsd.lib smpd_utild.lib ws2_32.lib mswsock.lib mpr.lib Rpcrt4.lib crypt32.lib"
 				OutputFile="..\..\..\bin\smpd.exe"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="..\..\..\lib"
@@ -264,7 +264,7 @@
 			/>
 		</Configuration>
 		<Configuration
-			Name="mpich2DebugConfig_1_0_4|Win32"
+			Name="mpichDebugConfig_1_0_4|Win32"
 			OutputDirectory="$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="1"
@@ -310,7 +310,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="activeds.lib adsiid.lib netapi32.lib ntdsapi.lib secur32.lib mpich2socksd.lib ch3sockd.lib smpd_utild.lib dbgd.lib sockd.lib pmid.lib ws2_32.lib mswsock.lib mpr.lib Rpcrt4.lib crypt32.lib"
+				AdditionalDependencies="activeds.lib adsiid.lib netapi32.lib ntdsapi.lib secur32.lib mpichsocksd.lib ch3sockd.lib smpd_utild.lib dbgd.lib sockd.lib pmid.lib ws2_32.lib mswsock.lib mpr.lib Rpcrt4.lib crypt32.lib"
 				OutputFile="..\..\..\bin\smpd.exe"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="..\..\..\lib"
@@ -345,7 +345,7 @@
 			/>
 		</Configuration>
 		<Configuration
-			Name="mpich2ReleaseConfig_1_0_4|Win32"
+			Name="mpichReleaseConfig_1_0_4|Win32"
 			OutputDirectory="$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="1"
@@ -391,7 +391,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="activeds.lib adsiid.lib netapi32.lib ntdsapi.lib secur32.lib mpich2socks.lib ch3sock.lib smpd_util.lib dbg.lib sock.lib pmi.lib ws2_32.lib mswsock.lib mpr.lib Rpcrt4.lib crypt32.lib"
+				AdditionalDependencies="activeds.lib adsiid.lib netapi32.lib ntdsapi.lib secur32.lib mpichsocks.lib ch3sock.lib smpd_util.lib dbg.lib sock.lib pmi.lib ws2_32.lib mswsock.lib mpr.lib Rpcrt4.lib crypt32.lib"
 				OutputFile="..\..\..\bin\smpd.exe"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="..\..\..\lib"
@@ -426,7 +426,7 @@
 			/>
 		</Configuration>
 		<Configuration
-			Name="ch3shm_mpich2ReleaseConfig_1_0_4|Win32"
+			Name="ch3shm_mpichReleaseConfig_1_0_4|Win32"
 			OutputDirectory="$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="1"
@@ -472,7 +472,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="activeds.lib adsiid.lib netapi32.lib ntdsapi.lib secur32.lib mpich2shms.lib ch3shm.lib smpd_util.lib dbg.lib sock.lib pmi.lib ws2_32.lib mswsock.lib mpr.lib Rpcrt4.lib crypt32.lib"
+				AdditionalDependencies="activeds.lib adsiid.lib netapi32.lib ntdsapi.lib secur32.lib mpichshms.lib ch3shm.lib smpd_util.lib dbg.lib sock.lib pmi.lib ws2_32.lib mswsock.lib mpr.lib Rpcrt4.lib crypt32.lib"
 				OutputFile="..\..\..\bin\smpd.exe"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="..\..\..\lib"
@@ -507,7 +507,7 @@
 			/>
 		</Configuration>
 		<Configuration
-			Name="mpich2sshm_mpich2ReleaseConfig_1_0_4|Win32"
+			Name="mpichsshm_mpichReleaseConfig_1_0_4|Win32"
 			OutputDirectory="$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="1"
@@ -553,7 +553,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="activeds.lib adsiid.lib netapi32.lib ntdsapi.lib secur32.lib mpich2shms.lib ch3shm.lib smpd_util.lib dbg.lib sock.lib pmi.lib ws2_32.lib mswsock.lib mpr.lib Rpcrt4.lib crypt32.lib"
+				AdditionalDependencies="activeds.lib adsiid.lib netapi32.lib ntdsapi.lib secur32.lib mpichshms.lib ch3shm.lib smpd_util.lib dbg.lib sock.lib pmi.lib ws2_32.lib mswsock.lib mpr.lib Rpcrt4.lib crypt32.lib"
 				OutputFile="..\..\..\bin\smpd.exe"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="..\..\..\lib"
@@ -588,7 +588,7 @@
 			/>
 		</Configuration>
 		<Configuration
-			Name="mpich2ssm_mpich2ReleaseConfig_1_0_4|Win32"
+			Name="mpichssm_mpichReleaseConfig_1_0_4|Win32"
 			OutputDirectory="$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="1"
@@ -634,7 +634,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="activeds.lib adsiid.lib netapi32.lib ntdsapi.lib secur32.lib mpich2shms.lib ch3shm.lib smpd_util.lib dbg.lib sock.lib pmi.lib ws2_32.lib mswsock.lib mpr.lib Rpcrt4.lib crypt32.lib"
+				AdditionalDependencies="activeds.lib adsiid.lib netapi32.lib ntdsapi.lib secur32.lib mpichshms.lib ch3shm.lib smpd_util.lib dbg.lib sock.lib pmi.lib ws2_32.lib mswsock.lib mpr.lib Rpcrt4.lib crypt32.lib"
 				OutputFile="..\..\..\bin\smpd.exe"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="..\..\..\lib"
@@ -669,7 +669,7 @@
 			/>
 		</Configuration>
 		<Configuration
-			Name="mt_mpich2ReleaseConfig_1_0_4|Win32"
+			Name="mt_mpichReleaseConfig_1_0_4|Win32"
 			OutputDirectory="$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="1"
@@ -715,7 +715,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="activeds.lib adsiid.lib netapi32.lib ntdsapi.lib secur32.lib mpich2socks.lib ch3sock.lib smpd_util.lib dbg.lib sock.lib pmi.lib ws2_32.lib mswsock.lib mpr.lib Rpcrt4.lib crypt32.lib"
+				AdditionalDependencies="activeds.lib adsiid.lib netapi32.lib ntdsapi.lib secur32.lib mpichsocks.lib ch3sock.lib smpd_util.lib dbg.lib sock.lib pmi.lib ws2_32.lib mswsock.lib mpr.lib Rpcrt4.lib crypt32.lib"
 				OutputFile="..\..\..\bin\smpd.exe"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="..\..\..\lib"
@@ -798,7 +798,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="activeds.lib adsiid.lib netapi32.lib ntdsapi.lib secur32.lib mpich2socks.lib ch3sock.lib smpd_util.lib dbg.lib sock.lib pmi.lib ws2_32.lib mswsock.lib mpr.lib Rpcrt4.lib crypt32.lib"
+				AdditionalDependencies="activeds.lib adsiid.lib netapi32.lib ntdsapi.lib secur32.lib mpichsocks.lib ch3sock.lib smpd_util.lib dbg.lib sock.lib pmi.lib ws2_32.lib mswsock.lib mpr.lib Rpcrt4.lib crypt32.lib"
 				OutputFile="..\..\..\bin\smpd.exe"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="..\..\..\lib"
@@ -834,7 +834,7 @@
 			/>
 		</Configuration>
 		<Configuration
-			Name="mpich2DebugConfig_1_0_5|Win32"
+			Name="mpichDebugConfig_1_0_5|Win32"
 			OutputDirectory="$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="1"
@@ -880,7 +880,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="activeds.lib adsiid.lib netapi32.lib ntdsapi.lib secur32.lib mpich2socks.lib ch3sock.lib smpd_util.lib dbg.lib sock.lib pmi.lib ws2_32.lib mswsock.lib mpr.lib Rpcrt4.lib crypt32.lib"
+				AdditionalDependencies="activeds.lib adsiid.lib netapi32.lib ntdsapi.lib secur32.lib mpichsocks.lib ch3sock.lib smpd_util.lib dbg.lib sock.lib pmi.lib ws2_32.lib mswsock.lib mpr.lib Rpcrt4.lib crypt32.lib"
 				OutputFile="..\..\..\bin\smpd.exe"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="..\..\..\lib"
@@ -963,7 +963,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="activeds.lib adsiid.lib netapi32.lib ntdsapi.lib secur32.lib mpich2socks.lib ch3sock.lib smpd_util.lib dbg.lib sock.lib pmi.lib ws2_32.lib mswsock.lib mpr.lib Rpcrt4.lib crypt32.lib"
+				AdditionalDependencies="activeds.lib adsiid.lib netapi32.lib ntdsapi.lib secur32.lib mpichsocks.lib ch3sock.lib smpd_util.lib dbg.lib sock.lib pmi.lib ws2_32.lib mswsock.lib mpr.lib Rpcrt4.lib crypt32.lib"
 				OutputFile="..\..\..\bin\smpd.exe"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="..\..\..\lib"
@@ -1047,7 +1047,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="activeds.lib adsiid.lib netapi32.lib ntdsapi.lib secur32.lib mpich2socks.lib ch3sock.lib smpd_util.lib dbg.lib sock.lib pmi.lib ws2_32.lib mswsock.lib mpr.lib Rpcrt4.lib crypt32.lib"
+				AdditionalDependencies="activeds.lib adsiid.lib netapi32.lib ntdsapi.lib secur32.lib mpichsocks.lib ch3sock.lib smpd_util.lib dbg.lib sock.lib pmi.lib ws2_32.lib mswsock.lib mpr.lib Rpcrt4.lib crypt32.lib"
 				OutputFile="..\..\..\bin\smpd.exe"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="..\..\..\lib"
@@ -1204,7 +1204,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2DebugConfig_1_0_4|Win32"
+					Name="mpichDebugConfig_1_0_4|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -1212,7 +1212,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichReleaseConfig_1_0_4|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -1220,7 +1220,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="ch3shm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="ch3shm_mpichReleaseConfig_1_0_4|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -1228,7 +1228,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2sshm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichsshm_mpichReleaseConfig_1_0_4|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -1236,7 +1236,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2ssm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichssm_mpichReleaseConfig_1_0_4|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -1244,7 +1244,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mt_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mt_mpichReleaseConfig_1_0_4|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -1260,7 +1260,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2DebugConfig_1_0_5|Win32"
+					Name="mpichDebugConfig_1_0_5|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"

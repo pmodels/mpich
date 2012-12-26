@@ -8,9 +8,9 @@ m4_include([../../../maint/version.m4])
 dnl 2nd arg is intentionally underquoted
 AC_INIT([MPD],
         MPICH_VERSION_m4,
-        [mpich-discuss@mcs.anl.gov],
+        [discuss@mpich.org],
         [mpd],
-        [http://www.mcs.anl.gov/research/projects/mpich2/])
+        [http://www.mpich.org/])
 
 # Autoconf header:
 rm -f ${srcdir}/mpdconf.h mpdconf.h

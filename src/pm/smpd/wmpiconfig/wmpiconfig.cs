@@ -392,7 +392,7 @@ namespace wmpiconfig
 			this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
 			this.MinimumSize = new System.Drawing.Size(504, 256);
 			this.Name = "wmpiconfig";
-			this.Text = "MPICH2 Configurable Settings";
+			this.Text = "MPICH Configurable Settings";
 			this.Load += new System.EventHandler(this.wmpiconfig_Load);
 			this.ResumeLayout(false);
 
@@ -713,7 +713,7 @@ namespace wmpiconfig
 			}
 			if (hash.Count == 0)
 			{
-				hash.Add("error", host + ": MPICH2 not installed or unable to query the host");
+				hash.Add("error", host + ": MPICH not installed or unable to query the host");
 			}
 			return hash;
 		}
@@ -826,7 +826,7 @@ namespace wmpiconfig
 			object obj;
 			try
 			{
-				RegistryKey key = Registry.LocalMachine.OpenSubKey(@"Software\MPICH2");
+				RegistryKey key = Registry.LocalMachine.OpenSubKey(@"Software\MPICH");
 				if (key != null)
 				{
 					obj = key.GetValue("Path");
@@ -890,7 +890,7 @@ namespace wmpiconfig
 			object obj;
 			try
 			{
-				RegistryKey key = Registry.LocalMachine.OpenSubKey(@"Software\MPICH2");
+				RegistryKey key = Registry.LocalMachine.OpenSubKey(@"Software\MPICH");
 				if (key != null)
 				{
 					obj = key.GetValue("Path");

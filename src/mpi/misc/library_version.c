@@ -67,14 +67,14 @@ int MPI_Get_library_version(char *version, int *resultlen)
     /* ... body of routine ...  */
 
     MPL_snprintf(version, MPI_MAX_LIBRARY_VERSION_STRING,
-                 "MPICH2 Version:\t%s\n"
-                 "MPICH2 Release date:\t%s\n"
-                 "MPICH2 Device:\t%s\n"
-                 "MPICH2 configure:\t%s\n"
-                 "MPICH2 CC:\t%s\n"
-                 "MPICH2 CXX:\t%s\n"
-                 "MPICH2 F77:\t%s\n"
-                 "MPICH2 FC:\t%s\n",
+                 "MPICH Version:\t%s\n"
+                 "MPICH Release date:\t%s\n"
+                 "MPICH Device:\t%s\n"
+                 "MPICH configure:\t%s\n"
+                 "MPICH CC:\t%s\n"
+                 "MPICH CXX:\t%s\n"
+                 "MPICH F77:\t%s\n"
+                 "MPICH FC:\t%s\n",
                  MPIR_Version_string, MPIR_Version_date, MPIR_Version_device,
                  MPIR_Version_configure, MPIR_Version_CC, MPIR_Version_CXX,
                  MPIR_Version_F77, MPIR_Version_FC);

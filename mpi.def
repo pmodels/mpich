@@ -715,7 +715,7 @@ EXPORTS
 	PMPI_Wtime
 	MPI_Wtime
 ;
-; mpich2 extra and renamed symbols
+; mpich extra and renamed symbols
 ;
     MPIR_CommGetAttr
     MPIR_CommGetAttr_fort

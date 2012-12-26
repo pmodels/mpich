@@ -159,7 +159,7 @@ BEGIN
     LTEXT           "Copyright (C) 2003",IDC_STATIC,40,25,119,8
     DEFPUSHBUTTON   "OK",IDOK,178,7,50,16,WS_GROUP
     LTEXT           "Usage:",IDC_STATIC,41,38,29,8
-    LTEXT           "1) connect to a pmandel mpich2 program.",IDC_STATIC,51,
+    LTEXT           "1) connect to a pmandel mpich program.",IDC_STATIC,51,
                     47,134,8
     LTEXT           "2) click and drag left mouse to zoom in.",IDC_STATIC,51,
                     55,123,8

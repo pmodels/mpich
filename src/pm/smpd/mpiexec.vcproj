@@ -230,7 +230,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="Secur32.lib mpich2ssmsd.lib smpd_utild.lib ws2_32.lib mswsock.lib rpcrt4.lib mpr.lib crypt32.lib"
+				AdditionalDependencies="Secur32.lib mpichssmsd.lib smpd_utild.lib ws2_32.lib mswsock.lib rpcrt4.lib mpr.lib crypt32.lib"
 				OutputFile="..\..\..\bin\mpiexec.exe"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="..\..\..\lib"
@@ -265,7 +265,7 @@
 			/>
 		</Configuration>
 		<Configuration
-			Name="mpich2DebugConfig_1_0_4|Win32"
+			Name="mpichDebugConfig_1_0_4|Win32"
 			OutputDirectory="$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="1"
@@ -311,7 +311,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="activeds.lib adsiid.lib netapi32.lib ntdsapi.lib secur32.lib smpd_utild.lib ch3sockd.lib sockd.lib pmid.lib dbgd.lib mpich2socksd.lib ws2_32.lib mswsock.lib rpcrt4.lib mpr.lib crypt32.lib"
+				AdditionalDependencies="activeds.lib adsiid.lib netapi32.lib ntdsapi.lib secur32.lib smpd_utild.lib ch3sockd.lib sockd.lib pmid.lib dbgd.lib mpichsocksd.lib ws2_32.lib mswsock.lib rpcrt4.lib mpr.lib crypt32.lib"
 				OutputFile="..\..\..\bin\mpiexec.exe"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="..\..\..\lib"
@@ -347,7 +347,7 @@
 			/>
 		</Configuration>
 		<Configuration
-			Name="mpich2ReleaseConfig_1_0_4|Win32"
+			Name="mpichReleaseConfig_1_0_4|Win32"
 			OutputDirectory="$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="1"
@@ -393,7 +393,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="activeds.lib adsiid.lib netapi32.lib ntdsapi.lib secur32.lib smpd_util.lib ch3sock.lib sock.lib pmi.lib dbg.lib mpich2socks.lib ws2_32.lib mswsock.lib rpcrt4.lib mpr.lib crypt32.lib"
+				AdditionalDependencies="activeds.lib adsiid.lib netapi32.lib ntdsapi.lib secur32.lib smpd_util.lib ch3sock.lib sock.lib pmi.lib dbg.lib mpichsocks.lib ws2_32.lib mswsock.lib rpcrt4.lib mpr.lib crypt32.lib"
 				OutputFile="..\..\..\bin\mpiexec.exe"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="..\..\..\lib"
@@ -429,7 +429,7 @@
 			/>
 		</Configuration>
 		<Configuration
-			Name="ch3shm_mpich2ReleaseConfig_1_0_4|Win32"
+			Name="ch3shm_mpichReleaseConfig_1_0_4|Win32"
 			OutputDirectory="$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="1"
@@ -475,7 +475,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="activeds.lib adsiid.lib netapi32.lib ntdsapi.lib secur32.lib smpd_util.lib ch3shm.lib sock.lib pmi.lib dbg.lib mpich2shms.lib ws2_32.lib mswsock.lib rpcrt4.lib mpr.lib crypt32.lib"
+				AdditionalDependencies="activeds.lib adsiid.lib netapi32.lib ntdsapi.lib secur32.lib smpd_util.lib ch3shm.lib sock.lib pmi.lib dbg.lib mpichshms.lib ws2_32.lib mswsock.lib rpcrt4.lib mpr.lib crypt32.lib"
 				OutputFile="..\..\..\bin\mpiexec.exe"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="..\..\..\lib"
@@ -511,7 +511,7 @@
 			/>
 		</Configuration>
 		<Configuration
-			Name="mpich2sshm_mpich2ReleaseConfig_1_0_4|Win32"
+			Name="mpichsshm_mpichReleaseConfig_1_0_4|Win32"
 			OutputDirectory="$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="1"
@@ -557,7 +557,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="activeds.lib adsiid.lib netapi32.lib ntdsapi.lib secur32.lib smpd_util.lib ch3shm.lib sock.lib pmi.lib dbg.lib mpich2shms.lib ws2_32.lib mswsock.lib rpcrt4.lib mpr.lib crypt32.lib"
+				AdditionalDependencies="activeds.lib adsiid.lib netapi32.lib ntdsapi.lib secur32.lib smpd_util.lib ch3shm.lib sock.lib pmi.lib dbg.lib mpichshms.lib ws2_32.lib mswsock.lib rpcrt4.lib mpr.lib crypt32.lib"
 				OutputFile="..\..\..\bin\mpiexec.exe"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="..\..\..\lib"
@@ -593,7 +593,7 @@
 			/>
 		</Configuration>
 		<Configuration
-			Name="mpich2ssm_mpich2ReleaseConfig_1_0_4|Win32"
+			Name="mpichssm_mpichReleaseConfig_1_0_4|Win32"
 			OutputDirectory="$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="1"
@@ -639,7 +639,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="activeds.lib adsiid.lib netapi32.lib ntdsapi.lib secur32.lib smpd_util.lib ch3shm.lib sock.lib pmi.lib dbg.lib mpich2shms.lib ws2_32.lib mswsock.lib rpcrt4.lib mpr.lib crypt32.lib"
+				AdditionalDependencies="activeds.lib adsiid.lib netapi32.lib ntdsapi.lib secur32.lib smpd_util.lib ch3shm.lib sock.lib pmi.lib dbg.lib mpichshms.lib ws2_32.lib mswsock.lib rpcrt4.lib mpr.lib crypt32.lib"
 				OutputFile="..\..\..\bin\mpiexec.exe"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="..\..\..\lib"
@@ -675,7 +675,7 @@
 			/>
 		</Configuration>
 		<Configuration
-			Name="mt_mpich2ReleaseConfig_1_0_4|Win32"
+			Name="mt_mpichReleaseConfig_1_0_4|Win32"
 			OutputDirectory="$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="1"
@@ -721,7 +721,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="activeds.lib adsiid.lib netapi32.lib ntdsapi.lib secur32.lib smpd_util.lib ch3sock.lib sock.lib pmi.lib dbg.lib mpich2socks.lib ws2_32.lib mswsock.lib rpcrt4.lib mpr.lib crypt32.lib"
+				AdditionalDependencies="activeds.lib adsiid.lib netapi32.lib ntdsapi.lib secur32.lib smpd_util.lib ch3sock.lib sock.lib pmi.lib dbg.lib mpichsocks.lib ws2_32.lib mswsock.lib rpcrt4.lib mpr.lib crypt32.lib"
 				OutputFile="..\..\..\bin\mpiexec.exe"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="..\..\..\lib"
@@ -805,7 +805,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="activeds.lib adsiid.lib netapi32.lib ntdsapi.lib secur32.lib mpich2socks.lib ch3sock.lib smpd_util.lib pmi.lib sock.lib dbg.lib ws2_32.lib mswsock.lib rpcrt4.lib mpr.lib crypt32.lib"
+				AdditionalDependencies="activeds.lib adsiid.lib netapi32.lib ntdsapi.lib secur32.lib mpichsocks.lib ch3sock.lib smpd_util.lib pmi.lib sock.lib dbg.lib ws2_32.lib mswsock.lib rpcrt4.lib mpr.lib crypt32.lib"
 				OutputFile="..\..\..\bin\mpiexec.exe"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="..\..\..\lib"
@@ -841,7 +841,7 @@
 			/>
 		</Configuration>
 		<Configuration
-			Name="mpich2DebugConfig_1_0_5|Win32"
+			Name="mpichDebugConfig_1_0_5|Win32"
 			OutputDirectory="$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="1"
@@ -887,7 +887,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="activeds.lib adsiid.lib netapi32.lib ntdsapi.lib secur32.lib smpd_util.lib ch3sock.lib sock.lib pmi.lib dbg.lib mpich2socks.lib ws2_32.lib mswsock.lib rpcrt4.lib mpr.lib crypt32.lib"
+				AdditionalDependencies="activeds.lib adsiid.lib netapi32.lib ntdsapi.lib secur32.lib smpd_util.lib ch3sock.lib sock.lib pmi.lib dbg.lib mpichsocks.lib ws2_32.lib mswsock.lib rpcrt4.lib mpr.lib crypt32.lib"
 				OutputFile="..\..\..\bin\mpiexec.exe"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="..\..\..\lib"
@@ -971,7 +971,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="activeds.lib adsiid.lib netapi32.lib ntdsapi.lib secur32.lib mpich2socks.lib ch3sock.lib smpd_util.lib pmi.lib sock.lib dbg.lib ws2_32.lib mswsock.lib rpcrt4.lib mpr.lib crypt32.lib"
+				AdditionalDependencies="activeds.lib adsiid.lib netapi32.lib ntdsapi.lib secur32.lib mpichsocks.lib ch3sock.lib smpd_util.lib pmi.lib sock.lib dbg.lib ws2_32.lib mswsock.lib rpcrt4.lib mpr.lib crypt32.lib"
 				OutputFile="..\..\..\bin\mpiexec.exe"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="..\..\..\lib"
@@ -1055,7 +1055,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="activeds.lib adsiid.lib netapi32.lib ntdsapi.lib secur32.lib mpich2socks.lib ch3sock.lib smpd_util.lib pmi.lib sock.lib dbg.lib ws2_32.lib mswsock.lib rpcrt4.lib mpr.lib crypt32.lib"
+				AdditionalDependencies="activeds.lib adsiid.lib netapi32.lib ntdsapi.lib secur32.lib mpichsocks.lib ch3sock.lib smpd_util.lib pmi.lib sock.lib dbg.lib ws2_32.lib mswsock.lib rpcrt4.lib mpr.lib crypt32.lib"
 				OutputFile="..\..\..\bin\mpiexec.exe"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="..\..\..\lib"

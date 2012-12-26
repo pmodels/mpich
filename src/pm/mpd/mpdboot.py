@@ -45,7 +45,7 @@ usage:  mpdboot --totalnum=<n_to_start> [--file=<hostsfile>]  [--help]        \
 """
 
 # workaround to suppress deprecated module warnings in python2.6
-# see https://trac.mcs.anl.gov/projects/mpich2/ticket/362 for tracking
+# see https://trac.mpich.org/projects/mpich/ticket/362 for tracking
 import warnings
 warnings.filterwarnings('ignore', '.*the popen2 module is deprecated.*', DeprecationWarning)
 

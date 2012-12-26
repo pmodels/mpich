@@ -5,8 +5,8 @@ GOTO AFTERHELP
 REM
 REM Usage:
 REM    getdotin
-REM      1) check out mpich2 from cvs
-REM         the environment variable USERNAME is used to checkout mpich2
+REM      1) check out mpich from cvs
+REM         the environment variable USERNAME is used to checkout mpich
 REM         If this variable is not set or is set to the wrong mcs user:
 REM           set USERNAME=mymcsusername
 REM
@@ -21,18 +21,18 @@ echo cd /sandbox/%USERNAME% > sshcmds.txt
 echo mkdir dotintmp >> sshcmds.txt
 echo cd dotintmp >> sshcmds.txt
 if "%1" == "" GOTO EXPORT_HEAD
-echo cvs -d /home/MPI/cvsMaster export -r %1 mpich2allWithMPE >> sshcmds.txt
+echo cvs -d /home/MPI/cvsMaster export -r %1 mpichallWithMPE >> sshcmds.txt
 GOTO AFTER_EXPORT_HEAD
 :EXPORT_HEAD
-echo cvs -d /home/MPI/cvsMaster export -r HEAD mpich2allWithMPE >> sshcmds.txt
+echo cvs -d /home/MPI/cvsMaster export -r HEAD mpichallWithMPE >> sshcmds.txt
 :AFTER_EXPORT_HEAD
-echo cd mpich2 >> sshcmds.txt
+echo cd mpich >> sshcmds.txt
 echo autogen.sh >> sshcmds.txt
 echo tar cvf dotin.tar `find . -name "*.h.in"` >> sshcmds.txt
 echo gzip dotin.tar >> sshcmds.txt
 echo exit >> sshcmds.txt
 ssh -l %USERNAME% %CVS_HOST% < sshcmds.txt
-scp %USERNAME%@%CVS_HOST%:/sandbox/%USERNAME%/dotintmp/mpich2/dotin.tar.gz .
+scp %USERNAME%@%CVS_HOST%:/sandbox/%USERNAME%/dotintmp/mpich/dotin.tar.gz .
 ssh -l %USERNAME% %CVS_HOST% rm -rf /sandbox/%USERNAME%/dotintmp
 del sshcmds.txt
 tar xvfz dotin.tar.gz

@@ -215,7 +215,7 @@ SMPD_BOOL smpd_save_cred_to_file(const char *filename, const char *szAccount, co
     /* Encrypt account name */
     cred_blob.cbData = (DWORD )strlen(szAccount) + 1;
     cred_blob.pbData = (BYTE *)szAccount;
-    if(!CryptProtectData(&cred_blob, L"MPICH2 User Credentials", NULL, NULL, NULL, CRYPTPROTECT_UI_FORBIDDEN, &safe_blob)){
+    if(!CryptProtectData(&cred_blob, L"MPICH User Credentials", NULL, NULL, NULL, CRYPTPROTECT_UI_FORBIDDEN, &safe_blob)){
         int err_num = GetLastError();
         smpd_translate_win_error(GetLastError(), err_msg, SMPD_MAX_ERR_MSG_LENGTH, "CryptProtectData() failed, errno = %d, ", err_num);
         smpd_err_printf("%s\n", err_msg);
@@ -246,7 +246,7 @@ SMPD_BOOL smpd_save_cred_to_file(const char *filename, const char *szAccount, co
     /* Encrypt password */
     cred_blob.cbData = (DWORD )strlen(szPassword) + 1;
     cred_blob.pbData = (BYTE *)szPassword;
-    if(!CryptProtectData(&cred_blob, L"MPICH2 User Credentials", NULL, NULL, NULL, CRYPTPROTECT_UI_FORBIDDEN, &safe_blob)){
+    if(!CryptProtectData(&cred_blob, L"MPICH User Credentials", NULL, NULL, NULL, CRYPTPROTECT_UI_FORBIDDEN, &safe_blob)){
         int err_num = GetLastError();
         smpd_translate_win_error(GetLastError(), err_msg, SMPD_MAX_ERR_MSG_LENGTH, "CryptProtectData() failed, errno = %d, ", err_num);
         smpd_err_printf("%s\n", err_msg);
@@ -487,7 +487,7 @@ SMPD_BOOL smpd_save_password_to_registry(int index, const char *szAccount, const
 
     password_blob.cbData = (DWORD)strlen(szPassword)+1; /* store the NULL termination */
     password_blob.pbData = (BYTE*)szPassword;
-    if (CryptProtectData(&password_blob, L"MPICH2 User Credentials", NULL, NULL, NULL, CRYPTPROTECT_UI_FORBIDDEN, &blob))
+    if (CryptProtectData(&password_blob, L"MPICH User Credentials", NULL, NULL, NULL, CRYPTPROTECT_UI_FORBIDDEN, &blob))
     {
 	/* Write data to registry.*/
 	if (RegSetValueEx(hRegKey, key_pwd, 0, REG_BINARY, blob.pbData, blob.cbData) != ERROR_SUCCESS)

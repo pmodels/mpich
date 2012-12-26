@@ -32,7 +32,7 @@
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="mpich2d.lib ws2_32.lib "
+				AdditionalDependencies="mpichd.lib ws2_32.lib "
 				OutputFile="$(OutDir)/adapt.exe"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="..\..\..\lib"
@@ -85,7 +85,7 @@
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="mpich2.lib ws2_32.lib"
+				AdditionalDependencies="mpich.lib ws2_32.lib"
 				OutputFile="$(OutDir)/adapt.exe"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="..\..\..\lib"

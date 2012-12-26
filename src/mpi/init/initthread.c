@@ -90,7 +90,7 @@ static int assert_hook( int reportType, char *message, int *returnValue )
     return TRUE;
 }
 
-/* MPICH2 dll entry point */
+/* MPICH dll entry point */
 BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpReserved)
 {
     BOOL result = TRUE;

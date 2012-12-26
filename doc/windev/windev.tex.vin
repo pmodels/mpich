@@ -33,8 +33,8 @@
 
 
 \begin{document}
-\markright{MPICH2 Windows Development Guide}
-\title{{\bf MPICH2 Windows Development Guide}\thanks{This work was supported by the
+\markright{MPICH Windows Development Guide}
+\title{{\bf MPICH Windows Development Guide}\thanks{This work was supported by the
     Mathematical, Information, and Computational Sciences Division
     subprogram of the Office of Advanced Scientific Computing Research,
     SciDAC Program, Office of Science, U.S. Department of Energy, under
@@ -73,13 +73,13 @@ Brian Toonen
 
 \section{Introduction}
 \label{sec:intro}
-This manual describes how to set up a Windows machine to build and test MPICH2 on.
+This manual describes how to set up a Windows machine to build and test MPICH on.
 
 \section{Build machine}
 \label{sec:machine}
 
 Build a Windows XP or Windows Server 2003 machine. This machine should have access to
-the internet to be able to download the MPICH2 source code.
+the internet to be able to download the MPICH source code.
 
 \section{Test machine}
 \label{sec:test_machine}
@@ -89,12 +89,12 @@ Also build a Windows Server 2003 X64 machine to test the Win64 distribution.
 
 \section{Software}
 
-This section describes the software necessary to build MPICH2.
+This section describes the software necessary to build MPICH.
 
 \subsection{Packages}
 \label{sec:packages}
 
-To build MPICH2 you will need:
+To build MPICH you will need:
 \begin{enumerate}
 \item Microsoft Visual Studio 2005
 \item The latest version of Microsoft .NET framework
@@ -119,8 +119,8 @@ machine.
 
 Cygwin needs to be installed to get svn, perl and ssh. By default the Cygwin installer might
 not install all the required packages, so make sure that the required packages are selected
-during the install. MPICH2 also requires autoconf version 2.62 or above. The OpenPA library
-used by MPICH2 requires the automake package. Select to use the DOS file format when installing
+during the install. MPICH also requires autoconf version 2.62 or above. The OpenPA library
+used by MPICH requires the automake package. Select to use the DOS file format when installing
 Cygwin.
 
 Assuming you installed Cygwin to the default \texttt{c:$\backslash$cygwin} directory, add 
@@ -137,7 +137,7 @@ GUI mode to console mode:
 cscript //H:cscript
 \end{verbatim}
 
-\section{Building MPICH2}
+\section{Building MPICH}
 \label{sec:building}
 
 This section describes how to make various packages once you have a working build machine.
@@ -145,28 +145,28 @@ This section describes how to make various packages once you have a working buil
 \subsection{Visual Studio automated 32bit build}
 \label{sec:vsbuild}
 
-The easist way to build an MPICH2 distribution is to use the Visual Studio environment
-and the makewindist.bat script from the top level of the mpich2 source tree.  You can check
-out mpich2 from SVN or you can simply copy this batch file from the distribution.  The batch
-file knows how to check out mpich2 so it the only file required to make a distribution.
+The easist way to build an MPICH distribution is to use the Visual Studio environment
+and the makewindist.bat script from the top level of the mpich source tree.  You can check
+out mpich from SVN or you can simply copy this batch file from the distribution.  The batch
+file knows how to check out mpich so it the only file required to make a distribution.
 
 The product GUIDs need to be changed when a new release is created.  To do this run 
-``\texttt{perl update\_windows\_version $<$new\_version$>$}''.  Run this script with mpich2/maint 
+``\texttt{perl update\_windows\_version $<$new\_version$>$}''.  Run this script with mpich/maint 
 as the current directory so the project files can be found.  Example:
 \begin{verbatim}
 perl update_windows_version 1.0.8
 \end{verbatim}
 
-Or you can modify the project files by hand. Edit mpich2/maint/mpich2i.vdproj. The ProductCode
+Or you can modify the project files by hand. Edit mpich/maint/mpichi.vdproj. The ProductCode
 and PackageCode entries need to be changed to use new GUIDs.  Under Unix or Windows, uuidgen can 
 be used to generate a new GUID.  The ProductVersion entry needs to be changed to match the 
-version of MPICH2. Once the version and GUIDs have been updated, commit the changes to
-mpich2i.vdproj to SVN. Now you can build a distribution.
+version of MPICH. Once the version and GUIDs have been updated, commit the changes to
+mpichi.vdproj to SVN. Now you can build a distribution.
 
 Bring up a build command prompt by selecting Start$\to$Progams$\to$Microsoft Visual Studio 
 2005$\to$Visual Studio 2005 Tools$\to$Visual Studio 2005 Command Prompt.
 
-Change directories to wherever you want to create the distribution.  mpich2 will be checked 
+Change directories to wherever you want to create the distribution.  mpich will be checked 
 out under the current directory.  Run the makewindist batch file:
 
 \begin{verbatim}
@@ -175,31 +175,31 @@ makewindist.bat --with-checkout
 
 The batch file executes the following steps:
 \begin{enumerate}
-\item Check out trunk from the MPICH2 svn repository.
+\item Check out trunk from the MPICH svn repository.
 \item Run \texttt{autogen.sh} to generate the autogenerated files
-\item Run ``\texttt{winconfigure.wsf --cleancode}'' to configure mpich2 for Windows and output
+\item Run ``\texttt{winconfigure.wsf --cleancode}'' to configure mpich for Windows and output
 all the generated files like mpi.h and the fortran interface files, etc.
-\item Run the Visual Studio command line tool to build all the components of MPICH2.  This
+\item Run the Visual Studio command line tool to build all the components of MPICH.  This
 includes each of the channels - sock, nemesis, ssm, shm, and the multi-threaded sock
 channel.  Two versions of each channel are built, the regular release build and the rlog
 profiled version.  The mpi wrapper channel selector dll is built and three Fortran interfaces
 are built, one for each set of common symbol types and calling conventions.  mpiexec and
 smpd are built along with the Windows GUI tools and the Cygwin libraries.  (These are the Cygwin
-link libraries to use the Windows native build of MPICH2, not a Unix-style build of MPICH2
+link libraries to use the Windows native build of MPICH, not a Unix-style build of MPICH
 under Cygwin.)
-\item Package up everthing into \texttt{maint$\backslash$ReleaseMSI$\backslash$mpich2.msi}.
+\item Package up everthing into \texttt{maint$\backslash$ReleaseMSI$\backslash$mpich.msi}.
 \end{enumerate}
 
-When the batch file is finished you will be left with a mpich2.msi file that can be used to
-install MPICH2 on any Win32 machine.  This file can be re-named to match the release naming 
+When the batch file is finished you will be left with a mpich.msi file that can be used to
+install MPICH on any Win32 machine.  This file can be re-named to match the release naming 
 conventions.
 
 \subsubsection{Automated build from the source distribution}
-Follow the steps mentioned below to build MPICH2 from a source tarball.
+Follow the steps mentioned below to build MPICH from a source tarball.
 \begin{enumerate}
 \item unzip/untar the source distribution
 \item Open a Visual Studio Command Prompt
-\item cd into the mpich2xxx directory
+\item cd into the mpich-xxx directory
 \item execute ``\texttt{winconfigure.wsf --cleancode}''
 \item execute ``\texttt{makewindist.bat --with-curdir}''
 \end{enumerate}
@@ -214,7 +214,7 @@ it before executing it.
 \subsection{Platform SDK builds}
 \label{sec:psdk_build}
 
-The makefile in the \texttt{mpich2$\backslash$winbuild} directory builds a distribution based 
+The makefile in the \texttt{mpich$\backslash$winbuild} directory builds a distribution based 
 on the compilers specified in the environment. The following targets can all be built with
 this mechanism:
 \begin{itemize}
@@ -223,12 +223,12 @@ this mechanism:
 \item Win32 x86
 \end{itemize}
 
-Follow the steps below to build MPICH2.
+Follow the steps below to build MPICH.
 \begin{enumerate}
-\item Open a Cygwin bash shell and check out mpich2: 
+\item Open a Cygwin bash shell and check out mpich: 
 
-\texttt{svn checkout https://svn.mcs.anl.gov/repos/mpi/mpich2/trunk mpich2}.
-\item cd into mpich2 directory
+\texttt{svn checkout https://svn.mcs.anl.gov/repos/mpi/mpich2/trunk mpich}.
+\item cd into mpich directory
 \item run \texttt{autogen.sh}
 \item Open a Visual Studio command prompt
 \item From within the Visual Studio command prompt run
@@ -241,13 +241,13 @@ To build the Win64 X64 distribution do the following:
 $\to$Microsoft Platform SDK for Windows Server 2003 SP1$\to$Open Build Environment Window$\to$
 Windows Server 2003 64-bit Build Environment$\to$Set Win Svr 2003 x64 Build Env (Retail)
 \item Run \texttt{$\backslash$Program Files$\backslash$Intel$\backslash$Fortran$\backslash$compiler80$\backslash$Ia32e$\backslash$Bin$\backslash$ifortvars.bat}
-\item cd into \texttt{mpich2$\backslash$winbuild}
+\item cd into \texttt{mpich$\backslash$winbuild}
 \item run \texttt{build.bat 2>\&1 | tee build.x64.out}
 \end{enumerate}
 
-For building the installer for Win64 x64, open the mpich2 solution file, mpich2.sln, using
-Visual Studio 2005 and build the Installerx64 solution. The installer, \texttt{mpich2.msi}
-will be available at \texttt{mpich2$\backslash$maint$\backslash$ReleaseMSIx64} directory.
+For building the installer for Win64 x64, open the mpich solution file, mpich.sln, using
+Visual Studio 2005 and build the Installerx64 solution. The installer, \texttt{mpich.msi}
+will be available at \texttt{mpich$\backslash$maint$\backslash$ReleaseMSIx64} directory.
 
 
 The Visual Studio 2005 compiler provides a Cross tools command prompt for building
@@ -260,7 +260,7 @@ To build the Win64 IA64 distribution do the following:
 $\to$Microsoft Platform SDK for Windows Server 2003 SP1$\to$Open Build Environment Window$\to$
 Windows Server 2003 64-bit Build Environment$\to$Set Win Svr 2003 IA64 Build Env (Retail)
 \item Run \texttt{$\backslash$Program Files$\backslash$Intel$\backslash$Fortran$\backslash$compiler80$\backslash$Itanium$\backslash$Bin$\backslash$ifortvars.bat}
-\item cd into \texttt{mpich2$\backslash$winbuild}
+\item cd into \texttt{mpich$\backslash$winbuild}
 \item run \texttt{build.bat 2>\&1 | tee build.ia64.out}
 \end{enumerate}
 
@@ -270,59 +270,59 @@ To build the Win32 x86 distribution do the following:
 $\to$Microsoft Platform SDK for Windows Server 2003 SP1$\to$Open Build Environment Window$\to$
 Windows 2000 Build Environment$\to$Set Windows 2000 Build Environment (Retail)
 \item Run \texttt{$\backslash$Program Files$\backslash$Intel$\backslash$Fortran$\backslash$compiler80$\backslash$Ia32$\backslash$Bin$\backslash$ifortvars.bat}
-\item cd into \texttt{mpich2$\backslash$winbuild}
+\item cd into \texttt{mpich$\backslash$winbuild}
 \item run \texttt{build.bat 2>\&1 | tee build.x86.out}
 \end{enumerate}
 
-\section{Distributing MPICH2 builds}
+\section{Distributing MPICH builds}
 \label{sec:distribute}
 
 If you built an .msi file using the Visual Studio build process \ref{sec:vsbuild} then
-all you have to do is rename the \texttt{mpich2.msi} file to something appropriate like
-\texttt{mpich2-1.0.3-1-win32-ia32.msi}
+all you have to do is rename the \texttt{mpich.msi} file to something appropriate like
+\texttt{mpich-1.4-win32-ia32.msi}
 
 If you built using the Platform SDK build process \ref{sec:psdk_build} then the output files
 are left in their build locations and need to be collected and put in a zip file for
 distributing.  This process should be automated with a script.
 
-\section{Testing MPICH2}
+\section{Testing MPICH}
 \label{sec:testing}
 
-Run the \texttt{testmpich2.wsf} script to checkout mpich2, build it, install it, checkout 
+Run the \texttt{testmpich.wsf} script to checkout mpich, build it, install it, checkout 
 the test suites, build them, run the test suites, and collect the results in a web page.
 
 \subsection{Testing from scratch}
-Explain the use of testmpich2.wsf.
+Explain the use of testmpich.wsf.
 
-Run ``\texttt{testmpich2.wsf}'' without any parameters and it will create a \texttt{testmpich2}
-subdirectory and check out into that directory mpich2 and the test suites - c++, mpich, intel
-and mpich2.  It will then build mpich2 and all the tests from the test suites.  Then it will run
-the tests and place a summary in \texttt{testmpich2$\backslash$summary$\backslash$index.html}.
+Run ``\texttt{testmpich.wsf}'' without any parameters and it will create a \texttt{testmpich}
+subdirectory and check out into that directory mpich and the test suites - c++, mpich, intel
+and mpich.  It will then build mpich and all the tests from the test suites.  Then it will run
+the tests and place a summary in \texttt{testmpich$\backslash$summary$\backslash$index.html}.
 
-\subsection{Testing a built mpich2 directory}
-Explain how to run \texttt{testmpich2.wsf} if you have the mpich2 source tree on a machine and you 
-have already built all of mpich2.
+\subsection{Testing a built mpich directory}
+Explain how to run \texttt{testmpich.wsf} if you have the mpich source tree on a machine and you 
+have already built all of mpich.
 
-Here is a sample batch file to test mpich2 that has already been built in c:$\backslash$mpich2:
+Here is a sample batch file to test mpich that has already been built in c:$\backslash$mpich:
 \begin{verbatim}
-testmpich2.wsf /mpich2:c:\mpich2 /make- /configure- /buildbatch
-pushd testmpich2\buildMPICH
+testmpich.wsf /mpich:c:\mpich /make- /configure- /buildbatch
+pushd testmpich\buildMPICH
 call mpich_cmds.bat
 popd
-pushd testmpich2\buildCPP
+pushd testmpich\buildCPP
 call cpp_cmds.bat
 popd
-pushd testmpich2\buildINTEL
+pushd testmpich\buildINTEL
 call intel_cmds.bat
 popd
-pushd testmpich2\buildMPICH2
-call mpich2_cmds.bat
+pushd testmpich\buildMPICH
+call mpich_cmds.bat
 popd
-testmpich2.wsf /mpich2:c:\mpich2 /make- /configure- /summarize
+testmpich.wsf /mpich:c:\mpich /make- /configure- /summarize
 \end{verbatim}
 
 \subsection{Testing an existing installation}
-Explain the use of testmpich2.wsf to test an existing installation, one that was installed
+Explain the use of testmpich.wsf to test an existing installation, one that was installed
 with the .msi distribution.
 
 \section{Development issues}
@@ -344,7 +344,7 @@ have not been added to the case statement.
 
 \section{Runtime environment}
 
-This section describes the MPICH2 environment that is particular to Windows.
+This section describes the MPICH environment that is particular to Windows.
 
 \subsection{User credentials}
 mpiexec must have the user name and password to launch MPI applications in the context of
@@ -375,8 +375,8 @@ option to mpiexec.  Put the username on the first line of the file and the passw
 on the second line.  If you choose this option you should make sure the file is
 only readable by the current user.
 
-\subsection{MPICH2 channel selection}
-MPICH2 for Windows comes with multiple complete implementations of MPI.  These are called
+\subsection{MPICH channel selection}
+MPICH for Windows comes with multiple complete implementations of MPI.  These are called
 channels and each build represents a different transport mechanism used to move MPI messages.
 The default channel (sock) uses sockets for communication.  There is channel that use only
 shared memory (shm).  There are two channels that uses both sockets and shared memory 
@@ -385,12 +385,12 @@ users to use the sock, mt or nemesis channels. The shm and ssm channels will soo
 
 The short names for the channels are: sock, nemesis, shm, ssm, mt.
 
-These channels can be selected at runtime with an environment variable: MPICH2\_CHANNEL.
+These channels can be selected at runtime with an environment variable: MPICH\_CHANNEL.
 The following is an example that uses the nemesis channel instead of the default sockets
 channel:
 
 \begin{verbatim}
-mpiexec -env MPICH2_CHANNEL nemesis -n 4 myapp.exe
+mpiexec -env MPICH_CHANNEL nemesis -n 4 myapp.exe
 or
 mpiexec -channel nemesis -n 4 myapp.exe
 \end{verbatim}
@@ -419,7 +419,7 @@ processes on the local machine to be able to bring up GUIs.  Add -localroot to t
 command to enable this capability.  But even with this option, all GUIs from processes on 
 remote machines will be hidden.
 
-So the only GUI application that MPICH2 cannot handle by default would be a video-wall type
+So the only GUI application that MPICH cannot handle by default would be a video-wall type
 application.  But this can be done by running smpd.exe by hand on each machine instead of
 installing it as a service.  Log on to each machine and run ``\texttt{smpd.exe -stop}'' 
 to stop the service and then run ``\texttt{smpd.exe -d 0}'' to start up the smpd again.  
@@ -427,7 +427,7 @@ As long as this process is running you will be able to run applications where ev
 is allowed to bring up GUIs.
 
 \subsection{Security}
-MPICH2 can use Microsoft's SSPI interface to launch processes without using any user 
+MPICH can use Microsoft's SSPI interface to launch processes without using any user 
 passwords.  This is the most secure way to launch MPI jobs but it requires the machines to be 
 configured in a certain way.
 \begin{itemize}
@@ -436,7 +436,7 @@ configured in a certain way.
 \item Each user that will run jobs must be allowed to use delegation.
 \end{itemize}
 
-If the machines are set up this way then an administrator can set up MPICH2 for passwordless
+If the machines are set up this way then an administrator can set up MPICH for passwordless
 authentication.  On each node, a domain administrator needs to execute the following:
 ``\texttt{smpd -register\_spn}''.
 
@@ -503,20 +503,20 @@ LogonUser with the user name and password for each user that submits a job reque
 
 \subsection{Firewalls}
 Windows comes with a default firewall that is usually turned on by default.
-Firewalls block all TCP ports by default which renders MPICH2 applications inoperable
-because the default communication mechanism used by MPICH2 are sockets on arbitrary
+Firewalls block all TCP ports by default which renders MPICH applications inoperable
+because the default communication mechanism used by MPICH are sockets on arbitrary
 ports assigned by the operating system.  This can be solved in several ways:
 
 \begin{itemize}
 \item Turn off the firewall completely.
-\item  MPICH2 applications can be limited to a range of TCP ports using the 
+\item  MPICH applications can be limited to a range of TCP ports using the 
 MPICH\_PORT\_RANGE environment variable.  If you set your firewall to allow the
-same port range then MPICH2 applications will run.
-\item Leave the Windows firewall on and allow exceptions for your MPICH2 applications.
+same port range then MPICH applications will run.
+\item Leave the Windows firewall on and allow exceptions for your MPICH applications.
 This can be done through the Security Center module of the Windows Control 
 Panel.  Click the Windows Firewall option in the Security Center to bring up
 the properties page and select the Exceptions tab.  Here you can add each 
-MPICH2 application to exempt.  Note that this exception includes the path to
+MPICH application to exempt.  Note that this exception includes the path to
 the executable so if you move the executable you will have to exempt the new
 location.  This solution obviously only will work for a small number of 
 applications since managing a large list would be difficult.  Make sure you add
@@ -566,7 +566,7 @@ processor 1, rank 1 to logical processor 3, rank 2 to logical processor 1.
 
 \item \texttt{-channel channel\_name}
 This option is only available under Windows and allows the user to select which
-channel implementation of MPICH2 to select at runtime.  The current channels
+channel implementation of MPICH to select at runtime.  The current channels
 supported are sock, mt, ssm, and shm.  These represent the sockets, 
 multi-threaded sockets, sockets plus shared memory, and shared memory channels.
 The shared memory channels only work on one node.  The sockets, multi-threaded
@@ -601,7 +601,7 @@ processes exits.
 Use the specified implementation specific job configuration file.  For Windows
 this option is used to specify the old MPICH 1.2.5 configuration file format.
 This is useful for users who have existing configuration files and want to upgrade
-to MPICH2.
+to MPICH.
 
 \item \texttt{-genvlist a,b,c,d...}
 Specify a list of environment variables to taken from the environment local to mpiexec and propagated to the launched processes.
@@ -721,9 +721,9 @@ machines.
 
 \item \texttt{-pmi\_server num\_processes or -pmiserver num\_processes}
 This option specified by itself connects to the local smpd process manager and
-starts a PMI service.  This service is used by MPICH2 processes to communicate
+starts a PMI service.  This service is used by MPICH processes to communicate
 connection information to each other.  This option is only good for a single
-MPICH2 job.  The input parameter is the number of processes in the job.
+MPICH job.  The input parameter is the number of processes in the job.
 \texttt{mpiexec} immediately outputs three lines of data.  The first line is the
 host name.  The second line is the port it is listening on and the third line
 is the name of the PMI KVS.  A process manager that can set environment variables
@@ -932,7 +932,7 @@ Print a brief summary of the options to smpd.
 This section describes how to start a job by hand without the use of a process
 manager so the job can be stepped through with a debugger.
 
-You can launch an MPICH2 job by hand if you set the minimum required environment
+You can launch an MPICH job by hand if you set the minimum required environment
 variables for each process and then start the processes yourself (or in a debugger).
 
 Here is a script that sets the environment variables so that a job can be started
@@ -946,7 +946,7 @@ set PMI_ROOT_PORT=9222
 set PMI_ROOT_LOCAL=1
 set PMI_RANK=%1
 set PMI_SIZE=%2
-set PMI_KVS=mpich2
+set PMI_KVS=mpich
 goto DONE
 :HELP
 REM usage: setmpi2 rank size
@@ -985,14 +985,14 @@ This section describes how to debug MPI jobs using the MPI Cluster Debugger avai
 \item In Debugging section (Select ``\texttt{Configuration Properties}'' and then select ``\texttt{Debugging}'' category), select ``\texttt{MPI Cluster debugger}'' as the debugger to launch from the drop down menu.
 \item Set the ``\texttt{Run Environment}'' item to ``\texttt{localhost/NUM\_PROCS\_TO\_LAUNCH}'' (e.g. localhost/3 to launch 3 MPI processes)
 \item Set the ``\texttt{Application Arguments}'' item, if your MPI application has any arguments (To specify input to your application redirect it from a text file)
-\item Set the ``\texttt{MPIExec Command}'' item to point to MPICH2's mpiexec (\texttt{C:$\backslash$Program Files$\backslash$MPICH2$\backslash$bin$\backslash$mpiexec.exe})
+\item Set the ``\texttt{MPIExec Command}'' item to point to MPICH's mpiexec (\texttt{C:$\backslash$Program Files$\backslash$MPICH$\backslash$bin$\backslash$mpiexec.exe})
 \item Click OK to submit the project property changes
 \item Insert break points in the Visual Studio explorer window
 \item Press F5 to start debugging your code. Note that multiple windows pop up showing a view of the processes launched and the corresponding call stacks. The debugger automatically switches between MPI processes, if required, when it hits a breakpoint.
 \end{enumerate}
 
 \subsection{Environment variables}
-This section describes the environment variables used by MPICH2 and smpd.
+This section describes the environment variables used by MPICH and smpd.
 
 \begin{itemize}
 \item \texttt{MPICH\_ABORT\_ON\_ERROR}
@@ -1046,8 +1046,8 @@ stdout, memlog or file.  determines where debugging output goes
 name of the dll that contains the MPI and PMPI interfaces
 \item \texttt{MPI\_DLL\_PATH}
 path of the dll that contains the MPI and PMPI interfaces
-\item \texttt{MPICH2\_CHANNEL}
-short name of the channel used to create the full name of the MPI dll (ie. ib becomes mpich2ib.dll)
+\item \texttt{MPICH\_CHANNEL}
+short name of the channel used to create the full name of the MPI dll (ie. ib becomes mpichib.dll)
 \item \texttt{MPI\_WRAP\_DLL\_NAME}
 name of the dll that contains only the MPI interface, not the PMPI interface
 \item \texttt{MPICH\_TRMEM\_INITZERO}
@@ -1134,7 +1134,7 @@ Used by the process managers other than smpd:
 \end{itemize}
 
 \subsection{Compiling}
-This section describes how to set up a project to compile an MPICH2 application
+This section describes how to set up a project to compile an MPICH application
 using Visual Studio 2005 and Visual Studio 6.0.
 
 \subsubsection{Visual Studio 6.0}
@@ -1147,11 +1147,11 @@ in your project.
 
 \item Bring up the settings for the project by hitting Alt F7.  Select the Preprocessor
 Category from the C/C++ tab.  Enter \texttt{HAVE\_NO\_VARIABLE\_RETURN\_TYPE\_SUPPORT} into
-the Preprocessor box.  Enter \texttt{C:$\backslash$Program Files$\backslash$MPICH2$\backslash$include}
+the Preprocessor box.  Enter \texttt{C:$\backslash$Program Files$\backslash$MPICH$\backslash$include}
 into the ``Additional include directories'' box.
 
 \item Select the Input Category from the Link tab.  Add \texttt{cxx.lib} and \texttt{mpi.lib} to
-the Object/library modules box.  Add \texttt{C:$\backslash$Program Files$\backslash$MPICH2$\backslash$lib}
+the Object/library modules box.  Add \texttt{C:$\backslash$Program Files$\backslash$MPICH$\backslash$lib}
 to the ``Additional library path'' box.
 
 \item Compile your application.
@@ -1168,27 +1168,27 @@ it as a guide to create your own projects.
 name and selecting Properties.
 
 \item Navigate to Configuration Properties::C/C++::General
-\item Add \texttt{C:$\backslash$Program Files$\backslash$MPICH2$\backslash$include}
+\item Add \texttt{C:$\backslash$Program Files$\backslash$MPICH$\backslash$include}
 to the ``Additional Include Directories'' box.
 
 \item Navigate to Configuration Properties::Linker::General
-\item Add \texttt{C:$\backslash$Program Files$\backslash$MPICH2$\backslash$lib}
+\item Add \texttt{C:$\backslash$Program Files$\backslash$MPICH$\backslash$lib}
 to the ``Aditional Library Directories'' box.
 
 \item Navigate to Configuration Properties::Linker::Input
-\item Add \texttt{cxx.lib} and \texttt{mpi.lib} and \texttt{fmpich2.lib} to the ``Additional Dependencies'' box.  If your
+\item Add \texttt{cxx.lib} and \texttt{mpi.lib} and \texttt{fmpich.lib} to the ``Additional Dependencies'' box.  If your
 application is a C application then it only needs \texttt{mpi.lib}.  If it is a C++ application then it
-needs both \texttt{cxx.lib} and \texttt{mpi.lib}.  If it is a Fortran application then it only needs one of the \texttt{fmpich2[s,g].lib} libraries.
-The fortran library comes in three flavors \texttt{fmpich2.lib}, \texttt{fmpich2s.lib} and \texttt{fmpich2s.lib}.  \texttt{fmpich2.lib}
-contains all uppercase symbols and uses the C calling convention like this: \texttt{MPI\_INIT}.  \texttt{fmpich2s.lib}
+needs both \texttt{cxx.lib} and \texttt{mpi.lib}.  If it is a Fortran application then it only needs one of the \texttt{fmpich[s,g].lib} libraries.
+The fortran library comes in three flavors \texttt{fmpich.lib}, \texttt{fmpichs.lib} and \texttt{fmpichs.lib}.  \texttt{fmpich.lib}
+contains all uppercase symbols and uses the C calling convention like this: \texttt{MPI\_INIT}.  \texttt{fmpichs.lib}
 contains all uppercase symbols and uses the stdcall calling convention like this: \texttt{MPI\_INIT@4}.
-\texttt{fmpich2g.lib} contains all lowercase symbols with double underscores and the C calling convention
+\texttt{fmpichg.lib} contains all lowercase symbols with double underscores and the C calling convention
 like this: \texttt{mpi\_init\_\_}.  Add the library that matches your Fortran compiler.
 
 \item Compile your application.
 \end{enumerate}
 
 \subsubsection{Cygwin and MinGW GNU compilers}
-You can compile your MPI programs using gcc/g++/g77/gfortran from Cygwin or MinGW using the MPICH2 header files/libraries installed with MPICH2 on windows. Compile using the header files in \texttt{C:$\backslash$Program Files$\backslash$MPICH2$\backslash$include} and link using the libs, lib*.a, in \texttt{C:$\backslash$Program Files$\backslash$MPICH2$\backslash$lib}. Note that you should use the ``-localroot'' option when running programs compiled using gcc/g++ from Cygwin.
+You can compile your MPI programs using gcc/g++/g77/gfortran from Cygwin or MinGW using the MPICH header files/libraries installed with MPICH on windows. Compile using the header files in \texttt{C:$\backslash$Program Files$\backslash$MPICH$\backslash$include} and link using the libs, lib*.a, in \texttt{C:$\backslash$Program Files$\backslash$MPICH$\backslash$lib}. Note that you should use the ``-localroot'' option when running programs compiled using gcc/g++ from Cygwin.
 
 \end{document}

@@ -2413,11 +2413,11 @@ configfile_loop:
 		env_str = &iter->env[maxlen];
 		maxlen = SMPD_MAX_ENV_LENGTH - maxlen - 1;
 
-		if (maxlen > 15) /* At least 16 characters are needed to store MPICH2_CHANNEL=x */
+		if (maxlen > 15) /* At least 16 characters are needed to store MPICH_CHANNEL=x */
 		{
 		    *env_str = ' ';
 		    env_str++;
-		    MPIU_Str_add_string_arg(&env_str, &maxlen, "MPICH2_CHANNEL", channel);
+		    MPIU_Str_add_string_arg(&env_str, &maxlen, "MPICH_CHANNEL", channel);
 		    /* trim the trailing white space */
 		    env_str--;
 		    *env_str = '\0';

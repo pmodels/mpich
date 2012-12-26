@@ -153,7 +153,7 @@
 			/>
 		</Configuration>
 		<Configuration
-			Name="mpich2DebugConfig_1_0_4|Win32"
+			Name="mpichDebugConfig_1_0_4|Win32"
 			OutputDirectory="$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="4"
@@ -219,7 +219,7 @@
 			/>
 		</Configuration>
 		<Configuration
-			Name="mpich2ReleaseConfig_1_0_4|Win32"
+			Name="mpichReleaseConfig_1_0_4|Win32"
 			OutputDirectory="$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="4"
@@ -285,7 +285,7 @@
 			/>
 		</Configuration>
 		<Configuration
-			Name="ch3shm_mpich2ReleaseConfig_1_0_4|Win32"
+			Name="ch3shm_mpichReleaseConfig_1_0_4|Win32"
 			OutputDirectory="$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="4"
@@ -351,7 +351,7 @@
 			/>
 		</Configuration>
 		<Configuration
-			Name="mpich2sshm_mpich2ReleaseConfig_1_0_4|Win32"
+			Name="mpichsshm_mpichReleaseConfig_1_0_4|Win32"
 			OutputDirectory="$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="4"
@@ -417,7 +417,7 @@
 			/>
 		</Configuration>
 		<Configuration
-			Name="mpich2ssm_mpich2ReleaseConfig_1_0_4|Win32"
+			Name="mpichssm_mpichReleaseConfig_1_0_4|Win32"
 			OutputDirectory="$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="4"
@@ -483,7 +483,7 @@
 			/>
 		</Configuration>
 		<Configuration
-			Name="mt_mpich2ReleaseConfig_1_0_4|Win32"
+			Name="mt_mpichReleaseConfig_1_0_4|Win32"
 			OutputDirectory="$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="4"
@@ -617,7 +617,7 @@
 			/>
 		</Configuration>
 		<Configuration
-			Name="mpich2DebugConfig_1_0_5|Win32"
+			Name="mpichDebugConfig_1_0_5|Win32"
 			OutputDirectory="$(ConfigurationName)"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="4"
@@ -918,7 +918,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2DebugConfig_1_0_4|Win32"
+					Name="mpichDebugConfig_1_0_4|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -926,7 +926,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichReleaseConfig_1_0_4|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -934,7 +934,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="ch3shm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="ch3shm_mpichReleaseConfig_1_0_4|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -942,7 +942,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2sshm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichsshm_mpichReleaseConfig_1_0_4|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -950,7 +950,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2ssm_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mpichssm_mpichReleaseConfig_1_0_4|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -958,7 +958,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mt_mpich2ReleaseConfig_1_0_4|Win32"
+					Name="mt_mpichReleaseConfig_1_0_4|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -974,7 +974,7 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="mpich2DebugConfig_1_0_5|Win32"
+					Name="mpichDebugConfig_1_0_5|Win32"
 					>
 					<Tool
 						Name="VCCLCompilerTool"

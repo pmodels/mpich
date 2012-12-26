@@ -251,7 +251,7 @@ static BOOL smpd_setup_service_restart( SC_HANDLE schService )
 	return FALSE;
 
     /* Add a description string */
-    ds.lpDescription = "Process manager service for MPICH2 applications";
+    ds.lpDescription = "Process manager service for MPICH applications";
     ChangeServiceConfig2_fn(schService, SERVICE_CONFIG_DESCRIPTION, &ds);
 
     /* The actions in this array are performed in order each time the service fails 

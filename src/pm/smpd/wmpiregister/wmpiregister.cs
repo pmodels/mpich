@@ -144,7 +144,7 @@ namespace wmpiregister
 			this.usage_label.Size = new System.Drawing.Size(224, 48);
 			this.usage_label.TabIndex = 9;
 			this.usage_label.Text = "Use this tool to encrypt an account and password to be used by mpiexec to launch " +
-				"mpich2 jobs.";
+				"mpich jobs.";
 			// 
 			// usage2_label
 			// 
@@ -153,7 +153,7 @@ namespace wmpiregister
 			this.usage2_label.Size = new System.Drawing.Size(224, 48);
 			this.usage2_label.TabIndex = 10;
 			this.usage2_label.Text = "The account provided must be a valid user account available on all the nodes that" +
-				" will participate in mpich2 jobs.";
+				" will participate in mpich jobs.";
 			// 
 			// example_label
 			// 
@@ -231,7 +231,7 @@ namespace wmpiregister
 			object obj;
 			try
 			{
-				RegistryKey key = Registry.LocalMachine.OpenSubKey(@"Software\MPICH2");
+				RegistryKey key = Registry.LocalMachine.OpenSubKey(@"Software\MPICH");
 				if (key != null)
 				{
 					obj = key.GetValue("Path");
@@ -297,7 +297,7 @@ namespace wmpiregister
 			{
 				if (password_textBox.Text.Length == 0)
 				{
-					MessageBox.Show("MPICH2 cannot use user credentials with empty passwords, please select another user");
+					MessageBox.Show("MPICH cannot use user credentials with empty passwords, please select another user");
 					return;
 				}
 				Process process = new Process();

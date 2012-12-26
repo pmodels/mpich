@@ -70,7 +70,7 @@ BEGIN
         BLOCK "040904b0"
         BEGIN
             VALUE "CompanyName", "Argonne National Lab"
-            VALUE "FileDescription", "Process launcher for MPICH2 applications"
+            VALUE "FileDescription", "Process launcher for MPICH applications"
             VALUE "FileVersion", "1, 0, 0, 1"
             VALUE "InternalName", "mpiexec"
             VALUE "LegalCopyright", "Copyright (C) 2004"

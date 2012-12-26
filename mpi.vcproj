@@ -62,7 +62,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				OutputFile="lib/mpich2mpid.dll"
+				OutputFile="lib/mpichmpid.dll"
 				LinkIncremental="2"
 				ModuleDefinitionFile=".\mpi.def"
 				GenerateDebugInformation="true"
@@ -94,8 +94,8 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				Description="copying mpich2mpid.dll to system32 directory"
-				CommandLine="copy lib\mpich2mpid.dll %SystemRoot%\system32\mpich2mpid.dll&#x0D;&#x0A;copy $(ConfigurationName)\mpid.lib lib\mpid.lib&#x0D;&#x0A;"
+				Description="copying mpichmpid.dll to system32 directory"
+				CommandLine="copy lib\mpichmpid.dll %SystemRoot%\system32\mpichmpid.dll&#x0D;&#x0A;copy $(ConfigurationName)\mpid.lib lib\mpid.lib&#x0D;&#x0A;"
 			/>
 		</Configuration>
 		<Configuration
@@ -142,7 +142,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				OutputFile="lib/mpich2mpi.dll"
+				OutputFile="lib/mpichmpi.dll"
 				LinkIncremental="1"
 				ModuleDefinitionFile=".\mpi.def"
 				GenerateDebugInformation="false"
@@ -177,8 +177,8 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				Description="copying mpich2mpi.dll to system32 directory"
-				CommandLine="copy lib\mpich2mpi.dll %SystemRoot%\system32\mpich2mpi.dll&#x0D;&#x0A;copy $(ConfigurationName)\mpi.lib lib\mpi.lib&#x0D;&#x0A;"
+				Description="copying mpichmpi.dll to system32 directory"
+				CommandLine="copy lib\mpichmpi.dll %SystemRoot%\system32\mpichmpi.dll&#x0D;&#x0A;copy $(ConfigurationName)\mpi.lib lib\mpi.lib&#x0D;&#x0A;"
 			/>
 		</Configuration>
 		<Configuration
@@ -225,7 +225,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				OutputFile="lib/mpich2mpi.dll"
+				OutputFile="lib/mpichmpi.dll"
 				LinkIncremental="1"
 				ModuleDefinitionFile=".\mpi.def"
 				GenerateDebugInformation="true"
@@ -258,8 +258,8 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				Description="copying mpich2mpi.dll to system32 directory"
-				CommandLine="copy lib\mpich2mpi.dll %SystemRoot%\system32\mpich2mpi.dll&#x0D;&#x0A;copy $(ConfigurationName)\mpi.lib lib\mpi.lib&#x0D;&#x0A;"
+				Description="copying mpichmpi.dll to system32 directory"
+				CommandLine="copy lib\mpichmpi.dll %SystemRoot%\system32\mpichmpi.dll&#x0D;&#x0A;copy $(ConfigurationName)\mpi.lib lib\mpi.lib&#x0D;&#x0A;"
 			/>
 		</Configuration>
 		<Configuration
@@ -306,7 +306,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				OutputFile="lib/mpich2mpi.dll"
+				OutputFile="lib/mpichmpi.dll"
 				LinkIncremental="1"
 				ModuleDefinitionFile=".\mpi.def"
 				GenerateDebugInformation="false"
@@ -341,8 +341,8 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				Description="copying mpich2mpi.dll to system32 directory"
-				CommandLine="copy lib\mpich2mpi.dll %SystemRoot%\system32\mpich2mpi.dll&#x0D;&#x0A;copy $(ConfigurationName)\mpi.lib lib\mpi.lib&#x0D;&#x0A;"
+				Description="copying mpichmpi.dll to system32 directory"
+				CommandLine="copy lib\mpichmpi.dll %SystemRoot%\system32\mpichmpi.dll&#x0D;&#x0A;copy $(ConfigurationName)\mpi.lib lib\mpi.lib&#x0D;&#x0A;"
 			/>
 		</Configuration>
 	</Configurations>

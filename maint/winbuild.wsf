@@ -1,7 +1,7 @@
 <package>
 <job id="winbuild">
     <runtime>
-        <description> Build MPICH2 on windows using windows makefile </description>
+        <description> Build MPICH on windows using windows makefile </description>
         <unnamed
             name = "--with-cpu"
             helpstring = "Specify the target CPU. Supports x86, x64. Eg: --with-cpu=x86"
@@ -19,7 +19,7 @@
         />
         <unnamed
             name = "--build-dir"
-            helpstring = "Specify the directory containing the windows makefile. Eg: --build-dir=c:\jay\downloads\mpich2\winbuild. The default is the current directory."
+            helpstring = "Specify the directory containing the windows makefile. Eg: --build-dir=c:\jay\downloads\mpich\winbuild. The default is the current directory."
             required = "false"
         />
         <unnamed

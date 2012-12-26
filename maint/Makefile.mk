@@ -49,8 +49,8 @@ dist_noinst_DATA +=                        \
     maint/makegcclibs.bat                  \
     maint/makegcclibs_64.bat               \
     maint/mpi1.lst                         \
-    maint/mpich2i.vdproj                   \
-    maint/mpich2x64i.vdproj                \
+    maint/mpichi.vdproj                   \
+    maint/mpichx64i.vdproj                \
     maint/setup.jpg                        \
     maint/structalign.c                    \
     maint/template.c                       \

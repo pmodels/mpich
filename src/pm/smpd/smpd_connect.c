@@ -970,7 +970,7 @@ void smpd_get_account_and_password(char *account, char *password)
 	smpd_get_password(password);
 	if (strlen(password) == 0)
 	{
-	    fprintf(stderr, "MPICH2 is unable to manage jobs using credentials with a blank password.\nPlease enter another account.\n");
+	    fprintf(stderr, "MPICH is unable to manage jobs using credentials with a blank password.\nPlease enter another account.\n");
 	}
     }
     while (strlen(password) == 0);

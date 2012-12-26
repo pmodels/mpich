@@ -1,16 +1,16 @@
 <package>
-<job id="testmpich2">
+<job id="testmpich">
     <runtime>
-        <description>This script checks out mpich2 and builds it and the test suites </description>
+        <description>This script checks out mpich and builds it and the test suites </description>
         <named
             name = "buildonly"
-            helpstring = "build mpich2 and the test suites"
+            helpstring = "build mpich and the test suites"
             type = "simple"
             required = "false"
         />
         <named
 			name = "buildbatch"
-			helpstring = "build mpich2, the test suites, and the batch files to run the tests"
+			helpstring = "build mpich, the test suites, and the batch files to run the tests"
 			type = "simple"
 			required = "false"
 		/>
@@ -22,13 +22,13 @@
         />
         <named
             name = "tag"
-            helpstring = "check out mpich2 using the version tag specified"
+            helpstring = "check out mpich using the version tag specified"
             type = "string"
             required = "false"
         />
         <named
             name = "test"
-            helpstring = "build and run the tests specified: c++, mpich, intel, mpich2"
+            helpstring = "build and run the tests specified: c++, mpich, intel, mpich"
             type = "string"
             required = "false"
         />
@@ -51,32 +51,32 @@
 			required = "false"
 		/>
         <named
-            name = "mpich2"
-            helpstring = "path to mpich2"
+            name = "mpich"
+            helpstring = "path to mpich"
             type = "string"
             required = "false"
         />
         <named
-            name = "mpich2i"
-            helpstring = "path to installed mpich2"
+            name = "mpichi"
+            helpstring = "path to installed mpich"
             type = "string"
             required = "false"
         />
         <named
             name = "test_installed"
-            helpstring = "test the installed mpich2"
+            helpstring = "test the installed mpich"
             type = "simple"
             required = "false"
         />
         <named
             name = "make"
-            helpstring = "make mpich2 or use existing build"
+            helpstring = "make mpich or use existing build"
             type = "boolean"
             required = "false"
         />
         <named
             name = "configure"
-            helpstring = "configure mpich2 or use existing configuration"
+            helpstring = "configure mpich or use existing configuration"
             type = "boolean"
             required = "false"
         />
@@ -112,7 +112,7 @@
         />
         <named
 			name = "cvs_host"
-			helpstring = "cvs host to use - cvs -d username@cvs_host:rootdir co mpich2allWithMPE"
+			helpstring = "cvs host to use - cvs -d username@cvs_host:rootdir co mpichallWithMPE"
 			type = "string"
 			required = "false"
         />
@@ -170,19 +170,19 @@ rootdir = ""
 bTestMPICH = true
 bTestCPP = true
 bTestINTEL = true
-bTestMPICH2 = true
+bTestMPICH = true
 bBuildOnly = false
 bTestOnly = false
 cvsTag = "HEAD"
-bCheckoutMPICH2 = true
-bConfigureMPICH2 = true
-bConfigureMPICH2Tests = true
-bMakeMPICH2 = true
+bCheckoutMPICH = true
+bConfigureMPICH = true
+bConfigureMPICHTests = true
+bMakeMPICH = true
 bCheckoutMPICH = true
 bCheckoutCPP = true
 bCheckoutINTEL = true
-pathMPICH2 = ""
-pathMPICH2Installed = ""
+pathMPICH = ""
+pathMPICHInstalled = ""
 pathMPICH = ""
 pathCPP = ""
 pathINTEL = ""
@@ -194,10 +194,10 @@ CPP = "cl"
 FC = "ifort"
 CPPFLAGS = " /nologo /EHsc /W4 /DHAVE_MPI_CXX /DUSE_STDARG /DHAVE_WINDOWS_H /DHAVE_LONG_LONG_INT /DHAVE_LONG_DOUBLE /DHAVE_MPI_DARRAY_SUBARRAY"
 CFLAGS = " /nologo /W4 /DUSE_STDARG /DHAVE_WINDOWS_H /DHAVE_LONG_LONG_INT /DHAVE_LONG_DOUBLE /DHAVE_MPI_DARRAY_SUBARRAY /DMPICH_SKIP_MPICXX"
-'mpich2lib = "mpich2d.lib"
-mpich2lib = "mpi.lib"
-fmpich2lib = "fmpich2.lib"
-cppmpich2lib = "cxx.lib"
+'mpichlib = "mpichd.lib"
+mpichlib = "mpi.lib"
+fmpichlib = "fmpich.lib"
+cppmpichlib = "cxx.lib"
 bFortran = true
 bRemoveDirs = false
 cvs_host = "harley.mcs.anl.gov"
@@ -207,7 +207,7 @@ ssh_cmd = "ssh"
 scp_cmd = "scp"
 channel = ""
 mpiexec = "mpiexec"
-testdirname = "testmpich2"
+testdirname = "testmpich"
 mpiexec_args = ""
 timeoutarg = " -timeout 180"
 bCommandsOnly = False
@@ -368,44 +368,44 @@ if WScript.Arguments.Named.Exists("ch") then
 	End Select
 end if
 
-if WScript.Arguments.Named.Exists("mpich2") then
-	bCheckoutMPICH2 = false
-	bMakeMPICH2 = false
-	bConfigureMPICH2 = false
-	bConfigureMPICH2Tests = false
-	pathMPICH2 = WScript.Arguments.Named.Item("mpich2")
-	mpiexec = pathMPICH2 & "\bin\mpiexec.exe"
+if WScript.Arguments.Named.Exists("mpich") then
+	bCheckoutMPICH = false
+	bMakeMPICH = false
+	bConfigureMPICH = false
+	bConfigureMPICHTests = false
+	pathMPICH = WScript.Arguments.Named.Item("mpich")
+	mpiexec = pathMPICH & "\bin\mpiexec.exe"
 end if
 
-if WScript.Arguments.Named.Exists("mpich2i") then
-	bMakeMPICH2 = false
-	bConfigureMPICH2 = false
-	pathMPICH2Installed = WScript.Arguments.Named.Item("mpich2i")
-	mpiexec = pathMPICH2Installed & "\bin\mpiexec.exe"
+if WScript.Arguments.Named.Exists("mpichi") then
+	bMakeMPICH = false
+	bConfigureMPICH = false
+	pathMPICHInstalled = WScript.Arguments.Named.Item("mpichi")
+	mpiexec = pathMPICHInstalled & "\bin\mpiexec.exe"
 end if
 
 if WScript.Arguments.Named.Exists("test_installed") then
-	bMakeMPICH2 = false
-	bConfigureMPICH2 = false
+	bMakeMPICH = false
+	bConfigureMPICH = false
 	On Error Resume Next
-	pathMPICH2Installed = WshShell.RegRead("HKLM\Software\MPICH2\Path")
+	pathMPICHInstalled = WshShell.RegRead("HKLM\Software\MPICH\Path")
 	if err <> 0 then
-		cEcho "MPICH2 not installed on this machine."
+		cEcho "MPICH not installed on this machine."
 		WScript.Quit
 	end if
-	if Right(pathMPICH2Installed, 1) = "\" then
-		pathMPICH2Installed = Left(pathMPICH2Installed, Len(pathMPICH2Installed) - 1)
+	if Right(pathMPICHInstalled, 1) = "\" then
+		pathMPICHInstalled = Left(pathMPICHInstalled, Len(pathMPICHInstalled) - 1)
 	end if
-	mpiexec = """" & pathMPICH2Installed & "\bin\mpiexec.exe"""
-	cEcho "Testing installed mpich2: " & pathMPICH2Installed
+	mpiexec = """" & pathMPICHInstalled & "\bin\mpiexec.exe"""
+	cEcho "Testing installed mpich: " & pathMPICHInstalled
 end if
 
 if WScript.Arguments.Named.Exists("make") then
-	bMakeMPICH2 = WScript.Arguments.Named.Item("make")
+	bMakeMPICH = WScript.Arguments.Named.Item("make")
 end if
 
 if WScript.Arguments.Named.Exists("configure") then
-	bConfigureMPICH2 = WScript.Arguments.Named.Item("configure")
+	bConfigureMPICH = WScript.Arguments.Named.Item("configure")
 end if
 
 if WScript.Arguments.Named.Exists("mpich") then
@@ -445,8 +445,8 @@ end if
 
 if WScript.Arguments.Named.Exists("win64") then
 	bWin64 = true
-	mpich2lib = mpich2lib & " bufferoverflowU.lib"
-	fmpich2lib = fmpich2lib & " bufferoverflowU.lib"
+	mpichlib = mpichlib & " bufferoverflowU.lib"
+	fmpichlib = fmpichlib & " bufferoverflowU.lib"
 end if
 
 if WScript.Arguments.Named.Exists("test") then
@@ -454,7 +454,7 @@ if WScript.Arguments.Named.Exists("test") then
 	bTestMPICH = false
 	bTestCPP = false
 	bTestINTEL = false
-	bTestMPICH2 = false
+	bTestMPICH = false
 	for each test in tests
 		Select Case test
 			Case "c++"
@@ -463,8 +463,6 @@ if WScript.Arguments.Named.Exists("test") then
 				bTestMPICH = true
 			Case "intel"
 				bTestINTEL = true
-			Case "mpich2"
-				bTestMPICH2 = true
 			Case Else
 				cEcho "unknown test: " & test
 		End Select
@@ -482,8 +480,8 @@ end if
 'if bTestINTEL then
 '	tests = tests & "intel "
 'end if
-'if bTestMPICH2 then
-'	tests = tests & "mpich2 "
+'if bTestMPICH then
+'	tests = tests & "mpich "
 'end if
 'if bBuildOnly then
 '	cEcho "buildonly"
@@ -607,11 +605,11 @@ End Function
 
 Function CheckOut(package)
 	Select Case package
-		Case "mpich2"
-			if bRemoveDirs and f.FolderExists("mpich2") then
-				f.DeleteFolder "mpich2", true
+		Case "mpich"
+			if bRemoveDirs and f.FolderExists("mpich") then
+				f.DeleteFolder "mpich", true
 			end if
-			co = "mpich2allWithMPE"
+			co = "mpichallWithMPE"
 		Case "mpich"
 			if bRemoveDirs and f.FolderExists("mpi1") then
 				f.DeleteFolder "mpi1", true
@@ -724,9 +722,9 @@ Function BuildMPICHMakefile(filename, outputfile)
 					end if
 				next
 				if bFort then
-					cmd = cmd & " " & fmpich2lib '& " " & mpich2lib
+					cmd = cmd & " " & fmpichlib '& " " & mpichlib
 				else
-					cmd = cmd & " " & mpich2lib
+					cmd = cmd & " " & mpichlib
 				end if
 				cEcho cmd
 				if not bFortran and bFort then
@@ -773,7 +771,7 @@ Function BuildCPPMakefile(filename)
 					cmd = cmd & "/Tp" & Replace(filename, "Makefile.in", "stack.cc ")
 					cmd = cmd & "/Tp" & Replace(filename, "Makefile.in", "signal.cc ")
 				end if
-				cmd = cmd & cppmpich2lib & " " & mpich2lib
+				cmd = cmd & cppmpichlib & " " & mpichlib
 				cEcho cmd
 				if f.FileExists(test & ".exe") then
 					f.DeleteFile(test & ".exe")
@@ -818,7 +816,7 @@ Function BuildINTELTest(testdir, np, buildout, testlistout)
 				cmd = cmd & testdir & "\" & file.Name & " "
 			end if
 		next
-		cmd = cmd & intel_rootdir & "\lib\libmpitest.c " & mpich2lib
+		cmd = cmd & intel_rootdir & "\lib\libmpitest.c " & mpichlib
 	end if
 	if bFortranTest then
 		cmd = cmd & "-I" & intel_rootdir & "\include "
@@ -827,7 +825,7 @@ Function BuildINTELTest(testdir, np, buildout, testlistout)
 				cmd = cmd & testdir & "\" & file.Name & " "
 			end if
 		next
-		cmd = cmd & intel_rootdir & "\lib\libmpitestf.f " & fmpich2lib '& " " & mpich2lib
+		cmd = cmd & intel_rootdir & "\lib\libmpitestf.f " & fmpichlib '& " " & mpichlib
 	end if
 '	cEcho cmd
 '	if f.FileExists("node.obj") then
@@ -873,7 +871,7 @@ Function BuildINTELTest(testdir, np, buildout, testlistout)
 	testlistout.WriteLine(test & " " & np)
 End Function
 
-Function BuildMPICH2TestList(filename, srcdir, buildout)
+Function BuildMPICHTestList(filename, srcdir, buildout)
 	cEcho "building testlist: " & filename
 	buildout.WriteLine("building testlist: " & filename)
 	set fin = f.OpenTextFile(filename)
@@ -895,17 +893,17 @@ Function BuildMPICH2TestList(filename, srcdir, buildout)
 					bCTest = true
 					cmd = CC & CFLAGS & " -o " & test & ".exe "
 					cmd = cmd & "-I" & srcdir & "\include " & basefilename & ".c "
-					cmd = cmd & srcdir & "\util\mtest.c " & mpich2lib & " ws2_32.lib" ' the join test needs the socket library
+					cmd = cmd & srcdir & "\util\mtest.c " & mpichlib & " ws2_32.lib" ' the join test needs the socket library
 				ElseIf f.FileExists(basefilename & ".f") Then
 					bFortranTest = true
 					cmd = FC & " /nologo /fpp -o " & test & ".exe "
 					cmd = cmd & "-I" & srcdir & "\include " & basefilename & ".f "
-					cmd = cmd & srcdir & "\f77\util\mtestf.f " & fmpich2lib '& " " & mpich2lib
+					cmd = cmd & srcdir & "\f77\util\mtestf.f " & fmpichlib '& " " & mpichlib
 				ElseIf f.FileExists(basefilename & ".cxx") Then
 					bCppTest = true
 					cmd = CPP & CPPFLAGS & " -o " & test & ".exe "
 					cmd = cmd & "-I" & srcdir & "\include " & basefilename & ".cxx "
-					cmd = cmd & srcdir & "\cxx\util\mtest.cxx " & cppmpich2lib & " " & mpich2lib
+					cmd = cmd & srcdir & "\cxx\util\mtest.cxx " & cppmpichlib & " " & mpichlib
 				Else
 					cmd = "no source file " & basefilename & ".c .f or .cxx"
 				End If
@@ -1858,7 +1856,7 @@ Function RunINTELTestSuiteBatch(outdir)
 	WshShell.CurrentDirectory = rootdir
 End Function
 
-'Function BuildMPICH2TestSuite(srcdir, builddir)
+'Function BuildMPICHTestSuite(srcdir, builddir)
 '	cEcho "changing into directory " & srcdir
 '	WshShell.CurrentDirectory = srcdir
 '	RunEchoCommand "cscript createprojects.wsf"
@@ -1868,7 +1866,7 @@ End Function
 '	WshShell.CurrentDirectory = rootdir
 'End Function
 
-'Function RunMPICH2TestSuite(outdir)
+'Function RunMPICHTestSuite(outdir)
 '	cEcho "changing into directory " & outdir
 '	WshShell.CurrentDirectory = outdir
 '	RunEchoCommand "cscript runtests.wsf /config:Debug"
@@ -1877,7 +1875,7 @@ End Function
 '	WshShell.CurrentDirectory = rootdir
 'End Function
 
-Function BuildMPICH2TestSuite(srcdir, builddir)
+Function BuildMPICHTestSuite(srcdir, builddir)
 	if Not f.FolderExists(builddir) then
 		f.CreateFolder(builddir)
 	end if
@@ -1894,7 +1892,7 @@ Function BuildMPICH2TestSuite(srcdir, builddir)
 	a = testlists.Items
 	If testlists.Count > 0 Then
 		For i = 0 to testlists.Count - 1
-			BuildMPICH2TestList a(i), srcdir, buildout
+			BuildMPICHTestList a(i), srcdir, buildout
 			' copy the testlist in to the master testlist
 			set fin = f.OpenTextFile(a(i))
 			contents = fin.ReadAll()
@@ -1911,12 +1909,12 @@ Function BuildMPICH2TestSuite(srcdir, builddir)
 	WshShell.CurrentDirectory = rootdir
 End Function
 
-Function RunMPICH2TestSuite(outdir)
+Function RunMPICHTestSuite(outdir)
 	cEcho "changing into directory " & outdir
 	WshShell.CurrentDirectory = outdir
 	cur_test = 1
 	num_tests = CountTests(outdir)
-	set fcmds = f.CreateTextFile(outdir & "mpich2_cmds.bat")
+	set fcmds = f.CreateTextFile(outdir & "mpich_cmds.bat")
 	set fout = f.CreateTextFile(outdir & "summary.xml")
 	Set fin = f.OpenTextFile(outdir & "testlist")
 	if not f.FileExists("er.xsl") then
@@ -1997,7 +1995,7 @@ Function RunMPICH2TestSuite(outdir)
 	WshShell.CurrentDirectory = rootdir
 End Function
 
-Function RunMPICH2TestSuiteBatch(outdir)
+Function RunMPICHTestSuiteBatch(outdir)
 	cEcho "changing into directory " & outdir
 	WshShell.CurrentDirectory = outdir
 	cur_test = 1
@@ -2005,7 +2003,7 @@ Function RunMPICH2TestSuiteBatch(outdir)
 
 	if not bSummarize then
 		' first pass generates the commands
-		set fcmds = f.CreateTextFile(outdir & "mpich2_cmds.bat")
+		set fcmds = f.CreateTextFile(outdir & "mpich_cmds.bat")
 		Set fin = f.OpenTextFile(outdir & "testlist")
 		while not fin.AtEndOfStream
 			line = fin.ReadLine()
@@ -2047,7 +2045,7 @@ Function RunMPICH2TestSuiteBatch(outdir)
 		' run the tests
 		if not bCommandsOnly then
 			if not bBatchFilesOnly then
-				RunEchoCommand(outdir & "mpich2_cmds.bat")
+				RunEchoCommand(outdir & "mpich_cmds.bat")
 			end if
 		end if
 	end if
@@ -2159,39 +2157,39 @@ if not bTestOnly then
 	' set the INCLUDE and LIB environment variables to be used by the command line build tools
 	old_include = env("INCLUDE")
 	old_lib = env("LIB")
-	if pathMPICH2Installed <> "" then
-		' FIXME: mpitestconf.h needs to be copied to this include directory if the mpich2 test suite is to be run
-		env("INCLUDE") = old_include & ";" & pathMPICH2Installed & "\include"
-		env("LIB") = old_lib & ";" & pathMPICH2Installed & "\lib"
+	if pathMPICHInstalled <> "" then
+		' FIXME: mpitestconf.h needs to be copied to this include directory if the mpich test suite is to be run
+		env("INCLUDE") = old_include & ";" & pathMPICHInstalled & "\include"
+		env("LIB") = old_lib & ";" & pathMPICHInstalled & "\lib"
 	else
-		if pathMPICH2 = "" then
+		if pathMPICH = "" then
 			if bWin64 then
-				env("INCLUDE") = old_include & ";" & rootdir & "mpich2\src\include" & ";" & rootdir & "mpich2\src\include\win64"
+				env("INCLUDE") = old_include & ";" & rootdir & "mpich\src\include" & ";" & rootdir & "mpich\src\include\win64"
 			else
-				env("INCLUDE") = old_include & ";" & rootdir & "mpich2\src\include" & ";" & rootdir & "mpich2\src\include\win32"
+				env("INCLUDE") = old_include & ";" & rootdir & "mpich\src\include" & ";" & rootdir & "mpich\src\include\win32"
 			end if
-			env("LIB") = old_lib & ";" & rootdir & "mpich2\lib"
+			env("LIB") = old_lib & ";" & rootdir & "mpich\lib"
 		else
 			if bWin64 then
-				env("INCLUDE") = old_include & ";" & pathMPICH2 & "\src\include" & ";" & pathMPICH2 & "\src\include\win64"
+				env("INCLUDE") = old_include & ";" & pathMPICH & "\src\include" & ";" & pathMPICH & "\src\include\win64"
 			else
-				env("INCLUDE") = old_include & ";" & pathMPICH2 & "\src\include" & ";" & pathMPICH2 & "\src\include\win32"
+				env("INCLUDE") = old_include & ";" & pathMPICH & "\src\include" & ";" & pathMPICH & "\src\include\win32"
 			end if
-			env("LIB") = old_lib & ";" & pathMPICH2 & "\lib"
+			env("LIB") = old_lib & ";" & pathMPICH & "\lib"
 		end if
 	end if
 
-	if bCheckoutMPICH2 then
-		' check out mpich2 locally
-		CheckOut("mpich2")
-		WshShell.CurrentDirectory = "mpich2"
-		' check out mpich2 remotely, run autogen.sh and tar up the .h.in files
+	if bCheckoutMPICH then
+		' check out mpich locally
+		CheckOut("mpich")
+		WshShell.CurrentDirectory = "mpich"
+		' check out mpich remotely, run autogen.sh and tar up the .h.in files
 		set fout = f.CreateTextFile("sshcmds.txt")
 		fout.WriteLine( "cd /sandbox/" & username )
 		fout.WriteLine( "mkdir " & hostname & "dotintmp" )
 		fout.WriteLine( "cd " & hostname & "dotintmp" )
-		fout.WriteLine( "cvs -d " & cvs_root_dir & " export -r " & cvsTag & " mpich2allWithMPE" )
-		fout.WriteLine( "cd mpich2" )
+		fout.WriteLine( "cvs -d " & cvs_root_dir & " export -r " & cvsTag & " mpichallWithMPE" )
+		fout.WriteLine( "cd mpich" )
 		fout.WriteLine( "autogen.sh" )
 		fout.WriteLine( "tar cvf dotin.tar `find . -name ""*.h.in""`" )
 		fout.WriteLine( "gzip dotin.tar" )
@@ -2203,7 +2201,7 @@ if not bTestOnly then
 		RunEchoCommand cmd
 		f.DeleteFile("sshcmds.txt")
 		' copy the .h.in tarball
-		RunEchoCommand scp_cmd & " " & username & "@" & cvs_host & ":/sandbox/" & username & "/" & hostname & "dotintmp/mpich2/dotin.tar.gz ."
+		RunEchoCommand scp_cmd & " " & username & "@" & cvs_host & ":/sandbox/" & username & "/" & hostname & "dotintmp/mpich/dotin.tar.gz ."
 		' remove the remote temporary directory
 		RunEchoCommand ssh_cmd & " -l " & username & " " & cvs_host & " rm -rf /sandbox/" & username & "/" & hostname & "dotintmp"
 		' extract the .h.in files and delete the tarball
@@ -2214,11 +2212,11 @@ if not bTestOnly then
 		WshShell.CurrentDirectory = rootdir
 	end if
 
-	if bConfigureMPICH2 then
-		if pathMPICH2 <> "" then
-			WshShell.CurrentDirectory = pathMPICH2
+	if bConfigureMPICH then
+		if pathMPICH <> "" then
+			WshShell.CurrentDirectory = pathMPICH
 		else
-			WshShell.CurrentDirectory = "mpich2"
+			WshShell.CurrentDirectory = "mpich"
 		end if
 		if bFortran then
 			RunEchoCommand "cscript winconfigure.wsf --cleancode"
@@ -2227,18 +2225,18 @@ if not bTestOnly then
 		end if
 		WshShell.CurrentDirectory = rootdir
 	else
-		if bConfigureMPICH2Tests then
-			if pathMPICH2 <> "" then
-				WshShell.CurrentDirectory = pathMPICH2
+		if bConfigureMPICHTests then
+			if pathMPICH <> "" then
+				WshShell.CurrentDirectory = pathMPICH
 			else
-				WshShell.CurrentDirectory = "mpich2"
+				WshShell.CurrentDirectory = "mpich"
 			end if
 			RunEchoCommand "cscript winconfigure.wsf --testdir"
 			WshShell.CurrentDirectory = rootdir
 		end if
 	end if
 
-	if bMakeMPICH2 then
+	if bMakeMPICH then
 		' stop a running smpd
 		smpd = ""
 		On Error resume next
@@ -2246,69 +2244,69 @@ if not bTestOnly then
 		if Len(smpd) > 0 then
 			error = RunEchoCommandError(smpd & " -remove")
 		end if
-		' make the mpich2 libraries and dlls
-		if pathMPICH2 <> "" then
-			WshShell.CurrentDirectory = pathMPICH2
+		' make the mpich libraries and dlls
+		if pathMPICH <> "" then
+			WshShell.CurrentDirectory = pathMPICH
 		else
-			WshShell.CurrentDirectory = "mpich2"
+			WshShell.CurrentDirectory = "mpich"
 		end if
-		'error = RunEchoCommandError("devenv.com mpich2.sln /build ch3sockDebug")
+		'error = RunEchoCommandError("devenv.com mpich.sln /build ch3sockDebug")
 		'if error <> 0 then
 		'	WScript.Echo("Error building the sock channel")
 		'	WScript.Quit
 		'end if
-		'error = RunEchoCommandError("devenv.com mpich2.sln /project mpich2s /build ch3sockDebug")
+		'error = RunEchoCommandError("devenv.com mpich.sln /project mpichs /build ch3sockDebug")
 		'if error <> 0 then
 		'	WScript.Echo("Error building the sock channel static library")
 		'	WScript.Quit
 		'end if
-		error = RunEchoCommandError("devenv.com mpich2.sln /build ch3sockRelease")
+		error = RunEchoCommandError("devenv.com mpich.sln /build ch3sockRelease")
 		if error <> 0 then
 			WScript.Echo("Error building the sock channel release target")
 			WScript.Quit
 		end if
-		error = RunEchoCommandError("devenv.com mpich2.sln /project mpich2s /build ch3sockRelease")
+		error = RunEchoCommandError("devenv.com mpich.sln /project mpichs /build ch3sockRelease")
 		if error <> 0 then
 			WScript.Echo("Error building the sock channel release target static library")
 			WScript.Quit
 		end if
-		'error = RunEchoCommandError("devenv.com mpich2.sln /build Debug")
+		'error = RunEchoCommandError("devenv.com mpich.sln /build Debug")
 		'if error <> 0 then
 		'	WScript.Echo("Error building the utilities and process manager")
 		'	WScript.Quit
 		'end if
-		error = RunEchoCommandError("devenv.com mpich2.sln /build Release")
+		error = RunEchoCommandError("devenv.com mpich.sln /build Release")
 		if error <> 0 then
 			WScript.Echo("Error building the release target utilities and process manager")
 			WScript.Quit
 		end if
 		if bFortran then
-			'error = RunEchoCommandError("devenv.com mpich2.sln /build fortDebug")
+			'error = RunEchoCommandError("devenv.com mpich.sln /build fortDebug")
 			'if error <> 0 then
 			'	WScript.Echo("Error building the fortran interface")
 			'	WScript.Quit
 			'end if
-			error = RunEchoCommandError("devenv.com mpich2.sln /build fortRelease")
+			error = RunEchoCommandError("devenv.com mpich.sln /build fortRelease")
 			if error <> 0 then
 				WScript.Echo("Error building the release target fortran interface")
 				WScript.Quit
 			end if
-			'error = RunEchoCommandError("devenv.com mpich2.sln /build gfortDebug")
+			'error = RunEchoCommandError("devenv.com mpich.sln /build gfortDebug")
 			'if error <> 0 then
 			'	WScript.Echo("Error building the cdecl fortran interface")
 			'	WScript.Quit
 			'end if
-			'error = RunEchoCommandError("devenv.com mpich2.sln /build gfortRelease")
+			'error = RunEchoCommandError("devenv.com mpich.sln /build gfortRelease")
 			'if error <> 0 then
 			'	WScript.Echo("Error building the release target cdecl fortran interface")
 			'	WScript.Quit
 			'end if
-			'error = RunEchoCommandError("devenv.com mpich2.sln /build sfortDebug")
+			'error = RunEchoCommandError("devenv.com mpich.sln /build sfortDebug")
 			'if error <> 0 then
 			'	WScript.Echo("Error building the stdcall fortran interface")
 			'	WScript.Quit
 			'end if
-			'error = RunEchoCommandError("devenv.com mpich2.sln /build sfortRelease")
+			'error = RunEchoCommandError("devenv.com mpich.sln /build sfortRelease")
 			'if error <> 0 then
 			'	WScript.Echo("Error building the release target stdcall fortran interface")
 			'	WScript.Quit
@@ -2319,7 +2317,7 @@ if not bTestOnly then
 		'WshShell.CurrentDirectory = ".."
 		'error = RunEchoCommandError("devenv.com examples\examples.sln /project cpi /build Release")
 		if channel <> "" then
-			error = RunEchoCommandError("devenv.com mpich2.sln /build " & channel)
+			error = RunEchoCommandError("devenv.com mpich.sln /build " & channel)
 			if error <> 0 then
 				WScript.Echo("Error building the " & channel & " channel")
 				WScript.Quit
@@ -2352,12 +2350,12 @@ if not bTestOnly then
 		BuildINTELTestSuite "IntelMPITEST", "buildINTEL"
 	end if
 
-	if bTestMPICH2 then
-		'BuildMPICH2TestSuite "mpich2\test\mpi", ""
-		if pathMPICH2 = "" then
-			BuildMPICH2TestSuite rootdir & "mpich2\test\mpi", "buildMPICH2"
+	if bTestMPICH then
+		'BuildMPICHTestSuite "mpich\test\mpi", ""
+		if pathMPICH = "" then
+			BuildMPICHTestSuite rootdir & "mpich\test\mpi", "buildMPICH"
 		else
-			BuildMPICH2TestSuite pathMPICH2 & "\test\mpi", "buildMPICH2"
+			BuildMPICHTestSuite pathMPICH & "\test\mpi", "buildMPICH"
 		end if
 	end if
 
@@ -2435,25 +2433,25 @@ if not bBuildOnly then
 			webpage.WriteLine("<TR><TD>INTEL</TD><TD>failed</TD><TD><A HREF=""summary.intel.failed.xml"">" & intel_failed & "</A></TD><TD>passed</TD><TD>" & intel_passed & "</TD><TD>skipped</TD><TD>" & intel_skipped & "</TD><TD><A HREF=""summary.intel.xml"">summary.xml</A></TD>")
 		end if
 	end if
-	if bTestMPICH2 then
+	if bTestMPICH then
 		if bBatch then
-			'RunMPICH2TestSuiteBatch(rootdir & "mpich2\test\mpi")
-			RunMPICH2TestSuiteBatch(rootdir & "buildMPICH2\")
+			'RunMPICHTestSuiteBatch(rootdir & "mpich\test\mpi")
+			RunMPICHTestSuiteBatch(rootdir & "buildMPICH\")
 		else
-			'RunMPICH2TestSuite(rootdir & "mpich2\test\mpi")
-			RunMPICH2TestSuite(rootdir & "buildMPICH2\")
+			'RunMPICHTestSuite(rootdir & "mpich\test\mpi")
+			RunMPICHTestSuite(rootdir & "buildMPICH\")
 		end if
 		if not bBatchFilesOnly then
-			f.CopyFile rootdir & "buildMPICH2\summary.xml", rootdir & "summary\summary.mpich2.xml", True
-			set fin = f.OpenTextFile(rootdir & "summary\summary.mpich2.xml")
-			set fout = f.CreateTextFile(rootdir & "summary\summary.mpich2.failed.xml", True)
+			f.CopyFile rootdir & "buildMPICH\summary.xml", rootdir & "summary\summary.mpich.xml", True
+			set fin = f.OpenTextFile(rootdir & "summary\summary.mpich.xml")
+			set fout = f.CreateTextFile(rootdir & "summary\summary.mpich.failed.xml", True)
 			fout.Write(ParseFailed(fin.ReadAll()))
 			fin.Close()
 			fout.Close()
-			mpich2_failed = CountInstances(rootdir & "summary\summary.mpich2.failed.xml", "<STATUS>fail</STATUS>")
-			mpich2_passed = CountInstances(rootdir & "summary\summary.mpich2.xml", "<STATUS>pass</STATUS>")
-			mpich2_skipped = CountInstances(rootdir & "summary\summary.mpich2.xml", "no executable, test skipped")
-			webpage.WriteLine("<TR><TD>MPICH2</TD><TD>failed</TD><TD><A HREF=""summary.mpich2.failed.xml"">" & mpich2_failed & "</A></TD><TD>passed</TD><TD>" & mpich2_passed & "</TD><TD>skipped</TD><TD>" & mpich2_skipped & "</TD><TD><A HREF=""summary.mpich2.xml"">summary.xml</A></TD>")
+			mpich_failed = CountInstances(rootdir & "summary\summary.mpich.failed.xml", "<STATUS>fail</STATUS>")
+			mpich_passed = CountInstances(rootdir & "summary\summary.mpich.xml", "<STATUS>pass</STATUS>")
+			mpich_skipped = CountInstances(rootdir & "summary\summary.mpich.xml", "no executable, test skipped")
+			webpage.WriteLine("<TR><TD>MPICH</TD><TD>failed</TD><TD><A HREF=""summary.mpich.failed.xml"">" & mpich_failed & "</A></TD><TD>passed</TD><TD>" & mpich_passed & "</TD><TD>skipped</TD><TD>" & mpich_skipped & "</TD><TD><A HREF=""summary.mpich.xml"">summary.xml</A></TD>")
 		end if
 	end if
 	if not bBatchFilesOnly then

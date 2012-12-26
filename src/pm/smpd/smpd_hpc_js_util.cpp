@@ -195,7 +195,7 @@ int smpd_hpc_js_create_job(smpd_hpc_js_ctxt_t ctxt, smpd_launch_node_t *head, IS
     pjob = *pp_job;
 
     /* Set the properties of the job */
-    hr = pjob->put_Name(_bstr_t(L"MPICH2_JOB"));
+    hr = pjob->put_Name(_bstr_t(L"MPICH_JOB"));
     if(FAILED(hr)){
         smpd_dbg_printf("Unable to set the name of the job\n");
     }
@@ -234,13 +234,13 @@ int smpd_hpc_js_create_job(smpd_hpc_js_ctxt_t ctxt, smpd_launch_node_t *head, IS
             smpd_err_printf("ERROR: Unable to set the working directory for job\n");
         }
 
-        _snwprintf_s(filename, SMPD_MAX_EXE_LENGTH, SMPD_MAX_EXE_LENGTH - 1, L"stdout_mpich2_%s_%d_%d.txt", exe_namew, head->iproc, head->nproc);
+        _snwprintf_s(filename, SMPD_MAX_EXE_LENGTH, SMPD_MAX_EXE_LENGTH - 1, L"stdout_mpich_%s_%d_%d.txt", exe_namew, head->iproc, head->nproc);
         hr = ptask->put_StdOutFilePath(_bstr_t(filename));
         if(FAILED(hr)){
             smpd_err_printf("ERROR: Unable to set the stdout file path\n");
         }
 
-        _snwprintf_s(filename, SMPD_MAX_EXE_LENGTH, SMPD_MAX_EXE_LENGTH - 1, L"stderr_mpich2_%s_%d_%d.txt", exe_namew, head->iproc, head->nproc);
+        _snwprintf_s(filename, SMPD_MAX_EXE_LENGTH, SMPD_MAX_EXE_LENGTH - 1, L"stderr_mpich_%s_%d_%d.txt", exe_namew, head->iproc, head->nproc);
         hr = ptask->put_StdErrFilePath(_bstr_t(filename));
         if(FAILED(hr)){
             smpd_err_printf("ERROR: Unable to set the stderr file path\n");
