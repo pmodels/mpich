@@ -13,7 +13,6 @@
 #include <assert.h>
 
 #include <mpi.h>
-#include <mpix.h>
 
 #define NUM_MUTEXES 100
 
