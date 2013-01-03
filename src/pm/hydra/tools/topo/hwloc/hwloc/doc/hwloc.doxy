@@ -139,17 +139,26 @@ shell$ make install
 The hwloc command-line tool "lstopo" produces human-readable topology
 maps, as mentioned above.  It can also export maps to the "fig" file
 format.  Support for PDF, Postscript, and PNG exporting is provided if
-the "Cairo" development package can be found in "lstopo" when hwloc
+the "Cairo" development package (usually <tt>cairo-devel</tt> or
+<tt>libcairo2-dev</tt>) can be found in "lstopo" when hwloc
 is configured and build.
 
 The hwloc core may also benefit from the following development packages:
 <ul>
-<li>pciutils (libpci) for I/O discovery.</li>
-<li>libnuma for memory binding and migration support on Linux.</li>
+<li>pciutils (libpci) for I/O discovery.
+    The relevant development package is usually <tt>pciutils-devel</tt>
+    or <tt>libpci-dev</tt>.
+</li>
+<li>libnuma for memory binding and migration support on Linux
+    (<tt>numactl-devel</tt> or <tt>libnuma-dev</tt> package).
+</li>
 <li>libxml2 for full XML import/export support (otherwise, the
     internal minimalistic parser will only be able to import
     XML files that were exported by the same hwloc release).
-    See \ref xml for details.</li>
+    See \ref xml for details.
+    The relevant development package is usually <tt>libxml2-devel</tt>
+    or <tt>libxml2-dev</tt>.
+</li>
 </ul>
 libpci and libxml2 support may be statically built inside the main
 hwloc library, or as separate dynamically-loaded plugins
@@ -756,6 +765,8 @@ lstopo (also known as hwloc-info and hwloc-ls) displays the
 hierarchical topology map of the current system.  The output may be
 graphical or textual, and can also be exported to numerous file
 formats such as PDF, PNG, XML, and others.
+Advanced graphical outputs require the "Cairo" development package
+(usually <tt>cairo-devel</tt> or <tt>libcairo2-dev</tt>).
 
 lstopo and lstopo-no-graphics accept the same command-line options.
 However graphical outputs are only available in lstopo.
@@ -1113,7 +1124,8 @@ It can be enabled by passing flags such as <tt>::HWLOC_TOPOLOGY_FLAG_IO_DEVICES<
 to hwloc_topology_set_flags() before loading the topology.
 
 Note that I/O discovery requires significant help from the operating system.
-The pciutils library is needed to detect PCI devices and bridges,
+The pciutils library (the development package is usually <tt>pciutils-devel</tt>
+or <tt>libpci-dev</tt>) is needed to detect PCI devices and bridges,
 and the actual locality of these devices is only currently detected
 on Linux. Also, some operating systems require privileges for probing PCI
 devices, see \ref faq_privileged for details.
@@ -1195,9 +1207,16 @@ lstopo displays the interesting ones by default
 
 hwloc-calc and hwloc-bind may manipulate I/O devices specified
 by PCI bus ID or by OS device name.
-For instance, <tt>pci=0000:02:03.0</tt> (respectively <tt>os=eth0</tt>)
-is replaced by the set of CPUs that are close to this PCI device
-(respectively software device).
+<ul>
+<li>
+ <tt>pci=0000:02:03.0</tt> is replaced by the set
+ of CPUs that are close to the PCI device whose bus ID is given.
+</li>
+<li>
+ <tt>os=eth0</tt> is replaced by CPUs that are close to the I/O
+ device whose software handle is called <tt>eth0</tt>.
+</li>
+</ul>
 This enables easy binding of I/O-intensive applications near the
 device they use.
 
@@ -1317,7 +1336,7 @@ To make sure binding on an object is possible, one should first check
 that its cpuset or nodeset pointer is not NULL.
 Then, one should check whether the object is indeed local.
 
-To find out which machine a given object correspond too, one may look
+To find out which machine a given object corresponds to, one may look
 at the info attributes of the parent Machine object. The <tt>HostName</tt>
 info is usually available in Machine objects, it may be retrieved with the
 following code:
@@ -1544,7 +1563,8 @@ First, it can use the libxml2 library for importing/exporting XML
 files. It features full XML support, for instance when those files
 have to be manipulated by non-hwloc software (e.g. a XSLT parser).
 The libxml2 backend is enabled by default if libxml2 development
-headers are available.
+headers are available (the relevant development package is usually
+<tt>libxml2-devel</tt> or <tt>libxml2-dev</tt>).
 
 If libxml2 is not available at configure time,
 or if <tt>--disable-libxml2</tt> is passed, hwloc falls back to a
@@ -1970,6 +1990,66 @@ This function is invoked when this component is actually used by a topology.
 It creates a <tt>backend</tt> structure that usually contains a
 <tt>discover</tt> and/or <tt>notify_new_object</tt> callback taking
 care of the actual topology discovery.
+
+
+\section plugins_list Existing components and plugins
+
+All components distributed within hwloc are listed below.
+The list of actually available components may be listed
+at running with the <tt>HWLOC_COMPONENTS_VERBOSE</tt>
+environment variable (see \ref envvar).
+
+<dl>
+<dt>aix, darwin, freebsd, hpux, linux, netbsd, osf, solaris, windows</dt>
+<dd>
+ Each officially supported operating system has its own native component,
+ which is statically built when supported, and which is used by default.
+</dd>
+<dt>x86</dt>
+<dd>
+ The x86 architecture (either 32 or 64 bits) has its own component
+ that may complete or replace the previously-found CPU information.
+ It is statically built when supported.
+</dd>
+<dt>no_os</dt>
+<dd>
+ A basic component that just tries to detect the number of processing
+ units in the system. It mostly serves on operating systems that are
+ not natively supported.
+ It is always statically built.
+</dd>
+<dt>libpci</dt>
+<dd>
+ PCI object discovery uses the external pciutils library (aka libpci),
+ see \ref iodevices.
+ <b>It may be built as a plugin</b>.
+</dd>
+<dt>synthetic</dt>
+<dd>
+ Synthetic topology support (see \ref synthetic) is always built statically.
+</dd>
+<dt>custom</dt>
+<dd>
+ Custom topology support (see \ref multinode) is always built statically.
+</dd>
+<dt>xml</dt>
+<dd>
+ XML topology import (see \ref xml) is always built statically.
+ It internally uses one of the XML backends (see \ref xml_backends).
+ <ul>
+ <li><b>xml_nolibxml</b> is a basic and hwloc-specific XML import/export.
+  It is always statically built.
+ </li>
+ <li><b>xml_libxml</b> relies on the external libxml2 library for
+  provinding a feature-complete XML import/export.
+  <b>It may be built as a plugin</b>.
+ </li>
+</dd>
+<dt>fake</dt>
+<dd>
+ A dummy plugin that does nothing but is used for debugging plugin support.
+</dd>
+</dl>
 
 
 
