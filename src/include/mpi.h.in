@@ -142,12 +142,12 @@ struct mpich_struct_mpi_short_int       { short s; int i; };
 struct mpich_struct_mpi_2int            { int i1; int i2; };
 struct mpich_struct_mpi_long_double_int { long double ld; int i; };
 
-static const MPI_Datatype mpich_mpi_float_int       MPICH_ATTR_TYPE_TAG(struct mpich_struct_mpi_float_int)       = MPI_FLOAT_INT;
-static const MPI_Datatype mpich_mpi_double_int      MPICH_ATTR_TYPE_TAG(struct mpich_struct_mpi_double_int)      = MPI_DOUBLE_INT;
-static const MPI_Datatype mpich_mpi_long_int        MPICH_ATTR_TYPE_TAG(struct mpich_struct_mpi_long_int)        = MPI_LONG_INT;
-static const MPI_Datatype mpich_mpi_short_int       MPICH_ATTR_TYPE_TAG(struct mpich_struct_mpi_short_int)       = MPI_SHORT_INT;
-static const MPI_Datatype mpich_mpi_2int            MPICH_ATTR_TYPE_TAG(struct mpich_struct_mpi_2int)            = MPI_2INT;
-static const MPI_Datatype mpich_mpi_long_double_int MPICH_ATTR_TYPE_TAG(struct mpich_struct_mpi_long_double_int) = MPI_LONG_DOUBLE_INT;
+static const MPI_Datatype mpich_mpi_float_int       MPICH_ATTR_TYPE_TAG_LAYOUT_COMPATIBLE(struct mpich_struct_mpi_float_int)       = MPI_FLOAT_INT;
+static const MPI_Datatype mpich_mpi_double_int      MPICH_ATTR_TYPE_TAG_LAYOUT_COMPATIBLE(struct mpich_struct_mpi_double_int)      = MPI_DOUBLE_INT;
+static const MPI_Datatype mpich_mpi_long_int        MPICH_ATTR_TYPE_TAG_LAYOUT_COMPATIBLE(struct mpich_struct_mpi_long_int)        = MPI_LONG_INT;
+static const MPI_Datatype mpich_mpi_short_int       MPICH_ATTR_TYPE_TAG_LAYOUT_COMPATIBLE(struct mpich_struct_mpi_short_int)       = MPI_SHORT_INT;
+static const MPI_Datatype mpich_mpi_2int            MPICH_ATTR_TYPE_TAG_LAYOUT_COMPATIBLE(struct mpich_struct_mpi_2int)            = MPI_2INT;
+static const MPI_Datatype mpich_mpi_long_double_int MPICH_ATTR_TYPE_TAG_LAYOUT_COMPATIBLE(struct mpich_struct_mpi_long_double_int) = MPI_LONG_DOUBLE_INT;
 
 /* Fortran types */
 #define MPI_COMPLEX           ((MPI_Datatype)@MPI_COMPLEX@)
