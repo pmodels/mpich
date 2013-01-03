@@ -4891,6 +4891,8 @@ for type in int long long_long short ; do
             long_long)
                 MPI_AINT_FMT_DEC_SPEC="%lld"
                 MPI_AINT_FMT_HEX_SPEC="%llx"
+                # tt#1776: if LLONG_MAX is missing, we fix it up in C, b/c it's
+                # easier there.  See mpiiimpl.h.
                 MPIR_AINT_MAX="LLONG_MAX"
                 ;;
             short)

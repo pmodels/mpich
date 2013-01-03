@@ -59,6 +59,37 @@
 #endif
 #endif
 
+#ifdef HAVE_LIMITS_H
+#include <limits.h>
+#endif
+
+#if defined(HAVE_LONG_LONG_INT)
+/* tt#1776: some platforms have "long long" but not a LLONG_MAX/ULLONG_MAX,
+ * usually because some feature test macro has turned them off in glibc's
+ * features.h header b/c we are not in a >=C99 mode.  Use well-defined unsigned
+ * integer overflow to determine ULLONG_MAX, and assume two's complement for
+ * determining LLONG_MAX (already assumed elsewhere in MPICH). */
+#ifndef ULLONG_MIN
+#define ULLONG_MIN (0) /* trivial */
+#endif
+#ifndef ULLONG_MAX
+#define ULLONG_MAX ((unsigned long long)0 - 1)
+#endif
+#ifndef LLONG_MAX
+/* slightly tricky (values in binary):
+ * - put a 1 in the second-to-msb digit                   (0100...0000)
+ * - sub 1, giving all 1s starting at third-to-msb digit  (0011...1111)
+ * - shift left 1                                         (0111...1110)
+ * - add 1, yielding all 1s in positive space             (0111...1111) */
+#define LLONG_MAX (((((long long) 1 << (sizeof(long long) * CHAR_BIT - 2)) - 1 ) << 1) + 1)
+#endif
+#ifndef LLONG_MIN
+/* (1000...0000) is the most negative value in a twos-complement representation,
+ * which is the bitwise complement of the most positive value */
+#define LLONG_MIN (~LLONG_MAX)
+#endif
+#endif /* defined(HAVE_LONG_LONG_INT) */
+
 #ifdef HAVE_SYS_TYPES_H
 #include <sys/types.h>
 #endif
