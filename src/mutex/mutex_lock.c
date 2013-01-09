@@ -88,7 +88,7 @@ int MPIX_Mutex_lock(MPIX_Mutex hdl, int mutex, int proc)
     if (already_locked) {
         MPI_Status status;
         debug_print("waiting for notification [proc = %d, mutex = %d]\n", proc, mutex);
-        MPI_Recv(NULL, 0, MPI_BYTE, MPI_ANY_SOURCE, MPI_MUTEX_TAG + mutex, hdl->comm, &status);
+        MPI_Recv(NULL, 0, MPI_BYTE, MPI_ANY_SOURCE, MPIX_MUTEX_TAG + mutex, hdl->comm, &status);
     }
 
     debug_print("lock acquired [proc = %d, mutex = %d]\n", proc, mutex);
