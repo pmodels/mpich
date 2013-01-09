@@ -126,6 +126,7 @@ configure
 /tools/topo/hwloc/hwloc/config/ltversion.m4
 /tools/topo/hwloc/hwloc/config/lt~obsolete.m4
 /tools/topo/hwloc/hwloc/config/missing
+/tools/topo/hwloc/hwloc/config/test-driver
 /tools/topo/hwloc/hwloc/include/hwloc/autogen/config.h
 /tools/topo/hwloc/hwloc/include/hwloc/autogen/stamp-h2
 /tools/topo/hwloc/hwloc/include/hwloc/autogen/stamp-h3
