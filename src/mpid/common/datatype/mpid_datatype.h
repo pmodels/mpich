@@ -24,6 +24,7 @@
 
 #define MPID_Datatype_add_ref(datatype_ptr) MPIU_Object_add_ref((datatype_ptr))
 
+/* NOTE: returns 0, not MPI_DATATYPE_NULL if the eltype is invalid */
 #define MPID_Datatype_get_basic_type(a,eltype_) do {                    \
     void *ptr;								\
     switch (HANDLE_GET_KIND(a)) {					\

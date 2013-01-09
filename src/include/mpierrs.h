@@ -354,6 +354,22 @@
         }                                                                       \
     } while (0)
 
+/* check op-datatype compatibility for accumulate operations */
+#define MPIR_ERRTEST_OP_DTYPE_ACC(op, dtype, err)                                  \
+    do {                                                                           \
+        MPI_Datatype basic_type_ = MPI_DATATYPE_NULL;                              \
+        MPID_Datatype_get_basic_type(dtype, basic_type_);                          \
+        if (basic_type_ == MPI_DATATYPE_NULL) {                                    \
+            MPIU_ERR_SETANDJUMP(err, MPI_ERR_TYPE, "**typebasiccomponentsdiffer"); \
+        }                                                                          \
+        err = ( * MPIR_OP_HDL_TO_DTYPE_FN(op) )((basic_type_));                    \
+        if (err) MPIU_ERR_POP(err);                                                \
+    } while (0)
+
+/* restrictions are same for GACC right now */
+#define MPIR_ERRTEST_OP_DTYPE_GACC(op, dtype, err)              \
+    MPIR_ERRTEST_OP_DTYPE_ACC(op, dtype, err)
+
 #define MPIR_ERRTEST_OP_GACC(op,err)                                            \
     do {                                                                        \
         if (op == MPI_OP_NULL) {                                                \
