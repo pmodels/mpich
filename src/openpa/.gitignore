@@ -17,6 +17,7 @@ confdb/ltsugar.m4
 confdb/ltversion.m4
 confdb/lt~obsolete.m4
 confdb/missing
+confdb/test-driver
 config.log
 config.status
 configure
