@@ -268,7 +268,6 @@ int MPIDI_Compare_and_swap(const void *origin_addr, const void *compare_addr,
             MPIU_Memcpy(dest_addr, origin_addr, len);
         }
 
-        goto fn_exit;
     }
     else {
         MPIDI_RMA_Ops_list_t *ops_list = MPIDI_CH3I_RMA_Get_ops_list(win_ptr, target_rank);
@@ -351,7 +350,6 @@ int MPIDI_Fetch_and_op(const void *origin_addr, void *result_addr,
 
         (*uop)((void *) origin_addr, dest_addr, &one, &datatype);
 
-        goto fn_exit;
     }
     else {
         MPIDI_RMA_Ops_list_t *ops_list = MPIDI_CH3I_RMA_Get_ops_list(win_ptr, target_rank);
