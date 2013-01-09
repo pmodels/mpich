@@ -7,7 +7,7 @@ AC_PREREQ(2.62)
 AC_INIT([armci],[0])
 AC_CONFIG_AUX_DIR(m4)
 AC_CONFIG_MACRO_DIR(m4)
-AM_INIT_AUTOMAKE([-Wall -Werror foreign 1.12.3 color-tests parallel-tests])
+AM_INIT_AUTOMAKE([-Wall -Werror -Wno-portability-recursive foreign 1.12.3 color-tests parallel-tests])
 
 LT_PREREQ([2.2.6])
 
