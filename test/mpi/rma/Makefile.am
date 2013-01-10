@@ -109,7 +109,8 @@ noinst_PROGRAMS =          \
     reqops                 \
     req_example            \
     win_info               \
-    pscw_ordering
+    pscw_ordering          \
+    mutex_bench
 
 strided_acc_indexed_LDADD       = $(LDADD) -lm
 strided_acc_onelock_LDADD       = $(LDADD) -lm
@@ -151,3 +152,5 @@ get_accumulate_short_derived_SOURCES  = get_accumulate.c
 get_accumulate_long_derived_SOURCES   = get_accumulate.c
 get_accumulate_double_derived_SOURCES = get_accumulate.c
 get_accumulate_int_derived_SOURCES      = get_accumulate.c
+
+mutex_bench_SOURCES              = mutex_bench.c mcs-mutex.c mcs-mutex.h
