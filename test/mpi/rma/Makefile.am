@@ -110,7 +110,8 @@ noinst_PROGRAMS =          \
     req_example            \
     win_info               \
     pscw_ordering          \
-    mutex_bench
+    mutex_bench            \
+    mutex_bench_shared
 
 strided_acc_indexed_LDADD       = $(LDADD) -lm
 strided_acc_onelock_LDADD       = $(LDADD) -lm
@@ -154,3 +155,5 @@ get_accumulate_double_derived_SOURCES = get_accumulate.c
 get_accumulate_int_derived_SOURCES      = get_accumulate.c
 
 mutex_bench_SOURCES              = mutex_bench.c mcs-mutex.c mcs-mutex.h
+mutex_bench_shared_CPPFLAGS      = -DUSE_WIN_SHARED
+mutex_bench_shared_SOURCES       = mutex_bench.c mcs-mutex.c mcs-mutex.h

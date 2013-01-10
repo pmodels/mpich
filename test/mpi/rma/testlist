@@ -96,3 +96,4 @@ linked_list_bench_lock_all 4 mpiversion=3.0
 linked_list_bench_lock_excl 4 mpiversion=3.0
 linked_list_bench_lock_shr 4 mpiversion=3.0
 mutex_bench 4 mpiversion=3.0
+mutex_bench_shared 4 mpiversion=3.0
