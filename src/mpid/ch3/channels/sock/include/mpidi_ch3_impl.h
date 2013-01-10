@@ -75,4 +75,11 @@ int MPIDI_CH3I_Progress_init(void);
 int MPIDI_CH3I_Progress_finalize(void);
 int MPIDI_CH3I_VC_post_connect(MPIDI_VC_t *);
 
+/* Shared memory window atomic/accumulate mutex implementation */
+
+#define MPIDI_CH3I_SHM_MUTEX_LOCK(win_ptr)
+#define MPIDI_CH3I_SHM_MUTEX_UNLOCK(win_ptr)
+#define MPIDI_CH3I_SHM_MUTEX_INIT(win_ptr)
+#define MPIDI_CH3I_SHM_MUTEX_DESTROY(win_ptr)
+
 #endif /* !defined(MPICH_MPIDI_CH3_IMPL_H_INCLUDED) */
