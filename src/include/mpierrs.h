@@ -266,6 +266,14 @@
         goto fn_fail;                                                   \
     }
 
+#define MPIR_ERRTEST_NAMED_BUF_INPLACE(buf, bufname, count, err)       \
+    do {                                                               \
+        if (count > 0 && buf == MPI_IN_PLACE) {                        \
+            MPIU_ERR_SETANDJUMP1(err, MPI_ERR_BUFFER, "**buf_inplace", \
+                                 "**buf_inplace %s", bufname);         \
+        }                                                              \
+    } while (0)
+
 /*
  * Check that the triple (buf,count,datatype) does not specify a null
  * buffer.  This does not guarantee that the buffer is valid but does

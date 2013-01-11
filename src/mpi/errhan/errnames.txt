@@ -134,6 +134,7 @@ be in the range 0 to %d
 **sendbuf_inplace:sendbuf cannot be MPI_IN_PLACE
 **recvbuf_inplace:recvbuf cannot be MPI_IN_PLACE
 **buf_inplace:buffer cannot be MPI_IN_PLACE
+**buf_inplace %s:buffer '%s' cannot be MPI_IN_PLACE
 **typematchnoclass:The value of typeclass is not one of MPI_TYPECLASS_REAL, \
 MPI_TYPECLASS_INTEGER, or MPI_TYPECLASS_COMPLEX
 **typematchsize:No MPI datatype available for the given typeclass and size
