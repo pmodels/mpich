@@ -2193,6 +2193,19 @@ int MPIDI_Win_flush(int rank, MPID_Win *win_ptr)
         goto fn_exit;
     }
 
+    /* NOTE: All flush and req-based operations are currently implemented in
+       terms of MPIDI_Win_flush.  When this changes, those operations will also
+       need to insert this read/write memory fence for shared memory windows. */
+
+    /* For shared memory windows, all operations are done immediately, so there
+       is nothing to flush.  Ensure that load/store operations are visible and
+       return. */
+    if (win_ptr->create_flavor == MPI_WIN_FLAVOR_SHARED) {
+        /* FIXME: We may be able to make this just a read or write barrier */
+        OPA_read_write_barrier();
+        goto fn_exit;
+    }
+
     /* MT: If another thread is performing a flush, wait for them to finish. */
     if (win_ptr->targets[rank].remote_lock_state == MPIDI_CH3_WIN_LOCK_FLUSH)
     {
@@ -2276,16 +2289,6 @@ int MPIDI_Win_flush(int rank, MPID_Win *win_ptr)
     }
     else {
         win_ptr->targets[rank].remote_lock_state = MPIDI_CH3_WIN_LOCK_GRANTED;
-    }
-
-    /* FIXME: All flush and req-based operations are currently implemented in
-       terms of this operation.  When this changes, those operations will also
-       need to insert this read/write memory fence for shared memory windows. */
-
-    /* Ensure that load/store operations are visible. */
-    if (win_ptr->create_flavor == MPI_WIN_FLAVOR_SHARED) {
-        /* FIXME: We may be able to make this just a read or write barrier */
-        OPA_read_write_barrier();
     }
 
  fn_exit:
