@@ -1,0 +1,8 @@
+# You can use this file to unify commits made by the same person from
+# names/emails.  This will have effect in the output from "git shortlog" and
+# some invocations of "git log".
+#
+# See "man git-shortlog" for formatting information on this file.
+
+# use "Dave Goodell" as Dave's canonical name (SVN history includes "David").
+Dave Goodell <goodell@mcs.anl.gov>
