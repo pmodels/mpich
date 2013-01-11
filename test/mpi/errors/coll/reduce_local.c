@@ -37,20 +37,24 @@ int main(int argc, char *argv[])
         recvbuf[i] = -1;
     }
 
+    /* check valid reduce_local does not fail */
     err = MPI_Reduce_local(buf, recvbuf, size, MPI_INT, MPI_SUM);
     check(err == MPI_SUCCESS);
 
+    /* ERR: check inbuf==MPI_IN_PLACE */
     err = MPI_Reduce_local(MPI_IN_PLACE, recvbuf, size, MPI_INT, MPI_SUM);
     check(err != MPI_SUCCESS);
     MPI_Error_class(err, &errclass);
     check(errclass == MPI_ERR_BUFFER);
 
+    /* ERR: check inoutbuf==MPI_IN_PLACE */
     err = MPI_Reduce_local(buf, MPI_IN_PLACE, size, MPI_INT, MPI_SUM);
     check(err != MPI_SUCCESS);
     MPI_Error_class(err, &errclass);
     check(errclass == MPI_ERR_BUFFER);
 
-    err = MPI_Reduce_local(buf, MPI_IN_PLACE, size, MPI_INT, MPI_SUM);
+    /* ERR: check buffer aliasing is caught */
+    err = MPI_Reduce_local(recvbuf, recvbuf, size, MPI_INT, MPI_SUM);
     check(err != MPI_SUCCESS);
     MPI_Error_class(err, &errclass);
     check(errclass == MPI_ERR_BUFFER);
