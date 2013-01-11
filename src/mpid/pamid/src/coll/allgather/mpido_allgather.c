@@ -204,8 +204,17 @@ int MPIDO_Allgather_alltoall(const void *sendbuf,
     a2a_recvcounts[rank] = 0;
   }
 
-/* TODO: Change to PAMI */
-  rc = MPIR_Alltoallv((const void *)a2a_sendbuf,
+  rc = MPIDO_Alltoallv((const void *)a2a_sendbuf,
+                       a2a_sendcounts,
+                       a2a_senddispls,
+                       MPI_CHAR,
+                       recvbuf,
+                       a2a_recvcounts,
+                       a2a_recvdispls,
+                       recvtype,
+                       comm_ptr,
+                       mpierrno); 
+/*  rc = MPIR_Alltoallv((const void *)a2a_sendbuf,
 		       a2a_sendcounts,
 		       a2a_senddispls,
 		       MPI_CHAR,
@@ -214,7 +223,7 @@ int MPIDO_Allgather_alltoall(const void *sendbuf,
 		       a2a_recvdispls,
 		       recvtype,
 		       comm_ptr,
-		       mpierrno);
+		       mpierrno); */
 
   return rc;
 }
