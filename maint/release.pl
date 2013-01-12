@@ -101,7 +101,7 @@ sub check_autotools_version
 sub check_git_repo {
     my $repo_path = shift;
 
-    print "===> chdir to $repo_path";
+    print "===> chdir to $repo_path\n";
     chdir $repo_path;
 
     print "===> Checking git repository sanity... ";
@@ -109,7 +109,9 @@ sub check_git_repo {
         print "ERROR: $repo_path is not a git repository\n";
         exit 1;
     }
-    unless (`git rev-parse --is-bare-repository 2> /dev/null` eq "true\n") {
+    # I'm not strictly sure that this is true, but it's not too burdensome right
+    # now to restrict it to complete (non-bare repositories).
+    unless (`git rev-parse --is-bare-repository 2> /dev/null` eq "false\n") {
         print "ERROR: $repo_path is a *bare* repository (need working tree)\n";
         exit 1;
     }
@@ -118,14 +120,6 @@ sub check_git_repo {
     unless (-e "maint/extracterrmsgs") {
         print "ERROR: does not appear to be a valid MPICH repository\n" .
               "(missing maint/extracterrmsgs)\n";
-        exit 1;
-    }
-
-    # a dirty working copy and/or index could cause problems for us
-    my $status = `git status --porcelain`;
-    chomp $status;
-    unless ($status eq "") {
-        print "ERROR: repository contains uncommitted/untracked changes (see 'git status')\n";
         exit 1;
     }
 
@@ -188,7 +182,7 @@ print("\n");
 check_git_repo($git_repo_path);
 print("\n");
 
-my $current_ver = `cat ${source}/maint/version.m4 | grep MPICH_VERSION_m4 | \
+my $current_ver = `git show ${source}:maint/version.m4 | grep MPICH_VERSION_m4 | \
                    sed -e 's/^.*\\[MPICH_VERSION_m4\\],\\[\\(.*\\)\\].*/\\1/g'`;
 if ("$current_ver" ne "$version\n") {
     print("\tWARNING: Version mismatch\n\n");
@@ -204,7 +198,7 @@ if ($psource) {
 }
 
 if ($append_commit_id) {
-    $version .= '-' . `git describe --tags --always`;
+    $version .= '-' . `git describe --tags --always ${source}`;
 }
 
 my $tdir = tempdir(CLEANUP => 1);
@@ -213,11 +207,11 @@ my $tdir = tempdir(CLEANUP => 1);
 system("rm -f ${root}/$logfile");
 
 # Check out the appropriate source
-print("===> Checking out $pack SVN source... ");
+print("===> Exporting $pack source from git... ");
 run_cmd("rm -rf ${pack}-${version}");
 my $expdir = "${tdir}/${pack}-${version}";
 run_cmd("mkdir -p ${expdir}");
-run_cmd("git archive master --prefix='${pack}-${version}/' | tar -x -C $tdir");
+run_cmd("git archive ${source} --prefix='${pack}-${version}/' | tar -x -C $tdir");
 print("done\n");
 
 print("===> Create release date and version information... ");
@@ -226,7 +220,8 @@ chdir($expdir);
 my $date = `date`;
 chomp $date;
 system(qq(perl -p -i -e 's/\\[MPICH_RELEASE_DATE_m4\\],\\[unreleased development copy\\]/[MPICH_RELEASE_DATE_m4],[$date]/g' ./maint/version.m4));
-system(qq(perl -p -i -e 's/\\[MPICH_RELEASE_DATE_m4\\],\\[unreleased development copy\\]/[MPICH_RELEASE_DATE_m4],[$date]/g' ./src/pm/hydra/version.m4));
+# the main version.m4 file will be copied to hydra's version.m4, including the
+# above modifications
 print("done\n");
 
 # Remove packages that are not being released
@@ -234,7 +229,7 @@ print("===> Removing packages that are not being released... ");
 chdir($expdir);
 run_cmd("rm -rf doc/notes src/pm/mpd/Zeroconf.py");
 
-chdir("${expdir}/src/mpid/ch3/channels/nemesis/nemesis/netmod");
+chdir("${expdir}/src/mpid/ch3/channels/nemesis/netmod");
 my @nem_modules = qw(elan);
 run_cmd("rm -rf ".join(' ', @nem_modules));
 for my $module (@nem_modules) {
