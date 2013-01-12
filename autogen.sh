@@ -65,17 +65,9 @@ fi
 # This used to be an optionally installed hook to help with git-svn
 # versions of the old SVN repo.  Now that we are using git, this is our
 # mechanism that replaces relative svn:externals paths, such as for
-# "confdb" and "mpl".
-#
-# The basic plan is to copy all of the files that are under source
-# control, but copy the working tree versions instead in case of local
-# modifications.  This will catch files that have been "git add"ed, but
-# not random untracked files sitting in the working copy.
-#
-# It is especially important not to copy files like "aclocal.m4" from
-# one dir to the other, since this will touch the mtime of the file and
-# likely cause "make" to attempt to rebuild "configure".  If you are
-# attempting to simplify the logic below, consider yourself warned ;)
+# "confdb" and "mpl". The basic plan is to delete the destdir and then
+# copy all of the files, warts and all, from the source directory to the
+# destination directory.
 echo
 echo "####################################"
 echo "## Replicating confdb (and similar)"
@@ -88,27 +80,10 @@ sync_external () {
 
     echo "syncing '$srcdir' --> '$destdir'"
 
-    # this code probably breaks for any filenames with a space (' ')
-    mkdir -p "$destdir"
-
-    # The first cmd gets any files listed in the current HEAD commit,
-    # while the second cmd gets anything that has been added to the
-    # index since that commit (but won't handle deleted files that have
-    # been staged to the index).  Both will produce lists of paths
-    # (relative to $srcdir) to tracked files, but no directories.
-    # Populated subdirectories of $srcdir will be handled correctly.
-    scm_files=`( git ls-tree -r --name-only HEAD:$srcdir ; cd confdb && git ls-files -m -d -c --exclude-standard ) | sort | uniq`
-
-    for scm_file in $scm_files ; do
-        s="$srcdir/$scm_file"
-        d="$destdir/$scm_file"
-        if [ -f "$s" ] ; then
-            mkdir -p `dirname "$d"`
-            cp -pPR "$s" "$d"
-        else
-            rm -f "$d"
-        fi
-    done
+    # deletion prevents creating 'confdb/confdb' situation, also cleans
+    # stray files that may have crept in somehow
+    rm -rf "$destdir"
+    cp -pPR "$srcdir" "$destdir"
 }
 
 confdb_dirs=
@@ -119,30 +94,21 @@ confdb_dirs="${confdb_dirs} src/pm/hydra/mpl/confdb"
 confdb_dirs="${confdb_dirs} test/mpi/confdb"
 confdb_dirs="${confdb_dirs} src/armci/m4"
 
-in_git_work_tree=`git rev-parse --is-inside-work-tree 2> /dev/null`
-if [ "X$in_git_work_tree" = 'Xtrue' ] ; then
-    # hydra's copy of mpl
-    sync_external src/mpl src/pm/hydra/mpl
+# hydra's copy of mpl
+sync_external src/mpl src/pm/hydra/mpl
 
-    # all the confdb directories, by various names
-    for destdir in $confdb_dirs ; do
-        sync_external confdb "$destdir"
-    done
+# all the confdb directories, by various names
+for destdir in $confdb_dirs ; do
+    sync_external confdb "$destdir"
+done
 
-    # a couple of other random files
-    if [ -f maint/version.m4 ] ; then
-        cp -pPR maint/version.m4 src/pm/hydra/version.m4
-        cp -pPR maint/version.m4 src/mpi/romio/version.m4
-    fi
-else
-    # an expected case for release tarballs
-    echo "Not in a git repository (or cannot execute git), skipping."
+# a couple of other random files
+if [ -f maint/version.m4 ] ; then
+    cp -pPR maint/version.m4 src/pm/hydra/version.m4
+    cp -pPR maint/version.m4 src/mpi/romio/version.m4
 fi
 
-# Now sanity check that:
-# (A) much of the above sync was successful, or
-# (B) someone else already performed an equivalent sync, such as when we are a
-# release tarball.
+# Now sanity check that some of the above sync was successful
 f="aclocal_cc.m4"
 for d in $confdb_dirs ; do
     if [ -f "$d/$f" ] ; then :
