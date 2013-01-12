@@ -104,7 +104,7 @@ sync_external () {
         d="$destdir/$scm_file"
         if [ -f "$s" ] ; then
             mkdir -p `dirname "$d"`
-            cp -a "$s" "$d"
+            cp -pPR "$s" "$d"
         else
             rm -f "$d"
         fi
@@ -131,8 +131,8 @@ if [ "X$in_git_work_tree" = 'Xtrue' ] ; then
 
     # a couple of other random files
     if [ -f maint/version.m4 ] ; then
-        cp -a maint/version.m4 src/pm/hydra/version.m4
-        cp -a maint/version.m4 src/mpi/romio/version.m4
+        cp -pPR maint/version.m4 src/pm/hydra/version.m4
+        cp -pPR maint/version.m4 src/mpi/romio/version.m4
     fi
 else
     # an expected case for release tarballs
