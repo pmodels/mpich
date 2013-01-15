@@ -984,6 +984,7 @@ int MPID_Init(int * argc,
   /* ------------------------------- */
   MPIR_Process.attrs.tag_ub = INT_MAX;
   MPIR_Process.attrs.wtime_is_global = 1;
+  MPIR_Process.attrs.io   = MPI_ANY_SOURCE;
 
 
   /* ------------------------------- */
