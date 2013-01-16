@@ -46,6 +46,7 @@ static void allred_cb_done(void *ctxt, void *clientdata, pami_result_t err)
  *       - Tree allreduce is availible (for max performance)
  */
 /* ****************************************************************** */
+#define MAX_ALLGATHERV_ALLREDUCE_BUFFER_SIZE (1024*1024*2)
 int MPIDO_Allgatherv_allreduce(const void *sendbuf,
 			       int sendcount,
 			       MPI_Datatype sendtype,
@@ -61,7 +62,7 @@ int MPIDO_Allgatherv_allreduce(const void *sendbuf,
 			       MPID_Comm * comm_ptr,
                                int *mpierrno)
 {
-  int start, rc;
+  int start, rc, i;
   int length;
   char *startbuf = NULL;
   char *destbuf = NULL;
@@ -70,6 +71,58 @@ int MPIDO_Allgatherv_allreduce(const void *sendbuf,
 
   startbuf = (char *) recvbuf + recv_true_lb;
   destbuf = startbuf + displs[rank] * recv_size;
+
+  if (sendbuf != MPI_IN_PLACE)
+  {
+    char *outputbuf = (char *) sendbuf + send_true_lb;
+    memcpy(destbuf, outputbuf, send_size);
+  }
+
+  //printf("buffer_sum %d, send_size %d recv_size %d\n", buffer_sum, 
+  // (int)send_size, (int)recv_size);	 
+
+  /* TODO: Change to PAMI */
+  /*integer/long/double allgathers only*/
+  /*Do a convert and then do the allreudce*/
+  if ( buffer_sum <= MAX_ALLGATHERV_ALLREDUCE_BUFFER_SIZE &&
+       (send_size & 0x3)==0 && (recv_size & 0x3)==0)  
+  {
+    double *tmprbuf = (double *)MPIU_Malloc(buffer_sum*2);
+    if (tmprbuf == NULL)
+      goto direct_algo; /*skip int to fp conversion and go to direct
+			  algo*/
+
+    double *tmpsbuf = tmprbuf + (displs[rank]*recv_size)/sizeof(int);
+    int *sibuf = (int *) destbuf;
+    
+    memset(tmprbuf, 0, displs[rank]*recv_size*2);
+    start  = (displs[rank] + recvcounts[rank]) * recv_size;   
+    length = buffer_sum - (displs[rank] + recvcounts[rank]) * recv_size;
+    memset(tmprbuf + start/sizeof(int), 0, length*2);
+
+    for(i = 0; i < (send_size/sizeof(int)); ++i) 
+      tmpsbuf[i] = (double)sibuf[i];
+    
+    rc = MPIDO_Allreduce(MPI_IN_PLACE,
+			 tmprbuf,
+			 buffer_sum/sizeof(int),
+			 MPI_DOUBLE,
+			 MPI_SUM,
+			 comm_ptr,
+			 mpierrno);
+    
+    sibuf = (int *) startbuf;
+    for(i = 0; i < (displs[rank]*recv_size/sizeof(int)); ++i) 
+      sibuf[i] = (int)tmprbuf[i];
+    
+    for(i = start/sizeof(int); i < buffer_sum/sizeof(int); ++i) 
+      sibuf[i] = (int)tmprbuf[i];
+
+    MPIU_Free(tmprbuf);
+    return rc;
+  }
+
+ direct_algo:
 
   start = 0;
   length = displs[rank] * recv_size;
@@ -81,15 +134,8 @@ int MPIDO_Allgatherv_allreduce(const void *sendbuf,
 			 recvcounts[rank]) * recv_size;
   memset(startbuf + start, 0, length);
 
-  if (sendbuf != MPI_IN_PLACE)
-  {
-    char *outputbuf = (char *) sendbuf + send_true_lb;
-    memcpy(destbuf, outputbuf, send_size);
-  }
-
-
-   TRACE_ERR("Calling MPIDO_Allreduce from MPIDO_Allgatherv_allreduce\n");
-   /* TODO: Change to PAMI allreduce */
+  TRACE_ERR("Calling MPIDO_Allreduce from MPIDO_Allgatherv_allreduce\n");
+  /* TODO: Change to PAMI allreduce */
   rc = MPIDO_Allreduce(MPI_IN_PLACE,
 		       startbuf,
 		       buffer_sum/sizeof(unsigned),
@@ -98,7 +144,7 @@ int MPIDO_Allgatherv_allreduce(const void *sendbuf,
 		       comm_ptr,
                        mpierrno);
 
-   TRACE_ERR("Leaving MPIDO_Allgatherv_allreduce\n");
+  TRACE_ERR("Leaving MPIDO_Allgatherv_allreduce\n");
   return rc;
 }
 
@@ -220,7 +266,7 @@ int MPIDO_Allgatherv_alltoall(const void *sendbuf,
 
    TRACE_ERR("Calling alltoallv in MPIDO_Allgatherv_alltoallv\n");
    /* TODO: Change to PAMI alltoallv */
-  rc = MPIR_Alltoallv(a2a_sendbuf,
+  rc = MPIDO_Alltoallv(a2a_sendbuf,
 		       a2a_sendcounts,
 		       a2a_senddispls,
 		       MPI_CHAR,
@@ -298,10 +344,10 @@ MPIDO_Allgatherv(const void *sendbuf,
   allred.cmd.xfer_allreduce.rtypecount = 6;
   allred.cmd.xfer_allreduce.op = PAMI_DATA_BAND;
 
-   use_alltoall = mpid->allgathervs[2];
-   use_tree_reduce = mpid->allgathervs[0];
-   use_bcast = mpid->allgathervs[1];
-   use_pami = selected_type != MPID_COLL_USE_MPICH;
+  use_alltoall = mpid->allgathervs[2];
+  use_tree_reduce = mpid->allgathervs[0];
+  use_bcast = mpid->allgathervs[1];
+  use_pami = selected_type != MPID_COLL_USE_MPICH;
 	 
    if((sendbuf != MPI_IN_PLACE) && (MPIDI_Datatype_to_pami(sendtype, &stype, -1, NULL, &tmp) != MPI_SUCCESS))
      use_pami = 0;

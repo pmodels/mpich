@@ -47,6 +47,9 @@ static void allgather_cb_done(void *ctxt, void *clientdata, pami_result_t err)
  *       - The datatype parameters needed added to the function signature
  */
 /* ****************************************************************** */
+
+#define MAX_ALLGATHER_ALLREDUCE_BUFFER_SIZE  (1024*1024*2)
+
 int MPIDO_Allgather_allreduce(const void *sendbuf,
 			      int sendcount,
 			      MPI_Datatype sendtype,
@@ -61,7 +64,7 @@ int MPIDO_Allgather_allreduce(const void *sendbuf,
                               int *mpierrno)
 
 {
-  int rc;
+  int rc, i;
   char *startbuf = NULL;
   char *destbuf = NULL;
   const int rank = comm_ptr->rank;
@@ -69,23 +72,74 @@ int MPIDO_Allgather_allreduce(const void *sendbuf,
   startbuf   = (char *) recvbuf + recv_true_lb;
   destbuf    = startbuf + rank * send_size;
 
-  memset(startbuf, 0, rank * send_size);
-  memset(destbuf + send_size, 0, recv_size - (rank + 1) * send_size);
-
   if (sendbuf != MPI_IN_PLACE)
   {
     char *outputbuf = (char *) sendbuf + send_true_lb;
     memcpy(destbuf, outputbuf, send_size);
   }
-  /* TODO: Change to PAMI */
-  rc = MPIDO_Allreduce(MPI_IN_PLACE,
-                       startbuf,
-                       recv_size/sizeof(unsigned),
-                       MPI_UNSIGNED,
-                       MPI_BOR,
-                       comm_ptr,
-                       mpierrno);
 
+  /* TODO: Change to PAMI */
+  /*Do a convert and then do the allreudce*/
+  if ( recv_size <= MAX_ALLGATHER_ALLREDUCE_BUFFER_SIZE &&
+       (send_size & 0x3)==0 &&  /*integer/long allgathers only*/
+       (sendtype != MPI_DOUBLE || recvtype != MPI_DOUBLE))       
+  {
+    double *tmprbuf = (double *)MPIU_Malloc(recv_size*2);
+    if (tmprbuf == NULL)
+      goto direct_algo; /*skip int to fp conversion and go to direct
+			  algo*/
+
+    double *tmpsbuf = tmprbuf + (rank*send_size)/sizeof(int);
+    int *sibuf = (int *) destbuf;
+    
+    memset(tmprbuf, 0, rank*send_size*2);
+    memset(tmpsbuf + send_size/sizeof(int), 0, 
+	   (recv_size - (rank + 1)*send_size)*2);
+
+    for(i = 0; i < (send_size/sizeof(int)); ++i) 
+      tmpsbuf[i] = (double)sibuf[i];
+    
+    rc = MPIDO_Allreduce(MPI_IN_PLACE,
+			 tmprbuf,
+			 recv_size/sizeof(int),
+			 MPI_DOUBLE,
+			 MPI_SUM,
+			 comm_ptr,
+			 mpierrno);
+    
+    sibuf = (int *) startbuf;
+    for(i = 0; i < (rank*send_size/sizeof(int)); ++i) 
+      sibuf[i] = (int)tmprbuf[i];
+
+    for(i = (rank+1)*send_size/sizeof(int); i < recv_size/sizeof(int); ++i) 
+      sibuf[i] = (int)tmprbuf[i];
+
+    MPIU_Free(tmprbuf);
+    return rc;
+  }
+
+ direct_algo:
+
+  memset(startbuf, 0, rank * send_size);
+  memset(destbuf + send_size, 0, recv_size - (rank + 1) * send_size);
+
+  if (sendtype == MPI_DOUBLE && recvtype == MPI_DOUBLE)
+    rc = MPIDO_Allreduce(MPI_IN_PLACE,
+			 startbuf,
+			 recv_size/sizeof(double),
+			 MPI_DOUBLE,
+			 MPI_SUM,
+			 comm_ptr,
+			 mpierrno);
+  else
+    rc = MPIDO_Allreduce(MPI_IN_PLACE,
+			 startbuf,
+			 recv_size/sizeof(int),
+			 MPI_UNSIGNED,
+			 MPI_BOR,
+			 comm_ptr,
+			 mpierrno);
+  
   return rc;
 }
 
@@ -204,6 +258,7 @@ int MPIDO_Allgather_alltoall(const void *sendbuf,
     a2a_recvcounts[rank] = 0;
   }
 
+
   rc = MPIDO_Alltoallv((const void *)a2a_sendbuf,
                        a2a_sendcounts,
                        a2a_senddispls,
@@ -214,16 +269,6 @@ int MPIDO_Allgather_alltoall(const void *sendbuf,
                        recvtype,
                        comm_ptr,
                        mpierrno); 
-/*  rc = MPIR_Alltoallv((const void *)a2a_sendbuf,
-		       a2a_sendcounts,
-		       a2a_senddispls,
-		       MPI_CHAR,
-		       recvbuf,
-		       a2a_recvcounts,
-		       a2a_recvdispls,
-		       recvtype,
-		       comm_ptr,
-		       mpierrno); */
 
   return rc;
 }
