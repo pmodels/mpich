@@ -198,7 +198,9 @@ if ($psource) {
 }
 
 if ($append_commit_id) {
-    $version .= '-' . `git describe --tags --always ${source}`;
+    my $desc = `git describe --always ${source}`;
+    chomp $desc;
+    $version .= "-${desc}";
 }
 
 my $tdir = tempdir(CLEANUP => 1);
