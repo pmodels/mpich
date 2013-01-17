@@ -139,6 +139,7 @@ int MPIDI_Comm_spawn_multiple(int count, char **commands,
     int total_num_processes, should_accept = 1;
     MPID_Info tmp_info_ptr;
     char *tmp;
+    int tmp_ret = 0;
 
     if (comm_ptr->rank == root) {
 	/* create an array for the pmi error codes */
@@ -163,7 +164,7 @@ int MPIDI_Comm_spawn_multiple(int count, char **commands,
         {
             int *argcs = MPIU_Malloc(count*sizeof(int));
             struct MPID_Info preput;
-            struct MPID_Info *preput_p[1] = { &preput };
+            struct MPID_Info *preput_p[2] = { &preput, &tmp_info_ptr };
 
             MPIU_Assert(argcs);
 
@@ -172,12 +173,12 @@ int MPIDI_Comm_spawn_multiple(int count, char **commands,
             /* FIXME cheating on constness */
             preput.key = (char *)MPIDI_PARENT_PORT_KVSKEY;
             preput.value = port_name;
-            preput.next = NULL;
+            preput.next = &tmp_info_ptr;
 
 	    tmp_info_ptr.key = "COMMCTX";
 	    len=sprintf(ctxid_str, "%d", comm_ptr->context_id);
 	    TRACE_ERR("COMMCTX=%d\n", comm_ptr->context_id);
-	     ctxid_str[len]='\0';
+	    ctxid_str[len]='\0';
 	    tmp_info_ptr.value = ctxid_str;
 	    tmp_info_ptr.next = NULL;
 
@@ -189,10 +190,6 @@ int MPIDI_Comm_spawn_multiple(int count, char **commands,
                         ++argcs[i];
                     }
                 }
-
-                /* a fib for now */
-                info_keyval_sizes[i] = 1;
-		info_ptrs[i] = &tmp_info_ptr;
             }
 
             /* XXX DJG don't need this, PMI API is thread-safe? */
@@ -203,19 +200,23 @@ int MPIDI_Comm_spawn_multiple(int count, char **commands,
                                        argcs, (const char ***)argvs,
                                        maxprocs,
                                        info_keyval_sizes, (const MPID_Info **)info_ptrs,
-                                       1, (const struct MPID_Info **)preput_p,
+                                       2, (const struct MPID_Info **)preput_p,
                                        jobId, jobIdSize,
                                        pmi_errcodes);
-	    TRACE_ERR("after PMI2_Job_Spawn - jobId=%s\n", jobId);
+	    TRACE_ERR("after PMI2_Job_Spawn - pmi_errno=%d jobId=%s\n", pmi_errno, jobId);
 
 	    tmp=MPIU_Strdup(jobId);
-	    strtok(tmp, ";");
-	    pami_task_t leader_taskid = atoi(strtok(NULL, ";"));
-	    pami_endpoint_t ldest;
+	    tmp_ret = atoi(strtok(tmp, ";"));
 
-            PAMI_Endpoint_create(MPIDI_Client,  leader_taskid, 0, &ldest);
-	    TRACE_ERR("PAMI_Resume to taskid=%d\n", leader_taskid);
-            PAMI_Resume(MPIDI_Context[0], &ldest, 1);
+	    if( (pmi_errno == PMI2_SUCCESS) && (tmp_ret != -1) ) {
+	      pami_task_t leader_taskid = atoi(strtok(NULL, ";"));
+	      pami_endpoint_t ldest;
+
+              PAMI_Endpoint_create(MPIDI_Client,  leader_taskid, 0, &ldest);
+	      TRACE_ERR("PAMI_Resume to taskid=%d\n", leader_taskid);
+              PAMI_Resume(MPIDI_Context[0], &ldest, 1);
+            }
+
             MPIU_Free(tmp);
 
             MPIU_Free(argcs);
@@ -263,10 +264,10 @@ int MPIDI_Comm_spawn_multiple(int count, char **commands,
 	TRACE_ERR("pmi_errno from PMI_Spawn_multiple=%d\n", pmi_errno);
 #endif
 
-	if (errcodes != MPI_ERRCODES_IGNORE) {
+        if (errcodes != MPI_ERRCODES_IGNORE) {
 	    for (i=0; i<total_num_processes; i++) {
 		/* FIXME: translate the pmi error codes here */
-		errcodes[i] = pmi_errcodes[i];
+		errcodes[i] = pmi_errcodes[0];
                 /* We want to accept if any of the spawns succeeded.
                    Alternatively, this is the same as we want to NOT accept if
                    all of them failed.  should_accept = NAND(e_0, ..., e_n)
@@ -275,11 +276,21 @@ int MPIDI_Comm_spawn_multiple(int count, char **commands,
 	    }
             should_accept = !should_accept; /* the `N' in NAND */
 	}
+
+#ifdef USE_PMI2_API
+        if( (pmi_errno == PMI2_SUCCESS) && (tmp_ret == -1) )
+#else
+        if( (pmi_errno == PMI_SUCCESS) && (tmp_ret == -1) )
+#endif
+	  should_accept = 0;
     }
 
     if (errcodes != MPI_ERRCODES_IGNORE) {
         int errflag = FALSE;
         mpi_errno = MPIR_Bcast_impl(&should_accept, 1, MPI_INT, root, comm_ptr, &errflag);
+        if (mpi_errno) TRACE_ERR("MPIR_Bcast_impl returned with mpi_errno=%d\n", mpi_errno);
+
+        mpi_errno = MPIR_Bcast_impl(&pmi_errno, 1, MPI_INT, root, comm_ptr, &errflag);
         if (mpi_errno) TRACE_ERR("MPIR_Bcast_impl returned with mpi_errno=%d\n", mpi_errno);
 
         mpi_errno = MPIR_Bcast_impl(&total_num_processes, 1, MPI_INT, root, comm_ptr, &errflag);
@@ -292,6 +303,10 @@ int MPIDI_Comm_spawn_multiple(int count, char **commands,
     if (should_accept) {
         mpi_errno = MPID_Comm_accept(port_name, NULL, root, comm_ptr, intercomm);
 	TRACE_ERR("mpi_errno from MPID_Comm_accept=%d\n", mpi_errno);
+    } else {
+	if( (pmi_errno == PMI2_SUCCESS) && (errcodes[0] != 0) ) {
+	  MPIR_Comm_create(intercomm);
+	}
     }
 
     if (comm_ptr->rank == root) {
@@ -301,6 +316,11 @@ int MPIDI_Comm_spawn_multiple(int count, char **commands,
 	if (mpi_errno != MPI_SUCCESS)
 	    TRACE_ERR("MPID_Close_port returned with mpi_errno=%d\n", mpi_errno);
 	/* --END ERROR HANDLING-- */
+    }
+
+    if(pmi_errno) {
+           mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL, __FILE__, __LINE__, MPI_ERR_SPAWN,
+            "**noresource", 0);
     }
 
  fn_exit:
