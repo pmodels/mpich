@@ -13,7 +13,6 @@ EXTRA_DIST = testlist
 ## file, we don't need per-target _SOURCES rules, automake will infer them
 ## correctly
 noinst_PROGRAMS =       \
-    acc_op_type_check   \
     winerr              \
     winerr2             \
     cas_type_check      \

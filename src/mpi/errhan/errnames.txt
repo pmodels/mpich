@@ -190,8 +190,6 @@ MPI_TYPECLASS_INTEGER, or MPI_TYPECLASS_COMPLEX
 
 **typenotpredefined: Datatype must be predefined
 
-**typebasiccomponentsdiffer: Datatype is composed of multiple different basic datatypes
-
 # -- FIXME: Some (but not all) of the messages below this line have been used
 #---- The messages below this line haven't been used yet.
 #

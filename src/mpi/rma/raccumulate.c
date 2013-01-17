@@ -146,8 +146,6 @@ int MPI_Raccumulate(const void *origin_addr, int origin_count, MPI_Datatype
             MPIR_ERRTEST_SEND_RANK(comm_ptr, target_rank, mpi_errno);
             MPIR_ERRTEST_OP_ACC(op, mpi_errno);
             MPIR_ERRTEST_ARGNULL(request, "request", mpi_errno);
-            MPIR_ERRTEST_OP_DTYPE_ACC(op, origin_datatype, mpi_errno);
-            MPIR_ERRTEST_OP_DTYPE_ACC(op, target_datatype, mpi_errno);
         }
         MPID_END_ERROR_CHECKS;
     }
