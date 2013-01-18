@@ -70,6 +70,11 @@ $batchRun = 0;           # Set to true to batch the execution of the tests
 $testCount = 0;          # Used with batchRun to count tests.
 $batrundir = ".";        # Set to the directory into which to run the examples
 
+# TAP (Test Anything Protocol) output
+my $tapoutput = 0;
+my $tapfile = '';
+my $tapfullfile = '';
+
 $debug = 1;
 
 $depth = 0;              # This is used to manage multiple open list files
@@ -178,6 +183,25 @@ foreach $_ (@ARGV) {
     elsif (/--?noxmlclose/) {
 	$closeXMLOutput = 0;
     }
+    elsif (/--?tapfile=(.*)/) {
+        $tapfile = $1;
+        if ($tapfile !~ m|^/|) {
+            $thisdir = `pwd`;
+            chomp $thisdir;
+            $tapfullfile = $thisdir . "/" . $tapfile ;
+        }
+        else {
+            $tapfullfile = $tapfile;
+        }
+        $tapoutput = 1;
+        open( TAPOUT, ">$tapfile" ) || die "Cannot open $tapfile\n";
+        my $date = `date "+%Y-%m-%d-%H-%M"`;
+        $date =~ s/\r?\n//;
+        print TAPOUT "# MPICH test suite results (TAP format)\n";
+        print TAPOUT "# date ${date}\n";
+        # we do not know at this point how many tests will be run, so do
+        # not print a test plan line like "1..450" until the very end
+    }
     else {
 	print STDERR "Unrecognized argument $_\n";
 	print STDERR "runtests [-tests=testfile] [-np=nprocesses] \
@@ -226,6 +250,11 @@ if ($xmloutput && $closeXMLOutput) {
     close XMLOUT; 
 }
 
+if ($tapoutput) {
+    print TAPOUT "1..$total_count";
+    close TAPOUT;
+}
+
 # Output a summary:
 if ($batchRun) {
     print "Programs created along with a runtest.batch file in $batrundir\n";
@@ -240,6 +269,9 @@ else {
     }
     else {
 	print " All $total_count tests passed!\n";
+    }
+    if ($tapoutput) {
+        print "TAP formatted results in $tapfullfile\n";
     }
 }
 #
@@ -898,6 +930,9 @@ sub RunPreMsg {
 	print XMLOUT "<NP>$np</NP>$newline";
 	print XMLOUT "<WORKDIR>$workdir</WORKDIR>$newline";
     }
+    if ($tapoutput) {
+        print TAPOUT "# running '${programname}' in '${workdir}' with ${np} processes\n";
+    }
 }
 sub RunPostMsg {
     if ($xmloutput) {
@@ -907,6 +942,9 @@ sub RunPostMsg {
 sub RunTestPassed {
     if ($xmloutput) {
 	print XMLOUT "<STATUS>pass</STATUS>$newline";
+    }
+    if ($tapoutput) {
+        print TAPOUT "ok\n";
     }
 }
 sub RunTestFailed {
@@ -920,6 +958,15 @@ sub RunTestFailed {
     if ($xmloutput) {
 	print XMLOUT "<STATUS>fail</STATUS>$newline";
 	print XMLOUT "<TESTDIFF>$newline$output</TESTDIFF>$newline";
+    }
+    if ($tapoutput) {
+        print TAPOUT "not ok - # Test output:\n";
+        # TODO could be converted to use the YAMLish syntax instead of
+        # emitting the output as a comment
+        foreach my $line (split m/\r?\n/, $output) {
+            chomp $line;
+            print TAPOUT "## $line\n";
+        }
     }
 }
 # ----------------------------------------------------------------------------

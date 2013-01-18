@@ -99,6 +99,7 @@ old
 old*_pngs
 stamp-h1
 summary.xml
+summary.tap
 tags
 
 # the hooks dir shouldn't be accidentally committed
