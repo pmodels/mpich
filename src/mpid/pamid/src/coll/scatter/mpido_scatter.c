@@ -288,14 +288,14 @@ int MPIDO_Scatter_simple(const void *sendbuf,
   int contig, nbytes = 0;
   const int rank = comm_ptr->rank;
   int success = 1;
-  pami_type_t stype, rtype;
+  pami_type_t stype, rtype = NULL;
   int tmp;
   int use_pami = 1;
   const struct MPIDI_Comm* const mpid = &(comm_ptr->mpid);
 
   if(MPIDI_Datatype_to_pami(sendtype, &stype, -1, NULL, &tmp) != MPI_SUCCESS)
     use_pami = 0;
-  if(MPIDI_Datatype_to_pami(recvtype, &rtype, -1, NULL, &tmp) != MPI_SUCCESS)
+  if(recvbuf != MPI_IN_PLACE && (MPIDI_Datatype_to_pami(recvtype, &rtype, -1, NULL, &tmp) != MPI_SUCCESS))
     use_pami = 0;
 
 
@@ -357,19 +357,13 @@ int MPIDO_Scatter_simple(const void *sendbuf,
    scatter.cmd.xfer_scatter.sndbuf = (void *)sendbuf;
    scatter.cmd.xfer_scatter.stype = stype;
    scatter.cmd.xfer_scatter.stypecount = sendcount;
+   scatter.cmd.xfer_scatter.rcvbuf = (void *)recvbuf;
+   scatter.cmd.xfer_scatter.rtype = rtype;/* rtype is ignored when rcvbuf == PAMI_IN_PLACE */
+   scatter.cmd.xfer_scatter.rtypecount = recvcount;
+
    if(recvbuf == MPI_IN_PLACE) 
    {
-     MPIDI_Datatype_get_info(sendcount, sendtype, contig,
-                             nbytes, data_ptr, true_lb);
-     scatter.cmd.xfer_scatter.rcvbuf = (char *)sendbuf + nbytes*rank;
-     scatter.cmd.xfer_scatter.rtype = stype;
-     scatter.cmd.xfer_scatter.rtypecount = sendcount;
-   }
-   else
-   {
-     scatter.cmd.xfer_scatter.rcvbuf = (void *)recvbuf;
-     scatter.cmd.xfer_scatter.rtype = rtype;
-     scatter.cmd.xfer_scatter.rtypecount = recvcount;
+     scatter.cmd.xfer_scatter.rcvbuf = PAMI_IN_PLACE;
    }
 
 

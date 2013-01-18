@@ -542,7 +542,7 @@ MPIDO_Allgatherv_simple(const void *sendbuf,
   int scount=sendcount;
 
   char *sbuf, *rbuf;
-  pami_type_t stype, rtype;
+  pami_type_t stype = NULL, rtype;
   const int rank = comm_ptr->rank;
   const struct MPIDI_Comm* const mpid = &(comm_ptr->mpid);
 
@@ -571,10 +571,7 @@ MPIDO_Allgatherv_simple(const void *sendbuf,
 
    if(sendbuf == MPI_IN_PLACE)
    {
-     sbuf = (char *)recvbuf+displs[rank]*recv_size;
-     send_true_lb = recv_true_lb;
-     scount = recvcounts[rank];
-     send_size = recv_size * scount; 
+     sbuf = PAMI_IN_PLACE;
    }
    else
    {
@@ -601,7 +598,7 @@ MPIDO_Allgatherv_simple(const void *sendbuf,
    allgatherv.cookie = (void *)&allgatherv_active;
    allgatherv.cmd.xfer_allgatherv_int.sndbuf = sbuf;
    allgatherv.cmd.xfer_allgatherv_int.rcvbuf = rbuf;
-   allgatherv.cmd.xfer_allgatherv_int.stype = stype;
+   allgatherv.cmd.xfer_allgatherv_int.stype = stype;/* stype is ignored when sndbuf == PAMI_IN_PLACE */
    allgatherv.cmd.xfer_allgatherv_int.rtype = rtype;
    allgatherv.cmd.xfer_allgatherv_int.stypecount = scount;
    allgatherv.cmd.xfer_allgatherv_int.rtypecounts = (int *) recvcounts;

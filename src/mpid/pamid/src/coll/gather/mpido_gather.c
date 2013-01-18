@@ -320,10 +320,13 @@ int MPIDO_Gather_simple(const void *sendbuf,
   const int size = comm_ptr->local_size;
   const struct MPIDI_Comm* const mpid = &(comm_ptr->mpid);
 
-  MPIDI_Datatype_get_info(sendcount, sendtype, contig,
+  if(sendbuf != MPI_IN_PLACE)
+  {
+    MPIDI_Datatype_get_info(sendcount, sendtype, contig,
                             send_bytes, data_ptr, true_lb);
-  if (!contig)
+    if (!contig)
       success = 0;
+  }
 
   if (success && rank == root)
   {
@@ -352,17 +355,13 @@ int MPIDO_Gather_simple(const void *sendbuf,
    gather.cb_done = cb_gather;
    gather.cookie = (void *)&active;
    gather.cmd.xfer_gather.root = MPID_VCR_GET_LPID(comm_ptr->vcr, root);
+   gather.cmd.xfer_gather.stypecount = send_bytes;/* stypecount is ignored when sndbuf == PAMI_IN_PLACE */
+   gather.cmd.xfer_gather.sndbuf = (void *)sendbuf;
    if(sendbuf == MPI_IN_PLACE) 
    {
-     gather.cmd.xfer_gather.stypecount = recv_bytes;
-     gather.cmd.xfer_gather.sndbuf = (char *)recvbuf + recv_bytes*rank;
+     gather.cmd.xfer_gather.sndbuf = PAMI_IN_PLACE;
    }
-   else
-   {
-     gather.cmd.xfer_gather.stypecount = send_bytes;
-     gather.cmd.xfer_gather.sndbuf = (void *)sendbuf;
-   }
-   gather.cmd.xfer_gather.stype = PAMI_TYPE_BYTE;
+   gather.cmd.xfer_gather.stype = PAMI_TYPE_BYTE;/* stype is ignored when sndbuf == PAMI_IN_PLACE */
    gather.cmd.xfer_gather.rcvbuf = (void *)recvbuf;
    gather.cmd.xfer_gather.rtype = PAMI_TYPE_BYTE;
    gather.cmd.xfer_gather.rtypecount = recv_bytes;

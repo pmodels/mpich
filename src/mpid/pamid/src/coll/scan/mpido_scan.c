@@ -201,7 +201,7 @@ int MPIDO_Doscan_simple(const void *sendbuf, void *recvbuf,
    rbuf = (char *)recvbuf + true_lb;
    if(sendbuf == MPI_IN_PLACE) 
    {
-      sbuf = rbuf;
+      sbuf = PAMI_IN_PLACE;
    }
    else
    {

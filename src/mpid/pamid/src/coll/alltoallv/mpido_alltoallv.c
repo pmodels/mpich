@@ -187,8 +187,8 @@ int MPIDO_Alltoallv_simple(const void *sendbuf,
    volatile unsigned active = 1;
    int sndtypelen, rcvtypelen, snd_contig, rcv_contig;
    MPID_Datatype *sdt, *rdt;
-   pami_type_t stype, rtype;
-   MPI_Aint sdt_true_lb, rdt_true_lb;
+   pami_type_t stype = NULL, rtype;
+   MPI_Aint sdt_true_lb = 0, rdt_true_lb;
    MPIDI_Post_coll_t alltoallv_post;
    int pamidt = 1;
    int tmp;
@@ -196,19 +196,20 @@ int MPIDO_Alltoallv_simple(const void *sendbuf,
 
    const struct MPIDI_Comm* const mpid = &(comm_ptr->mpid);
 
-   if(MPIDI_Datatype_to_pami(sendtype, &stype, -1, NULL, &tmp) != MPI_SUCCESS)
+   if(sendbuf != MPI_IN_PLACE && (MPIDI_Datatype_to_pami(sendtype, &stype, -1, NULL, &tmp) != MPI_SUCCESS))
       pamidt = 0;
    if(MPIDI_Datatype_to_pami(recvtype, &rtype, -1, NULL, &tmp) != MPI_SUCCESS)
       pamidt = 0;
 
 
-   MPIDI_Datatype_get_info(1, sendtype, snd_contig, sndtypelen, sdt, sdt_true_lb);
-   if(!snd_contig) pamidt = 0;
+   if(sendbuf != MPI_IN_PLACE)
+   {
+     MPIDI_Datatype_get_info(1, sendtype, snd_contig, sndtypelen, sdt, sdt_true_lb);
+     if(!snd_contig) pamidt = 0;
+   }
    MPIDI_Datatype_get_info(1, recvtype, rcv_contig, rcvtypelen, rdt, rdt_true_lb);
    if(!rcv_contig) pamidt = 0;
 
-   if(sendbuf ==  MPI_IN_PLACE)
-      pamidt = 0;
 
    if(pamidt == 0)
    {
@@ -227,23 +228,17 @@ int MPIDO_Alltoallv_simple(const void *sendbuf,
 
    alltoallv.cb_done = cb_alltoallv;
    alltoallv.cookie = (void *)&active;
+   alltoallv.cmd.xfer_alltoallv_int.stype = stype;/* stype is ignored when sndbuf == PAMI_IN_PLACE */
+   alltoallv.cmd.xfer_alltoallv_int.sdispls = (int *) senddispls;
+   alltoallv.cmd.xfer_alltoallv_int.stypecounts = (int *) sendcounts;
+   alltoallv.cmd.xfer_alltoallv_int.sndbuf = (char *)sendbuf+sdt_true_lb;
+
    /* We won't bother with alltoallv since MPI is always going to be ints. */
    if(sendbuf == MPI_IN_PLACE)
    {
-      alltoallv.cmd.xfer_alltoallv_int.stype = rtype;
-      alltoallv.cmd.xfer_alltoallv_int.sdispls = (int *) recvdispls;
-      alltoallv.cmd.xfer_alltoallv_int.stypecounts = (int *) recvcounts;
-      alltoallv.cmd.xfer_alltoallv_int.sndbuf = (char *)recvbuf+rdt_true_lb;
-   }
-   else
-   {
-      alltoallv.cmd.xfer_alltoallv_int.stype = stype;
-      alltoallv.cmd.xfer_alltoallv_int.sdispls = (int *) senddispls;
-      alltoallv.cmd.xfer_alltoallv_int.stypecounts = (int *) sendcounts;
-      alltoallv.cmd.xfer_alltoallv_int.sndbuf = (char *)sendbuf+sdt_true_lb;
+      alltoallv.cmd.xfer_alltoallv_int.sndbuf = PAMI_IN_PLACE;
    }
    alltoallv.cmd.xfer_alltoallv_int.rcvbuf = (char *)recvbuf+rdt_true_lb;
-      
    alltoallv.cmd.xfer_alltoallv_int.rdispls = (int *) recvdispls;
    alltoallv.cmd.xfer_alltoallv_int.rtypecounts = (int *) recvcounts;
    alltoallv.cmd.xfer_alltoallv_int.rtype = rtype;

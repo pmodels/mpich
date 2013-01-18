@@ -206,7 +206,7 @@ int MPIDO_Gatherv_simple(const void *sendbuf,
    MPID_Datatype *dt_ptr = NULL;
    MPI_Aint send_true_lb, recv_true_lb;
    char *sbuf, *rbuf;
-   pami_type_t stype, rtype;
+   pami_type_t stype = NULL, rtype;
    int tmp;
    volatile unsigned gatherv_active = 1;
    const int rank = comm_ptr->rank;
@@ -217,7 +217,7 @@ int MPIDO_Gatherv_simple(const void *sendbuf,
    /* Check for native PAMI types and MPI_IN_PLACE on sendbuf */
    /* MPI_IN_PLACE is a nonlocal decision. We will need a preallreduce if we ever have
     * multiple "good" gathervs that work on different counts for example */
-   if((MPIDI_Datatype_to_pami(sendtype, &stype, -1, NULL, &tmp) != MPI_SUCCESS))
+   if(sendbuf != MPI_IN_PLACE && (MPIDI_Datatype_to_pami(sendtype, &stype, -1, NULL, &tmp) != MPI_SUCCESS))
       pamidt = 0;
    if(MPIDI_Datatype_to_pami(recvtype, &rtype, -1, NULL, &tmp) != MPI_SUCCESS)
       pamidt = 0;
@@ -232,18 +232,17 @@ int MPIDO_Gatherv_simple(const void *sendbuf,
    {
       if(sendbuf == MPI_IN_PLACE) 
       {
-         sbuf = (char*)rbuf + rsize*displs[rank];
-         gatherv.cmd.xfer_gatherv_int.stype = rtype;
-         gatherv.cmd.xfer_gatherv_int.stypecount = recvcounts[rank];
+         sbuf = PAMI_IN_PLACE;
       }
       else
       {
          MPIDI_Datatype_get_info(1, sendtype, contig, ssize, dt_ptr, send_true_lb);
 		 if(!contig) pamidt = 0;
          sbuf = (char *)sbuf + send_true_lb;
-         gatherv.cmd.xfer_gatherv_int.stype = stype;
-         gatherv.cmd.xfer_gatherv_int.stypecount = sendcount;
       }
+      gatherv.cmd.xfer_gatherv_int.stype = stype;/* stype is ignored when sndbuf == PAMI_IN_PLACE */
+      gatherv.cmd.xfer_gatherv_int.stypecount = sendcount;
+
    }
    else
    {

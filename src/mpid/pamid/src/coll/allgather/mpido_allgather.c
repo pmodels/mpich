@@ -503,7 +503,6 @@ MPIDO_Allgather_simple(const void *sendbuf,
 
    const pami_metadata_t *my_md;
 
-
    char *rbuf = NULL, *sbuf = NULL;
 
 
@@ -532,31 +531,33 @@ MPIDO_Allgather_simple(const void *sendbuf,
       }
    }
 
-   MPIDI_Datatype_get_info(sendcount,
-                         sendtype,
-                         snd_data_contig,
-                         send_size,
-                         dt_null,
-                         send_true_lb);
-
-   sbuf = (char *)sendbuf+send_true_lb;
-   if(sendbuf == MPI_IN_PLACE) 
-     sbuf = (char *)recvbuf+recv_size*rank;
-
-   if(!snd_data_contig)
+   if(sendbuf == MPI_IN_PLACE)
+     sbuf = PAMI_IN_PLACE;
+   else
    {
-      snd_noncontig_buff = MPIU_Malloc(send_size);
-      sbuf = snd_noncontig_buff;
-      if(snd_noncontig_buff == NULL)
-      {
-         MPID_Abort(NULL, MPI_ERR_NO_SPACE, 1,
-            "Fatal:  Cannot allocate pack buffer");
-      }
-      DLOOP_Offset last = send_size;
-      MPID_Segment_init(sendbuf != MPI_IN_PLACE?sendbuf:(void*)((char *)recvbuf+recv_size*rank), 
-	                    sendcount, sendtype, &segment, 0);
-      MPID_Segment_pack(&segment, 0, &last, snd_noncontig_buff);
-   }
+     MPIDI_Datatype_get_info(sendcount,
+                           sendtype,
+                           snd_data_contig,
+                           send_size,
+                           dt_null,
+                           send_true_lb);
+
+     sbuf = (char *)sendbuf+send_true_lb;
+
+     if(!snd_data_contig)
+     {
+        snd_noncontig_buff = MPIU_Malloc(send_size);
+        sbuf = snd_noncontig_buff;
+        if(snd_noncontig_buff == NULL)
+        {
+           MPID_Abort(NULL, MPI_ERR_NO_SPACE, 1,
+              "Fatal:  Cannot allocate pack buffer");
+        }
+        DLOOP_Offset last = send_size;
+        MPID_Segment_init(sendbuf, sendcount, sendtype, &segment, 0);
+        MPID_Segment_pack(&segment, 0, &last, snd_noncontig_buff);
+     }
+  }
 
    TRACE_ERR("Using PAMI-level allgather protocol\n");
    pami_xfer_t allgather;
@@ -564,7 +565,7 @@ MPIDO_Allgather_simple(const void *sendbuf,
    allgather.cookie = (void *)&allgather_active;
    allgather.cmd.xfer_allgather.rcvbuf = rbuf;
    allgather.cmd.xfer_allgather.sndbuf = sbuf;
-   allgather.cmd.xfer_allgather.stype = PAMI_TYPE_BYTE;
+   allgather.cmd.xfer_allgather.stype = PAMI_TYPE_BYTE;/* stype is ignored when sndbuf == PAMI_IN_PLACE */
    allgather.cmd.xfer_allgather.rtype = PAMI_TYPE_BYTE;
    allgather.cmd.xfer_allgather.stypecount = send_size;
    allgather.cmd.xfer_allgather.rtypecount = recv_size;

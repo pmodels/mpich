@@ -403,12 +403,14 @@ int MPIDO_Scatterv_simple(const void *sendbuf,
                    MPID_Comm *comm_ptr,
                    int *mpierrno)
 {
-  int snd_contig, rcv_contig, tmp, pamidt = 1;
+  int snd_contig = 1;
+  int rcv_contig = 1;
+  int tmp, pamidt = 1;
   int ssize, rsize;
   MPID_Datatype *dt_ptr = NULL;
   MPI_Aint send_true_lb=0, recv_true_lb;
   char *sbuf, *rbuf;
-  pami_type_t stype, rtype;
+  pami_type_t stype, rtype = NULL;
   const int rank = comm_ptr->rank;
   const struct MPIDI_Comm* const mpid = &(comm_ptr->mpid);
 
@@ -423,7 +425,8 @@ int MPIDO_Scatterv_simple(const void *sendbuf,
    if(MPIDI_Datatype_to_pami(sendtype, &stype, -1, NULL, &tmp) != MPI_SUCCESS)
       pamidt = 0;
    MPIDI_Datatype_get_info(1, sendtype, snd_contig, ssize, dt_ptr, send_true_lb);
-   MPIDI_Datatype_get_info(1, recvtype, rcv_contig, rsize, dt_ptr, recv_true_lb);
+   if(recvbuf != MPI_IN_PLACE)
+     MPIDI_Datatype_get_info(1, recvtype, rcv_contig, rsize, dt_ptr, recv_true_lb);
 
    if(pamidt == 0 || !snd_contig || !rcv_contig)
    {
@@ -442,7 +445,7 @@ int MPIDO_Scatterv_simple(const void *sendbuf,
    {
       if(recvbuf == MPI_IN_PLACE) 
       {
-        rbuf = (char *)sendbuf + ssize*displs[rank] + send_true_lb;
+        rbuf = PAMI_IN_PLACE;
       }
       else
       {
@@ -460,7 +463,7 @@ int MPIDO_Scatterv_simple(const void *sendbuf,
    scatterv.cmd.xfer_scatterv_int.rcvbuf = rbuf;
    scatterv.cmd.xfer_scatterv_int.sndbuf = sbuf;
    scatterv.cmd.xfer_scatterv_int.stype = stype;
-   scatterv.cmd.xfer_scatterv_int.rtype = rtype;
+   scatterv.cmd.xfer_scatterv_int.rtype = rtype;/* rtype is ignored when rcvbuf == PAMI_IN_PLACE */
    scatterv.cmd.xfer_scatterv_int.stypecounts = (int *) sendcounts;
    scatterv.cmd.xfer_scatterv_int.rtypecount = recvcount;
    scatterv.cmd.xfer_scatterv_int.sdispls = (int *) displs;

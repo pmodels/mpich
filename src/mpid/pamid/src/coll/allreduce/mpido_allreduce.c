@@ -428,7 +428,7 @@ int MPIDO_Allreduce_simple(const void *sendbuf,
   sbuf = (void *)sendbuf;
   if(unlikely(sendbuf == MPI_IN_PLACE))
   {
-     sbuf = recvbuf;
+     sbuf = PAMI_IN_PLACE;
   }
 
   allred.cb_done = cb_allreduce;

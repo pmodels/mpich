@@ -221,7 +221,7 @@ int MPIDO_Reduce_simple(const void *sendbuf,
    sbuf = (char *)sendbuf + true_lb;
    if(sendbuf == MPI_IN_PLACE) 
    {
-      sbuf = rbuf;
+      sbuf = PAMI_IN_PLACE;
    }
 
    reduce.cb_done = reduce_cb_done;
