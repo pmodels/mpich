@@ -627,12 +627,12 @@ sub RunMPIProgram {
 	}
     }
     if ($found_error) {
-	&RunTestFailed( $inline );
+	&RunTestFailed( $programname, $np, $curdir, $inline );
     }
     else { 
-	&RunTestPassed;
+	&RunTestPassed( $programname, $np, $curdir );
     }
-    &RunPostMsg;
+    &RunPostMsg( $programname, $np, $curdir );
 }
 
 # This version simply writes the mpiexec command out, with the output going
@@ -930,42 +930,69 @@ sub RunPreMsg {
 	print XMLOUT "<NP>$np</NP>$newline";
 	print XMLOUT "<WORKDIR>$workdir</WORKDIR>$newline";
     }
-    if ($tapoutput) {
-        print TAPOUT "# running '${programname}' in '${workdir}' with ${np} processes\n";
-    }
 }
 sub RunPostMsg {
+    my ($programname, $np, $workdir) = @_;
     if ($xmloutput) {
 	print XMLOUT "</MPITEST>$newline";
     }
 }
 sub RunTestPassed {
+    my ($programname, $np, $workdir) = @_;
     if ($xmloutput) {
 	print XMLOUT "<STATUS>pass</STATUS>$newline";
     }
     if ($tapoutput) {
-        print TAPOUT "ok ${total_count}\n";
+        print TAPOUT "ok ${total_count} - $workdir/$programname $np\n";
     }
 }
 sub RunTestFailed {
-    my $output = $_[0];
-    $output =~ s/</\*AMP\*lt;/g;
-    $output =~ s/>/\*AMP\*gt;/g;
-    $output =~ s/&/\*AMP\*amp;/g;
-    $output =~ s/\*AMP\*/&/g;
-    # TODO: Also capture any non-printing characters (XML doesn't like them
-    # either).  
+    my $programname = shift;
+    my $np = shift;
+    my $workdir = shift;
+    my $output = shift;
+
     if ($xmloutput) {
+        my $xout = $output;
+        # basic escapes that wreck the XML output
+        $xout =~ s/</\*AMP\*lt;/g;
+        $xout =~ s/>/\*AMP\*gt;/g;
+        $xout =~ s/&/\*AMP\*amp;/g;
+        $xout =~ s/\*AMP\*/&/g;
+        # TODO: Also capture any non-printing characters (XML doesn't like them
+        # either).
 	print XMLOUT "<STATUS>fail</STATUS>$newline";
-	print XMLOUT "<TESTDIFF>$newline$output</TESTDIFF>$newline";
+	print XMLOUT "<TESTDIFF>$newline$xout</TESTDIFF>$newline";
     }
+
     if ($tapoutput) {
-        print TAPOUT "not ok ${total_count} - # Test output:\n";
-        # TODO could be converted to use the YAMLish syntax instead of
-        # emitting the output as a comment
+        print TAPOUT "not ok ${total_count} - $workdir/$programname $np\n";
+        print TAPOUT "  ---\n";
+        print TAPOUT "  Directory: $workdir\n";
+        print TAPOUT "  File: $programname\n";
+        print TAPOUT "  Num-procs: $np\n";
+        print TAPOUT "  Date: \"" . localtime . "\"\n";
+
+        # The following would be nice, but it leads to unfortunate formatting in
+        # the Jenkins web output for now.  Using comment lines instead, since
+        # they are easier to read/find in a browser.
+##        print TAPOUT "  Output: |\n";
+##        # using block literal format, requires that all chars are printable
+##        # UTF-8 (or UTF-16, but we won't encounter that)
+##        foreach my $line (split m/\r?\n/, $output) {
+##            chomp $line;
+##            # 4 spaces, 2 for TAP indent, 2 more for YAML block indent
+##            print TAPOUT "    $line\n";
+##        }
+
+        print TAPOUT "  ...\n";
+
+        # alternative to the "Output:" YAML block literal above
+        print TAPOUT "  ## Test output (expected 'No Errors'):\n";
         foreach my $line (split m/\r?\n/, $output) {
             chomp $line;
-            print TAPOUT "## $line\n";
+            # 2 spaces for TAP indent
+            print TAPOUT "  ## $line\n";
         }
     }
 }
