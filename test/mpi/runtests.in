@@ -944,7 +944,7 @@ sub RunTestPassed {
 	print XMLOUT "<STATUS>pass</STATUS>$newline";
     }
     if ($tapoutput) {
-        print TAPOUT "ok\n";
+        print TAPOUT "ok ${total_count}\n";
     }
 }
 sub RunTestFailed {
@@ -960,7 +960,7 @@ sub RunTestFailed {
 	print XMLOUT "<TESTDIFF>$newline$output</TESTDIFF>$newline";
     }
     if ($tapoutput) {
-        print TAPOUT "not ok - # Test output:\n";
+        print TAPOUT "not ok ${total_count} - # Test output:\n";
         # TODO could be converted to use the YAMLish syntax instead of
         # emitting the output as a comment
         foreach my $line (split m/\r?\n/, $output) {
