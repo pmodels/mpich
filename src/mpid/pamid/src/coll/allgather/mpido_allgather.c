@@ -494,7 +494,7 @@ MPIDO_Allgather_simple(const void *sendbuf,
    void *snd_noncontig_buff = NULL, *rcv_noncontig_buff = NULL;
    MPI_Aint send_true_lb = 0;
    MPI_Aint recv_true_lb = 0;
-   int snd_data_contig, rcv_data_contig;
+   int snd_data_contig = 1, rcv_data_contig;
    size_t send_size = 0;
    size_t recv_size = 0;
    MPID_Segment segment;

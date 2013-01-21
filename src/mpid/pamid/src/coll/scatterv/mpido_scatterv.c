@@ -408,7 +408,7 @@ int MPIDO_Scatterv_simple(const void *sendbuf,
   int tmp, pamidt = 1;
   int ssize, rsize;
   MPID_Datatype *dt_ptr = NULL;
-  MPI_Aint send_true_lb=0, recv_true_lb;
+  MPI_Aint send_true_lb=0, recv_true_lb=0;
   char *sbuf, *rbuf;
   pami_type_t stype, rtype = NULL;
   const int rank = comm_ptr->rank;
