@@ -135,7 +135,7 @@ int MPIDI_Comm_spawn_multiple(int count, char **commands,
     int len=0;
     int *info_keyval_sizes=0, i, mpi_errno=MPI_SUCCESS;
     PMI_keyval_t **info_keyval_vectors=0, preput_keyval_vector;
-    int *pmi_errcodes = 0, pmi_errno;
+    int *pmi_errcodes = 0, pmi_errno=0;
     int total_num_processes, should_accept = 1;
     MPID_Info tmp_info_ptr;
     char *tmp;

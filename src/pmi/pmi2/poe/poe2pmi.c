@@ -290,30 +290,28 @@ int _mpi_world_exiting_handler_wrapper(pami_context_t context, void *cookie)
   int world_id = req->world_id;
   MPID_Comm *comm = MPIR_Process.comm_world;
 
-  if(!mpidi_finalized) {
-    ref_count = MPIDI_get_refcnt_of_world(world_id);
-    TRACE_ERR("_mpi_world_exiting_handler: invoked for world %d exiting ref_count=%d my comm_word_size=%d\n", world_id, ref_count, world_size);
-    if(ref_count == 0) {
-      taskid_list = MPIDI_get_taskids_in_world_id(world_id);
-      if(taskid_list != NULL) {
-        for(i=0;taskid_list[i]!=-1;i++) {
-          PAMI_Endpoint_create(MPIDI_Client, taskid_list[i], 0, &dest);
-	  MPIDI_OpState_reset(taskid_list[i]);
-	  MPIDI_IpState_reset(taskid_list[i]);
-	  TRACE_ERR("PAMI_Purge on taskid_list[%d]=%d\n", i,taskid_list[i]);
-            PAMI_Purge(context, &dest, 1);
-        }
-        MPIDI_delete_conn_record(world_id);
+  ref_count = MPIDI_get_refcnt_of_world(world_id);
+  TRACE_ERR("_mpi_world_exiting_handler: invoked for world %d exiting ref_count=%d my comm_word_size=%d\n", world_id, ref_count, world_size);
+  if(ref_count == 0) {
+    taskid_list = MPIDI_get_taskids_in_world_id(world_id);
+    if(taskid_list != NULL) {
+      for(i=0;taskid_list[i]!=-1;i++) {
+        PAMI_Endpoint_create(MPIDI_Client, taskid_list[i], 0, &dest);
+        MPIDI_OpState_reset(taskid_list[i]);
+	MPIDI_IpState_reset(taskid_list[i]);
+	TRACE_ERR("PAMI_Purge on taskid_list[%d]=%d\n", i,taskid_list[i]);
+        PAMI_Purge(context, &dest, 1);
       }
-      rc = -1;
+      MPIDI_delete_conn_record(world_id);
     }
-    my_state = TRUE;
-
-    rc = _mpi_reduce_for_dyntask(&my_state, &reduce_state);
-    if(rc) return rc;
-	
-    TRACE_ERR("_mpi_world_exiting_handler: Out of _mpi_reduce_for_dyntask for exiting world %d reduce_state=%d\n",world_id, reduce_state);
+    rc = -1;
   }
+  my_state = TRUE;
+
+  rc = _mpi_reduce_for_dyntask(&my_state, &reduce_state);
+  if(rc) return rc;
+
+  TRACE_ERR("_mpi_world_exiting_handler: Out of _mpi_reduce_for_dyntask for exiting world %d reduce_state=%d\n",world_id, reduce_state);
 
   if(comm->rank == 0) {
     MPIU_Snprintf(world_id_str, sizeof(world_id_str), "%d", world_id);
@@ -342,8 +340,12 @@ int _mpi_world_exiting_handler(int world_id)
     req = MPIU_Malloc(sizeof(struct worldExitReq));
     req->world_id = world_id;
 
-    if(!mpidi_finalized && MPIDI_Context[0])
-      PAMI_Context_post(MPIDI_Context[0], &(req->work), _mpi_world_exiting_handler_wrapper, req);
+    if(MPIDI_Context[0]) {
+      if(!mpidi_finalized)
+        PAMI_Context_post(MPIDI_Context[0], &(req->work), _mpi_world_exiting_handler_wrapper, req);
+      else
+        _mpi_world_exiting_handler_wrapper(MPIDI_Context[0], req);
+    }
 
     return MPI_SUCCESS;
 }
