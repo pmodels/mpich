@@ -5,13 +5,9 @@
  # PM/PMI: Upgrade to hwloc-1.6.1
 
  # Several other minor bug fixes, memory leak fixes, and code cleanup.
-   A full list of changes is available using:
+   A full list of changes is available at the following link:
 
-     svn log -r10797:HEAD https://svn.mcs.anl.gov/repos/mpi/mpich2/tags/release/mpich-3.0.2
-
-     ... or at the following link:
-
-     https://trac.mcs.anl.gov/projects/mpich2/log/mpich2/tags/release/mpich-3.0.2?action=follow_copy&rev=HEAD&stop_rev=10797&mode=follow_copy
+     http://git.mpich.org/mpich.git/shortlog/v3.0..v3.0.1
 
 
 ===============================================================================
