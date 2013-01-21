@@ -1,6 +1,6 @@
 /*
  * Copyright © 2009 CNRS
- * Copyright © 2009-2012 Inria.  All rights reserved.
+ * Copyright © 2009-2013 Inria.  All rights reserved.
  * Copyright © 2009-2011 Université Bordeaux 1
  * Copyright © 2009-2010 Cisco Systems, Inc.  All rights reserved.
  * See COPYING in top-level directory.
@@ -64,25 +64,30 @@ static int singlify = 0;
 static int taskset = 0;
 
 static void
-hwloc_calc_hierarch_output(hwloc_topology_t topology, const char *prefix, const char *sep, hwloc_bitmap_t set, int level)
+hwloc_calc_hierarch_output(hwloc_topology_t topology, const char *prefix, const char *sep, hwloc_obj_t root, hwloc_bitmap_t set, int level)
 {
   hwloc_obj_t obj, prev = NULL;
   unsigned logi = 0;
-  while ((obj = hwloc_get_next_obj_covering_cpuset_by_depth(topology, set, hierdepth[level], prev)) != NULL) {
+  int first = 1;
+  while ((obj = hwloc_get_next_obj_covering_cpuset_by_depth(topology, root->cpuset, hierdepth[level], prev)) != NULL) {
     char string[256];
     char type[32];
+    if (!hwloc_bitmap_intersects(set, obj->cpuset))
+     goto next;
     hwloc_obj_type_snprintf(type, sizeof(type), obj, 1);
     snprintf(string, sizeof(string), "%s%s%s:%u", prefix, level ? "." : "", type, logicalo ? logi : obj->os_index);
-    if (prev)
+    if (!first)
       printf("%s", sep);
+    first = 0;
     if (level != hiernblevels - 1) {
       hwloc_bitmap_t new = hwloc_bitmap_dup(set);
       hwloc_bitmap_and(new, new, obj->cpuset);
-      hwloc_calc_hierarch_output(topology, string, sep, new, level+1);
+      hwloc_calc_hierarch_output(topology, string, sep, obj, new, level+1);
       hwloc_bitmap_free(new);
     } else {
       printf("%s", string);
     }
+next:
     prev = obj;
     logi++;
   }
@@ -138,7 +143,7 @@ hwloc_calc_output(hwloc_topology_t topology, const char *sep, hwloc_bitmap_t set
   } else if (hiernblevels) {
     if (!sep)
       sep = " ";
-    hwloc_calc_hierarch_output(topology, "", sep, set, 0);
+    hwloc_calc_hierarch_output(topology, "", sep, hwloc_get_root_obj(topology), set, 0);
     printf("\n");
   } else {
     char *string = NULL;
@@ -186,6 +191,7 @@ static int hwloc_calc_check_type_depth(hwloc_topology_t topology, hwloc_obj_type
 int main(int argc, char *argv[])
 {
   hwloc_topology_t topology;
+  unsigned long flags = HWLOC_TOPOLOGY_FLAG_WHOLE_IO|HWLOC_TOPOLOGY_FLAG_ICACHES;
   char *input = NULL;
   enum hwloc_utils_input_format input_format = HWLOC_UTILS_INPUT_DEFAULT;
   int input_changed = 0;
@@ -209,7 +215,7 @@ int main(int argc, char *argv[])
   set = hwloc_bitmap_alloc();
 
   hwloc_topology_init(&topology);
-  hwloc_topology_set_flags(topology, HWLOC_TOPOLOGY_FLAG_WHOLE_IO|HWLOC_TOPOLOGY_FLAG_ICACHES);
+  hwloc_topology_set_flags(topology, flags);
   hwloc_topology_load(topology);
   depth = hwloc_topology_get_depth(topology);
 
@@ -389,6 +395,9 @@ int main(int argc, char *argv[])
 
     if (input_changed && input) {
       /* only update the input when actually using it */
+      hwloc_topology_destroy(topology);
+      hwloc_topology_init(&topology);
+      hwloc_topology_set_flags(topology, flags);
       err = hwloc_utils_enable_input_format(topology, input, input_format, verbose, callname);
       if (err)
 	return err;
@@ -428,6 +437,9 @@ int main(int argc, char *argv[])
 
     if (input_changed && input) {
       /* only update the input when actually using it */
+      hwloc_topology_destroy(topology);
+      hwloc_topology_init(&topology);
+      hwloc_topology_set_flags(topology, flags);
       err = hwloc_utils_enable_input_format(topology, input, input_format, verbose, callname);
       if (err)
         return err;

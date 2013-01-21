@@ -29,10 +29,6 @@
 #endif
 #include <string.h>
 
-#if defined(HAVE_GETPAGESIZE) && defined(NEEDS_GETPAGESIZE_DECL)
-int getpagesize(void);
-#endif
-
 #ifdef HWLOC_HAVE_ATTRIBUTE_FORMAT
 # if HWLOC_HAVE_ATTRIBUTE_FORMAT
 #  define __hwloc_attribute_format(type, str, arg)  __attribute__((__format__(type, str, arg)))

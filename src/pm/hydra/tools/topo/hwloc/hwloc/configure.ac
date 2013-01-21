@@ -1,7 +1,7 @@
 # -*- shell-script -*-
 #
 # Copyright © 2009      CNRS
-# Copyright © 2009-2012 Inria.  All rights reserved.
+# Copyright © 2009-2013 Inria.  All rights reserved.
 # Copyright © 2009, 2011-2012      Université Bordeaux 1
 # Copyright © 2009-2010 Cisco Systems, Inc.  All rights reserved.
 #
@@ -176,18 +176,13 @@ AC_CONFIG_FILES([src/libltdl/Makefile])
 #CPPFLAGS="$CPPFLAGS -I$HWLOC_top_builddir"
 AC_CONFIG_COMMANDS_PRE([LT_CONFIG_H=`expr "$LT_CONFIG_H" : '.*/\(.*\)'`])
 
-## Enable creation of libtool-style versioning or no versioning
-AC_ARG_ENABLE(versioning,
-        [AC_HELP_STRING([--enable-versioning],[Enable library versioning])],,
-        [enable_versioning=yes])
-
-if test "$enable_versioning" = "yes" ; then
-   libhwloc_so_versionflags="-version-info \$(libhwloc_so_version)"
-else
-   libhwloc_so_versionflags="-avoid-version"
+# Add libltdl static-build dependencies to hwloc.pc
+if test "x$hwloc_have_plugins" = xyes; then
+  if test "x$with_included_ltdl" = xno; then
+    HWLOC_LIBS_PRIVATE="$HWLOC_LIBS_PRIVATE $LIBLTDL"
+  fi
+  HWLOC_LIBS_PRIVATE="$HWLOC_LIBS_PRIVATE $lt_cv_dlopen_libs"
 fi
-export libhwloc_so_versionflags
-AC_SUBST(libhwloc_so_versionflags)
 
 # Party on
 AC_OUTPUT
