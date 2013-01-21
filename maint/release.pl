@@ -309,3 +309,6 @@ run_cmd("tar -czvf ${pack}-${version}.tar.gz ${pack}-${version}");
 run_cmd("rm -rf ${expdir}");
 run_cmd("cp -a ${pack}-${version}.tar.gz ${root}/");
 print("done\n\n");
+
+# make sure we are outside of the tempdir so that the CLEANUP logic can run
+chdir("${tdir}/..");
