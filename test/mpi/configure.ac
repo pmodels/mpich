@@ -1409,6 +1409,7 @@ AC_OUTPUT(maint/testmerge \
           errors/f90/Makefile \
           manual/Makefile \
           manual/manyconnect \
+          manual/mpi_t/Makefile \
           perf/Makefile \
           testlist \
           cxx/testlist \
