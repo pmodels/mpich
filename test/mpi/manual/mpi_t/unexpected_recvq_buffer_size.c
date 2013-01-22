@@ -1,3 +1,15 @@
+/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
+/*
+ *
+ *  (C) 2013 by Argonne National Laboratory.
+ *      See COPYRIGHT in top-level directory.
+ */
+
+/* This test checks that the nemesis code correctly exposes statistics related
+ * to unexpected receive queue buffer/message sizes.
+ *
+ * Originally written by Ralf Gunter Correa Carvalho. */
+
 #include <mpi.h>
 #include <assert.h>
 #include <string.h>
@@ -91,11 +103,14 @@ int main(int argc, char *argv[])
     MPI_Datatype dtype;
     MPI_T_enum enumtype;
 
-    printf("MPIT pvar test: unexpected_recvq_buffer_size\n"); fflush(stdout);
-
     MPI_Init(NULL, NULL);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+
+    if (rank == 0) {
+        printf("MPIT pvar test: unexpected_recvq_buffer_size\n");
+        fflush(stdout);
+    }
 
     /* Ensure we're using exactly two ranks. */
     /* Future tests (using collectives) might need this because of the MPI_Barrier */
@@ -130,6 +145,11 @@ int main(int argc, char *argv[])
     /* Cleanup. */
     MPI_T_pvar_handle_free(session, &uqsize_handle);
     MPI_T_pvar_session_free(&session);
+
+    if (rank == 0) {
+        printf("finished\n");
+        fflush(stdout);
+    }
 
     TRY(MPI_T_finalize());
     MPI_Finalize();
