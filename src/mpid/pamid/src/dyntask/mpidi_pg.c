@@ -459,7 +459,6 @@ int MPIDI_PG_Create_from_string(const char * str, MPIDI_PG_t ** pg_pptr,
     int mpi_errno = MPI_SUCCESS;
     const char *p;
     char *pg_id, *pg_id2, *cp2, *cp3,*str2, *str3;
-    pami_task_t taskids[10];
     int vct_sz, i;
     MPIDI_PG_t *existing_pg, *pg_ptr=0;
 
@@ -484,9 +483,9 @@ int MPIDI_PG_Create_from_string(const char * str, MPIDI_PG_t ** pg_pptr,
     while (*p) p++; p++;
     vct_sz = atoi(p);
 
-    p++;p++;
-    TRACE_ERR("before MPIDI_PG_Create - p=%s\n", p);
+    while (*p) p++;p++;
     char *p_tmp = MPIU_Strdup(p);
+    TRACE_ERR("before MPIDI_PG_Create - p=%s p_tmp=%s vct_sz=%d\n", p, p_tmp, vct_sz);
     mpi_errno = MPIDI_PG_Create(vct_sz, (void *)str, pg_pptr);
     if (mpi_errno != MPI_SUCCESS) {
 	TRACE_ERR("MPIDI_PG_Create returned with mpi_errno=%d\n", mpi_errno);
@@ -610,6 +609,16 @@ int MPIDI_connToStringKVS( char **buf_p, int *slen, MPIDI_PG_t *pg )
 
     /* add the taskids of the pg */
     for(i = 0; i < pg->size; i++) {
+      MPIU_Snprintf(buf, MPIDI_MAX_KVS_VALUE_LEN, "%d:", pg->vct[i].taskid);
+      vallen = strlen(buf);
+      if (len+vallen+1 >= curSlen) {
+        char *nstring = 0;
+        curSlen += (pg->size - i) * (vallen + 1 );
+        nstring = MPIU_Realloc( string, curSlen);
+        MPID_assert(nstring != NULL);
+        string = nstring;
+      }
+      /* Append to string */
       nChars = MPIU_Snprintf(&string[len], curSlen - len, "%d:", pg->vct[i].taskid);
       len+=nChars;
     }
