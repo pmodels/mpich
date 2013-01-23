@@ -269,6 +269,7 @@ void volatile_memcpy (volatile void *restrict dst, volatile const void *restrict
 /* #define MPIU_Memcpy(dst, src, n) do { volatile void * restrict d = (dst); volatile const void *restrict s = (src); MPIUI_Memcpy((void *)d, (const void *)s, n); }while (0) */
 #define MPIU_Memcpy(dst, src, n)                \
     do {                                        \
+        MPIU_DBG_MSG_FMT(CH3_CHANNEL, VERBOSE, (MPIU_DBG_FDEST, "memcpy(%p, %p, %lu)", dst, src, (size_t)n));   \
         MPIU_MEM_CHECK_MEMCPY((dst),(src),(n)); \
         MPIUI_Memcpy(dst, src, n);              \
     } while (0)
