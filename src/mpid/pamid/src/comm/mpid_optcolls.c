@@ -529,7 +529,7 @@ void MPIDI_Comm_coll_select(MPID_Comm *comm_ptr)
       for(i = 0; i < comm_ptr->mpid.coll_count[PAMI_XFER_BROADCAST][0]; i++)
       {
         /* This is a good choice for small messages only */
-        if(strcasecmp(comm_ptr->mpid.coll_metadata[PAMI_XFER_BROADCAST][0][i].name, "I0:RankBased_Binomial:SHMEM:MU") == 0)
+        if(strcasecmp(comm_ptr->mpid.coll_metadata[PAMI_XFER_BROADCAST][0][i].name, "I0:SequenceBased_Binomial:SHMEM:MU") == 0)
         {
           opt_proto = i;
           comm_ptr->mpid.cutoff_size[PAMI_XFER_BROADCAST][0] = 256;
@@ -539,7 +539,7 @@ void MPIDI_Comm_coll_select(MPID_Comm *comm_ptr)
       if(opt_proto == -1) for(i = 0; i < comm_ptr->mpid.coll_count[PAMI_XFER_BROADCAST][1]; i++)
       {
         /* This is a good choice for small messages only */
-        if(strcasecmp(comm_ptr->mpid.coll_metadata[PAMI_XFER_BROADCAST][1][i].name, "I0:RankBased_Binomial:SHMEM:MU") == 0)
+        if(strcasecmp(comm_ptr->mpid.coll_metadata[PAMI_XFER_BROADCAST][1][i].name, "I0:SequenceBased_Binomial:SHMEM:MU") == 0)
         {
           opt_proto = i;
           mustquery = 1;
@@ -630,7 +630,7 @@ void MPIDI_Comm_coll_select(MPID_Comm *comm_ptr)
             }
           }
         }
-      if(strcasecmp(comm_ptr->mpid.opt_protocol_md[PAMI_XFER_BROADCAST][0].name, "I0:RankBased_Binomial:SHMEM:MU") == 0)
+      if(strcasecmp(comm_ptr->mpid.opt_protocol_md[PAMI_XFER_BROADCAST][0].name, "I0:SequenceBased_Binomial:SHMEM:MU") == 0)
       {
         /* This protocol was only good for up to 256, and it was an irregular, so let's set
          * 2-nomial for larger message sizes. Cutoff should have already been set to 256 too */
