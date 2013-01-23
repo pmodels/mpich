@@ -185,6 +185,13 @@ int MPIDO_Gatherv(const void *sendbuf,
                              recvbuf, recvcounts, displs, recvtype,
                              root, comm_ptr, mpierrno);
       }
+      if(my_md->check_correct.values.asyncflowctl) 
+      { /* need better flow control than a barrier every time */
+         int tmpmpierrno;   
+         if(unlikely(verbose))
+            fprintf(stderr,"Query barrier required for %s\n", my_md->name);
+         MPIR_Barrier(comm_ptr, &tmpmpierrno);
+      }
    }
    
    MPIDI_Update_last_algorithm(comm_ptr, my_md->name);

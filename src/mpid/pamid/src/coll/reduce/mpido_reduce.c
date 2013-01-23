@@ -186,7 +186,17 @@ int MPIDO_Reduce(const void *sendbuf,
             fprintf(stderr,"Query failed for %s.  Using MPICH reduce.\n",
                     my_md->name);
       }  
-      else alg_selected = 1;
+      else 
+      {   
+         if(my_md->check_correct.values.asyncflowctl) 
+         { /* need better flow control than a barrier every time */
+            int tmpmpierrno;   
+            if(unlikely(verbose))
+               fprintf(stderr,"Query barrier required for %s\n", my_md->name);
+            MPIR_Barrier(comm_ptr, &tmpmpierrno);
+         }
+         alg_selected = 1;
+      }
    }
 
    if(alg_selected)
