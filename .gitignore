@@ -82,6 +82,9 @@ Makefile
 .libstamp0
 .state-cache
 TAGS
+GPATH
+GRTAGS
+GTAGS
 confdefs.h
 config.h.in
 config.log
