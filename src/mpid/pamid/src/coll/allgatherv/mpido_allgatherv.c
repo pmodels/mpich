@@ -378,6 +378,9 @@ MPIDO_Allgatherv(const void *sendbuf,
    if(sendbuf == MPI_IN_PLACE)
    {
      sbuf = PAMI_IN_PLACE;
+     if(unlikely(verbose))
+       fprintf(stderr,"allgatherv MPI_IN_PLACE buffering\n");
+     stype = rtype;
      scount = recvcounts[rank];
      send_size = recv_size * scount; 
    }

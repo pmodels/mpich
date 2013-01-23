@@ -77,7 +77,7 @@ int MPIDO_Reduce(const void *sendbuf,
    if(sendbuf == MPI_IN_PLACE) 
    {
       if(unlikely(verbose))
-         fprintf(stderr,"reduce MPI_IN_PLACE buffering\n");
+	fprintf(stderr,"reduce MPI_IN_PLACE send buffering (%d,%d)\n",count,tsize);
       sbuf = PAMI_IN_PLACE;
    }
 

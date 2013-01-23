@@ -367,8 +367,6 @@ MPIDO_Allgather(const void *sendbuf,
    sbuf = PAMI_IN_PLACE;
    if(sendbuf != MPI_IN_PLACE)
    {
-     if(unlikely(verbose))
-         fprintf(stderr,"allgather MPI_IN_PLACE buffering\n");
       MPIDI_Datatype_get_info(sendcount,
                             sendtype,
                             config[MPID_SEND_CONTIG],
@@ -377,6 +375,10 @@ MPIDO_Allgather(const void *sendbuf,
                             send_true_lb);
       sbuf = (char *)sendbuf+send_true_lb;
    }
+   else
+     if(unlikely(verbose))
+       fprintf(stderr,"allgather MPI_IN_PLACE buffering\n");
+
 
   /* verify everyone's datatype contiguity */
   /* Check buffer alignment now, since we're pre-allreducing anyway */
