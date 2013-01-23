@@ -37,12 +37,12 @@ static int get_local_procs(MPIDI_PG_t *pg, int our_pg_rank, int *num_local_p,
 
 char *MPID_nem_asymm_base_addr = 0;
 
+/* used by mpid_nem_inline.h and mpid_nem_finalize.c */
+uint64_t *MPID_nem_fbox_fall_back_to_queue_count = NULL;
+
 #if ENABLE_NEM_STATISTICS
 /* MPIT support */
 MPIR_T_SIMPLE_HANDLE_CREATOR(fbox_count_creator, uint64_t, MPID_nem_mem_region.num_local)
-
-/* used by mpid_nem_inline.h and mpid_nem_finalize.c */
-uint64_t *MPID_nem_fbox_fall_back_to_queue_count = NULL;
 
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_init_stats

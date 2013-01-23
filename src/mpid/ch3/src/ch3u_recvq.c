@@ -59,7 +59,9 @@ MPID_Request ** const MPID_Recvq_posted_head_ptr     = &recvq_posted_head;
 MPID_Request ** const MPID_Recvq_unexpected_head_ptr = &recvq_unexpected_head;
 #endif
 
-#if ENABLE_RECVQ_STATISTICS
+/* Always define these, since our macros will always generate references to
+ * them.  Every compiler we have tested optimizes these "if(0){...}" code paths
+ * away, even at "-O0". */
 static unsigned int posted_qlen = 0;
 static unsigned int unexpected_qlen = 0;
 static MPI_Aint posted_recvq_match_attempts = 0;
@@ -67,15 +69,6 @@ static MPI_Aint unexpected_recvq_match_attempts = 0;
 static double time_failed_matching_postedq = 0.0;
 static double time_matching_unexpectedq = 0.0;
 uint64_t MPIDI_CH3I_unexpected_recvq_buffer_size = 0;    /* used in ch3u_eager.c and ch3u_handle_recv_pkt.c */
-#else 
-extern unsigned int posted_qlen;
-extern unsigned int unexpected_qlen;
-extern MPI_Aint posted_recvq_match_attempts;
-extern MPI_Aint unexpected_recvq_match_attempts;
-extern double time_failed_matching_postedq;
-extern double time_matching_unexpectedq;
-extern uint64_t MPIDI_CH3I_unexpected_recvq_buffer_size;
-#endif  /* ENABLE_RECVQ_STATISTICS */ 
 
 
 /* If the MPIDI_Message_match structure fits into a pointer size, we
