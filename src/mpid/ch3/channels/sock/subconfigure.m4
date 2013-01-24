@@ -11,6 +11,8 @@ AC_DEFUN([PAC_SUBCFG_PREREQ_]PAC_SUBCFG_AUTO_SUFFIX,[
         build_mpid_common_sock=yes
         build_ch3u_sock=yes
 
+        MPID_MAX_THREAD_LEVEL=MPI_THREAD_MULTIPLE
+
         # code that formerly lived in setup_args
         #
         # Variables of interest...

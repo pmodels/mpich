@@ -1,5 +1,0 @@
-#! /bin/sh
-#
-# The socket channel supports THREAD MULTIPLE
-echo "Executing mpichprereq in $devicedir/channels/sock"
-MPID_MAX_THREAD_LEVEL=MPI_THREAD_MULTIPLE
