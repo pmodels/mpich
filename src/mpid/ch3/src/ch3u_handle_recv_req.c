@@ -1017,7 +1017,7 @@ int MPIDI_CH3I_Release_lock(MPID_Win *win_ptr)
 				mpi_errno = do_simple_get(win_ptr, lock_queue);
 			    }
 			    
-			    if (mpi_errno != MPI_SUCCESS) goto fn_exit;
+                            if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
 			    
 			    /* if put or accumulate, send rma done packet and release lock. */
 			    if (single_op->type != MPIDI_RMA_GET) {
@@ -1027,7 +1027,7 @@ int MPIDI_CH3I_Release_lock(MPID_Win *win_ptr)
 				mpi_errno = 
                                     MPIDI_CH3I_Send_pt_rma_done_pkt(lock_queue->vc, win_ptr,
 								    lock_queue->source_win_handle);
-				if (mpi_errno != MPI_SUCCESS) goto fn_exit;
+                                if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
 				
 				/* release the lock */
 				if (win_ptr->current_lock_type == MPI_LOCK_SHARED) {
@@ -1100,6 +1100,8 @@ int MPIDI_CH3I_Release_lock(MPID_Win *win_ptr)
  fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3I_RELEASE_LOCK);
     return mpi_errno;
+ fn_fail:
+    goto fn_exit;
 }
 
 
