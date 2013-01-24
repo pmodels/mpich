@@ -102,18 +102,22 @@ static int MPIDI_CH3I_Send_flush_msg(int dest, MPID_Win *win_ptr);
 static int MPIDI_CH3I_Wait_for_lock_granted(MPID_Win *win_ptr, int target_rank);
 static int MPIDI_CH3I_Acquire_local_lock(MPID_Win *win_ptr, int lock_mode);
 static int MPIDI_CH3I_Send_rma_msg(MPIDI_RMA_Op_t * rma_op, MPID_Win * win_ptr,
+                                   MPIDI_CH3_Pkt_flags_t flags,
 				   MPI_Win source_win_handle, 
 				   MPI_Win target_win_handle, 
 				   MPIDI_RMA_dtype_info * dtype_info, 
 				   void ** dataloop, MPID_Request ** request);
 static int MPIDI_CH3I_Recv_rma_msg(MPIDI_RMA_Op_t * rma_op, MPID_Win * win_ptr,
+                                   MPIDI_CH3_Pkt_flags_t flags,
 				   MPI_Win source_win_handle, 
 				   MPI_Win target_win_handle, 
 				   MPIDI_RMA_dtype_info * dtype_info, 
 				   void ** dataloop, MPID_Request ** request); 
 static int MPIDI_CH3I_Send_contig_acc_msg(MPIDI_RMA_Op_t *, MPID_Win *,
+                                          MPIDI_CH3_Pkt_flags_t flags,
 					  MPI_Win, MPI_Win, MPID_Request ** );
 static int MPIDI_CH3I_Send_immed_rmw_msg(MPIDI_RMA_Op_t *, MPID_Win *,
+                                         MPIDI_CH3_Pkt_flags_t flags,
                                          MPI_Win, MPI_Win, MPID_Request ** );
 static int MPIDI_CH3I_Do_passive_target_rma(MPID_Win *win_ptr, int target_rank,
                                             int *wait_for_rma_done_pkt,
@@ -135,14 +139,14 @@ static int create_datatype(const MPIDI_RMA_dtype_info *dtype_info,
 /* Issue an RMA operation -- Before calling this macro, you must define the
  * MPIDI_CH3I_TRACK_RMA_WRITE helper macro.  This macro defines any extra action
  * that should be taken when a write (put/acc) operation is encountered. */
-#define MPIDI_CH3I_ISSUE_RMA_OP(op_ptr_, win_ptr_, source_win_handle_, target_win_handle_,err_) \
+#define MPIDI_CH3I_ISSUE_RMA_OP(op_ptr_, win_ptr_, flags_, source_win_handle_, target_win_handle_,err_) \
     do {                                                                                        \
     switch ((op_ptr_)->type)                                                                    \
     {                                                                                           \
         case (MPIDI_RMA_PUT):                                                                   \
         case (MPIDI_RMA_ACCUMULATE):                                                            \
             MPIDI_CH3I_TRACK_RMA_WRITE(op_ptr_, win_ptr_);                                      \
-            (err_) = MPIDI_CH3I_Send_rma_msg((op_ptr_), (win_ptr_), (source_win_handle_),       \
+            (err_) = MPIDI_CH3I_Send_rma_msg((op_ptr_), (win_ptr_), (flags_), (source_win_handle_), \
                                                 (target_win_handle_), &(op_ptr_)->dtype_info,   \
                                                 &(op_ptr_)->dataloop, &(op_ptr_)->request);     \
             if (err_) { MPIU_ERR_POP(err_); }                                                   \
@@ -158,12 +162,12 @@ static int create_datatype(const MPIDI_RMA_dtype_info *dtype_info,
                 (op_ptr_)->origin_count    = (op_ptr_)->result_count;                           \
                 (op_ptr_)->origin_datatype = (op_ptr_)->result_datatype;                        \
                                                                                                 \
-                (err_) = MPIDI_CH3I_Recv_rma_msg((op_ptr_), (win_ptr_), (source_win_handle_),   \
+                (err_) = MPIDI_CH3I_Recv_rma_msg((op_ptr_), (win_ptr_), (flags_), (source_win_handle_), \
                                                     (target_win_handle_), &(op_ptr_)->dtype_info,\
                                                     &(op_ptr_)->dataloop, &(op_ptr_)->request); \
             } else {                                                                            \
                 MPIDI_CH3I_TRACK_RMA_WRITE(op_ptr_, win_ptr_);                                  \
-                (err_) = MPIDI_CH3I_Send_rma_msg((op_ptr_), (win_ptr_), (source_win_handle_),   \
+                (err_) = MPIDI_CH3I_Send_rma_msg((op_ptr_), (win_ptr_), (flags_), (source_win_handle_), \
                                                     (target_win_handle_), &(op_ptr_)->dtype_info,\
                                                     &(op_ptr_)->dataloop, &(op_ptr_)->request); \
             }                                                                                   \
@@ -171,13 +175,13 @@ static int create_datatype(const MPIDI_RMA_dtype_info *dtype_info,
             break;                                                                              \
         case MPIDI_RMA_ACC_CONTIG:                                                              \
             MPIDI_CH3I_TRACK_RMA_WRITE(op_ptr_, win_ptr_);                                      \
-            (err_) = MPIDI_CH3I_Send_contig_acc_msg((op_ptr_), (win_ptr_),                      \
+            (err_) = MPIDI_CH3I_Send_contig_acc_msg((op_ptr_), (win_ptr_), (flags_),            \
                                                        (source_win_handle_), (target_win_handle_),\
                                                        &(op_ptr_)->request );                   \
             if (err_) { MPIU_ERR_POP(err_); }                                                   \
             break;                                                                              \
         case (MPIDI_RMA_GET):                                                                   \
-            (err_) = MPIDI_CH3I_Recv_rma_msg((op_ptr_), (win_ptr_),                             \
+            (err_) = MPIDI_CH3I_Recv_rma_msg((op_ptr_), (win_ptr_), (flags_),                   \
                                                 (source_win_handle_), (target_win_handle_),     \
                                                 &(op_ptr_)->dtype_info,                         \
                                                 &(op_ptr_)->dataloop, &(op_ptr_)->request);     \
@@ -186,7 +190,7 @@ static int create_datatype(const MPIDI_RMA_dtype_info *dtype_info,
         case (MPIDI_RMA_COMPARE_AND_SWAP):                                                      \
         case (MPIDI_RMA_FETCH_AND_OP):                                                          \
             MPIDI_CH3I_TRACK_RMA_WRITE(op_ptr_, win_ptr_);                                      \
-            (err_) = MPIDI_CH3I_Send_immed_rmw_msg((op_ptr_), (win_ptr_),                       \
+            (err_) = MPIDI_CH3I_Send_immed_rmw_msg((op_ptr_), (win_ptr_), (flags_),             \
                                                       (source_win_handle_), (target_win_handle_),\
                                                       &(op_ptr_)->request );                    \
             if (err_) { MPIU_ERR_POP(err_); }                                                   \
@@ -356,7 +360,8 @@ int MPIDI_Win_fence(int assert, MPID_Win *win_ptr)
 	    target_win_handle = win_ptr->all_win_handles[curr_ptr->target_rank];
 
 #define MPIDI_CH3I_TRACK_RMA_WRITE(op_ptr_, win_ptr_) /* Not used by active mode */
-            MPIDI_CH3I_ISSUE_RMA_OP(curr_ptr, win_ptr, source_win_handle, target_win_handle, mpi_errno);
+            MPIDI_CH3I_ISSUE_RMA_OP(curr_ptr, win_ptr, MPIDI_CH3_PKT_FLAG_NONE,
+                                    source_win_handle, target_win_handle, mpi_errno);
 #undef MPIDI_CH3I_TRACK_RMA_WRITE
 
 	    i++;
@@ -531,6 +536,7 @@ static int create_datatype(const MPIDI_RMA_dtype_info *dtype_info,
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 static int MPIDI_CH3I_Send_rma_msg(MPIDI_RMA_Op_t *rma_op, MPID_Win *win_ptr,
+                                   MPIDI_CH3_Pkt_flags_t flags,
 				   MPI_Win source_win_handle, 
 				   MPI_Win target_win_handle, 
 				   MPIDI_RMA_dtype_info *dtype_info, 
@@ -559,7 +565,7 @@ static int MPIDI_CH3I_Send_rma_msg(MPIDI_RMA_Op_t *rma_op, MPID_Win *win_ptr,
         MPIDI_Pkt_init(put_pkt, MPIDI_CH3_PKT_PUT);
         put_pkt->addr = (char *) win_ptr->base_addrs[rma_op->target_rank] +
             win_ptr->disp_units[rma_op->target_rank] * rma_op->target_disp;
-        put_pkt->flags = MPIDI_CH3_PKT_FLAG_NONE;
+        put_pkt->flags = flags;
         put_pkt->count = rma_op->target_count;
         put_pkt->datatype = rma_op->target_datatype;
         put_pkt->dataloop_size = 0;
@@ -598,7 +604,7 @@ static int MPIDI_CH3I_Send_rma_msg(MPIDI_RMA_Op_t *rma_op, MPID_Win *win_ptr,
         MPIDI_Pkt_init(accum_pkt, MPIDI_CH3_PKT_GET_ACCUM);
         accum_pkt->addr = (char *) win_ptr->base_addrs[rma_op->target_rank] +
             win_ptr->disp_units[rma_op->target_rank] * rma_op->target_disp;
-        accum_pkt->flags = MPIDI_CH3_PKT_FLAG_NONE;
+        accum_pkt->flags = flags;
         accum_pkt->count = rma_op->target_count;
         accum_pkt->datatype = rma_op->target_datatype;
         accum_pkt->dataloop_size = 0;
@@ -615,7 +621,7 @@ static int MPIDI_CH3I_Send_rma_msg(MPIDI_RMA_Op_t *rma_op, MPID_Win *win_ptr,
         MPIDI_Pkt_init(accum_pkt, MPIDI_CH3_PKT_ACCUMULATE);
         accum_pkt->addr = (char *) win_ptr->base_addrs[rma_op->target_rank] +
             win_ptr->disp_units[rma_op->target_rank] * rma_op->target_disp;
-        accum_pkt->flags = MPIDI_CH3_PKT_FLAG_NONE;
+        accum_pkt->flags = flags;
         accum_pkt->count = rma_op->target_count;
         accum_pkt->datatype = rma_op->target_datatype;
         accum_pkt->dataloop_size = 0;
@@ -847,6 +853,7 @@ static int MPIDI_CH3I_Send_rma_msg(MPIDI_RMA_Op_t *rma_op, MPID_Win *win_ptr,
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 static int MPIDI_CH3I_Send_contig_acc_msg(MPIDI_RMA_Op_t *rma_op,
 					  MPID_Win *win_ptr,
+                                          MPIDI_CH3_Pkt_flags_t flags,
 					  MPI_Win source_win_handle, 
 					  MPI_Win target_win_handle, 
 					  MPID_Request **request) 
@@ -875,7 +882,7 @@ static int MPIDI_CH3I_Send_contig_acc_msg(MPIDI_RMA_Op_t *rma_op,
 	MPIDI_Pkt_init(accumi_pkt, MPIDI_CH3_PKT_ACCUM_IMMED);
 	accumi_pkt->addr = (char *) win_ptr->base_addrs[rma_op->target_rank] +
 	    win_ptr->disp_units[rma_op->target_rank] * rma_op->target_disp;
-        accumi_pkt->flags = MPIDI_CH3_PKT_FLAG_NONE;
+        accumi_pkt->flags = flags;
 	accumi_pkt->count = rma_op->target_count;
 	accumi_pkt->datatype = rma_op->target_datatype;
 	accumi_pkt->op = rma_op->op;
@@ -902,7 +909,7 @@ static int MPIDI_CH3I_Send_contig_acc_msg(MPIDI_RMA_Op_t *rma_op,
     MPIDI_Pkt_init(accum_pkt, MPIDI_CH3_PKT_ACCUMULATE);
     accum_pkt->addr = (char *) win_ptr->base_addrs[rma_op->target_rank] +
 	win_ptr->disp_units[rma_op->target_rank] * rma_op->target_disp;
-    accum_pkt->flags = MPIDI_CH3_PKT_FLAG_NONE;
+    accum_pkt->flags = flags;
     accum_pkt->count = rma_op->target_count;
     accum_pkt->datatype = rma_op->target_datatype;
     accum_pkt->dataloop_size = 0;
@@ -961,6 +968,7 @@ static int MPIDI_CH3I_Send_contig_acc_msg(MPIDI_RMA_Op_t *rma_op,
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 static int MPIDI_CH3I_Send_immed_rmw_msg(MPIDI_RMA_Op_t *rma_op,
                                          MPID_Win *win_ptr,
+                                         MPIDI_CH3_Pkt_flags_t flags,
                                          MPI_Win source_win_handle, 
                                          MPI_Win target_win_handle, 
                                          MPID_Request **request) 
@@ -1014,7 +1022,7 @@ static int MPIDI_CH3I_Send_immed_rmw_msg(MPIDI_RMA_Op_t *rma_op,
 
         cas_pkt->addr = (char *) win_ptr->base_addrs[rma_op->target_rank] +
             win_ptr->disp_units[rma_op->target_rank] * rma_op->target_disp;
-        cas_pkt->flags = MPIDI_CH3_PKT_FLAG_NONE;
+        cas_pkt->flags = flags;
         cas_pkt->datatype = rma_op->target_datatype;
         cas_pkt->target_win_handle = target_win_handle;
         cas_pkt->request_handle = resp_req->handle;
@@ -1043,7 +1051,7 @@ static int MPIDI_CH3I_Send_immed_rmw_msg(MPIDI_RMA_Op_t *rma_op,
 
         fop_pkt->addr = (char *) win_ptr->base_addrs[rma_op->target_rank] +
             win_ptr->disp_units[rma_op->target_rank] * rma_op->target_disp;
-        fop_pkt->flags = MPIDI_CH3_PKT_FLAG_NONE;
+        fop_pkt->flags = flags;
         fop_pkt->datatype = rma_op->target_datatype;
         fop_pkt->target_win_handle = target_win_handle;
         fop_pkt->source_win_handle = source_win_handle;
@@ -1119,6 +1127,7 @@ fn_fail:
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 static int MPIDI_CH3I_Recv_rma_msg(MPIDI_RMA_Op_t *rma_op, MPID_Win *win_ptr,
+                                   MPIDI_CH3_Pkt_flags_t flags,
 				   MPI_Win source_win_handle, 
 				   MPI_Win target_win_handle, 
 				   MPIDI_RMA_dtype_info *dtype_info, 
@@ -1168,7 +1177,7 @@ static int MPIDI_CH3I_Recv_rma_msg(MPIDI_RMA_Op_t *rma_op, MPID_Win *win_ptr,
     MPIDI_Pkt_init(get_pkt, MPIDI_CH3_PKT_GET);
     get_pkt->addr = (char *) win_ptr->base_addrs[rma_op->target_rank] +
         win_ptr->disp_units[rma_op->target_rank] * rma_op->target_disp;
-    get_pkt->flags = MPIDI_CH3_PKT_FLAG_NONE;
+    get_pkt->flags = flags;
     get_pkt->count = rma_op->target_count;
     get_pkt->datatype = rma_op->target_datatype;
     get_pkt->request_handle = req->handle;
@@ -1644,7 +1653,8 @@ int MPIDI_Win_complete(MPID_Win *win_ptr)
 	target_win_handle = win_ptr->all_win_handles[curr_ptr->target_rank];
 
 #define MPIDI_CH3I_TRACK_RMA_WRITE(op_ptr_, win_ptr_) /* Not used by active mode */
-            MPIDI_CH3I_ISSUE_RMA_OP(curr_ptr, win_ptr, source_win_handle, target_win_handle, mpi_errno);
+            MPIDI_CH3I_ISSUE_RMA_OP(curr_ptr, win_ptr, MPIDI_CH3_PKT_FLAG_NONE,
+                                    source_win_handle, target_win_handle, mpi_errno);
 #undef MPIDI_CH3I_TRACK_RMA_WRITE
 
 	i++;
@@ -2560,6 +2570,8 @@ static int MPIDI_CH3I_Do_passive_target_rma(MPID_Win *win_ptr, int target_rank,
 
     while (curr_ptr != NULL)
     {
+        MPIDI_CH3_Pkt_flags_t flags = MPIDI_CH3_PKT_FLAG_NONE;
+
         /* To indicate the last RMA operation, we pass the
            source_win_handle only on the last operation. Otherwise, 
            we pass MPI_WIN_NULL. */
@@ -2579,7 +2591,8 @@ static int MPIDI_CH3I_Do_passive_target_rma(MPID_Win *win_ptr, int target_rank,
 #define MPIDI_CH3I_TRACK_RMA_WRITE(op_, win_ptr_) \
         do { (win_ptr_)->pt_rma_puts_accs[(op_)->target_rank]++; } while (0)
 
-        MPIDI_CH3I_ISSUE_RMA_OP(curr_ptr, win_ptr, source_win_handle, target_win_handle, mpi_errno);
+        MPIDI_CH3I_ISSUE_RMA_OP(curr_ptr, win_ptr, flags, source_win_handle,
+                                target_win_handle, mpi_errno);
 #undef MPIDI_CH3I_TRACK_RMA_WRITE
 
 	/* If the request is null, we can remove it immediately */
