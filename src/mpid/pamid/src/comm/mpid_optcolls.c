@@ -264,6 +264,13 @@ void MPIDI_Comm_coll_select(MPID_Comm *comm_ptr)
     TRACE_ERR("Done setting optimized allgatherv[int]\n");
   }
 
+  if(comm_ptr->mpid.user_selected_type[PAMI_XFER_GATHER] == MPID_COLL_NOSELECTION)
+  {
+    TRACE_ERR("Default gather to  MPICH\n");
+    comm_ptr->mpid.user_selected_type[PAMI_XFER_GATHER] = MPID_COLL_USE_MPICH;
+    comm_ptr->mpid.opt_protocol[PAMI_XFER_GATHER][0] = 0;
+  }
+
   opt_proto = -1;
   mustquery = 0;
   /* Alltoall */
@@ -832,6 +839,8 @@ void MPIDI_Comm_coll_select(MPID_Comm *comm_ptr)
       fprintf(stderr,"Selecting %s for opt allgatherv comm %p\n", comm_ptr->mpid.opt_protocol_md[PAMI_XFER_ALLGATHERV_INT][0].name, comm_ptr);
     if(comm_ptr->mpid.must_query[PAMI_XFER_ALLGATHERV_INT][0] == MPID_COLL_USE_MPICH)
       fprintf(stderr,"Selecting MPICH for allgatherv below %d size comm %p\n", comm_ptr->mpid.cutoff_size[PAMI_XFER_ALLGATHERV_INT][0], comm_ptr);
+    if(comm_ptr->mpid.user_selected_type[PAMI_XFER_GATHER] == MPID_COLL_USE_MPICH)
+      fprintf(stderr,"Selecting MPICH for gather comm %p\n", comm_ptr);
     if(comm_ptr->mpid.user_selected_type[PAMI_XFER_BROADCAST] == MPID_COLL_OPTIMIZED)
       fprintf(stderr,"Selecting %s for opt bcast up to size %d comm %p\n", comm_ptr->mpid.opt_protocol_md[PAMI_XFER_BROADCAST][0].name,
               comm_ptr->mpid.cutoff_size[PAMI_XFER_BROADCAST][0], comm_ptr);

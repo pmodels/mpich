@@ -134,7 +134,7 @@ int MPIDO_Gather(const void *sendbuf,
   MPI_Aint true_lb = 0;
   pami_xfer_t gather;
   MPIDI_Post_coll_t gather_post;
-  int success = 1, contig, send_bytes=-1, recv_bytes = 0;
+  int use_opt = 1, contig=0, send_bytes=-1, recv_bytes = 0;
   const int rank = comm_ptr->rank;
   const int size = comm_ptr->local_size;
 #if ASSERT_LEVEL==0
@@ -146,69 +146,91 @@ int MPIDO_Gather(const void *sendbuf,
    const struct MPIDI_Comm* const mpid = &(comm_ptr->mpid);
    const int selected_type = mpid->user_selected_type[PAMI_XFER_GATHER];
 
-  if (sendtype != MPI_DATATYPE_NULL && sendcount >= 0)
-  {
-    MPIDI_Datatype_get_info(sendcount, sendtype, contig,
-                            send_bytes, data_ptr, true_lb);
-    if (!contig || ((send_bytes * size) % sizeof(int)))
-      success = 0;
-  }
-  else
-    success = 0;
-
-  if (success && rank == root)
+  if (rank == root)
   {
     if (recvtype != MPI_DATATYPE_NULL && recvcount >= 0)
     {
       MPIDI_Datatype_get_info(recvcount, recvtype, contig,
                               recv_bytes, data_ptr, true_lb);
-      if (!contig) success = 0;
+      if (!contig || ((recv_bytes * size) % sizeof(int))) /* ? */
+        use_opt = 0;
     }
     else
-      success = 0;
+      use_opt = 0;
   }
 
-  MPIDI_Update_last_algorithm(comm_ptr, "GATHER_MPICH");
-  if(!mpid->optgather ||
+  if ((sendbuf != MPI_IN_PLACE) && sendtype != MPI_DATATYPE_NULL && sendcount >= 0)
+  {
+    MPIDI_Datatype_get_info(sendcount, sendtype, contig,
+                            send_bytes, data_ptr, true_lb);
+    if (!contig || ((send_bytes * size) % sizeof(int)))
+      use_opt = 0;
+  }
+  else 
+  {
+    if(sendbuf == MPI_IN_PLACE)
+      send_bytes = recv_bytes;
+    if (sendtype == MPI_DATATYPE_NULL || sendcount == 0)
+    {
+      send_bytes = 0;
+      use_opt = 0;
+    }
+  }
+
+  if(!mpid->optgather &&
    selected_type == MPID_COLL_USE_MPICH)
   {
+    MPIDI_Update_last_algorithm(comm_ptr, "GATHER_MPICH");
     if(unlikely(verbose))
-      fprintf(stderr,"Using MPICH gather algorithm\n");
+      fprintf(stderr,"Using MPICH gather algorithm (01) opt %x, selected type %d\n",mpid->optgather,selected_type);
     return MPIR_Gather(sendbuf, sendcount, sendtype,
                        recvbuf, recvcount, recvtype,
                        root, comm_ptr, mpierrno);
   }
-
-   if(mpid->preallreduces[MPID_GATHER_PREALLREDUCE])
-   {
-      volatile unsigned allred_active = 1;
-      pami_xfer_t allred;
-      MPIDI_Post_coll_t allred_post;
-      allred.cb_done = cb_allred;
-      allred.cookie = (void *)&allred_active;
-      /* Guaranteed to work allreduce */
-      allred.algorithm = mpid->coll_algorithm[PAMI_XFER_ALLREDUCE][0][0];
-      allred.cmd.xfer_allreduce.sndbuf = (void *)(size_t)success;
-      allred.cmd.xfer_allreduce.stype = PAMI_TYPE_SIGNED_INT;
-      allred.cmd.xfer_allreduce.rcvbuf = (void *)(size_t)success;
-      allred.cmd.xfer_allreduce.rtype = PAMI_TYPE_SIGNED_INT;
-      allred.cmd.xfer_allreduce.stypecount = 1;
-      allred.cmd.xfer_allreduce.rtypecount = 1;
-      allred.cmd.xfer_allreduce.op = PAMI_DATA_BAND;
-
-      MPIDI_Context_post(MPIDI_Context[0], &allred_post.state,
-                         MPIDI_Pami_post_wrapper, (void *)&allred);
-      MPID_PROGRESS_WAIT_WHILE(allred_active);
-   }
-
-   if(selected_type == MPID_COLL_USE_MPICH || !success)
-   {
+  if(mpid->preallreduces[MPID_GATHER_PREALLREDUCE])
+  {
     if(unlikely(verbose))
-      fprintf(stderr,"Using MPICH gather algorithm\n");
-    return MPIR_Gather(sendbuf, sendcount, sendtype,
-                       recvbuf, recvcount, recvtype,
-                       root, comm_ptr, mpierrno);
-   }
+      fprintf(stderr,"MPID_GATHER_PREALLREDUCE opt %x, selected type %d, use_opt %d\n",mpid->optgather,selected_type, use_opt);
+    volatile unsigned allred_active = 1;
+    pami_xfer_t allred;
+    MPIDI_Post_coll_t allred_post;
+    allred.cb_done = cb_allred;
+    allred.cookie = (void *)&allred_active;
+    /* Guaranteed to work allreduce */
+    allred.algorithm = mpid->coll_algorithm[PAMI_XFER_ALLREDUCE][0][0];
+    allred.cmd.xfer_allreduce.sndbuf = (void *)PAMI_IN_PLACE;
+    allred.cmd.xfer_allreduce.stype = PAMI_TYPE_SIGNED_INT;
+    allred.cmd.xfer_allreduce.rcvbuf = (void *)&use_opt;
+    allred.cmd.xfer_allreduce.rtype = PAMI_TYPE_SIGNED_INT;
+    allred.cmd.xfer_allreduce.stypecount = 1;
+    allred.cmd.xfer_allreduce.rtypecount = 1;
+    allred.cmd.xfer_allreduce.op = PAMI_DATA_BAND;
+    
+    MPIDI_Context_post(MPIDI_Context[0], &allred_post.state,
+                       MPIDI_Pami_post_wrapper, (void *)&allred);
+    MPID_PROGRESS_WAIT_WHILE(allred_active);
+    if(unlikely(verbose))
+      fprintf(stderr,"MPID_GATHER_PREALLREDUCE opt %x, selected type %d, use_opt %d\n",mpid->optgather,selected_type, use_opt);
+  }
+
+  if(mpid->optgather)
+  {
+    if(use_opt)
+    {
+      MPIDI_Update_last_algorithm(comm_ptr, "GLUE_REDUCDE");
+      abort();
+      /* GLUE_REDUCE ? */
+    }
+    else
+    {
+      MPIDI_Update_last_algorithm(comm_ptr, "GATHER_MPICH");
+      if(unlikely(verbose))
+        fprintf(stderr,"Using MPICH gather algorithm (02) opt %x, selected type %d, use_opt %d\n",mpid->optgather,selected_type, use_opt);
+      return MPIR_Gather(sendbuf, sendcount, sendtype,
+                         recvbuf, recvcount, recvtype,
+                         root, comm_ptr, mpierrno);
+    }
+  }
 
 
    pami_algorithm_t my_gather;
@@ -268,8 +290,15 @@ int MPIDO_Gather(const void *sendbuf,
            result.check.unspecified = 1;
         if(my_md->check_correct.values.rangeminmax)
         {
-          if((my_md->range_lo <= recv_bytes) &&
-             (my_md->range_hi >= recv_bytes))
+          /* Non-local decision? */
+          if(((rank == root) &&
+              (my_md->range_lo <= recv_bytes) &&
+              (my_md->range_hi >= recv_bytes)
+              ) &&
+             ((my_md->range_lo <= send_bytes) &&
+              (my_md->range_hi >= send_bytes)
+              )
+             )
             ; /* ok, algorithm selected */
           else
           {
