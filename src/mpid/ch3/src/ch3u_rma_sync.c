@@ -559,7 +559,7 @@ static int MPIDI_CH3I_Send_rma_msg(MPIDI_RMA_Op_t *rma_op, MPID_Win *win_ptr,
         MPIDI_Pkt_init(put_pkt, MPIDI_CH3_PKT_PUT);
         put_pkt->addr = (char *) win_ptr->base_addrs[rma_op->target_rank] +
             win_ptr->disp_units[rma_op->target_rank] * rma_op->target_disp;
-
+        put_pkt->flags = MPIDI_CH3_PKT_FLAG_NONE;
         put_pkt->count = rma_op->target_count;
         put_pkt->datatype = rma_op->target_datatype;
         put_pkt->dataloop_size = 0;
@@ -598,6 +598,7 @@ static int MPIDI_CH3I_Send_rma_msg(MPIDI_RMA_Op_t *rma_op, MPID_Win *win_ptr,
         MPIDI_Pkt_init(accum_pkt, MPIDI_CH3_PKT_GET_ACCUM);
         accum_pkt->addr = (char *) win_ptr->base_addrs[rma_op->target_rank] +
             win_ptr->disp_units[rma_op->target_rank] * rma_op->target_disp;
+        accum_pkt->flags = MPIDI_CH3_PKT_FLAG_NONE;
         accum_pkt->count = rma_op->target_count;
         accum_pkt->datatype = rma_op->target_datatype;
         accum_pkt->dataloop_size = 0;
@@ -614,6 +615,7 @@ static int MPIDI_CH3I_Send_rma_msg(MPIDI_RMA_Op_t *rma_op, MPID_Win *win_ptr,
         MPIDI_Pkt_init(accum_pkt, MPIDI_CH3_PKT_ACCUMULATE);
         accum_pkt->addr = (char *) win_ptr->base_addrs[rma_op->target_rank] +
             win_ptr->disp_units[rma_op->target_rank] * rma_op->target_disp;
+        accum_pkt->flags = MPIDI_CH3_PKT_FLAG_NONE;
         accum_pkt->count = rma_op->target_count;
         accum_pkt->datatype = rma_op->target_datatype;
         accum_pkt->dataloop_size = 0;
@@ -873,6 +875,7 @@ static int MPIDI_CH3I_Send_contig_acc_msg(MPIDI_RMA_Op_t *rma_op,
 	MPIDI_Pkt_init(accumi_pkt, MPIDI_CH3_PKT_ACCUM_IMMED);
 	accumi_pkt->addr = (char *) win_ptr->base_addrs[rma_op->target_rank] +
 	    win_ptr->disp_units[rma_op->target_rank] * rma_op->target_disp;
+        accumi_pkt->flags = MPIDI_CH3_PKT_FLAG_NONE;
 	accumi_pkt->count = rma_op->target_count;
 	accumi_pkt->datatype = rma_op->target_datatype;
 	accumi_pkt->op = rma_op->op;
@@ -899,6 +902,7 @@ static int MPIDI_CH3I_Send_contig_acc_msg(MPIDI_RMA_Op_t *rma_op,
     MPIDI_Pkt_init(accum_pkt, MPIDI_CH3_PKT_ACCUMULATE);
     accum_pkt->addr = (char *) win_ptr->base_addrs[rma_op->target_rank] +
 	win_ptr->disp_units[rma_op->target_rank] * rma_op->target_disp;
+    accum_pkt->flags = MPIDI_CH3_PKT_FLAG_NONE;
     accum_pkt->count = rma_op->target_count;
     accum_pkt->datatype = rma_op->target_datatype;
     accum_pkt->dataloop_size = 0;
@@ -1010,6 +1014,7 @@ static int MPIDI_CH3I_Send_immed_rmw_msg(MPIDI_RMA_Op_t *rma_op,
 
         cas_pkt->addr = (char *) win_ptr->base_addrs[rma_op->target_rank] +
             win_ptr->disp_units[rma_op->target_rank] * rma_op->target_disp;
+        cas_pkt->flags = MPIDI_CH3_PKT_FLAG_NONE;
         cas_pkt->datatype = rma_op->target_datatype;
         cas_pkt->target_win_handle = target_win_handle;
         cas_pkt->request_handle = resp_req->handle;
@@ -1038,6 +1043,7 @@ static int MPIDI_CH3I_Send_immed_rmw_msg(MPIDI_RMA_Op_t *rma_op,
 
         fop_pkt->addr = (char *) win_ptr->base_addrs[rma_op->target_rank] +
             win_ptr->disp_units[rma_op->target_rank] * rma_op->target_disp;
+        fop_pkt->flags = MPIDI_CH3_PKT_FLAG_NONE;
         fop_pkt->datatype = rma_op->target_datatype;
         fop_pkt->target_win_handle = target_win_handle;
         fop_pkt->source_win_handle = source_win_handle;
@@ -1162,6 +1168,7 @@ static int MPIDI_CH3I_Recv_rma_msg(MPIDI_RMA_Op_t *rma_op, MPID_Win *win_ptr,
     MPIDI_Pkt_init(get_pkt, MPIDI_CH3_PKT_GET);
     get_pkt->addr = (char *) win_ptr->base_addrs[rma_op->target_rank] +
         win_ptr->disp_units[rma_op->target_rank] * rma_op->target_disp;
+    get_pkt->flags = MPIDI_CH3_PKT_FLAG_NONE;
     get_pkt->count = rma_op->target_count;
     get_pkt->datatype = rma_op->target_datatype;
     get_pkt->request_handle = req->handle;
@@ -1683,6 +1690,7 @@ int MPIDI_Win_complete(MPID_Win *win_ptr)
 	    MPID_Request *request;
 	    
 	    MPIDI_Pkt_init(put_pkt, MPIDI_CH3_PKT_PUT);
+            put_pkt->flags = MPIDI_CH3_PKT_FLAG_NONE;
 	    put_pkt->addr = NULL;
 	    put_pkt->count = 0;
 	    put_pkt->datatype = MPI_INT;

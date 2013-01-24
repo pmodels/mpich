@@ -109,6 +109,15 @@ enum MPIDI_CH3_Pkt_types
 };
 
 typedef int16_t MPIDI_CH3_Pkt_type_t;
+typedef uint16_t MPIDI_CH3_Pkt_flags_t;
+
+                                                   /* Flag vector bits:*/
+#define MPIDI_CH3_PKT_FLAG_NONE                 0
+#define MPIDI_CH3_PKT_FLAG_RMA_LOCK             1  /* ...............X */
+#define MPIDI_CH3_PKT_FLAG_RMA_UNLOCK           2  /* ..............X. */
+#define MPIDI_CH3_PKT_FLAG_RMA_FLUSH            4  /* .............X.. */
+#define MPIDI_CH3_PKT_FLAG_RMA_REQ_ACK          8  /* ............X... */
+#define MPIDI_CH3_PKT_FLAG_RMA_AT_COMPLETE      16 /* ...........X.... */
 
 typedef struct MPIDI_CH3_Pkt_send
 {
@@ -189,6 +198,7 @@ MPIDI_CH3_PKT_DEFS
 typedef struct MPIDI_CH3_Pkt_put
 {
     MPIDI_CH3_Pkt_type_t type;
+    MPIDI_CH3_Pkt_flags_t flags;
     void *addr;
     int count;
     MPI_Datatype datatype;
@@ -206,6 +216,7 @@ MPIDI_CH3_Pkt_put_t;
 typedef struct MPIDI_CH3_Pkt_get
 {
     MPIDI_CH3_Pkt_type_t type;
+    MPIDI_CH3_Pkt_flags_t flags;
     void *addr;
     int count;
     MPI_Datatype datatype;
@@ -231,6 +242,7 @@ MPIDI_CH3_Pkt_get_resp_t;
 typedef struct MPIDI_CH3_Pkt_accum
 {
     MPIDI_CH3_Pkt_type_t type;
+    MPIDI_CH3_Pkt_flags_t flags;
     MPI_Request request_handle; /* For get_accumulate response */
     void *addr;
     int count;
@@ -257,6 +269,7 @@ MPIDI_CH3_Pkt_get_accum_resp_t;
 typedef struct MPIDI_CH3_Pkt_accum_immed
 {
     MPIDI_CH3_Pkt_type_t type;
+    MPIDI_CH3_Pkt_flags_t flags;
     void *addr;
     int count;
     /* FIXME: Compress datatype/op into a single word (immedate mode) */
@@ -277,6 +290,7 @@ MPIDI_CH3_Pkt_accum_immed_t;
 typedef struct MPIDI_CH3_Pkt_cas
 {
     MPIDI_CH3_Pkt_type_t type;
+    MPIDI_CH3_Pkt_flags_t flags;
     MPI_Datatype datatype;
     void *addr;
     MPI_Request request_handle;
@@ -304,6 +318,7 @@ MPIDI_CH3_Pkt_cas_resp_t;
 typedef struct MPIDI_CH3_Pkt_fop
 {
     MPIDI_CH3_Pkt_type_t type;
+    MPIDI_CH3_Pkt_flags_t flags;
     MPI_Datatype datatype;
     void *addr;
     MPI_Op op;
@@ -354,6 +369,7 @@ typedef MPIDI_CH3_Pkt_lock_t MPIDI_CH3_Pkt_flush_t;
 typedef struct MPIDI_CH3_Pkt_lock_put_unlock
 {
     MPIDI_CH3_Pkt_type_t type;
+    MPIDI_CH3_Pkt_flags_t flags;
     MPI_Win target_win_handle;
     MPI_Win source_win_handle;
     int lock_type;
@@ -366,6 +382,7 @@ MPIDI_CH3_Pkt_lock_put_unlock_t;
 typedef struct MPIDI_CH3_Pkt_lock_get_unlock
 {
     MPIDI_CH3_Pkt_type_t type;
+    MPIDI_CH3_Pkt_flags_t flags;
     MPI_Win target_win_handle;
     MPI_Win source_win_handle;
     int lock_type;
@@ -379,6 +396,7 @@ MPIDI_CH3_Pkt_lock_get_unlock_t;
 typedef struct MPIDI_CH3_Pkt_lock_accum_unlock
 {
     MPIDI_CH3_Pkt_type_t type;
+    MPIDI_CH3_Pkt_flags_t flags;
     MPI_Win target_win_handle;
     MPI_Win source_win_handle;
     int lock_type;
