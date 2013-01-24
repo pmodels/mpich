@@ -724,8 +724,8 @@ sub BuildMPIProgram {
 	# in the summary file (which is otherwise written by the
 	# RunMPIProgram step)
 	&RunPreMsg( $programname, $np, $curdir );
-	&RunTestFailed( "Failed to build $programname; $output" );
-	&RunPostMsg;
+	&RunTestFailed( $programname, $np, $curdir, "Failed to build $programname; $output" );
+	&RunPostMsg( $programname, $np, $curdir );
     }
     return $rc;
 }
