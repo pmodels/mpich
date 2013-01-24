@@ -912,3 +912,8 @@ int MPIDI_CH3I_Progress( int blocking, MPID_Progress_state *state )
 
     return mpi_errno;
 }
+
+/* A convenience dummy symbol so that the PETSc folks can configure test to
+ * ensure that they have a working version of MPICH ch3:sock.  Please don't
+ * delete it without consulting them. */
+int MPIDI_CH3I_sock_fixed_nbc_progress = TRUE;
