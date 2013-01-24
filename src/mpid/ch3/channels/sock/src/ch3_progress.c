@@ -52,6 +52,7 @@ static int MPIDI_CH3i_Progress_test(void)
 {
     MPIDU_Sock_event_t event;
     int mpi_errno = MPI_SUCCESS;
+    int made_progress;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3I_PROGRESS_TEST);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3I_PROGRESS_TEST);
@@ -83,6 +84,10 @@ static int MPIDI_CH3i_Progress_test(void)
     }
 #   endif
     
+    /* make progress on NBC schedules */
+    mpi_errno = MPIDU_Sched_progress(&made_progress);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
     mpi_errno = MPIDU_Sock_wait(MPIDI_CH3I_sock_set, 0, &event);
 
     if (mpi_errno == MPI_SUCCESS)

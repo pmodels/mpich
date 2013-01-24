@@ -52,6 +52,7 @@ noinst_PROGRAMS =      \
     gather             \
     gather2            \
     iallred            \
+    ibarrier           \
     icallgather        \
     icallgatherv       \
     icallreduce        \
