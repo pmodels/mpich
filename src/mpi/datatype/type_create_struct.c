@@ -152,7 +152,7 @@ int MPI_Type_create_struct(int count,
 
     mpi_errno = MPIR_Type_create_struct_impl(count, array_of_blocklengths, array_of_displacements,
                                              array_of_types, newtype);
-    if (mpi_errno) goto fn_exit;
+    if (mpi_errno) goto fn_fail;
         
     /* ... end of body of routine ... */
 
