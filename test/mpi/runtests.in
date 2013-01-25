@@ -434,14 +434,14 @@ sub RunList {
 	}
 	# Check whether strict is required by MPI but not by the
 	# test (use strict=false for tests that use non-standard extensions)
-        if ($requiresStrict eq "false" && $testIsStrict eq "true") {
+        if (lc($requiresStrict) eq "false" && lc($testIsStrict) eq "true") {
             unless (-d $programname) {
                 SkippedTest($programname, $np, $workdir, "non-strict test, strict MPI mode requested");
             }
             next;
         }
 
-        if ($requiresMPIX eq "true" && $MPIHasMPIX eq "no") {
+        if (lc($requiresMPIX) eq "true" && lc($MPIHasMPIX) eq "no") {
             unless (-d $programname) {
                 SkippedTest($programname, $np, $workdir, "tests MPIX extensions, MPIX testing disabled");
             }
