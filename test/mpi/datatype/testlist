@@ -48,5 +48,5 @@ get-elements 1
 hindexed_block 1 mpiversion=3.0
 hindexed_block_contents 1 mpiversion=3.0
 longdouble 1
-large-count 1 mpiversion=3.0
+large-count 1 mpiversion=3.0 xfail=ticket1767
 cxx-types 1 mpiversion=3.0
