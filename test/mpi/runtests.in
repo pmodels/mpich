@@ -362,6 +362,7 @@ sub RunList {
 	my $requiresMPIX   = "";
 	my $progEnv    = "";
 	my $mpiVersion = "";
+        my $xfail = "";
 	if ($#args >= 1) { $np = $args[1]; }
 	# Process the key=value arguments
 	for (my $i=2; $i <= $#args; $i++) {
@@ -395,6 +396,12 @@ sub RunList {
 		elsif ($key eq "mpix") {
 		    $requiresMPIX = $value
 		}
+                elsif ($key eq "xfail") {
+                    if ($value eq "") {
+                        print STDERR "\"xfail=\" requires an argument\n";
+                    }
+                    $xfail = $value;
+                }
 		else {
 		    print STDERR "Unrecognized key $key in $listfileSource\n";
 		}
@@ -441,6 +448,13 @@ sub RunList {
             next;
         }
 
+        if (lc($testIsStrict) eq "true") {
+            # Strict MPI testing was requested, so assume that a non-MPICH MPI
+            # implementation is being tested and the "xfail" implementation
+            # assumptions do not hold.
+            $xfail = '';
+        }
+
         if (lc($requiresMPIX) eq "true" && lc($MPIHasMPIX) eq "no") {
             unless (-d $programname) {
                 SkippedTest($programname, $np, $workdir, "tests MPIX extensions, MPIX testing disabled");
@@ -455,19 +469,19 @@ sub RunList {
 	}
 	else {
 	    $total_run++;
-	    if (&BuildMPIProgram( $programname ) == 0) {
+	    if (&BuildMPIProgram( $programname, $xfail ) == 0) {
 		if ($batchRun == 1) {
 		    &AddMPIProgram( $programname, $np, $ResultTest, 
 				    $InitForRun, $timeLimit, $progArgs,
-				    $progEnv, $mpiexecArgs );
+				    $progEnv, $mpiexecArgs, $xfail );
 		}
 		else {
 		    &RunMPIProgram( $programname, $np, $ResultTest, 
 				    $InitForRun, $timeLimit, $progArgs, 
-				    $progEnv, $mpiexecArgs );
+				    $progEnv, $mpiexecArgs, $xfail );
 		}
 	    }
-	    else {
+	    elsif ($xfail ne '') {
 		# We expected to run this program, so failure to build
 		# is an error
 		$found_error = 1;
@@ -520,7 +534,7 @@ sub ProcessImplicitList {
 	    if ($programname eq "runtests") { next; } # Ignore self
 	    if (-x $programname) {
 		$total_run++;
-		&RunMPIProgram( $programname, $np_default, "", "", "", "", "", "" );
+		&RunMPIProgram( $programname, $np_default, "", "", "", "", "", "", "" );
 	    }
 	}
 	close PGMS;
@@ -540,8 +554,8 @@ sub ProcessImplicitList {
 	    if (! -s $programname) { next; }
 	    $programname =~ s/\.c//;
 	    $total_run++;
-	    if (&BuildMPIProgram( $programname ) == 0) {
-		&RunMPIProgram( $programname, $np_default, "", "", "", "", "", "" );
+	    if (&BuildMPIProgram( $programname, "") == 0) {
+		&RunMPIProgram( $programname, $np_default, "", "", "", "", "", "", "" );
 	    }
 	    else {
 		# We expected to run this program, so failure to build
@@ -562,7 +576,7 @@ sub ProcessImplicitList {
 # If the 3rd arg is not present, the a default that simply checks that the
 # return status is 0 and that the output is " No Errors" is used.
 sub RunMPIProgram {
-    my ($programname,$np,$ResultTest,$InitForTest,$timeLimit,$progArgs,$progEnv,$mpiexecArgs) = @_;
+    my ($programname,$np,$ResultTest,$InitForTest,$timeLimit,$progArgs,$progEnv,$mpiexecArgs,$xfail) = @_;
     my $found_error   = 0;
     my $found_noerror = 0;
     my $inline = "";
@@ -655,10 +669,10 @@ sub RunMPIProgram {
 	}
     }
     if ($found_error) {
-	&RunTestFailed( $programname, $np, $curdir, $inline );
+	&RunTestFailed( $programname, $np, $curdir, $inline, $xfail );
     }
     else { 
-	&RunTestPassed( $programname, $np, $curdir );
+	&RunTestPassed( $programname, $np, $curdir, $xfail );
     }
     &RunPostMsg( $programname, $np, $curdir );
 }
@@ -666,7 +680,7 @@ sub RunMPIProgram {
 # This version simply writes the mpiexec command out, with the output going
 # into a file, and recording the output status of the run.
 sub AddMPIProgram {
-    my ($programname,$np,$ResultTest,$InitForTest,$timeLimit,$progArgs,$progEnv,$mpiexecArgs) = @_;
+    my ($programname,$np,$ResultTest,$InitForTest,$timeLimit,$progArgs,$progEnv,$mpiexecArgs, $xfail) = @_;
 
     if (! -x $programname) {
 	print STDERR "Could not find $programname!";
@@ -734,7 +748,8 @@ sub AddMPIProgram {
 # 
 # Return value is 0 on success, non zero on failure
 sub BuildMPIProgram {
-    my $programname = $_[0];
+    my $programname = shift;
+    my $xfail = shift;
     my $rc = 0;
     if ($verbose) { print STDERR "making $programname\n"; }
     if (! -x $programname) { $remove_this_pgm = 1; }
@@ -752,7 +767,7 @@ sub BuildMPIProgram {
 	# in the summary file (which is otherwise written by the
 	# RunMPIProgram step)
 	&RunPreMsg( $programname, $np, $curdir );
-	&RunTestFailed( $programname, $np, $curdir, "Failed to build $programname; $output" );
+	&RunTestFailed( $programname, $np, $curdir, "Failed to build $programname; $output", $xfail );
 	&RunPostMsg( $programname, $np, $curdir );
     }
     return $rc;
@@ -966,12 +981,16 @@ sub RunPostMsg {
     }
 }
 sub RunTestPassed {
-    my ($programname, $np, $workdir) = @_;
+    my ($programname, $np, $workdir, $xfail) = @_;
     if ($xmloutput) {
 	print XMLOUT "<STATUS>pass</STATUS>$newline";
     }
     if ($tapoutput) {
-        print TAPOUT "ok ${total_run} - $workdir/$programname $np\n";
+        my $xfailstr = '';
+        if ($xfail ne '') {
+            $xfailstr = " # TODO $xfail";
+        }
+        print TAPOUT "ok ${total_run} - $workdir/$programname ${np}${xfailstr}\n";
     }
 }
 sub RunTestFailed {
@@ -979,6 +998,7 @@ sub RunTestFailed {
     my $np = shift;
     my $workdir = shift;
     my $output = shift;
+    my $xfail = shift;
 
     if ($xmloutput) {
         my $xout = $output;
@@ -994,7 +1014,11 @@ sub RunTestFailed {
     }
 
     if ($tapoutput) {
-        print TAPOUT "not ok ${total_run} - $workdir/$programname $np\n";
+        my $xfailstr = '';
+        if ($xfail ne '') {
+            $xfailstr = " # TODO $xfail";
+        }
+        print TAPOUT "not ok ${total_run} - $workdir/$programname ${np}${xfailstr}\n";
         print TAPOUT "  ---\n";
         print TAPOUT "  Directory: $workdir\n";
         print TAPOUT "  File: $programname\n";
