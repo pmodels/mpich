@@ -11,6 +11,7 @@
 
 #include "my_papi_defs.h"
 #include "mpiiov.h"
+#include "mpidi_nem_statistics.h"
 
 extern int MPID_nem_lmt_shm_pending;
 extern MPID_nem_cell_ptr_t MPID_nem_prefetched_cell;
@@ -82,6 +83,8 @@ MPID_nem_mpich_send_header (void* buf, int size, MPIDI_VC_t *vc, int *again)
         goto return_success;
     }
  usequeue_l:
+    MPIR_T_INC(NEM_STATISTICS, MPID_nem_fbox_fall_back_to_queue_count[MPID_nem_mem_region.local_ranks[vc->lpid]]);
+
 #endif /*USE_FASTBOX */
 
 #ifdef PREFETCH_CELL
@@ -312,6 +315,7 @@ MPID_nem_mpich_sendv_header (MPID_IOV **iov, int *n_iov, MPIDI_VC_t *vc, int *ag
         goto return_success;
     }
  usequeue_l:
+    MPIR_T_INC(NEM_STATISTICS, MPID_nem_fbox_fall_back_to_queue_count[MPID_nem_mem_region.local_ranks[vc->lpid]]);
 
 #endif /*USE_FASTBOX */
 	
@@ -465,6 +469,7 @@ MPID_nem_mpich_send_seg_header (MPID_Segment *segment, MPIDI_msg_sz_t *segment_f
 	}
     }
  usequeue_l:
+    MPIR_T_INC(NEM_STATISTICS, MPID_nem_fbox_fall_back_to_queue_count[MPID_nem_mem_region.local_ranks[vc->lpid]]);
 
 #endif /*USE_FASTBOX */
 	

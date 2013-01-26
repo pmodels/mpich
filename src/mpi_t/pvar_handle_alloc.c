@@ -61,6 +61,9 @@ int MPIR_T_pvar_handle_alloc_impl(MPI_T_pvar_session session, int pvar_index, vo
     mpi_errno = info->create_fn(obj_handle, (*handle), count);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
+    /* some creator functions may not assign this */
+    (*handle)->count = *count;
+
     MPL_DL_APPEND(session->hlist, *handle);
 
     MPIU_CHKPMEM_COMMIT();

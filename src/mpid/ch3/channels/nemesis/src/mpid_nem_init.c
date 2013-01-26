@@ -8,6 +8,7 @@
 #include "mpid_nem_impl.h"
 #include "mpid_nem_nets.h"
 #include <errno.h>
+#include "mpidi_nem_statistics.h"
 
 /* constants for configure time selection of local LMT implementations */
 #define MPID_NEM_LOCAL_LMT_NONE 0
@@ -35,6 +36,47 @@ static int get_local_procs(MPIDI_PG_t *pg, int our_pg_rank, int *num_local_p,
 #endif /* MAX */
 
 char *MPID_nem_asymm_base_addr = 0;
+
+/* used by mpid_nem_inline.h and mpid_nem_finalize.c */
+uint64_t *MPID_nem_fbox_fall_back_to_queue_count = NULL;
+
+#if ENABLE_NEM_STATISTICS
+/* MPIT support */
+MPIR_T_SIMPLE_HANDLE_CREATOR(fbox_count_creator, uint64_t, MPID_nem_mem_region.num_local)
+
+#undef FUNCNAME
+#define FUNCNAME MPID_nem_init_stats
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
+static int MPID_nem_init_stats(int n_local_ranks)
+{
+    int mpi_errno = MPI_SUCCESS;
+    int idx = -1;
+
+    MPID_nem_fbox_fall_back_to_queue_count = MPIU_Calloc(n_local_ranks, sizeof(uint64_t));
+
+    mpi_errno = MPIR_T_pvar_add("nem_fbox_fall_back_to_queue_count",
+                                MPI_T_VERBOSITY_USER_DETAIL,
+                                MPI_T_PVAR_CLASS_COUNTER,
+                                MPI_AINT,
+                                MPI_T_ENUM_NULL,
+                                "array counting how many times nemesis had to fall back to "
+                                "the regular queue when sending messages between pairs of "
+                                "local processes",
+                                MPI_T_BIND_NO_OBJECT,
+                                /*readonly=*/ FALSE,
+                                /*continuous=*/ TRUE,
+                                /*atomic=*/ FALSE,
+                                MPIR_T_PVAR_IMPL_SIMPLE,
+                                /*var_state=*/ MPID_nem_fbox_fall_back_to_queue_count,
+                                &fbox_count_creator,
+                                &idx);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
+fn_fail:
+    return mpi_errno;
+}
+#endif  /* ENABLE_NEM_STATISTICS */
 
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_init
@@ -341,6 +383,10 @@ MPID_nem_init(int pg_rank, MPIDI_PG_t *pg_p, int has_parent ATTRIBUTE((unused)))
     my_papi_start( pg_rank );
 #endif /*PAPI_MONITOR   */
 
+#if ENABLE_NEM_STATISTICS
+    MPID_nem_init_stats(num_local);
+#endif
+
     MPIU_CHKPMEM_COMMIT();
  fn_exit:
     return mpi_errno;
@@ -349,6 +395,7 @@ MPID_nem_init(int pg_rank, MPIDI_PG_t *pg_p, int has_parent ATTRIBUTE((unused)))
     MPIU_CHKPMEM_REAP();
     goto fn_exit;
     /* --END ERROR HANDLING-- */
+
 }
 
 /* MPID_nem_vc_init initialize nemesis' part of the vc */

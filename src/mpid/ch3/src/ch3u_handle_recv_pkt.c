@@ -6,6 +6,7 @@
 
 #include "mpidimpl.h"
 #include "mpidrma.h"
+#include "mpidi_recvq_statistics.h"
 
 /*
  * This file contains the dispatch routine called by the ch3 progress 
@@ -271,6 +272,9 @@ int MPIDI_CH3U_Receive_data_unexpected(MPID_Request * rreq, char *buf, MPIDI_msg
         *buflen = 0;
         *complete = FALSE;
     }
+
+    if (MPIDI_Request_get_msg_type(rreq) == MPIDI_REQUEST_EAGER_MSG)
+        MPIR_T_ADD(RECVQ_STATISTICS, MPIDI_CH3I_unexpected_recvq_buffer_size, rreq->dev.tmpbuf_sz);
 
     rreq->dev.OnDataAvail = MPIDI_CH3_ReqHandler_UnpackUEBufComplete;
 
