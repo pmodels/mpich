@@ -320,7 +320,7 @@ int MPIDI_Comm_spawn_multiple(int count, char **commands,
 
     if(pmi_errno) {
            mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_FATAL, __FILE__, __LINE__, MPI_ERR_SPAWN,
-            "**noresource", 0);
+            "**mpi_comm_spawn", 0);
     }
 
  fn_exit:
