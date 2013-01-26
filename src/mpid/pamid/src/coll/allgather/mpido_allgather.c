@@ -685,3 +685,37 @@ MPIDO_Allgather_simple(const void *sendbuf,
    TRACE_ERR("Allgather done\n");
    return MPI_SUCCESS;
 }
+
+
+int
+MPIDO_CSWrapper_allgather(pami_xfer_t *allgather,
+                          void        *comm)
+{
+   int mpierrno = 0;
+   MPID_Comm   *comm_ptr = (MPID_Comm*)comm;
+   MPI_Datatype sendtype, recvtype;
+   void *sbuf;
+   MPIDI_coll_check_in_place(allgather->cmd.xfer_allgather.sndbuf, &sbuf);
+   int rc = MPIDI_Dtpami_to_dtmpi(  allgather->cmd.xfer_allgather.stype,
+                                   &sendtype,
+                                    NULL,
+                                    NULL);
+   if(rc == -1) return rc;
+
+   rc = MPIDI_Dtpami_to_dtmpi(  allgather->cmd.xfer_allgather.rtype,
+                               &recvtype,
+                                NULL,
+                                NULL);
+   if(rc == -1) return rc;
+
+   rc  =  MPIR_Allgather(sbuf, 
+                         allgather->cmd.xfer_allgather.stypecount, sendtype,
+                         allgather->cmd.xfer_allgather.rcvbuf, 
+                         allgather->cmd.xfer_allgather.rtypecount, recvtype,
+                         comm_ptr, &mpierrno);
+   if(allgather->cb_done && rc == 0)
+     allgather->cb_done(NULL, allgather->cookie, PAMI_SUCCESS);
+   return rc;
+
+}
+

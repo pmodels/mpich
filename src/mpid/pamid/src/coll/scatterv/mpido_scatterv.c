@@ -499,7 +499,7 @@ int MPIDO_Scatterv_simple(const void *sendbuf,
    scatterv.cmd.xfer_scatterv_int.root = MPID_VCR_GET_LPID(comm_ptr->vcr, root);
 
    scatterv.algorithm = mpid->coll_algorithm[PAMI_XFER_SCATTERV_INT][0][0];
-   my_scatterv_md = &mpid->coll_metadata[PAMI_XFER_SCATTERV][0][0];
+   my_scatterv_md = &mpid->coll_metadata[PAMI_XFER_SCATTERV_INT][0][0];
    
    scatterv.cmd.xfer_scatterv_int.rcvbuf = rbuf;
    scatterv.cmd.xfer_scatterv_int.sndbuf = sbuf;
@@ -523,6 +523,40 @@ int MPIDO_Scatterv_simple(const void *sendbuf,
 
    TRACE_ERR("Leaving MPIDO_Scatterv_optimized\n");
    return MPI_SUCCESS;
+}
+
+
+int
+MPIDO_CSWrapper_scatterv(pami_xfer_t *scatterv,
+                         void        *comm)
+{
+   int mpierrno = 0;
+   MPID_Comm   *comm_ptr = (MPID_Comm*)comm;
+   MPI_Datatype sendtype, recvtype;
+   void *rbuf;
+   MPIDI_coll_check_in_place(scatterv->cmd.xfer_scatterv_int.rcvbuf, &rbuf);
+   int rc = MPIDI_Dtpami_to_dtmpi(  scatterv->cmd.xfer_scatterv_int.stype,
+                                   &sendtype,
+                                    NULL,
+                                    NULL);
+   if(rc == -1) return rc;
+
+   rc = MPIDI_Dtpami_to_dtmpi(  scatterv->cmd.xfer_scatterv_int.rtype,
+                               &recvtype,
+                                NULL,
+                                NULL);
+   if(rc == -1) return rc;
+
+   rc  =  MPIR_Scatterv(scatterv->cmd.xfer_scatterv_int.sndbuf,
+                        scatterv->cmd.xfer_scatterv_int.stypecounts, 
+                        scatterv->cmd.xfer_scatterv_int.sdispls, sendtype,
+                        rbuf,
+                        scatterv->cmd.xfer_scatterv_int.rtypecount, recvtype,
+                        scatterv->cmd.xfer_scatterv_int.root, comm_ptr, &mpierrno);
+   if(scatterv->cb_done && rc == 0)
+     scatterv->cb_done(NULL, scatterv->cookie, PAMI_SUCCESS);
+   return rc;
+
 }
 
 

@@ -298,10 +298,6 @@ int MPIDO_Gatherv_simple(const void *sendbuf,
                root, comm_ptr, mpierrno);
    }
 
-
-
-
-
    gatherv.cb_done = cb_gatherv;
    gatherv.cookie = (void *)&gatherv_active;
    gatherv.cmd.xfer_gatherv_int.root = MPID_VCR_GET_LPID(comm_ptr->vcr, root);
@@ -331,3 +327,37 @@ int MPIDO_Gatherv_simple(const void *sendbuf,
    TRACE_ERR("Leaving MPIDO_Gatherv_optimized\n");
    return MPI_SUCCESS;
 }
+
+int
+MPIDO_CSWrapper_gatherv(pami_xfer_t *gatherv,
+                        void        *comm)
+{
+   int mpierrno = 0;
+   MPID_Comm   *comm_ptr = (MPID_Comm*)comm;
+   MPI_Datatype sendtype, recvtype;
+   void *sbuf;
+   MPIDI_coll_check_in_place(gatherv->cmd.xfer_gatherv_int.sndbuf, &sbuf);
+   int rc = MPIDI_Dtpami_to_dtmpi(  gatherv->cmd.xfer_gatherv_int.stype,
+                                   &sendtype,
+                                    NULL,
+                                    NULL);
+   if(rc == -1) return rc;
+
+   rc = MPIDI_Dtpami_to_dtmpi(  gatherv->cmd.xfer_gatherv_int.rtype,
+                               &recvtype,
+                                NULL,
+                                NULL);
+   if(rc == -1) return rc;
+
+   rc  =  MPIR_Gatherv(sbuf,
+                       gatherv->cmd.xfer_gatherv_int.stypecount, sendtype,
+                       gatherv->cmd.xfer_gatherv_int.rcvbuf,
+                       gatherv->cmd.xfer_gatherv_int.rtypecounts,
+                       gatherv->cmd.xfer_gatherv_int.rdispls, recvtype,
+                       gatherv->cmd.xfer_gatherv_int.root, comm_ptr, &mpierrno);
+   if(gatherv->cb_done && rc == 0)
+     gatherv->cb_done(NULL, gatherv->cookie, PAMI_SUCCESS);
+   return rc;
+
+}
+

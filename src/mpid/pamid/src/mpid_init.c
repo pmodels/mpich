@@ -45,8 +45,8 @@ int mpidi_dynamic_tasking = 0;
   pami_extension_t pe_extension;
 #endif
 
-pami_client_t   MPIDI_Client;
-pami_context_t MPIDI_Context[MPIDI_MAX_CONTEXTS];
+pami_client_t    MPIDI_Client;
+pami_context_t   MPIDI_Context[MPIDI_MAX_CONTEXTS];
 
 MPIDI_Process_t  MPIDI_Process = {
   .verbose               = 0,
@@ -274,6 +274,14 @@ static struct
 #endif
 };
 
+/* ------------------------------ */
+/* Collective selection extension */
+/* ------------------------------ */
+pami_extension_t MPIDI_Collsel_extension;
+advisor_t        MPIDI_Collsel_advisor;
+advisor_table_t  MPIDI_Collsel_advisor_table;
+advisor_params_t MPIDI_Collsel_advisor_params;
+char            *MPIDI_Collsel_output_file;
 static void
 MPIDI_PAMI_client_init(int* rank, int* size, int* mpidi_dynamic_tasking, char **world_tasks)
 {
@@ -385,6 +393,145 @@ MPIDI_PAMI_client_init(int* rank, int* size, int* mpidi_dynamic_tasking, char **
   }
 }
 
+void MPIDI_Init_collsel_extension()
+{
+  pami_result_t status = PAMI_ERROR;
+  status = PAMI_Extension_open (MPIDI_Client, "EXT_collsel", &MPIDI_Collsel_extension);
+  if(status == PAMI_SUCCESS)
+  {
+    if(MPIDI_Process.optimized.auto_select_colls == MPID_AUTO_SELECT_COLLS_TUNE)
+    {
+      advisor_configuration_t configuration[1];
+      pami_extension_collsel_init pamix_collsel_init =
+         (pami_extension_collsel_init) PAMI_Extension_symbol (MPIDI_Collsel_extension, "Collsel_init");
+      status = pamix_collsel_init (MPIDI_Client, configuration, 1, &MPIDI_Context[0], 1, &MPIDI_Collsel_advisor);
+      if(status != PAMI_SUCCESS)
+      {
+        fprintf (stderr, "Error. The collsel_init failed. result = %d\n", status);
+        MPIDI_Process.optimized.auto_select_colls = MPID_AUTO_SELECT_COLLS_NONE;
+      }
+
+    }
+    else if(MPIDI_Process.optimized.auto_select_colls == MPID_AUTO_SELECT_COLLS_ALL)
+    {
+      pami_extension_collsel_initialized pamix_collsel_initialized =
+         (pami_extension_collsel_initialized) PAMI_Extension_symbol(MPIDI_Collsel_extension,
+                                                                    "Collsel_initialized");
+      if(pamix_collsel_initialized(MPIDI_Client, &MPIDI_Collsel_advisor) == 1)
+      {
+        char *collselfile;
+        collselfile = getenv("MP_COLLECTIVE_SELECTION_FILE");
+        pami_extension_collsel_table_load pamix_collsel_table_load =
+           (pami_extension_collsel_table_load) PAMI_Extension_symbol(MPIDI_Collsel_extension,
+                                                                       "Collsel_table_load");
+        if(collselfile != NULL)
+          status = pamix_collsel_table_load(MPIDI_Collsel_advisor, collselfile, &MPIDI_Collsel_advisor_table);
+        else
+          status = pamix_collsel_table_load(MPIDI_Collsel_advisor, "pami_tune_results.xml", &MPIDI_Collsel_advisor_table);
+          if (status == PAMI_SUCCESS)
+          {
+            pami_xfer_type_t *collsel_collectives = NULL;
+            unsigned          num_collectives;
+            pami_extension_collsel_get_collectives pamix_collsel_get_collectives =
+               (pami_extension_collsel_get_collectives) PAMI_Extension_symbol(MPIDI_Collsel_extension,
+                                                                              "Collsel_get_collectives");
+            status = pamix_collsel_get_collectives(MPIDI_Collsel_advisor_table, &collsel_collectives, &num_collectives);
+            MPIDI_Process.optimized.auto_select_colls = MPID_AUTO_SELECT_COLLS_NONE;
+            if(collsel_collectives != NULL)
+            {
+              unsigned i = 0;
+              for(i = 0; i < num_collectives; i++)
+              {
+                switch(collsel_collectives[i])
+                {
+                  case PAMI_XFER_BROADCAST:
+                    MPIDI_Process.optimized.auto_select_colls |= MPID_AUTO_SELECT_COLLS_BCAST;
+                    break;
+                  case PAMI_XFER_ALLREDUCE:
+                    MPIDI_Process.optimized.auto_select_colls |= MPID_AUTO_SELECT_COLLS_ALLREDUCE;
+                    break;
+                  case PAMI_XFER_REDUCE:
+                    MPIDI_Process.optimized.auto_select_colls |= MPID_AUTO_SELECT_COLLS_REDUCE;
+                    break;
+                  case PAMI_XFER_ALLGATHER:
+                    MPIDI_Process.optimized.auto_select_colls |= MPID_AUTO_SELECT_COLLS_ALLGATHER;
+                    break;
+                  case PAMI_XFER_ALLGATHERV:
+                  case PAMI_XFER_ALLGATHERV_INT:
+                    MPIDI_Process.optimized.auto_select_colls |= MPID_AUTO_SELECT_COLLS_ALLGATHERV;
+                    break;
+                  case PAMI_XFER_SCATTER:
+                    MPIDI_Process.optimized.auto_select_colls |= MPID_AUTO_SELECT_COLLS_SCATTER;
+                    break;
+                  case PAMI_XFER_SCATTERV:
+                  case PAMI_XFER_SCATTERV_INT:
+                    MPIDI_Process.optimized.auto_select_colls |= MPID_AUTO_SELECT_COLLS_SCATTERV;
+                    break;
+                  case PAMI_XFER_GATHER:
+                    MPIDI_Process.optimized.auto_select_colls |= MPID_AUTO_SELECT_COLLS_GATHER;
+                    break;
+                  case PAMI_XFER_GATHERV:
+                  case PAMI_XFER_GATHERV_INT:
+                    MPIDI_Process.optimized.auto_select_colls |= MPID_AUTO_SELECT_COLLS_GATHERV;
+                    break;
+                  case PAMI_XFER_BARRIER:
+                    MPIDI_Process.optimized.auto_select_colls |= MPID_AUTO_SELECT_COLLS_BARRIER;
+                    break;
+                  case PAMI_XFER_ALLTOALL:
+                    MPIDI_Process.optimized.auto_select_colls |= MPID_AUTO_SELECT_COLLS_ALLTOALL;
+                    break;
+                  case PAMI_XFER_ALLTOALLV:
+                  case PAMI_XFER_ALLTOALLV_INT:
+                    MPIDI_Process.optimized.auto_select_colls |= MPID_AUTO_SELECT_COLLS_ALLTOALLV;
+                    break;
+                  case PAMI_XFER_SCAN:
+                    MPIDI_Process.optimized.auto_select_colls |= MPID_AUTO_SELECT_COLLS_SCAN;
+                    MPIDI_Process.optimized.auto_select_colls |= MPID_AUTO_SELECT_COLLS_EXSCAN;
+                    break;
+                  case PAMI_XFER_REDUCE_SCATTER:
+                    MPIDI_Process.optimized.auto_select_colls |= MPID_AUTO_SELECT_COLLS_REDUCE_SCATTER;
+                    break;
+                  default:
+                    MPIDI_Process.optimized.auto_select_colls |= MPID_AUTO_SELECT_COLLS_NONE;
+                }
+              }
+              MPIU_Free(collsel_collectives);
+            }
+          }
+          else
+          {
+            fprintf (stderr, "Error. Collsel_table_load failed. result = %d\n", status);
+            MPIDI_Process.optimized.auto_select_colls = MPID_AUTO_SELECT_COLLS_NONE;
+          }
+      }
+      else
+        MPIDI_Process.optimized.auto_select_colls = MPID_AUTO_SELECT_COLLS_NONE;
+    }
+    else
+      PAMI_Extension_close(MPIDI_Collsel_extension);
+  }
+  else
+    MPIDI_Process.optimized.auto_select_colls = MPID_AUTO_SELECT_COLLS_NONE;
+}
+
+void MPIDI_Collsel_table_generate()
+{
+  external_geometry_ops_t external_ops;
+  external_ops.geometry_create     = MPIDI_Comm_create_from_pami_geom;
+  external_ops.geometry_destroy    = MPIDI_Comm_destroy_external;
+  external_ops.register_algorithms = MPIDI_Register_algorithms_ext;
+  pami_result_t status = PAMI_SUCCESS;
+  pami_extension_collsel_table_generate pamix_collsel_table_generate =
+    (pami_extension_collsel_table_generate) PAMI_Extension_symbol (MPIDI_Collsel_extension, "Collsel_table_generate");
+
+  status = pamix_collsel_table_generate (MPIDI_Collsel_advisor, MPIDI_Collsel_output_file, &MPIDI_Collsel_advisor_params, &external_ops, 1);
+  if(status != PAMI_SUCCESS)
+  {
+    fprintf (stderr, "Error. The collsel_table_generate failed. result = %d\n", status);
+  }
+
+}
+
 
 static void
 MPIDI_PAMI_context_init(int* threading, int *size)
@@ -494,7 +641,7 @@ MPIDI_PAMI_context_init(int* threading, int *size)
 
 
 #ifdef MPIDI_TRACE
-      int i; 
+      int i;
       MPIDI_Trace_buf = MPIU_Calloc0(numTasks, MPIDI_Trace_buf_t);
       if(MPIDI_Trace_buf == NULL) MPID_abort();
       memset((void *) MPIDI_Trace_buf,0, sizeof(MPIDI_Trace_buf_t));
@@ -529,6 +676,14 @@ MPIDI_PAMI_context_init(int* threading, int *size)
   rc = PAMI_Context_createv(MPIDI_Client, config, cfgval, MPIDI_Context, MPIDI_Process.avail_contexts);
 
   MPID_assert_always(rc == PAMI_SUCCESS);
+
+  /* --------------------------------------------- */
+  /* Get collective selection advisor and cache it */
+  /* --------------------------------------------- */
+  /* Context is created, i.e. collective selection extension is initialized in PAMI. Now I can get the
+     advisor if I am not in TUNE mode. If in TUNE mode, I can init collsel and generate the table */
+  MPIDI_Init_collsel_extension();
+
 #if (MPIDI_STATISTICS || MPIDI_PRINTENV)
   MPIDI_open_pe_extension();
 #endif
@@ -731,7 +886,7 @@ MPIDI_PAMI_init(int* rank, int* size, int* threading)
              MPIDI_Process.rma_pending,
              MPIDI_Process.shmem_pt2pt,
              MPIDI_Process.disable_internal_eager_scale,
-#if TOKEN_FLOW_CONTROL             
+#if TOKEN_FLOW_CONTROL
              MPIDI_Process.mp_buf_mem,
              MPIDI_Process.mp_buf_mem_max,
              MPIDI_Process.is_token_flow_control_on,
@@ -1089,6 +1244,26 @@ int MPID_Init(int * argc,
       MPIDI_Print_mpenv(rank,size);
   }
 #endif
+  /* ----------------------------------------------- */
+  /* parse params for pami_tune if in benchmark mode */
+  /* ----------------------------------------------- */
+  if(MPIDI_Process.optimized.auto_select_colls == MPID_AUTO_SELECT_COLLS_TUNE)
+  {
+    if(argc != NULL && argv != NULL)
+    {
+      if(MPIDI_collsel_pami_tune_parse_params(*argc, *argv) != PAMI_SUCCESS)
+      {
+        MPIDI_Process.optimized.auto_select_colls = MPID_AUTO_SELECT_COLLS_NONE;
+      }
+    }
+    else
+    {
+      if(MPIDI_collsel_pami_tune_parse_params(0, NULL) != PAMI_SUCCESS)
+      {
+        MPIDI_Process.optimized.auto_select_colls = MPID_AUTO_SELECT_COLLS_NONE;
+      }
+    }
+  }
   return MPI_SUCCESS;
 }
 
@@ -1100,6 +1275,14 @@ int MPID_InitCompleted()
 {
   MPIDI_NBC_init();
   MPIDI_Progress_init();
+  /* ----------------------------------------------- */
+  /*    Now all is ready.. call table generate       */
+  /* ----------------------------------------------- */
+  if(MPIDI_Process.optimized.auto_select_colls == MPID_AUTO_SELECT_COLLS_TUNE)
+  {
+    MPIDI_Collsel_table_generate();
+    MPIDI_collsel_pami_tune_cleanup();
+  }
   return MPI_SUCCESS;
 }
 
@@ -1182,7 +1365,7 @@ int MPIDI_Banner(char * bufPtr) {
     MPIU_Free(tmx);
     return MPI_SUCCESS;
 }
-#endif 
+#endif
 
 
 static inline void

@@ -305,3 +305,32 @@ int MPIDO_Reduce_simple(const void *sendbuf,
    TRACE_ERR("Reduce done\n");
    return MPI_SUCCESS;
 }
+
+
+int
+MPIDO_CSWrapper_reduce(pami_xfer_t *reduce,
+                       void        *comm)
+{
+   int mpierrno = 0;
+   MPID_Comm   *comm_ptr = (MPID_Comm*)comm;
+   MPI_Datatype type;
+   MPI_Op op;
+   void *sbuf;
+   MPIDI_coll_check_in_place(reduce->cmd.xfer_reduce.sndbuf, &sbuf);
+   int rc = MPIDI_Dtpami_to_dtmpi(  reduce->cmd.xfer_reduce.stype,
+                                   &type,
+                                    reduce->cmd.xfer_reduce.op,
+                                   &op);
+   if(rc == -1) return rc;
+
+
+   rc  =  MPIR_Reduce(sbuf,
+                      reduce->cmd.xfer_reduce.rcvbuf,
+                      reduce->cmd.xfer_reduce.rtypecount, type, op,
+                      reduce->cmd.xfer_reduce.root, comm_ptr, &mpierrno);
+   if(reduce->cb_done && rc == 0)
+     reduce->cb_done(NULL, reduce->cookie, PAMI_SUCCESS);
+   return rc;
+
+}
+

@@ -346,3 +346,26 @@ int MPIDO_Bcast_simple(void *buffer,
    TRACE_ERR("Exiting MPIDO_Bcast_optimized\n");
    return 0;
 }
+
+
+int
+MPIDO_CSWrapper_bcast(pami_xfer_t *bcast,
+                      void        *comm)
+{
+   int mpierrno = 0;
+   MPID_Comm   *comm_ptr = (MPID_Comm*)comm;
+   MPI_Datatype type;
+   int rc = MPIDI_Dtpami_to_dtmpi(  bcast->cmd.xfer_broadcast.type,
+                                   &type,
+                                    NULL,
+                                    NULL);
+   if(rc == -1) return rc;
+
+   rc  =  MPIR_Bcast_intra(bcast->cmd.xfer_broadcast.buf, 
+                           bcast->cmd.xfer_broadcast.typecount, type, 
+                           bcast->cmd.xfer_broadcast.root, comm_ptr, &mpierrno);
+   if(bcast->cb_done && rc == 0)
+     bcast->cb_done(NULL, bcast->cookie, PAMI_SUCCESS);
+   return rc;
+}
+

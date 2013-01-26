@@ -442,5 +442,119 @@ struct MPIDI_Win
   } sync;
 };
 
+/**
+ * \brief Structures and typedefs for collective selection extensions in PAMI
+ */
+
+typedef void* advisor_t;
+typedef void* advisor_table_t;
+typedef void* advisor_attribute_name_t;
+
+typedef union
+{
+  size_t         intval;
+  double         doubleval;
+  const char *   chararray;
+  const size_t * intarray;
+} advisor_attribute_value_t;
+
+typedef struct
+{
+  advisor_attribute_name_t  name;
+  advisor_attribute_value_t value;
+} advisor_configuration_t;
+
+typedef struct {
+   pami_xfer_type_t  *collectives;
+   size_t             num_collectives;
+   size_t            *procs_per_node;
+   size_t             num_procs_per_node;
+   size_t            *geometry_sizes;
+   size_t             num_geometry_sizes;
+   size_t            *message_sizes;
+   size_t             num_message_sizes;
+   int                iter;
+   int                verify;
+   int                verbose;
+   int                checkpoint;
+} advisor_params_t;
+
+typedef enum
+{
+  COLLSEL_ALGO = 0,      /* 'Always works' PAMI algorithm */
+  COLLSEL_QUERY_ALGO,    /* 'Must query' PAMI algorithm */
+  COLLSEL_EXTERNAL_ALGO, /* External algorithm */
+} advisor_algorithm_type_t;
+
+/* External algorithm callback function */
+typedef pami_result_t (*external_algorithm_fn)(pami_xfer_t *, void *);
+
+typedef struct
+{
+  external_algorithm_fn callback;
+  void                 *cookie;
+} external_algorithm_t;
+
+typedef struct
+{
+  union
+  {
+    pami_algorithm_t     internal;/* PAMI Algorithm */
+    external_algorithm_t external;/* External Algorithm */
+  } algorithm;
+  pami_metadata_t *metadata;
+  advisor_algorithm_type_t algorithm_type;
+} advisor_algorithm_t;
+
+
+typedef pami_result_t (*pami_extension_collsel_init)            (pami_client_t,
+                                                                 advisor_configuration_t [],
+                                                                 size_t,
+                                                                 pami_context_t [],
+                                                                 size_t,
+                                                                 advisor_t *);
+
+typedef pami_result_t (*pami_extension_collsel_destroy)         (advisor_t *);
+
+typedef int (*pami_extension_collsel_initialized)               (pami_client_t, advisor_t *);
+
+typedef pami_result_t (*pami_extension_collsel_table_load)      (advisor_t,
+                                                                 char *,
+                                                                 advisor_table_t *);
+
+typedef pami_result_t (*pami_extension_collsel_get_collectives) (advisor_table_t,
+                                                                 pami_xfer_type_t **,
+                                                                 unsigned          *);
+
+typedef pami_result_t (*pami_extension_collsel_register_algorithms) (advisor_table_t,
+                                                                     pami_geometry_t,
+                                                                     pami_xfer_type_t,
+                                                                     advisor_algorithm_t *,
+                                                                     size_t);
+
+typedef pami_result_t (*external_geometry_create_fn)(pami_geometry_range_t* task_slices,
+                                                     size_t           slice_count,
+                                                     pami_geometry_t *geometry,
+                                                     void           **cookie);
+
+typedef pami_result_t (*external_geometry_destroy_fn)(void *cookie);
+
+typedef pami_result_t (*external_register_algorithms_fn)(void *cookie,
+                                                         pami_xfer_type_t collective,
+                                                         advisor_algorithm_t **algorithms,
+                                                         size_t              *num_algorithms);
+
+typedef struct
+{
+  external_geometry_create_fn   geometry_create;
+  external_geometry_destroy_fn  geometry_destroy;
+  external_register_algorithms_fn register_algorithms;
+} external_geometry_ops_t;
+
+typedef pami_result_t (*pami_extension_collsel_table_generate)  (advisor_t,
+                                                                 char *,
+                                                                 advisor_params_t *,
+                                                                 external_geometry_ops_t *,
+                                                                 int);
 
 #endif

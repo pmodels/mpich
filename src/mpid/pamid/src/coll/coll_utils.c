@@ -72,6 +72,11 @@ pami_result_t MPIDI_Pami_post_wrapper(pami_context_t context, void *cookie)
                         (x) == MPI_DOUBLE_INT || (x) == MPI_LONG_INT || \
                         (x) == MPI_2INT || (x) == MPI_SHORT_INT || \
                         (x) == MPI_LONG_DOUBLE_INT )
+						
+#define isPAMI_LOC_TYPE(x) ( (x) == PAMI_TYPE_LOC_2INT || (x) == PAMI_TYPE_LOC_FLOAT_INT || \
+                             (x) == PAMI_TYPE_LOC_DOUBLE_INT || (x) == PAMI_TYPE_LOC_SHORT_INT || \
+                             (x) == PAMI_TYPE_LOC_LONG_INT || (x) == PAMI_TYPE_LOC_LONGDOUBLE_INT || \
+                             (x) == PAMI_TYPE_LOC_2FLOAT || (x) == PAMI_TYPE_LOC_2DOUBLE )
 
 #define isBOOL(x) ( (x) == MPI_C_BOOL )
 
@@ -263,3 +268,132 @@ int MPIDI_Datatype_to_pami(MPI_Datatype        dt,
 
    return MPI_SUCCESS;
 }
+
+int MPIDI_Dtpami_to_dtmpi( pami_type_t         pdt,
+                           MPI_Datatype       *dt,
+                           pami_data_function  pop,
+                           MPI_Op             *op)
+{
+   *dt = MPI_DATATYPE_NULL;
+   if(pop != NULL)
+      *op = MPI_OP_NULL;
+
+   if(pdt == PAMI_TYPE_SIGNED_INT)               *dt = MPI_INT;
+   else if(pdt == PAMI_TYPE_UNSIGNED_INT)        *dt = MPI_UNSIGNED;
+   else if(pdt == PAMI_TYPE_FLOAT)               *dt = MPI_FLOAT; 
+   else if(pdt == PAMI_TYPE_DOUBLE)              *dt = MPI_DOUBLE;
+   else if(pdt == PAMI_TYPE_LONG_DOUBLE)         *dt = MPI_LONG_DOUBLE;
+   else if(pdt == PAMI_TYPE_SIGNED_CHAR)         *dt = MPI_CHAR;
+   else if(pdt == PAMI_TYPE_UNSIGNED_CHAR)       *dt = MPI_UNSIGNED_CHAR;
+   else if(pdt == PAMI_TYPE_BYTE)                *dt = MPI_BYTE;
+   else if(pdt == PAMI_TYPE_SIGNED_SHORT)        *dt = MPI_SHORT;
+   else if(pdt == PAMI_TYPE_UNSIGNED_SHORT)      *dt = MPI_UNSIGNED_SHORT;
+   else if(pdt == PAMI_TYPE_SIGNED_LONG_LONG)    *dt = MPI_LONG_LONG;
+   else if(pdt == PAMI_TYPE_UNSIGNED_LONG_LONG)  *dt = MPI_UNSIGNED_LONG_LONG;
+   else if(pdt == PAMI_TYPE_SINGLE_COMPLEX)      *dt = MPI_C_FLOAT_COMPLEX;
+   else if(pdt == PAMI_TYPE_DOUBLE_COMPLEX)      *dt = MPI_C_DOUBLE_COMPLEX;
+   else if(isPAMI_LOC_TYPE(pdt))
+   {
+     if(pdt == PAMI_TYPE_LOC_2INT)               *dt = MPI_2INT;
+     else if(pdt == PAMI_TYPE_LOC_FLOAT_INT)     *dt = MPI_FLOAT_INT;
+     else if(pdt == PAMI_TYPE_LOC_DOUBLE_INT)    *dt = MPI_DOUBLE_INT;
+     else if(pdt == PAMI_TYPE_LOC_SHORT_INT)     *dt = MPI_SHORT_INT;
+     else if(pdt == PAMI_TYPE_LOC_LONG_INT)      *dt = MPI_LONG_INT;
+     else if(pdt == PAMI_TYPE_LOC_LONGDOUBLE_INT)*dt = MPI_LONG_DOUBLE_INT;
+     else if(pdt == PAMI_TYPE_LOC_2FLOAT)        *dt = MPI_2REAL;
+     else if(pdt == PAMI_TYPE_LOC_2DOUBLE)       *dt = MPI_2DOUBLE_PRECISION;
+
+     if(pop == NULL) return MPI_SUCCESS;
+     if(pop == PAMI_DATA_MINLOC)
+     {
+        *op = MPI_MINLOC;
+        return MPI_SUCCESS;
+     }
+     if(pop == PAMI_DATA_MAXLOC) 
+     {
+        *op = MPI_MAXLOC;
+        return MPI_SUCCESS;
+     }
+     if(pop == PAMI_DATA_COPY) 
+     {
+        *op = MPI_REPLACE;
+        return MPI_SUCCESS;
+     }
+     else return -1;
+   }
+   else if(pdt == PAMI_TYPE_LOGICAL4)
+   {
+      *dt = MPI_LOGICAL;
+      if(pop == NULL) return MPI_SUCCESS;
+      if(pop == PAMI_DATA_LOR) 
+      {   
+         *op = MPI_LOR;
+         return MPI_SUCCESS;
+      }
+      if(pop == PAMI_DATA_LAND) 
+      {   
+         *op = MPI_LAND;
+         return MPI_SUCCESS;
+      }
+      if(pop == PAMI_DATA_LXOR) 
+      {   
+         *op = MPI_LXOR;
+         return MPI_SUCCESS;
+      }
+      if(pop == PAMI_DATA_COPY) 
+      {   
+         *op = MPI_REPLACE;
+         return MPI_SUCCESS;
+      }
+      return -1;
+   }
+   else if(pdt == PAMI_TYPE_LOGICAL1)
+   {
+     *dt = MPI_C_BOOL;
+     if(pop == NULL) return MPI_SUCCESS;
+     if(pop == PAMI_DATA_LOR) 
+     {   
+        *op = MPI_LOR;
+        return MPI_SUCCESS;
+     }
+     if(pop == PAMI_DATA_LAND) 
+     {   
+        *op = MPI_LAND;
+        return MPI_SUCCESS;
+     }
+     if(pop == PAMI_DATA_LXOR) 
+     {   
+        *op = MPI_LXOR;
+        return MPI_SUCCESS;
+     }
+     if(pop == PAMI_DATA_COPY) 
+     {   
+        *op = MPI_REPLACE;
+        return MPI_SUCCESS;
+     }
+     return -1;
+   }
+   
+   
+   if(*dt == MPI_DATATYPE_NULL) return -1;
+
+   if(pop == NULL) return MPI_SUCCESS; /* just doing DT conversion */
+
+   *op = MPI_OP_NULL;
+   if(pop == PAMI_DATA_SUM)      *op = MPI_SUM;
+   else if(pop ==PAMI_DATA_PROD) *op = MPI_PROD;
+   else if(pop ==PAMI_DATA_MAX)  *op = MPI_MAX;
+   else if(pop ==PAMI_DATA_MIN)  *op = MPI_MIN;
+   else if(pop ==PAMI_DATA_BAND) *op = MPI_BAND;
+   else if(pop ==PAMI_DATA_BOR)  *op = MPI_BOR;
+   else if(pop ==PAMI_DATA_BXOR) *op = MPI_BXOR;
+   else if(pop ==PAMI_DATA_LAND) *op = MPI_LAND;
+   else if(pop ==PAMI_DATA_LOR)  *op = MPI_LOR;
+   else if(pop ==PAMI_DATA_LXOR) *op = MPI_LXOR;
+   else if(pop ==PAMI_DATA_COPY) *op = MPI_REPLACE;
+
+   if(*op == MPI_OP_NULL) return -1;
+
+   return MPI_SUCCESS;
+}
+

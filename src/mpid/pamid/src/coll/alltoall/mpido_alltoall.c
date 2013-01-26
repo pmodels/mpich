@@ -290,3 +290,37 @@ int MPIDO_Alltoall_simple(const void *sendbuf,
    TRACE_ERR("Leaving MPIDO_Alltoall_optimized\n");
    return MPI_SUCCESS;
 }
+
+
+int
+MPIDO_CSWrapper_alltoall(pami_xfer_t *alltoall,
+                         void        *comm)
+{
+   int mpierrno = 0;
+   MPID_Comm   *comm_ptr = (MPID_Comm*)comm;
+   MPI_Datatype sendtype, recvtype;
+   void *sbuf;
+   MPIDI_coll_check_in_place(alltoall->cmd.xfer_alltoall.sndbuf, &sbuf);
+   int rc = MPIDI_Dtpami_to_dtmpi(  alltoall->cmd.xfer_alltoall.stype,
+                                   &sendtype,
+                                    NULL,
+                                    NULL);
+   if(rc == -1) return rc;
+
+   rc = MPIDI_Dtpami_to_dtmpi(  alltoall->cmd.xfer_alltoall.rtype,
+                               &recvtype,
+                                NULL,
+                                NULL);
+   if(rc == -1) return rc;
+
+   rc  =  MPIR_Alltoall_intra(sbuf,
+                              alltoall->cmd.xfer_alltoall.stypecount, sendtype,
+                              alltoall->cmd.xfer_alltoall.rcvbuf,
+                              alltoall->cmd.xfer_alltoall.rtypecount, recvtype,
+                              comm_ptr, &mpierrno);
+   if(alltoall->cb_done && rc == 0)
+     alltoall->cb_done(NULL, alltoall->cookie, PAMI_SUCCESS);
+   return rc;
+
+}
+

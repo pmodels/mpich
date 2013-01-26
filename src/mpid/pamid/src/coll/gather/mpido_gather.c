@@ -446,3 +446,36 @@ int MPIDO_Gather_simple(const void *sendbuf,
    TRACE_ERR("Leaving MPIDO_Gather_optimized\n");
    return MPI_SUCCESS;
 }
+
+int
+MPIDO_CSWrapper_gather(pami_xfer_t *gather,
+                       void        *comm)
+{
+   int mpierrno = 0;
+   MPID_Comm   *comm_ptr = (MPID_Comm*)comm;
+   MPI_Datatype sendtype, recvtype;
+   void *sbuf;
+   MPIDI_coll_check_in_place(gather->cmd.xfer_gather.sndbuf, &sbuf);
+   int rc = MPIDI_Dtpami_to_dtmpi(  gather->cmd.xfer_gather.stype,
+                                   &sendtype,
+                                    NULL,
+                                    NULL);
+   if(rc == -1) return rc;
+
+   rc = MPIDI_Dtpami_to_dtmpi(  gather->cmd.xfer_gather.rtype,
+                               &recvtype,
+                                NULL,
+                                NULL);
+   if(rc == -1) return rc;
+
+   rc  =  MPIR_Gather(sbuf,
+                      gather->cmd.xfer_gather.stypecount, sendtype,
+                      gather->cmd.xfer_gather.rcvbuf,
+                      gather->cmd.xfer_gather.rtypecount, recvtype,
+                      gather->cmd.xfer_gather.root, comm_ptr, &mpierrno);
+   if(gather->cb_done && rc == 0)
+     gather->cb_done(NULL, gather->cookie, PAMI_SUCCESS);
+   return rc;
+
+}
+

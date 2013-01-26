@@ -34,5 +34,10 @@ extern pami_context_t MPIDI_Context[];
 
 extern MPIDI_Process_t MPIDI_Process;
 
+extern advisor_table_t  MPIDI_Collsel_advisor_table;
+extern pami_extension_t MPIDI_Collsel_extension;
+extern advisor_params_t MPIDI_Collsel_advisor_params;
+extern char            *MPIDI_Collsel_output_file;
+
 
 #endif

@@ -50,6 +50,93 @@ int MPIDI_Comm_destroy (MPID_Comm *comm)
   return MPI_SUCCESS;
 }
 
+pami_result_t MPIDI_Comm_create_from_pami_geom(pami_geometry_range_t  *task_slices,
+                                               size_t                  slice_count,
+                                               pami_geometry_t        *geometry,
+                                               void                  **cookie)
+{
+  int         mpi_errno = MPI_SUCCESS;
+  int         num_tasks = 0;
+  int        *ranks     = NULL;
+  MPID_Comm  *comm_ptr  = NULL,  *new_comm_ptr  = NULL;
+  MPID_Group *group_ptr = NULL,  *new_group_ptr = NULL;
+  int i = 0, j = 0;
+  MPIR_Context_id_t new_context_id = 0;
+  int *mapping = NULL;
+
+  /* Get comm_ptr for MPI_COMM_WORLD and get the group_ptr for it */
+  MPID_Comm_get_ptr( MPI_COMM_WORLD, comm_ptr );
+  mpi_errno = MPIR_Comm_group_impl(comm_ptr, &group_ptr);
+  if (mpi_errno) 
+  {
+    TRACE_ERR("Error while creating group_ptr from MPI_COMM_WORLD in MPIDI_Comm_create_from_pami_geom\n");
+    return PAMI_ERROR;
+  }
+
+  /* Create the ranks list from the pami_geometry_range_t array */
+  for(i = 0; i < slice_count; i++)
+  {
+    num_tasks += (task_slices[i].hi - task_slices[i].lo) + 1;
+  }
+  ranks = MPIU_Calloc0(num_tasks, int);
+  for(i = 0; i < slice_count; i++)
+  {
+    int slice_sz = (task_slices[i].hi - task_slices[i].lo) + 1;
+    int k = 0;
+    for(k = 0; k < slice_sz; k++)
+    {
+      ranks[j] = task_slices[i].lo + k;
+      j++;
+    }
+  }
+
+  /* Now we have all we need to create the new group. Create it */
+  mpi_errno = MPIR_Group_incl_impl(group_ptr, num_tasks, ranks, &new_group_ptr);
+  if (mpi_errno) 
+  {
+    TRACE_ERR("Error while creating new_group_ptr from group_ptr in MPIDI_Comm_create_from_pami_geom\n");
+    return PAMI_ERROR;
+  }
+
+  /* Now create the communicator using the new_group_ptr */
+  mpi_errno = MPIR_Comm_create_intra(comm_ptr, new_group_ptr, &new_comm_ptr);
+  if (mpi_errno)
+  {
+    TRACE_ERR("Error while creating new_comm_ptr from group_ptr in MPIDI_Comm_create_from_pami_geom\n");
+    return PAMI_ERROR;
+  }
+
+  if(new_comm_ptr)
+  {
+    /* Get the geometry from the communicator and set the out parameters */
+    *geometry = new_comm_ptr->mpid.geometry;
+    *cookie   = new_comm_ptr;
+  }
+  else
+  {
+    *geometry = PAMI_GEOMETRY_NULL;
+    *cookie   = NULL;
+  }
+
+  /* Cleanup */
+  MPIU_TestFree(&ranks);
+
+  return PAMI_SUCCESS;
+}
+
+pami_result_t MPIDI_Comm_destroy_external(void *comm_ext)
+{
+  int mpi_errno = 0;
+  MPID_Comm* comm_ptr = (MPID_Comm*)comm_ext;
+  mpi_errno = MPIR_Comm_free_impl(comm_ptr);
+  if (mpi_errno)
+  {
+    TRACE_ERR("Error while destroying comm_ptr in MPIDI_Comm_destroy_external\n");
+    return PAMI_ERROR;
+  }
+  return PAMI_SUCCESS;
+}
+
 typedef struct MPIDI_Post_geom_create
 {
    pami_work_t state;
@@ -289,6 +376,15 @@ void MPIDI_Coll_comm_destroy(MPID_Comm *comm)
    for(i=0;i<PAMI_XFER_COUNT;i++)
    {
      TRACE_ERR("Freeing algo/meta %d\n", i);
+     /* When allocating comm->mpid.coll_algorithm, we skip allocations for
+       AM collectives. Also there is no explicit initialization of 
+       comm->mpid.coll_algorithm to NULLs. This may cause MPIU_TestFree to
+       cause problems when freeing. We skip AM collectives here as we skip
+       allocating them in MPIDI_Comm_coll_query */
+     if(i == PAMI_XFER_AMBROADCAST || i == PAMI_XFER_AMSCATTER ||
+         i == PAMI_XFER_AMGATHER || i == PAMI_XFER_AMREDUCE)
+         continue;
+
      MPIU_TestFree(&comm->mpid.coll_algorithm[i][0]);
      MPIU_TestFree(&comm->mpid.coll_algorithm[i][1]);
      MPIU_TestFree(&comm->mpid.coll_metadata[i][0]);

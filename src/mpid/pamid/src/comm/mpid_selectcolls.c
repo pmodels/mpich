@@ -24,6 +24,68 @@
 
 #include <mpidimpl.h>
 
+pami_metadata_t       ext_metadata;
+advisor_algorithm_t   ext_algorithms[1];
+external_algorithm_t  ext_algorithm;
+
+#define MPIDI_UPDATE_COLLSEL_EXT_ALGO(cb,nm,xfer_type) {             \
+  ext_algorithm.callback               =  cb;                        \
+  ext_algorithm.cookie                 =  comm;                      \
+  ext_metadata.name                    =  nm;                        \
+  ext_algorithms[0].algorithm.external =  ext_algorithm;             \
+  ext_algorithms[0].metadata           = &ext_metadata;              \
+  ext_algorithms[0].algorithm_type     =  COLLSEL_EXTERNAL_ALGO;     \
+  collsel_register_algorithms(MPIDI_Collsel_advisor_table,           \
+                                   comm->mpid.geometry,              \
+                                   xfer_type,                        \
+                                  &ext_algorithms[0],                \
+                                   1);                               \
+}
+
+
+pami_result_t MPIDI_Register_algorithms_ext(void                 *cookie,
+                                            pami_xfer_type_t      collective,
+                                            advisor_algorithm_t **algorithms,
+                                            size_t               *num_algorithms)
+{
+  external_algorithm_fn callback;
+  char                 *algoname;
+
+  switch(collective)
+  {
+      case PAMI_XFER_BROADCAST:  callback = MPIDO_CSWrapper_bcast; algoname = "EXT:Bcast:P2P:P2P"; break;
+      case PAMI_XFER_ALLREDUCE:  callback = MPIDO_CSWrapper_allreduce; algoname = "EXT:Allreduce:P2P:P2P"; break;
+      case PAMI_XFER_REDUCE:  callback = MPIDO_CSWrapper_reduce; algoname = "EXT:Reduce:P2P:P2P"; break;
+      case PAMI_XFER_ALLGATHER:  callback = MPIDO_CSWrapper_allgather; algoname = "EXT:Allgather:P2P:P2P"; break;
+      case PAMI_XFER_ALLGATHERV_INT:  callback = MPIDO_CSWrapper_allgatherv; algoname = "EXT:Allgatherv:P2P:P2P"; break;
+      case PAMI_XFER_SCATTER:  callback = MPIDO_CSWrapper_scatter; algoname = "EXT:Scatter:P2P:P2P"; break;
+      case PAMI_XFER_SCATTERV_INT:  callback = MPIDO_CSWrapper_scatterv; algoname = "EXT:Scatterv:P2P:P2P"; break;
+      case PAMI_XFER_GATHER:  callback = MPIDO_CSWrapper_gather; algoname = "EXT:Gather:P2P:P2P"; break;
+      case PAMI_XFER_GATHERV_INT: callback = MPIDO_CSWrapper_gatherv; algoname = "EXT:Gatherv:P2P:P2P"; break;
+      case PAMI_XFER_BARRIER: callback = MPIDO_CSWrapper_barrier; algoname = "EXT:Barrier:P2P:P2P"; break;
+      case PAMI_XFER_ALLTOALL: callback = MPIDO_CSWrapper_alltoall; algoname = "EXT:Alltoall:P2P:P2P"; break;
+      case PAMI_XFER_ALLTOALLV_INT: callback = MPIDO_CSWrapper_alltoallv; algoname = "EXT:Alltoallv:P2P:P2P"; break;
+      case PAMI_XFER_SCAN: callback = MPIDO_CSWrapper_scan; algoname = "EXT:Scan:P2P:P2P"; break;
+      case PAMI_XFER_ALLGATHERV:
+      case PAMI_XFER_SCATTERV:
+      case PAMI_XFER_GATHERV:
+      case PAMI_XFER_ALLTOALLV:
+      case PAMI_XFER_REDUCE_SCATTER:
+           *num_algorithms = 0;
+           return PAMI_SUCCESS;
+      default: return -1;
+  }
+  *num_algorithms                      =  1;
+  ext_algorithm.callback               =  callback;
+  ext_algorithm.cookie                 =  cookie;
+  ext_metadata.name                    =  algoname;
+  ext_algorithms[0].algorithm.external =  ext_algorithm;
+  ext_algorithms[0].metadata           = &ext_metadata;
+  ext_algorithms[0].algorithm_type     =  COLLSEL_EXTERNAL_ALGO;
+  *algorithms                          = &ext_algorithms[0];
+  return PAMI_SUCCESS;
+}
+
 static char* MPIDI_Coll_type_name(int i)
 {
    switch(i)
@@ -417,89 +479,106 @@ void MPIDI_Comm_coll_envvars(MPID_Comm *comm)
 
    /*   If automatic collective selection is enabled and user didn't specifically overwrite
       it, then use auto coll sel.. Otherwise, go through the manual coll sel code path. */
-   /* ************ Barrier ************ */
-   if((MPIDI_Process.optimized.auto_select_colls & MPID_AUTO_SELECT_COLLS_BARRIER) &&
-       comm->mpid.user_selected_type[PAMI_XFER_BARRIER] == MPID_COLL_NOSELECTION)
+   if(MPIDI_Process.optimized.auto_select_colls != MPID_AUTO_SELECT_COLLS_NONE)
    {
-     comm->coll_fns->Barrier      = MPIDO_Barrier_simple;
-   }
-   /* ************ Bcast ************ */
-   if((MPIDI_Process.optimized.auto_select_colls & MPID_AUTO_SELECT_COLLS_BCAST) &&
-       comm->mpid.user_selected_type[PAMI_XFER_BROADCAST] == MPID_COLL_NOSELECTION)
-   {
-     comm->coll_fns->Bcast        = MPIDO_Bcast_simple;
-   }
-   /* ************ Allreduce ************ */
-   if((MPIDI_Process.optimized.auto_select_colls & MPID_AUTO_SELECT_COLLS_ALLREDUCE) &&
-       comm->mpid.user_selected_type[PAMI_XFER_ALLREDUCE] == MPID_COLL_NOSELECTION)
-   {
-     comm->coll_fns->Allreduce    = MPIDO_Allreduce_simple;
-   }
-   /* ************ Allgather ************ */
-   if((MPIDI_Process.optimized.auto_select_colls & MPID_AUTO_SELECT_COLLS_ALLGATHER) &&
-       comm->mpid.user_selected_type[PAMI_XFER_ALLGATHER] == MPID_COLL_NOSELECTION)
-   {
-     comm->coll_fns->Allgather    = MPIDO_Allgather_simple;
-   }
-   /* ************ Allgatherv ************ */
-   if((MPIDI_Process.optimized.auto_select_colls & MPID_AUTO_SELECT_COLLS_ALLGATHERV) &&
-       comm->mpid.user_selected_type[PAMI_XFER_ALLGATHERV_INT] == MPID_COLL_NOSELECTION)
-   {
-     comm->coll_fns->Allgatherv   = MPIDO_Allgatherv_simple;
-   }
-   /* ************ Scatterv ************ */
-   if((MPIDI_Process.optimized.auto_select_colls & MPID_AUTO_SELECT_COLLS_SCATTERV) &&
-       comm->mpid.user_selected_type[PAMI_XFER_SCATTERV_INT] == MPID_COLL_NOSELECTION)
-   {
-     comm->coll_fns->Scatterv     = MPIDO_Scatterv_simple;
-   }
-   /* ************ Scatter ************ */
-   if((MPIDI_Process.optimized.auto_select_colls & MPID_AUTO_SELECT_COLLS_SCATTER) &&
-       comm->mpid.user_selected_type[PAMI_XFER_SCATTER] == MPID_COLL_NOSELECTION)
-   {
-     comm->coll_fns->Scatter      = MPIDO_Scatter_simple;
-   }
-   /* ************ Gather ************ */
-   if((MPIDI_Process.optimized.auto_select_colls & MPID_AUTO_SELECT_COLLS_GATHER) &&
-       comm->mpid.user_selected_type[PAMI_XFER_GATHER] == MPID_COLL_NOSELECTION)
-   {
-     comm->coll_fns->Gather       = MPIDO_Gather_simple;
-   }
-   /* ************ Alltoallv ************ */
-   if((MPIDI_Process.optimized.auto_select_colls & MPID_AUTO_SELECT_COLLS_ALLTOALLV) &&
-       comm->mpid.user_selected_type[PAMI_XFER_ALLTOALLV_INT] == MPID_COLL_NOSELECTION)
-   {
-     comm->coll_fns->Alltoallv    = MPIDO_Alltoallv_simple;
-   }
-   /* ************ Alltoall ************ */
-   if((MPIDI_Process.optimized.auto_select_colls & MPID_AUTO_SELECT_COLLS_ALLTOALL) &&
-       comm->mpid.user_selected_type[PAMI_XFER_ALLTOALL] == MPID_COLL_NOSELECTION)
-   {
-     comm->coll_fns->Alltoall     = MPIDO_Alltoall_simple;
-   }
-   /* ************ Gatherv ************ */
-   if((MPIDI_Process.optimized.auto_select_colls & MPID_AUTO_SELECT_COLLS_GATHERV) &&
-       comm->mpid.user_selected_type[PAMI_XFER_GATHERV_INT] == MPID_COLL_NOSELECTION)
-   {
-     comm->coll_fns->Gatherv      = MPIDO_Gatherv_simple;
-   }
-   /* ************ Reduce ************ */
-   if((MPIDI_Process.optimized.auto_select_colls & MPID_AUTO_SELECT_COLLS_REDUCE) &&
-       comm->mpid.user_selected_type[PAMI_XFER_REDUCE] == MPID_COLL_NOSELECTION)
-   {
-     comm->coll_fns->Reduce       = MPIDO_Reduce_simple;
-   }
-   /* ************ Scan ************ */
-   if((MPIDI_Process.optimized.auto_select_colls & MPID_AUTO_SELECT_COLLS_SCAN) &&
-       comm->mpid.user_selected_type[PAMI_XFER_SCAN] == MPID_COLL_NOSELECTION)
-   {
-     comm->coll_fns->Scan         = MPIDO_Scan_simple;
-   }
-   /* ************ Exscan ************ */
-   if((MPIDI_Process.optimized.auto_select_colls & MPID_AUTO_SELECT_COLLS_EXSCAN) &&
-       comm->mpid.user_selected_type[PAMI_XFER_SCAN] == MPID_COLL_NOSELECTION)
-   {
-     comm->coll_fns->Exscan       = MPIDO_Exscan_simple;
+     pami_extension_collsel_register_algorithms collsel_register_algorithms =
+      (pami_extension_collsel_register_algorithms) PAMI_Extension_symbol(MPIDI_Collsel_extension,
+                                                                        "Collsel_register_algorithms");
+    if(collsel_register_algorithms != NULL)
+    {
+
+      /* ************ Barrier ************ */
+      if((MPIDI_Process.optimized.auto_select_colls & MPID_AUTO_SELECT_COLLS_BARRIER) &&
+         comm->mpid.user_selected_type[PAMI_XFER_BARRIER] == MPID_COLL_NOSELECTION)
+      {
+         comm->coll_fns->Barrier      = MPIDO_Barrier_simple;
+         MPIDI_UPDATE_COLLSEL_EXT_ALGO(MPIDO_CSWrapper_barrier,"EXT:Barrier:P2P:P2P",PAMI_XFER_BARRIER);
+      }
+      /* ************ Bcast ************ */
+      if((MPIDI_Process.optimized.auto_select_colls & MPID_AUTO_SELECT_COLLS_BCAST) &&
+         comm->mpid.user_selected_type[PAMI_XFER_BROADCAST] == MPID_COLL_NOSELECTION)
+      {
+         comm->coll_fns->Bcast        = MPIDO_Bcast_simple;
+         MPIDI_UPDATE_COLLSEL_EXT_ALGO(MPIDO_CSWrapper_bcast,"EXT:Bcast:P2P:P2P",PAMI_XFER_BROADCAST);
+      }
+      /* ************ Allreduce ************ */
+      if((MPIDI_Process.optimized.auto_select_colls & MPID_AUTO_SELECT_COLLS_ALLREDUCE) &&
+         comm->mpid.user_selected_type[PAMI_XFER_ALLREDUCE] == MPID_COLL_NOSELECTION)
+      {
+         comm->coll_fns->Allreduce    = MPIDO_Allreduce_simple;
+         MPIDI_UPDATE_COLLSEL_EXT_ALGO(MPIDO_CSWrapper_allreduce,"EXT:Allreduce:P2P:P2P",PAMI_XFER_ALLREDUCE);
+      }
+      /* ************ Allgather ************ */
+      if((MPIDI_Process.optimized.auto_select_colls & MPID_AUTO_SELECT_COLLS_ALLGATHER) &&
+         comm->mpid.user_selected_type[PAMI_XFER_ALLGATHER] == MPID_COLL_NOSELECTION)
+      {
+         comm->coll_fns->Allgather    = MPIDO_Allgather_simple;
+         MPIDI_UPDATE_COLLSEL_EXT_ALGO(MPIDO_CSWrapper_allgather,"EXT:Allgather:P2P:P2P",PAMI_XFER_ALLGATHER);
+      }
+      /* ************ Allgatherv ************ */
+      if((MPIDI_Process.optimized.auto_select_colls & MPID_AUTO_SELECT_COLLS_ALLGATHERV) &&
+         comm->mpid.user_selected_type[PAMI_XFER_ALLGATHERV_INT] == MPID_COLL_NOSELECTION)
+      {
+         comm->coll_fns->Allgatherv   = MPIDO_Allgatherv_simple;
+         MPIDI_UPDATE_COLLSEL_EXT_ALGO(MPIDO_CSWrapper_allgatherv,"EXT:Allgatherv:P2P:P2P",PAMI_XFER_ALLGATHERV_INT);
+      }
+      /* ************ Scatterv ************ */
+      if((MPIDI_Process.optimized.auto_select_colls & MPID_AUTO_SELECT_COLLS_SCATTERV) &&
+         comm->mpid.user_selected_type[PAMI_XFER_SCATTERV_INT] == MPID_COLL_NOSELECTION)
+      {
+         comm->coll_fns->Scatterv     = MPIDO_Scatterv_simple;
+         MPIDI_UPDATE_COLLSEL_EXT_ALGO(MPIDO_CSWrapper_scatterv,"EXT:Scatterv:P2P:P2P",PAMI_XFER_SCATTERV_INT);
+      }
+      /* ************ Scatter ************ */
+      if((MPIDI_Process.optimized.auto_select_colls & MPID_AUTO_SELECT_COLLS_SCATTER) &&
+         comm->mpid.user_selected_type[PAMI_XFER_SCATTER] == MPID_COLL_NOSELECTION)
+      {
+         comm->coll_fns->Scatter      = MPIDO_Scatter_simple;
+         MPIDI_UPDATE_COLLSEL_EXT_ALGO(MPIDO_CSWrapper_scatter,"EXT:Scatter:P2P:P2P",PAMI_XFER_SCATTER);
+      }
+      /* ************ Gather ************ */
+      if((MPIDI_Process.optimized.auto_select_colls & MPID_AUTO_SELECT_COLLS_GATHER) &&
+         comm->mpid.user_selected_type[PAMI_XFER_GATHER] == MPID_COLL_NOSELECTION)
+      {
+         comm->coll_fns->Gather       = MPIDO_Gather_simple;
+         MPIDI_UPDATE_COLLSEL_EXT_ALGO(MPIDO_CSWrapper_gather,"EXT:Gather:P2P:P2P",PAMI_XFER_GATHER);
+      }
+      /* ************ Alltoallv ************ */
+      if((MPIDI_Process.optimized.auto_select_colls & MPID_AUTO_SELECT_COLLS_ALLTOALLV) &&
+         comm->mpid.user_selected_type[PAMI_XFER_ALLTOALLV_INT] == MPID_COLL_NOSELECTION)
+      {
+         comm->coll_fns->Alltoallv    = MPIDO_Alltoallv_simple;
+         MPIDI_UPDATE_COLLSEL_EXT_ALGO(MPIDO_CSWrapper_alltoallv,"EXT:Alltoallv:P2P:P2P",PAMI_XFER_ALLTOALLV_INT);
+      }
+      /* ************ Alltoall ************ */
+      if((MPIDI_Process.optimized.auto_select_colls & MPID_AUTO_SELECT_COLLS_ALLTOALL) &&
+         comm->mpid.user_selected_type[PAMI_XFER_ALLTOALL] == MPID_COLL_NOSELECTION)
+      {
+         comm->coll_fns->Alltoall     = MPIDO_Alltoall_simple;
+         MPIDI_UPDATE_COLLSEL_EXT_ALGO(MPIDO_CSWrapper_alltoall,"EXT:Alltoall:P2P:P2P",PAMI_XFER_ALLTOALL);
+      }
+      /* ************ Gatherv ************ */
+      if((MPIDI_Process.optimized.auto_select_colls & MPID_AUTO_SELECT_COLLS_GATHERV) &&
+         comm->mpid.user_selected_type[PAMI_XFER_GATHERV_INT] == MPID_COLL_NOSELECTION)
+      {
+         comm->coll_fns->Gatherv      = MPIDO_Gatherv_simple;
+         MPIDI_UPDATE_COLLSEL_EXT_ALGO(MPIDO_CSWrapper_gatherv,"EXT:Gatherv:P2P:P2P",PAMI_XFER_GATHERV_INT);
+      }
+      /* ************ Reduce ************ */
+      if((MPIDI_Process.optimized.auto_select_colls & MPID_AUTO_SELECT_COLLS_REDUCE) &&
+         comm->mpid.user_selected_type[PAMI_XFER_REDUCE] == MPID_COLL_NOSELECTION)
+      {
+         comm->coll_fns->Reduce       = MPIDO_Reduce_simple;
+         MPIDI_UPDATE_COLLSEL_EXT_ALGO(MPIDO_CSWrapper_reduce,"EXT:Reduce:P2P:P2P",PAMI_XFER_REDUCE);
+      }
+      /* ************ Scan ************ */
+      if((MPIDI_Process.optimized.auto_select_colls & MPID_AUTO_SELECT_COLLS_SCAN) &&
+         comm->mpid.user_selected_type[PAMI_XFER_SCAN] == MPID_COLL_NOSELECTION)
+      {
+         comm->coll_fns->Scan         = MPIDO_Scan_simple;
+         MPIDI_UPDATE_COLLSEL_EXT_ALGO(MPIDO_CSWrapper_scan,"EXT:Scan:P2P:P2P",PAMI_XFER_SCAN);
+      }
+    }
    }
    TRACE_ERR("MPIDI_Comm_coll_envvars exit\n");
 }

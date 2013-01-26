@@ -292,3 +292,36 @@ int MPIDO_Scan_simple(const void *sendbuf, void *recvbuf,
    return MPIDO_Doscan_simple(sendbuf, recvbuf, count, datatype,
                 op, comm_ptr, mpierrno, 0);
 }
+
+int
+MPIDO_CSWrapper_scan(pami_xfer_t *scan,
+                     void        *comm)
+{
+   int mpierrno = 0;
+   MPID_Comm   *comm_ptr = (MPID_Comm*)comm;
+   MPI_Datatype type;
+   MPI_Op op;
+   void *sbuf;
+   MPIDI_coll_check_in_place(scan->cmd.xfer_scan.sndbuf, &sbuf);
+   int rc = MPIDI_Dtpami_to_dtmpi(  scan->cmd.xfer_scan.stype,
+                                   &type,
+                                    scan->cmd.xfer_scan.op,
+                                   &op);
+   if(rc == -1) return rc;
+
+   if(scan->cmd.xfer_scan.exclusive)
+     rc  =  MPIR_Exscan(sbuf,
+                        scan->cmd.xfer_scan.rcvbuf,
+                        scan->cmd.xfer_scan.rtypecount, type, op,
+                        comm_ptr, &mpierrno);
+   else
+     rc  =  MPIR_Scan(sbuf,
+                      scan->cmd.xfer_scan.rcvbuf,
+                      scan->cmd.xfer_scan.rtypecount, type, op,
+                      comm_ptr, &mpierrno);
+   if(scan->cb_done && rc == 0)
+     scan->cb_done(NULL, scan->cookie, PAMI_SUCCESS);
+   return rc;
+
+}
+

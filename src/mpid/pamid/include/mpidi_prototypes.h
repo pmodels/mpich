@@ -217,6 +217,17 @@ void MPIDI_Coll_comm_destroy (MPID_Comm *comm);
 void MPIDI_Env_setup        ();
 void MPIDI_Comm_world_setup ();
 
+pami_result_t MPIDI_Comm_create_from_pami_geom(pami_geometry_range_t  *task_slices,
+                                                size_t                  slice_count,
+                                                pami_geometry_t        *geometry,
+                                                void                  **cookie);
+pami_result_t MPIDI_Comm_destroy_external(void *comm_ext);
+pami_result_t MPIDI_Register_algorithms_ext(void                 *cookie,
+                                            pami_xfer_type_t      collective,
+                                            advisor_algorithm_t **algorithms,
+                                            size_t               *num_algorithms);
+int MPIDI_collsel_pami_tune_parse_params(int argc, char ** argv);
+void MPIDI_collsel_pami_tune_cleanup();
 void MPIDI_Coll_Comm_create (MPID_Comm *comm);
 void MPIDI_Coll_Comm_destroy(MPID_Comm *comm);
 void MPIDI_Comm_coll_query  (MPID_Comm *comm);
@@ -226,23 +237,28 @@ void MPIDI_Coll_register    (void);
 
 int MPIDO_Bcast(void *buffer, int count, MPI_Datatype dt, int root, MPID_Comm *comm_ptr, int *mpierrno);
 int MPIDO_Bcast_simple(void *buffer, int count, MPI_Datatype dt, int root, MPID_Comm *comm_ptr, int *mpierrno);
+int MPIDO_CSWrapper_bcast(pami_xfer_t *bcast, void *comm);
 int MPIDO_Barrier(MPID_Comm *comm_ptr, int *mpierrno);
 int MPIDO_Barrier_simple(MPID_Comm *comm_ptr, int *mpierrno);
+int MPIDO_CSWrapper_barrier(pami_xfer_t *barrier, void *comm);
 
 int MPIDO_Allreduce(const void *sbuffer, void *rbuffer, int count,
                     MPI_Datatype datatype, MPI_Op op, MPID_Comm *comm_ptr, int *mpierrno);
 int MPIDO_Allreduce_simple(const void *sbuffer, void *rbuffer, int count,
                     MPI_Datatype datatype, MPI_Op op, MPID_Comm *comm_ptr, int *mpierrno);
+int MPIDO_CSWrapper_allreduce(pami_xfer_t *allreduce, void *comm);
 int MPIDO_Reduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, 
                  MPI_Op op, int root, MPID_Comm *comm_ptr, int *mpierrno);
 int MPIDO_Reduce_simple(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, 
                  MPI_Op op, int root, MPID_Comm *comm_ptr, int *mpierrno);
+int MPIDO_CSWrapper_reduce(pami_xfer_t *reduce, void *comm);
 int MPIDO_Allgather(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                     void *recvbuf, int recvcount, MPI_Datatype recvtype,
                     MPID_Comm *comm_ptr, int *mpierrno);
 int MPIDO_Allgather_simple(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                     void *recvbuf, int recvcount, MPI_Datatype recvtype,
                     MPID_Comm *comm_ptr, int *mpierrno);
+int MPIDO_CSWrapper_allgather(pami_xfer_t *allgather, void *comm);
 
 int MPIDO_Allgatherv(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                      void *recvbuf, const int *recvcounts, const int *displs,
@@ -250,6 +266,7 @@ int MPIDO_Allgatherv(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
 int MPIDO_Allgatherv_simple(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                      void *recvbuf, const int *recvcounts, const int *displs,
                      MPI_Datatype recvtype, MPID_Comm * comm_ptr, int *mpierrno);
+int MPIDO_CSWrapper_allgatherv(pami_xfer_t *allgatherv, void *comm);
 int MPIDO_Iallgatherv(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                       void *recvbuf, const int *recvcounts, const int *displs,
                       MPI_Datatype recvtype, MPID_Comm * comm_ptr,
@@ -261,6 +278,7 @@ int MPIDO_Gather(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
 int MPIDO_Gather_simple(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                  void *recvbuf, int recvcount, MPI_Datatype recvtype,
                  int root, MPID_Comm * comm_ptr, int *mpierrno);
+int MPIDO_CSWrapper_gather(pami_xfer_t *gather, void *comm);
 
 int MPIDO_Gatherv(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                   void *recvbuf, const int *recvcounts, const int *displs, MPI_Datatype recvtype,
@@ -268,11 +286,13 @@ int MPIDO_Gatherv(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
 int MPIDO_Gatherv_simple(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                   void *recvbuf, const int *recvcounts, const int *displs, MPI_Datatype recvtype,
                   int root, MPID_Comm * comm_ptr, int *mpierrno);
+int MPIDO_CSWrapper_gatherv(pami_xfer_t *gatherv, void *comm);
 
 int MPIDO_Scan(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
                MPI_Op op, MPID_Comm * comm_ptr, int *mpierrno);
 int MPIDO_Scan_simple(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
                MPI_Op op, MPID_Comm * comm_ptr, int *mpierrno);
+int MPIDO_CSWrapper_scan(pami_xfer_t *scan, void *comm);
 
 int MPIDO_Exscan(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
                MPI_Op op, MPID_Comm * comm_ptr, int *mpierrno);
@@ -285,6 +305,7 @@ int MPIDO_Scatter(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
 int MPIDO_Scatter_simple(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                   void *recvbuf, int recvcount, MPI_Datatype recvtype,
                   int root, MPID_Comm * comm_ptr, int *mpierrno);
+int MPIDO_CSWrapper_scatter(pami_xfer_t *scatter, void *comm);
 
 int MPIDO_Scatterv(const void *sendbuf, const int *sendcounts, const int *displs,
                    MPI_Datatype sendtype,
@@ -294,6 +315,7 @@ int MPIDO_Scatterv_simple(const void *sendbuf, const int *sendcounts, const int 
                    MPI_Datatype sendtype,
                    void *recvbuf, int recvcount, MPI_Datatype recvtype,
                    int root, MPID_Comm * comm_ptr, int *mpierrno);
+int MPIDO_CSWrapper_scatterv(pami_xfer_t *scatterv, void *comm);
 
 int MPIDO_Alltoallv(const void *sendbuf, const int *sendcounts, const int *senddispls,
                     MPI_Datatype sendtype,
@@ -305,6 +327,7 @@ int MPIDO_Alltoallv_simple(const void *sendbuf, const int *sendcounts, const int
                     void *recvbuf, const int *recvcounts, const int *recvdispls,
                     MPI_Datatype recvtype,
                     MPID_Comm *comm_ptr, int *mpierrno);
+int MPIDO_CSWrapper_alltoallv(pami_xfer_t *alltoallv, void *comm);
 
 int MPIDO_Alltoall(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                    void *recvbuf, int recvcount, MPI_Datatype recvtype,
@@ -312,12 +335,18 @@ int MPIDO_Alltoall(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
 int MPIDO_Alltoall_simple(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                    void *recvbuf, int recvcount, MPI_Datatype recvtype,
                    MPID_Comm *comm_ptr, int *mpierrno);
+int MPIDO_CSWrapper_alltoall(pami_xfer_t *alltoall, void *comm);
 
 int MPIDI_Datatype_to_pami(MPI_Datatype        dt,
                            pami_type_t        *pdt,
                            MPI_Op              op,
                            pami_data_function *pop,
                            int                *musupport);
+
+int MPIDI_Dtpami_to_dtmpi(pami_type_t          pdt,
+                          MPI_Datatype        *dt,
+                          pami_data_function   pop,
+                          MPI_Op              *op);
 void MPIDI_Op_to_string(MPI_Op op, char *string);
 pami_result_t MPIDI_Pami_post_wrapper(pami_context_t context, void *cookie);
 

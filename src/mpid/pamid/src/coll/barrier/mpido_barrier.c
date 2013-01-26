@@ -130,3 +130,17 @@ int MPIDO_Barrier_simple(MPID_Comm *comm_ptr, int *mpierrno)
    TRACE_ERR("Exiting MPIDO_Barrier_optimized\n");
    return 0;
 }
+
+int
+MPIDO_CSWrapper_barrier(pami_xfer_t *barrier,
+                        void        *comm)
+{
+   int mpierrno = 0;
+   MPID_Comm   *comm_ptr = (MPID_Comm*)comm;
+   int rc = MPIR_Barrier(comm_ptr, &mpierrno);
+   if(barrier->cb_done && rc == 0)
+     barrier->cb_done(NULL, barrier->cookie, PAMI_SUCCESS);
+   return rc;
+
+}
+

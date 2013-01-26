@@ -420,6 +420,38 @@ int MPIDO_Scatter_simple(const void *sendbuf,
 }
 
 
+int
+MPIDO_CSWrapper_scatter(pami_xfer_t *scatter,
+                        void        *comm)
+{
+   int mpierrno = 0;
+   MPID_Comm   *comm_ptr = (MPID_Comm*)comm;
+   MPI_Datatype sendtype, recvtype;
+   void *rbuf;
+   MPIDI_coll_check_in_place(scatter->cmd.xfer_scatter.rcvbuf, &rbuf);
+   int rc = MPIDI_Dtpami_to_dtmpi(  scatter->cmd.xfer_scatter.stype,
+                                   &sendtype,
+                                    NULL,
+                                    NULL);
+   if(rc == -1) return rc;
+
+   rc = MPIDI_Dtpami_to_dtmpi(  scatter->cmd.xfer_scatter.rtype,
+                               &recvtype,
+                                NULL,
+                                NULL);
+   if(rc == -1) return rc;
+
+   rc  =  MPIR_Scatter(scatter->cmd.xfer_scatter.sndbuf,
+                       scatter->cmd.xfer_scatter.stypecount, sendtype,
+                       rbuf,
+                       scatter->cmd.xfer_scatter.rtypecount, recvtype,
+                       scatter->cmd.xfer_scatter.root, comm_ptr, &mpierrno);
+   if(scatter->cb_done && rc == 0)
+     scatter->cb_done(NULL, scatter->cookie, PAMI_SUCCESS);
+   return rc;
+
+}
+
 #if 0 /* old glue-based scatter-via-bcast */
 
   /* Assume glue protocol sucks for now.... Needs work if not or to enable */

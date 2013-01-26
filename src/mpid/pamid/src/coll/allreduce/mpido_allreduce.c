@@ -465,3 +465,30 @@ int MPIDO_Allreduce_simple(const void *sendbuf,
   TRACE_ERR("Allreduce done\n");
   return MPI_SUCCESS;
 }
+
+int
+MPIDO_CSWrapper_allreduce(pami_xfer_t *allreduce,
+                          void        *comm)
+{
+   int mpierrno = 0;
+   MPID_Comm   *comm_ptr = (MPID_Comm*)comm;
+   MPI_Datatype type;
+   MPI_Op op;
+   void *sbuf;
+   MPIDI_coll_check_in_place(allreduce->cmd.xfer_allreduce.sndbuf, &sbuf);
+   int rc = MPIDI_Dtpami_to_dtmpi(  allreduce->cmd.xfer_allreduce.stype,
+                                   &type,
+                                    allreduce->cmd.xfer_allreduce.op,
+                                   &op);
+   if(rc == -1) return rc;
+
+   rc  =  MPIR_Allreduce(sbuf,
+                         allreduce->cmd.xfer_allreduce.rcvbuf,
+                         allreduce->cmd.xfer_allreduce.rtypecount,
+                         type, op, comm_ptr, &mpierrno);
+   if(allreduce->cb_done && rc == 0)
+     allreduce->cb_done(NULL, allreduce->cookie, PAMI_SUCCESS);
+   return rc;
+
+}
+

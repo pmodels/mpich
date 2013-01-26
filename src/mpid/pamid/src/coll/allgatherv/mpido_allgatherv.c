@@ -705,3 +705,39 @@ MPIDO_Allgatherv_simple(const void *sendbuf,
 
    return MPI_SUCCESS;
 }
+
+
+int
+MPIDO_CSWrapper_allgatherv(pami_xfer_t *allgatherv,
+                           void        *comm)
+{
+   int mpierrno = 0;
+   MPID_Comm   *comm_ptr = (MPID_Comm*)comm;
+   MPI_Datatype sendtype, recvtype;
+   void *sbuf;
+   MPIDI_coll_check_in_place(allgatherv->cmd.xfer_allgatherv_int.sndbuf, &sbuf);
+   int rc = MPIDI_Dtpami_to_dtmpi(  allgatherv->cmd.xfer_allgatherv_int.stype,
+                                   &sendtype,
+                                    NULL,
+                                    NULL);
+   if(rc == -1) return rc;
+
+   rc = MPIDI_Dtpami_to_dtmpi(  allgatherv->cmd.xfer_allgatherv_int.rtype,
+                               &recvtype,
+                                NULL,
+                                NULL);
+   if(rc == -1) return rc;
+
+   rc  =  MPIR_Allgatherv(sbuf,
+                          allgatherv->cmd.xfer_allgatherv_int.stypecount, sendtype,
+                          allgatherv->cmd.xfer_allgatherv_int.rcvbuf,
+                          allgatherv->cmd.xfer_allgatherv_int.rtypecounts,
+                          allgatherv->cmd.xfer_allgatherv_int.rdispls, recvtype,
+                          comm_ptr, &mpierrno);
+   if(allgatherv->cb_done && rc == 0)
+     allgatherv->cb_done(NULL, allgatherv->cookie, PAMI_SUCCESS);
+   return rc;
+
+
+}
+

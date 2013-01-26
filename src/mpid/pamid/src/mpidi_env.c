@@ -456,7 +456,9 @@ ENV_Char__(char* name[], unsigned* val, char* string)
       break;
   }
 
-  if ((env[0]=='y')|| (env[0]=='Y')|| (env[0]=='p')|| (env[0]=='P') || (env[0]=='F')|| (env[0]=='f'))
+  if (  (env[0]=='y')|| (env[0]=='Y')
+     || (env[0]=='p')|| (env[0]=='P') 
+     || (env[0]=='F')|| (env[0]=='f'))
           *val = 1;
   /*This may seem redundant; however, 
     in some cases we need to force val=0 if value = no/none*/
@@ -864,22 +866,35 @@ MPIDI_Env_setup(int rank, int requested)
 
    /* Finally, if MP_COLLECTIVE_SELECTION is "on", then we want to overwrite any other setting */
    {
-      unsigned temp;
-      temp = 0;
-      char* names[] = {"MP_COLLECTIVE_SELECTION", NULL};
-      ENV_Char(names, &temp);
-      if(temp)
+      char *env = getenv("MP_COLLECTIVE_SELECTION");
+      if(env != NULL)
       {
          pami_extension_t extension;
          pami_result_t status = PAMI_ERROR;
          status = PAMI_Extension_open (MPIDI_Client, "EXT_collsel", &extension);
          if(status == PAMI_SUCCESS)
          {
+           char *env = getenv("MP_COLLECTIVE_SELECTION");
+           if(env != NULL)
+           {
+             if(strncasecmp(env, "TUN", 3) == 0)
+             {
+               MPIDI_Process.optimized.auto_select_colls = MPID_AUTO_SELECT_COLLS_TUNE;
+               MPIDI_Process.optimized.collectives       = 1;
+             }
+             else if(strncasecmp(env, "YES", 3) == 0)
+             {
+               MPIDI_Process.optimized.auto_select_colls = MPID_AUTO_SELECT_COLLS_ALL; /* All collectives will be using auto coll sel.
+                                                                                    We will check later on each individual coll. */
+               MPIDI_Process.optimized.collectives       = 1;
+             }
+             else
+               MPIDI_Process.optimized.auto_select_colls = MPID_AUTO_SELECT_COLLS_NONE;
 
-           MPIDI_Process.optimized.auto_select_colls = MPID_AUTO_SELECT_COLLS_ALL; /* All collectives will be using auto coll sel. 
-                                                                                    We will check later on each individual coll. */ 
-           MPIDI_Process.optimized.collectives       = 1;                          /* Enable optimized collectives so we can create PAMI Geometry */
+           }
          }
+         else
+           MPIDI_Process.optimized.auto_select_colls = MPID_AUTO_SELECT_COLLS_NONE;/* Auto coll sel is disabled for all */
       }
       else
          MPIDI_Process.optimized.auto_select_colls = MPID_AUTO_SELECT_COLLS_NONE;/* Auto coll sel is disabled for all */ 

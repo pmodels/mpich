@@ -29,6 +29,20 @@
 #include <mpix.h>
 
 
+
+static inline void MPIDI_coll_check_in_place(void* src, void** dst)
+{
+  if(MPI_IN_PLACE == PAMI_IN_PLACE)
+    *dst = src;
+  else
+  {
+    if(src == PAMI_IN_PLACE)
+      *dst = MPI_IN_PLACE;
+    else
+      *dst = src;
+  }
+}
+
 #ifdef DYNAMIC_TASKING
 
 #define MPIDI_MAX_KVS_VALUE_LEN    4096
