@@ -59,20 +59,19 @@ int MPIDI_CH3_ReqHandler_GetSendRespComplete( MPIDI_VC_t *vc ATTRIBUTE((unused))
 	   packet since the last operation is a get. */
 	
 	MPID_Win_get_ptr(sreq->dev.target_win_handle, win_ptr);
-	if (win_ptr->current_lock_type == MPID_LOCK_NONE) {
-	    /* FIXME: MT: this has to be done atomically */
-	    win_ptr->my_counter -= 1;
-	}
-	else {
-	    mpi_errno = MPIDI_CH3I_Release_lock(win_ptr);
-	}
+
+        mpi_errno = MPIDI_CH3_Finish_rma_op_target(vc, win_ptr, FALSE, TRUE, MPI_WIN_NULL, FALSE);
+        if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
     }
 
     /* mark data transfer as complete and decrement CC */
     MPIDI_CH3U_Request_complete(sreq);
     *complete = TRUE;
 
+ fn_exit:
     return mpi_errno;
+ fn_fail:
+    goto fn_exit;
 }
 
 int MPIDI_CH3_ReqHandler_SendReloadIOV( MPIDI_VC_t *vc ATTRIBUTE((unused)), MPID_Request *sreq, 

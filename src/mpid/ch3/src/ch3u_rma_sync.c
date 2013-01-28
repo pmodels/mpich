@@ -1960,6 +1960,9 @@ int MPIDI_Win_unlock(int dest, MPID_Win *win_ptr)
 	 * in the queue, and return. */
         MPIU_Assert(MPIDI_CH3I_RMA_Ops_isempty(&win_ptr->targets[dest].rma_ops_list));
 
+        /* NOTE: We don't need to signal completion here becase a thread in the
+         * same processes cannot lock the window again while it is already
+         * locked. */
 	mpi_errno = MPIDI_CH3I_Release_lock(win_ptr);
         if (mpi_errno != MPI_SUCCESS) { MPIU_ERR_POP(mpi_errno); }
         win_ptr->targets[dest].remote_lock_state = MPIDI_CH3_WIN_LOCK_NONE;
@@ -3242,12 +3245,11 @@ int MPIDI_CH3_PktHandler_Put( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 	   post/start/complete/wait sync model; therefore, no need
 	   to check lock queue. */
 	if (put_pkt->target_win_handle != MPI_WIN_NULL) {
-	    MPID_Win_get_ptr(put_pkt->target_win_handle, win_ptr);
-	    /* FIXME: MT: this has to be done atomically */
-	    win_ptr->my_counter -= 1;
+            MPID_Win_get_ptr(put_pkt->target_win_handle, win_ptr);
+            mpi_errno = MPIDI_CH3_Finish_rma_op_target(NULL, win_ptr, TRUE, TRUE, MPI_WIN_NULL, FALSE);
+            if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
 	}
         *buflen = sizeof(MPIDI_CH3_Pkt_t);
-	MPIDI_CH3_Progress_signal_completion();	
 	*rreqp = NULL;
         goto fn_exit;
     }
@@ -3730,41 +3732,11 @@ int MPIDI_CH3_PktHandler_Accumulate_Immed( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 	/* Here is the code executed in PutAccumRespComplete after the
 	   accumulation operation */
 	MPID_Win_get_ptr(accum_pkt->target_win_handle, win_ptr);
-	
-	/* if passive target RMA, increment counter */
-	if (win_ptr->current_lock_type != MPID_LOCK_NONE)
-	    win_ptr->my_pt_rma_puts_accs++;
-	
-	if (accum_pkt->source_win_handle != MPI_WIN_NULL) {
-	    /* Last RMA operation from source. If active
-	       target RMA, decrement window counter. If
-	       passive target RMA, release lock on window and
-	       grant next lock in the lock queue if there is
-	       any. If it's a shared lock or a lock-put-unlock
-	       type of optimization, we also need to send an
-	       ack to the source. */ 
-	    if (win_ptr->current_lock_type == MPID_LOCK_NONE) {
-		/* FIXME: MT: this has to be done atomically */
-		win_ptr->my_counter -= 1;
-		MPIDI_CH3_Progress_signal_completion();
-	    }
-	    else {
-		if ((win_ptr->current_lock_type == MPI_LOCK_SHARED) ||
-		    (/*rreq->dev.single_op_opt*/ 0 == 1)) {
-                    mpi_errno = MPIDI_CH3I_Send_pt_rma_done_pkt(vc, win_ptr,
-					accum_pkt->source_win_handle);
-		    if (mpi_errno) {
-			    MPIU_ERR_POP(mpi_errno);
-		    }
-		}
-		mpi_errno = MPIDI_CH3I_Release_lock(win_ptr);
-		/* Without the following signal_completion call, we 
-		   sometimes hang */
-		MPIDI_CH3_Progress_signal_completion();
-	    }
-	}
 
-	goto fn_exit;
+        mpi_errno = MPIDI_CH3_Finish_rma_op_target(vc, win_ptr, TRUE,
+                                                   accum_pkt->source_win_handle != MPI_WIN_NULL,
+                                                   accum_pkt->source_win_handle, FALSE);
+        if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
     }
 
  fn_exit:
@@ -3832,31 +3804,10 @@ int MPIDI_CH3_PktHandler_CAS( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 
     MPID_Win_get_ptr(cas_pkt->target_win_handle, win_ptr);
 
-    /* if passive target RMA, increment counter */
-    if (win_ptr->current_lock_type != MPID_LOCK_NONE)
-        win_ptr->my_pt_rma_puts_accs++;
-
-    /* Send RMA done packet?  FIXME: Can the cas_resp handler handle this? */
-    if (cas_pkt->type == MPIDI_CH3_PKT_CAS_UNLOCK) {
-        /* Last RMA operation from source. If active
-           target RMA, decrement window counter. If
-           passive target RMA, release lock on window and
-           grant next lock in the lock queue if there is
-           any. If it's a shared lock or a lock-put-unlock
-           type of optimization, we also need to send an
-           ack to the source. */ 
-        if (win_ptr->current_lock_type == MPID_LOCK_NONE) {
-            /* FIXME: MT: this has to be done atomically */
-            win_ptr->my_counter -= 1;
-            MPIDI_CH3_Progress_signal_completion();
-        }
-        else {
-            mpi_errno = MPIDI_CH3I_Release_lock(win_ptr);
-            /* Without the following signal_completion call, we 
-               sometimes hang */
-            MPIDI_CH3_Progress_signal_completion();
-        }
-    }
+    mpi_errno = MPIDI_CH3_Finish_rma_op_target(NULL, win_ptr, TRUE,
+                                               pkt->type == MPIDI_CH3_PKT_CAS_UNLOCK,
+                                               MPI_WIN_NULL, FALSE);
+    if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
 
 fn_exit:
     MPIU_INSTR_DURATION_END(rmapkt_cas);
@@ -4921,6 +4872,74 @@ static int MPIDI_CH3I_RMAListPartialComplete( MPID_Win *win_ptr,
  fn_fail:
     return mpi_errno;
 }
+
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_CH3_Finish_rma_op_target
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
+int MPIDI_CH3_Finish_rma_op_target(MPIDI_VC_t *vc, MPID_Win *win_ptr, int is_rma_update,
+                                   int end_epoch, MPI_Win source_win_handle, int force_done_pkt)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3_FINISH_RMA_OP_TARGET);
+
+    MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3_FINISH_RMA_OP_TARGET);
+
+    /* This function should be called by the target process after each RMA
+       operation is completed, to update synchronization state. */
+
+    /* If this is a passive target RMA update operation, increment counter.  This is
+       needed in Win_free to ensure that all ops are completed before a window
+       is freed. */
+    if (win_ptr->current_lock_type != MPID_LOCK_NONE && is_rma_update)
+        win_ptr->my_pt_rma_puts_accs++;
+
+    if (end_epoch) {
+        /* Last RMA operation from source. If active target RMA, decrement
+           window counter. If passive target RMA, release lock on window and
+           grant next lock in the lock queue if there is any. If it's a shared
+           lock or a lock-put-unlock type of optimization, we also need to send
+           an ack to the source. */
+
+        if (win_ptr->current_lock_type == MPID_LOCK_NONE) {
+            /* FIXME: MT: Accesses to my_counter should be done atomically */
+            win_ptr->my_counter -= 1;
+
+            /* Active target: Signal the local process when the op counter
+             * reaches 0. */
+            if (win_ptr->my_counter == 0)
+                MPIDI_CH3_Progress_signal_completion();
+        }
+        else {
+            if (source_win_handle != MPI_WIN_NULL &&
+                ((win_ptr->current_lock_type == MPI_LOCK_SHARED || force_done_pkt)))
+            {
+                mpi_errno = MPIDI_CH3I_Send_pt_rma_done_pkt(vc, win_ptr, source_win_handle);
+                if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
+            }
+
+            if (end_epoch) {
+                mpi_errno = MPIDI_CH3I_Release_lock(win_ptr);
+                if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
+
+                /* Passive target: The local process may be waiting for the
+                 * lock.  Signal completion to wake it up, so it can attempt to
+                 * grab the lock. */
+                MPIDI_CH3_Progress_signal_completion();
+            }
+        }
+    }
+
+fn_exit:
+    MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3_FINISH_RMA_OP_TARGET);
+    return mpi_errno;
+    /* --BEGIN ERROR HANDLING-- */
+fn_fail:
+    goto fn_exit;
+    /* --END ERROR HANDLING-- */
+}
+
 
 /* ------------------------------------------------------------------------ */
 /* 
