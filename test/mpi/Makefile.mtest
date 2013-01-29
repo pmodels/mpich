@@ -31,4 +31,4 @@ testing:
 		-mpiexec=${MPIEXEC} -xmlfile=summary.xml \
 		-tapfile=summary.tap
 
-CLEANFILES = summary.xml
+CLEANFILES = summary.xml summary.tap

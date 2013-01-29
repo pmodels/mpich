@@ -33,4 +33,4 @@ testing:
 	$(top_builddir)/runtests -srcdir=$(srcdir) -tests=testlist \
 		-mpiexec=${MPIEXEC} -xmlfile=summary.xml
 
-CLEANFILES = summary.xml
+CLEANFILES = summary.xml summary.tap
