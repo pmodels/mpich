@@ -252,7 +252,7 @@ if ($xmloutput && $closeXMLOutput) {
 }
 
 if ($tapoutput) {
-    print TAPOUT "1..$total_seen";
+    print TAPOUT "1..$total_seen\n";
     close TAPOUT;
 }
 
