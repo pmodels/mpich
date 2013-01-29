@@ -913,7 +913,8 @@ int MPIDI_PG_Dup_vcr( MPIDI_PG_t *pg, int rank, pami_task_t taskid, MPID_VCR *vc
 
     TRACE_ERR("ENTER MPIDI_PG_Dup_vcr - pg->id=%s rank=%d taskid=%d\n", pg->id, rank, taskid);
     pg->vct[rank].taskid = taskid;
-    vcr = &pg->vct[rank];
+
+    vcr = MPIU_Malloc(sizeof(struct MPID_VCR_t));
     TRACE_ERR("MPIDI_PG_Dup_vcr- pg->vct[%d].pg=%x pg=%x vcr=%x vcr->pg=%x\n", rank, pg->vct[rank].pg, pg, vcr, vcr->pg);
     vcr->pg = pg;
     vcr->pg_rank = rank;
