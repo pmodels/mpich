@@ -4,6 +4,8 @@
 
  # PM/PMI: Upgrade to hwloc-1.6.1
 
+ # Performance enhancements for shared memory windows.
+
  # Several other minor bug fixes, memory leak fixes, and code cleanup.
    A full list of changes is available at the following link:
 
