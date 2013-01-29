@@ -1,7 +1,7 @@
 transp-datatype 2
 sendrecvl 2
 twovec 1  xfail=ticket1788
-dtpack 1
+dtpack 1  xfail=ticket1789
 nestvec 1  xfail=ticket1788
 nestvec2 1  xfail=ticket1788
 indexperf 1  xfail=ticket1788
