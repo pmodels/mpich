@@ -1048,7 +1048,6 @@ static int MPIDI_CH3I_Send_immed_rmw_msg(MPIDI_RMA_Op_t *rma_op,
         fop_pkt->flags = flags;
         fop_pkt->datatype = rma_op->target_datatype;
         fop_pkt->target_win_handle = target_win_handle;
-        fop_pkt->source_win_handle = source_win_handle;
         fop_pkt->request_handle = resp_req->handle;
         fop_pkt->op = rma_op->op;
 
@@ -3915,7 +3914,6 @@ int MPIDI_CH3_PktHandler_FOP( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
     req->dev.op = fop_pkt->op;
     req->dev.real_user_buf = fop_pkt->addr;
     req->dev.target_win_handle = fop_pkt->target_win_handle;
-    req->dev.source_win_handle = fop_pkt->source_win_handle;
     req->dev.request_handle = fop_pkt->request_handle;
     req->dev.flags = fop_pkt->flags;
 

@@ -322,9 +322,6 @@ typedef struct MPIDI_CH3_Pkt_fop
                                 * epoch for decrementing rma op counter in
                                 * active target rma and for unlocking window 
                                 * in passive target rma. Otherwise set to NULL*/
-    MPI_Win source_win_handle; /* Used in the last RMA operation in an
-                                * epoch in the case of passive target rma
-                                * with shared locks. Otherwise set to NULL*/
     int origin_data[MPIDI_RMA_FOP_IMMED_INTS];
 }
 MPIDI_CH3_Pkt_fop_t;
