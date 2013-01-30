@@ -50,7 +50,7 @@ errnames_txt_files =
 external_subdirs = src/mpl src/openpa
 # FIXME how/where does external_libs/ldflags get used?
 external_ldflags = -L$(top_builddir)/src/mpl -L$(top_builddir)/src/openpa/src
-external_libs = -lmpl -l@OPALIBNAME@
+external_libs = -l@MPLLIBNAME@ -l@OPALIBNAME@
 
 # NOTE on our semi-unconventional usage of DIST_SUBDIRS:
 # The automake manual recommends thinking of DIST_SUBDIRS as the list of all
