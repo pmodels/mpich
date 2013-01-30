@@ -776,7 +776,7 @@ export LIBS
 export MPILIBNAME
 export PMPILIBNAME
 export RANLIB
-
+export OPALIBNAME
 # ----------------------------------------------------------------------------
 # with-device
 if test "$with_device" = "default" ; then
@@ -1169,6 +1169,10 @@ PAC_APPEND_FLAG([-I${master_top_builddir}/src/mpl/include], [CPPFLAGS])
 PAC_APPEND_FLAG([-I${use_top_srcdir}/src/mpl/include], [CPPFLAGS])
 
 # OpenPA
+AC_ARG_VAR([OPALIBNAME],[can be used to override the name of the OpenPA library (default: "opa")])
+OPALIBNAME=${OPALIBNAME:-"opa"}
+export OPALIBNAME
+AC_SUBST(OPALIBNAME)
 AC_ARG_WITH([openpa-prefix],
             [AS_HELP_STRING([[--with-openpa-prefix[=DIR]]],
                             [use the OpenPA atomics library installed in DIR,
@@ -1178,7 +1182,7 @@ AC_ARG_WITH([openpa-prefix],
             [],
             [# see if OPA is already installed on the system
              PAC_PUSH_FLAG([LIBS])
-             PAC_PREPEND_FLAG([-lopa],[LIBS])
+             PAC_PREPEND_FLAG([-l${OPALIBNAME}],[LIBS])
              AC_LINK_IFELSE([AC_LANG_PROGRAM([dnl
 #include "opa_primitives.h"
 ],[
@@ -1209,12 +1213,12 @@ if test "$with_openpa_prefix" = "embedded" ; then
             opa_subdir_args="--with-atomic-primitives=auto_allow_emulation"
         fi
         PAC_CONFIG_SUBDIR_ARGS([src/openpa],[$opa_subdir_args],[],[AC_MSG_ERROR([OpenPA configure failed])])
-        PAC_PREPEND_FLAG([-lopa],[WRAPPER_LIBS])
+        PAC_PREPEND_FLAG([-l${OPALIBNAME}],[WRAPPER_LIBS])
     else
         AC_MSG_WARN([Attempted to use the embedded OpenPA source tree in "src/openpa", but it is missing.  Configuration or compilation may fail later.])
     fi
 elif test "$with_openpa_prefix" = "system" ; then
-    PAC_PREPEND_FLAG([-lopa],[WRAPPER_LIBS])
+    PAC_PREPEND_FLAG([-l${OPALIBNAME}],[WRAPPER_LIBS])
 elif test "$with_openpa_prefix" = "no" ; then
     # The user doesn't want to use OPA.  This may or may not cause MPICH to
     # fail to configure/build, depending on many other factors.
@@ -1225,7 +1229,7 @@ else
     AS_IF([test -s "${with_openpa_prefix}/include/opa_primitives.h" -a -s "${with_openpa_prefix}/include/opa_config.h"],
           [:],[AC_MSG_ERROR([the OpenPA installation in "${with_openpa_prefix}" appears broken])])
     PAC_APPEND_FLAG([-I${with_openpa_prefix}/include],[CPPFLAGS])
-    PAC_PREPEND_FLAG([-lopa],[WRAPPER_LIBS])
+    PAC_PREPEND_FLAG([-l${OPALIBNAME}],[WRAPPER_LIBS])
     if test -d ${with_openpa_prefix}/lib64 ; then
         PAC_APPEND_FLAG([-L${with_openpa_prefix}/lib64],[WRAPPER_LDFLAGS])
     fi

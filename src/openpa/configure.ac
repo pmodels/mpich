@@ -25,6 +25,13 @@ save_cflags=$CFLAGS
 LT_INIT(disable-shared)
 CFLAGS=$save_cflags
 
+# ----------------------------------------------------------------------------
+# Set default library names if names haven't already been provided
+AC_ARG_VAR([OPALIBNAME],[can be used to override the name of the OpenPA library (default: "opa")])
+OPALIBNAME=${OPALIBNAME:-"opa"}
+AC_SUBST(OPALIBNAME)
+export OPALIBNAME
+
 if test -s "$srcdir/VERSION" ; then
    . $srcdir/VERSION
    AC_SUBST([libopa_so_version])
