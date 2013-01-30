@@ -1,15 +1,12 @@
 ----------------------------------------------------------------------
-                        Experimental Features
+                        KNOWN ISSUES
 ----------------------------------------------------------------------
 
- * New MPI-3 RMA functionality has been included in this release;
-   however, it is experimental and not yet supported.  Users may try
-   out this new feature, but they should not rely on its correctness
-   or performance.
+### Large counts
 
-----------------------------------------------------------------------
-			KNOWN ISSUES
-----------------------------------------------------------------------
+ * The new MPI-3 "large count" routines (e.g., MPI_Type_size_x) do not
+   work correctly due to 64-bit to 32-bit truncations occurring inside
+   the MPICH library.  We expect to fix this in upcoming releases.
 
 ### Known runtime failures
 
@@ -48,12 +45,6 @@
 
 ### Build Platforms
 
- * Builds using the native "make" program on OpenSolaris fail unknown
-   reasons.  A workaround is to use GNU Make instead.  See the following
-   ticket for more information:
-
-     https://trac.mpich.org/projects/mpich/ticket/1122
-
  * Build fails with Intel compiler suite 13.0, because of weak symbol
    issues in the compiler.  A workaround is to disable weak symbol
    support by passing --disable-weak-symbols to configure.  See the
@@ -63,6 +54,10 @@
 
 
 ### Process Managers
+
+ * Hydra has a bug related to stdin handling:
+
+     https://trac.mpich.org/projects/mpich/ticket/1782
 
  * The MPD process manager can only handle relatively small amounts of
    data on stdin and may also have problems if there is data on stdin
