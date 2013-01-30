@@ -4,12 +4,34 @@
 
  # PM/PMI: Upgrade to hwloc-1.6.1
 
- # Performance enhancements for shared memory windows.
+ # RMA: Performance enhancements for shared memory windows.
+
+ # COMPILER INTEGRATION: minor improvements and fixes to the clang static type
+   checking annotation macros.
+
+ # MPI-IO (ROMIO): improved error checking for user errors, contributed by IBM.
+
+ # MPI-3 TOOLS INTERFACE: new MPI_T performance variables providing information
+   about nemesis communication behavior and and CH3 message matching queues.
+
+ # TEST SUITE: "make testing" now also outputs a "summary.tap" file that can be
+   interpreted with standard TAP consumer libraries and tools.  The
+   "summary.xml" format remains unchanged.
+
+ # GIT: This is the first release built from the new git repository at
+   git.mpich.org.  A few build system mechanisms have changed because of this
+   switch.
+
+ # BUG FIX: resolved a compilation error related to LLONG_MAX that affected
+   several users (ticket #1776).
+
+ # BUG FIX: nonblocking collectives now properly make progress when MPICH is
+   configured with the ch3:sock channel (ticket #1785).
 
  # Several other minor bug fixes, memory leak fixes, and code cleanup.
    A full list of changes is available at the following link:
 
-     http://git.mpich.org/mpich.git/shortlog/v3.0..v3.0.1
+     http://git.mpich.org/mpich.git/shortlog/v3.0.1..v3.0.2
 
 
 ===============================================================================
