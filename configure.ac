@@ -628,6 +628,13 @@ AC_ARG_WITH(fwrapname,
 	[FWRAPNAME=$withval;set_FWRAPNAME="yes"],FWRAPNAME=fmpich)
 AC_SUBST(FWRAPNAME)
 
+dnl The default is a special wrapper library
+AC_ARG_WITH(fcwrapname,
+	AC_HELP_STRING([--with-fcwrapname=name],
+		[Specify name of library containing Fortran 90 interface routines]),
+	[FCWRAPNAME=$withval;set_FCWRAPNAME="yes"],FCWRAPNAME=mpichf90)
+AC_SUBST(FCWRAPNAME)
+
 # Find a C compiler.
 # We also need to do this before the F77 and FC test to ensure that we
 # find the C preprocessor reliably.

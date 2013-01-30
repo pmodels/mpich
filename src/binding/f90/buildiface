@@ -898,7 +898,7 @@ if BUILD_F90_LIB
 # in a VPATH build)
 AM_FCFLAGS += \@FCINCFLAG\@src/binding/f90
 
-lib_LTLIBRARIES += lib/lib\@MPILIBNAME\@f90.la
+lib_LTLIBRARIES += lib/lib\@FCWRAPNAME\@.la
 
 EOT
 
@@ -930,27 +930,27 @@ nodist_noinst_HEADERS += \\
     src/binding/f90/mpif90model.h
 
 # actual f90 code that also gets compiled into modules
-lib_lib\@MPILIBNAME\@f90_la_LDFLAGS = \$(ABIVERSIONFLAGS)
+lib_lib\@FCWRAPNAME\@_la_LDFLAGS = \$(ABIVERSIONFLAGS)
 
 # cause any .\$(MOD) files to be output in the f90 bindings directory instead of
 # the current directory
 AM_FCFLAGS += \$(FCMODOUTFLAG)src/binding/f90
 
 # we "manually" build the f90 sources and add them with LIBADD
-lib_lib\@MPILIBNAME\@f90_la_SOURCES =
-lib_lib\@MPILIBNAME\@f90_la_LIBADD = \\
+lib_lib\@FCWRAPNAME\@_la_SOURCES =
+lib_lib\@FCWRAPNAME\@_la_LIBADD = \\
     src/binding/f90/mpi.lo \\
     src/binding/f90/mpi_constants.lo \\
     src/binding/f90/mpi_sizeofs.lo \\
     src/binding/f90/${outfile_prefix}_base.lo
 
 # now force libtool FC rules/variables to be generated and cause FC linking to
-# be selected for lib/lib\@MPILIBNAME\@f90.la
-EXTRA_lib_lib\@MPILIBNAME\@f90_la_SOURCES = \\
+# be selected for lib/lib\@FCWRAPNAME\@.la
+EXTRA_lib_lib\@FCWRAPNAME\@_la_SOURCES = \\
     src/binding/f90/mpi.f90 \\
     src/binding/f90/mpi_constants.f90
 
-nodist_EXTRA_lib_lib\@MPILIBNAME\@f90_la_SOURCES = \\
+nodist_EXTRA_lib_lib\@FCWRAPNAME\@_la_SOURCES = \\
     src/binding/f90/mpi_sizeofs.f90 \\
     src/binding/f90/${outfile_prefix}_base.f90
 

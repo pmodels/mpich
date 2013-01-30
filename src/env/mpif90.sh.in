@@ -326,7 +326,7 @@ fi
 
 # Handle the specification of the directory containing the modules
 # For now, these are in the includedir (no choice argument supported)
-modulelib="@MPILIBNAME@f90"
+modulelib="@FCWRAPNAME@"
 if [ -n "$FCMODINCSPEC" ] ; then
     newarg=`echo A"$FCMODINCSPEC" | \
 	sed -e 's/^A//' -e 's%<dir>%'"$includedir%g" -e 's/<file>/mpi/g'`
