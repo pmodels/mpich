@@ -90,7 +90,6 @@ enum MPIDI_CH3_Pkt_types
     MPIDI_CH3_PKT_ACCUM_IMMED,     /* optimization for short accumulate */
     /* FIXME: Add PUT, GET_IMMED packet types */
     MPIDI_CH3_PKT_CAS,
-    MPIDI_CH3_PKT_CAS_UNLOCK,
     MPIDI_CH3_PKT_CAS_RESP,
     MPIDI_CH3_PKT_FOP,
     MPIDI_CH3_PKT_FOP_RESP,
@@ -298,10 +297,6 @@ typedef struct MPIDI_CH3_Pkt_cas
                                 * epoch for decrementing rma op counter in
                                 * active target rma and for unlocking window 
                                 * in passive target rma. Otherwise set to NULL*/
-
-                               /* source_win_handle is omitted here to reduce
-                                * the packet size.  If this is the last CAS
-                                * packet, the type will be set to CAS_UNLOCK */
     MPIDI_CH3_CAS_Immed_u origin_data;
     MPIDI_CH3_CAS_Immed_u compare_data;
 }

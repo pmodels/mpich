@@ -52,15 +52,9 @@ int MPIDI_CH3_ReqHandler_GetSendRespComplete( MPIDI_VC_t *vc ATTRIBUTE((unused))
     /* FIXME: Should this test be an MPIU_Assert? */
     if (sreq->dev.source_win_handle != MPI_WIN_NULL) {
 	MPID_Win *win_ptr;
-	/* Last RMA operation (get) from source. If active target RMA,
-	   decrement window counter. If passive target RMA, 
-	   release lock on window and grant next lock in the 
-	   lock queue if there is any; no need to send rma done 
-	   packet since the last operation is a get. */
-	
 	MPID_Win_get_ptr(sreq->dev.target_win_handle, win_ptr);
 
-        mpi_errno = MPIDI_CH3_Finish_rma_op_target(vc, win_ptr, FALSE, TRUE, MPI_WIN_NULL, FALSE);
+        mpi_errno = MPIDI_CH3_Finish_rma_op_target(NULL, win_ptr, FALSE, sreq->dev.flags, MPI_WIN_NULL);
         if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
     }
 

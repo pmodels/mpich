@@ -152,8 +152,8 @@ int MPIDI_CH3_ReqHandler_PutAccumRespComplete( MPIDI_VC_t *vc,
     
     MPID_Win_get_ptr(rreq->dev.target_win_handle, win_ptr);
     
-    mpi_errno = MPIDI_CH3_Finish_rma_op_target(vc, win_ptr, TRUE, rreq->dev.source_win_handle != MPI_WIN_NULL,
-                                               rreq->dev.source_win_handle, rreq->dev.single_op_opt);
+    mpi_errno = MPIDI_CH3_Finish_rma_op_target(vc, win_ptr, TRUE, rreq->dev.flags,
+                                               rreq->dev.source_win_handle);
     if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
 
     /* mark data transfer as complete and decrement CC */
@@ -353,6 +353,7 @@ int MPIDI_CH3_ReqHandler_GetRespDerivedDTComplete( MPIDI_VC_t *vc,
     sreq->dev.datatype_ptr = new_dtp;
     sreq->dev.target_win_handle = rreq->dev.target_win_handle;
     sreq->dev.source_win_handle = rreq->dev.source_win_handle;
+    sreq->dev.flags = rreq->dev.flags;
     
     MPIDI_Pkt_init(get_resp_pkt, MPIDI_CH3_PKT_GET_RESP);
     get_resp_pkt->request_handle = rreq->dev.request_handle;    
@@ -418,7 +419,6 @@ int MPIDI_CH3_ReqHandler_SinglePutAccumComplete( MPIDI_VC_t *vc,
     if (MPIDI_CH3I_Try_acquire_win_lock(win_ptr, 
 					lock_queue_entry->lock_type) == 1)
     {
-        MPI_Win source_win_handle = lock_queue_entry->source_win_handle;
 	
 	if (MPIDI_Request_get_type(rreq) == MPIDI_REQUEST_TYPE_PT_SINGLE_PUT) {
 	    /* copy the data over */
@@ -447,11 +447,14 @@ int MPIDI_CH3_ReqHandler_SinglePutAccumComplete( MPIDI_VC_t *vc,
 	}                    
 	*curr_ptr_ptr = curr_ptr->next;
 	
+        mpi_errno = MPIDI_CH3_Finish_rma_op_target(vc, win_ptr, TRUE,
+                                                   lock_queue_entry->pt_single_op->flags,
+                                                   lock_queue_entry->source_win_handle);
+
 	MPIU_Free(lock_queue_entry->pt_single_op->data);
 	MPIU_Free(lock_queue_entry->pt_single_op);
 	MPIU_Free(lock_queue_entry);
 	
-        mpi_errno = MPIDI_CH3_Finish_rma_op_target(vc, win_ptr, TRUE, TRUE, source_win_handle, TRUE);
         if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
     }
     else {
@@ -551,8 +554,8 @@ int MPIDI_CH3_ReqHandler_FOPComplete( MPIDI_VC_t *vc,
 
     MPID_Win_get_ptr(rreq->dev.target_win_handle, win_ptr);
 
-    mpi_errno = MPIDI_CH3_Finish_rma_op_target(vc, win_ptr, TRUE, rreq->dev.source_win_handle != MPI_WIN_NULL,
-                                               rreq->dev.source_win_handle, FALSE);
+    mpi_errno = MPIDI_CH3_Finish_rma_op_target(vc, win_ptr, TRUE, rreq->dev.flags,
+                                               rreq->dev.source_win_handle);
     if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
 
     *complete = 1;
@@ -1163,6 +1166,7 @@ static int do_simple_get(MPID_Win *win_ptr, MPIDI_Win_lock_queue *lock_queue)
     }
     req->dev.target_win_handle = win_ptr->handle;
     req->dev.source_win_handle = lock_queue->source_win_handle;
+    req->dev.flags = lock_queue->pt_single_op->flags;
     req->dev.single_op_opt = 1;
     
     MPIDI_Request_set_type(req, MPIDI_REQUEST_TYPE_GET_RESP); 

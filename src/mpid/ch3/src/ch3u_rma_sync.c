@@ -347,20 +347,20 @@ int MPIDI_Win_fence(int assert, MPID_Win *win_ptr)
         curr_ptr = MPIDI_CH3I_RMA_Ops_head(ops_list);
 	while (curr_ptr != NULL)
 	{
+            MPIDI_CH3_Pkt_flags_t flags = MPIDI_CH3_PKT_FLAG_NONE;
+
 	    /* The completion counter at the target is decremented only on 
-	       the last RMA operation. We indicate the last operation by 
-	       passing the source_win_handle only on the last operation. 
-	       Otherwise, we pass NULL */
+	       the last RMA operation. */
 	    if (curr_ops_cnt[curr_ptr->target_rank] ==
-		nops_to_proc[curr_ptr->target_rank] - 1) 
-		source_win_handle = win_ptr->handle;
-	    else 
-		source_win_handle = MPI_WIN_NULL;
-	    
+                nops_to_proc[curr_ptr->target_rank] - 1) {
+                flags = MPIDI_CH3_PKT_FLAG_RMA_AT_COMPLETE;
+            }
+
+            source_win_handle = win_ptr->handle;
 	    target_win_handle = win_ptr->all_win_handles[curr_ptr->target_rank];
 
 #define MPIDI_CH3I_TRACK_RMA_WRITE(op_ptr_, win_ptr_) /* Not used by active mode */
-            MPIDI_CH3I_ISSUE_RMA_OP(curr_ptr, win_ptr, MPIDI_CH3_PKT_FLAG_NONE,
+            MPIDI_CH3I_ISSUE_RMA_OP(curr_ptr, win_ptr, flags,
                                     source_win_handle, target_win_handle, mpi_errno);
 #undef MPIDI_CH3I_TRACK_RMA_WRITE
 
@@ -1012,13 +1012,7 @@ static int MPIDI_CH3I_Send_immed_rmw_msg(MPIDI_RMA_Op_t *rma_op,
 
         MPIU_Assert(len <= sizeof(MPIDI_CH3_CAS_Immed_u));
 
-        /* If this is the last operation, it also unlocks the window 
-           at the target. */
-        if (source_win_handle != MPI_WIN_NULL) {
-            MPIDI_Pkt_init(cas_pkt, MPIDI_CH3_PKT_CAS_UNLOCK);
-        } else {
-            MPIDI_Pkt_init(cas_pkt, MPIDI_CH3_PKT_CAS);
-        }
+        MPIDI_Pkt_init(cas_pkt, MPIDI_CH3_PKT_CAS);
 
         cas_pkt->addr = (char *) win_ptr->base_addrs[rma_op->target_rank] +
             win_ptr->disp_units[rma_op->target_rank] * rma_op->target_disp;
@@ -1640,20 +1634,20 @@ int MPIDI_Win_complete(MPID_Win *win_ptr)
     curr_ptr = MPIDI_CH3I_RMA_Ops_head(ops_list);
     while (curr_ptr != NULL)
     {
+        MPIDI_CH3_Pkt_flags_t flags = MPIDI_CH3_PKT_FLAG_NONE;
+
 	/* The completion counter at the target is decremented only on 
-	   the last RMA operation. We indicate the last operation by 
-	   passing the source_win_handle only on the last operation. 
-	   Otherwise, we pass NULL */
+	   the last RMA operation. */
 	if (curr_ops_cnt[curr_ptr->target_rank] ==
-	    nops_to_proc[curr_ptr->target_rank] - 1) 
-	    source_win_handle = win_ptr->handle;
-	else 
-	    source_win_handle = MPI_WIN_NULL;
-	
+	    nops_to_proc[curr_ptr->target_rank] - 1) {
+            flags = MPIDI_CH3_PKT_FLAG_RMA_AT_COMPLETE;
+        }
+
+        source_win_handle = win_ptr->handle;
 	target_win_handle = win_ptr->all_win_handles[curr_ptr->target_rank];
 
 #define MPIDI_CH3I_TRACK_RMA_WRITE(op_ptr_, win_ptr_) /* Not used by active mode */
-            MPIDI_CH3I_ISSUE_RMA_OP(curr_ptr, win_ptr, MPIDI_CH3_PKT_FLAG_NONE,
+            MPIDI_CH3I_ISSUE_RMA_OP(curr_ptr, win_ptr, flags,
                                     source_win_handle, target_win_handle, mpi_errno);
 #undef MPIDI_CH3I_TRACK_RMA_WRITE
 
@@ -1700,7 +1694,7 @@ int MPIDI_Win_complete(MPID_Win *win_ptr)
 	    MPID_Request *request;
 	    
 	    MPIDI_Pkt_init(put_pkt, MPIDI_CH3_PKT_PUT);
-            put_pkt->flags = MPIDI_CH3_PKT_FLAG_NONE;
+            put_pkt->flags = MPIDI_CH3_PKT_FLAG_RMA_AT_COMPLETE;
 	    put_pkt->addr = NULL;
 	    put_pkt->count = 0;
 	    put_pkt->datatype = MPI_INT;
@@ -2572,18 +2566,23 @@ static int MPIDI_CH3I_Do_passive_target_rma(MPID_Win *win_ptr, int target_rank,
     {
         MPIDI_CH3_Pkt_flags_t flags = MPIDI_CH3_PKT_FLAG_NONE;
 
-        /* To indicate the last RMA operation, we pass the
-           source_win_handle only on the last operation. Otherwise, 
-           we pass MPI_WIN_NULL. */
-
         /* Assertion: (curr_ptr != NULL) => (nops > 0) */
         MPIU_Assert(nops > 0);
         MPIU_Assert(curr_ptr->target_rank == target_rank);
 
-        if (curr_ptr->next == NULL && unlock_target)
-            source_win_handle = win_ptr->handle;
-        else 
-            source_win_handle = MPI_WIN_NULL;
+        if (curr_ptr->next == NULL) {
+            if (unlock_target) {
+                flags = MPIDI_CH3_PKT_FLAG_RMA_UNLOCK;
+
+                /* Inform the target that we want an acknowledgement when the
+                 * unlock has completed. */
+                if (*wait_for_rma_done_pkt) {
+                    flags |= MPIDI_CH3_PKT_FLAG_RMA_REQ_ACK;
+                }
+            }
+        }
+
+        source_win_handle = win_ptr->handle;
 
         /* Track passive target write operations.  This is used during Win_free
          * to ensure that all writes to a given target have completed at that
@@ -2895,6 +2894,8 @@ static int MPIDI_CH3I_Send_lock_put_or_acc(MPID_Win *win_ptr, int target_rank)
 
     if (rma_op->type == MPIDI_RMA_PUT) {
         MPIDI_Pkt_init(lock_put_unlock_pkt, MPIDI_CH3_PKT_LOCK_PUT_UNLOCK);
+        lock_put_unlock_pkt->flags = MPIDI_CH3_PKT_FLAG_RMA_LOCK |
+            MPIDI_CH3_PKT_FLAG_RMA_UNLOCK | MPIDI_CH3_PKT_FLAG_RMA_REQ_ACK;
         lock_put_unlock_pkt->target_win_handle = 
             win_ptr->all_win_handles[rma_op->target_rank];
         lock_put_unlock_pkt->source_win_handle = win_ptr->handle;
@@ -2913,6 +2914,8 @@ static int MPIDI_CH3I_Send_lock_put_or_acc(MPID_Win *win_ptr, int target_rank)
     
     else if (rma_op->type == MPIDI_RMA_ACCUMULATE) {        
         MPIDI_Pkt_init(lock_accum_unlock_pkt, MPIDI_CH3_PKT_LOCK_ACCUM_UNLOCK);
+        lock_accum_unlock_pkt->flags = MPIDI_CH3_PKT_FLAG_RMA_LOCK |
+            MPIDI_CH3_PKT_FLAG_RMA_UNLOCK | MPIDI_CH3_PKT_FLAG_RMA_REQ_ACK;
         lock_accum_unlock_pkt->target_win_handle = 
             win_ptr->all_win_handles[rma_op->target_rank];
         lock_accum_unlock_pkt->source_win_handle = win_ptr->handle;
@@ -2931,6 +2934,8 @@ static int MPIDI_CH3I_Send_lock_put_or_acc(MPID_Win *win_ptr, int target_rank)
     }
     else if (rma_op->type == MPIDI_RMA_ACC_CONTIG) {
         MPIDI_Pkt_init(lock_accum_unlock_pkt, MPIDI_CH3_PKT_LOCK_ACCUM_UNLOCK);
+        lock_accum_unlock_pkt->flags = MPIDI_CH3_PKT_FLAG_RMA_LOCK |
+            MPIDI_CH3_PKT_FLAG_RMA_UNLOCK | MPIDI_CH3_PKT_FLAG_RMA_REQ_ACK;
         lock_accum_unlock_pkt->target_win_handle = 
             win_ptr->all_win_handles[rma_op->target_rank];
         lock_accum_unlock_pkt->source_win_handle = win_ptr->handle;
@@ -3115,6 +3120,8 @@ static int MPIDI_CH3I_Send_lock_get(MPID_Win *win_ptr, int target_rank)
     }
 
     MPIDI_Pkt_init(lock_get_unlock_pkt, MPIDI_CH3_PKT_LOCK_GET_UNLOCK);
+    lock_get_unlock_pkt->flags = MPIDI_CH3_PKT_FLAG_RMA_LOCK |
+        MPIDI_CH3_PKT_FLAG_RMA_UNLOCK; /* FIXME | MPIDI_CH3_PKT_FLAG_RMA_REQ_ACK; */
     lock_get_unlock_pkt->target_win_handle = 
         win_ptr->all_win_handles[rma_op->target_rank];
     lock_get_unlock_pkt->source_win_handle = win_ptr->handle;
@@ -3267,7 +3274,7 @@ int MPIDI_CH3_PktHandler_Put( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 	   to check lock queue. */
 	if (put_pkt->target_win_handle != MPI_WIN_NULL) {
             MPID_Win_get_ptr(put_pkt->target_win_handle, win_ptr);
-            mpi_errno = MPIDI_CH3_Finish_rma_op_target(NULL, win_ptr, TRUE, TRUE, MPI_WIN_NULL, FALSE);
+            mpi_errno = MPIDI_CH3_Finish_rma_op_target(NULL, win_ptr, TRUE, put_pkt->flags, MPI_WIN_NULL);
             if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
 	}
         *buflen = sizeof(MPIDI_CH3_Pkt_t);
@@ -3285,6 +3292,7 @@ int MPIDI_CH3_PktHandler_Put( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
     req->dev.user_count = put_pkt->count;
     req->dev.target_win_handle = put_pkt->target_win_handle;
     req->dev.source_win_handle = put_pkt->source_win_handle;
+    req->dev.flags = put_pkt->flags;
 	
     MPIDI_CH3I_DATATYPE_IS_PREDEFINED(put_pkt->datatype, predefined);
     if (predefined)
@@ -3426,6 +3434,7 @@ int MPIDI_CH3_PktHandler_Get( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
     req = MPID_Request_create();
     req->dev.target_win_handle = get_pkt->target_win_handle;
     req->dev.source_win_handle = get_pkt->source_win_handle;
+    req->dev.flags = get_pkt->flags;
     
     MPIDI_CH3I_DATATYPE_IS_PREDEFINED(get_pkt->datatype, predefined);
     if (predefined)
@@ -3562,6 +3571,7 @@ int MPIDI_CH3_PktHandler_Accumulate( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
     req->dev.real_user_buf = accum_pkt->addr;
     req->dev.target_win_handle = accum_pkt->target_win_handle;
     req->dev.source_win_handle = accum_pkt->source_win_handle;
+    req->dev.flags = accum_pkt->flags;
 
     if (accum_pkt->type == MPIDI_CH3_PKT_GET_ACCUM) {
         req->dev.resp_request_handle = accum_pkt->request_handle;
@@ -3755,8 +3765,8 @@ int MPIDI_CH3_PktHandler_Accumulate_Immed( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 	MPID_Win_get_ptr(accum_pkt->target_win_handle, win_ptr);
 
         mpi_errno = MPIDI_CH3_Finish_rma_op_target(vc, win_ptr, TRUE,
-                                                   accum_pkt->source_win_handle != MPI_WIN_NULL,
-                                                   accum_pkt->source_win_handle, FALSE);
+                                                   accum_pkt->flags,
+                                                   accum_pkt->source_win_handle);
         if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
     }
 
@@ -3826,8 +3836,8 @@ int MPIDI_CH3_PktHandler_CAS( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
     MPID_Win_get_ptr(cas_pkt->target_win_handle, win_ptr);
 
     mpi_errno = MPIDI_CH3_Finish_rma_op_target(NULL, win_ptr, TRUE,
-                                               pkt->type == MPIDI_CH3_PKT_CAS_UNLOCK,
-                                               MPI_WIN_NULL, FALSE);
+                                               cas_pkt->flags,
+                                               MPI_WIN_NULL);
     if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
 
 fn_exit:
@@ -3907,6 +3917,7 @@ int MPIDI_CH3_PktHandler_FOP( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
     req->dev.target_win_handle = fop_pkt->target_win_handle;
     req->dev.source_win_handle = fop_pkt->source_win_handle;
     req->dev.request_handle = fop_pkt->request_handle;
+    req->dev.flags = fop_pkt->flags;
 
     MPID_Datatype_get_size_macro(req->dev.datatype, len);
     MPIU_Assert(len <= sizeof(MPIDI_CH3_FOP_Immed_u));
@@ -4197,6 +4208,7 @@ int MPIDI_CH3_PktHandler_LockPutUnlock( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 	req->dev.OnDataAvail = MPIDI_CH3_ReqHandler_PutAccumRespComplete;
 	req->dev.user_buf = lock_put_unlock_pkt->addr;
 	req->dev.source_win_handle = lock_put_unlock_pkt->source_win_handle;
+        req->dev.flags = lock_put_unlock_pkt->flags;
 	req->dev.single_op_opt = 1;
     }
     
@@ -4239,6 +4251,7 @@ int MPIDI_CH3_PktHandler_LockPutUnlock( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 	new_ptr->vc = vc;
 	
 	new_ptr->pt_single_op->type = MPIDI_RMA_PUT;
+	new_ptr->pt_single_op->flags = lock_put_unlock_pkt->flags;
 	new_ptr->pt_single_op->addr = lock_put_unlock_pkt->addr;
 	new_ptr->pt_single_op->count = lock_put_unlock_pkt->count;
 	new_ptr->pt_single_op->datatype = lock_put_unlock_pkt->datatype;
@@ -4335,6 +4348,7 @@ int MPIDI_CH3_PktHandler_LockGetUnlock( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 	req->dev.target_win_handle = lock_get_unlock_pkt->target_win_handle;
 	req->dev.source_win_handle = lock_get_unlock_pkt->source_win_handle;
 	req->dev.single_op_opt = 1;
+        req->dev.flags = lock_get_unlock_pkt->flags;
 	
 	MPIDI_Request_set_type(req, MPIDI_REQUEST_TYPE_GET_RESP); 
 	req->dev.OnDataAvail = MPIDI_CH3_ReqHandler_GetSendRespComplete;
@@ -4400,6 +4414,7 @@ int MPIDI_CH3_PktHandler_LockGetUnlock( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 	new_ptr->vc = vc;
 	
 	new_ptr->pt_single_op->type = MPIDI_RMA_GET;
+	new_ptr->pt_single_op->flags = lock_get_unlock_pkt->flags;
 	new_ptr->pt_single_op->addr = lock_get_unlock_pkt->addr;
 	new_ptr->pt_single_op->count = lock_get_unlock_pkt->count;
 	new_ptr->pt_single_op->datatype = lock_get_unlock_pkt->datatype;
@@ -4453,6 +4468,7 @@ int MPIDI_CH3_PktHandler_LockAccumUnlock( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
     req->dev.recv_data_sz = type_size * lock_accum_unlock_pkt->count;
     req->dev.user_count = lock_accum_unlock_pkt->count;
     req->dev.target_win_handle = lock_accum_unlock_pkt->target_win_handle;
+    req->dev.flags = lock_accum_unlock_pkt->flags;
     
     /* queue the information */
     
@@ -4493,6 +4509,7 @@ int MPIDI_CH3_PktHandler_LockAccumUnlock( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
     new_ptr->vc = vc;
     
     new_ptr->pt_single_op->type = MPIDI_RMA_ACCUMULATE;
+    new_ptr->pt_single_op->flags = lock_accum_unlock_pkt->flags;
     new_ptr->pt_single_op->addr = lock_accum_unlock_pkt->addr;
     new_ptr->pt_single_op->count = lock_accum_unlock_pkt->count;
     new_ptr->pt_single_op->datatype = lock_accum_unlock_pkt->datatype;
@@ -4900,7 +4917,7 @@ static int MPIDI_CH3I_RMAListPartialComplete( MPID_Win *win_ptr,
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 int MPIDI_CH3_Finish_rma_op_target(MPIDI_VC_t *vc, MPID_Win *win_ptr, int is_rma_update,
-                                   int end_epoch, MPI_Win source_win_handle, int force_done_pkt)
+                                   MPIDI_CH3_Pkt_flags_t flags, MPI_Win source_win_handle)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3_FINISH_RMA_OP_TARGET);
@@ -4916,40 +4933,37 @@ int MPIDI_CH3_Finish_rma_op_target(MPIDI_VC_t *vc, MPID_Win *win_ptr, int is_rma
     if (win_ptr->current_lock_type != MPID_LOCK_NONE && is_rma_update)
         win_ptr->my_pt_rma_puts_accs++;
 
-    if (end_epoch) {
-        /* Last RMA operation from source. If active target RMA, decrement
-           window counter. If passive target RMA, release lock on window and
-           grant next lock in the lock queue if there is any. If it's a shared
-           lock or a lock-put-unlock type of optimization, we also need to send
-           an ack to the source. */
+    /* Last RMA operation from source. If active target RMA, decrement window
+       counter. */
+    if (flags & MPIDI_CH3_PKT_FLAG_RMA_AT_COMPLETE) {
+        MPIU_Assert(win_ptr->current_lock_type == MPID_LOCK_NONE);
 
-        if (win_ptr->current_lock_type == MPID_LOCK_NONE) {
-            /* FIXME: MT: Accesses to my_counter should be done atomically */
-            win_ptr->my_counter -= 1;
+        /* FIXME: MT: Accesses to my_counter should be done atomically */
+        win_ptr->my_counter -= 1;
 
-            /* Active target: Signal the local process when the op counter
-             * reaches 0. */
-            if (win_ptr->my_counter == 0)
-                MPIDI_CH3_Progress_signal_completion();
+        /* Signal the local process when the op counter reaches 0. */
+        if (win_ptr->my_counter == 0)
+            MPIDI_CH3_Progress_signal_completion();
+    }
+
+    /* If passive target RMA, release lock on window and grant next lock in the
+       lock queue if there is any.  If requested by the origin, send an ack back
+       to indicate completion at the target. */
+    else if (flags & MPIDI_CH3_PKT_FLAG_RMA_UNLOCK) {
+        MPIU_Assert(win_ptr->current_lock_type != MPID_LOCK_NONE);
+
+        if (flags & MPIDI_CH3_PKT_FLAG_RMA_REQ_ACK) {
+            MPIU_Assert(source_win_handle != MPI_WIN_NULL);
+            mpi_errno = MPIDI_CH3I_Send_pt_rma_done_pkt(vc, win_ptr, source_win_handle);
+            if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
         }
-        else {
-            if (source_win_handle != MPI_WIN_NULL &&
-                ((win_ptr->current_lock_type == MPI_LOCK_SHARED || force_done_pkt)))
-            {
-                mpi_errno = MPIDI_CH3I_Send_pt_rma_done_pkt(vc, win_ptr, source_win_handle);
-                if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
-            }
 
-            if (end_epoch) {
-                mpi_errno = MPIDI_CH3I_Release_lock(win_ptr);
-                if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
+        mpi_errno = MPIDI_CH3I_Release_lock(win_ptr);
+        if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
 
-                /* Passive target: The local process may be waiting for the
-                 * lock.  Signal completion to wake it up, so it can attempt to
-                 * grab the lock. */
-                MPIDI_CH3_Progress_signal_completion();
-            }
-        }
+        /* The local process may be waiting for the lock.  Signal completion to
+           wake it up, so it can attempt to grab the lock. */
+        MPIDI_CH3_Progress_signal_completion();
     }
 
 fn_exit:

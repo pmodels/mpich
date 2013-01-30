@@ -1215,7 +1215,7 @@ int MPIDI_CH3I_Try_acquire_win_lock(MPID_Win * win_ptr, int requested_lock);
 int MPIDI_CH3I_Send_lock_granted_pkt(MPIDI_VC_t * vc, MPID_Win *win_ptr, int source_win_hdl);
 int MPIDI_CH3I_Send_pt_rma_done_pkt(MPIDI_VC_t * vc, MPID_Win *win_ptr, int source_win_hdl);
 int MPIDI_CH3_Finish_rma_op_target(MPIDI_VC_t *vc, MPID_Win *win_ptr, int is_rma_update,
-                                   int end_epoch, MPI_Win source_win_handle, int force_done_pkt);
+                                   MPIDI_CH3_Pkt_flags_t flags, MPI_Win source_win_handle);
 
 #define MPIDI_CH3I_DATATYPE_IS_PREDEFINED(type, predefined) \
     if ((HANDLE_GET_KIND(type) == HANDLE_KIND_BUILTIN) || \
