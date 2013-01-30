@@ -2310,6 +2310,12 @@ if test "$enable_fc" = "yes" ; then
     # ------------------------------------------------
 fi
 
+if test "X$modincdir" = "X" ; then
+  modincdir=$includedir
+fi
+export modincdir
+AC_SUBST(modincdir)
+
 # ----------------------------------------------------------------------------
 # We previously allowed "default" as a valid value for $enable_cxx.  Now we
 # assume its available by default and error out if it doesn't work (just like

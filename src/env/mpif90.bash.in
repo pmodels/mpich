@@ -33,6 +33,7 @@ exec_prefix=@exec_prefix@
 sysconfdir=@sysconfdir@
 includedir=@includedir@
 libdir=@libdir@
+modincdir=@modincdir@
 
 # Default settings for compiler, flags, and libraries
 # Determined by a combination of environment variables and tests within
@@ -308,7 +309,6 @@ else
 fi
 
 # Handle the specification of the directory containing the modules
-# For now, these are in the includedir (no choice argument supported)
 modulelib="@FCWRAPNAME@"
 if [ -n "$FCMODINCSPEC" ] ; then
     newarg=`echo A"$FCMODINCSPEC" | \
@@ -316,7 +316,7 @@ if [ -n "$FCMODINCSPEC" ] ; then
     FCMODDIRS="$newarg"
     FCMODLIBS="-l$modulelib"
 elif [ -n "$FCMODINC" ] ; then
-    FCMODDIRS="${FCMODINC}$includedir"
+    FCMODDIRS="${FCMODINC}$modincdir"
     FCMODLIBS="-l$modulelib"
 fi
 

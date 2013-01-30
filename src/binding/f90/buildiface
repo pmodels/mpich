@@ -1016,7 +1016,7 @@ mpi_f90_modules = \\
     src/binding/f90/\$(MPIBASEMOD).\$(MOD)
 
 # the modules are effectively precompiled headers for Fortran programs
-include_HEADERS += \$(mpi_f90_modules)
+modinc_HEADERS = \$(mpi_f90_modules)
 
 # We need a free-format version of mpif.h with no external commands,
 # including no wtime/wtick (removing MPI_WTICK also removes MPI_WTIME, 
