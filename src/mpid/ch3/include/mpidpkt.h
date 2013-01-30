@@ -9,6 +9,13 @@
 
 #include "oputil.h"
 
+#ifdef HAVE_STDINT_H
+#  include <stdint.h>
+#endif
+#ifdef HAVE_INTTYPES_H
+#  include <inttypes.h>
+#endif
+
 /* Enable the use of data within the message packet for small messages */
 #define USE_EAGER_SHORT
 #define MPIDI_EAGER_SHORT_INTS 4
@@ -49,13 +56,11 @@ typedef union {
 } MPIDI_CH3_FOP_Immed_u;
 
 /*
- * MPIDI_CH3_Pkt_type_t
- *
  * Predefined packet types.  This simplifies some of the code.
  */
 /* FIXME: Having predefined names makes it harder to add new message types,
    such as different RMA types. */
-typedef enum MPIDI_CH3_Pkt_type
+enum MPIDI_CH3_Pkt_types
 {
     MPIDI_CH3_PKT_EAGER_SEND = 0,
 #if defined(USE_EAGER_SHORT)
@@ -101,8 +106,9 @@ typedef enum MPIDI_CH3_Pkt_type
 # endif    
     , MPIDI_CH3_PKT_END_ALL,
     MPIDI_CH3_PKT_INVALID = -1 /* forces a signed enum to quash warnings */
-}
-MPIDI_CH3_Pkt_type_t;
+};
+
+typedef int16_t MPIDI_CH3_Pkt_type_t;
 
 typedef struct MPIDI_CH3_Pkt_send
 {

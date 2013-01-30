@@ -61,7 +61,7 @@ typedef enum MPID_nem_pkt_type
 
 typedef struct MPID_nem_pkt_lmt_rts
 {
-    MPID_nem_pkt_type_t type;
+    MPIDI_CH3_Pkt_type_t type;
     MPIDI_Message_match match;
     MPI_Request sender_req_id;
     MPIDI_msg_sz_t data_sz;
@@ -71,7 +71,7 @@ MPID_nem_pkt_lmt_rts_t;
 
 typedef struct MPID_nem_pkt_lmt_cts
 {
-    MPID_nem_pkt_type_t type;
+    MPIDI_CH3_Pkt_type_t type;
     MPI_Request sender_req_id;
     MPI_Request receiver_req_id;
     MPIDI_msg_sz_t data_sz;
@@ -81,14 +81,14 @@ MPID_nem_pkt_lmt_cts_t;
 
 typedef struct MPID_nem_pkt_lmt_done
 {
-    MPID_nem_pkt_type_t type;
+    MPIDI_CH3_Pkt_type_t type;
     MPI_Request req_id;
 }
 MPID_nem_pkt_lmt_done_t;
 
 typedef struct MPID_nem_pkt_lmt_cookie
 {
-    MPID_nem_pkt_type_t type;
+    MPIDI_CH3_Pkt_type_t type;
     int from_sender;
     MPI_Request sender_req_id;
     MPI_Request receiver_req_id;
@@ -98,14 +98,14 @@ MPID_nem_pkt_lmt_cookie_t;
 
 typedef struct MPID_nem_pkt_ckpt_marker
 {
-    MPID_nem_pkt_type_t type;
+    MPIDI_CH3_Pkt_type_t type;
     int wave; /* used for debugging */
 }
 MPID_nem_pkt_ckpt_marker_t;
 
 typedef struct MPID_nem_pkt_netmod
 {
-    MPID_nem_pkt_type_t type;
+    MPIDI_CH3_Pkt_type_t type;
     unsigned subtype;
 }
 MPID_nem_pkt_netmod_t;
