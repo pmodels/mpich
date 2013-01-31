@@ -38,6 +38,7 @@ $rootSrcDir = "";
 	      "[A-Za-z0-9_\/-]*\/icc",
 	      "[A-Za-z0-9_\/-]*\/install-sh",
 	      "/usr/bin/ar", "mkdir",
+              "/bin/mkdir",
 	      "/usr/ucb/ld",
 	      "mpicc", "mpicxx",
 	      "compiling ROMIO in", 
@@ -57,6 +58,7 @@ $rootSrcDir = "";
 	      "Copying Upshot",
 	      "Cleaning directory",
 	      "[*][*][*][*] Making .*\.\.\.\.",
+	      "Making .* in .*",
 	      "Making upshot", "\\s*\$", );
 
 # OtherNoise is an array of patterns that describe blocks of
