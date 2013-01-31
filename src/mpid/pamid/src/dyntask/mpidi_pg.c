@@ -13,6 +13,8 @@
 #ifdef DYNAMIC_TASKING
 
 extern int mpidi_dynamic_tasking;
+int mpidi_sync_done=0;
+
 
 #define MAX_JOBID_LEN 1024
 
@@ -71,6 +73,11 @@ int MPIDI_PG_Init(int *argc_p, char ***argv_p,
     return mpi_errno;
 }
 
+void *mpidi_finalize_req(void *arg) {
+    PMI2_Finalize();
+    mpidi_sync_done=1;
+}
+
 /*@
    MPIDI_PG_Finalize - Finalize the process groups, including freeing all
    process group structures
@@ -82,9 +89,10 @@ int MPIDI_PG_Finalize(void)
    int                    my_max_worldid, world_max_worldid;
    int                    wid_bit_array_size=0, wid;
    unsigned char          *wid_bit_array=NULL, *root_wid_barray=NULL;
-   MPIDI_PG_t *pg, *pgNext;
-   char key[PMI2_MAX_KEYLEN];
-   char value[PMI2_MAX_VALLEN];
+   MPIDI_PG_t             *pg, *pgNext;
+   char                   key[PMI2_MAX_KEYLEN];
+   char                   value[PMI2_MAX_VALLEN];
+   pthread_t              finalize_req_thread;
 
    /* Print the state of the process groups */
    if (verbose) {
@@ -161,17 +169,21 @@ int MPIDI_PG_Finalize(void)
    TRACE_ERR("PMI2_KVS_Fence returned with mpi_errno=%d\n", mpi_errno);
 
    MPIU_Free(root_wid_barray); /* root_wid_barray is now NULL for non-root */
-/*    if (pg_world->connData) { */
-#ifdef USE_PMI2_API
-	mpi_errno = PMI2_Finalize();
-#else
-	int rc;
-	rc = PMI_Finalize();
-	if (rc) {
-          TRACE_ERR("PMI_Finalize returned with rc=%d\n", rc);
-	}
-#endif
-    /*}*/
+
+
+   pthread_create(&finalize_req_thread, NULL, mpidi_finalize_req, NULL);
+   MPIU_THREAD_CS_EXIT(ALLFUNC,);
+   while (mpidi_sync_done !=1) {
+     mpi_errno=PAMI_Context_advance(MPIDI_Context[0], 1000);
+     if (mpi_errno == PAMI_EAGAIN) {
+       usleep(1);
+     }
+   }
+
+   if (mpi_errno = pthread_join(finalize_req_thread, NULL) ) {
+         TRACE_ERR("error returned from pthread_join() mpi_errno=%d\n",mpi_errno);
+   }
+   MPIU_THREAD_CS_ENTER(ALLFUNC,);
 
    if(_conn_info_list) {
      if(_conn_info_list->rem_taskids)
