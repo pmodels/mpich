@@ -41,7 +41,7 @@ doc1_src_txt =
 CLEAN_LOCAL_TARGETS =
 
 # used by nodist_pkgconfig_DATA
-pkgconfigdir = $(libdir)/pkgconfig
+pkgconfigdir = @pkgconfigdir@
 
 # contains all of the "errnames.txt" files that are used by maint/extracterrmsgs
 # to build src/mpi/errhan/defmsg.h

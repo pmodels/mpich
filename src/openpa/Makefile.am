@@ -28,7 +28,7 @@ prettycheck:
 all-executable:
 
 # pkgconfig files
-pkgconfigdir = $(libdir)/pkgconfig
+pkgconfigdir = @pkgconfigdir@
 pkgconfig_DATA = openpa.pc
 $(pkgconfig_DATA): config.status
 

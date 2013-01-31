@@ -6137,6 +6137,13 @@ fi
 
 ########################################################################
 
+if test -z "$pkgconfigdir" ; then
+  # The default pkgconfig dir is under the lib dir
+  pkgconfigdir=$libdir/pkgconfig
+fi
+AC_SUBST(pkgconfigdir)
+export pkgconfigdir
+
 dnl This includes an experimental pkgconfig file for ch3 in the src/pkgconfig
 dnl directory
 AC_OUTPUT(Makefile \

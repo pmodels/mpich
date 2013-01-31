@@ -431,6 +431,12 @@ fi
 export libopa_so_versionflags
 AC_SUBST(libopa_so_versionflags)
 
+if test -z "$pkgconfigdir" ; then
+  # The default pkgconfig dir is under the lib dir
+  pkgconfigdir=$libdir/pkgconfig
+fi
+AC_SUBST(pkgconfigdir)
+export pkgconfigdir
 
 AC_CONFIG_FILES([Makefile src/Makefile test/Makefile openpa.pc])
 AC_OUTPUT
