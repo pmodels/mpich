@@ -32,3 +32,10 @@
 **ch3|close_progress:an error occurred while the device was waiting for all open connections to close
 **ch3|pmi_finalize:PMI_Finalize failed
 **ch3|pmi_finalize %d:PMI_Finalize failed, error %d
+
+#
+# RMA errors
+#
+**ch3|sync_arg:Invalid RMA synchronization argument
+**ch3|sync_arg %d:Invalid RMA synchronization argument (%d)
+**ch3|rma_flags:Invalid combination of RMA packet flags

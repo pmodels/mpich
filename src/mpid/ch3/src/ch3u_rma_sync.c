@@ -121,7 +121,7 @@ static int MPIDI_CH3I_Send_immed_rmw_msg(MPIDI_RMA_Op_t *, MPID_Win *,
                                          MPI_Win, MPI_Win, MPID_Request ** );
 static int MPIDI_CH3I_Do_passive_target_rma(MPID_Win *win_ptr, int target_rank,
                                             int *wait_for_rma_done_pkt,
-                                            int unlock_target);
+                                            MPIDI_CH3_Pkt_flags_t sync_flags);
 static int MPIDI_CH3I_Send_lock_put_or_acc(MPID_Win *, int);
 static int MPIDI_CH3I_Send_lock_get(MPID_Win *, int);
 static int MPIDI_CH3I_RMAListComplete(MPID_Win *win_ptr,
@@ -2053,7 +2053,7 @@ int MPIDI_Win_unlock(int dest, MPID_Win *win_ptr)
 
 	/* Now do all the RMA operations */
         mpi_errno = MPIDI_CH3I_Do_passive_target_rma(win_ptr, dest, &wait_for_rma_done_pkt,
-                                                     1 /* unlock the target */);
+                                                     MPIDI_CH3_PKT_FLAG_RMA_UNLOCK);
 	if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
     }
         
@@ -2233,7 +2233,7 @@ int MPIDI_Win_flush(int rank, MPID_Win *win_ptr)
 
     win_ptr->targets[rank].remote_lock_state = MPIDI_CH3_WIN_LOCK_FLUSH;
     mpi_errno = MPIDI_CH3I_Do_passive_target_rma(win_ptr, rank, &wait_for_rma_done_pkt,
-                                                 0 /* don't unlock the target */);
+                                                 MPIDI_CH3_PKT_FLAG_RMA_FLUSH);
     if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
 
     /* If the lock is a shared lock or we have done the single op optimization,
@@ -2244,9 +2244,6 @@ int MPIDI_Win_flush(int rank, MPID_Win *win_ptr)
         /* wait until the "pt rma done" packet is received from the target.
            This packet resets the remote_lock_state flag. */
 
-        MPIDI_CH3I_Send_flush_msg(rank, win_ptr);
-
-        /* poke the progress engine until remote_lock_state flag is reset */
         if (win_ptr->targets[rank].remote_lock_state != MPIDI_CH3_WIN_LOCK_GRANTED)
         {
             MPID_Progress_state progress_state;
@@ -2479,7 +2476,7 @@ int MPIDI_Win_sync(MPID_Win *win_ptr)
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 static int MPIDI_CH3I_Do_passive_target_rma(MPID_Win *win_ptr, int target_rank,
-                                            int *wait_for_rma_done_pkt, int unlock_target)
+                                            int *wait_for_rma_done_pkt, MPIDI_CH3_Pkt_flags_t sync_flags)
 {
     int mpi_errno = MPI_SUCCESS, nops;
     MPIDI_RMA_Op_t *curr_ptr;
@@ -2570,18 +2567,23 @@ static int MPIDI_CH3I_Do_passive_target_rma(MPID_Win *win_ptr, int target_rank,
         MPIU_Assert(curr_ptr->target_rank == target_rank);
 
         if (curr_ptr->next == NULL) {
-            if (unlock_target) {
+            if (sync_flags & MPIDI_CH3_PKT_FLAG_RMA_UNLOCK) {
                 flags = MPIDI_CH3_PKT_FLAG_RMA_UNLOCK;
-
-                /* Inform the target that we want an acknowledgement when the
-                 * unlock has completed. */
-                if (*wait_for_rma_done_pkt) {
-                    flags |= MPIDI_CH3_PKT_FLAG_RMA_REQ_ACK;
-                }
+            } else if (sync_flags & MPIDI_CH3_PKT_FLAG_RMA_FLUSH) {
+                flags = MPIDI_CH3_PKT_FLAG_RMA_FLUSH;
+            } else {
+                MPIU_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_RMA_SYNC, "**ch3|sync_arg",
+                                     "**ch3|sync_arg %d", sync_flags);
             }
-        }
 
-        source_win_handle = win_ptr->handle;
+            /* Inform the target that we want an acknowledgement when the
+             * unlock has completed. */
+            if (*wait_for_rma_done_pkt) {
+                flags |= MPIDI_CH3_PKT_FLAG_RMA_REQ_ACK;
+            }
+
+            source_win_handle = win_ptr->handle;
+        }
 
         /* Track passive target write operations.  This is used during Win_free
          * to ensure that all writes to a given target have completed at that
@@ -2621,11 +2623,20 @@ static int MPIDI_CH3I_Do_passive_target_rma(MPID_Win *win_ptr, int target_rank,
 	MPIU_INSTR_STMT(list_block=MPIU_INSTR_GET_VAR(winunlock_block));
         mpi_errno = MPIDI_CH3I_RMAListComplete(win_ptr, &win_ptr->targets[target_rank].rma_ops_list);
     }
-    else if (unlock_target) {
+    else if (sync_flags & MPIDI_CH3_PKT_FLAG_RMA_UNLOCK) {
         /* No communication operations were left to process, but the RMA epoch
            is open.  Send an unlock message to release the lock at the target.  */
         mpi_errno = MPIDI_CH3I_Send_unlock_msg(target_rank, win_ptr);
-        MPIU_ERR_CHKANDJUMP(mpi_errno != MPI_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**winRMAmessage");
+        if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
+        *wait_for_rma_done_pkt = 1;
+    }
+    else if (sync_flags & MPIDI_CH3_PKT_FLAG_RMA_FLUSH) {
+        /* No communication operations were left to process, but the RMA epoch
+           is open.  Send a flush message to ensure remote completion. */
+        /* FIXME: This should be unnecessary for exclusive lock epochs */
+        mpi_errno = MPIDI_CH3I_Send_flush_msg(target_rank, win_ptr);
+        if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
+        *wait_for_rma_done_pkt = 1;
     }
 
     MPIU_Assert(MPIDI_CH3I_RMA_Ops_isempty(&win_ptr->targets[target_rank].rma_ops_list));
@@ -4934,8 +4945,8 @@ int MPIDI_CH3_Finish_rma_op_target(MPIDI_VC_t *vc, MPID_Win *win_ptr, int is_rma
     if (flags & MPIDI_CH3_PKT_FLAG_RMA_AT_COMPLETE) {
         MPIU_Assert(win_ptr->current_lock_type == MPID_LOCK_NONE);
 
-        /* FIXME: MT: Accesses to my_counter should be done atomically */
         win_ptr->my_counter -= 1;
+        MPIU_Assert(win_ptr->my_counter >= 0);
 
         /* Signal the local process when the op counter reaches 0. */
         if (win_ptr->my_counter == 0)
@@ -4949,7 +4960,7 @@ int MPIDI_CH3_Finish_rma_op_target(MPIDI_VC_t *vc, MPID_Win *win_ptr, int is_rma
         MPIU_Assert(win_ptr->current_lock_type != MPID_LOCK_NONE);
 
         if (flags & MPIDI_CH3_PKT_FLAG_RMA_REQ_ACK) {
-            MPIU_Assert(source_win_handle != MPI_WIN_NULL);
+            MPIU_Assert(source_win_handle != MPI_WIN_NULL && vc != NULL);
             mpi_errno = MPIDI_CH3I_Send_pt_rma_done_pkt(vc, win_ptr, source_win_handle);
             if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
         }
@@ -4960,6 +4971,31 @@ int MPIDI_CH3_Finish_rma_op_target(MPIDI_VC_t *vc, MPID_Win *win_ptr, int is_rma
         /* The local process may be waiting for the lock.  Signal completion to
            wake it up, so it can attempt to grab the lock. */
         MPIDI_CH3_Progress_signal_completion();
+    }
+    else if (flags & MPIDI_CH3_PKT_FLAG_RMA_FLUSH) {
+        if (flags & MPIDI_CH3_PKT_FLAG_RMA_REQ_ACK) {
+            MPIDI_CH3_Pkt_t upkt;
+            MPIDI_CH3_Pkt_flush_t *flush_pkt = &upkt.flush;
+            MPID_Request *req = NULL;
+
+            MPIU_DBG_MSG(CH3_OTHER,VERBOSE,"received piggybacked flush request");
+            MPIU_Assert(source_win_handle != MPI_WIN_NULL && vc != NULL);
+
+            MPIDI_Pkt_init(flush_pkt, MPIDI_CH3_PKT_FLUSH);
+            flush_pkt->source_win_handle = source_win_handle;
+            flush_pkt->target_win_handle = MPI_WIN_NULL;
+            flush_pkt->target_rank = win_ptr->comm_ptr->rank;
+
+            MPIU_THREAD_CS_ENTER(CH3COMM,vc);
+            mpi_errno = MPIDI_CH3_iStartMsg(vc, flush_pkt, sizeof(*flush_pkt), &req);
+            MPIU_THREAD_CS_EXIT(CH3COMM,vc);
+            MPIU_ERR_CHKANDJUMP(mpi_errno != MPI_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**winRMAmessage");
+
+            /* Release the request returned by iStartMsg */
+            if (req != NULL) {
+                MPID_Request_release(req);
+            }
+        }
     }
 
 fn_exit:
