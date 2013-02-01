@@ -4207,7 +4207,6 @@ int MPIDI_CH3_PktHandler_LockPutUnlock( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 	req->dev.user_buf = lock_put_unlock_pkt->addr;
 	req->dev.source_win_handle = lock_put_unlock_pkt->source_win_handle;
         req->dev.flags = lock_put_unlock_pkt->flags;
-	req->dev.single_op_opt = 1;
     }
     
     else {
@@ -4345,7 +4344,6 @@ int MPIDI_CH3_PktHandler_LockGetUnlock( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 	req = MPID_Request_create();
 	req->dev.target_win_handle = lock_get_unlock_pkt->target_win_handle;
 	req->dev.source_win_handle = lock_get_unlock_pkt->source_win_handle;
-	req->dev.single_op_opt = 1;
         req->dev.flags = lock_get_unlock_pkt->flags;
 	
 	MPIDI_Request_set_type(req, MPIDI_REQUEST_TYPE_GET_RESP); 

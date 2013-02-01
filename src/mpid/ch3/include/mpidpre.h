@@ -380,7 +380,6 @@ typedef struct MPIDI_Request {
     MPI_Request request_handle;
     MPI_Win     target_win_handle;
     MPI_Win     source_win_handle;
-    int single_op_opt;   /* to indicate a lock-put-unlock optimization case */
     MPIDI_CH3_Pkt_flags_t flags; /* flags that were included in the original RMA packet header */
     struct MPIDI_Win_lock_queue *lock_queue_entry; /* for single lock-put-unlock optimization */
     MPI_Request resp_request_handle; /* Handle for get_accumulate response */
