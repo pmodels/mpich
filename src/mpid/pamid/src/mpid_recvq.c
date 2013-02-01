@@ -87,13 +87,6 @@ MPIDI_Recvq_FU(int source, int tag, int context_id, MPI_Status * status)
   MPIDI_In_cntr_t *in_cntr;
   uint nMsgs=0;
   pami_task_t pami_source;
-  
-
-  if(source != MPI_ANY_SOURCE) {
-    pami_source = PAMIX_Endpoint_query(source);
-    in_cntr=&MPIDI_In_cntr[pami_source];
-    nMsgs = in_cntr->nMsgs + 1;
-  }
 #endif
 
   if (tag != MPI_ANY_TAG && source != MPI_ANY_SOURCE)
@@ -103,31 +96,32 @@ MPIDI_Recvq_FU(int source, int tag, int context_id, MPI_Status * status)
 #ifdef USE_STATISTICS
         ++search_length;
 #endif
-#ifdef OUT_OF_ORDER_HANDLING
-        if( ((int)(nMsgs-MPIDI_Request_getMatchSeq(rreq))) >= 0 )
-        { 
-#endif
         if ( (MPIDI_Request_getMatchCtxt(rreq) == context_id) &&
              (MPIDI_Request_getMatchRank(rreq) == source    ) &&
              (MPIDI_Request_getMatchTag(rreq)  == tag       )
              )
           {
-#ifdef OUT_OF_ORDER_HANDLING
-            if (rreq->mpid.nextR != NULL) {  /* recv is in the out of order list */
-              if (MPIDI_Request_getMatchSeq(rreq) == nMsgs) {
-                in_cntr->nMsgs=nMsgs;
-              MPIDI_Recvq_remove_req_from_ool(rreq,in_cntr);
-            } 
-           } 
-#endif
+  #ifdef OUT_OF_ORDER_HANDLING
+            pami_source= MPIDI_Request_getPeerRank_pami(rreq);
+            in_cntr=&MPIDI_In_cntr[pami_source];
+            nMsgs = in_cntr->nMsgs + 1;
+            if( ((int)(nMsgs-MPIDI_Request_getMatchSeq(rreq))) >= 0 )
+            {
+              if (rreq->mpid.nextR != NULL) {  /* recv is in the out of order list */
+                 if (MPIDI_Request_getMatchSeq(rreq) == nMsgs) {
+                     in_cntr->nMsgs=nMsgs;
+                     MPIDI_Recvq_remove_req_from_ool(rreq,in_cntr);
+                 } 
+              } 
+  #endif
             found = TRUE;
             if(status != MPI_STATUS_IGNORE)
               *status = (rreq->status);
             break;
-          }
 #ifdef OUT_OF_ORDER_HANDLING
-       }
+             }
 #endif
+       }
         rreq = rreq->mpid.next;
       }
     }
