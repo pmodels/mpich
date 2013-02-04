@@ -26,6 +26,11 @@ dnl _PREREQ handles the former role of mpichprereq, setup_device, etc
 AC_DEFUN([PAC_SUBCFG_PREREQ_]PAC_SUBCFG_AUTO_SUFFIX,[
 AM_CONDITIONAL([BUILD_PAMID],[test "$device_name" = "pamid"])
 
+AC_ARG_VAR([PAMILIBNAME],[can be used to override the name of the PAMI library (default: "pami")])
+PAMILIBNAME=${PAMILIBNAME:-"pami"}
+AC_SUBST(PAMILIBNAME)
+export PAMILIBNAME
+
 dnl this subconfigure.m4 handles the configure work for the ftb subdir too
 dnl this AM_CONDITIONAL only works because enable_ftb is set very early on by
 dnl autoconf's argument parsing code.  The "action-if-given" from the
@@ -146,12 +151,12 @@ if test "${pamid_platform}" = "BGQ" ; then
   #
   # The bgq compile requires these libraries.
   #
-  PAC_APPEND_FLAG([-lpami],      [WRAPPER_LIBS])
-  PAC_APPEND_FLAG([-lSPI],       [WRAPPER_LIBS])
-  PAC_APPEND_FLAG([-lSPI_cnk],   [WRAPPER_LIBS])
-  PAC_APPEND_FLAG([-lrt],        [WRAPPER_LIBS])
-  PAC_APPEND_FLAG([-lpthread],   [WRAPPER_LIBS])
-  PAC_APPEND_FLAG([-lstdc++],    [WRAPPER_LIBS])
+  PAC_APPEND_FLAG([-l${PAMILIBNAME}], [WRAPPER_LIBS])
+  PAC_APPEND_FLAG([-lSPI],            [WRAPPER_LIBS])
+  PAC_APPEND_FLAG([-lSPI_cnk],        [WRAPPER_LIBS])
+  PAC_APPEND_FLAG([-lrt],             [WRAPPER_LIBS])
+  PAC_APPEND_FLAG([-lpthread],        [WRAPPER_LIBS])
+  PAC_APPEND_FLAG([-lstdc++],         [WRAPPER_LIBS])
 
   # For some reason, on bgq, libtool will incorrectly attempt a static link
   # of libstdc++.so unless this '-all-static' option is used. This seems to
