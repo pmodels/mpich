@@ -147,7 +147,7 @@ int MPID_VCR_CommFromLpids( MPID_Comm *newcomm_ptr,
     MPID_VCRT_Get_ptr( newcomm_ptr->vcrt, &newcomm_ptr->vcr );
     if(mpidi_dynamic_tasking) {
       for (i=0; i<size; i++) {
-	MPID_VCR *vc = 0;
+        MPID_VCR vc = 0;
 
 	/* For rank i in the new communicator, find the corresponding
 	   virtual connection.  For lpids less than the size of comm_world,
@@ -158,7 +158,7 @@ int MPID_VCR_CommFromLpids( MPID_Comm *newcomm_ptr,
 	   MPIR_Process.comm_world->rank, i, lpids[i] ); */
 #if 0
 	if (lpids[i] < commworld_ptr->remote_size) {
-	    *vc = commworld_ptr->vcr[lpids[i]];
+           vc = commworld_ptr->vcr[lpids[i]];
 	}
 	else {
 #endif
@@ -169,7 +169,7 @@ int MPID_VCR_CommFromLpids( MPID_Comm *newcomm_ptr,
 
 	    MPIDI_PG_Get_iterator(&iter);
 	    /* Skip comm_world */
-	    MPIDI_PG_Get_next( &iter, &pg );
+            /*MPIDI_PG_Get_next( &iter, &pg ); */
 	    do {
 		MPIDI_PG_Get_next( &iter, &pg );
                 /*MPIU_ERR_CHKINTERNAL(!pg, mpi_errno, "no pg"); */
@@ -177,8 +177,8 @@ int MPID_VCR_CommFromLpids( MPID_Comm *newcomm_ptr,
 		   for this process group could help speed this search */
 		for (j=0; j<pg->size; j++) {
 		    /*printf( "Checking lpid %d against %d in pg %s\n",
-			    lpids[i], pg->vct[j].lpid, (char *)pg->id );
-			    fflush(stdout); */
+                            lpids[i], pg->vct[j].taskid, (char *)pg->id );
+                           fflush(stdout); */
 		    if (pg->vct[j].taskid == lpids[i]) {
 			vc = &pg->vct[j];
 			/*printf( "found vc %x for lpid = %d in another pg\n",
