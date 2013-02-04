@@ -334,11 +334,12 @@ static void MPIR_Bsend_free_segment( MPIR_Bsend_data_t *p )
     MPIR_Bsend_data_t *prev = p->prev, *avail = BsendBuffer.avail, *avail_prev;
 
     MPIU_DBG_MSG_FMT(BSEND,TYPICAL,(MPIU_DBG_FDEST,
-                 "Freeing bsend segment at %p of size %d, next at %p",
-		 p,p->size, ((char *)p)+p->total_size));
+                 "Freeing bsend segment at %p of size %llu, next at %p",
+                 p, (unsigned long long) p->size, ((char *)p)+p->total_size));
 
     MPIU_DBG_MSG_D(BSEND,TYPICAL,
-	     "At the begining of free_segment with size %d:", p->total_size );
+                   "At the begining of free_segment with size %llu:",
+                   (unsigned long long) p->total_size );
     MPIU_DBG_STMT(BSEND,TYPICAL,MPIR_Bsend_dump());
 
     /* Remove the segment from the active list */
@@ -530,8 +531,8 @@ static void MPIR_Bsend_take_buffer( MPIR_Bsend_data_t *p, int size  )
        allocate for this buffer. */
 
     MPIU_DBG_MSG_FMT(BSEND,TYPICAL,(MPIU_DBG_FDEST,
-			    "Taking %d bytes from a block with %d bytes\n", 
-				    alloc_size, p->total_size ));
+                                    "Taking %d bytes from a block with %llu bytes\n",
+                                    alloc_size, (unsigned long long) p->total_size ));
 
     /* Is there enough space left to create a new block? */
     if (alloc_size + (int)BSENDDATA_HEADER_TRUE_SIZE + MIN_BUFFER_BLOCK <= p->size) {
@@ -559,8 +560,9 @@ static void MPIR_Bsend_take_buffer( MPIR_Bsend_data_t *p, int size  )
 	p->size       = p->total_size - BSENDDATA_HEADER_TRUE_SIZE;
 
 	MPIU_DBG_MSG_FMT(BSEND,TYPICAL,(MPIU_DBG_FDEST,
-		   "broken blocks p (%d) and new (%d)\n",
-		    p->total_size, newp->total_size ));
+                                        "broken blocks p (%llu) and new (%llu)\n",
+                                        (unsigned long long) p->total_size,
+                                        (unsigned long long) newp->total_size ));
     }
 
     /* Remove p from the avail list and add it to the active list */
@@ -610,12 +612,13 @@ static void MPIR_Bsend_dump( void )
 {
     MPIR_Bsend_data_t *a = BsendBuffer.avail;
 
-    MPIU_DBG_MSG_D(BSEND,TYPICAL,"Total size is %d",BsendBuffer.buffer_size );
+    MPIU_DBG_MSG_D(BSEND, TYPICAL, "Total size is %llu",
+                   (unsigned long long) BsendBuffer.buffer_size);
     MPIU_DBG_MSG(BSEND,TYPICAL,"Avail list is:" );
     while (a) {
-	MPIU_DBG_MSG_FMT(BSEND,TYPICAL,(MPIU_DBG_FDEST,
-				"[%p] totalsize = %d(%x)", a, a->total_size, 
-					a->total_size ));
+        MPIU_DBG_MSG_FMT(BSEND, TYPICAL, (MPIU_DBG_FDEST, "[%p] totalsize = %llu(%llx)",
+                                          a, (unsigned long long) a->total_size,
+                                          (unsigned long long) a->total_size));
 	if (a == a->next) {
 	    MPIU_DBG_MSG(BSEND,TYPICAL,
 			 "@@@Corrupt list; avail block points at itself" );
@@ -627,9 +630,9 @@ static void MPIR_Bsend_dump( void )
     MPIU_DBG_MSG(BSEND,TYPICAL,"Active list is:" );
     a = BsendBuffer.active;
     while (a) {
-	MPIU_DBG_MSG_FMT(BSEND,TYPICAL,(MPIU_DBG_FDEST,
-				"[%p] totalsize = %d(%x)", a, a->total_size, 
-					a->total_size ));
+        MPIU_DBG_MSG_FMT(BSEND, TYPICAL, (MPIU_DBG_FDEST, "[%p] totalsize = %llu(%llx)",
+                                          a, (unsigned long long) a->total_size,
+                                          (unsigned long long) a->total_size));
 	if (a == a->next) {
 	    MPIU_DBG_MSG(BSEND,TYPICAL,
 			 "@@@Corrupt list; active block points at itself" );
