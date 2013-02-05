@@ -36,7 +36,14 @@
 
  * Support for "external32" data representation is incomplete. This
    affects the MPI_Pack_external and MPI_Unpack_external routines, as
-   well the external data representation capabilities of ROMIO.
+   well the external data representation capabilities of ROMIO.  In
+   particular: noncontiguous user buffers could consume egregious
+   amounts of memory in the MPI library and any types which vary in
+   width between the native representation and the external32
+   representation will likely cause corruption.  The following ticket
+   contains some additional information:
+
+     http://trac.mpich.org/projects/mpich/ticket/1754
 
  * ch3 has known problems in some cases when threading and dynamic
    processes are used together on communicators of size greater than
