@@ -2136,6 +2136,7 @@ int MPIDI_Win_flush(int rank, MPID_Win *win_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
     int wait_for_rma_done_pkt = 0;
+    MPIDI_RMA_Op_t *rma_op;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_WIN_FLUSH);
 
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_WIN_FLUSH);
@@ -2171,6 +2172,16 @@ int MPIDI_Win_flush(int rank, MPID_Win *win_ptr)
     if (win_ptr->create_flavor == MPI_WIN_FLAVOR_SHARED) {
         /* FIXME: We may be able to make this just a read or write barrier */
         OPA_read_write_barrier();
+        goto fn_exit;
+    }
+
+    rma_op = MPIDI_CH3I_RMA_Ops_head(&win_ptr->targets[rank].rma_ops_list);
+
+    /* If there is no activity at this target (e.g. lock-all was called, but we
+     * haven't communicated with this target), don't do anything. */
+    if (win_ptr->targets[rank].remote_lock_state == MPIDI_CH3_WIN_LOCK_CALLED
+        && rma_op == NULL)
+    {
         goto fn_exit;
     }
 
