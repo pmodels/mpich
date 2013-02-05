@@ -102,11 +102,12 @@ int MPI_File_read_ordered_begin(MPI_File fh, void *buf, int count,
     xbuf = buf;
     if (adio_fh->is_external32)
     {
-        error_code = MPIU_datatype_full_size(datatype, &datatype_size);
+        MPI_Aint e32_size = 0;
+        error_code = MPIU_datatype_full_size(datatype, &e32_size);
         if (error_code != MPI_SUCCESS)
             goto fn_exit;
 
-        e32_buf = ADIOI_Malloc(datatype_size*count);
+        e32_buf = ADIOI_Malloc(e32_size*count);
 	xbuf = e32_buf;
     }
 

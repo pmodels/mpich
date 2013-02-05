@@ -12,7 +12,7 @@
 #include "mpioprof.h"
 #endif
 
-int MPIU_write_external32_conversion_fn (void *userbuf, MPI_Datatype datatype,
+int MPIU_write_external32_conversion_fn (const void *userbuf, MPI_Datatype datatype,
         int count, void *filebuf)
 {
     int position_i = 0;
@@ -136,7 +136,7 @@ fn_exit:
 /* given a buffer, count, and datatype, return an apropriately allocated, sized
  * and external32-formatted buffer, suitable for handing off to a subsequent
  * write routine.  Caller is responsible for freeing 'newbuf' */
-int MPIU_external32_buffer_setup(void * buf, int count, MPI_Datatype type, void **newbuf)
+int MPIU_external32_buffer_setup(const void * buf, int count, MPI_Datatype type, void **newbuf)
 {
 
     MPI_Aint datatype_size=0, bytes=0;

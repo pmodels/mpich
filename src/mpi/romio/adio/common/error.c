@@ -38,7 +38,7 @@ int ADIOI_Error(ADIO_File fd, int error_code, char *string)
 
 /* Returns an MPI error code corresponding to "my_errno", for function "myname"
  * and the given file, "filename".  */
-int ADIOI_Err_create_code(char *myname, char *filename, int my_errno)
+int ADIOI_Err_create_code(const char *myname, const char *filename, int my_errno)
 {
     int error_code = MPI_SUCCESS;
     if(!my_errno) return MPI_SUCCESS;

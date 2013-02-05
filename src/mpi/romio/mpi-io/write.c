@@ -74,7 +74,8 @@ int MPIOI_File_write(MPI_File fh,
     int datatype_size;
     ADIO_Offset off;
     ADIO_File adio_fh;
-    void *e32buf=NULL, *xbuf=NULL;
+    void *e32buf=NULL;
+    const void *xbuf=NULL;
 
     MPIU_THREAD_CS_ENTER(ALLFUNC,);
 
@@ -121,7 +122,7 @@ int MPIOI_File_write(MPI_File fh,
 
     ADIOI_TEST_DEFERRED(adio_fh, myname, &error_code);
 
-    xbuf = (void *)buf;
+    xbuf = buf;
     if (adio_fh->is_external32) {
 	error_code = MPIU_external32_buffer_setup(buf, count, datatype, &e32buf);
 	if (error_code != MPI_SUCCESS) 

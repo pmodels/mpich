@@ -74,7 +74,8 @@ int MPIOI_File_write_all(MPI_File fh,
 {
     int error_code, datatype_size;
     ADIO_File adio_fh;
-    void *e32buf=NULL, *xbuf=NULL;
+    void *e32buf=NULL;
+    const void *xbuf=NULL;
 
     MPIU_THREAD_CS_ENTER(ALLFUNC,);
 
@@ -104,7 +105,7 @@ int MPIOI_File_write_all(MPI_File fh,
     MPIO_CHECK_COUNT_SIZE(adio_fh, count, datatype_size, myname, error_code);
     /* --END ERROR HANDLING-- */
 
-    xbuf = (void *)buf;
+    xbuf = buf;
     if (adio_fh->is_external32) {
 	error_code = MPIU_external32_buffer_setup(buf, count, datatype, &e32buf);
 	if (error_code != MPI_SUCCESS) 
