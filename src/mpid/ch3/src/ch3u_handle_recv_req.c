@@ -82,7 +82,6 @@ int MPIDI_CH3_ReqHandler_PutAccumRespComplete( MPIDI_VC_t *vc,
 					       int *complete )
 {
     int mpi_errno = MPI_SUCCESS;
-    int is_gacc_op = 0;
     MPID_Win *win_ptr;
     MPIU_CHKPMEM_DECL(1);
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3_REQHANDLER_PUTACCUMRESPCOMPLETE);
@@ -97,7 +96,6 @@ int MPIDI_CH3_ReqHandler_PutAccumRespComplete( MPIDI_VC_t *vc,
         MPID_Request *resp_req;
         MPID_IOV iov[MPID_IOV_LIMIT];
 
-        is_gacc_op = 1;
         MPIDI_Pkt_init(get_accum_resp_pkt, MPIDI_CH3_PKT_GET_ACCUM_RESP);
         get_accum_resp_pkt->request_handle = rreq->dev.resp_request_handle;
 
@@ -172,7 +170,7 @@ int MPIDI_CH3_ReqHandler_PutAccumRespComplete( MPIDI_VC_t *vc,
 	    win_ptr->my_counter -= 1;
 	}
 	else {
-	    if ((win_ptr->current_lock_type == MPI_LOCK_SHARED && !is_gacc_op) ||
+	    if ((win_ptr->current_lock_type == MPI_LOCK_SHARED) ||
 		(rreq->dev.single_op_opt == 1)) {
                 mpi_errno = MPIDI_CH3I_Send_pt_rma_done_pkt(vc, win_ptr,
 				    rreq->dev.source_win_handle);
