@@ -4710,6 +4710,7 @@ int MPIDI_CH3_PktHandler_PtRMADone( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
     *buflen = sizeof(MPIDI_CH3_Pkt_t);
 
     MPID_Win_get_ptr(pt_rma_done_pkt->source_win_handle, win_ptr);
+    MPIU_Assert(win_ptr->targets[pt_rma_done_pkt->target_rank].remote_lock_state != MPIDI_CH3_WIN_LOCK_NONE);
 
     if (win_ptr->targets[pt_rma_done_pkt->target_rank].remote_lock_state == MPIDI_CH3_WIN_LOCK_FLUSH)
         win_ptr->targets[pt_rma_done_pkt->target_rank].remote_lock_state = MPIDI_CH3_WIN_LOCK_GRANTED;
