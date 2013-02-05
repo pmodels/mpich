@@ -21,12 +21,13 @@ C      ARGVS_NULL, ARGV_NULL
        common /MPIFCMB6/ ecsi
        common /MPIFCMB7/ asn, pads_a
        common /MPIFCMB8/ an, pads_b
+       common /MPIFCMB9/ we
        save /MPIFCMB1/,/MPIFCMB2/
        save /MPIFCMB3/,/MPIFCMB4/,/MPIFCMB5/,/MPIFCMB6/
-       save /MPIFCMB7/,/MPIFCMB8/
+       save /MPIFCMB7/,/MPIFCMB8/,/MPIFCMB9/
 C      MPI_ARGVS_NULL 
 C      (Fortran requires character data in a separate common block)
-       call mpirinitc(si, ssi, bt, ip, uw, ecsi, asn)
+       call mpirinitc(si, ssi, bt, ip, uw, ecsi, asn, we)
        call mpirinitc2(an)
        return
        end
