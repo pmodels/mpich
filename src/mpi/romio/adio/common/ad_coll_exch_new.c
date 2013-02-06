@@ -396,7 +396,7 @@ void ADIOI_Exch_file_views(int myrank, int nprocs, int file_ptr_type,
 			  INDICES, fd->comm, &recv_req_arr[j]);
 		j++;
 		MPI_Irecv(client_file_view_state_arr[i].flat_type_p->blocklens,
-			  recv_count_arr[i].count, MPI_INT, i, 
+			  recv_count_arr[i].count, ADIO_OFFSET, i,
 			  BLOCK_LENS, fd->comm, &recv_req_arr[j]);
 		j++;
 	    }
@@ -412,7 +412,7 @@ void ADIOI_Exch_file_views(int myrank, int nprocs, int file_ptr_type,
                       INDICES, fd->comm, &send_req_arr[j]);
 	        j++;
 	        MPI_Isend(flat_file_p->blocklens,         
-		      send_count_arr[i].count, MPI_INT, i,
+		      send_count_arr[i].count, ADIO_OFFSET, i,
                       BLOCK_LENS, fd->comm, &send_req_arr[j]);
 	        j++;
 	    }
@@ -427,7 +427,7 @@ void ADIOI_Exch_file_views(int myrank, int nprocs, int file_ptr_type,
 		      &send_req_arr[j]);
 	        j++;
 	        MPI_Isend(flat_file_p->blocklens,         
-		      send_count_arr[i].count, MPI_INT,
+		      send_count_arr[i].count, ADIO_OFFSET,
 		      fd->hints->ranklist[i], BLOCK_LENS, fd->comm,
 		      &send_req_arr[j]);
 	        j++;
