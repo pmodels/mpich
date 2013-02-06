@@ -39,6 +39,7 @@ $rootSrcDir = "";
 	      "[A-Za-z0-9_\/-]*\/install-sh",
 	      "/usr/bin/ar", "mkdir",
               "/bin/mkdir",
+              "/.*bin/mkdir",
 	      "/usr/ucb/ld",
 	      "mpicc", "mpicxx",
 	      "compiling ROMIO in", 
@@ -55,11 +56,15 @@ $rootSrcDir = "";
 	      "PATH=\"\\\$PATH.*\\sldconfig\\s",
 	      "building profiling interface in directory",
 	      "/usr/bin/install",
+              "/.*bin/install",
 	      "Copying Upshot",
 	      "Cleaning directory",
 	      "[*][*][*][*] Making .*\.\.\.\.",
 	      "Making .* in .*",
-	      "Making upshot", "\\s*\$", );
+	      "Making upshot", "\\s*\$",
+              "ld: warning: directory not found for option '-L\\S*src/mpl'",
+              "ld: warning: directory not found for option '-L\\S*src/openpa/src'",
+);
 
 # OtherNoise is an array of patterns that describe blocks of
 # text that we'd like to skip.  The initial use it to handle 
@@ -183,7 +188,7 @@ while ($line = <>) {
     else {
 	$is_command = 0;
 	foreach $cmdname (@commands) {
-	    if ($line =~ /^\s*$cmdname[^\w]/) {
+	    if ($line =~ /^\s*$cmdname\b/) {
 		$is_command = 1;
 		$cmdline = $line;
 		last;
