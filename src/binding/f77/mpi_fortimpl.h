@@ -22,16 +22,35 @@
  * an MPI_Fint instead of an int.  In that case, we will need an additional
  * case.
  */
+/*
+ * Many Fortran compilers at some point changed from passing the length of
+ * a CHARACTER*(N) in an int to using a size_t.  This definition allows
+ * us to select either size_t or int.  Determining which one the compiler
+ * is using may require reading the documentation or examining the generated
+ * code.
+ *
+ * The default is left as "int" because that is the correct legacy choice.
+ * Configure may need to check the compiler vendor and version to decide
+ * whether to select size_t.  And despite documentation to the contrary,
+ * in our experiments, gfortran used int instead of size_t, which was
+ * verified by inspecting the assembly code.
+ */
+#ifdef USE_FORT_STR_LEN_SIZET
+#define FORT_SIZE_INT size_t
+#else
+#define FORT_SIZE_INT int
+#endif
+
 #ifdef USE_FORT_MIXED_STR_LEN
-#define FORT_MIXED_LEN_DECL   , int
+#define FORT_MIXED_LEN_DECL   , FORT_SIZE_INT
 #define FORT_END_LEN_DECL
-#define FORT_MIXED_LEN(a)     , int a
+#define FORT_MIXED_LEN(a)     , FORT_SIZE_INT a
 #define FORT_END_LEN(a)
 #else
 #define FORT_MIXED_LEN_DECL
-#define FORT_END_LEN_DECL     , int
+#define FORT_END_LEN_DECL     , FORT_SIZE_INT
 #define FORT_MIXED_LEN(a)
-#define FORT_END_LEN(a)       , int a
+#define FORT_END_LEN(a)       , FORT_SIZE_INT a
 #endif
 
 /* ------------------------------------------------------------------------- */

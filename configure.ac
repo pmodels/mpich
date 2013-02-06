@@ -1882,6 +1882,66 @@ information to configure with the FCFLAGS environment variable.])
        AC_DEFINE(HAVE_MPI_F_INIT_WORKS_WITH_C,1,[Define if the Fortran init code for MPI works from C programs without special libraries])
    fi
 
+   #
+   # Some Fortran compilers now pass CHARACTER length as a size_t instead
+   # of as an int.  This is hard to test for, since the data is passed by
+   # value and for characters less than about 2GB long, the correct
+   # value will be used.  In this case, we must use an approach similar to
+   # the one used by libtool for shared library options - look at the
+   # compiler name or vendor.
+   # Known compilers that use size_t instead of int:
+   #    Intel Fortran
+   #    gfortran
+   # Add others as they become known
+   AC_ARG_ENABLE(f77characterlen,
+       AC_HELP_STRING([--enable-f77characterlen],
+           [Select between int and size_t for the length of a Fortran CHARACTER, depending on the F77 compiler.  If --enable-f77characterlen=size_t is given, force the use of size_t.  This is used for passing Fortran CHARACTER data between C and Fortran, and is provided for experts.  Note that the documentation provided by compiler vendors on the calling convention may not be accurate.]),,enable_f77characterlen=no)
+
+   # Set the default
+   f77_uses_int_for_str=default
+
+   case "$enable_f77characterlen" in
+      yes|no)
+      ;;
+      size_t)
+         f77_uses_int_for_str=no
+	 enable_f77characterlen=yes
+      ;;
+      int)
+         f77_uses_int_for_str=yes
+	 enable_f77characterlen=yes
+      ;;
+      *)
+      AC_MSG_ERROR([Invalid value provided for --enable-f77characterlen])
+      ;;
+   esac
+
+   # If we might change the size (enable) and we haven't set the choice,
+   # attempt to determine it from the compiler name.  Risky, but we haven't
+   # found a reliable way to do this with test codes.
+   if test "$enable_f77characterlen" = "yes" -a \
+           "$f77_uses_int_for_str" = "default" ; then
+       f77_uses_int_for_str=yes
+       f77Basename=`basename $F77`
+       case $f77Basename in
+       ifort*)
+       f77_uses_int_for_str=no
+       ;;
+       gfortran*)
+       f77_uses_int_for_str=no
+       ;;
+       esac
+   fi
+   # This test is disabled for now.  Despite information in documentation
+   # on gfortran, it appears to pass lengths as int, at least in some
+   # builds (it used movl when tested in 2/2013).  Tests that failed
+   # included infotestf.f, in a call to mpi_info_get.
+   # Leave this as a place holder until a proper test can be determined.
+   if test  "$enable_f77characterlen" = "yes" -a \
+            "$f77_uses_int_for_str" = "no" ; then
+       AC_DEFINE(USE_FORT_STR_LEN_SIZET,1,[Define if the length of a CHARACTER*(*) string in Fortran should be passed as size_t instead of int] )
+   fi
+
 fi
 
 # FC requires F77 as well.  If the user disabled f77, do not run the
