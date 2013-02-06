@@ -2376,11 +2376,15 @@ int MPIDI_Win_lock_all(int assert, MPID_Win *win_ptr)
 
             mpi_errno = MPIDI_CH3I_Send_lock_msg(i, MPI_LOCK_SHARED, win_ptr);
             if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
+        }
+
+        for (i = 0; i < MPIR_Comm_size(win_ptr->comm_ptr); i++) {
+            /* Local process is already locked */
+            if (i == win_ptr->myrank) continue;
 
             mpi_errno = MPIDI_CH3I_Wait_for_lock_granted(win_ptr, i);
             if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
         }
-
     }
 
 fn_exit:
