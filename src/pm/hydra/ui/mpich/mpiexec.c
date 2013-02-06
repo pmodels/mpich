@@ -101,7 +101,8 @@ static HYD_status qsort_node_list(void)
     int count, i;
     HYD_status status = HYD_SUCCESS;
 
-    for (count = 0, node = HYD_server_info.node_list; node; node = node->next, count++);
+    for (count = 0, node = HYD_server_info.node_list; node; node = node->next, count++)
+        /* skip */;
 
     HYDU_MALLOC(node_list, struct HYD_node **, count * sizeof(struct HYD_node *), status);
     for (i = 0, node = HYD_server_info.node_list; node; node = node->next, i++)
