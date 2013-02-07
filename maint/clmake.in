@@ -57,6 +57,7 @@ $rootSrcDir = "";
 	      "building profiling interface in directory",
 	      "/usr/bin/install",
               "/.*bin/install",
+              ".*confdb/install-sh",
 	      "Copying Upshot",
 	      "Cleaning directory",
 	      "[*][*][*][*] Making .*\.\.\.\.",
