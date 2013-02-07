@@ -190,8 +190,14 @@ void MPIDI_Coll_comm_create(MPID_Comm *comm)
          numconfigs = 0;
       }
 
-      if(comm->mpid.tasks == NULL)
+      if(MPIDI_Process.optimized.memory && (comm->local_size & (comm->local_size-1)))
       {
+	/* Don't create irregular geometries.  Fallback to MPICH only collectives */
+	geom_init = 0;
+	comm->mpid.geometry = NULL;
+      }
+      else if(comm->mpid.tasks == NULL)
+      {   
          geom_post.client = MPIDI_Client;
          geom_post.configs = &config;
          geom_post.context_offset = 0; /* TODO BES investigate */

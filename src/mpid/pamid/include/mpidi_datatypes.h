@@ -113,6 +113,7 @@ typedef struct
     unsigned subcomms;
     unsigned select_colls;      /**< Enable collective selection */
     unsigned auto_select_colls; /**< Enable automatic collective selection */
+    unsigned memory;
   }
   optimized;
 

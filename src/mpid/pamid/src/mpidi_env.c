@@ -106,6 +106,13 @@
  *   - 0 - Optimized collective selection is not used.
  *   - 1 - Optimized collective selection is used. (default)
  *
+ * - PAMID_COLLECTIVES_MEMORY_OPTIMIZED - Controls whether collectives are 
+ *   optimized to reduce memory usage. This may disable some PAMI collectives.
+ *   Possible values:
+ *   - 0 - Collectives are not memory optimized.
+ *   - n - Collectives are memory optimized. 'n' may represent different 
+ *         levels of optimization. 
+ *  
  * - PAMID_VERBOSE - Increases the amount of information dumped during an
  *   MPI_Abort() call and during varoius MPI function calls.  Possible values:
  *   - 0 - No additional information is dumped.
@@ -865,6 +872,12 @@ MPIDI_Env_setup(int rank, int requested)
          MPIDI_Process.optimized.auto_select_colls = MPID_AUTO_SELECT_COLLS_NONE;/* Auto coll sel is disabled for all */ 
    }
    
+   /* Set the status for memory optimized collectives */
+   {
+      char* names[] = {"PAMID_COLLECTIVES_MEMORY_OPTIMIZED", NULL};
+      ENV_Unsigned(names, &MPIDI_Process.optimized.memory, 1, &found_deprecated_env_var, rank);
+      TRACE_ERR("MPIDI_Process.optimized.memory=%u\n", MPIDI_Process.optimized.memory);
+   }
 
   /* Set the status of the optimized shared memory point-to-point functions */
   {

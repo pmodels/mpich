@@ -120,6 +120,7 @@ MPIDI_Process_t  MPIDI_Process = {
     .collectives         = MPIDI_OPTIMIZED_COLLECTIVE_DEFAULT,
     .subcomms            = 1,
     .select_colls        = 2,
+    .memory              = 0,
   },
 
   .mpir_nbc              = 0,
@@ -700,6 +701,7 @@ MPIDI_PAMI_init(int* rank, int* size, int* threading)
              "  optimized.collectives : %u\n"
              "  optimized.select_colls: %u\n"
              "  optimized.subcomms    : %u\n"
+             "  optimized.memory      : %u\n"
              "  mpir_nbc              : %u\n" 
              "  numTasks              : %u\n",
              MPIDI_Process.verbose,
@@ -732,6 +734,7 @@ MPIDI_PAMI_init(int* rank, int* size, int* threading)
              MPIDI_Process.optimized.collectives,
              MPIDI_Process.optimized.select_colls,
              MPIDI_Process.optimized.subcomms,
+             MPIDI_Process.optimized.memory,
              MPIDI_Process.mpir_nbc, 
              MPIDI_Process.numTasks);
       switch (*threading)
