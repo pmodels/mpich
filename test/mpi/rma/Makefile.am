@@ -91,6 +91,7 @@ noinst_PROGRAMS =          \
     linked_list_bench_lock_all  \
     linked_list_bench_lock_excl \
     linked_list_bench_lock_shr  \
+    linked_list_bench_lock_shr_nocheck  \
     fetch_and_op_char      \
     fetch_and_op_short     \
     fetch_and_op_int       \
@@ -157,3 +158,6 @@ get_accumulate_int_derived_SOURCES      = get_accumulate.c
 mutex_bench_SOURCES              = mutex_bench.c mcs-mutex.c mcs-mutex.h
 mutex_bench_shared_CPPFLAGS      = -DUSE_WIN_SHARED
 mutex_bench_shared_SOURCES       = mutex_bench.c mcs-mutex.c mcs-mutex.h
+
+linked_list_bench_lock_shr_nocheck_SOURCES  = linked_list_bench_lock_shr.c
+linked_list_bench_lock_shr_nocheck_CPPFLAGS = -DUSE_MODE_NOCHECK
