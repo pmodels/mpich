@@ -39,3 +39,4 @@
 **ch3|sync_arg:Invalid RMA synchronization argument
 **ch3|sync_arg %d:Invalid RMA synchronization argument (%d)
 **ch3|rma_flags:Invalid combination of RMA packet flags
+**ch3|nocheck_invalid:MPI_MODE_NOCHECK was specified, but the lock was not available at the target

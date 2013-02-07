@@ -116,7 +116,10 @@ typedef uint16_t MPIDI_CH3_Pkt_flags_t;
 #define MPIDI_CH3_PKT_FLAG_RMA_UNLOCK           2  /* ..............X. */
 #define MPIDI_CH3_PKT_FLAG_RMA_FLUSH            4  /* .............X.. */
 #define MPIDI_CH3_PKT_FLAG_RMA_REQ_ACK          8  /* ............X... */
-#define MPIDI_CH3_PKT_FLAG_RMA_AT_COMPLETE      16 /* ...........X.... */
+#define MPIDI_CH3_PKT_FLAG_RMA_AT_COMPLETE     16  /* ...........X.... */
+#define MPIDI_CH3_PKT_FLAG_RMA_NOCHECK         32  /* ..........X..... */
+#define MPIDI_CH3_PKT_FLAG_RMA_SHARED          64  /* .........X...... */
+#define MPIDI_CH3_PKT_FLAG_RMA_EXCLUSIVE      128  /* ........X....... */
 
 typedef struct MPIDI_CH3_Pkt_send
 {
