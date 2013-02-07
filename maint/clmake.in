@@ -188,7 +188,7 @@ while ($line = <>) {
     else {
 	$is_command = 0;
 	foreach $cmdname (@commands) {
-	    if ($line =~ /^\s*$cmdname\b/) {
+	    if ($line =~ /^\s*$cmdname\W/) {
 		$is_command = 1;
 		$cmdline = $line;
 		last;
