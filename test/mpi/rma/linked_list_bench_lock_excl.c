@@ -245,7 +245,7 @@ int main(int argc, char **argv) {
     if (print_perf) {
         double max_time;
 
-        MPI_Reduce(&time, &max_time, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+        MPI_Reduce(&time, &max_time, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
 
         if (procid == 0) {
             printf("Total time = %0.2f sec, elem/sec = %0.2f, sec/elem = %0.2f usec\n", max_time, NUM_ELEMS/max_time, max_time/NUM_ELEMS*1.0e6);
