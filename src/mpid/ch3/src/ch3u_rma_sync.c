@@ -1919,7 +1919,7 @@ int MPIDI_Win_lock(int lock_type, int dest, int assert, MPID_Win *win_ptr)
         /* TODO: Make this mode of operation available through an assert
            argument or info key. */
         mpi_errno = MPIDI_CH3I_Send_lock_msg(dest, lock_type, win_ptr);
-        MPIU_ERR_CHKANDJUMP(mpi_errno != MPI_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**winRMAmessage");
+        MPIU_ERR_CHKANDJUMP(mpi_errno != MPI_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**ch3|rma_msg");
     }
 
  fn_exit:
@@ -2711,7 +2711,7 @@ static int MPIDI_CH3I_Send_lock_msg(int dest, int lock_type, MPID_Win *win_ptr) 
     MPIU_THREAD_CS_ENTER(CH3COMM,vc);
     mpi_errno = MPIDI_CH3_iStartMsg(vc, lock_pkt, sizeof(*lock_pkt), &req);
     MPIU_THREAD_CS_EXIT(CH3COMM,vc);
-    MPIU_ERR_CHKANDJUMP(mpi_errno != MPI_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**winRMAmessage");
+    MPIU_ERR_CHKANDJUMP(mpi_errno != MPI_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**ch3|rma_msg");
 
     /* release the request returned by iStartMsg */
     if (req != NULL) {
@@ -2846,7 +2846,7 @@ static int MPIDI_CH3I_Send_unlock_msg(int dest, MPID_Win *win_ptr) {
     MPIU_THREAD_CS_ENTER(CH3COMM,vc);
     mpi_errno = MPIDI_CH3_iStartMsg(vc, unlock_pkt, sizeof(*unlock_pkt), &req);
     MPIU_THREAD_CS_EXIT(CH3COMM,vc);
-    MPIU_ERR_CHKANDJUMP(mpi_errno != MPI_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**winRMAmessage");
+    MPIU_ERR_CHKANDJUMP(mpi_errno != MPI_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**ch3|rma_msg");
 
     /* Release the request returned by iStartMsg */
     if (req != NULL) {
@@ -2887,7 +2887,7 @@ static int MPIDI_CH3I_Send_flush_msg(int dest, MPID_Win *win_ptr) {
     MPIU_THREAD_CS_ENTER(CH3COMM,vc);
     mpi_errno = MPIDI_CH3_iStartMsg(vc, flush_pkt, sizeof(*flush_pkt), &req);
     MPIU_THREAD_CS_EXIT(CH3COMM,vc);
-    MPIU_ERR_CHKANDJUMP(mpi_errno != MPI_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**winRMAmessage");
+    MPIU_ERR_CHKANDJUMP(mpi_errno != MPI_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**ch3|rma_msg");
 
     /* Release the request returned by iStartMsg */
     if (req != NULL) {
@@ -3086,7 +3086,7 @@ static int MPIDI_CH3I_Send_lock_put_or_acc(MPID_Win *win_ptr, int target_rank)
                 if (mpi_errno != MPI_SUCCESS)
                 {
 		    MPID_Progress_end(&progress_state);
-		    MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**winRMAmessage");
+		    MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**ch3|rma_msg");
                 }
                 /* --END ERROR HANDLING-- */
             }
@@ -3095,7 +3095,7 @@ static int MPIDI_CH3I_Send_lock_put_or_acc(MPID_Win *win_ptr, int target_rank)
         
         mpi_errno = request->status.MPI_ERROR;
         if (mpi_errno != MPI_SUCCESS) {
-	    MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**winRMAmessage");
+	    MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**ch3|rma_msg");
         }
                 
         MPID_Request_release(request);
@@ -3206,7 +3206,7 @@ static int MPIDI_CH3I_Send_lock_get(MPID_Win *win_ptr, int target_rank)
             if (mpi_errno != MPI_SUCCESS)
             {
 		MPID_Progress_end(&progress_state);
-		MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**winRMAmessage");
+		MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**ch3|rma_msg");
             }
             /* --END ERROR HANDLING-- */
         }
@@ -3215,7 +3215,7 @@ static int MPIDI_CH3I_Send_lock_get(MPID_Win *win_ptr, int target_rank)
     
     mpi_errno = rreq->status.MPI_ERROR;
     if (mpi_errno != MPI_SUCCESS) {
-	MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**winRMAmessage");
+	MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**ch3|rma_msg");
     }
             
     /* if origin datatype was a derived datatype, it will get freed when the 
@@ -4766,7 +4766,7 @@ int MPIDI_CH3_PktHandler_Unlock( MPIDI_VC_t *vc ATTRIBUTE((unused)),
 
     MPID_Win_get_ptr(unlock_pkt->target_win_handle, win_ptr);
     mpi_errno = MPIDI_CH3I_Release_lock(win_ptr);
-    MPIU_ERR_CHKANDJUMP(mpi_errno != MPI_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**winRMAmessage");
+    MPIU_ERR_CHKANDJUMP(mpi_errno != MPI_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**ch3|rma_msg");
 
     MPIDI_CH3_Progress_signal_completion();
 
@@ -4810,7 +4810,7 @@ int MPIDI_CH3_PktHandler_Flush( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
         MPIU_THREAD_CS_ENTER(CH3COMM,vc);
         mpi_errno = MPIDI_CH3_iStartMsg(vc, flush_pkt, sizeof(*flush_pkt), &req);
         MPIU_THREAD_CS_EXIT(CH3COMM,vc);
-        MPIU_ERR_CHKANDJUMP(mpi_errno != MPI_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**winRMAmessage");
+        MPIU_ERR_CHKANDJUMP(mpi_errno != MPI_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**ch3|rma_msg");
 
         /* Release the request returned by iStartMsg */
         if (req != NULL) {
@@ -4862,7 +4862,7 @@ static int MPIDI_CH3I_RMAListComplete( MPID_Win *win_ptr,
 		    /* --BEGIN ERROR HANDLING-- */
 		    if (mpi_errno != MPI_SUCCESS) {
 			MPID_Progress_end(&progress_state);
-			MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**winRMAmessage");
+			MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**ch3|rma_msg");
 		    }
 		    /* --END ERROR HANDLING-- */
 		    MPID_Request_release(curr_ptr->request);
@@ -4945,7 +4945,7 @@ static int MPIDI_CH3I_RMAListPartialComplete( MPID_Win *win_ptr,
 		/* --BEGIN ERROR HANDLING-- */
 		if (mpi_errno != MPI_SUCCESS) {
 		    MPID_Progress_end(&progress_state);
-		    MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**winRMAmessage");
+		    MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**ch3|rma_msg");
 		}
 		/* --END ERROR HANDLING-- */
 		MPID_Request_release(curr_ptr->request);
@@ -5087,7 +5087,7 @@ int MPIDI_CH3_Finish_rma_op_target(MPIDI_VC_t *vc, MPID_Win *win_ptr, int is_rma
             MPIU_THREAD_CS_ENTER(CH3COMM,vc);
             mpi_errno = MPIDI_CH3_iStartMsg(vc, flush_pkt, sizeof(*flush_pkt), &req);
             MPIU_THREAD_CS_EXIT(CH3COMM,vc);
-            MPIU_ERR_CHKANDJUMP(mpi_errno != MPI_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**winRMAmessage");
+            MPIU_ERR_CHKANDJUMP(mpi_errno != MPI_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**ch3|rma_msg");
 
             /* Release the request returned by iStartMsg */
             if (req != NULL) {

@@ -706,8 +706,6 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **windeserialize:deserializing win object
 **winnoprogress: Detected an error while in progress wait for RMA messages
 **winInvalidOp: Invalid RMA operation
-**winRMAmessage: RMA message operation failed
-**winRMArequest: RMA message operation failed; request returned error
 **open %s:open failed - %s
 **setenv:setenv failed
 **putenv:putenv failed
