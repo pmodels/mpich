@@ -1324,6 +1324,11 @@ int MPIDI_Win_post(MPID_Group *post_grp_ptr, int assert, MPID_Win *win_ptr)
 	MPIU_INSTR_DURATION_END(winpost_clearlock);
     }
         
+    /* Ensure ordering of load/store operations. */
+    if (win_ptr->create_flavor == MPI_WIN_FLAVOR_SHARED) {
+        OPA_read_write_barrier();
+    }
+
     post_grp_size = post_grp_ptr->size;
         
     /* initialize the completion counter */
@@ -1476,6 +1481,11 @@ int MPIDI_Win_start(MPID_Group *group_ptr, int assert, MPID_Win *win_ptr)
 	MPIU_INSTR_DURATION_END(winstart_clearlock);
     }
     
+    /* Ensure ordering of load/store operations. */
+    if (win_ptr->create_flavor == MPI_WIN_FLAVOR_SHARED) {
+        OPA_read_write_barrier();
+    }
+
     win_ptr->start_group_ptr = group_ptr;
     MPIR_Group_add_ref( group_ptr );
     win_ptr->start_assert = assert;
@@ -1522,6 +1532,11 @@ int MPIDI_Win_complete(MPID_Win *win_ptr)
     comm_ptr = win_ptr->comm_ptr;
     comm_size = comm_ptr->local_size;
         
+    /* Ensure ordering of load/store operations. */
+    if (win_ptr->create_flavor == MPI_WIN_FLAVOR_SHARED) {
+        OPA_read_write_barrier();
+    }
+
     /* Translate the ranks of the processes in
        start_group to ranks in win_ptr->comm_ptr */
     
@@ -1801,6 +1816,11 @@ int MPIDI_Win_wait(MPID_Win *win_ptr)
 	MPIU_INSTR_DURATION_END(winwait_wait);
     } 
 
+    /* Ensure ordering of load/store operations. */
+    if (win_ptr->create_flavor == MPI_WIN_FLAVOR_SHARED) {
+        OPA_read_write_barrier();
+    }
+
  fn_exit:
     MPIDI_RMA_FUNC_EXIT(MPID_STATE_MPIDI_WIN_WAIT);
     return mpi_errno;
@@ -1833,12 +1853,17 @@ int MPIDI_Win_test(MPID_Win *win_ptr, int *flag)
 
     *flag = (win_ptr->my_counter) ? 0 : 1;
 
-    /* Track access epoch state */
     if (*flag) {
+        /* Track access epoch state */
         if (win_ptr->epoch_state == MPIDI_EPOCH_PSCW)
             win_ptr->epoch_state = MPIDI_EPOCH_START;
         else
             win_ptr->epoch_state = MPIDI_EPOCH_NONE;
+
+        /* Ensure ordering of load/store operations. */
+        if (win_ptr->create_flavor == MPI_WIN_FLAVOR_SHARED) {
+            OPA_read_write_barrier();
+        }
     }
 
  fn_exit:
@@ -1906,7 +1931,6 @@ int MPIDI_Win_lock(int lock_type, int dest, int assert, MPID_Win *win_ptr)
         /* Lock must be taken immediately for shared memory windows because of
          * load/store access */
 
-        /* FIXME: We may be able to make this just a read or write barrier */
         OPA_read_write_barrier();
 
         mpi_errno = MPIDI_CH3I_Send_lock_msg(dest, lock_type, win_ptr);
@@ -1960,9 +1984,8 @@ int MPIDI_Win_unlock(int dest, MPID_Win *win_ptr)
             win_ptr->epoch_state = MPIDI_EPOCH_NONE;
     }
 
-    /* Ensure that load/store operations are visible. */
+    /* Ensure ordering of load/store operations. */
     if (win_ptr->create_flavor == MPI_WIN_FLAVOR_SHARED) {
-        /* FIXME: We may be able to make this just a read or write barrier */
         OPA_read_write_barrier();
     }
 
@@ -2188,10 +2211,9 @@ int MPIDI_Win_flush(int rank, MPID_Win *win_ptr)
        need to insert this read/write memory fence for shared memory windows. */
 
     /* For shared memory windows, all operations are done immediately, so there
-       is nothing to flush.  Ensure that load/store operations are visible and
+       is nothing to flush.  Ensure ordering of load/store operations and
        return. */
     if (win_ptr->create_flavor == MPI_WIN_FLAVOR_SHARED) {
-        /* FIXME: We may be able to make this just a read or write barrier */
         OPA_read_write_barrier();
         goto fn_exit;
     }
@@ -2384,8 +2406,6 @@ int MPIDI_Win_lock_all(int assert, MPID_Win *win_ptr)
 
     if (win_ptr->create_flavor == MPI_WIN_FLAVOR_SHARED) {
         /* Immediately lock all targets for load/store access */
-
-        /* FIXME: We may be able to make this just a read or write barrier */
         OPA_read_write_barrier();
 
         for (i = 0; i < MPIR_Comm_size(win_ptr->comm_ptr); i++) {
