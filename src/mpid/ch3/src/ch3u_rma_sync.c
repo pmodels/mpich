@@ -2682,14 +2682,8 @@ static int MPIDI_CH3I_Do_passive_target_rma(MPID_Win *win_ptr, int target_rank,
         if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
         *wait_for_rma_done_pkt = 1;
     }
-    else if (sync_flags & MPIDI_CH3_PKT_FLAG_RMA_FLUSH) {
-        /* No communication operations were left to process, but the RMA epoch
-           is open.  Send a flush message to ensure remote completion. */
-        /* FIXME: This should be unnecessary for exclusive lock epochs */
-        mpi_errno = MPIDI_CH3I_Send_flush_msg(target_rank, win_ptr);
-        if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
-        *wait_for_rma_done_pkt = 1;
-    }
+    /* NOTE: Flush -- If RMA ops are issued eagerly, Send_flush_msg should be
+       called here and wait_for_rma_done_pkt should be set. */
 
     MPIU_Assert(MPIDI_CH3I_RMA_Ops_isempty(&win_ptr->targets[target_rank].rma_ops_list));
 
