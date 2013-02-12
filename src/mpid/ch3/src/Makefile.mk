@@ -16,7 +16,6 @@ lib_lib@MPILIBNAME@_la_SOURCES +=                          \
     src/mpid/ch3/src/ch3u_port.c                           \
     src/mpid/ch3/src/ch3u_recvq.c                          \
     src/mpid/ch3/src/ch3u_request.c                        \
-    src/mpid/ch3/src/ch3u_rma_notimpl.c                    \
     src/mpid/ch3/src/ch3u_rma_acc_ops.c                    \
     src/mpid/ch3/src/ch3u_rma_ops.c                        \
     src/mpid/ch3/src/ch3u_rma_reqops.c                     \

@@ -222,17 +222,54 @@ int MPIDI_CH3U_Win_allocate_shared(MPI_Aint size, int disp_unit, MPID_Info *info
                                   void **base_ptr, MPID_Win **win_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
+    MPID_Comm *comm_self_ptr = NULL;
+    MPID_Group *group_comm, *group_self;
+    int result;
+    MPIU_CHKPMEM_DECL(1);
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3U_WIN_ALLOCATE_SHARED);
 
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_CH3U_WIN_ALLOCATE_SHARED);
 
-    MPIU_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**notimpl");
+#ifdef HAVE_ERROR_CHECKING
+    /* The baseline CH3 implementation only works with MPI_COMM_SELF */
+    MPID_Comm_get_ptr( MPI_COMM_SELF, comm_self_ptr );
+
+    mpi_errno = MPIR_Comm_group_impl(comm_ptr, &group_comm);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    mpi_errno = MPIR_Comm_group_impl(comm_self_ptr, &group_self);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    mpi_errno = MPIR_Group_compare_impl(group_comm, group_self, &result);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    mpi_errno = MPIR_Group_free_impl(group_comm);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    mpi_errno = MPIR_Group_free_impl(group_self);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
+    if (result != MPI_IDENT) {
+        MPIU_ERR_SETANDJUMP(mpi_errno, MPI_ERR_RMA_SHARED, "**ch3|win_shared_comm");
+    }
+#endif
+
+    mpi_errno = MPIDI_CH3U_Win_allocate(size, disp_unit, info, comm_ptr,
+                                        base_ptr, win_ptr);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
+    MPIU_CHKPMEM_MALLOC((*win_ptr)->shm_base_addrs, void **,
+                        1 /* comm_size */ * sizeof(void *),
+                        mpi_errno, "(*win_ptr)->shm_base_addrs");
+
+    (*win_ptr)->shm_base_addrs[0] = *base_ptr;
+
+    /* Register the shared memory window free function, which will free the
+       memory allocated here. */
+    (*win_ptr)->RMAFns.Win_free = MPIDI_SHM_Win_free;
 
 fn_exit:
     MPIDI_RMA_FUNC_EXIT(MPID_STATE_MPIDI_CH3U_WIN_ALLOCATE_SHARED);
     return mpi_errno;
     /* --BEGIN ERROR HANDLING-- */
 fn_fail:
+    MPIU_CHKPMEM_REAP();
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }
