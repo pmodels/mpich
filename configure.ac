@@ -1168,10 +1168,38 @@ AC_ARG_VAR([MPLLIBNAME],[can be used to override the name of the MPL library (de
 MPLLIBNAME=${MPLLIBNAME:-"mpl"}
 export MPLLIBNAME
 AC_SUBST(MPLLIBNAME)
-PAC_CONFIG_SUBDIR(src/mpl,,AC_MSG_ERROR(MPL configure failed))
-PAC_PREPEND_FLAG([-l${MPLLIBNAME}], [WRAPPER_LIBS])
-PAC_APPEND_FLAG([-I${master_top_builddir}/src/mpl/include], [CPPFLAGS])
-PAC_APPEND_FLAG([-I${use_top_srcdir}/src/mpl/include], [CPPFLAGS])
+AC_ARG_WITH([mpl-prefix],
+            [AS_HELP_STRING([[--with-mpl-prefix[=DIR]]],
+                            [use the MPL library installed in DIR,
+                             rather than the one included in src/mpl.  Pass
+                             "embedded" to force usage of the MPL source
+                             distributed with MPICH2.])],
+            [],dnl action-if-given
+            [with_mpl_prefix=embedded]) dnl action-if-not-given
+mpldir=""
+AC_SUBST([mpldir])
+mplsrcdir=""
+AC_SUBST([mplsrcdir])
+mpllibdir=""
+AC_SUBST([mpllibdir])
+if test "$with_mpl_prefix" = "embedded" ; then
+    PAC_CONFIG_SUBDIR(src/mpl,,AC_MSG_ERROR(MPL configure failed))
+    PAC_PREPEND_FLAG([-l${MPLLIBNAME}], [WRAPPER_LIBS])
+    PAC_APPEND_FLAG([-I${master_top_builddir}/src/mpl/include], [CPPFLAGS])
+    PAC_APPEND_FLAG([-I${use_top_srcdir}/src/mpl/include], [CPPFLAGS])
+
+    mpllibdir="${master_top_builddir}/src/mpl"
+    mplsrcdir="${master_top_builddir}/src/mpl"
+else
+    # The user specified an already-installed MPL; just sanity check, don't
+    # subconfigure it
+    AS_IF([test -s "${with_mpl_prefix}/include/mplconfig.h"],
+          [:],[AC_MSG_ERROR([the MPL installation in "${with_mpl_prefix}" appears broken])])
+    PAC_APPEND_FLAG([-I${with_mpl_prefix}/include],[CPPFLAGS])
+    PAC_PREPEND_FLAG([-l${MPLLIBNAME}],[WRAPPER_LIBS])
+    PAC_APPEND_FLAG([-L${with_mpl_prefix}/lib],[WRAPPER_LDFLAGS])
+    mpllibdir="${with_mpl_prefix}/lib"
+fi
 
 # OpenPA
 AC_ARG_VAR([OPALIBNAME],[can be used to override the name of the OpenPA library (default: "opa")])

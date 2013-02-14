@@ -47,9 +47,9 @@ pkgconfigdir = @pkgconfigdir@
 # to build src/mpi/errhan/defmsg.h
 errnames_txt_files = 
 
-external_subdirs = src/mpl @opasrcdir@
+external_subdirs = @mplsrcdir@ @opasrcdir@
 # FIXME how/where does external_libs/ldflags get used?
-external_ldflags = -L$(top_builddir)/src/mpl -L@opalibdir@
+external_ldflags = -L@mpllibdir@ -L@opalibdir@
 external_libs = -l@MPLLIBNAME@ -l@OPALIBNAME@
 
 # NOTE on our semi-unconventional usage of DIST_SUBDIRS:
