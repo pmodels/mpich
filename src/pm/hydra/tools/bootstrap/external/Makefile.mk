@@ -49,6 +49,7 @@ libhydra_la_SOURCES += $(top_srcdir)/tools/bootstrap/external/external_common.c 
 	$(top_srcdir)/tools/bootstrap/external/pbs_init.c \
 	$(top_srcdir)/tools/bootstrap/external/pbs_query_native_int.c \
 	$(top_srcdir)/tools/bootstrap/external/pbs_query_node_list.c \
+	$(top_srcdir)/tools/bootstrap/external/cobalt_init.c \
 	$(top_srcdir)/tools/bootstrap/external/cobalt_query_native_int.c \
 	$(top_srcdir)/tools/bootstrap/external/cobalt_query_node_list.c
 
