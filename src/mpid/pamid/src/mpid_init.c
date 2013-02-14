@@ -279,11 +279,20 @@ MPIDI_PAMI_client_init(int* rank, int* size, int* mpidi_dynamic_tasking, char **
   /* ------------------------------------ */
   /*  Initialize the MPICH->PAMI Client  */
   /* ------------------------------------ */
-  pami_configuration_t config;
   pami_result_t        rc = PAMI_ERROR;
-  unsigned             n  = 0;
+  
+  pami_configuration_t config[2];
+  config[0].name = PAMI_CLIENT_NONCONTIG;
+  config[0].value.intval = 0; // Disable non-contig, pamid doesn't use pami for non-contig data
+  size_t numconfigs = 1;
+  if(MPIDI_Process.optimized.memory) 
+  {
+    config[numconfigs].name = PAMI_CLIENT_MEMORY_OPTIMIZE;
+    config[numconfigs].value.intval = MPIDI_Process.optimized.memory;
+    ++numconfigs;
+  }
 
-  rc = PAMI_Client_create("MPI", &MPIDI_Client, &config, n);
+  rc = PAMI_Client_create("MPI", &MPIDI_Client, config, numconfigs);
   MPID_assert_always(rc == PAMI_SUCCESS);
   PAMIX_Initialize(MPIDI_Client);
 

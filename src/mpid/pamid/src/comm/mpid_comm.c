@@ -177,29 +177,33 @@ void MPIDI_Coll_comm_create(MPID_Comm *comm)
       if(unlikely(MPIDI_Process.verbose >= MPIDI_VERBOSE_DETAILS_0 && comm->rank == 0))
          fprintf(stderr,"create geometry tasks %p {%u..%u}\n", comm->mpid.tasks, MPID_VCR_GET_LPID(comm->vcr, 0),MPID_VCR_GET_LPID(comm->vcr, comm->local_size-1));
 
-      pami_configuration_t config;
-      size_t numconfigs = 0;
-
+      pami_configuration_t config[3];
+      config[0].name = PAMI_GEOMETRY_NONCONTIG;
+      config[0].value.intval = 0; // Disable non-contig, pamid doesn't use pami for non-contig data collectives
+      size_t numconfigs = 1;
       if(MPIDI_Process.optimized.subcomms)
       {
-         config.name = PAMI_GEOMETRY_OPTIMIZE;
-         numconfigs = 1;
+         config[numconfigs].name = PAMI_GEOMETRY_OPTIMIZE;
+         config[numconfigs].value.intval = 1; 
+         ++numconfigs;
       }
-      else
+      if(MPIDI_Process.optimized.memory) 
       {
-         numconfigs = 0;
+         config[numconfigs].name = PAMI_GEOMETRY_MEMORY_OPTIMIZE;
+         config[numconfigs].value.intval = MPIDI_Process.optimized.memory; /* level of optimization */
+         ++numconfigs;
       }
 
       if(MPIDI_Process.optimized.memory && (comm->local_size & (comm->local_size-1)))
       {
-	/* Don't create irregular geometries.  Fallback to MPICH only collectives */
-	geom_init = 0;
-	comm->mpid.geometry = NULL;
+         /* Don't create irregular geometries.  Fallback to MPICH only collectives */
+         geom_init = 0;
+         comm->mpid.geometry = NULL;
       }
       else if(comm->mpid.tasks == NULL)
       {   
          geom_post.client = MPIDI_Client;
-         geom_post.configs = &config;
+         geom_post.configs = config;
          geom_post.context_offset = 0; /* TODO BES investigate */
          geom_post.num_configs = numconfigs;
          geom_post.newgeom = &comm->mpid.geometry,
@@ -218,7 +222,7 @@ void MPIDI_Coll_comm_create(MPID_Comm *comm)
       else
       {
          geom_post.client = MPIDI_Client;
-         geom_post.configs = &config;
+         geom_post.configs = config;
          geom_post.context_offset = 0; /* TODO BES investigate */
          geom_post.num_configs = numconfigs;
          geom_post.newgeom = &comm->mpid.geometry,

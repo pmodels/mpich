@@ -713,6 +713,8 @@ void MPIDI_Comm_coll_select(MPID_Comm *comm_ptr)
     comm_ptr->mpid.query_cached_allreduce = MPID_COLL_USE_MPICH;
 
     comm_ptr->mpid.cutoff_size[PAMI_XFER_ALLREDUCE][0] = 0;
+    comm_ptr->mpid.must_query[PAMI_XFER_ALLREDUCE][0] = MPID_COLL_USE_MPICH;
+    comm_ptr->mpid.must_query[PAMI_XFER_ALLREDUCE][1] = MPID_COLL_USE_MPICH;
     /* For BGQ */
     /*  1ppn: I0:MultiCombineDput:-:MU if it is available, but it has a check_fn
      *  since it is MU-based*/
