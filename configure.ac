@@ -1200,8 +1200,15 @@ OPA_fetch_and_incr_int(&i,5);
              PAC_POP_FLAG([LIBS])
              ])
 
+opasrcdir=""
+AC_SUBST([opasrcdir])
+opalibdir=""
+AC_SUBST([opalibdir])
+
 if test "$with_openpa_prefix" = "embedded" ; then
     if test -e "${use_top_srcdir}/src/openpa" ; then
+        opasrcdir="${master_top_builddir}/src/openpa"
+        opalibdir="${master_top_builddir}/src/openpa/src"
         PAC_APPEND_FLAG([-I${use_top_srcdir}/src/openpa/src],[CPPFLAGS])
         PAC_APPEND_FLAG([-I${master_top_builddir}/src/openpa/src],[CPPFLAGS])
 
@@ -1237,6 +1244,9 @@ else
     PAC_PREPEND_FLAG([-l${OPALIBNAME}],[WRAPPER_LIBS])
     if test -d ${with_openpa_prefix}/lib64 ; then
         PAC_APPEND_FLAG([-L${with_openpa_prefix}/lib64],[WRAPPER_LDFLAGS])
+        opalibdir="${with_openpa_prefix}/lib64"
+    else
+        opalibdir="${with_openpa_prefix}/lib"
     fi
     PAC_APPEND_FLAG([-L${with_openpa_prefix}/lib],[WRAPPER_LDFLAGS])
 fi

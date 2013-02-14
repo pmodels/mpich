@@ -36,7 +36,7 @@ cpi_DEPENDENCIES =
 # the make-time instances of libpmpich.la and libmpich.la live here
 LDFLAGS += -L../lib
 # the make-time instances of libmpl.la and libopa.la live here
-LDFLAGS += -L../src/mpl -L../src/openpa/src
+LDFLAGS += -L../src/mpl -L@opalibdir@
 
 # Wrapper LDFLAGS need to be added at the end to make sure we link
 # with the libraries we just built, and not any previously installed
