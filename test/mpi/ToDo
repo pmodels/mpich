@@ -128,6 +128,25 @@ items listed here that are already sufficiently tested.
 42. Keyval free (F90 and C++)
 43. Type create indexed block
 44. Type create resized
+45. User-defined error handler invoked:
+   a. On comm from Fortran on communicator
+   b. On win from C++ and Fortran
+46. Error output strings involving:
+   a. MPI_MODE_NOSTORE errors
+   b. MPI_MODE_NOCHECK errors
+   c. MPI_MODE_NOPUT errors
+   d. MPI_MODE_NOSUCCEED errors
+   e. MPI_MODE_NOPRECEED errors
+   f. Unknown assert value in window mode (as above)
+   g. Datatype = 0x0
+   h. MPI_Op = MPI_REPLACE
+   i. MPI_UNDEFINED
+   j. MPI_IN_PLACE
+   k. MPI_FILE_NULL
+   l. MPI_WIN_NULL
+   m. MPI_REQUEST_NULL
+   o. MPI_Count output (Note dangerous and improper assert! in errutil.c!)
+47. Use of "CombineSpecificCodes" (static in file); MPIR_Err_combine_codes
 
 Also, 
 Replace the calls to MPIR_Group_release in Finalize with
