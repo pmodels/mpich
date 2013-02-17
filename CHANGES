@@ -1,4 +1,16 @@
 ===============================================================================
+                               Changes in 3.0.3
+===============================================================================
+
+ # PM/PMI: Added support for the Cobalt process manager.
+
+ # Several other minor bug fixes, memory leak fixes, and code cleanup.
+   A full list of changes is available at the following link:
+
+     http://git.mpich.org/mpich.git/shortlog/v3.0.2..v3.0.3
+
+
+===============================================================================
                                Changes in 3.0.2
 ===============================================================================
 
