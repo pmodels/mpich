@@ -184,19 +184,6 @@ if test "x$hwloc_have_plugins" = xyes; then
   HWLOC_LIBS_PRIVATE="$HWLOC_LIBS_PRIVATE $lt_cv_dlopen_libs"
 fi
 
-## Enable creation of libtool-style versioning or no versioning
-AC_ARG_ENABLE(versioning,
-        [AC_HELP_STRING([--enable-versioning],[Enable library versioning])],,
-        [enable_versioning=yes])
-
-if test "$enable_versioning" = "yes" ; then
-   libhwloc_so_versionflags="-version-info \$(libhwloc_so_version)"
-else
-   libhwloc_so_versionflags="-avoid-version"
-fi
-export libhwloc_so_versionflags
-AC_SUBST(libhwloc_so_versionflags)
-
 # Party on
 AC_OUTPUT
 
@@ -214,6 +201,16 @@ append_env() {
           [new_value="[$]2]")
     eval "[$]1=\"$new_value\""
 }
+
+# Warn about PCI support
+if test x$hwloc_warn_may_use_libpci = xyes; then
+  echo
+  echo "***********************************************************************"
+  echo "PCI support could not be enabled because libpciaccess is not available."
+  echo "libpci could be used instead but hwloc may be tainted by the GPL"
+  echo "license of pciutils. Add --enable-libpci to enable it."
+  echo "***********************************************************************"
+fi
 
 # Show which optional support we'll be building
 hwloc_xml_status=basic
