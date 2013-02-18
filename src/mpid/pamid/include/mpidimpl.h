@@ -100,6 +100,12 @@ typedef struct conn_info {
   struct conn_info   *next;
 }conn_info;
 
+/* link list of transaciton id for all active remote connections in my world */
+typedef struct transactionID_struct {
+  long long                     tranid;
+  int                           *cntr_for_AM; /* Array size = TOTAL_AM */
+  struct transactionID_struct   *next;
+}transactionID_struct;
 
 /*--------------------------
   BEGIN MPI PORT SECTION

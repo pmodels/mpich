@@ -154,6 +154,7 @@ enum
     MPIDI_Protocols_RVZ_zerobyte,
 #ifdef DYNAMIC_TASKING
     MPIDI_Protocols_Dyntask,
+    MPIDI_Protocols_Dyntask_disconnect,
 #endif
     MPIDI_Protocols_COUNT,
   };
@@ -352,6 +353,8 @@ struct MPIDI_Comm
     pami_endpoint_t *endpoints;
   } tasks_descriptor;
 #ifdef DYNAMIC_TASKING
+  int local_leader;
+  long long world_intercomm_cntr;
   int *world_ids;      /* ids of worlds that composed this communicator (inter communicator created for dynamic tasking */
 #endif
 };

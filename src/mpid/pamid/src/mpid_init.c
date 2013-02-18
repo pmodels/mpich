@@ -147,6 +147,7 @@ static struct
   struct protocol_t RVZ_zerobyte;
 #ifdef DYNAMIC_TASKING
   struct protocol_t Dyntask;
+  struct protocol_t Dyntask_disconnect;
 #endif
 } proto_list = {
   .Short = {
@@ -249,6 +250,17 @@ static struct
   .Dyntask = {
     .func = MPIDI_Recvfrom_remote_world,
     .dispatch = MPIDI_Protocols_Dyntask,
+    .options = {
+      .consistency     = USE_PAMI_CONSISTENCY,
+      .long_header     = PAMI_HINT_DISABLE,
+      .recv_immediate  = PAMI_HINT_ENABLE,
+      .use_rdma        = PAMI_HINT_DISABLE,
+    },
+    .immediate_min     = sizeof(MPIDI_MsgInfo),
+  },
+  .Dyntask_disconnect = {
+    .func = MPIDI_Recvfrom_remote_world_disconnect,
+    .dispatch = MPIDI_Protocols_Dyntask_disconnect,
     .options = {
       .consistency     = USE_PAMI_CONSISTENCY,
       .long_header     = PAMI_HINT_DISABLE,
@@ -580,6 +592,7 @@ MPIDI_PAMI_dispath_init()
   MPIDI_PAMI_dispath_set(MPIDI_Protocols_RVZ_zerobyte, &proto_list.RVZ_zerobyte, NULL);
 #ifdef DYNAMIC_TASKING
   MPIDI_PAMI_dispath_set(MPIDI_Protocols_Dyntask,   &proto_list.Dyntask,  NULL);
+  MPIDI_PAMI_dispath_set(MPIDI_Protocols_Dyntask_disconnect,   &proto_list.Dyntask_disconnect,  NULL);
 #endif
 
   /*

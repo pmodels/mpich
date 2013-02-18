@@ -81,6 +81,7 @@ int MPID_Finalize()
   }
   if(_conn_info_list) 
     MPIU_Free(_conn_info_list);
+  MPIDI_free_all_tranid_node();
 #endif
 
 

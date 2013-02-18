@@ -20,10 +20,13 @@
 
 #ifdef DYNAMIC_TASKING
 #define MAX_HOST_DESCRIPTION_LEN 256
+#define WORLDINTCOMMCNTR _global_world_intercomm_cntr
 #ifdef USE_PMI2_API
 #define MPID_MAX_JOBID_LEN 256
+#define TOTAL_AM 3
 #endif
 
+transactionID_struct *_transactionID_list = NULL;
 
 typedef struct {
   MPID_VCR vcr;
@@ -32,6 +35,7 @@ typedef struct {
 
 conn_info  *_conn_info_list = NULL;
 extern int mpidi_dynamic_tasking;
+long long _global_world_intercomm_cntr;
 
 typedef struct MPIDI_Acceptq
 {
@@ -46,6 +50,7 @@ static int maxAcceptQueueSize = 0;
 static int AcceptQueueSize    = 0;
 
 pthread_mutex_t rem_connlist_mutex = PTHREAD_MUTEX_INITIALIZER;
+extern struct transactionID;
 
 /* FIXME: If dynamic processes are not supported, this file will contain
    no code and some compilers may warn about an "empty translation unit" */
@@ -444,6 +449,42 @@ fn_fail:
 }
 
 
+/**
+ *  * Function to add a new trasaction id in the transaction id list. This function
+ *   * gets called only when a new connection is made with remote tasks.
+ *    */
+void MPIDI_add_new_tranid(long long tranid)
+{
+  int i;
+  transactionID_struct *tridtmp=NULL;
+
+  MPIU_THREAD_CS_ENTER(MSGQUEUE,0);
+  if(_transactionID_list == NULL) {
+    _transactionID_list = (transactionID_struct*) MPIU_Malloc(sizeof(transactionID_struct));
+    _transactionID_list->cntr_for_AM = MPIU_Malloc(TOTAL_AM*sizeof(int));
+    _transactionID_list->tranid = tranid;
+    for(i=0;i<TOTAL_AM;i++)
+      _transactionID_list->cntr_for_AM[i] = 0;
+    _transactionID_list->next     = NULL;
+    MPIU_THREAD_CS_EXIT(MSGQUEUE,0);
+    return;
+  }
+
+  tridtmp = _transactionID_list;
+  while(tridtmp->next != NULL)
+    tridtmp = tridtmp->next;
+
+  tridtmp->next = (transactionID_struct*) MPIU_Malloc(sizeof(transactionID_struct));
+  tridtmp = tridtmp->next;
+  tridtmp->tranid  = tranid;
+  tridtmp->cntr_for_AM = MPIU_Malloc(TOTAL_AM*sizeof(int));
+  for(i=0;i<TOTAL_AM;i++)
+    tridtmp->cntr_for_AM[i] = 0;
+  tridtmp->next    = NULL;
+  MPIU_THREAD_CS_EXIT(MSGQUEUE,0);
+}
+
+
 /* ------------------------------------------------------------------------- */
 /*
    MPIDI_Comm_connect()
@@ -471,7 +512,7 @@ int MPIDI_Comm_connect(const char *port_name, MPID_Info *info, int root,
     MPIDI_PG_t **remote_pg = NULL;
     MPIR_Context_id_t recvcontext_id = MPIR_INVALID_CONTEXT_ID;
     int errflag = FALSE;
-    MPIU_CHKLMEM_DECL(3);
+    long long comm_cntr, lcomm_cntr;
 
     /* Get the context ID here because we need to send it to the remote side */
     mpi_errno = MPIR_Get_contextid( comm_ptr, &recvcontext_id );
@@ -481,6 +522,10 @@ int MPIDI_Comm_connect(const char *port_name, MPID_Info *info, int root,
     rank = comm_ptr->rank;
     local_comm_size = comm_ptr->local_size;
     TRACE_ERR("In MPIDI_Comm_connect - port_name=%s rank=%d root=%d\n", port_name, rank, root);
+
+    WORLDINTCOMMCNTR += 1;
+    comm_cntr = WORLDINTCOMMCNTR;
+    lcomm_cntr = WORLDINTCOMMCNTR;
 
     if (rank == root)
     {
@@ -525,11 +570,25 @@ int MPIDI_Comm_connect(const char *port_name, MPID_Info *info, int root,
                on the send if the port name is invalid */
 	    TRACE_ERR("MPIC_Sendrecv returned with mpi_errno=%d\n", mpi_errno);
 	}
+
+        mpi_errno = MPIC_Sendrecv_replace(&comm_cntr, 1, MPI_INT, 0,
+                                  sendtag++, 0, recvtag++, tmp_comm->handle,
+                                  MPI_STATUS_IGNORE);
+        if (mpi_errno != MPI_SUCCESS) {
+            /* this is a no_port error because we may fail to connect
+               on the send if the port name is invalid */
+            TRACE_ERR("MPIC_Sendrecv returned with mpi_errno=%d\n", mpi_errno);
+        }
     }
 
     /* broadcast the received info to local processes */
     mpi_errno = MPIR_Bcast_intra(recv_ints, 3, MPI_INT, root, comm_ptr, &errflag);
     if (mpi_errno) TRACE_ERR("MPIR_Bcast_intra returned with mpi_errno=%d\n", mpi_errno);
+
+    mpi_errno = MPIR_Bcast_intra(&comm_cntr, 1, MPI_LONG_LONG_INT, root, comm_ptr, &errflag);
+    if (mpi_errno) TRACE_ERR("MPIR_Bcast_intra returned with mpi_errno=%d\n", mpi_errno);
+
+    if(lcomm_cntr > comm_cntr)  comm_cntr = lcomm_cntr;
 
     /* check if root was unable to connect to the port */
 
@@ -603,6 +662,9 @@ int MPIDI_Comm_connect(const char *port_name, MPID_Info *info, int root,
 
     mpi_errno = MPIDI_SetupNewIntercomm( comm_ptr, remote_comm_size,
 				   remote_translation, n_remote_pgs, remote_pg, *newcomm );
+    (*newcomm)->mpid.world_intercomm_cntr   = comm_cntr;
+    MPIDI_add_new_tranid(comm_cntr);
+
 /*    MPIDI_Parse_connection_info(n_remote_pgs, remote_pg); */
     if (mpi_errno != MPI_SUCCESS) {
 	TRACE_ERR("MPIDI_SetupNewIntercomm returned with mpi_errno=%d\n", mpi_errno);
@@ -928,6 +990,99 @@ void MPIDI_Parse_connection_info(int n_remote_pgs, MPIDI_PG_t **remote_pg) {
 }
 
 
+
+/**
+ * Function to increment the active message counter for a particular trasaction id.
+ * This function is used inside disconnect routine
+ * whichAM = FIRST_AM/SECOND_AM/LAST_AM
+ */
+void MPIDI_increment_AM_cntr_for_tranid(long long tranid, int whichAM)
+{
+  transactionID_struct *tridtmp;
+
+  /* No error thrown here if tranid not found. This is for the case where timout
+   * happened in MPI_Comm_disconnect and tasks have freed the tranid list node
+   * and now after this the Active message is received.
+   */
+
+  tridtmp = _transactionID_list;
+
+  MPIU_THREAD_CS_ENTER(MSGQUEUE,0);
+  while(tridtmp != NULL) {
+    if(tridtmp->tranid == tranid) {
+      tridtmp->cntr_for_AM[whichAM]++;
+      break;
+    }
+    tridtmp = tridtmp->next;
+  }
+  MPIU_THREAD_CS_EXIT(MSGQUEUE,0);
+
+  TRACE_ERR("MPIDI_increment_AM_cntr_for_tranid - tridtmp->cntr_for_AM[%d]=%d\n",
+          whichAM, tridtmp->cntr_for_AM[whichAM]);
+}
+
+/**
+ * Function to free a partucular trasaction id node from the trasaction id list.
+ * This function is called inside disconnect routine once the remote connection is
+ * terminated
+ */
+void MPIDI_free_tranid_node(long long tranid)
+{
+  transactionID_struct *tridtmp, *tridtmp2;
+
+  MPID_assert(_transactionID_list != NULL);
+
+  tridtmp = tridtmp2 = _transactionID_list;
+
+  MPIU_THREAD_CS_ENTER(MSGQUEUE,0);
+  while(tridtmp != NULL) {
+    if(tridtmp->tranid == tranid) {
+      /* If there is only one node */
+      if(_transactionID_list->next == NULL) {
+        MPIU_Free(_transactionID_list->cntr_for_AM);
+        MPIU_Free(_transactionID_list);
+        _transactionID_list = NULL;
+        MPIU_THREAD_CS_EXIT(MSGQUEUE,0);
+        return;
+      }
+      /* If more than one node and if this is the first node of the list */
+      if(tridtmp == _transactionID_list && tridtmp->next != NULL) {
+        _transactionID_list = _transactionID_list->next;
+        MPIU_Free(tridtmp->cntr_for_AM);
+        MPIU_Free(tridtmp);
+        MPIU_THREAD_CS_EXIT(MSGQUEUE,0);
+        return;
+      }
+      /* For rest all other nodes position of the list */
+      tridtmp2->next = tridtmp->next;
+      MPIU_Free(tridtmp->cntr_for_AM);
+      MPIU_Free(tridtmp);
+        MPIU_THREAD_CS_EXIT(MSGQUEUE,0);
+      return;
+    }
+    tridtmp2 = tridtmp;
+    tridtmp = tridtmp->next;
+  }
+  MPIU_THREAD_CS_EXIT(MSGQUEUE,0);
+}
+
+/** This routine is used inside finalize to free all the nodes
+ * if the disconnect call has not been called
+ */
+void MPIDI_free_all_tranid_node()
+{
+  transactionID_struct *tridtmp;
+
+  MPIU_THREAD_CS_ENTER(MSGQUEUE,0);
+  while(_transactionID_list != NULL) {
+    tridtmp = _transactionID_list;
+    _transactionID_list = _transactionID_list->next;
+    MPIU_Free(tridtmp->cntr_for_AM);
+    MPIU_Free(tridtmp);
+  }
+  MPIU_THREAD_CS_EXIT(MSGQUEUE,0);
+}
+
 /* Sends the process group information to the peer and frees the
    pg_list */
 static int MPIDI_SendPGtoPeerAndFree( struct MPID_Comm *tmp_comm, int *sendtag_p,
@@ -998,6 +1153,8 @@ int MPIDI_Comm_accept(const char *port_name, MPID_Info *info, int root,
     MPIDI_PG_t **remote_pg = NULL;
     int errflag = FALSE;
     char send_char[16], recv_char[16], remote_taskids[16];
+    long long comm_cntr, lcomm_cntr;
+    int leader_taskid;
 
     /* Create the new intercommunicator here. We need to send the
        context id to the other side. */
@@ -1013,6 +1170,10 @@ int MPIDI_Comm_accept(const char *port_name, MPID_Info *info, int root,
 
     rank = comm_ptr->rank;
     local_comm_size = comm_ptr->local_size;
+
+    WORLDINTCOMMCNTR += 1;
+    comm_cntr = WORLDINTCOMMCNTR;
+    lcomm_cntr = WORLDINTCOMMCNTR;
 
     if (rank == root)
     {
@@ -1065,6 +1226,14 @@ int MPIDI_Comm_accept(const char *port_name, MPID_Info *info, int root,
 	    TRACE_ERR("MPIC_Sendrecv returned with mpi_errno=%d\n", mpi_errno);
 	}
 #endif
+        mpi_errno = MPIC_Sendrecv_replace(&comm_cntr, 1, MPI_INT, 0,
+                                  sendtag++, 0, recvtag++, tmp_comm->handle,
+                                  MPI_STATUS_IGNORE);
+        if (mpi_errno != MPI_SUCCESS) {
+            /* this is a no_port error because we may fail to connect
+               on the send if the port name is invalid */
+            TRACE_ERR("MPIC_Sendrecv returned with mpi_errno=%d\n", mpi_errno);
+        }
 
     }
 
@@ -1073,6 +1242,10 @@ int MPIDI_Comm_accept(const char *port_name, MPID_Info *info, int root,
     mpi_errno = MPIR_Bcast_intra(recv_ints, 3, MPI_INT, root, comm_ptr, &errflag);
     if (mpi_errno) TRACE_ERR("MPIR_Bcast_intra returned with mpi_errno=%d\n", mpi_errno);
 
+    mpi_errno = MPIR_Bcast_intra(&comm_cntr, 1, MPI_LONG_LONG_INT, root, comm_ptr, &errflag);
+    if (mpi_errno) TRACE_ERR("MPIR_Bcast_intra returned with mpi_errno=%d\n", mpi_errno);
+
+    if(lcomm_cntr > comm_cntr)  comm_cntr = lcomm_cntr;
     n_remote_pgs     = recv_ints[0];
     remote_comm_size = recv_ints[1];
     context_id       = recv_ints[2];
@@ -1147,6 +1320,9 @@ int MPIDI_Comm_accept(const char *port_name, MPID_Info *info, int root,
 
     mpi_errno = MPIDI_SetupNewIntercomm( comm_ptr, remote_comm_size,
 				   remote_translation, n_remote_pgs, remote_pg, intercomm );
+    intercomm->mpid.world_intercomm_cntr   = comm_cntr;
+    MPIDI_add_new_tranid(comm_cntr);
+
     if (mpi_errno != MPI_SUCCESS) {
 	TRACE_ERR("MPIDI_SetupNewIntercomm returned with mpi_errno=%d\n", mpi_errno);
     }
@@ -1213,13 +1389,21 @@ static int MPIDI_SetupNewIntercomm( struct MPID_Comm *comm_ptr, int remote_comm_
 			      int n_remote_pgs, MPIDI_PG_t **remote_pg,
 			      struct MPID_Comm *intercomm )
 {
-    int mpi_errno = MPI_SUCCESS, i, j, index;
+    int mpi_errno = MPI_SUCCESS, i, j, index=0;
     int errflag = FALSE;
     int total_rem_world_cnts, p=0;
     char *world_tasks, *cp1;
     conn_info *tmp_node;
     int conn_world_ids[64];
+    MPID_VCR *worldlist;
+    int worldsize;
     pami_endpoint_t dest;
+    MPID_Comm *comm;
+    pami_task_t leader1=-1, leader2=-1, leader_taskid=-1;
+    long long comm_cntr=0, lcomm_cntr=-1;
+    int jobIdSize=64;
+    char jobId[jobIdSize];
+
     TRACE_ERR("MPIDI_SetupNewIntercomm - remote_comm_size=%d\n", remote_comm_size);
     /* FIXME: How much of this could/should be common with the
        upper level (src/mpi/comm/ *.c) code? For best robustness,
@@ -1302,15 +1486,56 @@ static int MPIDI_SetupNewIntercomm( struct MPID_Comm *comm_ptr, int remote_comm_
       }
    }
    else {
+    index=0;
     intercomm->mpid.world_ids = MPIU_Malloc((n_remote_pgs+1)*sizeof(int));
+    PMI2_Job_GetId(jobId, jobIdSize);
     for(i=0;i<n_remote_pgs;i++) {
-      intercomm->mpid.world_ids[i] = atoi((char *)remote_pg[i]->id);
+      if(atoi(jobId) != atoi((char *)remote_pg[i]->id) )
+	intercomm->mpid.world_ids[index++] = atoi((char *)remote_pg[i]->id);
     }
-    intercomm->mpid.world_ids[i] = -1;
+    intercomm->mpid.world_ids[index++] = -1;
    }
    for(i=0; intercomm->mpid.world_ids[i] != -1; i++)
      TRACE_ERR("intercomm=%x intercomm->mpid.world_ids[%d]=%d\n", intercomm, i, intercomm->mpid.world_ids[i]);
 
+   leader_taskid = comm_ptr->vcr[0]->taskid;
+
+   MPID_Comm *comm_world_ptr = MPIR_Process.comm_world;
+   worldlist = comm_world_ptr->vcr;
+   worldsize = comm_world_ptr->local_size;
+   comm = intercomm;
+   for(i=0;i<intercomm->local_size;i++)
+     {
+       for(j=0;j<comm_world_ptr->local_size;j++)
+	 {
+	   if(intercomm->local_vcr[i]->taskid == comm_world_ptr->vcr[j]->taskid) {
+	     leader1 = comm_world_ptr->vcr[j]->taskid;
+	     break;
+	   }
+	 }
+       if(leader1 != -1)
+	 break;
+     }
+   for(i=0;i<intercomm->remote_size;i++)
+     {
+       for(j=0;j<comm_world_ptr->local_size;j++)
+	 {
+	   if(intercomm->vcr[i]->taskid == comm_world_ptr->vcr[j]->taskid) {
+	     leader2 = comm_world_ptr->vcr[j]->taskid;
+	     break;
+	   }
+	 }
+       if(leader2 != -1)
+	 break;
+     }
+   
+   if(leader1 == -1)
+     leader_taskid = leader2;
+   else if(leader2 == -1)
+     leader_taskid = leader1;
+   else
+     leader_taskid = leader1 < leader2 ? leader1 : leader2;
+   intercomm->mpid.local_leader = leader_taskid;
 
    mpi_errno = MPIR_Comm_commit(intercomm);
    if (mpi_errno) TRACE_ERR("MPIR_Comm_commit returned with mpi_errno=%d\n", mpi_errno);

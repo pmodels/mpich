@@ -148,6 +148,14 @@ void MPIDI_Recvfrom_remote_world (pami_context_t    context,
                                   size_t            sndlen,
                                   pami_endpoint_t   sender,
                                   pami_recv_t     * recv);
+void MPIDI_Recvfrom_remote_world_disconnect (pami_context_t    context,
+                                  void            * cookie,
+                                  const void      * _msginfo,
+                                  size_t            msginfo_size,
+                                  const void      * sndbuf,
+                                  size_t            sndlen,
+                                  pami_endpoint_t   sender,
+                                  pami_recv_t     * recv);
 #endif
 #ifdef OUT_OF_ORDER_HANDLING
 void MPIDI_Recvq_process_out_of_order_msgs(pami_task_t src, pami_context_t context);
