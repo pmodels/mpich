@@ -2,6 +2,9 @@
                                Changes in 3.0.3
 ===============================================================================
 
+ # PM/PMI: Upgraded to hwloc-1.6.2rc1.  This version uses libpciaccess
+   instead of libpci, to workaround the GPL license used by libpci.
+
  # PM/PMI: Added support for the Cobalt process manager.
 
  # Several other minor bug fixes, memory leak fixes, and code cleanup.
