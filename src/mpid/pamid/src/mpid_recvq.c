@@ -158,23 +158,20 @@ MPIDI_Recvq_FU(int source, int tag, int context_id, MPI_Status * status)
 #ifdef USE_STATISTICS
         ++search_length;
 #endif
-#ifdef OUT_OF_ORDER_HANDLING
-        if(( ( (int)(nMsgs-MPIDI_Request_getMatchSeq(rreq))) >= 0) || (source == MPI_ANY_SOURCE)) {
-#endif
         if ( (  MPIDI_Request_getMatchCtxt(rreq)              == match.context_id) &&
              ( (MPIDI_Request_getMatchRank(rreq) & mask.rank) == match.rank      ) &&
              ( (MPIDI_Request_getMatchTag(rreq)  & mask.tag ) == match.tag       )
              )
           {
 #ifdef OUT_OF_ORDER_HANDLING
-            if(source == MPI_ANY_SOURCE) {
-              pami_source= MPIDI_Request_getPeerRank_pami(rreq);
-              in_cntr = &MPIDI_In_cntr[pami_source];
-              nMsgs = in_cntr->nMsgs+1;
-              if((int) (nMsgs-MPIDI_Request_getMatchSeq(rreq)) < 0 )
-                 goto NEXT_MSG;
-
-            }
+            pami_source= MPIDI_Request_getPeerRank_pami(rreq);
+            in_cntr=&MPIDI_In_cntr[pami_source];
+            nMsgs = in_cntr->nMsgs + 1;
+            if(( ( (int)(nMsgs-MPIDI_Request_getMatchSeq(rreq))) >= 0) || (source == MPI_ANY_SOURCE)) {
+               if(source == MPI_ANY_SOURCE) {
+                 if((int) (nMsgs-MPIDI_Request_getMatchSeq(rreq)) < 0 )
+                    goto NEXT_MSG;
+               }
             if (rreq->mpid.nextR != NULL)  { /* recv is in the out of order list */
               if (MPIDI_Request_getMatchSeq(rreq) == nMsgs)
                 in_cntr->nMsgs=nMsgs;
@@ -185,12 +182,12 @@ MPIDI_Recvq_FU(int source, int tag, int context_id, MPI_Status * status)
             if(status != MPI_STATUS_IGNORE) 
               *status = (rreq->status);
             break;
-          }
-
 #ifdef OUT_OF_ORDER_HANDLING
+           }
+#endif
+
         }
      NEXT_MSG:
-#endif
         rreq = rreq->mpid.next;
       }
     }
