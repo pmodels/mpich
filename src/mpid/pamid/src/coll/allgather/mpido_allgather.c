@@ -309,7 +309,7 @@ MPIDO_Allgather(const void *sendbuf,
    send_size = recv_size;
    rbuf = (char *)recvbuf+recv_true_lb;
 
-   sbuf = (char *)recvbuf+recv_size*rank;
+   sbuf = PAMI_IN_PLACE;
    if(sendbuf != MPI_IN_PLACE)
    {
      if(unlikely(verbose))

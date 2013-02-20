@@ -59,8 +59,6 @@ int MPIDO_Alltoall(const void *sendbuf,
    const struct MPIDI_Comm* const mpid = &(comm_ptr->mpid);
    const int selected_type = mpid->user_selected_type[PAMI_XFER_ALLTOALL];
 
-   if(sendbuf == MPI_IN_PLACE) 
-     pamidt = 0; /* Disable until ticket #632 is fixed */
    if(sendbuf != MPI_IN_PLACE)
    {
       MPIDI_Datatype_get_info(1, sendtype, snd_contig, sndlen, sdt, sdt_true_lb);
@@ -75,7 +73,7 @@ int MPIDO_Alltoall(const void *sendbuf,
 
 
    /* Is it a built in type? If not, send to MPICH */
-   if(MPIDI_Datatype_to_pami(sendtype, &stype, -1, NULL, &tmp) != MPI_SUCCESS)
+   if(sendbuf != MPI_IN_PLACE && (MPIDI_Datatype_to_pami(sendtype, &stype, -1, NULL, &tmp) != MPI_SUCCESS))
       pamidt = 0;
    if(MPIDI_Datatype_to_pami(recvtype, &rtype, -1, NULL, &tmp) != MPI_SUCCESS)
       pamidt = 0;
@@ -121,7 +119,7 @@ int MPIDO_Alltoall(const void *sendbuf,
          fprintf(stderr,"alltoall MPI_IN_PLACE buffering\n");
       alltoall.cmd.xfer_alltoall.stype = rtype;
       alltoall.cmd.xfer_alltoall.stypecount = recvcount;
-      alltoall.cmd.xfer_alltoall.sndbuf = (char *)recvbuf + rdt_true_lb;
+      alltoall.cmd.xfer_alltoall.sndbuf = PAMI_IN_PLACE;
    }
    else
    {

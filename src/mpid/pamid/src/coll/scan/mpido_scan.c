@@ -82,8 +82,7 @@ int MPIDO_Doscan(const void *sendbuf, void *recvbuf,
    pami_xfer_t scan;
    volatile unsigned scan_active = 1;
 
-   if((sendbuf == MPI_IN_PLACE) || /* Disable until ticket #627 is fixed */
-      (selected_type == MPID_COLL_USE_MPICH || rc != MPI_SUCCESS))
+   if((selected_type == MPID_COLL_USE_MPICH || rc != MPI_SUCCESS))
    {
       if(unlikely(verbose))
          fprintf(stderr,"Using MPICH scan algorithm (exflag %d)\n",exflag);
@@ -99,7 +98,7 @@ int MPIDO_Doscan(const void *sendbuf, void *recvbuf,
    {
       if(unlikely(verbose))
          fprintf(stderr,"scan MPI_IN_PLACE buffering\n");
-      sbuf = rbuf;
+      sbuf = PAMI_IN_PLACE;
    }
    else
    {

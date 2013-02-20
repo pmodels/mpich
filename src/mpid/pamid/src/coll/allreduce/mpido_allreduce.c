@@ -102,7 +102,7 @@ int MPIDO_Allreduce(const void *sendbuf,
    {
      if(unlikely(verbose))
          fprintf(stderr,"allreduce MPI_IN_PLACE buffering\n");
-      sbuf = recvbuf;
+      sbuf = PAMI_IN_PLACE;
    }
 
    allred.cb_done = cb_allreduce;

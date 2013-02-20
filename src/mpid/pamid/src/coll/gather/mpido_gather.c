@@ -146,7 +146,7 @@ int MPIDO_Gather(const void *sendbuf,
    const struct MPIDI_Comm* const mpid = &(comm_ptr->mpid);
    const int selected_type = mpid->user_selected_type[PAMI_XFER_GATHER];
 
-  if ((sendbuf == MPI_IN_PLACE) && sendtype != MPI_DATATYPE_NULL && sendcount >= 0)
+  if (sendtype != MPI_DATATYPE_NULL && sendcount >= 0)
   {
     MPIDI_Datatype_get_info(sendcount, sendtype, contig,
                             send_bytes, data_ptr, true_lb);
@@ -224,7 +224,7 @@ int MPIDO_Gather(const void *sendbuf,
      if(unlikely(verbose))
        fprintf(stderr,"gather MPI_IN_PLACE buffering\n");
      gather.cmd.xfer_gather.stypecount = recv_bytes;
-     gather.cmd.xfer_gather.sndbuf = (char *)recvbuf + recv_bytes*rank;
+     gather.cmd.xfer_gather.sndbuf = PAMI_IN_PLACE;
    }
    else
    {

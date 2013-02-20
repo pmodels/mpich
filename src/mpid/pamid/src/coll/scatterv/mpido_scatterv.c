@@ -326,7 +326,7 @@ int MPIDO_Scatterv(const void *sendbuf,
       {
         if(unlikely(verbose))
           fprintf(stderr,"scatterv MPI_IN_PLACE buffering\n");
-        rbuf = (char *)sendbuf + ssize*displs[rank] + send_true_lb;
+        rbuf = PAMI_IN_PLACE;
       }
       else
       {  

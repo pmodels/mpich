@@ -62,12 +62,13 @@ int MPIDO_Alltoallv(const void *sendbuf,
    const struct MPIDI_Comm* const mpid = &(comm_ptr->mpid);
    const int selected_type = mpid->user_selected_type[PAMI_XFER_ALLTOALLV_INT];
 
-   if(sendbuf == MPI_IN_PLACE) 
-     pamidt = 0; /* Disable until ticket #632 is fixed */
-   if(MPIDI_Datatype_to_pami(sendtype, &stype, -1, NULL, &tmp) != MPI_SUCCESS)
+   if((sendbuf != MPI_IN_PLACE) && (MPIDI_Datatype_to_pami(sendtype, &stype, -1, NULL, &tmp) != MPI_SUCCESS))
       pamidt = 0;
    if(MPIDI_Datatype_to_pami(recvtype, &rtype, -1, NULL, &tmp) != MPI_SUCCESS)
       pamidt = 0;
+
+   MPIDI_Datatype_get_info(1, recvtype, rcv_contig, rcvtypelen, rdt, rdt_true_lb);
+   if(!rcv_contig) pamidt = 0;
 
    if((selected_type == MPID_COLL_USE_MPICH) ||
        pamidt == 0)
@@ -78,8 +79,6 @@ int MPIDO_Alltoallv(const void *sendbuf,
                             recvbuf, recvcounts, recvdispls, recvtype,
                             comm_ptr, mpierrno);
    }
-
-   MPIDI_Datatype_get_info(1, recvtype, rcv_contig, rcvtypelen, rdt, rdt_true_lb);
 
    pami_xfer_t alltoallv;
    pami_algorithm_t my_alltoallv;
@@ -114,7 +113,7 @@ int MPIDO_Alltoallv(const void *sendbuf,
       alltoallv.cmd.xfer_alltoallv_int.stype = rtype;
       alltoallv.cmd.xfer_alltoallv_int.sdispls = (int *) recvdispls;
       alltoallv.cmd.xfer_alltoallv_int.stypecounts = (int *) recvcounts;
-      alltoallv.cmd.xfer_alltoallv_int.sndbuf = (char *)recvbuf+rdt_true_lb;
+      alltoallv.cmd.xfer_alltoallv_int.sndbuf = PAMI_IN_PLACE;
    }
    else
    {

@@ -105,7 +105,7 @@ int MPIDO_Gatherv(const void *sendbuf,
       {
          if(unlikely(verbose))
             fprintf(stderr,"gatherv MPI_IN_PLACE buffering\n");
-         sbuf = (char*)rbuf + rsize*displs[rank];
+         sbuf = PAMI_IN_PLACE;
          gatherv.cmd.xfer_gatherv_int.stype = rtype;
          gatherv.cmd.xfer_gatherv_int.stypecount = recvcounts[rank];
       }
