@@ -72,6 +72,11 @@ static MPID_CommOps comm_fns = {
     split_type
 };
 
+
+#undef FUNCNAME
+#define FUNCNAME finalize_failed_procs_group
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
 static int finalize_failed_procs_group(void *param)
 {
     int mpi_errno = MPI_SUCCESS;
