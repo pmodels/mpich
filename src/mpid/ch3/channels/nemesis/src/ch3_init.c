@@ -19,6 +19,37 @@ MPIDI_PG_t *MPIDI_CH3I_my_pg = NULL;
 
 static int nemesis_initialized = 0;
 
+#undef FUNCNAME
+#define FUNCNAME split_type
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
+static int split_type(MPID_Comm * comm_ptr, int stype, int key,
+                      MPID_Info *info_ptr, MPID_Comm ** newcomm_ptr)
+{
+    MPID_Node_id_t id;
+    MPIR_Rank_t nid;
+    int mpi_errno = MPI_SUCCESS;
+
+    mpi_errno = MPID_Get_node_id(comm_ptr, comm_ptr->rank, &id);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
+    nid = (stype == MPI_COMM_TYPE_SHARED) ? id : MPI_UNDEFINED;
+    mpi_errno = MPIR_Comm_split_impl(comm_ptr, nid, key, newcomm_ptr);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
+  fn_exit:
+    return mpi_errno;
+
+    /* --BEGIN ERROR HANDLING-- */
+  fn_fail:
+    goto fn_exit;
+    /* --END ERROR HANDLING-- */
+}
+
+static MPID_CommOps comm_fns = {
+    split_type
+};
+
 /* MPIDI_CH3_Init():  Initialize the nemesis channel */
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3_Init
@@ -31,6 +62,9 @@ int MPIDI_CH3_Init(int has_parent, MPIDI_PG_t *pg_p, int pg_rank)
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3_INIT);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3_INIT);
+
+    /* Override split_type */
+    MPID_Comm_fns = &comm_fns;
 
     mpi_errno = MPID_nem_init (pg_rank, pg_p, has_parent);
     if (mpi_errno) MPIU_ERR_POP (mpi_errno);
