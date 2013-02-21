@@ -12,6 +12,7 @@
 #include <assert.h>
 
 #include <mpi.h>
+#include "mpitest.h"
 #include "mcs-mutex.h"
 
 #define NUM_ITER    1000

@@ -15,10 +15,13 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
 #include <mpi.h>
 #include <assert.h>
 #include "mpitest.h"
+
+#ifdef HAVE_UNISTD_H
+#include <unistd.h>
+#endif
 
 #define NUM_ELEMS 1000
 #define MAX_NPROBE nproc

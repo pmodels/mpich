@@ -17,6 +17,11 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <stdio.h>
+#include "mpitest.h"
+
+#ifdef HAVE_UNISTD_H
+#include <unistd.h>
+#endif
 
 #define TRY(func)                           \
     do {                                    \

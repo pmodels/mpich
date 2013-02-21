@@ -21,6 +21,10 @@
 /* USE_STRICT_MPI may be defined in mpitestconf.h */
 #include "mpitestconf.h"
 
+#ifdef HAVE_UNISTD_H
+#include <unistd.h>
+#endif
+
 static int errs = 0;
 
 /* Constants that control the high level test harness behavior. */

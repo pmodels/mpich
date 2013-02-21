@@ -124,7 +124,7 @@ void cgetsizes_( MPI_Fint *ptrSize, MPI_Fint *intSize, MPI_Fint *aintSize )
 }
 
 /* ----------------------------------------------------------------------- */
-/* Copy and delete functions attached to keyvals
+/* Copy and delete functions attached to keyvals                           */
 /* ----------------------------------------------------------------------- */
 static int CMPI1_COPY_FN( MPI_Comm comm, int keyval, void *extra, 
 		      void *inval, void *outval, int *flag )
