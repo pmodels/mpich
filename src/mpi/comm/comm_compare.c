@@ -75,6 +75,7 @@ int MPI_Comm_compare(MPI_Comm comm1, MPI_Comm comm2, int *result)
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
     
+    MPIU_THREAD_CS_ENTER(ALLFUNC,);
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_COMM_COMPARE);
 
 #   ifdef HAVE_ERROR_CHECKING
@@ -177,6 +178,7 @@ int MPI_Comm_compare(MPI_Comm comm1, MPI_Comm comm2, int *result)
 
   fn_exit:
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_COMM_COMPARE);
+    MPIU_THREAD_CS_EXIT(ALLFUNC,);
     return mpi_errno;
     
     /* --BEGIN ERROR HANDLING-- */
