@@ -9,7 +9,7 @@
 
 #include <mpi.h>
 
-#define MPI_MUTEX_TAG 100
+#define MCS_MUTEX_TAG 100
 
 #ifdef ENABLE_DEBUG
 #define debug_print(...) do { printf(__VA_ARGS__); } while (0)

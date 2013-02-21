@@ -48,8 +48,8 @@ int MCS_Mutex_create(int tail_rank, MPI_Comm comm, MCS_Mutex * hdl_out)
 
     MPI_Win_lock_all(0, hdl->window);
 
-    hdl->base[0] = -1;
-    hdl->base[1] = -1;
+    hdl->base[0] = MPI_PROC_NULL;
+    hdl->base[1] = MPI_PROC_NULL;
 
     MPI_Win_sync(hdl->window);
     MPI_Barrier(hdl->comm);
@@ -96,7 +96,7 @@ int MCS_Mutex_lock(MCS_Mutex hdl)
 
     /* This store is safe, since it cannot happen concurrently with a remote
      * write */
-    hdl->base[MCS_MTX_ELEM_DISP] = -1;
+    hdl->base[MCS_MTX_ELEM_DISP] = MPI_PROC_NULL;
     MPI_Win_sync(hdl->window);
 
     MPI_Fetch_and_op(&rank, &prev, MPI_INT, hdl->tail_rank, MCS_MTX_TAIL_DISP,
@@ -105,7 +105,7 @@ int MCS_Mutex_lock(MCS_Mutex hdl)
 
     /* If there was a previous tail, update their next pointer and wait for
      * notification.  Otherwise, the mutex was successfully acquired. */
-    if (prev != -1) {
+    if (prev != MPI_PROC_NULL) {
         /* Wait for notification */
         MPI_Status status;
 
@@ -113,7 +113,7 @@ int MCS_Mutex_lock(MCS_Mutex hdl)
         MPI_Win_flush(prev, hdl->window);
 
         debug_print("%2d: LOCK   - waiting for notification from %d\n", rank, prev);
-        MPI_Recv(NULL, 0, MPI_BYTE, prev, MPI_MUTEX_TAG, hdl->comm, &status);
+        MPI_Recv(NULL, 0, MPI_BYTE, prev, MCS_MUTEX_TAG, hdl->comm, &status);
     }
 
     debug_print("%2d: LOCK   - lock acquired\n", rank);
@@ -131,14 +131,14 @@ int MCS_Mutex_lock(MCS_Mutex hdl)
 int MCS_Mutex_trylock(MCS_Mutex hdl, int *success)
 {
     int rank, nproc;
-    int tail, nil = -1;
+    int tail, nil = MPI_PROC_NULL;
 
     MPI_Comm_rank(hdl->comm, &rank);
     MPI_Comm_size(hdl->comm, &nproc);
 
     /* This store is safe, since it cannot happen concurrently with a remote
      * write */
-    hdl->base[MCS_MTX_ELEM_DISP] = -1;
+    hdl->base[MCS_MTX_ELEM_DISP] = MPI_PROC_NULL;
     MPI_Win_sync(hdl->window);
 
     /* Check if the lock is available and claim it if it is. */
@@ -146,7 +146,7 @@ int MCS_Mutex_trylock(MCS_Mutex hdl, int *success)
                          MCS_MTX_TAIL_DISP, hdl->window);
     MPI_Win_flush(hdl->tail_rank, hdl->window);
 
-    /* If the old tail was -1, we have claimed the mutex */
+    /* If the old tail was MPI_PROC_NULL, we have claimed the mutex */
     *success = (tail == nil);
 
     debug_print("%2d: TRYLOCK - %s\n", rank, (*success) ? "Success" : "Non-success");
@@ -175,9 +175,9 @@ int MCS_Mutex_unlock(MCS_Mutex hdl)
                      hdl->window);
     MPI_Win_flush(rank, hdl->window);
 
-    if ( next == -1) {
+    if ( next == MPI_PROC_NULL) {
         int tail;
-        int nil = -1;
+        int nil = MPI_PROC_NULL;
 
         /* Check if we are the at the tail of the lock queue.  If so, we're
          * done.  If not, we need to send notification. */
@@ -196,7 +196,7 @@ int MCS_Mutex_unlock(MCS_Mutex hdl)
                                  MPI_NO_OP, hdl->window);
 
                 MPI_Win_flush(rank, hdl->window);
-                if (next != -1) break;
+                if (next != MPI_PROC_NULL) break;
 
                 MPI_Iprobe(MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &flag,
                            MPI_STATUS_IGNORE);
@@ -205,9 +205,9 @@ int MCS_Mutex_unlock(MCS_Mutex hdl)
     }
 
     /* Notify the next waiting process */
-    if (next != -1) {
+    if (next != MPI_PROC_NULL) {
         debug_print("%2d: UNLOCK - notifying %d\n", rank, next);
-        MPI_Send(NULL, 0, MPI_BYTE, next, MPI_MUTEX_TAG, hdl->comm);
+        MPI_Send(NULL, 0, MPI_BYTE, next, MCS_MUTEX_TAG, hdl->comm);
     }
 
     debug_print("%2d: UNLOCK - lock released\n", rank);
