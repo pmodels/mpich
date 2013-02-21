@@ -1406,7 +1406,11 @@ AC_OUTPUT(maint/testmerge \
           errors/cxx/errhan/Makefile \
           errors/cxx/io/Makefile \
           errors/f77/Makefile \
+	  errors/f77/errhan/Makefile \
+          errors/f77/errhan/addsize.h \
+	  errors/f77/errhan/iooffset.h \
           errors/f90/Makefile \
+	  errors/f90/errhan/Makefile \
           manual/Makefile \
           manual/manyconnect \
           manual/mpi_t/Makefile \

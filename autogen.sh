@@ -866,6 +866,15 @@ if [ -x ./maint/f77tof90 -a $do_f77tof90 = "yes" ] ; then
         maint/f77tof90 $dir test/mpi/f90/$leafDir Makefile.am Makefile.ap
         echo "timestamp" > test/mpi/f90/$leafDir/Makefile.am-stamp
     done
+    for dir in test/mpi/errors/f77/* ; do
+        if [ ! -d $dir ] ; then continue ; fi
+	leafDir=`basename $dir`
+        if [ ! -d test/mpi/errors/f90/$leafDir ] ; then
+	    mkdir test/mpi/errors/f90/$leafDir
+        fi
+        maint/f77tof90 $dir test/mpi/errors/f90/$leafDir Makefile.am Makefile.ap
+        echo "timestamp" > test/mpi/errors/f90/$leafDir/Makefile.am-stamp
+    done
     echo "done"
 fi
 

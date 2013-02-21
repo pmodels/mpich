@@ -158,6 +158,8 @@ Makefile.am-stamp
 /test/mpi/f90/ext/stamp-Makefile.am
 /test/mpi/f90/io/Makefile.am
 /test/mpi/f90/rma/Makefile.am
+/test/mpi/errors/f90/errhan/Makefile.am
+/test/mpi/errors/f90/errhan/testlist
 
 # created solely from the f77 counterpart dirs
 /test/mpi/f90/coll/
