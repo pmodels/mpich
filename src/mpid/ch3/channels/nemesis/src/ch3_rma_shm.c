@@ -22,10 +22,6 @@ int MPIDI_CH3_SHM_Win_shared_query(MPID_Win *win_ptr, int target_rank, MPI_Aint 
 
     comm_size = win_ptr->comm_ptr->local_size;
 
-    if (win_ptr->create_flavor != MPI_WIN_FLAVOR_SHARED) {
-        MPIU_ERR_SETANDJUMP(mpi_errno, MPI_ERR_RMA_FLAVOR, "**winflavor");
-    }
-
     /* Scan the sizes to locate the first process that allocated a nonzero
      * amount of space */
     if (target_rank == MPI_PROC_NULL) {

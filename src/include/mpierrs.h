@@ -245,6 +245,15 @@
         }                                                               \
     } while (0)
 
+#define MPIR_ERRTEST_WIN_FLAVOR(win_, flavor_, err_)                    \
+    do {                                                                \
+        if ((win_)->create_flavor != (flavor_)) {                       \
+            MPIU_ERR_SETANDSTMT1((err_), MPI_ERR_RMA_FLAVOR,            \
+                                goto fn_fail, "**winflavor",            \
+                                 "**winflavor %s", #flavor_);           \
+        }                                                               \
+    } while (0)
+
 #define MPIR_ERRTEST_SENDBUF_INPLACE(sendbuf,count,err)                 \
     if (count > 0 && sendbuf == MPI_IN_PLACE) {                         \
         err = MPIR_Err_create_code( MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, \
