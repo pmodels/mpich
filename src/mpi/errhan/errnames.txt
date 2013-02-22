@@ -383,6 +383,10 @@ be in the range 0 to %d
 **rmadisp:Invalid displacement argument in RMA call 
 **rmareqcancel:Request-based RMA operation cannot be cancelled
 **rmareqop:Error in request-based RMA operation
+**rmarange:Target memory is not contained within the window
+**rmaattach:Memory cannot be attached
+**rmashared:Memory cannot be shared
+**rmaflavor:Incorrect window flavor
 **assert:Invalid assert argument
 **lockassertval:Invalid assert argument passed to MPI_Win_lock
 **lockassertval %d: Invalid assert argument (%d) passed to MPI_Win_lock

@@ -74,3 +74,7 @@ MPI_ERR_SIZE        51      **rmasize
 MPI_ERR_DISP        52      **rmadisp
 MPI_ERR_ASSERT      53      **assert
 MPIX_ERR_PROC_FAIL_STOP 54  **proc_fail_stop
+MPI_ERR_RMA_RANGE   55      **rmarange
+MPI_ERR_RMA_ATTACH  56      **rmaattach
+MPI_ERR_RMA_SHARED  57      **rmashared
+MPI_ERR_RMA_FLAVOR  58      **rmaflavor
