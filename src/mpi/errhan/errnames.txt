@@ -187,6 +187,7 @@ MPI_TYPECLASS_INTEGER, or MPI_TYPECLASS_COMPLEX
 **rmatypenotatomic: Datatype not permitted for atomic operations
 **rmatypenotatomic %D: Datatype (%D) not permitted for atomic operations
 **winflavor: Window flavor is not compatible with the given operation
+**winflavor %s: Window flavor is not compatible with the given operation (expected %s)
 
 **typenotpredefined: Datatype must be predefined
 
