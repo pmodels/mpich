@@ -91,6 +91,7 @@ typedef struct MPIDI_PT_single_op {
     void *data;  /* for queued puts and accumulates, data is copied here */
     MPI_Request request_handle;  /* for gets */
     int data_recd;  /* to indicate if the data has been received */
+    MPIDI_CH3_Pkt_flags_t flags;
 } MPIDI_PT_single_op;
 
 typedef struct MPIDI_Win_lock_queue {

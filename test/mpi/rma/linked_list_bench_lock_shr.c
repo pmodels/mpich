@@ -131,7 +131,11 @@ int main(int argc, char **argv) {
                 if (verbose)
                     printf("%d: Appending to <%d, %p>\n", procid, tail_ptr.rank, (void*) tail_ptr.disp);
 
+#ifdef USE_MODE_NOCHECK
+                MPI_Win_lock(MPI_LOCK_SHARED, tail_ptr.rank, MPI_MODE_NOCHECK, llist_win);
+#else
                 MPI_Win_lock(MPI_LOCK_SHARED, tail_ptr.rank, 0, llist_win);
+#endif
                 MPI_Accumulate(&new_elem_ptr, sizeof(llist_ptr_t), MPI_BYTE, tail_ptr.rank,
                                (MPI_Aint) &(((llist_elem_t*)tail_ptr.disp)->next), sizeof(llist_ptr_t),
                                MPI_BYTE, MPI_REPLACE, llist_win);
@@ -146,7 +150,11 @@ int main(int argc, char **argv) {
             {
                 llist_ptr_t next_tail_ptr;
 
+#ifdef USE_MODE_NOCHECK
+                MPI_Win_lock(MPI_LOCK_SHARED, tail_ptr.rank, MPI_MODE_NOCHECK, llist_win);
+#else
                 MPI_Win_lock(MPI_LOCK_SHARED, tail_ptr.rank, 0, llist_win);
+#endif
                 MPI_Get_accumulate( NULL, 0, MPI_DATATYPE_NULL, &next_tail_ptr,
                                     sizeof(llist_ptr_t), MPI_BYTE, tail_ptr.rank,
                                     (MPI_Aint) &(((llist_elem_t*)tail_ptr.disp)->next),

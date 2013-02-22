@@ -9,6 +9,13 @@
 
 #include "oputil.h"
 
+#ifdef HAVE_STDINT_H
+#  include <stdint.h>
+#endif
+#ifdef HAVE_INTTYPES_H
+#  include <inttypes.h>
+#endif
+
 /* Enable the use of data within the message packet for small messages */
 #define USE_EAGER_SHORT
 #define MPIDI_EAGER_SHORT_INTS 4
@@ -49,13 +56,11 @@ typedef union {
 } MPIDI_CH3_FOP_Immed_u;
 
 /*
- * MPIDI_CH3_Pkt_type_t
- *
  * Predefined packet types.  This simplifies some of the code.
  */
 /* FIXME: Having predefined names makes it harder to add new message types,
    such as different RMA types. */
-typedef enum MPIDI_CH3_Pkt_type
+enum MPIDI_CH3_Pkt_types
 {
     MPIDI_CH3_PKT_EAGER_SEND = 0,
 #if defined(USE_EAGER_SHORT)
@@ -85,7 +90,6 @@ typedef enum MPIDI_CH3_Pkt_type
     MPIDI_CH3_PKT_ACCUM_IMMED,     /* optimization for short accumulate */
     /* FIXME: Add PUT, GET_IMMED packet types */
     MPIDI_CH3_PKT_CAS,
-    MPIDI_CH3_PKT_CAS_UNLOCK,
     MPIDI_CH3_PKT_CAS_RESP,
     MPIDI_CH3_PKT_FOP,
     MPIDI_CH3_PKT_FOP_RESP,
@@ -101,8 +105,21 @@ typedef enum MPIDI_CH3_Pkt_type
 # endif    
     , MPIDI_CH3_PKT_END_ALL,
     MPIDI_CH3_PKT_INVALID = -1 /* forces a signed enum to quash warnings */
-}
-MPIDI_CH3_Pkt_type_t;
+};
+
+typedef int16_t MPIDI_CH3_Pkt_type_t;
+typedef uint16_t MPIDI_CH3_Pkt_flags_t;
+
+                                                   /* Flag vector bits:*/
+#define MPIDI_CH3_PKT_FLAG_NONE                 0
+#define MPIDI_CH3_PKT_FLAG_RMA_LOCK             1  /* ...............X */
+#define MPIDI_CH3_PKT_FLAG_RMA_UNLOCK           2  /* ..............X. */
+#define MPIDI_CH3_PKT_FLAG_RMA_FLUSH            4  /* .............X.. */
+#define MPIDI_CH3_PKT_FLAG_RMA_REQ_ACK          8  /* ............X... */
+#define MPIDI_CH3_PKT_FLAG_RMA_AT_COMPLETE     16  /* ...........X.... */
+#define MPIDI_CH3_PKT_FLAG_RMA_NOCHECK         32  /* ..........X..... */
+#define MPIDI_CH3_PKT_FLAG_RMA_SHARED          64  /* .........X...... */
+#define MPIDI_CH3_PKT_FLAG_RMA_EXCLUSIVE      128  /* ........X....... */
 
 typedef struct MPIDI_CH3_Pkt_send
 {
@@ -183,6 +200,7 @@ MPIDI_CH3_PKT_DEFS
 typedef struct MPIDI_CH3_Pkt_put
 {
     MPIDI_CH3_Pkt_type_t type;
+    MPIDI_CH3_Pkt_flags_t flags;
     void *addr;
     int count;
     MPI_Datatype datatype;
@@ -200,6 +218,7 @@ MPIDI_CH3_Pkt_put_t;
 typedef struct MPIDI_CH3_Pkt_get
 {
     MPIDI_CH3_Pkt_type_t type;
+    MPIDI_CH3_Pkt_flags_t flags;
     void *addr;
     int count;
     MPI_Datatype datatype;
@@ -225,6 +244,7 @@ MPIDI_CH3_Pkt_get_resp_t;
 typedef struct MPIDI_CH3_Pkt_accum
 {
     MPIDI_CH3_Pkt_type_t type;
+    MPIDI_CH3_Pkt_flags_t flags;
     MPI_Request request_handle; /* For get_accumulate response */
     void *addr;
     int count;
@@ -251,6 +271,7 @@ MPIDI_CH3_Pkt_get_accum_resp_t;
 typedef struct MPIDI_CH3_Pkt_accum_immed
 {
     MPIDI_CH3_Pkt_type_t type;
+    MPIDI_CH3_Pkt_flags_t flags;
     void *addr;
     int count;
     /* FIXME: Compress datatype/op into a single word (immedate mode) */
@@ -271,6 +292,7 @@ MPIDI_CH3_Pkt_accum_immed_t;
 typedef struct MPIDI_CH3_Pkt_cas
 {
     MPIDI_CH3_Pkt_type_t type;
+    MPIDI_CH3_Pkt_flags_t flags;
     MPI_Datatype datatype;
     void *addr;
     MPI_Request request_handle;
@@ -278,10 +300,6 @@ typedef struct MPIDI_CH3_Pkt_cas
                                 * epoch for decrementing rma op counter in
                                 * active target rma and for unlocking window 
                                 * in passive target rma. Otherwise set to NULL*/
-
-                               /* source_win_handle is omitted here to reduce
-                                * the packet size.  If this is the last CAS
-                                * packet, the type will be set to CAS_UNLOCK */
     MPIDI_CH3_CAS_Immed_u origin_data;
     MPIDI_CH3_CAS_Immed_u compare_data;
 }
@@ -298,6 +316,7 @@ MPIDI_CH3_Pkt_cas_resp_t;
 typedef struct MPIDI_CH3_Pkt_fop
 {
     MPIDI_CH3_Pkt_type_t type;
+    MPIDI_CH3_Pkt_flags_t flags;
     MPI_Datatype datatype;
     void *addr;
     MPI_Op op;
@@ -306,9 +325,6 @@ typedef struct MPIDI_CH3_Pkt_fop
                                 * epoch for decrementing rma op counter in
                                 * active target rma and for unlocking window 
                                 * in passive target rma. Otherwise set to NULL*/
-    MPI_Win source_win_handle; /* Used in the last RMA operation in an
-                                * epoch in the case of passive target rma
-                                * with shared locks. Otherwise set to NULL*/
     int origin_data[MPIDI_RMA_FOP_IMMED_INTS];
 }
 MPIDI_CH3_Pkt_fop_t;
@@ -348,6 +364,7 @@ typedef MPIDI_CH3_Pkt_lock_t MPIDI_CH3_Pkt_flush_t;
 typedef struct MPIDI_CH3_Pkt_lock_put_unlock
 {
     MPIDI_CH3_Pkt_type_t type;
+    MPIDI_CH3_Pkt_flags_t flags;
     MPI_Win target_win_handle;
     MPI_Win source_win_handle;
     int lock_type;
@@ -360,6 +377,7 @@ MPIDI_CH3_Pkt_lock_put_unlock_t;
 typedef struct MPIDI_CH3_Pkt_lock_get_unlock
 {
     MPIDI_CH3_Pkt_type_t type;
+    MPIDI_CH3_Pkt_flags_t flags;
     MPI_Win target_win_handle;
     MPI_Win source_win_handle;
     int lock_type;
@@ -373,6 +391,7 @@ MPIDI_CH3_Pkt_lock_get_unlock_t;
 typedef struct MPIDI_CH3_Pkt_lock_accum_unlock
 {
     MPIDI_CH3_Pkt_type_t type;
+    MPIDI_CH3_Pkt_flags_t flags;
     MPI_Win target_win_handle;
     MPI_Win source_win_handle;
     int lock_type;

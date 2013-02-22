@@ -194,7 +194,7 @@ typedef enum MPIDI_nem_tcp_pkt_type {
 #ifdef ENABLE_CHECKPOINTING
 typedef struct MPIDI_nem_tcp_pkt_unpause
 {
-    MPID_nem_pkt_type_t type;
+    MPIDI_CH3_Pkt_type_t type;
     unsigned subtype;
 } MPIDI_nem_tcp_pkt_unpause_t;
 #endif
