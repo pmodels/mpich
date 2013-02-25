@@ -811,9 +811,9 @@ MPIDI_VCRT_init(int rank, int size, char *world_tasks, MPIDI_PG_t *pg)
 
 #ifdef DYNAMIC_TASKING
   if(mpidi_dynamic_tasking) {
-    comm->vcr[0]->pg=pg->vct[0].pg;
-    comm->vcr[0]->pg_rank=pg->vct[0].pg_rank;
-    pg->vct[0].taskid = comm->vcr[0]->taskid;
+    comm->vcr[0]->pg=pg->vct[rank].pg;
+    comm->vcr[0]->pg_rank=pg->vct[rank].pg_rank;
+    pg->vct[rank].taskid = comm->vcr[0]->taskid;
     if(comm->vcr[0]->pg) {
       TRACE_ERR("Adding ref for comm=%x vcr=%x pg=%x\n", comm, comm->vcr[0], comm->vcr[0]->pg);
       MPIDI_PG_add_ref(comm->vcr[0]->pg);
