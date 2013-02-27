@@ -147,7 +147,7 @@ PMPI_LOCAL MPI_Count MPIR_Type_get_basic_type_elements(MPI_Count *bytes_p,
  * Arguments:
  * - bytes_p - input/output byte count
  * - count - maximum number of this type to subtract from the bytes; a count
- *           of -1 indicates use as many as we like
+ *           of <0 indicates use as many as we like
  * - datatype - input datatype
  *
  * Returns number of elements available given the two constraints of number of
@@ -232,14 +232,14 @@ PMPI_LOCAL MPI_Count MPIR_Type_get_elements(MPI_Count *bytes_p,
                  * cycle through the types just as the struct would.  thus the
                  * nested loops.
                  *
-                 * We need to keep going until we see a "0" elements returned
+                 * We need to keep going until we get less elements than expected
                  * or we run out of bytes.
                  */
 
 
                 last_nr_elements = 1; /* seed value */
                 for (j=0;
-                     (count == -1 || j < count) &&
+                     (count < 0 || j < count) &&
                          *bytes_p > 0 && last_nr_elements > 0;
                      j++)
                 {
@@ -255,7 +255,7 @@ PMPI_LOCAL MPI_Count MPIR_Type_get_elements(MPI_Count *bytes_p,
 
                         MPIU_Assert(last_nr_elements >= 0);
 
-                        if (last_nr_elements == 0) break;
+                        if (last_nr_elements < ints[i+1]) break;
                     }
                 }
                 return nr_elements;
