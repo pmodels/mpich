@@ -49,6 +49,7 @@ mixedsync 4
 epochtest 4
 locknull 2
 rmanull 2
+rmazero 2
 strided_acc_indexed 2
 strided_acc_onelock 2
 strided_acc_subarray 2

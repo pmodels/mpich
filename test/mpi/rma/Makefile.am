@@ -66,6 +66,7 @@ noinst_PROGRAMS =          \
     baseattrwin            \
     nullpscw               \
     rmanull                \
+    rmazero                \
     mixedsync              \
     manyrma2		   \
     selfrma                \
