@@ -2,6 +2,17 @@
                                Changes in 3.0.3
 ===============================================================================
 
+ # RMA: Added a new mechanism for piggybacking RMA synchronization operations,
+   which improves the performance of several synchronization operations,
+   including Flush.
+
+ # RMA: Added an optimization to utilize the MPI_MODE_NOCHECK assertion in
+   passive target RMA to improve performance by eliminating a lock request
+   message.
+
+ # RMA: Added a default implementation of shared memory windows to CH3.  This
+   adds support for this MPI 3.0 feature to the ch3:sock device.
+
  # PM/PMI: Upgraded to hwloc-1.6.2rc1.  This version uses libpciaccess
    instead of libpci, to workaround the GPL license used by libpci.
 
