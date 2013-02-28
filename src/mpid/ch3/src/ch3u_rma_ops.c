@@ -189,6 +189,10 @@ int MPIDI_Put(const void *origin_addr, int origin_count, MPI_Datatype
         
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_PUT);
 
+    if (target_rank == MPI_PROC_NULL) {
+        goto fn_exit;
+    }
+
     if (win_ptr->epoch_state == MPIDI_EPOCH_NONE && win_ptr->fence_issued) {
         win_ptr->epoch_state = MPIDI_EPOCH_FENCE;
     }
@@ -199,8 +203,7 @@ int MPIDI_Put(const void *origin_addr, int origin_count, MPI_Datatype
     MPIDI_Datatype_get_info(origin_count, origin_datatype,
 			    dt_contig, data_sz, dtp,dt_true_lb); 
     
-    if ((data_sz == 0) || (target_rank == MPI_PROC_NULL))
-    {
+    if (data_sz == 0) {
 	goto fn_exit;
     }
 
@@ -297,6 +300,10 @@ int MPIDI_Get(void *origin_addr, int origin_count, MPI_Datatype
         
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_GET);
 
+    if (target_rank == MPI_PROC_NULL) {
+        goto fn_exit;
+    }
+
     if (win_ptr->epoch_state == MPIDI_EPOCH_NONE && win_ptr->fence_issued) {
         win_ptr->epoch_state = MPIDI_EPOCH_FENCE;
     }
@@ -307,8 +314,7 @@ int MPIDI_Get(void *origin_addr, int origin_count, MPI_Datatype
     MPIDI_Datatype_get_info(origin_count, origin_datatype,
 			    dt_contig, data_sz, dtp, dt_true_lb); 
 
-    if ((data_sz == 0) || (target_rank == MPI_PROC_NULL))
-    {
+    if (data_sz == 0) {
 	goto fn_exit;
     }
 
@@ -404,6 +410,10 @@ int MPIDI_Accumulate(const void *origin_addr, int origin_count, MPI_Datatype
     
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_ACCUMULATE);
 
+    if (target_rank == MPI_PROC_NULL) {
+        goto fn_exit;
+    }
+
     if (win_ptr->epoch_state == MPIDI_EPOCH_NONE && win_ptr->fence_issued) {
         win_ptr->epoch_state = MPIDI_EPOCH_FENCE;
     }
@@ -414,8 +424,7 @@ int MPIDI_Accumulate(const void *origin_addr, int origin_count, MPI_Datatype
     MPIDI_Datatype_get_info(origin_count, origin_datatype,
 			    dt_contig, data_sz, dtp, dt_true_lb);  
     
-    if ((data_sz == 0) || (target_rank == MPI_PROC_NULL))
-    {
+    if (data_sz == 0) {
 	goto fn_exit;
     }
 

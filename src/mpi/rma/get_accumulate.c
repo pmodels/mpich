@@ -187,8 +187,6 @@ int MPI_Get_accumulate(const void *origin_addr, int origin_count,
 
     /* ... body of routine ...  */
     
-    if (target_rank == MPI_PROC_NULL) goto fn_exit;
-
     mpi_errno = MPIU_RMA_CALL(win_ptr,Get_accumulate(origin_addr, origin_count, 
                                          origin_datatype,
                                          result_addr, result_count,
