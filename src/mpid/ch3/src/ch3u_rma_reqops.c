@@ -144,7 +144,8 @@ int MPIDI_Rput(const void *origin_addr, int origin_count,
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_RPUT);
 
     MPIU_ERR_CHKANDJUMP(win_ptr->epoch_state != MPIDI_EPOCH_LOCK &&
-                        win_ptr->epoch_state != MPIDI_EPOCH_LOCK_ALL,
+                        win_ptr->epoch_state != MPIDI_EPOCH_LOCK_ALL &&
+                        target_rank != MPI_PROC_NULL,
                         mpi_errno, MPI_ERR_RMA_SYNC, "**rmasync");
 
     MPIU_CHKPMEM_MALLOC(req_state, MPIDI_CH3I_Rma_req_state_t*,
@@ -217,7 +218,8 @@ int MPIDI_Rget(void *origin_addr, int origin_count,
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_RGET);
 
     MPIU_ERR_CHKANDJUMP(win_ptr->epoch_state != MPIDI_EPOCH_LOCK &&
-                        win_ptr->epoch_state != MPIDI_EPOCH_LOCK_ALL,
+                        win_ptr->epoch_state != MPIDI_EPOCH_LOCK_ALL &&
+                        target_rank != MPI_PROC_NULL,
                         mpi_errno, MPI_ERR_RMA_SYNC, "**rmasync");
 
     MPIU_CHKPMEM_MALLOC(req_state, MPIDI_CH3I_Rma_req_state_t*,
@@ -290,7 +292,8 @@ int MPIDI_Raccumulate(const void *origin_addr, int origin_count,
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_RACCUMULATE);
 
     MPIU_ERR_CHKANDJUMP(win_ptr->epoch_state != MPIDI_EPOCH_LOCK &&
-                        win_ptr->epoch_state != MPIDI_EPOCH_LOCK_ALL,
+                        win_ptr->epoch_state != MPIDI_EPOCH_LOCK_ALL &&
+                        target_rank != MPI_PROC_NULL,
                         mpi_errno, MPI_ERR_RMA_SYNC, "**rmasync");
 
     MPIU_CHKPMEM_MALLOC(req_state, MPIDI_CH3I_Rma_req_state_t*,
@@ -363,7 +366,8 @@ int MPIDI_Rget_accumulate(const void *origin_addr, int origin_count,
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_RGET_ACCUMULATE);
 
     MPIU_ERR_CHKANDJUMP(win_ptr->epoch_state != MPIDI_EPOCH_LOCK &&
-                        win_ptr->epoch_state != MPIDI_EPOCH_LOCK_ALL,
+                        win_ptr->epoch_state != MPIDI_EPOCH_LOCK_ALL &&
+                        target_rank != MPI_PROC_NULL,
                         mpi_errno, MPI_ERR_RMA_SYNC, "**rmasync");
 
     MPIU_CHKPMEM_MALLOC(req_state, MPIDI_CH3I_Rma_req_state_t*,
