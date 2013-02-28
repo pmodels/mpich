@@ -236,6 +236,28 @@ int MPIDO_Alltoallv_simple(const void *sendbuf,
    const int rank = comm_ptr->rank;
 
    const struct MPIDI_Comm* const mpid = &(comm_ptr->mpid);
+   /* We don't pack and unpack in alltoallv as we do in alltoall because alltoallv has
+      more overhead of book keeping for sendcounts/displs and recvcounts/displs. Since,
+      alltoallv is non-rooted and all tasks has type info, decision to punt to mpich
+      will be the same on all tasks */
+
+
+
+   MPIDI_Datatype_get_info(1, recvtype, rcv_contig, rcvtypelen, rdt, rdt_true_lb);
+   if(MPIDI_Pamix_collsel_advise != NULL)
+   {
+     advisor_algorithm_t advisor_algorithms[1];
+     int num_algorithms = MPIDI_Pamix_collsel_advise(mpid->collsel_fast_query, PAMI_XFER_ALLTOALLV_INT, rcvtypelen * recvcounts[0], advisor_algorithms, 1);
+     if(num_algorithms)
+     {
+       if(advisor_algorithms[0].algorithm_type == COLLSEL_EXTERNAL_ALGO)
+       {
+         return MPIR_Alltoallv(sendbuf, sendcounts, senddispls, sendtype,
+                              recvbuf, recvcounts, recvdispls, recvtype,
+                              comm_ptr, mpierrno);
+       }
+     }
+   }
 
    if(sendbuf != MPI_IN_PLACE && (MPIDI_Datatype_to_pami(sendtype, &stype, -1, NULL, &tmp) != MPI_SUCCESS))
       pamidt = 0;
@@ -248,7 +270,6 @@ int MPIDO_Alltoallv_simple(const void *sendbuf,
      MPIDI_Datatype_get_info(1, sendtype, snd_contig, sndtypelen, sdt, sdt_true_lb);
      if(!snd_contig) pamidt = 0;
    }
-   MPIDI_Datatype_get_info(1, recvtype, rcv_contig, rcvtypelen, rdt, rdt_true_lb);
    if(!rcv_contig) pamidt = 0;
 
 

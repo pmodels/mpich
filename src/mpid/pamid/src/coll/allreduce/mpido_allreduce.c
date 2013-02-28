@@ -419,6 +419,24 @@ int MPIDO_Allreduce_simple(const void *sendbuf,
    MPI_Aint data_true_lb = 0;
    int data_size, data_contig;
 
+   MPIDI_Datatype_get_info(1, dt,
+                           data_contig, data_size, data_ptr, data_true_lb);
+
+
+   if(MPIDI_Pamix_collsel_advise != NULL)
+   {
+     advisor_algorithm_t advisor_algorithms[1];
+     int num_algorithms = MPIDI_Pamix_collsel_advise(mpid->collsel_fast_query, PAMI_XFER_ALLREDUCE, data_size * count, advisor_algorithms, 1);
+     if(num_algorithms)
+     {
+       if(advisor_algorithms[0].algorithm_type == COLLSEL_EXTERNAL_ALGO)
+       {
+         return MPIR_Allreduce(sendbuf, recvbuf, count, dt, op, comm_ptr, mpierrno);
+       }
+     }
+   }
+
+
    rc = MPIDI_Datatype_to_pami(dt, &pdt, op, &pop, &mu);
 
       /* convert to metadata query */
@@ -428,8 +446,6 @@ int MPIDO_Allreduce_simple(const void *sendbuf,
       MPIDI_Update_last_algorithm(comm_ptr, "ALLREDUCE_MPICH");
       return MPIR_Allreduce(sendbuf, recvbuf, count, dt, op, comm_ptr, mpierrno);
    }
-   MPIDI_Datatype_get_info(1, dt,
-			   data_contig, data_size, data_ptr, data_true_lb);
 
    if(!data_contig)
    {

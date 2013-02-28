@@ -379,34 +379,96 @@ int MPIDO_Gather_simple(const void *sendbuf,
   MPI_Aint true_lb = 0;
   pami_xfer_t gather;
   MPIDI_Post_coll_t gather_post;
-  int success = 1, contig, send_bytes=-1, recv_bytes = 0;
+  int success = 1, snd_contig = 1, rcv_contig = 1;
+  void *snd_noncontig_buff = NULL, *rcv_noncontig_buff = NULL;
+  void *sbuf = NULL, *rbuf = NULL;
+  int send_size = 0;
+  int recv_size = 0;
+  MPID_Segment segment;
   const int rank = comm_ptr->rank;
   const int size = comm_ptr->local_size;
   const struct MPIDI_Comm* const mpid = &(comm_ptr->mpid);
 
   if(sendbuf != MPI_IN_PLACE)
   {
-    MPIDI_Datatype_get_info(sendcount, sendtype, contig,
-                            send_bytes, data_ptr, true_lb);
-    if (!contig)
-      success = 0;
+    MPIDI_Datatype_get_info(sendcount, sendtype, snd_contig,
+                            send_size, data_ptr, true_lb);
+    if(MPIDI_Pamix_collsel_advise != NULL)
+    {
+      advisor_algorithm_t advisor_algorithms[1];
+      int num_algorithms = MPIDI_Pamix_collsel_advise(mpid->collsel_fast_query, PAMI_XFER_GATHER, send_size, advisor_algorithms, 1);
+      if(num_algorithms)
+      {
+        if(advisor_algorithms[0].algorithm_type == COLLSEL_EXTERNAL_ALGO)
+        {
+          return MPIR_Gather(sendbuf, sendcount, sendtype,
+                            recvbuf, recvcount, recvtype,
+                            root, comm_ptr, mpierrno);
+        }
+      }
+    }
+
+    sbuf = (char *)sendbuf + true_lb;
+    if (!snd_contig)
+    {
+        snd_noncontig_buff = MPIU_Malloc(send_size);
+        sbuf = snd_noncontig_buff;
+        if(snd_noncontig_buff == NULL)
+        {
+           MPID_Abort(NULL, MPI_ERR_NO_SPACE, 1,
+              "Fatal:  Cannot allocate pack buffer");
+        }
+        DLOOP_Offset last = send_size;
+        MPID_Segment_init(sendbuf, sendcount, sendtype, &segment, 0);
+        MPID_Segment_pack(&segment, 0, &last, snd_noncontig_buff);
+    }
+  }
+  else
+  {
+   if(MPIDI_Pamix_collsel_advise != NULL)
+   {
+     MPIDI_Datatype_get_info(recvcount, recvtype, rcv_contig,
+                              recv_size, data_ptr, true_lb);
+     advisor_algorithm_t advisor_algorithms[1];
+     int num_algorithms = MPIDI_Pamix_collsel_advise(mpid->collsel_fast_query, PAMI_XFER_GATHER, recv_size, advisor_algorithms, 1);
+     if(num_algorithms)
+     {
+       if(advisor_algorithms[0].algorithm_type == COLLSEL_EXTERNAL_ALGO)
+       {
+         return MPIR_Gather(sendbuf, sendcount, sendtype,
+                           recvbuf, recvcount, recvtype,
+                           root, comm_ptr, mpierrno);
+       }
+     }
+   }
   }
 
-  if (success && rank == root)
+  rbuf = (char *)recvbuf + true_lb;
+  if (rank == root)
   {
     if (recvtype != MPI_DATATYPE_NULL && recvcount >= 0)
     {
-      MPIDI_Datatype_get_info(recvcount, recvtype, contig,
-                              recv_bytes, data_ptr, true_lb);
-      if (!contig) success = 0;
+      MPIDI_Datatype_get_info(recvcount, recvtype, rcv_contig,
+                              recv_size, data_ptr, true_lb);
+      rbuf = (char *)recvbuf + true_lb;
+      if (!rcv_contig)
+      {
+        rcv_noncontig_buff = MPIU_Malloc(recv_size);
+        rbuf = rcv_noncontig_buff;
+        if(rcv_noncontig_buff == NULL)
+        {
+           MPID_Abort(NULL, MPI_ERR_NO_SPACE, 1,
+              "Fatal:  Cannot allocate pack buffer");
+        }
+      }
     }
     else
       success = 0;
   }
 
-  MPIDI_Update_last_algorithm(comm_ptr, "GATHER_MPICH");
   if(!success)
   {
+    MPIDI_Update_last_algorithm(comm_ptr, "GATHER_MPICH");
     return MPIR_Gather(sendbuf, sendcount, sendtype,
                        recvbuf, recvcount, recvtype,
                        root, comm_ptr, mpierrno);
@@ -419,22 +481,21 @@ int MPIDO_Gather_simple(const void *sendbuf,
    gather.cb_done = cb_gather;
    gather.cookie = (void *)&active;
    gather.cmd.xfer_gather.root = MPID_VCR_GET_LPID(comm_ptr->vcr, root);
-   gather.cmd.xfer_gather.stypecount = send_bytes;/* stypecount is ignored when sndbuf == PAMI_IN_PLACE */
-   gather.cmd.xfer_gather.sndbuf = (void *)sendbuf;
+   gather.cmd.xfer_gather.stypecount = send_size;/* stypecount is ignored when sndbuf == PAMI_IN_PLACE */
+   gather.cmd.xfer_gather.sndbuf = (void *)sbuf;
    if(sendbuf == MPI_IN_PLACE) 
    {
      gather.cmd.xfer_gather.sndbuf = PAMI_IN_PLACE;
    }
    gather.cmd.xfer_gather.stype = PAMI_TYPE_BYTE;/* stype is ignored when sndbuf == PAMI_IN_PLACE */
-   gather.cmd.xfer_gather.rcvbuf = (void *)recvbuf;
+   gather.cmd.xfer_gather.rcvbuf = (void *)rbuf;
    gather.cmd.xfer_gather.rtype = PAMI_TYPE_BYTE;
-   gather.cmd.xfer_gather.rtypecount = recv_bytes;
+   gather.cmd.xfer_gather.rtypecount = recv_size;
    gather.algorithm = mpid->coll_algorithm[PAMI_XFER_GATHER][0][0];
    my_gather_md = &mpid->coll_metadata[PAMI_XFER_GATHER][0][0];
 
    MPIDI_Update_last_algorithm(comm_ptr,
             my_gather_md->name);
-
 
    TRACE_ERR("%s gather\n", MPIDI_Process.context_post.active>0?"Posting":"Invoking");
    MPIDI_Context_post(MPIDI_Context[0], &gather_post.state,
@@ -442,6 +503,14 @@ int MPIDO_Gather_simple(const void *sendbuf,
 
    TRACE_ERR("Waiting on active: %d\n", active);
    MPID_PROGRESS_WAIT_WHILE(active);
+
+   if(!rcv_contig)
+   {
+      MPIR_Localcopy(rcv_noncontig_buff, recv_size, MPI_CHAR,
+                        recvbuf,         recvcount,     recvtype);
+      MPIU_Free(rcv_noncontig_buff);
+   }
+   if(!snd_contig)  MPIU_Free(snd_noncontig_buff);
 
    TRACE_ERR("Leaving MPIDO_Gather_optimized\n");
    return MPI_SUCCESS;
@@ -473,6 +542,7 @@ MPIDO_CSWrapper_gather(pami_xfer_t *gather,
                       gather->cmd.xfer_gather.rcvbuf,
                       gather->cmd.xfer_gather.rtypecount, recvtype,
                       gather->cmd.xfer_gather.root, comm_ptr, &mpierrno);
+
    if(gather->cb_done && rc == 0)
      gather->cb_done(NULL, gather->cookie, PAMI_SUCCESS);
    return rc;

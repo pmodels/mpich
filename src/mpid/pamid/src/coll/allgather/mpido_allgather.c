@@ -590,7 +590,7 @@ MPIDO_Allgather_simple(const void *sendbuf,
    void *snd_noncontig_buff = NULL, *rcv_noncontig_buff = NULL;
    MPI_Aint send_true_lb = 0;
    MPI_Aint recv_true_lb = 0;
-   int snd_data_contig = 1, rcv_data_contig;
+   int snd_data_contig = 1, rcv_data_contig = 1;
    size_t send_size = 0;
    size_t recv_size = 0;
    MPID_Segment segment;
@@ -614,6 +614,22 @@ MPIDO_Allgather_simple(const void *sendbuf,
 			  recv_true_lb);
 
    send_size = recv_size;
+
+   if(MPIDI_Pamix_collsel_advise != NULL)
+   {
+     advisor_algorithm_t advisor_algorithms[1];
+     int num_algorithms = MPIDI_Pamix_collsel_advise(mpid->collsel_fast_query, PAMI_XFER_ALLGATHER, send_size, advisor_algorithms, 1);
+     if(num_algorithms)
+     {
+       if(advisor_algorithms[0].algorithm_type == COLLSEL_EXTERNAL_ALGO)
+       {
+         return MPIR_Allgather(sendbuf, sendcount, sendtype,
+                          recvbuf, recvcount, recvtype,
+                          comm_ptr, mpierrno); 
+       }
+     }
+   }
+
    rbuf = (char *)recvbuf+recv_true_lb;
 
    if(!rcv_data_contig)

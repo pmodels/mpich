@@ -228,12 +228,27 @@ int MPIDO_Doscan_simple(const void *sendbuf, void *recvbuf,
 
    const struct MPIDI_Comm* const mpid = &(comm_ptr->mpid);
 
-   rc = MPIDI_Datatype_to_pami(datatype, &pdt, op, &pop, &mu);
-
    pami_xfer_t scan;
    volatile unsigned scan_active = 1;
    MPIDI_Datatype_get_info(count, datatype, dt_contig, tsize, dt_null, true_lb);
-   
+   if(MPIDI_Pamix_collsel_advise != NULL)
+   {
+     advisor_algorithm_t advisor_algorithms[1];
+     int num_algorithms = MPIDI_Pamix_collsel_advise(mpid->collsel_fast_query, PAMI_XFER_SCAN, tsize, advisor_algorithms, 1);
+     if(num_algorithms)
+     {
+       if(advisor_algorithms[0].algorithm_type == COLLSEL_EXTERNAL_ALGO)
+       {
+         if(exflag)
+           return MPIR_Exscan(sendbuf, recvbuf, count, datatype, op, comm_ptr, mpierrno);
+         else
+           return MPIR_Scan(sendbuf, recvbuf, count, datatype, op, comm_ptr, mpierrno);
+       }
+     }
+   }
+  
+   rc = MPIDI_Datatype_to_pami(datatype, &pdt, op, &pop, &mu);
+ 
    if(rc != MPI_SUCCESS || !dt_contig)
    {
       if(exflag)

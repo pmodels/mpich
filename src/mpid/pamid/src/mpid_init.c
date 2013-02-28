@@ -282,6 +282,7 @@ advisor_t        MPIDI_Collsel_advisor;
 advisor_table_t  MPIDI_Collsel_advisor_table;
 advisor_params_t MPIDI_Collsel_advisor_params;
 char            *MPIDI_Collsel_output_file;
+pami_extension_collsel_advise MPIDI_Pamix_collsel_advise;
 static void
 MPIDI_PAMI_client_init(int* rank, int* size, int* mpidi_dynamic_tasking, char **world_tasks)
 {

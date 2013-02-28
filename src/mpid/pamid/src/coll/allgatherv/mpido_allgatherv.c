@@ -637,6 +637,29 @@ MPIDO_Allgatherv_simple(const void *sendbuf,
   int tmp;
   const pami_metadata_t *my_md;
 
+
+   MPIDI_Datatype_get_info(1,
+                          recvtype,
+                          rcv_data_contig,
+                          recv_size,
+                          dt_null,
+                          recv_true_lb);
+
+   if(MPIDI_Pamix_collsel_advise != NULL)
+   {
+     advisor_algorithm_t advisor_algorithms[1];
+     int num_algorithms = MPIDI_Pamix_collsel_advise(mpid->collsel_fast_query, PAMI_XFER_ALLGATHERV_INT, recv_size * recvcounts[0], advisor_algorithms, 1);
+     if(num_algorithms)
+     {
+       if(advisor_algorithms[0].algorithm_type == COLLSEL_EXTERNAL_ALGO)
+       {
+         return MPIR_Allgatherv(sendbuf, sendcount, sendtype,
+                       recvbuf, recvcounts, displs, recvtype,
+                       comm_ptr, mpierrno);
+       }
+     }
+   }
+
    if((sendbuf != MPI_IN_PLACE) && (MPIDI_Datatype_to_pami(sendtype, &stype, -1, NULL, &tmp) != MPI_SUCCESS))
    {
      return MPIR_Allgatherv(sendbuf, sendcount, sendtype,
@@ -649,12 +672,7 @@ MPIDO_Allgatherv_simple(const void *sendbuf,
                        recvbuf, recvcounts, displs, recvtype,
                        comm_ptr, mpierrno);
    }
-   MPIDI_Datatype_get_info(1,
-			  recvtype,
-			  rcv_data_contig,
-			  recv_size,
-			  dt_null,
-			  recv_true_lb);
+
 
    if(sendbuf == MPI_IN_PLACE)
    {

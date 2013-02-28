@@ -324,39 +324,98 @@ int MPIDO_Scatter_simple(const void *sendbuf,
                   int *mpierrno)
 {
   MPID_Datatype * data_ptr;
-  MPI_Aint true_lb = 0;
-  int contig, nbytes = 0;
   const int rank = comm_ptr->rank;
-  int success = 1;
-  pami_type_t stype, rtype = NULL;
+  int success = 1, snd_contig = 1, rcv_contig = 1;
+  void *snd_noncontig_buff = NULL, *rcv_noncontig_buff = NULL;
+  void *sbuf = NULL, *rbuf = NULL;
+  size_t send_size = 0;
+  size_t recv_size = 0;
+  MPI_Aint snd_true_lb = 0, rcv_true_lb = 0; 
   int tmp;
   int use_pami = 1;
+  MPID_Segment segment;
   const struct MPIDI_Comm* const mpid = &(comm_ptr->mpid);
 
-  if(MPIDI_Datatype_to_pami(sendtype, &stype, -1, NULL, &tmp) != MPI_SUCCESS)
-    use_pami = 0;
-  if(recvbuf != MPI_IN_PLACE && (MPIDI_Datatype_to_pami(recvtype, &rtype, -1, NULL, &tmp) != MPI_SUCCESS))
-    use_pami = 0;
 
+  if (rank == root && sendtype != MPI_DATATYPE_NULL && sendcount >= 0)
+  {
+    MPIDI_Datatype_get_info(sendcount, sendtype, snd_contig,
+                            send_size, data_ptr, snd_true_lb);
+    if(MPIDI_Pamix_collsel_advise != NULL)
+    {
+      advisor_algorithm_t advisor_algorithms[1];
+      int num_algorithms = MPIDI_Pamix_collsel_advise(mpid->collsel_fast_query, PAMI_XFER_SCATTER, send_size, advisor_algorithms, 1);
+      if(num_algorithms)
+      {
+        if(advisor_algorithms[0].algorithm_type == COLLSEL_EXTERNAL_ALGO)
+        {
+          return MPIR_Scatter(sendbuf, sendcount, sendtype,
+                            recvbuf, recvcount, recvtype,
+                            root, comm_ptr, mpierrno);
+        }
+      }
+    }
+  }
 
+  if (recvtype != MPI_DATATYPE_NULL && recvcount >= 0)
+  {
+    MPIDI_Datatype_get_info(recvcount, recvtype, rcv_contig,
+                            recv_size, data_ptr, rcv_true_lb);
+    if(MPIDI_Pamix_collsel_advise != NULL)
+    {
+      advisor_algorithm_t advisor_algorithms[1];
+      int num_algorithms = MPIDI_Pamix_collsel_advise(mpid->collsel_fast_query, PAMI_XFER_SCATTER, recv_size, advisor_algorithms, 1);
+      if(num_algorithms)
+      {
+        if(advisor_algorithms[0].algorithm_type == COLLSEL_EXTERNAL_ALGO)
+        {
+          return MPIR_Scatter(sendbuf, sendcount, sendtype,
+                            recvbuf, recvcount, recvtype,
+                            root, comm_ptr, mpierrno);
+        }
+      }
+    }
+  }
+
+  sbuf = (char *)sendbuf + snd_true_lb;
+  rbuf = (char *)recvbuf + rcv_true_lb;
   if (rank == root)
   {
-    if (recvtype != MPI_DATATYPE_NULL && recvcount >= 0)/* Should this be send or recv? */
+    if (send_size)
     {
-      MPIDI_Datatype_get_info(sendcount, sendtype, contig,
-                              nbytes, data_ptr, true_lb);
-      if (!contig) success = 0;
+      sbuf = (char *)sendbuf + snd_true_lb;
+      if (!snd_contig)
+      {
+        snd_noncontig_buff = MPIU_Malloc(send_size);
+        sbuf = snd_noncontig_buff;
+        if(snd_noncontig_buff == NULL)
+        {
+           MPID_Abort(NULL, MPI_ERR_NO_SPACE, 1,
+              "Fatal:  Cannot allocate pack buffer");
+        }
+        DLOOP_Offset last = send_size;
+        MPID_Segment_init(sendbuf, sendcount, sendtype, &segment, 0);
+        MPID_Segment_pack(&segment, 0, &last, snd_noncontig_buff);
+      }
     }
     else
       success = 0;
 
-    if (success)
+    if (success && recvbuf != MPI_IN_PLACE)
     {
-      if (recvtype != MPI_DATATYPE_NULL && recvcount >= 0)
+      if (recv_size)
       {
-        MPIDI_Datatype_get_info(recvcount, recvtype, contig,
-                                nbytes, data_ptr, true_lb);
-        if (!contig) success = 0;
+        rbuf = (char *)recvbuf + rcv_true_lb;
+        if (!rcv_contig)
+        {
+          rcv_noncontig_buff = MPIU_Malloc(recv_size);
+          rbuf = rcv_noncontig_buff;
+          if(rcv_noncontig_buff == NULL)
+          {
+             MPID_Abort(NULL, MPI_ERR_NO_SPACE, 1,
+                "Fatal:  Cannot allocate pack buffer");
+          }
+        }
       }
       else success = 0;
     }
@@ -364,17 +423,25 @@ int MPIDO_Scatter_simple(const void *sendbuf,
 
   else
   {
-    if (sendtype != MPI_DATATYPE_NULL && sendcount >= 0)/* Should this be send or recv? */
+    if (recv_size)/* Should this be send or recv? */
     {
-      MPIDI_Datatype_get_info(recvcount, recvtype, contig,
-                              nbytes, data_ptr, true_lb);
-      if (!contig) success = 0;
+      rbuf = (char *)recvbuf + rcv_true_lb;
+      if (!rcv_contig)
+      {
+        rcv_noncontig_buff = MPIU_Malloc(recv_size);
+        rbuf = rcv_noncontig_buff;
+        if(rcv_noncontig_buff == NULL)
+        {
+           MPID_Abort(NULL, MPI_ERR_NO_SPACE, 1,
+              "Fatal:  Cannot allocate pack buffer");
+        }
+      }
     }
     else
       success = 0;
   }
   
-  if(!use_pami || !success)
+  if(!success)
   {
     MPIDI_Update_last_algorithm(comm_ptr, "SCATTER_MPICH");
     return MPIR_Scatter(sendbuf, sendcount, sendtype,
@@ -394,12 +461,12 @@ int MPIDO_Scatter_simple(const void *sendbuf,
    scatter.cb_done = cb_scatter;
    scatter.cookie = (void *)&scatter_active;
    scatter.cmd.xfer_scatter.root = MPID_VCR_GET_LPID(comm_ptr->vcr, root);
-   scatter.cmd.xfer_scatter.sndbuf = (void *)sendbuf;
-   scatter.cmd.xfer_scatter.stype = stype;
-   scatter.cmd.xfer_scatter.stypecount = sendcount;
-   scatter.cmd.xfer_scatter.rcvbuf = (void *)recvbuf;
-   scatter.cmd.xfer_scatter.rtype = rtype;/* rtype is ignored when rcvbuf == PAMI_IN_PLACE */
-   scatter.cmd.xfer_scatter.rtypecount = recvcount;
+   scatter.cmd.xfer_scatter.sndbuf = (void *)sbuf;
+   scatter.cmd.xfer_scatter.stype = PAMI_TYPE_BYTE;
+   scatter.cmd.xfer_scatter.stypecount = send_size;
+   scatter.cmd.xfer_scatter.rcvbuf = (void *)rbuf;
+   scatter.cmd.xfer_scatter.rtype = PAMI_TYPE_BYTE;/* rtype is ignored when rcvbuf == PAMI_IN_PLACE */
+   scatter.cmd.xfer_scatter.rtypecount = recv_size;
 
    if(recvbuf == MPI_IN_PLACE) 
    {
@@ -412,6 +479,14 @@ int MPIDO_Scatter_simple(const void *sendbuf,
                       MPIDI_Pami_post_wrapper, (void *)&scatter);
    TRACE_ERR("Waiting on active %d\n", scatter_active);
    MPID_PROGRESS_WAIT_WHILE(scatter_active);
+
+   if(!rcv_contig)
+   {
+      MPIR_Localcopy(rcv_noncontig_buff, recv_size, MPI_CHAR,
+                        recvbuf,         recvcount,     recvtype);
+      MPIU_Free(rcv_noncontig_buff);
+   }
+   if(!snd_contig)  MPIU_Free(snd_noncontig_buff);
 
 
    TRACE_ERR("Leaving MPIDO_Scatter_optimized\n");

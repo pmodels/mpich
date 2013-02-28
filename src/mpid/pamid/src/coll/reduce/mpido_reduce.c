@@ -259,13 +259,26 @@ int MPIDO_Reduce_simple(const void *sendbuf,
 
    const struct MPIDI_Comm* const mpid = &(comm_ptr->mpid);
 
+   MPIDI_Datatype_get_info(count, datatype, dt_contig, tsize, dt_null, true_lb);
+   if(MPIDI_Pamix_collsel_advise != NULL)
+   {
+     advisor_algorithm_t advisor_algorithms[1];
+     int num_algorithms = MPIDI_Pamix_collsel_advise(mpid->collsel_fast_query, PAMI_XFER_REDUCE, tsize, advisor_algorithms, 1);
+     if(num_algorithms)
+     {
+       if(advisor_algorithms[0].algorithm_type == COLLSEL_EXTERNAL_ALGO)
+       {
+         return MPIR_Reduce(sendbuf, recvbuf, count, datatype, op, root, comm_ptr, mpierrno);
+       }
+     }
+   }
+
    rc = MPIDI_Datatype_to_pami(datatype, &pdt, op, &pop, &mu);
 
    pami_xfer_t reduce;
    const pami_metadata_t *my_reduce_md=NULL;
    volatile unsigned reduce_active = 1;
 
-   MPIDI_Datatype_get_info(count, datatype, dt_contig, tsize, dt_null, true_lb);
    if(rc != MPI_SUCCESS || !dt_contig)
    {
       return MPIR_Reduce(sendbuf, recvbuf, count, datatype, op, root, comm_ptr, mpierrno);

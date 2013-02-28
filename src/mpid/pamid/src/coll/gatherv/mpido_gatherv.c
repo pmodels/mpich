@@ -239,74 +239,141 @@ int MPIDO_Gatherv_simple(const void *sendbuf,
 
 {
    TRACE_ERR("Entering MPIDO_Gatherv_optimized\n");
-   int rc;
-   int contig, rsize=0, ssize=0;
-   int pamidt = 1;
-   MPID_Datatype *dt_ptr = NULL;
-   MPI_Aint send_true_lb, recv_true_lb;
-   char *sbuf, *rbuf;
-   pami_type_t stype = NULL, rtype;
-   int tmp;
+   int snd_contig = 1, rcv_contig = 1;
+   void *snd_noncontig_buff = NULL, *rcv_noncontig_buff = NULL;
+   void *sbuf = NULL, *rbuf = NULL;
+   int  *rcounts = NULL;
+   int  *rdispls = NULL;
+   int send_size = 0;
+   int recv_size = 0;
+   int rcvlen    = 0;
+   int rcvcount  = 0;
+   pami_type_t rtype = PAMI_TYPE_NULL;
+   MPID_Segment segment;
+   MPID_Datatype *data_ptr = NULL;
+   int send_true_lb, recv_true_lb = 0;
+   int i, tmp;
    volatile unsigned gatherv_active = 1;
    const int rank = comm_ptr->rank;
+   const int size = comm_ptr->local_size;
 
    const struct MPIDI_Comm* const mpid = &(comm_ptr->mpid);
 
 
-   /* Check for native PAMI types and MPI_IN_PLACE on sendbuf */
-   /* MPI_IN_PLACE is a nonlocal decision. We will need a preallreduce if we ever have
-    * multiple "good" gathervs that work on different counts for example */
-   if(sendbuf != MPI_IN_PLACE && (MPIDI_Datatype_to_pami(sendtype, &stype, -1, NULL, &tmp) != MPI_SUCCESS))
-      pamidt = 0;
-   if(MPIDI_Datatype_to_pami(recvtype, &rtype, -1, NULL, &tmp) != MPI_SUCCESS)
-      pamidt = 0;
+   if(sendbuf != MPI_IN_PLACE)
+   {
+     MPIDI_Datatype_get_info(sendcount, sendtype, snd_contig,
+                            send_size, data_ptr, send_true_lb);
+     if(MPIDI_Pamix_collsel_advise != NULL)
+     {
+       advisor_algorithm_t advisor_algorithms[1];
+       int num_algorithms = MPIDI_Pamix_collsel_advise(mpid->collsel_fast_query, PAMI_XFER_GATHERV_INT, send_size, advisor_algorithms, 1);
+       if(num_algorithms)
+       {
+         if(advisor_algorithms[0].algorithm_type == COLLSEL_EXTERNAL_ALGO)
+         {
+           return MPIR_Gatherv(sendbuf, sendcount, sendtype,
+                             recvbuf, recvcounts, displs, recvtype,
+                             root, comm_ptr, mpierrno);
+         }
+       }
+     }
 
-   MPIDI_Datatype_get_info(1, recvtype, contig, rsize, dt_ptr, recv_true_lb);
-   if(!contig) pamidt = 0;
+     sbuf = (char *)sendbuf + send_true_lb;
+     if (!snd_contig)
+     {
+        snd_noncontig_buff = MPIU_Malloc(send_size);
+        sbuf = snd_noncontig_buff;
+        if(snd_noncontig_buff == NULL)
+        {
+           MPID_Abort(NULL, MPI_ERR_NO_SPACE, 1,
+              "Fatal:  Cannot allocate pack buffer");
+        }
+        DLOOP_Offset last = send_size;
+        MPID_Segment_init(sendbuf, sendcount, sendtype, &segment, 0);
+        MPID_Segment_pack(&segment, 0, &last, snd_noncontig_buff);
+     }
+   }
+   else
+   {
+     MPIDI_Datatype_get_info(1, recvtype, rcv_contig,
+                                rcvlen, data_ptr, recv_true_lb);
+     if(MPIDI_Pamix_collsel_advise != NULL)
+     {
+       advisor_algorithm_t advisor_algorithms[1];
+       int num_algorithms = MPIDI_Pamix_collsel_advise(mpid->collsel_fast_query, PAMI_XFER_GATHERV_INT, rcvlen * recvcounts[0], advisor_algorithms, 1);
+       if(num_algorithms)
+       {
+         if(advisor_algorithms[0].algorithm_type == COLLSEL_EXTERNAL_ALGO)
+         {
+           return MPIR_Gatherv(sendbuf, sendcount, sendtype,
+                             recvbuf, recvcounts, displs, recvtype,
+                             root, comm_ptr, mpierrno);
+         }
+       }
+     }
+   }
 
-   rbuf = (char *)recvbuf + recv_true_lb;
-   sbuf = (void *) sendbuf;
    pami_xfer_t gatherv;
+   rbuf = (char *)recvbuf + recv_true_lb;
+   rcounts = (int*)recvcounts;
+   rdispls = (int*)displs;
    if(rank == root)
    {
+      if(MPIDI_Datatype_to_pami(recvtype, &rtype, -1, NULL, &tmp) != MPI_SUCCESS)
+      {
+        MPIDI_Datatype_get_info(1, recvtype, rcv_contig,
+                                rcvlen, data_ptr, recv_true_lb);
+        if (!rcv_contig)
+        {
+          rcounts = (int*)MPIU_Malloc(size);
+          rdispls = (int*)MPIU_Malloc(size);
+          for(i = 0; i < size; i++)
+          {
+            rcounts[i] = rcvlen * recvcounts[i];
+            rdispls[i] = rcvlen * displs[i];
+            recv_size += rcounts[i];
+            rcvcount  += recvcounts[i];
+          }
+
+          rcv_noncontig_buff = MPIU_Malloc(recv_size);
+          rbuf = rcv_noncontig_buff;
+          rtype = PAMI_TYPE_BYTE;
+          if(rcv_noncontig_buff == NULL)
+          {
+             MPID_Abort(NULL, MPI_ERR_NO_SPACE, 1,
+                "Fatal:  Cannot allocate pack buffer");
+          }
+        }
+      }
       if(sendbuf == MPI_IN_PLACE) 
       {
-         sbuf = PAMI_IN_PLACE;
+         gatherv.cmd.xfer_gatherv_int.sndbuf = PAMI_IN_PLACE;
       }
       else
       {
-         MPIDI_Datatype_get_info(1, sendtype, contig, ssize, dt_ptr, send_true_lb);
-		 if(!contig) pamidt = 0;
-         sbuf = (char *)sbuf + send_true_lb;
+         gatherv.cmd.xfer_gatherv_int.sndbuf = sbuf;
       }
-      gatherv.cmd.xfer_gatherv_int.stype = stype;/* stype is ignored when sndbuf == PAMI_IN_PLACE */
-      gatherv.cmd.xfer_gatherv_int.stypecount = sendcount;
+      gatherv.cmd.xfer_gatherv_int.stype = PAMI_TYPE_BYTE;/* stype is ignored when sndbuf == PAMI_IN_PLACE */
+      gatherv.cmd.xfer_gatherv_int.stypecount = send_size;
 
    }
    else
    {
-      gatherv.cmd.xfer_gatherv_int.stype = stype;
-      gatherv.cmd.xfer_gatherv_int.stypecount = sendcount;     
+      gatherv.cmd.xfer_gatherv_int.sndbuf = sbuf;
+      gatherv.cmd.xfer_gatherv_int.stype = PAMI_TYPE_BYTE;
+      gatherv.cmd.xfer_gatherv_int.stypecount = send_size;     
    }
 
-   if(pamidt == 0)
-   {
-      TRACE_ERR("GATHERV using MPICH\n");
-      MPIDI_Update_last_algorithm(comm_ptr, "GATHERV_MPICH");
-      return MPIR_Gatherv(sendbuf, sendcount, sendtype,
-               recvbuf, recvcounts, displs, recvtype,
-               root, comm_ptr, mpierrno);
-   }
 
    gatherv.cb_done = cb_gatherv;
    gatherv.cookie = (void *)&gatherv_active;
    gatherv.cmd.xfer_gatherv_int.root = MPID_VCR_GET_LPID(comm_ptr->vcr, root);
    gatherv.cmd.xfer_gatherv_int.rcvbuf = rbuf;
    gatherv.cmd.xfer_gatherv_int.rtype = rtype;
-   gatherv.cmd.xfer_gatherv_int.rtypecounts = (int *) recvcounts;
-   gatherv.cmd.xfer_gatherv_int.rdispls = (int *) displs;
+   gatherv.cmd.xfer_gatherv_int.rtypecounts = (int *) rcounts;
+   gatherv.cmd.xfer_gatherv_int.rdispls = (int *) rdispls;
 
-   gatherv.cmd.xfer_gatherv_int.sndbuf = sbuf;
 
    const pami_metadata_t *my_gatherv_md;
 
@@ -323,6 +390,20 @@ int MPIDO_Gatherv_simple(const void *sendbuf,
    
    TRACE_ERR("Waiting on active %d\n", gatherv_active);
    MPID_PROGRESS_WAIT_WHILE(gatherv_active);
+
+   if(!rcv_contig)
+   {
+      MPIR_Localcopy(rcv_noncontig_buff, recv_size, MPI_CHAR,
+                        recvbuf,         rcvcount,     recvtype);
+      MPIU_Free(rcv_noncontig_buff);
+      if(rank == root)
+      {
+         MPIU_Free(rcounts);
+         MPIU_Free(rdispls);
+      }
+   }
+   if(!snd_contig)  MPIU_Free(snd_noncontig_buff);
+
 
    TRACE_ERR("Leaving MPIDO_Gatherv_optimized\n");
    return MPI_SUCCESS;
@@ -343,7 +424,10 @@ MPIDO_CSWrapper_gatherv(pami_xfer_t *gatherv,
                                     NULL);
    if(rc == -1) return rc;
 
-   rc = MPIDI_Dtpami_to_dtmpi(  gatherv->cmd.xfer_gatherv_int.rtype,
+   if(gatherv->cmd.xfer_gatherv_int.rtype == PAMI_TYPE_NULL)
+     recvtype = MPI_DATATYPE_NULL;
+   else
+     rc = MPIDI_Dtpami_to_dtmpi(  gatherv->cmd.xfer_gatherv_int.rtype,
                                &recvtype,
                                 NULL,
                                 NULL);

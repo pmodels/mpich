@@ -294,6 +294,18 @@ int MPIDO_Bcast_simple(void *buffer,
    int data_size_one;
    MPIDI_Datatype_get_info(1, datatype,
 			   data_contig, data_size_one, data_ptr, data_true_lb);
+   if(MPIDI_Pamix_collsel_advise != NULL)
+   {
+     advisor_algorithm_t advisor_algorithms[1];
+     int num_algorithms = MPIDI_Pamix_collsel_advise(mpid->collsel_fast_query, PAMI_XFER_BROADCAST, data_size_one * count, advisor_algorithms, 1);
+     if(num_algorithms)
+     {
+       if(advisor_algorithms[0].algorithm_type == COLLSEL_EXTERNAL_ALGO)
+       {
+         return MPIR_Bcast_intra(buffer, count, datatype, root, comm_ptr, mpierrno);
+       }
+     }
+   }
 
    const int data_size = data_size_one*(size_t)count;
 

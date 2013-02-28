@@ -391,6 +391,19 @@ void MPIDI_Coll_comm_destroy(MPID_Comm *comm)
      MPIU_TestFree(&comm->mpid.coll_metadata[i][1]);
    }
 
+
+   if(MPIDI_Process.optimized.auto_select_colls != MPID_AUTO_SELECT_COLLS_NONE)
+   {
+     /* Destroy the fast query object. */
+     pami_extension_collsel_query_destroy pamix_collsel_query_destroy =
+      (pami_extension_collsel_query_destroy) PAMI_Extension_symbol(MPIDI_Collsel_extension,
+                                                                        "Collsel_query_destroy");
+     if(pamix_collsel_query_destroy != NULL)
+     {
+       pamix_collsel_query_destroy(&(comm->mpid.collsel_fast_query));
+     }
+   }
+
    TRACE_ERR("Destroying geometry\n");
 
    geom_destroy_post.client = MPIDI_Client;

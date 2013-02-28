@@ -292,7 +292,7 @@ struct MPIDI_Request
 #endif
 };
 
-
+typedef void* fast_query_t;
 /** \brief This defines the portion of MPID_Comm that is specific to the Device */
 struct MPIDI_Comm
 {
@@ -351,6 +351,7 @@ struct MPIDI_Comm
   long long world_intercomm_cntr;
   int *world_ids;      /* ids of worlds that composed this communicator (inter communicator created for dynamic tasking */
 #endif
+  fast_query_t collsel_fast_query;
 };
 
 
@@ -556,5 +557,19 @@ typedef pami_result_t (*pami_extension_collsel_table_generate)  (advisor_t,
                                                                  advisor_params_t *,
                                                                  external_geometry_ops_t *,
                                                                  int);
+
+typedef pami_result_t (*pami_extension_collsel_query_create) (advisor_table_t  advisor_table,
+                                                              pami_geometry_t  geometry,
+                                                              fast_query_t    *query);
+
+typedef pami_result_t (*pami_extension_collsel_query_destroy) (fast_query_t *query);
+
+typedef int (*pami_extension_collsel_advise) (fast_query_t        fast_query,
+                                              pami_xfer_type_t    xfer_type,
+                                              size_t              message_size,
+                                              advisor_algorithm_t algorithms_optimized[],
+                                              size_t              max_algorithms);
+
+
 
 #endif

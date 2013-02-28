@@ -35,7 +35,7 @@ external_algorithm_t  ext_algorithm;
   ext_algorithms[0].algorithm.external =  ext_algorithm;             \
   ext_algorithms[0].metadata           = &ext_metadata;              \
   ext_algorithms[0].algorithm_type     =  COLLSEL_EXTERNAL_ALGO;     \
-  collsel_register_algorithms(MPIDI_Collsel_advisor_table,           \
+  pamix_collsel_register_algorithms(MPIDI_Collsel_advisor_table,     \
                                    comm->mpid.geometry,              \
                                    xfer_type,                        \
                                   &ext_algorithms[0],                \
@@ -481,10 +481,23 @@ void MPIDI_Comm_coll_envvars(MPID_Comm *comm)
       it, then use auto coll sel.. Otherwise, go through the manual coll sel code path. */
    if(MPIDI_Process.optimized.auto_select_colls != MPID_AUTO_SELECT_COLLS_NONE)
    {
-     pami_extension_collsel_register_algorithms collsel_register_algorithms =
+     /* Create a fast query object, cache it on the comm/geometry and use it in each collective */
+     pami_extension_collsel_query_create pamix_collsel_query_create =
+      (pami_extension_collsel_query_create) PAMI_Extension_symbol(MPIDI_Collsel_extension,
+                                                                        "Collsel_query_create");
+     if(pamix_collsel_query_create != NULL)
+     {
+       pamix_collsel_query_create(MPIDI_Collsel_advisor_table, comm->mpid.geometry, &(comm->mpid.collsel_fast_query));
+     }
+
+     MPIDI_Pamix_collsel_advise = /* Get the function pointer and cache it */
+      (pami_extension_collsel_advise) PAMI_Extension_symbol(MPIDI_Collsel_extension,
+                                                                        "Collsel_advise");
+
+     pami_extension_collsel_register_algorithms pamix_collsel_register_algorithms =
       (pami_extension_collsel_register_algorithms) PAMI_Extension_symbol(MPIDI_Collsel_extension,
                                                                         "Collsel_register_algorithms");
-    if(collsel_register_algorithms != NULL)
+    if(pamix_collsel_register_algorithms != NULL)
     {
 
       /* ************ Barrier ************ */
