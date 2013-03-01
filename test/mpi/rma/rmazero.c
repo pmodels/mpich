@@ -127,10 +127,8 @@ int main( int argc, char *argv[] )
         MPI_Abort( MPI_COMM_WORLD, 1 );
     }
 
-    /* The following illustrates the use of the routines to 
-       run through a selection of communicators and datatypes.
-       Use subsets of these for tests that do not involve combinations 
-       of communicators, datatypes, and counts of datatypes */
+    /* The following loop is used to run through a series of communicators
+     * that are subsets of MPI_COMM_WORLD, of size 1 or greater. */
     while (MTestGetIntracommGeneral( &comm, 1, 1 )) {
         int count = 0;
 
