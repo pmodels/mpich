@@ -172,6 +172,106 @@ int main( int argc, char *argv[] )
     }
     MPI_Win_unlock(0, window);
 
+    MPI_Barrier(MPI_COMM_WORLD);
+
+    /* Wait inside of an epoch */
+    {
+        MPI_Request pn_req[4];
+        int val[4], res;
+        const int target = 0;
+
+        MPI_Win_lock_all(0, window);
+
+        MPI_Rget_accumulate(&val[0], 1, MPI_INT, &res, 1, MPI_INT, target, 0, 1, MPI_INT, MPI_REPLACE, window, &pn_req[0]);
+        MPI_Rget(&val[1], 1, MPI_INT, target, 1, 1, MPI_INT, window, &pn_req[1]);
+        MPI_Rput(&val[2], 1, MPI_INT, target, 2, 1, MPI_INT, window, &pn_req[2]);
+        MPI_Raccumulate(&val[3], 1, MPI_INT, target, 3, 1, MPI_INT, MPI_REPLACE, window, &pn_req[3]);
+
+        assert(pn_req[0] != MPI_REQUEST_NULL);
+        assert(pn_req[1] != MPI_REQUEST_NULL);
+        assert(pn_req[2] != MPI_REQUEST_NULL);
+        assert(pn_req[3] != MPI_REQUEST_NULL);
+
+        MPI_Waitall(4, pn_req, MPI_STATUSES_IGNORE);
+
+        MPI_Win_unlock_all(window);
+    }
+
+    MPI_Barrier(MPI_COMM_WORLD);
+
+    /* Wait outside of an epoch */
+    {
+        MPI_Request pn_req[4];
+        int val[4], res;
+        const int target = 0;
+
+        MPI_Win_lock_all(0, window);
+
+        MPI_Rget_accumulate(&val[0], 1, MPI_INT, &res, 1, MPI_INT, target, 0, 1, MPI_INT, MPI_REPLACE, window, &pn_req[0]);
+        MPI_Rget(&val[1], 1, MPI_INT, target, 1, 1, MPI_INT, window, &pn_req[1]);
+        MPI_Rput(&val[2], 1, MPI_INT, target, 2, 1, MPI_INT, window, &pn_req[2]);
+        MPI_Raccumulate(&val[3], 1, MPI_INT, target, 3, 1, MPI_INT, MPI_REPLACE, window, &pn_req[3]);
+
+        assert(pn_req[0] != MPI_REQUEST_NULL);
+        assert(pn_req[1] != MPI_REQUEST_NULL);
+        assert(pn_req[2] != MPI_REQUEST_NULL);
+        assert(pn_req[3] != MPI_REQUEST_NULL);
+
+        MPI_Win_unlock_all(window);
+
+        MPI_Waitall(4, pn_req, MPI_STATUSES_IGNORE);
+    }
+
+    /* Wait in a different epoch */
+    {
+        MPI_Request pn_req[4];
+        int val[4], res;
+        const int target = 0;
+
+        MPI_Win_lock_all(0, window);
+
+        MPI_Rget_accumulate(&val[0], 1, MPI_INT, &res, 1, MPI_INT, target, 0, 1, MPI_INT, MPI_REPLACE, window, &pn_req[0]);
+        MPI_Rget(&val[1], 1, MPI_INT, target, 1, 1, MPI_INT, window, &pn_req[1]);
+        MPI_Rput(&val[2], 1, MPI_INT, target, 2, 1, MPI_INT, window, &pn_req[2]);
+        MPI_Raccumulate(&val[3], 1, MPI_INT, target, 3, 1, MPI_INT, MPI_REPLACE, window, &pn_req[3]);
+
+        assert(pn_req[0] != MPI_REQUEST_NULL);
+        assert(pn_req[1] != MPI_REQUEST_NULL);
+        assert(pn_req[2] != MPI_REQUEST_NULL);
+        assert(pn_req[3] != MPI_REQUEST_NULL);
+
+        MPI_Win_unlock_all(window);
+
+        MPI_Win_lock_all(0, window);
+        MPI_Waitall(4, pn_req, MPI_STATUSES_IGNORE);
+        MPI_Win_unlock_all(window);
+    }
+
+    /* Wait in a fence epoch */
+    {
+        MPI_Request pn_req[4];
+        int val[4], res;
+        const int target = 0;
+
+        MPI_Win_lock_all(0, window);
+
+        MPI_Rget_accumulate(&val[0], 1, MPI_INT, &res, 1, MPI_INT, target, 0, 1, MPI_INT, MPI_REPLACE, window, &pn_req[0]);
+        MPI_Rget(&val[1], 1, MPI_INT, target, 1, 1, MPI_INT, window, &pn_req[1]);
+        MPI_Rput(&val[2], 1, MPI_INT, target, 2, 1, MPI_INT, window, &pn_req[2]);
+        MPI_Raccumulate(&val[3], 1, MPI_INT, target, 3, 1, MPI_INT, MPI_REPLACE, window, &pn_req[3]);
+
+        assert(pn_req[0] != MPI_REQUEST_NULL);
+        assert(pn_req[1] != MPI_REQUEST_NULL);
+        assert(pn_req[2] != MPI_REQUEST_NULL);
+        assert(pn_req[3] != MPI_REQUEST_NULL);
+
+        MPI_Win_unlock_all(window);
+
+        MPI_Win_fence(0, window);
+        MPI_Waitall(4, pn_req, MPI_STATUSES_IGNORE);
+        MPI_Win_fence(0, window);
+    }
+
     MPI_Win_free(&window);
     if (buf) MPI_Free_mem(buf);
 
