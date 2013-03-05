@@ -588,6 +588,16 @@ AC_ARG_ENABLE([wrapper-rpath],
               [],[enable_wrapper_rpath=yes])
 AC_SUBST([enable_wrapper_rpath])
 
+AC_ARG_ENABLE([long-double],
+              [AC_HELP_STRING([--disable-long-double],
+                              [Pass --disable-long-double to prevent the MPI
+                               library from supporting the C "long double" type,
+                               even if the C compiler supports it.  "long
+                               double" support is enabled by default, provided
+                               the compiler supports it.])],
+              [],
+              [enable_long_double=yes])
+
 AC_ARG_WITH(cross,
 	AC_HELP_STRING([--with-cross=file],
 		[Specify the values of variables that configure cannot
@@ -2696,7 +2706,7 @@ fi
 # types as well.  In addition, allow the device to suppress support for these
 # optional C types by setting MPID_NO_LONG_DOUBLE and/or MPID_NO_LONG_LONG
 # to yes.
-if test "$MPID_NO_LONG_DOUBLE" != "yes" ; then
+if test "$MPID_NO_LONG_DOUBLE" != "yes" && test "X$enable_long_double" != "Xno" ; then
     AC_CACHE_CHECK([whether long double is supported],
     pac_cv_have_long_double,[
     AC_TRY_COMPILE(,[long double a;],
