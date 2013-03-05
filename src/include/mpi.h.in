@@ -76,6 +76,17 @@ extern "C" {
 #  define MPICH_ATTR_TYPE_TAG_CXX(type)
 #endif
 
+
+/* Define some null objects */
+#define MPI_COMM_NULL      ((MPI_Comm)0x04000000)
+#define MPI_OP_NULL        ((MPI_Op)0x18000000)
+#define MPI_GROUP_NULL     ((MPI_Group)0x08000000)
+#define MPI_DATATYPE_NULL  ((MPI_Datatype)0x0c000000)
+#define MPI_REQUEST_NULL   ((MPI_Request)0x2c000000)
+#define MPI_ERRHANDLER_NULL ((MPI_Errhandler)0x14000000)
+#define MPI_MESSAGE_NULL   ((MPI_Message)MPI_REQUEST_NULL)
+#define MPI_MESSAGE_NO_PROC ((MPI_Message)0x6c000000)
+
 /* Results of the compare operations. */
 #define MPI_IDENT     0
 #define MPI_CONGRUENT 1
@@ -309,16 +320,6 @@ typedef int MPI_Op;
 #define MPI_WIN_DISP_UNIT     0x66000005
 #define MPI_WIN_CREATE_FLAVOR 0x66000007
 #define MPI_WIN_MODEL         0x66000009
-
-/* Define some null objects */
-#define MPI_COMM_NULL      ((MPI_Comm)0x04000000)
-#define MPI_OP_NULL        ((MPI_Op)0x18000000)
-#define MPI_GROUP_NULL     ((MPI_Group)0x08000000)
-#define MPI_DATATYPE_NULL  ((MPI_Datatype)0x0c000000)
-#define MPI_REQUEST_NULL   ((MPI_Request)0x2c000000)
-#define MPI_ERRHANDLER_NULL ((MPI_Errhandler)0x14000000)
-#define MPI_MESSAGE_NULL   ((MPI_Message)MPI_REQUEST_NULL)
-#define MPI_MESSAGE_NO_PROC ((MPI_Message)0x6c000000)
 
 #ifdef MPICH_DEFINE_ATTR_TYPE_TYPES
 static const MPI_Datatype mpich_mpi_datatype_null MPICH_ATTR_TYPE_TAG_MUST_BE_NULL() = MPI_DATATYPE_NULL;
