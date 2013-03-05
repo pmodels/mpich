@@ -2949,14 +2949,21 @@ AC_CHECK_SIZEOF([double _Complex],0,[
 #include <complex.h>
 #endif
 ])
-AC_CHECK_SIZEOF([long double _Complex],0,[
+AS_IF(["X$pac_cv_have_long_double" = "Xyes"],[
+  AC_CHECK_SIZEOF([long double _Complex],0,[
 #ifdef HAVE_COMPLEX_H
 #include <complex.h>
 #endif
+  ])
 ])
+
 # we need really could just use the result of AC_CHECK_SIZEOF, but having a
 # HAVE_typename macro is useful for consistency
-AC_CHECK_TYPES([_Bool, float _Complex, double _Complex, long double _Complex])
+AC_CHECK_TYPES([_Bool, float _Complex, double _Complex])
+
+AS_IF(["X$pac_cv_have_long_double" = "Xyes"],[
+  AC_CHECK_TYPES([long double _Complex])
+])
 
 # Generate a hex version of the size of each type
 for type in short int long long_long float double long_double wchar_t \
@@ -4264,13 +4271,17 @@ using namespace std;
            32)   MPIR_CXX_DOUBLE_COMPLEX=0x4c002035 ;;
            *) ;;
         esac
-        case "$ac_cv_sizeof_LongDoubleComplex" in 
-           8)    MPIR_CXX_LONG_DOUBLE_COMPLEX=0x4c000836 ;;
-           16)   MPIR_CXX_LONG_DOUBLE_COMPLEX=0x4c001036 ;;
-           24)   MPIR_CXX_LONG_DOUBLE_COMPLEX=0x4c001836 ;;
-           32)   MPIR_CXX_LONG_DOUBLE_COMPLEX=0x4c002036 ;;
-           *) ;;
-        esac
+        # only enable CXX "long double" if we have a C "long double", since we
+        # currently perform reductions on CXX "long double" types via C.
+        if test "X$pac_cv_have_long_double" = "Xyes" ; then
+            case "$ac_cv_sizeof_LongDoubleComplex" in
+               8)    MPIR_CXX_LONG_DOUBLE_COMPLEX=0x4c000836 ;;
+               16)   MPIR_CXX_LONG_DOUBLE_COMPLEX=0x4c001036 ;;
+               24)   MPIR_CXX_LONG_DOUBLE_COMPLEX=0x4c001836 ;;
+               32)   MPIR_CXX_LONG_DOUBLE_COMPLEX=0x4c002036 ;;
+               *) ;;
+            esac
+        fi
     fi
     AC_LANG_C
 
