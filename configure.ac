@@ -2949,7 +2949,7 @@ AC_CHECK_SIZEOF([double _Complex],0,[
 #include <complex.h>
 #endif
 ])
-AS_IF(["X$pac_cv_have_long_double" = "Xyes"],[
+AS_IF([test "X$pac_cv_have_long_double" = "Xyes"],[
   AC_CHECK_SIZEOF([long double _Complex],0,[
 #ifdef HAVE_COMPLEX_H
 #include <complex.h>
@@ -2961,7 +2961,7 @@ AS_IF(["X$pac_cv_have_long_double" = "Xyes"],[
 # HAVE_typename macro is useful for consistency
 AC_CHECK_TYPES([_Bool, float _Complex, double _Complex])
 
-AS_IF(["X$pac_cv_have_long_double" = "Xyes"],[
+AS_IF([test "X$pac_cv_have_long_double" = "Xyes"],[
   AC_CHECK_TYPES([long double _Complex])
 ])
 
