@@ -147,7 +147,7 @@ void MPIDI_Coll_comm_create(MPID_Comm *comm)
 
   if(comm->comm_kind != MPID_INTRACOMM) return;
   /* Create a geometry */
-   
+
    if(comm->mpid.geometry != MPIDI_Process.world_geometry)
    {
       if(MPIDI_Process.verbose >= MPIDI_VERBOSE_DETAILS_ALL)
@@ -198,7 +198,7 @@ void MPIDI_Coll_comm_create(MPID_Comm *comm)
       {
          /* Don't create irregular geometries.  Fallback to MPICH only collectives */
          geom_init = 0;
-         comm->mpid.geometry = NULL;
+         comm->mpid.geometry = PAMI_GEOMETRY_NULL;
       }
       else if(comm->mpid.tasks == NULL)
       {   
@@ -207,7 +207,7 @@ void MPIDI_Coll_comm_create(MPID_Comm *comm)
          geom_post.context_offset = 0; /* TODO BES investigate */
          geom_post.num_configs = numconfigs;
          geom_post.newgeom = &comm->mpid.geometry,
-         geom_post.parent = NULL;
+         geom_post.parent = PAMI_GEOMETRY_NULL;
          geom_post.id     = comm->context_id;
          geom_post.ranges = &comm->mpid.range;
          geom_post.tasks = NULL;;
@@ -226,7 +226,7 @@ void MPIDI_Coll_comm_create(MPID_Comm *comm)
          geom_post.context_offset = 0; /* TODO BES investigate */
          geom_post.num_configs = numconfigs;
          geom_post.newgeom = &comm->mpid.geometry,
-         geom_post.parent = NULL;
+         geom_post.parent = PAMI_GEOMETRY_NULL;
          geom_post.id     = comm->context_id;
          geom_post.ranges = NULL;
          geom_post.tasks = comm->mpid.tasks;
@@ -242,7 +242,7 @@ void MPIDI_Coll_comm_create(MPID_Comm *comm)
       TRACE_ERR("Waiting for geom create to finish\n");
       MPID_PROGRESS_WAIT_WHILE(geom_init);
 
-      if(comm->mpid.geometry == NULL)
+      if(comm->mpid.geometry == PAMI_GEOMETRY_NULL)
       {
          if(unlikely(MPIDI_Process.verbose >= MPIDI_VERBOSE_DETAILS_0 && comm->rank == 0))
             fprintf(stderr,"Created unoptimized communicator id=%u, size=%u\n", (unsigned) comm->context_id,comm->local_size);
@@ -275,13 +275,13 @@ void MPIDI_Coll_comm_destroy(MPID_Comm *comm)
   if (!MPIDI_Process.optimized.collectives)
     return;
 
-  if(comm->comm_kind != MPID_INTRACOMM) 
+  if(comm->comm_kind != MPID_INTRACOMM)
     return;
 
   /* It's possible (MPIR_Setup_intercomm_localcomm) to have an intracomm
      without a geometry even when using optimized collectives */
-  if(comm->mpid.geometry == NULL)
-    return; 
+  if(comm->mpid.geometry == PAMI_GEOMETRY_NULL)
+    return;
 
    MPIU_TestFree(&comm->coll_fns);
    for(i=0;i<PAMI_XFER_COUNT;i++)
