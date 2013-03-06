@@ -246,7 +246,10 @@ int MPIDO_Scatter(const void *sendbuf,
            MPI_Aint data_true_lb;
            MPID_Datatype *data_ptr;
            int data_size, data_contig;
-           MPIDI_Datatype_get_info(recvcount, recvtype, data_contig, data_size, data_ptr, data_true_lb); 
+           if(rank == root)
+             MPIDI_Datatype_get_info(sendcount, sendtype, data_contig, data_size, data_ptr, data_true_lb); 
+           else
+             MPIDI_Datatype_get_info(recvcount, recvtype, data_contig, data_size, data_ptr, data_true_lb); 
            if((my_md->range_lo <= data_size) &&
               (my_md->range_hi >= data_size))
               ; /* ok, algorithm selected */
