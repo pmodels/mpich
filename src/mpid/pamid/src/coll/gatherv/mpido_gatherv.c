@@ -152,6 +152,7 @@ int MPIDO_Gatherv(const void *sendbuf,
          /* process metadata bits */
          if((!my_md->check_correct.values.inplace) && (sendbuf == MPI_IN_PLACE))
             result.check.unspecified = 1;
+/* Can't check ranges like this.  Non-local.  Comment out for now.
          if(my_md->check_correct.values.rangeminmax)
          {
             MPI_Aint data_true_lb;
@@ -160,7 +161,7 @@ int MPIDO_Gatherv(const void *sendbuf,
             MPIDI_Datatype_get_info(sendcount, sendtype, data_contig, data_size, data_ptr, data_true_lb); 
             if((my_md->range_lo <= data_size) &&
                (my_md->range_hi >= data_size))
-               ; /* ok, algorithm selected */
+               ; 
             else
             {
                result.check.range = 1;
@@ -174,6 +175,7 @@ int MPIDO_Gatherv(const void *sendbuf,
                }
             }
          }
+ */
       }
       else /* calling the check fn is sufficient */
          result = my_md->check_fn(&gatherv);

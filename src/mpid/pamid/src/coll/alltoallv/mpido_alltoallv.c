@@ -139,7 +139,7 @@ int MPIDO_Alltoallv(const void *sendbuf,
         /* process metadata bits */
          if((!my_md->check_correct.values.inplace) && (sendbuf == MPI_IN_PLACE))
             result.check.unspecified = 1;
-/*
+/* Can't check ranges like this.  Non-local.  Comment out for now.
          if(my_md->check_correct.values.rangeminmax)
          {
             MPI_Aint data_true_lb;
