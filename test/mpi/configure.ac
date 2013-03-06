@@ -541,8 +541,9 @@ AC_TYPE_UINT64_T
 AC_CHECK_TYPES([_Bool, float _Complex, double _Complex, long double _Complex])
 
 # Only run the long double complex tests if that type is available
-if test "$enable_long_double_complex" != "no" -a \
-   "x$ac_cv_type_long_double__Complex" = "xyes" ; then
+if test "x$enable_long_double" = "xyes" && \
+   test "x$enable_long_double_complex" = "xyes" && \
+   test "x$ac_cv_type_long_double__Complex" = "xyes" ; then
    AC_DEFINE(USE_LONG_DOUBLE_COMPLEX,1,[Define if tests with long double complex should be included])
 fi
 
