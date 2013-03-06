@@ -1374,6 +1374,7 @@ int MPIDI_Banner(char * bufPtr) {
        sprintf(bufPtr, "%s %s %s %s ", type, ver_buf, msgBuf, ASC_time);
     } else {
        sprintf(bufPtr, "%s %s %s ", type, msgBuf, ASC_time);
+
     }
 
     MPIU_Free(tmx);
@@ -1388,6 +1389,11 @@ static_assertions()
   MPID_assert_static(sizeof(void*) == sizeof(size_t));
   MPID_assert_static(sizeof(uintptr_t) == sizeof(size_t));
 #ifdef __BGQ__
+  /* MPID_VCR_GET_LPIDS relies on the VCR being a simple task list */
+  MPID_VCR vcr=NULL;
+  MPID_assert_static(sizeof(*vcr) == sizeof(pami_task_t));/* VCR is a simple task list */
+  MPID_assert_static(sizeof(vcr->taskid) == sizeof(*vcr));/* VCR is a simple task list */
+
   MPID_assert_static(sizeof(MPIDI_MsgInfo) == 16);
   MPID_assert_static(sizeof(uint64_t) == sizeof(size_t));
 #endif

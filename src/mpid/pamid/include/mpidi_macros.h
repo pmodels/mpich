@@ -114,7 +114,14 @@ _dt_contig_out, _data_sz_out, _dt_ptr, _dt_true_lb)             \
   vcr[index]->taskid;                           \
 })
 
-
+#ifdef __BGQ__
+/* BGQ just shares the MPICH vcr/tasklist.
+   This relies on the VCR being a simple task list which is asserted
+   in static_assertions() in mpid_init.c */
+#define MPID_VCR_GET_LPIDS(comm, taskids) taskids =  &((*comm->vcr)->taskid);
+#define MPID_VCR_FREE_LPIDS(taskids) 
+#else
+/* non-BGQ mallocs and copies the MPICH vcr/tasklist */
 #define MPID_VCR_GET_LPIDS(comm, taskids)                      \
 ({                                                             \
   int i;                                                       \
@@ -123,7 +130,9 @@ _dt_contig_out, _data_sz_out, _dt_ptr, _dt_true_lb)             \
   for(i=0; i<comm->local_size; i++)                            \
     taskids[i] = comm->vcr[i]->taskid;                         \
 })
+#define MPID_VCR_FREE_LPIDS(taskids) MPIU_Free(taskids)
 
+#endif
 
 #define MPID_GPID_Get(comm_ptr, rank, gpid)             \
 ({                                                      \

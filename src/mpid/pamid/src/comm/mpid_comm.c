@@ -245,13 +245,13 @@ void MPIDI_Coll_comm_create(MPID_Comm *comm)
       comm->mpid.tasks = NULL;
       for(i=1;i<comm->local_size;i++)
       {
-         /* only if sequential tasks should we use a (single) range.
-            Multi or reordered ranges are inefficient */
-         if(MPID_VCR_GET_LPID(comm->vcr, i) != (MPID_VCR_GET_LPID(comm->vcr, i-1) + 1)) {
-            /* not sequential, use tasklist */
-	    MPID_VCR_GET_LPIDS(comm, comm->mpid.tasks);
-            break;
-         }
+        /* only if sequential tasks should we use a (single) range.
+           Multi or reordered ranges are inefficient */
+        if(MPID_VCR_GET_LPID(comm->vcr, i) != (MPID_VCR_GET_LPID(comm->vcr, i-1) + 1)) {
+        /* not sequential, use tasklist */
+          MPID_VCR_GET_LPIDS(comm, comm->mpid.tasks);
+          break;
+        }
       }
       /* Should we use a range? (no task list set) */
       if(comm->mpid.tasks == NULL)
@@ -421,7 +421,7 @@ void MPIDI_Coll_comm_destroy(MPID_Comm *comm)
 
    TRACE_ERR("Waiting for geom destroy to finish\n");
    MPID_PROGRESS_WAIT_WHILE(geom_destroy);
-   MPIU_Free(comm->mpid.tasks);
+   MPID_VCR_FREE_LPIDS(comm->mpid.tasks);
 /*   TRACE_ERR("Freeing geometry ranges\n");
    MPIU_TestFree(&comm->mpid.tasks_descriptor.ranges);
 */
