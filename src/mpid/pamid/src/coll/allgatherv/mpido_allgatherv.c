@@ -103,6 +103,7 @@ int MPIDO_Allgatherv_allreduce(const void *sendbuf,
     for(i = 0; i < (send_size/sizeof(int)); ++i) 
       tmpsbuf[i] = (double)sibuf[i];
     
+    /* Switch to comm->coll_fns->fn() */
     rc = MPIDO_Allreduce(MPI_IN_PLACE,
 			 tmprbuf,
 			 buffer_sum/sizeof(int),
@@ -135,7 +136,7 @@ int MPIDO_Allgatherv_allreduce(const void *sendbuf,
   memset(startbuf + start, 0, length);
 
   TRACE_ERR("Calling MPIDO_Allreduce from MPIDO_Allgatherv_allreduce\n");
-  /* TODO: Change to PAMI allreduce */
+  /* Switch to comm->coll_fns->fn() */
   rc = MPIDO_Allreduce(MPI_IN_PLACE,
 		       startbuf,
 		       buffer_sum/sizeof(unsigned),
@@ -194,7 +195,7 @@ int MPIDO_Allgatherv_bcast(const void *sendbuf,
   for (i = 0; i < comm_ptr->local_size; i++)
   {
     void *destbuffer = recvbuf + displs[i] * extent;
-    /* TODO: Change to PAMI */
+    /* Switch to comm->coll_fns->fn() */
     rc = MPIDO_Bcast(destbuffer,
                      recvcounts[i],
                      recvtype,
@@ -265,7 +266,7 @@ int MPIDO_Allgatherv_alltoall(const void *sendbuf,
   }
 
    TRACE_ERR("Calling alltoallv in MPIDO_Allgatherv_alltoallv\n");
-   /* TODO: Change to PAMI alltoallv */
+   /* Switch to comm->coll_fns->fn() */
   rc = MPIDO_Alltoallv(a2a_sendbuf,
 		       a2a_sendcounts,
 		       a2a_senddispls,
@@ -483,25 +484,28 @@ MPIDO_Allgatherv(const void *sendbuf,
            /* process metadata bits */
            if((!my_md->check_correct.values.inplace) && (sendbuf == MPI_IN_PLACE))
               result.check.unspecified = 1;
-         MPI_Aint data_true_lb;
-         MPID_Datatype *data_ptr;
-         int data_size, data_contig;
-         MPIDI_Datatype_get_info(sendcount, sendtype, data_contig, data_size, data_ptr, data_true_lb); 
-         if((my_md->range_lo <= data_size) &&
-            (my_md->range_hi >= data_size))
-            ; /* ok, algorithm selected */
-         else
-         {
-            result.check.range = 1;
-            if(unlikely(verbose))
-            {   
-               fprintf(stderr,"message size (%u) outside range (%zu<->%zu) for %s.\n",
-                       data_size,
-                       my_md->range_lo,
-                       my_md->range_hi,
-                       my_md->name);
-            }
-         }
+           if(my_md->check_correct.values.rangeminmax)
+           {
+             MPI_Aint data_true_lb;
+             MPID_Datatype *data_ptr;
+             int data_size, data_contig;
+             MPIDI_Datatype_get_info(sendcount, sendtype, data_contig, data_size, data_ptr, data_true_lb); 
+             if((my_md->range_lo <= data_size) &&
+                (my_md->range_hi >= data_size))
+                ; /* ok, algorithm selected */
+             else
+             {
+                result.check.range = 1;
+                if(unlikely(verbose))
+                {   
+                   fprintf(stderr,"message size (%u) outside range (%zu<->%zu) for %s.\n",
+                           data_size,
+                           my_md->range_lo,
+                           my_md->range_hi,
+                           my_md->name);
+                }
+             }
+           }
          }
          else /* calling the check fn is sufficient */
            result = my_md->check_fn(&allgatherv);

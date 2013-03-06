@@ -295,7 +295,8 @@ int MPIDO_Gather(const void *sendbuf,
               (my_md->range_lo <= recv_bytes) &&
               (my_md->range_hi >= recv_bytes)
               ) &&
-             ((my_md->range_lo <= send_bytes) &&
+             ((rank != root) &&
+              (my_md->range_lo <= send_bytes) &&
               (my_md->range_hi >= send_bytes)
               )
              )
