@@ -588,6 +588,16 @@ AC_ARG_ENABLE([wrapper-rpath],
               [],[enable_wrapper_rpath=yes])
 AC_SUBST([enable_wrapper_rpath])
 
+AC_ARG_ENABLE([long-double],
+              [AC_HELP_STRING([--disable-long-double],
+                              [Pass --disable-long-double to prevent the MPI
+                               library from supporting the C "long double" type,
+                               even if the C compiler supports it.  "long
+                               double" support is enabled by default, provided
+                               the compiler supports it.])],
+              [],
+              [enable_long_double=yes])
+
 AC_ARG_WITH(cross,
 	AC_HELP_STRING([--with-cross=file],
 		[Specify the values of variables that configure cannot
@@ -2696,7 +2706,7 @@ fi
 # types as well.  In addition, allow the device to suppress support for these
 # optional C types by setting MPID_NO_LONG_DOUBLE and/or MPID_NO_LONG_LONG
 # to yes.
-if test "$MPID_NO_LONG_DOUBLE" != "yes" ; then
+if test "$MPID_NO_LONG_DOUBLE" != "yes" && test "X$enable_long_double" != "Xno" ; then
     AC_CACHE_CHECK([whether long double is supported],
     pac_cv_have_long_double,[
     AC_TRY_COMPILE(,[long double a;],
@@ -2939,14 +2949,21 @@ AC_CHECK_SIZEOF([double _Complex],0,[
 #include <complex.h>
 #endif
 ])
-AC_CHECK_SIZEOF([long double _Complex],0,[
+AS_IF(["X$pac_cv_have_long_double" = "Xyes"],[
+  AC_CHECK_SIZEOF([long double _Complex],0,[
 #ifdef HAVE_COMPLEX_H
 #include <complex.h>
 #endif
+  ])
 ])
+
 # we need really could just use the result of AC_CHECK_SIZEOF, but having a
 # HAVE_typename macro is useful for consistency
-AC_CHECK_TYPES([_Bool, float _Complex, double _Complex, long double _Complex])
+AC_CHECK_TYPES([_Bool, float _Complex, double _Complex])
+
+AS_IF(["X$pac_cv_have_long_double" = "Xyes"],[
+  AC_CHECK_TYPES([long double _Complex])
+])
 
 # Generate a hex version of the size of each type
 for type in short int long long_long float double long_double wchar_t \
@@ -4161,14 +4178,17 @@ fi
 # C++ types
 
 # default to null types
-MPIR_CXX_BOOL=MPI_DATATYPE_NULL
-MPIR_CXX_COMPLEX=MPI_DATATYPE_NULL
-MPIR_CXX_DOUBLE_COMPLEX=MPI_DATATYPE_NULL
-MPIR_CXX_LONG_DOUBLE_COMPLEX=MPI_DATATYPE_NULL
-MPI_F77_CXX_BOOL=MPI_DATATYPE_NULL
-MPI_F77_CXX_FLOAT_COMPLEX=MPI_DATATYPE_NULL
-MPI_F77_CXX_DOUBLE_COMPLEX=MPI_DATATYPE_NULL
-MPI_F77_CXX_LONG_DOUBLE_COMPLEX=MPI_DATATYPE_NULL
+# Set to "0x0c000000" instead of "MPI_DATATYPE_NULL" because these values
+# sometimes are used in preprocessor tests where we cannot compare the
+# type-casted values.
+MPIR_CXX_BOOL=0x0c000000
+MPIR_CXX_COMPLEX=0x0c000000
+MPIR_CXX_DOUBLE_COMPLEX=0x0c000000
+MPIR_CXX_LONG_DOUBLE_COMPLEX=0x0c000000
+MPI_F77_CXX_BOOL=0x0c000000
+MPI_F77_CXX_FLOAT_COMPLEX=0x0c000000
+MPI_F77_CXX_DOUBLE_COMPLEX=0x0c000000
+MPI_F77_CXX_LONG_DOUBLE_COMPLEX=0x0c000000
 if test "$enable_cxx" = "yes" ; then
     AC_LANG_CPLUSPLUS
     AC_CHECK_SIZEOF(bool)
@@ -4251,13 +4271,17 @@ using namespace std;
            32)   MPIR_CXX_DOUBLE_COMPLEX=0x4c002035 ;;
            *) ;;
         esac
-        case "$ac_cv_sizeof_LongDoubleComplex" in 
-           8)    MPIR_CXX_LONG_DOUBLE_COMPLEX=0x4c000836 ;;
-           16)   MPIR_CXX_LONG_DOUBLE_COMPLEX=0x4c001036 ;;
-           24)   MPIR_CXX_LONG_DOUBLE_COMPLEX=0x4c001836 ;;
-           32)   MPIR_CXX_LONG_DOUBLE_COMPLEX=0x4c002036 ;;
-           *) ;;
-        esac
+        # only enable CXX "long double" if we have a C "long double", since we
+        # currently perform reductions on CXX "long double" types via C.
+        if test "X$pac_cv_have_long_double" = "Xyes" ; then
+            case "$ac_cv_sizeof_LongDoubleComplex" in
+               8)    MPIR_CXX_LONG_DOUBLE_COMPLEX=0x4c000836 ;;
+               16)   MPIR_CXX_LONG_DOUBLE_COMPLEX=0x4c001036 ;;
+               24)   MPIR_CXX_LONG_DOUBLE_COMPLEX=0x4c001836 ;;
+               32)   MPIR_CXX_LONG_DOUBLE_COMPLEX=0x4c002036 ;;
+               *) ;;
+            esac
+        fi
     fi
     AC_LANG_C
 
