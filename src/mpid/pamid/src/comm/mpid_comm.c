@@ -250,6 +250,8 @@ void MPIDI_Coll_comm_create(MPID_Comm *comm)
          return;
       }
    }
+   /* Initialize the async flow control in case it will be used. */
+   comm->mpid.num_requests = MPIDI_Process.optimized.num_requests;
 
    TRACE_ERR("Querying protocols\n");
    /* Determine what protocols are available for this comm/geom */

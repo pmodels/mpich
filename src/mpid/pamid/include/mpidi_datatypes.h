@@ -114,6 +114,7 @@ typedef struct
     unsigned select_colls;      /**< Enable collective selection */
     unsigned auto_select_colls; /**< Enable automatic collective selection */
     unsigned memory;            /**< Enable memory optimized subcomm's */
+    unsigned num_requests;      /**< Number of requests between flow control barriers */
   }
   optimized;
 
@@ -312,7 +313,7 @@ struct MPIDI_Comm
   char allgathervs[4];
   char scattervs[2];
   char optgather, optscatter, optreduce;
-
+  unsigned num_requests;
   /* These need to be freed at geom destroy, so we need to store them
    * inside the communicator struct until destroy time rather than
    * allocating pointers on the stack

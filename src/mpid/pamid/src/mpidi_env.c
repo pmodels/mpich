@@ -153,13 +153,15 @@
  ***************************************************************************
  *
  * - PAMID_NUMREQUESTS - Sets the number of outstanding asynchronous
- *   broadcasts to have before a barrier is called.  This is mostly
- *   used in allgather/allgatherv using asynchronous broadcasts.
- *   Higher numbers can help on larger partitions and larger
- *   message sizes. This is also used for asynchronous broadcasts.
- *   After every {PAMID_NUMREQUESTS} async bcasts, the "glue" will call
- *   a barrier. See PAMID_BCAST and PAMID_ALLGATHER(V) for more information
- *   - Default is 32.
+ *   collectives to have before a barrier is called.  This is used when
+ *   the PAMI collective metadata indicates 'asyncflowctl' may be needed 
+ *   to avoid 'flooding' other participants with unexpected data. 
+ *   Higher numbers can help on larger partitions and larger message sizes. 
+ * 
+ *   After every {PAMID_NUMREQUESTS} async collectives, the "glue" will call
+ *   a barrier. 
+ *   - Default is 1 (guaranteed functionality) 
+ *   - N>1may used to tune performance
  *
  ***************************************************************************
  *                            "Safety" Options                             *
@@ -503,6 +505,13 @@ MPIDI_Env_setup(int rank, int requested)
   {
     char* names[] = {"PAMID_STATISTICS", "PAMI_STATISTICS", NULL};
     ENV_Unsigned(names, &MPIDI_Process.statistics, 1, &found_deprecated_env_var, rank);
+  }
+
+  /* Set async flow control - number of collectives between barriers */
+  {
+    char* names[] = {"PAMID_NUMREQUESTS", NULL};
+    ENV_Unsigned(names, &MPIDI_Process.optimized.num_requests, 1, &found_deprecated_env_var, rank);
+    TRACE_ERR("MPIDI_Process.optimized.num_requests=%u\n", MPIDI_Process.optimized.num_requests);
   }
 
   /* "Globally" set the optimization flag for low-level collectives in geometry creation.

@@ -229,12 +229,13 @@ int MPIDO_Bcast(void *buffer,
          MPIDI_Update_last_algorithm(comm_ptr,"BCAST_MPICH");
          return MPIR_Bcast_intra(buffer, count, datatype, root, comm_ptr, mpierrno);
       }
-      if(my_md->check_correct.values.asyncflowctl) 
-      { /* need better flow control than a barrier every time */
+      if(my_md->check_correct.values.asyncflowctl && !(--(comm_ptr->mpid.num_requests))) 
+      { 
+         comm_ptr->mpid.num_requests = MPIDI_Process.optimized.num_requests;
          int tmpmpierrno;   
          if(unlikely(verbose))
             fprintf(stderr,"Query barrier required for %s\n", my_md->name);
-         MPIR_Barrier(comm_ptr, &tmpmpierrno);
+         MPIDO_Barrier(comm_ptr, &tmpmpierrno);
       }
    }
 
