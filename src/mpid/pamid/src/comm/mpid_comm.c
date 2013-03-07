@@ -353,7 +353,8 @@ void MPIDI_Coll_comm_create(MPID_Comm *comm)
       MPIDI_Comm_coll_select(comm);
    TRACE_ERR("mpir barrier\n");
    int mpierrno;
-   MPIR_Barrier(comm, &mpierrno);
+   /* Switch to comm->coll_fns->fn() */
+   MPIDO_Barrier(comm, &mpierrno);
 
 
   TRACE_ERR("MPIDI_Coll_comm_create exit\n");

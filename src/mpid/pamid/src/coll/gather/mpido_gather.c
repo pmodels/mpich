@@ -102,8 +102,8 @@ int MPIDO_Gather_reduce(void * sendbuf,
     memset(tempbuf, 0, sbytes * size * sizeof(char));
     memcpy(tempbuf+(rank*sbytes), sendbuf, sbytes);
   }
-  /* #warning TODO need an optimal reduce */
-  rc = MPIR_Reduce(MPI_IN_PLACE,
+  /* Switch to comm->coll_fns->fn() */
+  rc = MPIDO_Reduce(MPI_IN_PLACE,
                     tempbuf,
                     (sbytes * size)/4,
                     MPI_INT,

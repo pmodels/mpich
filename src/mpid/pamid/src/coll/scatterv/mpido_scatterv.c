@@ -175,7 +175,8 @@ int MPIDO_Scatterv_alltoallv(void * sendbuf,
 
   rcounts[root] = rbytes;
 
-  rc = MPIR_Alltoallv(sbuf,
+  /* Switch to comm->coll_fns->fn() */
+  rc = MPIDO_Alltoallv(sbuf,
                   scounts,
                   sdispls,
                   sendtype,
