@@ -35,21 +35,49 @@ MPIDI_WinCtrlSend(pami_context_t       context,
   rc = PAMI_Endpoint_create(MPIDI_Client, peer, 0, &dest);
   MPID_assert(rc == PAMI_SUCCESS);
 
-  pami_send_immediate_t params = {
-    .dispatch = MPIDI_Protocols_WinCtrl,
-    .dest     = dest,
-    .header   = {
-      .iov_base = control,
-      .iov_len  = sizeof(MPIDI_Win_control_t),
-    },
-    .data     = {
-      .iov_base = NULL,
-      .iov_len  = 0,
-    },
-  };
-
-  rc = PAMI_Send_immediate(context, &params);
+  if(control->type == MPIDI_WIN_MSGTYPE_UNLOCK) {
+    pami_send_t params = {
+      .send   = {
+        .dispatch = MPIDI_Protocols_WinCtrl,
+        .dest     = dest,
+        .header   = {
+          .iov_base = control,
+          .iov_len  = sizeof(MPIDI_Win_control_t),
+        },
+      },
+      .events = {
+        .cookie   = win,
+        .local_fn = NULL,
+        .remote_fn= MPIDI_WinUnlockDoneCB,
+      },
+    };
+    rc = PAMI_Send(context, &params);
+  } else {
+    pami_send_immediate_t params = {
+      .dispatch = MPIDI_Protocols_WinCtrl,
+      .dest     = dest,
+      .header   = {
+        .iov_base = control,
+        .iov_len  = sizeof(MPIDI_Win_control_t),
+      },
+      .data     = {
+        .iov_base = NULL,
+        .iov_len  = 0,
+      },
+    };
+    rc = PAMI_Send_immediate(context, &params);
+  }
   MPID_assert(rc == PAMI_SUCCESS);
+
+}
+
+void
+MPIDI_WinUnlockDoneCB(pami_context_t   context,
+                      void           * cookie,
+                      pami_result_t    result)
+{
+  MPID_Win *win = (MPID_Win *)cookie;
+  win->mpid.sync.lock.remote.locked = 0;
 }
 
 
