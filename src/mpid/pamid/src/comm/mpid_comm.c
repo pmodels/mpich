@@ -237,7 +237,7 @@ void MPIDI_Coll_comm_create(MPID_Comm *comm)
 
    if(comm->mpid.geometry != MPIDI_Process.world_geometry)
    {
-      if(MPIDI_Process.verbose >= MPIDI_VERBOSE_DETAILS_ALL)
+      if(unlikely(MPIDI_Process.verbose >= MPIDI_VERBOSE_DETAILS_0 && comm->rank == 0))
          fprintf(stderr,"world geom: %p parent geom: %p\n", MPIDI_Process.world_geometry, comm->mpid.parent);
       TRACE_ERR("Creating subgeom\n");
       /* Change to this at some point */
