@@ -278,10 +278,18 @@ void MPIDI_Comm_coll_select(MPID_Comm *comm_ptr)
   if(comm_ptr->mpid.user_selected_type[PAMI_XFER_ALLTOALL] == MPID_COLL_NOSELECTION)
   {
     TRACE_ERR("No alltoall env var, so setting optimized alltoall\n");
-    /* the best alltoall is always I0:M2MComposite:MU:MU, though there are
-     * displacement array memory issues today.... */
+    /* The best alltoall is always I0:M2MComposite:MU:MU */
     /* Loop over the protocols until we find the one we want */
     if(use_threaded_collectives)
+      for(i = 0; i < comm_ptr->mpid.coll_count[PAMI_XFER_ALLTOALL][0]; i++)
+      {
+        if(strcasecmp(comm_ptr->mpid.coll_metadata[PAMI_XFER_ALLTOALL][0][i].name, "I0:M2MComposite:MU:MU") == 0)
+        {
+          opt_proto = i;
+          break;
+        }
+      }
+    if(use_threaded_collectives && (opt_proto == -1)) /* check other list */
       for(i = 0; i < comm_ptr->mpid.coll_count[PAMI_XFER_ALLTOALL][1]; i++)
       {
         if(strcasecmp(comm_ptr->mpid.coll_metadata[PAMI_XFER_ALLTOALL][1][i].name, "I0:M2MComposite:MU:MU") == 0)
@@ -290,7 +298,7 @@ void MPIDI_Comm_coll_select(MPID_Comm *comm_ptr)
           mustquery = 1;
           break;
         }
-      }
+      }    
     if(opt_proto != -1)
     {
       TRACE_ERR("Memcpy protocol type %d, number %d (%s) to optimized protocol\n",
@@ -320,10 +328,18 @@ void MPIDI_Comm_coll_select(MPID_Comm *comm_ptr)
   if(comm_ptr->mpid.user_selected_type[PAMI_XFER_ALLTOALLV_INT] == MPID_COLL_NOSELECTION)
   {
     TRACE_ERR("No alltoallv env var, so setting optimized alltoallv\n");
-    /* the best alltoallv is always I0:M2MComposite:MU:MU, though there are
-     * displacement array memory issues today.... */
+    /* The best alltoall is always I0:M2MComposite:MU:MU */
     /* Loop over the protocols until we find the one we want */
     if(use_threaded_collectives)
+      for(i = 0; i < comm_ptr->mpid.coll_count[PAMI_XFER_ALLTOALLV_INT][0]; i++)
+      {
+        if(strcasecmp(comm_ptr->mpid.coll_metadata[PAMI_XFER_ALLTOALLV_INT][0][i].name, "I0:M2MComposite:MU:MU") == 0)
+        {
+          opt_proto = i;
+          break;
+        }
+      }
+    if(use_threaded_collectives && (opt_proto == -1)) /* check other list */
       for(i = 0; i <comm_ptr->mpid.coll_count[PAMI_XFER_ALLTOALLV_INT][1]; i++)
       {
         if(strcasecmp(comm_ptr->mpid.coll_metadata[PAMI_XFER_ALLTOALLV_INT][1][i].name, "I0:M2MComposite:MU:MU") == 0)
