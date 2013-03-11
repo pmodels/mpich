@@ -26,11 +26,14 @@
 
 #include <pami.h>
 #include <mpidi_platform.h>
-
 #if defined(__cplusplus)
 extern "C" {
 #endif
 
+typedef pami_result_t (*node_info_fn)(pami_task_t  task,
+                                      uint32_t    *node_id,
+                                      uint32_t    *offset,
+                                      uint32_t    *max_nodes);
 typedef struct
 {
   pami_extension_t progress;
@@ -42,6 +45,7 @@ typedef struct
     uint8_t          * base;
     uintptr_t          stride;
     uintptr_t          bitmask;
+    node_info_fn       node_info;
   } is_local_task;
 
 #if defined(__BGQ__)

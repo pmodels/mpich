@@ -79,6 +79,7 @@
 #define PAMIX_IS_LOCAL_TASK
 #define PAMIX_IS_LOCAL_TASK_STRIDE  (4)
 #define PAMIX_IS_LOCAL_TASK_SHIFT   (6)
+#define MPIDI_SMP_DETECT_DEFAULT 0
 #define TOKEN_FLOW_CONTROL    0
 
 /*
@@ -128,11 +129,15 @@ static const char _ibm_release_version_[] = "V1R2M0";
 #define TOKEN_FLOW_CONTROL    1
 #define DYNAMIC_TASKING       1
 
+/* Allow MPICH to detect local tasks */
+#define MPID_USE_NODE_IDS 1
+typedef int32_t MPID_Node_id_t;
+
 /* 'is local task' extension and limits */
 #define PAMIX_IS_LOCAL_TASK
 #define PAMIX_IS_LOCAL_TASK_STRIDE  (1)
 #define PAMIX_IS_LOCAL_TASK_SHIFT   (0)
-
+#define MPIDI_SMP_DETECT_DEFAULT 1
 /*
  * Enable only the 'local vs remote' point-to-point eager limits.
  */

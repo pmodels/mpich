@@ -104,7 +104,7 @@ typedef struct
   unsigned statistics;     /**< The current level of stats collection.               */
   unsigned rma_pending;    /**< The max num outstanding requests during an RMA op    */
   unsigned shmem_pt2pt;    /**< Enable optimized shared memory point-to-point functions. */
-
+  unsigned smp_detect;
   pami_geometry_t world_geometry;
 
   struct

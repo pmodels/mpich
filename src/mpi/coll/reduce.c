@@ -684,6 +684,7 @@ int MPIR_Reduce_intra (
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
     int comm_size, is_commutative, type_size, pof2;
+    int nbytes = 0;
     MPID_Op *op_ptr;
     MPIU_CHKLMEM_DECL(1);
 
@@ -700,7 +701,10 @@ int MPIR_Reduce_intra (
         is_commutative = (op_ptr->kind == MPID_OP_USER_NONCOMMUTE) ? 0 : 1;
     }
 
-    if (MPIR_Comm_is_node_aware(comm_ptr) && is_commutative) {
+    MPID_Datatype_get_size_macro(datatype, type_size);
+    nbytes = MPIR_PARAM_MAX_SMP_REDUCE_MSG_SIZE ? type_size*count : 0;
+    if (MPIR_Comm_is_node_aware(comm_ptr) && is_commutative &&
+        nbytes <= MPIR_PARAM_MAX_SMP_REDUCE_MSG_SIZE) {
 
         void *tmp_buf = NULL;
         MPI_Aint  true_lb, true_extent, extent;

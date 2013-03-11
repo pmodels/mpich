@@ -1119,6 +1119,14 @@ MPIDI_Env_setup(int rank, int requested)
       ENV_Char(names, &MPIDI_Process.mp_s_use_pami_get);
     }
 #endif
+    /* MP_S_SMP_DETECT                                                         */
+    {
+      char* names[] = {"MP_S_SMP_DETECT", "PAMID_SMP_DIRECT", NULL};
+      ENV_Char(names, &MPIDI_Process.smp_detect);
+      if(!MPIDI_Process.smp_detect)
+        PAMIX_Extensions.is_local_task.node_info=NULL;
+    }
+
   }
     {
 #if TOKEN_FLOW_CONTROL

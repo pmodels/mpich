@@ -117,7 +117,7 @@ MPIDI_Process_t  MPIDI_Process = {
 
   .rma_pending           = 1000,
   .shmem_pt2pt           = 1,
-
+  .smp_detect            = MPIDI_SMP_DETECT_DEFAULT,
   .optimized = {
     .collectives         = MPIDI_OPTIMIZED_COLLECTIVE_DEFAULT,
     .subcomms            = 1,

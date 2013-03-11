@@ -101,18 +101,19 @@ PAMIX_Initialize(pami_client_t client)
 
 #ifdef PAMIX_IS_LOCAL_TASK
   {
-    PAMIX_Extensions.is_local_task.base    = NULL;
-    PAMIX_Extensions.is_local_task.stride  = 0;
-    PAMIX_Extensions.is_local_task.bitmask = 0;
-    PAMIX_Extensions.is_local_task.status  =
-      PAMI_Extension_open(client, "EXT_is_local_task",
-                          &PAMIX_Extensions.is_local_task.extension);
+    PAMIX_Extensions.is_local_task.base      = NULL;
+    PAMIX_Extensions.is_local_task.stride    = 0;
+    PAMIX_Extensions.is_local_task.bitmask   = 0;
+    PAMIX_Extensions.is_local_task.node_info = NULL;
+    PAMIX_Extensions.is_local_task.status    = PAMI_Extension_open(client, "EXT_is_local_task",
+                                                                   &PAMIX_Extensions.is_local_task.extension);
 
     if (PAMIX_Extensions.is_local_task.status == PAMI_SUCCESS)
       {
         PAMIX_Extensions.is_local_task.base    = PAMI_EXTENSION_FUNCTION(uint8_t *, "base",    PAMIX_Extensions.is_local_task.extension);
         PAMIX_Extensions.is_local_task.stride  = PAMI_EXTENSION_FUNCTION(uintptr_t, "stride",  PAMIX_Extensions.is_local_task.extension);
         PAMIX_Extensions.is_local_task.bitmask = PAMI_EXTENSION_FUNCTION(uintptr_t, "bitmask", PAMIX_Extensions.is_local_task.extension);
+        PAMIX_Extensions.is_local_task.node_info = PAMI_EXTENSION_FUNCTION(node_info_fn, "get_node_info", PAMIX_Extensions.is_local_task.extension);
       }
 
 #if defined(PAMIX_IS_LOCAL_TASK_STRIDE) && defined(PAMIX_IS_LOCAL_TASK_BITMASK)

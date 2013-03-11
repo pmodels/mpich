@@ -139,6 +139,7 @@ int MPIR_Allreduce_intra (
     int        comm_size, rank, type_size;
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
+    int nbytes = 0;
     int mask, dst, is_commutative, pof2, newrank, rem, newdst, i,
         send_idx, recv_idx, last_idx, send_cnt, recv_cnt, *cnts, *disps; 
     MPI_Aint true_extent, true_lb, extent;
@@ -156,7 +157,10 @@ int MPIR_Allreduce_intra (
 
     if (MPIR_PARAM_ENABLE_SMP_COLLECTIVES && MPIR_PARAM_ENABLE_SMP_ALLREDUCE) {
     /* is the op commutative? We do SMP optimizations only if it is. */
-    if (MPIR_Comm_is_node_aware(comm_ptr) && is_commutative) {
+    MPID_Datatype_get_size_macro(datatype, type_size);
+    nbytes = MPIR_PARAM_MAX_SMP_ALLREDUCE_MSG_SIZE ? type_size*count : 0;
+    if (MPIR_Comm_is_node_aware(comm_ptr) && is_commutative &&
+        nbytes <= MPIR_PARAM_MAX_SMP_ALLREDUCE_MSG_SIZE) {
         /* on each node, do a reduce to the local root */ 
         if (comm_ptr->node_comm != NULL) {
             /* take care of the MPI_IN_PLACE case. For reduce, 
