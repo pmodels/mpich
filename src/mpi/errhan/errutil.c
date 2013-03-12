@@ -406,13 +406,20 @@ static void handleFatalError( MPID_Comm *comm_ptr,
 {
     /* Define length of the the maximum error message line (or string with 
        newlines?).  This definition is used only within this routine.  */
-    /* FIXME: This should really be the same as MPI_MAX_ERROR_STRING, or in the
-       worst case, defined in terms of that */
+    /* Ensure that the error message string is sufficiently long to 
+       hold enough information about the error.  Use the size of the
+       MPI error messages unless it is too short (defined as shown here) */
+#if MPI_MAX_ERROR_STRING < 4096
 #define MAX_ERRMSG_STRING 4096
-    char error_msg[ MAX_ERRMSG_STRING ];
+#else
+#define MAX_ERRMSG_STRING MPI_MAX_ERROR_STRING
+#endif
+    char error_msg[MAX_ERRMSG_STRING];
     int len;
 
-    /* FIXME: Not internationalized */
+    /* FIXME: Not internationalized.  Since we are using MPIR_Err_get_string,
+       we are assuming that the code is still able to execute a full 
+       MPICH error code to message conversion. */
     MPIU_Snprintf(error_msg, MAX_ERRMSG_STRING, "Fatal error in %s: ", fcname);
     len = (int)strlen(error_msg);
     MPIR_Err_get_string(errcode, &error_msg[len], MAX_ERRMSG_STRING-len, NULL);
@@ -491,8 +498,8 @@ int MPIR_Err_combine_codes(int error1, int error2)
 	error2_class = MPI_ERR_OTHER;
     }
 
-    /* FIXME: This is the only difference between the two versions of
-       CombineCodes */
+    /* Note that this call may simply discard an error code if the error 
+       message level does not support multiple codes */
     CombineSpecificCodes( error1_code, error2_code, error2_class );
 
     if (MPIR_ERR_GET_CLASS(error1_code) == MPI_ERR_OTHER)
@@ -856,7 +863,7 @@ int MPIR_Err_create_code_valist( int lastcode, int fatal, const char fcname[],
 	reason = checkErrcodeIsValid(lastcode);
 	if (reason) {
 	    /* --BEGIN ERROR HANDLING-- */
-	    MPIU_Error_printf( "Internal Error: invalid error code %x (%s) in %s:%d\n", 
+	    MPIU_Error_printf( "INTERNAL ERROR: invalid error code %x (%s) in %s:%d\n", 
 			       lastcode, ErrcodeInvalidReasonStr( reason ), 
 			       fcname, line );
 	    lastcode = MPI_SUCCESS;
@@ -933,9 +940,7 @@ int MPIR_Err_create_code_valist( int lastcode, int fatal, const char fcname[],
 	{
 	    if (generic_msg[0] == '*' && generic_msg[1] == '*')
 		{
-		    /* FIXME : Internal error.  Generate some debugging 
-		       information; Fix for the general release */
-		    fprintf( stderr, "Could not find %s in list of messages\n", generic_msg );
+                    MPIU_Error_printf( "INTERNAL ERROR: Could not find %s in list of messages\n", generic_msg );
 		}
 	}
 #           endif /* DBG_OUTPUT */
