@@ -28,7 +28,7 @@ HYD_status HYDT_dbg_setup_procdesc(struct HYD_pg * pg)
 {
     struct HYD_proxy *proxy;
     struct HYD_exec *exec;
-    int i, j, np;
+    int i, j, k, np, round;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -36,10 +36,27 @@ HYD_status HYDT_dbg_setup_procdesc(struct HYD_pg * pg)
     HYDU_MALLOC(MPIR_proctable, struct MPIR_PROCDESC *,
                 pg->pg_process_count * sizeof(struct MPIR_PROCDESC), status);
 
-    for (proxy = pg->proxy_list, i = 0; proxy; proxy = proxy->next) {
+    round = 0;
+    /* We need to allocate the MPIR_proctable in COMM_WORLD rank
+     * order.  We do this in multiple rounds.  In each round, we
+     * allocate the proctable entries for the executables on the proxy
+     * that form a contiguous rank list.  Then we move to the next
+     * proxy.  When we run out of proxies, we go back to the first
+     * proxy and find the next set of contiguous ranks on that
+     * proxy. */
+    for (proxy = pg->proxy_list, i = 0;; proxy = proxy->next) {
         j = 0;
+        k = 0;
+        if (!proxy) {
+            proxy = pg->proxy_list;
+            round++;
+        }
         for (exec = proxy->exec_list; exec; exec = exec->next) {
             for (np = 0; np < exec->proc_count; np++) {
+                if (k + np >= ((round + 1) * proxy->node->core_count))
+                    break;
+                if (k + np < round * proxy->node->core_count)
+                    continue;
                 MPIR_proctable[i].host_name = HYDU_strdup(proxy->node->hostname);
                 MPIR_proctable[i].pid = proxy->pid[j++];
                 if (exec->exec[0])
@@ -48,7 +65,11 @@ HYD_status HYDT_dbg_setup_procdesc(struct HYD_pg * pg)
                     MPIR_proctable[i].executable_name = NULL;
                 i++;
             }
+            k += exec->proc_count;
         }
+
+        if (i >= pg->pg_process_count)
+            break;
     }
 
     MPIR_proctable_size = pg->pg_process_count;
