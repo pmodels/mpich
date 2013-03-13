@@ -352,8 +352,8 @@ AC_ARG_ENABLE(timing,
 
 AC_ARG_ENABLE(g,
 [  --enable-g=option - Control the level of debugging support in the
-                      MPICH implementation.  option is a list of comma
-                      separated names including
+                       MPICH implementation.  "option" is a list of comma
+                       separated names including.  Default is "most".
         none     - No debugging
         handle   - Trace handle operations
         handlealloc - Trace handle allocations
@@ -369,6 +369,9 @@ AC_ARG_ENABLE(g,
         memarena - Check for overwrite errors in memory allocation arena
         mutex    - Enable error checking on pthread mutexes
         mutexnesting - Check for non-nesting of mutexes
+        most     - Most of the above options, excluding some with severe
+                   performance impacts.  Recommended for typical development.
+        yes      - synonym for "most" (*not* "all")
         all      - All of the above choices
 ],,enable_g=none)
 
@@ -1372,7 +1375,7 @@ for option in $enable_g ; do
 	perform_handlealloc=yes
 	;;
 	handle)
-	AC_DEFINE(MPICH_DEBUG_HANDLES,1,[Define to enable handle checking])
+        perform_handle=yes
 	;;
 	instr)
 	perform_instr=yes
@@ -1396,7 +1399,19 @@ for option in $enable_g ; do
 	mutexnesting)
 	perform_mutexnesting=yes
 	;;
-	all|yes)
+        most|yes)
+        perform_memtracing=yes
+        perform_dbglog=yes
+        enable_append_g=yes
+        perform_meminit=yes
+        perform_instr=yes
+        perform_dbgmutex=yes
+        perform_mutexnesting=yes
+        perform_handlealloc=yes
+        perform_handle=yes
+        ;;
+	all)
+        perform_memarena=yes
 	perform_memtracing=yes
 	perform_dbglog=yes
 	enable_append_g=yes
@@ -1405,6 +1420,7 @@ for option in $enable_g ; do
 	perform_dbgmutex=yes
 	perform_mutexnesting=yes
 	perform_handlealloc=yes
+        perform_handle=yes
 	;;
 	*)
 	IFS=$save_IFS
@@ -1437,6 +1453,8 @@ fi
 if test "$perform_instr" = yes ; then
     AC_DEFINE(USE_MPIU_INSTR,1,[Define this to enable internal instrumentation] )
 fi
+AS_IF([test "X$perform_handle" = "Xyes"],
+      [AC_DEFINE(MPICH_DEBUG_HANDLES,1,[Define to enable handle checking])])
 
 if test -n "$perform_memtracing" ; then
     enable_g_mem=yes
