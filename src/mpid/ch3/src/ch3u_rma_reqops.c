@@ -30,10 +30,16 @@ static int MPIDI_CH3I_Rma_req_poll(void *state, MPI_Status *status)
 
     MPIU_UNREFERENCED_ARG(status);
 
-    /* Call flush to complete the operation */
+    /* Call flush to complete the operation.  Check that a passive target epoch
+     * is still active first; the user could complete the request after calling
+     * unlock. */
     /* FIXME: We need per-operation completion to make this more efficient. */
-    mpi_errno = req_state->win_ptr->RMAFns.Win_flush(req_state->target_rank,
-                                                     req_state->win_ptr);
+    if (req_state->win_ptr->targets[req_state->target_rank].remote_lock_state
+        != MPIDI_CH3_WIN_LOCK_NONE)
+    {
+        mpi_errno = req_state->win_ptr->RMAFns.Win_flush(req_state->target_rank,
+                                                         req_state->win_ptr);
+    }
 
     if (mpi_errno != MPI_SUCCESS) { MPIU_ERR_POP(mpi_errno); }
 
