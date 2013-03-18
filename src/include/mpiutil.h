@@ -145,16 +145,19 @@ int MPIR_Assert_fail_fmt(const char *cond, const char *file_name, int line_num, 
 #    define MPIU_Assert_fmt_msg(cond_,fmt_arg_parens_)
 #endif
 
+
+/* evaluates to TRUE if ((a_)*(b_)>(max_)), only detects overflow for positive
+ * a_ and _b. */
+#define MPIU_Prod_overflows_max(a_, b_, max_) \
+    ( (a_) > 0 && (b_) > 0 && ((a_) > ((max_) / (b_))) )
+
 /* asserts that ((a_)*(b_)<=(max_)) holds in a way that is robust against
- * undefined overflow behavior and is suitable for both signed and unsigned math
- * (only suitable for positive values) */
-#define MPIU_Assert_prod_overflow(a_, b_, max_)                                              \
-    do {                                                                                     \
-        if ((a_) >= 0 && (b_) >= 0) {                                                        \
-            MPIU_Assert_fmt_msg((a_) <= ((max_) / (b_)),                                     \
-                                ("overflow detected: %llx * %llx > %s", (a_), (b_), #max_)); \
-        }                                                                                    \
-    } while (0)
+ * undefined integer overflow behavior and is suitable for both signed and
+ * unsigned math (only suitable for positive values of (a_) and (b_)) */
+#define MPIU_Assert_prod_pos_overflow_safe(a_, b_, max_)                               \
+    MPIU_Assert_fmt_msg(!MPIU_Prod_overflows_max((a_),(b_),(max_)),                    \
+                        ("overflow detected: (%llx * %llx) > %s", (a_), (b_), #max_)); \
+
 
 /*
  * Ensure an MPI_Aint value fits into a signed int.
