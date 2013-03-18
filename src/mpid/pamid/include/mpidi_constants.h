@@ -117,4 +117,10 @@ enum
   MPID_AUTO_SELECT_COLLS_ALL             = 0xFFFFFFFF,
 };
 
+enum /* PAMID_COLLECTIVES_MEMORY_OPTIMIZED levels */
+ 
+{
+  MPID_OPT_LVL_IRREG     = 1,       /**< Do not optimize irregular communicators */
+  MPID_OPT_LVL_NONCONTIG = 2,       /**< Disable some non-contig collectives     */
+};
 #endif
