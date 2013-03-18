@@ -180,6 +180,59 @@ int MPIR_Assert_fail_fmt(const char *cond, const char *file_name, int line_num, 
                         ("overflow detected: (%llx * %llx) > %s", (a_), (b_), #max_)); \
 
 
+/* Helper macros that give us a crude version of C++'s
+ * "std::numeric_limits<TYPE>" functionality.  These rely on either C11
+ * "_Generic" functionality or some unfortunately complicated GCC builtins. */
+#if HAVE_C11__GENERIC
+#define expr_inttype_max(expr_)              \
+    _Generic(expr_,                          \
+             signed char:        SCHAR_MAX,  \
+             signed short:       SHRT_MAX,   \
+             signed int:         INT_MAX,    \
+             signed long:        LONG_MAX,   \
+             signed long long:   LLONG_MAX,  \
+             unsigned char:      UCHAR_MAX,  \
+             unsigned short:     USHRT_MAX,  \
+             unsigned int:       UINT_MAX,   \
+             unsigned long:      ULONG_MAX,  \
+             unsigned long long: ULLONG_MAX)
+#define expr_inttype_min(expr_)             \
+    _Generic(expr_,                         \
+             signed char:        SCHAR_MIN, \
+             signed short:       SHRT_MIN,  \
+             signed int:         INT_MIN,   \
+             signed long:        LONG_MIN,  \
+             signed long long:   LLONG_MIN, \
+             unsigned char:      0,         \
+             unsigned short:     0,         \
+             unsigned int:       0,         \
+             unsigned long:      0,         \
+             unsigned long long: 0)
+#endif
+
+/* Assigns (src_) to (dst_), checking that (src_) fits in (dst_) without
+ * truncation.
+ *
+ * When fiddling with this macro, please keep C's overly complicated integer
+ * promotion/truncation/conversion rules in mind.  A discussion of these issues
+ * can be found in Chapter 5 of "Secure Coding in C and C++" by Robert Seacord.
+ */
+#if defined(expr_inttype_max) && defined(expr_inttype_min)
+#  define MPIU_Assign_trunc(dst_,src_) \
+    do { \
+        MPIU_Assert((src_) <= expr_inttype_max(dst_)); \
+        MPIU_Assert((src_) >= expr_inttype_min(dst_)); \
+        dst_ = (src_); \
+    } while (0)
+#else
+#  define MPIU_Assign_trunc(dst_,src_) \
+    do { \
+        dst_ = (src_); \
+        /* will catch some of the cases if the expr_inttype macros aren't available */ \
+        MPIU_Assert((dst_) == (src_)); \
+    } while (0)
+#endif
+
 /*
  * Ensure an MPI_Aint value fits into a signed int.
  * Useful for detecting overflow when MPI_Aint is larger than an int.
