@@ -17,6 +17,9 @@ int MPID_Abort( struct MPID_Comm *comm, int mpi_errno, int exit_code, const char
 
 /* modern versions of clang support lots of C11 features */
 #if defined(__has_extension)
+#  if __has_extension(c_generic_selections)
+#    define HAVE_C11__GENERIC 1
+#  endif
 #  if __has_extension(c_static_assert)
 #    define HAVE_C11__STATIC_ASSERT 1
 #  endif
