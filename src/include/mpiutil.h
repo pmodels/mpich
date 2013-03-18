@@ -12,6 +12,24 @@ struct MPID_Comm;
 int MPID_Abort( struct MPID_Comm *comm, int mpi_errno, int exit_code, const char *error_msg );
 #endif
 
+/* -------------------------------------------------------------------------- */
+/* detect compiler characteristics from predefined preprocesor tokens */
+
+/* modern versions of clang support lots of C11 features */
+#if defined(__has_extension)
+#  if __has_extension(c_static_assert)
+#    define HAVE_C11__STATIC_ASSERT 1
+#  endif
+#endif
+
+/* GCC 4.6 added support for _Static_assert:
+ * http://gcc.gnu.org/gcc-4.6/changes.html */
+#if (__GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 6)) && !defined __cplusplus
+#  define HAVE_C11__STATIC_ASSERT 1
+#endif
+
+/* -------------------------------------------------------------------------- */
+
 /*
  * MPIU_Sterror()
  *
@@ -187,6 +205,29 @@ int MPIR_Assert_fail_fmt(const char *cond, const char *file_name, int line_num, 
 #define MPID_Ensure_Aint_fits_in_pointer(aint) \
   MPIU_Assert((aint) == (MPI_Aint)(MPIR_Upint) MPI_AINT_CAST_TO_VOID_PTR(aint));
 
+/* -------------------------------------------------------------------------- */
+/* static assertions
+ *
+ * C11 adds static assertions.  They can be faked in pre-C11 compilers through
+ * various tricks as long as you are willing to accept some ugly error messages
+ * when the assert trips.  See
+ * http://www.pixelbeat.org/programming/gcc/static_assert.html
+ * for some implementation options.
+ *
+ * For now, we just use some simple preprocessor tests to use real static
+ * assertions when the compiler supports them (modern clang and gcc do).
+ * Eventually add configure logic to detect this.
+ */
+/* the case we usually want to hit */
+#ifdef HAVE_C11__STATIC_ASSERT
+#  define MPIU_Static_assert(cond_,msg_) _Static_assert(cond_,msg_)
+#endif
+/* fallthrough to a run-time assertion */
+#ifndef MPIU_Static_assert
+#  define MPIU_Static_assert(cond_,msg_) MPIU_Assert_fmt_msg((cond_), ("%s", (msg_)))
+#endif
+
+/* -------------------------------------------------------------------------- */
 /*
  * Basic utility macros
  */
