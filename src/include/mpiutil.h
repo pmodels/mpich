@@ -231,6 +231,20 @@ int MPIR_Assert_fail_fmt(const char *cond, const char *file_name, int line_num, 
 #endif
 
 /* -------------------------------------------------------------------------- */
+/* static type checking macros */
+
+/* implement using C11's "_Generic" functionality (optimal case) */
+#ifdef HAVE_C11__GENERIC
+#  define MPIU_Assert_has_type(expr_,type_) \
+    MPIU_Static_assert(_Generic((expr_), type_: 1, default: 0), \
+                       "expression '" #expr_ "' does not have type '" #type_ "'")
+#endif
+/* fallthrough to do nothing */
+#ifndef MPIU_Assert_has_type
+#  define MPIU_Assert_has_type(expr_,type_) do {} while (0)
+#endif
+
+/* -------------------------------------------------------------------------- */
 /*
  * Basic utility macros
  */
