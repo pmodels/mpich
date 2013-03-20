@@ -49,7 +49,19 @@ int main( int argc, char *argv[] )
 	    printf( "Error returned from Irecv\n" );
 	}
 
-	/* synchronize */
+        /* Wait for Irecvs to be posted before the sender calls send.  This
+         * prevents the operation from completing and returning an error in the
+         * Irecv. */
+        errval = MPI_Recv(NULL, 0, MPI_INT, src, 100, comm, MPI_STATUS_IGNORE);
+        if (errval) {
+            errs++;
+            MTestPrintError( errval );
+            printf( "Error returned from Recv\n" );
+        }
+
+        /* Wait for sends to complete at the sender before proceeding */
+        /* WARNING: This does not guarantee that the sends are ready to
+         * complete at the receiver. */
 	errval = MPI_Recv(NULL, 0, MPI_INT, src, 10, comm, MPI_STATUS_IGNORE);
 	if (errval) {
 	    errs++;
@@ -59,6 +71,9 @@ int main( int argc, char *argv[] )
 	for (i=0; i<2; i++) {
 	    s[i].MPI_ERROR = -1;
 	}
+
+        /* WARNING: The following assumes that Waitsome will complete both
+         * send/irecv pairs.  This is *not* guaranteed by the MPI standard. */
 	errval = MPI_Waitsome( 2, r, &outcount, indices, s );
 	MPI_Error_class( errval, &errclass );
 	if (errclass != MPI_ERR_IN_STATUS) {
@@ -88,12 +103,15 @@ int main( int argc, char *argv[] )
 
     }
     else if (rank == src) {
+        /* Wait for Irecvs to be posted before the sender calls send */
+        MPI_Ssend( NULL, 0, MPI_INT, dest, 100, comm );
+
 	/* Send test messages, then send another message so that the test does
 	   not start until we are sure that the sends have begun */
 	MPI_Send( b1, 10, MPI_INT, dest, 0, comm );
 	MPI_Send( b2, 11, MPI_INT, dest, 10, comm );
 
-	/* synchronize */
+        /* Wait for sends to complete before proceeding to the testsome. */
 	MPI_Ssend( NULL, 0, MPI_INT, dest, 10, comm );
     }
 

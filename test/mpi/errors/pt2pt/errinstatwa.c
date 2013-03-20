@@ -48,7 +48,16 @@ int main( int argc, char *argv[] )
 	    printf( "Error returned from Irecv\n" );
 	}
 
-	errval = MPI_Barrier(comm);
+        /* Wait for Irecvs to be posted before the sender calls send.  This
+         * prevents the operation from completing and returning an error in the
+         * Irecv. */
+        errval = MPI_Recv(NULL, 0, MPI_INT, src, 100, comm, MPI_STATUS_IGNORE);
+        if (errval) {
+            errs++;
+            MTestPrintError( errval );
+            printf( "Error returned from Recv\n" );
+        }
+
 	if (errval) {
 	    errs++;
 	    MTestPrintError( errval );
@@ -89,14 +98,11 @@ int main( int argc, char *argv[] )
 
     }
     else if (rank == src) {
-	/* Send messages, then barrier so that the wait does not start 
-	   until we are sure that the sends have begun */
+        /* Wait for Irecvs to be posted before the sender calls send */
+        MPI_Ssend( NULL, 0, MPI_INT, dest, 100, comm );
+
 	MPI_Send( b1, 10, MPI_INT, dest, 0, comm );
 	MPI_Send( b2, 11, MPI_INT, dest, 10, comm );
-	MPI_Barrier(comm);
-    }
-    else {
-	MPI_Barrier(comm);
     }
 
     MTest_Finalize( errs );
