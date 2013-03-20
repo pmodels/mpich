@@ -335,7 +335,7 @@ int MPIDO_Scatter_simple(const void *sendbuf,
   int use_pami = 1;
   MPID_Segment segment;
   const struct MPIDI_Comm* const mpid = &(comm_ptr->mpid);
-
+  const int size = comm_ptr->local_size;
 
   if (rank == root && sendtype != MPI_DATATYPE_NULL && sendcount >= 0)
   {
@@ -376,7 +376,6 @@ int MPIDO_Scatter_simple(const void *sendbuf,
       }
     }
   }
-
   sbuf = (char *)sendbuf + snd_true_lb;
   rbuf = (char *)recvbuf + rcv_true_lb;
   if (rank == root)
@@ -386,15 +385,15 @@ int MPIDO_Scatter_simple(const void *sendbuf,
       sbuf = (char *)sendbuf + snd_true_lb;
       if (!snd_contig)
       {
-        snd_noncontig_buff = MPIU_Malloc(send_size);
+        snd_noncontig_buff = MPIU_Malloc(send_size * size);
         sbuf = snd_noncontig_buff;
         if(snd_noncontig_buff == NULL)
         {
            MPID_Abort(NULL, MPI_ERR_NO_SPACE, 1,
               "Fatal:  Cannot allocate pack buffer");
         }
-        DLOOP_Offset last = send_size;
-        MPID_Segment_init(sendbuf, sendcount, sendtype, &segment, 0);
+        DLOOP_Offset last = send_size * size;
+        MPID_Segment_init(sendbuf, sendcount * size, sendtype, &segment, 0);
         MPID_Segment_pack(&segment, 0, &last, snd_noncontig_buff);
       }
     }
@@ -480,7 +479,7 @@ int MPIDO_Scatter_simple(const void *sendbuf,
    TRACE_ERR("Waiting on active %d\n", scatter_active);
    MPID_PROGRESS_WAIT_WHILE(scatter_active);
 
-   if(!rcv_contig)
+   if(!rcv_contig && rcv_noncontig_buff)
    {
       MPIR_Localcopy(rcv_noncontig_buff, recv_size, MPI_CHAR,
                         recvbuf,         recvcount,     recvtype);

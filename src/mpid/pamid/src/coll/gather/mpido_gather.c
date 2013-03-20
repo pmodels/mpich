@@ -453,7 +453,7 @@ int MPIDO_Gather_simple(const void *sendbuf,
       rbuf = (char *)recvbuf + true_lb;
       if (!rcv_contig)
       {
-        rcv_noncontig_buff = MPIU_Malloc(recv_size);
+        rcv_noncontig_buff = MPIU_Malloc(recv_size * size);
         rbuf = rcv_noncontig_buff;
         if(rcv_noncontig_buff == NULL)
         {
@@ -506,8 +506,8 @@ int MPIDO_Gather_simple(const void *sendbuf,
 
    if(!rcv_contig)
    {
-      MPIR_Localcopy(rcv_noncontig_buff, recv_size, MPI_CHAR,
-                        recvbuf,         recvcount,     recvtype);
+      MPIR_Localcopy(rcv_noncontig_buff, recv_size*size, MPI_CHAR,
+                        recvbuf,         recvcount*size,     recvtype);
       MPIU_Free(rcv_noncontig_buff);
    }
    if(!snd_contig)  MPIU_Free(snd_noncontig_buff);

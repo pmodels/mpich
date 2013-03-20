@@ -267,7 +267,7 @@ int MPIDO_Gatherv_simple(const void *sendbuf,
      if(MPIDI_Pamix_collsel_advise != NULL)
      {
        advisor_algorithm_t advisor_algorithms[1];
-       int num_algorithms = MPIDI_Pamix_collsel_advise(mpid->collsel_fast_query, PAMI_XFER_GATHERV_INT, send_size, advisor_algorithms, 1);
+       int num_algorithms = MPIDI_Pamix_collsel_advise(mpid->collsel_fast_query, PAMI_XFER_GATHERV_INT, 64, advisor_algorithms, 1);
        if(num_algorithms)
        {
          if(advisor_algorithms[0].algorithm_type == COLLSEL_EXTERNAL_ALGO)
@@ -301,7 +301,7 @@ int MPIDO_Gatherv_simple(const void *sendbuf,
      if(MPIDI_Pamix_collsel_advise != NULL)
      {
        advisor_algorithm_t advisor_algorithms[1];
-       int num_algorithms = MPIDI_Pamix_collsel_advise(mpid->collsel_fast_query, PAMI_XFER_GATHERV_INT, rcvlen * recvcounts[0], advisor_algorithms, 1);
+       int num_algorithms = MPIDI_Pamix_collsel_advise(mpid->collsel_fast_query, PAMI_XFER_GATHERV_INT, 64, advisor_algorithms, 1);
        if(num_algorithms)
        {
          if(advisor_algorithms[0].algorithm_type == COLLSEL_EXTERNAL_ALGO)

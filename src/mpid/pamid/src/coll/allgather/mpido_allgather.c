@@ -596,6 +596,7 @@ MPIDO_Allgather_simple(const void *sendbuf,
    MPID_Segment segment;
    volatile unsigned allgather_active = 1;
    const int rank = comm_ptr->rank;
+   const int size = comm_ptr->local_size;
 
    const pami_metadata_t *my_md;
 
@@ -634,7 +635,7 @@ MPIDO_Allgather_simple(const void *sendbuf,
 
    if(!rcv_data_contig)
    {
-      rcv_noncontig_buff = MPIU_Malloc(recv_size);
+      rcv_noncontig_buff = MPIU_Malloc(recv_size * size);
       rbuf = rcv_noncontig_buff;
       if(rcv_noncontig_buff == NULL)
       {
@@ -693,7 +694,7 @@ MPIDO_Allgather_simple(const void *sendbuf,
    MPID_PROGRESS_WAIT_WHILE(allgather_active);
    if(!rcv_data_contig)
    {
-      MPIR_Localcopy(rcv_noncontig_buff, recv_size, MPI_CHAR,
+      MPIR_Localcopy(rcv_noncontig_buff, recv_size * size, MPI_CHAR,
                         recvbuf,         recvcount,     recvtype);
       MPIU_Free(rcv_noncontig_buff);   
    }
