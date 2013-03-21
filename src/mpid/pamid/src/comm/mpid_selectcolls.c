@@ -370,15 +370,6 @@ void MPIDI_Comm_coll_envvars(MPID_Comm *comm)
    { /* In addition to glue protocols, check for other PAMI protocols and check for PE now */
       char* names[] = {"PAMID_COLLECTIVE_SCATTERV", NULL};
       MPIDI_Check_protocols(names, comm, "scatterv", PAMI_XFER_SCATTERV_INT);
-
-      /* Use MPICH on large communicators (Issue 7516 and ticket 595)*/
-      if((comm->mpid.user_selected_type[PAMI_XFER_SCATTERV_INT] == 
-	  MPID_COLL_NOSELECTION) /* no env var selected */
-	 && (comm->local_size > (16*1024))) /* and > 16k ranks */
-	{
-         comm->mpid.user_selected_type[PAMI_XFER_SCATTERV_INT] = MPID_COLL_USE_MPICH;
-         comm->mpid.user_selected[PAMI_XFER_SCATTERV_INT] = 0;
-	}
    }
    
    TRACE_ERR("Checking scatter\n");
