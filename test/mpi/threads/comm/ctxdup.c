@@ -7,17 +7,12 @@
 #include "mpi.h"
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
 #include "mpitest.h"
 #include "mpithreadtest.h"
 
 /*
 static char MTEST_Descrip[] = "Creating communications concurrently in different threads";
 */
-
-#ifdef HAVE_WINDOWS_H
-#define sleep(a) Sleep(a*1000)
-#endif
 
 MTEST_THREAD_RETURN_TYPE dup_thread(void *);
 
@@ -88,7 +83,7 @@ int main( int argc, char *argv[] )
     /* If we're odd, send to our new thread and then delay */
     if (rank & 0x1) {
 	MPI_Ssend( buffer, 0, MPI_INT, rank, 0, MPI_COMM_WORLD );
-	sleep(1);
+	MTestSleep(1);
     }
     MPI_Comm_dup( comm1, &comm4 );
 

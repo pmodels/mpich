@@ -5,7 +5,7 @@
  */
 #include "mpi.h"
 #include <stdio.h>
-#include <unistd.h>
+#include "mpitest.h"
 
 int main(int argc, char *argv[])
 {
@@ -16,7 +16,7 @@ int main(int argc, char *argv[])
 	MPI_Comm_rank(MPI_COMM_WORLD, &i);
 
 	dStart = MPI_Wtime();
-	sleep(1);
+    MTestSleep(1);
 	dFinish = MPI_Wtime();
 	dDuration = dFinish - dStart;
 

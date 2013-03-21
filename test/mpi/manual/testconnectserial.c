@@ -11,6 +11,7 @@
 #include <string.h>
 #include <time.h>
 #include <unistd.h>
+#include "mpitest.h"
 
 #include "connectstuff.h"
 
@@ -119,7 +120,7 @@ int main( int argc, char ** argv ) {
     if( expectedRank == 0 ) {
 
         /* Cleanup on rank zero - delete some files */
-        sleep( 4 );
+        MTestSleep( 4 );
         unlink( actualFname );
         free( actualFname );
         unlink( globalFname );

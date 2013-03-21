@@ -9,9 +9,6 @@
 #include "mpitest.h"
 
 #include <math.h> /* for fabs(3) */
-#ifdef HAVE_UNISTD_H
-#include <unistd.h> /* for sleep(3) */
-#endif
 
 /* Measure and compare the relative performance of MPI_Group_translate_ranks
  * with small and large group2 sizes but a constant number of ranks.  This
@@ -89,10 +86,10 @@ int main( int argc, char *argv[] )
     MPI_Barrier(comm);
 
     if (rank != 0) {
-        sleep(10);
+        MTestSleep(10);
     }
     else /* rank==0 */ {
-        sleep(1); /* try to avoid timing while everyone else is making syscalls */
+        MTestSleep(1); /* try to avoid timing while everyone else is making syscalls */
 
         MPI_Group_translate_ranks(grev, size, ranks, gworld, ranksout); /*throwaway iter*/
         start = MPI_Wtime();

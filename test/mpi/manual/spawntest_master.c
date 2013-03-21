@@ -11,7 +11,7 @@
 #include "mpi.h"
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
+#include "mpitest.h"
 
 #define NUM_SPAWNS 4
 
@@ -48,11 +48,11 @@ int main( int argc, char *argv[] ) {
   MPI_Comm_free( &allcomm );
   MPI_Comm_disconnect( &intercomm );
 
-  fprintf(stdout, "%s:%d: Sleep starting; children should exit\n",
+  fprintf(stdout, "%s:%d: MTestSleep starting; children should exit\n",
           __FILE__, __LINE__ );fflush(stdout);
-  sleep(30);
+  MTestSleep(30);
   fprintf(stdout, 
-          "%s:%d: Sleep done; all children should have already exited\n", 
+          "%s:%d: MTestSleep done; all children should have already exited\n",
           __FILE__, __LINE__ );fflush(stdout);
 
   MPI_Finalize();

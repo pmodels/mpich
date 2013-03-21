@@ -4,7 +4,6 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#include <unistd.h>
 #include <stdio.h>
 #include <mpi.h>
 #include "mpitest.h"
@@ -20,10 +19,6 @@
             MPI_Abort(MPI_COMM_WORLD, 1); \
         }               \
     } while (0)
-
-#ifdef HAVE_WINDOWS_H
-#define sleep(a) Sleep(a*1000)
-#endif
 
 MPI_Comm               comms[NUM_THREADS];
 MTEST_THREAD_LOCK_TYPE comm_lock;
@@ -41,7 +36,7 @@ MTEST_THREAD_RETURN_TYPE test_comm_dup(void *arg)
         MPI_Comm    comm, self_dup;
 
         if (*(int*)arg == rank) {
-            sleep(1);
+            MTestSleep(1);
         }
 
         MTest_thread_lock(&comm_lock);
@@ -66,7 +61,7 @@ MTEST_THREAD_RETURN_TYPE test_comm_dup(void *arg)
 int main(int argc, char **argv)
 {
     int         thread_args[NUM_THREADS];
-    int         i, err, provided;
+    int         i, provided;
 
     MPI_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &provided);
 
