@@ -71,7 +71,18 @@ if test "$pac_result" = "yes" \
      -a "$pac_c_check_compiler_option_prototest" != "no" ; then
     AC_MSG_CHECKING([whether C compiler option $1 works with an invalid prototype program])
     AC_LINK_IFELSE([
-        AC_LANG_SOURCE([void main(){ return 0; }])
+        dnl We want a warning, but we don't want to inadvertently disable
+        dnl special warnings like -Werror-implicit-function-declaration (e.g.,
+        dnl in PAC_CC_STRICT) by compiling something that might actually be
+        dnl treated as an error by the compiler.  So we try to elicit an
+        dnl "unused variable" warning and/or an "uninitialized" warning with the
+        dnl test program below.
+        dnl
+        dnl The old sanity program was:
+        dnl   void main() {return 0;}
+        dnl which clang (but not GCC) would treat as an *error*, invalidating
+        dnl the test for any given parameter.
+        AC_LANG_SOURCE([int main(int argc, char **argv){ int foo, bar = 0; foo += 1; return foo; }])
     ],[pac_result=yes],[pac_result=no])
     AC_MSG_RESULT([$pac_result])
 fi
