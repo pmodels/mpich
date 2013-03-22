@@ -481,6 +481,10 @@ if test "$enable_strict_done" != "yes" ; then
     #       compare it to 0 later to see if it was updated.  Also when using strtod()
     #       one needs to compare the return value with 0 to see whether a conversion
     #       was performed.
+    #   -Werror-implicit-function-declaration -- implicit function declarations
+    #       should never be tolerated.  This also ensures that we get quick
+    #       compilation failures rather than later link failures that usually
+    #       come from a function name typo.
     # the embedded newlines in this string are safe because we evaluate each
     # argument in the for-loop below and append them to the CFLAGS with a space
     # as the separator instead
@@ -514,6 +518,7 @@ if test "$enable_strict_done" != "yes" ; then
         -Wvariadic-macros
         -Wno-format-zero-length
 	-Wno-type-limits
+        -Werror-implicit-function-declaration
     "
 
     enable_c89=yes
