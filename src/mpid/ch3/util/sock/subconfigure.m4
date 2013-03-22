@@ -28,21 +28,6 @@ AC_DEFUN([PAC_SUBCFG_BODY_]PAC_SUBCFG_AUTO_SUFFIX,[
     dnl AC_CHECK_FUNCS(CFUUIDCreate uuid_generate time)
     dnl AC_SEARCH_LIBS(uuid_generate, uuid)
     
-    dnl FIXME this should be a common test, already performed at a higher level
-    AC_CACHE_CHECK([whether CPP accepts variable length argument lists],
-    pac_cv_have_cpp_varargs,[
-AC_TRY_COMPILE([
-#include <stdio.h>
-#define MY_PRINTF(rank, fmt, args...)  printf("%d: " fmt, rank, ## args)
-],[
-MY_PRINTF(0, "hello");
-MY_PRINTF(1, "world %d", 3);
-], pac_cv_have_cpp_varargs=yes, pac_cv_have_cpp_varargs=no)
-                   ])
-    if test $pac_cv_have_cpp_varargs = "yes" ; then
-        AC_DEFINE(HAVE_CPP_VARARGS,,[Define if CPP supports macros with a variable number arguments])
-    fi
-
     # If we need the socket code, see if we can use struct ifconf
     # sys/socket.h is needed on Solaris
     AC_CACHE_CHECK([whether we can use struct ifconf],
