@@ -183,7 +183,7 @@ static int register_hook_finalize(void *param)
         MPL_LL_DELETE(destroy_hooks, elt);
         MPIU_Free(elt);
     }
-    
+
  fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_REGISTER_HOOK_FINALIZE);
     return mpi_errno;

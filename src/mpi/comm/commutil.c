@@ -6,6 +6,10 @@
 
 #include "mpiimpl.h"
 #include "mpicomm.h"
+#include "mpiinfo.h"    /* MPIU_Info_free */
+
+#include "mpl_utlist.h"
+#include "mpiu_uthash.h"
 
 /* This is the utility file for comm that contains the basic comm items
    and storage management */
@@ -22,7 +26,14 @@ MPIU_Object_alloc_t MPID_Comm_mem = { 0, 0, 0, 0, MPID_COMM,
                                       MPID_COMM_PREALLOC};
 
 /* Communicator creation functions */
-struct MPID_CommOps  *MPID_Comm_fns = NULL;
+struct MPID_CommOps *MPID_Comm_fns = NULL;
+struct MPIR_Comm_hint_fn_elt {
+    char name[MPI_MAX_INFO_KEY];
+    MPIR_Comm_hint_fn_t fn;
+    void *state;
+    UT_hash_handle hh;
+};
+static struct MPIR_Comm_hint_fn_elt *MPID_hint_fns = NULL;
 
 /* utility function to pretty print a context ID for debugging purposes, see
  * mpiimpl.h for more info on the various fields */
@@ -92,6 +103,7 @@ int MPIR_Comm_init(MPID_Comm *comm_p)
     comm_p->coll_fns     = NULL;
     comm_p->topo_fns     = NULL;
     comm_p->name[0]      = '\0';
+    comm_p->info         = NULL;
 
     comm_p->hierarchy_kind  = MPID_HIERARCHY_FLAT;
     comm_p->node_comm       = NULL;
@@ -1555,6 +1567,13 @@ int MPIR_Comm_copy( MPID_Comm *comm_ptr, int size, MPID_Comm **outcomm_ptr )
 
     /* Start with no attributes on this communicator */
     newcomm_ptr->attributes = 0;
+
+    /* Copy over the info hints from the original communicator. */
+    mpi_errno = MPIR_Info_dup_impl(comm_ptr->info, &(newcomm_ptr->info));
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    mpi_errno = MPIR_Comm_apply_hints(newcomm_ptr, newcomm_ptr->info);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
     *outcomm_ptr = newcomm_ptr;
 
  fn_fail:
@@ -1684,7 +1703,12 @@ int MPIR_Comm_delete_internal(MPID_Comm * comm_ptr, int isDisconnect)
            destroyed */
         mpi_errno = MPID_Dev_comm_destroy_hook(comm_ptr);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-        
+
+        /* Free info hints */
+        if (comm_ptr->info != NULL) {
+            MPIU_Info_free(comm_ptr->info);
+        }
+
         /* release our reference to the collops structure, comes after the
          * destroy_hook to allow the device to manage these vtables in a custom
          * fashion */
@@ -1801,3 +1825,98 @@ int MPIR_Comm_release_always(MPID_Comm *comm_ptr, int isDisconnect)
     goto fn_exit;
 }
 
+/* Apply all known info hints in the specified info chain to the given
+ * communicator. */
+#undef FUNCNAME
+#define FUNCNAME MPIR_Comm_apply_hints
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+int MPIR_Comm_apply_hints(MPID_Comm *comm_ptr, MPID_Info *info_ptr)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPID_Info *hint = NULL;
+    char hint_name[MPI_MAX_INFO_KEY] = { 0 };
+    struct MPIR_Comm_hint_fn_elt *hint_fn = NULL;
+    MPID_MPI_STATE_DECL(MPID_STATE_MPIR_COMM_APPLY_HINTS);
+
+    MPID_MPI_FUNC_ENTER(MPID_STATE_MPIR_COMM_APPLY_HINTS);
+
+    MPL_LL_FOREACH(info_ptr, hint) {
+        /* Have we hit the default, empty info hint? */
+        if (hint->key == NULL) continue;
+
+        strncpy(hint_name, hint->key, MPI_MAX_INFO_KEY);
+
+        HASH_FIND_STR(MPID_hint_fns, hint_name, hint_fn);
+
+        /* Skip hints that MPICH doesn't recognize. */
+        if (hint_fn) {
+            mpi_errno = hint_fn->fn(comm_ptr, hint, hint_fn->state);
+            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        }
+    }
+
+ fn_exit:
+    MPID_MPI_FUNC_EXIT(MPID_STATE_MPIR_COMM_APPLY_HINTS);
+    return mpi_errno;
+ fn_fail:
+    goto fn_exit;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIR_Comm_free_hint_handles
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+static int MPIR_Comm_free_hint_handles(void *ignore)
+{
+    int mpi_errno = MPI_SUCCESS;
+    struct MPIR_Comm_hint_fn_elt *curr_hint = NULL, *tmp = NULL;
+    MPID_MPI_STATE_DECL(MPID_STATE_MPIR_COMM_FREE_HINT_HANDLES);
+
+    MPID_MPI_FUNC_ENTER(MPID_STATE_MPIR_COMM_FREE_HINT_HANDLES);
+
+    if (MPID_hint_fns) {
+        HASH_ITER(hh, MPID_hint_fns, curr_hint, tmp) {
+            HASH_DEL(MPID_hint_fns, curr_hint);
+            MPIU_Free(curr_hint);
+        }
+    }
+
+ fn_exit:
+    MPID_MPI_FUNC_EXIT(MPID_STATE_MPIR_COMM_FREE_HINT_HANDLES);
+    return mpi_errno;
+ fn_fail:
+    goto fn_exit;
+}
+
+/* The hint logic is stored in a uthash, with hint name as key and
+ * the function responsible for applying the hint as the value. */
+#undef FUNCNAME
+#define FUNCNAME MPIR_Comm_register_hint
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+int MPIR_Comm_register_hint(const char *hint_key, MPIR_Comm_hint_fn_t fn, void *state)
+{
+    int mpi_errno = MPI_SUCCESS;
+    struct MPIR_Comm_hint_fn_elt *hint_elt = NULL;
+    MPID_MPI_STATE_DECL(MPID_STATE_MPIR_COMM_REGISTER_HINT);
+
+    MPID_MPI_FUNC_ENTER(MPID_STATE_MPIR_COMM_REGISTER_HINT);
+
+    if (MPID_hint_fns == NULL) {
+        MPIR_Add_finalize(MPIR_Comm_free_hint_handles, NULL, MPIR_FINALIZE_CALLBACK_PRIO - 1);
+    }
+
+    hint_elt = MPIU_Malloc(sizeof(struct MPIR_Comm_hint_fn_elt));
+    strncpy(hint_elt->name, hint_key, MPI_MAX_INFO_KEY);
+    hint_elt->state = state;
+    hint_elt->fn = fn;
+
+    HASH_ADD_STR(MPID_hint_fns, name, hint_elt);
+
+ fn_exit:
+    MPID_MPI_FUNC_EXIT(MPID_STATE_MPIR_COMM_REGISTER_HINT);
+    return mpi_errno;
+ fn_fail:
+    goto fn_exit;
+}

@@ -24,11 +24,54 @@
 #ifndef MPICH_MPI_FROM_PMPI
 #undef MPI_Info_dup
 #define MPI_Info_dup PMPI_Info_dup
+
+#undef FUNCNAME
+#define FUNCNAME MPIR_Info_dup_impl
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+int MPIR_Info_dup_impl(MPID_Info *info_ptr, MPID_Info **new_info_ptr)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPID_Info *curr_old, *curr_new;
+
+    *new_info_ptr = NULL;
+    if (!info_ptr) goto fn_exit;
+
+    /* Note that this routine allocates info elements one at a time.
+       In the multithreaded case, each allocation may need to acquire
+       and release the allocation lock.  If that is ever a problem, we
+       may want to add an "allocate n elements" routine and execute this
+       it two steps: count and then allocate */
+    /* FIXME : multithreaded */
+    mpi_errno = MPIU_Info_alloc(&curr_new);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    *new_info_ptr = curr_new;
+
+    curr_old = info_ptr->next;
+    while (curr_old)
+    {
+        mpi_errno = MPIU_Info_alloc(&curr_new->next);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
+        curr_new         = curr_new->next;
+        curr_new->key    = MPIU_Strdup(curr_old->key);
+        curr_new->value  = MPIU_Strdup(curr_old->value);
+
+        curr_old         = curr_old->next;
+    }
+
+fn_exit:
+    return mpi_errno;
+fn_fail:
+    goto fn_exit;
+}
+
 #endif
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Info_dup
-
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 /*@
     MPI_Info_dup - Returns a duplicate of the info object
 
@@ -48,16 +91,15 @@ Output Parameters:
 @*/
 int MPI_Info_dup( MPI_Info info, MPI_Info *newinfo )
 {
-    MPID_Info *info_ptr=0, *curr_old, *curr_new;
-    static const char FCNAME[] = "MPI_Info_dup";
+    MPID_Info *info_ptr = 0, *new_info_ptr;
     int mpi_errno = MPI_SUCCESS;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_INFO_DUP);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
-    
+
     MPIU_THREAD_CS_ENTER(ALLFUNC,);
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_INFO_DUP);
-    
+
     /* Validate parameters, especially handles needing to be converted */
 #   ifdef HAVE_ERROR_CHECKING
     {
@@ -68,7 +110,7 @@ int MPI_Info_dup( MPI_Info info, MPI_Info *newinfo )
         MPID_END_ERROR_CHECKS;
     }
 #   endif /* HAVE_ERROR_CHECKING */
-    
+
     /* Convert MPI object handles to object pointers */
     MPID_Info_get_ptr( info, info_ptr );
 
@@ -86,30 +128,12 @@ int MPI_Info_dup( MPI_Info info, MPI_Info *newinfo )
 #   endif /* HAVE_ERROR_CHECKING */
 
     /* ... body of routine ...  */
-    
-    /* Note that this routine allocates info elements one at a time.
-       In the multithreaded case, each allocation may need to acquire
-       and release the allocation lock.  If that is ever a problem, we
-       may want to add an "allocate n elements" routine and execute this
-       it two steps: count and then allocate */
-    /* FIXME : multithreaded */
-    mpi_errno = MPIU_Info_alloc(&curr_new);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-    *newinfo = curr_new->handle;
 
-    curr_old = info_ptr->next;
-    while (curr_old)
-    {
-        mpi_errno = MPIU_Info_alloc(&curr_new->next);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    mpi_errno = MPIR_Info_dup_impl(info_ptr, &new_info_ptr);
+    if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 
-	curr_new	 = curr_new->next;
-	curr_new->key	 = MPIU_Strdup(curr_old->key);
-	curr_new->value	 = MPIU_Strdup(curr_old->value);
+    *newinfo = new_info_ptr->handle;
 
-	curr_old	 = curr_old->next;
-    }
-    
     /* ... end of body of routine ... */
 
   fn_exit:

@@ -1231,9 +1231,11 @@ typedef struct MPID_Comm {
                                               implementing the collective 
                                               routines */
     struct MPID_TopoOps  *topo_fns; /* Pointer to a table of functions
-				       implementting the topology routines
-				    */
+				       implementting the topology routines */
     int next_sched_tag;             /* used by the NBC schedule code to allocate tags */
+
+    MPID_Info *info;                /* Hints to the communicator */
+
 #ifdef MPID_HAS_HETERO
     int is_hetero;
 #endif
@@ -1288,6 +1290,8 @@ static inline int MPIR_Comm_release(MPID_Comm * comm_ptr, int isDisconnect)
 */
 int MPIR_Comm_release_always(MPID_Comm *comm_ptr, int isDisconnect);
 
+/* applies the specified info chain to the specified communicator */
+int MPIR_Comm_apply_hints(MPID_Comm *comm_ptr, MPID_Info *info_ptr);
 
 /* Preallocated comm objects.  There are 3: comm_world, comm_self, and 
    a private (non-user accessible) dup of comm world that is provided 
@@ -4276,6 +4280,10 @@ int MPIR_Comm_init(MPID_Comm *);
 /* Miscellaneous */
 void MPIU_SetTimeout( int );
 
+/* Communicator info hint functions */
+typedef int (*MPIR_Comm_hint_fn_t)(MPID_Comm *, MPID_Info *, void *);
+int MPIR_Comm_register_hint(const char *hint_key, MPIR_Comm_hint_fn_t fn, void *state);
+
 #if defined(HAVE_VSNPRINTF) && defined(NEEDS_VSNPRINTF_DECL) && !defined(vsnprintf)
 int vsnprintf(char *str, size_t size, const char *format, va_list ap);
 # endif
@@ -4311,6 +4319,7 @@ void MPIR_Info_get_nkeys_impl(MPID_Info *info_ptr, int *nkeys);
 int MPIR_Info_get_nthkey_impl(MPID_Info *info, int n, char *key);
 void MPIR_Info_get_valuelen_impl(MPID_Info *info_ptr, const char *key, int *valuelen, int *flag);
 int MPIR_Info_set_impl(MPID_Info *info_ptr, const char *key, const char *value);
+int MPIR_Info_dup_impl(MPID_Info *info_ptr, MPID_Info **new_info_ptr);
 int MPIR_Comm_delete_attr_impl(MPID_Comm *comm_ptr, MPID_Keyval *keyval_ptr);
 int MPIR_Comm_create_keyval_impl(MPI_Comm_copy_attr_function *comm_copy_attr_fn,
                                  MPI_Comm_delete_attr_function *comm_delete_attr_fn,

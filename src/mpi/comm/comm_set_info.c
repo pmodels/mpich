@@ -6,6 +6,7 @@
  */
 
 #include "mpiimpl.h"
+#include "mpl_utlist.h"
 
 /* -- Begin Profiling Symbol Block for routine MPI_Comm_set_info */
 #if defined(HAVE_PRAGMA_WEAK)
@@ -30,8 +31,33 @@
 int MPIR_Comm_set_info_impl(MPID_Comm * comm_ptr, MPID_Info * info_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
+    MPID_Info *info;
+    MPID_Info *curr_info = NULL;
+    MPID_MPI_STATE_DECL(MPID_STATE_MPIR_COMM_SET_INFO_IMPL);
 
-    /* FIXME: We currently ignore the info passed */
+    MPID_MPI_FUNC_ENTER(MPID_STATE_MPIR_COMM_SET_INFO_IMPL);
+
+    mpi_errno = MPIR_Comm_apply_hints(comm_ptr, info_ptr);
+    if (mpi_errno != MPI_SUCCESS)
+        goto fn_fail;
+
+    if (comm_ptr->info == NULL) {
+        /* Always have at least a blank info hint. */
+        mpi_errno = MPIU_Info_alloc(&(comm_ptr->info));
+        if (mpi_errno != MPI_SUCCESS)
+            goto fn_fail;
+    }
+
+    /* MPIR_Info_set_impl will do an O(n) search to prevent duplicate keys, so
+     * this _FOREACH loop will cost O(m*n) time, where "m" is the number of keys
+     * in info_ptr and "n" is the number of keys in comm_ptr->info. */
+    MPL_LL_FOREACH(info_ptr, curr_info) {
+        /* Have we hit the default, empty info hint? */
+        if (curr_info->key == NULL) continue;
+
+        mpi_errno = MPIR_Info_set_impl(comm_ptr->info, curr_info->key, curr_info->value);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    }
 
   fn_exit:
     return mpi_errno;
