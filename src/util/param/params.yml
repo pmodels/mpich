@@ -38,6 +38,8 @@ categories:
       description : parameters that control fault tolerance behavior
     - name        : threads
       description : multi-threading parameters
+    - name        : ch3
+      description : parameters that control behavior of ch3
     - name        : nemesis
       description : "parameters that control behavior of the ch3:nemesis channel"
     - name        : sockets
@@ -369,8 +371,9 @@ parameters:
       default     : -1
       description : >-
         This parameter controls the message size at which Nemesis 
-        switches from eager to rendezvous mode.  If this parameter 
-        is set to -1, then Nemesis will choose an appropriate value.
+        switches from eager to rendezvous mode for shared memory.
+        If this parameter is set to -1, then Nemesis will choose
+        an appropriate value.
 
     - category    : nemesis
       name        : SHM_READY_EAGER_MAX_SZ
@@ -393,6 +396,15 @@ parameters:
         netmods may not honor this flag.
         # Note the netmod must implement this functionality by not
         # setting the comm_ops table in any VC.
+
+    - category    : ch3
+      name        : CH3_EAGER_MAX_MSG_SIZE
+      type        : int
+      default     : 131072
+      description : >-
+        This parameter controls the message size at which CH3 switches
+        from eager to rendezvous mode.
+
 
   ##############################################################
     # debugging parameters
