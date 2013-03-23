@@ -137,29 +137,23 @@ void MPIDI_wait_for_AM(long long tranid, int expected_AM, int whichAM)
   double starttime, currtime, elapsetime;
   int    rc, curr_AMcntr;
 
-  MPIU_THREAD_CS_EXIT(ALLFUNC,);
   rc = PAMI_Context_advance(MPIDI_Context[0], (size_t)100);
-  MPIU_THREAD_CS_ENTER(ALLFUNC,);
   if(whichAM == LAST_AM) {
     CURTIME(starttime)
     do {
       CURTIME(currtime)
       elapsetime = currtime - starttime;
 
-      MPIU_THREAD_CS_EXIT(ALLFUNC,);
       rc = PAMI_Context_advance(MPIDI_Context[0], (size_t)100);
-      MPIU_THREAD_CS_ENTER(ALLFUNC,);
       curr_AMcntr = MPIDI_get_AM_cntr_for_tranid(tranid, whichAM);
-      TRACE_ERR("_try_to_disconnect: Looping in timer for TranID %lld, whichAM %d expected_AM = %d, Current AM = %d\n",tranid,whichAM,expected_AM,curr_AMcntr);
+      /*TRACE_ERR("_try_to_disconnect: Looping in timer for TranID %lld, whichAM %d expected_AM = %d, Current AM = %d\n",tranid,whichAM,expected_AM,curr_AMcntr); */
     }while(curr_AMcntr != expected_AM && elapsetime < DISCONNECT_LAPI_XFER_TIMEOUT);
   }
   else {
     do {
-      MPIU_THREAD_CS_EXIT(ALLFUNC,);
       rc = PAMI_Context_advance(MPIDI_Context[0], (size_t)100);
-      MPIU_THREAD_CS_ENTER(ALLFUNC,);
       curr_AMcntr = MPIDI_get_AM_cntr_for_tranid(tranid, whichAM);
-      TRACE_ERR("_try_to_disconnect: Looping in timer for TranID %lld, whichAM %d expected_AM = %d, Current AM = %d\n",tranid,whichAM,expected_AM,curr_AMcntr);
+      /*TRACE_ERR("_try_to_disconnect: Looping in timer for TranID %lld, whichAM %d expected_AM = %d, Current AM = %d\n",tranid,whichAM,expected_AM,curr_AMcntr);*/
     }while(curr_AMcntr != expected_AM);
   }
 }

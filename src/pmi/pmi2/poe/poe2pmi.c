@@ -69,8 +69,7 @@ static MPID_Thread_cond_t cond;
 #endif
 
 extern int mpidi_finalized;
-extern int (*mp_world_exiting_handler)(int);
-extern int _mpi_world_exiting_handler(int);
+int _mpi_world_exiting_handler(int);
 
 void *poeptr = NULL;
 
@@ -98,7 +97,7 @@ int PMI2_Init(int *spawned, int *size, int *rank, int *appnum)
     }
 
     ret = (*pmi2_init)(spawned, size, rank, appnum);
-    mp_world_exiting_handler = &(_mpi_world_exiting_handler);
+    /*mp_world_exiting_handler = &(_mpi_world_exiting_handler); */
     return ret;
 }
 
@@ -271,7 +270,7 @@ int PMI2_Info_GetJobAttr(const char name[], char value[], int valuelen, int *fla
  * This is the mpi level of callback that get invoked when a task get notified
  * of a world's exiting
  */
-int _mpi_world_exiting_handler_wrapper(pami_context_t context, void *cookie)
+int _mpi_world_exiting_handler(int world_id)
 {
   /* check the reference count associated with that remote world
      if the reference count is zero, the task will call LAPI_Purge_totask on
@@ -286,10 +285,10 @@ int _mpi_world_exiting_handler_wrapper(pami_context_t context, void *cookie)
   char world_id_str[32];
   int mpi_errno = MPI_SUCCESS;
   pami_endpoint_t dest;
-  struct worldExitReq *req = (struct worldExitReq *)cookie;
-  int world_id = req->world_id;
+/*  struct worldExitReq *req = (struct worldExitReq *)cookie; */
   MPID_Comm *comm = MPIR_Process.comm_world;
 
+  MPIU_THREAD_CS_ENTER(ALLFUNC,);
   ref_count = MPIDI_get_refcnt_of_world(world_id);
   TRACE_ERR("_mpi_world_exiting_handler: invoked for world %d exiting ref_count=%d my comm_word_size=%d\n", world_id, ref_count, world_size);
   if(ref_count == 0) {
@@ -300,7 +299,7 @@ int _mpi_world_exiting_handler_wrapper(pami_context_t context, void *cookie)
         MPIDI_OpState_reset(taskid_list[i]);
 	MPIDI_IpState_reset(taskid_list[i]);
 	TRACE_ERR("PAMI_Purge on taskid_list[%d]=%d\n", i,taskid_list[i]);
-        PAMI_Purge(context, &dest, 1);
+        PAMI_Purge(MPIDI_Context[0], &dest, 1);
       }
       MPIDI_delete_conn_record(world_id);
     }
@@ -313,6 +312,7 @@ int _mpi_world_exiting_handler_wrapper(pami_context_t context, void *cookie)
 
   TRACE_ERR("_mpi_world_exiting_handler: Out of _mpi_reduce_for_dyntask for exiting world %d reduce_state=%d\n",world_id, reduce_state);
 
+  MPIU_THREAD_CS_EXIT(ALLFUNC,);
   if(comm->rank == 0) {
     MPIU_Snprintf(world_id_str, sizeof(world_id_str), "%d", world_id);
     PMI2_Abort(0, world_id_str);
@@ -329,25 +329,8 @@ int _mpi_world_exiting_handler_wrapper(pami_context_t context, void *cookie)
     rc = -2;
   }
 
-  if(cookie) MPIU_Free(cookie);
+/*  if(cookie) MPIU_Free(cookie);*/
   return PAMI_SUCCESS;
-}
-
-
-int _mpi_world_exiting_handler(int world_id)
-{
-    struct worldExitReq *req;
-    req = MPIU_Malloc(sizeof(struct worldExitReq));
-    req->world_id = world_id;
-
-    if(MPIDI_Context[0]) {
-      if(!mpidi_finalized)
-        PAMI_Context_post(MPIDI_Context[0], &(req->work), _mpi_world_exiting_handler_wrapper, req);
-      else
-        _mpi_world_exiting_handler_wrapper(MPIDI_Context[0], req);
-    }
-
-    return MPI_SUCCESS;
 }
 
 
@@ -418,14 +401,17 @@ int _mpi_reduce_for_dyntask(int *sendbuf, int *recvbuf)
   {
     remaining_child_count = i;
     child_rank = (children[i])% TASKS;
-    mpi_errno = MPIC_Recv(recvbuf, sizeof(int),MPI_BYTE, pg_world->vct[child_rank].taskid, tag, comm_ptr->handle, MPI_STATUS_IGNORE);
+    TRACE_ERR("_mpi_reduce_for_dyntask - recv from child_rank%d child_taskid=%d\n", child_rank, pg_world->vct[child_rank].taskid);
+    mpi_errno = MPIC_Recv(recvbuf, sizeof(int),MPI_BYTE, child_rank, tag, comm_ptr->handle, MPI_STATUS_IGNORE);
+    TRACE_ERR("_mpi_reduce_for_dyntask - recv DONE from child_rank%d child_taskid=%d\n", child_rank, pg_world->vct[child_rank].taskid);
 
     if(world_rank != parent)
     {
       if(remaining_child_count == 0) {
         parent_rank = (parent) % TASKS;
         result += *recvbuf;
-        MPIC_Send(&result, sizeof(int), MPI_BYTE, pg_world->vct[parent_rank].taskid, tag, comm_ptr->handle);
+        TRACE_ERR("_mpi_reduce_for_dyntask - send to parent_rank=%d parent taskid=%d \n", parent_rank, pg_world->vct[parent_rank].taskid);
+        MPIC_Send(&result, sizeof(int), MPI_BYTE, parent_rank, tag, comm_ptr->handle);
       }
       else
       {
@@ -440,7 +426,8 @@ int _mpi_reduce_for_dyntask(int *sendbuf, int *recvbuf)
 
   if(world_rank != parent && numchildren == 0) {
     parent_rank = (parent) % TASKS;
-    MPIC_Send(sendbuf, sizeof(int), MPI_BYTE, pg_world->vct[parent_rank].taskid, tag, comm_ptr->handle);
+    TRACE_ERR("_mpi_reduce_for_dyntask - send to parent_rank=%d parent_task_id=%d\n", parent_rank, pg_world->vct[parent_rank].taskid);
+    MPIC_Send(sendbuf, sizeof(int), MPI_BYTE, parent_rank, tag, comm_ptr->handle);
   }
 
   if(world_rank == 0) {

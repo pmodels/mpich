@@ -170,9 +170,9 @@ int MPIDI_PG_Finalize(void)
 
    MPIU_Free(root_wid_barray); /* root_wid_barray is now NULL for non-root */
 
-
+#if 0
    pthread_create(&finalize_req_thread, NULL, mpidi_finalize_req, NULL);
-   MPIU_THREAD_CS_EXIT(ALLFUNC,);
+   /*MPIU_THREAD_CS_EXIT(ALLFUNC,); */
    while (mpidi_sync_done !=1) {
      mpi_errno=PAMI_Context_advance(MPIDI_Context[0], 1000);
      if (mpi_errno == PAMI_EAGAIN) {
@@ -183,6 +183,9 @@ int MPIDI_PG_Finalize(void)
    if (mpi_errno = pthread_join(finalize_req_thread, NULL) ) {
          TRACE_ERR("error returned from pthread_join() mpi_errno=%d\n",mpi_errno);
    }
+#endif
+   MPIU_THREAD_CS_EXIT(ALLFUNC,);
+   PMI2_Finalize();
    MPIU_THREAD_CS_ENTER(ALLFUNC,);
 
    if(_conn_info_list) {

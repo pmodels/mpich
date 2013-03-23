@@ -33,6 +33,8 @@
 #define MAX_JOBID_LEN                1024
 int     world_rank;
 int     world_size;
+extern int (*mp_world_exiting_handler)(int);
+extern int _mpi_world_exiting_handler(int);
 #endif
 int mpidi_dynamic_tasking = 0;
 
@@ -1009,10 +1011,8 @@ MPIDI_VCRT_init(int rank, int size, char *world_tasks, MPIDI_PG_t *pg)
     world_tasks_save = MPIU_Strdup(world_tasks);
     if(world_tasks != NULL) {
       comm->vcr[0]->taskid = atoi(strtok(world_tasks, ":"));
-      TRACE_ERR("comm->vcr[0]->taskid =%d\n", comm->vcr[0]->taskid);
       while( (cp=strtok(NULL, ":")) != NULL) {
         comm->vcr[++i]->taskid= atoi(cp);
-        TRACE_ERR("comm->vcr[i]->taskid =%d\n", comm->vcr[i]->taskid);
       }
     }
     MPIU_Free(world_tasks_save);
@@ -1228,6 +1228,7 @@ int MPID_Init(int * argc,
 	/* FIXME: Check that this intercommunicator gets freed in MPI_Finalize
 	   if not already freed.  */
    }
+  mp_world_exiting_handler = &(_mpi_world_exiting_handler);
 #endif
   /* ------------------------------- */
   /* Initialize timer data           */
