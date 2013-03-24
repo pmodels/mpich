@@ -374,7 +374,7 @@ struct HYD_user_global {
 #define HYDU_error_printf(...)                                          \
     {                                                                   \
         HYDU_dump_prefix(stderr);                                       \
-        HYDU_dump_noprefix(stderr, "%s (%s:%d): ", __func__, __FILE__, __LINE__); \
+        HYDU_dump_noprefix(stderr, "%s (%s:%d): ", HYDU_FUNC, __FILE__, __LINE__); \
         HYDU_dump_noprefix(stderr, __VA_ARGS__);                        \
     }
 #elif defined __FILE__
