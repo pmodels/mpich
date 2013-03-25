@@ -56,6 +56,7 @@ noinst_HEADERS +=                   \
     src/include/mpiu_ex.h           \
     src/include/mpiu_thread.h       \
     src/include/mpiu_utarray.h      \
+    src/include/mpiu_uthash.h       \
     src/include/mpiutil.h           \
     src/include/nopackage.h         \
     src/include/oputil.h            \
