@@ -18,6 +18,13 @@
 
  # PM/PMI: Added support for the Cobalt process manager.
 
+ # BUILD SYSTEM: allow MPI_LONG_DOUBLE_SUPPORT to be disabled with a configure
+   option.
+
+ # FORTRAN: fix MPI_WEIGHTS_EMPTY in the Fortran bindings
+
+ # MISC: fix a bug in MPI_Get_elements where it could return incorrect values
+
  # Several other minor bug fixes, memory leak fixes, and code cleanup.
    A full list of changes is available at the following link:
 
