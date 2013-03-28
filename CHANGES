@@ -13,6 +13,9 @@
  # RMA: Added a default implementation of shared memory windows to CH3.  This
    adds support for this MPI 3.0 feature to the ch3:sock device.
 
+ # RMA: Fix a bug that resulted in an error when RMA operation request handles
+   where completed outside of a synchronization epoch.
+
  # PM/PMI: Upgraded to hwloc-1.6.2rc1.  This version uses libpciaccess
    instead of libpci, to workaround the GPL license used by libpci.
 
