@@ -1404,6 +1404,7 @@ static int MPIDI_collsel_process_msg_sizes(char *msg_sizes_arg, advisor_params_t
   char *msg_sizes = (char *) MPIU_Malloc(arg_len + 1);
   char *msg_sz;
   size_t tmp;
+  size_t array_size = 50;
   /* if already set via config file, free it */
   if(params->message_sizes)
   {
@@ -1411,7 +1412,7 @@ static int MPIDI_collsel_process_msg_sizes(char *msg_sizes_arg, advisor_params_t
     params->num_message_sizes = 0;
   }
   /* Allocating some extra space should be fine */
-  params->message_sizes = (size_t *)MPIU_Malloc(sizeof(size_t) * 50);
+  params->message_sizes = (size_t *)MPIU_Malloc(sizeof(size_t) * array_size);
 
   strcpy(msg_sizes, msg_sizes_arg);
   msg_sz = strtok(msg_sizes,",");
@@ -1430,6 +1431,12 @@ static int MPIDI_collsel_process_msg_sizes(char *msg_sizes_arg, advisor_params_t
       break;
     }
 
+    if(params->num_message_sizes >= array_size)
+    {
+      array_size *= 2;
+      params->message_sizes = (size_t *) MPIU_Realloc(params->message_sizes,
+                                                      sizeof(size_t) * array_size);
+    }
     params->message_sizes[params->num_message_sizes++] = tmp;
     msg_sz = strtok(NULL,",");
   }
@@ -1444,6 +1451,7 @@ static int MPIDI_collsel_process_geo_sizes(char *geo_sizes_arg, advisor_params_t
   char *geo_sizes = (char *) MPIU_Malloc(arg_len + 1);
   char *geo_sz;
   size_t tmp;
+  size_t array_size = 50;
   /* if already set via config file, free it */
   if(params->geometry_sizes)
   {
@@ -1451,7 +1459,7 @@ static int MPIDI_collsel_process_geo_sizes(char *geo_sizes_arg, advisor_params_t
     params->num_geometry_sizes = 0;
   }
   /* Allocating some extra space should be fine */
-  params->geometry_sizes = (size_t *)MPIU_Malloc(sizeof(size_t) * 50);
+  params->geometry_sizes = (size_t *)MPIU_Malloc(sizeof(size_t) * array_size);
 
   strcpy(geo_sizes, geo_sizes_arg);
   geo_sz = strtok(geo_sizes,",");
@@ -1470,6 +1478,12 @@ static int MPIDI_collsel_process_geo_sizes(char *geo_sizes_arg, advisor_params_t
       break;
     }
 
+    if(params->num_geometry_sizes >= array_size)
+    {
+      array_size *= 2;
+      params->geometry_sizes = (size_t *) MPIU_Realloc(params->geometry_sizes,
+                                                       sizeof(size_t) * array_size);
+    }
     params->geometry_sizes[params->num_geometry_sizes++] = tmp;
     geo_sz = strtok(NULL,",");
   }
