@@ -161,6 +161,8 @@ Makefile.am-stamp
 /test/mpi/errors/f90/errhan/Makefile.am
 /test/mpi/errors/f90/errhan/testlist
 /test/mpi/errors/f90/errhan/uerrhandf90.f90
+/test/mpi/errors/f77/errhan/addsize.h
+/test/mpi/errors/f77/errhan/iooffset.h
 
 # created solely from the f77 counterpart dirs
 /test/mpi/f90/coll/
