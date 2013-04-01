@@ -1946,5 +1946,12 @@ int MPIDI_CH3_ReqHandler_GetSendRespComplete( MPIDI_VC_t *, MPID_Request *,
 
 #endif /* MPICH_IS_THREADED */
 
-#endif /* !defined(MPICH_MPIDIMPL_H_INCLUDED) */
+#define MPIDI_CH3_GET_EAGER_THRESHOLD(eager_threshold_p, comm, vc)  \
+    do {                                                            \
+        if ((comm)->ch.eager_max_msg_sz != -1)                      \
+            *(eager_threshold_p) = (comm)->ch.eager_max_msg_sz;     \
+        else                                                        \
+            *(eager_threshold_p) = (vc)->eager_max_msg_sz;          \
+    } while (0)
 
+#endif /* !defined(MPICH_MPIDIMPL_H_INCLUDED) */

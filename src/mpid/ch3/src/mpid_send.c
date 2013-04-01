@@ -28,6 +28,7 @@ int MPID_Send(const void * buf, int count, MPI_Datatype datatype, int rank,
 #if defined(MPID_USE_SEQUENCE_NUMBERS)
     MPID_Seqnum_t seqnum;
 #endif    
+    int eager_threshold = -1;
     int mpi_errno = MPI_SUCCESS;    
     MPIDI_STATE_DECL(MPID_STATE_MPID_SEND);
 
@@ -112,7 +113,9 @@ int MPID_Send(const void * buf, int count, MPI_Datatype datatype, int rank,
 	
 	goto fn_exit;
     }
-    
+
+    MPIDI_CH3_GET_EAGER_THRESHOLD(&eager_threshold, comm, vc);
+
     /* FIXME: flow control: limit number of outstanding eager messsages 
        containing data and need to be buffered by the receiver */
 #ifdef USE_EAGER_SHORT
@@ -125,16 +128,19 @@ int MPID_Send(const void * buf, int count, MPI_Datatype datatype, int rank,
     }
     else
 #endif
-    if (data_sz + sizeof(MPIDI_CH3_Pkt_eager_send_t) <=	
-	vc->eager_max_msg_sz) {
-	if (dt_contig) {
+
+    if (data_sz + sizeof(MPIDI_CH3_Pkt_eager_send_t) <= eager_threshold)
+    {
+	if (dt_contig)
+        {
  	    mpi_errno = MPIDI_CH3_EagerContigSend( &sreq, 
 						   MPIDI_CH3_PKT_EAGER_SEND,
 						   (char *)buf + dt_true_lb,
 						   data_sz, rank, tag, comm, 
 						   context_offset );
 	}
-	else {
+	else
+        {
 	    MPIDI_Request_create_sreq(sreq, mpi_errno, goto fn_exit);
 	    MPIDI_Request_set_type(sreq, MPIDI_REQUEST_TYPE_SEND);
 	    mpi_errno = MPIDI_CH3_EagerNoncontigSend( &sreq, 
@@ -144,7 +150,8 @@ int MPID_Send(const void * buf, int count, MPI_Datatype datatype, int rank,
                                                       comm, context_offset );
 	}
     }
-    else {
+    else
+    {
 	MPIDI_Request_create_sreq(sreq, mpi_errno, goto fn_exit);
 	MPIDI_Request_set_type(sreq, MPIDI_REQUEST_TYPE_SEND);
 	mpi_errno = vc->rndvSend_fn( &sreq, buf, count, datatype, dt_contig,

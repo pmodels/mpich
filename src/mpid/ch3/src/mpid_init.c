@@ -58,6 +58,31 @@ static int finalize_failed_procs_group(void *param)
     return mpi_errno;
 }
 
+#undef FUNCNAME
+#define FUNCNAME MPIDI_CH3_Set_eager_threshold
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+int MPIDI_CH3_Set_eager_threshold(MPID_Comm *comm_ptr, MPID_Info *info, void *state)
+{
+    int mpi_errno = MPI_SUCCESS;
+    char *endptr;
+    MPID_MPI_STATE_DECL(MPID_STATE_MPIDI_CH3_SET_EAGER_THRESHOLD);
+
+    MPID_MPI_FUNC_ENTER(MPID_STATE_MPIDI_CH3_SET_EAGER_THRESHOLD);
+
+    comm_ptr->ch.eager_max_msg_sz = strtol(info->value, &endptr, 0);
+
+    MPIU_ERR_CHKANDJUMP1(*endptr, mpi_errno, MPI_ERR_ARG,
+                         "**infohintparse", "**infohintparse %s",
+                         info->key);
+
+ fn_exit:
+    MPID_MPI_FUNC_EXIT(MPID_STATE_MPIDI_CH3_SET_EAGER_THRESHOLD);
+    return mpi_errno;
+ fn_fail:
+    goto fn_exit;
+}
+
 
 #undef FUNCNAME
 #define FUNCNAME MPID_Init
@@ -296,6 +321,11 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided,
 	*provided = (MPICH_THREAD_LEVEL < requested) ? 
 	    MPICH_THREAD_LEVEL : requested;
     }
+
+    mpi_errno = MPIR_Comm_register_hint("eager_rendezvous_threshold",
+                                        MPIDI_CH3_Set_eager_threshold,
+                                        NULL);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
   fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_MPID_INIT);

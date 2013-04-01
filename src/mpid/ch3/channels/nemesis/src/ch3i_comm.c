@@ -27,6 +27,9 @@ int MPIDI_CH3I_comm_create(MPID_Comm *comm, void *param)
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3I_COMM_CREATE);
 
+    /* Use the VC's eager threshold by default. */
+    comm->ch.eager_max_msg_sz = -1;
+
 #ifndef ENABLED_SHM_COLLECTIVES
     goto fn_exit;
 #endif
