@@ -16,11 +16,22 @@
  * default hints.  These hints are specific to the MPI-IO implementation, so
  * pick one of the following profiles to use */
 
+#if 1  /* hints are for BlueGene */
+#   define DFLT_CB_BUFFER_SIZE     16777216
+#   define DFLT_IND_RD_BUFFER_SIZE 4194304
+#   define DFLT_IND_WR_BUFFER_SIZE 4194304
+#   define DFLT_ROMIO_CB_READ      "enable"
+#   define DFLT_ROMIO_CB_WRITE     "enable"
+
+#   define SKIP_CB_CONFIG_LIST_TEST     1
+#endif
+#if 0 /* hints for MPICH2 */
 #   define DFLT_CB_BUFFER_SIZE     16777216
 #   define DFLT_IND_RD_BUFFER_SIZE 4194304
 #   define DFLT_IND_WR_BUFFER_SIZE 524288
 #   define DFLT_ROMIO_CB_READ      "automatic"
 #   define DFLT_ROMIO_CB_WRITE     "automatic"
+#endif
 /* #undef INFO_DEBUG */
 
 /* Test will print out information about unexpected hint keys or values that
