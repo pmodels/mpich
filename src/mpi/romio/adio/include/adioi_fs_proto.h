@@ -79,6 +79,11 @@ extern struct ADIOI_Fns_struct ADIO_BGL_operations;
 /* prototypes are in adio/ad_bgl/ad_bgl.h */
 #endif
 
+#ifdef ROMIO_BG
+extern struct ADIOI_Fns_struct ADIO_BG_operations;
+/* prototypes are in adio/ad_bg/ad_bg.h */
+#endif
+
 #ifdef ROMIO_BGLOCKLESS
 extern struct ADIOI_Fns_struct ADIO_BGLOCKLESS_operations;
 /* no extra prototypes for this fs at this time */

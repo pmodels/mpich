@@ -42,6 +42,14 @@ void ADIO_Get_shared_fp(ADIO_File fd, int incr, ADIO_Offset *shared_fp,
 	return;
     }
 #endif
+#ifdef ROMIO_BG
+    /* BGLOCKLESS won't support shared fp */
+    if (fd->file_system == ADIO_BG) {
+	ADIOI_BG_Get_shared_fp(fd, incr, shared_fp, error_code);
+	return;
+    }
+#endif
+
 
     if (fd->shared_fp_fd == ADIO_FILE_NULL) {
 	MPI_Comm_dup(MPI_COMM_SELF, &dupcommself);

@@ -293,6 +293,7 @@ typedef struct {
 #define ADIO_BGL                 164   /* IBM BGL */
 #define ADIO_BGLOCKLESS          165   /* IBM BGL (lock-free) */
 #define ADIO_ZOIDFS              167   /* ZoidFS: the I/O forwarding fs */
+#define ADIO_BG                  168
 
 #define ADIO_SEEK_SET            SEEK_SET
 #define ADIO_SEEK_CUR            SEEK_CUR

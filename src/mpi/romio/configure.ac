@@ -1171,15 +1171,15 @@ if test -n "$file_system_bg"; then
     AC_DEFINE(ROMIO_BG,1,[Define for ROMIO with BG])
 fi
 if test -n "$file_system_bglockless"; then
-    if test x"$file_system_bgl" != x; then
+    if test -n "$file_system_bgl"; then
         AC_DEFINE(ROMIO_BGLOCKLESS,1,[Define for lock-free ROMIO with BGL])
     fi
 
-    if test x"$file_system_bg" != x; then
+    if test -n "$file_system_bg"; then
         AC_DEFINE(ROMIO_BGLOCKLESS,1,[Define for lock-free ROMIO with BG])
     fi
 
-    if test x"$ROMIO_BGLOCKLESS" -ne x1; then
+    if test -n "$ROMIO_BGLOCKLESS"; then
         AC_MSG_ERROR("bglockless requested without [bgl|bg]")
     fi
 fi

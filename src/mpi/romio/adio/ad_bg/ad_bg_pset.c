@@ -112,7 +112,7 @@ ADIOI_BG_persInfo_init(ADIOI_BG_ConfInfo_t *conf,
       conf->cpuIDsize = hw.ppn;
       /*conf->virtualPsetSize = conf->ioMaxSize * conf->cpuIDsize;*/
       conf->nAggrs = 1;
-      conf->aggRatio = 1. * conf->nAggrs / conf->ioMaxSize /*virtualPsetSize*/;
+      conf->aggRatio = 1. * conf->nAggrs / conf->ioMinSize /*virtualPsetSize*/;
       if(conf->aggRatio > 1) conf->aggRatio = 1.;
       TRACE_ERR("I am (single) Bridge rank\n");
       return;
@@ -194,7 +194,7 @@ ADIOI_BG_persInfo_init(ADIOI_BG_ConfInfo_t *conf,
          if(countPset < mincompute)
             mincompute = countPset;
 
-         /* Is this my bridge? */
+         /* Was this my bridge we finished? */
          if(tempCoords == bridgeCoords)
          {
             /* Am I the bridge rank? */
@@ -208,6 +208,7 @@ ADIOI_BG_persInfo_init(ADIOI_BG_ConfInfo_t *conf,
             proc->myIOSize = countPset;
             proc->ioNodeIndex = bridgeIndex;
          }
+         /* Setup next bridge */
          tempCoords = bridges[i].bridgeCoord & ~1;
          tempRank   = bridges[i].rank;
          bridgeIndex++;
@@ -226,7 +227,7 @@ ADIOI_BG_persInfo_init(ADIOI_BG_ConfInfo_t *conf,
    if(countPset < mincompute)
       mincompute = countPset;
 
-   /* Is this my bridge? */
+   /* Was this my bridge? */
    if(tempCoords == bridgeCoords)
    {
       /* Am I the bridge rank? */
@@ -252,15 +253,17 @@ ADIOI_BG_persInfo_init(ADIOI_BG_ConfInfo_t *conf,
             
       conf->nAggrs = n_aggrs;
       /*    First pass gets nAggrs = -1 */
-      if(conf->nAggrs <=0 || 
-         MIN(conf->nProcs, conf->ioMaxSize /*virtualPsetSize*/) < conf->nAggrs) 
+      if(conf->nAggrs <=0) 
          conf->nAggrs = ADIOI_BG_NAGG_PSET_DFLT;
-      if(conf->nAggrs > conf->numBridgeRanks) /* maybe? * conf->cpuIDsize) */
-         conf->nAggrs = conf->numBridgeRanks; /* * conf->cpuIDsize; */
-   
-      conf->aggRatio = 1. * conf->nAggrs / conf->ioMaxSize /*virtualPsetSize*/;
-      if(conf->aggRatio > 1) conf->aggRatio = 1.;
-      TRACE_ERR("Maximum ranks under a bridge rank: %d, minimum: %d, nAggrs: %d, vps: %d, numBridgeRanks: %d pset dflt: %d naggrs: %d ratio: %f\n", maxcompute, mincompute, conf->nAggrs, conf->ioMaxSize /*virtualPsetSize*/, conf->numBridgeRanks, ADIOI_BG_NAGG_PSET_DFLT, conf->nAggrs, conf->aggRatio);
+      if(conf->ioMinSize <= conf->nAggrs) 
+        conf->nAggrs = MAX(1,conf->ioMinSize-1); /* not including bridge itself */
+/*      if(conf->nAggrs > conf->numBridgeRanks) 
+         conf->nAggrs = conf->numBridgeRanks; 
+*/
+      conf->aggRatio = 1. * conf->nAggrs / conf->ioMinSize /*virtualPsetSize*/;
+/*    if(conf->aggRatio > 1) conf->aggRatio = 1.; */
+      TRACE_ERR("n_aggrs %zd, conf->nProcs %zu, conf->ioMaxSize %zu, ADIOI_BG_NAGG_PSET_DFLT %zu,conf->numBridgeRanks %zu,conf->nAggrs %zu\n",(size_t)n_aggrs, (size_t)conf->nProcs, (size_t)conf->ioMaxSize, (size_t)ADIOI_BG_NAGG_PSET_DFLT,(size_t)conf->numBridgeRanks,(size_t)conf->nAggrs);
+      TRACE_ERR("Maximum ranks under a bridge rank: %d, minimum: %d, nAggrs: %d, numBridgeRanks: %d pset dflt: %d naggrs: %d ratio: %f\n", maxcompute, mincompute, conf->nAggrs, conf->numBridgeRanks, ADIOI_BG_NAGG_PSET_DFLT, conf->nAggrs, conf->aggRatio);
    }
 
    ADIOI_BG_assert((bridgerank != -1));
