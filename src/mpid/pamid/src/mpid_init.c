@@ -1344,11 +1344,12 @@ int MPIDI_Banner(char * bufPtr) {
        }
     }
 
-#ifndef __32BIT__
-    strcpy(type, "64bit (MPI over PAMI)");
-#else
-    strcpy(type, "32bit (MPI over PAMI)");
-#endif
+    if(sizeof(int) == 8)
+      strcpy(type, "64bit (MPI over PAMI)");
+    else if(sizeof(int) == 4)
+      strcpy(type, "32bit (MPI over PAMI)");
+    else
+      strcpy(type, "UNKNOWN-bit (MPI over PAMI)");
 
     sprintf(msgBuf,"MPICH library was compiled on");
 

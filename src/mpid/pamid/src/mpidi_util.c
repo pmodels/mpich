@@ -561,11 +561,12 @@ int MPIDI_Print_mpenv(int rank,int size)
         if (cp) strncpy(sender.libpath, cp, MAXPATHLEN-1);
         else strcpy(sender.libpath, "NOT SET");
         getcwd(sender.directory, FILENAME_MAX+1);
-#ifdef __32BIT__
-        sender.mode_64 = 0;
-#else
-        sender.mode_64 = 1;
-#endif
+
+        if(sizeof(int) == 4)
+          sender.mode_64 = 0;
+        else
+          sender.mode_64 = 1;
+        
         sender.threaded = 1;         /* Always 1 */
         cp = getenv("AIXTHREAD_SCOPE");
         if (cp) strncpy(sender.thread_scope, cp, 8);
