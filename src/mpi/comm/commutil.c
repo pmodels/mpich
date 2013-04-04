@@ -599,12 +599,22 @@ int MPIR_Comm_is_node_consecutive(MPID_Comm * comm)
 static uint32_t context_mask[MPIR_MAX_CONTEXT_MASK];
 static int initialize_context_mask = 1;
 
-#ifdef USE_DBG_LOGGING
 /* Create a string that contains the context mask.  This is
    used only with the logging interface, and must be used by one thread at 
    a time (should this be enforced by the logging interface?).
-   Converts the mask to hex and returns a pointer to that string */
-static char *MPIR_ContextMaskToStr( void )
+   Converts the mask to hex and returns a pointer to that string.
+
+   Callers should own the context ID critical section, or should be prepared to
+   suffer data races in any fine-grained locking configuration.
+
+   This routine is no longer static in order to allow advanced users and
+   developers to debug context ID problems "in the field".  We provide a
+   prototype here to keep the compiler happy, but users will need to put a
+   (possibly "extern") copy of the prototype in their own code in order to call
+   this routine.
+ */
+char *MPIR_ContextMaskToStr( void );
+char *MPIR_ContextMaskToStr( void )
 {
     static char bufstr[MPIR_MAX_CONTEXT_MASK*8+1];
     int i;
@@ -619,7 +629,6 @@ static char *MPIR_ContextMaskToStr( void )
     }
     return bufstr;
 }
-#endif
 
 #ifdef MPICH_DEBUG_HANDLEALLOC
 static int MPIU_CheckContextIDsOnFinalize(void *context_mask_ptr)
