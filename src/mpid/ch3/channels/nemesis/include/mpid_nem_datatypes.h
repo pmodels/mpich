@@ -147,7 +147,7 @@
 #define MPID_NEM_PKT_HEADER_FIELDS		\
     int source;					\
     int dest;					\
-    int datalen;				\
+    MPIDI_msg_sz_t datalen;                     \
     unsigned short seqno;                       \
     unsigned short type /* currently used only with checkpointing */
 typedef struct MPID_nem_pkt_header

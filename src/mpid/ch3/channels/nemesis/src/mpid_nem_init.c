@@ -4,7 +4,7 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#include "mpid_nem_pre.h"
+#include "mpiimpl.h"
 #include "mpid_nem_impl.h"
 #include "mpid_nem_nets.h"
 #include <errno.h>

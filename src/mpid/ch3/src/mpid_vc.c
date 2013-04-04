@@ -919,7 +919,7 @@ static int parse_mapping(char *map_str, mapping_type_t *type, map_block_t **map,
 
         if (!isdigit(*c))
             parse_error();
-        (*map)[i].start_id = strtol(c, &c, 0);
+        (*map)[i].start_id = (int)strtol(c, &c, 0);
         skip_space(c);
 
         expect_and_skip_c(c, ',');
@@ -927,7 +927,7 @@ static int parse_mapping(char *map_str, mapping_type_t *type, map_block_t **map,
 
         if (!isdigit(*c))
             parse_error();
-        (*map)[i].count = strtol(c, &c, 0);
+        (*map)[i].count = (int)strtol(c, &c, 0);
         skip_space(c);
 
         expect_and_skip_c(c, ',');
@@ -935,7 +935,7 @@ static int parse_mapping(char *map_str, mapping_type_t *type, map_block_t **map,
 
         if (!isdigit(*c))
             parse_error();
-        (*map)[i].size = strtol(c, &c, 0);
+        (*map)[i].size = (int)strtol(c, &c, 0);
 
         expect_and_skip_c(c, ')');
         skip_space(c);

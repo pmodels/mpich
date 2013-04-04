@@ -162,7 +162,7 @@ typedef enum MPIDI_nem_tcp_socksm_pkt_type {
     
 typedef struct MPIDI_nem_tcp_header {
     MPIDI_nem_tcp_socksm_pkt_type_t pkt_type;
-    int datalen;
+    MPIDI_msg_sz_t datalen;
 } MPIDI_nem_tcp_header_t;
 
 typedef struct MPIDI_nem_tcp_idinfo {

@@ -45,7 +45,8 @@ static int MPIR_Bcast_binomial(
     int nbytes=0;
     int recvd_size;
     MPI_Status status;
-    int type_size, is_contig, is_homogeneous;
+    int is_contig, is_homogeneous;
+    MPI_Aint type_size;
     int position;
     void *tmp_buf=NULL;
     MPI_Comm comm;
@@ -399,8 +400,9 @@ static int MPIR_Bcast_scatter_doubling_allgather(
     int relative_rank, mask;
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
-    int scatter_size, nbytes=0, curr_size, recv_size = 0;
-    int type_size, j, k, i, tmp_mask, is_contig, is_homogeneous;
+    int scatter_size, curr_size, recv_size = 0;
+    int j, k, i, tmp_mask, is_contig, is_homogeneous;
+    MPI_Aint type_size, nbytes = 0;
     int relative_dst, dst_tree_root, my_tree_root, send_offset;
     int recv_offset, tree_root, nprocs_completed, offset, position;
     MPIU_CHKLMEM_DECL(1);
@@ -706,7 +708,8 @@ static int MPIR_Bcast_scatter_ring_allgather(
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
     int scatter_size, nbytes;
-    int type_size, j, i, is_contig, is_homogeneous;
+    int j, i, is_contig, is_homogeneous;
+    MPI_Aint type_size;
     int position;
     int left, right, jnext;
     int curr_size = 0;
@@ -912,8 +915,8 @@ static int MPIR_SMP_Bcast(
 {
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
-    int type_size, is_homogeneous;
-    int nbytes=0;
+    int is_homogeneous;
+    MPI_Aint type_size, nbytes=0;
     MPI_Status status;
     int recvd_size;
 

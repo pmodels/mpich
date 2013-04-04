@@ -47,7 +47,7 @@ enum MPID_Lock_state {
 typedef struct MPIDI_RMA_dtype_info { /* for derived datatypes */
     int           is_contig; 
     int           max_contig_blocks;
-    int           size;     
+    MPI_Aint      size;
     MPI_Aint      extent;   
     int           dataloop_size; /* not needed because this info is sent in 
 				    packet header. remove it after lock/unlock 
@@ -707,7 +707,8 @@ static inline int MPIDI_CH3I_Shm_acc_op(const void *origin_addr, int origin_coun
             if (shm_op) MPIDI_CH3I_SHM_MUTEX_LOCK(win_ptr);
             for (i=0; i<vec_len; i++)
             {
-                count = (dloop_vec[i].DLOOP_VECTOR_LEN)/type_size;
+		MPIU_Assign_trunc(count, (dloop_vec[i].DLOOP_VECTOR_LEN)/type_size, int);
+
                 (*uop)((char *)source_buf + MPIU_PtrToAint(dloop_vec[i].DLOOP_VECTOR_BUF),
                        (char *)target_buf + MPIU_PtrToAint(dloop_vec[i].DLOOP_VECTOR_BUF),
                        &count, &type);
@@ -866,7 +867,7 @@ static inline int MPIDI_CH3I_Shm_get_acc_op(const void *origin_addr, int origin_
             type_size = MPID_Datatype_get_basic_size(type);
 
             for (i=0; i<vec_len; i++) {
-                count = (dloop_vec[i].DLOOP_VECTOR_LEN)/type_size;
+		MPIU_Assign_trunc(count, (dloop_vec[i].DLOOP_VECTOR_LEN)/type_size, int);
                 (*uop)((char *)source_buf + MPIU_PtrToAint(dloop_vec[i].DLOOP_VECTOR_BUF),
                        (char *)target_buf + MPIU_PtrToAint(dloop_vec[i].DLOOP_VECTOR_BUF),
                        &count, &type);
@@ -943,7 +944,8 @@ static inline int MPIDI_CH3I_Shm_cas_op(const void *origin_addr, const void *com
 {
     void *base = NULL, *dest_addr = NULL;
     int disp_unit;
-    int len, shm_locked = 0;
+    MPI_Aint len;
+    int shm_locked = 0;
     int mpi_errno = MPI_SUCCESS;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3I_SHM_CAS_OP);
 
@@ -999,7 +1001,8 @@ static inline int MPIDI_CH3I_Shm_fop_op(const void *origin_addr, void *result_ad
     void *base = NULL, *dest_addr = NULL;
     MPI_User_function *uop = NULL;
     int disp_unit;
-    int len, one, shm_locked = 0;
+    MPI_Aint len;
+    int one, shm_locked = 0;
     int mpi_errno = MPI_SUCCESS;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3I_SHM_FOP_OP);
 

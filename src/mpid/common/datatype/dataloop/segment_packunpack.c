@@ -166,8 +166,8 @@ int PREPEND_PREFIX(Segment_vector_m2m)(DLOOP_Offset *blocks_p,
     cbufp = (char*) paramp->userbuf + rel_off;
     DLOOP_Handle_get_size_macro(el_type, el_size);
 
-    whole_count = (blksz > 0) ? (*blocks_p / (DLOOP_Offset) blksz) : 0;
-    blocks_left = (blksz > 0) ? (*blocks_p % (DLOOP_Offset) blksz) : 0;
+    whole_count = (DLOOP_Count)((blksz > 0) ? (*blocks_p / (DLOOP_Offset) blksz) : 0);
+    blocks_left = (DLOOP_Count)((blksz > 0) ? (*blocks_p % (DLOOP_Offset) blksz) : 0);
 
     if (paramp->direction == DLOOP_M2M_TO_USERBUF) {
 	if (el_size == 8

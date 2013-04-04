@@ -301,7 +301,7 @@ fn_fail:
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 static inline int MPIU_SHMW_Hnd_deserialize(
-    MPIU_SHMW_Hnd_t hnd, const char *str_hnd, int str_hnd_len)
+    MPIU_SHMW_Hnd_t hnd, const char *str_hnd, size_t str_hnd_len)
 {
     int mpi_errno = MPI_SUCCESS;
     int rc = -1;
@@ -615,7 +615,7 @@ static inline int MPIU_SHMW_Seg_create_attach_templ(
             MPI_ERR_OTHER, "**lseek", "**lseek %s",
             MPIU_OSW_Strerror(MPIU_OSW_Get_errno()));
 
-        MPIU_OSW_RETRYON_INTR((rc == -1), (rc = write(lhnd, "", 1)));
+        MPIU_OSW_RETRYON_INTR((rc == -1), (rc = (int)write(lhnd, "", 1)));
         MPIU_ERR_CHKANDJUMP((rc == -1), mpi_errno, MPI_ERR_OTHER,
             "**write");
 

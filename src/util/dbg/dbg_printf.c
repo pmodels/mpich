@@ -625,7 +625,7 @@ static int MPIU_DBG_ProcessArgs( int *argc_p, char ***argv_p )
 		    if (*p == '=' && p[1] != 0) {
 			char *sOut;
 			p++;
-			whichRank = strtol( p, &sOut, 10 );
+			whichRank = (int)strtol( p, &sOut, 10 );
 			if (p == sOut) {
 			    MPIU_DBG_Usage( "-mpich-dbg-rank", 0 );
 			    whichRank = -1;
@@ -678,7 +678,7 @@ static int MPIU_DBG_ProcessEnv( void )
     s = getenv( "MPICH_DBG_RANK" );
     if (s) {
 	char *sOut;
-	whichRank = strtol( s, &sOut, 10 );
+	whichRank = (int)strtol( s, &sOut, 10 );
 	if (s == sOut) {
 	    MPIU_DBG_Usage( "MPICH_DBG_RANK", 0 );
 	    whichRank = -1;
@@ -1129,17 +1129,17 @@ static int MPIU_DBG_OpenFile(FILE **dbg_fp)
 static int setDBGClass( const char *s )
 {
     int i;
-    int slen = 0;
-    int len = 0;
-	    
+    size_t slen = 0;
+    size_t len = 0;
+
     if (s && *s) slen = strlen(s);
 
     while (s && *s) {
 	for (i=0; MPIU_Classnames[i].LCName; i++) {
 	    /* The LCLen and UCLen *should* be the same, but
 	       just in case, we separate them */
-	    int LClen = strlen(MPIU_Classnames[i].LCName);
-	    int UClen = strlen(MPIU_Classnames[i].UCName);
+	    size_t LClen = strlen(MPIU_Classnames[i].LCName);
+	    size_t UClen = strlen(MPIU_Classnames[i].UCName);
 	    int matchClass = 0;
 
 	    /* Allow the upper case and lower case in all cases */

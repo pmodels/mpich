@@ -179,7 +179,8 @@ int MPID_nem_tcp_is_sock_connected(int fd)
 {
     int rc = FALSE;
     char buf[1];
-    int buf_len = sizeof(buf)/sizeof(buf[0]), ret_recv, error=0;
+    int buf_len = sizeof(buf)/sizeof(buf[0]), error=0;
+    size_t ret_recv;
     socklen_t n = sizeof(error);
 
     n = sizeof(error);

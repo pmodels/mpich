@@ -41,7 +41,8 @@ int MPID_Type_indexed(int count,
     int mpi_errno = MPI_SUCCESS;
     int is_builtin, old_is_contig;
     int i, contig_count;
-    int el_sz, el_ct, old_ct, old_sz;
+    int el_ct, old_ct;
+    MPI_Aint el_sz, old_sz;
     MPI_Aint old_lb, old_ub, old_extent, old_true_lb, old_true_ub;
     MPI_Aint min_lb = 0, max_ub = 0, eff_disp;
     MPI_Datatype el_type;
@@ -109,8 +110,8 @@ int MPID_Type_indexed(int count,
 	new_dtp->has_sticky_ub = 0;
 	new_dtp->has_sticky_lb = 0;
 
-	new_dtp->alignsize    = el_sz; /* ??? */
-	new_dtp->element_size = (MPI_Aint) el_sz;
+        MPIU_Assign_trunc(new_dtp->alignsize, el_sz, int);
+	new_dtp->element_size = el_sz;
 	new_dtp->eltype       = el_type;
 
 	new_dtp->max_contig_blocks = count;

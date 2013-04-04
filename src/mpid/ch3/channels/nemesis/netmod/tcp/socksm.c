@@ -459,7 +459,9 @@ static int send_id_info(const sockconn_t *const sc)
     MPIDI_nem_tcp_idinfo_t id_info;
     MPIDI_nem_tcp_header_t hdr;
     struct iovec iov[3];
-    int pg_id_len = 0, offset, buf_size, iov_cnt = 2;
+    int buf_size, iov_cnt = 2;
+    ssize_t offset;
+    size_t pg_id_len = 0;
     MPIDI_STATE_DECL(MPID_STATE_SEND_ID_INFO);
 
     MPIDI_FUNC_ENTER(MPID_STATE_SEND_ID_INFO);
@@ -503,7 +505,7 @@ static int send_id_info(const sockconn_t *const sc)
     MPIDI_FUNC_EXIT(MPID_STATE_SEND_ID_INFO);
     return mpi_errno;
  fn_fail:
-    MPIU_DBG_MSG_FMT(NEM_SOCK_DET, VERBOSE, (MPIU_DBG_FDEST, "failure. mpi_errno = %d, offset=%d, errno=%d %s", mpi_errno, offset, errno, MPIU_Strerror(errno)));
+    MPIU_DBG_MSG_FMT(NEM_SOCK_DET, VERBOSE, (MPIU_DBG_FDEST, "failure. mpi_errno = %d, offset=%lld, errno=%d %s", mpi_errno, (long long)offset, errno, MPIU_Strerror(errno)));
     goto fn_exit;    
 }
 
@@ -518,7 +520,8 @@ static int send_tmpvc_info(const sockconn_t *const sc)
     MPIDI_nem_tcp_portinfo_t port_info;
     MPIDI_nem_tcp_header_t hdr;
     struct iovec iov[3];
-    int offset, buf_size, iov_cnt = 2;
+    int buf_size, iov_cnt = 2;
+    ssize_t offset;
     MPIDI_STATE_DECL(MPID_STATE_SEND_TMPVC_INFO);
 
     MPIDI_FUNC_ENTER(MPID_STATE_SEND_TMPVC_INFO);
@@ -552,7 +555,7 @@ static int send_tmpvc_info(const sockconn_t *const sc)
     MPIDI_FUNC_EXIT(MPID_STATE_SEND_TMPVC_INFO);
     return mpi_errno;
  fn_fail:
-    MPIU_DBG_MSG_FMT(NEM_SOCK_DET, VERBOSE, (MPIU_DBG_FDEST, "failure. mpi_errno = %d, offset=%d, errno=%d %s", mpi_errno, offset, errno, MPIU_Strerror(errno)));
+    MPIU_DBG_MSG_FMT(NEM_SOCK_DET, VERBOSE, (MPIU_DBG_FDEST, "failure. mpi_errno = %d, offset=%lld, errno=%d %s", mpi_errno, (long long)offset, errno, MPIU_Strerror(errno)));
     goto fn_exit;    
 }
 
@@ -564,7 +567,9 @@ static int recv_id_or_tmpvc_info(sockconn_t *const sc, int *got_sc_eof)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_nem_tcp_header_t hdr;
-    int pg_id_len = 0, nread, iov_cnt = 1;
+    int iov_cnt = 1;
+    size_t pg_id_len = 0;
+    ssize_t nread;
     int hdr_len = sizeof(MPIDI_nem_tcp_header_t);
     struct iovec iov[2];
     char *pg_id = NULL;
@@ -695,7 +700,8 @@ static int recv_id_or_tmpvc_info(sockconn_t *const sc, int *got_sc_eof)
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 static int send_cmd_pkt(int fd, MPIDI_nem_tcp_socksm_pkt_type_t pkt_type)
 {
-    int mpi_errno = MPI_SUCCESS, offset;
+    int mpi_errno = MPI_SUCCESS;
+    ssize_t offset;
     MPIDI_nem_tcp_header_t pkt;
     int pkt_len = sizeof(MPIDI_nem_tcp_header_t);
 
@@ -729,7 +735,8 @@ static int send_cmd_pkt(int fd, MPIDI_nem_tcp_socksm_pkt_type_t pkt_type)
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 static int recv_cmd_pkt(int fd, MPIDI_nem_tcp_socksm_pkt_type_t *pkt_type)
 {
-    int mpi_errno = MPI_SUCCESS, nread;
+    int mpi_errno = MPI_SUCCESS;
+    ssize_t nread;
     MPIDI_nem_tcp_header_t pkt;
     int pkt_len = sizeof(MPIDI_nem_tcp_header_t);
     MPIDI_STATE_DECL(MPID_STATE_RECV_CMD_PKT);
@@ -1597,11 +1604,11 @@ static int MPID_nem_tcp_recv_handler(sockconn_t *const sc)
             {
                 iov->MPID_IOV_BUF = (char *)iov->MPID_IOV_BUF + bytes_recvd;
                 iov->MPID_IOV_LEN -= bytes_recvd;
-                rreq->dev.iov_count = &rreq->dev.iov[rreq->dev.iov_offset + rreq->dev.iov_count] - iov;
+                rreq->dev.iov_count = (int)(&rreq->dev.iov[rreq->dev.iov_offset + rreq->dev.iov_count] - iov);
                 rreq->dev.iov_offset = iov - rreq->dev.iov;
                 MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE, "bytes_recvd = %ld", (long int)bytes_recvd);
                 MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE, "iov len = %ld", (long int)iov->MPID_IOV_LEN);
-                MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE, "iov_offset = %d", rreq->dev.iov_offset);
+                MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE, "iov_offset = %lld", (long long)rreq->dev.iov_offset);
                 goto fn_exit;
             }
             bytes_recvd -= iov->MPID_IOV_LEN;
@@ -1811,7 +1818,7 @@ int MPID_nem_tcp_connpoll(int in_blocking_poll)
              * on many platforms, including modern Linux. */
             if (it_plfd->revents & POLLERR || it_plfd->revents & POLLNVAL) {
                 int req_errno = MPI_SUCCESS;
-                int rc;
+                ssize_t rc;
                 char dummy;
                 const char *err_str = "UNKNOWN";
 

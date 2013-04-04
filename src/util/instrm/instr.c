@@ -116,7 +116,7 @@ int MPIU_INSTR_ToStr_Duration_Count( char *buf, size_t maxBuf, void *ptr )
     snprintf( buf, maxBuf, "%-40s:\t%d\t%e", dPtr->desc, dPtr->count, ttime );
     if (dPtr->nitems) {
 	char *p;
-	int  len = strlen(buf);
+	size_t  len = strlen(buf);
 	int  i;
 	/* Add each integer value, separated by a tab. */
 	maxBuf -= len;

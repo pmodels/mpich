@@ -298,7 +298,7 @@
         int ferr = 0;							\
         if (HANDLE_GET_KIND(dtype) == HANDLE_KIND_BUILTIN) { ferr=1; }	\
         else {								\
-            int errsize;                                                \
+            MPI_Aint errsize;                                           \
             MPID_Datatype *errdtypeptr;					\
             MPID_Datatype_get_ptr(dtype,errdtypeptr);			\
             MPID_Datatype_get_size_macro(dtype,errsize);                \

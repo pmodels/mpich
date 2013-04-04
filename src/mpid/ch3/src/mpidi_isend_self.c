@@ -85,7 +85,7 @@ int MPIDI_Isend_self(const void * buf, int count, MPI_Datatype datatype, int ran
     {
 	if (type != MPIDI_REQUEST_TYPE_RSEND)
 	{
-	    int dt_sz;
+	    MPI_Aint dt_sz;
 	
 	    /* FIXME: Insert code here to buffer small sends in a temporary buffer? */
 

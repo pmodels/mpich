@@ -455,7 +455,7 @@ void MPIR_T_strncpy(char *dst, const char *src, int *len)
             MPIU_Assert(*len > 0);
             if (src != NULL) {
                 MPL_strncpy(dst, src, *len);
-                *len = strlen(dst) + 1;
+                *len = (int)strlen(dst) + 1;
             } else {
                 /* As if an empty string is copied */
                 *dst = '\0';

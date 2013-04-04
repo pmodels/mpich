@@ -122,7 +122,7 @@ fn_fail:
 /* initiates the schedule entry "e" in the NBC described by "s", where
  * "e" is at "idx" in "s".  This means posting nonblocking sends/recvs,
  * performing reductions, calling callbacks, etc. */
-static int MPIDU_Sched_start_entry(struct MPIDU_Sched *s, int idx, struct MPIDU_Sched_entry *e)
+static int MPIDU_Sched_start_entry(struct MPIDU_Sched *s, size_t idx, struct MPIDU_Sched_entry *e)
 {
     int mpi_errno = MPI_SUCCESS;
     int context_offset;
@@ -237,7 +237,7 @@ fn_fail:
 static int MPIDU_Sched_continue(struct MPIDU_Sched *s)
 {
     int mpi_errno = MPI_SUCCESS;
-    int i;
+    size_t i;
 
     for (i = s->idx; i < s->num_entries; ++i) {
         struct MPIDU_Sched_entry *e = &s->entries[i];
@@ -680,12 +680,12 @@ int MPID_Sched_copy(const void *inbuf,  int incount,  MPI_Datatype intype,
     /* some sanity checking up front */
 #if defined(HAVE_ERROR_CHECKING) && !defined(NDEBUG)
     {
-        int intype_size, outtype_size;
+        MPI_Aint intype_size, outtype_size;
         MPID_Datatype_get_size_macro(intype, intype_size);
         MPID_Datatype_get_size_macro(outtype, outtype_size);
         if (incount * intype_size > outcount * outtype_size) {
-            MPIU_Error_printf("truncation: intype=%#x, intype_size=%d, incount=%d, outtype=%#x, outtype_size=%d outcount=%d\n",
-                              intype, intype_size, incount, outtype, outtype_size, outcount);
+            MPIU_Error_printf("truncation: intype=%#x, intype_size=%lld, incount=%d, outtype=%#x, outtype_size=%lld outcount=%d\n",
+                              intype, (long long)intype_size, incount, outtype, (long long)outtype_size, outcount);
         }
     }
 #endif
@@ -787,7 +787,7 @@ fn_fail:
 static int MPIDU_Sched_progress_state(struct MPIDU_Sched_state *state, int *made_progress)
 {
     int mpi_errno = MPI_SUCCESS;
-    int i;
+    size_t i;
     struct MPIDU_Sched *s;
     struct MPIDU_Sched *tmp;
 

@@ -424,7 +424,7 @@ static int terminate_failed_VCs(MPID_Group *new_failed_group)
         while (isspace(*c)) /* skip spaces */                                                   \
             ++c;                                                                                \
         MPIU_ERR_CHKINTERNAL(!isdigit(*c), mpi_errno, "error parsing failed process list");     \
-        *(r_p) = strtol(c, &c, 0);                                                              \
+        *(r_p) = (int)strtol(c, &c, 0);                                                         \
         while (isspace(*c)) /* skip spaces */                                                   \
             ++c;                                                                                \
     } while (0)

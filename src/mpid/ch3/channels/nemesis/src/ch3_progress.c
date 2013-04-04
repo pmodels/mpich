@@ -723,8 +723,8 @@ int MPID_nem_handle_pkt(MPIDI_VC_t *vc, char *buf, MPIDI_msg_sz_t buflen)
 		
             while (n_iov && buflen >= iov->MPID_IOV_LEN)
             {
-                int iov_len = iov->MPID_IOV_LEN;
-		MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE, "        %d", iov_len);
+                size_t iov_len = iov->MPID_IOV_LEN;
+		MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE, "        %d", (int)iov_len);
                 MPIU_Memcpy (iov->MPID_IOV_BUF, buf, iov_len);
 
                 buflen -= iov_len;

@@ -217,7 +217,7 @@ MPID_nem_mpich_sendv (MPID_IOV **iov, int *n_iov, MPIDI_VC_t *vc, int *again)
     
     while (*n_iov && payload_len >= (*iov)->MPID_IOV_LEN)
     {
-	int _iov_len = (*iov)->MPID_IOV_LEN;
+	size_t _iov_len = (*iov)->MPID_IOV_LEN;
 	MPIU_Memcpy (cell_buf, (*iov)->MPID_IOV_BUF, _iov_len);
 	payload_len -= _iov_len;
 	cell_buf += _iov_len;
@@ -352,7 +352,7 @@ MPID_nem_mpich_sendv_header (MPID_IOV **iov, int *n_iov, MPIDI_VC_t *vc, int *ag
     payload_len = MPID_NEM_MPICH_DATA_LEN - sizeof(MPIDI_CH3_Pkt_t);
     while (*n_iov && payload_len >= (*iov)->MPID_IOV_LEN)
     {
-	int _iov_len = (*iov)->MPID_IOV_LEN;
+	size_t _iov_len = (*iov)->MPID_IOV_LEN;
 	MPIU_Memcpy (cell_buf, (*iov)->MPID_IOV_BUF, _iov_len);
 	payload_len -= _iov_len;
 	cell_buf += _iov_len;

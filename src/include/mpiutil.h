@@ -195,7 +195,10 @@ int MPIR_Assert_fail_fmt(const char *cond, const char *file_name, int line_num, 
              unsigned short:     USHRT_MAX,  \
              unsigned int:       UINT_MAX,   \
              unsigned long:      ULONG_MAX,  \
-             unsigned long long: ULLONG_MAX)
+             unsigned long long: ULLONG_MAX,\
+             /* _Generic cares about cv-qualifiers */ \
+             volatile signed int:   INT_MAX,          \
+             volatile unsigned int: UINT_MAX)
 #define expr_inttype_min(expr_)             \
     _Generic(expr_,                         \
              signed char:        SCHAR_MIN, \
@@ -207,7 +210,10 @@ int MPIR_Assert_fail_fmt(const char *cond, const char *file_name, int line_num, 
              unsigned short:     0,         \
              unsigned int:       0,         \
              unsigned long:      0,         \
-             unsigned long long: 0)
+             unsigned long long: 0,         \
+             /* _Generic cares about cv-qualifiers */ \
+             volatile signed int:   INT_MIN,          \
+             volatile unsigned int: 0)
 #endif
 
 /* Assigns (src_) to (dst_), checking that (src_) fits in (dst_) without
@@ -218,18 +224,19 @@ int MPIR_Assert_fail_fmt(const char *cond, const char *file_name, int line_num, 
  * can be found in Chapter 5 of "Secure Coding in C and C++" by Robert Seacord.
  */
 #if defined(expr_inttype_max) && defined(expr_inttype_min)
-#  define MPIU_Assign_trunc(dst_,src_) \
-    do { \
-        MPIU_Assert((src_) <= expr_inttype_max(dst_)); \
-        MPIU_Assert((src_) >= expr_inttype_min(dst_)); \
-        dst_ = (src_); \
+#  define MPIU_Assign_trunc(dst_,src_,dst_type_)                                       \
+    do {                                                                               \
+        MPIU_Assert_has_type((dst_), dst_type_);                                       \
+        MPIU_Assert((src_) <= expr_inttype_max(dst_));                                 \
+        MPIU_Assert((src_) >= expr_inttype_min(dst_));                                 \
+        dst_ = (dst_type_)(src_);                                                      \
     } while (0)
 #else
-#  define MPIU_Assign_trunc(dst_,src_) \
-    do { \
-        dst_ = (src_); \
+#  define MPIU_Assign_trunc(dst_,src_,dst_type_)                                       \
+    do {                                                                               \
+        dst_ = (dst_type_)(src_);                                                      \
         /* will catch some of the cases if the expr_inttype macros aren't available */ \
-        MPIU_Assert((dst_) == (src_)); \
+        MPIU_Assert((dst_) == (src_));                                                 \
     } while (0)
 #endif
 

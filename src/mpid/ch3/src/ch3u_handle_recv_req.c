@@ -90,7 +90,7 @@ int MPIDI_CH3_ReqHandler_PutAccumRespComplete( MPIDI_VC_t *vc,
 
     /* Perform get in get-accumulate */
     if (rreq->dev.resp_request_handle != MPI_REQUEST_NULL) {
-        int type_size;
+        MPI_Aint type_size;
         MPIDI_CH3_Pkt_t upkt;
         MPIDI_CH3_Pkt_get_accum_resp_t *get_accum_resp_pkt = &upkt.get_accum_resp;
         MPID_Request *resp_req;
@@ -493,7 +493,8 @@ int MPIDI_CH3_ReqHandler_FOPComplete( MPIDI_VC_t *vc,
     MPID_Request *resp_req;
     MPID_Win *win_ptr;
     MPI_User_function *uop;
-    int len, one;
+    MPI_Aint len;
+    int one;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3_REQHANDLER_FOPCOMPLETE);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3_REQHANDLER_FOPCOMPLETE);
@@ -822,7 +823,8 @@ static int do_accumulate_op(MPID_Request *rreq)
         MPID_Segment *segp;
         DLOOP_VECTOR *dloop_vec;
         MPI_Aint first, last;
-        int vec_len, i, type_size, count;
+        int vec_len, i, count;
+        MPI_Aint type_size;
         MPI_Datatype type;
         MPID_Datatype *dtp;
         
@@ -860,7 +862,7 @@ static int do_accumulate_op(MPID_Request *rreq)
         MPID_Datatype_get_size_macro(type, type_size);
         for (i=0; i<vec_len; i++)
 	{
-            count = (dloop_vec[i].DLOOP_VECTOR_LEN)/type_size;
+            MPIU_Assign_trunc(count, (dloop_vec[i].DLOOP_VECTOR_LEN)/type_size, int);
             (*uop)((char *)rreq->dev.user_buf + MPIU_PtrToAint(dloop_vec[i].DLOOP_VECTOR_BUF),
                    (char *)rreq->dev.real_user_buf + MPIU_PtrToAint(dloop_vec[i].DLOOP_VECTOR_BUF),
                    &count, &type);
@@ -1171,7 +1173,8 @@ static int do_simple_get(MPID_Win *win_ptr, MPIDI_Win_lock_queue *lock_queue)
     MPIDI_CH3_Pkt_get_resp_t * get_resp_pkt = &upkt.get_resp;
     MPID_Request *req;
     MPID_IOV iov[MPID_IOV_LIMIT];
-    int type_size, mpi_errno=MPI_SUCCESS;
+    int mpi_errno=MPI_SUCCESS;
+    MPI_Aint type_size;
     MPIDI_STATE_DECL(MPID_STATE_DO_SIMPLE_GET);
     
     MPIDI_FUNC_ENTER(MPID_STATE_DO_SIMPLE_GET);

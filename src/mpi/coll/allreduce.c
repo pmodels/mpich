@@ -136,7 +136,8 @@ int MPIR_Allreduce_intra (
     int is_homogeneous;
     int rc;
 #endif
-    int        comm_size, rank, type_size;
+    int comm_size, rank;
+    MPI_Aint type_size;
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
     int nbytes = 0;

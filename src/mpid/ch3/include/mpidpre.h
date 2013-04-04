@@ -340,7 +340,7 @@ typedef struct MPIDI_Request {
        iov_offset points to the current head element in the IOV */
     MPID_IOV iov[MPID_IOV_LIMIT];
     int iov_count;
-    int iov_offset;
+    size_t iov_offset;
 
     /* OnDataAvail is the action to take when data is now available.
        For example, when an operation described by an iov has 

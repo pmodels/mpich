@@ -358,7 +358,7 @@ typedef struct MPID_Datatype {
     MPIU_OBJECT_HEADER; /* adds handle and ref_count fields */
 
     /* basic parameters for datatype, accessible via MPI calls */
-    int      size;
+    MPI_Aint size;
     MPI_Aint extent, ub, lb, true_ub, true_lb;
 
     /* chars affecting subsequent datatype processing and creation */
