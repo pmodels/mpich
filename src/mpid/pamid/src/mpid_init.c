@@ -1344,7 +1344,7 @@ int MPIDI_Banner(char * bufPtr) {
        }
     }
 
-    if(sizeof(int) == 8)
+    if(sizeof(void*) == 8)
       strcpy(type, "64bit (MPI over PAMI)");
     else if(sizeof(int) == 4)
       strcpy(type, "32bit (MPI over PAMI)");

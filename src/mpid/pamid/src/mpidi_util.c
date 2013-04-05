@@ -562,7 +562,7 @@ int MPIDI_Print_mpenv(int rank,int size)
         else strcpy(sender.libpath, "NOT SET");
         getcwd(sender.directory, FILENAME_MAX+1);
 
-        if(sizeof(int) == 4)
+        if(sizeof(void*) == 4)
           sender.mode_64 = 0;
         else
           sender.mode_64 = 1;
