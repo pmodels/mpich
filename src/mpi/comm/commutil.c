@@ -630,6 +630,41 @@ char *MPIR_ContextMaskToStr( void )
     return bufstr;
 }
 
+/* Returns useful debugging information about the context ID mask bit-vector.
+ * This includes the total number of possibly valid IDs (the size of the ID
+ * space) and the number of free IDs remaining in the mask.  NULL arguments are
+ * fine, they will be ignored.
+ *
+ * This routine is for debugging in very particular situations and does not
+ * attempt to control concurrent access to the mask vector.
+ *
+ * Callers should own the context ID critical section, or should be prepared to
+ * suffer data races in any fine-grained locking configuration.
+ *
+ * The routine is non-static in order to permit "in the field debugging".  We
+ * provide a prototype here to keep the compiler happy. */
+void MPIR_ContextMaskStats(int *free_ids, int *total_ids);
+void MPIR_ContextMaskStats(int *free_ids, int *total_ids)
+{
+    if (free_ids) {
+        int i, j;
+        *free_ids = 0;
+
+        /* if this ever needs to be fast, use a lookup table to do a per-nibble
+         * or per-byte lookup of the popcount instead of checking each bit at a
+         * time (or just track the count when manipulating the mask and keep
+         * that count stored in a variable) */
+        for (i = 0; i < MPIR_MAX_CONTEXT_MASK; ++i) {
+            for (j = 0; j < sizeof(context_mask[0])*8; ++j) {
+                *free_ids += (context_mask[i] & (0x1 << j)) >> j;
+            }
+        }
+    }
+    if (total_ids) {
+        *total_ids = MPIR_MAX_CONTEXT_MASK*sizeof(context_mask[0])*8;
+    }
+}
+
 #ifdef MPICH_DEBUG_HANDLEALLOC
 static int MPIU_CheckContextIDsOnFinalize(void *context_mask_ptr)
 {
