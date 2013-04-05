@@ -91,6 +91,9 @@ was not started with MPI_GREQUEST_START
 **attrsentinal:Internal fields in an attribute have been overwritten; \
  possible errors in using the attribute value in user code.
 **toomanycomm:Too many communicators
+**toomanycomm %d %d %d:Too many communicators (%d/%d free on this process; ignore_id=%d)
+**toomanycommfrag: Cannot allocate context ID because of fragmentation
+**toomanycommfrag %d %d %d: Cannot allocate context ID because of fragmentation (%d/%d free on this process; ignore_id=%d)
 **commperm:Cannot free permanent communicator
 **commperm %s:Cannot free permanent communicator %s
 **group:Invalid group

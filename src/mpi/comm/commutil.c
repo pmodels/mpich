@@ -859,11 +859,25 @@ int MPIR_Get_contextid_sparse_group(MPID_Comm *comm_ptr, MPID_Group *group_ptr, 
 
     if (ignore_id) {
         *context_id = MPIR_Locate_context_bit(local_mask);
-        MPIU_ERR_CHKANDJUMP(!(*context_id), mpi_errno, MPIR_ERR_RECOVERABLE, "**toomanycomm");
+        if (*context_id == 0) {
+            int nfree = -1;
+            int ntotal = -1;
+            MPIR_ContextMaskStats(&nfree, &ntotal);
+            MPIU_ERR_SETANDJUMP3(mpi_errno, MPIR_ERR_RECOVERABLE,
+                                 "**toomanycomm", "**toomanycomm %d %d %d",
+                                 nfree, ntotal, ignore_id);
+        }
     }
     else {
         *context_id = MPIR_Find_and_allocate_context_id(local_mask);
-        MPIU_ERR_CHKANDJUMP(!(*context_id), mpi_errno, MPIR_ERR_RECOVERABLE, "**toomanycomm");
+        if (*context_id == 0) {
+            int nfree = -1;
+            int ntotal = -1;
+            MPIR_ContextMaskStats(&nfree, &ntotal);
+            MPIU_ERR_SETANDJUMP3(mpi_errno, MPIR_ERR_RECOVERABLE,
+                                 "**toomanycomm", "**toomanycomm %d %d %d",
+                                 nfree, ntotal, ignore_id);
+        }
     }
 
 fn_exit:
@@ -1114,6 +1128,8 @@ int MPIR_Get_contextid_sparse_group(MPID_Comm *comm_ptr, MPID_Group *group_ptr, 
          * succeed because there is no common context ID. */
         if (*context_id == 0 && local_mask[ALL_OWN_MASK_FLAG] == 1) {
             /* --BEGIN ERROR HANDLING-- */
+            int nfree = 0;
+            int ntotal = 0;
             if (own_mask) {
                 MPIU_THREAD_CS_ENTER(CONTEXTID,);
                 mask_in_use = 0;
@@ -1124,7 +1140,10 @@ int MPIR_Get_contextid_sparse_group(MPID_Comm *comm_ptr, MPID_Group *group_ptr, 
                 MPIU_THREAD_CS_EXIT(CONTEXTID,);
             }
 
-            MPIU_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**toomanycomm");
+            MPIR_ContextMaskStats(&nfree, &ntotal);
+            MPIU_ERR_SETANDJUMP3(mpi_errno, MPIR_ERR_RECOVERABLE,
+                                 "**toomanycommfrag", "**toomanycommfrag %d %d %d",
+                                 nfree, ntotal, ignore_id);
             /* --END ERROR HANDLING-- */
         }
 
@@ -1169,7 +1188,14 @@ static int gcn_helper(MPID_Comm *comm, int tag, void *state)
     MPIR_Context_id_t newctxid;
 
     newctxid = MPIR_Find_and_allocate_context_id(st->local_mask);
-    MPIU_ERR_CHKANDJUMP(!newctxid, mpi_errno, MPIR_ERR_RECOVERABLE, "**toomanycomm");
+    if (!newctxid) {
+        int nfree = -1;
+        int ntotal = -1;
+        MPIR_ContextMaskStats(&nfree, &ntotal);
+        MPIU_ERR_SETANDJUMP3(mpi_errno, MPIR_ERR_RECOVERABLE,
+                             "**toomanycomm", "**toomanycomm %d %d %d",
+                             nfree, ntotal, /*ignore_id=*/0);
+    }
 
     if (st->ctx0)
         *st->ctx0 = newctxid;
@@ -1528,7 +1554,12 @@ int MPIR_Comm_copy( MPID_Comm *comm_ptr, int size, MPID_Comm **outcomm_ptr )
     }
     /* --BEGIN ERROR HANDLING-- */
     if (new_context_id == 0) {
-        MPIU_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**toomanycomm" );
+        int nfree = -1;
+        int ntotal = -1;
+        MPIR_ContextMaskStats(&nfree, &ntotal);
+        MPIU_ERR_SETANDJUMP3(mpi_errno, MPIR_ERR_RECOVERABLE,
+                             "**toomanycomm", "**toomanycomm %d %d %d",
+                             nfree, ntotal, /*ignore_id=*/0);
     }
     /* --END ERROR HANDLING-- */
 
