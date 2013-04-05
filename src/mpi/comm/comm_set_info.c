@@ -7,6 +7,7 @@
 
 #include "mpiimpl.h"
 #include "mpl_utlist.h"
+#include "mpiinfo.h"
 
 /* -- Begin Profiling Symbol Block for routine MPI_Comm_set_info */
 #if defined(HAVE_PRAGMA_WEAK)
