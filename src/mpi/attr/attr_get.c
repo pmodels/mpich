@@ -46,7 +46,7 @@ Notes:
     in with 'MPI_ATTR_PUT'.  The notes for C and Fortran below explain why.
 
 Notes for C:
-    Even though the 'attribute_val' arguement is declared as 'void *', it is
+    Even though the 'attribute_val' argument is declared as 'void *', it is
     really the address of a void pointer (i.e., a 'void **').  Using
     a 'void *', however, is more in keeping with C idiom and allows the
     pointer to be passed without additional casts.

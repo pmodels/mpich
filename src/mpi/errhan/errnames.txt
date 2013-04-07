@@ -152,7 +152,7 @@ MPI_TYPECLASS_INTEGER, or MPI_TYPECLASS_COMPLEX
 (precision=%d, range=%d) failed
 **f90typetoomany:Too many requests for unnamed, predefined f90 types
 **f90typeintnone: No integer type with the requested range is available
-**f90typeintnone %d: No integer type with %d digits of range is avaiable
+**f90typeintnone %d: No integer type with %d digits of range is available
 **f90typerealnone: No real type with the requested range and/or precision \
  is available
 **f90typerealnone %d %d: No real type with both %d digits of precision \

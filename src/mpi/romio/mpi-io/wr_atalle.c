@@ -24,7 +24,7 @@
 #endif
 
 /*@
-    MPI_File_write_at_all_end - Complete a split collective write using explict offset
+    MPI_File_write_at_all_end - Complete a split collective write using explicit offset
 
 Input Parameters:
 . fh - file handle (handle)

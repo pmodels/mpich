@@ -25,7 +25,7 @@
 /* status object not filled currently */
 
 /*@
-    MPI_File_read_at - Read using explict offset
+    MPI_File_read_at - Read using explicit offset
 
 Input Parameters:
 . fh - file handle (handle)

@@ -139,7 +139,7 @@ int MPIDI_CH3U_Recvq_init(void)
                                 MPI_T_PVAR_CLASS_LEVEL,
                                 MPI_UNSIGNED,
                                 MPI_T_ENUM_NULL,
-                                "length of the unexpected messsage receive queue",
+                                "length of the unexpected message receive queue",
                                 MPI_T_BIND_NO_OBJECT,
                                 /*readonly=*/TRUE,
                                 /*continuous=*/TRUE,
@@ -156,7 +156,7 @@ int MPIDI_CH3U_Recvq_init(void)
                                 MPI_T_PVAR_CLASS_COUNTER,
                                 MPI_AINT,
                                 MPI_T_ENUM_NULL,
-                                "number of search passes on the messsage receive queue",
+                                "number of search passes on the message receive queue",
                                 MPI_T_BIND_NO_OBJECT,
                                 /*readonly=*/FALSE,
                                 /*continuous=*/TRUE,
@@ -173,7 +173,7 @@ int MPIDI_CH3U_Recvq_init(void)
                                 MPI_T_PVAR_CLASS_COUNTER,
                                 MPI_AINT,
                                 MPI_T_ENUM_NULL,
-                                "number of search passes on the messsage receive queue",
+                                "number of search passes on the message receive queue",
                                 MPI_T_BIND_NO_OBJECT,
                                 /*readonly=*/FALSE,
                                 /*continuous=*/TRUE,
@@ -246,7 +246,7 @@ fn_fail:
  * MPIDI_CH3U_Recvq_FU()
  *
  * Search for a matching request in the unexpected receive queue.  Return 
- * true if one is found, false otherwise.  If the status arguement is
+ * true if one is found, false otherwise.  If the status argument is
  * not MPI_STATUS_IGNORE, return information about the request in that
  * parameter.  This routine is used by mpid_probe and mpid_iprobe.
  *

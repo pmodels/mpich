@@ -24,7 +24,7 @@
 #endif
 
 /*@
-    MPI_File_iwrite_at - Nonblocking write using explict offset
+    MPI_File_iwrite_at - Nonblocking write using explicit offset
 
 Input Parameters:
 . fh - file handle (handle)

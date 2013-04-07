@@ -28,7 +28,7 @@
 #endif
 
 /*@
-    MPI_File_iread_at - Nonblocking read using explict offset
+    MPI_File_iread_at - Nonblocking read using explicit offset
 
 Input Parameters:
 . fh - file handle (handle)

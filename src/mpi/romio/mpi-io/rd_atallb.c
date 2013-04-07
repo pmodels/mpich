@@ -24,7 +24,7 @@
 #endif
 
 /*@
-    MPI_File_read_at_all_begin - Begin a split collective read using explict offset
+    MPI_File_read_at_all_begin - Begin a split collective read using explicit offset
 
 Input Parameters:
 . fh - file handle (handle)

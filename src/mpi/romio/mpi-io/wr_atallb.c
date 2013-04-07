@@ -25,7 +25,7 @@
 
 /*@
     MPI_File_write_at_all_begin - Begin a split collective write using
-    explict offset
+    explicit offset
 
 Input Parameters:
 . fh - file handle (handle)

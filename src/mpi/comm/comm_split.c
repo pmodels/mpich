@@ -381,7 +381,7 @@ Input Parameters:
 + comm - communicator (handle) 
 . color - control of subset assignment (nonnegative integer).  Processes 
   with the same color are in the same new communicator 
-- key - control of rank assigment (integer)
+- key - control of rank assignment (integer)
 
 Output Parameters:
 . newcomm - new communicator (handle) 

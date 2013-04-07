@@ -122,7 +122,7 @@ int MPID_Isend(const void * buf, int count, MPI_Datatype datatype, int rank,
 
     MPIDI_CH3_GET_EAGER_THRESHOLD(&eager_threshold, comm, vc);
 
-    /* FIXME: flow control: limit number of outstanding eager messsages 
+    /* FIXME: flow control: limit number of outstanding eager messages
        containing data and need to be buffered by the receiver */
     if (data_sz + sizeof(MPIDI_CH3_Pkt_eager_send_t) <= eager_threshold)
     {

@@ -407,7 +407,7 @@ int MPID_nem_scif_poll_send(int ep, shmchan_t * csend)
 
     avail = csend->buflen - (csend->curp - csend->bufp) - sizeof(uint64_t);
     if (avail >= SMALLMSG)
-        goto fn_exit;   /* room for a messsage */
+        goto fn_exit;   /* room for a message */
     lseqno = *csend->lseqno;
     if (lseqno == csend->seqno)
         goto fn_exit;   /* remote side has consumed everything */

@@ -43,7 +43,7 @@ Input Parameters:
 
    Unlike 'MPI_Waitall', 'MPI_Startall' does not provide a mechanism for
    returning multiple errors nor pinpointing the request(s) involved.
-   Futhermore, the behavior of 'MPI_Startall' after an error occurs is not
+   Furthermore, the behavior of 'MPI_Startall' after an error occurs is not
    defined by the MPI standard.  If well-defined error reporting and behavior
    are required, multiple calls to 'MPI_Start' should be used instead.
 

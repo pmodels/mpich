@@ -332,7 +332,7 @@ Output Parameters:
     why. 
 
 Notes for C:
-    Even though the 'attr_value' arguement is declared as 'void *', it is
+    Even though the 'attr_value' argument is declared as 'void *', it is
     really the address of a void pointer.  See the rationale in the 
     standard for more details. 
 

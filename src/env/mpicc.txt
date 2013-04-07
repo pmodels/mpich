@@ -11,7 +11,7 @@
 
     Command line arguments:
 +  -show      - Show the commands that would be used without
-             runnning them
+                running them
 .  -help      - Give short help
 .  -cc=name   - Use compiler 'name' instead of the default choice.  Use
                 this only if the compiler is compatible with the MPICH

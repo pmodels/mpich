@@ -26,7 +26,7 @@
 /* status object not filled currently */
 
 /*@
-    MPI_File_write_at_all - Collective write using explict offset
+    MPI_File_write_at_all - Collective write using explicit offset
 
 Input Parameters:
 . fh - file handle (handle)

@@ -25,7 +25,7 @@
 /* status object not filled currently */
 
 /*@
-    MPI_File_write_at - Write using explict offset
+    MPI_File_write_at - Write using explicit offset
 
 Input Parameters:
 . fh - file handle (handle)

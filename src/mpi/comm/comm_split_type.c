@@ -70,7 +70,7 @@ MPI_Comm_split_type - Creates new communicators based on split types and keys
 Input Parameters:
 + comm - communicator (handle)
 . split_type - type of processes to be grouped together (nonnegative integer).
-. key - control of rank assigment (integer)
+. key - control of rank assignment (integer)
 - info - hints to improve communicator creation (handle)
 
 Output Parameters:

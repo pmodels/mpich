@@ -25,7 +25,7 @@
 
 /*@
     MPI_File_read_at_all_end - Complete a split collective read using
-    explict offset
+    explicit offset
 
 Input Parameters:
 . fh - file handle (handle)
