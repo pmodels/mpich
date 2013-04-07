@@ -31,6 +31,13 @@
 #include <mpidimpl.h>
 #include "mpidi_util.h"
 
+/* Short hand for sizes */
+#define ONE  (1)
+#define ONEK (1<<10)
+#define ONEM (1<<20)
+#define ONEG (1<<30)
+
+
 
 #if (MPIDI_PRINTENV || MPIDI_STATISTICS || MPIDI_BANNER)
 MPIDI_printenv_t  *mpich_env;
@@ -773,3 +780,368 @@ void MPIDI_print_statistics() {
 }
 
 #endif  /* MPIDI_PRINTENV || MPIDI_STATISTICS         */
+
+/**
+ * \brief validate whether a lpid is in a given group
+ *
+ * Searches the group lpid list for a match.
+ *
+ * \param[in] lpid  World rank of the node in question
+ * \param[in] grp   Group to validate against
+ * \return TRUE is lpid is in group
+ */
+
+int MPIDI_valid_group_rank(int lpid, MPID_Group *grp) {
+        int size = grp->size;
+        int z;
+
+        for (z = 0; z < size &&
+                lpid != grp->lrank_to_lpid[z].lpid; ++z);
+        return (z < size);
+}
+
+/****************************************************************/
+/* function MPIDI_uppers converts a passed string to upper case */
+/****************************************************************/
+void MPIDI_toupper(char *s)
+{
+   int i;
+   if (s != NULL) {
+      for(i=0;i<strlen(s);i++) s[i] = toupper(s[i]);
+   }
+}
+
+/*
+  -----------------------------------------------------------------
+  Name:           MPID_scan_str()
+
+  Function:       Scan a flag string for 2 out of 3 possible
+                  characters (K, M, G). Return a 1 if neither
+                  character is found otherwise return the character
+                  along with a buffer containing the string without
+                  the character.
+                  value are valid. If they are valid, the
+                  multiplication of the number and the units
+                  will be returned as an unsigned int. If the
+                  number and units are invalid, a 1 will be returned.
+
+  Description:    search string for character or end of string
+                  if string contains either entered character
+                    check which char it is, set multiplier
+                  if no chars found, return error
+
+  Parameters:     A0 = MPIDI_scan_str(A1, A2, A3, A4, A5)
+
+                  A1    string to scan                char *
+                  A2    first char to scan for        char
+                  A3    second char to scan for       char
+                  A4    multiplier                    char *
+                  A5    returned string               char *
+
+                  A0    Return Code                   int
+
+
+  Return Codes:   0 OK
+                  1 input chars not found
+  ------------------------------------------------------------
+*/
+int MPIDI_scan_str(char *my_str, char fir_c, char sec_c, char *multiplier, char *tempbuf)
+{
+   int str_ptr;           /*index counter into string*/
+   int found;             /*indicates whether one of input chars found*/
+   int len_my_str;        /*length of string with size and units*/
+
+   str_ptr = 0;           /*start at beginning of string*/
+   found = 0;             /*no chars found yet*/
+
+   len_my_str = strlen(my_str);
+
+   /* first check if all 'characters' of *my_str are digits,  */
+   /* str_ptr points to the first occurrence of a character   */
+   for (str_ptr=0; str_ptr<len_my_str; str_ptr++) {
+      if (str_ptr == 0) {   /* there can be a '+' or a '-' in the first position   */
+                            /* but I do not allow a negative value because there's */
+                            /* no negative amount of memory...                     */
+         if (my_str[0] == '+') {
+            tempbuf[0] = my_str[0];  /* copy sign */
+            /* this is ok but a digit MUST follow */
+            str_ptr++;
+            /* If only a '+' was entered the next character is '\0'. */
+            /* This is not a digit so the error message shows up     */
+         }
+      }
+      if (!isdigit(my_str[str_ptr])) {
+         break;
+      }
+      tempbuf[str_ptr] = my_str[str_ptr]; /* copy to return string */
+   } /* endfor */
+
+   tempbuf[str_ptr] = 0x00;       /* terminate return string, this was NOT done before this modification! */
+
+   if((my_str[str_ptr] == fir_c) || (my_str[str_ptr] == sec_c)) {
+      /*check which char it is, then set multiplier and indicate char found*/
+      switch(my_str[str_ptr]) {
+        case 'K':
+          *multiplier = 'K';
+          found++;
+          break;
+        case 'M':
+          *multiplier = 'M';
+          found++;
+          break;
+        case 'G':
+          *multiplier = 'G';
+          found++;
+          break;
+      }
+  /*    my_str[str_ptr] = 0; */  /*change char in string to end of string char*/
+   }
+  if (found == 0) {             /*if input chars not found, indicate error*/
+    return(1); }
+  else {
+    /* K, M or G should be the last character, something like 64M55 is invalid */
+    if (str_ptr == len_my_str-1) {
+       return(0);                 /*if input chars found, return good status*/
+    } else {
+       /* I only allow a 'B' to follow. This is not documented but reflects the */
+       /* behaviour of earlier poe parsing. 64MB is valid, but after 'B' the    */
+       /* string must end */
+       if (my_str[str_ptr+1] == 'B' && (str_ptr+1) == (len_my_str-1)) {
+          return(0);                 /*if input chars found, return good status*/
+       } else {
+          return(1);
+       } /* endif */
+    } /* endif */
+  }
+}
+/*
+  -----------------------------------------------------------------
+  Name:           MPIDI_scan_str3()
+
+  Function:       Scan a flag string for 3 out of 3 possible
+                  characters (K, M, G). Return a 1 if neither
+                  character is found otherwise return the character
+                  along with a buffer containing the string without
+                  the character.
+                  value are valid. If they are valid, the
+                  multiplication of the number and the units
+                  will be returned as an unsigned int. If the
+                  number and units are invalid, a 1 will be returned.
+
+  Description:    search string for character or end of string
+                  if string contains either entered character
+                    check which char it is, set multiplier
+                  if no chars found, return error
+
+  Parameters:     A0 = MPIDI_scan_str(A1, A2, A3, A4, A5, A6)
+
+                  A1    string to scan                char *
+                  A2    first char to scan for        char
+                  A3    second char to scan for       char
+                  A4    third char to scan for        char
+                  A5    multiplier                    char *
+                  A6    returned string               char *
+
+                  A0    Return Code                   int
+
+  Return Codes:   0 OK
+                  1 input chars not found
+  ------------------------------------------------------------
+*/
+int MPIDI_scan_str3(char *my_str, char fir_c, char sec_c, char thr_c, char *multiplier, char *tempbuf)
+{
+
+   int str_ptr;           /*index counter into string*/
+   int found;             /*indicates whether one of input chars found*/
+   int len_my_str;        /*length of string with size and units*/
+
+   str_ptr = 0;           /*start at beginning of string*/
+   found = 0;             /*no chars found yet*/
+
+   len_my_str = strlen(my_str);
+
+   /* first check if all 'characters' of *my_str are digits,  */
+   /* str_ptr points to the first occurrence of a character   */
+   for (str_ptr=0; str_ptr<len_my_str; str_ptr++) {
+      if (str_ptr == 0) {   /* there can be a '+' or a '-' in the first position   */
+                            /* but I do not allow a negative value because there's */
+                            /* no negative amount of memory...                     */
+         if (my_str[0] == '+') {
+            tempbuf[0] = my_str[0];  /* copy sign */
+            /* this is ok but a digit MUST follow */
+            str_ptr++;
+            /* If only a '+' was entered the next character is '\0'. */
+            /* This is not a digit so the error message shows up     */
+         }
+      }
+      if (!isdigit(my_str[str_ptr])) {
+         break;
+      }
+      tempbuf[str_ptr] = my_str[str_ptr]; /* copy to return string */
+   } /* endfor */
+
+   tempbuf[str_ptr] = 0x00;       /* terminate return string, this was NOT done before this modification! */
+
+   if((my_str[str_ptr] == fir_c) || (my_str[str_ptr] == sec_c) || (my_str[str_ptr] == thr_c)) {
+      /*check which char it is, then set multiplier and indicate char found*/
+      switch(my_str[str_ptr]) {
+        case 'K':
+          *multiplier = 'K';
+          found++;
+          break;
+        case 'M':
+          *multiplier = 'M';
+          found++;
+          break;
+        case 'G':
+          *multiplier = 'G';
+          found++;
+          break;
+      }
+  /*    my_str[str_ptr] = 0; */  /*change char in string to end of string char*/
+   }
+  if (found == 0) {             /*if input chars not found, indicate error*/
+    return(1); }
+  else {
+    /* K, M or G should be the last character, something like 64M55 is invalid */
+    if (str_ptr == len_my_str-1) {
+       return(0);                 /*if input chars found, return good status*/
+    } else {
+       /* I only allow a 'B' to follow. This is not documented but reflects the */
+       /* behaviour of earlier poe parsing. 64MB is valid, but after 'B' the    */
+       /* string must end */
+       if (my_str[str_ptr+1] == 'B' && (str_ptr+1) == (len_my_str-1)) {
+          return(0);                 /*if input chars found, return good status*/
+       } else {
+          return(1);
+       } /* endif */
+    } /* endif */
+  }
+}
+
+/*
+  -----------------------------------------------------------------
+  Name:           MPIDI_checkit()
+
+  Function:       Determine whether a given number and units
+                  value are valid. If they are valid, the
+                  multiplication of the number and the units
+                  will be returned as an unsigned int. If the
+                  number and units are invalid, a 1 will be returned.
+
+  Description:    if units is G
+                    if value is > 4 return error
+                    else multiplier is 1G
+                  else if units is M
+                    if value is > 4K return error
+                    else multiplier is 1M
+                  else if units is K
+                    if value is > 4M return error
+                    else multiplier is 1K
+                  if value < 1 return error
+                  else
+                    multiply value by multiplier
+                    return result
+
+  Parameters:     A0 = MPIDI_checkit(A1, A2, A3)
+
+                  A1    given value                   int
+                  A2    given units                   char *
+                  A3    result                        unsigned int *
+
+                  A0    Return Code                   int
+
+  Return Codes:   0 OK
+                  1 bad value
+  ------------------------------------------------------------
+*/
+int MPIDI_checkit(int myval, char myunits, unsigned int *mygoodval)
+{
+  int multiplier = ONE;             /*units multiplier for entered value*/
+
+  if (myunits == 'G') {             /*if units is G*/
+    if (myval>4) return 1;          /*entered value can't be greater than 4*/
+    else multiplier = ONEG;         /*if OK, mult value by units*/
+  }
+  else if (myunits == 'M') {        /*if units is M*/
+    if (myval > (4*ONEK)) return 1;   /*value can't be > 4096*/
+    else multiplier = ONEM;         /*if OK, mult value by units*/
+  }
+  else if (myunits == 'K') {        /*if units is K*/
+    if (myval > (4*ONEM)) return 1; /*value can't be > 4M*/
+    else multiplier = ONEK;         /*if OK, mult value by units*/
+  }
+  if (myval < 1) return 1;          /*value can't be less than 1*/
+
+  *mygoodval = myval * multiplier;  /*do multiplication*/
+  return 0;                         /*good return*/
+
+}
+
+
+
+ /***************************************************************************
+ Function Name: MPIDI_atoi
+
+ Description:   Convert a string into an interger.  The string can be all
+                digits or includes symbols 'K', 'M'.
+
+ Parameters:    char * -- string to be converted
+                unsigned int  * -- result val (caller to cast to int* or long*)
+
+ Return:        int    0 if AOK
+                       number of errors.
+ ***************************************************************************/
+int MPIDI_atoi(char* str_in, unsigned int* val)
+{
+   char tempbuf[256];
+   char size_mult;                 /* multiplier for size strings */
+   int  i, tempval;
+   int  letter=0, retval=0;
+
+   /***********************************/
+   /* Check for letter                */
+   /***********************************/
+   for (i=0; i<strlen(str_in); i++) {
+      if (!isdigit(str_in[i])) {
+         letter = 1;
+         break;
+      }
+   }
+   if (!letter) {    /* only digits */
+      errno = 0;     /*  should set errno to 0 before atoi() call */
+      *val = atoi(str_in);
+      if (errno) {   /* no check for negative integer, there's no '-' in the string */
+         retval = errno;
+      }
+   }
+   else {
+      /***********************************/
+      /* Check for K or M.               */
+      /***********************************/
+      MPIDI_toupper(str_in);
+      retval = MPIDI_scan_str(str_in, 'M', 'K', &size_mult, tempbuf);
+
+      if ( retval == 0) {
+         tempval = atoi(tempbuf);
+
+         /***********************************/
+         /* If 0 K or 0 M entered, set to 0 */
+         /* otherwise, do conversion.       */
+         /***********************************/
+         if (tempval != 0)
+            retval = MPIDI_checkit(tempval, size_mult, (unsigned int*)val);
+         else
+            *val = 0;
+      }
+
+      if (retval == 0) {
+         tempval = atoi(tempbuf);
+         retval = MPIDI_checkit(tempval, size_mult, (unsigned int*)val);
+      }
+      else
+         *val = 0;
+   }
+
+   return retval;
+}
