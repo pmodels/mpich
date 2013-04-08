@@ -1,4 +1,17 @@
 ===============================================================================
+                               Changes in 3.0.4
+===============================================================================
+
+ # OVERALL: Added support to manage per-communicator eager-rendezvous
+   thresholds.
+
+ # Several other minor bug fixes, memory leak fixes, and code cleanup.
+   A full list of changes is available at the following link:
+
+     http://git.mpich.org/mpich.git/shortlog/v3.0.3..v3.0.4
+
+
+===============================================================================
                                Changes in 3.0.3
 ===============================================================================
 
