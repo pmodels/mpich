@@ -254,7 +254,7 @@ print("done\n");
 # Disable unnecessary tests in the release tarball
 print("===> Disabling unnecessary tests in the main package... ");
 chdir($expdir);
-run_cmd("perl -p -i -e 's/^@perfdir@\$/#@perfdir@/' test/mpi/testlist.in");
+run_cmd("perl -p -i -e 's/^\@perfdir\@\$/#\@perfdir\@/' test/mpi/testlist.in");
 run_cmd("perl -p -i -e 's/^large_message /#large_message /' test/mpi/pt2pt/testlist");
 run_cmd("perl -p -i -e 's/^large-count /#large-count /' test/mpi/datatype/testlist");
 print("done\n");
