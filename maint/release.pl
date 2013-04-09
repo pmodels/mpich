@@ -19,17 +19,18 @@ use Getopt::Long;
 use File::Temp qw( tempdir );
 
 my $arg = 0;
-my $source = "";
-my $psource = "";
+my $branch = "";
+my $pbranch = "";
 my $version = "";
 my $append_commit_id;
+my $since = "";
 my $root = cwd();
 my $with_autoconf = "";
 my $with_automake = "";
-my $git_repo_path = ".";
+my $remote_git_repo = "";
 
 # Default to MPICH
-my $pack = "mpich";
+my $prefix = "mpich";
 
 my $logfile = "release.log";
 
@@ -38,19 +39,14 @@ sub usage
     print "Usage: $0 [OPTIONS]\n\n";
     print "OPTIONS:\n";
 
-    print "\t--source          git tree-ish specifying source to be packaged\n";
-    print "\t--psource         git tree-ish for the previous version source for ABI compliance (required)\n";
+    print "\t--branch             git branch to be packaged (required)\n";
+    print "\t--pbranch            git previous version branch for ABI compliance (required)\n";
+    print "\t--version            tarball version (required)\n";
+    print "\t--remote-git-repo    path to root of the git repository (required)\n";
 
-    # what package we are creating
-    print "\t--package         package to create (optional)\n";
-
-    # version string associated with the tarball
-    print "\t--version         tarball version (required)\n";
-
-    # append a valid git commit ID (SHA1 or git-describe output)
+    print "\t--prefix             package prefix to use (optional)\n";
     print "\t--append-commit-id   append git commit ID (optional)\n";
-
-    print "\t--git-repository  path to root of the git repository\n";
+    print "\t--newer-than         date (optional)\n";
 
     print "\n";
 
@@ -139,14 +135,15 @@ sub run_cmd
 }
 
 GetOptions(
-    "source=s" => \$source,
-    "psource=s" => \$psource,
-    "package:s"  => \$pack,
+    "branch=s" => \$branch,
+    "pbranch=s" => \$pbranch,
+    "prefix:s"  => \$prefix,
     "version=s" => \$version,
     "append-commit-id!" => \$append_commit_id,
+    "newer-than=s" => \$since,
     "with-autoconf" => \$with_autoconf,
     "with-automake" => \$with_automake,
-    "git-repository=s" => \$git_repo_path,
+    "remote-git-repo=s" => \$remote_git_repo,
     "help"     => \&usage,
 
     # old deprecated args, retained with usage() to help catch non-updated cron
@@ -158,7 +155,7 @@ if (scalar(@ARGV) != 0) {
     usage();
 }
 
-if (!$source || !$version || !$psource) {
+if (!$branch || !$version || !$pbranch) {
     usage();
 }
 
@@ -178,42 +175,61 @@ check_autotools_version("automake", "1.12.4");
 check_autotools_version("libtool", "2.4.2");
 print("\n");
 
-# chdirs to $git_repo_path if valid
-check_git_repo($git_repo_path);
+
+my $tdir = tempdir(CLEANUP => 1);
+my $local_git_clone = "${tdir}/${prefix}-clone";
+
+
+# clone git repo
+print("===> Cloning git repo... ");
+run_cmd("git clone ${remote_git_repo} ${local_git_clone}");
+print("done\n");
+
+# chdirs to $local_git_clone if valid
+check_git_repo($local_git_clone);
 print("\n");
 
-my $current_ver = `git show ${source}:maint/version.m4 | grep MPICH_VERSION_m4 | \
+if ($since) {
+    # If there have been no commits in the past some amount of time,
+    # do not create a tarball
+    if (!(`git log --since='$since' ${branch}`)) {
+	chdir("${tdir}/..");
+	print "No recent commits found... aborting\n";
+	exit;
+    }
+}
+
+my $current_ver = `git show ${branch}:maint/version.m4 | grep MPICH_VERSION_m4 | \
                    sed -e 's/^.*\\[MPICH_VERSION_m4\\],\\[\\(.*\\)\\].*/\\1/g'`;
 if ("$current_ver" ne "$version\n") {
     print("\tWARNING: Version mismatch\n\n");
 }
 
-if ($psource) {
+if ($pbranch) {
     # Check diff
-    my $d = `git diff ${psource}:src/include/mpi.h.in ${source}:src/include/mpi.h.in`;
-    $d .= `git diff ${psource}:src/binding ${source}:src/binding`;
+    my $d = `git diff ${pbranch}:src/include/mpi.h.in ${branch}:src/include/mpi.h.in`;
+    $d .= `git diff ${pbranch}:src/binding ${branch}:src/binding`;
     if ("$d" ne "") {
 	print("\tWARNING: ABI mismatch\n\n");
     }
 }
 
 if ($append_commit_id) {
-    my $desc = `git describe --always ${source}`;
+    my $desc = `git describe --always ${branch}`;
     chomp $desc;
     $version .= "-${desc}";
 }
 
-my $tdir = tempdir(CLEANUP => 1);
+my $expdir = "${tdir}/${prefix}-${version}";
 
 # Clean up the log file
 system("rm -f ${root}/$logfile");
 
-# Check out the appropriate source
-print("===> Exporting $pack source from git... ");
-run_cmd("rm -rf ${pack}-${version}");
-my $expdir = "${tdir}/${pack}-${version}";
+# Check out the appropriate branch
+print("===> Exporting code from git... ");
+run_cmd("rm -rf ${expdir}");
 run_cmd("mkdir -p ${expdir}");
-run_cmd("git archive ${source} --prefix='${pack}-${version}/' | tar -x -C $tdir");
+run_cmd("git archive ${branch} --prefix='${prefix}-${version}/' | tar -x -C $tdir");
 print("done\n");
 
 print("===> Create release date and version information... ");
@@ -226,8 +242,8 @@ system(qq(perl -p -i -e 's/\\[MPICH_RELEASE_DATE_m4\\],\\[unreleased development
 # above modifications
 print("done\n");
 
-# Remove packages that are not being released
-print("===> Removing packages that are not being released... ");
+# Remove content that is not being released
+print("===> Removing content that is not being released... ");
 chdir($expdir);
 run_cmd("rm -rf doc/notes src/pm/mpd/Zeroconf.py");
 
@@ -241,7 +257,7 @@ for my $module (@nem_modules) {
 print("done\n");
 
 # Create configure
-print("===> Creating configure in the main package... ");
+print("===> Creating configure in the main codebase... ");
 chdir($expdir);
 {
     my $cmd = "./autogen.sh";
@@ -252,7 +268,7 @@ chdir($expdir);
 print("done\n");
 
 # Disable unnecessary tests in the release tarball
-print("===> Disabling unnecessary tests in the main package... ");
+print("===> Disabling unnecessary tests in the main codebase... ");
 chdir($expdir);
 run_cmd("perl -p -i -e 's/^\@perfdir\@\$/#\@perfdir\@/' test/mpi/testlist.in");
 run_cmd("perl -p -i -e 's/^large_message /#large_message /' test/mpi/pt2pt/testlist");
@@ -260,18 +276,18 @@ run_cmd("perl -p -i -e 's/^large-count /#large-count /' test/mpi/datatype/testli
 print("done\n");
 
 # Remove unnecessary files
-print("===> Removing unnecessary files in the main package... ");
+print("===> Removing unnecessary files in the main codebase... ");
 chdir($expdir);
 run_cmd("rm -rf README.vin maint/config.log maint/config.status unusederr.txt");
 run_cmd("find . -name autom4te.cache | xargs rm -rf");
 print("done\n");
 
 # Get docs
-print("===> Creating secondary package for the docs... ");
+print("===> Creating secondary codebase for the docs... ");
 run_cmd("cp -a ${expdir} ${expdir}-tmp");
 print("done\n");
 
-print("===> Configuring and making the secondary package... ");
+print("===> Configuring and making the secondary codebase... ");
 chdir("${expdir}-tmp");
 {
     my $cmd = "./autogen.sh";
@@ -302,12 +318,18 @@ run_cmd("make");
 run_cmd("rm -f users-guide.blg users-guide.toc users-guide.aux users-guide.bbl users-guide.log users-guide.dvi");
 print("done\n");
 
-# Create the tarball
-print("===> Creating the final ${pack} tarball... ");
+# Create the main tarball
+print("===> Creating the final ${prefix} tarball... ");
 chdir("${tdir}");
-run_cmd("tar -czvf ${pack}-${version}.tar.gz ${pack}-${version}");
-run_cmd("rm -rf ${expdir}");
-run_cmd("cp -a ${pack}-${version}.tar.gz ${root}/");
+run_cmd("tar -czvf ${prefix}-${version}.tar.gz ${prefix}-${version}");
+run_cmd("cp -a ${prefix}-${version}.tar.gz ${root}/");
+print("done\n");
+
+# Create the hydra tarball
+print("===> Creating the final hydra tarball... ");
+run_cmd("cp -a ${expdir}/src/pm/hydra hydra-${version}");
+run_cmd("tar -czvf hydra-${version}.tar.gz hydra-${version}");
+run_cmd("cp -a hydra-${version}.tar.gz ${root}/");
 print("done\n\n");
 
 # make sure we are outside of the tempdir so that the CLEANUP logic can run
