@@ -198,6 +198,7 @@ foreach $_ (@ARGV) {
         open( TAPOUT, ">$tapfile" ) || die "Cannot open $tapfile\n";
         my $date = `date "+%Y-%m-%d-%H-%M"`;
         $date =~ s/\r?\n//;
+        print TAPOUT "TAP version 13\n";
         print TAPOUT "# MPICH test suite results (TAP format)\n";
         print TAPOUT "# date ${date}\n";
         # we do not know at this point how many tests will be run, so do
@@ -1039,12 +1040,14 @@ sub RunTestFailed {
 
         print TAPOUT "  ...\n";
 
-        # alternative to the "Output:" YAML block literal above
-        print TAPOUT "  ## Test output (expected 'No Errors'):\n";
+        # Alternative to the "Output:" YAML block literal above.  Do not put any
+        # spaces before the '#', this causes some TAP parsers (including Perl's
+        # TAP::Parser) to treat the line as "unknown" instead of a proper
+        # comment.
+        print TAPOUT "## Test output (expected 'No Errors'):\n";
         foreach my $line (split m/\r?\n/, $output) {
             chomp $line;
-            # 2 spaces for TAP indent
-            print TAPOUT "  ## $line\n";
+            print TAPOUT "## $line\n";
         }
     }
 }
