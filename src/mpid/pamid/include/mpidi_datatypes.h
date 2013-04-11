@@ -101,6 +101,9 @@ typedef struct
   MPIDI_RequestHandle_t request_handles[MPIDI_MAX_THREADS];
 #endif
 
+#if QUEUE_BINARY_SEARCH_SUPPORT
+  unsigned queue_binary_search_support_on;
+#endif
   unsigned verbose;        /**< The current level of verbosity for end-of-job stats. */
   unsigned statistics;     /**< The current level of stats collection.               */
   unsigned rma_pending;    /**< The max num outstanding requests during an RMA op    */

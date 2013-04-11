@@ -1136,6 +1136,11 @@ MPIDI_Env_setup(int rank, int requested)
            MPIDI_Process.mp_buf_mem=0;
 #endif
     }
+
+#ifdef QUEUE_BINARY_SEARCH_SUPPORT
+    char* names[] = {"MP_S_USE_QUEUE_BINARY_SEARCH_SUPPORT", NULL};
+    ENV_Char(names, &MPIDI_Process.queue_binary_search_support_on);
+#endif
   /* Exit if any deprecated environment variables were specified. */
   if (found_deprecated_env_var)
     {

@@ -114,7 +114,9 @@ MPIDI_Process_t  MPIDI_Process = {
   .mp_statistics         = 0,
   .mp_printenv           = 0,
 #endif
-
+#ifdef QUEUE_BINARY_SEARCH_SUPPORT
+  .queue_binary_search_support_on = 0,
+#endif
   .rma_pending           = 1000,
   .shmem_pt2pt           = 1,
   .smp_detect            = MPIDI_SMP_DETECT_DEFAULT,
@@ -903,6 +905,9 @@ MPIDI_PAMI_init(int* rank, int* size, int* threading)
              "  mp_printenv  : %u\n"
              "  mp_interrupts: %u\n"
 #endif
+#ifdef QUEUE_BINARY_SEARCH_SUPPORT
+             "  queue_binary_search_support_on : %u\n"
+#endif
              "  optimized.collectives : %u\n"
              "  optimized.select_colls: %u\n"
              "  optimized.subcomms    : %u\n"
@@ -936,6 +941,9 @@ MPIDI_PAMI_init(int* rank, int* size, int* threading)
              MPIDI_Process.mp_statistics,
              MPIDI_Process.mp_printenv,
              (MPIDI_Process.async_progress.mode != ASYNC_PROGRESS_MODE_DISABLED),
+#endif
+#ifdef QUEUE_BINARY_SEARCH_SUPPORT
+             MPIDI_Process.queue_binary_search_support_on,
 #endif
              MPIDI_Process.optimized.collectives,
              MPIDI_Process.optimized.select_colls,

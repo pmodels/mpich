@@ -55,6 +55,10 @@ MPIDI_Recvq_init()
   MPIDI_Recvq.posted_tail = NULL;
   MPIDI_Recvq.unexpected_head = NULL;
   MPIDI_Recvq.unexpected_tail = NULL;
+#ifdef QUEUE_BINARY_SEARCH_SUPPORT
+  if(MPIDI_Process.queue_binary_search_support_on)
+    MPIDI_Recvq_init_queues();
+#endif
 }
 
 
@@ -80,6 +84,7 @@ MPIDI_Recvq_FU(int source, int tag, int context_id, MPI_Status * status)
 {
   MPID_Request * rreq;
   int found = FALSE;
+  void * it;
 #ifdef USE_STATISTICS
   unsigned search_length = 0;
 #endif
@@ -91,39 +96,88 @@ MPIDI_Recvq_FU(int source, int tag, int context_id, MPI_Status * status)
 
   if (tag != MPI_ANY_TAG && source != MPI_ANY_SOURCE)
     {
-      rreq = MPIDI_Recvq.unexpected_head;
-      while (rreq != NULL) {
-#ifdef USE_STATISTICS
-        ++search_length;
+#ifdef QUEUE_BINARY_SEARCH_SUPPORT
+      if(MPIDI_Process.queue_binary_search_support_on)
+      {
+#ifndef OUT_OF_ORDER_HANDLING
+        MPIDI_Recvq_find_in_uexp(source, tag, context_id, &rreq, &it);
+#else
+        MPIDI_Recvq_find_in_uexp(source, tag, context_id, -1, &rreq, &it);
 #endif
-        if ( (MPIDI_Request_getMatchCtxt(rreq) == context_id) &&
-             (MPIDI_Request_getMatchRank(rreq) == source    ) &&
-             (MPIDI_Request_getMatchTag(rreq)  == tag       )
-             )
-          {
+        if (rreq != NULL) {
   #ifdef OUT_OF_ORDER_HANDLING
-            pami_source= MPIDI_Request_getPeerRank_pami(rreq);
-            in_cntr=&MPIDI_In_cntr[pami_source];
-            nMsgs = in_cntr->nMsgs + 1;
-            if( ((int)(nMsgs-MPIDI_Request_getMatchSeq(rreq))) >= 0 )
-            {
-              if (rreq->mpid.nextR != NULL) {  /* recv is in the out of order list */
-                 if (MPIDI_Request_getMatchSeq(rreq) == nMsgs) {
-                     in_cntr->nMsgs=nMsgs;
-                     MPIDI_Recvq_remove_req_from_ool(rreq,in_cntr);
-                 } 
-              } 
+          pami_source= MPIDI_Request_getPeerRank_pami(rreq);
+          in_cntr=&MPIDI_In_cntr[pami_source];
+          nMsgs = in_cntr->nMsgs + 1;
+          if( ((int)(nMsgs-MPIDI_Request_getMatchSeq(rreq))) >= 0 )
+          {
+            if (rreq->mpid.nextR != NULL) {  /* recv is in the out of order list */
+               if (MPIDI_Request_getMatchSeq(rreq) == nMsgs) {
+                   in_cntr->nMsgs=nMsgs;
+                   MPIDI_Recvq_remove_req_from_ool(rreq,in_cntr);
+               } 
+            } 
   #endif
             found = TRUE;
             if(status != MPI_STATUS_IGNORE)
               *status = (rreq->status);
-            break;
 #ifdef OUT_OF_ORDER_HANDLING
-             }
-#endif
-       }
-        rreq = rreq->mpid.next;
+          }
+          else
+          {
+            MPIDI_Recvq_find_in_uexp(source, tag, context_id, nMsgs, &rreq, &it);
+            if (rreq != NULL) {
+              if (rreq->mpid.nextR != NULL) {  /* recv is in the out of order list */
+                in_cntr->nMsgs=nMsgs;
+                MPIDI_Recvq_remove_req_from_ool(rreq,in_cntr);
+              }
+              found = TRUE;
+              if(status != MPI_STATUS_IGNORE)
+                *status = (rreq->status);
+            }
+          }
+#endif /* OUT_OF_ORDER_HANDLING */
+        }
       }
+      else
+      {
+#endif /* QUEUE_BINARY_SEARCH_SUPPORT */
+        rreq = MPIDI_Recvq.unexpected_head;
+        while (rreq != NULL) {
+#ifdef USE_STATISTICS
+          ++search_length;
+#endif
+          if ( (MPIDI_Request_getMatchCtxt(rreq) == context_id) &&
+               (MPIDI_Request_getMatchRank(rreq) == source    ) &&
+               (MPIDI_Request_getMatchTag(rreq)  == tag       )
+               )
+            {
+  #ifdef OUT_OF_ORDER_HANDLING
+              pami_source= MPIDI_Request_getPeerRank_pami(rreq);
+              in_cntr=&MPIDI_In_cntr[pami_source];
+              nMsgs = in_cntr->nMsgs + 1;
+              if( ((int)(nMsgs-MPIDI_Request_getMatchSeq(rreq))) >= 0 )
+              {
+                if (rreq->mpid.nextR != NULL) {  /* recv is in the out of order list */
+                   if (MPIDI_Request_getMatchSeq(rreq) == nMsgs) {
+                       in_cntr->nMsgs=nMsgs;
+                       MPIDI_Recvq_remove_req_from_ool(rreq,in_cntr);
+                   } 
+                } 
+  #endif
+              found = TRUE;
+              if(status != MPI_STATUS_IGNORE)
+                *status = (rreq->status);
+              break;
+#ifdef OUT_OF_ORDER_HANDLING
+               }
+#endif
+          }
+          rreq = rreq->mpid.next;
+        }
+#ifdef QUEUE_BINARY_SEARCH_SUPPORT
+      }
+#endif /* QUEUE_BINARY_SEARCH_SUPPORT */
     }
   else
     {
@@ -152,26 +206,24 @@ MPIDI_Recvq_FU(int source, int tag, int context_id, MPI_Status * status)
           match.rank = source;
           mask.rank = ~0;
         }
-
-      rreq = MPIDI_Recvq.unexpected_head;
-      while (rreq != NULL) {
-#ifdef USE_STATISTICS
-        ++search_length;
+#ifdef QUEUE_BINARY_SEARCH_SUPPORT
+      if(MPIDI_Process.queue_binary_search_support_on)
+      {
+#ifndef OUT_OF_ORDER_HANDLING
+        MPIDI_Recvq_find_in_uexp(source, tag, match.context_id, &rreq, &it);
+#else
+        MPIDI_Recvq_find_in_uexp(source, tag, match.context_id, -1, &rreq, &it);
 #endif
-        if ( (  MPIDI_Request_getMatchCtxt(rreq)              == match.context_id) &&
-             ( (MPIDI_Request_getMatchRank(rreq) & mask.rank) == match.rank      ) &&
-             ( (MPIDI_Request_getMatchTag(rreq)  & mask.tag ) == match.tag       )
-             )
-          {
+        if (rreq != NULL) {
 #ifdef OUT_OF_ORDER_HANDLING
-            pami_source= MPIDI_Request_getPeerRank_pami(rreq);
-            in_cntr=&MPIDI_In_cntr[pami_source];
-            nMsgs = in_cntr->nMsgs + 1;
-            if(( ( (int)(nMsgs-MPIDI_Request_getMatchSeq(rreq))) >= 0) || (source == MPI_ANY_SOURCE)) {
-               if(source == MPI_ANY_SOURCE) {
-                 if((int) (nMsgs-MPIDI_Request_getMatchSeq(rreq)) < 0 )
-                    goto NEXT_MSG;
-               }
+          pami_source= MPIDI_Request_getPeerRank_pami(rreq);
+          in_cntr=&MPIDI_In_cntr[pami_source];
+          nMsgs = in_cntr->nMsgs + 1;
+          if(( ( (int)(nMsgs-MPIDI_Request_getMatchSeq(rreq))) >= 0) || (source == MPI_ANY_SOURCE)) {
+            if(source == MPI_ANY_SOURCE) {
+              if((int) (nMsgs-MPIDI_Request_getMatchSeq(rreq)) < 0 )
+                goto NEXT_MSG2;
+            }
             if (rreq->mpid.nextR != NULL)  { /* recv is in the out of order list */
               if (MPIDI_Request_getMatchSeq(rreq) == nMsgs)
                 in_cntr->nMsgs=nMsgs;
@@ -181,15 +233,66 @@ MPIDI_Recvq_FU(int source, int tag, int context_id, MPI_Status * status)
             found = TRUE;
             if(status != MPI_STATUS_IGNORE) 
               *status = (rreq->status);
-            break;
 #ifdef OUT_OF_ORDER_HANDLING
-           }
-#endif
-
+          }
+          else
+          {
+     NEXT_MSG2: MPIDI_Recvq_find_in_uexp(source, tag, match.context_id, nMsgs, &rreq, &it);
+             if (rreq != NULL) {
+               if (rreq->mpid.nextR != NULL) {  /* recv is in the out of order list */
+                 in_cntr->nMsgs=nMsgs;
+                 MPIDI_Recvq_remove_req_from_ool(rreq,in_cntr);
+               }
+               found = TRUE;
+               if(status != MPI_STATUS_IGNORE)
+                 *status = (rreq->status);
+             }
+          }
+#endif /* OUT_OF_ORDER_HANDLING */
         }
-     NEXT_MSG:
-        rreq = rreq->mpid.next;
       }
+      else
+      {
+#endif /* QUEUE_BINARY_SEARCH_SUPPORT */
+        rreq = MPIDI_Recvq.unexpected_head;
+        while (rreq != NULL) {
+#ifdef USE_STATISTICS
+          ++search_length;
+#endif
+          if ( (  MPIDI_Request_getMatchCtxt(rreq)              == match.context_id) &&
+               ( (MPIDI_Request_getMatchRank(rreq) & mask.rank) == match.rank      ) &&
+               ( (MPIDI_Request_getMatchTag(rreq)  & mask.tag ) == match.tag       )
+               )
+            {
+#ifdef OUT_OF_ORDER_HANDLING
+              pami_source= MPIDI_Request_getPeerRank_pami(rreq);
+              in_cntr=&MPIDI_In_cntr[pami_source];
+              nMsgs = in_cntr->nMsgs + 1;
+              if(( ( (int)(nMsgs-MPIDI_Request_getMatchSeq(rreq))) >= 0) || (source == MPI_ANY_SOURCE)) {
+                 if(source == MPI_ANY_SOURCE) {
+                   if((int) (nMsgs-MPIDI_Request_getMatchSeq(rreq)) < 0 )
+                      goto NEXT_MSG;
+                 }
+              if (rreq->mpid.nextR != NULL)  { /* recv is in the out of order list */
+                if (MPIDI_Request_getMatchSeq(rreq) == nMsgs)
+                  in_cntr->nMsgs=nMsgs;
+                MPIDI_Recvq_remove_req_from_ool(rreq,in_cntr);
+              }
+#endif
+              found = TRUE;
+              if(status != MPI_STATUS_IGNORE) 
+                *status = (rreq->status);
+              break;
+#ifdef OUT_OF_ORDER_HANDLING
+             }
+#endif
+          }
+     NEXT_MSG:
+          rreq = rreq->mpid.next;
+        }
+#ifdef QUEUE_BINARY_SEARCH_SUPPORT
+      }
+#endif
     }
 
 #ifdef USE_STATISTICS
@@ -215,6 +318,7 @@ MPIDI_Recvq_FDUR(MPI_Request req, int source, int tag, int context_id)
   MPID_Request * cur_rreq           = NULL; /* current request in queue */
   MPID_Request * matching_cur_rreq  = NULL; /* matching request in queue */
   MPID_Request * matching_prev_rreq = NULL; /* previous in queue to match */
+  void         * it                 = NULL;
 #ifdef USE_STATISTICS
   unsigned search_length = 0;
 #endif
@@ -222,31 +326,64 @@ MPIDI_Recvq_FDUR(MPI_Request req, int source, int tag, int context_id)
   /* ----------------------- */
   /* first we do the finding */
   /* ----------------------- */
-  cur_rreq = MPIDI_Recvq.unexpected_head;
-  while (cur_rreq != NULL) {
-#ifdef USE_STATISTICS
-    ++search_length;
+#ifdef QUEUE_BINARY_SEARCH_SUPPORT
+  if(MPIDI_Process.queue_binary_search_support_on)
+  {
+#ifndef OUT_OF_ORDER_HANDLING
+    MPIDI_Recvq_find_in_uexp(source, tag, context_id, &cur_rreq, &it);
+#else
+    /* Passing -1 for seqno because I don't care about it here */
+    MPIDI_Recvq_find_in_uexp(source, tag, context_id, -1, &cur_rreq, &it);
 #endif
-    if (MPIDI_Request_getPeerRequestH(cur_rreq) == req        &&
-        MPIDI_Request_getMatchCtxt(cur_rreq)    == context_id &&
-        MPIDI_Request_getMatchRank(cur_rreq)    == source     &&
-        MPIDI_Request_getMatchTag(cur_rreq)     == tag)
+    if (cur_rreq != NULL) {
+      if (MPIDI_Request_getPeerRequestH(cur_rreq) == req) 
       {
         matching_prev_rreq = prev_rreq;
         matching_cur_rreq  = cur_rreq;
-        break;
       }
-    prev_rreq = cur_rreq;
-    cur_rreq  = cur_rreq->mpid.next;
+    }
   }
+  else
+  {
+#endif
+    cur_rreq = MPIDI_Recvq.unexpected_head;
+    while (cur_rreq != NULL) {
+#ifdef USE_STATISTICS
+      ++search_length;
+#endif
+      if (MPIDI_Request_getPeerRequestH(cur_rreq) == req        &&
+          MPIDI_Request_getMatchCtxt(cur_rreq)    == context_id &&
+          MPIDI_Request_getMatchRank(cur_rreq)    == source     &&
+          MPIDI_Request_getMatchTag(cur_rreq)     == tag)
+        {
+          matching_prev_rreq = prev_rreq;
+          matching_cur_rreq  = cur_rreq;
+          break;
+        }
+      prev_rreq = cur_rreq;
+      cur_rreq  = cur_rreq->mpid.next;
+    }
+#ifdef  QUEUE_BINARY_SEARCH_SUPPORT
+  }
+#endif
 
   /* ----------------------- */
   /* found nothing; return   */
   /* ----------------------- */
   if (matching_cur_rreq == NULL)
     goto fn_exit;
-
-  MPIDI_Recvq_remove(MPIDI_Recvq.unexpected, matching_cur_rreq, matching_prev_rreq);
+#ifdef QUEUE_BINARY_SEARCH_SUPPORT
+  if(MPIDI_Process.queue_binary_search_support_on)
+  {
+#ifndef OUT_OF_ORDER_HANDLING
+    MPIDI_Recvq_remove_uexp(source, tag, context_id, it);
+#else
+    MPIDI_Recvq_remove_uexp(source, tag, context_id, MPIDI_Request_getMatchSeq(cur_rreq),it);
+#endif
+  }
+  else
+#endif
+    MPIDI_Recvq_remove(MPIDI_Recvq.unexpected, matching_cur_rreq, matching_prev_rreq);
 
  fn_exit:
 #ifdef USE_STATISTICS
@@ -276,6 +413,7 @@ MPIDI_Recvq_FDU(int source, pami_task_t pami_source, int tag, int context_id, in
   int found = FALSE;
   MPID_Request * rreq = NULL;
   MPID_Request * prev_rreq;
+  void         * it;
 #ifdef USE_STATISTICS
   unsigned search_length = 0;
 #endif
@@ -292,27 +430,56 @@ MPIDI_Recvq_FDU(int source, pami_task_t pami_source, int tag, int context_id, in
   //This function is typically called when there are unexp recvs
   if (tag != MPI_ANY_TAG && source != MPI_ANY_SOURCE)
     {
-      prev_rreq = NULL;
-      rreq = MPIDI_Recvq.unexpected_head;
-      while (rreq != NULL) {
-#ifdef USE_STATISTICS
-        ++search_length;
-#endif
+#ifdef QUEUE_BINARY_SEARCH_SUPPORT
+      if(MPIDI_Process.queue_binary_search_support_on)
+      {
 #ifdef OUT_OF_ORDER_HANDLING
-        if( ((int)(nMsgs-MPIDI_Request_getMatchSeq(rreq))) >= 0 ) {
+        MPIDI_Recvq_find_in_uexp(source, tag, context_id, nMsgs, &rreq, &it);
+#else
+        MPIDI_Recvq_find_in_uexp(source, tag, context_id, &rreq, &it);
 #endif
-        if ( (MPIDI_Request_getMatchCtxt(rreq) == context_id) &&
-             (MPIDI_Request_getMatchRank(rreq) == source    ) &&
-             (MPIDI_Request_getMatchTag(rreq)  == tag       )
-             )
-          {
+        if (rreq != NULL) {
 #ifdef OUT_OF_ORDER_HANDLING
-            if(rreq->mpid.nextR != NULL) {       /* recv is in the out of order list */
-              if (MPIDI_Request_getMatchSeq(rreq) == nMsgs) {
-                in_cntr->nMsgs=nMsgs;
-              }
-              MPIDI_Recvq_remove_req_from_ool(rreq,in_cntr);
+          if(rreq->mpid.nextR != NULL) {       /* recv is in the out of order list */
+            if (MPIDI_Request_getMatchSeq(rreq) == nMsgs) {
+              in_cntr->nMsgs=nMsgs;
             }
+            MPIDI_Recvq_remove_req_from_ool(rreq,in_cntr);
+          }
+          MPIDI_Recvq_remove_uexp(source, tag, context_id, MPIDI_Request_getMatchSeq(rreq),it);
+#else
+          MPIDI_Recvq_remove_uexp(source, tag, context_id, it);
+#endif
+          found = TRUE;
+#ifdef MPIDI_TRACE
+          MPIDI_Trace_buf[(rreq->mpid.partner_id)].R[(rreq->mpid.idx)].matchedInUQ2=1;
+#endif
+        }
+      }
+      else
+      {
+#endif
+        prev_rreq = NULL;
+        rreq = MPIDI_Recvq.unexpected_head;
+        while (rreq != NULL) {
+#ifdef USE_STATISTICS
+          ++search_length;
+#endif
+#ifdef OUT_OF_ORDER_HANDLING
+          if( ((int)(nMsgs-MPIDI_Request_getMatchSeq(rreq))) >= 0 ) {
+#endif
+            if ( (MPIDI_Request_getMatchCtxt(rreq) == context_id) &&
+                 (MPIDI_Request_getMatchRank(rreq) == source    ) &&
+                 (MPIDI_Request_getMatchTag(rreq)  == tag       )
+               )
+            {
+#ifdef OUT_OF_ORDER_HANDLING
+              if(rreq->mpid.nextR != NULL) {       /* recv is in the out of order list */
+                if (MPIDI_Request_getMatchSeq(rreq) == nMsgs) {
+                  in_cntr->nMsgs=nMsgs;
+                }
+                MPIDI_Recvq_remove_req_from_ool(rreq,in_cntr);
+              }
 #endif
             MPIDI_Recvq_remove(MPIDI_Recvq.unexpected, rreq, prev_rreq);
             found = TRUE;
@@ -320,12 +487,15 @@ MPIDI_Recvq_FDU(int source, pami_task_t pami_source, int tag, int context_id, in
             goto fn_exit;
           }
 #ifdef OUT_OF_ORDER_HANDLING
-       }
+          }
 #endif
 
-        prev_rreq = rreq;
-        rreq = rreq->mpid.next;
+          prev_rreq = rreq;
+          rreq = rreq->mpid.next;
+        }
+#ifdef QUEUE_BINARY_SEARCH_SUPPORT
       }
+#endif
     }
   else
     {
@@ -355,44 +525,94 @@ MPIDI_Recvq_FDU(int source, pami_task_t pami_source, int tag, int context_id, in
           mask.rank = ~0;
         }
 
-      prev_rreq = NULL;
-      rreq = MPIDI_Recvq.unexpected_head;
-      while (rreq != NULL) {
-#ifdef USE_STATISTICS
-        ++search_length;
+#ifdef QUEUE_BINARY_SEARCH_SUPPORT
+      if(MPIDI_Process.queue_binary_search_support_on)
+      {
+#ifndef OUT_OF_ORDER_HANDLING
+        MPIDI_Recvq_find_in_uexp(source, tag, match.context_id, &rreq, &it);
+#else
+        MPIDI_Recvq_find_in_uexp(source, tag, match.context_id, -1, &rreq, &it);
 #endif
+        if (rreq != NULL) {
 #ifdef OUT_OF_ORDER_HANDLING
-        if(( ( (int)(nMsgs-MPIDI_Request_getMatchSeq(rreq))) >= 0) || (source == MPI_ANY_SOURCE)) {
-#endif
-        if ( (  MPIDI_Request_getMatchCtxt(rreq)              == match.context_id) &&
-             ( (MPIDI_Request_getMatchRank(rreq) & mask.rank) == match.rank      ) &&
-             ( (MPIDI_Request_getMatchTag(rreq)  & mask.tag ) == match.tag       )
-             )
-          {
-#ifdef OUT_OF_ORDER_HANDLING
+          if(( ( (int)(nMsgs-MPIDI_Request_getMatchSeq(rreq))) >= 0) || (source == MPI_ANY_SOURCE)) {
             if(source == MPI_ANY_SOURCE) {
               in_cntr = &MPIDI_In_cntr[MPIDI_Request_getPeerRank_pami(rreq)];
               nMsgs = in_cntr->nMsgs+1;
               if((int) (nMsgs-MPIDI_Request_getMatchSeq(rreq)) < 0 )
-                 goto NEXT_MSG;
+                 goto NEXT_MSG2;
             }
             if (rreq->mpid.nextR != NULL)  { /* recv is in the out of order list */
               if (MPIDI_Request_getMatchSeq(rreq) == nMsgs)
                 in_cntr->nMsgs=nMsgs;
               MPIDI_Recvq_remove_req_from_ool(rreq,in_cntr);
             }
-#endif
-            MPIDI_Recvq_remove(MPIDI_Recvq.unexpected, rreq, prev_rreq);
+            MPIDI_Recvq_remove_uexp(MPIDI_Request_getMatchRank(rreq), MPIDI_Request_getMatchTag(rreq), match.context_id, MPIDI_Request_getMatchSeq(rreq),it);
+#else /* OUT_OF_ORDER_HANDLING */
+            MPIDI_Recvq_remove_uexp(MPIDI_Request_getMatchRank(rreq), MPIDI_Request_getMatchTag(rreq), match.context_id, it);
+#endif/* OUT_OF_ORDER_HANDLING */
             found = TRUE;
             goto fn_exit;
-          }
 #ifdef OUT_OF_ORDER_HANDLING
+          }
+     NEXT_MSG2:
+          MPIDI_Recvq_find_in_uexp(source, tag, match.context_id, nMsgs, &rreq, &it);
+          if (rreq != NULL) {
+            if (rreq->mpid.nextR != NULL)  { /* recv is in the out of order list */
+              if (MPIDI_Request_getMatchSeq(rreq) == nMsgs)
+                in_cntr->nMsgs=nMsgs;
+              MPIDI_Recvq_remove_req_from_ool(rreq,in_cntr);
+            }
+            MPIDI_Recvq_remove_uexp(MPIDI_Request_getMatchRank(rreq), MPIDI_Request_getMatchTag(rreq), match.context_id, MPIDI_Request_getMatchSeq(rreq),it);
+          }
+#endif /* OUT_OF_ORDER_HANDLING */
+
         }
-     NEXT_MSG:
-#endif
-        prev_rreq = rreq;
-        rreq = rreq->mpid.next;
       }
+      else
+      {
+#endif
+        prev_rreq = NULL;
+        rreq = MPIDI_Recvq.unexpected_head;
+        while (rreq != NULL) {
+#ifdef USE_STATISTICS
+          ++search_length;
+#endif
+#ifdef OUT_OF_ORDER_HANDLING
+          if(( ( (int)(nMsgs-MPIDI_Request_getMatchSeq(rreq))) >= 0) || (source == MPI_ANY_SOURCE)) {
+#endif
+            if ( (  MPIDI_Request_getMatchCtxt(rreq)              == match.context_id) &&
+                 ( (MPIDI_Request_getMatchRank(rreq) & mask.rank) == match.rank      ) &&
+                 ( (MPIDI_Request_getMatchTag(rreq)  & mask.tag ) == match.tag       )
+                 )
+            {
+#ifdef OUT_OF_ORDER_HANDLING
+              if(source == MPI_ANY_SOURCE) {
+                in_cntr = &MPIDI_In_cntr[MPIDI_Request_getPeerRank_pami(rreq)];
+                nMsgs = in_cntr->nMsgs+1;
+                if((int) (nMsgs-MPIDI_Request_getMatchSeq(rreq)) < 0 )
+                   goto NEXT_MSG;
+              }
+              if (rreq->mpid.nextR != NULL)  { /* recv is in the out of order list */
+                if (MPIDI_Request_getMatchSeq(rreq) == nMsgs)
+                  in_cntr->nMsgs=nMsgs;
+                MPIDI_Recvq_remove_req_from_ool(rreq,in_cntr);
+              }
+#endif
+              MPIDI_Recvq_remove(MPIDI_Recvq.unexpected, rreq, prev_rreq);
+              found = TRUE;
+              goto fn_exit;
+            }
+#ifdef OUT_OF_ORDER_HANDLING
+          }
+       NEXT_MSG:
+#endif
+          prev_rreq = rreq;
+          rreq = rreq->mpid.next;
+        }
+#ifdef QUEUE_BINARY_SEARCH_SUPPORT
+      }
+#endif
     }
 
  fn_exit:
@@ -416,27 +636,45 @@ MPIDI_Recvq_FDPR(MPID_Request * req)
   MPID_Request * cur_rreq  = NULL;
   MPID_Request * prev_rreq = NULL;
   int found = FALSE;
+  void * it;
 #ifdef USE_STATISTICS
   unsigned search_length = 0;
 #endif
 
-  cur_rreq = MPIDI_Recvq.posted_head;
+#ifdef QUEUE_BINARY_SEARCH_SUPPORT
+  if(MPIDI_Process.queue_binary_search_support_on)
+  {
+    MPIDI_Recvq_find_in_post(MPIDI_Request_getMatchRank(req), MPIDI_Request_getMatchTag(req), MPIDI_Request_getMatchCtxt(req), &cur_rreq, &it);
+    if (cur_rreq != NULL) {
+      if (cur_rreq == req)
+      {
+        MPIDI_Recvq_remove_post(MPIDI_Request_getMatchRank(req), MPIDI_Request_getMatchTag(req), MPIDI_Request_getMatchCtxt(req),it);
+        found = TRUE;
+      }
+    }
+  }
+  else
+  {
+#endif /* QUEUE_BINARY_SEARCH_SUPPORT */
+    cur_rreq = MPIDI_Recvq.posted_head;
 
-  while (cur_rreq != NULL) {
+    while (cur_rreq != NULL) {
 #ifdef USE_STATISTICS
-    ++search_length;
+      ++search_length;
 #endif
-    if (cur_rreq == req)
+      if (cur_rreq == req)
       {
         MPIDI_Recvq_remove(MPIDI_Recvq.posted, cur_rreq, prev_rreq);
         found = TRUE;
         break;
       }
 
-    prev_rreq = cur_rreq;
-    cur_rreq = cur_rreq->mpid.next;
+      prev_rreq = cur_rreq;
+      cur_rreq = cur_rreq->mpid.next;
+    }
+#ifdef QUEUE_BINARY_SEARCH_SUPPORT
   }
-
+#endif
 #ifdef USE_STATISTICS
   MPIDI_Statistics_time(MPIDI_Statistics.recvq.posted_search, search_length);
 #endif
@@ -511,8 +749,13 @@ MPIDI_Recvq_AEU(MPID_Request *newreq, int source, pami_task_t pami_source, int t
   TRACE_SET_REQ_VAL(rreq->mpid.envelope.data,(void *) 0);
 #ifndef OUT_OF_ORDER_HANDLING
   MPIDI_Request_setMatch(rreq, tag, source, context_id);
-  MPIDI_Recvq_append(MPIDI_Recvq.unexpected, rreq);
-#else
+#ifdef QUEUE_BINARY_SEARCH_SUPPORT
+  if(MPIDI_Process.queue_binary_search_support_on)
+    MPIDI_Recvq_insert_uexp((void*)rreq, source, tag, context_id);
+  else
+#endif
+    MPIDI_Recvq_append(MPIDI_Recvq.unexpected, rreq);
+#else /* OUT_OF_ORDER_HANDLING */
   MPID_Request *q;
   MPIDI_In_cntr_t *in_cntr;
   int insert, i;
@@ -522,26 +765,33 @@ MPIDI_Recvq_AEU(MPID_Request *newreq, int source, pami_task_t pami_source, int t
   MPIDI_Request_setPeerRank_pami(rreq, pami_source);
   MPIDI_Request_setPeerRank_comm(rreq, source);
   MPIDI_Request_setMatchSeq(rreq, msg_seqno);
-
-  if (!in_cntr->n_OutOfOrderMsgs) {
-    MPIDI_Recvq_append(MPIDI_Recvq.unexpected, rreq);
-  } else {
-    q=in_cntr->OutOfOrderList;
-    insert=0;
-    for (i=1; i<=in_cntr->n_OutOfOrderMsgs; i++) {
-      if ( context_id == MPIDI_Request_getMatchCtxt(q)) {
-        if (((int)(msg_seqno - MPIDI_Request_getMatchSeq(q))) < 0) {
-           MPIDI_Recvq_insert(MPIDI_Recvq.unexpected, q, rreq);
-           insert=1;
-           break;
-        }
-      }
-      q=q->mpid.nextR;
-    }
-    if (!insert) {
+#ifdef QUEUE_BINARY_SEARCH_SUPPORT
+  if(MPIDI_Process.queue_binary_search_support_on)
+  { 
+    MPIDI_Recvq_insert_uexp((void*)rreq, source, tag, context_id, msg_seqno);
+  }
+  else
+  {
+#endif
+    if (!in_cntr->n_OutOfOrderMsgs) {
       MPIDI_Recvq_append(MPIDI_Recvq.unexpected, rreq);
+    } else {
+      q=in_cntr->OutOfOrderList;
+      insert=0;
+      for (i=1; i<=in_cntr->n_OutOfOrderMsgs; i++) {
+        if ( context_id == MPIDI_Request_getMatchCtxt(q)) {
+          if (((int)(msg_seqno - MPIDI_Request_getMatchSeq(q))) < 0) {
+             MPIDI_Recvq_insert(MPIDI_Recvq.unexpected, q, rreq);
+             insert=1;
+             break;
+          }
+        }
+        q=q->mpid.nextR;
+      }
+      if (!insert) {
+        MPIDI_Recvq_append(MPIDI_Recvq.unexpected, rreq);
+      }
     }
-   }
    TRACE_SET_R_VAL(pami_source,(msg_seqno & SEQMASK),req,rreq);
    TRACE_SET_R_VAL(pami_source,(msg_seqno & SEQMASK),msgid,msg_seqno);
    TRACE_SET_R_BIT(pami_source,(msg_seqno & SEQMASK),fl.f.ool);
@@ -550,11 +800,14 @@ MPIDI_Recvq_AEU(MPID_Request *newreq, int source, pami_task_t pami_source, int t
    TRACE_SET_REQ_VAL(rreq->mpid.idx,(msg_seqno & SEQMASK));
    TRACE_SET_R_VAL(pami_source,(msg_seqno & SEQMASK),rsource,pami_source);
    TRACE_SET_REQ_VAL(rreq->mpid.partner_id,pami_source);
+#ifdef QUEUE_BINARY_SEARCH_SUPPORT
+  }
+#endif
 
   if (((int)(in_cntr->nMsgs - msg_seqno)) < 0) { /* seqno > nMsgs, out of order */
     MPIDI_Recvq_enqueue_ool(pami_source,rreq);
   }
-#endif
+#endif/* OUT_OF_ORDER_HANDLING */
 
   return rreq;
 }

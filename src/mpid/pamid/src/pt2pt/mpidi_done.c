@@ -148,6 +148,7 @@ void MPIDI_Recvq_process_out_of_order_msgs(pami_task_t src, pami_context_t conte
    pami_get_simple_t xferP;
    MPIDI_msg_sz_t _count=0;
    int matched;
+   void * it;
 
    in_cntr  = &MPIDI_In_cntr[src];
    prev_rreq = NULL;
@@ -155,7 +156,7 @@ void MPIDI_Recvq_process_out_of_order_msgs(pami_task_t src, pami_context_t conte
    while((in_cntr->n_OutOfOrderMsgs !=0) && ((MPIDI_Request_getMatchSeq(ooreq) == (in_cntr->nMsgs+1)) || (MPIDI_Request_getMatchSeq(ooreq) == in_cntr->nMsgs)))
    {
       matched=0;
-      matched=MPIDI_Search_recv_posting_queue(MPIDI_Request_getMatchRank(ooreq),MPIDI_Request_getMatchTag(ooreq),MPIDI_Request_getMatchCtxt(ooreq),&rreq);
+      matched=MPIDI_Search_recv_posting_queue(MPIDI_Request_getMatchRank(ooreq),MPIDI_Request_getMatchTag(ooreq),MPIDI_Request_getMatchCtxt(ooreq),&rreq, &it);
 
       if (matched)  {
         /* process a completed message i.e. data is in EA   */
@@ -208,8 +209,12 @@ void MPIDI_Recvq_process_out_of_order_msgs(pami_task_t src, pami_context_t conte
             MPID_Datatype_get_ptr(ooreq->mpid.datatype, ooreq->mpid.datatype_ptr);
             MPID_Datatype_add_ref(ooreq->mpid.datatype_ptr);
           }
-
-        MPIDI_Recvq_remove(MPIDI_Recvq.unexpected, ooreq, ooreq->mpid.prev);
+#ifdef QUEUE_BINARY_SEARCH_SUPPORT
+        if(MPIDI_Process.queue_binary_search_support_on)
+          MPIDI_Recvq_remove_uexp_noit(MPIDI_Request_getMatchRank(ooreq),MPIDI_Request_getMatchTag(ooreq),MPIDI_Request_getMatchCtxt(ooreq), MPIDI_Request_getMatchSeq(ooreq));
+        else
+#endif
+          MPIDI_Recvq_remove(MPIDI_Recvq.unexpected, ooreq, ooreq->mpid.prev);
 	if (!MPID_cc_is_complete(&ooreq->cc)) {
 	  ooreq->mpid.oo_peer = rreq;
           MPIDI_RecvMsg_Unexp(ooreq, rreq->mpid.userbuf, rreq->mpid.userbufcount, rreq->mpid.datatype);
@@ -241,15 +246,53 @@ void MPIDI_Recvq_process_out_of_order_msgs(pami_task_t src, pami_context_t conte
  * element from the queue and return in *request; else return NULL
  */
 int MPIDI_Search_recv_posting_queue(int src, int tag, int context_id,
-                                   MPID_Request **request )
+                                   MPID_Request **request, void** it )
 {
     MPID_Request * rreq;
     MPID_Request * prev_rreq = NULL;
 
     *request = NULL;
-    rreq = MPIDI_Recvq.posted_head;
-    while (rreq != NULL)
+#ifdef QUEUE_BINARY_SEARCH_SUPPORT
+    if(MPIDI_Process.queue_binary_search_support_on)
     {
+      MPIDI_Recvq_find_in_post(src, tag, context_id, &rreq, it);
+      if (rreq != NULL)
+      {
+        /* The communicator test is not yet correct */
+        MPIDI_Recvq_remove_post(src, tag, context_id, *it);
+        *request = rreq;
+#if (MPIDI_STATISTICS)
+        MPID_NSTAT(mpid_statp->earlyArrivalsMatched);
+#endif
+        return 1;
+      }
+      else
+      {
+        MPIDI_Recvq_find_in_post(src, MPI_ANY_TAG, context_id, &rreq, it);
+        if (rreq == NULL)
+        {
+          MPIDI_Recvq_find_in_post(MPI_ANY_SOURCE, tag, context_id, &rreq, it);
+          if (rreq == NULL)
+            MPIDI_Recvq_find_in_post(MPI_ANY_SOURCE, MPI_ANY_TAG, context_id, &rreq, it);
+        }
+        if (rreq != NULL)
+        {
+          /* The communicator test is not yet correct */
+          MPIDI_Recvq_remove_post(MPIDI_Request_getMatchRank(rreq), MPIDI_Request_getMatchTag(rreq), context_id, *it);
+          *request = rreq;
+#if (MPIDI_STATISTICS)
+          MPID_NSTAT(mpid_statp->earlyArrivalsMatched);
+#endif
+          return 1;
+        }
+      }
+    }
+    else
+    {
+#endif
+      rreq = MPIDI_Recvq.posted_head;
+      while (rreq != NULL)
+      {
         /* The communicator test is not yet correct */
         if ((MPIDI_Request_getMatchRank(rreq)==src || MPIDI_Request_getMatchRank(rreq)==MPI_ANY_SOURCE) &&
         (MPIDI_Request_getMatchCtxt(rreq)==context_id) &&
@@ -258,14 +301,16 @@ int MPIDI_Search_recv_posting_queue(int src, int tag, int context_id,
             MPIDI_Recvq_remove(MPIDI_Recvq.posted, rreq, prev_rreq);
             *request = rreq;
 #if (MPIDI_STATISTICS)
-      MPID_NSTAT(mpid_statp->earlyArrivalsMatched);
+            MPID_NSTAT(mpid_statp->earlyArrivalsMatched);
 #endif
             return 1;
         }
         prev_rreq = rreq;
         rreq = rreq->mpid.next;
-
+      }
+#ifdef QUEUE_BINARY_SEARCH_SUPPORT
     }
+#endif
     return 0;
 }
 #endif

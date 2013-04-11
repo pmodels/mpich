@@ -42,6 +42,7 @@
 #undef  OUT_OF_ORDER_HANDLING
 #undef  DYNAMIC_TASKING
 #undef  RDMA_FAILOVER
+#undef  QUEUE_BINARY_SEARCH_SUPPORT
 
 #define ASYNC_PROGRESS_MODE_DEFAULT 0
 
@@ -137,6 +138,7 @@ static const char _ibm_release_version_[] = "V1R2M0";
 #define MPIDI_NO_ASSERT       1
 #define TOKEN_FLOW_CONTROL    1
 #define DYNAMIC_TASKING       1
+#define QUEUE_BINARY_SEARCH_SUPPORT 1
 
 /* Allow MPICH to detect local tasks */
 #define MPID_USE_NODE_IDS 1
