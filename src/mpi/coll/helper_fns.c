@@ -88,7 +88,7 @@ int MPIC_Send(const void *buf, int count, MPI_Datatype datatype, int dest, int t
 int MPIC_Recv(void *buf, int count, MPI_Datatype datatype, int source, int tag,
 	     MPI_Comm comm, MPI_Status *status)
 {
-    int mpi_errno, context_id;
+    int mpi_errno = MPI_SUCCESS, context_id;
     MPID_Request *request_ptr=NULL;
     MPID_Comm *comm_ptr = NULL;
     MPIDI_STATE_DECL(MPID_STATE_MPIC_RECV);
@@ -136,7 +136,7 @@ int MPIC_Recv(void *buf, int count, MPI_Datatype datatype, int source, int tag,
 int MPIC_Ssend(const void *buf, int count, MPI_Datatype datatype, int dest, int tag,
                MPI_Comm comm)
 {
-    int mpi_errno, context_id;
+    int mpi_errno = MPI_SUCCESS, context_id;
     MPID_Request *request_ptr=NULL;
     MPID_Comm *comm_ptr=NULL;
     MPIDI_STATE_DECL(MPID_STATE_MPIC_SSEND);
@@ -180,7 +180,7 @@ int MPIC_Sendrecv(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                   MPI_Comm comm, MPI_Status *status) 
 {
     MPID_Request *recv_req_ptr=NULL, *send_req_ptr=NULL;
-    int mpi_errno, context_id;
+    int mpi_errno = MPI_SUCCESS, context_id;
     MPID_Comm *comm_ptr = NULL;
     MPIDI_STATE_DECL(MPID_STATE_MPIC_SENDRECV);
 
@@ -476,7 +476,7 @@ int MPIR_Localcopy(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
 int MPIC_Isend(const void *buf, int count, MPI_Datatype datatype, int dest, int tag,
               MPI_Comm comm, MPI_Request *request)
 {
-    int mpi_errno, context_id;
+    int mpi_errno = MPI_SUCCESS, context_id;
     MPID_Request *request_ptr=NULL;
     MPID_Comm *comm_ptr=NULL;
     MPIDI_STATE_DECL(MPID_STATE_MPIC_ISEND);
@@ -511,7 +511,7 @@ int MPIC_Isend(const void *buf, int count, MPI_Datatype datatype, int dest, int 
 int MPIC_Irecv(void *buf, int count, MPI_Datatype datatype, int
                source, int tag, MPI_Comm comm, MPI_Request *request)
 {
-    int mpi_errno, context_id;
+    int mpi_errno = MPI_SUCCESS, context_id;
     MPID_Request *request_ptr=NULL;
     MPID_Comm *comm_ptr = NULL;
     MPIDI_STATE_DECL(MPID_STATE_MPIC_IRECV);
