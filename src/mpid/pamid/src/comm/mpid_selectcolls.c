@@ -312,7 +312,7 @@ void MPIDI_Comm_coll_envvars(MPID_Comm *comm)
    }
    {
       TRACE_ERR("Checking alltaoll\n");
-      char* names[] = {"PAMID_COLLECTIVE_ALLTOALL", NULL};
+      char* names[] = {"PAMID_COLLECTIVE_ALLTOALL", "MP_S_MPI_ALLTOALL", NULL};
       MPIDI_Check_protocols(names, comm, "alltoall", PAMI_XFER_ALLTOALL);
    }
    comm->mpid.optreduce = 0;
@@ -334,17 +334,17 @@ void MPIDI_Comm_coll_envvars(MPID_Comm *comm)
    }
    {
       TRACE_ERR("Checking alltoallv\n");
-      char* names[] = {"PAMID_COLLECTIVE_ALLTOALLV", NULL};
+      char* names[] = {"PAMID_COLLECTIVE_ALLTOALLV", "MP_S_MPI_ALLTOALLV", NULL};
       MPIDI_Check_protocols(names, comm, "alltoallv", PAMI_XFER_ALLTOALLV_INT);
    }
    {
       TRACE_ERR("Checking gatherv\n");
-      char* names[] = {"PAMID_COLLECTIVE_GATHERV",  NULL};
+      char* names[] = {"PAMID_COLLECTIVE_GATHERV",  "MP_S_MPI_GATHERV", NULL};
       MPIDI_Check_protocols(names, comm, "gatherv", PAMI_XFER_GATHERV_INT);
    }
    {
       TRACE_ERR("Checking scan\n");
-      char* names[] = {"PAMID_COLLECTIVE_SCAN", NULL};
+      char* names[] = {"PAMID_COLLECTIVE_SCAN", "MP_S_MPI_SCAN", NULL};
       MPIDI_Check_protocols(names, comm, "scan", PAMI_XFER_SCAN);
    }
 
@@ -368,7 +368,7 @@ void MPIDI_Comm_coll_envvars(MPID_Comm *comm)
       }
    }
    { /* In addition to glue protocols, check for other PAMI protocols and check for PE now */
-      char* names[] = {"PAMID_COLLECTIVE_SCATTERV", NULL};
+      char* names[] = {"PAMID_COLLECTIVE_SCATTERV", "MP_S_MPI_SCATTERV", NULL};
       MPIDI_Check_protocols(names, comm, "scatterv", PAMI_XFER_SCATTERV_INT);
    }
    
@@ -385,7 +385,7 @@ void MPIDI_Comm_coll_envvars(MPID_Comm *comm)
       }
    }
    { /* In addition to glue protocols, check for other PAMI protocols and check for PE now */
-      char* names[] = {"PAMID_COLLECTIVE_SCATTER", NULL};
+      char* names[] = {"PAMID_COLLECTIVE_SCATTER", "MP_S_MPI_SCATTER", NULL};
       MPIDI_Check_protocols(names, comm, "scatter", PAMI_XFER_SCATTER);
    }
 
@@ -464,13 +464,13 @@ void MPIDI_Comm_coll_envvars(MPID_Comm *comm)
       }
    }
    { /* In addition to glue protocols, check for other PAMI protocols and check for PE now */
-      char* names[] = {"PAMID_COLLECTIVE_GATHER", NULL};
+      char* names[] = {"PAMID_COLLECTIVE_GATHER", "MP_S_MPI_GATHER", NULL};
       MPIDI_Check_protocols(names, comm, "gather", PAMI_XFER_GATHER);
    }
 
    /*   If automatic collective selection is enabled and user didn't specifically overwrite
       it, then use auto coll sel.. Otherwise, go through the manual coll sel code path. */
-   if(MPIDI_Process.optimized.auto_select_colls != MPID_AUTO_SELECT_COLLS_NONE && MPIDI_Process.optimized.auto_select_colls != MPID_AUTO_SELECT_COLLS_TUNE)
+   if(MPIDI_Process.optimized.auto_select_colls != MPID_AUTO_SELECT_COLLS_NONE && MPIDI_Process.optimized.auto_select_colls != MPID_AUTO_SELECT_COLLS_TUNE && comm->local_size > 1)
    {
      /* Create a fast query object, cache it on the comm/geometry and use it in each collective */
      pami_extension_collsel_query_create pamix_collsel_query_create =
