@@ -1117,7 +1117,7 @@ int MPID_Init(int * argc,
   /* ----------------------------- */
   /* Initialize messager           */
   /* ----------------------------- */
-  if (MPIDI_Process.async_progress.mode == ASYNC_PROGRESS_MODE_TRIGGER)
+  if ( (MPIDI_Process.async_progress.mode == ASYNC_PROGRESS_MODE_TRIGGER) || mpidi_dynamic_tasking)
   {
     /* The 'trigger' async progress mode requires MPI_THREAD_MULTIPLE.
      * Silently promote the thread level.
