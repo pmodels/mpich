@@ -240,7 +240,7 @@ int MPIDO_Gather(const void *sendbuf,
 
    gather.cb_done = cb_gather;
    gather.cookie = (void *)&active;
-   gather.cmd.xfer_gather.root = MPID_VCR_GET_LPID(comm_ptr->vcr, root);
+   gather.cmd.xfer_gather.root = MPIDI_Task_to_endpoint(MPID_VCR_GET_LPID(comm_ptr->vcr, root), 0);
    if(sendbuf == MPI_IN_PLACE) 
    {
      if(unlikely(verbose))
@@ -480,7 +480,7 @@ int MPIDO_Gather_simple(const void *sendbuf,
 
    gather.cb_done = cb_gather;
    gather.cookie = (void *)&active;
-   gather.cmd.xfer_gather.root = MPID_VCR_GET_LPID(comm_ptr->vcr, root);
+   gather.cmd.xfer_gather.root = MPIDI_Task_to_endpoint(MPID_VCR_GET_LPID(comm_ptr->vcr, root), 0);
    gather.cmd.xfer_gather.stypecount = send_size;/* stypecount is ignored when sndbuf == PAMI_IN_PLACE */
    gather.cmd.xfer_gather.sndbuf = (void *)sbuf;
    if(sendbuf == MPI_IN_PLACE) 

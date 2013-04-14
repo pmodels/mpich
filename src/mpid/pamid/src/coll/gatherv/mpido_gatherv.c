@@ -89,7 +89,7 @@ int MPIDO_Gatherv(const void *sendbuf,
 
    gatherv.cb_done = cb_gatherv;
    gatherv.cookie = (void *)&gatherv_active;
-   gatherv.cmd.xfer_gatherv_int.root = MPID_VCR_GET_LPID(comm_ptr->vcr, root);
+   gatherv.cmd.xfer_gatherv_int.root = MPIDI_Task_to_endpoint(MPID_VCR_GET_LPID(comm_ptr->vcr, root), 0);
    gatherv.cmd.xfer_gatherv_int.rcvbuf = rbuf;
    gatherv.cmd.xfer_gatherv_int.rtype = rtype;
    gatherv.cmd.xfer_gatherv_int.rtypecounts = (int *) recvcounts;
@@ -368,7 +368,7 @@ int MPIDO_Gatherv_simple(const void *sendbuf,
 
    gatherv.cb_done = cb_gatherv;
    gatherv.cookie = (void *)&gatherv_active;
-   gatherv.cmd.xfer_gatherv_int.root = MPID_VCR_GET_LPID(comm_ptr->vcr, root);
+   gatherv.cmd.xfer_gatherv_int.root = MPIDI_Task_to_endpoint(MPID_VCR_GET_LPID(comm_ptr->vcr, root), 0);
    gatherv.cmd.xfer_gatherv_int.rcvbuf = rbuf;
    gatherv.cmd.xfer_gatherv_int.rtype = rtype;
    gatherv.cmd.xfer_gatherv_int.rtypecounts = (int *) rcounts;

@@ -339,7 +339,7 @@ int MPIDO_Scatterv(const void *sendbuf,
 
    scatterv.cb_done = cb_scatterv;
    scatterv.cookie = (void *)&scatterv_active;
-   scatterv.cmd.xfer_scatterv_int.root = MPID_VCR_GET_LPID(comm_ptr->vcr, root);
+   scatterv.cmd.xfer_scatterv_int.root = MPIDI_Task_to_endpoint(MPID_VCR_GET_LPID(comm_ptr->vcr, root), 0);
 
    scatterv.algorithm = my_scatterv;
 
@@ -560,7 +560,7 @@ int MPIDO_Scatterv_simple(const void *sendbuf,
 
    scatterv.cb_done = cb_scatterv;
    scatterv.cookie = (void *)&scatterv_active;
-   scatterv.cmd.xfer_scatterv_int.root = MPID_VCR_GET_LPID(comm_ptr->vcr, root);
+   scatterv.cmd.xfer_scatterv_int.root = MPIDI_Task_to_endpoint(MPID_VCR_GET_LPID(comm_ptr->vcr, root), 0);
 
    scatterv.algorithm = mpid->coll_algorithm[PAMI_XFER_SCATTERV_INT][0][0];
    my_scatterv_md = &mpid->coll_metadata[PAMI_XFER_SCATTERV_INT][0][0];

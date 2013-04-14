@@ -142,7 +142,7 @@ int MPIDO_Reduce(const void *sendbuf,
    reduce.cmd.xfer_reduce.stypecount = count;
    reduce.cmd.xfer_reduce.rtypecount = count;
    reduce.cmd.xfer_reduce.op = pop;
-   reduce.cmd.xfer_reduce.root = MPID_VCR_GET_LPID(comm_ptr->vcr, root);
+   reduce.cmd.xfer_reduce.root = MPIDI_Task_to_endpoint(MPID_VCR_GET_LPID(comm_ptr->vcr, root), 0);
 
 
    if(unlikely(queryreq == MPID_COLL_ALWAYS_QUERY || 
@@ -302,7 +302,7 @@ int MPIDO_Reduce_simple(const void *sendbuf,
    reduce.cmd.xfer_reduce.stypecount = count;
    reduce.cmd.xfer_reduce.rtypecount = count;
    reduce.cmd.xfer_reduce.op = pop;
-   reduce.cmd.xfer_reduce.root = MPID_VCR_GET_LPID(comm_ptr->vcr, root);
+   reduce.cmd.xfer_reduce.root = MPIDI_Task_to_endpoint(MPID_VCR_GET_LPID(comm_ptr->vcr, root), 0);
    my_reduce_md = &mpid->coll_metadata[PAMI_XFER_REDUCE][0][0];
 
    TRACE_ERR("%s reduce, context %d, algoname: %s, exflag: %d\n", MPIDI_Process.context_post.active>0?"Posting":"Invoking", 0,

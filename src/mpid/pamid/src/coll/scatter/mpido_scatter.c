@@ -209,7 +209,7 @@ int MPIDO_Scatter(const void *sendbuf,
    scatter.algorithm = my_scatter;
    scatter.cb_done = cb_scatter;
    scatter.cookie = (void *)&scatter_active;
-   scatter.cmd.xfer_scatter.root = MPID_VCR_GET_LPID(comm_ptr->vcr, root);
+   scatter.cmd.xfer_scatter.root = MPIDI_Task_to_endpoint(MPID_VCR_GET_LPID(comm_ptr->vcr, root), 0);
    scatter.cmd.xfer_scatter.sndbuf = (void *)sendbuf;
    scatter.cmd.xfer_scatter.stype = stype;
    scatter.cmd.xfer_scatter.stypecount = sendcount;
@@ -459,7 +459,7 @@ int MPIDO_Scatter_simple(const void *sendbuf,
 
    scatter.cb_done = cb_scatter;
    scatter.cookie = (void *)&scatter_active;
-   scatter.cmd.xfer_scatter.root = MPID_VCR_GET_LPID(comm_ptr->vcr, root);
+   scatter.cmd.xfer_scatter.root = MPIDI_Task_to_endpoint(MPID_VCR_GET_LPID(comm_ptr->vcr, root), 0);
    scatter.cmd.xfer_scatter.sndbuf = (void *)sbuf;
    scatter.cmd.xfer_scatter.stype = PAMI_TYPE_BYTE;
    scatter.cmd.xfer_scatter.stypecount = send_size;

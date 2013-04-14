@@ -134,7 +134,7 @@ int MPIDO_Bcast(void *buffer,
 
    bcast.cb_done = cb_bcast;
    bcast.cookie = (void *)&active;
-   bcast.cmd.xfer_broadcast.root = MPID_VCR_GET_LPID(comm_ptr->vcr, root);
+   bcast.cmd.xfer_broadcast.root = MPIDI_Task_to_endpoint(MPID_VCR_GET_LPID(comm_ptr->vcr, root), 0);
    bcast.algorithm = mpid->user_selected[PAMI_XFER_BROADCAST];
    bcast.cmd.xfer_broadcast.buf = data_buffer;
    bcast.cmd.xfer_broadcast.type = PAMI_TYPE_BYTE;
@@ -334,7 +334,7 @@ int MPIDO_Bcast_simple(void *buffer,
 
    bcast.cb_done = cb_bcast;
    bcast.cookie = (void *)&active;
-   bcast.cmd.xfer_broadcast.root = MPID_VCR_GET_LPID(comm_ptr->vcr, root);
+   bcast.cmd.xfer_broadcast.root = MPIDI_Task_to_endpoint(MPID_VCR_GET_LPID(comm_ptr->vcr, root), 0);
    bcast.algorithm = mpid->coll_algorithm[PAMI_XFER_BROADCAST][0][0];
    bcast.cmd.xfer_broadcast.buf = data_buffer;
    bcast.cmd.xfer_broadcast.type = PAMI_TYPE_BYTE;

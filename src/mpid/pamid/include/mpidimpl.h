@@ -165,4 +165,16 @@ int MPIDI_PG_Get_size(MPIDI_PG_t * pg);
 #define MPIDI_PG_Get_size(pg_) ((pg_)->size)
 #endif  /** DYNAMIC_TASKING **/
 
+
+static inline pami_endpoint_t MPIDI_Task_to_endpoint(pami_task_t task, size_t offset)
+{
+  pami_endpoint_t ep;
+  pami_result_t   rc;
+  rc = PAMI_Endpoint_create(MPIDI_Client, task, 0, &ep);
+  if(rc != PAMI_SUCCESS)
+    MPID_Abort (NULL, 0, 1, "MPIDI_Task_to_endpoint:  Invalid task/offset.  No endpoint found");
+  return ep;
+}
+
+
 #endif
