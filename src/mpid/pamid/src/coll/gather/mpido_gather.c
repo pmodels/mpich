@@ -460,6 +460,13 @@ int MPIDO_Gather_simple(const void *sendbuf,
            MPID_Abort(NULL, MPI_ERR_NO_SPACE, 1,
               "Fatal:  Cannot allocate pack buffer");
         }
+        if(sendbuf == MPI_IN_PLACE)
+        {
+          size_t extent;
+          MPID_Datatype_get_extent_macro(recvtype,extent);
+          MPIR_Localcopy(recvbuf + (rank*recvcount*extent), recvcount, recvtype,
+                         rcv_noncontig_buff + (rank*recv_size), recv_size,MPI_CHAR);
+        }
       }
     }
     else

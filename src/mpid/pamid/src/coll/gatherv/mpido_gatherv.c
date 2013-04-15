@@ -247,7 +247,7 @@ int MPIDO_Gatherv_simple(const void *sendbuf,
    int send_size = 0;
    int recv_size = 0;
    int rcvlen    = 0;
-   int rcvcount  = 0;
+  int totalrecvcount  = 0;
    pami_type_t rtype = PAMI_TYPE_NULL;
    MPID_Segment segment;
    MPID_Datatype *data_ptr = NULL;
@@ -258,7 +258,7 @@ int MPIDO_Gatherv_simple(const void *sendbuf,
    const int size = comm_ptr->local_size;
 
    const struct MPIDI_Comm* const mpid = &(comm_ptr->mpid);
-
+  int recvok=PAMI_SUCCESS, recvcontinuous=0;
 
    if(sendbuf != MPI_IN_PLACE)
    {
@@ -320,21 +320,25 @@ int MPIDO_Gatherv_simple(const void *sendbuf,
    rdispls = (int*)displs;
    if(rank == root)
    {
-      if(MPIDI_Datatype_to_pami(recvtype, &rtype, -1, NULL, &tmp) != MPI_SUCCESS)
+    if((recvok = MPIDI_Datatype_to_pami(recvtype, &rtype, -1, NULL, &tmp)) != MPI_SUCCESS)
       {
         MPIDI_Datatype_get_info(1, recvtype, rcv_contig,
                                 rcvlen, data_ptr, recv_true_lb);
-        if (!rcv_contig)
-        {
+      totalrecvcount = recvcounts[0];
+      recvcontinuous = displs[0] == 0? 1 : 0 ;
           rcounts = (int*)MPIU_Malloc(size);
           rdispls = (int*)MPIU_Malloc(size);
-          for(i = 0; i < size; i++)
-          {
+      rdispls[0] = 0;
+      rcounts[0] = rcvlen * recvcounts[0];
+      for(i = 1; i < size; i++)
+      {
+        rdispls[i]= rcvlen * totalrecvcount;
+        totalrecvcount += recvcounts[i];
+        if(displs[i] != (displs[i-1] + recvcounts[i-1]))
+          recvcontinuous = 0;
             rcounts[i] = rcvlen * recvcounts[i];
-            rdispls[i] = rcvlen * displs[i];
-            recv_size += rcounts[i];
-            rcvcount  += recvcounts[i];
           }
+      recv_size = rcvlen * totalrecvcount;
 
           rcv_noncontig_buff = MPIU_Malloc(recv_size);
           rbuf = rcv_noncontig_buff;
@@ -344,6 +348,12 @@ int MPIDO_Gatherv_simple(const void *sendbuf,
              MPID_Abort(NULL, MPI_ERR_NO_SPACE, 1,
                 "Fatal:  Cannot allocate pack buffer");
           }
+      if(sendbuf == MPI_IN_PLACE)
+      {
+        size_t extent;
+        MPID_Datatype_get_extent_macro(recvtype,extent);
+        MPIR_Localcopy(recvbuf + displs[rank]*extent, recvcounts[rank], recvtype,
+                     rcv_noncontig_buff + rdispls[rank], rcounts[rank],MPI_CHAR);
         }
       }
       if(sendbuf == MPI_IN_PLACE) 
@@ -391,10 +401,30 @@ int MPIDO_Gatherv_simple(const void *sendbuf,
    TRACE_ERR("Waiting on active %d\n", gatherv_active);
    MPID_PROGRESS_WAIT_WHILE(gatherv_active);
 
-   if(!rcv_contig)
+  if(!rcv_contig || recvok != PAMI_SUCCESS)
+  {
+    if(recvcontinuous)
    {
       MPIR_Localcopy(rcv_noncontig_buff, recv_size, MPI_CHAR,
-                        recvbuf,         rcvcount,     recvtype);
+                     recvbuf,   totalrecvcount,     recvtype);
+    }
+    else
+    {
+      size_t extent;
+      MPID_Datatype_get_extent_macro(recvtype,extent);
+      for(i=0; i<size; ++i)
+      {
+        char* scbuf = (char*)rcv_noncontig_buff+ rdispls[i];
+        char* rcbuf = (char*)recvbuf + displs[i]*extent;
+        MPIR_Localcopy(scbuf, rcounts[i], MPI_CHAR,
+                       rcbuf, recvcounts[i], recvtype);
+        TRACE_ERR("Pack recv src  extent %zu, displ[%zu]=%zu, count[%zu]=%zu buf[%zu]=%u\n",
+                  (size_t)extent, (size_t)i,(size_t)precvdispls[i],(size_t)i,(size_t)precvcounts[i],(size_t)precvdispls[i], *(int*)scbuf);
+        TRACE_ERR("Pack recv dest extent %zu, displ[%zu]=%zu, count[%zu]=%zu buf[%zu]=%u\n",
+                  (size_t)extent, (size_t)i,(size_t)displs[i],(size_t)i,(size_t)recvcounts[i],(size_t)displs[i], *(int*)rcbuf);
+      }
+
+    }
       MPIU_Free(rcv_noncontig_buff);
       if(rank == root)
       {

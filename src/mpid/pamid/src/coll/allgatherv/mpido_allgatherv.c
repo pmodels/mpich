@@ -624,6 +624,7 @@ MPIDO_Allgatherv_simple(const void *sendbuf,
   MPI_Aint recv_true_lb  = 0;
   size_t   send_size     = 0;
   size_t   recv_size     = 0;
+  size_t   rcvtypelen    = 0;
   int snd_data_contig = 0, rcv_data_contig = 0;
   void *snd_noncontig_buff = NULL, *rcv_noncontig_buff = NULL;
   int scount=sendcount;
@@ -631,9 +632,20 @@ MPIDO_Allgatherv_simple(const void *sendbuf,
   char *sbuf, *rbuf;
   pami_type_t stype = NULL, rtype;
   const int rank = comm_ptr->rank;
+  const int size = comm_ptr->local_size;
   const struct MPIDI_Comm* const mpid = &(comm_ptr->mpid);
 
+  int recvcontinuous=0;
+  size_t totalrecvcount=0;
+  int *lrecvdispls = NULL; /* possible local displs calculated for noncontinous */
+  int *lrecvcounts  = NULL;/* possible local counts calculated for noncontinous */
+  const int *precvdispls = displs; /* pointer to displs to use as pami parmi */
+  const int *precvcounts = recvcounts; /* pointer to counts to use as pami parmi */
+  int inplace = sendbuf == MPI_IN_PLACE? 1 : 0;
+
+
   volatile unsigned allgatherv_active = 1;
+  int recvok=PAMI_SUCCESS, sendok=PAMI_SUCCESS;
   int tmp;
   const pami_metadata_t *my_md;
 
@@ -641,14 +653,14 @@ MPIDO_Allgatherv_simple(const void *sendbuf,
    MPIDI_Datatype_get_info(1,
                           recvtype,
                           rcv_data_contig,
-                          recv_size,
+                          rcvtypelen,
                           dt_null,
                           recv_true_lb);
 
    if(MPIDI_Pamix_collsel_advise != NULL)
    {
      advisor_algorithm_t advisor_algorithms[1];
-     int num_algorithms = MPIDI_Pamix_collsel_advise(mpid->collsel_fast_query, PAMI_XFER_ALLGATHERV_INT, recv_size * recvcounts[0], advisor_algorithms, 1);
+    int num_algorithms = MPIDI_Pamix_collsel_advise(mpid->collsel_fast_query, PAMI_XFER_ALLGATHERV_INT, rcvtypelen * recvcounts[0], advisor_algorithms, 1);
      if(num_algorithms)
      {
        if(advisor_algorithms[0].algorithm_type == COLLSEL_EXTERNAL_ALGO)
@@ -660,43 +672,76 @@ MPIDO_Allgatherv_simple(const void *sendbuf,
      }
    }
 
-   if((sendbuf != MPI_IN_PLACE) && (MPIDI_Datatype_to_pami(sendtype, &stype, -1, NULL, &tmp) != MPI_SUCCESS))
-   {
-     return MPIR_Allgatherv(sendbuf, sendcount, sendtype,
-                       recvbuf, recvcounts, displs, recvtype,
-                       comm_ptr, mpierrno);
-   }
-   if(MPIDI_Datatype_to_pami(recvtype, &rtype, -1, NULL, &tmp) != MPI_SUCCESS)
-   {
-     return MPIR_Allgatherv(sendbuf, sendcount, sendtype,
-                       recvbuf, recvcounts, displs, recvtype,
-                       comm_ptr, mpierrno);
-   }
 
-
-   if(sendbuf == MPI_IN_PLACE)
+  if(!inplace)
    {
-     sbuf = PAMI_IN_PLACE;
-   }
-   else
+    sendok = MPIDI_Datatype_to_pami(sendtype, &stype, -1, NULL, &tmp);
+    MPIDI_Datatype_get_info(sendcount, sendtype, snd_data_contig, send_size, dt_null, send_true_lb);
+    sbuf = (char *)sendbuf + send_true_lb;
+    if(!snd_data_contig || (sendok != PAMI_SUCCESS))
    {
-      MPIDI_Datatype_get_info(sendcount,
-                              sendtype,
-                              snd_data_contig,
-                              send_size,
-                              dt_null,
-                              send_true_lb);
-       sbuf = (char *)sendbuf+send_true_lb;
+      stype  = PAMI_TYPE_UNSIGNED_CHAR;
+      scount = send_size;
+      if(!snd_data_contig)
+   {
+        snd_noncontig_buff = MPIU_Malloc(send_size);
+        sbuf = snd_noncontig_buff;
+        if(snd_noncontig_buff == NULL)
+   {
+          MPID_Abort(NULL, MPI_ERR_NO_SPACE, 1,
+                   "Fatal:  Cannot allocate pack buffer");
    }
+        MPIR_Localcopy(sendbuf, sendcount, sendtype,
+                       snd_noncontig_buff, send_size,MPI_CHAR);
+      }
+    }
+  }
+  else
+    sbuf = PAMI_IN_PLACE;
 
+  recvok = MPIDI_Datatype_to_pami(recvtype, &rtype, -1, NULL, &tmp);
    rbuf = (char *)recvbuf+recv_true_lb;
+  if(!rcv_data_contig || (recvok != PAMI_SUCCESS))
+  {
+    rtype = PAMI_TYPE_UNSIGNED_CHAR;
+    totalrecvcount = recvcounts[0];
+    recvcontinuous = displs[0] == 0? 1 : 0 ;
+    int i;
+    precvdispls = lrecvdispls = MPIU_Malloc(size*sizeof(int));
+    precvcounts = lrecvcounts = MPIU_Malloc(size*sizeof(int));
+    lrecvdispls[0]= 0;
+    lrecvcounts[0]= rcvtypelen * recvcounts[0];
+    for(i=1; i<size; ++i)
+    {
+      lrecvdispls[i]= rcvtypelen * totalrecvcount;
+      totalrecvcount += recvcounts[i];
+      if(displs[i] != (displs[i-1] + recvcounts[i-1]))
+        recvcontinuous = 0;
+      lrecvcounts[i]= rcvtypelen * recvcounts[i];
+    }
+    recv_size = rcvtypelen * totalrecvcount;
+    TRACE_ERR("Pack receive rcv_contig %zu, recvok %zd, totalrecvcount %zu, recvcontinuous %zu, rcvtypelen %zu, recv_size %zu\n",
+              (size_t)rcv_data_contig, (size_t)recvok, (size_t)totalrecvcount, (size_t)recvcontinuous,(size_t)rcvtypelen, (size_t)recv_size);
 
-   if(!snd_data_contig || !rcv_data_contig)
-   {
-      return MPIR_Allgatherv(sendbuf, sendcount, sendtype,
-                       recvbuf, recvcounts, displs, recvtype,
-                       comm_ptr, mpierrno);
+    rcv_noncontig_buff = MPIU_Malloc(recv_size);
+    rbuf = rcv_noncontig_buff;
+    if(rcv_noncontig_buff == NULL)
+    {
+      MPID_Abort(NULL, MPI_ERR_NO_SPACE, 1,
+                 "Fatal:  Cannot allocate pack buffer");
+    }
+    if(inplace)
+    {
+      size_t extent;
+      MPID_Datatype_get_extent_macro(recvtype,extent);
+      MPIR_Localcopy(recvbuf + displs[rank]*extent, recvcounts[rank], recvtype,
+                     rcv_noncontig_buff + precvdispls[rank], precvcounts[rank],MPI_CHAR);
+      scount = precvcounts[rank];
+      stype   = PAMI_TYPE_UNSIGNED_CHAR;
+      sbuf    = PAMI_IN_PLACE;
+    }
    }
+
 
    pami_xfer_t allgatherv;
    allgatherv.cb_done = allgatherv_cb_done;
@@ -706,8 +751,8 @@ MPIDO_Allgatherv_simple(const void *sendbuf,
    allgatherv.cmd.xfer_allgatherv_int.stype = stype;/* stype is ignored when sndbuf == PAMI_IN_PLACE */
    allgatherv.cmd.xfer_allgatherv_int.rtype = rtype;
    allgatherv.cmd.xfer_allgatherv_int.stypecount = scount;
-   allgatherv.cmd.xfer_allgatherv_int.rtypecounts = (int *) recvcounts;
-   allgatherv.cmd.xfer_allgatherv_int.rdispls = (int *) displs;
+  allgatherv.cmd.xfer_allgatherv_int.rtypecounts = (int *) precvcounts;
+  allgatherv.cmd.xfer_allgatherv_int.rdispls = (int *) precvdispls;
    allgatherv.algorithm = mpid->coll_algorithm[PAMI_XFER_ALLGATHERV_INT][0][0];
    my_md = &mpid->coll_metadata[PAMI_XFER_ALLGATHERV_INT][0][0];
 
@@ -720,6 +765,36 @@ MPIDO_Allgatherv_simple(const void *sendbuf,
 
    TRACE_ERR("Rank %d waiting on active %d\n", rank, allgatherv_active);
    MPID_PROGRESS_WAIT_WHILE(allgatherv_active);
+
+  if(!rcv_data_contig || (recvok != PAMI_SUCCESS))
+  {
+    if(recvcontinuous)
+    {
+      MPIR_Localcopy(rcv_noncontig_buff, recv_size,MPI_CHAR,
+                     recvbuf, totalrecvcount, recvtype);
+    }
+    else
+    {
+      size_t extent;
+      int i;
+      MPID_Datatype_get_extent_macro(recvtype,extent);
+      for(i=0; i<size; ++i)
+      {
+        char* scbuf = (char*)rcv_noncontig_buff+ precvdispls[i];
+        char* rcbuf = (char*)recvbuf + displs[i]*extent;
+        MPIR_Localcopy(scbuf, precvcounts[i], MPI_CHAR,
+                       rcbuf, recvcounts[i], recvtype);
+        TRACE_ERR("Pack recv src  extent %zu, displ[%zu]=%zu, count[%zu]=%zu buf[%zu]=%u\n",
+                  (size_t)extent, (size_t)i,(size_t)precvdispls[i],(size_t)i,(size_t)precvcounts[i],(size_t)precvdispls[i], *(int*)scbuf);
+        TRACE_ERR("Pack recv dest extent %zu, displ[%zu]=%zu, count[%zu]=%zu buf[%zu]=%u\n",
+                  (size_t)extent, (size_t)i,(size_t)displs[i],(size_t)i,(size_t)recvcounts[i],(size_t)displs[i], *(int*)rcbuf);
+      }
+    }
+    MPIU_Free(rcv_noncontig_buff);
+  }
+  if(!snd_data_contig)  MPIU_Free(snd_noncontig_buff);
+  if(lrecvdispls) MPIU_Free(lrecvdispls);
+  if(lrecvcounts) MPIU_Free(lrecvcounts);
 
    return MPI_SUCCESS;
 }
