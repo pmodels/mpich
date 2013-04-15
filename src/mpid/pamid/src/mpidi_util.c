@@ -1290,9 +1290,7 @@ Options:\n\
                 (Default: pami_tune_results.xml)\n\n\
   -d            Diagnostics mode. Verify correctness of collective algorithms\n\
                 (Default: Disabled)\n\n\
-  -v            Verbose mode\n\
-                (Default: Disabled)\n\n\
-  -x            Checkpoint mode. Enable pami_tune checkpointing\n\
+  -p            Print the Collective Algorithm performance data to standard output\n\
                 (Default: Disabled)\n\n\
   -h            Print this help message\n\n", stdout);
 
@@ -1633,11 +1631,11 @@ static int MPIDI_collsel_process_ini_file(const char *filename, advisor_params_t
       if(params->verify == -1)
         ret = MPIDI_collsel_checkvalue(name, value, filename, &params->verify);
     }
-    else if(strcmp(name, "checkpoint") == 0)
+    /*else if(strcmp(name, "checkpoint") == 0)
     {
       if(params->checkpoint == -1)
         ret = MPIDI_collsel_checkvalue(name, value, filename, &params->checkpoint);
-    }
+    }*/
     else
     {
       fprintf(stderr, "Invalid parameter: %s in file: %s\n", name, filename);
@@ -1660,7 +1658,7 @@ static int MPIDI_collsel_process_arg(int argc, char *argv[], advisor_params_t *p
    params->verify = 0;
 
    opterr = 0;
-   while ((c = getopt (argc, argv, "c:m:g:f:o:i:v::d::x::h::")) != -1)
+   while ((c = getopt (argc, argv, "c:m:g:f:o:i:p::d::x::h::")) != -1)
    {
      switch (c)
      {
@@ -1692,11 +1690,11 @@ static int MPIDI_collsel_process_arg(int argc, char *argv[], advisor_params_t *p
        case 'd':
          params->verify = 1;
          break;
-       case 'v':
+       case 'p':
          params->verbose = 1;
          break;
        case 'x':
-         params->checkpoint = 1;
+         /*params->checkpoint = 1;*/
          break;
        case 'h':
          ret = 2;
