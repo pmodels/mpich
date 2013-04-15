@@ -127,7 +127,7 @@ MPIDI_Callback_process_trunc(pami_context_t  context,
       rreq->mpid.uebuflen = rreq->status.count;
       rreq->mpid.uebuf    = MPIU_Malloc(rreq->status.count);
       MPID_assert(rreq->mpid.uebuf != NULL);
-      rreq->mpid.uebuf_malloc = 1;
+      rreq->mpid.uebuf_malloc = mpiuMalloc;
 
       recv->addr = rreq->mpid.uebuf;
     }

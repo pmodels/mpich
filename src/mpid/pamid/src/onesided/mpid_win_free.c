@@ -38,6 +38,12 @@ MPID_Win_free(MPID_Win **win_ptr)
   MPID_Win *win = *win_ptr;
   size_t rank = win->comm_ptr->rank;
 
+  if(win->mpid.sync.origin_epoch_type != win->mpid.sync.target_epoch_type ||
+     (win->mpid.sync.origin_epoch_type != MPID_EPOTYPE_NONE &&
+      win->mpid.sync.origin_epoch_type != MPID_EPOTYPE_REFENCE)){
+    MPIU_ERR_SETANDSTMT(mpi_errno, MPI_ERR_RMA_SYNC, return mpi_errno, "**rmasync");
+  }
+
   mpi_errno = MPIR_Barrier_impl(win->comm_ptr, &mpi_errno);
   if (mpi_errno != MPI_SUCCESS)
     return mpi_errno;

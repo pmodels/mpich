@@ -56,7 +56,7 @@
     type * tmp_src = l_src;                                     \
     register int _i, j, k;		                        \
     unsigned long total_count = count * nelms;                  \
-    const int l_stride = stride;				\
+    const DLOOP_Offset l_stride = stride;				\
                                                                 \
     if (nelms == 1) {                                           \
         for (_i = total_count; _i; _i--) {			        \
@@ -168,7 +168,7 @@
     type * tmp_src = l_src;                                     \
     register int _i, j, k;		                        \
     unsigned long total_count = count * nelms;                  \
-    const int l_stride = stride;				\
+    const DLOOP_Offset l_stride = stride;				\
                                                                 \
     if (nelms == 1) {                                           \
         for (_i = total_count; _i; _i--) {			        \
@@ -280,7 +280,7 @@
     type * tmp_dest = l_dest;                                   \
     register int _i, j, k;		                        \
     unsigned long total_count = count * nelms;                  \
-    const int l_stride = stride;				\
+    const DLOOP_Offset l_stride = stride;				\
                                                                 \
     if (nelms == 1) {                                           \
         for (_i = total_count; _i; _i--) {			        \
@@ -392,7 +392,7 @@
     type * tmp_dest = l_dest;                                   \
     register int _i, j, k;		                        \
     unsigned long total_count = count * nelms;                  \
-    const int l_stride = stride;				\
+    const DLOOP_Offset l_stride = stride;				\
                                                                 \
     if (nelms == 1) {                                           \
         for (_i = total_count; _i; _i--) {			        \

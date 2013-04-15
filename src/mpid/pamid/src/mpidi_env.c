@@ -106,6 +106,17 @@
  *   - 0 - Optimized collective selection is not used.
  *   - 1 - Optimized collective selection is used. (default)
  *
+ * - PAMID_COLLECTIVES_MEMORY_OPTIMIZED - Controls whether collectives are 
+ *   optimized to reduce memory usage. This may disable some PAMI collectives.
+ *   Possible values:
+ *   - 0 - Collectives are not memory optimized.
+ *   - n - Collectives are memory optimized. 'n' may represent different 
+ *         levels of optimization. 
+ *
+ *   PAMID_OPTIMIZED_SUBCOMMS - Use PAMI 'optimized' collectives. Defaullt is 1.
+ *   - 0 - Some optimized protocols may be disabled.
+ *   - 1 - All performance optimized protocols will be enabled when available
+ * 
  * - PAMID_VERBOSE - Increases the amount of information dumped during an
  *   MPI_Abort() call and during varoius MPI function calls.  Possible values:
  *   - 0 - No additional information is dumped.
@@ -142,13 +153,15 @@
  ***************************************************************************
  *
  * - PAMID_NUMREQUESTS - Sets the number of outstanding asynchronous
- *   broadcasts to have before a barrier is called.  This is mostly
- *   used in allgather/allgatherv using asynchronous broadcasts.
- *   Higher numbers can help on larger partitions and larger
- *   message sizes. This is also used for asynchronous broadcasts.
- *   After every {PAMID_NUMREQUESTS} async bcasts, the "glue" will call
- *   a barrier. See PAMID_BCAST and PAMID_ALLGATHER(V) for more information
- *   - Default is 32.
+ *   collectives to have before a barrier is called.  This is used when
+ *   the PAMI collective metadata indicates 'asyncflowctl' may be needed 
+ *   to avoid 'flooding' other participants with unexpected data. 
+ *   Higher numbers can help on larger partitions and larger message sizes. 
+ * 
+ *   After every {PAMID_NUMREQUESTS} async collectives, the "glue" will call
+ *   a barrier. 
+ *   - Default is 1 (guaranteed functionality) 
+ *   - N>1may used to tune performance
  *
  ***************************************************************************
  *                            "Safety" Options                             *
@@ -331,12 +344,19 @@
 #if (MPIDI_STATISTICS || MPIDI_PRINTENV)
 int prtStat=0;
 int prtEnv=0;
-int numTasks=0;
+
 MPIX_stats_t *mpid_statp=NULL;
 extern MPIDI_printenv_t  *mpich_env;
 #endif
 
 #define ENV_Deprecated(a, b, c, d, e) ENV_Deprecated__(a, b, c, d, e)
+
+#ifdef TOKEN_FLOW_CONTORL
+ extern int MPIDI_get_buf_mem(unsigned long *);
+ extern int MPIDI_atoi(char* , int* );
+#endif
+ extern int application_set_eager_limit;
+
 static inline void
 ENV_Deprecated__(char* name[], unsigned num_supported, unsigned* deprecated, int rank, int NA)
 {
@@ -402,7 +422,8 @@ static inline void
 ENV_Unsigned__(char* name[], unsigned* val, char* string, unsigned num_supported, unsigned* deprecated, int rank, int NA)
 {
   /* Check for deprecated environment variables. */
-  ENV_Deprecated(name, num_supported, deprecated, rank, NA);
+  if (deprecated != NULL)
+    ENV_Deprecated(name, num_supported, deprecated, rank, NA);
 
   char * env;
 
@@ -484,6 +505,13 @@ MPIDI_Env_setup(int rank, int requested)
   {
     char* names[] = {"PAMID_STATISTICS", "PAMI_STATISTICS", NULL};
     ENV_Unsigned(names, &MPIDI_Process.statistics, 1, &found_deprecated_env_var, rank);
+  }
+
+  /* Set async flow control - number of collectives between barriers */
+  {
+    char* names[] = {"PAMID_NUMREQUESTS", NULL};
+    ENV_Unsigned(names, &MPIDI_Process.optimized.num_requests, 1, &found_deprecated_env_var, rank);
+    TRACE_ERR("MPIDI_Process.optimized.num_requests=%u\n", MPIDI_Process.optimized.num_requests);
   }
 
   /* "Globally" set the optimization flag for low-level collectives in geometry creation.
@@ -660,23 +688,138 @@ MPIDI_Env_setup(int rank, int requested)
     TRACE_ERR("MPIDI_Process.async_progress.mode=%u\n", MPIDI_Process.async_progress.mode);
   }
 
-  /* Determine short limit */
+  /*
+   * Determine 'short' limit
+   * - sets both the 'local' and 'remote' short limit, and
+   * - sets both the 'application' and 'internal' short limit
+   *
+   * Identical to setting the PAMID_PT2PT_LIMITS environment variable as:
+   *
+   *   PAMID_PT2PT_LIMITS="::x:x:::x:x"
+   */
   {
     /* THIS ENVIRONMENT VARIABLE NEEDS TO BE DOCUMENTED ABOVE */
     char* names[] = {"PAMID_SHORT", "MP_S_SHORT_LIMIT", "PAMI_SHORT", NULL};
-    ENV_Unsigned(names, &MPIDI_Process.short_limit, 2, &found_deprecated_env_var, rank);
+    ENV_Unsigned(names, &MPIDI_Process.pt2pt.limits.application.immediate.remote, 2, &found_deprecated_env_var, rank);
+    ENV_Unsigned(names, &MPIDI_Process.pt2pt.limits.application.immediate.local, 2, NULL, rank);
+    ENV_Unsigned(names, &MPIDI_Process.pt2pt.limits.internal.immediate.remote, 2, NULL, rank);
+    ENV_Unsigned(names, &MPIDI_Process.pt2pt.limits.internal.immediate.local, 2, NULL, rank);
   }
 
-  /* Determine eager limit */
+  /*
+   * Determine 'remote' eager limit
+   * - sets both the 'application' and 'internal' remote eager limit
+   *
+   * Identical to setting the PAMID_PT2PT_LIMITS environment variable as:
+   *
+   *   PAMID_PT2PT_LIMITS="x::::x:::"
+   *   -- or --
+   *   PAMID_PT2PT_LIMITS="x::::x"
+   */
   {
     char* names[] = {"PAMID_EAGER", "PAMID_RZV", "MP_EAGER_LIMIT", "PAMI_RVZ", "PAMI_RZV", "PAMI_EAGER", NULL};
-    ENV_Unsigned(names, &MPIDI_Process.eager_limit, 3, &found_deprecated_env_var, rank);
+    ENV_Unsigned(names, &MPIDI_Process.pt2pt.limits.application.eager.remote, 3, &found_deprecated_env_var, rank);
+    ENV_Unsigned(names, &MPIDI_Process.pt2pt.limits.internal.eager.remote, 3, NULL, rank);
   }
+#if TOKEN_FLOW_CONTROL
+  /* Determine if users set eager limit  */
+  {
+    MPIDI_set_eager_limit(&MPIDI_Process.pt2pt.limits.application.eager.remote);
+  }
+  /* Determine buffer memory for early arrivals */
+  {
+    int rc;
+    rc=MPIDI_get_buf_mem(&MPIDI_Process.mp_buf_mem,&MPIDI_Process.mp_buf_mem_max);
+    MPID_assert_always(rc == MPI_SUCCESS);
+  }
+#endif
 
-  /* Determine 'local' eager limit */
+  /*
+   * Determine 'local' eager limit
+   * - sets both the 'application' and 'internal' local eager limit
+   *
+   * Identical to setting the PAMID_PT2PT_LIMITS environment variable as:
+   *
+   *   PAMID_PT2PT_LIMITS=":x::::x::"
+   *   -- or --
+   *   PAMID_PT2PT_LIMITS=":x::::x"
+   */
   {
     char* names[] = {"PAMID_RZV_LOCAL", "PAMID_EAGER_LOCAL", "MP_EAGER_LIMIT_LOCAL", "PAMI_RVZ_LOCAL", "PAMI_RZV_LOCAL", "PAMI_EAGER_LOCAL", NULL};
-    ENV_Unsigned(names, &MPIDI_Process.eager_limit_local, 3, &found_deprecated_env_var, rank);
+    ENV_Unsigned(names, &MPIDI_Process.pt2pt.limits.application.eager.local, 3, &found_deprecated_env_var, rank);
+    ENV_Unsigned(names, &MPIDI_Process.pt2pt.limits.internal.eager.local, 3, NULL, rank);
+  }
+
+  /*
+   * Determine *all* point-to-point limit overrides.
+   *
+   * The entire point-to-point limit set is determined by three boolean
+   * configuration values:
+   * - 'is non-local limit'   vs 'is local limit'
+   * - 'is eager limit'       vs 'is immediate limit'
+   * - 'is application limit' vs 'is internal limit'
+   *
+   * The point-to-point configuration limit values are specified in order and
+   * are delimited by ':' characters. If a value is not specified for a given
+   * configuration then the limit is not changed. All eight configuration
+   * values are not required to be specified, although in order to set the
+   * last (eighth) configuration value the previous seven configurations must
+   * be listed. For example:
+   *
+   *    PAMID_PT2PT_LIMITS=":::::::10240"
+   *
+   * The configuration entries can be described as:
+   *    0 - remote eager     application limit
+   *    1 - local  eager     application limit
+   *    2 - remote immediate application limit
+   *    3 - local  immediate application limit
+   *    4 - remote eager     internal    limit
+   *    5 - local  eager     internal    limit
+   *    6 - remote immediate internal    limit
+   *    7 - local  immediate internal    limit
+   *
+   * Examples:
+   *
+   *    "10240"
+   *      - sets the application internode eager (the "normal" eager limit)
+   *
+   *    "10240::64"
+   *      - sets the application internode eager and immediate limits
+   *
+   *    "::::0:0:0:0"
+   *      - disables 'eager' and 'immediate' for all internal point-to-point
+   */
+  {
+    char * env = getenv("PAMID_PT2PT_LIMITS");
+    if (env != NULL)
+      {
+        size_t i, n = strlen(env);
+        char * tmp = (char *) MPIU_Malloc(n+1);
+        strncpy(tmp,env,n);
+        if (n>0) tmp[n]=0;
+
+        char * tail  = tmp;
+        char * token = tail;
+        for (i = 0; token == tail; i++)
+          {
+            while (*tail != 0 && *tail != ':') tail++;
+            if (*tail == ':')
+              {
+                *tail = 0;
+                if (token != tail)
+                  MPIDI_atoi(token, &MPIDI_Process.pt2pt.limits_array[i]);
+                tail++;
+                token = tail;
+              }
+            else
+              {
+                if (token != tail)
+                  MPIDI_atoi(token, &MPIDI_Process.pt2pt.limits_array[i]);
+              }
+          }
+
+        MPIU_Free (tmp);
+      }
   }
 
   /* Set the maximum number of outstanding RDMA requests */
@@ -719,11 +862,52 @@ MPIDI_Env_setup(int rank, int requested)
       TRACE_ERR("MPIDI_Process.optimized.select_colls=%u\n", MPIDI_Process.optimized.select_colls);
    }
 
+   /* Finally, if MP_COLLECTIVE_SELECTION is "on", then we want to overwrite any other setting */
+   {
+      unsigned temp;
+      temp = 0;
+      char* names[] = {"MP_COLLECTIVE_SELECTION", NULL};
+      ENV_Char(names, &temp);
+      if(temp)
+      {
+         pami_extension_t extension;
+         pami_result_t status = PAMI_ERROR;
+         status = PAMI_Extension_open (MPIDI_Client, "EXT_collsel", &extension);
+         if(status == PAMI_SUCCESS)
+         {
+
+           MPIDI_Process.optimized.auto_select_colls = MPID_AUTO_SELECT_COLLS_ALL; /* All collectives will be using auto coll sel. 
+                                                                                    We will check later on each individual coll. */ 
+           MPIDI_Process.optimized.collectives       = 1;                          /* Enable optimized collectives so we can create PAMI Geometry */
+         }
+      }
+      else
+         MPIDI_Process.optimized.auto_select_colls = MPID_AUTO_SELECT_COLLS_NONE;/* Auto coll sel is disabled for all */ 
+   }
+   
+   /* Set the status for memory optimized collectives */
+   {
+      char* names[] = {"PAMID_COLLECTIVES_MEMORY_OPTIMIZED", NULL};
+      ENV_Unsigned(names, &MPIDI_Process.optimized.memory, 1, &found_deprecated_env_var, rank);
+      TRACE_ERR("MPIDI_Process.optimized.memory=%u\n", MPIDI_Process.optimized.memory);
+   }
 
   /* Set the status of the optimized shared memory point-to-point functions */
   {
-    char* names[] = {"PAMID_SHMEM_PT2PT", "MP_SHMEM_PT2PT", "PAMI_SHMEM_PT2PT", NULL};
+    char* names[] = {"PAMID_SHMEM_PT2PT", "PAMI_SHMEM_PT2PT", NULL};
     ENV_Unsigned(names, &MPIDI_Process.shmem_pt2pt, 2, &found_deprecated_env_var, rank);
+  }
+
+  /* MP_SHMEM_PT2PT = yes or no       */
+  {
+    char* names[] = {"MP_SHMEM_PT2PT", NULL};
+      ENV_Char(names, &MPIDI_Process.shmem_pt2pt);
+  }
+
+  /* Enable MPIR_* implementations of non-blocking collectives */
+  {
+    char* names[] = {"PAMID_MPIR_NBC", NULL};
+    ENV_Unsigned(names, &MPIDI_Process.mpir_nbc, 1, &found_deprecated_env_var, rank);
   }
 
   /* Check for deprecated collectives environment variables. These variables are
@@ -877,6 +1061,14 @@ MPIDI_Env_setup(int rank, int requested)
     }
 #endif
   }
+    {
+#if TOKEN_FLOW_CONTROL
+      char* names[] = {"MP_USE_TOKEN_FLOW_CONTROL", NULL};
+      ENV_Char(names, &MPIDI_Process.is_token_flow_control_on);
+      if (!MPIDI_Process.is_token_flow_control_on)
+           MPIDI_Process.mp_buf_mem=0;
+#endif
+    }
   /* Exit if any deprecated environment variables were specified. */
   if (found_deprecated_env_var)
     {
@@ -890,3 +1082,131 @@ MPIDI_Env_setup(int rank, int requested)
       }
     }
 }
+
+#if TOKEN_FLOW_CONTROL
+int  MPIDI_set_eager_limit(unsigned int *eager_limit)
+{
+     char *cp;
+     int  val;
+     int  numTasks=MPIDI_Process.numTasks;
+     cp = getenv("MP_EAGER_LIMIT");
+     if (cp)
+       {
+         application_set_eager_limit=1;
+         if ( MPIDI_atoi(cp, &val) == 0 )
+           *eager_limit=val;
+       }
+     else
+       {
+        /*  set default
+        *  Number of tasks      MP_EAGER_LIMIT
+        * -----------------     --------------
+        *      1  -    256         32768
+        *    257  -    512         16384
+        *    513  -   1024          8192
+        *   1025  -   2048          4096
+        *   2049  -   4096          2048
+        *   4097  &  above          1024
+        */
+       if      (numTasks <  257) *eager_limit = 32768;
+       else if (numTasks <  513) *eager_limit = 16384;
+       else if (numTasks < 1025) *eager_limit =  8192;
+       else if (numTasks < 2049) *eager_limit =  4096;
+       else if (numTasks < 4097) *eager_limit =  2048;
+       else                      *eager_limit =  1024;
+
+       }
+     return 0;
+}
+
+   /******************************************************************/
+   /*                                                                */
+   /* Check for MP_BUFFER_MEM, if the value is not set by the user,  */
+   /* then set the value with the default of 64 MB.                  */
+   /* MP_BUFFER_MEM supports the following format:                   */
+   /* MP_BUFFER_MEM=xxM                                              */
+   /* MP_BUFFER_MEM=xxM,yyyM                                         */
+   /* MP_BUFFER_MEM=xxM,yyyG                                         */
+   /* MP_BUFFER_MEM=,yyyM                                            */
+   /* xx:  pre allocated size  the max. allowable value is 256 MB    */
+   /*      the space is allocated during the initialization.         */
+   /*      the default is 64 MB                                      */
+   /* yyy: maximum size - the maximum size to which the early arrival*/
+   /*      buffer can temporarily grow when the preallocated portion */
+   /*      of the EA buffer has been filled.                         */
+   /*                                                                */
+   /******************************************************************/
+int  MPIDI_get_buf_mem(unsigned long *buf_mem,unsigned long *buf_mem_max)
+    {
+     char *cp;
+     int  i;
+     int args_in_error=0;
+     char pre_alloc_buf[25], buf_max[25];
+     char *buf_max_cp;
+     int pre_alloc_val=0;
+     unsigned long buf_max_val;
+     int  has_error = 0;
+
+     if (cp = getenv("MP_BUFFER_MEM")) {
+         pre_alloc_buf[24] = '\0';
+         buf_max[24] = '\0';
+         if ( (buf_max_cp = strchr(cp, ',')) ) {
+           if ( *(++buf_max_cp)  == '\0' ) {
+              /* Error: missing buffer_mem_max */
+              has_error = 1;
+           }
+           else if ( cp[0] == ',' ) {
+              /* Pre_alloc value is default -- use default   */
+              pre_alloc_val = -1;
+              strncpy(buf_max, buf_max_cp, 24);
+              if ( MPIDI_atoll(buf_max, &buf_max_val) != 0 )
+                 has_error = 1;
+           }
+           else {
+              /* both values are present */
+              for (i=0; ; i++ ) {
+                 if ( (cp[i] != ',') && (i<24) )
+                    pre_alloc_buf[i] = cp[i];
+                 else {
+                    pre_alloc_buf[i] = '\0';
+                    break;
+                 }
+              }
+              strncpy(buf_max, buf_max_cp, 24);
+              if ( MPIDI_atoi(pre_alloc_buf, &pre_alloc_val) == 0 ) {
+                 if ( MPIDI_atoll(buf_max, &buf_max_val) != 0 )
+                    has_error = 1;
+              }
+              else
+                 has_error = 1;
+           }
+        }
+        else
+         {
+            /* Old single value format  */
+            if ( MPIDI_atoi(cp, &pre_alloc_val) == 0 )
+               buf_max_val = (unsigned long)pre_alloc_val;
+            else
+               has_error = 1;
+         }
+         if ( has_error == 0) {
+             if ((int) pre_alloc_val != -1)  /* MP_BUFFER_MEM=,128MB  */
+                 *buf_mem     = (int) pre_alloc_val;
+             if (buf_max_val > ONE_SHARED_SEGMENT)
+                 *buf_mem = ONE_SHARED_SEGMENT;
+             if (buf_max_val  > *buf_mem_max)
+                  *buf_mem_max = buf_max_val;
+         } else {
+            args_in_error += 1;
+            TRACE_ERR("ERROR in MP_BUFFER_MEM %s(%d)\n",__FILE__,__LINE__);
+            return 1;
+         }
+        return 0;
+     } else {
+         /* MP_BUFFER_MEM is not specified by the user*/
+         *buf_mem     = BUFFER_MEM_DEFAULT;
+         TRACE_ERR("buffer_mem=%d  buffer_mem_max=%d\n",*buf_mem,*buf_mem_max);
+         return 0;
+     }
+}
+#endif

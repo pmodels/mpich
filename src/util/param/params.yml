@@ -68,7 +68,7 @@ parameters:
     - category    : collective
       name        : ALLTOALL_THROTTLE
       type        : int
-      default     : 4
+      default     : 32
       description : >-
         max no. of irecvs/isends posted at a time in some alltoall
         algorithms. Setting it to 0 causes all irecvs/isends to be

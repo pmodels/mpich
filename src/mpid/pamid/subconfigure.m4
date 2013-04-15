@@ -1,4 +1,22 @@
 [#] start of __file__
+dnl begin_generated_IBM_copyright_prolog                             
+dnl                                                                  
+dnl This is an automatically generated copyright prolog.             
+dnl After initializing,  DO NOT MODIFY OR MOVE                       
+dnl  --------------------------------------------------------------- 
+dnl Licensed Materials - Property of IBM                             
+dnl Blue Gene/Q 5765-PER 5765-PRP                                    
+dnl                                                                  
+dnl (C) Copyright IBM Corp. 2011, 2012 All Rights Reserved           
+dnl US Government Users Restricted Rights -                          
+dnl Use, duplication, or disclosure restricted                       
+dnl by GSA ADP Schedule Contract with IBM Corp.                      
+dnl                                                                  
+dnl  --------------------------------------------------------------- 
+dnl                                                                  
+dnl end_generated_IBM_copyright_prolog                               
+dnl -*- mode: makefile-gmake; -*-
+
 dnl MPICH_SUBCFG_BEFORE=src/mpid/common/sched
 dnl MPICH_SUBCFG_BEFORE=src/mpid/common/datatype
 dnl MPICH_SUBCFG_BEFORE=src/mpid/common/thread
@@ -20,6 +38,10 @@ pamid_platform=${device_args}
 
 # Set a value for the maximum processor name.
 MPID_MAX_PROCESSOR_NAME=128
+PM_REQUIRES_PMI=pmi2
+if test "${pamid_platform}" = "PE" ; then
+        PM_REQUIRES_PMI=pmi2/poe
+fi
 
 MPID_DEVICE_TIMER_TYPE=double
 MPID_MAX_THREAD_LEVEL=MPI_THREAD_MULTIPLE
@@ -89,10 +111,25 @@ if test "${pamid_platform}" = "BGQ" ; then
       PAC_APPEND_FLAG([-I${bgq_driver}/spi/include],            [CPPFLAGS])
       PAC_APPEND_FLAG([-I${bgq_driver}/spi/include/kernel/cnk], [CPPFLAGS])
 
-      PAC_APPEND_FLAG([-I${bgq_driver}],                        [WRAPPER_CPPFLAGS])
-      PAC_APPEND_FLAG([-I${bgq_driver}/comm/sys/include],       [WRAPPER_CPPFLAGS])
-      PAC_APPEND_FLAG([-I${bgq_driver}/spi/include],            [WRAPPER_CPPFLAGS])
-      PAC_APPEND_FLAG([-I${bgq_driver}/spi/include/kernel/cnk], [WRAPPER_CPPFLAGS])
+      PAC_APPEND_FLAG([-I${bgq_driver}],                        [WRAPPER_CFLAGS])
+      PAC_APPEND_FLAG([-I${bgq_driver}],                        [WRAPPER_CXXFLAGS])
+      PAC_APPEND_FLAG([-I${bgq_driver}],                        [WRAPPER_FCFLAGS])
+      PAC_APPEND_FLAG([-I${bgq_driver}],                        [WRAPPER_FFLAGS])
+
+      PAC_APPEND_FLAG([-I${bgq_driver}/comm/sys/include],       [WRAPPER_CFLAGS])
+      PAC_APPEND_FLAG([-I${bgq_driver}/comm/sys/include],       [WRAPPER_CXXFLAGS])
+      PAC_APPEND_FLAG([-I${bgq_driver}/comm/sys/include],       [WRAPPER_FCFLAGS])
+      PAC_APPEND_FLAG([-I${bgq_driver}/comm/sys/include],       [WRAPPER_FFLAGS])
+
+      PAC_APPEND_FLAG([-I${bgq_driver}/spi/include],            [WRAPPER_CFLAGS])
+      PAC_APPEND_FLAG([-I${bgq_driver}/spi/include],            [WRAPPER_CXXFLAGS])
+      PAC_APPEND_FLAG([-I${bgq_driver}/spi/include],            [WRAPPER_FCFLAGS])
+      PAC_APPEND_FLAG([-I${bgq_driver}/spi/include],            [WRAPPER_FFLAGS])
+
+      PAC_APPEND_FLAG([-I${bgq_driver}/spi/include/kernel/cnk], [WRAPPER_CFLAGS])
+      PAC_APPEND_FLAG([-I${bgq_driver}/spi/include/kernel/cnk], [WRAPPER_CXXFLAGS])
+      PAC_APPEND_FLAG([-I${bgq_driver}/spi/include/kernel/cnk], [WRAPPER_FCFLAGS])
+      PAC_APPEND_FLAG([-I${bgq_driver}/spi/include/kernel/cnk], [WRAPPER_FFLAGS])
 
       PAC_APPEND_FLAG([-L${bgq_driver}/spi/lib],                [LDFLAGS])
 
@@ -124,7 +161,9 @@ if test "${pamid_platform}" = "BGQ" ; then
   MPID_LIBTOOL_STATIC_FLAG="-all-static"
 fi
 
-
+if test "${pamid_platform}" = "PE" ; then
+        MPID_MAX_ERROR_STRING=512
+fi
 #
 # Check for gnu-style option to enable all warnings; if specified, then
 # add gnu option to treat all warnings as errors.

@@ -21,6 +21,12 @@
  */
 
 #include <mpidimpl.h>
+
+#ifdef __BGQ__
+#include <stdlib.h>
+#include <spi/include/kernel/location.h>
+#endif /* __BGQ__ */
+
 MPIX_Hardware_t MPIDI_HW;
 
 /* Determine the number of torus dimensions. Implemented to keep this code
@@ -160,15 +166,24 @@ MPIX_Hardware(MPIX_Hardware_t *hw)
 }
 
 #if (MPIDI_PRINTENV || MPIDI_STATISTICS || MPIDI_BANNER)
+void mpc_statistics_write() __attribute__ ((alias("MPIX_statistics_write")));
+void mp_statistics_write() __attribute__ ((alias("MPIXF_statistics_write")));
+void mp_statistics_write_() __attribute__ ((alias("MPIXF_statistics_write")));
+void mp_statistics_write__() __attribute__ ((alias("MPIXF_statistics_write")));
+void mpc_statistics_zero() __attribute__ ((alias("MPIX_statistics_zero")));
+void mp_statistics_zero() __attribute__ ((alias("MPIXF_statistics_zero")));
+void mp_statistics_zero_() __attribute__ ((alias("MPIXF_statistics_zero")));
+void mp_statistics_zero__() __attribute__ ((alias("MPIXF_statistics_zero")));
+
   /* ------------------------------------------- */
-  /* - mpid_statistics_zero  and        -------- */
-  /* - mpid_statistics_write can be     -------- */
-  /* - called during init and finalize  -------- */
-  /* - PE utiliti routines              -------- */
-  /* ------------------------------------------- */
+  /* - MPIDI_Statistics_zero  and        -------- */
+  /* - MPIDI_Statistics_write can be     -------- */
+  /* - called during init and finalize   -------- */
+  /* - PE utiliti routines               -------- */
+  /* -------------------------------------------- */
 
 int
-MPIX_Statistics_zero(void)
+MPIDI_Statistics_zero(void)
 {
     int rc=0;
 
@@ -184,8 +199,41 @@ MPIX_Statistics_zero(void)
 
    return (rc); /* to map with current PE support */
 }
+ /***************************************************************************
+ Function Name: _MPIX_statistics_zero
+
+ Description: Call the corresponding MPIDI_statistics_zero function to initialize/clear
+              statistics counter.
+
+ Parameters:
+ Name               Type         I/O
+ void
+ int                >0           Success
+                    <0           statistics not enable
+ ***************************************************************************/
+
+int _MPIX_statistics_zero (void)
+{
+    int rc = MPIDI_Statistics_zero();
+    if (rc < 0) {
+        MPID_assert(rc == PAMI_SUCCESS);
+    }
+    return(rc);
+}
+
+int MPIX_statistics_zero(void)
+{
+    return(_MPIX_statistics_zero());
+}
+
+void MPIXF_statistics_zero(int *rc)
+{
+    *rc = _MPIX_statistics_zero();
+}
+
+
 int
-MPIX_Statistics_write (FILE *statfile) {
+MPIDI_Statistics_write(FILE *statfile) {
 
     int rc=-1;
     int i;
@@ -201,20 +249,23 @@ MPIX_Statistics_write (FILE *statfile) {
     long long Tot_pkt_recv_cnt=0;
     long long Tot_data_sent=0;
     long long Tot_data_recv=0;
+    extern long mem_hwmark;
 
     memset(&time_buf,0, 201);
     sprintf(time_buf, __DATE__" "__TIME__);
+    mpid_statp->buffer_mem_hwmark =  mem_hwmark;
     mpid_statp->sendWaitsComplete =  mpid_statp->sends - mpid_statp->sendsComplete;
     fprintf(statfile,"Start of task (pid=%d) statistics at %s \n", getpid(), time_buf);
-    fprintf(statfile, "PAMID: sends = %ld\n", mpid_statp->sends);
-    fprintf(statfile, "PAMID: sendsComplete = %ld\n", mpid_statp->sendsComplete);
-    fprintf(statfile, "PAMID: sendWaitsComplete = %ld\n", mpid_statp->sendWaitsComplete);
-    fprintf(statfile, "PAMID: recvs = %ld\n", mpid_statp->recvs);
-    fprintf(statfile, "PAMID: recvWaitsComplete = %ld\n", mpid_statp->recvWaitsComplete);
-    fprintf(statfile, "PAMID: earlyArrivals = %ld\n", mpid_statp->earlyArrivals);
-    fprintf(statfile, "PAMID: earlyArrivalsMatched = %ld\n", mpid_statp->earlyArrivalsMatched);
-    fprintf(statfile, "PAMID: lateArrivals = %ld\n", mpid_statp->lateArrivals);
-    fprintf(statfile, "PAMID: unorderedMsgs = %ld\n", mpid_statp->unorderedMsgs);
+    fprintf(statfile, "MPICH: sends = %ld\n", mpid_statp->sends);
+    fprintf(statfile, "MPICH: sendsComplete = %ld\n", mpid_statp->sendsComplete);
+    fprintf(statfile, "MPICH: sendWaitsComplete = %ld\n", mpid_statp->sendWaitsComplete);
+    fprintf(statfile, "MPICH: recvs = %ld\n", mpid_statp->recvs);
+    fprintf(statfile, "MPICH: recvWaitsComplete = %ld\n", mpid_statp->recvWaitsComplete);
+    fprintf(statfile, "MPICH: earlyArrivals = %ld\n", mpid_statp->earlyArrivals);
+    fprintf(statfile, "MPICH: earlyArrivalsMatched = %ld\n", mpid_statp->earlyArrivalsMatched);
+    fprintf(statfile, "MPICH: lateArrivals = %ld\n", mpid_statp->lateArrivals);
+    fprintf(statfile, "MPICH: unorderedMsgs = %ld\n", mpid_statp->unorderedMsgs);
+    fprintf(statfile, "MPICH: buffer_mem_hwmark = %ld\n", mpid_statp->buffer_mem_hwmark);
     fflush(statfile);
     memset(&query_stat,0, sizeof(query_stat));
     query_stat.name =  (pami_attribute_name_t)PAMI_CONTEXT_STATISTICS ;
@@ -262,8 +313,79 @@ n",rc);
         }
    return (rc);
 }
+ /***************************************************************************
+ Function Name: _MPIX_statistics_write
+ Description: Call MPIDI_Statistics_write  to write statistical
+              information to specified file descriptor.   
+ Parameters:
+ Name               Type         I/O
+ fptr               FILE*        I    File pointer, can be stdout or stderr.
+                                      If it is to a file, user has to open
+                                      the file.
+ rc (Fortran only)  int          0    Return sum from MPIDI_Statistics_write calls
+ <returns> (C only)  0                Both MPICH and PAMI statistics
+ ***************************************************************************/
+int _MPIX_statistics_write(FILE* fptr)
+{
+    int rc = MPIDI_Statistics_write(fptr);
+    if (rc < 0) {
+        MPID_assert(rc == PAMI_SUCCESS);
+    }
+    return(rc);
+}
 
+int MPIX_statistics_write(FILE* fptr)
+{
+    return(_MPIX_statistics_write(fptr));
+}
+
+/* Fortran:  fdes is pointer to a file descriptor.
+ *           rc   is pointer to buffer for storing return code.
+ *
+ * Note: Fortran app. will convert a Fortran I/O unit to a file
+ *       descriptor by calling Fortran utilities, flush_ and getfd.
+ *       When fdes=1, output is to STDOUT.  When fdes=2, output is to STDERR.
+ */
+
+void MPIXF_statistics_write(int *fdes, int *rc)
+{
+    FILE *fp;
+    int  dup_fd;
+    int  closefp=0;
+
+    /* Convert the DUP file descriptor to a FILE pointer */
+    dup_fd = dup(*fdes);
+    if ( (fp = fdopen(dup_fd, "a")) != NULL )
+       closefp = 1;
+    else
+       fp = stdout;    /* If fdopen failed then default to stdout */
+
+    *rc = _MPIX_statistics_write(fp);
+
+    /* The check is because I don't want to close stdout. */
+    if ( closefp ) fclose(fp);
+}
+
+void MPIXF_statistics_write_(int *fdes, int *rc)
+{
+    FILE *fp;
+    int  dup_fd;
+    int  closefp=0;
+
+    /* Convert the DUP file descriptor to a FILE pointer */
+    dup_fd = dup(*fdes);
+    if ( (fp = fdopen(dup_fd, "a")) != NULL )
+       closefp = 1;
+    else
+       fp = stdout;    /* If fdopen failed then default to stdout */
+
+    *rc = _MPIX_statistics_write(fp);
+
+    /* The check is because I don't want to close stdout. */
+    if ( closefp ) fclose(fp);
+}
 #endif
+
 
 #ifdef __BGQ__
 
@@ -397,6 +519,347 @@ MPIX_Get_last_algorithm_name(MPI_Comm comm, char *protocol, int length)
    return MPI_SUCCESS;
 }
 
+#undef FUNCNAME
+#define FUNCNAME MPIX_Pset_ionode
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+void
+MPIX_Pset_io_node (int *io_node_route_id, int *distance_to_io_node)
+{
+  int iA,  iB,  iC,  iD,  iE;                /* The local node's coordinates  */
+  int nA,  nB,  nC,  nD,  nE;                /* Size of each torus dimension  */
+  int brA, brB, brC, brD, brE;               /* The bridge node's coordinates */
+  int Nflags;
+  int torusA, torusB, torusC, torusD, torusE;        /* mesh == 0, torus == 1 */
+  int d1, d2;
+  int dA, dB, dC, dD, dE;          /* distance from local node to bridge node */
+
+  Personality_t personality;
+
+  Kernel_GetPersonality(&personality, sizeof(personality));
+
+  iA  = personality.Network_Config.Acoord;
+  iB  = personality.Network_Config.Bcoord;
+  iC  = personality.Network_Config.Ccoord;
+  iD  = personality.Network_Config.Dcoord;
+  iE  = personality.Network_Config.Ecoord;
+
+  nA  = personality.Network_Config.Anodes;
+  nB  = personality.Network_Config.Bnodes;
+  nC  = personality.Network_Config.Cnodes;
+  nD  = personality.Network_Config.Dnodes;
+  nE  = personality.Network_Config.Enodes;
+
+  brA = personality.Network_Config.cnBridge_A;
+  brB = personality.Network_Config.cnBridge_B;
+  brC = personality.Network_Config.cnBridge_C;
+  brD = personality.Network_Config.cnBridge_D;
+  brE = personality.Network_Config.cnBridge_E;
+
+  Nflags = personality.Network_Config.NetFlags;
+
+  if (Nflags & ND_ENABLE_TORUS_DIM_A) torusA = 1;
+  else                                torusA = 0;
+  if (Nflags & ND_ENABLE_TORUS_DIM_B) torusB = 1;
+  else                                torusB = 0;
+  if (Nflags & ND_ENABLE_TORUS_DIM_C) torusC = 1;
+  else                                torusC = 0;
+  if (Nflags & ND_ENABLE_TORUS_DIM_D) torusD = 1;
+  else                                torusD = 0;
+  if (Nflags & ND_ENABLE_TORUS_DIM_E) torusE = 1;
+  else                                torusE = 0;
+
+  /*
+   * This is the bridge node, numbered in ABCDE order, E increments first.
+   * It is considered the unique "io node route identifer" because each
+   * bridge node only has one torus link to one io node.
+   */
+  *io_node_route_id = brE + brD*nE + brC*nD*nE + brB*nC*nD*nE + brA*nB*nC*nD*nE;
+
+  d1 = abs(iA - brA);
+  d2 = nA - d1;
+  if (torusA) dA = (d1 < d2) ? d1 : d2;
+  else        dA = d1;
+
+  d1 = abs(iB - brB);
+  d2 = nB - d1;
+  if (torusB) dB = (d1 < d2) ? d1 : d2;
+  else        dB = d1;
+
+  d1 = abs(iC - brC);
+  d2 = nC - d1;
+  if (torusC) dC = (d1 < d2) ? d1 : d2;
+  else        dC = d1;
+
+  d1 = abs(iD - brD);
+  d2 = nD - d1;
+  if (torusD) dD = (d1 < d2) ? d1 : d2;
+  else        dD = d1;
+
+  d1 = abs(iE - brE);
+  d2 = nE - d1;
+  if (torusE) dE = (d1 < d2) ? d1 : d2;
+  else        dE = d1;
+
+  /* This is the number of hops to the io node */
+  *distance_to_io_node = dA + dB + dC + dD + dE + 1;
+
+  return;
+};
+
+/**
+ * \brief Create a communicator of ranks that have a common bridge node.
+ *
+ * \note This function is private to this source file.
+ *
+ * \param [in]  parent_comm_ptr  Pointer to the parent communicator
+ * \param [out] pset_comm_ptr    Pointer to the new 'MPID' communicator
+ *
+ * \return MPI status
+ */
+int _MPIX_Pset_same_comm_create (MPID_Comm *parent_comm_ptr, MPID_Comm **pset_comm_ptr)
+{
+  int color, key;
+  int mpi_errno;
+
+  MPIX_Pset_io_node (&color, &key);
+
+  /*
+   * Use MPIR_Comm_split_impl to make a communicator of all ranks in the parent
+   * communicator that share the same bridge node; i.e. the 'color' is the
+   * 'io node route identifer', which is unique to each BGQ bridge node.
+   *
+   * Setting the 'key' to the 'distance to io node' ensures that rank 0 in
+   * the new communicator is on the bridge node, or as close to the bridge node
+   * as possible.
+   */
+
+  *pset_comm_ptr = NULL;
+  mpi_errno = MPI_SUCCESS;
+  mpi_errno = MPIR_Comm_split_impl(parent_comm_ptr, color, key, pset_comm_ptr);
+
+  return mpi_errno;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIX_Pset_same_comm_create_from_parent
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+int
+MPIX_Pset_same_comm_create_from_parent (MPI_Comm parent_comm, MPI_Comm *pset_comm)
+{
+  int mpi_errno;
+  MPID_Comm *parent_comm_ptr, *pset_comm_ptr;
+
+  *pset_comm = MPI_COMM_NULL;
+
+  /*
+   * Convert the parent communicator object handle to an object pointer;
+   * needed by the error handling code.
+   */
+  parent_comm_ptr = NULL;
+  MPID_Comm_get_ptr(parent_comm, parent_comm_ptr);
+
+  mpi_errno = MPI_SUCCESS;
+  mpi_errno = _MPIX_Pset_same_comm_create (parent_comm_ptr, &pset_comm_ptr);
+  if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+  if (pset_comm_ptr)
+    MPIU_OBJ_PUBLISH_HANDLE(*pset_comm, pset_comm_ptr->handle);
+  else
+    goto fn_fail;
+
+fn_exit:
+  return mpi_errno;
+fn_fail:
+  mpi_errno = MPIR_Err_return_comm( parent_comm_ptr, FCNAME, mpi_errno );
+  goto fn_exit;
+};
+
+#undef FUNCNAME
+#define FUNCNAME MPIX_Pset_same_comm_create
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+int
+MPIX_Pset_same_comm_create (MPI_Comm *pset_comm)
+{
+  return MPIX_Pset_same_comm_create_from_parent (MPI_COMM_WORLD, pset_comm);
+};
+
+
+#undef FUNCNAME
+#define FUNCNAME MPIX_Pset_diff_comm_create_from_parent
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+int
+MPIX_Pset_diff_comm_create_from_parent (MPI_Comm parent_comm, MPI_Comm *pset_comm)
+{
+  MPID_Comm *parent_comm_ptr, *pset_same_comm_ptr, *pset_diff_comm_ptr;
+  int color, key;
+  int mpi_errno;
+
+  *pset_comm = MPI_COMM_NULL;
+
+  /*
+   * Convert the parent communicator object handle to an object pointer;
+   * needed by the error handling code.
+   */
+  parent_comm_ptr = NULL;
+  MPID_Comm_get_ptr(parent_comm, parent_comm_ptr);
+
+  /*
+   * Determine the 'color' of this rank to create the new communicator - which
+   * is the rank in a (transient) communicator where all ranks share a common
+   * bridge node.
+   */
+  mpi_errno = MPI_SUCCESS;
+  mpi_errno = _MPIX_Pset_same_comm_create (parent_comm_ptr, &pset_same_comm_ptr);
+  if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+  if (pset_same_comm_ptr == NULL)
+    goto fn_fail;
+
+  color = MPIR_Comm_rank(pset_same_comm_ptr) * MPIDI_HW.ppn + MPIDI_HW.coreID;
+
+  /* Discard the 'pset_same_comm_ptr' .. it is no longer needed. */
+  mpi_errno = MPIR_Comm_free_impl(pset_same_comm_ptr);
+  if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
+  /* Set the 'key' for this rank to order the ranks in the new communicator. */
+  key = MPIR_Comm_rank(parent_comm_ptr);
+
+  pset_diff_comm_ptr = NULL;
+  mpi_errno = MPI_SUCCESS;
+  mpi_errno = MPIR_Comm_split_impl(parent_comm_ptr, color, key, &pset_diff_comm_ptr);
+  if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+  if (pset_diff_comm_ptr)
+    MPIU_OBJ_PUBLISH_HANDLE(*pset_comm, pset_diff_comm_ptr->handle);
+  else
+    goto fn_fail;
+
+fn_exit:
+  return mpi_errno;
+fn_fail:
+  mpi_errno = MPIR_Err_return_comm( parent_comm_ptr, FCNAME, mpi_errno );
+  goto fn_exit;
+};
+
+#undef FUNCNAME
+#define FUNCNAME MPIX_Pset_diff_comm_create
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+int
+MPIX_Pset_diff_comm_create (MPI_Comm *pset_comm)
+{
+  return MPIX_Pset_diff_comm_create_from_parent (MPI_COMM_WORLD, pset_comm);
+};
+
+
+
+/**
+ * \brief Compare each elemt of two six-element arrays
+ * \param [in] A The first array
+ * \param [in] B The first array
+ * \return MPI_SUCCESS (does not return on failure)
+ */
+#define CMP_6(A,B)                              \
+({                                              \
+  assert(A[0] == B[0]);                         \
+  assert(A[1] == B[1]);                         \
+  assert(A[2] == B[2]);                         \
+  assert(A[3] == B[3]);                         \
+  assert(A[4] == B[4]);                         \
+  assert(A[5] == B[5]);                         \
+  MPI_SUCCESS;                                  \
+})
+
+#undef FUNCNAME
+#define FUNCNAME MPIX_Cart_comm_create
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+int
+MPIX_Cart_comm_create (MPI_Comm *cart_comm)
+{
+  int result;
+  int rank, numprocs,
+      dims[6],
+      wrap[6],
+      coords[6];
+  int new_rank1, new_rank2;
+  MPI_Comm new_comm = MPI_COMM_NULL;
+  int cart_rank,
+      cart_dims[6],
+      cart_wrap[6],
+      cart_coords[6];
+  int Nflags;
+
+  *cart_comm = MPI_COMM_NULL;
+  PMPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  PMPI_Comm_size(MPI_COMM_WORLD, &numprocs);
+
+  Personality_t personality;
+
+  Kernel_GetPersonality(&personality, sizeof(personality));
+
+  dims[0] = personality.Network_Config.Anodes;
+  dims[1] = personality.Network_Config.Bnodes;
+  dims[2] = personality.Network_Config.Cnodes;
+  dims[3] = personality.Network_Config.Dnodes;
+  dims[4] = personality.Network_Config.Enodes;
+  dims[5] = Kernel_ProcessCount();
+
+  /* This only works if MPI_COMM_WORLD is the full partition */
+  if (dims[5] * dims[4] * dims[3] * dims[2] * dims[1] * dims[0] != numprocs)
+    return MPI_ERR_TOPOLOGY;
+
+  Nflags = personality.Network_Config.NetFlags;
+  wrap[0] = ((Nflags & ND_ENABLE_TORUS_DIM_A) != 0);
+  wrap[1] = ((Nflags & ND_ENABLE_TORUS_DIM_B) != 0);
+  wrap[2] = ((Nflags & ND_ENABLE_TORUS_DIM_C) != 0);
+  wrap[3] = ((Nflags & ND_ENABLE_TORUS_DIM_D) != 0);
+  wrap[4] = ((Nflags & ND_ENABLE_TORUS_DIM_E) != 0);
+  wrap[5] = 1;
+
+  coords[0] = personality.Network_Config.Acoord;
+  coords[1] = personality.Network_Config.Bcoord;
+  coords[2] = personality.Network_Config.Ccoord;
+  coords[3] = personality.Network_Config.Dcoord;
+  coords[4] = personality.Network_Config.Ecoord;
+  coords[5] = Kernel_MyTcoord();
+
+  new_rank1 =                                         coords[5] +
+                                            dims[5] * coords[4] +
+                                  dims[5] * dims[4] * coords[3] +
+                        dims[5] * dims[4] * dims[3] * coords[2] +
+              dims[5] * dims[4] * dims[3] * dims[2] * coords[1] +
+    dims[5] * dims[4] * dims[3] * dims[2] * dims[1] * coords[0];
+
+  result = PMPI_Comm_split(MPI_COMM_WORLD, 0, new_rank1, &new_comm);
+  if (result != MPI_SUCCESS)
+  {
+     PMPI_Comm_free(&new_comm);
+     return result;
+  }
+  PMPI_Comm_rank(new_comm, &new_rank2);
+  assert(new_rank1 == new_rank2);
+
+  result = PMPI_Cart_create(new_comm,
+                            6,
+                            dims,
+                            wrap,
+                            0,
+                            cart_comm);
+  if (result != MPI_SUCCESS)
+    return result;
+
+  PMPI_Comm_rank(*cart_comm, &cart_rank);
+  PMPI_Cart_get (*cart_comm, 6, cart_dims, cart_wrap, cart_coords);
+
+  CMP_6(dims,   cart_dims);
+  CMP_6(wrap,   cart_wrap);
+  CMP_6(coords, cart_coords);
+
+  PMPI_Comm_free(&new_comm);
+  return MPI_SUCCESS;
+};
 
 #endif
 

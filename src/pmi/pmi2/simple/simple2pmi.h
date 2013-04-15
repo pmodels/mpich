@@ -79,15 +79,15 @@ static const char FALSE_VAL[] = "FALSE";
 
 /* Local types */
 
-/* Parse commands are in this structure.  Fields in this structure are 
+/* Parse commands are in this structure.  Fields in this structure are
    dynamically allocated as necessary */
 typedef struct PMI2_Keyvalpair {
     const char *key;
     const char *value;
     int         valueLen;  /* Length of a value (values may contain nulls, so
                               we need this) */
-    int         isCopy;    /* The value is a copy (and will need to be freed) 
-                              if this is true, otherwise, 
+    int         isCopy;    /* The value is a copy (and will need to be freed)
+                              if this is true, otherwise,
                               it is a null-terminated string in the original
                               buffer */
 } PMI2_Keyvalpair;

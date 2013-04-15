@@ -61,7 +61,8 @@ typedef struct MPIDI_Post_geom_create
    pami_geometry_t parent;
    unsigned id;
    pami_geometry_range_t *ranges;
-   size_t slice_count;
+   pami_task_t *tasks;
+   size_t count; /* count of ranges or tasks */
    pami_event_function fn;
    void* cookie;
 } MPIDI_Post_geom_create_t;
@@ -89,7 +90,27 @@ static pami_result_t geom_rangelist_create_wrapper(pami_context_t context, void 
                geom_struct->parent,
                geom_struct->id,
                geom_struct->ranges,
-               geom_struct->slice_count,
+               geom_struct->count,
+               context,
+               geom_struct->fn,
+               geom_struct->cookie);
+   TRACE_ERR("Done in geom create wrapper\n");
+}
+static pami_result_t geom_tasklist_create_wrapper(pami_context_t context, void *cookie)
+{
+   /* I'll need one of these per geometry creation function..... */
+   MPIDI_Post_geom_create_t *geom_struct = (MPIDI_Post_geom_create_t *)cookie;
+   TRACE_ERR("In geom create wrapper\n");
+   return PAMI_Geometry_create_tasklist(
+               geom_struct->client,
+               geom_struct->context_offset,
+               geom_struct->configs,
+               geom_struct->num_configs,
+               geom_struct->newgeom,
+               geom_struct->parent,
+               geom_struct->id,
+               geom_struct->tasks,
+               geom_struct->count,
                context,
                geom_struct->fn,
                geom_struct->cookie);
@@ -126,67 +147,111 @@ void MPIDI_Coll_comm_create(MPID_Comm *comm)
 
   if(comm->comm_kind != MPID_INTRACOMM) return;
   /* Create a geometry */
-   
+
    if(comm->mpid.geometry != MPIDI_Process.world_geometry)
    {
       if(MPIDI_Process.verbose >= MPIDI_VERBOSE_DETAILS_ALL)
          fprintf(stderr,"world geom: %p parent geom: %p\n", MPIDI_Process.world_geometry, comm->mpid.parent);
       TRACE_ERR("Creating subgeom\n");
       /* Change to this at some point */
-      #if 0
-      rc = PAMI_Geometry_create_tasklist( MPIDI_Client,
-                                          NULL,
-                                          0,
-                                          &comm->mpid.geometry,
-                                          NULL, /* Parent */
-                                          comm->context_id,
-                                          /* task list, where/how do I get that? */
-                                          comm->local_size,
-                                          MPIDI_Context[0],
-                                          geom_create_cb_done,
-                                          &geom_init);
-      #endif
 
-      comm->mpid.tasks_descriptor.ranges = MPIU_Malloc(sizeof(comm->mpid.tasks_descriptor) *
-                                             comm->local_size);
-      /* Can we just pass a max and min. Does that work now? */
-      for(i=0;i<comm->local_size;i++)
+      comm->mpid.tasks = NULL;
+      for(i=1;i<comm->local_size;i++)
       {
-         comm->mpid.tasks_descriptor.ranges[i].lo = MPID_VCR_GET_LPID(comm->vcr, i);
-         comm->mpid.tasks_descriptor.ranges[i].hi = MPID_VCR_GET_LPID(comm->vcr, i);
+         /* only if sequential tasks should we use a (single) range.
+            Multi or reordered ranges are inefficient */
+         if(MPID_VCR_GET_LPID(comm->vcr, i) != (MPID_VCR_GET_LPID(comm->vcr, i-1) + 1)) {
+            /* not sequential, use tasklist */
+	    MPID_VCR_GET_LPIDS(comm, comm->mpid.tasks);
+            break;
+         }
       }
-      pami_configuration_t config;
-      size_t numconfigs = 0;
+      /* Should we use a range? (no task list set) */
+      if(comm->mpid.tasks == NULL)
+      {
+         /* one range, {first rank ... last rank} */
+         comm->mpid.range.lo = MPID_VCR_GET_LPID(comm->vcr, 0);
+         comm->mpid.range.hi = MPID_VCR_GET_LPID(comm->vcr, comm->local_size-1);
+      }
 
+      if(unlikely(MPIDI_Process.verbose >= MPIDI_VERBOSE_DETAILS_0 && comm->rank == 0))
+         fprintf(stderr,"create geometry tasks %p {%u..%u}\n", comm->mpid.tasks, MPID_VCR_GET_LPID(comm->vcr, 0),MPID_VCR_GET_LPID(comm->vcr, comm->local_size-1));
+
+      pami_configuration_t config[3];
+      config[0].name = PAMI_GEOMETRY_NONCONTIG;
+      config[0].value.intval = 0; // Disable non-contig, pamid doesn't use pami for non-contig data collectives
+      size_t numconfigs = 1;
       if(MPIDI_Process.optimized.subcomms)
       {
-         config.name = PAMI_GEOMETRY_OPTIMIZE;
-         numconfigs = 1;
+         config[numconfigs].name = PAMI_GEOMETRY_OPTIMIZE;
+         config[numconfigs].value.intval = 1; 
+         ++numconfigs;
+      }
+      if(MPIDI_Process.optimized.memory) 
+      {
+         config[numconfigs].name = PAMI_GEOMETRY_MEMORY_OPTIMIZE;
+         config[numconfigs].value.intval = MPIDI_Process.optimized.memory; /* level of optimization */
+         ++numconfigs;
+      }
+
+      if(MPIDI_Process.optimized.memory && (comm->local_size & (comm->local_size-1)))
+      {
+         /* Don't create irregular geometries.  Fallback to MPICH only collectives */
+         geom_init = 0;
+         comm->mpid.geometry = PAMI_GEOMETRY_NULL;
+      }
+      else if(comm->mpid.tasks == NULL)
+      {   
+         geom_post.client = MPIDI_Client;
+         geom_post.configs = config;
+         geom_post.context_offset = 0; /* TODO BES investigate */
+         geom_post.num_configs = numconfigs;
+         geom_post.newgeom = &comm->mpid.geometry,
+         geom_post.parent = PAMI_GEOMETRY_NULL;
+         geom_post.id     = comm->context_id;
+         geom_post.ranges = &comm->mpid.range;
+         geom_post.tasks = NULL;;
+         geom_post.count = (size_t)1;
+         geom_post.fn = geom_create_cb_done;
+         geom_post.cookie = (void*)&geom_init;
+
+         TRACE_ERR("%s geom_rangelist_create\n", MPIDI_Process.context_post>0?"Posting":"Invoking");
+         MPIDI_Context_post(MPIDI_Context[0], &geom_post.state,
+                            geom_rangelist_create_wrapper, (void *)&geom_post);
       }
       else
       {
-         numconfigs = 0;
+         geom_post.client = MPIDI_Client;
+         geom_post.configs = config;
+         geom_post.context_offset = 0; /* TODO BES investigate */
+         geom_post.num_configs = numconfigs;
+         geom_post.newgeom = &comm->mpid.geometry,
+         geom_post.parent = PAMI_GEOMETRY_NULL;
+         geom_post.id     = comm->context_id;
+         geom_post.ranges = NULL;
+         geom_post.tasks = comm->mpid.tasks;
+         geom_post.count = (size_t)comm->local_size;
+         geom_post.fn = geom_create_cb_done;
+         geom_post.cookie = (void*)&geom_init;
+
+         TRACE_ERR("%s geom_tasklist_create\n", MPIDI_Process.context_post>0?"Posting":"Invoking");
+         MPIDI_Context_post(MPIDI_Context[0], &geom_post.state,
+                            geom_tasklist_create_wrapper, (void *)&geom_post);
       }
-
-      geom_post.client = MPIDI_Client;
-      geom_post.configs = &config;
-      geom_post.context_offset = 0; /* TODO BES investigate */
-      geom_post.num_configs = numconfigs;
-      geom_post.newgeom = &comm->mpid.geometry,
-      geom_post.parent = NULL;
-      geom_post.id     = comm->context_id;
-      geom_post.ranges = comm->mpid.tasks_descriptor.ranges;
-      geom_post.slice_count = (size_t)comm->local_size,
-      geom_post.fn = geom_create_cb_done;
-      geom_post.cookie = (void*)&geom_init;
-
-      TRACE_ERR("%s geom_create\n", MPIDI_Process.context_post>0?"Posting":"Invoking");
-      MPIDI_Context_post(MPIDI_Context[0], &geom_post.state,
-                         geom_rangelist_create_wrapper, (void *)&geom_post);
 
       TRACE_ERR("Waiting for geom create to finish\n");
       MPID_PROGRESS_WAIT_WHILE(geom_init);
+
+      if(comm->mpid.geometry == PAMI_GEOMETRY_NULL)
+      {
+         if(unlikely(MPIDI_Process.verbose >= MPIDI_VERBOSE_DETAILS_0 && comm->rank == 0))
+            fprintf(stderr,"Created unoptimized communicator id=%u, size=%u\n", (unsigned) comm->context_id,comm->local_size);
+         MPIU_TestFree(&comm->coll_fns);
+         return;
+      }
    }
+   /* Initialize the async flow control in case it will be used. */
+   comm->mpid.num_requests = MPIDI_Process.optimized.num_requests;
 
    TRACE_ERR("Querying protocols\n");
    /* Determine what protocols are available for this comm/geom */
@@ -212,13 +277,13 @@ void MPIDI_Coll_comm_destroy(MPID_Comm *comm)
   if (!MPIDI_Process.optimized.collectives)
     return;
 
-  if(comm->comm_kind != MPID_INTRACOMM) 
+  if(comm->comm_kind != MPID_INTRACOMM)
     return;
 
   /* It's possible (MPIR_Setup_intercomm_localcomm) to have an intracomm
      without a geometry even when using optimized collectives */
-  if(comm->mpid.geometry == NULL)
-    return; 
+  if(comm->mpid.geometry == PAMI_GEOMETRY_NULL)
+    return;
 
    MPIU_TestFree(&comm->coll_fns);
    for(i=0;i<PAMI_XFER_COUNT;i++)
@@ -242,20 +307,9 @@ void MPIDI_Coll_comm_destroy(MPID_Comm *comm)
 
    TRACE_ERR("Waiting for geom destroy to finish\n");
    MPID_PROGRESS_WAIT_WHILE(geom_destroy);
-   TRACE_ERR("Freeing geometry ranges\n");
+   MPIU_Free(comm->mpid.tasks);
+/*   TRACE_ERR("Freeing geometry ranges\n");
    MPIU_TestFree(&comm->mpid.tasks_descriptor.ranges);
+*/
    TRACE_ERR("MPIDI_Coll_comm_destroy exit\n");
-}
-
-
-
-void MPIDI_Comm_world_setup()
-{
-  TRACE_ERR("MPIDI_Comm_world_setup enter\n");
-
-  /* Anything special required for COMM_WORLD goes here */
-   MPID_Comm *comm;
-   comm = MPIR_Process.comm_world;
-
-  TRACE_ERR("MPIDI_Comm_world_setup exit\n");
 }

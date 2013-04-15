@@ -35,7 +35,7 @@ MPIDI_SendDoneCB(pami_context_t   context,
 {
 #ifdef MPIDI_TRACE
   MPID_Request * req = (MPID_Request *) clientdata;
-  MPIDI_Out_cntr[(req->mpid.partner_id)].S[(req->mpid.idx)].sendComp=1;
+  MPIDI_Trace_buf[(req->mpid.partner_id)].S[(req->mpid.idx)].sendComp=1;
 #endif
   MPIDI_SendDoneCB_inline(context,
                           clientdata,
@@ -105,7 +105,7 @@ MPIDI_RecvDoneCB(pami_context_t   context,
   MPIDI_Request_complete_norelease(rreq);
   /* caller must release rreq, after unlocking MSGQUEUE (if held) */
 #ifdef OUT_OF_ORDER_HANDLING
-  int source;
+  pami_task_t source;
   source = MPIDI_Request_getPeerRank_pami(rreq);
   if (MPIDI_In_cntr[source].n_OutOfOrderMsgs > 0) {
      MPIDI_Recvq_process_out_of_order_msgs(source, context);
@@ -162,6 +162,16 @@ void MPIDI_Recvq_process_out_of_order_msgs(pami_task_t src, pami_context_t conte
 
       if (matched)  {
         /* process a completed message i.e. data is in EA   */
+        if (TOKEN_FLOW_CONTROL_ON) {
+           #if TOKEN_FLOW_CONTROL
+           if ((ooreq->mpid.uebuflen) && (!(ooreq->mpid.envelope.msginfo.isRzv))) {
+               MPIDI_Token_cntr[src].unmatched--;
+               MPIDI_Update_rettoks(src);
+           }
+           #else
+           MPID_assert_always(0);
+           #endif
+         }
         if (MPIDI_Request_getMatchSeq(ooreq) == (in_cntr->nMsgs+ 1))
           in_cntr->nMsgs++;
 
@@ -188,8 +198,9 @@ void MPIDI_Recvq_process_out_of_order_msgs(pami_task_t src, pami_context_t conte
           }
 
 #ifdef MPIDI_TRACE
-       MPIDI_In_cntr[src].R[(rreq->mpid.idx)].matchedInOOL=1;
-       MPIDI_In_cntr[src].R[(rreq->mpid.idx)].rlen=dt_size;
+       rreq->mpid.idx = ooreq->mpid.idx;
+       MPIDI_Trace_buf[src].R[(rreq->mpid.idx)].matchedInOOL=1;
+       MPIDI_Trace_buf[src].R[(rreq->mpid.idx)].rlen=dt_size;
 #endif
         ooreq->comm = rreq->comm;
         MPIR_Comm_add_ref(ooreq->comm);

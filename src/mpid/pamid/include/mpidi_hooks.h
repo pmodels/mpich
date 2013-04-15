@@ -29,8 +29,16 @@
 #define __include_mpidi_hooks_h__
 
 
-typedef pami_task_t         MPID_VCR;
+struct MPID_VCR_t {
+	pami_task_t      taskid;
+#ifdef DYNAMIC_TASKING
+	int              pg_rank;    /** rank in process group **/
+	struct MPIDI_PG *pg;         /** process group **/
+#endif
+};
+typedef struct MPID_VCR_t * MPID_VCR ;
 typedef struct MPIDI_VCRT * MPID_VCRT;
+
 
 typedef size_t              MPIDI_msg_sz_t;
 

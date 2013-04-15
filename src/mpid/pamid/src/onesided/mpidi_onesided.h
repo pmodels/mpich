@@ -168,6 +168,10 @@ void
 MPIDI_Win_DoneCB(pami_context_t  context,
                  void          * cookie,
                  pami_result_t   result);
+void
+MPIDI_WinUnlockDoneCB(pami_context_t  context,
+                 void          * cookie,
+                 pami_result_t   result);
 
 void
 MPIDI_WinAccumCB(pami_context_t    context,
