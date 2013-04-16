@@ -268,7 +268,7 @@ int  MPIDI_Update_mpenv()
              if ((i==task_count) || (gatherer[i].x != gatherer[first].x)) {          \
                   last = i-1;                                                        \
                   if (last != task_count-1) cflag = '*';                             \
-                  if (gatherer[first].x == 1) {                                      \
+                  if (gatherer[first].x > 0) {                                       \
                     printf("Task %1c%4d-%4d:%s %s\n", cflag, first, last,            \
                            y, "YES");                                                \
                   } else if (gatherer[first].x == 0) {                               \

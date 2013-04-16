@@ -75,6 +75,7 @@ PAMIX_Endpoint_query(pami_endpoint_t endpoint);
 
 typedef void (*pamix_progress_function) (pami_context_t context, void *cookie);
 #define PAMIX_CLIENT_ASYNC_GUARANTEE 1016
+#define ASYNC_PROGRESS_ALL  0x1111
 typedef enum
 {
   PAMIX_PROGRESS_ALL            =    0,

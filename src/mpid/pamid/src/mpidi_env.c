@@ -470,6 +470,8 @@ ENV_Char__(char* name[], unsigned* val, char* string)
 
   if (  (env[0]=='y')|| (env[0]=='Y')
      || (env[0]=='p')|| (env[0]=='P') 
+     || (env[0]=='t')|| (env[0]=='T')
+     || (env[0]=='r')|| (env[0]=='R')
      || (env[0]=='F')|| (env[0]=='f'))
           *val = 1;
   /*This may seem redundant; however, 
@@ -1049,11 +1051,41 @@ MPIDI_Env_setup(int rank, int requested)
     }
     /*  MP_CSS_INTERRUPT                                                       */
     {
+      char *cp=NULL, *cp1=NULL;
+      int user_interrupts=0;
       char* names[] = {"MP_CSS_INTERRUPT", NULL};
       ENV_Char(names, &mpich_env->interrupts);
       if (mpich_env->interrupts == 1)      /* force on  */
       {
-        MPIDI_Process.mp_interrupts=1;
+        cp = getenv("MP_CSS_INTERRUPT");
+        if (*cp=='Y' || *cp=='y')
+        {
+          user_interrupts = ASYNC_PROGRESS_ALL;
+        }
+        else
+        {
+          char delimiter='+';
+          cp1 = strchr(cp,delimiter);
+          if (!cp1)  /* timer or receive  */
+          {
+             if ( (*cp == 't') || (*cp == 'T') )
+                user_interrupts = PAMIX_PROGRESS_TIMER;
+             else if ( (*cp == 'r') || (*cp == 'R') )
+                user_interrupts = PAMIX_PROGRESS_RECV_INTERRUPT;
+          }
+          else   /* timer + receive   */
+          {
+            if ((( *cp == 't' || *cp == 'T') && ( *(cp1+1) == 'r' || *(cp1+1) == 'R')) ||
+                (( *cp == 'r' || *cp == 'R') && ( *(cp1+1) == 't' || *(cp1+1) == 'T')))
+                 user_interrupts = ASYNC_PROGRESS_ALL;
+            else
+            {
+                TRACE_ERR("ERROR in MP_CSS_INTERRUPT %s(%d)\n",__FILE__,__LINE__);
+                exit(1);
+            }
+          }
+        }
+        MPIDI_Process.mp_interrupts=user_interrupts;
         MPIDI_Process.perobj.context_post.requested = 0;
         MPIDI_Process.async_progress.mode    = ASYNC_PROGRESS_MODE_TRIGGER;
 #if (MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_PER_OBJECT)

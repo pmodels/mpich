@@ -26,6 +26,7 @@ void
 MPIDI_Progress_init()
 {
   MPIDI_Process.async_progress.active = 0;
+  pamix_progress_t async_progress_type=0;
 
   /* In the "global" mpich lock mode the only possible progress function
    * is the "global mpich lock" trigger progress function. This progress
@@ -47,6 +48,25 @@ MPIDI_Progress_init()
     MPIDI_Process.perobj.context_post.requested;
 #endif
 
+  async_progress_type = PAMIX_PROGRESS_ALL;
+
+#ifdef __PE__
+  if (MPIDI_Process.mp_interrupts)
+  {
+      /*  PAMIX_PROGRESS_TIMER, PAMIX_PROGRESS_RECV_INTERRUPT or      */
+      /*  ASYNC_PROGRESS_ALL                                          */
+      /*  mp_interrupts=0 indicates the interrupts is disabled        */
+      /*  which is the same definition as that of PAMIX_PROGRESS_ALL. */
+      /*  ASYNC_PROGRESS_ALL is an internal variable which is defined */
+      /*  as 0x1111 and needs to be converted to corresponding pami   */
+      /*  type PAMIX_PROGRESS_ALL                                     */
+      async_progress_type = MPIDI_Process.mp_interrupts;
+      if (MPIDI_Process.mp_interrupts == ASYNC_PROGRESS_ALL)
+         async_progress_type = PAMIX_PROGRESS_ALL;
+  }
+#endif
+
+
   if (MPIDI_Process.async_progress.mode != ASYNC_PROGRESS_MODE_DISABLED)
     {
       TRACE_ERR("Async advance beginning...\n");
@@ -60,7 +80,7 @@ MPIDI_Progress_init()
                                   MPIDI_Progress_async_end,
                                   MPIDI_Progress_async_start,
                                   (void *) i);
-          PAMIX_Progress_enable(MPIDI_Context[i], PAMIX_PROGRESS_ALL);
+          PAMIX_Progress_enable(MPIDI_Context[i], async_progress_type);
         }
       TRACE_ERR("Async advance enabled\n");
     }
