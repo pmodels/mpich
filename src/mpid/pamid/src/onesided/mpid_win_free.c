@@ -30,6 +30,10 @@
  * \param[in,out] win  Window
  * \return MPI_SUCCESS or error returned from MPI_Barrier.
  */
+#undef FUNCNAME
+#define FUNCNAME MPID_Win_free
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int
 MPID_Win_free(MPID_Win **win_ptr)
 {
@@ -71,5 +75,6 @@ MPID_Win_free(MPID_Win **win_ptr)
 
   MPIU_Handle_obj_free(&MPID_Win_mem, win);
 
+fn_fail:
   return mpi_errno;
 }

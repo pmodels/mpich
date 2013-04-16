@@ -220,6 +220,10 @@ MPIDI_Put_use_pami_put(pami_context_t   context, MPIDI_Win_request * req,int *fr
  * \param[in] win              Window
  * \return MPI_SUCCESS
  */
+#undef FUNCNAME
+#define FUNCNAME MPID_Put
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int
 MPID_Put(void         *origin_addr,
          int           origin_count,
@@ -230,6 +234,7 @@ MPID_Put(void         *origin_addr,
          MPI_Datatype  target_datatype,
          MPID_Win     *win)
 {
+  int mpi_errno = MPI_SUCCESS;
   MPIDI_Win_request *req = MPIU_Calloc0(1, MPIDI_Win_request);
   req->win          = win;
   req->type         = MPIDI_WIN_REQUEST_PUT;
@@ -365,6 +370,6 @@ MPID_Put(void         *origin_addr,
    */
   PAMI_Context_post(MPIDI_Context[0], &req->post_request, MPIDI_Put, req);
 
-
-  return MPI_SUCCESS;
+fn_fail:
+  return mpi_errno;
 }

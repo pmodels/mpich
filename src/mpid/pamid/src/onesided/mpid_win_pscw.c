@@ -113,13 +113,15 @@ MPID_Win_start(MPID_Group *group,
   MPID_PROGRESS_WAIT_WHILE(group->size != sync->pw.count);
   sync->pw.count = 0;
 
-  MPIU_ERR_CHKORASSERT(win->mpid.sync.sc.group == NULL,
-                       mpi_errno, MPI_ERR_GROUP, return mpi_errno, "**group");
+  MPIU_ERR_CHKANDJUMP((win->mpid.sync.sc.group != NULL), mpi_errno, MPI_ERR_GROUP, "**group");
 
   win->mpid.sync.sc.group = group;
   win->mpid.sync.origin_epoch_type = MPID_EPOTYPE_START;
 
+fn_exit:
   return mpi_errno;
+fn_fail:
+  goto fn_exit;
 }
 
 
@@ -174,8 +176,8 @@ MPID_Win_post(MPID_Group *group,
 
   MPIR_Group_add_ref(group);
 
-  MPIU_ERR_CHKORASSERT(win->mpid.sync.pw.group == NULL,
-                       mpi_errno, MPI_ERR_GROUP, return mpi_errno,"**group");
+  MPIU_ERR_CHKANDJUMP((win->mpid.sync.pw.group != NULL), mpi_errno, MPI_ERR_GROUP, "**group");
+
   win->mpid.sync.pw.group = group;
 
   MPIDI_WinPSCW_info info = {
@@ -187,6 +189,7 @@ MPID_Win_post(MPID_Group *group,
 
   win->mpid.sync.target_epoch_type = MPID_EPOTYPE_POST;
 
+fn_fail:
   return mpi_errno;
 }
 

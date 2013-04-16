@@ -214,6 +214,10 @@ MPIDI_Get_use_pami_get(pami_context_t context, MPIDI_Win_request * req, int *fre
  * \param[in] win              Window
  * \return MPI_SUCCESS
  */
+#undef FUNCNAME
+#define FUNCNAME MPID_Get
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int
 MPID_Get(void         *origin_addr,
          int           origin_count,
@@ -224,6 +228,7 @@ MPID_Get(void         *origin_addr,
          MPI_Datatype  target_datatype,
          MPID_Win     *win)
 {
+  int mpi_errno = MPI_SUCCESS;
   MPIDI_Win_request *req = MPIU_Calloc0(1, MPIDI_Win_request);
   req->win          = win;
   req->type         = MPIDI_WIN_REQUEST_GET;
@@ -360,6 +365,6 @@ MPID_Get(void         *origin_addr,
    */
   PAMI_Context_post(MPIDI_Context[0], &req->post_request, MPIDI_Get, req);
 
-
-  return MPI_SUCCESS;
+fn_fail:
+  return mpi_errno;
 }
