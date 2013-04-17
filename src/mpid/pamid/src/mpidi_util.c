@@ -42,17 +42,26 @@
 #define ONEM (1<<20)
 #define ONEG (1<<30)
 
-
+#define PAMI_ASYNC_EXT_ATTR 2000
 
 #if (MPIDI_PRINTENV || MPIDI_STATISTICS || MPIDI_BANNER)
 MPIDI_printenv_t  *mpich_env;
 extern char* mp_euilib;
 char mp_euidevice[20];
 extern pami_extension_t pe_extension;
+extern pamix_extension_info_t PAMIX_Extensions;
+ typedef enum {
+        /* Attribute       usage : type : default : description   */
+         PAMI_ASYNC_ATTR
+           = PAMI_ASYNC_EXT_ATTR,
+         PAMI_CONTEXT_TIMER_INTERVAL,   /**<   U: size_t : N/A : current timer interval in PAMI context */
+       } pamix_attribute_name_async_t;
+
 
 void MPIDI_Set_mpich_env(int rank, int size) {
      static char polling_buf[32]="";
      int rc;
+     pami_configuration_t config;
 
      mpich_env->this_task = rank;
      mpich_env->nprocs  = size;
@@ -60,14 +69,20 @@ void MPIDI_Set_mpich_env(int rank, int size) {
      mpich_env->use_token_flow_control=MPIDI_Process.is_token_flow_control_on;
      mpich_env->mp_statistics=MPIDI_Process.mp_statistics;
      if (mpich_env->polling_interval == 0) {
-            mpich_env->polling_interval = 400000;
+         bzero(&config, sizeof(config));
+         config.name = (pami_attribute_name_t)PAMI_CONTEXT_TIMER_INTERVAL;
+         rc= PAMI_Context_query(MPIDI_Context[0], &config, 1);
+            mpich_env->polling_interval = config.value.intval;;
             sprintf(polling_buf, "MP_POLLING_INTERVAL=%d",
                     mpich_env->polling_interval); /* microseconds */
             rc = putenv(polling_buf);
      }
      if (mpich_env->retransmit_interval == 0) {
-            mpich_env->retransmit_interval = 400000;
-            sprintf(polling_buf, "MP_POLLING_INTERVAL=%d",
+         bzero(&config, sizeof(config));
+         config.name = (pami_attribute_name_ext_t)PAMI_CONTEXT_RETRANSMIT_INTERVAL;
+         rc= PAMI_Context_query(MPIDI_Context[0], &config, 1);
+            mpich_env->retransmit_interval = config.value.intval;
+            sprintf(polling_buf, "MP_RETRANSMIT_INTERVAL=%d",
                     mpich_env->retransmit_interval); /* microseconds */
             rc = putenv(polling_buf);
      }
@@ -135,11 +150,10 @@ void MPIDI_Setup_networkenv()
        *  mpi_printenv variable can print them out.
        */
       if ( mpich_env->retransmit_interval == 0 ) {
-         if (mpich_env->transport_type == IS_US)  {  /* default for IP is 10000 loops */
-             mpich_env->retransmit_interval = 4000000;
-         } else {
-             mpich_env->retransmit_interval = 10000;
-         }
+          bzero(&config, sizeof(config));
+          config.name = (pami_attribute_name_t)PAMI_CONTEXT_RETRANSMIT_INTERVAL;
+          rc= PAMI_Context_query(MPIDI_Context[0], &config, 1);
+             mpich_env->retransmit_interval = config.value.intval;
       }
 
 }
