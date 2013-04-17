@@ -309,7 +309,7 @@ int ARMCII_Buf_acc_is_scaled(int datatype, void *scale) {
   */
 void ARMCII_Buf_acc_scale(void *buf_in, void *buf_out, int size, int datatype, void *scale) {
   int   j, nelem;
-  int   type_size;
+  int   type_size = -1;
   MPI_Datatype type;
 
   switch (datatype) {
