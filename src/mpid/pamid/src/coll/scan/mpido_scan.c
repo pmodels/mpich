@@ -272,7 +272,7 @@ int MPIDO_Doscan_simple(const void *sendbuf, void *recvbuf,
    pami_xfer_t scan;
    volatile unsigned scan_active = 1;
    MPIDI_Datatype_get_info(count, datatype, dt_contig, tsize, dt_null, true_lb);
-   if(MPIDI_Pamix_collsel_advise != NULL)
+   if(MPIDI_Pamix_collsel_advise != NULL && mpid->collsel_fast_query != NULL)
    {
      advisor_algorithm_t advisor_algorithms[1];
      int num_algorithms = MPIDI_Pamix_collsel_advise(mpid->collsel_fast_query, PAMI_XFER_SCAN, tsize, advisor_algorithms, 1);

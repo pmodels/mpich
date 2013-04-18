@@ -393,7 +393,7 @@ int MPIDO_Gather_simple(const void *sendbuf,
   {
     MPIDI_Datatype_get_info(sendcount, sendtype, snd_contig,
                             send_size, data_ptr, true_lb);
-    if(MPIDI_Pamix_collsel_advise != NULL)
+    if(MPIDI_Pamix_collsel_advise != NULL && mpid->collsel_fast_query != NULL)
     {
       advisor_algorithm_t advisor_algorithms[1];
       int num_algorithms = MPIDI_Pamix_collsel_advise(mpid->collsel_fast_query, PAMI_XFER_GATHER, send_size, advisor_algorithms, 1);
@@ -425,7 +425,7 @@ int MPIDO_Gather_simple(const void *sendbuf,
   }
   else
   {
-   if(MPIDI_Pamix_collsel_advise != NULL)
+   if(MPIDI_Pamix_collsel_advise != NULL && mpid->collsel_fast_query != NULL)
    {
      MPIDI_Datatype_get_info(recvcount, recvtype, rcv_contig,
                               recv_size, data_ptr, true_lb);

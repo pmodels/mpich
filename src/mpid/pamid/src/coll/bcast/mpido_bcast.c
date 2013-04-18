@@ -289,12 +289,11 @@ int MPIDO_Bcast_simple(void *buffer,
    const struct MPIDI_Comm* const mpid = &(comm_ptr->mpid);
    const int rank = comm_ptr->rank;
 
-
    /* Must calculate data_size based on count=1 in case it's total size is > integer */
    int data_size_one;
    MPIDI_Datatype_get_info(1, datatype,
 			   data_contig, data_size_one, data_ptr, data_true_lb);
-   if(MPIDI_Pamix_collsel_advise != NULL)
+   if(MPIDI_Pamix_collsel_advise != NULL && mpid->collsel_fast_query != NULL)
    {
      advisor_algorithm_t advisor_algorithms[1];
      int num_algorithms = MPIDI_Pamix_collsel_advise(mpid->collsel_fast_query, PAMI_XFER_BROADCAST, data_size_one * count, advisor_algorithms, 1);

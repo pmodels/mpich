@@ -264,55 +264,55 @@ int MPIDO_Gatherv_simple(const void *sendbuf,
    {
      MPIDI_Datatype_get_info(sendcount, sendtype, snd_contig,
                             send_size, data_ptr, send_true_lb);
-     if(MPIDI_Pamix_collsel_advise != NULL)
-     {
-       advisor_algorithm_t advisor_algorithms[1];
-       int num_algorithms = MPIDI_Pamix_collsel_advise(mpid->collsel_fast_query, PAMI_XFER_GATHERV_INT, 64, advisor_algorithms, 1);
-       if(num_algorithms)
-       {
-         if(advisor_algorithms[0].algorithm_type == COLLSEL_EXTERNAL_ALGO)
-         {
-           return MPIR_Gatherv(sendbuf, sendcount, sendtype,
-                             recvbuf, recvcounts, displs, recvtype,
-                             root, comm_ptr, mpierrno);
-         }
-       }
-     }
-
-     sbuf = (char *)sendbuf + send_true_lb;
-     if (!snd_contig)
-     {
-        snd_noncontig_buff = MPIU_Malloc(send_size);
-        sbuf = snd_noncontig_buff;
-        if(snd_noncontig_buff == NULL)
+    if(MPIDI_Pamix_collsel_advise != NULL && mpid->collsel_fast_query != NULL)
+    {
+      advisor_algorithm_t advisor_algorithms[1];
+      int num_algorithms = MPIDI_Pamix_collsel_advise(mpid->collsel_fast_query, PAMI_XFER_GATHERV_INT, 64, advisor_algorithms, 1);
+      if(num_algorithms)
+      {
+        if(advisor_algorithms[0].algorithm_type == COLLSEL_EXTERNAL_ALGO)
         {
-           MPID_Abort(NULL, MPI_ERR_NO_SPACE, 1,
-              "Fatal:  Cannot allocate pack buffer");
+          return MPIR_Gatherv(sendbuf, sendcount, sendtype,
+                              recvbuf, recvcounts, displs, recvtype,
+                              root, comm_ptr, mpierrno);
         }
-        DLOOP_Offset last = send_size;
-        MPID_Segment_init(sendbuf, sendcount, sendtype, &segment, 0);
-        MPID_Segment_pack(&segment, 0, &last, snd_noncontig_buff);
-     }
-   }
-   else
-   {
-     MPIDI_Datatype_get_info(1, recvtype, rcv_contig,
-                                rcvlen, data_ptr, recv_true_lb);
-     if(MPIDI_Pamix_collsel_advise != NULL)
-     {
-       advisor_algorithm_t advisor_algorithms[1];
-       int num_algorithms = MPIDI_Pamix_collsel_advise(mpid->collsel_fast_query, PAMI_XFER_GATHERV_INT, 64, advisor_algorithms, 1);
-       if(num_algorithms)
-       {
-         if(advisor_algorithms[0].algorithm_type == COLLSEL_EXTERNAL_ALGO)
-         {
-           return MPIR_Gatherv(sendbuf, sendcount, sendtype,
-                             recvbuf, recvcounts, displs, recvtype,
-                             root, comm_ptr, mpierrno);
-         }
-       }
-     }
-   }
+      }
+    }
+
+    sbuf = (char *)sendbuf + send_true_lb;
+    if(!snd_contig)
+    {
+      snd_noncontig_buff = MPIU_Malloc(send_size);
+      sbuf = snd_noncontig_buff;
+      if(snd_noncontig_buff == NULL)
+      {
+        MPID_Abort(NULL, MPI_ERR_NO_SPACE, 1,
+                   "Fatal:  Cannot allocate pack buffer");
+      }
+      DLOOP_Offset last = send_size;
+      MPID_Segment_init(sendbuf, sendcount, sendtype, &segment, 0);
+      MPID_Segment_pack(&segment, 0, &last, snd_noncontig_buff);
+    }
+  }
+  else
+  {
+    MPIDI_Datatype_get_info(1, recvtype, rcv_contig,
+                            rcvlen, data_ptr, recv_true_lb);
+    if(MPIDI_Pamix_collsel_advise != NULL && mpid->collsel_fast_query != NULL)
+    {
+      advisor_algorithm_t advisor_algorithms[1];
+      int num_algorithms = MPIDI_Pamix_collsel_advise(mpid->collsel_fast_query, PAMI_XFER_GATHERV_INT, 64, advisor_algorithms, 1);
+      if(num_algorithms)
+      {
+        if(advisor_algorithms[0].algorithm_type == COLLSEL_EXTERNAL_ALGO)
+        {
+          return MPIR_Gatherv(sendbuf, sendcount, sendtype,
+                              recvbuf, recvcounts, displs, recvtype,
+                              root, comm_ptr, mpierrno);
+        }
+      }
+    }
+  }
 
    pami_xfer_t gatherv;
    rbuf = (char *)recvbuf + recv_true_lb;
@@ -354,52 +354,52 @@ int MPIDO_Gatherv_simple(const void *sendbuf,
         MPID_Datatype_get_extent_macro(recvtype,extent);
         MPIR_Localcopy(recvbuf + displs[rank]*extent, recvcounts[rank], recvtype,
                      rcv_noncontig_buff + rdispls[rank], rcounts[rank],MPI_CHAR);
-        }
       }
-      if(sendbuf == MPI_IN_PLACE) 
-      {
-         gatherv.cmd.xfer_gatherv_int.sndbuf = PAMI_IN_PLACE;
-      }
-      else
-      {
-         gatherv.cmd.xfer_gatherv_int.sndbuf = sbuf;
-      }
-      gatherv.cmd.xfer_gatherv_int.stype = PAMI_TYPE_BYTE;/* stype is ignored when sndbuf == PAMI_IN_PLACE */
-      gatherv.cmd.xfer_gatherv_int.stypecount = send_size;
-
-   }
-   else
-   {
+    }
+    if(sendbuf == MPI_IN_PLACE)
+    {
+      gatherv.cmd.xfer_gatherv_int.sndbuf = PAMI_IN_PLACE;
+    }
+    else
+    {
       gatherv.cmd.xfer_gatherv_int.sndbuf = sbuf;
-      gatherv.cmd.xfer_gatherv_int.stype = PAMI_TYPE_BYTE;
-      gatherv.cmd.xfer_gatherv_int.stypecount = send_size;     
-   }
+    }
+    gatherv.cmd.xfer_gatherv_int.stype = PAMI_TYPE_BYTE;/* stype is ignored when sndbuf == PAMI_IN_PLACE */
+    gatherv.cmd.xfer_gatherv_int.stypecount = send_size;
+
+  }
+  else
+  {
+    gatherv.cmd.xfer_gatherv_int.sndbuf = sbuf;
+    gatherv.cmd.xfer_gatherv_int.stype = PAMI_TYPE_BYTE;
+    gatherv.cmd.xfer_gatherv_int.stypecount = send_size;     
+  }
 
 
-   gatherv.cb_done = cb_gatherv;
-   gatherv.cookie = (void *)&gatherv_active;
-   gatherv.cmd.xfer_gatherv_int.root = MPIDI_Task_to_endpoint(MPID_VCR_GET_LPID(comm_ptr->vcr, root), 0);
-   gatherv.cmd.xfer_gatherv_int.rcvbuf = rbuf;
-   gatherv.cmd.xfer_gatherv_int.rtype = rtype;
-   gatherv.cmd.xfer_gatherv_int.rtypecounts = (int *) rcounts;
-   gatherv.cmd.xfer_gatherv_int.rdispls = (int *) rdispls;
+  gatherv.cb_done = cb_gatherv;
+  gatherv.cookie = (void *)&gatherv_active;
+  gatherv.cmd.xfer_gatherv_int.root = MPIDI_Task_to_endpoint(MPID_VCR_GET_LPID(comm_ptr->vcr, root), 0);
+  gatherv.cmd.xfer_gatherv_int.rcvbuf = rbuf;
+  gatherv.cmd.xfer_gatherv_int.rtype = rtype;
+  gatherv.cmd.xfer_gatherv_int.rtypecounts = (int *) rcounts;
+  gatherv.cmd.xfer_gatherv_int.rdispls = (int *) rdispls;
 
 
-   const pami_metadata_t *my_gatherv_md;
+  const pami_metadata_t *my_gatherv_md;
 
-   gatherv.algorithm = mpid->coll_algorithm[PAMI_XFER_GATHERV_INT][0][0];
-   my_gatherv_md = &mpid->coll_metadata[PAMI_XFER_GATHERV_INT][0][0];
+  gatherv.algorithm = mpid->coll_algorithm[PAMI_XFER_GATHERV_INT][0][0];
+  my_gatherv_md = &mpid->coll_metadata[PAMI_XFER_GATHERV_INT][0][0];
 
-   MPIDI_Update_last_algorithm(comm_ptr, my_gatherv_md->name);
+  MPIDI_Update_last_algorithm(comm_ptr, my_gatherv_md->name);
 
-   MPIDI_Post_coll_t gatherv_post;
-   TRACE_ERR("%s gatherv\n", MPIDI_Process.context_post.active>0?"Posting":"Invoking");
-   MPIDI_Context_post(MPIDI_Context[0], &gatherv_post.state,
-                      MPIDI_Pami_post_wrapper, (void *)&gatherv);
-   TRACE_ERR("Gatherv %s\n", MPIDI_Process.context_post.active>0?"posted":"invoked");
-   
-   TRACE_ERR("Waiting on active %d\n", gatherv_active);
-   MPID_PROGRESS_WAIT_WHILE(gatherv_active);
+  MPIDI_Post_coll_t gatherv_post;
+  TRACE_ERR("%s gatherv\n", MPIDI_Process.context_post.active>0?"Posting":"Invoking");
+  MPIDI_Context_post(MPIDI_Context[0], &gatherv_post.state,
+                     MPIDI_Pami_post_wrapper, (void *)&gatherv);
+  TRACE_ERR("Gatherv %s\n", MPIDI_Process.context_post.active>0?"posted":"invoked");
+
+  TRACE_ERR("Waiting on active %d\n", gatherv_active);
+  MPID_PROGRESS_WAIT_WHILE(gatherv_active);
 
   if(!rcv_contig || recvok != PAMI_SUCCESS)
   {

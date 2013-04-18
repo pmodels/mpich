@@ -242,51 +242,51 @@ int MPIDO_Alltoall_simple(const void *sendbuf,
    rbuf = (char *)recvbuf + rdt_true_lb;
    recv_size = rcvlen * recvcount;
 
-   if(MPIDI_Pamix_collsel_advise != NULL)
-   {
-     advisor_algorithm_t advisor_algorithms[1];
-     int num_algorithms = MPIDI_Pamix_collsel_advise(mpid->collsel_fast_query, PAMI_XFER_ALLTOALL, recv_size, advisor_algorithms, 1);
-     if(num_algorithms)
-     {
-       if(advisor_algorithms[0].algorithm_type == COLLSEL_EXTERNAL_ALGO)
-       {
-         return MPIR_Alltoall_intra(sendbuf, sendcount, sendtype,
-                      recvbuf, recvcount, recvtype,
-                      comm_ptr, mpierrno);
-       }
-     }
-   }
-
-   if(sendbuf != MPI_IN_PLACE)
-   {
-     MPIDI_Datatype_get_info(1, sendtype, snd_contig, sndlen, sdt, sdt_true_lb);
-     sbuf = (char *)sendbuf + sdt_true_lb;
-     send_size = sndlen * sendcount;
-     if(!snd_contig)
-     {
-        snd_noncontig_buff = MPIU_Malloc(send_size);
-        sbuf = snd_noncontig_buff;
-        if(snd_noncontig_buff == NULL)
-        {
-           MPID_Abort(NULL, MPI_ERR_NO_SPACE, 1,
-              "Fatal:  Cannot allocate pack buffer");
-        }
-        DLOOP_Offset last = send_size;
-        MPID_Segment_init(sendbuf, sendcount, sendtype, &segment, 0);
-        MPID_Segment_pack(&segment, 0, &last, snd_noncontig_buff);
-
-     } 
-   }
-
-   if(!rcv_contig)
-   {
-      rcv_noncontig_buff = MPIU_Malloc(recv_size);
-      rbuf = rcv_noncontig_buff;
-      if(rcv_noncontig_buff == NULL)
+  if(MPIDI_Pamix_collsel_advise != NULL && mpid->collsel_fast_query != NULL)
+  {
+    advisor_algorithm_t advisor_algorithms[1];
+    int num_algorithms = MPIDI_Pamix_collsel_advise(mpid->collsel_fast_query, PAMI_XFER_ALLTOALL, recv_size, advisor_algorithms, 1);
+    if(num_algorithms)
+    {
+      if(advisor_algorithms[0].algorithm_type == COLLSEL_EXTERNAL_ALGO)
       {
-         MPID_Abort(NULL, MPI_ERR_NO_SPACE, 1,
-            "Fatal:  Cannot allocate pack buffer");
+        return MPIR_Alltoall_intra(sendbuf, sendcount, sendtype,
+                                   recvbuf, recvcount, recvtype,
+                                   comm_ptr, mpierrno);
       }
+    }
+  }
+
+  if(sendbuf != MPI_IN_PLACE)
+  {
+    MPIDI_Datatype_get_info(1, sendtype, snd_contig, sndlen, sdt, sdt_true_lb);
+    sbuf = (char *)sendbuf + sdt_true_lb;
+    send_size = sndlen * sendcount;
+    if(!snd_contig)
+    {
+      snd_noncontig_buff = MPIU_Malloc(send_size);
+      sbuf = snd_noncontig_buff;
+      if(snd_noncontig_buff == NULL)
+      {
+        MPID_Abort(NULL, MPI_ERR_NO_SPACE, 1,
+                   "Fatal:  Cannot allocate pack buffer");
+      }
+      DLOOP_Offset last = send_size;
+      MPID_Segment_init(sendbuf, sendcount, sendtype, &segment, 0);
+      MPID_Segment_pack(&segment, 0, &last, snd_noncontig_buff);
+
+    }
+  }
+
+  if(!rcv_contig)
+  {
+    rcv_noncontig_buff = MPIU_Malloc(recv_size);
+    rbuf = rcv_noncontig_buff;
+    if(rcv_noncontig_buff == NULL)
+    {
+      MPID_Abort(NULL, MPI_ERR_NO_SPACE, 1,
+                 "Fatal:  Cannot allocate pack buffer");
+    }
     if(sendbuf == MPI_IN_PLACE)
     {
       size_t extent;

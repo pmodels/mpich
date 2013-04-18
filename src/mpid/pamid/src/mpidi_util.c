@@ -1357,6 +1357,11 @@ static int MPIDI_collsel_process_collectives(char *coll_arg, advisor_params_t *p
   int i, ret = 0, arg_len = strlen(coll_arg);
   char *collectives = (char *) MPIU_Malloc(arg_len + 1);
   char *coll;
+  int infolevel = 0;
+#if (MPIDI_STATISTICS || MPIDI_PRINTENV)
+  if(MPIDI_Process.mp_infolevel >= 1)
+    infolevel = 1;
+#endif
   /* if already set via config file, free it */
   if(params->collectives)
   {
@@ -1374,8 +1379,35 @@ static int MPIDI_collsel_process_collectives(char *coll_arg, advisor_params_t *p
     {
       if(strcmp(coll, xfer_array_str[i]) == 0)
       {
-        params->collectives[params->num_collectives++] = i;
-        break;
+        if(i == 4 )
+        {
+          if(infolevel) 
+            fprintf(stderr,"WARNING: MPICH (pami_tune) doesn't support tuning for ALLGATHERV. ALLGATHERV tuning will be skipped.\nTune for ALLGATHERV_INT instead\n");
+          break;
+        }
+        else if(i == 7 )
+        {
+          if(infolevel)
+            fprintf(stderr,"WARNING: MPICH (pami_tune) doesn't support tuning for SCATTERV. SCATTERV tuning will be skipped.\nTune for SCATTERV_INT instead\n");
+          break;
+        }
+        else if(i == 10 )
+        {
+          if(infolevel)
+            fprintf(stderr,"WARNING: MPICH (pami_tune) doesn't support tuning for GATHERV. GATHERV tuning will be skipped.\nTune for GATHERV_INT instead\n");
+          break;
+        }
+        else if(i == 14 )
+        {
+          if(infolevel)
+            fprintf(stderr,"WARNING: MPICH (pami_tune) doesn't support tuning for ALLTOALLV. ALLTOALLV tuning will be skipped.\nTune for ALLTOALLV_INT instead\n");
+          break;
+        }
+        else
+        {
+          params->collectives[params->num_collectives++] = i;
+          break;
+        }
       }
     }
     /* arg did not match any collective */
@@ -1741,6 +1773,8 @@ static int MPIDI_collsel_process_arg(int argc, char *argv[], advisor_params_t *p
      params->collectives = (pami_xfer_type_t *)MPIU_Malloc(sizeof(pami_xfer_type_t)*PAMI_XFER_COUNT);
      for(i = 0; i < PAMI_XFER_COUNT; i++)
      {
+       if(i == 4 || i == 7 || i == 10 || i == 14)
+         i++;
        params->collectives[params->num_collectives++] = i;
      }
    }

@@ -616,35 +616,35 @@ MPIDO_Allgather_simple(const void *sendbuf,
 
    send_size = recv_size;
 
-   if(MPIDI_Pamix_collsel_advise != NULL)
-   {
-     advisor_algorithm_t advisor_algorithms[1];
-     int num_algorithms = MPIDI_Pamix_collsel_advise(mpid->collsel_fast_query, PAMI_XFER_ALLGATHER, send_size, advisor_algorithms, 1);
-     if(num_algorithms)
-     {
-       if(advisor_algorithms[0].algorithm_type == COLLSEL_EXTERNAL_ALGO)
-       {
-         return MPIR_Allgather(sendbuf, sendcount, sendtype,
-                          recvbuf, recvcount, recvtype,
-                          comm_ptr, mpierrno); 
-       }
-     }
-   }
+  if(MPIDI_Pamix_collsel_advise != NULL && mpid->collsel_fast_query != NULL)
+  {
+    advisor_algorithm_t advisor_algorithms[1];
+    int num_algorithms = MPIDI_Pamix_collsel_advise(mpid->collsel_fast_query, PAMI_XFER_ALLGATHER, send_size, advisor_algorithms, 1);
+    if(num_algorithms)
+    {
+      if(advisor_algorithms[0].algorithm_type == COLLSEL_EXTERNAL_ALGO)
+      {
+        return MPIR_Allgather(sendbuf, sendcount, sendtype,
+                              recvbuf, recvcount, recvtype,
+                              comm_ptr, mpierrno); 
+      }
+    }
+  }
 
    rbuf = (char *)recvbuf+recv_true_lb;
 
-   if(!rcv_data_contig)
-   {
-      rcv_noncontig_buff = MPIU_Malloc(recv_size * size);
-      rbuf = rcv_noncontig_buff;
-      if(rcv_noncontig_buff == NULL)
-      {
-         MPID_Abort(NULL, MPI_ERR_NO_SPACE, 1,
-            "Fatal:  Cannot allocate pack buffer");
-      }
-   if(sendbuf == MPI_IN_PLACE)
+  if(!rcv_data_contig)
+  {
+    rcv_noncontig_buff = MPIU_Malloc(recv_size * size);
+    rbuf = rcv_noncontig_buff;
+    if(rcv_noncontig_buff == NULL)
     {
-     sbuf = PAMI_IN_PLACE;
+      MPID_Abort(NULL, MPI_ERR_NO_SPACE, 1,
+                 "Fatal:  Cannot allocate pack buffer");
+    }
+    if(sendbuf == MPI_IN_PLACE)
+    {
+      sbuf = PAMI_IN_PLACE;
       size_t extent;
       MPID_Datatype_get_extent_macro(recvtype,extent);
       MPIR_Localcopy(recvbuf + (rank*recvcount*extent), recvcount, recvtype,

@@ -440,16 +440,16 @@ int MPIDO_Alltoallv_simple(const void *sendbuf,
 
 
   /* Check if collsel has MPICH algorithm as the best performing one, if so, call MPICH now w/o doing any conversions */
-   MPIDI_Datatype_get_info(1, recvtype, rcv_contig, rcvtypelen, rdt, rdt_true_lb);
-   if(MPIDI_Pamix_collsel_advise != NULL)
-   {
-     advisor_algorithm_t advisor_algorithms[1];
-     int num_algorithms = MPIDI_Pamix_collsel_advise(mpid->collsel_fast_query, PAMI_XFER_ALLTOALLV_INT, rcvtypelen * recvcounts[0], advisor_algorithms, 1);
-     if(num_algorithms)
-     {
-       if(advisor_algorithms[0].algorithm_type == COLLSEL_EXTERNAL_ALGO)
-       {
-         return MPIR_Alltoallv(sendbuf, sendcounts, senddispls, sendtype,
+  MPIDI_Datatype_get_info(1, recvtype, rcv_contig, rcvtypelen, rdt, rdt_true_lb);
+  if(MPIDI_Pamix_collsel_advise != NULL && mpid->collsel_fast_query != NULL)
+  {
+    advisor_algorithm_t advisor_algorithms[1];
+    int num_algorithms = MPIDI_Pamix_collsel_advise(mpid->collsel_fast_query, PAMI_XFER_ALLTOALLV_INT, rcvtypelen * recvcounts[0], advisor_algorithms, 1);
+    if(num_algorithms)
+    {
+      if(advisor_algorithms[0].algorithm_type == COLLSEL_EXTERNAL_ALGO)
+      {
+        return MPIR_Alltoallv(sendbuf, sendcounts, senddispls, sendtype,
                               recvbuf, recvcounts, recvdispls, recvtype,
                               comm_ptr, mpierrno);
        }

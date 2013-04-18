@@ -657,9 +657,9 @@ MPIDO_Allgatherv_simple(const void *sendbuf,
                           dt_null,
                           recv_true_lb);
 
-   if(MPIDI_Pamix_collsel_advise != NULL)
-   {
-     advisor_algorithm_t advisor_algorithms[1];
+  if(MPIDI_Pamix_collsel_advise != NULL && mpid->collsel_fast_query != NULL)
+  {
+    advisor_algorithm_t advisor_algorithms[1];
     int num_algorithms = MPIDI_Pamix_collsel_advise(mpid->collsel_fast_query, PAMI_XFER_ALLGATHERV_INT, rcvtypelen * recvcounts[0], advisor_algorithms, 1);
      if(num_algorithms)
      {

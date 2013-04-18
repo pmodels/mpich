@@ -341,7 +341,7 @@ int MPIDO_Scatter_simple(const void *sendbuf,
   {
     MPIDI_Datatype_get_info(sendcount, sendtype, snd_contig,
                             send_size, data_ptr, snd_true_lb);
-    if(MPIDI_Pamix_collsel_advise != NULL)
+    if(MPIDI_Pamix_collsel_advise != NULL && mpid->collsel_fast_query != NULL)
     {
       advisor_algorithm_t advisor_algorithms[1];
       int num_algorithms = MPIDI_Pamix_collsel_advise(mpid->collsel_fast_query, PAMI_XFER_SCATTER, send_size, advisor_algorithms, 1);
@@ -361,7 +361,7 @@ int MPIDO_Scatter_simple(const void *sendbuf,
   {
     MPIDI_Datatype_get_info(recvcount, recvtype, rcv_contig,
                             recv_size, data_ptr, rcv_true_lb);
-    if(MPIDI_Pamix_collsel_advise != NULL)
+    if(MPIDI_Pamix_collsel_advise != NULL && mpid->collsel_fast_query != NULL)
     {
       advisor_algorithm_t advisor_algorithms[1];
       int num_algorithms = MPIDI_Pamix_collsel_advise(mpid->collsel_fast_query, PAMI_XFER_SCATTER, recv_size, advisor_algorithms, 1);

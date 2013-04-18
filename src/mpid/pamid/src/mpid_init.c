@@ -472,6 +472,11 @@ void MPIDI_Init_collsel_extension()
                     MPIDI_Process.optimized.auto_select_colls |= MPID_AUTO_SELECT_COLLS_ALLGATHER;
                     break;
                   case PAMI_XFER_ALLGATHERV:
+#if (MPIDI_STATISTICS || MPIDI_PRINTENV)
+                    if(MPIDI_Process.mp_infolevel >= 1)
+                      fprintf(stderr,"WARNING: MPICH (collective selection) doesn't support ALLGATHERV, only ALLGATHERV_INT is supported\n");
+#endif
+                    break;
                   case PAMI_XFER_ALLGATHERV_INT:
                     MPIDI_Process.optimized.auto_select_colls |= MPID_AUTO_SELECT_COLLS_ALLGATHERV;
                     break;
@@ -479,6 +484,11 @@ void MPIDI_Init_collsel_extension()
                     MPIDI_Process.optimized.auto_select_colls |= MPID_AUTO_SELECT_COLLS_SCATTER;
                     break;
                   case PAMI_XFER_SCATTERV:
+#if (MPIDI_STATISTICS || MPIDI_PRINTENV)
+                    if(MPIDI_Process.mp_infolevel >= 1)
+                      fprintf(stderr,"WARNING: MPICH (collective selection) doesn't support SCATTERV, only SCATTERV_INT is supported\n");
+#endif
+                    break;
                   case PAMI_XFER_SCATTERV_INT:
                     MPIDI_Process.optimized.auto_select_colls |= MPID_AUTO_SELECT_COLLS_SCATTERV;
                     break;
@@ -486,6 +496,11 @@ void MPIDI_Init_collsel_extension()
                     MPIDI_Process.optimized.auto_select_colls |= MPID_AUTO_SELECT_COLLS_GATHER;
                     break;
                   case PAMI_XFER_GATHERV:
+#if (MPIDI_STATISTICS || MPIDI_PRINTENV)
+                    if(MPIDI_Process.mp_infolevel >= 1)
+                      fprintf(stderr,"WARNING: MPICH (collective selection) doesn't support GATHERV, only GATHERV_INT is supported\n");
+#endif
+                    break;
                   case PAMI_XFER_GATHERV_INT:
                     MPIDI_Process.optimized.auto_select_colls |= MPID_AUTO_SELECT_COLLS_GATHERV;
                     break;
@@ -496,6 +511,11 @@ void MPIDI_Init_collsel_extension()
                     MPIDI_Process.optimized.auto_select_colls |= MPID_AUTO_SELECT_COLLS_ALLTOALL;
                     break;
                   case PAMI_XFER_ALLTOALLV:
+#if (MPIDI_STATISTICS || MPIDI_PRINTENV)
+                    if(MPIDI_Process.mp_infolevel >= 1)
+                      fprintf(stderr,"WARNING: MPICH (collective selection) doesn't support ALLTOALLV, only ALLTOALLV_INT is supported\n");
+#endif
+                    break;
                   case PAMI_XFER_ALLTOALLV_INT:
                     MPIDI_Process.optimized.auto_select_colls |= MPID_AUTO_SELECT_COLLS_ALLTOALLV;
                     break;
