@@ -439,6 +439,7 @@ if (!TOKEN_FLOW_CONTROL_ON) {
 #endif
 
   const unsigned isLocal = PAMIX_Task_is_local(dest_tid);
+  const unsigned data_sz_limit = isSync?UINT_MAX:data_sz;
 
   /*
    * Always use the short protocol when data_sz is small.
@@ -456,7 +457,7 @@ if (!TOKEN_FLOW_CONTROL_ON) {
   /*
    * Use the eager protocol when data_sz is less than the eager limit.
    */
-  else if (data_sz < MPIDI_PT2PT_EAGER_LIMIT(isInternal,isLocal))
+  else if (data_sz_limit < MPIDI_PT2PT_EAGER_LIMIT(isInternal,isLocal))
     {
       TRACE_ERR("Sending(eager%s%s) bytes=%u (eager_limit=%u)\n", isInternal==1?",internal":"", isLocal==1?",intranode":"", data_sz, MPIDI_PT2PT_EAGER_LIMIT(isInternal,isLocal));
       MPIDI_SendMsg_eager(context,
