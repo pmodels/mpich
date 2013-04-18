@@ -1379,27 +1379,27 @@ static int MPIDI_collsel_process_collectives(char *coll_arg, advisor_params_t *p
     {
       if(strcmp(coll, xfer_array_str[i]) == 0)
       {
-        if(i == 4 )
+        if(i == 4)
         {
-          if(infolevel) 
+          if(infolevel >= 1) 
             fprintf(stderr,"WARNING: MPICH (pami_tune) doesn't support tuning for ALLGATHERV. ALLGATHERV tuning will be skipped.\nTune for ALLGATHERV_INT instead\n");
           break;
         }
-        else if(i == 7 )
+        else if(i == 7)
         {
-          if(infolevel)
+          if(infolevel >= 1)
             fprintf(stderr,"WARNING: MPICH (pami_tune) doesn't support tuning for SCATTERV. SCATTERV tuning will be skipped.\nTune for SCATTERV_INT instead\n");
           break;
         }
-        else if(i == 10 )
+        else if(i == 10)
         {
-          if(infolevel)
+          if(infolevel >= 1)
             fprintf(stderr,"WARNING: MPICH (pami_tune) doesn't support tuning for GATHERV. GATHERV tuning will be skipped.\nTune for GATHERV_INT instead\n");
           break;
         }
-        else if(i == 14 )
+        else if(i == 14)
         {
-          if(infolevel)
+          if(infolevel >= 1)
             fprintf(stderr,"WARNING: MPICH (pami_tune) doesn't support tuning for ALLTOALLV. ALLTOALLV tuning will be skipped.\nTune for ALLTOALLV_INT instead\n");
           break;
         }
