@@ -520,17 +520,79 @@ MPIX_Get_last_algorithm_name(MPI_Comm comm, char *protocol, int length)
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIX_Pset_ionode
+#define FUNCNAME MPIX_IO_node_id
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-void
-MPIX_Pset_io_node (int *io_node_route_id, int *distance_to_io_node)
+int MPIX_IO_node_id ()
+{
+  static unsigned long IO_node_id = ULONG_MAX;
+
+  if (IO_node_id != ULONG_MAX)
+    return (int)(IO_node_id>>32);
+
+  int rc;
+  int fd;
+  char* uci_str;
+  char buffer[4096];
+  unsigned long uci;
+
+  fd = open("/dev/bgpers", O_RDONLY, 0);
+  assert(fd>=0);
+  rc = read(fd, buffer, sizeof(buffer));
+  assert(rc>0);
+  close(fd);
+
+  uci_str = strstr(buffer, "BG_UCI=");
+  assert(uci_str);
+  uci_str += sizeof("BG_UCI=")-1;
+
+  IO_node_id = strtoul(uci_str, NULL, 16);
+  return (int)(IO_node_id>>32);
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIX_IO_link_id
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+int MPIX_IO_link_id ()
+{
+  int nA,  nB,  nC,  nD,  nE;                /* Size of each torus dimension  */
+  int brA, brB, brC, brD, brE;               /* The bridge node's coordinates */
+
+  Personality_t personality;
+
+  Kernel_GetPersonality(&personality, sizeof(personality));
+
+  nA  = personality.Network_Config.Anodes;
+  nB  = personality.Network_Config.Bnodes;
+  nC  = personality.Network_Config.Cnodes;
+  nD  = personality.Network_Config.Dnodes;
+  nE  = personality.Network_Config.Enodes;
+
+  brA = personality.Network_Config.cnBridge_A;
+  brB = personality.Network_Config.cnBridge_B;
+  brC = personality.Network_Config.cnBridge_C;
+  brD = personality.Network_Config.cnBridge_D;
+  brE = personality.Network_Config.cnBridge_E;
+
+  /*
+   * This is the bridge node, numbered in ABCDE order, E increments first.
+   * It is considered the unique "io node route identifer" because each
+   * bridge node only has one torus link to one io node.
+   */
+  return brE + brD*nE + brC*nD*nE + brB*nC*nD*nE + brA*nB*nC*nD*nE;
+};
+
+#undef FUNCNAME
+#define FUNCNAME MPIX_IO_distance
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+int MPIX_IO_distance ()
 {
   int iA,  iB,  iC,  iD,  iE;                /* The local node's coordinates  */
   int nA,  nB,  nC,  nD,  nE;                /* Size of each torus dimension  */
   int brA, brB, brC, brD, brE;               /* The bridge node's coordinates */
   int Nflags;
-  int torusA, torusB, torusC, torusD, torusE;        /* mesh == 0, torus == 1 */
   int d1, d2;
   int dA, dB, dC, dD, dE;          /* distance from local node to bridge node */
 
@@ -558,51 +620,59 @@ MPIX_Pset_io_node (int *io_node_route_id, int *distance_to_io_node)
 
   Nflags = personality.Network_Config.NetFlags;
 
-  if (Nflags & ND_ENABLE_TORUS_DIM_A) torusA = 1;
-  else                                torusA = 0;
-  if (Nflags & ND_ENABLE_TORUS_DIM_B) torusB = 1;
-  else                                torusB = 0;
-  if (Nflags & ND_ENABLE_TORUS_DIM_C) torusC = 1;
-  else                                torusC = 0;
-  if (Nflags & ND_ENABLE_TORUS_DIM_D) torusD = 1;
-  else                                torusD = 0;
-  if (Nflags & ND_ENABLE_TORUS_DIM_E) torusE = 1;
-  else                                torusE = 0;
+  dA = abs(iA - brA);
+  if (Nflags & ND_ENABLE_TORUS_DIM_A)
+  {
+    d1 = dA;
+    d2 = nA - d1;
+    dA = (d1 < d2) ? d1 : d2;
+  }
 
-  /*
-   * This is the bridge node, numbered in ABCDE order, E increments first.
-   * It is considered the unique "io node route identifer" because each
-   * bridge node only has one torus link to one io node.
-   */
-  *io_node_route_id = brE + brD*nE + brC*nD*nE + brB*nC*nD*nE + brA*nB*nC*nD*nE;
+  dB = abs(iB - brB);
+  if (Nflags & ND_ENABLE_TORUS_DIM_B)
+  {
+    d1 = dB;
+    d2 = nB - d1;
+    dB = (d1 < d2) ? d1 : d2;
+  }
 
-  d1 = abs(iA - brA);
-  d2 = nA - d1;
-  if (torusA) dA = (d1 < d2) ? d1 : d2;
-  else        dA = d1;
+  dC = abs(iC - brC);
+  if (Nflags & ND_ENABLE_TORUS_DIM_C)
+  {
+    d1 = dC;
+    d2 = nC - d1;
+    dC = (d1 < d2) ? d1 : d2;
+  }
 
-  d1 = abs(iB - brB);
-  d2 = nB - d1;
-  if (torusB) dB = (d1 < d2) ? d1 : d2;
-  else        dB = d1;
+  dD = abs(iD - brD);
+  if (Nflags & ND_ENABLE_TORUS_DIM_D)
+  {
+    d1 = dD;
+    d2 = nD - d1;
+    dD = (d1 < d2) ? d1 : d2;
+  }
 
-  d1 = abs(iC - brC);
-  d2 = nC - d1;
-  if (torusC) dC = (d1 < d2) ? d1 : d2;
-  else        dC = d1;
-
-  d1 = abs(iD - brD);
-  d2 = nD - d1;
-  if (torusD) dD = (d1 < d2) ? d1 : d2;
-  else        dD = d1;
-
-  d1 = abs(iE - brE);
-  d2 = nE - d1;
-  if (torusE) dE = (d1 < d2) ? d1 : d2;
-  else        dE = d1;
+  dE = abs(iE - brE);
+  if (Nflags & ND_ENABLE_TORUS_DIM_E)
+  {
+    d1 = dE;
+    d2 = nE - d1;
+    dE = (d1 < d2) ? d1 : d2;
+  }
 
   /* This is the number of hops to the io node */
-  *distance_to_io_node = dA + dB + dC + dD + dE + 1;
+  return dA + dB + dC + dD + dE + 1;
+};
+
+#undef FUNCNAME
+#define FUNCNAME MPIX_Pset_io_node
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+void
+MPIX_Pset_io_node (int *io_node_route_id, int *distance_to_io_node)
+{
+  *io_node_route_id    = MPIX_IO_link_id ();
+  *distance_to_io_node = MPIX_IO_distance ();
 
   return;
 };
@@ -622,7 +692,8 @@ int _MPIX_Pset_same_comm_create (MPID_Comm *parent_comm_ptr, MPID_Comm **pset_co
   int color, key;
   int mpi_errno;
 
-  MPIX_Pset_io_node (&color, &key);
+  color = MPIX_IO_link_id ();
+  key   = MPIX_IO_distance ();
 
   /*
    * Use MPIR_Comm_split_impl to make a communicator of all ranks in the parent
@@ -860,6 +931,105 @@ MPIX_Cart_comm_create (MPI_Comm *cart_comm)
   PMPI_Comm_free(&new_comm);
   return MPI_SUCCESS;
 };
+
+/**
+ * \brief FORTRAN interface to MPIX_Comm_rank2global
+ *
+ * \param [in] comm  Communicator
+ * \param [in] crank Pointer to the rank in the communicator variable
+ * \param [out] grank Pointer tot he global rank variable
+ *
+ * \return status
+ */
+int mpix_comm_rank2global (MPI_Comm *comm, int *crank, int *grank)
+{
+  return MPIX_Comm_rank2global (*comm, *crank, grank);
+}
+
+/**
+ * \brief FORTRAN interface to MPIX_Pset_same_comm_create
+ *
+ * \param [out] pset_comm  Communicator
+ *
+ * \return status
+ */
+int mpix_pset_same_comm_create (MPI_Comm *pset_comm)
+{
+  return MPIX_Pset_same_comm_create (pset_comm);
+}
+
+/**
+ * \brief FORTRAN interface to MPIX_Pset_diff_comm_create
+ *
+ * \param [out] pset_comm  Communicator
+ *
+ * \return status
+ */
+int mpix_pset_diff_comm_create (MPI_Comm *pset_comm)
+{
+  return MPIX_Pset_diff_comm_create (pset_comm);
+}
+
+/**
+ * \brief FORTRAN interface to MPIX_Pset_same_comm_create_from_parent
+ *
+ * \param [in]  parent_comm  Parent communicator
+ * \param [out] pset_comm    New pset communicator
+ *
+ * \return status
+ */
+int mpix_pset_same_comm_create_from_parent (MPI_Comm *parent_comm, MPI_Comm *pset_comm)
+{
+  return MPIX_Pset_same_comm_create_from_parent (*parent_comm, pset_comm);
+}
+
+/**
+ * \brief FORTRAN interface to MPIX_Pset_diff_comm_create_from_parent
+ *
+ * \param [in]  parent_comm  Parent communicator
+ * \param [out] pset_comm    New pset communicator
+ *
+ * \return status
+ */
+int mpix_pset_diff_comm_create_from_parent (MPI_Comm *parent_comm, MPI_Comm *pset_comm)
+{
+  return MPIX_Pset_diff_comm_create_from_parent (*parent_comm, pset_comm);
+}
+
+/**
+ * \brief FORTRAN interface to MPIX_IO_node_id
+ *
+ * \param [out] io_node_id    This rank's io node id
+ */
+void mpix_io_node_id (int *io_node_id) { *io_node_id = MPIX_IO_node_id(); }
+
+/**
+ * \brief FORTRAN interface to MPIX_IO_link_id
+ *
+ * \param [out] io_link_id    This rank's io link id
+ */
+void mpix_io_link_id (int *io_link_id) { *io_link_id = MPIX_IO_link_id(); }
+
+/**
+ * \brief FORTRAN interface to MPIX_IO_distance
+ *
+ * \param [out] io_distance   This rank's distance to the io node
+ */
+void mpix_io_distance (int *io_distance) { *io_distance = MPIX_IO_distance(); }
+
+/**
+ * \brief FORTRAN interface to MPIX_Cart_comm_create
+ *
+ * \param [out] cart_comm  Communicator to create
+ *
+ * \return status
+ */
+int mpix_cart_comm_create (MPI_Comm *cart_comm)
+{
+  return MPIX_Cart_comm_create (cart_comm);
+}
+
+
 
 #endif
 
