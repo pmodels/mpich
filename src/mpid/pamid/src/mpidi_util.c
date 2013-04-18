@@ -1281,10 +1281,10 @@ Options:\n\
   -m            Comma separated list of message sizes to benchmark\n\
                 (Default: 1 to 2^k, where k <= 20)\n\n\
   -g            Comma separated list of geometry sizes to benchmark\n\
-                (Default: 2 to 2^k, where k <= world geometry size)\n\n\
+                (Default: Powers of 2 (plus and minus one as well))\n\n\
   -i            Number of benchmark iterations per algorithm\n\
-                (Default: 100)\n\n\
-  -f <file>     Input file containing benchmark parameters\n\
+                (Default: 1000)\n\n\
+  -f <file>     Input INI file containing benchmark parameters\n\
                 You can override a parameter with a command line argument\n\n\
   -o <file>     Output XML file containing benchmark results\n\
                 (Default: pami_tune_results.xml)\n\n\
@@ -1308,7 +1308,7 @@ static void MPIDI_collsel_init_advisor_params(advisor_params_t *params)
   params->procs_per_node = NULL;
   params->geometry_sizes = NULL;
   params->message_sizes = NULL;
-  params->iter = 100;
+  params->iter = 1000;
   /* Set the following to -1, so that we can
      check if the user has set them or not */
   params->verify = -1;
@@ -1534,7 +1534,7 @@ static int MPIDI_collsel_process_output_file(char *filename, char **out_file)
   if(access(filename, F_OK) == 0)
   {
     fprintf(stderr, "File %s already exists, renaming existing file\n", filename);
-    newname = (char *) MPIU_Malloc(filename_len + 4);
+    newname = (char *) MPIU_Malloc(filename_len + 5);
     for (i = 0; i < 500; ++i)
     {
       sprintf(newname,"%s.%d", filename, i);
@@ -1642,7 +1642,7 @@ static int MPIDI_collsel_process_ini_file(const char *filename, advisor_params_t
     }
     else if(strcmp(name, "iterations") == 0)
     {
-      if(params->iter == 100)
+      if(params->iter == 1000)
       {
         params->iter = atoi(value);
         if(params->iter <= 0)
