@@ -5,6 +5,9 @@
  # OVERALL: Added support to manage per-communicator eager-rendezvous
    thresholds.
 
+ # PM/PMI: Performance improvements to the Hydra process manager on
+   large-scale systems by allowing for key/value caching.
+
  # Several other minor bug fixes, memory leak fixes, and code cleanup.
    A full list of changes is available at the following link:
 
