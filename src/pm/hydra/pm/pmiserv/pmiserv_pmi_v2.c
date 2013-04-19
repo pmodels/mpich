@@ -738,7 +738,7 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
         }
         cmd_str[i++] = HYDU_strdup("rc=0;");
         cmd_str[i++] = HYDU_strdup("jobid=");
-        cmd_str[i++] = HYDU_strdup(pg_scratch->kvs->kvs_name);
+        cmd_str[i++] = HYDU_strdup(pg_scratch->kvs->kvsname);
         cmd_str[i++] = HYDU_strdup(";");
         cmd_str[i++] = HYDU_strdup("nerrs=0;");
         cmd_str[i++] = NULL;

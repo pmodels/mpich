@@ -185,9 +185,9 @@ static HYD_status fn_fullinit(int fd, char *args[])
     tmp[i++] = HYDU_strdup(";size=");
     tmp[i++] = HYDU_int_to_str(HYD_pmcd_pmip.system_global.global_process_count);
     tmp[i++] = HYDU_strdup(";appnum=0");
-    if (HYD_pmcd_pmip.local.spawner_kvs_name) {
+    if (HYD_pmcd_pmip.local.spawner_kvsname) {
         tmp[i++] = HYDU_strdup(";spawner-jobid=");
-        tmp[i++] = HYDU_strdup(HYD_pmcd_pmip.local.spawner_kvs_name);
+        tmp[i++] = HYDU_strdup(HYD_pmcd_pmip.local.spawner_kvsname);
     }
     if (HYD_pmcd_pmip.user_global.debug) {
         tmp[i++] = HYDU_strdup(";debugged=TRUE;pmiverbose=TRUE");
@@ -237,7 +237,7 @@ static HYD_status fn_job_getid(int fd, char *args[])
         tmp[i++] = HYDU_strdup(";");
     }
     tmp[i++] = HYDU_strdup("jobid=");
-    tmp[i++] = HYDU_strdup(HYD_pmcd_pmip.local.kvs->kvs_name);
+    tmp[i++] = HYDU_strdup(HYD_pmcd_pmip.local.kvs->kvsname);
     tmp[i++] = HYDU_strdup(";rc=0;");
     tmp[i++] = NULL;
 

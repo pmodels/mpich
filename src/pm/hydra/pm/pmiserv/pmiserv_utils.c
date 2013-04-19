@@ -363,12 +363,12 @@ HYD_status HYD_pmcd_pmi_fill_in_exec_launch_info(struct HYD_pg *pg)
 
         pg_scratch = (struct HYD_pmcd_pmi_pg_scratch *) pg->pg_scratch;
         proxy->exec_launch_info[arg++] = HYDU_strdup("--pmi-kvsname");
-        proxy->exec_launch_info[arg++] = HYDU_strdup(pg_scratch->kvs->kvs_name);
+        proxy->exec_launch_info[arg++] = HYDU_strdup(pg_scratch->kvs->kvsname);
 
         if (pg->spawner_pg) {
             pg_scratch = (struct HYD_pmcd_pmi_pg_scratch *) pg->spawner_pg->pg_scratch;
             proxy->exec_launch_info[arg++] = HYDU_strdup("--pmi-spawner-kvsname");
-            proxy->exec_launch_info[arg++] = HYDU_strdup(pg_scratch->kvs->kvs_name);
+            proxy->exec_launch_info[arg++] = HYDU_strdup(pg_scratch->kvs->kvsname);
         }
 
         proxy->exec_launch_info[arg++] = HYDU_strdup("--pmi-process-mapping");

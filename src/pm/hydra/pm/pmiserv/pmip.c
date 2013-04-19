@@ -47,7 +47,7 @@ static HYD_status init_params(void)
     HYD_pmcd_pmip.local.pgid = -1;
     HYD_pmcd_pmip.local.iface_ip_env_name = NULL;
     HYD_pmcd_pmip.local.hostname = NULL;
-    HYD_pmcd_pmip.local.spawner_kvs_name = NULL;
+    HYD_pmcd_pmip.local.spawner_kvsname = NULL;
     HYD_pmcd_pmip.local.proxy_core_count = -1;
     HYD_pmcd_pmip.local.proxy_process_count = -1;
     HYD_pmcd_pmip.local.ckpoint_prefix_list = NULL;
@@ -109,8 +109,8 @@ static void cleanup_params(void)
     if (HYD_pmcd_pmip.local.hostname)
         HYDU_FREE(HYD_pmcd_pmip.local.hostname);
 
-    if (HYD_pmcd_pmip.local.spawner_kvs_name)
-        HYDU_FREE(HYD_pmcd_pmip.local.spawner_kvs_name);
+    if (HYD_pmcd_pmip.local.spawner_kvsname)
+        HYDU_FREE(HYD_pmcd_pmip.local.spawner_kvsname);
 
     if (HYD_pmcd_pmip.local.ckpoint_prefix_list) {
         for (i = 0; HYD_pmcd_pmip.local.ckpoint_prefix_list[i]; i++)

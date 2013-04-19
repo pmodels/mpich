@@ -174,7 +174,7 @@ static HYD_status retries_fn(char *arg, char ***argv)
 
 static HYD_status pmi_kvsname_fn(char *arg, char ***argv)
 {
-    HYDU_snprintf(HYD_pmcd_pmip.local.kvs->kvs_name, PMI_MAXKVSLEN, "%s", **argv);
+    HYDU_snprintf(HYD_pmcd_pmip.local.kvs->kvsname, PMI_MAXKVSLEN, "%s", **argv);
     (*argv)++;
 
     return HYD_SUCCESS;
@@ -184,9 +184,9 @@ static HYD_status pmi_spawner_kvsname_fn(char *arg, char ***argv)
 {
     HYD_status status = HYD_SUCCESS;
 
-    HYDU_MALLOC(HYD_pmcd_pmip.local.spawner_kvs_name, char *, PMI_MAXKVSLEN, status);
+    HYDU_MALLOC(HYD_pmcd_pmip.local.spawner_kvsname, char *, PMI_MAXKVSLEN, status);
 
-    HYDU_snprintf(HYD_pmcd_pmip.local.spawner_kvs_name, PMI_MAXKVSLEN, "%s", **argv);
+    HYDU_snprintf(HYD_pmcd_pmip.local.spawner_kvsname, PMI_MAXKVSLEN, "%s", **argv);
     (*argv)++;
 
   fn_exit:

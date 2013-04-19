@@ -114,10 +114,10 @@ static HYD_status fn_put(int fd, int pid, int pgid, char *args[])
 
     pg_scratch = (struct HYD_pmcd_pmi_pg_scratch *) proxy->pg->pg_scratch;
 
-    if (strcmp(pg_scratch->kvs->kvs_name, kvsname))
+    if (strcmp(pg_scratch->kvs->kvsname, kvsname))
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
                             "kvsname (%s) does not match this group's kvs space (%s)\n",
-                            kvsname, pg_scratch->kvs->kvs_name);
+                            kvsname, pg_scratch->kvs->kvsname);
 
     status = HYD_pmcd_pmi_add_kvs(key, val, pg_scratch->kvs, &ret);
     HYDU_ERR_POP(status, "unable to add keypair to kvs\n");
@@ -188,10 +188,10 @@ static HYD_status fn_get(int fd, int pid, int pgid, char *args[])
         goto found_val;
     }
 
-    if (strcmp(pg_scratch->kvs->kvs_name, kvsname))
+    if (strcmp(pg_scratch->kvs->kvsname, kvsname))
         HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
                             "kvsname (%s) does not match this group's kvs space (%s)\n",
-                            kvsname, pg_scratch->kvs->kvs_name);
+                            kvsname, pg_scratch->kvs->kvsname);
 
     /* Try to find the key */
     for (run = pg_scratch->kvs->key_pair; run; run = run->next) {
