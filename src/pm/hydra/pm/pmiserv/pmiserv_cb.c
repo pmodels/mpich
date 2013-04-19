@@ -15,7 +15,7 @@
 
 static HYD_status handle_pmi_cmd(int fd, int pgid, int pid, char *buf, int pmi_version)
 {
-    char *args[HYD_NUM_TMP_STRINGS], *cmd = NULL;
+    char *args[MAX_PMI_ARGS], *cmd = NULL;
     struct HYD_pmcd_pmi_handle *h;
     HYD_status status = HYD_SUCCESS;
 

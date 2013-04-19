@@ -23,11 +23,9 @@ void HYD_pmcd_init_header(struct HYD_pmcd_hdr *hdr)
 HYD_status HYD_pmcd_pmi_parse_pmi_cmd(char *obuf, int pmi_version, char **pmi_cmd,
                                       char *args[])
 {
-    char *tbuf = NULL, *seg, *str1 = NULL, *cmd;
-    char *buf;
-    char *tmp[HYD_NUM_TMP_STRINGS], *targs[HYD_NUM_TMP_STRINGS];
+    char *str1 = NULL, *cmd, *buf;
     const char *delim;
-    int i, j, k;
+    int i;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -42,70 +40,17 @@ HYD_status HYD_pmcd_pmi_parse_pmi_cmd(char *obuf, int pmi_version, char **pmi_cm
             delim = " ";
         else
             delim = "\n";
-
-        /* Here we only get PMI-1 commands or backward compatible
-         * PMI-2 commands, so we always explicitly use the PMI-1
-         * delimiter. This allows us to get backward-compatible PMI-2
-         * commands interleaved with regular PMI-2 commands. */
-        tbuf = HYDU_strdup(buf);
-        cmd = strtok(tbuf, delim);
-        for (i = 0; i < HYD_NUM_TMP_STRINGS; i++) {
-            targs[i] = strtok(NULL, delim);
-            if (targs[i] == NULL)
-                break;
-        }
-
-        /* Make a pass through targs and merge space separated
-         * arguments which are actually part of the same key */
-        k = 0;
-        for (i = 0; targs[i]; i++) {
-            if (!strrchr(targs[i], ' ')) {
-                /* no spaces */
-                args[k++] = HYDU_strdup(targs[i]);
-            }
-            else {
-                /* space in the argument; each segment is either a new
-                 * key, or a space-separated part of the previous
-                 * key */
-                j = 0;
-                seg = strtok(targs[i], " ");
-                while (1) {
-                    if (!seg || strrchr(seg, '=')) {
-                        /* segment has an '='; it's a start of a new key */
-                        if (j) {
-                            tmp[j++] = NULL;
-                            status = HYDU_str_alloc_and_join(tmp, &args[k++]);
-                            HYDU_ERR_POP(status, "error while joining strings\n");
-                            HYDU_free_strlist(tmp);
-                        }
-                        j = 0;
-
-                        if (!seg)
-                            break;
-                    }
-                    else {
-                        /* no '='; part of the previous key */
-                        tmp[j++] = HYDU_strdup(" ");
-                    }
-                    tmp[j++] = HYDU_strdup(seg);
-
-                    seg = strtok(NULL, " ");
-                }
-            }
-        }
-        args[k++] = NULL;
     }
     else {      /* PMI-v2 */
         delim = ";";
+    }
 
-        tbuf = HYDU_strdup(buf);
-        cmd = strtok(tbuf, delim);
-        for (i = 0; i < HYD_NUM_TMP_STRINGS; i++) {
-            args[i] = strtok(NULL, delim);
-            if (args[i] == NULL)
-                break;
-            args[i] = HYDU_strdup(args[i]);
-        }
+    cmd = strtok(buf, delim);
+    for (i = 0;; i++) {
+        args[i] = strtok(NULL, delim);
+        if (args[i] == NULL)
+            break;
+        args[i] = HYDU_strdup(args[i]);
     }
 
     /* Search for the PMI command in our table */
@@ -114,8 +59,6 @@ HYD_status HYD_pmcd_pmi_parse_pmi_cmd(char *obuf, int pmi_version, char **pmi_cm
 
   fn_exit:
     HYDU_FREE(buf);
-    if (tbuf)
-        HYDU_FREE(tbuf);
     if (str1)
         HYDU_FREE(str1);
     HYDU_FUNC_EXIT();
