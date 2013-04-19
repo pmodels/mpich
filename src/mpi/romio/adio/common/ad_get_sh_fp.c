@@ -28,6 +28,13 @@ void ADIO_Get_shared_fp(ADIO_File fd, int incr, ADIO_Offset *shared_fp,
     ADIO_Offset new_fp;
     MPI_Comm dupcommself;
 
+    /* Set the shared_fp in case this comes from an uninitialized stack variable
+       The read routines will not read into the address of this variable if the file
+       size of a shared pointer is 0, and if incr is always zero, this value will remain
+       uninitialized.  Initialize it here to prevent incorrect values
+    */
+    *shared_fp = 0;
+
 #ifdef ROMIO_NFS
     if (fd->file_system == ADIO_NFS) {
 	ADIOI_NFS_Get_shared_fp(fd, incr, shared_fp, error_code);
@@ -42,6 +49,14 @@ void ADIO_Get_shared_fp(ADIO_File fd, int incr, ADIO_Offset *shared_fp,
 	return;
     }
 #endif
+#ifdef ROMIO_BG
+    /* BGLOCKLESS won't support shared fp */
+    if (fd->file_system == ADIO_BG) {
+	ADIOI_BG_Get_shared_fp(fd, incr, shared_fp, error_code);
+	return;
+    }
+#endif
+
 
     if (fd->shared_fp_fd == ADIO_FILE_NULL) {
 	MPI_Comm_dup(MPI_COMM_SELF, &dupcommself);
@@ -54,7 +69,6 @@ void ADIO_Get_shared_fp(ADIO_File fd, int incr, ADIO_Offset *shared_fp,
 				     MPI_INFO_NULL, 
 				     ADIO_PERM_NULL, error_code);
 	if (*error_code != MPI_SUCCESS) return;
-	*shared_fp = 0;
 	ADIOI_WRITE_LOCK(fd->shared_fp_fd, 0, SEEK_SET, sizeof(ADIO_Offset));
 	ADIO_ReadContig(fd->shared_fp_fd, shared_fp, sizeof(ADIO_Offset), 
 		       MPI_BYTE, ADIO_EXPLICIT_OFFSET, 0, &status, error_code);

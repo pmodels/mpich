@@ -45,6 +45,26 @@ typedef struct
 } MPIDI_RequestHandle_t;
 #endif
 
+#define MPIDI_PT2PT_LIMIT_SET(is_internal,is_immediate,is_local,value)		\
+  MPIDI_Process.pt2pt.limits_lookup[is_internal][is_immediate][is_local] = value\
+
+typedef struct
+{
+  unsigned remote;
+  unsigned local;
+} MPIDI_remote_and_local_limits_t;
+
+typedef struct
+{
+  MPIDI_remote_and_local_limits_t eager;
+  MPIDI_remote_and_local_limits_t immediate;
+} MPIDI_immediate_and_eager_limits_t;
+
+typedef struct
+{
+  MPIDI_immediate_and_eager_limits_t application;
+  MPIDI_immediate_and_eager_limits_t internal;
+} MPIDI_pt2pt_limits_t;
 
 /**
  * \brief MPI Process descriptor
@@ -54,13 +74,23 @@ typedef struct
 typedef struct
 {
   unsigned avail_contexts;
-  unsigned short_limit;
-  unsigned eager_limit;
-  unsigned eager_limit_local;
+  union
+  {
+    unsigned             limits_array[8];
+    unsigned             limits_lookup[2][2][2];
+    MPIDI_pt2pt_limits_t limits;
+  } pt2pt;
+  unsigned disable_internal_eager_scale; /**< The number of tasks at which point eager will be disabled */
+#if TOKEN_FLOW_CONTROL
+  unsigned long long mp_buf_mem;
+  unsigned long long mp_buf_mem_max;
+  unsigned is_token_flow_control_on;
+#endif
 #if (MPIDI_STATISTICS || MPIDI_PRINTENV)
   unsigned mp_infolevel;
   unsigned mp_statistics;     /* print pamid statistcs data                           */
   unsigned mp_printenv; ;     /* print env data                                       */
+  unsigned mp_interrupts; ;   /* interrupts                                           */
 #endif
 #ifdef RDMA_FAILOVER
   unsigned mp_s_use_pami_get; /* force the PAMI_Get path instead of PAMI_Rget         */
@@ -79,9 +109,12 @@ typedef struct
 
   struct
   {
-    unsigned collectives;  /**< Enable optimized collective functions. */
-    unsigned subcomms;
-    unsigned select_colls; /**< Enable collective selection */
+    unsigned collectives;       /**< Enable optimized collective functions. */
+    unsigned subcomms;          /**< Enable hardware optimized subcomm's */
+    unsigned select_colls;      /**< Enable collective selection */
+    unsigned auto_select_colls; /**< Enable automatic collective selection */
+    unsigned memory;            /**< Enable memory optimized subcomm's */
+    unsigned num_requests;      /**< Number of requests between flow control barriers */
   }
   optimized;
 
@@ -101,6 +134,12 @@ typedef struct
     } context_post;
   } perobj;                  /**< This structure is only used in the 'perobj' mpich lock mode. */
 
+  unsigned mpir_nbc;         /**< Enable MPIR_* non-blocking collectives implementations. */
+  int  numTasks;             /* total number of tasks on a job                            */
+#ifdef DYNAMIC_TASKING
+  struct MPIDI_PG_t * my_pg; /**< Process group I belong to */
+  int                 my_pg_rank; /**< Rank in process group */
+#endif
 } MPIDI_Process_t;
 
 
@@ -115,6 +154,10 @@ enum
     MPIDI_Protocols_WinCtrl,
     MPIDI_Protocols_WinAccum,
     MPIDI_Protocols_RVZ_zerobyte,
+#ifdef DYNAMIC_TASKING
+    MPIDI_Protocols_Dyntask,
+    MPIDI_Protocols_Dyntask_disconnect,
+#endif
     MPIDI_Protocols_COUNT,
   };
 
@@ -139,6 +182,7 @@ typedef enum
     MPIDI_CONTROL_CANCEL_ACKNOWLEDGE,
     MPIDI_CONTROL_CANCEL_NOT_ACKNOWLEDGE,
     MPIDI_CONTROL_RENDEZVOUS_ACKNOWLEDGE,
+    MPIDI_CONTROL_RETURN_TOKENS,
   } MPIDI_CONTROL;
 
 
@@ -181,11 +225,17 @@ typedef struct
       unsigned control:3;  /**< message type for control protocols */
       unsigned isSync:1;   /**< set for sync sends     */
       unsigned isRzv :1;   /**< use pt2pt rendezvous   */
+      unsigned    noRDMA:1;    /**< msg sent via shm or mem reg. fails */
+      unsigned    reserved:6;  /**< unused bits                        */
+      unsigned    tokens:4;    /** tokens need to be returned          */
     } __attribute__ ((__packed__));
   };
 
 #ifdef OUT_OF_ORDER_HANDLING
   unsigned    MPIseqno;    /**< match seqno            */
+#endif
+#if TOKEN_FLOW_CONTROL
+  unsigned    alltokens;   /* control:MPIDI_CONTROL_RETURN_TOKENS  */
 #endif
 } MPIDI_MsgInfo;
 
@@ -262,40 +312,32 @@ struct MPIDI_Comm
   char allgathers[4];
   char allgathervs[4];
   char scattervs[2];
-  char optgather, optscatter;
-
+  char optgather, optscatter, optreduce;
+  unsigned num_requests;
   /* These need to be freed at geom destroy, so we need to store them
    * inside the communicator struct until destroy time rather than
    * allocating pointers on the stack
    */
   /* For create_taskrange */
-  pami_geometry_range_t *ranges;
+  pami_geometry_range_t range;
   /* For create_tasklist/endpoints if we ever use it */
   pami_task_t *tasks;
   pami_endpoint_t *endpoints;
-   /* There are some protocols where the optimized protocol always works and
-    * is the best performance */
-   /* Assume we have small vs large cutoffs vs medium for some protocols */
-   pami_algorithm_t opt_protocol[PAMI_XFER_COUNT][2];
-   int must_query[PAMI_XFER_COUNT][2];
-   pami_metadata_t opt_protocol_md[PAMI_XFER_COUNT][2];
-   int cutoff_size[PAMI_XFER_COUNT][2];
-   /* Our best allreduce double protocol only works on 
-    * doubles and sum/min/max. Since that is a common
-    * occurance let's cache that protocol and call
-    * it without checking */
-   pami_algorithm_t cached_allred_dsmm; /*dsmm = double, sum/min/max */
-   pami_metadata_t cached_allred_dsmm_md;
-   int query_allred_dsmm; 
-
-   /* We have some integer optimized protocols that only work on
-    * sum/min/max but also have datasize/ppn <= 8k limitations */
-   /* Using Amith's protocol, these work on int/min/max/sum of SMALL messages */
-   pami_algorithm_t cached_allred_ismm;
-   pami_metadata_t cached_allred_ismm_md;
-   /* Because this only works at select message sizes, this will have to be
-    * nonzero */
-   int query_allred_ismm;
+  /* There are some protocols where the optimized protocol always works and
+   * is the best performance */
+  /* Assume we have small vs large cutoffs vs medium for some protocols */
+  pami_algorithm_t opt_protocol[PAMI_XFER_COUNT][2];
+  int must_query[PAMI_XFER_COUNT][2];
+  pami_metadata_t opt_protocol_md[PAMI_XFER_COUNT][2];
+  int cutoff_size[PAMI_XFER_COUNT][2];
+  /* Our best allreduce protocol always works on 
+   * doubles and sum/min/max. Since that is a common
+   * occurance let's cache that protocol and call
+   * it without checking.  Any other dt/op must be 
+   * checked */ 
+  pami_algorithm_t cached_allreduce;
+  pami_metadata_t cached_allreduce_md;
+  int query_cached_allreduce; 
 
   union tasks_descrip_t {
     /* For create_taskrange */
@@ -304,6 +346,11 @@ struct MPIDI_Comm
     pami_task_t *tasks;
     pami_endpoint_t *endpoints;
   } tasks_descriptor;
+#ifdef DYNAMIC_TASKING
+  int local_leader;
+  long long world_intercomm_cntr;
+  int *world_ids;      /* ids of worlds that composed this communicator (inter communicator created for dynamic tasking */
+#endif
 };
 
 
@@ -365,6 +412,9 @@ struct MPIDI_Win
     /** \todo optimize some of the synchronization assertion */
     uint32_t assert; /**< MPI_MODE_* bits asserted at epoch start              */
 #endif
+
+    volatile int origin_epoch_type; /**< curretn epoch type for origin */
+    volatile int target_epoch_type; /**< curretn epoch type for target */
 
     /* These fields are reset by the sync functions */
     uint32_t          total;    /**< The number of PAMI requests that we know about (updated only by calling thread) */

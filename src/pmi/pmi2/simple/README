@@ -4,13 +4,13 @@ PMI version 1.  This version is not yet in use in MPICH, and is
 being developed to prototype the changes proposed.  In particular, this version
 adds support for better thread-safe behavior.
 
-Currently, the source files simply define the interfaces.  There is no 
+Currently, the source files simply define the interfaces.  There is no
 implementation yet.  The files have been added to the repository so that they
-can be reviewed by interested parties, particularly 3rd-parties that 
+can be reviewed by interested parties, particularly 3rd-parties that
 will need to interface to this second-generation interface.
 
 A major issue that PMI verison 2 needs to address is thread-safety and
-responsiveness.  In particular, no thread that is waiting on a PMI call can 
+responsiveness.  In particular, no thread that is waiting on a PMI call can
 block other threads, even PMI_Spawn.  The design sketched out here
 addresses these issues as well as providing a relatively simple model
 for thread interaction.
@@ -30,7 +30,7 @@ exit-atomic
 During the "waitfor" operation, other threads may enter this atomic
 section.
 
-Here is a sketch of the implementation of "waitfor" that makes use of 
+Here is a sketch of the implementation of "waitfor" that makes use of
 the Posix condition variable to block the threads that are waiting for
 a response.
 
@@ -57,7 +57,7 @@ int wait-function( int *flag, void *socket_set )
 do {
      poll( socket_set ... );
      for each active fd
-          process fd (may complete some operations). 
+          process fd (may complete some operations).
     } while (!*flag);
 }
 
@@ -73,7 +73,7 @@ waitfor( ... )
 
 and the enter/exit atomic are no-ops.  This makes each of the
 implementation of each of the PMI routines essentially independent of
-the number of threads.  
+the number of threads.
 
 For example, the PMI_KVS_Get operation will look more like
 
@@ -106,7 +106,7 @@ if (!*flag) {
 }
 
 An easy way to do this with the single wait function is to make the
-routine wait only if there is a non-null flag, i.e., 
+routine wait only if there is a non-null flag, i.e.,
 
 wait-function( NULL, wait-ctx )
 if (!*flag) {

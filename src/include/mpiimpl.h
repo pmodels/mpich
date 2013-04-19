@@ -4088,6 +4088,11 @@ int MPIR_Comm_create_create_and_map_vcrt(int n,
                                          MPID_VCRT *out_vcrt,
                                          MPID_VCR **out_vcr);
 
+/* implements the logic for MPI_Comm_create for intracommunicators only */
+int MPIR_Comm_create_intra(MPID_Comm *comm_ptr, MPID_Group *group_ptr,
+                           MPID_Comm **newcomm_ptr);
+
+
 int MPIR_Comm_commit( MPID_Comm * );
 
 int MPIR_Comm_is_node_aware( MPID_Comm * );

@@ -167,6 +167,13 @@ MPID_Win_lock(int       lock_type,
 {
   int mpi_errno = MPI_SUCCESS;
   struct MPIDI_Win_sync_lock* slock = &win->mpid.sync.lock;
+  static char FCNAME[] = "MPID_Win_lock";
+
+  if(win->mpid.sync.origin_epoch_type != MPID_EPOTYPE_NONE &&
+     win->mpid.sync.origin_epoch_type != MPID_EPOTYPE_REFENCE){
+    MPIU_ERR_SETANDSTMT(mpi_errno, MPI_ERR_RMA_SYNC,
+                        return mpi_errno, "**rmasync");
+   }
 
   MPIDI_WinLock_info info = {
   .done = 0,
@@ -178,6 +185,8 @@ MPID_Win_lock(int       lock_type,
   MPIDI_Context_post(MPIDI_Context[0], &info.work, MPIDI_WinLockReq_post, &info);
   MPID_PROGRESS_WAIT_WHILE(!slock->remote.locked);
 
+  win->mpid.sync.origin_epoch_type = MPID_EPOTYPE_LOCK;
+
   return mpi_errno;
 }
 
@@ -187,6 +196,12 @@ MPID_Win_unlock(int       rank,
                 MPID_Win *win)
 {
   int mpi_errno = MPI_SUCCESS;
+  static char FCNAME[] = "MPID_Win_unlock";
+
+  if(win->mpid.sync.origin_epoch_type != MPID_EPOTYPE_LOCK){
+    MPIU_ERR_SETANDSTMT(mpi_errno, MPI_ERR_RMA_SYNC,
+                        return mpi_errno, "**rmasync");
+   }
 
   struct MPIDI_Win_sync* sync = &win->mpid.sync;
   MPID_PROGRESS_WAIT_WHILE(sync->total != sync->complete);
@@ -200,7 +215,13 @@ MPID_Win_unlock(int       rank,
   .win  = win,
   };
   MPIDI_Context_post(MPIDI_Context[0], &info.work, MPIDI_WinUnlock_post, &info);
-  MPID_PROGRESS_WAIT_WHILE(!info.done);
-  sync->lock.remote.locked = 0;
+  MPID_PROGRESS_WAIT_WHILE(sync->lock.remote.locked);
+
+  if(win->mpid.sync.target_epoch_type == MPID_EPOTYPE_REFENCE)
+  {
+    win->mpid.sync.origin_epoch_type = MPID_EPOTYPE_REFENCE;
+  }else{
+    win->mpid.sync.origin_epoch_type = MPID_EPOTYPE_NONE;
+  }
   return mpi_errno;
 }

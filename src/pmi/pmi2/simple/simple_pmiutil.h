@@ -110,7 +110,7 @@ extern int PMI2_pmiverbose; /* Set this to true to print PMI debugging info */
 #define PMI2U_AssertDeclValue(_a, _b) _a = _b
 #else
 /* Empty decls not allowed in C */
-#define PMI2U_AssertDecl(a_) a_ 
+#define PMI2U_AssertDecl(a_) a_
 #define PMI2U_AssertDeclValue(_a, _b) _a ATTRIBUTE((unused))
 #endif
 

@@ -79,7 +79,12 @@ static void MPIDI_Update_coll(pami_algorithm_t coll,
       {
          /* For now, if there's a check_fn we will always call it and not cache.
             We *could* be smarter about this eventually.                        */
-         TRACE_ERR("Protocol %s setting to always query\n", comm->mpid.coll_metadata[coll][type][index].name);
+         TRACE_ERR("Protocol %s setting to always query/call check_fn\n", comm->mpid.coll_metadata[coll][type][index].name);
+         comm->mpid.user_selected_type[coll] = MPID_COLL_CHECK_FN_REQUIRED;
+      } 
+      else /* No check fn but we still need to check metadata bits (query protocol)  */
+      {
+         TRACE_ERR("Protocol %s setting to always query/no check_fn\n", comm->mpid.coll_metadata[coll][type][index].name);
          comm->mpid.user_selected_type[coll] = MPID_COLL_ALWAYS_QUERY;
       }
 
@@ -190,19 +195,24 @@ void MPIDI_Comm_coll_envvars(MPID_Comm *comm)
       comm->mpid.user_selected_type[i] = MPID_COLL_NOSELECTION;
          if(MPIDI_Process.verbose >= MPIDI_VERBOSE_DETAILS_0 && comm->rank == 0)
             fprintf(stderr,"Setting up collective %d on comm %p\n", i, comm);
-      if(comm->mpid.coll_count[i][0] == 0)
+	 if((comm->mpid.coll_count[i][0] == 0) && (comm->mpid.coll_count[i][1] == 0))
       {
-         if(MPIDI_Process.verbose >= MPIDI_VERBOSE_DETAILS_0 && comm->rank == 0)
-            fprintf(stderr,"There are no 'always works' protocols of type %d. This could be a problem later in your app\n", i);
          comm->mpid.user_selected_type[i] = MPID_COLL_USE_MPICH;
          comm->mpid.user_selected[i] = 0;
       }
-      else
+	 else if(comm->mpid.coll_count[i][0] != 0)
       {
          comm->mpid.user_selected[i] = comm->mpid.coll_algorithm[i][0][0];
          memcpy(&comm->mpid.user_metadata[i], &comm->mpid.coll_metadata[i][0][0],
                sizeof(pami_metadata_t));
       }
+	 else
+	   {
+	     MPIDI_Update_coll(i, MPID_COLL_QUERY, 0, comm);
+	     /* even though it's a query protocol, say NOSELECTION 
+		so the optcoll selection will override (maybe) */
+	     comm->mpid.user_selected_type[i] = MPID_COLL_NOSELECTION;
+	   }
    }
 
 
@@ -243,6 +253,18 @@ void MPIDI_Comm_coll_envvars(MPID_Comm *comm)
       char* names[] = {"PAMID_COLLECTIVE_ALLTOALL", NULL};
       MPIDI_Check_protocols(names, comm, "alltoall", PAMI_XFER_ALLTOALL);
    }
+   comm->mpid.optreduce = 0;
+   envopts = getenv("PAMID_COLLECTIVE_REDUCE");
+   if(envopts != NULL)
+   {
+      if(strcasecmp(envopts, "GLUE_ALLREDUCE") == 0)
+      {
+         if(MPIDI_Process.verbose >= MPIDI_VERBOSE_DETAILS_0 && comm->rank == 0)
+            fprintf(stderr,"Selecting glue allreduce for reduce\n");
+         comm->mpid.optreduce = 1;
+      }
+   }
+   /* In addition to glue protocols, check for other PAMI protocols and check for PE now */
    {
       TRACE_ERR("Checking reduce\n");
       char* names[] = {"PAMID_COLLECTIVE_REDUCE", "MP_S_MPI_REDUCE", NULL};
@@ -384,7 +406,7 @@ void MPIDI_Comm_coll_envvars(MPID_Comm *comm)
       if(strcasecmp(envopts, "GLUE_REDUCE") == 0)
       {
          if(MPIDI_Process.verbose >= MPIDI_VERBOSE_DETAILS_0 && comm->rank == 0)
-            fprintf(stderr,"using glue_reduce for gather\n");
+            fprintf(stderr,"Selecting glue reduce for gather\n");
          comm->mpid.optgather = 1;
       }
    }
@@ -393,6 +415,92 @@ void MPIDI_Comm_coll_envvars(MPID_Comm *comm)
       MPIDI_Check_protocols(names, comm, "gather", PAMI_XFER_GATHER);
    }
 
+   /*   If automatic collective selection is enabled and user didn't specifically overwrite
+      it, then use auto coll sel.. Otherwise, go through the manual coll sel code path. */
+   /* ************ Barrier ************ */
+   if((MPIDI_Process.optimized.auto_select_colls & MPID_AUTO_SELECT_COLLS_BARRIER) &&
+       comm->mpid.user_selected_type[PAMI_XFER_BARRIER] == MPID_COLL_NOSELECTION)
+   {
+     comm->coll_fns->Barrier      = MPIDO_Barrier_simple;
+   }
+   /* ************ Bcast ************ */
+   if((MPIDI_Process.optimized.auto_select_colls & MPID_AUTO_SELECT_COLLS_BCAST) &&
+       comm->mpid.user_selected_type[PAMI_XFER_BROADCAST] == MPID_COLL_NOSELECTION)
+   {
+     comm->coll_fns->Bcast        = MPIDO_Bcast_simple;
+   }
+   /* ************ Allreduce ************ */
+   if((MPIDI_Process.optimized.auto_select_colls & MPID_AUTO_SELECT_COLLS_ALLREDUCE) &&
+       comm->mpid.user_selected_type[PAMI_XFER_ALLREDUCE] == MPID_COLL_NOSELECTION)
+   {
+     comm->coll_fns->Allreduce    = MPIDO_Allreduce_simple;
+   }
+   /* ************ Allgather ************ */
+   if((MPIDI_Process.optimized.auto_select_colls & MPID_AUTO_SELECT_COLLS_ALLGATHER) &&
+       comm->mpid.user_selected_type[PAMI_XFER_ALLGATHER] == MPID_COLL_NOSELECTION)
+   {
+     comm->coll_fns->Allgather    = MPIDO_Allgather_simple;
+   }
+   /* ************ Allgatherv ************ */
+   if((MPIDI_Process.optimized.auto_select_colls & MPID_AUTO_SELECT_COLLS_ALLGATHERV) &&
+       comm->mpid.user_selected_type[PAMI_XFER_ALLGATHERV_INT] == MPID_COLL_NOSELECTION)
+   {
+     comm->coll_fns->Allgatherv   = MPIDO_Allgatherv_simple;
+   }
+   /* ************ Scatterv ************ */
+   if((MPIDI_Process.optimized.auto_select_colls & MPID_AUTO_SELECT_COLLS_SCATTERV) &&
+       comm->mpid.user_selected_type[PAMI_XFER_SCATTERV_INT] == MPID_COLL_NOSELECTION)
+   {
+     comm->coll_fns->Scatterv     = MPIDO_Scatterv_simple;
+   }
+   /* ************ Scatter ************ */
+   if((MPIDI_Process.optimized.auto_select_colls & MPID_AUTO_SELECT_COLLS_SCATTER) &&
+       comm->mpid.user_selected_type[PAMI_XFER_SCATTER] == MPID_COLL_NOSELECTION)
+   {
+     comm->coll_fns->Scatter      = MPIDO_Scatter_simple;
+   }
+   /* ************ Gather ************ */
+   if((MPIDI_Process.optimized.auto_select_colls & MPID_AUTO_SELECT_COLLS_GATHER) &&
+       comm->mpid.user_selected_type[PAMI_XFER_GATHER] == MPID_COLL_NOSELECTION)
+   {
+     comm->coll_fns->Gather       = MPIDO_Gather_simple;
+   }
+   /* ************ Alltoallv ************ */
+   if((MPIDI_Process.optimized.auto_select_colls & MPID_AUTO_SELECT_COLLS_ALLTOALLV) &&
+       comm->mpid.user_selected_type[PAMI_XFER_ALLTOALLV_INT] == MPID_COLL_NOSELECTION)
+   {
+     comm->coll_fns->Alltoallv    = MPIDO_Alltoallv_simple;
+   }
+   /* ************ Alltoall ************ */
+   if((MPIDI_Process.optimized.auto_select_colls & MPID_AUTO_SELECT_COLLS_ALLTOALL) &&
+       comm->mpid.user_selected_type[PAMI_XFER_ALLTOALL] == MPID_COLL_NOSELECTION)
+   {
+     comm->coll_fns->Alltoall     = MPIDO_Alltoall_simple;
+   }
+   /* ************ Gatherv ************ */
+   if((MPIDI_Process.optimized.auto_select_colls & MPID_AUTO_SELECT_COLLS_GATHERV) &&
+       comm->mpid.user_selected_type[PAMI_XFER_GATHERV_INT] == MPID_COLL_NOSELECTION)
+   {
+     comm->coll_fns->Gatherv      = MPIDO_Gatherv_simple;
+   }
+   /* ************ Reduce ************ */
+   if((MPIDI_Process.optimized.auto_select_colls & MPID_AUTO_SELECT_COLLS_REDUCE) &&
+       comm->mpid.user_selected_type[PAMI_XFER_REDUCE] == MPID_COLL_NOSELECTION)
+   {
+     comm->coll_fns->Reduce       = MPIDO_Reduce_simple;
+   }
+   /* ************ Scan ************ */
+   if((MPIDI_Process.optimized.auto_select_colls & MPID_AUTO_SELECT_COLLS_SCAN) &&
+       comm->mpid.user_selected_type[PAMI_XFER_SCAN] == MPID_COLL_NOSELECTION)
+   {
+     comm->coll_fns->Scan         = MPIDO_Scan_simple;
+   }
+   /* ************ Exscan ************ */
+   if((MPIDI_Process.optimized.auto_select_colls & MPID_AUTO_SELECT_COLLS_EXSCAN) &&
+       comm->mpid.user_selected_type[PAMI_XFER_SCAN] == MPID_COLL_NOSELECTION)
+   {
+     comm->coll_fns->Exscan       = MPIDO_Exscan_simple;
+   }
    TRACE_ERR("MPIDI_Comm_coll_envvars exit\n");
 }
 
@@ -476,10 +584,14 @@ void MPIDI_Comm_coll_query(MPID_Comm *comm)
             {
                fprintf(stderr,"comm[%p] coll type %d (%s), \"glue\" algorithm: GLUE_BCAST\n", comm, i, MPIDI_Coll_type_name(i));
             }
+            if(i == PAMI_XFER_REDUCE)
+            {
+               fprintf(stderr,"comm[%p] coll type %d (%s), \"glue\" algorithm: GLUE_ALLREDUCE\n", comm, i, MPIDI_Coll_type_name(i));
+            }
          }
       }
    }
-   /* Determine if we have protocols for these maybe, rather than just setting them? */
+   /* Determine if we have protocols for these maybe, rather than just setting them?  */
    comm->coll_fns->Barrier      = MPIDO_Barrier;
    comm->coll_fns->Bcast        = MPIDO_Bcast;
    comm->coll_fns->Allreduce    = MPIDO_Allreduce;

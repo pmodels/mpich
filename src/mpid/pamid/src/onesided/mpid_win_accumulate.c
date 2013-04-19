@@ -152,6 +152,10 @@ MPIDI_Accumulate(pami_context_t   context,
  * \param[in] win              Window
  * \return MPI_SUCCESS
  */
+#undef FUNCNAME
+#define FUNCNAME MPID_Accumulate
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int
 MPID_Accumulate(void         *origin_addr,
                 int           origin_count,
@@ -163,9 +167,22 @@ MPID_Accumulate(void         *origin_addr,
                 MPI_Op        op,
                 MPID_Win     *win)
 {
+  int mpi_errno = MPI_SUCCESS;
   MPIDI_Win_request *req = MPIU_Calloc0(1, MPIDI_Win_request);
   req->win          = win;
   req->type         = MPIDI_WIN_REQUEST_ACCUMULATE;
+
+  if(win->mpid.sync.origin_epoch_type == win->mpid.sync.target_epoch_type &&
+     win->mpid.sync.origin_epoch_type == MPID_EPOTYPE_REFENCE){
+     win->mpid.sync.origin_epoch_type = MPID_EPOTYPE_FENCE;
+     win->mpid.sync.target_epoch_type = MPID_EPOTYPE_FENCE;
+  }
+
+  if(win->mpid.sync.origin_epoch_type == MPID_EPOTYPE_NONE ||
+     win->mpid.sync.origin_epoch_type == MPID_EPOTYPE_POST){
+    MPIU_ERR_SETANDSTMT(mpi_errno, MPI_ERR_RMA_SYNC,
+                        return mpi_errno, "**rmasync");
+  }
 
   req->offset = target_disp * win->mpid.info[target_rank].disp_unit;
 
@@ -251,6 +268,13 @@ MPID_Accumulate(void         *origin_addr,
 
   pami_result_t rc;
   pami_task_t task = MPID_VCR_GET_LPID(win->comm_ptr->vcr, target_rank);
+  if (win->mpid.sync.origin_epoch_type == MPID_EPOTYPE_START &&
+    !MPIDI_valid_group_rank(task, win->mpid.sync.sc.group))
+  {
+       MPIU_ERR_SETANDSTMT(mpi_errno, MPI_ERR_RMA_SYNC,
+                          return mpi_errno, "**rmasync");
+  }
+
   rc = PAMI_Endpoint_create(MPIDI_Client, task, 0, &req->dest);
   MPID_assert(rc == PAMI_SUCCESS);
 
@@ -302,6 +326,6 @@ MPID_Accumulate(void         *origin_addr,
    */
   PAMI_Context_post(MPIDI_Context[0], &req->post_request, MPIDI_Accumulate, req);
 
-
-  return MPI_SUCCESS;
+fn_fail:
+  return mpi_errno;
 }

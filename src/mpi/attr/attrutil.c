@@ -50,6 +50,7 @@ MPID_Attribute *MPID_Attr_alloc(void)
     MPID_Attribute *attr = (MPID_Attribute *)MPIU_Handle_obj_alloc(&MPID_Attr_mem);
     /* attributes don't have refcount semantics, but let's keep valgrind and
      * the debug logging pacified */
+    MPIU_Assert(attr != NULL);
     MPIU_Object_set_ref(attr, 0);
     return attr;
 }

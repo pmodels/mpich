@@ -99,16 +99,29 @@ MPID_Win_start(MPID_Group *group,
                MPID_Win   *win)
 {
   int mpi_errno = MPI_SUCCESS;
+  static char FCNAME[] = "MPID_Win_start";
+  if(win->mpid.sync.origin_epoch_type != MPID_EPOTYPE_NONE &&
+    win->mpid.sync.origin_epoch_type != MPID_EPOTYPE_REFENCE)
+  {
+    MPIU_ERR_SETANDSTMT(mpi_errno, MPI_ERR_RMA_SYNC,
+                        return mpi_errno, "**rmasync");
+  }
+
   MPIR_Group_add_ref(group);
 
   struct MPIDI_Win_sync* sync = &win->mpid.sync;
   MPID_PROGRESS_WAIT_WHILE(group->size != sync->pw.count);
   sync->pw.count = 0;
 
-  MPID_assert(win->mpid.sync.sc.group == NULL);
-  win->mpid.sync.sc.group = group;
+  MPIU_ERR_CHKANDJUMP((win->mpid.sync.sc.group != NULL), mpi_errno, MPI_ERR_GROUP, "**group");
 
+  win->mpid.sync.sc.group = group;
+  win->mpid.sync.origin_epoch_type = MPID_EPOTYPE_START;
+
+fn_exit:
   return mpi_errno;
+fn_fail:
+  goto fn_exit;
 }
 
 
@@ -116,6 +129,11 @@ int
 MPID_Win_complete(MPID_Win *win)
 {
   int mpi_errno = MPI_SUCCESS;
+  static char FCNAME[] = "MPID_Win_complete";
+  if(win->mpid.sync.origin_epoch_type != MPID_EPOTYPE_START){
+     MPIU_ERR_SETANDSTMT(mpi_errno, MPI_ERR_RMA_SYNC,
+                        return mpi_errno, "**rmasync");
+  }
 
   struct MPIDI_Win_sync* sync = &win->mpid.sync;
   MPID_PROGRESS_WAIT_WHILE(sync->total != sync->complete);
@@ -130,6 +148,13 @@ MPID_Win_complete(MPID_Win *win)
   MPIDI_Context_post(MPIDI_Context[0], &info.work, MPIDI_WinComplete_post, &info);
   MPID_PROGRESS_WAIT_WHILE(!info.done);
 
+  if(win->mpid.sync.target_epoch_type == MPID_EPOTYPE_REFENCE)
+  {
+    win->mpid.sync.origin_epoch_type = MPID_EPOTYPE_REFENCE;
+  }else{
+    win->mpid.sync.origin_epoch_type = MPID_EPOTYPE_NONE;
+  }
+
   MPIR_Group_release(sync->sc.group);
   sync->sc.group = NULL;
   return mpi_errno;
@@ -142,9 +167,17 @@ MPID_Win_post(MPID_Group *group,
               MPID_Win   *win)
 {
   int mpi_errno = MPI_SUCCESS;
+  static char FCNAME[] = "MPID_Win_post";
+  if(win->mpid.sync.target_epoch_type != MPID_EPOTYPE_NONE &&
+     win->mpid.sync.target_epoch_type != MPID_EPOTYPE_REFENCE){
+       MPIU_ERR_SETANDSTMT(mpi_errno, MPI_ERR_RMA_SYNC,
+                        return mpi_errno, "**rmasync");
+  }
+
   MPIR_Group_add_ref(group);
 
-  MPID_assert(win->mpid.sync.pw.group == NULL);
+  MPIU_ERR_CHKANDJUMP((win->mpid.sync.pw.group != NULL), mpi_errno, MPI_ERR_GROUP, "**group");
+
   win->mpid.sync.pw.group = group;
 
   MPIDI_WinPSCW_info info = {
@@ -154,6 +187,9 @@ MPID_Win_post(MPID_Group *group,
   MPIDI_Context_post(MPIDI_Context[0], &info.work, MPIDI_WinPost_post, &info);
   MPID_PROGRESS_WAIT_WHILE(!info.done);
 
+  win->mpid.sync.target_epoch_type = MPID_EPOTYPE_POST;
+
+fn_fail:
   return mpi_errno;
 }
 
@@ -162,14 +198,26 @@ int
 MPID_Win_wait(MPID_Win *win)
 {
   int mpi_errno = MPI_SUCCESS;
-
+  static char FCNAME[] = "MPID_Win_wait";
   struct MPIDI_Win_sync* sync = &win->mpid.sync;
+
+  if(win->mpid.sync.target_epoch_type != MPID_EPOTYPE_POST){
+    MPIU_ERR_SETANDSTMT(mpi_errno, MPI_ERR_RMA_SYNC,
+                        return mpi_errno, "**rmasync");
+  }
+
   MPID_Group *group = sync->pw.group;
   MPID_PROGRESS_WAIT_WHILE(group->size != sync->sc.count);
   sync->sc.count = 0;
   sync->pw.group = NULL;
 
   MPIR_Group_release(group);
+
+  if(win->mpid.sync.origin_epoch_type == MPID_EPOTYPE_REFENCE){
+    win->mpid.sync.target_epoch_type = MPID_EPOTYPE_REFENCE;
+  }else{
+    win->mpid.sync.target_epoch_type = MPID_EPOTYPE_NONE;
+  }
   return mpi_errno;
 }
 
@@ -179,8 +227,14 @@ MPID_Win_test(MPID_Win *win,
               int      *flag)
 {
   int mpi_errno = MPI_SUCCESS;
-
+  static char FCNAME[] = "MPID_Win_test";
   struct MPIDI_Win_sync* sync = &win->mpid.sync;
+
+  if(win->mpid.sync.target_epoch_type != MPID_EPOTYPE_POST){
+    MPIU_ERR_SETANDSTMT(mpi_errno, MPI_ERR_RMA_SYNC,
+                        return mpi_errno, "**rmasync");
+  }
+
   MPID_Group *group = sync->pw.group;
   if (group->size == sync->sc.count)
     {
@@ -188,6 +242,11 @@ MPID_Win_test(MPID_Win *win,
       sync->pw.group = NULL;
       *flag = 1;
       MPIR_Group_release(group);
+      if(win->mpid.sync.origin_epoch_type == MPID_EPOTYPE_REFENCE){
+        win->mpid.sync.target_epoch_type = MPID_EPOTYPE_REFENCE;
+      }else{
+        win->mpid.sync.target_epoch_type = MPID_EPOTYPE_NONE;
+      }
     }
   else
     {

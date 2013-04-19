@@ -84,4 +84,36 @@ enum
  };
 /** \} */
 
+
+enum
+{
+MPID_EPOTYPE_NONE      = 0,       /**< No epoch in affect */
+MPID_EPOTYPE_LOCK      = 1,       /**< MPI_Win_lock access epoch */
+MPID_EPOTYPE_START     = 2,       /**< MPI_Win_start access epoch */
+MPID_EPOTYPE_POST      = 3,       /**< MPI_Win_post exposure epoch */
+MPID_EPOTYPE_FENCE     = 4,       /**< MPI_Win_fence access/exposure epoch */
+MPID_EPOTYPE_REFENCE   = 5,       /**< MPI_Win_fence possible access/exposure epoch */
+};
+
+enum
+{
+  MPID_AUTO_SELECT_COLLS_NONE            = 0,
+  MPID_AUTO_SELECT_COLLS_BARRIER         = 1,
+  MPID_AUTO_SELECT_COLLS_BCAST           = ((int)((MPID_AUTO_SELECT_COLLS_BARRIER        << 1) & 0xFFFFFFFF)),
+  MPID_AUTO_SELECT_COLLS_ALLGATHER       = ((int)((MPID_AUTO_SELECT_COLLS_BCAST          << 1) & 0xFFFFFFFF)),
+  MPID_AUTO_SELECT_COLLS_ALLGATHERV      = ((int)((MPID_AUTO_SELECT_COLLS_ALLGATHER      << 1) & 0xFFFFFFFF)),
+  MPID_AUTO_SELECT_COLLS_ALLREDUCE       = ((int)((MPID_AUTO_SELECT_COLLS_ALLGATHERV     << 1) & 0xFFFFFFFF)),
+  MPID_AUTO_SELECT_COLLS_ALLTOALL        = ((int)((MPID_AUTO_SELECT_COLLS_ALLREDUCE      << 1) & 0xFFFFFFFF)),
+  MPID_AUTO_SELECT_COLLS_ALLTOALLV       = ((int)((MPID_AUTO_SELECT_COLLS_ALLTOALL       << 1) & 0xFFFFFFFF)),
+  MPID_AUTO_SELECT_COLLS_EXSCAN          = ((int)((MPID_AUTO_SELECT_COLLS_ALLTOALLV      << 1) & 0xFFFFFFFF)),
+  MPID_AUTO_SELECT_COLLS_GATHER          = ((int)((MPID_AUTO_SELECT_COLLS_EXSCAN         << 1) & 0xFFFFFFFF)),
+  MPID_AUTO_SELECT_COLLS_GATHERV         = ((int)((MPID_AUTO_SELECT_COLLS_GATHER         << 1) & 0xFFFFFFFF)),
+  MPID_AUTO_SELECT_COLLS_REDUCE_SCATTER  = ((int)((MPID_AUTO_SELECT_COLLS_GATHERV        << 1) & 0xFFFFFFFF)),
+  MPID_AUTO_SELECT_COLLS_REDUCE          = ((int)((MPID_AUTO_SELECT_COLLS_REDUCE_SCATTER << 1) & 0xFFFFFFFF)),
+  MPID_AUTO_SELECT_COLLS_SCAN            = ((int)((MPID_AUTO_SELECT_COLLS_REDUCE         << 1) & 0xFFFFFFFF)),
+  MPID_AUTO_SELECT_COLLS_SCATTER         = ((int)((MPID_AUTO_SELECT_COLLS_SCAN           << 1) & 0xFFFFFFFF)),
+  MPID_AUTO_SELECT_COLLS_SCATTERV        = ((int)((MPID_AUTO_SELECT_COLLS_SCATTER        << 1) & 0xFFFFFFFF)),
+  MPID_AUTO_SELECT_COLLS_ALL             = 0xFFFFFFFF,
+};
+
 #endif
