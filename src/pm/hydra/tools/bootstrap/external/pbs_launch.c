@@ -38,7 +38,7 @@ static HYD_status find_pbs_node_id(const char *hostname, int *node_id)
 HYD_status HYDT_bscd_pbs_launch_procs(char **args, struct HYD_proxy *proxy_list,
                                       int *control_fd)
 {
-    int proxy_count, i, args_count, events_count, err, idx, hostid;
+    int proxy_count, i, args_count, err, hostid;
     struct HYD_proxy *proxy;
     char *targs[HYD_NUM_TMP_STRINGS];
     HYD_status status = HYD_SUCCESS;
