@@ -229,6 +229,11 @@ if (! -d "../../mpi/romio") { $build_io = 0; }
 		     'Create_cart-4' => 'in:boolarray:2',
 		     'Create_cart-5' => 'in:bool',
 		     'Create_graph-5' => 'in:bool',
+#                     'Dist_graph_create-8' => 'in:bool',
+#                     'Dist_graph_create_adjacent-9' => 'in:bool',
+                     # Other versions with one less argument (no weights)
+                     # also needed.
+#                     'distgraph-Get_dist_neighbors_count-4' => 'out:bool',
 		     'cart-Get_topo-4' => 'out:boolarray:2',
 		     'Sub-2' => 'in:boolarray:-10', # Use -10 for immediate number
 		     'Shift-4' => 'in:refint',
@@ -310,6 +315,9 @@ $specialReturnType{"cart-Split"} = "Cartcomm";
 		     );
 $specialReturnType{"graph-Dup"} = "Graphcomm";
 $specialReturnType{"graph-Split"} = "Graphcomm";
+$specialReturnType{"distgraph-Dup"} = "Distgraphcomm";
+$specialReturnType{"distgraph-Split"} = "Distgraphcomm";
+
 
 # Range routines will require special handling
 # The Translate_ranks, Union, Intersect, Difference, and Compare routines are 
@@ -354,7 +362,9 @@ $specialReturnType{"inter-Split"} = "Intercomm";
 		     'Split' => MPI_Comm,
 		     'Create_intercomm' => MPI_Comm,
 		     'Create_cart' => 'MPI_Comm:4:5',
-		     'Create_graph' => 'MPI_Comm:5' 
+		     'Create_graph' => 'MPI_Comm:5',
+#		     'Dist_graph_create' => 'MPI_Comm:8',
+#		     'Dist_graph_create_adjacent' => 'MPI_Comm:9',
 );
 $specialReturnType{"intra-Split"} = "Intracomm";
 $specialReturnType{"intra-Create"} = "Intracomm";
@@ -407,20 +417,20 @@ $specialReturnType{"intra-Dup"} = "Intracomm";
 		    'Is_finalized' => '1;bool',
 		    'Query_thread' => '1',
 		    'Is_thread_main' => '1;bool',
-		    'Add_error_class' => 1,
-		    'Add_error_code' => 2, 
+		    'Add_error_class' => '1',
+		    'Add_error_code' => '2', 
 		    'Add_error_string' => '0:2',
 		    );
-%class_mpi2comm = ( 'Barrier' => 0, 
+%class_mpi2comm = ( 'Barrier' => '0', 
 		    'Get_attr' => 'int',
-		    'Set_attr' => 0,
-		    'Delete_attr' => 0,
+		    'Set_attr' => '0',
+		    'Delete_attr' => '0',
 #		    'Create_keyval' => 'int',
 		    'Free_keyval' =>  'static:0:1',
-		    'Call_errhandler' => 0,
+		    'Call_errhandler' => '0',
 		    'Set_name' => '0:2',
 		    'Get_name' => '0:3',
-		    'Disconnect' => 0,
+		    'Disconnect' => '0',
 		    'Get_parent' => 'static:0;Intercomm',
 		   );
 %class_mpi2cart = ();
@@ -432,18 +442,22 @@ $specialReturnType{"intra-Dup"} = "Intracomm";
 		     'Create_hindexed' => 'MPI_Datatype',
 		     'Get_extent' => '0',
 		     'Create_resized' => 'MPI_Datatype',  # FIXME Check not just resized
-		     'Get_true_extent' => 0,
+		     'Get_true_extent' => '0',
 		     'Create_subarray' => 'MPI_Datatype',
 		     'Create_darray' => 'MPI_Datatype',
 		     'Get_attr' => 'int',
-		     'Set_attr' => 0,
-		     'Delete_attr' => 0,
+		     'Set_attr' => '0',
+		     'Delete_attr' => '0',
 #		     'Create_keyval' => 'int',
 		     'Free_keyval' =>  'static:0:1',
 );
 %class_mpi2errh = ( 
 		    );
 %class_mpi2graph = ();
+%class_mpi2distgraph = (
+#		     'Get_dist_neighbors_count' => '0', 
+		     'Get_dist_neighbors' => '0',
+);  
 %class_mpi2group = ();
 %class_mpi2inter = ( #'Barrier' => 0, # MPI-2 adds intercomm collective
 		     #'Bcast' => 0,   # These are moved into the Comm class
@@ -464,7 +478,7 @@ $specialReturnType{"intra-Dup"} = "Intracomm";
 #$specialReturnType{"inter-Split"} = "Intercomm";
 
 # Alltoallw uses an array of datatypes, which requires special handling
-# Spawn and spawn mulitple uses arrays of character strings, which
+# Spawn and spawn multiple uses arrays of character strings, which
 # also require special handling
 %class_mpi2intra = ( #'Alltoallw' => 0, 
 		     'Exscan' => 0,
@@ -537,10 +551,10 @@ if ($build_io) {
 		   'Get_type_extent' => 'MPI_Aint',
 		   'Set_atomicity' => '0:2',
 		   'Get_atomicity' => 'int;bool',
-		   'Sync' => 0,
+		   'Sync' => '0',
 		   'Get_errhandler' => 'MPI_Errhandler',
-		   'Set_errhandler' => 0,
- 		   'Call_errhandler' => 0,
+		   'Set_errhandler' => '0',
+ 		   'Call_errhandler' => '0',
 		   );		
 #     %class_mpi2file = ( 
 # 		   'File_open' => 'static:MPI_File:2',
@@ -616,8 +630,8 @@ if ($build_io) {
 		    'Set_name' => '0:2',
 		    'Get_name' => '0:3',
 		    'Get_attr' => 'int',
-		    'Set_attr' => 0,
-		    'Delete_attr' => 0,
+		    'Set_attr' => '0',
+		    'Delete_attr' => '0',
 		    'Free_keyval' =>  'static:0:1',
 		    );
 %class_mpi2info = ( 'Create' => 'static:1',
@@ -651,6 +665,7 @@ if ($build_io) {
 		   'win', 
 		   'file', 
 		   'graph',
+                   'distgraph',
 		   'cart', 
 );
 
@@ -662,11 +677,12 @@ if ($build_io) {
 %class_extra_fnc = ( 'st'        => 'Status_methods',
                      'except'    => 'Exception_methods',
 		     'comm'      => 'Comm_methods',
-		     'null'  => 'Nullcomm_methods',
-		     'inter' => 'Intercomm_methods',
-		     'intra' => 'Intracomm_methods',
-		     'graph' => 'Graphcomm_methods',
-		     'cart'  => 'Cartcomm_methods',
+		     'null'      => 'Nullcomm_methods',
+		     'inter'     => 'Intercomm_methods',
+		     'intra'     => 'Intracomm_methods',
+		     'graph'     => 'Graphcomm_methods',
+		     'distgraph' => 'Distgraphcomm_methods',
+		     'cart'      => 'Cartcomm_methods',
 		     'dtype'     => 'Datatype_methods',
 		     'op'        => 'Op_methods',
 		     'file'      => 'File_methods',
@@ -797,6 +813,7 @@ if ( -s "../../mpi/romio/include/mpio.h.in" ) {
 		'errh' => MPI_Errhandler,
 		'null'  => MPI_Comm,
 		'graph' => MPI_Comm,
+		'distgraph' => MPI_Comm,
 		'group' => MPI_Group,
 		'inter' => MPI_Comm,
 		'intra' => MPI_Comm,
@@ -817,6 +834,7 @@ if ( -s "../../mpi/romio/include/mpio.h.in" ) {
 		   'dtype' => 'Datatype',
 		   'errh' => 'Errhandler',
 		   'graph' => 'Graphcomm',
+		   'distgraph' => 'Distgraphcomm',
 		   'group' => 'Group',
 		   'null'  => 'Nullcomm',
 		   'inter' => 'Intercomm',
@@ -837,14 +855,15 @@ if ( -s "../../mpi/romio/include/mpio.h.in" ) {
 # This has gives the list of friends for each class (i.e., the
 # classes that are allowed to directly access the protected members).
 # The friends are the full class names
-%class_friends = ( 'comm' => 'Cartcomm,Intercomm,Intracomm,Graphcomm,Nullcomm,Datatype,Win,File',
+%class_friends = ( 'comm' => 'Cartcomm,Intercomm,Intracomm,Graphcomm,Distgraphcomm,Nullcomm,Datatype,Win,File',
 		   'cart' => '',
 		   'dtype' => 'Comm,Status,Intracomm,Intercomm,Win,File,Op',
 		   'errh' => 'Comm,File,Win',
 		   'graph' => '',
+		   'distgraph' => '',
 		   'group' => 'Comm,Intracomm,Intercomm,Win,File',
 		   'inter' => 'Intracomm',
-		   'intra' => 'Cartcomm,Graphcomm,Datatype',
+		   'intra' => 'Cartcomm,Graphcomm,Distgraphcomm,Datatype',
 		   # Op adds comm as a friend because of MPI2
 		   'op' => 'Intracomm,Intercomm,Win,Comm',
 		   'preq' => '',
@@ -860,6 +879,7 @@ if ( -s "../../mpi/romio/include/mpio.h.in" ) {
 # We also need to know the derived classes.  This gives the class that
 # a class is derived from.  Base classes are not included here.
 %derived_class = ( 'graph' => 'Intracomm', 
+		   'distgraph' => 'Intracomm',
 		   'preq' => 'Request',
 		   'greq' => 'Request',
 		   'null' => 'Comm',
@@ -874,6 +894,8 @@ if ( -s "../../mpi/romio/include/mpio.h.in" ) {
 # used to store the C version of the class handle.
 %mytopclass = ( 'graph'     => 'comm', 
 		'graphcomm' => 'comm',
+		'distgraph' => 'comm',
+		'distgraphcomm' => 'comm',
 		'nullcomm'  => 'comm',
 	        'intracomm' => 'comm', 
 	        'intercomm' => 'comm',
@@ -958,6 +980,8 @@ if ( -s "../../mpi/romio/include/mpio.h.in" ) {
 	     'intra-Split' => 'Comm_split',
 	     'intra-Create_cart' => 'Cart_create',
 	     'intra-Create_graph' => 'Graph_create',
+#	     'intra-Dist_graph_create' => 'Dist_graph_create',
+#	     'intra-Dist_graph_create_adjacent' => 'Dist_graph_create_adjacent',
 	     'intra-Connect' => 'Comm_connect',
 	     'intra-Spawn' => 'Comm_spawn',
 	     'intra-Spawn_multiple' => 'Comm_spawn_multiple',
@@ -978,6 +1002,9 @@ if ( -s "../../mpi/romio/include/mpio.h.in" ) {
 	     'graph-Get_neighbors_count' => 'Graph_neighbors_count',
 	     'graph-Get_dims' => 'Graphdims_get',
 	     'graph-Dup' => 'Comm_dup',
+	     'distgraph-Dup' => 'Comm_dup',
+	     'distgraph-Get_dist_neighbors' => 'Dist_graph_neighbors',
+	     'distgraph-Get_dist_neighbors_count' => 'Dist_graph_neighbors_count',
              'op-Is_commutative' => 'Op_commutative',
              'op-Reduce_local' => 'Reduce_local',
 	     );
@@ -999,6 +1026,7 @@ if ( -s "../../mpi/romio/include/mpio.h.in" ) {
 			  'Nullcomm' => 1,
 			  'Cartcomm' => 1,
 			  'Graphcomm' => 1,
+			  'Distgraphcomm' => 1,
 			  'Prequest' => 1,
 			  );
 # These classes do not have a default intialization
@@ -1013,6 +1041,8 @@ if ($doFuncspec) {
     # Use the MPI C++ binding names for the defered definitions
     $defer_definition{"Create_cart"}  = "Comm";
     $defer_definition{"Create_graph"} = "Comm";
+#    $defer_definition{"Dist_graph_create"} = "Comm";
+#    $defer_definition{"Dist_graph_create_adjacent"} = "Comm";
     $defer_definition{"Get_parent"}   = "Comm";
     $defer_definition{"Join"}         = "Comm";
     $defer_definition{"Merge"}        = "Intercomm";
@@ -1084,6 +1114,7 @@ class Intercomm;
 class Intracomm;
 class Cartcomm;
 class Graphcomm;
+class Distgraphcomm;
 class File;
 \n";
 
@@ -1826,7 +1857,7 @@ extern Datatype TWOINTEGER;
     }
 
     # Predefined integers
-    foreach $int (BSEND_OVERHEAD, KEYVAL_INVALID, CART, GRAPH,
+    foreach $int (BSEND_OVERHEAD, KEYVAL_INVALID, CART, GRAPH, DIST_GRAPH,
 		  IDENT, SIMILAR, CONGRUENT, UNEQUAL, PROC_NULL,
 		  ANY_TAG, ANY_SOURCE, ROOT, TAG_UB, IO, HOST, WTIME_IS_GLOBAL,
                   UNIVERSE_SIZE, LASTUSEDCODE, APPNUM, 
@@ -2236,9 +2267,14 @@ MPIR_Comm_delete_attr_cxx_proxy(
         MPI::Cartcomm c = comm;
         return f( c, keyval, value, extra_state );
     }
-    else
+    else if (ttype == MPI_GRAPH)
     {
         MPI::Graphcomm c = comm;
+        return f( c, keyval, value, extra_state );
+    }
+    else
+    {
+        MPI::Distgraphcomm c = comm;
         return f( c, keyval, value, extra_state );
     }
 }
@@ -2289,9 +2325,14 @@ MPIR_Comm_copy_attr_cxx_proxy(
         MPI::Cartcomm c = comm;
         return f( c, keyval, extra_state, value, new_value, *(bool*)flag );
     }
-    else
+    else if (ttype == MPI_GRAPH)
     {
         MPI::Graphcomm c = comm;
+        return f( c, keyval, extra_state, value, new_value, *(bool*)flag );
+    }
+    else 
+    {
+        MPI::Distgraphcomm c = comm;
         return f( c, keyval, extra_state, value, new_value, *(bool*)flag );
     }
 }
@@ -2764,6 +2805,72 @@ void Datatype::Unpack( const void *inbuf, int insize, void *outbuf,
     }\n";
 
     print $OUTFD "\
+    Distgraphcomm Intracomm::Dist_graph_create( int v2, const int v3[], const int v4[], const int v5[], const int v6[], const MPI::Info &v7, bool v8 ) const
+    {
+        Distgraphcomm v9;
+        int l8;
+        l8 = (v8 == true) ? 1 : 0;\n";
+    &printCoverageStart( $OUTFD, "Dist_graph_create", 9 );
+    print $OUTFD "\
+        MPIX_CALLREF( this, 
+                      MPI_Dist_graph_create( (MPI_Comm) the_real_comm, 
+                      v2, (int *)v3, (int *)v4, (int *)v5, (int *)v6, 
+                      (MPI_Info)v7, l8, &(v9.the_real_comm) ));\n";
+    &printCoverageEnd( $OUTFD, "Dist_graph_create", 9 );
+    print $OUTFD "\
+        return v9;
+    }
+
+    Distgraphcomm Intracomm::Dist_graph_create( int v2, const int v3[], const int v4[], const int v5[], const MPI::Info &v7, bool v8 ) const
+    {
+        Distgraphcomm v9;
+        int l8;
+        l8 = (v8 == true) ? 1 : 0;\n";
+    &printCoverageStart( $OUTFD, "Dist_graph_create", 9 );
+    print $OUTFD "\
+        MPIX_CALLREF( this, 
+                      MPI_Dist_graph_create( (MPI_Comm) the_real_comm, 
+                      v2, (int *)v3, (int *)v4, (int *)v5, MPI_UNWEIGHTED, 
+                      (MPI_Info)v7, l8, &(v9.the_real_comm) ));\n";
+    &printCoverageEnd( $OUTFD, "Dist_graph_create", 9 );
+    print $OUTFD "\
+        return v9;
+    }
+
+    Distgraphcomm Intracomm::Dist_graph_create_adjacent( int v2, const int v3[], const int v4[], int v5, const int v6[], const int v7[], const MPI::Info &v8, bool v9 ) const
+    {
+        Distgraphcomm v10;
+        int l9;
+        l9 = (v9 == true) ? 1 : 0;\n";
+    &printCoverageStart( $OUTFD, "Dist_graph_create_adjacent", 9 );
+    print $OUTFD "\
+        MPIX_CALLREF( this, 
+                      MPI_Dist_graph_create_adjacent( (MPI_Comm) the_real_comm, 
+                      v2, (int *)v3, (int *)v4, v5, (int *)v6, (int *)v7, 
+                      (MPI_Info)v8, l9, &(v10.the_real_comm) ));\n";
+    &printCoverageEnd( $OUTFD, "Dist_graph_create_adjacent", 10 );
+    print $OUTFD "\
+        return v10;
+    }
+
+    Distgraphcomm Intracomm::Dist_graph_create_adjacent( int v2, const int v3[], int v5, const int v6[], const MPI::Info &v8, bool v9 ) const
+    {
+        Distgraphcomm v10;
+        int l9;
+        l9 = (v9 == true) ? 1 : 0;\n";
+    &printCoverageStart( $OUTFD, "Dist_graph_create_adjacent", 9 );
+    print $OUTFD "\
+        MPIX_CALLREF( this, 
+                      MPI_Dist_graph_create_adjacent( (MPI_Comm) the_real_comm, 
+                      v2, (int *)v3, MPI_UNWEIGHTED, v5, (int *)v6, MPI_UNWEIGHTED, 
+                      (MPI_Info)v8, l9, &(v10.the_real_comm) ));\n";
+    &printCoverageEnd( $OUTFD, "Dist_graph_create_adjacent", 10 );
+    print $OUTFD "\
+        return v10;
+    }\n";
+
+
+    print $OUTFD "\
     Intracomm Intercomm::Merge( bool v2 ) const
     {
         Intracomm v3;
@@ -2887,7 +2994,7 @@ Grequest Grequest::Start( Grequest::Query_function  *query_fn,
 
 # Add the routine to initialize MPI datatype names for the C++ datatypes
 print $OUTFD "
-/* MT FIXME: this is not thread-safe */
+// MT FIXME: this is not thread-safe
 void MPIR_CXX_InitDatatypeNames( void )
 {
     static int _isInit = 1; 
@@ -3437,6 +3544,10 @@ sub Graphcomm_methods {
     my $OUTFD = $_[0];
     &Clone_method( $OUTFD, "Graphcomm" );
 }
+sub Distgraphcomm_methods {
+    my $OUTFD = $_[0];
+    &Clone_method( $OUTFD, "Distgraphcomm" );
+}
 sub Intercomm_methods {
     my $OUTFD = $_[0];
     &Clone_method( $OUTFD, "Intercomm" );
@@ -3494,6 +3605,21 @@ Intercomm Spawn_multiple(int count, const char* array_of_commands[], const char*
 }
 
 ";    
+
+    # Because there are two versions of each of the dist graph 
+    # create routines (fewer arguments for the case that uses 
+    # MPI_UNWEIGHTED in C or Fortran), we must define these explicitly 
+    # rather than generating them from the definitions.
+    print $OUTFD "\
+    virtual Distgraphcomm Dist_graph_create( int v2, const int v3[], const int v4[], const int v5[], const int v6[], const MPI::Info &v7, bool v8 ) const;
+
+    virtual Distgraphcomm Dist_graph_create( int v2, const int v3[], const int v4[], const int v5[], const MPI::Info &v7, bool v8 ) const;
+
+    virtual Distgraphcomm Dist_graph_create_adjacent( int v2, const int v3[], const int v4[], int v5, const int v6[], const int v7[], const MPI::Info &v8, bool v9 ) const;
+
+    virtual Distgraphcomm Dist_graph_create_adjacent( int v2, const int v3[], int v5, const int v6[], const MPI::Info &v8, bool v9 ) const;
+    \n";
+
 }
 
 sub Op_methods {
@@ -3964,7 +4090,7 @@ sub PrintRoutineCall {
     my $useThis = 0;
     my $TYPE = "OBJ", $obj = "COMM_WORLD";
     if ($class eq "comm" || $class eq "inter" || $class eq "intra" ||
-	$class eq "cart" || $class eq "graph") {
+	$class eq "cart" || $class eq "graph" || $class eq "distgraph") {
 	$useThis = 1;
 	$TYPE = "REF";
 	$obj  = "this";
@@ -4074,7 +4200,7 @@ sub DoSpecialArgProcessing {
 #	    }
 	}
 	else {
-	    print STDERR "Expected :$subname: for $routine but is was not defined\n";
+	    print STDERR "Expected :$subname: for $routine but it was not defined\n";
 	}
     }
     return 0;
@@ -4141,6 +4267,13 @@ sub bool_in_methoddecl {
     if (!$first) { print $OUTFD ", "; }
     print $OUTFD "bool v$count";
 }
+sub bool_out_methoddecl {
+    my $count = $_[0];
+    if (!$first) { print $OUTFD ", "; }
+    print $OUTFD "bool &v$count";
+}
+sub bool_out_cxxtoc {
+}
 sub bool_out_decl {
     my $count = $_[0];
     print $OUTFD "$indent    int l$count;\n";
@@ -4153,6 +4286,10 @@ sub bool_in_ctocxx {}
 sub bool_in_call {
     my $count = $_[0];
     print $OUTFD "l$count";
+}
+sub bool_out_call {
+    my $count = $_[0];
+    print $OUTFD "&l$count";
 }
 sub bool_out_ctocxx {
 #    my $cinvar     = $_[0];

@@ -8,8 +8,8 @@
    bug fixes */
 
 #include "mpi.h"
-#include "mpitestcxx.h"
 #include "mpitestconf.h"
+#include "mpitestcxx.h"
 #ifdef HAVE_IOSTREAM
 // Not all C++ compilers have iostream instead of iostream.h
 #include <iostream>

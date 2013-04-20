@@ -6,6 +6,7 @@
  */
 #include "mpi.h"
 #include <iostream>
+#include "mpitestconf.h"
 #include "mpitestcxx.h"
 
 static char MTEST_Descrip[] = "Simple intercomm gatherv test";

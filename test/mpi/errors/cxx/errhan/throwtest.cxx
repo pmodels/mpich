@@ -15,6 +15,7 @@
 
 #include <mpi.h>
 #include <iostream>
+#include "mpitestconf.h"
 #include "mpitestcxx.h"
 
 /* #define VERBOSE */

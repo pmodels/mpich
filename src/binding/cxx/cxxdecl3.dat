@@ -270,11 +270,13 @@ intra-Dup Intracomm (,return) const
 inter-Dup Intercomm (,return) const
 cart-Dup Cartcomm (,return) const
 graph-Dup Graphcomm (,return) const
+distgraph-Dup Distgraphcomm (,return) const
 comm-Clone  (,return)
 intra-Clone  (,return) const
 inter-Clone  (,return) const
 cart-Clone  (,return) const
 graph-Clone  (,return) const
+distgraph-Clone (,return) const
 intra-Create Intracomm (,in:constref:Group ,return) const
 intra-Split Intracomm (, , ,return) const
 comm-Free void ()
@@ -286,6 +288,10 @@ inter-Merge Intracomm (,in:bool ,return) const
 intra-Create_cart Cartcomm (, ,in:const ,in:boolarray:2 ,in:bool ,return) const
 -Compute_dims void ( , , )
 intra-Create_graph Graphcomm (, ,in:const ,in:const ,in:bool ,return) const
+#intra-Dist_graph_create Distgraphcomm (,,in:const,in:const,in:const,in:const,in:constref:Info,in:bool,return) const
+#intra-Dist_graph_create_adjacent Distgraphcomm (,,in:const,in:const,,in:const,in:const,in:constref:Info,in:bool,return) const
+##intra-Create_dist_graph Distgraphcomm (,,in:const,in:const,in:const,in:const,in:constref:Info,in:bool,return) const
+##intra-Create_dist_graph_adjacent Distgraphcomm (,,in:const,in:const,,in:const,in:const,in:constref:Info,in:bool,return) const
 comm-Get_topology int (,return) const
 graph-Get_dims void (, , ) const
 graph-Get_topo void (, , , , ) const
@@ -295,6 +301,8 @@ cart-Get_cart_rank int (,in:const ,return) const
 cart-Get_coords void (, , , ) const
 graph-Get_neighbors_count int (, ,return) const
 graph-Get_neighbors void (, , , ) const
+distgraph-Get_dist_neighbors_count void (,in:refint,in:refint,out:bool) const
+distgraph-Get_dist_graph_neighbors void (, , , , ,) const
 cart-Shift void (, , ,in:refint ,in:refint ) const
 cart-Sub Cartcomm ( ,in:boolarray:-10 ,return) const
 cart-Map int (, ,in:const ,in:boolarray:2 ,return) const

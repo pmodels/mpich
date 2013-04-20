@@ -1384,6 +1384,7 @@ AC_OUTPUT(maint/testmerge \
           cxx/init/Makefile \
           cxx/rma/Makefile \
           cxx/spawn/Makefile \
+	  cxx/topo/Makefile \
           threads/Makefile \
           threads/pt2pt/Makefile \
           threads/util/Makefile \
