@@ -513,14 +513,16 @@ static HYD_status fn_keyval_cache(int fd, char *args[])
     status = HYD_pmcd_pmi_args_to_tokens(args, &tokens, &token_count);
     HYDU_ERR_POP(status, "unable to convert args to tokens\n");
 
-    cache_get.keyval_len = token_count;
-    HYDU_MALLOC(cache_get.key, char **, cache_get.keyval_len * sizeof(char *), status);
-    HYDU_MALLOC(cache_get.val, char **, cache_get.keyval_len * sizeof(char *), status);
+    /* allocate a larger space for the cached keyvals, copy over the
+     * older keyvals and add the new ones in */
+    HYDU_REALLOC(cache_get.key, char **, (cache_get.keyval_len + token_count) * sizeof(char *), status);
+    HYDU_REALLOC(cache_get.val, char **, (cache_get.keyval_len + token_count) * sizeof(char *), status);
 
     for (i = 0; i < token_count; i++) {
-        cache_get.key[i] = HYDU_strdup(tokens[i].key);
-        cache_get.val[i] = HYDU_strdup(tokens[i].val);
+        cache_get.key[cache_get.keyval_len + i] = HYDU_strdup(tokens[i].key);
+        cache_get.val[cache_get.keyval_len + i] = HYDU_strdup(tokens[i].val);
     }
+    cache_get.keyval_len += token_count;
 
   fn_exit:
     HYD_pmcd_pmi_free_tokens(tokens, token_count);

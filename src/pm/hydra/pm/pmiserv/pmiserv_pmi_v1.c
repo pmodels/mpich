@@ -48,9 +48,10 @@ static HYD_status fn_barrier_in(int fd, int pid, int pgid, char *args[])
 {
     struct HYD_proxy *proxy, *tproxy;
     struct HYD_pmcd_pmi_pg_scratch *pg_scratch;
-    int proxy_count, keyval_count, i, arg_count;
+    int proxy_count, keyval_count, i, j, arg_count;
     struct HYD_pmcd_pmi_kvs_pair *run;
     char **tmp = NULL, *cmd;
+    static int keyval_count_distributed = 0;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -72,17 +73,22 @@ static HYD_status fn_barrier_in(int fd, int pid, int pgid, char *args[])
         for (run = pg_scratch->kvs->key_pair; run; run = run->next)
             keyval_count++;
 
+        keyval_count -= keyval_count_distributed;
+
         /* Each keyval has the following four items: 'key' '=' 'val'
          * '<space>'.  Two additional items for the command at the
          * start and the NULL at the end. */
-        HYDU_MALLOC(tmp, char **, (4 * keyval_count + 2) * sizeof(char *), status);
+        HYDU_MALLOC(tmp, char **, (4 * keyval_count + 3) * sizeof(char *), status);
 
         /* send all available keyvals downstream */
         if (keyval_count) {
             arg_count = 1;
             i = 0;
             tmp[i++] = HYDU_strdup("cmd=keyval_cache ");
-            for (run = pg_scratch->kvs->key_pair; run; run = run->next) {
+            for (run = pg_scratch->kvs->key_pair, j = 0; run; run = run->next, j++) {
+                if (j < keyval_count_distributed)
+                    continue;
+
                 tmp[i++] = HYDU_strdup(run->key);
                 tmp[i++] = HYDU_strdup("=");
                 tmp[i++] = HYDU_strdup(run->val);
@@ -90,12 +96,14 @@ static HYD_status fn_barrier_in(int fd, int pid, int pgid, char *args[])
 
                 arg_count++;
                 if (arg_count >= MAX_PMI_INTERNAL_ARGS) {
+                    tmp[i++] = HYDU_strdup("\n");
                     tmp[i++] = NULL;
 
                     status = HYDU_str_alloc_and_join(tmp, &cmd);
                     HYDU_ERR_POP(status, "unable to join strings\n");
                     HYDU_free_strlist(tmp);
 
+                    keyval_count_distributed += (arg_count - 1);
                     for (tproxy = proxy->pg->proxy_list; tproxy; tproxy = tproxy->next) {
                         status = cmd_response(tproxy->control_fd, pid, cmd);
                         HYDU_ERR_POP(status, "error writing PMI line\n");
@@ -104,21 +112,24 @@ static HYD_status fn_barrier_in(int fd, int pid, int pgid, char *args[])
 
                     i = 0;
                     tmp[i++] = HYDU_strdup("cmd=keyval_cache ");
+                    arg_count = 1;
                 }
             }
+            tmp[i++] = HYDU_strdup("\n");
             tmp[i++] = NULL;
 
             if (arg_count > 1) {
                 status = HYDU_str_alloc_and_join(tmp, &cmd);
                 HYDU_ERR_POP(status, "unable to join strings\n");
-                HYDU_free_strlist(tmp);
 
+                keyval_count_distributed += (arg_count - 1);
                 for (tproxy = proxy->pg->proxy_list; tproxy; tproxy = tproxy->next) {
                     status = cmd_response(tproxy->control_fd, pid, cmd);
                     HYDU_ERR_POP(status, "error writing PMI line\n");
                 }
                 HYDU_FREE(cmd);
             }
+            HYDU_free_strlist(tmp);
         }
 
         for (tproxy = proxy->pg->proxy_list; tproxy; tproxy = tproxy->next) {

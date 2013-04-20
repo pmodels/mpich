@@ -564,6 +564,9 @@ HYD_status HYDU_sock_cloexec(int fd);
 #define HYDU_malloc(a) MPL_trmalloc((unsigned)(a),__LINE__,__FILE__)
 #define malloc(a)      'Error use HYDU_malloc' :::
 
+#define HYDU_realloc(a,b) MPL_trrealloc((void *)(a),(unsigned)(b),__LINE__,__FILE__)
+#define realloc(a)      'Error use HYDU_realloc' :::
+
 #define HYDU_free(a) MPL_trfree(a,__LINE__,__FILE__)
 #define free(a)      'Error use HYDU_free' :::
 
@@ -572,6 +575,7 @@ HYD_status HYDU_sock_cloexec(int fd);
 #define HYDU_mem_init()
 #define HYDU_strdup MPL_strdup
 #define HYDU_malloc malloc
+#define HYDU_realloc realloc
 #define HYDU_free free
 
 #endif /* USE_MEMORY_TRACING */
@@ -583,6 +587,16 @@ HYD_status HYDU_sock_cloexec(int fd);
         (p) = NULL; /* initialize p in case assert fails */             \
         HYDU_ASSERT(size, status);                                      \
         (p) = (type) HYDU_malloc((size));                               \
+        if ((p) == NULL)                                                \
+            HYDU_ERR_SETANDJUMP((status), HYD_NO_MEM,                   \
+                                "failed to allocate %d bytes\n",        \
+                                (int) (size));                          \
+    }
+
+#define HYDU_REALLOC(p, type, size, status)                             \
+    {                                                                   \
+        HYDU_ASSERT(size, status);                                      \
+        (p) = (type) HYDU_realloc((p),(size));                          \
         if ((p) == NULL)                                                \
             HYDU_ERR_SETANDJUMP((status), HYD_NO_MEM,                   \
                                 "failed to allocate %d bytes\n",        \
