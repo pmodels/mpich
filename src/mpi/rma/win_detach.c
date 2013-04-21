@@ -34,7 +34,7 @@ MPI_Win_detach - Detach memory from a dynamic window
 
 Detaches a previously attached memory region beginning at base. The arguments
 base and win must match the arguments passed to a previous call to
-'MPI_Win_attach.'
+'MPI_Win_attach'.
 
 Input Parameters:
 + base - initial address of memory to be detached

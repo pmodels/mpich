@@ -62,7 +62,7 @@ The info argument provides optimization hints to the runtime about the expected
 usage pattern of the window. The following info keys are predefined.
 
 . no_locks - If set to true, then the implementation may assume that passive
-    target synchronization (i.e., 'MPI_Win_lock,' 'MPI_Win_lock_all') will not be used on
+    target synchronization (i.e., 'MPI_Win_lock', 'MPI_Win_lock_all') will not be used on
     the given window. This implies that this window is not used for 3-party
     communication, and RMA can be implemented with no (less) asynchronous agent
     activity at this process.
@@ -76,7 +76,7 @@ usage pattern of the window. The following info keys are predefined.
     concurrent accumulate calls to the same target address will use the same
     operation. If set to same_op_no_op, then the implementation will assume that
     all concurrent accumulate calls to the same target address will use the same
-    operation or 'MPI_NO_OP.' This can eliminate the need to protect access for
+    operation or 'MPI_NO_OP'. This can eliminate the need to protect access for
     certain operation types where the hardware can guarantee atomicity. The default
     is same_op_no_op.
 

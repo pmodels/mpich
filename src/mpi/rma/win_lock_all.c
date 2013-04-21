@@ -33,10 +33,10 @@ MPI_Win_lock_all - Begin an RMA access epoch at all processes on the given windo
 
 
 Starts an RMA access epoch to all processes in win, with a lock type of
-'MPI_Lock_shared.' During the epoch, the calling process can access the window
+'MPI_Lock_shared'. During the epoch, the calling process can access the window
 memory on all processes in win by using RMA operations. A window locked with
-'MPI_Win_lock_all' must be unlocked with 'MPI_Win_unlock_all.' This routine is not
-collective — the ALL refers to a lock on all members of the group of the
+'MPI_Win_lock_all' must be unlocked with 'MPI_Win_unlock_all'. This routine is not
+collective -- the ALL refers to a lock on all members of the group of the
 window.
 
 Input Parameters:
