@@ -26,10 +26,15 @@
  */
 
 #include <sys/time.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <errno.h>
 #include <limits.h>
 #include <nl_types.h>
 #include <mpidimpl.h>
 #include "mpidi_util.h"
+
+#define PAMI_TUNE_MAX_ITER 2000
 
 /* Short hand for sizes */
 #define ONE  (1)
@@ -1283,7 +1288,7 @@ Options:\n\
   -g            Comma separated list of geometry sizes to benchmark\n\
                 (Default: Powers of 2 (plus and minus one as well))\n\n\
   -i            Number of benchmark iterations per algorithm\n\
-                (Default: 1000)\n\n\
+                (Default: 1000. Maximum is 2000)\n\n\
   -f <file>     Input INI file containing benchmark parameters\n\
                 You can override a parameter with a command line argument\n\n\
   -o <file>     Output XML file containing benchmark results\n\
@@ -1308,9 +1313,9 @@ static void MPIDI_collsel_init_advisor_params(advisor_params_t *params)
   params->procs_per_node = NULL;
   params->geometry_sizes = NULL;
   params->message_sizes = NULL;
-  params->iter = 1000;
   /* Set the following to -1, so that we can
      check if the user has set them or not */
+  params->iter = -1;
   params->verify = -1;
   params->verbose = -1;
   params->checkpoint = -1;
@@ -1527,13 +1532,20 @@ static int MPIDI_collsel_process_output_file(char *filename, char **out_file)
 {
   char *newname;
   int i, filename_len, ret = 0;
+  struct stat ost;
 
   filename_len = strlen(filename);
 
   /* Check if file already exists */
-  if(access(filename, F_OK) == 0)
+  if(stat(filename, &ost) == 0)
   {
+    if(!S_ISREG(ost.st_mode))
+    {
+      fprintf(stderr, "Error: %s exists and is not a regular file\n", filename);
+      return 1;
+    }
     fprintf(stderr, "File %s already exists, renaming existing file\n", filename);
+
     newname = (char *) MPIU_Malloc(filename_len + 5);
     for (i = 0; i < 500; ++i)
     {
@@ -1599,15 +1611,27 @@ static int MPIDI_collsel_process_ini_file(const char *filename, advisor_params_t
 {
   char *line, *start, *name, *value;
   int ret = 0;
+  struct stat ist;
+
+  if(stat(filename, &ist) == 0)
+  {
+    if(!S_ISREG(ist.st_mode))
+    {
+      fprintf(stderr, "Error: %s is not a regular file\n", filename);
+      return 1;
+    }
+  }
+
   FILE *file = fopen(filename, "r");
   if(!file)
   {
-    fprintf(stderr, "Error. Can't open file %s\n", filename);
+    fprintf(stderr, "Error: Cannot open file %s: %s\n",
+            filename, strerror(errno));
     return 1;
   }
-  line = (char *) MPIU_Malloc(1000);
+  line = (char *) MPIU_Malloc(2000);
 
-  while (fgets(line, 1000, file) != NULL)
+  while (fgets(line, 2000, file) != NULL)
   {
     start = MPIDI_collsel_ltrim(MPIDI_collsel_rtrim(line));
     /* Skip comments and sections */
@@ -1642,10 +1666,10 @@ static int MPIDI_collsel_process_ini_file(const char *filename, advisor_params_t
     }
     else if(strcmp(name, "iterations") == 0)
     {
-      if(params->iter == 1000)
+      if(params->iter == -1)
       {
         params->iter = atoi(value);
-        if(params->iter <= 0)
+        if(params->iter <= 0 || params->iter > PAMI_TUNE_MAX_ITER)
         {
           if(!task_id)
             fprintf(stderr, "Invalid iteration count: %s in file: %s\n", value, filename);
@@ -1685,6 +1709,7 @@ static int MPIDI_collsel_process_ini_file(const char *filename, advisor_params_t
 static int MPIDI_collsel_process_arg(int argc, char *argv[], advisor_params_t *params, char ** out_file)
 {
    int i,c,ret = 0;
+   char *in_file = NULL;
 
    MPIDI_collsel_init_xfer_tables();
    params->verify = 0;
@@ -1704,7 +1729,7 @@ static int MPIDI_collsel_process_arg(int argc, char *argv[], advisor_params_t *p
          ret = MPIDI_collsel_process_geo_sizes(optarg, params);
          break;
        case 'f':
-         ret = MPIDI_collsel_process_ini_file(optarg, params, out_file);
+         in_file = (char *) optarg;
          break;
        case 'o':
          if(!task_id) /* Only task 0 creates o/p file */
@@ -1712,7 +1737,7 @@ static int MPIDI_collsel_process_arg(int argc, char *argv[], advisor_params_t *p
          break;
        case 'i':
          params->iter = atoi(optarg);
-         if(params->iter <= 0)
+         if(params->iter <= 0  || params->iter > PAMI_TUNE_MAX_ITER)
          {
            if(!task_id)
              fprintf(stderr, "Invalid iteration count %s\n", optarg);
@@ -1756,6 +1781,17 @@ static int MPIDI_collsel_process_arg(int argc, char *argv[], advisor_params_t *p
      }
      if(ret) return ret;
    }
+   /* INI file is processed last as we don't wan't to override
+    * command line parameters. Also any invalid value in the INI
+    * file if overriden by a command line flag should not generate
+    * an error
+    */
+   if(in_file != NULL)
+   {
+     ret = MPIDI_collsel_process_ini_file(in_file, params, out_file);
+     if(ret) return ret;
+   }
+
    if(!task_id)
    {
      if (optind < argc)
@@ -1778,7 +1814,8 @@ static int MPIDI_collsel_process_arg(int argc, char *argv[], advisor_params_t *p
        params->collectives[params->num_collectives++] = i;
      }
    }
-   /* If user did not set any of the following parameters, disable them */
+   /* If user did not set any of the following parameters, set default value */
+   if(params->iter == -1) params->iter = 1000;
    if(params->verbose == -1) params->verbose = 0;
    if(params->verify == -1) params->verify = 0;
    if(params->checkpoint == -1) params->checkpoint = 0;
@@ -1806,7 +1843,7 @@ static void MPIDI_collsel_print_params(advisor_params_t *params, char *output_fi
   }
   printf("\n  Iterations       : %d\n", params->iter);
   printf("  Output file      : %s\n", output_file);
-  printf("  Checkpoint mode  : %d\n", params->checkpoint);
+/*  printf("  Checkpoint mode  : %d\n", params->checkpoint); */
   printf("  Diagnostics mode : %d\n", params->verify);
   printf("  Verbose mode     : %d\n", params->verbose);
 }

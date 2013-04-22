@@ -677,6 +677,8 @@ MPIDO_Allgather_simple(const void *sendbuf,
         MPID_Segment_pack(&segment, 0, &last, snd_noncontig_buff);
      }
   }
+  else
+    sbuf = PAMI_IN_PLACE;
 
    TRACE_ERR("Using PAMI-level allgather protocol\n");
    pami_xfer_t allgather;
