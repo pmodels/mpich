@@ -30,7 +30,7 @@ char *MPIDI_DBG_parent_str = "?";
 
 int MPIDI_Use_pmi2_api = 0;
 
-static int InitPG( int *argc_p, char ***argv_p,
+static int init_pg( int *argc_p, char ***argv_p,
 		   int *has_args, int *has_env, int *has_parent, 
 		   int *pg_rank_p, MPIDI_PG_t **pg_p );
 static int pg_compare_ids(void * id1, void * id2);
@@ -133,7 +133,7 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided,
     /*
      * Perform channel-independent PMI initialization
      */
-    mpi_errno = InitPG( argc, argv, 
+    mpi_errno = init_pg( argc, argv,
 			has_args, has_env, &has_parent, &pg_rank, &pg );
     if (mpi_errno) {
 	MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER, "**ch3|ch3_init");
@@ -352,7 +352,7 @@ int MPID_InitCompleted( void )
  * process group structures.
  * 
  */
-static int InitPG( int *argc, char ***argv, 
+static int init_pg( int *argc, char ***argv,
 		   int *has_args, int *has_env, int *has_parent, 
 		   int *pg_rank_p, MPIDI_PG_t **pg_p )
 {
