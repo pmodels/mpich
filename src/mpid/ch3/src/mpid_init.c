@@ -35,7 +35,7 @@ static int InitPG( int *argc_p, char ***argv_p,
 		   int *pg_rank_p, MPIDI_PG_t **pg_p );
 static int MPIDI_CH3I_PG_Compare_ids(void * id1, void * id2);
 static int MPIDI_CH3I_PG_Destroy(MPIDI_PG_t * pg );
-
+static int MPIDI_CH3_Set_eager_threshold(MPID_Comm *comm_ptr, MPID_Info *info, void *state);
 
 MPIDI_Process_t MPIDI_Process = { NULL };
 MPIDI_CH3U_SRBuf_element_t * MPIDI_CH3U_SRBuf_pool = NULL;
@@ -62,7 +62,7 @@ static int finalize_failed_procs_group(void *param)
 #define FUNCNAME MPIDI_CH3_Set_eager_threshold
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPIDI_CH3_Set_eager_threshold(MPID_Comm *comm_ptr, MPID_Info *info, void *state)
+static int MPIDI_CH3_Set_eager_threshold(MPID_Comm *comm_ptr, MPID_Info *info, void *state)
 {
     int mpi_errno = MPI_SUCCESS;
     char *endptr;
