@@ -11,7 +11,7 @@ AC_DEFUN([PAC_PROG_CC],[
         dnl developers notice this case.
         AC_BEFORE([$0],[AC_PROG_CC])
 	PAC_PUSH_FLAG([CFLAGS])
-	AC_PROG_CC([icc pgcc xlc xlC pathcc cc gcc])
+	AC_PROG_CC([icc pgcc xlc xlC pathcc cc gcc clang])
 	PAC_POP_FLAG([CFLAGS])
 ])
 dnl
