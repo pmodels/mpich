@@ -740,6 +740,37 @@ export master_top_builddir
 export master_top_srcdir
 
 # ----------------------------------------------------------------------------
+dnl Export important "precious" variables so that any directories configured via
+dnl PAC_CONFIG_SUBDIR will agree with the top-level configure about these
+dnl critical variables (esp. compiler selection).  These exports should come
+dnl before any subconfigures in this script.
+dnl
+dnl This list is arguably incomplete, and should possibly be automatically
+dnl generated from "$ac_precious_vars" using code similar to the implementation
+dnl of PAC_CONFIG_SUBDIR.
+dnl
+dnl To be clear, without these exports any variable values determined by this
+dnl configure script will not be seen by child scripts.  Instead they will dnl
+dnl receive the only the original inherited environment and configure args used
+dnl when this configure script was invoked.
+export AR
+export AR_FLAGS
+export CC
+export CFLAGS
+export CPPFLAGS
+export CXX
+export CXXFLAGS
+export F77
+export FC
+export FCFLAGS
+export FFLAGS
+export LDFLAGS
+export LIBS
+export MPILIBNAME
+export PMPILIBNAME
+export RANLIB
+
+# ----------------------------------------------------------------------------
 # with-device
 if test "$with_device" = "default" ; then
     # Pick the device.  For now, always choose ch3
@@ -5170,7 +5201,6 @@ fi
 
 dnl Configure any subdirectories.  Note that config.status will *not* 
 dnl reexecute these!
-dnl Export any important variables first:
 dnl 
 dnl Gastly problem.  CONFIG_SUBDIRS only adds the directories to the
 dnl list of directories to be configured.  It does NOT control the
@@ -5181,25 +5211,7 @@ dnl uses to handle the subdir configure.  However, later versions of
 dnl autoconf did this in a way that caused problems, paritcularly with 
 dnl errors reported as inconsistent cache files.  Instead, we simply
 dnl invoke the configure scripts (if present) directly.
-export AR
-export AR_FLAGS
-export RANLIB
-export MPILIBNAME
-export PMPILIBNAME
-export CC
-export CPPFLAGS
-export LIBS
-export CXX
-export CXXFLAGS
-export FFLAGS
-export CFLAGS
-export FCFLAGS
-export LDFLAGS
-# Make sure that any Fortran 77 and Fortran 90 compilers are exported to 
-# the subdir builds (in particular, ROMIO may try to use the Fortran 90
-# compiler to determine the Fortran 90 KINDS for MPI_OFFSET_KIND).
-export F77
-export FC
+
 #
 # -----------------------------------------------------------------------------
 # Configure threads first.  This is necessary to obtain all required
