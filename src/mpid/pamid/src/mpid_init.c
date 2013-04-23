@@ -1003,7 +1003,9 @@ MPIDI_VCRT_init(int rank, int size, char *world_tasks, MPIDI_PG_t *pg)
       TRACE_ERR("Adding ref for comm=%x vcr=%x pg=%x\n", comm, comm->vcr[0], comm->vcr[0]->pg);
       MPIDI_PG_add_ref(comm->vcr[0]->pg);
     }
+    comm->local_vcr = comm->vcr;
   }
+ 
 #endif
 
   /* -------------------------------- */
@@ -1051,8 +1053,7 @@ MPIDI_VCRT_init(int rank, int size, char *world_tasks, MPIDI_PG_t *pg)
 	  TRACE_ERR("TASKID -- comm->vcr[%d]=%d\n", p, comm->vcr[p]->taskid);
     }
 
-  i = 0;
-
+   comm->local_vcr = comm->vcr;
   }else {
 	for (i=0; i<size; i++) {
 	  comm->vcr[i]->taskid = i;

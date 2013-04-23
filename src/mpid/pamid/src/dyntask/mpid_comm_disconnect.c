@@ -207,13 +207,16 @@ int MPID_Comm_disconnect(MPID_Comm *comm_ptr)
     pami_task_t *leader_tids;
     int expected_firstAM=0, expected_secondAM=0, expected_lastAM=0;
     MPID_Comm *commworld_ptr;
+    MPID_Group *group_ptr = NULL,  *new_group_ptr = NULL;
     MPID_VCR *glist;
     MPID_Comm *lcomm;
+    int *ranks;
     int local_tasks=0, localtasks_in_remglist=0;
     int jobIdSize=64;
     char jobId[jobIdSize];
     int MY_TASKID = PAMIX_Client_query(MPIDI_Client, PAMI_CLIENT_TASK_ID  ).value.intval;
 
+    /*if( (comm_ptr->comm_kind == MPID_INTERCOMM) && (comm_ptr->mpid.world_ids != NULL)) { */
     if(comm_ptr->mpid.world_ids != NULL) {
 	rc = MPID_Iprobe(comm_ptr->rank, MPI_ANY_TAG, comm_ptr, MPID_CONTEXT_INTER_PT2PT, &probe_flag, &status);
         if(rc || probe_flag) {
@@ -223,7 +226,15 @@ int MPID_Comm_disconnect(MPID_Comm *comm_ptr)
 
 	/* make commSubWorld */
 	{
+	  /*           MPID_Comm_get_ptr( MPI_COMM_WORLD, commworld_ptr ); */
 	  commworld_ptr = MPIR_Process.comm_world;
+	  mpi_errno = MPIR_Comm_group_impl(commworld_ptr, &group_ptr);
+	  if (mpi_errno)
+	    {
+	      TRACE_ERR("Error while creating group_ptr from MPI_COMM_WORLD in MPIDI_Comm_create_from_pami_geom\n");
+	      return PAMI_ERROR;
+	    }
+
 	  
 	  glist = commworld_ptr->vcr;
 	  gsize = commworld_ptr->local_size;
@@ -250,25 +261,48 @@ int MPID_Comm_disconnect(MPID_Comm *comm_ptr)
 	    }
 	  }
 	  k=0;
-	  local_list = MPIU_Malloc(local_tasks*sizeof(pami_task_t));
+	  /*	  local_list = MPIU_Malloc(local_tasks*sizeof(pami_task_t)); */
+	  ranks = MPIU_Malloc(local_tasks*sizeof(int));
 
 	  for(i=0;i<comm_ptr->local_size;i++) {
 	    for(j=0;j<gsize;j++) {
 	      if(comm_ptr->local_vcr[i]->taskid == glist[j]->taskid)
-		local_list[k++] = glist[j]->taskid;
+		/*	local_list[k] = glist[j]->taskid; */
+		ranks[k++] = j;
 	    }
 	  }
 	  if((comm_ptr->comm_kind == MPID_INTERCOMM) && localtasks_in_remglist) {
 	    for(i=0;i<comm_ptr->remote_size;i++) {
 	      for(j=0;j<gsize;j++) {
 		if(comm_ptr->vcr[i]->taskid == glist[j]->taskid)
-		  local_list[k++] = glist[j]->taskid;
+		  /*	  local_list[k] = glist[j]->taskid; */
+		  ranks[k++] = j;
 	      }
 	    }
 	    /* Sort the local_list when there are localtasks_in_remglist */
-	    _qsort_dyntask(local_list, 0, local_tasks-1);
+/*	    _qsort_dyntask(local_list, 0, local_tasks-1); */
+	    _qsort_dyntask(ranks, 0, local_tasks-1);
 	  }
+
+	  /* Now we have all we need to create the new group. Create it */
+	  /*  mpi_errno = MPIR_Group_incl_impl(group_ptr, local_tasks, ranks, &new_group_ptr); */
+	  mpi_errno = MPIR_Group_incl_impl(group_ptr, local_tasks, ranks, &new_group_ptr);
+	  if (mpi_errno)
+	    {
+	      TRACE_ERR("Error while creating new_group_ptr from group_ptr in MPIDI_Comm_create_from_pami_geom\n");
+	      return PAMI_ERROR;
+	    }
 	  
+	  /* Now create the communicator using the new_group_ptr */
+	  mpi_errno = MPIR_Comm_create_group(commworld_ptr, new_group_ptr, 0, &lcomm);
+	  /*  mpi_errno = MPIR_Comm_create_intra(commworld_ptr, new_group_ptr, &lcomm); */
+	  if (mpi_errno)
+	    {
+	      TRACE_ERR("Error while creating new_comm_ptr from group_ptr in MPIDI_Comm_create_from_pami_geom\n");
+	      return PAMI_ERROR;
+	    }
+
+#if 0
 	  mpi_errno = MPIR_Comm_create(&lcomm);
 	  if (mpi_errno != MPI_SUCCESS) {
 	    TRACE_ERR("MPIR_Comm_create returned with mpi_errno=%d\n", mpi_errno);
@@ -310,6 +344,8 @@ int MPID_Comm_disconnect(MPID_Comm *comm_ptr)
 	    if(MY_TASKID == local_list[i]) lcomm->rank = i;
 	    lcomm->vcr[i]->taskid = local_list[i];
 	  }
+#endif
+
 	}
 
 	TRACE_ERR("subcomm for disconnect is established local_tasks=%d calling MPIR_Barrier_intra\n", local_tasks);
@@ -403,7 +439,8 @@ int MPID_Comm_disconnect(MPID_Comm *comm_ptr)
 	MPIDI_free_tranid_node(comm_ptr->mpid.world_intercomm_cntr);
         mpi_errno = MPIR_Comm_release(comm_ptr,1);
         if (mpi_errno) TRACE_ERR("MPIR_Comm_release returned with mpi_errno=%d\n", mpi_errno);
-	MPIU_Free(local_list);
+	/*	MPIU_Free(local_list); */
+	MPIU_Free(ranks);
     }
     return mpi_errno;
 }
