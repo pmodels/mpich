@@ -528,8 +528,8 @@ if test "$enable_strict_done" != "yes" ; then
         -Werror-implicit-function-declaration
     "
 
-    enable_c89=yes
-    enable_c99=no
+    enable_c89=no
+    enable_c99=yes
     enable_posix=2001
     enable_opt=yes
     flags="`echo $1 | sed -e 's/:/ /g' -e 's/,/ /g'`"
@@ -538,9 +538,11 @@ if test "$enable_strict_done" != "yes" ; then
 	     c89)
 		enable_strict_done="yes"
 		enable_c89=yes
+                enable_c99=no
 		;;
 	     c99)
 		enable_strict_done="yes"
+                enable_c89=no
 		enable_c99=yes
 		;;
 	     posix1995)
@@ -569,7 +571,7 @@ if test "$enable_strict_done" != "yes" ; then
 		;;
 	     all|yes)
 		enable_strict_done="yes"
-		enable_c89=yes
+		enable_c99=yes
 		enable_posix=2001
 		enable_opt=yes
 	        ;;
