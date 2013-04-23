@@ -4,7 +4,7 @@ ifdef([AC_PROG_CC_GNU],,[AC_DEFUN([AC_PROG_CC_GNU],)])
 dnl PAC_PROG_CC - reprioritize the C compiler search order
 AC_DEFUN([PAC_PROG_CC],[
 	PAC_PUSH_FLAG([CFLAGS])
-	AC_PROG_CC([gcc icc pgcc xlc xlC pathcc cc])
+	AC_PROG_CC([icc pgcc xlc xlC pathcc cc gcc])
 	PAC_POP_FLAG([CFLAGS])
 ])
 dnl
