@@ -582,6 +582,7 @@ int MPIDI_Comm_connect(const char *port_name, MPID_Info *info, int root,
     }
 
     /* broadcast the received info to local processes */
+    TRACE_ERR("accept:broadcasting 2 ints - %d and %d\n", recv_ints[0], recv_ints[1]);
     mpi_errno = MPIR_Bcast_intra(recv_ints, 3, MPI_INT, root, comm_ptr, &errflag);
     if (mpi_errno) TRACE_ERR("MPIR_Bcast_intra returned with mpi_errno=%d\n", mpi_errno);
 
@@ -663,6 +664,7 @@ int MPIDI_Comm_connect(const char *port_name, MPID_Info *info, int root,
     mpi_errno = MPIDI_SetupNewIntercomm( comm_ptr, remote_comm_size,
 				   remote_translation, n_remote_pgs, remote_pg, *newcomm );
     (*newcomm)->mpid.world_intercomm_cntr   = comm_cntr;
+    WORLDINTCOMMCNTR = comm_cntr;
     MPIDI_add_new_tranid(comm_cntr);
 
 /*    MPIDI_Parse_connection_info(n_remote_pgs, remote_pg); */
@@ -1321,6 +1323,7 @@ int MPIDI_Comm_accept(const char *port_name, MPID_Info *info, int root,
     mpi_errno = MPIDI_SetupNewIntercomm( comm_ptr, remote_comm_size,
 				   remote_translation, n_remote_pgs, remote_pg, intercomm );
     intercomm->mpid.world_intercomm_cntr   = comm_cntr;
+    WORLDINTCOMMCNTR = comm_cntr;
     MPIDI_add_new_tranid(comm_cntr);
 
     if (mpi_errno != MPI_SUCCESS) {
@@ -1442,8 +1445,8 @@ static int MPIDI_SetupNewIntercomm( struct MPID_Comm *comm_ptr, int remote_comm_
 			 remote_translation[i].pg_rank, remote_translation[i].pg_taskid,&intercomm->vcr[i]);
 	TRACE_ERR("MPIDI_SetupNewIntercomm - pg_id=%s pg_rank=%d pg_taskid=%d intercomm->vcr[%d]->taskid=%d intercomm->vcr[%d]->pg=%x\n ", remote_pg[remote_translation[i].pg_index]->id, remote_translation[i].pg_rank, remote_translation[i].pg_taskid, i, intercomm->vcr[i]->taskid, i, intercomm->vcr[i]->pg);
 	PAMI_Endpoint_create(MPIDI_Client, remote_translation[i].pg_taskid, 0, &dest);
-	/*PAMI_Resume(MPIDI_Context[0],
-                    &dest, 1); */
+	PAMI_Resume(MPIDI_Context[0],
+                    &dest, 1);
     }
 
     MPIDI_Parse_connection_info(n_remote_pgs, remote_pg);
