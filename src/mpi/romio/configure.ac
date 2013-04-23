@@ -25,6 +25,9 @@ AC_CONFIG_MACRO_DIR([confdb])
 AM_INIT_AUTOMAKE([-Wall -Werror -Wno-portability-recursive foreign 1.12.3 silent-rules subdir-objects])
 AM_MAINTAINER_MODE([enable])
 
+dnl must come before LT_INIT, which AC_REQUIREs AC_PROG_CC
+PAC_PROG_CC
+
 AM_PROG_AR
 
 LT_INIT([])
@@ -424,8 +427,6 @@ case $ARCH in
     F77=${FC:-f77}
     ;;
 esac
-
-PAC_PROG_CC
 
 dnl AC_PROG_{CXX,F77,FC} must come early in configure.ac in order to control
 dnl compiler search order and avoid some esoteric autoconf macro expansion

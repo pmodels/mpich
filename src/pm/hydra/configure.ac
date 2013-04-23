@@ -14,7 +14,15 @@ AC_CONFIG_MACRO_DIR(confdb)
 # bizarre expansion ordering warnings
 AC_CANONICAL_TARGET
 AC_ARG_PROGRAM
+
+dnl must come before LT_INIT, which AC_REQUIREs AC_PROG_CC
+dnl must also come before AC_USE_SYSTEM_EXTENSIONS
+PAC_PROG_CC
+
+# also needed by hwloc in embedded mode, must also come early for expansion
+# ordering reasons
 AC_USE_SYSTEM_EXTENSIONS
+
 # Define -D_DARWIN_C_SOURCE on OS/X to ensure that hwloc will build even if we
 # are building under MPICH with --enable-strict that defined _POSIX_C_SOURCE.
 # Some standard Darwin headers don't build correctly under a strict posix
@@ -36,7 +44,6 @@ m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 # Reset link flags
 PAC_RESET_LINK_FLAGS()
 
-PAC_PROG_CC
 AM_PROG_CC_C_O
 
 PAC_ARG_STRICT
