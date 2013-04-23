@@ -2,6 +2,14 @@
                                Changes in 3.0.4
 ===============================================================================
 
+ # BUILD SYSTEM: Reordered the default compiler search to prefer Intel
+   and PG compilers over GNU compilers because of the performance
+   difference.
+
+   WARNING: If you do not explicitly specify the compiler you want
+   through CC and friends, this might break ABI for you relative to
+   the previous 3.0.x release.
+
  # OVERALL: Added support to manage per-communicator eager-rendezvous
    thresholds.
 
