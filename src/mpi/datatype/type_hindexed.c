@@ -59,9 +59,9 @@ is to do something like to following
     call MPI_TYPE_COMMIT(newtype,ierr)
     call MPI_SEND(a,1,newtype,...)
 .ve
-expecting this to send 'a(1),a(11),...' because the array_of_displacements have values
-'1,11,...'.   Because these are `displacements` from the beginning of 'a',
-it actually sends 'a(1+1),a(1+11),...'.
+expecting this to send "a(1),a(11),..." because the array_of_displacements have values
+"1,11,...".   Because these are `displacements` from the beginning of "a",
+it actually sends "a(1+1),a(1+11),...".
 
 If you wish to consider the displacements as array_of_displacements into a Fortran array,
 consider declaring the Fortran array with a zero origin

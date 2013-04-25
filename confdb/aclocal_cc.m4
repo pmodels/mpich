@@ -3,8 +3,15 @@ ifdef([AC_PROG_CC_GNU],,[AC_DEFUN([AC_PROG_CC_GNU],)])
 
 dnl PAC_PROG_CC - reprioritize the C compiler search order
 AC_DEFUN([PAC_PROG_CC],[
+        dnl Many standard autoconf/automake/libtool macros, such as LT_INIT,
+        dnl perform an AC_REQUIRE([AC_PROG_CC]).  If this macro (PAC_PROG_CC)
+        dnl comes after LT_INIT (or similar) then the default compiler search
+        dnl path will be used instead.  This AC_BEFORE macro ensures that a
+        dnl warning will be emitted at autoconf-time (autogen.sh-time) to help
+        dnl developers notice this case.
+        AC_BEFORE([$0],[AC_PROG_CC])
 	PAC_PUSH_FLAG([CFLAGS])
-	AC_PROG_CC([gcc icc pgcc xlc xlC pathcc cc])
+	AC_PROG_CC([icc pgcc xlc xlC pathcc cc gcc clang])
 	PAC_POP_FLAG([CFLAGS])
 ])
 dnl
@@ -71,7 +78,18 @@ if test "$pac_result" = "yes" \
      -a "$pac_c_check_compiler_option_prototest" != "no" ; then
     AC_MSG_CHECKING([whether C compiler option $1 works with an invalid prototype program])
     AC_LINK_IFELSE([
-        AC_LANG_SOURCE([void main(){ return 0; }])
+        dnl We want a warning, but we don't want to inadvertently disable
+        dnl special warnings like -Werror-implicit-function-declaration (e.g.,
+        dnl in PAC_CC_STRICT) by compiling something that might actually be
+        dnl treated as an error by the compiler.  So we try to elicit an
+        dnl "unused variable" warning and/or an "uninitialized" warning with the
+        dnl test program below.
+        dnl
+        dnl The old sanity program was:
+        dnl   void main() {return 0;}
+        dnl which clang (but not GCC) would treat as an *error*, invalidating
+        dnl the test for any given parameter.
+        AC_LANG_SOURCE([int main(int argc, char **argv){ int foo, bar = 0; foo += 1; return foo; }])
     ],[pac_result=yes],[pac_result=no])
     AC_MSG_RESULT([$pac_result])
 fi
@@ -470,6 +488,10 @@ if test "$enable_strict_done" != "yes" ; then
     #       compare it to 0 later to see if it was updated.  Also when using strtod()
     #       one needs to compare the return value with 0 to see whether a conversion
     #       was performed.
+    #   -Werror-implicit-function-declaration -- implicit function declarations
+    #       should never be tolerated.  This also ensures that we get quick
+    #       compilation failures rather than later link failures that usually
+    #       come from a function name typo.
     # the embedded newlines in this string are safe because we evaluate each
     # argument in the for-loop below and append them to the CFLAGS with a space
     # as the separator instead
@@ -503,6 +525,7 @@ if test "$enable_strict_done" != "yes" ; then
         -Wvariadic-macros
         -Wno-format-zero-length
 	-Wno-type-limits
+        -Werror-implicit-function-declaration
     "
 
     enable_c89=yes

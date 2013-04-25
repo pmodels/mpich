@@ -68,14 +68,14 @@ operation op applies to elements of that predefined type. target_datatype must
 not specify overlapping entries, and the target buffer must fit in the target
 window or in attached memory in a dynamic window.
 
-Any of the predefined operations for 'MPI_Reduce,' as well as 'MPI_NO_OP' or
+Any of the predefined operations for 'MPI_Reduce', as well as 'MPI_NO_OP' or
 'MPI_REPLACE' can be specified as op. User-defined functions cannot be used. A
-new predefined operation, 'MPI_NO_OP,' is defined. It corresponds to the
+new predefined operation, 'MPI_NO_OP', is defined. It corresponds to the
 associative function f (a, b) = a; i.e., the current value in the target memory
 is returned in the result buffer at the origin and no operation is performed on
-the target buffer. 'MPI_NO_OP' can be used only in 'MPI_Get_accumulate,'
-'MPI_Rget_accumulate,' and 'MPI_Fetch_and_op.' 'MPI_NO_OP' cannot be used in
-'MPI_Accumulate,' 'MPI_Raccumulate,' or collective reduction operations, such as
+the target buffer. 'MPI_NO_OP' can be used only in 'MPI_Get_accumulate',
+'MPI_Rget_accumulate', and 'MPI_Fetch_and_op'. 'MPI_NO_OP' cannot be used in
+'MPI_Accumulate', 'MPI_Raccumulate', or collective reduction operations, such as
 'MPI_Reduce' and others.
 
 .N Fortran

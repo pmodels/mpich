@@ -30,12 +30,12 @@ char *MPIDI_DBG_parent_str = "?";
 
 int MPIDI_Use_pmi2_api = 0;
 
-static int InitPG( int *argc_p, char ***argv_p,
+static int init_pg( int *argc_p, char ***argv_p,
 		   int *has_args, int *has_env, int *has_parent, 
 		   int *pg_rank_p, MPIDI_PG_t **pg_p );
-static int MPIDI_CH3I_PG_Compare_ids(void * id1, void * id2);
-static int MPIDI_CH3I_PG_Destroy(MPIDI_PG_t * pg );
-
+static int pg_compare_ids(void * id1, void * id2);
+static int pg_destroy(MPIDI_PG_t * pg );
+static int set_eager_threshold(MPID_Comm *comm_ptr, MPID_Info *info, void *state);
 
 MPIDI_Process_t MPIDI_Process = { NULL };
 MPIDI_CH3U_SRBuf_element_t * MPIDI_CH3U_SRBuf_pool = NULL;
@@ -59,10 +59,10 @@ static int finalize_failed_procs_group(void *param)
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_CH3_Set_eager_threshold
+#define FUNCNAME set_eager_threshold
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPIDI_CH3_Set_eager_threshold(MPID_Comm *comm_ptr, MPID_Info *info, void *state)
+static int set_eager_threshold(MPID_Comm *comm_ptr, MPID_Info *info, void *state)
 {
     int mpi_errno = MPI_SUCCESS;
     char *endptr;
@@ -133,7 +133,7 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided,
     /*
      * Perform channel-independent PMI initialization
      */
-    mpi_errno = InitPG( argc, argv, 
+    mpi_errno = init_pg( argc, argv,
 			has_args, has_env, &has_parent, &pg_rank, &pg );
     if (mpi_errno) {
 	MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER, "**ch3|ch3_init");
@@ -323,7 +323,7 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided,
     }
 
     mpi_errno = MPIR_Comm_register_hint("eager_rendezvous_threshold",
-                                        MPIDI_CH3_Set_eager_threshold,
+                                        set_eager_threshold,
                                         NULL);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
@@ -352,7 +352,7 @@ int MPID_InitCompleted( void )
  * process group structures.
  * 
  */
-static int InitPG( int *argc, char ***argv, 
+static int init_pg( int *argc, char ***argv,
 		   int *has_args, int *has_env, int *has_parent, 
 		   int *pg_rank_p, MPIDI_PG_t **pg_p )
 {
@@ -482,7 +482,7 @@ static int InitPG( int *argc, char ***argv,
      * Initialize the process group tracking subsystem
      */
     mpi_errno = MPIDI_PG_Init(argc, argv, 
-			     MPIDI_CH3I_PG_Compare_ids, MPIDI_CH3I_PG_Destroy);
+			     pg_compare_ids, pg_destroy);
     if (mpi_errno != MPI_SUCCESS) {
 	MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**dev|pg_init");
     }
@@ -582,13 +582,13 @@ int MPIDI_CH3I_BCFree( char *bc_val )
 
 /* FIXME: The PG code should supply these, since it knows how the 
    pg_ids and other data are represented */
-static int MPIDI_CH3I_PG_Compare_ids(void * id1, void * id2)
+static int pg_compare_ids(void * id1, void * id2)
 {
     return (strcmp((char *) id1, (char *) id2) == 0) ? TRUE : FALSE;
 }
 
 
-static int MPIDI_CH3I_PG_Destroy(MPIDI_PG_t * pg)
+static int pg_destroy(MPIDI_PG_t * pg)
 {
     if (pg->id != NULL)
     { 

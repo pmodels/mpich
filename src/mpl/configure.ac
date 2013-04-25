@@ -13,6 +13,9 @@ AC_CONFIG_AUX_DIR(confdb)
 AC_CONFIG_MACRO_DIR(confdb)
 AM_INIT_AUTOMAKE([-Wall -Werror foreign 1.12.3])
 
+dnl must come before LT_INIT, which AC_REQUIREs AC_PROG_CC
+PAC_PROG_CC
+
 AM_PROG_AR
 
 LT_PREREQ([2.2.6])
@@ -35,7 +38,6 @@ AX_PREFIX_CONFIG_H([include/mplconfig.h],[MPL])
 # Non-verbose make
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 
-PAC_PROG_CC
 AC_C_CONST
 AC_C_RESTRICT
 

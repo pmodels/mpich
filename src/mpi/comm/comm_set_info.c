@@ -32,7 +32,6 @@
 int MPIR_Comm_set_info_impl(MPID_Comm * comm_ptr, MPID_Info * info_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_Info *info;
     MPID_Info *curr_info = NULL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPIR_COMM_SET_INFO_IMPL);
 

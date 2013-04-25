@@ -42,7 +42,7 @@ this window has special properties, it will sometimes be referred to as a
 dynamic window.  The info argument can be used to specify hints similar to the
 info argument for 'MPI_Win_create'.
 
-In the case of a window created with 'MPI_Win_create_dynamic,' the target_disp
+In the case of a window created with 'MPI_Win_create_dynamic', the target_disp
 for all RMA functions is the address at the target; i.e., the effective
 window_base is 'MPI_BOTTOM' and the disp_unit is one. For dynamic windows, the
 target_disp argument to RMA communication operations is not restricted to

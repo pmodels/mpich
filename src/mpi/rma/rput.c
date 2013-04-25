@@ -33,13 +33,13 @@ MPI_Rput - Put data into a memory window on a remote process and return a
 request handle for the operation.
 
 
-'MPI_Rput' is similar to 'MPI_Put,' except that it allocates a
+'MPI_Rput' is similar to 'MPI_Put', except that it allocates a
 communication request object and associates it with the request handle (the
 argument request). The completion of an 'MPI_Rput' operation (i.e., after the
 corresponding test or wait) indicates that the sender is now free to update
 the locations in the origin buffer. It does not indicate that the data is
 available at the target window. If remote completion is required,
-'MPI_Win_flush,' 'MPI_Win_flush_all,' 'MPI_Win_unlock,' or 'MPI_Win_unlock_all' can be
+'MPI_Win_flush', 'MPI_Win_flush_all', 'MPI_Win_unlock', or 'MPI_Win_unlock_all' can be
 used.
 
 Input Parameters:

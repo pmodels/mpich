@@ -34,14 +34,14 @@ memory window.
 
 
 This function queries the process-local address for remote memory segments
-created with 'MPI_Win_allocate_shared.' This function can return different
+created with 'MPI_Win_allocate_shared'. This function can return different
 process-local addresses for the same physical memory on different processes.
 
 The returned memory can be used for load/store accesses subject to the
 constraints defined in MPI 3.0, Section 11.7. This function can only be called
-with windows of type 'MPI_Win_flavor_shared.' If the passed window is not of
-flavor 'MPI_Win_flavor_shared,' the error 'MPI_ERR_RMA_FLAVOR' is raised. When rank
-is 'MPI_PROC_NULL,' the pointer, disp_unit, and size returned are the pointer,
+with windows of type 'MPI_Win_flavor_shared'. If the passed window is not of
+flavor 'MPI_Win_flavor_shared', the error 'MPI_ERR_RMA_FLAVOR' is raised. When rank
+is 'MPI_PROC_NULL', the pointer, disp_unit, and size returned are the pointer,
 disp_unit, and size of the memory segment belonging the lowest rank that
 specified size > 0. If all processes in the group attached to the window
 specified size = 0, then the call returns size = 0 and a baseptr as if

@@ -52,11 +52,11 @@ This operations is atomic with respect to other "accumulate" operations.
 The generic functionality of 'MPI_Get_accumulate' might limit the performance of
 fetch-and-increment or fetch-and-add calls that might be supported by special
 hardware operations. 'MPI_Fetch_and_op' thus allows for a fast implementation
-of a commonly used subset of the functionality of 'MPI_Get_accumulate.'
+of a commonly used subset of the functionality of 'MPI_Get_accumulate'.
 
 The origin and result buffers (origin_addr and result_addr) must be disjoint.
-Any of the predefined operations for 'MPI_Reduce,' as well as 'MPI_NO_OP' or
-'MPI_REPLACE,' can be specified as op; user-defined functions cannot be used. The
+Any of the predefined operations for 'MPI_Reduce', as well as 'MPI_NO_OP' or
+'MPI_REPLACE', can be specified as op; user-defined functions cannot be used. The
 datatype argument must be a predefined datatype.
 
 .N Fortran

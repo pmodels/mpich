@@ -358,7 +358,7 @@ int cisize_(char *i1p, char *i2p) {
         AC_LANG_SOURCE([
             program main
             $1 a(2)
-            integer irc
+            integer irc, cisize
             irc = cisize(a(1),a(2))
             end
         ])

@@ -1018,15 +1018,15 @@ extern char *MPIDI_DBG_parent_str;
 
 #define MPIDI_ERR_PRINTF(e) MPIDI_err_printf e
 
-#if defined(HAVE_CPP_VARARGS)
-#   define MPIDI_dbg_printf(level, func, fmt, args...)			\
+#if defined(HAVE_MACRO_VA_ARGS)
+#   define MPIDI_dbg_printf(level, func, fmt, ...)			\
     {									\
-    	MPIU_dbglog_printf("[%d] %s(): " fmt "\n", MPIR_Process.comm_world->rank, func, ## args);	\
+        MPIU_dbglog_printf("[%d] %s(): " fmt "\n", MPIR_Process.comm_world->rank, func, __VA_ARGS__);   \
     }
-#   define MPIDI_err_printf(func, fmt, args...)				\
+#   define MPIDI_err_printf(func, fmt, ...)				\
     {									\
-    	MPIU_Error_printf("[%d] ERROR - %s(): " fmt "\n", MPIR_Process.comm_world->rank, func, ## args);	\
-    	fflush(stdout);							\
+        MPIU_Error_printf("[%d] ERROR - %s(): " fmt "\n", MPIR_Process.comm_world->rank, func, __VA_ARGS__);    \
+        fflush(stdout);							\
     }
 #endif
 

@@ -107,9 +107,9 @@ is to do something like the following
     call MPI_TYPE_COMMIT(newtype,ierr)
     call MPI_SEND(a,1,newtype,...)
 .ve
-expecting this to send 'a(1),a(11),...' because the indices have values 
-'1,11,...'.   Because these are `displacements` from the beginning of 'a',
-it actually sends 'a(1+1),a(1+11),...'.
+expecting this to send "a(1),a(11),..." because the indices have values
+"1,11,...".   Because these are `displacements` from the beginning of "a",
+it actually sends "a(1+1),a(1+11),...".
 
 If you wish to consider the displacements as indices into a Fortran array,
 consider declaring the Fortran array with a zero origin

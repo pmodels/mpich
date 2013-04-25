@@ -57,7 +57,8 @@ C
          endif
       endif
 
-      call mpi_win_create( winbuf, 2*sizeofint, sizeofint, MPI_INFO_NULL
+      asize = 2*sizeofint
+      call mpi_win_create( winbuf, asize, sizeofint, MPI_INFO_NULL
      $     , wdup, winh, ierr ) 
       if (ierr .ne. MPI_SUCCESS) then
          call mtestprinterrormsg( "Win_create:", ierr )

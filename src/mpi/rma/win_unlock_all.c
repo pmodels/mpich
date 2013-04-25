@@ -33,7 +33,7 @@ MPI_Win_unlock_all - Completes an RMA access epoch at all processes on the given
 
 
 Completes a shared RMA access epoch started by a call to
-'MPI_Win_lock_all(assert, win).' RMA operations issued during this epoch will
+'MPI_Win_lock_all'. RMA operations issued during this epoch will
 have completed both at the origin and at the target when the call returns.
 
 Input Parameters:
