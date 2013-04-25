@@ -298,7 +298,6 @@ run_cmd("cp -a doc/installguide/install.pdf ${expdir}/doc/installguide");
 run_cmd("cp -a doc/smpd/smpd_pmi.pdf ${expdir}/doc/smpd");
 run_cmd("cp -a doc/logging/logging.pdf ${expdir}/doc/logging");
 run_cmd("cp -a doc/windev/windev.pdf ${expdir}/doc/windev");
-run_cmd("rm -rf ${expdir}-tmp");
 print("done\n");
 
 print("===> Creating ROMIO docs... ");
