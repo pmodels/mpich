@@ -35,7 +35,7 @@ typedef struct {
 
 conn_info  *_conn_info_list = NULL;
 extern int mpidi_dynamic_tasking;
-long long _global_world_intercomm_cntr;
+long long _global_world_intercomm_cntr = 0;
 
 typedef struct MPIDI_Acceptq
 {
@@ -571,7 +571,7 @@ int MPIDI_Comm_connect(const char *port_name, MPID_Info *info, int root,
 	    TRACE_ERR("MPIC_Sendrecv returned with mpi_errno=%d\n", mpi_errno);
 	}
 
-        mpi_errno = MPIC_Sendrecv_replace(&comm_cntr, 1, MPI_INT, 0,
+        mpi_errno = MPIC_Sendrecv_replace(&comm_cntr, 1, MPI_LONG_LONG_INT, 0,
                                   sendtag++, 0, recvtag++, tmp_comm->handle,
                                   MPI_STATUS_IGNORE);
         if (mpi_errno != MPI_SUCCESS) {
@@ -1226,7 +1226,7 @@ int MPIDI_Comm_accept(const char *port_name, MPID_Info *info, int root,
 	    TRACE_ERR("MPIC_Sendrecv returned with mpi_errno=%d\n", mpi_errno);
 	}
 #endif
-        mpi_errno = MPIC_Sendrecv_replace(&comm_cntr, 1, MPI_INT, 0,
+        mpi_errno = MPIC_Sendrecv_replace(&comm_cntr, 1, MPI_LONG_LONG_INT, 0,
                                   sendtag++, 0, recvtag++, tmp_comm->handle,
                                   MPI_STATUS_IGNORE);
         if (mpi_errno != MPI_SUCCESS) {
