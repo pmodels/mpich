@@ -199,12 +199,6 @@ typedef struct MPIDI_In_cntr {
   uint               n_OutOfOrderMsgs:16; /* the number of out-of-order messages received */
   uint               nMsgs;               /* the number of received messages */
   MPID_Request       *OutOfOrderList;     /* link list of out-of-order messages */
-#ifdef MPIDI_TRACE
-  recv_status *R;
-  int  totPR;
-  int  nRdmaMsgs;
-  posted_recv *PR;
-#endif
 } MPIDI_In_cntr_t;
 
 /**
@@ -213,9 +207,6 @@ typedef struct MPIDI_In_cntr {
 typedef struct MPIDI_Out_cntr {
   uint         unmatched:16;             /* the number of un-matched messages */
   uint         nMsgs;                    /* the number of out-going messages */
-#ifdef MPIDI_TRACE
-  send_status *S;
-#endif
 } MPIDI_Out_cntr_t;
 
 /* global data to keep track of pair-wise communication, storage malloced
@@ -250,8 +241,8 @@ MPIDI_Recvq_FDP(size_t source, pami_task_t pami_source, int tag, int context_id,
   int idx;
   idx=(msg_seqno & SEQMASK);
   recv_status  *rstatus;
-  memset(&MPIDI_In_cntr[pami_source].R[idx],0,sizeof(recv_status));
-  rstatus=&MPIDI_In_cntr[pami_source].R[idx];
+  memset(&MPIDI_Trace_buf[pami_source].R[idx],0,sizeof(recv_status));
+  rstatus=&MPIDI_Trace_buf[pami_source].R[idx];
 #endif
 
   rreq = MPIDI_Recvq.posted_head;
