@@ -468,7 +468,7 @@ AC_COMPILE_IFELSE([
     ])
 ],[
     # pac_f77compile_ok=yes
-    PAC_RUNLOG([mv conftest.$OBJEXT pac_f77conftest.$OBJEXT])
+    AC_RUN_LOG([mv conftest.$OBJEXT pac_f77conftest.$OBJEXT])
     # Save original LIBS, prepend previously generated object file to LIBS
     saved_LIBS="$LIBS"
     LIBS="pac_f77conftest.$OBJEXT $LIBS"
@@ -589,7 +589,7 @@ int $confname( int a )
     ])
 ],[
     pac_compile_ok=yes
-    PAC_RUNLOG([mv conftest.$OBJEXT pac_conftest.$OBJEXT])
+    AC_RUN_LOG([mv conftest.$OBJEXT pac_conftest.$OBJEXT])
     # Save LIBS and prepend object file to LIBS
     saved_LIBS="$LIBS"
     LIBS="pac_conftest.$OBJEXT $LIBS"
@@ -678,7 +678,7 @@ if test "$pac_result" = "yes" ; then
             end
         ])
     ],[
-        PAC_RUNLOG([mv conftest.$OBJEXT pac_conftest.$OBJEXT])
+        AC_RUN_LOG([mv conftest.$OBJEXT pac_conftest.$OBJEXT])
         saved_LIBS="$LIBS"
         LIBS="pac_conftest.$OBJEXT $LIBS"
 
@@ -778,7 +778,7 @@ AC_MSG_CHECKING([for Fortran 90 compiler vendor])
 pac_cv_fc_vendor="unknown"
 for arg in --version -V -v ; do
     rm -f conftest.txt
-    PAC_RUNLOG([$FC $arg </dev/null >conftest.txt 2>&1])
+    AC_RUN_LOG([$FC $arg </dev/null >conftest.txt 2>&1])
     # Ignore the return code, because some compilers set the
     # return code to zero on invalid arguments and some to 
     # non-zero on success (with no files to compile)
@@ -1027,7 +1027,7 @@ int cisize_(char *i1p, char *i2p)
 }
     ])
 ],[
-    PAC_RUNLOG([mv conftest.$OBJEXT pac_conftest.$OBJEXT])
+    AC_RUN_LOG([mv conftest.$OBJEXT pac_conftest.$OBJEXT])
     pac_ccompile_ok=yes
 ],[
     pac_ccompile_ok=no

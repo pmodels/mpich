@@ -148,7 +148,7 @@ int same_addrs2( void *ptr )
     ])
 ],[
     rm -f pac_conftest_other.$OBJEXT
-    PAC_RUNLOG([cp conftest.$OBJEXT pac_conftest_other.$OBJEXT])
+    AC_RUN_LOG([cp conftest.$OBJEXT pac_conftest_other.$OBJEXT])
     test -s pac_conftest_other.$OBJEXT && pac_c_attr_alias_other=yes
 dnl     cp conftest.$ac_ext pac_conftest_other.$ac_ext
 dnl     echo
@@ -196,7 +196,7 @@ extern int same_addrs2( void *ptr );
         ])
     ],[
         rm -f pac_conftest_main$EXEEXT
-        PAC_RUNLOG([cp conftest$EXEEXT pac_conftest_main$EXEEXT])
+        AC_RUN_LOG([cp conftest$EXEEXT pac_conftest_main$EXEEXT])
         test -x pac_conftest_main$EXEEXT && pac_c_attr_alias_main=yes
 dnl         cp conftest.$ac_ext pac_conftest_main.$ac_ext
 dnl         echo
@@ -371,7 +371,7 @@ dnl
 AC_LANG_PUSH([C])
 AC_COMPILE_IFELSE([AC_LANG_SOURCE([])],[
     cp conftest.$ac_ext pac_conftest.c
-    PAC_RUNLOG([mv conftest.$OBJEXT pac_conftest.$OBJEXT])
+    AC_RUN_LOG([mv conftest.$OBJEXT pac_conftest.$OBJEXT])
     PAC_PUSH_FLAG([LIBS])
     LIBS="pac_conftest.$OBJEXT $LIBS"
     AC_LANG_PUSH([Fortran]) dnl AC_LANG_PUSH([Fortran 77])
@@ -429,7 +429,7 @@ extern mpif_cmblk_t   mpifcmb_ __attribute__ ((alias("mpifcmbr")));
             ])
         ],[
             cp conftest.$ac_ext pac_conftest.c
-            PAC_RUNLOG([mv conftest.$OBJEXT pac_conftest.$OBJEXT])
+            AC_RUN_LOG([mv conftest.$OBJEXT pac_conftest.$OBJEXT])
 	    PAC_PUSH_FLAG([LIBS])
             LIBS="pac_conftest.$OBJEXT $LIBS"
             AC_LANG_PUSH([Fortran]) dnl AC_LANG_PUSH([Fortran 77])
