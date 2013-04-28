@@ -126,7 +126,6 @@ MPI_OFFSET_KIND1="!"
 MPI_OFFSET_KIND2="!"
 TEST_CC=""
 TEST_F77=""
-TRY_WEAK_SYMBOLS=1
 #
 have_aio=no
 #
@@ -187,9 +186,6 @@ if test "$enable_f90" != "yes" ; then
 fi
 if test "$enable_debug" = "yes" ; then
     DEBUG=yes
-fi
-if test "$enable_weak_symbols" = "no" ; then
-    TRY_WEAK_SYMBOLS=0
 fi
 MPI=$with_mpi
 if test -n "$with_mpi"; then
@@ -895,122 +891,25 @@ if test $FROM_MPICH = yes ; then
    MPI_FARRAY6="!"
    MPI_FARRAY7="!"
 fi   
-#
-#
-# Test for weak symbol support...
-# We can't put # in the message because it causes autoconf to generate
-# incorrect code
-HAVE_WEAK_SYMBOLS=0
-if test -n "$arch_hpux" || test -n "$arch_sppux" ; then
-# multiple secondary definitions not allowed by HP compilers
-# Fortran interface for HP already uses one secondary defn. 
-# therefore, do not use this method for profiling interface.
-# build profiling interface explicitly.
-   TRY_WEAK_SYMBOLS=0
+
+# Check to see if weak symbols work correctly
+if test $enable_weak_symbols = yes ; then
+    # Turn off weak symbols if they aren't available
+    PAC_PROG_C_WEAK_SYMBOLS(,enable_weak_symbols=no)
 fi
-if test $TRY_WEAK_SYMBOLS = 1 ; then
-  AC_MSG_CHECKING([for weak symbol support])
-  AC_TRY_LINK([
-extern int PFoo(int);
-#pragma weak PFoo = Foo
-int Foo(int a) { return a; }
-],[return PFoo(1);],has_pragma_weak=1)
-  #
-  # Some systems (Linux ia64 and ecc, for example), support weak symbols
-  # only within a single object file!  This tests that case.
-  # Note that there is an extern int PFoo declaration before the
-  # pragma.  Some compilers require this in order to make the weak symbol
-  # extenally visible.  
-if test "$has_pragma_weak" = 1 ; then
-    AC_MSG_RESULT([pragma weak])
-    AC_MSG_CHECKING([that weak symbols are visible to other files])
-    rm -f conftest*
-    cat >>conftest1.c <<EOF
-extern int PFoo(int);
-#pragma weak PFoo = Foo
-int Foo(int);
-int Foo(int a) { return a; }
-EOF
-    cat >>conftest2.c <<EOF
-extern int PFoo(int);
-int main(int argc, char **argv) {
-return PFoo(0);}
-EOF
-    ac_link2='${CC-cc} -o conftest$EXEEXT $CFLAGS $CPPFLAGS $LDFLAGS conftest1.c conftest2.c $LIBS >conftest.out 2>&1'
-    if eval $ac_link2 ; then
-        AC_MSG_RESULT(yes)
-        AC_MSG_CHECKING([that the compiler correctly implements weak symbols])
-        # The gcc 3.4.x compiler accepts the pragma weak, but does not
-        # correctly implement it on systems where the loader doesn't 
-        # support weak symbols (e.g., cygwin).  This is a bug in gcc, but it
-        # it is one that *we* have to detect.
-        rm -f conftest*
-        cat >>conftest1.c <<EOF
-extern int PFoo(int);
-#pragma weak PFoo = Foo
-int Foo(int);
-int Foo(int a) { return a; }
-EOF
-    cat >>conftest2.c <<EOF
-extern int Foo(int);
-int PFoo(int a) { return a+1;}
-int main(int argc, char **argv) {
-return Foo(0);}
-EOF
-        if eval $ac_link2 ; then
-            AC_MSG_RESULT(yes)
-            has_pragma_weak=1
-        else 
-            AC_MSG_RESULT(no)
-            echo "$ac_link2" >> config.log
-	    echo "Failed program was" >> config.log
-            cat conftest1.c >>config.log
-            cat conftest2.c >>config.log
-            if test -s conftest.out ; then cat conftest.out >> config.log ; fi
-            has_pragma_weak=0
-        fi
-    else
-      echo "$ac_link2" 1>&AC_FD_CC
-      echo "Failed program was" 1>&AC_FD_CC
-      cat conftest1.c 1>&AC_FD_CC
-      cat conftest2.c 1>&AC_FD_CC
-      if test -s conftest.out ; then cat conftest.out 1>&AC_FD_CC ; fi
-      AC_MSG_RESULT(no)
-      has_pragma_weak=0
+if test $enable_weak_symbols = "yes" ; then
+    AC_DEFINE(USE_WEAK_SYMBOLS,1,[Define if weak symbols should be used])
+    # Check for the ability to support multiple weak symbols
+    if test "$pac_cv_prog_c_weak_symbols" = "pragma weak" ; then
+       PAC_PROG_C_MULTIPLE_WEAK_SYMBOLS(AC_DEFINE(HAVE_MULTIPLE_PRAGMA_WEAK,1,[Define if multiple weak symbols may be defined]))
     fi
-    rm -f conftest*
-  fi
-  if test "$has_pragma_weak" = 1 ; then
-    HAVE_WEAK_SYMBOLS=1
-    AC_DEFINE(HAVE_PRAGMA_WEAK,1,[Define if pragma weak available])
-  else
-    AC_TRY_LINK([
-extern int PFoo(int);
-#pragma _HP_SECONDARY_DEF Foo PFoo
-int Foo(int a) { return a; }
-],[return PFoo(1);],has_pragma_hp_secondary=1)
-    if test "$has_pragma_hp_secondary" = 1 ; then 
-        AC_MSG_RESULT([pragma _HP_SECONDARY_DEF])
-        HAVE_WEAK_SYMBOLS=1
-        AC_DEFINE(HAVE_PRAGMA_HP_SEC_DEF,1,[Define for HP weak pragma])
-    else
-        AC_TRY_LINK([
-extern int PFoo(int);
-#pragma _CRI duplicate PFoo as Foo
-int Foo(int a) { return a; }
-],[return PFoo(1);],has_pragma_cri_duplicate=1)
-        if test "$has_pragma_cri_duplicate" = 1 ; then
-	    AC_MSG_RESULT([pragma _CRI duplicate x as y])
-	    HAVE_WEAK_SYMBOLS=1
-	    AC_DEFINE(HAVE_PRAGMA_CRI_DUP,1,[Define for CRAY weak dup])
-        else    
-            AC_MSG_RESULT(no)
-        fi
-    fi
-  fi
 fi
-if test "$HAVE_WEAK_SYMBOLS" = 1 ; then
+
+if test "$enable_weak_symbols" = 1 ; then
     AC_DEFINE(HAVE_WEAK_SYMBOLS,1,[Define if weak symbols available])
+    HAVE_WEAK_SYMBOLS=1
+else
+    HAVE_WEAK_SYMBOLS=0
 fi
 AC_SUBST(HAVE_WEAK_SYMBOLS)
 
