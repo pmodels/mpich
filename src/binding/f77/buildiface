@@ -46,6 +46,10 @@ $do_fint = 0;            # Set to 1 to support C and Fortran integers of a
                          # different size
 $within_fint = 0;        # This is set to 1 while generating code for the 
                          # do_fint branch
+$fixStatusAlignment = 1; # Set to 1 to generate code that 
+                         # handles different alignment rules between
+                         # Fortran (INTEGER) and C (likely MPI_Count)
+                         # Note set by feature value do_fixstatus .
 %fintToHandle = ( 'int' => 1, 'MPI_Request' => 1, 'MPI_Group' => 1, 
 		  'MPI_Win' => 1, 'MPI_Info' => 1, 'MPI_Errhandler' => 1, 
 		  'MPI_File' => 1, 'MPI_Op' => 1, 'MPI_Message' => 1 );
@@ -68,6 +72,7 @@ $do_logical = 1;
 $do_weak    = 1;
 $do_subdecls = 1;
 $do_bufptr = 1;
+$do_fixstatus = 1;
 $prototype_file = "../../include/mpi.h.in";
 
 # Global hashes used for definitions and to record the locations of the
@@ -107,8 +112,8 @@ $specialInitString = "\
 # Process arguments
 #
 # Args
-# -feature={logical,fint,subdecls,weak,bufptr}, separated by :, value given 
-# by =on or =off, eg
+# -feature={logical,fint,subdecls,weak,bufptr,fixstatus}, 
+#  separated by :, value given by =on or =off, eg
 # -feature=logical=on:fint=off
 # The feature names mean:
 #    logical - Fortran logicals are converted to/from C
@@ -117,6 +122,11 @@ $specialInitString = "\
 #    weak    - Use weak symbols 
 #    bufptr  - Check for MPI_BOTTOM as a special address.  This is
 #              not needed if a POINTER declaration is available.
+#    fixstatus - The alignment of a Fortran STATUS array may not always
+#              be what is required in C (particularly with MPI_Count in 
+#              MPI_Status now).  If set, generate code to handle this case.
+#              Systems without alignment restrictions can set this to off,
+#              which will remove some tests.
 foreach $_ (@ARGV) {
     if (/-noprototypes/) { $build_prototypes = 0; }
     elsif (/-infile=(.*)/) {
@@ -161,6 +171,8 @@ foreach $_ (@ARGV) {
 	print STDERR "Unrecognized argument $_\n";
     }
 }
+# For now, make these equal.  
+$fixStatusAlignment = $do_fixstatus;
 
 # Note that the code that looks up values strips blanks out of the type name
 # No blanks should be used in the key.
@@ -647,18 +659,18 @@ foreach $_ (@ARGV) {
                  'Testsome-2' => 'inout:handle_array:*v1:MPI_Request',
                  'Testsome-3' => 'out:fint2int',
                  'Testsome-4' => 'out:index_array:*v1:*v3',
-		 'Testsome-5' => 'out:status_array:*v1:*v3:l3>0',
+		 'Testsome-5' => 'out:status_array:*v1:*v3:*v3>0',
     'Get_count' => '1', 'Get_count-1' => 'in:status',
     'Request_get_status' => '2:3',
       'Request_get_status-2' => 'out:logical',
       'Request_get_status-3' => 'out:status',
     'Status_set_cancelled' => '1:2',
-      'Status_set_cancelled-1' => 'in:status',
+      'Status_set_cancelled-1' => 'inout:status',
       'Status_set_cancelled-2' => 'in:logical',
     'Status_set_elements' => '1',
-      'Status_set_elements-1' => 'out:status',
+      'Status_set_elements-1' => 'inout:status',
     'Status_set_elements_x' => '1', 
-      'Status_set_elements_x-1' => 'out:status',
+      'Status_set_elements_x-1' => 'inout:status',
     'Type_contiguous' => '2:3', 
                   'Type_contiguous-2' => 'in:handle::MPI_Datatype',
                   'Type_contiguous-3' => 'out:handle::MPI_Datatype',
@@ -1744,6 +1756,7 @@ sub bufptr_in_arg {
 sub bufptr_ctof {
     my $coutvar = $_[0];
     my $outvar  = $_[1];
+    my $count   = $_[2];
 }
 # --------------------------------------------------------------------------
 # MPI_IN_PLACE buffer pointers
@@ -1763,6 +1776,7 @@ sub inplace_in_arg {
 sub inplace_ctof {
     my $coutvar = $_[0];
     my $outvar  = $_[1];
+    my $count   = $_[2];
 }
 # --------------------------------------------------------------------------
 # MPI_UNWEIGHTED pointers.  Note that unweighted is only used to indicate
@@ -1839,6 +1853,7 @@ sub unweighted_out_arg {
 sub unweighted_out_ctof {
     my $coutvar = $_[0];
     my $outvar  = $_[1];
+    my $count   = $_[2];
 
     if ($within_fint) {
         # MPI_WEIGHTS_EMPTY should never be an output value from the MPI library
@@ -1877,6 +1892,7 @@ sub logical_in_arg {
 sub logical_out_ctof {
     my $coutvar = $_[0];
     my $outvar  = $_[1];
+    my $count   = $_[2];
     if ($do_logical) {
 	print $OUTFD "    if ($errparmlval == MPI_SUCCESS) *$outvar = MPIR_TO_FLOG($coutvar);\n";
     }
@@ -1940,6 +1956,7 @@ sub logical_array_in_arg {
 sub logical_array_out_ctof {
     my $coutvar = $_[0];
     my $outvar  = $_[1];
+    my $count   = $_[2];
     # Special case if MPI_Fint == int: we use the input variable
     # for space.
     my $ActSize = $Array_size;
@@ -1984,6 +2001,7 @@ sub index_ftoc {
 sub index_ctof {
     my $coutvar = $_[0];
     my $outvar  = $_[1];
+    my $count   = $_[2];
     print $OUTFD "    *$outvar = (MPI_Fint)$coutvar;\n";
     print $OUTFD "    if ($coutvar >= 0) *$outvar = *$outvar + 1;\n";
 }
@@ -2010,6 +2028,7 @@ sub index_array_out_ftoc {
 sub index_array_ctof {
     my $coutvar = $_[0];
     my $outvar  = $_[1];
+    my $count   = $_[2];
     my $ActSize = $Array_size;
     # In the case where the input and out sizes are not the same,
     # the output size is in the fourth argument.
@@ -2082,6 +2101,7 @@ sub handle_inout_ftoc {
 sub handle_out_ctof {
     my $coutvar = $_[0];
     my $outvar  = $_[1];
+    my $count   = $_[2];
     if ($within_fint) {
 	print $OUTFD "    if ($errparmlval==MPI_SUCCESS) *$outvar = (MPI_Fint)$coutvar;\n";
     }
@@ -2204,7 +2224,8 @@ sub handle_array_out_ftoc {
 sub handle_array_inout_ctof {
     my $coutvar = $_[0];
     my $outvar  = $_[1];
-    &handle_array_ctof( $coutvar, $outvar );
+    my $count   = $_[2];
+    &handle_array_ctof( $coutvar, $outvar, $count );
 }
 
 # Make sure that there is no output processing (other than to free the 
@@ -2212,12 +2233,14 @@ sub handle_array_inout_ctof {
 sub handle_array_in_ctof {
     my $coutvar = $_[0];
     my $outvar  = $_[1];
-    #&handle_array_ctof( $coutvar, $outvar );
+    my $count   = $_[2];
+    #&handle_array_ctof( $coutvar, $outvar, $count );
 }
 
 sub handle_array_ctof {
     my $coutvar = $_[0];
     my $outvar  = $_[1];
+    my $count   = $_[2];
     if ($within_fint) {
 	my $basetype = $nativeType;
 	$basetype =~ s/MPI_//;
@@ -2228,7 +2251,7 @@ sub handle_array_ctof {
 	    $asize = "_csize";
 	}
 	print $OUTFD "\
-        /* handle_array_ctof( $coutvar, $outvar ) */
+        /* handle_array_ctof( $coutvar, $outvar, $count ) */
     {int li;
      for (li=0; li<$asize; li++) {
         $outvar\[li\] = $convfunc( $coutvar\[li\] );
@@ -2336,6 +2359,7 @@ sub addrint_in_arg {
 sub attrint_ctof {
     my $fvar = $_[0];
     my $cvar = $_[1];
+    my $count   = $_[2];
     my $flagarg = 4; # get from option
     # The strange cast is due to the following:
     # The MPICH attribute code returns an int in the void *.  In
@@ -2392,6 +2416,7 @@ sub addraint_in_arg {
 sub attraint_ctof {
     my $fvar = $_[0];
     my $cvar = $_[1];
+    my $count   = $_[2];
     my $flagarg = 4; # get from option
     print $OUTFD "
     if ((int)*ierr || !l$flagarg) {
@@ -2429,6 +2454,7 @@ sub bufaddr_out_arg {
 sub bufaddr_ctof {
     my $fvar = $_[0];
     my $cvar = $_[1];
+    my $count   = $_[2];
 }
 # --------------------------------------------------------------------------
 # 
@@ -2449,6 +2475,10 @@ sub status_out_fnulltoc {
     if (v$count == MPI_F_STATUS_IGNORE) { l$count = MPI_STATUS_IGNORE; }
     else { l$count->MPI_ERROR = (int)(v$count\[2\]); }\n";
     }
+    elsif ($fixStatusAlignment) {
+	print $OUTFD "\
+    if (v$count == MPI_F_STATUS_IGNORE) { l$count = MPI_STATUS_IGNORE; }\n";
+    }
     else {
 	print $OUTFD "\
     if (v$count == MPI_F_STATUS_IGNORE) { v$count = (MPI_Fint*)MPI_STATUS_IGNORE; }\n";
@@ -2460,11 +2490,26 @@ sub status_in_ftoc {
     if ($within_fint) {
 	print $OUTFD "    MPI_Status_f2c( v$count, l$count );\n";
     }
+    elsif ($fixStatusAlignment) {
+	print $OUTFD "\
+    if ( l$count != MPI_STATUS_IGNORE && 
+        (((MPI_Aint)v$count) & MPIR_COUNT_ALIGNMENT) == 0 ) 
+        l$count = (MPI_Status *)(void*)v$count;
+    else {
+        MPI_Status_f2c( v$count, l$count );
+    }
+";
+    }
+}
+sub status_inout_ftoc {
+    my $count = $_[0];
+    status_in_ftoc( $count );
 }
 
 sub status_out_ctof {
     my $coutvar = $_[0];
     my $outvar  = $_[1];
+    my $count   = $_[2];
     if ($within_fint) {
 	my $testFlag = "";
 	if (defined($condition) && $condition ne "") {
@@ -2473,24 +2518,50 @@ sub status_out_ctof {
 	print $OUTFD 
 "    if ($testFlag$coutvar != MPI_STATUS_IGNORE && $errparmlval == MPI_SUCCESS) {
 	MPI_Status_c2f($coutvar,$outvar);
-    }\n"
+    }\n";
+    }
+    elsif ($fixStatusAlignment) {
+	# only copy if Fortran is not properly aligned
+	print $OUTFD "\
+    if ($coutvar != MPI_STATUS_IGNORE && $errparmlval == MPI_SUCCESS && $outvar != (MPI_Fint*)$coutvar) {
+        MPI_Status_c2f($coutvar,$outvar);
+    }\n";
     }
 }
 sub status_in_decl {
     my $count = $_[0];
-    if ($within_fint) {
+    if ($within_fint || $fixStatusAlignment) {
 	print $OUTFD "    MPI_Status vtmp$count, *l$count = &vtmp$count;\n";
     }
 }
 sub status_out_decl {
     my $count = $_[0];
-    if ($within_fint) {
+    if ($within_fint || $fixStatusAlignment) {
 	print $OUTFD "    MPI_Status vtmp$count, *l$count = &vtmp$count;\n";
+    }
+}
+sub status_inout_decl {
+    my $count = $_[0];
+    if ($within_fint || $fixStatusAlignment) {
+	print $OUTFD "    MPI_Status vtmp$count, *l$count = &vtmp$count;\n";
+    }
+}
+sub status_out_ftoc {
+    my $count = $_[0];
+    if ($fixStatusAlignment) {
+	# The first (void *) cast helps suppress compiler warnings about
+	# casting to a pointer with greater alignment (and which the
+	# specific runtime check is used to ensure the alignments are 
+	# ok).
+	print $OUTFD "\
+    if (l$count != MPI_STATUS_IGNORE && 
+        (((MPI_Aint)v$count) & MPIR_COUNT_ALIGNMENT) == 0) 
+        l$count = (MPI_Status*)(void *)v$count;\n";
     }
 }
 sub status_out_arg {
     my $count = $_[0];
-    if ($within_fint) {
+    if ($within_fint|| $fixStatusAlignment) {
 	print $OUTFD "l$count";
     }
     else {
@@ -2499,7 +2570,16 @@ sub status_out_arg {
 }
 sub status_in_arg {
     my $count = $_[0];
-    if ($within_fint) {
+    if ($within_fint || $fixStatusAlignment) {
+	print $OUTFD "l$count";
+    }
+    else {
+	print $OUTFD "(MPI_Status *)(v$count)";
+    }
+}
+sub status_inout_arg {
+    my $count = $_[0];
+    if ($within_fint || $fixStatusAlignment) {
 	print $OUTFD "l$count";
     }
     else {
@@ -2549,6 +2629,7 @@ sub errcodesignore_out_ftoc {
 sub errcodesignore_out_ctof {
     my $coutvar = $_[0];
     my $outvar  = $_[1];
+    my $count   = $_[2];
 
     if ($within_fint) {
 	$asize = $Array_size;
@@ -2592,7 +2673,7 @@ sub status_array_out_fnulltoc {
     &specialInitStatement( $OUTFD );
     my $varname = "v";
     my $varcast = "(MPI_Fint *)";
-    if ($within_fint) { $varname = "l"; $varcast = ""; }
+    if ($within_fint || $fixStatusAlignment) { $varname = "l"; $varcast = ""; }
     print $OUTFD "\
     if (v$count == MPI_F_STATUSES_IGNORE) { $varname$count = ${varcast}MPI_STATUSES_IGNORE; }\n";
 }
@@ -2602,11 +2683,23 @@ sub status_array_out_ftoc {
     if ($within_fint) {
 	print $OUTFD "    if (l$count != MPI_STATUSES_IGNORE) { l$count = (MPI_Status*)$malloc($Array_size * sizeof(MPI_Status)); }\n";
     }
+    elsif ($fixStatusAlignment) {
+	print $OUTFD "\
+    if (l$count != MPI_STATUSES_IGNORE) {
+        if( (((MPI_Aint)v$count) & MPIR_COUNT_ALIGNMENT) == 0) 
+            l$count = (MPI_Status*)(void *)v$count;
+        else {
+            lalloc$count = 1;
+            l$count = (MPI_Status*)$malloc($Array_size * sizeof(MPI_Status));
+        }
+    }\n";
+    }
 }
 
 sub status_array_ctof {
     my $coutvar = $_[0];
     my $outvar  = $_[1];
+    my $count   = $_[2];
 
     if ($within_fint) {
 	my $ActSize = $Array_size;
@@ -2626,17 +2719,38 @@ sub status_array_ctof {
     }\n";
 	$clean_up .= "     if ($coutvar != MPI_STATUSES_IGNORE) { $free($coutvar); }\n";
     }
+    elsif ($fixStatusAlignment) {
+	my $ActSize = $Array_size;
+	if (defined($nativeType) && $nativeType ne "") { 
+	    $ActSize = $nativeType; 
+	}
+	my $testFlag = "";
+	if (defined($condition) && $condition ne "") {
+	    $testFlag = "$condition && "
+	}
+	print $OUTFD 
+"    if (${testFlag}lalloc$count) {
+        int li;
+        for (li=0; li<$ActSize; li++) {
+            MPI_Status_c2f($coutvar+li,$outvar+li*5);
+        }
+    }\n";
+	$clean_up .= "     if (lalloc$count) { $free($coutvar); }\n";
+    }
 }
 sub status_array_out_decl {
     my $count = $_[0];
     if ($within_fint) {
 	print $OUTFD "    MPI_Status *l$count=0;\n";
+    } 
+    elsif ($fixStatusAlignment) {
+	print $OUTFD "    MPI_Status *l$count=0;\n    int lalloc$count=0;\n";
     }
 }
 sub status_array_out_arg {
     my $count = $_[0];
 
-    if ($within_fint) {
+    if ($within_fint || $fixStatusAlignment) {
 	print $OUTFD "l$count";
     }
     else {
@@ -2648,6 +2762,7 @@ sub status_array_out_arg {
 sub aintToInt_ctof {
     my $coutvar = $_[0];
     my $outvar  = $_[1];
+    my $count   = $_[2];
     print $OUTFD "    if ($errparmlval == MPI_SUCCESS) *$outvar = (MPI_Fint)($coutvar);\n";
 }
 sub aintToInt_out_decl {
@@ -2685,6 +2800,7 @@ sub fint2int_ftoc {
 sub fint2int_ctof {
     my $coutvar = $_[0];
     my $outvar  = $_[1];
+    my $count   = $_[2];
     if ($within_fint) {
 	print $OUTFD "    if ($errparmlval == MPI_SUCCESS) *$outvar = (MPI_Fint)$coutvar;\n";
     }
@@ -2800,6 +2916,7 @@ sub fint2int_array_out_ftoc {
 sub fint2int_array_out_ctof {
     my $coutvar = $_[0];
     my $outvar  = $_[1];
+    my $count   = $_[2];
     if ($within_fint) {
 	my $asize = $Array_size;
 	if ($Array_size =~ /_commsize/) {
@@ -3033,16 +3150,16 @@ sub print_post_call {
 	    $processing_routine       = "${method}_${direction}_ctof";
 	    # Prefer a specific choice matching the direction
 	    if (defined(&$processing_routine)) {
-		&$processing_routine( "l$count", "v$count" );
+		&$processing_routine( "l$count", "v$count", $count );
 	    }
 	    elsif ($direction eq "inout" && 
 		   defined(&$processing_out_routine)) {
-		&$processing_out_routine( "l$count", "v$count" );
+		&$processing_out_routine( "l$count", "v$count", $count );
 		}
 	    else {
 		$processing_routine = "${method}_ctof";
 		if (defined(&$processing_routine)) {
-		    &$processing_routine( "l$count", "v$count" );
+		    &$processing_routine( "l$count", "v$count", $count );
 		}
 		elsif ($direction ne "in") {
 		    print STDERR "Missing $processing_routine for $routine_name\n";
@@ -3090,6 +3207,7 @@ sub blankpad_out_ftoc {
 sub blankpad_ctof {
     my $coutvar = $_[0];
     my $outvar  = $_[1];
+    my $count   = $_[2];
     
     # find the null character.  Replace with blanks from there to the
     # end of the string.  The declared lenght is given by a variable
@@ -3132,6 +3250,7 @@ sub blankpadonflag_out_ftoc {
 sub blankpadonflag_ctof {
     my $coutvar = $_[0];
     my $outvar  = $_[1];
+    my $count   = $_[2];
     
     # find the null character.  Replace with blanks from there to the
     # end of the string.  The declared lenght is given by a variable
@@ -3455,6 +3574,7 @@ sub intToAintArr_in_arg {
 sub intToAintArr_in_ctof {
     my $lname = $_[0];
     my $vname = $_[1];
+    my $count   = $_[2];
     print $OUTFD "
 #ifdef HAVE_AINT_LARGER_THAN_FINT
     if ($lname) { $free($lname); }
@@ -3500,6 +3620,7 @@ sub FileToFint_out_decl {
 sub FileToFint_ctof {
     my $lvar = $_[0];
     my $gvar = $_[1];
+    my $count   = $_[2];
     print $OUTFD "    *$gvar = MPI_File_c2f($lvar);\n";
 }
 sub FileToFint_out_arg {
@@ -4515,6 +4636,7 @@ print $OUTFD "\
 	return MPIR_Err_return_comm( 0, \"MPI_Status_f2c\",  mpi_errno );
     }\n";
     if ($do_fint) {
+        #FIXME: Invalid alignment assumptions on MPI_Count field.
         print $OUTFD "\
 #ifdef HAVE_FINT_IS_INT
     *c_status = *(MPI_Status *)	f_status;
@@ -4553,7 +4675,11 @@ print $OUTFD "\
 #include \"mpi_fortimpl.h\"
 /* mpierrs.h and mpierror.h for the error code creation */
 #include \"mpierrs.h\"
-#include <stdio.h> 
+#include <stdio.h>\n";
+    if ($fixStatusAlignment) {
+	print $OUTFD "#include <string.h>\n";
+    }
+    print $OUTFD "\
 #include \"mpierror.h\"
 
 /* -- Begin Profiling Symbol Block for routine MPI_Status_c2f */
@@ -4589,6 +4715,8 @@ int MPI_Status_c2f( const MPI_Status *c_status, MPI_Fint *f_status )
 	return MPIR_Err_return_comm( 0, \"MPI_Status_c2f\",  mpi_errno );
     }\n";
     if ($do_fint) { 
+        #FIXME: Copy to f_status of MPI_Count data makes invalid alignment
+        # data.
         print $OUTFD "\
 #ifdef HAVE_FINT_IS_INT
     *(MPI_Status *)f_status = *c_status;
@@ -4601,14 +4729,24 @@ int MPI_Status_c2f( const MPI_Status *c_status, MPI_Fint *f_status )
 #endif\n";
     }
     else {
-        print $OUTFD "    *(MPI_Status *)f_status = *c_status;\n";
+        if ($fixStatusAlignment) {
+            # Within this routine, MPI_STATUS_IGNORE is invalid
+            print $OUTFD "\
+    if ( (((MPI_Aint)f_status) & MPIR_COUNT_ALIGNMENT) == 0 ) 
+        *(MPI_Status*)(void *)f_status = *c_status;
+    else
+        memcpy(f_status,c_status,sizeof(MPI_Status));
+    \n";
+        }
+        else {
+            print $OUTFD "    *(MPI_Status *)f_status = *c_status;\n";
+        }
     }
     print $OUTFD "
     return MPI_SUCCESS;
 }\n";
     close ($OUTFD);
     &ReplaceIfDifferent( $filename, $filename . ".new" );
-
 }
 
 sub print_mpif_int {
