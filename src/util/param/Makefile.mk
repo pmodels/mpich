@@ -12,7 +12,6 @@ dist_noinst_DATA += src/util/param/params.yml
 
 if MAINTAINER_MODE
 # normally built by autogen.sh, but this rebuild rule is here
-src/util/param/param_vals.c: src/util/param/params.yml $(top_srcdir)/maint/genparams
+$(top_srcdir)/src/util/param/param_vals.c: $(top_srcdir)/src/util/param/params.yml $(top_srcdir)/maint/genparams
 	( cd $(top_srcdir) && ./maint/genparams )
 endif MAINTAINER_MODE
-
