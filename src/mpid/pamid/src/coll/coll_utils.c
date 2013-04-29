@@ -53,13 +53,18 @@ pami_result_t MPIDI_Pami_post_wrapper(pami_context_t context, void *cookie)
 		       (x) == MPI_UNSIGNED_CHAR || (x) == MPI_UINT8_T )
 
 /* sizeof(longlong) == sizeof(long) == sizeof(uint64) on bgq */
-#define isS_LONG(x) ( (x) == MPI_INT64_T || (x) == MPI_LONG || \
-                      (x) == MPI_INTEGER8 || (x) == MPI_LONG_LONG || \
-                      (x) == MPI_LONG_LONG_INT || (x) == MPI_AINT || \
-                      (x) == MPI_OFFSET)
+#define isS_LONG(x) ( (x) == MPI_LONG || (x) == MPI_AINT ||  \
+                      (x) == MPI_OFFSET )
 
-#define isUS_LONG(x) ( (x) == MPI_UINT64_T || (x) == MPI_UNSIGNED_LONG || \
-                       (x) == MPI_UNSIGNED_LONG_LONG)
+#define isUS_LONG(x) ( (x) == MPI_UNSIGNED_LONG )
+
+#define isS_LONG_LONG(x) ( (x) == MPI_INT64_T || \
+                      (x) == MPI_INTEGER8 || (x) == MPI_LONG_LONG || \
+                      (x) == MPI_LONG_LONG_INT )                           
+
+#define isUS_LONG_LONG(x) ( (x) == MPI_UINT64_T || (x) == MPI_UNSIGNED_LONG_LONG )  
+
+
 
 #define isFLOAT(x) ( (x) == MPI_FLOAT || (x) == MPI_REAL)
 
@@ -137,8 +142,10 @@ int MPIDI_Datatype_to_pami(MPI_Datatype        dt,
       else if(isUS_CHAR(dt))        *pdt = PAMI_TYPE_UNSIGNED_CHAR;
       else if(isS_SHORT(dt))        *pdt = PAMI_TYPE_SIGNED_SHORT;
       else if(isUS_SHORT(dt))       *pdt = PAMI_TYPE_UNSIGNED_SHORT;
-      else if(isS_LONG(dt))         *pdt = PAMI_TYPE_SIGNED_LONG_LONG;
-      else if(isUS_LONG(dt))        *pdt = PAMI_TYPE_UNSIGNED_LONG_LONG;
+      else if(isS_LONG(dt))         *pdt = PAMI_TYPE_SIGNED_LONG;
+      else if(isUS_LONG(dt))        *pdt = PAMI_TYPE_UNSIGNED_LONG;
+      else if(isS_LONG_LONG(dt))    *pdt = PAMI_TYPE_SIGNED_LONG_LONG;
+      else if(isUS_LONG_LONG(dt))   *pdt = PAMI_TYPE_UNSIGNED_LONG_LONG;
       else if(isSINGLE_COMPLEX(dt)) *pdt = PAMI_TYPE_SINGLE_COMPLEX;
       else if(isDOUBLE_COMPLEX(dt)) *pdt = PAMI_TYPE_DOUBLE_COMPLEX;
       else if(isLOC_TYPE(dt))
