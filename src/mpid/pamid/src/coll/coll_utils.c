@@ -53,12 +53,11 @@ pami_result_t MPIDI_Pami_post_wrapper(pami_context_t context, void *cookie)
 		       (x) == MPI_UNSIGNED_CHAR || (x) == MPI_UINT8_T )
 
 /* sizeof(longlong) == sizeof(long) == sizeof(uint64) on bgq */
-#define isS_LONG(x) ( (x) == MPI_LONG || (x) == MPI_AINT ||  \
-                      (x) == MPI_OFFSET )
+#define isS_LONG(x) ( (x) == MPI_LONG || (x) == MPI_AINT )
 
 #define isUS_LONG(x) ( (x) == MPI_UNSIGNED_LONG )
 
-#define isS_LONG_LONG(x) ( (x) == MPI_INT64_T || \
+#define isS_LONG_LONG(x) ( (x) == MPI_INT64_T || (x) == MPI_OFFSET || \
                       (x) == MPI_INTEGER8 || (x) == MPI_LONG_LONG || \
                       (x) == MPI_LONG_LONG_INT )                           
 
