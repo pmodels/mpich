@@ -402,7 +402,10 @@ hwloc_obj_type_snprintf(char * __hwloc_restrict string, size_t size, hwloc_obj_t
 			  verbose ? hwloc_obj_type_string(type): "");
   case HWLOC_OBJ_GROUP:
 	  /* TODO: more pretty presentation? */
-    return hwloc_snprintf(string, size, "%s%u", hwloc_obj_type_string(type), obj->attr->group.depth);
+    if (obj->attr->group.depth != (unsigned) -1)
+      return hwloc_snprintf(string, size, "%s%u", hwloc_obj_type_string(type), obj->attr->group.depth);
+    else
+      return hwloc_snprintf(string, size, "%s", hwloc_obj_type_string(type));
   case HWLOC_OBJ_BRIDGE:
     if (verbose)
       return snprintf(string, size, "Bridge %s->%s",
@@ -416,10 +419,11 @@ hwloc_obj_type_snprintf(char * __hwloc_restrict string, size_t size, hwloc_obj_t
   case HWLOC_OBJ_OS_DEVICE:
     switch (obj->attr->osdev.type) {
     case HWLOC_OBJ_OSDEV_BLOCK: return hwloc_snprintf(string, size, "Block");
-    case HWLOC_OBJ_OSDEV_NETWORK: return hwloc_snprintf(string, size, "Net");
+    case HWLOC_OBJ_OSDEV_NETWORK: return hwloc_snprintf(string, size, verbose ? "Network" : "Net");
     case HWLOC_OBJ_OSDEV_OPENFABRICS: return hwloc_snprintf(string, size, "OpenFabrics");
     case HWLOC_OBJ_OSDEV_DMA: return hwloc_snprintf(string, size, "DMA");
     case HWLOC_OBJ_OSDEV_GPU: return hwloc_snprintf(string, size, "GPU");
+    case HWLOC_OBJ_OSDEV_COPROC: return hwloc_snprintf(string, size, verbose ? "Co-Processor" : "CoProc");
     default:
       *string = '\0';
       return 0;

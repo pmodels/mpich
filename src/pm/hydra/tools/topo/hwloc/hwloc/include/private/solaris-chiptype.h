@@ -8,6 +8,19 @@
  * $HEADER$
  */
 
+
+#ifdef HWLOC_INSIDE_PLUGIN
+/*
+ * these declarations are internal only, they are not available to plugins
+ * (functions below are internal static symbols).
+ */
+#error This file should not be used in plugins
+#endif
+
+
+#ifndef HWLOC_PRIVATE_SOLARIS_CHIPTYPE_H
+#define HWLOC_PRIVATE_SOLARIS_CHIPTYPE_H
+
 /* SPARC Chip Modes. */
 #define MODE_UNKNOWN            0
 #define MODE_SPITFIRE           1
@@ -43,4 +56,4 @@
 char* hwloc_solaris_get_chip_type(void);
 char* hwloc_solaris_get_chip_model(void);
 
-
+#endif /* HWLOC_PRIVATE_SOLARIS_CHIPTYPE_H */

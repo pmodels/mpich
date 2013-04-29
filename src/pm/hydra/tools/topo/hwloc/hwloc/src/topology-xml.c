@@ -585,6 +585,7 @@ hwloc__xml_import_object(hwloc_topology_t topology,
     if (!strcmp(tag, "object")) {
       hwloc_obj_t childobj = hwloc_alloc_setup_object(HWLOC_OBJ_TYPE_MAX, -1);
       hwloc_insert_object_by_parent(topology, obj, childobj);
+      /* insert_object_by_parent() doesn't merge during insert, so childobj is still valid */
       ret = hwloc__xml_import_object(topology, data, childobj, &childstate);
     } else if (!strcmp(tag, "page_type")) {
       ret = hwloc__xml_import_pagetype(topology, obj, &childstate);
@@ -610,18 +611,19 @@ hwloc__xml_import_object(hwloc_topology_t topology,
  ********* main XML import *********
  ***********************************/
 
-static void
+static int
 hwloc_xml__handle_distances(struct hwloc_topology *topology,
 			    struct hwloc_xml_backend_data_s *data)
 {
   struct hwloc_xml_imported_distances_s *xmldist, *next = data->first_distances;
 
   if (!next)
-    return;
+    return 0;
 
   /* connect things now because we need levels to check/build, they'll be reconnected properly later anyway */
   hwloc_connect_children(topology->levels[0][0]);
-  hwloc_connect_levels(topology);
+  if (hwloc_connect_levels(topology) < 0)
+    return -1;
 
   while ((xmldist = next) != NULL) {
     hwloc_obj_t root = xmldist->root;
@@ -652,6 +654,8 @@ hwloc_xml__handle_distances(struct hwloc_topology *topology,
     next = xmldist->next;
     free(xmldist);
   }
+
+  return 0;
 }
 
 /* this canNOT be the first XML call */
@@ -691,7 +695,8 @@ hwloc_look_xml(struct hwloc_backend *backend)
   /* we could add "BackendSource=XML" to notify that XML was used between the actual backend and here */
 
   /* if we added some distances, we must check them, and make them groupable */
-  hwloc_xml__handle_distances(topology, data);
+  if (hwloc_xml__handle_distances(topology, data) < 0)
+    goto err;
   data->first_distances = data->last_distances = NULL;
   topology->support.discovery->pu = 1;
 
@@ -701,6 +706,7 @@ hwloc_look_xml(struct hwloc_backend *backend)
  failed:
   if (data->look_failed)
     data->look_failed(data);
+ err:
   hwloc_localeswitch_fini();
   return -1;
 }
@@ -1141,7 +1147,7 @@ hwloc_xml_component_instantiate(struct hwloc_disc_component *component,
 static struct hwloc_disc_component hwloc_xml_disc_component = {
   HWLOC_DISC_COMPONENT_TYPE_GLOBAL,
   "xml",
-  HWLOC_DISC_COMPONENT_TYPE_CPU | HWLOC_DISC_COMPONENT_TYPE_GLOBAL | HWLOC_DISC_COMPONENT_TYPE_ADDITIONAL,
+  ~0,
   hwloc_xml_component_instantiate,
   30,
   NULL

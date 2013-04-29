@@ -1,6 +1,6 @@
 /*
  * Copyright © 2009 CNRS
- * Copyright © 2009-2012 Inria.  All rights reserved.
+ * Copyright © 2009-2013 Inria.  All rights reserved.
  * Copyright © 2009-2012 Université Bordeaux 1
  * Copyright © 2009-2011 Cisco Systems, Inc.  All rights reserved.
  * See COPYING in top-level directory.
@@ -34,17 +34,20 @@
 #include "lstopo.h"
 #include "misc.h"
 
-int logical = -1;
-hwloc_obj_type_t show_only = (hwloc_obj_type_t) -1;
-int show_cpuset = 0;
-int taskset = 0;
+int lstopo_pid_number = -1;
+hwloc_pid_t lstopo_pid;
+hwloc_obj_type_t lstopo_show_only = (hwloc_obj_type_t) -1;
+int lstopo_show_cpuset = 0;
+int lstopo_show_taskset = 0;
+int lstopo_ignore_pus = 0;
+
 unsigned int fontsize = 10;
 unsigned int gridsize = 10;
 enum lstopo_orient_e force_orient[HWLOC_OBJ_TYPE_MAX];
-unsigned int legend = 1;
-unsigned int top = 0;
-int pid_number = -1;
-hwloc_pid_t pid;
+
+static int logical = -1;
+static unsigned int legend = 1;
+static unsigned int top = 0;
 
 FILE *open_file(const char *filename, const char *mode)
 {
@@ -262,11 +265,9 @@ void usage(const char *name, FILE *where)
                   "                        impact\n");
   fprintf (where, "  --restrict <cpuset>   Restrict the topology to processors listed in <cpuset>\n");
   fprintf (where, "  --restrict binding    Restrict the topology to the current process binding\n");
-#ifdef HWLOC_HAVE_LIBPCI
   fprintf (where, "  --no-io               Do not show any I/O device or bridge\n");
   fprintf (where, "  --no-bridges          Do not any I/O bridge except hostbridges\n");
   fprintf (where, "  --whole-io            Show all I/O devices and bridges\n");
-#endif
   fprintf (where, "Input options:\n");
   hwloc_utils_input_format_usage(where, 6);
   fprintf (where, "  --thissystem          Assume that the input topology provides the topology\n"
@@ -388,27 +389,36 @@ main (int argc, char *argv[])
       else if (!strcmp (argv[0], "-p") || !strcmp (argv[0], "--physical"))
 	logical = 0;
       else if (!strcmp (argv[0], "-c") || !strcmp (argv[0], "--cpuset"))
-	show_cpuset = 1;
+	lstopo_show_cpuset = 1;
       else if (!strcmp (argv[0], "-C") || !strcmp (argv[0], "--cpuset-only"))
-	show_cpuset = 2;
+	lstopo_show_cpuset = 2;
       else if (!strcmp (argv[0], "--taskset")) {
-	taskset = 1;
-	if (!show_cpuset)
-	  show_cpuset = 1;
+	lstopo_show_taskset = 1;
+	if (!lstopo_show_cpuset)
+	  lstopo_show_cpuset = 1;
       } else if (!strcmp (argv[0], "--only")) {
 	if (argc < 2) {
 	  usage (callname, stderr);
 	  exit(EXIT_FAILURE);
 	}
-        show_only = hwloc_obj_type_of_string(argv[1]);
+        lstopo_show_only = hwloc_obj_type_of_string(argv[1]);
+	if (lstopo_show_only == (hwloc_obj_type_t) -1)
+	  fprintf(stderr, "Unsupported type `%s' passed to --only, ignoring.\n", argv[1]);
 	opt = 1;
       }
       else if (!strcmp (argv[0], "--ignore")) {
+	hwloc_obj_type_t type;
 	if (argc < 2) {
 	  usage (callname, stderr);
 	  exit(EXIT_FAILURE);
 	}
-        hwloc_topology_ignore_type(topology, hwloc_obj_type_of_string(argv[1]));
+	type = hwloc_obj_type_of_string(argv[1]);
+	if (type == (hwloc_obj_type_t) -1)
+	  fprintf(stderr, "Unsupported type `%s' passed to --ignore, ignoring.\n", argv[1]);
+	else if (type == HWLOC_OBJ_PU)
+	  lstopo_ignore_pus = 1;
+	else
+	  hwloc_topology_ignore_type(topology, type);
 	opt = 1;
       }
       else if (!strcmp (argv[0], "--no-caches"))
@@ -456,6 +466,8 @@ main (int argc, char *argv[])
 	  type = hwloc_obj_type_of_string(tmp);
 	  if (type != (hwloc_obj_type_t) -1)
 	    force_orient[type] = orient;
+	  else
+	    fprintf(stderr, "Unsupported type `%s' passed to %s, ignoring.\n", tmp, argv[0]);
 	  if (!end)
 	    break;
 	  tmp = end+1;
@@ -492,7 +504,7 @@ main (int argc, char *argv[])
 	  usage (callname, stderr);
 	  exit(EXIT_FAILURE);
 	}
-	pid_number = atoi(argv[1]); opt = 1;
+	lstopo_pid_number = atoi(argv[1]); opt = 1;
       } else if (!strcmp (argv[0], "--ps") || !strcmp (argv[0], "--top"))
         top = 1;
       else if (!strcmp (argv[0], "--version")) {
@@ -517,7 +529,7 @@ main (int argc, char *argv[])
       argv += opt+1;
     }
 
-  if (show_only != (hwloc_obj_type_t)-1)
+  if (lstopo_show_only != (hwloc_obj_type_t)-1)
     merge = 0;
 
   hwloc_topology_set_flags(topology, flags);
@@ -536,9 +548,9 @@ main (int argc, char *argv[])
       return err;
   }
 
-  if (pid_number != -1 && pid_number != 0) {
-    pid = hwloc_pid_from_number(pid_number, 0);
-    if (hwloc_topology_set_pid(topology, pid)) {
+  if (lstopo_pid_number != -1 && lstopo_pid_number != 0) {
+    lstopo_pid = hwloc_pid_from_number(lstopo_pid_number, 0);
+    if (hwloc_topology_set_pid(topology, lstopo_pid)) {
       perror("Setting target pid");
       return EXIT_FAILURE;
     }
@@ -554,8 +566,8 @@ main (int argc, char *argv[])
   if (restrictstring) {
     hwloc_bitmap_t restrictset = hwloc_bitmap_alloc();
     if (!strcmp (restrictstring, "binding")) {
-      if (pid_number != -1 && pid_number != 0)
-	hwloc_get_proc_cpubind(topology, pid, restrictset, HWLOC_CPUBIND_PROCESS);
+      if (lstopo_pid_number != -1 && lstopo_pid_number != 0)
+	hwloc_get_proc_cpubind(topology, lstopo_pid, restrictset, HWLOC_CPUBIND_PROCESS);
       else
 	hwloc_get_cpubind(topology, restrictset, HWLOC_CPUBIND_PROCESS);
     } else {
@@ -570,12 +582,6 @@ main (int argc, char *argv[])
     free(restrictstring);
   }
 
-  if (!filename && !strcmp(callname,"hwloc-info")) {
-    /* behave kind-of plpa-info */
-    filename = "-";
-    verbose_mode--;
-  }
-
   /* if the output format wasn't enforced, look at the filename */
   if (filename && output_format == LSTOPO_OUTPUT_DEFAULT) {
     if (!strcmp(filename, "-")
@@ -585,13 +591,17 @@ main (int argc, char *argv[])
       char *dot = strrchr(filename, '.');
       if (dot)
         output_format = parse_output_format(dot+1, callname);
+      else {
+	fprintf(stderr, "Cannot infer output type for file `%s' without any extension, using default output.\n", filename);
+	filename = NULL;
+      }
     }
   }
 
   /* if  the output format wasn't enforced, think a bit about what the user probably want */
   if (output_format == LSTOPO_OUTPUT_DEFAULT) {
-    if (show_cpuset
-        || show_only != (hwloc_obj_type_t)-1
+    if (lstopo_show_cpuset
+        || lstopo_show_only != (hwloc_obj_type_t)-1
         || verbose_mode != LSTOPO_VERBOSE_MODE_DEFAULT)
       output_format = LSTOPO_OUTPUT_CONSOLE;
   }

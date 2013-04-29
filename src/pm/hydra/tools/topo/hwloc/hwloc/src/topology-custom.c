@@ -10,8 +10,7 @@
 hwloc_obj_t
 hwloc_custom_insert_group_object_by_parent(struct hwloc_topology *topology, hwloc_obj_t parent, int groupdepth)
 {
-  hwloc_obj_t obj = hwloc_alloc_setup_object(HWLOC_OBJ_GROUP, -1);
-  obj->attr->group.depth = groupdepth;
+  hwloc_obj_t obj;
 
   /* must be called between set_custom() and load(), so there's a single backend, the custom one */
   if (topology->is_loaded || !topology->backends || !topology->backends->is_custom) {
@@ -19,7 +18,10 @@ hwloc_custom_insert_group_object_by_parent(struct hwloc_topology *topology, hwlo
     return NULL;
   }
 
+  obj = hwloc_alloc_setup_object(HWLOC_OBJ_GROUP, -1);
+  obj->attr->group.depth = groupdepth;
   hwloc_insert_object_by_parent(topology, parent, obj);
+  /* insert_object_by_parent() doesn't merge during insert, so obj is still valid */
 
   return obj;
 }
@@ -80,7 +82,7 @@ hwloc_custom_component_instantiate(struct hwloc_disc_component *component,
 static struct hwloc_disc_component hwloc_custom_disc_component = {
   HWLOC_DISC_COMPONENT_TYPE_GLOBAL,
   "custom",
-  HWLOC_DISC_COMPONENT_TYPE_CPU | HWLOC_DISC_COMPONENT_TYPE_GLOBAL | HWLOC_DISC_COMPONENT_TYPE_ADDITIONAL,
+  ~0,
   hwloc_custom_component_instantiate,
   30,
   NULL

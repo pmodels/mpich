@@ -1,6 +1,6 @@
 /*
  * Copyright © 2009-2011 Cisco Systems, Inc.  All rights reserved.
- * Copyright © 2010-2012 Inria.  All rights reserved.
+ * Copyright © 2010-2013 Inria.  All rights reserved.
  * See COPYING in top-level directory.
  */
 
@@ -80,6 +80,7 @@ extern "C" {
 #define HWLOC_OBJ_OSDEV_NETWORK HWLOC_NAME_CAPS(OBJ_OSDEV_NETWORK)
 #define HWLOC_OBJ_OSDEV_OPENFABRICS HWLOC_NAME_CAPS(OBJ_OSDEV_OPENFABRICS)
 #define HWLOC_OBJ_OSDEV_DMA HWLOC_NAME_CAPS(OBJ_OSDEV_DMA)
+#define HWLOC_OBJ_OSDEV_COPROC HWLOC_NAME_CAPS(OBJ_OSDEV_COPROC)
 
 #define hwloc_compare_types HWLOC_NAME(compare_types)
 
@@ -168,6 +169,7 @@ extern "C" {
 #define hwloc_get_nbobjs_by_type HWLOC_NAME(get_nbobjs_by_type)
 
 #define hwloc_topology_is_thissystem HWLOC_NAME(topology_is_thissystem)
+#define hwloc_topology_get_flags HWLOC_NAME(topology_get_flags)
 
 #define hwloc_get_obj_by_depth HWLOC_NAME(get_obj_by_depth )
 #define hwloc_get_obj_by_type HWLOC_NAME(get_obj_by_type )
@@ -373,6 +375,7 @@ extern "C" {
 /* openfabrics-verbs.h */
 
 #define hwloc_ibv_get_device_cpuset HWLOC_NAME(ibv_get_device_cpuset)
+#define hwloc_ibv_get_device_osdev HWLOC_NAME(ibv_get_device_osdev)
 #define hwloc_ibv_get_device_osdev_by_name HWLOC_NAME(ibv_get_device_osdev_by_name)
 
 /* myriexpress.h */
@@ -380,17 +383,75 @@ extern "C" {
 #define hwloc_mx_board_get_device_cpuset HWLOC_NAME(mx_board_get_device_cpuset)
 #define hwloc_mx_endpoint_get_device_cpuset HWLOC_NAME(mx_endpoint_get_device_cpuset)
 
+/* intel-mic.h */
+
+#define hwloc_intel_mic_get_device_cpuset HWLOC_NAME(intel_mic_get_device_cpuset)
+#define hwloc_intel_mic_get_device_osdev_by_index HWLOC_NAME(intel_mic_get_device_osdev_by_index)
+
+/* opencl.h */
+
+#define hwloc_opencl_get_device_cpuset HWLOC_NAME(opencl_get_device_cpuset)
+#define hwloc_opencl_get_device_osdev HWLOC_NAME(opencl_get_device_osdev)
+#define hwloc_opencl_get_device_osdev_by_index HWLOC_NAME(opencl_get_device_osdev_by_index)
+
 /* cuda.h */
 
 #define hwloc_cuda_get_device_pci_ids HWLOC_NAME(cuda_get_device_pci_ids)
 #define hwloc_cuda_get_device_cpuset HWLOC_NAME(cuda_get_device_cpuset)
 #define hwloc_cuda_get_device_pcidev HWLOC_NAME(cuda_get_device_pcidev)
+#define hwloc_cuda_get_device_osdev HWLOC_NAME(cuda_get_device_osdev)
+#define hwloc_cuda_get_device_osdev_by_index HWLOC_NAME(cuda_get_device_osdev_by_index)
 
 /* cudart.h */
 
 #define hwloc_cudart_get_device_pci_ids HWLOC_NAME(cudart_get_device_pci_ids)
 #define hwloc_cudart_get_device_cpuset HWLOC_NAME(cudart_get_device_cpuset)
 #define hwloc_cudart_get_device_pcidev HWLOC_NAME(cudart_get_device_pcidev)
+#define hwloc_cudart_get_device_osdev_by_index HWLOC_NAME(cudart_get_device_osdev_by_index)
+
+/* nvml.h */
+
+#define hwloc_nvml_get_device_cpuset HWLOC_NAME(nvml_get_device_cpuset)
+#define hwloc_nvml_get_device_osdev HWLOC_NAME(nvml_get_device_osdev)
+#define hwloc_nvml_get_device_osdev_by_index HWLOC_NAME(nvml_get_device_osdev_by_index)
+
+/* gl.h */
+
+#define hwloc_gl_get_display_osdev_by_port_device HWLOC_NAME(gl_get_display_osdev_by_port_device)
+#define hwloc_gl_get_display_osdev_by_name HWLOC_NAME(gl_get_display_osdev_by_name)
+#define hwloc_gl_get_display_by_osdev HWLOC_NAME(gl_get_display_by_osdev)
+
+/* hwloc/plugins.h */
+
+#define hwloc_disc_component_type_e HWLOC_NAME(disc_component_type_e)
+#define HWLOC_DISC_COMPONENT_TYPE_CPU HWLOC_NAME_CAPS(DISC_COMPONENT_TYPE_CPU)
+#define HWLOC_DISC_COMPONENT_TYPE_GLOBAL HWLOC_NAME_CAPS(DISC_COMPONENT_TYPE_GLOBAL)
+#define HWLOC_DISC_COMPONENT_TYPE_MISC HWLOC_NAME_CAPS(DISC_COMPONENT_TYPE_MISC)
+#define hwloc_disc_component_type_t HWLOC_NAME(disc_component_type_t)
+#define hwloc_disc_component HWLOC_NAME(disc_component)
+
+#define hwloc_backend HWLOC_NAME(backend)
+#define hwloc_backend_flag_e HWLOC_NAME(backend_flag_e)
+#define HWLOC_BACKEND_FLAG_NEED_LEVELS HWLOC_NAME_CAPS(BACKEND_FLAG_NEED_LEVELS)
+
+#define hwloc_backend_alloc HWLOC_NAME(backend_alloc)
+#define hwloc_backend_enable HWLOC_NAME(backend_enable)
+#define hwloc_backends_get_obj_cpuset HWLOC_NAME(backends_get_obj_cpuset)
+#define hwloc_backends_notify_new_object HWLOC_NAME(backends_notify_new_object)
+
+#define hwloc_component_type_e HWLOC_NAME(component_type_e)
+#define HWLOC_COMPONENT_TYPE_DISC HWLOC_NAME_CAPS(COMPONENT_TYPE_DISC)
+#define HWLOC_COMPONENT_TYPE_XML HWLOC_NAME_CAPS(COMPONENT_TYPE_XML)
+#define hwloc_component_type_t HWLOC_NAME(component_type_t)
+#define hwloc_component HWLOC_NAME(component)
+
+#define hwloc_insert_object_by_cpuset HWLOC_NAME(insert_object_by_cpuset)
+#define hwloc_report_error_t HWLOC_NAME(report_error_t)
+#define hwloc_report_os_error HWLOC_NAME(report_os_error)
+#define hwloc_hide_errors HWLOC_NAME(hide_errors)
+#define hwloc__insert_object_by_cpuset HWLOC_NAME(_insert_object_by_cpuset)
+#define hwloc_insert_object_by_parent HWLOC_NAME(insert_object_by_parent)
+#define hwloc_alloc_setup_object HWLOC_NAME(alloc_setup_object)
 
 /* private/debug.h */
 
@@ -429,59 +490,15 @@ extern "C" {
 
 /* private/components.h */
 
-#define HWLOC_DISC_COMPONENT_TYPE_CPU HWLOC_NAME_CAPS(DISC_COMPONENT_TYPE_CPU)
-#define HWLOC_DISC_COMPONENT_TYPE_GLOBAL HWLOC_NAME_CAPS(DISC_COMPONENT_TYPE_GLOBAL)
-#define HWLOC_DISC_COMPONENT_TYPE_ADDITIONAL HWLOC_NAME_CAPS(DISC_COMPONENT_TYPE_ADDITIONAL)
-#define HWLOC_DISC_COMPONENT_TYPE_MAX HWLOC_NAME_CAPS(DISC_COMPONENT_TYPE_MAX)
-
-#define hwloc_disc_component_type_e HWLOC_NAME(disc_component_type_e)
-#define hwloc_disc_component_type_t HWLOC_NAME(disc_component_type_t)
-#define hwloc_disc_component HWLOC_NAME(disc_component)
-
 #define hwloc_disc_component_force_enable HWLOC_NAME(disc_component_force_enable)
 #define hwloc_disc_components_enable_others HWLOC_NAME(disc_components_instantiate_others)
 
-#define hwloc_backend HWLOC_NAME(backend)
-#define hwloc_backend_alloc HWLOC_NAME(backend_alloc)
-#define hwloc_backend_enable HWLOC_NAME(backend_enable)
 #define hwloc_backends_reset HWLOC_NAME(backends_reset)
 #define hwloc_backends_disable_all HWLOC_NAME(backends_disable_all)
 #define hwloc_backends_is_thissystem HWLOC_NAME(backends_is_thissystem)
-#define hwloc_backends_get_obj_cpuset HWLOC_NAME(backends_get_obj_cpuset)
-#define hwloc_backends_notify_new_object HWLOC_NAME(backends_notify_new_object)
-
-#define hwloc_backend_flag_e HWLOC_NAME(backend_flag_e)
-#define HWLOC_BACKEND_FLAG_NEED_LEVELS HWLOC_NAME_CAPS(BACKEND_FLAG_NEED_LEVELS)
 
 #define hwloc_components_init HWLOC_NAME(components_init)
 #define hwloc_components_destroy_all HWLOC_NAME(components_destroy_all)
-
-#define HWLOC_COMPONENT_TYPE_DISC HWLOC_NAME_CAPS(COMPONENT_TYPE_DISC)
-#define HWLOC_COMPONENT_TYPE_XML HWLOC_NAME_CAPS(COMPONENT_TYPE_XML)
-#define HWLOC_COMPONENT_TYPE_MAX HWLOC_NAME_CAPS(COMPONENT_TYPE_MAX)
-
-#define hwloc_component_type_e HWLOC_NAME(component_type_e)
-#define hwloc_component_type_t HWLOC_NAME(component_type_t)
-
-#define hwloc_component HWLOC_NAME(component)
-
-#define hwloc_linux_component HWLOC_NAME(linux_component)
-#define hwloc_xml_component HWLOC_NAME(xml_component)
-#define hwloc_solaris_component HWLOC_NAME(solaris_component)
-#define hwloc_aix_component HWLOC_NAME(aix_component)
-#define hwloc_osf_component HWLOC_NAME(osf_component)
-#define hwloc_windows_component HWLOC_NAME(windows_component)
-#define hwloc_darwin_component HWLOC_NAME(darwin_component)
-#define hwloc_freebsd_component HWLOC_NAME(freebsd_component)
-#define hwloc_hpux_component HWLOC_NAME(hpux_component)
-#define hwloc_synthetic_component HWLOC_NAME(synthetic_component)
-#define hwloc_custom_component HWLOC_NAME(custom_component)
-#define hwloc_x86_component HWLOC_NAME(x86_component)
-#define hwloc_noos_component HWLOC_NAME(noos_component)
-#define hwloc_libpci_component HWLOC_NAME(libpci_component)
-
-#define hwloc_xml_nolibxml_component HWLOC_NAME(xml_nolibxml_component)
-#define hwloc_xml_libxml_component HWLOC_NAME(xml_libxml_component)
 
 /* private/private.h */
 
@@ -519,15 +536,7 @@ extern "C" {
 #define hwloc_set_freebsd_hooks HWLOC_NAME(set_freebsd_hooks)
 #define hwloc_set_hpux_hooks HWLOC_NAME(set_hpux_hooks)
 
-#define hwloc_insert_object_by_cpuset HWLOC_NAME(insert_object_by_cpuset)
-#define hwloc_report_error_t HWLOC_NAME(report_error_t)
-#define hwloc_report_os_error HWLOC_NAME(report_os_error)
-#define hwloc_hide_errors HWLOC_NAME(hide_errors)
-#define hwloc__insert_object_by_cpuset HWLOC_NAME(_insert_object_by_cpuset)
-#define hwloc_insert_object_by_parent HWLOC_NAME(insert_object_by_parent)
 #define hwloc_add_uname_info HWLOC_NAME(add_uname_info)
-#define hwloc_bitmap_printf_value HWLOC_NAME(bitmap_printf_value)
-#define hwloc_alloc_setup_object HWLOC_NAME(alloc_setup_object)
 #define hwloc_free_unlinked_object HWLOC_NAME(free_unlinked_object)
 #define hwloc__duplicate_objects HWLOC_NAME(_duplicate_objects)
 

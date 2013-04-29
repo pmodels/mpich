@@ -1,13 +1,11 @@
 .\" -*- nroff -*-
-.\" Copyright © 2009-2012 Inria.  All rights reserved.
+.\" Copyright © 2009-2013 Inria.  All rights reserved.
 .\" Copyright © 2009-2010 Université of Bordeaux
 .\" Copyright © 2009-2010 Cisco Systems, Inc.  All rights reserved.
 .\" See COPYING in top-level directory.
 .TH LSTOPO "1" "#HWLOC_DATE#" "#PACKAGE_VERSION#" "#PACKAGE_NAME#"
 .SH NAME
-lstopo, lstopo-no-graphics \- Show the topology of the system (note that hwloc-bind(1)
-provides a detailed explanation of the hwloc system; it should be read
-before reading this man page).
+lstopo, lstopo-no-graphics \- Show the topology of the system
 .
 .\" **************************
 .\"    Synopsis Section
@@ -59,6 +57,8 @@ and \fBsynthetic\fR.
 .TP
 \fB\-v\fR \fB\-\-verbose\fR
 Include additional detail.
+The hwloc-info tool may be used to display even more information
+about specific objects.
 .TP
 \fB\-s\fR \fB\-\-silent\fR
 Reduce the amount of details to show.
@@ -91,6 +91,10 @@ Only show objects of the given type in the textual output.
 .TP
 \fB\-\-ignore\fR <type>
 Ignore all objects of type <type> in the topology.
+hwloc supports ignoring any type except PUs and I/O devices.
+However lstopo still offers PU ignoring by hiding PU objects
+in the graphical and textual outputs.
+Note that PU may not be ignored in the XML output.
 .TP
 \fB\-\-no\-caches\fR
 Do not show caches.
@@ -425,5 +429,5 @@ To count the number of logical processors in the system
 .SH SEE ALSO
 .
 .ft R
-hwloc(7), hwloc-bind(1), hwloc-ps(1), hwloc-gather-topology(1)
+hwloc(7), hwloc-info(1), hwloc-bind(1), hwloc-ps(1), hwloc-gather-topology(1)
 .sp

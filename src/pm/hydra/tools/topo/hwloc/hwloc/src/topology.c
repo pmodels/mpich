@@ -1,6 +1,6 @@
 /*
  * Copyright © 2009 CNRS
- * Copyright © 2009-2013 Inria.  All rights reserved.
+ * Copyright © 2009-2012 Inria.  All rights reserved.
  * Copyright © 2009-2012 Université Bordeaux 1
  * Copyright © 2009-2011 Cisco Systems, Inc.  All rights reserved.
  * See COPYING in top-level directory.
@@ -475,13 +475,20 @@ int hwloc_compare_types (hwloc_obj_type_t type1, hwloc_obj_type_t type2)
 static enum hwloc_type_cmp_e
 hwloc_type_cmp(hwloc_obj_t obj1, hwloc_obj_t obj2)
 {
-  if (hwloc_compare_types(obj1->type, obj2->type) > 0)
+  hwloc_obj_type_t type1 = obj1->type;
+  hwloc_obj_type_t type2 = obj2->type;
+  int compare;
+
+  compare = hwloc_compare_types(type1, type2);
+  if (compare == HWLOC_TYPE_UNORDERED)
+    return HWLOC_TYPE_EQUAL; /* we cannot do better */
+  if (compare > 0)
     return HWLOC_TYPE_DEEPER;
-  if (hwloc_compare_types(obj1->type, obj2->type) < 0)
+  if (compare < 0)
     return HWLOC_TYPE_HIGHER;
 
   /* Caches have the same types but can have different depths.  */
-  if (obj1->type == HWLOC_OBJ_CACHE) {
+  if (type1 == HWLOC_OBJ_CACHE) {
     if (obj1->attr->cache.depth < obj2->attr->cache.depth)
       return HWLOC_TYPE_DEEPER;
     else if (obj1->attr->cache.depth > obj2->attr->cache.depth)
@@ -495,7 +502,10 @@ hwloc_type_cmp(hwloc_obj_t obj1, hwloc_obj_t obj2)
   }
 
   /* Group objects have the same types but can have different depths.  */
-  if (obj1->type == HWLOC_OBJ_GROUP) {
+  if (type1 == HWLOC_OBJ_GROUP) {
+    if (obj1->attr->group.depth == (unsigned) -1
+	|| obj2->attr->group.depth == (unsigned) -1)
+      return HWLOC_TYPE_EQUAL;
     if (obj1->attr->group.depth < obj2->attr->group.depth)
       return HWLOC_TYPE_DEEPER;
     else if (obj1->attr->group.depth > obj2->attr->group.depth)
@@ -503,7 +513,7 @@ hwloc_type_cmp(hwloc_obj_t obj1, hwloc_obj_t obj2)
   }
 
   /* Bridges objects have the same types but can have different depths.  */
-  if (obj1->type == HWLOC_OBJ_BRIDGE) {
+  if (type1 == HWLOC_OBJ_BRIDGE) {
     if (obj1->attr->bridge.depth < obj2->attr->bridge.depth)
       return HWLOC_TYPE_DEEPER;
     else if (obj1->attr->bridge.depth > obj2->attr->bridge.depth)
@@ -635,8 +645,12 @@ hwloc___insert_object_by_cpuset_report_error(hwloc_report_error_t report_error, 
 #define check_sizes(new, old, field)
 #endif
 
-/* Try to insert OBJ in CUR, recurse if needed */
-static int
+/* Try to insert OBJ in CUR, recurse if needed.
+ * Returns the object if it was inserted,
+ * the remaining object it was merged,
+ * NULL if failed to insert.
+ */
+static struct hwloc_obj *
 hwloc___insert_object_by_cpuset(struct hwloc_topology *topology, hwloc_obj_t cur, hwloc_obj_t obj,
 			        hwloc_report_error_t report_error)
 {
@@ -646,7 +660,7 @@ hwloc___insert_object_by_cpuset(struct hwloc_topology *topology, hwloc_obj_t cur
   /* Make sure we haven't gone too deep.  */
   if (!hwloc_bitmap_isincluded(obj->cpuset, cur->cpuset)) {
     fprintf(stderr,"recursion has gone too deep?!\n");
-    return -1;
+    return NULL;
   }
 
   /* Check whether OBJ is included in some child.  */
@@ -657,12 +671,12 @@ hwloc___insert_object_by_cpuset(struct hwloc_topology *topology, hwloc_obj_t cur
         merge_index(obj, child, os_level, signed);
 	if (obj->os_level != child->os_level) {
           fprintf(stderr, "Different OS level\n");
-          return -1;
+          return NULL;
         }
         merge_index(obj, child, os_index, unsigned);
 	if (obj->os_index != child->os_index) {
           fprintf(stderr, "Different OS indexes\n");
-          return -1;
+          return NULL;
         }
 	if (obj->distances_count) {
 	  if (child->distances_count) {
@@ -723,13 +737,13 @@ hwloc___insert_object_by_cpuset(struct hwloc_topology *topology, hwloc_obj_t cur
 	    break;
 	}
 	/* Already present, no need to insert.  */
-	return -1;
+	return child;
       case HWLOC_OBJ_INCLUDED:
 	if (container) {
           if (report_error)
 	    hwloc___insert_object_by_cpuset_report_error(report_error, "object (%s) included in several different objects!", obj, __LINE__);
 	  /* We can't handle that.  */
-	  return -1;
+	  return NULL;
 	}
 	/* This child contains OBJ.  */
 	container = child;
@@ -738,7 +752,7 @@ hwloc___insert_object_by_cpuset(struct hwloc_topology *topology, hwloc_obj_t cur
         if (report_error)
           hwloc___insert_object_by_cpuset_report_error(report_error, "object (%s) intersection without inclusion!", obj, __LINE__);
 	/* We can't handle that.  */
-	return -1;
+	return NULL;
       case HWLOC_OBJ_CONTAINS:
 	/* OBJ will be above CHILD.  */
 	break;
@@ -812,32 +826,33 @@ hwloc___insert_object_by_cpuset(struct hwloc_topology *topology, hwloc_obj_t cur
   *obj_children = NULL;
   *cur_children = NULL;
 
-  return 0;
+  return obj;
 }
 
 /* insertion routine that lets you change the error reporting callback */
-int
+struct hwloc_obj *
 hwloc__insert_object_by_cpuset(struct hwloc_topology *topology, hwloc_obj_t obj,
 			       hwloc_report_error_t report_error)
 {
-  int ret;
+  struct hwloc_obj *result;
   /* Start at the top.  */
   /* Add the cpuset to the top */
   hwloc_bitmap_or(topology->levels[0][0]->complete_cpuset, topology->levels[0][0]->complete_cpuset, obj->cpuset);
   if (obj->nodeset)
     hwloc_bitmap_or(topology->levels[0][0]->complete_nodeset, topology->levels[0][0]->complete_nodeset, obj->nodeset);
-  ret = hwloc___insert_object_by_cpuset(topology, topology->levels[0][0], obj, report_error);
-  if (ret < 0)
+  result = hwloc___insert_object_by_cpuset(topology, topology->levels[0][0], obj, report_error);
+  if (result != obj)
+    /* either failed to insert, or got merged, free the original object */
     hwloc_free_unlinked_object(obj);
-  return ret;
+  return result;
 }
 
 /* the default insertion routine warns in case of error.
  * it's used by most backends */
-void
+struct hwloc_obj *
 hwloc_insert_object_by_cpuset(struct hwloc_topology *topology, hwloc_obj_t obj)
 {
-  hwloc__insert_object_by_cpuset(topology, obj, hwloc_report_os_error);
+  return hwloc__insert_object_by_cpuset(topology, obj, hwloc_report_os_error);
 }
 
 void
@@ -869,7 +884,6 @@ hwloc_obj_t
 hwloc_topology_insert_misc_object_by_cpuset(struct hwloc_topology *topology, hwloc_const_bitmap_t cpuset, const char *name)
 {
   hwloc_obj_t obj, child;
-  int err;
 
   if (!topology->is_loaded) {
     errno = EINVAL;
@@ -894,8 +908,8 @@ hwloc_topology_insert_misc_object_by_cpuset(struct hwloc_topology *topology, hwl
   obj->allowed_cpuset = hwloc_bitmap_dup(cpuset);
   obj->online_cpuset = hwloc_bitmap_dup(cpuset);
 
-  err = hwloc__insert_object_by_cpuset(topology, obj, NULL /* do not show errors on stdout */);
-  if (err < 0)
+  obj = hwloc__insert_object_by_cpuset(topology, obj, NULL /* do not show errors on stdout */);
+  if (!obj)
     return NULL;
 
   hwloc_connect_children(topology->levels[0][0]);
@@ -1984,10 +1998,15 @@ hwloc_connect_levels(hwloc_topology_t topology)
     /* New level.  */
     taken_objs = malloc((n_taken_objs + 1) * sizeof(taken_objs[0]));
     /* New list of pending objects.  */
-    if (n_objs - n_taken_objs + n_new_objs)
+    if (n_objs - n_taken_objs + n_new_objs) {
       new_objs = malloc((n_objs - n_taken_objs + n_new_objs) * sizeof(new_objs[0]));
-    else
+    } else {
+#ifdef HWLOC_DEBUG
+      assert(!n_new_objs);
+      assert(n_objs == n_taken_objs);
+#endif
       new_objs = NULL;
+    }
 
     n_new_objs = hwloc_level_take_objects(top_obj,
 					  objs, n_objs,
@@ -2236,7 +2255,7 @@ next_cpubackend:
   propagate_total_memory(topology->levels[0][0]);
 
   /*
-   * Discovery with additional backends
+   * Additional discovery with other backends
    */
   backend = topology->backends;
   while (NULL != backend) {
@@ -2449,6 +2468,12 @@ hwloc_topology_set_flags (struct hwloc_topology *topology, unsigned long flags)
 {
   topology->flags = flags;
   return 0;
+}
+
+unsigned long
+hwloc_topology_get_flags (struct hwloc_topology *topology)
+{
+  return topology->flags;
 }
 
 int

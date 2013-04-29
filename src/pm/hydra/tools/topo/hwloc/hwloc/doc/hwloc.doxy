@@ -1,7 +1,7 @@
 /*
  * Copyright © 2009 CNRS
  * Copyright © 2009-2013 Inria.  All rights reserved.
- * Copyright © 2009-2012 Université Bordeaux 1
+ * Copyright © 2009-2013 Université Bordeaux 1
  * Copyright © 2009-2011 Cisco Systems, Inc.  All rights reserved.
  * See COPYING in top-level directory.
  */
@@ -53,10 +53,12 @@ and Kerrighed support)</li>
 <li>Solaris</li>
 <li>AIX</li>
 <li>Darwin / OS X</li>
-<li>FreeBSD and its variants, such as kFreeBSD/GNU</li>
+<li>FreeBSD and its variants (such as kFreeBSD/GNU)</li>
+<li>NetBSD</li>
 <li>OSF/1 (a.k.a., Tru64)</li>
 <li>HP-UX</li>
 <li>Microsoft Windows</li>
+<li>IBM BlueGene/Q Compute Node Kernel (CNK)</li>
 </ul>
 
 Since it uses standard Operating System information, hwloc's support is mostly
@@ -145,7 +147,10 @@ is configured and build.
 
 The hwloc core may also benefit from the following development packages:
 <ul>
-<li>Hwloc can use one of two different libraries for I/O device
+<li>libnuma for memory binding and migration support on Linux
+    (<tt>numactl-devel</tt> or <tt>libnuma-dev</tt> package).
+</li>
+<li>hwloc can use one of two different libraries for I/O device
 discovery:
 <ol>
 <li> libpciaccess (BSD).  The relevant development package is usually
@@ -154,8 +159,14 @@ discovery:
 package is usually <tt>pciutils-devel</tt> or <tt>libpci-dev</tt>.  
 </ol>
 </li>
-<li>libnuma for memory binding and migration support on Linux
-    (<tt>numactl-devel</tt> or <tt>libnuma-dev</tt> package).
+
+<li>the AMD OpenCL implementation for OpenCL device discovery.
+</li>
+<li>the NVIDIA CUDA Toolkit for CUDA device discovery.
+</li>
+<li>the NVIDIA Tesla Development Kit for NVML device discovery.
+</li>
+<li>the NV-CONTROL X extension library (NVCtrl) for NVIDIA display discovery.
 </li>
 <li>libxml2 for full XML import/export support (otherwise, the
     internal minimalistic parser will only be able to import
@@ -167,8 +178,8 @@ package is usually <tt>pciutils-devel</tt> or <tt>libpci-dev</tt>.
 </ul>
 
 PCI and XML support may be statically built inside the main hwloc
-library, or as separate dynamically-loaded plugins (see the \ref
-plugins section).
+library, or as separate dynamically-loaded plugins (see the
+\ref plugins section).
 
 Note that because of the possibility of GPL taint (remember that hwloc
 is BSD-licensed), hwloc's <tt>configure</tt> script will prefer
@@ -426,8 +437,9 @@ To precisely define the vocabulary used by hwloc, a \ref termsanddefs
 section is available and should probably be read first.  
 
 Each hwloc object contains a cpuset describing the list of processing
-units that it contains.  These bitmaps may be used for \ref
-hwlocality_cpubinding and \ref hwlocality_membinding.  hwloc offers an extensive
+units that it contains.  These bitmaps may be used for
+\ref hwlocality_cpubinding and \ref hwlocality_membinding.
+hwloc offers an extensive
 bitmap manipulation interface in hwloc/bitmap.h.
 
 Moreover, hwloc also comes with additional helpers for
@@ -463,8 +475,8 @@ memory bindings, some others provide only interfaces for a limited number of
 kinds of CPU and memory binding, and some do not provide any binding interface
 at all.  Hwloc's binding functions would then simply return the ENOSYS error
 (Function not implemented), meaning that the underlying Operating System
-does not provide any interface for them. \ref hwlocality_cpubinding and \ref
-hwlocality_membinding provide more information on which hwloc binding functions
+does not provide any interface for them. \ref hwlocality_cpubinding and
+\ref hwlocality_membinding provide more information on which hwloc binding functions
 should be preferred because interfaces for them are usually available on the
 supported Operating Systems.
 
@@ -785,7 +797,7 @@ tools.
 
 \section cli_lstopo lstopo and lstopo-no-graphics
 
-lstopo (also known as hwloc-info and hwloc-ls) displays the
+lstopo (also known as hwloc-ls) displays the
 hierarchical topology map of the current system.  The output may be
 graphical or textual, and can also be exported to numerous file
 formats such as PDF, PNG, XML, and others.
@@ -830,6 +842,13 @@ may be composed to generate complex combinations.
 Note that hwloc-calc can also generate lists of logical processors or
 NUMA nodes that are convenient to pass to some external tools such as
 taskset or numactl.
+
+\section cli_hwloc_info hwloc-info
+
+hwloc-info dumps information about the given objects.
+It is intended to be used with tools such as grep for filtering
+certain attribute lines.
+When no object is specified, hwloc-info prints a summary of the topology.
 
 \section cli_hwloc_distrib hwloc-distrib
 
@@ -908,7 +927,7 @@ following environment variables.
 
 <dt>HWLOC_XML_VERBOSE=1</dt>
 <dt>HWLOC_SYNTHETIC_VERBOSE=1</dt>
-  <dd>enable verbose messages in the XML or synthetic topology backends.
+  <dd>enables verbose messages in the XML or synthetic topology backends.
   hwloc XML backends (see \ref xml) can emit some error messages to
   the error output stream.
   Enabling these verbose messages within hwloc can be useful for
@@ -1025,18 +1044,20 @@ following environment variables.
   </dd>
 
 <dt>HWLOC_PLUGINS_VERBOSE=1</dt>
-  <dd>display verbose information about plugins.
+  <dd>displays verbose information about plugins.
   List which directories are scanned, which files are loaded,
   and which components are successfully loaded.
   </dd>
 
 <dt>HWLOC_COMPONENTS=list,of,components</dt>
-  <dd>forces a list of components to enable.
-  Enable the given comma-separated list of components
-   (if they do not conflict with each other).
+  <dd>forces a list of components to enable or disable.
+  Enable or disable the given comma-separated list of components
+  (if they do not conflict with each other). Component names prefixed with
+  <tt>-</tt> are disabled.
   Once the end of the list is reached, hwloc falls back to
   enabling the remaining components (sorted by priority) that do not
-  conflict with the already enabled ones.
+  conflict with the already enabled ones, and unless explicitly disabled in the
+  list.
   If <tt>stop</tt> is met, the enabling loop immediately stops, no
   more component is enabled.
   If the variable is set to an empty string, no specific component is
@@ -1046,11 +1067,14 @@ following environment variables.
   load (<tt>xml=file.xml</tt>).
   The synthetic component may be followed by a synthetic topology
   description (<tt>synthetic=node:2 pu:3</tt>).
+  This variable does not take precedence over the application
+  selecting components with functions such as
+  hwloc_topology_set_xml().
   See \ref plugins for details.
   </dd>
 
 <dt>HWLOC_COMPONENTS_VERBOSE=1</dt>
-  <dd>display verbose information about components.
+  <dd>displays verbose information about components.
   Display messages when components are registered or enabled.
   This is the recommended way to list the available components
   with their priority
@@ -1067,9 +1091,21 @@ following environment variables.
   uses /proc/cpuinfo instead of sysfs.
   may be useful in the doc for debugging?
  HWLOC_DEBUG_CHECK
-  run sanity checks during discovery, as if --enable-debug was passed but
+  runs sanity checks during discovery, as if --enable-debug was passed but
   without debug messages
   may be useful in the doc for debugging?
+ HWLOC_HIDE_DEPRECATED
+  hides some warnings about deprecated features.
+  listed in those warnings so no need to document it
+ HWLOC_FORCE_BGQ
+  makes the bgq component run even if it doesn't recognize the running platform as a BGQ/CNK
+ HWLOC_DEBUG_FAKE_COMPONENT
+  enables debugging message to check that the fake component gets loaded
+ HWLOC_DEBUG_PAGESIZE
+  forces the page size in the Linux code for debugging in topology chroots 
+ HWLOC_NO_LIBXML_EXPORT
+ HWLOC_NO_LIBXML_IMPORT
+  forces the use of the nolibxml XML backend instead of libxml2 if available
 -->
 
 
@@ -1190,18 +1226,75 @@ on the machine and on the topology flags.
 Although each PCI device is uniquely identified by its bus ID
 (e.g. 0000:01:02.3), the application can hardly find out which
 PCI device is actually used when manipulating software handle
-(such as the <em>eth0</em> network interface or the <em>mlx4_0</em>
-OpenFabrics HCA).
-Therefore hwloc tries to add software devices (<tt>::HWLOC_OBJ_OS_DEVICE</tt>)
+(such as the <em>eth0</em> network interface,
+ the <em>sda</em> hard drive,
+ or the <em>mlx4_0</em> OpenFabrics HCA).
+Therefore hwloc tries to add software devices
+(<tt>::HWLOC_OBJ_OS_DEVICE</tt>, also known as OS devices)
 below their PCI objects.
-These objects can be identified by their usual operating system-wide
-names, e.g. <em>eth0</em> or <em>mlx4_0</em>.
+
+hwloc first tries to discover the corresponding names,
+e.g. <em>eth0</em>, <em>sda</em> or <em>mlx4_0</em>,
+from the operating system.
 However, this ability is currently only available on Linux for some
 classes of devices.
-It should especially be noted that proprietary graphics driver
-currently do not create any interesting software device for GPUs,
-they should therefore be manipulated as PCI device objects.
-On the contrary some PCI devices may contain multiple software device
+
+hwloc then tries to discover software devices through additional
+I/O components using external libraries.
+For instance proprietary graphics drivers do not offer any OS name,
+but hwloc may still create one OS object per software handle when
+supported.
+For instance the <tt>opencl</tt> and <tt>cuda</tt> components may
+add some <em>opencl0d0</em> and <em>cuda0</em> OS device objects.
+
+Here is a list of OS device objects commonly created by hwloc
+components when I/O discovery is enabled and supported.
+
+<ul>
+<li>Hard disks (HWLOC_OBJ_OSDEV_BLOCK)
+ <ul>
+ <li><em>sda</em> (Linux component)</li>
+ </ul>
+</li>
+<li>Network interfaces (HWLOC_OBJ_OSDEV_NETWORK)
+ <ul>
+ <li><em>eth0</em>, <em>wlan0</em>, <em>ib0</em> (Linux component)</li>
+ </ul>
+</li>
+<li>OpenFabrics HCAs (HWLOC_OBJ_OSDEV_OPENFABRICS)
+ <ul>
+ <li><em>mlx4_0</em>, <em>qib0</em> (Linux component)</li>
+ </ul>
+</li>
+<li>GPUs (HWLOC_OBJ_OSDEV_GPU)
+ <ul>
+ <li><em>nvml0</em> for the first NVML device
+  (NVML component, using the NVIDIA Management Library)</li>
+ <li><em>:0.0</em> for the first display
+  (GL component, using the NV-CONTROL X extension library, NVCtrl)</li>
+ </ul>
+</li>
+<li>Co-Processors (HWLOC_OBJ_OSDEV_COPROC)
+ <ul>
+ <li><em>opencl0d0</em> for the first device of the first OpenCL platform,
+  <em>opencl1d3</em> for the fourth device of the second OpenCL platform
+  (OpenCL component)</li>
+ <li><em>cuda0</em> for the first NVIDIA CUDA device
+  (CUDA component, using the NVIDIA CUDA Library)</li>
+ <li><em>mic0</em> for the first Intel Xeon Phi (MIC) coprocessor
+  (Linux component)</li>
+ </ul>
+</li>
+<li>DMA engine channel (HWLOC_OBJ_OSDEV_DMA)
+ <ul>
+ <li><em>dma0chan0</em> (Linux component)</li>
+ </ul>
+</li>
+</ul>
+
+When none of the above strategies is supported and enabled,
+hwloc cannot place any OS object inside PCI objects.
+Note that some PCI devices may contain multiple software devices
 (see the example below).
 
 See also \ref interoperability for managing these devices without
@@ -1513,7 +1606,7 @@ architecture name, as reported by the Unix <tt>uname</tt> command.
 <dd>The name of the hwloc backend/component that filled the topology.
 If several components were combined, multiple Backend keys may exist,
 with different values, for instance <tt>x86</tt>, <tt>Linux</tt>
-and <tt>libpci</tt>.
+and <tt>pci</tt>.
 </dd>
 <dt>LinuxCgroup (Machine object)</dt>
 <dd>The name the Linux control group where the calling process is
@@ -1533,6 +1626,25 @@ object instead.
 </dd>
 <dt>PCIVendor, PCIDevice (PCI devices and bridges)</dt>
 <dd>The vendor and device names of the PCI device.
+</dd>
+<dt>CoProcType (Co-Processor OS devices)</dt>
+<dd>The type of co-processor, for instance <tt>"MIC"</tt>, <tt>"CUDA"</tt>
+ or <tt>"OpenCL"</tt>.
+</dd>
+<dt>GPUVendor, GPUModel (GPU or Co-Processor OS devices)</dt>
+<dd>The vendor and model names of the GPU device.
+</dd>
+<dt>OpenCLDeviceType, OpenCLPlatformIndex,
+<dt>OpenCLPlatformName, OpenCLPlatformDeviceIndex (OpenCL GPU OS devices)</dt>
+<dd>The type of OpenCL device,
+ the OpenCL platform index and name,
+ and the index of the device within the platform.
+</dd>
+<dt>NVIDIAUUID, NVIDIASerial (NVML GPU OS devices)</dt>
+<dd>The UUID and Serial of NVIDIA GPUs.
+</dd>
+<dt>MICFamily</dt>
+<dd>The family of an Intel Xeon Phi (MIC) coprocessor.
 </dd>
 <dt>DMIBoardVendor, DMIBoardName, etc. (Machine object)</dt>
 <dd>DMI hardware information such as the motherboard and chassis
@@ -1772,8 +1884,8 @@ enabled for the current topology.
   hwloc/openfabrics-verbs.h helps interoperability with the
   OpenFabrics Verbs interface.  For example, it can return a list of
   processors near an OpenFabrics device.
-  Note that if I/O device discovery is enabled, such devices may also
-  appear as PCI objects and as OS objects in the topology.
+  It may also return the corresponding OS device hwloc object for further
+  information (if I/O device discovery is enabled).
  </dd>
 
 <dt>Myrinet Express</dt>
@@ -1785,13 +1897,50 @@ enabled for the current topology.
   appear as PCI objects in the topology.
  </dd>
 
+<dt>Intel Xeon Phi (MIC)</dt>
+ <dd>
+  hwloc/intel-mic.h helps interoperability with Intel Xeon Phi (MIC)
+  coprocessors by returning the list of processors near these devices.
+  It may also return the corresponding OS device hwloc object for further
+  information (if I/O device discovery is enabled).
+ </dd>
+
+<dt>AMD OpenCL</dt>
+ <dd>
+  hwloc/opencl.h enables interoperability with the OpenCL interface.
+  Only the AMD implementation currently offers locality information.
+  It may return the list of processors near an AMD/ATI GPU given as
+  a <tt>cl_device_id</tt>.
+  It may also return the corresponding OS device hwloc object for further
+  information (if I/O device discovery is enabled).
+ </dd>
+
 <dt>NVIDIA CUDA</dt>
  <dd>
   hwloc/cuda.h and hwloc/cudart.h enable interoperability with
   NVIDIA CUDA Driver and Runtime interfaces. For instance, it may
   return the list of processors near NVIDIA GPUs.
-  Note that if I/O device discovery is enabled, GPUs may also
-  appear as PCI objects in the topology.
+  It may also return the corresponding OS device hwloc object for further
+  information (if I/O device discovery is enabled).
+ </dd>
+
+<dt>NVIDIA Management Library (NVML)</dt>
+ <dd>
+  hwloc/nvml.h enables interoperability with the NVIDIA NVML interface.
+  It may return the list of processors near a NVIDIA GPU given as
+  a <tt>nvmlDevice_t</tt>.
+  It may also return the corresponding OS device hwloc object for further
+  information (if I/O device discovery is enabled).
+ </dd>
+
+<dt>NVIDIA displays</dt>
+ <dd>
+  hwloc/gl.h enables interoperability with NVIDIA displays
+  using the NV-CONTROL X extension (NVCtrl library).
+  If I/O device discovery is enabled, it may return the OS device
+  hwloc object that corresponds to a display
+  given as a name such as <em>:0.0</em>
+  or given as a port/device pair (server/screen).
  </dd>
 
 <dt>Taskset command-line tool</dt>
@@ -1813,13 +1962,13 @@ enabled for the current topology.
 \page threadsafety Thread Safety
 
 Like most libraries that mainly fill data structures, hwloc is not
-thread safe but rather reentrant: all state is held in a \ref
-hwloc_topology_t instance without mutex protection.  That means, for
+thread safe but rather reentrant: all state is held in a
+\ref hwloc_topology_t instance without mutex protection.  That means, for
 example, that two threads can safely operate on and modify two
 different \ref hwloc_topology_t instances, but they should not
 simultaneously invoke functions that modify the <em>same</em>
-instance.  Similarly, one thread should not modify a \ref
-hwloc_topology_t instance while another thread is reading or
+instance.  Similarly, one thread should not modify a
+\ref hwloc_topology_t instance while another thread is reading or
 traversing it.  However, two threads can safely read or traverse the
 same \ref hwloc_topology_t instance concurrently.
 
@@ -1846,8 +1995,8 @@ For reference, \ref hwloc_topology_t modification operations include
   after these functions return.  </dd>
 
 <dt>Runtime topology modifications</dt>
-  <dd><tt>hwloc_topology_insert_misc_object_by_*</tt> (see \ref
-  hwlocality_tinker) may modify the topology significantly by adding
+  <dd><tt>hwloc_topology_insert_misc_object_by_*</tt> (see
+  \ref hwlocality_tinker) may modify the topology significantly by adding
   objects inside the tree, changing the topology depth, etc.
   <tt>hwloc_topology_restrict</tt> modifies the topology even more
   dramatically by removing some objects.
@@ -1878,7 +2027,7 @@ Depending on the topology configuration, some components will be used,
 some will be ignored.
 The usual default is to enable the native operating system component,
 (e.g. <tt>linux</tt> or <tt>solaris</tt>) and the
-<tt>libpci</tt> additional component.
+<tt>pci</tt> miscellaneous component.
 If available, an architecture-specific component (such as <tt>x86</tt>)
 may also improve the topology detection.
 
@@ -1895,7 +2044,7 @@ Each one is enabled as long as it does not conflict with the
 previously enabled ones.
 This includes native operating system components,
 architecture-specific ones, and if available, I/O components
-such as <tt>libpci</tt>.
+such as <tt>pci</tt>.
 
 Usually the native operating system component
 (when it exists, e.g. <tt>linux</tt> or <tt>aix</tt>)
@@ -1908,7 +2057,7 @@ that just tries to discover the number of PUs in the system.
 Each component discovers as much topology information as possible.
 Most of them, including most native OS components, do nothing
 unless the topology is still empty.
-Some others, such as <tt>x86</tt> and <tt>libpci</tt>,
+Some others, such as <tt>x86</tt> and <tt>pci</tt>,
 can complete and annotate what other backends still earlier.
 
 Default priorities ensure that clever components are invoked first.
@@ -1937,9 +2086,10 @@ may be set to get verbose messages about component registration
 
 \section plugins_select Selecting which components to use
 
-Aside from topology configuration function such as
-<tt>hwloc_topology_set_custom()</tt>, the default priority order may
-be changed through the  <tt>HWLOC_COMPONENTS</tt> environment
+Once topology configuration functions such as
+<tt>hwloc_topology_set_custom()</tt> have been taken care of,
+the priority order of the remaining components may be changed
+through the  <tt>HWLOC_COMPONENTS</tt> environment
 variable (component names must be separated by commas).
 
 Specifying <tt>x86</tt> in this variable will cause the <tt>x86</tt>
@@ -1951,6 +2101,11 @@ In this case, <tt>x86</tt> would take care of discovering everything
 it supports, instead of only completing what the native OS information.
 This may be useful if the native component is buggy on some platforms.
 
+It is possible to prevent some components from being loaded by prefixing their
+name with <tt>-</tt> in the list. For instance <tt>x86,-pci</tt> will load the
+<tt>x86</tt> component, then let hwloc load all the usual components except
+<tt>pci</tt>.
+
 It is possible to prevent all remaining components from being loaded
 by placing <tt>stop</tt> in the environment variable.
 Only the components listed before this keyword will be enabled.
@@ -1961,7 +2116,7 @@ These arguments behave exactly as if the corresponding string had
 been passed to <tt>hwloc_topology_set_xml()</tt>
 or <tt>hwloc_topology_set_synthetic()</tt>.
 
-\section plugins_config Building components as plugins
+\section plugins_load Loading components from plugins
 
 Components may optionally be built as plugins so that the hwloc core
 library does not directly depend on their dependencies (for instance
@@ -1979,10 +2134,6 @@ All plugins found in this directory are loaded during
 A specific list of directories (colon-separated) to scan may be
 specified in the <tt>HWLOC_PLUGINS_PATH</tt> environment variable.
 
-Plugin filenames must start with <tt>hwloc_</tt>.
-For instance the <tt>libpci</tt> plugin is usually built as
-<tt>hwloc_libpci.so</tt>.
-
 Note that loading a plugin just means that the corresponding component
 is registered to the hwloc core.
 Components are then only enabled if the topology configuration
@@ -1990,29 +2141,54 @@ requests it, as explained in the previous sections.
 
 \section plugins_adding Adding new discovery components and plugins
 
-Each new discovery component requires a new <tt>hwloc_component</tt>
-structure to be exported to the hwloc core with name
-<tt>hwloc_&lt;name&gt;_component</tt>.
-The configure script should then be modified to add
-<tt>&lt;name&gt;</tt> to the <tt>hwloc_components</tt>
-variable so that the component is actually available at runtime.
+The types and functions cited below are declared in the hwloc/plugins.h header.
+Components are supposed to only use hwloc public headers (hwloc.h and
+anything under the <tt>include/hwloc</tt> subdirectory) and nothing from the
+<tt>include/private</tt> subdirectory in the source tree.
 
-If the new component may be built as a plugin, the configure script
-should also define <tt>hwloc_&lt;name&gt;_component_maybeplugin=1</tt>.
-If the configure scripts decides to enable the component as a plugin,
-the variable <tt>hwloc_&lt;name&gt;_component</tt>
-will be set to <tt>plugin</tt>.
-The build system may then use this variable to actually
-change the way the component is built.
+\subsection plugins_disc_basic Basics of discovery components
 
-The component structure contains a data field that points to an
-<tt>hwloc_disc_component</tt> which defines an <tt>instantiate</tt>
-callback.
+Each discovery component is defined by a <tt>hwloc_disc_component</tt>
+structure which contains an <tt>instantiate()</tt> callback.
 This function is invoked when this component is actually used by a topology.
-It creates a <tt>backend</tt> structure that usually contains a
-<tt>discover</tt> and/or <tt>notify_new_object</tt> callback taking
+It fills a new <tt>hwloc_backend</tt> structure that usually contains
+<tt>discover()</tt> and/or <tt>notify_new_object()</tt> callbacks taking
 care of the actual topology discovery.
 
+\note If two discovery components have the same name, only the highest
+priority one is actually made available.
+This offers a way for third-party plugins to override existing components.
+
+\subsection plugins_disc_register Registering a new discovery component
+
+Registering components to the hwloc core relies on a <tt>hwloc_component</tt> structure.
+Its <tt>data</tt> field points to the previously defined <tt>hwloc_disc_component</tt>
+structure while its <tt>type</tt> should be HWLOC_COMPONENT_TYPE_DISC.
+This structure should be named <tt>hwloc_&lt;name&gt;_component</tt>.
+
+The configure script should be modified to add <tt>&lt;name&gt;</tt>
+to its <tt>hwloc_components</tt> shell variable so that the component
+is actually available.
+
+\note The symbol name of the <tt>hwloc_component</tt> structure
+is independent of the name of the discovery component mentioned
+in the previous section.
+
+When the component is statically built inside the hwloc library,
+the symbol <tt>hwloc_&lt;name&gt;_component</tt> is added by configure
+to the <tt>src/static-components.h</tt>.
+The core then registers all components listed in this file.
+
+If the new component may be built as a plugin, the configure script
+should also define the shell variable
+<tt>hwloc_&lt;name&gt;_component_maybeplugin=1</tt>.
+When the configure script actually enables the component as a plugin,
+it will set the variable <tt>hwloc_&lt;name&gt;_component</tt>
+to <tt>plugin</tt>.
+The build system may then use this variable to change the way the component is built.
+It should create a <tt>hwloc_&lt;name&gt;.so</tt> shared object.
+All these files are loaded in alphabetic order, and the components
+they contain are registered to the hwloc core.
 
 \section plugins_list Existing components and plugins
 
@@ -2022,6 +2198,7 @@ at running with the <tt>HWLOC_COMPONENTS_VERBOSE</tt>
 environment variable (see \ref envvar).
 
 <dl>
+
 <dt>aix, darwin, freebsd, hpux, linux, netbsd, osf, solaris, windows</dt>
 <dd>
  Each officially supported operating system has its own native component,
@@ -2033,6 +2210,12 @@ environment variable (see \ref envvar).
  that may complete or replace the previously-found CPU information.
  It is statically built when supported.
 </dd>
+<dt>bgq</dt>
+<dd>
+ This component is specific to IBM BlueGene/Q compute node (running CNK).
+ It is built and enabled by default when <tt>--host=powerpc64-bgq-linux</tt>
+ is passed to configure (see \ref faq_bgq).
+</dd>
 <dt>no_os</dt>
 <dd>
  A basic component that just tries to detect the number of processing
@@ -2040,11 +2223,44 @@ environment variable (see \ref envvar).
  not natively supported.
  It is always statically built.
 </dd>
-<dt>libpci</dt>
+<dt>pci</dt>
 <dd>
  PCI object discovery uses the external pciaccess library (aka libpciaccess),
  or optionally the pciutils library (libpci),
  see \ref iodevices.
+ <b>It may be built as a plugin</b>.
+</dd>
+<dt>opencl</dt>
+<dd>
+ The OpenCL component creates co-processor OS device objects such as
+ <em>opencl0d0</em> (first device of the first OpenCL platform)
+ or <em>opencl1d3</em> (fourth device of the second platform).
+ Only the AMD OpenCL implementation currently offers locality
+ information.
+ <b>It may be built as a plugin</b>.
+</dd>
+<dt>cuda</dt>
+<dd>
+ This component creates co-processor OS device objects such as <em>cuda0</em>
+ that correspond to NVIDIA GPUs used with CUDA library.
+ <b>It may be built as a plugin</b>.
+</dd>
+<dt>nvml</dt>
+<dd>
+ Probing the NVIDIA Management Library creates OS device objects
+ such as <em>nvml0</em> that are useful for batch schedulers.
+ It also detects the actual PCIe link bandwidth without depending
+ on power management state and without requiring administrator
+ privileges.
+ <b>It may be built as a plugin</b>.
+</dd>
+<dt>gl</dt>
+<dd>
+ Probing the NV-CONTROL X extension (NVCtrl library) creates OS
+ device objects such as <em>:0.0</em> corresponding to NVIDIA
+ displays.
+ They are useful for graphical applications that need to place
+ computation and/or data near a rendering GPU.
  <b>It may be built as a plugin</b>.
 </dd>
 <dt>synthetic</dt>
@@ -2271,6 +2487,36 @@ interface, and the import/export may also be directed to memory buffer
 See also \ref xml.
 
 
+\section faq_slow_lstopo Why is lstopo slow?
+
+lstopo enables most hwloc discovery flags by default so that the output
+topology is as precise as possible (while hwloc disables many of them
+by default).
+This includes I/O device discovery through PCI libraries as well as external
+libraries such as NVML.
+To speed up lstopo, you may disable such features with command-line
+options such as <tt>--no-io</tt>.
+
+When NVIDIA GPU probing is enabled with CUDA or NVML, one should make sure that
+the <em>Persistent</em> mode is enabled (with <tt>nvidia-smi -pm 1</tt>)
+to avoid significant GPU initialization overhead.
+
+When AMD GPU discovery is enabled with OpenCL and hwloc is used remotely
+over ssh, some spurious round-trips on the network may significantly
+increase the discovery time.
+Forcing the <tt>DISPLAY</tt> environment variable to the remote X server
+display (usually <tt>:0</tt>) instead of only setting the <tt>COMPUTE</tt>
+variable may avoid this.
+
+Also remember that these components may be disabled at build-time with
+configure flags such as <tt>--disable-opencl</tt>, <tt>--disable-cuda</tt> or <tt>--disable-nvml</tt>,
+and at runtime with the environment variable
+<tt>HWLOC_COMPONENTS=-opencl,cuda,nvml</tt>.
+
+If loading topologies is slow because the machine contains tons of
+processors, one should also consider using XML (see \ref faq_xml).
+
+
 \section faq_privileged Does hwloc require privileged access?
 
 hwloc discovers the topology by querying the operating system.
@@ -2486,5 +2732,21 @@ following code to support old cpuset-only hwloc versions:
 
 hwloc 0.9 did not define any <tt>HWLOC_API_VERSION</tt> but this very old
 release probably does not deserve support from your application anymore.
+
+
+\section faq_bgq How do I build hwloc for BlueGene/Q?
+
+IBM BlueGene/Q machines run a standard Linux on the I/O node and a
+custom CNK (<em>Compute Node Kernel</em>) on the compute nodes.
+To run on the compute node, hwloc must be cross-compiled from the I/O
+node with the following configuration line:
+\verbatim
+./configure --host=powerpc64-bgq-linux --disable-shared --enable-static \
+  CPPFLAGS='-I/bgsys/drivers/ppcfloor -I/bgsys/drivers/ppcfloor/spi/include/kernel/cnk/'
+\endverbatim
+
+CPPFLAGS may have to be updated if your platform headers are installed
+in a different directory.
+
 
 */

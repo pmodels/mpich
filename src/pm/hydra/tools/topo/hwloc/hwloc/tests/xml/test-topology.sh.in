@@ -3,7 +3,7 @@
 
 #
 # Copyright © 2009 CNRS
-# Copyright © 2009-2012 Inria.  All rights reserved.
+# Copyright © 2009-2013 Inria.  All rights reserved.
 # Copyright © 2009-2012 Université Bordeaux 1
 # Copyright © 2010 Cisco Systems, Inc.  All rights reserved.
 # See COPYING in top-level directory.
@@ -16,7 +16,7 @@ HWLOC_top_builddir="@HWLOC_top_builddir@"
 HWLOC_top_srcdir="@HWLOC_top_srcdir@"
 lstopo="@HWLOC_top_builddir@/utils/lstopo-no-graphics"
 
-HWLOC_PLUGINS_PATH=${abs_top_builddir}/src
+HWLOC_PLUGINS_PATH=${HWLOC_top_builddir}/src
 export HWLOC_PLUGINS_PATH
 
 if test x@HWLOC_XML_LOCALIZED@ = x1; then
@@ -54,7 +54,17 @@ set -e
 
 do_run()
 {
-  $lstopo --if xml --input "$1" --of xml "$file"
+  dirname=`dirname $1`
+  basename="${dirname}/"`basename $1 .xml`
+
+  source="$1"
+  source_file="${basename}.source"
+  test -f "$source_file" && source="${dirname}/"`cat $source_file`
+
+  options_file="${basename}.options"
+  test -f "$options_file" && opts=`cat $options_file`
+
+  $lstopo --if xml --input "$source" --of xml "$file" $opts
 
   if [ "$HWLOC_UPDATE_TEST_TOPOLOGY_OUTPUT" != 1 ]
   then

@@ -1,4 +1,4 @@
-# Copyright © 2009-2012 Inria.  All rights reserved.
+# Copyright © 2009-2013 Inria.  All rights reserved.
 # Copyright © 2009-2012 Université Bordeaux 1
 # Copyright © 2009-2011 Cisco Systems, Inc.  All rights reserved.
 #
@@ -12,14 +12,14 @@ AM_LDFLAGS = $(HWLOC_LDFLAGS)
 
 LDADD = $(HWLOC_top_builddir)/src/libhwloc.la
 
-EXTRA_DIST = test-hwloc-annotate.input test-hwloc-annotate.output test-hwloc-assembler.input1 test-hwloc-assembler.input2 test-hwloc-assembler.output test-hwloc-calc.output test-hwloc-distances.output test-hwloc-distrib.output test-hwloc-ls.output
+EXTRA_DIST = test-hwloc-annotate.input test-hwloc-annotate.output test-hwloc-assembler.input1 test-hwloc-assembler.input2 test-hwloc-assembler.output test-hwloc-calc.output test-hwloc-distances.output test-hwloc-distrib.output test-hwloc-info.output test-hwloc-ls.output
 
 noinst_HEADERS = misc.h
 
-bin_PROGRAMS = lstopo-no-graphics hwloc-annotate hwloc-assembler hwloc-calc hwloc-bind hwloc-distances hwloc-distrib hwloc-ps
+bin_PROGRAMS = lstopo-no-graphics hwloc-annotate hwloc-assembler hwloc-calc hwloc-bind hwloc-distances hwloc-distrib hwloc-info hwloc-ps
 
 lstopo_no_graphics_SOURCES = lstopo.h lstopo.c lstopo-color.c lstopo-text.c lstopo-draw.c lstopo-fig.c lstopo-xml.c
-lstopo_no_graphics_CFLAGS = $(HWLOC_LIBXML2_CFLAGS) $(HWLOC_PCI_CFLAGS)
+lstopo_no_graphics_CFLAGS = 
 lstopo_no_graphics_LDADD = $(LDADD) -lm $(HWLOC_TERMCAP_LIBS)
 lstopo_SOURCES = $(lstopo_no_graphics_SOURCES)
 lstopo_CPPFLAGS = $(AM_CPPFLAGS)
@@ -46,7 +46,7 @@ hwloc_calc_SOURCES = hwloc-calc.c hwloc-calc.h
 bin_SCRIPTS = hwloc-assembler-remote
 
 if !HWLOC_HAVE_MINGW32
-TESTS = test-hwloc-annotate.sh test-hwloc-assembler.sh test-hwloc-calc.sh test-hwloc-distances.sh test-hwloc-distrib.sh test-hwloc-ls.sh
+TESTS = test-hwloc-annotate.sh test-hwloc-assembler.sh test-hwloc-calc.sh test-hwloc-distances.sh test-hwloc-distrib.sh test-hwloc-info.sh test-hwloc-ls.sh
 if HWLOC_HAVE_PLUGINS
 TESTS += test-fake-plugin.sh
 endif HWLOC_HAVE_PLUGINS
@@ -57,7 +57,7 @@ man7_pages = hwloc.7
 EXTRA_DIST += $(man7_pages:.7=.7in)
 nodist_man_MANS = $(man7_pages)
 
-man1_pages = lstopo.1 hwloc-annotate.1 hwloc-bind.1 hwloc-calc.1 hwloc-distances.1 hwloc-distrib.1 hwloc-ps.1 hwloc-assembler.1 hwloc-assembler-remote.1
+man1_pages = lstopo.1 hwloc-annotate.1 hwloc-bind.1 hwloc-calc.1 hwloc-distances.1 hwloc-distrib.1 hwloc-info.1 hwloc-ps.1 hwloc-assembler.1 hwloc-assembler-remote.1
 EXTRA_DIST += $(man1_pages:.1=.1in)
 nodist_man_MANS += $(man1_pages)
 
@@ -92,29 +92,29 @@ endif HWLOC_HAVE_LINUX
 	  > $@ < $<
 
 install-exec-hook: install-man
-	rm -f $(DESTDIR)$(bindir)/hwloc-ls$(EXEEXT) $(DESTDIR)$(bindir)/hwloc-info$(EXEEXT)
-	cd $(DESTDIR)$(bindir) && $(LN_S) lstopo-no-graphics$(EXEEXT) hwloc-ls$(EXEEXT) && $(LN_S) lstopo-no-graphics$(EXEEXT) hwloc-info$(EXEEXT)
+	rm -f $(DESTDIR)$(bindir)/hwloc-ls$(EXEEXT)
+	cd $(DESTDIR)$(bindir) && $(LN_S) lstopo-no-graphics$(EXEEXT) hwloc-ls$(EXEEXT)
 if !HWLOC_HAVE_WINDOWS
 if !HWLOC_HAVE_CAIRO
 	rm -f $(DESTDIR)$(bindir)/lstopo
 	cd $(DESTDIR)$(bindir) && $(LN_S) lstopo-no-graphics$(EXEEXT) lstopo$(EXEEXT) || true
 endif
 endif
-	rm -f $(DESTDIR)$(man1dir)/hwloc-ls.1 $(DESTDIR)$(man1dir)/hwloc-info.1
-	cd $(DESTDIR)$(man1dir) && $(LN_S) lstopo.1 hwloc-ls.1 && $(LN_S) lstopo.1 hwloc-info.1
+	rm -f $(DESTDIR)$(man1dir)/hwloc-ls.1
+	cd $(DESTDIR)$(man1dir) && $(LN_S) lstopo.1 hwloc-ls.1
 	rm -f $(DESTDIR)$(man1dir)/lstopo-no-graphics.1
 	cd $(DESTDIR)$(man1dir) && $(LN_S) lstopo.1 lstopo-no-graphics.1
-	$(SED) -e 's/abs_top_builddir\/utils/bindir/' -e '/abs_top_builddir/d' $(DESTDIR)$(bindir)/hwloc-assembler-remote > $(DESTDIR)$(bindir)/hwloc-assembler-remote.tmp && mv -f $(DESTDIR)$(bindir)/hwloc-assembler-remote.tmp $(DESTDIR)$(bindir)/hwloc-assembler-remote
+	$(SED) -e 's/HWLOC_top_builddir\/utils/bindir/' -e '/HWLOC_top_builddir/d' $(DESTDIR)$(bindir)/hwloc-assembler-remote > $(DESTDIR)$(bindir)/hwloc-assembler-remote.tmp && mv -f $(DESTDIR)$(bindir)/hwloc-assembler-remote.tmp $(DESTDIR)$(bindir)/hwloc-assembler-remote
 	chmod +x $(DESTDIR)$(bindir)/hwloc-assembler-remote
 
 uninstall-local:
-	rm -f $(DESTDIR)$(bindir)/hwloc-ls$(EXEEXT) $(DESTDIR)$(bindir)/hwloc-info$(EXEEXT)
+	rm -f $(DESTDIR)$(bindir)/hwloc-ls$(EXEEXT)
 if !HWLOC_HAVE_WINDOWS
 if !HWLOC_HAVE_CAIRO
 	rm -f $(DESTDIR)$(bindir)/lstopo$(EXEEXT)
 endif
 endif
-	rm -f $(DESTDIR)$(man1dir)/hwloc-ls.1 $(DESTDIR)$(man1dir)/hwloc-info.1 $(DESTDIR)$(man1dir)/lstopo-no-graphics.1
+	rm -f $(DESTDIR)$(man1dir)/hwloc-ls.1 $(DESTDIR)$(man1dir)/lstopo-no-graphics.1
 
 distclean-local:
 	rm -f $(nodist_man_MANS)

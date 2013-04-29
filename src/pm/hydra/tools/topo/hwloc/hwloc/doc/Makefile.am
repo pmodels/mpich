@@ -1,4 +1,4 @@
-# Copyright © 2009-2012 Inria.  All rights reserved.
+# Copyright © 2009-2013 Inria.  All rights reserved.
 # Copyright © 2009-2012 Université Bordeaux 1
 # Copyright © 2009-2010 Cisco Systems, Inc.  All rights reserved.
 # See COPYING in top-level directory.
@@ -66,11 +66,16 @@ dox_inputs = $(DOX_CONFIG) \
        $(HWLOC_top_srcdir)/include/hwloc.h \
        $(HWLOC_top_srcdir)/include/hwloc/helper.h \
        $(HWLOC_top_srcdir)/include/hwloc/bitmap.h \
+       $(HWLOC_top_srcdir)/include/hwloc/plugins.h \
        $(HWLOC_top_srcdir)/include/hwloc/glibc-sched.h \
        $(HWLOC_top_srcdir)/include/hwloc/linux.h \
        $(HWLOC_top_srcdir)/include/hwloc/linux-libnuma.h \
+       $(HWLOC_top_srcdir)/include/hwloc/opencl.h \
        $(HWLOC_top_srcdir)/include/hwloc/cuda.h \
        $(HWLOC_top_srcdir)/include/hwloc/cudart.h \
+       $(HWLOC_top_srcdir)/include/hwloc/nvml.h \
+       $(HWLOC_top_srcdir)/include/hwloc/gl.h \
+       $(HWLOC_top_srcdir)/include/hwloc/intel-mic.h \
        $(HWLOC_top_srcdir)/include/hwloc/openfabrics-verbs.h \
        $(HWLOC_top_srcdir)/include/hwloc/myriexpress.h
 
@@ -290,6 +295,7 @@ man3_types_DATA = \
         $(DOX_MAN_DIR)/man3/HWLOC_OBJ_OSDEV_GPU.3 \
         $(DOX_MAN_DIR)/man3/HWLOC_OBJ_OSDEV_NETWORK.3 \
         $(DOX_MAN_DIR)/man3/HWLOC_OBJ_OSDEV_OPENFABRICS.3 \
+        $(DOX_MAN_DIR)/man3/HWLOC_OBJ_OSDEV_COPROC.3 \
         $(DOX_MAN_DIR)/man3/hwloc_obj_osdev_type_e.3 \
         $(DOX_MAN_DIR)/man3/hwloc_obj_osdev_type_t.3 \
         $(DOX_MAN_DIR)/man3/hwloc_compare_types.3 \
@@ -383,7 +389,8 @@ man3_information_DATA = \
         $(DOX_MAN_DIR)/man3/hwloc_get_depth_type.3 \
         $(DOX_MAN_DIR)/man3/hwloc_get_nbobjs_by_depth.3 \
         $(DOX_MAN_DIR)/man3/hwloc_get_nbobjs_by_type.3 \
-        $(DOX_MAN_DIR)/man3/hwloc_topology_is_thissystem.3
+        $(DOX_MAN_DIR)/man3/hwloc_topology_is_thissystem.3 \
+        $(DOX_MAN_DIR)/man3/hwloc_topology_get_flags.3
 
 man3_traversaldir = $(man3dir)
 man3_traversal_DATA = \
@@ -622,14 +629,32 @@ man3_helper_advanced_io_DATA = \
 
 man3_cudadir = $(man3dir)
 man3_cuda_DATA = \
+        $(DOX_MAN_DIR)/man3/hwlocality_opencl.3 \
+        $(DOX_MAN_DIR)/man3/hwloc_opencl_get_device_cpuset.3 \
+        $(DOX_MAN_DIR)/man3/hwloc_opencl_get_device_osdev.3 \
+        $(DOX_MAN_DIR)/man3/hwloc_opencl_get_device_osdev_by_index.3 \
         $(DOX_MAN_DIR)/man3/hwlocality_cuda.3 \
         $(DOX_MAN_DIR)/man3/hwloc_cuda_get_device_cpuset.3 \
         $(DOX_MAN_DIR)/man3/hwloc_cuda_get_device_pci_ids.3 \
         $(DOX_MAN_DIR)/man3/hwloc_cuda_get_device_pcidev.3 \
+        $(DOX_MAN_DIR)/man3/hwloc_cuda_get_device_osdev.3 \
+        $(DOX_MAN_DIR)/man3/hwloc_cuda_get_device_osdev_by_index.3 \
         $(DOX_MAN_DIR)/man3/hwlocality_cudart.3 \
         $(DOX_MAN_DIR)/man3/hwloc_cudart_get_device_cpuset.3 \
         $(DOX_MAN_DIR)/man3/hwloc_cudart_get_device_pci_ids.3 \
-        $(DOX_MAN_DIR)/man3/hwloc_cudart_get_device_pcidev.3
+        $(DOX_MAN_DIR)/man3/hwloc_cudart_get_device_pcidev.3 \
+        $(DOX_MAN_DIR)/man3/hwloc_cudart_get_device_osdev_by_index.3 \
+        $(DOX_MAN_DIR)/man3/hwlocality_nvml.3 \
+        $(DOX_MAN_DIR)/man3/hwloc_nvml_get_device_cpuset.3 \
+        $(DOX_MAN_DIR)/man3/hwloc_nvml_get_device_osdev.3 \
+        $(DOX_MAN_DIR)/man3/hwloc_nvml_get_device_osdev_by_index.3 \
+        $(DOX_MAN_DIR)/man3/hwlocality_gl.3 \
+        $(DOX_MAN_DIR)/man3/hwloc_gl_get_display_osdev_by_port_device.3 \
+        $(DOX_MAN_DIR)/man3/hwloc_gl_get_display_osdev_by_name.3 \
+        $(DOX_MAN_DIR)/man3/hwloc_gl_get_display_by_osdev.3 \
+        $(DOX_MAN_DIR)/man3/hwlocality_intel_mic.3 \
+        $(DOX_MAN_DIR)/man3/hwloc_intel_mic_get_device_cpuset.3 \
+        $(DOX_MAN_DIR)/man3/hwloc_intel_mic_get_device_osdev_by_index.3
 
 man3_glibc_scheddir = $(man3dir)
 man3_glibc_sched_DATA = \
@@ -667,6 +692,7 @@ man3_openfabricsdir = $(man3dir)
 man3_openfabrics_DATA = \
         $(DOX_MAN_DIR)/man3/hwlocality_openfabrics.3 \
         $(DOX_MAN_DIR)/man3/hwloc_ibv_get_device_cpuset.3 \
+        $(DOX_MAN_DIR)/man3/hwloc_ibv_get_device_osdev.3 \
         $(DOX_MAN_DIR)/man3/hwloc_ibv_get_device_osdev_by_name.3
 
 # end of manpages(3) if HWLOC_BUILD_DOXYGEN

@@ -15,8 +15,13 @@ include_hwloc_HEADERS = \
         hwloc/helper.h \
         hwloc/myriexpress.h \
         hwloc/openfabrics-verbs.h \
+        hwloc/opencl.h \
         hwloc/cuda.h \
         hwloc/cudart.h \
+        hwloc/nvml.h \
+        hwloc/plugins.h \
+        hwloc/gl.h \
+        hwloc/intel-mic.h \
         hwloc/rename.h
 include_hwloc_autogendir = $(includedir)/hwloc/autogen
 nodist_include_hwloc_autogen_HEADERS = hwloc/autogen/config.h 

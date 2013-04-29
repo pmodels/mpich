@@ -9,6 +9,10 @@
 #include <private/private.h>
 #include <private/xml.h>
 
+#define HWLOC_COMPONENT_STOP_NAME "stop"
+#define HWLOC_COMPONENT_EXCLUDE_CHAR '-'
+#define HWLOC_COMPONENT_SEPS ","
+
 /* list of all registered discovery components, sorted by priority, higher priority first.
  * noos is last because its priority is 0.
  * others' priority is 10.
@@ -68,7 +72,7 @@ hwloc__dlforeach_cb(const char *filename, void *_data __hwloc_attribute_unused)
   lt_dlhandle handle;
   char *componentsymbolname = NULL;
   struct hwloc_component *component;
-  struct hwloc__plugin_desc *desc;
+  struct hwloc__plugin_desc *desc, **prevdesc;
 
   if (hwloc_plugins_verbose)
     fprintf(stderr, "Plugin dlforeach found `%s'\n", filename);
@@ -134,11 +138,15 @@ hwloc__dlforeach_cb(const char *filename, void *_data __hwloc_attribute_unused)
   desc->filename = strdup(filename);
   desc->component = component;
   desc->handle = handle;
+  desc->next = NULL;
   if (hwloc_plugins_verbose)
     fprintf(stderr, "Plugin descriptor `%s' ready\n", basename);
 
-  desc->next = hwloc_plugins;
-  hwloc_plugins = desc;
+  /* append to the list */
+  prevdesc = &hwloc_plugins;
+  while (*prevdesc)
+    prevdesc = &((*prevdesc)->next);
+  *prevdesc = desc;
   if (hwloc_plugins_verbose)
     fprintf(stderr, "Plugin descriptor `%s' queued\n", basename);
   return 0;
@@ -215,8 +223,8 @@ hwloc_disc_component_type_string(hwloc_disc_component_type_t type)
   switch (type) {
   case HWLOC_DISC_COMPONENT_TYPE_CPU: return "cpu";
   case HWLOC_DISC_COMPONENT_TYPE_GLOBAL: return "global";
-  case HWLOC_DISC_COMPONENT_TYPE_ADDITIONAL: return "additional";
-  default: return "Unknown";
+  case HWLOC_DISC_COMPONENT_TYPE_MISC: return "misc";
+  default: return "**unknown**";
   }
 }
 
@@ -226,18 +234,53 @@ hwloc_disc_component_register(struct hwloc_disc_component *component,
 {
   struct hwloc_disc_component **prev;
 
+  /* check that the component name is valid */
+  if (!strcmp(component->name, HWLOC_COMPONENT_STOP_NAME)) {
+    if (hwloc_components_verbose)
+      fprintf(stderr, "Cannot register discovery component with reserved name `" HWLOC_COMPONENT_STOP_NAME "'\n");
+    return -1;
+  }
+  if (strchr(component->name, HWLOC_COMPONENT_EXCLUDE_CHAR)
+      || strcspn(component->name, HWLOC_COMPONENT_SEPS) != strlen(component->name)) {
+    if (hwloc_components_verbose)
+      fprintf(stderr, "Cannot register discovery component with name `%s' containing reserved characters `%c" HWLOC_COMPONENT_SEPS "'\n",
+	      component->name, HWLOC_COMPONENT_EXCLUDE_CHAR);
+    return -1;
+  }
+  /* check that the component type is valid */
+  switch ((unsigned) component->type) {
+  case HWLOC_DISC_COMPONENT_TYPE_CPU:
+  case HWLOC_DISC_COMPONENT_TYPE_GLOBAL:
+  case HWLOC_DISC_COMPONENT_TYPE_MISC:
+    break;
+  default:
+    fprintf(stderr, "Cannot register discovery component `%s' with unknown type %u\n",
+	    component->name, (unsigned) component->type);
+    return -1;
+  }
+
   prev = &hwloc_disc_components;
   while (NULL != *prev) {
     if (!strcmp((*prev)->name, component->name)) {
-      if (hwloc_components_verbose)
-	fprintf(stderr, "Multiple `%s' components, only registering the first one\n",
-		component->name);
-      return -1;
+      /* if two components have the same name, only keep the highest priority one */
+      if ((*prev)->priority < component->priority) {
+	/* drop the existing component */
+	if (hwloc_components_verbose)
+	  fprintf(stderr, "Dropping previously registered discovery component `%s', priority %u lower than new one %u\n",
+		  (*prev)->name, (*prev)->priority, component->priority);
+	*prev = (*prev)->next;
+      } else {
+	/* drop the new one */
+	if (hwloc_components_verbose)
+	  fprintf(stderr, "Ignoring new discovery component `%s', priority %u lower than previously registered one %u\n",
+		  component->name, component->priority, (*prev)->priority);
+	return -1;
+      }
     }
     prev = &((*prev)->next);
   }
   if (hwloc_components_verbose)
-    fprintf(stderr, "Registered %s component `%s' with priority %u (%s%s)\n",
+    fprintf(stderr, "Registered %s discovery component `%s' with priority %u (%s%s)\n",
 	    hwloc_disc_component_type_string(component->type), component->name, component->priority,
 	    filename ? "from plugin " : "statically build", filename ? filename : "");
 
@@ -278,23 +321,35 @@ hwloc_components_init(struct hwloc_topology *topology __hwloc_attribute_unused)
 #endif
 
   /* hwloc_static_components is created by configure in static-components.h */
-  for(i=0; NULL != hwloc_static_components[i]; i++)
+  for(i=0; NULL != hwloc_static_components[i]; i++) {
+    if (hwloc_static_components[i]->flags) {
+      fprintf(stderr, "Ignoring static component with invalid flags %lx\n",
+	      hwloc_static_components[i]->flags);
+      continue;
+    }
     if (HWLOC_COMPONENT_TYPE_DISC == hwloc_static_components[i]->type)
       hwloc_disc_component_register(hwloc_static_components[i]->data, NULL);
     else if (HWLOC_COMPONENT_TYPE_XML == hwloc_static_components[i]->type)
       hwloc_xml_callbacks_register(hwloc_static_components[i]->data);
     else
       assert(0);
+  }
 
   /* dynamic plugins */
 #ifdef HWLOC_HAVE_PLUGINS
-  for(desc = hwloc_plugins; NULL != desc; desc = desc->next)
+  for(desc = hwloc_plugins; NULL != desc; desc = desc->next) {
+    if (desc->component->flags) {
+      fprintf(stderr, "Ignoring plugin `%s' component with invalid flags %lx\n",
+	      desc->name, desc->component->flags);
+      continue;
+    }
     if (HWLOC_COMPONENT_TYPE_DISC == desc->component->type)
       hwloc_disc_component_register(desc->component->data, desc->filename);
     else if (HWLOC_COMPONENT_TYPE_XML == desc->component->type)
       hwloc_xml_callbacks_register(desc->component->data);
     else
       assert(0);
+  }
 #endif
 
   HWLOC_COMPONENTS_UNLOCK();
@@ -356,7 +411,7 @@ hwloc_disc_component_try_enable(struct hwloc_topology *topology,
 
   if ((*excludes) & comp->type) {
     if (hwloc_components_verbose || verbose_errors)
-      fprintf(stderr, "Excluding %s component `%s', conflicts with excludes 0x%x\n",
+      fprintf(stderr, "Excluding %s discovery component `%s', conflicts with excludes 0x%x\n",
 	      hwloc_disc_component_type_string(comp->type), comp->name, *excludes);
     return -1;
   }
@@ -364,7 +419,7 @@ hwloc_disc_component_try_enable(struct hwloc_topology *topology,
   backend = comp->instantiate(comp, comparg, NULL, NULL);
   if (!backend) {
     if (verbose_errors)
-      fprintf(stderr, "Failed to instantiate component `%s'\n", comp->name);
+      fprintf(stderr, "Failed to instantiate discovery component `%s'\n", comp->name);
     return -1;
   }
 
@@ -387,6 +442,8 @@ hwloc_disc_components_enable_others(struct hwloc_topology *topology)
   int tryall = 1;
   char *env;
 
+  env = getenv("HWLOC_COMPONENTS");
+
   /* compute current excludes */
   backend = topology->backends;
   while (backend) {
@@ -394,54 +451,108 @@ hwloc_disc_components_enable_others(struct hwloc_topology *topology)
     backend = backend->next;
   }
 
-  env = getenv("HWLOC_COMPONENTS");
+  /* enable explicitly listed components */
   if (env) {
+    char *curenv = env;
     size_t s;
 
-    while (*env) {
-      s = strcspn(env, ",");
+    while (*curenv) {
+      s = strcspn(curenv, HWLOC_COMPONENT_SEPS);
       if (s) {
 	char *arg;
 	char c;
-	/* save the last char and replace with \0 */
-	c = env[s];
-	env[s] = '\0';
 
-	if (!strcmp(env, "stop")) {
+	/* replace libpci with pci for backward compatibility with v1.6 */
+	if (!strncmp(curenv, "libpci", s)) {
+	  curenv[0] = curenv[1] = curenv[2] = *HWLOC_COMPONENT_SEPS;
+	  curenv += 3;
+	  s -= 3;
+	} else if (curenv[0] == HWLOC_COMPONENT_EXCLUDE_CHAR && !strncmp(curenv+1, "libpci", s-1)) {
+	  curenv[3] = curenv[0];
+	  curenv[0] = curenv[1] = curenv[2] = *HWLOC_COMPONENT_SEPS;
+	  curenv += 3;
+	  s -= 3;
+	  /* skip this name, it's a negated one */
+	  goto nextname;
+	}
+
+	if (curenv[0] == HWLOC_COMPONENT_EXCLUDE_CHAR)
+	  goto nextname;
+
+	if (!strncmp(curenv, HWLOC_COMPONENT_STOP_NAME, s)) {
 	  tryall = 0;
 	  break;
 	}
 
-	arg = strchr(env, '=');
+	/* save the last char and replace with \0 */
+	c = curenv[s];
+	curenv[s] = '\0';
+
+	arg = strchr(curenv, '=');
 	if (arg) {
 	  *arg = '\0';
 	  arg++;
 	}
 
-	comp = hwloc_disc_component_find(-1, env);
+	comp = hwloc_disc_component_find(-1, curenv);
 	if (comp) {
 	  hwloc_disc_component_try_enable(topology, comp, arg, &excludes, 1 /* envvar forced */, 1 /* envvar forced need warnings */);
 	} else {
-	  fprintf(stderr, "Cannot find component `%s'\n", env);
+	  fprintf(stderr, "Cannot find discovery component `%s'\n", curenv);
 	}
 
-	/* restore last char */
-	env[s] = c;
+	/* restore last char (the second loop below needs env to be unmodified) */
+	curenv[s] = c;
       }
 
-      env += s;
-      if (*env)
+nextname:
+      curenv += s;
+      if (*curenv)
 	/* Skip comma */
-	env++;
+	curenv++;
     }
   }
 
+  /* env is still the same, the above loop didn't modify it */
+
+  /* now enable remaining components (except the explicitly '-'-listed ones) */
   if (tryall) {
     comp = hwloc_disc_components;
     while (NULL != comp) {
+      /* check if this component was explicitly excluded in env */
+      if (env) {
+	char *curenv = env;
+	while (*curenv) {
+	  size_t s = strcspn(curenv, HWLOC_COMPONENT_SEPS);
+	  if (curenv[0] == HWLOC_COMPONENT_EXCLUDE_CHAR && !strncmp(curenv+1, comp->name, s-1)) {
+	    if (hwloc_components_verbose)
+	      fprintf(stderr, "Excluding %s discovery component `%s' because of HWLOC_COMPONENTS environment variable\n",
+	    hwloc_disc_component_type_string(comp->type), comp->name);
+	    goto nextcomp;
+	  }
+	  curenv += s;
+	  if (*curenv)
+	    /* Skip comma */
+	    curenv++;
+	}
+      }
       hwloc_disc_component_try_enable(topology, comp, NULL, &excludes, 0 /* defaults, not envvar forced */, 0 /* defaults don't need warnings on conflicts */);
+nextcomp:
       comp = comp->next;
     }
+  }
+
+  if (hwloc_components_verbose) {
+    /* print a summary */
+    int first = 1;
+    backend = topology->backends;
+    fprintf(stderr, "Final list of enabled discovery components: ");
+    while (backend != NULL) {
+      fprintf(stderr, "%s%s", first ? "" : ",", backend->component->name);
+      backend = backend->next;
+      first = 0;
+    }
+    fprintf(stderr, "\n");
   }
 }
 
@@ -501,12 +612,19 @@ hwloc_backend_enable(struct hwloc_topology *topology, struct hwloc_backend *back
 {
   struct hwloc_backend **pprev;
 
+  /* check backend flags */
+  if (backend->flags & (~(HWLOC_BACKEND_FLAG_NEED_LEVELS))) {
+    fprintf(stderr, "Cannot enable %s discovery component `%s' with unknown flags %lx\n",
+	    hwloc_disc_component_type_string(backend->component->type), backend->component->name, backend->flags);
+    return -1;
+  }
+
   /* make sure we didn't already enable this backend, we don't want duplicates */
   pprev = &topology->backends;
   while (NULL != *pprev) {
     if ((*pprev)->component == backend->component) {
       if (hwloc_components_verbose)
-	fprintf(stderr, "Cannot enable %s component `%s' twice\n",
+	fprintf(stderr, "Cannot enable %s discovery component `%s' twice\n",
 		hwloc_disc_component_type_string(backend->component->type), backend->component->name);
       hwloc_backend_disable(backend);
       errno = EBUSY;
@@ -516,7 +634,7 @@ hwloc_backend_enable(struct hwloc_topology *topology, struct hwloc_backend *back
   }
 
   if (hwloc_components_verbose)
-    fprintf(stderr, "Enabling %s component `%s'\n",
+    fprintf(stderr, "Enabling %s discovery component `%s'\n",
 	    hwloc_disc_component_type_string(backend->component->type), backend->component->name);
 
   /* enqueue at the end */
@@ -614,7 +732,7 @@ hwloc_backends_disable_all(struct hwloc_topology *topology)
   while (NULL != (backend = topology->backends)) {
     struct hwloc_backend *next = backend->next;
     if (hwloc_components_verbose)
-      fprintf(stderr, "Disabling %s component `%s'\n",
+      fprintf(stderr, "Disabling %s discovery component `%s'\n",
 	      hwloc_disc_component_type_string(backend->component->type), backend->component->name);
     hwloc_backend_disable(backend);
     topology->backends = next;

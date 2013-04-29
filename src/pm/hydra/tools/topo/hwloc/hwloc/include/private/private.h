@@ -9,6 +9,16 @@
 
 /* Internal types and helpers. */
 
+
+#ifdef HWLOC_INSIDE_PLUGIN
+/*
+ * these declarations are internal only, they are not available to plugins
+ * (many functions below are internal static symbols).
+ */
+#error This file should not be used in plugins
+#endif
+
+
 #ifndef HWLOC_PRIVATE_H
 #define HWLOC_PRIVATE_H
 
@@ -28,16 +38,6 @@
 #include <sys/utsname.h>
 #endif
 #include <string.h>
-
-#ifdef HWLOC_HAVE_ATTRIBUTE_FORMAT
-# if HWLOC_HAVE_ATTRIBUTE_FORMAT
-#  define __hwloc_attribute_format(type, str, arg)  __attribute__((__format__(type, str, arg)))
-# else
-#  define __hwloc_attribute_format(type, str, arg)
-# endif
-#else
-# define __hwloc_attribute_format(type, str, arg)
-#endif
 
 enum hwloc_ignore_type_e {
   HWLOC_IGNORE_TYPE_NEVER = 0,
@@ -148,6 +148,10 @@ extern void hwloc_set_binding_hooks(struct hwloc_topology *topology);
 extern void hwloc_set_linuxfs_hooks(struct hwloc_binding_hooks *binding_hooks, struct hwloc_topology_support *support);
 #endif /* HWLOC_LINUX_SYS */
 
+#if defined(HWLOC_BGQ_SYS)
+extern void hwloc_set_bgq_hooks(struct hwloc_binding_hooks *binding_hooks, struct hwloc_topology_support *support);
+#endif /* HWLOC_BGQ_SYS */
+
 #ifdef HWLOC_SOLARIS_SYS
 extern void hwloc_set_solaris_hooks(struct hwloc_binding_hooks *binding_hooks, struct hwloc_topology_support *support);
 #endif /* HWLOC_SOLARIS_SYS */
@@ -172,77 +176,16 @@ extern void hwloc_set_darwin_hooks(struct hwloc_binding_hooks *binding_hooks, st
 extern void hwloc_set_freebsd_hooks(struct hwloc_binding_hooks *binding_hooks, struct hwloc_topology_support *support);
 #endif /* HWLOC_FREEBSD_SYS */
 
+#ifdef HWLOC_NETBSD_SYS
+extern void hwloc_set_netbsd_hooks(struct hwloc_binding_hooks *binding_hooks, struct hwloc_topology_support *support);
+#endif /* HWLOC_NETBSD_SYS */
+
 #ifdef HWLOC_HPUX_SYS
 extern void hwloc_set_hpux_hooks(struct hwloc_binding_hooks *binding_hooks, struct hwloc_topology_support *support);
 #endif /* HWLOC_HPUX_SYS */
 
-/*
- * Add an object to the topology.
- * It is sorted along the tree of other objects according to the inclusion of
- * cpusets, to eventually be added as a child of the smallest object including
- * this object.
- *
- * If the cpuset is empty, the type of the object (and maybe some attributes)
- * must be enough to find where to insert the object. This is especially true
- * for NUMA nodes with memory and no CPUs.
- *
- * The given object should not have children.
- *
- * This shall only be called before levels are built.
- *
- * In case of error, hwloc_report_os_error() is called.
- */
-HWLOC_DECLSPEC void hwloc_insert_object_by_cpuset(struct hwloc_topology *topology, hwloc_obj_t obj);
-
-/* Error reporting */
-typedef void (*hwloc_report_error_t)(const char * msg, int line);
-HWLOC_DECLSPEC void hwloc_report_os_error(const char * msg, int line);
-HWLOC_DECLSPEC int hwloc_hide_errors(void);
-/*
- * Add an object to the topology and specify which error callback to use
- */
-HWLOC_DECLSPEC int hwloc__insert_object_by_cpuset(struct hwloc_topology *topology, hwloc_obj_t obj, hwloc_report_error_t report_error);
-
-/*
- * Insert an object somewhere in the topology.
- *
- * It is added as the last child of the given parent.
- * The cpuset is completely ignored, so strange objects such as I/O devices should
- * preferably be inserted with this.
- *
- * The given object may have children.
- *
- * Remember to call topology_connect() afterwards to fix handy pointers.
- */
-HWLOC_DECLSPEC void hwloc_insert_object_by_parent(struct hwloc_topology *topology, hwloc_obj_t parent, hwloc_obj_t obj);
-
 /* Insert uname-specific names/values in the object infos array */
 extern void hwloc_add_uname_info(struct hwloc_topology *topology);
-
-#ifdef HWLOC_INSIDE_LIBHWLOC
-/** \brief Return a locally-allocated stringified bitmap for printf-like calls. */
-static __hwloc_inline char *
-hwloc_bitmap_printf_value(hwloc_const_bitmap_t bitmap)
-{
-  char *buf;
-  hwloc_bitmap_asprintf(&buf, bitmap);
-  return buf;
-}
-
-static __hwloc_inline struct hwloc_obj *
-hwloc_alloc_setup_object(hwloc_obj_type_t type, signed idx)
-{
-  struct hwloc_obj *obj = malloc(sizeof(*obj));
-  memset(obj, 0, sizeof(*obj));
-  obj->type = type;
-  obj->os_index = idx;
-  obj->os_level = -1;
-  obj->attr = malloc(sizeof(*obj->attr));
-  memset(obj->attr, 0, sizeof(*obj->attr));
-  /* do not allocate the cpuset here, let the caller do it */
-  return obj;
-}
-#endif
 
 /* Free obj and its attributes assuming it doesn't have any children/parent anymore */
 extern void hwloc_free_unlinked_object(hwloc_obj_t obj);
@@ -334,5 +277,23 @@ extern int hwloc_encode_to_base64(const char *src, size_t srclength, char *targe
  * (the next one may be partially written during decoding, but it should be ignored).
  */
 extern int hwloc_decode_from_base64(char const *src, char *target, size_t targsize);
+
+/* Check whether needle matches the beginning of haystack, at least n, and up
+ * to a colon or \0 */
+extern int hwloc_namecoloncmp(const char *haystack, const char *needle, size_t n);
+
+#ifdef HWLOC_HAVE_ATTRIBUTE_FORMAT
+# if HWLOC_HAVE_ATTRIBUTE_FORMAT
+#  define __hwloc_attribute_format(type, str, arg)  __attribute__((__format__(type, str, arg)))
+# else
+#  define __hwloc_attribute_format(type, str, arg)
+# endif
+#else
+# define __hwloc_attribute_format(type, str, arg)
+#endif
+
+/* On some systems, snprintf returns the size of written data, not the actually
+ * required size.  hwloc_snprintf always report the actually required size. */
+extern int hwloc_snprintf(char *str, size_t size, const char *format, ...) __hwloc_attribute_format(printf, 3, 4);
 
 #endif /* HWLOC_PRIVATE_H */

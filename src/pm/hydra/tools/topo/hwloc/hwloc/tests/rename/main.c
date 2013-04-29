@@ -1,20 +1,47 @@
 #define _GNU_SOURCE 1
 #include "sched.h"
 
+/* all headers should be included */
 #include "hwloc.h"
+#include "hwloc/bitmap.h"
+#include "hwloc/helper.h"
+#include "hwloc/plugins.h"
 
-/* enable those that have the right dependencies on your machine */
-#include "hwloc/glibc-sched.h"
-#include "hwloc/linux-libnuma.h"
+#if HWLOC_TEST_RENAME_LINUX
 #include "hwloc/linux.h"
-//#include "hwloc/cuda.h"
-//#include "hwloc/cudart.h"
-//#include "hwloc/myriexpress.h"
+#endif
+#if HWLOC_TEST_RENAME_LINUX_LIBNUMA
+#include "hwloc/linux-libnuma.h"
+#endif
+#if HWLOC_TEST_RENAME_GLIBC_SCHED
+#include "hwloc/glibc-sched.h"
+#endif
+#if HWLOC_TEST_RENAME_MYRIEXPRESS
+#include "hwloc/myriexpress.h"
+#endif
+#if HWLOC_TEST_RENAME_OPENFABRICS_VERBS
 #include "hwloc/openfabrics-verbs.h"
+#endif
+#if HWLOC_TEST_RENAME_OPENCL
+#include "hwloc/opencl.h"
+#endif
+#if HWLOC_TEST_RENAME_CUDA
+#include "hwloc/cuda.h"
+#endif
+#if HWLOC_TEST_RENAME_CUDART
+#include "hwloc/cudart.h"
+#endif
+#if HWLOC_TEST_RENAME_NVML
+#include "hwloc/nvml.h"
+#endif
+#include "hwloc/gl.h"
+#include "hwloc/intel-mic.h"
 
 #include "private/autogen/config.h"
+#include "private/components.h"
 #include "private/cpuid.h"
 #include "private/debug.h"
 #include "private/misc.h"
 #include "private/private.h"
+#include "private/solaris-chiptype.h"
 #include "private/xml.h"

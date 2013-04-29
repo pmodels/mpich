@@ -1,4 +1,4 @@
-# Copyright © 2009-2012 Inria.  All rights reserved.
+# Copyright © 2009-2013 Inria.  All rights reserved.
 # Copyright © 2009-2012 Université Bordeaux 1
 # Copyright © 2009-2010 Cisco Systems, Inc.  All rights reserved.
 # See COPYING in top-level directory.
@@ -16,7 +16,7 @@ endif HWLOC_HAVE_LINUX
 
 LDADD =
 
-TESTS_ENVIRONMENT = $(builddir)/wrapper.sh
+LOG_COMPILER = $(builddir)/wrapper.sh
 
 check_PROGRAMS = hwloc_list_components \
 	hwloc_bitmap \
@@ -47,7 +47,9 @@ check_PROGRAMS = hwloc_list_components \
 	hwloc_topology_restrict \
 	hwloc_obj_infos \
 	hwloc_iodevs \
-	xmlbuffer
+	xmlbuffer \
+	gl \
+	intel-mic
 
 if HWLOC_HAVE_LINUX_LIBNUMA
 check_PROGRAMS += linux-libnuma
@@ -65,6 +67,10 @@ if HWLOC_HAVE_MYRIEXPRESS
 check_PROGRAMS += myriexpress
 endif HWLOC_HAVE_MYRIEXPRESS
 
+if HWLOC_HAVE_OPENCL
+check_PROGRAMS += opencl
+endif HWLOC_HAVE_OPENCL
+
 if HWLOC_HAVE_CUDA
 check_PROGRAMS += cuda
 endif HWLOC_HAVE_CUDA
@@ -72,6 +78,10 @@ endif HWLOC_HAVE_CUDA
 if HWLOC_HAVE_CUDART
 check_PROGRAMS += cudart
 endif HWLOC_HAVE_CUDART
+
+if HWLOC_HAVE_NVML
+check_PROGRAMS += nvml
+endif HWLOC_HAVE_NVML
 
 TESTS = $(check_PROGRAMS)
 
@@ -88,10 +98,10 @@ LDADD += $(HWLOC_top_builddir)/src/$(hwloc_lib)
 linux_libnuma_LDADD = $(LDADD) -lnuma
 openfabrics_verbs_LDADD = $(LDADD) -libverbs
 myriexpress_LDADD = $(LDADD) -lmyriexpress
+opencl_LDADD = $(LDADD) -lOpenCL
 cuda_LDADD = $(LDADD) -lcuda
 cudart_LDADD = $(LDADD) -lcuda -lcudart
-xmlbuffer_LDADD = $(LDADD) $(HWLOC_LIBXML2_LIBS)
-hwloc_backends_LDADD = $(LDADD) $(HWLOC_LIBXML2_LIBS)
+nvml_LDADD = $(LDADD) -lnvidia-ml
 hwloc_bind_LDADD = $(LDADD)
 if HWLOC_HAVE_PTHREAD
 hwloc_bind_LDADD += -lpthread

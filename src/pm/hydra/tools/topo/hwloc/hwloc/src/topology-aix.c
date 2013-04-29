@@ -1,7 +1,7 @@
 /*
  * Copyright © 2009 CNRS
  * Copyright © 2009-2012 Inria.  All rights reserved.
- * Copyright © 2009-2011 Université Bordeaux 1
+ * Copyright © 2009-2011, 2013 Université Bordeaux 1
  * Copyright © 2011 Cisco Systems, Inc.  All rights reserved.
  * See COPYING in top-level directory.
  */
@@ -35,6 +35,22 @@
 #include <sys/thread.h>
 #include <sys/mman.h>
 #include <sys/systemcfg.h>
+
+#ifndef __power_pc
+#define __power_pc() 0
+#endif
+#ifndef __power_4
+#define __power_4() 0
+#endif
+#ifndef __power_5
+#define __power_5() 0
+#endif
+#ifndef __power_6
+#define __power_6() 0
+#endif
+#ifndef __power_7
+#define __power_7() 0
+#endif
 
 static int
 hwloc_aix_set_sth_cpubind(hwloc_topology_t topology, rstype_t what, rsid_t who, pid_t pid, hwloc_const_bitmap_t hwloc_set, int flags __hwloc_attribute_unused)
@@ -246,7 +262,8 @@ hwloc_aix_set_thread_cpubind(hwloc_topology_t topology, hwloc_thread_t pthread, 
   if ((errno = pthread_getthrds_np(&pthread, PTHRDSINFO_QUERY_TID, &info, sizeof(info), NULL, &size)))
     return -1;
   {
-    rsid_t who = { .at_tid = info.__pi_tid };
+    rsid_t who;
+    who.at_tid = info.__pi_tid;
     return hwloc_aix_set_sth_cpubind(topology, R_THREAD, who, getpid(), hwloc_set, flags);
   }
 }
@@ -399,6 +416,7 @@ hwloc_aix_get_sth_membind(hwloc_topology_t topology, rstype_t what, rsid_t who, 
     goto out;
 
   hwloc_set = hwloc_bitmap_alloc();
+
   maxcpus = rs_getinfo(rset, R_MAXPROCS, 0);
   for (cpu = 0; cpu < maxcpus; cpu++)
     if (rs_op(RS_TESTRESOURCE, rset, NULL, R_PROCS, cpu) == 1)
@@ -411,6 +429,8 @@ hwloc_aix_get_sth_membind(hwloc_topology_t topology, rstype_t what, rsid_t who, 
     if (hwloc_bitmap_isincluded(obj->cpuset, hwloc_set))
       hwloc_bitmap_set(nodeset, obj->os_index);
   }
+
+  hwloc_bitmap_free(hwloc_set);
 
   *policy = HWLOC_MEMBIND_DEFAULT;
   res = 0;
@@ -622,9 +642,14 @@ look_rset(int sdl, hwloc_obj_type_t type, struct hwloc_topology *topology, int l
       case HWLOC_OBJ_CACHE:
 	obj->attr->cache.size = _system_configuration.L2_cache_size;
 	obj->attr->cache.associativity = _system_configuration.L2_cache_asc;
-	obj->attr->cache.linesize = 0; /* TODO: ? */
+
+	obj->attr->cache.linesize = 0; /* unknown by default */
+	if (__power_pc())
+	  if (__power_4() || __power_5() || __power_6() || __power_7())
+	    obj->attr->cache.linesize = 128;
+
 	obj->attr->cache.depth = 2;
-	obj->attr->cache.type = HWLOC_OBJ_CACHE_UNIFIED; /* FIXME? */
+	obj->attr->cache.type = HWLOC_OBJ_CACHE_UNIFIED; /* OK for power[4567], unknown for others */
 	break;
       case HWLOC_OBJ_GROUP:
 	obj->attr->group.depth = level;
