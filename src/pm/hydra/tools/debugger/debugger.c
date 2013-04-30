@@ -58,7 +58,8 @@ HYD_status HYDT_dbg_setup_procdesc(struct HYD_pg * pg)
                 if (k + np < round * proxy->node->core_count)
                     continue;
                 MPIR_proctable[i].host_name = HYDU_strdup(proxy->node->hostname);
-                MPIR_proctable[i].pid = proxy->pid[j++];
+                MPIR_proctable[i].pid = proxy->pid[(proxy->node->core_count * round) + j];
+                j++;
                 if (exec->exec[0])
                     MPIR_proctable[i].executable_name = HYDU_strdup(exec->exec[0]);
                 else
