@@ -39,7 +39,10 @@ static HYD_status send_cmd_upstream(const char *start, int fd, int num_args, cha
 
     HYDU_FUNC_ENTER();
 
-    HYDU_MALLOC(tmp, char **, (2 * num_args + 1) * sizeof(char *), status);
+    /* We need two slots for each argument (one for the argument
+     * itself and one for a space character), one slot for the
+     * command, and one for the NULL character at the end. */
+    HYDU_MALLOC(tmp, char **, (2 * num_args + 2) * sizeof(char *), status);
 
     j = 0;
     tmp[j++] = HYDU_strdup(start);
