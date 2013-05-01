@@ -192,7 +192,6 @@ int MPIDI_Comm_spawn_multiple(int count, char **commands,
                 }
             }
 
-            /* XXX DJG don't need this, PMI API is thread-safe? */
             /*MPIU_THREAD_CS_ENTER(PMI,);*/
             /* release the global CS for spawn PMI calls */
             MPIU_THREAD_CS_EXIT(ALLFUNC,);
@@ -204,6 +203,7 @@ int MPIDI_Comm_spawn_multiple(int count, char **commands,
                                        jobId, jobIdSize,
                                        pmi_errcodes);
 	    TRACE_ERR("after PMI2_Job_Spawn - pmi_errno=%d jobId=%s\n", pmi_errno, jobId);
+            MPIU_THREAD_CS_ENTER(ALLFUNC,);
 
 	    tmp=MPIU_Strdup(jobId);
 	    tmp_ret = atoi(strtok(tmp, ";"));
