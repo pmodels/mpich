@@ -168,6 +168,7 @@ void MPIDI_Recvq_process_out_of_order_msgs(pami_task_t src, pami_context_t conte
                MPIDI_Token_cntr[src].unmatched--;
                MPIDI_Update_rettoks(src);
            }
+           MPIDI_Must_return_tokens(context,src);
            #else
            MPID_assert_always(0);
            #endif

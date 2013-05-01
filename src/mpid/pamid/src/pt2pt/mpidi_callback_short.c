@@ -80,18 +80,6 @@ MPIDI_RecvShortCB(pami_context_t    context,
 #if (MPIDI_STATISTICS)
          MPID_NSTAT(mpid_statp->earlyArrivals);
 #endif
-     if (TOKEN_FLOW_CONTROL_ON)
-       {
-         #if TOKEN_FLOW_CONTROL
-         if (MPIDI_MUST_RETURN_TOKENS(source))
-           {
-             rettoks=MPIDI_Token_cntr[source].rettoks;
-             MPIDI_Token_cntr[source].rettoks=0;
-           }
-         #else
-         MPID_assert_always(0);
-         #endif
-     }
       MPIU_THREAD_CS_EXIT(MSGQUEUE,0);
       MPID_Request *newreq = MPIDI_Request_create2();
       MPID_assert(newreq != NULL);
@@ -154,6 +142,7 @@ MPIDI_RecvShortCB(pami_context_t    context,
         {
           #if TOKEN_FLOW_CONTROL
           MPIDI_Update_rettoks(source);
+          MPIDI_Must_return_tokens(context,source);
           #else
           MPID_assert_always(0);
           #endif
@@ -214,16 +203,15 @@ MPIDI_RecvShortCB(pami_context_t    context,
 #endif
   MPIDI_Request_complete(rreq);
 
+ fn_exit_short:
 #ifdef OUT_OF_ORDER_HANDLING
   MPIU_THREAD_CS_ENTER(MSGQUEUE,0);
-  if ((rank != MPI_ANY_SOURCE) && (MPIDI_In_cntr[source].n_OutOfOrderMsgs>0))  {
+  if (MPIDI_In_cntr[source].n_OutOfOrderMsgs>0)  {
     MPIDI_Recvq_process_out_of_order_msgs(source, context);
   }
   MPIU_THREAD_CS_EXIT(MSGQUEUE,0);
 #endif
 
- fn_exit_short:
- MPIDI_Return_tokens(context, source, rettoks);
   /* ---------------------------------------- */
   /*  Signal that the recv has been started.  */
   /* ---------------------------------------- */

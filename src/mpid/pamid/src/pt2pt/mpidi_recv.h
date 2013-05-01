@@ -42,11 +42,7 @@ extern char *EagerLimit;
 #define MPIDI_Receive_tokens       MPIDI_Receive_tokens_inline
 #define MPIDI_Update_rettoks       MPIDI_Update_rettoks_inline
 #define MPIDI_Alloc_lock           MPIDI_Alloc_lock_inline
-
-#define MPIDI_MUST_RETURN_TOKENS(dd)                                          \
-    (MPIDI_Token_cntr[(dd)].rettoks                                           \
-     && (MPIDI_Token_cntr[(dd)].rettoks + MPIDI_Token_cntr[(dd)].unmatched    \
-         >= MPIDI_tfctrl_hwmark))
+#define MPIDI_Must_return_tokens   MPIDI_Must_return_tokens_inline
 
 static inline void *
 MPIDI_Return_tokens_inline(pami_context_t context, int dest, int tokens)
@@ -72,6 +68,23 @@ MPIDI_Return_tokens_inline(pami_context_t context, int dest, int tokens)
          rc = PAMI_Send_immediate(context, &params);
          MPID_assert(rc == PAMI_SUCCESS);
      }
+}
+
+
+static inline void *
+MPIDI_Must_return_tokens_inline(pami_context_t context,int dest) 
+{
+  int rettoks=0;  
+   
+  if  (MPIDI_Token_cntr[dest].rettoks
+       && (MPIDI_Token_cntr[dest].rettoks + MPIDI_Token_cntr[dest].unmatched
+       >= MPIDI_tfctrl_hwmark))
+  {
+       rettoks=MPIDI_Token_cntr[dest].rettoks;
+       MPIDI_Token_cntr[dest].rettoks=0;
+       MPIDI_Return_tokens_inline(context,dest,rettoks);
+
+  }
 }
 
 static inline void *
@@ -101,7 +114,7 @@ MPIDI_Alloc_lock_inline(void **buf,size_t size)
 #define MPIDI_Return_tokens(x,y,z)
 #define MPIDI_Receive_tokens(x,y)
 #define MPIDI_Update_rettoks(x)
-#define MPIDI_MUST_RETURN_TOKENS(x) (0)
+#define MPIDI_Must_return_tokens(x,y) (0)
 #define MPIDI_Alloc_lock(x,y)
 #endif
 
@@ -207,6 +220,7 @@ MPIDI_Recv(void          * buf,
            MPIDI_Token_cntr[(rreq->mpid.peer_pami)].unmatched--;
            MPIDI_Update_rettoks(rreq->mpid.peer_pami);
          }
+         MPIDI_Must_return_tokens(MPIDI_Context[0],(rreq->mpid.peer_pami));
          #else
          MPID_assert_always(0);
          #endif

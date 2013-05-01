@@ -79,7 +79,7 @@ MPIDI_RecvRzvCB_impl(pami_context_t    context,
   rreq->status.MPI_TAG    = tag;
   rreq->status.count      = envelope->length;
   MPIDI_Request_setPeerRank_comm(rreq, rank);
-  MPIDI_Request_setPeerRank_pami(rreq, PAMIX_Endpoint_query(sender));
+  MPIDI_Request_setPeerRank_pami(rreq, source);
   MPIDI_Request_cpyPeerRequestH (rreq, msginfo);
   MPIDI_Request_setSync         (rreq, msginfo->isSync);
   MPIDI_Request_setRzv          (rreq, 1);
@@ -117,11 +117,10 @@ MPIDI_RecvRzvCB_impl(pami_context_t    context,
   MPIDI_Trace_buf[source].R[(rreq->mpid.idx)].rlen=envelope->length;
   MPIDI_Trace_buf[source].R[(rreq->mpid.idx)].sync=msginfo->isSync;
 #endif
-     if ((TOKEN_FLOW_CONTROL_ON) && (MPIDI_MUST_RETURN_TOKENS(sender)))
+     if (TOKEN_FLOW_CONTROL_ON)
        {
          #if TOKEN_FLOW_CONTROL
-         rettoks=MPIDI_Token_cntr[sender].rettoks;
-         MPIDI_Token_cntr[sender].rettoks=0;
+         MPIDI_Must_return_tokens(context,source);
          #else
          MPID_assert_always(0);
          #endif
@@ -180,9 +179,6 @@ MPIDI_RecvRzvCB_impl(pami_context_t    context,
 #endif
       MPIU_THREAD_CS_EXIT(MSGQUEUE,0);
     }
-#if TOKEN_FLOW_CONTROL
-  MPIDI_Return_tokens(context, source, rettoks);
-#endif
   /* ---------------------------------------- */
   /*  Signal that the recv has been started.  */
   /* ---------------------------------------- */
