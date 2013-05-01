@@ -19,7 +19,9 @@ void ADIOI_GEN_ReadContig(ADIO_File fd, void *buf, int count,
 			  ADIO_Offset offset, ADIO_Status *status,
 			  int *error_code)
 {
-    int err = -1, datatype_size;
+    off_t err_lseek = -1;
+    ssize_t err = -1;
+    int datatype_size;
     ADIO_Offset len;
     static char myname[] = "ADIOI_GEN_READCONTIG";
 
@@ -38,12 +40,12 @@ void ADIOI_GEN_ReadContig(ADIO_File fd, void *buf, int count,
 #ifdef ADIOI_MPE_LOGGING
         MPE_Log_event( ADIOI_MPE_lseek_a, 0, NULL );
 #endif
-	err = lseek(fd->fd_sys, offset, SEEK_SET);
+	err_lseek = lseek(fd->fd_sys, offset, SEEK_SET);
 #ifdef ADIOI_MPE_LOGGING
         MPE_Log_event( ADIOI_MPE_lseek_b, 0, NULL );
 #endif
 	/* --BEGIN ERROR HANDLING-- */
-	if (err == -1) {
+	if (err_lseek == -1) {
 	    *error_code = MPIO_Err_create_code(MPI_SUCCESS,
 					       MPIR_ERR_RECOVERABLE,
 					       myname, __LINE__,
