@@ -3,7 +3,6 @@
  *  (C) 2007 by Argonne National Laboratory.
  *      See COPYRIGHT in top-level directory.
  */
-
 #include <dlfcn.h>
 #include "mpichconf.h"
 #include "pmi2.h"
@@ -85,10 +84,21 @@ int PMI2_Init(int *spawned, int *size, int *rank, int *appnum)
     int ret;
 
     int (*pmi2_init)(int*, int*, int *, int*);
-
-    poeptr = dlopen("libpoe.so",RTLD_NOW|RTLD_GLOBAL);
+    char *poelibname;
+    int   poeflags;
+#ifndef __AIX__
+    poelibname = "libpoe.so";
+    poeflags   = RTLD_NOW|RTLD_GLOBAL;
+#else
+    poeflags   = RTLD_NOW|RTLD_GLOBAL|RTLD_MEMBER;
+    if(sizeof(void *) == 8)
+      poelibname = "libpoe_r.a(poe64_r.o)";
+    else
+      poelibname = "libpoe_r.a(poe_r.o)";
+#endif
+    poeptr = dlopen(poelibname, poeflags);
     if (poeptr == NULL) {
-        TRACE_ERR("failed to open libpoe.so\n");
+        TRACE_ERR("failed to open %s error=%s\n", poelibname, dlerror());
     }
 
     pmi2_init = (int (*)())dlsym(poeptr, "PMI2_Init");
