@@ -2553,10 +2553,18 @@ sub status_out_ftoc {
 	# casting to a pointer with greater alignment (and which the
 	# specific runtime check is used to ensure the alignments are 
 	# ok).
+	# Horrible requirement: MPI Standard (see MPI-3, Section 3.2.5, 
+        # page 30, lines 39-43) implies that the MPI_ERROR field needs
+	# to be *preserved*.  Thus, if we have a temp status, we need to
+	# either copy it to the temp status (as here) or *not* copy over 
+	# it when storing the result.  This is simpler.
 	print $OUTFD "\
-    if (l$count != MPI_STATUS_IGNORE && 
-        (((MPI_Aint)v$count) & MPIR_COUNT_ALIGNMENT) == 0) 
-        l$count = (MPI_Status*)(void *)v$count;\n";
+    if (l$count != MPI_STATUS_IGNORE) {
+        if ((((MPI_Aint)v$count) & MPIR_COUNT_ALIGNMENT) == 0) 
+            l$count = (MPI_Status*)(void *)v$count;
+	else 
+            l$count->MPI_ERROR = ((MPI_Status*)v$count)->MPI_ERROR;
+    }\n";
     }
 }
 sub status_out_arg {
@@ -2679,9 +2687,17 @@ sub status_array_out_fnulltoc {
 }
 sub status_array_out_ftoc {
     my $count = $_[0];
-    
+ 
+    # See discussion of status_out_ftoc - unfortunately, we need to
+    # copy *just* the MPI_ERROR field
     if ($within_fint) {
-	print $OUTFD "    if (l$count != MPI_STATUSES_IGNORE) { l$count = (MPI_Status*)$malloc($Array_size * sizeof(MPI_Status)); }\n";
+	print $OUTFD "\
+    if (l$count != MPI_STATUSES_IGNORE) { 
+        int li;
+        l$count = (MPI_Status*)$malloc($Array_size * sizeof(MPI_Status)); 
+        for (li=0; li<$Array_size; li++) 
+            l$count\[li].MPI_ERROR = ((MPI_Status*)v$count)[li].MPI_ERROR;
+    }\n";
     }
     elsif ($fixStatusAlignment) {
 	print $OUTFD "\
@@ -2689,8 +2705,11 @@ sub status_array_out_ftoc {
         if( (((MPI_Aint)v$count) & MPIR_COUNT_ALIGNMENT) == 0) 
             l$count = (MPI_Status*)(void *)v$count;
         else {
+            int li;
             lalloc$count = 1;
             l$count = (MPI_Status*)$malloc($Array_size * sizeof(MPI_Status));
+            for (li=0; li<$Array_size; li++) 
+                l$count\[li].MPI_ERROR = ((MPI_Status*)v$count)[li].MPI_ERROR;
         }
     }\n";
     }
@@ -2714,7 +2733,7 @@ sub status_array_ctof {
 "    if ($testFlag$coutvar != MPI_STATUSES_IGNORE) {
         int li;
         for (li=0; li<$ActSize; li++) {
-            MPI_Status_c2f($coutvar+li,$outvar+li*5);
+            MPI_Status_c2f($coutvar+li,$outvar+li*MPIF_STATUS_SIZE);
         }
     }\n";
 	$clean_up .= "     if ($coutvar != MPI_STATUSES_IGNORE) { $free($coutvar); }\n";
@@ -2732,7 +2751,7 @@ sub status_array_ctof {
 "    if (${testFlag}lalloc$count) {
         int li;
         for (li=0; li<$ActSize; li++) {
-            MPI_Status_c2f($coutvar+li,$outvar+li*5);
+            MPI_Status_c2f($coutvar+li,$outvar+li*MPIF_STATUS_SIZE);
         }
     }\n";
 	$clean_up .= "     if (lalloc$count) { $free($coutvar); }\n";

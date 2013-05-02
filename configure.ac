@@ -4079,9 +4079,10 @@ dnl     len_doublecplx=$hexlen
         #
         PAC_PROG_FC_INT_KIND(INTEGER_KIND,$pac_cv_f77_sizeof_integer,$CROSS_F90_INTEGER_KIND)
         if test "$INTEGER_KIND" = "-1" ; then
-	    # Wild guess; probably means that Fortran 90 is not available
-	    AC_MSG_WARN([Unable to determine Fortran 90 KIND values for either address-sized integers or offset-sized integers.  Using 4 in that case.])
-            INTEGER_KIND=4
+	    # In our experience, this usually means that there is some
+	    # problem building and/or running the f90 program.  Fail
+	    # in this case rather than attempt to continue
+	    AC_MSG_ERROR([Unable to determine Fortran 90 KIND values for either address-sized integers or offset-sized integers.])
         fi
 	#
         # Some compilers won't allow a -1 kind (e.g., absoft).  In this case, 
@@ -5792,6 +5793,8 @@ if test "$enable_f77" = yes -a -z "$MPI_STATUS_SIZE" ; then
     if test $MPI_SIZEOF_COUNT -gt $pac_cv_f77_sizeof_integer ; then
         # Alignment test looks at the low address bits, as long
 	# as the sizeof(MPI_Count) is 2^j.  
+	# If we can't tell, pick a value that forces the Fortran
+	# wrappers to use a local copy.
 	MPIR_COUNT_ALIGNMENT=0
 	case $MPI_SIZEOF_COUNT in 
 	4)  MPIR_COUNT_ALIGNMENT="0x3";;
@@ -5801,6 +5804,77 @@ if test "$enable_f77" = yes -a -z "$MPI_STATUS_SIZE" ; then
 	esac
         
         AC_DEFINE_UNQUOTED([MPIR_COUNT_ALIGNMENT],[$MPIR_COUNT_ALIGNMENT],[Value that anded with an address will give 0 if the address is properly aligned for MPI_Count])
+
+	# Compare the size of MPI_Status to the sizes of the individual 
+	# elements.  If the sizeof(MPI_Status) > sum of the sizes, then
+	# determine if simple padding will work.
+	# FIXME: DETERMINED TO SEE IF THERE IS PROBLEM BUT NOT YET USED
+	AC_MSG_CHECKING([whether MPI_Status contains padding])
+	sum_of_status_element_sizes=`expr 6 \* $ac_cv_sizeof_int + $MPI_SIZEOF_COUNT`
+	if test $sum_of_status_element_sizes -lt $pac_cv_sizeof_mpi_status ; then
+	    AC_MSG_RESULT([yes])
+	    if test "$enable_fc" = "yes" ; then
+	        # FIXME: We could compute the padding or delete the 
+		# status definition from mpi_constants
+		AC_MSG_CHECKING([padding size before count field in MPI_Status])
+                rm -f pac_mpi_status.h
+dnl quote with [] since otherwise m4 strips the array declaration out of this
+dnl structure
+[                cat > pac_mpi_status.h <<_EOF
+typedef struct {
+    int MPI_SOURCE;
+    int MPI_TAG;
+    int MPI_ERROR;
+    $MPI_COUNT count;
+    int cancelled;
+    int abi_slush_fund[2];
+    $EXTRA_STATUS_DECL
+} MPI_Status;
+MPI_Status mya;
+_EOF
+]
+		AC_COMPUTE_INT(pac_cv_fc_pad1,[((char*)&mya.count-(((char*)&mya)+3*sizeof(int)))],[AC_INCLUDES_DEFAULT()
+#include "pac_mpi_status.h"])
+                AC_MSG_RESULT($pac_cv_fc_pad1)
+		AC_MSG_CHECKING([padding at end of MPI_Status])
+		AC_COMPUTE_INT(pac_cv_fc_pad2,[((char*)(&mya + 1) - ((char *)(mya.abi_slush_fund+1) + sizeof(int)))],[AC_INCLUDES_DEFAULT()
+#include "pac_mpi_status.h"])
+		AC_MSG_RESULT($pac_cv_fc_pad2)
+                rm -f pac_mpi_status.h
+		pac_cv_pad1found=no
+		pac_cv_pad2found=no
+		FC_STATUS_PAD1=""
+		FC_STATUS_PAD2=""
+		AC_SUBST(FC_STATUS_PAD1)
+		AC_SUBST(FC_STATUS_PAD2)
+		if test $pac_cv_fc_pad1 -gt 0 ; then
+		    if test $pac_cv_fc_pad1 -eq $ac_cv_sizeof_int ; then
+		        pac_cv_pad1found=yes
+			FC_STATUS_PAD1="INTEGER :: PAD1"
+		    fi
+                else 
+		    # No padding needed here, so successfully determined
+		    # padding
+		    pac_cv_pad1found=yes
+                fi
+		if test $pac_cv_fc_pad2 -gt 0 ; then
+		    if test $pac_cv_fc_pad2 -eq $ac_cv_sizeof_int ; then
+		        pac_cv_pad2found=yes
+			FC_STATUS_PAD2="INTEGER :: PAD2"
+		    fi
+                else 
+		    # No padding needed here, so successfully determined
+		    # padding
+		    pac_cv_pad2found=yes
+                fi
+		if test $pac_cv_pad1found = "no" -o \
+		        $pac_cv_pad2found = "no" ; then
+                    AC_MSG_ERROR([INTERNAL ERROR: definition of MPI_Status in C and Fortran 90 is incompatible due to padding in the C definition])
+		fi
+	    fi
+	else
+	    AC_MSG_RESULT([no])
+	fi
     fi 
 fi
 AC_SUBST([MPI_STATUS_SIZE])
@@ -6063,6 +6137,7 @@ AC_OUTPUT(Makefile \
 	  src/binding/f77/setbot.c \
 	  src/binding/f90/mpi_sizeofs.f90 \
 	  src/binding/f90/mpi_base.f90 \
+	  src/binding/f90/mpi_constants.f90 \
 	  src/packaging/pkgconfig/mpich.pc \
 	  src/packaging/envmods/mpich.module \
           src/env/mpixxx_opts.conf \

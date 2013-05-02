@@ -603,7 +603,7 @@ print MPIBASEFD "       END MODULE ${ucoutfile_prefix}_BASE\n";
 close MPIBASEFD;
 &ReplaceIfDifferent( "${outfile_prefix}_base.f90.in", "${outfile_prefix}_base.f90.in.new" );
 
-open ( MPIFD, ">${outfile_prefix}_constants.f90.new" ) || die "Cannot open ${outfile_prefix}_constants.f90.new\n";
+open ( MPIFD, ">${outfile_prefix}_constants.f90.in.new" ) || die "Cannot open ${outfile_prefix}_constants.f90.in.new\n";
 print MPIFD "!     -*- Mode: Fortran; -*-
 !  (C) 2008 by Argonne National Laboratory.
 !       See COPYRIGHT in top-level directory.
@@ -642,13 +642,21 @@ $PRIVATEVAR = "";
 #
 #$BINDACCESS = ", BIND(C)";
 #$BINDDEF ="";
+# Yet another problem.
+# Because MPI_Count may be longer than a single (Fortran) INTEGER, 
+# alignment restrictions may introduce padding in the structure
+# And one more problem: If a Fortran INTEGER is not the same as a C int,
+# then these are also wrong (see the "fint" option in 
+# src/binding/f77/buildiface 
 print MPIFD <<EOT;
         TYPE$BINDACCESS :: MPI_Status
            $BINDDEF
            INTEGER$PUBLICVAR :: MPI_SOURCE, MPI_TAG, MPI_ERROR
+           \@FC_STATUS_PAD1\@
            INTEGER$PRIVATEVAR(KIND=MPI_COUNT_KIND) :: count
            INTEGER$PRIVATEVAR :: cancelled
            INTEGER$PRIVATEVAR(2) :: abi_slush_fund
+           \@FC_STATUS_PAD2\@
         END TYPE MPI_Status
 EOT
 
@@ -708,7 +716,7 @@ foreach $handle (keys(%handles)) {
 
 print MPIFD "        END MODULE ${ucoutfile_prefix}_CONSTANTS\n";
 close MPIFD;
-&ReplaceIfDifferent( "${outfile_prefix}_constants.f90", "${outfile_prefix}_constants.f90.new" );
+&ReplaceIfDifferent( "${outfile_prefix}_constants.f90.in", "${outfile_prefix}_constants.f90.in.new" );
 
 #
 # Generate the choice argument routines

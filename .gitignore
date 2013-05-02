@@ -159,6 +159,7 @@ Makefile.am-stamp
 /README.envvar
 /maint/extracterrmsgs
 /src/binding/f90/mpi_base.f90.in
+/src/binding/f90/mpi_constants.f90.in
 /src/env/mpixxx_opts.conf
 /src/mpi/romio/include/mpio.h
 /src/mpi/romio/include/mpiof.h
