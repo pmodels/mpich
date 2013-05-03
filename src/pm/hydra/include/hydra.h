@@ -163,44 +163,6 @@ extern char **environ;
 
 #define HYDRA_NAMESERVER_DEFAULT_PORT 6392
 
-struct HYD_string_stash {
-    char **strlist;
-    int max_count;
-    int cur_count;
-};
-
-#define HYD_STRING_STASH_INIT(stash)            \
-    do {                                        \
-        (stash).strlist = NULL;                 \
-        (stash).max_count = 0;                  \
-        (stash).cur_count = 0;                  \
-    } while (0)
-
-#define HYD_STRING_STASH(stash, str, status)                            \
-    do {                                                                \
-        if ((stash).cur_count >= (stash).max_count - 1) {               \
-            HYDU_REALLOC((stash).strlist, char **, (stash).max_count + HYD_NUM_TMP_STRINGS, \
-                         (status));                                     \
-            (stash).max_count += HYD_NUM_TMP_STRINGS;                   \
-        }                                                               \
-        (stash).strlist[(stash).cur_count++] = (str);                   \
-        (stash).strlist[(stash).cur_count] = NULL;                      \
-    } while (0)
-
-#define HYD_STRING_SPIT(stash, str, status)                             \
-    do {                                                                \
-        if ((stash).cur_count == 0) {                                   \
-            (str) = HYDU_strdup("");                                    \
-        }                                                               \
-        else {                                                          \
-            (status) = HYDU_str_alloc_and_join((stash).strlist, &(str)); \
-            HYDU_ERR_POP((status), "unable to join strings\n");         \
-            HYDU_free_strlist((stash).strlist);                         \
-            HYDU_FREE((stash).strlist);                                 \
-            HYD_STRING_STASH_INIT((stash));                             \
-        }                                                               \
-    } while (0)
-
 enum HYD_bool {
     HYD_FALSE = 0,
     HYD_TRUE = 1
@@ -644,6 +606,19 @@ HYD_status HYDU_sock_cloexec(int fd);
 #define HYDU_FREE(p)                            \
     {                                           \
         HYDU_free((void *) p);                  \
+    }
+
+#define HYDU_STRLIST_CONSOLIDATE(strlist, i, status)                    \
+    {                                                                   \
+        char *out;                                                      \
+        if ((i) >= (HYD_NUM_TMP_STRINGS / 2)) {                         \
+            (strlist)[(i)] = NULL;                                      \
+            (status) = HYDU_str_alloc_and_join((strlist), &out);        \
+            HYDU_ERR_POP((status), "unable to join strings\n");         \
+            HYDU_free_strlist((strlist));                               \
+            strlist[0] = out;                                           \
+            (i) = 1;                                                    \
+        }                                                               \
     }
 
 HYD_status HYDU_list_append_strlist(char **exec, char **client_arg);

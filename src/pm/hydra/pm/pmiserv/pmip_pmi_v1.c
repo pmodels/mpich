@@ -183,10 +183,10 @@ static HYD_status fn_init(int fd, char *args[])
 static HYD_status fn_initack(int fd, char *args[])
 {
     int id, i;
-    char *val, *cmd;
+    char *val;
     struct HYD_pmcd_token *tokens;
     int token_count;
-    struct HYD_string_stash stash;
+    char *tmp[HYD_NUM_TMP_STRINGS], *cmd;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -209,19 +209,22 @@ static HYD_status fn_initack(int fd, char *args[])
     }
     HYDU_ASSERT(i < HYD_pmcd_pmip.local.proxy_process_count, status);
 
-    HYD_STRING_STASH_INIT(stash);
-    HYD_STRING_STASH(stash, HYDU_strdup("cmd=initack\ncmd=set size="), status);
-    HYD_STRING_STASH(stash, HYDU_int_to_str(HYD_pmcd_pmip.system_global.global_process_count),
-                     status);
+    i = 0;
+    tmp[i++] = HYDU_strdup("cmd=initack\ncmd=set size=");
+    tmp[i++] = HYDU_int_to_str(HYD_pmcd_pmip.system_global.global_process_count);
 
-    HYD_STRING_STASH(stash, HYDU_strdup("\ncmd=set rank="), status);
-    HYD_STRING_STASH(stash, HYDU_int_to_str(id), status);
+    /* FIXME: allow for multiple ranks per PMI ID */
+    tmp[i++] = HYDU_strdup("\ncmd=set rank=");
+    tmp[i++] = HYDU_int_to_str(id);
 
-    HYD_STRING_STASH(stash, HYDU_strdup("\ncmd=set debug="), status);
-    HYD_STRING_STASH(stash, HYDU_int_to_str(HYD_pmcd_pmip.user_global.debug), status);
-    HYD_STRING_STASH(stash, HYDU_strdup("\n"), status);
+    tmp[i++] = HYDU_strdup("\ncmd=set debug=");
+    tmp[i++] = HYDU_int_to_str(HYD_pmcd_pmip.user_global.debug);
+    tmp[i++] = HYDU_strdup("\n");
+    tmp[i++] = NULL;
 
-    HYD_STRING_SPIT(stash, cmd, status);
+    status = HYDU_str_alloc_and_join(tmp, &cmd);
+    HYDU_ERR_POP(status, "error while joining strings\n");
+    HYDU_free_strlist(tmp);
 
     status = send_cmd_downstream(fd, cmd);
     HYDU_ERR_POP(status, "error sending PMI response\n");
@@ -238,22 +241,25 @@ static HYD_status fn_initack(int fd, char *args[])
 
 static HYD_status fn_get_maxes(int fd, char *args[])
 {
-    struct HYD_string_stash stash;
-    char *cmd;
+    int i;
+    char *tmp[HYD_NUM_TMP_STRINGS], *cmd;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    HYD_STRING_STASH_INIT(stash);
-    HYD_STRING_STASH(stash, HYDU_strdup("cmd=maxes kvsname_max="), status);
-    HYD_STRING_STASH(stash, HYDU_int_to_str(PMI_MAXKVSLEN), status);
-    HYD_STRING_STASH(stash, HYDU_strdup(" keylen_max="), status);
-    HYD_STRING_STASH(stash, HYDU_int_to_str(PMI_MAXKEYLEN), status);
-    HYD_STRING_STASH(stash, HYDU_strdup(" vallen_max="), status);
-    HYD_STRING_STASH(stash, HYDU_int_to_str(PMI_MAXVALLEN), status);
-    HYD_STRING_STASH(stash, HYDU_strdup("\n"), status);
+    i = 0;
+    tmp[i++] = HYDU_strdup("cmd=maxes kvsname_max=");
+    tmp[i++] = HYDU_int_to_str(PMI_MAXKVSLEN);
+    tmp[i++] = HYDU_strdup(" keylen_max=");
+    tmp[i++] = HYDU_int_to_str(PMI_MAXKEYLEN);
+    tmp[i++] = HYDU_strdup(" vallen_max=");
+    tmp[i++] = HYDU_int_to_str(PMI_MAXVALLEN);
+    tmp[i++] = HYDU_strdup("\n");
+    tmp[i++] = NULL;
 
-    HYD_STRING_SPIT(stash, cmd, status);
+    status = HYDU_str_alloc_and_join(tmp, &cmd);
+    HYDU_ERR_POP(status, "unable to join strings\n");
+    HYDU_free_strlist(tmp);
 
     status = send_cmd_downstream(fd, cmd);
     HYDU_ERR_POP(status, "error sending PMI response\n");
@@ -271,8 +277,7 @@ static HYD_status fn_get_appnum(int fd, char *args[])
 {
     int i, idx;
     struct HYD_exec *exec;
-    struct HYD_string_stash stash;
-    char *cmd;
+    char *tmp[HYD_NUM_TMP_STRINGS], *cmd;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -291,12 +296,15 @@ static HYD_status fn_get_appnum(int fd, char *args[])
             break;
     }
 
-    HYD_STRING_STASH_INIT(stash);
-    HYD_STRING_STASH(stash, HYDU_strdup("cmd=appnum appnum="), status);
-    HYD_STRING_STASH(stash, HYDU_int_to_str(exec->appnum), status);
-    HYD_STRING_STASH(stash, HYDU_strdup("\n"), status);
+    i = 0;
+    tmp[i++] = HYDU_strdup("cmd=appnum appnum=");
+    tmp[i++] = HYDU_int_to_str(exec->appnum);
+    tmp[i++] = HYDU_strdup("\n");
+    tmp[i++] = NULL;
 
-    HYD_STRING_SPIT(stash, cmd, status);
+    status = HYDU_str_alloc_and_join(tmp, &cmd);
+    HYDU_ERR_POP(status, "unable to join strings\n");
+    HYDU_free_strlist(tmp);
 
     status = send_cmd_downstream(fd, cmd);
     HYDU_ERR_POP(status, "error sending PMI response\n");
@@ -312,18 +320,21 @@ static HYD_status fn_get_appnum(int fd, char *args[])
 
 static HYD_status fn_get_my_kvsname(int fd, char *args[])
 {
-    struct HYD_string_stash stash;
-    char *cmd;
+    char *tmp[HYD_NUM_TMP_STRINGS], *cmd;
+    int i;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    HYD_STRING_STASH_INIT(stash);
-    HYD_STRING_STASH(stash, HYDU_strdup("cmd=my_kvsname kvsname="), status);
-    HYD_STRING_STASH(stash, HYDU_strdup(HYD_pmcd_pmip.local.kvs->kvsname), status);
-    HYD_STRING_STASH(stash, HYDU_strdup("\n"), status);
+    i = 0;
+    tmp[i++] = HYDU_strdup("cmd=my_kvsname kvsname=");
+    tmp[i++] = HYDU_strdup(HYD_pmcd_pmip.local.kvs->kvsname);
+    tmp[i++] = HYDU_strdup("\n");
+    tmp[i++] = NULL;
 
-    HYD_STRING_SPIT(stash, cmd, status);
+    status = HYDU_str_alloc_and_join(tmp, &cmd);
+    HYDU_ERR_POP(status, "unable to join strings\n");
+    HYDU_free_strlist(tmp);
 
     status = send_cmd_downstream(fd, cmd);
     HYDU_ERR_POP(status, "error sending PMI response\n");
@@ -339,25 +350,26 @@ static HYD_status fn_get_my_kvsname(int fd, char *args[])
 
 static HYD_status fn_get_usize(int fd, char *args[])
 {
-    struct HYD_string_stash stash;
-    char *cmd;
+    int i;
+    char *tmp[HYD_NUM_TMP_STRINGS], *cmd;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    HYD_STRING_STASH_INIT(stash);
-    HYD_STRING_STASH(stash, HYDU_strdup("cmd=universe_size size="), status);
+    i = 0;
+    tmp[i++] = HYDU_strdup("cmd=universe_size size=");
     if (HYD_pmcd_pmip.user_global.usize == HYD_USIZE_SYSTEM)
-        HYD_STRING_STASH(stash,
-                         HYDU_int_to_str(HYD_pmcd_pmip.system_global.global_core_map.global_count),
-                         status);
+        tmp[i++] = HYDU_int_to_str(HYD_pmcd_pmip.system_global.global_core_map.global_count);
     else if (HYD_pmcd_pmip.user_global.usize == HYD_USIZE_INFINITE)
-        HYD_STRING_STASH(stash, HYDU_int_to_str(-1), status);
+        tmp[i++] = HYDU_int_to_str(-1);
     else
-        HYD_STRING_STASH(stash, HYDU_int_to_str(HYD_pmcd_pmip.user_global.usize), status);
-    HYD_STRING_STASH(stash, HYDU_strdup("\n"), status);
+        tmp[i++] = HYDU_int_to_str(HYD_pmcd_pmip.user_global.usize);
+    tmp[i++] = HYDU_strdup("\n");
+    tmp[i++] = NULL;
 
-    HYD_STRING_SPIT(stash, cmd, status);
+    status = HYDU_str_alloc_and_join(tmp, &cmd);
+    HYDU_ERR_POP(status, "unable to join strings\n");
+    HYDU_free_strlist(tmp);
 
     status = send_cmd_downstream(fd, cmd);
     HYDU_ERR_POP(status, "error sending PMI response\n");
@@ -373,8 +385,7 @@ static HYD_status fn_get_usize(int fd, char *args[])
 
 static HYD_status fn_get(int fd, char *args[])
 {
-    struct HYD_string_stash stash;
-    char *cmd, *key, *val;
+    char *tmp[HYD_NUM_TMP_STRINGS], *cmd, *key, *val;
     struct HYD_pmcd_token *tokens;
     int token_count, i;
     HYD_status status = HYD_SUCCESS;
@@ -389,13 +400,15 @@ static HYD_status fn_get(int fd, char *args[])
                         "unable to find token: key\n");
 
     if (!strcmp(key, "PMI_process_mapping")) {
-        HYD_STRING_STASH_INIT(stash);
-        HYD_STRING_STASH(stash, HYDU_strdup("cmd=get_result rc=0 msg=success value="), status);
-        HYD_STRING_STASH(stash, HYDU_strdup(HYD_pmcd_pmip.system_global.pmi_process_mapping),
-                         status);
-        HYD_STRING_STASH(stash, HYDU_strdup("\n"), status);
+        i = 0;
+        tmp[i++] = HYDU_strdup("cmd=get_result rc=0 msg=success value=");
+        tmp[i++] = HYDU_strdup(HYD_pmcd_pmip.system_global.pmi_process_mapping);
+        tmp[i++] = HYDU_strdup("\n");
+        tmp[i++] = NULL;
 
-        HYD_STRING_SPIT(stash, cmd, status);
+        status = HYDU_str_alloc_and_join(tmp, &cmd);
+        HYDU_ERR_POP(status, "unable to join strings\n");
+        HYDU_free_strlist(tmp);
 
         status = send_cmd_downstream(fd, cmd);
         HYDU_ERR_POP(status, "error sending PMI response\n");
@@ -410,20 +423,23 @@ static HYD_status fn_get(int fd, char *args[])
             }
         }
 
-        HYD_STRING_STASH_INIT(stash);
-        HYD_STRING_STASH(stash, HYDU_strdup("cmd=get_result rc="), status);
+        i = 0;
+        tmp[i++] = HYDU_strdup("cmd=get_result rc=");
         if (val) {
-            HYD_STRING_STASH(stash, HYDU_strdup("0 msg=success value="), status);
-            HYD_STRING_STASH(stash, HYDU_strdup(val), status);
+            tmp[i++] = HYDU_strdup("0 msg=success value=");
+            tmp[i++] = HYDU_strdup(val);
         }
         else {
-            HYD_STRING_STASH(stash, HYDU_strdup("-1 msg=key_"), status);
-            HYD_STRING_STASH(stash, HYDU_strdup(key), status);
-            HYD_STRING_STASH(stash, HYDU_strdup("_not_found value=unknown"), status);
+            tmp[i++] = HYDU_strdup("-1 msg=key_");
+            tmp[i++] = HYDU_strdup(key);
+            tmp[i++] = HYDU_strdup("_not_found value=unknown");
         }
-        HYD_STRING_STASH(stash, HYDU_strdup("\n"), status);
+        tmp[i++] = HYDU_strdup("\n");
+        tmp[i++] = NULL;
 
-        HYD_STRING_SPIT(stash, cmd, status);
+        status = HYDU_str_alloc_and_join(tmp, &cmd);
+        HYDU_ERR_POP(status, "unable to join strings\n");
+        HYDU_free_strlist(tmp);
 
         status = send_cmd_downstream(fd, cmd);
         HYDU_ERR_POP(status, "error sending command downstream\n");
@@ -441,11 +457,10 @@ static HYD_status fn_get(int fd, char *args[])
 
 static HYD_status fn_put(int fd, char *args[])
 {
-    struct HYD_string_stash stash;
-    char *cmd;
+    char *tmp[HYD_NUM_TMP_STRINGS], *cmd;
     char *key, *val;
     struct HYD_pmcd_token *tokens;
-    int token_count;
+    int token_count, i;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -462,12 +477,15 @@ static HYD_status fn_put(int fd, char *args[])
         val = HYDU_strdup("");
 
     /* add to the cache */
-    HYD_STRING_STASH_INIT(stash);
-    HYD_STRING_STASH(stash, HYDU_strdup(key), status);
-    HYD_STRING_STASH(stash, HYDU_strdup("="), status);
-    HYD_STRING_STASH(stash, HYDU_strdup(val), status);
+    i = 0;
+    tmp[i++] = HYDU_strdup(key);
+    tmp[i++] = HYDU_strdup("=");
+    tmp[i++] = HYDU_strdup(val);
+    tmp[i++] = NULL;
 
-    HYD_STRING_SPIT(stash, cmd, status);
+    status = HYDU_str_alloc_and_join(tmp, &cmd);
+    HYDU_ERR_POP(status, "unable to join strings\n");
+    HYDU_free_strlist(tmp);
 
     cache_put.keyval[cache_put.keyval_len++] = cmd;
     debug("cached command: %s\n", cmd);

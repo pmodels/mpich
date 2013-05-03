@@ -12,8 +12,8 @@
 
 HYD_status HYD_pmcd_pmi_fill_in_proxy_args(char **proxy_args, char *control_port, int pgid)
 {
-    int arg, use_ddd, use_valgrind, use_strace, retries, ret;
-    struct HYD_string_stash stash;
+    int i, arg, use_ddd, use_valgrind, use_strace, retries, ret;
+    char *path_str[HYD_NUM_TMP_STRINGS];
     HYD_status status = HYD_SUCCESS;
 
     arg = 0;
@@ -45,11 +45,13 @@ HYD_status HYD_pmcd_pmi_fill_in_proxy_args(char **proxy_args, char *control_port
         proxy_args[arg++] = HYDU_strdup("-ff");
     }
 
-    HYD_STRING_STASH_INIT(stash);
-    HYD_STRING_STASH(stash, HYDU_strdup(HYD_server_info.base_path), status);
-    HYD_STRING_STASH(stash, HYDU_strdup("hydra_pmi_proxy"), status);
-    HYD_STRING_SPIT(stash, proxy_args[arg], status);
-    arg++;
+    i = 0;
+    path_str[i++] = HYDU_strdup(HYD_server_info.base_path);
+    path_str[i++] = HYDU_strdup("hydra_pmi_proxy");
+    path_str[i] = NULL;
+    status = HYDU_str_alloc_and_join(path_str, &proxy_args[arg++]);
+    HYDU_ERR_POP(status, "unable to join strings\n");
+    HYDU_free_strlist(path_str);
 
     proxy_args[arg++] = HYDU_strdup("--control-port");
     proxy_args[arg++] = HYDU_strdup(control_port);
@@ -111,8 +113,8 @@ HYD_status HYD_pmcd_pmi_fill_in_proxy_args(char **proxy_args, char *control_port
 
 static HYD_status pmi_process_mapping(struct HYD_pg *pg, char **process_mapping_str)
 {
-    int is_equal, filler_round, core_count;
-    struct HYD_string_stash stash;
+    int i, is_equal, filler_round, core_count;
+    char *tmp[HYD_NUM_TMP_STRINGS];
     struct block {
         int start_idx;
         int num_nodes;
@@ -202,23 +204,28 @@ static HYD_status pmi_process_mapping(struct HYD_pg *pg, char **process_mapping_
 
   create_mapping_key:
     /* Create the mapping out of the blocks */
-    HYD_STRING_STASH_INIT(stash);
-    HYD_STRING_STASH(stash, HYDU_strdup("("), status);
-    HYD_STRING_STASH(stash, HYDU_strdup("vector,"), status);
+    i = 0;
+    tmp[i++] = HYDU_strdup("(");
+    tmp[i++] = HYDU_strdup("vector,");
     for (block = blocklist_head; block; block = block->next) {
-        HYD_STRING_STASH(stash, HYDU_strdup("("), status);
-        HYD_STRING_STASH(stash, HYDU_int_to_str(block->start_idx), status);
-        HYD_STRING_STASH(stash, HYDU_strdup(","), status);
-        HYD_STRING_STASH(stash, HYDU_int_to_str(block->num_nodes), status);
-        HYD_STRING_STASH(stash, HYDU_strdup(","), status);
-        HYD_STRING_STASH(stash, HYDU_int_to_str(block->core_count), status);
-        HYD_STRING_STASH(stash, HYDU_strdup(")"), status);
+        tmp[i++] = HYDU_strdup("(");
+        tmp[i++] = HYDU_int_to_str(block->start_idx);
+        tmp[i++] = HYDU_strdup(",");
+        tmp[i++] = HYDU_int_to_str(block->num_nodes);
+        tmp[i++] = HYDU_strdup(",");
+        tmp[i++] = HYDU_int_to_str(block->core_count);
+        tmp[i++] = HYDU_strdup(")");
         if (block->next)
-            HYD_STRING_STASH(stash, HYDU_strdup(","), status);
+            tmp[i++] = HYDU_strdup(",");
+        HYDU_STRLIST_CONSOLIDATE(tmp, i, status);
     }
-    HYD_STRING_STASH(stash, HYDU_strdup(")"), status);
+    tmp[i++] = HYDU_strdup(")");
+    tmp[i++] = NULL;
 
-    HYD_STRING_SPIT(stash, *process_mapping_str, status);
+    status = HYDU_str_alloc_and_join(tmp, process_mapping_str);
+    HYDU_ERR_POP(status, "error while joining strings\n");
+
+    HYDU_free_strlist(tmp);
 
     for (block = blocklist_head; block; block = nblock) {
         nblock = block->next;

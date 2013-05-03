@@ -111,12 +111,13 @@ static HYD_status poke_progress(char *key)
 
 static HYD_status fn_info_getjobattr(int fd, int pid, int pgid, char *args[])
 {
+    int i;
     struct HYD_proxy *proxy;
     struct HYD_pmcd_pmi_pg_scratch *pg_scratch;
     struct HYD_pmcd_pmi_kvs_pair *run;
     const char *key;
-    char *thrid, *val, *cmd;
-    struct HYD_string_stash stash;
+    char *thrid, *val;
+    char *tmp[HYD_NUM_TMP_STRINGS], *cmd;
     struct HYD_pmcd_token *tokens;
     int token_count;
     HYD_status status = HYD_SUCCESS;
@@ -148,24 +149,28 @@ static HYD_status fn_info_getjobattr(int fd, int pid, int pgid, char *args[])
         }
     }
 
-    HYD_STRING_STASH_INIT(stash);
-    HYD_STRING_STASH(stash, HYDU_strdup("cmd=info-getjobattr-response;"), status);
+    i = 0;
+    tmp[i++] = HYDU_strdup("cmd=info-getjobattr-response;");
     if (thrid) {
-        HYD_STRING_STASH(stash, HYDU_strdup("thrid="), status);
-        HYD_STRING_STASH(stash, HYDU_strdup(thrid), status);
-        HYD_STRING_STASH(stash, HYDU_strdup(";"), status);
+        tmp[i++] = HYDU_strdup("thrid=");
+        tmp[i++] = HYDU_strdup(thrid);
+        tmp[i++] = HYDU_strdup(";");
     }
-    HYD_STRING_STASH(stash, HYDU_strdup("found="), status);
+    tmp[i++] = HYDU_strdup("found=");
     if (val) {
-        HYD_STRING_STASH(stash, HYDU_strdup("TRUE;value="), status);
-        HYD_STRING_STASH(stash, HYDU_strdup(val), status);
-        HYD_STRING_STASH(stash, HYDU_strdup(";rc=0;"), status);
+        tmp[i++] = HYDU_strdup("TRUE;value=");
+        tmp[i++] = HYDU_strdup(val);
+        tmp[i++] = HYDU_strdup(";rc=0;");
     }
     else {
-        HYD_STRING_STASH(stash, HYDU_strdup("FALSE;rc=0;"), status);
+        tmp[i++] = HYDU_strdup("FALSE;rc=0;");
     }
+    tmp[i++] = NULL;
 
-    HYD_STRING_SPIT(stash, cmd, status);
+    status = HYDU_str_alloc_and_join(tmp, &cmd);
+    HYDU_ERR_POP(status, "unable to join strings\n");
+
+    HYDU_free_strlist(tmp);
 
     status = cmd_response(fd, pid, cmd);
     HYDU_ERR_POP(status, "send command failed\n");
@@ -183,9 +188,9 @@ static HYD_status fn_info_getjobattr(int fd, int pid, int pgid, char *args[])
 
 static HYD_status fn_kvs_put(int fd, int pid, int pgid, char *args[])
 {
-    struct HYD_string_stash stash;
-    char *key, *val, *thrid, *cmd;
-    int ret;
+    char *tmp[HYD_NUM_TMP_STRINGS], *cmd;
+    char *key, *val, *thrid;
+    int i, ret;
     struct HYD_proxy *proxy;
     struct HYD_pmcd_pmi_pg_scratch *pg_scratch;
     struct HYD_pmcd_token *tokens;
@@ -217,18 +222,22 @@ static HYD_status fn_kvs_put(int fd, int pid, int pgid, char *args[])
     status = HYD_pmcd_pmi_add_kvs(key, val, pg_scratch->kvs, &ret);
     HYDU_ERR_POP(status, "unable to put data into kvs\n");
 
-    HYD_STRING_STASH_INIT(stash);
-    HYD_STRING_STASH(stash, HYDU_strdup("cmd=kvs-put-response;"), status);
+    i = 0;
+    tmp[i++] = HYDU_strdup("cmd=kvs-put-response;");
     if (thrid) {
-        HYD_STRING_STASH(stash, HYDU_strdup("thrid="), status);
-        HYD_STRING_STASH(stash, HYDU_strdup(thrid), status);
-        HYD_STRING_STASH(stash, HYDU_strdup(";"), status);
+        tmp[i++] = HYDU_strdup("thrid=");
+        tmp[i++] = HYDU_strdup(thrid);
+        tmp[i++] = HYDU_strdup(";");
     }
-    HYD_STRING_STASH(stash, HYDU_strdup("rc="), status);
-    HYD_STRING_STASH(stash, HYDU_int_to_str(ret), status);
-    HYD_STRING_STASH(stash, HYDU_strdup(";"), status);
+    tmp[i++] = HYDU_strdup("rc=");
+    tmp[i++] = HYDU_int_to_str(ret);
+    tmp[i++] = HYDU_strdup(";");
+    tmp[i++] = NULL;
 
-    HYD_STRING_SPIT(stash, cmd, status);
+    status = HYDU_str_alloc_and_join(tmp, &cmd);
+    HYDU_ERR_POP(status, "unable to join strings\n");
+
+    HYDU_free_strlist(tmp);
 
     status = cmd_response(fd, pid, cmd);
     HYDU_ERR_POP(status, "send command failed\n");
@@ -259,8 +268,8 @@ static HYD_status fn_kvs_get(int fd, int pid, int pgid, char *args[])
     struct HYD_pg *pg;
     struct HYD_proxy *proxy;
     struct HYD_pmcd_pmi_kvs_pair *run;
-    char *key, *thrid, *cmd;
-    struct HYD_string_stash stash;
+    char *key, *thrid;
+    char *tmp[HYD_NUM_TMP_STRINGS], *cmd;
     struct HYD_pmcd_token *tokens;
     int token_count;
     HYD_status status = HYD_SUCCESS;
@@ -313,24 +322,27 @@ static HYD_status fn_kvs_get(int fd, int pid, int pgid, char *args[])
         }
     }
 
-    HYD_STRING_STASH_INIT(stash);
-    HYD_STRING_STASH(stash, HYDU_strdup("cmd=kvs-get-response;"), status);
+    i = 0;
+    tmp[i++] = HYDU_strdup("cmd=kvs-get-response;");
     if (thrid) {
-        HYD_STRING_STASH(stash, HYDU_strdup("thrid="), status);
-        HYD_STRING_STASH(stash, HYDU_strdup(thrid), status);
-        HYD_STRING_STASH(stash, HYDU_strdup(";"), status);
+        tmp[i++] = HYDU_strdup("thrid=");
+        tmp[i++] = HYDU_strdup(thrid);
+        tmp[i++] = HYDU_strdup(";");
     }
     if (found) {
-        HYD_STRING_STASH(stash, HYDU_strdup("found=TRUE;value="), status);
-        HYD_STRING_STASH(stash, HYDU_strdup(run->val), status);
-        HYD_STRING_STASH(stash, HYDU_strdup(";"), status);
+        tmp[i++] = HYDU_strdup("found=TRUE;value=");
+        tmp[i++] = HYDU_strdup(run->val);
+        tmp[i++] = HYDU_strdup(";");
     }
     else {
-        HYD_STRING_STASH(stash, HYDU_strdup("found=FALSE;"), status);
+        tmp[i++] = HYDU_strdup("found=FALSE;");
     }
-    HYD_STRING_STASH(stash, HYDU_strdup("rc=0;"), status);
+    tmp[i++] = HYDU_strdup("rc=0;");
+    tmp[i++] = NULL;
 
-    HYD_STRING_SPIT(stash, cmd, status);
+    status = HYDU_str_alloc_and_join(tmp, &cmd);
+    HYDU_ERR_POP(status, "unable to join strings\n");
+    HYDU_free_strlist(tmp);
 
     status = cmd_response(fd, pid, cmd);
     HYDU_ERR_POP(status, "send command failed\n");
@@ -349,8 +361,7 @@ static HYD_status fn_kvs_fence(int fd, int pid, int pgid, char *args[])
 {
     struct HYD_proxy *proxy;
     struct HYD_pmcd_pmi_pg_scratch *pg_scratch;
-    struct HYD_string_stash stash;
-    char *cmd, *thrid;
+    char *tmp[HYD_NUM_TMP_STRINGS], *cmd, *thrid;
     struct HYD_pmcd_token *tokens;
     int token_count, i;
     static int fence_count = 0;
@@ -385,16 +396,19 @@ static HYD_status fn_kvs_fence(int fd, int pid, int pgid, char *args[])
         pg_scratch->ecount[i].epoch = 1;
     }
 
-    HYD_STRING_STASH_INIT(stash);
-    HYD_STRING_STASH(stash, HYDU_strdup("cmd=kvs-fence-response;"), status);
+    i = 0;
+    tmp[i++] = HYDU_strdup("cmd=kvs-fence-response;");
     if (thrid) {
-        HYD_STRING_STASH(stash, HYDU_strdup("thrid="), status);
-        HYD_STRING_STASH(stash, HYDU_strdup(thrid), status);
-        HYD_STRING_STASH(stash, HYDU_strdup(";"), status);
+        tmp[i++] = HYDU_strdup("thrid=");
+        tmp[i++] = HYDU_strdup(thrid);
+        tmp[i++] = HYDU_strdup(";");
     }
-    HYD_STRING_STASH(stash, HYDU_strdup("rc=0;"), status);
+    tmp[i++] = HYDU_strdup("rc=0;");
+    tmp[i++] = NULL;
 
-    HYD_STRING_SPIT(stash, cmd, status);
+    status = HYDU_str_alloc_and_join(tmp, &cmd);
+    HYDU_ERR_POP(status, "unable to join strings\n");
+    HYDU_free_strlist(tmp);
 
     status = cmd_response(fd, pid, cmd);
     HYDU_ERR_POP(status, "send command failed\n");
@@ -458,7 +472,7 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
     int token_count, i, j, k, new_pgid;
     int argcnt, num_segments;
     char *control_port, *proxy_args[HYD_NUM_TMP_STRINGS] = { NULL };
-    struct HYD_string_stash stash;
+    char *tmp[HYD_NUM_TMP_STRINGS];
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -599,12 +613,15 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
         if (path == NULL)
             execname = HYDU_strdup(val);
         else {
-            HYD_STRING_STASH_INIT(stash);
-            HYD_STRING_STASH(stash, HYDU_strdup(path), status);
-            HYD_STRING_STASH(stash, HYDU_strdup("/"), status);
-            HYD_STRING_STASH(stash, HYDU_strdup(val), status);
+            i = 0;
+            tmp[i++] = HYDU_strdup(path);
+            tmp[i++] = HYDU_strdup("/");
+            tmp[i++] = HYDU_strdup(val);
+            tmp[i++] = NULL;
 
-            HYD_STRING_SPIT(stash, execname, status);
+            status = HYDU_str_alloc_and_join(tmp, &execname);
+            HYDU_ERR_POP(status, "error while joining strings\n");
+            HYDU_free_strlist(tmp);
         }
 
         i = 0;
@@ -710,22 +727,25 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
     HYDU_ERR_POP(status, "launcher cannot launch processes\n");
 
     {
-        char *cmd;
+        char *cmd_str[HYD_NUM_TMP_STRINGS], *cmd;
 
-        HYD_STRING_STASH_INIT(stash);
-        HYD_STRING_STASH(stash, HYDU_strdup("cmd=spawn-response;"), status);
+        i = 0;
+        cmd_str[i++] = HYDU_strdup("cmd=spawn-response;");
         if (thrid) {
-            HYD_STRING_STASH(stash, HYDU_strdup("thrid="), status);
-            HYD_STRING_STASH(stash, HYDU_strdup(thrid), status);
-            HYD_STRING_STASH(stash, HYDU_strdup(";"), status);
+            cmd_str[i++] = HYDU_strdup("thrid=");
+            cmd_str[i++] = HYDU_strdup(thrid);
+            cmd_str[i++] = HYDU_strdup(";");
         }
-        HYD_STRING_STASH(stash, HYDU_strdup("rc=0;"), status);
-        HYD_STRING_STASH(stash, HYDU_strdup("jobid="), status);
-        HYD_STRING_STASH(stash, HYDU_strdup(pg_scratch->kvs->kvsname), status);
-        HYD_STRING_STASH(stash, HYDU_strdup(";"), status);
-        HYD_STRING_STASH(stash, HYDU_strdup("nerrs=0;"), status);
+        cmd_str[i++] = HYDU_strdup("rc=0;");
+        cmd_str[i++] = HYDU_strdup("jobid=");
+        cmd_str[i++] = HYDU_strdup(pg_scratch->kvs->kvsname);
+        cmd_str[i++] = HYDU_strdup(";");
+        cmd_str[i++] = HYDU_strdup("nerrs=0;");
+        cmd_str[i++] = NULL;
 
-        HYD_STRING_SPIT(stash, cmd, status);
+        status = HYDU_str_alloc_and_join(cmd_str, &cmd);
+        HYDU_ERR_POP(status, "unable to join strings\n");
+        HYDU_free_strlist(cmd_str);
 
         status = cmd_response(fd, pid, cmd);
         HYDU_ERR_POP(status, "send command failed\n");
@@ -746,9 +766,9 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
 
 static HYD_status fn_name_publish(int fd, int pid, int pgid, char *args[])
 {
-    struct HYD_string_stash stash;
-    char *cmd, *thrid, *val, *name, *port;
-    int token_count, success;
+    char *tmp[HYD_NUM_TMP_STRINGS], *cmd, *thrid, *val;
+    char *name, *port;
+    int i, token_count, success;
     struct HYD_pmcd_token *tokens;
     HYD_status status = HYD_SUCCESS;
 
@@ -770,22 +790,25 @@ static HYD_status fn_name_publish(int fd, int pid, int pgid, char *args[])
     status = HYD_pmcd_pmi_publish(name, port, &success);
     HYDU_ERR_POP(status, "error publishing service\n");
 
-    HYD_STRING_STASH_INIT(stash);
-    HYD_STRING_STASH(stash, HYDU_strdup("cmd=name-publish-response;"), status);
+    i = 0;
+    tmp[i++] = HYDU_strdup("cmd=name-publish-response;");
     if (thrid) {
-        HYD_STRING_STASH(stash, HYDU_strdup("thrid="), status);
-        HYD_STRING_STASH(stash, HYDU_strdup(thrid), status);
-        HYD_STRING_STASH(stash, HYDU_strdup(";"), status);
+        tmp[i++] = HYDU_strdup("thrid=");
+        tmp[i++] = HYDU_strdup(thrid);
+        tmp[i++] = HYDU_strdup(";");
     }
     if (!success) {
-        HYD_STRING_STASH(stash, HYDU_strdup("rc=1;errmsg=duplicate_service_"), status);
-        HYD_STRING_STASH(stash, HYDU_strdup(name), status);
-        HYD_STRING_STASH(stash, HYDU_strdup(";"), status);
+        tmp[i++] = HYDU_strdup("rc=1;errmsg=duplicate_service_");
+        tmp[i++] = HYDU_strdup(name);
+        tmp[i++] = HYDU_strdup(";");
     }
     else
-        HYD_STRING_STASH(stash, HYDU_strdup("rc=0;"), status);
+        tmp[i++] = HYDU_strdup("rc=0;");
+    tmp[i++] = NULL;
 
-    HYD_STRING_SPIT(stash, cmd, status);
+    status = HYDU_str_alloc_and_join(tmp, &cmd);
+    HYDU_ERR_POP(status, "unable to join strings\n");
+    HYDU_free_strlist(tmp);
 
     status = cmd_response(fd, pid, cmd);
     HYDU_ERR_POP(status, "send command failed\n");
@@ -801,9 +824,8 @@ static HYD_status fn_name_publish(int fd, int pid, int pgid, char *args[])
 
 static HYD_status fn_name_unpublish(int fd, int pid, int pgid, char *args[])
 {
-    struct HYD_string_stash stash;
-    char *cmd, *thrid, *name;
-    int token_count, success;
+    char *tmp[HYD_NUM_TMP_STRINGS], *cmd, *thrid, *name;
+    int i, token_count, success;
     struct HYD_pmcd_token *tokens;
     HYD_status status = HYD_SUCCESS;
 
@@ -820,22 +842,25 @@ static HYD_status fn_name_unpublish(int fd, int pid, int pgid, char *args[])
     status = HYD_pmcd_pmi_unpublish(name, &success);
     HYDU_ERR_POP(status, "error unpublishing service\n");
 
-    HYD_STRING_STASH_INIT(stash);
-    HYD_STRING_STASH(stash, HYDU_strdup("cmd=name-unpublish-response;"), status);
+    i = 0;
+    tmp[i++] = HYDU_strdup("cmd=name-unpublish-response;");
     if (thrid) {
-        HYD_STRING_STASH(stash, HYDU_strdup("thrid="), status);
-        HYD_STRING_STASH(stash, HYDU_strdup(thrid), status);
-        HYD_STRING_STASH(stash, HYDU_strdup(";"), status);
+        tmp[i++] = HYDU_strdup("thrid=");
+        tmp[i++] = HYDU_strdup(thrid);
+        tmp[i++] = HYDU_strdup(";");
     }
     if (success)
-        HYD_STRING_STASH(stash, HYDU_strdup("rc=0;"), status);
+        tmp[i++] = HYDU_strdup("rc=0;");
     else {
-        HYD_STRING_STASH(stash, HYDU_strdup("rc=1;errmsg=service_"), status);
-        HYD_STRING_STASH(stash, HYDU_strdup(name), status);
-        HYD_STRING_STASH(stash, HYDU_strdup("_not_found;"), status);
+        tmp[i++] = HYDU_strdup("rc=1;errmsg=service_");
+        tmp[i++] = HYDU_strdup(name);
+        tmp[i++] = HYDU_strdup("_not_found;");
     }
+    tmp[i++] = NULL;
 
-    HYD_STRING_SPIT(stash, cmd, status);
+    status = HYDU_str_alloc_and_join(tmp, &cmd);
+    HYDU_ERR_POP(status, "unable to join strings\n");
+    HYDU_free_strlist(tmp);
 
     status = cmd_response(fd, pid, cmd);
     HYDU_ERR_POP(status, "send command failed\n");
@@ -851,10 +876,9 @@ static HYD_status fn_name_unpublish(int fd, int pid, int pgid, char *args[])
 
 static HYD_status fn_name_lookup(int fd, int pid, int pgid, char *args[])
 {
-    struct HYD_string_stash stash;
-    char *cmd, *thrid, *name, *value;
+    char *tmp[HYD_NUM_TMP_STRINGS], *cmd, *thrid, *name, *value;
     struct HYD_pmcd_pmi_publish *publish;
-    int token_count;
+    int i, token_count;
     struct HYD_pmcd_token *tokens;
     HYD_status status = HYD_SUCCESS;
 
@@ -874,23 +898,26 @@ static HYD_status fn_name_lookup(int fd, int pid, int pgid, char *args[])
     status = HYD_pmcd_pmi_lookup(name, &value);
     HYDU_ERR_POP(status, "error while looking up service\n");
 
-    HYD_STRING_STASH_INIT(stash);
-    HYD_STRING_STASH(stash, HYDU_strdup("cmd=name-lookup-response;"), status);
+    i = 0;
+    tmp[i++] = HYDU_strdup("cmd=name-lookup-response;");
     if (thrid) {
-        HYD_STRING_STASH(stash, HYDU_strdup("thrid="), status);
-        HYD_STRING_STASH(stash, HYDU_strdup(thrid), status);
-        HYD_STRING_STASH(stash, HYDU_strdup(";"), status);
+        tmp[i++] = HYDU_strdup("thrid=");
+        tmp[i++] = HYDU_strdup(thrid);
+        tmp[i++] = HYDU_strdup(";");
     }
     if (value) {
-        HYD_STRING_STASH(stash, HYDU_strdup("port="), status);
-        HYD_STRING_STASH(stash, HYDU_strdup(value), status);
-        HYD_STRING_STASH(stash, HYDU_strdup(";found=TRUE;rc=0;"), status);
+        tmp[i++] = HYDU_strdup("port=");
+        tmp[i++] = HYDU_strdup(value);
+        tmp[i++] = HYDU_strdup(";found=TRUE;rc=0;");
     }
     else {
-        HYD_STRING_STASH(stash, HYDU_strdup("found=FALSE;rc=1;"), status);
+        tmp[i++] = HYDU_strdup("found=FALSE;rc=1;");
     }
+    tmp[i++] = NULL;
 
-    HYD_STRING_SPIT(stash, cmd, status);
+    status = HYDU_str_alloc_and_join(tmp, &cmd);
+    HYDU_ERR_POP(status, "unable to join strings\n");
+    HYDU_free_strlist(tmp);
 
     status = cmd_response(fd, pid, cmd);
     HYDU_ERR_POP(status, "send command failed\n");
