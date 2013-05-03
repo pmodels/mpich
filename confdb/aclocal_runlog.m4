@@ -44,82 +44,6 @@ PAC_COMMAND_IFELSE([$1 > $pac_TESTLOG],[
 rm -f $pac_TESTLOG
 ])
 
-
-dnl PAC_VAR_PUSHVAL(VARNAME, [LastSavedValue]))
-dnl
-dnl Save the content of the shell variable, VARNAME, onto a stack.
-dnl The saved value of VARNAME is restorable with respect to the nesting
-dnl of the macro.
-dnl
-dnl The Last saved value of VARNAME on the stack is stored in shell variable
-dnl pac_LastSavedValueOf_$VARNAME if the 2nd argument is NOT supplied.
-dnl If the 2nd argument is present, the last saved value will be stored
-dnl in the 2nd argument instead.
-dnl
-dnl The First saved value of VARNAME on the stack is stored in shell variable
-dnl dnl pac_FirstSavedValueOf_$VARNAME.
-dnl
-AC_DEFUN([PAC_VAR_PUSHVAL],[
-# START of PUSHVAL
-dnl define local m4-name pac_stk_level.
-AS_VAR_PUSHDEF([pac_stk_level], [pac_stk_$1_level])
-AS_VAR_SET_IF([pac_stk_level],[
-    dnl autoconf < 2.64 does not have AS_VAR_ARITH, so use expr instead.
-    AS_VAR_SET([pac_stk_level], [`expr $pac_stk_level + 1`])
-],[
-    AS_VAR_SET([pac_stk_level], [0])
-])
-dnl AS_ECHO_N(["PUSHVAL: pac_stk_level = $pac_stk_level, "])
-dnl Save the content of VARNAME, i.e. $VARNAME, onto the stack.
-AS_VAR_SET([pac_stk_$1_$pac_stk_level],[$$1])
-AS_VAR_IF([pac_stk_level], [0], [
-    dnl Save the 1st pushed value of VARNAME as pac_FirstSavedValueOf_$VARNAME
-    AS_VAR_COPY([pac_FirstSavedValueOf_$1],[pac_stk_$1_$pac_stk_level])
-])
-ifelse([$2],[],[
-    dnl Save the last pushed value of VARNAME as pac_LastSavedValueOf_$VARNAME
-    AS_VAR_COPY([pac_LastSavedValueOf_$1],[pac_stk_$1_$pac_stk_level])
-    dnl AS_ECHO(["pac_LastSavedValueOf_$1 = $pac_LastSavedValueOf_$1"])
-],[
-    dnl Save the last pushed value of VARNAME as $2
-    AS_VAR_COPY([$2],[pac_stk_$1_$pac_stk_level])
-    dnl AS_ECHO(["$2 = $$2"])
-])
-AS_VAR_POPDEF([pac_stk_level])
-# END of PUSHVAL
-])
-dnl
-dnl
-dnl
-dnl PAC_VAR_POPVAL(VARNAME) 
-dnl
-dnl Restore variable, VARNAME, from the stack.
-dnl This macro is safe with respect to the nesting.
-dnl Some minimal checking of nesting balance of PAC_VAR_PUSH[POP]VAL()
-dnl is done here.
-dnl
-AC_DEFUN([PAC_VAR_POPVAL],[
-# START of POPVAL
-dnl define local m4-name pac_stk_level.
-AS_VAR_PUSHDEF([pac_stk_level], [pac_stk_$1_level])
-AS_VAR_SET_IF([pac_stk_level],[
-    AS_VAR_IF([pac_stk_level],[-1],[
-        AC_MSG_WARN(["Imbalance of PUSHVAL/POPVAL of $1"])
-    ],[
-        dnl AS_ECHO_N(["POPVAL: pac_stk_level = $pac_stk_level, "])
-        AS_VAR_COPY([$1],[pac_stk_$1_$pac_stk_level])
-        dnl AS_ECHO(["popped_val = $$1"])
-        dnl autoconf < 2.64 does not have AS_VAR_ARITH, so use expr instead.
-        AS_VAR_SET([pac_stk_level], [`expr $pac_stk_level - 1`])
-    ])
-],[
-    AC_MSG_WARN(["Uninitialized PUSHVAL/POPVAL of $1"])
-])
-AS_VAR_POPDEF([pac_stk_level])
-# END of POPVAL
-])
-dnl
-dnl
 dnl
 dnl PAC_COMPILE_IFELSE_LOG is a wrapper around AC_COMPILE_IFELSE with the
 dnl output of ac_compile to a specified logfile instead of AS_MESSAGE_LOG_FD
@@ -143,20 +67,12 @@ dnl
 dnl Replace ">&AS_MESSAGE_LOG_FD" by "> FILE 2>&1" in ac_compile.
 dnl Save a copy of ac_compile on a stack
 dnl which is safe through nested invocations of this macro.
-PAC_VAR_PUSHVAL([ac_compile])
-dnl Modify ac_compile based on the unmodified ac_compile.
-ac_compile="`echo $pac_FirstSavedValueOf_ac_compile | sed -e 's|>.*$|> $1 2>\&1|g'`"
-AC_COMPILE_IFELSE([$2],[
-    ifelse([$3],[],[:],[$3])
-],[
-    ifelse([$4],[],[:],[$4])
+PAC_PUSH_FLAG([ac_compile])
+ac_compile="`echo $ac_compile | sed -e 's|>.*$|> $1 2>\&1|g'`"
+AC_COMPILE_IFELSE([$2],[$3],[$4])
+PAC_POP_FLAG([ac_compile])
 ])
-dnl Restore the original ac_compile from the stack.
-PAC_VAR_POPVAL([ac_compile])
-])
-dnl
-dnl
-dnl
+
 dnl PAC_LINK_IFELSE_LOG is a wrapper around AC_LINK_IFELSE with the
 dnl output of ac_link to a specified logfile instead of AS_MESSAGE_LOG_FD
 dnl
@@ -179,20 +95,12 @@ dnl
 dnl Replace ">&AS_MESSAGE_LOG_FD" by "> FILE 2>&1" in ac_link.
 dnl Save a copy of ac_link on a stack
 dnl which is safe through nested invocations of this macro.
-PAC_VAR_PUSHVAL([ac_link])
-dnl Modify ac_link based on the unmodified ac_link.
-ac_link="`echo $pac_FirstSavedValueOf_ac_link | sed -e 's|>.*$|> $1 2>\&1|g'`"
-dnl
-AC_LINK_IFELSE([$2],[
-    ifelse([$3],[],[:],[$3])
-],[
-    ifelse([$4],[],[:],[$4])
+PAC_PUSH_FLAG([ac_link])
+ac_link="`echo $ac_link | sed -e 's|>.*$|> $1 2>\&1|g'`"
+AC_LINK_IFELSE([$2],[$3],[$4])
+PAC_POP_FLAG([ac_link])
 ])
-dnl Restore the original ac_link from the stack.
-PAC_VAR_POPVAL([ac_link])
-])
-dnl
-dnl
+
 dnl
 dnl PAC_COMPLINK_IFELSE (input1, input2, [action-if-true], [action-if-false])
 dnl
@@ -205,16 +113,10 @@ dnl
 AC_DEFUN([PAC_COMPLINK_IFELSE],[
 AC_COMPILE_IFELSE([$1],[
     PAC_RUNLOG([mv conftest.$OBJEXT pac_conftest.$OBJEXT])
-    PAC_VAR_PUSHVAL([LIBS])
-    LIBS="pac_conftest.$OBJEXT $pac_FirstSavedValueOf_LIBS"
-    AC_LINK_IFELSE([$2],[
-        ifelse([$3],[],[:],[$3])
-    ],[
-        ifelse([$4],[],[:],[$4])
-    ])
-    PAC_VAR_POPVAL([LIBS])
+    PAC_PUSH_FLAG([LIBS])
+    LIBS="pac_conftest.$OBJEXT $LIBS"
+    AC_LINK_IFELSE([$2],[$3],[$4])
+    PAC_POP_FLAG([LIBS])
     rm -f pac_conftest.$OBJEXT
-],[
-    ifelse([$4],[],[:],[$4])
-])
+],[$4])
 ])
