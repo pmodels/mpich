@@ -893,11 +893,11 @@ if test $FROM_MPICH = yes ; then
 fi   
 
 # Check to see if weak symbols work correctly
-if test $enable_weak_symbols = yes ; then
+if test "$enable_weak_symbols" = "yes" ; then
     # Turn off weak symbols if they aren't available
     PAC_PROG_C_WEAK_SYMBOLS(,enable_weak_symbols=no)
 fi
-if test $enable_weak_symbols = "yes" ; then
+if test "$enable_weak_symbols" = "yes" ; then
     AC_DEFINE(USE_WEAK_SYMBOLS,1,[Define if weak symbols should be used])
     # Check for the ability to support multiple weak symbols
     if test "$pac_cv_prog_c_weak_symbols" = "pragma weak" ; then
@@ -905,7 +905,7 @@ if test $enable_weak_symbols = "yes" ; then
     fi
 fi
 
-if test "$enable_weak_symbols" = 1 ; then
+if test "$enable_weak_symbols" = "yes" ; then
     AC_DEFINE(HAVE_WEAK_SYMBOLS,1,[Define if weak symbols available])
     HAVE_WEAK_SYMBOLS=1
 else
