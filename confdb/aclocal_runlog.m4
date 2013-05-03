@@ -9,6 +9,7 @@ AC_DEFUN([PAC_RUNLOG],[
   ac_status=$?
   AS_ECHO(["$as_me:$LINENO: \$? = $ac_status"]) >&AS_MESSAGE_LOG_FD
   test $ac_status = 0; }])
+
 dnl
 dnl PAC_COMMAND_IFELSE is written to replace AC_TRY_EVAL with added logging
 dnl to config.log, i.e. AC_TRY_EVAL does not log anything to config.log.
@@ -18,8 +19,6 @@ dnl
 dnl PAC_COMMAND_IFELSE(COMMMAND,[ACTION-IF-RUN-OK],[ACTION-IF-RUN-FAIL])
 dnl
 AC_DEFUN([PAC_COMMAND_IFELSE],[
-dnl Should use _AC_DO_TOKENS but use AC_RUN_LOG instead
-dnl because _AC_XX is autoconf's undocumented macro.
 AS_IF([PAC_RUNLOG([$1])],[
     $2
 ],[
@@ -30,25 +29,7 @@ AS_IF([PAC_RUNLOG([$1])],[
     ])
 ])
 ])
-dnl
-dnl
-dnl
-AC_DEFUN([PAC_EVAL_IFELSE],[
-dnl Should use _AC_DO_TOKENS but use AC_RUN_LOG instead
-dnl because _AC_XX is autoconf's undocumented macro.
-AS_IF([PAC_RUNLOG([$$1])],[
-    $2
-],[
-    AS_ECHO(["$as_me: program exited with status $ac_status"]) >&AS_MESSAGE_LOG_FD
-    m4_ifvaln([$3],[
-        (exit $ac_status)
-        $3
-    ])
-])
-])
-dnl
-dnl
-dnl
+
 AC_DEFUN([PAC_RUNLOG_IFELSE],[
 dnl pac_TESTLOG is the internal temporary logfile for this macro.
 pac_TESTLOG="pac_test.log"
