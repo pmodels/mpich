@@ -63,7 +63,8 @@ HYD_status HYD_pmcd_pmi_free_publish(struct HYD_pmcd_pmi_publish * publish)
 HYD_status HYD_pmcd_pmi_publish(char *name, char *port, int *success)
 {
     struct HYD_pmcd_pmi_publish *r, *publish;
-    char *ns, *ns_host, *ns_port_str, *tmp[HYD_NUM_TMP_STRINGS];
+    struct HYD_string_stash stash;
+    char *ns, *ns_host, *ns_port_str;
     int ns_port, ns_fd, i;
     HYD_status status = HYD_SUCCESS;
 
@@ -115,15 +116,14 @@ HYD_status HYD_pmcd_pmi_publish(char *name, char *port, int *success)
         status = HYDU_sock_connect(ns_host, (uint16_t) ns_port, &ns_fd, 0, HYD_CONNECT_DELAY);
         HYDU_ERR_POP(status, "error connecting to the nameserver\n");
 
-        i = 0;
-        tmp[i++] = HYDU_strdup("PUBLISH");
-        tmp[i++] = HYDU_strdup(name);
-        tmp[i++] = HYDU_strdup(port);
-        tmp[i++] = NULL;
+        HYD_STRING_STASH_INIT(stash);
+        HYD_STRING_STASH(stash, HYDU_strdup("PUBLISH"), status);
+        HYD_STRING_STASH(stash, HYDU_strdup(name), status);
+        HYD_STRING_STASH(stash, HYDU_strdup(port), status);
 
-        status = HYDU_send_strlist(ns_fd, tmp);
+        status = HYDU_send_strlist(ns_fd, stash.strlist);
         HYDU_ERR_POP(status, "error sending string list\n");
-        HYDU_free_strlist(tmp);
+        HYD_STRING_STASH_FREE(stash);
 
         status = HYDU_sock_read(ns_fd, &len, sizeof(int), &recvd, &closed,
                                 HYDU_SOCK_COMM_MSGWAIT);
@@ -156,7 +156,8 @@ HYD_status HYD_pmcd_pmi_publish(char *name, char *port, int *success)
 HYD_status HYD_pmcd_pmi_unpublish(char *name, int *success)
 {
     struct HYD_pmcd_pmi_publish *r, *publish;
-    char *ns, *ns_host, *ns_port_str, *tmp[HYD_NUM_TMP_STRINGS];
+    struct HYD_string_stash stash;
+    char *ns, *ns_host, *ns_port_str;
     int ns_port, ns_fd, i;
     HYD_status status = HYD_SUCCESS;
 
@@ -213,13 +214,13 @@ HYD_status HYD_pmcd_pmi_unpublish(char *name, int *success)
         status = HYDU_sock_connect(ns_host, (uint16_t) ns_port, &ns_fd, 0, HYD_CONNECT_DELAY);
         HYDU_ERR_POP(status, "error connecting to the nameserver\n");
 
-        i = 0;
-        tmp[i++] = HYDU_strdup("UNPUBLISH");
-        tmp[i++] = HYDU_strdup(name);
-        tmp[i++] = NULL;
+        HYD_STRING_STASH_INIT(stash);
+        HYD_STRING_STASH(stash, HYDU_strdup("UNPUBLISH"), status);
+        HYD_STRING_STASH(stash, HYDU_strdup(name), status);
 
-        status = HYDU_send_strlist(ns_fd, tmp);
+        status = HYDU_send_strlist(ns_fd, stash.strlist);
         HYDU_ERR_POP(status, "error sending string list\n");
+        HYD_STRING_STASH_FREE(stash);
 
         status = HYDU_sock_read(ns_fd, &len, sizeof(int), &recvd, &closed,
                                 HYDU_SOCK_COMM_MSGWAIT);
@@ -249,7 +250,8 @@ HYD_status HYD_pmcd_pmi_unpublish(char *name, int *success)
 HYD_status HYD_pmcd_pmi_lookup(char *name, char **value)
 {
     struct HYD_pmcd_pmi_publish *publish;
-    char *ns, *ns_host, *ns_port_str, *tmp[HYD_NUM_TMP_STRINGS];
+    struct HYD_string_stash stash;
+    char *ns, *ns_host, *ns_port_str;
     int ns_port, ns_fd, i;
     HYD_status status = HYD_SUCCESS;
 
@@ -286,13 +288,13 @@ HYD_status HYD_pmcd_pmi_lookup(char *name, char **value)
         status = HYDU_sock_connect(ns_host, (uint16_t) ns_port, &ns_fd, 0, HYD_CONNECT_DELAY);
         HYDU_ERR_POP(status, "error connecting to the nameserver\n");
 
-        i = 0;
-        tmp[i++] = HYDU_strdup("LOOKUP");
-        tmp[i++] = HYDU_strdup(name);
-        tmp[i++] = NULL;
+        HYD_STRING_STASH_INIT(stash);
+        HYD_STRING_STASH(stash, HYDU_strdup("LOOKUP"), status);
+        HYD_STRING_STASH(stash, HYDU_strdup(name), status);
 
-        status = HYDU_send_strlist(ns_fd, tmp);
+        status = HYDU_send_strlist(ns_fd, stash.strlist);
         HYDU_ERR_POP(status, "error sending string list\n");
+        HYD_STRING_STASH_FREE(stash);
 
         status = HYDU_sock_read(ns_fd, &len, sizeof(int), &recvd, &closed,
                                 HYDU_SOCK_COMM_MSGWAIT);

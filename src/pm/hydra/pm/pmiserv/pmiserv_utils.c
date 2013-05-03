@@ -10,13 +10,13 @@
 #include "pmiserv_pmi.h"
 #include "pmiserv_utils.h"
 
-HYD_status HYD_pmcd_pmi_fill_in_proxy_args(char **proxy_args, char *control_port, int pgid)
+HYD_status HYD_pmcd_pmi_fill_in_proxy_args(struct HYD_string_stash *proxy_stash,
+                                           char *control_port, int pgid)
 {
-    int i, arg, use_ddd, use_valgrind, use_strace, retries, ret;
-    char *path_str[HYD_NUM_TMP_STRINGS];
+    int use_ddd, use_valgrind, use_strace, retries, ret;
+    char *str;
+    struct HYD_string_stash stash;
     HYD_status status = HYD_SUCCESS;
-
-    arg = 0;
 
     /* Hack to use ddd and valgrind with the proxy */
     if (MPL_env2bool("HYDRA_USE_DDD", &use_ddd) == 0)
@@ -26,81 +26,80 @@ HYD_status HYD_pmcd_pmi_fill_in_proxy_args(char **proxy_args, char *control_port
     if (MPL_env2bool("HYDRA_USE_STRACE", &use_strace) == 0)
         use_strace = 0;
 
+    HYD_STRING_STASH_INIT(*proxy_stash);
     if (use_ddd) {
-        proxy_args[arg++] = HYDU_strdup("ddd");
-        proxy_args[arg++] = HYDU_strdup("--args");
+        HYD_STRING_STASH(*proxy_stash, HYDU_strdup("ddd"), status);
+        HYD_STRING_STASH(*proxy_stash, HYDU_strdup("--args"), status);
     }
 
     if (use_valgrind) {
-        proxy_args[arg++] = HYDU_strdup("valgrind");
-        proxy_args[arg++] = HYDU_strdup("--leak-check=full");
-        proxy_args[arg++] = HYDU_strdup("--show-reachable=yes");
-        proxy_args[arg++] = HYDU_strdup("--track-origins=yes");
+        HYD_STRING_STASH(*proxy_stash, HYDU_strdup("valgrind"), status);
+        HYD_STRING_STASH(*proxy_stash, HYDU_strdup("--leak-check=full"), status);
+        HYD_STRING_STASH(*proxy_stash, HYDU_strdup("--show-reachable=yes"), status);
+        HYD_STRING_STASH(*proxy_stash, HYDU_strdup("--track-origins=yes"), status);
     }
 
     if (use_strace) {
-        proxy_args[arg++] = HYDU_strdup("strace");
-        proxy_args[arg++] = HYDU_strdup("-o");
-        proxy_args[arg++] = HYDU_strdup("hydra_strace");
-        proxy_args[arg++] = HYDU_strdup("-ff");
+        HYD_STRING_STASH(*proxy_stash, HYDU_strdup("strace"), status);
+        HYD_STRING_STASH(*proxy_stash, HYDU_strdup("-o"), status);
+        HYD_STRING_STASH(*proxy_stash, HYDU_strdup("hydra_strace"), status);
+        HYD_STRING_STASH(*proxy_stash, HYDU_strdup("-ff"), status);
     }
 
-    i = 0;
-    path_str[i++] = HYDU_strdup(HYD_server_info.base_path);
-    path_str[i++] = HYDU_strdup("hydra_pmi_proxy");
-    path_str[i] = NULL;
-    status = HYDU_str_alloc_and_join(path_str, &proxy_args[arg++]);
-    HYDU_ERR_POP(status, "unable to join strings\n");
-    HYDU_free_strlist(path_str);
+    HYD_STRING_STASH_INIT(stash);
+    HYD_STRING_STASH(stash, HYDU_strdup(HYD_server_info.base_path), status);
+    HYD_STRING_STASH(stash, HYDU_strdup("hydra_pmi_proxy"), status);
+    HYD_STRING_SPIT(stash, str, status);
 
-    proxy_args[arg++] = HYDU_strdup("--control-port");
-    proxy_args[arg++] = HYDU_strdup(control_port);
+    HYD_STRING_STASH(*proxy_stash, str, status);
+
+    HYD_STRING_STASH(*proxy_stash, HYDU_strdup("--control-port"), status);
+    HYD_STRING_STASH(*proxy_stash, HYDU_strdup(control_port), status);
 
     if (HYD_server_info.user_global.debug)
-        proxy_args[arg++] = HYDU_strdup("--debug");
+        HYD_STRING_STASH(*proxy_stash, HYDU_strdup("--debug"), status);
 
     if (HYDT_bsci_info.rmk) {
-        proxy_args[arg++] = HYDU_strdup("--rmk");
-        proxy_args[arg++] = HYDU_strdup(HYDT_bsci_info.rmk);
+        HYD_STRING_STASH(*proxy_stash, HYDU_strdup("--rmk"), status);
+        HYD_STRING_STASH(*proxy_stash, HYDU_strdup(HYDT_bsci_info.rmk), status);
     }
 
     if (HYDT_bsci_info.launcher) {
-        proxy_args[arg++] = HYDU_strdup("--launcher");
-        proxy_args[arg++] = HYDU_strdup(HYDT_bsci_info.launcher);
+        HYD_STRING_STASH(*proxy_stash, HYDU_strdup("--launcher"), status);
+        HYD_STRING_STASH(*proxy_stash, HYDU_strdup(HYDT_bsci_info.launcher), status);
     }
 
     if (HYDT_bsci_info.launcher_exec) {
-        proxy_args[arg++] = HYDU_strdup("--launcher-exec");
-        proxy_args[arg++] = HYDU_strdup(HYDT_bsci_info.launcher_exec);
+        HYD_STRING_STASH(*proxy_stash, HYDU_strdup("--launcher-exec"), status);
+        HYD_STRING_STASH(*proxy_stash, HYDU_strdup(HYDT_bsci_info.launcher_exec), status);
     }
 
-    proxy_args[arg++] = HYDU_strdup("--demux");
-    proxy_args[arg++] = HYDU_strdup(HYD_server_info.user_global.demux);
+    HYD_STRING_STASH(*proxy_stash, HYDU_strdup("--demux"), status);
+    HYD_STRING_STASH(*proxy_stash, HYDU_strdup(HYD_server_info.user_global.demux), status);
 
     if (HYD_server_info.user_global.iface) {
-        proxy_args[arg++] = HYDU_strdup("--iface");
-        proxy_args[arg++] = HYDU_strdup(HYD_server_info.user_global.iface);
+        HYD_STRING_STASH(*proxy_stash, HYDU_strdup("--iface"), status);
+        HYD_STRING_STASH(*proxy_stash, HYDU_strdup(HYD_server_info.user_global.iface), status);
     }
 
-    proxy_args[arg++] = HYDU_strdup("--pgid");
-    proxy_args[arg++] = HYDU_int_to_str(pgid);
+    HYD_STRING_STASH(*proxy_stash, HYDU_strdup("--pgid"), status);
+    HYD_STRING_STASH(*proxy_stash, HYDU_int_to_str(pgid), status);
 
     ret = MPL_env2int("HYDRA_PROXY_RETRY_COUNT", &retries);
     if (ret == 0)
         retries = HYD_DEFAULT_RETRY_COUNT;
 
-    proxy_args[arg++] = HYDU_strdup("--retries");
-    proxy_args[arg++] = HYDU_int_to_str(retries);
+    HYD_STRING_STASH(*proxy_stash, HYDU_strdup("--retries"), status);
+    HYD_STRING_STASH(*proxy_stash, HYDU_int_to_str(retries), status);
 
-    proxy_args[arg++] = HYDU_strdup("--usize");
-    proxy_args[arg++] = HYDU_int_to_str(HYD_server_info.user_global.usize);
+    HYD_STRING_STASH(*proxy_stash, HYDU_strdup("--usize"), status);
+    HYD_STRING_STASH(*proxy_stash, HYDU_int_to_str(HYD_server_info.user_global.usize), status);
 
-    proxy_args[arg++] = HYDU_strdup("--proxy-id");
-    proxy_args[arg++] = NULL;
+    HYD_STRING_STASH(*proxy_stash, HYDU_strdup("--proxy-id"), status);
 
     if (HYD_server_info.user_global.debug) {
         HYDU_dump_noprefix(stdout, "\nProxy launch args: ");
-        HYDU_print_strlist(proxy_args);
+        HYDU_print_strlist(proxy_stash->strlist);
         HYDU_dump_noprefix(stdout, "\n");
     }
 
@@ -113,8 +112,8 @@ HYD_status HYD_pmcd_pmi_fill_in_proxy_args(char **proxy_args, char *control_port
 
 static HYD_status pmi_process_mapping(struct HYD_pg *pg, char **process_mapping_str)
 {
-    int i, is_equal, filler_round, core_count;
-    char *tmp[HYD_NUM_TMP_STRINGS];
+    int is_equal, filler_round, core_count;
+    struct HYD_string_stash stash;
     struct block {
         int start_idx;
         int num_nodes;
@@ -204,28 +203,23 @@ static HYD_status pmi_process_mapping(struct HYD_pg *pg, char **process_mapping_
 
   create_mapping_key:
     /* Create the mapping out of the blocks */
-    i = 0;
-    tmp[i++] = HYDU_strdup("(");
-    tmp[i++] = HYDU_strdup("vector,");
+    HYD_STRING_STASH_INIT(stash);
+    HYD_STRING_STASH(stash, HYDU_strdup("("), status);
+    HYD_STRING_STASH(stash, HYDU_strdup("vector,"), status);
     for (block = blocklist_head; block; block = block->next) {
-        tmp[i++] = HYDU_strdup("(");
-        tmp[i++] = HYDU_int_to_str(block->start_idx);
-        tmp[i++] = HYDU_strdup(",");
-        tmp[i++] = HYDU_int_to_str(block->num_nodes);
-        tmp[i++] = HYDU_strdup(",");
-        tmp[i++] = HYDU_int_to_str(block->core_count);
-        tmp[i++] = HYDU_strdup(")");
+        HYD_STRING_STASH(stash, HYDU_strdup("("), status);
+        HYD_STRING_STASH(stash, HYDU_int_to_str(block->start_idx), status);
+        HYD_STRING_STASH(stash, HYDU_strdup(","), status);
+        HYD_STRING_STASH(stash, HYDU_int_to_str(block->num_nodes), status);
+        HYD_STRING_STASH(stash, HYDU_strdup(","), status);
+        HYD_STRING_STASH(stash, HYDU_int_to_str(block->core_count), status);
+        HYD_STRING_STASH(stash, HYDU_strdup(")"), status);
         if (block->next)
-            tmp[i++] = HYDU_strdup(",");
-        HYDU_STRLIST_CONSOLIDATE(tmp, i, status);
+            HYD_STRING_STASH(stash, HYDU_strdup(","), status);
     }
-    tmp[i++] = HYDU_strdup(")");
-    tmp[i++] = NULL;
+    HYD_STRING_STASH(stash, HYDU_strdup(")"), status);
 
-    status = HYDU_str_alloc_and_join(tmp, process_mapping_str);
-    HYDU_ERR_POP(status, "error while joining strings\n");
-
-    HYDU_free_strlist(tmp);
+    HYD_STRING_SPIT(stash, *process_mapping_str, status);
 
     for (block = blocklist_head; block; block = nblock) {
         nblock = block->next;
@@ -242,16 +236,16 @@ static HYD_status pmi_process_mapping(struct HYD_pg *pg, char **process_mapping_
 
 HYD_status HYD_pmcd_pmi_fill_in_exec_launch_info(struct HYD_pg *pg)
 {
-    int i, arg, inherited_env_count, user_env_count, system_env_count, exec_count;
-    int total_args, proxy_count, total_filler_processes, total_core_count;
+    int i, inherited_env_count, user_env_count, system_env_count, exec_count;
+    int proxy_count, total_filler_processes, total_core_count;
     int pmi_id, *filler_pmi_ids = NULL, *nonfiller_pmi_ids = NULL;
     struct HYD_env *env;
     struct HYD_proxy *proxy;
     struct HYD_exec *exec;
     struct HYD_node *node;
     struct HYD_pmcd_pmi_pg_scratch *pg_scratch;
-    char *mapping = NULL, *map = NULL;
-    char *tmp[HYD_NUM_TMP_STRINGS];
+    char *mapping = NULL, *map;
+    struct HYD_string_stash stash, exec_stash;
     HYD_status status = HYD_SUCCESS;
 
     status = pmi_process_mapping(pg, &mapping);
@@ -301,215 +295,209 @@ HYD_status HYD_pmcd_pmi_fill_in_exec_launch_info(struct HYD_pg *pg)
         for (exec_count = 0, exec = proxy->exec_list; exec; exec = exec->next)
             exec_count++;
 
-        total_args = HYD_NUM_TMP_STRINGS;       /* For the basic arguments */
+        HYD_STRING_STASH_INIT(exec_stash);
 
-        /* Environments */
-        total_args += inherited_env_count;
-        total_args += user_env_count;
-        total_args += system_env_count;
-
-        /* For each exec add a few strings */
-        total_args += (exec_count * HYD_NUM_TMP_STRINGS);
-
-        /* Add a few strings for the remaining arguments */
-        total_args += HYD_NUM_TMP_STRINGS;
-
-        HYDU_MALLOC(proxy->exec_launch_info, char **, total_args * sizeof(char *), status);
-
-        arg = 0;
-        proxy->exec_launch_info[arg++] = HYDU_strdup("--version");
-        proxy->exec_launch_info[arg++] = HYDU_strdup(HYDRA_VERSION);
+        HYD_STRING_STASH(exec_stash, HYDU_strdup("--version"), status);
+        HYD_STRING_STASH(exec_stash, HYDU_strdup(HYDRA_VERSION), status);
 
         if (HYD_server_info.iface_ip_env_name) {
-            proxy->exec_launch_info[arg++] = HYDU_strdup("--iface-ip-env-name");
-            proxy->exec_launch_info[arg++] = HYDU_strdup(HYD_server_info.iface_ip_env_name);
+            HYD_STRING_STASH(exec_stash, HYDU_strdup("--iface-ip-env-name"), status);
+            HYD_STRING_STASH(exec_stash, HYDU_strdup(HYD_server_info.iface_ip_env_name), status);
         }
 
-        proxy->exec_launch_info[arg++] = HYDU_strdup("--hostname");
-        proxy->exec_launch_info[arg++] = HYDU_strdup(proxy->node->hostname);
+        HYD_STRING_STASH(exec_stash, HYDU_strdup("--hostname"), status);
+        HYD_STRING_STASH(exec_stash, HYDU_strdup(proxy->node->hostname), status);
 
         /* This map has three fields: filler cores on this node,
          * remaining cores on this node, total cores in the system */
-        proxy->exec_launch_info[arg++] = HYDU_strdup("--global-core-map");
-        tmp[0] = HYDU_int_to_str(proxy->filler_processes);
-        tmp[1] = HYDU_strdup(",");
-        tmp[2] = HYDU_int_to_str(proxy->node->core_count);
-        tmp[3] = HYDU_strdup(",");
-        tmp[4] = HYDU_int_to_str(total_core_count);
-        tmp[5] = NULL;
-        status = HYDU_str_alloc_and_join(tmp, &map);
-        HYDU_ERR_POP(status, "unable to join strings\n");
-        proxy->exec_launch_info[arg++] = map;
-        HYDU_free_strlist(tmp);
+        HYD_STRING_STASH(exec_stash, HYDU_strdup("--global-core-map"), status);
+
+        HYD_STRING_STASH_INIT(stash);
+        HYD_STRING_STASH(stash, HYDU_int_to_str(proxy->filler_processes), status);
+        HYD_STRING_STASH(stash, HYDU_strdup(","), status);
+        HYD_STRING_STASH(stash, HYDU_int_to_str(proxy->node->core_count), status);
+        HYD_STRING_STASH(stash, HYDU_strdup(","), status);
+        HYD_STRING_STASH(stash, HYDU_int_to_str(total_core_count), status);
+        HYD_STRING_SPIT(stash, map, status);
+
+        HYD_STRING_STASH(exec_stash, map, status);
 
         /* This map has two fields: start PMI ID during the filler
          * phase, start PMI ID for the remaining phase */
-        proxy->exec_launch_info[arg++] = HYDU_strdup("--pmi-id-map");
-        tmp[0] = HYDU_int_to_str(filler_pmi_ids[proxy_count]);
-        tmp[1] = HYDU_strdup(",");
-        tmp[2] = HYDU_int_to_str(nonfiller_pmi_ids[proxy_count]);
-        tmp[3] = NULL;
-        status = HYDU_str_alloc_and_join(tmp, &map);
-        HYDU_ERR_POP(status, "unable to join strings\n");
-        proxy->exec_launch_info[arg++] = map;
-        HYDU_free_strlist(tmp);
+        HYD_STRING_STASH(exec_stash, HYDU_strdup("--pmi-id-map"), status);
 
-        proxy->exec_launch_info[arg++] = HYDU_strdup("--global-process-count");
-        proxy->exec_launch_info[arg++] = HYDU_int_to_str(pg->pg_process_count);
+        HYD_STRING_STASH_INIT(stash);
+        HYD_STRING_STASH(stash, HYDU_int_to_str(filler_pmi_ids[proxy_count]), status);
+        HYD_STRING_STASH(stash, HYDU_strdup(","), status);
+        HYD_STRING_STASH(stash, HYDU_int_to_str(nonfiller_pmi_ids[proxy_count]), status);
+        HYD_STRING_SPIT(stash, map, status);
 
-        proxy->exec_launch_info[arg++] = HYDU_strdup("--auto-cleanup");
-        proxy->exec_launch_info[arg++] =
-            HYDU_int_to_str(HYD_server_info.user_global.auto_cleanup);
+        HYD_STRING_STASH(exec_stash, map, status);
+
+        HYD_STRING_STASH(exec_stash, HYDU_strdup("--global-process-count"), status);
+        HYD_STRING_STASH(exec_stash, HYDU_int_to_str(pg->pg_process_count), status);
+
+        HYD_STRING_STASH(exec_stash, HYDU_strdup("--auto-cleanup"), status);
+        HYD_STRING_STASH(exec_stash, HYDU_int_to_str(HYD_server_info.user_global.auto_cleanup),
+                         status);
 
         pg_scratch = (struct HYD_pmcd_pmi_pg_scratch *) pg->pg_scratch;
-        proxy->exec_launch_info[arg++] = HYDU_strdup("--pmi-kvsname");
-        proxy->exec_launch_info[arg++] = HYDU_strdup(pg_scratch->kvs->kvsname);
+        HYD_STRING_STASH(exec_stash, HYDU_strdup("--pmi-kvsname"), status);
+        HYD_STRING_STASH(exec_stash, HYDU_strdup(pg_scratch->kvs->kvsname), status);
 
         if (pg->spawner_pg) {
             pg_scratch = (struct HYD_pmcd_pmi_pg_scratch *) pg->spawner_pg->pg_scratch;
-            proxy->exec_launch_info[arg++] = HYDU_strdup("--pmi-spawner-kvsname");
-            proxy->exec_launch_info[arg++] = HYDU_strdup(pg_scratch->kvs->kvsname);
+            HYD_STRING_STASH(exec_stash, HYDU_strdup("--pmi-spawner-kvsname"), status);
+            HYD_STRING_STASH(exec_stash, HYDU_strdup(pg_scratch->kvs->kvsname), status);
         }
 
-        proxy->exec_launch_info[arg++] = HYDU_strdup("--pmi-process-mapping");
-        proxy->exec_launch_info[arg++] = HYDU_strdup(mapping);
+        HYD_STRING_STASH(exec_stash, HYDU_strdup("--pmi-process-mapping"), status);
+        HYD_STRING_STASH(exec_stash, HYDU_strdup(mapping), status);
 
         if (proxy->node->local_binding) {
-            proxy->exec_launch_info[arg++] = HYDU_strdup("--binding");
-            proxy->exec_launch_info[arg++] = HYDU_strdup(proxy->node->local_binding);
+            HYD_STRING_STASH(exec_stash, HYDU_strdup("--binding"), status);
+            HYD_STRING_STASH(exec_stash, HYDU_strdup(proxy->node->local_binding), status);
         }
         else if (HYD_server_info.user_global.binding) {
-            proxy->exec_launch_info[arg++] = HYDU_strdup("--binding");
-            proxy->exec_launch_info[arg++] = HYDU_strdup(HYD_server_info.user_global.binding);
+            HYD_STRING_STASH(exec_stash, HYDU_strdup("--binding"), status);
+            HYD_STRING_STASH(exec_stash, HYDU_strdup(HYD_server_info.user_global.binding), status);
         }
 
         if (HYD_server_info.user_global.mapping) {
-            proxy->exec_launch_info[arg++] = HYDU_strdup("--mapping");
-            proxy->exec_launch_info[arg++] = HYDU_strdup(HYD_server_info.user_global.mapping);
+            HYD_STRING_STASH(exec_stash, HYDU_strdup("--mapping"), status);
+            HYD_STRING_STASH(exec_stash, HYDU_strdup(HYD_server_info.user_global.mapping), status);
         }
 
         if (HYD_server_info.user_global.membind) {
-            proxy->exec_launch_info[arg++] = HYDU_strdup("--membind");
-            proxy->exec_launch_info[arg++] = HYDU_strdup(HYD_server_info.user_global.membind);
+            HYD_STRING_STASH(exec_stash, HYDU_strdup("--membind"), status);
+            HYD_STRING_STASH(exec_stash, HYDU_strdup(HYD_server_info.user_global.membind), status);
         }
 
         if (HYD_server_info.user_global.topolib) {
-            proxy->exec_launch_info[arg++] = HYDU_strdup("--topolib");
-            proxy->exec_launch_info[arg++] = HYDU_strdup(HYD_server_info.user_global.topolib);
+            HYD_STRING_STASH(exec_stash, HYDU_strdup("--topolib"), status);
+            HYD_STRING_STASH(exec_stash, HYDU_strdup(HYD_server_info.user_global.topolib), status);
         }
 
         if (HYD_server_info.user_global.ckpointlib) {
-            proxy->exec_launch_info[arg++] = HYDU_strdup("--ckpointlib");
-            proxy->exec_launch_info[arg++] =
-                HYDU_strdup(HYD_server_info.user_global.ckpointlib);
+            HYD_STRING_STASH(exec_stash, HYDU_strdup("--ckpointlib"), status);
+            HYD_STRING_STASH(exec_stash, HYDU_strdup(HYD_server_info.user_global.ckpointlib),
+                             status);
         }
 
         if (HYD_server_info.user_global.ckpoint_prefix) {
-            proxy->exec_launch_info[arg++] = HYDU_strdup("--ckpoint-prefix");
-            proxy->exec_launch_info[arg++] =
-                HYDU_strdup(HYD_server_info.user_global.ckpoint_prefix);
+            HYD_STRING_STASH(exec_stash, HYDU_strdup("--ckpoint-prefix"), status);
+            HYD_STRING_STASH(exec_stash, HYDU_strdup(HYD_server_info.user_global.ckpoint_prefix),
+                             status);
         }
 
         if (HYD_server_info.user_global.ckpoint_num) {
-            proxy->exec_launch_info[arg++] = HYDU_strdup("--ckpoint-num");
-            proxy->exec_launch_info[arg++] =
-                HYDU_int_to_str(HYD_server_info.user_global.ckpoint_num);
+            HYD_STRING_STASH(exec_stash, HYDU_strdup("--ckpoint-num"), status);
+            HYD_STRING_STASH(exec_stash, HYDU_int_to_str(HYD_server_info.user_global.ckpoint_num),
+                             status);
         }
 
-        proxy->exec_launch_info[arg++] = HYDU_strdup("--global-inherited-env");
+        HYD_STRING_STASH(exec_stash, HYDU_strdup("--global-inherited-env"), status);
         for (i = 0, env = HYD_server_info.user_global.global_env.inherited; env;
              env = env->next, i++);
-        proxy->exec_launch_info[arg++] = HYDU_int_to_str(i);
+        HYD_STRING_STASH(exec_stash, HYDU_int_to_str(i), status);
 
         for (env = HYD_server_info.user_global.global_env.inherited; env; env = env->next) {
-            status = HYDU_env_to_str(env, &proxy->exec_launch_info[arg++]);
-            HYDU_ERR_POP(status, "error converting env to string\n");
-        }
-        proxy->exec_launch_info[arg++] = NULL;
+            char *envstr;
 
-        arg = HYDU_strlist_lastidx(proxy->exec_launch_info);
-        proxy->exec_launch_info[arg++] = HYDU_strdup("--global-user-env");
+            status = HYDU_env_to_str(env, &envstr);
+            HYDU_ERR_POP(status, "error converting env to string\n");
+
+            HYD_STRING_STASH(exec_stash, envstr, status);
+        }
+
+        HYD_STRING_STASH(exec_stash, HYDU_strdup("--global-user-env"), status);
         for (i = 0, env = HYD_server_info.user_global.global_env.user; env;
              env = env->next, i++);
-        proxy->exec_launch_info[arg++] = HYDU_int_to_str(i);
+        HYD_STRING_STASH(exec_stash, HYDU_int_to_str(i), status);
 
         for (env = HYD_server_info.user_global.global_env.user; env; env = env->next) {
-            status = HYDU_env_to_str(env, &proxy->exec_launch_info[arg++]);
-            HYDU_ERR_POP(status, "error converting env to string\n");
-        }
-        proxy->exec_launch_info[arg++] = NULL;
+            char *envstr;
 
-        arg = HYDU_strlist_lastidx(proxy->exec_launch_info);
-        proxy->exec_launch_info[arg++] = HYDU_strdup("--global-system-env");
+            status = HYDU_env_to_str(env, &envstr);
+            HYDU_ERR_POP(status, "error converting env to string\n");
+
+            HYD_STRING_STASH(exec_stash, envstr, status);
+        }
+
+        HYD_STRING_STASH(exec_stash, HYDU_strdup("--global-system-env"), status);
         for (i = 0, env = HYD_server_info.user_global.global_env.system; env;
              env = env->next, i++);
-        proxy->exec_launch_info[arg++] = HYDU_int_to_str(i);
+        HYD_STRING_STASH(exec_stash, HYDU_int_to_str(i), status);
 
         for (env = HYD_server_info.user_global.global_env.system; env; env = env->next) {
-            status = HYDU_env_to_str(env, &proxy->exec_launch_info[arg++]);
+            char *envstr;
+
+            status = HYDU_env_to_str(env, &envstr);
             HYDU_ERR_POP(status, "error converting env to string\n");
-        }
-        proxy->exec_launch_info[arg++] = NULL;
 
-        arg = HYDU_strlist_lastidx(proxy->exec_launch_info);
+            HYD_STRING_STASH(exec_stash, envstr, status);
+        }
+
         if (HYD_server_info.user_global.global_env.prop) {
-            proxy->exec_launch_info[arg++] = HYDU_strdup("--genv-prop");
-            proxy->exec_launch_info[arg++] =
-                HYDU_strdup(HYD_server_info.user_global.global_env.prop);
+            HYD_STRING_STASH(exec_stash, HYDU_strdup("--genv-prop"), status);
+            HYD_STRING_STASH(exec_stash, HYDU_strdup(HYD_server_info.user_global.global_env.prop),
+                             status);
         }
 
-        proxy->exec_launch_info[arg++] = HYDU_strdup("--proxy-core-count");
-        proxy->exec_launch_info[arg++] = HYDU_int_to_str(proxy->node->core_count);
-        proxy->exec_launch_info[arg++] = NULL;
+        HYD_STRING_STASH(exec_stash, HYDU_strdup("--proxy-core-count"), status);
+        HYD_STRING_STASH(exec_stash, HYDU_int_to_str(proxy->node->core_count), status);
 
         /* Now pass the local executable information */
         for (exec = proxy->exec_list; exec; exec = exec->next) {
-            arg = HYDU_strlist_lastidx(proxy->exec_launch_info);
-            proxy->exec_launch_info[arg++] = HYDU_strdup("--exec");
+            HYD_STRING_STASH(exec_stash, HYDU_strdup("--exec"), status);
 
-            proxy->exec_launch_info[arg++] = HYDU_strdup("--exec-appnum");
-            proxy->exec_launch_info[arg++] = HYDU_int_to_str(exec->appnum);
+            HYD_STRING_STASH(exec_stash, HYDU_strdup("--exec-appnum"), status);
+            HYD_STRING_STASH(exec_stash, HYDU_int_to_str(exec->appnum), status);
 
-            proxy->exec_launch_info[arg++] = HYDU_strdup("--exec-proc-count");
-            proxy->exec_launch_info[arg++] = HYDU_int_to_str(exec->proc_count);
+            HYD_STRING_STASH(exec_stash, HYDU_strdup("--exec-proc-count"), status);
+            HYD_STRING_STASH(exec_stash, HYDU_int_to_str(exec->proc_count), status);
 
-            proxy->exec_launch_info[arg++] = HYDU_strdup("--exec-local-env");
+            HYD_STRING_STASH(exec_stash, HYDU_strdup("--exec-local-env"), status);
             for (i = 0, env = exec->user_env; env; env = env->next, i++);
-            proxy->exec_launch_info[arg++] = HYDU_int_to_str(i);
+            HYD_STRING_STASH(exec_stash, HYDU_int_to_str(i), status);
 
             for (env = exec->user_env; env; env = env->next) {
-                status = HYDU_env_to_str(env, &proxy->exec_launch_info[arg++]);
+                char *envstr;
+
+                status = HYDU_env_to_str(env, &envstr);
                 HYDU_ERR_POP(status, "error converting env to string\n");
+
+                HYD_STRING_STASH(exec_stash, envstr, status);
             }
-            proxy->exec_launch_info[arg++] = NULL;
 
             if (exec->env_prop) {
-                arg = HYDU_strlist_lastidx(proxy->exec_launch_info);
-                proxy->exec_launch_info[arg++] = HYDU_strdup("--exec-env-prop");
-                proxy->exec_launch_info[arg++] = HYDU_strdup(exec->env_prop);
-                proxy->exec_launch_info[arg++] = NULL;
+                HYD_STRING_STASH(exec_stash, HYDU_strdup("--exec-env-prop"), status);
+                HYD_STRING_STASH(exec_stash, HYDU_strdup(exec->env_prop), status);
             }
-
-            arg = HYDU_strlist_lastidx(proxy->exec_launch_info);
 
             if (exec->wdir) {
-                proxy->exec_launch_info[arg++] = HYDU_strdup("--exec-wdir");
-                proxy->exec_launch_info[arg++] = HYDU_strdup(exec->wdir);
+                HYD_STRING_STASH(exec_stash, HYDU_strdup("--exec-wdir"), status);
+                HYD_STRING_STASH(exec_stash, HYDU_strdup(exec->wdir), status);
             }
 
-            proxy->exec_launch_info[arg++] = HYDU_strdup("--exec-args");
+            HYD_STRING_STASH(exec_stash, HYDU_strdup("--exec-args"), status);
             for (i = 0; exec->exec[i]; i++);
-            proxy->exec_launch_info[arg++] = HYDU_int_to_str(i);
-            proxy->exec_launch_info[arg++] = NULL;
+            HYD_STRING_STASH(exec_stash, HYDU_int_to_str(i), status);
 
-            HYDU_list_append_strlist(exec->exec, proxy->exec_launch_info);
+            for (i = 0; exec->exec[i]; i++)
+                HYD_STRING_STASH(exec_stash, HYDU_strdup(exec->exec[i]), status);
         }
 
         if (HYD_server_info.user_global.debug) {
             HYDU_dump_noprefix(stdout, "Arguments being passed to proxy %d:\n", proxy_count);
-            HYDU_print_strlist(proxy->exec_launch_info);
+            HYDU_print_strlist(stash.strlist);
             HYDU_dump_noprefix(stdout, "\n");
         }
+
+        status = HYDU_strdup_list(exec_stash.strlist, &proxy->exec_launch_info);
+        HYDU_ERR_POP(status, "unable to dup strlist\n");
+
+        HYD_STRING_STASH_FREE(exec_stash);
 
         proxy_count++;
     }

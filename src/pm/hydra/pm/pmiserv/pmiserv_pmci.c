@@ -94,7 +94,8 @@ static HYD_status ui_cmd_cb(int fd, HYD_event_t events, void *userp)
 HYD_status HYD_pmci_launch_procs(void)
 {
     struct HYD_proxy *proxy;
-    char *proxy_args[HYD_NUM_TMP_STRINGS] = { NULL }, *control_port = NULL;
+    struct HYD_string_stash proxy_stash;
+    char *control_port = NULL;
     int node_count, i, *control_fd;
     HYD_status status = HYD_SUCCESS;
 
@@ -115,7 +116,7 @@ HYD_status HYD_pmci_launch_procs(void)
     if (HYD_server_info.user_global.debug)
         HYDU_dump(stdout, "Got a control port string of %s\n", control_port);
 
-    status = HYD_pmcd_pmi_fill_in_proxy_args(proxy_args, control_port, 0);
+    status = HYD_pmcd_pmi_fill_in_proxy_args(&proxy_stash, control_port, 0);
     HYDU_ERR_POP(status, "unable to fill in proxy arguments\n");
 
     status = HYD_pmcd_pmi_fill_in_exec_launch_info(&HYD_server_info.pg_list);
@@ -129,8 +130,8 @@ HYD_status HYD_pmci_launch_procs(void)
     for (i = 0; i < node_count; i++)
         control_fd[i] = HYD_FD_UNSET;
 
-    status =
-        HYDT_bsci_launch_procs(proxy_args, HYD_server_info.pg_list.proxy_list, control_fd);
+    status = HYDT_bsci_launch_procs(proxy_stash.strlist, HYD_server_info.pg_list.proxy_list,
+                                    control_fd);
     HYDU_ERR_POP(status, "launcher cannot launch processes\n");
 
     for (i = 0, proxy = HYD_server_info.pg_list.proxy_list; proxy; proxy = proxy->next, i++)
@@ -147,7 +148,7 @@ HYD_status HYD_pmci_launch_procs(void)
   fn_exit:
     if (control_port)
         HYDU_FREE(control_port);
-    HYDU_free_strlist(proxy_args);
+    HYD_STRING_STASH_FREE(proxy_stash);
     HYDU_FUNC_EXIT();
     return status;
 

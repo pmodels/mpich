@@ -468,7 +468,7 @@ static HYD_status launch_procs(void)
     int i, j, arg, process_id;
     int using_pmi_port = 0;
     char *str, *envstr, *list, *pmi_port;
-    char *client_args[HYD_NUM_TMP_STRINGS];
+    struct HYD_string_stash stash;
     struct HYD_env *env, *force_env = NULL;
     struct HYD_exec *exec;
     struct HYD_pmcd_hdr hdr;
@@ -691,11 +691,11 @@ static HYD_status launch_procs(void)
                 HYDU_FREE(str);
             }
 
+            HYD_STRING_STASH_INIT(stash);
             for (j = 0, arg = 0; exec->exec[j]; j++)
-                client_args[arg++] = HYDU_strdup(exec->exec[j]);
-            client_args[arg++] = NULL;
+                HYD_STRING_STASH(stash, HYDU_strdup(exec->exec[j]), status);
 
-            status = HYDU_create_process(client_args, force_env,
+            status = HYDU_create_process(stash.strlist, force_env,
                                          HYD_pmcd_pmip.downstream.pmi_rank[process_id] ? NULL :
                                          &HYD_pmcd_pmip.downstream.in,
                                          &HYD_pmcd_pmip.downstream.out[process_id],
@@ -709,7 +709,7 @@ static HYD_status launch_procs(void)
                 HYDU_ERR_POP(status, "unable to set stdin socket to non-blocking\n");
             }
 
-            HYDU_free_strlist(client_args);
+            HYD_STRING_STASH_FREE(stash);
 
             if (pmi_fds[1] != HYD_FD_UNSET) {
                 close(pmi_fds[1]);
