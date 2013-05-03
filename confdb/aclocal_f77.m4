@@ -64,7 +64,7 @@ AC_COMPILE_IFELSE([
         end
     ])
 ],[
-    AC_RUN_LOG([mv conftest.$OBJEXT f77conftest.$OBJEXT])
+    PAC_RUNLOG([mv conftest.$OBJEXT f77conftest.$OBJEXT])
     saved_LIBS="$LIBS"
     dnl  FLIBS is set by AC_F77_LIBRARY_LDFLAGS
     LIBS="f77conftest.$OBJEXT $FLIBS $LIBS"
@@ -96,7 +96,7 @@ if test  "$pac_found" != "yes" ; then
             AC_COMPILE_IFELSE([
                 AC_LANG_SOURCE([void ${call} ${sym}(int a) {}])
             ],[
-                AC_RUN_LOG([mv conftest.$OBJEXT cconftest.$OBJEXT])
+                PAC_RUNLOG([mv conftest.$OBJEXT cconftest.$OBJEXT])
                 saved_LIBS="$LIBS"
                 LIBS="cconftest.$OBJEXT $LIBS"
                 AC_LANG_PUSH([Fortran 77])
@@ -242,7 +242,7 @@ AC_COMPILE_IFELSE([
     ])
 ],[
     # pac_f77compile_ok=yes
-    AC_RUN_LOG([mv conftest.$OBJEXT pac_f77conftest.$OBJEXT])
+    PAC_RUNLOG([mv conftest.$OBJEXT pac_f77conftest.$OBJEXT])
     # Save original LIBS, prepend previously generated object file to LIBS
     saved_LIBS="$LIBS"
     LIBS="pac_f77conftest.$OBJEXT $FLIBS $LIBS"
@@ -349,7 +349,7 @@ int cisize_(char *i1p, char *i2p) {
     dnl Endof ac_lang_source
 ],[
     # pac_compile_ok=yes
-    AC_RUN_LOG([mv conftest.$OBJEXT pac_conftest.$OBJEXT])
+    PAC_RUNLOG([mv conftest.$OBJEXT pac_conftest.$OBJEXT])
     # Save LIBS and prepend object file to LIBS
     saved_LIBS="$LIBS"
     LIBS="pac_conftest.$OBJEXT $LIBS"
@@ -481,7 +481,7 @@ if test "$pac_result" = "yes" ; then
             end
         ])
     ],[
-        AC_RUN_LOG([mv conftest.$OBJEXT pac_conftest.$OBJEXT])
+        PAC_RUNLOG([mv conftest.$OBJEXT pac_conftest.$OBJEXT])
         saved_LIBS="$LIBS"
         LIBS="pac_conftest.$OBJEXT $LIBS"
 
@@ -541,10 +541,10 @@ AC_COMPILE_IFELSE([
     ])
 ],[
     # pac_f77compile_ok=yes
-    AC_RUN_LOG([mv conftest.$OBJEXT pac_f77conftest.$OBJEXT])
-    AC_RUN_LOG([test -d conftestdir || mkdir conftestdir])
-    AC_RUN_LOG([${AR-ar} ${AR_FLAGS-cr} conftestdir/libf77conftest.a pac_f77conftest.$OBJEXT])
-    AC_RUN_LOG([${RANLIB-ranlib} conftestdir/libf77conftest.a])
+    PAC_RUNLOG([mv conftest.$OBJEXT pac_f77conftest.$OBJEXT])
+    PAC_RUNLOG([test -d conftestdir || mkdir conftestdir])
+    PAC_RUNLOG([${AR-ar} ${AR_FLAGS-cr} conftestdir/libf77conftest.a pac_f77conftest.$OBJEXT])
+    PAC_RUNLOG([${RANLIB-ranlib} conftestdir/libf77conftest.a])
     # Save original LIBS, prepend previously generated object file to LIBS
     saved_LIBS="$LIBS"
     LIBS="-lf77conftest $LIBS"
@@ -595,7 +595,7 @@ ifelse([$1],[],[checkdir=f77tmpdir],[checkdir=$1;checkdir_is_given=yes])
 AC_CACHE_CHECK([for include directory flag for Fortran],
 pac_cv_prog_f77_has_incdir,[
 test -d $checkdir || mkdir $checkdir
-dnl AC_RUN_LOG([echo '       call sub()' > $checkdir/conftestf.h])
+dnl PAC_RUNLOG([echo '       call sub()' > $checkdir/conftestf.h])
 echo '       call sub()' > $checkdir/conftestf.h
 AC_LANG_PUSH([Fortran 77])
 saved_FFLAGS="$FFLAGS"
@@ -673,7 +673,7 @@ AC_COMPILE_IFELSE([
     AC_LANG_SOURCE([$2])
 ],[
     # pac_f77compile_ok=yes
-    AC_RUN_LOG([mv conftest.$OBJEXT pac_f77conftest.$OBJEXT])
+    PAC_RUNLOG([mv conftest.$OBJEXT pac_f77conftest.$OBJEXT])
     # Save original LIBS, prepend previously generated object file to LIBS
     saved_LIBS="$LIBS"
     LIBS="pac_f77conftest.$OBJEXT $FLIBS $LIBS"
@@ -732,7 +732,7 @@ AC_COMPILE_IFELSE([
     ])
 ],[
     # pac_f77compile_ok=yes
-    AC_RUN_LOG([mv conftest.$OBJEXT pac_f77conftest.$OBJEXT])
+    PAC_RUNLOG([mv conftest.$OBJEXT pac_f77conftest.$OBJEXT])
     # Save original LIBS, prepend previously generated object file to LIBS
     saved_LIBS="$LIBS"
     LIBS="pac_f77conftest.$OBJEXT $FLIBS $saved_LIBS"
@@ -833,7 +833,7 @@ dnl Use F77 as a linker to compile a Fortran main and C subprogram.
 if test "$pac_linkwithC" != "yes" ; then
     AC_LANG_PUSH([C])
     AC_COMPILE_IFELSE([],[
-        AC_RUN_LOG([mv conftest.$OBJEXT pac_conftest.$OBJEXT])
+        PAC_RUNLOG([mv conftest.$OBJEXT pac_conftest.$OBJEXT])
         saved_LIBS="$LIBS"
         LIBS="pac_conftest.$OBJEXT $saved_LIBS"
         AC_LANG_PUSH([Fortran 77])
@@ -852,7 +852,7 @@ dnl Use C as a linker and FLIBS to compile a Fortran main and C subprogram.
 if test "$pac_linkwithf77" != "yes" ; then
     AC_LANG_PUSH([Fortran 77])
     AC_COMPILE_IFELSE([],[
-        AC_RUN_LOG([mv conftest.$OBJEXT pac_f77conftest.$OBJEXT])
+        PAC_RUNLOG([mv conftest.$OBJEXT pac_f77conftest.$OBJEXT])
         saved_LIBS="$LIBS"
         LIBS="pac_f77conftest.$OBJEXT $FLIBS $saved_LIBS"
         AC_LANG_PUSH([C])
@@ -961,7 +961,7 @@ int $confname(int a) {
 }
     ])
 ],[
-    AC_RUN_LOG([mv conftest.$OBJEXT pac_conftest.$OBJEXT])
+    PAC_RUNLOG([mv conftest.$OBJEXT pac_conftest.$OBJEXT])
     saved_LIBS="$LIBS"
     AC_LANG_PUSH([Fortran 77])
     AC_LANG_CONFTEST([
@@ -1089,7 +1089,7 @@ dnl Use F77 as a linker to compile a Fortran main and C subprogram.
 if test "$pac_linkwithC" != "yes" ; then
     AC_LANG_PUSH([C])
     AC_COMPILE_IFELSE([],[
-        AC_RUN_LOG([mv conftest.$OBJEXT pac_conftest.$OBJEXT])
+        PAC_RUNLOG([mv conftest.$OBJEXT pac_conftest.$OBJEXT])
         saved_LIBS="$LIBS"
         LIBS="pac_conftest.$OBJEXT $saved_LIBS"
         AC_LANG_PUSH([Fortran 77])
@@ -1110,7 +1110,7 @@ dnl Use C as a linker and FLIBS to compile a Fortran main and C subprogram.
 if test "$pac_linkwithf77" != "yes" ; then
     AC_LANG_PUSH([Fortran 77])
     AC_COMPILE_IFELSE([],[
-        AC_RUN_LOG([mv conftest.$OBJEXT pac_f77conftest.$OBJEXT])
+        PAC_RUNLOG([mv conftest.$OBJEXT pac_f77conftest.$OBJEXT])
         saved_LIBS="$LIBS"
         LIBS="pac_f77conftest.$OBJEXT $FLIBS $saved_LIBS"
         AC_LANG_PUSH([C])
@@ -1277,7 +1277,7 @@ AC_COMPILE_IFELSE([
         end
     ])
 ],[
-    AC_RUN_LOG([mv conftest.$OBJEXT pac_f77conftest.$OBJEXT])
+    PAC_RUNLOG([mv conftest.$OBJEXT pac_f77conftest.$OBJEXT])
     saved_LIBS="$LIBS"
     # This test checks if Fortran init can be done in pure C environment,
     # i.e. no FLIBS in linking, so don't put FLIBS in LIBS below
@@ -1368,7 +1368,7 @@ void ftest_( $pac_mpi_fint *itrue, $pac_mpi_fint *ifalse )
 }
     ])
 ],[
-    AC_RUN_LOG([mv conftest.$OBJEXT pac_conftest.$OBJEXT])
+    PAC_RUNLOG([mv conftest.$OBJEXT pac_conftest.$OBJEXT])
     saved_LIBS="$LIBS"
     LIBS="pac_conftest.$OBJEXT $saved_LIBS"
     AC_LANG_PUSH([Fortran 77])

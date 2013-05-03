@@ -153,7 +153,7 @@ if test "$pac_result" = "yes" ; then
             int foo(void){return 0;}
         ])
     ],[
-        AC_RUN_LOG([mv conftest.$OBJEXT pac_conftest.$OBJEXT])
+        PAC_RUNLOG([mv conftest.$OBJEXT pac_conftest.$OBJEXT])
         saved_LIBS="$LIBS"
         LIBS="pac_conftest.$OBJEXT $LIBS"
 
