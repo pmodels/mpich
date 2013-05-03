@@ -2563,7 +2563,7 @@ sub status_out_ftoc {
         if ((((MPI_Aint)v$count) & MPIR_COUNT_ALIGNMENT) == 0) 
             l$count = (MPI_Status*)(void *)v$count;
 	else 
-            l$count->MPI_ERROR = ((MPI_Status*)v$count)->MPI_ERROR;
+            l$count->MPI_ERROR = ((MPI_Status*)(void*)v$count)->MPI_ERROR;
     }\n";
     }
 }
@@ -2696,7 +2696,7 @@ sub status_array_out_ftoc {
         int li;
         l$count = (MPI_Status*)$malloc($Array_size * sizeof(MPI_Status)); 
         for (li=0; li<$Array_size; li++) 
-            l$count\[li].MPI_ERROR = ((MPI_Status*)v$count)[li].MPI_ERROR;
+            l$count\[li].MPI_ERROR = ((MPI_Status*)(void*)v$count)[li].MPI_ERROR;
     }\n";
     }
     elsif ($fixStatusAlignment) {
@@ -2709,7 +2709,7 @@ sub status_array_out_ftoc {
             lalloc$count = 1;
             l$count = (MPI_Status*)$malloc($Array_size * sizeof(MPI_Status));
             for (li=0; li<$Array_size; li++) 
-                l$count\[li].MPI_ERROR = ((MPI_Status*)v$count)[li].MPI_ERROR;
+                l$count\[li].MPI_ERROR = ((MPI_Status*)(void*)v$count)[li].MPI_ERROR;
         }
     }\n";
     }
