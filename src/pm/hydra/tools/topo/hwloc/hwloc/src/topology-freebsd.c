@@ -19,7 +19,7 @@
 #ifdef HAVE_SYS_CPUSET_H
 #include <sys/cpuset.h>
 #endif
-#ifdef HAVE_SYSCTL
+#ifdef HAVE_SYS_SYSCTL_H
 #include <sys/sysctl.h>
 #endif
 
@@ -164,7 +164,7 @@ hwloc_freebsd_get_thread_cpubind(hwloc_topology_t topology __hwloc_attribute_unu
 #endif
 #endif
 
-#ifdef HAVE_SYSCTL
+#if defined(HAVE_SYSCTL) && defined(HAVE_SYSCTL_H)
 static void
 hwloc_freebsd_node_meminfo_info(struct hwloc_topology *topology)
 {
