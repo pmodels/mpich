@@ -137,15 +137,34 @@ PAC_ENABLE_COVERAGE
 AC_CHECK_HEADERS(unistd.h stdlib.h string.h strings.h stdarg.h sys/types.h sys/socket.h \
 		 sched.h sys/stat.h sys/param.h netinet/in.h netinet/tcp.h \
 		 sys/un.h netdb.h sys/time.h time.h ifaddrs.h arpa/inet.h \
-		 errno.h poll.h fcntl.h netdb.h winsock2.h windows.h)
+		 errno.h poll.h fcntl.h netdb.h winsock2.h windows.h signal.h)
 
 AC_CHECK_LIB(socket,socket,LDFLAGS="$LDFLAGS -lsocket",)
 AC_CHECK_LIB(nsl,gethostbyname,LDFLAGS="$LDFLAGS -lnsl",)
 
 # Check for necessary functions
 AC_CHECK_FUNCS(gettimeofday time strdup sigaction signal usleep alloca unsetenv \
-	       strerror strsignal stat getifaddrs fcntl alarm isatty inet_ntop getpgid \
-	       setsid)
+	       strerror strsignal stat fcntl alarm isatty inet_ntop getpgid \
+	       setsid killpg)
+
+if test "$ac_cv_func_gettimeofday" = "yes" ; then
+   PAC_FUNC_NEEDS_DECL([#include <sys/time.h>],gettimeofday)
+fi
+
+if test "$ac_cv_func_getpgid" = "yes" ; then
+   PAC_FUNC_NEEDS_DECL([#include <unistd.h>],getpgid)
+fi
+
+if test "$ac_cv_func_killpg" = "yes" ; then
+   PAC_FUNC_NEEDS_DECL([#include <signal.h>],killpg)
+fi
+
+AC_TRY_LINK([
+	#include <sys/types.h>
+	#include <ifaddrs.h>
+	],
+	[return getifaddrs(NULL);],
+	[AC_DEFINE([HAVE_GETIFADDRS],1,[Define to '1' if getifaddrs is present and usable])])
 
 # Check what we need to do about the environ extern
 AC_CACHE_CHECK([for environ in unistd.h],pac_cv_environ_in_unistd,

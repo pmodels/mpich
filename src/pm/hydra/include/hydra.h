@@ -112,7 +112,11 @@ extern char *HYD_dbg_prefix;
 
 #ifdef HAVE_SYS_SOCKET_H
 #include <sys/socket.h>
-#endif
+#endif /* HAVE_SYS_SOCKET_H */
+
+#ifdef HAVE_SIGNAL_H
+#include <signal.h>
+#endif /* HAVE_SIGNAL_H */
 
 #define HYD_POLLIN  (0x0001)
 #define HYD_POLLOUT (0x0002)
@@ -158,6 +162,18 @@ extern char *HYD_dbg_prefix;
 #if defined MANUAL_EXTERN_ENVIRON
 extern char **environ;
 #endif /* MANUAL_EXTERN_ENVIRON */
+
+#if defined NEEDS_GETTIMEOFDAY_DECL
+int gettimeofday(struct timeval *tv, struct timezone *tz);
+#endif /* NEEDS_GETTIMEOFDAY_DECL */
+
+#if defined NEEDS_GETPGID_DECL
+pid_t getpgid(pid_t pid);
+#endif /* NEEDS_GETPGID_DECL */
+
+#if defined NEEDS_KILLPG_DECL
+int killpg(int pgrp, int sig);
+#endif /* NEEDS_KILLPG_DECL */
 
 #define HYD_SILENT_ERROR(status) (((status) == HYD_GRACEFUL_ABORT) || ((status) == HYD_TIMED_OUT))
 
