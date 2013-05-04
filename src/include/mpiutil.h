@@ -183,7 +183,7 @@ int MPIR_Assert_fail_fmt(const char *cond, const char *file_name, int line_num, 
 /* Helper macros that give us a crude version of C++'s
  * "std::numeric_limits<TYPE>" functionality.  These rely on either C11
  * "_Generic" functionality or some unfortunately complicated GCC builtins. */
-#if HAVE_C11__GENERIC
+#if defined(HAVE_C11__GENERIC)
 #define expr_inttype_max(expr_)              \
     _Generic(expr_,                          \
              signed char:        SCHAR_MAX,  \
