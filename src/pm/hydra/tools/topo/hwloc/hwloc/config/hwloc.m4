@@ -447,10 +447,16 @@ EOF])
     # or other similar definitions.  So while the symbols "sysctl" and
     # "sysctlbyname" might still be available in libc (which autoconf
     # checks for), they might not be actually usable.
-    AC_TRY_LINK([#include <sys/sysctl.h>],
+    AC_TRY_LINK([
+		#include <stdio.h>
+		#include <sys/sysctl.h>
+		],
                 [return sysctl(NULL,0,NULL,NULL,NULL,0);],
                 AC_DEFINE([HAVE_SYSCTL],[1],[Define to '1' if sysctl is present and usable]))
-    AC_TRY_LINK([#include <sys/sysctl.h>],
+    AC_TRY_LINK([
+		#include <stdio.h>
+		#include <sys/sysctl.h>
+		],
                 [return sysctlbyname(NULL,NULL,NULL,NULL,0);],
                 AC_DEFINE([HAVE_SYSCTLBYNAME],[1],[Define to '1' if sysctlbyname is present and usable]))
 
