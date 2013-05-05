@@ -160,6 +160,7 @@ if test "$ac_cv_func_killpg" = "yes" ; then
 fi
 
 AC_TRY_LINK([
+	#include <stdio.h>
 	#include <sys/types.h>
 	#include <ifaddrs.h>
 	],
