@@ -499,8 +499,8 @@ HYD_status HYDU_sock_is_local(char *host, int *is_local)
 {
     struct hostent *ht;
     char *ip1 = NULL, *ip2 = NULL;
-    char buf1[INET_ADDRSTRLEN], buf2[INET_ADDRSTRLEN];
-    struct sockaddr_in *sa_ptr, sa;
+    char buf1[INET_ADDRSTRLEN];
+    struct sockaddr_in sa;
 
 #if defined(HAVE_GETIFADDRS)
     struct ifaddrs *ifaddr, *ifa;
@@ -546,13 +546,19 @@ HYD_status HYDU_sock_is_local(char *host, int *is_local)
 
     for (ifa = ifaddr; ifa; ifa = ifa->ifa_next) {
         if (ifa->ifa_addr && ifa->ifa_addr->sa_family == AF_INET) {
+            struct sockaddr_in *sa_ptr;
+
             sa_ptr = (struct sockaddr_in *) ifa->ifa_addr;
 
 #if defined HAVE_INET_NTOP
-            ip2 = HYDU_strdup((char *)
-                              inet_ntop(AF_INET, (const void *) &(sa_ptr->sin_addr), buf2,
-                                        MAX_HOSTNAME_LEN));
-            HYDU_ASSERT(ip2, status);
+            {
+                char buf2[INET_ADDRSTRLEN];
+
+                ip2 = HYDU_strdup((char *)
+                                  inet_ntop(AF_INET, (const void *) &(sa_ptr->sin_addr), buf2,
+                                            MAX_HOSTNAME_LEN));
+                HYDU_ASSERT(ip2, status);
+            }
 #endif /* HAVE_INET_NTOP */
 
             if (!strcmp(ip1, ip2)) {
