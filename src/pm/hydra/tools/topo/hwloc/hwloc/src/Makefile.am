@@ -201,7 +201,7 @@ endif HWLOC_HAVE_WINDOWS
 # Installable library
 
 libhwloc_la_SOURCES = $(sources)
-libhwloc_la_LDFLAGS = $(ldflags) $(libhwloc_so_versionflags) $(HWLOC_LIBS)
+libhwloc_la_LDFLAGS = $(ldflags) -version-info $(libhwloc_so_version) $(HWLOC_LIBS)
 
 if HWLOC_HAVE_PLUGINS
 AM_CPPFLAGS += $(LTDLINCL)
