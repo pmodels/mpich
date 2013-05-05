@@ -16,6 +16,10 @@
 #  define PMIU_Assert(expr)
 #endif
 
+#if defined HAVE_ARPA_INET_H
+#include <arpa/inet.h>
+#endif /* HAVE_ARPA_INET_H */
+
 
 /* prototypes for PMIU routines */
 void PMIU_Set_rank( int PMI_rank );
