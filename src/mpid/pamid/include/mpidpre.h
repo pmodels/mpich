@@ -66,4 +66,8 @@
 #define HAVE_GPID_ROUTINES
 #endif
 
+#ifdef __BGQ__
+#define MPID_HANDLE_NUM_INDICES 256
+#endif /* __BGQ__ */
+
 #endif

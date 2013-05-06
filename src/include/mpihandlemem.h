@@ -97,10 +97,19 @@ const char *MPIU_Handle_get_kind_str(int kind);
 #define HANDLE_BLOCK_INDEX(a) ((a) & 0x00000FFF)
 
 /* Number of blocks is between 1 and 16384 */
+#if defined MPID_HANDLE_NUM_BLOCKS
+#define HANDLE_NUM_BLOCKS MPID_HANDLE_NUM_BLOCKS
+#else
 #define HANDLE_NUM_BLOCKS 8192
+#endif /* MPID_HANDLE_NUM_BLOCKS */
+
 /* Number of objects in a block is bewtween 1 and 4096 (each obj has an index
  * within its block) */
+#if defined MPID_HANDLE_NUM_INDICES
+#define HANDLE_NUM_INDICES MPID_HANDLE_NUM_INDICES
+#else
 #define HANDLE_NUM_INDICES 1024
+#endif /* MPID_HANDLE_NUM_INDICES */
 
 /* For direct, the remainder of the handle is the index into a predefined 
    block */
