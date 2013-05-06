@@ -2507,7 +2507,7 @@ static int MPIDI_CH3I_Do_passive_target_rma(MPID_Win *win_ptr, int target_rank,
 {
     int mpi_errno = MPI_SUCCESS, nops;
     MPIDI_RMA_Op_t *curr_ptr;
-    MPI_Win source_win_handle, target_win_handle = MPI_WIN_NULL;
+    MPI_Win source_win_handle = MPI_WIN_NULL, target_win_handle = MPI_WIN_NULL;
     int nRequest=0, nRequestNew=0;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3I_DO_PASSIVE_TARGET_RMA);
 
