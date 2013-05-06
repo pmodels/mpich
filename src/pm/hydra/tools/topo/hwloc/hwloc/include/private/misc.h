@@ -28,6 +28,10 @@
 #error "unknown size for unsigned int."
 #endif
 
+#if !defined(HWLOC_HAVE_DECL_STRTOULL)
+unsigned long long int strtoull(const char *nptr, char **endptr, int base);
+#endif /* HWLOC_HAVE_DECL_STRTOULL */
+
 
 /**
  * ffsl helpers.

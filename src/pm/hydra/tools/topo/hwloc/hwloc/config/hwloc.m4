@@ -460,6 +460,10 @@ EOF])
                 [return sysctlbyname(NULL,NULL,NULL,NULL,0);],
                 AC_DEFINE([HAVE_SYSCTLBYNAME],[1],[Define to '1' if sysctlbyname is present and usable]))
 
+    AC_CHECK_DECLS([strtoull],
+	[AC_DEFINE([HWLOC_HAVE_DECL_STRTOULL],[1],[Define to '1' if strtoull declaration is present])],,
+	[AC_INCLUDES_DEFAULT])
+
     case ${target} in
       *-*-mingw*|*-*-cygwin*)
         hwloc_pid_t=HANDLE
