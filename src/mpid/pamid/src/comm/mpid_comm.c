@@ -392,7 +392,7 @@ void MPIDI_Coll_comm_destroy(MPID_Comm *comm)
    }
 
 
-   if(MPIDI_Process.optimized.auto_select_colls != MPID_AUTO_SELECT_COLLS_NONE)
+   if(MPIDI_Process.optimized.auto_select_colls != MPID_AUTO_SELECT_COLLS_NONE && MPIDI_Process.optimized.auto_select_colls != MPID_AUTO_SELECT_COLLS_TUNE)
    {
      /* Destroy the fast query object. */
      pami_extension_collsel_query_destroy pamix_collsel_query_destroy =

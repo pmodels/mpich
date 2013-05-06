@@ -479,7 +479,7 @@ void MPIDI_Comm_coll_envvars(MPID_Comm *comm)
 
    /*   If automatic collective selection is enabled and user didn't specifically overwrite
       it, then use auto coll sel.. Otherwise, go through the manual coll sel code path. */
-   if(MPIDI_Process.optimized.auto_select_colls != MPID_AUTO_SELECT_COLLS_NONE)
+   if(MPIDI_Process.optimized.auto_select_colls != MPID_AUTO_SELECT_COLLS_NONE && MPIDI_Process.optimized.auto_select_colls != MPID_AUTO_SELECT_COLLS_TUNE)
    {
      /* Create a fast query object, cache it on the comm/geometry and use it in each collective */
      pami_extension_collsel_query_create pamix_collsel_query_create =
