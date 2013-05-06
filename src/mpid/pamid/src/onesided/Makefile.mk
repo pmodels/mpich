@@ -35,6 +35,8 @@ lib_lib@MPILIBNAME@_la_SOURCES +=                                    \
   src/mpid/pamid/src/onesided/mpid_win_lock.c                        \
   src/mpid/pamid/src/onesided/mpid_win_pscw.c                        \
   src/mpid/pamid/src/onesided/mpid_win_put.c                         \
+  src/mpid/pamid/src/onesided/mpid_win_get_info.c                    \
+  src/mpid/pamid/src/onesided/mpid_win_set_info.c                    \
   src/mpid/pamid/src/onesided/mpidi_win_control.c
 
 
