@@ -160,7 +160,7 @@ AC_CHECK_SIZEOF([void *])
 AC_CHECK_SIZEOF([int])
 
 dnl Check for __attribute__ support.  This was originally taken from
-dnl the PAC_C_GNU_ATTRIBUTE macro in mpich2.
+dnl the PAC_C_GNU_ATTRIBUTE macro in mpich.
 dnl
 dnl We start by requiring Gcc.  Some other compilers accept __attribute__
 dnl but generate warning messages, or have different interpretations 

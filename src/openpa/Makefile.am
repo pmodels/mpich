@@ -22,7 +22,7 @@ prettycheck:
 		      | highlight --color=yellow 'WARN(ING)?' \
 		      | highlight --color=cyan -- '-SKIP-'
 
-# This target exists to smooth the integration with MPICH2's upcoming build
+# This target exists to smooth the integration with MPICH's upcoming build
 # system changes to support parallel make (i.e. "make -j 4").  It serves no
 # other purpose, but should _not_ be removed unless you know what you are doing.
 all-executable:
@@ -32,7 +32,7 @@ pkgconfigdir = @pkgconfigdir@
 pkgconfig_DATA = openpa.pc
 $(pkgconfig_DATA): config.status
 
-# make MPICH2 happy
+# make MPICH happy
 coverage:
 
 .PHONY: prettycheck all-executable coverage

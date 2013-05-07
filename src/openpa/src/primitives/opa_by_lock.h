@@ -16,7 +16,7 @@
 /* defined in opa_primitives.c */
 extern pthread_mutex_t *OPA_emulation_lock;
 
-/* FIXME these make less sense now that OPA is not inside of MPICH2.  Is there a
+/* FIXME these make less sense now that OPA is not inside of MPICH.  Is there a
    simpler name/scheme that could be used here instead? [goodell@ 2009-02-19] */
 #define OPA_IPC_SINGLE_CS_ENTER(msg)          \
     do {                                        \

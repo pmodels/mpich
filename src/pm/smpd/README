@@ -43,14 +43,14 @@ hosts=<host1 host2 host3 ...>
 log=<yes or no>
 logfile=<path/filename>
 
-After mpich is built, the smpd commands are in mpich2/bin, or the bin
+After mpich is built, the smpd commands are in mpich/bin, or the bin
 subdirectory of the install directory if you have done an install.
 You should put this (bin) directory in your PATH 
 in your .cshrc or .bashrc:
 
-Put in .cshrc:  setenv PATH /home/you/mpich2/bin:$PATH
+Put in .cshrc:  setenv PATH /home/you/mpich/bin:$PATH
 
-Put in .bashrc: export PATH=/home/you/mpich2/bin:$PATH
+Put in .bashrc: export PATH=/home/you/mpich/bin:$PATH
 
 You can run something with mpiexec
 
@@ -59,7 +59,7 @@ donner.mcs.anl.gov
 foo.mcs.anl.gov
 donner%
 
-You can run an mpich2 job:
+You can run an mpich job:
 
 donner% mpiexec -n 10 /home/ashton/hellow
 Hello world from process 0 of 10

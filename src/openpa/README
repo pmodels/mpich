@@ -6,7 +6,7 @@ library that provides atomic primitives (and related constructs) for
 high performance, concurrent software. This project is a collaboration
 between the Mathematics and Computer Science (MCS) division at Argonne
 National Laboratory (ANL) and the HDF Group. The code was originally
-derived from work on the MPICH2 project. 
+derived from work on the MPICH project.
 
 Project documentation and bug tracking can be found at:
 

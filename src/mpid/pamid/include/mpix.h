@@ -214,7 +214,7 @@ extern "C" {
    * The communicator is created to match the size of each dimension, the
    * physical coords on each node, and the torus/mesh link status.
    *
-   * Because of MPICH2 dimension ordering, the associated arrays (i.e. coords,
+   * Because of MPICH dimension ordering, the associated arrays (i.e. coords,
    * sizes, and periods) are in [a, b, c, d, e, t] order. Consequently, when
    * using the default ABCDET mapping, the rank in cart_comm will match the rank
    * in MPI_COMM_WORLD. However, when using a non-default mapping or a mapfile
