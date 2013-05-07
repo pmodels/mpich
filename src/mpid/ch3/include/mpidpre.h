@@ -257,6 +257,8 @@ struct MPIDI_Win_target_state {
 };
 
 #define MPIDI_DEV_WIN_DECL                                               \
+    int myrank;            /* Rank of this process in comm (used to      \
+                              detect operations on self) */              \
     volatile int my_counter;  /* completion counter for operations       \
                                  targeting this window */                \
     void **base_addrs;     /* array of base addresses of the windows of  \
@@ -293,6 +295,7 @@ struct MPIDI_Win_target_state {
                            this state must be updated collectively (in   \
                            fence) to ensure that the fence state across  \
                            all processes remains consistent. */          \
+    MPID_Group *start_group_ptr; /* group passed in MPI_Win_start */     \
     int start_assert;   /* assert passed to MPI_Win_start */             \
 
 #ifdef MPIDI_CH3_WIN_DECL

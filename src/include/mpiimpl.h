@@ -1693,10 +1693,7 @@ typedef struct MPID_Win {
     MPI_Aint    size;        
     int          disp_unit;      /* Displacement unit of *local* window */
     MPID_Attribute *attributes;
-    MPID_Group *start_group_ptr; /* group passed in MPI_Win_start */
     MPID_Comm *comm_ptr;         /* Pointer to comm of window (dup) */
-    int         myrank;          /* Rank of this process in comm (used to 
-				    detect operations on self) */
 #ifdef USE_THREADED_WINDOW_CODE
     /* These were causing compilation errors.  We need to figure out how to
        integrate threads into MPICH before including these fields. */
