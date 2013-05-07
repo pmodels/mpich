@@ -266,7 +266,6 @@ static int win_init(MPI_Aint size, int disp_unit, int create_flavor, int model,
     (*win_ptr)->start_group_ptr     = NULL;
     (*win_ptr)->start_assert        = 0;
     (*win_ptr)->comm_ptr            = win_comm_ptr;
-    (*win_ptr)->myrank              = comm_ptr->rank;
 
     (*win_ptr)->my_counter          = 0;
     /* (*win_ptr)->base_addrs[] is set by caller; */

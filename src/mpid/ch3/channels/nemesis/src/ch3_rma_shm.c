@@ -79,7 +79,7 @@ int MPIDI_CH3_SHM_Win_free(MPID_Win **win_ptr)
     /* Free shared process mutex memory region */
     if ((*win_ptr)->shm_mutex) {
 
-        if ((*win_ptr)->myrank == 0) {
+        if ((*win_ptr)->comm_ptr->rank == 0) {
             MPIDI_CH3I_SHM_MUTEX_DESTROY(*win_ptr);
         }
 

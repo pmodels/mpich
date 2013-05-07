@@ -257,8 +257,6 @@ struct MPIDI_Win_target_state {
 };
 
 #define MPIDI_DEV_WIN_DECL                                               \
-    int myrank;            /* Rank of this process in comm (used to      \
-                              detect operations on self) */              \
     volatile int my_counter;  /* completion counter for operations       \
                                  targeting this window */                \
     void **base_addrs;     /* array of base addresses of the windows of  \

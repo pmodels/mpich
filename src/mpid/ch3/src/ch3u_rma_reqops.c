@@ -181,7 +181,7 @@ int MPIDI_Rput(const void *origin_addr, int origin_count,
     /* If the operation is already complete, return a completed request.
      * Otherwise, generate a grequest. */
     /* FIXME: We still may need to flush or sync for shared memory windows */
-    if (target_rank == MPI_PROC_NULL || target_rank == win_ptr->myrank ||
+    if (target_rank == MPI_PROC_NULL || target_rank == win_ptr->comm_ptr->rank ||
         win_ptr->create_flavor == MPI_WIN_FLAVOR_SHARED || data_sz == 0)
     {
         mpi_errno = MPIR_Grequest_start_impl(MPIDI_CH3I_Rma_req_query,
@@ -262,7 +262,7 @@ int MPIDI_Rget(void *origin_addr, int origin_count,
     /* If the operation is already complete, return a completed request.
      * Otherwise, generate a grequest. */
     /* FIXME: We still may need to flush or sync for shared memory windows */
-    if (target_rank == MPI_PROC_NULL || target_rank == win_ptr->myrank ||
+    if (target_rank == MPI_PROC_NULL || target_rank == win_ptr->comm_ptr->rank ||
         win_ptr->create_flavor == MPI_WIN_FLAVOR_SHARED || data_sz == 0)
     {
         mpi_errno = MPIR_Grequest_start_impl(MPIDI_CH3I_Rma_req_query,
@@ -342,7 +342,7 @@ int MPIDI_Raccumulate(const void *origin_addr, int origin_count,
     /* If the operation is already complete, return a completed request.
      * Otherwise, generate a grequest. */
     /* FIXME: We still may need to flush or sync for shared memory windows */
-    if (target_rank == MPI_PROC_NULL || target_rank == win_ptr->myrank ||
+    if (target_rank == MPI_PROC_NULL || target_rank == win_ptr->comm_ptr->rank ||
         win_ptr->create_flavor == MPI_WIN_FLAVOR_SHARED || data_sz == 0)
     {
         mpi_errno = MPIR_Grequest_start_impl(MPIDI_CH3I_Rma_req_query,
@@ -428,7 +428,7 @@ int MPIDI_Rget_accumulate(const void *origin_addr, int origin_count,
     /* If the operation is already complete, return a completed request.
      * Otherwise, generate a grequest. */
     /* FIXME: We still may need to flush or sync for shared memory windows */
-    if (target_rank == MPI_PROC_NULL || target_rank == win_ptr->myrank ||
+    if (target_rank == MPI_PROC_NULL || target_rank == win_ptr->comm_ptr->rank ||
         win_ptr->create_flavor == MPI_WIN_FLAVOR_SHARED ||
         (data_sz == 0 && trg_data_sz == 0))
     {

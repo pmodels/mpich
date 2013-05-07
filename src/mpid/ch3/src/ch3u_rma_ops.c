@@ -207,7 +207,7 @@ int MPIDI_Put(const void *origin_addr, int origin_count, MPI_Datatype
 	goto fn_exit;
     }
 
-    rank = win_ptr->myrank;
+    rank = win_ptr->comm_ptr->rank;
     
     /* If the put is a local operation, do it here */
     if (target_rank == rank || win_ptr->create_flavor == MPI_WIN_FLAVOR_SHARED)
@@ -318,7 +318,7 @@ int MPIDI_Get(void *origin_addr, int origin_count, MPI_Datatype
 	goto fn_exit;
     }
 
-    rank = win_ptr->myrank;
+    rank = win_ptr->comm_ptr->rank;
     
     /* If the get is a local operation, do it here */
     if (target_rank == rank || win_ptr->create_flavor == MPI_WIN_FLAVOR_SHARED)
@@ -428,7 +428,7 @@ int MPIDI_Accumulate(const void *origin_addr, int origin_count, MPI_Datatype
 	goto fn_exit;
     }
 
-    rank = win_ptr->myrank;
+    rank = win_ptr->comm_ptr->rank;
     
     MPIDI_CH3I_DATATYPE_IS_PREDEFINED(origin_datatype, origin_predefined);
     MPIDI_CH3I_DATATYPE_IS_PREDEFINED(target_datatype, target_predefined);

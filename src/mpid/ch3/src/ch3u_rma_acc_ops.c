@@ -52,7 +52,7 @@ int MPIDI_Get_accumulate(const void *origin_addr, int origin_count,
         goto fn_exit;
     }
 
-    rank = win_ptr->myrank;
+    rank = win_ptr->comm_ptr->rank;
 
     origin_predefined = TRUE; /* quiet uninitialized warnings (b/c goto) */
     if (op != MPI_NO_OP) {
@@ -286,7 +286,7 @@ int MPIDI_Compare_and_swap(const void *origin_addr, const void *compare_addr,
     MPIU_ERR_CHKANDJUMP(win_ptr->epoch_state == MPIDI_EPOCH_NONE,
                         mpi_errno, MPI_ERR_RMA_SYNC, "**rmasync");
 
-    rank = win_ptr->myrank;
+    rank = win_ptr->comm_ptr->rank;
 
     /* The datatype must be predefined, and one of: C integer, Fortran integer,
      * Logical, Multi-language types, or Byte.  This is checked above the ADI,
@@ -393,7 +393,7 @@ int MPIDI_Fetch_and_op(const void *origin_addr, void *result_addr,
     MPIU_ERR_CHKANDJUMP(win_ptr->epoch_state == MPIDI_EPOCH_NONE,
                         mpi_errno, MPI_ERR_RMA_SYNC, "**rmasync");
 
-    rank = win_ptr->myrank;
+    rank = win_ptr->comm_ptr->rank;
 
     /* The datatype and op must be predefined.  This is checked above the ADI,
      * so there's no need to check it again here. */

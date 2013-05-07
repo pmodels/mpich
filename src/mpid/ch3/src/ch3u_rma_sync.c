@@ -1370,7 +1370,7 @@ int MPIDI_Win_post(MPID_Group *post_grp_ptr, int assert, MPID_Win *win_ptr)
                                                     win_grp_ptr, ranks_in_win_grp);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 	
-        rank = win_ptr->myrank;
+        rank = win_ptr->comm_ptr->rank;
 	
 	MPIU_CHKLMEM_MALLOC(req, MPI_Request *, post_grp_size * sizeof(MPI_Request), mpi_errno, "req");
         MPIU_CHKLMEM_MALLOC(status, MPI_Status *, post_grp_size*sizeof(MPI_Status), mpi_errno, "status");
@@ -1562,7 +1562,7 @@ int MPIDI_Win_complete(MPID_Win *win_ptr)
                                                 win_grp_ptr, ranks_in_win_grp);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
-    rank = win_ptr->myrank;
+    rank = win_ptr->comm_ptr->rank;
 
     /* If MPI_MODE_NOCHECK was not specified, we need to check if
        Win_post was called on the target processes. Wait for a 0-byte sync
@@ -1920,7 +1920,7 @@ int MPIDI_Win_lock(int lock_type, int dest, int assert, MPID_Win *win_ptr)
     target_state->remote_lock_mode   = lock_type;
     target_state->remote_lock_assert = assert;
 
-    if (dest == win_ptr->myrank) {
+    if (dest == win_ptr->comm_ptr->rank) {
         /* The target is this process itself. We must block until the lock
          * is acquired.  Once it is acquired, local puts, gets, accumulates
          * will be done directly without queueing. */
@@ -1989,7 +1989,7 @@ int MPIDI_Win_unlock(int dest, MPID_Win *win_ptr)
         OPA_read_write_barrier();
     }
 
-    if (dest == win_ptr->myrank) {
+    if (dest == win_ptr->comm_ptr->rank) {
 	/* local lock. release the lock on the window, grant the next one
 	 * in the queue, and return. */
         MPIU_Assert(MPIDI_CH3I_RMA_Ops_isempty(&win_ptr->targets[dest].rma_ops_list));
@@ -2410,7 +2410,7 @@ int MPIDI_Win_lock_all(int assert, MPID_Win *win_ptr)
 
         for (i = 0; i < MPIR_Comm_size(win_ptr->comm_ptr); i++) {
             /* Local process is already locked */
-            if (i == win_ptr->myrank) continue;
+            if (i == win_ptr->comm_ptr->rank) continue;
 
             mpi_errno = MPIDI_CH3I_Send_lock_msg(i, MPI_LOCK_SHARED, win_ptr);
             if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
@@ -2418,7 +2418,7 @@ int MPIDI_Win_lock_all(int assert, MPID_Win *win_ptr)
 
         for (i = 0; i < MPIR_Comm_size(win_ptr->comm_ptr); i++) {
             /* Local process is already locked */
-            if (i == win_ptr->myrank) continue;
+            if (i == win_ptr->comm_ptr->rank) continue;
 
             mpi_errno = MPIDI_CH3I_Wait_for_lock_granted(win_ptr, i);
             if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
@@ -2772,8 +2772,8 @@ static int MPIDI_CH3I_Acquire_local_lock(MPID_Win *win_ptr, int lock_type) {
         MPIU_INSTR_DURATION_END(winlock_getlocallock);
     }
 
-    win_ptr->targets[win_ptr->myrank].remote_lock_state = MPIDI_CH3_WIN_LOCK_GRANTED;
-    win_ptr->targets[win_ptr->myrank].remote_lock_mode = lock_type;
+    win_ptr->targets[win_ptr->comm_ptr->rank].remote_lock_state = MPIDI_CH3_WIN_LOCK_GRANTED;
+    win_ptr->targets[win_ptr->comm_ptr->rank].remote_lock_mode = lock_type;
 
  fn_exit:
     MPIDI_RMA_FUNC_EXIT(MPID_STATE_MPIDI_ACQUIRE_LOCAL_LOCK);
