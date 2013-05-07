@@ -233,7 +233,8 @@ void *MPL_trmalloc(size_t a, int lineno, const char fname[])
         goto fn_exit;
 
     memset(new, TRDefaultByte, nsize + sizeof(TrSPACE) + sizeof(unsigned long));
-    head = (TRSPACE *) new;
+    /* Cast to (void*) to avoid false warnings about alignment issues */
+    head = (TRSPACE *) (void *)new;
     new += sizeof(TrSPACE);
 
     if (TRhead[0] != TRHEAD_PRESENTINAL || TRhead[2] != TRHEAD_POSTSENTINAL) {
@@ -256,7 +257,8 @@ void *MPL_trmalloc(size_t a, int lineno, const char fname[])
     MPL_strncpy(head->fname, fname, TR_FNAME_LEN);
     head->fname[TR_FNAME_LEN - 1] = 0;
     head->cookie = COOKIE_VALUE;
-    nend = (unsigned long *) (new + nsize);
+    /* Cast to (void*) to avoid false warning about alignment */
+    nend = (unsigned long *) (void *) (new + nsize);
     nend[0] = COOKIE_VALUE;
 
     allocated += nsize;
@@ -309,7 +311,9 @@ void MPL_trfree(void *a_ptr, int line, const char file[])
             return;
     }
 
-    head = (TRSPACE *) ( ((char *)a_ptr) - sizeof(TrSPACE) );
+    /* Alignment guaranteed by the way a_ptr was allocated.  Use
+       (void *) cast to suppress false warning about alignment issues */
+    head = (TRSPACE *) (void *) ( ((char *)a_ptr) - sizeof(TrSPACE) );
 
     /* We need to mark the memory as defined before performing our own error
      * checks or valgrind will flag the trfree function as erroneous.  The real
@@ -328,7 +332,8 @@ void MPL_trfree(void *a_ptr, int line, const char file[])
                          "called in %s at line %d\n", world_rank, hexstring, file, line);
         return;
     }
-    nend = (unsigned long *) ((char *)a_ptr + head->size);
+    /* Cast to (void*) to avoid false warning about alignment */
+    nend = (unsigned long *) (void *) ((char *)a_ptr + head->size);
 /* Check that nend is properly aligned */
     if ((sizeof(long) == 4 && ((long) nend & 0x3) != 0) ||
         (sizeof(long) == 8 && ((long) nend & 0x7) != 0)) {
@@ -506,7 +511,8 @@ int MPL_trvalid2(const char str[], int line, const char file[] )
            the full header is padded to ensure correct byte alignment with
            the data */
         a    = (char *)( (TrSPACE *)head + 1 );
-        nend = (unsigned long *) (a + head->size);
+        /* Cast to (void*) to avoid false warning about alignment */
+        nend = (unsigned long *) (void *)(a + head->size);
 
         /* mark defined before accessing nend contents */
         MPL_VG_MAKE_MEM_DEFINED(nend, sizeof(*nend));
@@ -785,9 +791,9 @@ void *MPL_trrealloc(void *p, size_t size, int lineno, const char fname[])
     TRSPACE *head = 0;
     char hexstring[MAX_ADDRESS_CHARS];
 
-/* We should really use the size of the old block... */
+    /* We should really use the size of the old block... */
     if (p) {
-        head = (TRSPACE *) ((char *)p - sizeof(TrSPACE));
+        head = (TRSPACE *) (void*) ((char *)p - sizeof(TrSPACE));
         MPL_VG_MAKE_MEM_DEFINED(head, sizeof(*head));   /* mark defined before accessing contents */
         if (head->cookie != COOKIE_VALUE) {
             /* Damaged header */

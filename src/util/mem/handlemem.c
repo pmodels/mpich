@@ -157,7 +157,9 @@ void *MPIU_Handle_direct_init(void *direct,
 
     for (i=0; i<direct_size; i++) {
 	/* printf( "Adding %p in %d\n", ptr, handle_type ); */
-	hptr = (MPIU_Handle_common *)ptr;
+        /* First cast to (void*) to avoid false warnings about alignment
+           (consider that a requirement of the input parameters) */
+	hptr = (MPIU_Handle_common *)(void *)ptr;
 	ptr  = ptr + obj_size;
 	hptr->next = ptr;
 	hptr->handle = ((unsigned)HANDLE_KIND_DIRECT << HANDLE_KIND_SHIFT) | 
@@ -209,7 +211,8 @@ static void *MPIU_Handle_indirect_init( void *(**indirect)[],
     }
     ptr = (char *)block_ptr;
     for (i=0; i<indirect_num_indices; i++) {
-	hptr       = (MPIU_Handle_common *)ptr;
+        /* Cast to (void*) to avoid false warning about alignment */
+	hptr       = (MPIU_Handle_common *)(void*)ptr;
 	ptr        = ptr + obj_size;
 	hptr->next = ptr;
 	hptr->handle   = ((unsigned)HANDLE_KIND_INDIRECT << HANDLE_KIND_SHIFT) | 
