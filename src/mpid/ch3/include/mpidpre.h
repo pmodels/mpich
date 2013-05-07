@@ -370,7 +370,7 @@ typedef struct MPIDI_Request {
      * unexpected, exclusive access otherwise */
     int            recv_pending_count;
 
-    /* The next 8 are for RMA */
+    /* The next several fields are used to hold state for ongoing RMA operations */
     MPI_Op op;
     /* For accumulate, since data is first read into a tmp_buf */
     void *real_user_buf;
