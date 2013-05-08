@@ -171,8 +171,10 @@ static inline pami_endpoint_t MPIDI_Task_to_endpoint(pami_task_t task, size_t of
   pami_endpoint_t ep;
   pami_result_t   rc;
   rc = PAMI_Endpoint_create(MPIDI_Client, task, 0, &ep);
+#if ASSERT_LEVEL > 0
   if(rc != PAMI_SUCCESS)
     MPID_Abort (NULL, 0, 1, "MPIDI_Task_to_endpoint:  Invalid task/offset.  No endpoint found");
+#endif
   return ep;
 }
 
