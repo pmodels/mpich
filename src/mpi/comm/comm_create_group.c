@@ -18,11 +18,6 @@
 #endif
 /* -- End Profiling Symbol Block */
 
-/* PMPI_LOCAL should be dropped and this prototype moved to mpiimpl.h if we ever
- * need to use this routine outside of this translation unit */
-PMPI_LOCAL int MPIR_Comm_create_group(MPID_Comm * comm_ptr, MPID_Group * group_ptr, int tag,
-                                      MPID_Comm ** newcomm);
-
 
 /* Define MPICH_MPI_FROM_PMPI if weak symbols are not supported to build
    the MPI routines */
@@ -36,8 +31,8 @@ PMPI_LOCAL int MPIR_Comm_create_group(MPID_Comm * comm_ptr, MPID_Group * group_p
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 /* comm create group impl; assumes that the standard error checking
  * has already taken place in the calling function */
-PMPI_LOCAL int MPIR_Comm_create_group(MPID_Comm * comm_ptr, MPID_Group * group_ptr, int tag,
-                                      MPID_Comm ** newcomm_ptr)
+int MPIR_Comm_create_group(MPID_Comm * comm_ptr, MPID_Group * group_ptr, int tag,
+                           MPID_Comm ** newcomm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Context_id_t new_context_id = 0;

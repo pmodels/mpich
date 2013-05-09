@@ -4073,6 +4073,8 @@ int MPIR_Reduce_local_impl(const void *inbuf, void *inoutbuf, int count, MPI_Dat
 int MPIR_Setup_intercomm_localcomm( MPID_Comm * );
 
 int MPIR_Comm_create( MPID_Comm ** );
+int MPIR_Comm_create_group(MPID_Comm * comm_ptr, MPID_Group * group_ptr, int tag,
+                           MPID_Comm ** newcomm);
 
 /* comm_create helper functions, used by both comm_create and comm_create_group */
 int MPIR_Comm_create_calculate_mapping(MPID_Group  *group_ptr,
