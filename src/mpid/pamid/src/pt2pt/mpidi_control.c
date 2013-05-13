@@ -229,7 +229,7 @@ MPIDI_RzvAck_proc_req(pami_context_t   context,
     }
 #endif
 #ifdef  MPIDI_TRACE
-  MPIDI_Out_cntr[(req->mpid.partner_id)].S[(req->mpid.idx)].recvAck=1;
+  MPIDI_Trace_buf[(req->mpid.partner_id)].S[(req->mpid.idx)].recvAck=1;
 #endif
 
   MPIDI_SendDoneCB(context, req, PAMI_SUCCESS);

@@ -317,7 +317,7 @@ MPIDI_Recvq_FDU(int source, pami_task_t pami_source, int tag, int context_id, in
             MPIDI_Recvq_remove(MPIDI_Recvq.unexpected, rreq, prev_rreq);
             found = TRUE;
 #ifdef MPIDI_TRACE
-            MPIDI_In_cntr[(rreq->mpid.partner_id)].R[(rreq->mpid.idx)].matchedInUQ2=1;
+            MPIDI_Trace_buf[(rreq->mpid.partner_id)].R[(rreq->mpid.idx)].matchedInUQ2=1;
 #endif
             goto fn_exit;
           }

@@ -37,7 +37,7 @@ MPIDI_RecvMsg_Unexp(MPID_Request  * rreq,
   /* Recv functions will ack the messages that are unexpected     */
   /* ------------------------------------------------------------ */
 #ifdef MPIDI_TRACE
-  MPIDI_In_cntr[(rreq->mpid.partner_id)].R[(rreq->mpid.idx)].matchedInUQ=1;
+  MPIDI_Trace_buf[(rreq->mpid.partner_id)].R[(rreq->mpid.idx)].matchedInUQ=1;
 #endif
 
   if (MPIDI_Request_isRzv(rreq))

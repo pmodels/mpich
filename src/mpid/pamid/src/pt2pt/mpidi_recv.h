@@ -160,13 +160,6 @@ MPIDI_Recv(void          * buf,
                                 tag,
                                 comm->recvcontext_id + context_offset,
                                 &found);
-#ifdef MPIDI_TRACE
-{
-  size_t ll;
-  ll = count * MPID_Datatype_get_basic_size(datatype);
-  SET_REC_PR(rreq,buf,count,ll,datatype,pami_source,rank,tag,comm,is_blocking);
-}
-#endif
 #else
   int pami_source;
   if(rank != MPI_ANY_SOURCE) {
@@ -183,6 +176,13 @@ MPIDI_Recv(void          * buf,
                                 tag,
                                 comm->recvcontext_id + context_offset,
                                 &found);
+#endif
+#ifdef MPIDI_TRACE
+{
+  size_t ll;
+  ll = count * MPID_Datatype_get_basic_size(datatype);
+  MPIDI_SET_PR_REC(rreq,buf,count,ll,datatype,pami_source,rank,tag,comm,is_blocking);
+}
 #endif
 
   /* ----------------------------------------------------------------- */
