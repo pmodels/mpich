@@ -42,6 +42,7 @@
 #endif
 #endif
 
+extern int MPIDI_atoi(char* , unsigned int* );
 extern int MPIDI_Banner(char *);
 typedef enum {IS_IP, IS_US} MPIDI_TransportType;
 typedef enum {NO_STRIPING=0, IS_PACKET_STRIPING} MPIDI_StripingType;
