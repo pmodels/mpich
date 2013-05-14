@@ -44,7 +44,7 @@ int MPI_File_set_info(MPI_File fh, MPI_Info info)
 
     /* --BEGIN ERROR HANDLING-- */
     MPIO_CHECK_FILE_HANDLE(adio_fh, myname, error_code);
-    MPIO_CHECK_INFO(info, error_code);
+    MPIO_CHECK_INFO_ALL(info, error_code, fh->comm);
     /* --END ERROR HANDLING-- */
 
     /* set new info */

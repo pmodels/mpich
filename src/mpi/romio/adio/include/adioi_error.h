@@ -163,10 +163,17 @@ if ((fh->file_system == ADIO_PIOFS) ||					\
 
 /* Check MPI_Info object by calling MPI_Info_dup, if the info object is valid
 then the dup operation will succeed */
-#define MPIO_CHECK_INFO(info, error_code) {     \
+/* a collective check for error makes this macro collective */
+#define MPIO_CHECK_INFO_ALL(info, error_code, comm) {     \
     MPI_Info dupinfo;                           \
+    int tmp_err = MPI_SUCCESS;                  \
     error_code = MPI_Info_dup(info, &dupinfo);  \
-    if(error_code != MPI_SUCCESS) goto fn_fail; \
+    MPI_Allreduce(&error_code, &tmp_err, 1, MPI_INT, MPI_MAX, comm); \
+    if(tmp_err != MPI_SUCCESS) {                                            \
+	error_code = MPIO_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, \
+		myname, __LINE__, MPI_ERR_OTHER, "**info", 0); \
+	goto fn_fail; \
+    }                                           \
     if (dupinfo != MPI_INFO_NULL) {             \
         MPI_Info_free(&dupinfo);                \
     }                                           \
