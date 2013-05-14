@@ -45,7 +45,7 @@ typedef struct {
 
 
 extern transactionID_struct *_transactionID_list;
-
+void MPIDI_get_allremote_leaders(int *tid_arr, MPID_Comm *comm_ptr);
 
 void MPIDI_send_AM_to_remote_leader_on_disconnect(int taskid, long long comm_cntr, int whichAM)
 {
