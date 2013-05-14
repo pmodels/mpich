@@ -195,10 +195,10 @@ int MPIR_Iscan_SMP(const void *sendbuf, void *recvbuf, int count, MPI_Datatype d
     node_comm = comm_ptr->node_comm;
     roots_comm = comm_ptr->node_roots_comm;
     if (node_comm) {
-        MPIU_Assert(node_comm->coll_fns && node_comm->coll_fns->Iscan && node_comm->coll_fns->Ibcast);
+        MPIU_Assert(node_comm->coll_fns && node_comm->coll_fns->Iscan_sched && node_comm->coll_fns->Ibcast_sched);
     }
     if (roots_comm) {
-        MPIU_Assert(roots_comm->coll_fns && roots_comm->coll_fns->Iscan);
+        MPIU_Assert(roots_comm->coll_fns && roots_comm->coll_fns->Iscan_sched);
     }
 
     MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
@@ -226,7 +226,7 @@ int MPIR_Iscan_SMP(const void *sendbuf, void *recvbuf, int count, MPI_Datatype d
     /* perform intranode scan to get temporary result in recvbuf. if there is only
        one process, just copy the raw data. */
     if (node_comm != NULL) {
-        mpi_errno = node_comm->coll_fns->Iscan(sendbuf, recvbuf, count, datatype, op, node_comm, s);
+        mpi_errno = node_comm->coll_fns->Iscan_sched(sendbuf, recvbuf, count, datatype, op, node_comm, s);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
         MPID_SCHED_BARRIER(s);
     }
@@ -265,7 +265,7 @@ int MPIR_Iscan_SMP(const void *sendbuf, void *recvbuf, int count, MPI_Datatype d
         int roots_rank = MPIU_Get_internode_rank(comm_ptr, rank);
         MPIU_Assert(roots_rank == roots_comm->rank);
 
-        mpi_errno = roots_comm->coll_fns->Iscan(localfulldata, prefulldata, count, datatype, op, roots_comm, s);
+        mpi_errno = roots_comm->coll_fns->Iscan_sched(localfulldata, prefulldata, count, datatype, op, roots_comm, s);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
         MPID_SCHED_BARRIER(s);
 
@@ -292,7 +292,7 @@ int MPIR_Iscan_SMP(const void *sendbuf, void *recvbuf, int count, MPI_Datatype d
          * "prefulldata" from another leader into "tempbuf" */
 
         if (node_comm != NULL) {
-            mpi_errno = node_comm->coll_fns->Ibcast(tempbuf, count, datatype, 0, node_comm, s);
+            mpi_errno = node_comm->coll_fns->Ibcast_sched(tempbuf, count, datatype, 0, node_comm, s);
             if (mpi_errno) MPIU_ERR_POP(mpi_errno);
             MPID_SCHED_BARRIER(s);
         }
@@ -322,9 +322,9 @@ int MPIR_Iscan_impl(const void *sendbuf, void *recvbuf, int count, MPI_Datatype 
     *request = MPI_REQUEST_NULL;
 
     MPIU_Assert(comm_ptr->coll_fns != NULL);
-    if (comm_ptr->coll_fns->Iscan_optimized != NULL) {
+    if (comm_ptr->coll_fns->Iscan_req != NULL) {
         /* --BEGIN USEREXTENSION-- */
-        mpi_errno = comm_ptr->coll_fns->Iscan_optimized(sendbuf, recvbuf, count,
+        mpi_errno = comm_ptr->coll_fns->Iscan_req(sendbuf, recvbuf, count,
                                                         datatype, op,
                                                         comm_ptr, &reqp);
         if (reqp) {
@@ -343,8 +343,8 @@ int MPIR_Iscan_impl(const void *sendbuf, void *recvbuf, int count, MPI_Datatype 
     mpi_errno = MPID_Sched_create(&s);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
-    MPIU_Assert(comm_ptr->coll_fns->Iscan != NULL);
-    mpi_errno = comm_ptr->coll_fns->Iscan(sendbuf, recvbuf, count, datatype, op, comm_ptr, s);
+    MPIU_Assert(comm_ptr->coll_fns->Iscan_sched != NULL);
+    mpi_errno = comm_ptr->coll_fns->Iscan_sched(sendbuf, recvbuf, count, datatype, op, comm_ptr, s);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
     mpi_errno = MPID_Sched_start(&s, comm_ptr, tag, &reqp);

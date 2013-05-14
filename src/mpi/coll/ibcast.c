@@ -291,8 +291,8 @@ fn_fail:
 */
 /* It would be nice to just call:
  * ----8<----
- * comm_ptr->coll_fns->Iscatter(...);
- * comm_ptr->coll_fns->Iallgather(...);
+ * comm_ptr->coll_fns->Iscatter_sched(...);
+ * comm_ptr->coll_fns->Iallgather_sched(...);
  * ----8<----
  *
  * But that results in inefficient additional memory allocation and copies
@@ -685,11 +685,11 @@ int MPIR_Ibcast_SMP(void *buffer, int count, MPI_Datatype datatype, int root, MP
     MPIU_Assert(is_homogeneous); /* we don't handle the hetero case yet */
     if (comm_ptr->node_comm) {
         MPIU_Assert(comm_ptr->node_comm->coll_fns);
-        MPIU_Assert(comm_ptr->node_comm->coll_fns->Ibcast);
+        MPIU_Assert(comm_ptr->node_comm->coll_fns->Ibcast_sched);
     }
     if (comm_ptr->node_roots_comm) {
         MPIU_Assert(comm_ptr->node_roots_comm->coll_fns);
-        MPIU_Assert(comm_ptr->node_roots_comm->coll_fns->Ibcast);
+        MPIU_Assert(comm_ptr->node_roots_comm->coll_fns->Ibcast_sched);
     }
 
     /* MPI_Type_size() might not give the accurate size of the packed
@@ -724,7 +724,7 @@ int MPIR_Ibcast_SMP(void *buffer, int count, MPI_Datatype datatype, int root, MP
     /* perform the internode broadcast */
     if (comm_ptr->node_roots_comm != NULL)
     {
-        mpi_errno = comm_ptr->node_roots_comm->coll_fns->Ibcast(buffer, count, datatype,
+        mpi_errno = comm_ptr->node_roots_comm->coll_fns->Ibcast_sched(buffer, count, datatype,
                                                                 MPIU_Get_internode_rank(comm_ptr, root),
                                                                 comm_ptr->node_roots_comm, s);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
@@ -735,7 +735,7 @@ int MPIR_Ibcast_SMP(void *buffer, int count, MPI_Datatype datatype, int root, MP
     /* perform the intranode broadcast on all except for the root's node */
     if (comm_ptr->node_comm != NULL)
     {
-        mpi_errno = comm_ptr->node_comm->coll_fns->Ibcast(buffer, count, datatype, 0, comm_ptr->node_comm, s);
+        mpi_errno = comm_ptr->node_comm->coll_fns->Ibcast_sched(buffer, count, datatype, 0, comm_ptr->node_comm, s);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     }
 
@@ -838,8 +838,8 @@ int MPIR_Ibcast_inter(void *buffer, int count, MPI_Datatype datatype, int root, 
 
         /* now do the usual broadcast on this intracommunicator
            with rank 0 as root. */
-        MPIU_Assert(comm_ptr->local_comm->coll_fns && comm_ptr->local_comm->coll_fns->Ibcast);
-        mpi_errno = comm_ptr->local_comm->coll_fns->Ibcast(buffer, count, datatype, root, comm_ptr->local_comm, s);
+        MPIU_Assert(comm_ptr->local_comm->coll_fns && comm_ptr->local_comm->coll_fns->Ibcast_sched);
+        mpi_errno = comm_ptr->local_comm->coll_fns->Ibcast_sched(buffer, count, datatype, root, comm_ptr->local_comm, s);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     }
 
@@ -861,9 +861,9 @@ int MPIR_Ibcast_impl(void *buffer, int count, MPI_Datatype datatype, int root, M
     *request = MPI_REQUEST_NULL;
 
     MPIU_Assert(comm_ptr->coll_fns != NULL);
-    if (comm_ptr->coll_fns->Ibcast_optimized != NULL) {
+    if (comm_ptr->coll_fns->Ibcast_req != NULL) {
         /* --BEGIN USEREXTENSION-- */
-        mpi_errno = comm_ptr->coll_fns->Ibcast_optimized(buffer, count, datatype, root, comm_ptr, &reqp);
+        mpi_errno = comm_ptr->coll_fns->Ibcast_req(buffer, count, datatype, root, comm_ptr, &reqp);
         if (reqp) {
             *request = reqp->handle;
             if (mpi_errno) MPIU_ERR_POP(mpi_errno);
@@ -880,8 +880,8 @@ int MPIR_Ibcast_impl(void *buffer, int count, MPI_Datatype datatype, int root, M
     mpi_errno = MPID_Sched_create(&s);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
-    MPIU_Assert(comm_ptr->coll_fns->Ibcast != NULL);
-    mpi_errno = comm_ptr->coll_fns->Ibcast(buffer, count, datatype, root, comm_ptr, s);
+    MPIU_Assert(comm_ptr->coll_fns->Ibcast_sched != NULL);
+    mpi_errno = comm_ptr->coll_fns->Ibcast_sched(buffer, count, datatype, root, comm_ptr, s);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
     mpi_errno = MPID_Sched_start(&s, comm_ptr, tag, &reqp);

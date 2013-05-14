@@ -503,8 +503,8 @@ int MPIR_Iscatter_inter(const void *sendbuf, int sendcount, MPI_Datatype sendtyp
 
             /* now do the usual scatter on this intracommunicator */
             MPIU_Assert(newcomm_ptr->coll_fns != NULL);
-            MPIU_Assert(newcomm_ptr->coll_fns->Iscatter != NULL);
-            mpi_errno = newcomm_ptr->coll_fns->Iscatter(tmp_buf, recvcount, recvtype,
+            MPIU_Assert(newcomm_ptr->coll_fns->Iscatter_sched != NULL);
+            mpi_errno = newcomm_ptr->coll_fns->Iscatter_sched(tmp_buf, recvcount, recvtype,
                                                         recvbuf, recvcount, recvtype,
                                                         0, newcomm_ptr, s);
             if (mpi_errno) MPIU_ERR_POP(mpi_errno);
@@ -550,9 +550,9 @@ int MPIR_Iscatter_impl(const void *sendbuf, int sendcount, MPI_Datatype sendtype
     *request = MPI_REQUEST_NULL;
 
     MPIU_Assert(comm_ptr->coll_fns != NULL);
-    if (comm_ptr->coll_fns->Iscatter_optimized != NULL) {
+    if (comm_ptr->coll_fns->Iscatter_req != NULL) {
         /* --BEGIN USEREXTENSION-- */
-        mpi_errno = comm_ptr->coll_fns->Iscatter_optimized(sendbuf, sendcount, sendtype,
+        mpi_errno = comm_ptr->coll_fns->Iscatter_req(sendbuf, sendcount, sendtype,
                                                            recvbuf, recvcount, recvtype,
                                                            root, comm_ptr, &reqp);
         if (reqp) {
@@ -571,8 +571,8 @@ int MPIR_Iscatter_impl(const void *sendbuf, int sendcount, MPI_Datatype sendtype
     mpi_errno = MPID_Sched_create(&s);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
-    MPIU_Assert(comm_ptr->coll_fns->Iscatter != NULL);
-    mpi_errno = comm_ptr->coll_fns->Iscatter(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, root, comm_ptr, s);
+    MPIU_Assert(comm_ptr->coll_fns->Iscatter_sched != NULL);
+    mpi_errno = comm_ptr->coll_fns->Iscatter_sched(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, root, comm_ptr, s);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
     mpi_errno = MPID_Sched_start(&s, comm_ptr, tag, &reqp);

@@ -121,9 +121,9 @@ int MPIR_Iscatterv_impl(const void *sendbuf, const int sendcounts[], const int d
     *request = MPI_REQUEST_NULL;
 
     MPIU_Assert(comm_ptr->coll_fns != NULL);
-    if (comm_ptr->coll_fns->Iscatterv_optimized != NULL) {
+    if (comm_ptr->coll_fns->Iscatterv_req != NULL) {
         /* --BEGIN USEREXTENSION-- */
-        mpi_errno = comm_ptr->coll_fns->Iscatterv_optimized(sendbuf, sendcounts, displs, sendtype,
+        mpi_errno = comm_ptr->coll_fns->Iscatterv_req(sendbuf, sendcounts, displs, sendtype,
                                                            recvbuf, recvcount, recvtype,
                                                            root, comm_ptr, &reqp);
         if (reqp) {
@@ -142,8 +142,8 @@ int MPIR_Iscatterv_impl(const void *sendbuf, const int sendcounts[], const int d
     mpi_errno = MPID_Sched_create(&s);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
-    MPIU_Assert(comm_ptr->coll_fns->Iscatterv != NULL);
-    mpi_errno = comm_ptr->coll_fns->Iscatterv(sendbuf, sendcounts, displs, sendtype, recvbuf, recvcount, recvtype, root, comm_ptr, s);
+    MPIU_Assert(comm_ptr->coll_fns->Iscatterv_sched != NULL);
+    mpi_errno = comm_ptr->coll_fns->Iscatterv_sched(sendbuf, sendcounts, displs, sendtype, recvbuf, recvcount, recvtype, root, comm_ptr, s);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
     mpi_errno = MPID_Sched_start(&s, comm_ptr, tag, &reqp);

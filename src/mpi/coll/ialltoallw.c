@@ -256,9 +256,9 @@ int MPIR_Ialltoallw_impl(const void *sendbuf, const int sendcounts[], const int 
     *request = MPI_REQUEST_NULL;
 
     MPIU_Assert(comm_ptr->coll_fns != NULL);
-    if (comm_ptr->coll_fns->Ialltoallw_optimized != NULL) {
+    if (comm_ptr->coll_fns->Ialltoallw_req != NULL) {
         /* --BEGIN USEREXTENSION-- */
-        mpi_errno = comm_ptr->coll_fns->Ialltoallw_optimized(sendbuf, sendcounts, sdispls, sendtypes, recvbuf, recvcounts, rdispls, recvtypes, comm_ptr, &reqp);
+        mpi_errno = comm_ptr->coll_fns->Ialltoallw_req(sendbuf, sendcounts, sdispls, sendtypes, recvbuf, recvcounts, rdispls, recvtypes, comm_ptr, &reqp);
         if (reqp) {
             *request = reqp->handle;
             if (mpi_errno) MPIU_ERR_POP(mpi_errno);
@@ -276,8 +276,8 @@ int MPIR_Ialltoallw_impl(const void *sendbuf, const int sendcounts[], const int 
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
     MPIU_Assert(comm_ptr->coll_fns != NULL);
-    MPIU_Assert(comm_ptr->coll_fns->Ialltoallw != NULL);
-    mpi_errno = comm_ptr->coll_fns->Ialltoallw(sendbuf, sendcounts, sdispls, sendtypes, recvbuf, recvcounts, rdispls, recvtypes, comm_ptr, s);
+    MPIU_Assert(comm_ptr->coll_fns->Ialltoallw_sched != NULL);
+    mpi_errno = comm_ptr->coll_fns->Ialltoallw_sched(sendbuf, sendcounts, sdispls, sendtypes, recvbuf, recvcounts, rdispls, recvtypes, comm_ptr, s);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
     mpi_errno = MPID_Sched_start(&s, comm_ptr, tag, &reqp);

@@ -188,9 +188,9 @@ int MPIR_Iexscan_impl(const void *sendbuf, void *recvbuf, int count, MPI_Datatyp
     *request = MPI_REQUEST_NULL;
 
     MPIU_Assert(comm_ptr->coll_fns != NULL);
-    if (comm_ptr->coll_fns->Iexscan_optimized != NULL) {
+    if (comm_ptr->coll_fns->Iexscan_req != NULL) {
         /* --BEGIN USEREXTENSION-- */
-        mpi_errno = comm_ptr->coll_fns->Iexscan_optimized(sendbuf, recvbuf, count, datatype, op, comm_ptr, &reqp);
+        mpi_errno = comm_ptr->coll_fns->Iexscan_req(sendbuf, recvbuf, count, datatype, op, comm_ptr, &reqp);
         if (reqp) {
             *request = reqp->handle;
             if (mpi_errno) MPIU_ERR_POP(mpi_errno);
@@ -208,8 +208,8 @@ int MPIR_Iexscan_impl(const void *sendbuf, void *recvbuf, int count, MPI_Datatyp
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
     MPIU_Assert(comm_ptr->coll_fns != NULL);
-    MPIU_Assert(comm_ptr->coll_fns->Iexscan != NULL);
-    mpi_errno = comm_ptr->coll_fns->Iexscan(sendbuf, recvbuf, count, datatype, op, comm_ptr, s);
+    MPIU_Assert(comm_ptr->coll_fns->Iexscan_sched != NULL);
+    mpi_errno = comm_ptr->coll_fns->Iexscan_sched(sendbuf, recvbuf, count, datatype, op, comm_ptr, s);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
     mpi_errno = MPID_Sched_start(&s, comm_ptr, tag, &reqp);
