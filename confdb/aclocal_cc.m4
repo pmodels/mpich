@@ -492,13 +492,20 @@ if test "$enable_strict_done" != "yes" ; then
     #       should never be tolerated.  This also ensures that we get quick
     #       compilation failures rather than later link failures that usually
     #       come from a function name typo.
+    #   -Wcast-align -- Casting alignment warnings.  This is an
+    #       important check, but is temporarily disabled, since it is
+    #       throwing too many (correct) warnings currently, causing us
+    #       to miss other warnings.
+    #   -Wshorten-64-to-32 -- Bad type-casting warnings.  This is an
+    #       important check, but is temporarily disabled, since it is
+    #       throwing too many (correct) warnings currently, causing us
+    #       to miss other warnings.
     # the embedded newlines in this string are safe because we evaluate each
     # argument in the for-loop below and append them to the CFLAGS with a space
     # as the separator instead
     pac_common_strict_flags="
         -Wall
         -Wextra
-        -Wshorten-64-to-32
         -Wno-missing-field-initializers
         -Wstrict-prototypes
         -Wmissing-prototypes
@@ -512,7 +519,6 @@ if test "$enable_strict_done" != "yes" ; then
         -Wno-endif-labels
         -Wpointer-arith
         -Wbad-function-cast
-        -Wcast-align
         -Wwrite-strings
         -Wno-sign-compare
         -Wold-style-definition
