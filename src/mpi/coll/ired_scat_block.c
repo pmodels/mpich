@@ -727,7 +727,6 @@ int MPIR_Ireduce_scatter_block_noncomm(const void *sendbuf, void *recvbuf, int r
                                           (outgoing_data + recv_offset*true_extent),
                                           size, datatype, op, s);
             if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-            buf0_was_inout = buf0_was_inout;
         }
         else {
             /* lower ranked value so need to call op(my_data, received_data) */

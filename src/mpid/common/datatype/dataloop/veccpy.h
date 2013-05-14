@@ -54,7 +54,8 @@
 {								\
     type * l_src = (type *) src, * l_dest = (type *) dest;	\
     type * tmp_src = l_src;                                     \
-    register int _i, j, k;		                        \
+    register int k;                                             \
+    register unsigned long _i, j;                               \
     unsigned long total_count = count * nelms;                  \
     const DLOOP_Offset l_stride = stride;				\
                                                                 \
@@ -166,8 +167,8 @@
 {								\
     type * l_src = (type *) src, * l_dest = (type *) dest;	\
     type * tmp_src = l_src;                                     \
-    register int _i, j, k;		                        \
-    unsigned long total_count = count * nelms;                  \
+    register int k;                                                     \
+    register unsigned long _i, j, total_count = count * nelms;          \
     const DLOOP_Offset l_stride = stride;				\
                                                                 \
     if (nelms == 1) {                                           \
@@ -278,7 +279,8 @@
 {								\
     type * l_src = (type *) src, * l_dest = (type *) dest;	\
     type * tmp_dest = l_dest;                                   \
-    register int _i, j, k;		                        \
+    register int k;                                             \
+    register unsigned long _i, j;                               \
     unsigned long total_count = count * nelms;                  \
     const DLOOP_Offset l_stride = stride;				\
                                                                 \
@@ -390,7 +392,8 @@
 {								\
     type * l_src = (type *) src, * l_dest = (type *) dest;	\
     type * tmp_dest = l_dest;                                   \
-    register int _i, j, k;		                        \
+    register int k;                                             \
+    register unsigned long _i, j;                               \
     unsigned long total_count = count * nelms;                  \
     const DLOOP_Offset l_stride = stride;				\
                                                                 \

@@ -98,7 +98,7 @@ static MPIU_INSTR_Duration_count *list_block;     /* Inner; while waiting */
 
 static int MPIDI_CH3I_Send_lock_msg(int dest, int lock_type, MPID_Win *win_ptr);
 static int MPIDI_CH3I_Send_unlock_msg(int dest, MPID_Win *win_ptr);
-static int MPIDI_CH3I_Send_flush_msg(int dest, MPID_Win *win_ptr);
+/* static int MPIDI_CH3I_Send_flush_msg(int dest, MPID_Win *win_ptr); */
 static int MPIDI_CH3I_Wait_for_lock_granted(MPID_Win *win_ptr, int target_rank);
 static int MPIDI_CH3I_Acquire_local_lock(MPID_Win *win_ptr, int lock_mode);
 static int MPIDI_CH3I_Send_rma_msg(MPIDI_RMA_Op_t * rma_op, MPID_Win * win_ptr,
@@ -2877,6 +2877,9 @@ static int MPIDI_CH3I_Send_unlock_msg(int dest, MPID_Win *win_ptr) {
 }
 
 
+/* Commented out function to squash a warning, but retaining the code
+ * for later use. */
+#if 0
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3I_Send_flush_msg
 #undef FCNAME
@@ -2916,6 +2919,7 @@ static int MPIDI_CH3I_Send_flush_msg(int dest, MPID_Win *win_ptr) {
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }
+#endif
 
 
 #undef FUNCNAME

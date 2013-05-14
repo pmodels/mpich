@@ -155,8 +155,8 @@ int PREPEND_PREFIX(Segment_vector_m2m)(DLOOP_Offset *blocks_p,
 				       void *bufp ATTRIBUTE((unused)),
 				       void *v_paramp)
 {
-    DLOOP_Count i, blocks_left, whole_count;
-    DLOOP_Offset el_size;
+    DLOOP_Count i;
+    DLOOP_Offset el_size, whole_count, blocks_left;
     struct PREPEND_PREFIX(m2m_params) *paramp = v_paramp;
     char *cbufp;
 
@@ -295,7 +295,11 @@ int PREPEND_PREFIX(Segment_blkidx_m2m)(DLOOP_Offset *blocks_p,
 					 rel_off + offsetarray[curblock]);
 	cbufp = (char*) paramp->userbuf + rel_off + offsetarray[curblock];
 
-	if (blocklen > blocks_left) blocklen = blocks_left;
+        /* Type-cast blocklen to a large type for comparison, but once
+         * we confirm that it is smaller than the blocks_left, we can
+         * safely type-cast blocks_left to a smaller type */
+	if ((DLOOP_Offset) blocklen > blocks_left)
+            blocklen = (DLOOP_Count) blocks_left;
 
 	if (paramp->direction == DLOOP_M2M_TO_USERBUF) {
 	    src  = paramp->streambuf;

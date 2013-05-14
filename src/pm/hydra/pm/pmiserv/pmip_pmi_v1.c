@@ -139,7 +139,7 @@ static HYD_status cache_put_flush(int fd)
 static HYD_status fn_init(int fd, char *args[])
 {
     int pmi_version, pmi_subversion, i;
-    const char *tmp;
+    const char *tmp = NULL;
     static int global_init = 1;
     HYD_status status = HYD_SUCCESS;
 
