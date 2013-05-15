@@ -156,9 +156,6 @@ parameters:
 
     - category    : collective
       name        : GATHERV_INTER_SSEND_MIN_PROCS
-      # backwards compatibility
-      abs-alt-env :
-                    - MPICH_GATHERV_MIN_PROCS
       type        : int
       default     : 32
       description : >-
@@ -191,92 +188,19 @@ parameters:
       default     : true
       description : >-
         Use qsort(3) in the implementation of MPI_Comm_split instead of bubble sort.
-    ##############################################################
-    # RMA parameters
-    - category    : rma
-      name        : CH3_RMA_ACC_IMMED
-      type        : boolean
-      default     : true
-      description : >-
-        Use the immediate accumulate optimization
 
-    - category    : rma
-      name        : CH3_RMA_NREQUEST_THRESHOLD
-      type        : int
-      default     : 4000
-      description : >-
-        Threshold at which the RMA implementation attempts to complete requests
-        while completing RMA operations and while using the lazy synchonization
-        approach.  Change this value if programs fail because they run out of 
-        requests or other internal resources
-
-    - category    : rma
-      name        : CH3_RMA_NREQUEST_NEW_THRESHOLD
-      type        : int
-      default     : 128
-      description : >-
-        Threshold for the number of new requests since the last attempt to
-        complete pending requests.  Higher values can increase performance, 
-        but may run the risk of exceeding the available number of requests
-        or other internal resources.
-
-    - category    : rma
-      name        : CH3_RMA_LOCK_IMMED
+  ##############################################################
+    # debugging parameters
+    - category    : debugger
+      name        : DEBUG_HOLD
       type        : boolean
       default     : false
       description : >-
-        Issue a request for the passive target RMA lock immediately.  Default
-        behavior is to defer the lock request until the call to MPI_Win_unlock.
-
-    - category    : rma
-      name        : CH3_RMA_MERGE_LOCK_OP_UNLOCK
-      type        : boolean
-      default     : true
-      description : >-
-        Enable/disable an optimization that merges lock, op, and unlock
-        messages, for single-operation passive target epochs.
-
-    ##############################################################
-    # intranode communication parameters
-    - category    : intranode
-      name        : CH3_NOLOCAL
-      alt-env     :
-                    - CH3_NO_LOCAL
-      type        : boolean
-      default     : false
-      description : >-
-        If true, force all processes to operate as though all processes
-        are located on another node.  For example, this disables shared
-        memory communication hierarchical collectives.
-
-    - category    : intranode
-      name        : CH3_ODD_EVEN_CLIQUES
-      alt-env     :
-                    - CH3_EVEN_ODD_CLIQUES
-      type        : boolean
-      default     : false
-      description : >-
-        If true, odd procs on a node are seen as local to each other, and even
-        procs on a node are seen as local to each other.  Used for debugging on
-        a single machine.
-
-    - category    : intranode
-      name        : NEMESIS_POLLS_BEFORE_YIELD
-      type        : int
-      default     : 1000
-      description : >-
-        When MPICH is in a busy waiting loop, it will periodically
-        call a function to yield the processor.  This parameter sets
-        the number of loops before the yield function is called.  A 
-        value of 0 disables yielding.
-
-    - category    : developer
-      name        : MEMDUMP
-      type        : boolean
-      default     : true
-      description : >-
-        If true, list any memory that was allocated by MPICH and that
-        remains allocated when MPI_Finalize completes.
+        If true, causes processes to wait in MPI_Init and
+        MPI_Initthread for a debugger to be attached.  Once the
+        debugger has attached, the variable 'hold' should be set to 0
+        in order to allow the process to continue (e.g., in gdb, "set
+        hold=0").
 
     - category    : debugger
       name        : PROCTABLE_SIZE
@@ -292,145 +216,6 @@ parameters:
       description : >-
         If true, dump the proctable entries at MPIR_WaitForDebugger-time.
         (currently compile-time disabled by "#if 0")
-
-    - category    : error_handling
-      name        : ERROR_CHECKING
-      type        : boolean
-      default     : true
-      description : >-
-        If true, perform checks for errors, typically to verify valid inputs
-        to MPI routines.  Only effective when MPICH is configured with
-        --enable-error-checking=runtime .
-
-    - category    : error_handling
-      name        : PRINT_ERROR_STACK
-      type        : boolean
-      default     : true
-      description : >-
-        If true, print an error stack trace at error handling time.
-
-    - category    : error_handling
-      name        : CHOP_ERROR_STACK
-      type        : int
-      default     : 0
-      description : >-
-        If >0, truncate error stack output lines this many characters
-        wide.  If 0, do not truncate, and if <0 use a sensible default.
-
-    - category    : intranode
-      name        : NEMESIS_LMT_DMA_THRESHOLD
-      type        : int
-      # 2048*1024 == 2MiB
-      default     : 2097152
-      description : >-
-        Messages larger than this size will use the "dma" (knem)
-        intranode LMT implementation, if it is enabled and available.
-
-    - category    : nemesis
-      name        : NEMESIS_NETMOD
-      type        : string
-      default     : ""
-      description : >-
-        If non-empty, this parameter specifies which network module
-        should be used for communication.
-
-    - category    : nemesis
-      name        : CH3_INTERFACE_HOSTNAME
-      alt-env     :
-                    - INTERFACE_HOSTNAME
-      type        : string
-      defaultliteral : NULL
-      description : >-
-        If non-NULL, this parameter specifies the IP address that
-        other processes should use when connecting to this process.
-        This parameter is mutually exclusive with the
-        MPIR_PARAM_CH3_NETWORK_IFACE parameter and it is an error to set them
-        both.
-
-    - category    : nemesis
-      name        : NEMESIS_TCP_NETWORK_IFACE
-      alt-env     :
-                    - NETWORK_IFACE
-      type        : string
-      defaultliteral : NULL
-      description : >-
-        If non-NULL, this parameter specifies which pseudo-ethernet
-        interface the tcp netmod should use (e.g., "eth1", "ib0"). 
-        Note, this is a Linux-specific parameter.
-        This parameter is mutually exclusive with the
-        MPICH_INTERFACE_HOSTNAME parameter and it is an error to set
-        them both.
-
-    - category    : nemesis
-      name        : NEMESIS_TCP_HOST_LOOKUP_RETRIES
-      type        : int
-      default     : 10
-      description : >-
-        This parameter controls the number of times to retry the 
-        gethostbyname() function before giving up.
-
-    - category    : nemesis
-      name        : NEMESIS_SHM_EAGER_MAX_SZ
-      type        : int
-      default     : -1
-      description : >-
-        This parameter controls the message size at which Nemesis 
-        switches from eager to rendezvous mode for shared memory.
-        If this parameter is set to -1, then Nemesis will choose
-        an appropriate value.
-
-    - category    : nemesis
-      name        : NEMESIS_SHM_READY_EAGER_MAX_SZ
-      type        : int
-      default     : -2
-      description : >-
-        This parameter controls the message size at which Nemesis
-        switches from eager to rendezvous mode for ready-send
-        messages.  If this parameter is set to -1, then ready messages
-        will always be sent eagerly.  If this parameter is set to -2,
-        then Nemesis will choose an appropriate value.
-
-    - category    : nemesis
-      name        : NEMESIS_PORTALS_COMM_OVERRIDES
-      type        : boolean
-      default     : true
-      description : >-
-        If set to false, communication override functionality will be
-        disabled for netmods that provide the override feature.
-        # Note the netmod must implement this functionality by not
-        # setting the comm_ops table in any VC.
-
-    - category    : ch3
-      name        : CH3_EAGER_MAX_MSG_SIZE
-      type        : int
-      default     : 131072
-      description : >-
-        This parameter controls the message size at which CH3 switches
-        from eager to rendezvous mode.
-
-
-  ##############################################################
-    # debugging parameters
-    - category    : debugger
-      name        : DEBUG_HOLD
-      type        : boolean
-      default     : false
-      description : >-
-        If true, causes processes to wait in MPI_Init and
-        MPI_Initthread for a debugger to be attached.  Once the
-        debugger has attached, the variable 'hold' should be set to 0
-        in order to allow the process to continue (e.g., in gdb, "set
-        hold=0").
-
-  ##############################################################
-    # checkpointing parameters
-    - category    : checkpointing
-      name        : NEMESIS_ENABLE_CKPOINT
-      type        : boolean
-      default     : false
-      description : >-
-        If true, enables checkpointing support and returns an error if
-        checkpointing library cannot be initialized.
 
   ##############################################################
     # fault-tolerance parameters
@@ -462,31 +247,244 @@ parameters:
         work.
 
   ############################
-    # sockets parameters
-    - category    : sockets
-      name        : CH3_PORT_RANGE
-      alt-env     : 
-                    - PORTRANGE
-                    - PORT_RANGE
-      type        : range
-      default     : "0:0"
-      description : >-
-        The MPICH_PORT_RANGE environment variable allows you to
-        specify the range of TCP ports to be used by the process
-        manager and the MPICH library. The format of this variable is
-        <low>:<high>.
-
-  ############################
     # threads parameters
     - category    : threads
       name        : CTXID_EAGER_SIZE
       type        : int
       default     : 2
       description : >-
-        The MPICH_CTXID_EAGER_SIZE environment variable allows you to
+        The MPIR_PARAM_CTXID_EAGER_SIZE environment variable allows you to
         specify how many words in the context ID mask will be set aside
         for the eager allocation protocol.  If the application is running
         out of context IDs, reducing this value may help.
+
+    ##############################################################
+    # other MPI-level parameters
+    - category    : developer
+      name        : MEMDUMP
+      type        : boolean
+      default     : true
+      description : >-
+        If true, list any memory that was allocated by MPICH and that
+        remains allocated when MPI_Finalize completes.
+
+    - category    : error_handling
+      name        : ERROR_CHECKING
+      type        : boolean
+      default     : true
+      description : >-
+        If true, perform checks for errors, typically to verify valid inputs
+        to MPI routines.  Only effective when MPICH is configured with
+        --enable-error-checking=runtime .
+
+    - category    : error_handling
+      name        : PRINT_ERROR_STACK
+      type        : boolean
+      default     : true
+      description : >-
+        If true, print an error stack trace at error handling time.
+
+    - category    : error_handling
+      name        : CHOP_ERROR_STACK
+      type        : int
+      default     : 0
+      description : >-
+        If >0, truncate error stack output lines this many characters
+        wide.  If 0, do not truncate, and if <0 use a sensible default.
+
+    ##############################################################
+    # ch3 parameters
+    - category    : ch3
+      name        : CH3_RMA_ACC_IMMED
+      type        : boolean
+      default     : true
+      description : >-
+        Use the immediate accumulate optimization
+
+    - category    : ch3
+      name        : CH3_RMA_NREQUEST_THRESHOLD
+      type        : int
+      default     : 4000
+      description : >-
+        Threshold at which the RMA implementation attempts to complete requests
+        while completing RMA operations and while using the lazy synchonization
+        approach.  Change this value if programs fail because they run out of
+        requests or other internal resources
+
+    - category    : ch3
+      name        : CH3_RMA_NREQUEST_NEW_THRESHOLD
+      type        : int
+      default     : 128
+      description : >-
+        Threshold for the number of new requests since the last attempt to
+        complete pending requests.  Higher values can increase performance,
+        but may run the risk of exceeding the available number of requests
+        or other internal resources.
+
+    - category    : ch3
+      name        : CH3_RMA_LOCK_IMMED
+      type        : boolean
+      default     : false
+      description : >-
+        Issue a request for the passive target RMA lock immediately.  Default
+        behavior is to defer the lock request until the call to MPI_Win_unlock.
+
+    - category    : ch3
+      name        : CH3_RMA_MERGE_LOCK_OP_UNLOCK
+      type        : boolean
+      default     : true
+      description : >-
+        Enable/disable an optimization that merges lock, op, and unlock
+        messages, for single-operation passive target epochs.
+
+    - category    : ch3
+      name        : CH3_NOLOCAL
+      alt-env     :
+                    - CH3_NO_LOCAL
+      type        : boolean
+      default     : false
+      description : >-
+        If true, force all processes to operate as though all processes
+        are located on another node.  For example, this disables shared
+        memory communication hierarchical collectives.
+
+    - category    : ch3
+      name        : CH3_ODD_EVEN_CLIQUES
+      alt-env     :
+                    - CH3_EVEN_ODD_CLIQUES
+      type        : boolean
+      default     : false
+      description : >-
+        If true, odd procs on a node are seen as local to each other, and even
+        procs on a node are seen as local to each other.  Used for debugging on
+        a single machine.
+
+    - category    : ch3
+      name        : CH3_INTERFACE_HOSTNAME
+      alt-env     :
+                    - INTERFACE_HOSTNAME
+      type        : string
+      defaultliteral : NULL
+      description : >-
+        If non-NULL, this parameter specifies the IP address that
+        other processes should use when connecting to this process.
+        This parameter is mutually exclusive with the
+        MPIR_PARAM_CH3_NETWORK_IFACE parameter and it is an error to set them
+        both.
+
+    - category    : ch3
+      name        : CH3_EAGER_MAX_MSG_SIZE
+      type        : int
+      default     : 131072
+      description : >-
+        This parameter controls the message size at which CH3 switches
+        from eager to rendezvous mode.
+
+    - category    : ch3
+      name        : CH3_PORT_RANGE
+      alt-env     :
+                    - PORTRANGE
+                    - PORT_RANGE
+      type        : range
+      default     : "0:0"
+      description : >-
+        The MPIR_PARAM_CH3_PORT_RANGE environment variable allows you to
+        specify the range of TCP ports to be used by the process
+        manager and the MPICH library. The format of this variable is
+        <low>:<high>.
+
+    ##############################################################
+    # nemesis parameters
+    - category    : nemesis
+      name        : NEMESIS_POLLS_BEFORE_YIELD
+      type        : int
+      default     : 1000
+      description : >-
+        When MPICH is in a busy waiting loop, it will periodically
+        call a function to yield the processor.  This parameter sets
+        the number of loops before the yield function is called.  A
+        value of 0 disables yielding.
+
+    - category    : nemesis
+      name        : NEMESIS_LMT_DMA_THRESHOLD
+      type        : int
+      default     : 2097152
+      description : >-
+        Messages larger than this size will use the "dma" (knem)
+        intranode LMT implementation, if it is enabled and available.
+
+    - category    : nemesis
+      name        : NEMESIS_NETMOD
+      type        : string
+      default     : ""
+      description : >-
+        If non-empty, this parameter specifies which network module
+        should be used for communication.
+
+    - category    : nemesis
+      name        : NEMESIS_SHM_EAGER_MAX_SZ
+      type        : int
+      default     : -1
+      description : >-
+        This parameter controls the message size at which Nemesis
+        switches from eager to rendezvous mode for shared memory.
+        If this parameter is set to -1, then Nemesis will choose
+        an appropriate value.
+
+    - category    : nemesis
+      name        : NEMESIS_SHM_READY_EAGER_MAX_SZ
+      type        : int
+      default     : -2
+      description : >-
+        This parameter controls the message size at which Nemesis
+        switches from eager to rendezvous mode for ready-send
+        messages.  If this parameter is set to -1, then ready messages
+        will always be sent eagerly.  If this parameter is set to -2,
+        then Nemesis will choose an appropriate value.
+
+    - category    : nemesis
+      name        : NEMESIS_ENABLE_CKPOINT
+      type        : boolean
+      default     : false
+      description : >-
+        If true, enables checkpointing support and returns an error if
+        checkpointing library cannot be initialized.
+
+    ##############################################################
+    # nemesis TCP parameters
+    - category    : nemesis
+      name        : NEMESIS_TCP_NETWORK_IFACE
+      alt-env     :
+                    - NETWORK_IFACE
+      type        : string
+      defaultliteral : NULL
+      description : >-
+        If non-NULL, this parameter specifies which pseudo-ethernet
+        interface the tcp netmod should use (e.g., "eth1", "ib0").
+        Note, this is a Linux-specific parameter.
+        This parameter is mutually exclusive with the
+        MPIR_PARAM_CH3_INTERFACE_HOSTNAME parameter and it is an error to set
+        them both.
+
+    - category    : nemesis
+      name        : NEMESIS_TCP_HOST_LOOKUP_RETRIES
+      type        : int
+      default     : 10
+      description : >-
+        This parameter controls the number of times to retry the
+        gethostbyname() function before giving up.
+
+    ##############################################################
+    # nemesis portals parameters
+    - category    : nemesis
+      name        : NEMESIS_PORTALS_COMM_OVERRIDES
+      type        : boolean
+      default     : true
+      description : >-
+        If set to false, communication override functionality will be
+        disabled for netmods that provide the override feature.
+        # Note the netmod must implement this functionality by not
+        # setting the comm_ops table in any VC.
 
 ...
 
