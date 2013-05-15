@@ -330,7 +330,17 @@ foreach my $p (@{$params->{parameters}}) {
     else {
         $default = fmt_default($p->{name}, $p->{default}, $p->{defaultliteral}, $p->{type});
     }
+
+    if ($p->{class} eq "device") {
+	printf PARAM_C "#if defined MPID_%s\n", $p->{name};
+	printf PARAM_C "%s ${uc_ns}_%s = MPID_%s;\n", type2ctype($p->{type}), $p->{name},
+	               $p->{name};
+	printf PARAM_C "#else\n";
+    }
     printf PARAM_C "%s ${uc_ns}_%s = %s;\n", type2ctype($p->{type}), $p->{name}, $default;
+    if ($p->{class} eq "device") {
+	printf PARAM_C "#endif /* MPID_%s */\n\n", $p->{name};
+    }
 }
 
 # FIXME the mpi_errno bit is MPICH-specific

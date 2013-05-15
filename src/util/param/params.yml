@@ -13,6 +13,11 @@
 # Listing "FOO" as a parameter name will cause two environment variables
 # to be examined by default: MPIR_PARAM_FOO and MPICH_FOO, with the
 # MPIR_PARAM value having priority.
+#
+# Each parameter has a class associated with it.  The following
+# classes are defined: "device", and "none".  Setting it to "device"
+# will allow the device to override the default value.
+
 categories:
     - name        : collective
       description : parameters that control collective communication behavior
@@ -52,6 +57,7 @@ parameters:
       name        : ALLTOALL_SHORT_MSG_SIZE
       type        : int
       default     : 256
+      class       : device
       description : >-
         the short message algorithm will be used if the per-destination
         message size (sendcount*size(sendtype)) is <= this value
@@ -60,6 +66,7 @@ parameters:
       name        : ALLTOALL_MEDIUM_MSG_SIZE
       type        : int
       default     : 32768
+      class       : device
       description : >-
         the medium message algorithm will be used if the per-destination
         message size (sendcount*size(sendtype)) is <= this value and
@@ -69,6 +76,7 @@ parameters:
       name        : ALLTOALL_THROTTLE
       type        : int
       default     : 32
+      class       : device
       description : >-
         max no. of irecvs/isends posted at a time in some alltoall
         algorithms. Setting it to 0 causes all irecvs/isends to be
@@ -78,6 +86,7 @@ parameters:
       name        : REDSCAT_COMMUTATIVE_LONG_MSG_SIZE
       type        : int
       default     : 524288
+      class       : device
       description : >-
         the long message algorithm will be used if the operation is commutative
         and the send buffer size is >= this value (in bytes)
@@ -86,6 +95,7 @@ parameters:
       name        : BCAST_MIN_PROCS
       type        : int
       default     : 8
+      class       : device
       description : >-
         the minimum number of processes in a communicator to use a non-binomial
         broadcast algorithm
@@ -94,6 +104,7 @@ parameters:
       name        : BCAST_SHORT_MSG_SIZE
       type        : int
       default     : 12288
+      class       : device
       description : >-
         the short message algorithm will be used if the send buffer size is <
         this value (in bytes)
@@ -102,6 +113,7 @@ parameters:
       name        : BCAST_LONG_MSG_SIZE
       type        : int
       default     : 524288
+      class       : device
       description : >-
         the long message algorithm will be used if the send buffer size is >=
         this value (in bytes)
@@ -110,6 +122,7 @@ parameters:
       name        : ALLGATHER_SHORT_MSG_SIZE
       type        : int
       default     : 81920
+      class       : device
       description : >-
         For MPI_Allgather and MPI_Allgatherv, the short message algorithm will
         be used if the send buffer size is < this value (in bytes).
@@ -118,6 +131,7 @@ parameters:
       name        : ALLGATHER_LONG_MSG_SIZE
       type        : int
       default     : 524288
+      class       : device
       description : >-
         For MPI_Allgather and MPI_Allgatherv, the long message algorithm will be
         used if the send buffer size is >= this value (in bytes)
@@ -126,6 +140,7 @@ parameters:
       name        : REDUCE_SHORT_MSG_SIZE
       type        : int
       default     : 2048
+      class       : device
       description : >-
         the short message algorithm will be used if the send buffer size is <=
         this value (in bytes)
@@ -134,6 +149,7 @@ parameters:
       name        : ALLREDUCE_SHORT_MSG_SIZE
       type        : int
       default     : 2048
+      class       : device
       description : >-
         the short message algorithm will be used if the send buffer size is <=
         this value (in bytes)
@@ -142,6 +158,7 @@ parameters:
       name        : GATHER_VSMALL_MSG_SIZE
       type        : int
       default     : 1024
+      class       : device
       description : >-
         use a temporary buffer for intracommunicator MPI_Gather if the send
         buffer size is < this value (in bytes)
@@ -150,6 +167,7 @@ parameters:
       name        : GATHER_INTER_SHORT_MSG_SIZE
       type        : int
       default     : 2048
+      class       : device
       description : >-
         use the short message algorithm for intercommunicator MPI_Gather if the
         send buffer size is < this value (in bytes)
@@ -158,6 +176,7 @@ parameters:
       name        : GATHERV_INTER_SSEND_MIN_PROCS
       type        : int
       default     : 32
+      class       : device
       description : >-
         Use Ssend (synchronous send) for intercommunicator MPI_Gatherv if the
         "group B" size is >= this value.  Specifying "-1" always avoids using
@@ -168,6 +187,7 @@ parameters:
       name        : SCATTER_INTER_SHORT_MSG_SIZE
       type        : int
       default     : 2048
+      class       : device
       description : >-
         use the short message algorithm for intercommunicator MPI_Scatter if the
         send buffer size is < this value (in bytes)
@@ -176,6 +196,7 @@ parameters:
       name        : ALLGATHERV_PIPELINE_MSG_SIZE
       type        : int
       default     : 32768
+      class       : device
       description : >-
         The smallest message size that will be used for the pipelined, large-message,
         ring algorithm in the MPI_Allgatherv implementation.
@@ -186,6 +207,7 @@ parameters:
       name        : COMM_SPLIT_USE_QSORT
       type        : boolean
       default     : true
+      class       : device
       description : >-
         Use qsort(3) in the implementation of MPI_Comm_split instead of bubble sort.
 
@@ -195,6 +217,7 @@ parameters:
       name        : DEBUG_HOLD
       type        : boolean
       default     : false
+      class       : device
       description : >-
         If true, causes processes to wait in MPI_Init and
         MPI_Initthread for a debugger to be attached.  Once the
@@ -206,6 +229,7 @@ parameters:
       name        : PROCTABLE_SIZE
       type        : int
       default     : 64
+      class       : device
       description : >-
         Size of the "MPIR" debugger interface proctable (process table).
 
@@ -213,6 +237,7 @@ parameters:
       name        : PROCTABLE_PRINT
       type        : boolean
       default     : true
+      class       : device
       description : >-
         If true, dump the proctable entries at MPIR_WaitForDebugger-time.
         (currently compile-time disabled by "#if 0")
@@ -223,6 +248,7 @@ parameters:
       name        : ENABLE_COLL_FT_RET
       type        : boolean
       default     : false
+      class       : device
       description : >-
         NOT COMPATIBLE WITH NONBLOCKING COLLECTIVES (see tt#1601)!!!
         Collectives called on a communicator with a failed process
@@ -237,6 +263,7 @@ parameters:
       name        : ABORT_ON_LEAKED_HANDLES
       type        : boolean
       default     : false
+      class       : device
       description : >-
         If true, MPI will call MPI_Abort at MPI_Finalize if any MPI object
         handles have been leaked.  For example, if MPI_Comm_dup is called
@@ -252,6 +279,7 @@ parameters:
       name        : CTXID_EAGER_SIZE
       type        : int
       default     : 2
+      class       : device
       description : >-
         The MPIR_PARAM_CTXID_EAGER_SIZE environment variable allows you to
         specify how many words in the context ID mask will be set aside
@@ -264,6 +292,7 @@ parameters:
       name        : MEMDUMP
       type        : boolean
       default     : true
+      class       : device
       description : >-
         If true, list any memory that was allocated by MPICH and that
         remains allocated when MPI_Finalize completes.
@@ -272,6 +301,7 @@ parameters:
       name        : ERROR_CHECKING
       type        : boolean
       default     : true
+      class       : device
       description : >-
         If true, perform checks for errors, typically to verify valid inputs
         to MPI routines.  Only effective when MPICH is configured with
@@ -281,6 +311,7 @@ parameters:
       name        : PRINT_ERROR_STACK
       type        : boolean
       default     : true
+      class       : device
       description : >-
         If true, print an error stack trace at error handling time.
 
@@ -288,6 +319,7 @@ parameters:
       name        : CHOP_ERROR_STACK
       type        : int
       default     : 0
+      class       : device
       description : >-
         If >0, truncate error stack output lines this many characters
         wide.  If 0, do not truncate, and if <0 use a sensible default.
@@ -298,6 +330,7 @@ parameters:
       name        : CH3_RMA_ACC_IMMED
       type        : boolean
       default     : true
+      class       : none
       description : >-
         Use the immediate accumulate optimization
 
@@ -305,6 +338,7 @@ parameters:
       name        : CH3_RMA_NREQUEST_THRESHOLD
       type        : int
       default     : 4000
+      class       : none
       description : >-
         Threshold at which the RMA implementation attempts to complete requests
         while completing RMA operations and while using the lazy synchonization
@@ -315,6 +349,7 @@ parameters:
       name        : CH3_RMA_NREQUEST_NEW_THRESHOLD
       type        : int
       default     : 128
+      class       : none
       description : >-
         Threshold for the number of new requests since the last attempt to
         complete pending requests.  Higher values can increase performance,
@@ -325,6 +360,7 @@ parameters:
       name        : CH3_RMA_LOCK_IMMED
       type        : boolean
       default     : false
+      class       : none
       description : >-
         Issue a request for the passive target RMA lock immediately.  Default
         behavior is to defer the lock request until the call to MPI_Win_unlock.
@@ -333,6 +369,7 @@ parameters:
       name        : CH3_RMA_MERGE_LOCK_OP_UNLOCK
       type        : boolean
       default     : true
+      class       : none
       description : >-
         Enable/disable an optimization that merges lock, op, and unlock
         messages, for single-operation passive target epochs.
@@ -343,6 +380,7 @@ parameters:
                     - CH3_NO_LOCAL
       type        : boolean
       default     : false
+      class       : none
       description : >-
         If true, force all processes to operate as though all processes
         are located on another node.  For example, this disables shared
@@ -354,6 +392,7 @@ parameters:
                     - CH3_EVEN_ODD_CLIQUES
       type        : boolean
       default     : false
+      class       : none
       description : >-
         If true, odd procs on a node are seen as local to each other, and even
         procs on a node are seen as local to each other.  Used for debugging on
@@ -365,6 +404,7 @@ parameters:
                     - INTERFACE_HOSTNAME
       type        : string
       defaultliteral : NULL
+      class       : none
       description : >-
         If non-NULL, this parameter specifies the IP address that
         other processes should use when connecting to this process.
@@ -376,6 +416,7 @@ parameters:
       name        : CH3_EAGER_MAX_MSG_SIZE
       type        : int
       default     : 131072
+      class       : none
       description : >-
         This parameter controls the message size at which CH3 switches
         from eager to rendezvous mode.
@@ -387,6 +428,7 @@ parameters:
                     - PORT_RANGE
       type        : range
       default     : "0:0"
+      class       : none
       description : >-
         The MPIR_PARAM_CH3_PORT_RANGE environment variable allows you to
         specify the range of TCP ports to be used by the process
@@ -399,6 +441,7 @@ parameters:
       name        : NEMESIS_POLLS_BEFORE_YIELD
       type        : int
       default     : 1000
+      class       : none
       description : >-
         When MPICH is in a busy waiting loop, it will periodically
         call a function to yield the processor.  This parameter sets
@@ -409,6 +452,7 @@ parameters:
       name        : NEMESIS_LMT_DMA_THRESHOLD
       type        : int
       default     : 2097152
+      class       : none
       description : >-
         Messages larger than this size will use the "dma" (knem)
         intranode LMT implementation, if it is enabled and available.
@@ -417,6 +461,7 @@ parameters:
       name        : NEMESIS_NETMOD
       type        : string
       default     : ""
+      class       : none
       description : >-
         If non-empty, this parameter specifies which network module
         should be used for communication.
@@ -425,6 +470,7 @@ parameters:
       name        : NEMESIS_SHM_EAGER_MAX_SZ
       type        : int
       default     : -1
+      class       : none
       description : >-
         This parameter controls the message size at which Nemesis
         switches from eager to rendezvous mode for shared memory.
@@ -435,6 +481,7 @@ parameters:
       name        : NEMESIS_SHM_READY_EAGER_MAX_SZ
       type        : int
       default     : -2
+      class       : none
       description : >-
         This parameter controls the message size at which Nemesis
         switches from eager to rendezvous mode for ready-send
@@ -446,6 +493,7 @@ parameters:
       name        : NEMESIS_ENABLE_CKPOINT
       type        : boolean
       default     : false
+      class       : none
       description : >-
         If true, enables checkpointing support and returns an error if
         checkpointing library cannot be initialized.
@@ -458,6 +506,7 @@ parameters:
                     - NETWORK_IFACE
       type        : string
       defaultliteral : NULL
+      class       : none
       description : >-
         If non-NULL, this parameter specifies which pseudo-ethernet
         interface the tcp netmod should use (e.g., "eth1", "ib0").
@@ -470,6 +519,7 @@ parameters:
       name        : NEMESIS_TCP_HOST_LOOKUP_RETRIES
       type        : int
       default     : 10
+      class       : none
       description : >-
         This parameter controls the number of times to retry the
         gethostbyname() function before giving up.
@@ -480,6 +530,7 @@ parameters:
       name        : NEMESIS_PORTALS_COMM_OVERRIDES
       type        : boolean
       default     : true
+      class       : none
       description : >-
         If set to false, communication override functionality will be
         disabled for netmods that provide the override feature.
