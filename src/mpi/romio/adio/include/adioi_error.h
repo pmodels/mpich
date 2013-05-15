@@ -168,10 +168,10 @@ then the dup operation will succeed */
     MPI_Info dupinfo;                           \
     int tmp_err = MPI_SUCCESS;                  \
     if (info == MPI_INFO_NULL) {                \
-	error_code = MPI_Info_dup(info, &dupinfo);  \
 	dupinfo = MPI_INFO_NULL;                    \
-    } else {                                        \
 	error_code = MPI_SUCCESS;                   \
+    } else {                                        \
+	error_code = MPI_Info_dup(info, &dupinfo);  \
     }                                               \
     MPI_Allreduce(&error_code, &tmp_err, 1, MPI_INT, MPI_MAX, comm); \
     if(tmp_err != MPI_SUCCESS) {                                            \
