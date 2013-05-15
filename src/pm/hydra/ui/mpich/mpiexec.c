@@ -311,7 +311,7 @@ int main(int argc, char **argv)
      * range. */
     if (MPL_env2str("MPIEXEC_PORTRANGE", (const char **) &HYD_server_info.port_range) ||
         MPL_env2str("MPIEXEC_PORT_RANGE", (const char **) &HYD_server_info.port_range) ||
-        MPL_env2str("MPICH_PORT_RANGE", (const char **) &HYD_server_info.port_range))
+        MPL_env2str("MPIR_PARAM_CH3_PORT_RANGE", (const char **) &HYD_server_info.port_range))
         HYD_server_info.port_range = HYDU_strdup(HYD_server_info.port_range);
 
     /* Add the stdout/stderr callback handlers */

@@ -333,10 +333,10 @@ int MPIDU_Sock_listen(struct MPIDU_Sock_set * sock_set, void * user_ptr,
 	int portnum;
 	/* see if we actually want to find values within a range */
 
-        MPIU_ERR_CHKANDJUMP(MPIR_PARAM_PORT_RANGE.low < 0 || MPIR_PARAM_PORT_RANGE.low > MPIR_PARAM_PORT_RANGE.high, mpi_errno, MPI_ERR_OTHER, "**badportrange");
+        MPIU_ERR_CHKANDJUMP(MPIR_PARAM_CH3_PORT_RANGE.low < 0 || MPIR_PARAM_CH3_PORT_RANGE.low > MPIR_PARAM_CH3_PORT_RANGE.high, mpi_errno, MPI_ERR_OTHER, "**badportrange");
 
         /* default MPICH_PORT_RANGE is {0,0} so bind will use any available port */
-        for (portnum = MPIR_PARAM_PORT_RANGE.low; portnum <= MPIR_PARAM_PORT_RANGE.high; ++portnum) {
+        for (portnum = MPIR_PARAM_CH3_PORT_RANGE.low; portnum <= MPIR_PARAM_CH3_PORT_RANGE.high; ++portnum) {
 	    memset( (void *)&addr, 0, sizeof(addr) );
 	    addr.sin_family      = AF_INET;
 	    addr.sin_addr.s_addr = htonl(INADDR_ANY);

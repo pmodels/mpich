@@ -142,11 +142,11 @@ static int easy_create_ranged(SOCKET *sock, int port, unsigned long addr)
 	return mpi_errno;
     }
     
-    MPIU_ERR_CHKANDJUMP(MPIR_PARAM_PORT_RANGE.low < 0 || MPIR_PARAM_PORT_RANGE.low > MPIR_PARAM_PORT_RANGE.high, mpi_errno, MPI_ERR_OTHER, "**badportrange");
-    if (port == 0 && MPIR_PARAM_PORT_RANGE.low != 0 && MPIR_PARAM_PORT_RANGE.high != 0)
+    MPIU_ERR_CHKANDJUMP(MPIR_PARAM_CH3_PORT_RANGE.low < 0 || MPIR_PARAM_CH3_PORT_RANGE.low > MPIR_PARAM_CH3_PORT_RANGE.high, mpi_errno, MPI_ERR_OTHER, "**badportrange");
+    if (port == 0 && MPIR_PARAM_CH3_PORT_RANGE.low != 0 && MPIR_PARAM_CH3_PORT_RANGE.high != 0)
     {
 	use_range = 1;
-	port = MPIR_PARAM_PORT_RANGE.low;
+	port = MPIR_PARAM_CH3_PORT_RANGE.low;
     }
 
     memset(&sockAddr,0,sizeof(sockAddr));
@@ -162,7 +162,7 @@ static int easy_create_ranged(SOCKET *sock, int port, unsigned long addr)
 	    if (use_range)
 	    {
 		port++;
-		if (port > MPIR_PARAM_PORT_RANGE.high)
+		if (port > MPIR_PARAM_CH3_PORT_RANGE.high)
 		{
 		    mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPIDU_SOCK_ERR_FAIL, "**socket", 0);
 		    return mpi_errno;

@@ -421,13 +421,13 @@ int MPID_nem_newtcp_module_bind (MPIU_SOCKW_Sockfd_t sockfd)
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_NEWTCP_MODULE_BIND);
    
-    MPIU_ERR_CHKANDJUMP(MPIR_PARAM_PORT_RANGE.low < 0 || MPIR_PARAM_PORT_RANGE.low > MPIR_PARAM_PORT_RANGE.high, mpi_errno, MPI_ERR_OTHER, "**badportrange");
+    MPIU_ERR_CHKANDJUMP(MPIR_PARAM_CH3_PORT_RANGE.low < 0 || MPIR_PARAM_CH3_PORT_RANGE.low > MPIR_PARAM_CH3_PORT_RANGE.high, mpi_errno, MPI_ERR_OTHER, "**badportrange");
 
     memset((void *)&sin, 0, sizeof(sin));
     sin.sin_family      = AF_INET;
     sin.sin_addr.s_addr = htonl(INADDR_ANY);
 
-    mpi_errno = MPIU_SOCKW_Bind_port_range(sockfd, &sin, MPIR_PARAM_PORT_RANGE.low, MPIR_PARAM_PORT_RANGE.high);
+    mpi_errno = MPIU_SOCKW_Bind_port_range(sockfd, &sin, MPIR_PARAM_CH3_PORT_RANGE.low, MPIR_PARAM_CH3_PORT_RANGE.high);
     if(mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
 
  fn_exit:

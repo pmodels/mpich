@@ -194,14 +194,14 @@ parameters:
     ##############################################################
     # RMA parameters
     - category    : rma
-      name        : RMA_ACC_IMMED
+      name        : CH3_RMA_ACC_IMMED
       type        : boolean
       default     : true
       description : >-
         Use the immediate accumulate optimization
 
     - category    : rma
-      name        : RMA_NREQUEST_THRESHOLD
+      name        : CH3_RMA_NREQUEST_THRESHOLD
       type        : int
       default     : 4000
       description : >-
@@ -211,7 +211,7 @@ parameters:
         requests or other internal resources
 
     - category    : rma
-      name        : RMA_NREQUEST_NEW_THRESHOLD
+      name        : CH3_RMA_NREQUEST_NEW_THRESHOLD
       type        : int
       default     : 128
       description : >-
@@ -221,7 +221,7 @@ parameters:
         or other internal resources.
 
     - category    : rma
-      name        : RMA_LOCK_IMMED
+      name        : CH3_RMA_LOCK_IMMED
       type        : boolean
       default     : false
       description : >-
@@ -229,7 +229,7 @@ parameters:
         behavior is to defer the lock request until the call to MPI_Win_unlock.
 
     - category    : rma
-      name        : RMA_MERGE_LOCK_OP_UNLOCK
+      name        : CH3_RMA_MERGE_LOCK_OP_UNLOCK
       type        : boolean
       default     : true
       description : >-
@@ -239,9 +239,9 @@ parameters:
     ##############################################################
     # intranode communication parameters
     - category    : intranode
-      name        : NOLOCAL
+      name        : CH3_NOLOCAL
       alt-env     :
-                    - NO_LOCAL
+                    - CH3_NO_LOCAL
       type        : boolean
       default     : false
       description : >-
@@ -250,9 +250,9 @@ parameters:
         memory communication hierarchical collectives.
 
     - category    : intranode
-      name        : ODD_EVEN_CLIQUES
+      name        : CH3_ODD_EVEN_CLIQUES
       alt-env     :
-                    - EVEN_ODD_CLIQUES
+                    - CH3_EVEN_ODD_CLIQUES
       type        : boolean
       default     : false
       description : >-
@@ -261,7 +261,7 @@ parameters:
         a single machine.
 
     - category    : intranode
-      name        : POLLS_BEFORE_YIELD
+      name        : NEMESIS_POLLS_BEFORE_YIELD
       type        : int
       default     : 1000
       description : >-
@@ -318,7 +318,7 @@ parameters:
         wide.  If 0, do not truncate, and if <0 use a sensible default.
 
     - category    : intranode
-      name        : NEM_LMT_DMA_THRESHOLD
+      name        : NEMESIS_LMT_DMA_THRESHOLD
       type        : int
       # 2048*1024 == 2MiB
       default     : 2097152
@@ -335,18 +335,22 @@ parameters:
         should be used for communication.
 
     - category    : nemesis
-      name        : INTERFACE_HOSTNAME
+      name        : CH3_INTERFACE_HOSTNAME
+      alt-env     :
+                    - INTERFACE_HOSTNAME
       type        : string
       defaultliteral : NULL
       description : >-
         If non-NULL, this parameter specifies the IP address that
         other processes should use when connecting to this process.
         This parameter is mutually exclusive with the
-        MPICH_NETWORK_IFACE parameter and it is an error to set them
+        MPIR_PARAM_CH3_NETWORK_IFACE parameter and it is an error to set them
         both.
 
     - category    : nemesis
-      name        : NETWORK_IFACE
+      name        : NEMESIS_TCP_NETWORK_IFACE
+      alt-env     :
+                    - NETWORK_IFACE
       type        : string
       defaultliteral : NULL
       description : >-
@@ -358,7 +362,7 @@ parameters:
         them both.
 
     - category    : nemesis
-      name        : HOST_LOOKUP_RETRIES
+      name        : NEMESIS_TCP_HOST_LOOKUP_RETRIES
       type        : int
       default     : 10
       description : >-
@@ -366,7 +370,7 @@ parameters:
         gethostbyname() function before giving up.
 
     - category    : nemesis
-      name        : SHM_EAGER_MAX_SZ
+      name        : NEMESIS_SHM_EAGER_MAX_SZ
       type        : int
       default     : -1
       description : >-
@@ -376,7 +380,7 @@ parameters:
         an appropriate value.
 
     - category    : nemesis
-      name        : SHM_READY_EAGER_MAX_SZ
+      name        : NEMESIS_SHM_READY_EAGER_MAX_SZ
       type        : int
       default     : -2
       description : >-
@@ -387,13 +391,12 @@ parameters:
         then Nemesis will choose an appropriate value.
 
     - category    : nemesis
-      name        : COMM_OVERRIDES
+      name        : NEMESIS_PORTALS_COMM_OVERRIDES
       type        : boolean
       default     : true
       description : >-
         If set to false, communication override functionality will be
-        disabled for netmods that provide the override feature.  Some
-        netmods may not honor this flag.
+        disabled for netmods that provide the override feature.
         # Note the netmod must implement this functionality by not
         # setting the comm_ops table in any VC.
 
@@ -422,7 +425,7 @@ parameters:
   ##############################################################
     # checkpointing parameters
     - category    : checkpointing
-      name        : ENABLE_CKPOINT
+      name        : NEMESIS_ENABLE_CKPOINT
       type        : boolean
       default     : false
       description : >-
@@ -461,9 +464,10 @@ parameters:
   ############################
     # sockets parameters
     - category    : sockets
-      name        : PORT_RANGE
+      name        : CH3_PORT_RANGE
       alt-env     : 
                     - PORTRANGE
+                    - PORT_RANGE
       type        : range
       default     : "0:0"
       description : >-

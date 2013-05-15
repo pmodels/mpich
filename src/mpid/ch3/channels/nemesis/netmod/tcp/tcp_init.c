@@ -234,16 +234,16 @@ static int GetSockInterfaceAddr(int myRank, char *ifname, int maxIfname,
     MPIU_Assert(maxIfname);
     ifname[0] = '\0';
 
-    MPIU_ERR_CHKANDJUMP(MPIR_PARAM_INTERFACE_HOSTNAME && MPIR_PARAM_NETWORK_IFACE, mpi_errno, MPI_ERR_OTHER, "**ifname_and_hostname");
+    MPIU_ERR_CHKANDJUMP(MPIR_PARAM_CH3_INTERFACE_HOSTNAME && MPIR_PARAM_NEMESIS_TCP_NETWORK_IFACE, mpi_errno, MPI_ERR_OTHER, "**ifname_and_hostname");
     
     /* Set "not found" for ifaddr */
     ifaddr->len = 0;
 
     /* Check if user specified ethernet interface name, e.g., ib0, eth1 */
-    if (MPIR_PARAM_NETWORK_IFACE) {
+    if (MPIR_PARAM_NEMESIS_TCP_NETWORK_IFACE) {
 	int len;
-        mpi_errno = MPIDI_Get_IP_for_iface(MPIR_PARAM_NETWORK_IFACE, ifaddr, &ifaddrFound);
-        MPIU_ERR_CHKANDJUMP1(mpi_errno || !ifaddrFound, mpi_errno, MPI_ERR_OTHER, "**iface_notfound", "**iface_notfound %s", MPIR_PARAM_NETWORK_IFACE);
+        mpi_errno = MPIDI_Get_IP_for_iface(MPIR_PARAM_NEMESIS_TCP_NETWORK_IFACE, ifaddr, &ifaddrFound);
+        MPIU_ERR_CHKANDJUMP1(mpi_errno || !ifaddrFound, mpi_errno, MPI_ERR_OTHER, "**iface_notfound", "**iface_notfound %s", MPIR_PARAM_NEMESIS_TCP_NETWORK_IFACE);
         
         MPIU_DBG_MSG_FMT(CH3_CONNECT, VERBOSE, (MPIU_DBG_FDEST,
                                                 "ifaddrFound=TRUE ifaddr->type=%d ifaddr->len=%d ifaddr->ifaddr[0-3]=%#08x",
@@ -256,7 +256,7 @@ static int GetSockInterfaceAddr(int myRank, char *ifname, int maxIfname,
     }
 
     /* Check for a host name supplied through an environment variable */
-    ifname_string = MPIR_PARAM_INTERFACE_HOSTNAME;
+    ifname_string = MPIR_PARAM_CH3_INTERFACE_HOSTNAME;
     if (!ifname_string) {
 	/* See if there is a per-process name for the interfaces (e.g.,
 	   the process manager only delievers the same values for the 
@@ -305,7 +305,7 @@ static int GetSockInterfaceAddr(int myRank, char *ifname, int maxIfname,
     if (!ifaddrFound) {
         int i;
 	struct hostent *info = NULL;
-        for (i = 0; i < MPIR_PARAM_HOST_LOOKUP_RETRIES; ++i) {
+        for (i = 0; i < MPIR_PARAM_NEMESIS_TCP_HOST_LOOKUP_RETRIES; ++i) {
             info = gethostbyname( ifname_string );
             if (info || h_errno != TRY_AGAIN)
                 break;
@@ -558,11 +558,11 @@ int MPID_nem_tcp_bind (int sockfd)
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_TCP_BIND);
    
-    MPIU_ERR_CHKANDJUMP(MPIR_PARAM_PORT_RANGE.low < 0 || MPIR_PARAM_PORT_RANGE.low > MPIR_PARAM_PORT_RANGE.high, mpi_errno, MPI_ERR_OTHER, "**badportrange");
+    MPIU_ERR_CHKANDJUMP(MPIR_PARAM_CH3_PORT_RANGE.low < 0 || MPIR_PARAM_CH3_PORT_RANGE.low > MPIR_PARAM_CH3_PORT_RANGE.high, mpi_errno, MPI_ERR_OTHER, "**badportrange");
 
     /* default MPICH_PORT_RANGE is {0,0} so bind will use any available port */
     ret = 0;
-    for (port = MPIR_PARAM_PORT_RANGE.low; port <= MPIR_PARAM_PORT_RANGE.high; ++port)
+    for (port = MPIR_PARAM_CH3_PORT_RANGE.low; port <= MPIR_PARAM_CH3_PORT_RANGE.high; ++port)
     {
         memset ((void *)&sin, 0, sizeof(sin));
         sin.sin_family      = AF_INET;

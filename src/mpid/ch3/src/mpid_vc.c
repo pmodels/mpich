@@ -1120,7 +1120,7 @@ int MPIDI_Populate_vc_node_ids(MPIDI_PG_t *pg, int our_pg_rank)
 #ifdef ENABLED_NO_LOCAL
     no_local = 1;
 #else
-    no_local = MPIR_PARAM_NOLOCAL;
+    no_local = MPIR_PARAM_CH3_NOLOCAL;
 #endif
 
     /* Used for debugging on a single machine: Odd procs on a node are
@@ -1129,7 +1129,7 @@ int MPIDI_Populate_vc_node_ids(MPIDI_PG_t *pg, int our_pg_rank)
 #ifdef ENABLED_ODD_EVEN_CLIQUES
     odd_even_cliques = 1;
 #else
-    odd_even_cliques = MPIR_PARAM_ODD_EVEN_CLIQUES;
+    odd_even_cliques = MPIR_PARAM_CH3_ODD_EVEN_CLIQUES;
 #endif
 
     if (no_local) {

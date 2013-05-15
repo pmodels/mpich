@@ -513,15 +513,15 @@ MPID_nem_vc_init (MPIDI_VC_t *vc)
         vc_ch->lmt_active_lmt      = NULL;
         vc_ch->lmt_enqueued        = FALSE;
 
-        if (MPIR_PARAM_SHM_EAGER_MAX_SZ == -1)
+        if (MPIR_PARAM_NEMESIS_SHM_EAGER_MAX_SZ == -1)
             vc->eager_max_msg_sz = MPID_NEM_MPICH_DATA_LEN - sizeof(MPIDI_CH3_Pkt_t);
         else
-            vc->eager_max_msg_sz = MPIR_PARAM_SHM_EAGER_MAX_SZ;
+            vc->eager_max_msg_sz = MPIR_PARAM_NEMESIS_SHM_EAGER_MAX_SZ;
 
-        if (MPIR_PARAM_SHM_READY_EAGER_MAX_SZ == -2)
+        if (MPIR_PARAM_NEMESIS_SHM_READY_EAGER_MAX_SZ == -2)
             vc->ready_eager_max_msg_sz = vc->eager_max_msg_sz; /* force local ready sends to use LMT */
         else
-            vc->ready_eager_max_msg_sz = MPIR_PARAM_SHM_READY_EAGER_MAX_SZ;
+            vc->ready_eager_max_msg_sz = MPIR_PARAM_NEMESIS_SHM_READY_EAGER_MAX_SZ;
 
         MPIU_DBG_MSG(VC, VERBOSE, "vc using shared memory");
     }
