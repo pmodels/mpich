@@ -226,6 +226,15 @@ parameters:
         Enable SMP aware broadcast.
 
     - category    : collective
+      name        : MAX_SMP_BCAST_MSG_SIZE
+      type        : int
+      default     : 0
+      class       : device
+      description : >-
+        Maximum message size for which SMP-aware broadcast is used.  A
+        value of '0' uses SMP-aware broadcast for all message sizes.
+
+    - category    : collective
       name        : ENABLE_SMP_REDUCE
       type        : boolean
       default     : true
@@ -234,12 +243,30 @@ parameters:
         Enable SMP aware reduce.
 
     - category    : collective
+      name        : MAX_SMP_REDUCE_MSG_SIZE
+      type        : int
+      default     : 0
+      class       : device
+      description : >-
+        Maximum message size for which SMP-aware reduce is used.  A
+        value of '0' uses SMP-aware reduce for all message sizes.
+
+    - category    : collective
       name        : ENABLE_SMP_ALLREDUCE
       type        : boolean
       default     : true
       class       : device
       description : >-
         Enable SMP aware allreduce.
+
+    - category    : collective
+      name        : MAX_SMP_ALLREDUCE_MSG_SIZE
+      type        : int
+      default     : 0
+      class       : device
+      description : >-
+        Maximum message size for which SMP-aware allreduce is used.  A
+        value of '0' uses SMP-aware allreduce for all message sizes.
 
     ##############################################################
     # communicator parameters
