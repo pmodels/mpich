@@ -154,7 +154,7 @@ int MPIR_Allreduce_intra (
 
     is_commutative = MPIR_Op_is_commutative(op);
 
-    if (MPIR_PARAM_ENABLE_SMP_COLLECTIVES) {
+    if (MPIR_PARAM_ENABLE_SMP_COLLECTIVES && MPIR_PARAM_ENABLE_SMP_ALLREDUCE) {
     /* is the op commutative? We do SMP optimizations only if it is. */
     if (MPIR_Comm_is_node_aware(comm_ptr) && is_commutative) {
         /* on each node, do a reduce to the local root */ 

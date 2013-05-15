@@ -207,8 +207,39 @@ parameters:
       default     : true
       class       : device
       description : >-
-        The smallest message size that will be used for the pipelined, large-message,
-        ring algorithm in the MPI_Allgatherv implementation.
+        Enable SMP aware collective communication.
+
+    - category    : collective
+      name        : ENABLE_SMP_BARRIER
+      type        : boolean
+      default     : true
+      class       : device
+      description : >-
+        Enable SMP aware barrier.
+
+    - category    : collective
+      name        : ENABLE_SMP_BCAST
+      type        : boolean
+      default     : true
+      class       : device
+      description : >-
+        Enable SMP aware broadcast.
+
+    - category    : collective
+      name        : ENABLE_SMP_REDUCE
+      type        : boolean
+      default     : true
+      class       : device
+      description : >-
+        Enable SMP aware reduce.
+
+    - category    : collective
+      name        : ENABLE_SMP_ALLREDUCE
+      type        : boolean
+      default     : true
+      class       : device
+      description : >-
+        Enable SMP aware allreduce.
 
     ##############################################################
     # communicator parameters

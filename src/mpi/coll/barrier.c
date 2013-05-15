@@ -270,7 +270,8 @@ int MPIR_Barrier_impl(MPID_Comm *comm_ptr, int *errflag)
     else
     {
         if (comm_ptr->comm_kind == MPID_INTRACOMM) {
-            if (MPIR_PARAM_ENABLE_SMP_COLLECTIVES && MPIR_Comm_is_node_aware(comm_ptr)) {
+            if (MPIR_PARAM_ENABLE_SMP_COLLECTIVES && MPIR_PARAM_ENABLE_SMP_BARRIER &&
+                MPIR_Comm_is_node_aware(comm_ptr)) {
 
                 /* do the intranode barrier on all nodes */
                 if (comm_ptr->node_comm != NULL)
