@@ -589,6 +589,8 @@ int MPIR_Iallgather_impl(const void *sendbuf, int sendcount, MPI_Datatype sendty
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_Request *reqp = NULL;
+    int tag = -1;
+    MPID_Sched_t s = MPID_SCHED_NULL;
 
     *request = MPI_REQUEST_NULL;
 
@@ -603,9 +605,6 @@ int MPIR_Iallgather_impl(const void *sendbuf, int sendcount, MPI_Datatype sendty
         }
         /* --END USEREXTENSION-- */
     }
-
-    int tag = -1;
-    MPID_Sched_t s = MPID_SCHED_NULL;
 
     mpi_errno = MPID_Sched_next_tag(comm_ptr, &tag);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);

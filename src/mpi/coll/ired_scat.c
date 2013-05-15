@@ -1009,6 +1009,8 @@ int MPIR_Ireduce_scatter_impl(const void *sendbuf, void *recvbuf, const int recv
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_Request *reqp = NULL;
+    int tag = -1;
+    MPID_Sched_t s = MPID_SCHED_NULL;
 
     *request = MPI_REQUEST_NULL;
 
@@ -1025,9 +1027,6 @@ int MPIR_Ireduce_scatter_impl(const void *sendbuf, void *recvbuf, const int recv
         }
         /* --END USEREXTENSION-- */
     }
-
-    int tag = -1;
-    MPID_Sched_t s = MPID_SCHED_NULL;
 
     mpi_errno = MPID_Sched_next_tag(comm_ptr, &tag);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
