@@ -167,7 +167,12 @@ then the dup operation will succeed */
 #define MPIO_CHECK_INFO_ALL(info, error_code, comm) {     \
     MPI_Info dupinfo;                           \
     int tmp_err = MPI_SUCCESS;                  \
-    error_code = MPI_Info_dup(info, &dupinfo);  \
+    if (info == MPI_INFO_NULL) {                \
+	error_code = MPI_Info_dup(info, &dupinfo);  \
+	dupinfo = MPI_INFO_NULL;                    \
+    } else {                                        \
+	error_code = MPI_SUCCESS;                   \
+    }                                               \
     MPI_Allreduce(&error_code, &tmp_err, 1, MPI_INT, MPI_MAX, comm); \
     if(tmp_err != MPI_SUCCESS) {                                            \
 	error_code = MPIO_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, \
