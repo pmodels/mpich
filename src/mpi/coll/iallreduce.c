@@ -571,9 +571,8 @@ int MPIR_Iallreduce_SMP(const void *sendbuf, void *recvbuf, int count, MPI_Datat
     MPID_Comm *nc;
     MPID_Comm *nrc;
 
-#if !defined(USE_SMP_COLLECTIVES)
-    MPID_Abort(comm_ptr, MPI_ERR_OTHER, 1, "SMP collectives are disabled!");
-#endif
+    if (!MPIR_PARAM_ENABLE_SMP_COLLECTIVES)
+        MPID_Abort(comm_ptr, MPI_ERR_OTHER, 1, "SMP collectives are disabled!");
     MPIU_Assert(MPIR_Comm_is_node_aware(comm_ptr));
 
     nc = comm_ptr->node_comm;

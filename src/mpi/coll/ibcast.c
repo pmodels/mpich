@@ -671,9 +671,8 @@ int MPIR_Ibcast_SMP(void *buffer, int count, MPI_Datatype datatype, int root, MP
     int mpi_errno = MPI_SUCCESS;
     int type_size, is_homogeneous;
 
-#if !defined(USE_SMP_COLLECTIVES)
-    MPID_Abort(comm_ptr, MPI_ERR_OTHER, 1, "SMP collectives are disabled!");
-#endif
+    if (!MPIR_PARAM_ENABLE_SMP_COLLECTIVES)
+        MPID_Abort(comm_ptr, MPI_ERR_OTHER, 1, "SMP collectives are disabled!");
     MPIU_Assert(MPIR_Comm_is_node_aware(comm_ptr));
 
     is_homogeneous = 1;

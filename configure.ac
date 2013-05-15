@@ -444,14 +444,6 @@ AC_ARG_ENABLE(debuginfo,
 	AC_HELP_STRING([--enable-debuginfo], [Enable support for debuggers]),,
 	enable_debuginfo=no)
 
-AC_ARG_ENABLE(smpcoll,
-	AC_HELP_STRING([--enable-smpcoll],
-			[Enable support for SMP/multi-core aware collectives]),
-	smpcoll=$enableval,smpcoll=yes)
-if test $smpcoll = "yes" ; then
-   AC_DEFINE(USE_SMP_COLLECTIVES,1,[define to enable SMP/multi-core aware collectives])
-fi
-
 
 ## Enable creation of libtool-style versioning or no versioning
 AC_ARG_ENABLE(versioning,

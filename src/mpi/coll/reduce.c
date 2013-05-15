@@ -685,14 +685,13 @@ int MPIR_Reduce_intra (
     int mpi_errno_ret = MPI_SUCCESS;
     int comm_size, is_commutative, type_size, pof2;
     MPID_Op *op_ptr;
-#if defined(USE_SMP_COLLECTIVES)
     MPIU_CHKLMEM_DECL(1);
-#endif
+
     if (count == 0) return MPI_SUCCESS;
     /* check if multiple threads are calling this collective function */
     MPIDU_ERR_CHECK_MULTIPLE_THREADS_ENTER( comm_ptr );
 
-#if defined(USE_SMP_COLLECTIVES)
+    if (MPIR_PARAM_ENABLE_SMP_COLLECTIVES) {
     /* is the op commutative? We do SMP optimizations only if it is. */
     if (HANDLE_GET_KIND(op) == HANDLE_KIND_BUILTIN)
         is_commutative = 1;
@@ -803,8 +802,7 @@ int MPIR_Reduce_intra (
         
         goto fn_exit;
     }
-#endif
-
+    }
 
     comm_size = comm_ptr->local_size;
 
@@ -841,9 +839,9 @@ int MPIR_Reduce_intra (
   fn_exit:
     /* check if multiple threads are calling this collective function */
     MPIDU_ERR_CHECK_MULTIPLE_THREADS_EXIT( comm_ptr );
-#if defined(USE_SMP_COLLECTIVES)
+
     MPIU_CHKLMEM_FREEALL();
-#endif
+
     if (mpi_errno_ret)
         mpi_errno = mpi_errno_ret;
     else if (*errflag)

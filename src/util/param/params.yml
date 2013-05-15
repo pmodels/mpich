@@ -201,6 +201,15 @@ parameters:
         The smallest message size that will be used for the pipelined, large-message,
         ring algorithm in the MPI_Allgatherv implementation.
 
+    - category    : collective
+      name        : ENABLE_SMP_COLLECTIVES
+      type        : boolean
+      default     : true
+      class       : device
+      description : >-
+        The smallest message size that will be used for the pipelined, large-message,
+        ring algorithm in the MPI_Allgatherv implementation.
+
     ##############################################################
     # communicator parameters
     - category    : communicator

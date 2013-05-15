@@ -917,9 +917,8 @@ static int MPIR_SMP_Bcast(
     MPI_Status status;
     int recvd_size;
 
-#if !defined(USE_SMP_COLLECTIVES)
-    MPIU_Assert(0);
-#endif
+    if (!MPIR_PARAM_ENABLE_SMP_COLLECTIVES)
+        MPIU_Assert(0);
     MPIU_Assert(MPIR_Comm_is_node_aware(comm_ptr));
 
     is_homogeneous = 1;
@@ -1151,8 +1150,7 @@ int MPIR_Bcast_intra (
 
     if (count == 0) goto fn_exit;
 
-#if defined(USE_SMP_COLLECTIVES)
-    if (MPIR_Comm_is_node_aware(comm_ptr)) {
+    if (MPIR_PARAM_ENABLE_SMP_COLLECTIVES && MPIR_Comm_is_node_aware(comm_ptr)) {
         mpi_errno = MPIR_SMP_Bcast(buffer, count, datatype, root, comm_ptr, errflag);
         if (mpi_errno) {
             /* for communication errors, just record the error but continue */
@@ -1162,7 +1160,6 @@ int MPIR_Bcast_intra (
         }
         goto fn_exit;
     }
-#endif
 
     comm_size = comm_ptr->local_size;
 
