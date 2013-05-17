@@ -186,6 +186,85 @@ PAC_APPEND_FLAG([-I${master_top_srcdir}/src/mpid/common/locks],    [CPPFLAGS])
 PAC_APPEND_FLAG([-I${master_top_srcdir}/src/mpid/common/thread],   [CPPFLAGS])
 PAC_APPEND_FLAG([-I${master_top_srcdir}/src/mpid/common/sched],    [CPPFLAGS])
 
+
+dnl
+dnl Check for PAMI_CLIENT_NONCONTIG
+dnl
+AC_MSG_CHECKING([for PAMI_CLIENT_NONCONTIG support])
+have_pami_client_noncontig=0
+AC_COMPILE_IFELSE(
+  [AC_LANG_PROGRAM([[#include "pami.h"]],
+                   [[int foo = PAMI_CLIENT_NONCONTIG;]])],
+  have_pami_client_noncontig=1
+)
+if test "$have_pami_client_noncontig" != "0"; then
+  AC_DEFINE(HAVE_PAMI_CLIENT_NONCONTIG,1,[Define if PAMI_CLIENT_NONCONTIG is defined in pami.h])
+  AC_MSG_RESULT('yes')
+else
+  AC_MSG_RESULT('no')
+fi
+
+dnl
+dnl Check for PAMI_CLIENT_MEMORY_OPTIMIZE
+dnl
+AC_MSG_CHECKING([for PAMI_CLIENT_MEMORY_OPTIMIZE support])
+have_pami_client_memory_optimize=0
+AC_COMPILE_IFELSE(
+  [AC_LANG_PROGRAM([[#include "pami.h"]],
+                   [[int foo = PAMI_CLIENT_MEMORY_OPTIMIZE;]])],
+  have_pami_client_memory_optimize=1
+)
+if test "$have_pami_client_memory_optimize" != "0"; then
+  AC_DEFINE(HAVE_PAMI_CLIENT_MEMORY_OPTIMIZE,1,[Define if PAMI_CLIENT_MEMORY_OPTIMIZE is defined in pami.h])
+  AC_MSG_RESULT('yes')
+else
+  AC_MSG_RESULT('no')
+fi
+
+dnl
+dnl Check for PAMI_GEOMETRY_NONCONTIG
+dnl
+AC_MSG_CHECKING([for PAMI_GEOMETRY_NONCONTIG support])
+have_pami_geometry_noncontig=0
+AC_COMPILE_IFELSE(
+  [AC_LANG_PROGRAM([[#include "pami.h"]],
+                   [[int foo = PAMI_GEOMETRY_NONCONTIG;]])],
+  have_pami_geometry_noncontig=1
+)
+if test "$have_pami_geometry_noncontig" != "0"; then
+  AC_DEFINE(HAVE_PAMI_GEOMETRY_NONCONTIG,1,[Define if PAMI_GEOMETRY_NONCONTIG is defined in pami.h])
+  AC_MSG_RESULT('yes')
+else
+  AC_MSG_RESULT('no')
+fi
+
+dnl
+dnl Check for PAMI_GEOMETRY_MEMORY_OPTIMIZE
+dnl
+AC_MSG_CHECKING([for PAMI_GEOMETRY_MEMORY_OPTIMIZE support])
+have_pami_geometry_memory_optimize=0
+AC_COMPILE_IFELSE(
+  [AC_LANG_PROGRAM([[#include "pami.h"]],
+                   [[int foo = PAMI_GEOMETRY_MEMORY_OPTIMIZE;]])],
+  have_pami_geometry_memory_optimize=1
+)
+if test "$have_pami_geometry_memory_optimize" != "0"; then
+  AC_DEFINE(HAVE_PAMI_GEOMETRY_MEMORY_OPTIMIZE,1,[Define if PAMI_GEOMETRY_MEMORY_OPTIMIZE is defined in pami.h])
+  AC_MSG_RESULT('yes')
+else
+  AC_MSG_RESULT('no')
+fi
+
+
+
+
+
+
+
+
+
+
+
 ])dnl end AM_COND_IF(BUILD_PAMID,...)
 ])dnl end _BODY
 

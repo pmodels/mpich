@@ -265,25 +265,30 @@ void MPIDI_Coll_comm_create(MPID_Comm *comm)
          fprintf(stderr,"create geometry tasks %p {%u..%u}\n", comm->mpid.tasks, MPID_VCR_GET_LPID(comm->vcr, 0),MPID_VCR_GET_LPID(comm->vcr, comm->local_size-1));
 
       pami_configuration_t config[3];
+      size_t numconfigs = 0;
+#ifdef HAVE_PAMI_GEOMETRY_NONCONTIG
       config[0].name = PAMI_GEOMETRY_NONCONTIG;
       if(MPIDI_Process.optimized.memory & MPID_OPT_LVL_NONCONTIG) 
          config[0].value.intval = 0; // Disable non-contig, pamid doesn't use pami for non-contig data collectives
       else
          config[0].value.intval = 1; // Enable non-contig even though pamid doesn't use pami for non-contig data collectives, 
                                      // we still possibly want those collectives for other reasons.
-      size_t numconfigs = 1;
+      ++numconfigs;
+#endif
       if(MPIDI_Process.optimized.subcomms)
       {
          config[numconfigs].name = PAMI_GEOMETRY_OPTIMIZE;
          config[numconfigs].value.intval = 1; 
          ++numconfigs;
       }
+#ifdef HAVE_PAMI_GEOMETRY_MEMORY_OPTIMIZE
       if(MPIDI_Process.optimized.memory) 
       {
          config[numconfigs].name = PAMI_GEOMETRY_MEMORY_OPTIMIZE;
          config[numconfigs].value.intval = MPIDI_Process.optimized.memory; /* level of optimization */
          ++numconfigs;
       }
+#endif
 
       if((MPIDI_Process.optimized.memory  & MPID_OPT_LVL_IRREG) && (comm->local_size & (comm->local_size-1)))
       {

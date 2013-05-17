@@ -294,6 +294,7 @@ MPIDI_PAMI_client_init(int* rank, int* size, int* mpidi_dynamic_tasking, char **
   pami_result_t        rc = PAMI_ERROR;
   
   pami_configuration_t config[2];
+  size_t numconfigs = 0;
 
   /* Set the status for memory optimized collectives */
   {
@@ -302,19 +303,23 @@ MPIDI_PAMI_client_init(int* rank, int* size, int* mpidi_dynamic_tasking, char **
       MPIDI_atoi(env,&MPIDI_Process.optimized.memory);
   }
 
+#ifdef HAVE_PAMI_CLIENT_NONCONTIG
   config[0].name = PAMI_CLIENT_NONCONTIG;
   if(MPIDI_Process.optimized.memory & MPID_OPT_LVL_NONCONTIG) 
     config[0].value.intval = 0; // Disable non-contig, pamid doesn't use pami for non-contig data collectives so save memory
   else
     config[0].value.intval = 1; // Enable non-contig even though pamid doesn't use pami for non-contig data collectives, 
                                 // we still possibly want those collectives for other reasons.
-  size_t numconfigs = 1;
+  ++numconfigs;
+#endif
+#ifdef HAVE_PAMI_CLIENT_MEMORY_OPTIMIZE
   if(MPIDI_Process.optimized.memory) 
   {
     config[numconfigs].name = PAMI_CLIENT_MEMORY_OPTIMIZE;
     config[numconfigs].value.intval = MPIDI_Process.optimized.memory;
     ++numconfigs;
   }
+#endif
 
   rc = PAMI_Client_create("MPI", &MPIDI_Client, config, numconfigs);
   MPID_assert_always(rc == PAMI_SUCCESS);
