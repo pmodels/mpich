@@ -40,6 +40,13 @@ int MPIDO_Reduce(const void *sendbuf,
                  int *mpierrno)
 
 {
+#ifndef HAVE_PAMI_IN_PLACE
+  if (sendbuf == MPI_IN_PLACE)
+  {
+    MPID_Abort (NULL, 0, 1, "'MPI_IN_PLACE' requries support for `PAMI_IN_PLACE`");
+    return -1;
+  }
+#endif
    MPID_Datatype *dt_null = NULL;
    MPI_Aint true_lb = 0;
    int dt_contig, tsize;
@@ -247,6 +254,13 @@ int MPIDO_Reduce_simple(const void *sendbuf,
                  int *mpierrno)
 
 {
+#ifndef HAVE_PAMI_IN_PLACE
+  if (sendbuf == MPI_IN_PLACE)
+  {
+    MPID_Abort (NULL, 0, 1, "'MPI_IN_PLACE' requries support for `PAMI_IN_PLACE`");
+    return -1;
+  }
+#endif
    MPID_Datatype *dt_null = NULL;
    MPI_Aint true_lb = 0;
    int dt_contig, tsize;

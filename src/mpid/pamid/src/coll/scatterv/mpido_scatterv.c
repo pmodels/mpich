@@ -236,6 +236,13 @@ int MPIDO_Scatterv(const void *sendbuf,
                    MPID_Comm *comm_ptr,
                    int *mpierrno)
 {
+#ifndef HAVE_PAMI_IN_PLACE
+  if (sendbuf == MPI_IN_PLACE)
+  {
+    MPID_Abort (NULL, 0, 1, "'MPI_IN_PLACE' requries support for `PAMI_IN_PLACE`");
+    return -1;
+  }
+#endif
   int contig, tmp, pamidt = 1;
   int ssize, rsize;
   MPID_Datatype *dt_ptr = NULL;
@@ -445,6 +452,13 @@ int MPIDO_Scatterv_simple(const void *sendbuf,
                    MPID_Comm *comm_ptr,
                    int *mpierrno)
 {
+#ifndef HAVE_PAMI_IN_PLACE
+  if (sendbuf == MPI_IN_PLACE)
+  {
+    MPID_Abort (NULL, 0, 1, "'MPI_IN_PLACE' requries support for `PAMI_IN_PLACE`");
+    return -1;
+  }
+#endif
   int snd_contig = 1;
   int rcv_contig = 1;
   int send_size = 0, recv_size = 0;

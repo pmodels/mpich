@@ -296,6 +296,13 @@ MPIDO_Allgatherv(const void *sendbuf,
 		 MPID_Comm * comm_ptr,
                  int *mpierrno)
 {
+#ifndef HAVE_PAMI_IN_PLACE
+  if (sendbuf == MPI_IN_PLACE)
+  {
+    MPID_Abort (NULL, 0, 1, "'MPI_IN_PLACE' requries support for `PAMI_IN_PLACE`");
+    return -1;
+  }
+#endif
    TRACE_ERR("Entering MPIDO_Allgatherv\n");
   /* function pointer to be used to point to approperiate algorithm */
 
@@ -616,6 +623,13 @@ MPIDO_Allgatherv_simple(const void *sendbuf,
 		 MPID_Comm * comm_ptr,
                  int *mpierrno)
 {
+#ifndef HAVE_PAMI_IN_PLACE
+  if (sendbuf == MPI_IN_PLACE)
+  {
+    MPID_Abort (NULL, 0, 1, "'MPI_IN_PLACE' requries support for `PAMI_IN_PLACE`");
+    return -1;
+  }
+#endif
    TRACE_ERR("Entering MPIDO_Allgatherv_optimized\n");
   /* function pointer to be used to point to approperiate algorithm */
   /* Check the nature of the buffers */

@@ -42,6 +42,13 @@ int MPIDO_Alltoall(const void *sendbuf,
                    MPID_Comm *comm_ptr,
                    int *mpierrno)
 {
+#ifndef HAVE_PAMI_IN_PLACE
+  if (sendbuf == MPI_IN_PLACE)
+  {
+    MPID_Abort (NULL, 0, 1, "'MPI_IN_PLACE' requries support for `PAMI_IN_PLACE`");
+    return -1;
+  }
+#endif
    TRACE_ERR("Entering MPIDO_Alltoall\n");
    volatile unsigned active = 1;
    MPID_Datatype *sdt, *rdt;
@@ -221,6 +228,13 @@ int MPIDO_Alltoall_simple(const void *sendbuf,
                    MPID_Comm *comm_ptr,
                    int *mpierrno)
 {
+#ifndef HAVE_PAMI_IN_PLACE
+  if (sendbuf == MPI_IN_PLACE)
+  {
+    MPID_Abort (NULL, 0, 1, "'MPI_IN_PLACE' requries support for `PAMI_IN_PLACE`");
+    return -1;
+  }
+#endif
    TRACE_ERR("Entering MPIDO_Alltoall_optimized\n");
    volatile unsigned active = 1;
    void *snd_noncontig_buff = NULL, *rcv_noncontig_buff = NULL;

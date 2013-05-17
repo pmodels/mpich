@@ -56,6 +56,7 @@ build_mpid_common_sched=yes
 build_mpid_common_datatype=yes
 build_mpid_common_thread=yes
 
+
 ])dnl end AM_COND_IF(BUILD_PAMID,...)
 ])dnl end PREREQ
 AC_DEFUN([PAC_SUBCFG_BODY_]PAC_SUBCFG_AUTO_SUFFIX,[
@@ -186,6 +187,23 @@ PAC_APPEND_FLAG([-I${master_top_srcdir}/src/mpid/common/locks],    [CPPFLAGS])
 PAC_APPEND_FLAG([-I${master_top_srcdir}/src/mpid/common/thread],   [CPPFLAGS])
 PAC_APPEND_FLAG([-I${master_top_srcdir}/src/mpid/common/sched],    [CPPFLAGS])
 
+dnl
+dnl Check for PAMI_IN_PLACE
+dnl
+AC_MSG_CHECKING([for PAMI_IN_PLACE support])
+have_pami_in_place=0
+AC_COMPILE_IFELSE(
+  [AC_LANG_PROGRAM([[#include "pami.h"]],
+                   [[void * foo = PAMI_IN_PLACE;]])],
+  have_pami_in_place=1
+)
+if test "$have_pami_in_place" != "0"; then
+  AC_DEFINE(HAVE_PAMI_IN_PLACE,1,[Define if PAMI_IN_PLACE is defined in pami.h])
+  AC_MSG_RESULT('yes')
+else
+  AC_DEFINE(PAMI_IN_PLACE,((void *) -1L),[Define if PAMI_IN_PLACE is not defined in pami.h])
+  AC_MSG_RESULT('no')
+fi
 
 dnl
 dnl Check for PAMI_CLIENT_NONCONTIG

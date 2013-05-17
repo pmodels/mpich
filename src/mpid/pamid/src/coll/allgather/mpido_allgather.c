@@ -289,6 +289,13 @@ MPIDO_Allgather(const void *sendbuf,
                 MPID_Comm * comm_ptr,
                 int *mpierrno)
 {
+#ifndef HAVE_PAMI_IN_PLACE
+  if (sendbuf == MPI_IN_PLACE)
+  {
+    MPID_Abort (NULL, 0, 1, "'MPI_IN_PLACE' requries support for `PAMI_IN_PLACE`");
+    return -1;
+  }
+#endif
   /* *********************************
    * Check the nature of the buffers
    * *********************************
@@ -581,6 +588,13 @@ MPIDO_Allgather_simple(const void *sendbuf,
                 MPID_Comm * comm_ptr,
                 int *mpierrno)
 {
+#ifndef HAVE_PAMI_IN_PLACE
+  if (sendbuf == MPI_IN_PLACE)
+  {
+    MPID_Abort (NULL, 0, 1, "'MPI_IN_PLACE' requries support for `PAMI_IN_PLACE`");
+    return -1;
+  }
+#endif
      /* *********************************
    * Check the nature of the buffers
    * *********************************

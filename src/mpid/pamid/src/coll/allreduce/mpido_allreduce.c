@@ -43,6 +43,13 @@ int MPIDO_Allreduce(const void *sendbuf,
                     MPID_Comm *comm_ptr,
                     int *mpierrno)
 {
+#ifndef HAVE_PAMI_IN_PLACE
+  if (sendbuf == MPI_IN_PLACE)
+  {
+    MPID_Abort (NULL, 0, 1, "'MPI_IN_PLACE' requries support for `PAMI_IN_PLACE`");
+    return -1;
+  }
+#endif
   void *sbuf;
   TRACE_ERR("Entering mpido_allreduce\n");
   pami_type_t pdt;
@@ -397,6 +404,13 @@ int MPIDO_Allreduce_simple(const void *sendbuf,
                     MPID_Comm *comm_ptr,
                     int *mpierrno)
 {
+#ifndef HAVE_PAMI_IN_PLACE
+  if (sendbuf == MPI_IN_PLACE)
+  {
+    MPID_Abort (NULL, 0, 1, "'MPI_IN_PLACE' requries support for `PAMI_IN_PLACE`");
+    return -1;
+  }
+#endif
    void *sbuf;
    TRACE_ERR("Entering MPIDO_Allreduce_optimized\n");
    pami_type_t pdt;

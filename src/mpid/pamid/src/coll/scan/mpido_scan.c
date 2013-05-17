@@ -96,6 +96,13 @@ int MPIDO_Doscan(const void *sendbuf, void *recvbuf,
                int count, MPI_Datatype datatype,
                MPI_Op op, MPID_Comm * comm_ptr, int *mpierrno, int exflag)
 {
+#ifndef HAVE_PAMI_IN_PLACE
+  if (sendbuf == MPI_IN_PLACE)
+  {
+    MPID_Abort (NULL, 0, 1, "'MPI_IN_PLACE' requries support for `PAMI_IN_PLACE`");
+    return -1;
+  }
+#endif
    MPID_Datatype *dt_null = NULL;
    MPI_Aint true_lb = 0;
    int dt_contig, tsize;
@@ -257,6 +264,13 @@ int MPIDO_Doscan_simple(const void *sendbuf, void *recvbuf,
                int count, MPI_Datatype datatype,
                MPI_Op op, MPID_Comm * comm_ptr, int *mpierrno, int exflag)
 {
+#ifndef HAVE_PAMI_IN_PLACE
+  if (sendbuf == MPI_IN_PLACE)
+  {
+    MPID_Abort (NULL, 0, 1, "'MPI_IN_PLACE' requries support for `PAMI_IN_PLACE`");
+    return -1;
+  }
+#endif
    MPID_Datatype *dt_null = NULL;
    MPI_Aint true_lb = 0;
    int dt_contig, tsize;

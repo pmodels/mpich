@@ -130,6 +130,13 @@ int MPIDO_Gather(const void *sendbuf,
                  MPID_Comm *comm_ptr,
 		 int *mpierrno)
 {
+#ifndef HAVE_PAMI_IN_PLACE
+  if (sendbuf == MPI_IN_PLACE)
+  {
+    MPID_Abort (NULL, 0, 1, "'MPI_IN_PLACE' requries support for `PAMI_IN_PLACE`");
+    return -1;
+  }
+#endif
   MPID_Datatype * data_ptr;
   MPI_Aint true_lb = 0;
   pami_xfer_t gather;
@@ -375,6 +382,13 @@ int MPIDO_Gather_simple(const void *sendbuf,
                  MPID_Comm *comm_ptr,
 		 int *mpierrno)
 {
+#ifndef HAVE_PAMI_IN_PLACE
+  if (sendbuf == MPI_IN_PLACE)
+  {
+    MPID_Abort (NULL, 0, 1, "'MPI_IN_PLACE' requries support for `PAMI_IN_PLACE`");
+    return -1;
+  }
+#endif
   MPID_Datatype * data_ptr;
   MPI_Aint true_lb = 0;
   pami_xfer_t gather;

@@ -108,6 +108,13 @@ int MPIDO_Scatter(const void *sendbuf,
                   MPID_Comm *comm_ptr,
                   int *mpierrno)
 {
+#ifndef HAVE_PAMI_IN_PLACE
+  if (sendbuf == MPI_IN_PLACE)
+  {
+    MPID_Abort (NULL, 0, 1, "'MPI_IN_PLACE' requries support for `PAMI_IN_PLACE`");
+    return -1;
+  }
+#endif
   MPID_Datatype * data_ptr;
   MPI_Aint true_lb = 0;
   int contig, nbytes = 0;
@@ -323,6 +330,13 @@ int MPIDO_Scatter_simple(const void *sendbuf,
                   MPID_Comm *comm_ptr,
                   int *mpierrno)
 {
+#ifndef HAVE_PAMI_IN_PLACE
+  if (sendbuf == MPI_IN_PLACE)
+  {
+    MPID_Abort (NULL, 0, 1, "'MPI_IN_PLACE' requries support for `PAMI_IN_PLACE`");
+    return -1;
+  }
+#endif
   MPID_Datatype * data_ptr;
   const int rank = comm_ptr->rank;
   int success = 1, snd_contig = 1, rcv_contig = 1;
