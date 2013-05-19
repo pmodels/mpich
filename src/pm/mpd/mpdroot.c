@@ -80,7 +80,7 @@ int main(int argc, char *argv[])
 
     /* setup default console */
     strncpy(console_name,argv[1],NAME_LEN);
-    bzero( (void *)&sa, sizeof( sa ) );
+    memset( (void *)&sa, 0, sizeof( sa ) );
     sa.sun_family = AF_UNIX;
     strncpy(sa.sun_path,console_name, sizeof(sa.sun_path)-1 );
     sock = atoi(argv[2]);

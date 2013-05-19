@@ -58,7 +58,7 @@ void MPIDI_send_AM_to_remote_leader_on_disconnect(int taskid, long long comm_cnt
    AM_data.tranid  = comm_cntr;
    AM_data.whichAM = whichAM;
 
-   bzero(&xferP, sizeof(pami_send_immediate_t));
+   memset(&xferP, 0, sizeof(pami_send_immediate_t));
    xferP.header.iov_base = (void*)&AM_data;
    xferP.header.iov_len  = sizeof(AM_struct2);
    xferP.dispatch = (size_t)MPIDI_Protocols_Dyntask_disconnect;

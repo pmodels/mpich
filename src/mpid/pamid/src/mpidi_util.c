@@ -69,7 +69,7 @@ void MPIDI_Set_mpich_env(int rank, int size) {
      mpich_env->use_token_flow_control=MPIDI_Process.is_token_flow_control_on;
      mpich_env->mp_statistics=MPIDI_Process.mp_statistics;
      if (mpich_env->polling_interval == 0) {
-         bzero(&config, sizeof(config));
+         memset(&config, 0, sizeof(config));
          config.name = (pami_attribute_name_t)PAMI_CONTEXT_TIMER_INTERVAL;
          rc= PAMI_Context_query(MPIDI_Context[0], &config, 1);
             mpich_env->polling_interval = config.value.intval;;
@@ -78,7 +78,7 @@ void MPIDI_Set_mpich_env(int rank, int size) {
             rc = putenv(polling_buf);
      }
      if (mpich_env->retransmit_interval == 0) {
-         bzero(&config, sizeof(config));
+         memset(&config, 0, sizeof(config));
          config.name = (pami_attribute_name_ext_t)PAMI_CONTEXT_RETRANSMIT_INTERVAL;
          rc= PAMI_Context_query(MPIDI_Context[0], &config, 1);
             mpich_env->retransmit_interval = config.value.intval;
@@ -150,7 +150,7 @@ void MPIDI_Setup_networkenv()
        *  mpi_printenv variable can print them out.
        */
       if ( mpich_env->retransmit_interval == 0 ) {
-          bzero(&config, sizeof(config));
+          memset(&config, 0, sizeof(config));
           config.name = (pami_attribute_name_t)PAMI_CONTEXT_RETRANSMIT_INTERVAL;
           rc= PAMI_Context_query(MPIDI_Context[0], &config, 1);
              mpich_env->retransmit_interval = config.value.intval;

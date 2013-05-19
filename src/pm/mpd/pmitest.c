@@ -146,7 +146,7 @@ int connect_to_pm( char *hostname, int portnum )
 	exit(-1);
     }
     
-    bzero( (void *)&sin, sizeof(sin) );
+    memset( (void *)&sin, 0, sizeof(sin) );
     memmove( (void *)&sin.sin_addr, (void *)hp->h_addr, hp->h_length);
     sin.sin_family = hp->h_addrtype;
     sin.sin_port   = htons( (unsigned short) portnum );

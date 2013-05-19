@@ -184,7 +184,7 @@ int MPIDU_send_AM_to_leader(MPID_VCR new_vcr, int port_name_tag, pami_task_t tas
    TRACE_ERR("send - %p %d %p %d\n", AM_data.vcr, AM_data.port_name_tag, AM_data.vcr, AM_data.vcr->taskid);
 
 
-   bzero(&xferP, sizeof(pami_send_t));
+   memset(&xferP, 0, sizeof(pami_send_t));
    xferP.send.header.iov_base = (void*)&AM_data;
    xferP.send.header.iov_len  = sizeof(AM_struct);
    xferP.send.dispatch = MPIDI_Protocols_Dyntask;

@@ -191,7 +191,7 @@ void ADIOI_PANFS_Open(ADIO_File fd, int *error_code)
                 }
 
                 /* create PanFS object */
-                bzero(&file_create_args,sizeof(pan_fs_client_layout_create_args_t)); 
+                memset(&file_create_args,0,sizeof(pan_fs_client_layout_create_args_t));
                 /* open directory */
                 fd_dir = open(path, O_RDONLY);
                 if (fd_dir < 0) {
@@ -285,7 +285,7 @@ void ADIOI_PANFS_Open(ADIO_File fd, int *error_code)
         int rc;
         char temp_buffer[TEMP_BUFFER_SIZE];
         pan_fs_client_layout_query_args_t file_query_args;
-        bzero(&file_query_args,sizeof(pan_fs_client_layout_query_args_t));
+        memset(&file_query_args,0,sizeof(pan_fs_client_layout_query_args_t));
         file_query_args.version = PAN_FS_CLIENT_LAYOUT_VERSION;
         rc = ioctl(fd->fd_sys, PAN_FS_CLIENT_LAYOUT_QUERY_FILE, &file_query_args);
         if (rc < 0)

@@ -112,7 +112,7 @@ typedef struct {
         MPIDI_Trace_buf[src].totPR++ ;                            \
         seqNo=MPIDI_Trace_buf[src].totPR;                         \
         idx = (seqNo & SEQMASK);                                  \
-        bzero(&MPIDI_Trace_buf[src].PR[idx],sizeof(posted_recv)); \
+        memset(&MPIDI_Trace_buf[src].PR[idx],0,sizeof(posted_recv)); \
         MPIDI_Trace_buf[src].PR[idx].src_task= pami_id;           \
         MPIDI_Trace_buf[src].PR[idx].rank   = rank;               \
         MPIDI_Trace_buf[src].PR[idx].bufadd = buf;                \
@@ -132,7 +132,7 @@ typedef struct {
         int dest=sreq->mpid.partner_id;                         \
         int seqNo=sreq->mpid.envelope.msginfo.MPIseqno;         \
         int idx = (seqNo & SEQMASK);                            \
-        bzero(&MPIDI_Trace_buf[dest].S[idx],sizeof(send_status));\
+        memset(&MPIDI_Trace_buf[dest].S[idx],0,sizeof(send_status));\
         sstatus=&MPIDI_Trace_buf[dest].S[idx];                  \
         sstatus->req    = (void *)sreq;                         \
         sstatus->tag    = sreq->mpid.envelope.msginfo.MPItag;   \

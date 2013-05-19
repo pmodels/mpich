@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
+#include <string.h>
 #include <strings.h>
 
 #include <mpi.h>
@@ -83,7 +84,7 @@ int MPIX_Mutex_create(int my_count, MPI_Comm comm, MPIX_Mutex * hdl_out)
         if (i < my_count) {
             MPI_Alloc_mem(nproc, MPI_INFO_NULL, &hdl->bases[i]);
             assert(hdl->bases[i] != NULL);
-            bzero(hdl->bases[i], nproc);
+            memset(hdl->bases[i], 0, nproc);
 
             base = hdl->bases[i];
             size = nproc;
