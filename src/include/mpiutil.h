@@ -43,7 +43,7 @@ const char *MPIU_Strerror(int errnum);
  * MPIU_Busy_wait()
  *
  * Call this in every busy wait loop to periodically yield the processor.  The
- * MPIR_PARAM_POLLS_BEFORE_YIELD parameter can be used to adjust the number of
+ * MPIR_PARAM_NEMESIS_POLLS_BEFORE_YIELD parameter can be used to adjust the number of
  * times MPIU_Busy_wait is called before the yield function is called.
  */
 #ifdef USE_NOTHING_FOR_YIELD
@@ -54,9 +54,9 @@ const char *MPIU_Strerror(int errnum);
    need to be changed for fine-grained multithreading.  A possible alternative
    is to make it a global thread-local variable. */
 #define MPIU_Busy_wait() do {                                   \
-        if (MPIR_PARAM_POLLS_BEFORE_YIELD) {                    \
+        if (MPIR_PARAM_NEMESIS_POLLS_BEFORE_YIELD) {                    \
             static int poll_count_ = 0;                         \
-            if (poll_count_ >= MPIR_PARAM_POLLS_BEFORE_YIELD) { \
+            if (poll_count_ >= MPIR_PARAM_NEMESIS_POLLS_BEFORE_YIELD) { \
                 poll_count_ = 0;                                \
                 MPIU_PW_Sched_yield();                          \
             } else {                                            \
