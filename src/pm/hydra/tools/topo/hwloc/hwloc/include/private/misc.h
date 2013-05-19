@@ -28,10 +28,6 @@
 #error "unknown size for unsigned int."
 #endif
 
-#if !defined(HWLOC_HAVE_DECL_STRTOULL)
-unsigned long long int strtoull(const char *nptr, char **endptr, int base);
-#endif /* HWLOC_HAVE_DECL_STRTOULL */
-
 
 /**
  * ffsl helpers.
@@ -344,5 +340,8 @@ hwloc_weight_long(unsigned long w)
 #endif /* HWLOC_BITS_PER_LONG == 64 */
 }
 
+#if !HAVE_DECL_STRTOULL
+unsigned long long int strtoull(const char *nptr, char **endptr, int base);
+#endif
 
 #endif /* HWLOC_PRIVATE_MISC_H */

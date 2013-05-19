@@ -153,10 +153,10 @@ The hwloc core may also benefit from the following development packages:
 <li>hwloc can use one of two different libraries for I/O device
 discovery:
 <ol>
-<li> libpciaccess (BSD).  The relevant development package is usually
+<li>libpciaccess (BSD).  The relevant development package is usually
 <tt>libpciaccess-devel</tt> or <tt>libpciaccess-dev</tt>.  </li>
 <li>libpci, from the pciutils package (GPL). The relevant development
-package is usually <tt>pciutils-devel</tt> or <tt>libpci-dev</tt>.  
+package is usually <tt>pciutils-devel</tt> or <tt>libpci-dev</tt>.  </li>
 </ol>
 </li>
 
@@ -174,6 +174,10 @@ package is usually <tt>pciutils-devel</tt> or <tt>libpci-dev</tt>.
     See \ref xml for details.
     The relevant development package is usually <tt>libxml2-devel</tt>
     or <tt>libxml2-dev</tt>.
+</li>
+<li>libtool's ltdl library for dynamic plugin loading.
+  The relevant development package is usually <tt>libtool-ltdl-devel</tt>
+  or <tt>libltdl-dev</tt>.
 </li>
 </ul>
 
@@ -1876,7 +1880,7 @@ enabled for the current topology.
  <dd>
   hwloc/glibc-sched.h offers conversion routines between Glibc and
   hwloc CPU sets in order to use hwloc with functions such as
-  sched_setaffinity().
+  sched_getaffinity() or pthread_attr_setaffinity_np().
  </dd>
 
 <dt>OpenFabrics Verbs</dt>
@@ -2139,6 +2143,9 @@ is registered to the hwloc core.
 Components are then only enabled if the topology configuration
 requests it, as explained in the previous sections.
 
+Also note that plugins should carefully be enabled and used when
+embedding hwloc in another project, see \ref embed for details.
+
 \section plugins_adding Adding new discovery components and plugins
 
 The types and functions cited below are declared in the hwloc/plugins.h header.
@@ -2322,6 +2329,17 @@ Automake / Libtool tool chain to build your software.  If you do this,
 you can directly integrate hwloc's m4 configure macro into your
 configure script.  You can then invoke hwloc's configuration tests and
 build setup by calling an m4 macro (see below).
+
+Although hwloc dynamic shared object plugins may be used in embedded
+mode, the embedder project will have to manually setup libltdl in its
+build system so that hwloc can load its plugins at run time.
+Also, embedders should be aware of complications that can arise due to
+public and private linker namespaces (e.g., if the embedder project is
+loaded into a private namespace and then hwloc tries to dynamically
+load its plugins, such loading may fail since the hwloc plugins can't
+find the hwloc symbols they need).
+The embedder project is <b>strongly</b> advised not to use hwloc's
+dynamically loading plugins / libltdl capability.
 
 \section embedding_m4 Using hwloc's M4 Embedding Capabilities
 
@@ -2748,5 +2766,17 @@ node with the following configuration line:
 CPPFLAGS may have to be updated if your platform headers are installed
 in a different directory.
 
+
+\section faq_netbsd_bind How to get useful topology information on NetBSD?
+
+The NetBSD (and FreeBSD) backend uses x86-specific topology discovery
+(through the x86 component).
+This implementation requires CPU binding so as to query topology
+information from each individual logical processor.
+This means that hwloc cannot find any useful topology information
+unless user-level process binding is allowed by the NetBSD kernel.
+The <tt>security.models.extensions.user_set_cpu_affinity</tt>
+sysctl variable must be set to 1 to do so.
+Otherwise, only the number of logical processors will be detected.
 
 */
