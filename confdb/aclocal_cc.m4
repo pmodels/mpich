@@ -1625,19 +1625,29 @@ AC_DEFUN([PAC_STRUCT_ALIGNMENT],[
 	   pac_cv_struct_alignment="eight"
 	fi
 ])
-dnl
+
 dnl PAC_C_MACRO_VA_ARGS
 dnl
 dnl will AC_DEFINE([HAVE_MACRO_VA_ARGS]) if the compiler supports C99 variable
 dnl length argument lists in macros (#define foo(...) bar(__VA_ARGS__))
 AC_DEFUN([PAC_C_MACRO_VA_ARGS],[
     AC_MSG_CHECKING([for variable argument list macro functionality])
-    AC_LINK_IFELSE([AC_LANG_PROGRAM([
+
+    # check if the program links correctly
+    rm -f pac_test.log
+    PAC_LINK_IFELSE_LOG([pac_test.log],[AC_LANG_PROGRAM([
         #include <stdio.h>
         #define conftest_va_arg_macro(...) printf(__VA_ARGS__)
     ],
     [conftest_va_arg_macro("a test %d", 3);])],
-    [AC_DEFINE([HAVE_MACRO_VA_ARGS],[1],[Define if C99-style variable argument list macro functionality])
-     AC_MSG_RESULT([yes])],
-    [AC_MSG_RESULT([no])])
+    prog_links=yes,prog_links=no)
+
+    # If the program linked OK, make sure there were no warnings
+    if test "$prog_links" = "yes" -a "`cat pac_test.log`" = "" ; then
+       AC_DEFINE([HAVE_MACRO_VA_ARGS],[1],[Define if C99-style variable argument list macro functionality])
+       AC_MSG_RESULT([yes])
+    else
+       AC_MSG_RESULT([no])
+    fi
+    rm -f pac_test.log
 ])dnl
