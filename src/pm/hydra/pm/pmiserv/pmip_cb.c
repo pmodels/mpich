@@ -462,7 +462,7 @@ static int local_to_global_id(int local_id)
 
 static HYD_status launch_procs(void)
 {
-    int i, j, arg, process_id;
+    int i, j, process_id;
     int using_pmi_port = 0;
     char *str, *envstr, *list, *pmi_port;
     struct HYD_string_stash stash;
@@ -685,7 +685,7 @@ static HYD_status launch_procs(void)
             }
 
             HYD_STRING_STASH_INIT(stash);
-            for (j = 0, arg = 0; exec->exec[j]; j++)
+            for (j = 0; exec->exec[j]; j++)
                 HYD_STRING_STASH(stash, HYDU_strdup(exec->exec[j]), status);
 
             status = HYDU_create_process(stash.strlist, force_env,
