@@ -31,6 +31,9 @@ int main(int argc,char **argv)
 
 int delete_fn(MPI_Comm comm,int keyval,void *attr_val,void *extra_state)
 {
+    /* The standard is not explicit that the 'comm' argument of
+     * delete_fn must be valid, so this test is only in effect when
+     * !USE_STRICT_MPI. */
 #ifndef USE_STRICT_MPI
     int err,flg,*errs = extra_state;
     void *ptr;
