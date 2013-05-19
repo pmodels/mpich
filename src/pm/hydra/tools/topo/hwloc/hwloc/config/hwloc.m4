@@ -441,7 +441,25 @@ EOF])
     ])
     AC_CHECK_DECLS([strtoull], [], [], [AC_INCLUDES_DEFAULT])
 
-    AC_CHECK_FUNCS([sysctl sysctlbyname])
+    # Do a full link test instead of just using AC_CHECK_FUNCS, which
+    # just checks to see if the symbol exists or not.  For example,
+    # the prototype of sysctl uses u_int, which on some platforms
+    # (such as FreeBSD) is only defined under __BSD_VISIBLE, __USE_BSD
+    # or other similar definitions.  So while the symbols "sysctl" and
+    # "sysctlbyname" might still be available in libc (which autoconf
+    # checks for), they might not be actually usable.
+    AC_TRY_LINK([
+		#include <stdio.h>
+		#include <sys/sysctl.h>
+		],
+                [return sysctl(NULL,0,NULL,NULL,NULL,0);],
+                AC_DEFINE([HAVE_SYSCTL],[1],[Define to '1' if sysctl is present and usable]))
+    AC_TRY_LINK([
+		#include <stdio.h>
+		#include <sys/sysctl.h>
+		],
+                [return sysctlbyname(NULL,NULL,NULL,NULL,0);],
+                AC_DEFINE([HAVE_SYSCTLBYNAME],[1],[Define to '1' if sysctlbyname is present and usable]))
 
     case ${target} in
       *-*-mingw*|*-*-cygwin*)
@@ -1232,7 +1250,10 @@ dnl number of arguments (10). Success means the compiler couldn't really check.
 AC_DEFUN([_HWLOC_CHECK_DECL], [
   AC_MSG_CHECKING([whether function $1 is declared])
   AC_REQUIRE([AC_PROG_CC])
-  AC_COMPILE_IFELSE([AC_LANG_PROGRAM([AC_INCLUDES_DEFAULT([$4])],[$1(1,2,3,4,5,6,7,8,9,10);])],
+  AC_COMPILE_IFELSE([AC_LANG_PROGRAM(
+	[AC_INCLUDES_DEFAULT([$4])
+	$1(int,long,int,long,int,long,int,long,int,long);],
+	[$1(1,2,3,4,5,6,7,8,9,10);])],
     [AC_MSG_RESULT([no])
      $3],
     [AC_MSG_RESULT([yes])
