@@ -182,8 +182,7 @@ void HYDU_free_pg_list(struct HYD_pg *pg_list)
     }
 }
 
-static HYD_status alloc_proxy(struct HYD_proxy **proxy, struct HYD_pg *pg,
-                              struct HYD_node *node)
+static HYD_status alloc_proxy(struct HYD_proxy **proxy, struct HYD_pg *pg, struct HYD_node *node)
 {
     HYD_status status = HYD_SUCCESS;
 
@@ -298,8 +297,7 @@ void HYDU_free_exec_list(struct HYD_exec *exec_list)
     HYDU_FUNC_EXIT();
 }
 
-static HYD_status add_exec_to_proxy(struct HYD_exec *exec, struct HYD_proxy *proxy,
-                                    int num_procs)
+static HYD_status add_exec_to_proxy(struct HYD_exec *exec, struct HYD_proxy *proxy, int num_procs)
 {
     int i;
     struct HYD_exec *texec;
@@ -420,8 +418,7 @@ HYD_status HYDU_create_proxy_list(struct HYD_exec *exec_list, struct HYD_node *n
         exec = exec_list;
 
         filler_round = 1;
-        for (proxy = pg->proxy_list; proxy && proxy->filler_processes == 0;
-             proxy = proxy->next);
+        for (proxy = pg->proxy_list; proxy && proxy->filler_processes == 0; proxy = proxy->next);
         if (proxy == NULL) {
             filler_round = 0;
             proxy = pg->proxy_list;
@@ -448,8 +445,7 @@ HYD_status HYDU_create_proxy_list(struct HYD_exec *exec_list, struct HYD_node *n
                     proxy = pg->proxy_list;
                 }
 
-                proxy_rem_cores =
-                    filler_round ? proxy->filler_processes : proxy->node->core_count;
+                proxy_rem_cores = filler_round ? proxy->filler_processes : proxy->node->core_count;
             }
 
             num_procs = (exec_rem_procs > proxy_rem_cores) ? proxy_rem_cores : exec_rem_procs;

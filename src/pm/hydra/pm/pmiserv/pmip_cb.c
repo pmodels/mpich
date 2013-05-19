@@ -143,11 +143,9 @@ static HYD_status check_pmi_cmd(char **buf, int *pmi_version, int *repeat)
             }
         }
         else {  /* multi commands */
-            for (bufptr = sptr; bufptr < sptr + pmi_storage_len - strlen("endcmd\n") + 1;
-                 bufptr++) {
+            for (bufptr = sptr; bufptr < sptr + pmi_storage_len - strlen("endcmd\n") + 1; bufptr++) {
                 if (bufptr[0] == 'e' && bufptr[1] == 'n' && bufptr[2] == 'd' &&
-                    bufptr[3] == 'c' && bufptr[4] == 'm' && bufptr[5] == 'd' &&
-                    bufptr[6] == '\n') {
+                    bufptr[3] == 'c' && bufptr[4] == 'm' && bufptr[5] == 'd' && bufptr[6] == '\n') {
                     full_command = 1;
                     bufptr += strlen("endcmd\n") - 1;
                     break;
@@ -397,8 +395,7 @@ static HYD_status handle_pmi_response(int fd, struct HYD_pmcd_hdr hdr)
     }
 
     if (HYD_pmcd_pmip.user_global.debug) {
-        HYDU_dump(stdout, "we don't understand the response %s; forwarding downstream\n",
-                  pmi_cmd);
+        HYDU_dump(stdout, "we don't understand the response %s; forwarding downstream\n", pmi_cmd);
     }
 
     status = HYDU_sock_write(hdr.pid, buf, hdr.buflen, &sent, &closed, HYDU_SOCK_COMM_MSGWAIT);
@@ -515,8 +512,7 @@ static HYD_status launch_procs(void)
 
     status = HYDT_topo_init(HYD_pmcd_pmip.user_global.topolib,
                             HYD_pmcd_pmip.user_global.binding,
-                            HYD_pmcd_pmip.user_global.mapping,
-                            HYD_pmcd_pmip.user_global.membind);
+                            HYD_pmcd_pmip.user_global.mapping, HYD_pmcd_pmip.user_global.membind);
     HYDU_ERR_POP(status, "unable to initialize process topology\n");
 
     status = HYDT_ckpoint_init(HYD_pmcd_pmip.user_global.ckpointlib,
@@ -526,8 +522,7 @@ static HYD_status launch_procs(void)
     if (HYD_pmcd_pmip.user_global.ckpoint_prefix) {
         using_pmi_port = 1;
         status = HYDU_sock_create_and_listen_portstr(HYD_pmcd_pmip.user_global.iface,
-                                                     NULL, NULL, &pmi_port, pmi_listen_cb,
-                                                     NULL);
+                                                     NULL, NULL, &pmi_port, pmi_listen_cb, NULL);
         HYDU_ERR_POP(status, "unable to create PMI port\n");
     }
 
@@ -587,15 +582,13 @@ static HYD_status launch_procs(void)
             if (exec->env_prop)
                 list = HYDU_strdup(exec->env_prop + strlen("list:"));
             else
-                list = HYDU_strdup(HYD_pmcd_pmip.user_global.global_env.prop +
-                                   strlen("list:"));
+                list = HYDU_strdup(HYD_pmcd_pmip.user_global.global_env.prop + strlen("list:"));
 
             envstr = strtok(list, ",");
             while (envstr) {
                 env = HYDU_env_lookup(envstr, HYD_pmcd_pmip.user_global.global_env.inherited);
                 if (env) {
-                    status = HYDU_append_env_to_list(env->env_name, env->env_value,
-                                                     &force_env);
+                    status = HYDU_append_env_to_list(env->env_name, env->env_value, &force_env);
                     HYDU_ERR_POP(status, "unable to add env to list\n");
                 }
                 envstr = strtok(NULL, ",");
@@ -700,8 +693,7 @@ static HYD_status launch_procs(void)
                                          &HYD_pmcd_pmip.downstream.in,
                                          &HYD_pmcd_pmip.downstream.out[process_id],
                                          &HYD_pmcd_pmip.downstream.err[process_id],
-                                         &HYD_pmcd_pmip.downstream.pid[process_id],
-                                         process_id);
+                                         &HYD_pmcd_pmip.downstream.pid[process_id], process_id);
             HYDU_ERR_POP(status, "create process returned error\n");
 
             if (HYD_pmcd_pmip.downstream.in != HYD_FD_UNSET) {
@@ -829,23 +821,20 @@ static HYD_status procinfo(int fd)
     /* Read information about the application to launch into a string
      * array and call parse_exec_params() to interpret it and load it into
      * the proxy handle. */
-    status = HYDU_sock_read(fd, &num_strings, sizeof(int), &recvd, &closed,
-                            HYDU_SOCK_COMM_MSGWAIT);
+    status = HYDU_sock_read(fd, &num_strings, sizeof(int), &recvd, &closed, HYDU_SOCK_COMM_MSGWAIT);
     HYDU_ERR_POP(status, "error reading data from upstream\n");
     HYDU_ASSERT(!closed, status);
 
     HYDU_MALLOC(arglist, char **, (num_strings + 1) * sizeof(char *), status);
 
     for (i = 0; i < num_strings; i++) {
-        status = HYDU_sock_read(fd, &str_len, sizeof(int), &recvd, &closed,
-                                HYDU_SOCK_COMM_MSGWAIT);
+        status = HYDU_sock_read(fd, &str_len, sizeof(int), &recvd, &closed, HYDU_SOCK_COMM_MSGWAIT);
         HYDU_ERR_POP(status, "error reading data from upstream\n");
         HYDU_ASSERT(!closed, status);
 
         HYDU_MALLOC(arglist[i], char *, str_len, status);
 
-        status = HYDU_sock_read(fd, arglist[i], str_len, &recvd, &closed,
-                                HYDU_SOCK_COMM_MSGWAIT);
+        status = HYDU_sock_read(fd, arglist[i], str_len, &recvd, &closed, HYDU_SOCK_COMM_MSGWAIT);
         HYDU_ERR_POP(status, "error reading data from upstream\n");
         HYDU_ASSERT(!closed, status);
     }
@@ -921,8 +910,7 @@ HYD_status HYD_pmcd_pmip_control_cmd_cb(int fd, HYD_event_t events, void *userp)
             HYDU_MALLOC(buf, char *, hdr.buflen, status);
             HYDU_ERR_POP(status, "unable to allocate memory\n");
 
-            status = HYDU_sock_read(fd, buf, hdr.buflen, &count, &closed,
-                                    HYDU_SOCK_COMM_MSGWAIT);
+            status = HYDU_sock_read(fd, buf, hdr.buflen, &count, &closed, HYDU_SOCK_COMM_MSGWAIT);
             HYDU_ERR_POP(status, "unable to read from control socket\n");
             HYDU_ASSERT(!closed, status);
 

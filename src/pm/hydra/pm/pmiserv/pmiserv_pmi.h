@@ -37,7 +37,7 @@ struct HYD_pmcd_pmi_pg_scratch {
     int dead_process_count;
 
     struct HYD_pmcd_pmi_kvs *kvs;
-    int keyval_dist_count;  /* Number of keyvals distributed */
+    int keyval_dist_count;      /* Number of keyvals distributed */
 };
 
 struct HYD_pmcd_pmi_publish {

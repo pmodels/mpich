@@ -29,8 +29,7 @@ HYD_status HYDT_ckpoint_init(const char *user_ckpointlib, int user_ckpoint_num)
 
     if (user_ckpointlib)
         HYDT_ckpoint_info.ckpointlib = user_ckpointlib;
-    else if (MPL_env2str("HYDRA_CKPOINTLIB", (const char **) &HYDT_ckpoint_info.ckpointlib) ==
-             0)
+    else if (MPL_env2str("HYDRA_CKPOINTLIB", (const char **) &HYDT_ckpoint_info.ckpointlib) == 0)
         HYDT_ckpoint_info.ckpointlib = HYDRA_DEFAULT_CKPOINTLIB;
 
     /* If there is no default checkpointlib, we bail out */
@@ -114,8 +113,7 @@ HYD_status HYDT_ckpoint_checkpoint(int pgid, int id, const char *user_ckpoint_pr
      * join with it to free resources */
     if (in_ckpt == HYDT_CKPOINT_FINISHED) {
         ret = pthread_join(thread, NULL);
-        HYDU_ERR_CHKANDJUMP(status, ret, HYD_FAILURE, "pthread_join failed: %s.",
-                            strerror(ret));
+        HYDU_ERR_CHKANDJUMP(status, ret, HYD_FAILURE, "pthread_join failed: %s.", strerror(ret));
     }
 
     /* set state, and start the thread to do the checkpoint */

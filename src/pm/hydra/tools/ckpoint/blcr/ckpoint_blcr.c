@@ -92,12 +92,10 @@ static HYD_status create_stdinouterr_sock(int *port)
     sin.sin_port = htons(0);
 
     ret = bind(listen_fd, (struct sockaddr *) &sin, sizeof(sin));
-    HYDU_ERR_CHKANDJUMP(status, ret, HYD_INTERNAL_ERROR, "bind() failed, %s\n",
-                        strerror(errno));
+    HYDU_ERR_CHKANDJUMP(status, ret, HYD_INTERNAL_ERROR, "bind() failed, %s\n", strerror(errno));
 
     ret = listen(listen_fd, SOMAXCONN);
-    HYDU_ERR_CHKANDJUMP(status, ret, HYD_INTERNAL_ERROR, "listen() failed, %s\n",
-                        strerror(errno));
+    HYDU_ERR_CHKANDJUMP(status, ret, HYD_INTERNAL_ERROR, "listen() failed, %s\n", strerror(errno));
 
     len = sizeof(sin);
     ret = getsockname(listen_fd, (struct sockaddr *) &sin, &len);
@@ -222,16 +220,14 @@ HYD_status HYDT_ckpoint_blcr_checkpoint(const char *prefix, int pgid, int id, in
     HYDU_FUNC_ENTER();
 
     /* build the checkpoint filename */
-    MPL_snprintf(filename, sizeof(filename), "%s/context-num%d-%d-%d", prefix, ckpt_num, pgid,
-                 id);
+    MPL_snprintf(filename, sizeof(filename), "%s/context-num%d-%d-%d", prefix, ckpt_num, pgid, id);
 
     /* remove existing checkpoint file, if any */
     (void) unlink(filename);
 
     /* open the checkpoint file */
     fd = open(filename, O_WRONLY | O_CREAT | O_TRUNC /* | O_LARGEFILE */ , 0600);
-    HYDU_ERR_CHKANDJUMP(status, fd < 0, HYD_INTERNAL_ERROR, "open failed: %s\n",
-                        strerror(errno));
+    HYDU_ERR_CHKANDJUMP(status, fd < 0, HYD_INTERNAL_ERROR, "open failed: %s\n", strerror(errno));
 
     cr_initialize_checkpoint_args_t(&my_args);
     my_args.cr_fd = fd;
@@ -272,8 +268,7 @@ HYD_status HYDT_ckpoint_blcr_checkpoint(const char *prefix, int pgid, int id, in
     }
 
     ret = close(my_args.cr_fd);
-    HYDU_ERR_CHKANDJUMP(status, ret, HYD_INTERNAL_ERROR, "close failed, %s\n",
-                        strerror(errno));
+    HYDU_ERR_CHKANDJUMP(status, ret, HYD_INTERNAL_ERROR, "close failed, %s\n", strerror(errno));
 
   fn_exit:
     HYDU_FUNC_EXIT();
@@ -312,8 +307,7 @@ HYD_status HYDT_ckpoint_blcr_restart(const char *prefix, int pgid, int id, int c
         HYDU_ERR_POP(status, "blcr restart\n");
 
     /* open the checkpoint file */
-    MPL_snprintf(filename, sizeof(filename), "%s/context-num%d-%d-%d", prefix, ckpt_num, pgid,
-                 id);
+    MPL_snprintf(filename, sizeof(filename), "%s/context-num%d-%d-%d", prefix, ckpt_num, pgid, id);
     context_fd = open(filename, O_RDONLY /* | O_LARGEFILE */);
     HYDU_ERR_CHKANDJUMP(status, context_fd < 0, HYD_INTERNAL_ERROR, "open failed, %s\n",
                         strerror(errno));
@@ -329,8 +323,7 @@ HYD_status HYDT_ckpoint_blcr_restart(const char *prefix, int pgid, int id, int c
                         strerror(errno));
 
     ret = close(context_fd);
-    HYDU_ERR_CHKANDJUMP(status, ret, HYD_INTERNAL_ERROR, "close failed, %s\n",
-                        strerror(errno));
+    HYDU_ERR_CHKANDJUMP(status, ret, HYD_INTERNAL_ERROR, "close failed, %s\n", strerror(errno));
 
     /* get fds for stdin/out/err sockets, and get pids of restarted processes */
     status = wait_for_stdinouterr_sockets(num_ranks, ranks, in, out, err, pid);

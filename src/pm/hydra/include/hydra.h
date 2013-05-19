@@ -552,8 +552,7 @@ HYD_status HYDU_create_process(char **client_arg, struct HYD_env *env_list,
 
 /* others */
 int HYDU_dceil(int x, int y);
-HYD_status HYDU_add_to_node_list(const char *hostname, int num_procs,
-                                 struct HYD_node **node_list);
+HYD_status HYDU_add_to_node_list(const char *hostname, int num_procs, struct HYD_node **node_list);
 HYD_status HYDU_gethostname(char *hostname);
 void HYDU_delay(unsigned long delay);
 

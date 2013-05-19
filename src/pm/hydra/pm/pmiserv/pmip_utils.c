@@ -436,8 +436,7 @@ static HYD_status global_process_count_fn(char *arg, char ***argv)
 {
     HYD_status status = HYD_SUCCESS;
 
-    status = HYDU_set_int(arg, &HYD_pmcd_pmip.system_global.global_process_count,
-                          atoi(**argv));
+    status = HYDU_set_int(arg, &HYD_pmcd_pmip.system_global.global_process_count, atoi(**argv));
 
     (*argv)++;
 

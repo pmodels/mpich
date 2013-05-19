@@ -134,8 +134,7 @@ static hwloc_obj_t find_obj_containing_pu(hwloc_obj_type_t type, int idx, int ca
     return obj;
 }
 
-static HYD_status get_nbobjs_by_type(hwloc_obj_type_t type, int *nbobjs,
-                                     int *nbobjs_per_parent)
+static HYD_status get_nbobjs_by_type(hwloc_obj_type_t type, int *nbobjs, int *nbobjs_per_parent)
 {
     int x, nb;
     hwloc_obj_type_t parent, t;
@@ -254,8 +253,7 @@ static HYD_status cache_to_cpu_type(int cache_depth, hwloc_obj_type_t * cpu_type
            cache_obj->attr->cache.depth != cache_depth)
         cache_obj = cache_obj->first_child;
     if (cache_obj == NULL) {
-        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "cache level %d not found\n",
-                            cache_depth);
+        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "cache level %d not found\n", cache_depth);
     }
 
     cpu_obj = hwloc_get_root_obj(topology);
@@ -436,17 +434,13 @@ static HYD_status handle_bitmap_binding(const char *binding, const char *mapping
         if (map_str[i] == 'T')
             status = get_nbobjs_by_type(HWLOC_OBJ_PU, &total_nbobjs[i], &nbobjs_per_parent[i]);
         else if (map_str[i] == 'C')
-            status =
-                get_nbobjs_by_type(HWLOC_OBJ_CORE, &total_nbobjs[i], &nbobjs_per_parent[i]);
+            status = get_nbobjs_by_type(HWLOC_OBJ_CORE, &total_nbobjs[i], &nbobjs_per_parent[i]);
         else if (map_str[i] == 'S')
-            status =
-                get_nbobjs_by_type(HWLOC_OBJ_SOCKET, &total_nbobjs[i], &nbobjs_per_parent[i]);
+            status = get_nbobjs_by_type(HWLOC_OBJ_SOCKET, &total_nbobjs[i], &nbobjs_per_parent[i]);
         else if (map_str[i] == 'N')
-            status =
-                get_nbobjs_by_type(HWLOC_OBJ_NODE, &total_nbobjs[i], &nbobjs_per_parent[i]);
+            status = get_nbobjs_by_type(HWLOC_OBJ_NODE, &total_nbobjs[i], &nbobjs_per_parent[i]);
         else if (map_str[i] == 'B')
-            status =
-                get_nbobjs_by_type(HWLOC_OBJ_MACHINE, &total_nbobjs[i], &nbobjs_per_parent[i]);
+            status = get_nbobjs_by_type(HWLOC_OBJ_MACHINE, &total_nbobjs[i], &nbobjs_per_parent[i]);
         HYDU_ERR_POP(status, "unable to get number of objects\n");
 
         nbpu_per_obj[i] = HYDT_topo_hwloc_info.num_bitmaps / total_nbobjs[i];
@@ -564,8 +558,7 @@ HYD_status HYDT_topo_hwloc_bind(int idx)
     HYDU_FUNC_ENTER();
 
     hwloc_set_cpubind(topology, HYDT_topo_hwloc_info.bitmap[id], 0);
-    hwloc_set_membind(topology, HYDT_topo_hwloc_info.bitmap[id],
-                      HYDT_topo_hwloc_info.membind, 0);
+    hwloc_set_membind(topology, HYDT_topo_hwloc_info.bitmap[id], HYDT_topo_hwloc_info.membind, 0);
 
     HYDU_FUNC_EXIT();
     return status;

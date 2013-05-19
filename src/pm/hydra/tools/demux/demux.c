@@ -76,8 +76,7 @@ HYD_status HYDT_dmx_init(char **demux)
 }
 
 HYD_status HYDT_dmx_register_fd(int num_fds, int *fd, HYD_event_t events, void *userp,
-                                HYD_status(*callback) (int fd, HYD_event_t events,
-                                                       void *userp))
+                                HYD_status(*callback) (int fd, HYD_event_t events, void *userp))
 {
     struct HYDT_dmxu_callback *cb_element, *run;
 #if defined HAVE_ERROR_CHECKING
@@ -107,8 +106,7 @@ HYD_status HYDT_dmx_register_fd(int num_fds, int *fd, HYD_event_t events, void *
     }
 #endif /* HAVE_ERROR_CHECKING */
 
-    HYDU_MALLOC(cb_element, struct HYDT_dmxu_callback *, sizeof(struct HYDT_dmxu_callback),
-                status);
+    HYDU_MALLOC(cb_element, struct HYDT_dmxu_callback *, sizeof(struct HYDT_dmxu_callback), status);
     cb_element->num_fds = num_fds;
     HYDU_MALLOC(cb_element->fd, int *, num_fds * sizeof(int), status);
     memcpy(cb_element->fd, fd, num_fds * sizeof(int));
@@ -158,8 +156,7 @@ HYD_status HYDT_dmx_deregister_fd(int fd)
     }
 
     /* FD is not found */
-    HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
-                        "could not find fd to deregister: %d\n", fd);
+    HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "could not find fd to deregister: %d\n", fd);
 
   fn_exit:
     HYDU_FUNC_EXIT();

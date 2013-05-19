@@ -269,8 +269,7 @@ static HYD_status fn_info_putnodeattr(int fd, char *args[])
     HYDU_ERR_CHKANDJUMP(status, key == NULL, HYD_INTERNAL_ERROR, "unable to find key token\n");
 
     val = HYD_pmcd_pmi_find_token_keyval(tokens, token_count, "value");
-    HYDU_ERR_CHKANDJUMP(status, val == NULL, HYD_INTERNAL_ERROR,
-                        "unable to find value token\n");
+    HYDU_ERR_CHKANDJUMP(status, val == NULL, HYD_INTERNAL_ERROR, "unable to find value token\n");
 
     thrid = HYD_pmcd_pmi_find_token_keyval(tokens, token_count, "thrid");
 
@@ -406,8 +405,7 @@ static HYD_status fn_info_getjobattr(int fd, char *args[])
     HYDU_ERR_POP(status, "unable to convert args to tokens\n");
 
     key = HYD_pmcd_pmi_find_token_keyval(tokens, token_count, "key");
-    HYDU_ERR_CHKANDJUMP(status, key == NULL, HYD_INTERNAL_ERROR,
-                        "unable to find token: key\n");
+    HYDU_ERR_CHKANDJUMP(status, key == NULL, HYD_INTERNAL_ERROR, "unable to find token: key\n");
 
     thrid = HYD_pmcd_pmi_find_token_keyval(tokens, token_count, "thrid");
 

@@ -57,8 +57,7 @@ static void help_help_fn(void)
     printf("    -genv {name} {value}             environment variable name and value\n");
     printf("    -genvlist {env1,env2,...}        environment variable list to pass\n");
     printf("    -genvnone                        do not pass any environment variables\n");
-    printf
-        ("    -genvall                         pass all environment variables not managed\n");
+    printf("    -genvall                         pass all environment variables not managed\n");
     printf("                                          by the launcher (default)\n");
 
     printf("\n");
@@ -66,8 +65,7 @@ static void help_help_fn(void)
     printf("    -f {name}                        file containing the host names\n");
     printf("    -hosts {host list}               comma separated host list\n");
     printf("    -wdir {dirname}                  working directory to use\n");
-    printf
-        ("    -configfile {name}               config file containing MPMD launch options\n");
+    printf("    -configfile {name}               config file containing MPMD launch options\n");
 
     printf("\n");
     printf("\n");
@@ -121,8 +119,7 @@ static void help_help_fn(void)
 
     printf("\n");
     printf("  Demux engine options:\n");
-    printf("    -demux                           demux engine (%s)\n",
-           HYDRA_AVAILABLE_DEMUXES);
+    printf("    -demux                           demux engine (%s)\n", HYDRA_AVAILABLE_DEMUXES);
 
     printf("\n");
     printf("  Other Hydra options:\n");
@@ -136,8 +133,7 @@ static void help_help_fn(void)
     printf("    -prepend-pattern                 prepend pattern to output\n");
     printf("    -outfile-pattern                 direct stdout to file\n");
     printf("    -errfile-pattern                 direct stderr to file\n");
-    printf
-        ("    -nameserver                      name server information (host:port format)\n");
+    printf("    -nameserver                      name server information (host:port format)\n");
     printf("    -disable-auto-cleanup            don't cleanup processes on error\n");
     printf("    -disable-hostname-propagation    let MPICH auto-detect the hostname\n");
     printf("    -order-nodes                     order nodes as ascending/descending cores\n");
@@ -336,8 +332,7 @@ static HYD_status mfile_fn(char *arg, char ***argv)
                         "duplicate host file setting\n");
 
     if (strcmp(**argv, "HYDRA_USE_LOCALHOST")) {
-        status =
-            HYDU_parse_hostfile(**argv, &HYD_server_info.node_list, HYDU_process_mfile_token);
+        status = HYDU_parse_hostfile(**argv, &HYD_server_info.node_list, HYDU_process_mfile_token);
         HYDU_ERR_POP(status, "error parsing hostfile\n");
     }
     else {
@@ -1208,11 +1203,9 @@ static HYD_status info_fn(char *arg, char ***argv)
     HYD_status status = HYD_SUCCESS;
 
     HYDU_dump_noprefix(stdout, "HYDRA build details:\n");
+    HYDU_dump_noprefix(stdout, "    Version:                                 %s\n", HYDRA_VERSION);
     HYDU_dump_noprefix(stdout,
-                       "    Version:                                 %s\n", HYDRA_VERSION);
-    HYDU_dump_noprefix(stdout,
-                       "    Release Date:                            %s\n",
-                       HYDRA_RELEASE_DATE);
+                       "    Release Date:                            %s\n", HYDRA_RELEASE_DATE);
     HYDU_dump_noprefix(stdout, "    CC:                              %s\n", HYDRA_CC);
     HYDU_dump_noprefix(stdout, "    CXX:                             %s\n", HYDRA_CXX);
     HYDU_dump_noprefix(stdout, "    F77:                             %s\n", HYDRA_F77);
@@ -1228,8 +1221,7 @@ static HYD_status info_fn(char *arg, char ***argv)
                        "    Topology libraries available:            %s\n",
                        HYDRA_AVAILABLE_TOPOLIBS);
     HYDU_dump_noprefix(stdout,
-                       "    Resource management kernels available:   %s\n",
-                       HYDRA_AVAILABLE_RMKS);
+                       "    Resource management kernels available:   %s\n", HYDRA_AVAILABLE_RMKS);
     HYDU_dump_noprefix(stdout,
                        "    Checkpointing libraries available:       %s\n",
                        HYDRA_AVAILABLE_CKPOINTLIBS);
@@ -1366,8 +1358,7 @@ static HYD_status hostname_propagation_fn(char *arg, char ***argv)
         goto fn_exit;
     }
 
-    status = HYDU_set_int(arg, &hostname_propagation,
-                          strcmp(arg, "disable-hostname-propagation"));
+    status = HYDU_set_int(arg, &hostname_propagation, strcmp(arg, "disable-hostname-propagation"));
     HYDU_ERR_POP(status, "error setting hostname propagation\n");
 
   fn_exit:
@@ -1440,8 +1431,7 @@ static void usize_help_fn(void)
 {
     printf("\n");
     printf("-usize: Universe size (SYSTEM, INFINITE, <value>\n");
-    printf
-        ("   SYSTEM: Number of cores passed to mpiexec through hostfile or resource manager\n");
+    printf("   SYSTEM: Number of cores passed to mpiexec through hostfile or resource manager\n");
     printf("   INFINITE: No limit\n");
     printf("   <value>: Numeric value >= 0\n\n");
 }
@@ -1520,10 +1510,8 @@ static HYD_status set_default_values(void)
         tmp = NULL;
     }
 
-    if (HYD_server_info.node_list == NULL &&
-        MPL_env2str("HYDRA_HOST_FILE", (const char **) &tmp)) {
-        status =
-            HYDU_parse_hostfile(tmp, &HYD_server_info.node_list, HYDU_process_mfile_token);
+    if (HYD_server_info.node_list == NULL && MPL_env2str("HYDRA_HOST_FILE", (const char **) &tmp)) {
+        status = HYDU_parse_hostfile(tmp, &HYD_server_info.node_list, HYDU_process_mfile_token);
         HYDU_ERR_POP(status, "error parsing hostfile\n");
     }
 

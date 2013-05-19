@@ -488,8 +488,7 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
      */
 
     val = HYD_pmcd_pmi_find_token_keyval(tokens, token_count, "ncmds");
-    HYDU_ERR_CHKANDJUMP(status, val == NULL, HYD_INTERNAL_ERROR,
-                        "unable to find token: ncmds\n");
+    HYDU_ERR_CHKANDJUMP(status, val == NULL, HYD_INTERNAL_ERROR, "unable to find token: ncmds\n");
     ncmds = atoi(val);
 
     HYDU_MALLOC(segment_list, struct HYD_pmcd_token_segment *,

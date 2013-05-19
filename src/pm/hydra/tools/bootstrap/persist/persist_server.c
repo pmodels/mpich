@@ -99,8 +99,7 @@ static HYD_status stdio_cb(int fd, HYD_event_t events, void *userp)
         }
         else {
             status = HYDT_dmx_deregister_fd(private.stdout_fd);
-            HYDU_ERR_SETANDJUMP(status, status, "error deregistering fd %d\n",
-                                private.stdout_fd);
+            HYDU_ERR_SETANDJUMP(status, status, "error deregistering fd %d\n", private.stdout_fd);
             close(private.stdout_fd);
         }
     }
@@ -130,8 +129,7 @@ static HYD_status stdio_cb(int fd, HYD_event_t events, void *userp)
         }
         else {
             status = HYDT_dmx_deregister_fd(private.stderr_fd);
-            HYDU_ERR_SETANDJUMP(status, status, "error deregistering fd %d\n",
-                                private.stderr_fd);
+            HYDU_ERR_SETANDJUMP(status, status, "error deregistering fd %d\n", private.stderr_fd);
             close(private.stderr_fd);
         }
     }
@@ -162,8 +160,7 @@ static HYD_status listen_cb(int fd, HYD_event_t events, void *userp)
 
         /* fork and let the slave process handle this connection */
         private.slave_pid = fork();
-        HYDU_ERR_CHKANDJUMP(status, private.slave_pid < 0, HYD_INTERNAL_ERROR,
-                            "fork failed\n");
+        HYDU_ERR_CHKANDJUMP(status, private.slave_pid < 0, HYD_INTERNAL_ERROR, "fork failed\n");
 
         if (private.slave_pid > 0) {    /* master process */
             close(private.client_fd);   /* the slave process will handle this */

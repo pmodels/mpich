@@ -14,8 +14,8 @@
 #define PMI_MAXVALLEN    (1024) /* max length of value in keyval space */
 #define PMI_MAXKVSLEN    (256)  /* max length of various names */
 
-#define MAX_PMI_ARGS  (1024)  /* number of arguments in a PMI command */
-#define MAX_PMI_INTERNAL_ARGS   (65536)  /* number of arguments in internal communication */
+#define MAX_PMI_ARGS  (1024)    /* number of arguments in a PMI command */
+#define MAX_PMI_INTERNAL_ARGS   (65536) /* number of arguments in internal communication */
 
 struct HYD_pmcd_pmi_kvs_pair {
     char key[PMI_MAXKEYLEN];
@@ -24,7 +24,7 @@ struct HYD_pmcd_pmi_kvs_pair {
 };
 
 struct HYD_pmcd_pmi_kvs {
-    char kvsname[PMI_MAXKVSLEN];       /* Name of this kvs */
+    char kvsname[PMI_MAXKVSLEN];        /* Name of this kvs */
     struct HYD_pmcd_pmi_kvs_pair *key_pair;
 };
 
@@ -71,16 +71,12 @@ struct HYD_pmcd_token {
 };
 
 void HYD_pmcd_init_header(struct HYD_pmcd_hdr *hdr);
-HYD_status HYD_pmcd_pmi_parse_pmi_cmd(char *buf, int pmi_version, char **pmi_cmd,
-                                      char *args[]);
-HYD_status HYD_pmcd_pmi_args_to_tokens(char *args[], struct HYD_pmcd_token **tokens,
-                                       int *count);
+HYD_status HYD_pmcd_pmi_parse_pmi_cmd(char *buf, int pmi_version, char **pmi_cmd, char *args[]);
+HYD_status HYD_pmcd_pmi_args_to_tokens(char *args[], struct HYD_pmcd_token **tokens, int *count);
 void HYD_pmcd_pmi_free_tokens(struct HYD_pmcd_token *tokens, int token_count);
-char *HYD_pmcd_pmi_find_token_keyval(struct HYD_pmcd_token *tokens, int count,
-                                     const char *key);
+char *HYD_pmcd_pmi_find_token_keyval(struct HYD_pmcd_token *tokens, int count, const char *key);
 HYD_status HYD_pmcd_pmi_allocate_kvs(struct HYD_pmcd_pmi_kvs **kvs, int pgid);
 void HYD_pmcd_free_pmi_kvs_list(struct HYD_pmcd_pmi_kvs *kvs_list);
-HYD_status HYD_pmcd_pmi_add_kvs(const char *key, char *val, struct HYD_pmcd_pmi_kvs *kvs,
-                                int *ret);
+HYD_status HYD_pmcd_pmi_add_kvs(const char *key, char *val, struct HYD_pmcd_pmi_kvs *kvs, int *ret);
 
 #endif /* COMMON_H_INCLUDED */

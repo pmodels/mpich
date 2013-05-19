@@ -38,8 +38,7 @@ HYD_status HYDT_dmx_init(char **demux);
  * event.
  */
 HYD_status HYDT_dmx_register_fd(int num_fds, int *fd, HYD_event_t events, void *userp,
-                                HYD_status(*callback) (int fd, HYD_event_t events,
-                                                       void *userp));
+                                HYD_status(*callback) (int fd, HYD_event_t events, void *userp));
 
 /**
  * \brief HYDT_dmx_deregister_fd - Deregister file descriptor

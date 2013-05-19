@@ -18,8 +18,7 @@ int HYDU_dceil(int x, int y)
         return z + 1;
 }
 
-HYD_status HYDU_add_to_node_list(const char *hostname, int num_procs,
-                                 struct HYD_node ** node_list)
+HYD_status HYDU_add_to_node_list(const char *hostname, int num_procs, struct HYD_node ** node_list)
 {
     struct HYD_node *node;
     HYD_status status = HYD_SUCCESS;

@@ -42,8 +42,7 @@ HYD_status HYDT_bscd_pbs_wait_for_completion(int timeout)
             if (HYDT_bscd_pbs_sys->spawn_events[idx] == e) {
                 /* got a spawn event (task_id[idx] is now valid);
                  * register this task for a termination event */
-                err = tm_obit(HYDT_bscd_pbs_sys->task_id[idx], &taskobits[idx],
-                              &obit_events[idx]);
+                err = tm_obit(HYDT_bscd_pbs_sys->task_id[idx], &taskobits[idx], &obit_events[idx]);
                 HYDU_ERR_CHKANDJUMP(status, err != TM_SUCCESS, HYD_INTERNAL_ERROR,
                                     "tm_obit() failed with TM error %d\n", err);
                 spawn_count--;

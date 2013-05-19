@@ -195,8 +195,7 @@ static HYD_status fn_initack(int fd, char *args[])
     HYDU_ERR_POP(status, "unable to convert args to tokens\n");
 
     val = HYD_pmcd_pmi_find_token_keyval(tokens, token_count, "pmiid");
-    HYDU_ERR_CHKANDJUMP(status, val == NULL, HYD_INTERNAL_ERROR,
-                        "unable to find pmiid token\n");
+    HYDU_ERR_CHKANDJUMP(status, val == NULL, HYD_INTERNAL_ERROR, "unable to find pmiid token\n");
     id = atoi(val);
 
     /* Store the PMI_ID to fd mapping */
@@ -385,8 +384,7 @@ static HYD_status fn_get(int fd, char *args[])
     HYDU_ERR_POP(status, "unable to convert args to tokens\n");
 
     key = HYD_pmcd_pmi_find_token_keyval(tokens, token_count, "key");
-    HYDU_ERR_CHKANDJUMP(status, key == NULL, HYD_INTERNAL_ERROR,
-                        "unable to find token: key\n");
+    HYDU_ERR_CHKANDJUMP(status, key == NULL, HYD_INTERNAL_ERROR, "unable to find token: key\n");
 
     if (!strcmp(key, "PMI_process_mapping")) {
         HYD_STRING_STASH_INIT(stash);
@@ -454,8 +452,7 @@ static HYD_status fn_put(int fd, char *args[])
     HYDU_ERR_POP(status, "unable to convert args to tokens\n");
 
     key = HYD_pmcd_pmi_find_token_keyval(tokens, token_count, "key");
-    HYDU_ERR_CHKANDJUMP(status, key == NULL, HYD_INTERNAL_ERROR,
-                        "unable to find token: key\n");
+    HYDU_ERR_CHKANDJUMP(status, key == NULL, HYD_INTERNAL_ERROR, "unable to find token: key\n");
 
     val = HYD_pmcd_pmi_find_token_keyval(tokens, token_count, "value");
     if (val == NULL)
@@ -500,8 +497,10 @@ static HYD_status fn_keyval_cache(int fd, char *args[])
 
     /* allocate a larger space for the cached keyvals, copy over the
      * older keyvals and add the new ones in */
-    HYDU_REALLOC(cache_get.key, char **, (cache_get.keyval_len + token_count) * sizeof(char *), status);
-    HYDU_REALLOC(cache_get.val, char **, (cache_get.keyval_len + token_count) * sizeof(char *), status);
+    HYDU_REALLOC(cache_get.key, char **, (cache_get.keyval_len + token_count) * sizeof(char *),
+                 status);
+    HYDU_REALLOC(cache_get.val, char **, (cache_get.keyval_len + token_count) * sizeof(char *),
+                 status);
 
     for (i = 0; i < token_count; i++) {
         cache_get.key[cache_get.keyval_len + i] = HYDU_strdup(tokens[i].key);

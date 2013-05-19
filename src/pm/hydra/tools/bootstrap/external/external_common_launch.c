@@ -97,15 +97,13 @@ static HYD_status sge_get_path(char **path)
     goto fn_exit;
 }
 
-HYD_status HYDT_bscd_common_launch_procs(char **args, struct HYD_proxy *proxy_list,
-                                         int *control_fd)
+HYD_status HYDT_bscd_common_launch_procs(char **args, struct HYD_proxy *proxy_list, int *control_fd)
 {
     int num_hosts, idx, i, host_idx, fd, exec_idx, offset, lh, len, rc, autofork;
     int *pid, *fd_list, *dummy;
     int sockpair[2];
     struct HYD_proxy *proxy;
-    char *targs[HYD_NUM_TMP_STRINGS] = { NULL }, *path = NULL, *extra_arg_list =
-        NULL, *extra_arg;
+    char *targs[HYD_NUM_TMP_STRINGS] = { NULL }, *path = NULL, *extra_arg_list = NULL, *extra_arg;
     char quoted_exec_string[HYD_TMP_STRLEN], *original_exec_string;
     struct HYD_env *env = NULL;
     HYD_status status = HYD_SUCCESS;
@@ -199,8 +197,7 @@ HYD_status HYDT_bscd_common_launch_procs(char **args, struct HYD_proxy *proxy_li
     HYD_bscu_pid_list = pid;
 
     /* Increase fd list to accommodate these new fds */
-    HYDU_MALLOC(fd_list, int *, (HYD_bscu_fd_count + (2 * num_hosts) + 1) * sizeof(int),
-                status);
+    HYDU_MALLOC(fd_list, int *, (HYD_bscu_fd_count + (2 * num_hosts) + 1) * sizeof(int), status);
     for (i = 0; i < HYD_bscu_fd_count; i++)
         fd_list[i] = HYD_bscu_fd_list[i];
     HYDU_FREE(HYD_bscu_fd_list);
@@ -223,8 +220,7 @@ HYD_status HYDT_bscd_common_launch_procs(char **args, struct HYD_proxy *proxy_li
             len = strlen(proxy->node->user) + strlen("@") + strlen(proxy->node->hostname) + 1;
 
             HYDU_MALLOC(targs[host_idx], char *, len, status);
-            MPL_snprintf(targs[host_idx], len, "%s@%s", proxy->node->user,
-                         proxy->node->hostname);
+            MPL_snprintf(targs[host_idx], len, "%s@%s", proxy->node->user, proxy->node->hostname);
         }
 
         /* append proxy ID */
@@ -275,8 +271,7 @@ HYD_status HYDT_bscd_common_launch_procs(char **args, struct HYD_proxy *proxy_li
              * to have problems when stdin is closed before they are
              * launched. */
             if (!strcmp(HYDT_bsci_info.launcher, "ssh") ||
-                !strcmp(HYDT_bsci_info.launcher, "rsh") ||
-                !strcmp(HYDT_bsci_info.launcher, "sge"))
+                !strcmp(HYDT_bsci_info.launcher, "rsh") || !strcmp(HYDT_bsci_info.launcher, "sge"))
                 dummy = &fd;
             else
                 dummy = NULL;

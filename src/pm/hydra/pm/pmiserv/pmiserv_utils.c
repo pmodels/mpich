@@ -411,8 +411,7 @@ HYD_status HYD_pmcd_pmi_fill_in_exec_launch_info(struct HYD_pg *pg)
         }
 
         HYD_STRING_STASH(exec_stash, HYDU_strdup("--global-user-env"), status);
-        for (i = 0, env = HYD_server_info.user_global.global_env.user; env;
-             env = env->next, i++);
+        for (i = 0, env = HYD_server_info.user_global.global_env.user; env; env = env->next, i++);
         HYD_STRING_STASH(exec_stash, HYDU_int_to_str(i), status);
 
         for (env = HYD_server_info.user_global.global_env.user; env; env = env->next) {
@@ -425,8 +424,7 @@ HYD_status HYD_pmcd_pmi_fill_in_exec_launch_info(struct HYD_pg *pg)
         }
 
         HYD_STRING_STASH(exec_stash, HYDU_strdup("--global-system-env"), status);
-        for (i = 0, env = HYD_server_info.user_global.global_env.system; env;
-             env = env->next, i++);
+        for (i = 0, env = HYD_server_info.user_global.global_env.system; env; env = env->next, i++);
         HYD_STRING_STASH(exec_stash, HYDU_int_to_str(i), status);
 
         for (env = HYD_server_info.user_global.global_env.system; env; env = env->next) {

@@ -125,8 +125,7 @@ HYD_status HYD_pmcd_pmi_publish(char *name, char *port, int *success)
         HYDU_ERR_POP(status, "error sending string list\n");
         HYD_STRING_STASH_FREE(stash);
 
-        status = HYDU_sock_read(ns_fd, &len, sizeof(int), &recvd, &closed,
-                                HYDU_SOCK_COMM_MSGWAIT);
+        status = HYDU_sock_read(ns_fd, &len, sizeof(int), &recvd, &closed, HYDU_SOCK_COMM_MSGWAIT);
         HYDU_ERR_POP(status, "error reading from nameserver\n");
         HYDU_ASSERT(!closed, status);
 
@@ -222,8 +221,7 @@ HYD_status HYD_pmcd_pmi_unpublish(char *name, int *success)
         HYDU_ERR_POP(status, "error sending string list\n");
         HYD_STRING_STASH_FREE(stash);
 
-        status = HYDU_sock_read(ns_fd, &len, sizeof(int), &recvd, &closed,
-                                HYDU_SOCK_COMM_MSGWAIT);
+        status = HYDU_sock_read(ns_fd, &len, sizeof(int), &recvd, &closed, HYDU_SOCK_COMM_MSGWAIT);
         HYDU_ERR_POP(status, "error reading from nameserver\n");
         HYDU_ASSERT(!closed, status);
 
@@ -296,8 +294,7 @@ HYD_status HYD_pmcd_pmi_lookup(char *name, char **value)
         HYDU_ERR_POP(status, "error sending string list\n");
         HYD_STRING_STASH_FREE(stash);
 
-        status = HYDU_sock_read(ns_fd, &len, sizeof(int), &recvd, &closed,
-                                HYDU_SOCK_COMM_MSGWAIT);
+        status = HYDU_sock_read(ns_fd, &len, sizeof(int), &recvd, &closed, HYDU_SOCK_COMM_MSGWAIT);
         HYDU_ERR_POP(status, "error reading from nameserver\n");
         HYDU_ASSERT(!closed, status);
 

@@ -233,8 +233,7 @@ char **HYDU_str_to_strlist(char *str)
 
     HYDU_MALLOC(strlist, char **, HYD_NUM_TMP_STRINGS * sizeof(char *), status);
     if (!strlist)
-        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
-                            "Unable to allocate mem for strlist\n");
+        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "Unable to allocate mem for strlist\n");
 
     for (i = 0; i < HYD_NUM_TMP_STRINGS; i++)
         strlist[i] = NULL;

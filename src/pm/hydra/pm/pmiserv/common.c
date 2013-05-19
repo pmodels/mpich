@@ -20,8 +20,7 @@ void HYD_pmcd_init_header(struct HYD_pmcd_hdr *hdr)
     hdr->signum = -1;
 }
 
-HYD_status HYD_pmcd_pmi_parse_pmi_cmd(char *obuf, int pmi_version, char **pmi_cmd,
-                                      char *args[])
+HYD_status HYD_pmcd_pmi_parse_pmi_cmd(char *obuf, int pmi_version, char **pmi_cmd, char *args[])
 {
     char *str1 = NULL, *cmd, *buf;
     const char *delim;
@@ -68,8 +67,7 @@ HYD_status HYD_pmcd_pmi_parse_pmi_cmd(char *obuf, int pmi_version, char **pmi_cm
     goto fn_exit;
 }
 
-HYD_status HYD_pmcd_pmi_args_to_tokens(char *args[], struct HYD_pmcd_token **tokens,
-                                       int *count)
+HYD_status HYD_pmcd_pmi_args_to_tokens(char *args[], struct HYD_pmcd_token **tokens, int *count)
 {
     int i, j;
     char *arg;
@@ -77,8 +75,7 @@ HYD_status HYD_pmcd_pmi_args_to_tokens(char *args[], struct HYD_pmcd_token **tok
 
     for (i = 0; args[i]; i++);
     *count = i;
-    HYDU_MALLOC(*tokens, struct HYD_pmcd_token *, *count * sizeof(struct HYD_pmcd_token),
-                status);
+    HYDU_MALLOC(*tokens, struct HYD_pmcd_token *, *count * sizeof(struct HYD_pmcd_token), status);
 
     for (i = 0; args[i]; i++) {
         arg = HYDU_strdup(args[i]);
@@ -156,8 +153,7 @@ void HYD_pmcd_free_pmi_kvs_list(struct HYD_pmcd_pmi_kvs *kvs_list)
     HYDU_FUNC_EXIT();
 }
 
-HYD_status HYD_pmcd_pmi_add_kvs(const char *key, char *val, struct HYD_pmcd_pmi_kvs *kvs,
-                                int *ret)
+HYD_status HYD_pmcd_pmi_add_kvs(const char *key, char *val, struct HYD_pmcd_pmi_kvs *kvs, int *ret)
 {
     struct HYD_pmcd_pmi_kvs_pair *key_pair, *run;
     HYD_status status = HYD_SUCCESS;
