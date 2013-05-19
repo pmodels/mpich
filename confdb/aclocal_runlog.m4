@@ -183,8 +183,6 @@ dnl Save a copy of ac_link on a stack
 dnl which is safe through nested invocations of this macro.
 PAC_VAR_PUSHVAL([ac_link])
 dnl Modify ac_link based on the unmodified ac_link.
-echo "ac_link: $ac_link"
-echo "pac_FirstSavedValueOf_ac_link: $pac_FirstSavedValueOf_ac_link"
 ac_link="`echo $pac_FirstSavedValueOf_ac_link | sed -e 's|>.*$|> $1 2>\&1|g'`"
 dnl
 AC_LINK_IFELSE([$2],[
