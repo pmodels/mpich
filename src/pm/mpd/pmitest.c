@@ -6,6 +6,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netdb.h>
@@ -146,7 +147,7 @@ int connect_to_pm( char *hostname, int portnum )
     }
     
     bzero( (void *)&sin, sizeof(sin) );
-    bcopy( (void *)hp->h_addr, (void *)&sin.sin_addr, hp->h_length);
+    memmove( (void *)&sin.sin_addr, (void *)hp->h_addr, hp->h_length);
     sin.sin_family = hp->h_addrtype;
     sin.sin_port   = htons( (unsigned short) portnum );
     
