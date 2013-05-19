@@ -656,7 +656,7 @@ AM_MAINTAINER_MODE([enable])
 
 AM_PROG_AR
 
-LT_INIT([disable-shared])
+LT_INIT()
 # Non-verbose make by default
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 

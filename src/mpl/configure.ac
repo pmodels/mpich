@@ -22,7 +22,7 @@ LT_PREREQ([2.2.6])
 
 # Bug in libtool adds -O2 and -g by default
 PAC_PUSH_FLAG([CFLAGS])
-LT_INIT(disable-shared)
+LT_INIT()
 PAC_POP_FLAG([CFLAGS])
 
 # ----------------------------------------------------------------------------

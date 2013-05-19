@@ -22,7 +22,7 @@ LT_PREREQ([2.2.6])
 
 # Bug in libtool adds -O2 and -g by default
 save_cflags=$CFLAGS
-LT_INIT(disable-shared)
+LT_INIT()
 CFLAGS=$save_cflags
 
 # ----------------------------------------------------------------------------

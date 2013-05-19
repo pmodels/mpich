@@ -21,7 +21,7 @@ AC_PROG_CC(mpicc)
 
 AM_PROG_AR
 
-LT_INIT(disable-shared)
+LT_INIT()
 PAC_POP_FLAG(CFLAGS)
 
 ## Non-verbose make
