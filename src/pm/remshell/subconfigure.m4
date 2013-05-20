@@ -128,7 +128,8 @@ if test "$ac_cv_func_ptrace" = yes ; then
     fi
 fi
 
-AC_CHECK_FUNCS([setsid isatty getsid])
+dnl The test for getsid etc is in src/pm/util (see the subconfigure.m4 there)
+dnl AC_CHECK_FUNCS([setsid isatty getsid])
 if test "$enable_newsession" = "yes" ; then
     AC_DEFINE([USE_NEW_SESSION],[1],[Define if mpiexec should create a new process group session])
 fi

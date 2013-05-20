@@ -52,6 +52,9 @@ fi
 #
 # Cygwin has setsid but not getsid
 AC_CHECK_FUNCS(setsid isatty getsid)
+# See if we need to define getsid (in the case that the above XOPEN
+# definitions have not been made.  
+PAC_FUNC_NEEDS_DECL([#include <unistd.h>],getsid)
 if test "$enable_newsession" = "yes" ; then
     AC_DEFINE(USE_NEW_SESSION,1,[Define if mpiexec should create a new process group session])
 fi
