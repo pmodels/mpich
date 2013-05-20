@@ -1908,3 +1908,54 @@ void MPIDI_collsel_pami_tune_cleanup()
 }
 
 
+#undef FUNCNAME
+#define FUNCNAME MPID_Get_node_id
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
+static int _g_max_node_id = -1;
+int MPID_Get_node_id(MPID_Comm *comm, int rank, MPID_Node_id_t *id_p)
+{
+  int mpi_errno = MPI_SUCCESS;
+  uint32_t node_id;
+  uint32_t offset;
+  uint32_t max_nodes;
+  if(!PAMIX_Extensions.is_local_task.node_info)
+    MPIU_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**notimpl");
+
+  pami_result_t rc = PAMIX_Extensions.is_local_task.node_info(comm->vcr[rank]->taskid,
+                                                              &node_id,&offset,&max_nodes);
+  if(rc != PAMI_SUCCESS)  MPIU_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**notimpl");
+  *id_p = node_id;
+
+  fn_fail:
+  return mpi_errno;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPID_Get_max_node_id
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
+int MPID_Get_max_node_id(MPID_Comm *comm, MPID_Node_id_t *max_id_p)
+{
+  int mpi_errno = MPI_SUCCESS;
+  uint32_t node_id;
+  uint32_t offset;
+  uint32_t max_nodes;
+  if(_g_max_node_id == -1)
+  {
+    if(!PAMIX_Extensions.is_local_task.node_info)
+      MPIU_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**notimpl");
+
+    pami_result_t rc = PAMIX_Extensions.is_local_task.node_info(comm->vcr[0]->taskid,
+                                                                &node_id,&offset,&max_nodes);
+    if(rc != PAMI_SUCCESS)  MPIU_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**notimpl");
+    *max_id_p = max_nodes;
+    _g_max_node_id = max_nodes;
+  }
+  else
+    *max_id_p = _g_max_node_id;
+
+  fn_fail:
+  return mpi_errno;
+}
+#undef FUNCNAME
