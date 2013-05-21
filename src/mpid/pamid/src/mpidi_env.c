@@ -1213,10 +1213,12 @@ int  MPIDI_get_buf_mem(unsigned long *buf_mem,unsigned long *buf_mem_max)
      int pre_alloc_val=0;
      unsigned long buf_max_val;
      int  has_error = 0;
+     extern int application_set_buf_mem;
 
      if (cp = getenv("MP_BUFFER_MEM")) {
          pre_alloc_buf[24] = '\0';
          buf_max[24] = '\0';
+         application_set_buf_mem=1;
          if ( (buf_max_cp = strchr(cp, ',')) ) {
            if ( *(++buf_max_cp)  == '\0' ) {
               /* Error: missing buffer_mem_max */
@@ -1261,7 +1263,7 @@ int  MPIDI_get_buf_mem(unsigned long *buf_mem,unsigned long *buf_mem_max)
                  *buf_mem     = (int) pre_alloc_val;
              if (buf_max_val > ONE_SHARED_SEGMENT)
                  *buf_mem = ONE_SHARED_SEGMENT;
-             if (buf_max_val  > *buf_mem_max)
+             if (buf_max_val != *buf_mem_max)
                   *buf_mem_max = buf_max_val;
          } else {
             args_in_error += 1;

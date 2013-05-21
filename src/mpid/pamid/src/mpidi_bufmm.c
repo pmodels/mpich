@@ -192,7 +192,7 @@ void MPIDI_calc_tokens(int nTasks,uint *eager_limit_in, unsigned long *buf_mem_i
           if (MPIDI_tfctrl_enabled < 2) {
              /* Sometimes we are off by 1 - due to integer arithmetic. */
              new_buf_mem_max = (2 * nTasks * MIN_BUF_BKT_SIZE);
-             if ( new_buf_mem_max <= BUFFER_MEM_MAX ) {
+             if ( (new_buf_mem_max <= BUFFER_MEM_MAX) && (!application_set_buf_mem) ) {
                  MPIDI_tfctrl_enabled = 2;
                  /* Reset val to mini (64) because the for loop above     */
                  /* would have changed it to 32.                          */
@@ -206,6 +206,13 @@ void MPIDI_calc_tokens(int nTasks,uint *eager_limit_in, unsigned long *buf_mem_i
                  /* Still not enough ...... Turn off eager send protocol */
                  MPIDI_tfctrl_enabled = 0;
                  val = 0;
+                 if (((MPIDI_Process.verbose >= MPIDI_VERBOSE_SUMMARY_0)|| (MPIDI_Process.mp_infolevel > 0))
+                      && (MPIR_Process.comm_world->rank == 0)) {
+                      if ( application_set_buf_mem ) {
+                           printf("ATTENTION: MP_BUFFER_MEM=%d was set too low, eager send protocol is disabled\n",
+                                   *buf_mem_in); 
+                      }
+                 }
              }
           }
        }
