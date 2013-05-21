@@ -1907,7 +1907,7 @@ void MPIDI_collsel_pami_tune_cleanup()
   MPIDI_collsel_free_advisor_params(&MPIDI_Collsel_advisor_params);
 }
 
-
+#if defined(MPID_USE_NODE_IDS)
 #undef FUNCNAME
 #define FUNCNAME MPID_Get_node_id
 #undef FCNAME
@@ -1958,4 +1958,5 @@ int MPID_Get_max_node_id(MPID_Comm *comm, MPID_Node_id_t *max_id_p)
   fn_fail:
   return mpi_errno;
 }
+#endif
 #undef FUNCNAME
