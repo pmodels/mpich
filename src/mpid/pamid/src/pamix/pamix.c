@@ -81,6 +81,7 @@ pamix_extension_info_t PAMIX_Extensions;
 ({                                                      \
   void* fn;                                             \
   fn = PAMI_Extension_symbol(ext, name);                \
+  PAMIX_assert_always(fn != NULL);                      \
   (type)fn;                                             \
 })
 void
