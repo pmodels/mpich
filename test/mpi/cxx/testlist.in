@@ -6,6 +6,7 @@ errhan
 init
 info
 datatype
+topo
 @iodir@
 @spawndir@
 @rmadir@
