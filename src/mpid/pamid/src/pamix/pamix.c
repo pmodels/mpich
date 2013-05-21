@@ -113,7 +113,9 @@ PAMIX_Initialize(pami_client_t client)
         PAMIX_Extensions.is_local_task.base    = PAMI_EXTENSION_FUNCTION(uint8_t *, "base",    PAMIX_Extensions.is_local_task.extension);
         PAMIX_Extensions.is_local_task.stride  = PAMI_EXTENSION_FUNCTION(uintptr_t, "stride",  PAMIX_Extensions.is_local_task.extension);
         PAMIX_Extensions.is_local_task.bitmask = PAMI_EXTENSION_FUNCTION(uintptr_t, "bitmask", PAMIX_Extensions.is_local_task.extension);
+#if defined(MPID_USE_NODE_IDS)
         PAMIX_Extensions.is_local_task.node_info = PAMI_EXTENSION_FUNCTION(node_info_fn, "get_node_info", PAMIX_Extensions.is_local_task.extension);
+#endif
       }
 
 #if defined(PAMIX_IS_LOCAL_TASK_STRIDE) && defined(PAMIX_IS_LOCAL_TASK_BITMASK)
