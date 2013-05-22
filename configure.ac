@@ -1659,7 +1659,11 @@ if test "$with_pmi" = "uni" -a "$with_pm" = "default" ; then
     with_pm="no"
 fi
 if test "$with_pm" = "default" -o "$with_pm" = "yes" ; then
-    with_pm=hydra
+   if test -z "$MPID_DEFAULT_PM" ; then
+      with_pm=${MPID_DEFAULT_PM}
+   else
+      with_pm=hydra
+   fi
 fi
 
 # We allow multiple pm names, separated by : or ,

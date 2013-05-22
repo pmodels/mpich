@@ -55,6 +55,7 @@ if test "${pamid_platform}" = "PE" ; then
         PM_REQUIRES_PMI=pmi2/poe
 elif test "${pamid_platform}" = "BGQ" ; then
   MPID_DEFAULT_CROSS_FILE=${master_top_srcdir}/src/mpid/pamid/cross/bgq8
+  MPID_DEFAULT_PM=no
 fi
 
 MPID_DEVICE_TIMER_TYPE=double
