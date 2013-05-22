@@ -596,7 +596,12 @@ AC_ARG_ENABLE([long-double],
 AC_ARG_WITH(cross,
 	AC_HELP_STRING([--with-cross=file],
 		[Specify the values of variables that configure cannot
-                 determine in a cross-compilation environment]),,with_cross=no)
+                 determine in a cross-compilation environment]),,
+		 with_cross=$MPID_DEFAULT_CROSS_FILE)
+if test -z "$with_cross" ; then with_cross=no ; fi
+if test "$with_cross" != "no"; then
+  AC_MSG_NOTICE([Using cross file: $with_cross])
+fi
 
 AC_ARG_WITH(namepublisher,
 [  --with-namepublisher=name   Choose the system that will support 
