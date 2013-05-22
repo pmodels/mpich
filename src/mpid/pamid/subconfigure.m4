@@ -96,13 +96,15 @@ AC_SUBST(BGQ_INSTALL_DIR)
 #
 if test "${pamid_platform}" = "BGQ" ; then
 
+  AC_MSG_CHECKING([for BGQ system software directory])
+
   #
   # Specify the default bgq system software paths
   #
-  bgq_driver_search_path="${BGQ_INSTALL_DIR} /bgsys/drivers/ppcfloor "
-  for bgq_version in `echo 1 2 3 4`; do
-    for bgq_release in `echo 1 2 3 4`; do
-      for bgq_mod in `echo 0 1 2 3 4`; do
+  bgq_driver_search_path="${BGQ_INSTALL_DIR} "
+  for bgq_version in `echo 4 3 2 1`; do
+    for bgq_release in `echo 4 3 2 1`; do
+      for bgq_mod in `echo 4 3 2 1 0`; do
         bgq_driver_search_path+="/bgsys/drivers/V${bgq_version}R${bgq_release}M${bgq_mod}/ppc64 "
       done
     done
@@ -148,6 +150,12 @@ if test "${pamid_platform}" = "BGQ" ; then
       break
     fi
   done
+
+  if test x"$bgq_driver" != "x"; then
+    AC_MSG_RESULT('$bgq_driver')
+  else
+    AC_MSG_RESULT('no')
+  fi
 
   #
   # The bgq compile requires these libraries.
