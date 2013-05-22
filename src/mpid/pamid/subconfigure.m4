@@ -40,6 +40,13 @@ dnl AM_CONDITIONAL([BUILD_CH3_UTIL_FTB],[test "x$enable_ftb" = "xyes"])
 AM_COND_IF([BUILD_PAMID],[
 
 pamid_platform=${device_args}
+if test x"$pamid_platform" == "x"; then
+  AS_CASE([$host],
+        [*-bgq-*],[pamid_platform=BGQ])
+fi
+
+AC_MSG_NOTICE([Using the pamid platform '$pamid_platform'])
+
 
 # Set a value for the maximum processor name.
 MPID_MAX_PROCESSOR_NAME=128
