@@ -288,10 +288,8 @@ inter-Merge Intracomm (,in:bool ,return) const
 intra-Create_cart Cartcomm (, ,in:const ,in:boolarray:2 ,in:bool ,return) const
 -Compute_dims void ( , , )
 intra-Create_graph Graphcomm (, ,in:const ,in:const ,in:bool ,return) const
-#intra-Dist_graph_create Distgraphcomm (,,in:const,in:const,in:const,in:const,in:constref:Info,in:bool,return) const
-#intra-Dist_graph_create_adjacent Distgraphcomm (,,in:const,in:const,,in:const,in:const,in:constref:Info,in:bool,return) const
-##intra-Create_dist_graph Distgraphcomm (,,in:const,in:const,in:const,in:const,in:constref:Info,in:bool,return) const
-##intra-Create_dist_graph_adjacent Distgraphcomm (,,in:const,in:const,,in:const,in:const,in:constref:Info,in:bool,return) const
+# Dist_graph_create, Dist_graph_create_adjacent are handled specially 
+# because of the optional weights parameter
 comm-Get_topology int (,return) const
 graph-Get_dims void (, , ) const
 graph-Get_topo void (, , , , ) const

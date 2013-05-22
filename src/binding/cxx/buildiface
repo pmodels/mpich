@@ -229,11 +229,11 @@ if (! -d "../../mpi/romio") { $build_io = 0; }
 		     'Create_cart-4' => 'in:boolarray:2',
 		     'Create_cart-5' => 'in:bool',
 		     'Create_graph-5' => 'in:bool',
-#                     'Dist_graph_create-8' => 'in:bool',
-#                     'Dist_graph_create_adjacent-9' => 'in:bool',
-                     # Other versions with one less argument (no weights)
-                     # also needed.
-#                     'distgraph-Get_dist_neighbors_count-4' => 'out:bool',
+# Because there are multiple versions of the Distgraph create routines, 
+# to allow for the optional weights, 
+# we don't use the automatic method to create them.  Thus, there are
+# no entries for Dist_graph_create, Dist_graph_create_adjacent, or
+# Dist_graph_neighrbors_count
 		     'cart-Get_topo-4' => 'out:boolarray:2',
 		     'Sub-2' => 'in:boolarray:-10', # Use -10 for immediate number
 		     'Shift-4' => 'in:refint',
@@ -363,8 +363,8 @@ $specialReturnType{"inter-Split"} = "Intercomm";
 		     'Create_intercomm' => MPI_Comm,
 		     'Create_cart' => 'MPI_Comm:4:5',
 		     'Create_graph' => 'MPI_Comm:5',
-#		     'Dist_graph_create' => 'MPI_Comm:8',
-#		     'Dist_graph_create_adjacent' => 'MPI_Comm:9',
+# Because the Dist_graph_create and Dist_graph_create_adjacent routines
+# have two signatures, their definitions are handled as a special case
 );
 $specialReturnType{"intra-Split"} = "Intracomm";
 $specialReturnType{"intra-Create"} = "Intracomm";
@@ -455,7 +455,8 @@ $specialReturnType{"intra-Dup"} = "Intracomm";
 		    );
 %class_mpi2graph = ();
 %class_mpi2distgraph = (
-#		     'Get_dist_neighbors_count' => '0', 
+# Because of the weights option, Get_dist_neighbors_count is handled as
+# special case
 		     'Get_dist_neighbors' => '0',
 );  
 %class_mpi2group = ();
@@ -482,9 +483,9 @@ $specialReturnType{"intra-Dup"} = "Intracomm";
 # also require special handling
 %class_mpi2intra = ( #'Alltoallw' => 0, 
 		     'Exscan' => 0,
-#		    'Spawn' => 'MPI_Comm',
-#		    'Spawn_multiple' => 'MPI_Comm',
-		    'Accept' => 'MPI_Comm',
+		     # Because Spawn and Spawn_multiple have two different
+		     # signaturs, they are handled as special cases.
+		     'Accept' => 'MPI_Comm',
 		     'Connect' => 'MPI_Comm',
 		     );
 %class_mpi2op = (
@@ -980,8 +981,8 @@ if ( -s "../../mpi/romio/include/mpio.h.in" ) {
 	     'intra-Split' => 'Comm_split',
 	     'intra-Create_cart' => 'Cart_create',
 	     'intra-Create_graph' => 'Graph_create',
-#	     'intra-Dist_graph_create' => 'Dist_graph_create',
-#	     'intra-Dist_graph_create_adjacent' => 'Dist_graph_create_adjacent',
+	     # Dist_graph_create and Dist_graph_create_adjacent are handled
+	     # as a special case
 	     'intra-Connect' => 'Comm_connect',
 	     'intra-Spawn' => 'Comm_spawn',
 	     'intra-Spawn_multiple' => 'Comm_spawn_multiple',
@@ -1041,8 +1042,6 @@ if ($doFuncspec) {
     # Use the MPI C++ binding names for the defered definitions
     $defer_definition{"Create_cart"}  = "Comm";
     $defer_definition{"Create_graph"} = "Comm";
-#    $defer_definition{"Dist_graph_create"} = "Comm";
-#    $defer_definition{"Dist_graph_create_adjacent"} = "Comm";
     $defer_definition{"Get_parent"}   = "Comm";
     $defer_definition{"Join"}         = "Comm";
     $defer_definition{"Merge"}        = "Intercomm";
