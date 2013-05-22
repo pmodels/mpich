@@ -355,24 +355,28 @@ MPIDI_SendMsg_process_userdefined_dt(MPID_Request      * sreq,
     {
       MPID_Segment segment;
 
-      sreq->mpid.uebuf = sndbuf = MPIU_Malloc(data_sz);
-      if (unlikely(sndbuf == NULL))
-        {
-          sreq->status.MPI_ERROR = MPI_ERR_NO_SPACE;
-          sreq->status.count = 0;
-          MPID_Abort(NULL, MPI_ERR_NO_SPACE, -1,
-                     "Unable to allocate non-contiguous buffer");
-        }
-      sreq->mpid.uebuf_malloc = mpiuMalloc;
+      if(data_sz != 0) {
+        sreq->mpid.uebuf = sndbuf = MPIU_Malloc(data_sz);
+        if (unlikely(sndbuf == NULL))
+          {
+            sreq->status.MPI_ERROR = MPI_ERR_NO_SPACE;
+            sreq->status.count = 0;
+            MPID_Abort(NULL, MPI_ERR_NO_SPACE, -1,
+                       "Unable to allocate non-contiguous buffer");
+          }
+        sreq->mpid.uebuf_malloc = mpiuMalloc;
 
-      DLOOP_Offset last = data_sz;
-      MPID_Segment_init(sreq->mpid.userbuf,
-                        sreq->mpid.userbufcount,
-                        sreq->mpid.datatype,
-                        &segment,
-                        0);
-      MPID_Segment_pack(&segment, 0, &last, sndbuf);
-      MPID_assert(last == data_sz);
+        DLOOP_Offset last = data_sz;
+        MPID_Segment_init(sreq->mpid.userbuf,
+                          sreq->mpid.userbufcount,
+                          sreq->mpid.datatype,
+                          &segment,
+                          0);
+        MPID_Segment_pack(&segment, 0, &last, sndbuf);
+        MPID_assert(last == data_sz);
+      } else {
+	sndbuf = NULL;
+      }
     }
 
   *_sndbuf = sndbuf;
