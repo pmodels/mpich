@@ -110,6 +110,7 @@ int MPI_Rget(void *origin_addr, int origin_count, MPI_Datatype
 
             MPIR_ERRTEST_COUNT(origin_count, mpi_errno);
             MPIR_ERRTEST_DATATYPE(origin_datatype, "origin_datatype", mpi_errno);
+            MPIR_ERRTEST_USERBUFFER(origin_addr, origin_count, origin_datatype, mpi_errno);
             MPIR_ERRTEST_COUNT(target_count, mpi_errno);
             MPIR_ERRTEST_DATATYPE(target_datatype, "target_datatype", mpi_errno);
             if (win_ptr->create_flavor != MPI_WIN_FLAVOR_DYNAMIC)

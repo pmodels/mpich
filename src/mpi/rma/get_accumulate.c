@@ -133,11 +133,11 @@ int MPI_Get_accumulate(const void *origin_addr, int origin_count,
             if (op != MPI_NO_OP) {
                 MPIR_ERRTEST_COUNT(origin_count, mpi_errno);
                 MPIR_ERRTEST_DATATYPE(origin_datatype, "origin_datatype", mpi_errno);
-                MPIR_ERRTEST_ARGNULL(origin_addr, "origin_addr", mpi_errno);
+                MPIR_ERRTEST_USERBUFFER(origin_addr, origin_count, origin_datatype, mpi_errno);
             }
             MPIR_ERRTEST_COUNT(result_count, mpi_errno);
             MPIR_ERRTEST_DATATYPE(result_datatype, "result_datatype", mpi_errno);
-            MPIR_ERRTEST_ARGNULL(result_addr, "result_addr", mpi_errno);
+            MPIR_ERRTEST_USERBUFFER(result_addr, result_count, result_datatype, mpi_errno);
             MPIR_ERRTEST_COUNT(target_count, mpi_errno);
             MPIR_ERRTEST_DATATYPE(target_datatype, "target_datatype", mpi_errno);
             if (win_ptr->create_flavor != MPI_WIN_FLAVOR_DYNAMIC)
