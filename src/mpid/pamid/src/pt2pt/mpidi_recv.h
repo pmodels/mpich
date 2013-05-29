@@ -190,13 +190,7 @@ MPIDI_Recv(void          * buf,
                                 comm->recvcontext_id + context_offset,
                                 &found);
 #endif
-#ifdef MPIDI_TRACE
-{
-  size_t ll;
-  ll = count * MPID_Datatype_get_basic_size(datatype);
-  MPIDI_SET_PR_REC(rreq,buf,count,ll,datatype,pami_source,rank,tag,comm,is_blocking);
-}
-#endif
+  MPIDI_SET_PR_REC(rreq,buf,count,datatype,pami_source,rank,tag,comm,is_blocking);
 
   /* ----------------------------------------------------------------- */
   /* populate request with our data                                    */
@@ -212,6 +206,7 @@ MPIDI_Recv(void          * buf,
 
   if (unlikely(found))
     {
+      TRACE_SET_R_VAL(pami_source,(rreq->mpid.PR_idx),len,rreq->mpid.uebuflen);
       MPIDI_RecvMsg_Unexp(rreq, buf, count, datatype);
       mpi_errno = rreq->status.MPI_ERROR;
       if (TOKEN_FLOW_CONTROL_ON) {

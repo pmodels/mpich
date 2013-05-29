@@ -196,11 +196,9 @@ MPIDI_RecvShortCB(pami_context_t    context,
 
   if (sndlen > 0)
     memcpy(rcvbuf, sndbuf, sndlen);
-#ifdef MPIDI_TRACE
-   MPIDI_Trace_buf[(PAMIX_Endpoint_query(sender))].R[(rreq->mpid.idx)].rlen=sndlen;
-   MPIDI_Trace_buf[(PAMIX_Endpoint_query(sender))].R[(rreq->mpid.idx)].comp_in_HH=1;
-   MPIDI_Trace_buf[(PAMIX_Endpoint_query(sender))].R[(rreq->mpid.idx)].bufadd=rreq->mpid.userbuf;
-#endif
+  TRACE_SET_R_VAL(source,(rreq->mpid.idx),rlen,sndlen);
+  TRACE_SET_R_BIT(source,(rreq->mpid.idx),fl.f.comp_in_HH);
+  TRACE_SET_R_VAL(source,(rreq->mpid.idx),bufadd,rreq->mpid.userbuf);
   MPIDI_Request_complete(rreq);
 
  fn_exit_short:

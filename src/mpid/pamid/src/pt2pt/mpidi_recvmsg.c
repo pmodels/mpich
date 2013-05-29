@@ -36,9 +36,7 @@ MPIDI_RecvMsg_Unexp(MPID_Request  * rreq,
   /* The recvnew callback will acknowledge the posted messages    */
   /* Recv functions will ack the messages that are unexpected     */
   /* ------------------------------------------------------------ */
-#ifdef MPIDI_TRACE
-  MPIDI_Trace_buf[(rreq->mpid.partner_id)].R[(rreq->mpid.idx)].matchedInUQ=1;
-#endif
+  TRACE_SET_R_BIT((rreq->mpid.partner_id),(rreq->mpid.idx),fl.f.matchedInUQ);
 
   if (MPIDI_Request_isRzv(rreq))
     {

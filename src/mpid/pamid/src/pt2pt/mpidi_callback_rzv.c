@@ -111,12 +111,10 @@ MPIDI_RecvRzvCB_impl(pami_context_t    context,
       rreq->mpid.envelope.data   = envelope->data;
 #endif
       rreq->mpid.envelope.length = envelope->length;
-#ifdef MPIDI_TRACE
-  MPIDI_Trace_buf[source].R[(rreq->mpid.idx)].req=rreq;
-  MPIDI_Trace_buf[source].R[(rreq->mpid.idx)].rzv=1;
-  MPIDI_Trace_buf[source].R[(rreq->mpid.idx)].rlen=envelope->length;
-  MPIDI_Trace_buf[source].R[(rreq->mpid.idx)].sync=msginfo->isSync;
-#endif
+     TRACE_SET_R_VAL(source,(rreq->mpid.idx),req,rreq);
+     TRACE_SET_R_VAL(source,(rreq->mpid.idx),rlen,envelope->length);
+     TRACE_SET_R_VAL(source,(rreq->mpid.idx),fl.f.sync,msginfo->isSync);
+     TRACE_SET_R_BIT(source,(rreq->mpid.idx),fl.f.rzv);
      if (TOKEN_FLOW_CONTROL_ON)
        {
          #if TOKEN_FLOW_CONTROL
@@ -147,11 +145,9 @@ MPIDI_RecvRzvCB_impl(pami_context_t    context,
       else
         {
           MPIDI_RendezvousTransfer(context, rreq);
-#ifdef MPIDI_TRACE
-      MPIDI_Trace_buf[source].R[(rreq->mpid.idx)].sync_com_in_HH=1;
-      MPIDI_Trace_buf[source].R[(rreq->mpid.idx)].matchedInHH=1;
-      MPIDI_Trace_buf[source].R[(rreq->mpid.idx)].bufadd=rreq->mpid.userbuf;
-#endif
+          TRACE_SET_R_BIT(source,(rreq->mpid.idx),fl.f.sync_com_in_HH);
+          TRACE_SET_R_BIT(source,(rreq->mpid.idx),fl.f.matchedInHH);
+          TRACE_SET_R_VAL(source,(rreq->mpid.idx),bufadd,rreq->mpid.userbuf);
         }
       MPID_Request_discard(newreq);
     }

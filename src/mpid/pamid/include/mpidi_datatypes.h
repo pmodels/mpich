@@ -35,6 +35,7 @@
 #include "mpidi_constants.h"
 #include "mpidi_platform.h"
 #include "pami.h"
+#include "mpidi_trace.h"
 
 #if (MPIU_HANDLE_ALLOCATION_METHOD == MPIU_HANDLE_ALLOCATION_THREAD_LOCAL) && defined(__BGQ__)
 struct MPID_Request;

@@ -73,18 +73,14 @@ MPIDI_Callback_process_unexp(MPID_Request *newreq,
 #endif
 
   MPID_assert(!sndlen || rreq->mpid.uebuf != NULL);
-#ifdef MPIDI_TRACE
-   int  idx=(msginfo->MPIseqno & SEQMASK);
-   int  source=PAMIX_Endpoint_query(sender);
-   memset(&MPIDI_Trace_buf[source].R[idx],0,sizeof(recv_status));
-   MPIDI_Trace_buf[source].R[idx].msgid=msginfo->MPIseqno;
-   MPIDI_Trace_buf[source].R[idx].rtag=tag;
-   MPIDI_Trace_buf[source].R[idx].rctx=msginfo->MPIctxt;
-   MPIDI_Trace_buf[source].R[idx].rlen=sndlen;
-   MPIDI_Trace_buf[source].R[idx].sync=isSync;
-   MPIDI_Trace_buf[source].R[idx].rsource=source;
-   rreq->mpid.idx=idx;
-#endif
+  TRACE_MEMSET_R(PAMIX_Endpoint_query(sender),msg_seqno,recv_status);
+  TRACE_SET_R_VAL(PAMIX_Endpoint_query(sender),(msginfo->MPIseqno & SEQMASK),msgid,msginfo->MPIseqno);
+  TRACE_SET_R_VAL(PAMIX_Endpoint_query(sender),(msginfo->MPIseqno & SEQMASK),rtag,tag);
+  TRACE_SET_R_VAL(PAMIX_Endpoint_query(sender),(msginfo->MPIseqno & SEQMASK),rctx,msginfo->MPIctxt);
+  TRACE_SET_R_VAL(PAMIX_Endpoint_query(sender),(msginfo->MPIseqno & SEQMASK),rlen,sndlen);
+  TRACE_SET_R_VAL(PAMIX_Endpoint_query(sender),(msginfo->MPIseqno & SEQMASK),fl.f.sync,isSync);
+  TRACE_SET_R_VAL(PAMIX_Endpoint_query(sender),(msginfo->MPIseqno & SEQMASK),rsource,PAMIX_Endpoint_query(sender));
+  TRACE_SET_REQ_VAL(rreq->mpid.idx,(msginfo->MPIseqno & SEQMASK));
 
   if (recv != NULL)
     {

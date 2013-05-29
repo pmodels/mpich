@@ -166,11 +166,9 @@ MPIDI_Recvq_FDU_or_AEP(MPID_Request *newreq, int source, pami_task_t pami_source
      so we need to allocate a new request and add it to the
      posted queue */
   rreq = newreq;
-#ifdef  MPIDI_TRACE
-  rreq->mpid.envelope.msginfo.MPIseqno=-1;
-  rreq->mpid.envelope.length=-1;
-  rreq->mpid.envelope.data=NULL;
-#endif
+  TRACE_SET_REQ_VAL(rreq->mpid.envelope.msginfo.MPIseqno,-1);
+  TRACE_SET_REQ_VAL(rreq->mpid.envelope.length,-1);
+  TRACE_SET_REQ_VAL(rreq->mpid.envelope.data,(void *) 0);
   rreq->kind = MPID_REQUEST_RECV;
   MPIDI_Request_setMatch(rreq, tag, source, context_id);
   MPIDI_Recvq_append(MPIDI_Recvq.posted, rreq);
@@ -237,13 +235,7 @@ MPIDI_Recvq_FDP(size_t source, pami_task_t pami_source, int tag, int context_id,
 #ifdef USE_STATISTICS
   unsigned search_length = 0;
 #endif
-#ifdef MPIDI_TRACE
-  int idx;
-  idx=(msg_seqno & SEQMASK);
-  recv_status  *rstatus;
-  memset(&MPIDI_Trace_buf[pami_source].R[idx],0,sizeof(recv_status));
-  rstatus=&MPIDI_Trace_buf[pami_source].R[idx];
-#endif
+  TRACE_MEMSET_R(pami_source,msg_seqno,recv_status);
 
   rreq = MPIDI_Recvq.posted_head;
 
@@ -282,19 +274,17 @@ MPIDI_Recvq_FDP(size_t source, pami_task_t pami_source, int tag, int context_id,
     if (flag)
 #endif
       {
-#ifdef MPIDI_TRACE
-        rstatus->req=rreq;
-        rstatus->msgid=msg_seqno;
-        rstatus->posted=1;
-        rstatus->bufadd=rreq->mpid.userbuf;
-        rstatus->len=rreq->mpid.envelope.length;
-        rstatus->rtag=tag;
-        rstatus->rctx=context_id;
-        rstatus->matchedInHH=1;
-        rstatus->rsource=pami_source;
-        rreq->mpid.idx=idx;
-        rreq->mpid.partner_id=pami_source;
-#endif
+        TRACE_SET_R_VAL(pami_source,(msg_seqno & SEQMASK),req,rreq);
+        TRACE_SET_R_VAL(pami_source,(msg_seqno & SEQMASK),msgid,msg_seqno);
+        TRACE_SET_R_BIT(pami_source,(msg_seqno & SEQMASK),fl.f.posted);
+        TRACE_SET_R_VAL(pami_source,(msg_seqno & SEQMASK),bufadd,rreq->mpid.userbuf);
+        TRACE_SET_R_VAL(pami_source,(msg_seqno & SEQMASK),len,rreq->mpid.envelope.length);
+        TRACE_SET_R_VAL(pami_source,(msg_seqno & SEQMASK),rtag,tag);
+        TRACE_SET_R_VAL(pami_source,(msg_seqno & SEQMASK),rctx,context_id);
+        TRACE_SET_R_VAL(pami_source,(msg_seqno & SEQMASK),rsource,pami_source);
+        TRACE_SET_R_BIT(pami_source,(msg_seqno & SEQMASK),fl.f.matchedInHH);
+        TRACE_SET_REQ_VAL(rreq->mpid.idx,(msg_seqno & SEQMASK));
+        TRACE_SET_REQ_VAL(rreq->mpid.partner_id,pami_source);
 #ifdef OUT_OF_ORDER_HANDLING
         MPIDI_Request_setPeerRank_pami(rreq, pami_source);
 #endif

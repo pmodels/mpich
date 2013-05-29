@@ -58,9 +58,6 @@
 #include "mpidi_hooks.h"
 #include "mpidi_thread.h"
 #include "mpidi_util.h"
-#ifdef MPIDI_TRACE
-#include "mpidi_trace.h"
-#endif
 
 #ifdef DYNAMIC_TASKING
 #define HAVE_GPID_ROUTINES

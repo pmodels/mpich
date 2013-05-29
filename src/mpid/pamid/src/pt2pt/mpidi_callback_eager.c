@@ -202,7 +202,7 @@ MPIDI_RecvCB(pami_context_t    context,
   MPIDI_Request_cpyPeerRequestH(rreq, msginfo);
   MPIDI_Request_setSync        (rreq, msginfo->isSync);
   MPIDI_Request_setRzv         (rreq, 0);
-
+  TRACE_SET_R_VAL(source,(rreq->mpid.PR_idx),len,sndlen);
   /* --------------------------------------- */
   /*  We have to fill in the callback info.  */
   /* --------------------------------------- */
@@ -295,10 +295,8 @@ MPIDI_RecvCB(pami_context_t    context,
       /* -------------------------------------------------- */
       recv->addr = rreq->mpid.uebuf;
     }
-#ifdef MPIDI_TRACE
-   MPIDI_Trace_buf[(PAMIX_Endpoint_query(sender))].R[(rreq->mpid.idx)].comp_in_HH=2;
-   MPIDI_Trace_buf[(PAMIX_Endpoint_query(sender))].R[(rreq->mpid.idx)].bufadd=rreq->mpid.userbuf;
-#endif
+   TRACE_SET_R_VAL(source,(rreq->mpid.idx),fl.f.comp_in_HH,2);
+   TRACE_SET_R_VAL(source,(rreq->mpid.idx),bufadd,rreq->mpid.userbuf);
 
  fn_exit_eager:
 #ifdef OUT_OF_ORDER_HANDLING

@@ -73,15 +73,13 @@ MPIDI_SendMsg_short(pami_context_t    context,
     }
 #endif
   MPID_assert(rc == PAMI_SUCCESS);
-#ifdef MPIDI_TRACE
- MPIDI_Trace_buf[dest].S[(sreq->mpid.idx)].mode=params.dispatch;
+ TRACE_SET_S_VAL(dest,(sreq->mpid.envelope.msginfo.MPIseqno & SEQMASK),mode,params.dispatch);
  if (!isSync) {
-     MPIDI_Trace_buf[dest].S[(sreq->mpid.idx)].NoComp=1;
-     MPIDI_Trace_buf[dest].S[(sreq->mpid.idx)].sendShort=1;
- } else
-     MPIDI_Trace_buf[dest].S[(sreq->mpid.idx)].sendEnvelop=1;
-
-#endif
+     TRACE_SET_S_BIT(dest,(sreq->mpid.envelope.msginfo.MPIseqno & SEQMASK),fl.f.NoComp);
+     TRACE_SET_S_BIT(dest,(sreq->mpid.envelope.msginfo.MPIseqno & SEQMASK),fl.f.sendShort);
+ } else {
+     TRACE_SET_S_BIT(dest,(sreq->mpid.envelope.msginfo.MPIseqno & SEQMASK),fl.f.sendEnvelop);
+ }
 
   MPIDI_SendDoneCB_inline(context, sreq, PAMI_SUCCESS);
 #if (MPIDI_STATISTICS)
@@ -128,10 +126,8 @@ MPIDI_SendMsg_eager(pami_context_t    context,
   pami_result_t rc;
   rc = PAMI_Send(context, &params);
   MPID_assert(rc == PAMI_SUCCESS);
-#ifdef MPIDI_TRACE
-  MPIDI_Trace_buf[dest].S[(sreq->mpid.idx)].mode=MPIDI_Protocols_Eager;
-  MPIDI_Trace_buf[dest].S[(sreq->mpid.idx)].sendEager=1;
-#endif
+  TRACE_SET_S_VAL(dest,(sreq->mpid.idx),mode,MPIDI_Protocols_Eager);
+  TRACE_SET_S_BIT(dest,(sreq->mpid.idx),fl.f.sendEager);
 }
 
 
@@ -239,14 +235,12 @@ MPIDI_SendMsg_rzv(pami_context_t    context,
 
   rc = PAMI_Send_immediate(context, &params);
   MPID_assert(rc == PAMI_SUCCESS);
-#ifdef MPIDI_TRACE
-  MPIDI_Trace_buf[dest].S[(sreq->mpid.idx)].bufaddr=sreq->mpid.envelope.data;
-  MPIDI_Trace_buf[dest].S[(sreq->mpid.idx)].mode=MPIDI_Protocols_RVZ;
-  MPIDI_Trace_buf[dest].S[(sreq->mpid.idx)].sendRzv=1;
-  MPIDI_Trace_buf[dest].S[(sreq->mpid.idx)].sendEnvelop=1;
-  MPIDI_Trace_buf[dest].S[(sreq->mpid.idx)].memRegion=sreq->mpid.envelope.memregion_used;
-  MPIDI_Trace_buf[dest].S[(sreq->mpid.idx)].use_pami_get=MPIDI_Process.mp_s_use_pami_get;
-#endif
+  TRACE_SET_S_VAL(dest,(sreq->mpid.idx),bufaddr,sreq->mpid.envelope.data);
+  TRACE_SET_S_VAL(dest,(sreq->mpid.idx),mode,MPIDI_Protocols_RVZ);
+  TRACE_SET_S_BIT(dest,(sreq->mpid.idx),fl.f.sendRzv);
+  TRACE_SET_S_BIT(dest,(sreq->mpid.idx),fl.f.sendEnvelop);
+  TRACE_SET_S_VAL(dest,(sreq->mpid.idx),fl.f.memRegion,sreq->mpid.envelope.memregion_used);
+  TRACE_SET_S_VAL(dest,(sreq->mpid.idx),fl.f.use_pami_get,MPIDI_Process.mp_s_use_pami_get);
 }
 
 
@@ -299,14 +293,12 @@ MPIDI_SendMsg_rzv_zerobyte(pami_context_t    context,
 
   rc = PAMI_Send_immediate(context, &params);
   MPID_assert(rc == PAMI_SUCCESS);
-#ifdef MPIDI_TRACE
-  MPIDI_Trace_buf[dest].S[(sreq->mpid.idx)].bufaddr=sreq->mpid.envelope.data;
-  MPIDI_Trace_buf[dest].S[(sreq->mpid.idx)].mode=MPIDI_Protocols_RVZ_zerobyte;
-  MPIDI_Trace_buf[dest].S[(sreq->mpid.idx)].sendRzv=1;
-  MPIDI_Trace_buf[dest].S[(sreq->mpid.idx)].sendEnvelop=1;
-  MPIDI_Trace_buf[dest].S[(sreq->mpid.idx)].memRegion=sreq->mpid.envelope.memregion_used;
-  MPIDI_Trace_buf[dest].S[(sreq->mpid.idx)].use_pami_get=MPIDI_Process.mp_s_use_pami_get;
-#endif
+  TRACE_SET_S_VAL(dest,(sreq->mpid.idx),bufaddr,sreq->mpid.envelope.data);
+  TRACE_SET_S_VAL(dest,(sreq->mpid.idx),mode,MPIDI_Protocols_RVZ_zerobyte);
+  TRACE_SET_S_VAL(dest,(sreq->mpid.idx),fl.f.memRegion,sreq->mpid.envelope.memregion_used);
+  TRACE_SET_S_VAL(dest,(sreq->mpid.idx),fl.f.use_pami_get,MPIDI_Process.mp_s_use_pami_get);
+  TRACE_SET_S_BIT(dest,(sreq->mpid.idx),fl.f.sendRzv);
+  TRACE_SET_S_BIT(dest,(sreq->mpid.idx),fl.f.sendEnvelop);
 }
 
 
@@ -440,10 +432,7 @@ if (!TOKEN_FLOW_CONTROL_ON) {
     {
       MPIDI_SendMsg_process_userdefined_dt(sreq, &sndbuf, &data_sz);
     }
-#ifdef MPIDI_TRACE
-   sreq->mpid.partner_id=dest;
-   MPIDI_GET_S_REC(sreq,context,isSync,data_sz);
-#endif
+  MPIDI_GET_S_REC(dest_tid,sreq,context,isSync,data_sz);
 
 #ifdef OUT_OF_ORDER_HANDLING
   sreq->mpid.envelope.msginfo.noRDMA=0;
@@ -519,10 +508,7 @@ if (!TOKEN_FLOW_CONTROL_ON) {
     #if TOKEN_FLOW_CONTROL
     if (!(sreq->mpid.userbufcount))
        {
-#ifdef MPIDI_TRACE
-        sreq->mpid.partner_id=dest;
-        MPIDI_GET_S_REC(sreq,context,isSync,0);
-#endif
+        MPIDI_GET_S_REC(dest_tid,sreq,context,isSync,0);
         TRACE_ERR("Sending(short,intranode) bytes=%u (short_limit=%u)\n", data_sz, MPIDI_Process.short_limit);
         MPIU_THREAD_CS_ENTER(MSGQUEUE,0);
         MPIDI_Piggy_back_tokens(dest,sreq,0);
@@ -548,10 +534,7 @@ if (!TOKEN_FLOW_CONTROL_ON) {
         {
           MPIDI_SendMsg_process_userdefined_dt(sreq, &sndbuf, &data_sz);
          }
-#ifdef MPIDI_TRACE
-       sreq->mpid.partner_id=dest;
-       MPIDI_GET_S_REC(sreq,context,isSync,data_sz);
-#endif
+       MPIDI_GET_S_REC(dest_tid,sreq,context,isSync,data_sz);
        if (unlikely(PAMIX_Task_is_local(dest_tid) != 0))  noRDMA=1;
 
        MPIU_THREAD_CS_ENTER(MSGQUEUE,0);
