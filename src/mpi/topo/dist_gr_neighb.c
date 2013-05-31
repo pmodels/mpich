@@ -38,7 +38,7 @@ int MPIR_Dist_graph_neighbors_impl(MPID_Comm *comm_ptr,
     MPIR_Topology *topo_ptr = NULL;
 
     topo_ptr = MPIR_Topology_get(comm_ptr);
-    MPIU_ERR_CHKANDJUMP(!topo_ptr || topo_ptr->kind != MPI_DIST_GRAPH, mpi_errno, MPIR_ERR_RECOVERABLE, "**notdistgraphtopo");
+    MPIU_ERR_CHKANDJUMP(!topo_ptr || topo_ptr->kind != MPI_DIST_GRAPH, mpi_errno, MPI_ERR_TOPOLOGY, "**notdistgraphtopo");
 
     MPIU_Memcpy(sources, topo_ptr->topo.dist_graph.in, maxindegree*sizeof(int));
     MPIU_Memcpy(destinations, topo_ptr->topo.dist_graph.out, maxoutdegree*sizeof(int));
@@ -118,12 +118,12 @@ int MPI_Dist_graph_neighbors(MPI_Comm comm,
         {
             MPIR_Topology *topo_ptr = NULL;
             topo_ptr = MPIR_Topology_get(comm_ptr);
-            MPIU_ERR_CHKANDJUMP(!topo_ptr || topo_ptr->kind != MPI_DIST_GRAPH, mpi_errno, MPIR_ERR_RECOVERABLE, "**notdistgraphtopo");
+            MPIU_ERR_CHKANDJUMP(!topo_ptr || topo_ptr->kind != MPI_DIST_GRAPH, mpi_errno, MPI_ERR_TOPOLOGY, "**notdistgraphtopo");
 
             MPIR_ERRTEST_ARGNEG(maxindegree, "maxindegree", mpi_errno);
             MPIR_ERRTEST_ARGNEG(maxoutdegree, "maxoutdegree", mpi_errno);
-            MPIU_ERR_CHKANDJUMP3((maxindegree > topo_ptr->topo.dist_graph.indegree), mpi_errno, MPIR_ERR_RECOVERABLE, "**argrange", "**argrange %s %d %d", "maxindegree", maxindegree, topo_ptr->topo.dist_graph.indegree);
-            MPIU_ERR_CHKANDJUMP3((maxoutdegree > topo_ptr->topo.dist_graph.outdegree), mpi_errno, MPIR_ERR_RECOVERABLE, "**argrange", "**argrange %s %d %d", "maxoutdegree", maxoutdegree, topo_ptr->topo.dist_graph.outdegree);
+            MPIU_ERR_CHKANDJUMP3((maxindegree < topo_ptr->topo.dist_graph.indegree), mpi_errno, MPI_ERR_ARG, "**argtoosmall", "**argtoosmall %s %d %d", "maxindegree", maxindegree, topo_ptr->topo.dist_graph.indegree);
+            MPIU_ERR_CHKANDJUMP3((maxoutdegree < topo_ptr->topo.dist_graph.outdegree), mpi_errno, MPI_ERR_ARG, "**argtoosmall", "**argtoosmall %s %d %d", "maxoutdegree", maxoutdegree, topo_ptr->topo.dist_graph.outdegree);
         }
         MPID_END_ERROR_CHECKS;
     }

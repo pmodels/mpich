@@ -2,6 +2,8 @@
 **argnonpos %s %d:Invalid value for %s; must be positive but is %d
 **argneg:Invalid argument; must be non-negative
 **argneg %s %d:Invalid value for %s, must be non-negative but is %d
+**argtoosmall:Invalid argument; value is too small
+**argtoosmall %s %d %d:Invalid argument for %s: value is %d but must be at least %d
 **countneg:Negative count
 **countneg %d:Negative count, value is %d
 **initialized:MPI not initialized. Call MPI_Init or MPI_Init_thread first

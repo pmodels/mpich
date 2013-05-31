@@ -313,18 +313,23 @@ int MPI_Dist_graph_create(MPI_Comm comm_old, int n, const int sources[],
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
         MPIR_Get_count_impl(&status, MPI_INT, &count);
         /* can't use CHKLMEM macros b/c we are in a loop */
+        /* FIXME: Why not - there is only one allocated at a time. Is it only 
+           that there is no defined macro to pop and free an item? */
         buf = MPIU_Malloc(count*sizeof(int));
         MPIU_ERR_CHKANDJUMP(!buf, mpi_errno, MPIR_ERR_RECOVERABLE, "**nomem");
 
         mpi_errno = MPIC_Recv(buf, count, MPI_INT, MPI_ANY_SOURCE, MPIR_TOPO_A_TAG, comm_old, MPI_STATUS_IGNORE);
+        /* FIXME: buf is never freed on error! */
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
         
         for (j = 0; j < count/2; ++j) {
             int deg = dist_graph_ptr->indegree++;
             if (deg >= in_capacity) {
                 in_capacity *= 2;
+                /* FIXME: buf is never freed on error! */
                 MPIU_REALLOC_ORJUMP(dist_graph_ptr->in, in_capacity*sizeof(int), mpi_errno);
                 if (dist_graph_ptr->is_weighted)
+                    /* FIXME: buf is never freed on error! */
                     MPIU_REALLOC_ORJUMP(dist_graph_ptr->in_weights, in_capacity*sizeof(int), mpi_errno);
             }
             dist_graph_ptr->in[deg] = buf[2*j];
@@ -343,18 +348,22 @@ int MPI_Dist_graph_create(MPI_Comm comm_old, int n, const int sources[],
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
         MPIR_Get_count_impl(&status, MPI_INT, &count);
         /* can't use CHKLMEM macros b/c we are in a loop */
+        /* Why not? */
         buf = MPIU_Malloc(count*sizeof(int));
         MPIU_ERR_CHKANDJUMP(!buf, mpi_errno, MPIR_ERR_RECOVERABLE, "**nomem");
 
         mpi_errno = MPIC_Recv(buf, count, MPI_INT, MPI_ANY_SOURCE, MPIR_TOPO_B_TAG, comm_old, MPI_STATUS_IGNORE);
+        /* FIXME: buf is never freed on error! */
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
         for (j = 0; j < count/2; ++j) {
             int deg = dist_graph_ptr->outdegree++;
             if (deg >= out_capacity) {
                 out_capacity *= 2;
+                /* FIXME: buf is never freed on error! */
                 MPIU_REALLOC_ORJUMP(dist_graph_ptr->out, out_capacity*sizeof(int), mpi_errno);
                 if (dist_graph_ptr->is_weighted)
+                    /* FIXME: buf is never freed on error! */
                     MPIU_REALLOC_ORJUMP(dist_graph_ptr->out_weights, out_capacity*sizeof(int), mpi_errno);
             }
             dist_graph_ptr->out[deg] = buf[2*j];

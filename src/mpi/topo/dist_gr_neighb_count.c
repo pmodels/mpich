@@ -36,7 +36,7 @@ int MPIR_Dist_graph_neighbors_count_impl(MPID_Comm *comm_ptr, int *indegree, int
     MPIR_Topology *topo_ptr = NULL;
 
     topo_ptr = MPIR_Topology_get(comm_ptr);
-    MPIU_ERR_CHKANDJUMP(!topo_ptr || topo_ptr->kind != MPI_DIST_GRAPH, mpi_errno, MPIR_ERR_RECOVERABLE, "**notdistgraphtopo");
+    MPIU_ERR_CHKANDJUMP(!topo_ptr || topo_ptr->kind != MPI_DIST_GRAPH, mpi_errno, MPI_ERR_TOPOLOGY, "**notdistgraphtopo");
     *indegree = topo_ptr->topo.dist_graph.indegree;
     *outdegree = topo_ptr->topo.dist_graph.outdegree;
     *weighted = topo_ptr->topo.dist_graph.is_weighted;

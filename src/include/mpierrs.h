@@ -143,12 +143,12 @@
         goto fn_fail;                                                   \
     }
 
-#define MPIR_ERRTEST_ARGNONPOS(arg,arg_name,err,err_class)      \
+#define MPIR_ERRTEST_ARGNONPOS(arg,arg_name,err,errclass)      \
     if ((arg) <= 0) {                                           \
         err = MPIR_Err_create_code(MPI_SUCCESS,                 \
                                    MPIR_ERR_RECOVERABLE,        \
                                    FCNAME, __LINE__,            \
-                                   err_class,                   \
+                                   errclass,                    \
                                    "**argnonpos",               \
                                    "**argnonpos %s %d",         \
                                    arg_name, arg );             \

@@ -103,10 +103,10 @@ int MPI_Graph_get(MPI_Comm comm, int maxindex, int maxedges,
     topo_ptr = MPIR_Topology_get( comm_ptr );
 
     MPIU_ERR_CHKANDJUMP((!topo_ptr || topo_ptr->kind != MPI_GRAPH), mpi_errno, MPI_ERR_TOPOLOGY, "**notgraphtopo");
-    MPIU_ERR_CHKANDJUMP3((topo_ptr->topo.graph.nnodes > maxindex), mpi_errno, MPI_ERR_ARG, "**argrange",
-			 "**argrange %s %d %d", "maxindex", maxindex, topo_ptr->topo.graph.nnodes);
-    MPIU_ERR_CHKANDJUMP3((topo_ptr->topo.graph.nedges > maxedges), mpi_errno, MPI_ERR_ARG, "**argrange",
-			 "**argrange %s %d %d", "maxedges", maxedges, topo_ptr->topo.graph.nedges);
+    MPIU_ERR_CHKANDJUMP3((topo_ptr->topo.graph.nnodes > maxindex), mpi_errno, MPI_ERR_ARG, "**argtoosmall",
+			 "**argtoosmall %s %d %d", "maxindex", maxindex, topo_ptr->topo.graph.nnodes);
+    MPIU_ERR_CHKANDJUMP3((topo_ptr->topo.graph.nedges > maxedges), mpi_errno, MPI_ERR_ARG, "**argtoosmall",
+			 "**argtoosmall %s %d %d", "maxedges", maxedges, topo_ptr->topo.graph.nedges);
     
     /* Get index */
     n = topo_ptr->topo.graph.nnodes;
