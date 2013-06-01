@@ -56,6 +56,7 @@ static HYD_status send_cmd_upstream(const char *start, int fd, int num_args, cha
     status = HYDU_str_alloc_and_join(tmp, &buf);
     HYDU_ERR_POP(status, "unable to join strings\n");
     HYDU_free_strlist(tmp);
+    HYDU_FREE(tmp);
 
     HYD_pmcd_init_header(&hdr);
     hdr.cmd = PMI_CMD;
@@ -570,6 +571,8 @@ static HYD_status fn_barrier_out(int fd, char *args[])
 static HYD_status fn_finalize(int fd, char *args[])
 {
     const char *cmd;
+    int i;
+    static int finalize_count = 0;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -583,6 +586,18 @@ static HYD_status fn_finalize(int fd, char *args[])
     status = HYDT_dmx_deregister_fd(fd);
     HYDU_ERR_POP(status, "unable to deregister fd\n");
     close(fd);
+
+    finalize_count++;
+
+    if (finalize_count == HYD_pmcd_pmip.local.proxy_process_count) {
+        /* All processes have finalized */
+        for (i = 0; i < cache_get.keyval_len; i++) {
+            HYDU_FREE(cache_get.key[i]);
+            HYDU_FREE(cache_get.val[i]);
+        }
+        HYDU_FREE(cache_get.key);
+        HYDU_FREE(cache_get.val);
+    }
 
   fn_exit:
     HYDU_FUNC_EXIT();
