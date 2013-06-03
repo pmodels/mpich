@@ -216,6 +216,9 @@ void MPIDI_Recvq_process_out_of_order_msgs(pami_task_t src, pami_context_t conte
 	} else {
           MPIDI_RecvMsg_Unexp(ooreq, rreq->mpid.userbuf, rreq->mpid.userbufcount, rreq->mpid.datatype);
           rreq->status.count = ooreq->status.count;
+          rreq->status.MPI_SOURCE = ooreq->status.MPI_SOURCE;
+          rreq->status.MPI_TAG = ooreq->status.MPI_TAG;
+          rreq->mpid.envelope.msginfo.MPIseqno = ooreq->mpid.envelope.msginfo.MPIseqno;
 	  MPIDI_Request_complete(rreq);
         }
         MPID_Request_release(ooreq);
