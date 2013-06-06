@@ -3851,6 +3851,29 @@ int MPID_VCR_Get_lpid(MPID_VCR vcr, int * lpid_ptr);
 #define MPIR_ERROR_TAG                29
 #define MPIR_FIRST_NBC_TAG            30
 
+/* These macros must be used carefully. These macros will not work with
+ * negative tags. By definition, users are not to use negative tags and the
+ * only negative tag in MPICH is MPI_ANY_TAG which is checked seperately, but
+ * if there is a time where negative tags become more common, this setup won't
+ * work anymore. */
+
+/* This bitmask can be used to manually mask the tag space wherever it might
+ * be necessary to do so (for instance in the receive queue */
+#define MPIR_TAG_ERROR_BIT (1 << 30)
+
+/* This macro checks the value of the error bit in the MPI tag and returns 1
+ * if the tag is set and 0 if it is not. */
+#define MPIR_TAG_CHECK_ERROR_BIT(tag) ((MPIR_TAG_ERROR_BIT & tag) == MPIR_TAG_ERROR_BIT ? 1 : 0)
+
+/* This macro sets the value of the error bit in the MPI tag to 1 */
+#define MPIR_TAG_SET_ERROR_BIT(tag) (tag |= MPIR_TAG_ERROR_BIT)
+
+/* This macro clears the value of the error bit in the MPI tag */
+#define MPIR_TAG_CLEAR_ERROR_BIT(tag) (tag &= ~MPIR_TAG_ERROR_BIT)
+
+/* This macro masks the value of the error bit in the MPI tag */
+#define MPIR_TAG_MASK_ERROR_BIT(tag) (tag & ~MPIR_TAG_ERROR_BIT)
+
 /* These functions are used in the implementation of collective and
    other internal operations. They are wrappers around MPID send/recv
    functions. They do sends/receives by setting the context offset to

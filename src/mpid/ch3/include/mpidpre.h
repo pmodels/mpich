@@ -119,7 +119,9 @@ typedef union {
 /* The first bit of the tag space is reserved for error propagation. We are
  * still well over the required tag size and this allows us to retain the
  * matching semantics while piggybacking the notification. If the message is
- * propagating an error, the data being transmitted is probably garbage.
+ * propagating an error, the data being transmitted is probably garbage. The
+ * macros to set/access this bit are in src/include/mpiimpl.h. If the
+ * location of this bit changes, those macros also need to be adjusted.
  */
 #define MPIDI_TAG_UB (0x3fffffff)
 
