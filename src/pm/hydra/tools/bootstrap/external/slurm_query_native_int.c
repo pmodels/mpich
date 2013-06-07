@@ -18,9 +18,11 @@ HYD_status HYDT_bscd_slurm_query_native_int(int *ret)
 
     if (!HYDTI_bscd_env_is_avail("SLURM_NODELIST"))
         *ret = 0;
-    if (!HYDTI_bscd_env_is_avail("SLURM_JOB_CPUS_PER_NODE"))
-        *ret = 0;
     if (!HYDTI_bscd_env_is_avail("SLURM_NNODES"))
+        *ret = 0;
+    if (!HYDTI_bscd_env_is_avail("SLURM_TASKS_PER_NODE"))
+        *ret = 0;
+    if (!HYDTI_bscd_env_is_avail("SLURM_NODEID"))
         *ret = 0;
 
   fn_exit:
