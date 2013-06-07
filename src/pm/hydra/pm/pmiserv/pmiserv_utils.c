@@ -488,7 +488,7 @@ HYD_status HYD_pmcd_pmi_fill_in_exec_launch_info(struct HYD_pg *pg)
 
         if (HYD_server_info.user_global.debug) {
             HYDU_dump_noprefix(stdout, "Arguments being passed to proxy %d:\n", proxy_count);
-            HYDU_print_strlist(stash.strlist);
+            HYDU_print_strlist(exec_stash.strlist);
             HYDU_dump_noprefix(stdout, "\n");
         }
 
