@@ -79,18 +79,9 @@ static HYD_status group_to_nodes(char *str)
 
             HYDU_free_strlist(node_str);
 
-            status = HYDU_alloc_node(&node);
-            HYDU_ERR_POP(status, "unable to allocate note\n");
-
-            node->hostname = HYDU_strdup(tmp);
-            node->core_count = tasks_per_node[k++];
-
-            if (global_node_list == NULL)
-                global_node_list = node;
-            else {
-                for (tnode = global_node_list; tnode->next; tnode = tnode->next);
-                tnode->next = node;
-            }
+            status =
+                HYDU_add_to_node_list(HYDU_strdup(tmp), tasks_per_node[k++], &global_node_list);
+            HYDU_ERR_POP(status, "unable to add to node list\n");
         }
     }
 
