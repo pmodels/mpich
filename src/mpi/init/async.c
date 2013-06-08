@@ -10,13 +10,15 @@
 
 #ifndef MPICH_MPI_FROM_PMPI
 
-#if MPICH_THREAD_LEVEL >= MPI_THREAD_SERIALIZED
+#if MPICH_THREAD_LEVEL == MPI_THREAD_MULTIPLE
 static MPID_Comm *progress_comm_ptr;
 static MPIU_Thread_id_t progress_thread_id;
 static MPIU_Thread_mutex_t progress_mutex;
 static MPIU_Thread_cond_t progress_cond;
 static volatile int progress_thread_done = 0;
 
+/* We can use whatever tag we want; we use a different communicator
+ * for communicating with the progress thread. */
 #define WAKE_TAG 100
 
 #undef FUNCNAME
@@ -68,7 +70,7 @@ static void progress_fn(void * data)
     return;
 }
 
-#endif /* MPICH_THREAD_LEVEL >= MPI_THREAD_SERIALIZED */
+#endif /* MPICH_THREAD_LEVEL == MPI_THREAD_MULTIPLE */
 
 #undef FUNCNAME
 #define FUNCNAME MPIR_Init_async_thread
@@ -76,7 +78,7 @@ static void progress_fn(void * data)
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIR_Init_async_thread(void)
 {
-#if MPICH_THREAD_LEVEL >= MPI_THREAD_SERIALIZED
+#if MPICH_THREAD_LEVEL == MPI_THREAD_MULTIPLE
     int mpi_errno = MPI_SUCCESS;
     MPID_Comm *comm_self_ptr;
     int err = 0;
@@ -107,7 +109,7 @@ int MPIR_Init_async_thread(void)
     goto fn_exit;
 #else
     return MPI_SUCCESS;
-#endif /* MPICH_THREAD_LEVEL >= MPI_THREAD_SERIALIZED */
+#endif /* MPICH_THREAD_LEVEL == MPI_THREAD_MULTIPLE */
 }
 
 #undef FUNCNAME
@@ -117,7 +119,7 @@ int MPIR_Init_async_thread(void)
 int MPIR_Finalize_async_thread(void)
 {
     int mpi_errno = MPI_SUCCESS;
-#if MPICH_THREAD_LEVEL >= MPI_THREAD_SERIALIZED
+#if MPICH_THREAD_LEVEL == MPI_THREAD_MULTIPLE
     MPID_Request *request_ptr = NULL;
     MPI_Request request;
     MPI_Status status;
@@ -159,7 +161,7 @@ int MPIR_Finalize_async_thread(void)
 
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPIR_FINALIZE_ASYNC_THREAD);
 
-#endif /* MPICH_THREAD_LEVEL >= MPI_THREAD_SERIALIZED */
+#endif /* MPICH_THREAD_LEVEL == MPI_THREAD_MULTIPLE */
     return mpi_errno;
 }
 
