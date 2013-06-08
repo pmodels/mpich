@@ -100,34 +100,18 @@ int MPI_Init( int *argc, char ***argv )
     mpi_errno = MPIR_Param_init_params();
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
-#if (MPICH_THREAD_LEVEL == MPI_THREAD_MULTIPLE)
-    /* If we support all thread levels, allow the use of an environment 
-       variable to set the default thread level */
-    {
-	const char *str = 0;
-	threadLevel = MPI_THREAD_SINGLE;
-	if (MPL_env2str( "MPICH_THREADLEVEL_DEFAULT", &str )) {
-	    if (strcmp(str,"MULTIPLE") == 0 || strcmp(str,"multiple") == 0) {
-		threadLevel = MPI_THREAD_MULTIPLE;
-	    }
-	    else if (strcmp(str,"SERIALIZED") == 0 || strcmp(str,"serialized") == 0) {
-		threadLevel = MPI_THREAD_SERIALIZED;
-	    }
-	    else if (strcmp(str,"FUNNELED") == 0 || strcmp(str,"funneled") == 0) {
-		threadLevel = MPI_THREAD_FUNNELED;
-	    }
-	    else if (strcmp(str,"SINGLE") == 0 || strcmp(str,"single") == 0) {
-		threadLevel = MPI_THREAD_SINGLE;
-	    }
-	    else {
-		MPIU_Error_printf( "Unrecognized thread level %s\n", str );
-		exit(1);
-	    }
-	}
+    if (!strcmp(MPIR_PARAM_DEFAULT_THREAD_LEVEL, "MPI_THREAD_MULTIPLE"))
+        threadLevel = MPI_THREAD_MULTIPLE;
+    else if (!strcmp(MPIR_PARAM_DEFAULT_THREAD_LEVEL, "MPI_THREAD_SERIALIZED"))
+        threadLevel = MPI_THREAD_SERIALIZED;
+    else if (!strcmp(MPIR_PARAM_DEFAULT_THREAD_LEVEL, "MPI_THREAD_FUNNELED"))
+        threadLevel = MPI_THREAD_FUNNELED;
+    else if (!strcmp(MPIR_PARAM_DEFAULT_THREAD_LEVEL, "MPI_THREAD_SINGLE"))
+        threadLevel = MPI_THREAD_SINGLE;
+    else {
+        MPIU_Error_printf("Unrecognized thread level %s\n", MPIR_PARAM_DEFAULT_THREAD_LEVEL);
+        exit(1);
     }
-#else 
-    threadLevel = MPI_THREAD_SINGLE;
-#endif
 
     /* If the user requested for asynchronous progress, request for
      * THREAD_MULTIPLE. */

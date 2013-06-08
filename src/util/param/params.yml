@@ -362,6 +362,14 @@ parameters:
         If set to true, MPICH will spawn an additional thread to make
         asynchronous progress on all communication operations.
 
+    - category    : threads
+      name        : DEFAULT_THREAD_LEVEL
+      type        : string
+      default     : "MPI_THREAD_SINGLE"
+      class       : device
+      description : >-
+        Sets the default thread level to use when using MPI_INIT.
+
     ##############################################################
     # other MPI-level parameters
     - category    : developer
