@@ -113,7 +113,8 @@ noinst_PROGRAMS =          \
     win_info               \
     pscw_ordering          \
     mutex_bench            \
-    mutex_bench_shared
+    mutex_bench_shared     \
+    rma-contig
 
 strided_acc_indexed_LDADD       = $(LDADD) -lm
 strided_acc_onelock_LDADD       = $(LDADD) -lm
