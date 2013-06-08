@@ -506,8 +506,6 @@ AC_ARG_ENABLE(threads,
                           DO NOT select this option. The option runtime is more
                           efficient and also supports thread_multiple. 
                           (multiple aliased to runtime now)
-        default         - Make a good choice depending on the communication
-                          device.  For ch3:nemesis, this is runtime.
 
         See also the --enable-thread-cs option for controlling the granularity of
         the concurrency inside of the library
@@ -1282,6 +1280,7 @@ fi
 #
 # Threads must be supported by the device.  First, set the default to
 # be the highest supported by the device
+if test "$enable_threads" = "yes" ; then enable_threads=default ; fi
 if test "$enable_threads" = default ; then
     # XXX DJG bug is here, PREREQ is not being used right now
     if test -n "$MPID_MAX_THREAD_LEVEL" ; then
@@ -1298,14 +1297,10 @@ if test "$enable_threads" = default ; then
     fi
 fi
 
-if test "$enable_threads" = "yes" ; then 
-    enable_threads=multiple
+if test "$enable_threads" = "default" ; then
+    enable_threads=runtime
 elif test "$enable_threads" = "no" ; then
     enable_threads=single
-elif test "$enable_threads" = "default"; then
-    if test "$with_device" = "default" -o "$with_device" = "ch3:sock" ; then
-        enable_threads=runtime
-    fi
 fi
 
 # Runtime is an alias for multiple with an additional value
