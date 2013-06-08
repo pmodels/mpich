@@ -145,8 +145,6 @@ dnl Save a copy of ac_compile on a stack
 dnl which is safe through nested invocations of this macro.
 PAC_VAR_PUSHVAL([ac_compile])
 dnl Modify ac_compile based on the unmodified ac_compile.
-echo "ac_compile: $ac_compile"
-echo "pac_FirstSavedValueOf_ac_compile: $pac_FirstSavedValueOf_ac_compile"
 ac_compile="`echo $pac_FirstSavedValueOf_ac_compile | sed -e 's|>.*$|> $1 2>\&1|g'`"
 AC_COMPILE_IFELSE([$2],[
     ifelse([$3],[],[:],[$3])
@@ -208,8 +206,6 @@ AC_DEFUN([PAC_COMPLINK_IFELSE],[
 AC_COMPILE_IFELSE([$1],[
     PAC_RUNLOG([mv conftest.$OBJEXT pac_conftest.$OBJEXT])
     PAC_VAR_PUSHVAL([LIBS])
-    echo "LIBS: $LIBS"
-    echo "pac_FirstSavedValueOf_LIBS: $pac_FirstSavedValueOf_LIBS"
     LIBS="pac_conftest.$OBJEXT $pac_FirstSavedValueOf_LIBS"
     AC_LINK_IFELSE([$2],[
         ifelse([$3],[],[:],[$3])
