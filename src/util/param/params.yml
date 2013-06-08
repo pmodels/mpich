@@ -353,6 +353,15 @@ parameters:
         for the eager allocation protocol.  If the application is running
         out of context IDs, reducing this value may help.
 
+    - category    : threads
+      name        : ASYNC_PROGRESS
+      type        : boolean
+      default     : false
+      class       : device
+      description : >-
+        If set to true, MPICH will spawn an additional thread to make
+        asynchronous progress on all communication operations.
+
     ##############################################################
     # other MPI-level parameters
     - category    : developer

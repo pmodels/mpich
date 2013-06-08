@@ -97,6 +97,9 @@ int MPI_Init( int *argc, char ***argv )
 
     /* ... body of routine ... */
 
+    mpi_errno = MPIR_Param_init_params();
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
 #if (MPICH_THREAD_LEVEL == MPI_THREAD_MULTIPLE)
     /* If we support all thread levels, allow the use of an environment 
        variable to set the default thread level */
@@ -128,15 +131,13 @@ int MPI_Init( int *argc, char ***argv )
 
     /* If the user requested for asynchronous progress, request for
      * THREAD_MULTIPLE. */
-    rc = 0;
-    MPL_env2bool("MPICH_ASYNC_PROGRESS", &rc);
-    if (rc)
+    if (MPIR_PARAM_ASYNC_PROGRESS)
         threadLevel = MPI_THREAD_MULTIPLE;
 
     mpi_errno = MPIR_Init_thread( argc, argv, threadLevel, &provided );
     if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 
-    if (rc && provided == MPI_THREAD_MULTIPLE) {
+    if (MPIR_PARAM_ASYNC_PROGRESS && provided == MPI_THREAD_MULTIPLE) {
         mpi_errno = MPIR_Init_async_thread();
         if (mpi_errno) goto fn_fail;
 

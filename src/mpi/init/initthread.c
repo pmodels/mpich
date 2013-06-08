@@ -587,15 +587,13 @@ int MPI_Init_thread( int *argc, char ***argv, int required, int *provided )
 
     /* If the user requested for asynchronous progress, request for
      * THREAD_MULTIPLE. */
-    rc = 0;
-    MPL_env2bool("MPICH_ASYNC_PROGRESS", &rc);
-    if (rc)
+    if (MPIR_PARAM_ASYNC_PROGRESS)
         reqd = MPI_THREAD_MULTIPLE;
 
     mpi_errno = MPIR_Init_thread( argc, argv, reqd, provided );
     if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 
-    if (rc && *provided == MPI_THREAD_MULTIPLE) {
+    if (MPIR_PARAM_ASYNC_PROGRESS && *provided == MPI_THREAD_MULTIPLE) {
         mpi_errno = MPIR_Init_async_thread();
         if (mpi_errno) goto fn_fail;
 
