@@ -1375,11 +1375,6 @@ fi
 export MPICH_THREAD_LEVEL
 AC_DEFINE_UNQUOTED(MPICH_THREAD_LEVEL,$MPICH_THREAD_LEVEL,[Level of thread support selected at compile time])
 
-if test "$thread_pkg_required" = "no" ; then
-    MPIU_THREAD_DEFAULT=${MPIU_THREAD_DEFAULT:-none}
-fi
-export MPIU_THREAD_DEFAULT
-
 # Check for value thread_cs choice; set the refcount default if necessary
 thread_granularity=MPIU_THREAD_GRANULARITY_SINGLE
 thread_refcount=MPIU_REFCOUNT_NONE
@@ -5274,19 +5269,17 @@ dnl invoke the configure scripts (if present) directly.
 #
 # 
 # -----------------------------------------------------------------------------
-MPIU_THREAD_DEFAULT=${MPIU_THREAD_DEFAULT:-posix}
-
 AC_ARG_WITH([thread-package],
 [  --with-thread-package=package     Thread package to use. Supported thread packages include:
-        posix or pthreads - POSIX threads
+        posix or pthreads - POSIX threads (default, if required)
         solaris - Solaris threads (Solaris OS only)
         win - windows threads
         none - no threads
+],,with_thread_package=posix)
 
-    If the option is not specified, the default package is
-    ${MPIU_THREAD_DEFAULT}.  If the option is specified, but a package
-    is not given, then the default is posix
-],,with_thread_package=${MPIU_THREAD_DEFAULT})
+if test "$thread_pkg_required" = "no" ; then
+   with_thread_package=none
+fi
 
 if test "$with_thread_package" = "yes" ; then
    with_thread_package=posix
