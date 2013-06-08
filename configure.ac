@@ -1320,9 +1320,7 @@ case "$enable_threads" in
     MPICH_THREAD_LEVEL=MPI_THREAD_FUNNELED
     ;;
     serialized)
-    # We require a thread package even in serialized mode, since we
-    # use that for the aynchronous threads
-    thread_pkg_required=yes
+    thread_pkg_required=no
     MPICH_THREAD_LEVEL=MPI_THREAD_SERIALIZED
     ;;
     multiple)
