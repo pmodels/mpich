@@ -121,11 +121,16 @@ int MPI_Init( int *argc, char ***argv )
     mpi_errno = MPIR_Init_thread( argc, argv, threadLevel, &provided );
     if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 
-    if (MPIR_PARAM_ASYNC_PROGRESS && provided == MPI_THREAD_MULTIPLE) {
-        mpi_errno = MPIR_Init_async_thread();
-        if (mpi_errno) goto fn_fail;
+    if (MPIR_PARAM_ASYNC_PROGRESS) {
+        if (provided == MPI_THREAD_MULTIPLE) {
+            mpi_errno = MPIR_Init_async_thread();
+            if (mpi_errno) goto fn_fail;
 
-        MPIR_async_thread_initialized = 1;
+            MPIR_async_thread_initialized = 1;
+        }
+        else {
+            printf("WARNING: No MPI_THREAD_MULTIPLE support (needed for async progress)\n");
+        }
     }
 
     /* ... end of body of routine ... */
