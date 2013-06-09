@@ -25,10 +25,9 @@ on bug fixes and new releases.
 6.  Alternate Configure Options
 7.  Testing the MPICH installation
 8.  Fault Tolerance
-9.  Environment Variables
-10. Developer Builds
-11. Installing MPICH on windows
-12. Multiple Fortran compiler support
+9. Developer Builds
+10. Installing MPICH on windows
+11. Multiple Fortran compiler support
 
 
 -------------------------------------------------------------------------
@@ -829,22 +828,8 @@ These instructions can also be found on the MPICH wiki:
 
 -------------------------------------------------------------------------
 
-9. Environment Variables
-========================
-
-MPICH provides several environment variables that have different
-purposes.  Most of these environment variables are listed in the
-README.envvar file.  Additional variables that have not yet been
-migrated to the MPICH PARAMS format are listed below.
-
-  MPICH_NAMEPUB_DIR - Allows the user to override where the publish
-         and lookup information is placed for connect/accept based
-         applications.
-
--------------------------------------------------------------------------
-
-10. Developer Builds
-====================
+9. Developer Builds
+===================
 For MPICH developers who want to directly work on the svn, there are
 a few additional steps involved (people using the release tarballs do
 not have to follow these steps). Details about these steps can be
@@ -853,7 +838,7 @@ http://wiki.mpich.org/mpich/index.php/Getting_And_Building_MPICH
 
 -------------------------------------------------------------------------
 
-11. Installing MPICH on Windows
+10. Installing MPICH on Windows
 ================================
 
 Here are the instructions for setting up MPICH on a Windows machine:
@@ -932,7 +917,7 @@ Here are the instructions for setting up MPICH on a Windows machine:
 
 -------------------------------------------------------------------------
 
-12. Multiple Fortran compiler support
+11. Multiple Fortran compiler support
 =====================================
 
 If the C compiler that is used to build MPICH libraries supports both
