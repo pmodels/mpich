@@ -49,6 +49,8 @@ categories:
       description : "parameters that control behavior of the ch3:nemesis channel"
     - name        : sockets
       description : control socket parameters
+    - name        : process_manager
+      description : parameters that control the client-side process manager code
 
 parameters:
     ##############################################################
@@ -625,6 +627,21 @@ parameters:
         disabled for netmods that provide the override feature.
         # Note the netmod must implement this functionality by not
         # setting the comm_ops table in any VC.
+
+    ##############################################################
+    # process manager parameters
+    - category    : process_manager
+      name        : NAMESERV_FILE_PUBDIR
+      alt-env     :
+                    - NAMEPUB_DIR
+      type        : string
+      defaultliteral : NULL
+      class       : none
+      description : >-
+        Sets the directory to use for MPI service publishing in the
+        file nameserv implementation.  Allows the user to override
+        where the publish and lookup information is placed for
+        connect/accept based applications.
 
 ...
 

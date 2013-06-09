@@ -57,8 +57,8 @@ int MPID_NS_Create( const MPID_Info *info_ptr, MPID_NS_Handle *handle_ptr )
     (*handle_ptr)->mypid   = getpid();
 
     /* Get the dirname.  Could use an info value of NAMEPUB_CONTACT */
-    ret = MPL_env2str("MPICH_NAMEPUB_DIR", &dirname);
-    if (!ret) {
+    dirname = MPIR_PARAM_NAMESERV_FILE_PUBDIR;
+    if (!dirname) {
         /* user did not specify a directory, try using HOME */
         ret = MPL_env2str("HOME", &dirname);
         if (!ret) {
