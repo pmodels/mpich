@@ -833,19 +833,9 @@ These instructions can also be found on the MPICH wiki:
 ========================
 
 MPICH provides several environment variables that have different
-purposes. Many of these environment variables are listed in the
-README.envvar file. Some more are listed below.
-
-  MPICH_ASYNC_PROGRESS - Initiates a spare thread to provide
-         asynchronous progress. This improves progress semantics for
-         all MPI operations including point-to-point, collective,
-         one-sided operations and I/O. Setting this variable would
-         increase the thread-safety level to
-         MPI_THREAD_MULTIPLE. While this improves the progress
-         semantics, it might cause a small amount of performance
-         overhead for regular MPI operations.
-
-               ************************************
+purposes.  Most of these environment variables are listed in the
+README.envvar file.  Additional variables that have not yet been
+migrated to the MPICH PARAMS format are listed below.
 
   MPICH_NAMEPUB_DIR - Allows the user to override where the publish
          and lookup information is placed for connect/accept based

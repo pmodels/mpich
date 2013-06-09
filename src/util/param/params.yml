@@ -359,8 +359,13 @@ parameters:
       default     : false
       class       : device
       description : >-
-        If set to true, MPICH will spawn an additional thread to make
-        asynchronous progress on all communication operations.
+        If set to true, MPICH will initiate an additional thread to
+        make asynchronous progress on all communication operations
+        including point-to-point, collective, one-sided operations and
+        I/O.  Setting this variable will automatically increase the
+        thread-safety level to MPI_THREAD_MULTIPLE.  While this
+        improves the progress semantics, it might cause a small amount
+        of performance overhead for regular MPI operations.
 
     - category    : threads
       name        : DEFAULT_THREAD_LEVEL
