@@ -14,19 +14,14 @@ static struct HYD_node *global_node_list = NULL;
 
 static HYD_status group_to_nodes(char *str)
 {
-    char *pre, *nodes, *tnodes, *tmp, *start_str, *end_str, **set;
+    char *nodes, *tnodes, *tmp, *start_str, *end_str, **set;
     int start, end, i, j, k = 0;
-    struct HYD_node *node;
     HYD_status status = HYD_SUCCESS;
 
-    pre = HYDU_strdup(str);
-    for (tmp = pre; *tmp != '[' && *tmp != 0; tmp++);
+    for (tmp = str; *tmp != '[' && *tmp != 0; tmp++);
 
     if (*tmp == 0) {    /* only one node in the group */
-        status = HYDU_alloc_node(&node);
-        HYDU_ERR_POP(status, "unable to allocate note\n");
-
-        status = HYDU_add_to_node_list(pre, tasks_per_node[k++], &global_node_list);
+        status = HYDU_add_to_node_list(str, tasks_per_node[k++], &global_node_list);
         HYDU_ERR_POP(status, "unable to add to node list\n");
 
         goto fn_exit;
@@ -63,7 +58,7 @@ static HYD_status group_to_nodes(char *str)
         for (j = start; j <= end; j++) {
             char *node_str[HYD_NUM_TMP_STRINGS];
 
-            node_str[0] = HYDU_strdup(pre);
+            node_str[0] = HYDU_strdup(str);
             node_str[1] = HYDU_int_to_str_pad(j, strlen(start_str));
             node_str[2] = NULL;
 
@@ -133,9 +128,9 @@ static HYD_status list_to_groups(char *str)
 
 static HYD_status extract_tasks_per_node(int nnodes, char *task_list)
 {
-    char *task_set, **tmp_core_list;
+    char *task_set, **tmp_core_list = NULL;
     char *nodes, *cores;
-    int i, j, k, p, count;
+    int i, j, k, p, count = 0;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_MALLOC(tasks_per_node, int *, nnodes * sizeof(int), status);
@@ -168,6 +163,9 @@ static HYD_status extract_tasks_per_node(int nnodes, char *task_list)
     }
 
   fn_exit:
+    for (i = 0; i < count; i++)
+        HYDU_FREE(tmp_core_list[i]);
+    HYDU_FREE(tmp_core_list);
     return status;
 
   fn_fail:
@@ -197,7 +195,6 @@ HYD_status HYDT_bscd_slurm_query_node_list(struct HYD_node **node_list)
         *node_list = NULL;
         goto fn_exit;
     }
-    task_list = HYDU_strdup(task_list);
 
     status = extract_tasks_per_node(nnodes, task_list);
     HYDU_ERR_POP(status, "unable to extract the number of tasks per node\n");
@@ -206,6 +203,7 @@ HYD_status HYDT_bscd_slurm_query_node_list(struct HYD_node **node_list)
     *node_list = global_node_list;
 
   fn_exit:
+    HYDU_FREE(tasks_per_node);
     HYDU_FUNC_EXIT();
     return status;
 
