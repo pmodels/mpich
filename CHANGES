@@ -1,4 +1,27 @@
 ===============================================================================
+                               Changes in 3.1
+===============================================================================
+
+ # OVERALL: Integrated MPICH-PAMI code base for Blue Gene/Q and other
+   IBM platforms.
+
+ # OVERALL: Added environment variables to control a lot more
+   capabilities for collectives.  See the README.envvar file for more
+   information.
+
+ # BUILD: Enable shared library builds by default.
+
+ # PM/PMI: Upgraded hwloc to 1.7.1.
+
+ # PM/PMI: Several improvements to the Hydra-SLURM integration.
+
+ # Several other minor bug fixes, memory leak fixes, and code cleanup.
+   A full list of changes is available at the following link:
+
+     http://git.mpich.org/mpich.git/shortlog/v3.0.4..v3.1b1
+
+
+===============================================================================
                                Changes in 3.0.4
 ===============================================================================
 
