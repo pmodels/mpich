@@ -16,7 +16,7 @@ static HYD_status group_to_nodes(char *str)
 {
     char *pre, *nodes, *tnodes, *tmp, *start_str, *end_str, **set;
     int start, end, i, j, k = 0;
-    struct HYD_node *node, *tnode;
+    struct HYD_node *node;
     HYD_status status = HYD_SUCCESS;
 
     pre = HYDU_strdup(str);
@@ -26,15 +26,8 @@ static HYD_status group_to_nodes(char *str)
         status = HYDU_alloc_node(&node);
         HYDU_ERR_POP(status, "unable to allocate note\n");
 
-        node->hostname = HYDU_strdup(pre);
-        node->core_count = tasks_per_node[k++];
-
-        if (global_node_list == NULL)
-            global_node_list = node;
-        else {
-            for (tnode = global_node_list; tnode->next; tnode = tnode->next);
-            tnode->next = node;
-        }
+        status = HYDU_add_to_node_list(pre, tasks_per_node[k++], &global_node_list);
+        HYDU_ERR_POP(status, "unable to add to node list\n");
 
         goto fn_exit;
     }
@@ -79,8 +72,7 @@ static HYD_status group_to_nodes(char *str)
 
             HYDU_free_strlist(node_str);
 
-            status =
-                HYDU_add_to_node_list(HYDU_strdup(tmp), tasks_per_node[k++], &global_node_list);
+            status = HYDU_add_to_node_list(tmp, tasks_per_node[k++], &global_node_list);
             HYDU_ERR_POP(status, "unable to add to node list\n");
         }
     }
