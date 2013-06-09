@@ -1333,11 +1333,7 @@ case "$enable_threads" in
 esac
 # Check that the requested thread level is available.
 threadLevelOK=yes
-if test -z "$MPID_MAX_THREAD_LEVEL" ; then
-    if test "$MPICH_THREAD_LEVEL" = "MPI_THREAD_MULTIPLE" -o "$MPICH_THREAD_LEVEL" = "MPI_THREAD_SERIALIZED" ; then
-        threadLevelOK=no
-    fi
-else
+if test ! -z "$MPID_MAX_THREAD_LEVEL" ; then
     # Check that MPID_MAX_THREAD_LEVEL is at least as large as the
     # selected MPICH_THREAD_LEVEL
     case $MPICH_THREAD_LEVEL in 
