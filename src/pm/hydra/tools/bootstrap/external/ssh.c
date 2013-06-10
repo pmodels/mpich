@@ -17,10 +17,13 @@ static HYD_status create_element(char *hostname, struct HYDT_bscd_ssh_time **e)
     struct HYDT_bscd_ssh_time *tmp;
     HYD_status status = HYD_SUCCESS;
 
+    /* FIXME: These are never getting freed */
     HYDU_MALLOC((*e), struct HYDT_bscd_ssh_time *, sizeof(struct HYDT_bscd_ssh_time), status);
+    HYDU_MALLOC((*e)->init_time, struct timeval *,
+                HYDT_bscd_ssh_limit_time * sizeof(struct timeval), status);
 
     (*e)->hostname = HYDU_strdup(hostname);
-    for (i = 0; i < SSH_LIMIT; i++) {
+    for (i = 0; i < HYDT_bscd_ssh_limit; i++) {
         (*e)->init_time[i].tv_sec = 0;
         (*e)->init_time[i].tv_usec = 0;
     }
@@ -57,7 +60,7 @@ HYD_status HYDTI_bscd_ssh_store_launch_time(char *hostname)
     }
 
     /* Search for an unset element to store the current time */
-    for (i = 0; i < SSH_LIMIT; i++) {
+    for (i = 0; i < HYDT_bscd_ssh_limit; i++) {
         if (e->init_time[i].tv_sec == 0 && e->init_time[i].tv_usec == 0) {
             gettimeofday(&e->init_time[i], NULL);
             goto fn_exit;
@@ -67,12 +70,12 @@ HYD_status HYDTI_bscd_ssh_store_launch_time(char *hostname)
     /* No free element found; wait for the oldest element to turn
      * older */
     oldest = 0;
-    for (i = 0; i < SSH_LIMIT; i++)
+    for (i = 0; i < HYDT_bscd_ssh_limit; i++)
         if (older(e->init_time[i], e->init_time[oldest]))
             oldest = i;
 
     gettimeofday(&now, NULL);
-    time_left = SSH_LIMIT_TIME - now.tv_sec + e->init_time[oldest].tv_sec;
+    time_left = HYDT_bscd_ssh_limit_time - now.tv_sec + e->init_time[oldest].tv_sec;
 
     /* A better approach will be to make progress here, but that would
      * mean that we need to deal with nested calls to the demux engine

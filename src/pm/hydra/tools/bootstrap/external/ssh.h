@@ -13,8 +13,8 @@
  * connections from the same IP address per minute. If we exceed that,
  * the server assumes it's a hack-in attack, and does not accept any
  * more connections. So, we limit the number of ssh connections. */
-#define SSH_LIMIT 8
-#define SSH_LIMIT_TIME 15
+#define HYDRA_LAUNCHER_SSH_DEFAULT_LIMIT 8
+#define HYDRA_LAUNCHER_SSH_DEFAULT_LIMIT_TIME 15
 
 #define older(a,b) \
     ((((a).tv_sec < (b).tv_sec) ||                                      \
@@ -22,10 +22,12 @@
 
 struct HYDT_bscd_ssh_time {
     char *hostname;
-    struct timeval init_time[SSH_LIMIT];
+    struct timeval *init_time;
     struct HYDT_bscd_ssh_time *next;
 };
 
+extern int HYDT_bscd_ssh_limit;
+extern int HYDT_bscd_ssh_limit_time;
 extern struct HYDT_bscd_ssh_time *HYDT_bscd_ssh_time;
 
 HYD_status HYDTI_bscd_ssh_store_launch_time(char *hostname);
