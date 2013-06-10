@@ -367,7 +367,12 @@ parameters:
         I/O.  Setting this variable will automatically increase the
         thread-safety level to MPI_THREAD_MULTIPLE.  While this
         improves the progress semantics, it might cause a small amount
-        of performance overhead for regular MPI operations.
+        of performance overhead for regular MPI operations.  The user
+        is encouraged to leave one or more hardware threads vacant in
+        order to prevent contention between the application threads
+        and the progress thread(s).  The impact of oversubscription is
+        highly system dependent but may be substantial in some cases,
+        hence this recommendation.
 
     - category    : threads
       name        : DEFAULT_THREAD_LEVEL
