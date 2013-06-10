@@ -4819,7 +4819,7 @@ AC_ARG_ENABLE(timer-type,
         certain situations.
 
         linuxalpha_cycle is no longer supported.
-],timer_type=$enable_timer_type,timer_type=$MPID_DEFAULT_TIMER_TYPE)
+],timer_type=$enable_timer_type)
 
 if test -z "$timer_type" ; then 
     # Try to pick a timer based on what is available
@@ -5060,6 +5060,14 @@ pac_cv_ia64_cycle,[
     AC_CHECK_FUNC(mach_absolute_time,,[AC_MSG_ERROR([mach_absolute_time is not available])])
     AC_CHECK_FUNC(mach_timebase_info,,[AC_MSG_ERROR([mach_timebase_info is not available])])
     MPID_TIMER_TYPE="uint64_t"
+    ;;
+
+    device)
+    # The device selected should export the datatype for the timer
+    # in MPID_DEVICE_TIMER_TYPE if something other than long is needed
+    if test -n "$MPID_DEVICE_TIMER_TYPE" ; then
+       MPID_TIMER_TYPE=$MPID_DEVICE_TIMER_TYPE
+    fi
     ;;
 
     *)
