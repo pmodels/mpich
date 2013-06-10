@@ -4784,6 +4784,14 @@ fi
 MPID_TIMER_TYPE=long
 AC_SUBST(MPID_TIMER_TYPE)
 
+# If the device specified a timer type, use that by default.  Else,
+# try to detect a type that works on this system.
+if test -n "$MPID_DEVICE_TIMER_TYPE" ; then
+   default_timer_type=device
+else
+   default_timer_type=
+fi
+
 # clock_gettime is the POSIX gettimeofday
 # gethrtime is the Solaris high-resolution timer
 dnl
@@ -4819,7 +4827,7 @@ AC_ARG_ENABLE(timer-type,
         certain situations.
 
         linuxalpha_cycle is no longer supported.
-],timer_type=$enable_timer_type)
+],timer_type=$enable_timer_type,timer_type=${default_timer_type})
 
 if test -z "$timer_type" ; then 
     # Try to pick a timer based on what is available
