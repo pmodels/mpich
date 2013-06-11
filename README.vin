@@ -492,19 +492,26 @@ pamid device
 This is the device used on the IBM Blue Gene/Q system.  The following
 configure options can be used:
 
-  ./configure --host=powerpc64-bgq-linux --target=powerpc64-bgq-linux --build=powerpc64-linux-gnu
-	      --with-device=pamid:BGQ --with-file-system=bg+bglockless --enable-timer-type=device
-	      --with-fwrapname=fmpich --with-cross=src/mpid/pamid/cross/bgq8
-	      --with-pm=none --enable-timing=no --disable-collchk
-	      --disable-graphics --disable-rlog --disable-sample --disable-rpath
-	      --with-aint-size=8 --with-assert-level=2 --enable-fast=O3
-	      --enable-error-messages --disable-debuginfo
-	      --enable-thread-cs=per-object --enable-handle-allocation=tls
-	      --enable-refcount=lock-free --disable-predefined-refcount
-	      CC=powerpc64-bgq-linux-gcc
-	      CXX=powerpc64-bgq-linux-g++
-	      F77=powerpc64-bgq-linux-gfortran
-	      FC=powerpc64-bgq-linux-gfortran
+  ./configure --host=powerpc64-bgq-linux                                \
+              --with-device=pamid:BGQ                                   \
+              --with-file-system=bg+bglockless
+
+The Blue Gene/Q cross compilers must either be in the $PATH, or
+explicitly specified using environment variables, before configure.
+For example:
+
+  PATH=$PATH:/bgsys/drivers/ppcfloor/gnu-linux/bin
+
+or
+
+  CC=/bgsys/drivers/ppcfloor/gnu-linux/bin/powerpc64-bgq-linux-gcc
+  CXX=...
+  ...
+
+There are several other configure options that are specific to building
+on a Blue Gene/Q system.  See the wiki page for more information:
+
+  https://wiki.mpich.org/mpich/index.php/BGQ
 
 -------------------------------------------------------------------------
 
