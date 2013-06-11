@@ -38,9 +38,9 @@
 
 #define MUTEX_FAIL 0x8000000000000000UL
 
-#include "kernel/location.h"
-#include "kernel/memory.h"
-#include "l2/atomic.h"
+#include <spi/include/kernel/location.h>
+#include <spi/include/kernel/memory.h>
+#include <spi/include/l2/atomic.h>
 
 
 #define  MPIDI_MAX_MUTEXES 16
@@ -159,7 +159,7 @@ MPIDI_Mutex_release(unsigned m)
 
 
 
-#include <kernel/location.h>
+#include <spi/include/kernel/location.h>
 
 #define  MPIDI_MAX_MUTEXES 16
 typedef OPA_int_t MPIDI_Mutex_t;

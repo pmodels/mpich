@@ -125,7 +125,6 @@ if test "${pamid_platform}" = "BGQ" ; then
     if test -d ${bgq_driver}/spi/include ; then
 
       PAC_APPEND_FLAG([-I${bgq_driver}],                        [CPPFLAGS])
-      PAC_APPEND_FLAG([-I${bgq_driver}/spi/include],            [CPPFLAGS])
       PAC_APPEND_FLAG([-I${bgq_driver}/spi/include/kernel/cnk], [CPPFLAGS])
 
       PAC_APPEND_FLAG([-I${bgq_driver}],                        [WRAPPER_CFLAGS])
