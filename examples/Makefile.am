@@ -9,15 +9,15 @@
 # all of these?
 MPICHDIR=..
 #CC       = $(MPICHDIR)/bin/mpicc
-CFLAGS   = $(WRAPPER_CFLAGS)
+AM_CFLAGS   = $(WRAPPER_CFLAGS)
 CXXFLAGS = $(WRAPPER_CXXFLAGS)
 FFLAGS   = $(WRAPPER_FFLAGS)
 FCFLAGS  = $(WRAPPER_FCFLAGS)
-LDFLAGS  =
-CPPFLAGS = $(WRAPPER_CPPFLAGS)
+AM_LDFLAGS  =
+AM_CPPFLAGS = $(WRAPPER_CPPFLAGS)
 #DEFS     = 
 
-AM_CPPFLAGS = -I$(top_builddir)/src/include -I${top_srcdir}/src/include
+AM_CPPFLAGS += -I$(top_builddir)/src/include -I${top_srcdir}/src/include
 if BUILD_ROMIO
 AM_CPPFLAGS += -I$(top_builddir)/src/mpi/romio/include -I${top_srcdir}/mpi/romio/include/include
 endif BUILD_ROMIO
@@ -34,14 +34,14 @@ cpi_DEPENDENCIES =
 # is a better system?
 
 # the make-time instances of libpmpich.la and libmpich.la live here
-LDFLAGS += -L../lib
+AM_LDFLAGS += -L../lib
 # the make-time instances of libmpl.la and libopa.la live here
-LDFLAGS += -L@mpllibdir@ -L@opalibdir@
+AM_LDFLAGS += -L@mpllibdir@ -L@opalibdir@
 
 # Wrapper LDFLAGS need to be added at the end to make sure we link
 # with the libraries we just built, and not any previously installed
 # libraries.
-LDFLAGS += $(WRAPPER_LDFLAGS)
+AM_LDFLAGS += $(WRAPPER_LDFLAGS)
 
 external_libs = -l@MPLLIBNAME@ -l@OPALIBNAME@ $(WRAPPER_LIBS)
 if BUILD_PROFILING_LIB
@@ -78,7 +78,7 @@ parent_SOURCES = parent.c
 # --disable-static" is passed to configure.
 cpi_SOURCES = cpi.c
 cpi_LDADD = -lm
-cpi_LDFLAGS = $(LDFLAGS) $(mpich_libtool_static_flag)
+cpi_LDFLAGS = $(AM_LDFLAGS) $(mpich_libtool_static_flag)
 
 icpi_SOURCES = icpi.c
 icpi_LDADD = -lm
