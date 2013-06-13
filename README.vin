@@ -12,9 +12,8 @@ in the doc/installguide/install.pdf and doc/userguide/user.pdf files
 respectively. Additional information regarding the contents of the
 release can be found in the CHANGES file in the top-level directory,
 and in the RELEASE_NOTES file, where certain restrictions are
-detailed. Finally, the MPICH web site,
-http://www.mcs.anl.gov/research/projects/mpich, contains information
-on bug fixes and new releases.
+detailed. Finally, the MPICH web site, http://www.mpich.org, contains
+information on bug fixes and new releases.
 
 
 1.  Getting Started
@@ -235,15 +234,15 @@ see if the problem you are facing has a simple solution. Many common
 problems and their solutions are listed here.
 
 2. If you cannot find an answer on the FAQ page, look through previous
-email threads on the mpich-discuss mailing list archive
-(http://lists.mcs.anl.gov/pipermail/mpich-discuss/). It is likely
+email threads on the discuss@mpich.org mailing list archive
+(https://lists.mpich.org/mailman/listinfo/discuss). It is likely
 someone else had a similar problem, which has already been resolved
 before.
 
 3. If neither of the above steps work, please send an email to
-mpich-discuss@mcs.anl.gov. You need to subscribe to this list
-(https://lists.mcs.anl.gov/mailman/listinfo/mpich-discuss) before
-sending an email.
+discuss@mpich.org. You need to subscribe to this list
+(https://lists.mpich.org/mailman/listinfo/discuss) before sending an
+email.
 
 Your email should contain the following files.  ONCE AGAIN, PLEASE
 COMPRESS BEFORE SENDING, AS THE FILES CAN BE LARGE.  Note that,
@@ -274,9 +273,9 @@ application or benchmark and send that along in your bug report.
 
 4. If you have found a bug in MPICH, we request that you report it at
 our bug tracking system:
-(https://trac.mpich.org/projects/mpich/newticket). Even if you
-believe you have found a bug, we recommend you sending an email to
-mpich-discuss@mcs.anl.gov first.
+(https://trac.mpich.org/projects/mpich/newticket). Even if you believe
+you have found a bug, we recommend you sending an email to
+discuss@mpich.org first.
 
 
 -------------------------------------------------------------------------
@@ -860,8 +859,7 @@ Here are the instructions for setting up MPICH on a Windows machine:
 (b) Checkout mpich:
 
     Bring up a command prompt.
-    (replace "yourname" with your MCS login name):
-    svn co https://svn.mcs.anl.gov/repos/mpi/mpich2/trunk mpich
+    git clone git.mpich.org:mpich
 
 (c) Generate *.h.in
 
