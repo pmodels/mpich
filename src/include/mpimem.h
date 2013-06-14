@@ -426,7 +426,7 @@ if (pointer_) { \
     void *realloc_tmp_ = MPIU_Realloc((ptr_), (size_)); \
     if ((size_) && !realloc_tmp_) { \
         MPIU_Free(ptr_); \
-        MPIU_ERR_SETANDJUMP2(rc_,MPIU_CHKMEM_ISFATAL,"**nomem2","**nomem2 %d %s",(size_),MPIU_QUOTE(ptr_)); \
+        MPIU_ERR_SETANDJUMP2(rc_,MPI_ERR_OTHER,"**nomem2","**nomem2 %d %s",(size_),MPIU_QUOTE(ptr_)); \
     } \
     (ptr_) = realloc_tmp_; \
 } while (0)
@@ -434,7 +434,7 @@ if (pointer_) { \
 #define MPIU_REALLOC_ORJUMP(ptr_,size_,rc_) do { \
     void *realloc_tmp_ = MPIU_Realloc((ptr_), (size_)); \
     if (size_) \
-        MPIU_ERR_CHKANDJUMP2(!realloc_tmp_,rc_,MPIU_CHKMEM_ISFATAL,"**nomem2","**nomem2 %d %s",(size_),MPIU_QUOTE(ptr_)); \
+        MPIU_ERR_CHKANDJUMP2(!realloc_tmp_,rc_,MPI_ERR_OTHER,"**nomem2","**nomem2 %d %s",(size_),MPIU_QUOTE(ptr_)); \
     (ptr_) = realloc_tmp_; \
 } while (0)
 

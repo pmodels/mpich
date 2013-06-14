@@ -116,7 +116,7 @@ int MPI_Dist_graph_create_adjacent(MPI_Comm comm_old,
             if (indegree > 0) {
                 MPIR_ERRTEST_ARGNULL(sources, "sources", mpi_errno);
                 if (sourceweights == MPI_UNWEIGHTED && destweights != MPI_UNWEIGHTED) {
-                    MPIU_ERR_SET(mpi_errno, MPIR_ERR_RECOVERABLE, "**unweightedboth");
+                    MPIU_ERR_SET(mpi_errno, MPI_ERR_TOPOLOGY, "**unweightedboth");
                     goto fn_fail;
                 }
                 /* TODO check ranges for array elements too (**argarrayneg / **rankarray)*/
@@ -124,7 +124,7 @@ int MPI_Dist_graph_create_adjacent(MPI_Comm comm_old,
             if (outdegree > 0) {
                 MPIR_ERRTEST_ARGNULL(destinations, "destinations", mpi_errno);
                 if (destweights == MPI_UNWEIGHTED && sourceweights != MPI_UNWEIGHTED) {
-                    MPIU_ERR_SET(mpi_errno, MPIR_ERR_RECOVERABLE, "**unweightedboth");
+                    MPIU_ERR_SET(mpi_errno, MPI_ERR_TOPOLOGY, "**unweightedboth");
                     goto fn_fail;
                 }
             }

@@ -24,7 +24,7 @@ $quiet = 0;
 $build_test_pgm = 1;
 # FIXME: checkErrClass should be set to 1; currently set to zero
 # to permit autogen.sh to complete
-$checkErrClass = 0;
+$checkErrClass = 1;
 
 # Strict is used to control checking of error message strings.
 $gStrict = 0;

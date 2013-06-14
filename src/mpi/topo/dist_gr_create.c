@@ -316,7 +316,7 @@ int MPI_Dist_graph_create(MPI_Comm comm_old, int n, const int sources[],
         /* FIXME: Why not - there is only one allocated at a time. Is it only 
            that there is no defined macro to pop and free an item? */
         buf = MPIU_Malloc(count*sizeof(int));
-        MPIU_ERR_CHKANDJUMP(!buf, mpi_errno, MPIR_ERR_RECOVERABLE, "**nomem");
+        MPIU_ERR_CHKANDJUMP(!buf, mpi_errno, MPI_ERR_OTHER, "**nomem");
 
         mpi_errno = MPIC_Recv(buf, count, MPI_INT, MPI_ANY_SOURCE, MPIR_TOPO_A_TAG, comm_old, MPI_STATUS_IGNORE);
         /* FIXME: buf is never freed on error! */
@@ -350,7 +350,7 @@ int MPI_Dist_graph_create(MPI_Comm comm_old, int n, const int sources[],
         /* can't use CHKLMEM macros b/c we are in a loop */
         /* Why not? */
         buf = MPIU_Malloc(count*sizeof(int));
-        MPIU_ERR_CHKANDJUMP(!buf, mpi_errno, MPIR_ERR_RECOVERABLE, "**nomem");
+        MPIU_ERR_CHKANDJUMP(!buf, mpi_errno, MPI_ERR_OTHER, "**nomem");
 
         mpi_errno = MPIC_Recv(buf, count, MPI_INT, MPI_ANY_SOURCE, MPIR_TOPO_B_TAG, comm_old, MPI_STATUS_IGNORE);
         /* FIXME: buf is never freed on error! */

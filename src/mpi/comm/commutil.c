@@ -863,7 +863,7 @@ int MPIR_Get_contextid_sparse_group(MPID_Comm *comm_ptr, MPID_Group *group_ptr, 
             int nfree = -1;
             int ntotal = -1;
             MPIR_ContextMaskStats(&nfree, &ntotal);
-            MPIU_ERR_SETANDJUMP3(mpi_errno, MPIR_ERR_RECOVERABLE,
+            MPIU_ERR_SETANDJUMP3(mpi_errno, MPI_ERR_OTHER,
                                  "**toomanycomm", "**toomanycomm %d %d %d",
                                  nfree, ntotal, ignore_id);
         }
@@ -874,7 +874,7 @@ int MPIR_Get_contextid_sparse_group(MPID_Comm *comm_ptr, MPID_Group *group_ptr, 
             int nfree = -1;
             int ntotal = -1;
             MPIR_ContextMaskStats(&nfree, &ntotal);
-            MPIU_ERR_SETANDJUMP3(mpi_errno, MPIR_ERR_RECOVERABLE,
+            MPIU_ERR_SETANDJUMP3(mpi_errno, MPI_ERR_OTHER,
                                  "**toomanycomm", "**toomanycomm %d %d %d",
                                  nfree, ntotal, ignore_id);
         }
@@ -1141,7 +1141,7 @@ int MPIR_Get_contextid_sparse_group(MPID_Comm *comm_ptr, MPID_Group *group_ptr, 
             }
 
             MPIR_ContextMaskStats(&nfree, &ntotal);
-            MPIU_ERR_SETANDJUMP3(mpi_errno, MPIR_ERR_RECOVERABLE,
+            MPIU_ERR_SETANDJUMP3(mpi_errno, MPI_ERR_OTHER,
                                  "**toomanycommfrag", "**toomanycommfrag %d %d %d",
                                  nfree, ntotal, ignore_id);
             /* --END ERROR HANDLING-- */
@@ -1192,7 +1192,7 @@ static int gcn_helper(MPID_Comm *comm, int tag, void *state)
         int nfree = -1;
         int ntotal = -1;
         MPIR_ContextMaskStats(&nfree, &ntotal);
-        MPIU_ERR_SETANDJUMP3(mpi_errno, MPIR_ERR_RECOVERABLE,
+        MPIU_ERR_SETANDJUMP3(mpi_errno, MPI_ERR_OTHER,
                              "**toomanycomm", "**toomanycomm %d %d %d",
                              nfree, ntotal, /*ignore_id=*/0);
     }
@@ -1557,7 +1557,7 @@ int MPIR_Comm_copy( MPID_Comm *comm_ptr, int size, MPID_Comm **outcomm_ptr )
         int nfree = -1;
         int ntotal = -1;
         MPIR_ContextMaskStats(&nfree, &ntotal);
-        MPIU_ERR_SETANDJUMP3(mpi_errno, MPIR_ERR_RECOVERABLE,
+        MPIU_ERR_SETANDJUMP3(mpi_errno, MPI_ERR_OTHER,
                              "**toomanycomm", "**toomanycomm %d %d %d",
                              nfree, ntotal, /*ignore_id=*/0);
     }
