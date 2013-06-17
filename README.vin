@@ -25,8 +25,7 @@ information on bug fixes and new releases.
 7.  Testing the MPICH installation
 8.  Fault Tolerance
 9. Developer Builds
-10. Installing MPICH on windows
-11. Multiple Fortran compiler support
+10. Multiple Fortran compiler support
 
 
 -------------------------------------------------------------------------
@@ -844,85 +843,7 @@ http://wiki.mpich.org/mpich/index.php/Getting_And_Building_MPICH
 
 -------------------------------------------------------------------------
 
-10. Installing MPICH on Windows
-================================
-
-Here are the instructions for setting up MPICH on a Windows machine:
-
-(a) Install:
-    Microsoft Developer Studio 2003 or later
-    Intel Fortran 8.0 or later
-    cygwin
-	choose the dos file format option
-	install perl and svn
-
-(b) Checkout mpich:
-
-    Bring up a command prompt.
-    git clone git.mpich.org:mpich
-
-(c) Generate *.h.in
-
-    Bring up a cygwin bash shell.
-    cd mpich
-    ./autogen.sh
-    exit
-
-(d) Execute winconfigure.wsf
-
-(e) Open Developer Studio
-
-    open mpich\mpich.sln
-    build the ch3sockDebug mpich solution
-    build the ch3sockDebug mpichs project
-    build the ch3sockRelease mpich solution
-    build the ch3sockRelease mpichs project
-    build the Debug mpich solution
-    build the Release mpich solution
-    build the fortDebug mpich solution
-    build the fortRelease mpich solution
-    build the gfortDebug mpich solution
-    build the gfortRelease mpich solution
-    build the sfortDebug mpich solution
-    build the sfortRelease mpich solution
-
-(f) Open a command prompt
-
-    cd to mpich\maint
-    execute "makegcclibs.bat"
-
-(g) Open another Developer Studio instance
-
-    open mpich\examples\examples.sln
-    build the Release target of the cpi project
-
-(h) Return to Developer Studio with the mpich solution
-
-    set the version numbers in the Installer project
-    build the Installer mpich solution
-
-(i) Test and distribute mpich\maint\ReleaseMSI\mpich.msi
-
-    mpich.msi can be renamed, eg mpich-1.1.msi
-
-(j) To install the launcher:
-
-    Copy smpd.exe to a local directory on all the nodes.
-    Log on to each node as an administrator and execute "smpd.exe -install"
-
-(k) Compile and run an MPI application:
-
-    Compile an mpi application.  Use mpi.h from mpich\src\include\win32
-    and mpi.lib in mpich\lib
-    
-    Place your executable along with the mpich dlls somewhere accessable
-    to all the machines.
-    
-    Execute a job by running something like: mpiexec -n 3 myapp.exe
-
--------------------------------------------------------------------------
-
-11. Multiple Fortran compiler support
+10. Multiple Fortran compiler support
 =====================================
 
 If the C compiler that is used to build MPICH libraries supports both
