@@ -614,9 +614,9 @@ int MPIC_Send_ft(const void *buf, int count, MPI_Datatype datatype, int dest, in
     MPIU_DBG_MSG_S(PT2PT, TYPICAL, "IN: errflag = %s", *errflag?"TRUE":"FALSE");
 
     if (*errflag && MPIR_PARAM_ENABLE_COLL_FT_RET)
-        mpi_errno = MPIC_Send(buf, count, datatype, dest, MPIR_ERROR_TAG, comm);
-    else
-        mpi_errno = MPIC_Send(buf, count, datatype, dest, tag, comm);
+        MPIR_TAG_SET_ERROR_BIT(tag);
+
+    mpi_errno = MPIC_Send(buf, count, datatype, dest, tag, comm);
 
  fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_MPIC_SEND_FT);
@@ -640,24 +640,25 @@ int MPIC_Recv_ft(void *buf, int count, MPI_Datatype datatype, int source, int ta
 
     MPIU_DBG_MSG_S(PT2PT, TYPICAL, "IN: errflag = %s", *errflag?"TRUE":"FALSE");
 
-    if (!MPIR_PARAM_ENABLE_COLL_FT_RET) {
-            mpi_errno = MPIC_Recv(buf, count, datatype, source, tag, comm, status);
-            goto fn_exit;
-    }
-    
     if (status == MPI_STATUS_IGNORE)
         status = &mystatus;
-    
-    mpi_errno = MPIC_Recv(buf, count, datatype, source, MPI_ANY_TAG, comm, status);
+
+    mpi_errno = MPIC_Recv(buf, count, datatype, source, tag, comm, status);
+
+    if (!MPIR_PARAM_ENABLE_COLL_FT_RET) {
+        goto fn_exit;
+    }
+
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
     if (*errflag)
         goto fn_exit;
 
     if (source != MPI_PROC_NULL) {
-        if (status->MPI_TAG == MPIR_ERROR_TAG)
+        if (MPIR_TAG_CHECK_ERROR_BIT(status->MPI_TAG)) {
             *errflag = TRUE;
-        else {
+            MPIR_TAG_CLEAR_ERROR_BIT(status->MPI_TAG);
+        } else {
             MPIU_Assert(status->MPI_TAG == tag);
         }
     }
@@ -685,9 +686,9 @@ int MPIC_Ssend_ft(const void *buf, int count, MPI_Datatype datatype, int dest, i
     MPIU_DBG_MSG_S(PT2PT, TYPICAL, "IN: errflag = %s", *errflag?"TRUE":"FALSE");
     
     if (*errflag && MPIR_PARAM_ENABLE_COLL_FT_RET)
-        mpi_errno = MPIC_Ssend(buf, count, datatype, dest, MPIR_ERROR_TAG, comm);
-    else
-        mpi_errno = MPIC_Ssend(buf, count, datatype, dest, tag, comm);
+        MPIR_TAG_SET_ERROR_BIT(tag);
+
+    mpi_errno = MPIC_Ssend(buf, count, datatype, dest, tag, comm);
 
  fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_MPIC_SSEND_FT);
@@ -713,32 +714,22 @@ int MPIC_Sendrecv_ft(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
 
     MPIU_DBG_MSG_S(PT2PT, TYPICAL, "IN: errflag = %s", *errflag?"TRUE":"FALSE");
 
-    if (!MPIR_PARAM_ENABLE_COLL_FT_RET) {
-        mpi_errno = MPIC_Sendrecv(sendbuf, sendcount, sendtype, dest, sendtag,
-                                  recvbuf, recvcount, recvtype, source, recvtag,
-                                  comm, status);
-        goto fn_exit;
+    if (MPIR_PARAM_ENABLE_COLL_FT_RET) {
+        if (status == MPI_STATUS_IGNORE) status = &mystatus;
+        if (*errflag) MPIR_TAG_SET_ERROR_BIT(sendtag);
     }
-    
-    if (status == MPI_STATUS_IGNORE)
-        status = &mystatus;
-    
-    if (*errflag) {
-        mpi_errno = MPIC_Sendrecv(sendbuf, sendcount, sendtype, dest, MPIR_ERROR_TAG,
-                                  recvbuf, recvcount, recvtype, source, MPI_ANY_TAG,
-                                  comm, status);
-        goto fn_exit;
-    }
-    
+
     mpi_errno = MPIC_Sendrecv(sendbuf, sendcount, sendtype, dest, sendtag,
-                              recvbuf, recvcount, recvtype, source, MPI_ANY_TAG,
+                              recvbuf, recvcount, recvtype, source, recvtag,
                               comm, status);
+    if (!MPIR_PARAM_ENABLE_COLL_FT_RET) goto fn_exit;
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
     if (source != MPI_PROC_NULL) {
-        if (status->MPI_TAG == MPIR_ERROR_TAG)
+        if (MPIR_TAG_CHECK_ERROR_BIT(status->MPI_TAG)) {
             *errflag = TRUE;
-        else {
+            MPIR_TAG_CLEAR_ERROR_BIT(status->MPI_TAG);
+        } else {
             MPIU_Assert(status->MPI_TAG == recvtag);
         }
     }
@@ -769,35 +760,23 @@ int MPIC_Sendrecv_replace_ft(void *buf, int count, MPI_Datatype datatype,
 
     MPIU_DBG_MSG_S(PT2PT, TYPICAL, "IN: errflag = %s", *errflag?"TRUE":"FALSE");
 
-    if (!MPIR_PARAM_ENABLE_COLL_FT_RET) {
-        mpi_errno = MPIC_Sendrecv_replace(buf, count, datatype,
-                                          dest, sendtag,
-                                          source, recvtag,
-                                          comm, status);
-        goto fn_exit;
+    if (MPIR_PARAM_ENABLE_COLL_FT_RET) {
+        if (status == MPI_STATUS_IGNORE) status = &mystatus;
+        if (*errflag) MPIR_TAG_SET_ERROR_BIT(sendtag);
     }
 
-    if (status == MPI_STATUS_IGNORE)
-        status = &mystatus;
-    
-    if (*errflag) {
-        mpi_errno = MPIC_Sendrecv_replace(buf, count, datatype,
-                                          dest, MPIR_ERROR_TAG,
-                                          source, MPI_ANY_TAG,
-                                          comm, status);
-        goto fn_exit;
-    }
-    
     mpi_errno = MPIC_Sendrecv_replace(buf, count, datatype,
                                       dest, sendtag,
-                                      source, MPI_ANY_TAG,
+                                      source, recvtag,
                                       comm, status);
+    if (!MPIR_PARAM_ENABLE_COLL_FT_RET) goto fn_exit;
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     
     if (source != MPI_PROC_NULL) {
-        if (status->MPI_TAG == MPIR_ERROR_TAG)
+        if (MPIR_TAG_CHECK_ERROR_BIT(status->MPI_TAG)) {
             *errflag = TRUE;
-        else {
+            MPIR_TAG_CLEAR_ERROR_BIT(status->MPI_TAG);
+        } else {
             MPIU_Assert(status->MPI_TAG == recvtag);
         }
     }
@@ -825,9 +804,9 @@ int MPIC_Isend_ft(const void *buf, int count, MPI_Datatype datatype, int dest, i
     MPIU_DBG_MSG_S(PT2PT, TYPICAL, "IN: errflag = %s", *errflag?"TRUE":"FALSE");
 
     if (*errflag && MPIR_PARAM_ENABLE_COLL_FT_RET)
-        mpi_errno = MPIC_Isend(buf, count, datatype, dest, MPIR_ERROR_TAG, comm, request);
-    else
-        mpi_errno = MPIC_Isend(buf, count, datatype, dest, tag, comm, request);
+        MPIR_TAG_SET_ERROR_BIT(tag);
+
+    mpi_errno = MPIC_Isend(buf, count, datatype, dest, tag, comm, request);
 
  fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_MPIC_ISEND_FT);
@@ -848,10 +827,7 @@ int MPIC_Irecv_ft(void *buf, int count, MPI_Datatype datatype, int source,
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIC_IRECV_FT);
 
-    if (MPIR_PARAM_ENABLE_COLL_FT_RET)
-        mpi_errno = MPIC_Irecv(buf, count, datatype, source, MPI_ANY_TAG, comm, request);
-    else
-        mpi_errno = MPIC_Irecv(buf, count, datatype, source, tag, comm, request);
+    mpi_errno = MPIC_Irecv(buf, count, datatype, source, tag, comm, request);
 
  fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_MPIC_IRECV_FT);
@@ -877,9 +853,9 @@ int MPIC_Waitall_ft(int numreq, MPI_Request requests[], MPI_Status statuses[], i
 
     MPIU_DBG_MSG_S(PT2PT, TYPICAL, "IN: errflag = %s", *errflag?"TRUE":"FALSE");
 
-    /* The MPI_TAG field is not set for send oeprations, so if we want
-       to check for MPIR_ERROR_TAG below, we should initialize all tag
-       fields here. */
+    /* The MPI_TAG field is not set for send operations, so if we want
+       to check for the error bit in the tag below, we should initialize all
+       tag fields here. */
     for (i = 0; i < numreq; ++i)
         statuses[i].MPI_TAG = 0;
     
@@ -890,8 +866,9 @@ int MPIC_Waitall_ft(int numreq, MPI_Request requests[], MPI_Status statuses[], i
         goto fn_exit;
 
     for (i = 0; i < numreq; ++i) {
-        if (statuses[i].MPI_TAG == MPIR_ERROR_TAG) {
+        if (MPIR_TAG_CHECK_ERROR_BIT(statuses[i].MPI_TAG)) {
             *errflag = TRUE;
+            MPIR_TAG_CLEAR_ERROR_BIT(statuses[i].MPI_TAG);
             break;
         }
     }

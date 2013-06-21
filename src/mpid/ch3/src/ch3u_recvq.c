@@ -287,7 +287,7 @@ int MPIDI_CH3U_Recvq_FU(int source, int tag, int context_id, MPI_Status *s)
     /* Mask the error bit that might be set on incoming messages. It is
      * assumed that the local receive operation won't have the error bit set
      * (or it is masked away at some other level). */
-    MPIU_TAG_CLEAR_ERROR_BIT(mask.parts.tag);
+    MPIR_TAG_CLEAR_ERROR_BIT(mask.parts.tag);
     if (tag != MPI_ANY_TAG && source != MPI_ANY_SOURCE) {
         MPIR_T_START_TIMER(RECVQ_STATISTICS, timer_start);
 	while (rreq != NULL) {
@@ -371,7 +371,7 @@ MPID_Request * MPIDI_CH3U_Recvq_FDU(MPI_Request sreq_id,
     /* Mask the error bit that might be set on incoming messages. It is
      * assumed that the local receive operation won't have the error bit set
      * (or it is masked away at some other level). */
-    MPIU_TAG_CLEAR_ERROR_BIT(mask.parts.tag);
+    MPIR_TAG_CLEAR_ERROR_BIT(mask.parts.tag);
 
     /* Note that since this routine is used only in the case of send_cancel,
        there can be only one match if at all. */
@@ -456,7 +456,7 @@ MPID_Request * MPIDI_CH3U_Recvq_FDU_matchonly(int source, int tag, int context_i
         /* Mask the error bit that might be set on incoming messages. It is
          * assumed that the local receive operation won't have the error bit set
          * (or it is masked away at some other level). */
-        MPIU_TAG_CLEAR_ERROR_BIT(mask.parts.tag);
+        MPIR_TAG_CLEAR_ERROR_BIT(mask.parts.tag);
 
         if (tag != MPI_ANY_TAG && source != MPI_ANY_SOURCE) {
             do {
@@ -578,7 +578,7 @@ MPID_Request * MPIDI_CH3U_Recvq_FDU_or_AEP(int source, int tag,
     /* Mask the error bit that might be set on incoming messages. It is
      * assumed that the local receive operation won't have the error bit set
      * (or it is masked away at some other level). */
-    MPIU_TAG_CLEAR_ERROR_BIT(mask.parts.tag);
+    MPIR_TAG_CLEAR_ERROR_BIT(mask.parts.tag);
 
 	if (tag != MPI_ANY_TAG && source != MPI_ANY_SOURCE) {
 	    do {
@@ -824,8 +824,8 @@ MPID_Request * MPIDI_CH3U_Recvq_FDP_or_AEU(MPIDI_Message_match * match,
     /* Unset the error bit if it is set on the incoming packet so we don't
      * have to mask it every time. It will get reset at the end of the loop or
      * before the request is added to the unexpected queue if was set here. */
-    if (MPIU_TAG_CHECK_ERROR_BIT(match->parts.tag)) {
-        MPIU_TAG_CLEAR_ERROR_BIT(match->parts.tag);
+    if (MPIR_TAG_CHECK_ERROR_BIT(match->parts.tag)) {
+        MPIR_TAG_CLEAR_ERROR_BIT(match->parts.tag);
         error_bit_masked = 1;
     }
 
@@ -872,7 +872,7 @@ MPID_Request * MPIDI_CH3U_Recvq_FDP_or_AEU(MPIDI_Message_match * match,
         rreq->dev.recv_pending_count = 1;
         /* Reset the error bit if we unset it earlier. */
         if (error_bit_masked)
-            MPIU_TAG_SET_ERROR_BIT(match->parts.tag);
+            MPIR_TAG_SET_ERROR_BIT(match->parts.tag);
 	rreq->dev.match	= *match;
 	rreq->dev.next	= NULL;
 	if (recvq_unexpected_tail != NULL) {
@@ -891,7 +891,7 @@ MPID_Request * MPIDI_CH3U_Recvq_FDP_or_AEU(MPIDI_Message_match * match,
 
     /* Reset the error bit if we unset it earlier. */
     if (error_bit_masked)
-        MPIU_TAG_SET_ERROR_BIT(match->parts.tag);
+        MPIR_TAG_SET_ERROR_BIT(match->parts.tag);
 
     *foundp = found;
 
