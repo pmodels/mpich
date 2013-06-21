@@ -7,8 +7,12 @@
 
 #include "adio.h"
 
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#endif
+#ifdef HAVE_SYS_TYPES_H
 #include <sys/types.h>
+#endif
 
 /* The following function selects the name of the file to be used to 
    store the shared file pointer. The shared-file-pointer file is a 
