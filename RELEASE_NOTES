@@ -10,19 +10,15 @@
 
    http://trac.mpich.org/projects/mpich/ticket/1719
 
+
 ### Large counts
 
  * The new MPI-3 "large count" routines (e.g., MPI_Type_size_x) do not
    work correctly due to 64-bit to 32-bit truncations occurring inside
    the MPICH library.  We expect to fix this in upcoming releases.
 
-### Known runtime failures
 
- * MPI_Alltoall might fail in some cases because of the newly added
-   fault-tolerance features. If you are seeing this error, try setting
-   the environment variable MPICH_ENABLE_COLL_FT_RET=0.
-
-### Threads
+### Fine-grained thread safety
 
  * ch3:sock does not (and will not) support fine-grained threading.
 
@@ -74,14 +70,6 @@
 
      https://trac.mpich.org/projects/mpich/ticket/1782
 
- * The MPD process manager can only handle relatively small amounts of
-   data on stdin and may also have problems if there is data on stdin
-   that is not consumed by the program.
-
- * The SMPD process manager does not work reliably with threaded MPI
-   processes. MPI_Comm_spawn() does not currently work for >= 256
-   arguments with smpd.
-
 
 ### Performance issues
 
@@ -96,12 +84,3 @@
    operations may erroneously fail. By explicitly completed, we mean
    that the request associated with the operation is completed by one
    of the MPI_Test or MPI_Wait routines.
-
-
-### C++ Binding:
-  
- * The MPI datatypes corresponding to Fortran datatypes are not
-   available (e.g., no MPI::DOUBLE_PRECISION).
-
- * MPI::ERRORS_RETURN may still throw exceptions in the event of an
-   error rather than silently returning.
