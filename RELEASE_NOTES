@@ -2,6 +2,14 @@
                         KNOWN ISSUES
 ----------------------------------------------------------------------
 
+### ABI issues
+
+ * The format of MPI_INFO_ENV was changed between v3.0 and v3.0.1 in
+   an ABI incompatible way.  The change was not caught, unfortunately,
+   and the ABI string not updated appropriately.
+
+   http://trac.mpich.org/projects/mpich/ticket/1719
+
 ### Large counts
 
  * The new MPI-3 "large count" routines (e.g., MPI_Type_size_x) do not
