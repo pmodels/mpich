@@ -3848,8 +3848,7 @@ int MPID_VCR_Get_lpid(MPID_VCR vcr, int * lpid_ptr);
 #define MPIR_TOPO_A_TAG               26
 #define MPIR_TOPO_B_TAG               27
 #define MPIR_REDUCE_SCATTER_BLOCK_TAG 28
-#define MPIR_ERROR_TAG                29
-#define MPIR_FIRST_NBC_TAG            30
+#define MPIR_FIRST_NBC_TAG            29
 
 /* These macros must be used carefully. These macros will not work with
  * negative tags. By definition, users are not to use negative tags and the
