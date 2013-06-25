@@ -12,6 +12,14 @@
 #include <string.h>
 #include <stdlib.h>
 
+static void handle_error(int errcode, const char *str)
+{
+	char msg[MPI_MAX_ERROR_STRING];
+	int resultlen;
+	MPI_Error_string(errcode, msg, &resultlen);
+	fprintf(stderr, "%s: %s\n", str, msg);
+	MPI_Abort(MPI_COMM_WORLD, 1);
+}
 /* this test wants to compare the hints it gets from a file with a set of
  * default hints.  These hints are specific to the MPI-IO implementation, so if
  * you want to test something besides the default you'll have to use a command
@@ -43,7 +51,6 @@ hint_defaults BLUEGENE_DEFAULTS = {
     .romio_cb_write = "enable",
     .cb_config_list = NULL};
 
-
 /* #undef INFO_DEBUG */
 
 /* Test will print out information about unexpected hint keys or values that
@@ -62,6 +69,7 @@ int main(int argc, char **argv)
     MPI_Info info, info_used;
     char *filename, key[MPI_MAX_INFO_KEY], value[MPI_MAX_INFO_VAL];
     hint_defaults *defaults;
+    int ret;
 
     MPI_Init(&argc,&argv);
 
@@ -111,8 +119,9 @@ int main(int argc, char **argv)
 
 
 /* open the file with MPI_INFO_NULL */
-    MPI_File_open(MPI_COMM_WORLD, filename, MPI_MODE_CREATE | MPI_MODE_RDWR, 
+    ret = MPI_File_open(MPI_COMM_WORLD, filename, MPI_MODE_CREATE | MPI_MODE_RDWR, 
                   MPI_INFO_NULL, &fh);
+    if (ret != MPI_SUCCESS) handle_error(ret, "MPI_File_open");
 
 /* check the default values set by ROMIO */
     MPI_File_get_info(fh, &info_used);
@@ -277,11 +286,13 @@ int main(int argc, char **argv)
     MPI_Info_set(info, "pfs_svr_buf", "true");
 
 /* open the file and set new info */
-    MPI_File_open(MPI_COMM_WORLD, filename, MPI_MODE_CREATE | MPI_MODE_RDWR, 
+    ret = MPI_File_open(MPI_COMM_WORLD, filename, MPI_MODE_CREATE | MPI_MODE_RDWR, 
                   info, &fh);
+    if (ret != MPI_SUCCESS) handle_error(ret, "MPI_File_open");
 
 /* check the values set */
-    MPI_File_get_info(fh, &info_used);
+    ret = MPI_File_get_info(fh, &info_used);
+    if (ret != MPI_SUCCESS) handle_error(ret, "MPI_File_get_info");
     MPI_Info_get_nkeys(info_used, &nkeys);
 
     for (i=0; i<nkeys; i++) {
