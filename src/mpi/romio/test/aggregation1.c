@@ -7,6 +7,7 @@
 /* Test case from John Bent (ROMIO req #835)
  * Aggregation code was not handling certain access patterns when collective
  * buffering forced */
+#define _XOPEN_SOURCE 500 /* strdup not in string.h otherwsie */
 #include <unistd.h>
 #include <stdlib.h>
 #include <mpi.h>
@@ -38,7 +39,7 @@ Usage( int line ) {
 }
 
 static void
-fatal_error( int mpi_ret, MPI_Status *mpi_stat, char *msg ) {
+fatal_error( int mpi_ret, MPI_Status *mpi_stat, const char *msg ) {
     fprintf( stderr, "Fatal error %s: %d\n", msg, mpi_ret );
     MPI_Abort( MPI_COMM_WORLD, -1 );
 }
