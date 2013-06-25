@@ -10,6 +10,7 @@
 
 #include "ad_lustre.h"
 #include "adio_extern.h"
+#include "hint_fns.h"
 
 void ADIOI_LUSTRE_SetInfo(ADIO_File fd, MPI_Info users_info, int *error_code)
 {
@@ -138,56 +139,19 @@ void ADIOI_LUSTRE_SetInfo(ADIO_File fd, MPI_Info users_info, int *error_code)
     if (users_info != MPI_INFO_NULL) {
         /* CO: IO Clients/OST,
          * to keep the load balancing between clients and OSTs */
-        ADIOI_Info_get(users_info, "romio_lustre_co_ratio", MPI_MAX_INFO_VAL, value,
-                     &flag);
-	if (flag && (int_val = atoi(value)) > 0) {
-            tmp_val = int_val;
-	    MPI_Bcast(&tmp_val, 1, MPI_INT, 0, fd->comm);
-	    if (tmp_val != int_val) {
-                MPIO_ERR_CREATE_CODE_INFO_NOT_SAME(myname,
-                                                   "romio_lustre_co_ratio",
-                                                   error_code);
-                ADIOI_Free(value);
-		return;
-	    }
-	    ADIOI_Info_set(fd->info, "romio_lustre_co_ratio", value);
-            fd->hints->fs_hints.lustre.co_ratio = atoi(value);
-	}
+	ADIOI_Info_check_and_install_int(fd, users_info, "romio_lustre_co_ratio", 
+		&(fd->hints->fs_hints.lustre.co_ratio));
+
         /* coll_threshold:
          * if the req size is bigger than this, collective IO may not be performed.
          */
-	ADIOI_Info_get(users_info, "romio_lustre_coll_threshold", MPI_MAX_INFO_VAL, value,
-                     &flag);
-	if (flag && (int_val = atoi(value)) > 0) {
-            tmp_val = int_val;
-	    MPI_Bcast(&tmp_val, 1, MPI_INT, 0, fd->comm);
-	    if (tmp_val != int_val) {
-	        MPIO_ERR_CREATE_CODE_INFO_NOT_SAME(myname,
-		                                   "romio_lustre_coll_threshold",
-	                                           error_code);
-                ADIOI_Free(value);
-	        return;
-	    }
-	    ADIOI_Info_set(fd->info, "romio_lustre_coll_threshold", value);
-            fd->hints->fs_hints.lustre.coll_threshold = atoi(value);
-        }
+	ADIOI_Info_check_and_install_int(fd, users_info, "romio_lustre_coll_threshold",
+		&(fd->hints->fs_hints.lustre.coll_threshold) );
+
         /* ds_in_coll: disable data sieving in collective IO */
-	ADIOI_Info_get(users_info, "romio_lustre_ds_in_coll", MPI_MAX_INFO_VAL,
-	             value, &flag);
-	if (flag && (!strcmp(value, "disable") ||
-                     !strcmp(value, "DISABLE"))) {
-            tmp_val = int_val = 2;
-	    MPI_Bcast(&tmp_val, 2, MPI_INT, 0, fd->comm);
-	    if (tmp_val != int_val) {
-	        MPIO_ERR_CREATE_CODE_INFO_NOT_SAME(myname,
-		                                   "romio_lustre_ds_in_coll",
-						   error_code);
-                ADIOI_Free(value);
-                return;
-	    }
-	    ADIOI_Info_set(fd->info, "romio_lustre_ds_in_coll", "disable");
-            fd->hints->fs_hints.lustre.ds_in_coll = ADIOI_HINT_DISABLE;
-	}
+	ADIOI_Info_check_and_install_enabled(fd, users_info, "romio_lustre_ds_in_coll",
+		&(fd->hints->fs_hints.lustre.ds_in_coll) );
+
     }
     /* set the values for collective I/O and data sieving parameters */
     ADIOI_GEN_SetInfo(fd, users_info, error_code);
