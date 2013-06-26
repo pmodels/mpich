@@ -15,6 +15,25 @@
    sends/receives by setting the context offset to
    MPID_CONTEXT_INTRA_COLL or MPID_CONTEXT_INTER_COLL. */
 
+static int MPIC_Send(const void *buf, int count, MPI_Datatype datatype, int dest, int tag,
+                    MPI_Comm comm);
+static int MPIC_Recv(void *buf, int count, MPI_Datatype datatype, int source, int tag,
+                    MPI_Comm comm, MPI_Status *status);
+static int MPIC_Ssend(const void *buf, int count, MPI_Datatype datatype, int dest, int tag,
+                    MPI_Comm comm);
+static int MPIC_Sendrecv(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+                        int dest, int sendtag, void *recvbuf, int recvcount,
+                        MPI_Datatype recvtype, int source, int recvtag,
+                        MPI_Comm comm, MPI_Status *status);
+static int MPIC_Sendrecv_replace(void *buf, int count, MPI_Datatype type,
+                                int dest, int sendtag,
+                                int source, int recvtag,
+                                MPI_Comm comm, MPI_Status *status);
+static int MPIC_Irecv(void *buf, int count, MPI_Datatype datatype, int
+                     source, int tag, MPI_Comm comm, MPI_Request *request);
+static int MPIC_Isend(const void *buf, int count, MPI_Datatype datatype, int dest, int tag,
+                     MPI_Comm comm, MPI_Request *request);
+
 #undef FUNCNAME
 #define FUNCNAME MPIC_Probe
 #undef FCNAME
@@ -44,8 +63,8 @@ int MPIC_Probe(int source, int tag, MPI_Comm comm, MPI_Status *status)
 #define FUNCNAME MPIC_Send
 #undef FCNAME
 #define FCNAME "MPIC_Send"
-int MPIC_Send(const void *buf, int count, MPI_Datatype datatype, int dest, int tag,
-              MPI_Comm comm)
+static int MPIC_Send(const void *buf, int count, MPI_Datatype datatype, int dest, int tag,
+                     MPI_Comm comm)
 {
     int mpi_errno = MPI_SUCCESS;
     int context_id;
@@ -86,8 +105,8 @@ int MPIC_Send(const void *buf, int count, MPI_Datatype datatype, int dest, int t
 #define FUNCNAME MPIC_Recv
 #undef FCNAME
 #define FCNAME "MPIC_Recv"
-int MPIC_Recv(void *buf, int count, MPI_Datatype datatype, int source, int tag,
-	     MPI_Comm comm, MPI_Status *status)
+static int MPIC_Recv(void *buf, int count, MPI_Datatype datatype, int source, int tag,
+	                 MPI_Comm comm, MPI_Status *status)
 {
     int mpi_errno = MPI_SUCCESS;
     int context_id;
@@ -135,8 +154,8 @@ int MPIC_Recv(void *buf, int count, MPI_Datatype datatype, int source, int tag,
 #define FUNCNAME MPIC_Ssend
 #undef FCNAME
 #define FCNAME "MPIC_Ssend"
-int MPIC_Ssend(const void *buf, int count, MPI_Datatype datatype, int dest, int tag,
-               MPI_Comm comm)
+static int MPIC_Ssend(const void *buf, int count, MPI_Datatype datatype, int dest, int tag,
+                     MPI_Comm comm)
 {
     int mpi_errno = MPI_SUCCESS;
     int context_id;
@@ -177,10 +196,10 @@ int MPIC_Ssend(const void *buf, int count, MPI_Datatype datatype, int dest, int 
 #define FUNCNAME MPIC_Sendrecv
 #undef FCNAME
 #define FCNAME "MPIC_Sendrecv"
-int MPIC_Sendrecv(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
-                  int dest, int sendtag, void *recvbuf, int recvcount,
-                  MPI_Datatype recvtype, int source, int recvtag,
-                  MPI_Comm comm, MPI_Status *status) 
+static int MPIC_Sendrecv(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+                         int dest, int sendtag, void *recvbuf, int recvcount,
+                         MPI_Datatype recvtype, int source, int recvtag,
+                         MPI_Comm comm, MPI_Status *status)
 {
     MPID_Request *recv_req_ptr=NULL, *send_req_ptr=NULL;
     int mpi_errno = MPI_SUCCESS;
@@ -231,10 +250,10 @@ int MPIC_Sendrecv(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
 #define FUNCNAME MPIC_Sendrecv_replace
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPIC_Sendrecv_replace(void *buf, int count, MPI_Datatype datatype,
-                          int dest, int sendtag,
-                          int source, int recvtag,
-                          MPI_Comm comm, MPI_Status *status)
+static int MPIC_Sendrecv_replace(void *buf, int count, MPI_Datatype datatype,
+                                 int dest, int sendtag,
+                                 int source, int recvtag,
+                                 MPI_Comm comm, MPI_Status *status)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIR_Context_id_t context_id_offset;
@@ -477,8 +496,8 @@ int MPIR_Localcopy(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
 #define FUNCNAME MPIC_Isend
 #undef FCNAME
 #define FCNAME "MPIC_Isend"
-int MPIC_Isend(const void *buf, int count, MPI_Datatype datatype, int dest, int tag,
-              MPI_Comm comm, MPI_Request *request)
+static int MPIC_Isend(const void *buf, int count, MPI_Datatype datatype, int dest, int tag,
+                      MPI_Comm comm, MPI_Request *request)
 {
     int mpi_errno = MPI_SUCCESS;
     int context_id;
@@ -513,8 +532,8 @@ int MPIC_Isend(const void *buf, int count, MPI_Datatype datatype, int dest, int 
 #define FUNCNAME MPIC_Irecv
 #undef FCNAME
 #define FCNAME "MPIC_Irecv"
-int MPIC_Irecv(void *buf, int count, MPI_Datatype datatype, int
-               source, int tag, MPI_Comm comm, MPI_Request *request)
+static int MPIC_Irecv(void *buf, int count, MPI_Datatype datatype, int
+                    source, int tag, MPI_Comm comm, MPI_Request *request)
 {
     int mpi_errno = MPI_SUCCESS;
     int context_id;

@@ -3877,26 +3877,8 @@ int MPID_VCR_Get_lpid(MPID_VCR vcr, int * lpid_ptr);
    other internal operations. They are wrappers around MPID send/recv
    functions. They do sends/receives by setting the context offset to
    MPID_CONTEXT_INTRA(INTER)_COLL. */
-int MPIC_Send(const void *buf, int count, MPI_Datatype datatype, int dest, int tag,
-              MPI_Comm comm);
-int MPIC_Recv(void *buf, int count, MPI_Datatype datatype, int source, int tag,
-              MPI_Comm comm, MPI_Status *status);
-int MPIC_Ssend(const void *buf, int count, MPI_Datatype datatype, int dest, int tag,
-               MPI_Comm comm);
-int MPIC_Sendrecv(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
-                  int dest, int sendtag, void *recvbuf, int recvcount,
-                  MPI_Datatype recvtype, int source, int recvtag,
-                  MPI_Comm comm, MPI_Status *status);
-int MPIC_Sendrecv_replace(void *buf, int count, MPI_Datatype type,
-                          int dest, int sendtag,
-                          int source, int recvtag,
-                          MPI_Comm comm, MPI_Status *status);
 int MPIR_Localcopy(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                    void *recvbuf, int recvcount, MPI_Datatype recvtype);
-int MPIC_Irecv(void *buf, int count, MPI_Datatype datatype, int
-               source, int tag, MPI_Comm comm, MPI_Request *request);
-int MPIC_Isend(const void *buf, int count, MPI_Datatype datatype, int dest, int tag,
-               MPI_Comm comm, MPI_Request *request);
 int MPIC_Wait(MPID_Request * request_ptr);
 int MPIC_Probe(int source, int tag, MPI_Comm comm, MPI_Status *status);
 

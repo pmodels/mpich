@@ -389,6 +389,7 @@ int _mpi_reduce_for_dyntask(int *sendbuf, int *recvbuf)
   int         numchildren, parent=0, i, result=0,tag, remaining_child_count;
   MPID_Comm   *comm_ptr;
   int         mpi_errno;
+  int         errflag = FALSE;
 
   int TASKS= world_size;
   children = MPIU_Malloc(TASKS*sizeof(int));
@@ -412,7 +413,7 @@ int _mpi_reduce_for_dyntask(int *sendbuf, int *recvbuf)
     remaining_child_count = i;
     child_rank = (children[i])% TASKS;
     TRACE_ERR("_mpi_reduce_for_dyntask - recv from child_rank%d child_taskid=%d\n", child_rank, pg_world->vct[child_rank].taskid);
-    mpi_errno = MPIC_Recv(recvbuf, sizeof(int),MPI_BYTE, child_rank, tag, comm_ptr->handle, MPI_STATUS_IGNORE);
+    mpi_errno = MPIC_Recv_ft(recvbuf, sizeof(int),MPI_BYTE, child_rank, tag, comm_ptr->handle, MPI_STATUS_IGNORE, &errflag);
     TRACE_ERR("_mpi_reduce_for_dyntask - recv DONE from child_rank%d child_taskid=%d\n", child_rank, pg_world->vct[child_rank].taskid);
 
     if(world_rank != parent)
@@ -421,7 +422,7 @@ int _mpi_reduce_for_dyntask(int *sendbuf, int *recvbuf)
         parent_rank = (parent) % TASKS;
         result += *recvbuf;
         TRACE_ERR("_mpi_reduce_for_dyntask - send to parent_rank=%d parent taskid=%d \n", parent_rank, pg_world->vct[parent_rank].taskid);
-        MPIC_Send(&result, sizeof(int), MPI_BYTE, parent_rank, tag, comm_ptr->handle);
+        MPIC_Send_ft(&result, sizeof(int), MPI_BYTE, parent_rank, tag, comm_ptr->handle, &errflag);
       }
       else
       {
@@ -437,7 +438,7 @@ int _mpi_reduce_for_dyntask(int *sendbuf, int *recvbuf)
   if(world_rank != parent && numchildren == 0) {
     parent_rank = (parent) % TASKS;
     TRACE_ERR("_mpi_reduce_for_dyntask - send to parent_rank=%d parent_task_id=%d\n", parent_rank, pg_world->vct[parent_rank].taskid);
-    MPIC_Send(sendbuf, sizeof(int), MPI_BYTE, parent_rank, tag, comm_ptr->handle);
+    MPIC_Send_ft(sendbuf, sizeof(int), MPI_BYTE, parent_rank, tag, comm_ptr->handle, &errflag);
   }
 
   if(world_rank == 0) {
