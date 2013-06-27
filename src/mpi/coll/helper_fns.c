@@ -58,48 +58,6 @@ int MPIC_Probe(int source, int tag, MPI_Comm comm, MPI_Status *status)
 
 
 #undef FUNCNAME
-#define FUNCNAME MPIC_Ssend
-#undef FCNAME
-#define FCNAME "MPIC_Ssend"
-static int MPIC_Ssend(const void *buf, int count, MPI_Datatype datatype, int dest, int tag,
-                     MPI_Comm comm)
-{
-    int mpi_errno = MPI_SUCCESS;
-    int context_id;
-    MPID_Request *request_ptr=NULL;
-    MPID_Comm *comm_ptr=NULL;
-    MPIDI_STATE_DECL(MPID_STATE_MPIC_SSEND);
-
-    MPIDI_PT2PT_FUNC_ENTER_FRONT(MPID_STATE_MPIC_SSEND);
-
-    MPIU_ERR_CHKANDJUMP1((count < 0), mpi_errno, MPI_ERR_COUNT,
-                         "**countneg", "**countneg %d", count);
-
-    MPID_Comm_get_ptr( comm, comm_ptr );
-    context_id = (comm_ptr->comm_kind == MPID_INTRACOMM) ?
-        MPID_CONTEXT_INTRA_COLL : MPID_CONTEXT_INTER_COLL;
-
-    mpi_errno = MPID_Ssend(buf, count, datatype, dest, tag, comm_ptr,
-                           context_id, &request_ptr); 
-    if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
-    if (request_ptr) {
-        mpi_errno = MPIC_Wait(request_ptr);
-	if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
-	MPID_Request_release(request_ptr);
-    }
- fn_exit:
-    MPIDI_PT2PT_FUNC_EXIT(MPID_STATE_MPIC_SSEND);
-    return mpi_errno;
- fn_fail:
-    /* --BEGIN ERROR HANDLING-- */
-    if (request_ptr) {
-        MPID_Request_release(request_ptr);
-    }
-    goto fn_exit;
-    /* --END ERROR HANDLING-- */
-}
-
-#undef FUNCNAME
 #define FUNCNAME MPIC_Sendrecv
 #undef FCNAME
 #define FCNAME "MPIC_Sendrecv"
@@ -642,22 +600,42 @@ int MPIC_Ssend_ft(const void *buf, int count, MPI_Datatype datatype, int dest, i
                   MPI_Comm comm, int *errflag)
 {
     int mpi_errno = MPI_SUCCESS;
+    int context_id;
+    MPID_Request *request_ptr = NULL;
+    MPID_Comm *comm_ptr = NULL;
     MPIDI_STATE_DECL(MPID_STATE_MPIC_SSEND_FT);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIC_SSEND_FT);
 
     MPIU_DBG_MSG_S(PT2PT, TYPICAL, "IN: errflag = %s", *errflag?"TRUE":"FALSE");
-    
+
+    MPIU_ERR_CHKANDJUMP1((count < 0), mpi_errno, MPI_ERR_COUNT,
+            "**countneg", "**countneg %d", count);
+
+    MPID_Comm_get_ptr(comm, comm_ptr);
+    context_id = (comm_ptr->comm_kind == MPID_INTRACOMM) ?
+        MPID_CONTEXT_INTRA_COLL : MPID_CONTEXT_INTER_COLL;
+
     if (*errflag && MPIR_PARAM_ENABLE_COLL_FT_RET)
         MPIR_TAG_SET_ERROR_BIT(tag);
 
-    mpi_errno = MPIC_Ssend(buf, count, datatype, dest, tag, comm);
+    mpi_errno = MPID_Ssend(buf, count, datatype, dest, tag, comm_ptr,
+                           context_id, &request_ptr);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    if (request_ptr) {
+        mpi_errno = MPIC_Wait(request_ptr);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        MPID_Request_release(request_ptr);
+    }
 
  fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_MPIC_SSEND_FT);
     return mpi_errno;
  fn_fail:
+    /* --BEGIN ERROR HANDLING-- */
+    if (request_ptr) MPID_Request_release(request_ptr);
     goto fn_exit;
+    /* --END ERROR HANDLING-- */
 }
 
 #undef FUNCNAME
