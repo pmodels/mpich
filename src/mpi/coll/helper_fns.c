@@ -58,55 +58,6 @@ int MPIC_Probe(int source, int tag, MPI_Comm comm, MPI_Status *status)
 
 
 #undef FUNCNAME
-#define FUNCNAME MPIC_Recv
-#undef FCNAME
-#define FCNAME "MPIC_Recv"
-static int MPIC_Recv(void *buf, int count, MPI_Datatype datatype, int source, int tag,
-	                 MPI_Comm comm, MPI_Status *status)
-{
-    int mpi_errno = MPI_SUCCESS;
-    int context_id;
-    MPID_Request *request_ptr=NULL;
-    MPID_Comm *comm_ptr = NULL;
-    MPIDI_STATE_DECL(MPID_STATE_MPIC_RECV);
-
-    MPIDI_PT2PT_FUNC_ENTER_BACK(MPID_STATE_MPIC_RECV);
-
-    MPIU_ERR_CHKANDJUMP1((count < 0), mpi_errno, MPI_ERR_COUNT,
-                         "**countneg", "**countneg %d", count);
-
-    MPID_Comm_get_ptr( comm, comm_ptr );
-    context_id = (comm_ptr->comm_kind == MPID_INTRACOMM) ?
-        MPID_CONTEXT_INTRA_COLL : MPID_CONTEXT_INTER_COLL;
-
-    mpi_errno = MPID_Recv(buf, count, datatype, source, tag, comm_ptr,
-                          context_id, status, &request_ptr); 
-    if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
-    if (request_ptr) {
-        mpi_errno = MPIC_Wait(request_ptr);
-	if (mpi_errno == MPI_SUCCESS) {
-	    if (status != MPI_STATUS_IGNORE) {
-		*status = request_ptr->status;
-	    }
-	    mpi_errno = request_ptr->status.MPI_ERROR;
-	}
-	else { MPIU_ERR_POP(mpi_errno); }
-
-        MPID_Request_release(request_ptr);
-    }
- fn_exit:
-    MPIDI_PT2PT_FUNC_EXIT_BACK(MPID_STATE_MPIC_RECV);
-    return mpi_errno;
- fn_fail:
-    /* --BEGIN ERROR HANDLING-- */
-    if (request_ptr) { 
-	MPID_Request_release(request_ptr);
-    }
-    goto fn_exit;
-    /* --END ERROR HANDLING-- */
-}
-
-#undef FUNCNAME
 #define FUNCNAME MPIC_Ssend
 #undef FCNAME
 #define FCNAME "MPIC_Ssend"
@@ -628,26 +579,41 @@ int MPIC_Recv_ft(void *buf, int count, MPI_Datatype datatype, int source, int ta
                  MPI_Comm comm, MPI_Status *status, int *errflag)
 {
     int mpi_errno = MPI_SUCCESS;
+    int context_id;
     MPI_Status mystatus;
+    MPID_Request *request_ptr = NULL;
+    MPID_Comm *comm_ptr = NULL;
     MPIDI_STATE_DECL(MPID_STATE_MPIC_RECV_FT);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIC_RECV_FT);
 
     MPIU_DBG_MSG_S(PT2PT, TYPICAL, "IN: errflag = %s", *errflag?"TRUE":"FALSE");
 
+    MPIU_ERR_CHKANDJUMP1((count < 0), mpi_errno, MPI_ERR_COUNT,
+                         "**countneg", "**countneg %d", count);
+
+    MPID_Comm_get_ptr(comm, comm_ptr);
+    context_id = (comm_ptr->comm_kind == MPID_INTRACOMM) ?
+        MPID_CONTEXT_INTRA_COLL : MPID_CONTEXT_INTER_COLL;
+
     if (status == MPI_STATUS_IGNORE)
         status = &mystatus;
 
-    mpi_errno = MPIC_Recv(buf, count, datatype, source, tag, comm, status);
-
-    if (!MPIR_PARAM_ENABLE_COLL_FT_RET) {
-        goto fn_exit;
+    mpi_errno = MPID_Recv(buf, count, datatype, source, tag, comm_ptr,
+                          context_id, status, &request_ptr);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    if (request_ptr) {
+        mpi_errno = MPIC_Wait(request_ptr);
+        if (mpi_errno == MPI_SUCCESS) {
+            *status = request_ptr->status;
+            mpi_errno = request_ptr->status.MPI_ERROR;
+        } else {
+            MPIU_ERR_POP(mpi_errno);
+        }
+        MPID_Request_release(request_ptr);
     }
 
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-
-    if (*errflag)
-        goto fn_exit;
+    if (!MPIR_PARAM_ENABLE_COLL_FT_RET) goto fn_exit;
 
     if (source != MPI_PROC_NULL) {
         if (MPIR_TAG_CHECK_ERROR_BIT(status->MPI_TAG)) {
@@ -663,6 +629,8 @@ int MPIC_Recv_ft(void *buf, int count, MPI_Datatype datatype, int source, int ta
     MPIDI_FUNC_EXIT(MPID_STATE_MPIC_RECV_FT);
     return mpi_errno;
  fn_fail:
+    /* --BEGIN ERROR HANDLING-- */
+    if (request_ptr) MPID_Request_release(request_ptr);
     goto fn_exit;
 }
 
