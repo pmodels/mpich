@@ -448,6 +448,7 @@ fi
 
 # Running C compiler tests
 PAC_PROG_CC
+AM_PROG_CC_C_O
 
 # Note that some versions of autoconf will insist that the compiler 
 # produce executables at this point, which is why we must do something

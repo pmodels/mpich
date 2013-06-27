@@ -72,6 +72,7 @@ else
 fi
 
 AC_PROG_CC
+AM_PROG_CC_C_O
 
 AC_HEADER_ASSERT
 # do we need intrin.h in here since it's a windows file?

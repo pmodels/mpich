@@ -18,6 +18,7 @@ AC_ARG_PROGRAM
 dnl must come before LT_INIT, which AC_REQUIREs AC_PROG_CC
 dnl must also come before AC_USE_SYSTEM_EXTENSIONS
 PAC_PROG_CC
+AM_PROG_CC_C_O
 
 # also needed by hwloc in embedded mode, must also come early for expansion
 # ordering reasons
@@ -44,7 +45,6 @@ m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 # Reset link flags
 PAC_RESET_LINK_FLAGS()
 
-AM_PROG_CC_C_O
 
 PAC_ARG_STRICT
 

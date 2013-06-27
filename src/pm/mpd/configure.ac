@@ -46,6 +46,7 @@ AC_EXEEXT
 AC_OBJEXT
 # Checking for programs.
 PAC_PROG_CC
+AM_PROG_CC_C_O
 AC_PROG_MAKE_SET
 AC_PROG_LN_S
 # A quick check to ensure that install-sh has the execute bit set

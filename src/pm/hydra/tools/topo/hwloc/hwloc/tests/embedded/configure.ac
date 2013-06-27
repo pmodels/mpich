@@ -9,9 +9,11 @@ AC_CANONICAL_TARGET
 AM_INIT_AUTOMAKE([1.10 dist-bzip2 foreign subdir-objects tar-ustar -Wall -Werror])
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 
+
 AC_LANG([C])
 
 AC_PROG_CC
+AM_PROG_CC_C_O
 
 cat <<EOF
 

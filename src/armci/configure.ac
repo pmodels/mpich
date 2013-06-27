@@ -18,6 +18,7 @@ if test ! -z "$MPICC" ; then
 fi
 PAC_PUSH_FLAG(CFLAGS)
 AC_PROG_CC(mpicc)
+AM_PROG_CC_C_O
 
 AM_PROG_AR
 
