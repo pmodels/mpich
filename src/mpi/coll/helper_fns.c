@@ -15,10 +15,6 @@
    sends/receives by setting the context offset to
    MPID_CONTEXT_INTRA_COLL or MPID_CONTEXT_INTER_COLL. */
 
-static int MPIC_Sendrecv_replace(void *buf, int count, MPI_Datatype type,
-                                int dest, int sendtag,
-                                int source, int recvtag,
-                                MPI_Comm comm, MPI_Status *status);
 static int MPIC_Irecv(void *buf, int count, MPI_Datatype datatype, int
                      source, int tag, MPI_Comm comm, MPI_Request *request);
 static int MPIC_Isend(const void *buf, int count, MPI_Datatype datatype, int dest, int tag,
@@ -713,21 +709,88 @@ int MPIC_Sendrecv_replace_ft(void *buf, int count, MPI_Datatype datatype,
 {
     int mpi_errno = MPI_SUCCESS;
     MPI_Status mystatus;
+    MPIR_Context_id_t context_id_offset;
+    MPID_Request *sreq;
+    MPID_Request *rreq;
+    void *tmpbuf = NULL;
+    int tmpbuf_size = 0;
+    int tmpbuf_count = 0;
+    MPID_Comm *comm_ptr;
+    MPIU_CHKLMEM_DECL(1);
     MPIDI_STATE_DECL(MPID_STATE_MPIC_SENDRECV_REPLACE_FT);
+#ifdef MPID_LOG_ARROWS
+    /* The logging macros log sendcount and recvcount */
+    int sendcount = count, recvcount = count;
+#endif
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIC_SENDRECV_REPLACE_FT);
 
     MPIU_DBG_MSG_S(PT2PT, TYPICAL, "IN: errflag = %s", *errflag?"TRUE":"FALSE");
+
+    MPIU_ERR_CHKANDJUMP1((count < 0), mpi_errno, MPI_ERR_COUNT,
+                         "**countneg", "**countneg %d", count);
 
     if (MPIR_PARAM_ENABLE_COLL_FT_RET) {
         if (status == MPI_STATUS_IGNORE) status = &mystatus;
         if (*errflag) MPIR_TAG_SET_ERROR_BIT(sendtag);
     }
 
-    mpi_errno = MPIC_Sendrecv_replace(buf, count, datatype,
-                                      dest, sendtag,
-                                      source, recvtag,
-                                      comm, status);
+    MPID_Comm_get_ptr(comm, comm_ptr);
+    context_id_offset = (comm_ptr->comm_kind == MPID_INTRACOMM) ?
+        MPID_CONTEXT_INTRA_COLL : MPID_CONTEXT_INTER_COLL;
+
+    if (count > 0 && dest != MPI_PROC_NULL) {
+        MPIR_Pack_size_impl(count, datatype, &tmpbuf_size);
+        MPIU_CHKLMEM_MALLOC(tmpbuf, void *, tmpbuf_size, mpi_errno, "temporary send buffer");
+
+        mpi_errno = MPIR_Pack_impl(buf, count, datatype, tmpbuf, tmpbuf_size, &tmpbuf_count);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    }
+
+    mpi_errno = MPID_Irecv(buf, count, datatype, source, recvtag,
+                           comm_ptr, context_id_offset, &rreq);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
+    mpi_errno = MPID_Isend(tmpbuf, tmpbuf_count, MPI_PACKED, dest,
+                           sendtag, comm_ptr, context_id_offset, &sreq);
+    if (mpi_errno != MPI_SUCCESS) {
+        /* --BEGIN ERROR HANDLING-- */
+        /* FIXME: should we cancel the pending (possibly completed) receive
+         * request or wait for it to complete? */
+        MPID_Request_release(rreq);
+        MPIU_ERR_POP(mpi_errno);
+        /* --END ERROR HANDLING-- */
+    }
+
+    if (!MPID_Request_is_complete(sreq) || !MPID_Request_is_complete(rreq)) {
+        MPID_Progress_state progress_state;
+
+        MPID_Progress_start(&progress_state);
+        while (!MPID_Request_is_complete(sreq) || !MPID_Request_is_complete(rreq)) {
+            mpi_errno = MPID_Progress_wait(&progress_state);
+            if (mpi_errno != MPI_SUCCESS) {
+                /* --BEGIN ERROR HANDLING-- */
+                MPID_Progress_end(&progress_state);
+                MPIU_ERR_POP(mpi_errno);
+                /* --END ERROR HANDLING-- */
+            }
+        }
+        MPID_Progress_end(&progress_state);
+    }
+
+    *status = rreq->status;
+
+    if (mpi_errno == MPI_SUCCESS) {
+        mpi_errno = rreq->status.MPI_ERROR;
+
+        if (mpi_errno == MPI_SUCCESS) {
+            mpi_errno = sreq->status.MPI_ERROR;
+        }
+    }
+
+    MPID_Request_release(sreq);
+    MPID_Request_release(rreq);
+
     if (!MPIR_PARAM_ENABLE_COLL_FT_RET) goto fn_exit;
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     
@@ -741,6 +804,7 @@ int MPIC_Sendrecv_replace_ft(void *buf, int count, MPI_Datatype datatype,
     }
 
  fn_exit:
+    MPIU_CHKLMEM_FREEALL();
     MPIU_DBG_MSG_S(PT2PT, TYPICAL, "OUT: errflag = %s", *errflag?"TRUE":"FALSE");
     MPIDI_FUNC_EXIT(MPID_STATE_MPIC_SENDRECV_REPLACE_FT);
     return mpi_errno;
