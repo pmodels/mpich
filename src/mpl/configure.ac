@@ -11,7 +11,7 @@ AC_CONFIG_SRCDIR([src/mplstr.c])
 
 AC_CONFIG_AUX_DIR(confdb)
 AC_CONFIG_MACRO_DIR(confdb)
-AM_INIT_AUTOMAKE([-Wall -Werror foreign 1.12.3])
+AM_INIT_AUTOMAKE([subdir-objects] [-Wall -Werror foreign 1.12.3])
 
 dnl must come before LT_INIT, which AC_REQUIREs AC_PROG_CC
 PAC_PROG_CC

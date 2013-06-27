@@ -12,7 +12,7 @@ dnl config.guess.  It also contains autoconf macro files.
 AC_CONFIG_AUX_DIR(confdb)
 AC_CONFIG_MACRO_DIR([confdb])
 
-AM_INIT_AUTOMAKE([-Wall -Werror foreign color-tests 1.12.3])
+AM_INIT_AUTOMAKE([-Wall -Werror foreign color-tests 1.12.3 subdir-objects])
 
 # automake 1.12 seems to require this, but automake 1.11 doesn't recognize it
 # must come before LT_INIT

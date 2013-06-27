@@ -32,7 +32,7 @@ AS_CASE([$host],
 )
 
 
-AM_INIT_AUTOMAKE([-Wall -Werror foreign 1.12.3])
+AM_INIT_AUTOMAKE([-Wall -Werror foreign 1.12.3 subdir-objects])
 
 AM_PROG_AR
 
