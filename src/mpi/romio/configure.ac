@@ -706,6 +706,10 @@ fi
 #
 AC_C_INLINE
 
+AC_TYPE_SIZE_T
+AC_TYPE_SSIZE_T
+AC_TYPE_OFF_T
+
 # Header files
 # Find the CPP before the header check
 AC_PROG_CPP
