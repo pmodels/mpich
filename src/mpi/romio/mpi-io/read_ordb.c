@@ -39,7 +39,8 @@ Output Parameters:
 int MPI_File_read_ordered_begin(MPI_File fh, void *buf, int count,
 				MPI_Datatype datatype)
 {
-    int error_code, datatype_size, nprocs, myrank, incr;
+    int error_code,  nprocs, myrank, incr;
+    MPI_Count datatype_size;
     int source, dest;
     ADIO_Offset shared_fp;
     ADIO_File adio_fh;
@@ -68,7 +69,7 @@ int MPI_File_read_ordered_begin(MPI_File fh, void *buf, int count,
     adio_fh->split_coll_count = 1;
 
 
-    MPI_Type_size(datatype, &datatype_size);
+    MPI_Type_size_x(datatype, &datatype_size);
     /* --BEGIN ERROR HANDLING-- */
     MPIO_CHECK_INTEGRAL_ETYPE(adio_fh, count, datatype_size, myname, error_code);
     MPIO_CHECK_FS_SUPPORTS_SHARED(adio_fh, myname, error_code);

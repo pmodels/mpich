@@ -81,7 +81,7 @@ int MPIOI_File_iwrite(MPI_File fh,
 		      MPI_Request *request)
 {
     int error_code, bufsize, buftype_is_contig, filetype_is_contig;
-    int datatype_size;
+    MPI_Count datatype_size;
     ADIO_Status status;
     ADIO_Offset off;
     ADIO_File adio_fh;
@@ -104,7 +104,7 @@ int MPIOI_File_iwrite(MPI_File fh,
     }
     /* --END ERROR HANDLING-- */
 
-    MPI_Type_size(datatype, &datatype_size);
+    MPI_Type_size_x(datatype, &datatype_size);
 
     /* --BEGIN ERROR HANDLING-- */
     MPIO_CHECK_INTEGRAL_ETYPE(adio_fh, count, datatype_size, myname, error_code);

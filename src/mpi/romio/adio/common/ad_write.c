@@ -21,7 +21,7 @@ void ADIOI_GEN_WriteContig(ADIO_File fd, const void *buf, int count,
 {
     off_t err_lseek = -1;
     ssize_t err = -1;
-    int datatype_size;
+    MPI_Count datatype_size;
     ADIO_Offset len, bytes_xfered=0;
     size_t wr_count;
     static char myname[] = "ADIOI_GEN_WRITECONTIG";
@@ -31,7 +31,7 @@ void ADIOI_GEN_WriteContig(ADIO_File fd, const void *buf, int count,
     MPE_Log_event (5036, 0, NULL);
 #endif
 
-    MPI_Type_size(datatype, &datatype_size);
+    MPI_Type_size_x(datatype, &datatype_size);
     len = (ADIO_Offset)datatype_size * (ADIO_Offset)count;
 
     if (file_ptr_type == ADIO_INDIVIDUAL) {

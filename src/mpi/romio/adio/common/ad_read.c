@@ -21,7 +21,7 @@ void ADIOI_GEN_ReadContig(ADIO_File fd, void *buf, int count,
 {
     off_t err_lseek = -1;
     ssize_t err = -1;
-    int datatype_size;
+    MPI_Count datatype_size;
     ADIO_Offset len, bytes_xfered=0;
     size_t rd_count;
     static char myname[] = "ADIOI_GEN_READCONTIG";
@@ -30,8 +30,8 @@ void ADIOI_GEN_ReadContig(ADIO_File fd, void *buf, int count,
 #ifdef AGGREGATION_PROFILE
     MPE_Log_event (5034, 0, NULL);
 #endif
-    MPI_Type_size(datatype, &datatype_size);
-    len = (ADIO_Offset)datatype_size * (ADIO_Offset)count;
+    MPI_Type_size_x(datatype, &datatype_size);
+    len = datatype_size * (ADIO_Offset)count;
 
     if (file_ptr_type == ADIO_INDIVIDUAL) {
 	offset = fd->fp_ind;

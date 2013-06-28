@@ -209,7 +209,7 @@ typedef struct ADIOI_FileD {
     ADIO_Offset disp;        /* reqd. for MPI-IO */
     MPI_Datatype etype;      /* reqd. for MPI-IO */
     MPI_Datatype filetype;   /* reqd. for MPI-IO */
-    int etype_size;          /* in bytes */
+    MPI_Count etype_size;          /* in bytes */
     ADIOI_Hints *hints;      /* structure containing fs-indep. info values */
     MPI_Info info;
 

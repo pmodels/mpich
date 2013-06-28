@@ -122,13 +122,14 @@ void ADIOI_GEN_WriteStrided(ADIO_File fd, const void *buf, int count,
     int n_etypes_in_filetype;
     ADIO_Offset num, size, n_filetypes, etype_in_filetype, st_n_filetypes;
     ADIO_Offset abs_off_in_filetype=0;
-    int filetype_size, etype_size, buftype_size;
+    MPI_Count filetype_size, etype_size, buftype_size;
     MPI_Aint filetype_extent, buftype_extent; 
     int buf_count, buftype_is_contig, filetype_is_contig;
     ADIO_Offset userbuf_off;
     ADIO_Offset off, req_off, disp, end_offset=0, writebuf_off, start_off;
     char *writebuf;
-    unsigned bufsize, writebuf_len, max_bufsize, write_sz;
+    unsigned writebuf_len, max_bufsize, write_sz;
+    MPI_Aint bufsize;
     ADIO_Status status1;
     ADIO_Offset new_bwr_size, new_fwr_size, st_fwr_size, fwr_size=0, bwr_size, req_len;
     static char myname[] = "ADIOI_GEN_WriteStrided";
@@ -155,7 +156,7 @@ void ADIOI_GEN_WriteStrided(ADIO_File fd, const void *buf, int count,
     ADIOI_Datatype_iscontig(datatype, &buftype_is_contig);
     ADIOI_Datatype_iscontig(fd->filetype, &filetype_is_contig);
 
-    MPI_Type_size(fd->filetype, &filetype_size);
+    MPI_Type_size_x(fd->filetype, &filetype_size);
     if ( ! filetype_size ) {
 #ifdef HAVE_STATUS_SET_BYTES
 	MPIR_Status_set_bytes(status, datatype, 0);
@@ -165,11 +166,11 @@ void ADIOI_GEN_WriteStrided(ADIO_File fd, const void *buf, int count,
     }
 
     MPI_Type_extent(fd->filetype, &filetype_extent);
-    MPI_Type_size(datatype, &buftype_size);
+    MPI_Type_size_x(datatype, &buftype_size);
     MPI_Type_extent(datatype, &buftype_extent);
     etype_size = fd->etype_size;
 
-    ADIOI_Assert((buftype_size * count) == ((ADIO_Offset)(unsigned)buftype_size * (ADIO_Offset)count));
+    ADIOI_Assert((buftype_size * count) == ((ADIO_Offset)buftype_size * (ADIO_Offset)count));
     bufsize = buftype_size * count;
 
 /* get max_bufsize from the info object. */
@@ -285,6 +286,10 @@ void ADIOI_GEN_WriteStrided(ADIO_File fd, const void *buf, int count,
 	/* this could happen, for example, with subarray types that are
 	 * actually fairly contiguous */
         if (buftype_is_contig && bufsize <= fwr_size) {
+	    /* though MPI api has an integer 'count' parameter, derived
+	     * datatypes might describe more bytes than can fit into an integer.
+	     * Other WriteContig calls in this path are operating on data
+	     * sieving buffer */
             ADIO_WriteContig(fd, buf, bufsize, MPI_BYTE, ADIO_EXPLICIT_OFFSET,
                              offset, status, error_code);
 
@@ -475,6 +480,7 @@ void ADIOI_GEN_WriteStrided(ADIO_File fd, const void *buf, int count,
     fd->fp_sys_posn = -1;   /* set it to null. */
 
 #ifdef HAVE_STATUS_SET_BYTES
+    /* datatypes returning negagive values, probably related to tt 1893 */
     MPIR_Status_set_bytes(status, datatype, bufsize);
 /* This is a temporary way of filling in status. The right way is to 
    keep track of how much data was actually written by ADIOI_BUFFERED_WRITE. */

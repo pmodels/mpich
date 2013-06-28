@@ -281,8 +281,8 @@ void ADIOI_Calc_my_off_len(ADIO_File fd, int bufcount, MPI_Datatype
 			    ADIO_Offset *end_offset_ptr, int
 			   *contig_access_count_ptr)
 {
-    int filetype_size, etype_size;
-    unsigned buftype_size;
+    MPI_Count filetype_size, etype_size;
+    MPI_Count buftype_size;
     int i, j, k;
     ADIO_Offset i_offset;
     ADIO_Offset frd_size=0, old_frd_size=0;
@@ -306,10 +306,10 @@ void ADIOI_Calc_my_off_len(ADIO_File fd, int bufcount, MPI_Datatype
 
     ADIOI_Datatype_iscontig(fd->filetype, &filetype_is_contig);
 
-    MPI_Type_size(fd->filetype, &filetype_size);
+    MPI_Type_size_x(fd->filetype, &filetype_size);
     MPI_Type_extent(fd->filetype, &filetype_extent);
     MPI_Type_lb(fd->filetype, &filetype_lb);
-    MPI_Type_size(datatype, (int*)&buftype_size);
+    MPI_Type_size_x(datatype, &buftype_size);
     etype_size = fd->etype_size;
 
     if ( ! filetype_size ) {
@@ -359,7 +359,7 @@ void ADIOI_Calc_my_off_len(ADIO_File fd, int bufcount, MPI_Datatype
 #ifdef RDCOLL_DEBUG 
         {
             int ii;
-            DBG_FPRINTF(stderr, "flattened %3d : ", flat_file->count );
+            DBG_FPRINTF(stderr, "flattened %3lld : ", flat_file->count );
             for (ii=0; ii<flat_file->count; ii++) {
                 DBG_FPRINTF(stderr, "%16qd:%-16qd", flat_file->indices[ii], flat_file->blocklens[ii] );
             }

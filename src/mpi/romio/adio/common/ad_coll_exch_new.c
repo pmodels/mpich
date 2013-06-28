@@ -43,7 +43,7 @@ void ADIOI_Print_flatlist_node(ADIOI_Flatlist_node *flatlist_node_p)
 	return;
     }
     fprintf(stderr, "print flatlist node count = %d (idx,blocklen)\n", 
-	    flatlist_node_p->count);
+	    (int)flatlist_node_p->count);
     for (i = 0; i < flatlist_node_p->count; i++)
     {
 	if (i % 5 == 0 && i != 0)

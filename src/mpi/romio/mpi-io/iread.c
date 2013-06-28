@@ -74,7 +74,7 @@ int MPIOI_File_iread(MPI_File fh, MPI_Offset offset, int file_ptr_type, void *bu
 		     MPI_Datatype datatype, char *myname, MPI_Request *request)
 {
     int error_code, bufsize, buftype_is_contig, filetype_is_contig;
-    int datatype_size;
+    MPI_Count datatype_size;
     ADIO_Status status;
     ADIO_File adio_fh;
     ADIO_Offset off;
@@ -98,7 +98,7 @@ int MPIOI_File_iread(MPI_File fh, MPI_Offset offset, int file_ptr_type, void *bu
     }
     /* --END ERROR HANDLING-- */
 
-    MPI_Type_size(datatype, &datatype_size);
+    MPI_Type_size_x(datatype, &datatype_size);
 
     /* --BEGIN ERROR HANDLING-- */
     MPIO_CHECK_INTEGRAL_ETYPE(adio_fh, count, datatype_size, myname, error_code);

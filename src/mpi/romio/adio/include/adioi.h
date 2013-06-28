@@ -104,7 +104,7 @@ enum {
 
 typedef struct ADIOI_Fl_node {  
     MPI_Datatype type;
-    int count;                   /* no. of contiguous blocks */
+    MPI_Count count;                   /* no. of contiguous blocks */
     ADIO_Offset *blocklens;      /* array of contiguous block lengths (bytes)*/
     ADIO_Offset *indices;        /* array of byte offsets of each block */
     struct ADIOI_Fl_node *next;  /* pointer to next node */
@@ -318,7 +318,7 @@ typedef struct {
 void ADIOI_SetFunctions(ADIO_File fd);
 void ADIOI_Flatten_datatype(MPI_Datatype type);
 void ADIOI_Flatten(MPI_Datatype type, ADIOI_Flatlist_node *flat,
-		  ADIO_Offset st_offset, int *curr_index);  
+		  ADIO_Offset st_offset, MPI_Count *curr_index);
 void ADIOI_Delete_flattened(MPI_Datatype datatype);
 int ADIOI_Count_contiguous_blocks(MPI_Datatype type, int *curr_index);
 void ADIOI_Complete_async(int *error_code);
@@ -558,7 +558,10 @@ void ADIOI_GEN_Prealloc(ADIO_File fd, ADIO_Offset size, int *error_code);
 int ADIOI_Error(ADIO_File fd, int error_code, char *string);
 int MPIR_Err_setmsg( int, int, const char *, const char *, const char *, ... );
 int ADIOI_End_call(MPI_Comm comm, int keyval, void *attribute_val, void *extra_state);
-int MPIR_Status_set_bytes(MPI_Status *status, MPI_Datatype datatype, int nbytes);
+int MPIR_Status_set_bytes(MPI_Status *status, MPI_Datatype datatype, MPI_Count nbytes);
+#ifdef HAVE_MPIR_TYPE_GET_CONTIG_BLOCKS
+MPI_Count MPIR_Type_get_contig_blocks(MPI_Datatype datatype, MPI_Count *nr_blocks_p);
+#endif
 int ADIOI_Uses_generic_read(ADIO_File fd);
 int ADIOI_Uses_generic_write(ADIO_File fd);
 int ADIOI_Err_create_code(const char *myname, const char *filename, int my_errno);

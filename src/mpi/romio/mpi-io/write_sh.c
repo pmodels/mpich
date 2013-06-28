@@ -44,7 +44,7 @@ int MPI_File_write_shared(MPI_File fh, const void *buf, int count,
 {
     int error_code, bufsize, buftype_is_contig, filetype_is_contig;
     static char myname[] = "MPI_FILE_READ_SHARED";
-    int datatype_size, incr;
+    MPI_Count datatype_size, incr;
     ADIO_Offset off, shared_fp;
     ADIO_File adio_fh;
     void *e32buf = NULL;
@@ -60,7 +60,7 @@ int MPI_File_write_shared(MPI_File fh, const void *buf, int count,
     MPIO_CHECK_DATATYPE(adio_fh, datatype, myname, error_code);
     /* --END ERROR HANDLING-- */
 
-    MPI_Type_size(datatype, &datatype_size);
+    MPI_Type_size_x(datatype, &datatype_size);
 
     /* --BEGIN ERROR HANDLING-- */
     MPIO_CHECK_COUNT_SIZE(adio_fh, count, datatype_size, myname, error_code);
