@@ -90,7 +90,7 @@ int MPIR_Allreduce_group_intra(void *sendbuf, void *recvbuf, int count,
     if (group_rank < 2*rem) {
         if (group_rank % 2 == 0) { /* even */
             to_comm_rank(cdst, group_rank+1);
-            mpi_errno = MPIC_Send_ft(recvbuf, count,
+            mpi_errno = MPIC_Send(recvbuf, count,
                                      datatype, cdst,
                                      tag, comm, errflag);
             if (mpi_errno) {
@@ -329,7 +329,7 @@ int MPIR_Allreduce_group_intra(void *sendbuf, void *recvbuf, int count,
     if (group_rank < 2*rem) {
         if (group_rank % 2) { /* odd */
             to_comm_rank(cdst, group_rank-1);
-            mpi_errno = MPIC_Send_ft(recvbuf, count,
+            mpi_errno = MPIC_Send(recvbuf, count,
                                      datatype, cdst,
                                      tag, comm, errflag);
         }

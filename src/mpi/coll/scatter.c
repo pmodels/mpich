@@ -205,7 +205,7 @@ int MPIR_Scatter_intra(const void *sendbuf, int sendcount, MPI_Datatype sendtype
 		{
                     send_subtree_cnt = curr_cnt - sendcount * mask;
                     /* mask is also the size of this process's subtree */
-                    mpi_errno = MPIC_Send_ft(((char *)sendbuf + 
+                    mpi_errno = MPIC_Send(((char *)sendbuf +
                                               extent * sendcount * mask),
                                              send_subtree_cnt,
                                              sendtype, dst,
@@ -216,7 +216,7 @@ int MPIR_Scatter_intra(const void *sendbuf, int sendcount, MPI_Datatype sendtype
                     /* non-zero root and others */
                     send_subtree_cnt = curr_cnt - nbytes*mask; 
                     /* mask is also the size of this process's subtree */
-                    mpi_errno = MPIC_Send_ft(((char *)tmp_buf + nbytes*mask),
+                    mpi_errno = MPIC_Send(((char *)tmp_buf + nbytes*mask),
                                              send_subtree_cnt,
                                              MPI_BYTE, dst,
                                              MPIR_SCATTER_TAG, comm, errflag);
@@ -356,7 +356,7 @@ int MPIR_Scatter_intra(const void *sendbuf, int sendcount, MPI_Datatype sendtype
                 
                 send_subtree_cnt = curr_cnt - nbytes * mask; 
                 /* mask is also the size of this process's subtree */
-                mpi_errno = MPIC_Send_ft(((char *)tmp_buf + nbytes*mask),
+                mpi_errno = MPIC_Send(((char *)tmp_buf + nbytes*mask),
                                          send_subtree_cnt, MPI_BYTE, dst,
                                          MPIR_SCATTER_TAG, comm, errflag);
                 if (mpi_errno) {
@@ -446,7 +446,7 @@ int MPIR_Scatter_inter(const void *sendbuf, int sendcount, MPI_Datatype sendtype
     if (nbytes < MPIR_PARAM_SCATTER_INTER_SHORT_MSG_SIZE) {
         if (root == MPI_ROOT) {
             /* root sends all data to rank 0 on remote group and returns */
-            mpi_errno = MPIC_Send_ft(sendbuf, sendcount*remote_size,
+            mpi_errno = MPIC_Send(sendbuf, sendcount*remote_size,
                                      sendtype, 0, MPIR_SCATTER_TAG, comm, errflag);
             if (mpi_errno) {
                 /* for communication errors, just record the error but continue */
@@ -509,7 +509,7 @@ int MPIR_Scatter_inter(const void *sendbuf, int sendcount, MPI_Datatype sendtype
         if (root == MPI_ROOT) {
             MPID_Datatype_get_extent_macro(sendtype, extent);
             for (i=0; i<remote_size; i++) {
-                mpi_errno = MPIC_Send_ft(((char *)sendbuf+sendcount*i*extent),
+                mpi_errno = MPIC_Send(((char *)sendbuf+sendcount*i*extent),
                                          sendcount, sendtype, i,
                                          MPIR_SCATTER_TAG, comm, errflag);
                 if (mpi_errno) {

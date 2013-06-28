@@ -158,7 +158,7 @@ int MPIR_Gatherv (
                 }
             }
             else {
-                mpi_errno = MPIC_Send_ft(sendbuf, sendcount, sendtype, root,
+                mpi_errno = MPIC_Send(sendbuf, sendcount, sendtype, root,
                                          MPIR_GATHERV_TAG, comm, errflag);
                 if (mpi_errno) {
                     /* for communication errors, just record the error but continue */

@@ -165,7 +165,7 @@ static int MPIR_Reduce_binomial (
             /* I've received all that I'm going to.  Send my result to 
                my parent */
             source = ((relrank & (~ mask)) + lroot) % comm_size;
-            mpi_errno  = MPIC_Send_ft(recvbuf, count, datatype,
+            mpi_errno  = MPIC_Send(recvbuf, count, datatype,
                                       source, MPIR_REDUCE_TAG, comm, errflag);
             if (mpi_errno) {
                 /* for communication errors, just record the error but continue */
@@ -182,7 +182,7 @@ static int MPIR_Reduce_binomial (
     {
         if (rank == 0)
         {
-            mpi_errno  = MPIC_Send_ft(recvbuf, count, datatype, root,
+            mpi_errno  = MPIC_Send(recvbuf, count, datatype, root,
                                       MPIR_REDUCE_TAG, comm, errflag);
         }
         else if (rank == root)
@@ -327,7 +327,7 @@ static int MPIR_Reduce_redscat_gather (
     
     if (rank < 2*rem) {
         if (rank % 2 != 0) { /* odd */
-            mpi_errno = MPIC_Send_ft(recvbuf, count,
+            mpi_errno = MPIC_Send(recvbuf, count,
                                      datatype, rank-1,
                                      MPIR_REDUCE_TAG, comm, errflag);
             if (mpi_errno) {
@@ -482,7 +482,7 @@ static int MPIR_Reduce_redscat_gather (
                 last_idx = 2;
             }
             else if (newrank == 0) {  /* send */
-                mpi_errno = MPIC_Send_ft(recvbuf, cnts[0], datatype,
+                mpi_errno = MPIC_Send(recvbuf, cnts[0], datatype,
                                          root, MPIR_REDUCE_TAG, comm, errflag);
                 if (mpi_errno) {
                     /* for communication errors, just record the error but continue */
@@ -553,7 +553,7 @@ static int MPIR_Reduce_redscat_gather (
                 /* printf("Rank %d, send_idx %d, send_cnt %d, last_idx %d\n", newrank, send_idx, send_cnt, last_idx);
                    fflush(stdout); */
                 /* Send data from recvbuf. Recv into tmp_buf */ 
-                mpi_errno = MPIC_Send_ft((char *) recvbuf +
+                mpi_errno = MPIC_Send((char *) recvbuf +
                                          disps[send_idx]*extent,
                                          send_cnt, datatype,
                                          dst, MPIR_REDUCE_TAG,
@@ -948,7 +948,7 @@ int MPIR_Reduce_inter (
 
         if (rank == 0)
 	{
-            mpi_errno = MPIC_Send_ft(tmp_buf, count, datatype, root,
+            mpi_errno = MPIC_Send(tmp_buf, count, datatype, root,
                                      MPIR_REDUCE_TAG, comm, errflag);
             if (mpi_errno) {
                 /* for communication errors, just record the error but continue */

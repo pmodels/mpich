@@ -293,7 +293,7 @@ int MPIR_Allreduce_intra (
         
         if (rank < 2*rem) {
             if (rank % 2 == 0) { /* even */
-                mpi_errno = MPIC_Send_ft(recvbuf, count, 
+                mpi_errno = MPIC_Send(recvbuf, count,
                                          datatype, rank+1,
                                          MPIR_ALLREDUCE_TAG, comm, errflag);
                 if (mpi_errno) {
@@ -528,7 +528,7 @@ int MPIR_Allreduce_intra (
            (rank-1), the ranks who didn't participate above. */
         if (rank < 2*rem) {
             if (rank % 2)  /* odd */
-                mpi_errno = MPIC_Send_ft(recvbuf, count, 
+                mpi_errno = MPIC_Send(recvbuf, count,
                                          datatype, rank-1,
                                          MPIR_ALLREDUCE_TAG, comm, errflag);
             else  /* even */

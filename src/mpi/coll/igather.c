@@ -327,7 +327,7 @@ int MPIR_Igather_binomial(const void *sendbuf, int sendcount, MPI_Datatype sendt
             {
                 dst = relative_rank ^ mask;
                 dst = (dst + root) % comm_size;
-                mpi_errno = MPIC_Send_ft(tmp_buf, curr_cnt, MPI_BYTE, dst,
+                mpi_errno = MPIC_Send(tmp_buf, curr_cnt, MPI_BYTE, dst,
                                          MPIR_GATHER_TAG, comm, errflag);
                 if (mpi_errno) MPIU_ERR_POP(mpi_errno);
                 break;

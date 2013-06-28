@@ -257,7 +257,7 @@ int MPIR_Allgatherv_intra (
                                 offset += recvcounts[j];
                             offset *= recvtype_extent;
 
-                            mpi_errno = MPIC_Send_ft(((char *)tmp_buf + offset),
+                            mpi_errno = MPIC_Send(((char *)tmp_buf + offset),
                                                      last_recv_cnt,
                                                      recvtype, dst,
                                                      MPIR_ALLGATHERV_TAG, comm, errflag);
@@ -450,7 +450,7 @@ int MPIR_Allgatherv_intra (
                             (rank < tree_root + nprocs_completed)
                             && (dst >= tree_root + nprocs_completed)) {
                             
-                            mpi_errno = MPIC_Send_ft(((char *)tmp_buf + offset),
+                            mpi_errno = MPIC_Send(((char *)tmp_buf + offset),
                                                      last_recv_cnt, MPI_BYTE,
                                                      dst, MPIR_ALLGATHERV_TAG,
                                                      comm, errflag);
@@ -683,7 +683,7 @@ int MPIR_Allgatherv_intra (
 		torecv -= recvnow;
 	    }
 	    else if (!recvnow) { /* If there's no data to receive, just do a send call */
-		mpi_errno = MPIC_Send_ft(sbuf, sendnow, recvtype, right, MPIR_ALLGATHERV_TAG, comm, errflag);
+		mpi_errno = MPIC_Send(sbuf, sendnow, recvtype, right, MPIR_ALLGATHERV_TAG, comm, errflag);
                 if (mpi_errno) {
                     /* for communication errors, just record the error but continue */
                     *errflag = TRUE;

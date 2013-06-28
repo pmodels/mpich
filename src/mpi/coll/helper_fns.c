@@ -396,10 +396,10 @@ int MPIC_Wait(MPID_Request * request_ptr)
    this is OK since there is no data that can be received corrupted. */
 
 #undef FUNCNAME
-#define FUNCNAME MPIC_Send_ft
+#define FUNCNAME MPIC_Send
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPIC_Send_ft(const void *buf, int count, MPI_Datatype datatype, int dest, int tag,
+int MPIC_Send(const void *buf, int count, MPI_Datatype datatype, int dest, int tag,
                  MPI_Comm comm, int *errflag)
 {
     int mpi_errno = MPI_SUCCESS;

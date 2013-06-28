@@ -184,10 +184,10 @@ static int MPIR_Bcast_binomial(
             dst = rank + mask;
             if (dst >= comm_size) dst -= comm_size;
             if (!is_contig || !is_homogeneous)
-                mpi_errno = MPIC_Send_ft(tmp_buf,nbytes,MPI_BYTE,dst,
+                mpi_errno = MPIC_Send(tmp_buf,nbytes,MPI_BYTE,dst,
                                          MPIR_BCAST_TAG,comm, errflag);
             else
-                mpi_errno = MPIC_Send_ft(buffer,count,datatype,dst,
+                mpi_errno = MPIC_Send(buffer,count,datatype,dst,
                                          MPIR_BCAST_TAG,comm, errflag); 
             if (mpi_errno) {
                 /* for communication errors, just record the error but continue */
@@ -333,7 +333,7 @@ static int scatter_for_bcast(
             {
                 dst = rank + mask;
                 if (dst >= comm_size) dst -= comm_size;
-                mpi_errno = MPIC_Send_ft(((char *)tmp_buf +
+                mpi_errno = MPIC_Send(((char *)tmp_buf +
                                           scatter_size*(relative_rank+mask)),
                                          send_size, MPI_BYTE, dst,
                                          MPIR_BCAST_TAG, comm, errflag);
@@ -589,7 +589,7 @@ static int MPIR_Bcast_scatter_doubling_allgather(
 
                     /* printf("Rank %d, send to %d, offset %d, size %d\n", rank, dst, offset, recv_size);
                        fflush(stdout); */
-                    mpi_errno = MPIC_Send_ft(((char *)tmp_buf + offset),
+                    mpi_errno = MPIC_Send(((char *)tmp_buf + offset),
                                              recv_size, MPI_BYTE, dst,
                                              MPIR_BCAST_TAG, comm, errflag); 
                     /* recv_size was set in the previous
@@ -952,7 +952,7 @@ static int MPIR_SMP_Bcast(
             MPIU_Get_intranode_rank(comm_ptr, root) > 0) /* is not the node root (0) */ 
         {                                                /* and is on our node (!-1) */
             if (root == comm_ptr->rank) {
-                mpi_errno = MPIC_Send_ft(buffer,count,datatype,0,
+                mpi_errno = MPIC_Send(buffer,count,datatype,0,
                                          MPIR_BCAST_TAG,comm_ptr->node_comm->handle, errflag);
                 if (mpi_errno) {
                     /* for communication errors, just record the error but continue */
@@ -1283,7 +1283,7 @@ int MPIR_Bcast_inter (
     {
         /* root sends to rank 0 on remote group and returns */
         MPIDU_ERR_CHECK_MULTIPLE_THREADS_ENTER( comm_ptr );
-        mpi_errno =  MPIC_Send_ft(buffer, count, datatype, 0,
+        mpi_errno =  MPIC_Send(buffer, count, datatype, 0,
                                   MPIR_BCAST_TAG, comm, errflag); 
         if (mpi_errno) {
             /* for communication errors, just record the error but continue */

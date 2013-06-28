@@ -422,7 +422,7 @@ int _mpi_reduce_for_dyntask(int *sendbuf, int *recvbuf)
         parent_rank = (parent) % TASKS;
         result += *recvbuf;
         TRACE_ERR("_mpi_reduce_for_dyntask - send to parent_rank=%d parent taskid=%d \n", parent_rank, pg_world->vct[parent_rank].taskid);
-        MPIC_Send_ft(&result, sizeof(int), MPI_BYTE, parent_rank, tag, comm_ptr->handle, &errflag);
+        MPIC_Send(&result, sizeof(int), MPI_BYTE, parent_rank, tag, comm_ptr->handle, &errflag);
       }
       else
       {
@@ -438,7 +438,7 @@ int _mpi_reduce_for_dyntask(int *sendbuf, int *recvbuf)
   if(world_rank != parent && numchildren == 0) {
     parent_rank = (parent) % TASKS;
     TRACE_ERR("_mpi_reduce_for_dyntask - send to parent_rank=%d parent_task_id=%d\n", parent_rank, pg_world->vct[parent_rank].taskid);
-    MPIC_Send_ft(sendbuf, sizeof(int), MPI_BYTE, parent_rank, tag, comm_ptr->handle, &errflag);
+    MPIC_Send(sendbuf, sizeof(int), MPI_BYTE, parent_rank, tag, comm_ptr->handle, &errflag);
   }
 
   if(world_rank == 0) {

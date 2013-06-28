@@ -320,7 +320,7 @@ int MPIR_Reduce_scatter_intra(const void *sendbuf, void *recvbuf, const int recv
 
         if (rank < 2*rem) {
             if (rank % 2 == 0) { /* even */
-                mpi_errno = MPIC_Send_ft(tmp_results, total_count, 
+                mpi_errno = MPIC_Send(tmp_results, total_count,
                                          datatype, rank+1,
                                          MPIR_REDUCE_SCATTER_TAG, comm, errflag);
                 if (mpi_errno) {
@@ -430,7 +430,7 @@ int MPIR_Reduce_scatter_intra(const void *sendbuf, void *recvbuf, const int recv
                                              MPIR_REDUCE_SCATTER_TAG, comm,
                                              MPI_STATUS_IGNORE, errflag);
                 else if ((recv_cnt == 0) && (send_cnt != 0))
-                    mpi_errno = MPIC_Send_ft((char *) tmp_results +
+                    mpi_errno = MPIC_Send((char *) tmp_results +
                                              newdisps[send_idx]*extent,
                                              send_cnt, datatype,
                                              dst, MPIR_REDUCE_SCATTER_TAG,
@@ -476,7 +476,7 @@ int MPIR_Reduce_scatter_intra(const void *sendbuf, void *recvbuf, const int recv
         if (rank < 2*rem) {
             if (rank % 2) { /* odd */
                 if (recvcounts[rank-1]) {
-                    mpi_errno = MPIC_Send_ft((char *) tmp_results +
+                    mpi_errno = MPIC_Send((char *) tmp_results +
                                              disps[rank-1]*extent, recvcounts[rank-1],
                                              datatype, rank-1,
                                              MPIR_REDUCE_SCATTER_TAG, comm, errflag);
@@ -764,7 +764,7 @@ int MPIR_Reduce_scatter_intra(const void *sendbuf, void *recvbuf, const int recv
                             (rank < tree_root + nprocs_completed)
                             && (dst >= tree_root + nprocs_completed)) {
                             /* send the current result */
-                            mpi_errno = MPIC_Send_ft(tmp_recvbuf, 1, recvtype,
+                            mpi_errno = MPIC_Send(tmp_recvbuf, 1, recvtype,
                                                      dst, MPIR_REDUCE_SCATTER_TAG,
                                                      comm, errflag);
                             if (mpi_errno) {

@@ -368,7 +368,7 @@ int MPIR_Alltoall_intra(
                         (rank < tree_root + nprocs_completed)
                         && (dst >= tree_root + nprocs_completed)) {
                         /* send the data received in this step above */
-                        mpi_errno = MPIC_Send_ft(((char *)tmp_buf +
+                        mpi_errno = MPIC_Send(((char *)tmp_buf +
                                                   dst_tree_root*sendbuf_extent),
                                                  last_recv_cnt, sendtype,
                                                  dst, MPIR_ALLTOALL_TAG,
