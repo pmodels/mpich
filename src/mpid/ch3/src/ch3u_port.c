@@ -704,7 +704,7 @@ static int ReceivePGAndDistribute( MPID_Comm *tmp_comm, MPID_Comm *comm_ptr,
 
 	if (rank == root) {
 	    /* First, receive the pg description from the partner */
-	    mpi_errno = MPIC_Recv_ft(&j, 1, MPI_INT, 0, recvtag++,
+	    mpi_errno = MPIC_Recv(&j, 1, MPI_INT, 0, recvtag++,
 				  tmp_comm->handle, MPI_STATUS_IGNORE, &errflag);
 	    *recvtag_p = recvtag;
 	    if (mpi_errno != MPI_SUCCESS) {
@@ -714,7 +714,7 @@ static int ReceivePGAndDistribute( MPID_Comm *tmp_comm, MPID_Comm *comm_ptr,
 	    if (pg_str == NULL) {
 		MPIU_ERR_POP(mpi_errno);
 	    }
-	    mpi_errno = MPIC_Recv_ft(pg_str, j, MPI_CHAR, 0, recvtag++,
+	    mpi_errno = MPIC_Recv(pg_str, j, MPI_CHAR, 0, recvtag++,
 				  tmp_comm->handle, MPI_STATUS_IGNORE, &errflag);
 	    *recvtag_p = recvtag;
 	    if (mpi_errno != MPI_SUCCESS) {

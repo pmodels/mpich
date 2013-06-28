@@ -107,7 +107,7 @@ int MPIR_Allreduce_group_intra(void *sendbuf, void *recvbuf, int count,
         }
         else { /* odd */
             to_comm_rank(csrc, group_rank-1);
-            mpi_errno = MPIC_Recv_ft(tmp_buf, count,
+            mpi_errno = MPIC_Recv(tmp_buf, count,
                                      datatype, csrc,
                                      tag, comm,
                                      MPI_STATUS_IGNORE, errflag);
@@ -335,7 +335,7 @@ int MPIR_Allreduce_group_intra(void *sendbuf, void *recvbuf, int count,
         }
         else { /* even */
             to_comm_rank(csrc, group_rank+1);
-            mpi_errno = MPIC_Recv_ft(recvbuf, count,
+            mpi_errno = MPIC_Recv(recvbuf, count,
                                      datatype, csrc,
                                      tag, comm,
                                      MPI_STATUS_IGNORE, errflag);

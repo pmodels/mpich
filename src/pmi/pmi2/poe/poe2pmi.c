@@ -413,7 +413,7 @@ int _mpi_reduce_for_dyntask(int *sendbuf, int *recvbuf)
     remaining_child_count = i;
     child_rank = (children[i])% TASKS;
     TRACE_ERR("_mpi_reduce_for_dyntask - recv from child_rank%d child_taskid=%d\n", child_rank, pg_world->vct[child_rank].taskid);
-    mpi_errno = MPIC_Recv_ft(recvbuf, sizeof(int),MPI_BYTE, child_rank, tag, comm_ptr->handle, MPI_STATUS_IGNORE, &errflag);
+    mpi_errno = MPIC_Recv(recvbuf, sizeof(int),MPI_BYTE, child_rank, tag, comm_ptr->handle, MPI_STATUS_IGNORE, &errflag);
     TRACE_ERR("_mpi_reduce_for_dyntask - recv DONE from child_rank%d child_taskid=%d\n", child_rank, pg_world->vct[child_rank].taskid);
 
     if(world_rank != parent)

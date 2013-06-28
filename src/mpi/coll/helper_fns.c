@@ -442,10 +442,10 @@ int MPIC_Send_ft(const void *buf, int count, MPI_Datatype datatype, int dest, in
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIC_Recv_ft
+#define FUNCNAME MPIC_Recv
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPIC_Recv_ft(void *buf, int count, MPI_Datatype datatype, int source, int tag,
+int MPIC_Recv(void *buf, int count, MPI_Datatype datatype, int source, int tag,
                  MPI_Comm comm, MPI_Status *status, int *errflag)
 {
     int mpi_errno = MPI_SUCCESS;

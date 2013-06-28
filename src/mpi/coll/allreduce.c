@@ -309,7 +309,7 @@ int MPIR_Allreduce_intra (
                 newrank = -1; 
             }
             else { /* odd */
-                mpi_errno = MPIC_Recv_ft(tmp_buf, count, 
+                mpi_errno = MPIC_Recv(tmp_buf, count,
                                          datatype, rank-1,
                                          MPIR_ALLREDUCE_TAG, comm,
                                          MPI_STATUS_IGNORE, errflag);
@@ -532,7 +532,7 @@ int MPIR_Allreduce_intra (
                                          datatype, rank-1,
                                          MPIR_ALLREDUCE_TAG, comm, errflag);
             else  /* even */
-                mpi_errno = MPIC_Recv_ft(recvbuf, count,
+                mpi_errno = MPIC_Recv(recvbuf, count,
                                          datatype, rank+1,
                                          MPIR_ALLREDUCE_TAG, comm,
                                          MPI_STATUS_IGNORE, errflag);

@@ -281,7 +281,7 @@ int MPIR_Allgatherv_intra (
                             for (j=0; j<(my_tree_root+mask); j++)
                                 offset += recvcounts[j];
 
-                            mpi_errno = MPIC_Recv_ft(((char *)tmp_buf + offset * recvtype_extent),
+                            mpi_errno = MPIC_Recv(((char *)tmp_buf + offset * recvtype_extent),
                                                      total_count - offset, recvtype,
                                                      dst, MPIR_ALLGATHERV_TAG,
                                                      comm, &status, errflag);
@@ -469,7 +469,7 @@ int MPIR_Allgatherv_intra (
                         else if ((dst < rank) && 
                                  (dst < tree_root + nprocs_completed) &&
                                  (rank >= tree_root + nprocs_completed)) {
-                            mpi_errno = MPIC_Recv_ft(((char *)tmp_buf + offset),
+                            mpi_errno = MPIC_Recv(((char *)tmp_buf + offset),
                                                      tmp_buf_size-offset, MPI_BYTE,
                                                      dst,
                                                      MPIR_ALLGATHERV_TAG,
@@ -673,7 +673,7 @@ int MPIR_Allgatherv_intra (
 		 * consecutive processes contribute 0 bytes each. */
 	    }
 	    else if (!sendnow) { /* If there's no data to send, just do a recv call */
-		mpi_errno = MPIC_Recv_ft(rbuf, recvnow, recvtype, left, MPIR_ALLGATHERV_TAG, comm, &status, errflag);
+		mpi_errno = MPIC_Recv(rbuf, recvnow, recvtype, left, MPIR_ALLGATHERV_TAG, comm, &status, errflag);
                 if (mpi_errno) {
                     /* for communication errors, just record the error but continue */
                     *errflag = TRUE;

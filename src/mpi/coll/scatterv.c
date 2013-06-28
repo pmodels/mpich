@@ -128,7 +128,7 @@ int MPIR_Scatterv(const void *sendbuf, const int *sendcounts, const int *displs,
 
     else if (root != MPI_PROC_NULL) { /* non-root nodes, and in the intercomm. case, non-root nodes on remote side */
         if (recvcount) {
-            mpi_errno = MPIC_Recv_ft(recvbuf,recvcount,recvtype,root,
+            mpi_errno = MPIC_Recv(recvbuf,recvcount,recvtype,root,
                                      MPIR_SCATTERV_TAG,comm,MPI_STATUS_IGNORE, errflag);
             if (mpi_errno) {
                 /* for communication errors, just record the error but continue */

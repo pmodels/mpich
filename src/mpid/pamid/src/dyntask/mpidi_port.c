@@ -827,18 +827,18 @@ static int MPIDI_ReceivePGAndDistribute( struct MPID_Comm *tmp_comm, struct MPID
 
 	if (rank == root) {
 	    /* First, receive the pg description from the partner */
-	    mpi_errno = MPIC_Recv_ft(&j, 1, MPI_INT, 0, recvtag++,
+	    mpi_errno = MPIC_Recv(&j, 1, MPI_INT, 0, recvtag++,
 				  tmp_comm->handle, MPI_STATUS_IGNORE, &errflag);
 	    *recvtag_p = recvtag;
 	    if (mpi_errno != MPI_SUCCESS) {
-		TRACE_ERR("MPIC_Recv_ft returned with mpi_errno=%d\n", mpi_errno);
+		TRACE_ERR("MPIC_Recv returned with mpi_errno=%d\n", mpi_errno);
 	    }
 	    pg_str = (char*)MPIU_Malloc(j);
-	    mpi_errno = MPIC_Recv_ft(pg_str, j, MPI_CHAR, 0, recvtag++,
+	    mpi_errno = MPIC_Recv(pg_str, j, MPI_CHAR, 0, recvtag++,
 				  tmp_comm->handle, MPI_STATUS_IGNORE, &errflag);
 	    *recvtag_p = recvtag;
 	    if (mpi_errno != MPI_SUCCESS) {
-		TRACE_ERR("MPIC_Recv_ft returned with mpi_errno=%d\n", mpi_errno);
+		TRACE_ERR("MPIC_Recv returned with mpi_errno=%d\n", mpi_errno);
 	    }
 	}
 

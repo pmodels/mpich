@@ -312,7 +312,7 @@ int MPIR_Igather_binomial(const void *sendbuf, int sendcount, MPI_Datatype sendt
                 src = relative_rank | mask;
                 if (src < comm_size) {
                     src = (src + root) % comm_size;
-                    mpi_errno = MPIC_Recv_ft(((char *)tmp_buf + curr_cnt),
+                    mpi_errno = MPIC_Recv(((char *)tmp_buf + curr_cnt),
                                              tmp_buf_size-curr_cnt, MPI_BYTE, src,
                                              MPIR_GATHER_TAG, comm,
                                              &status, errflag);

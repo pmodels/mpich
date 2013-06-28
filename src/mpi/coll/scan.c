@@ -299,7 +299,7 @@ int MPIR_Scan(
        reduced data of rank 1,2,3. */
     if (comm_ptr->node_roots_comm != NULL && comm_ptr->node_comm != NULL)
     {
-        mpi_errno = MPIC_Recv_ft(localfulldata, count, datatype, 
+        mpi_errno = MPIC_Recv(localfulldata, count, datatype,
                                  comm_ptr->node_comm->local_size - 1, MPIR_SCAN_TAG, 
                                  comm_ptr->node_comm->handle, &status, errflag);
         if (mpi_errno) {
@@ -357,7 +357,7 @@ int MPIR_Scan(
         }
         if (MPIU_Get_internode_rank(comm_ptr, rank) != 0)
         {
-            mpi_errno = MPIC_Recv_ft(tempbuf, count, datatype,
+            mpi_errno = MPIC_Recv(tempbuf, count, datatype,
                                      MPIU_Get_internode_rank(comm_ptr, rank) - 1, 
                                      MPIR_SCAN_TAG, comm_ptr->node_roots_comm->handle, 
                                      &status, errflag);

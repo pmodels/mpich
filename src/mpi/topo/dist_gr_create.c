@@ -318,7 +318,7 @@ int MPI_Dist_graph_create(MPI_Comm comm_old, int n, const int sources[],
         buf = MPIU_Malloc(count*sizeof(int));
         MPIU_ERR_CHKANDJUMP(!buf, mpi_errno, MPI_ERR_OTHER, "**nomem");
 
-        mpi_errno = MPIC_Recv_ft(buf, count, MPI_INT, MPI_ANY_SOURCE, MPIR_TOPO_A_TAG, comm_old, MPI_STATUS_IGNORE, &errflag);
+        mpi_errno = MPIC_Recv(buf, count, MPI_INT, MPI_ANY_SOURCE, MPIR_TOPO_A_TAG, comm_old, MPI_STATUS_IGNORE, &errflag);
         /* FIXME: buf is never freed on error! */
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
         
@@ -352,7 +352,7 @@ int MPI_Dist_graph_create(MPI_Comm comm_old, int n, const int sources[],
         buf = MPIU_Malloc(count*sizeof(int));
         MPIU_ERR_CHKANDJUMP(!buf, mpi_errno, MPI_ERR_OTHER, "**nomem");
 
-        mpi_errno = MPIC_Recv_ft(buf, count, MPI_INT, MPI_ANY_SOURCE, MPIR_TOPO_B_TAG, comm_old, MPI_STATUS_IGNORE, &errflag);
+        mpi_errno = MPIC_Recv(buf, count, MPI_INT, MPI_ANY_SOURCE, MPIR_TOPO_B_TAG, comm_old, MPI_STATUS_IGNORE, &errflag);
         /* FIXME: buf is never freed on error! */
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 

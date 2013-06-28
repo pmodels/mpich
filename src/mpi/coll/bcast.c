@@ -138,10 +138,10 @@ static int MPIR_Bcast_binomial(
             src = rank - mask; 
             if (src < 0) src += comm_size;
             if (!is_contig || !is_homogeneous)
-                mpi_errno = MPIC_Recv_ft(tmp_buf,nbytes,MPI_BYTE,src,
+                mpi_errno = MPIC_Recv(tmp_buf,nbytes,MPI_BYTE,src,
                                          MPIR_BCAST_TAG,comm, &status, errflag);
             else
-                mpi_errno = MPIC_Recv_ft(buffer,count,datatype,src,
+                mpi_errno = MPIC_Recv(buffer,count,datatype,src,
                                          MPIR_BCAST_TAG,comm, &status, errflag);
             if (mpi_errno) {
                 /* for communication errors, just record the error but continue */
@@ -297,7 +297,7 @@ static int scatter_for_bcast(
             }
             else
             {
-                mpi_errno = MPIC_Recv_ft(((char *)tmp_buf +
+                mpi_errno = MPIC_Recv(((char *)tmp_buf +
                                           relative_rank*scatter_size),
                                          recv_size, MPI_BYTE, src,
                                          MPIR_BCAST_TAG, comm, &status, errflag);
@@ -610,7 +610,7 @@ static int MPIR_Bcast_scatter_doubling_allgather(
                 {
                     /* printf("Rank %d waiting to recv from rank %d\n",
                        relative_rank, dst); */
-                    mpi_errno = MPIC_Recv_ft(((char *)tmp_buf + offset),
+                    mpi_errno = MPIC_Recv(((char *)tmp_buf + offset),
                                              nbytes - offset, 
                                              MPI_BYTE, dst, MPIR_BCAST_TAG,
                                              comm, &status, errflag); 
@@ -962,7 +962,7 @@ static int MPIR_SMP_Bcast(
                 }
             }
             else if (0 == comm_ptr->node_comm->rank) {
-                mpi_errno = MPIC_Recv_ft(buffer,count,datatype,MPIU_Get_intranode_rank(comm_ptr, root),
+                mpi_errno = MPIC_Recv(buffer,count,datatype,MPIU_Get_intranode_rank(comm_ptr, root),
                                          MPIR_BCAST_TAG,comm_ptr->node_comm->handle, &status, errflag);
                 if (mpi_errno) {
                     /* for communication errors, just record the error but continue */
@@ -1301,7 +1301,7 @@ int MPIR_Bcast_inter (
         
         if (rank == 0)
         {
-            mpi_errno = MPIC_Recv_ft(buffer, count, datatype, root,
+            mpi_errno = MPIC_Recv(buffer, count, datatype, root,
                                      MPIR_BCAST_TAG, comm, &status, errflag);
             if (mpi_errno) {
                 /* for communication errors, just record the error but continue */

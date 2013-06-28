@@ -136,7 +136,7 @@ static int MPIR_Reduce_binomial (
             source = (relrank | mask);
             if (source < comm_size) {
                 source = (source + lroot) % comm_size;
-                mpi_errno = MPIC_Recv_ft(tmp_buf, count, datatype, source, 
+                mpi_errno = MPIC_Recv(tmp_buf, count, datatype, source,
                                          MPIR_REDUCE_TAG, comm, &status, errflag);
                 if (mpi_errno) {
                     /* for communication errors, just record the error but continue */
@@ -187,7 +187,7 @@ static int MPIR_Reduce_binomial (
         }
         else if (rank == root)
         {
-            mpi_errno = MPIC_Recv_ft(recvbuf, count, datatype, 0,
+            mpi_errno = MPIC_Recv(recvbuf, count, datatype, 0,
                                     MPIR_REDUCE_TAG, comm, &status, errflag);
         }
         if (mpi_errno) {
@@ -343,7 +343,7 @@ static int MPIR_Reduce_redscat_gather (
             newrank = -1; 
         }
         else { /* even */
-            mpi_errno = MPIC_Recv_ft(tmp_buf, count,
+            mpi_errno = MPIC_Recv(tmp_buf, count,
                                      datatype, rank+1,
                                      MPIR_REDUCE_TAG, comm,
                                      MPI_STATUS_IGNORE, errflag);
@@ -468,7 +468,7 @@ static int MPIR_Reduce_redscat_gather (
                 for (i=1; i<pof2; i++)
                     disps[i] = disps[i-1] + cnts[i-1];
                 
-                mpi_errno = MPIC_Recv_ft(recvbuf, cnts[0], datatype,
+                mpi_errno = MPIC_Recv(recvbuf, cnts[0], datatype,
                                          0, MPIR_REDUCE_TAG, comm,
                                          MPI_STATUS_IGNORE, errflag);
                 if (mpi_errno) {
@@ -570,7 +570,7 @@ static int MPIR_Reduce_redscat_gather (
                 /* recv and continue */
                 /* printf("Rank %d, recv_idx %d, recv_cnt %d, last_idx %d\n", newrank, recv_idx, recv_cnt, last_idx);
                    fflush(stdout); */
-                mpi_errno = MPIC_Recv_ft((char *) recvbuf +
+                mpi_errno = MPIC_Recv((char *) recvbuf +
                                          disps[recv_idx]*extent,
                                          recv_cnt, datatype, dst,
                                          MPIR_REDUCE_TAG, comm,
@@ -899,7 +899,7 @@ int MPIR_Reduce_inter (
 
     if (root == MPI_ROOT) {
         /* root receives data from rank 0 on remote group */
-        mpi_errno = MPIC_Recv_ft(recvbuf, count, datatype, 0,
+        mpi_errno = MPIC_Recv(recvbuf, count, datatype, 0,
                                  MPIR_REDUCE_TAG, comm, &status, errflag);
         if (mpi_errno) {
             /* for communication errors, just record the error but continue */

@@ -252,7 +252,7 @@ int MPIR_Allgather_intra (
                         else if ((dst < rank) && 
                                  (dst < tree_root + nprocs_completed) &&
                                  (rank >= tree_root + nprocs_completed)) {
-                            mpi_errno = MPIC_Recv_ft(((char *)recvbuf + offset),  
+                            mpi_errno = MPIC_Recv(((char *)recvbuf + offset),
                                                      (comm_size - (my_tree_root + mask))*recvcount,
                                                      recvtype, dst,
                                                      MPIR_ALLGATHER_TAG,
@@ -413,7 +413,7 @@ int MPIR_Allgather_intra (
                         else if ((dst < rank) && 
                                  (dst < tree_root + nprocs_completed) &&
                                  (rank >= tree_root + nprocs_completed)) {
-                            mpi_errno = MPIC_Recv_ft(((char *)tmp_buf + offset),
+                            mpi_errno = MPIC_Recv(((char *)tmp_buf + offset),
                                                      tmp_buf_size - offset,
                                                      MPI_BYTE, dst,
                                                      MPIR_ALLGATHER_TAG,

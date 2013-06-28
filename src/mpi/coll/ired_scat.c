@@ -593,7 +593,7 @@ int MPIR_Ireduce_scatter_rec_dbl(const void *sendbuf, void *recvbuf, const int r
          * will in the future when we update the NBC code to be fault-tolerant
          * in roughly the same fashion. [goodell@ 2011-03-03] */
         /* The following reduction is done here instead of after
-           the MPIC_Sendrecv_ft or MPIC_Recv_ft above. This is
+           the MPIC_Sendrecv_ft or MPIC_Recv above. This is
            because to do it above, in the noncommutative
            case, we would need an extra temp buffer so as not to
            overwrite temp_recvbuf, because temp_recvbuf may have

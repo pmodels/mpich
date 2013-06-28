@@ -385,7 +385,7 @@ int MPIR_Alltoall_intra(
                     else if ((dst < rank) && 
                              (dst < tree_root + nprocs_completed) &&
                              (rank >= tree_root + nprocs_completed)) {
-                        mpi_errno = MPIC_Recv_ft(((char *)tmp_buf +
+                        mpi_errno = MPIC_Recv(((char *)tmp_buf +
                                                   dst_tree_root*sendbuf_extent),
                                                  sendbuf_extent*(comm_size-dst_tree_root),
                                                  sendtype,   

@@ -161,7 +161,7 @@ int MPIR_Scatter_intra(const void *sendbuf, int sendcount, MPI_Datatype sendtype
                    they don't have to forward data to anyone. Others
                    receive data into a temporary buffer. */
                 if (relative_rank % 2) {
-                    mpi_errno = MPIC_Recv_ft(recvbuf, recvcount, recvtype,
+                    mpi_errno = MPIC_Recv(recvbuf, recvcount, recvtype,
                                              src, MPIR_SCATTER_TAG, comm, 
                                              &status, errflag);
                     if (mpi_errno) {
@@ -172,7 +172,7 @@ int MPIR_Scatter_intra(const void *sendbuf, int sendcount, MPI_Datatype sendtype
                     }
                 }
                 else {
-                    mpi_errno = MPIC_Recv_ft(tmp_buf, tmp_buf_size, MPI_BYTE, src,
+                    mpi_errno = MPIC_Recv(tmp_buf, tmp_buf_size, MPI_BYTE, src,
                                              MPIR_SCATTER_TAG, comm, &status, errflag);
                     if (mpi_errno) {
                         /* for communication errors, just record the error but continue */
@@ -326,7 +326,7 @@ int MPIR_Scatter_intra(const void *sendbuf, int sendcount, MPI_Datatype sendtype
                 src = rank - mask; 
                 if (src < 0) src += comm_size;
                 
-                mpi_errno = MPIC_Recv_ft(tmp_buf, tmp_buf_size, MPI_BYTE, src,
+                mpi_errno = MPIC_Recv(tmp_buf, tmp_buf_size, MPI_BYTE, src,
                                          MPIR_SCATTER_TAG, comm, &status, errflag);
                 if (mpi_errno) {
                     /* for communication errors, just record the error but continue */
@@ -475,7 +475,7 @@ int MPIR_Scatter_inter(const void *sendbuf, int sendcount, MPI_Datatype sendtype
                 /* adjust for potential negative lower bound in datatype */
                 tmp_buf = (void *)((char*)tmp_buf - true_lb);
 
-                mpi_errno = MPIC_Recv_ft(tmp_buf, recvcount*local_size,
+                mpi_errno = MPIC_Recv(tmp_buf, recvcount*local_size,
                                          recvtype, root,
                                          MPIR_SCATTER_TAG, comm, &status, errflag);
                 if (mpi_errno) {
@@ -521,7 +521,7 @@ int MPIR_Scatter_inter(const void *sendbuf, int sendcount, MPI_Datatype sendtype
             }
         }
         else {
-            mpi_errno = MPIC_Recv_ft(recvbuf,recvcount,recvtype,root,
+            mpi_errno = MPIC_Recv(recvbuf,recvcount,recvtype,root,
                                      MPIR_SCATTER_TAG,comm,&status, errflag);
             if (mpi_errno) {
                 /* for communication errors, just record the error but continue */
