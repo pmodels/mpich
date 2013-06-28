@@ -15,8 +15,6 @@
    sends/receives by setting the context offset to
    MPID_CONTEXT_INTRA_COLL or MPID_CONTEXT_INTER_COLL. */
 
-static int MPIC_Irecv(void *buf, int count, MPI_Datatype datatype, int
-                     source, int tag, MPI_Comm comm, MPI_Request *request);
 static int MPIC_Isend(const void *buf, int count, MPI_Datatype datatype, int dest, int tag,
                      MPI_Comm comm, MPI_Request *request);
 
@@ -380,41 +378,6 @@ static int MPIC_Isend(const void *buf, int count, MPI_Datatype datatype, int des
     /* --END ERROR HANDLING-- */
 }
 
-
-#undef FUNCNAME
-#define FUNCNAME MPIC_Irecv
-#undef FCNAME
-#define FCNAME "MPIC_Irecv"
-static int MPIC_Irecv(void *buf, int count, MPI_Datatype datatype, int
-                    source, int tag, MPI_Comm comm, MPI_Request *request)
-{
-    int mpi_errno = MPI_SUCCESS;
-    int context_id;
-    MPID_Request *request_ptr=NULL;
-    MPID_Comm *comm_ptr = NULL;
-    MPIDI_STATE_DECL(MPID_STATE_MPIC_IRECV);
-
-    MPIDI_PT2PT_FUNC_ENTER_BACK(MPID_STATE_MPIC_IRECV);
-
-    MPIU_ERR_CHKANDJUMP1((count < 0), mpi_errno, MPI_ERR_COUNT,
-                         "**countneg", "**countneg %d", count);
-
-    MPID_Comm_get_ptr( comm, comm_ptr );
-    context_id = (comm_ptr->comm_kind == MPID_INTRACOMM) ?
-        MPID_CONTEXT_INTRA_COLL : MPID_CONTEXT_INTER_COLL;
-
-    mpi_errno = MPID_Irecv(buf, count, datatype, source, tag, comm_ptr,
-                          context_id, &request_ptr); 
-    if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
-
-    *request = request_ptr->handle;
-
- fn_fail:
-    /* --BEGIN ERROR HANDLING-- */
-    MPIDI_PT2PT_FUNC_EXIT_BACK(MPID_STATE_MPIC_IRECV);
-    return mpi_errno;
-    /* --END ERROR HANDLING-- */
-}
 
 /* FIXME: For the brief-global and finer-grain control, we must ensure that
    the global lock is *not* held when this routine is called. (unless we change
@@ -846,11 +809,25 @@ int MPIC_Irecv_ft(void *buf, int count, MPI_Datatype datatype, int source,
                   int tag, MPI_Comm comm, MPI_Request *request)
 {
     int mpi_errno = MPI_SUCCESS;
+    int context_id;
+    MPID_Request *request_ptr = NULL;
+    MPID_Comm *comm_ptr = NULL;
     MPIDI_STATE_DECL(MPID_STATE_MPIC_IRECV_FT);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIC_IRECV_FT);
 
-    mpi_errno = MPIC_Irecv(buf, count, datatype, source, tag, comm, request);
+    MPIU_ERR_CHKANDJUMP1((count < 0), mpi_errno, MPI_ERR_COUNT,
+                         "**countneg", "**countneg %d", count);
+
+    MPID_Comm_get_ptr(comm, comm_ptr);
+    context_id = (comm_ptr->comm_kind == MPID_INTRACOMM) ?
+        MPID_CONTEXT_INTRA_COLL : MPID_CONTEXT_INTER_COLL;
+
+    mpi_errno = MPID_Irecv(buf, count, datatype, source, tag, comm_ptr,
+            context_id, &request_ptr);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
+    *request = request_ptr->handle;
 
  fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_MPIC_IRECV_FT);
