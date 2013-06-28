@@ -4,7 +4,7 @@
 ##     See COPYRIGHT in top-level directory.
 ##
 
-libhydra_la_SOURCES += $(top_srcdir)/tools/ckpoint/blcr/ckpoint_blcr.c
+libhydra_la_SOURCES += tools/ckpoint/blcr/ckpoint_blcr.c
 
 noinst_HEADERS += tools/ckpoint/blcr/ckpoint_blcr.h
 

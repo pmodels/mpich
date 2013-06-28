@@ -10,7 +10,7 @@ noinst_HEADERS += ui/mpich/mpiexec.h
 
 bin_PROGRAMS += mpiexec.hydra
 
-mpiexec_hydra_SOURCES = $(top_srcdir)/ui/mpich/mpiexec.c $(top_srcdir)/ui/mpich/utils.c
+mpiexec_hydra_SOURCES = ui/mpich/mpiexec.c ui/mpich/utils.c
 mpiexec_hydra_LDFLAGS = $(external_ldflags) -L$(top_builddir)
 mpiexec_hydra_LDADD = -lpm -lhydra $(external_libs)
 mpiexec_hydra_DEPENDENCIES = libpm.la libhydra.la

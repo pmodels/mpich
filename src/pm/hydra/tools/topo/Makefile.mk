@@ -8,7 +8,7 @@ AM_CPPFLAGS += -I$(top_srcdir)/tools/topo
 
 noinst_HEADERS += tools/topo/topo.h
 
-libhydra_la_SOURCES += $(top_srcdir)/tools/topo/topo.c
+libhydra_la_SOURCES += tools/topo/topo.c
 
 if hydra_have_hwloc
 include tools/topo/hwloc/Makefile.mk

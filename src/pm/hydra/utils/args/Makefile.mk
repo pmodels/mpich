@@ -4,4 +4,4 @@
 ##     See COPYRIGHT in top-level directory.
 ##
 
-libhydra_la_SOURCES += $(top_srcdir)/utils/args/args.c
+libhydra_la_SOURCES += utils/args/args.c

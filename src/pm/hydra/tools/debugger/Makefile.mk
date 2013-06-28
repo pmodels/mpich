@@ -8,4 +8,4 @@ AM_CPPFLAGS += -I$(top_srcdir)/tools/debugger
 
 noinst_HEADERS += tools/debugger/debugger.h
 
-libhydra_la_SOURCES += $(top_srcdir)/tools/debugger/debugger.c
+libhydra_la_SOURCES += tools/debugger/debugger.c

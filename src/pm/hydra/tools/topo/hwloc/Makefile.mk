@@ -4,7 +4,7 @@
 ##     See COPYRIGHT in top-level directory.
 ##
 
-libhydra_la_SOURCES += $(top_srcdir)/tools/topo/hwloc/topo_hwloc.c
+libhydra_la_SOURCES += tools/topo/hwloc/topo_hwloc.c
 
 noinst_HEADERS += tools/topo/hwloc/topo_hwloc.h
 
