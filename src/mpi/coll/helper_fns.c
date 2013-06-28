@@ -15,9 +15,6 @@
    sends/receives by setting the context offset to
    MPID_CONTEXT_INTRA_COLL or MPID_CONTEXT_INTER_COLL. */
 
-static int MPIC_Isend(const void *buf, int count, MPI_Datatype datatype, int dest, int tag,
-                     MPI_Comm comm, MPI_Request *request);
-
 #undef FUNCNAME
 #define FUNCNAME MPIC_Probe
 #undef FCNAME
@@ -340,42 +337,6 @@ int MPIR_Localcopy(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
 
   fn_fail:
     goto fn_exit;
-}
-
-
-#undef FUNCNAME
-#define FUNCNAME MPIC_Isend
-#undef FCNAME
-#define FCNAME "MPIC_Isend"
-static int MPIC_Isend(const void *buf, int count, MPI_Datatype datatype, int dest, int tag,
-                      MPI_Comm comm, MPI_Request *request)
-{
-    int mpi_errno = MPI_SUCCESS;
-    int context_id;
-    MPID_Request *request_ptr=NULL;
-    MPID_Comm *comm_ptr=NULL;
-    MPIDI_STATE_DECL(MPID_STATE_MPIC_ISEND);
-
-    MPIDI_PT2PT_FUNC_ENTER_FRONT(MPID_STATE_MPIC_ISEND);
-
-    MPIU_ERR_CHKANDJUMP1((count < 0), mpi_errno, MPI_ERR_COUNT,
-                         "**countneg", "**countneg %d", count);
-
-    MPID_Comm_get_ptr( comm, comm_ptr );
-    context_id = (comm_ptr->comm_kind == MPID_INTRACOMM) ?
-        MPID_CONTEXT_INTRA_COLL : MPID_CONTEXT_INTER_COLL;
-
-    mpi_errno = MPID_Isend(buf, count, datatype, dest, tag, comm_ptr,
-                          context_id, &request_ptr); 
-    if (mpi_errno) { MPIU_ERR_POP(mpi_errno); } 
-
-    *request = request_ptr->handle;
-
- fn_fail:
-    /* --BEGIN ERROR HANDLING-- */
-    MPIDI_PT2PT_FUNC_EXIT(MPID_STATE_MPIC_ISEND);
-    return mpi_errno;
-    /* --END ERROR HANDLING-- */
 }
 
 
@@ -783,16 +744,30 @@ int MPIC_Isend_ft(const void *buf, int count, MPI_Datatype datatype, int dest, i
                   MPI_Comm comm, MPI_Request *request, int *errflag)
 {
     int mpi_errno = MPI_SUCCESS;
+    int context_id;
+    MPID_Request *request_ptr = NULL;
+    MPID_Comm *comm_ptr = NULL;
     MPIDI_STATE_DECL(MPID_STATE_MPIC_ISEND_FT);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIC_ISEND_FT);
 
     MPIU_DBG_MSG_S(PT2PT, TYPICAL, "IN: errflag = %s", *errflag?"TRUE":"FALSE");
 
+    MPIU_ERR_CHKANDJUMP1((count < 0), mpi_errno, MPI_ERR_COUNT,
+                         "**countneg", "**countneg %d", count);
+
     if (*errflag && MPIR_PARAM_ENABLE_COLL_FT_RET)
         MPIR_TAG_SET_ERROR_BIT(tag);
 
-    mpi_errno = MPIC_Isend(buf, count, datatype, dest, tag, comm, request);
+    MPID_Comm_get_ptr(comm, comm_ptr);
+    context_id = (comm_ptr->comm_kind == MPID_INTRACOMM) ?
+        MPID_CONTEXT_INTRA_COLL : MPID_CONTEXT_INTER_COLL;
+
+    mpi_errno = MPID_Isend(buf, count, datatype, dest, tag, comm_ptr,
+            context_id, &request_ptr);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
+    *request = request_ptr->handle;
 
  fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_MPIC_ISEND_FT);
