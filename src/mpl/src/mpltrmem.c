@@ -351,7 +351,7 @@ void MPL_trfree(void *a_ptr, int line, const char file[])
             if (TRidSet) {
                 MPL_error_printf
                     ("[%d] Block [id=%d(%lu)] at address %s was already freed\n", world_rank,
-                     head->id, head->size, hexstring);
+                     head->id, (unsigned long)head->size, hexstring);
             }
             else {
                 MPL_error_printf("[%d] Block at address %s was already freed\n",
@@ -371,7 +371,7 @@ void MPL_trfree(void *a_ptr, int line, const char file[])
             if (TRidSet) {
                 MPL_error_printf
                     ("[%d] Block [id=%d(%lu)] at address %s is corrupted (probably write past end)\n",
-                     world_rank, head->id, head->size, hexstring);
+                     world_rank, head->id, (unsigned long)head->size, hexstring);
             }
             else {
                 MPL_error_printf
@@ -412,7 +412,8 @@ void MPL_trfree(void *a_ptr, int line, const char file[])
     if (TRlevel & TR_FREE) {
         addrToHex(a_ptr, hexstring);
         MPL_error_printf("[%d] Freeing %lu bytes at %s in %s[%d]\n",
-                         world_rank, head->size, hexstring, file, line);
+                         world_rank, (unsigned long)head->size, hexstring, 
+                         file, line);
     }
 
     /*
@@ -530,7 +531,7 @@ int MPL_trvalid2(const char str[], int line, const char file[] )
             if (TRidSet) {
                 MPL_error_printf
                     ("[%d] Block [id=%d(%lu)] at address %s is corrupted (probably write past end)\n",
-                     world_rank, head->id, head->size, hexstring);
+                     world_rank, head->id, (unsigned long)head->size, hexstring);
             }
             else {
                 MPL_error_printf
@@ -594,7 +595,8 @@ void MPL_trdump(FILE * fp, int minid)
         MPL_VG_MAKE_MEM_DEFINED(head, sizeof(*head));
         if (head->id >= minid) {
             addrToHex((char *) head + sizeof(TrSPACE), hexstring);
-            fprintf(fp, "[%d] %lu at [%s], ", world_rank, head->size, hexstring);
+            fprintf(fp, "[%d] %lu at [%s], ", world_rank, 
+                    (unsigned long)head->size, hexstring);
             head->fname[TR_FNAME_LEN - 1] = 0;  /* Be extra careful */
             if (TRidSet) {
                 /* For head->id >= 0, we can add code to map the id to
