@@ -135,7 +135,7 @@ int MPIR_Alltoall_intra(
             for (j = i; j < comm_size; ++j) {
                 if (rank == i) {
                     /* also covers the (rank == i && rank == j) case */
-                    mpi_errno = MPIC_Sendrecv_replace_ft(((char *)recvbuf + j*recvcount*recvtype_extent),
+                    mpi_errno = MPIC_Sendrecv_replace(((char *)recvbuf + j*recvcount*recvtype_extent),
                                                          recvcount, recvtype,
                                                          j, MPIR_ALLTOALL_TAG,
                                                          j, MPIR_ALLTOALL_TAG,
@@ -149,7 +149,7 @@ int MPIR_Alltoall_intra(
                 }
                 else if (rank == j) {
                     /* same as above with i/j args reversed */
-                    mpi_errno = MPIC_Sendrecv_replace_ft(((char *)recvbuf + i*recvcount*recvtype_extent),
+                    mpi_errno = MPIC_Sendrecv_replace(((char *)recvbuf + i*recvcount*recvtype_extent),
                                                          recvcount, recvtype,
                                                          i, MPIR_ALLTOALL_TAG,
                                                          i, MPIR_ALLTOALL_TAG,
