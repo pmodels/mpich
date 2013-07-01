@@ -148,7 +148,7 @@ int MPIR_Gatherv (
                 MPIR_PARAM_GET_DEFAULT_INT(GATHERV_INTER_SSEND_MIN_PROCS,&min_procs);
 
             if (comm_size >= min_procs) {
-                mpi_errno = MPIC_Ssend_ft(sendbuf, sendcount, sendtype, root,
+                mpi_errno = MPIC_Ssend(sendbuf, sendcount, sendtype, root,
                                           MPIR_GATHERV_TAG, comm, errflag);
                 if (mpi_errno) {
                     /* for communication errors, just record the error but continue */
