@@ -99,7 +99,7 @@ int MPIR_Scatterv(const void *sendbuf, const int *sendcounts, const int *displs,
                     }
                 }
                 else {
-                    mpi_errno = MPIC_Isend_ft(((char *)sendbuf+displs[i]*extent), 
+                    mpi_errno = MPIC_Isend(((char *)sendbuf+displs[i]*extent),
                                               sendcounts[i], sendtype, i,
                                               MPIR_SCATTERV_TAG, comm, &reqarray[reqs++], errflag);
                     if (mpi_errno) MPIU_ERR_POP(mpi_errno);

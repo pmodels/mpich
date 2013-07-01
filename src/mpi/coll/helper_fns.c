@@ -584,10 +584,10 @@ int MPIC_Sendrecv_replace(void *buf, int count, MPI_Datatype datatype,
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIC_Isend_ft
+#define FUNCNAME MPIC_Isend
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPIC_Isend_ft(const void *buf, int count, MPI_Datatype datatype, int dest, int tag,
+int MPIC_Isend(const void *buf, int count, MPI_Datatype datatype, int dest, int tag,
                   MPI_Comm comm, MPI_Request *request, int *errflag)
 {
     int mpi_errno = MPI_SUCCESS;

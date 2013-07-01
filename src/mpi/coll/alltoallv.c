@@ -173,7 +173,7 @@ int MPIR_Alltoallv_intra(const void *sendbuf, const int *sendcounts, const int *
                     if (type_size) {
                         MPID_Ensure_Aint_fits_in_pointer(MPI_VOID_PTR_CAST_TO_MPI_AINT sendbuf +
                                                          sdispls[dst]*send_extent);
-                        mpi_errno = MPIC_Isend_ft((char *)sendbuf+sdispls[dst]*send_extent,
+                        mpi_errno = MPIC_Isend((char *)sendbuf+sdispls[dst]*send_extent,
                                                   sendcounts[dst], sendtype, dst,
                                                   MPIR_ALLTOALLV_TAG, comm,
                                                   &reqarray[req_cnt], errflag);

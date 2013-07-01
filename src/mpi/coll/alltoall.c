@@ -464,7 +464,7 @@ int MPIR_Alltoall_intra(
 
             for ( i=0; i<ss; i++ ) { 
                 dst = (rank-i-ii+comm_size) % comm_size;
-                mpi_errno = MPIC_Isend_ft((char *)sendbuf +
+                mpi_errno = MPIC_Isend((char *)sendbuf +
                                           dst*sendcount*sendtype_extent, 
                                           sendcount, sendtype, dst,
                                           MPIR_ALLTOALL_TAG, comm,
