@@ -109,7 +109,7 @@ static int MPIR_Reduce_scatter_noncomm(const void *sendbuf, void *recvbuf, const
             send_offset += size;
         }
 
-        mpi_errno = MPIC_Sendrecv_ft(outgoing_data + send_offset*true_extent,
+        mpi_errno = MPIC_Sendrecv(outgoing_data + send_offset*true_extent,
                                      size, datatype, peer, MPIR_REDUCE_SCATTER_TAG,
                                      incoming_data + recv_offset*true_extent,
                                      size, datatype, peer, MPIR_REDUCE_SCATTER_TAG,
@@ -414,7 +414,7 @@ int MPIR_Reduce_scatter_intra(const void *sendbuf, void *recvbuf, const int recv
 */
                 /* Send data from tmp_results. Recv into tmp_recvbuf */ 
                 if ((send_cnt != 0) && (recv_cnt != 0)) 
-                    mpi_errno = MPIC_Sendrecv_ft((char *) tmp_results +
+                    mpi_errno = MPIC_Sendrecv((char *) tmp_results +
                                                  newdisps[send_idx]*extent,
                                                  send_cnt, datatype,
                                                  dst, MPIR_REDUCE_SCATTER_TAG,
@@ -530,14 +530,14 @@ int MPIR_Reduce_scatter_intra(const void *sendbuf, void *recvbuf, const int recv
             /* send the data that dst needs. recv data that this process
                needs from src into tmp_recvbuf */
             if (sendbuf != MPI_IN_PLACE) 
-                mpi_errno = MPIC_Sendrecv_ft(((char *)sendbuf+disps[dst]*extent), 
+                mpi_errno = MPIC_Sendrecv(((char *)sendbuf+disps[dst]*extent),
                                              recvcounts[dst], datatype, dst,
                                              MPIR_REDUCE_SCATTER_TAG, tmp_recvbuf,
                                              recvcounts[rank], datatype, src,
                                              MPIR_REDUCE_SCATTER_TAG, comm,
                                              MPI_STATUS_IGNORE, errflag);
             else
-                mpi_errno = MPIC_Sendrecv_ft(((char *)recvbuf+disps[dst]*extent), 
+                mpi_errno = MPIC_Sendrecv(((char *)recvbuf+disps[dst]*extent),
                                              recvcounts[dst], datatype, dst,
                                              MPIR_REDUCE_SCATTER_TAG, tmp_recvbuf,
                                              recvcounts[rank], datatype, src,
@@ -714,7 +714,7 @@ int MPIR_Reduce_scatter_intra(const void *sendbuf, void *recvbuf, const int recv
                        received in tmp_recvbuf and then accumulated into
                        tmp_results. accumulation is done later below.   */ 
 
-                    mpi_errno = MPIC_Sendrecv_ft(tmp_results, 1, sendtype, dst,
+                    mpi_errno = MPIC_Sendrecv(tmp_results, 1, sendtype, dst,
                                                  MPIR_REDUCE_SCATTER_TAG, 
                                                  tmp_recvbuf, 1, recvtype, dst,
                                                  MPIR_REDUCE_SCATTER_TAG, comm,
@@ -796,7 +796,7 @@ int MPIR_Reduce_scatter_intra(const void *sendbuf, void *recvbuf, const int recv
                 }
 
                 /* The following reduction is done here instead of after 
-                   the MPIC_Sendrecv_ft or MPIC_Recv above. This is
+                   the MPIC_Sendrecv or MPIC_Recv above. This is
                    because to do it above, in the noncommutative 
                    case, we would need an extra temp buffer so as not to
                    overwrite temp_recvbuf, because temp_recvbuf may have

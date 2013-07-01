@@ -186,7 +186,7 @@ int MPIR_Allgatherv_intra (
                     for (j=0; j<dst_tree_root; j++)
                         recv_offset += recvcounts[j];
 
-                    mpi_errno = MPIC_Sendrecv_ft(((char *)tmp_buf + send_offset * recvtype_extent),
+                    mpi_errno = MPIC_Sendrecv(((char *)tmp_buf + send_offset * recvtype_extent),
                                                  curr_cnt, recvtype, dst,
                                                  MPIR_ALLGATHERV_TAG,  
                                                  ((char *)tmp_buf + recv_offset * recvtype_extent),
@@ -388,7 +388,7 @@ int MPIR_Allgatherv_intra (
                 recv_offset *= nbytes;
                 
                 if (dst < comm_size) {
-                    mpi_errno = MPIC_Sendrecv_ft(((char *)tmp_buf + send_offset),
+                    mpi_errno = MPIC_Sendrecv(((char *)tmp_buf + send_offset),
                                                  curr_cnt, MPI_BYTE, dst,
                                                  MPIR_ALLGATHERV_TAG,  
                                                  ((char *)tmp_buf + recv_offset),
@@ -551,7 +551,7 @@ int MPIR_Allgatherv_intra (
             src = (rank + pof2) % comm_size;
             dst = (rank - pof2 + comm_size) % comm_size;
             
-            mpi_errno = MPIC_Sendrecv_ft(tmp_buf, curr_cnt, recvtype, dst,
+            mpi_errno = MPIC_Sendrecv(tmp_buf, curr_cnt, recvtype, dst,
                                          MPIR_ALLGATHERV_TAG,
                                          ((char *)tmp_buf + curr_cnt*recvtype_extent),
                                          total_count - curr_cnt, recvtype,
@@ -580,7 +580,7 @@ int MPIR_Allgatherv_intra (
             for (i=0; i<rem; i++)
                 send_cnt += recvcounts[(rank+i)%comm_size];
 
-            mpi_errno = MPIC_Sendrecv_ft(tmp_buf, send_cnt, recvtype,
+            mpi_errno = MPIC_Sendrecv(tmp_buf, send_cnt, recvtype,
                                          dst, MPIR_ALLGATHERV_TAG,
                                          ((char *)tmp_buf + curr_cnt*recvtype_extent),
                                          total_count - curr_cnt, recvtype,
@@ -693,7 +693,7 @@ int MPIR_Allgatherv_intra (
 		tosend -= sendnow;
 	    }
 	    else { /* There's data to be sent and received */
-		mpi_errno = MPIC_Sendrecv_ft(sbuf, sendnow, recvtype, right, MPIR_ALLGATHERV_TAG, 
+		mpi_errno = MPIC_Sendrecv(sbuf, sendnow, recvtype, right, MPIR_ALLGATHERV_TAG,
                                              rbuf, recvnow, recvtype, left, MPIR_ALLGATHERV_TAG,
                                              comm, &status, errflag);
                 if (mpi_errno) {

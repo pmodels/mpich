@@ -354,7 +354,7 @@ int MPIR_Allreduce_intra (
 
                     /* Send the most current data, which is in recvbuf. Recv
                        into tmp_buf */ 
-                    mpi_errno = MPIC_Sendrecv_ft(recvbuf, count, datatype, 
+                    mpi_errno = MPIC_Sendrecv(recvbuf, count, datatype,
                                                  dst, MPIR_ALLREDUCE_TAG, tmp_buf,
                                                  count, datatype, dst,
                                                  MPIR_ALLREDUCE_TAG, comm,
@@ -435,7 +435,7 @@ int MPIR_Allreduce_intra (
                            send_cnt, recv_cnt, last_idx);
                            */
                     /* Send data from recvbuf. Recv into tmp_buf */ 
-                    mpi_errno = MPIC_Sendrecv_ft((char *) recvbuf +
+                    mpi_errno = MPIC_Sendrecv((char *) recvbuf +
                                                  disps[send_idx]*extent,
                                                  send_cnt, datatype,  
                                                  dst, MPIR_ALLREDUCE_TAG, 
@@ -500,7 +500,7 @@ int MPIR_Allreduce_intra (
                             recv_cnt += cnts[i];
                     }
 
-                    mpi_errno = MPIC_Sendrecv_ft((char *) recvbuf +
+                    mpi_errno = MPIC_Sendrecv((char *) recvbuf +
                                                  disps[send_idx]*extent,
                                                  send_cnt, datatype,  
                                                  dst, MPIR_ALLREDUCE_TAG, 

@@ -231,7 +231,7 @@ int MPIR_Comm_split_impl(MPID_Comm *comm_ptr, int color, int key, MPID_Comm **ne
     /* In the intercomm case, we need to exchange the context ids */
     if (comm_ptr->comm_kind == MPID_INTERCOMM) {
 	if (comm_ptr->rank == 0) {
-	    mpi_errno = MPIC_Sendrecv_ft( &new_context_id, 1, MPIR_CONTEXT_ID_T_DATATYPE, 0, 0,
+	    mpi_errno = MPIC_Sendrecv( &new_context_id, 1, MPIR_CONTEXT_ID_T_DATATYPE, 0, 0,
 				       &remote_context_id, 1, MPIR_CONTEXT_ID_T_DATATYPE, 
 				       0, 0, comm_ptr->handle, MPI_STATUS_IGNORE, &errflag );
 	    if (mpi_errno) { MPIU_ERR_POP( mpi_errno ); }

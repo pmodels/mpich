@@ -383,7 +383,7 @@ PMPI_LOCAL int MPIR_Comm_create_inter(MPID_Comm *comm_ptr, MPID_Group *group_ptr
         info[0] = new_context_id;
         info[1] = group_ptr->size;
 
-        mpi_errno = MPIC_Sendrecv_ft(info, 2, MPI_INT, 0, 0,
+        mpi_errno = MPIC_Sendrecv(info, 2, MPI_INT, 0, 0,
                                      rinfo, 2, MPI_INT, 0, 0,
                                      comm, MPI_STATUS_IGNORE, &errflag );
         if (mpi_errno) { MPIU_ERR_POP( mpi_errno ); }
@@ -397,7 +397,7 @@ PMPI_LOCAL int MPIR_Comm_create_inter(MPID_Comm *comm_ptr, MPID_Group *group_ptr
                             mpi_errno,"remote_mapping");
 
         /* Populate and exchange the ranks */
-        mpi_errno = MPIC_Sendrecv_ft( mapping, group_ptr->size, MPI_INT, 0, 0,
+        mpi_errno = MPIC_Sendrecv( mapping, group_ptr->size, MPI_INT, 0, 0,
                                       remote_mapping, remote_size, MPI_INT, 0, 0,
                                       comm, MPI_STATUS_IGNORE, &errflag );
         if (mpi_errno) { MPIU_ERR_POP( mpi_errno ); }

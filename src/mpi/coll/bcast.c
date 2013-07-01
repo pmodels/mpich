@@ -513,7 +513,7 @@ static int MPIR_Bcast_scatter_doubling_allgather(
 
         if (relative_dst < comm_size)
         {
-            mpi_errno = MPIC_Sendrecv_ft(((char *)tmp_buf + send_offset),
+            mpi_errno = MPIC_Sendrecv(((char *)tmp_buf + send_offset),
                                          curr_size, MPI_BYTE, dst, MPIR_BCAST_TAG, 
                                          ((char *)tmp_buf + recv_offset),
                                          (nbytes-recv_offset < 0 ? 0 : nbytes-recv_offset), 
@@ -814,7 +814,7 @@ static int MPIR_Bcast_scatter_ring_allgather(
             right_count = 0;
         right_disp = rel_j * scatter_size;
 
-        mpi_errno = MPIC_Sendrecv_ft((char *)tmp_buf + right_disp, right_count,
+        mpi_errno = MPIC_Sendrecv((char *)tmp_buf + right_disp, right_count,
                                      MPI_BYTE, right, MPIR_BCAST_TAG,
                                      (char *)tmp_buf + left_disp, left_count,
                                      MPI_BYTE, left, MPIR_BCAST_TAG,

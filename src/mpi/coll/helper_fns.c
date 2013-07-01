@@ -40,57 +40,6 @@ int MPIC_Probe(int source, int tag, MPI_Comm comm, MPI_Status *status)
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME MPIC_Sendrecv
-#undef FCNAME
-#define FCNAME "MPIC_Sendrecv"
-static int MPIC_Sendrecv(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
-                         int dest, int sendtag, void *recvbuf, int recvcount,
-                         MPI_Datatype recvtype, int source, int recvtag,
-                         MPI_Comm comm, MPI_Status *status)
-{
-    MPID_Request *recv_req_ptr=NULL, *send_req_ptr=NULL;
-    int mpi_errno = MPI_SUCCESS;
-    int context_id;
-    MPID_Comm *comm_ptr = NULL;
-    MPIDI_STATE_DECL(MPID_STATE_MPIC_SENDRECV);
-
-    MPIDI_PT2PT_FUNC_ENTER_BOTH(MPID_STATE_MPIC_SENDRECV);
-
-    MPIU_ERR_CHKANDJUMP1((sendcount < 0), mpi_errno, MPI_ERR_COUNT,
-                         "**countneg", "**countneg %d", sendcount);
-    MPIU_ERR_CHKANDJUMP1((recvcount < 0), mpi_errno, MPI_ERR_COUNT,
-                         "**countneg", "**countneg %d", recvcount);
-
-    MPID_Comm_get_ptr( comm, comm_ptr );
-    context_id = (comm_ptr->comm_kind == MPID_INTRACOMM) ?
-        MPID_CONTEXT_INTRA_COLL : MPID_CONTEXT_INTER_COLL;
-
-    mpi_errno = MPID_Irecv(recvbuf, recvcount, recvtype, source, recvtag,
-                           comm_ptr, context_id, &recv_req_ptr);
-    if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
-    mpi_errno = MPID_Isend(sendbuf, sendcount, sendtype, dest, sendtag, 
-                           comm_ptr, context_id, &send_req_ptr); 
-    if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
-
-    mpi_errno = MPIC_Wait(send_req_ptr); 
-    if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
-    
-    mpi_errno = MPIC_Wait(recv_req_ptr);
-    if (mpi_errno) { MPIU_ERR_POPFATAL(mpi_errno); }
-    if (status != MPI_STATUS_IGNORE)
-        *status = recv_req_ptr->status;
-    mpi_errno = recv_req_ptr->status.MPI_ERROR;
-
-    MPID_Request_release(send_req_ptr);
-    MPID_Request_release(recv_req_ptr);
- fn_fail:
-    /* --BEGIN ERROR HANDLING-- */
-    MPIDI_PT2PT_FUNC_EXIT_BOTH(MPID_STATE_MPIC_SENDRECV);
-    return mpi_errno;
-    /* --END ERROR HANDLING-- */
-}
-
 /* NOTE: for regular collectives (as opposed to irregular collectives) calling
  * this function repeatedly will almost always be slower than performing the
  * equivalent inline because of the overhead of the repeated malloc/free */
@@ -551,10 +500,10 @@ int MPIC_Ssend(const void *buf, int count, MPI_Datatype datatype, int dest, int 
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIC_Sendrecv_ft
+#define FUNCNAME MPIC_Sendrecv
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPIC_Sendrecv_ft(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
+int MPIC_Sendrecv(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                      int dest, int sendtag, void *recvbuf, int recvcount,
                      MPI_Datatype recvtype, int source, int recvtag,
                      MPI_Comm comm, MPI_Status *status, int *errflag)

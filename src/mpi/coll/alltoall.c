@@ -224,7 +224,7 @@ int MPIR_Alltoall_intra(
             mpi_errno = MPIR_Pack_impl(recvbuf, 1, newtype, tmp_buf, pack_size, &position);
             if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
-            mpi_errno = MPIC_Sendrecv_ft(tmp_buf, position, MPI_PACKED, dst,
+            mpi_errno = MPIC_Sendrecv(tmp_buf, position, MPI_PACKED, dst,
                                          MPIR_ALLTOALL_TAG, recvbuf, 1, newtype,
                                          src, MPIR_ALLTOALL_TAG, comm,
                                          MPI_STATUS_IGNORE, errflag);
@@ -310,7 +310,7 @@ int MPIR_Alltoall_intra(
             my_tree_root <<= i;
             
             if (dst < comm_size) {
-                mpi_errno = MPIC_Sendrecv_ft(((char *)tmp_buf +
+                mpi_errno = MPIC_Sendrecv(((char *)tmp_buf +
                                               my_tree_root*sendbuf_extent),
                                              curr_cnt, sendtype,
                                              dst, MPIR_ALLTOALL_TAG, 
@@ -528,7 +528,7 @@ int MPIR_Alltoall_intra(
                 dst = (rank + i) % comm_size;
             }
 
-            mpi_errno = MPIC_Sendrecv_ft(((char *)sendbuf +
+            mpi_errno = MPIC_Sendrecv(((char *)sendbuf +
                                           dst*sendcount*sendtype_extent), 
                                          sendcount, sendtype, dst,
                                          MPIR_ALLTOALL_TAG, 
@@ -632,7 +632,7 @@ int MPIR_Alltoall_inter(
             sendaddr = (char *)sendbuf + dst*sendcount*sendtype_extent;
         }
 
-        mpi_errno = MPIC_Sendrecv_ft(sendaddr, sendcount, sendtype, dst,
+        mpi_errno = MPIC_Sendrecv(sendaddr, sendcount, sendtype, dst,
                                      MPIR_ALLTOALL_TAG, recvaddr,
                                      recvcount, recvtype, src,
                                      MPIR_ALLTOALL_TAG, comm, &status, errflag);

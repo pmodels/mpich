@@ -197,7 +197,7 @@ int MPIR_Alltoallw_intra(const void *sendbuf, const int sendcounts[], const int 
         for (i=1; i<comm_size; i++) {
             src = (rank - i + comm_size) % comm_size;
             dst = (rank + i) % comm_size;
-            mpi_errno = MPIC_Sendrecv_ft(((char *)sendbuf+sdispls[dst]), 
+            mpi_errno = MPIC_Sendrecv(((char *)sendbuf+sdispls[dst]),
                                          sendcounts[dst], sendtypes[dst], dst,
                                          MPIR_ALLTOALLW_TAG, 
                                          ((char *)recvbuf+rdispls[src]), 
@@ -294,7 +294,7 @@ int MPIR_Alltoallw_inter(const void *sendbuf, const int sendcounts[], const int 
             sendtype = sendtypes[dst];
         }
 
-        mpi_errno = MPIC_Sendrecv_ft(sendaddr, sendcount, sendtype,
+        mpi_errno = MPIC_Sendrecv(sendaddr, sendcount, sendtype,
                                      dst, MPIR_ALLTOALLW_TAG, recvaddr,
                                      recvcount, recvtype, src,
                                      MPIR_ALLTOALLW_TAG, comm, &status, errflag);

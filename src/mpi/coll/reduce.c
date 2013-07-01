@@ -413,7 +413,7 @@ static int MPIR_Reduce_redscat_gather (
                   send_cnt, recv_cnt, last_idx);
 */
             /* Send data from recvbuf. Recv into tmp_buf */ 
-            mpi_errno = MPIC_Sendrecv_ft((char *) recvbuf +
+            mpi_errno = MPIC_Sendrecv((char *) recvbuf +
                                          disps[send_idx]*extent,
                                          send_cnt, datatype,
                                          dst, MPIR_REDUCE_TAG,

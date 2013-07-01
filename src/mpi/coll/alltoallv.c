@@ -298,7 +298,7 @@ int MPIR_Alltoallv_inter(const void *sendbuf, const int *sendcounts, const int *
             sendcount = sendcounts[dst];
         }
 
-        mpi_errno = MPIC_Sendrecv_ft(sendaddr, sendcount, sendtype, dst, 
+        mpi_errno = MPIC_Sendrecv(sendaddr, sendcount, sendtype, dst,
                                      MPIR_ALLTOALLV_TAG, recvaddr, recvcount, 
                                      recvtype, src, MPIR_ALLTOALLV_TAG,
                                      comm, &status, errflag);

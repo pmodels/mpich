@@ -150,7 +150,7 @@ static int MPIR_Scan_generic (
         dst = rank ^ mask;
         if (dst < comm_size) {
             /* Send partial_scan to dst. Recv into tmp_buf */
-            mpi_errno = MPIC_Sendrecv_ft(partial_scan, count, datatype,
+            mpi_errno = MPIC_Sendrecv(partial_scan, count, datatype,
                                          dst, MPIR_SCAN_TAG, tmp_buf,
                                          count, datatype, dst,
                                          MPIR_SCAN_TAG, comm,

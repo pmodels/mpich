@@ -155,7 +155,7 @@ int MPIR_Allreduce_group_intra(void *sendbuf, void *recvbuf, int count,
 
                 /* Send the most current data, which is in recvbuf. Recv
                    into tmp_buf */
-                mpi_errno = MPIC_Sendrecv_ft(recvbuf, count, datatype,
+                mpi_errno = MPIC_Sendrecv(recvbuf, count, datatype,
                                              cdst, tag, tmp_buf,
                                              count, datatype, cdst,
                                              tag, comm,
@@ -234,7 +234,7 @@ int MPIR_Allreduce_group_intra(void *sendbuf, void *recvbuf, int count,
                 }
 
                 /* Send data from recvbuf. Recv into tmp_buf */
-                mpi_errno = MPIC_Sendrecv_ft((char *) recvbuf +
+                mpi_errno = MPIC_Sendrecv((char *) recvbuf +
                                              disps[send_idx]*extent,
                                              send_cnt, datatype,
                                              cdst, tag,
@@ -300,7 +300,7 @@ int MPIR_Allreduce_group_intra(void *sendbuf, void *recvbuf, int count,
                         recv_cnt += cnts[i];
                 }
 
-                mpi_errno = MPIC_Sendrecv_ft((char *) recvbuf +
+                mpi_errno = MPIC_Sendrecv((char *) recvbuf +
                                              disps[send_idx]*extent,
                                              send_cnt, datatype,
                                              cdst, tag,
