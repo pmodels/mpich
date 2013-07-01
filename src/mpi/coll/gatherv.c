@@ -114,7 +114,7 @@ int MPIR_Gatherv (
             }
         }
         /* ... then wait for *all* of them to finish: */
-        mpi_errno = MPIC_Waitall_ft(reqs, reqarray, starray, errflag);
+        mpi_errno = MPIC_Waitall(reqs, reqarray, starray, errflag);
         if (mpi_errno&& mpi_errno != MPI_ERR_IN_STATUS) MPIU_ERR_POP(mpi_errno);
         
         /* --BEGIN ERROR HANDLING-- */

@@ -164,7 +164,7 @@ int MPIR_Alltoallw_intra(const void *sendbuf, const int sendcounts[], const int 
                 }
             }
 
-            mpi_errno = MPIC_Waitall_ft(outstanding_requests, reqarray, starray, errflag);
+            mpi_errno = MPIC_Waitall(outstanding_requests, reqarray, starray, errflag);
             if (mpi_errno && mpi_errno != MPI_ERR_IN_STATUS) MPIU_ERR_POP(mpi_errno);
             
             /* --BEGIN ERROR HANDLING-- */

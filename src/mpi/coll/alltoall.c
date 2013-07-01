@@ -473,7 +473,7 @@ int MPIR_Alltoall_intra(
             }
   
             /* ... then wait for them to finish: */
-            mpi_errno = MPIC_Waitall_ft(2*ss,reqarray,starray, errflag);
+            mpi_errno = MPIC_Waitall(2*ss,reqarray,starray, errflag);
             if (mpi_errno && mpi_errno != MPI_ERR_IN_STATUS) MPIU_ERR_POP(mpi_errno);
             
             /* --BEGIN ERROR HANDLING-- */

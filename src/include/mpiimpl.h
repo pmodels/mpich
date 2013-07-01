@@ -3901,7 +3901,7 @@ int MPIC_Isend(const void *buf, int count, MPI_Datatype datatype, int dest, int 
                   MPI_Comm comm, MPI_Request *request, int *errflag);
 int MPIC_Irecv(void *buf, int count, MPI_Datatype datatype, int source,
                   int tag, MPI_Comm comm, MPI_Request *request);
-int MPIC_Waitall_ft(int numreq, MPI_Request requests[], MPI_Status statuses[], int *errflag);
+int MPIC_Waitall(int numreq, MPI_Request requests[], MPI_Status statuses[], int *errflag);
 
 
 void MPIR_MAXF  ( void *, void *, int *, MPI_Datatype * ) ;

@@ -660,10 +660,10 @@ int MPIC_Irecv(void *buf, int count, MPI_Datatype datatype, int source,
 
 
 #undef FUNCNAME
-#define FUNCNAME MPIC_Waitall_ft
+#define FUNCNAME MPIC_Waitall
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPIC_Waitall_ft(int numreq, MPI_Request requests[], MPI_Status statuses[], int *errflag)
+int MPIC_Waitall(int numreq, MPI_Request requests[], MPI_Status statuses[], int *errflag)
 {
     int mpi_errno = MPI_SUCCESS;
     int i;
