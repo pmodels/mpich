@@ -624,10 +624,10 @@ int MPIC_Isend(const void *buf, int count, MPI_Datatype datatype, int dest, int 
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIC_Irecv_ft
+#define FUNCNAME MPIC_Irecv
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPIC_Irecv_ft(void *buf, int count, MPI_Datatype datatype, int source,
+int MPIC_Irecv(void *buf, int count, MPI_Datatype datatype, int source,
                   int tag, MPI_Comm comm, MPI_Request *request)
 {
     int mpi_errno = MPI_SUCCESS;

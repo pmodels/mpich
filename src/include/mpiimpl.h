@@ -3899,7 +3899,7 @@ int MPIC_Sendrecv_replace(void *buf, int count, MPI_Datatype datatype,
                              MPI_Comm comm, MPI_Status *status, int *errflag);
 int MPIC_Isend(const void *buf, int count, MPI_Datatype datatype, int dest, int tag,
                   MPI_Comm comm, MPI_Request *request, int *errflag);
-int MPIC_Irecv_ft(void *buf, int count, MPI_Datatype datatype, int source,
+int MPIC_Irecv(void *buf, int count, MPI_Datatype datatype, int source,
                   int tag, MPI_Comm comm, MPI_Request *request);
 int MPIC_Waitall_ft(int numreq, MPI_Request requests[], MPI_Status statuses[], int *errflag);
 

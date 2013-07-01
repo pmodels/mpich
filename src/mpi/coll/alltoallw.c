@@ -137,7 +137,7 @@ int MPIR_Alltoallw_intra(const void *sendbuf, const int sendcounts[], const int 
                 if (recvcounts[dst]) {
                     MPID_Datatype_get_size_macro(recvtypes[dst], type_size);
                     if (type_size) {
-                        mpi_errno = MPIC_Irecv_ft((char *)recvbuf+rdispls[dst],
+                        mpi_errno = MPIC_Irecv((char *)recvbuf+rdispls[dst],
                                                   recvcounts[dst], recvtypes[dst], dst,
                                                   MPIR_ALLTOALLW_TAG, comm,
                                                   &reqarray[outstanding_requests]);

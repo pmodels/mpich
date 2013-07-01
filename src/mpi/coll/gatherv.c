@@ -105,7 +105,7 @@ int MPIR_Gatherv (
                     }
                 }
                 else {
-                    mpi_errno = MPIC_Irecv_ft(((char *)recvbuf+displs[i]*extent), 
+                    mpi_errno = MPIC_Irecv(((char *)recvbuf+displs[i]*extent),
                                               recvcounts[i], recvtype, i,
                                               MPIR_GATHERV_TAG, comm,
                                               &reqarray[reqs++]);

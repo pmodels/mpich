@@ -454,7 +454,7 @@ int MPIR_Alltoall_intra(
             /* do the communication -- post ss sends and receives: */
             for ( i=0; i<ss; i++ ) { 
                 dst = (rank+i+ii) % comm_size;
-                mpi_errno = MPIC_Irecv_ft((char *)recvbuf +
+                mpi_errno = MPIC_Irecv((char *)recvbuf +
                                           dst*recvcount*recvtype_extent, 
                                           recvcount, recvtype, dst,
                                           MPIR_ALLTOALL_TAG, comm,
