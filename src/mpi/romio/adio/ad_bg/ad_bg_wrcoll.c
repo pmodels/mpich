@@ -1331,6 +1331,7 @@ static void ADIOI_W_Exchange_data_alltoallv(
                            min_st_offset, fd_size, fd_start, fd_end, 
                            send_buf_idx, curr_to_proc, done_to_proc, iter,
                            buftype_extent);
+	ADIOI_Free(send_buf);
     }
 
   /* alltoallv */
@@ -1338,6 +1339,9 @@ static void ADIOI_W_Exchange_data_alltoallv(
             all_send_buf, send_size, sdispls, MPI_BYTE,
             all_recv_buf, recv_size, rdispls, MPI_BYTE,
             fd->comm ); 
+
+    ADIOI_Free( all_send_buf );
+    ADIOI_Free(sdispls);
 
   /* data sieving pre-read */
   /* To avoid a read-modify-write, check if there are holes in the 
@@ -1416,9 +1420,7 @@ static void ADIOI_W_Exchange_data_alltoallv(
     }
     
     ADIOI_Free( tmp_len );
-    ADIOI_Free( all_send_buf );
     ADIOI_Free( all_recv_buf );
-    ADIOI_Free(sdispls);
     ADIOI_Free(rdispls);
     return; 
 }   
