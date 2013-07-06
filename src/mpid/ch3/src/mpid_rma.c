@@ -80,7 +80,7 @@ int MPID_Win_create(void *base, MPI_Aint size, int disp_unit, MPID_Info *info,
     
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPID_WIN_CREATE);
 
-    mpi_errno = win_init(size, disp_unit, MPI_WIN_FLAVOR_CREATE, MPI_WIN_SEPARATE, comm_ptr, win_ptr);
+    mpi_errno = win_init(size, disp_unit, MPI_WIN_FLAVOR_CREATE, MPI_WIN_UNIFIED, comm_ptr, win_ptr);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
     (*win_ptr)->base = base;
@@ -106,7 +106,7 @@ int MPID_Win_allocate(MPI_Aint size, int disp_unit, MPID_Info *info,
     
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPID_WIN_ALLOCATE);
 
-    mpi_errno = win_init(size, disp_unit, MPI_WIN_FLAVOR_ALLOCATE, MPI_WIN_SEPARATE, comm_ptr, win_ptr);
+    mpi_errno = win_init(size, disp_unit, MPI_WIN_FLAVOR_ALLOCATE, MPI_WIN_UNIFIED, comm_ptr, win_ptr);
     if (mpi_errno != MPI_SUCCESS) { MPIU_ERR_POP(mpi_errno); }
 
     mpi_errno = MPIDI_CH3U_Win_fns.allocate(size, disp_unit, info, comm_ptr, baseptr, win_ptr);
@@ -133,7 +133,7 @@ int MPID_Win_create_dynamic(MPID_Info *info, MPID_Comm *comm_ptr,
 
     mpi_errno = win_init(0 /* spec defines size to be 0 */,
                          1 /* spec defines disp_unit to be 1 */,
-                         MPI_WIN_FLAVOR_DYNAMIC, MPI_WIN_SEPARATE,
+                         MPI_WIN_FLAVOR_DYNAMIC, MPI_WIN_UNIFIED,
                          comm_ptr, win_ptr);
 
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
