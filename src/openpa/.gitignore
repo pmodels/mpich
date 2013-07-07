@@ -6,6 +6,7 @@ _configs.sed
 aclocal.m4
 autom4te.cache/
 confdb/ar-lib
+confdb/compile
 confdb/config.guess
 confdb/config.sub
 confdb/depcomp
