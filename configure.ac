@@ -1894,12 +1894,7 @@ if test -n "$F90" -o -n "$F90FLAGS" ; then
 fi
 # ----------------------------------------------------------------------------
 # Handle default choices for the Fortran compilers
-if test "$enable_f77" = "yes" ; then
-    # Check for a Fortran compiler
-    # FIXME already done earlier
-    dnl PAC_PROG_F77
-    :
-fi
+# Note that these have already been set above
 
 if test "$enable_f77" = "yes" -a "$F77" = "" ; then
    # No Fortran 77 compiler found; abort
@@ -3484,7 +3479,8 @@ if test "$enable_f77" = yes ; then
     MPI_CHARACTER=0x4c00011a
     AC_SUBST(MPI_CHARACTER)
 
-    if test -z "$pac_cv_f77_sizeof_integer" ; then
+    if test -z "$pac_cv_f77_sizeof_integer" -o \
+       "X$pac_cv_f77_sizeof_integer" = "X0" ; then
         AC_MSG_ERROR([Unable to configure with Fortran support because configure could not determine the size of a Fortran INTEGER.  Consider setting CROSS_F77_SIZEOF_INTEGER to the length in bytes of a Fortran INTEGER])
     fi
     len_integer=$pac_cv_f77_sizeof_integer
