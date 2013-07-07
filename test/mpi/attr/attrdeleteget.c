@@ -24,6 +24,7 @@ int main(int argc,char **argv)
     MPI_Comm_create_keyval(MPI_NULL_COPY_FN, delete_fn, &key, &errs);
     MPI_Comm_set_attr(scomm, key, a);
     MPI_Comm_free(&scomm);
+    MPI_Comm_free_keyval( &key );
     MTest_Finalize(errs);
     MPI_Finalize();
     return 0;
