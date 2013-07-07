@@ -164,8 +164,8 @@ HYD_status HYDU_sock_connect(const char *host, uint16_t port, int *fd, int retri
     if (ret < 0) {
         char localhost[MAX_HOSTNAME_LEN] = { 0 };
 
-        status = HYDU_gethostname(localhost);
-        HYDU_ERR_POP(status, "unable to get local hostname\n");
+        if (gethostname(localhost, MAX_HOSTNAME_LEN) < 0)
+            HYDU_ERR_SETANDJUMP(status, HYD_SOCK_ERROR, "unable to get local hostname\n");
 
         HYDU_ERR_SETANDJUMP(status, HYD_SOCK_ERROR,
                             "unable to connect from \"%s\" to \"%s\" (%s)\n",
@@ -649,8 +649,8 @@ HYDU_sock_create_and_listen_portstr(char *iface, char *hostname, char *port_rang
     else {
         char localhost[MAX_HOSTNAME_LEN] = { 0 };
 
-        status = HYDU_gethostname(localhost);
-        HYDU_ERR_POP(status, "unable to get local hostname\n");
+        if (gethostname(localhost, MAX_HOSTNAME_LEN) < 0)
+            HYDU_ERR_SETANDJUMP(status, HYD_SOCK_ERROR, "unable to get local hostname\n");
 
         ip = HYDU_strdup(localhost);
     }

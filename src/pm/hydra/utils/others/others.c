@@ -58,34 +58,6 @@ HYD_status HYDU_add_to_node_list(const char *hostname, int num_procs, struct HYD
     goto fn_exit;
 }
 
-/* This function just adds a simple caching logic to gethostname to
- * avoid hitting the DNS too many times */
-HYD_status HYDU_gethostname(char *hostname)
-{
-    static char localhost[MAX_HOSTNAME_LEN] = { 0 };
-    HYD_status status = HYD_SUCCESS;
-
-    HYDU_FUNC_ENTER();
-
-    if (strcmp(localhost, "")) {
-        HYDU_snprintf(hostname, MAX_HOSTNAME_LEN, "%s", localhost);
-        goto fn_exit;
-    }
-
-    if (gethostname(hostname, MAX_HOSTNAME_LEN) < 0)
-        HYDU_ERR_SETANDJUMP(status, HYD_SOCK_ERROR,
-                            "gethostname error (hostname: %s; errno: %d)\n", hostname, errno);
-
-    HYDU_snprintf(localhost, MAX_HOSTNAME_LEN, "%s", hostname);
-
-  fn_exit:
-    HYDU_FUNC_EXIT();
-    return status;
-
-  fn_fail:
-    goto fn_exit;
-}
-
 void HYDU_delay(unsigned long delay)
 {
     struct timeval start, end;

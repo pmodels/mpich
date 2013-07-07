@@ -184,8 +184,8 @@ int main(int argc, char **argv)
             char localhost[MAX_HOSTNAME_LEN] = { 0 };
 
             /* The RMK didn't give us anything back; use localhost */
-            status = HYDU_gethostname(localhost);
-            HYDU_ERR_POP(status, "unable to get local hostname\n");
+            if (gethostname(localhost, MAX_HOSTNAME_LEN) < 0)
+                HYDU_ERR_SETANDJUMP(status, HYD_SOCK_ERROR, "unable to get local hostname\n");
 
             status = HYDU_add_to_node_list(localhost, 1, &HYD_server_info.node_list);
             HYDU_ERR_POP(status, "unable to add to node list\n");
@@ -293,8 +293,8 @@ int main(int argc, char **argv)
             HYD_server_info.localhost = HYDU_strdup(node->hostname);
         else {
             HYDU_MALLOC(HYD_server_info.localhost, char *, MAX_HOSTNAME_LEN, status);
-            status = HYDU_gethostname(HYD_server_info.localhost);
-            HYDU_ERR_POP(status, "unable to get local hostname\n");
+            if (gethostname(HYD_server_info.localhost, MAX_HOSTNAME_LEN) < 0)
+                HYDU_ERR_SETANDJUMP(status, HYD_SOCK_ERROR, "unable to get local hostname\n");
         }
     }
 

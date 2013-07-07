@@ -15,8 +15,8 @@ HYD_status HYDU_dbg_init(const char *str)
 
     HYDU_mem_init();
 
-    status = HYDU_gethostname(hostname);
-    HYDU_ERR_POP(status, "unable to get local host name\n");
+    if (gethostname(hostname, MAX_HOSTNAME_LEN) < 0)
+        HYDU_ERR_SETANDJUMP(status, HYD_SOCK_ERROR, "unable to get local host name\n");
 
     HYDU_MALLOC(HYD_dbg_prefix, char *, strlen(hostname) + 1 + strlen(str) + 1, status);
     HYDU_snprintf(HYD_dbg_prefix, strlen(hostname) + 1 + strlen(str) + 1, "%s@%s", str, hostname);
