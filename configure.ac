@@ -712,7 +712,7 @@ PAC_ARG_STRICT
 
 # -----------------------------------------------------------------------------
 # First check that we have a clean build if we are doing a VPATH build
-PAC_VPATH_CHECK(src/include/mpi.h src/env/mpicc src/env/mpicc.conf,lib)
+PAC_VPATH_CHECK(src/include/mpi.h src/env/mpicc,lib)
 
 # ----------------------------------------------------------------------------
 # This test is complicated by the fact that top_srcdir is not set until
@@ -6196,16 +6196,12 @@ AC_OUTPUT(Makefile \
 	  src/packaging/envmods/mpich.module \
           src/env/mpixxx_opts.conf \
           src/env/mpicc.sh \
-	  src/env/mpicc.conf \
 	  src/env/mpicc.bash \
           src/env/mpicxx.sh \
-	  src/env/mpicxx.conf \
 	  src/env/mpicxx.bash \
 	  src/env/mpif77.sh \
-	  src/env/mpif77.conf \
 	  src/env/mpif77.bash \
 	  src/env/mpif90.sh \
-	  src/env/mpif90.conf \
 	  src/env/mpif90.bash \
           src/env/parkill \
 	  src/util/dbg/getfuncstack \
