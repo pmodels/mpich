@@ -10,28 +10,28 @@
     as it provides the necessary libraries.  
 
     Command line arguments:
-+  -show      - Show the commands that would be used without
++  \-show      - Show the commands that would be used without
                 running them
-.  -help      - Give short help
-.  -f77=name   - Use compiler 'name' instead of the default choice.  Use
+.  \-help      - Give short help
+.  \-f77=name   - Use compiler 'name' instead of the default choice.  Use
                 this only if the compiler is compatible with the MPICH
                 library (see below)
-.  -config=name - Load a configuration file for a particular compiler.
+.  \-config=name - Load a configuration file for a particular compiler.
                 This allows a single 'mpif77' command to be used with 
                 multiple compilers.
-.  -compile_info - Show the steps for compiling a program.  This option
+.  \-compile_info - Show the steps for compiling a program.  This option
                 can be used to see what options and include paths are
 		used by mpif77.
-.  -link_info - Show the steps for linking a program.  This optoin 
+.  \-link_info - Show the steps for linking a program.  This option
                 can be used to see what options and libraries are used by
                 mpif77.
-.  -profile=name - Use the MPI profiling given by name.  See below for
+.  \-profile=name - Use the MPI profiling given by name.  See below for
                 details
-.  -echo      - Show exactly what this program is doing.
+.  \-echo      - Show exactly what this program is doing.
                 This option should normally not be used.
--  others     - are passed to the compiler or linker.  For example, '-c'
-                causes files to be compiled, '-g' selects compilation with
-                debugging on most systems, and '-o name' causes linking 
+-  others     - are passed to the compiler or linker.  For example, '\-c'
+                causes files to be compiled, '\-g' selects compilation with
+                debugging on most systems, and '\-o name' causes linking
                 with the output executable given the name 'name'.
 
     Environment Variables:
@@ -47,7 +47,7 @@
     uses compatible run-time libraries.  On many systems, the various
     compilers are compatible and may be used interchangably.  There are 
     exceptions; if you use the 'MPICH_F77' environment variable or the 
-    '-f77=name' command-line argument to override the choice of compiler 
+    '\-f77=name' command-line argument to override the choice of compiler
     and encounter problems, try reconfiguring MPICH with the new compiler 
     and installing MPICH in a separate location.  See the installation manual 
     for more details.
@@ -55,21 +55,21 @@
     Examples:
 To compile a single file 'foo.f', use
 .vb
-   mpif77 -c foo.f 
+   mpif77 \-c foo.f
 .ve
 
 To link the output and make an executable, use
 .vb
-   mpif77 -o foo foo.o
+   mpif77 \-o foo foo.o
 .ve
 Combining compilation and linking in a single command
 .vb
-   mpif77 -o foo foo.f
+   mpif77 \-o foo foo.f
 .ve
 is a convenient way to build simple programs.
 
  Selecting a Profiling Library:
- The '-profile=name' argument allows you to specify an MPI profiling
+ The '\-profile=name' argument allows you to specify an MPI profiling
  library to be used.  'name' can have two forms\:
 
 .n A library in the same directory as the MPI library 
@@ -90,12 +90,12 @@ is a convenient way to build simple programs.
  you could create the file 'myprof.conf' with the lines
 
 .vb
-    PROFILE_PRELIB="-L/usr/local/myprof/lib -lmyprof"
-    PROFILE_INCPATHS="-I/usr/local/myprof/include"
+    PROFILE_PRELIB="\-L/usr/local/myprof/lib \-lmyprof"
+    PROFILE_INCPATHS="\-I/usr/local/myprof/include"
 .ve
  and place it in the sysconfdir directory (this directory is set at
  configure time when MPICH is built).  Then using the command-line 
- argument '-profile=myprof' will cause these 
+ argument '\-profile=myprof' will cause these
  definitions to be added to the relevant compile commands.
 
 .seealso: mpicc, mpicxx, mpif90, mpiexec

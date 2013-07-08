@@ -10,28 +10,28 @@
     as it provides the necessary libraries.  
 
     Command line arguments:
-+  -show      - Show the commands that would be used without
++  \-show      - Show the commands that would be used without
                 running them
-.  -help      - Give short help
-.  -cxx=name   - Use compiler 'name' instead of the default choice.  Use
+.  \-help      - Give short help
+.  \-cxx=name   - Use compiler 'name' instead of the default choice.  Use
                 this only if the compiler is compatible with the MPICH
                 library (see below)
-.  -config=name - Load a configuration file for a particular compiler.
+.  \-config=name - Load a configuration file for a particular compiler.
                 This allows a single 'mpicxx' command to be used with 
                 multiple compilers.
-.  -compile_info - Show the steps for compiling a program.  This option
+.  \-compile_info - Show the steps for compiling a program.  This option
                 can be used to see what options and include paths are
 		used by mpicxx.
-.  -link_info - Show the steps for linking a program.  This optoin 
+.  \-link_info - Show the steps for linking a program.  This option
                 can be used to see what options and libraries are used by
                 mpicxx.
-.  -profile=name - Use the MPI profiling given by name.  See below for
+.  \-profile=name - Use the MPI profiling given by name.  See below for
                 details
-.  -echo      - Show exactly what this program is doing.
+.  \-echo      - Show exactly what this program is doing.
                 This option should normally not be used.
--  others     - are passed to the compiler or linker.  For example, '-c'
-                causes files to be compiled, '-g' selects compilation with
-                debugging on most systems, and '-o name' causes linking 
+-  others     - are passed to the compiler or linker.  For example, '\-c'
+                causes files to be compiled, '\-g' selects compilation with
+                debugging on most systems, and '\-o name' causes linking
                 with the output executable given the name 'name'.
 
     Environment Variables:
@@ -42,8 +42,8 @@
     code compiled with the different compilers.
 
     The environment variable 'MPICC_PROFILE' specifies a profile library
-    and has the same effect as if '-profile=$MPICC_PROFILE' were used as
-    an argument to 'mpicc'.  See the discussion of '-profile' below for more 
+    and has the same effect as if '\-profile=$MPICC_PROFILE' were used as
+    an argument to 'mpicc'.  See the discussion of '\-profile' below for more
     details.
 
     Compatible Compilers:
@@ -52,7 +52,7 @@
     uses compatible run-time libraries.  On many systems, the various
     compilers are compatible and may be used interchangably.  There are 
     exceptions; if you use the 'MPICH_CXX' environment variable or the 
-    '-cxx=name' command-line argument to override the choice of compiler 
+    '\-cxx=name' command-line argument to override the choice of compiler
     and encounter problems, try reconfiguring MPICH with the new compiler, 
     and installing MPICH in a separate location.  See the installation manual 
     for more details.
@@ -60,21 +60,21 @@
     Examples:
 To compile a single file 'foo.c', use
 .vb
-   mpicxx -c foo.cxx
+   mpicxx \-c foo.cxx
 .ve
 
 To link the output and make an executable, use
 .vb
-   mpicxx -o foo foo.o
+   mpicxx \-o foo foo.o
 .ve
 Combining compilation and linking in a single command
 .vb
-   mpicxx -o foo foo.cxx
+   mpicxx \-o foo foo.cxx
 .ve
 is a convenient way to build simple programs.
 
  Selecting a Profiling Library:
- The '-profile=name' argument allows you to specify an MPI profiling
+ The '\-profile=name' argument allows you to specify an MPI profiling
  library to be used.  'name' can have two forms\:
 
 .n A library in the same directory as the MPI library 
@@ -95,12 +95,12 @@ is a convenient way to build simple programs.
  you could create the file 'myprof.conf' with the lines
 
 .vb
-    PROFILE_PRELIB="-L/usr/local/myprof/lib -lmyprof"
-    PROFILE_INCPATHS="-I/usr/local/myprof/include"
+    PROFILE_PRELIB="\-L/usr/local/myprof/lib \-lmyprof"
+    PROFILE_INCPATHS="\-I/usr/local/myprof/include"
 .ve
  and place it in the sysconfdir directory (this directory is set at
  configure time when MPICH is built).  Then using the command-line 
- argument '-profile=myprof' will cause these 
+ argument '\-profile=myprof' will cause these
  definitions to be added to the relevant compile commands.
 
 .seealso: mpif77, mpicc, mpif90, mpiexec
