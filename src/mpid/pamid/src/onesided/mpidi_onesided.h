@@ -24,6 +24,10 @@
 #ifndef __src_onesided_mpidi_onesided_h__
 #define __src_onesided_mpidi_onesided_h__
 
+pami_rget_simple_t zero_rget_parms;
+pami_get_simple_t zero_get_parms;
+pami_rput_simple_t zero_rput_parms;
+pami_put_simple_t zero_put_parms;
 
 /**
  * \brief One-sided Message Types

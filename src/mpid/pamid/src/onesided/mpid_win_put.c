@@ -67,7 +67,7 @@ MPIDI_Put_use_pami_rput(pami_context_t context, MPIDI_Win_request * req,int *fre
   void  *map;
   pami_rput_simple_t params;
   /* params need to zero out to avoid passing garbage to PAMI */
-  memset((void *) &params,0,sizeof(pami_rput_simple_t));
+  params=zero_rput_parms;
 
   params.rma.dest=req->dest;
   params.rma.hints.buffer_registered = PAMI_HINT_ENABLE;
@@ -129,28 +129,22 @@ MPIDI_Put_use_pami_put(pami_context_t   context, MPIDI_Win_request * req,int *fr
 {
   pami_result_t rc;
   void  *map;
+  pami_put_simple_t params;
 
-  pami_put_simple_t params = {
-    .rma  = {
-      .dest    = req->dest,
-      .hints   = {
-	.use_rdma=       PAMI_HINT_DEFAULT,
+  params = zero_put_parms;
+
+  params.rma.dest=req->dest;
+  params.rma.hints.use_rdma          = PAMI_HINT_DEFAULT;
 #ifndef OUT_OF_ORDER_HANDLING
-	.no_long_header= 1,
+  params.rma.hints.no_long_header= 1,
 #endif
-      },
-      .bytes   = 0,
-      .cookie  = req,
-      .done_fn = NULL,
-    },
-    .addr = {
-      .local   = req->buffer,
-      .remote  = req->win->mpid.info[req->target.rank].base_addr,
-    },
-    .put = {
-      .rdone_fn = MPIDI_Win_DoneCB,
-    },
-  };
+  params.rma.bytes   = 0;
+  params.rma.cookie  = req;
+  params.rma.done_fn = NULL;
+  params.addr.local=req->buffer;
+  params.addr.remote=req->win->mpid.info[req->target.rank].base_addr;
+  params.put.rdone_fn= MPIDI_Win_DoneCB;
+
   struct MPIDI_Win_sync* sync = &req->win->mpid.sync;
   TRACE_ERR("Start       index=%u/%d  l-addr=%p  r-base=%p  r-offset=%zu (sync->started=%u  sync->complete=%u)\n",
 	    req->state.index, req->target.dt.num_contig, req->buffer, req->win->mpid.info[req->target.rank].base_addr, req->offset, sync->started, sync->complete);

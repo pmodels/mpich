@@ -65,28 +65,19 @@ MPIDI_Get_use_pami_rget(pami_context_t context, MPIDI_Win_request * req, int *fr
 {
   pami_result_t rc;
   void  *map=NULL;
+  pami_rget_simple_t  params;
 
-  pami_rget_simple_t params = {
-    .rma = {
-      .dest = req->dest,
-      .hints = {
-	.buffer_registered = PAMI_HINT_ENABLE,
-	.use_rdma          = PAMI_HINT_ENABLE,
-      },
-      .bytes   = 0,
-      .cookie  = req,
-      .done_fn = MPIDI_Win_DoneCB,
-    },
-    .rdma = {
-      .local = {
-	.mr = &req->origin.memregion,
-      },
-      .remote = {
-	.mr     = &req->win->mpid.info[req->target.rank].memregion,
-	.offset = req->offset,
-      },
-    },
-  };
+  params=zero_rget_parms;
+
+  params.rma.dest=req->dest;
+  params.rma.hints.buffer_registered = PAMI_HINT_ENABLE;
+  params.rma.hints.use_rdma          = PAMI_HINT_ENABLE;
+  params.rma.bytes   = 0;
+  params.rma.cookie  = req;
+  params.rma.done_fn = MPIDI_Win_DoneCB;
+  params.rdma.local.mr=&req->origin.memregion;
+  params.rdma.remote.mr=&req->win->mpid.info[req->target.rank].memregion;
+  params.rdma.remote.offset= req->offset;
 
   struct MPIDI_Win_sync* sync = &req->win->mpid.sync;
   TRACE_ERR("Start       index=%u/%d  l-addr=%p  r-base=%p  r-offset=%zu (sync->started=%u  sync->complete=%u)\n",
@@ -136,25 +127,20 @@ MPIDI_Get_use_pami_get(pami_context_t context, MPIDI_Win_request * req, int *fre
 {
   pami_result_t rc;
   void  *map=NULL;
+  pami_get_simple_t params;
 
-  pami_get_simple_t params = {
-    .rma = {
-      .dest = req->dest,
-      .hints = {
-	.use_rdma          = PAMI_HINT_DEFAULT,
+  params=zero_get_parms;
+
+  params.rma.dest=req->dest;
+  params.rma.hints.use_rdma          = PAMI_HINT_DEFAULT;
 #ifndef OUT_OF_ORDER_HANDLING
-	.no_long_header= 1,
+  params.rma.hints.no_long_header= 1,
 #endif
-      },
-      .bytes   = 0,
-      .cookie  = req,
-      .done_fn = MPIDI_Win_DoneCB,
-    },
-    .addr = {
-      .local   = req->buffer,
-      .remote  = req->win->mpid.info[req->target.rank].base_addr,
-    },
-  };
+  params.rma.bytes   = 0;
+  params.rma.cookie  = req;
+  params.rma.done_fn = MPIDI_Win_DoneCB;
+  params.addr.local=req->buffer;
+  params.addr.remote= req->win->mpid.info[req->target.rank].base_addr;
 
   struct MPIDI_Win_sync* sync = &req->win->mpid.sync;
   TRACE_ERR("Start       index=%u/%d  l-addr=%p  r-base=%p  r-offset=%zu (sync->started=%u  sync->complete=%u)\n",
