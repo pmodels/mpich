@@ -189,7 +189,8 @@ struct HYD_string_stash {
 #define HYD_STRING_STASH(stash, str, status)                            \
     do {                                                                \
         if ((stash).cur_count >= (stash).max_count - 1) {               \
-            HYDU_REALLOC((stash).strlist, char **, (stash).max_count + HYD_NUM_TMP_STRINGS, \
+            HYDU_REALLOC((stash).strlist, char **,                      \
+                         ((stash).max_count + HYD_NUM_TMP_STRINGS) * sizeof(char *), \
                          (status));                                     \
             (stash).max_count += HYD_NUM_TMP_STRINGS;                   \
         }                                                               \
