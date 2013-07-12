@@ -30,7 +30,7 @@ int MPID_Type_contiguous(int count,
 {
     int mpi_errno = MPI_SUCCESS;
     int is_builtin;
-    int el_sz;
+    MPI_Aint el_sz;
     MPI_Datatype el_type;
     MPID_Datatype *new_dtp;
 

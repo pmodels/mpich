@@ -23,8 +23,8 @@ Output Parameters:
   0 on success, -1 on failure.
 @*/
 
-int MPIR_Type_get_contig_blocks(MPI_Datatype type,
-				int *nr_blocks_p)
+MPI_Count MPIR_Type_get_contig_blocks(MPI_Datatype type,
+				MPI_Count *nr_blocks_p)
 {
     MPID_Datatype *datatype_ptr;
 

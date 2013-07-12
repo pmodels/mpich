@@ -358,11 +358,12 @@ typedef struct MPID_Datatype {
     MPIU_OBJECT_HEADER; /* adds handle and ref_count fields */
 
     /* basic parameters for datatype, accessible via MPI calls */
-    MPI_Aint size;
+    MPI_Aint size;   /* MPI_Count could be 128 bits, so use MPI_Aint */
     MPI_Aint extent, ub, lb, true_ub, true_lb;
 
     /* chars affecting subsequent datatype processing and creation */
-    int alignsize, has_sticky_ub, has_sticky_lb;
+    MPI_Aint alignsize;
+    int has_sticky_ub, has_sticky_lb;
     int is_permanent; /* non-zero if datatype is a predefined type */
     int is_committed;
 
@@ -371,7 +372,8 @@ typedef struct MPID_Datatype {
      * if type is composed of more than one element type, then
      * eltype == MPI_DATATYPE_NULL and element_size == -1
      */
-    int      eltype, n_elements;
+    int      eltype;
+    MPI_Aint n_elements;
     MPI_Aint element_size;
 
     /* information on contiguity of type, for processing shortcuts.
@@ -384,7 +386,7 @@ typedef struct MPID_Datatype {
      * It is not trivial to calculate the *real* number of contig 
      * blocks in the case where old datatype is non-contiguous
      */
-    int max_contig_blocks;
+    MPI_Aint max_contig_blocks;
 
     /* pointer to contents and envelope data for the datatype */
     MPID_Datatype_contents *contents;
@@ -393,11 +395,11 @@ typedef struct MPID_Datatype {
      * and a depth used to verify that we can process it (limited stack depth
      */
     struct MPID_Dataloop *dataloop; /* might be optimized for homogenous */
-    int                   dataloop_size;
+    MPI_Aint              dataloop_size;
     int                   dataloop_depth;
 #if defined(MPID_HAS_HETERO) || 1
     struct MPID_Dataloop *hetero_dloop; /* heterogeneous dataloop */
-    int                   hetero_dloop_size;
+    MPI_Aint              hetero_dloop_size;
     int                   hetero_dloop_depth;
 #endif /* MPID_HAS_HETERO */
     /* MPI-2 attributes and name */
@@ -623,30 +625,30 @@ void MPIDI_Datatype_printf(MPI_Datatype type,
 /* Dataloop functions */
 void MPID_Dataloop_copy(void *dest,
 			void *src,
-			int size);
+			MPI_Aint size);
 
 void MPID_Dataloop_print(struct MPID_Dataloop *dataloop,
 			 int depth);
 
 void MPID_Dataloop_alloc(int kind,
-			 int count,
+			 MPI_Aint count,
 			 DLOOP_Dataloop **new_loop_p,
-			 int *new_loop_sz_p);
+			 MPI_Aint *new_loop_sz_p);
 
 void MPID_Dataloop_alloc_and_copy(int kind,
-				  int count,
+				  MPI_Aint count,
 				  struct DLOOP_Dataloop *old_loop,
-				  int old_loop_sz,
+				  MPI_Aint old_loop_sz,
 				  struct DLOOP_Dataloop **new_loop_p,
-				  int *new_loop_sz_p);
-void MPID_Dataloop_struct_alloc(int count,
-				int old_loop_sz,
+				  MPI_Aint *new_loop_sz_p);
+void MPID_Dataloop_struct_alloc(MPI_Aint count,
+				MPI_Aint old_loop_sz,
 				int basic_ct,
 				DLOOP_Dataloop **old_loop_p,
 				DLOOP_Dataloop **new_loop_p,
-				int *new_loop_sz_p);
+				MPI_Aint *new_loop_sz_p);
 void MPID_Dataloop_dup(DLOOP_Dataloop *old_loop,
-		       int old_loop_sz,
+		       MPI_Aint old_loop_sz,
 		       DLOOP_Dataloop **new_loop_p);
 void MPID_Dataloop_free(struct MPID_Dataloop **dataloop);
 
@@ -667,7 +669,7 @@ void MPID_Segment_flatten(struct DLOOP_Segment *segp,
 			  DLOOP_Offset first,
 			  DLOOP_Offset *lastp,
 			  DLOOP_Offset *offp,
-			  int *sizep,
+			  DLOOP_Size *sizep,
 			  DLOOP_Offset *lengthp);
 
 /* misc */
@@ -693,12 +695,12 @@ void MPID_Datatype_free(struct MPID_Datatype *ptr);
 void MPID_Dataloop_update(struct DLOOP_Dataloop *dataloop,
 			  MPI_Aint ptrdiff);
 
-int MPIR_Type_get_contig_blocks(MPI_Datatype type,
-				int *nr_blocks_p);
+MPI_Count MPIR_Type_get_contig_blocks(MPI_Datatype type,
+				MPI_Count *nr_blocks_p);
 
 int MPIR_Type_flatten(MPI_Datatype type,
 		      MPI_Aint *off_array,
-		      int *size_array,
+		      DLOOP_Size *size_array,
 		      MPI_Aint *array_len_p);
 
 void MPID_Segment_pack_external32(struct DLOOP_Segment *segp,

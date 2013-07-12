@@ -45,9 +45,10 @@ static int DLOOP_Leaf_index_mpi_flatten(DLOOP_Offset *blocks_p,
 					void *v_paramp);
 
 struct PREPEND_PREFIX(mpi_flatten_params) {
-    int       index, length;
+    int       index;
+    MPI_Aint  length;
     MPI_Aint  last_end;
-    int      *blklens;
+    MPI_Aint  *blklens;
     MPI_Aint *disps;
 };
 
@@ -72,9 +73,9 @@ struct PREPEND_PREFIX(mpi_flatten_params) {
 void PREPEND_PREFIX(Segment_mpi_flatten)(DLOOP_Segment *segp,
 					 DLOOP_Offset first,
 					 DLOOP_Offset *lastp,
-					 int *blklens,
+					 DLOOP_Size *blklens,
 					 MPI_Aint *disps,
-					 int *lengthp)
+					 DLOOP_Size *lengthp)
 {
     struct PREPEND_PREFIX(mpi_flatten_params) params;
 
@@ -111,7 +112,8 @@ static int DLOOP_Leaf_contig_mpi_flatten(DLOOP_Offset *blocks_p,
 					 void *bufp,
 					 void *v_paramp)
 {
-    int last_idx, size;
+    int last_idx;
+    DLOOP_Offset size;
     DLOOP_Offset el_size;
     char *last_end = NULL;
     struct PREPEND_PREFIX(mpi_flatten_params) *paramp = v_paramp;
@@ -186,24 +188,25 @@ static int DLOOP_Leaf_vector_mpi_flatten(DLOOP_Offset *blocks_p,
 					 void *bufp, /* start of buffer */
 					 void *v_paramp)
 {
-    int i, size, blocks_left;
+    int i;
+    DLOOP_Size size, blocks_left;
     DLOOP_Offset el_size;
     struct PREPEND_PREFIX(mpi_flatten_params) *paramp = v_paramp;
 
     DLOOP_Handle_get_size_macro(el_type, el_size);
-    blocks_left = (int)*blocks_p;
+    blocks_left = *blocks_p;
 
     for (i=0; i < count && blocks_left > 0; i++) {
 	int last_idx;
 	char *last_end = NULL;
 
 	if (blocks_left > blksz) {
-	    size = blksz * (int) el_size;
+	    size = blksz * el_size;
 	    blocks_left -= blksz;
 	}
 	else {
 	    /* last pass */
-	    size = blocks_left * (int) el_size;
+	    size = blocks_left * el_size;
 	    blocks_left = 0;
 	}
 
@@ -231,7 +234,7 @@ static int DLOOP_Leaf_vector_mpi_flatten(DLOOP_Offset *blocks_p,
 	    /* we have used up all our entries, and this one doesn't fit on
 	     * the end of the last one.
 	     */
-	    *blocks_p -= (blocks_left + (size / (int) el_size));
+	    *blocks_p -= (blocks_left + (size / el_size));
 #ifdef MPID_SP_VERBOSE
 	    MPIU_dbg_printf("\t[vector to vec exiting (1): next ind = %d, " DLOOP_OFFSET_FMT_DEC_SPEC " blocks processed.\n",
 			    paramp->u.pack_vector.index,
@@ -280,7 +283,8 @@ static int DLOOP_Leaf_blkidx_mpi_flatten(DLOOP_Offset *blocks_p,
 					 void *bufp,
 					 void *v_paramp)
 {
-    int i, size, blocks_left;
+    int i;
+    DLOOP_Size blocks_left, size;
     DLOOP_Offset el_size;
     struct PREPEND_PREFIX(mpi_flatten_params) *paramp = v_paramp;
 
@@ -292,12 +296,12 @@ static int DLOOP_Leaf_blkidx_mpi_flatten(DLOOP_Offset *blocks_p,
 	char *last_end = NULL;
 
 	if (blocks_left > blksz) {
-	    size = blksz * (int) el_size;
+	    size = blksz * el_size;
 	    blocks_left -= blksz;
 	}
 	else {
 	    /* last pass */
-	    size = blocks_left * (int) el_size;
+	    size = blocks_left * el_size;
 	    blocks_left = 0;
 	}
 
@@ -362,7 +366,8 @@ static int DLOOP_Leaf_index_mpi_flatten(DLOOP_Offset *blocks_p,
 					void *bufp,
 					void *v_paramp)
 {
-    int i, size, blocks_left;
+    int i;
+    DLOOP_Size size, blocks_left;
     DLOOP_Offset el_size;
     struct PREPEND_PREFIX(mpi_flatten_params) *paramp = v_paramp;
 
@@ -374,12 +379,12 @@ static int DLOOP_Leaf_index_mpi_flatten(DLOOP_Offset *blocks_p,
 	char *last_end = NULL;
 
 	if (blocks_left > blockarray[i]) {
-	    size = blockarray[i] * (int) el_size;
+	    size = blockarray[i] * el_size;
 	    blocks_left -= blockarray[i];
 	}
 	else {
 	    /* last pass */
-	    size = blocks_left * (int) el_size;
+	    size = blocks_left *  el_size;
 	    blocks_left = 0;
 	}
 
@@ -407,7 +412,7 @@ static int DLOOP_Leaf_index_mpi_flatten(DLOOP_Offset *blocks_p,
 	    /* we have used up all our entries, and this one doesn't fit on
 	     * the end of the last one.
 	     */
-	    *blocks_p -= (blocks_left + (size / (int) el_size));
+	    *blocks_p -= (blocks_left + (size /  el_size));
 	    return 1;
 	}
         else if (last_idx >= 0 && (last_end == ((char *) bufp + rel_off + offsetarray[i])))

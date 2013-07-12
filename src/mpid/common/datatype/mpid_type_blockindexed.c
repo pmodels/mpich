@@ -38,7 +38,8 @@ int MPID_Type_blockindexed(int count,
 			   MPI_Datatype *newtype)
 {
     int mpi_errno = MPI_SUCCESS, i;
-    int is_builtin, contig_count, old_is_contig;
+    int is_builtin, old_is_contig;
+    MPI_Aint contig_count;
     MPI_Aint el_sz;
     MPI_Datatype el_type;
     MPI_Aint old_lb, old_ub, old_extent, old_true_lb, old_true_ub;

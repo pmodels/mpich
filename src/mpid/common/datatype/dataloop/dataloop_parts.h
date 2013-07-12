@@ -33,6 +33,10 @@
 #error "DLOOP_Type must be defined before dataloop_parts.h is included."
 #endif
 
+#ifndef DLOOP_Size
+#error "DLOOP_Size must be defined before dataloop_parts.h is included."
+#endif
+
 /* Redefine all of the internal structures in terms of the prefix */
 #define DLOOP_Dataloop              PREPEND_PREFIX(Dataloop)
 #define DLOOP_Dataloop_contig       PREPEND_PREFIX(Dataloop_contig)
@@ -317,7 +321,7 @@ typedef struct DLOOP_Segment {
 /* Dataloop functions (dataloop.c) */
 void PREPEND_PREFIX(Dataloop_copy)(void *dest,
 				   void *src,
-				   int size);
+				   DLOOP_Size size);
 void PREPEND_PREFIX(Dataloop_update)(DLOOP_Dataloop *dataloop,
 				     DLOOP_Offset ptrdiff);
 DLOOP_Offset
@@ -329,21 +333,21 @@ void PREPEND_PREFIX(Dataloop_print)(DLOOP_Dataloop *dataloop,
 void PREPEND_PREFIX(Dataloop_alloc)(int kind,
 				    DLOOP_Count count,
 				    DLOOP_Dataloop **new_loop_p,
-				    int *new_loop_sz_p);
+				    DLOOP_Size *new_loop_sz_p);
 void PREPEND_PREFIX(Dataloop_alloc_and_copy)(int kind,
 					     DLOOP_Count count,
 					     DLOOP_Dataloop *old_loop,
-					     int old_loop_sz,
+					     DLOOP_Size old_loop_sz,
 					     DLOOP_Dataloop **new_loop_p,
-					     int *new_loop_sz_p);
+					     DLOOP_Size *new_loop_sz_p);
 void PREPEND_PREFIX(Dataloop_struct_alloc)(DLOOP_Count count,
-					   int old_loop_sz,
+					   DLOOP_Size old_loop_sz,
 					   int basic_ct,
 					   DLOOP_Dataloop **old_loop_p,
 					   DLOOP_Dataloop **new_loop_p,
-					   int *new_loop_sz_p);
+					   DLOOP_Size *new_loop_sz_p);
 void PREPEND_PREFIX(Dataloop_dup)(DLOOP_Dataloop *old_loop,
-				  int old_loop_sz,
+				  DLOOP_Size old_loop_sz,
 				  DLOOP_Dataloop **new_loop_p);
 
 void PREPEND_PREFIX(Dataloop_free)(DLOOP_Dataloop **dataloop);
@@ -403,9 +407,9 @@ void PREPEND_PREFIX(Segment_count_contig_blocks)(DLOOP_Segment *segp,
 void PREPEND_PREFIX(Segment_mpi_flatten)(DLOOP_Segment *segp,
 					 DLOOP_Offset first,
 					 DLOOP_Offset *lastp,
-					 int *blklens,
+					 DLOOP_Size *blklens,
 					 MPI_Aint *disps,
-					 int *lengthp);
+					 DLOOP_Size *lengthp);
 
 #define DLOOP_M2M_TO_USERBUF   0
 #define DLOOP_M2M_FROM_USERBUF 1

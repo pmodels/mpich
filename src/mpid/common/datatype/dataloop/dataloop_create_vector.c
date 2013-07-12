@@ -24,18 +24,19 @@
    Returns 0 on success, -1 on failure.
 
 @*/
-int PREPEND_PREFIX(Dataloop_create_vector)(int icount,
-					   int iblocklength,
+int PREPEND_PREFIX(Dataloop_create_vector)(DLOOP_Count icount,
+					   DLOOP_Size iblocklength,
 					   MPI_Aint astride,
 					   int strideinbytes,
 					   DLOOP_Type oldtype,
 					   DLOOP_Dataloop **dlp_p,
-					   int *dlsz_p,
+					   DLOOP_Size *dlsz_p,
 					   int *dldepth_p,
 					   int flag)
 {
     int err, is_builtin;
-    int new_loop_sz, new_loop_depth;
+    DLOOP_Size new_loop_sz;
+    int new_loop_depth;
 
     DLOOP_Count count, blocklength;
     DLOOP_Offset stride;
@@ -81,7 +82,8 @@ int PREPEND_PREFIX(Dataloop_create_vector)(int icount,
 	new_loop_depth = 1;
     }
     else {
-	int old_loop_sz = 0, old_loop_depth = 0;
+	MPI_Aint old_loop_sz = 0;
+	int old_loop_depth = 0;
 
 	DLOOP_Handle_get_loopsize_macro(oldtype, old_loop_sz, flag);
 	DLOOP_Handle_get_loopdepth_macro(oldtype, old_loop_depth, flag);
@@ -129,7 +131,7 @@ int PREPEND_PREFIX(Dataloop_create_vector)(int icount,
     }
     else /* user-defined base type (oldtype) */ {
 	DLOOP_Dataloop *old_loop_ptr;
-	int old_loop_sz = 0;
+	MPI_Aint old_loop_sz = 0;
 
 	DLOOP_Handle_get_loopptr_macro(oldtype, old_loop_ptr, flag);
 	DLOOP_Handle_get_loopsize_macro(oldtype, old_loop_sz, flag);

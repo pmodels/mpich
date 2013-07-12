@@ -13,7 +13,7 @@
 #undef MPID_STRUCT_FLATTEN_DEBUG
 #undef MPID_STRUCT_DEBUG
 
-static int MPID_Type_struct_alignsize(int count,
+static MPI_Aint MPID_Type_struct_alignsize(int count,
 				      const MPI_Datatype *oldtype_array,
 				      const MPI_Aint *displacement_array);
 
@@ -39,11 +39,12 @@ static int MPID_Type_struct_alignsize(int count,
  * have different natural alignments).  Linux on X86, however, does not have
  * different rules for this case.
  */
-static int MPID_Type_struct_alignsize(int count,
+static MPI_Aint MPID_Type_struct_alignsize(int count,
 				      const MPI_Datatype *oldtype_array,
 				      const MPI_Aint *displacement_array)
 {
-    int i, max_alignsize = 0, tmp_alignsize, derived_alignsize = 0;
+    int i;
+    MPI_Aint max_alignsize = 0, tmp_alignsize, derived_alignsize = 0;
 
     for (i=0; i < count; i++)
     {
@@ -152,7 +153,7 @@ int MPID_Type_struct(int count,
     int found_sticky_lb = 0, found_sticky_ub = 0, found_true_lb = 0,
 	found_true_ub = 0, found_el_type = 0;
     MPI_Aint el_sz = 0;
-    int size = 0;
+    MPI_Aint size = 0;
     MPI_Datatype el_type = MPI_DATATYPE_NULL;
     MPI_Aint true_lb_disp = 0, true_ub_disp = 0, sticky_lb_disp = 0,
 	sticky_ub_disp = 0;

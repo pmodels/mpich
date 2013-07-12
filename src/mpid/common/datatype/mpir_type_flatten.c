@@ -25,7 +25,7 @@ Output Parameters:
 
 int MPIR_Type_flatten(MPI_Datatype type,
 		      MPI_Aint *off_array,
-		      int *size_array,
+		      MPI_Aint *size_array,
 		      MPI_Aint *array_len_p)
 {
     int err;

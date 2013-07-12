@@ -38,7 +38,7 @@
 @*/
 int PREPEND_PREFIX(Dataloop_create_pairtype)(MPI_Datatype type,
 					     DLOOP_Dataloop **dlp_p,
-					     int *dlsz_p,
+					     MPI_Aint *dlsz_p,
 					     int *dldepth_p,
 					     int flag)
 {

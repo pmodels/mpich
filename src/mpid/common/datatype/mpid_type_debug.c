@@ -234,7 +234,7 @@ void MPIDI_Datatype_printf(MPI_Datatype type,
 			   int header)
 {
     char *string;
-    int size;
+    MPI_Aint size;
     MPI_Aint extent, true_lb, true_ub, lb, ub, sticky_lb, sticky_ub;
 
     if (HANDLE_GET_KIND(type) == HANDLE_KIND_BUILTIN) {
@@ -457,8 +457,8 @@ void MPIDU_Datatype_debug(MPI_Datatype type,
     MPIU_Assert(dtp != NULL);
 
     MPIU_DBG_OUT_FMT(DATATYPE,(MPIU_DBG_FDEST,
-      "# Size = %d, Extent = " MPI_AINT_FMT_DEC_SPEC ", LB = " MPI_AINT_FMT_DEC_SPEC "%s, UB = " MPI_AINT_FMT_DEC_SPEC "%s, Extent = " MPI_AINT_FMT_DEC_SPEC ", Element Size = " MPI_AINT_FMT_DEC_SPEC " (%s), %s",
-		    (int) dtp->size,
+      "# Size = " MPI_AINT_FMT_DEC_SPEC ", Extent = " MPI_AINT_FMT_DEC_SPEC ", LB = " MPI_AINT_FMT_DEC_SPEC "%s, UB = " MPI_AINT_FMT_DEC_SPEC "%s, Extent = " MPI_AINT_FMT_DEC_SPEC ", Element Size = " MPI_AINT_FMT_DEC_SPEC " (%s), %s",
+		    (MPI_Aint) dtp->size,
 		    (MPI_Aint) dtp->extent,
 		    (MPI_Aint) dtp->lb,
 		    (dtp->has_sticky_lb) ? "(sticky)" : "",

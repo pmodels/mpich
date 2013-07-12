@@ -22,20 +22,21 @@
 .N Errors
 .N Returns 0 on success, -1 on failure.
 @*/
-int PREPEND_PREFIX(Dataloop_create_contiguous)(int icount,
+int PREPEND_PREFIX(Dataloop_create_contiguous)(DLOOP_Count icount,
 					       DLOOP_Type oldtype,
 					       DLOOP_Dataloop **dlp_p,
-					       int *dlsz_p,
+					       DLOOP_Size *dlsz_p,
 					       int *dldepth_p,
 					       int flag)
 {
     DLOOP_Count count;
     int is_builtin, apply_contig_coalescing = 0;
-    int new_loop_sz, new_loop_depth;
+    int new_loop_depth;
+    DLOOP_Size new_loop_sz;
 
     DLOOP_Dataloop *new_dlp;
 
-    count = (DLOOP_Count) icount; /* avoid subsequent casting */
+    count = icount;
 
     is_builtin = (DLOOP_Handle_hasloop_macro(oldtype)) ? 0 : 1;
 
@@ -103,7 +104,7 @@ int PREPEND_PREFIX(Dataloop_create_contiguous)(int icount,
     {
 	/* user-defined base type (oldtype) */
 	DLOOP_Dataloop *old_loop_ptr;
-	int old_loop_sz = 0;
+	MPI_Aint old_loop_sz = 0;
 
 	DLOOP_Handle_get_loopptr_macro(oldtype, old_loop_ptr, flag);
 	DLOOP_Handle_get_loopsize_macro(oldtype, old_loop_sz, flag);

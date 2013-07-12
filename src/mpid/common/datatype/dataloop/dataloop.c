@@ -97,13 +97,13 @@ Input Parameters:
 @*/
 void PREPEND_PREFIX(Dataloop_copy)(void *dest,
 				   void *src,
-				   int size)
+				   DLOOP_Size size)
 {
     DLOOP_Offset ptrdiff;
 
 #ifdef DLOOP_DEBUG_MEMORY
-    DLOOP_dbg_printf("DLOOP_Dataloop_copy: copying from %x to %x (%d bytes).\n",
-		     (int) src, (int) dest, size);
+    DLOOP_dbg_printf("DLOOP_Dataloop_copy: copying from %x to %x (%z bytes).\n",
+		     (int) src, (int) dest, (size_t)size);
 #endif
 
     /* copy region first */
@@ -286,7 +286,7 @@ Input Parameters:
 void PREPEND_PREFIX(Dataloop_alloc)(int kind,
 				    DLOOP_Count count,
 				    DLOOP_Dataloop **new_loop_p,
-				    int *new_loop_sz_p)
+				    MPI_Aint *new_loop_sz_p)
 {
     PREPEND_PREFIX(Dataloop_alloc_and_copy)(kind,
 					    count,
@@ -317,15 +317,15 @@ Input Parameters:
 void PREPEND_PREFIX(Dataloop_alloc_and_copy)(int kind,
 					     DLOOP_Count count,
 					     DLOOP_Dataloop *old_loop,
-					     int old_loop_sz,
+					     DLOOP_Size old_loop_sz,
 					     DLOOP_Dataloop **new_loop_p,
-					     int *new_loop_sz_p)
+					     DLOOP_Size *new_loop_sz_p)
 {
-    int new_loop_sz = 0;
+    DLOOP_Size new_loop_sz = 0;
     int align_sz = 8; /* default aligns everything to 8-byte boundaries */
     int epsilon;
-    int loop_sz = sizeof(DLOOP_Dataloop);
-    int off_sz = 0, blk_sz = 0, ptr_sz = 0, extent_sz = 0;
+    DLOOP_Size loop_sz = sizeof(DLOOP_Dataloop);
+    DLOOP_Size off_sz = 0, blk_sz = 0, ptr_sz = 0, extent_sz = 0;
 
     char *pos;
     DLOOP_Dataloop *new_loop;
@@ -386,7 +386,7 @@ void PREPEND_PREFIX(Dataloop_alloc_and_copy)(int kind,
     }
 
 #ifdef DLOOP_DEBUG_MEMORY
-    DLOOP_dbg_printf("DLOOP_Dataloop_alloc_and_copy: new loop @ %x (tot sz = %d, loop = %d, off = %d, blk = %d, ptr = %d, extent = %d, old = %d)\n",
+    DLOOP_dbg_printf("DLOOP_Dataloop_alloc_and_copy: new loop @ %x (tot sz = %z, loop = %z, off = %z, blk = %z, ptr = %z, extent = %z, old = %z)\n",
 		     (int) new_loop,
 		     new_loop_sz,
 		     loop_sz,
@@ -505,17 +505,17 @@ Input Parameters:
   old_loop_p (count elements).
 @*/
 void PREPEND_PREFIX(Dataloop_struct_alloc)(DLOOP_Count count,
-					   int old_loop_sz,
+					   DLOOP_Size old_loop_sz,
 					   int basic_ct,
 					   DLOOP_Dataloop **old_loop_p,
 					   DLOOP_Dataloop **new_loop_p,
-					   int *new_loop_sz_p)
+					   DLOOP_Size *new_loop_sz_p)
 {
-    int new_loop_sz = 0;
+    DLOOP_Size new_loop_sz = 0;
     int align_sz = 8; /* default aligns everything to 8-byte boundaries */
     int epsilon;
-    int loop_sz = sizeof(DLOOP_Dataloop);
-    int off_sz, blk_sz, ptr_sz, extent_sz, basic_sz;
+    DLOOP_Size loop_sz = sizeof(DLOOP_Dataloop);
+    DLOOP_Size off_sz, blk_sz, ptr_sz, extent_sz, basic_sz;
 
     DLOOP_Dataloop *new_loop;
 
@@ -567,7 +567,7 @@ void PREPEND_PREFIX(Dataloop_struct_alloc)(DLOOP_Count count,
     }
 
 #ifdef DLOOP_DEBUG_MEMORY
-    DLOOP_dbg_printf("DLOOP_Dataloop_struct_alloc: new loop @ %x (tot sz = %d, loop = %d, off = %d, blk = %d, ptr = %d, extent = %d, basics = %d, old = %d)\n",
+    DLOOP_dbg_printf("DLOOP_Dataloop_struct_alloc: new loop @ %x (tot sz = %z, loop = %z, off = %z, blk = %z, ptr = %z, extent = %z, basics = %z, old = %z)\n",
 		     (int) new_loop,
 		     new_loop_sz,
 		     loop_sz,
@@ -603,7 +603,7 @@ void PREPEND_PREFIX(Dataloop_struct_alloc)(DLOOP_Count count,
   Returns 0 on success, -1 on failure.
 @*/
 void PREPEND_PREFIX(Dataloop_dup)(DLOOP_Dataloop *old_loop,
-				  int old_loop_sz,
+				  DLOOP_Count old_loop_sz,
 				  DLOOP_Dataloop **new_loop_p)
 {
     DLOOP_Dataloop *new_loop;

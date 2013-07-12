@@ -593,7 +593,7 @@ void PREPEND_PREFIX(Segment_manipulate)(struct DLOOP_Segment *segp,
 		return;
 	    }
 	    else /* myblocks >= cur_elmp->curblock */ {
-		int count_index = 0;
+		MPI_Aint count_index = 0;
 
 		/* this assumes we're either *just* processing the last parts
 		 * of the current block, or we're processing as many blocks as
@@ -736,7 +736,7 @@ void PREPEND_PREFIX(Segment_manipulate)(struct DLOOP_Segment *segp,
 	}
 	else /* push the stackelm */ {
 	    DLOOP_Dataloop_stackelm *next_elmp;
-	    int count_index, block_index;
+	    MPI_Aint count_index, block_index;
 
 	    count_index = cur_elmp->orig_count - cur_elmp->curcount;
 	    block_index = cur_elmp->orig_block - cur_elmp->curblock;

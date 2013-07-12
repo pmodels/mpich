@@ -19,7 +19,7 @@ static void DLOOP_Type_blockindexed_array_copy(DLOOP_Count count,
    Dataloop_create_blockindexed - create blockindexed dataloop
 
    Arguments:
-+  int count
++  DLOOP_Count count
 .  void *displacement_array (array of either MPI_Aints or ints)
 .  int displacement_in_bytes (boolean)
 .  MPI_Datatype old_type
@@ -31,18 +31,19 @@ static void DLOOP_Type_blockindexed_array_copy(DLOOP_Count count,
 .N Errors
 .N Returns 0 on success, -1 on failure.
 @*/
-int PREPEND_PREFIX(Dataloop_create_blockindexed)(int icount,
-						 int iblklen,
+int PREPEND_PREFIX(Dataloop_create_blockindexed)(DLOOP_Count icount,
+						 DLOOP_Count iblklen,
 						 const void *disp_array,
 						 int dispinbytes,
 						 DLOOP_Type oldtype,
 						 DLOOP_Dataloop **dlp_p,
-						 int *dlsz_p,
+						 DLOOP_Size *dlsz_p,
 						 int *dldepth_p,
 						 int flag)
 {
     int err, is_builtin, is_vectorizable = 1;
-    int i, new_loop_sz, old_loop_depth;
+    int i, old_loop_depth;
+    DLOOP_Size new_loop_sz;
 
     DLOOP_Count contig_count, count, blklen;
     DLOOP_Offset old_extent, eff_disp0, eff_disp1, last_stride;
@@ -201,7 +202,7 @@ int PREPEND_PREFIX(Dataloop_create_blockindexed)(int icount,
     else
     {
 	DLOOP_Dataloop *old_loop_ptr = NULL;
-	int old_loop_sz = 0;
+	MPI_Aint old_loop_sz = 0;
 
 	DLOOP_Handle_get_loopptr_macro(oldtype, old_loop_ptr, flag);
 	DLOOP_Handle_get_loopsize_macro(oldtype, old_loop_sz, flag);
