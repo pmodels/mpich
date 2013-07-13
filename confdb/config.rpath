@@ -1,24 +1,5 @@
 #! /bin/sh
 #
-################################################################################
-# MPICH custom modifications:
-#
-# This is the latest git version of config.rpath from gnulib as of 2011-06-16.
-# The only modifications can be found at the bottom of the script where all of
-# the output variables have been prefixed with "${PAC_CC_PREFIX}", which the
-# caller should set if prefixed variables are desired.  That is, if
-# "PAC_CC_PREFIX=FC_" then "FC_shlibext=..." will be in the output instead of
-# "acl_cv_shlibext=...".
-#
-# The provenance of this script is a bit unclear.  It appears to be code that
-# was excised from libtool 1.x and placed into GNU gettext.  The gettext project
-# was the "official" upstream source of this script for a while, but it appears
-# that gnulib is now where the most up-to-date version can be found.
-#
-# See PAC_COMPILER_SHLIB_FLAGS in confdb/aclocal_shl.m4 for MPICH's use of this
-# script.  [goodell@ 2011-06-16]
-################################################################################
-#
 # Output a system dependent set of variables, describing how to set the
 # run time search path of shared libraries in an executable.
 #
@@ -675,14 +656,10 @@ escaped_libname_spec=`echo "X$libname_spec" | sed -e 's/^X//' -e "$sed_quote_sub
 escaped_library_names_spec=`echo "X$library_names_spec" | sed -e 's/^X//' -e "$sed_quote_subst"`
 escaped_hardcode_libdir_flag_spec=`echo "X$hardcode_libdir_flag_spec" | sed -e 's/^X//' -e "$sed_quote_subst"`
 
-# if the caller did not pass a prefix, then use a default that is compatible
-# with the unmodified upstream version of this script
-: ${PAC_CC_PREFIX=acl_cv_}
-LC_ALL=C sed -e 's/^\([a-zA-Z0-9_]*\)=/'"$PAC_CC_PREFIX"'\1=/' <<EOF
-
-# MPICH ADDITION
-# Shared library suffix, including any period (normally "so").
-shrext="$shrext"
+# MPICH modification: we don't prefix with acl_cv_ by default.  This
+# is causing problems in the stock version of config.rpath as well.
+# LC_ALL=C sed -e 's/^\([a-zA-Z0-9_]*\)=/acl_cv_\1=/' <<EOF
+LC_ALL=C sed -e 's/^\([a-zA-Z0-9_]*\)=/\1=/' <<EOF
 
 # How to pass a linker flag through the compiler.
 wl="$escaped_wl"
