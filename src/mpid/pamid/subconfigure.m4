@@ -156,10 +156,10 @@ if test "${pamid_platform}" = "BGQ" ; then
       PAC_APPEND_FLAG([-L${bgq_driver}/spi/lib],                [LDFLAGS])
 
       PAC_APPEND_FLAG([-L${bgq_driver}/spi/lib],                [WRAPPER_LDFLAGS])
-      if test -d ${bgq_driver}/comm/sys/lib ; then
-        PAC_APPEND_FLAG([-L${bgq_driver}/comm/sys/lib],         [WRAPPER_LDFLAGS])
-      else
+      if test -d ${bgq_driver}/comm/lib ; then
         PAC_APPEND_FLAG([-L${bgq_driver}/comm/lib],             [WRAPPER_LDFLAGS])
+      else
+        PAC_APPEND_FLAG([-L${bgq_driver}/comm/sys/lib],         [WRAPPER_LDFLAGS])
       fi
 
       break
