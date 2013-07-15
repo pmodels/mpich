@@ -27,6 +27,7 @@ AC_DEFUN([PAC_SUBCFG_PREREQ_]PAC_SUBCFG_AUTO_SUFFIX,[
 AM_CONDITIONAL([BUILD_PAMID],[test "$device_name" = "pamid"])
 
 AC_ARG_VAR([PAMILIBNAME],[can be used to override the name of the PAMI library (default: "pami")])
+original_PAMILIBNAME=${PAMILIBNAME}
 PAMILIBNAME=${PAMILIBNAME:-"pami"}
 AC_SUBST(PAMILIBNAME)
 export PAMILIBNAME
@@ -158,6 +159,9 @@ if test "${pamid_platform}" = "BGQ" ; then
       PAC_APPEND_FLAG([-L${bgq_driver}/spi/lib],                [WRAPPER_LDFLAGS])
       if test -d ${bgq_driver}/comm/lib ; then
         PAC_APPEND_FLAG([-L${bgq_driver}/comm/lib],             [WRAPPER_LDFLAGS])
+        if test x${original_PAMILIBNAME} = x ; then
+          PAMILIBNAME=pami-gcc
+        fi
       else
         PAC_APPEND_FLAG([-L${bgq_driver}/comm/sys/lib],         [WRAPPER_LDFLAGS])
       fi
