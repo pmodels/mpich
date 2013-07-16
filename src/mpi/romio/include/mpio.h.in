@@ -116,122 +116,122 @@ typedef int MPI_Fint;
 
 /* Section 9.2 */
 /* Begin Prototypes */
-int MPI_File_open(MPI_Comm comm, const char *filename, int amode, MPI_Info info, MPI_File *fh);
-int MPI_File_close(MPI_File *fh);
-int MPI_File_delete(const char *filename, MPI_Info info);
-int MPI_File_set_size(MPI_File fh, MPI_Offset size);
-int MPI_File_preallocate(MPI_File fh, MPI_Offset size);
-int MPI_File_get_size(MPI_File fh, MPI_Offset *size);
-int MPI_File_get_group(MPI_File fh, MPI_Group *group);
-int MPI_File_get_amode(MPI_File fh, int *amode);
-int MPI_File_set_info(MPI_File fh, MPI_Info info);
-int MPI_File_get_info(MPI_File fh, MPI_Info *info_used);
+int MPI_File_open(MPI_Comm comm, const char *filename, int amode, MPI_Info info, MPI_File *fh) MPICH_ATTR_WEAK_ALIAS("PMPI_File_open");
+int MPI_File_close(MPI_File *fh) MPICH_ATTR_WEAK_ALIAS("PMPI_File_close");
+int MPI_File_delete(const char *filename, MPI_Info info) MPICH_ATTR_WEAK_ALIAS("PMPI_File_delete");
+int MPI_File_set_size(MPI_File fh, MPI_Offset size) MPICH_ATTR_WEAK_ALIAS("PMPI_File_set_size");
+int MPI_File_preallocate(MPI_File fh, MPI_Offset size) MPICH_ATTR_WEAK_ALIAS("PMPI_File_preallocate");
+int MPI_File_get_size(MPI_File fh, MPI_Offset *size) MPICH_ATTR_WEAK_ALIAS("PMPI_File_get_size");
+int MPI_File_get_group(MPI_File fh, MPI_Group *group) MPICH_ATTR_WEAK_ALIAS("PMPI_File_get_group");
+int MPI_File_get_amode(MPI_File fh, int *amode) MPICH_ATTR_WEAK_ALIAS("PMPI_File_get_amode");
+int MPI_File_set_info(MPI_File fh, MPI_Info info) MPICH_ATTR_WEAK_ALIAS("PMPI_File_set_info");
+int MPI_File_get_info(MPI_File fh, MPI_Info *info_used) MPICH_ATTR_WEAK_ALIAS("PMPI_File_get_info");
 
 /* Section 9.3 */
 int MPI_File_set_view(MPI_File fh, MPI_Offset disp, MPI_Datatype etype, MPI_Datatype filetype,
-                      const char *datarep, MPI_Info info);
+                      const char *datarep, MPI_Info info) MPICH_ATTR_WEAK_ALIAS("PMPI_File_set_view");
 int MPI_File_get_view(MPI_File fh, MPI_Offset *disp, MPI_Datatype *etype, MPI_Datatype *filetype,
-                      char *datarep);
+                      char *datarep) MPICH_ATTR_WEAK_ALIAS("PMPI_File_get_view");
 
 /* Section 9.4.2 */
 int MPI_File_read_at(MPI_File fh, MPI_Offset offset, void *buf, int count, MPI_Datatype datatype,
-                     MPI_Status *status) MPICH_ATTR_POINTER_WITH_TYPE_TAG(3,5);
+                     MPI_Status *status) MPICH_ATTR_POINTER_WITH_TYPE_TAG(3,5) MPICH_ATTR_WEAK_ALIAS("PMPI_File_read_at");
 int MPI_File_read_at_all(MPI_File fh, MPI_Offset offset, void * buf, int count,
                          MPI_Datatype datatype, MPI_Status *status)
-    MPICH_ATTR_POINTER_WITH_TYPE_TAG(3,5);
+    MPICH_ATTR_POINTER_WITH_TYPE_TAG(3,5) MPICH_ATTR_WEAK_ALIAS("PMPI_File_read_at_all");
 int MPI_File_write_at(MPI_File fh, MPI_Offset offset, const void * buf, int count,
                       MPI_Datatype datatype, MPI_Status *status)
-    MPICH_ATTR_POINTER_WITH_TYPE_TAG(3,5);
+    MPICH_ATTR_POINTER_WITH_TYPE_TAG(3,5) MPICH_ATTR_WEAK_ALIAS("PMPI_File_write_at");
 int MPI_File_write_at_all(MPI_File fh, MPI_Offset offset, const void *buf, int count,
                           MPI_Datatype datatype, MPI_Status *status)
-    MPICH_ATTR_POINTER_WITH_TYPE_TAG(3,5);
+    MPICH_ATTR_POINTER_WITH_TYPE_TAG(3,5) MPICH_ATTR_WEAK_ALIAS("PMPI_File_write_at_all");
 
 /* nonblocking calls currently use MPIO_Request, because generalized
    requests not yet implemented. For the same reason, MPIO_Test and 
    MPIO_Wait are used to test and wait on nonblocking I/O requests */ 
 int MPI_File_iread_at(MPI_File fh, MPI_Offset offset, void *buf, int count, MPI_Datatype datatype,
-                      MPIO_Request *request) MPICH_ATTR_POINTER_WITH_TYPE_TAG(3,5);
+                      MPIO_Request *request) MPICH_ATTR_POINTER_WITH_TYPE_TAG(3,5) MPICH_ATTR_WEAK_ALIAS("PMPI_File_iread_at");
 int MPI_File_iwrite_at(MPI_File fh, MPI_Offset offset, const void *buf, int count,
                        MPI_Datatype datatype, MPIO_Request *request)
-    MPICH_ATTR_POINTER_WITH_TYPE_TAG(3,5);
+    MPICH_ATTR_POINTER_WITH_TYPE_TAG(3,5) MPICH_ATTR_WEAK_ALIAS("PMPI_File_iwrite_at");
 
 /* Section 9.4.3 */
 int MPI_File_read(MPI_File fh, void *buf, int count, MPI_Datatype datatype, MPI_Status *status)
-    MPICH_ATTR_POINTER_WITH_TYPE_TAG(2,4);
+    MPICH_ATTR_POINTER_WITH_TYPE_TAG(2,4) MPICH_ATTR_WEAK_ALIAS("PMPI_File_read");
 int MPI_File_read_all(MPI_File fh, void *buf, int count, MPI_Datatype datatype, MPI_Status *status)
-    MPICH_ATTR_POINTER_WITH_TYPE_TAG(2,4);
+    MPICH_ATTR_POINTER_WITH_TYPE_TAG(2,4) MPICH_ATTR_WEAK_ALIAS("PMPI_File_read_all");
 int MPI_File_write(MPI_File fh, const void *buf, int count, MPI_Datatype datatype,
-                   MPI_Status *status) MPICH_ATTR_POINTER_WITH_TYPE_TAG(2,4);
+                   MPI_Status *status) MPICH_ATTR_POINTER_WITH_TYPE_TAG(2,4) MPICH_ATTR_WEAK_ALIAS("PMPI_File_write");
 int MPI_File_write_all(MPI_File fh, const void *buf, int count, MPI_Datatype datatype,
-                       MPI_Status *status) MPICH_ATTR_POINTER_WITH_TYPE_TAG(2,4);
+                       MPI_Status *status) MPICH_ATTR_POINTER_WITH_TYPE_TAG(2,4) MPICH_ATTR_WEAK_ALIAS("PMPI_File_write_all");
 
 /* nonblocking calls currently use MPIO_Request, because generalized
    requests not yet implemented. For the same reason, MPIO_Test and 
    MPIO_Wait are used to test and wait on nonblocking I/O requests */ 
 
 int MPI_File_iread(MPI_File fh, void *buf, int count, MPI_Datatype datatype, MPIO_Request *request)
-    MPICH_ATTR_POINTER_WITH_TYPE_TAG(2,4);
+    MPICH_ATTR_POINTER_WITH_TYPE_TAG(2,4) MPICH_ATTR_WEAK_ALIAS("PMPI_File_iread");
 int MPI_File_iwrite(MPI_File fh, const void *buf, int count, MPI_Datatype datatype,
-                    MPIO_Request *request) MPICH_ATTR_POINTER_WITH_TYPE_TAG(2,4);
+                    MPIO_Request *request) MPICH_ATTR_POINTER_WITH_TYPE_TAG(2,4) MPICH_ATTR_WEAK_ALIAS("PMPI_File_iwrite");
 
-int MPI_File_seek(MPI_File fh, MPI_Offset offset, int whence);
-int MPI_File_get_position(MPI_File fh, MPI_Offset *offset);
-int MPI_File_get_byte_offset(MPI_File fh, MPI_Offset offset, MPI_Offset *disp);
+int MPI_File_seek(MPI_File fh, MPI_Offset offset, int whence) MPICH_ATTR_WEAK_ALIAS("PMPI_File_seek");
+int MPI_File_get_position(MPI_File fh, MPI_Offset *offset) MPICH_ATTR_WEAK_ALIAS("PMPI_File_get_position");
+int MPI_File_get_byte_offset(MPI_File fh, MPI_Offset offset, MPI_Offset *disp) MPICH_ATTR_WEAK_ALIAS("PMPI_File_get_byte_offset");
 
 /* Section 9.4.4 */
 int MPI_File_read_shared(MPI_File fh, void *buf, int count, MPI_Datatype datatype,
-                         MPI_Status *status) MPICH_ATTR_POINTER_WITH_TYPE_TAG(2,4);
+                         MPI_Status *status) MPICH_ATTR_POINTER_WITH_TYPE_TAG(2,4) MPICH_ATTR_WEAK_ALIAS("PMPI_File_read_shared");
 int MPI_File_write_shared(MPI_File fh, const void *buf, int count, MPI_Datatype datatype,
-                          MPI_Status *status) MPICH_ATTR_POINTER_WITH_TYPE_TAG(2,4);
+                          MPI_Status *status) MPICH_ATTR_POINTER_WITH_TYPE_TAG(2,4) MPICH_ATTR_WEAK_ALIAS("PMPI_File_write_shared");
 int MPI_File_iread_shared(MPI_File fh, void *buf, int count, MPI_Datatype datatype,
-                          MPIO_Request *request) MPICH_ATTR_POINTER_WITH_TYPE_TAG(2,4);
+                          MPIO_Request *request) MPICH_ATTR_POINTER_WITH_TYPE_TAG(2,4) MPICH_ATTR_WEAK_ALIAS("PMPI_File_iread_shared");
 int MPI_File_iwrite_shared(MPI_File fh, const void *buf, int count, MPI_Datatype datatype,
-                           MPIO_Request *request) MPICH_ATTR_POINTER_WITH_TYPE_TAG(2,4);
+                           MPIO_Request *request) MPICH_ATTR_POINTER_WITH_TYPE_TAG(2,4) MPICH_ATTR_WEAK_ALIAS("PMPI_File_iwrite_shared");
 int MPI_File_read_ordered(MPI_File fh, void *buf, int count, MPI_Datatype datatype,
-                          MPI_Status *status) MPICH_ATTR_POINTER_WITH_TYPE_TAG(2,4);
+                          MPI_Status *status) MPICH_ATTR_POINTER_WITH_TYPE_TAG(2,4) MPICH_ATTR_WEAK_ALIAS("PMPI_File_read_ordered");
 int MPI_File_write_ordered(MPI_File fh, const void *buf, int count, MPI_Datatype datatype,
-                           MPI_Status *status) MPICH_ATTR_POINTER_WITH_TYPE_TAG(2,4);
-int MPI_File_seek_shared(MPI_File fh, MPI_Offset offset, int whence);
-int MPI_File_get_position_shared(MPI_File fh, MPI_Offset *offset);
+                           MPI_Status *status) MPICH_ATTR_POINTER_WITH_TYPE_TAG(2,4) MPICH_ATTR_WEAK_ALIAS("PMPI_File_write_ordered");
+int MPI_File_seek_shared(MPI_File fh, MPI_Offset offset, int whence) MPICH_ATTR_WEAK_ALIAS("PMPI_File_seek_shared");
+int MPI_File_get_position_shared(MPI_File fh, MPI_Offset *offset) MPICH_ATTR_WEAK_ALIAS("PMPI_File_get_position_shared");
 
 /* Section 9.4.5 */
 int MPI_File_read_at_all_begin(MPI_File fh, MPI_Offset offset, void *buf, int count,
-                               MPI_Datatype datatype) MPICH_ATTR_POINTER_WITH_TYPE_TAG(3,5);
-int MPI_File_read_at_all_end(MPI_File fh, void *buf, MPI_Status *status);
+                               MPI_Datatype datatype) MPICH_ATTR_POINTER_WITH_TYPE_TAG(3,5) MPICH_ATTR_WEAK_ALIAS("PMPI_File_read_at_all_begin");
+int MPI_File_read_at_all_end(MPI_File fh, void *buf, MPI_Status *status) MPICH_ATTR_WEAK_ALIAS("PMPI_File_read_at_all_end");
 int MPI_File_write_at_all_begin(MPI_File fh, MPI_Offset offset, const void *buf, int count,
-                                MPI_Datatype datatype) MPICH_ATTR_POINTER_WITH_TYPE_TAG(3,5);
-int MPI_File_write_at_all_end(MPI_File fh, const void *buf, MPI_Status *status);
+                                MPI_Datatype datatype) MPICH_ATTR_POINTER_WITH_TYPE_TAG(3,5) MPICH_ATTR_WEAK_ALIAS("PMPI_File_write_at_all_begin");
+int MPI_File_write_at_all_end(MPI_File fh, const void *buf, MPI_Status *status) MPICH_ATTR_WEAK_ALIAS("PMPI_File_write_at_all_end");
 int MPI_File_read_all_begin(MPI_File fh, void *buf, int count, MPI_Datatype datatype)
-    MPICH_ATTR_POINTER_WITH_TYPE_TAG(2,4);
-int MPI_File_read_all_end(MPI_File fh, void *buf, MPI_Status *status);
+    MPICH_ATTR_POINTER_WITH_TYPE_TAG(2,4) MPICH_ATTR_WEAK_ALIAS("PMPI_File_read_all_begin");
+int MPI_File_read_all_end(MPI_File fh, void *buf, MPI_Status *status) MPICH_ATTR_WEAK_ALIAS("PMPI_File_read_all_end");
 int MPI_File_write_all_begin(MPI_File fh, const void *buf, int count, MPI_Datatype datatype)
-    MPICH_ATTR_POINTER_WITH_TYPE_TAG(2,4);
-int MPI_File_write_all_end(MPI_File fh, const void *buf, MPI_Status *status);
+    MPICH_ATTR_POINTER_WITH_TYPE_TAG(2,4) MPICH_ATTR_WEAK_ALIAS("PMPI_File_write_all_begin");
+int MPI_File_write_all_end(MPI_File fh, const void *buf, MPI_Status *status) MPICH_ATTR_WEAK_ALIAS("PMPI_File_write_all_end");
 int MPI_File_read_ordered_begin(MPI_File fh, void *buf, int count, MPI_Datatype datatype)
-    MPICH_ATTR_POINTER_WITH_TYPE_TAG(2,4);
-int MPI_File_read_ordered_end(MPI_File fh, void *buf, MPI_Status *status);
+    MPICH_ATTR_POINTER_WITH_TYPE_TAG(2,4) MPICH_ATTR_WEAK_ALIAS("PMPI_File_read_ordered_begin");
+int MPI_File_read_ordered_end(MPI_File fh, void *buf, MPI_Status *status) MPICH_ATTR_WEAK_ALIAS("PMPI_File_read_ordered_end");
 int MPI_File_write_ordered_begin(MPI_File fh, const void *buf, int count, MPI_Datatype datatype)
-    MPICH_ATTR_POINTER_WITH_TYPE_TAG(2,4);
-int MPI_File_write_ordered_end(MPI_File fh, const void *buf, MPI_Status *status);
+    MPICH_ATTR_POINTER_WITH_TYPE_TAG(2,4) MPICH_ATTR_WEAK_ALIAS("PMPI_File_write_ordered_begin");
+int MPI_File_write_ordered_end(MPI_File fh, const void *buf, MPI_Status *status) MPICH_ATTR_WEAK_ALIAS("PMPI_File_write_ordered_end");
 
 /* Section 9.5.1 */
-int MPI_File_get_type_extent(MPI_File fh, MPI_Datatype datatype, MPI_Aint *extent);
+int MPI_File_get_type_extent(MPI_File fh, MPI_Datatype datatype, MPI_Aint *extent) MPICH_ATTR_WEAK_ALIAS("PMPI_File_get_type_extent");
 
 /* Section 9.5.3 */
 int MPI_Register_datarep(const char *datarep, MPI_Datarep_conversion_function *read_conversion_fn,
 			 MPI_Datarep_conversion_function *write_conversion_fn,
-			 MPI_Datarep_extent_function *dtype_file_extent_fn, void *extra_state);
+			 MPI_Datarep_extent_function *dtype_file_extent_fn, void *extra_state) MPICH_ATTR_WEAK_ALIAS("PMPI_Register_datarep");
 
 /* Section 9.6.1 */
-int MPI_File_set_atomicity(MPI_File fh, int flag);
-int MPI_File_get_atomicity(MPI_File fh, int *flag);
-int MPI_File_sync(MPI_File fh);
+int MPI_File_set_atomicity(MPI_File fh, int flag) MPICH_ATTR_WEAK_ALIAS("PMPI_File_set_atomicity");
+int MPI_File_get_atomicity(MPI_File fh, int *flag) MPICH_ATTR_WEAK_ALIAS("PMPI_File_get_atomicity");
+int MPI_File_sync(MPI_File fh) MPICH_ATTR_WEAK_ALIAS("PMPI_File_sync");
 
 /* Section 4.13.3 */
 #ifndef MPICH
 /* MPICH provides these definitions */
-int MPI_File_set_errhandler(MPI_File file, MPI_Errhandler errhandler);
-int MPI_File_get_errhandler(MPI_File file, MPI_Errhandler *errhandler);
+int MPI_File_set_errhandler(MPI_File file, MPI_Errhandler errhandler) MPICH_ATTR_WEAK_ALIAS("PMPI_File_set_errhandler");
+int MPI_File_get_errhandler(MPI_File file, MPI_Errhandler *errhandler) MPICH_ATTR_WEAK_ALIAS("PMPI_File_get_errhandler");
 #endif
 /* End Prototypes */
 
@@ -261,8 +261,8 @@ int MPI_Type_create_darray(int size, int rank, int ndims, const int array_of_gsi
 #endif
 #endif
 /* above needed for some versions of mpi.h in MPICH!! */
-MPI_File MPI_File_f2c(MPI_Fint file);
-MPI_Fint MPI_File_c2f(MPI_File file);
+MPI_File MPI_File_f2c(MPI_Fint file) MPICH_ATTR_WEAK_ALIAS("PMPI_File_f2c");
+MPI_Fint MPI_File_c2f(MPI_File file) MPICH_ATTR_WEAK_ALIAS("PMPI_File_c2f");
 
 
 #ifndef HAVE_MPI_GREQUEST

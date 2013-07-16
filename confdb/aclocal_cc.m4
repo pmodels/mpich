@@ -338,9 +338,7 @@ if test -n "$pragma_extra_message" ; then
 fi
 dnl
 ])
-if test "$pac_cv_prog_c_weak_symbols" = "no" ; then
-    ifelse([$2],,:,[$2])
-else
+if test "$pac_cv_prog_c_weak_symbols" != "no" ; then
     case "$pac_cv_prog_c_weak_symbols" in
         "pragma weak") AC_DEFINE(HAVE_PRAGMA_WEAK,1,[Supports weak pragma])
         ;;
@@ -349,7 +347,6 @@ else
         "pragma _CRI") AC_DEFINE(HAVE_PRAGMA_CRI_DUP,1,[Cray style weak pragma])
         ;;
     esac
-    ifelse([$1],,:,[$1])
 fi
 AC_CACHE_CHECK([whether __attribute__ ((weak)) allowed],
 pac_cv_attr_weak,[
@@ -366,6 +363,14 @@ AC_CACHE_CHECK([whether __attribute__((weak,alias(...))) allowed],
 pac_cv_attr_weak_alias,[
 AC_TRY_COMPILE([int foo(int) __attribute__((weak,alias("__foo")));],[int a;],
 pac_cv_attr_weak_alias=yes,pac_cv_attr_weak_alias=no)])
+if test "$pac_cv_attr_weak_alias" = "yes" ; then
+    AC_DEFINE(HAVE_WEAK_ATTRIBUTE,1,[Attribute style weak pragma])
+fi
+if test "$pac_cv_prog_c_weak_symbols" = "no" -a "$pac_cv_attr_weak_alias" = "no" ; then
+    ifelse([$2],,:,[$2])
+else
+    ifelse([$1],,:,[$1])
+fi
 ])
 
 #

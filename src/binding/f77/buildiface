@@ -1269,6 +1269,33 @@ sub print_profiling_block {
 #else\
 #pragma _CRI duplicate ${lcprefix}${lcname}_ as p${lcprefix}${lcname}_\
 #endif\
+\
+#elif defined(HAVE_WEAK_ATTRIBUTE)
+#if defined(F77_NAME_UPPER)\n";
+    &print_weak_decl( $OUTFD, "${ucprefix}$ucname", $args, $lcname, "P${ucprefix}${ucname}" );
+    &print_weak_decl( $OUTFD, "${lcprefix}${lcname}__", $args, $lcname, "P${ucprefix}${ucname}" );
+    &print_weak_decl( $OUTFD, "${lcprefix}${lcname}_", $args, $lcname, "P${ucprefix}${ucname}" );
+    &print_weak_decl( $OUTFD, "${lcprefix}${lcname}", $args, $lcname, "P${ucprefix}${ucname}" );
+    print $OUTFD "
+#elif defined(F77_NAME_LOWER_2USCORE)\n";
+    &print_weak_decl( $OUTFD, "${ucprefix}$ucname", $args, $lcname, "p${lcprefix}${lcname}__" );
+    &print_weak_decl( $OUTFD, "${lcprefix}${lcname}__", $args, $lcname, "p${lcprefix}${lcname}__" );
+    &print_weak_decl( $OUTFD, "${lcprefix}${lcname}_", $args, $lcname, "p${lcprefix}${lcname}__" );
+    &print_weak_decl( $OUTFD, "${lcprefix}${lcname}", $args, $lcname, "p${lcprefix}${lcname}__" );
+    print $OUTFD "
+#elif defined(F77_NAME_LOWER_USCORE)\n";
+    &print_weak_decl( $OUTFD, "${ucprefix}$ucname", $args, $lcname, "p${lcprefix}${lcname}_" );
+    &print_weak_decl( $OUTFD, "${lcprefix}${lcname}__", $args, $lcname, "p${lcprefix}${lcname}_" );
+    &print_weak_decl( $OUTFD, "${lcprefix}${lcname}_", $args, $lcname, "p${lcprefix}${lcname}_" );
+    &print_weak_decl( $OUTFD, "${lcprefix}${lcname}", $args, $lcname, "p${lcprefix}${lcname}_" );
+    print $OUTFD "
+#else\n";
+    &print_weak_decl( $OUTFD, "${ucprefix}$ucname", $args, $lcname, "p${lcprefix}${lcname}" );
+    &print_weak_decl( $OUTFD, "${lcprefix}${lcname}__", $args, $lcname, "p${lcprefix}${lcname}" );
+    &print_weak_decl( $OUTFD, "${lcprefix}${lcname}_", $args, $lcname, "p${lcprefix}${lcname}" );
+    &print_weak_decl( $OUTFD, "${lcprefix}${lcname}", $args, $lcname, "p${lcprefix}${lcname}" );
+    print $OUTFD "
+#endif
 #endif /* HAVE_PRAGMA_WEAK */\
 #endif /* USE_WEAK_SYMBOLS */\
 /* End MPI profiling block */\n\n";
@@ -1300,7 +1327,8 @@ sub print_name_map_block {
 	print $OUTFD "
 /* Map the name to the correct form */
 #ifndef MPICH_MPI_FROM_PMPI
-#if defined(USE_WEAK_SYMBOLS) && defined(HAVE_MULTIPLE_PRAGMA_WEAK)
+#if defined(USE_WEAK_SYMBOLS)
+#if defined(HAVE_MULTIPLE_PRAGMA_WEAK)
 /* Define the weak versions of the PMPI routine*/
 #ifndef F77_NAME_UPPER\n";
 	&print_weak_decl( $OUTFD, "P${ucprefix}$ucname", $args, $lcname ); 
@@ -1330,7 +1358,31 @@ sub print_name_map_block {
 #pragma weak p${lcprefix}${lcname}__ = p${lcprefix}${lcname}
 #pragma weak p${lcprefix}${lcname}_ = p${lcprefix}${lcname}
 #endif /* Test on name mapping */
-#endif /* Use multiple pragma weak */
+
+#elif defined(HAVE_WEAK_ATTRIBUTE)
+#if defined(F77_NAME_UPPER)\n";
+    &print_weak_decl( $OUTFD, "p${lcprefix}${lcname}__", $args, $lcname, "P${ucprefix}${ucname}" );
+    &print_weak_decl( $OUTFD, "p${lcprefix}${lcname}_", $args, $lcname, "P${ucprefix}${ucname}" );
+    &print_weak_decl( $OUTFD, "p${lcprefix}${lcname}", $args, $lcname, "P${ucprefix}${ucname}" );
+    print $OUTFD "
+#elif defined(F77_NAME_LOWER_2USCORE)\n";
+    &print_weak_decl( $OUTFD, "P${ucprefix}$ucname", $args, $lcname, "p${lcprefix}${lcname}__" );
+    &print_weak_decl( $OUTFD, "p${lcprefix}${lcname}_", $args, $lcname, "p${lcprefix}${lcname}__" );
+    &print_weak_decl( $OUTFD, "p${lcprefix}${lcname}", $args, $lcname, "p${lcprefix}${lcname}__" );
+    print $OUTFD "
+#elif defined(F77_NAME_LOWER_USCORE)\n";
+    &print_weak_decl( $OUTFD, "P${ucprefix}$ucname", $args, $lcname, "p${lcprefix}${lcname}_" );
+    &print_weak_decl( $OUTFD, "p${lcprefix}${lcname}__", $args, $lcname, "p${lcprefix}${lcname}_" );
+    &print_weak_decl( $OUTFD, "p${lcprefix}${lcname}", $args, $lcname, "p${lcprefix}${lcname}_" );
+    print $OUTFD "
+#else\n";
+    &print_weak_decl( $OUTFD, "P${ucprefix}$ucname", $args, $lcname, "p${lcprefix}${lcname}" );
+    &print_weak_decl( $OUTFD, "p${lcprefix}${lcname}__", $args, $lcname, "p${lcprefix}${lcname}" );
+    &print_weak_decl( $OUTFD, "p${lcprefix}${lcname}_", $args, $lcname, "p${lcprefix}${lcname}" );
+    print $OUTFD "
+#endif /* Test on name mapping */
+#endif /* HAVE_MULTIPLE_PRAGMA_WEAK */
+#endif /* USE_WEAK_SYMBOLS */
 
 #ifdef F77_NAME_UPPER
 #define ${lcprefix}${lcname}_ P${ucprefix}${ucname}
@@ -1696,17 +1748,21 @@ sub print_weak_decl {
     my $name  = $_[1];
     my $args  = $_[2];
     my $lcname = $_[3];
+    my $weak_alias = $_[4];
 
     my $basename = lc($name);
     $basename =~ s/_*$//;
     if (defined($altweak{$basename})) {
-	print $OUTFD "extern FORT_DLL_SPEC $altweakrtype{$basename} FORT_CALL $name($altweak{$basename});\n";
+	print $OUTFD "extern FORT_DLL_SPEC $altweakrtype{$basename} FORT_CALL $name($altweak{$basename})";
     }
     else {
 	print $OUTFD "extern FORT_DLL_SPEC $returnType FORT_CALL $name";
 	&print_args( $OUTFD, $args, 1, $lcname );
-	print $OUTFD ";\n";
+	}
+    if (defined($weak_alias)) {
+    print $OUTFD " __attribute__((weak,alias(\"$weak_alias\")))";
     }
+    print $OUTFD ";\n";
 }
 #
 # --------------------------------------------------------------------------
@@ -5354,11 +5410,23 @@ sub HelperForRegister_datarep {
        for use as the conversion function for MPI_Register_datarep.  
        Like the attribute null functions, we provide multiple weak versions
        of this if possible */
-#if defined(USE_WEAK_SYMBOLS) && defined(HAVE_MULTIPLE_PRAGMA_WEAK)
+#if defined(USE_WEAK_SYMBOLS) && (defined(HAVE_MULTIPLE_PRAGMA_WEAK) || defined(HAVE_WEAK_ATTRIBUTE))
 extern FORT_DLL_SPEC int FORT_CALL mpi_conversion_fn_null_ ( void*v1, MPI_Fint*v2, MPI_Fint*v3, void*v4, MPI_Offset*v5, MPI_Fint *v6, MPI_Fint*v7, MPI_Fint *ierr );
-extern FORT_DLL_SPEC int FORT_CALL mpi_conversion_fn_null__ ( void*v1, MPI_Fint*v2, MPI_Fint*v3, void*v4, MPI_Offset*v5, MPI_Fint *v6, MPI_Fint*v7, MPI_Fint *ierr );
-extern FORT_DLL_SPEC int FORT_CALL mpi_conversion_fn_null ( void*v1, MPI_Fint*v2, MPI_Fint*v3, void*v4, MPI_Offset*v5, MPI_Fint *v6, MPI_Fint*v7, MPI_Fint *ierr );
-extern FORT_DLL_SPEC int FORT_CALL MPI_CONVERSION_FN_NULL ( void*v1, MPI_Fint*v2, MPI_Fint*v3, void*v4, MPI_Offset*v5, MPI_Fint *v6, MPI_Fint*v7, MPI_Fint *ierr );
+extern FORT_DLL_SPEC int FORT_CALL mpi_conversion_fn_null__ ( void*v1, MPI_Fint*v2, MPI_Fint*v3, void*v4, MPI_Offset*v5, MPI_Fint *v6, MPI_Fint*v7, MPI_Fint *ierr )
+#ifndef MPICH_MPI_FROM_PMPI
+MPICH_ATTR_WEAK_ALIAS(\"mpi_conversion_fn_null_\")
+#endif
+;
+extern FORT_DLL_SPEC int FORT_CALL mpi_conversion_fn_null ( void*v1, MPI_Fint*v2, MPI_Fint*v3, void*v4, MPI_Offset*v5, MPI_Fint *v6, MPI_Fint*v7, MPI_Fint *ierr )
+#ifndef MPICH_MPI_FROM_PMPI
+MPICH_ATTR_WEAK_ALIAS(\"mpi_conversion_fn_null_\")
+#endif
+;
+extern FORT_DLL_SPEC int FORT_CALL MPI_CONVERSION_FN_NULL ( void*v1, MPI_Fint*v2, MPI_Fint*v3, void*v4, MPI_Offset*v5, MPI_Fint *v6, MPI_Fint*v7, MPI_Fint *ierr )
+#ifndef MPICH_MPI_FROM_PMPI
+MPICH_ATTR_WEAK_ALIAS(\"mpi_conversion_fn_null_\")
+#endif
+;
 /* */
 #ifndef MPICH_MPI_FROM_PMPI
 #pragma weak mpi_conversion_fn_null__ = mpi_conversion_fn_null_
@@ -5622,8 +5690,8 @@ sub AddFwrapWeakName {
 
     print $OUTFD "
 /* These definitions are used only for generating the Fortran wrappers */
-#if defined(USE_WEAK_SYMBOLS) && defined(HAVE_MULTIPLE_PRAGMA_WEAK) && \\
-    defined(USE_ONLY_MPI_NAMES)\n";
+#if defined(USE_WEAK_SYMBOLS) && defined(USE_ONLY_MPI_NAMES)
+#if defined(HAVE_MULTIPLE_PRAGMA_WEAK)\n";
     &print_weak_decl( $OUTFD, "${ucprefix}$ucname", $args, $lcname ); 
     &print_weak_decl( $OUTFD, "${lcprefix}${lcname}__", $args, $lcname );
     &print_weak_decl( $OUTFD, "${lcprefix}${lcname}", $args, $lcname );
@@ -5645,6 +5713,33 @@ sub AddFwrapWeakName {
 #pragma weak ${ucprefix}$ucname = ${lcprefix}${lcname}
 #pragma weak ${lcprefix}${lcname}__ = ${lcprefix}${lcname}
 #pragma weak ${lcprefix}${lcname}_ = ${lcprefix}${lcname}
+#endif
+#elif defined(HAVE_WEAK_ATTRIBUTE)
+#if defined(F77_NAME_UPPER)\n";
+    &print_weak_decl( $OUTFD, "${ucprefix}$ucname", $args, $lcname );
+    &print_weak_decl( $OUTFD, "${lcprefix}${lcname}__", $args, $lcname, "${ucprefix}${ucname}" );
+    &print_weak_decl( $OUTFD, "${lcprefix}${lcname}_", $args, $lcname, "${ucprefix}${ucname}" );
+    &print_weak_decl( $OUTFD, "${lcprefix}${lcname}", $args, $lcname, "${ucprefix}${ucname}" );
+    print $OUTFD "
+#elif defined(F77_NAME_LOWER_2USCORE)\n";
+    &print_weak_decl( $OUTFD, "${ucprefix}$ucname", $args, $lcname, "${lcprefix}${lcname}__" );
+    &print_weak_decl( $OUTFD, "${lcprefix}${lcname}__", $args, $lcname );
+    &print_weak_decl( $OUTFD, "${lcprefix}${lcname}_", $args, $lcname, "${lcprefix}${lcname}__" );
+    &print_weak_decl( $OUTFD, "${lcprefix}${lcname}", $args, $lcname, "${lcprefix}${lcname}__" );
+    print $OUTFD "
+#elif defined(F77_NAME_LOWER_USCORE)\n";
+    &print_weak_decl( $OUTFD, "${ucprefix}$ucname", $args, $lcname, "${lcprefix}${lcname}_" );
+    &print_weak_decl( $OUTFD, "${lcprefix}${lcname}__", $args, $lcname, "${lcprefix}${lcname}_" );
+    &print_weak_decl( $OUTFD, "${lcprefix}${lcname}_", $args, $lcname );
+    &print_weak_decl( $OUTFD, "${lcprefix}${lcname}", $args, $lcname, "${lcprefix}${lcname}_" );
+    print $OUTFD "
+#else\n";
+    &print_weak_decl( $OUTFD, "${ucprefix}$ucname", $args, $lcname, "${lcprefix}${lcname}" );
+    &print_weak_decl( $OUTFD, "${lcprefix}${lcname}__", $args, $lcname, "${lcprefix}${lcname}" );
+    &print_weak_decl( $OUTFD, "${lcprefix}${lcname}_", $args, $lcname, "${lcprefix}${lcname}" );
+    &print_weak_decl( $OUTFD, "${lcprefix}${lcname}", $args, $lcname );
+    print $OUTFD "
+#endif
 #endif
 
 #endif

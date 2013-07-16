@@ -1814,7 +1814,12 @@ if test $enable_weak_symbols = "yes" ; then
     # Check for the ability to support multiple weak symbols
     if test "$pac_cv_prog_c_weak_symbols" = "pragma weak" ; then
        PAC_PROG_C_MULTIPLE_WEAK_SYMBOLS(AC_DEFINE(HAVE_MULTIPLE_PRAGMA_WEAK,1,[Define if multiple weak symbols may be defined]))
+    else
+        if test "$pac_cv_prog_c_weak_symbols" = "no" -a "$pac_cv_attr_weak_alias" = "yes"; then
+            MPICH_ATTR_WEAK_ALIAS_DEFINITION="__attribute__((weak,alias(fname)))"
+        fi
     fi
+    AC_SUBST(MPICH_ATTR_WEAK_ALIAS_DEFINITION)
 fi
 export NEEDSPLIB
 
