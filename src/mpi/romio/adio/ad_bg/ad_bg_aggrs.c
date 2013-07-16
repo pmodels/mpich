@@ -29,9 +29,6 @@
   #define AGG_DEBUG 1
 #endif
 
-static int aggrsInPsetSize=0;
-static int *aggrsInPset=NULL;
-
 /* Comments copied from common:
  * This file contains four functions:
  *
@@ -67,8 +64,7 @@ static int *aggrsInPset=NULL;
 static void 
 ADIOI_BG_compute_agg_ranklist_serial ( ADIO_File fd, 
 					const ADIOI_BG_ConfInfo_t *confInfo, 
-					ADIOI_BG_ProcInfo_t *all_procInfo,
-					int *aggrsInPset );
+					ADIOI_BG_ProcInfo_t *all_procInfo);
 
 /*
  * Compute the aggregator-related parameters that are required in 2-phase collective IO of ADIO.
@@ -97,13 +93,6 @@ ADIOI_BG_gen_agg_ranklist(ADIO_File fd, int n_aggrs_per_pset)
   /* Gather BG personality infomation onto process 0 */
     /* if (r == 0) */
     all_procInfo  = ADIOI_BG_ProcInfo_new_n  (s);
-    if(s > aggrsInPsetSize)
-    {
-      if(aggrsInPset) ADIOI_Free(aggrsInPset);
-      aggrsInPset   = (int *) ADIOI_Malloc (s *sizeof(int));
-      aggrsInPsetSize = s;
-    }
-
 
     MPI_Gather( (void *)procInfo,     sizeof(ADIOI_BG_ProcInfo_t), MPI_BYTE, 
 		(void *)all_procInfo, sizeof(ADIOI_BG_ProcInfo_t), MPI_BYTE, 
@@ -112,7 +101,7 @@ ADIOI_BG_gen_agg_ranklist(ADIO_File fd, int n_aggrs_per_pset)
 
   /* Compute a list of the ranks of chosen IO proxy CN on process 0 */
     if (r == 0) { 
-	ADIOI_BG_compute_agg_ranklist_serial (fd, confInfo, all_procInfo, aggrsInPset);    
+	ADIOI_BG_compute_agg_ranklist_serial (fd, confInfo, all_procInfo);
 	/* ADIOI_BG_ProcInfo_free (all_procInfo);*/
     }
     ADIOI_BG_ProcInfo_free (all_procInfo);
@@ -121,12 +110,6 @@ ADIOI_BG_gen_agg_ranklist(ADIO_File fd, int n_aggrs_per_pset)
      Declared in adio_cb_config_list.h */
     ADIOI_cb_bcast_rank_map(fd);		
 
-  /* Broadcast the BG-GPFS related file domain info */
-    MPI_Bcast( (void *)aggrsInPset, 
-	  	fd->hints->cb_nodes * sizeof(int), MPI_BYTE, 
-		0, 
-		fd->comm );
-    
     ADIOI_BG_persInfo_free( confInfo, procInfo );
     TRACE_ERR("Leaving ADIOI_BG_gen_agg_ranklist\n");
     return 0;
@@ -160,7 +143,6 @@ static int intsort(const void *p1, const void *p2)
 static int 
 ADIOI_BG_compute_agg_ranklist_serial_do (const ADIOI_BG_ConfInfo_t *confInfo, 
 					  ADIOI_BG_ProcInfo_t       *all_procInfo, 
-					  int *aggrsInPset, 
 					  int *tmp_ranklist)
 {
     TRACE_ERR("Entering ADIOI_BG_compute_agg_ranklist_serial_do\n");
@@ -279,8 +261,7 @@ ADIOI_BG_compute_agg_ranklist_serial_do (const ADIOI_BG_ConfInfo_t *confInfo,
 static void 
 ADIOI_BG_compute_agg_ranklist_serial ( ADIO_File fd, 
 					const ADIOI_BG_ConfInfo_t *confInfo, 
-					ADIOI_BG_ProcInfo_t *all_procInfo,
-					int *aggrsInPset )
+					ADIOI_BG_ProcInfo_t *all_procInfo)
 {
     TRACE_ERR("Entering ADIOI_BG_compute_agg_ranklist_serial\n");
     int i; 
@@ -298,7 +279,7 @@ ADIOI_BG_compute_agg_ranklist_serial ( ADIO_File fd,
 #   endif
 
     naggs= 
-    ADIOI_BG_compute_agg_ranklist_serial_do (confInfo, all_procInfo, aggrsInPset, tmp_ranklist);
+    ADIOI_BG_compute_agg_ranklist_serial_do (confInfo, all_procInfo, tmp_ranklist);
 
 #   define VERIFY 1
 #   if VERIFY
