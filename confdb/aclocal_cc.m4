@@ -1651,3 +1651,21 @@ AC_DEFUN([PAC_C_MACRO_VA_ARGS],[
     fi
     rm -f pac_test.log
 ])dnl
+
+# Will AC_DEFINE([HAVE_BUILTIN_EXPECT]) if the compiler supports __builtin_expect.
+AC_DEFUN([PAC_C_BUILTIN_EXPECT],[
+AC_MSG_CHECKING([if C compiler supports __builtin_expect])
+
+AC_TRY_LINK(, [
+    return __builtin_expect(1, 1) ? 1 : 0
+], [
+    have_builtin_expect=yes
+    AC_MSG_RESULT([yes])
+], [
+    have_builtin_expect=no
+    AC_MSG_RESULT([no])
+])
+if test x$have_builtin_expect = xyes ; then
+    AC_DEFINE([HAVE_BUILTIN_EXPECT], [1], [Define to 1 if the compiler supports __builtin_expect.])
+fi
+])
