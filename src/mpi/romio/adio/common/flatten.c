@@ -731,11 +731,11 @@ void ADIOI_Flatten(MPI_Datatype datatype, ADIOI_Flatlist_node *flat,
  *
  * ASSUMES THAT TYPE IS NOT A BASIC!!!
  */
-int ADIOI_Count_contiguous_blocks(MPI_Datatype datatype, int *curr_index)
+MPI_Count ADIOI_Count_contiguous_blocks(MPI_Datatype datatype, MPI_Count *curr_index)
 {
 #ifdef HAVE_MPIR_TYPE_GET_CONTIG_BLOCKS
     /* MPICH can get us this value without all the envelope/contents calls */
-    int blks;
+    MPI_Count blks;
     MPIR_Type_get_contig_blocks(datatype, &blks);
     *curr_index = blks;
     return blks;
