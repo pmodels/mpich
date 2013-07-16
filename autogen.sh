@@ -906,3 +906,24 @@ if [ "$do_build_configure" = "yes" ] ; then
 	fi
     done
 fi
+
+########################################################################
+## Patching libtool.m4
+########################################################################
+
+# This works with libtool versions 2.4 - 2.4.2.
+# Older versions are not supported to build mpich.
+# Newer versions should have this patch already included.
+# There is no need to patch if we're not going to use Fortran.
+if [ $do_bindings = "yes" ] ; then
+    echo "------------------------------------------------------------------------"
+    echo
+    echo_n "Patching libtool.m4 for compatibility with nagfor shared libraries... "
+    patch --forward -p0 < maint/libtool.m4.patch >/dev/null
+    if [ $? -eq 0 ] ; then
+        echo "done"
+    else
+        echo "failed"
+        exit 1
+    fi
+fi
