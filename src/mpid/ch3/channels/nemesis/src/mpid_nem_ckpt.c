@@ -146,7 +146,7 @@ int MPIDI_nem_ckpt_init(void)
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_NEM_CKPT_INIT);
 
-    if (!MPIR_PARAM_ENABLE_CKPOINT)
+    if (!MPIR_PARAM_NEMESIS_ENABLE_CKPOINT)
         goto fn_exit;
     
     client_id = cr_init();

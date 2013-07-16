@@ -1742,7 +1742,7 @@ HYD_status HYD_uii_mpx_get_parameters(char **t_argv)
     /* If the user set the checkpoint prefix, set env var to enable
      * checkpointing on the processes  */
     if (HYD_server_info.user_global.ckpoint_prefix)
-        HYDU_append_env_to_list("MPIR_PARAM_ENABLE_CKPOINT", "1",
+        HYDU_append_env_to_list("MPIR_PARAM_NEMESIS_ENABLE_CKPOINT", "1",
                                 &HYD_server_info.user_global.global_env.system);
 
     /* Preset common environment options for disabling STDIO buffering

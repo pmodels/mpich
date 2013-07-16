@@ -310,7 +310,7 @@ int MPIDI_CH3I_Progress (MPID_Progress_state *progress_state, int is_blocking)
     }
     
 #ifdef ENABLE_CHECKPOINTING
-    if (MPIR_PARAM_ENABLE_CKPOINT) {
+    if (MPIR_PARAM_NEMESIS_ENABLE_CKPOINT) {
         if (MPIDI_nem_ckpt_start_checkpoint) {
             MPIDI_nem_ckpt_start_checkpoint = FALSE;
             mpi_errno = MPIDI_nem_ckpt_start();
