@@ -329,7 +329,7 @@ typedef OPA_int_t MPIU_Handle_ref_count;
 #define MPIU_Object_add_ref(objptr_)                           \
     do {                                                       \
         int handle_kind_ = HANDLE_GET_KIND((objptr_)->handle); \
-        if (handle_kind_ != HANDLE_KIND_BUILTIN) {             \
+        if (unlikely(handle_kind_ != HANDLE_KIND_BUILTIN)) {   \
             MPIU_Object_add_ref_always((objptr_));             \
         }                                                      \
         else {                                                                                                 \
@@ -344,7 +344,7 @@ typedef OPA_int_t MPIU_Handle_ref_count;
 #define MPIU_Object_release_ref(objptr_,inuse_ptr_)                  \
     do {                                                             \
         int handle_kind_ = HANDLE_GET_KIND((objptr_)->handle);       \
-        if (handle_kind_ != HANDLE_KIND_BUILTIN) {                   \
+        if (unlikely(handle_kind_ != HANDLE_KIND_BUILTIN)) {         \
             MPIU_Object_release_ref_always((objptr_), (inuse_ptr_)); \
         }                                                            \
         else {                                                       \
