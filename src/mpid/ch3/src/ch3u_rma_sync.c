@@ -3829,8 +3829,8 @@ int MPIDI_CH3_PktHandler_Accumulate_Immed( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 		MPIU_ERR_SETANDJUMP1(mpi_errno,MPI_ERR_OP, "**opnotpredefined",
 				     "**opnotpredefined %d", accum_pkt->op );
 	    }
-	MPIU_INSTR_DURATION_END(rmapkt_acc_immed_op);
 	}
+	MPIU_INSTR_DURATION_END(rmapkt_acc_immed_op);
 	
 
 	/* There are additional steps to take if this is a passive 
