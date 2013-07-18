@@ -3913,8 +3913,6 @@ int MPIDI_CH3_PktHandler_CAS( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
     /* There are additional steps to take if this is a passive 
        target RMA or the last operation from the source */
 
-    MPID_Win_get_ptr(cas_pkt->target_win_handle, win_ptr);
-
     mpi_errno = MPIDI_CH3_Finish_rma_op_target(NULL, win_ptr, TRUE,
                                                cas_pkt->flags,
                                                MPI_WIN_NULL);
