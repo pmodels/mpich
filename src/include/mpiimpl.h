@@ -1484,6 +1484,8 @@ typedef struct MPID_Request {
      * bloated request for regular pt2pt and NBC requests. */
     struct MPID_Grequest_fns *greq_fns;
 
+    struct MPIR_Sendq *dbg_next;
+
     /* Other, device-specific information */
 #ifdef MPID_DEV_REQUEST_DECL
     MPID_DEV_REQUEST_DECL

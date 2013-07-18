@@ -337,7 +337,7 @@ void MPIR_Sendq_remember( MPID_Request *req,
 	p = (MPIR_Sendq *)MPIU_Malloc( sizeof(MPIR_Sendq) );
 	if (!p) {
 	    /* Just ignore it */
-            req->mpid.next = NULL;
+            req->dbg_next = NULL;
             goto fn_exit;
 	}
     }
@@ -349,7 +349,7 @@ void MPIR_Sendq_remember( MPID_Request *req,
     p->prev       = NULL;
     MPIR_Sendq_head = p;
     if (p->next) p->next->prev = p;
-    req->mpid.next = (MPID_Request *)p; /* overload 'next' for debugger SEND queue */
+    req->dbg_next = p;
 fn_exit:
     MPIU_THREAD_CS_EXIT(HANDLE,req);
 }
@@ -359,7 +359,7 @@ void MPIR_Sendq_forget( MPID_Request *req )
     MPIR_Sendq *p, *prev;
 
     MPIU_THREAD_CS_ENTER(HANDLE,req);
-    p    = (MPIR_Sendq *)req->mpid.next;
+    p    = req->dbg_next;
     if (!p) {
         /* Just ignore it */
         MPIU_THREAD_CS_EXIT(HANDLE,req);
