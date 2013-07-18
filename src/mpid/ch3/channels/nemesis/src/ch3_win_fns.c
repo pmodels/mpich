@@ -60,8 +60,13 @@ static int MPIDI_CH3I_Win_allocate_shared(MPI_Aint size, int disp_unit, MPID_Inf
 
     /* Check if we are allowed to allocate space non-contiguously */
     if (info != NULL) {
-        MPIR_Info_get_impl(info, "alloc_shared_noncontig", 0, NULL,
-                           &(*win_ptr)->info_args.alloc_shared_noncontig);
+        int alloc_shared_nctg_flag = 0;
+        char alloc_shared_nctg_value[MPI_MAX_INFO_VAL+1];
+        MPIR_Info_get_impl(info, "alloc_shared_noncontig", MPI_MAX_INFO_VAL,
+                           alloc_shared_nctg_value, &alloc_shared_nctg_flag);
+        if ((alloc_shared_nctg_flag == 1) && (!strncmp(alloc_shared_nctg_value, "true",
+                                                       strlen("true"))))
+            (*win_ptr)->info_args.alloc_shared_noncontig = 1;
     }
 
     /* see if we can allocate all windows contiguously */
