@@ -114,7 +114,8 @@ noinst_PROGRAMS =          \
     pscw_ordering          \
     mutex_bench            \
     mutex_bench_shared     \
-    rma-contig
+    rma-contig             \
+    badrma
 
 strided_acc_indexed_LDADD       = $(LDADD) -lm
 strided_acc_onelock_LDADD       = $(LDADD) -lm
