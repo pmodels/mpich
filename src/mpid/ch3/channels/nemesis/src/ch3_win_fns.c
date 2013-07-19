@@ -133,6 +133,11 @@ static int MPIDI_CH3I_Win_allocate_shared(MPI_Aint size, int disp_unit, MPID_Inf
             (*win_ptr)->shm_segment_len += (*win_ptr)->sizes[i];
     }
 
+    if ((*win_ptr)->shm_segment_len == 0) {
+        (*win_ptr)->base = NULL;
+    }
+
+    else {
     mpi_errno = MPIU_SHMW_Hnd_init(&(*win_ptr)->shm_segment_handle);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
@@ -252,6 +257,7 @@ static int MPIDI_CH3I_Win_allocate_shared(MPI_Aint size, int disp_unit, MPID_Inf
     }
 
     (*win_ptr)->base = (*win_ptr)->shm_base_addrs[rank];
+    }
 
     /* get the base addresses of the windows.  Note we reuse tmp_buf from above
        since it's at least as large as we need it for this allgather. */

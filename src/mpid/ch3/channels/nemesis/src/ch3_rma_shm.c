@@ -68,16 +68,19 @@ int MPIDI_CH3_SHM_Win_free(MPID_Win **win_ptr)
     if ((*win_ptr)->shm_allocated) {
         /* free shm_base_addrs that's only used for shared memory windows */
         MPIU_Free((*win_ptr)->shm_base_addrs);
-        /* detach from shared memory segment */
-        mpi_errno = MPIU_SHMW_Seg_detach((*win_ptr)->shm_segment_handle, (char **)&(*win_ptr)->shm_base_addr,
-                                         (*win_ptr)->shm_segment_len);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
-        MPIU_SHMW_Hnd_finalize(&(*win_ptr)->shm_segment_handle);
+        if ((*win_ptr)->shm_segment_len > 0) {
+            /* detach from shared memory segment */
+            mpi_errno = MPIU_SHMW_Seg_detach((*win_ptr)->shm_segment_handle, (char **)&(*win_ptr)->shm_base_addr,
+                                         (*win_ptr)->shm_segment_len);
+            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
+            MPIU_SHMW_Hnd_finalize(&(*win_ptr)->shm_segment_handle);
+        }
     }
 
     /* Free shared process mutex memory region */
-    if ((*win_ptr)->shm_mutex) {
+    if ((*win_ptr)->shm_mutex && (*win_ptr)->shm_segment_len > 0) {
 
         if ((*win_ptr)->comm_ptr->rank == 0) {
             MPIDI_CH3I_SHM_MUTEX_DESTROY(*win_ptr);
