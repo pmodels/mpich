@@ -68,6 +68,7 @@ manyrma2 2 timeLimit=500
 win_shared 4 mpiversion=3.0
 win_shared_noncontig 4 mpiversion=3.0
 win_shared_noncontig_put 4 mpiversion=3.0
+win_zero 4 mpiversion=3.0
 win_dynamic_acc 4 mpiversion=3.0
 get_acc_local 1 mpiversion=3.0
 linked_list 4 mpiversion=3.0

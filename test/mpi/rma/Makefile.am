@@ -83,6 +83,7 @@ noinst_PROGRAMS =          \
     win_shared             \
     win_shared_noncontig   \
     win_shared_noncontig_put \
+    win_zero               \
     win_dynamic_acc        \
     get_acc_local          \
     compare_and_swap       \
