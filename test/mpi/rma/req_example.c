@@ -42,6 +42,7 @@ int main( int argc, char *argv[] )
     MPI_Request get_req;
     double *baseptr;
     double data[M][N]; /* M buffers of length N */
+    MPI_Info win_info;
 
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -49,7 +50,15 @@ int main( int argc, char *argv[] )
 
     assert(M < NSTEPS);
 
-    MPI_Win_allocate(NSTEPS*N*sizeof(double), sizeof(double), MPI_INFO_NULL,
+    MPI_Info_create(&win_info);
+
+#ifdef USE_WIN_ALLOC_SHM
+    MPI_Info_set(win_info, "alloc_shm", "true");
+#else
+    MPI_Info_set(win_info, "alloc_shm", "false");
+#endif
+
+    MPI_Win_allocate(NSTEPS*N*sizeof(double), sizeof(double), win_info,
                      MPI_COMM_WORLD, &baseptr, &win);
 
     MPI_Win_lock_all(0, win);
@@ -79,6 +88,8 @@ int main( int argc, char *argv[] )
     MPI_Win_unlock_all(win);
 
     MPI_Win_free(&win);
+
+    MPI_Info_free(&win_info);
 
     MPI_Reduce(&errors, &all_errors, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
 

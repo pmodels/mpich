@@ -111,6 +111,7 @@ noinst_PROGRAMS =          \
     flush                  \
     reqops                 \
     req_example            \
+    req_example_shm        \
     win_info               \
     pscw_ordering          \
     mutex_bench            \
@@ -159,6 +160,9 @@ get_accumulate_short_derived_SOURCES  = get_accumulate.c
 get_accumulate_long_derived_SOURCES   = get_accumulate.c
 get_accumulate_double_derived_SOURCES = get_accumulate.c
 get_accumulate_int_derived_SOURCES      = get_accumulate.c
+
+req_example_shm_CPPFLAGS         = -DUSE_WIN_ALLOC_SHM $(AM_CPPFLAGS)
+req_example_shm_SOURCES          = req_example.c
 
 mutex_bench_SOURCES              = mutex_bench.c mcs-mutex.c mcs-mutex.h
 mutex_bench_shared_CPPFLAGS      = -DUSE_WIN_SHARED $(AM_CPPFLAGS)
