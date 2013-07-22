@@ -22,6 +22,7 @@ struct mcs_mutex_s {
     MPI_Comm comm;
     MPI_Win window;
     int *base;
+    MPI_Info win_info;
 };
 
 typedef struct mcs_mutex_s * MCS_Mutex;
