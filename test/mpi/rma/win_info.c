@@ -57,6 +57,9 @@ int main(int argc, char **argv) {
     MPI_Info_get(info_out, "same_size", MPI_MAX_INFO_VAL, buf, &flag);
     if (flag && VERBOSE) printf("%d: same_size = %s\n", rank, buf);
 
+    MPI_Info_get(info_out, "alloc_shm", MPI_MAX_INFO_VAL, buf, &flag);
+    if (flag && VERBOSE) printf("%d: alloc_shm = %s\n", rank, buf);
+
     MPI_Info_free(&info_in);
     MPI_Info_free(&info_out);
     MPI_Win_free(&win);
