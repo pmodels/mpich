@@ -4496,7 +4496,7 @@ AC_CHECK_SIZEOF(MPIR_Bsend_data_t,0,[
 #include "${master_top_srcdir}/src/include/mpibsend.h"]
 )
 if test "$ac_cv_sizeof_MPIR_Bsend_data_t" = "0" ; then
-    AC_MSG_ERROR([Unable to determine the size of MPI_BSEND_OVERHEAD"])
+    AC_MSG_ERROR([Unable to determine the size of MPI_BSEND_OVERHEAD])
     # In the past, a default of 128 was used (still likely good enough),
     # but the autoconf SIZEOF macro has been changed to ignore the second
     # argument, so code that depended on the prior defined behavior now
