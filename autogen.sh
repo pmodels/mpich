@@ -919,7 +919,8 @@ if [ $do_bindings = "yes" ] ; then
     echo "------------------------------------------------------------------------"
     echo
     echo_n "Patching libtool.m4 for compatibility with nagfor shared libraries... "
-    patch --forward --no-backup-if-mismatch -p0 -s -l < maint/libtool.m4.patch
+    patch --forward -p0 -s -l < maint/libtool.m4.patch
+    rm -f confdb/libtool.m4.orig
     if [ $? -eq 0 ] ; then
         echo "done"
     else
