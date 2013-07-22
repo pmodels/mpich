@@ -109,8 +109,22 @@ int MPID_Win_allocate(MPI_Aint size, int disp_unit, MPID_Info *info,
     mpi_errno = win_init(size, disp_unit, MPI_WIN_FLAVOR_ALLOCATE, MPI_WIN_UNIFIED, comm_ptr, win_ptr);
     if (mpi_errno != MPI_SUCCESS) { MPIU_ERR_POP(mpi_errno); }
 
-    mpi_errno = MPIDI_CH3U_Win_fns.allocate(size, disp_unit, info, comm_ptr, baseptr, win_ptr);
-    if (mpi_errno != MPI_SUCCESS) { MPIU_ERR_POP(mpi_errno); }
+    if (info != NULL) {
+        int alloc_shm_flag = 0;
+        char shm_alloc_value[MPI_MAX_INFO_VAL+1];
+        MPIR_Info_get_impl(info, "alloc_shm", MPI_MAX_INFO_VAL, shm_alloc_value, &alloc_shm_flag);
+        if ((alloc_shm_flag == 1) && (!strncmp(shm_alloc_value, "true", sizeof("true"))))
+            (*win_ptr)->info_args.alloc_shm = TRUE;
+    }
+
+    if((*win_ptr)->info_args.alloc_shm == TRUE) {
+        mpi_errno = MPIDI_CH3U_Win_fns.allocate_shared(size, disp_unit, info, comm_ptr, baseptr, win_ptr);
+        if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
+    }
+    else {
+        mpi_errno = MPIDI_CH3U_Win_fns.allocate(size, disp_unit, info, comm_ptr, baseptr, win_ptr);
+        if (mpi_errno != MPI_SUCCESS) { MPIU_ERR_POP(mpi_errno); }
+    }
 
  fn_fail:
     MPIDI_FUNC_EXIT(MPID_STATE_MPID_WIN_ALLOCATE);
@@ -298,6 +312,7 @@ static int win_init(MPI_Aint size, int disp_unit, int create_flavor, int model,
     (*win_ptr)->info_args.accumulate_ops      = MPIDI_ACC_OPS_SAME_OP_NO_OP;
     (*win_ptr)->info_args.same_size           = 0;
     (*win_ptr)->info_args.alloc_shared_noncontig = 0;
+    (*win_ptr)->info_args.alloc_shm = FALSE;
 
     MPID_WIN_FTABLE_SET_DEFAULTS(win_ptr);
 
