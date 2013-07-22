@@ -84,8 +84,19 @@ int MPIDI_CH3_SHM_Win_free(MPID_Win **win_ptr)
 
     /* Free shared process mutex memory region */
     if ((*win_ptr)->shm_mutex && (*win_ptr)->shm_segment_len > 0) {
+        MPID_Comm *node_comm_ptr = NULL;
 
-        if ((*win_ptr)->comm_ptr->rank == 0) {
+        /* When allocating shared memory region segment, we need comm of processes
+           that are on the same node as this process (node_comm).
+           If node_comm == NULL, this process is the only one on this node, therefore
+           we use comm_self as node comm. */
+        if ((*win_ptr)->comm_ptr->node_comm != NULL)
+            node_comm_ptr = (*win_ptr)->comm_ptr->node_comm;
+        else
+            node_comm_ptr = MPIR_Process.comm_self;
+        MPIU_Assert(node_comm_ptr != NULL);
+
+        if (node_comm_ptr->rank == 0) {
             MPIDI_CH3I_SHM_MUTEX_DESTROY(*win_ptr);
         }
 
