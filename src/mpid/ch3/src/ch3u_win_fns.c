@@ -382,6 +382,13 @@ int MPIDI_Win_get_info(MPID_Win *win, MPID_Info **info_used)
 
     if (mpi_errno != MPI_SUCCESS) { MPIU_ERR_POP(mpi_errno); }
 
+    if (win->info_args.alloc_shm == TRUE)
+        mpi_errno = MPIR_Info_set_impl(*info_used, "alloc_shm", "true");
+    else
+        mpi_errno = MPIR_Info_set_impl(*info_used, "alloc_shm", "false");
+
+    if (mpi_errno != MPI_SUCCESS) { MPIU_ERR_POP(mpi_errno); }
+
     if (win->create_flavor == MPI_WIN_FLAVOR_SHARED) {
         if (win->info_args.alloc_shared_noncontig)
             mpi_errno = MPIR_Info_set_impl(*info_used, "alloc_shared_noncontig", "true");
