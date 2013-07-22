@@ -3900,6 +3900,8 @@ int MPIDI_CH3_PktHandler_Accumulate_Immed( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
     }
     else {
 	MPIU_INSTR_DURATION_START(rmapkt_acc_immed_op);
+	if (win_ptr->shm_allocated == TRUE)
+	    MPIDI_CH3I_SHM_MUTEX_LOCK(win_ptr);
 	/* Data is already present */
 	if (accum_pkt->op == MPI_REPLACE) {
 	    /* no datatypes required */
@@ -3920,6 +3922,8 @@ int MPIDI_CH3_PktHandler_Accumulate_Immed( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 				     "**opnotpredefined %d", accum_pkt->op );
 	    }
 	}
+	if (win_ptr->shm_allocated == TRUE)
+	    MPIDI_CH3I_SHM_MUTEX_UNLOCK(win_ptr);
 	MPIU_INSTR_DURATION_END(rmapkt_acc_immed_op);
 	
 
@@ -3982,7 +3986,19 @@ int MPIDI_CH3_PktHandler_CAS( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
     /* Copy old value into the response packet */
     MPID_Datatype_get_size_macro(cas_pkt->datatype, len);
     MPIU_Assert(len <= sizeof(MPIDI_CH3_CAS_Immed_u));
+
+    if (win_ptr->shm_allocated == TRUE)
+        MPIDI_CH3I_SHM_MUTEX_LOCK(win_ptr);
+
     MPIU_Memcpy( (void *)&cas_resp_pkt->data, cas_pkt->addr, len );
+
+    /* Compare and replace if equal */
+    if (MPIR_Compare_equal(&cas_pkt->compare_data, cas_pkt->addr, cas_pkt->datatype)) {
+        MPIU_Memcpy(cas_pkt->addr, &cas_pkt->origin_data, len);
+    }
+
+    if (win_ptr->shm_allocated == TRUE)
+        MPIDI_CH3I_SHM_MUTEX_UNLOCK(win_ptr);
 
     /* Send the response packet */
     MPIU_THREAD_CS_ENTER(CH3COMM,vc);
@@ -3995,10 +4011,6 @@ int MPIDI_CH3_PktHandler_CAS( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
         MPID_Request_release(req);
     }
 
-    /* Compare and replace if equal */
-    if (MPIR_Compare_equal(&cas_pkt->compare_data, cas_pkt->addr, cas_pkt->datatype)) {
-        MPIU_Memcpy(cas_pkt->addr, &cas_pkt->origin_data, len);
-    }
 
     /* There are additional steps to take if this is a passive 
        target RMA or the last operation from the source */

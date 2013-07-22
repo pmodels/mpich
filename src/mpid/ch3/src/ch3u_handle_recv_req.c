@@ -142,15 +142,21 @@ int MPIDI_CH3_ReqHandler_PutAccumRespComplete( MPIDI_VC_t *vc,
         rreq->dev.resp_request_handle = MPI_REQUEST_NULL;
     }
 
+    MPID_Win_get_ptr(rreq->dev.target_win_handle, win_ptr);
+
     if (MPIDI_Request_get_type(rreq) == MPIDI_REQUEST_TYPE_ACCUM_RESP) {
+
+	if (win_ptr->shm_allocated == TRUE)
+	    MPIDI_CH3I_SHM_MUTEX_LOCK(win_ptr);
 	/* accumulate data from tmp_buf into user_buf */
 	mpi_errno = do_accumulate_op(rreq);
+	if (win_ptr->shm_allocated == TRUE)
+	    MPIDI_CH3I_SHM_MUTEX_UNLOCK(win_ptr);
+
 	if (mpi_errno) {
 	    MPIU_ERR_POP(mpi_errno);
 	}
     }
-    
-    MPID_Win_get_ptr(rreq->dev.target_win_handle, win_ptr);
     
     mpi_errno = MPIDI_CH3_Finish_rma_op_target(vc, win_ptr, TRUE, rreq->dev.flags,
                                                rreq->dev.source_win_handle);
@@ -430,7 +436,11 @@ int MPIDI_CH3_ReqHandler_SinglePutAccumComplete( MPIDI_VC_t *vc,
 				       lock_queue_entry->pt_single_op->datatype);
 	}
 	else {
+	    if (win_ptr->shm_allocated == TRUE)
+		MPIDI_CH3I_SHM_MUTEX_LOCK(win_ptr);
 	    mpi_errno = do_simple_accumulate(lock_queue_entry->pt_single_op);
+	    if (win_ptr->shm_allocated == TRUE)
+		MPIDI_CH3I_SHM_MUTEX_UNLOCK(win_ptr);
 	}
 	
 	if (mpi_errno) {
@@ -510,12 +520,18 @@ int MPIDI_CH3_ReqHandler_FOPComplete( MPIDI_VC_t *vc,
         MPIU_Memcpy( resp_req->dev.tmpbuf, rreq->dev.real_user_buf, len );
     }
 
+    MPID_Win_get_ptr(rreq->dev.target_win_handle, win_ptr);
+
     /* Apply the op */
     if (rreq->dev.op != MPI_NO_OP) {
         uop = MPIR_OP_HDL_TO_FN(rreq->dev.op);
         one = 1;
 
+        if (win_ptr->shm_allocated == TRUE)
+            MPIDI_CH3I_SHM_MUTEX_LOCK(win_ptr);
         (*uop)(rreq->dev.user_buf, rreq->dev.real_user_buf, &one, &rreq->dev.datatype);
+        if (win_ptr->shm_allocated == TRUE)
+            MPIDI_CH3I_SHM_MUTEX_UNLOCK(win_ptr);
     }
 
     /* Send back the original data.  We do this here to ensure that the
@@ -551,8 +567,6 @@ int MPIDI_CH3_ReqHandler_FOPComplete( MPIDI_VC_t *vc,
 
     /* There are additional steps to take if this is a passive 
        target RMA or the last operation from the source */
-
-    MPID_Win_get_ptr(rreq->dev.target_win_handle, win_ptr);
 
     mpi_errno = MPIDI_CH3_Finish_rma_op_target(vc, win_ptr, TRUE, rreq->dev.flags,
                                                rreq->dev.source_win_handle);
@@ -958,7 +972,11 @@ int MPIDI_CH3I_Release_lock(MPID_Win *win_ptr)
 							   single_op->datatype);
 			    }   
 			    else if (single_op->type == MPIDI_RMA_ACCUMULATE) {
+				if (win_ptr->shm_allocated == TRUE)
+				    MPIDI_CH3I_SHM_MUTEX_LOCK(win_ptr);
 				mpi_errno = do_simple_accumulate(single_op);
+				if (win_ptr->shm_allocated == TRUE)
+				    MPIDI_CH3I_SHM_MUTEX_UNLOCK(win_ptr);
 			    }
 			    else if (single_op->type == MPIDI_RMA_GET) {
 				mpi_errno = do_simple_get(win_ptr, lock_queue);
