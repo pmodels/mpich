@@ -4,7 +4,6 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#include "mpidi_ch3_impl.h"
 #include "mpidrma.h"
 
 #ifdef USE_MPIU_INSTR
@@ -25,7 +24,6 @@ int MPIDI_Get_accumulate(const void *origin_addr, int origin_count,
     int mpi_errno = MPI_SUCCESS;
     MPIDI_msg_sz_t data_sz;
     int rank, origin_predefined, result_predefined, target_predefined;
-    int shm_locked = 0;
     int dt_contig ATTRIBUTE((unused));
     MPI_Aint dt_true_lb ATTRIBUTE((unused));
     MPID_Datatype *dtp;
@@ -64,141 +62,11 @@ int MPIDI_Get_accumulate(const void *origin_addr, int origin_count,
     /* Do =! rank first (most likely branch?) */
     if (target_rank == rank || win_ptr->create_flavor == MPI_WIN_FLAVOR_SHARED)
     {
-        MPI_User_function *uop;
-        void *base;
-        int disp_unit;
-
-        if (win_ptr->create_flavor == MPI_WIN_FLAVOR_SHARED) {
-            base = win_ptr->shm_base_addrs[target_rank];
-            disp_unit = win_ptr->disp_units[target_rank];
-            MPIDI_CH3I_SHM_MUTEX_LOCK(win_ptr);
-            shm_locked = 1;
-        }
-        else {
-            base = win_ptr->base;
-            disp_unit = win_ptr->disp_unit;
-        }
-
-        /* Perform the local get first, then the accumulate */
-        mpi_errno = MPIR_Localcopy((char *) base + disp_unit * target_disp,
-                                   target_count, target_datatype,
-                                   result_addr, result_count, result_datatype);
-        if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
-
-        /* NO_OP: Don't perform the accumulate */
-        if (op == MPI_NO_OP) {
-            if (shm_locked) {
-                MPIDI_CH3I_SHM_MUTEX_UNLOCK(win_ptr);
-                shm_locked = 0;
-            }
-
-            goto fn_exit;
-        }
-
-        if (op == MPI_REPLACE) {
-            mpi_errno = MPIR_Localcopy(origin_addr, origin_count, origin_datatype,
-                                (char *) base + disp_unit * target_disp,
-                                target_count, target_datatype);
-
-            if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
-
-            if (shm_locked) {
-                MPIDI_CH3I_SHM_MUTEX_UNLOCK(win_ptr);
-                shm_locked = 0;
-            }
-
-            goto fn_exit;
-        }
-
-        MPIU_ERR_CHKANDJUMP1((HANDLE_GET_KIND(op) != HANDLE_KIND_BUILTIN),
-                             mpi_errno, MPI_ERR_OP, "**opnotpredefined",
-                             "**opnotpredefined %d", op );
-
-        /* get the function by indexing into the op table */
-        uop = MPIR_OP_HDL_TO_FN(op);
-
-        if (origin_predefined && target_predefined) {
-            /* Cast away const'ness for origin_address in order to
-             * avoid changing the prototype for MPI_User_function */
-            (*uop)((void *) origin_addr, (char *) base + disp_unit*target_disp,
-                   &target_count, &target_datatype);
-        }
-        else {
-            /* derived datatype */
-
-            MPID_Segment *segp;
-            DLOOP_VECTOR *dloop_vec;
-            MPI_Aint first, last;
-            int vec_len, i, type_size, count;
-            MPI_Datatype type;
-            MPI_Aint true_lb, true_extent, extent;
-            void *tmp_buf=NULL, *target_buf;
-            const void *source_buf;
-
-            if (origin_datatype != target_datatype) {
-                /* first copy the data into a temporary buffer with
-                   the same datatype as the target. Then do the
-                   accumulate operation. */
-
-                MPIR_Type_get_true_extent_impl(target_datatype, &true_lb, &true_extent);
-                MPID_Datatype_get_extent_macro(target_datatype, extent);
-
-                MPIU_CHKLMEM_MALLOC(tmp_buf, void *,
-                                    target_count * (MPIR_MAX(extent,true_extent)),
-                                    mpi_errno, "temporary buffer");
-                /* adjust for potential negative lower bound in datatype */
-                tmp_buf = (void *)((char*)tmp_buf - true_lb);
-
-                mpi_errno = MPIR_Localcopy(origin_addr, origin_count,
-                                           origin_datatype, tmp_buf,
-                                           target_count, target_datatype);
-                if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
-            }
-
-            if (target_predefined) {
-                /* target predefined type, origin derived datatype */
-
-                (*uop)(tmp_buf, (char *) base + disp_unit * target_disp,
-                       &target_count, &target_datatype);
-            }
-            else {
-
-                segp = MPID_Segment_alloc();
-                MPIU_ERR_CHKANDJUMP1((!segp), mpi_errno, MPI_ERR_OTHER,
-                                     "**nomem","**nomem %s","MPID_Segment_alloc");
-                MPID_Segment_init(NULL, target_count, target_datatype, segp, 0);
-                first = 0;
-                last  = SEGMENT_IGNORE_LAST;
-
-                MPID_Datatype_get_ptr(target_datatype, dtp);
-                vec_len = dtp->max_contig_blocks * target_count + 1;
-                /* +1 needed because Rob says so */
-                MPIU_CHKLMEM_MALLOC(dloop_vec, DLOOP_VECTOR *,
-                                    vec_len * sizeof(DLOOP_VECTOR),
-                                    mpi_errno, "dloop vector");
-
-                MPID_Segment_pack_vector(segp, first, &last, dloop_vec, &vec_len);
-
-                source_buf = (tmp_buf != NULL) ? tmp_buf : origin_addr;
-                target_buf = (char *) base + disp_unit * target_disp;
-                type = dtp->eltype;
-                type_size = MPID_Datatype_get_basic_size(type);
-
-                for (i=0; i<vec_len; i++) {
-                    count = (dloop_vec[i].DLOOP_VECTOR_LEN)/type_size;
-                    (*uop)((char *)source_buf + MPIU_PtrToAint(dloop_vec[i].DLOOP_VECTOR_BUF),
-                           (char *)target_buf + MPIU_PtrToAint(dloop_vec[i].DLOOP_VECTOR_BUF),
-                           &count, &type);
-                }
-
-                MPID_Segment_free(segp);
-            }
-        }
-
-        if (shm_locked) {
-            MPIDI_CH3I_SHM_MUTEX_UNLOCK(win_ptr);
-            shm_locked = 0;
-        }
+        mpi_errno = MPIDI_CH3I_Shm_get_acc_op(origin_addr, origin_count, origin_datatype,
+                                              result_addr, result_count, result_datatype,
+                                              target_rank, target_disp, target_count, target_datatype,
+                                              op, win_ptr);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     }
     else {
         MPIDI_RMA_Ops_list_t *ops_list = MPIDI_CH3I_RMA_Get_ops_list(win_ptr, target_rank);
@@ -252,9 +120,6 @@ int MPIDI_Get_accumulate(const void *origin_addr, int origin_count,
 
     /* --BEGIN ERROR HANDLING-- */
   fn_fail:
-    if (shm_locked) {
-        MPIDI_CH3I_SHM_MUTEX_UNLOCK(win_ptr);
-    }
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }
@@ -269,7 +134,6 @@ int MPIDI_Compare_and_swap(const void *origin_addr, const void *compare_addr,
                           MPI_Aint target_disp, MPID_Win *win_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
-    int shm_locked = 0;
     int rank;
 
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_COMPARE_AND_SWAP);
@@ -296,35 +160,9 @@ int MPIDI_Compare_and_swap(const void *origin_addr, const void *compare_addr,
      * that uses a processor atomic operation. */
     if (target_rank == rank || win_ptr->create_flavor == MPI_WIN_FLAVOR_SHARED)
     {
-        void *base, *dest_addr;
-        int disp_unit;
-        int len;
-
-        if (win_ptr->create_flavor == MPI_WIN_FLAVOR_SHARED) {
-            base = win_ptr->shm_base_addrs[target_rank];
-            disp_unit = win_ptr->disp_units[target_rank];
-
-            MPIDI_CH3I_SHM_MUTEX_LOCK(win_ptr);
-            shm_locked = 1;
-        }
-        else {
-            base = win_ptr->base;
-            disp_unit = win_ptr->disp_unit;
-        }
-
-        dest_addr = (char *) base + disp_unit * target_disp;
-
-        MPID_Datatype_get_size_macro(datatype, len);
-        MPIU_Memcpy(result_addr, dest_addr, len);
-
-        if (MPIR_Compare_equal(compare_addr, dest_addr, datatype)) {
-            MPIU_Memcpy(dest_addr, origin_addr, len);
-        }
-
-        if (shm_locked) {
-            MPIDI_CH3I_SHM_MUTEX_UNLOCK(win_ptr);
-            shm_locked = 0;
-        }
+        mpi_errno = MPIDI_CH3I_Shm_cas_op(origin_addr, compare_addr, result_addr,
+                                          datatype, target_rank, target_disp, win_ptr);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     }
     else {
         MPIDI_RMA_Ops_list_t *ops_list = MPIDI_CH3I_RMA_Get_ops_list(win_ptr, target_rank);
@@ -359,9 +197,6 @@ fn_exit:
     return mpi_errno;
     /* --BEGIN ERROR HANDLING-- */
 fn_fail:
-    if (shm_locked) {
-        MPIDI_CH3I_SHM_MUTEX_UNLOCK(win_ptr);
-    }
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }
@@ -376,7 +211,6 @@ int MPIDI_Fetch_and_op(const void *origin_addr, void *result_addr,
                        MPI_Aint target_disp, MPI_Op op, MPID_Win *win_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
-    int shm_locked = 0;
     int rank;
 
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_FETCH_AND_OP);
@@ -402,37 +236,9 @@ int MPIDI_Fetch_and_op(const void *origin_addr, void *result_addr,
      * that uses a processor atomic operation. */
     if (target_rank == rank || win_ptr->create_flavor == MPI_WIN_FLAVOR_SHARED)
     {
-        MPI_User_function *uop;
-        void *base, *dest_addr;
-        int disp_unit;
-        int len, one;
-
-        if (win_ptr->create_flavor == MPI_WIN_FLAVOR_SHARED) {
-            base = win_ptr->shm_base_addrs[target_rank];
-            disp_unit = win_ptr->disp_units[target_rank];
-
-            MPIDI_CH3I_SHM_MUTEX_LOCK(win_ptr);
-            shm_locked = 1;
-        }
-        else {
-            base = win_ptr->base;
-            disp_unit = win_ptr->disp_unit;
-        }
-
-        dest_addr = (char *) base + disp_unit * target_disp;
-
-        MPID_Datatype_get_size_macro(datatype, len);
-        MPIU_Memcpy(result_addr, dest_addr, len);
-
-        uop = MPIR_OP_HDL_TO_FN(op);
-        one = 1;
-
-        (*uop)((void *) origin_addr, dest_addr, &one, &datatype);
-
-        if (shm_locked) {
-            MPIDI_CH3I_SHM_MUTEX_UNLOCK(win_ptr);
-            shm_locked = 0;
-        }
+        mpi_errno = MPIDI_CH3I_Shm_fop_op(origin_addr, result_addr, datatype,
+                                          target_rank, target_disp, op, win_ptr);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     }
     else {
         MPIDI_RMA_Ops_list_t *ops_list = MPIDI_CH3I_RMA_Get_ops_list(win_ptr, target_rank);
@@ -465,9 +271,6 @@ fn_exit:
     return mpi_errno;
     /* --BEGIN ERROR HANDLING-- */
 fn_fail:
-    if (shm_locked) {
-        MPIDI_CH3I_SHM_MUTEX_UNLOCK(win_ptr);
-    }
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }
