@@ -9,6 +9,10 @@
    capabilities for collectives.  See the README.envvar file for more
    information.
 
+ # OVERALL: Allow non-blocking collectives and fault tolerance at the same
+   time. The option MPIR_PARAM_ENABLE_COLL_FT_RET has been removed as it is no
+   longer necessary.
+
  # BUILD: Enable shared library builds by default.
 
  # PM/PMI: Upgraded hwloc to 1.7.1.
