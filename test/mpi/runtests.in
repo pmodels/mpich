@@ -637,7 +637,7 @@ sub RunMPIProgram {
 	    if (/^\s*No [Ee]rrors\s*$/ && $found_noerror == 0) {
 		$found_noerror = 1;
 	    }
-	    if (! /^\s*No [Ee]rrors\s*$/ && !/^\s*Test Passed\s*$/) {
+	    if (! /^\s*No [Ee]rrors\s*$/ && !/^\s*Test Passed\s*$/ && !/requesting checkpoint\s*$/ && !/checkpoint completed\s*$/) {
 		print STDERR "Unexpected output in $programname: $_";
 		if (!$found_error) {
 		    $found_error = 1;

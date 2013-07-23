@@ -19,7 +19,7 @@ all_lang_subdirs = f77 cxx f90
 # duplication because automake is able to "see" into simple variable
 # assignments that are not driven by a configure @-substitution variable.
 DIST_SUBDIRS = $(static_subdirs) io $(all_lang_subdirs) threads spawn .
-SUBDIRS      = $(static_subdirs) $(iodir) $(otherlangs) $(threadsdir) $(spawndir) .
+SUBDIRS      = $(static_subdirs) $(iodir) $(otherlangs) $(threadsdir) $(spawndir) $(ckpointdir) .
 
 EXTRA_DIST = maint/common.defn maint/f77tof90.in maint/testmerge.in maint/updatefiles testlist.in
 

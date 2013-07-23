@@ -135,6 +135,11 @@ AC_ARG_ENABLE(checkfaults,
 		[Add some tests for checking on handling of faults in user programs])],,
 	[enable_checkfaults=no])
 
+AC_ARG_ENABLE(checkpointing,
+	[AC_HELP_STRING([--enable-checkpointing],
+		[Add some tests for checkpointing])],,
+	[enable_checkpointing=no])
+
 AC_ARG_ENABLE(fast,
 	[AC_HELP_STRING([--enable-fast],
 		[Indicates that the MPI implementation may have been
@@ -287,6 +292,13 @@ AC_SUBST(perfdir)
 if test "$enable_threads" = "multiple" -o "$enable_threads" = "runtime" ; then
     threadsdir="threads"
 fi
+# 
+# Only run the checkpointing tests if enabled
+ckpointdir="#ckpoint"
+if test "$enable_checkpointing" = "yes" ; then
+    ckpointdir="ckpoint"
+fi
+AC_SUBST(ckpointdir)
 
 PAC_LOAD_BASE_CACHE
 PAC_VPATH_CHECK()
@@ -1414,6 +1426,7 @@ AC_OUTPUT(maint/testmerge \
 	  errors/f77/errhan/iooffset.h \
           errors/f90/Makefile \
 	  errors/f90/errhan/Makefile \
+	  ckpoint/Makefile \
           manual/Makefile \
           manual/manyconnect \
           manual/mpi_t/Makefile \

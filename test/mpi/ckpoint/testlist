@@ -1,0 +1,1 @@
+write_ckpoint 2 timeLimit=30 mpiexecarg=-ckpoint-prefix mpiexecarg=/tmp mpiexecarg=-ckpointlib mpiexecarg=blcr mpiexecarg=-ckpoint-interval mpiexecarg=5
