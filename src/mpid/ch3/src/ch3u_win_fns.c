@@ -353,7 +353,7 @@ int MPIDI_Win_get_info(MPID_Win *win, MPID_Info **info_used)
     if (win->info_args.no_locks)
         mpi_errno = MPIR_Info_set_impl(*info_used, "no_locks", "true");
     else
-        mpi_errno = MPIR_Info_set_impl(*info_used, "no_locks", "");
+        mpi_errno = MPIR_Info_set_impl(*info_used, "no_locks", "false");
 
     if (mpi_errno != MPI_SUCCESS) { MPIU_ERR_POP(mpi_errno); }
 
@@ -386,7 +386,7 @@ int MPIDI_Win_get_info(MPID_Win *win, MPID_Info **info_used)
         if (win->info_args.alloc_shared_noncontig)
             mpi_errno = MPIR_Info_set_impl(*info_used, "alloc_shared_noncontig", "true");
         else
-            mpi_errno = MPIR_Info_set_impl(*info_used, "alloc_shared_noncontig", "");
+            mpi_errno = MPIR_Info_set_impl(*info_used, "alloc_shared_noncontig", "false");
 
         if (mpi_errno != MPI_SUCCESS) { MPIU_ERR_POP(mpi_errno); }
     }
@@ -394,7 +394,7 @@ int MPIDI_Win_get_info(MPID_Win *win, MPID_Info **info_used)
         if (win->info_args.same_size)
             mpi_errno = MPIR_Info_set_impl(*info_used, "same_size", "true");
         else
-            mpi_errno = MPIR_Info_set_impl(*info_used, "same_size", "");
+            mpi_errno = MPIR_Info_set_impl(*info_used, "same_size", "false");
 
         if (mpi_errno != MPI_SUCCESS) { MPIU_ERR_POP(mpi_errno); }
     }
