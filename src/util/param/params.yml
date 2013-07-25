@@ -319,6 +319,7 @@ parameters:
       default     : true
       class       : device
       description : >-
+        DEPRECATED! Will be removed in MPICH-3.2
         Collectives called on a communicator with a failed process
         should not hang, however the result of the operation may be
         invalid even though the function returns MPI_SUCCESS.  This
