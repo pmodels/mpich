@@ -6,12 +6,16 @@
 
 #include "mpi.h"
 #include <stdio.h>
+#include <unistd.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 
 int main(int argc,char *argv[])
 {
     int numprocs, myid, i;
     int  namelen;
     char processor_name[MPI_MAX_PROCESSOR_NAME];
+    struct stat fileStat;
 
     MPI_Init(&argc,&argv);
     MPI_Comm_size(MPI_COMM_WORLD,&numprocs);
@@ -24,7 +28,13 @@ int main(int argc,char *argv[])
     }
 
     if (myid == 0) {
-        printf("No Errors\n");
+        if (stat("/tmp/context-num2-0-0",&fileStat) < 0) {
+            printf("failed to find ckpoint file\n");
+        } else if (fileStat.st_size == 0) {
+            printf("ckpoint file is empty\n");
+        } else {
+            printf("No Errors\n");
+        }
     }
 
     MPI_Finalize();
