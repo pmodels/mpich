@@ -112,8 +112,7 @@ static regmem_t *regmem(int ep, shmchan_t * c, void *addr, size_t len)
     rp = malloc(sizeof(regmem_t));
     rp->base = (char *) base;
     rp->size = size;
-    rp->offset = scif_register(ep, (void *) base, size, 0,
-                               SCIF_PROT_READ | SCIF_PROT_WRITE, 0);
+    rp->offset = scif_register(ep, (void *) base, size, 0, SCIF_PROT_READ | SCIF_PROT_WRITE, 0);
     if (rp->offset == SCIF_REGISTER_FAILED) {
         fprintf(stderr, "regmem failed: errno %d base 0x%lx size %ld\n", errno, base, size);
         free(rp);
@@ -154,8 +153,7 @@ static int dma_read(int ep, shmchan_t * c, void *recv_buf, off_t raddr, size_t m
 
     /* see if we can DMA into the destination */
     if (buflen >= msglen &&
-        ((off_t) recv_buf & (CACHE_LINESIZE - 1)) ==
-        ((raddr + c->pos) & (CACHE_LINESIZE - 1))) {
+        ((off_t) recv_buf & (CACHE_LINESIZE - 1)) == ((raddr + c->pos) & (CACHE_LINESIZE - 1))) {
 
         retval = scif_vreadfrom(ep, recv_buf, buflen, raddr + c->pos, 0);
         if (retval < 0) {
@@ -337,7 +335,7 @@ ssize_t MPID_nem_scif_readv(int ep, shmchan_t * c, const struct iovec * iov, int
         if (retval == 0)
             break;
         nread += retval;
-        if (retval < iov[i].iov_len) 
+        if (retval < iov[i].iov_len)
             break;
     }
     if (retval > 0 && did_dma) {
