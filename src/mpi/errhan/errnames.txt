@@ -1592,6 +1592,8 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **scif_poll_send %s:scif_poll_send failed (scif_poll_send failed with error '%s')
 **poll error:poll error
 **loadsendiov:sendiov failed
+**MPIDI_PG_Get_vc:MPIDI_PG_Get_vc failed
+**MPIDI_PG_Get_vc %s:MPIDI_PG_Get_vc failed (MPIDI_PG_Get_vc failed with error '%s')
 
 # Datarep conversion function not supported by ROMIO (Temproary until implemented)
 **drconvnotsupported:Read and Write datarep conversions are currently not supported by MPI-IO

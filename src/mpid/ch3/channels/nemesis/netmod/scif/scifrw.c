@@ -4,7 +4,7 @@
  *      See COPYRIGHT in top-level directory.
  *
  *  Portions of this code were written by Intel Corporation.
- *  Copyright (C) 2011-2012 Intel Corporation.  Intel provides this material
+ *  Copyright (C) 2011-2013 Intel Corporation.  Intel provides this material
  *  to Argonne National Laboratory subject to Software Grant and Corporate
  *  Contributor License Agreement dated February 8, 2012.
  */
@@ -108,11 +108,7 @@ static regmem_t *regmem(int ep, shmchan_t * c, void *addr, size_t len)
     base = (uint64_t) addr & ~(pagesize - 1);
     size = ((uint64_t) addr + len + pagesize - 1) & ~(pagesize - 1);
     size -= base;
-    for (rp = c->reg; rp != 0; rp = rp->next) {
-        if (base >= (uint64_t) rp->base && base < (uint64_t) rp->base + rp->size)
-            if (base + size <= (uint64_t) rp->base + rp->size)
-                return rp;
-    }
+
     rp = malloc(sizeof(regmem_t));
     rp->base = (char *) base;
     rp->size = size;
@@ -160,17 +156,12 @@ static int dma_read(int ep, shmchan_t * c, void *recv_buf, off_t raddr, size_t m
     if (buflen >= msglen &&
         ((off_t) recv_buf & (CACHE_LINESIZE - 1)) ==
         ((raddr + c->pos) & (CACHE_LINESIZE - 1))) {
-        rp = regmem(ep, c, recv_buf, buflen);
-        if (rp == 0) {
-            retval = -1;
-            goto fn_exit;
-        }
-        locoffs = (char *) recv_buf - rp->base;
-        retval = scif_readfrom(ep, rp->offset + locoffs, buflen, raddr + c->pos, 0);
+
+        retval = scif_vreadfrom(ep, recv_buf, buflen, raddr + c->pos, 0);
         if (retval < 0) {
-            fprintf(stderr, "scif_readfrom #1 returns %d, errno %d\n", retval, errno);
-            fprintf(stderr, "locoffs: 0x%lx raddr: 0x%lx buflen: %ld\n",
-                    rp->offset + locoffs, raddr + c->pos, buflen);
+            fprintf(stderr, "scif_vreadfrom #1 returns %d, errno %d\n", retval, errno);
+            fprintf(stderr, "recv_buf: %p raddr: 0x%lx buflen: %ld\n",
+                    recv_buf, raddr + c->pos, buflen);
         }
         *did_dma = 1;
         goto fn_exit;
@@ -184,20 +175,15 @@ static int dma_read(int ep, shmchan_t * c, void *recv_buf, off_t raddr, size_t m
         void *p;
         off_t offset;
         if (c->dmalen) {
-            scif_unregister(ep, c->dmaoffset, c->dmalen);
             free(c->dmabuf);
         }
         retval = posix_memalign(&p, pagesize, newbufsiz);
         if (retval != 0)
             goto fn_exit;
-        offset = scif_register(ep, p, newbufsiz, 0, SCIF_PROT_READ | SCIF_PROT_WRITE, 0);
-        if (offset == SCIF_REGISTER_FAILED) {
-            retval = errno;
-            free(p);
-        }
+
         c->dmabuf = p;
         c->dmalen = newbufsiz;
-        c->dmaoffset = offset;
+        c->dmaoffset = 0;
         c->dmastart = -1;
         c->dmaend = 0;
     }
@@ -213,7 +199,8 @@ static int dma_read(int ep, shmchan_t * c, void *recv_buf, off_t raddr, size_t m
     }
     locoffs = c->dmaoffset + c->dmastart;
     assert(c->pos == 0);
-    retval = scif_readfrom(ep, locoffs, msglen, raddr, 0);
+    retval = scif_vreadfrom(ep, c->dmabuf + c->dmastart, msglen, raddr, 0);
+    *did_dma = 1;
     scif_fence_mark(ep, SCIF_FENCE_INIT_SELF, &mark);
     scif_fence_wait(ep, mark);
     if (retval < 0)
@@ -276,7 +263,7 @@ static ssize_t getmsg(int ep, shmchan_t * c, void *recv_buf, size_t len, int *di
 }
 
 /* Read at most one message */
-#if 0
+
 static ssize_t do_scif_read(int ep, shmchan_t * c, void *recv_buf, size_t len, int *did_dma)
 {
     ssize_t retval = 0;
@@ -313,42 +300,6 @@ static ssize_t do_scif_read(int ep, shmchan_t * c, void *recv_buf, size_t len, i
   fn_exit:
     return nread;
 }
-#else
-static ssize_t do_scif_read(int ep, shmchan_t * c, void *recv_buf, size_t len, int *did_dma)
-{
-    ssize_t retval = 0;
-    size_t nread = 0;
-    uint64_t rseqno;
-
-    if (c->pos >= 0) {
-        /* partial message chunk left */
-        retval = getmsg(ep, c, (char *) recv_buf + nread, len - nread, did_dma);
-        if (retval < 0) {
-            nread = -1;
-            goto fn_exit;
-        }
-        nread += retval;
-        goto fn_exit;
-    }
-    /* Check if we have a message */
-    rseqno = *c->rseqno;
-    if (rseqno <= c->seqno) {
-        goto fn_exit;
-    }
-    /* Message is available */
-    ++c->seqno;
-    c->pos = 0;
-    retval = getmsg(ep, c, (char *) recv_buf + nread, len - nread, did_dma);
-    if (retval < 0) {
-        nread = -1;
-        goto fn_exit;
-    }
-    nread += retval;
-
-  fn_exit:
-    return nread;
-}
-#endif
 
 ssize_t MPID_nem_scif_read(int ep, shmchan_t * c, void *recv_buf, size_t len)
 {
@@ -386,6 +337,8 @@ ssize_t MPID_nem_scif_readv(int ep, shmchan_t * c, const struct iovec * iov, int
         if (retval == 0)
             break;
         nread += retval;
+        if (retval < iov[i].iov_len) 
+            break;
     }
     if (retval > 0 && did_dma) {
         scif_fence_mark(ep, SCIF_FENCE_INIT_SELF, &mark);
@@ -423,6 +376,8 @@ ssize_t MPID_nem_scif_writev(int ep, shmchan_t * c, const struct iovec * iov, in
     size_t nwritten = 0;
     int did_dma = 0;
     int i;
+    int mark;
+    regmem_t *rp;
 
     for (i = 0; i < iov_cnt; ++i) {
         size_t len;
@@ -459,7 +414,7 @@ ssize_t MPID_nem_scif_writev(int ep, shmchan_t * c, const struct iovec * iov, in
         }
         else {
             did_dma = 1;
-            regmem_t *rp = regmem(ep, c, iov[i].iov_base, iovlen);
+            rp = regmem(ep, c, iov[i].iov_base, iovlen);
             if (rp == 0) {
                 nwritten = -1;
                 goto fn_exit;
