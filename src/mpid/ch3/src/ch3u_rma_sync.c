@@ -202,6 +202,122 @@ static int create_datatype(const MPIDI_RMA_dtype_info *dtype_info,
     } while (0)
 
 
+/* Perform RMA operation asynchronously if window of processes on the same node
+   is allocated on shared memory */
+#define MPIDI_CH3I_DO_SHM_OP(op_ptr_, win_ptr_, err_)                                                                       \
+    do {                                                                                                                    \
+    switch ((op_ptr_)->type)                                                                                                \
+    {                                                                                                                       \
+        int predefined_;                                                                                                    \
+        MPID_Datatype *dtp_;                                                                                                \
+        case (MPIDI_RMA_PUT):                                                                                               \
+            (err_) = MPIDI_CH3I_Shm_put_op((op_ptr_)->origin_addr, (op_ptr_)->origin_count, (op_ptr_)->origin_datatype,     \
+                                           (op_ptr_)->target_rank, (op_ptr_)->target_disp, (op_ptr_)->target_count,         \
+                                           (op_ptr_)->target_datatype, (win_ptr_));                                         \
+            if (err_) {MPIU_ERR_POP(err_);}                                                                                 \
+            /* if source or target datatypes are derived, decrement their                                                   \
+               reference counts because they will not be referenced by progress engine */                                   \
+            MPIDI_CH3I_DATATYPE_IS_PREDEFINED((op_ptr_)->origin_datatype, predefined_);                                     \
+            if (!predefined_)                                                                                               \
+            {                                                                                                               \
+                MPID_Datatype_get_ptr((op_ptr_)->origin_datatype, dtp_);                                                    \
+                MPID_Datatype_release(dtp_);                                                                                \
+            }                                                                                                               \
+            MPIDI_CH3I_DATATYPE_IS_PREDEFINED((op_ptr_)->target_datatype, predefined_);                                     \
+            if (!predefined_)                                                                                               \
+            {                                                                                                               \
+                MPID_Datatype_get_ptr((op_ptr_)->target_datatype, dtp_);                                                    \
+                MPID_Datatype_release(dtp_);                                                                                \
+            }                                                                                                               \
+            break;                                                                                                          \
+        case (MPIDI_RMA_ACCUMULATE):                                                                                        \
+        case (MPIDI_RMA_ACC_CONTIG):                                                                                        \
+            (err_) = MPIDI_CH3I_Shm_acc_op((op_ptr_)->origin_addr, (op_ptr_)->origin_count, (op_ptr_)->origin_datatype,     \
+                                           (op_ptr_)->target_rank, (op_ptr_)->target_disp, (op_ptr_)->target_count,         \
+                                           (op_ptr_)->target_datatype, (op_ptr_)->op, (win_ptr_));                          \
+            if (err_) {MPIU_ERR_POP(err_);}                                                                                 \
+            /* if source or target datatypes are derived, decrement their                                                   \
+               reference counts because they will not be referenced by progress engine */                                   \
+            MPIDI_CH3I_DATATYPE_IS_PREDEFINED((op_ptr_)->origin_datatype, predefined_);                                     \
+            if (!predefined_)                                                                                               \
+            {                                                                                                               \
+                MPID_Datatype_get_ptr((op_ptr_)->origin_datatype, dtp_);                                                    \
+                MPID_Datatype_release(dtp_);                                                                                \
+            }                                                                                                               \
+            MPIDI_CH3I_DATATYPE_IS_PREDEFINED((op_ptr_)->target_datatype, predefined_);                                     \
+            if (!predefined_)                                                                                               \
+            {                                                                                                               \
+                MPID_Datatype_get_ptr((op_ptr_)->target_datatype, dtp_);                                                    \
+                MPID_Datatype_release(dtp_);                                                                                \
+            }                                                                                                               \
+            break;                                                                                                          \
+        case (MPIDI_RMA_GET_ACCUMULATE):                                                                                    \
+            (err_) = MPIDI_CH3I_Shm_get_acc_op((op_ptr_)->origin_addr, (op_ptr_)->origin_count, (op_ptr_)->origin_datatype, \
+                                               (op_ptr_)->result_addr, (op_ptr_)->result_count, (op_ptr_)->result_datatype, \
+                                               (op_ptr_)->target_rank, (op_ptr_)->target_disp, (op_ptr_)->target_count,     \
+                                               (op_ptr_)->target_datatype, (op_ptr_)->op, (win_ptr_));                      \
+            if (err_) {MPIU_ERR_POP(err_);}                                                                                 \
+            /* if source or target datatypes are derived, decrement their                                                   \
+               reference counts because they will not be referenced by progress engine */                                   \
+            predefined_ = TRUE;                                                                                             \
+            if ((op_ptr_)->op != MPI_NO_OP) {                                                                               \
+                MPIDI_CH3I_DATATYPE_IS_PREDEFINED((op_ptr_)->origin_datatype, predefined_);                                 \
+            }                                                                                                               \
+            if (!predefined_)                                                                                               \
+            {                                                                                                               \
+                MPID_Datatype_get_ptr((op_ptr_)->origin_datatype, dtp_);                                                    \
+                MPID_Datatype_release(dtp_);                                                                                \
+            }                                                                                                               \
+            MPIDI_CH3I_DATATYPE_IS_PREDEFINED((op_ptr_)->result_datatype, predefined_);                                     \
+            if (!predefined_)                                                                                               \
+            {                                                                                                               \
+                MPID_Datatype_get_ptr((op_ptr_)->result_datatype, dtp_);                                                    \
+                MPID_Datatype_release(dtp_);                                                                                \
+            }                                                                                                               \
+            MPIDI_CH3I_DATATYPE_IS_PREDEFINED((op_ptr_)->target_datatype, predefined_);                                     \
+            if (!predefined_)                                                                                               \
+            {                                                                                                               \
+                MPID_Datatype_get_ptr((op_ptr_)->target_datatype, dtp_);                                                    \
+                MPID_Datatype_release(dtp_);                                                                                \
+            }                                                                                                               \
+            break;                                                                                                          \
+        case (MPIDI_RMA_GET):                                                                                               \
+            (err_) = MPIDI_CH3I_Shm_get_op((op_ptr_)->origin_addr, (op_ptr_)->origin_count, (op_ptr_)->origin_datatype,     \
+                                           (op_ptr_)->target_rank, (op_ptr_)->target_disp, (op_ptr_)->target_count,         \
+                                           (op_ptr_)->target_datatype, (win_ptr_));                                         \
+            if (err_) {MPIU_ERR_POP(err_);}                                                                                 \
+            /* if source or target datatypes are derived, decrement their                                                   \
+               reference counts because they will not be referenced by progress engine */                                   \
+            MPIDI_CH3I_DATATYPE_IS_PREDEFINED((op_ptr_)->origin_datatype, predefined_);                                     \
+            if (!predefined_)                                                                                               \
+            {                                                                                                               \
+                MPID_Datatype_get_ptr((op_ptr_)->origin_datatype, dtp_);                                                    \
+                MPID_Datatype_release(dtp_);                                                                                \
+            }                                                                                                               \
+            MPIDI_CH3I_DATATYPE_IS_PREDEFINED((op_ptr_)->target_datatype, predefined_);                                     \
+            if (!predefined_)                                                                                               \
+            {                                                                                                               \
+                MPID_Datatype_get_ptr((op_ptr_)->target_datatype, dtp_);                                                    \
+                MPID_Datatype_release(dtp_);                                                                                \
+            }                                                                                                               \
+            break;                                                                                                          \
+        case (MPIDI_RMA_COMPARE_AND_SWAP):                                                                                  \
+            (err_) = MPIDI_CH3I_Shm_cas_op((op_ptr_)->origin_addr, (op_ptr_)->compare_addr, (op_ptr_)->result_addr,         \
+                                           (op_ptr_)->origin_datatype, (op_ptr_)->target_rank, (op_ptr_)->target_disp,      \
+                                           (win_ptr_));                                                                     \
+            if (err_) {MPIU_ERR_POP(err_);}                                                                                 \
+            break;                                                                                                          \
+        case (MPIDI_RMA_FETCH_AND_OP):                                                                                      \
+            (err_) = MPIDI_CH3I_Shm_fop_op((op_ptr_)->origin_addr, (op_ptr_)->result_addr, (op_ptr_)->origin_datatype,      \
+                                           (op_ptr_)->target_rank, (op_ptr_)->target_disp, (op_ptr_)->op, (win_ptr_));      \
+            if (err_) {MPIU_ERR_POP(err_);}                                                                                 \
+            break;                                                                                                          \
+        default:                                                                                                            \
+            MPIU_ERR_SETANDJUMP(err_,MPI_ERR_OTHER,"**winInvalidOp");                                                       \
+    }                                                                                                                       \
+    } while (0)
+
+
 #undef FUNCNAME
 #define FUNCNAME MPIDI_Win_fence
 #undef FCNAME
@@ -309,9 +425,13 @@ int MPIDI_Win_fence(int assert, MPID_Win *win_ptr)
         curr_ptr = MPIDI_CH3I_RMA_Ops_head(ops_list);
 	while (curr_ptr != NULL)
 	{
-	    total_op_count++;
-	    rma_target_proc[curr_ptr->target_rank] = 1;
-	    nops_to_proc[curr_ptr->target_rank]++;
+	    MPIDI_VC_t *vc = NULL;
+	    MPIDI_Comm_get_vc(win_ptr->comm_ptr, curr_ptr->target_rank, &vc);
+	    if (!(win_ptr->shm_allocated == TRUE && vc->ch.is_local)) {
+		total_op_count++;
+		rma_target_proc[curr_ptr->target_rank] = 1;
+		nops_to_proc[curr_ptr->target_rank]++;
+	    }
 	    curr_ptr = curr_ptr->next;
 	}
 	
@@ -347,6 +467,14 @@ int MPIDI_Win_fence(int assert, MPID_Win *win_ptr)
         curr_ptr = MPIDI_CH3I_RMA_Ops_head(ops_list);
 	while (curr_ptr != NULL)
 	{
+          MPIDI_VC_t *vc = NULL;
+          MPIDI_Comm_get_vc(win_ptr->comm_ptr, curr_ptr->target_rank, &vc);
+          if (win_ptr->shm_allocated == TRUE && vc->ch.is_local) {
+            MPIDI_CH3I_DO_SHM_OP(curr_ptr, win_ptr, mpi_errno);
+            MPIDI_CH3I_RMA_Ops_free_and_next(ops_list, &curr_ptr);
+          }
+          else {
+
             MPIDI_CH3_Pkt_flags_t flags = MPIDI_CH3_PKT_FLAG_NONE;
 
 	    /* The completion counter at the target is decremented only on 
@@ -388,6 +516,7 @@ int MPIDI_Win_fence(int assert, MPID_Win *win_ptr)
 		    nRequestNew = nRequest;
 		}
 	    }
+	  } /* end of else */
 	}
 	MPIU_INSTR_DURATION_END(winfence_issue);
 
@@ -1628,8 +1757,12 @@ int MPIDI_Win_complete(MPID_Win *win_ptr)
     curr_ptr = MPIDI_CH3I_RMA_Ops_head(ops_list);
     while (curr_ptr != NULL)
     {
-	nops_to_proc[curr_ptr->target_rank]++;
-	total_op_count++;
+	MPIDI_VC_t *vc = NULL;
+	MPIDI_Comm_get_vc(win_ptr->comm_ptr, curr_ptr->target_rank, &vc);
+	if (!(win_ptr->shm_allocated == TRUE && vc->ch.is_local)) {
+	    nops_to_proc[curr_ptr->target_rank]++;
+	    total_op_count++;
+	}
 	curr_ptr = curr_ptr->next;
     }
 
@@ -1648,6 +1781,14 @@ int MPIDI_Win_complete(MPID_Win *win_ptr)
     curr_ptr = MPIDI_CH3I_RMA_Ops_head(ops_list);
     while (curr_ptr != NULL)
     {
+      MPIDI_VC_t *vc = NULL;
+      MPIDI_Comm_get_vc(win_ptr->comm_ptr, curr_ptr->target_rank, &vc);
+      if (win_ptr->shm_allocated == TRUE && vc->ch.is_local) {
+        MPIDI_CH3I_DO_SHM_OP(curr_ptr, win_ptr, mpi_errno);
+        MPIDI_CH3I_RMA_Ops_free_and_next(ops_list, &curr_ptr);
+      }
+      else {
+
         MPIDI_CH3_Pkt_flags_t flags = MPIDI_CH3_PKT_FLAG_NONE;
 
 	/* The completion counter at the target is decremented only on 
@@ -1683,6 +1824,7 @@ int MPIDI_Win_complete(MPID_Win *win_ptr)
 		nRequestNew = nRequest;
 	    }
 	}
+      }  /* end of else */
     }
     MPIU_INSTR_DURATION_END(wincomplete_issue);
         
@@ -2509,6 +2651,7 @@ static int MPIDI_CH3I_Do_passive_target_rma(MPID_Win *win_ptr, int target_rank,
     MPIDI_RMA_Op_t *curr_ptr;
     MPI_Win source_win_handle = MPI_WIN_NULL, target_win_handle = MPI_WIN_NULL;
     int nRequest=0, nRequestNew=0;
+    MPIDI_VC_t *vc = NULL;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3I_DO_PASSIVE_TARGET_RMA);
 
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_CH3I_DO_PASSIVE_TARGET_RMA);
@@ -2517,6 +2660,20 @@ static int MPIDI_CH3I_Do_passive_target_rma(MPID_Win *win_ptr, int target_rank,
                 win_ptr->targets[target_rank].remote_lock_state == MPIDI_CH3_WIN_LOCK_FLUSH ||
                 (win_ptr->targets[target_rank].remote_lock_state == MPIDI_CH3_WIN_LOCK_CALLED &&
                  win_ptr->targets[target_rank].remote_lock_assert & MPI_MODE_NOCHECK));
+
+    /* if alloc_shm is enabled and target process is on the same node,
+       directly perform RMA operations at the origin side and remove them
+       from passive RMA operation list */
+
+    MPIDI_Comm_get_vc(win_ptr->comm_ptr, target_rank, &vc);
+    if (win_ptr->shm_allocated == TRUE && vc->ch.is_local) {
+        curr_ptr = MPIDI_CH3I_RMA_Ops_head(&win_ptr->targets[target_rank].rma_ops_list);
+        while (curr_ptr != NULL) {
+            MPIU_Assert(curr_ptr->target_rank == target_rank);
+            MPIDI_CH3I_DO_SHM_OP(curr_ptr, win_ptr, mpi_errno);
+            MPIDI_CH3I_RMA_Ops_free_and_next(&win_ptr->targets[target_rank].rma_ops_list, &curr_ptr);
+        }
+    }
 
     if (win_ptr->targets[target_rank].remote_lock_mode == MPI_LOCK_EXCLUSIVE &&
         win_ptr->targets[target_rank].remote_lock_state != MPIDI_CH3_WIN_LOCK_CALLED) {
