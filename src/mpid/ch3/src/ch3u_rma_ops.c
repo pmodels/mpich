@@ -10,9 +10,6 @@
 static int enableShortACC=1;
 
 #ifdef USE_MPIU_INSTR
-MPIU_INSTR_DURATION_EXTERN_DECL(wincreate_allgather);
-MPIU_INSTR_DURATION_EXTERN_DECL(winfree_rs);
-MPIU_INSTR_DURATION_EXTERN_DECL(winfree_complete);
 MPIU_INSTR_DURATION_EXTERN_DECL(rmaqueue_alloc);
 MPIU_INSTR_DURATION_EXTERN_DECL(rmaqueue_set);
 extern void MPIDI_CH3_RMA_InitInstr(void);
@@ -55,37 +52,10 @@ int MPIDI_Win_free(MPID_Win **win_ptr)
     MPIU_ERR_CHKANDJUMP((*win_ptr)->epoch_state != MPIDI_EPOCH_NONE,
                         mpi_errno, MPI_ERR_RMA_SYNC, "**rmasync");
 
+    mpi_errno = MPIDI_CH3I_Wait_for_pt_ops_finish(*win_ptr);
+    if(mpi_errno) MPIU_ERR_POP(mpi_errno);
+
     comm_ptr = (*win_ptr)->comm_ptr;
-    MPIU_INSTR_DURATION_START(winfree_rs);
-    mpi_errno = MPIR_Reduce_scatter_block_impl((*win_ptr)->pt_rma_puts_accs, 
-                                               &total_pt_rma_puts_accs, 1, 
-                                               MPI_INT, MPI_SUM, comm_ptr, &errflag);
-    if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
-    MPIU_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
-    MPIU_INSTR_DURATION_END(winfree_rs);
-
-    if (total_pt_rma_puts_accs != (*win_ptr)->my_pt_rma_puts_accs)
-    {
-	MPID_Progress_state progress_state;
-            
-	/* poke the progress engine until the two are equal */
-	MPIU_INSTR_DURATION_START(winfree_complete);
-	MPID_Progress_start(&progress_state);
-	while (total_pt_rma_puts_accs != (*win_ptr)->my_pt_rma_puts_accs)
-	{
-	    mpi_errno = MPID_Progress_wait(&progress_state);
-	    /* --BEGIN ERROR HANDLING-- */
-	    if (mpi_errno != MPI_SUCCESS)
-	    {
-		MPID_Progress_end(&progress_state);
-		MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**winnoprogress");
-	    }
-	    /* --END ERROR HANDLING-- */
-	}
-	MPID_Progress_end(&progress_state);
-	MPIU_INSTR_DURATION_END(winfree_complete);
-    }
-
     mpi_errno = MPIR_Comm_free_impl(comm_ptr);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
