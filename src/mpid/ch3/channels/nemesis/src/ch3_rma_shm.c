@@ -64,6 +64,9 @@ int MPIDI_CH3_SHM_Win_free(MPID_Win **win_ptr)
 
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_CH3_SHM_WIN_FREE);
 
+    mpi_errno = MPIDI_CH3I_Wait_for_pt_ops_finish(*win_ptr);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
     /* Free shared memory region */
     if ((*win_ptr)->shm_allocated) {
         /* free shm_base_addrs that's only used for shared memory windows */
