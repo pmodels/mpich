@@ -5,6 +5,9 @@
  # OVERALL: Integrated MPICH-PAMI code base for Blue Gene/Q and other
    IBM platforms.
 
+ # OVERALL: Several improvements to the SCIF netmod.  (code
+   contribution from Intel).
+
  # OVERALL: Added environment variables to control a lot more
    capabilities for collectives.  See the README.envvar file for more
    information.
