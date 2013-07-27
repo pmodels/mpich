@@ -190,6 +190,7 @@ int MPIDI_Put(const void *origin_addr, int origin_count, MPI_Datatype
     {
         MPIDI_RMA_Ops_list_t *ops_list = MPIDI_CH3I_RMA_Get_ops_list(win_ptr, target_rank);
         MPIDI_RMA_Op_t *new_ptr = NULL;
+        MPIDI_VC_t *vc = NULL;
 
 	/* queue it up */
         MPIU_INSTR_DURATION_START(rmaqueue_alloc);
@@ -212,20 +213,28 @@ int MPIDI_Put(const void *origin_addr, int origin_count, MPI_Datatype
 	new_ptr->target_datatype = target_datatype;
 	MPIU_INSTR_DURATION_END(rmaqueue_set);
 
-	/* if source or target datatypes are derived, increment their
-	   reference counts */ 
-	MPIDI_CH3I_DATATYPE_IS_PREDEFINED(origin_datatype, predefined);
-	if (!predefined)
-	{
-	    MPID_Datatype_get_ptr(origin_datatype, dtp);
-	    MPID_Datatype_add_ref(dtp);
-	}
-	MPIDI_CH3I_DATATYPE_IS_PREDEFINED(target_datatype, predefined);
-	if (!predefined)
-	{
-	    MPID_Datatype_get_ptr(target_datatype, dtp);
-	    MPID_Datatype_add_ref(dtp);
-	}
+	/* check if target is local and shared memory is allocated on window,
+	  if so, we do not need to increment reference counts on datatype. This is
+	  because this operation will be directly done on shared memory region, instead
+	  of sending and receiving through the progress engine, therefore datatype
+	  will not be referenced by the progress engine */
+	MPIDI_Comm_get_vc(win_ptr->comm_ptr, target_rank, &vc);
+	if (!(win_ptr->shm_allocated == TRUE && vc->ch.is_local)) {
+	    /* if source or target datatypes are derived, increment their
+	       reference counts */
+	    MPIDI_CH3I_DATATYPE_IS_PREDEFINED(origin_datatype, predefined);
+	    if (!predefined)
+	    {
+	        MPID_Datatype_get_ptr(origin_datatype, dtp);
+	        MPID_Datatype_add_ref(dtp);
+	    }
+	    MPIDI_CH3I_DATATYPE_IS_PREDEFINED(target_datatype, predefined);
+	    if (!predefined)
+	    {
+	        MPID_Datatype_get_ptr(target_datatype, dtp);
+	        MPID_Datatype_add_ref(dtp);
+	    }
+        }
     }
 
   fn_exit:
@@ -288,6 +297,7 @@ int MPIDI_Get(void *origin_addr, int origin_count, MPI_Datatype
     {
         MPIDI_RMA_Ops_list_t *ops_list = MPIDI_CH3I_RMA_Get_ops_list(win_ptr, target_rank);
         MPIDI_RMA_Op_t *new_ptr = NULL;
+        MPIDI_VC_t *vc = NULL;
 
 	/* queue it up */
         MPIU_INSTR_DURATION_START(rmaqueue_alloc);
@@ -307,20 +317,28 @@ int MPIDI_Get(void *origin_addr, int origin_count, MPI_Datatype
 	new_ptr->target_datatype = target_datatype;
 	MPIU_INSTR_DURATION_END(rmaqueue_set);
 	
-	/* if source or target datatypes are derived, increment their
-	   reference counts */ 
-	MPIDI_CH3I_DATATYPE_IS_PREDEFINED(origin_datatype, predefined);
-	if (!predefined)
-	{
-	    MPID_Datatype_get_ptr(origin_datatype, dtp);
-	    MPID_Datatype_add_ref(dtp);
-	}
-	MPIDI_CH3I_DATATYPE_IS_PREDEFINED(target_datatype, predefined);
-	if (!predefined)
-	{
-	    MPID_Datatype_get_ptr(target_datatype, dtp);
-	    MPID_Datatype_add_ref(dtp);
-	}
+	/* check if target is local and shared memory is allocated on window,
+	  if so, we do not need to increment reference counts on datatype. This is
+	  because this operation will be directly done on shared memory region, instead
+	  of sending and receiving through the progress engine, therefore datatype
+	  will not be referenced by the progress engine */
+	MPIDI_Comm_get_vc(win_ptr->comm_ptr, target_rank, &vc);
+	if (!(win_ptr->shm_allocated == TRUE && vc->ch.is_local)) {
+	    /* if source or target datatypes are derived, increment their
+	       reference counts */
+	    MPIDI_CH3I_DATATYPE_IS_PREDEFINED(origin_datatype, predefined);
+	    if (!predefined)
+	    {
+	        MPID_Datatype_get_ptr(origin_datatype, dtp);
+	        MPID_Datatype_add_ref(dtp);
+	    }
+	    MPIDI_CH3I_DATATYPE_IS_PREDEFINED(target_datatype, predefined);
+	    if (!predefined)
+	    {
+	        MPID_Datatype_get_ptr(target_datatype, dtp);
+	        MPID_Datatype_add_ref(dtp);
+	    }
+        }
     }
 
   fn_exit:
@@ -389,6 +407,7 @@ int MPIDI_Accumulate(const void *origin_addr, int origin_count, MPI_Datatype
     {
         MPIDI_RMA_Ops_list_t *ops_list = MPIDI_CH3I_RMA_Get_ops_list(win_ptr, target_rank);
         MPIDI_RMA_Op_t *new_ptr = NULL;
+        MPIDI_VC_t *vc = NULL;
 
 	/* queue it up */
         MPIU_INSTR_DURATION_START(rmaqueue_alloc);
@@ -429,18 +448,26 @@ int MPIDI_Accumulate(const void *origin_addr, int origin_count, MPI_Datatype
 	new_ptr->op = op;
 	MPIU_INSTR_DURATION_END(rmaqueue_set);
 	
-	/* if source or target datatypes are derived, increment their
-	   reference counts */ 
-	if (!origin_predefined)
-	{
-	    MPID_Datatype_get_ptr(origin_datatype, dtp);
-	    MPID_Datatype_add_ref(dtp);
-	}
-	if (!target_predefined)
-	{
-	    MPID_Datatype_get_ptr(target_datatype, dtp);
-	    MPID_Datatype_add_ref(dtp);
-	}
+	/* check if target is local and shared memory is allocated on window,
+	  if so, we do not need to increment reference counts on datatype. This is
+	  because this operation will be directly done on shared memory region, instead
+	  of sending and receiving through the progress engine, therefore datatype
+	  will not be referenced by the progress engine */
+	MPIDI_Comm_get_vc(win_ptr->comm_ptr, target_rank, &vc);
+	if (!(win_ptr->shm_allocated == TRUE && vc->ch.is_local)) {
+	    /* if source or target datatypes are derived, increment their
+	       reference counts */
+	    if (!origin_predefined)
+	    {
+	        MPID_Datatype_get_ptr(origin_datatype, dtp);
+	        MPID_Datatype_add_ref(dtp);
+	    }
+	    if (!target_predefined)
+	    {
+	        MPID_Datatype_get_ptr(target_datatype, dtp);
+	        MPID_Datatype_add_ref(dtp);
+	    }
+        }
     }
 
  fn_exit:
