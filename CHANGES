@@ -2,25 +2,24 @@
                                Changes in 3.1
 ===============================================================================
 
- # OVERALL: Integrated MPICH-PAMI code base for Blue Gene/Q and other
-   IBM platforms.
+ # Integrated MPICH-PAMI code base for Blue Gene/Q and other IBM
+   platforms.
 
- # OVERALL: Several improvements to the SCIF netmod.  (code
-   contribution from Intel).
+ # Several improvements to the SCIF netmod.  (code contribution from
+   Intel).
 
- # OVERALL: Added environment variables to control a lot more
-   capabilities for collectives.  See the README.envvar file for more
-   information.
+ # Added environment variables to control a lot more capabilities for
+   collectives.  See the README.envvar file for more information.
 
- # OVERALL: Allow non-blocking collectives and fault tolerance at the same
-   time. The option MPIR_PARAM_ENABLE_COLL_FT_RET has been removed as it is no
-   longer necessary.
+ # Allow non-blocking collectives and fault tolerance at the same
+   time. The option MPIR_PARAM_ENABLE_COLL_FT_RET has been removed as
+   it is no longer necessary.
 
- # BUILD: Enable shared library builds by default.
+ # Enable shared library builds by default.
 
- # PM/PMI: Upgraded hwloc to 1.7.1.
+ # Upgraded hwloc to 1.7.1.
 
- # PM/PMI: Several improvements to the Hydra-SLURM integration.
+ # Several improvements to the Hydra-SLURM integration.
 
  # Several other minor bug fixes, memory leak fixes, and code cleanup.
    A full list of changes is available at the following link:
