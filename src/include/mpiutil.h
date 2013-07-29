@@ -223,6 +223,10 @@ int MPIR_Assert_fail_fmt(const char *cond, const char *file_name, int line_num, 
  * promotion/truncation/conversion rules in mind.  A discussion of these issues
  * can be found in Chapter 5 of "Secure Coding in C and C++" by Robert Seacord.
  */
+/* this "check for overflow" macro seems buggy in a crazy way that I can't
+ * figure out. Instead of using the clever 'expr_inttype_max' macro, fall back
+ * to simple "cast and check for obvious overflow" */
+#if 0
 #if defined(expr_inttype_max) && defined(expr_inttype_min)
 #  define MPIU_Assign_trunc(dst_,src_,dst_type_)                                       \
     do {                                                                               \
@@ -231,14 +235,14 @@ int MPIR_Assert_fail_fmt(const char *cond, const char *file_name, int line_num, 
         MPIU_Assert((src_) >= expr_inttype_min(dst_));                                 \
         dst_ = (dst_type_)(src_);                                                      \
     } while (0)
-#else
-#  define MPIU_Assign_trunc(dst_,src_,dst_type_)                                       \
+#endif
+#endif
+#define MPIU_Assign_trunc(dst_,src_,dst_type_)                                         \
     do {                                                                               \
         dst_ = (dst_type_)(src_);                                                      \
         /* will catch some of the cases if the expr_inttype macros aren't available */ \
         MPIU_Assert((dst_) == (src_));                                                 \
     } while (0)
-#endif
 
 /*
  * Ensure an MPI_Aint value fits into a signed int.
