@@ -1427,6 +1427,7 @@ AC_OUTPUT(maint/testmerge \
           errors/f90/Makefile \
 	  errors/f90/errhan/Makefile \
 	  ckpoint/Makefile \
+	  ft/Makefile \
           manual/Makefile \
           manual/manyconnect \
           manual/mpi_t/Makefile \
