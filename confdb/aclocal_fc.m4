@@ -171,6 +171,10 @@ dnl Special characteristics that have no autoconf counterpart but that
 dnl we need as part of the Fortran 90 support.  To distinquish these, they
 dnl have a [PAC] prefix.
 dnl 
+dnl At least one version of the Cray compiler needs the option -em to
+dnl generate a separate module file, rather than including the module
+dnl information in the object (.o) file.
+dnl
 dnl
 dnl PAC_FC_MODULE_EXT(action if found,action if not found)
 dnl
@@ -187,11 +191,11 @@ AC_COMPILE_IFELSE([
         end module conftest
     ])
 ],[
-    dnl Look for module name
-    dnl First, try to find known names.  This avoids confusion caused by
-    dnl additional files (like <name>.stb created by some versions of pgf90)
-    dnl Early versions of the Intel compiler used "d" as the module extension;
-    dnl we include that just to finish the test as early as possible.
+    # Look for module name
+    # First, try to find known names.  This avoids confusion caused by
+    # additional files (like <name>.stb created by some versions of pgf90)
+    # Early versions of the Intel compiler used d as the module extension;
+    # we include that just to finish the test as early as possible.
     for name in conftest CONFTEST ; do
         for ext in mod MOD d ; do
             if test -s $name.$ext ; then
@@ -208,14 +212,14 @@ AC_COMPILE_IFELSE([
         if test -n "$pac_cv_fc_module_ext" ; then break ; fi
     done
     if test -z "$pac_MOD" ; then
-        pac_MOD=`ls conftest.* 2>&1 | grep -v conftest.${ac_fc_srcext} | grep -v conftest.o`
+        # The test on .err is needed for Cray Fortran.
+        pac_MOD=`ls conftest.* 2>&1 | grep -v conftest.${ac_fc_srcext} | grep -v conftest.o | grep -v conftest.err`
         pac_MOD=`echo $pac_MOD | sed -e 's/conftest\.//g'`
         pac_cv_fc_module_case="lower"
         if test "X$pac_MOD" = "X" ; then
-            pac_MOD=`ls CONFTEST* 2>&1 | grep -v CONFTEST.f | grep -v CONFTEST.o`
+            pac_MOD=`ls CONFTEST* 2>&1 | grep -v CONFTEST.${ac_fc_srcext} | grep -v CONFTEST.o | grep -v CONFTEST.err`
             pac_MOD=`echo $pac_MOD | sed -e 's/CONFTEST\.//g'`
             if test -n "$pac_MOD" -a -s "CONFTEST.$pac_MOD" ; then
-                testname="CONFTEST"
                 pac_cv_fc_module_case="upper"
             else
                 # Clear because we must have gotten an error message
@@ -231,11 +235,40 @@ AC_COMPILE_IFELSE([
 ],[
     pac_cv_fc_module_ext="unknown"
 ])
+
+if test "$pac_cv_fc_module_ext" = "unknown" ; then
+    # Try again, but with an -em option.  Abbreviated, because we're
+    # just looking for the Cray option
+    saveFCFLAGS=$FCFLAGS
+    FCFLAGS="$FCFLAGS -em"
+    AC_COMPILE_IFELSE([
+    AC_LANG_SOURCE([
+        module conftest
+        integer n
+        parameter (n=1)
+        end module conftest
+    ])
+],[
+    if test -s conftest.mod ; then
+        pac_cv_fc_module_ext="mod"
+        pac_cv_fc_module_case="lower"
+    elif test -s CONFTEST.mod ; then
+        pac_cv_fc_module_ext="mod"
+        pac_cv_fc_module_case="upper"
+    fi
+],[
+    :
+    # do nothing - already have the unknown default value
+])
+    if test "$pac_cv_fc_module_ext" = "unknown" ; then
+        # The additional command line option did not help - restore
+        # the original flags.
+        FCFLAGS=$saveFCFLAGS
+    fi
+fi
 AC_LANG_POP(Fortran)
 ])
-dnl
-dnl
-dnl
+#
 AC_SUBST(FCMODEXT)
 if test "$pac_cv_fc_module_ext" = "unknown" ; then
     ifelse($2,,:,[$2])
@@ -400,10 +433,14 @@ AC_COMPILE_IFELSE([],[
 #   pgf90 -module ${dir}
 #   ifort -module ${dir}
 #   nagfor -mdir ${dir}
-#   ftn -J ${dir}   ## the Cray fortran compiler
+#   ftn -J ${dir}              ## the Cray fortran compiler
+#   ftn -em -J${dir}           ## the Cray fortran compiler (crayftn, in 2013)
+#      For this above case, we must have added -em to FCFLAGS, since other
+#      module tests do not always use the module output flag.  See
+#      FC_MODULE_EXT , where this is determined.
 #   f95 -YMOD_OUT_DIR=${dir}   ## the Absoft fortran compiler
-#   lf95 -Am -mod ${dir}    ## the Lahey/Fujitsu fortran compiler
-#   f90 -moddir=${dir}   ## the Sun f90 compiler
+#   lf95 -Am -mod ${dir}       ## the Lahey/Fujitsu fortran compiler
+#   f90 -moddir=${dir}         ## the Sun f90 compiler
 #   g95 -fmod=${dir}
 #
 # If there are any compilers still out there that are totally brain-dead and
