@@ -346,6 +346,7 @@ int MPIC_Recv(void *buf, int count, MPI_Datatype datatype, int source, int tag,
     /* --BEGIN ERROR HANDLING-- */
     if (request_ptr) MPID_Request_release(request_ptr);
     goto fn_exit;
+    /* --END ERROR HANDLING-- */
 }
 
 #undef FUNCNAME
