@@ -1272,7 +1272,7 @@ int MPIDI_Comm_accept(const char *port_name, MPID_Info *info, int root,
 				  MPI_INT, 0, sendtag++,
 				  remote_translation, remote_comm_size * 3,
 				  MPI_INT, 0, recvtag++, tmp_comm->handle,
-				  MPI_STATUS_IGNORE);
+                                  MPI_STATUS_IGNORE, &errflag);
 	for (i=0; i<remote_comm_size; i++)
 	{
 	    TRACE_ERR(" remote_translation[%d].pg_index = %d\n remote_translation[%d].pg_rank = %d\n",
