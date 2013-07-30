@@ -177,6 +177,57 @@ AC_ARG_WITH(mpi,
 		[Use the selected MPI; compilation scripts for mpicc,
 		mpif77 and mpicxx should be in dir/bin])],,)
 
+AC_ARG_WITH(pm,
+	AC_HELP_STRING([--with-pm=name],
+		[Specify the process manager for MPICH.  "no" or "none" are
+                 valid values.  Multiple process managers may be specified as
+                 long as they all use the same pmi interface by separating them
+                 with colons.  The mpiexec for the first named process manager
+                 will be installed.  Example: "--with-pm=hydra:mpd:gforker"
+                 builds the three process managers hydra, mpd and gforker;
+                 only the mpiexec from hydra is installed into the bin
+                 directory.]),,with_pm=default)
+
+if test "$with_pm" = "none" ; then
+    # add "none" as synonym for "no" to agree with older erroneous docs
+    with_pm="no"
+fi
+if test "$MPID_NO_PM" = yes ; then
+    if test "$with_pm" != "default" -a "$with_pm" != no ; then
+        AC_MSG_ERROR([The PM chosen ($with_pm) is is not valid for the selected device ($with_device)])
+    fi
+    # This is used to change with_pm=default to with_pm=no in the case
+    # where the device does not want a PM
+    with_pm=no
+fi
+if test -z "$with_pm" ; then
+    with_pm="no"
+fi
+if test "$with_pmi" = "uni" -a "$with_pm" = "default" ; then
+    with_pm="no"
+fi
+if test "$with_pm" = "default" -o "$with_pm" = "yes" ; then
+   if test ! -z "$MPID_DEFAULT_PM" ; then
+      with_pm=${MPID_DEFAULT_PM}
+   else
+      with_pm=hydra
+   fi
+fi
+
+# Get the first pm specified
+if test "$with_pm" != "no" ; then
+    first_pm="`echo $with_pm | sed -e 's/:.*//' -e 's/,.*//'`"
+else
+    first_pm=""
+fi
+
+# Only run the fault tolerance tests if hydra is the primary PM
+ftdir="#ft"
+if test "$first_pm" = "hydra"; then
+    ftdir="ft"
+fi
+AC_SUBST(ftdir)
+
 AC_ARG_WITH(config-args,
 	[AC_HELP_STRING([--with-config-args=filename],
 		[Specify configure argument file that contains the
