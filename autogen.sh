@@ -917,7 +917,7 @@ if [ "$do_build_configure" = "yes" ] ; then
                         # Remove possible leftovers, which don't imply a failure
                         rm -f $amdir/confdb/libtool.m4.orig
                         # Reset libtool.m4 timestamps to avoid confusing make
-                        touch $amdir/confdb/libtool.m4 -r $amdir/confdb/ltversion.m4
+                        touch -r $amdir/confdb/ltversion.m4 $amdir/confdb/libtool.m4
                     else
                         echo "failed"
                     fi
