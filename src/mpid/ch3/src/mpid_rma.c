@@ -117,14 +117,8 @@ int MPID_Win_allocate(MPI_Aint size, int disp_unit, MPID_Info *info,
             (*win_ptr)->info_args.alloc_shm = TRUE;
     }
 
-    if((*win_ptr)->info_args.alloc_shm == TRUE) {
-        mpi_errno = MPIDI_CH3U_Win_fns.allocate_shared(size, disp_unit, info, comm_ptr, baseptr, win_ptr);
-        if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
-    }
-    else {
-        mpi_errno = MPIDI_CH3U_Win_fns.allocate(size, disp_unit, info, comm_ptr, baseptr, win_ptr);
-        if (mpi_errno != MPI_SUCCESS) { MPIU_ERR_POP(mpi_errno); }
-    }
+    mpi_errno = MPIDI_CH3U_Win_fns.allocate(size, disp_unit, info, comm_ptr, baseptr, win_ptr);
+    if (mpi_errno != MPI_SUCCESS) { MPIU_ERR_POP(mpi_errno); }
 
  fn_fail:
     MPIDI_FUNC_EXIT(MPID_STATE_MPID_WIN_ALLOCATE);

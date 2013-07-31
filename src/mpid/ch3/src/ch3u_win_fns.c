@@ -214,6 +214,37 @@ int MPIDI_Win_detach(MPID_Win *win, const void *base)
 
 
 #undef FUNCNAME
+#define FUNCNAME MPIDI_CH3U_Win_allocate
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
+int MPIDI_CH3U_Win_allocate(MPI_Aint size, int disp_unit, MPID_Info *info,
+                            MPID_Comm *comm_ptr, void *baseptr, MPID_Win **win_ptr)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3U_WIN_ALLOCATE);
+
+    MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_CH3U_WIN_ALLOCATE);
+
+    if ((*win_ptr)->info_args.alloc_shm == TRUE) {
+        if (MPIDI_CH3U_Win_fns.allocate_shm != NULL) {
+            mpi_errno = MPIDI_CH3U_Win_fns.allocate_shm(size, disp_unit, info, comm_ptr, baseptr, win_ptr);
+            if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
+            goto fn_exit;
+        }
+    }
+
+    mpi_errno = MPIDI_CH3U_Win_allocate_no_shm(size, disp_unit, info, comm_ptr, baseptr, win_ptr);
+    if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
+
+ fn_exit:
+    MPIDI_RMA_FUNC_EXIT(MPID_STATE_MPIDI_CH3U_WIN_ALLOCATE);
+    return mpi_errno;
+ fn_fail:
+    goto fn_exit;
+}
+
+
+#undef FUNCNAME
 #define FUNCNAME MPIDI_CH3U_Win_allocate_no_shm
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
