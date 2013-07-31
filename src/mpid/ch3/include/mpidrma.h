@@ -334,8 +334,7 @@ static inline int MPIDI_CH3I_Shm_put_op(const void *origin_addr, int origin_coun
 
     MPIDI_Comm_get_vc(win_ptr->comm_ptr, target_rank, &vc);
 
-    if ((win_ptr->create_flavor == MPI_WIN_FLAVOR_SHARED) ||
-        (win_ptr->shm_allocated == TRUE && vc->ch.is_local)) {
+    if (win_ptr->shm_allocated == TRUE && vc->ch.is_local) {
         base = win_ptr->shm_base_addrs[target_rank];
         disp_unit = win_ptr->disp_units[target_rank];
     }
@@ -385,8 +384,7 @@ static inline int MPIDI_CH3I_Shm_acc_op(const void *origin_addr, int origin_coun
 
     MPIDI_Comm_get_vc(win_ptr->comm_ptr, target_rank, &vc);
 
-    if ((win_ptr->create_flavor == MPI_WIN_FLAVOR_SHARED) ||
-        (win_ptr->shm_allocated == TRUE && vc->ch.is_local)) {
+    if (win_ptr->shm_allocated == TRUE && vc->ch.is_local) {
         shm_op = 1;
         base = win_ptr->shm_base_addrs[target_rank];
         disp_unit = win_ptr->disp_units[target_rank];
@@ -545,8 +543,7 @@ static inline int MPIDI_CH3I_Shm_get_acc_op(const void *origin_addr, int origin_
 
     MPIDI_Comm_get_vc(win_ptr->comm_ptr, target_rank, &vc);
 
-    if ((win_ptr->create_flavor == MPI_WIN_FLAVOR_SHARED) ||
-        (win_ptr->shm_allocated == TRUE && vc->ch.is_local)) {
+    if (win_ptr->shm_allocated == TRUE && vc->ch.is_local) {
         base = win_ptr->shm_base_addrs[target_rank];
         disp_unit = win_ptr->disp_units[target_rank];
         MPIDI_CH3I_SHM_MUTEX_LOCK(win_ptr);
@@ -710,8 +707,7 @@ static inline int MPIDI_CH3I_Shm_get_op(void *origin_addr, int origin_count, MPI
 
     MPIDI_Comm_get_vc(win_ptr->comm_ptr, target_rank, &vc);
 
-    if ((win_ptr->create_flavor == MPI_WIN_FLAVOR_SHARED) ||
-        (win_ptr->shm_allocated == TRUE && vc->ch.is_local)) {
+    if (win_ptr->shm_allocated == TRUE && vc->ch.is_local) {
         base = win_ptr->shm_base_addrs[target_rank];
         disp_unit = win_ptr->disp_units[target_rank];
     }
@@ -754,8 +750,7 @@ static inline int MPIDI_CH3I_Shm_cas_op(const void *origin_addr, const void *com
 
     MPIDI_Comm_get_vc(win_ptr->comm_ptr, target_rank, &vc);
 
-    if ((win_ptr->create_flavor == MPI_WIN_FLAVOR_SHARED) ||
-        (win_ptr->shm_allocated == TRUE && vc->ch.is_local)) {
+    if (win_ptr->shm_allocated == TRUE && vc->ch.is_local) {
         base = win_ptr->shm_base_addrs[target_rank];
         disp_unit = win_ptr->disp_units[target_rank];
 
@@ -814,8 +809,7 @@ static inline int MPIDI_CH3I_Shm_fop_op(const void *origin_addr, void *result_ad
 
     MPIDI_Comm_get_vc(win_ptr->comm_ptr, target_rank, &vc);
 
-    if ((win_ptr->create_flavor == MPI_WIN_FLAVOR_SHARED) ||
-        (win_ptr->shm_allocated == TRUE && vc->ch.is_local)) {
+    if (win_ptr->shm_allocated == TRUE && vc->ch.is_local) {
         base = win_ptr->shm_base_addrs[target_rank];
         disp_unit = win_ptr->disp_units[target_rank];
 
