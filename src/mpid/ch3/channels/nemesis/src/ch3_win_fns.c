@@ -18,8 +18,8 @@
 MPIU_INSTR_DURATION_EXTERN_DECL(wincreate_allgather);
 #endif
 
-static int MPIDI_CH3I_Win_allocate_shared(MPI_Aint size, int disp_unit, MPID_Info *info, MPID_Comm *comm_ptr,
-                                          void **base_ptr, MPID_Win **win_ptr);
+static int MPIDI_CH3I_Win_allocate_shm(MPI_Aint size, int disp_unit, MPID_Info *info, MPID_Comm *comm_ptr,
+                                       void **base_ptr, MPID_Win **win_ptr);
 
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3_Win_fns_init
@@ -41,11 +41,11 @@ int MPIDI_CH3_Win_fns_init(MPIDI_CH3U_Win_fns_t *win_fns)
 
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_CH3I_Win_allocate_shared
+#define FUNCNAME MPIDI_CH3I_Win_allocate_shm
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-static int MPIDI_CH3I_Win_allocate_shared(MPI_Aint size, int disp_unit, MPID_Info *info,
-                                          MPID_Comm *comm_ptr, void **base_ptr, MPID_Win **win_ptr)
+static int MPIDI_CH3I_Win_allocate_shm(MPI_Aint size, int disp_unit, MPID_Info *info,
+                                       MPID_Comm *comm_ptr, void **base_ptr, MPID_Win **win_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
     int i, k, comm_size, rank;
@@ -58,9 +58,9 @@ static int MPIDI_CH3I_Win_allocate_shared(MPI_Aint size, int disp_unit, MPID_Inf
     int noncontig = FALSE;
     MPIU_CHKPMEM_DECL(6);
     MPIU_CHKLMEM_DECL(3);
-    MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3I_WIN_ALLOCATE_SHARED);
+    MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3I_WIN_ALLOCATE_SHM);
 
-    MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_CH3I_WIN_ALLOCATE_SHARED);
+    MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_CH3I_WIN_ALLOCATE_SHM);
 
     /* If create flavor is MPI_WIN_FLAVOR_ALLOCATE, alloc_shared_noncontig is set to 1 by default. */
     if ((*win_ptr)->create_flavor == MPI_WIN_FLAVOR_ALLOCATE)
@@ -350,7 +350,7 @@ static int MPIDI_CH3I_Win_allocate_shared(MPI_Aint size, int disp_unit, MPID_Inf
 
 fn_exit:
     MPIU_CHKLMEM_FREEALL();
-    MPIDI_RMA_FUNC_EXIT(MPID_STATE_MPIDI_CH3I_WIN_ALLOCATE_SHARED);
+    MPIDI_RMA_FUNC_EXIT(MPID_STATE_MPIDI_CH3I_WIN_ALLOCATE_SHM);
     return mpi_errno;
     /* --BEGIN ERROR HANDLING-- */
 fn_fail:
