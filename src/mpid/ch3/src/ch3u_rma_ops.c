@@ -98,7 +98,7 @@ int MPIDI_Win_shared_query(MPID_Win *win_ptr, int target_rank, MPI_Aint *size,
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_WIN_SHARED_QUERY);
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_WIN_SHARED_QUERY);
 
-    *(void**) baseptr = win_ptr->shm_base_addrs[0];
+    *(void**) baseptr = win_ptr->base;
     *size             = win_ptr->size;
     *disp_unit        = win_ptr->disp_unit;
 
