@@ -71,7 +71,7 @@ int MPIDI_Get_accumulate(const void *origin_addr, int origin_count,
     else {
         MPIDI_RMA_Ops_list_t *ops_list = MPIDI_CH3I_RMA_Get_ops_list(win_ptr, target_rank);
         MPIDI_RMA_Op_t *new_ptr = NULL;
-        MPIDI_VC_t *vc = NULL;
+        MPIDI_VC_t *orig_vc, *target_vc;
 
         /* Append the operation to the window's RMA ops queue */
         MPIU_INSTR_DURATION_START(rmaqueue_alloc);
@@ -103,8 +103,10 @@ int MPIDI_Get_accumulate(const void *origin_addr, int origin_count,
 	  because this operation will be directly done on shared memory region, instead
 	  of sending and receiving through the progress engine, therefore datatype
 	  will not be referenced by the progress engine */
-        MPIDI_Comm_get_vc(win_ptr->comm_ptr, target_rank, &vc);
-        if (!(win_ptr->shm_allocated == TRUE && vc->ch.is_local)) {
+
+        MPIDI_Comm_get_vc(win_ptr->comm_ptr, rank, &orig_vc);
+        MPIDI_Comm_get_vc(win_ptr->comm_ptr, target_rank, &target_vc);
+	if (!(win_ptr->shm_allocated == TRUE && orig_vc->node_id == target_vc->node_id)) {
             /* if source or target datatypes are derived, increment their
                reference counts */
             if (!origin_predefined) {

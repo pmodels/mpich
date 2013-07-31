@@ -325,16 +325,22 @@ static inline int MPIDI_CH3I_Shm_put_op(const void *origin_addr, int origin_coun
                                         MPID_Win *win_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_VC_t *vc = NULL;
     void *base = NULL;
     int disp_unit;
+    MPIDI_VC_t *orig_vc, *target_vc;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3I_SHM_PUT_OP);
 
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_CH3I_SHM_PUT_OP);
 
-    MPIDI_Comm_get_vc(win_ptr->comm_ptr, target_rank, &vc);
-
-    if (win_ptr->shm_allocated == TRUE && vc->ch.is_local) {
+    /* FIXME: Here we decide whether to perform SHM operations by checking if origin and target are on
+       the same node. However, in ch3:sock, even if origin and target are on the same node, they do
+       not within the same SHM region. Here we filter out ch3:sock by checking shm_allocated flag first,
+       which is only set to TRUE when SHM region is allocated in nemesis.
+       In future we need to figure out a way to check if origin and target are in the same "SHM comm".
+    */
+    MPIDI_Comm_get_vc(win_ptr->comm_ptr, win_ptr->comm_ptr->rank, &orig_vc);
+    MPIDI_Comm_get_vc(win_ptr->comm_ptr, target_rank, &target_vc);
+    if (win_ptr->shm_allocated == TRUE && orig_vc->node_id == target_vc->node_id) {
         base = win_ptr->shm_base_addrs[target_rank];
         disp_unit = win_ptr->disp_units[target_rank];
     }
@@ -372,7 +378,7 @@ static inline int MPIDI_CH3I_Shm_acc_op(const void *origin_addr, int origin_coun
     int origin_predefined, target_predefined;
     MPI_User_function *uop = NULL;
     MPID_Datatype *dtp;
-    MPIDI_VC_t *vc = NULL;
+    MPIDI_VC_t *orig_vc, *target_vc;
     int mpi_errno = MPI_SUCCESS;
     MPIU_CHKLMEM_DECL(2);
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3I_SHM_ACC_OP);
@@ -382,9 +388,10 @@ static inline int MPIDI_CH3I_Shm_acc_op(const void *origin_addr, int origin_coun
     MPIDI_CH3I_DATATYPE_IS_PREDEFINED(origin_datatype, origin_predefined);
     MPIDI_CH3I_DATATYPE_IS_PREDEFINED(target_datatype, target_predefined);
 
-    MPIDI_Comm_get_vc(win_ptr->comm_ptr, target_rank, &vc);
-
-    if (win_ptr->shm_allocated == TRUE && vc->ch.is_local) {
+    /* FIXME: refer to FIXME in MPIDI_CH3I_Shm_put_op */
+    MPIDI_Comm_get_vc(win_ptr->comm_ptr, win_ptr->comm_ptr->rank, &orig_vc);
+    MPIDI_Comm_get_vc(win_ptr->comm_ptr, target_rank, &target_vc);
+    if (win_ptr->shm_allocated == TRUE && orig_vc->node_id == target_vc->node_id) {
         shm_op = 1;
         base = win_ptr->shm_base_addrs[target_rank];
         disp_unit = win_ptr->disp_units[target_rank];
@@ -527,7 +534,7 @@ static inline int MPIDI_CH3I_Shm_get_acc_op(const void *origin_addr, int origin_
     MPI_User_function *uop = NULL;
     MPID_Datatype *dtp;
     int origin_predefined, result_predefined, target_predefined;
-    MPIDI_VC_t *vc = NULL;
+    MPIDI_VC_t *orig_vc, *target_vc;
     int mpi_errno = MPI_SUCCESS;
     MPIU_CHKLMEM_DECL(2);
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3I_SHM_GET_ACC_OP);
@@ -541,9 +548,10 @@ static inline int MPIDI_CH3I_Shm_get_acc_op(const void *origin_addr, int origin_
     MPIDI_CH3I_DATATYPE_IS_PREDEFINED(result_datatype, result_predefined);
     MPIDI_CH3I_DATATYPE_IS_PREDEFINED(target_datatype, target_predefined);
 
-    MPIDI_Comm_get_vc(win_ptr->comm_ptr, target_rank, &vc);
-
-    if (win_ptr->shm_allocated == TRUE && vc->ch.is_local) {
+    /* FIXME: refer to FIXME in MPIDI_CH3I_Shm_put_op */
+    MPIDI_Comm_get_vc(win_ptr->comm_ptr, win_ptr->comm_ptr->rank, &orig_vc);
+    MPIDI_Comm_get_vc(win_ptr->comm_ptr, target_rank, &target_vc);
+    if (win_ptr->shm_allocated == TRUE && orig_vc->node_id == target_vc->node_id) {
         base = win_ptr->shm_base_addrs[target_rank];
         disp_unit = win_ptr->disp_units[target_rank];
         MPIDI_CH3I_SHM_MUTEX_LOCK(win_ptr);
@@ -699,15 +707,16 @@ static inline int MPIDI_CH3I_Shm_get_op(void *origin_addr, int origin_count, MPI
 {
     void *base = NULL;
     int disp_unit;
-    MPIDI_VC_t *vc = NULL;
+    MPIDI_VC_t *orig_vc, *target_vc;
     int mpi_errno = MPI_SUCCESS;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3I_SHM_GET_OP);
 
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_CH3I_SHM_GET_OP);
 
-    MPIDI_Comm_get_vc(win_ptr->comm_ptr, target_rank, &vc);
-
-    if (win_ptr->shm_allocated == TRUE && vc->ch.is_local) {
+    /* FIXME: refer to FIXME in MPIDI_CH3I_Shm_put_op */
+    MPIDI_Comm_get_vc(win_ptr->comm_ptr, win_ptr->comm_ptr->rank, &orig_vc);
+    MPIDI_Comm_get_vc(win_ptr->comm_ptr, target_rank, &target_vc);
+    if (win_ptr->shm_allocated == TRUE && orig_vc->node_id == target_vc->node_id) {
         base = win_ptr->shm_base_addrs[target_rank];
         disp_unit = win_ptr->disp_units[target_rank];
     }
@@ -742,15 +751,16 @@ static inline int MPIDI_CH3I_Shm_cas_op(const void *origin_addr, const void *com
     void *base = NULL, *dest_addr = NULL;
     int disp_unit;
     int len, shm_locked = 0;
-    MPIDI_VC_t *vc = NULL;
     int mpi_errno = MPI_SUCCESS;
+    MPIDI_VC_t *orig_vc, *target_vc;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3I_SHM_CAS_OP);
 
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_CH3I_SHM_CAS_OP);
 
-    MPIDI_Comm_get_vc(win_ptr->comm_ptr, target_rank, &vc);
-
-    if (win_ptr->shm_allocated == TRUE && vc->ch.is_local) {
+    /* FIXME: refer to FIXME in MPIDI_CH3I_Shm_put_op */
+    MPIDI_Comm_get_vc(win_ptr->comm_ptr, win_ptr->comm_ptr->rank, &orig_vc);
+    MPIDI_Comm_get_vc(win_ptr->comm_ptr, target_rank, &target_vc);
+    if (win_ptr->shm_allocated == TRUE && orig_vc->node_id == target_vc->node_id) {
         base = win_ptr->shm_base_addrs[target_rank];
         disp_unit = win_ptr->disp_units[target_rank];
 
@@ -801,15 +811,16 @@ static inline int MPIDI_CH3I_Shm_fop_op(const void *origin_addr, void *result_ad
     MPI_User_function *uop = NULL;
     int disp_unit;
     int len, one, shm_locked = 0;
-    MPIDI_VC_t *vc = NULL;
+    MPIDI_VC_t *orig_vc, *target_vc;
     int mpi_errno = MPI_SUCCESS;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3I_SHM_FOP_OP);
 
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_CH3I_SHM_FOP_OP);
 
-    MPIDI_Comm_get_vc(win_ptr->comm_ptr, target_rank, &vc);
-
-    if (win_ptr->shm_allocated == TRUE && vc->ch.is_local) {
+    /* FIXME: refer to FIXME in MPIDI_CH3I_Shm_put_op */
+    MPIDI_Comm_get_vc(win_ptr->comm_ptr, win_ptr->comm_ptr->rank, &orig_vc);
+    MPIDI_Comm_get_vc(win_ptr->comm_ptr, target_rank, &target_vc);
+    if (win_ptr->shm_allocated == TRUE && orig_vc->node_id == target_vc->node_id) {
         base = win_ptr->shm_base_addrs[target_rank];
         disp_unit = win_ptr->disp_units[target_rank];
 

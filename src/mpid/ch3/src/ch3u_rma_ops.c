@@ -190,7 +190,7 @@ int MPIDI_Put(const void *origin_addr, int origin_count, MPI_Datatype
     {
         MPIDI_RMA_Ops_list_t *ops_list = MPIDI_CH3I_RMA_Get_ops_list(win_ptr, target_rank);
         MPIDI_RMA_Op_t *new_ptr = NULL;
-        MPIDI_VC_t *vc = NULL;
+        MPIDI_VC_t *orig_vc, *target_vc;
 
 	/* queue it up */
         MPIU_INSTR_DURATION_START(rmaqueue_alloc);
@@ -218,8 +218,16 @@ int MPIDI_Put(const void *origin_addr, int origin_count, MPI_Datatype
 	  because this operation will be directly done on shared memory region, instead
 	  of sending and receiving through the progress engine, therefore datatype
 	  will not be referenced by the progress engine */
-	MPIDI_Comm_get_vc(win_ptr->comm_ptr, target_rank, &vc);
-	if (!(win_ptr->shm_allocated == TRUE && vc->ch.is_local)) {
+
+        /* FIXME: Here we decide whether to perform SHM operations by checking if origin and target are on
+           the same node. However, in ch3:sock, even if origin and target are on the same node, they do
+           not within the same SHM region. Here we filter out ch3:sock by checking shm_allocated flag first,
+           which is only set to TRUE when SHM region is allocated in nemesis.
+           In future we need to figure out a way to check if origin and target are in the same "SHM comm".
+        */
+        MPIDI_Comm_get_vc(win_ptr->comm_ptr, rank, &orig_vc);
+        MPIDI_Comm_get_vc(win_ptr->comm_ptr, target_rank, &target_vc);
+	if (!(win_ptr->shm_allocated == TRUE && orig_vc->node_id == target_vc->node_id)) {
 	    /* if source or target datatypes are derived, increment their
 	       reference counts */
 	    MPIDI_CH3I_DATATYPE_IS_PREDEFINED(origin_datatype, predefined);
@@ -297,7 +305,7 @@ int MPIDI_Get(void *origin_addr, int origin_count, MPI_Datatype
     {
         MPIDI_RMA_Ops_list_t *ops_list = MPIDI_CH3I_RMA_Get_ops_list(win_ptr, target_rank);
         MPIDI_RMA_Op_t *new_ptr = NULL;
-        MPIDI_VC_t *vc = NULL;
+        MPIDI_VC_t *orig_vc, *target_vc;
 
 	/* queue it up */
         MPIU_INSTR_DURATION_START(rmaqueue_alloc);
@@ -322,8 +330,10 @@ int MPIDI_Get(void *origin_addr, int origin_count, MPI_Datatype
 	  because this operation will be directly done on shared memory region, instead
 	  of sending and receiving through the progress engine, therefore datatype
 	  will not be referenced by the progress engine */
-	MPIDI_Comm_get_vc(win_ptr->comm_ptr, target_rank, &vc);
-	if (!(win_ptr->shm_allocated == TRUE && vc->ch.is_local)) {
+
+        MPIDI_Comm_get_vc(win_ptr->comm_ptr, rank, &orig_vc);
+        MPIDI_Comm_get_vc(win_ptr->comm_ptr, target_rank, &target_vc);
+	if (!(win_ptr->shm_allocated == TRUE && orig_vc->node_id == target_vc->node_id)) {
 	    /* if source or target datatypes are derived, increment their
 	       reference counts */
 	    MPIDI_CH3I_DATATYPE_IS_PREDEFINED(origin_datatype, predefined);
@@ -407,7 +417,7 @@ int MPIDI_Accumulate(const void *origin_addr, int origin_count, MPI_Datatype
     {
         MPIDI_RMA_Ops_list_t *ops_list = MPIDI_CH3I_RMA_Get_ops_list(win_ptr, target_rank);
         MPIDI_RMA_Op_t *new_ptr = NULL;
-        MPIDI_VC_t *vc = NULL;
+        MPIDI_VC_t *orig_vc, *target_vc;
 
 	/* queue it up */
         MPIU_INSTR_DURATION_START(rmaqueue_alloc);
@@ -453,8 +463,10 @@ int MPIDI_Accumulate(const void *origin_addr, int origin_count, MPI_Datatype
 	  because this operation will be directly done on shared memory region, instead
 	  of sending and receiving through the progress engine, therefore datatype
 	  will not be referenced by the progress engine */
-	MPIDI_Comm_get_vc(win_ptr->comm_ptr, target_rank, &vc);
-	if (!(win_ptr->shm_allocated == TRUE && vc->ch.is_local)) {
+
+        MPIDI_Comm_get_vc(win_ptr->comm_ptr, rank, &orig_vc);
+        MPIDI_Comm_get_vc(win_ptr->comm_ptr, target_rank, &target_vc);
+	if (!(win_ptr->shm_allocated == TRUE && orig_vc->node_id == target_vc->node_id)) {
 	    /* if source or target datatypes are derived, increment their
 	       reference counts */
 	    if (!origin_predefined)

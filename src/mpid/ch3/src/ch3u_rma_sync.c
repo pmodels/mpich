@@ -329,6 +329,7 @@ int MPIDI_Win_fence(int assert, MPID_Win *win_ptr)
     {
 	int nRequest = 0;
 	int nRequestNew = 0;
+        MPIDI_VC_t *orig_vc, *target_vc;
 	MPIU_INSTR_DURATION_START(winfence_rs);
 	/* This is the second or later fence. Do all the preceding RMA ops. */
 	comm_ptr = win_ptr->comm_ptr;
@@ -356,11 +357,11 @@ int MPIDI_Win_fence(int assert, MPID_Win *win_ptr)
 	   ops from this process */
 	total_op_count = 0;
         curr_ptr = MPIDI_CH3I_RMA_Ops_head(ops_list);
+        MPIDI_Comm_get_vc(win_ptr->comm_ptr, win_ptr->comm_ptr->rank, &orig_vc);
 	while (curr_ptr != NULL)
 	{
-	    MPIDI_VC_t *vc = NULL;
-	    MPIDI_Comm_get_vc(win_ptr->comm_ptr, curr_ptr->target_rank, &vc);
-	    if (!(win_ptr->shm_allocated == TRUE && vc->ch.is_local)) {
+            MPIDI_Comm_get_vc(win_ptr->comm_ptr, curr_ptr->target_rank, &target_vc);
+	    if (!(win_ptr->shm_allocated == TRUE && orig_vc->node_id == target_vc->node_id)) {
 		total_op_count++;
 		rma_target_proc[curr_ptr->target_rank] = 1;
 		nops_to_proc[curr_ptr->target_rank]++;
@@ -400,9 +401,8 @@ int MPIDI_Win_fence(int assert, MPID_Win *win_ptr)
         curr_ptr = MPIDI_CH3I_RMA_Ops_head(ops_list);
 	while (curr_ptr != NULL)
 	{
-          MPIDI_VC_t *vc = NULL;
-          MPIDI_Comm_get_vc(win_ptr->comm_ptr, curr_ptr->target_rank, &vc);
-          if (win_ptr->shm_allocated == TRUE && vc->ch.is_local) {
+          MPIDI_Comm_get_vc(win_ptr->comm_ptr, curr_ptr->target_rank, &target_vc);
+          if (win_ptr->shm_allocated == TRUE && orig_vc->node_id == target_vc->node_id) {
             MPIDI_CH3I_DO_SHM_OP(curr_ptr, win_ptr, mpi_errno);
             MPIDI_CH3I_RMA_Ops_free_and_next(ops_list, &curr_ptr);
           }
@@ -1576,6 +1576,7 @@ int MPIDI_Win_complete(MPID_Win *win_ptr)
     int start_grp_size, *ranks_in_start_grp, *ranks_in_win_grp, rank;
     int nRequest = 0;
     int nRequestNew = 0;
+    MPIDI_VC_t *orig_vc, *target_vc;
     MPIU_CHKLMEM_DECL(9);
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_WIN_COMPLETE);
 
@@ -1688,11 +1689,11 @@ int MPIDI_Win_complete(MPID_Win *win_ptr)
 
     total_op_count = 0;
     curr_ptr = MPIDI_CH3I_RMA_Ops_head(ops_list);
+    MPIDI_Comm_get_vc(win_ptr->comm_ptr, win_ptr->comm_ptr->rank, &orig_vc);
     while (curr_ptr != NULL)
     {
-	MPIDI_VC_t *vc = NULL;
-	MPIDI_Comm_get_vc(win_ptr->comm_ptr, curr_ptr->target_rank, &vc);
-	if (!(win_ptr->shm_allocated == TRUE && vc->ch.is_local)) {
+        MPIDI_Comm_get_vc(win_ptr->comm_ptr, curr_ptr->target_rank, &target_vc);
+	if (!(win_ptr->shm_allocated == TRUE && orig_vc->node_id == target_vc->node_id)) {
 	    nops_to_proc[curr_ptr->target_rank]++;
 	    total_op_count++;
 	}
@@ -1714,9 +1715,8 @@ int MPIDI_Win_complete(MPID_Win *win_ptr)
     curr_ptr = MPIDI_CH3I_RMA_Ops_head(ops_list);
     while (curr_ptr != NULL)
     {
-      MPIDI_VC_t *vc = NULL;
-      MPIDI_Comm_get_vc(win_ptr->comm_ptr, curr_ptr->target_rank, &vc);
-      if (win_ptr->shm_allocated == TRUE && vc->ch.is_local) {
+      MPIDI_Comm_get_vc(win_ptr->comm_ptr, curr_ptr->target_rank, &target_vc);
+      if (win_ptr->shm_allocated == TRUE && orig_vc->node_id == target_vc->node_id) {
         MPIDI_CH3I_DO_SHM_OP(curr_ptr, win_ptr, mpi_errno);
         MPIDI_CH3I_RMA_Ops_free_and_next(ops_list, &curr_ptr);
       }
@@ -2584,7 +2584,7 @@ static int MPIDI_CH3I_Do_passive_target_rma(MPID_Win *win_ptr, int target_rank,
     MPIDI_RMA_Op_t *curr_ptr;
     MPI_Win source_win_handle = MPI_WIN_NULL, target_win_handle = MPI_WIN_NULL;
     int nRequest=0, nRequestNew=0;
-    MPIDI_VC_t *vc = NULL;
+    MPIDI_VC_t *orig_vc, *target_vc;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3I_DO_PASSIVE_TARGET_RMA);
 
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_CH3I_DO_PASSIVE_TARGET_RMA);
@@ -2594,12 +2594,13 @@ static int MPIDI_CH3I_Do_passive_target_rma(MPID_Win *win_ptr, int target_rank,
                 (win_ptr->targets[target_rank].remote_lock_state == MPIDI_CH3_WIN_LOCK_CALLED &&
                  win_ptr->targets[target_rank].remote_lock_assert & MPI_MODE_NOCHECK));
 
+    MPIDI_Comm_get_vc(win_ptr->comm_ptr, win_ptr->comm_ptr->rank, &orig_vc);
+    MPIDI_Comm_get_vc(win_ptr->comm_ptr, target_rank, &target_vc);
+
     /* if alloc_shm is enabled and target process is on the same node,
        directly perform RMA operations at the origin side and remove them
        from passive RMA operation list */
-
-    MPIDI_Comm_get_vc(win_ptr->comm_ptr, target_rank, &vc);
-    if (win_ptr->shm_allocated == TRUE && vc->ch.is_local) {
+    if (win_ptr->shm_allocated == TRUE && orig_vc->node_id == target_vc->node_id) {
         curr_ptr = MPIDI_CH3I_RMA_Ops_head(&win_ptr->targets[target_rank].rma_ops_list);
         while (curr_ptr != NULL) {
             MPIU_Assert(curr_ptr->target_rank == target_rank);
