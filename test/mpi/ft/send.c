@@ -10,9 +10,14 @@
 #include <unistd.h>
 #include <signal.h>
 
+/* 
+ * This test attempts communication between 2 running processes
+ * after another process has failed.
+ */
 int main(int argc, char **argv)
 {
-    int rank, size;
+    int rank, size, err;
+    char buf[10];
     pid_t pid;
 
     MPI_Init(&argc, &argv);
@@ -26,7 +31,12 @@ int main(int argc, char **argv)
     MTestSleep(1);
 
     if (rank == 0) {
-        printf("No Errors\n");
+        err = MPI_Send("No Errors", 10, MPI_CHAR, 2, 0, MPI_COMM_WORLD);
+    }
+
+    if (rank == 2) {
+        MPI_Recv(buf, 10, MPI_CHAR, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        printf("%s\n", buf);
         fflush( stdout );
     }
 
