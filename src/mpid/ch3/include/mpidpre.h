@@ -303,6 +303,8 @@ struct MPIDI_Win_target_state {
                            all processes remains consistent. */          \
     MPID_Group *start_group_ptr; /* group passed in MPI_Win_start */     \
     int start_assert;   /* assert passed to MPI_Win_start */             \
+    int shm_allocated; /* flag: TRUE iff this window has a shared memory \
+                          region associated with it */                   \
 
 #ifdef MPIDI_CH3_WIN_DECL
 #define MPID_DEV_WIN_DECL \

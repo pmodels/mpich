@@ -18,8 +18,6 @@
 typedef pthread_mutex_t MPIDI_CH3I_SHM_MUTEX;
 
 #define MPIDI_CH3_WIN_DECL                                                              \
-    int shm_allocated;          /* flag: TRUE iff this window has a shared memory       \
-                                   region associated with it */                         \
     void *shm_base_addr;        /* base address of shared memory region */              \
     MPI_Aint shm_segment_len;   /* size of shared memory region */                      \
     MPIU_SHMW_Hnd_t shm_segment_handle; /* handle to shared memory region */            \
