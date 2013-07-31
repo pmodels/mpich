@@ -1107,6 +1107,7 @@ typedef struct {
     int (*create)(void *, MPI_Aint, int, MPID_Info *, MPID_Comm *, MPID_Win **);
     int (*allocate)(MPI_Aint, int, MPID_Info *, MPID_Comm *, void *, MPID_Win **);
     int (*allocate_shared)(MPI_Aint, int, MPID_Info *, MPID_Comm *, void **, MPID_Win **);
+    int (*allocate_shm)(MPI_Aint, int, MPID_Info *, MPID_Comm *, void *, MPID_Win **);
     int (*create_dynamic)(MPID_Info *, MPID_Comm *, MPID_Win **);
 } MPIDI_CH3U_Win_fns_t;
 
