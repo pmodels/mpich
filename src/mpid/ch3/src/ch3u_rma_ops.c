@@ -66,9 +66,10 @@ int MPIDI_Win_free(MPID_Win **win_ptr)
     MPIU_Free((*win_ptr)->pt_rma_puts_accs);
 
     /* Free the attached buffer for windows created with MPI_Win_allocate() */
-    if ((*win_ptr)->create_flavor == MPI_WIN_FLAVOR_ALLOCATE && (*win_ptr)->size > 0) {
-        if ((*win_ptr)->shm_allocated != TRUE)
+    if ((*win_ptr)->create_flavor == MPI_WIN_FLAVOR_ALLOCATE || (*win_ptr)->create_flavor == MPI_WIN_FLAVOR_SHARED) {
+        if ((*win_ptr)->shm_allocated == FALSE && (*win_ptr)->size > 0) {
             MPIU_Free((*win_ptr)->base);
+        }
     }
 
     MPIU_Object_release_ref(*win_ptr, &in_use);
