@@ -214,6 +214,18 @@ int MPID_Win_allocate_shared(MPI_Aint size, int disp_unit, MPID_Info *info, MPID
     mpi_errno = win_init(size, disp_unit, MPI_WIN_FLAVOR_SHARED, MPI_WIN_UNIFIED, comm_ptr, win_ptr);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
+    /* FOR ALLOCATE_SHARED, alloc_shm info is default to set to TRUE */
+    (*win_ptr)->info_args.alloc_shm = TRUE;
+
+    if (info != NULL) {
+        int alloc_shm_flag = 0;
+        char shm_alloc_value[MPI_MAX_INFO_VAL+1];
+        MPIR_Info_get_impl(info, "alloc_shm", MPI_MAX_INFO_VAL, shm_alloc_value, &alloc_shm_flag);
+        /* if value of 'alloc_shm' info is not set to true, throw an error */
+        if (alloc_shm_flag == 1 && strncmp(shm_alloc_value, "true", sizeof("true")))
+            MPIU_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**infoval");
+    }
+
     mpi_errno = MPIDI_CH3U_Win_fns.allocate_shared(size, disp_unit, info, comm_ptr, base_ptr, win_ptr);
     if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
 
