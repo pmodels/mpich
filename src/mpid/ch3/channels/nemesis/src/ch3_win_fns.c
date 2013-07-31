@@ -32,8 +32,6 @@ int MPIDI_CH3_Win_fns_init(MPIDI_CH3U_Win_fns_t *win_fns)
 
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_CH3_WIN_FNS_INIT);
 
-    win_fns->allocate_shared = MPIDI_CH3I_Win_allocate_shared;
-
     MPIDI_RMA_FUNC_EXIT(MPID_STATE_MPIDI_CH3_WIN_FNS_INIT);
 
     return mpi_errno;
