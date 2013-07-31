@@ -275,18 +275,18 @@ fn_fail:
 
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_CH3U_Win_allocate
+#define FUNCNAME MPIDI_CH3U_Win_allocate_no_shm
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-int MPIDI_CH3U_Win_allocate(MPI_Aint size, int disp_unit, MPID_Info *info,
-                           MPID_Comm *comm_ptr, void *baseptr, MPID_Win **win_ptr )
+int MPIDI_CH3U_Win_allocate_no_shm(MPI_Aint size, int disp_unit, MPID_Info *info,
+                                   MPID_Comm *comm_ptr, void *baseptr, MPID_Win **win_ptr )
 {
     void **base_pp = (void **) baseptr;
     int mpi_errno = MPI_SUCCESS;
     MPIU_CHKPMEM_DECL(1);
 
-    MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3U_WIN_ALLOCATE);
-    MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_CH3U_WIN_ALLOCATE);
+    MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3U_WIN_ALLOCATE_NO_SHM);
+    MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_CH3U_WIN_ALLOCATE_NO_SHM);
 
     if (size > 0) {
         MPIU_CHKPMEM_MALLOC(*base_pp, void *, size, mpi_errno, "(*win_ptr)->base");
@@ -302,7 +302,7 @@ int MPIDI_CH3U_Win_allocate(MPI_Aint size, int disp_unit, MPID_Info *info,
     if (mpi_errno != MPI_SUCCESS) { MPIU_ERR_POP(mpi_errno); }
 
 fn_exit:
-    MPIDI_RMA_FUNC_EXIT(MPID_STATE_MPIDI_CH3U_WIN_ALLOCATE);
+    MPIDI_RMA_FUNC_EXIT(MPID_STATE_MPIDI_CH3U_WIN_ALLOCATE_NO_SHM);
     return mpi_errno;
     /* --BEGIN ERROR HANDLING-- */
 fn_fail:
