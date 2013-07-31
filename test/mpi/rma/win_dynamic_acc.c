@@ -34,7 +34,7 @@ int main(int argc, char **argv) {
                   MPI_COMM_WORLD);
 
     MPI_Win_create_dynamic(MPI_INFO_NULL, MPI_COMM_WORLD, &dyn_win);
-    MPI_Win_attach(dyn_win, &one, sizeof(int));
+    MPI_Win_attach(dyn_win, &val, sizeof(int));
 
     for (i = 0; i < ITER; i++) {
             MPI_Win_fence(MPI_MODE_NOPRECEDE, dyn_win);
@@ -50,7 +50,7 @@ int main(int argc, char **argv) {
         printf("%d -- Got %d, expected %d\n", rank, val, ITER);
     }
 
-    MPI_Win_detach(dyn_win, &one);
+    MPI_Win_detach(dyn_win, &val);
     MPI_Win_free(&dyn_win);
 
     MPI_Reduce(&errors, &all_errors, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
