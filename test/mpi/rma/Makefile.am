@@ -69,6 +69,7 @@ noinst_PROGRAMS =          \
     rmazero                \
     mixedsync              \
     manyrma2		   \
+    manyrma3		   \
     selfrma                \
     strided_acc_onelock    \
     strided_putget_indexed \
