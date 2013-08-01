@@ -1416,6 +1416,7 @@ AC_OUTPUT(maint/testmerge \
           f77/io/iooffset.h \
           f77/io/iodisp.h \
           f77/io/ioaint.h \
+	  f77/profile/Makefile \
           f90/Makefile \
           f90/attr/Makefile \
           f90/datatype/Makefile \
@@ -1435,6 +1436,7 @@ AC_OUTPUT(maint/testmerge \
           f90/ext/testlist \
           f90/io/Makefile \
           f90/misc/Makefile \
+	  f90/profile/Makefile \
           cxx/Makefile \
           cxx/util/Makefile \
           cxx/attr/Makefile \

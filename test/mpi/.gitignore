@@ -21,6 +21,7 @@
 /f90/pt2pt/
 /f90/spawn/
 /f90/topo/
+/f90/profile
 /coll/gdb.script
 /coll/redscat2
 /coll/reduce_local
