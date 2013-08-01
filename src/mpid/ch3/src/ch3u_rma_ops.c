@@ -40,10 +40,9 @@ extern void MPIDI_CH3_RMA_InitInstr(void);
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 int MPIDI_Win_free(MPID_Win **win_ptr)
 {
-    int mpi_errno=MPI_SUCCESS, total_pt_rma_puts_accs;
+    int mpi_errno=MPI_SUCCESS;
     int in_use;
     MPID_Comm *comm_ptr;
-    int errflag = FALSE;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_WIN_FREE);
         
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_WIN_FREE);

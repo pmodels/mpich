@@ -533,7 +533,7 @@ static inline int MPIDI_CH3I_Shm_get_acc_op(const void *origin_addr, int origin_
     void *base = NULL;
     MPI_User_function *uop = NULL;
     MPID_Datatype *dtp;
-    int origin_predefined, result_predefined, target_predefined;
+    int origin_predefined, target_predefined;
     MPIDI_VC_t *orig_vc, *target_vc;
     int mpi_errno = MPI_SUCCESS;
     MPIU_CHKLMEM_DECL(2);
@@ -545,7 +545,6 @@ static inline int MPIDI_CH3I_Shm_get_acc_op(const void *origin_addr, int origin_
     if (op != MPI_NO_OP) {
         MPIDI_CH3I_DATATYPE_IS_PREDEFINED(origin_datatype, origin_predefined);
     }
-    MPIDI_CH3I_DATATYPE_IS_PREDEFINED(result_datatype, result_predefined);
     MPIDI_CH3I_DATATYPE_IS_PREDEFINED(target_datatype, target_predefined);
 
     /* FIXME: refer to FIXME in MPIDI_CH3I_Shm_put_op */
