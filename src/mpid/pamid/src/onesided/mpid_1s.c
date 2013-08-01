@@ -29,10 +29,10 @@ MPIDI_Win_DoneCB(pami_context_t  context,
 {
   MPIDI_Win_request *req = (MPIDI_Win_request*)cookie;
   ++req->win->mpid.sync.complete;
+  ++req->origin.completed;
 
   if ((req->buffer_free) && (req->type == MPIDI_WIN_REQUEST_GET))
     {
-      ++req->origin.completed;
       if (req->origin.completed == req->target.dt.num_contig)
         {
           int mpi_errno;
@@ -49,7 +49,8 @@ MPIDI_Win_DoneCB(pami_context_t  context,
         }
     }
 
-  if (req->win->mpid.sync.total == req->win->mpid.sync.complete)
+  //if (req->win->mpid.sync.total == req->win->mpid.sync.complete)
+  if (req->origin.completed == req->target.dt.num_contig)
     {
       if (req->buffer_free)
         MPIU_Free(req->buffer);

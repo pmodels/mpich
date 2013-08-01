@@ -107,7 +107,12 @@ MPIDI_Accumulate(pami_context_t   context,
     TRACE_ERR("  Sub     index=%u  bytes=%zu  l-offset=%zu  r-addr=%p  l-buf=%p  *(int*)buf=0x%08x  *(double*)buf=%g\n",
               req->state.index, params.send.data.iov_len, req->state.local_offset, req->accum_headers[req->state.index].addr, buf, *ibuf, *dbuf);
 #endif
-      if (sync->total - sync->complete == 1) {
+
+    /** sync->total will be updated with every RMA and the complete
+	will not change till that RMA has completed. In the meanwhile
+	the rest of the RMAs will have memory leaks */
+      if (req->target.dt.num_contig - req->state.index == 1) {
+      //if (sync->total - sync->complete == 1) {
           map=NULL;
           if (req->target.dt.map != &req->target.dt.__map) {
               map=(void *) req->target.dt.map;

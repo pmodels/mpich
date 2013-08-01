@@ -99,7 +99,12 @@ MPIDI_Get_use_pami_rget(pami_context_t context, MPIDI_Win_request * req, int *fr
     unsigned* buf = (unsigned*)(req->buffer + params.rdma.local.offset);
 #endif
     TRACE_ERR("  Sub     index=%u  bytes=%zu  l-offset=%zu  r-offset=%zu  buf=%p  *(int*)buf=0x%08x\n", req->state.index, params.rma.bytes, params.rdma.local.offset, params.rdma.remote.offset, buf, *buf);
-      if (sync->total - sync->complete == 1) {
+
+    /** sync->total will be updated with every RMA and the complete
+	will not change till that RMA has completed. In the meanwhile
+	the rest of the RMAs will have memory leaks */
+    if (req->target.dt.num_contig - req->state.index == 1) {
+    //if (sync->total - sync->complete == 1) {
           map=NULL;
           if (req->target.dt.map != &req->target.dt.__map) {
               map=(void *) req->target.dt.map;
@@ -164,7 +169,12 @@ MPIDI_Get_use_pami_get(pami_context_t context, MPIDI_Win_request * req, int *fre
 #endif
     TRACE_ERR("  Sub     index=%u  bytes=%zu  l-offset=%zu  r-offset=%zu  buf=%p  *(int*)buf=0x%08x\n",
 	      req->state.index, params.rma.bytes, params.rdma.local.offset, params.rdma.remote.offset, buf, *buf);
-    if (sync->total - sync->complete == 1) {
+    
+    /** sync->total will be updated with every RMA and the complete
+	will not change till that RMA has completed. In the meanwhile
+	the rest of the RMAs will have memory leaks */
+    if (req->target.dt.num_contig - req->state.index == 1) {
+    //if (sync->total - sync->complete == 1) {
         map=NULL;
         if (req->target.dt.map != &req->target.dt.__map) {
             map=(void *) req->target.dt.map;

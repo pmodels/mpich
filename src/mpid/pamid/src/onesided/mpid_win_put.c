@@ -101,7 +101,12 @@ MPIDI_Put_use_pami_rput(pami_context_t context, MPIDI_Win_request * req,int *fre
 #endif
     TRACE_ERR("  Sub     index=%u  bytes=%zu  l-offset=%zu  r-offset=%zu  buf=%p  *(int*)buf=0x%08x\n",
 	      req->state.index, params.rma.bytes, params.rdma.local.offset, params.rdma.remote.offset, buf, *buf);
-    if (sync->total - sync->complete == 1) {
+
+    /** sync->total will be updated with every RMA and the complete
+	will not change till that RMA has completed. In the meanwhile
+	the rest of the RMAs will have memory leaks */
+    if (req->target.dt.num_contig - req->state.index == 1) {
+    //if (sync->total - sync->complete == 1) {
          map=NULL;
          if (req->target.dt.map != &req->target.dt.__map) {
              map=(void *) req->target.dt.map;
@@ -166,7 +171,11 @@ MPIDI_Put_use_pami_put(pami_context_t   context, MPIDI_Win_request * req,int *fr
 #endif
     TRACE_ERR("  Sub     index=%u  bytes=%zu  l-offset=%zu  r-offset=%zu  buf=%p  *(int*)buf=0x%08x\n",
 	      req->state.index, params.rma.bytes, params.addr.local, params.addr.remote, buf, *buf);
-    if (sync->total - sync->complete == 1) {
+
+    /** sync->total will be updated with every RMA and the complete
+	will not change till that RMA has completed. In the meanwhile
+	the rest of the RMAs will have memory leaks */
+    if (req->target.dt.num_contig - req->state.index == 1) {
         map=NULL;
         if (req->target.dt.map != &req->target.dt.__map) {
             map=(void *) req->target.dt.map;
@@ -338,7 +347,6 @@ MPID_Put(void         *origin_addr,
   MPIDI_Win_datatype_map(&req->target.dt);
   win->mpid.sync.total += req->target.dt.num_contig;
 
-
   /* The pamid one-sided design requires context post in order to handle the
    * case where the number of pending rma operation exceeds the
    * 'PAMID_RMA_PENDING' threshold. When there are too many pending requests the
@@ -351,7 +359,8 @@ MPID_Put(void         *origin_addr,
    *        the rma pending threshold has been reached. This would result in
    *        better latency for one-sided operations.
    */
-  PAMI_Context_post(MPIDI_Context[0], &req->post_request, MPIDI_Put, req);
+  PAMI_Context_post(MPIDI_Context[0], &req->post_request, MPIDI_Put, req);  
+  //MPIDI_Put(MPIDI_Context[0], req);
 
 fn_fail:
   return mpi_errno;
