@@ -19,7 +19,7 @@ MPIU_INSTR_DURATION_EXTERN_DECL(wincreate_allgather);
 #endif
 
 static int MPIDI_CH3I_Win_allocate_shm(MPI_Aint size, int disp_unit, MPID_Info *info, MPID_Comm *comm_ptr,
-                                       void **base_ptr, MPID_Win **win_ptr);
+                                       void *base_ptr, MPID_Win **win_ptr);
 
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3_Win_fns_init
@@ -45,9 +45,10 @@ int MPIDI_CH3_Win_fns_init(MPIDI_CH3U_Win_fns_t *win_fns)
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 static int MPIDI_CH3I_Win_allocate_shm(MPI_Aint size, int disp_unit, MPID_Info *info,
-                                       MPID_Comm *comm_ptr, void **base_ptr, MPID_Win **win_ptr)
+                                       MPID_Comm *comm_ptr, void *base_ptr, MPID_Win **win_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
+    void **base_pp = (void **) base_ptr;
     int i, k, comm_size, rank;
     int  node_size, node_rank;
     MPID_Comm *node_comm_ptr;
@@ -342,7 +343,7 @@ static int MPIDI_CH3I_Win_allocate_shm(MPI_Aint size, int disp_unit, MPID_Info *
     for (i = 0; i < comm_size; ++i)
         (*win_ptr)->base_addrs[i] = MPIU_AintToPtr(tmp_buf[i]);
 
-    *base_ptr = (*win_ptr)->base;
+    *base_pp = (*win_ptr)->base;
 
     /* Provide operation overrides for this window flavor */
     (*win_ptr)->RMAFns.Win_shared_query = MPIDI_CH3_SHM_Win_shared_query;
