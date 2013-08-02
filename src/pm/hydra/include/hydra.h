@@ -214,6 +214,8 @@ struct HYD_string_stash {
 
 #define HYD_STRING_STASH_FREE(stash)            \
     do {                                        \
+        if ((stash).strlist == NULL)            \
+            break;                              \
         HYDU_free_strlist((stash).strlist);     \
         HYDU_FREE((stash).strlist);             \
         (stash).max_count = 0;                  \
