@@ -913,11 +913,13 @@ if [ "$do_build_configure" = "yes" ] ; then
                     echo_n "Patching libtool.m4 for compatibility with nagfor shared libraries... "
                     patch --forward -s -l $amdir/confdb/libtool.m4 maint/libtool.m4.patch
                     if [ $? -eq 0 ] ; then
-                        echo "done"
                         # Remove possible leftovers, which don't imply a failure
                         rm -f $amdir/confdb/libtool.m4.orig
+                        # Rebuild configure
+                        (cd $amdir && $autoconf -f) || exit 1
                         # Reset libtool.m4 timestamps to avoid confusing make
                         touch -r $amdir/confdb/ltversion.m4 $amdir/confdb/libtool.m4
+                        echo "done"
                     else
                         echo "failed"
                     fi
