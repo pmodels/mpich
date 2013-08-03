@@ -24,6 +24,8 @@ typedef struct regmem {
     char *base;
     size_t size;
     off_t offset;               /* for DMA */
+    uint64_t seqno;             /* sender sequence number, */
+    /* used for unreg */
     struct regmem *next;
 } regmem_t;
 
@@ -47,6 +49,8 @@ typedef struct {
     ssize_t dmaend;             /* end of the read in the DMA buffer */
     regmem_t *reg;              /* registration list */
     int rank;                   /* mostly for debugging */
+    int dma_count;              /* count of DMA ops (send only) */
+    int dma_chdseqno;           /* last checked segno           */
 } shmchan_t;
 
 int MPID_nem_scif_init_shmsend(shmchan_t * csend, int ep, int rank);
@@ -69,5 +73,16 @@ static inline int MPID_nem_scif_poll_recv(shmchan_t * crecv)
 static inline int MPID_nem_scif_chk_seqno(shmchan_t * csend, int seqno)
 {
     return *csend->lseqno >= seqno;
+}
+
+static inline int MPID_nem_scif_chk_dma_unreg(shmchan_t * csend)
+{
+    uint64_t lseqno = *csend->lseqno;
+
+    if (lseqno != csend->dma_chdseqno) {
+        csend->dma_chdseqno = lseqno;
+        return csend->dma_count;
+    }
+    return 0;
 }
 #endif

@@ -4,7 +4,7 @@
  *      See COPYRIGHT in top-level directory.
  *
  *  Portions of this code were written by Intel Corporation.
- *  Copyright (C) 2011-2013 Intel Corporation.  Intel provides this material
+ *  Copyright (C) 2011-2012 Intel Corporation.  Intel provides this material
  *  to Argonne National Laboratory subject to Software Grant and Corporate
  *  Contributor License Agreement dated February 8, 2012.
  */
@@ -56,6 +56,8 @@ int MPID_nem_scif_init_shmsend(shmchan_t * csend, int ep, int rank)
     csend->pos = -1;
     csend->reg = 0;
     csend->rank = rank;
+    csend->dma_count = 0;
+    csend->dma_chdseqno = 0;
 
   fn_exit:
     return retval;
@@ -85,6 +87,29 @@ int MPID_nem_scif_init_shmrecv(shmchan_t * crecv, int ep, off_t offs, int rank)
     crecv->rank = rank;
   fn_exit:
     return retval;
+}
+
+void MPID_nem_scif_unregmem(int ep, shmchan_t * c)
+{
+    regmem_t *rp = c->reg, *prev = c->reg;
+    uint64_t lseqno = c->dma_chdseqno;
+
+    while (rp && c->dma_count) {
+        if (rp->seqno <= lseqno) {
+            scif_unregister(ep, rp->offset, rp->size);
+            prev->next = rp->next;
+            if (c->reg == rp) {
+                c->reg = rp->next;
+            }
+            free(rp);
+            --c->dma_count;
+            rp = prev->next;
+        }
+        else {
+            prev = rp;
+            rp = rp->next;
+        }
+    }
 }
 
 static regmem_t *regmem(int ep, shmchan_t * c, void *addr, size_t len)
@@ -161,6 +186,8 @@ static int dma_read(int ep, shmchan_t * c, void *recv_buf, off_t raddr, size_t m
             fprintf(stderr, "recv_buf: %p raddr: 0x%lx buflen: %ld\n",
                     recv_buf, raddr + c->pos, buflen);
         }
+        scif_fence_mark(ep, SCIF_FENCE_INIT_SELF, &mark);
+        scif_fence_wait(ep, mark);
         *did_dma = 1;
         goto fn_exit;
     }
@@ -423,6 +450,11 @@ ssize_t MPID_nem_scif_writev(int ep, shmchan_t * c, const struct iovec * iov, in
         c->curp += len;
         nwritten += iovlen;
         ++c->seqno;
+
+        if (did_dma) {
+            rp->seqno = c->seqno;
+            ++c->dma_count;
+        }
     }
   fn_exit:
 #if !defined(__MIC__)

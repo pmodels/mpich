@@ -17,10 +17,21 @@
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 int MPID_nem_scif_finalize(void)
 {
+    int i, ret;
+    scifconn_t *it_sc;
+
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_SCIF_FINALIZE);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_SCIF_FINALIZE);
 
+    for (i = 0; i < MPID_nem_scif_nranks; ++i) {
+        it_sc = &MPID_nem_scif_conns[i];
+        if (it_sc->fd == -1) {
+            continue;   /* no connection */
+        }
+        if (scif_close(it_sc->fd) == 0)
+            it_sc->fd = -1;
+    }
     MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_SCIF_FINALIZE);
     return MPI_SUCCESS;
 }

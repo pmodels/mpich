@@ -70,10 +70,8 @@ static int MPID_nem_scif_recv_handler(scifconn_t * const sc)
                 rreq->dev.iov_count =
                     &rreq->dev.iov[rreq->dev.iov_offset + rreq->dev.iov_count] - iov;
                 rreq->dev.iov_offset = iov - rreq->dev.iov;
-                MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE, "bytes_recvd = %ld",
-                               (long int) bytes_recvd);
-                MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE, "iov len = %ld",
-                               (long int) iov->MPID_IOV_LEN);
+                MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE, "bytes_recvd = %ld", (long int) bytes_recvd);
+                MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE, "iov len = %ld", (long int) iov->MPID_IOV_LEN);
                 MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE, "iov_offset = %d", rreq->dev.iov_offset);
                 goto fn_exit;
             }
@@ -111,8 +109,7 @@ static int MPID_nem_scif_recv_handler(scifconn_t * const sc)
     return mpi_errno;
   fn_fail:     /* comm related failures jump here */
     {
-        MPIU_ERR_SET1(mpi_errno, MPI_ERR_OTHER, "**comm_fail",
-                      "**comm_fail %d", sc_vc->pg_rank);
+        MPIU_ERR_SET1(mpi_errno, MPI_ERR_OTHER, "**comm_fail", "**comm_fail %d", sc_vc->pg_rank);
     }
   fn_noncomm_fail:     /* NON-comm related failures jump here */
     goto fn_exit;
@@ -143,6 +140,13 @@ static int state_commrdy_handler(int is_readable, int is_writeable, scifconn_t *
             MPIU_ERR_POP(mpi_errno);
         /* check to see if this VC is waiting for outstanding sends to
          * finish in order to terminate */
+        if (MPIDI_CH3I_Sendq_empty(sc_vc_scif->send_queue) && sc_vc_scif->terminate == 1) {
+            /* The sendq is empty, so we can immediately terminate
+             * the connection. */
+            mpi_errno = MPID_nem_scif_vc_terminated(sc_vc);
+            if (mpi_errno)
+                MPIU_ERR_POP(mpi_errno);
+        }
     }
   fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_STATE_COMMRDY_HANDLER);
@@ -166,6 +170,9 @@ int MPID_nem_scif_connpoll(int in_blocking_poll)
         scifconn_t *it_sc = &MPID_nem_scif_conns[i];
         if (it_sc->fd == -1)
             continue;   /* no connection */
+        if (MPID_nem_scif_chk_dma_unreg(&it_sc->csend)) {
+            MPID_nem_scif_unregmem(it_sc->fd, &it_sc->csend);
+        }
         is_readable = MPID_nem_scif_poll_recv(&it_sc->crecv);
         is_writeable = MPID_nem_scif_poll_send(it_sc->fd, &it_sc->csend);
         MPIU_ERR_CHKANDJUMP1(is_writeable == -1, mpi_errno, MPI_ERR_OTHER,
@@ -180,8 +187,7 @@ int MPID_nem_scif_connpoll(int in_blocking_poll)
             fds.revents = 0;
             MPIU_ERR_CHKANDJUMP1(poll(&fds, 1, 0) < 0, mpi_errno, MPI_ERR_OTHER,
                                  "**poll", "**poll %s", MPIU_Strerror(errno));
-            MPIU_ERR_CHKANDJUMP(fds.revents & (POLLERR | POLLHUP), mpi_errno,
-                                MPI_ERR_OTHER, "**poll");
+            MPIU_ERR_CHKANDJUMP(fds.revents & POLLERR, mpi_errno, MPI_ERR_OTHER, "**poll");
         }
     }
     if (npolls++ >= NPOLLS)
@@ -190,7 +196,6 @@ int MPID_nem_scif_connpoll(int in_blocking_poll)
   fn_exit:
     return mpi_errno;
   fn_fail:
-    MPIU_DBG_MSG_FMT(NEM_SOCK_DET, VERBOSE,
-                     (MPIU_DBG_FDEST, "failure. mpi_errno = %d", mpi_errno));
+    MPIU_DBG_MSG_FMT(NEM_SOCK_DET, VERBOSE, (MPIU_DBG_FDEST, "failure. mpi_errno = %d", mpi_errno));
     goto fn_exit;
 }
