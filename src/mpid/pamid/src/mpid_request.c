@@ -26,6 +26,8 @@
 #define  MPID_REQUEST_PREALLOC 16
 #elif (MPIU_HANDLE_ALLOCATION_METHOD == MPIU_HANDLE_ALLOCATION_THREAD_LOCAL)
 #define  MPID_REQUEST_PREALLOC 512  //Have direct more reqyests for all threads
+#else
+#define MPID_REQUEST_PREALLOC 8
 #endif
 #endif
 
