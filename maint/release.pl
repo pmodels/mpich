@@ -271,6 +271,7 @@ print("done\n");
 print("===> Disabling unnecessary tests in the main codebase... ");
 chdir($expdir);
 run_cmd(q{perl -p -i -e 's/^\@perfdir\@/#\@perfdir@/' test/mpi/testlist.in});
+run_cmd(q{perl -p -i -e 's/^\@ftdir\@/#\@ftdir@/' test/mpi/testlist.in});
 run_cmd("perl -p -i -e 's/^large_message /#large_message /' test/mpi/pt2pt/testlist");
 run_cmd("perl -p -i -e 's/^large-count /#large-count /' test/mpi/datatype/testlist");
 print("done\n");
