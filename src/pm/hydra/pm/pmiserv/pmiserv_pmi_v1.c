@@ -253,6 +253,10 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
         mcmd_args[mcmd_num_args++] = HYDU_strdup(args[i]);
     mcmd_args[mcmd_num_args] = NULL;
 
+    /* Initialize the proxy stash, so it can be freed if we jump to
+     * exit */
+    HYD_STRING_STASH_INIT(proxy_stash);
+
     status = HYD_pmcd_pmi_args_to_tokens(mcmd_args, &tokens, &token_count);
     HYDU_ERR_POP(status, "unable to convert args to tokens\n");
 
@@ -500,7 +504,6 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
     /* Go to the last PG */
     for (pg = &HYD_server_info.pg_list; pg->next; pg = pg->next);
 
-    HYD_STRING_STASH_INIT(proxy_stash);
     status = HYD_pmcd_pmi_fill_in_proxy_args(&proxy_stash, control_port, new_pgid);
     HYDU_ERR_POP(status, "unable to fill in proxy arguments\n");
     HYDU_FREE(control_port);
