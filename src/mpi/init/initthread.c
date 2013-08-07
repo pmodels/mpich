@@ -390,9 +390,6 @@ int MPIR_Init_thread(int * argc, char ***argv, int required, int * provided)
 
     /* MPIU_Timer_pre_init(); */
 
-    mpi_errno = MPIR_Param_init_params();
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-
     /* Wait for debugger to attach if requested. */
     if (MPIR_PARAM_DEBUG_HOLD) {
         volatile int hold = 1;
@@ -584,6 +581,9 @@ int MPI_Init_thread( int *argc, char ***argv, int required, int *provided )
 #   endif /* HAVE_ERROR_CHECKING */
 
     /* ... body of routine ... */
+
+    mpi_errno = MPIR_Param_init_params();
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
     /* If the user requested for asynchronous progress, request for
      * THREAD_MULTIPLE. */
