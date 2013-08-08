@@ -11,7 +11,7 @@
 
 #define CAS_CHECK_TYPE(c_type, mpi_type, expected_err)  \
 do {                                                    \
-    int            err, err_class;                      \
+    int            err, err_class, i;                   \
     c_type         val, cmp_val;                        \
     c_type         buf, res;                            \
     MPI_Win        win;                                 \
@@ -24,10 +24,12 @@ do {                                                    \
     MPI_Win_set_errhandler( win, MPI_ERRORS_RETURN );   \
                                                         \
     MPI_Win_fence( MPI_MODE_NOPRECEDE, win );           \
+    for (i = 0; i < 10000; i++) {                       \
     err = MPI_Compare_and_swap( &val, &cmp_val, &res,  \
                                  mpi_type, 0, 0, win ); \
     MPI_Error_class( err, &err_class );                 \
     assert( err_class == expected_err );                \
+    }                                                   \
     MPI_Win_fence( MPI_MODE_NOSUCCEED, win);            \
                                                         \
     MPI_Win_free( &win );                               \
