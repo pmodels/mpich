@@ -443,6 +443,7 @@ int MPIDI_Win_fence(int assert, MPID_Win *win_ptr)
 		if (nRequest > MPIR_PARAM_CH3_RMA_NREQUEST_THRESHOLD &&
 		    nRequest - nRequestNew > MPIR_PARAM_CH3_RMA_NREQUEST_NEW_THRESHOLD) {
 		    int nDone = 0;
+		    MPIU_INSTR_STMT(list_complete=MPIU_INSTR_GET_VAR(winfence_complete));
                     MPIDI_CH3I_RMAListPartialComplete(win_ptr, ops_list, curr_ptr, &nDone);
 		    /* if (nDone > 0) printf( "nDone = %d\n", nDone ); */
 		    nRequest -= nDone;
@@ -1752,6 +1753,7 @@ int MPIDI_Win_complete(MPID_Win *win_ptr)
 	    if (nRequest > MPIR_PARAM_CH3_RMA_NREQUEST_THRESHOLD &&
 		nRequest - nRequestNew > MPIR_PARAM_CH3_RMA_NREQUEST_NEW_THRESHOLD) {
 		int nDone = 0;
+		MPIU_INSTR_STMT(list_complete=MPIU_INSTR_GET_VAR(wincomplete_complete));
                 MPIDI_CH3I_RMAListPartialComplete(win_ptr, ops_list, curr_ptr, &nDone);
 		nRequest -= nDone;
 		nRequestNew = nRequest;
@@ -2749,6 +2751,7 @@ static int MPIDI_CH3I_Do_passive_target_rma(MPID_Win *win_ptr, int target_rank,
 	    if (nRequest > MPIR_PARAM_CH3_RMA_NREQUEST_THRESHOLD &&
 		nRequest - nRequestNew > MPIR_PARAM_CH3_RMA_NREQUEST_NEW_THRESHOLD) {
 		int nDone = 0;
+		MPIU_INSTR_STMT(list_complete=MPIU_INSTR_GET_VAR(winunlock_complete));
                 MPIDI_CH3I_RMAListPartialComplete(win_ptr,
                                                   &win_ptr->targets[target_rank].rma_ops_list,
                                                   curr_ptr, &nDone);
