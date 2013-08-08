@@ -125,52 +125,55 @@ if test "${pamid_platform}" = "BGQ" ; then
   for bgq_driver in $bgq_driver_search_path ; do
     if test -d ${bgq_driver}/spi/include ; then
 
+      found_bgq_driver=yes
+
       PAC_APPEND_FLAG([-I${bgq_driver}],                        [CPPFLAGS])
       PAC_APPEND_FLAG([-I${bgq_driver}/spi/include/kernel/cnk], [CPPFLAGS])
-
-      PAC_APPEND_FLAG([-I${bgq_driver}],                        [WRAPPER_CFLAGS])
-      PAC_APPEND_FLAG([-I${bgq_driver}],                        [WRAPPER_CXXFLAGS])
-      PAC_APPEND_FLAG([-I${bgq_driver}],                        [WRAPPER_FCFLAGS])
-      PAC_APPEND_FLAG([-I${bgq_driver}],                        [WRAPPER_FFLAGS])
-
-      if test -d {bgq_driver}/comm/include ; then
-        PAC_APPEND_FLAG([-I${bgq_driver}/comm/include],         [CPPFLAGS])
-
-        PAC_APPEND_FLAG([-I${bgq_driver}/comm/include],         [WRAPPER_CFLAGS])
-        PAC_APPEND_FLAG([-I${bgq_driver}/comm/include],         [WRAPPER_CXXFLAGS])
-        PAC_APPEND_FLAG([-I${bgq_driver}/comm/include],         [WRAPPER_FCFLAGS])
-        PAC_APPEND_FLAG([-I${bgq_driver}/comm/include],         [WRAPPER_FFLAGS])
-      else
-        PAC_APPEND_FLAG([-I${bgq_driver}/comm/sys/include],     [CPPFLAGS])
-
-        PAC_APPEND_FLAG([-I${bgq_driver}/comm/sys/include],     [WRAPPER_CFLAGS])
-        PAC_APPEND_FLAG([-I${bgq_driver}/comm/sys/include],     [WRAPPER_CXXFLAGS])
-        PAC_APPEND_FLAG([-I${bgq_driver}/comm/sys/include],     [WRAPPER_FCFLAGS])
-        PAC_APPEND_FLAG([-I${bgq_driver}/comm/sys/include],     [WRAPPER_FFLAGS])
-      fi
-
-      PAC_APPEND_FLAG([-I${bgq_driver}/spi/include/kernel/cnk], [WRAPPER_CFLAGS])
-      PAC_APPEND_FLAG([-I${bgq_driver}/spi/include/kernel/cnk], [WRAPPER_CXXFLAGS])
-      PAC_APPEND_FLAG([-I${bgq_driver}/spi/include/kernel/cnk], [WRAPPER_FCFLAGS])
-      PAC_APPEND_FLAG([-I${bgq_driver}/spi/include/kernel/cnk], [WRAPPER_FFLAGS])
-
       PAC_APPEND_FLAG([-L${bgq_driver}/spi/lib],                [LDFLAGS])
-
       PAC_APPEND_FLAG([-L${bgq_driver}/spi/lib],                [WRAPPER_LDFLAGS])
-      if test -d ${bgq_driver}/comm/lib ; then
-        PAC_APPEND_FLAG([-L${bgq_driver}/comm/lib],             [WRAPPER_LDFLAGS])
-        if test x${original_PAMILIBNAME} = x ; then
-          PAMILIBNAME=pami-gcc
-        fi
-      else
-        PAC_APPEND_FLAG([-L${bgq_driver}/comm/sys/lib],         [WRAPPER_LDFLAGS])
-      fi
+
+      dnl If the '--with-pami' and the '--with-pami-include' configure options
+      dnl were NOT specified then test for a V1R2M1+ comm include directory.
+      dnl
+      AS_IF([test "x${with_pami_include}" = "x" ],
+        [AS_IF([test "x${with_pami}" = "x" ],
+          [AS_IF([test -d ${bgq_driver}/comm/include ],
+            [PAC_APPEND_FLAG([-I${bgq_driver}/comm/include],    [CPPFLAGS])],
+            [PAC_APPEND_FLAG([-I${bgq_driver}/comm/sys/include],[CPPFLAGS])])])])
+
+      dnl If the '--with-pami' and the '--with-pami-lib' configure options were
+      dnl NOT specified then
+      dnl
+      dnl   if a custom pami library name was NOT specified then test for a
+      dnl   V1R2M1+ pami lib in a V1R2M1+ comm lib directory then test for a
+      dnl   pre-V1R2M1 pami lib in a pre-V1R2M1 comm lib directory; otherwise
+      dnl
+      dnl   if a custom pami library name WAS specified then test for a custom
+      dnl   pami lib in a V1R2M1+ comm lib directory then test for a custom
+      dnl   pami lib in a pre-V1R2M1 comm lib directory
+      dnl
+      AS_IF([test "x${with_pami_lib}" = "x" ],
+        [AS_IF([test "x${with_pami}" = "x" ],
+          [AS_IF([test "x${original_PAMILIBNAME}" = "x" ],
+            [AS_IF([test -f ${bgq_driver}/comm/lib/libpami-gcc.a ],
+              [PAMILIBNAME=pami-gcc
+               PAC_APPEND_FLAG([-L${bgq_driver}/comm/lib],      [LDFLAGS])
+               PAC_APPEND_FLAG([-L${bgq_driver}/comm/lib],      [WRAPPER_LDFLAGS])],
+              [AS_IF([test -f ${bgq_driver}/comm/sys/lib/libpami.a ],
+                [PAC_APPEND_FLAG([-L${bgq_driver}/comm/sys/lib],[LDFLAGS])
+                 PAC_APPEND_FLAG([-L${bgq_driver}/comm/sys/lib],[WRAPPER_LDFLAGS])])])],
+            [AS_IF([test -f ${bgq_driver}/comm/lib/lib${PAMILIBNAME}.a ],
+              [PAC_APPEND_FLAG([-L${bgq_driver}/comm/lib],      [LDFLAGS])
+               PAC_APPEND_FLAG([-L${bgq_driver}/comm/lib],      [WRAPPER_LDFLAGS])],
+              [AS_IF([test -f ${bgq_driver}/comm/sys/lib/lib${PAMILIBNAME}.a ],
+                [PAC_APPEND_FLAG([-L${bgq_driver}/comm/sys/lib],[LDFLAGS])
+                 PAC_APPEND_FLAG([-L${bgq_driver}/comm/sys/lib],[WRAPPER_LDFLAGS])])])])])])
 
       break
     fi
   done
 
-  if test x"$bgq_driver" != "x"; then
+  if test "x${found_bgq_driver}" = "xyes"; then
     AC_MSG_RESULT('$bgq_driver')
   else
     AC_MSG_RESULT('no')
@@ -179,12 +182,14 @@ if test "${pamid_platform}" = "BGQ" ; then
   #
   # The bgq compile requires these libraries.
   #
-  PAC_APPEND_FLAG([-l${PAMILIBNAME}], [WRAPPER_LIBS])
-  PAC_APPEND_FLAG([-lSPI],            [WRAPPER_LIBS])
-  PAC_APPEND_FLAG([-lSPI_cnk],        [WRAPPER_LIBS])
-  PAC_APPEND_FLAG([-lrt],             [WRAPPER_LIBS])
-  PAC_APPEND_FLAG([-lpthread],        [WRAPPER_LIBS])
-  PAC_APPEND_FLAG([-lstdc++],         [WRAPPER_LIBS])
+  PAC_APPEND_FLAG([-lSPI],            [LIBS])
+  PAC_APPEND_FLAG([-lSPI_cnk],        [LIBS])
+  PAC_APPEND_FLAG([-lrt],             [LIBS])
+  PAC_APPEND_FLAG([-lpthread],        [LIBS])
+  PAC_APPEND_FLAG([-lstdc++],         [LIBS])
+
+  AC_SEARCH_LIBS([PAMI_Send], [${PAMILIBNAME} pami-gcc])
+
 
   # For some reason, on bgq, libtool will incorrectly attempt a static link
   # of libstdc++.so unless this '-all-static' option is used. This seems to
