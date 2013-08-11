@@ -586,8 +586,7 @@ sub fmt_default {
             die "Unable to parse range value '$val', stopped";
         }
 
-        $val =~ s/:/,/;
-        return qq({$val});
+        return qq($val);
     }
     else {
         return qq($val);
