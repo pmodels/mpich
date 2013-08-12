@@ -64,8 +64,7 @@ AC_DEFUN([PAC_VAR_PUSHVAL],[
 dnl define local m4-name pac_stk_level.
 AS_VAR_PUSHDEF([pac_stk_level], [pac_stk_$1_level])
 AS_VAR_SET_IF([pac_stk_level],[
-    dnl autoconf < 2.64 does not have AS_VAR_ARITH, so use expr instead.
-    AS_VAR_SET([pac_stk_level], [`expr $pac_stk_level + 1`])
+    AS_VAR_ARITH([pac_stk_level], [$pac_stk_level + 1])
 ],[
     AS_VAR_SET([pac_stk_level], [0])
 ])
@@ -109,8 +108,7 @@ AS_VAR_SET_IF([pac_stk_level],[
         dnl AS_ECHO_N(["POPVAL: pac_stk_level = $pac_stk_level, "])
         AS_VAR_COPY([$1],[pac_stk_$1_$pac_stk_level])
         dnl AS_ECHO(["popped_val = $$1"])
-        dnl autoconf < 2.64 does not have AS_VAR_ARITH, so use expr instead.
-        AS_VAR_SET([pac_stk_level], [`expr $pac_stk_level - 1`])
+        AS_VAR_ARITH([pac_stk_level], [ $pac_stk_level - 1 ])
     ])
 ],[
     AC_MSG_WARN(["Uninitialized PUSHVAL/POPVAL of $1"])
