@@ -20,9 +20,18 @@ static char MTEST_Descrip[] = "Test contig asynchronous I/O";
    reads them back. The file name is taken as a command-line argument,
    and the process rank is appended to it.*/ 
 
+static void handle_error(int errcode, char *str)
+{
+        char msg[MPI_MAX_ERROR_STRING];
+        int resultlen;
+        MPI_Error_string(errcode, msg, &resultlen);
+        fprintf(stderr, "%s: %s\n", str, msg);
+        MPI_Abort(MPI_COMM_WORLD, 1);
+}
+
 int main(int argc, char **argv)
 {
-    int *buf, i, rank, nints, len;
+    int *buf, i, rank, nints, len, err;
     char *filename=0, *tmp;
     int errs=0;
     int SIZE = DEFAULT_SIZE;
@@ -36,6 +45,7 @@ int main(int argc, char **argv)
 
     MTest_Init(&argc,&argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+
 
 /* process 0 takes the file name as a command-line argument and 
    broadcasts it to other processes */
@@ -99,10 +109,14 @@ int main(int argc, char **argv)
     sprintf(filename, "%s.%d", tmp, rank);
     free(tmp);
 
-    MPI_File_open(MPI_COMM_SELF, filename, MPI_MODE_CREATE | MPI_MODE_RDWR, 
+    err = MPI_File_open(MPI_COMM_SELF, filename, MPI_MODE_CREATE | MPI_MODE_RDWR, 
                   MPI_INFO_NULL, &fh);
-    MPI_File_set_view(fh, 0, MPI_INT, MPI_INT, (char*)"native", MPI_INFO_NULL);
-    MPI_File_iwrite(fh, buf, nints, MPI_INT, &request);
+    if (err != MPI_SUCCESS) handle_error(err, "MPI_File_open");
+
+    err = MPI_File_set_view(fh, 0, MPI_INT, MPI_INT, (char*)"native", MPI_INFO_NULL);
+    if (err != MPI_SUCCESS) handle_error(err, "MPI_File_set_view");
+    err = MPI_File_iwrite(fh, buf, nints, MPI_INT, &request);
+    if (err != MPI_SUCCESS) handle_error(err, "MPI_File_iwrtie");
 #ifdef MPIO_USES_MPI_REQUEST
     MPI_Wait( &request, &status );
 #else    
@@ -113,10 +127,13 @@ int main(int argc, char **argv)
     /* reopen the file and read the data back */
 
     for (i=0; i<nints; i++) buf[i] = 0;
-    MPI_File_open(MPI_COMM_SELF, filename, MPI_MODE_CREATE | MPI_MODE_RDWR, 
+    err = MPI_File_open(MPI_COMM_SELF, filename, MPI_MODE_CREATE | MPI_MODE_RDWR, 
                   MPI_INFO_NULL, &fh);
-    MPI_File_set_view(fh, 0, MPI_INT, MPI_INT, (char*)"native", MPI_INFO_NULL);
-    MPI_File_iread(fh, buf, nints, MPI_INT, &request);
+    if (err != MPI_SUCCESS) handle_error(err, "MPI_File_open (read)");
+    err = MPI_File_set_view(fh, 0, MPI_INT, MPI_INT, (char*)"native", MPI_INFO_NULL);
+    if (err != MPI_SUCCESS) handle_error(err, "MPI_File_set_view (read)");
+    err = MPI_File_iread(fh, buf, nints, MPI_INT, &request);
+    if (err != MPI_SUCCESS) handle_error(err, "MPI_File_iread");
 #ifdef MPIO_USES_MPI_REQUEST
     MPI_Wait( &request, &status );
 #else    
