@@ -146,8 +146,9 @@ int ADIOI_GEN_aio(ADIO_File fd, void *buf, int len, ADIO_Offset offset,
 #endif
 
     if (err == -1) {
-	if (errno == EAGAIN) {
+	if (errno == EAGAIN || errno == ENOSYS) { 
 	    /* exceeded the max. no. of outstanding requests.
+               or, aio routines are not actually implemented 
 	    treat this as a blocking request and return.  */
 	    if (wr) 
 		ADIO_WriteContig(fd, buf, len, MPI_BYTE, 
@@ -159,7 +160,7 @@ int ADIOI_GEN_aio(ADIO_File fd, void *buf, int len, ADIO_Offset offset,
 	    MPIO_Completed_request_create(&fd, len, &error_code, request);
 	    return 0;
 	} else {
-	    return -errno;
+	    return errno;
 	}
     }
     aio_req->aiocbp = aiocbp;
