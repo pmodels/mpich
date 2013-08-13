@@ -813,10 +813,29 @@ typedef int (MPIX_Grequest_wait_function)(int, void **, double, MPI_Status *);
 #define MPI_ERR_RMA_SHARED 57       /* */
 #define MPI_ERR_RMA_FLAVOR 58       /* */
 
+/* Return codes for functions in the MPI Tool Information Interface */
+#define MPI_T_ERR_MEMORY            59  /* Out of memory */
+#define MPI_T_ERR_NOT_INITIALIZED   60  /* Interface not initialized */
+#define MPI_T_ERR_CANNOT_INIT       61  /* Interface not in the state to
+                                           be initialized */
+#define MPI_T_ERR_INVALID_INDEX     62  /* The index is invalid or
+                                           has been deleted  */
+#define MPI_T_ERR_INVALID_ITEM      63  /* Item index queried is out of range */
+#define MPI_T_ERR_INVALID_HANDLE    64  /* The handle is invalid */
+#define MPI_T_ERR_OUT_OF_HANDLES    65  /* No more handles available */
+#define MPI_T_ERR_OUT_OF_SESSIONS   66  /* No more sessions available */
+#define MPI_T_ERR_INVALID_SESSION   67  /* Session argument is not valid */
+#define MPI_T_ERR_CVAR_SET_NOT_NOW  68  /* Cvar can't be set at this moment */
+#define MPI_T_ERR_CVAR_SET_NEVER    69  /* Cvar can't be set until
+                                           end of execution */
+#define MPI_T_ERR_PVAR_NO_STARTSTOP 70  /* Pvar can't be started or stopped */
+#define MPI_T_ERR_PVAR_NO_WRITE     71  /* Pvar can't be written or reset */
+#define MPI_T_ERR_PVAR_NO_ATOMIC    72  /* Pvar can't be R/W atomically */
+
 #define MPI_ERR_LASTCODE    0x3fffffff  /* Last valid error code for a 
 					   predefined error class */
 /* WARNING: this is also defined in mpishared.h.  Update both locations */
-#define MPICH_ERR_LAST_CLASS 58     /* It is also helpful to know the
+#define MPICH_ERR_LAST_CLASS 72     /* It is also helpful to know the
 				       last valid class */
 /* End of MPI's error classes */
 

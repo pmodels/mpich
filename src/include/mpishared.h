@@ -62,7 +62,7 @@
 #include "mpierrs.h"
 
 /* FIXME: This is extracted from mpi.h.in, where it may not be appropriate */
-#define MPICH_ERR_LAST_CLASS 58     /* It is also helpful to know the
+#define MPICH_ERR_LAST_CLASS 72     /* It is also helpful to know the
 				       last valid class */
 
 #include "mpifunc.h"
