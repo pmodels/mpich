@@ -68,16 +68,16 @@ HYD_status HYDU_sock_listen(int *listen_fd, char *port_range, uint16_t * port)
      * being set is not a fatal error, so we ignore that
      * case. However, we do check for error cases, which means that
      * something bad has happened. */
-    if (setsockopt(*listen_fd, SOL_SOCKET, SO_REUSEADDR, &one, sizeof(one)) < 0)
+    if (setsockopt(*listen_fd, SOL_SOCKET, SO_REUSEADDR, &one, sizeof(int)) < 0)
         HYDU_ERR_SETANDJUMP(status, HYD_SOCK_ERROR, "cannot set SO_REUSEADDR\n");
 
     for (i = low_port; i <= high_port; i++) {
-        memset((void *) &sa, 0, sizeof(sa));
+        memset((void *) &sa, 0, sizeof(struct sockaddr_in));
         sa.sin_family = AF_INET;
         sa.sin_port = htons(i);
         sa.sin_addr.s_addr = INADDR_ANY;
 
-        if (bind(*listen_fd, (struct sockaddr *) &sa, sizeof(sa)) < 0) {
+        if (bind(*listen_fd, (struct sockaddr *) &sa, sizeof(struct sockaddr_in)) < 0) {
             /* If the address is in use, we should try the next
              * port. Otherwise, it's an error. */
             if (errno != EADDRINUSE)
@@ -98,7 +98,7 @@ HYD_status HYDU_sock_listen(int *listen_fd, char *port_range, uint16_t * port)
     /* We asked for any port, so we need to find out which port we
      * actually got. */
     if (*port == 0) {
-        socklen_t sinlen = sizeof(sa);
+        socklen_t sinlen = sizeof(struct sockaddr_in);
 
         if (getsockname(*listen_fd, (struct sockaddr *) &sa, &sinlen) < 0)
             HYDU_ERR_SETANDJUMP(status, HYD_SOCK_ERROR, "getsockname error (%s)\n",
@@ -149,7 +149,7 @@ HYD_status HYDU_sock_connect(const char *host, uint16_t port, int *fd, int retri
      * layer can decide what to do with the return status. */
     retry_count = 0;
     do {
-        ret = connect(*fd, (struct sockaddr *) &sa, sizeof(sa));
+        ret = connect(*fd, (struct sockaddr *) &sa, sizeof(struct sockaddr_in));
         if (ret < 0 && errno == ECONNREFUSED) {
             /* connection error; increase retry count and delay */
             retry_count++;
