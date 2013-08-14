@@ -1734,7 +1734,7 @@ int MPIDI_CH3_PG_Destroy( struct MPIDI_PG *pg );
 @*/
 int MPIDI_CH3_VC_Destroy( struct MPIDI_VC *vc );
 
-/*@ MPIDI_CH3_InitComplete - Perform any channel-specific initialization 
+/*@ MPIDI_CH3_InitCompleted - Perform any channel-specific initialization
   actions after MPID_Init but before MPI_Init (or MPI_Initthread) returns
   @*/
 int MPIDI_CH3_InitCompleted( void );
