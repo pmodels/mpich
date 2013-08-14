@@ -632,7 +632,8 @@ enum MPIR_T_scope_t {
     MPIX_T_SCOPE_INVALID = 0,
 
     /* arbitrarily shift values to aid debugging and reduce accidental errors */
-    MPI_T_SCOPE_READONLY = 60439,
+    MPI_T_SCOPE_CONSTANT = 60438,
+    MPI_T_SCOPE_READONLY,
     MPI_T_SCOPE_LOCAL,
     MPI_T_SCOPE_GROUP,
     MPI_T_SCOPE_GROUP_EQ,
