@@ -30,7 +30,7 @@
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIR_T_pvar_stop_impl(MPI_T_pvar_session session, MPI_T_pvar_handle handle)
 {
-    int mpi_errno = MPI_SUCCESS;
+    int mpi_errno = MPI_ERR_INTERN;
 
     /* TODO implement this function */
 

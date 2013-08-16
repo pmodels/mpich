@@ -30,7 +30,7 @@
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIR_T_category_get_cvars_impl(int cat_index, int len, int indices[])
 {
-    int mpi_errno = MPI_SUCCESS;
+    int mpi_errno = MPI_ERR_INTERN;
 
     /* TODO implement this function */
 

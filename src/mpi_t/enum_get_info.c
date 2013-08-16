@@ -30,7 +30,7 @@
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIR_T_enum_get_info_impl(MPI_T_enum enumtype, int *num, char *name, int *name_len)
 {
-    int mpi_errno = MPI_SUCCESS;
+    int mpi_errno = MPI_ERR_INTERN;
 
     /* TODO implement this function */
 
