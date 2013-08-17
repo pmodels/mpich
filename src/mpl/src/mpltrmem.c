@@ -120,6 +120,7 @@ static unsigned char TRDefaultByte = 0xda;
 static unsigned char TRFreedByte = 0xfc;
 #define MAX_TR_STACK 20
 static int TRdebugLevel = 0;
+static int TRSetBytes   = 0;
 #define TR_MALLOC 0x1
 #define TR_FREE   0x2
 
@@ -164,6 +165,10 @@ void MPL_trinit(int rank)
      * variables */
     /* these should properly only be "MPL_" parameters, but for backwards
      * compatibility we also support "MPICH_" parameters. */
+    s = getenv("MPICH_TRMEM_INIT");
+    if (s && *s && (strcmp(s, "YES") == 0 || strcmp(s, "yes") == 0)) {
+        TRSetBytes = 1;
+    }
     s = getenv("MPICH_TRMEM_VALIDATE");
     if (s && *s && (strcmp(s, "YES") == 0 || strcmp(s, "yes") == 0)) {
         TRdebugLevel = 1;
@@ -172,6 +177,10 @@ void MPL_trinit(int rank)
     if (s && *s && (strcmp(s, "YES") == 0 || strcmp(s, "yes") == 0)) {
         TRDefaultByte = 0;
         TRFreedByte = 0;
+    }
+    s = getenv("MPL_TRMEM_INIT");
+    if (s && *s && (strcmp(s, "YES") == 0 || strcmp(s, "yes") == 0)) {
+        TRSetBytes = 1;
     }
     s = getenv("MPL_TRMEM_VALIDATE");
     if (s && *s && (strcmp(s, "YES") == 0 || strcmp(s, "yes") == 0)) {
@@ -232,7 +241,9 @@ void *MPL_trmalloc(size_t a, int lineno, const char fname[])
     if (!new)
         goto fn_exit;
 
-    memset(new, TRDefaultByte, nsize + sizeof(TrSPACE) + sizeof(unsigned long));
+    if(TRSetBytes)
+      memset(new, TRDefaultByte, nsize + sizeof(TrSPACE) + sizeof(unsigned long));
+
     /* Cast to (void*) to avoid false warnings about alignment issues */
     head = (TRSPACE *) (void *)new;
     new += sizeof(TrSPACE);
@@ -433,7 +444,8 @@ void MPL_trfree(void *a_ptr, int line, const char file[])
          * them then our memset will elicit "invalid write" errors from
          * valgrind.  Mark it as accessible but undefined here to prevent this. */
         MPL_VG_MAKE_MEM_UNDEFINED((char *)a_ptr + 2 * sizeof(int), nset);
-        memset((char *)a_ptr + 2 * sizeof(int), TRFreedByte, nset);
+        if(TRSetBytes)
+          memset((char *)a_ptr + 2 * sizeof(int), TRFreedByte, nset);
     }
     free(head);
 }
