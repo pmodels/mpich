@@ -16,7 +16,7 @@ void *MPL_trmalloc(size_t, int, const char[]);
 void MPL_trfree(void *, int, const char[]);
 int MPL_trvalid(const char[]);
 int MPL_trvalid2(const char[],int,const char[]);
-void MPL_trspace(int *, int *);
+void MPL_trspace(size_t *, size_t *);
 void MPL_trid(int);
 void MPL_trlevel(int);
 void MPL_trDebugLevel(int);

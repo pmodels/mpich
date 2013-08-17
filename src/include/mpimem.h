@@ -145,7 +145,7 @@ void MPIU_trinit(int);
 void *MPIU_trmalloc(size_t, int, const char []);
 void MPIU_trfree(void *, int, const char []);
 int MPIU_trvalid(const char []);
-void MPIU_trspace(int *, int *);
+void MPIU_trspace(size_t *, size_t *);
 void MPIU_trid(int);
 void MPIU_trlevel(int);
 void MPIU_trDebugLevel(int);

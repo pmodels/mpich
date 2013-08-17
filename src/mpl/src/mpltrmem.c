@@ -561,13 +561,13 @@ int MPL_trvalid2(const char str[], int line, const char file[] )
 .   space - number of bytes currently allocated
 .   frags - number of blocks currently allocated
  +*/
-void MPL_trspace(int *space, int *fr)
+void MPL_trspace(size_t *space, size_t *fr)
 {
     /* We use ints because systems without prototypes will usually
      * allow calls with ints instead of longs, leading to unexpected
      * behavior */
-    *space = (int) allocated;
-    *fr = (int) frags;
+    *space =  allocated;
+    *fr =  frags;
 }
 
 /*+C

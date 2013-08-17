@@ -47,7 +47,7 @@ int MPIU_trvalid(const char str[])
     return retval;
 }
 
-void MPIU_trspace(int *space, int *fr)
+void MPIU_trspace(size_t *space, size_t *fr)
 {
     MPIU_THREAD_CS_ENTER(MEMALLOC,);
     MPL_trspace(space, fr);
