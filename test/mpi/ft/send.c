@@ -24,11 +24,8 @@ int main(int argc, char **argv)
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
     if (rank == 1) {
-        pid = getpid();
-        kill(pid, SIGKILL);
+        _exit(0);
     }
-
-    MTestSleep(1);
 
     if (rank == 0) {
         err = MPI_Send("No Errors", 10, MPI_CHAR, 2, 0, MPI_COMM_WORLD);
@@ -36,7 +33,7 @@ int main(int argc, char **argv)
 
     if (rank == 2) {
         MPI_Recv(buf, 10, MPI_CHAR, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-        printf("%s\n", buf);
+        printf(" %s\n", buf);
         fflush( stdout );
     }
 

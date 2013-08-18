@@ -14,7 +14,7 @@ int main(int argc, char **argv)
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-    printf("No Errors\n");
+    printf(" No Errors\n");
     fflush( stdout );
 
     if (rank == 0)

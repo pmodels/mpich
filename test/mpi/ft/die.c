@@ -19,14 +19,11 @@ int main(int argc, char **argv)
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
     if (rank == 1) {
-        pid = getpid();
-        kill(pid, SIGKILL);
+        _exit(0);
     }
 
-    MTestSleep(1);
-
     if (rank == 0) {
-        printf("No Errors\n");
+        printf(" No Errors\n");
         fflush( stdout );
     }
 
