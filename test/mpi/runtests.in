@@ -874,6 +874,58 @@ sub TestStatus {
     }
     return ($found_error,$inline);
 }
+# ----------------------------------------------------------------------------
+#
+# TestStatusNoErrors is like TestStatus except that it also checks for " No Errors"
+# This is useful for fault tolerance tests where mpiexec returns a non-zero status
+# because of a failed process, but still outputs " No Errors" when the correct
+# behavior is detected.
+sub TestStatusNoErrors {
+    my $MPIOUT = $_[0];
+    my $programname = $_[1];
+    my $found_error = 0;
+    my $found_noerror = 0;
+
+    my $inline = "";
+    while (<MPIOUT>) {
+	print STDOUT $_ if $verbose;
+	# Skip FORTRAN STOP
+	if (/FORTRAN STOP/) { next; }
+	$inline .= $_;
+	if (/^\s*No [Ee]rrors\s*$/ && $found_noerror == 0) {
+	    $found_noerror = 1;
+	}
+	if (! /^\s*No [Ee]rrors\s*$/ && !/^\s*Test Passed\s*$/) {
+	    print STDERR "Unexpected output in $programname: $_";
+	    if (!$found_error) {
+		$found_error = 1;
+		$err_count ++;
+	    }
+	}
+    }
+    if ($found_noerror == 0) {
+	print STDERR "Program $programname exited without No Errors\n";
+	if (!$found_error) {
+	    $found_error = 1;
+	    $err_count ++;
+	}
+    }
+    $rc = close ( MPIOUT );
+    if ($rc == 0) {
+	$run_status = $?;
+	$signal_num = $run_status & 127;
+	if ($run_status > 255) { $run_status >>= 8; }
+    }
+    else {
+	# This test *requires* non-zero return codes
+        if (!$found_error) {
+	    $found_error = 1;
+	    $err_count ++;
+        }
+	$inline .= "$mpiexec returned a zero status but the program required a non-zero status\n";
+    }
+    return ($found_error,$inline);
+}
 #
 # TestTimeout is a special test that reports success *only* when the 
 # status return is NONZERO and there are no processes left over.

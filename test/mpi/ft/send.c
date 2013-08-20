@@ -21,7 +21,7 @@ int main(int argc, char **argv)
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
     if (rank == 1) {
-        exit(0);
+        exit(EXIT_FAILURE);
     }
 
     if (rank == 0) {
