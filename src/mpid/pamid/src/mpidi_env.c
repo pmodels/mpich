@@ -867,7 +867,7 @@ MPIDI_Env_setup(int rank, int requested)
       if(env != NULL)
       {
          if(strncasecmp(env, "N", 1) == 1)
-            MPIDI_Process.optimized.collectives = 0;
+            MPIDI_Process.optimized.collectives = MPID_COLL_OFF;
       }
    }
 
@@ -894,13 +894,15 @@ MPIDI_Env_setup(int rank, int requested)
              if(strncasecmp(env, "TUN", 3) == 0)
              {
                MPIDI_Process.optimized.auto_select_colls = MPID_AUTO_SELECT_COLLS_TUNE;
-               MPIDI_Process.optimized.collectives       = 1;
+               if(MPIDI_Process.optimized.collectives   != MPID_COLL_FCA)
+                 MPIDI_Process.optimized.collectives     = MPID_COLL_ON;
              }
              else if(strncasecmp(env, "YES", 3) == 0)
              {
                MPIDI_Process.optimized.auto_select_colls = MPID_AUTO_SELECT_COLLS_ALL; /* All collectives will be using auto coll sel.
                                                                                     We will check later on each individual coll. */
-               MPIDI_Process.optimized.collectives       = 1;
+               if(MPIDI_Process.optimized.collectives   != MPID_COLL_FCA)
+                 MPIDI_Process.optimized.collectives     = MPID_COLL_ON;
              }
              else
                MPIDI_Process.optimized.auto_select_colls = MPID_AUTO_SELECT_COLLS_NONE;

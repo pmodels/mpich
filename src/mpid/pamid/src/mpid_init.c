@@ -554,6 +554,10 @@ void MPIDI_Init_collsel_extension()
   }
   else
     MPIDI_Process.optimized.auto_select_colls = MPID_AUTO_SELECT_COLLS_NONE;
+
+  //If collective selection will be disabled, check on fca, if both not required, disable pami alltogether
+  if(MPIDI_Process.optimized.auto_select_colls == MPID_AUTO_SELECT_COLLS_NONE && MPIDI_Process.optimized.collectives != MPID_COLL_FCA)
+    MPIDI_Process.optimized.collectives = MPID_COLL_OFF;
 }
 
 void MPIDI_Collsel_table_generate()
