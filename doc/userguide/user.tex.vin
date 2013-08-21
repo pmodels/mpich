@@ -684,54 +684,6 @@ be found in the \texttt{mpich/test/mpi} source directory and can be
 run with the command \texttt{make testing}.  This test suite should
 work with any MPI implementation, not just MPICH.
 
-\section{MPICH under Windows}
-\label{sec:windows}
-
-\subsection{Directories}
-\label{sec:windir}
-
-The default installation of MPICH is in
-\texttt{C:$\backslash$Program Files$\backslash$MPICH}. Under the installation
-directory are three sub-directories: \texttt{include}, \texttt{bin}, and
-\texttt{lib}.  The \texttt{include} and \texttt{lib} directories contain
-the header files and libraries necessary to compile MPI applications.  
-The \texttt{bin} directory contains the process manager, \texttt{smpd.exe},
-and the MPI job launcher, \texttt{mpiexec.exe}.  The dlls that implement
-MPICH are copied to the Windows system32 directory.
-
-\subsection{Compiling}
-\label{sec:wincompile}
-
-The libraries in the \texttt{lib} directory were compiled with MS Visual C++ .NET 2003
-and Intel Fortran 8.1.  These 
-compilers and any others that can link with the MS \texttt{.lib} files can be used to
-create user applications.  \texttt{gcc} and \texttt{g77} for \texttt{cygwin} can be used with the 
-\texttt{libmpich*.a} libraries.
-
-For MS Developer Studio users: Create a project and add
-\begin{verbatim}
-    C:\Program Files\MPICH\include
-\end{verbatim}
-to the include path and
-\begin{verbatim}
-    C:\Program Files\MPICH\lib
-\end{verbatim}
-to
-the library path.  Add \texttt{mpi.lib} and \texttt{cxx.lib} to the
-link command.  Add \texttt{cxxd.lib} to the Debug target link instead of
-\texttt{cxx.lib}.
-
-Intel Fortran 8 users should add \texttt{fmpich.lib} to the link command. 
-
-Cygwin users should use \texttt{libmpich.a} \texttt{libfmpichg.a}.
-
-\subsection{Running}
-\label{sec:winrun}
-
-MPI jobs are run from a command prompt using \texttt{mpiexec.exe}.  See
-Section~\ref{sec:extensions-smpd} on \texttt{mpiexec} for \texttt{smpd}
-for a description of the options to \texttt{mpiexec}.
-
 \clearpage
 \appendix
 
