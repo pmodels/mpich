@@ -254,7 +254,7 @@ ADIOI_BG_persInfo_init(ADIOI_BG_ConfInfo_t *conf,
       conf->nAggrs = n_aggrs;
       /*    First pass gets nAggrs = -1 */
       if(conf->nAggrs <=0) 
-         conf->nAggrs = ADIOI_BG_NAGG_PSET_DFLT;
+         conf->nAggrs = bgmpio_bg_nagg_pset;
       if(conf->ioMinSize <= conf->nAggrs) 
         conf->nAggrs = MAX(1,conf->ioMinSize-1); /* not including bridge itself */
 /*      if(conf->nAggrs > conf->numBridgeRanks) 

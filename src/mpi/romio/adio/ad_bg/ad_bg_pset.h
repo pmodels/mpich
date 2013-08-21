@@ -51,12 +51,6 @@ typedef struct {
 #define MIN(a,b) ((a<b ? a : b))
 
 
-/* Default is to choose 8 aggregator nodes in each 32 CN pset. 
-   Also defines default ratio of aggregator nodes in each a pset.
-   For Virtual Node Mode, the ratio is 8/64 */
-#define ADIOI_BG_NAGG_PSET_MIN  1
-#define ADIOI_BG_NAGG_PSET_DFLT 8
-#define ADIOI_BG_PSET_SIZE_DFLT 32
 
 
 /* public funcs for ADIOI_BG_ProcInfo_t objects */

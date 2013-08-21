@@ -33,6 +33,7 @@ int 	bgmpio_comm;
 int 	bgmpio_tunegather;
 int 	bgmpio_tuneblocking;
 long    bglocklessmpio_f_type;
+int     bgmpio_bg_nagg_pset;
 
 double	bgmpio_prof_cw    [BGMPIO_CIO_LAST];
 double	bgmpio_prof_cr    [BGMPIO_CIO_LAST];
@@ -80,6 +81,11 @@ double	bgmpio_prof_cr    [BGMPIO_CIO_LAST];
  *                  statfs() field f_type.
  *   - The default is 0x20030528 (PVFS2_SUPER_MAGIC)
  *
+ * - BGMPIO_NAGG_PSET - Specify a ratio of "I/O aggregators" to use for each
+ *   compute group (compute nodes + i/o nodes).    Possible values:
+ *   - any integer
+ *   - Default is 8
+ *
 */
 void ad_bg_get_env_vars() {
     char *x, *dummy;
@@ -104,6 +110,12 @@ void ad_bg_get_env_vars() {
     if (x) bglocklessmpio_f_type = strtol(x,&dummy,0);
     DBG_FPRINTF(stderr,"BGLOCKLESSMPIO_F_TYPE=%ld/%#lX\n",
             bglocklessmpio_f_type,bglocklessmpio_f_type);
+    /* note: this value will be 'sanity checked' in ADIOI_BG_persInfo_init(),
+     * when we know a bit more about what "largest possible value" and
+     * "smallest possible value" should be */
+    bgmpio_bg_nagg_pset = ADIOI_BG_NAGG_PSET_DFLT;
+    x = getenv("BGMPIO_NAGG_PSET");
+    if (x) bgmpio_bg_nagg_pset = atoi(x);
 }
 
 /* report timing breakdown for MPI I/O collective call */

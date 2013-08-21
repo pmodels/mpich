@@ -76,6 +76,7 @@ void ADIOI_BG_SetInfo(ADIO_File fd, MPI_Info users_info, int *error_code)
      */
     if (!fd->hints->initialized) {
 
+	ad_bg_get_env_vars();
 	did_anything = 1;
 
 	/* buffer size for collective I/O */
