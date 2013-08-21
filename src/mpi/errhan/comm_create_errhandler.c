@@ -64,6 +64,11 @@ Input Parameters:
 Output Parameters:
 . errhandler - MPI error handler (handle) 
 
+Error Handler:
+   The error handler function should be of the form
+
+   void MPI_Comm_errhandler_function(MPI_Comm *comm, int *rc);
+
 .N ThreadSafe
 
 .N Fortran

@@ -544,6 +544,35 @@ information about this can be found here:
 \url{http://www.osc.edu/~pw/mpiexec}
 
 
+\section{Specification of Implementation Details}
+\label{sec:specification}
+
+The MPI Standard defines a number of areas where a library is free to
+define its own specific behavior as long as such behavior is documented
+appropriately. This section provides that documentation for MPICH where
+necessary.
+
+\subsection{MPI Error Handlers for Communicators}
+\label{sec:errhandler}
+
+In Section 8.3.1 (Error Handlers for Communicators) of the MPI-3.0
+Standard~\cite{mpi-forum:mpi3},
+MPI defines an error handler callback function as
+
+\begin{verbatim}
+typedef void MPI_Comm_errhandler_function(MPI_Comm *, int *, ...);
+\end{verbatim}
+
+Where the first argument is the communicator in use, the second argument is
+the error code to be returned by the MPI routine that raised the error, and
+the remaining arguments to be implementation specific ``{\texttt varargs}''.
+MPICH does not provide any arguments as part of this list. So a callback
+function being provided to MPICH is sufficient if the header is
+
+\begin{verbatim}
+typedef void MPI_Comm_errhandler_function(MPI_Comm *, int *);
+\end{verbatim}
+
 \section{Debugging}
 \label{sec:debugging}
 
