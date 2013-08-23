@@ -54,6 +54,10 @@ Notes:
    external state of the program, such as opening files, reading standard
    input or writing to standard output.
 
+Notes for C:
+    As of MPI-2, 'MPI_Init' will accept NULL as input parameters. Doing so
+    will impact the values stored in 'MPI_INFO_ENV'.
+
 Notes for Fortran:
 The Fortran binding for 'MPI_Init' has only the error return
 .vb
