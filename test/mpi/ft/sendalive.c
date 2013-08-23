@@ -8,7 +8,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-/* 
+/*
  * This test attempts communication between 2 running processes
  * after another process has failed.
  */
@@ -26,12 +26,19 @@ int main(int argc, char **argv)
 
     if (rank == 0) {
         err = MPI_Send("No Errors", 10, MPI_CHAR, 2, 0, MPI_COMM_WORLD);
+        if (err) {
+            fprintf(stderr, "An error occurred during the send operation\n");
+        }
     }
 
     if (rank == 2) {
-        MPI_Recv(buf, 10, MPI_CHAR, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-        printf(" %s\n", buf);
-        fflush( stdout );
+        err = MPI_Recv(buf, 10, MPI_CHAR, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        if (err) {
+            fprintf(stderr, "An error occurred during the recv operation\n");
+        } else {
+            printf(" %s\n", buf);
+            fflush(stdout);
+        }
     }
 
     MPI_Finalize();
