@@ -99,10 +99,12 @@ int main(int argc, char **argv)
 
         /* not much of a string test, just need a quick spot to stick a test for
          * the existence of the correct MPI_T prototype (tt#1727) */
-        if (enumtype != MPI_T_ENUM_NULL) {
+        /* Include test that enumtype is defined */
+        if (dtype == MPI_INT && enumtype != MPI_T_ENUM_NULL) {
             int num_enumtype = -1;
             name_len = STR_SZ;
-            MPI_T_enum_get_info(enumtype, &num_enumtype, name, name_len);
+            MPI_T_enum_get_info(enumtype, &num_enumtype, name, &name_len);
+            check(num_enumtype >= 0);
         }
     }
 
