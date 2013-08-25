@@ -38,6 +38,10 @@ MPIR_OP_TYPE_GROUP(FORTRAN_INTEGER)
 
 /* op_macro_ is a 2-arg macro or function that preforms the reduction
    operation on a single element */
+/* FIXME: This code may penalize the performance on many platforms as
+   a work-around for a compiler bug in some versions of xlc.  It
+   would be far better to either test for that bug or to confirm that
+   the work-around is really as benign as claimed. */
 /* Ideally "b" would be const, but xlc on POWER7 can't currently handle
  * "const long double _Complex * restrict" as a valid pointer type.  It just
  * emits a warning and generates invalid arithmetic code.  We could drop the
