@@ -78,7 +78,6 @@ int MPI_Op_commutative(MPI_Op op, int *commute)
 
     if (HANDLE_GET_KIND(op) == HANDLE_KIND_BUILTIN) {
         *commute = 1;
-        /* get the function by indexing into the op table */
     }
     else {
         if (op_ptr->kind == MPID_OP_USER_NONCOMMUTE)
