@@ -60,7 +60,7 @@ void MPIR_Op_set_fc( MPI_Op op )
 }
 #endif
 
-#endif
+#endif /* MPICH_MPI_FROM_PMPI */
 
 #undef FUNCNAME
 #define FUNCNAME MPI_Op_create
