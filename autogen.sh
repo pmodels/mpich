@@ -863,8 +863,13 @@ if [ -x ./maint/f77tof90 -a $do_f77tof90 = "yes" ] ; then
         if [ ! -d test/mpi/f90/$leafDir ] ; then
 	    mkdir test/mpi/f90/$leafDir
         fi
-        maint/f77tof90 $dir test/mpi/f90/$leafDir Makefile.am Makefile.ap
-        echo "timestamp" > test/mpi/f90/$leafDir/Makefile.am-stamp
+        if maint/f77tof90 $dir test/mpi/f90/$leafDir Makefile.am Makefile.ap ; then
+            echo "timestamp" > test/mpi/f90/$leafDir/Makefile.am-stamp
+        else
+            echo "failed"
+            error "maint/f77tof90 $dir failed!"
+            exit 1
+        fi
     done
     for dir in test/mpi/errors/f77/* ; do
         if [ ! -d $dir ] ; then continue ; fi
@@ -872,8 +877,13 @@ if [ -x ./maint/f77tof90 -a $do_f77tof90 = "yes" ] ; then
         if [ ! -d test/mpi/errors/f90/$leafDir ] ; then
 	    mkdir test/mpi/errors/f90/$leafDir
         fi
-        maint/f77tof90 $dir test/mpi/errors/f90/$leafDir Makefile.am Makefile.ap
-        echo "timestamp" > test/mpi/errors/f90/$leafDir/Makefile.am-stamp
+        if maint/f77tof90 $dir test/mpi/errors/f90/$leafDir Makefile.am Makefile.ap ; then 
+            echo "timestamp" > test/mpi/errors/f90/$leafDir/Makefile.am-stamp
+        else
+            echo "failed"
+            error "maint/f77tof90 $dir failed!"
+            exit 1
+        fi
     done
     echo "done"
 fi
