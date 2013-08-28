@@ -42,14 +42,18 @@ int main(int argc, char **argv) {
     /* Locate absolute base */
     MPI_Win_shared_query(shm_win, MPI_PROC_NULL, &size, &disp_unit, &base); 
 
+    /* make sure the query returned the right values */
+    if (disp_unit != sizeof(int))
+        errors++;
+    if (size != ELEM_PER_PROC * sizeof(int))
+        errors++;
+    if ((shm_rank == 0) && (base != my_base))
+        errors++;
+    if (shm_rank && (base == my_base))
+        errors++;
+
     if (verbose) printf("%d -- size = %d baseptr = %p my_baseptr = %p\n", shm_rank, 
                         (int) size, (void*) base, (void*) my_base);
-
-    assert(size == ELEM_PER_PROC * sizeof(int));
-    if (shm_rank == 0)
-        assert(base == my_base);
-    else
-        assert(base != my_base);
 
     MPI_Win_lock_all(MPI_MODE_NOCHECK, shm_win);
 
