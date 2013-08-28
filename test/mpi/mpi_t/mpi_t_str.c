@@ -48,7 +48,9 @@ int main(int argc, char **argv)
     int bind;
     int scope;
     int provided;
-    MPI_T_enum enumtype;
+
+    /* Init'ed to a garbage value, to trigger MPI_T bugs easily if there are. */
+    MPI_T_enum enumtype = (MPI_T_enum)0x31415926; 
 
     MPI_Init(&argc, &argv);
     MPI_T_init_thread(MPI_THREAD_SINGLE, &provided);
