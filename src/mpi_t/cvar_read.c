@@ -31,43 +31,42 @@
 int MPIR_T_cvar_read_impl(MPI_T_cvar_handle handle, void *buf)
 {
     int mpi_errno = MPI_SUCCESS;
-    struct MPIR_Param_t *p = handle->p;
+    int i, count;
+    void *addr;
+    MPIR_T_cvar_handle_t *hnd = handle;
 
-    switch (p->default_val.type) {
-        case MPIR_PARAM_TYPE_INT:
-            {
-                int *i_buf = buf;
-                *i_buf = *(int *)p->val_p;
-            }
-            break;
-        case MPIR_PARAM_TYPE_DOUBLE:
-            {
-                double *d_buf = buf;
-                *d_buf = *(double *)p->val_p;
-            }
-            break;
-        case MPIR_PARAM_TYPE_BOOLEAN:
-            {
-                int *i_buf = buf;
-                *i_buf = *(int *)p->val_p;
-            }
-            break;
-        case MPIR_PARAM_TYPE_STRING:
-            if (*(char **)p->val_p == NULL) {
-                char *c_buf = buf;
-                c_buf[0] = '\0';
-            }
-            else {
-                MPIU_Strncpy(buf, *(char **)p->val_p, MPIR_PARAM_MAX_STRLEN);
-            }
-            break;
-        case MPIR_PARAM_TYPE_RANGE:
-            MPIU_Memcpy(buf, p->val_p, 2*sizeof(int));
-            break;
-        default:
-            /* FIXME the error handling code may not have been setup yet */
-            MPIU_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_INTERN, "**intern", "**intern %s", "unexpected parameter type");
-            break;
+    count = hnd->count;
+    addr = hnd->addr;
+    MPIU_Assert(addr != NULL);
+
+    switch (hnd->datatype) {
+    case MPI_INT:
+        for (i = 0; i < count; i++)
+            ((int *)buf)[i] = ((int *)addr)[i];
+        break;
+    case MPI_UNSIGNED:
+        for (i = 0; i < count; i++)
+            ((unsigned *)buf)[i] = ((unsigned *)addr)[i];
+        break;
+    case MPI_UNSIGNED_LONG:
+        for (i = 0; i < count; i++)
+            ((unsigned long *)buf)[i] = ((unsigned long *)addr)[i];
+        break;
+    case MPI_UNSIGNED_LONG_LONG:
+        for (i = 0; i < count; i++)
+            ((unsigned long long *)buf)[i] = ((unsigned long long *)addr)[i];
+        break;
+    case MPI_DOUBLE:
+        for (i = 0; i < count; i++)
+            ((double *)buf)[i] = ((double *)addr)[i];
+        break;
+    case MPI_CHAR:
+        MPIU_Strncpy(buf, addr, count);
+        break;
+    default:
+         /* FIXME the error handling code may not have been setup yet */
+        MPIU_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_INTERN, "**intern", "**intern %s", "unexpected parameter type");
+        break;
     }
 
 fn_exit:
@@ -100,33 +99,19 @@ Output Parameters:
 int MPI_T_cvar_read(MPI_T_cvar_handle handle, void *buf)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPI_T_CVAR_READ);
 
-    MPIU_THREAD_CS_ENTER(ALLFUNC,);
+    MPID_MPI_STATE_DECL(MPID_STATE_MPI_T_CVAR_READ);
+    MPIR_T_FAIL_IF_UNINITIALIZED();
+    MPIR_T_THREAD_CS_ENTER();
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_T_CVAR_READ);
 
-    /* Validate parameters, especially handles needing to be converted */
+    /* Validate parameters */
 #   ifdef HAVE_ERROR_CHECKING
     {
         MPID_BEGIN_ERROR_CHECKS
         {
-
-            /* TODO more checks may be appropriate */
-            if (mpi_errno != MPI_SUCCESS) goto fn_fail;
-        }
-        MPID_END_ERROR_CHECKS
-    }
-#   endif /* HAVE_ERROR_CHECKING */
-
-    /* Convert MPI object handles to object pointers */
-
-    /* Validate parameters and objects (post conversion) */
-#   ifdef HAVE_ERROR_CHECKING
-    {
-        MPID_BEGIN_ERROR_CHECKS
-        {
-            /* TODO more checks may be appropriate (counts, in_place, buffer aliasing, etc) */
-            if (mpi_errno != MPI_SUCCESS) goto fn_fail;
+            MPIR_ERRTEST_ARGNULL(handle, "handle", mpi_errno);
+            MPIR_ERRTEST_ARGNULL(buf, "buf", mpi_errno);
         }
         MPID_END_ERROR_CHECKS
     }
@@ -141,7 +126,7 @@ int MPI_T_cvar_read(MPI_T_cvar_handle handle, void *buf)
 
 fn_exit:
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_T_CVAR_READ);
-    MPIU_THREAD_CS_EXIT(ALLFUNC,);
+    MPIR_T_THREAD_CS_EXIT();
     return mpi_errno;
 
 fn_fail:

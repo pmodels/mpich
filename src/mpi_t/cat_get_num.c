@@ -21,26 +21,6 @@
 #ifndef MPICH_MPI_FROM_PMPI
 #undef MPI_T_category_get_num
 #define MPI_T_category_get_num PMPI_T_category_get_num
-
-/* any non-MPI functions go here, especially non-static ones */
-
-#undef FUNCNAME
-#define FUNCNAME MPIR_T_category_get_num_impl
-#undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPIR_T_category_get_num_impl(int *num_cat)
-{
-    int mpi_errno = MPI_SUCCESS;
-
-    /* we don't support any categories right now */
-    *num_cat = 0;
-
-fn_exit:
-    return mpi_errno;
-fn_fail:
-    goto fn_exit;
-}
-
 #endif /* MPICH_MPI_FROM_PMPI */
 
 #undef FUNCNAME
@@ -62,48 +42,22 @@ Output Parameters:
 int MPI_T_category_get_num(int *num_cat)
 {
     int mpi_errno = MPI_SUCCESS;
+
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_T_CATEGORY_GET_NUM);
-
-    MPIU_THREAD_CS_ENTER(ALLFUNC,);
+    MPIR_T_FAIL_IF_UNINITIALIZED();
+    MPIR_T_THREAD_CS_ENTER();
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_T_CATEGORY_GET_NUM);
-
-    /* Validate parameters, especially handles needing to be converted */
-#   ifdef HAVE_ERROR_CHECKING
-    {
-        MPID_BEGIN_ERROR_CHECKS
-        {
-
-            /* TODO more checks may be appropriate */
-            if (mpi_errno != MPI_SUCCESS) goto fn_fail;
-        }
-        MPID_END_ERROR_CHECKS
-    }
-#   endif /* HAVE_ERROR_CHECKING */
-
-    /* Convert MPI object handles to object pointers */
-
-    /* Validate parameters and objects (post conversion) */
-#   ifdef HAVE_ERROR_CHECKING
-    {
-        MPID_BEGIN_ERROR_CHECKS
-        {
-            MPIR_ERRTEST_ARGNULL(num_cat, "num_cat", mpi_errno);
-            /* TODO more checks may be appropriate (counts, in_place, buffer aliasing, etc) */
-        }
-        MPID_END_ERROR_CHECKS
-    }
-#   endif /* HAVE_ERROR_CHECKING */
 
     /* ... body of routine ...  */
 
-    mpi_errno = MPIR_T_category_get_num_impl(num_cat);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    if (*num_cat)
+        *num_cat = utarray_len(cat_table);
 
     /* ... end of body of routine ... */
 
 fn_exit:
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_T_CATEGORY_GET_NUM);
-    MPIU_THREAD_CS_EXIT(ALLFUNC,);
+    MPIR_T_THREAD_CS_EXIT();
     return mpi_errno;
 
 fn_fail:

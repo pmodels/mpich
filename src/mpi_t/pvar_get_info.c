@@ -21,41 +21,6 @@
 #ifndef MPICH_MPI_FROM_PMPI
 #undef MPI_T_pvar_get_info
 #define MPI_T_pvar_get_info PMPI_T_pvar_get_info
-
-/* any non-MPI functions go here, especially non-static ones */
-
-#undef FUNCNAME
-#define FUNCNAME MPIR_T_pvar_get_info_impl
-#undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPIR_T_pvar_get_info_impl(int pvar_index, char *name, int *name_len, int *verbosity, int *var_class, MPI_Datatype *datatype, MPI_T_enum *enumtype, char *desc, int *desc_len, int *binding, int *readonly, int *continuous, int *atomic)
-{
-    int mpi_errno = MPI_SUCCESS;
-    struct MPIR_T_pvar_info *info = NULL;
-
-    MPIU_Assert(pvar_index >= 0);
-
-    mpi_errno = MPIR_T_get_pvar_info_by_idx(pvar_index, &info);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-
-    MPIU_Tool_strncpy(name, info->name, name_len);
-    MPIU_Tool_strncpy(desc, info->desc, desc_len);
-
-    *verbosity  = info->verbosity;
-    *var_class  = info->varclass;
-    *datatype   = info->dtype;
-    *enumtype   = info->etype;
-    *binding    = info->binding;
-    *readonly   = info->readonly;
-    *continuous = info->continuous;
-    *atomic     = info->atomic;
-
-fn_exit:
-    return mpi_errno;
-fn_fail:
-    goto fn_exit;
-}
-
 #endif /* MPICH_MPI_FROM_PMPI */
 
 #undef FUNCNAME
@@ -90,56 +55,79 @@ Output Parameters:
 
 .N Errors
 @*/
-int MPI_T_pvar_get_info(int pvar_index, char *name, int *name_len, int *verbosity, int *var_class, MPI_Datatype *datatype, MPI_T_enum *enumtype, char *desc, int *desc_len, int *binding, int *readonly, int *continuous, int *atomic)
+int MPI_T_pvar_get_info(int pvar_index, char *name, int *name_len, int *verbosity,
+    int *var_class, MPI_Datatype *datatype, MPI_T_enum *enumtype, char *desc,
+    int *desc_len, int *bind, int *readonly, int *continuous, int *atomic)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPI_T_PVAR_GET_INFO);
 
-    MPIU_THREAD_CS_ENTER(ALLFUNC,);
+    MPID_MPI_STATE_DECL(MPID_STATE_MPI_T_PVAR_GET_INFO);
+    MPIR_T_FAIL_IF_UNINITIALIZED();
+    MPIR_T_THREAD_CS_ENTER();
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_T_PVAR_GET_INFO);
 
-    /* Validate parameters, especially handles needing to be converted */
+    /* Validate parameters */
 #   ifdef HAVE_ERROR_CHECKING
     {
         MPID_BEGIN_ERROR_CHECKS
         {
-
-            /* TODO more checks may be appropriate */
-            if (mpi_errno != MPI_SUCCESS) goto fn_fail;
-        }
-        MPID_END_ERROR_CHECKS
-    }
-#   endif /* HAVE_ERROR_CHECKING */
-
-    /* Convert MPI object handles to object pointers */
-
-    /* Validate parameters and objects (post conversion) */
-#   ifdef HAVE_ERROR_CHECKING
-    {
-        MPID_BEGIN_ERROR_CHECKS
-        {
-            MPIR_ERRTEST_ARGNULL(verbosity, "verbosity", mpi_errno);
-            MPIR_ERRTEST_ARGNULL(var_class, "var_class", mpi_errno);
-            MPIR_ERRTEST_ARGNULL(binding, "binding", mpi_errno);
-            MPIR_ERRTEST_ARGNULL(readonly, "readonly", mpi_errno);
-            MPIR_ERRTEST_ARGNULL(continuous, "continuous", mpi_errno);
-            MPIR_ERRTEST_ARGNULL(atomic, "atomic", mpi_errno);
-            /* TODO more checks may be appropriate (counts, in_place, buffer aliasing, etc) */
+            /* Do not do _TEST_ARGNULL for any argument, since this is
+             * allowed or will be allowed by MPI_T standard.
+             */
         }
         MPID_END_ERROR_CHECKS
     }
 #   endif /* HAVE_ERROR_CHECKING */
 
     /* ... body of routine ...  */
+    const pvar_table_entry_t *entry;
 
-    mpi_errno = MPIR_T_pvar_get_info_impl(pvar_index, name, name_len, verbosity, var_class, datatype, enumtype, desc, desc_len, binding, readonly, continuous, atomic);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    if (pvar_index < 0 || pvar_index >= utarray_len(pvar_table)) {
+        mpi_errno = MPI_T_ERR_INVALID_INDEX;
+        goto fn_fail;
+    }
+
+    entry = (pvar_table_entry_t *) utarray_eltptr(pvar_table, pvar_index);
+    if (!entry->active) {
+        mpi_errno = MPI_T_ERR_INVALID_INDEX;
+        goto fn_fail;
+    }
+
+    const pvar_table_entry_t *info;
+    info = (pvar_table_entry_t *) utarray_eltptr(pvar_table, pvar_index);
+
+    MPIR_T_strncpy(name, info->name, name_len);
+    MPIR_T_strncpy(desc, info->desc, desc_len);
+
+    if (verbosity != NULL)
+        *verbosity = info->verbosity;
+
+    if (var_class != NULL)
+        *var_class = info->varclass;
+
+    if (datatype != NULL)
+        *datatype = info->datatype;
+
+    if (enumtype != NULL)
+        *enumtype = info->enumtype;
+
+    if (bind != NULL)
+        *bind = info->bind;
+
+    if (readonly != NULL)
+        *readonly = info->flags & MPIR_T_PVAR_FLAG_READONLY;
+
+    if (continuous != NULL)
+        *continuous = info->flags & MPIR_T_PVAR_FLAG_CONTINUOUS;
+
+    if (atomic != NULL)
+        *atomic = info->flags & MPIR_T_PVAR_FLAG_ATOMIC;
 
     /* ... end of body of routine ... */
 
 fn_exit:
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_T_PVAR_GET_INFO);
-    MPIU_THREAD_CS_EXIT(ALLFUNC,);
+    MPIR_T_THREAD_CS_EXIT();
     return mpi_errno;
 
 fn_fail:
@@ -148,7 +136,9 @@ fn_fail:
     {
         mpi_errno = MPIR_Err_create_code(
             mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
-            "**mpi_t_pvar_get_info", "**mpi_t_pvar_get_info %d %p %p %p %p %p %p %p %p %p %p %p %p", pvar_index, name, name_len, verbosity, var_class, datatype, enumtype, desc, desc_len, binding, readonly, continuous, atomic);
+            "**mpi_t_pvar_get_info", "**mpi_t_pvar_get_info %d %p %p %p %p %p %p %p %p %p %p %p %p",
+            pvar_index, name, name_len, verbosity, var_class, datatype, enumtype, desc, desc_len,
+            bind, readonly, continuous, atomic);
     }
 #   endif
     mpi_errno = MPIR_Err_return_comm(NULL, FCNAME, mpi_errno);

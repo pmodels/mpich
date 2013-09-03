@@ -31,48 +31,51 @@
 int MPIR_T_cvar_write_impl(MPI_T_cvar_handle handle, void *buf)
 {
     int mpi_errno = MPI_SUCCESS;
-    struct MPIR_Param_t *p = handle->p;
+    int i, count;
+    void *addr;
+    MPIR_T_cvar_handle_t *hnd = handle;
 
-    switch (p->default_val.type) {
-        case MPIR_PARAM_TYPE_INT:
-            {
-                int *ip_buf = (int *)p->val_p;
-                *ip_buf = *(int *)buf;
-            }
-            break;
-        case MPIR_PARAM_TYPE_DOUBLE:
-            {
-                double *dp_buf = (double *)p->val_p;
-                *dp_buf = *(double *)buf;
-            }
-            break;
-        case MPIR_PARAM_TYPE_BOOLEAN:
-            {
-                int *ip_buf = (int *)p->val_p;
-                *ip_buf = *(int *)buf;
-            }
-            break;
-        case MPIR_PARAM_TYPE_STRING:
-            {
-                char **lval_ptr = (char **)p->val_p;
-                if (*lval_ptr != NULL) {
-                    /* FIXME these strings are not all (in fact, almost never)
-                     * allocated with malloc/strdup right now */
-                    MPIU_Free(*lval_ptr);
-                    *lval_ptr = NULL;
-                }
-                *lval_ptr = MPIU_Strdup(buf);
-            }
-            break;
-        case MPIR_PARAM_TYPE_RANGE:
-            MPIU_Memcpy(p->val_p, buf, 2*sizeof(int));
-            break;
-        default:
-            /* FIXME the error handling code may not have been setup yet */
-            MPIU_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_INTERN, "**intern", "**intern %s", "unexpected parameter type");
-            break;
+    if (hnd->scope == MPI_T_SCOPE_CONSTANT) {
+        mpi_errno = MPI_T_ERR_CVAR_SET_NEVER;
+        goto fn_fail;
+    } else if (hnd->scope == MPI_T_SCOPE_READONLY) {
+        mpi_errno = MPI_T_ERR_CVAR_SET_NOT_NOW;
+        goto fn_fail;
     }
 
+    count = hnd->count;
+    addr = hnd->addr;
+    MPIU_Assert(addr != NULL);
+
+    switch (hnd->datatype) {
+    case MPI_INT:
+        for (i = 0; i < count; i++)
+            ((int *)addr)[i] = ((int *)buf)[i];
+        break;
+    case MPI_UNSIGNED:
+        for (i = 0; i < count; i++)
+            ((unsigned *)addr)[i] = ((unsigned *)buf)[i];
+        break;
+    case MPI_UNSIGNED_LONG:
+        for (i = 0; i < count; i++)
+            ((unsigned long *)addr)[i] = ((unsigned long *)buf)[i];
+        break;
+    case MPI_UNSIGNED_LONG_LONG:
+        for (i = 0; i < count; i++)
+            ((unsigned long long *)addr)[i] = ((unsigned long long *)buf)[i];
+        break;
+    case MPI_DOUBLE:
+        for (i = 0; i < count; i++)
+            ((double *)addr)[i] = ((double *)buf)[i];
+        break;
+    case MPI_CHAR:
+        MPIU_Strncpy(addr, buf, count);
+        break;
+    default:
+         /* FIXME the error handling code may not have been setup yet */
+        MPIU_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_INTERN, "**intern", "**intern %s", "unexpected parameter type");
+        break;
+    }
 
 fn_exit:
     return mpi_errno;
@@ -102,33 +105,19 @@ Input Parameters:
 int MPI_T_cvar_write(MPI_T_cvar_handle handle, void *buf)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPI_T_CVAR_WRITE);
 
-    MPIU_THREAD_CS_ENTER(ALLFUNC,);
+    MPID_MPI_STATE_DECL(MPID_STATE_MPI_T_CVAR_WRITE);
+    MPIR_T_FAIL_IF_UNINITIALIZED();
+    MPIR_T_THREAD_CS_ENTER();
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_T_CVAR_WRITE);
 
-    /* Validate parameters, especially handles needing to be converted */
+   /* Validate parameters */
 #   ifdef HAVE_ERROR_CHECKING
     {
         MPID_BEGIN_ERROR_CHECKS
         {
-
-            /* TODO more checks may be appropriate */
-            if (mpi_errno != MPI_SUCCESS) goto fn_fail;
-        }
-        MPID_END_ERROR_CHECKS
-    }
-#   endif /* HAVE_ERROR_CHECKING */
-
-    /* Convert MPI object handles to object pointers */
-
-    /* Validate parameters and objects (post conversion) */
-#   ifdef HAVE_ERROR_CHECKING
-    {
-        MPID_BEGIN_ERROR_CHECKS
-        {
-            /* TODO more checks may be appropriate (counts, in_place, buffer aliasing, etc) */
-            if (mpi_errno != MPI_SUCCESS) goto fn_fail;
+            MPIR_ERRTEST_ARGNULL(handle, "handle", mpi_errno);
+            MPIR_ERRTEST_ARGNULL(buf, "buf", mpi_errno);
         }
         MPID_END_ERROR_CHECKS
     }
@@ -143,7 +132,7 @@ int MPI_T_cvar_write(MPI_T_cvar_handle handle, void *buf)
 
 fn_exit:
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_T_CVAR_WRITE);
-    MPIU_THREAD_CS_EXIT(ALLFUNC,);
+    MPIR_T_THREAD_CS_EXIT();
     return mpi_errno;
 
 fn_fail:

@@ -31,27 +31,33 @@
 int MPIR_T_cvar_handle_alloc_impl(int cvar_index, void *obj_handle, MPI_T_cvar_handle *handle, int *count)
 {
     int mpi_errno = MPI_SUCCESS;
+    MPIR_T_cvar_handle_t *hnd;
+
     MPIU_CHKPMEM_DECL(1);
 
-    *handle = MPI_T_CVAR_HANDLE_NULL;
+    cvar_table_entry_t *cvar = (cvar_table_entry_t *) utarray_eltptr(cvar_table, cvar_index);
 
-    MPIU_Assert(cvar_index >= 0);
-    MPIU_Assert(cvar_index < MPIR_PARAM_NUM_PARAMS);
+    /* Allocate handle memory */
+    MPIU_CHKPMEM_MALLOC(hnd, MPIR_T_cvar_handle_t*, sizeof(*hnd), mpi_errno, "control variable handle");
 
-    *handle = NULL;
-    MPIU_CHKPMEM_MALLOC(*handle, MPI_T_cvar_handle, sizeof(**handle), mpi_errno, "control var handle");
-    (*handle)->p = &MPIR_Param_params[cvar_index];
+    /* It is time to fix addr and count if they are unknown */
+    if (cvar->get_count != NULL)
+        cvar->get_count(obj_handle, count);
+    else
+        *count = cvar->count;
 
-    if ((*handle)->p->default_val.type == MPIR_PARAM_TYPE_RANGE) {
-        *count = 2;
-    }
-    else if ((*handle)->p->default_val.type == MPIR_PARAM_TYPE_STRING) {
-        /* TODO it might be useful to be able to override on a per-var basis */
-        *count = MPIR_PARAM_MAX_STRLEN;
-    }
-    else {
-        *count = 1;
-    }
+    hnd->count = *count;
+
+    if (cvar->get_addr != NULL)
+        cvar->get_addr(obj_handle, &(hnd->addr));
+    else
+        hnd->addr = cvar->addr;
+
+    /* Cache other fields */
+    hnd->datatype = cvar->datatype;
+    hnd->scope = cvar->scope;
+
+    *handle = hnd;
 
     MPIU_CHKPMEM_COMMIT();
 fn_exit:
@@ -87,39 +93,29 @@ Output Parameters:
 int MPI_T_cvar_handle_alloc(int cvar_index, void *obj_handle, MPI_T_cvar_handle *handle, int *count)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPI_T_CVAR_HANDLE_ALLOC);
 
-    MPIU_THREAD_CS_ENTER(ALLFUNC,);
+    MPID_MPI_STATE_DECL(MPID_STATE_MPI_T_CVAR_HANDLE_ALLOC);
+    MPIR_T_FAIL_IF_UNINITIALIZED();
+    MPIR_T_THREAD_CS_ENTER();
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_T_CVAR_HANDLE_ALLOC);
 
-    /* Validate parameters, especially handles needing to be converted */
+    /* Validate parameters */
 #   ifdef HAVE_ERROR_CHECKING
     {
         MPID_BEGIN_ERROR_CHECKS
         {
-
-            /* TODO more checks may be appropriate */
-            if (mpi_errno != MPI_SUCCESS) goto fn_fail;
-        }
-        MPID_END_ERROR_CHECKS
-    }
-#   endif /* HAVE_ERROR_CHECKING */
-
-    /* Convert MPI object handles to object pointers */
-
-    /* Validate parameters and objects (post conversion) */
-#   ifdef HAVE_ERROR_CHECKING
-    {
-        MPID_BEGIN_ERROR_CHECKS
-        {
+            MPIR_ERRTEST_ARGNULL(handle, "handle", mpi_errno);
             MPIR_ERRTEST_ARGNULL(count, "count", mpi_errno);
-            /* TODO more checks may be appropriate (counts, in_place, buffer aliasing, etc) */
         }
         MPID_END_ERROR_CHECKS
     }
 #   endif /* HAVE_ERROR_CHECKING */
 
     /* ... body of routine ...  */
+    if (cvar_index < 0 || cvar_index >= utarray_len(cvar_table)) {
+        mpi_errno = MPI_T_ERR_INVALID_INDEX;
+        goto fn_fail;
+    }
 
     mpi_errno = MPIR_T_cvar_handle_alloc_impl(cvar_index, obj_handle, handle, count);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
@@ -128,7 +124,7 @@ int MPI_T_cvar_handle_alloc(int cvar_index, void *obj_handle, MPI_T_cvar_handle 
 
 fn_exit:
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_T_CVAR_HANDLE_ALLOC);
-    MPIU_THREAD_CS_EXIT(ALLFUNC,);
+    MPIR_T_THREAD_CS_EXIT();
     return mpi_errno;
 
 fn_fail:

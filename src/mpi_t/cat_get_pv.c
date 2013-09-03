@@ -30,9 +30,17 @@
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIR_T_category_get_pvars_impl(int cat_index, int len, int indices[])
 {
-    int mpi_errno = MPI_ERR_INTERN;
+    int mpi_errno = MPI_SUCCESS;
+    cat_table_entry_t *cat;
+    int i, num_pvars, count;
 
-    /* TODO implement this function */
+    cat = (cat_table_entry_t *)utarray_eltptr(cat_table, cat_index);
+    num_pvars = utarray_len(cat->pvar_indices);
+    count = len < num_pvars ? len : num_pvars;
+
+    for (i = 0; i < count; i++) {
+        indices[i] = *(int *)utarray_eltptr(cat->pvar_indices, i);
+    }
 
 fn_exit:
     return mpi_errno;
@@ -65,39 +73,31 @@ Output Parameters:
 int MPI_T_category_get_pvars(int cat_index, int len, int indices[])
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPI_T_CATEGORY_GET_PVARS);
 
-    MPIU_THREAD_CS_ENTER(ALLFUNC,);
+    MPID_MPI_STATE_DECL(MPID_STATE_MPI_T_CATEGORY_GET_PVARS);
+    MPIR_T_FAIL_IF_UNINITIALIZED();
+    MPIR_T_THREAD_CS_ENTER();
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_T_CATEGORY_GET_PVARS);
 
-    /* Validate parameters, especially handles needing to be converted */
+    /* Validate parameters */
 #   ifdef HAVE_ERROR_CHECKING
     {
         MPID_BEGIN_ERROR_CHECKS
         {
-
-            /* TODO more checks may be appropriate */
-            if (mpi_errno != MPI_SUCCESS) goto fn_fail;
-        }
-        MPID_END_ERROR_CHECKS
-    }
-#   endif /* HAVE_ERROR_CHECKING */
-
-    /* Convert MPI object handles to object pointers */
-
-    /* Validate parameters and objects (post conversion) */
-#   ifdef HAVE_ERROR_CHECKING
-    {
-        MPID_BEGIN_ERROR_CHECKS
-        {
-            /* TODO more checks may be appropriate (counts, in_place, buffer aliasing, etc) */
-            if (mpi_errno != MPI_SUCCESS) goto fn_fail;
+            if (len != 0)
+                MPIR_ERRTEST_ARGNULL(indices, "indices", mpi_errno);
         }
         MPID_END_ERROR_CHECKS
     }
 #   endif /* HAVE_ERROR_CHECKING */
 
     /* ... body of routine ...  */
+    if (cat_index < 0 || cat_index >= utarray_len(cat_table)) {
+        mpi_errno = MPI_T_ERR_INVALID_INDEX;
+        goto fn_fail;
+    }
+
+    if (len == 0) goto fn_exit;
 
     mpi_errno = MPIR_T_category_get_pvars_impl(cat_index, len, indices);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
@@ -106,7 +106,7 @@ int MPI_T_category_get_pvars(int cat_index, int len, int indices[])
 
 fn_exit:
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_T_CATEGORY_GET_PVARS);
-    MPIU_THREAD_CS_EXIT(ALLFUNC,);
+    MPIR_T_THREAD_CS_EXIT();
     return mpi_errno;
 
 fn_fail:

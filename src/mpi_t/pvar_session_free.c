@@ -32,7 +32,7 @@
 int MPIR_T_pvar_session_free_impl(MPI_T_pvar_session *session)
 {
     int mpi_errno = MPI_SUCCESS;
-    struct MPIR_T_pvar_handle *hnd, *tmp;
+    MPIR_T_pvar_handle_t *hnd, *tmp;
 
     /* The draft standard is a bit unclear about the behavior of this function
      * w.r.t. outstanding pvar handles.  A conservative (from the implementors
@@ -74,9 +74,10 @@ Input/Output Parameters:
 int MPI_T_pvar_session_free(MPI_T_pvar_session *session)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPI_T_PVAR_SESSION_FREE);
 
-    MPIU_THREAD_CS_ENTER(ALLFUNC,);
+    MPID_MPI_STATE_DECL(MPID_STATE_MPI_T_PVAR_SESSION_FREE);
+    MPIR_T_FAIL_IF_UNINITIALIZED();
+    MPIR_T_THREAD_CS_ENTER();
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_T_PVAR_SESSION_FREE);
 
     /* Validate parameters, especially handles needing to be converted */
@@ -84,23 +85,7 @@ int MPI_T_pvar_session_free(MPI_T_pvar_session *session)
     {
         MPID_BEGIN_ERROR_CHECKS
         {
-
-            /* TODO more checks may be appropriate */
-            if (mpi_errno != MPI_SUCCESS) goto fn_fail;
-        }
-        MPID_END_ERROR_CHECKS
-    }
-#   endif /* HAVE_ERROR_CHECKING */
-
-    /* Convert MPI object handles to object pointers */
-
-    /* Validate parameters and objects (post conversion) */
-#   ifdef HAVE_ERROR_CHECKING
-    {
-        MPID_BEGIN_ERROR_CHECKS
-        {
-            /* TODO more checks may be appropriate (counts, in_place, buffer aliasing, etc) */
-            if (mpi_errno != MPI_SUCCESS) goto fn_fail;
+            MPIR_ERRTEST_ARGNULL(session, "session", mpi_errno);
         }
         MPID_END_ERROR_CHECKS
     }
@@ -109,13 +94,13 @@ int MPI_T_pvar_session_free(MPI_T_pvar_session *session)
     /* ... body of routine ...  */
 
     mpi_errno = MPIR_T_pvar_session_free_impl(session);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 
     /* ... end of body of routine ... */
 
 fn_exit:
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_T_PVAR_SESSION_FREE);
-    MPIU_THREAD_CS_EXIT(ALLFUNC,);
+    MPIR_T_THREAD_CS_EXIT();
     return mpi_errno;
 
 fn_fail:

@@ -23,9 +23,9 @@
 #undef MPI_T_pvar_handle_alloc
 #define MPI_T_pvar_handle_alloc PMPI_T_pvar_handle_alloc
 
-/* define storage for the ALL_HANDLES constant */
-struct MPIR_T_pvar_handle MPIR_T_pvar_all_handles_obj = {NULL, NULL, NULL, NULL, -1, -1, NULL, NULL};
-struct MPIR_T_pvar_handle * const MPI_T_PVAR_ALL_HANDLES = &MPIR_T_pvar_all_handles_obj;
+/* Define storage for the ALL_HANDLES constant */
+MPIR_T_pvar_handle_t MPIR_T_pvar_all_handles_obj = {0};
+MPIR_T_pvar_handle_t * const MPI_T_PVAR_ALL_HANDLES = &MPIR_T_pvar_all_handles_obj;
 
 /* any non-MPI functions go here, especially non-static ones */
 
@@ -33,38 +33,124 @@ struct MPIR_T_pvar_handle * const MPI_T_PVAR_ALL_HANDLES = &MPIR_T_pvar_all_hand
 #define FUNCNAME MPIR_T_pvar_handle_alloc_impl
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPIR_T_pvar_handle_alloc_impl(MPI_T_pvar_session session, int pvar_index, void *obj_handle, MPI_T_pvar_handle *handle, int *count)
+int MPIR_T_pvar_handle_alloc_impl(MPI_T_pvar_session session, int pvar_index,
+                                  void *obj_handle, MPI_T_pvar_handle *handle,int *count)
 {
     int mpi_errno = MPI_SUCCESS;
-    struct MPIR_T_pvar_info *info = NULL;
+    int cnt, extra, bytes;
+    int is_sum, is_watermark;
+    const pvar_table_entry_t *info;
+    MPIR_T_pvar_handle_t *hnd;
+
     MPIU_CHKPMEM_DECL(1);
 
-    *handle = MPI_T_PVAR_HANDLE_NULL;
-    *count = 0xdeadbeef;
+    info = (pvar_table_entry_t *) utarray_eltptr(pvar_table, pvar_index);
 
-    mpi_errno = MPIR_T_get_pvar_info_by_idx(pvar_index, &info);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    if (info->get_count == NULL) {
+        cnt = info->count;
+    } else {
+        mpi_errno = info->get_count(info->addr, obj_handle, &cnt);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    }
 
-    MPIU_CHKPMEM_MALLOC(*handle, MPI_T_pvar_handle, sizeof(**handle), mpi_errno, "performance var handle");
+    bytes = MPID_Datatype_get_basic_size(info->datatype);
+    is_sum = FALSE;
+    is_watermark = FALSE;
+    extra = 0;
 
-    /* setup the common fields */
-    (*handle)->session = session;
-    (*handle)->info = info;
+    if (info->varclass == MPI_T_PVAR_CLASS_COUNTER ||
+        info->varclass == MPI_T_PVAR_CLASS_AGGREGATE ||
+        info->varclass == MPI_T_PVAR_CLASS_TIMER)
+    {
+        /* Extra memory for accum, offset, current */
+        is_sum = TRUE;
+        extra = bytes * cnt * 3;
+    } else if (info->varclass == MPI_T_PVAR_CLASS_HIGHWATERMARK ||
+               info->varclass == MPI_T_PVAR_CLASS_LOWWATERMARK)
+    {
+        is_watermark = TRUE;
+    }
 
-    /* now some defaults that the create_fn might override */
-    (*handle)->bytes = -1;
-    (*handle)->vtable = NULL;
-    (*handle)->handle_state = NULL;
-    (*handle)->free_handle_state = FALSE;
+    /* Allocate memory and bzero it */
+    MPIU_CHKPMEM_CALLOC(hnd, MPIR_T_pvar_handle_t*, sizeof(*hnd) + extra,
+                        mpi_errno, "performance variable handle");
 
-    /* dispatch particulars of the handle to the creator function */
-    mpi_errno = info->create_fn(obj_handle, (*handle), count);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    /* Setup the common fields */
+    if (is_sum)
+        hnd->flags |= MPIR_T_PVAR_FLAG_SUM;
+    else if (is_watermark)
+        hnd->flags |= MPIR_T_PVAR_FLAG_WATERMARK;
 
-    /* some creator functions may not assign this */
-    (*handle)->count = *count;
+    hnd->addr = info->addr;
+    hnd->datatype = info->datatype;
+    hnd->count = cnt;
+    hnd->varclass = info->varclass;
+    hnd->flags = info->flags;
+    hnd->session = session;
+    hnd->info = info;
+    hnd->obj_handle = obj_handle;
+    hnd->get_value = info->get_value;
+    hnd->bytes = bytes;
+    hnd->count = cnt;
 
-    MPL_DL_APPEND(session->hlist, *handle);
+    /* Init pointers to cache buffers for a SUM */
+    if (MPIR_T_pvar_is_sum(hnd)) {
+        hnd->accum = (char*)(hnd) + sizeof(*hnd);
+        hnd->offset = (char*)(hnd) + sizeof(*hnd) + bytes*cnt;
+        hnd->current = (char*)(hnd) + sizeof(*hnd) + bytes*cnt*2;
+    }
+
+    if (MPIR_T_pvar_is_continuous(hnd))
+        MPIR_T_pvar_set_started(hnd);
+
+    /* Set starting value of a continuous SUM */
+    if (MPIR_T_pvar_is_continuous(hnd) && MPIR_T_pvar_is_sum(hnd)) {
+        /* Cache current value of a SUM in offset.
+         * accum is zero since we called CALLOC before.
+         */
+        if (hnd->get_value == NULL)
+            MPIU_Memcpy(hnd->offset, hnd->addr, bytes*cnt);
+        else
+            hnd->get_value(hnd->addr, hnd->obj_handle, hnd->count, hnd->offset);
+    }
+
+     /* Link a WATERMARK handle to its pvar & set starting value if continuous */
+    if (MPIR_T_pvar_is_watermark(hnd)) {
+        MPIR_T_pvar_watermark_t *mark = (MPIR_T_pvar_watermark_t *)hnd->addr;
+        if (!mark->first_used) {
+            /* Use the special handle slot for optimization if available */
+            mark->first_used = TRUE;
+            MPIR_T_pvar_set_first(hnd);
+
+            /* Set starting value */
+            if (MPIR_T_pvar_is_continuous(hnd)) {
+                mark->first_started = TRUE;
+                mark->watermark = mark->current;
+            } else {
+                mark->first_started = FALSE;
+            }
+        } else {
+            /* If the special handle slot is unavailable, link it to hlist */
+            if (mark->hlist == NULL) {
+                hnd->prev2 = hnd;
+                mark->hlist = hnd;
+            } else {
+                hnd->prev2 = hnd;
+                hnd->next2 = mark->hlist;
+                mark->hlist->prev2 = hnd;
+                mark->hlist = hnd;
+            }
+
+            /* Set starting value */
+            if (MPIR_T_pvar_is_continuous(hnd))
+                hnd->watermark = mark->current;
+        }
+    }
+
+    /* Link the handle in its session and return it */
+    MPL_DL_APPEND(session->hlist, hnd);
+    *handle = hnd;
+    *count = cnt;
 
     MPIU_CHKPMEM_COMMIT();
 fn_exit:
@@ -98,37 +184,24 @@ Output Parameters:
 
 .N Errors
 @*/
-int MPI_T_pvar_handle_alloc(MPI_T_pvar_session session, int pvar_index, void *obj_handle, MPI_T_pvar_handle *handle, int *count)
+int MPI_T_pvar_handle_alloc(MPI_T_pvar_session session, int pvar_index,
+                            void *obj_handle, MPI_T_pvar_handle *handle, int *count)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPI_T_PVAR_HANDLE_ALLOC);
 
-    MPIU_THREAD_CS_ENTER(ALLFUNC,);
+    MPID_MPI_STATE_DECL(MPID_STATE_MPI_T_PVAR_HANDLE_ALLOC);
+    MPIR_T_FAIL_IF_UNINITIALIZED();
+    MPIR_T_THREAD_CS_ENTER();
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_T_PVAR_HANDLE_ALLOC);
 
-    /* Validate parameters, especially handles needing to be converted */
-#   ifdef HAVE_ERROR_CHECKING
-    {
-        MPID_BEGIN_ERROR_CHECKS
-        {
-
-            /* TODO more checks may be appropriate */
-            if (mpi_errno != MPI_SUCCESS) goto fn_fail;
-        }
-        MPID_END_ERROR_CHECKS
-    }
-#   endif /* HAVE_ERROR_CHECKING */
-
-    /* Convert MPI object handles to object pointers */
-
-    /* Validate parameters and objects (post conversion) */
+    /* Validate parameters  */
 #   ifdef HAVE_ERROR_CHECKING
     {
         MPID_BEGIN_ERROR_CHECKS
         {
             MPIR_ERRTEST_ARGNULL(count, "count", mpi_errno);
             MPIR_ERRTEST_ARGNULL(handle, "handle", mpi_errno);
-            /* TODO more checks may be appropriate (counts, in_place, buffer aliasing, etc) */
+            /* Do not test obj_handle since it may be NULL when no binding */
         }
         MPID_END_ERROR_CHECKS
     }
@@ -136,14 +209,26 @@ int MPI_T_pvar_handle_alloc(MPI_T_pvar_session session, int pvar_index, void *ob
 
     /* ... body of routine ...  */
 
+    pvar_table_entry_t *entry;
+    if (pvar_index < 0 || pvar_index >= utarray_len(pvar_table)) {
+        mpi_errno = MPI_T_ERR_INVALID_INDEX;
+        goto fn_fail;
+    }
+
+    entry = (pvar_table_entry_t *) utarray_eltptr(pvar_table, pvar_index);
+    if (!entry->active) {
+        mpi_errno = MPI_T_ERR_INVALID_INDEX;
+        goto fn_fail;
+    }
+
     mpi_errno = MPIR_T_pvar_handle_alloc_impl(session, pvar_index, obj_handle, handle, count);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    if (mpi_errno) goto fn_fail;
 
     /* ... end of body of routine ... */
 
 fn_exit:
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_T_PVAR_HANDLE_ALLOC);
-    MPIU_THREAD_CS_EXIT(ALLFUNC,);
+    MPIR_T_THREAD_CS_EXIT();
     return mpi_errno;
 
 fn_fail:

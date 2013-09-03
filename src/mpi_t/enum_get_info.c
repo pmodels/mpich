@@ -21,25 +21,6 @@
 #ifndef MPICH_MPI_FROM_PMPI
 #undef MPI_T_enum_get_info
 #define MPI_T_enum_get_info PMPI_T_enum_get_info
-
-/* any non-MPI functions go here, especially non-static ones */
-
-#undef FUNCNAME
-#define FUNCNAME MPIR_T_enum_get_info_impl
-#undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPIR_T_enum_get_info_impl(MPI_T_enum enumtype, int *num, char *name, int *name_len)
-{
-    int mpi_errno = MPI_ERR_INTERN;
-
-    /* TODO implement this function */
-
-fn_exit:
-    return mpi_errno;
-fn_fail:
-    goto fn_exit;
-}
-
 #endif /* MPICH_MPI_FROM_PMPI */
 
 #undef FUNCNAME
@@ -68,34 +49,22 @@ Output Parameters:
 int MPI_T_enum_get_info(MPI_T_enum enumtype, int *num, char *name, int *name_len)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPI_T_ENUM_GET_INFO);
 
-    MPIU_THREAD_CS_ENTER(ALLFUNC,);
+    MPID_MPI_STATE_DECL(MPID_STATE_MPI_T_ENUM_GET_INFO);
+    MPIR_T_FAIL_IF_UNINITIALIZED();
+    MPIR_T_THREAD_CS_ENTER();
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_T_ENUM_GET_INFO);
 
-    /* Validate parameters, especially handles needing to be converted */
+    /* Validate parameters */
 #   ifdef HAVE_ERROR_CHECKING
     {
         MPID_BEGIN_ERROR_CHECKS
         {
-
-            /* TODO more checks may be appropriate */
-            if (mpi_errno != MPI_SUCCESS) goto fn_fail;
-        }
-        MPID_END_ERROR_CHECKS
-    }
-#   endif /* HAVE_ERROR_CHECKING */
-
-    /* Convert MPI object handles to object pointers */
-
-    /* Validate parameters and objects (post conversion) */
-#   ifdef HAVE_ERROR_CHECKING
-    {
-        MPID_BEGIN_ERROR_CHECKS
-        {
+            MPIR_ERRTEST_ARGNULL(enumtype, "enumtype", mpi_errno);
             MPIR_ERRTEST_ARGNULL(num, "num", mpi_errno);
-            /* TODO more checks may be appropriate (counts, in_place, buffer aliasing, etc) */
-            if (mpi_errno != MPI_SUCCESS) goto fn_fail;
+            /* Do not do _TEST_ARGNULL for name or name_len, since this is
+             * permitted per MPI_T standard.
+             */
         }
         MPID_END_ERROR_CHECKS
     }
@@ -103,14 +72,14 @@ int MPI_T_enum_get_info(MPI_T_enum enumtype, int *num, char *name, int *name_len
 
     /* ... body of routine ...  */
 
-    mpi_errno = MPIR_T_enum_get_info_impl(enumtype, num, name, name_len);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    *num = utarray_len(enumtype->items);
+    MPIR_T_strncpy(name, enumtype->name, name_len);
 
     /* ... end of body of routine ... */
 
 fn_exit:
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_T_ENUM_GET_INFO);
-    MPIU_THREAD_CS_EXIT(ALLFUNC,);
+    MPIR_T_THREAD_CS_EXIT();
     return mpi_errno;
 
 fn_fail:
@@ -119,7 +88,8 @@ fn_fail:
     {
         mpi_errno = MPIR_Err_create_code(
             mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
-            "**mpi_t_enum_get_info", "**mpi_t_enum_get_info %p %p %p %p", enumtype, num, name, name_len);
+            "**mpi_t_enum_get_info", "**mpi_t_enum_get_info %p %p %p %p",
+            enumtype, num, name, name_len);
     }
 #   endif
     mpi_errno = MPIR_Err_return_comm(NULL, FCNAME, mpi_errno);

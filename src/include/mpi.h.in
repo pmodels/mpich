@@ -569,17 +569,18 @@ typedef struct MPI_Status {
 } MPI_Status;
 
 /* types for the MPI_T_ interface */
-struct MPIR_T_enum;
-typedef struct MPIR_T_enum * MPI_T_enum;
-struct MPIR_T_cvar_handle;
-typedef struct MPIR_T_cvar_handle * MPI_T_cvar_handle;
-struct MPIR_T_pvar_handle;
-typedef struct MPIR_T_pvar_handle * MPI_T_pvar_handle;
-struct MPIR_T_pvar_session;
-typedef struct MPIR_T_pvar_session * MPI_T_pvar_session;
+struct MPIR_T_enum_s;
+struct MPIR_T_cvar_handle_s;
+struct MPIR_T_pvar_handle_s;
+struct MPIR_T_pvar_session_s;
+
+typedef struct MPIR_T_enum_s * MPI_T_enum;
+typedef struct MPIR_T_cvar_handle_s * MPI_T_cvar_handle;
+typedef struct MPIR_T_pvar_handle_s * MPI_T_pvar_handle;
+typedef struct MPIR_T_pvar_session_s * MPI_T_pvar_session;
 
 /* extra const at front would be safer, but is incompatible with MPI_T_ prototypes */
-extern struct MPIR_T_pvar_handle * const MPI_T_PVAR_ALL_HANDLES;
+extern struct MPIR_T_pvar_handle_s * const MPI_T_PVAR_ALL_HANDLES;
 
 #define MPI_T_ENUM_NULL         ((MPI_T_enum)NULL)
 #define MPI_T_CVAR_HANDLE_NULL  ((MPI_T_cvar_handle)NULL)
@@ -588,7 +589,7 @@ extern struct MPIR_T_pvar_handle * const MPI_T_PVAR_ALL_HANDLES;
 
 /* the MPI_T_ interface requires that these VERBOSITY constants occur in this
  * relative order with increasing values */
-enum MPIR_T_verbosity_t {
+typedef enum MPIR_T_verbosity_t {
     /* don't name-shift this if/when MPI_T_ is accepted, this is an MPICH-only
      * extension */
     MPIX_T_VERBOSITY_INVALID = 0,
@@ -605,9 +606,9 @@ enum MPIR_T_verbosity_t {
     MPI_T_VERBOSITY_MPIDEV_BASIC,
     MPI_T_VERBOSITY_MPIDEV_DETAIL,
     MPI_T_VERBOSITY_MPIDEV_ALL
-};
+} MPIR_T_verbosity_t;
 
-enum MPIR_T_bind_t {
+typedef enum MPIR_T_bind_t {
     /* don't name-shift this if/when MPI_T_ is accepted, this is an MPICH-only
      * extension */
     MPIX_T_BIND_INVALID = 0,
@@ -624,9 +625,9 @@ enum MPIR_T_bind_t {
     MPI_T_BIND_MPI_WIN,
     MPI_T_BIND_MPI_MESSAGE,
     MPI_T_BIND_MPI_INFO
-};
+} MPIR_T_bind_t;
 
-enum MPIR_T_scope_t {
+typedef enum MPIR_T_scope_t {
     /* don't name-shift this if/when MPI_T_ is accepted, this is an MPICH-only
      * extension */
     MPIX_T_SCOPE_INVALID = 0,
@@ -639,15 +640,16 @@ enum MPIR_T_scope_t {
     MPI_T_SCOPE_GROUP_EQ,
     MPI_T_SCOPE_ALL,
     MPI_T_SCOPE_ALL_EQ
-};
+} MPIR_T_scope_t;
 
-enum MPIR_T_pvar_class_t {
+typedef enum MPIR_T_pvar_class_t {
     /* don't name-shift this if/when MPI_T_ is accepted, this is an MPICH-only
      * extension */
     MPIX_T_PVAR_CLASS_INVALID = 0,
 
     /* arbitrarily shift values to aid debugging and reduce accidental errors */
-    MPI_T_PVAR_CLASS_STATE = 240,
+    MPIR_T_PVAR_CLASS_FIRST = 240,
+    MPI_T_PVAR_CLASS_STATE = MPIR_T_PVAR_CLASS_FIRST,
     MPI_T_PVAR_CLASS_LEVEL,
     MPI_T_PVAR_CLASS_SIZE,
     MPI_T_PVAR_CLASS_PERCENTAGE,
@@ -656,8 +658,10 @@ enum MPIR_T_pvar_class_t {
     MPI_T_PVAR_CLASS_COUNTER,
     MPI_T_PVAR_CLASS_AGGREGATE,
     MPI_T_PVAR_CLASS_TIMER,
-    MPI_T_PVAR_CLASS_GENERIC
-};
+    MPI_T_PVAR_CLASS_GENERIC,
+    MPIR_T_PVAR_CLASS_LAST,
+    MPIR_T_PVAR_CLASS_NUMBER = MPIR_T_PVAR_CLASS_LAST - MPIR_T_PVAR_CLASS_FIRST
+} MPIR_T_pvar_class_t;
 
 /* Handle conversion types/functions */
 

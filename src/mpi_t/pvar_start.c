@@ -5,6 +5,7 @@
  */
 
 #include "mpiimpl.h"
+#include "mpl_utlist.h" /* For MPL_DL_FOREACH */
 
 /* -- Begin Profiling Symbol Block for routine MPI_T_pvar_start */
 #if defined(HAVE_PRAGMA_WEAK)
@@ -30,9 +31,39 @@
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIR_T_pvar_start_impl(MPI_T_pvar_session session, MPI_T_pvar_handle handle)
 {
-    int mpi_errno = MPI_ERR_INTERN;
+    int mpi_errno = MPI_SUCCESS;
+    MPIR_T_pvar_watermark_t *mark;
 
-    /* TODO implement this function */
+    if (MPIR_T_pvar_is_sum(handle)) {
+        /* To start SUM, we only need to cache its current value into offset.
+         * If it has ever been started, accum holds correct value. Otherwise,
+         * accum is zero since handle allocation.
+         */
+        if (handle->get_value == NULL) {
+            MPIU_Memcpy(handle->offset, handle->addr, handle->bytes * handle->count);
+        } else {
+            handle->get_value(handle->addr, handle->obj_handle,
+                              handle->count, handle->offset);
+        }
+    } else if (MPIR_T_pvar_is_watermark(handle)) {
+        /* To start WATERMARK, if it has not ever been started,
+         * we need to set its starting value properly.
+         */
+        mark = (MPIR_T_pvar_watermark_t *)handle->addr;
+
+        if (MPIR_T_pvar_is_first(handle)) {
+            MPIU_Assert(mark->first_used);
+            mark->first_started = TRUE;
+            if (!MPIR_T_pvar_is_oncestarted(handle))
+                mark->watermark = mark->current;
+        } else {
+            if (!MPIR_T_pvar_is_oncestarted(handle))
+                handle->watermark = mark->current;
+        }
+    }
+
+    /* OK, let's get started */
+    MPIR_T_pvar_set_started(handle);
 
 fn_exit:
     return mpi_errno;
@@ -62,9 +93,10 @@ Input Parameters:
 int MPI_T_pvar_start(MPI_T_pvar_session session, MPI_T_pvar_handle handle)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_MPI_STATE_DECL(MPID_STATE_MPI_T_PVAR_START);
 
-    MPIU_THREAD_CS_ENTER(ALLFUNC,);
+    MPID_MPI_STATE_DECL(MPID_STATE_MPI_T_PVAR_START);
+    MPIR_T_FAIL_IF_UNINITIALIZED();
+    MPIR_T_THREAD_CS_ENTER();
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_T_PVAR_START);
 
     /* Validate parameters, especially handles needing to be converted */
@@ -72,23 +104,8 @@ int MPI_T_pvar_start(MPI_T_pvar_session session, MPI_T_pvar_handle handle)
     {
         MPID_BEGIN_ERROR_CHECKS
         {
-
-            /* TODO more checks may be appropriate */
-            if (mpi_errno != MPI_SUCCESS) goto fn_fail;
-        }
-        MPID_END_ERROR_CHECKS
-    }
-#   endif /* HAVE_ERROR_CHECKING */
-
-    /* Convert MPI object handles to object pointers */
-
-    /* Validate parameters and objects (post conversion) */
-#   ifdef HAVE_ERROR_CHECKING
-    {
-        MPID_BEGIN_ERROR_CHECKS
-        {
-            /* TODO more checks may be appropriate (counts, in_place, buffer aliasing, etc) */
-            if (mpi_errno != MPI_SUCCESS) goto fn_fail;
+            MPIR_ERRTEST_ARGNULL(session, "session", mpi_errno);
+            MPIR_ERRTEST_ARGNULL(handle, "handle", mpi_errno);
         }
         MPID_END_ERROR_CHECKS
     }
@@ -96,14 +113,33 @@ int MPI_T_pvar_start(MPI_T_pvar_session session, MPI_T_pvar_handle handle)
 
     /* ... body of routine ...  */
 
-    mpi_errno = MPIR_T_pvar_start_impl(session, handle);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    if (handle == MPI_T_PVAR_ALL_HANDLES) {
+        MPIR_T_pvar_handle_t *hnd;
+        MPL_DL_FOREACH(session->hlist, hnd) {
+            if (!MPIR_T_pvar_is_continuous(hnd) && !MPIR_T_pvar_is_started(hnd))
+                mpi_errno = MPIR_T_pvar_start_impl(session, hnd);
+        }
+    } else {
+        if (handle->session != session) {
+            mpi_errno = MPI_T_ERR_INVALID_HANDLE;
+            goto fn_fail;
+        }
+        if (MPIR_T_pvar_is_continuous(handle)) {
+            mpi_errno = MPI_T_ERR_PVAR_NO_STARTSTOP;
+            goto fn_fail;
+        }
+
+        if (!MPIR_T_pvar_is_started(handle)) {
+            mpi_errno = MPIR_T_pvar_start_impl(session, handle);
+            if (mpi_errno != MPI_SUCCESS) goto fn_fail;
+        }
+    }
 
     /* ... end of body of routine ... */
 
 fn_exit:
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_T_PVAR_START);
-    MPIU_THREAD_CS_EXIT(ALLFUNC,);
+    MPIR_T_THREAD_CS_EXIT();
     return mpi_errno;
 
 fn_fail:

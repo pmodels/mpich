@@ -23,43 +23,57 @@
 #define MPI_T_init_thread PMPI_T_init_thread
 
 /* any non-MPI functions go here, especially non-static ones */
-
-/* a counter that keeps track of the relative balance of calls to
- * MPI_T_init_thread and MPI_T_finalize */
-int MPIR_T_init_balance = 0;
-
-/* returns true iff the MPI_T_ interface is currently initialized */
-int MPIR_T_is_initialized(void)
+static inline void MPIR_T_enum_env_init(void)
 {
-    return (MPIR_T_init_balance > 0);
+    static const UT_icd enum_table_entry_icd =
+        {sizeof(MPIR_T_enum_t), NULL, NULL, NULL};
+
+    utarray_new(enum_table, &enum_table_entry_icd);
 }
 
-#undef FUNCNAME
-#define FUNCNAME MPIR_T_init_thread_impl
-#undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPIR_T_init_thread_impl(int required, int *provided)
+static inline void MPIR_T_cat_env_init(void)
 {
-    int mpi_errno = MPI_SUCCESS;
+    static const UT_icd cat_table_entry_icd =
+                    {sizeof(cat_table_entry_t), NULL, NULL, NULL};
 
-    /* TODO deal with required/provided and threading initialization */
-    /* always claim SINGLE for now, since it's a lot of work to separately
-     * initialize all of the threading code without initializing the whole MPI
-     * library right now */
-    *provided = MPI_THREAD_SINGLE;
+    utarray_new(cat_table, &cat_table_entry_icd);
+    cat_hash = NULL;
+    cat_stamp = 0;
+}
 
-    ++MPIR_T_init_balance;
-    if (MPIR_T_init_balance == 1) {
-        /* _init_params is idempotent, so it's OK if we call it after or before
-         * MPI_Init does */
-        mpi_errno = MPIR_Param_init_params();
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+static inline void MPIR_T_cvar_env_init(void)
+{
+    static const UT_icd cvar_table_entry_icd =
+                    {sizeof(cvar_table_entry_t), NULL, NULL, NULL};
+
+    utarray_new(cvar_table, &cvar_table_entry_icd);
+    cvar_hash = NULL;
+    MPIR_Param_init_params();
+}
+
+static inline void MPIR_T_pvar_env_init(void)
+{
+    int i;
+    static const UT_icd pvar_table_entry_icd =
+                    {sizeof(pvar_table_entry_t), NULL, NULL, NULL};
+
+    utarray_new(pvar_table, &pvar_table_entry_icd);
+    for (i = 0; i < MPIR_T_PVAR_CLASS_NUMBER; i++) {
+        pvar_hashs[i] = NULL;
     }
+}
 
-fn_exit:
-    return mpi_errno;
-fn_fail:
-    goto fn_exit;
+void MPIR_T_env_init(void)
+{
+    static int initialized = FALSE;
+
+    if (!initialized) {
+        initialized = TRUE;
+        MPIR_T_enum_env_init();
+        MPIR_T_cat_env_init();
+        MPIR_T_cvar_env_init();
+        MPIR_T_pvar_env_init();
+    }
 }
 
 #endif /* MPICH_MPI_FROM_PMPI */
@@ -86,48 +100,33 @@ Output Parameters:
 int MPI_T_init_thread(int required, int *provided)
 {
     int mpi_errno = MPI_SUCCESS;
+
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_T_INIT_THREAD);
-
-    MPIU_THREAD_CS_ENTER(ALLFUNC,);
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_T_INIT_THREAD);
-
-    /* Validate parameters, especially handles needing to be converted */
-#   ifdef HAVE_ERROR_CHECKING
-    {
-        MPID_BEGIN_ERROR_CHECKS
-        {
-
-            /* TODO more checks may be appropriate */
-            if (mpi_errno != MPI_SUCCESS) goto fn_fail;
-        }
-        MPID_END_ERROR_CHECKS
-    }
-#   endif /* HAVE_ERROR_CHECKING */
-
-    /* Convert MPI object handles to object pointers */
-
-    /* Validate parameters and objects (post conversion) */
-#   ifdef HAVE_ERROR_CHECKING
-    {
-        MPID_BEGIN_ERROR_CHECKS
-        {
-            MPIR_ERRTEST_ARGNULL(provided, "provided", mpi_errno);
-            /* TODO more checks may be appropriate (counts, in_place, buffer aliasing, etc) */
-        }
-        MPID_END_ERROR_CHECKS
-    }
-#   endif /* HAVE_ERROR_CHECKING */
 
     /* ... body of routine ...  */
 
-    mpi_errno = MPIR_T_init_thread_impl(required, provided);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+#ifdef HAVE_RUNTIME_THREADCHECK
+    MPIR_T_is_threaded = (required == MPI_THREAD_MULTIPLE);
+#endif
+
+    if (provided != NULL) {
+	    /* This must be min(required,MPICH_THREAD_LEVEL) if runtime
+	       control of thread level is available */
+	    *provided = (MPICH_THREAD_LEVEL < required) ?
+	        MPICH_THREAD_LEVEL : required;
+    }
+
+    ++MPIR_T_init_balance;
+    if (MPIR_T_init_balance == 1) {
+        MPIR_T_THREAD_CS_INIT();
+        MPIR_T_env_init();
+    }
 
     /* ... end of body of routine ... */
 
 fn_exit:
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_T_INIT_THREAD);
-    MPIU_THREAD_CS_EXIT(ALLFUNC,);
     return mpi_errno;
 
 fn_fail:
