@@ -120,9 +120,7 @@ if ((count*dtype_size) % fh->etype_size != 0) {				     \
 }
 
 #define MPIO_CHECK_FS_SUPPORTS_SHARED(fh, myname, error_code)		\
-if ((fh->file_system == ADIO_PIOFS) ||					\
-    (fh->file_system == ADIO_PVFS) || 					\
-    (fh->file_system == ADIO_PVFS2))					\
+if (!ADIO_Feature(fh, ADIO_SHARED_FP))                                  \
 {									\
     error_code = MPIO_Err_create_code(MPI_SUCCESS,			\
 				      MPIR_ERR_RECOVERABLE,		\
