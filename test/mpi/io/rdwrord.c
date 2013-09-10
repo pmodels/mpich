@@ -16,7 +16,7 @@ static char MTEST_Descrip[] = "Test reading and writing ordered output";
 int main( int argc, char *argv[] )
 {
     int errs = 0;
-    int size, rank, i, *buf;
+    int size, rank, i, *buf, rc;
     MPI_File fh;
     MPI_Comm comm;
     MPI_Status status;
@@ -32,8 +32,11 @@ int main( int argc, char *argv[] )
     MPI_Comm_rank( comm, &rank );
     buf = (int *)malloc( size * sizeof(int) );
     buf[0] = rank;
-    MPI_File_write_ordered( fh, buf, 1, MPI_INT, &status );
-
+    rc = MPI_File_write_ordered( fh, buf, 1, MPI_INT, &status );
+    if (rc) {
+	MTestPrintErrorMsg( "File_write_ordered", rc );
+	errs++;
+    }
     /* make sure all writes finish before we seek/read */
     MPI_Barrier(comm);
     

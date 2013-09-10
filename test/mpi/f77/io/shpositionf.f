@@ -40,6 +40,12 @@ C write
            if (i .eq. r + 1) then
               call mpi_file_write_shared( fh, i, 1, MPI_INTEGER, 
      &            MPI_STATUS_IGNORE, ierr )
+           if (ierr .ne. MPI_SUCCESS) then
+              errs = errs + 1
+              if (errs .le. 10) then
+                 call MTestPrintError( ierr )
+              endif
+           endif
            endif
            call mpi_barrier( comm, ierr )
            call mpi_file_get_position_shared( fh, offset, ierr )
