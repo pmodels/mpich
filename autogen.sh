@@ -877,7 +877,7 @@ if [ -x ./maint/f77tof90 -a $do_f77tof90 = "yes" ] ; then
         if [ ! -d test/mpi/errors/f90/$leafDir ] ; then
 	    mkdir test/mpi/errors/f90/$leafDir
         fi
-        if maint/f77tof90 $dir test/mpi/errors/f90/$leafDir Makefile.am Makefile.ap ; then 
+        if maint/f77tof90 $dir test/mpi/errors/f90/$leafDir Makefile.am Makefile.ap ; then
             echo "timestamp" > test/mpi/errors/f90/$leafDir/Makefile.am-stamp
         else
             echo "failed"
