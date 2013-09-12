@@ -272,21 +272,15 @@ int main(int argc, char **argv)
     /* If the user didn't specify a local hostname, try to find one in
      * the list of nodes passed to us */
     if (HYD_server_info.localhost == NULL) {
-        /* See if the node list contains a remotely accessible localhost */
+        /* See if the node list contains a localhost */
         for (node = HYD_server_info.node_list; node; node = node->next) {
-            int is_local, remote_access;
+            int is_local;
 
             status = HYDU_sock_is_local(node->hostname, &is_local);
             HYDU_ERR_POP(status, "unable to check if %s is local\n", node->hostname);
 
-            if (is_local) {
-                status = HYDU_sock_remote_access(node->hostname, &remote_access);
-                HYDU_ERR_POP(status, "unable to check if %s is remotely accessible\n",
-                             node->hostname);
-
-                if (remote_access)
-                    break;
-            }
+            if (is_local)
+                break;
         }
 
         if (node)
