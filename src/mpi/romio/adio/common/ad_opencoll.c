@@ -79,8 +79,12 @@ void ADIOI_GEN_OpenColl(ADIO_File fd, int rank,
    if write_only, open the file as read_write, but record it as write_only
    in fd, so that get_amode returns the right answer. */
 
+    /* observation from David Knaak: file systems that do not support data
+     * sieving do not need to change the mode */
+
     orig_amode_wronly = access_mode;
-    if (access_mode & ADIO_WRONLY) {
+    if ( (access_mode & ADIO_WRONLY) &&
+	    ADIO_Feature(fd, ADIO_DATA_SIEVING_WRITES) ) {
 	access_mode = access_mode ^ ADIO_WRONLY;
 	access_mode = access_mode | ADIO_RDWR;
     }
