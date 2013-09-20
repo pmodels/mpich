@@ -1,7 +1,7 @@
 /*
  * Copyright © 2009 CNRS
  * Copyright © 2009-2013 Inria.  All rights reserved.
- * Copyright © 2009-2012 Université Bordeaux 1
+ * Copyright © 2009-2013 Université Bordeaux 1
  * Copyright © 2009-2011 Cisco Systems, Inc.  All rights reserved.
  * Copyright © 2010 IBM
  * See COPYING in top-level directory.
@@ -272,6 +272,47 @@ hwloc_opendir(const char *p, int d __hwloc_attribute_unused)
 }
 
 
+static int
+hwloc_linux_parse_cpuset_file(FILE *file, hwloc_bitmap_t set)
+{
+  unsigned long start, stop;
+
+  /* reset to zero first */
+  hwloc_bitmap_zero(set);
+
+  while (fscanf(file, "%lu", &start) == 1)
+  {
+    int c = fgetc(file);
+
+    stop = start;
+
+    if (c == '-') {
+      /* Range */
+      if (fscanf(file, "%lu", &stop) != 1) {
+        /* Expected a number here */
+        errno = EINVAL;
+        return -1;
+      }
+      c = fgetc(file);
+    }
+
+    if (c == EOF || c == '\n') {
+      hwloc_bitmap_set_range(set, start, stop);
+      break;
+    }
+
+    if (c != ',') {
+      /* Expected EOF, EOL, or a comma */
+      errno = EINVAL;
+      return -1;
+    }
+
+    hwloc_bitmap_set_range(set, start, stop);
+  }
+
+  return 0;
+}
+
 
 /*****************************
  ******* CpuBind Hooks *******
@@ -353,6 +394,7 @@ hwloc_linux_find_kernel_nr_cpus(hwloc_topology_t topology)
 {
   static int _nr_cpus = -1;
   int nr_cpus = _nr_cpus;
+  FILE *possible;
 
   if (nr_cpus != -1)
     /* already computed */
@@ -364,6 +406,21 @@ hwloc_linux_find_kernel_nr_cpus(hwloc_topology_t topology)
   if (nr_cpus <= 0)
     /* start from scratch, the topology isn't ready yet (complete_cpuset is missing (-1) or empty (0))*/
     nr_cpus = 1;
+
+  possible = fopen("/sys/devices/system/cpu/possible", "r");
+  if (possible) {
+    hwloc_bitmap_t possible_bitmap = hwloc_bitmap_alloc();
+    if (hwloc_linux_parse_cpuset_file(possible, possible_bitmap) == 0) {
+      int max_possible = hwloc_bitmap_last(possible_bitmap);
+
+      hwloc_debug_bitmap("possible CPUs are %s\n", possible_bitmap);
+
+      if (nr_cpus < max_possible + 1)
+        nr_cpus = max_possible + 1;
+    }
+    fclose(possible);
+    hwloc_bitmap_free(possible_bitmap);
+  }
 
   while (1) {
     cpu_set_t *set = CPU_ALLOC(nr_cpus);
@@ -3542,14 +3599,23 @@ hwloc_linux_class_readdir(struct hwloc_topology *topology, struct hwloc_obj *pci
   DIR *dir;
   struct dirent *dirent;
   hwloc_obj_t obj;
-  int res = 0;
+  int res = 0, err;
 
   if (hwloc_linux_deprecated_classlinks_model == -2)
     hwloc_linux_check_deprecated_classlinks_model();
 
   if (hwloc_linux_deprecated_classlinks_model != 1) {
     /* modern sysfs: <device>/<class>/<name> */
+    struct stat st;
     snprintf(path, sizeof(path), "%s/%s", devicepath, classname);
+
+    /* some very host kernel (2.6.9/RHEL4) have <device>/<class> symlink without any way to find <name>.
+     * make sure <device>/<class> is a directory to avoid this case.
+     */
+    err = lstat(path, &st);
+    if (err < 0 || !S_ISDIR(st.st_mode))
+      goto trydeprecated;
+
     dir = opendir(path);
     if (dir) {
       hwloc_linux_deprecated_classlinks_model = 0;
@@ -3568,6 +3634,7 @@ hwloc_linux_class_readdir(struct hwloc_topology *topology, struct hwloc_obj *pci
     }
   }
 
+trydeprecated:
   if (hwloc_linux_deprecated_classlinks_model != 0) {
     /* deprecated sysfs: <device>/<class>:<name> */
     dir = opendir(devicepath);
@@ -3678,6 +3745,22 @@ hwloc_linux_infiniband_class_fillinfos(struct hwloc_topology *topology __hwloc_a
   }
 
   for(i=1; ; i++) {
+    snprintf(path, sizeof(path), "%s/ports/%u/state", osdevpath, i);
+    fd = fopen(path, "r");
+    if (fd) {
+      char statevalue[2];
+      if (fgets(statevalue, sizeof(statevalue), fd)) {
+	char statename[32];
+	statevalue[1] = '\0'; /* only keep the first byte/digit */
+	snprintf(statename, sizeof(statename), "Port%uState", i);
+	hwloc_obj_add_info(obj, statename, statevalue);
+      }
+      fclose(fd);
+    } else {
+      /* no such port */
+      break;
+    }
+
     snprintf(path, sizeof(path), "%s/ports/%u/lid", osdevpath, i);
     fd = fopen(path, "r");
     if (fd) {
@@ -3691,9 +3774,6 @@ hwloc_linux_infiniband_class_fillinfos(struct hwloc_topology *topology __hwloc_a
 	hwloc_obj_add_info(obj, lidname, lidvalue);
       }
       fclose(fd);
-    } else {
-      /* no such port */
-      break;
     }
 
     snprintf(path, sizeof(path), "%s/ports/%u/lid_mask_count", osdevpath, i);
@@ -3877,6 +3957,19 @@ hwloc_linux_mic_class_fillinfos(struct hwloc_topology *topology __hwloc_attribut
       if (eol)
         *eol = 0;
       hwloc_obj_add_info(obj, "MICSKU", sku);
+    }
+    fclose(fd);
+  }
+
+  snprintf(path, sizeof(path), "%s/serialnumber", osdevpath);
+  fd = fopen(path, "r");
+  if (fd) {
+    char sn[64];
+    if (fgets(sn, sizeof(sn), fd)) {
+      char *eol = strchr(sn, '\n');
+      if (eol)
+        *eol = 0;
+      hwloc_obj_add_info(obj, "MICSerialNumber", sn);
     }
     fclose(fd);
   }

@@ -503,6 +503,7 @@ hwloc_look_pci(struct hwloc_backend *backend)
     unsigned isbridge;
     unsigned domain;
     unsigned device_class;
+    unsigned short tmp16;
     char name[128];
     unsigned offset;
 #ifdef HWLOC_HAVE_PCI_FIND_CAP
@@ -559,10 +560,6 @@ hwloc_look_pci(struct hwloc_backend *backend)
     obj->attr->pcidev.class_id = device_class;
     HWLOC_BUILD_ASSERT(PCI_REVISION_ID < CONFIG_SPACE_CACHESIZE);
     obj->attr->pcidev.revision = config_space_cache[PCI_REVISION_ID];
-    HWLOC_BUILD_ASSERT(PCI_SUBSYSTEM_VENDOR_ID < CONFIG_SPACE_CACHESIZE);
-    obj->attr->pcidev.subvendor_id = config_space_cache[PCI_SUBSYSTEM_VENDOR_ID];
-    HWLOC_BUILD_ASSERT(PCI_SUBSYSTEM_ID < CONFIG_SPACE_CACHESIZE);
-    obj->attr->pcidev.subdevice_id = config_space_cache[PCI_SUBSYSTEM_ID];
 
     obj->attr->pcidev.linkspeed = 0; /* unknown */
 #ifdef HWLOC_HAVE_PCI_FIND_CAP
@@ -646,6 +643,20 @@ hwloc_look_pci(struct hwloc_backend *backend)
       obj->attr->bridge.downstream.pci.domain = domain;
       obj->attr->bridge.downstream.pci.secondary_bus = config_space_cache[PCI_SECONDARY_BUS];
       obj->attr->bridge.downstream.pci.subordinate_bus = config_space_cache[PCI_SUBORDINATE_BUS];
+    }
+
+    if (obj->type == HWLOC_OBJ_PCI_DEVICE) {
+      memcpy(&tmp16, &config_space_cache[PCI_SUBSYSTEM_VENDOR_ID], sizeof(tmp16));
+      HWLOC_BUILD_ASSERT(PCI_SUBSYSTEM_VENDOR_ID < CONFIG_SPACE_CACHESIZE);
+      obj->attr->pcidev.subvendor_id = tmp16;
+      memcpy(&tmp16, &config_space_cache[PCI_SUBSYSTEM_ID], sizeof(tmp16));
+      HWLOC_BUILD_ASSERT(PCI_SUBSYSTEM_ID < CONFIG_SPACE_CACHESIZE);
+      obj->attr->pcidev.subdevice_id = tmp16;
+    } else {
+      /* TODO:
+       * bridge must lookup PCI_CAP_ID_SSVID and then look at offset+PCI_SSVID_VENDOR/DEVICE_ID
+       * cardbus must look at PCI_CB_SUBSYSTEM_VENDOR_ID and PCI_CB_SUBSYSTEM_ID
+       */
     }
 
 /* starting from pciutils 2.2, pci_lookup_name() takes a variable number

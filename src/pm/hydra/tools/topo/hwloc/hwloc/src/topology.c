@@ -688,6 +688,7 @@ hwloc___insert_object_by_cpuset(struct hwloc_topology *topology, hwloc_obj_t cur
 	    child->distances_count += obj->distances_count;
 	    child->distances = realloc(child->distances, child->distances_count * sizeof(*child->distances));
 	    memcpy(child->distances + obj->distances_count, obj->distances, obj->distances_count * sizeof(*child->distances));
+	    free(obj->distances);
 	  } else {
 	    child->distances_count = obj->distances_count;
 	    child->distances = obj->distances;
@@ -700,6 +701,7 @@ hwloc___insert_object_by_cpuset(struct hwloc_topology *topology, hwloc_obj_t cur
 	    child->infos_count += obj->infos_count;
 	    child->infos = realloc(child->infos, child->infos_count * sizeof(*child->infos));
 	    memcpy(child->infos + obj->infos_count, obj->infos, obj->infos_count * sizeof(*child->infos));
+	    free(obj->infos);
 	  } else {
 	    child->infos_count = obj->infos_count;
 	    child->infos = obj->infos;
@@ -897,7 +899,7 @@ hwloc_topology_insert_misc_object_by_cpuset(struct hwloc_topology *topology, hwl
 
   if (hwloc_bitmap_iszero(cpuset))
     return NULL;
-  if (!hwloc_bitmap_isincluded(cpuset, hwloc_topology_get_complete_cpuset(topology)))
+  if (!hwloc_bitmap_isincluded(cpuset, hwloc_topology_get_topology_cpuset(topology)))
     return NULL;
 
   obj = hwloc_alloc_setup_object(HWLOC_OBJ_MISC, -1);
@@ -1183,11 +1185,18 @@ add_default_object_sets(hwloc_obj_t obj, int parent_has_sets)
   if (hwloc_obj_type_is_io(obj->type))
     return;
 
-  if (parent_has_sets || obj->cpuset) {
-    /* if the parent has non-NULL sets, or if the object has non-NULL cpusets,
-     * it must have non-NULL nodesets
-     */
+  if (parent_has_sets && obj->type != HWLOC_OBJ_MISC) {
+    /* non-MISC object must have cpuset if parent has one. */
     assert(obj->cpuset);
+  }
+
+  /* other sets must be consistent with main cpuset:
+   * check cpusets and add nodesets if needed.
+   *
+   * MISC may have no sets at all (if added by parent), or usual ones (if added by cpuset),
+   * but that's not easy to detect, so just make sure sets are consistent as usual.
+   */
+  if (obj->cpuset) {
     assert(obj->online_cpuset);
     assert(obj->complete_cpuset);
     assert(obj->allowed_cpuset);
@@ -1198,9 +1207,9 @@ add_default_object_sets(hwloc_obj_t obj, int parent_has_sets)
     if (!obj->allowed_nodeset)
       obj->allowed_nodeset = hwloc_bitmap_alloc_full();
   } else {
-    /* parent has no sets and object has NULL cpusets,
-     * it must have NULL nodesets
-     */
+    assert(!obj->online_cpuset);
+    assert(!obj->complete_cpuset);
+    assert(!obj->allowed_cpuset);
     assert(!obj->nodeset);
     assert(!obj->complete_nodeset);
     assert(!obj->allowed_nodeset);
@@ -1238,6 +1247,9 @@ propagate_nodeset(hwloc_obj_t obj, hwloc_obj_t sys)
   for_each_child_safe(child, obj, temp) {
     /* don't propagate nodesets in I/O objects, keep them NULL */
     if (hwloc_obj_type_is_io(child->type))
+      return;
+    /* don't propagate nodesets in Misc inserted by parent (no nodeset if no cpuset) */
+    if (child->type == HWLOC_OBJ_MISC && !child->cpuset)
       return;
 
     /* Propagate singleton nodesets down */
@@ -1450,7 +1462,7 @@ remove_empty(hwloc_topology_t topology, hwloc_obj_t *pobj)
 
   if (obj->type != HWLOC_OBJ_NODE
       && !obj->first_child /* only remove if all children were removed above, so that we don't remove parents of NUMAnode */
-      && !hwloc_obj_type_is_io(obj->type)
+      && !hwloc_obj_type_is_io(obj->type) && obj->type != HWLOC_OBJ_MISC
       && obj->cpuset /* don't remove if no cpuset at all, there's likely a good reason why it's different from having an empty cpuset */
       && hwloc_bitmap_iszero(obj->cpuset)) {
     /* Remove empty children */
@@ -2195,7 +2207,7 @@ next_cpubackend:
   }
 
   if (!discoveries) {
-    hwloc_debug("%s", "No CPU backend enabled\n");
+    hwloc_debug("%s", "No CPU backend enabled or no discovery succeeded\n");
     errno = EINVAL;
     return -1;
   }
