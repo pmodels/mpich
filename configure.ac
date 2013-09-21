@@ -5990,7 +5990,7 @@ AC_SUBST(MPI_MAX_LIBRARY_VERSION_STRING)
 # Get the value of MPI_MAX_ERROR_STRING
 if test -z "$MPID_MAX_ERROR_STRING" ; then
     if test -z "$MPI_MAX_ERROR_STRING" ; then
-       MPI_MAX_ERROR_STRING=1024
+       MPI_MAX_ERROR_STRING=512
     fi
     AC_MSG_WARN([The $with_device device did not set the maximum size of an error string, $MPI_MAX_ERROR_STRING being used.])
 else

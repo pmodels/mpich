@@ -19,9 +19,6 @@ AM_COND_IF([BUILD_CH3],[
 # Set a value for the maximum processor name.
 MPID_MAX_PROCESSOR_NAME=128
 
-# Set a value for the maximum error string.
-MPID_MAX_ERROR_STRING=1024
-
 # code that formerly lived in setup_device.args
 if test -z "${device_args}" ; then
     device_args="nemesis"
