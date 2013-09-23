@@ -74,7 +74,7 @@ int MPID_nem_newmad_probe(MPIDI_VC_t *vc,  int source, int tag, MPID_Comm *comm,
    else
      NEM_NMAD_MATCH_GET_TAG(out_tag,status->MPI_TAG);
    
-   status->count = size;
+   MPIR_STATUS_SET_COUNT(*status, size);
    
  fn_exit:
     return mpi_errno;
@@ -144,7 +144,7 @@ int MPID_nem_newmad_iprobe(MPIDI_VC_t *vc,  int source, int tag, MPID_Comm *comm
        else
 	 NEM_NMAD_MATCH_GET_TAG(out_tag,status->MPI_TAG);  
        
-       status->count = size;
+       MPIR_STATUS_SET_COUNT(*status, size);
        *flag = TRUE;
     }
     else

@@ -55,7 +55,7 @@ MPIDI_RecvDoneCB_copy(MPID_Request * rreq)
                     rreq->mpid.datatype,     /* dest type */
                     &_count,
                     &rreq->status.MPI_ERROR);
-  rreq->status.count = _count;
+  MPIR_STATUS_SET_COUNT(rreq->status, _count);
 }
 
 
@@ -95,7 +95,7 @@ MPIDI_RecvDoneCB(pami_context_t   context,
 #ifdef OUT_OF_ORDER_HANDLING
   MPID_Request * oo_peer = rreq->mpid.oo_peer;
   if (oo_peer) {
-     oo_peer->status.count = rreq->status.count;
+     MPIR_STATUS_SET_COUNT(oo_peer->status, MPIR_STATUS_GET_COUNT(rreq->status));
      MPIDI_Request_complete(oo_peer);
   }
 #endif
@@ -191,7 +191,7 @@ void MPIDI_Recvq_process_out_of_order_msgs(pami_task_t src, pami_context_t conte
                                 dt_true_lb);
         if (unlikely(ooreq->mpid.uebuflen > dt_size))
           {
-            rreq->status.count = dt_size;
+            MPIR_STATUS_SET_COUNT(rreq->status, dt_size);
             rreq->status.MPI_ERROR = MPI_ERR_TRUNCATE;
           }
 
@@ -215,7 +215,7 @@ void MPIDI_Recvq_process_out_of_order_msgs(pami_task_t src, pami_context_t conte
           MPIDI_RecvMsg_Unexp(ooreq, rreq->mpid.userbuf, rreq->mpid.userbufcount, rreq->mpid.datatype);
 	} else {
           MPIDI_RecvMsg_Unexp(ooreq, rreq->mpid.userbuf, rreq->mpid.userbufcount, rreq->mpid.datatype);
-          rreq->status.count = ooreq->status.count;
+          MPIR_STATUS_SET_COUNT(rreq->status, MPIR_STATUS_GET_COUNT(ooreq->status));
           rreq->status.MPI_SOURCE = ooreq->status.MPI_SOURCE;
           rreq->status.MPI_TAG = ooreq->status.MPI_TAG;
           rreq->mpid.envelope.msginfo.MPIseqno = ooreq->mpid.envelope.msginfo.MPIseqno;

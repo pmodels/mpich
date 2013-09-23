@@ -86,8 +86,8 @@ static int MPIDI_CH3I_Rma_req_query(void *state, MPI_Status *status)
     MPIU_UNREFERENCED_ARG(state);
 
     /* All status fields, except the error code, are undefined */
-    status->count = 0;
-    status->cancelled = FALSE;
+    MPIR_STATUS_SET_COUNT(*status, 0);
+    MPIR_STATUS_SET_CANCEL_BIT(*status, FALSE);
     status->MPI_SOURCE = MPI_UNDEFINED;
     status->MPI_TAG = MPI_UNDEFINED;
 

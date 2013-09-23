@@ -297,7 +297,7 @@ int MPIR_Get_elements_x_impl(const MPI_Status *status, MPI_Datatype datatype, MP
     if (HANDLE_GET_KIND(datatype) == HANDLE_KIND_BUILTIN ||
         (datatype_ptr->element_size != -1 && datatype_ptr->size > 0))
     {
-        byte_count = status->count;
+        byte_count = MPIR_STATUS_GET_COUNT(*status);
 
         /* QUESTION: WHAT IF SOMEONE GAVE US AN MPI_UB OR MPI_LB???
          */
@@ -324,7 +324,7 @@ int MPIR_Get_elements_x_impl(const MPI_Status *status, MPI_Datatype datatype, MP
         MPIU_Assert(byte_count >= 0);
     }
     else if (datatype_ptr->size == 0) {
-        if (status->count > 0) {
+        if (MPIR_STATUS_GET_COUNT(*status) > 0) {
             /* --BEGIN ERROR HANDLING-- */
 
             /* datatype size of zero and count > 0 should never happen. */
@@ -343,7 +343,7 @@ int MPIR_Get_elements_x_impl(const MPI_Status *status, MPI_Datatype datatype, MP
     else /* derived type with weird element type or weird size */ {
         MPIU_Assert(datatype_ptr->element_size == -1);
 
-        byte_count = status->count;
+        byte_count = MPIR_STATUS_GET_COUNT(*status);
         *elements = MPIR_Type_get_elements(&byte_count, -1, datatype);
     }
 

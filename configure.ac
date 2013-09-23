@@ -46,8 +46,6 @@ dnl    MPID_NO_PM            - If yes, the device does not require any
 dnl                            PM implementation.  
 dnl    MPID_NO_PMI           - If yes, the device does not require any 
 dnl                            PMI implementation.
-dnl    EXTRA_STATUS_DECL     - Any extra declarations that the device
-dnl                            needs added to the definition of MPI_Status.
 dnl    MPID_MAX_PROCESSOR_NAME - The maximum number of character in a processor
 dnl                            name.  If not set, 128 will be used.
 dnl    MPID_MAX_ERROR_STRING - The maximum number of character in an error
@@ -5777,8 +5775,6 @@ AC_SUBST([MPI_F77_COUNT])
 
 #
 # The size of MPI_Status is needed for the Fortran interface. 
-# This is not quite right unless the device prereq macro, expanded above,
-# sets the EXTRA_STATUS_DECL that will be used in defining a status.
 #
 # WARNING!!! this is a spot where we duplicate code from mpi.h.in and it *must*
 # be kept in sync in order to make a proper computation
@@ -5789,13 +5785,11 @@ dnl the array subscripting below
     rm -f pac_mpi_status.h
     cat > pac_mpi_status.h <<_EOF
 typedef struct {
+    int count_lo;
+    int count_hi_and_cancelled;
     int MPI_SOURCE;
     int MPI_TAG;
     int MPI_ERROR;
-    $MPI_COUNT count;
-    int cancelled;
-    int abi_slush_fund[2];
-    $EXTRA_STATUS_DECL
 } MPI_Status;
 _EOF
 ]
@@ -5864,10 +5858,6 @@ if test "$enable_f77" = yes ; then
 fi
 
 # ----------------------------------------------------------------------------
-
-dnl Extra status information, from device subsystem, to be included in the
-dnl declaration of MPI_Status in mpi.h.in
-AC_SUBST(EXTRA_STATUS_DECL)
 
 dnl FIXME XXX DJG does this need to actually be conditional on something?
 dnl previously it was conditional on the successful execution of

@@ -73,7 +73,7 @@ typedef struct {
         MPID_cc_set(&(sreq_)->cc, 1);                                                                           \
         (sreq_)->cc_ptr             = &(sreq_)->cc;                                                             \
         (sreq_)->status.MPI_ERROR   = MPI_SUCCESS;                                                              \
-        (sreq_)->status.cancelled   = FALSE;                                                                    \
+        MPIR_STATUS_SET_CANCEL_BIT((sreq_)->status, FALSE);                                                           \
         (sreq_)->dev.cancel_pending = FALSE;                                                                    \
         (sreq_)->dev.state          = 0;                                                                        \
         (sreq_)->dev.datatype_ptr   = NULL;                                                                     \

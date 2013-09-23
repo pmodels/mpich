@@ -74,7 +74,7 @@ int MPIDI_Isend_self(const void * buf, int count, MPI_Datatype datatype, int ran
 	    
 	MPIDI_CH3U_Buffer_copy(buf, count, datatype, &sreq->status.MPI_ERROR,
 			       rreq->dev.user_buf, rreq->dev.user_count, rreq->dev.datatype, &data_sz, &rreq->status.MPI_ERROR);
-	rreq->status.count = (int)data_sz;
+	MPIR_STATUS_SET_COUNT(rreq->status, (int)data_sz);
 	MPID_REQUEST_SET_COMPLETED(rreq);
 	MPID_Request_release(rreq);
 	/* sreq has never been seen by the user or outside this thread, so it is safe to reset ref_count and cc */
@@ -99,7 +99,7 @@ int MPIDI_Isend_self(const void * buf, int count, MPI_Datatype datatype, int ran
 	    rreq->partner_request = sreq;
 	    rreq->dev.sender_req_id = sreq->handle;
 	    MPID_Datatype_get_size_macro(datatype, dt_sz);
-	    rreq->status.count = count * dt_sz;
+	    MPIR_STATUS_SET_COUNT(rreq->status, count * dt_sz);
 	}
 	else
 	{
@@ -112,7 +112,7 @@ int MPIDI_Isend_self(const void * buf, int count, MPI_Datatype datatype, int ran
 	    
 	    rreq->partner_request = NULL;
 	    rreq->dev.sender_req_id = MPI_REQUEST_NULL;
-	    rreq->status.count = 0;
+	    MPIR_STATUS_SET_COUNT(rreq->status, 0);
 	    
 	    /* sreq has never been seen by the user or outside this thread, so it is safe to reset ref_count and cc */
 	    MPIU_Object_set_ref(sreq, 1);

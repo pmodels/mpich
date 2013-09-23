@@ -266,8 +266,8 @@ int MPIDI_CH3U_Recvq_FU(int source, int tag, int context_id, MPI_Status *s)
 	    /* Avoid setting "extra" fields like MPI_ERROR */
 	    s->MPI_SOURCE = rreq->status.MPI_SOURCE;
 	    s->MPI_TAG    = rreq->status.MPI_TAG;
-	    s->count      = rreq->status.count;
-	    s->cancelled  = rreq->status.cancelled;
+            MPIR_STATUS_SET_COUNT(*s, MPIR_STATUS_GET_COUNT(rreq->status));
+            MPIR_STATUS_SET_CANCEL_BIT(*s, MPIR_STATUS_GET_CANCEL_BIT(rreq->status));
 	}
 	found = 1;
     }

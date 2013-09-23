@@ -70,7 +70,7 @@ int MPID_Cancel_send(MPID_Request * sreq)
 	    MPIU_Object_set_ref(rreq, 0);
 	    MPIDI_CH3_Request_destroy(rreq);
 	    
-	    sreq->status.cancelled = TRUE;
+	    MPIR_STATUS_SET_CANCEL_BIT(sreq->status, TRUE);
 	    /* no other thread should be waiting on sreq, so it is safe to 
 	       reset ref_count and cc */
             MPID_cc_set(&sreq->cc, 0);
@@ -79,7 +79,7 @@ int MPID_Cancel_send(MPID_Request * sreq)
 	}
 	else
 	{
-	    sreq->status.cancelled = FALSE; 
+	    MPIR_STATUS_SET_CANCEL_BIT(sreq->status, FALSE);
 	    MPIU_DBG_MSG_FMT(CH3_OTHER,VERBOSE,(MPIU_DBG_FDEST,
                "send-to-self cancellation failed, sreq=0x%08x, rreq=0x%08x",
 						sreq->handle, rreq->handle));
@@ -125,7 +125,7 @@ int MPID_Cancel_send(MPID_Request * sreq)
 		
 		if (cancelled)
 		{
-		    sreq->status.cancelled = TRUE;
+		    MPIR_STATUS_SET_CANCEL_BIT(sreq->status, TRUE);
 		    /* no other thread should be waiting on sreq, so it is 
 		       safe to reset ref_count and cc */
                     MPID_cc_set(&sreq->cc, 0);
@@ -140,7 +140,7 @@ int MPID_Cancel_send(MPID_Request * sreq)
 	    cancelled = FALSE;
 	    if (cancelled)
 	    {
-		sreq->status.cancelled = TRUE;
+		MPIR_STATUS_SET_CANCEL_BIT(sreq->status, TRUE);
 		/* no other thread should be waiting on sreq, so it is safe to 
 		   reset ref_count and cc */
                 MPID_cc_set(&sreq->cc, 0);
@@ -288,7 +288,7 @@ int MPIDI_CH3_PktHandler_CancelSendResp( MPIDI_VC_t *vc ATTRIBUTE((unused)),
     
     if (resp_pkt->ack)
     {
-	sreq->status.cancelled = TRUE;
+	MPIR_STATUS_SET_CANCEL_BIT(sreq->status, TRUE);
 	
 	if (MPIDI_Request_get_msg_type(sreq) == MPIDI_REQUEST_RNDV_MSG ||
 	    MPIDI_Request_get_type(sreq) == MPIDI_REQUEST_TYPE_SSEND)
@@ -304,7 +304,7 @@ int MPIDI_CH3_PktHandler_CancelSendResp( MPIDI_VC_t *vc ATTRIBUTE((unused)),
     }
     else
     {
-	sreq->status.cancelled = FALSE; 
+	MPIR_STATUS_SET_CANCEL_BIT(sreq->status, FALSE);
 	MPIU_DBG_MSG(CH3_OTHER,TYPICAL,"unable to cancel message");
     }
     

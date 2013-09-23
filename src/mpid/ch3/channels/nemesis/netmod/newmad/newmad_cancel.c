@@ -26,12 +26,12 @@ int MPID_nem_newmad_cancel_send(MPIDI_VC_t *vc, MPID_Request *sreq)
 
     if (ret ==  NM_ESUCCESS)
     {
-        sreq->status.cancelled = TRUE;
+        MPIR_STATUS_SET_CANCEL_BIT(sreq->status, TRUE);
        (VC_FIELD(vc,pending_sends)) -= 1;
     }
     else
     {	    
-        sreq->status.cancelled = FALSE;
+        MPIR_STATUS_SET_CANCEL_BIT(sreq->status, FALSE);
     }
     
  fn_exit:
@@ -56,11 +56,11 @@ int MPID_nem_newmad_cancel_recv(MPIDI_VC_t *vc, MPID_Request *rreq)
 
     if (ret ==  NM_ESUCCESS)
     {	    
-        rreq->status.cancelled = TRUE;
+        MPIR_STATUS_SET_CANCEL_BIT(rreq->status, TRUE);
     }
     else
     {
-        rreq->status.cancelled = FALSE;
+        MPIR_STATUS_SET_CANCEL_BIT(rreq->status, FALSE);
     }
 
  fn_exit:

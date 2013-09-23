@@ -26,7 +26,7 @@ static int handle_probe(const ptl_event_t *e)
     REQ_PTL(req)->found = TRUE;
     req->status.MPI_SOURCE = NPTL_MATCH_GET_RANK(e->match_bits);
     req->status.MPI_TAG = NPTL_MATCH_GET_TAG(e->match_bits);
-    req->status.count = NPTL_HEADER_GET_LENGTH(e->match_bits);
+    MPIR_STATUS_SET_COUNT(req->status, NPTL_HEADER_GET_LENGTH(e->match_bits));
 
     MPIDI_CH3U_Request_complete(req);
     

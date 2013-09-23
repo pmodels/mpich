@@ -41,7 +41,7 @@ int MPIR_Status_set_elements_x_impl(MPI_Status *status, MPI_Datatype datatype, M
         MPIU_Assert(size_x < MPIR_COUNT_MAX / count);
     }
 
-    status->count = size_x * count;
+    MPIR_STATUS_SET_COUNT(*status, size_x * count);
 
 fn_exit:
     return mpi_errno;

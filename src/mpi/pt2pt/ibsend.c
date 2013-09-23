@@ -36,7 +36,7 @@ PMPI_LOCAL int MPIR_Ibsend_cancel( void *extra, int complete );
 PMPI_LOCAL int MPIR_Ibsend_query( void *extra, MPI_Status *status )
 {
     ibsend_req_info *ibsend_info = (ibsend_req_info *)extra;
-    status->cancelled = ibsend_info->cancelled;
+    MPIR_STATUS_SET_CANCEL_BIT(*status, ibsend_info->cancelled);
     return MPI_SUCCESS;
 }
 PMPI_LOCAL int MPIR_Ibsend_free( void *extra )

@@ -43,7 +43,7 @@ int MPID_nem_mx_probe(MPIDI_VC_t *vc,  int source, int tag, MPID_Comm *comm, int
     
     NEM_MX_MATCH_GET_RANK(mx_status.match_info,status->MPI_SOURCE);
     NEM_MX_MATCH_GET_TAG(mx_status.match_info,status->MPI_TAG);
-    status->count = mx_status.xfer_length;
+    MPIR_STATUS_SET_COUNT(*status, mx_status.xfer_length);
     
  fn_exit:
     return mpi_errno;
@@ -89,7 +89,7 @@ int MPID_nem_mx_iprobe(MPIDI_VC_t *vc,  int source, int tag, MPID_Comm *comm, in
     {    
 	NEM_MX_MATCH_GET_RANK(mx_status.match_info,status->MPI_SOURCE);
 	NEM_MX_MATCH_GET_TAG(mx_status.match_info,status->MPI_TAG);
-	status->count = mx_status.xfer_length;	
+	MPIR_STATUS_SET_COUNT(*status, mx_status.xfer_length);
 	*flag = TRUE;	
     }
     else

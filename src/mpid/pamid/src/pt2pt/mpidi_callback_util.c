@@ -56,7 +56,7 @@ MPIDI_Callback_process_unexp(MPID_Request *newreq,
   /* ---------------------- */
   rreq->status.MPI_SOURCE = rank;
   rreq->status.MPI_TAG    = tag;
-  rreq->status.count      = sndlen;
+  MPIR_STATUS_SET_COUNT(rreq->status, sndlen);
   MPIDI_Request_setCA          (rreq, MPIDI_CA_COMPLETE);
   MPIDI_Request_cpyPeerRequestH(rreq, msginfo);
   MPIDI_Request_setSync        (rreq, isSync);
@@ -118,8 +118,8 @@ MPIDI_Callback_process_trunc(pami_context_t  context,
   if (recv)
     {
       MPIDI_Request_setCA(rreq, MPIDI_CA_UNPACK_UEBUF_AND_COMPLETE);
-      rreq->mpid.uebuflen = rreq->status.count;
-      rreq->mpid.uebuf    = MPIU_Malloc(rreq->status.count);
+      rreq->mpid.uebuflen = MPIR_STATUS_GET_COUNT(rreq->status);
+      rreq->mpid.uebuf    = MPIU_Malloc(MPIR_STATUS_GET_COUNT(rreq->status));
       MPID_assert(rreq->mpid.uebuf != NULL);
       rreq->mpid.uebuf_malloc = mpiuMalloc;
 
@@ -128,7 +128,7 @@ MPIDI_Callback_process_trunc(pami_context_t  context,
   else
     {
       MPIDI_Request_setCA(rreq, MPIDI_CA_UNPACK_UEBUF_AND_COMPLETE);
-      rreq->mpid.uebuflen = rreq->status.count;
+      rreq->mpid.uebuflen = MPIR_STATUS_GET_COUNT(rreq->status);
       rreq->mpid.uebuf    = (void*)sndbuf;
       MPIDI_RecvDoneCB(context, rreq, PAMI_SUCCESS);
       MPID_Request_release(rreq);

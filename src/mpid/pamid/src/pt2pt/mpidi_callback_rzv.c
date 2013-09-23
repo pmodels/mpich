@@ -77,7 +77,7 @@ MPIDI_RecvRzvCB_impl(pami_context_t    context,
   /* ---------------------- */
   rreq->status.MPI_SOURCE = rank;
   rreq->status.MPI_TAG    = tag;
-  rreq->status.count      = envelope->length;
+  MPIR_STATUS_SET_COUNT(rreq->status, envelope->length);
   MPIDI_Request_setPeerRank_comm(rreq, rank);
   MPIDI_Request_setPeerRank_pami(rreq, source);
   MPIDI_Request_cpyPeerRequestH (rreq, msginfo);

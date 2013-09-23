@@ -46,14 +46,14 @@ int MPID_nem_mx_cancel_send(MPIDI_VC_t *vc, MPID_Request *sreq)
 	
 	if (result)
 	{
-	   sreq->status.cancelled = TRUE;
+	   MPIR_STATUS_SET_CANCEL_BIT(sreq->status, TRUE);
 	   sreq->cc = 0;
 	   MPIU_Object_set_ref(sreq, 1);     
 	   (VC_FIELD(vc,pending_sends)) -= 1;
 	}
 	else
         {	    
-	   sreq->status.cancelled = FALSE;
+	   MPIR_STATUS_SET_CANCEL_BIT(sreq->status, FALSE);
 	}
 	handled = TRUE;
      }
@@ -111,16 +111,16 @@ int MPID_nem_mx_cancel_recv(MPIDI_VC_t *vc, MPID_Request *rreq)
        if (result)
        {	    
 	  int found;
-	  rreq->status.cancelled = TRUE;
+	  MPIR_STATUS_SET_CANCEL_BIT(rreq->status, TRUE);
 	  found = MPIDI_CH3U_Recvq_DP(rreq);
 	  MPIU_Assert(found);
-	  rreq->status.count = 0;
+	  MPIR_STATUS_SET_COUNT(rreq->status, 0);
 	  MPID_REQUEST_SET_COMPLETED(rreq);
 	  MPID_Request_release(rreq);       
        }
        else
        {
-	  rreq->status.cancelled = FALSE;
+	  MPIR_STATUS_SET_CANCEL_BIT(rreq->status, FALSE);
 	  MPIU_DBG_MSG_P(CH3_OTHER,VERBOSE,
 			 "request 0x%08x already matched, unable to cancel", rreq->handle);
        }

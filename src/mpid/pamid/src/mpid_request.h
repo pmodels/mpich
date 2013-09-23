@@ -184,8 +184,8 @@ MPIDI_Request_initialize(MPID_Request * req)
 {
   req->greq_fns          = NULL;
 
-  req->status.count      = 0;
-  req->status.cancelled  = FALSE;
+  MPIR_STATUS_SET_COUNT(req->status, 0);
+  MPIR_STATUS_SET_CANCEL_BIT(req->status, FALSE);
   req->status.MPI_SOURCE = MPI_UNDEFINED;
   req->status.MPI_TAG    = MPI_UNDEFINED;
   req->status.MPI_ERROR  = MPI_SUCCESS;

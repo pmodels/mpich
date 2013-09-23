@@ -309,7 +309,7 @@ int MPIDI_CH3_PktHandler_EagerShortSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 
     (rreq)->status.MPI_SOURCE = (eagershort_pkt)->match.parts.rank;
     (rreq)->status.MPI_TAG    = (eagershort_pkt)->match.parts.tag;
-    (rreq)->status.count      = (eagershort_pkt)->data_sz;
+    MPIR_STATUS_SET_COUNT((rreq)->status, (eagershort_pkt)->data_sz);
     (rreq)->dev.recv_data_sz  = (eagershort_pkt)->data_sz;
     MPIDI_Request_set_seqnum((rreq), (eagershort_pkt)->seqnum);
     /* FIXME: Why do we set the message type? */
@@ -351,7 +351,7 @@ int MPIDI_CH3_PktHandler_EagerShortSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 		     "**truncate", "**truncate %d %d %d %d", 
 		     rreq->status.MPI_SOURCE, rreq->status.MPI_TAG, 
 		     rreq->dev.recv_data_sz, userbuf_sz );
-		rreq->status.count = userbuf_sz;
+		MPIR_STATUS_SET_COUNT(rreq->status, userbuf_sz);
 		data_sz = userbuf_sz;
 	    }
 
@@ -405,7 +405,7 @@ int MPIDI_CH3_PktHandler_EagerShortSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 		    /* There are two cases:  a datatype mismatch (could
 		       not consume all data) or a too-short buffer. We
 		       need to distinguish between these two types. */
-		    rreq->status.count = (int)last;
+		    MPIR_STATUS_SET_COUNT(rreq->status, (int)last);
 		    if (rreq->dev.recv_data_sz <= userbuf_sz) {
 			MPIU_ERR_SETSIMPLE(rreq->status.MPI_ERROR,MPI_ERR_TYPE,
 					   "**dtypemismatch");
@@ -575,7 +575,7 @@ int MPIDI_CH3_EagerContigIsend( MPID_Request **sreq_p,
 {								\
     (rreq_)->status.MPI_SOURCE = (pkt_)->match.parts.rank;	\
     (rreq_)->status.MPI_TAG = (pkt_)->match.parts.tag;		\
-    (rreq_)->status.count = (pkt_)->data_sz;			\
+    MPIR_STATUS_SET_COUNT((rreq_)->status, (pkt_)->data_sz);		\
     (rreq_)->dev.sender_req_id = (pkt_)->sender_req_id;		\
     (rreq_)->dev.recv_data_sz = (pkt_)->data_sz;		\
     MPIDI_Request_set_seqnum((rreq_), (pkt_)->seqnum);		\
@@ -744,7 +744,7 @@ int MPIDI_CH3_PktHandler_ReadySend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 				      "**rsendnomatch %d %d", 
 				      ready_pkt->match.parts.rank,
 				      ready_pkt->match.parts.tag);
-	rreq->status.count = 0;
+	MPIR_STATUS_SET_COUNT(rreq->status, 0);
 	if (rreq->dev.recv_data_sz > 0)
 	{
 	    /* force read of extra data */

@@ -329,7 +329,7 @@ extern MPIDI_Process_t MPIDI_Process;
     (sreq_)->partner_request   = NULL;                          \
     MPIR_Comm_add_ref(comm);					\
     (sreq_)->status.MPI_ERROR	   = MPI_SUCCESS;               \
-    (sreq_)->status.cancelled	   = FALSE;		        \
+    MPIR_STATUS_SET_CANCEL_BIT((sreq_)->status, FALSE);	        \
     (sreq_)->dev.state = 0;                                     \
     (sreq_)->dev.cancel_pending = FALSE;                        \
     (sreq_)->dev.match.parts.rank = rank;			\
@@ -366,7 +366,7 @@ extern MPIDI_Process_t MPIDI_Process;
     MPID_cc_set(&(rreq_)->cc, 1);                               \
     (rreq_)->cc_ptr		   = &(rreq_)->cc;              \
     (rreq_)->status.MPI_ERROR	   = MPI_SUCCESS;               \
-    (rreq_)->status.cancelled	   = FALSE;                     \
+    MPIR_STATUS_SET_CANCEL_BIT((rreq_)->status, FALSE);	        \
     (rreq_)->partner_request   = NULL;                          \
     (rreq_)->dev.state = 0;                                     \
     (rreq_)->dev.cancel_pending = FALSE;                        \

@@ -197,7 +197,7 @@ MPIDI_RecvCB(pami_context_t    context,
   /* ---------------------- */
   rreq->status.MPI_SOURCE = rank;
   rreq->status.MPI_TAG    = tag;
-  rreq->status.count      = sndlen;
+  MPIR_STATUS_SET_COUNT(rreq->status, sndlen);
   MPIDI_Request_setCA          (rreq, MPIDI_CA_COMPLETE);
   MPIDI_Request_cpyPeerRequestH(rreq, msginfo);
   MPIDI_Request_setSync        (rreq, msginfo->isSync);

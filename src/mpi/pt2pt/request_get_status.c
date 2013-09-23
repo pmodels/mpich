@@ -119,7 +119,7 @@ int MPI_Request_get_status(MPI_Request request, int *flag, MPI_Status *status)
         {
             if (status != MPI_STATUS_IGNORE)
             {
-                status->cancelled = request_ptr->status.cancelled;
+                MPIR_STATUS_SET_CANCEL_BIT(*status, MPIR_STATUS_GET_CANCEL_BIT(request_ptr->status));
             }
             mpi_errno = request_ptr->status.MPI_ERROR;
             break;
@@ -142,7 +142,7 @@ int MPI_Request_get_status(MPI_Request request, int *flag, MPI_Status *status)
 		{
 		    if (status != MPI_STATUS_IGNORE)
 		    {
-			status->cancelled = request_ptr->status.cancelled;
+			MPIR_STATUS_SET_CANCEL_BIT(*status, MPIR_STATUS_GET_CANCEL_BIT(request_ptr->status));
 		    }
 		    mpi_errno = prequest_ptr->status.MPI_ERROR;
 		}
@@ -158,7 +158,7 @@ int MPI_Request_get_status(MPI_Request request, int *flag, MPI_Status *status)
                     }
                     if (status != MPI_STATUS_IGNORE)
                     {
-                        status->cancelled = prequest_ptr->status.cancelled;
+                        MPIR_STATUS_SET_CANCEL_BIT(*status, MPIR_STATUS_GET_CANCEL_BIT(prequest_ptr->status));
                     }
                     if (mpi_errno == MPI_SUCCESS)
                     {
@@ -174,7 +174,7 @@ int MPI_Request_get_status(MPI_Request request, int *flag, MPI_Status *status)
                        make the error code available */
                     if (status != MPI_STATUS_IGNORE)
                     {
-                        status->cancelled = request_ptr->status.cancelled;
+                        MPIR_STATUS_SET_CANCEL_BIT(*status, MPIR_STATUS_GET_CANCEL_BIT(request_ptr->status));
                     }
                     mpi_errno = request_ptr->status.MPI_ERROR;
                 }
@@ -218,7 +218,7 @@ int MPI_Request_get_status(MPI_Request request, int *flag, MPI_Status *status)
             }
             if (status != MPI_STATUS_IGNORE)
             {
-                status->cancelled = request_ptr->status.cancelled;
+                MPIR_STATUS_SET_CANCEL_BIT(*status, MPIR_STATUS_GET_CANCEL_BIT(request_ptr->status));
             }
             MPIR_Request_extract_status(request_ptr, status);
 	    

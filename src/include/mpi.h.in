@@ -559,13 +559,11 @@ static const MPI_Datatype mpich_mpi_offset MPICH_ATTR_TYPE_TAG(MPI_Offset) = MPI
 
 /* The order of these elements must match that in mpif.h */
 typedef struct MPI_Status {
+    int count_lo;
+    int count_hi_and_cancelled;
     int MPI_SOURCE;
     int MPI_TAG;
     int MPI_ERROR;
-    MPI_Count count;
-    int cancelled;
-    int abi_slush_fund[2];
-    @EXTRA_STATUS_DECL@
 } MPI_Status;
 
 /* types for the MPI_T_ interface */

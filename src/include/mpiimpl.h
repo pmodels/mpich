@@ -2298,29 +2298,63 @@ void MPIR_Err_print_stack(FILE *, int);
    src/mpi/pt2pt? */
 /* ------------------------------------------------------------------------- */
 
+
+/* MPI_Status manipulation macros */
+#define MPIR_BITS_IN_INT (8 * SIZEOF_INT)
+
+/* We use bits from the "count_lo" and "count_hi_and_cancelled" fields
+ * to represent the 'count' and 'cancelled' objects.  The LSB of the
+ * "count_hi_and_cancelled" field represents the 'cancelled' object.
+ * The 'count' object is split between the "count_lo" and
+ * "count_hi_and_cancelled" fields, with the lower order bits going
+ * into the "count_lo" field, and the higher order bits goin into the
+ * "count_hi_and_cancelled" field.  This gives us 2N-1 bits for the
+ * 'count' object, where N is the size of int.  However, the value
+ * returned to the user is bounded by the definition on MPI_Count. */
+/* NOTE: The below code assumes that the count value is never
+ * negative.  For negative values, right-shifting can have weird
+ * implementation specific consequences. */
+#define MPIR_STATUS_SET_COUNT(status_, count_)                          \
+    {                                                                   \
+        (status_).count_lo = ((int) count_);                            \
+        (status_).count_hi_and_cancelled &= 1;                          \
+        (status_).count_hi_and_cancelled |= (int) ((MPI_Count) count_ >> MPIR_BITS_IN_INT << 1); \
+    }
+
+#define MPIR_STATUS_GET_COUNT(status_)                                  \
+    ((MPI_Count) ((((MPI_Count) (status_).count_hi_and_cancelled) >> 1 << MPIR_BITS_IN_INT) + (status_).count_lo))
+
+#define MPIR_STATUS_SET_CANCEL_BIT(status_, cancelled_)	\
+    {                                                   \
+        (status_).count_hi_and_cancelled &= ~1;         \
+        (status_).count_hi_and_cancelled |= cancelled_; \
+    }
+
+#define MPIR_STATUS_GET_CANCEL_BIT(status_)	((status_).count_hi_and_cancelled & 1)
+
 /* Do not set MPI_ERROR (only set if ERR_IN_STATUS is returned */
-#define MPIR_Status_set_empty(status_)			\
-{							\
-    if ((status_) != MPI_STATUS_IGNORE)			\
-    {							\
-	(status_)->MPI_SOURCE = MPI_ANY_SOURCE;		\
-	(status_)->MPI_TAG = MPI_ANY_TAG;		\
-	(status_)->count = 0;				\
-	(status_)->cancelled = FALSE;			\
-    }							\
-}
+#define MPIR_Status_set_empty(status_)                          \
+    {                                                           \
+        if ((status_) != MPI_STATUS_IGNORE)                     \
+        {                                                       \
+            (status_)->MPI_SOURCE = MPI_ANY_SOURCE;             \
+            (status_)->MPI_TAG = MPI_ANY_TAG;                   \
+            MPIR_STATUS_SET_COUNT(*(status_), 0);               \
+            MPIR_STATUS_SET_CANCEL_BIT(*(status_), FALSE);      \
+        }                                                       \
+    }
 /* See MPI 1.1, section 3.11, Null Processes */
 /* Do not set MPI_ERROR (only set if ERR_IN_STATUS is returned */
-#define MPIR_Status_set_procnull(status_)		\
-{							\
-    if ((status_) != MPI_STATUS_IGNORE)			\
-    {							\
-	(status_)->MPI_SOURCE = MPI_PROC_NULL;		\
-	(status_)->MPI_TAG = MPI_ANY_TAG;		\
-	(status_)->count = 0;				\
-	(status_)->cancelled = FALSE;			\
-    }							\
-}
+#define MPIR_Status_set_procnull(status_)                       \
+    {                                                           \
+        if ((status_) != MPI_STATUS_IGNORE)                     \
+        {                                                       \
+            (status_)->MPI_SOURCE = MPI_PROC_NULL;              \
+            (status_)->MPI_TAG = MPI_ANY_TAG;                   \
+            MPIR_STATUS_SET_COUNT(*(status_), 0);               \
+            MPIR_STATUS_SET_CANCEL_BIT(*(status_), FALSE);      \
+        }                                                       \
+    }
 
 #define MPIR_Request_extract_status(request_ptr_, status_)								\
 {															\
@@ -4241,7 +4275,7 @@ int MPIU_Get_intranode_rank(MPID_Comm *comm_ptr, int r);
 #define MPIR_Comm_size(comm_ptr) ((comm_ptr)->local_size)
 #define MPIR_Type_extent_impl(datatype, extent_ptr) MPID_Datatype_get_extent_macro(datatype, *(extent_ptr))
 #define MPIR_Type_size_impl(datatype, size) MPID_Datatype_get_size_macro(datatype, *(size))
-#define MPIR_Test_cancelled_impl(status, flag) *(flag) = (status)->cancelled
+#define MPIR_Test_cancelled_impl(status, flag) *(flag) = MPIR_STATUS_GET_CANCEL_BIT(*(status))
 
 /* MPIR_ functions.  These are versions of MPI_ functions appropriate for calling within MPI */
 int MPIR_Cancel_impl(MPID_Request *request_ptr);

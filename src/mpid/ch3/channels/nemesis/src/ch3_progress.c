@@ -798,7 +798,7 @@ int MPID_nem_handle_pkt(MPIDI_VC_t *vc, char *buf, MPIDI_msg_sz_t buflen)
 {                                                               \
     (rreq_)->status.MPI_SOURCE = (pkt_)->match.rank;            \
     (rreq_)->status.MPI_TAG = (pkt_)->match.tag;                \
-    (rreq_)->status.count = (pkt_)->data_sz;                    \
+    MPIR_STATUS_SET_COUNT((rreq_)->status, (pkt_)->data_sz);		\
     (rreq_)->dev.sender_req_id = (pkt_)->sender_req_id;         \
     (rreq_)->dev.recv_data_sz = (pkt_)->data_sz;                \
     MPIDI_Request_set_seqnum((rreq_), (pkt_)->seqnum);          \

@@ -352,7 +352,7 @@ MPIDI_SendMsg_process_userdefined_dt(MPID_Request      * sreq,
         if (unlikely(sndbuf == NULL))
           {
             sreq->status.MPI_ERROR = MPI_ERR_NO_SPACE;
-            sreq->status.count = 0;
+            MPIR_STATUS_SET_COUNT(sreq->status, 0);
             MPID_Abort(NULL, MPI_ERR_NO_SPACE, -1,
                        "Unable to allocate non-contiguous buffer");
           }

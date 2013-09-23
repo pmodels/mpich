@@ -323,7 +323,7 @@ MPIDI_CancelAck_proc(pami_context_t        context,
       MPID_assert(info->control == MPIDI_CONTROL_CANCEL_ACKNOWLEDGE);
       MPID_assert(req->mpid.cancel_pending == TRUE);
 
-      req->status.cancelled = TRUE;
+      MPIR_STATUS_SET_CANCEL_BIT(req->status, TRUE);
 
       /*
        * Rendezvous-Sends wait until a rzv ack is received to complete

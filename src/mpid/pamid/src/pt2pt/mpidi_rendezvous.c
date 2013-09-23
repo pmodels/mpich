@@ -66,7 +66,7 @@ MPIDI_RendezvousTransfer(pami_context_t   context,
     {
       rcvlen = dt_size;
       rreq->status.MPI_ERROR = MPI_ERR_TRUNCATE;
-      rreq->status.count = rcvlen;
+      MPIR_STATUS_SET_COUNT(rreq->status,  rcvlen);
     }
   else
     {

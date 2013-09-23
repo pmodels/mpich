@@ -612,8 +612,6 @@ print MPIFD "!     -*- Mode: Fortran; -*-
         INCLUDE 'mpifnoext.h'\n";
 # MPI-3 Requires that even the MPI module (not just mpi_f08) include
 # the MPI_Status type, as well as handle types
-# WARNING: If there is and "EXTRA_STATUS_DECL", this declaration is
-# erroneous
 # WARNING: INTEGER is incorrect; it should be INTEGER(C_INT) if this
 # is to be used directly by a C routine.  That may also require using
 # USE ISO_C_BINDING, ONLY :: C_INT

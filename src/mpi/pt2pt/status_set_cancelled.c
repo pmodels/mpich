@@ -68,7 +68,7 @@ int MPI_Status_set_cancelled(MPI_Status *status, int flag)
 
     /* ... body of routine ...  */
     
-    status->cancelled = flag ? TRUE : FALSE;
+    MPIR_STATUS_SET_CANCEL_BIT(*status, flag ? TRUE : FALSE);
 
     /* ... end of body of routine ... */
     

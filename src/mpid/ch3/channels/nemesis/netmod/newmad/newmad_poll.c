@@ -342,7 +342,7 @@ MPID_nem_newmad_handle_rreq(MPID_Request *req, nm_tag_t match_info, size_t size)
 
     NEM_NMAD_MATCH_GET_RANK(match_info,req->status.MPI_SOURCE);
     NEM_NMAD_MATCH_GET_TAG(match_info,req->status.MPI_TAG);
-    req->status.count = size;
+    MPIR_STATUS_SET_COUNT(req->status, size);
     req->dev.recv_data_sz = size;
 
     MPIDI_Datatype_get_info(req->dev.user_count, req->dev.datatype, dt_contig, userbuf_sz, dt_ptr, dt_true_lb);
@@ -362,7 +362,7 @@ MPID_nem_newmad_handle_rreq(MPID_Request *req, nm_tag_t match_info, size_t size)
 						     "**truncate", "**truncate %d %d %d %d",
 						     req->status.MPI_SOURCE, req->status.MPI_TAG,
 						     req->dev.recv_data_sz, userbuf_sz );
-	req->status.count = userbuf_sz;
+	MPIR_STATUS_SET_COUNT(req->status, userbuf_sz);
 	data_sz = userbuf_sz;
     }
     
@@ -373,7 +373,7 @@ MPID_nem_newmad_handle_rreq(MPID_Request *req, nm_tag_t match_info, size_t size)
 	MPID_Segment_unpack( req->dev.segment_ptr, 0, &last, req->dev.tmpbuf);
 	MPIU_Free(req->dev.tmpbuf);
 	if (last != data_sz) {
-	    req->status.count = (int)last;
+	    MPIR_STATUS_SET_COUNT(req->status, (int)last);
 	    if (req->dev.recv_data_sz <= userbuf_sz) {
 		MPIU_ERR_SETSIMPLE(req->status.MPI_ERROR,MPI_ERR_TYPE,"**dtypemismatch");
 	    }
