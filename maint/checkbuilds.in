@@ -815,12 +815,21 @@ sub RunTestMPIOSuite {
 
     $rc = chdir $testmpio_test_dir;
     if (!$rc) {
-	#print STDERR "Cannot change to $testmpio_test_dir\n";
+	print $OUTFD "Cannot change to $testmpio_test_dir\n";
 	return;
     }
 
-    # Switch to using the checked-in version of the Intel test
-    $config[$nargs++] = "$projects_dir/testmpio/configure";
+    # Switch to using the checked-in version of the Testmpio test
+    if (-x "$projects_dir/testmpio/configure") {
+        $config[$nargs++] = "$projects_dir/testmpio/configure";
+    }
+    elsif (-x "$projects_dir/Testmpio/configure") {
+        $config[$nargs++] = "$projects_dir/Testmpio/configure";
+    }
+    else {
+        print $OUTFD "Cannot find testmpio source directory!";
+        return;
+    }
     $config[$nargs++] = "--enable-xml";
     $config[$nargs++] = "CC=$instdir/bin/mpicc";
     $config[$nargs++] = "MPIEXEC=$instdir/bin/mpiexec";
