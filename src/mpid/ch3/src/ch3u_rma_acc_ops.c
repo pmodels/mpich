@@ -71,7 +71,6 @@ int MPIDI_Get_accumulate(const void *origin_addr, int origin_count,
     else {
         MPIDI_RMA_Ops_list_t *ops_list = MPIDI_CH3I_RMA_Get_ops_list(win_ptr, target_rank);
         MPIDI_RMA_Op_t *new_ptr = NULL;
-        MPIDI_VC_t *orig_vc, *target_vc;
 
         /* Append the operation to the window's RMA ops queue */
         MPIU_INSTR_DURATION_START(rmaqueue_alloc);
@@ -98,29 +97,19 @@ int MPIDI_Get_accumulate(const void *origin_addr, int origin_count,
         new_ptr->op = op;
         MPIU_INSTR_DURATION_END(rmaqueue_set);
 
-	/* check if target is local and shared memory is allocated on window,
-	  if so, we do not need to increment reference counts on datatype. This is
-	  because this operation will be directly done on shared memory region, instead
-	  of sending and receiving through the progress engine, therefore datatype
-	  will not be referenced by the progress engine */
-
-        MPIDI_Comm_get_vc(win_ptr->comm_ptr, rank, &orig_vc);
-        MPIDI_Comm_get_vc(win_ptr->comm_ptr, target_rank, &target_vc);
-	if (!(win_ptr->shm_allocated == TRUE && orig_vc->node_id == target_vc->node_id)) {
-            /* if source or target datatypes are derived, increment their
-               reference counts */
-            if (!origin_predefined) {
-                MPID_Datatype_get_ptr(origin_datatype, dtp);
-                MPID_Datatype_add_ref(dtp);
-            }
-            if (!result_predefined) {
-                MPID_Datatype_get_ptr(result_datatype, dtp);
-                MPID_Datatype_add_ref(dtp);
-            }
-            if (!target_predefined) {
-                MPID_Datatype_get_ptr(target_datatype, dtp);
-                MPID_Datatype_add_ref(dtp);
-            }
+        /* if source or target datatypes are derived, increment their
+           reference counts */
+        if (!origin_predefined) {
+            MPID_Datatype_get_ptr(origin_datatype, dtp);
+            MPID_Datatype_add_ref(dtp);
+        }
+        if (!result_predefined) {
+            MPID_Datatype_get_ptr(result_datatype, dtp);
+            MPID_Datatype_add_ref(dtp);
+        }
+        if (!target_predefined) {
+            MPID_Datatype_get_ptr(target_datatype, dtp);
+            MPID_Datatype_add_ref(dtp);
         }
     }
 
