@@ -330,6 +330,12 @@ int MPIDI_Win_fence(int assert, MPID_Win *win_ptr)
 	int nRequest = 0;
 	int nRequestNew = 0;
         MPIDI_VC_t *orig_vc, *target_vc;
+
+        /* Ensure ordering of load/store operations. */
+        if (win_ptr->create_flavor == MPI_WIN_FLAVOR_SHARED) {
+           OPA_read_write_barrier();
+        }
+
 	MPIU_INSTR_DURATION_START(winfence_rs);
 	/* This is the second or later fence. Do all the preceding RMA ops. */
 	comm_ptr = win_ptr->comm_ptr;
