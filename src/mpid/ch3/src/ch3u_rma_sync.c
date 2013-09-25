@@ -332,7 +332,7 @@ int MPIDI_Win_fence(int assert, MPID_Win *win_ptr)
         MPIDI_VC_t *orig_vc, *target_vc;
 
         /* Ensure ordering of load/store operations. */
-        if (win_ptr->create_flavor == MPI_WIN_FLAVOR_SHARED) {
+        if (win_ptr->shm_allocated == TRUE) {
            OPA_read_write_barrier();
         }
 
@@ -1593,7 +1593,7 @@ int MPIDI_Win_complete(MPID_Win *win_ptr)
     comm_size = comm_ptr->local_size;
         
     /* Ensure ordering of load/store operations. */
-    if (win_ptr->create_flavor == MPI_WIN_FLAVOR_SHARED) {
+    if (win_ptr->shm_allocated == TRUE) {
         OPA_read_write_barrier();
     }
 
@@ -1890,7 +1890,7 @@ int MPIDI_Win_wait(MPID_Win *win_ptr)
     } 
 
     /* Ensure ordering of load/store operations. */
-    if (win_ptr->create_flavor == MPI_WIN_FLAVOR_SHARED) {
+    if (win_ptr->shm_allocated == TRUE) {
         OPA_read_write_barrier();
     }
 
@@ -1934,7 +1934,7 @@ int MPIDI_Win_test(MPID_Win *win_ptr, int *flag)
             win_ptr->epoch_state = MPIDI_EPOCH_NONE;
 
         /* Ensure ordering of load/store operations. */
-        if (win_ptr->create_flavor == MPI_WIN_FLAVOR_SHARED) {
+        if (win_ptr->shm_allocated == TRUE) {
             OPA_read_write_barrier();
         }
     }
@@ -2056,7 +2056,7 @@ int MPIDI_Win_unlock(int dest, MPID_Win *win_ptr)
     }
 
     /* Ensure ordering of load/store operations. */
-    if (win_ptr->create_flavor == MPI_WIN_FLAVOR_SHARED) {
+    if (win_ptr->shm_allocated == TRUE) {
         OPA_read_write_barrier();
     }
 
