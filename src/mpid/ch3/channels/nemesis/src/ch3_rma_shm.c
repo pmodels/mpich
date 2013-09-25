@@ -29,11 +29,13 @@ int MPIDI_CH3_SHM_Win_shared_query(MPID_Win *win_ptr, int target_rank, MPI_Aint 
 
         /* Default, if no processes have size > 0. */
         *size               = 0;
+        *disp_unit          = 0;
         *((void**) baseptr) = NULL;
 
         for (i = 0; i < comm_size; i++) {
             if (win_ptr->sizes[i] > 0) {
                 *size               = win_ptr->sizes[i];
+                *disp_unit          = win_ptr->disp_units[i];
                 *((void**) baseptr) = win_ptr->shm_base_addrs[i];
                 break;
             }
@@ -41,6 +43,7 @@ int MPIDI_CH3_SHM_Win_shared_query(MPID_Win *win_ptr, int target_rank, MPI_Aint 
 
     } else {
         *size               = win_ptr->sizes[target_rank];
+        *disp_unit          = win_ptr->disp_units[target_rank];
         *((void**) baseptr) = win_ptr->shm_base_addrs[target_rank];
     }
 
