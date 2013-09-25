@@ -17,7 +17,8 @@
 /*  (C)Copyright IBM Corp.  2007, 2011  */
 /**
  * \file src/onesided/mpid_win_set_info.c
- * \brief ???
+ * \brief sets new values for the hints of the window of the window 
+ *        associated with win.                                      
  */
 #include "mpidi_onesided.h"
 
@@ -28,13 +29,76 @@
  * \param[in] info             Info hint
  * \return MPI_SUCCESS
  */
-#undef FUNCNAME
-#define FUNCNAME MPID_Win_set_info
-#undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
-int
-MPID_Win_set_info(MPID_Win     *win,
-                  MPID_Info    *info)
+
+int MPIDI_Win_set_info(MPID_Win *win, MPID_Info *info)
 {
-  return MPI_SUCCESS;
+
+    int mpi_errno = MPI_SUCCESS;
+    MPID_Info *curr_ptr, *prev_ptr;
+    MPID_Info *c_ptr, *p_ptr;
+    char *value, *token;
+    char *savePtr;
+    prev_ptr = info;
+    curr_ptr = info->next;
+    uint    save_ordering;
+
+    while (curr_ptr) {
+        if (!strcmp(curr_ptr->key,"no_locks")) {
+            if (!strcmp(curr_ptr->value,"true")) {
+                win->mpid.info_args.no_locks=1;
+            } else 
+                win->mpid.info_args.no_locks=0;
+        } else if (!strcmp(curr_ptr->key,"accumulate_ordering"))
+        {
+              save_ordering=(uint) win->mpid.info_args.accumulate_ordering;
+              win->mpid.info_args.accumulate_ordering=0;
+              value = curr_ptr->value;
+              token = (char *) strtok_r(value,"," , &savePtr);
+              while (token) {
+                if (!memcmp(token,"rar",3)) 
+                {
+                     win->mpid.info_args.accumulate_ordering =
+                     (win->mpid.info_args.accumulate_ordering | MPIDI_ACCU_ORDER_RAR);
+                 } else if (!memcmp(token,"raw",3)) 
+                 {
+                     win->mpid.info_args.accumulate_ordering =
+                     (win->mpid.info_args.accumulate_ordering | MPIDI_ACCU_ORDER_RAW);
+                  } else if (!memcmp(token,"war",3))
+                  {
+                     win->mpid.info_args.accumulate_ordering =
+                     (win->mpid.info_args.accumulate_ordering | MPIDI_ACCU_ORDER_WAR);
+                  } else if (!memcmp(token,"waw",3))
+                  {
+                     win->mpid.info_args.accumulate_ordering =
+                     (win->mpid.info_args.accumulate_ordering | MPIDI_ACCU_ORDER_WAW);
+                  } else
+                      MPID_assert_always(0);
+                  token = (char *) strtok_r(NULL,"," , &savePtr);
+               }
+               if (win->mpid.info_args.accumulate_ordering == 0) {
+                   win->mpid.info_args.accumulate_ordering=
+                      (MPIDI_Win_info_accumulate_ordering) save_ordering;
+               }
+        } else if (!strcmp(curr_ptr->key,"accumulate_ops"))
+         {
+              /* the default setting is MPIDI_ACCU_SAME_OP_NO_OP */
+              if (!strcmp(curr_ptr->value,"same_op"))
+                   win->mpid.info_args.accumulate_ops = MPIDI_ACCU_SAME_OP;
+         }
+        prev_ptr = curr_ptr;
+        curr_ptr = curr_ptr->next;
+    }
+
+    return mpi_errno;
+}
+
+int
+MPID_Win_set_info(MPID_Win     *win, MPID_Info    *info)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    mpi_errno = MPIDI_Win_set_info(win, info);
+    MPID_assert(mpi_errno == MPI_SUCCESS);
+    mpi_errno = MPIR_Barrier_impl(win->comm_ptr, &mpi_errno);
+    return mpi_errno;
 }

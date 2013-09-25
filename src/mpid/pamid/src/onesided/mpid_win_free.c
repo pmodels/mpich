@@ -70,6 +70,7 @@ MPID_Win_free(MPID_Win **win_ptr)
 #endif
 
   MPIU_Free(win->mpid.info);
+  MPIU_Free(win->mpid.origin);
 
   MPIR_Comm_release(win->comm_ptr, 0);
 

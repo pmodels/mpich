@@ -21,25 +21,13 @@
  */
 #include "mpidi_onesided.h"
 
-
-typedef struct
-{
-  unsigned            peer;
-  int                 lock_type;
-  MPID_Win          * win;
-
-  volatile unsigned   done;
-  pami_work_t         work;
-} MPIDI_WinLock_info;
-
-
-static inline void
+void
 MPIDI_WinLockAck_post(pami_context_t   context,
                       unsigned         peer,
                       MPID_Win       * win);
 
 
-static inline void
+void
 MPIDI_WinLockAdvance(pami_context_t   context,
                      MPID_Win       * win)
 {
@@ -112,7 +100,7 @@ MPIDI_WinLockReq_proc(pami_context_t              context,
 }
 
 
-static inline void
+void
 MPIDI_WinLockAck_post(pami_context_t   context,
                       unsigned         peer,
                       MPID_Win       * win)

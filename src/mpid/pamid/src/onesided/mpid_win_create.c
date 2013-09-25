@@ -21,6 +21,145 @@
  */
 #include "mpidi_onesided.h"
 
+/***************************************************************************/
+/*                                                                         */
+/* allocate win_ptr (MPIDI_Win)                                            */
+/* update win structure except for base address                            */
+/*                                                                         */
+/***************************************************************************/
+
+int
+MPIDI_Win_init( MPI_Aint length,
+                int disp_unit,
+                MPID_Win  **win_ptr,
+                MPID_Info  *info,
+                MPID_Comm *comm_ptr,
+                int create_flavor,
+                int model)
+{
+  int mpi_errno=MPI_SUCCESS;
+  size_t length_out = 0;
+  pami_result_t rc;
+  size_t rank, size;
+  MPIDI_Win_info *winfo;
+  int i;
+  static char FCNAME[] = "MPIDI_Win_init";
+
+  /* ----------------------------------------- */
+  /*  Setup the common sections of the window  */
+  /* ----------------------------------------- */
+  MPID_Win *win = (MPID_Win*)MPIU_Handle_obj_alloc(&MPID_Win_mem);
+
+  MPIU_ERR_CHKANDSTMT(win == NULL, mpi_errno, MPI_ERR_NO_MEM,
+                     return mpi_errno, "**nomem");
+
+  *win_ptr = win;
+  memset(&win->mpid, 0, sizeof(struct MPIDI_Win));
+  win->comm_ptr = comm_ptr; MPIR_Comm_add_ref(comm_ptr);
+  size = comm_ptr->local_size;
+  rank = comm_ptr->rank;
+
+  win->mpid.info = MPIU_Malloc(size * sizeof(struct MPIDI_Win_info));
+  MPID_assert(win->mpid.info != NULL);
+  memset((void *) win->mpid.info,0,(size * sizeof(struct MPIDI_Win_info)));
+  winfo = &win->mpid.info[rank];
+  win->errhandler          = NULL;
+  win->base                = NULL;
+  win->size                = length;
+  win->disp_unit           = disp_unit;
+  win->create_flavor       = create_flavor;
+  win->model               = model;
+  win->copyCreateFlavor    = 0;
+  win->copyModel           = 0;
+  win->attributes          = NULL;
+  win->comm_ptr            = comm_ptr;
+  if ((info != NULL) && ((int *)info != (int *) MPI_INFO_NULL)) {
+      mpi_errno= MPIDI_Win_set_info(win, info);
+      MPID_assert(mpi_errno == 0);
+  }
+  MPID_assert(mpi_errno == 0);
+  win->mpid.origin = MPIU_Calloc0(size, RMA_nOps_t);
+
+
+    /* Initialize the info (hint) flags per window */
+  win->mpid.info_args.no_locks            = 0;
+  win->mpid.info_args.accumulate_ordering =
+      (MPIDI_ACCU_ORDER_RAR | MPIDI_ACCU_ORDER_RAW | MPIDI_ACCU_ORDER_WAR | MPIDI_ACCU_ORDER_WAW);
+  win->mpid.info_args.accumulate_ops      = MPIDI_ACCU_OPS_SAME_OP_NO_OP; /*default */
+  win->mpid.info_args.same_size           = 0;
+  win->mpid.info_args.alloc_shared_noncontig = 0;
+
+  win->copyDispUnit=0;
+  win->copySize=0;
+  winfo->memregion_used = 0;
+  winfo->disp_unit = disp_unit;
+
+  return mpi_errno;
+}
+
+/***************************************************************************/
+/*                                                                         */
+/* MPIDI_Win_allgather                                                     */
+/*                                                                         */
+/* registers memory with PAMI if possible                                  */
+/* calls Allgather to gather the information from all members in win.      */
+/*                                                                         */
+/***************************************************************************/
+int
+MPIDI_Win_allgather(void *base, MPI_Aint size, MPID_Win **win_ptr )
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPID_Win *win;
+    int i, k, comm_size, rank;;
+    MPI_Aint  temp;
+    int nErrors=0;
+    MPID_Comm *comm_ptr;
+    size_t length_out = 0;
+    pami_result_t rc;
+    MPIDI_Win_info  *winfo;
+    pami_task_t  task_id;
+    static char FCNAME[] = "MPIDI_Win_allgather";
+
+  win = *win_ptr;
+  comm_ptr = win->comm_ptr;
+  rank = comm_ptr->rank;
+  winfo = &win->mpid.info[rank];
+  /* --------------------------------------- */
+  /*  Setup the PAMI sections of the window  */
+  /* --------------------------------------- */
+#ifdef USE_PAMI_RDMA
+  if (size != 0)
+    {
+      rc = PAMI_Memregion_create(MPIDI_Context[0], win->base, win->size, &length_out, &winfo->memregion);
+
+      MPIU_ERR_CHKANDJUMP((rc != PAMI_SUCCESS), mpi_errno, MPI_ERR_OTHER, "**nomem");
+      MPIU_ERR_CHKANDJUMP((win->size < length_out), mpi_errno, MPI_ERR_OTHER, "**nomem");
+    }
+#else
+  if ( (!MPIDI_Process.mp_s_use_pami_get) && (size != 0) )
+    {
+      rc = PAMI_Memregion_create(MPIDI_Context[0], win->base, win->size, &length_out, &winfo->memregion);
+      if(rc == PAMI_SUCCESS)
+        {
+          winfo->memregion_used = 1;
+          MPID_assert(win->size == length_out);
+        }
+    }
+#endif
+  mpi_errno = MPIR_Allgather_impl(MPI_IN_PLACE,
+                                  0,
+                                  MPI_DATATYPE_NULL,
+                                  win->mpid.info,
+                                  sizeof(struct MPIDI_Win_info),
+                                  MPI_BYTE,
+                                  comm_ptr,
+                                  &mpi_errno);
+
+fn_fail:
+   return mpi_errno;
+}
+
+
 
 /**
  * \brief MPI-PAMI glue for MPI_Win_create function
@@ -45,84 +184,36 @@
  */
 int
 MPID_Win_create(void       * base,
-                MPI_Aint     length,
+                MPI_Aint     size,
                 int          disp_unit,
                 MPID_Info  * info,
                 MPID_Comm  * comm_ptr,
                 MPID_Win  ** win_ptr)
 {
   int mpi_errno  = MPI_SUCCESS;
+  int rc  = MPI_SUCCESS,i;
+  static char FCNAME[] = "MPID_Win_create";
+  MPID_Win *win;
+  MPID_Win *sub_win;
+  size_t  rank,rk;
+  pami_task_t  taskid;
+  MPIDI_Win_info *winfo;
 
-
-  /* ----------------------------------------- */
-  /*  Setup the common sections of the window  */
-  /* ----------------------------------------- */
-  MPID_Win *win = (MPID_Win*)MPIU_Handle_obj_alloc(&MPID_Win_mem);
-  if (win == NULL)
-    return mpi_errno;
-  *win_ptr = win;
-
+  rc=MPIDI_Win_init(size,disp_unit,win_ptr, info, comm_ptr, MPI_WIN_FLAVOR_CREATE, MPI_WIN_SEPARATE);
+  win = *win_ptr;
   win->base = base;
-  win->size = length;
-  win->disp_unit = disp_unit;
+  rank = comm_ptr->rank;
+  winfo = &win->mpid.info[rank];
+  winfo->base_addr = base;
+  winfo->win = win;
+  winfo->disp_unit = disp_unit;
 
-  /* --------------------------------------- */
-  /*  Setup the PAMI sections of the window  */
-  /* --------------------------------------- */
-  memset(&win->mpid, 0, sizeof(struct MPIDI_Win));
+  rc= MPIDI_Win_allgather(base,size,win_ptr);
+  if (rc != MPI_SUCCESS)
+      return rc;
 
-  win->comm_ptr = comm_ptr; MPIR_Comm_add_ref(comm_ptr);
-
-  size_t size = comm_ptr->local_size;
-  size_t rank = comm_ptr->rank;
-
-  win->mpid.info = MPIU_Calloc0(size, struct MPIDI_Win_info);
-
-  struct MPIDI_Win_info *winfo = &win->mpid.info[rank];
-
-  MPID_assert((base != NULL) || (length == 0));
-#ifdef USE_PAMI_RDMA
-  if (length != 0)
-    {
-      size_t length_out = 0;
-      pami_result_t rc;
-      rc = PAMI_Memregion_create(MPIDI_Context[0], base, length, &length_out, &winfo->memregion);
-      MPID_assert(rc == PAMI_SUCCESS);
-      MPID_assert(length == length_out);
-    }
-#else
-  if ( (!MPIDI_Process.mp_s_use_pami_get) && (length != 0) )
-    {
-      size_t length_out = 0;
-      pami_result_t rc;
-      rc = PAMI_Memregion_create(MPIDI_Context[0], base, length, &length_out, &winfo->memregion);
-      if(rc == PAMI_SUCCESS)
-	{
-	  winfo->memregion_used = 1;
-	  MPID_assert(length == length_out);
-	}
-    }
-#endif
-
-  winfo->base_addr  = base;
-  /* winfo->win_handle = win->handle; */
-  winfo->win        = win;
-  winfo->disp_unit  = disp_unit;
-
-  mpi_errno = MPIR_Allgather_impl(MPI_IN_PLACE,
-                                  0,
-                                  MPI_DATATYPE_NULL,
-                                  win->mpid.info,
-                                  sizeof(struct MPIDI_Win_info),
-                                  MPI_BYTE,
-                                  comm_ptr,
-                                  &mpi_errno);
-  if (mpi_errno != MPI_SUCCESS)
-    return mpi_errno;
 
   mpi_errno = MPIR_Barrier_impl(comm_ptr, &mpi_errno);
-  if (mpi_errno != MPI_SUCCESS)
-    return mpi_errno;
 
   return mpi_errno;
 }

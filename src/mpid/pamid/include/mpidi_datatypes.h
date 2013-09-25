@@ -370,17 +370,6 @@ struct MPID_Win;
 struct MPID_Group;
 
 
-struct MPIDI_Win_lock
-{
-  struct MPIDI_Win_lock *next;
-  unsigned               rank;
-  int                    type;
-};
-struct MPIDI_Win_queue
-{
-  struct MPIDI_Win_lock *head;
-  struct MPIDI_Win_lock *tail;
-};
 /**
  * \brief Collective information related to a window
  *
@@ -391,22 +380,75 @@ struct MPIDI_Win_queue
  * The structure is allocated as an array sized for the window communicator.
  * Each entry in the array corresponds directly to the node of the same rank.
  */
-struct MPIDI_Win_info
+typedef enum
+  {
+    MPIDI_REQUEST_LOCK,
+    MPIDI_REQUEST_LOCKALL,
+  } MPIDI_LOCK_TYPE_t;
+
+
+struct MPIDI_Win_lock
+{
+  struct MPIDI_Win_lock *next;
+  unsigned               rank;
+  MPIDI_LOCK_TYPE_t      mtype;    /* MPIDI_REQUEST_LOCK or MPIDI_REQUEST_LOCKALL    */
+  int                    type;
+};
+struct MPIDI_Win_queue
+{
+  struct MPIDI_Win_lock *head;
+  struct MPIDI_Win_lock *tail;
+};
+
+typedef enum {
+    MPIDI_ACCU_ORDER_RAR = 1,
+    MPIDI_ACCU_ORDER_RAW = 2,
+    MPIDI_ACCU_ORDER_WAR = 4,
+    MPIDI_ACCU_ORDER_WAW = 8
+} MPIDI_Win_info_accumulate_ordering;
+
+typedef enum {
+    MPIDI_ACCU_SAME_OP,
+    MPIDI_ACCU_SAME_OP_NO_OP
+} MPIDI_Win_info_accumulate_ops;
+
+typedef struct MPIDI_Win_info_args {
+    int no_locks;
+    MPIDI_Win_info_accumulate_ordering accumulate_ordering;
+    MPIDI_Win_info_accumulate_ops      accumulate_ops;       /* default is same_op_no_op  */
+    int same_size;
+    int alloc_shared_noncontig;
+} MPIDI_Win_info_args;
+
+
+typedef  struct {
+       int nStarted;
+       int nCompleted;
+} RMA_nOps_t;
+
+typedef struct workQ_t {
+   void *msgQ;
+   int  count;
+} workQ_t;
+
+typedef struct MPIDI_Win_info
 {
   void             * base_addr;     /**< Node's exposure window base address                  */
   struct MPID_Win  * win;
   uint32_t           disp_unit;     /**< Node's exposure window displacement units            */
   pami_memregion_t   memregion;     /**< Memory region descriptor for each node               */
-#ifdef RDMA_FAILOVER
   uint32_t           memregion_used;
-#endif
-};
+} MPIDI_Win_info;
 /**
  * \brief Structure of PAMI extensions to MPID_Win structure
  */
 struct MPIDI_Win
 {
   struct MPIDI_Win_info * info;    /**< allocated array of collective info             */
+  MPIDI_Win_info_args info_args;
+  void             ** shm_base_addrs; /* base address shared by all process in comm      */
+  workQ_t work;
+  RMA_nOps_t *origin;
   struct MPIDI_Win_sync
   {
 #if 0
@@ -432,6 +474,7 @@ struct MPIDI_Win
       struct
       {
         volatile unsigned locked;
+        volatile unsigned allLocked;
       } remote;
       struct
       {

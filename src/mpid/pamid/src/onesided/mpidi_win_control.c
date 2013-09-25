@@ -25,14 +25,18 @@
 void
 MPIDI_WinCtrlSend(pami_context_t       context,
                   MPIDI_Win_control_t *control,
-                  pami_task_t          peer,
+                  int                  rank,
                   MPID_Win            *win)
 {
-  control->win = win->mpid.info[peer].win;
+  pami_task_t  taskid;
+  control->win = win->mpid.info[rank].win;
+  control->rank = win->comm_ptr->rank;
+  taskid=MPID_VCR_GET_LPID(win->comm_ptr->vcr,rank);
 
   pami_endpoint_t dest;
   pami_result_t rc;
-  rc = PAMI_Endpoint_create(MPIDI_Client, peer, 0, &dest);
+  taskid=MPID_VCR_GET_LPID(win->comm_ptr->vcr,rank);
+  rc = PAMI_Endpoint_create(MPIDI_Client,taskid, 0, &dest);
   MPID_assert(rc == PAMI_SUCCESS);
 
   if(control->type == MPIDI_WIN_MSGTYPE_UNLOCK) {

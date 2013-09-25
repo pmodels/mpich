@@ -27,7 +27,9 @@ MPIDI_Win_DoneCB(pami_context_t  context,
                  void          * cookie,
                  pami_result_t   result)
 {
+  int   target_rank;
   MPIDI_Win_request *req = (MPIDI_Win_request*)cookie;
+  target_rank = req->target.rank;
   ++req->win->mpid.sync.complete;
   ++req->origin.completed;
 
@@ -45,6 +47,7 @@ MPIDI_Win_DoneCB(pami_context_t  context,
           MPID_assert(mpi_errno == MPI_SUCCESS);
           MPID_Datatype_release(req->origin.dt.pointer);
           MPIU_Free(req->buffer);
+          MPIU_Free(req->user_buffer);
           req->buffer_free = 0;
         }
     }
@@ -52,8 +55,12 @@ MPIDI_Win_DoneCB(pami_context_t  context,
   //if (req->win->mpid.sync.total == req->win->mpid.sync.complete)
   if (req->origin.completed == req->target.dt.num_contig)
     {
-      if (req->buffer_free)
-        MPIU_Free(req->buffer);
+      req->win->mpid.origin[target_rank].nCompleted++;
+      if (req->buffer_free) {
+          MPIU_Free(req->buffer);
+          MPIU_Free(req->user_buffer);
+          req->buffer_free = 0;
+      }
       if (req->accum_headers)
         MPIU_Free(req->accum_headers);
       MPIU_Free(req);

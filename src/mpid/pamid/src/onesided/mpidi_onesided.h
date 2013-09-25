@@ -28,18 +28,23 @@ pami_rget_simple_t zero_rget_parms;
 pami_get_simple_t zero_get_parms;
 pami_rput_simple_t zero_rput_parms;
 pami_put_simple_t zero_put_parms;
+pami_send_t   zero_send_parms;
+pami_recv_t   zero_recv_parms;
 
 /**
  * \brief One-sided Message Types
  */
 typedef enum
   {
-    MPIDI_WIN_MSGTYPE_LOCKACK,  /**< Lock acknowledge  */
-    MPIDI_WIN_MSGTYPE_LOCKREQ,  /**< Lock window       */
-    MPIDI_WIN_MSGTYPE_UNLOCK,   /**< Unlock window     */
+    MPIDI_WIN_MSGTYPE_LOCKACK,     /**< Lock acknowledge      */
+    MPIDI_WIN_MSGTYPE_LOCKALLACK,  /**< Lock all acknowledge  */
+    MPIDI_WIN_MSGTYPE_LOCKREQ,     /**< Lock window           */
+    MPIDI_WIN_MSGTYPE_LOCKALLREQ,  /**< Lock all window       */
+    MPIDI_WIN_MSGTYPE_UNLOCK,      /**< Unlock window         */
+    MPIDI_WIN_MSGTYPE_UNLOCKALL,   /**< Unlock window         */
 
-    MPIDI_WIN_MSGTYPE_COMPLETE, /**< End a START epoch */
-    MPIDI_WIN_MSGTYPE_POST,     /**< Begin POST epoch  */
+    MPIDI_WIN_MSGTYPE_COMPLETE,    /**< End a START epoch     */
+    MPIDI_WIN_MSGTYPE_POST,        /**< Begin POST epoch      */
   } MPIDI_Win_msgtype_t;
 
 typedef enum
@@ -49,11 +54,18 @@ typedef enum
     MPIDI_WIN_REQUEST_PUT,
   } MPIDI_Win_requesttype_t;
 
+typedef enum
+  {
+    MPIDI_ACCU_OPS_SAME_OP,
+    MPIDI_ACCU_OPS_SAME_OP_NO_OP
+  } MPIDI_Win_info_arg_vals_accumulate_ops;
+
 
 typedef struct
 {
   MPIDI_Win_msgtype_t type;
   MPID_Win *win;
+  int      rank;          /* MPI rank */
   union
   {
     struct
@@ -62,6 +74,17 @@ typedef struct
     } lock;
   } data;
 } MPIDI_Win_control_t;
+
+
+typedef struct MPIDI_WinLock_info
+{
+  unsigned            peer;
+  int                 lock_type;
+  struct MPID_Win   * win;
+  volatile unsigned   done;
+  pami_work_t         work;
+} MPIDI_WinLock_info;
+
 
 
 typedef struct
@@ -82,10 +105,14 @@ typedef struct
 typedef struct
 {
   void         * addr;
+  void         * result_addr;  /* anchor the result buffer address*/
   void         * req;
   MPID_Win     * win;
   MPI_Datatype   type;
   MPI_Op         op;
+  pami_endpoint_t origin_endpoint;    /* needed for returning the result */
+                                      /* for MPI_Get_accumulate          */
+  size_t          len;                /* length of the send data         */
 } MPIDI_Win_MsgInfo;
 
 
@@ -113,6 +140,7 @@ typedef struct
     uint32_t         memregion_used;    /**< memory region registered or not */
 #endif
     void            *addr;
+    void            *result_addr;  /** result buffer that holds target buffer data */
     int              count;
     MPI_Datatype     datatype;
     MPIDI_Datatype   dt;
@@ -126,10 +154,11 @@ typedef struct
   } target;
 
   void     *buffer;
+  void     *user_buffer;
   uint32_t  buffer_free;
 } MPIDI_Win_request;
 
-
+MPIDI_Win_request  zero_req;    /* used for init. request structure to 0 */
 
 void
 MPIDI_Win_datatype_basic(int              count,
@@ -143,7 +172,7 @@ MPIDI_Win_datatype_unmap(MPIDI_Datatype * dt);
 void
 MPIDI_WinCtrlSend(pami_context_t       context,
                   MPIDI_Win_control_t *control,
-                  pami_task_t          peer,
+                  int                  rank,
                   MPID_Win            *win);
 
 void
@@ -186,5 +215,29 @@ MPIDI_WinAccumCB(pami_context_t    context,
                  size_t            sndlen,
                  pami_endpoint_t   sender,
                  pami_recv_t     * recv);
+int
+MPIDI_Win_init( MPI_Aint length,
+                int disp_unit,
+                MPID_Win  **win_ptr,
+                MPID_Info  *info,
+                MPID_Comm *comm_ptr,
+                int create_flavor,
+                int model);
+int
+MPIDI_Win_allgather(void *base,
+                    MPI_Aint size,
+                    MPID_Win **win_ptr);
 
+void
+MPIDI_WinLockAdvance(pami_context_t   context,
+                     MPID_Win         * win);
+void
+MPIDI_WinLockAck_post(pami_context_t   context,
+                      unsigned         peer,
+                      MPID_Win         *win);
+
+void
+MPIDI_WinLockReq_proc(pami_context_t              context,
+                      const MPIDI_Win_control_t * info,
+                      unsigned                    peer);
 #endif

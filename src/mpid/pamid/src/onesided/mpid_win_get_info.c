@@ -17,7 +17,8 @@
 /*  (C)Copyright IBM Corp.  2007, 2011  */
 /**
  * \file src/onesided/mpid_win_get_info.c
- * \brief ???
+ * \brief returns a new info object containing the hints of the window
+ *        associated with win.                                          
  */
 #include "mpidi_onesided.h"
 
@@ -28,23 +29,75 @@
  * \param[in] info_p_p         Info hint
  * \return MPI_SUCCESS
  */
-#undef FUNCNAME
-#define FUNCNAME MPID_Win_get_info
-#undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+int MPIDI_Win_get_info(MPID_Win *win, MPID_Info **info_used) 
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    
+    /* Populate the predefined info keys */
+    if (win->mpid.info_args.no_locks)
+        mpi_errno = MPIR_Info_set_impl(*info_used, "no_locks", "true");
+    else
+        mpi_errno = MPIR_Info_set_impl(*info_used, "no_locks", "false");
+    MPID_assert(mpi_errno == MPI_SUCCESS);
+
+    {
+#define BUFSIZE 32
+        char buf[BUFSIZE];
+        int c = 0;
+        if (win->mpid.info_args.accumulate_ordering & MPIDI_ACCU_ORDER_RAR)  
+            c += snprintf(buf+c, BUFSIZE-c, "%srar", (c > 0) ? "," : "");
+        if (win->mpid.info_args.accumulate_ordering & MPIDI_ACCU_ORDER_RAW)
+            c += snprintf(buf+c, BUFSIZE-c, "%sraw", (c > 0) ? "," : "");
+        if (win->mpid.info_args.accumulate_ordering & MPIDI_ACCU_ORDER_WAR)
+            c += snprintf(buf+c, BUFSIZE-c, "%swar", (c > 0) ? "," : "");
+        if (win->mpid.info_args.accumulate_ordering & MPIDI_ACCU_ORDER_WAW)
+            c += snprintf(buf+c, BUFSIZE-c, "%swaw", (c > 0) ? "," : "");
+
+        if (c == 0) {
+            memcpy(&buf[0],"not set   ",10); 
+        }
+        MPIR_Info_set_impl(*info_used, "accumulate_ordering", buf);
+        MPID_assert(mpi_errno == MPI_SUCCESS);
+#undef BUFSIZE
+    }
+    if (win->mpid.info_args.accumulate_ops == MPIDI_ACCU_OPS_SAME_OP)
+        mpi_errno = MPIR_Info_set_impl(*info_used, "accumulate_ops", "same_op");
+    else
+        mpi_errno = MPIR_Info_set_impl(*info_used, "accumulate_ops", "same_op_no_op");
+
+    MPID_assert(mpi_errno == MPI_SUCCESS);
+
+    if (win->create_flavor == MPI_WIN_FLAVOR_SHARED) {
+        if (win->mpid.info_args.alloc_shared_noncontig)
+            mpi_errno = MPIR_Info_set_impl(*info_used, "alloc_shared_noncontig", "true");
+        else
+            mpi_errno = MPIR_Info_set_impl(*info_used, "alloc_shared_noncontig", "false");
+
+        MPID_assert(mpi_errno == MPI_SUCCESS);
+    }
+    else if (win->create_flavor == MPI_WIN_FLAVOR_ALLOCATE) {
+        if (win->mpid.info_args.same_size)
+            mpi_errno = MPIR_Info_set_impl(*info_used, "same_size", "true");
+        else
+            mpi_errno = MPIR_Info_set_impl(*info_used, "same_size", "false");
+
+        MPID_assert(mpi_errno == MPI_SUCCESS);
+    }
+    return mpi_errno;
+}
+
+
 int
 MPID_Win_get_info(MPID_Win     *win,
-                  MPID_Info   **info_p_p)
+                  MPID_Info   **info_p)
 {
     int mpi_errno = MPI_SUCCESS;
 
     /* Allocate an empty info object */
-    mpi_errno = MPIU_Info_alloc(info_p_p);
-    if (mpi_errno != MPI_SUCCESS)
-        goto fn_fail;
-
-fn_exit:
-    return mpi_errno;
-fn_fail:
-    goto fn_exit;
+    mpi_errno = MPIU_Info_alloc(info_p);
+    MPID_assert(mpi_errno == MPI_SUCCESS);
+    mpi_errno = MPIDI_Win_get_info(win, info_p);
+    MPID_assert(mpi_errno == MPI_SUCCESS);
+    return MPI_SUCCESS;
 }

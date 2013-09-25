@@ -44,7 +44,7 @@ MPIDI_WinPost_post(pami_context_t   context,
   };
 
   for (index=0; index < group->size; ++index) {
-    peer = group->lrank_to_lpid[index].lpid;
+    peer = group->lrank_to_lpid[index].lrank;
     MPIDI_WinCtrlSend(context, &msg, peer, info->win);
   }
 
@@ -75,7 +75,7 @@ MPIDI_WinComplete_post(pami_context_t   context,
   };
 
   for (index=0; index < group->size; ++index) {
-    peer = group->lrank_to_lpid[index].lpid;
+    peer = group->lrank_to_lpid[index].lrank;
     MPIDI_WinCtrlSend(context, &msg, peer, info->win);
   }
 
