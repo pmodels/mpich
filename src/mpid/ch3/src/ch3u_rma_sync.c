@@ -1393,11 +1393,6 @@ int MPIDI_Win_post(MPID_Group *post_grp_ptr, int assert, MPID_Win *win_ptr)
 	MPIU_INSTR_DURATION_END(winpost_clearlock);
     }
         
-    /* Ensure ordering of load/store operations. */
-    if (win_ptr->create_flavor == MPI_WIN_FLAVOR_SHARED) {
-        OPA_read_write_barrier();
-    }
-
     post_grp_size = post_grp_ptr->size;
         
     /* initialize the completion counter */
@@ -1550,11 +1545,6 @@ int MPIDI_Win_start(MPID_Group *group_ptr, int assert, MPID_Win *win_ptr)
 	MPIU_INSTR_DURATION_END(winstart_clearlock);
     }
     
-    /* Ensure ordering of load/store operations. */
-    if (win_ptr->create_flavor == MPI_WIN_FLAVOR_SHARED) {
-        OPA_read_write_barrier();
-    }
-
     win_ptr->start_group_ptr = group_ptr;
     MPIR_Group_add_ref( group_ptr );
     win_ptr->start_assert = assert;
