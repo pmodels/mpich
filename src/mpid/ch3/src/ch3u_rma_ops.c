@@ -124,6 +124,7 @@ int MPIDI_Put(const void *origin_addr, int origin_count, MPI_Datatype
     MPID_Datatype *dtp;
     MPI_Aint dt_true_lb ATTRIBUTE((unused));
     MPIDI_msg_sz_t data_sz;
+    MPIDI_VC_t *orig_vc, *target_vc;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_PUT);
         
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_PUT);
@@ -148,8 +149,23 @@ int MPIDI_Put(const void *origin_addr, int origin_count, MPI_Datatype
 
     rank = win_ptr->comm_ptr->rank;
     
+    if (win_ptr->shm_allocated == TRUE && target_rank != rank && win_ptr->create_flavor != MPI_WIN_FLAVOR_SHARED) {
+        /* check if target is local and shared memory is allocated on window,
+           if so, we directly perform this operation on shared memory region. */
+
+        /* FIXME: Here we decide whether to perform SHM operations by checking if origin and target are on
+           the same node. However, in ch3:sock, even if origin and target are on the same node, they do
+           not within the same SHM region. Here we filter out ch3:sock by checking shm_allocated flag first,
+           which is only set to TRUE when SHM region is allocated in nemesis.
+           In future we need to figure out a way to check if origin and target are in the same "SHM comm".
+        */
+        MPIDI_Comm_get_vc(win_ptr->comm_ptr, rank, &orig_vc);
+        MPIDI_Comm_get_vc(win_ptr->comm_ptr, target_rank, &target_vc);
+    }
+
     /* If the put is a local operation, do it here */
-    if (target_rank == rank || win_ptr->create_flavor == MPI_WIN_FLAVOR_SHARED)
+    if (target_rank == rank || win_ptr->create_flavor == MPI_WIN_FLAVOR_SHARED ||
+        (win_ptr->shm_allocated == TRUE && orig_vc->node_id == target_vc->node_id))
     {
         mpi_errno = MPIDI_CH3I_Shm_put_op(origin_addr, origin_count, origin_datatype, target_rank,
                                           target_disp, target_count, target_datatype, win_ptr);
@@ -222,6 +238,7 @@ int MPIDI_Get(void *origin_addr, int origin_count, MPI_Datatype
     int dt_contig ATTRIBUTE((unused)), rank, predefined;
     MPI_Aint dt_true_lb ATTRIBUTE((unused));
     MPID_Datatype *dtp;
+    MPIDI_VC_t *orig_vc, *target_vc;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_GET);
         
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_GET);
@@ -245,9 +262,24 @@ int MPIDI_Get(void *origin_addr, int origin_count, MPI_Datatype
     }
 
     rank = win_ptr->comm_ptr->rank;
+
+    if (win_ptr->shm_allocated == TRUE && target_rank != rank && win_ptr->create_flavor != MPI_WIN_FLAVOR_SHARED) {
+        /* check if target is local and shared memory is allocated on window,
+           if so, we directly perform this operation on shared memory region. */
+
+        /* FIXME: Here we decide whether to perform SHM operations by checking if origin and target are on
+           the same node. However, in ch3:sock, even if origin and target are on the same node, they do
+           not within the same SHM region. Here we filter out ch3:sock by checking shm_allocated flag first,
+           which is only set to TRUE when SHM region is allocated in nemesis.
+           In future we need to figure out a way to check if origin and target are in the same "SHM comm".
+        */
+        MPIDI_Comm_get_vc(win_ptr->comm_ptr, rank, &orig_vc);
+        MPIDI_Comm_get_vc(win_ptr->comm_ptr, target_rank, &target_vc);
+    }
     
     /* If the get is a local operation, do it here */
-    if (target_rank == rank || win_ptr->create_flavor == MPI_WIN_FLAVOR_SHARED)
+    if (target_rank == rank || win_ptr->create_flavor == MPI_WIN_FLAVOR_SHARED ||
+        (win_ptr->shm_allocated == TRUE && orig_vc->node_id == target_vc->node_id))
     {
         mpi_errno = MPIDI_CH3I_Shm_get_op(origin_addr, origin_count, origin_datatype, target_rank,
                                           target_disp, target_count, target_datatype, win_ptr);
@@ -318,6 +350,7 @@ int MPIDI_Accumulate(const void *origin_addr, int origin_count, MPI_Datatype
     int dt_contig ATTRIBUTE((unused)), rank, origin_predefined, target_predefined;
     MPI_Aint dt_true_lb ATTRIBUTE((unused));
     MPID_Datatype *dtp;
+    MPIDI_VC_t *orig_vc, *target_vc;
     MPIU_CHKLMEM_DECL(2);
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_ACCUMULATE);
     
@@ -346,8 +379,23 @@ int MPIDI_Accumulate(const void *origin_addr, int origin_count, MPI_Datatype
     MPIDI_CH3I_DATATYPE_IS_PREDEFINED(origin_datatype, origin_predefined);
     MPIDI_CH3I_DATATYPE_IS_PREDEFINED(target_datatype, target_predefined);
 
+    if (win_ptr->shm_allocated == TRUE && target_rank != rank && win_ptr->create_flavor != MPI_WIN_FLAVOR_SHARED) {
+        /* check if target is local and shared memory is allocated on window,
+           if so, we directly perform this operation on shared memory region. */
+
+        /* FIXME: Here we decide whether to perform SHM operations by checking if origin and target are on
+           the same node. However, in ch3:sock, even if origin and target are on the same node, they do
+           not within the same SHM region. Here we filter out ch3:sock by checking shm_allocated flag first,
+           which is only set to TRUE when SHM region is allocated in nemesis.
+           In future we need to figure out a way to check if origin and target are in the same "SHM comm".
+        */
+        MPIDI_Comm_get_vc(win_ptr->comm_ptr, rank, &orig_vc);
+        MPIDI_Comm_get_vc(win_ptr->comm_ptr, target_rank, &target_vc);
+    }
+
     /* Do =! rank first (most likely branch?) */
-    if (target_rank == rank || win_ptr->create_flavor == MPI_WIN_FLAVOR_SHARED)
+    if (target_rank == rank || win_ptr->create_flavor == MPI_WIN_FLAVOR_SHARED ||
+        (win_ptr->shm_allocated == TRUE && orig_vc->node_id == target_vc->node_id))
     {
 	mpi_errno = MPIDI_CH3I_Shm_acc_op(origin_addr, origin_count, origin_datatype,
 					  target_rank, target_disp, target_count, target_datatype,

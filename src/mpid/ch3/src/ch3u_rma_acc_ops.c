@@ -27,6 +27,7 @@ int MPIDI_Get_accumulate(const void *origin_addr, int origin_count,
     int dt_contig ATTRIBUTE((unused));
     MPI_Aint dt_true_lb ATTRIBUTE((unused));
     MPID_Datatype *dtp;
+    MPIDI_VC_t *orig_vc, *target_vc;
     MPIU_CHKLMEM_DECL(2);
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_GET_ACCUMULATE);
 
@@ -59,8 +60,23 @@ int MPIDI_Get_accumulate(const void *origin_addr, int origin_count,
     MPIDI_CH3I_DATATYPE_IS_PREDEFINED(result_datatype, result_predefined);
     MPIDI_CH3I_DATATYPE_IS_PREDEFINED(target_datatype, target_predefined);
 
+    if (win_ptr->shm_allocated == TRUE && target_rank != rank && win_ptr->create_flavor != MPI_WIN_FLAVOR_SHARED) {
+        /* check if target is local and shared memory is allocated on window,
+           if so, we directly perform this operation on shared memory region. */
+
+        /* FIXME: Here we decide whether to perform SHM operations by checking if origin and target are on
+           the same node. However, in ch3:sock, even if origin and target are on the same node, they do
+           not within the same SHM region. Here we filter out ch3:sock by checking shm_allocated flag first,
+           which is only set to TRUE when SHM region is allocated in nemesis.
+           In future we need to figure out a way to check if origin and target are in the same "SHM comm".
+        */
+        MPIDI_Comm_get_vc(win_ptr->comm_ptr, rank, &orig_vc);
+        MPIDI_Comm_get_vc(win_ptr->comm_ptr, target_rank, &target_vc);
+    }
+
     /* Do =! rank first (most likely branch?) */
-    if (target_rank == rank || win_ptr->create_flavor == MPI_WIN_FLAVOR_SHARED)
+    if (target_rank == rank || win_ptr->create_flavor == MPI_WIN_FLAVOR_SHARED ||
+        (win_ptr->shm_allocated == TRUE && orig_vc->node_id == target_vc->node_id))
     {
         mpi_errno = MPIDI_CH3I_Shm_get_acc_op(origin_addr, origin_count, origin_datatype,
                                               result_addr, result_count, result_datatype,
@@ -135,6 +151,7 @@ int MPIDI_Compare_and_swap(const void *origin_addr, const void *compare_addr,
 {
     int mpi_errno = MPI_SUCCESS;
     int rank;
+    MPIDI_VC_t *orig_vc, *target_vc;
 
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_COMPARE_AND_SWAP);
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_COMPARE_AND_SWAP);
@@ -152,13 +169,28 @@ int MPIDI_Compare_and_swap(const void *origin_addr, const void *compare_addr,
 
     rank = win_ptr->comm_ptr->rank;
 
+    if (win_ptr->shm_allocated == TRUE && target_rank != rank && win_ptr->create_flavor != MPI_WIN_FLAVOR_SHARED) {
+        /* check if target is local and shared memory is allocated on window,
+           if so, we directly perform this operation on shared memory region. */
+
+        /* FIXME: Here we decide whether to perform SHM operations by checking if origin and target are on
+           the same node. However, in ch3:sock, even if origin and target are on the same node, they do
+           not within the same SHM region. Here we filter out ch3:sock by checking shm_allocated flag first,
+           which is only set to TRUE when SHM region is allocated in nemesis.
+           In future we need to figure out a way to check if origin and target are in the same "SHM comm".
+        */
+        MPIDI_Comm_get_vc(win_ptr->comm_ptr, rank, &orig_vc);
+        MPIDI_Comm_get_vc(win_ptr->comm_ptr, target_rank, &target_vc);
+    }
+
     /* The datatype must be predefined, and one of: C integer, Fortran integer,
      * Logical, Multi-language types, or Byte.  This is checked above the ADI,
      * so there's no need to check it again here. */
 
     /* FIXME: For shared memory windows, we should provide an implementation
      * that uses a processor atomic operation. */
-    if (target_rank == rank || win_ptr->create_flavor == MPI_WIN_FLAVOR_SHARED)
+    if (target_rank == rank || win_ptr->create_flavor == MPI_WIN_FLAVOR_SHARED ||
+        (win_ptr->shm_allocated == TRUE && orig_vc->node_id == target_vc->node_id))
     {
         mpi_errno = MPIDI_CH3I_Shm_cas_op(origin_addr, compare_addr, result_addr,
                                           datatype, target_rank, target_disp, win_ptr);
@@ -212,6 +244,7 @@ int MPIDI_Fetch_and_op(const void *origin_addr, void *result_addr,
 {
     int mpi_errno = MPI_SUCCESS;
     int rank;
+    MPIDI_VC_t *orig_vc, *target_vc;
 
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_FETCH_AND_OP);
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_FETCH_AND_OP);
@@ -229,12 +262,27 @@ int MPIDI_Fetch_and_op(const void *origin_addr, void *result_addr,
 
     rank = win_ptr->comm_ptr->rank;
 
+    if (win_ptr->shm_allocated == TRUE && target_rank != rank && win_ptr->create_flavor != MPI_WIN_FLAVOR_SHARED) {
+        /* check if target is local and shared memory is allocated on window,
+           if so, we directly perform this operation on shared memory region. */
+
+        /* FIXME: Here we decide whether to perform SHM operations by checking if origin and target are on
+           the same node. However, in ch3:sock, even if origin and target are on the same node, they do
+           not within the same SHM region. Here we filter out ch3:sock by checking shm_allocated flag first,
+           which is only set to TRUE when SHM region is allocated in nemesis.
+           In future we need to figure out a way to check if origin and target are in the same "SHM comm".
+        */
+        MPIDI_Comm_get_vc(win_ptr->comm_ptr, rank, &orig_vc);
+        MPIDI_Comm_get_vc(win_ptr->comm_ptr, target_rank, &target_vc);
+    }
+
     /* The datatype and op must be predefined.  This is checked above the ADI,
      * so there's no need to check it again here. */
 
     /* FIXME: For shared memory windows, we should provide an implementation
      * that uses a processor atomic operation. */
-    if (target_rank == rank || win_ptr->create_flavor == MPI_WIN_FLAVOR_SHARED)
+    if (target_rank == rank || win_ptr->create_flavor == MPI_WIN_FLAVOR_SHARED ||
+        (win_ptr->shm_allocated == TRUE && orig_vc->node_id == target_vc->node_id))
     {
         mpi_errno = MPIDI_CH3I_Shm_fop_op(origin_addr, result_addr, datatype,
                                           target_rank, target_disp, op, win_ptr);
