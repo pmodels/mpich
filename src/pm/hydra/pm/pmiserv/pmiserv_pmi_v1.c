@@ -199,6 +199,86 @@ static HYD_status fn_put(int fd, int pid, int pgid, char *args[])
     goto fn_exit;
 }
 
+static HYD_status fn_get(int fd, int pid, int pgid, char *args[])
+{
+    int i;
+    struct HYD_proxy *proxy;
+    struct HYD_pmcd_pmi_pg_scratch *pg_scratch;
+    struct HYD_pmcd_pmi_kvs_pair *run;
+    char *kvsname, *key, *val;
+    char *tmp[HYD_NUM_TMP_STRINGS], *cmd;
+    struct HYD_pmcd_token *tokens;
+    int token_count;
+    HYD_status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
+
+    status = HYD_pmcd_pmi_args_to_tokens(args, &tokens, &token_count);
+    HYDU_ERR_POP(status, "unable to convert args to tokens\n");
+
+    kvsname = HYD_pmcd_pmi_find_token_keyval(tokens, token_count, "kvsname");
+    HYDU_ERR_CHKANDJUMP(status, kvsname == NULL, HYD_INTERNAL_ERROR,
+                        "unable to find token: kvsname\n");
+
+    key = HYD_pmcd_pmi_find_token_keyval(tokens, token_count, "key");
+    HYDU_ERR_CHKANDJUMP(status, key == NULL, HYD_INTERNAL_ERROR, "unable to find token: key\n");
+
+    proxy = HYD_pmcd_pmi_find_proxy(fd);
+    HYDU_ASSERT(proxy, status);
+
+    pg_scratch = (struct HYD_pmcd_pmi_pg_scratch *) proxy->pg->pg_scratch;
+
+    val = NULL;
+    if (!strcmp(key, "PMI_dead_processes")) {
+        val = pg_scratch->dead_processes;
+        goto found_val;
+    }
+
+    if (strcmp(pg_scratch->kvs->kvsname, kvsname))
+        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR,
+                            "kvsname (%s) does not match this group's kvs space (%s)\n",
+                            kvsname, pg_scratch->kvs->kvsname);
+
+    /* Try to find the key */
+    for (run = pg_scratch->kvs->key_pair; run; run = run->next) {
+        if (!strcmp(run->key, key)) {
+            val = run->val;
+            break;
+        }
+    }
+
+  found_val:
+    i = 0;
+    tmp[i++] = HYDU_strdup("cmd=get_result rc=");
+    if (val) {
+        tmp[i++] = HYDU_strdup("0 msg=success value=");
+        tmp[i++] = HYDU_strdup(val);
+    }
+    else {
+        tmp[i++] = HYDU_strdup("-1 msg=key_");
+        tmp[i++] = HYDU_strdup(key);
+        tmp[i++] = HYDU_strdup("_not_found value=unknown");
+    }
+    tmp[i++] = HYDU_strdup("\n");
+    tmp[i++] = NULL;
+
+    status = HYDU_str_alloc_and_join(tmp, &cmd);
+    HYDU_ERR_POP(status, "unable to join strings\n");
+    HYDU_free_strlist(tmp);
+
+    status = cmd_response(fd, pid, cmd);
+    HYDU_ERR_POP(status, "error writing PMI line\n");
+    HYDU_FREE(cmd);
+
+  fn_exit:
+    HYD_pmcd_pmi_free_tokens(tokens, token_count);
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
 static char *mcmd_args[MAX_PMI_ARGS] = { NULL };
 
 static int mcmd_num_args = 0;
@@ -684,6 +764,7 @@ static HYD_status fn_lookup_name(int fd, int pid, int pgid, char *args[])
 static struct HYD_pmcd_pmi_handle pmi_v1_handle_fns_foo[] = {
     {"barrier_in", fn_barrier_in},
     {"put", fn_put},
+    {"get", fn_get},
     {"spawn", fn_spawn},
     {"publish_name", fn_publish_name},
     {"unpublish_name", fn_unpublish_name},
