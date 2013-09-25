@@ -1884,6 +1884,7 @@ int MPIDI_Win_lock(int lock_type, int dest, int assert, MPID_Win *win_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
     struct MPIDI_Win_target_state *target_state;
+    MPIDI_VC_t *orig_vc, *target_vc;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_WIN_LOCK);
 
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_WIN_LOCK);
@@ -1925,15 +1926,31 @@ int MPIDI_Win_lock(int lock_type, int dest, int assert, MPID_Win *win_ptr)
         mpi_errno = MPIDI_CH3I_Acquire_local_lock(win_ptr, lock_type);
         if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
     }
-    else if (win_ptr->create_flavor == MPI_WIN_FLAVOR_SHARED) {
+    else if (win_ptr->shm_allocated == TRUE) {
         /* Lock must be taken immediately for shared memory windows because of
          * load/store access */
 
-        mpi_errno = MPIDI_CH3I_Send_lock_msg(dest, lock_type, win_ptr);
-        if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
+        if (win_ptr->create_flavor != MPI_WIN_FLAVOR_SHARED) {
+            /* check if target is local and shared memory is allocated on window,
+               if so, we directly send lock request and wait for lock reply. */
 
-        mpi_errno = MPIDI_CH3I_Wait_for_lock_granted(win_ptr, dest);
-        if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
+            /* FIXME: Here we decide whether to perform SHM operations by checking if origin and target are on
+               the same node. However, in ch3:sock, even if origin and target are on the same node, they do
+               not within the same SHM region. Here we filter out ch3:sock by checking shm_allocated flag first,
+               which is only set to TRUE when SHM region is allocated in nemesis.
+               In future we need to figure out a way to check if origin and target are in the same "SHM comm".
+            */
+            MPIDI_Comm_get_vc(win_ptr->comm_ptr, win_ptr->comm_ptr->rank, &orig_vc);
+            MPIDI_Comm_get_vc(win_ptr->comm_ptr, dest, &target_vc);
+        }
+
+        if (win_ptr->create_flavor == MPI_WIN_FLAVOR_SHARED || orig_vc->node_id == target_vc->node_id) {
+            mpi_errno = MPIDI_CH3I_Send_lock_msg(dest, lock_type, win_ptr);
+            if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
+
+            mpi_errno = MPIDI_CH3I_Wait_for_lock_granted(win_ptr, dest);
+            if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
+        }
     }
     else if (MPIR_PARAM_CH3_RMA_LOCK_IMMED && ((assert & MPI_MODE_NOCHECK) == 0)) {
         /* TODO: Make this mode of operation available through an assert
@@ -2375,6 +2392,7 @@ fn_fail:
 int MPIDI_Win_lock_all(int assert, MPID_Win *win_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
+    MPIDI_VC_t *orig_vc, *target_vc;
     int i;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_WIN_LOCK_ALL);
 
@@ -2400,23 +2418,46 @@ int MPIDI_Win_lock_all(int assert, MPID_Win *win_ptr)
     mpi_errno = MPIDI_CH3I_Acquire_local_lock(win_ptr, MPI_LOCK_SHARED);
     if (mpi_errno != MPI_SUCCESS) { MPIU_ERR_POP(mpi_errno); }
 
-    if (win_ptr->create_flavor == MPI_WIN_FLAVOR_SHARED) {
+    if (win_ptr->shm_allocated == TRUE) {
         /* Immediately lock all targets for load/store access */
 
         for (i = 0; i < MPIR_Comm_size(win_ptr->comm_ptr); i++) {
             /* Local process is already locked */
             if (i == win_ptr->comm_ptr->rank) continue;
 
-            mpi_errno = MPIDI_CH3I_Send_lock_msg(i, MPI_LOCK_SHARED, win_ptr);
-            if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
+            if (win_ptr->create_flavor != MPI_WIN_FLAVOR_SHARED) {
+                /* check if target is local and shared memory is allocated on window,
+                   if so, we directly send lock request and wait for lock reply. */
+
+                /* FIXME: Here we decide whether to perform SHM operations by checking if origin and target are on
+                   the same node. However, in ch3:sock, even if origin and target are on the same node, they do
+                   not within the same SHM region. Here we filter out ch3:sock by checking shm_allocated flag first,
+                   which is only set to TRUE when SHM region is allocated in nemesis.
+                   In future we need to figure out a way to check if origin and target are in the same "SHM comm".
+                */
+                MPIDI_Comm_get_vc(win_ptr->comm_ptr, win_ptr->comm_ptr->rank, &orig_vc);
+                MPIDI_Comm_get_vc(win_ptr->comm_ptr, i, &target_vc);
+            }
+
+            if (win_ptr->create_flavor == MPI_WIN_FLAVOR_SHARED || orig_vc->node_id == target_vc->node_id) {
+                mpi_errno = MPIDI_CH3I_Send_lock_msg(i, MPI_LOCK_SHARED, win_ptr);
+                if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
+            }
         }
 
         for (i = 0; i < MPIR_Comm_size(win_ptr->comm_ptr); i++) {
             /* Local process is already locked */
             if (i == win_ptr->comm_ptr->rank) continue;
 
-            mpi_errno = MPIDI_CH3I_Wait_for_lock_granted(win_ptr, i);
-            if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
+            if (win_ptr->create_flavor != MPI_WIN_FLAVOR_SHARED) {
+                MPIDI_Comm_get_vc(win_ptr->comm_ptr, win_ptr->comm_ptr->rank, &orig_vc);
+                MPIDI_Comm_get_vc(win_ptr->comm_ptr, i, &target_vc);
+            }
+
+            if (win_ptr->create_flavor == MPI_WIN_FLAVOR_SHARED || orig_vc->node_id == target_vc->node_id) {
+                mpi_errno = MPIDI_CH3I_Wait_for_lock_granted(win_ptr, i);
+                if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
+            }
         }
     }
 
