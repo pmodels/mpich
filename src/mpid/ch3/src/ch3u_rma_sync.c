@@ -2004,8 +2004,6 @@ int MPIDI_Win_lock(int lock_type, int dest, int assert, MPID_Win *win_ptr)
         /* Lock must be taken immediately for shared memory windows because of
          * load/store access */
 
-        OPA_read_write_barrier();
-
         mpi_errno = MPIDI_CH3I_Send_lock_msg(dest, lock_type, win_ptr);
         if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
 
@@ -2479,7 +2477,6 @@ int MPIDI_Win_lock_all(int assert, MPID_Win *win_ptr)
 
     if (win_ptr->create_flavor == MPI_WIN_FLAVOR_SHARED) {
         /* Immediately lock all targets for load/store access */
-        OPA_read_write_barrier();
 
         for (i = 0; i < MPIR_Comm_size(win_ptr->comm_ptr); i++) {
             /* Local process is already locked */
