@@ -16,8 +16,10 @@
    it is no longer necessary.
 
  # Improvements to MPI_WIN_ALLOCATE to internally allocate shared
-   memory between processes on the same node (the "alloc_shm" info
-   argument needs to be provided).
+   memory between processes on the same node.
+
+ # Performance improvements for MPI RMA operations on shared memory
+   for MPI_WIN_ALLOCATE and MPI_WIN_ALLOCATE_SHARED.
 
  # Enable shared library builds by default.
 
