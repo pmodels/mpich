@@ -2225,12 +2225,8 @@ int MPIDI_Win_flush(int rank, MPID_Win *win_ptr)
        terms of MPIDI_Win_flush.  When this changes, those operations will also
        need to insert this read/write memory fence for shared memory windows. */
 
-    /* For shared memory windows, all operations are done immediately, so there
-       is nothing to flush.  Ensure ordering of load/store operations and
-       return. */
     if (win_ptr->shm_allocated == TRUE) {
         OPA_read_write_barrier();
-        goto fn_exit;
     }
 
     rma_op = MPIDI_CH3I_RMA_Ops_head(&win_ptr->targets[rank].rma_ops_list);
