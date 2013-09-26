@@ -2228,7 +2228,7 @@ int MPIDI_Win_flush(int rank, MPID_Win *win_ptr)
     /* For shared memory windows, all operations are done immediately, so there
        is nothing to flush.  Ensure ordering of load/store operations and
        return. */
-    if (win_ptr->create_flavor == MPI_WIN_FLAVOR_SHARED) {
+    if (win_ptr->shm_allocated == TRUE) {
         OPA_read_write_barrier();
         goto fn_exit;
     }
