@@ -148,6 +148,7 @@ int MPIDI_Rput(const void *origin_addr, int origin_count,
     MPI_Aint dt_true_lb ATTRIBUTE((unused));
     MPIDI_msg_sz_t data_sz;
     MPIDI_CH3I_Rma_req_state_t *req_state;
+    MPIDI_VC_t *orig_vc, *target_vc;
     MPIU_CHKPMEM_DECL(1);
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_RPUT);
 
@@ -178,11 +179,14 @@ int MPIDI_Rput(const void *origin_addr, int origin_count,
         if (mpi_errno != MPI_SUCCESS) { MPIU_ERR_POP(mpi_errno); }
     }
 
+    MPIDI_Comm_get_vc(win_ptr->comm_ptr, win_ptr->comm_ptr->rank, &orig_vc);
+    MPIDI_Comm_get_vc(win_ptr->comm_ptr, target_rank, &target_vc);
+
     /* If the operation is already complete, return a completed request.
      * Otherwise, generate a grequest. */
     /* FIXME: We still may need to flush or sync for shared memory windows */
     if (target_rank == MPI_PROC_NULL || target_rank == win_ptr->comm_ptr->rank ||
-        win_ptr->create_flavor == MPI_WIN_FLAVOR_SHARED || data_sz == 0)
+        (win_ptr->shm_allocated == TRUE && orig_vc->node_id == target_vc->node_id) || data_sz == 0)
     {
         mpi_errno = MPIR_Grequest_start_impl(MPIDI_CH3I_Rma_req_query,
                                              MPIDI_CH3I_Rma_req_free,
@@ -229,6 +233,7 @@ int MPIDI_Rget(void *origin_addr, int origin_count,
     MPI_Aint dt_true_lb ATTRIBUTE((unused));
     MPIDI_msg_sz_t data_sz;
     MPIDI_CH3I_Rma_req_state_t *req_state;
+    MPIDI_VC_t *orig_vc, *target_vc;
     MPIU_CHKPMEM_DECL(1);
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_RGET);
 
@@ -259,11 +264,14 @@ int MPIDI_Rget(void *origin_addr, int origin_count,
         if (mpi_errno != MPI_SUCCESS) { MPIU_ERR_POP(mpi_errno); }
     }
 
+    MPIDI_Comm_get_vc(win_ptr->comm_ptr, win_ptr->comm_ptr->rank, &orig_vc);
+    MPIDI_Comm_get_vc(win_ptr->comm_ptr, target_rank, &target_vc);
+
     /* If the operation is already complete, return a completed request.
      * Otherwise, generate a grequest. */
     /* FIXME: We still may need to flush or sync for shared memory windows */
     if (target_rank == MPI_PROC_NULL || target_rank == win_ptr->comm_ptr->rank ||
-        win_ptr->create_flavor == MPI_WIN_FLAVOR_SHARED || data_sz == 0)
+        (win_ptr->shm_allocated == TRUE && orig_vc->node_id == target_vc->node_id) || data_sz == 0)
     {
         mpi_errno = MPIR_Grequest_start_impl(MPIDI_CH3I_Rma_req_query,
                                              MPIDI_CH3I_Rma_req_free,
@@ -310,6 +318,7 @@ int MPIDI_Raccumulate(const void *origin_addr, int origin_count,
     MPI_Aint dt_true_lb ATTRIBUTE((unused));
     MPIDI_msg_sz_t data_sz;
     MPIDI_CH3I_Rma_req_state_t *req_state;
+    MPIDI_VC_t *orig_vc, *target_vc;
     MPIU_CHKPMEM_DECL(1);
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_RACCUMULATE);
 
@@ -339,11 +348,14 @@ int MPIDI_Raccumulate(const void *origin_addr, int origin_count,
         if (mpi_errno != MPI_SUCCESS) { MPIU_ERR_POP(mpi_errno); }
     }
 
+    MPIDI_Comm_get_vc(win_ptr->comm_ptr, win_ptr->comm_ptr->rank, &orig_vc);
+    MPIDI_Comm_get_vc(win_ptr->comm_ptr, target_rank, &target_vc);
+
     /* If the operation is already complete, return a completed request.
      * Otherwise, generate a grequest. */
     /* FIXME: We still may need to flush or sync for shared memory windows */
     if (target_rank == MPI_PROC_NULL || target_rank == win_ptr->comm_ptr->rank ||
-        win_ptr->create_flavor == MPI_WIN_FLAVOR_SHARED || data_sz == 0)
+        (win_ptr->shm_allocated == TRUE && orig_vc->node_id == target_vc->node_id) || data_sz == 0)
     {
         mpi_errno = MPIR_Grequest_start_impl(MPIDI_CH3I_Rma_req_query,
                                              MPIDI_CH3I_Rma_req_free,
@@ -391,6 +403,7 @@ int MPIDI_Rget_accumulate(const void *origin_addr, int origin_count,
     MPI_Aint dt_true_lb ATTRIBUTE((unused));
     MPIDI_msg_sz_t data_sz, trg_data_sz;
     MPIDI_CH3I_Rma_req_state_t *req_state;
+    MPIDI_VC_t *orig_vc, *target_vc;
     MPIU_CHKPMEM_DECL(1);
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_RGET_ACCUMULATE);
 
@@ -425,11 +438,14 @@ int MPIDI_Rget_accumulate(const void *origin_addr, int origin_count,
         if (mpi_errno != MPI_SUCCESS) { MPIU_ERR_POP(mpi_errno); }
     }
 
+    MPIDI_Comm_get_vc(win_ptr->comm_ptr, win_ptr->comm_ptr->rank, &orig_vc);
+    MPIDI_Comm_get_vc(win_ptr->comm_ptr, target_rank, &target_vc);
+
     /* If the operation is already complete, return a completed request.
      * Otherwise, generate a grequest. */
     /* FIXME: We still may need to flush or sync for shared memory windows */
     if (target_rank == MPI_PROC_NULL || target_rank == win_ptr->comm_ptr->rank ||
-        win_ptr->create_flavor == MPI_WIN_FLAVOR_SHARED ||
+        (win_ptr->shm_allocated == TRUE && orig_vc->node_id == target_vc->node_id) ||
         (data_sz == 0 && trg_data_sz == 0))
     {
         mpi_errno = MPIR_Grequest_start_impl(MPIDI_CH3I_Rma_req_query,
