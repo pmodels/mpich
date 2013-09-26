@@ -509,6 +509,12 @@ int MPIU_Handle_free( void *((*)[]), int );
 #define MPID_Request_valid_ptr(ptr,err) MPID_Valid_ptr_class(Request,ptr,MPI_ERR_REQUEST,err)
 #define MPID_Keyval_valid_ptr(ptr,err) MPID_Valid_ptr_class(Keyval,ptr,MPI_ERR_KEYVAL,err)
 
+#define MPIR_DATATYPE_IS_PREDEFINED(type) \
+    ((HANDLE_GET_KIND(type) == HANDLE_KIND_BUILTIN) || \
+     (type == MPI_FLOAT_INT) || (type == MPI_DOUBLE_INT) || \
+     (type == MPI_LONG_INT) || (type == MPI_SHORT_INT) || \
+     (type == MPI_LONG_DOUBLE_INT))
+
 /* FIXME: 
    Generic pointer test.  This is applied to any address, not just one from
    an MPI object.

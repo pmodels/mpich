@@ -90,7 +90,7 @@ int MPIDI_CH3_ReqHandler_PutAccumRespComplete( MPIDI_VC_t *vc,
 
     /* Perform get in get-accumulate */
     if (rreq->dev.resp_request_handle != MPI_REQUEST_NULL) {
-        int predefined, type_size;
+        int type_size;
         MPIDI_CH3_Pkt_t upkt;
         MPIDI_CH3_Pkt_get_accum_resp_t *get_accum_resp_pkt = &upkt.get_accum_resp;
         MPID_Request *resp_req;
@@ -100,7 +100,6 @@ int MPIDI_CH3_ReqHandler_PutAccumRespComplete( MPIDI_VC_t *vc,
         get_accum_resp_pkt->request_handle = rreq->dev.resp_request_handle;
 
         MPID_Datatype_get_size_macro(rreq->dev.datatype, type_size);
-        MPIDI_CH3I_DATATYPE_IS_PREDEFINED(rreq->dev.datatype, predefined);
 
         /* Copy data into a temporary buffer */
         resp_req = MPID_Request_create();
@@ -110,7 +109,7 @@ int MPIDI_CH3_ReqHandler_PutAccumRespComplete( MPIDI_VC_t *vc,
         MPIU_CHKPMEM_MALLOC(resp_req->dev.user_buf, void *, rreq->dev.user_count * type_size,
                             mpi_errno, "GACC resp. buffer");
 
-        if (predefined) {
+        if (MPIR_DATATYPE_IS_PREDEFINED(rreq->dev.datatype)) {
             MPIU_Memcpy(resp_req->dev.user_buf, rreq->dev.real_user_buf, 
                         rreq->dev.user_count * type_size);
         } else {
@@ -778,7 +777,7 @@ static int create_derived_datatype(MPID_Request *req, MPID_Datatype **dtp)
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 static int do_accumulate_op(MPID_Request *rreq)
 {
-    int mpi_errno = MPI_SUCCESS, predefined;
+    int mpi_errno = MPI_SUCCESS;
     MPI_Aint true_lb, true_extent;
     MPI_User_function *uop;
     MPIDI_STATE_DECL(MPID_STATE_DO_ACCUMULATE_OP);
@@ -812,8 +811,7 @@ static int do_accumulate_op(MPID_Request *rreq)
 	/* --END ERROR HANDLING-- */
     }
     
-    MPIDI_CH3I_DATATYPE_IS_PREDEFINED(rreq->dev.datatype, predefined);
-    if (predefined)
+    if (MPIR_DATATYPE_IS_PREDEFINED(rreq->dev.datatype))
     {
         (*uop)(rreq->dev.user_buf, rreq->dev.real_user_buf,
                &(rreq->dev.user_count), &(rreq->dev.datatype));

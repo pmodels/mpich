@@ -23,7 +23,7 @@ int MPIDI_Get_accumulate(const void *origin_addr, int origin_count,
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_msg_sz_t data_sz;
-    int rank, origin_predefined, result_predefined, target_predefined;
+    int rank;
     int dt_contig ATTRIBUTE((unused));
     MPI_Aint dt_true_lb ATTRIBUTE((unused));
     MPID_Datatype *dtp;
@@ -52,13 +52,6 @@ int MPIDI_Get_accumulate(const void *origin_addr, int origin_count,
     }
 
     rank = win_ptr->comm_ptr->rank;
-
-    origin_predefined = TRUE; /* quiet uninitialized warnings (b/c goto) */
-    if (op != MPI_NO_OP) {
-        MPIDI_CH3I_DATATYPE_IS_PREDEFINED(origin_datatype, origin_predefined);
-    }
-    MPIDI_CH3I_DATATYPE_IS_PREDEFINED(result_datatype, result_predefined);
-    MPIDI_CH3I_DATATYPE_IS_PREDEFINED(target_datatype, target_predefined);
 
     if (win_ptr->shm_allocated == TRUE && target_rank != rank && win_ptr->create_flavor != MPI_WIN_FLAVOR_SHARED) {
         /* check if target is local and shared memory is allocated on window,
@@ -115,15 +108,15 @@ int MPIDI_Get_accumulate(const void *origin_addr, int origin_count,
 
         /* if source or target datatypes are derived, increment their
            reference counts */
-        if (!origin_predefined) {
+        if (op != MPI_NO_OP && !MPIR_DATATYPE_IS_PREDEFINED(origin_datatype)) {
             MPID_Datatype_get_ptr(origin_datatype, dtp);
             MPID_Datatype_add_ref(dtp);
         }
-        if (!result_predefined) {
+        if (!MPIR_DATATYPE_IS_PREDEFINED(result_datatype)) {
             MPID_Datatype_get_ptr(result_datatype, dtp);
             MPID_Datatype_add_ref(dtp);
         }
-        if (!target_predefined) {
+        if (!MPIR_DATATYPE_IS_PREDEFINED(target_datatype)) {
             MPID_Datatype_get_ptr(target_datatype, dtp);
             MPID_Datatype_add_ref(dtp);
         }

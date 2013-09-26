@@ -120,7 +120,7 @@ int MPIDI_Put(const void *origin_addr, int origin_count, MPI_Datatype
             int target_count, MPI_Datatype target_datatype, MPID_Win *win_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
-    int dt_contig ATTRIBUTE((unused)), rank, predefined;
+    int dt_contig ATTRIBUTE((unused)), rank;
     MPID_Datatype *dtp;
     MPI_Aint dt_true_lb ATTRIBUTE((unused));
     MPIDI_msg_sz_t data_sz;
@@ -199,14 +199,12 @@ int MPIDI_Put(const void *origin_addr, int origin_count, MPI_Datatype
 
 	/* if source or target datatypes are derived, increment their
 	   reference counts */
-	MPIDI_CH3I_DATATYPE_IS_PREDEFINED(origin_datatype, predefined);
-	if (!predefined)
+	if (!MPIR_DATATYPE_IS_PREDEFINED(origin_datatype))
 	{
 	    MPID_Datatype_get_ptr(origin_datatype, dtp);
 	    MPID_Datatype_add_ref(dtp);
 	}
-	MPIDI_CH3I_DATATYPE_IS_PREDEFINED(target_datatype, predefined);
-	if (!predefined)
+	if (!MPIR_DATATYPE_IS_PREDEFINED(target_datatype))
 	{
 	    MPID_Datatype_get_ptr(target_datatype, dtp);
 	    MPID_Datatype_add_ref(dtp);
@@ -235,7 +233,7 @@ int MPIDI_Get(void *origin_addr, int origin_count, MPI_Datatype
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_msg_sz_t data_sz;
-    int dt_contig ATTRIBUTE((unused)), rank, predefined;
+    int dt_contig ATTRIBUTE((unused)), rank;
     MPI_Aint dt_true_lb ATTRIBUTE((unused));
     MPID_Datatype *dtp;
     MPIDI_VC_t *orig_vc, *target_vc;
@@ -310,14 +308,12 @@ int MPIDI_Get(void *origin_addr, int origin_count, MPI_Datatype
 	
 	/* if source or target datatypes are derived, increment their
 	   reference counts */
-	MPIDI_CH3I_DATATYPE_IS_PREDEFINED(origin_datatype, predefined);
-	if (!predefined)
+	if (!MPIR_DATATYPE_IS_PREDEFINED(origin_datatype))
 	{
 	    MPID_Datatype_get_ptr(origin_datatype, dtp);
 	    MPID_Datatype_add_ref(dtp);
 	}
-	MPIDI_CH3I_DATATYPE_IS_PREDEFINED(target_datatype, predefined);
-	if (!predefined)
+	if (!MPIR_DATATYPE_IS_PREDEFINED(target_datatype))
 	{
 	    MPID_Datatype_get_ptr(target_datatype, dtp);
 	    MPID_Datatype_add_ref(dtp);
@@ -347,7 +343,7 @@ int MPIDI_Accumulate(const void *origin_addr, int origin_count, MPI_Datatype
 {
     int mpi_errno=MPI_SUCCESS;
     MPIDI_msg_sz_t data_sz;
-    int dt_contig ATTRIBUTE((unused)), rank, origin_predefined, target_predefined;
+    int dt_contig ATTRIBUTE((unused)), rank;
     MPI_Aint dt_true_lb ATTRIBUTE((unused));
     MPID_Datatype *dtp;
     MPIDI_VC_t *orig_vc, *target_vc;
@@ -376,9 +372,6 @@ int MPIDI_Accumulate(const void *origin_addr, int origin_count, MPI_Datatype
 
     rank = win_ptr->comm_ptr->rank;
     
-    MPIDI_CH3I_DATATYPE_IS_PREDEFINED(origin_datatype, origin_predefined);
-    MPIDI_CH3I_DATATYPE_IS_PREDEFINED(target_datatype, target_predefined);
-
     if (win_ptr->shm_allocated == TRUE && target_rank != rank && win_ptr->create_flavor != MPI_WIN_FLAVOR_SHARED) {
         /* check if target is local and shared memory is allocated on window,
            if so, we directly perform this operation on shared memory region. */
@@ -414,7 +407,8 @@ int MPIDI_Accumulate(const void *origin_addr, int origin_count, MPI_Datatype
         if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
 
 	/* If predefined and contiguous, use a simplified element */
-	if (origin_predefined && target_predefined && enableShortACC) {
+	if (MPIR_DATATYPE_IS_PREDEFINED(origin_datatype) &&
+            MPIR_DATATYPE_IS_PREDEFINED(target_datatype) && enableShortACC) {
 	    MPIU_INSTR_DURATION_START(rmaqueue_set);
 	    new_ptr->type = MPIDI_RMA_ACC_CONTIG;
 	    /* Only the information needed for the contig/predefined acc */
@@ -448,12 +442,12 @@ int MPIDI_Accumulate(const void *origin_addr, int origin_count, MPI_Datatype
 	
 	/* if source or target datatypes are derived, increment their
 	   reference counts */
-	if (!origin_predefined)
+	if (!MPIR_DATATYPE_IS_PREDEFINED(origin_datatype))
 	{
 	    MPID_Datatype_get_ptr(origin_datatype, dtp);
 	    MPID_Datatype_add_ref(dtp);
 	}
-	if (!target_predefined)
+	if (!MPIR_DATATYPE_IS_PREDEFINED(target_datatype))
 	{
 	    MPID_Datatype_get_ptr(target_datatype, dtp);
 	    MPID_Datatype_add_ref(dtp);

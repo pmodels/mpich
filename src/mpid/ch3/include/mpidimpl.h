@@ -1219,14 +1219,6 @@ int MPIDI_CH3_Start_rma_op_target(MPID_Win *win_ptr, MPIDI_CH3_Pkt_flags_t flags
 int MPIDI_CH3_Finish_rma_op_target(MPIDI_VC_t *vc, MPID_Win *win_ptr, int is_rma_update,
                                    MPIDI_CH3_Pkt_flags_t flags, MPI_Win source_win_handle);
 
-#define MPIDI_CH3I_DATATYPE_IS_PREDEFINED(type, predefined) \
-    if ((HANDLE_GET_KIND(type) == HANDLE_KIND_BUILTIN) || \
-        (type == MPI_FLOAT_INT) || (type == MPI_DOUBLE_INT) || \
-        (type == MPI_LONG_INT) || (type == MPI_SHORT_INT) || \
-	(type == MPI_LONG_DOUBLE_INT)) \
-        predefined = 1; \
-    else predefined = 0;
-
 int MPIDI_CH3I_Progress_finalize(void);
 
 /*@

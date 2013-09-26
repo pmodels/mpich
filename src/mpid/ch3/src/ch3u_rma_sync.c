@@ -553,7 +553,7 @@ static int MPIDI_CH3I_Send_rma_msg(MPIDI_RMA_Op_t *rma_op, MPID_Win *win_ptr,
     MPIDI_CH3_Pkt_put_t *put_pkt = &upkt.put;
     MPIDI_CH3_Pkt_accum_t *accum_pkt = &upkt.accum;
     MPID_IOV iov[MPID_IOV_LIMIT];
-    int mpi_errno=MPI_SUCCESS, predefined;
+    int mpi_errno=MPI_SUCCESS;
     int origin_dt_derived, target_dt_derived, origin_type_size, iovcnt; 
     MPIDI_VC_t * vc;
     MPID_Comm *comm_ptr;
@@ -598,8 +598,7 @@ static int MPIDI_CH3I_Send_rma_msg(MPIDI_RMA_Op_t *rma_op, MPID_Win *win_ptr,
         resp_req->dev.target_win_handle = target_win_handle;
         resp_req->dev.source_win_handle = source_win_handle;
 
-        MPIDI_CH3I_DATATYPE_IS_PREDEFINED(resp_req->dev.datatype, predefined);
-        if (!predefined) {
+        if (!MPIR_DATATYPE_IS_PREDEFINED(resp_req->dev.datatype)) {
             MPID_Datatype *result_dtp = NULL;
             MPID_Datatype_get_ptr(resp_req->dev.datatype, result_dtp);
             resp_req->dev.datatype_ptr = result_dtp;
@@ -648,8 +647,7 @@ static int MPIDI_CH3I_Send_rma_msg(MPIDI_RMA_Op_t *rma_op, MPID_Win *win_ptr,
     comm_ptr = win_ptr->comm_ptr;
     MPIDI_Comm_get_vc_set_active(comm_ptr, rma_op->target_rank, &vc);
 
-    MPIDI_CH3I_DATATYPE_IS_PREDEFINED(rma_op->origin_datatype, predefined);
-    if (!predefined)
+    if (!MPIR_DATATYPE_IS_PREDEFINED(rma_op->origin_datatype))
     {
         origin_dt_derived = 1;
         MPID_Datatype_get_ptr(rma_op->origin_datatype, origin_dtp);
@@ -659,8 +657,7 @@ static int MPIDI_CH3I_Send_rma_msg(MPIDI_RMA_Op_t *rma_op, MPID_Win *win_ptr,
         origin_dt_derived = 0;
     }
 
-    MPIDI_CH3I_DATATYPE_IS_PREDEFINED(rma_op->target_datatype, predefined);
-    if (!predefined)
+    if (!MPIR_DATATYPE_IS_PREDEFINED(rma_op->target_datatype))
     {
         target_dt_derived = 1;
         MPID_Datatype_get_ptr(rma_op->target_datatype, target_dtp);
@@ -1135,7 +1132,7 @@ static int MPIDI_CH3I_Recv_rma_msg(MPIDI_RMA_Op_t *rma_op, MPID_Win *win_ptr,
 {
     MPIDI_CH3_Pkt_t upkt;
     MPIDI_CH3_Pkt_get_t *get_pkt = &upkt.get;
-    int mpi_errno=MPI_SUCCESS, predefined;
+    int mpi_errno=MPI_SUCCESS;
     MPIDI_VC_t * vc;
     MPID_Comm *comm_ptr;
     MPID_Request *req = NULL;
@@ -1165,8 +1162,7 @@ static int MPIDI_CH3I_Recv_rma_msg(MPIDI_RMA_Op_t *rma_op, MPID_Win *win_ptr,
     req->dev.datatype = rma_op->origin_datatype;
     req->dev.target_win_handle = MPI_WIN_NULL;
     req->dev.source_win_handle = source_win_handle;
-    MPIDI_CH3I_DATATYPE_IS_PREDEFINED(req->dev.datatype, predefined);
-    if (!predefined)
+    if (!MPIR_DATATYPE_IS_PREDEFINED(req->dev.datatype))
     {
         MPID_Datatype_get_ptr(req->dev.datatype, dtp);
         req->dev.datatype_ptr = dtp;
@@ -1192,8 +1188,7 @@ static int MPIDI_CH3I_Recv_rma_msg(MPIDI_RMA_Op_t *rma_op, MPID_Win *win_ptr,
     comm_ptr = win_ptr->comm_ptr;
     MPIDI_Comm_get_vc_set_active(comm_ptr, rma_op->target_rank, &vc);
 
-    MPIDI_CH3I_DATATYPE_IS_PREDEFINED(rma_op->target_datatype, predefined);
-    if (predefined)
+    if (MPIR_DATATYPE_IS_PREDEFINED(rma_op->target_datatype))
     {
         /* basic datatype on target. simply send the get_pkt. */
 	MPIU_THREAD_CS_ENTER(CH3COMM,vc);
@@ -2046,18 +2041,16 @@ int MPIDI_Win_unlock(int dest, MPID_Win *win_ptr)
 	 * do an optimization where the lock and the RMA operation are
 	 * sent in a single packet. Otherwise, we send a separate lock
 	 * request first. */
-        int type_size, predefined;
+        int type_size;
         MPIDI_VC_t *vc;
         MPIDI_RMA_Op_t *curr_op = rma_op;
 
         MPIDI_Comm_get_vc_set_active(win_ptr->comm_ptr, dest, &vc);
 
 	MPID_Datatype_get_size_macro(curr_op->origin_datatype, type_size);
-	
-	MPIDI_CH3I_DATATYPE_IS_PREDEFINED(curr_op->target_datatype, predefined);
 
 	/* msg_sz typically = 65480 */
-	if ( predefined &&
+	if (MPIR_DATATYPE_IS_PREDEFINED(curr_op->target_datatype) &&
 	     (type_size * curr_op->origin_count <= vc->eager_max_msg_sz) ) {
 	    single_op_opt = 1;
 	    /* Set the lock granted flag to 1 */
@@ -2976,7 +2969,7 @@ static int MPIDI_CH3I_Send_lock_put_or_acc(MPID_Win *win_ptr, int target_rank)
     MPID_IOV iov[MPID_IOV_LIMIT];
     MPID_Comm *comm_ptr;
     MPID_Datatype *origin_dtp=NULL;
-    int origin_type_size, predefined;
+    int origin_type_size;
     MPIDI_CH3_Pkt_t upkt;
     MPIDI_CH3_Pkt_lock_put_unlock_t *lock_put_unlock_pkt = 
 	&upkt.lock_put_unlock;
@@ -3062,8 +3055,7 @@ static int MPIDI_CH3I_Send_lock_put_or_acc(MPID_Win *win_ptr, int target_rank)
     comm_ptr = win_ptr->comm_ptr;
     MPIDI_Comm_get_vc_set_active(comm_ptr, rma_op->target_rank, &vc);
 
-    MPIDI_CH3I_DATATYPE_IS_PREDEFINED(rma_op->origin_datatype, predefined);
-    if (!predefined)
+    if (!MPIR_DATATYPE_IS_PREDEFINED(rma_op->origin_datatype))
     {
         origin_dt_derived = 1;
         MPID_Datatype_get_ptr(rma_op->origin_datatype, origin_dtp);
@@ -3176,7 +3168,7 @@ static int MPIDI_CH3I_Send_lock_put_or_acc(MPID_Win *win_ptr, int target_rank)
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 static int MPIDI_CH3I_Send_lock_get(MPID_Win *win_ptr, int target_rank)
 {
-    int mpi_errno=MPI_SUCCESS, lock_type, predefined;
+    int mpi_errno=MPI_SUCCESS, lock_type;
     MPIDI_RMA_Op_t *rma_op;
     MPID_Request *rreq=NULL, *sreq=NULL;
     MPIDI_VC_t * vc;
@@ -3211,8 +3203,7 @@ static int MPIDI_CH3I_Send_lock_get(MPID_Win *win_ptr, int target_rank)
     rreq->dev.target_win_handle = MPI_WIN_NULL;
     rreq->dev.source_win_handle = win_ptr->handle;
 
-    MPIDI_CH3I_DATATYPE_IS_PREDEFINED(rreq->dev.datatype, predefined);
-    if (!predefined)
+    if (!MPIR_DATATYPE_IS_PREDEFINED(rreq->dev.datatype))
     {
         MPID_Datatype_get_ptr(rreq->dev.datatype, dtp);
         rreq->dev.datatype_ptr = dtp;
@@ -3353,7 +3344,6 @@ int MPIDI_CH3_PktHandler_Put( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 {
     MPIDI_CH3_Pkt_put_t * put_pkt = &pkt->put;
     MPID_Request *req = NULL;
-    int predefined;
     int type_size;
     int complete = 0;
     char *data_buf = NULL;
@@ -3398,8 +3388,7 @@ int MPIDI_CH3_PktHandler_Put( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
     req->dev.source_win_handle = put_pkt->source_win_handle;
     req->dev.flags = put_pkt->flags;
 	
-    MPIDI_CH3I_DATATYPE_IS_PREDEFINED(put_pkt->datatype, predefined);
-    if (predefined)
+    if (MPIR_DATATYPE_IS_PREDEFINED(put_pkt->datatype))
     {
         MPIDI_Request_set_type(req, MPIDI_REQUEST_TYPE_PUT_RESP);
         req->dev.datatype = put_pkt->datatype;
@@ -3520,7 +3509,6 @@ int MPIDI_CH3_PktHandler_Get( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
     MPIDI_CH3_Pkt_get_t * get_pkt = &pkt->get;
     MPID_Request *req = NULL;
     MPID_IOV iov[MPID_IOV_LIMIT];
-    int predefined;
     int complete;
     char *data_buf = NULL;
     MPIDI_msg_sz_t data_len;
@@ -3545,8 +3533,7 @@ int MPIDI_CH3_PktHandler_Get( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
     req->dev.source_win_handle = get_pkt->source_win_handle;
     req->dev.flags = get_pkt->flags;
     
-    MPIDI_CH3I_DATATYPE_IS_PREDEFINED(get_pkt->datatype, predefined);
-    if (predefined)
+    if (MPIR_DATATYPE_IS_PREDEFINED(get_pkt->datatype))
     {
 	/* basic datatype. send the data. */
 	MPIDI_CH3_Pkt_t upkt;
@@ -3655,7 +3642,6 @@ int MPIDI_CH3_PktHandler_Accumulate( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
     MPID_Request *req = NULL;
     MPI_Aint true_lb, true_extent, extent;
     void *tmp_buf = NULL;
-    int predefined;
     int complete = 0;
     char *data_buf = NULL;
     MPIDI_msg_sz_t data_len;
@@ -3693,8 +3679,7 @@ int MPIDI_CH3_PktHandler_Accumulate( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
         req->dev.resp_request_handle = MPI_REQUEST_NULL;
     }
 
-    MPIDI_CH3I_DATATYPE_IS_PREDEFINED(accum_pkt->datatype, predefined);
-    if (predefined)
+    if (MPIR_DATATYPE_IS_PREDEFINED(accum_pkt->datatype))
     {
 	MPIU_INSTR_DURATION_START(rmapkt_acc_predef);
 	MPIDI_Request_set_type(req, MPIDI_REQUEST_TYPE_ACCUM_RESP);

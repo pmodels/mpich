@@ -366,7 +366,6 @@ static inline int MPIDI_CH3I_Shm_acc_op(const void *origin_addr, int origin_coun
 {
     void *base = NULL;
     int disp_unit, shm_op = 0;
-    int origin_predefined, target_predefined;
     MPI_User_function *uop = NULL;
     MPID_Datatype *dtp;
     int mpi_errno = MPI_SUCCESS;
@@ -374,9 +373,6 @@ static inline int MPIDI_CH3I_Shm_acc_op(const void *origin_addr, int origin_coun
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3I_SHM_ACC_OP);
 
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_CH3I_SHM_ACC_OP);
-
-    MPIDI_CH3I_DATATYPE_IS_PREDEFINED(origin_datatype, origin_predefined);
-    MPIDI_CH3I_DATATYPE_IS_PREDEFINED(target_datatype, target_predefined);
 
     if (win_ptr->shm_allocated == TRUE) {
         shm_op = 1;
@@ -407,7 +403,7 @@ static inline int MPIDI_CH3I_Shm_acc_op(const void *origin_addr, int origin_coun
     /* get the function by indexing into the op table */
     uop = MPIR_OP_HDL_TO_FN(op);
 
-    if (origin_predefined && target_predefined)
+    if (MPIR_DATATYPE_IS_PREDEFINED(origin_datatype) && MPIR_DATATYPE_IS_PREDEFINED(target_datatype))
     {
         /* Cast away const'ness for origin_address in order to
          * avoid changing the prototype for MPI_User_function */
@@ -450,7 +446,7 @@ static inline int MPIDI_CH3I_Shm_acc_op(const void *origin_addr, int origin_coun
             if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
         }
 
-        if (target_predefined) {
+        if (MPIR_DATATYPE_IS_PREDEFINED(target_datatype)) {
             /* target predefined type, origin derived datatype */
 
             if (shm_op) MPIDI_CH3I_SHM_MUTEX_LOCK(win_ptr);
@@ -520,18 +516,11 @@ static inline int MPIDI_CH3I_Shm_get_acc_op(const void *origin_addr, int origin_
     void *base = NULL;
     MPI_User_function *uop = NULL;
     MPID_Datatype *dtp;
-    int origin_predefined, target_predefined;
     int mpi_errno = MPI_SUCCESS;
     MPIU_CHKLMEM_DECL(2);
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3I_SHM_GET_ACC_OP);
 
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_CH3I_SHM_GET_ACC_OP);
-
-    origin_predefined = TRUE; /* quiet uninitialized warnings (b/c goto) */
-    if (op != MPI_NO_OP) {
-        MPIDI_CH3I_DATATYPE_IS_PREDEFINED(origin_datatype, origin_predefined);
-    }
-    MPIDI_CH3I_DATATYPE_IS_PREDEFINED(target_datatype, target_predefined);
 
     if (win_ptr->shm_allocated == TRUE) {
         base = win_ptr->shm_base_addrs[target_rank];
@@ -582,7 +571,8 @@ static inline int MPIDI_CH3I_Shm_get_acc_op(const void *origin_addr, int origin_
     /* get the function by indexing into the op table */
     uop = MPIR_OP_HDL_TO_FN(op);
 
-    if (origin_predefined && target_predefined) {
+    if ((op == MPI_NO_OP || MPIR_DATATYPE_IS_PREDEFINED(origin_datatype)) &&
+        MPIR_DATATYPE_IS_PREDEFINED(target_datatype)) {
         /* Cast away const'ness for origin_address in order to
          * avoid changing the prototype for MPI_User_function */
         (*uop)((void *) origin_addr, (char *) base + disp_unit*target_disp,
@@ -620,7 +610,7 @@ static inline int MPIDI_CH3I_Shm_get_acc_op(const void *origin_addr, int origin_
             if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
         }
 
-        if (target_predefined) {
+        if (MPIR_DATATYPE_IS_PREDEFINED(target_datatype)) {
             /* target predefined type, origin derived datatype */
 
             (*uop)(tmp_buf, (char *) base + disp_unit * target_disp,
