@@ -206,7 +206,7 @@ MPIDI_Recv(void          * buf,
 
   if (unlikely(found))
     {
-      TRACE_SET_R_VAL(pami_source,(rreq->mpid.PR_idx),len,rreq->mpid.uebuflen);
+      TRACE_SET_R_VALX(pami_source,rreq,len,rreq->mpid.uebuflen);
       MPIDI_RecvMsg_Unexp(rreq, buf, count, datatype);
       mpi_errno = rreq->status.MPI_ERROR;
       if (TOKEN_FLOW_CONTROL_ON) {

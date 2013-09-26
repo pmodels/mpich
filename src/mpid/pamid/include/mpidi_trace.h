@@ -236,6 +236,14 @@ MPIDI_Trace_buf_t  *MPIDI_Trace_buf;
 #define TRACE_SET_S_BIT(dd,ii,mbr) MPIDI_Trace_buf[(dd)].S[(ii)].mbr=1;
 #define TRACE_SET_R_BIT(dd,ii,mbr) MPIDI_Trace_buf[(dd)].R[(ii)].mbr=1;
 #define TRACE_SET_S_VAL(dd,ii,mbr,val) MPIDI_Trace_buf[(dd)].S[(ii)].mbr=val;
+#define TRACE_SET_R_VALX(dd,rr,mbr,val) {                        \
+    pami_task_t dd1;                                             \
+    if (dd < 0)                                                  \
+       dd1=rr->mpid.partner_id;                                  \
+    else                                                         \
+       dd1=dd;                                                   \
+    MPIDI_Trace_buf[(dd1)].R[(rr->mpid.PR_idx)].mbr=val;         \
+}
 #define TRACE_SET_R_VAL(dd,ii,mbr,val) MPIDI_Trace_buf[(dd)].R[(ii)].mbr=val;
 #define TRACE_SET_REQ_VAL(ww,val1) ww=val1;
 #define TRACE_MEMSET_R(tt,nbr,str)  (memset(&MPIDI_Trace_buf[tt].R[(nbr & SEQMASK)],0,sizeof(str)));
@@ -249,6 +257,7 @@ int posted_recv;
 #define TRACE_SET_S_BIT(dd,ii,mbr) 0 
 #define TRACE_SET_R_BIT(dd,ii,mbr) 0 
 #define TRACE_SET_S_VAL(dd,ii,mbr,val) 0 
+#define TRACE_SET_R_VALX(dd,rr,mbr,val) 0
 #define TRACE_SET_R_VAL(dd,ii,mbr,val) 0 
 #define TRACE_SET_REQ_VAL(ww,val1) 0 
 #define TRACE_MEMSET_R(tt,nbr,str)  0 
