@@ -2169,6 +2169,8 @@ int MPIDI_Win_flush_all(MPID_Win *win_ptr)
      * make asynchronous progress.  Currently this is handled by Win_flush().
      */
      for (i = 0; i < MPIR_Comm_size(win_ptr->comm_ptr); i++) {
+         if (MPIDI_CH3I_RMA_Ops_head(&win_ptr->targets[i].rma_ops_list) == NULL)
+             continue;
         if (win_ptr->targets[i].remote_lock_state != MPIDI_CH3_WIN_LOCK_NONE) {
             mpi_errno = win_ptr->RMAFns.Win_flush(i, win_ptr);
             if (mpi_errno != MPI_SUCCESS) { MPIU_ERR_POP(mpi_errno); }
