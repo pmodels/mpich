@@ -2177,6 +2177,12 @@ int MPIDI_Win_flush_all(MPID_Win *win_ptr)
         }
     }
 
+     /* Ensure that all shared memory operations are flushed out.  The memory
+      * barriers in the flush are not sufficient since we skip calling flush
+      * when all operations are already completed. */
+     if (win_ptr->shm_allocated == TRUE)
+         OPA_read_write_barrier();
+
  fn_exit:
     MPIDI_RMA_FUNC_EXIT(MPIDI_STATE_MPIDI_WIN_FLUSH_ALL);
     return mpi_errno;
