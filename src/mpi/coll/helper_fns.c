@@ -56,26 +56,33 @@ int MPIR_Localcopy(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
 
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPIR_LOCALCOPY);
 
-    MPIR_Datatype_iscontig(sendtype, &sendtype_iscontig);
-    MPIR_Datatype_iscontig(recvtype, &recvtype_iscontig);
-
     MPID_Datatype_get_size_macro(sendtype, sendsize);
     MPID_Datatype_get_size_macro(recvtype, recvsize);
+
     sdata_sz = sendsize * sendcount;
     rdata_sz = recvsize * recvcount;
 
+    /* if there is no data to copy, bail out */
     if (!sdata_sz || !rdata_sz)
         goto fn_exit;
-    
-    if (sdata_sz > rdata_sz)
-    {
+
+#if defined(HAVE_ERROR_CHECKING)
+    if (sdata_sz > rdata_sz) {
         MPIU_ERR_SET2(mpi_errno, MPI_ERR_TRUNCATE, "**truncate", "**truncate %d %d", sdata_sz, rdata_sz);
         copy_sz = rdata_sz;
     }
     else
-    {
+#endif /* HAVE_ERROR_CHECKING */
         copy_sz = sdata_sz;
+
+    /* Predefined types is the common case; optimize for it */
+    if (MPIR_DATATYPE_IS_PREDEFINED(sendtype) && MPIR_DATATYPE_IS_PREDEFINED(recvtype)) {
+        MPIU_Memcpy(recvbuf, sendbuf, copy_sz);
+        goto fn_exit;
     }
+
+    MPIR_Datatype_iscontig(sendtype, &sendtype_iscontig);
+    MPIR_Datatype_iscontig(recvtype, &recvtype_iscontig);
 
     MPIR_Type_get_true_extent_impl(sendtype, &sendtype_true_lb, &true_extent);
     MPIR_Type_get_true_extent_impl(recvtype, &recvtype_true_lb, &true_extent);
