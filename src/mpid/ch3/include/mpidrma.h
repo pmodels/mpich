@@ -315,6 +315,237 @@ static inline MPIDI_RMA_Ops_list_t *MPIDI_CH3I_RMA_Get_ops_list(MPID_Win *win_pt
  */
 /* ------------------------------------------------------------------------ */
 
+#define ASSIGN_COPY(src, dest, count, type)     \
+    {                                           \
+        type *src_ = (type *) src;              \
+        type *dest_ = (type *) dest;            \
+        int i;                                  \
+        for (i = 0; i < count; i++)             \
+            dest_[i] = src_[i];                 \
+        goto fn_exit;                           \
+    }
+
+static inline int shm_copy(const void *src, int scount, MPI_Datatype stype,
+                           void *dest, int dcount, MPI_Datatype dtype)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    /* We use a threshold of operations under which a for loop of assignments is
+     * used.  Even though this happens at smaller block lengths, making it
+     * potentially inefficient, it can take advantage of some vectorization
+     * available on most modern processors. */
+#define SHM_OPS_THRESHOLD  (16)
+
+    if (MPIR_DATATYPE_IS_PREDEFINED(stype) && MPIR_DATATYPE_IS_PREDEFINED(dtype) &&
+        scount <= SHM_OPS_THRESHOLD) {
+
+        /* FIXME: We currently only optimize a few predefined datatypes, which
+         * have a direct C datatype mapping. */
+
+        /* The below list of datatypes is based on those specified in the MPI-3
+         * standard on page 665. */
+        switch (stype) {
+            case MPI_CHAR:
+                ASSIGN_COPY(src, dest, scount, char);
+
+            case MPI_SHORT:
+                ASSIGN_COPY(src, dest, scount, signed short int);
+
+            case MPI_INT:
+                ASSIGN_COPY(src, dest, scount, signed int);
+
+            case MPI_LONG:
+                ASSIGN_COPY(src, dest, scount, signed long int);
+
+            case MPI_LONG_LONG_INT:  /* covers MPI_LONG_LONG too */
+                ASSIGN_COPY(src, dest, scount, signed long long int);
+
+            case MPI_SIGNED_CHAR:
+                ASSIGN_COPY(src, dest, scount, signed char);
+
+            case MPI_UNSIGNED_CHAR:
+                ASSIGN_COPY(src, dest, scount, unsigned char);
+
+            case MPI_UNSIGNED_SHORT:
+                ASSIGN_COPY(src, dest, scount, unsigned short int);
+
+            case MPI_UNSIGNED:
+                ASSIGN_COPY(src, dest, scount, unsigned int);
+
+            case MPI_UNSIGNED_LONG:
+                ASSIGN_COPY(src, dest, scount, unsigned long int);
+
+            case MPI_UNSIGNED_LONG_LONG:
+                ASSIGN_COPY(src, dest, scount, unsigned long long int);
+
+            case MPI_FLOAT:
+                ASSIGN_COPY(src, dest, scount, float);
+
+            case MPI_DOUBLE:
+                ASSIGN_COPY(src, dest, scount, double);
+
+            case MPI_LONG_DOUBLE:
+                ASSIGN_COPY(src, dest, scount, long double);
+
+#if 0
+            /* FIXME: we need a configure check to define HAVE_WCHAR_T before
+             * this can be enabled */
+            case MPI_WCHAR:
+                ASSIGN_COPY(src, dest, scount, wchar_t);
+#endif
+
+#if 0
+            /* FIXME: we need a configure check to define HAVE_C_BOOL before
+             * this can be enabled */
+            case MPI_C_BOOL:
+                ASSIGN_COPY(src, dest, scount, _Bool);
+#endif
+
+#if HAVE_INT8_T
+            case MPI_INT8_T:
+                ASSIGN_COPY(src, dest, scount, int8_t);
+#endif /* HAVE_INT8_T */
+
+#if HAVE_INT16_T
+            case MPI_INT16_T:
+                ASSIGN_COPY(src, dest, scount, int16_t);
+#endif /* HAVE_INT16_T */
+
+#if HAVE_INT32_T
+            case MPI_INT32_T:
+                ASSIGN_COPY(src, dest, scount, int32_t);
+#endif /* HAVE_INT32_T */
+
+#if HAVE_INT64_T
+            case MPI_INT64_T:
+                ASSIGN_COPY(src, dest, scount, int64_t);
+#endif /* HAVE_INT64_T */
+
+#if HAVE_UINT8_T
+            case MPI_UINT8_T:
+                ASSIGN_COPY(src, dest, scount, uint8_t);
+#endif /* HAVE_UINT8_T */
+
+#if HAVE_UINT16_T
+            case MPI_UINT16_T:
+                ASSIGN_COPY(src, dest, scount, uint16_t);
+#endif /* HAVE_UINT16_T */
+
+#if HAVE_UINT32_T
+            case MPI_UINT32_T:
+                ASSIGN_COPY(src, dest, scount, uint32_t);
+#endif /* HAVE_UINT32_T */
+
+#if HAVE_UINT64_T
+            case MPI_UINT64_T:
+                ASSIGN_COPY(src, dest, scount, uint64_t);
+#endif /* HAVE_UINT64_T */
+
+            case MPI_AINT:
+                ASSIGN_COPY(src, dest, scount, MPI_Aint);
+
+            case MPI_COUNT:
+                ASSIGN_COPY(src, dest, scount, MPI_Count);
+
+            case MPI_OFFSET:
+                ASSIGN_COPY(src, dest, scount, MPI_Offset);
+
+#if 0
+            /* FIXME: we need a configure check to define HAVE_C_COMPLEX before
+             * this can be enabled */
+            case MPI_C_COMPLEX:  /* covers MPI_C_FLOAT_COMPLEX as well */
+                ASSIGN_COPY(src, dest, scount, float _Complex);
+#endif
+
+#if 0
+            /* FIXME: we need a configure check to define HAVE_C_DOUPLE_COMPLEX
+             * before this can be enabled */
+            case MPI_C_DOUBLE_COMPLEX:
+                ASSIGN_COPY(src, dest, scount, double _Complex);
+#endif
+
+#if 0
+            /* FIXME: we need a configure check to define
+             * HAVE_C_LONG_DOUPLE_COMPLEX before this can be enabled */
+            case MPI_C_LONG_DOUBLE_COMPLEX:
+                ASSIGN_COPY(src, dest, scount, long double _Complex);
+#endif
+
+#if 0
+            /* Types that don't have a direct equivalent */
+            case MPI_BYTE:
+            case MPI_PACKED:
+#endif
+
+#if 0 /* Fortran types */
+            case MPI_INTEGER:
+            case MPI_REAL:
+            case MPI_DOUBLE_PRECISION:
+            case MPI_COMPLEX:
+            case MPI_LOGICAL:
+            case MPI_CHARACTER:
+#endif
+
+#if 0 /* C++ types */
+            case MPI_CXX_BOOL:
+            case MPI_CXX_FLOAT_COMPLEX:
+            case MPI_CXX_DOUBLE_COMPLEX:
+            case MPI_CXX_LONG_DOUBLE_COMPLEX:
+#endif
+
+#if 0 /* Optional Fortran types */
+            case MPI_DOUBLE_COMPLEX:
+            case MPI_INTEGER1:
+            case MPI_INTEGER2:
+            case MPI_INTEGER4:
+            case MPI_INTEGER8:
+            case MPI_INTEGER16:
+            case MPI_REAL2:
+            case MPI_REAL4:
+            case MPI_REAL8:
+            case MPI_REAL16:
+            case MPI_COMPLEX4:
+            case MPI_COMPLEX8:
+            case MPI_COMPLEX16:
+            case MPI_COMPLEX32:
+#endif
+
+#if 0 /* C datatypes for reduction functions */
+            case MPI_FLOAT_INT:
+            case MPI_DOUBLE_INT:
+            case MPI_LONG_INT:
+            case MPI_2INT:
+            case MPI_LONG_DOUBLE_INT:
+#endif
+
+#if 0 /* Fortran datatypes for reduction functions */
+            case MPI_2REAL:
+            case MPI_2DOUBLE_PRECISION:
+            case MPI_2INTEGER:
+#endif
+
+#if 0 /* Random types not present in the standard */
+            case MPI_2COMPLEX:
+            case MPI_2DOUBLE_COMPLEX:
+#endif
+
+            default:
+                /* Just to make sure the switch statement is not empty */
+                ;
+        }
+    }
+
+    mpi_errno = MPIR_Localcopy(src, scount, stype, dest, dcount, dtype);
+    if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
+
+ fn_exit:
+    return mpi_errno;
+    /* --BEGIN ERROR HANDLING-- */
+ fn_fail:
+    goto fn_exit;
+    /* --END ERROR HANDLING-- */
+}
+
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3I_Shm_put_op
 #undef FCNAME
@@ -340,9 +571,8 @@ static inline int MPIDI_CH3I_Shm_put_op(const void *origin_addr, int origin_coun
         disp_unit = win_ptr->disp_unit;
     }
 
-    mpi_errno = MPIR_Localcopy(origin_addr, origin_count, origin_datatype,
-                               (char *) base + disp_unit * target_disp,
-                               target_count, target_datatype);
+    mpi_errno = shm_copy(origin_addr, origin_count, origin_datatype,
+                         (char *) base + disp_unit * target_disp, target_count, target_datatype);
     if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
 
  fn_exit:
@@ -387,10 +617,8 @@ static inline int MPIDI_CH3I_Shm_acc_op(const void *origin_addr, int origin_coun
     if (op == MPI_REPLACE)
     {
         if (shm_op) MPIDI_CH3I_SHM_MUTEX_LOCK(win_ptr);
-        mpi_errno = MPIR_Localcopy(origin_addr, origin_count,
-                                   origin_datatype,
-                                   (char *) base + disp_unit * target_disp,
-                                   target_count, target_datatype);
+        mpi_errno = shm_copy(origin_addr, origin_count, origin_datatype,
+                             (char *) base + disp_unit * target_disp, target_count, target_datatype);
         if (shm_op) MPIDI_CH3I_SHM_MUTEX_UNLOCK(win_ptr);
         if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
         goto fn_exit;
@@ -534,9 +762,8 @@ static inline int MPIDI_CH3I_Shm_get_acc_op(const void *origin_addr, int origin_
     }
 
     /* Perform the local get first, then the accumulate */
-    mpi_errno = MPIR_Localcopy((char *) base + disp_unit * target_disp,
-                               target_count, target_datatype,
-                               result_addr, result_count, result_datatype);
+    mpi_errno = shm_copy((char *) base + disp_unit * target_disp, target_count, target_datatype,
+                         result_addr, result_count, result_datatype);
     if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
 
     /* NO_OP: Don't perform the accumulate */
@@ -550,9 +777,8 @@ static inline int MPIDI_CH3I_Shm_get_acc_op(const void *origin_addr, int origin_
     }
 
     if (op == MPI_REPLACE) {
-        mpi_errno = MPIR_Localcopy(origin_addr, origin_count, origin_datatype,
-                                   (char *) base + disp_unit * target_disp,
-                                   target_count, target_datatype);
+        mpi_errno = shm_copy(origin_addr, origin_count, origin_datatype,
+                             (char *) base + disp_unit * target_disp, target_count, target_datatype);
 
         if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
 
@@ -693,9 +919,8 @@ static inline int MPIDI_CH3I_Shm_get_op(void *origin_addr, int origin_count, MPI
         disp_unit = win_ptr->disp_unit;
     }
 
-    mpi_errno = MPIR_Localcopy((char *) base + disp_unit * target_disp,
-                               target_count, target_datatype, origin_addr,
-                               origin_count, origin_datatype);
+    mpi_errno = shm_copy((char *) base + disp_unit * target_disp, target_count, target_datatype,
+                         origin_addr, origin_count, origin_datatype);
     if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
 
  fn_exit:
