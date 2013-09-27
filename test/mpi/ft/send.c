@@ -16,7 +16,6 @@ int main(int argc, char **argv)
 {
     int rank, size, err;
     char buf[10];
-    pid_t pid;
 
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
