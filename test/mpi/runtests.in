@@ -987,11 +987,7 @@ sub RunTestPassed {
 	print XMLOUT "<STATUS>pass</STATUS>$newline";
     }
     if ($tapoutput) {
-        my $xfailstr = '';
-        if ($xfail ne '') {
-            $xfailstr = " # TODO $xfail";
-        }
-        print TAPOUT "ok ${total_run} - $workdir/$programname ${np}${xfailstr}\n";
+        print TAPOUT "ok ${total_run} - $workdir/$programname ${np}\n";
     }
 }
 sub RunTestFailed {
