@@ -1,3 +1,3 @@
-die 4 mpiexecarg=-disable-auto-cleanup timeLimit=10 xfail=ticket1917
-abort 2 mpiexecarg=-disable-auto-cleanup timeLimit=10 xfail=ticket1917
-send 4 mpiexecarg=-disable-auto-cleanup timeLimit=10 xfail=ticket1917
+die 4 mpiexecarg=-disable-auto-cleanup timeLimit=10 strict=false
+abort 2 mpiexecarg=-disable-auto-cleanup timeLimit=10 strict=false xfail=ticket1537
+send 4 mpiexecarg=-disable-auto-cleanup timeLimit=10 strict=false
