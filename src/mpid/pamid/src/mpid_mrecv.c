@@ -6,10 +6,6 @@
 
 #include "mpidimpl.h"
 
-#undef FUNCNAME
-#define FUNCNAME MPID_Imrecv
-#undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPID_Mrecv(void *buf, int count, MPI_Datatype datatype,
                MPID_Request *message, MPI_Status *status)
 {
@@ -21,7 +17,7 @@ int MPID_Mrecv(void *buf, int count, MPI_Datatype datatype,
     if (message == NULL) {
         /* treat as though MPI_MESSAGE_NO_PROC was passed */
         MPIR_Status_set_procnull(status);
-        goto fn_exit;
+	return mpi_errno;
     }
 
     /* There is no optimized MPID_Mrecv at this time because there is no real
@@ -29,30 +25,10 @@ int MPID_Mrecv(void *buf, int count, MPI_Datatype datatype,
      * creating a request unnecessarily for messages that are already present
      * and eligible for immediate completion. */
     mpi_errno = MPID_Imrecv(buf, count, datatype, message, &rreq);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
-    if (!MPID_Request_is_complete(rreq)) {
-        MPID_Progress_state progress_state;
+    MPID_PROGRESS_WAIT_WHILE(!MPID_Request_is_complete(rreq));
 
-        MPID_Progress_start(&progress_state);
-        while (!MPID_Request_is_complete(rreq))
-        {
-            mpi_errno = MPID_Progress_wait(&progress_state);
-            if (mpi_errno) {
-                /* --BEGIN ERROR HANDLING-- */
-                MPID_Progress_end(&progress_state);
-                MPIU_ERR_POP(mpi_errno);
-                /* --END ERROR HANDLING-- */
-            }
-        }
-        MPID_Progress_end(&progress_state);
-    }
     mpi_errno = MPIR_Request_complete(&req_handle, rreq, status, &active_flag);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-
-fn_exit:
     return mpi_errno;
-fn_fail:
-    goto fn_exit;
 }
 
