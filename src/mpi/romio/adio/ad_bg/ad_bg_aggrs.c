@@ -520,14 +520,43 @@ void ADIOI_BG_GPFS_Calc_file_domains(ADIO_Offset *st_offsets,
     fd_start             = *fd_start_ptr;
     fd_end               = *fd_end_ptr;
 
+    /* each process will have a file domain of some number of gpfs blocks, but
+     * the division of blocks is not likely to be even.  Some file domains will
+     * be "large" and others "small"
+     *
+     * Example: consider  17 blocks distributed over 3 aggregators.
+     * nb_cn_small = 17/3 = 5
+     * naggs_large = 17 - 3*(17/3) = 17 - 15  = 2
+     * naggs_small = 3 - 2 = 1
+     *
+     * and you end up with file domains of {5-blocks, 6-blocks, 6-blocks}
+     *
+     * what about (relatively) small files?  say, a file of 1000 blocks
+     * distributed over 2064 aggregators:
+     * nb_cn_small = 1000/2064 = 0
+     * naggs_large = 1000 - 2064*(1000/2064) = 1000
+     * naggs_small = 2064 - 1000 = 1064
+     * and you end up with domains of {0, 0, 0, ... 1, 1, 1 ...}
+     *
+     * it might be a good idea instead of having all the zeros up front, to
+     * "mix" those zeros into the fd_size array.  that way, no pset/bridge-set
+     * is left with zero work.  In fact, even if the small file domains aren't
+     * zero, it's probably still a good idea to mix the "small" file domains
+     * across the fd_size array to keep the io nodes in balance */
+
+
     ADIO_Offset n_gpfs_blk    = fd_gpfs_range / blksize;
     ADIO_Offset nb_cn_small   = n_gpfs_blk/naggs;
     ADIO_Offset naggs_large   = n_gpfs_blk - naggs * (n_gpfs_blk/naggs);
     ADIO_Offset naggs_small   = naggs - naggs_large;
 
-    for (i=0; i<naggs; i++)
-        if (i < naggs_small) fd_size[i] = nb_cn_small     * blksize;
-                        else fd_size[i] = (nb_cn_small+1) * blksize;
+    for (i=0; i<naggs; i++) {
+	if (i < naggs_small) {
+	    fd_size[i] = nb_cn_small     * blksize;
+	} else {
+	    fd_size[i] = (nb_cn_small+1) * blksize;
+	}
+    }
 
 #   if AGG_DEBUG
      DBG_FPRINTF(stderr,"%s(%d): "
