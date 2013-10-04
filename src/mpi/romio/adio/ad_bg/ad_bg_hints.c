@@ -258,7 +258,6 @@ void ADIOI_BG_SetInfo(ADIO_File fd, MPI_Info users_info, int *error_code)
      process hints for it. */
 	ADIOI_Info_check_and_install_int(fd, users_info, "striping_unit", 
 		&(fd->hints->striping_unit), myname, error_code);
-	}
 
 	memset( value, 0, MPI_MAX_INFO_VAL+1 );
         ADIOI_Info_get(users_info, ADIOI_BG_NAGG_IN_PSET_HINT_NAME, MPI_MAX_INFO_VAL,
