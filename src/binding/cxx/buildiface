@@ -55,6 +55,13 @@
 #   will have the correct type and some C++ compilers don't recognize NULL
 #   unless you include header files that needed it and are otherwise unneeded
 #   by the C++ interface)
+#
+# To fix the order of virtual methods, the arrays
+#  @routinesMpi1base
+#  @routinesMpi2base
+#  @routines<classname>
+# may be defined.  If these are not defined, then the order will be determined
+# by the perl implementation of the "keys" function.
 #    
 # TODO:
 #    The derived classes (such as Intracomm) must *not* have their own
@@ -82,6 +89,8 @@ $gDebugRoutine = "NONE";
 $do_subdecls = 1;
 $doCoverage = 0;
 $doFuncspec = 1;
+$outputRoutineLists = 0;
+
 # Process environment variables
 #   CXX_COVERAGE - yes    : turn on coverage code
 if (defined($ENV{"CXX_COVERAGE"}) && $ENV{"CXX_COVERAGE"} eq "yes") {
@@ -99,7 +108,12 @@ if (defined($ENV{"CXX_COVERAGE"}) && $ENV{"CXX_COVERAGE"} eq "yes") {
 # -routines=name  - provide a list of routines or a file that
 # lists the routines to use.  The names must be in the same form as the 
 # the class_xxx variables.  E.g., comm-Send, dtype-Commit.
+# -routinelist    - output files containing the routines to output in the
+#  classes (mostly as virtual functions) and the order in which they are output
+#  This can be used to change the output order if it is desired to specify
+#  a particular order.
 $routine_list = "";
+$initFile     = "";
 foreach $_ (@ARGV) {
     if (/--?feature=(.*)/) {
 	foreach $feature (split(/:/,$1)) {
@@ -125,7 +139,9 @@ foreach $_ (@ARGV) {
     elsif (/--?routines=(.*)/) {
 	$routine_list = $1;
     }
-    elsif (/--?coverage/) { &setCoverage( 1 ); }
+    elsif (/--?routinelist/) { $outputRoutineLists = 1; }
+    elsif (/--?initfile=(.*)/) { $initFile = $1; }
+    elsif (/--?coverage/)   { &setCoverage( 1 ); }
     elsif (/--?nocoverage/) { &setCoverage( 0 ); }
     else {
 	print STDERR "Unrecognized argument $_\n";
@@ -133,6 +149,10 @@ foreach $_ (@ARGV) {
 }
 
 if (! -d "../../mpi/romio") { $build_io = 0; }
+
+if ($initFile ne "" && -f $initFile) {
+    do $initFile;
+}
 # ----------------------------------------------------------------------------
 # 
 # The following hashes define each of the methods that belongs to each class.
@@ -292,11 +312,14 @@ $specialReturnType{"cart-Dup"} = "Cartcomm";
 $specialReturnType{"cart-Sub"} = "Cartcomm";
 $specialReturnType{"cart-Split"} = "Cartcomm";
 
-# Create_struct, Pack, and Unpack are handled through definitions elsewhere
+# Pack, and Unpack are handled through definitions elsewhere
+# Create_struct is also handled through definitions elsewhere, but for
+# compatibility with some previous versions, a slightly different
+# declaration is generated for this class.
 %class_mpi1dtype = ( 'Create_contiguous' => 'MPI_Datatype',
 		     'Create_vector' => 'MPI_Datatype', 
 		     'Create_indexed' => 'MPI_Datatype', 
-# 		     'Create_struct' => 'static:5:4',
+		     'Create_struct' => 'static:5:4',
 		     'Get_size' => 2, 
 		     'Commit' => 0,
 		     'Free' => 0, 
@@ -1126,11 +1149,24 @@ class File;
 # and we'll want to use a few of them in the implementations of the
 # other functions.
 print $OUTFD "// base (classless) routines\n";
-foreach $routine (keys(%class_mpi1base)) {
+@routines = keys(%class_mpi1base);
+if (defined(@routinesMpi1base)) {
+    @routines = @routinesMpi1base;
+}
+if ($outputRoutineLists) {
+    open (FD, ">order.mpi1base.txt" );
+    print FD "\@routinesMpi1base = (\n";
+}
+foreach $routine (@routines) {
+    print FD "\t\"$routine\",\n" if ($outputRoutineLists);
     # These aren't really a class, so they don't use Begin/EndClass
     $arginfo = $class_mpi1base{$routine};
     print $OUTFD "extern ";
     &PrintRoutineDef( $OUTFD, "base", $routine, $arginfo, 1 );
+}
+if ($outputRoutineLists) {
+    print FD ");\n";
+    close (FD);
 }
 
 # Forward references for externals, used in error handling
@@ -1178,13 +1214,23 @@ typedef int MPI_File;\
     foreach $mpilevel (@mpilevels) {
         $mpiclass = "$mpilevel$class";
         $class_hash = "class_$mpiclass";
-	foreach $routine (keys(%$class_hash)) {
-	    print "processing $routine\n" if $gDebug;
-
+	@routines = keys(%$class_hash);
+	$arrname  = "routines$mpiclass";
+	if (defined(@$arrname)) {
+	    @routines = @$arrname;
+	}
+	if ($#routines < 0) { next; }
+	if ($outputRoutineLists) {
+	    open (FD, ">order.$arrname.txt" );
+	    print FD "\@$arrname = (\n";
+	}
+	foreach $routine (@routines) {
+	    print "processing $routine in $mpiclass\n" if $gDebug;
+	    print FD "\t\"$routine\",\n" if ($outputRoutineLists);
 	    # info describes the return parameter and any special
 	    # processing for this routine.
 	    $arginfo = $$class_hash{$routine};
-	    
+	    print "Arginfo is $arginfo\n" if $gDebug;
 	    &PrintRoutineDef( $OUTFD, $class, $routine, $arginfo, 0 );
 	    
 	    # Check for Status as an arg (handle MPI_STATUS_IGNORE 
@@ -1193,6 +1239,10 @@ typedef int MPI_File;\
 		&PrintRoutineDefNoStatus( $OUTFD, $class, 
 					  $routine, $arginfo, 0 );
  	    }
+	}
+	if ($outputRoutineLists) {
+	    print FD ");\n";
+	    close (FD);
 	}
     }
     if (defined($class_extra_fnc{$class})) {
@@ -1216,12 +1266,25 @@ typedef int MPI_File;\
 }
 
     # Add a few more external functions (some require the above definitions)
-    foreach $routine (keys(%class_mpi2base)) {
-        # These aren't really a class, so they don't use Begin/EndClass
+    @routines = keys(%class_mpi2base);
+    if (defined(@routinesMpi2base)) { 
+        @routines = @routinesMpi2base;
+    }
+    if ($outputRoutineLists) {
+	open (FD, ">order.$arrname.txt" );
+	print FD "\@routinesMpi2base = (\n";
+    }
+    foreach $routine (@routines) {
+	print FD "\t\"$routine\",\n" if ($outputRoutineLists);
+	# These aren't really a class, so they don't use Begin/EndClass
         $arginfo = $class_mpi2base{$routine};
         print $OUTFD "extern ";
 	#print "$routine - $arginfo\n";
         &PrintRoutineDef( $OUTFD, "base", $routine, $arginfo, 1 );
+    }
+    if ($outputRoutineLists) {
+	print FD ");\n";
+	close (FD);
     }
     # Special case: the typedefs for the datarep function
     # Only define these typedefs when MPI-IO is available (this is the same
@@ -1531,10 +1594,13 @@ sub print_args {
 		    print STDERR "Internal error.  Could not find basetype\n";
 		    print STDERR "This may be a bug in perl in the handling of certain expressions\n";
 		}
+		# Convert C to C++ types
+		$cxxtype = $basetype;
+		$cxxtype =~ s/MPI_//;
 		if ($extrabracks =~ /(\[[\d\s]*\])/) {
 		    $otherdims = $1;
 		}
-		print $OUTFD "$qualifier$basetype v$count\[\]$otherdims";
+		print $OUTFD "$qualifier$cxxtype v$count\[\]$otherdims";
 	    }
 	    elsif ($parm =~ /\.\.\./) {
 		# Special case for varargs.  Only ints!
@@ -3757,7 +3823,18 @@ sub PrintRoutineDef {
 
     ($cArgs, $Croutine) = &GetCArgs( $class, $routine );
 
-    &PrintMethodDef( $OUTFD, $class, $routine, $arginfo, $cArgs );    
+    # Hideous hack.  To preserve ABI compatibility, for one particular
+    # case for Create struct, remove the const values
+    if ($routine eq "Create_struct" && $arginfo eq "static:5:4") { 
+	print "$cArgs\n";
+	$cDefArgs = $cArgs;
+	$cDefArgs =~ s/const\s+//g;
+    }
+    else {
+	$cDefArgs = $cArgs;
+    }
+
+    &PrintMethodDef( $OUTFD, $class, $routine, $arginfo, $cDefArgs );    
 
     # This inserts a modifier, such as const or =0 (for pure virtual)
     if (defined($funcAttributes{$fnchash})) {
