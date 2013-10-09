@@ -45,6 +45,7 @@ $MPIMinorVersion = "@MPI_SUBVERSION@";
 $mpiexec = "@MPIEXEC@";    # Name of mpiexec program (including path, if necessary)
 $testIsStrict = "@MPI_IS_STRICT@";
 $MPIhasMPIX   = "@MPI_HAS_MPIX@";
+$runxfail     = "@RUN_XFAIL@";
 $np_arg  = "-n";         # Name of argument to specify the number of processes
 $err_count = 0;          # Number of programs that failed.
 $total_run = 0;          # Number of programs tested
@@ -455,6 +456,15 @@ sub RunList {
             # assumptions do not hold.
             $xfail = '';
         }
+
+	if ($xfail ne '' && $runxfail eq "false") {
+	    # Skip xfail tests if they are not configured. Strict MPI tests that are
+	    # marked xfail will still run with --enable-strictmpi.
+            unless (-d $programname) {
+		SkippedTest($programname, $np, $workdir, "xfail tests disabled");
+	    }
+	    next;
+	}
 
         if (lc($requiresMPIX) eq "true" && lc($MPIHasMPIX) eq "no") {
             unless (-d $programname) {

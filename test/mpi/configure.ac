@@ -172,6 +172,11 @@ AC_ARG_ENABLE(threads,
 	requiring a specific --enable-threads argument.],,
 	[enable_threads=default])
 
+AC_ARG_ENABLE(xfail,
+	[AC_HELP_STRING([--enable-xfail],
+		[Run tests marked for expected failure])],,
+	[enable_xfail=no])
+
 AC_ARG_WITH(mpi,
 	[AC_HELP_STRING([--with-mpi=dir],
 		[Use the selected MPI; compilation scripts for mpicc,
@@ -350,6 +355,14 @@ if test "$enable_checkpointing" = "yes" ; then
     ckpointdir="ckpoint"
 fi
 AC_SUBST(ckpointdir)
+
+#
+# Only run xfail tests if enabled
+RUN_XFAIL=false
+if test "$enable_xfail" = "yes" ; then
+    RUN_XFAIL=true
+fi
+AC_SUBST(RUN_XFAIL)
 
 PAC_LOAD_BASE_CACHE
 PAC_VPATH_CHECK()
