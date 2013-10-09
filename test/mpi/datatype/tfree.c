@@ -65,8 +65,8 @@ int main( int argc, char *argv[] )
 	    MPI_Type_commit( &tmpType[i] );
 	}
 
-	MPI_Sendrecv( 0, 0, MPI_INT, source, 1, 
-		      0, 0, MPI_INT, source, 1, comm, &status );
+	MPI_Sendrecv( NULL, 0, MPI_INT, source, 1,
+		      NULL, 0, MPI_INT, source, 1, comm, &status );
 
 	MPI_Wait( &req, &status );
 	for (i=0; i<VEC_NELM; i++) {
@@ -87,8 +87,8 @@ int main( int argc, char *argv[] )
 	buf = (int *)malloc( VEC_NELM * sizeof(int) );
 	for (i=0; i<VEC_NELM; i++) buf[i] = i;
 	/* Synchronize with the receiver */
-	MPI_Sendrecv( 0, 0, MPI_INT, dest, 1, 
-		      0, 0, MPI_INT, dest, 1, comm, &status );
+	MPI_Sendrecv( NULL, 0, MPI_INT, dest, 1,
+		      NULL, 0, MPI_INT, dest, 1, comm, &status );
 	MPI_Send( buf, VEC_NELM, MPI_INT, dest, 0, comm );
 	free( buf );
     }

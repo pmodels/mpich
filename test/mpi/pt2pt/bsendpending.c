@@ -70,8 +70,8 @@ int main( int argc, char *argv[] )
 	    MPI_Bsend( msg3, msgsize, MPI_CHAR, dest, 0, comm );
 
 	    /* Synchronize with our partner */
-	    MPI_Sendrecv( 0, 0, MPI_CHAR, dest, 10, 
-			  0, 0, MPI_CHAR, dest, 10, comm, MPI_STATUS_IGNORE );
+	    MPI_Sendrecv( NULL, 0, MPI_CHAR, dest, 10,
+			  NULL, 0, MPI_CHAR, dest, 10, comm, MPI_STATUS_IGNORE );
 
 	    /* Detach the buffers.  There should be pending operations */
 	    MPI_Buffer_detach ( &bufp, &outsize );
@@ -95,8 +95,8 @@ int main( int argc, char *argv[] )
 	    }
 
 	    /* Wait for the synchronize */
-	    MPI_Sendrecv( 0, 0, MPI_CHAR, source, 10, 
-			  0, 0, MPI_CHAR, source, 10, comm, MPI_STATUS_IGNORE );
+	    MPI_Sendrecv( NULL, 0, MPI_CHAR, source, 10,
+			  NULL, 0, MPI_CHAR, source, 10, comm, MPI_STATUS_IGNORE );
 
 	    /* Wait 2 seconds */
 	    tstart = MPI_Wtime();

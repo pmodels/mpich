@@ -38,8 +38,8 @@ int main( int argc, char *argv[] )
     /* printf( "b[0] = %d\n", b[0] );*/
     MPI_Wait( &request, &status );
 
-    MPI_Isend( 0, 0, MPI_INT, rank, 0, MPI_COMM_WORLD, &request );
-    MPI_Recv( 0, 0, MPI_INT, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD,
+    MPI_Isend( NULL, 0, MPI_INT, rank, 0, MPI_COMM_WORLD, &request );
+    MPI_Recv( NULL, 0, MPI_INT, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD,
 	      &status );
     MPI_Get_count( &status, MPI_INT, &count );
     if (status.MPI_SOURCE != rank ||
