@@ -69,8 +69,8 @@ int double_int_test(void)
     MPI_Type_create_struct(3, blks, disps, types, &stype);
     MPI_Type_commit(&stype);
 
-    err = MPI_Sendrecv(&foo, 1, stype, 0, 0,
-		       &bar, 2, MPI_DOUBLE_INT, 0, 0,
+    err = MPI_Sendrecv((const void *) &foo, 1, stype, 0, 0,
+		       (void *) &bar, 2, MPI_DOUBLE_INT, 0, 0,
 		       MPI_COMM_SELF, &recvstatus);
     if (err != MPI_SUCCESS) {
 	errs++;
