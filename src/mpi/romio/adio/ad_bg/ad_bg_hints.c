@@ -57,7 +57,7 @@ void ADIOI_BG_SetInfo(ADIO_File fd, MPI_Info users_info, int *error_code)
 
     MPI_Info info;
     char *value;
-    int flag, intval, tmp_val, nprocs=0, nprocs_is_valid = 0;
+    int flag, intval, nprocs=0, nprocs_is_valid = 0;
     static char myname[] = "ADIOI_BG_SETINFO";
 
     int did_anything = 0;
