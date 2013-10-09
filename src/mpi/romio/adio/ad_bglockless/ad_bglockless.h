@@ -6,7 +6,7 @@
  */
 
 #ifndef AD_BGLOCKLESS_INCLUDE
-#define AD_PVFS2_INCLUDE
+#define AD_BGLOCKLESS_INCLUDE
 
 int ADIOI_BGLOCKLESS_Feature(ADIO_File fd, int flag);
 
