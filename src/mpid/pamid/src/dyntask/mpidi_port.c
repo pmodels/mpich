@@ -693,10 +693,6 @@ int MPIDI_Comm_connect(const char *port_name, MPID_Info *info, int root,
     }
 
     TRACE_ERR("connect:free new vc\n");
-    /* Free new_vc. It was explicitly allocated in MPIDI_Connect_to_root.*/
-    if (rank == root) {
-	MPIU_Free( new_vc);
-    }
 
 fn_exit:
     if(local_translation) MPIU_Free(local_translation);
@@ -1348,11 +1344,6 @@ int MPIDI_Comm_accept(const char *port_name, MPID_Info *info, int root,
     mpi_errno = MPIR_Barrier_intra(comm_ptr, &errflag);
     if (mpi_errno != MPI_SUCCESS) {
 	TRACE_ERR("MPIR_Barrier_intra returned with mpi_errno=%d\n", mpi_errno);
-    }
-
-    /* Free new_vc once the connection is completed. */
-    if (rank == root) {
-	MPIU_Free( new_vc );
     }
 
 fn_exit:

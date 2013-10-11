@@ -1246,9 +1246,6 @@ int MPID_Init(int * argc,
                                 * for getting the business card
                                 */
     MPIDI_Process.my_pg_rank = pg_rank;
-    /* FIXME: Why do we add a ref to pg here? */
-    TRACE_ERR("Adding ref pg=%x\n", pg);
-    MPIDI_PG_add_ref(pg);
 
   }
 #endif

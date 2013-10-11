@@ -34,7 +34,7 @@ struct MPIDI_VCRT
 {
   MPIU_OBJECT_HEADER;
   unsigned size;          /**< Number of entries in the table */
-  MPID_VCR vcr_table[0];  /**< Array of virtual connection references */
+  MPID_VCR *vcr_table;  /**< Array of virtual connection references */
 };
 
 
@@ -48,7 +48,11 @@ int MPID_VCR_Dup(MPID_VCR orig_vcr, MPID_VCR * new_vcr)
     }
 #endif
 
-    *new_vcr = orig_vcr;
+    (*new_vcr)->taskid = orig_vcr->taskid;
+#ifdef DYNAMIC_TASKING
+    (*new_vcr)->pg_rank = orig_vcr->pg_rank;
+    (*new_vcr)->pg = orig_vcr->pg;
+#endif
     return MPI_SUCCESS;
 }
 
@@ -63,9 +67,12 @@ int MPID_VCRT_Create(int size, MPID_VCRT *vcrt_ptr)
     struct MPIDI_VCRT * vcrt;
     int i,result;
 
-    vcrt = MPIU_Malloc(sizeof(struct MPIDI_VCRT) + size*sizeof(MPID_VCR));
-    for(i = 0; i < size; i++)
+    vcrt = MPIU_Malloc(sizeof(struct MPIDI_VCRT));
+    vcrt->vcr_table = MPIU_Malloc(size*sizeof(MPID_VCR));
+
+    for(i = 0; i < size; i++) {
 	vcrt->vcr_table[i] = MPIU_Malloc(sizeof(struct MPID_VCR_t));
+    }
     if (vcrt != NULL)
     {
         MPIU_Object_set_ref(vcrt, 1);
@@ -98,17 +105,17 @@ int MPID_VCRT_Release(MPID_VCRT vcrt, int isDisconnect)
       for (i = 0; i < vcrt->size; i++)
         {
           MPID_VCR const vcr = vcrt->vcr_table[i];
+
             if (vcr->pg == MPIDI_Process.my_pg &&
                 vcr->pg_rank == MPIDI_Process.my_pg_rank)
               {
 	        TRACE_ERR("before MPIDI_PG_release_ref on vcr=%x pg=%x pg=%s inuse=%d\n", vcr, vcr->pg, (vcr->pg)->id, inuse);
                 inuse=MPIU_Object_get_ref(vcr->pg);
-	        TRACE_ERR("before MPIDI_PG_release_ref on vcr=%x pg=%x pg=%s inuse=%d\n", vcr, vcr->pg, (vcr->pg)->id, inuse);
                 MPIDI_PG_release_ref(vcr->pg, &inuse);
-	        TRACE_ERR("MPIDI_PG_release_ref on pg=%s inuse=%d\n", (vcr->pg)->id, inuse);
                 if (inuse == 0)
                  {
                    MPIDI_PG_Destroy(vcr->pg);
+                   MPIU_Free(vcr);
                  }
                  continue;
               }
@@ -117,11 +124,21 @@ int MPID_VCRT_Release(MPID_VCRT vcrt, int isDisconnect)
             MPIDI_PG_release_ref(vcr->pg, &inuse);
             if (inuse == 0)
               MPIDI_PG_Destroy(vcr->pg);
-	/*MPIU_Free(vcrt->vcr_table[i]);*/
+        if(vcr) MPIU_Free(vcr);
        }
+       MPIU_Free(vcrt->vcr_table);
      } /** CHECK */
+     else {
+      for (i = 0; i < vcrt->size; i++)
+	MPIU_Free(vcrt->vcr_table[i]);
+      MPIU_Free(vcrt->vcr_table);vcrt->vcr_table=NULL;
+     }
+#else
+      for (i = 0; i < vcrt->size; i++)
+	MPIU_Free(vcrt->vcr_table[i]);
+      MPIU_Free(vcrt->vcr_table);vcrt->vcr_table=NULL;
 #endif
-     MPIU_Free(vcrt);
+     MPIU_Free(vcrt);vcrt=NULL;
     }
     return MPI_SUCCESS;
 }

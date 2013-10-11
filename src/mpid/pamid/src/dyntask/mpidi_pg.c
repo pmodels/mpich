@@ -204,11 +204,11 @@ int MPIDI_PG_Finalize(void)
         fails to use MPI_Comm_disconnect on communicators that
         were created with the dynamic process routines.*/
 	/* XXX DJG FIXME-MT should we be checking this? */
-     if (MPIU_Object_get_ref(pg) == 0 || 1) {
+     if (MPIU_Object_get_ref(pg) == 0 ) {
        if (pg == MPIDI_Process.my_pg)
          MPIDI_Process.my_pg = NULL;
-        MPIU_Object_set_ref(pg, 0); /* satisfy assertions in PG_Destroy */
-        MPIDI_PG_Destroy( pg );
+       MPIU_Object_set_ref(pg, 0); /* satisfy assertions in PG_Destroy */
+       MPIDI_PG_Destroy( pg );
      }
      pg     = pgNext;
    }
@@ -218,10 +218,9 @@ int MPIDI_PG_Finalize(void)
       point is that comm_world (and comm_self) still exist, and
       hence the usual process to free the related VC structures will
       not be invoked. */
-   if (MPIDI_Process.my_pg) {
-     MPIDI_PG_Destroy(MPIDI_Process.my_pg);
-   }
-   MPIDI_Process.my_pg = NULL;
+
+   /* The process group associated with MPI_COMM_WORLD will be
+      freed when MPI_COMM_WORLD is freed */
 
    return mpi_errno;
 }
