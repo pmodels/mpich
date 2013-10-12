@@ -635,6 +635,23 @@ void MPIDI_Datatype_contents_printf(MPI_Datatype type,
 					       acount);
 	    }
 	    __mpidi_datatype_free_and_return;
+	case MPI_COMBINER_SUBARRAY:
+	    MPIU_DBG_OUT_FMT(DATATYPE, (MPIU_DBG_FDEST,"# %ssubarray ct = %d:",
+			MPIDI_Datatype_depth_spacing(depth),
+			(int) ints[0]));
+	    for (i=0; i< acount && i < ints[0]; i++) {
+		MPIU_DBG_OUT_FMT(DATATYPE,(MPIU_DBG_FDEST,
+			    "# %s  sizes[%d] = %d subsizes[%d] = %d starts[%d] = %d\n",
+			    MPIDI_Datatype_depth_spacing(depth),
+			    i, (int)ints[i+1],
+			    i, (int)ints[i+ ints[0]+1],
+			    i, (int)ints[2*ints[0]+1]));
+	    }
+	    MPIDI_Datatype_contents_printf(*types,
+		    depth + 1,
+		    acount);
+	    __mpidi_datatype_free_and_return;
+
 	default:
 	    MPIU_DBG_OUT_FMT(DATATYPE,(MPIU_DBG_FDEST,"# %sunhandled combiner",
 			MPIDI_Datatype_depth_spacing(depth)));
