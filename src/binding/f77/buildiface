@@ -2503,7 +2503,7 @@ sub status_out_fnulltoc {
     if ($within_fint) {
 	print $OUTFD "\
     if (v$count == MPI_F_STATUS_IGNORE) { l$count = MPI_STATUS_IGNORE; }
-    else { l$count->MPI_ERROR = (int)(v$count\[2\]); }\n";
+    else { l$count->MPI_ERROR = (int)(v$count\[4\]); }\n";
     }
     else {
 	print $OUTFD "\
@@ -3775,7 +3775,7 @@ if ($write_mpif) {
     # FIXME: The offsets for the status elements are hardwired.  If they
     # change in mpi.h.in, they need to change here as well.
     print MPIFFD "       INTEGER MPI_SOURCE, MPI_TAG, MPI_ERROR\n";
-    print MPIFFD "       PARAMETER (MPI_SOURCE=1,MPI_TAG=2,MPI_ERROR=3)\n";
+    print MPIFFD "       PARAMETER (MPI_SOURCE=3,MPI_TAG=4,MPI_ERROR=5)\n";
     print MPIFFD "       INTEGER MPI_STATUS_SIZE\n";
     print MPIFFD "       PARAMETER (MPI_STATUS_SIZE=\@MPI_STATUS_SIZE\@)\n";
     # Temporary until configure handles these.  Define as arrays to keep
@@ -4582,11 +4582,11 @@ print $OUTFD "\
 #ifdef HAVE_FINT_IS_INT
     *c_status = *(MPI_Status *)	f_status;
 #else
-    c_status->MPI_SOURCE = (int)f_status\[0\];
-    c_status->MPI_TAG    = (int)f_status\[1\];
-    c_status->MPI_ERROR  = (int)f_status\[2\];
-    c_status->count      = *(MPI_Count *)(f_status+3);
-    c_status->cancelled  = (int)f_status\[3+(sizeof(MPI_Count)+sizeof(MPI_Fint)-1)/sizeof(MPI_Fint)\];
+    c_status->count_lo   = (int)f_status\[0\];
+    c_status->count_hi_and_cancelled = (int)f_status\[1\];
+    c_status->MPI_SOURCE = (int)f_status\[2\];
+    c_status->MPI_TAG    = (int)f_status\[3\];
+    c_status->MPI_ERROR  = (int)f_status\[4\];
     /* no need to copy abi_slush_fund field */
 #endif\n";
     }
@@ -4656,11 +4656,11 @@ int MPI_Status_c2f( const MPI_Status *c_status, MPI_Fint *f_status )
 #ifdef HAVE_FINT_IS_INT
     *(MPI_Status *)f_status = *c_status;
 #else
-    f_status\[0\] = (MPI_Fint)c_status->MPI_SOURCE;
-    f_status\[1\] = (MPI_Fint)c_status->MPI_TAG;
-    f_status\[2\] = (MPI_Fint)c_status->MPI_ERROR;
-    *(MPI_Count*)(f_status+3) = c_status->count;
-    f_status\[3+(sizeof(MPI_Count)+sizeof(MPI_Fint)-1)/sizeof(MPI_Fint)\] = (MPI_Fint)c_status->cancelled;
+    f_status\[0\] = (MPI_Fint)c_status->count_lo;
+    f_status\[1\] = (MPI_Fint)c_status->count_hi_and_cancelled;
+    f_status\[2\] = (MPI_Fint)c_status->MPI_SOURCE;
+    f_status\[3\] = (MPI_Fint)c_status->MPI_TAG;
+    f_status\[4\] = (MPI_Fint)c_status->MPI_ERROR;
 #endif\n";
     }
     else {

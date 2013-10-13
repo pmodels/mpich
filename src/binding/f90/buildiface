@@ -650,11 +650,8 @@ print MPIFD <<EOT;
         TYPE$BINDACCESS :: MPI_Status
            $BINDDEF
            INTEGER$PUBLICVAR :: MPI_SOURCE, MPI_TAG, MPI_ERROR
-           \@FC_STATUS_PAD1\@
-           INTEGER$PRIVATEVAR(KIND=MPI_COUNT_KIND) :: count
-           INTEGER$PRIVATEVAR :: cancelled
-           INTEGER$PRIVATEVAR(2) :: abi_slush_fund
-           \@FC_STATUS_PAD2\@
+           INTEGER$PRIVATEVAR :: count_lo
+           INTEGER$PRIVATEVAR :: count_hi_and_cancelled
         END TYPE MPI_Status
 EOT
 
