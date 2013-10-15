@@ -607,7 +607,7 @@ MPID_nem_mx_handle_rreq(MPID_Request *req, mx_status_t status)
     MPID_Segment_unpack( req->dev.segment_ptr, 0, &last, req->dev.tmpbuf );
     MPIU_Free(req->dev.tmpbuf);       
     if (last != data_sz) {
-      MPIR_STATUS_SET_COUNT(req->status, (int)last);
+      MPIR_STATUS_SET_COUNT(req->status, last);
       if (req->dev.recv_data_sz <= userbuf_sz) {
 	MPIU_ERR_SETSIMPLE(req->status.MPI_ERROR,MPI_ERR_TYPE,"**dtypemismatch");
       }

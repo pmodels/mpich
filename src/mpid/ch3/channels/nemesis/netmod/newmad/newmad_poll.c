@@ -373,7 +373,7 @@ MPID_nem_newmad_handle_rreq(MPID_Request *req, nm_tag_t match_info, size_t size)
 	MPID_Segment_unpack( req->dev.segment_ptr, 0, &last, req->dev.tmpbuf);
 	MPIU_Free(req->dev.tmpbuf);
 	if (last != data_sz) {
-	    MPIR_STATUS_SET_COUNT(req->status, (int)last);
+	    MPIR_STATUS_SET_COUNT(req->status, last);
 	    if (req->dev.recv_data_sz <= userbuf_sz) {
 		MPIU_ERR_SETSIMPLE(req->status.MPI_ERROR,MPI_ERR_TYPE,"**dtypemismatch");
 	    }

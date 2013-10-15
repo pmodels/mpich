@@ -239,7 +239,7 @@ int MPIDI_CH3_RecvFromSelf( MPID_Request *rreq, void *buf, int count,
 			       sreq->dev.datatype, &sreq->status.MPI_ERROR,
 			       buf, count, datatype, &data_sz, 
 			       &rreq->status.MPI_ERROR);
-	MPIR_STATUS_SET_COUNT(rreq->status, (int)data_sz);
+	MPIR_STATUS_SET_COUNT(rreq->status, data_sz);
 	MPID_REQUEST_SET_COMPLETED(sreq);
 	MPID_Request_release(sreq);
     }

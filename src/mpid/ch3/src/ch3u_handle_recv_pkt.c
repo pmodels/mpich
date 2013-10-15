@@ -198,7 +198,7 @@ int MPIDI_CH3U_Receive_data_found(MPID_Request *rreq, char *buf, MPIDI_msg_sz_t 
                    mismatch between the datatype and the amount of
                    data received.  Throw away received data. */
                 MPIU_ERR_SET(rreq->status.MPI_ERROR, MPI_ERR_TYPE, "**dtypemismatch");
-                MPIR_STATUS_SET_COUNT(rreq->status, (int)rreq->dev.segment_first);
+                MPIR_STATUS_SET_COUNT(rreq->status, rreq->dev.segment_first);
                 *buflen = data_sz;
                 *complete = TRUE;
 		/* FIXME: Set OnDataAvail to 0?  If not, why not? */

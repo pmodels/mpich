@@ -405,7 +405,7 @@ int MPIDI_CH3_PktHandler_EagerShortSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 		    /* There are two cases:  a datatype mismatch (could
 		       not consume all data) or a too-short buffer. We
 		       need to distinguish between these two types. */
-		    MPIR_STATUS_SET_COUNT(rreq->status, (int)last);
+		    MPIR_STATUS_SET_COUNT(rreq->status, last);
 		    if (rreq->dev.recv_data_sz <= userbuf_sz) {
 			MPIU_ERR_SETSIMPLE(rreq->status.MPI_ERROR,MPI_ERR_TYPE,
 					   "**dtypemismatch");
