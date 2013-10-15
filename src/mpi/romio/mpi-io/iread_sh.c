@@ -43,7 +43,8 @@ Output Parameters:
 int MPI_File_iread_shared(MPI_File fh, void *buf, int count,
                           MPI_Datatype datatype, MPI_Request *request)
 {
-    int error_code, bufsize, buftype_is_contig, filetype_is_contig;
+    int error_code, buftype_is_contig, filetype_is_contig;
+    ADIO_Offset bufsize;
     ADIO_File adio_fh;
     static char myname[] = "MPI_FILE_IREAD_SHARED";
     MPI_Count datatype_size, incr;

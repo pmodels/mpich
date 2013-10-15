@@ -42,11 +42,10 @@ Output Parameters:
 int MPI_File_read_shared(MPI_File fh, void *buf, int count,
 			 MPI_Datatype datatype, MPI_Status *status)
 {
-    int error_code, bufsize, buftype_is_contig, filetype_is_contig;
+    int error_code, buftype_is_contig, filetype_is_contig;
     static char myname[] = "MPI_FILE_READ_SHARED";
-    int incr;
     MPI_Count datatype_size;
-    ADIO_Offset off, shared_fp;
+    ADIO_Offset off, shared_fp, incr, bufsize;
     ADIO_File adio_fh;
     void *xbuf=NULL, *e32_buf=NULL;
 

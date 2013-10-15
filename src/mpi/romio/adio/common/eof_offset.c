@@ -14,8 +14,8 @@
 void ADIOI_Get_eof_offset(ADIO_File fd, ADIO_Offset *eof_offset)
 {
     unsigned filetype_size;
-    int error_code, filetype_is_contig, etype_size;
-    ADIO_Offset fsize, disp, sum=0, size_in_file, n_filetypes, rem;
+    int error_code, filetype_is_contig;
+    ADIO_Offset fsize, disp, sum=0, size_in_file, n_filetypes, rem, etype_size;
     int flag, i;
     ADIO_Fcntl_t *fcntl_struct;
     MPI_Aint filetype_extent;

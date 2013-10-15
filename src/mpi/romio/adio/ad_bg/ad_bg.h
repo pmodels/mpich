@@ -86,7 +86,7 @@ void ADIOI_BG_WriteStridedColl(ADIO_File fd, const void *buf, int count,
                        ADIO_Offset offset, ADIO_Status *status, int
                        *error_code);
 
-void ADIOI_BG_Get_shared_fp(ADIO_File fd, int size, ADIO_Offset *shared_fp, int *error_code);
+void ADIOI_BG_Get_shared_fp(ADIO_File fd, ADIO_Offset size, ADIO_Offset *shared_fp, int *error_code);
 void ADIOI_BG_Set_shared_fp(ADIO_File fd, ADIO_Offset offset, int *error_code);
 
 void ADIOI_BG_Flush(ADIO_File fd, int *error_code);

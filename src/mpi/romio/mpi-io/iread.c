@@ -73,11 +73,11 @@ int MPI_File_iread(MPI_File fh, void *buf, int count, MPI_Datatype datatype, MPI
 int MPIOI_File_iread(MPI_File fh, MPI_Offset offset, int file_ptr_type, void *buf, int count,
 		     MPI_Datatype datatype, char *myname, MPI_Request *request)
 {
-    int error_code, bufsize, buftype_is_contig, filetype_is_contig;
+    int error_code, buftype_is_contig, filetype_is_contig;
     MPI_Count datatype_size;
     ADIO_Status status;
     ADIO_File adio_fh;
-    ADIO_Offset off;
+    ADIO_Offset off, bufsize;
     MPI_Offset nbytes=0;
 
     MPIU_THREAD_CS_ENTER(ALLFUNC,);

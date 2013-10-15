@@ -43,7 +43,8 @@ Output Parameters:
 int MPI_File_write_ordered(MPI_File fh, const void *buf, int count,
 			   MPI_Datatype datatype, MPI_Status *status)
 {
-    int error_code, nprocs, myrank, incr;
+    int error_code, nprocs, myrank;
+    ADIO_Offset incr;
     MPI_Count datatype_size;
     int source, dest;
     static char myname[] = "MPI_FILE_WRITE_ORDERED";

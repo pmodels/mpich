@@ -80,10 +80,10 @@ int MPIOI_File_iwrite(MPI_File fh,
 		      char *myname,
 		      MPI_Request *request)
 {
-    int error_code, bufsize, buftype_is_contig, filetype_is_contig;
+    int error_code, buftype_is_contig, filetype_is_contig;
     MPI_Count datatype_size;
     ADIO_Status status;
-    ADIO_Offset off;
+    ADIO_Offset off, bufsize;
     ADIO_File adio_fh;
     MPI_Offset nbytes=0;
 

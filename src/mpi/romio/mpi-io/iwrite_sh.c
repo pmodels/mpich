@@ -44,9 +44,9 @@ Output Parameters:
 int MPI_File_iwrite_shared(MPI_File fh, const void *buf, int count,
 			   MPI_Datatype datatype, MPIO_Request *request)
 {
-    int error_code, bufsize, buftype_is_contig, filetype_is_contig;
+    int error_code, buftype_is_contig, filetype_is_contig;
     ADIO_File adio_fh;
-    int incr;
+    ADIO_Offset incr, bufsize;
     MPI_Count datatype_size;
     ADIO_Status status;
     ADIO_Offset off, shared_fp;

@@ -94,7 +94,8 @@ static int file_to_info(int fd, MPI_Info info)
 {
     char *buffer, *token, *key, *val, *garbage;
     char *pos1=NULL, *pos2=NULL;
-    int flag, ret;
+    int flag;
+    ssize_t ret;
     char dummy;
     struct stat statbuf;
 

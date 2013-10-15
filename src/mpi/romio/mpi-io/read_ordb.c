@@ -39,10 +39,10 @@ Output Parameters:
 int MPI_File_read_ordered_begin(MPI_File fh, void *buf, int count,
 				MPI_Datatype datatype)
 {
-    int error_code,  nprocs, myrank, incr;
+    int error_code,  nprocs, myrank;
     MPI_Count datatype_size;
     int source, dest;
-    ADIO_Offset shared_fp;
+    ADIO_Offset shared_fp, incr;
     ADIO_File adio_fh;
     static char myname[] = "MPI_FILE_READ_ORDERED_BEGIN";
     void *xbuf=NULL, *e32_buf=NULL;
