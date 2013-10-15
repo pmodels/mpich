@@ -99,6 +99,13 @@ int MPID_Finalize()
 
   PAMIX_Finalize(MPIDI_Client);
 
+#ifdef MPID_NEEDS_ICOMM_WORLD
+    MPIR_Comm_release_always(MPIR_Process.icomm_world, 0);
+#endif
+
+  MPIR_Comm_release_always(MPIR_Process.comm_self,0);
+  MPIR_Comm_release_always(MPIR_Process.comm_world,0);
+
   rc = PAMI_Context_destroyv(MPIDI_Context, MPIDI_Process.avail_contexts);
   MPID_assert_always(rc == PAMI_SUCCESS);
 
