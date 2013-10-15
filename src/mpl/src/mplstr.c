@@ -70,7 +70,7 @@ int MPL_snprintf(char *str, size_t size, mpl_const char *format, ...)
                     val = va_arg(list, int);
                     sprintf(tmp, "%d", val);
                     if (width > 0) {
-                        int tmplen = strlen(tmp);
+                        size_t tmplen = strlen(tmp);
                         /* If a width was specified, pad with spaces on the
                          * left (on the right if %-3d given; not implemented yet */
                         while (size-- > 0 && width-- > tmplen)
@@ -91,7 +91,7 @@ int MPL_snprintf(char *str, size_t size, mpl_const char *format, ...)
                     val = va_arg(list, int);
                     sprintf(tmp, "%x", val);
                     if (width > 0) {
-                        int tmplen = strlen(tmp);
+                        size_t tmplen = strlen(tmp);
                         /* If a width was specified, pad with spaces on the
                          * left (on the right if %-3d given; not implemented yet */
                         while (size-- > 0 && width-- > tmplen)
@@ -112,7 +112,7 @@ int MPL_snprintf(char *str, size_t size, mpl_const char *format, ...)
                     val = va_arg(list, void *);
                     sprintf(tmp, "%p", val);
                     if (width > 0) {
-                        int tmplen = strlen(tmp);
+                        size_t tmplen = strlen(tmp);
                         /* If a width was specified, pad with spaces on the
                          * left (on the right if %-3d given; not implemented yet */
                         while (size-- > 0 && width-- > tmplen)
