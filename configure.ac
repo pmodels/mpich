@@ -114,7 +114,7 @@ m4_include([maint/version.m4])
 dnl 2nd arg is intentionally underquoted
 AC_INIT([MPICH],
         MPICH_VERSION_m4,
-        [mpich-discuss@mcs.anl.gov],
+        [discuss@mpich.org],
         [mpich],
         [http://www.mpich.org/])
 
