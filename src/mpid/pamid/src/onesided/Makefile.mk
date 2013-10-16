@@ -36,7 +36,9 @@ lib_lib@MPILIBNAME@_la_SOURCES +=                                    \
   src/mpid/pamid/src/onesided/mpid_win_lock_all.c                    \
   src/mpid/pamid/src/onesided/mpid_win_pscw.c                        \
   src/mpid/pamid/src/onesided/mpid_win_put.c                         \
+  src/mpid/pamid/src/onesided/mpid_win_shared_query.c                \
   src/mpid/pamid/src/onesided/mpid_win_create_dynamic.c              \
+  src/mpid/pamid/src/onesided/mpid_win_allocate_shared.c             \
   src/mpid/pamid/src/onesided/mpid_win_flush.c                       \
   src/mpid/pamid/src/onesided/mpid_win_allocate.c                    \
   src/mpid/pamid/src/onesided/mpid_win_sync.c                        \

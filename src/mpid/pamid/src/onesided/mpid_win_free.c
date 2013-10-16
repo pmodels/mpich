@@ -21,6 +21,17 @@
  */
 #include "mpidi_onesided.h"
 
+int MPIDI_SHM_Win_free(MPID_Win **win_ptr)
+{
+  int mpi_errno = MPI_SUCCESS;
+    /* Free shared memory region */
+    /* free shm_base_addrs that's only used for shared memory windows */
+    if ((*win_ptr)->mpid.shm->allocated)
+        mpi_errno = shmdt((*win_ptr)->base);
+    MPIU_Free((*win_ptr)->mpid.shm);
+    (*win_ptr)->mpid.shm = NULL;
+    return mpi_errno;
+}
 
 /**
  * \brief MPI-PAMI glue for MPI_Win_free function
@@ -41,6 +52,7 @@ MPID_Win_free(MPID_Win **win_ptr)
 
   MPID_Win *win = *win_ptr;
   size_t rank = win->comm_ptr->rank;
+  int errflag = FALSE;
 
   if(win->mpid.sync.origin_epoch_type != win->mpid.sync.target_epoch_type ||
      (win->mpid.sync.origin_epoch_type != MPID_EPOTYPE_NONE &&
@@ -48,9 +60,11 @@ MPID_Win_free(MPID_Win **win_ptr)
     MPIU_ERR_SETANDSTMT(mpi_errno, MPI_ERR_RMA_SYNC, return mpi_errno, "**rmasync");
   }
 
-  mpi_errno = MPIR_Barrier_impl(win->comm_ptr, &mpi_errno);
-  if (mpi_errno != MPI_SUCCESS)
-    return mpi_errno;
+  mpi_errno = MPIR_Barrier_impl(win->comm_ptr, &errflag);
+  MPIU_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**mpi_bcast");
+ 
+  if (win->create_flavor == MPI_WIN_FLAVOR_SHARED)   
+       mpi_errno=MPIDI_SHM_Win_free(win_ptr);
 
   struct MPIDI_Win_info *winfo = &win->mpid.info[rank];
 #ifdef USE_PAMI_RDMA
@@ -68,9 +82,12 @@ MPID_Win_free(MPID_Win **win_ptr)
       MPID_assert(rc == PAMI_SUCCESS);
     }
 #endif
-
   MPIU_Free(win->mpid.info);
   MPIU_Free(win->mpid.origin);
+  if (win->mpid.work.msgQ) 
+      MPIU_Free(win->mpid.work.msgQ);
+  if (win->create_flavor == MPI_WIN_FLAVOR_SHARED) 
+      MPIU_Free(win->base);
 
   MPIR_Comm_release(win->comm_ptr, 0);
 

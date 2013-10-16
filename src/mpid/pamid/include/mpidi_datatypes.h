@@ -445,6 +445,16 @@ typedef struct MPIDI_Win_info
   pami_memregion_t   memregion;     /**< Memory region descriptor for each node               */
   uint32_t           memregion_used;
 } MPIDI_Win_info;
+
+typedef struct MPIDI_Win_shm_t
+{
+    int allocated;                  /* flag: TRUE iff this window has a shared memory
+                                                 region associated with it */
+    void *base_addr;                /* base address of shared memory region */
+    MPI_Aint segment_len;           /* size of shared memory region         */
+    uint32_t  shm_key;              /* shared memory key                    */
+} MPIDI_Win_shm_t;
+
 /**
  * \brief Structure of PAMI extensions to MPID_Win structure
  */
@@ -453,7 +463,8 @@ struct MPIDI_Win
   struct MPIDI_Win_info     *info;          /**< allocated array of collective info             */
   MPIDI_Win_info_args info_args;
   void             ** shm_base_addrs; /* base address shared by all process in comm      */
-  workQ_t work;    
+  MPIDI_Win_shm_t  *shm;             /* shared memory info                             */
+  workQ_t work;
   RMA_nOps_t *origin;
   struct MPIDI_Win_sync
   {

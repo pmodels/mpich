@@ -90,17 +90,3 @@ int MPID_Comm_group_failed(MPID_Comm *comm_ptr, MPID_Group **failed_group_ptr)
   MPID_abort();
   return 0;
 }
-
-int MPID_Win_allocate_shared(MPI_Aint size, int disp_unit, MPID_Info *info_ptr, MPID_Comm *comm_ptr,
-                             void **base_ptr, MPID_Win **win_ptr)
-{
-  MPID_abort();
-  return 0;
-}
-
-int MPID_Win_shared_query(MPID_Win *win, int rank, MPI_Aint *size, int *disp_unit,
-                          void *baseptr)
-{
-  MPID_abort();
-  return 0;
-}

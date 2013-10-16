@@ -36,7 +36,7 @@ MPIDI_WinPost_post(pami_context_t   context,
                    void           * _info)
 {
   MPIDI_WinPSCW_info * info = (MPIDI_WinPSCW_info*)_info;
-  unsigned peer, index;
+  unsigned peer, index, pid,i;
   MPID_Group *group = info->win->mpid.sync.pw.group;
   MPID_assert(group != NULL);
   MPIDI_Win_control_t msg = {
@@ -44,7 +44,13 @@ MPIDI_WinPost_post(pami_context_t   context,
   };
 
   for (index=0; index < group->size; ++index) {
-    peer = group->lrank_to_lpid[index].lrank;
+      pid = group->lrank_to_lpid[index].lpid;
+      for (i=0;i < ((info->win)->comm_ptr->local_size); i++) {
+         if ((info->win)->comm_ptr->local_group->lrank_to_lpid[i].lpid == pid) {
+             peer = ((info->win)->comm_ptr->local_group->lrank_to_lpid[i].lrank);
+             break;
+         }
+      }
     MPIDI_WinCtrlSend(context, &msg, peer, info->win);
   }
 
@@ -67,7 +73,7 @@ MPIDI_WinComplete_post(pami_context_t   context,
                        void           * _info)
 {
   MPIDI_WinPSCW_info * info = (MPIDI_WinPSCW_info*)_info;
-  unsigned peer, index;
+  unsigned peer, index,pid,i;
   MPID_Group *group = info->win->mpid.sync.sc.group;
   MPID_assert(group != NULL);
   MPIDI_Win_control_t msg = {
@@ -75,8 +81,14 @@ MPIDI_WinComplete_post(pami_context_t   context,
   };
 
   for (index=0; index < group->size; ++index) {
-    peer = group->lrank_to_lpid[index].lrank;
-    MPIDI_WinCtrlSend(context, &msg, peer, info->win);
+     pid = group->lrank_to_lpid[index].lpid;
+     for (i=0;i < ((info->win)->comm_ptr->local_size); i++) {
+         if ((info->win)->comm_ptr->local_group->lrank_to_lpid[i].lpid == pid) {
+            peer = ((info->win)->comm_ptr->local_group->lrank_to_lpid[i].lrank);
+            break;
+         }
+     }
+     MPIDI_WinCtrlSend(context, &msg, peer, info->win);
   }
 
   info->done = 1;
