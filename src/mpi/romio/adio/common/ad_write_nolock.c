@@ -31,8 +31,7 @@ void ADIOI_NOLOCK_WriteStrided(ADIO_File fd, const void *buf, int count,
     off_t err_lseek=-1;
     ssize_t err=-1;
     ADIO_Offset fwr_size=0, bwr_size, new_bwr_size, new_fwr_size, i_offset, num;
-    unsigned bufsize; 
-    int n_etypes_in_filetype;
+    ADIO_Offset bufsize, n_etypes_in_filetype;
     ADIO_Offset n_filetypes, etype_in_filetype, size, sum;
     ADIO_Offset abs_off_in_filetype=0, size_in_filetype;
     MPI_Count filetype_size, etype_size, buftype_size;

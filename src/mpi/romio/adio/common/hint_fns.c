@@ -143,7 +143,8 @@ int ADIOI_Info_check_and_install_true(ADIO_File fd, MPI_Info info, const char *k
 int ADIOI_Info_check_and_install_str(ADIO_File fd, MPI_Info info, const char *key, 
 	char **local_cache, char *funcname, int *error_code)
 {
-    int flag, len;
+    int flag;
+    size_t len;
     char *value;
 
     value = (char *) ADIOI_Malloc((MPI_MAX_INFO_VAL+1)*sizeof(char));

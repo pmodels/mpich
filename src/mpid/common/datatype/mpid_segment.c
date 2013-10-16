@@ -314,7 +314,8 @@ static int MPID_Segment_vector_pack_to_iov(DLOOP_Offset *blocks_p,
              "    vector to vec: do=" MPI_AINT_FMT_DEC_SPEC
              ", dp=%p"
              ", len=" MPI_AINT_FMT_DEC_SPEC
-	     ", ind=%d, ct=" MPI_AINT_FMT_DEC_SPEC
+	     ", ind=" MPI_AINT_FMT_DEC_SPEC
+	     ", ct=" MPI_AINT_FMT_DEC_SPEC
 	     ", blksz=" MPI_AINT_FMT_DEC_SPEC
              ", str=" MPI_AINT_FMT_DEC_SPEC
              ", blks=" MPI_AINT_FMT_DEC_SPEC,

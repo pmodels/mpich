@@ -20,7 +20,7 @@ void ADIOI_GEN_WriteStrided_naive(ADIO_File fd, const void *buf, int count,
     ADIO_Offset bwr_size, fwr_size=0, sum, size_in_filetype; 
     int b_index;
     unsigned bufsize; 
-    int n_etypes_in_filetype;
+    ADIO_Offset n_etypes_in_filetype;
     ADIO_Offset size, n_filetypes, etype_in_filetype;
     ADIO_Offset abs_off_in_filetype=0, req_len;
     MPI_Count filetype_size, etype_size, buftype_size;

@@ -219,7 +219,7 @@ int ADIOI_GEN_aio_poll_fn(void *extra_state, MPI_Status *status)
     else if (errno == ECANCELED) {
 	    /* TODO: unsure how to handle this */
     } else if (errno == 0) {
-	    int n = aio_return(aio_req->aiocbp);
+	    ssize_t n = aio_return(aio_req->aiocbp);
 	    aio_req->nbytes = n;
 	    errcode = MPI_Grequest_complete(aio_req->req);
 	    /* --BEGIN ERROR HANDLING-- */
@@ -278,7 +278,7 @@ int ADIOI_GEN_aio_wait_fn(int count, void ** array_of_states,
 			continue;
 		    errno = aio_error(aio_reqlist[i]->aiocbp);
 		    if (errno == 0) {
-			int n = aio_return(aio_reqlist[i]->aiocbp);
+			ssize_t n = aio_return(aio_reqlist[i]->aiocbp);
 			aio_reqlist[i]->nbytes = n;
 			errcode = MPI_Grequest_complete(aio_reqlist[i]->req);
 			if (errcode != MPI_SUCCESS) {
@@ -323,8 +323,7 @@ int ADIOI_GEN_aio_query_fn(void *extra_state, MPI_Status *status)
 
 	aio_req = (ADIOI_AIO_Request *)extra_state;
 
-
-	MPI_Status_set_elements(status, MPI_BYTE, aio_req->nbytes); 
+	MPI_Status_set_elements_x(status, MPI_BYTE, aio_req->nbytes);
 
 	/* can never cancel so always true */ 
 	MPI_Status_set_cancelled(status, 0); 

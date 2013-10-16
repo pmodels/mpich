@@ -172,7 +172,7 @@ static void ADIO_FileSysType_parentdir(const char *filename, char **dirnamep)
 	 * but this code doesn't care if the target is really there
 	 * or not.
 	 */
-	int namelen;
+	ssize_t namelen;
 	char *linkbuf;
 
 	linkbuf = ADIOI_Malloc(PATH_MAX+1);

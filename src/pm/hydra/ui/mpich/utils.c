@@ -237,7 +237,7 @@ static void genvlist_help_fn(void)
 
 static HYD_status genvlist_fn(char *arg, char ***argv)
 {
-    int len;
+    size_t len;
     HYD_status status = HYD_SUCCESS;
 
     if (reading_config_file && HYD_server_info.user_global.global_env.prop) {
@@ -684,7 +684,7 @@ static void envlist_help_fn(void)
 
 static HYD_status envlist_fn(char *arg, char ***argv)
 {
-    int len;
+    size_t len;
     struct HYD_exec *exec;
     HYD_status status = HYD_SUCCESS;
 
@@ -1632,7 +1632,8 @@ static HYD_status parse_args(char **t_argv)
 
 HYD_status HYD_uii_mpx_get_parameters(char **t_argv)
 {
-    int ret, len;
+    int ret;
+    size_t len;
     char **argv = t_argv;
     char *progname = *argv;
     char *post, *loc, *tmp[HYD_NUM_TMP_STRINGS], *conf_file;

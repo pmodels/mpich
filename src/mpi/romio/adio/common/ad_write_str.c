@@ -119,9 +119,8 @@ void ADIOI_GEN_WriteStrided(ADIO_File fd, const void *buf, int count,
     ADIOI_Flatlist_node *flat_buf, *flat_file;
     ADIO_Offset i_offset, sum, size_in_filetype;
     int i, j, k, st_index=0;
-    int n_etypes_in_filetype;
     ADIO_Offset num, size, n_filetypes, etype_in_filetype, st_n_filetypes;
-    ADIO_Offset abs_off_in_filetype=0;
+    ADIO_Offset n_etypes_in_filetype, abs_off_in_filetype=0;
     MPI_Count filetype_size, etype_size, buftype_size;
     MPI_Aint filetype_extent, buftype_extent; 
     int buf_count, buftype_is_contig, filetype_is_contig;

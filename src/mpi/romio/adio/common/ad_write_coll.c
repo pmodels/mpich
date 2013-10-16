@@ -530,9 +530,10 @@ static void ADIOI_Exch_and_write(ADIO_File fd, void *buf, MPI_Datatype
 
     for (i=0; i<nprocs; i++) count[i] = recv_size[i] = 0;
     for (m=ntimes; m<max_ntimes; m++) {
+	ADIOI_Assert(size == (int)size);
 	/* nothing to recv, but check for send. */
 	ADIOI_W_Exchange_data(fd, buf, write_buf, flat_buf, offset_list, 
-                            len_list, send_size, recv_size, off, size, count, 
+                            len_list, send_size, recv_size, off, (int)size, count,
                             start_pos, partial_recv, 
                             sent_to_proc, nprocs, myrank, 
 			    buftype_is_contig, contig_access_count,
@@ -659,7 +660,8 @@ static void ADIOI_W_Exchange_data(ADIO_File fd, void *buf, char *write_buf,
         else { /* coalesce the sorted offset-length pairs */
             for (i=1; i<sum; i++) {
                 if (srt_off[i] <= srt_off[0] + srt_len[0]) {
-		    int new_len = srt_off[i] + srt_len[i] - srt_off[0];
+		    /* ok to cast: operating on cb_buffer_size chunks */
+		    int new_len = (int)srt_off[i] + srt_len[i] - (int)srt_off[0];
 		    if (new_len > srt_len[0]) srt_len[0] = new_len;
 		}
 		else
@@ -929,7 +931,8 @@ static void ADIOI_Fill_send_buffer(ADIO_File fd, void *buf, ADIOI_Flatlist_node
       ADIOI_Assert((curr_to_proc[p] + len - done_to_proc[p]) == (unsigned)(curr_to_proc[p] + len - done_to_proc[p]));
 		        buf_incr = curr_to_proc[p] + len - done_to_proc[p];
       ADIOI_Assert((done_to_proc[p] + size) == (unsigned)(done_to_proc[p] + size));
-			curr_to_proc[p] = done_to_proc[p] + size;
+			/* ok to cast: bounded by cb buffer size */
+			curr_to_proc[p] = done_to_proc[p] + (int)size;
 		        ADIOI_BUF_COPY
 		    }
 		    else {

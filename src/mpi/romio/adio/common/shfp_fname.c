@@ -26,7 +26,8 @@
 void ADIOI_Shfp_fname(ADIO_File fd, int rank)
 {
     double tm;
-    int i, len;
+    int i;
+    int len;
     char *slash, *ptr, tmp[128];
     int pid = 0;
 
@@ -60,7 +61,8 @@ void ADIOI_Shfp_fname(ADIO_File fd, int rank)
 	    slash = strrchr(fd->shared_fp_fname, '/');
 #endif
 	    ADIOI_Strncpy(slash + 1, ".", 2);
-	    len = 256 - (slash+2 - fd->shared_fp_fname);
+	    /* ok to cast: file names bounded by PATH_MAX and NAME_MAX */
+	    len = (int) (256 - (slash+2 - fd->shared_fp_fname));
 	    ADIOI_Strncpy(slash + 2, ptr + 1, len);
 	}
 	    

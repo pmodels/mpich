@@ -701,11 +701,11 @@ void ADIOI_Calc_bounds (ADIO_File fd, int count, MPI_Datatype buftype,
 			ADIO_Offset *st_offset, ADIO_Offset *end_offset)
 {
     int filetype_size, buftype_size, etype_size;
-    int i, sum;
+    int sum;
     MPI_Aint filetype_extent;
     ADIO_Offset total_io;
     int filetype_is_contig;
-    int remainder;
+    ADIO_Offset i, remainder;
     ADIOI_Flatlist_node *flat_file;
     
     ADIO_Offset st_byte_off, end_byte_off;

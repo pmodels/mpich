@@ -134,7 +134,7 @@ void ADIOI_Exch_file_views(int myrank, int nprocs, int file_ptr_type,
     ADIOI_Flatlist_node *flat_mem_p = NULL, *flat_file_p = NULL;
     int memtype_sz = -1;
     int memtype_is_contig = -1;
-    int filetype_sz = -1;
+    ADIO_Offset filetype_sz = -1;
 
 #ifdef AGGREGATION_PROFILE
     MPE_Log_event (5014, 0, NULL);
@@ -157,7 +157,7 @@ void ADIOI_Exch_file_views(int myrank, int nprocs, int file_ptr_type,
     }
 
     MPI_Type_extent(fd->filetype, &filetype_extent);
-    MPI_Type_size(fd->filetype, &filetype_sz);
+    MPI_Type_size_x(fd->filetype, &filetype_sz);
     if (filetype_extent == filetype_sz) {
 	flat_file_p = ADIOI_Add_contig_flattened(fd->filetype);
 	flat_file_p->blocklens[0] = memtype_sz*count;

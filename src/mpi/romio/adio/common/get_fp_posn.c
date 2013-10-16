@@ -16,8 +16,8 @@ void ADIOI_Get_position(ADIO_File fd, ADIO_Offset *offset)
 {
     ADIOI_Flatlist_node *flat_file;
     int i, flag;
-    MPI_Count filetype_size;
-    int etype_size, filetype_is_contig;
+    MPI_Count filetype_size, etype_size;
+    int filetype_is_contig;
     MPI_Aint filetype_extent;
     ADIO_Offset disp, byte_offset, sum=0, size_in_file, n_filetypes, frd_size;
     

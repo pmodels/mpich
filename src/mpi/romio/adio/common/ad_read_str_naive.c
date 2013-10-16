@@ -22,7 +22,7 @@ void ADIOI_GEN_ReadStrided_naive(ADIO_File fd, void *buf, int count,
     ADIO_Offset n_filetypes, etype_in_filetype;
     ADIO_Offset abs_off_in_filetype=0;
     unsigned bufsize, filetype_size, buftype_size, size_in_filetype;
-    int etype_size;
+    ADIO_Offset etype_size;
     MPI_Aint filetype_extent, buftype_extent; 
     int buf_count, buftype_is_contig, filetype_is_contig;
     ADIO_Offset userbuf_off;
