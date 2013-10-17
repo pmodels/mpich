@@ -1,2 +1,2 @@
-mpi_t_str 1 mpiversion=3.0 xfail=ticket1898
+mpi_t_str 1 mpiversion=3.0
 mpit_vars 1 mpiversion=3.0
