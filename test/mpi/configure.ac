@@ -1232,6 +1232,24 @@ if test "$enable_romio" != no ; then
 fi
 AC_SUBST(iodir)
 
+impldir="#"
+#
+# Check for implementation to enable implementation-specific options
+if test $enable_strictmpi != "yes" ; then
+   # Is this MPICH?
+   if test "$FROM_MPICH" = yes ; then
+      impldir="mpich"
+   else
+       AC_CACHE_CHECK([Is the MPI derived from MPICH],
+       pac_cv_ismpich,[
+     AC_COMPILE_IFELSE([AC_LANG_PROGRAM([#include "mpi.h"],[return 1 + MPICH;]),
+       pac_cv_ismpich=yes,pac_cv_ismpich=no])])
+       if test "$pac_cv_ismpich" = "yes" ; then
+           impldir="mpich"
+       fi
+   fi
+fi
+AC_SUBST(impldir)
 #
 # MPI_INTEGER16 is mentioned in only one place in MPI 2.1, and some
 # implementations may have missed it.  Check to see if it is available in 
@@ -1506,5 +1524,10 @@ AC_OUTPUT(maint/testmerge \
           threads/testlist \
           errors/testlist \
           errors/cxx/testlist \
+          impls/testlist \
+          impls/Makefile \
+          impls/mpich/Makefile \
+          impls/mpich/testlist \
+          impls/mpich/mpi_t/Makefile \
           )
 

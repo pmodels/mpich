@@ -1,0 +1,5 @@
+mpi_t
+# The IO and RMA directories are optional and need to be handled in
+# a special way.  Uncomment these as appropriate when a test is added.
+#@iodir@
+#@rmadir@

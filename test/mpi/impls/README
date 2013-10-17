@@ -1,0 +1,4 @@
+This directory contains tests that are implementation-specific.  These may be
+for an implementation (such as MPICH) or a subsystem (such as Hydra or ROMIO).
+Configure will attempt to enable the relevant tests, but they may need to be
+manually selected.
