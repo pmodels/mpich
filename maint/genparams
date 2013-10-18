@@ -159,110 +159,13 @@ users.
 EOT
 
 ########################################################################
-# actually process file contents, starting w/ categories
-die "missing 'categories', stopped" unless exists $params->{categories};
-
-# write enum first
-print PARAM_HDR <<EOT;
-/* parameter categories */
-enum ${ns}_category_id_t {
-EOT
-my $num_categories = scalar @{$params->{categories}};
-foreach my $cat (@{$params->{categories}}) {
-    printf PARAM_HDR "    ${uc_ns}_CATEGORY_ID_%s,\n", $cat->{name};
-}
-# then write full contents tuple
-print PARAM_HDR <<EOT;
-    ${uc_ns}_NUM_CATEGORIES
-};
-
-struct ${ns}_category_t {
-    const enum ${ns}_category_id_t id;
-    const char *name;
-    const char *description;
-};
-
-/* array of category info for runtime usage */
-extern struct ${ns}_category_t ${ns}_categories[${uc_ns}_NUM_CATEGORIES];
-
-EOT
-
-print PARAM_C <<EOT;
-/* array of category info for runtime usage */
-struct ${ns}_category_t ${ns}_categories[${uc_ns}_NUM_CATEGORIES] = {
-EOT
-foreach my $cat (@{$params->{categories}}) {
-    my $desc = $cat->{description};
-    $desc =~ s/"/\\"/g;
-    printf PARAM_C qq(    { ) .
-        qq(${uc_ns}_CATEGORY_ID_%s,\n) .
-        qq(      "%s",\n) .
-        qq(      "%s" },\n),
-        $cat->{name}, $cat->{name}, $desc;
-}
-print PARAM_C <<EOT;
-};
-
-EOT
-
-
-########################################################################
 # now the actual parameters
 die "missing 'parameters', stopped" unless exists $params->{parameters};
 
 print PARAM_HDR <<EOT;
-/* parameter values */
-enum ${ns}_id_t {
-EOT
-my $num_params = @{$params->{parameters}};
-# XXX DJG TODO collate and separate by category
-foreach my $p (@{$params->{parameters}}) {
-    printf PARAM_HDR "    ${uc_ns}_ID_%s,\n", $p->{name};
-}
-print PARAM_HDR <<EOT;
-    ${uc_ns}_NUM_PARAMS
-};
-
 /* initializes parameter values from the environment */
 int ${ns}_init_params(void);
-
 int ${ns}_finalize(void);
-
-enum ${ns}_type_t {
-    ${uc_ns}_TYPE_INVALID = 0,
-    ${uc_ns}_TYPE_INT,
-    ${uc_ns}_TYPE_DOUBLE,
-    ${uc_ns}_TYPE_BOOLEAN,
-    ${uc_ns}_TYPE_STRING,
-    ${uc_ns}_TYPE_RANGE
-};
-
-typedef struct ${ns}_param_range_val {
-    int low;
-    int high;
-} ${ns}_param_range_val_t;
-
-/* used to represent default values */
-struct ${ns}_param_default_val_t {
-    const enum ${ns}_type_t type;
-
-    /* not a union b/c of initialization portability issues */
-    const int i_val; /* also used for booleans */
-    const double d_val;
-    const char *s_val;
-    const ${ns}_param_range_val_t r_val;
-};
-
-struct ${ns}_t {
-    const enum ${ns}_id_t id;
-    const char *name;
-    const char *description;
-    const struct ${ns}_param_default_val_t default_val;
-    void *val_p; /* ptr to the actual value */
-};
-
-/* array of parameter info for runtime usage */
-extern struct ${ns}_t ${ns}_params[${uc_ns}_NUM_PARAMS];
 
 /* extern declarations for each parameter
  * (definitions in $c_file) */
@@ -274,53 +177,8 @@ foreach my $p (@{$params->{parameters}}) {
         type2ctype($p->{type}), $p->{name};
 }
 
-print PARAM_C <<EOT;
-/* array of parameter info for runtime usage */
-struct ${ns}_t ${ns}_params[${uc_ns}_NUM_PARAMS] = {
-EOT
+print PARAM_C "/* actual storage for parameters */\n";
 
-# XXX DJG TODO collate and separate by category
-foreach my $p (@{$params->{parameters}}) {
-    my $type_enum_val = "${uc_ns}_TYPE_".uc($p->{type});
-    my ($int_val, $str_val, $double_val, $range_val) = (-1, qq(""), "0.0", "{0,0}");
-
-    if ($p->{type} eq "string") {
-        $str_val = fmt_default($p->{name}, $p->{default}, $p->{defaultliteral}, $p->{type});
-    }
-    elsif ($p->{type} eq "int") {
-        $int_val = fmt_default($p->{name}, $p->{default}, $p->{defaultliteral}, $p->{type});
-    }
-    elsif ($p->{type} eq "double") {
-        $double_val = fmt_default($p->{name}, $p->{default}, $p->{defaultliteral}, $p->{type});
-    }
-    elsif ($p->{type} eq "boolean") {
-        $int_val = fmt_default($p->{name}, $p->{default}, $p->{defaultliteral}, $p->{type});
-    }
-    elsif ($p->{type} eq "range") {
-        $range_val = fmt_default($p->{name}, $p->{default}, $p->{defaultliteral}, $p->{type});
-    }
-    else {
-        die "unknown type $p->{type}, stopped";
-    }
-
-    my $desc = $p->{description};
-    $desc =~ s/"/\\"/g;
-
-    printf PARAM_C qq(    { ) .
-        qq(${uc_ns}_ID_%s,\n) .
-        qq(      "%s",\n) .
-        qq(      "%s",\n) .
-        #          T    I   D   S  R     ptr
-        qq(      { %s, %s, %s, %s, %s }, %s },\n),
-        $p->{name}, $p->{name}, $desc,
-        $type_enum_val, $int_val, $double_val, $str_val, $range_val, "&${uc_ns}_".$p->{name};
-}
-
-print PARAM_C <<EOT;
-};
-
-/* actual storage for parameters */
-EOT
 foreach my $p (@{$params->{parameters}}) {
     my $default;
     if ($p->{type} eq "string") {
@@ -356,6 +214,7 @@ int ${ns}_init_params(void)
     int rc;
     const char *tmp_str;
     static int initialized = FALSE;
+    MPIR_T_cvar_value_t defaultval;
 
     /* FIXME any MT issues here? */
     if (initialized)
@@ -365,10 +224,80 @@ int ${ns}_init_params(void)
 EOT
 
 foreach my $p (@{$params->{parameters}}) {
+    my $count = 1;
+    my $mpi_dtype;
+    if ($p->{type} eq 'string') {
+        $mpi_dtype = "MPI_CHAR";
+        $count = "MPIR_PARAM_MAX_STRLEN";
+        my $str_val = fmt_default($p->{name}, $p->{default}, $p->{defaultliteral}, $p->{type});
+        printf PARAM_C qq(    defaultval.str = %s;\n), $str_val;
+    }
+    elsif ($p->{type} eq 'int' or $p->{type} eq 'boolean') {
+        $mpi_dtype = "MPI_INT";
+        $count = 1;
+        my $int_val = fmt_default($p->{name}, $p->{default}, $p->{defaultliteral}, $p->{type});
+        printf PARAM_C qq(    defaultval.d = %s;\n), $int_val;
+    }
+    elsif ($p->{type} eq 'unsigned') {
+        $mpi_dtype = "MPI_UNSINGED";
+        $count = 1;
+        my $double_val = fmt_default($p->{name}, $p->{default}, $p->{defaultliteral}, $p->{type});
+        printf PARAM_C qq(    defaultval.u = %s;\n), $double_val;
+    }
+    elsif ($p->{type} eq 'unsigned long') {
+        $mpi_dtype = "MPI_DOUBLE";
+        $count = 1;
+        my $double_val = fmt_default($p->{name}, $p->{default}, $p->{defaultliteral}, $p->{type});
+        printf PARAM_C qq(    defaultval.ul = %s;\n), $double_val;
+    }
+    elsif ($p->{type} eq 'unsigned long long') {
+        $mpi_dtype = "MPI_DOUBLE";
+        $count = 1;
+        my $double_val = fmt_default($p->{name}, $p->{default}, $p->{defaultliteral}, $p->{type});
+        printf PARAM_C qq(    defaultval.ull = %s;\n), $double_val;
+    }
+    elsif ($p->{type} eq 'double') {
+        $mpi_dtype = "MPI_DOUBLE";
+        $count = 1;
+        my $double_val = fmt_default($p->{name}, $p->{default}, $p->{defaultliteral}, $p->{type});
+        printf PARAM_C qq(    defaultval.d = %s;\n), $double_val;
+    }
+    elsif ($p->{type} eq 'range') {
+        $mpi_dtype = "MPI_INT";
+        $count = 2;
+        my $range_val = fmt_default($p->{name}, $p->{default}, $p->{defaultliteral}, $p->{type});
+        printf PARAM_C qq(    {\n);
+        printf PARAM_C qq(        MPIR_T_cvar_range_value_t tmp = %s;\n), $range_val;
+        printf PARAM_C qq(        defaultval.range = tmp;\n);
+        printf PARAM_C qq(    }\n);
+    }
+    else {
+        die "unknown type $p->{type}, stopped";
+    }
+
+    my $desc = $p->{description};
+    $desc =~ s/"/\\"/g;
+
+    printf PARAM_C qq(    MPIR_T_CVAR_REGISTER_STATIC(\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s);\n),
+        qq(        $mpi_dtype,),
+        qq(        ${uc_ns}_$p->{name}, /* name */),
+        qq(        &${uc_ns}_$p->{name}, /* address */),
+        qq(        $count, /* count */),
+        qq(        $p->{verbosity},),
+        qq(        $p->{scope},),
+        qq(        defaultval,),
+        qq(        "$p->{category}", /* category */),
+        qq(        "$desc");
+
+    if ($p->{type} eq 'string') {
+print PARAM_C <<EOT;
+    ${uc_ns}_GET_DEFAULT_STRING(${uc_ns}_$p->{name}, &tmp_str);
+EOT
+    }
+
     my $env_fn = type_to_env_fn($p->{type});
     my @env_names = ();
     my $var_name = "${uc_ns}_" . $p->{name};
-    my $var_suffix = $p->{name};
 
     # process extra envs first so the primary always wins
     push @env_names, @{$p->{'abs-alt-env'}} if $p->{'abs-alt-env'};
@@ -377,11 +306,6 @@ foreach my $p (@{$params->{parameters}}) {
     push @env_names, "${alt_ns}_" . $p->{name};
     push @env_names, "${uc_ns}_" . $p->{name};
 
-    if ($p->{type} eq 'string') {
-        print PARAM_C <<EOT;
-    ${uc_ns}_GET_DEFAULT_STRING($var_suffix, &tmp_str);
-EOT
-    }
     foreach my $env_name (@env_names) {
         # assumes rc is defined
         if ($p->{type} eq 'range') {
@@ -421,9 +345,19 @@ EOT
     print PARAM_C "\n";
 }
 
+foreach my $cat (@{$params->{categories}}) {
+    my $desc = $cat->{description};
+    $desc =~ s/"/\\"/g;
+    printf PARAM_C qq(    MPIR_T_cat_add_desc(%s\n%s);\n\n),
+        qq("$cat->{name}",),
+        qq(        "$desc");
+}
+
 print PARAM_C <<EOT;
-fn_fail:
+fn_exit:
     return mpi_errno;
+fn_fail:
+    goto fn_exit;
 }
 
 EOT
@@ -452,8 +386,10 @@ EOT
 
 
 print PARAM_C <<EOT;
-fn_fail:
+fn_exit:
     return mpi_errno;
+fn_fail:
+    goto fn_exit;
 }
 
 EOT
@@ -504,25 +440,8 @@ print PARAM_HDR <<EOT;
 
 /* helper macros for safely getting the default value of a parameter */
 EOT
-my @type_field = (
-    ['INT','i_val'],
-    ['DOUBLE','d_val'],
-    ['BOOLEAN','i_val'],
-    ['STRING','s_val'],
-    ['RANGE','r_val'],
-);
-foreach my $tuple (@type_field) {
-    my ($type,$field) = @$tuple;
-    print PARAM_HDR <<EOT;
-#define ${uc_ns}_GET_DEFAULT_${type}(p_suffix_,out_ptr_)                                               \\
-    do {                                                                                               \\
-        ${ns}_assert(${uc_ns}_TYPE_${type} == ${ns}_params[${uc_ns}_ID_##p_suffix_].default_val.type); \\
-        *(out_ptr_) = ${ns}_params[${uc_ns}_ID_##p_suffix_].default_val.${field};                      \\
-    } while (0)
-EOT
-}
-print PARAM_HDR <<EOT;
 
+print PARAM_HDR <<EOT;
 #endif /* $hdr_guard */
 EOT
 close(PARAM_HDR);
@@ -549,7 +468,7 @@ sub type2ctype {
         'double'  => 'double',
         'string'  => 'char *',
         'boolean' => 'int',
-        'range'   => "${ns}_param_range_val_t",
+        'range'   => "MPIR_T_cvar_range_value_t",
     );
     die "unknown type '$type', stopped" unless exists $typemap{$type};
     return $typemap{$type};
