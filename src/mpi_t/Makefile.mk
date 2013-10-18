@@ -11,7 +11,7 @@ mpi_sources +=                \
         src/mpi_t/cat_get_cvars.c       \
         src/mpi_t/cat_get_info.c        \
         src/mpi_t/cat_get_num.c         \
-        src/mpi_t/cat_get_pv.c          \
+        src/mpi_t/cat_get_pvars.c       \
         src/mpi_t/cvar_get_info.c       \
         src/mpi_t/cvar_get_num.c        \
         src/mpi_t/cvar_handle_alloc.c   \
