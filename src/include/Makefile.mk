@@ -34,7 +34,7 @@ noinst_HEADERS +=                   \
     src/include/mpiallstates.h      \
     src/include/mpibase.h           \
     src/include/mpibsend.h          \
-    src/include/mpich_param_vals.h  \
+    src/include/mpich_params.h  \
     src/include/mpichconfconst.h    \
     src/include/mpidbg.h            \
     src/include/mpierror.h          \
@@ -67,5 +67,5 @@ noinst_HEADERS +=                   \
     src/include/oputil.h            \
     src/include/mpiinfo.h
 
-src/include/param_vals.h: src/util/param/params.yml
+src/include/mpich_params.h: src/util/param/params.yml
 	$(top_srcdir)/maint/genparams

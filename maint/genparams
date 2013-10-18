@@ -44,8 +44,8 @@ my $alt_ns = "MPICH";
 my $param_file = "src/util/param/params.yml";
 
 # output source files
-my $header_file = "src/include/mpich_param_vals.h";
-my $c_file      = "src/util/param/param_vals.c";
+my $header_file = "src/include/mpich_params.h";
+my $c_file      = "src/util/param/mpich_params.c";
 my $readme_file = "README.envvar";
 
 GetOptions(
