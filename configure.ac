@@ -1842,11 +1842,11 @@ save_IFS="$IFS"
 IFS=","
 for var in $enable_mpit_pvars ; do
     AS_CASE(["$var"],
-            [nem],[enable_nem_pvars=yes],
-            [recvq],[enable_recvq_pvars=yes],
+            [nem],[enable_pvar_nem=yes],
+            [recvq],[enable_pvar_recvq=yes],
             [all|yes],
-            [enable_nem_pvars=yes
-             enable_recvq_pvars=yes],
+            [enable_pvar_nem=yes
+             enable_pvar_recvq=yes],
             [no|none],[],
             [IFS=$save_IFS
              AC_MSG_WARN([Unknown value ($option) for enable-mpit-pvars])
@@ -1854,20 +1854,20 @@ for var in $enable_mpit_pvars ; do
 done
 IFS="$save_IFS"
 
-if test -n "$enable_nem_pvars" ; then
+if test -n "$enable_pvar_nem" ; then
     status_nem_pvars=1
 else
     status_nem_pvars=0
 fi
-AC_DEFINE_UNQUOTED(ENABLE_NEM_STATISTICS,$status_nem_pvars,
+AC_DEFINE_UNQUOTED(ENABLE_PVAR_NEM,$status_nem_pvars,
           [Define to 1 to enable nemesis-related MPI_T performance variables])
 
-if test -n "$enable_recvq_pvars" ; then
+if test -n "$enable_pvar_recvq" ; then
     status_recvq_pvars=1
 else
     status_recvq_pvars=0
 fi
-AC_DEFINE_UNQUOTED(ENABLE_RECVQ_STATISTICS,$status_recvq_pvars,
+AC_DEFINE_UNQUOTED(ENABLE_PVAR_RECVQ,$status_recvq_pvars,
           [Define to 1 to enable message receive queue-related MPI_T performance variables])
 
 # ---------------------------------------------------------------------------
