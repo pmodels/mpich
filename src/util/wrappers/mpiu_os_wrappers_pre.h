@@ -30,7 +30,7 @@
 #ifdef USE_SYSV_SHM
 typedef int MPIU_SHMW_Lhnd_t;
 #elif defined USE_MMAP_SHM
-typedef int MPIU_SHMW_Lhnd_t;
+typedef MPI_Aint MPIU_SHMW_Lhnd_t;
 #elif defined USE_NT_SHM
 typedef HANDLE MPIU_SHMW_Lhnd_t;
 #endif

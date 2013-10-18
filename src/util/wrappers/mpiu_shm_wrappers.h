@@ -592,7 +592,7 @@ static inline int MPIU_SHMW_Seg_create_attach_templ(
     int offset, int flag)
 {
     int mpi_errno = MPI_SUCCESS;
-    int lhnd = -1, rc = -1;
+    MPIU_SHMW_Lhnd_t lhnd = -1, rc = -1;
 
     if(flag & MPIU_SHMW_FLAG_SHM_CREATE){
         char dev_shm_fname[] = "/dev/shm/mpich_shar_tmpXXXXXX";
@@ -610,7 +610,7 @@ static inline int MPIU_SHMW_Seg_create_attach_templ(
             MPIU_OSW_Strerror(MPIU_OSW_Get_errno()));
 
         MPIU_SHMW_Lhnd_set(hnd, lhnd);
-        rc = (int)lseek(lhnd, seg_sz - 1, SEEK_SET);
+        rc = (MPIU_SHMW_Lhnd_t)lseek(lhnd, seg_sz - 1, SEEK_SET);
         MPIU_ERR_CHKANDJUMP1((rc == -1), mpi_errno,
             MPI_ERR_OTHER, "**lseek", "**lseek %s",
             MPIU_OSW_Strerror(MPIU_OSW_Get_errno()));
