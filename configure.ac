@@ -4486,29 +4486,6 @@ int main(int argc, char **argv )
          AC_DEFINE(HAVE_ANY_INT32_T_ALIGNMENT,1,[Define if int32_t works with any alignment])
     fi
 fi
-
-# Get the size for the bsendoverhead
-AC_CHECK_SIZEOF(MPIR_Bsend_data_t,0,[
-#define MPI_Datatype int
-#ifdef HAVE_STDLIB_H
-#include <stdlib.h>
-#endif
-#ifdef HAVE_STDINT_H
-#include <stdint.h>
-#endif
-#include "${master_top_srcdir}/src/include/mpibsend.h"]
-)
-if test "$ac_cv_sizeof_MPIR_Bsend_data_t" = "0" ; then
-    AC_MSG_ERROR([Unable to determine the size of MPI_BSEND_OVERHEAD])
-    # In the past, a default of 128 was used (still likely good enough),
-    # but the autoconf SIZEOF macro has been changed to ignore the second
-    # argument, so code that depended on the prior defined behavior now
-    # silently breaks.
-fi
-BSEND_OVERHEAD=$ac_cv_sizeof_MPIR_Bsend_data_t
-export BSEND_OVERHEAD
-AC_SUBST(BSEND_OVERHEAD)
-
 # Check for special compile characteristics
 # If we are either gcc or icc, see if we can use __asm__
 # We test on prog_gcc to allow gcc by any name; if we are using
@@ -5244,6 +5221,31 @@ AC_DEFINE_UNQUOTED(MPIU_SIZE_T,$MPIU_SIZE_T,[Set to a type that can express the 
 if test "$ac_cv_sizeof_void_p" -lt "$aint_size" ; then
     AC_DEFINE(USE_AINT_FOR_ATTRVAL,1,[Define if MPI_Aint should be used instead of void * for storing attribute values])
 fi
+
+# with MPI_AINT defined, now we can
+# Get the size for the bsendoverhead
+AC_CHECK_SIZEOF(MPIR_Bsend_data_t,0,[
+#define MPI_Datatype int
+typedef $MPI_AINT MPI_Aint;
+#ifdef HAVE_STDLIB_H
+#include <stdlib.h>
+#endif
+#ifdef HAVE_STDINT_H
+#include <stdint.h>
+#endif
+#include "${master_top_srcdir}/src/include/mpibsend.h"]
+)
+if test "$ac_cv_sizeof_MPIR_Bsend_data_t" = "0" ; then
+    AC_MSG_ERROR([Unable to determine the size of MPI_BSEND_OVERHEAD])
+    # In the past, a default of 128 was used (still likely good enough),
+    # but the autoconf SIZEOF macro has been changed to ignore the second
+    # argument, so code that depended on the prior defined behavior now
+    # silently breaks.
+fi
+BSEND_OVERHEAD=$ac_cv_sizeof_MPIR_Bsend_data_t
+export BSEND_OVERHEAD
+AC_SUBST(BSEND_OVERHEAD)
+
 #
 # See if we need to update the timer type (which was converted to uppercase)
 if test "$timer_type" = "DEVICE" ; then

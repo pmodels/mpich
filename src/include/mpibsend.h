@@ -53,7 +53,7 @@ struct MPID_Comm;
    request is not currently available */
 typedef struct MPIR_Bsend_msg {
     void         *msgbuf;
-    int          count;     /* int type to match needs of Pack routine */
+    MPI_Aint     count;
     MPI_Datatype dtype;
     int          tag;
     struct MPID_Comm    *comm_ptr;
