@@ -91,7 +91,8 @@ int MPIR_Alltoall_intra(
     int mpi_errno=MPI_SUCCESS, src, dst, rank, nbytes;
     int mpi_errno_ret = MPI_SUCCESS;
     MPI_Status status;
-    int sendtype_size, pack_size, block, position, *displs, count;
+    int sendtype_size, block, *displs, count;
+    MPI_Aint pack_size, position;
     MPI_Datatype newtype = MPI_DATATYPE_NULL;
     void *tmp_buf;
     MPI_Comm comm;

@@ -40,8 +40,8 @@ int MPIR_Ibcast_binomial(void *buffer, int count, MPI_Datatype datatype, int roo
     int mpi_errno = MPI_SUCCESS;
     int mask;
     int comm_size, rank;
-    int type_size, is_contig, is_homogeneous;
-    int nbytes;
+    int is_contig, is_homogeneous;
+    MPI_Aint nbytes, type_size;
     int relative_rank;
     int src, dst;
     void *tmp_buf = NULL;
@@ -669,7 +669,8 @@ fn_fail:
 int MPIR_Ibcast_SMP(void *buffer, int count, MPI_Datatype datatype, int root, MPID_Comm *comm_ptr, MPID_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
-    int type_size, is_homogeneous;
+    int is_homogeneous;
+    MPI_Aint type_size;
 
     if (!MPIR_CVAR_ENABLE_SMP_COLLECTIVES || !MPIR_CVAR_ENABLE_SMP_BCAST)
         MPID_Abort(comm_ptr, MPI_ERR_OTHER, 1, "SMP collectives are disabled!");
@@ -754,7 +755,8 @@ fn_fail:
 int MPIR_Ibcast_intra(void *buffer, int count, MPI_Datatype datatype, int root, MPID_Comm *comm_ptr, MPID_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
-    int comm_size, is_homogeneous, type_size, nbytes;
+    int comm_size, is_homogeneous;
+    MPI_Aint type_size, nbytes;
 
     MPIU_Assert(comm_ptr->comm_kind == MPID_INTRACOMM);
 

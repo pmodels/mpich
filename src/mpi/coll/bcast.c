@@ -47,7 +47,7 @@ static int MPIR_Bcast_binomial(
     MPI_Status status;
     int is_contig, is_homogeneous;
     MPI_Aint type_size;
-    int position;
+    MPI_Aint position;
     void *tmp_buf=NULL;
     MPI_Comm comm;
     MPID_Datatype *dtp;
@@ -404,7 +404,8 @@ static int MPIR_Bcast_scatter_doubling_allgather(
     int j, k, i, tmp_mask, is_contig, is_homogeneous;
     MPI_Aint type_size, nbytes = 0;
     int relative_dst, dst_tree_root, my_tree_root, send_offset;
-    int recv_offset, tree_root, nprocs_completed, offset, position;
+    int recv_offset, tree_root, nprocs_completed, offset;
+    MPI_Aint position;
     MPIU_CHKLMEM_DECL(1);
     MPI_Comm comm;
     MPID_Datatype *dtp;
@@ -707,10 +708,9 @@ static int MPIR_Bcast_scatter_ring_allgather(
     int rank, comm_size;
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
-    int scatter_size, nbytes;
+    int scatter_size;
     int j, i, is_contig, is_homogeneous;
-    MPI_Aint type_size;
-    int position;
+    MPI_Aint nbytes, type_size, position;
     int left, right, jnext;
     int curr_size = 0;
     void *tmp_buf;
@@ -1143,7 +1143,8 @@ int MPIR_Bcast_intra (
     int mpi_errno_ret = MPI_SUCCESS;
     int comm_size;
     int nbytes=0;
-    int type_size, is_homogeneous;
+    int is_homogeneous;
+    MPI_Aint type_size;
     MPID_MPI_STATE_DECL(MPID_STATE_MPIR_BCAST);
 
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPIR_BCAST);

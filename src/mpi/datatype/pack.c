@@ -31,8 +31,8 @@ int MPIR_Pack_impl(const void *inbuf,
                    int incount,
                    MPI_Datatype datatype,
                    void *outbuf,
-                   int outsize,
-                   int *position)
+                   MPI_Aint outsize,
+                   MPI_Aint *position)
 {
     int mpi_errno = MPI_SUCCESS;
     MPI_Aint first, last;
@@ -151,6 +151,7 @@ int MPI_Pack(const void *inbuf,
 	     MPI_Comm comm)
 {
     int mpi_errno = MPI_SUCCESS;
+    MPI_Aint position_x;
     MPID_Comm *comm_ptr = NULL;
     
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_PACK);
@@ -240,7 +241,9 @@ int MPI_Pack(const void *inbuf,
 
     /* ... body of routine ... */
 
-    mpi_errno = MPIR_Pack_impl(inbuf, incount, datatype, outbuf, outsize, position);
+    position_x = *position;
+    mpi_errno = MPIR_Pack_impl(inbuf, incount, datatype, outbuf, outsize, &position_x);
+    MPIU_Assign_trunc(*position, position_x, int);
     if (mpi_errno) goto fn_fail;
     
    /* ... end of body of routine ... */

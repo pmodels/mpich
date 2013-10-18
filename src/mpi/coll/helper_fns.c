@@ -493,8 +493,8 @@ int MPIC_Sendrecv_replace(void *buf, int count, MPI_Datatype datatype,
     MPID_Request *sreq;
     MPID_Request *rreq;
     void *tmpbuf = NULL;
-    int tmpbuf_size = 0;
-    int tmpbuf_count = 0;
+    MPI_Aint tmpbuf_size = 0;
+    MPI_Aint tmpbuf_count = 0;
     MPID_Comm *comm_ptr;
     MPIU_CHKLMEM_DECL(1);
     MPIDI_STATE_DECL(MPID_STATE_MPIC_SENDRECV_REPLACE_FT);

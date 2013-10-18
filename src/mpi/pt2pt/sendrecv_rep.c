@@ -140,8 +140,8 @@ int MPI_Sendrecv_replace(void *buf, int count, MPI_Datatype datatype,
 	MPID_Request * sreq;
 	MPID_Request * rreq;
 	void * tmpbuf = NULL;
-	int tmpbuf_size = 0;
-	int tmpbuf_count = 0;
+	MPI_Aint tmpbuf_size = 0;
+	MPI_Aint tmpbuf_count = 0;
 
 	if (count > 0 && dest != MPI_PROC_NULL)
 	{

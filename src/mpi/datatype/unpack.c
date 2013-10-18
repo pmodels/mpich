@@ -27,7 +27,7 @@
 #define FUNCNAME MPIR_Unpack_impl
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPIR_Unpack_impl(const void *inbuf, int insize, int *position,
+int MPIR_Unpack_impl(const void *inbuf, MPI_Aint insize, MPI_Aint *position,
                      void *outbuf, int outcount, MPI_Datatype datatype)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -137,6 +137,7 @@ int MPI_Unpack(const void *inbuf, int insize, int *position,
 	       MPI_Comm comm)
 {
     int mpi_errno = MPI_SUCCESS;
+    MPI_Aint position_x;
     MPID_Comm *comm_ptr = NULL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_UNPACK);
 
@@ -193,8 +194,10 @@ int MPI_Unpack(const void *inbuf, int insize, int *position,
 
     /* ... body of routine ...  */
     
-    mpi_errno = MPIR_Unpack_impl(inbuf, insize, position, outbuf, outcount, datatype);
+    position_x = *position;
+    mpi_errno = MPIR_Unpack_impl(inbuf, insize, &position_x, outbuf, outcount, datatype);
     if (mpi_errno) goto fn_fail;
+    MPIU_Assign_trunc(*position, position_x, int);
     
     /* ... end of body of routine ... */
 
