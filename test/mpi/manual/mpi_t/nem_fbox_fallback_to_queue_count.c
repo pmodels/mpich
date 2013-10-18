@@ -34,7 +34,9 @@ int err, rank;
 MPI_T_pvar_session session;
 MPI_T_pvar_handle fbox_handle;
 
-/* Check that we can successfuly write to the variable. */
+/* Check that we can successfuly write to the variable.
+ * Question: Do we really want to write pvars other than reset?
+ */
 void blank_test()
 {
     uint64_t temp[2] = { -1 };
@@ -57,7 +59,7 @@ void send_first_test()
     uint64_t nem_fbox_fall_back_to_queue_count[2] = {-1};
 
     /* Reset the fbox variable. */
-    MPI_T_pvar_write(session, fbox_handle, null_fbox);
+    MPI_T_pvar_reset(session, fbox_handle);
 
     if (rank == 0) {
         char send_buf[BUF_COUNT] = { 0x12 };
@@ -117,7 +119,7 @@ void recv_first_test()
     uint64_t nem_fbox_fall_back_to_queue_count[2] = {-1};
 
     /* Reset the fbox variable. */
-    MPI_T_pvar_write(session, fbox_handle, null_fbox);
+    MPI_T_pvar_reset(session, fbox_handle);
 
     if (rank == 0) {
         char send_buf[BUF_COUNT] = { 0x12 };
@@ -211,7 +213,7 @@ int main(int argc, char *argv[])
     assert(count == 2);
 
     /* Run a batch of tests. */
-    blank_test();
+    /* blank_test(); */
     send_first_test();
     /* recv_first_test(); */
 
