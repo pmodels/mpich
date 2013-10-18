@@ -220,20 +220,16 @@ int MPI_Finalize( void )
        completing the finalize */
     if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 
+    /* Users did not call MPI_T_init_thread(), so we free memories allocated to
+     * MPIR_T during MPI_Init here. Otherwise, free them in MPI_T_finalize() */
+    if (!MPIR_T_is_initialized())
+        MPIR_T_env_finalize();
+
     /* FIXME: Many of these debugging items could/should be callbacks, 
        added to the finalize callback list */
     /* FIXME: the memory tracing code block should be a finalize callback */
     /* If memory debugging is enabled, check the memory here, after all
        finalize callbacks */
-
-    /* FIXME The init/finalize paths in general need a big overhaul in order
-     * to account for the new MPI_T_ code. */
-    if (!MPIR_T_is_initialized()) {
-        MPIR_T_finalize_pvars();
-
-        mpi_errno = MPIR_Param_finalize();
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-    }
 
     MPIU_THREAD_CS_EXIT(ALLFUNC,);
     MPIR_Process.initialized = MPICH_POST_FINALIZED;

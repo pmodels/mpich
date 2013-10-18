@@ -582,8 +582,7 @@ int MPI_Init_thread( int *argc, char ***argv, int required, int *provided )
 
     /* ... body of routine ... */
 
-    mpi_errno = MPIR_Param_init_params();
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    MPIR_T_env_init();
 
     /* If the user requested for asynchronous progress, request for
      * THREAD_MULTIPLE. */

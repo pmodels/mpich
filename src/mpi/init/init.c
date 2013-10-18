@@ -101,8 +101,7 @@ int MPI_Init( int *argc, char ***argv )
 
     /* ... body of routine ... */
 
-    mpi_errno = MPIR_Param_init_params();
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    MPIR_T_env_init();
 
     if (!strcmp(MPIR_PARAM_DEFAULT_THREAD_LEVEL, "MPI_THREAD_MULTIPLE"))
         threadLevel = MPI_THREAD_MULTIPLE;
