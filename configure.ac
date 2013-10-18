@@ -376,9 +376,9 @@ AC_ARG_ENABLE(g,
 ],,enable_g=none)
 
 AC_ARG_ENABLE([mpit_pvars],
-[--enable-mpit-pvars=list - Selectively enable MPI_T performance variables.
-                         list is a comma-separated list of variable names,
-                         including
+[  --enable-mpit-pvars=list - Selectively enable MPI_T performance variables in
+                      modules. list is a comma-separated module names,
+                      including (Default is "all"):
         none     - No performance info recorded
         recvq    - All message queue-related
         nem      - All nemesis-related
