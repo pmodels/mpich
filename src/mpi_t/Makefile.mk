@@ -36,5 +36,5 @@ mpi_sources +=                \
         src/mpi_t/pvar_write.c
 
 
-lib_lib@MPILIBNAME@_la_SOURCES += src/mpi_t/mpi_t_util.c
+lib_lib@MPILIBNAME@_la_SOURCES += src/mpi_t/mpit.c
 
