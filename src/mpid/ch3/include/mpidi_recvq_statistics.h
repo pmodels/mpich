@@ -7,10 +7,9 @@
 #ifndef _MPIDI_RECVQ_STATISTICS_H_
 #define _MPIDI_RECVQ_STATISTICS_H_
 
-#include "mpidi_common_statistics.h"
+#include "mpit.h"
 
-/* Do not protect by enable macro - see mpidi_common_statistics.h */
 /* from ch3u_recvq.c */
-extern uint64_t MPIDI_CH3I_unexpected_recvq_buffer_size;
+MPIR_T_PVAR_ULONG2_LEVEL_DECL_EXTERN(RECVQ, unexpected_recvq_buffer_size);
 
 #endif  /* _MPIDI_RECVQ_STATISTICS_H_ */
