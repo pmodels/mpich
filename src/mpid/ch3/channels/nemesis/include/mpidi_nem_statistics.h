@@ -7,9 +7,6 @@
 #ifndef _MPIDI_NEM_STATISTICS_H_
 #define _MPIDI_NEM_STATISTICS_H_
 
-#include "mpidi_common_statistics.h"
-
-/* Do not protect by enable macro - see mpidi_common_statistics.h */
-extern uint64_t *MPID_nem_fbox_fall_back_to_queue_count;
+extern unsigned long long *MPID_nem_fbox_fall_back_to_queue_count;
 
 #endif  /* _MPIDI_NEM_STATISTICS_H_ */

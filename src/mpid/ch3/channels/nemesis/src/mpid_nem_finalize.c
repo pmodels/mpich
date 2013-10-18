@@ -56,7 +56,7 @@ int MPID_nem_finalize(void)
     my_papi_close();
 #endif /*PAPI_MONITOR */
     
-#if ENABLE_NEM_STATISTICS
+#if ENABLE_PVAR_NEM
     MPIU_Free(MPID_nem_fbox_fall_back_to_queue_count);
 #endif
 

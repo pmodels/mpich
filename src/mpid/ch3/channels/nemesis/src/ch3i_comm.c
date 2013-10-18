@@ -5,6 +5,7 @@
  */
 
 #include "mpid_nem_impl.h"
+#undef utarray_oom
 #define utarray_oom() do { goto fn_oom; } while (0)
 #include "mpiu_utarray.h"
 
