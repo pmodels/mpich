@@ -37,6 +37,9 @@ int main(int argc, char *argv[])
     MPI_T_init_thread(required, &provided);
     MPI_Init_thread(&argc, &argv, required, &provided);
 
+    if (getenv("MPITEST_VERBOSE"))
+        verbose = 1;
+
     PrintControlVars(stdout);
     if (verbose)
         fprintf(stdout, "\n");
@@ -47,8 +50,12 @@ int main(int argc, char *argv[])
 
     PrintCategories(stdout);
 
-    MPI_Finalize();
+    /* Put MPI_T_finalize() after MPI_Finalize() will cause mpich memory
+     * tracing facility falsely reports memory leaks, though these memories
+     * are freed in MPI_T_finalize().
+     */
     MPI_T_finalize();
+    MPI_Finalize();
 
     fprintf(stdout, " No Errors\n");
 
@@ -176,11 +183,14 @@ int PrintCategories(FILE * fp)
     }
 
     for (i = 0; i < numCat; i++) {
+        nameLen = sizeof(name);
+        descLen = sizeof(desc);
         MPI_T_category_get_info(i, name, &nameLen, desc, &descLen, &numCvars,
                                 &numPvars, &numSubcat);
         if (verbose)
-            fprintf(fp, "Category %s has %d control variables, %d performance variables, \
-                %d subcategories\n", name, numCvars, numPvars, numSubcat);
+            fprintf(fp, "Category %s has %d control variables, %d performance variables, %d subcategories\n",
+                    name, numCvars, numPvars, numSubcat);
+            fprintf(fp, "\tDescription: %s\n", desc);
 
         if (numCvars > 0) {
             if (verbose)
@@ -189,12 +199,12 @@ int PrintCategories(FILE * fp)
             MPI_T_category_get_cvars(i, numCvars, cvarIndex);
             for (j = 0; j < numCvars; j++) {
                 /* Get just the variable name */
-                int varnameLen, verbose, binding, scope;
+                int varnameLen, verb, binding, scope;
                 MPI_Datatype datatype;
                 char varname[128];
                 varnameLen = sizeof(varname);
                 MPI_T_cvar_get_info(cvarIndex[j], varname, &varnameLen,
-                                    &verbose, &datatype, NULL, NULL, NULL, &binding, &scope);
+                                    &verb, &datatype, NULL, NULL, NULL, &binding, &scope);
                 if (verbose)
                     fprintf(fp, "%s, ", varname);
             }
@@ -210,12 +220,12 @@ int PrintCategories(FILE * fp)
             int *pvarIndex = (int *) malloc(numPvars * sizeof(int));
             MPI_T_category_get_pvars(i, numPvars, pvarIndex);
             for (j = 0; j < numPvars; j++) {
-                int varnameLen, verbose, varclass, binding;
+                int varnameLen, verb, varclass, binding;
                 int isReadonly, isContinuous, isAtomic;
                 MPI_Datatype datatype;
                 char varname[128];
                 varnameLen = sizeof(varname);
-                MPI_T_pvar_get_info(pvarIndex[j], varname, &varnameLen, &verbose,
+                MPI_T_pvar_get_info(pvarIndex[j], varname, &varnameLen, &verb,
                                     &varclass, &datatype, NULL, NULL, NULL, &binding,
                                     &isReadonly, &isContinuous, &isAtomic);
                 if (verbose)
@@ -228,8 +238,26 @@ int PrintCategories(FILE * fp)
         }
 
         /* TODO: Make it possible to recursively print category information */
-        if (verbose)
-            fprintf(fp, "\tNumber of subcategories: %d\n", numSubcat);
+        if (numSubcat > 0) {
+            if (verbose)
+                fprintf(fp, "\tSubcategories include: ");
+
+            int *subcatIndex = (int *) malloc(numSubcat * sizeof(int));
+            MPI_T_category_get_categories(i, numSubcat, subcatIndex);
+            for (j = 0; j < numSubcat; j++) {
+                int catnameLen, ncvars, npvars, nsubcats;
+                char catname[128];
+                catnameLen = sizeof(catname);
+                MPI_T_category_get_info(subcatIndex[j], catname, &catnameLen, NULL, NULL,
+                                        &ncvars, &npvars, &nsubcats);
+                if (verbose)
+                    fprintf(fp, "%s, ", catname);
+
+            }
+            free(subcatIndex);
+            if (verbose)
+                fprintf(fp, "\n");
+        }
     }
 
     return 0;
