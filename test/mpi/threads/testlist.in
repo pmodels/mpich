@@ -1,5 +1,6 @@
 pt2pt
 comm
 init
+mpi_t
 @spawndir@
 rma

@@ -473,6 +473,7 @@
 /threads/pt2pt/threaded_sr
 /threads/pt2pt/alltoall
 /threads/pt2pt/sendselfth
+/threads/mpi_t/mpit_threading
 /threads/spawn/threaded_sr
 /threads/spawn/alltoall
 /threads/spawn/sendselfth
