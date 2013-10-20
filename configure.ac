@@ -5843,12 +5843,12 @@ if test "$enable_f77" = yes -a -z "$MPI_STATUS_SIZE" ; then
     # size and then tell Fortran to enforce maximal alignment.  
     # A more sophisticated test would determine the required alignment,
     # rather than assuming alignment to maximum size
+    MPIR_COUNT_ALIGNMENT=0
     if test $MPI_SIZEOF_COUNT -gt $pac_cv_f77_sizeof_integer ; then
         # Alignment test looks at the low address bits, as long
 	# as the sizeof(MPI_Count) is 2^j.  
 	# If we can't tell, pick a value that forces the Fortran
 	# wrappers to use a local copy.
-	MPIR_COUNT_ALIGNMENT=0
 	case $MPI_SIZEOF_COUNT in 
 	4)  MPIR_COUNT_ALIGNMENT="0x3";;
 	8)  MPIR_COUNT_ALIGNMENT="0x7";;
@@ -5856,8 +5856,6 @@ if test "$enable_f77" = yes -a -z "$MPI_STATUS_SIZE" ; then
 	*)  MPIR_COUNT_ALIGNMENT=-1 ;;
 	esac
         
-        AC_DEFINE_UNQUOTED([MPIR_COUNT_ALIGNMENT],[$MPIR_COUNT_ALIGNMENT],[Value that anded with an address will give 0 if the address is properly aligned for MPI_Count])
-
 	# Compare the size of MPI_Status to the sizes of the individual 
 	# elements.  If the sizeof(MPI_Status) > sum of the sizes, then
 	# determine if simple padding will work.
@@ -5929,7 +5927,10 @@ _EOF
 	    AC_MSG_RESULT([no])
 	fi
     fi 
-fi
+    # Define the alignment of count regardless of whether sizeof(MPI_Count)
+    # is bigger than a Fortran integer
+    AC_DEFINE_UNQUOTED([MPIR_COUNT_ALIGNMENT],[$MPIR_COUNT_ALIGNMENT],[Value that anded with an address will give 0 if the address is properly aligned for MPI_Count])
+fi # enable_f77 and mpi_status_size not set
 AC_SUBST([MPI_STATUS_SIZE])
 MPIF_STATUS_SIZE=$MPI_STATUS_SIZE
 AC_DEFINE_UNQUOTED([MPIF_STATUS_SIZE],[$MPIF_STATUS_SIZE],[Size of an MPI_STATUS, in Fortran, in Fortran integers])
