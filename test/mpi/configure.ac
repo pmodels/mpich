@@ -1470,6 +1470,7 @@ AC_OUTPUT(maint/testmerge \
           threads/comm/Makefile \
           threads/init/Makefile \
           threads/spawn/Makefile \
+          threads/rma/Makefile \
           errors/Makefile \
           errors/attr/Makefile \
           errors/basic/Makefile \
