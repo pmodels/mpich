@@ -85,10 +85,13 @@ $print_line_len = 0;
 $gDebug = 0;
 $gDebugRoutine = "NONE";
 @mpilevels = ( 'mpi1' , 'mpi2' );
-#feature variables
+# feature variables (for the -feature commandline option)
 $do_subdecls = 1;
+
+# Other features
 $doCoverage = 0;
 $doFuncspec = 1;
+$do_DistGraphComm = 0;
 $outputRoutineLists = 0;
 
 # Process environment variables
@@ -100,9 +103,9 @@ if (defined($ENV{"CXX_COVERAGE"}) && $ENV{"CXX_COVERAGE"} eq "yes") {
 # Process arguments
 #
 # Args
-# -feature={logical,fint,subdecls,weak,bufptr}, separated by :, value given 
+# -feature={subdecls}, separated by :, value given
 # by =on or =off, eg
-# -feature=logical=on:fint=off
+# -feature=subdecls=on:fint=off
 # The feature names mean:
 #    subdecls - Declarations for PC-C++ compilers added
 # -routines=name  - provide a list of routines or a file that
@@ -338,9 +341,10 @@ $specialReturnType{"cart-Split"} = "Cartcomm";
 		     );
 $specialReturnType{"graph-Dup"} = "Graphcomm";
 $specialReturnType{"graph-Split"} = "Graphcomm";
-$specialReturnType{"distgraph-Dup"} = "Distgraphcomm";
-$specialReturnType{"distgraph-Split"} = "Distgraphcomm";
-
+if ($do_DistGraphComm) {
+    $specialReturnType{"distgraph-Dup"} = "Distgraphcomm";
+    $specialReturnType{"distgraph-Split"} = "Distgraphcomm";
+}
 
 # Range routines will require special handling
 # The Translate_ranks, Union, Intersect, Difference, and Compare routines are 
@@ -689,9 +693,13 @@ if ($build_io) {
 		   'win', 
 		   'file', 
 		   'graph',
-                   'distgraph',
+#                   'distgraph',
 		   'cart', 
 );
+if ($do_DistGraphComm) {
+    $classes[$#classes+1] = 'distgraph';
+}
+
 
 #
 # Some classes have additional methods.  This hash on the classes (by 
@@ -705,7 +713,7 @@ if ($build_io) {
 		     'inter'     => 'Intercomm_methods',
 		     'intra'     => 'Intracomm_methods',
 		     'graph'     => 'Graphcomm_methods',
-		     'distgraph' => 'Distgraphcomm_methods',
+#		     'distgraph' => 'Distgraphcomm_methods',
 		     'cart'      => 'Cartcomm_methods',
 		     'dtype'     => 'Datatype_methods',
 		     'op'        => 'Op_methods',
@@ -713,6 +721,9 @@ if ($build_io) {
 		     'win'       => 'Win_methods',
 		     'greq'      => 'Grequest_methods',
 		     );
+if ($do_DistGraphComm) {
+    $class_extra_fnc{'distgraph'} = 'Distgraphcomm_methods';
+}
 
 # ----------------------------------------------------------------------------
 # If there is a specific list of routines, replace the list with this
@@ -837,7 +848,7 @@ if ( -s "../../mpi/romio/include/mpio.h.in" ) {
 		'errh' => MPI_Errhandler,
 		'null'  => MPI_Comm,
 		'graph' => MPI_Comm,
-		'distgraph' => MPI_Comm,
+#		'distgraph' => MPI_Comm,
 		'group' => MPI_Group,
 		'inter' => MPI_Comm,
 		'intra' => MPI_Comm,
@@ -851,6 +862,10 @@ if ( -s "../../mpi/romio/include/mpio.h.in" ) {
 		'file' => MPI_File,
 		'except' => 'int',
  );
+if ($do_DistGraphComm) {
+    $class_type{'distgraph'} = 'MPI_Comm';
+}
+
 #
 # fullclassname gives the C++ binding class name for each shorthand version
 %fullclassname = ( 'comm' => 'Comm',
@@ -858,7 +873,7 @@ if ( -s "../../mpi/romio/include/mpio.h.in" ) {
 		   'dtype' => 'Datatype',
 		   'errh' => 'Errhandler',
 		   'graph' => 'Graphcomm',
-		   'distgraph' => 'Distgraphcomm',
+#		   'distgraph' => 'Distgraphcomm',
 		   'group' => 'Group',
 		   'null'  => 'Nullcomm',
 		   'inter' => 'Intercomm',
@@ -873,7 +888,9 @@ if ( -s "../../mpi/romio/include/mpio.h.in" ) {
 		   'file' => 'File',
 		   'except' => 'Exception',
 );
-
+if ($do_DistGraphComm) {
+    $fullclassname{'distgraph'} = 'Distgraphcomm';
+}
 #
 # Each class may need to access internal elements of another class.
 # This has gives the list of friends for each class (i.e., the
@@ -898,12 +915,16 @@ if ( -s "../../mpi/romio/include/mpio.h.in" ) {
 		   'win' => '',
 		   'file' => '',
  );
-
+if (!$do_DistGraphComm) {
+    # Remove Distgraphcomm from the friends list
+    $class_friends{'comm'} = 'Cartcomm,Intercomm,Intracomm,Graphcomm,Nullcomm,Datatype,Win,File';
+    $class_friends{'intra'} = 'Cartcomm,Graphcomm,Datatype';
+}
 #
 # We also need to know the derived classes.  This gives the class that
 # a class is derived from.  Base classes are not included here.
 %derived_class = ( 'graph' => 'Intracomm', 
-		   'distgraph' => 'Intracomm',
+	#	   'distgraph' => 'Intracomm',
 		   'preq' => 'Request',
 		   'greq' => 'Request',
 		   'null' => 'Comm',
@@ -911,6 +932,9 @@ if ( -s "../../mpi/romio/include/mpio.h.in" ) {
 		   'intra' => 'Comm',
 		   'cart' => 'Intracomm',
 		   );
+if ($do_DistGraphComm) {
+    $derived_class{'distgraph'} = 'Intracomm';
+}
 
 #
 # Maps all of the derived classes to their ultimate parent.  This is
@@ -918,8 +942,8 @@ if ( -s "../../mpi/romio/include/mpio.h.in" ) {
 # used to store the C version of the class handle.
 %mytopclass = ( 'graph'     => 'comm', 
 		'graphcomm' => 'comm',
-		'distgraph' => 'comm',
-		'distgraphcomm' => 'comm',
+#		'distgraph' => 'comm',
+#		'distgraphcomm' => 'comm',
 		'nullcomm'  => 'comm',
 	        'intracomm' => 'comm', 
 	        'intercomm' => 'comm',
@@ -931,6 +955,10 @@ if ( -s "../../mpi/romio/include/mpio.h.in" ) {
 		'prequest'  => 'request',
 	        'greq'      => 'request',
   	        'preq'      => 'request' );
+if ($do_DistGraphComm) {
+    $mytopclass{'distgraph'} = 'comm';
+    $mytopclass{'distgraphcomm'} = 'comm';
+}
 
 #
 # Many of the C++ binding names are easily derived from the C name.
@@ -1026,12 +1054,18 @@ if ( -s "../../mpi/romio/include/mpio.h.in" ) {
 	     'graph-Get_neighbors_count' => 'Graph_neighbors_count',
 	     'graph-Get_dims' => 'Graphdims_get',
 	     'graph-Dup' => 'Comm_dup',
-	     'distgraph-Dup' => 'Comm_dup',
-	     'distgraph-Get_dist_neighbors' => 'Dist_graph_neighbors',
-	     'distgraph-Get_dist_neighbors_count' => 'Dist_graph_neighbors_count',
+#	     'distgraph-Dup' => 'Comm_dup',
+#	     'distgraph-Get_dist_neighbors' => 'Dist_graph_neighbors',
+#	     'distgraph-Get_dist_neighbors_count' => 'Dist_graph_neighbors_count',
              'op-Is_commutative' => 'Op_commutative',
              'op-Reduce_local' => 'Reduce_local',
 	     );
+if ($do_DistGraphComm) {
+    $altname{'distgraph-Dup'} = 'Comm_dup';
+    $altname{'distgraph-Get_dist_neighbors'} = 'Dist_graph_neighbors';
+    $altname{'distgraph-Get_dist_neighbors_count'} =
+	'Dist_graph_neighbors_count';
+}
 
 # These routines must be defered because their implementations need 
 # definitions of classes that must be made later than the class that they
@@ -1050,9 +1084,13 @@ if ( -s "../../mpi/romio/include/mpio.h.in" ) {
 			  'Nullcomm' => 1,
 			  'Cartcomm' => 1,
 			  'Graphcomm' => 1,
-			  'Distgraphcomm' => 1,
+#			  'Distgraphcomm' => 1,
 			  'Prequest' => 1,
 			  );
+if ($do_DistGraphComm) {
+    $class_has_no_compare{'Distgraphcomm'} = 1;
+}
+
 # These classes do not have a default intialization
 # These use the Full class name
 %class_has_no_default = ( 'Status' => 1 );
@@ -1135,10 +1173,12 @@ class Nullcomm;
 class Intercomm;
 class Intracomm;
 class Cartcomm;
-class Graphcomm;
-class Distgraphcomm;
-class File;
-\n";
+class Graphcomm;\n";
+if ($do_DistGraphComm) {
+    print $OUTFD "class Distgraphcomm;\n"
+}
+print $OUTFD "class File;\n\n";
+
 
 
 #
@@ -2337,11 +2377,13 @@ MPIR_Comm_delete_attr_cxx_proxy(
         MPI::Graphcomm c = comm;
         return f( c, keyval, value, extra_state );
     }
+#ifdef HAVE_CXX_DISTGRAPH_COMM
     else
     {
         MPI::Distgraphcomm c = comm;
         return f( c, keyval, value, extra_state );
     }
+#endif
 }
 
 static
@@ -2395,11 +2437,13 @@ MPIR_Comm_copy_attr_cxx_proxy(
         MPI::Graphcomm c = comm;
         return f( c, keyval, extra_state, value, new_value, *(bool*)flag );
     }
+#ifdef HAVE_CXX_DISTGRAPH_COMM
     else 
     {
         MPI::Distgraphcomm c = comm;
         return f( c, keyval, extra_state, value, new_value, *(bool*)flag );
     }
+#endif
 }
 
 
@@ -2869,6 +2913,7 @@ void Datatype::Unpack( const void *inbuf, int insize, void *outbuf,
         return v6;
     }\n";
 
+    if ($do_DistGraphComm) {
     print $OUTFD "\
     Distgraphcomm Intracomm::Dist_graph_create( int v2, const int v3[], const int v4[], const int v5[], const int v6[], const MPI::Info &v7, bool v8 ) const
     {
@@ -2934,6 +2979,7 @@ void Datatype::Unpack( const void *inbuf, int insize, void *outbuf,
         return v10;
     }\n";
 
+    } # check on distgraphcomm implemented
 
     print $OUTFD "\
     Intracomm Intercomm::Merge( bool v2 ) const
@@ -3671,6 +3717,7 @@ Intercomm Spawn_multiple(int count, const char* array_of_commands[], const char*
 
 ";    
 
+    if ($do_DistGraphComm) {
     # Because there are two versions of each of the dist graph 
     # create routines (fewer arguments for the case that uses 
     # MPI_UNWEIGHTED in C or Fortran), we must define these explicitly 
@@ -3684,7 +3731,7 @@ Intercomm Spawn_multiple(int count, const char* array_of_commands[], const char*
 
     virtual Distgraphcomm Dist_graph_create_adjacent( int v2, const int v3[], int v5, const int v6[], const MPI::Info &v8, bool v9 ) const;
     \n";
-
+    }
 }
 
 sub Op_methods {
@@ -4165,6 +4212,11 @@ sub PrintRoutineCall {
 
     my $useThis = 0;
     my $TYPE = "OBJ", $obj = "COMM_WORLD";
+    if (!$do_DistGraphComm) {
+	if ($class eq "distgraph") {
+	    die "PANIC: unexpected distgraph class when distgraph support disabled";
+	}
+    }
     if ($class eq "comm" || $class eq "inter" || $class eq "intra" ||
 	$class eq "cart" || $class eq "graph" || $class eq "distgraph") {
 	$useThis = 1;
