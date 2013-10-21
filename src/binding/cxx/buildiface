@@ -127,6 +127,9 @@ foreach $_ (@ARGV) {
 	    elsif ($value eq "off") { $value = 0; }
 	    # Set the variable based on the string
 	    $varname = "do_$name";
+	    if (!defined($$varname)) {
+		die "Feature $name is unknown!\n";
+	    }
 	    $$varname = $value;
 	}
     }
