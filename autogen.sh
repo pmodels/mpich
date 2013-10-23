@@ -722,7 +722,7 @@ if [ $do_bindings = "yes" ] ; then
     if [ $build_cxx = "yes" ] ; then
 	echo_n "Building C++ interface... "
 	( cd src/binding/cxx && chmod a+x ./buildiface &&
-	  ./buildiface -nosep $otherarg )
+	  ./buildiface -nosep -initfile=cxx.vlist $otherarg )
 	echo "done"
     fi
 fi
