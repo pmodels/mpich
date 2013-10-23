@@ -1148,11 +1148,18 @@ if test "$enable_cxx" = yes ; then
 fi
 # Simple tests for which other languages we can handle
 cxxdir="#"
+# The C++ interface added support for the Distgraph routines in MPI-2.2,
+# but not all MPI implementations support that.  nocxxdistgraph allows
+# us to detect that and to skip the test when it is not supported.
+nocxxdistgraph="#"
 AC_SUBST(cxxdir)
 if test "$FROM_MPICH" = yes ; then
     if test "$enable_cxx" = yes ; then
         otherlangs="$otherlangs cxx"
         cxxdir=cxx
+        # MPICH ABI removed support for MPI::Distgraphcomm, so
+	# nocxxdistgraph is left as #, which comments out the test
+	# in cxx/topol/testlist.in
     fi
 elif test "$enable_cxx" = yes ; then
     AC_MSG_CHECKING([that we can build MPI programs with C++])
@@ -1171,8 +1178,29 @@ elif test "$enable_cxx" = yes ; then
     ],[
         AC_MSG_RESULT(no)
     ])
+    # Check for support of the Distgraphcomm, added in MPI 2.2.
+    # Some MPI implementations may support MPI 2.2 or MPI 3.x, but not
+    # support the Distgraphcomm C++ interface
+    AC_MSG_CHECKING([whether MPI C++ includes Distgraphcomm])
+    AC_COMPILE_IFELSE([
+        AC_LANG_PROGRAM([
+#include "mpi.h"
+        ],[
+    MPI::Distgraphcomm dcomm;
+    MPI::Init();
+    MPI::Finalize();
+        ])
+    ],[
+        AC_MSG_RESULT(yes)
+        nocxxdistgraph=""
+    ],[
+        AC_MSG_RESULT(no)
+    ])
+
     AC_LANG_POP([C++])
 fi
+AC_SUBST(nocxxdistgraph)
+
 if test "$enable_cxx" = yes ; then
     AC_CACHE_CHECK([whether <iostream> available],pac_cv_cxx_has_iostream,[
     AC_LANG_PUSH([C++])
@@ -1520,6 +1548,7 @@ AC_OUTPUT(maint/testmerge \
           perf/Makefile \
           testlist \
           cxx/testlist \
+	  cxx/topo/testlist \
           f77/testlist \
           f90/testlist \
           threads/testlist \

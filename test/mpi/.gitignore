@@ -122,6 +122,7 @@
 /comm/dupic
 /comm/ctxalloc
 /cxx/testlist
+/cxx/topo/testlist
 /cxx/coll/uallreduce
 /cxx/coll/ureduce
 /cxx/coll/uscan
