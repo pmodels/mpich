@@ -47,9 +47,9 @@ int main( int argc, char *argv[] )
 	MPI_Error_class( err, &ec );
 	MPI_Error_string( err, emsg, &emsglen );
 	MTestPrintfMsg( 2, "Error msg from open: %s\n", emsg );
-	if (ec != MPI_ERR_NO_SUCH_FILE) {
+	if (ec != MPI_ERR_NO_SUCH_FILE && ec != MPI_ERR_IO) {
 	    errs++;
-	    printf( "Did not return class ERR_NO_SUCH_FILE\n" );
+	    printf( "Did not return class ERR_NO_SUCH_FILE or ERR_IO\n" );
 	    printf( "Returned class %d, message %s\n", ec, emsg );
 	}
     }
@@ -137,8 +137,10 @@ int main( int argc, char *argv[] )
 	}
 	else {
 	    MPI_Error_class( err, &ec );
-	    if (ec != MPI_ERR_NO_SUCH_FILE) {
+	    if (ec != MPI_ERR_NO_SUCH_FILE && ec != MPI_ERR_IO) {
 		errs++;
+                printf( "Did not return class ERR_NO_SUCH_FILE or ERR_IO\n" );
+                printf( "Returned class %d, message %s\n", ec, emsg );
 	    }
 	}
     }
