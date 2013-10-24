@@ -36,6 +36,7 @@ noinst_PROGRAMS =           \
     indexed-misc            \
     large-count             \
     large_type              \
+    large_type_sendrec      \
     lbub                    \
     localpack               \
     longdouble              \
