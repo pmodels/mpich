@@ -60,6 +60,8 @@ parameters:
       type        : int
       default     : 256
       class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
       description : >-
         the short message algorithm will be used if the per-destination
         message size (sendcount*size(sendtype)) is <= this value
@@ -69,6 +71,8 @@ parameters:
       type        : int
       default     : 32768
       class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
       description : >-
         the medium message algorithm will be used if the per-destination
         message size (sendcount*size(sendtype)) is <= this value and
@@ -79,6 +83,8 @@ parameters:
       type        : int
       default     : 32
       class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
       description : >-
         max no. of irecvs/isends posted at a time in some alltoall
         algorithms. Setting it to 0 causes all irecvs/isends to be
@@ -89,6 +95,8 @@ parameters:
       type        : int
       default     : 524288
       class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
       description : >-
         the long message algorithm will be used if the operation is commutative
         and the send buffer size is >= this value (in bytes)
@@ -98,6 +106,8 @@ parameters:
       type        : int
       default     : 8
       class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
       description : >-
         the minimum number of processes in a communicator to use a non-binomial
         broadcast algorithm
@@ -107,6 +117,8 @@ parameters:
       type        : int
       default     : 12288
       class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
       description : >-
         the short message algorithm will be used if the send buffer size is <
         this value (in bytes)
@@ -116,6 +128,8 @@ parameters:
       type        : int
       default     : 524288
       class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
       description : >-
         the long message algorithm will be used if the send buffer size is >=
         this value (in bytes)
@@ -125,6 +139,8 @@ parameters:
       type        : int
       default     : 81920
       class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
       description : >-
         For MPI_Allgather and MPI_Allgatherv, the short message algorithm will
         be used if the send buffer size is < this value (in bytes).
@@ -134,6 +150,8 @@ parameters:
       type        : int
       default     : 524288
       class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
       description : >-
         For MPI_Allgather and MPI_Allgatherv, the long message algorithm will be
         used if the send buffer size is >= this value (in bytes)
@@ -143,6 +161,8 @@ parameters:
       type        : int
       default     : 2048
       class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
       description : >-
         the short message algorithm will be used if the send buffer size is <=
         this value (in bytes)
@@ -152,6 +172,8 @@ parameters:
       type        : int
       default     : 2048
       class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
       description : >-
         the short message algorithm will be used if the send buffer size is <=
         this value (in bytes)
@@ -161,6 +183,8 @@ parameters:
       type        : int
       default     : 1024
       class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
       description : >-
         use a temporary buffer for intracommunicator MPI_Gather if the send
         buffer size is < this value (in bytes)
@@ -170,6 +194,8 @@ parameters:
       type        : int
       default     : 2048
       class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
       description : >-
         use the short message algorithm for intercommunicator MPI_Gather if the
         send buffer size is < this value (in bytes)
@@ -179,6 +205,8 @@ parameters:
       type        : int
       default     : 32
       class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
       description : >-
         Use Ssend (synchronous send) for intercommunicator MPI_Gatherv if the
         "group B" size is >= this value.  Specifying "-1" always avoids using
@@ -190,6 +218,8 @@ parameters:
       type        : int
       default     : 2048
       class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
       description : >-
         use the short message algorithm for intercommunicator MPI_Scatter if the
         send buffer size is < this value (in bytes)
@@ -199,6 +229,8 @@ parameters:
       type        : int
       default     : 32768
       class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
       description : >-
         The smallest message size that will be used for the pipelined, large-message,
         ring algorithm in the MPI_Allgatherv implementation.
@@ -208,6 +240,8 @@ parameters:
       type        : boolean
       default     : true
       class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
       description : >-
         Enable SMP aware collective communication.
 
@@ -216,6 +250,8 @@ parameters:
       type        : boolean
       default     : true
       class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
       description : >-
         Enable SMP aware barrier.
 
@@ -224,6 +260,8 @@ parameters:
       type        : boolean
       default     : true
       class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
       description : >-
         Enable SMP aware broadcast.
 
@@ -232,6 +270,8 @@ parameters:
       type        : int
       default     : 0
       class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
       description : >-
         Maximum message size for which SMP-aware broadcast is used.  A
         value of '0' uses SMP-aware broadcast for all message sizes.
@@ -241,6 +281,8 @@ parameters:
       type        : boolean
       default     : true
       class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
       description : >-
         Enable SMP aware reduce.
 
@@ -249,6 +291,8 @@ parameters:
       type        : int
       default     : 0
       class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
       description : >-
         Maximum message size for which SMP-aware reduce is used.  A
         value of '0' uses SMP-aware reduce for all message sizes.
@@ -258,6 +302,8 @@ parameters:
       type        : boolean
       default     : true
       class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
       description : >-
         Enable SMP aware allreduce.
 
@@ -266,6 +312,8 @@ parameters:
       type        : int
       default     : 0
       class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
       description : >-
         Maximum message size for which SMP-aware allreduce is used.  A
         value of '0' uses SMP-aware allreduce for all message sizes.
@@ -277,6 +325,8 @@ parameters:
       type        : boolean
       default     : true
       class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
       description : >-
         Use qsort(3) in the implementation of MPI_Comm_split instead of bubble sort.
 
@@ -287,6 +337,8 @@ parameters:
       type        : boolean
       default     : false
       class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
       description : >-
         If true, causes processes to wait in MPI_Init and
         MPI_Initthread for a debugger to be attached.  Once the
@@ -299,6 +351,8 @@ parameters:
       type        : int
       default     : 64
       class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
       description : >-
         Size of the "MPIR" debugger interface proctable (process table).
 
@@ -307,6 +361,8 @@ parameters:
       type        : boolean
       default     : true
       class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
       description : >-
         If true, dump the proctable entries at MPIR_WaitForDebugger-time.
         (currently compile-time disabled by "#if 0")
@@ -318,6 +374,8 @@ parameters:
       type        : boolean
       default     : true
       class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
       description : >-
         DEPRECATED! Will be removed in MPICH-3.2
         Collectives called on a communicator with a failed process
@@ -333,6 +391,8 @@ parameters:
       type        : boolean
       default     : false
       class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
       description : >-
         If true, MPI will call MPI_Abort at MPI_Finalize if any MPI object
         handles have been leaked.  For example, if MPI_Comm_dup is called
@@ -349,6 +409,8 @@ parameters:
       type        : int
       default     : 2
       class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
       description : >-
         The MPIR_PARAM_CTXID_EAGER_SIZE environment variable allows you to
         specify how many words in the context ID mask will be set aside
@@ -360,6 +422,8 @@ parameters:
       type        : boolean
       default     : false
       class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
       description : >-
         If set to true, MPICH will initiate an additional thread to
         make asynchronous progress on all communication operations
@@ -379,6 +443,8 @@ parameters:
       type        : string
       default     : "MPI_THREAD_SINGLE"
       class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
       description : >-
         Sets the default thread level to use when using MPI_INIT.
 
@@ -389,6 +455,8 @@ parameters:
       type        : boolean
       default     : true
       class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
       description : >-
         If true, list any memory that was allocated by MPICH and that
         remains allocated when MPI_Finalize completes.
@@ -398,6 +466,8 @@ parameters:
       type        : boolean
       default     : true
       class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
       description : >-
         If true, perform checks for errors, typically to verify valid inputs
         to MPI routines.  Only effective when MPICH is configured with
@@ -408,6 +478,8 @@ parameters:
       type        : boolean
       default     : true
       class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
       description : >-
         If true, print an error stack trace at error handling time.
 
@@ -416,6 +488,8 @@ parameters:
       type        : int
       default     : 0
       class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
       description : >-
         If >0, truncate error stack output lines this many characters
         wide.  If 0, do not truncate, and if <0 use a sensible default.
@@ -427,6 +501,8 @@ parameters:
       type        : boolean
       default     : true
       class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
       description : >-
         Use the immediate accumulate optimization
 
@@ -435,6 +511,8 @@ parameters:
       type        : int
       default     : 4000
       class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
       description : >-
         Threshold at which the RMA implementation attempts to complete requests
         while completing RMA operations and while using the lazy synchonization
@@ -446,6 +524,8 @@ parameters:
       type        : int
       default     : 128
       class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
       description : >-
         Threshold for the number of new requests since the last attempt to
         complete pending requests.  Higher values can increase performance,
@@ -457,6 +537,8 @@ parameters:
       type        : boolean
       default     : false
       class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
       description : >-
         Issue a request for the passive target RMA lock immediately.  Default
         behavior is to defer the lock request until the call to MPI_Win_unlock.
@@ -466,6 +548,8 @@ parameters:
       type        : boolean
       default     : true
       class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
       description : >-
         Enable/disable an optimization that merges lock, op, and unlock
         messages, for single-operation passive target epochs.
@@ -477,6 +561,8 @@ parameters:
       type        : boolean
       default     : false
       class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
       description : >-
         If true, force all processes to operate as though all processes
         are located on another node.  For example, this disables shared
@@ -489,6 +575,8 @@ parameters:
       type        : boolean
       default     : false
       class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
       description : >-
         If true, odd procs on a node are seen as local to each other, and even
         procs on a node are seen as local to each other.  Used for debugging on
@@ -501,6 +589,8 @@ parameters:
       type        : string
       defaultliteral : NULL
       class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
       description : >-
         If non-NULL, this parameter specifies the IP address that
         other processes should use when connecting to this process.
@@ -513,6 +603,8 @@ parameters:
       type        : int
       default     : 131072
       class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
       description : >-
         This parameter controls the message size at which CH3 switches
         from eager to rendezvous mode.
@@ -525,6 +617,8 @@ parameters:
       type        : range
       default     : "0:0"
       class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
       description : >-
         The MPIR_PARAM_CH3_PORT_RANGE environment variable allows you to
         specify the range of TCP ports to be used by the process
@@ -538,6 +632,8 @@ parameters:
       type        : int
       default     : 1000
       class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
       description : >-
         When MPICH is in a busy waiting loop, it will periodically
         call a function to yield the processor.  This parameter sets
@@ -549,6 +645,8 @@ parameters:
       type        : int
       default     : 2097152
       class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
       description : >-
         Messages larger than this size will use the "dma" (knem)
         intranode LMT implementation, if it is enabled and available.
@@ -558,6 +656,8 @@ parameters:
       type        : string
       default     : ""
       class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
       description : >-
         If non-empty, this parameter specifies which network module
         should be used for communication.
@@ -567,6 +667,8 @@ parameters:
       type        : int
       default     : -1
       class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
       description : >-
         This parameter controls the message size at which Nemesis
         switches from eager to rendezvous mode for shared memory.
@@ -578,6 +680,8 @@ parameters:
       type        : int
       default     : -2
       class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
       description : >-
         This parameter controls the message size at which Nemesis
         switches from eager to rendezvous mode for ready-send
@@ -590,6 +694,8 @@ parameters:
       type        : boolean
       default     : false
       class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
       description : >-
         If true, enables checkpointing support and returns an error if
         checkpointing library cannot be initialized.
@@ -603,6 +709,8 @@ parameters:
       type        : string
       defaultliteral : NULL
       class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
       description : >-
         If non-NULL, this parameter specifies which pseudo-ethernet
         interface the tcp netmod should use (e.g., "eth1", "ib0").
@@ -616,6 +724,8 @@ parameters:
       type        : int
       default     : 10
       class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
       description : >-
         This parameter controls the number of times to retry the
         gethostbyname() function before giving up.
@@ -627,6 +737,8 @@ parameters:
       type        : boolean
       default     : true
       class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
       description : >-
         If set to false, communication override functionality will be
         disabled for netmods that provide the override feature.
@@ -642,6 +754,8 @@ parameters:
       type        : string
       defaultliteral : NULL
       class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
       description : >-
         Sets the directory to use for MPI service publishing in the
         file nameserv implementation.  Allows the user to override
