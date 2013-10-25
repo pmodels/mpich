@@ -24,7 +24,7 @@ CPLUSPLUS_BEGIN
 #include "mpibase.h"
 #include "mpiutil.h"
 #include "mpitypedefs.h"
-#include "mpich_params.h"
+#include "mpich_cvars.h"
 /* implementation specific header file */    
 #include "mpidu_socki.h"
 

@@ -7,7 +7,7 @@
 # script TODO:
 # - generate initialization function to read vals from env vars
 # - deal with string escaping in generated C strings
-# - sort/collate paramters by name/category
+# - sort/collate cvars by name/category
 
 use strict;
 use warnings;
@@ -46,12 +46,12 @@ my $alt_ns = "MPICH";
 # deprecated prefix for backward compatibility
 my $dep_ns = "MPIR_PARAM";
 
-# parameter description file
-my $cvar_file = "src/util/param/params.yml";
+# cvar description file
+my $cvar_file = "src/util/cvar/cvars.yml";
 
 # output source files
-my $header_file = "src/include/mpich_params.h";
-my $c_file      = "src/util/param/mpich_params.c";
+my $header_file = "src/include/mpich_cvars.h";
+my $c_file      = "src/util/cvar/mpich_cvars.c";
 my $readme_file = "README.envvar";
 
 GetOptions(
@@ -169,11 +169,11 @@ EOT
 die "missing 'cvars', stopped" unless exists $cvars->{cvars};
 
 print CVAR_HDR <<EOT;
-/* initializes parameter values from the environment */
+/* initializes cvar values from the environment */
 int ${fn_ns}_init(void);
 int ${fn_ns}_finalize(void);
 
-/* extern declarations for each parameter
+/* extern declarations for each cvar
  * (definitions in $c_file) */
 EOT
 
@@ -448,7 +448,7 @@ print CVAR_HDR <<EOT;
 /* arbitrary, simplifies interaction with external interfaces like MPI_T_ */
 #define ${uc_ns}_MAX_STRLEN (4096)
 
-/* helper macros for safely getting the default value of a parameter */
+/* helper macros for safely getting the default value of a cvar */
 EOT
 
 print CVAR_HDR <<EOT;
@@ -470,7 +470,7 @@ close(CVAR_README);
 ########################################################################
 # helper subroutines
 
-# transform a parameter type to a C-language type
+# transform a cvar type to a C-language type
 sub type2ctype {
     my $type = shift;
     my %typemap = (
@@ -492,11 +492,11 @@ sub fmt_default {
     my $type = shift;
 
     if (defined($literalval)) {
-        die "Both \"default\" and \"defaultliteral\" fields were specified for parameter \"$name\", stopped" if defined($val);
+        die "Both \"default\" and \"defaultliteral\" fields were specified for cvar \"$name\", stopped" if defined($val);
         return qq($literalval);
     }
 
-    die "Exactly one of \"default\" or \"defaultliteral\" fields must be specified for parameter \"$name\", stopped" unless defined($val);
+    die "Exactly one of \"default\" or \"defaultliteral\" fields must be specified for cvar \"$name\", stopped" unless defined($val);
 
     if ($type eq "string") {
         $val =~ s/"/\\"/g;

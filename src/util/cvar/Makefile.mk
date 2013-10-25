@@ -6,12 +6,12 @@
 ##
 
 lib_lib@MPILIBNAME@_la_SOURCES +=   \
-    src/util/param/mpich_params.c
+    src/util/cvar/mpich_cvars.c
 
-dist_noinst_DATA += src/util/param/params.yml
+dist_noinst_DATA += src/util/cvar/cvars.yml
 
 if MAINTAINER_MODE
 # normally built by autogen.sh, but this rebuild rule is here
-$(top_srcdir)/src/util/param/mpich_params.c: $(top_srcdir)/src/util/param/params.yml $(top_srcdir)/maint/genparams
-	( cd $(top_srcdir) && ./maint/genparams )
+$(top_srcdir)/src/util/cvar/mpich_cvars.c: $(top_srcdir)/src/util/cvar/cvars.yml $(top_srcdir)/maint/gencvars
+	( cd $(top_srcdir) && ./maint/gencvars )
 endif MAINTAINER_MODE

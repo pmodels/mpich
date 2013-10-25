@@ -3715,8 +3715,8 @@ int MPID_VCR_Get_lpid(MPID_VCR vcr, int * lpid_ptr);
    file (mpiimpl.h). */
 #include "mpidpost.h"
 
-/* tunable parameter values */
-#include "mpich_params.h"
+/* tunable cvar values */
+#include "mpich_cvars.h"
 
 /* Tags for point to point operations which implement collective and other
    internal operations */

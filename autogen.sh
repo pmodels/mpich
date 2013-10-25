@@ -842,8 +842,8 @@ echo "done"
 
 # new parameter code
 echo_n "Generating parameter handling code... "
-if test -x maint/genparams -a "$do_getparms" = "yes" ; then
-    if ./maint/genparams ; then
+if test -x maint/gencvars -a "$do_getparms" = "yes" ; then
+    if ./maint/gencvars ; then
         echo "done"
     else
         echo "failed"

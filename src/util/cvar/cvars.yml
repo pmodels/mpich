@@ -5,7 +5,7 @@
 # features like tagging or anchors.
 #
 # It is used to generate cvar-handling code for MPICH.
-# See the maint/genparams script for more information.
+# See the maint/gencvars script for more information.
 #
 # The only tricky bit is that long reflowed text (such as a description)
 # should use ">-" to both fold newlines and remove the trailing newline.

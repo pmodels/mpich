@@ -224,8 +224,8 @@ Makefile.am-stamp
 /src/binding/f90/Makefile.mk
 
 # MPICH2 parameter handling
-/src/include/mpich_params.h
-/src/util/param/mpich_params.c
+/src/include/mpich_cvars.h
+/src/util/cvar/mpich_cvars.c
 
 
 ################################################################################
