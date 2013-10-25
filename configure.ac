@@ -5812,22 +5812,10 @@ AC_SUBST([SIZEOF_MPI_STATUS])
 if test "$enable_f77" = yes -a -z "$MPI_STATUS_SIZE" ; then
     if test -n "$SIZEOF_MPI_STATUS" ; then
         # compute from the C sizeof
-	# Note that these *must* use the size of a Fortran INTEGER, 
-	# not a C int - as those two types might not be the same size.
-	if test -z "$pac_cv_f77_sizeof_integer" ; then 
-	    AC_MSG_ERROR([Sizeof Fortran INTEGER (MPI_Fint) is not available])
-	fi
-        AS_VAR_ARITH([MPI_STATUS_SIZE],[$SIZEOF_MPI_STATUS / $pac_cv_f77_sizeof_integer])
+        AS_VAR_ARITH([MPI_STATUS_SIZE],[$SIZEOF_MPI_STATUS / $ac_cv_sizeof_int])
         if test "$MPI_STATUS_SIZE" = "0" ; then
             AC_MSG_ERROR([Could not compute the size of MPI_Status])
         fi
-
-        # sanity: otherwise we have a problem in Fortran where we must implement
-        # MPI_STATUS as an array of INTEGERs with MPI_STATUS_SIZE elements
-        AS_VAR_ARITH([status_int_rem],[$SIZEOF_MPI_STATUS '%' $ac_cv_sizeof_int])
-        AS_IF([test "$status_int_rem" -gt 0],
-              [AC_MSG_ERROR([status size does not divide evenly by the integer size])])
-        AS_UNSET([status_int_rem])
     else
         AC_MSG_ERROR([MPI_STATUS_SIZE was not defined!])
     fi
