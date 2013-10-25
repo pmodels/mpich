@@ -976,8 +976,8 @@ int MPIR_Get_contextid_sparse_group(MPID_Comm *comm_ptr, MPID_Group *group_ptr, 
         if (eager_nelem < 0) {
             /* Ensure that at least one word of deadlock-free context IDs is
                always set aside for the base protocol */
-            MPIU_Assert( MPIR_PARAM_CTXID_EAGER_SIZE >= 0 && MPIR_PARAM_CTXID_EAGER_SIZE < MPIR_MAX_CONTEXT_MASK-1 );
-            eager_nelem = MPIR_PARAM_CTXID_EAGER_SIZE;
+            MPIU_Assert( MPIR_CVAR_CTXID_EAGER_SIZE >= 0 && MPIR_CVAR_CTXID_EAGER_SIZE < MPIR_MAX_CONTEXT_MASK-1 );
+            eager_nelem = MPIR_CVAR_CTXID_EAGER_SIZE;
         }
 
         if (ignore_id) {

@@ -781,11 +781,11 @@ int MPIR_Ireduce_scatter_block_intra(const void *sendbuf, void *recvbuf, int rec
     nbytes = total_count * type_size;
 
     /* select an appropriate algorithm based on commutivity and message size */
-    if (is_commutative && (nbytes < MPIR_PARAM_REDSCAT_COMMUTATIVE_LONG_MSG_SIZE)) {
+    if (is_commutative && (nbytes < MPIR_CVAR_REDSCAT_COMMUTATIVE_LONG_MSG_SIZE)) {
         mpi_errno = MPIR_Ireduce_scatter_block_rec_hlv(sendbuf, recvbuf, recvcount, datatype, op, comm_ptr, s);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     }
-    else if (is_commutative && (nbytes >= MPIR_PARAM_REDSCAT_COMMUTATIVE_LONG_MSG_SIZE)) {
+    else if (is_commutative && (nbytes >= MPIR_CVAR_REDSCAT_COMMUTATIVE_LONG_MSG_SIZE)) {
         mpi_errno = MPIR_Ireduce_scatter_block_pairwise(sendbuf, recvbuf, recvcount, datatype, op, comm_ptr, s);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     }

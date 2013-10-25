@@ -141,7 +141,7 @@ int MPIR_Allreduce_group_intra(void *sendbuf, void *recvbuf, int count,
        using recursive doubling in that case.) */
 
     if (newrank != -1) {
-        if ((count*type_size <= MPIR_PARAM_ALLREDUCE_SHORT_MSG_SIZE) ||
+        if ((count*type_size <= MPIR_CVAR_ALLREDUCE_SHORT_MSG_SIZE) ||
             (HANDLE_GET_KIND(op) != HANDLE_KIND_BUILTIN) ||
             (count < pof2))
         {

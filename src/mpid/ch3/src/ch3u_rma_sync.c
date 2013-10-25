@@ -385,8 +385,8 @@ int MPIDI_Win_fence(int assert, MPID_Win *win_ptr)
 		   this, significant overhead is added once the
 		   number of requests exceeds the threshold, since the
 		   number that are completed in a call may be small. */
-		if (nRequest > MPIR_PARAM_CH3_RMA_NREQUEST_THRESHOLD &&
-		    nRequest - nRequestNew > MPIR_PARAM_CH3_RMA_NREQUEST_NEW_THRESHOLD) {
+		if (nRequest > MPIR_CVAR_CH3_RMA_NREQUEST_THRESHOLD &&
+		    nRequest - nRequestNew > MPIR_CVAR_CH3_RMA_NREQUEST_NEW_THRESHOLD) {
 		    int nDone = 0;
 		    MPIU_INSTR_STMT(list_complete=MPIU_INSTR_GET_VAR(winfence_complete));
                     MPIDI_CH3I_RMAListPartialComplete(win_ptr, ops_list, curr_ptr, &nDone);
@@ -879,7 +879,7 @@ static int MPIDI_CH3I_Send_contig_acc_msg(MPIDI_RMA_Op_t *rma_op,
     MPID_Datatype_get_size_macro(rma_op->origin_datatype, origin_type_size);
     /* FIXME: Make this size check efficient and match the packet type */
     len = rma_op->origin_count * origin_type_size;
-    if (MPIR_PARAM_CH3_RMA_ACC_IMMED && len <= MPIDI_RMA_IMMED_INTS*sizeof(int)) {
+    if (MPIR_CVAR_CH3_RMA_ACC_IMMED && len <= MPIDI_RMA_IMMED_INTS*sizeof(int)) {
 	MPIDI_CH3_Pkt_accum_immed_t * accumi_pkt = &upkt.accum_immed;
 	void *dest = accumi_pkt->data, *src = rma_op->origin_addr;
 	
@@ -1667,8 +1667,8 @@ int MPIDI_Win_complete(MPID_Win *win_ptr)
 	    nRequest++;
 	    MPIU_INSTR_COUNTER_INCR(wincomplete_reqs,1);
 	    curr_ptr    = curr_ptr->next;
-	    if (nRequest > MPIR_PARAM_CH3_RMA_NREQUEST_THRESHOLD &&
-		nRequest - nRequestNew > MPIR_PARAM_CH3_RMA_NREQUEST_NEW_THRESHOLD) {
+	    if (nRequest > MPIR_CVAR_CH3_RMA_NREQUEST_THRESHOLD &&
+		nRequest - nRequestNew > MPIR_CVAR_CH3_RMA_NREQUEST_NEW_THRESHOLD) {
 		int nDone = 0;
 		MPIU_INSTR_STMT(list_complete=MPIU_INSTR_GET_VAR(wincomplete_complete));
                 MPIDI_CH3I_RMAListPartialComplete(win_ptr, ops_list, curr_ptr, &nDone);
@@ -1947,7 +1947,7 @@ int MPIDI_Win_lock(int lock_type, int dest, int assert, MPID_Win *win_ptr)
             if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
         }
     }
-    else if (MPIR_PARAM_CH3_RMA_LOCK_IMMED && ((assert & MPI_MODE_NOCHECK) == 0)) {
+    else if (MPIR_CVAR_CH3_RMA_LOCK_IMMED && ((assert & MPI_MODE_NOCHECK) == 0)) {
         /* TODO: Make this mode of operation available through an assert
            argument or info key. */
         mpi_errno = MPIDI_CH3I_Send_lock_msg(dest, lock_type, win_ptr);
@@ -2029,7 +2029,7 @@ int MPIDI_Win_unlock(int dest, MPID_Win *win_ptr)
     /* TODO: MPI-3: Add lock_all->op optimization. */
     /* LOCK-OP-UNLOCK Optimization -- This optimization can't be used if we
        have already requested the lock. */
-    if ( MPIR_PARAM_CH3_RMA_MERGE_LOCK_OP_UNLOCK &&
+    if ( MPIR_CVAR_CH3_RMA_MERGE_LOCK_OP_UNLOCK &&
          win_ptr->targets[dest].remote_lock_state == MPIDI_CH3_WIN_LOCK_CALLED &&
          rma_op && rma_op->next == NULL /* There is only one op */ &&
          rma_op->type != MPIDI_RMA_COMPARE_AND_SWAP &&
@@ -2688,8 +2688,8 @@ static int MPIDI_CH3I_Do_passive_target_rma(MPID_Win *win_ptr, int target_rank,
 	    nRequest++;
 	    MPIU_INSTR_COUNTER_INCR(winunlock_reqs,1);
 	    curr_ptr    = curr_ptr->next;
-	    if (nRequest > MPIR_PARAM_CH3_RMA_NREQUEST_THRESHOLD &&
-		nRequest - nRequestNew > MPIR_PARAM_CH3_RMA_NREQUEST_NEW_THRESHOLD) {
+	    if (nRequest > MPIR_CVAR_CH3_RMA_NREQUEST_THRESHOLD &&
+		nRequest - nRequestNew > MPIR_CVAR_CH3_RMA_NREQUEST_NEW_THRESHOLD) {
 		int nDone = 0;
 		MPIU_INSTR_STMT(list_complete=MPIU_INSTR_GET_VAR(winunlock_complete));
                 MPIDI_CH3I_RMAListPartialComplete(win_ptr,

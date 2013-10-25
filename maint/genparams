@@ -34,14 +34,20 @@ $Text::Wrap::unexpand = 0; # disable hard tabs in output
 # set true to enable debug output
 my $debug = 0;
 
+# namespace prefix for function names
+my $fn_ns = "MPIR_T_cvar";
+
 # namespace prefix for variable and type names
-my $ns = "MPIR_Param";
+my $ns = "MPIR_CVAR";
 # an alternative namespace used for environment variables, unused if set
 # to ""
 my $alt_ns = "MPICH";
 
+# deprecated prefix for backward compatibility
+my $dep_ns = "MPIR_PARAM";
+
 # parameter description file
-my $param_file = "src/util/param/params.yml";
+my $cvar_file = "src/util/param/params.yml";
 
 # output source files
 my $header_file = "src/include/mpich_params.h";
@@ -53,7 +59,7 @@ GetOptions(
     "debug!"      => \$debug,
     "namespace=s" => \$ns,
     "alt-namespace=s" => \$alt_ns,
-    "param-file"  => \$param_file,
+    "param-file"  => \$cvar_file,
     "header=s"    => \$header_file,
     "c-file=s"    => \$c_file,
     "readme-file=s" => \$readme_file,
@@ -68,7 +74,7 @@ Supported options:
     --help            - this output
     --debug           - enable some debugging output
     --namespace=STR   - use STR as variable/type prefix in generated code
-    --param-file=FILE - use FILE as input describing parameters
+    --param-file=FILE - use FILE as input describing cvars
 
 EOT
     exit 1;
@@ -85,17 +91,17 @@ my $uc_ns = uc($ns);
 # merge them into a single consistent configuration object
 
 my $yaml = YAML::Tiny->new();
-my $params = ($yaml->read($param_file))->[0]; # [0] is for the first document
-print Dumper($params)."\n" if $debug;
-die "not a HASH, stopped" unless ref($params) eq "HASH";
+my $cvars = ($yaml->read($cvar_file))->[0]; # [0] is for the first document
+print Dumper($cvars)."\n" if $debug;
+die "not a HASH, stopped" unless ref($cvars) eq "HASH";
 
 ########################################################################
 # validate the config file
 
 # only simple checks for now, just make sure that all categories
-# referenced by parameters actually exist
-my %cat_hash = (map { ($_->{name} => 1) } @{$params->{categories}});
-foreach my $p (@{$params->{parameters}}) {
+# referenced by cvars actually exist
+my %cat_hash = (map { ($_->{name} => 1) } @{$cvars->{categories}});
+foreach my $p (@{$cvars->{cvars}}) {
     unless (exists $cat_hash{$p->{category}}) {
         warn "category '".$p->{category}."' referenced by '".$p->{name}."' was not found";
     }
@@ -103,14 +109,14 @@ foreach my $p (@{$params->{parameters}}) {
 
 ########################################################################
 # setup output files
-open(PARAM_HDR,    '>', $header_file);
-open(PARAM_C,      '>', $c_file);
-open(PARAM_README, '>', $readme_file);
+open(CVAR_HDR,    '>', $header_file);
+open(CVAR_C,      '>', $c_file);
+open(CVAR_README, '>', $readme_file);
 
 my $hdr_guard = header_to_incl_guard($header_file);
-my $param_file_md5 = md5sum($param_file);
+my $cvar_file_md5 = md5sum($cvar_file);
 
-print PARAM_HDR <<EOT;
+print CVAR_HDR <<EOT;
 /* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
  *  (C) 2011 by Argonne National Laboratory.
@@ -119,7 +125,7 @@ print PARAM_HDR <<EOT;
 /* automatically generated
  *   by:   $0
  *   on:   $run_timestamp
- *   from: $param_file (md5sum $param_file_md5)
+ *   from: $cvar_file (md5sum $cvar_file_md5)
  *
  * DO NOT EDIT!!!
  */
@@ -129,7 +135,7 @@ print PARAM_HDR <<EOT;
 
 EOT
 
-print PARAM_C <<EOT;
+print CVAR_C <<EOT;
 /* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
  *  (C) 2011 by Argonne National Laboratory.
@@ -138,7 +144,7 @@ print PARAM_C <<EOT;
 /* automatically generated
  *   by:   $0
  *   at:   $run_timestamp
- *   from: $param_file (md5sum $param_file_md5)
+ *   from: $cvar_file (md5sum $cvar_file_md5)
  *
  * DO NOT EDIT!!!
  */
@@ -147,7 +153,7 @@ print PARAM_C <<EOT;
 
 EOT
 
-print PARAM_README <<EOT;
+print CVAR_README <<EOT;
 (C) 2011 by Argonne National Laboratory.
     See COPYRIGHT in top-level directory.
 
@@ -159,27 +165,27 @@ users.
 EOT
 
 ########################################################################
-# now the actual parameters
-die "missing 'parameters', stopped" unless exists $params->{parameters};
+# now the actual cvars
+die "missing 'cvars', stopped" unless exists $cvars->{cvars};
 
-print PARAM_HDR <<EOT;
+print CVAR_HDR <<EOT;
 /* initializes parameter values from the environment */
-int ${ns}_init_params(void);
-int ${ns}_finalize(void);
+int ${fn_ns}_init(void);
+int ${fn_ns}_finalize(void);
 
 /* extern declarations for each parameter
  * (definitions in $c_file) */
 EOT
 
 # XXX DJG TODO collate and separate by category
-foreach my $p (@{$params->{parameters}}) {
-    printf PARAM_HDR "extern %s ${uc_ns}_%s;\n",
+foreach my $p (@{$cvars->{cvars}}) {
+    printf CVAR_HDR "extern %s ${uc_ns}_%s;\n",
         type2ctype($p->{type}), $p->{name};
 }
 
-print PARAM_C "/* actual storage for parameters */\n";
+print CVAR_C "/* actual storage for cvars */\n";
 
-foreach my $p (@{$params->{parameters}}) {
+foreach my $p (@{$cvars->{cvars}}) {
     my $default;
     if ($p->{type} eq "string") {
         # handle strings specially to avoid various const issues
@@ -190,25 +196,25 @@ foreach my $p (@{$params->{parameters}}) {
     }
 
     if ($p->{class} eq "device") {
-	printf PARAM_C "#if defined MPID_%s\n", $p->{name};
-	printf PARAM_C "%s ${uc_ns}_%s = MPID_%s;\n", type2ctype($p->{type}), $p->{name},
+	printf CVAR_C "#if defined MPID_%s\n", $p->{name};
+	printf CVAR_C "%s ${uc_ns}_%s = MPID_%s;\n", type2ctype($p->{type}), $p->{name},
 	               $p->{name};
-	printf PARAM_C "#else\n";
+	printf CVAR_C "#else\n";
     }
-    printf PARAM_C "%s ${uc_ns}_%s = %s;\n", type2ctype($p->{type}), $p->{name}, $default;
+    printf CVAR_C "%s ${uc_ns}_%s = %s;\n", type2ctype($p->{type}), $p->{name}, $default;
     if ($p->{class} eq "device") {
-	printf PARAM_C "#endif /* MPID_%s */\n\n", $p->{name};
+	printf CVAR_C "#endif /* MPID_%s */\n\n", $p->{name};
     }
 }
 
 # FIXME the mpi_errno bit is MPICH-specific
-print PARAM_C <<EOT;
+print CVAR_C <<EOT;
 
 #undef FUNCNAME
-#define FUNCNAME ${ns}_init_params
+#define FUNCNAME ${fn_ns}_init
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int ${ns}_init_params(void)
+int ${fn_ns}_init(void)
 {
     int mpi_errno = MPI_SUCCESS;
     int rc;
@@ -223,53 +229,53 @@ int ${ns}_init_params(void)
 
 EOT
 
-foreach my $p (@{$params->{parameters}}) {
+foreach my $p (@{$cvars->{cvars}}) {
     my $count = 1;
     my $mpi_dtype;
     if ($p->{type} eq 'string') {
         $mpi_dtype = "MPI_CHAR";
-        $count = "MPIR_PARAM_MAX_STRLEN";
+        $count = "MPIR_CVAR_MAX_STRLEN";
         my $str_val = fmt_default($p->{name}, $p->{default}, $p->{defaultliteral}, $p->{type});
-        printf PARAM_C qq(    defaultval.str = %s;\n), $str_val;
+        printf CVAR_C qq(    defaultval.str = %s;\n), $str_val;
     }
     elsif ($p->{type} eq 'int' or $p->{type} eq 'boolean') {
         $mpi_dtype = "MPI_INT";
         $count = 1;
         my $int_val = fmt_default($p->{name}, $p->{default}, $p->{defaultliteral}, $p->{type});
-        printf PARAM_C qq(    defaultval.d = %s;\n), $int_val;
+        printf CVAR_C qq(    defaultval.d = %s;\n), $int_val;
     }
     elsif ($p->{type} eq 'unsigned') {
         $mpi_dtype = "MPI_UNSINGED";
         $count = 1;
         my $double_val = fmt_default($p->{name}, $p->{default}, $p->{defaultliteral}, $p->{type});
-        printf PARAM_C qq(    defaultval.u = %s;\n), $double_val;
+        printf CVAR_C qq(    defaultval.u = %s;\n), $double_val;
     }
     elsif ($p->{type} eq 'unsigned long') {
         $mpi_dtype = "MPI_DOUBLE";
         $count = 1;
         my $double_val = fmt_default($p->{name}, $p->{default}, $p->{defaultliteral}, $p->{type});
-        printf PARAM_C qq(    defaultval.ul = %s;\n), $double_val;
+        printf CVAR_C qq(    defaultval.ul = %s;\n), $double_val;
     }
     elsif ($p->{type} eq 'unsigned long long') {
         $mpi_dtype = "MPI_DOUBLE";
         $count = 1;
         my $double_val = fmt_default($p->{name}, $p->{default}, $p->{defaultliteral}, $p->{type});
-        printf PARAM_C qq(    defaultval.ull = %s;\n), $double_val;
+        printf CVAR_C qq(    defaultval.ull = %s;\n), $double_val;
     }
     elsif ($p->{type} eq 'double') {
         $mpi_dtype = "MPI_DOUBLE";
         $count = 1;
         my $double_val = fmt_default($p->{name}, $p->{default}, $p->{defaultliteral}, $p->{type});
-        printf PARAM_C qq(    defaultval.d = %s;\n), $double_val;
+        printf CVAR_C qq(    defaultval.d = %s;\n), $double_val;
     }
     elsif ($p->{type} eq 'range') {
         $mpi_dtype = "MPI_INT";
         $count = 2;
         my $range_val = fmt_default($p->{name}, $p->{default}, $p->{defaultliteral}, $p->{type});
-        printf PARAM_C qq(    {\n);
-        printf PARAM_C qq(        MPIR_T_cvar_range_value_t tmp = %s;\n), $range_val;
-        printf PARAM_C qq(        defaultval.range = tmp;\n);
-        printf PARAM_C qq(    }\n);
+        printf CVAR_C qq(    {\n);
+        printf CVAR_C qq(        MPIR_T_cvar_range_value_t tmp = %s;\n), $range_val;
+        printf CVAR_C qq(        defaultval.range = tmp;\n);
+        printf CVAR_C qq(    }\n);
     }
     else {
         die "unknown type $p->{type}, stopped";
@@ -278,7 +284,7 @@ foreach my $p (@{$params->{parameters}}) {
     my $desc = $p->{description};
     $desc =~ s/"/\\"/g;
 
-    printf PARAM_C qq(    MPIR_T_CVAR_REGISTER_STATIC(\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s);\n),
+    printf CVAR_C qq(    MPIR_T_CVAR_REGISTER_STATIC(\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s);\n),
         qq(        $mpi_dtype,),
         qq(        ${uc_ns}_$p->{name}, /* name */),
         qq(        &${uc_ns}_$p->{name}, /* address */),
@@ -290,7 +296,7 @@ foreach my $p (@{$params->{parameters}}) {
         qq(        "$desc");
 
     if ($p->{type} eq 'string') {
-print PARAM_C <<EOT;
+print CVAR_C <<EOT;
     ${uc_ns}_GET_DEFAULT_STRING(${uc_ns}_$p->{name}, &tmp_str);
 EOT
     }
@@ -301,34 +307,36 @@ EOT
 
     # process extra envs first so the primary always wins
     push @env_names, @{$p->{'abs-alt-env'}} if $p->{'abs-alt-env'};
+    push @env_names, map { "${dep_ns}_$_" } @{$p->{'alt-env'}};
     push @env_names, map { "${alt_ns}_$_" } @{$p->{'alt-env'}};
     push @env_names, map { "${uc_ns}_$_" } @{$p->{'alt-env'}};
+    push @env_names, "${dep_ns}_" . $p->{name};
     push @env_names, "${alt_ns}_" . $p->{name};
     push @env_names, "${uc_ns}_" . $p->{name};
 
     foreach my $env_name (@env_names) {
         # assumes rc is defined
         if ($p->{type} eq 'range') {
-            print PARAM_C <<EOT;
+            print CVAR_C <<EOT;
     rc = MPL_env2${env_fn}("$env_name", &($var_name.low), &($var_name.high));
     MPIU_ERR_CHKANDJUMP1((-1 == rc),mpi_errno,MPI_ERR_OTHER,"**envvarparse","**envvarparse %s","$env_name");
 EOT
         }
         elsif ($p->{type} eq 'string') {
-            print PARAM_C <<EOT;
+            print CVAR_C <<EOT;
     rc = MPL_env2${env_fn}("$env_name", &tmp_str);
     MPIU_ERR_CHKANDJUMP1((-1 == rc),mpi_errno,MPI_ERR_OTHER,"**envvarparse","**envvarparse %s","$env_name");
 EOT
         }
         else {
-            print PARAM_C <<EOT;
+            print CVAR_C <<EOT;
     rc = MPL_env2${env_fn}("$env_name", &($var_name));
     MPIU_ERR_CHKANDJUMP1((-1 == rc),mpi_errno,MPI_ERR_OTHER,"**envvarparse","**envvarparse %s","$env_name");
 EOT
         }
     }
     if ($p->{type} eq 'string') {
-        print PARAM_C <<EOT;
+        print CVAR_C <<EOT;
     if (tmp_str != NULL) {
         ${var_name} = MPIU_Strdup(tmp_str);
         ${ns}_assert(${var_name});
@@ -342,18 +350,18 @@ EOT
     }
 EOT
     }
-    print PARAM_C "\n";
+    print CVAR_C "\n";
 }
 
-foreach my $cat (@{$params->{categories}}) {
+foreach my $cat (@{$cvars->{categories}}) {
     my $desc = $cat->{description};
     $desc =~ s/"/\\"/g;
-    printf PARAM_C qq(    MPIR_T_cat_add_desc(%s\n%s);\n\n),
+    printf CVAR_C qq(    MPIR_T_cat_add_desc(%s\n%s);\n\n),
         qq("$cat->{name}",),
         qq(        "$desc");
 }
 
-print PARAM_C <<EOT;
+print CVAR_C <<EOT;
 fn_exit:
     return mpi_errno;
 fn_fail:
@@ -362,19 +370,19 @@ fn_fail:
 
 EOT
 
-print PARAM_C <<EOT;
-int ${ns}_finalize(void)
+print CVAR_C <<EOT;
+int ${fn_ns}_finalize(void)
 {
     int mpi_errno = MPI_SUCCESS;
 
 EOT
 
-foreach my $p (@{$params->{parameters}}) {
+foreach my $p (@{$cvars->{cvars}}) {
     my $var_name = "${uc_ns}_" . $p->{name};
 
     if ($p->{type} eq "string") {
         # need to cleanup after whatever was strduped by the init routine
-print PARAM_C <<EOT;
+print CVAR_C <<EOT;
     if (${var_name} != NULL) {
         MPIU_Free(${var_name});
         ${var_name} = NULL;
@@ -385,7 +393,7 @@ EOT
 }
 
 
-print PARAM_C <<EOT;
+print CVAR_C <<EOT;
 fn_exit:
     return mpi_errno;
 fn_fail:
@@ -394,43 +402,45 @@ fn_fail:
 
 EOT
 
-foreach my $p (@{$params->{parameters}}) {
+foreach my $p (@{$cvars->{cvars}}) {
     my @env_names = ();
     my $first;
     my $alt;
     my $default;
 
     # process extra envs first so the primary always wins
+    push @env_names, "${dep_ns}_" . $p->{name};
     push @env_names, "${alt_ns}_" . $p->{name};
     push @env_names, map { "${uc_ns}_$_" } @{$p->{'alt-env'}};
     push @env_names, map { "${alt_ns}_$_" } @{$p->{'alt-env'}};
+    push @env_names, map { "${dep_ns}_$_" } @{$p->{'alt-env'}};
     push @env_names, @{$p->{'abs-alt-env'}} if $p->{'abs-alt-env'};
 
-    print PARAM_README "${uc_ns}_$p->{name}\n";
+    print CVAR_README "${uc_ns}_$p->{name}\n";
 
     $first = 1;
     foreach $alt (@env_names) {
         if ($first) {
-            print PARAM_README "    Aliases: $alt\n";
+            print CVAR_README "    Aliases: $alt\n";
         } else {
-            print PARAM_README "             $alt\n";
+            print CVAR_README "             $alt\n";
         }
         $first = 0;
     }
 
-    print PARAM_README wrap("    Description: ", "        ", $p->{description} . "\n");
+    print CVAR_README wrap("    Description: ", "        ", $p->{description} . "\n");
     $default = fmt_default($p->{name}, $p->{default}, $p->{defaultliteral}, $p->{type});
-    print PARAM_README "    Default: $default\n";
-    print PARAM_README "\n";
+    print CVAR_README "    Default: $default\n";
+    print CVAR_README "\n";
 }
 
 
 ########################################################################
 # clean up
 
-close(PARAM_C);
+close(CVAR_C);
 
-print PARAM_HDR <<EOT;
+print CVAR_HDR <<EOT;
 
 /* TODO: this should be defined elsewhere */
 #define ${ns}_assert MPIU_Assert
@@ -441,21 +451,21 @@ print PARAM_HDR <<EOT;
 /* helper macros for safely getting the default value of a parameter */
 EOT
 
-print PARAM_HDR <<EOT;
+print CVAR_HDR <<EOT;
 #endif /* $hdr_guard */
 EOT
-close(PARAM_HDR);
+close(CVAR_HDR);
 
-print PARAM_README <<EOT;
+print CVAR_README <<EOT;
 ---------------------------------------------------------------------------
 
 Automatically generated
   by:   $0
   at:   $run_timestamp
-  from: $param_file (md5sum $param_file_md5)
+  from: $cvar_file (md5sum $cvar_file_md5)
 
 EOT
-close(PARAM_README);
+close(CVAR_README);
 
 ########################################################################
 # helper subroutines

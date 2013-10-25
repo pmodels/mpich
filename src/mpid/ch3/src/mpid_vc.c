@@ -722,7 +722,7 @@ int MPIDI_VC_Init( MPIDI_VC_t *vc, MPIDI_PG_t *pg, int rank )
     vc->rndvSend_fn      = MPIDI_CH3_RndvSend;
     vc->rndvRecv_fn      = MPIDI_CH3_RecvRndv;
     vc->ready_eager_max_msg_sz = -1; /* no limit */;
-    vc->eager_max_msg_sz = MPIR_PARAM_CH3_EAGER_MAX_MSG_SIZE;
+    vc->eager_max_msg_sz = MPIR_CVAR_CH3_EAGER_MAX_MSG_SIZE;
 
     vc->sendNoncontig_fn = MPIDI_CH3_SendNoncontig_iov;
 #ifdef ENABLE_COMM_OVERRIDES
@@ -1120,7 +1120,7 @@ int MPIDI_Populate_vc_node_ids(MPIDI_PG_t *pg, int our_pg_rank)
 #ifdef ENABLED_NO_LOCAL
     no_local = 1;
 #else
-    no_local = MPIR_PARAM_CH3_NOLOCAL;
+    no_local = MPIR_CVAR_CH3_NOLOCAL;
 #endif
 
     /* Used for debugging on a single machine: Odd procs on a node are
@@ -1129,7 +1129,7 @@ int MPIDI_Populate_vc_node_ids(MPIDI_PG_t *pg, int our_pg_rank)
 #ifdef ENABLED_ODD_EVEN_CLIQUES
     odd_even_cliques = 1;
 #else
-    odd_even_cliques = MPIR_PARAM_CH3_ODD_EVEN_CLIQUES;
+    odd_even_cliques = MPIR_CVAR_CH3_ODD_EVEN_CLIQUES;
 #endif
 
     if (no_local) {

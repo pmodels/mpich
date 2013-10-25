@@ -69,7 +69,7 @@
  *   libraries (gcc, xl, xl.ndebug) and MPI_Init_thread() is called with
  *   MPI_THREAD_MULTIPLE.
  *   - NOTE: This environment variable has the same effect as setting
- *           MPIR_PARAM_DEFAULT_THREAD_LEVEL=multiple
+ *           MPIR_CVAR_DEFAULT_THREAD_LEVEL=multiple
  *
  * - PAMID_CONTEXT_MAX - This variable sets the maximum allowable number
  *   of contexts. Contexts are a method of dividing hardware resources

@@ -92,7 +92,7 @@ static void MPIR_T_cvar_env_finalize(void)
     int i;
     cvar_table_entry_t *cvar;
 
-    MPIR_Param_finalize();
+    MPIR_T_cvar_finalize();
 
     if (cvar_table) {
         /* Free all entries */

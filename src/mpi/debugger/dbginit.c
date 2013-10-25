@@ -173,7 +173,7 @@ void MPIR_WaitForDebugger( void )
        to access this. */
     /* Also, to avoid scaling problems, we only populate the first 64
        entries (default) */
-    maxsize = MPIR_PARAM_PROCTABLE_SIZE;
+    maxsize = MPIR_CVAR_PROCTABLE_SIZE;
     if (maxsize > size) maxsize = size;
 
     if (rank == 0) {
@@ -208,7 +208,7 @@ void MPIR_WaitForDebugger( void )
 	MPIR_proctable_size               = size;
 #if 0
 	/* Debugging hook */
-	if (MPIR_PARAM_PROCTABLE_PRINT) {
+	if (MPIR_CVAR_PROCTABLE_PRINT) {
 	    for (i=0; i<maxsize; i++) {
 		printf( "PT[%d].pid = %d, .host_name = %s\n", 
 			i, MPIR_proctable[i].pid, MPIR_proctable[i].host_name );

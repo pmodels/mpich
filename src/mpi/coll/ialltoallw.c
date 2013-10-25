@@ -124,7 +124,7 @@ int MPIR_Ialltoallw_intra(const void *sendbuf, const int sendcounts[], const int
         }
     }
     else {
-        bblock = MPIR_PARAM_ALLTOALL_THROTTLE;
+        bblock = MPIR_CVAR_ALLTOALL_THROTTLE;
         if (bblock == 0) bblock = comm_size;
 
         /* post only bblock isends/irecvs at a time as suggested by Tony Ladd */

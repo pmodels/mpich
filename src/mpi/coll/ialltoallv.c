@@ -104,7 +104,7 @@ int MPIR_Ialltoallv_intra(const void *sendbuf, const int sendcounts[], const int
         MPID_SCHED_BARRIER(s);
     }
     else {
-        bblock = MPIR_PARAM_ALLTOALL_THROTTLE;
+        bblock = MPIR_CVAR_ALLTOALL_THROTTLE;
         if (bblock == 0)
             bblock = comm_size;
 

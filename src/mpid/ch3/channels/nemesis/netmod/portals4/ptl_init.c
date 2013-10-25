@@ -281,7 +281,7 @@ static int vc_init(MPIDI_VC_t *vc)
     vc_ch->iStartContigMsg = MPID_nem_ptl_iStartContigMsg;
     vc_ch->iSendContig     = MPID_nem_ptl_iSendContig;
 
-    if (MPIR_PARAM_COMM_OVERRIDES) /* allow feature to be disabled at runtime */
+    if (MPIR_CVAR_COMM_OVERRIDES) /* allow feature to be disabled at runtime */
         vc->comm_ops = &comm_ops;
 
     vc_ch->next = NULL;

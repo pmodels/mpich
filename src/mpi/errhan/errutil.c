@@ -1153,7 +1153,7 @@ static void MPIR_Err_print_stack_string(int errcode, char *str, int maxlen )
 		    maxlen--;
 		}
 		
-		if (MPIR_PARAM_CHOP_ERROR_STACK > 0)
+		if (MPIR_CVAR_CHOP_ERROR_STACK > 0)
 		{
 		    cur_pos = ErrorRing[ring_idx].msg;
 		    len = (int)strlen(cur_pos);
@@ -1163,16 +1163,16 @@ static void MPIR_Err_print_stack_string(int errcode, char *str, int maxlen )
 		    }
 		    while (len)
 		    {
-			if (len >= MPIR_PARAM_CHOP_ERROR_STACK - max_location_len)
+			if (len >= MPIR_CVAR_CHOP_ERROR_STACK - max_location_len)
 			{
 			    if (len > maxlen)
 				break;
 			    /* FIXME: Don't use Snprint to append a string ! */
-			    MPIU_Snprintf(str, MPIR_PARAM_CHOP_ERROR_STACK - 1 - max_location_len, "%s", cur_pos);
-			    str[MPIR_PARAM_CHOP_ERROR_STACK - 1 - max_location_len] = '\n';
-			    cur_pos += MPIR_PARAM_CHOP_ERROR_STACK - 1 - max_location_len;
-			    str += MPIR_PARAM_CHOP_ERROR_STACK - max_location_len;
-			    maxlen -= MPIR_PARAM_CHOP_ERROR_STACK - max_location_len;
+			    MPIU_Snprintf(str, MPIR_CVAR_CHOP_ERROR_STACK - 1 - max_location_len, "%s", cur_pos);
+			    str[MPIR_CVAR_CHOP_ERROR_STACK - 1 - max_location_len] = '\n';
+			    cur_pos += MPIR_CVAR_CHOP_ERROR_STACK - 1 - max_location_len;
+			    str += MPIR_CVAR_CHOP_ERROR_STACK - max_location_len;
+			    maxlen -= MPIR_CVAR_CHOP_ERROR_STACK - max_location_len;
 			    if (maxlen < max_location_len)
 				break;
 			    for (i=0; i<max_location_len; i++)
@@ -1777,8 +1777,8 @@ static void MPIR_Err_stack_init( void )
 
     error_ring_mutex_create(&mpi_errno);
 
-    if (MPIR_PARAM_CHOP_ERROR_STACK < 0) {
-        MPIR_PARAM_CHOP_ERROR_STACK = 80;
+    if (MPIR_CVAR_CHOP_ERROR_STACK < 0) {
+        MPIR_CVAR_CHOP_ERROR_STACK = 80;
 #ifdef HAVE_WINDOWS_H
         {
             /* If windows, set the default width to the window size */
@@ -1789,7 +1789,7 @@ static void MPIR_Err_stack_init( void )
                 if (GetConsoleScreenBufferInfo(hConsole, &info))
                 {
                     /* override the parameter system in this case */
-                    MPIR_PARAM_CHOP_ERROR_STACK = info.dwMaximumWindowSize.X;
+                    MPIR_CVAR_CHOP_ERROR_STACK = info.dwMaximumWindowSize.X;
                 }
             }
         }
@@ -1964,7 +1964,7 @@ static int ErrGetInstanceString( int errorcode, char msg[], int num_remaining )
 {
     int len;
 
-    if (MPIR_PARAM_PRINT_ERROR_STACK) {
+    if (MPIR_CVAR_PRINT_ERROR_STACK) {
 	MPIU_Strncpy(msg, ", error stack:\n", num_remaining);
 	msg[num_remaining - 1] = '\0';
 	len = (int)strlen(msg);

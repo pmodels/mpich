@@ -391,7 +391,7 @@ int MPIR_Init_thread(int * argc, char ***argv, int required, int * provided)
     /* MPIU_Timer_pre_init(); */
 
     /* Wait for debugger to attach if requested. */
-    if (MPIR_PARAM_DEBUG_HOLD) {
+    if (MPIR_CVAR_DEBUG_HOLD) {
         volatile int hold = 1;
         while (hold)
 #ifdef HAVE_USLEEP
@@ -402,7 +402,7 @@ int MPIR_Init_thread(int * argc, char ***argv, int required, int * provided)
 
 
 #if defined(HAVE_ERROR_CHECKING) && (HAVE_ERROR_CHECKING == MPID_ERROR_LEVEL_RUNTIME)
-    MPIR_Process.do_error_checks = MPIR_PARAM_ERROR_CHECKING;
+    MPIR_Process.do_error_checks = MPIR_CVAR_ERROR_CHECKING;
 #endif
 
     /* define MPI as initialized so that we can use MPI functions within 
@@ -586,13 +586,13 @@ int MPI_Init_thread( int *argc, char ***argv, int required, int *provided )
 
     /* If the user requested for asynchronous progress, request for
      * THREAD_MULTIPLE. */
-    if (MPIR_PARAM_ASYNC_PROGRESS)
+    if (MPIR_CVAR_ASYNC_PROGRESS)
         reqd = MPI_THREAD_MULTIPLE;
 
     mpi_errno = MPIR_Init_thread( argc, argv, reqd, provided );
     if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 
-    if (MPIR_PARAM_ASYNC_PROGRESS) {
+    if (MPIR_CVAR_ASYNC_PROGRESS) {
         if (*provided == MPI_THREAD_MULTIPLE) {
             mpi_errno = MPIR_Init_async_thread();
             if (mpi_errno) goto fn_fail;

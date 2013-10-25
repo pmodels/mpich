@@ -50,48 +50,48 @@ static inline cvar_table_entry_t * LOOKUP_CVAR_BY_NAME(const char* cvar_name)
 }
 
 /* Helper macros for getting the default value of a cvar */
-#define MPIR_PARAM_GET_DEFAULT_INT(name_,out_ptr_)   \
+#define MPIR_CVAR_GET_DEFAULT_INT(name_,out_ptr_)   \
     do {  \
         cvar_table_entry_t *cvar = LOOKUP_CVAR_BY_NAME(#name_); \
         *(out_ptr_) = cvar->defaultval.d; \
     } while (0)
 
-#define MPIR_PARAM_GET_DEFAULT_BOOLEAN(name_,out_ptr_)   \
+#define MPIR_CVAR_GET_DEFAULT_BOOLEAN(name_,out_ptr_)   \
     do {  \
-        MPIR_PARAM_GET_DEFAULT_INT(name_,out_ptr_); \
+        MPIR_CVAR_GET_DEFAULT_INT(name_,out_ptr_); \
     } while (0)
 
-#define MPIR_PARAM_GET_DEFAULT_UNSIGNED(name_,out_ptr_)   \
+#define MPIR_CVAR_GET_DEFAULT_UNSIGNED(name_,out_ptr_)   \
     do {  \
         cvar_table_entry_t *cvar = LOOKUP_CVAR_BY_NAME(#name_); \
         *(out_ptr_) = cvar->defaultval.u; \
     } while (0)
 
-#define MPIR_PARAM_GET_DEFAULT_UNSIGNED_LONG(name_,out_ptr_)   \
+#define MPIR_CVAR_GET_DEFAULT_UNSIGNED_LONG(name_,out_ptr_)   \
     do {  \
         cvar_table_entry_t *cvar = LOOKUP_CVAR_BY_NAME(#name_); \
         *(out_ptr_) = cvar->defaultval.ul; \
     } while (0)
 
-#define MPIR_PARAM_GET_DEFAULT_UNSIGNED_LONG_LONG(name_,out_ptr_)   \
+#define MPIR_CVAR_GET_DEFAULT_UNSIGNED_LONG_LONG(name_,out_ptr_)   \
     do {  \
         cvar_table_entry_t *cvar = LOOKUP_CVAR_BY_NAME(#name_); \
         *(out_ptr_) = cvar->defaultval.ull; \
     } while (0)
 
-#define MPIR_PARAM_GET_DEFAULT_DOUBLE(name_,out_ptr_)   \
+#define MPIR_CVAR_GET_DEFAULT_DOUBLE(name_,out_ptr_)   \
     do {  \
         cvar_table_entry_t *cvar = LOOKUP_CVAR_BY_NAME(#name_); \
         *(out_ptr_) = cvar->defaultval.f; \
     } while (0)
 
-#define MPIR_PARAM_GET_DEFAULT_STRING(name_,out_ptr_)   \
+#define MPIR_CVAR_GET_DEFAULT_STRING(name_,out_ptr_)   \
     do {  \
         cvar_table_entry_t *cvar = LOOKUP_CVAR_BY_NAME(#name_); \
         *(out_ptr_) = cvar->defaultval.str; \
     } while (0)
 
-#define MPIR_PARAM_GET_DEFAULT_RANGE(name_,out_ptr_)   \
+#define MPIR_CVAR_GET_DEFAULT_RANGE(name_,out_ptr_)   \
     do {  \
         cvar_table_entry_t *cvar = LOOKUP_CVAR_BY_NAME(#name_); \
         *(out_ptr_) = cvar->defaultval.range; \

@@ -299,7 +299,7 @@ int MPIR_Reduce_scatter_block_intra (
      * a user-passed in buffer */
     MPID_Ensure_Aint_fits_in_pointer(total_count * MPIR_MAX(true_extent, extent));
 
-    if ((is_commutative) && (nbytes < MPIR_PARAM_REDSCAT_COMMUTATIVE_LONG_MSG_SIZE)) {
+    if ((is_commutative) && (nbytes < MPIR_CVAR_REDSCAT_COMMUTATIVE_LONG_MSG_SIZE)) {
         /* commutative and short. use recursive halving algorithm */
 
         /* allocate temp. buffer to receive incoming data */
@@ -509,7 +509,7 @@ int MPIR_Reduce_scatter_block_intra (
         }
     }
     
-    if (is_commutative && (nbytes >= MPIR_PARAM_REDSCAT_COMMUTATIVE_LONG_MSG_SIZE)) {
+    if (is_commutative && (nbytes >= MPIR_CVAR_REDSCAT_COMMUTATIVE_LONG_MSG_SIZE)) {
 
         /* commutative and long message, or noncommutative and long message.
            use (p-1) pairwise exchanges */ 

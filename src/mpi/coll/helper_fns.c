@@ -267,7 +267,7 @@ int MPIC_Send(const void *buf, int count, MPI_Datatype datatype, int dest, int t
     MPIU_ERR_CHKANDJUMP1((count < 0), mpi_errno, MPI_ERR_COUNT,
                          "**countneg", "**countneg %d", count);
 
-    if (*errflag && MPIR_PARAM_ENABLE_COLL_FT_RET)
+    if (*errflag && MPIR_CVAR_ENABLE_COLL_FT_RET)
         MPIR_TAG_SET_ERROR_BIT(tag);
 
     MPID_Comm_get_ptr(comm, comm_ptr);
@@ -335,7 +335,7 @@ int MPIC_Recv(void *buf, int count, MPI_Datatype datatype, int source, int tag,
         MPID_Request_release(request_ptr);
     }
 
-    if (!MPIR_PARAM_ENABLE_COLL_FT_RET) goto fn_exit;
+    if (!MPIR_CVAR_ENABLE_COLL_FT_RET) goto fn_exit;
 
     if (source != MPI_PROC_NULL) {
         if (MPIR_TAG_CHECK_ERROR_BIT(status->MPI_TAG)) {
@@ -381,7 +381,7 @@ int MPIC_Ssend(const void *buf, int count, MPI_Datatype datatype, int dest, int 
     context_id = (comm_ptr->comm_kind == MPID_INTRACOMM) ?
         MPID_CONTEXT_INTRA_COLL : MPID_CONTEXT_INTER_COLL;
 
-    if (*errflag && MPIR_PARAM_ENABLE_COLL_FT_RET)
+    if (*errflag && MPIR_CVAR_ENABLE_COLL_FT_RET)
         MPIR_TAG_SET_ERROR_BIT(tag);
 
     mpi_errno = MPID_Ssend(buf, count, datatype, dest, tag, comm_ptr,
@@ -432,7 +432,7 @@ int MPIC_Sendrecv(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
     context_id = (comm_ptr->comm_kind == MPID_INTRACOMM) ?
         MPID_CONTEXT_INTRA_COLL : MPID_CONTEXT_INTER_COLL;
 
-    if (MPIR_PARAM_ENABLE_COLL_FT_RET) {
+    if (MPIR_CVAR_ENABLE_COLL_FT_RET) {
         if (status == MPI_STATUS_IGNORE) status = &mystatus;
         if (*errflag) MPIR_TAG_SET_ERROR_BIT(sendtag);
     }
@@ -455,7 +455,7 @@ int MPIC_Sendrecv(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
     MPID_Request_release(send_req_ptr);
     MPID_Request_release(recv_req_ptr);
 
-    if (!MPIR_PARAM_ENABLE_COLL_FT_RET) goto fn_exit;
+    if (!MPIR_CVAR_ENABLE_COLL_FT_RET) goto fn_exit;
 
     if (source != MPI_PROC_NULL) {
         if (MPIR_TAG_CHECK_ERROR_BIT(status->MPI_TAG)) {
@@ -510,7 +510,7 @@ int MPIC_Sendrecv_replace(void *buf, int count, MPI_Datatype datatype,
     MPIU_ERR_CHKANDJUMP1((count < 0), mpi_errno, MPI_ERR_COUNT,
                          "**countneg", "**countneg %d", count);
 
-    if (MPIR_PARAM_ENABLE_COLL_FT_RET) {
+    if (MPIR_CVAR_ENABLE_COLL_FT_RET) {
         if (status == MPI_STATUS_IGNORE) status = &mystatus;
         if (*errflag) MPIR_TAG_SET_ERROR_BIT(sendtag);
     }
@@ -571,7 +571,7 @@ int MPIC_Sendrecv_replace(void *buf, int count, MPI_Datatype datatype,
     MPID_Request_release(sreq);
     MPID_Request_release(rreq);
 
-    if (!MPIR_PARAM_ENABLE_COLL_FT_RET) goto fn_exit;
+    if (!MPIR_CVAR_ENABLE_COLL_FT_RET) goto fn_exit;
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     
     if (source != MPI_PROC_NULL) {
@@ -612,7 +612,7 @@ int MPIC_Isend(const void *buf, int count, MPI_Datatype datatype, int dest, int 
     MPIU_ERR_CHKANDJUMP1((count < 0), mpi_errno, MPI_ERR_COUNT,
                          "**countneg", "**countneg %d", count);
 
-    if (*errflag && MPIR_PARAM_ENABLE_COLL_FT_RET)
+    if (*errflag && MPIR_CVAR_ENABLE_COLL_FT_RET)
         MPIR_TAG_SET_ERROR_BIT(tag);
 
     MPID_Comm_get_ptr(comm, comm_ptr);
@@ -693,7 +693,7 @@ int MPIC_Waitall(int numreq, MPI_Request requests[], MPI_Status statuses[], int 
     mpi_errno = MPIR_Waitall_impl(numreq, requests, statuses);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
-    if (*errflag || !MPIR_PARAM_ENABLE_COLL_FT_RET)
+    if (*errflag || !MPIR_CVAR_ENABLE_COLL_FT_RET)
         goto fn_exit;
 
     for (i = 0; i < numreq; ++i) {

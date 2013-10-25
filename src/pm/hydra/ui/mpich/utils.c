@@ -1541,7 +1541,7 @@ static HYD_status set_default_values(void)
                                 "cannot set iface and force hostname propagation");
         }
 
-        HYDU_append_env_to_list("MPIR_PARAM_NEMESIS_TCP_NETWORK_IFACE",
+        HYDU_append_env_to_list("MPIR_CVAR_NEMESIS_TCP_NETWORK_IFACE",
                                 HYD_server_info.user_global.iface,
                                 &HYD_server_info.user_global.global_env.system);
 
@@ -1552,7 +1552,7 @@ static HYD_status set_default_values(void)
     /* If hostname propagation is requested (or not set), set the
      * environment variable for doing that */
     if (hostname_propagation || hostname_propagation == -1)
-        HYD_server_info.iface_ip_env_name = HYDU_strdup("MPIR_PARAM_CH3_INTERFACE_HOSTNAME");
+        HYD_server_info.iface_ip_env_name = HYDU_strdup("MPIR_CVAR_CH3_INTERFACE_HOSTNAME");
 
     /* Default universe size if the user did not specify anything is
      * INFINITE */
@@ -1742,7 +1742,7 @@ HYD_status HYD_uii_mpx_get_parameters(char **t_argv)
     /* If the user set the checkpoint prefix, set env var to enable
      * checkpointing on the processes  */
     if (HYD_server_info.user_global.ckpoint_prefix)
-        HYDU_append_env_to_list("MPIR_PARAM_NEMESIS_ENABLE_CKPOINT", "1",
+        HYDU_append_env_to_list("MPIR_CVAR_NEMESIS_ENABLE_CKPOINT", "1",
                                 &HYD_server_info.user_global.global_env.system);
 
     /* Preset common environment options for disabling STDIO buffering

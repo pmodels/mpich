@@ -4,57 +4,57 @@
 # the inline list or map forms and don't try to use any really fancy
 # features like tagging or anchors.
 #
-# It is used to generate parameter-handling code for MPICH.
+# It is used to generate cvar-handling code for MPICH.
 # See the maint/genparams script for more information.
 #
 # The only tricky bit is that long reflowed text (such as a description)
 # should use ">-" to both fold newlines and remove the trailing newline.
 #
-# Listing "FOO" as a parameter name will cause two environment variables
-# to be examined by default: MPIR_PARAM_FOO and MPICH_FOO, with the
+# Listing "FOO" as a cvar name will cause two environment variables
+# to be examined by default: MPIR_CVAR_FOO and MPICH_FOO, with the
 # MPIR_PARAM value having priority.
 #
-# Each parameter has a class associated with it.  The following
+# Each cvar has a class associated with it.  The following
 # classes are defined: "device", and "none".  Setting it to "device"
 # will allow the device to override the default value.
 
 categories:
     - name        : COLLECTIVE
-      description : parameters that control collective communication behavior
+      description : cvars that control collective communication behavior
     - name        : COMMUNICATOR
-      description : parameters that control communicator construction and operation
+      description : cvars that control communicator construction and operation
     - name        : PT2PT
-      description : parameters that control point-to-point communication behavior
+      description : cvars that control point-to-point communication behavior
     - name        : RMA
-      description : parameters that control RMA communicatin behavior
+      description : cvars that control RMA communicatin behavior
     - name        : INTRANODE
-      description : intranode communication parameters
+      description : intranode communication cvars
     - name        : DEVELOPER
       description : useful for developers working on MPICH itself
     - name        : MEMORY
       description : affects memory allocation and usage, including MPI object handles
     - name        : ERROR_HANDLING
-      description : parameters that control error handling behavior (stack traces, aborts, etc)
+      description : cvars that control error handling behavior (stack traces, aborts, etc)
     - name        : DEBUGGER
-      description : parameters relevant to the "MPIR" debugger interface
+      description : cvars relevant to the "MPIR" debugger interface
     - name        : CHECKPOINTING
-      description : parameters relevant to checkpointing
+      description : cvars relevant to checkpointing
     - name        : FAULT_TOLERANCE
-      description : parameters that control fault tolerance behavior
+      description : cvars that control fault tolerance behavior
     - name        : THREADS
-      description : multi-threading parameters
+      description : multi-threading cvars
     - name        : CH3
-      description : parameters that control behavior of ch3
+      description : cvars that control behavior of ch3
     - name        : NEMESIS
-      description : "parameters that control behavior of the ch3:nemesis channel"
+      description : "cvars that control behavior of the ch3:nemesis channel"
     - name        : SOCKETS
-      description : control socket parameters
+      description : control socket cvars
     - name        : PROCESS_MANAGER
-      description : parameters that control the client-side process manager code
+      description : cvars that control the client-side process manager code
 
-parameters:
+cvars:
     ##############################################################
-    # collective parameters
+    # collective cvars
     - category    : COLLECTIVE
       name        : ALLTOALL_SHORT_MSG_SIZE
       type        : int
@@ -319,7 +319,7 @@ parameters:
         value of '0' uses SMP-aware allreduce for all message sizes.
 
     ##############################################################
-    # communicator parameters
+    # communicator cvars
     - category    : COMMUNICATOR
       name        : COMM_SPLIT_USE_QSORT
       type        : boolean
@@ -331,7 +331,7 @@ parameters:
         Use qsort(3) in the implementation of MPI_Comm_split instead of bubble sort.
 
   ##############################################################
-    # debugging parameters
+    # debugging cvars
     - category    : DEBUGGER
       name        : DEBUG_HOLD
       type        : boolean
@@ -368,7 +368,7 @@ parameters:
         (currently compile-time disabled by "#if 0")
 
   ##############################################################
-    # fault-tolerance parameters
+    # fault-tolerance cvars
     - category    : FAULT_TOLERANCE
       name        : ENABLE_COLL_FT_RET
       type        : boolean
@@ -385,7 +385,7 @@ parameters:
         if the result of the collective is invalid.
 
   ##############################################################
-    # memory parameters
+    # memory cvars
     - category    : MEMORY
       name        : ABORT_ON_LEAKED_HANDLES
       type        : boolean
@@ -403,7 +403,7 @@ parameters:
         work.
 
   ############################
-    # threads parameters
+    # threads cvars
     - category    : THREADS
       name        : CTXID_EAGER_SIZE
       type        : int
@@ -412,7 +412,7 @@ parameters:
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_LOCAL
       description : >-
-        The MPIR_PARAM_CTXID_EAGER_SIZE environment variable allows you to
+        The MPIR_CVAR_CTXID_EAGER_SIZE environment variable allows you to
         specify how many words in the context ID mask will be set aside
         for the eager allocation protocol.  If the application is running
         out of context IDs, reducing this value may help.
@@ -449,7 +449,7 @@ parameters:
         Sets the default thread level to use when using MPI_INIT.
 
     ##############################################################
-    # other MPI-level parameters
+    # other MPI-level cvars
     - category    : DEVELOPER
       name        : MEMDUMP
       type        : boolean
@@ -495,7 +495,7 @@ parameters:
         wide.  If 0, do not truncate, and if <0 use a sensible default.
 
     ##############################################################
-    # ch3 parameters
+    # ch3 cvars
     - category    : CH3
       name        : CH3_RMA_ACC_IMMED
       type        : boolean
@@ -592,10 +592,10 @@ parameters:
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_LOCAL
       description : >-
-        If non-NULL, this parameter specifies the IP address that
+        If non-NULL, this cvar specifies the IP address that
         other processes should use when connecting to this process.
-        This parameter is mutually exclusive with the
-        MPIR_PARAM_CH3_NETWORK_IFACE parameter and it is an error to set them
+        This cvar is mutually exclusive with the
+        MPIR_CVAR_CH3_NETWORK_IFACE cvar and it is an error to set them
         both.
 
     - category    : CH3
@@ -606,7 +606,7 @@ parameters:
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_LOCAL
       description : >-
-        This parameter controls the message size at which CH3 switches
+        This cvar controls the message size at which CH3 switches
         from eager to rendezvous mode.
 
     - category    : CH3
@@ -620,13 +620,13 @@ parameters:
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_LOCAL
       description : >-
-        The MPIR_PARAM_CH3_PORT_RANGE environment variable allows you to
+        The MPIR_CVAR_CH3_PORT_RANGE environment variable allows you to
         specify the range of TCP ports to be used by the process
         manager and the MPICH library. The format of this variable is
         <low>:<high>.  To specify any available port, use 0:0.
 
     ##############################################################
-    # nemesis parameters
+    # nemesis cvars
     - category    : NEMESIS
       name        : NEMESIS_POLLS_BEFORE_YIELD
       type        : int
@@ -636,7 +636,7 @@ parameters:
       scope       : MPI_T_SCOPE_LOCAL
       description : >-
         When MPICH is in a busy waiting loop, it will periodically
-        call a function to yield the processor.  This parameter sets
+        call a function to yield the processor.  This cvar sets
         the number of loops before the yield function is called.  A
         value of 0 disables yielding.
 
@@ -659,7 +659,7 @@ parameters:
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_LOCAL
       description : >-
-        If non-empty, this parameter specifies which network module
+        If non-empty, this cvar specifies which network module
         should be used for communication.
 
     - category    : NEMESIS
@@ -670,9 +670,9 @@ parameters:
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_LOCAL
       description : >-
-        This parameter controls the message size at which Nemesis
+        This cvar controls the message size at which Nemesis
         switches from eager to rendezvous mode for shared memory.
-        If this parameter is set to -1, then Nemesis will choose
+        If this cvar is set to -1, then Nemesis will choose
         an appropriate value.
 
     - category    : NEMESIS
@@ -683,10 +683,10 @@ parameters:
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_LOCAL
       description : >-
-        This parameter controls the message size at which Nemesis
+        This cvar controls the message size at which Nemesis
         switches from eager to rendezvous mode for ready-send
-        messages.  If this parameter is set to -1, then ready messages
-        will always be sent eagerly.  If this parameter is set to -2,
+        messages.  If this cvar is set to -1, then ready messages
+        will always be sent eagerly.  If this cvar is set to -2,
         then Nemesis will choose an appropriate value.
 
     - category    : NEMESIS
@@ -701,7 +701,7 @@ parameters:
         checkpointing library cannot be initialized.
 
     ##############################################################
-    # nemesis TCP parameters
+    # nemesis TCP cvars
     - category    : NEMESIS
       name        : NEMESIS_TCP_NETWORK_IFACE
       alt-env     :
@@ -712,11 +712,11 @@ parameters:
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_LOCAL
       description : >-
-        If non-NULL, this parameter specifies which pseudo-ethernet
+        If non-NULL, this cvar specifies which pseudo-ethernet
         interface the tcp netmod should use (e.g., "eth1", "ib0").
-        Note, this is a Linux-specific parameter.
-        This parameter is mutually exclusive with the
-        MPIR_PARAM_CH3_INTERFACE_HOSTNAME parameter and it is an error to set
+        Note, this is a Linux-specific cvar.
+        This cvar is mutually exclusive with the
+        MPIR_CVAR_CH3_INTERFACE_HOSTNAME cvar and it is an error to set
         them both.
 
     - category    : NEMESIS
@@ -727,11 +727,11 @@ parameters:
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_LOCAL
       description : >-
-        This parameter controls the number of times to retry the
+        This cvar controls the number of times to retry the
         gethostbyname() function before giving up.
 
     ##############################################################
-    # nemesis portals parameters
+    # nemesis portals cvars
     - category    : NEMESIS
       name        : NEMESIS_PORTALS_COMM_OVERRIDES
       type        : boolean
@@ -746,7 +746,7 @@ parameters:
         # setting the comm_ops table in any VC.
 
     ##############################################################
-    # process manager parameters
+    # process manager cvars
     - category    : PROCESS_MANAGER
       name        : NAMESERV_FILE_PUBDIR
       alt-env     :

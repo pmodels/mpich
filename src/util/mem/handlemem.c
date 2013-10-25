@@ -647,7 +647,7 @@ static int MPIU_CheckHandlesOnFinalize( void *objmem_ptr )
 	MPIU_Free( nIndirect );
     }
 
-    if (leaked_handles && MPIR_PARAM_ABORT_ON_LEAKED_HANDLES) {
+    if (leaked_handles && MPIR_CVAR_ABORT_ON_LEAKED_HANDLES) {
         /* comm_world has been (or should have been) destroyed by this point,
          * pass comm=NULL */
         MPID_Abort(NULL, MPI_ERR_OTHER, 1, "ERROR: leaked handles detected, aborting");

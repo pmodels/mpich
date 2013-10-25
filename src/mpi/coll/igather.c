@@ -115,12 +115,12 @@ int MPIR_Igather_binomial(const void *sendbuf, int sendcount, MPI_Datatype sendt
 
         /* If the message is smaller than the threshold, we will copy
          * our message in there too */
-        if (nbytes < MPIR_PARAM_GATHER_VSMALL_MSG_SIZE) tmp_buf_size++;
+        if (nbytes < MPIR_CVAR_GATHER_VSMALL_MSG_SIZE) tmp_buf_size++;
 
         tmp_buf_size *= nbytes;
 
         /* For zero-ranked root, we don't need any temporary buffer */
-        if ((rank == root) && (!root || (nbytes >= MPIR_PARAM_GATHER_VSMALL_MSG_SIZE)))
+        if ((rank == root) && (!root || (nbytes >= MPIR_CVAR_GATHER_VSMALL_MSG_SIZE)))
             tmp_buf_size = 0;
 
         if (tmp_buf_size) {
@@ -134,7 +134,7 @@ int MPIR_Igather_binomial(const void *sendbuf, int sendcount, MPI_Datatype sendt
                 if (mpi_errno) MPIU_ERR_POP(mpi_errno);
             }
         }
-        else if (tmp_buf_size && (nbytes < MPIR_PARAM_GATHER_VSMALL_MSG_SIZE)) {
+        else if (tmp_buf_size && (nbytes < MPIR_CVAR_GATHER_VSMALL_MSG_SIZE)) {
             /* copy from sendbuf into tmp_buf */
             mpi_errno = MPIR_Localcopy(sendbuf, sendcount, sendtype,
                                        tmp_buf, nbytes, MPI_BYTE);
@@ -167,7 +167,7 @@ int MPIR_Igather_binomial(const void *sendbuf, int sendcount, MPI_Datatype sendt
                             mpi_errno = MPID_Sched_barrier(s);
                             if (mpi_errno) MPIU_ERR_POP(mpi_errno);
                         }
-                        else if (nbytes < MPIR_PARAM_GATHER_VSMALL_MSG_SIZE) {
+                        else if (nbytes < MPIR_CVAR_GATHER_VSMALL_MSG_SIZE) {
                             mpi_errno = MPID_Sched_recv(tmp_buf, (recvblks * nbytes), MPI_BYTE, src, comm_ptr, s);
                             if (mpi_errno) MPIU_ERR_POP(mpi_errno);
                             mpi_errno = MPID_Sched_barrier(s);
@@ -204,7 +204,7 @@ int MPIR_Igather_binomial(const void *sendbuf, int sendcount, MPI_Datatype sendt
                         if (relative_src + mask > comm_size)
                             recvblks -= (relative_src + mask - comm_size);
 
-                        if (nbytes < MPIR_PARAM_GATHER_VSMALL_MSG_SIZE)
+                        if (nbytes < MPIR_CVAR_GATHER_VSMALL_MSG_SIZE)
                             offset = mask * nbytes;
                         else
                             offset = (mask - 1) * nbytes;
@@ -228,7 +228,7 @@ int MPIR_Igather_binomial(const void *sendbuf, int sendcount, MPI_Datatype sendt
                     mpi_errno = MPID_Sched_barrier(s);
                     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
                 }
-                else if (nbytes < MPIR_PARAM_GATHER_VSMALL_MSG_SIZE) {
+                else if (nbytes < MPIR_CVAR_GATHER_VSMALL_MSG_SIZE) {
                     mpi_errno = MPID_Sched_send(tmp_buf, curr_cnt, MPI_BYTE, dst, comm_ptr, s);
                     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
                     mpi_errno = MPID_Sched_barrier(s);
@@ -260,7 +260,7 @@ int MPIR_Igather_binomial(const void *sendbuf, int sendcount, MPI_Datatype sendt
             mask <<= 1;
         }
 
-        if ((rank == root) && root && (nbytes < MPIR_PARAM_GATHER_VSMALL_MSG_SIZE) && copy_blks) {
+        if ((rank == root) && root && (nbytes < MPIR_CVAR_GATHER_VSMALL_MSG_SIZE) && copy_blks) {
             /* reorder and copy from tmp_buf into recvbuf */
             /* FIXME why are there two copies here? */
             mpi_errno = MPID_Sched_copy(tmp_buf, nbytes * (comm_size - copy_offset), MPI_BYTE,
@@ -431,7 +431,7 @@ int MPIR_Igather_inter(const void *sendbuf, int sendcount, MPI_Datatype sendtype
         nbytes = sendtype_size * sendcount * local_size;
     }
 
-    if (nbytes < MPIR_PARAM_GATHER_INTER_SHORT_MSG_SIZE) {
+    if (nbytes < MPIR_CVAR_GATHER_INTER_SHORT_MSG_SIZE) {
         if (root == MPI_ROOT) {
             /* root receives data from rank 0 on remote group */
             mpi_errno = MPID_Sched_recv(recvbuf, recvcount*remote_size, recvtype, 0, comm_ptr, s);

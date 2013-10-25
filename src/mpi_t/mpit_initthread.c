@@ -48,7 +48,7 @@ static inline void MPIR_T_cvar_env_init(void)
 
     utarray_new(cvar_table, &cvar_table_entry_icd);
     cvar_hash = NULL;
-    MPIR_Param_init_params();
+    MPIR_T_cvar_init();
 }
 
 static inline void MPIR_T_pvar_env_init(void)

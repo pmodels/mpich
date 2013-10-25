@@ -443,7 +443,7 @@ int MPIR_Scatter_inter(const void *sendbuf, int sendcount, MPI_Datatype sendtype
         nbytes = recvtype_size * recvcount * local_size;
     }
 
-    if (nbytes < MPIR_PARAM_SCATTER_INTER_SHORT_MSG_SIZE) {
+    if (nbytes < MPIR_CVAR_SCATTER_INTER_SHORT_MSG_SIZE) {
         if (root == MPI_ROOT) {
             /* root sends all data to rank 0 on remote group and returns */
             mpi_errno = MPIC_Send(sendbuf, sendcount*remote_size,

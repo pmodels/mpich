@@ -67,7 +67,7 @@ static void MPIU_Sort_inttable( sorttype *keytable, int size )
 
 #if defined(HAVE_QSORT)
     /* temporary switch for profiling performance differences */
-    if (MPIR_PARAM_COMM_SPLIT_USE_QSORT)
+    if (MPIR_CVAR_COMM_SPLIT_USE_QSORT)
     {
         /* qsort isn't a stable sort, so we have to enforce stability by keeping
          * track of the original indices */
