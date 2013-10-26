@@ -1841,7 +1841,7 @@ sub unweighted_in_ftoc {
         for (li=0; li<$Array_size; li++) l$count\[li\] = (int)v$count\[li\];
     }
 EOT
-	$clean_up .= "    if (l$count != MPI_UNWEIGHTED) {$free(l$count);}\n";
+	$clean_up .= "    if (l$count != MPI_UNWEIGHTED && l$count != MPI_WEIGHTS_EMPTY) {$free(l$count);}\n";
     }
     else {
         print $OUTFD "    if      (v$count == MPIR_F_MPI_UNWEIGHTED) v$count = MPI_UNWEIGHTED;\n";
