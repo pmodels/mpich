@@ -229,7 +229,13 @@ MPID_Put(void         *origin_addr,
   MPIDI_Win_request *req = MPIU_Calloc0(1, MPIDI_Win_request);
   *req = zero_req;
   req->win          = win;
-  req->type         = MPIDI_WIN_REQUEST_PUT;
+  if(win->mpid.request_based != 1) 
+    req->type         = MPIDI_WIN_REQUEST_PUT;
+  else {
+    req->req_handle   = win->mpid.rreq;
+    req->type         = MPIDI_WIN_REQUEST_RPUT;
+    req->req_handle->mpid.win_req = req;
+  }
 
   if(win->mpid.sync.origin_epoch_type == win->mpid.sync.target_epoch_type &&
      win->mpid.sync.origin_epoch_type == MPID_EPOTYPE_REFENCE){
@@ -262,7 +268,10 @@ MPID_Put(void         *origin_addr,
   if ( (req->origin.dt.size == 0) ||
        (target_rank == MPI_PROC_NULL))
     {
-      MPIU_Free(req);
+      if(req->req_handle)
+       MPID_cc_set(req->req_handle->cc_ptr, 0);
+      else
+       MPIU_Free(req);
       return MPI_SUCCESS;
     }
 
@@ -273,7 +282,10 @@ MPID_Put(void         *origin_addr,
     {
       size_t offset = req->offset;
       win->mpid.origin[target_rank].nCompleted++;
-      MPIU_Free(req);
+      if(req->req_handle)
+        MPID_cc_set(req->req_handle->cc_ptr, 0);
+      else
+        MPIU_Free(req);
       return MPIR_Localcopy(origin_addr,
                             origin_count,
                             origin_datatype,

@@ -265,6 +265,7 @@ MPID_Request_release_inline(MPID_Request *req)
   MPIU_Object_release_ref(req, &count);
   MPID_assert(count >= 0);
 
+
   if (count == 0)
   {
     MPID_assert(MPID_cc_is_complete(&req->cc));
@@ -275,6 +276,7 @@ MPID_Request_release_inline(MPID_Request *req)
     if (req->mpid.uebuf_malloc== mpiuMalloc) {
         MPIU_Free(req->mpid.uebuf);
     }
+    if(req->mpid.win_req)       MPIU_Free(req->mpid.win_req);
 #if TOKEN_FLOW_CONTROL
     else if (req->mpid.uebuf_malloc == mpidiBufMM) {
         MPIU_THREAD_CS_ENTER(MSGQUEUE,0);

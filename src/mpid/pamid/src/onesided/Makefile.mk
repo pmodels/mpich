@@ -45,6 +45,7 @@ lib_lib@MPILIBNAME@_la_SOURCES +=                                    \
   src/mpid/pamid/src/onesided/mpid_win_sync.c                        \
   src/mpid/pamid/src/onesided/mpid_win_get_info.c                    \
   src/mpid/pamid/src/onesided/mpid_win_set_info.c                    \
+  src/mpid/pamid/src/onesided/mpid_win_reqops.c                      \
   src/mpid/pamid/src/onesided/mpidi_win_control.c
 
 

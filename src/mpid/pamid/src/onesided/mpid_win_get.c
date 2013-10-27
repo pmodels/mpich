@@ -216,7 +216,13 @@ MPID_Get(void         *origin_addr,
   MPIDI_Win_request *req = MPIU_Calloc0(1, MPIDI_Win_request);
   *req = zero_req;
   req->win          = win;
-  req->type         = MPIDI_WIN_REQUEST_GET;
+  if(win->mpid.request_based != 1) 
+    req->type         = MPIDI_WIN_REQUEST_GET;
+  else {
+    req->req_handle   = win->mpid.rreq;
+    req->type         = MPIDI_WIN_REQUEST_RGET;
+    req->req_handle->mpid.win_req = req;
+  }
 
   if(win->mpid.sync.origin_epoch_type == win->mpid.sync.target_epoch_type &&
      win->mpid.sync.origin_epoch_type == MPID_EPOTYPE_REFENCE){
@@ -231,7 +237,6 @@ MPID_Get(void         *origin_addr,
   }
 
   req->offset = target_disp * win->mpid.info[target_rank].disp_unit;
-  win->mpid.origin[target_rank].nStarted++;
 
   MPIDI_Win_datatype_basic(origin_count,
                            origin_datatype,
@@ -248,16 +253,23 @@ MPID_Get(void         *origin_addr,
   if ( (req->origin.dt.size == 0) ||
        (target_rank == MPI_PROC_NULL))
     {
-      MPIU_Free(req);
+      if(req->req_handle)
+         MPID_cc_set(req->req_handle->cc_ptr, 0);
+      else
+         MPIU_Free(req);
       return MPI_SUCCESS;
     }
+  win->mpid.origin[target_rank].nStarted++;
 
   /* If the get is a local operation, do it here */
   if (target_rank == win->comm_ptr->rank)
     {
       size_t offset = req->offset;
-      req->win->mpid.origin[target_rank].nCompleted++;
-      MPIU_Free(req);
+      win->mpid.origin[target_rank].nCompleted++;
+      if(req->req_handle)
+        MPID_cc_set(req->req_handle->cc_ptr, 0);
+      else
+        MPIU_Free(req);
       return MPIR_Localcopy(win->base + offset,
                             target_count,
                             target_datatype,

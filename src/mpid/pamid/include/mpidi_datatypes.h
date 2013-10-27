@@ -295,6 +295,7 @@ struct MPIDI_Request
   int   idx;
   int   PR_idx;
 #endif
+  struct MPIDI_Win_request   *win_req; /* anchor of request based rma handle so as to free it properly when wait is called */
 };
 
 typedef void* fast_query_t;
@@ -489,6 +490,9 @@ struct MPIDI_Win
       } local;
     } lock;
   } sync;
+
+  int request_based;          /* flag for request based rma */
+  struct MPID_Request *rreq;  /* anchor of MPID_Request for request based rma */
 };
 
 /**

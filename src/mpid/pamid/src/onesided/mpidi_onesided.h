@@ -52,6 +52,11 @@ typedef enum
     MPIDI_WIN_REQUEST_ACCUMULATE,
     MPIDI_WIN_REQUEST_GET,
     MPIDI_WIN_REQUEST_PUT,
+    MPIDI_WIN_REQUEST_GET_ACCUMULATE,
+    MPIDI_WIN_REQUEST_RACCUMULATE,
+    MPIDI_WIN_REQUEST_RGET,
+    MPIDI_WIN_REQUEST_RPUT,
+    MPIDI_WIN_REQUEST_RGET_ACCUMULATE,
   } MPIDI_Win_requesttype_t;
 
 typedef enum
@@ -180,6 +185,8 @@ typedef struct _mpidi_win_request
   MPI_Op     op;
   int        result_num_contig;   
 
+  int request_based;            /* flag for request based rma */
+  MPID_Request *req_handle;     /* anchor of MPID_Request struc for request based rma*/
 } MPIDI_Win_request;
 
 MPIDI_Win_request  zero_req;    /* used for init. request structure to 0 */

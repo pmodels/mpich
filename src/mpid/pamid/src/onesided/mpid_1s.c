@@ -56,6 +56,10 @@ MPIDI_Win_DoneCB(pami_context_t  context,
   if (req->origin.completed == req->target.dt.num_contig)
     {
       req->win->mpid.origin[target_rank].nCompleted++;
+	if(req->req_handle) {
+          MPID_cc_set(req->req_handle->cc_ptr, 0);
+        }
+
       if (req->buffer_free) {
           MPIU_Free(req->buffer);
           MPIU_Free(req->user_buffer);
@@ -63,7 +67,9 @@ MPIDI_Win_DoneCB(pami_context_t  context,
       }
       if (req->accum_headers)
         MPIU_Free(req->accum_headers);
-      MPIU_Free(req);
+
+      if( (req->type != MPIDI_WIN_REQUEST_RPUT) && (req->type != MPIDI_WIN_REQUEST_RGET) && (req->type != MPIDI_WIN_REQUEST_RACCUMULATE) && (req->type != MPIDI_WIN_REQUEST_RGET_ACCUMULATE) )
+        MPIU_Free(req);
     }
   MPIDI_Progress_signal();
 }

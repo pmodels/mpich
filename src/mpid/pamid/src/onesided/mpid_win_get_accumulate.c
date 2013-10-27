@@ -161,11 +161,18 @@ MPIDI_Win_GetAccDoneCB(pami_context_t  context,
   if (req->origin.completed == 
       (req->result_num_contig + req->target.dt.num_contig))
     {
-      if (req->buffer_free)
-        MPIU_Free(req->buffer);
+      if(req->req_handle)
+          MPID_cc_set(req->req_handle->cc_ptr, 0);
+
+      if (req->buffer_free) {
+          MPIU_Free(req->buffer);
+          req->buffer_free = 0;
+      }
       if (req->accum_headers)
         MPIU_Free(req->accum_headers);
-      MPIU_Free (req);
+
+      if( req->type != MPIDI_WIN_REQUEST_RGET_ACCUMULATE )
+        MPIU_Free(req);
     }
   MPIDI_Progress_signal();
 }
@@ -323,7 +330,13 @@ MPID_Get_accumulate(const void   * origin_addr,
   MPIDI_Win_request *req;
   req = MPIU_Calloc0(1, MPIDI_Win_request);
   req->win      = win;
-  req->type     = MPIDI_WIN_REQUEST_ACCUMULATE,
+  if(win->mpid.request_based != 1) 
+    req->type         = MPIDI_WIN_REQUEST_GET_ACCUMULATE;
+  else {
+    req->req_handle   = win->mpid.rreq;
+    req->type         = MPIDI_WIN_REQUEST_RGET_ACCUMULATE;
+    req->req_handle->mpid.win_req = req;
+  }
   req->offset   = target_disp*win->mpid.info[target_rank].disp_unit;
 #ifdef __BGQ__
   /* PAMI limitation as it doesnt permit VA of 0 to be passed into
@@ -397,7 +410,10 @@ MPID_Get_accumulate(const void   * origin_addr,
   if ( (req->origin.dt.size == 0) ||
        (target_rank == MPI_PROC_NULL))
     {
-      MPIU_Free (req);
+      if(req->req_handle)
+         MPID_cc_set(req->req_handle->cc_ptr, 0);
+      else
+         MPIU_Free(req);
       return MPI_SUCCESS;
     }
 

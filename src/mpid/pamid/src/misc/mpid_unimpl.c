@@ -99,15 +99,6 @@ int MPID_Win_allocate_shared(MPI_Aint size, int disp_unit, MPID_Info *info_ptr, 
   return 0;
 }
 
-int MPID_Rput(const void *origin_addr, int origin_count,
-              MPI_Datatype origin_datatype, int target_rank, MPI_Aint target_disp,
-              int target_count, MPI_Datatype target_datatype, MPID_Win *win,
-              MPID_Request **request)
-{
-  MPID_abort();
-  return 0;
-}
-
 
 int MPID_Compare_and_swap(const void *origin_addr, const void *compare_addr,
                           void *result_addr, MPI_Datatype datatype, int target_rank,
@@ -117,24 +108,6 @@ int MPID_Compare_and_swap(const void *origin_addr, const void *compare_addr,
   return 0;
 }
 
-int MPID_Raccumulate(const void *origin_addr, int origin_count,
-                     MPI_Datatype origin_datatype, int target_rank, MPI_Aint target_disp,
-                     int target_count, MPI_Datatype target_datatype, MPI_Op op, MPID_Win *win,
-                     MPID_Request **request)
-{
-  MPID_abort();
-  return 0;
-}
-
-int MPID_Rget_accumulate(const void *origin_addr, int origin_count,
-                         MPI_Datatype origin_datatype, void *result_addr, int result_count,
-                         MPI_Datatype result_datatype, int target_rank, MPI_Aint target_disp,
-                         int target_count, MPI_Datatype target_datatype, MPI_Op op, MPID_Win *win,
-                         MPID_Request **request)
-{
-  MPID_abort();
-  return 0;
-}
 
 int MPID_Fetch_and_op(const void *origin_addr, void *result_addr,
                       MPI_Datatype datatype, int target_rank, MPI_Aint target_disp,
@@ -146,16 +119,6 @@ int MPID_Fetch_and_op(const void *origin_addr, void *result_addr,
 
 int MPID_Win_shared_query(MPID_Win *win, int rank, MPI_Aint *size, int *disp_unit,
                           void *baseptr)
-{
-  MPID_abort();
-  return 0;
-}
-
-
-int MPID_Rget(void *origin_addr, int origin_count,
-              MPI_Datatype origin_datatype, int target_rank, MPI_Aint target_disp,
-              int target_count, MPI_Datatype target_datatype, MPID_Win *win,
-              MPID_Request **request)
 {
   MPID_abort();
   return 0;

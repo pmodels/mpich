@@ -173,7 +173,13 @@ MPID_Accumulate(void         *origin_addr,
   MPIDI_Win_request *req = MPIU_Calloc0(1, MPIDI_Win_request);
   *req = zero_req;
   req->win          = win;
-  req->type         = MPIDI_WIN_REQUEST_ACCUMULATE;
+  if(win->mpid.request_based != 1)
+    req->type         = MPIDI_WIN_REQUEST_ACCUMULATE;
+  else {
+    req->type         = MPIDI_WIN_REQUEST_RACCUMULATE;
+    req->req_handle   = win->mpid.rreq;
+    req->req_handle->mpid.win_req = req;
+  }
 
   if(win->mpid.sync.origin_epoch_type == win->mpid.sync.target_epoch_type &&
      win->mpid.sync.origin_epoch_type == MPID_EPOTYPE_REFENCE){
@@ -188,7 +194,6 @@ MPID_Accumulate(void         *origin_addr,
   }
 
   req->offset = target_disp * win->mpid.info[target_rank].disp_unit;
-  win->mpid.origin[target_rank].nStarted++; 
 
   if (origin_datatype == MPI_DOUBLE_INT)
     {
@@ -241,10 +246,13 @@ MPID_Accumulate(void         *origin_addr,
   if ( (req->origin.dt.size == 0) ||
        (target_rank == MPI_PROC_NULL))
     {
-      win->mpid.origin[target_rank].nCompleted++;
-      MPIU_Free(req);
+      if(req->req_handle)
+        MPID_cc_set(req->req_handle->cc_ptr, 0);
+      else
+        MPIU_Free(req);
       return MPI_SUCCESS;
     }
+  win->mpid.origin[target_rank].nStarted++; 
 
   req->target.rank = target_rank;
 
