@@ -187,10 +187,11 @@ int PrintCategories(FILE * fp)
         descLen = sizeof(desc);
         MPI_T_category_get_info(i, name, &nameLen, desc, &descLen, &numCvars,
                                 &numPvars, &numSubcat);
-        if (verbose)
+        if (verbose) {
             fprintf(fp, "Category %s has %d control variables, %d performance variables, %d subcategories\n",
                     name, numCvars, numPvars, numSubcat);
             fprintf(fp, "\tDescription: %s\n", desc);
+        }
 
         if (numCvars > 0) {
             if (verbose)
