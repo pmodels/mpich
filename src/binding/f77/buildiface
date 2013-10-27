@@ -2386,7 +2386,7 @@ sub addrint_in_decl {
 }
 sub addrint_in_arg {
     my $count = $_[0];
-    print $OUTFD "(void *)(MPIR_Pint)((int)*(int *)v$count)";
+    print $OUTFD "(void *)(*(MPIR_Pint *)v$count)";
 }
 
 sub attrint_ctof {
