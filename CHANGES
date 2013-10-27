@@ -8,6 +8,8 @@
  # Several improvements to the SCIF netmod.  (code contribution from
    Intel).
 
+ # Major revamp of the MPI_T interface added in MPI-3.
+
  # Added environment variables to control a lot more capabilities for
    collectives.  See the README.envvar file for more information.
 
