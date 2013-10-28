@@ -17,9 +17,9 @@ int main( int argc, char *argv[] )
     MPI_Datatype dtype;
     MPI_T_enum   enumtype;
     MPI_T_cvar_handle bcastHandle, bcastLongHandle;
-    int          bcastCount, bcastScope, bcastCvar;
-    int          bcastLongCount, bcastLongScope, bcastLongCvar;
-    int          gatherCount, gatherScope, gatherCvar;
+    int          bcastCount, bcastScope=MPIX_T_SCOPE_INVALID, bcastCvar=-1;
+    int          bcastLongCount, bcastLongScope, bcastLongCvar=-1;
+    int          gatherScope, gatherCvar;
     int          newval;
     int          errs = 0;
 
