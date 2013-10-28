@@ -29,8 +29,7 @@ lib_lib@MPILIBNAME@_la_SOURCES +=                          \
     src/mpid/common/datatype/mpid_type_struct.c            \
     src/mpid/common/datatype/mpid_type_vector.c            \
     src/mpid/common/datatype/mpid_type_zerolen.c           \
-    src/mpid/common/datatype/mpir_type_flatten.c           \
-    src/mpid/common/datatype/mpir_type_get_contig_blocks.c
+    src/mpid/common/datatype/mpir_type_flatten.c
 
 # there are no AC_OUTPUT_FILES headers, so builddir is unnecessary
 AM_CPPFLAGS += -I$(top_srcdir)/src/mpid/common/datatype

@@ -733,13 +733,6 @@ void ADIOI_Flatten(MPI_Datatype datatype, ADIOI_Flatlist_node *flat,
  */
 MPI_Count ADIOI_Count_contiguous_blocks(MPI_Datatype datatype, MPI_Count *curr_index)
 {
-#ifdef HAVE_MPIR_TYPE_GET_CONTIG_BLOCKS
-    /* MPICH can get us this value without all the envelope/contents calls */
-    MPI_Count blks;
-    MPIR_Type_get_contig_blocks(datatype, &blks);
-    *curr_index = blks;
-    return blks;
-#else
     int i, n;
     MPI_Count count=0, prev_index, num, basic_num;
     int top_count, combiner, old_combiner, old_is_contig;
@@ -1008,7 +1001,6 @@ MPI_Count ADIOI_Count_contiguous_blocks(MPI_Datatype datatype, MPI_Count *curr_i
     ADIOI_Free(adds);
     ADIOI_Free(types);
     return count;
-#endif /* HAVE_MPIR_TYPE_GET_CONTIG_BLOCKS */
 }
 
 /* removezeros() make a second pass over the
