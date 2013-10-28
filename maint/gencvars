@@ -41,10 +41,10 @@ my $fn_ns = "MPIR_T_cvar";
 my $ns = "MPIR_CVAR";
 # an alternative namespace used for environment variables, unused if set
 # to ""
-my $alt_ns = "MPICH";
+my $alt_ns = "MPIR_PARAM";
 
 # deprecated prefix for backward compatibility
-my $dep_ns = "MPIR_PARAM";
+my $dep_ns = "MPICH";
 
 # cvar description file
 my $cvar_file = "src/util/cvar/cvars.yml";
@@ -409,8 +409,8 @@ foreach my $p (@{$cvars->{cvars}}) {
     my $default;
 
     # process extra envs first so the primary always wins
-    push @env_names, "${dep_ns}_" . $p->{name};
     push @env_names, "${alt_ns}_" . $p->{name};
+    push @env_names, "${dep_ns}_" . $p->{name};
     push @env_names, map { "${uc_ns}_$_" } @{$p->{'alt-env'}};
     push @env_names, map { "${alt_ns}_$_" } @{$p->{'alt-env'}};
     push @env_names, map { "${dep_ns}_$_" } @{$p->{'alt-env'}};
