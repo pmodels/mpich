@@ -248,7 +248,8 @@ int MPIDO_Alltoall_simple(const void *sendbuf,
    MPIDI_Post_coll_t alltoall_post;
    int sndlen, rcvlen, snd_contig = 1, rcv_contig = 1, pamidt=1;
    int tmp;
-  const int rank = comm_ptr->rank;
+   const int rank = comm_ptr->rank;
+   const int size = comm_ptr->local_size;
 
    const struct MPIDI_Comm* const mpid = &(comm_ptr->mpid);
 
@@ -278,15 +279,15 @@ int MPIDO_Alltoall_simple(const void *sendbuf,
     send_size = sndlen * sendcount;
     if(!snd_contig)
     {
-      snd_noncontig_buff = MPIU_Malloc(send_size);
+      snd_noncontig_buff = MPIU_Malloc(send_size*size);
       sbuf = snd_noncontig_buff;
       if(snd_noncontig_buff == NULL)
       {
         MPID_Abort(NULL, MPI_ERR_NO_SPACE, 1,
                    "Fatal:  Cannot allocate pack buffer");
       }
-      DLOOP_Offset last = send_size;
-      MPID_Segment_init(sendbuf, sendcount, sendtype, &segment, 0);
+      DLOOP_Offset last = send_size*size;
+      MPID_Segment_init(sendbuf, sendcount*size, sendtype, &segment, 0);
       MPID_Segment_pack(&segment, 0, &last, snd_noncontig_buff);
 
     }
@@ -294,7 +295,7 @@ int MPIDO_Alltoall_simple(const void *sendbuf,
 
   if(!rcv_contig)
   {
-    rcv_noncontig_buff = MPIU_Malloc(recv_size);
+    rcv_noncontig_buff = MPIU_Malloc(recv_size*size);
     rbuf = rcv_noncontig_buff;
     if(rcv_noncontig_buff == NULL)
     {
@@ -345,8 +346,8 @@ int MPIDO_Alltoall_simple(const void *sendbuf,
 
    if(!rcv_contig)
    {
-      MPIR_Localcopy(rcv_noncontig_buff, recv_size, MPI_CHAR,
-                        recvbuf,         recvcount,     recvtype);
+      MPIR_Localcopy(rcv_noncontig_buff, recv_size*size, MPI_CHAR,
+                        recvbuf,         recvcount*size,     recvtype);
       MPIU_Free(rcv_noncontig_buff);
    }
    if(!snd_contig)  MPIU_Free(snd_noncontig_buff);
