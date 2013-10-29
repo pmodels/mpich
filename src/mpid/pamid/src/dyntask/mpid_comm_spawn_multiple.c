@@ -13,6 +13,8 @@
 
 #ifdef DYNAMIC_TASKING
 
+extern mpidi_dynamic_tasking;
+
 /* Define the name of the kvs key used to provide the port name to the
    children */
 #define MPIDI_PARENT_PORT_KVSKEY "PARENT_ROOT_PORT_NAME"
@@ -106,6 +108,12 @@ int MPID_Comm_spawn_multiple(int count, char *array_of_commands[],
 			     int array_of_errcodes[])
 {
     int mpi_errno = MPI_SUCCESS;
+
+    if(mpidi_dynamic_tasking == 0) {
+	fprintf(stderr, "Received spawn request for non-dynamic jobs\n");
+        MPIU_ERR_SETANDSTMT(mpi_errno, MPI_ERR_SPAWN,
+                            return mpi_errno, "**spawn");
+    }
 
     /* We allow an empty implementation of this function to
        simplify building MPICH on systems that have difficulty
