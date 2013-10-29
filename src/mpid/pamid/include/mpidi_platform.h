@@ -110,6 +110,15 @@ static const char _ibm_release_version_[] = "V1R2M0";
 #endif
 
 #ifdef __PE__
+
+/*
+ * This 'maximum contexts' define needs to be changed when mpich on PE
+ * will support multiple contexts. Currently the PE PAMI allows multiple
+ * contexts, but the PE mpich code is not set up to use them.
+ */
+#undef MPIDI_MAX_CONTEXTS
+#define MPIDI_MAX_CONTEXTS 1
+
 #undef USE_PAMI_CONSISTENCY
 #define USE_PAMI_CONSISTENCY PAMI_HINT_DISABLE
 #undef  MPIDI_SHORT_LIMIT
