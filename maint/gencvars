@@ -133,6 +133,8 @@ print CVAR_HDR <<EOT;
 #if !defined($hdr_guard)
 #define $hdr_guard
 
+#include "mpitimpl.h" /* for MPIR_T_cvar_range_value_t */
+
 EOT
 
 print CVAR_C <<EOT;
