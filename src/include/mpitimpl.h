@@ -7,8 +7,8 @@
 /* Types and interfaces in this file are internally used by MPIR_T itself.
  * Other modules should call higher level interfaces in mpit.h instead.
  */
-#ifndef MPIT_INTERNAL_H_INCLUDED
-#define MPIT_INTERNAL_H_INCLUDED
+#ifndef MPITIMPL_H_INCLUDED
+#define MPITIMPL_H_INCLUDED
 
 #include "mpi.h"
 #include "mpiu_utarray.h"
