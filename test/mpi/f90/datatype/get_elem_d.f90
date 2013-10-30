@@ -21,7 +21,7 @@ program get_elem_d
   integer :: blklen(nb)=(/2,2/)
   integer :: types(nb)=(/MPI_DOUBLE_PRECISION,MPI_INTEGER/)
   integer(kind=MPI_ADDRESS_KIND) :: disp(nb)
-  integer :: newtype,ntlen,ians(0:23),ians0(0:3),ians1(20),ians2(20)
+  integer :: newtype,ntlen,ians(0:23),ians0(0:3),ians1(24),ians2(20)
   double precision :: dbuff(dmax), a
   integer :: ibuff(imax)
   character :: cbuff(cmax)='X'
