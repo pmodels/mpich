@@ -17,9 +17,9 @@ int main( int argc, char *argv[] )
     MPI_Datatype dtype;
     MPI_T_enum   enumtype;
     MPI_T_cvar_handle bcastHandle, bcastLongHandle;
-    int          bcastCount, bcastScope=MPIX_T_SCOPE_INVALID, bcastCvar=-1;
+    int          bcastCount, bcastScope, bcastCvar=-1;
     int          bcastLongCount, bcastLongScope, bcastLongCvar=-1;
-    int          gatherScope, gatherCvar;
+    int          gatherScope, gatherCvar=-1;
     int          newval;
     int          errs = 0;
 
@@ -35,29 +35,29 @@ int main( int argc, char *argv[] )
 	cnameLen = sizeof(cname);
 	MPI_T_cvar_get_info( i, cname, &cnameLen, &verbosity, &dtype,
 			     &enumtype, NULL, NULL, &binding, &scope );
-	if (strcmp( cname, "GATHER_VSMALL_MSG_SIZE" ) == 0) {
+	if (strcmp( cname, "MPIR_CVAR_GATHER_VSMALL_MSG_SIZE" ) == 0) {
 	    gatherCvar  = i;
 	    gatherScope = scope;
 	}
-	else if (strcmp( cname, "BCAST_SHORT_MSG_SIZE" ) == 0) {
+	else if (strcmp( cname, "MPIR_CVAR_BCAST_SHORT_MSG_SIZE" ) == 0) {
 	    bcastCvar = i;
 	    bcastScope = scope;
 	    if (binding != MPI_T_BIND_NO_OBJECT &&
 		binding != MPI_T_BIND_MPI_COMM) {
-		fprintf( stderr, "Unexpected binding for BCAST_SHORT_MSG\n" );
+		fprintf( stderr, "Unexpected binding for MPIR_CVAR_BCAST_SHORT_MSG\n" );
 		errs++;
 	    }
 	}
-	else if (strcmp( cname, "BCAST_LONG_MSG_SIZE" ) == 0) {
+	else if (strcmp( cname, "MPIR_CVAR_BCAST_LONG_MSG_SIZE" ) == 0) {
 	    bcastLongCvar = i;
 	    bcastLongScope = scope;
 	    if (binding != MPI_T_BIND_NO_OBJECT &&
 		binding != MPI_T_BIND_MPI_COMM) {
-		fprintf( stderr, "Unexpected binding for BCAST_LONG_MSG\n" );
+		fprintf( stderr, "Unexpected binding for MPIR_CVAR_BCAST_LONG_MSG\n" );
 		errs++;
 	    }
 	}
-	else if (strcmp( cname, "BCAST_MIN_PROCS" ) == 0) {
+	else if (strcmp( cname, "MPIR_CVAR_BCAST_MIN_PROCS" ) == 0) {
 	}
     }
 
