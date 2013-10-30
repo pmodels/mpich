@@ -112,6 +112,7 @@ int MPID_Comm_spawn_multiple(int count, char *array_of_commands[],
 			     int array_of_errcodes[])
 {
     int mpi_errno = MPI_SUCCESS;
+    static char FCNAME[] = "MPID_Comm_spawn_multiple";
 
     if(mpidi_dynamic_tasking == 0) {
 	fprintf(stderr, "Received spawn request for non-dynamic jobs\n");

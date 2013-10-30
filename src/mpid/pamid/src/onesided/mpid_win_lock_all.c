@@ -29,6 +29,7 @@ MPIDI_WinLockAllReq_post(pami_context_t   context,
   MPIDI_WinLock_info* info = (MPIDI_WinLock_info*)_info;
   MPIDI_Win_control_t msg = {
     .type       = MPIDI_WIN_MSGTYPE_LOCKALLREQ,
+    .flagAddr   = info,
     .data       = {
       .lock       = {
         .type = info->lock_type,
@@ -42,19 +43,17 @@ MPIDI_WinLockAllReq_post(pami_context_t   context,
 
 
 static pami_result_t
-MPIDI_WinUnlockAll_post(pami_context_t   context,
+MPIDI_WinUnlockAllReq_post(pami_context_t   context,
                         void           * _info)
 {
   MPID_Win  *win;  
   MPIDI_WinLock_info* info = (MPIDI_WinLock_info*)_info;
   MPIDI_Win_control_t msg = {
   .type       = MPIDI_WIN_MSGTYPE_UNLOCKALL,
+  .flagAddr   = info,
   };
   win=info->win; 
   MPIDI_WinCtrlSend(context, &msg, info->peer, info->win);
-  /* current request is the last one in the group */
-  if (win->mpid.sync.lock.remote.allLocked == 1) 
-        info->done = 1; 
   return PAMI_SUCCESS;
 }
 
@@ -88,6 +87,8 @@ MPID_Win_lock_all(int      assert,
   int mpi_errno = MPI_SUCCESS;
   int i,size;
   MPIDI_WinLock_info *lockQ;
+  char *cp=NULL;
+  int  nMask,index;
   struct MPIDI_Win_sync_lock* slock = &win->mpid.sync.lock;
   static char FCNAME[] = "MPID_Win_lock_all";
 
@@ -97,19 +98,47 @@ MPID_Win_lock_all(int      assert,
                         return mpi_errno, "**rmasync");
    }
    size = (MPIR_Comm_size(win->comm_ptr));
+   win->mpid.max_ctrlsends = MAX_NUM_CTRLSEND;
+   nMask= win->mpid.max_ctrlsends - 1;
+   if (cp=getenv("MP_MAX_NUM_CTRLSEND")) {
+       win->mpid.max_ctrlsends = atoi(cp);
+   }
+   nMask=(win->mpid.max_ctrlsends - 1);
    if (!win->mpid.work.msgQ) {
-       win->mpid.work.msgQ = (void *) MPIU_Calloc0(size, MPIDI_WinLock_info);
+       if (size < (win->mpid.max_ctrlsends)) {
+           win->mpid.work.msgQ = (void *) MPIU_Calloc0(size, MPIDI_WinLock_info);
+       }  else {
+           win->mpid.work.msgQ = (void *) MPIU_Calloc0((win->mpid.max_ctrlsends), MPIDI_WinLock_info);
+       }
        MPID_assert(win->mpid.work.msgQ != NULL);
-        win->mpid.work.count=0;
+       win->mpid.work.count=0;
    }
    lockQ = (MPIDI_WinLock_info *) win->mpid.work.msgQ;
-   for (i = 0; i < size; i++) {
-       lockQ[i].done=0;
-       lockQ[i].peer=i;               
-       lockQ[i].win=win;               
-       lockQ[i].lock_type=MPI_LOCK_SHARED;               
-       MPIDI_Context_post(MPIDI_Context[0], &lockQ[i].work, MPIDI_WinLockAllReq_post, &lockQ[i]);
-   }
+   if (size < win->mpid.max_ctrlsends) {
+      for (i = 0; i < size; i++) {
+           lockQ[i].done=0;
+           lockQ[i].peer=i;
+           lockQ[i].win=win;
+           lockQ[i].lock_type=MPI_LOCK_SHARED;
+           MPIDI_Context_post(MPIDI_Context[0], &lockQ[i].work, MPIDI_WinLockAllReq_post, &lockQ[i]);
+      }
+    } else {
+      for (i = 0; i < size; i++) {
+           if (i < win->mpid.max_ctrlsends)
+               index=i;
+           else {
+               index = i & nMask;
+               if (!lockQ[index].done) {
+                   MPID_PROGRESS_WAIT_WHILE(lockQ[index].done == 0);
+               }
+           }
+           lockQ[index].done=0;
+           lockQ[index].peer=i;
+           lockQ[index].win=win;
+           lockQ[index].lock_type=MPI_LOCK_SHARED;
+           MPIDI_Context_post(MPIDI_Context[0], &lockQ[index].work, MPIDI_WinLockAllReq_post, &lockQ[index]);
+      }
+    }
     /* wait for the lock is granted for all tasks in the window */
    MPID_PROGRESS_WAIT_WHILE(size != slock->remote.allLocked);
 
@@ -123,8 +152,9 @@ int
 MPID_Win_unlock_all(MPID_Win *win)
 {
   int mpi_errno = MPI_SUCCESS;
-  int i;
+  int i,size;
   MPIDI_WinLock_info *lockQ;
+  int  nMask,index;
   struct MPIDI_Win_sync* sync;
   static char FCNAME[] = "MPID_Win_unlock_all";
 
@@ -138,17 +168,32 @@ MPID_Win_unlock_all(MPID_Win *win)
   sync->total    = 0;
   sync->started  = 0;
   sync->complete = 0;
-  for (i = 0; i < MPIR_Comm_size(win->comm_ptr); i++) {
-       win->mpid.origin[i].nStarted=0;
-       win->mpid.origin[i].nCompleted=0;
-  }
   MPID_assert(win->mpid.work.msgQ != NULL);
   lockQ = (MPIDI_WinLock_info *) win->mpid.work.msgQ;
-  for (i = 0; i < MPIR_Comm_size(win->comm_ptr); i++) {
-       lockQ[i].done=0;
-       lockQ[i].peer=i;
-       lockQ[i].win=win;
-       MPIDI_Context_post(MPIDI_Context[0], &lockQ[i].work, MPIDI_WinUnlockAll_post, &lockQ[i]);
+  size = MPIR_Comm_size(win->comm_ptr);
+  nMask = (win->mpid.max_ctrlsends - 1);
+  if (size < win->mpid.max_ctrlsends) {
+      for (i = 0; i < size; i++) {
+           lockQ[i].done=0;
+           lockQ[i].peer=i;
+           lockQ[i].win=win;
+           MPIDI_Context_post(MPIDI_Context[0], &lockQ[i].work, MPIDI_WinUnlockAllReq_post, &lockQ[i]);
+      }
+   } else {
+      for (i = 0; i < size; i++) {
+           if (i < win->mpid.max_ctrlsends)
+               index=i;
+           else {
+               index = (i & nMask);
+               if (!lockQ[index].done) {
+                  MPID_PROGRESS_WAIT_WHILE(lockQ[index].done == 0);
+               }
+           }
+           lockQ[index].done=0;
+           lockQ[index].peer=i;
+           lockQ[index].win=win;
+           MPIDI_Context_post(MPIDI_Context[0], &lockQ[index].work, MPIDI_WinUnlockAllReq_post, &lockQ[index]);
+      }
   }
   
   MPID_PROGRESS_WAIT_WHILE(sync->lock.remote.allLocked);

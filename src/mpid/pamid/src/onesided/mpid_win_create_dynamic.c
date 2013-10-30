@@ -57,7 +57,7 @@ MPID_Win_create_dynamic( MPID_Info  * info,
   winfo = &win->mpid.info[rank];
   winfo->win = win;
 
-  rc= MPIDI_Win_allgather(MPI_BOTTOM,0,win_ptr);
+  rc= MPIDI_Win_allgather(0,win_ptr);
   if (rc != MPI_SUCCESS)
       return rc;
 

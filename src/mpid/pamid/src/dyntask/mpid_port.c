@@ -98,6 +98,7 @@ int MPID_Comm_accept(const char * port_name, MPID_Info * info, int root,
 		     MPID_Comm * comm, MPID_Comm ** newcomm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
+     static char FCNAME[] = "MPID_Comm_accept";
 
     if(mpidi_dynamic_tasking == 0) {
 	fprintf(stderr, "Dynamic tasking API is called on non-dynamic jobs\n");
@@ -126,6 +127,7 @@ int MPID_Comm_connect(const char * port_name, MPID_Info * info, int root,
 		      MPID_Comm * comm, MPID_Comm ** newcomm_ptr)
 {
     int mpi_errno=MPI_SUCCESS;
+     static char FCNAME[] = "MPID_Comm_connect";
 
     if(mpidi_dynamic_tasking == 0) {
 	fprintf(stderr, "Dynamic tasking API is called on non-dynamic jobs\n");

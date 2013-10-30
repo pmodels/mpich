@@ -274,13 +274,11 @@ MPID_Put(void         *origin_addr,
       return MPI_SUCCESS;
     }
 
-  win->mpid.origin[target_rank].nStarted++;
 
   /* If the get is a local operation, do it here */
   if (target_rank == win->comm_ptr->rank)
     {
       size_t offset = req->offset;
-      win->mpid.origin[target_rank].nCompleted++;
       if(req->req_handle)
         MPID_cc_set(req->req_handle->cc_ptr, 0);
       else

@@ -20,16 +20,34 @@
  * \brief ???
  */
 #include "mpidi_onesided.h"
+#include <sys/shm.h>
+#include <sys/ipc.h>
+#include <sys/stat.h>
+
 
 int MPIDI_SHM_Win_free(MPID_Win **win_ptr)
 {
+  static char FCNAME[] = "MPID_SHM_Win_free";
+  int    rc;
   int mpi_errno = MPI_SUCCESS;
+
     /* Free shared memory region */
     /* free shm_base_addrs that's only used for shared memory windows */
-    if ((*win_ptr)->mpid.shm->allocated)
-        mpi_errno = shmdt((*win_ptr)->base);
+    if ((*win_ptr)->mpid.shm->allocated) {
+        OPA_fetch_and_add_int((OPA_int_t *) (*win_ptr)->mpid.shm->shm_count,-1);
+        while(*(*win_ptr)->mpid.shm->shm_count) MPIDI_QUICKSLEEP;
+        if ((*win_ptr)->comm_ptr->rank == 0) {
+            MPIDI_SHM_MUTEX_DESTROY(*win_ptr);
+        }
+       mpi_errno = shmdt((*win_ptr)->mpid.shm->base_addr);
+       if ((*win_ptr)->comm_ptr->rank == 0) {
+            rc=shmctl((*win_ptr)->mpid.shm->shm_id,IPC_RMID,NULL);
+            MPIU_ERR_CHKANDJUMP((rc == -1), errno,MPI_ERR_RMA_SHARED, "**shmctl");
+        }
+    }
     MPIU_Free((*win_ptr)->mpid.shm);
     (*win_ptr)->mpid.shm = NULL;
+    fn_fail:
     return mpi_errno;
 }
 
@@ -62,9 +80,11 @@ MPID_Win_free(MPID_Win **win_ptr)
 
   mpi_errno = MPIR_Barrier_impl(win->comm_ptr, &errflag);
   MPIU_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**mpi_bcast");
- 
-  if (win->create_flavor == MPI_WIN_FLAVOR_SHARED)   
+
+  if (win->create_flavor == MPI_WIN_FLAVOR_SHARED)
        mpi_errno=MPIDI_SHM_Win_free(win_ptr);
+
+
 
   struct MPIDI_Win_info *winfo = &win->mpid.info[rank];
 #ifdef USE_PAMI_RDMA
@@ -82,12 +102,10 @@ MPID_Win_free(MPID_Win **win_ptr)
       MPID_assert(rc == PAMI_SUCCESS);
     }
 #endif
+
   MPIU_Free(win->mpid.info);
-  MPIU_Free(win->mpid.origin);
   if (win->mpid.work.msgQ) 
       MPIU_Free(win->mpid.work.msgQ);
-  if (win->create_flavor == MPI_WIN_FLAVOR_SHARED) 
-      MPIU_Free(win->base);
 
   MPIR_Comm_release(win->comm_ptr, 0);
 

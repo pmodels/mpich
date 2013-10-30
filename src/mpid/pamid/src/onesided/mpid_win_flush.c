@@ -52,12 +52,11 @@ MPID_Win_flush(int       rank,
       MPIU_ERR_SETANDSTMT(mpi_errno, MPI_ERR_RMA_SYNC,
                         return mpi_errno, "**rmasync");
      }
-  MPID_PROGRESS_WAIT_WHILE(win->mpid.origin[rank].nStarted != win->mpid.origin[rank].nCompleted);
-                                        
   sync = &win->mpid.sync;
-  win->mpid.origin[rank].nStarted=0;
-  win->mpid.origin[rank].nCompleted=0;
-
+  MPID_PROGRESS_WAIT_WHILE(sync->total != sync->complete);
+  sync->total    = 0;
+  sync->started  = 0;
+  sync->complete = 0;
 
   return mpi_errno;
 }
@@ -80,7 +79,6 @@ int
 MPID_Win_flush_all(MPID_Win *win)
 {
   int mpi_errno = MPI_SUCCESS;
-  int nTasks,i;
   struct MPIDI_Win_sync* sync;
   static char FCNAME[] = "MPID_Win_flush_all";
 
@@ -91,15 +89,11 @@ MPID_Win_flush_all(MPID_Win *win)
                         return mpi_errno, "**rmasync");
      }
 
-   sync = &win->mpid.sync;
-   MPID_PROGRESS_WAIT_WHILE(sync->total != sync->complete);
-   sync->total    = 0;
-   sync->started  = 0;
-   sync->complete = 0;
-   for (i = 0; i < MPIR_Comm_size(win->comm_ptr); i++) {
-        win->mpid.origin[i].nStarted=0;
-        win->mpid.origin[i].nCompleted=0;
-   }
+  sync = &win->mpid.sync;
+  MPID_PROGRESS_WAIT_WHILE(sync->total != sync->complete);
+  sync->total    = 0;
+  sync->started  = 0;
+  sync->complete = 0;
   return mpi_errno;
 
 }
@@ -114,6 +108,10 @@ MPID_Win_flush_all(MPID_Win *win)
  * the cng process to the target rank on the given window. The user may
  * reuse any buffers after this routine returns.
  *
+ * It has been determined that the routine uses only counters for each window
+ * and not for each rank because the overhead of tracking each rank could be great
+ * if a window group contains a large number of ranks. 
+ *
  * \param[in] rank      rank of target window
  * \param[in] win       window object
  * \return MPI_SUCCESS, MPI_ERR_OTHER
@@ -123,6 +121,7 @@ int
 MPID_Win_flush_local(int rank, MPID_Win *win)
 {
   int mpi_errno = MPI_SUCCESS;
+  struct MPIDI_Win_sync* sync;
   static char FCNAME[] = "MPID_Win_flush_local";
 
   if((win->mpid.sync.origin_epoch_type != MPID_EPOTYPE_LOCK) &&
@@ -131,9 +130,11 @@ MPID_Win_flush_local(int rank, MPID_Win *win)
       MPIU_ERR_SETANDSTMT(mpi_errno, MPI_ERR_RMA_SYNC,
                         return mpi_errno, "**rmasync");
      }
-   MPID_PROGRESS_WAIT_WHILE(win->mpid.origin[rank].nStarted != win->mpid.origin[rank].nCompleted);
-   win->mpid.origin[rank].nStarted=0;
-   win->mpid.origin[rank].nCompleted=0;
+   sync = &win->mpid.sync;
+   MPID_PROGRESS_WAIT_WHILE(sync->total != sync->complete);
+   sync->total    = 0;
+   sync->started  = 0;
+   sync->complete = 0;
 
   return mpi_errno;
 }
@@ -155,8 +156,8 @@ int
 MPID_Win_flush_local_all(MPID_Win *win)
 {
   int mpi_errno = MPI_SUCCESS;
+  struct MPIDI_Win_sync* sync;
   static char FCNAME[] = "MPID_Win_flush";
-  int size,i;
 
   if((win->mpid.sync.origin_epoch_type != MPID_EPOTYPE_LOCK) &&
      (win->mpid.sync.origin_epoch_type != MPID_EPOTYPE_LOCK_ALL))
@@ -164,14 +165,11 @@ MPID_Win_flush_local_all(MPID_Win *win)
       MPIU_ERR_SETANDSTMT(mpi_errno, MPI_ERR_RMA_SYNC,
                         return mpi_errno, "**rmasync");
      }
-  size = MPIR_Comm_size(win->comm_ptr);
-  for (i=0; i < size; i++) {
-      MPID_PROGRESS_WAIT_WHILE(win->mpid.origin[i].nStarted != win->mpid.origin[i].nCompleted);
-  }
-  for (i=0; i < size; i++) {
-     win->mpid.origin[i].nStarted=0;
-     win->mpid.origin[i].nCompleted=0;
-  }
+  sync = &win->mpid.sync;
+  MPID_PROGRESS_WAIT_WHILE(sync->total != sync->complete);
+  sync->total    = 0;
+  sync->started  = 0;
+  sync->complete = 0;
 
   return mpi_errno;
 }

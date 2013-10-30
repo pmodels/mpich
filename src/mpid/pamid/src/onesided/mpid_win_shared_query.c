@@ -40,8 +40,10 @@ MPID_Win_shared_query(MPID_Win *win, int rank, MPI_Aint *size,
                            int *disp_unit, void *base_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
-
-    *(void**) base_ptr = (void *) win->base;
+    static char FCNAME[] = "MPID_Win_shared_query";
+    MPIU_ERR_CHKANDSTMT((win->create_flavor != MPI_WIN_FLAVOR_SHARED), mpi_errno,
+                         MPI_ERR_RMA_FLAVOR, return mpi_errno, "**rmaflavor");
+    *((void **) base_ptr) = (void *) win->base;
     *size             = win->size;
     *disp_unit        = win->disp_unit;
 

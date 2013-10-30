@@ -91,8 +91,10 @@ MPIDI_WinLockReq_proc(pami_context_t              context,
   struct MPIDI_Win_lock* lock = MPIU_Calloc0(1, struct MPIDI_Win_lock);
   if (info->type == MPIDI_WIN_MSGTYPE_LOCKREQ)
        lock->mtype = MPIDI_REQUEST_LOCK;
-  else if (info->type == MPIDI_WIN_MSGTYPE_LOCKALLREQ)
+  else if (info->type == MPIDI_WIN_MSGTYPE_LOCKALLREQ) {
        lock->mtype = MPIDI_REQUEST_LOCKALL;
+       lock->flagAddr = (void *) info->flagAddr;
+  }
   lock->rank = info->rank;
   lock->type = info->data.lock.type;
 
@@ -206,9 +208,10 @@ MPID_Win_unlock(int       rank,
    }
   if (rank == MPI_PROC_NULL) goto fn_exit;
   struct MPIDI_Win_sync* sync = &win->mpid.sync;
-  MPID_PROGRESS_WAIT_DO_WHILE(win->mpid.origin[rank].nStarted != win->mpid.origin[rank].nCompleted);
-  win->mpid.origin[rank].nCompleted=0;
-  win->mpid.origin[rank].nStarted=0;
+  MPID_PROGRESS_WAIT_DO_WHILE(sync->total != sync->complete);
+  sync->total    = 0;
+  sync->started  = 0;
+  sync->complete = 0;
 
   MPIDI_WinLock_info info = {
   .done = 0,

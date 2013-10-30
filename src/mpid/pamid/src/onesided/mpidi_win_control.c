@@ -29,6 +29,7 @@ MPIDI_WinCtrlSend(pami_context_t       context,
                   MPID_Win            *win)
 {
   pami_task_t  taskid;
+  MPIDI_WinLock_info *winLock;
   control->win = win->mpid.info[rank].win;
   control->rank = win->comm_ptr->rank;
   taskid=MPID_VCR_GET_LPID(win->comm_ptr->vcr,rank);
@@ -71,6 +72,10 @@ MPIDI_WinCtrlSend(pami_context_t       context,
       },
     };
     rc = PAMI_Send_immediate(context, &params);
+  }
+  if ((control->type == MPIDI_WIN_MSGTYPE_LOCKALLREQ) || (control->type == MPIDI_WIN_MSGTYPE_UNLOCKALL)) {
+      winLock = (MPIDI_WinLock_info *) control->flagAddr;
+      winLock->done = 1;
   }
   MPID_assert(rc == PAMI_SUCCESS);
 

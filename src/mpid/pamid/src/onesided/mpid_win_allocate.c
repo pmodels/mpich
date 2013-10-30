@@ -86,7 +86,7 @@ MPID_Win_allocate(MPI_Aint     size,
   winfo->win = win;
   winfo->disp_unit = disp_unit;
 
-  rc= MPIDI_Win_allgather(baseP,size,win_ptr);
+  rc= MPIDI_Win_allgather(size,win_ptr);
   if (rc != MPI_SUCCESS)
       return rc;
   *(void**) base_ptr = (void *) win->base;

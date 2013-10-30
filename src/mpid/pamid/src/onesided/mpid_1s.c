@@ -56,7 +56,6 @@ MPIDI_Win_DoneCB(pami_context_t  context,
 
     if (req->origin.completed == req->target.dt.num_contig)
     {
-      req->win->mpid.origin[target_rank].nCompleted++;
       if(req->req_handle)
           MPID_cc_set(req->req_handle->cc_ptr, 0);
 

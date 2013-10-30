@@ -293,7 +293,6 @@ int MPID_Fetch_and_op(const void *origin_addr, void *result_addr,
         int disp_unit;
         int len, one;
 
-#ifdef PENDING_SHM_WIN
         if (win->create_flavor == MPI_WIN_FLAVOR_SHARED) {
             MPIDI_SHM_MUTEX_LOCK(win);
             shm_locked = 1;
@@ -302,12 +301,9 @@ int MPID_Fetch_and_op(const void *origin_addr, void *result_addr,
 
         }
         else {
-#endif
             base = win->base;
             disp_unit = win->disp_unit;
-#ifdef PENDING_SHM_WIN
         }
-#endif
 
         dest_addr = (char *) base + disp_unit * target_disp;
 
@@ -319,12 +315,10 @@ int MPID_Fetch_and_op(const void *origin_addr, void *result_addr,
 
         (*uop)((void *) origin_addr, dest_addr, &one, &datatype);
 
-#ifdef PENDING_SHM_WIN
         if (shm_locked) {
             MPIDI_SHM_MUTEX_UNLOCK(win);
             shm_locked = 0;
         }
-#endif
 
         MPIU_Free(req);
 

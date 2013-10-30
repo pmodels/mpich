@@ -112,7 +112,6 @@ int MPID_Compare_and_swap(const void *origin_addr, const void *compare_addr,
         int disp_unit;
         int len;
 
-#ifdef PENDING_SHM_WIN
         if (win->create_flavor == MPI_WIN_FLAVOR_SHARED) {
             MPIDI_SHM_MUTEX_LOCK(win);
             shm_locked = 1;
@@ -121,12 +120,9 @@ int MPID_Compare_and_swap(const void *origin_addr, const void *compare_addr,
             disp_unit = win->disp_unit;
         }
         else {
-#endif
             base = win->base;
             disp_unit = win->disp_unit;
-#ifdef PENDING_SHM_WIN
         }
-#endif
 
         dest_addr = (char *) base + disp_unit * target_disp;
 
@@ -136,12 +132,10 @@ int MPID_Compare_and_swap(const void *origin_addr, const void *compare_addr,
         if (MPIR_Compare_equal(compare_addr, dest_addr, datatype))
             MPIU_Memcpy(dest_addr, origin_addr, len); 
 
-#ifdef PENDING_SHM_WIN
         if (shm_locked) {
             MPIDI_SHM_MUTEX_UNLOCK(win);
             shm_locked = 0;
         }
-#endif
         MPIU_Free(req);
     } 
   else {

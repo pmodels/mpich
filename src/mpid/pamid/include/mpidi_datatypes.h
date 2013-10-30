@@ -388,6 +388,7 @@ struct MPIDI_Win_lock
   unsigned               rank;
   MPIDI_LOCK_TYPE_t      mtype;    /* MPIDI_REQUEST_LOCK or MPIDI_REQUEST_LOCKALL    */
   int                    type;
+  void                   *flagAddr;
 };
 struct MPIDI_Win_queue
 {
@@ -415,12 +416,6 @@ typedef struct MPIDI_Win_info_args {
     int alloc_shared_noncontig;
 } MPIDI_Win_info_args;
 
-
-typedef  struct {
-       int nStarted;
-       int nCompleted;
-} RMA_nOps_t;
-
 typedef struct workQ_t {
    void *msgQ;
    int  count;
@@ -446,13 +441,18 @@ typedef struct MPIDI_Win_info
   uint32_t           memregion_used;
 } MPIDI_Win_info;
 
+typedef pthread_mutex_t MPIDI_SHM_MUTEX;
+
 typedef struct MPIDI_Win_shm_t
 {
     int allocated;                  /* flag: TRUE iff this window has a shared memory
                                                  region associated with it */
     void *base_addr;                /* base address of shared memory region */
     MPI_Aint segment_len;           /* size of shared memory region         */
-    uint32_t  shm_key;              /* shared memory key                    */
+    uint32_t  shm_id;                /* shared memory id                    */
+    int       *shm_count;
+    MPIDI_SHM_MUTEX *mutex_lock;    /* shared memory windows -- lock for    */
+                                     /*     accumulate/atomic operations     */
 } MPIDI_Win_shm_t;
 
 /**
@@ -465,7 +465,7 @@ struct MPIDI_Win
   void             ** shm_base_addrs; /* base address shared by all process in comm      */
   MPIDI_Win_shm_t  *shm;             /* shared memory info                             */
   workQ_t work;
-  RMA_nOps_t *origin;
+  int   max_ctrlsends;
   struct MPIDI_Win_sync
   {
 #if 0

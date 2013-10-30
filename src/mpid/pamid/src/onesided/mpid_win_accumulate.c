@@ -251,7 +251,6 @@ MPID_Accumulate(void         *origin_addr,
         MPIU_Free(req);
       return MPI_SUCCESS;
     }
-  win->mpid.origin[target_rank].nStarted++;
 
   req->target.rank = target_rank;
 

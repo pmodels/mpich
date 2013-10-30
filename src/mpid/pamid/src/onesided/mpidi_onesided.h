@@ -20,6 +20,7 @@
  * \brief ???
  */
 #include <mpidimpl.h>
+#include "opa_primitives.h"
 
 #ifndef __src_onesided_mpidi_onesided_h__
 #define __src_onesided_mpidi_onesided_h__
@@ -32,6 +33,54 @@ pami_send_t   zero_send_parms;
 pami_send_immediate_t   zero_send_immediate_parms;
 pami_recv_t   zero_recv_parms;
 pami_rmw_t   zero_rmw_parms;
+
+#define MPIDI_QUICKSLEEP     usleep(1);
+#define MAX_NUM_CTRLSEND  1024          /* no more than 1024 outstanding control sends */
+
+
+#define MPIDI_SHM_MUTEX_LOCK(win)                                                       \
+    do {                                                                                \
+        pthread_mutex_t *shm_mutex = win->mpid.shm->mutex_lock;                         \
+        int rval = pthread_mutex_lock(shm_mutex);                                       \
+        MPIU_ERR_CHKANDJUMP1(rval, mpi_errno, MPI_ERR_OTHER, "**pthread_lock",          \
+                             "**pthread_lock %s", strerror(rval));                      \
+    } while (0)
+
+#define MPIDI_SHM_MUTEX_UNLOCK(win)                                                     \
+    do {                                                                                \
+        pthread_mutex_t *shm_mutex = win->mpid.shm->mutex_lock;                         \
+        int rval = pthread_mutex_unlock(shm_mutex);                                     \
+        MPIU_ERR_CHKANDJUMP1(rval, mpi_errno, MPI_ERR_OTHER, "**pthread_unlock",        \
+                             "**pthread_unlock %s", strerror(rval));                    \
+    } while (0)
+
+#define MPIDI_SHM_MUTEX_INIT(win)                                                       \
+    do {                                                                                \
+        int rval=0;                                                                     \
+        pthread_mutexattr_t attr;                                                       \
+        pthread_mutex_t *shm_mutex = win->mpid.shm->mutex_lock;                         \
+                                                                                        \
+        rval = pthread_mutexattr_init(&attr);                                           \
+        MPIU_ERR_CHKANDJUMP1(rval, mpi_errno, MPI_ERR_OTHER, "**pthread_mutex",         \
+                             "**pthread_mutex %s", strerror(rval));                     \
+        rval = pthread_mutexattr_setpshared(&attr, PTHREAD_PROCESS_SHARED);             \
+        MPIU_ERR_CHKANDJUMP1(rval, mpi_errno, MPI_ERR_OTHER, "**pthread_mutex",         \
+                             "**pthread_mutex %s", strerror(rval));                     \
+        rval = pthread_mutex_init(shm_mutex, &attr);                                    \
+        MPIU_ERR_CHKANDJUMP1(rval, mpi_errno, MPI_ERR_OTHER, "**pthread_mutex",         \
+                             "**pthread_mutex %s", strerror(rval));                     \
+        rval = pthread_mutexattr_destroy(&attr);                                        \
+        MPIU_ERR_CHKANDJUMP1(rval, mpi_errno, MPI_ERR_OTHER, "**pthread_mutex",         \
+                             "**pthread_mutex %s", strerror(rval));                     \
+    } while (0);
+
+#define MPIDI_SHM_MUTEX_DESTROY(win)                                                    \
+    do {                                                                                \
+        pthread_mutex_t *shm_mutex = (win)->mpid.shm->mutex_lock;                       \
+        int rval = pthread_mutex_destroy(shm_mutex);                                    \
+        MPIU_ERR_CHKANDJUMP1(rval, mpi_errno, MPI_ERR_OTHER, "**pthread_mutex",         \
+                             "**pthread_mutex %s", strerror(rval));                     \
+    } while (0);
 
 /**
  * \brief One-sided Message Types
@@ -75,6 +124,7 @@ typedef struct
   MPIDI_Win_msgtype_t type;
   MPID_Win *win;
   int      rank;          /* MPI rank */
+  void     *flagAddr;
   union
   {
     struct
@@ -104,6 +154,7 @@ typedef struct MPIDI_WinLock_info
   unsigned            peer;
   int                 lock_type;
   struct MPID_Win   * win;
+  void                *flagAddr;
   volatile unsigned   done;
   pami_work_t         work;
 } MPIDI_WinLock_info;
@@ -280,8 +331,7 @@ MPIDI_Win_init( MPI_Aint length,
                 int create_flavor,
                 int model);
 int
-MPIDI_Win_allgather(void *base,
-                    MPI_Aint size,
+MPIDI_Win_allgather(MPI_Aint size,
                     MPID_Win **win_ptr);
 
 void

@@ -78,7 +78,6 @@ MPIDI_Win_init( MPI_Aint length,
       MPID_assert(mpi_errno == 0);
   }
   MPID_assert(mpi_errno == 0);
-  win->mpid.origin = MPIU_Calloc0(size, RMA_nOps_t);
 
 
     /* Initialize the info (hint) flags per window */
@@ -106,7 +105,7 @@ MPIDI_Win_init( MPI_Aint length,
 /*                                                                         */
 /***************************************************************************/
 int
-MPIDI_Win_allgather(void *base, MPI_Aint size, MPID_Win **win_ptr )
+MPIDI_Win_allgather( MPI_Aint size, MPID_Win **win_ptr )
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_Win *win;
@@ -208,7 +207,7 @@ MPID_Win_create(void       * base,
   winfo->win = win;
   winfo->disp_unit = disp_unit;
 
-  rc= MPIDI_Win_allgather(base,size,win_ptr);
+  rc= MPIDI_Win_allgather(size,win_ptr);
   if (rc != MPI_SUCCESS)
       return rc;
 
