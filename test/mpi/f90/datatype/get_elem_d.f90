@@ -17,7 +17,7 @@ program get_elem_d
   integer, parameter :: nb=2
   integer :: comm,rank,size,dest,ierror,errs=0
   integer :: status(MPI_STATUS_SIZE)
-  integer :: i,ii,count,ka,j,jj,k,kj,krat,tag=100
+  integer :: i,ii,count,ka,j,jj,k,kj
   integer :: blklen(nb)=(/2,2/)
   integer :: types(nb)=(/MPI_DOUBLE_PRECISION,MPI_INTEGER/)
   integer(kind=MPI_ADDRESS_KIND) :: disp(nb)
@@ -34,7 +34,6 @@ program get_elem_d
   call MPI_Sizeof (j, kj, ierror)
   call MPI_Sizeof (a, ka, ierror)
   ntlen=2*ka+2*kj
-  krat=ntlen/kj
   disp=(/0,2*ka/)
 
   !  calculate answers for expected i values for Get_elements with derived type
