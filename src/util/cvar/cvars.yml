@@ -61,7 +61,7 @@ cvars:
       default     : 256
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_LOCAL
+      scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
         the short message algorithm will be used if the per-destination
         message size (sendcount*size(sendtype)) is <= this value
@@ -72,7 +72,7 @@ cvars:
       default     : 32768
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_LOCAL
+      scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
         the medium message algorithm will be used if the per-destination
         message size (sendcount*size(sendtype)) is <= this value and
@@ -84,7 +84,7 @@ cvars:
       default     : 32
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_LOCAL
+      scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
         max no. of irecvs/isends posted at a time in some alltoall
         algorithms. Setting it to 0 causes all irecvs/isends to be
@@ -96,7 +96,7 @@ cvars:
       default     : 524288
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_LOCAL
+      scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
         the long message algorithm will be used if the operation is commutative
         and the send buffer size is >= this value (in bytes)
@@ -107,7 +107,7 @@ cvars:
       default     : 8
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_LOCAL
+      scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
         the minimum number of processes in a communicator to use a non-binomial
         broadcast algorithm
@@ -118,7 +118,7 @@ cvars:
       default     : 12288
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_LOCAL
+      scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
         the short message algorithm will be used if the send buffer size is <
         this value (in bytes)
@@ -129,7 +129,7 @@ cvars:
       default     : 524288
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_LOCAL
+      scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
         the long message algorithm will be used if the send buffer size is >=
         this value (in bytes)
@@ -140,7 +140,7 @@ cvars:
       default     : 81920
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_LOCAL
+      scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
         For MPI_Allgather and MPI_Allgatherv, the short message algorithm will
         be used if the send buffer size is < this value (in bytes).
@@ -151,7 +151,7 @@ cvars:
       default     : 524288
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_LOCAL
+      scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
         For MPI_Allgather and MPI_Allgatherv, the long message algorithm will be
         used if the send buffer size is >= this value (in bytes)
@@ -162,7 +162,7 @@ cvars:
       default     : 2048
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_LOCAL
+      scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
         the short message algorithm will be used if the send buffer size is <=
         this value (in bytes)
@@ -173,7 +173,7 @@ cvars:
       default     : 2048
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_LOCAL
+      scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
         the short message algorithm will be used if the send buffer size is <=
         this value (in bytes)
@@ -184,7 +184,7 @@ cvars:
       default     : 1024
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_LOCAL
+      scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
         use a temporary buffer for intracommunicator MPI_Gather if the send
         buffer size is < this value (in bytes)
@@ -195,7 +195,7 @@ cvars:
       default     : 2048
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_LOCAL
+      scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
         use the short message algorithm for intercommunicator MPI_Gather if the
         send buffer size is < this value (in bytes)
@@ -206,7 +206,7 @@ cvars:
       default     : 32
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_LOCAL
+      scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
         Use Ssend (synchronous send) for intercommunicator MPI_Gatherv if the
         "group B" size is >= this value.  Specifying "-1" always avoids using
@@ -219,7 +219,7 @@ cvars:
       default     : 2048
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_LOCAL
+      scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
         use the short message algorithm for intercommunicator MPI_Scatter if the
         send buffer size is < this value (in bytes)
@@ -230,7 +230,7 @@ cvars:
       default     : 32768
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_LOCAL
+      scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
         The smallest message size that will be used for the pipelined, large-message,
         ring algorithm in the MPI_Allgatherv implementation.
@@ -241,7 +241,7 @@ cvars:
       default     : true
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_LOCAL
+      scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
         Enable SMP aware collective communication.
 
@@ -251,7 +251,7 @@ cvars:
       default     : true
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_LOCAL
+      scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
         Enable SMP aware barrier.
 
@@ -261,7 +261,7 @@ cvars:
       default     : true
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_LOCAL
+      scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
         Enable SMP aware broadcast.
 
@@ -271,7 +271,7 @@ cvars:
       default     : 0
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_LOCAL
+      scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
         Maximum message size for which SMP-aware broadcast is used.  A
         value of '0' uses SMP-aware broadcast for all message sizes.
@@ -282,7 +282,7 @@ cvars:
       default     : true
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_LOCAL
+      scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
         Enable SMP aware reduce.
 
@@ -292,7 +292,7 @@ cvars:
       default     : 0
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_LOCAL
+      scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
         Maximum message size for which SMP-aware reduce is used.  A
         value of '0' uses SMP-aware reduce for all message sizes.
@@ -303,7 +303,7 @@ cvars:
       default     : true
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_LOCAL
+      scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
         Enable SMP aware allreduce.
 
@@ -313,7 +313,7 @@ cvars:
       default     : 0
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_LOCAL
+      scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
         Maximum message size for which SMP-aware allreduce is used.  A
         value of '0' uses SMP-aware allreduce for all message sizes.
@@ -326,7 +326,7 @@ cvars:
       default     : true
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_LOCAL
+      scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
         Use qsort(3) in the implementation of MPI_Comm_split instead of bubble sort.
 
@@ -338,7 +338,7 @@ cvars:
       default     : false
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_LOCAL
+      scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
         If true, causes processes to wait in MPI_Init and
         MPI_Initthread for a debugger to be attached.  Once the
@@ -352,7 +352,7 @@ cvars:
       default     : 64
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_LOCAL
+      scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
         Size of the "MPIR" debugger interface proctable (process table).
 
@@ -362,7 +362,7 @@ cvars:
       default     : true
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_LOCAL
+      scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
         If true, dump the proctable entries at MPIR_WaitForDebugger-time.
         (currently compile-time disabled by "#if 0")
@@ -375,7 +375,7 @@ cvars:
       default     : true
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_LOCAL
+      scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
         DEPRECATED! Will be removed in MPICH-3.2
         Collectives called on a communicator with a failed process
@@ -392,7 +392,7 @@ cvars:
       default     : false
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_LOCAL
+      scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
         If true, MPI will call MPI_Abort at MPI_Finalize if any MPI object
         handles have been leaked.  For example, if MPI_Comm_dup is called
@@ -410,7 +410,7 @@ cvars:
       default     : 2
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_LOCAL
+      scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
         The MPIR_CVAR_CTXID_EAGER_SIZE environment variable allows you to
         specify how many words in the context ID mask will be set aside
@@ -423,7 +423,7 @@ cvars:
       default     : false
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_LOCAL
+      scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
         If set to true, MPICH will initiate an additional thread to
         make asynchronous progress on all communication operations
@@ -444,7 +444,7 @@ cvars:
       default     : "MPI_THREAD_SINGLE"
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_LOCAL
+      scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
         Sets the default thread level to use when using MPI_INIT.
 
@@ -455,7 +455,7 @@ cvars:
       type        : boolean
       default     : true
       class       : device
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      verbosity   : MPI_T_VERBOSITY_MPIDEV_DETAIL
       scope       : MPI_T_SCOPE_LOCAL
       description : >-
         If true, list any memory that was allocated by MPICH and that
@@ -467,7 +467,7 @@ cvars:
       default     : true
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_LOCAL
+      scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
         If true, perform checks for errors, typically to verify valid inputs
         to MPI routines.  Only effective when MPICH is configured with
@@ -479,7 +479,7 @@ cvars:
       default     : true
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_LOCAL
+      scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
         If true, print an error stack trace at error handling time.
 
@@ -489,7 +489,7 @@ cvars:
       default     : 0
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_LOCAL
+      scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
         If >0, truncate error stack output lines this many characters
         wide.  If 0, do not truncate, and if <0 use a sensible default.
@@ -502,7 +502,7 @@ cvars:
       default     : true
       class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_LOCAL
+      scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
         Use the immediate accumulate optimization
 
@@ -512,7 +512,7 @@ cvars:
       default     : 4000
       class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_LOCAL
+      scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
         Threshold at which the RMA implementation attempts to complete requests
         while completing RMA operations and while using the lazy synchonization
@@ -525,7 +525,7 @@ cvars:
       default     : 128
       class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_LOCAL
+      scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
         Threshold for the number of new requests since the last attempt to
         complete pending requests.  Higher values can increase performance,
@@ -538,7 +538,7 @@ cvars:
       default     : false
       class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_LOCAL
+      scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
         Issue a request for the passive target RMA lock immediately.  Default
         behavior is to defer the lock request until the call to MPI_Win_unlock.
@@ -549,7 +549,7 @@ cvars:
       default     : true
       class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_LOCAL
+      scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
         Enable/disable an optimization that merges lock, op, and unlock
         messages, for single-operation passive target epochs.
@@ -562,7 +562,7 @@ cvars:
       default     : false
       class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_LOCAL
+      scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
         If true, force all processes to operate as though all processes
         are located on another node.  For example, this disables shared
@@ -576,7 +576,7 @@ cvars:
       default     : false
       class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_LOCAL
+      scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
         If true, odd procs on a node are seen as local to each other, and even
         procs on a node are seen as local to each other.  Used for debugging on
@@ -590,7 +590,7 @@ cvars:
       defaultliteral : NULL
       class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_LOCAL
+      scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
         If non-NULL, this cvar specifies the IP address that
         other processes should use when connecting to this process.
@@ -604,7 +604,7 @@ cvars:
       default     : 131072
       class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_LOCAL
+      scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
         This cvar controls the message size at which CH3 switches
         from eager to rendezvous mode.
@@ -618,7 +618,7 @@ cvars:
       default     : "0:0"
       class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_LOCAL
+      scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
         The MPIR_CVAR_CH3_PORT_RANGE environment variable allows you to
         specify the range of TCP ports to be used by the process
@@ -633,7 +633,7 @@ cvars:
       default     : 1000
       class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_LOCAL
+      scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
         When MPICH is in a busy waiting loop, it will periodically
         call a function to yield the processor.  This cvar sets
@@ -646,7 +646,7 @@ cvars:
       default     : 2097152
       class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_LOCAL
+      scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
         Messages larger than this size will use the "dma" (knem)
         intranode LMT implementation, if it is enabled and available.
@@ -657,7 +657,7 @@ cvars:
       default     : ""
       class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_LOCAL
+      scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
         If non-empty, this cvar specifies which network module
         should be used for communication.
@@ -668,7 +668,7 @@ cvars:
       default     : -1
       class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_LOCAL
+      scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
         This cvar controls the message size at which Nemesis
         switches from eager to rendezvous mode for shared memory.
@@ -681,7 +681,7 @@ cvars:
       default     : -2
       class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_LOCAL
+      scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
         This cvar controls the message size at which Nemesis
         switches from eager to rendezvous mode for ready-send
@@ -695,7 +695,7 @@ cvars:
       default     : false
       class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_LOCAL
+      scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
         If true, enables checkpointing support and returns an error if
         checkpointing library cannot be initialized.
@@ -710,7 +710,7 @@ cvars:
       defaultliteral : NULL
       class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_LOCAL
+      scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
         If non-NULL, this cvar specifies which pseudo-ethernet
         interface the tcp netmod should use (e.g., "eth1", "ib0").
@@ -725,7 +725,7 @@ cvars:
       default     : 10
       class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_LOCAL
+      scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
         This cvar controls the number of times to retry the
         gethostbyname() function before giving up.
@@ -738,7 +738,7 @@ cvars:
       default     : true
       class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_LOCAL
+      scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
         If set to false, communication override functionality will be
         disabled for netmods that provide the override feature.
@@ -755,7 +755,7 @@ cvars:
       defaultliteral : NULL
       class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_LOCAL
+      scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
         Sets the directory to use for MPI service publishing in the
         file nameserv implementation.  Allows the user to override
