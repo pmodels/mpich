@@ -106,4 +106,4 @@ mutex_bench_shared 4 mpiversion=3.0
 mutex_bench_shm 4 mpiversion=3.0
 rma-contig 4 mpiversion=3.0 timeLimit=600
 badrma 2 mpiversion=3.0
-nb_test 2 mpiversion=3.0
+nb_test 2 mpiversion=3.0 xfail=ticket1910
