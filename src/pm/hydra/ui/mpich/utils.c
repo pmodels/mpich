@@ -48,7 +48,7 @@ static HYD_status get_current_exec(struct HYD_exec **exec)
 static void help_help_fn(void)
 {
     printf("\n");
-    printf("Usage: ./mpiexec [global opts] [local opts for exec1] [exec1] [exec1 args] : [local opts for exec2] [exec2] [exec2 args] : ...\n\n”);
+    printf("Usage: ./mpiexec [global opts] [local opts for exec1] [exec1] [exec1 args] : [local opts for exec2] [exec2] [exec2 args] : ...\n\n");
 
     printf("Global options (passed to all executables):\n");
 
