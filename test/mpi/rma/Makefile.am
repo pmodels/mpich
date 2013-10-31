@@ -120,7 +120,8 @@ noinst_PROGRAMS =          \
     mutex_bench_shared     \
     mutex_bench_shm        \
     rma-contig             \
-    badrma
+    badrma                 \
+    nb_test
 
 strided_acc_indexed_LDADD       = $(LDADD) -lm
 strided_acc_onelock_LDADD       = $(LDADD) -lm
