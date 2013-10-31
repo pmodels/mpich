@@ -1535,11 +1535,11 @@ AC_OUTPUT(maint/testmerge \
           errors/cxx/errhan/Makefile \
           errors/cxx/io/Makefile \
           errors/f77/Makefile \
-	  errors/f77/errhan/Makefile \
-          errors/f77/errhan/addsize.h \
-	  errors/f77/errhan/iooffset.h \
+          errors/f77/io/Makefile \
+          errors/f77/io/addsize.h \
+          errors/f77/io/iooffset.h \
           errors/f90/Makefile \
-	  errors/f90/errhan/Makefile \
+	  errors/f90/io/Makefile \
 	  ckpoint/Makefile \
 	  ft/Makefile \
           manual/Makefile \
@@ -1554,6 +1554,8 @@ AC_OUTPUT(maint/testmerge \
           threads/testlist \
           errors/testlist \
           errors/cxx/testlist \
+          errors/f77/testlist \
+          errors/f90/testlist \
           impls/testlist \
           impls/Makefile \
           impls/mpich/Makefile \
