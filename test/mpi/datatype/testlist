@@ -50,6 +50,6 @@ hindexed_block_contents 1 mpiversion=3.0
 longdouble 1
 large-count 1 mpiversion=3.0 xfail=ticket1767
 cxx-types 1 mpiversion=3.0
-large_type 1 mpiversion=3.0 xfail=ticket1893
-large_type_sendrec 2 arg=31 mpiversion=3.0 xfail=ticket1893
-large_type_sendrec 2 arg=32 mpiversion=3.0 xfail=ticket1893
+large_type 1 mpiversion=3.0
+large_type_sendrec 2 arg=31 mpiversion=3.0
+large_type_sendrec 2 arg=32 mpiversion=3.0
