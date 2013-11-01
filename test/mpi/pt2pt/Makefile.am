@@ -48,5 +48,6 @@ noinst_PROGRAMS =  \
     waittestnull   \
     sendall        \
     large_message  \
-    mprobe
+    mprobe         \
+    big_count_status
 
