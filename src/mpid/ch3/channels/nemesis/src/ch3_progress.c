@@ -368,7 +368,7 @@ int MPIDI_CH3I_Progress (MPID_Progress_state *progress_state, int is_blocking)
 
             if (cell)
             {
-                char            *cell_buf    = (char *)cell->pkt.mpich.payload;
+                char            *cell_buf    = (char *)cell->pkt.mpich.p.payload;
                 MPIDI_msg_sz_t   payload_len = cell->pkt.mpich.datalen;
                 MPIDI_CH3_Pkt_t *pkt         = (MPIDI_CH3_Pkt_t *)cell_buf;
 

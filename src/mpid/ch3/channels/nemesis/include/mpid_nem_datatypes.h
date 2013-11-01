@@ -144,15 +144,25 @@
 #define MPID_NEM_MPICH_HEAD_LEN sizeof(MPID_nem_pkt_header_t)
 #define MPID_NEM_MPICH_DATA_LEN (MPID_NEM_CELL_PAYLOAD_LEN - MPID_NEM_MPICH_HEAD_LEN)
 
-#include "mpid_nem_pkt_header.h"
+#define MPID_NEM_PKT_HEADER_FIELDS   	    \
+    int source;                             \
+    int dest;                               \
+    MPIR_Pint datalen;                      \
+    unsigned short seqno;                   \
+    unsigned short type; /* currently used only with checkpointing */
+
+typedef struct MPID_nem_pkt_header
+{
+    MPID_NEM_PKT_HEADER_FIELDS;
+} MPID_nem_pkt_header_t;
 
 typedef struct MPID_nem_pkt_mpich
 {
     MPID_NEM_PKT_HEADER_FIELDS;
-#if (MPID_NEM_PKT_HEADER_PADDING > 0)
-    char padding[MPID_NEM_PKT_HEADER_PADDING];
-#endif
-    char payload[MPID_NEM_MPICH_DATA_LEN];
+    union {
+        char payload[MPID_NEM_MPICH_DATA_LEN];
+        double dummy; /* align paylod to double */
+    } p;
 } MPID_nem_pkt_mpich_t;
 
 typedef union

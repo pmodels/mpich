@@ -319,22 +319,6 @@ if test "$enable_nemesis_lock_free_queues" = "yes" ; then
     AC_DEFINE(MPID_NEM_USE_LOCK_FREE_QUEUES, 1, [Define to enable lock-free communication queues])
 fi
 
-# for nemisis header alignment, will need to know how this structure laid out:
-AC_CHECK_SIZEOF(MPID_nem_pkt_header_t, 0, [
-typedef $MPI_PINT MPIR_Pint;
-#include "${master_top_srcdir}/src/mpid/ch3/channels/nemesis/include/mpid_nem_pkt_header.h"])
-
-AC_CHECK_ALIGNOF(MPID_nem_pkt_header_t, [
-typedef $MPI_PINT MPIR_Pint;
-#include "${master_top_srcdir}/src/mpid/ch3/channels/nemesis/include/mpid_nem_pkt_header.h"])
-
-# We're trying to get 'payload' to live at a double-aligned memory address
-AS_VAR_ARITH([mpid_pkt_header_padding],
-	     [ $ac_cv_alignof_MPID_nem_pkt_header_t % $ac_cv_sizeof_double])
-AC_DEFINE_UNQUOTED(MPID_NEM_PKT_HEADER_PADDING, [$mpid_pkt_header_padding], [Amount of padding needed in the MPID_nem_pkt_header_t structure])
-
-
-
 
 AC_SUBST(device_name)
 AC_SUBST(channel_name)
