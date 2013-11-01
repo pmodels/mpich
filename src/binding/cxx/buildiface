@@ -1191,7 +1191,7 @@ print $OUTFD "class File;\n\n";
 # other functions.
 print $OUTFD "// base (classless) routines\n";
 @routines = keys(%class_mpi1base);
-if (defined(@routinesMpi1base)) {
+if (@routinesMpi1base) {
     @routines = @routinesMpi1base;
 }
 if ($outputRoutineLists) {
@@ -1257,7 +1257,7 @@ typedef int MPI_File;\
         $class_hash = "class_$mpiclass";
 	@routines = keys(%$class_hash);
 	$arrname  = "routines$mpiclass";
-	if (defined(@$arrname)) {
+	if (@$arrname) {
 	    @routines = @$arrname;
 	}
 	if ($#routines < 0) { next; }
@@ -1308,7 +1308,7 @@ typedef int MPI_File;\
 
     # Add a few more external functions (some require the above definitions)
     @routines = keys(%class_mpi2base);
-    if (defined(@routinesMpi2base)) {
+    if (@routinesMpi2base) {
         @routines = @routinesMpi2base;
     }
     if ($outputRoutineLists) {
