@@ -117,7 +117,7 @@ extern char *HYD_dbg_prefix;
 #define HYD_POLLHUP (0x0004)
 
 #define HYD_TMPBUF_SIZE (64 * 1024)
-#define HYD_TMP_STRLEN  1024
+#define HYD_TMP_STRLEN  (16 * 1024)
 #define HYD_NUM_TMP_STRINGS 1000
 
 #define HYD_DEFAULT_RETRY_COUNT (10)
