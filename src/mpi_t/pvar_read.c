@@ -31,7 +31,6 @@
 int MPIR_T_pvar_read_impl(MPI_T_pvar_session session, MPI_T_pvar_handle handle, void *restrict buf)
 {
     int i, mpi_errno = MPI_SUCCESS;
-    void *tmp;
 
     /* Reading a never started pvar, or a stopped and then reset wartermark,
      * will run into this nasty situation. Wait for an error code to be defined

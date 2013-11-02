@@ -104,7 +104,6 @@ static inline cvar_table_entry_t * LOOKUP_CVAR_BY_NAME(const char* cvar_name)
 #define MPIR_T_CVAR_REGISTER_STATIC(dtype_, name_, addr_, count_, verb_, \
             scope_, default_, cat_, desc_) \
     do { \
-        MPIU_Assert(addr_ != NULL); \
         MPIU_Assert(count_ > 0); \
         MPIR_T_CVAR_REGISTER_impl(dtype_, #name_, addr_, count_, MPI_T_ENUM_NULL, \
             verb_, MPI_T_BIND_NO_OBJECT, scope_, NULL, NULL, default_, cat_, desc_); \

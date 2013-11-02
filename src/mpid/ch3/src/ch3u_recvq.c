@@ -116,7 +116,7 @@ int MPIDI_CH3U_Recvq_init(void)
         0, /* init value */
         MPI_T_VERBOSITY_USER_DETAIL,
         MPI_T_BIND_NO_OBJECT,
-        MPIR_T_PVAR_FLAG_READONLY | MPIR_T_PVAR_FLAG_CONTINUOUS,
+        (MPIR_T_PVAR_FLAG_READONLY | MPIR_T_PVAR_FLAG_CONTINUOUS),
         "CH3", /* category name */
         "length of the posted message receive queue");
 
@@ -127,7 +127,7 @@ int MPIDI_CH3U_Recvq_init(void)
         0, /* init value */
         MPI_T_VERBOSITY_USER_DETAIL,
         MPI_T_BIND_NO_OBJECT,
-        MPIR_T_PVAR_FLAG_READONLY | MPIR_T_PVAR_FLAG_CONTINUOUS,
+        (MPIR_T_PVAR_FLAG_READONLY | MPIR_T_PVAR_FLAG_CONTINUOUS),
         "CH3", /* category name */
         "length of the unexpected message receive queue");
 
@@ -137,7 +137,7 @@ int MPIDI_CH3U_Recvq_init(void)
         posted_recvq_match_attempts,
         MPI_T_VERBOSITY_USER_DETAIL,
         MPI_T_BIND_NO_OBJECT,
-        MPIR_T_PVAR_FLAG_READONLY | MPIR_T_PVAR_FLAG_CONTINUOUS,
+        (MPIR_T_PVAR_FLAG_READONLY | MPIR_T_PVAR_FLAG_CONTINUOUS),
         "CH3", /* category name */
         "number of search passes on the message receive queue");
 
@@ -147,7 +147,7 @@ int MPIDI_CH3U_Recvq_init(void)
         unexpected_recvq_match_attempts,
         MPI_T_VERBOSITY_USER_DETAIL,
         MPI_T_BIND_NO_OBJECT,
-        MPIR_T_PVAR_FLAG_READONLY | MPIR_T_PVAR_FLAG_CONTINUOUS,
+        (MPIR_T_PVAR_FLAG_READONLY | MPIR_T_PVAR_FLAG_CONTINUOUS),
         "CH3",
         "number of search passes on the message receive queue");
 
@@ -157,7 +157,7 @@ int MPIDI_CH3U_Recvq_init(void)
         time_failed_matching_postedq,
         MPI_T_VERBOSITY_USER_DETAIL,
         MPI_T_BIND_NO_OBJECT,
-        MPIR_T_PVAR_FLAG_READONLY | MPIR_T_PVAR_FLAG_CONTINUOUS,
+        (MPIR_T_PVAR_FLAG_READONLY | MPIR_T_PVAR_FLAG_CONTINUOUS),
         "CH3", /* category name */
         "total time spent on unsuccessful search passes on the posted receives queue");
 
@@ -167,7 +167,7 @@ int MPIDI_CH3U_Recvq_init(void)
         time_matching_unexpectedq,
         MPI_T_VERBOSITY_USER_DETAIL,
         MPI_T_BIND_NO_OBJECT,
-        MPIR_T_PVAR_FLAG_READONLY | MPIR_T_PVAR_FLAG_CONTINUOUS,
+        (MPIR_T_PVAR_FLAG_READONLY | MPIR_T_PVAR_FLAG_CONTINUOUS),
         "CH3", /* category name */
         "total time spent on search passes on the unexpected receive queue");
 
@@ -178,7 +178,7 @@ int MPIDI_CH3U_Recvq_init(void)
         0, /* init value */
         MPI_T_VERBOSITY_USER_DETAIL,
         MPI_T_BIND_NO_OBJECT,
-        MPIR_T_PVAR_FLAG_READONLY | MPIR_T_PVAR_FLAG_CONTINUOUS,
+        (MPIR_T_PVAR_FLAG_READONLY | MPIR_T_PVAR_FLAG_CONTINUOUS),
         "CH3", /* category name */
         "total buffer size allocated in the unexpected receive queue");
 

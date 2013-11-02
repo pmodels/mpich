@@ -54,7 +54,7 @@ Output Parameters:
 @*/
 int MPI_T_cvar_get_info(int cvar_index, char *name, int *name_len,
     int *verbosity, MPI_Datatype *datatype, MPI_T_enum *enumtype,
-    char *desc, int *desc_len, int *bind, int *scope)
+    char *desc, int *desc_len, int *binding, int *scope)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -97,8 +97,8 @@ int MPI_T_cvar_get_info(int cvar_index, char *name, int *name_len,
     if (enumtype != NULL)
         *enumtype = cvar->enumtype;
 
-    if (bind != NULL)
-        *bind = cvar->bind;
+    if (binding != NULL)
+        *binding = cvar->bind;
 
     if (scope != NULL)
         *scope = cvar->scope;
@@ -116,7 +116,7 @@ fn_fail:
         mpi_errno = MPIR_Err_create_code(
             mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER,
             "**mpi_t_cvar_get_info", "**mpi_t_cvar_get_info %d %p %p %p %p %p %p %p %p %p",
-            cvar_index, name, name_len, verbosity, datatype, enumtype, desc, desc_len, bind, scope);
+            cvar_index, name, name_len, verbosity, datatype, enumtype, desc, desc_len, binding, scope);
     }
 #endif
     mpi_errno = MPIR_Err_return_comm(NULL, FCNAME, mpi_errno);

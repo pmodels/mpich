@@ -278,7 +278,7 @@ fn_fail:
  * IN: count, # of elements of this cvar if known at registeration, otherwise 0.
  * IN: etype, MPI_T_enum or MPI_T_ENUM_NULL
  * IN: verb, MPI_T_PVAR_VERBOSITY_*
- * IN: bind, MPI_T_BIND_*
+ * IN: binding, MPI_T_BIND_*
  * IN: Scope, MPI_T_SCOPE_*
  * IN: get_addr, If not NULL, it is a callback to get address of the cvar.
  * IN: get_count, If not NULL, it is a callback to read count of the cvar.
@@ -287,7 +287,7 @@ fn_fail:
  */
 void MPIR_T_CVAR_REGISTER_impl(
     MPI_Datatype dtype, const char* name, const void *addr, int count,
-    MPIR_T_enum_t *etype, MPIR_T_verbosity_t verb, MPIR_T_bind_t bind,
+    MPIR_T_enum_t *etype, MPIR_T_verbosity_t verb, MPIR_T_bind_t binding,
     MPIR_T_scope_t scope, MPIR_T_cvar_get_addr_cb get_addr,
     MPIR_T_cvar_get_count_cb get_count, MPIR_T_cvar_value_t defaultval,
     const char *cat, const char * desc)
@@ -318,7 +318,7 @@ void MPIR_T_CVAR_REGISTER_impl(
         cvar->addr = (void *)addr;
         cvar->count = count;
         cvar->verbosity = verb;
-        cvar->bind = bind;
+        cvar->bind = binding;
         cvar->scope = scope;
         cvar->get_addr = get_addr;
         cvar->get_count = get_count;
@@ -352,7 +352,7 @@ void MPIR_T_CVAR_REGISTER_impl(
  * IN: count, # of elements of this pvar if known at registeration, otherwise 0.
  * IN: etype, MPI_T_enum or MPI_T_ENUM_NULL
  * IN: verb, MPI_T_PVAR_VERBOSITY_*
- * IN: bind, MPI_T_BIND_*
+ * IN: binding, MPI_T_BIND_*
  * IN: flags, Bitwise OR of MPIR_T_R_PVAR_FLAGS_{}
  * IN: get_value, If not NULL, it is a callback to read the pvar.
  * IN: get_count, If not NULL, it is a callback to read count of the pvar.
@@ -361,7 +361,7 @@ void MPIR_T_CVAR_REGISTER_impl(
  */
 void MPIR_T_PVAR_REGISTER_impl(
     int varclass, MPI_Datatype dtype, const char* name, void *addr, int count,
-    MPIR_T_enum_t *etype, int verb, int bind, int flags,
+    MPIR_T_enum_t *etype, int verb, int binding, int flags,
     MPIR_T_pvar_get_value_cb get_value, MPIR_T_pvar_get_count_cb get_count,
     const char * cat, const char * desc)
 {
@@ -394,7 +394,7 @@ void MPIR_T_PVAR_REGISTER_impl(
         pvar->count = count;
         pvar->enumtype = etype;
         pvar->verbosity = verb;
-        pvar->bind = bind;
+        pvar->bind = binding;
         pvar->flags = flags;
         pvar->get_value = get_value;
         pvar->get_count = get_count;

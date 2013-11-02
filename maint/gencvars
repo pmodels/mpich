@@ -238,7 +238,7 @@ foreach my $p (@{$cvars->{cvars}}) {
         $mpi_dtype = "MPI_CHAR";
         $count = "MPIR_CVAR_MAX_STRLEN";
         my $str_val = fmt_default($p->{name}, $p->{default}, $p->{defaultliteral}, $p->{type});
-        printf CVAR_C qq(    defaultval.str = %s;\n), $str_val;
+        printf CVAR_C qq(    defaultval.str = (char *)%s;\n), $str_val;
     }
     elsif ($p->{type} eq 'int' or $p->{type} eq 'boolean') {
         $mpi_dtype = "MPI_INT";

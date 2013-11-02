@@ -1390,8 +1390,8 @@ extern MPIU_Thread_mutex_t mpi_t_mutex;
 #endif
 
 /* Init and finalize routines */
-extern void MPIR_T_env_init();
-extern void MPIR_T_env_finalize();
+extern void MPIR_T_env_init(void);
+extern void MPIR_T_env_finalize(void);
 
 #define MPIR_T_FAIL_IF_UNINITIALIZED() \
     do { \
