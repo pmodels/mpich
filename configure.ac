@@ -5755,6 +5755,7 @@ AS_IF([test "$MPI_SIZEOF_AINT" -gt "$MPI_SIZEOF_OFFSET"],
 AC_SUBST([MPI_COUNT])
 AC_SUBST([COUNT_KIND])
 AC_DEFINE_UNQUOTED([MPIR_COUNT_MAX],[$MPIR_COUNT_MAX],[limits.h _MAX constant for MPI_Count])
+AC_DEFINE_UNQUOTED(MPIR_Ucount,unsigned $MPI_COUNT,[MPIR_Ucount is an unsigned MPI_Count-sized integer])
 
 AS_CASE([$MPI_SIZEOF_COUNT],
         [4], [len_mpi_count=04],

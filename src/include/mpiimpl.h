@@ -2318,11 +2318,11 @@ void MPIR_Err_print_stack(FILE *, int);
     {                                                                   \
         (status_).count_lo = ((int) count_);                            \
         (status_).count_hi_and_cancelled &= 1;                          \
-        (status_).count_hi_and_cancelled |= (int) ((MPI_Count) count_ >> MPIR_BITS_IN_INT << 1); \
+        (status_).count_hi_and_cancelled |= (int) ((MPIR_Ucount) count_ >> MPIR_BITS_IN_INT << 1); \
     }
 
 #define MPIR_STATUS_GET_COUNT(status_)                                  \
-    ((MPI_Count) ((((MPI_Count) (status_).count_hi_and_cancelled) >> 1 << MPIR_BITS_IN_INT) + (status_).count_lo))
+    ((MPI_Count) ((((MPIR_Ucount) (((unsigned int) (status_).count_hi_and_cancelled) >> 1)) << MPIR_BITS_IN_INT) + (unsigned int) (status_).count_lo))
 
 #define MPIR_STATUS_SET_CANCEL_BIT(status_, cancelled_)	\
     {                                                   \
