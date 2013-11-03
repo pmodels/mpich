@@ -38,7 +38,7 @@ int MPIR_Status_set_elements_x_impl(MPI_Status *status, MPI_Datatype datatype, M
     /* overflow check, should probably be a real error check? */
     if (count != 0) {
         MPIU_Assert(size_x >= 0 && count > 0);
-        MPIU_Assert(size_x < MPIR_COUNT_MAX / count);
+        MPIU_Assert(count * size_x < MPIR_COUNT_MAX);
     }
 
     MPIR_STATUS_SET_COUNT(*status, size_x * count);
