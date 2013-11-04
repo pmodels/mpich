@@ -308,33 +308,23 @@ int MPIR_Dims_create( int nnodes, int ndims, int dims[] )
 	/* We must combine some of the factors */
 	if (nfactors == 1) {
 	    /* Special case for k**n, such as powers of 2 */
-	    int factor = factors[0].val;
-	    int cnt    = factors[0].cnt; /* Numver of factors left */
-	    int cnteach = ( cnt + dims_needed - 1 ) / dims_needed;
-	    int factor_each;
-	    
-	    factor_each = factor;
-	    for (i=1; i<cnteach; i++) factor_each *= factor;
+            int factor = factors[0].val;
+            int cnt    = factors[0].cnt; /* Number of factors left */
 
-	    for (i=0; i<ndims; i++) {
-		if (dims[i] == 0) {
-		    if (cnt > cnteach) {
-			dims[i] = factor_each;
-			cnt -= cnteach;
-		    }
-		    else if (cnt > 0) {
-			factor_each = factor;
-			for (j=1; j<cnt; j++) 
-			    factor_each *= factor;
-			dims[i] = factor_each;
-			cnt = 0;
-		    }
-		    else {
-			dims[i] = 1;
-		    }
-		}
-	    }
-	}	    
+            for (i=0;i<ndims;i++)
+                if(dims[i]==0)dims[i]=-1;
+
+            i=0;
+            while (cnt > 0) {
+                if (dims[i] < 0) {
+                    dims[i] = dims[i] * factor;
+                    --cnt;
+                }
+                if (++i >= ndims) i=0;
+            }
+            for (i=0; i<ndims; i++)
+                if (dims[i] < 0) dims[i] = -dims[i];
+        }
 	else {
 	    /* Here is the general case.  */
 	    MPIR_ChooseFactors( nfactors, factors, nnodes, dims_needed, 
