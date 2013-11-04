@@ -21,7 +21,7 @@ program get_elem_d
   integer :: blklen(nb)=(/2,2/)
   integer :: types(nb)=(/MPI_DOUBLE_PRECISION,MPI_INTEGER/)
   integer(kind=MPI_ADDRESS_KIND) :: disp(nb)
-  integer :: newtype,ntlen,ians(0:23),ians0(0:3),ians1(24),ians2(20)
+  integer :: newtype,ntlen,ians(20),ians0(0:3),ians1(24),ians2(20)
   double precision :: dbuff(dmax), a
   integer :: ibuff(imax)
   character :: cbuff(cmax)='X'
@@ -42,13 +42,13 @@ program get_elem_d
   ians0(2)=2*ka+kj
   ians0(3)=2*ka+2*kj
   ii=0
-  do i=1,24
+  do i=1,24 ! answers for the test sending 1~24 bytes
      if (i .eq. ians0(ii)) ii=ii+1
      ians1(i)=ii
   enddo
   if (rank == 0 .and. verbose > 0) print *, (ians1(k),k=1,24)
   jj=0
-  do j=0,19,4
+  do j=1,17,4 ! 4 means newtype has 4 primitives
      ians(j)=jj+ka/kj
      ians(j+1)=jj+2*(ka/kj)
      ians(j+2)=jj+2*(ka/kj)+1
@@ -56,9 +56,11 @@ program get_elem_d
      if (rank == 0 .and. verbose > 0) print *, (ians(k),k=j,j+3)
      jj=jj+ntlen/kj
   enddo
+  ! To have k elements, need to receive ians(k) integers
+
   ii=0
-  do i=1,20
-     if (i .eq. ians(ii)) ii=ii+1
+  do i=1,20 ! answers for the test sending 1~20 integers
+     if (i .eq. ians(ii+1)) ii=ii+1
      ians2(i)=ii
   enddo
   if (rank == 0 .and. verbose > 0) print *, (ians2(k),k=1,20)
@@ -68,7 +70,7 @@ program get_elem_d
   call MPI_Type_create_struct(nb, blklen, disp, types, newtype, ierror)
   call MPI_Type_commit(newtype, ierror)
 
-  do i=1,24
+  do i=1,24 ! sending 1~24 bytes
      if (rank == 0) then
         call MPI_Send(cbuff, i, MPI_BYTE, dest, 100, comm, ierror)
 
@@ -89,7 +91,7 @@ program get_elem_d
      endif
   enddo
 
-  do i=1,20
+  do i=1,20 ! sending 1~20 integers
      if (rank == 0) then
         call MPI_Send(ibuff, i, MPI_INTEGER, dest, 100, comm, ierror)
 
