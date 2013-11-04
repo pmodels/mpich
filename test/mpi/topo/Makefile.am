@@ -20,6 +20,7 @@ noinst_PROGRAMS = \
     cartcreates   \
     dims1         \
     dims2         \
+    dims3         \
     graphmap1     \
     topotest      \
     topodup       \
