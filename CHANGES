@@ -34,6 +34,10 @@
 
  # Several improvements to the Hydra-SLURM integration.
 
+ # MPICH now supports operations on very large datatypes (those that describe
+   more than 32 bits of data).  This work also allows MPICH to fully support
+   MPI-3's introduction of MPI_Count.
+
  # Several other minor bug fixes, memory leak fixes, and code cleanup.
 
    A full list of changes is available at the following link:
