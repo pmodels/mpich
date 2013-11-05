@@ -19,7 +19,7 @@
    collectives.  See the README.envvar file for more information.
 
  # Allow non-blocking collectives and fault tolerance at the same
-   time. The option MPIR_PARAM_ENABLE_COLL_FT_RET has been removed as
+   time. The option MPIR_PARAM_ENABLE_COLL_FT_RET has been deprecated as
    it is no longer necessary.
 
  # Improvements to MPI_WIN_ALLOCATE to internally allocate shared

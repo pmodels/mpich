@@ -11,13 +11,6 @@
    http://trac.mpich.org/projects/mpich/ticket/1719
 
 
-### Large counts
-
- * The new MPI-3 "large count" routines (e.g., MPI_Type_size_x) do not
-   work correctly due to 64-bit to 32-bit truncations occurring inside
-   the MPICH library.  We expect to fix this in upcoming releases.
-
-
 ### Fine-grained thread safety
 
  * ch3:sock does not (and will not) support fine-grained threading.
