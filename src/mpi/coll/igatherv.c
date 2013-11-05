@@ -157,7 +157,8 @@ fn_fail:
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 /*@
-MPI_Igatherv - XXX description here
+MPI_Igatherv - Gathers into specified locations from all processes in a group
+               in a nonblocking way
 
 Input Parameters:
 + sendbuf - starting address of the send buffer (choice)

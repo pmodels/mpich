@@ -297,7 +297,8 @@ fn_fail:
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 /*@
-MPI_Ialltoallw - XXX description here
+MPI_Ialltoallw - Nonblocking generalized all-to-all communication allowing
+   different datatypes, counts, and displacements for each partner
 
 Input Parameters:
 + sendbuf - starting address of the send buffer (choice)

@@ -808,7 +808,8 @@ fn_fail:
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 /*@
-MPI_Ireduce - XXX description here
+MPI_Ireduce - Reduces values on all processes to a single value
+              in a nonblocking way
 
 Input Parameters:
 + sendbuf - address of the send buffer (choice)

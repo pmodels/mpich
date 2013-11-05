@@ -634,7 +634,8 @@ fn_fail:
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 /*@
-MPI_Iallgather - XXX description here
+MPI_Iallgather - Gathers data from all tasks and distribute the combined data
+                 to all tasks in a nonblocking way
 
 Input Parameters:
 + sendbuf - starting address of the send buffer (choice)

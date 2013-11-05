@@ -564,7 +564,7 @@ fn_fail:
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 /*@
-MPI_Ialltoall - XXX description here
+MPI_Ialltoall - Sends data from all to all processes in a nonblocking way
 
 Input Parameters:
 + sendbuf - starting address of the send buffer (choice)

@@ -291,7 +291,9 @@ fn_fail:
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 /*@
-MPI_Ialltoallv - XXX description here
+MPI_Ialltoallv - Sends data from all to all processes in a nonblocking way;
+   each process may send a different amount of data and provide displacements
+   for the input and output data.
 
 Input Parameters:
 + sendbuf - starting address of the send buffer (choice)

@@ -558,7 +558,8 @@ fn_fail:
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 /*@
-MPI_Igather - XXX description here
+MPI_Igather - Gathers together values from a group of processes in
+              a nonblocking way
 
 Input Parameters:
 + sendbuf - starting address of the send buffer (choice)

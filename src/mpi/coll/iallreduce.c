@@ -691,7 +691,8 @@ fn_fail:
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 /*@
-MPI_Iallreduce - XXX description here
+MPI_Iallreduce - Combines values from all processes and distributes the result
+                 back to all processes in a nonblocking way
 
 Input Parameters:
 + sendbuf - starting address of the send buffer (choice)

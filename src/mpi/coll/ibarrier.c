@@ -215,13 +215,24 @@ fn_fail:
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 /*@
-MPI_Ibarrier - XXX description here
+MPI_Ibarrier - Notifies the process that it has reached the barrier and returns
+               immediately
 
 Input Parameters:
 . comm - communicator (handle)
 
 Output Parameters:
 . request - communication request (handle)
+
+Notes:
+MPI_Ibarrier is a nonblocking version of MPI_barrier. By calling MPI_Ibarrier,
+a process notifies that it has reached the barrier. The call returns
+immediately, independent of whether other processes have called MPI_Ibarrier.
+The usual barrier semantics are enforced at the corresponding completion
+operation (test or wait), which in the intra-communicator case will complete
+only after all other processes in the communicator have called MPI_Ibarrier. In
+the intercommunicator case, it will complete when all processes in the remote
+group have called MPI_Ibarrier.
 
 .N ThreadSafe
 

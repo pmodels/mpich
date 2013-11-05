@@ -902,7 +902,8 @@ fn_fail:
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 /*@
-MPI_Ibcast - XXX description here
+MPI_Ibcast - Broadcasts a message from the process with rank "root" to
+             all other processes of the communicator in a nonblocking way
 
 Input/Output Parameters:
 . buffer - starting address of buffer (choice)

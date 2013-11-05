@@ -364,7 +364,8 @@ fn_fail:
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 /*@
-MPI_Iscan - XXX description here
+MPI_Iscan - Computes the scan (partial reductions) of data on a collection of
+            processes in a nonblocking way
 
 Input Parameters:
 + sendbuf - starting address of the send buffer (choice)

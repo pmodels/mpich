@@ -592,7 +592,8 @@ fn_fail:
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 /*@
-MPI_Iscatter - XXX description here
+MPI_Iscatter - Sends data from one process to all other processes in a
+               communicator in a nonblocking way
 
 Input Parameters:
 + sendbuf - address of send buffer (significant only at root) (choice)

@@ -163,7 +163,8 @@ fn_fail:
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 /*@
-MPI_Iscatterv - XXX description here
+MPI_Iscatterv - Scatters a buffer in parts to all processes in a communicator
+                in a nonblocking way
 
 Input Parameters:
 + sendbuf - address of send buffer (significant only at root) (choice)
