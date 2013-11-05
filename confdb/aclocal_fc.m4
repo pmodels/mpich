@@ -35,9 +35,9 @@ dnl       it may also be the name of a command for something other than
 dnl       the Fortran compiler (e.g., fc=file system check!)
 dnl gfortran - The GNU Fortran compiler (not the same as g95) 
 dnl gfc - An alias for gfortran recommended in cygwin installations
-dnl D*/
 dnl NOTE: this macro suffers from a basically intractable "expanded before it
 dnl was required" problem when libtool is also used
+dnl D*/
 AC_DEFUN([PAC_PROG_FC],[
 PAC_PUSH_FLAG([FCFLAGS])
 AC_PROG_FC([m4_default([$1],[PAC_FC_SEARCH_LIST])])
@@ -359,7 +359,7 @@ if test "X$pac_cv_fc_module_incflag" = "X" ; then
         # compiled.  
         # Intel compilers use a wierd system: -cl,filename.pcl .  If no file is
         # specified, work.pcl and work.pc are created.  However, if you specify
-        # a file, it must contain a the name of a file ending in .pc .  Ugh!
+        # a file, it must contain the name of a file ending in .pc .  Ugh!
         pac_cv_fc_module_incflag="unknown"
     fi
 fi
