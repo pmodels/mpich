@@ -129,6 +129,7 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided,
      * if necessary.
      */
     MPIR_Process.attrs.tag_ub = MPIDI_TAG_UB; /* see also mpidpre.h:NOTE-T1 */
+    MPIR_Process.attrs.io = MPI_ANY_SOURCE;
 
     /*
      * Perform channel-independent PMI initialization
