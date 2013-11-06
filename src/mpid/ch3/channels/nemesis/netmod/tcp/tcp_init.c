@@ -246,8 +246,9 @@ static int GetSockInterfaceAddr(int myRank, char *ifname, int maxIfname,
         MPIU_ERR_CHKANDJUMP1(mpi_errno || !ifaddrFound, mpi_errno, MPI_ERR_OTHER, "**iface_notfound", "**iface_notfound %s", MPIR_CVAR_NEMESIS_TCP_NETWORK_IFACE);
         
         MPIU_DBG_MSG_FMT(CH3_CONNECT, VERBOSE, (MPIU_DBG_FDEST,
-                                                "ifaddrFound=TRUE ifaddr->type=%d ifaddr->len=%d ifaddr->ifaddr[0-3]=%#08x",
-                                                ifaddr->type, ifaddr->len, *((unsigned int *)ifaddr->ifaddr)));
+                                                "ifaddrFound=TRUE ifaddr->type=%d ifaddr->len=%d ifaddr->ifaddr[0-3]=%d.%d.%d.%d",
+                                                ifaddr->type, ifaddr->len, ifaddr->ifaddr[0], ifaddr->ifaddr[1], ifaddr->ifaddr[2],
+                                                ifaddr->ifaddr[3]));
 
         /* In this case, ifname is only used for debugging purposes */
 	mpi_errno = MPID_Get_processor_name(ifname, maxIfname, &len );
