@@ -83,9 +83,13 @@ void MPIR_MAXLOC(
 	MPI_Datatype *type )
 {
     int mpi_errno = MPI_SUCCESS;
-    int i, len = *Len, flen;
+    int i, len = *Len;
     
-    flen = len * 2; /* used for Fortran types */
+#ifdef HAVE_FORTRAN_BINDING
+#ifndef HAVE_NO_FORTRAN_MPI_TYPES_IN_C
+    int flen = len * 2; /* used for Fortran types */
+#endif
+#endif
 
     switch (*type) {
     /* first the C types */
