@@ -117,7 +117,7 @@ int MPIR_Sched_cb_free_buf(MPID_Comm *comm, int tag, void *state);
 /* an upgraded version of MPIU_CHKPMEM_MALLOC/_DECL/_REAP/_COMMIT that adds
  * corresponding cleanup callbacks to the given schedule at _COMMIT time */
 #define MPIR_SCHED_CHKPMEM_DECL(n_)                               \
-    void *(mpir_sched_chkpmem_stk_[n_]);                          \
+    void *(mpir_sched_chkpmem_stk_[n_]) = { NULL };               \
     int mpir_sched_chkpmem_stk_sp_=0;                             \
     MPIU_AssertDeclValue(const int mpir_sched_chkpmem_stk_sz_,n_)
 
