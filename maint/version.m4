@@ -15,7 +15,7 @@
 # playing with autotools-fire.
 
 m4_define([MPICH_VERSION_m4],[3.1rc1])dnl
-m4_define([MPICH_RELEASE_DATE_m4],[Tue Nov  5 10:12:32 CST 2013])dnl
+m4_define([MPICH_RELEASE_DATE_m4],[unreleased development copy])dnl
 
 # For libtool ABI versioning rules see:
 # http://www.gnu.org/software/libtool/manual/libtool.html#Updating-version-info
