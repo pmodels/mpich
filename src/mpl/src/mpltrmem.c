@@ -581,7 +581,9 @@ Input Parameters:
 void MPL_trdump(FILE * fp, int minid)
 {
     TRSPACE *head;
+#ifdef VALGRIND_MAKE_MEM_NOACCESS
     TRSPACE *old_head;
+#endif
     char hexstring[MAX_ADDRESS_CHARS];
 
     if (fp == 0)
@@ -607,7 +609,9 @@ void MPL_trdump(FILE * fp, int minid)
                 fprintf(fp, "%s[%d]\n", head->fname, head->lineno);
             }
         }
+#ifdef VALGRIND_MAKE_MEM_NOACCESS
         old_head = head;
+#endif
         head = head->next;
         MPL_VG_MAKE_MEM_NOACCESS(old_head, sizeof(*old_head));
     }
