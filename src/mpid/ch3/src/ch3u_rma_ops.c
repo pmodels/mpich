@@ -345,7 +345,6 @@ int MPIDI_Accumulate(const void *origin_addr, int origin_count, MPI_Datatype
     MPI_Aint dt_true_lb ATTRIBUTE((unused));
     MPID_Datatype *dtp;
     MPIDI_VC_t *orig_vc, *target_vc;
-    MPIU_CHKLMEM_DECL(2);
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_ACCUMULATE);
     
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_ACCUMULATE);
@@ -453,7 +452,6 @@ int MPIDI_Accumulate(const void *origin_addr, int origin_count, MPI_Datatype
     }
 
  fn_exit:
-    MPIU_CHKLMEM_FREEALL();
     MPIDI_RMA_FUNC_EXIT(MPID_STATE_MPIDI_ACCUMULATE);
     return mpi_errno;
 
