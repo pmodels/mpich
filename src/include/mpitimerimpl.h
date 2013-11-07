@@ -162,7 +162,7 @@ int MPIU_Timer_finalize(void);
 int MPIR_Describe_timer_states(void);
 
 /* The original statistics macros (see the design documentation) 
-   have been superceeded by the instrumentation macros (see mpiinstr.h) */
+   have been superceeded by the MPIR_T_PVAR_* macros (see mpit.h) */
 
 #else /* HAVE_TIMING and doing logging */
 

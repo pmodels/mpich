@@ -359,7 +359,6 @@ AC_ARG_ENABLE(g,
                    compiler flags, i.e. MPICHLIB_CFLAGS, MPICHLIB_CXXFLAGS,
                    MPICHLIB_FFLAGS, and MPICHLIB_FCFLAGS.
         debug    - Synonym for dbg
-        instr    - Enable instrumentation
         log      - Enable debug event logging
         mem      - Memory usage tracing
         meminit  - Preinitialize memory associated structures and unions to
@@ -1442,9 +1441,6 @@ for option in $enable_g ; do
 	handle)
         perform_handle=yes
 	;;
-	instr)
-	perform_instr=yes
-	;;
 	meminit)
 	perform_meminit=yes
 	;;
@@ -1469,7 +1465,6 @@ for option in $enable_g ; do
         perform_dbglog=yes
         enable_append_g=yes
         perform_meminit=yes
-        perform_instr=yes
         perform_dbgmutex=yes
         perform_mutexnesting=yes
         perform_handlealloc=yes
@@ -1481,7 +1476,6 @@ for option in $enable_g ; do
 	perform_dbglog=yes
 	enable_append_g=yes
 	perform_meminit=yes
-	perform_instr=yes
 	perform_dbgmutex=yes
 	perform_mutexnesting=yes
 	perform_handlealloc=yes
@@ -1514,9 +1508,6 @@ if test -n "$perform_meminit" ; then
 fi
 if test "$perform_handlealloc" = yes ; then
     AC_DEFINE(MPICH_DEBUG_HANDLEALLOC,1,[Define to enable checking of handles still allocated at MPI_Finalize])
-fi
-if test "$perform_instr" = yes ; then
-    AC_DEFINE(USE_MPIU_INSTR,1,[Define this to enable internal instrumentation] )
 fi
 AS_IF([test "X$perform_handle" = "Xyes"],
       [AC_DEFINE(MPICH_DEBUG_HANDLES,1,[Define to enable handle checking])])

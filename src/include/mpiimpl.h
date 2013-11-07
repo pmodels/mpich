@@ -2277,9 +2277,6 @@ extern MPICH_PerProcess_t MPIR_Process;
 #include "mpierror.h"
 #include "mpierrs.h"
 
-/* Definitions for instrumentation (currently used within RMA code) */
-#include "mpiinstr.h"
-
 /* FIXME: This routine is only used within mpi/src/err/errutil.c and 
    smpd.  We may not want to export it.  */
 void MPIR_Err_print_stack(FILE *, int);

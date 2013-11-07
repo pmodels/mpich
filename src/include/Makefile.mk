@@ -45,7 +45,6 @@ noinst_HEADERS +=                   \
     src/include/mpiimpl.h           \
     src/include/mpiimplthread.h     \
     src/include/mpiimplthreadpost.h \
-    src/include/mpiinstr.h          \
     src/include/mpiiov.h            \
     src/include/mpimem.h            \
     src/include/mpir_nbc.h          \
