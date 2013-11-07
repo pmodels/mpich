@@ -375,12 +375,13 @@ AC_ARG_ENABLE(g,
 AC_ARG_ENABLE([mpit_pvars],
 [  --enable-mpit-pvars=list - Selectively enable MPI_T performance variables in
                       modules. list is a comma-separated module names,
-                      including (Default is "all"):
+                      including (Default is "none"):
         none     - No performance info recorded
         recvq    - All message queue-related
         nem      - All nemesis-related
+        rma      - All rma-related
         all      - All variables above
-],[],[enable_mpit_pvars=all])
+],[],[enable_mpit_pvars=none])
 
 dnl We may want to force MPI_Aint to be the same size as MPI_Offset, 
 dnl particularly on 32 bit systems with large (64 bit) file systems.
@@ -1833,9 +1834,11 @@ for var in $enable_mpit_pvars ; do
     AS_CASE(["$var"],
             [nem],[enable_pvar_nem=yes],
             [recvq],[enable_pvar_recvq=yes],
+            [rma],[enable_pvar_rma=yes],
             [all|yes],
             [enable_pvar_nem=yes
-             enable_pvar_recvq=yes],
+             enable_pvar_recvq=yes
+             enable_pvar_rma=yes],
             [no|none],[],
             [IFS=$save_IFS
              AC_MSG_WARN([Unknown value ($option) for enable-mpit-pvars])
@@ -1859,6 +1862,13 @@ fi
 AC_DEFINE_UNQUOTED(ENABLE_PVAR_RECVQ,$status_recvq_pvars,
           [Define to 1 to enable message receive queue-related MPI_T performance variables])
 
+if test -n "$enable_pvar_rma" ; then
+    status_rma_pvars=1
+else
+    status_rma_pvars=0
+fi
+AC_DEFINE_UNQUOTED(ENABLE_PVAR_RMA,$status_rma_pvars,
+          [Define to 1 to enable rma-related MPI_T performance variables])
 # ---------------------------------------------------------------------------
 # Support for the language bindings: Fortran 77, Fortran 90, and C++
 #
