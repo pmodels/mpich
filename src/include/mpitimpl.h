@@ -371,7 +371,7 @@ extern void MPIR_T_PVAR_REGISTER_impl(
 #define MPIR_T_PVAR_STATE_SET_VAR_impl(ptr_, val_) \
     do { *ptr_ = val_; } while (0)
 #define MPIR_T_PVAR_STATE_GET_VAR_impl(ptr_) \
-    *(ptr_)
+    (*(ptr_))
 
 #define MPIR_T_PVAR_STATE_SET_impl(name_, val_) \
     MPIR_T_PVAR_STATE_SET_VAR_impl(&PVAR_STATE_##name_, val_)
@@ -444,7 +444,7 @@ extern void MPIR_T_PVAR_REGISTER_impl(
 #define MPIR_T_PVAR_LEVEL_SET_VAR_impl(ptr_, val_) \
     do { *(ptr_) = val_; } while (0)
 #define MPIR_T_PVAR_LEVEL_GET_VAR_impl(ptr_) \
-    *(ptr)
+    (*(ptr_))
 #define MPIR_T_PVAR_LEVEL_INC_VAR_impl(ptr_, val_) \
     do { *(ptr_) += val_; } while (0)
 #define MPIR_T_PVAR_LEVEL_DEC_VAR_impl(ptr_, val_) \
@@ -525,7 +525,7 @@ extern void MPIR_T_PVAR_REGISTER_impl(
 #define MPIR_T_PVAR_SIZE_SET_VAR_impl(ptr_, val_) \
     do { *(ptr_) = val_; } while (0)
 #define MPIR_T_PVAR_SIZE_GET_VAR_impl(ptr_) \
-    *(ptr_)
+    (*(ptr_))
 
 #define MPIR_T_PVAR_SIZE_SET_impl(name_, val_) \
     MPIR_T_PVAR_SIZE_SET_VAR_impl(&PVAR_SIZE_##name_, val_)
@@ -583,7 +583,7 @@ extern void MPIR_T_PVAR_REGISTER_impl(
         *ptr_ = val_; \
     } while (0)
 #define MPIR_T_PVAR_PERCENTAGE_GET_VAR_impl(ptr_) \
-    *(ptr_)
+    (*(ptr_))
 
 #define MPIR_T_PVAR_PERCENTAGE_SET_impl(name_, val_) \
     MPIR_T_PVAR_PERCENTAGE_SET_VAR_impl(&PVAR_PERCENTAGE_##name_, val_)
@@ -649,7 +649,7 @@ extern void MPIR_T_PVAR_REGISTER_impl(
     do { *(ptr_) = 0; } while (0)
 /* _COUNTER_SET is intentionally not provided. Users should only INC counters */
 #define MPIR_T_PVAR_COUNTER_GET_VAR_impl(ptr_) \
-    *(ptr_)
+    (*(ptr_))
 #define MPIR_T_PVAR_COUNTER_INC_VAR_impl(ptr_, inc_) \
     do { *(ptr_) += inc_; } while (0)
 
@@ -786,7 +786,7 @@ extern void MPIR_T_PVAR_REGISTER_impl(
     do { *(ptr_) = 0; } while (0)
 /* _AGGREGATE_SET is intentionally not provided as for counters */
 #define MPIR_T_PVAR_AGGREGATE_GET_VAR_impl(ptr_) \
-    *(ptr_)
+    (*(ptr_))
 #define MPIR_T_PVAR_AGGREGATE_INC_VAR_impl(ptr_, inc_) \
     do { *(ptr_) += inc_; } while (0)
 

@@ -122,6 +122,9 @@ static inline cvar_table_entry_t * LOOKUP_CVAR_BY_NAME(const char* cvar_name)
             verb_, bind_, scope_, get_addr_, get_count_, default_, cat_, desc_); \
     } while (0)
 
+/* stmt_ is executed only when ENABLE_PVAR_#MODULE is defined as 1 */
+#define MPIR_T_PVAR_STMT(MODULE, stmt_) \
+    PVAR_GATED_ACTION(MODULE, stmt_)
 
 /* The following are interfaces for each pvar classe,
  * basically including delcaration, access and registeration.
@@ -139,13 +142,14 @@ static inline cvar_table_entry_t * LOOKUP_CVAR_BY_NAME(const char* cvar_name)
 
 #define MPIR_T_PVAR_STATE_SET_VAR(MODULE, ptr_, val_) \
     PVAR_GATED_ACTION(MODULE, MPIR_T_PVAR_STATE_SET_VAR_impl(ptr_, val_))
-#define MPIR_T_PVAR_STATE_GET_VAR(MODULE, ptr_) \
-    PVAR_GATED_ACTION(MODULE, MPIR_T_PVAR_STATE_GET_VAR_impl(ptr_))
+/* Not gated by MODULE, since it is supposed to be a rvalue */
+#define MPIR_T_PVAR_STATE_GET_VAR(ptr_) \
+    MPIR_T_PVAR_STATE_GET_VAR_impl(ptr_)
 
 #define MPIR_T_PVAR_STATE_SET(MODULE, name_, val_) \
     PVAR_GATED_ACTION(MODULE, MPIR_T_PVAR_STATE_SET_impl(name_, val_))
-#define MPIR_T_PVAR_STATE_GET(MODULE, name_) \
-    PVAR_GATED_ACTION(MODULE, MPIR_T_PVAR_STATE_GET_impl(name_))
+#define MPIR_T_PVAR_STATE_GET(name_) \
+    MPIR_T_PVAR_STATE_GET_impl(name_)
 
 #define MPIR_T_PVAR_STATE_REGISTER_STATIC(MODULE, dtype_, name_, \
             initval_, etype_, verb_, bind_, flags_, cat_, desc_) \
@@ -187,8 +191,8 @@ static inline cvar_table_entry_t * LOOKUP_CVAR_BY_NAME(const char* cvar_name)
 
 #define MPIR_T_PVAR_LEVEL_SET_VAR(MODULE, ptr_, val_) \
     PVAR_GATED_ACTION(MODULE, MPIR_T_PVAR_LEVEL_SET_VAR_impl(ptr_, val_))
-#define MPIR_T_PVAR_LEVEL_GET_VAR(MODULE, ptr_) \
-    PVAR_GATED_ACTION(MODULE, MPIR_T_PVAR_LEVEL_GET_VAR_impl(ptr_))
+#define MPIR_T_PVAR_LEVEL_GET_VAR(ptr_) \
+    MPIR_T_PVAR_LEVEL_GET_VAR_impl(ptr_)
 #define MPIR_T_PVAR_LEVEL_INC_VAR(MODULE, ptr_, val_) \
     PVAR_GATED_ACTION(MODULE, MPIR_T_PVAR_LEVEL_INC_VAR_impl(ptr_, val_))
 #define MPIR_T_PVAR_LEVEL_DEC_VAR(MODULE, ptr_, val_) \
@@ -196,8 +200,8 @@ static inline cvar_table_entry_t * LOOKUP_CVAR_BY_NAME(const char* cvar_name)
 
 #define MPIR_T_PVAR_LEVEL_SET(MODULE, name_, val_) \
     PVAR_GATED_ACTION(MODULE, MPIR_T_PVAR_LEVEL_SET_impl(name_, val_))
-#define MPIR_T_PVAR_LEVEL_GET(MODULE, name_) \
-    PVAR_GATED_ACTION(MODULE, MPIR_T_PVAR_LEVEL_GET_impl(name_))
+#define MPIR_T_PVAR_LEVEL_GET(name_) \
+    MPIR_T_PVAR_LEVEL_GET_impl(name_)
 #define MPIR_T_PVAR_LEVEL_INC(MODULE, name_, val_) \
     PVAR_GATED_ACTION(MODULE, MPIR_T_PVAR_LEVEL_INC_impl(name_, val_))
 #define MPIR_T_PVAR_LEVEL_DEC(MODULE, name_, val_) \
@@ -243,13 +247,13 @@ static inline cvar_table_entry_t * LOOKUP_CVAR_BY_NAME(const char* cvar_name)
 
 #define MPIR_T_PVAR_SIZE_SET_VAR(MODULE, ptr_, val_) \
     PVAR_GATED_ACTION(MODULE, MPIR_T_PVAR_SIZE_SET_VAR_impl(ptr_, val_))
-#define MPIR_T_PVAR_SIZE_GET_VAR(MODULE, ptr_) \
-    PVAR_GATED_ACTION(MODULE, MPIR_T_PVAR_SIZE_GET_VAR_impl(ptr_))
+#define MPIR_T_PVAR_SIZE_GET_VAR(ptr_) \
+    MPIR_T_PVAR_SIZE_GET_VAR_impl(ptr_)
 
 #define MPIR_T_PVAR_SIZE_SET(MODULE, name_, val_) \
     PVAR_GATED_ACTION(MODULE, MPIR_T_PVAR_SIZE_SET_impl(name_, val_))
-#define MPIR_T_PVAR_SIZE_GET(MODULE, name_) \
-    PVAR_GATED_ACTION(MODULE, MPIR_T_PVAR_SIZE_GET_impl(name_))
+#define MPIR_T_PVAR_SIZE_GET(name_) \
+    MPIR_T_PVAR_SIZE_GET_impl(name_)
 
 #define MPIR_T_PVAR_SIZE_REGISTER_STATIC(MODULE, dtype_, name_, \
             initval_, verb_, bind_, flags_, cat_, desc_) \
@@ -274,12 +278,12 @@ static inline cvar_table_entry_t * LOOKUP_CVAR_BY_NAME(const char* cvar_name)
 #define MPIR_T_PVAR_PERCENTAGE_SET_VAR(MODULE, ptr_, val_) \
     PVAR_GATED_ACTION(MODULE, MPIR_T_PVAR_PERCENTAGE_SET_VAR_impl(ptr_, val_))
 #define MPIR_T_PVAR_PERCENTAGE_GET_VAR(MODULE, ptr_) \
-    PVAR_GATED_ACTION(MODULE, MPIR_T_PVAR_PERCENTAGE_GET_VAR_impl(ptr_))
+    MPIR_T_PVAR_PERCENTAGE_GET_VAR_impl(ptr_)
 
 #define MPIR_T_PVAR_PERCENTAGE_SET(MODULE, name_, val_) \
     PVAR_GATED_ACTION(MODULE, MPIR_T_PVAR_PERCENTAGE_SET_impl(name_, val_))
 #define MPIR_T_PVAR_PERCENTAGE_GET(MODULE, name_) \
-    PVAR_GATED_ACTION(MODULE, MPIR_T_PVAR_PERCENTAGE_GET_impl(name_))
+    MPIR_T_PVAR_PERCENTAGE_GET_impl(name_)
 
 #define MPIR_T_PVAR_PERCENTAGE_REGISTER_STATIC(MODULE, dtype_, name_, \
             initval_, verb_, bind_, flags_, cat_, desc_) \
@@ -315,15 +319,15 @@ static inline cvar_table_entry_t * LOOKUP_CVAR_BY_NAME(const char* cvar_name)
 
 #define MPIR_T_PVAR_COUNTER_INIT_VAR(MODULE, ptr_) \
     PVAR_GATED_ACTION(MODULE, MPIR_T_PVAR_COUNTER_INIT_VAR_impl(ptr_))
-#define MPIR_T_PVAR_COUNTER_GET_VAR(MODULE, ptr_) \
-    PVAR_GATED_ACTION(MODULE, MPIR_T_PVAR_COUNTER_GET_VAR_impl(ptr_))
+#define MPIR_T_PVAR_COUNTER_GET_VAR(ptr_) \
+    MPIR_T_PVAR_COUNTER_GET_VAR_impl(ptr_)
 #define MPIR_T_PVAR_COUNTER_INC_VAR(MODULE, ptr_, inc_) \
     PVAR_GATED_ACTION(MODULE, MPIR_T_PVAR_COUNTER_INC_VAR_impl(ptr_, inc_))
 
 #define MPIR_T_PVAR_COUNTER_INIT(MODULE, name_) \
     PVAR_GATED_ACTION(MODULE, MPIR_T_PVAR_COUNTER_INIT_impl(name_))
-#define MPIR_T_PVAR_COUNTER_GET(MODULE, name_) \
-    PVAR_GATED_ACTION(MODULE, MPIR_T_PVAR_COUNTER_GET_impl(name_))
+#define MPIR_T_PVAR_COUNTER_GET(name_) \
+    MPIR_T_PVAR_COUNTER_GET_impl(name_)
 #define MPIR_T_PVAR_COUNTER_INC(MODULE, name_, inc_) \
     PVAR_GATED_ACTION(MODULE, MPIR_T_PVAR_COUNTER_INC_impl(name_, inc_))
 
@@ -361,15 +365,15 @@ static inline cvar_table_entry_t * LOOKUP_CVAR_BY_NAME(const char* cvar_name)
 
 #define MPIR_T_PVAR_COUNTER_ARRAY_INIT_VAR(MODULE, ptr_, count_) \
     PVAR_GATED_ACTION(MODULE, MPIR_T_PVAR_COUNTER_ARRAY_INIT_VAR_impl(ptr_, count_))
-#define MPIR_T_PVAR_COUNTER_ARRAY_GET_VAR(MODULE, ptr_, idx_) \
-    PVAR_GATED_ACTION(MODULE, MPIR_T_PVAR_COUNTER_ARRAY_GET_VAR_impl(ptr_, idx_))
+#define MPIR_T_PVAR_COUNTER_ARRAY_GET_VAR(ptr_, idx_) \
+    MPIR_T_PVAR_COUNTER_ARRAY_GET_VAR_impl(ptr_, idx_)
 #define MPIR_T_PVAR_COUNTER_ARRAY_INC_VAR(MODULE, ptr_, idx_, inc_) \
     PVAR_GATED_ACTION(MODULE, MPIR_T_PVAR_COUNTER_ARRAY_INC_VAR_impl(ptr_, idx_, inc_))
 
 #define MPIR_T_PVAR_COUNTER_ARRAY_INIT(MODULE, name_) \
     PVAR_GATED_ACTION(MODULE, MPIR_T_PVAR_COUNTER_ARRAY_INIT_impl(name_))
-#define MPIR_T_PVAR_COUNTER_ARRAY_GET(MODULE, name_, idx_) \
-    PVAR_GATED_ACTION(MODULE, MPIR_T_PVAR_COUNTER_ARRAY_GET_impl(name_, idx_))
+#define MPIR_T_PVAR_COUNTER_ARRAY_GET(name_, idx_) \
+    MPIR_T_PVAR_COUNTER_ARRAY_GET_impl(name_, idx_)
 #define MPIR_T_PVAR_COUNTER_ARRAY_INC(MODULE, ptr_, idx_, inc_) \
     PVAR_GATED_ACTION(MODULE, MPIR_T_PVAR_COUNTER_ARRAY_INC_impl(ptr_, idx_, inc_))
 
@@ -408,15 +412,15 @@ static inline cvar_table_entry_t * LOOKUP_CVAR_BY_NAME(const char* cvar_name)
 
 #define MPIR_T_PVAR_AGGREGATE_INIT_VAR(MODULE, ptr_) \
     PVAR_GATED_ACTION(MODULE, MPIR_T_PVAR_AGGREGATE_INIT_VAR_impl(ptr_))
-#define MPIR_T_PVAR_AGGREGATE_GET_VAR(MODULE, ptr_) \
-    PVAR_GATED_ACTION(MODULE, MPIR_T_PVAR_AGGREGATE_GET_VAR_impl(ptr_))
+#define MPIR_T_PVAR_AGGREGATE_GET_VAR(ptr_) \
+    MPIR_T_PVAR_AGGREGATE_GET_VAR_impl(ptr_)
 #define MPIR_T_PVAR_AGGREGATE_INC_VAR(MODULE, ptr_, inc_) \
     PVAR_GATED_ACTION(MODULE, MPIR_T_PVAR_AGGREGATE_INC_VAR_impl(ptr_, inc_))
 
 #define MPIR_T_PVAR_AGGREGATE_INIT(MODULE, name_) \
     PVAR_GATED_ACTION(MODULE, MPIR_T_PVAR_AGGREGATE_INIT_impl(name_))
-#define MPIR_T_PVAR_AGGREGATE_GET(MODULE, name_) \
-    PVAR_GATED_ACTION(MODULE, MPIR_T_PVAR_AGGREGATE_GET_impl(name_))
+#define MPIR_T_PVAR_AGGREGATE_GET(name_) \
+    MPIR_T_PVAR_AGGREGATE_GET_impl(name_)
 #define MPIR_T_PVAR_AGGREGATE_INC(MODULE, name_, inc_) \
     PVAR_GATED_ACTION(MODULE, MPIR_T_PVAR_AGGREGATE_INC_impl(name_, inc_))
 
@@ -618,5 +622,4 @@ static inline cvar_table_entry_t * LOOKUP_CVAR_BY_NAME(const char* cvar_name)
             addr_, count_, verb_, bind_, flags_, get_value_, get_count_, cat_, desc_) \
     PVAR_GATED_ACTION(MODULE, MPIR_T_PVAR_LOWWATERMARK_REGISTER_DYNAMIC_impl(dtype_, name_, \
             addr_, count_, verb_, bind_, flags_, get_value_, get_count_, cat_, desc_))
-
 #endif
