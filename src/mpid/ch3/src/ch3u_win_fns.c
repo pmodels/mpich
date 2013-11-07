@@ -8,9 +8,7 @@
 #include "mpiinfo.h"
 #include "mpidrma.h"
 
-#ifdef USE_MPIU_INSTR
-MPIU_INSTR_DURATION_EXTERN_DECL(wincreate_allgather);
-#endif
+MPIR_T_PVAR_DOUBLE_TIMER_DECL_EXTERN(RMA, rma_wincreate_allgather);
 
 #undef FUNCNAME
 #define FUNCNAME MPIDI_Win_fns_init
@@ -56,7 +54,7 @@ int MPIDI_CH3U_Win_create_gather( void *base, MPI_Aint size, int disp_unit,
     /* RMA handlers should be set before calling this function */
     mpi_errno = (*win_ptr)->RMAFns.Win_set_info(*win_ptr, info);
 
-    MPIU_INSTR_DURATION_START(wincreate_allgather);
+    MPIR_T_PVAR_TIMER_START(RMA, rma_wincreate_allgather);
     /* allocate memory for the base addresses, disp_units, and
        completion counters of all processes */
     MPIU_CHKPMEM_MALLOC((*win_ptr)->base_addrs, void **,
@@ -94,7 +92,7 @@ int MPIDI_CH3U_Win_create_gather( void *base, MPI_Aint size, int disp_unit,
     mpi_errno = MPIR_Allgather_impl(MPI_IN_PLACE, 0, MPI_DATATYPE_NULL,
                                     tmp_buf, 4, MPI_AINT,
                                     (*win_ptr)->comm_ptr, &errflag);
-    MPIU_INSTR_DURATION_END(wincreate_allgather);
+    MPIR_T_PVAR_TIMER_END(RMA, rma_wincreate_allgather);
     if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
     MPIU_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
 

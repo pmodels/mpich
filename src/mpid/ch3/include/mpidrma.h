@@ -9,11 +9,9 @@
 #include "mpl_utlist.h"
 #include "mpidi_ch3_impl.h"
 
-#ifdef USE_MPIU_INSTR
-MPIU_INSTR_DURATION_EXTERN_DECL(wincreate_allgather);
-MPIU_INSTR_DURATION_EXTERN_DECL(winfree_rs);
-MPIU_INSTR_DURATION_EXTERN_DECL(winfree_complete);
-#endif
+MPIR_T_PVAR_DOUBLE_TIMER_DECL_EXTERN(RMA, rma_wincreate_allgather);
+MPIR_T_PVAR_DOUBLE_TIMER_DECL_EXTERN(RMA, rma_winfree_rs);
+MPIR_T_PVAR_DOUBLE_TIMER_DECL_EXTERN(RMA, rma_winfree_complete);
 
 typedef enum MPIDI_RMA_Op_type {
     MPIDI_RMA_PUT               = 23,
@@ -1062,20 +1060,20 @@ static inline int MPIDI_CH3I_Wait_for_pt_ops_finish(MPID_Win *win_ptr)
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_CH3I_WAIT_FOR_PT_OPS_FINISH);
 
     comm_ptr = win_ptr->comm_ptr;
-    MPIU_INSTR_DURATION_START(winfree_rs);
+    MPIR_T_PVAR_TIMER_START(RMA, rma_winfree_rs);
     mpi_errno = MPIR_Reduce_scatter_block_impl(win_ptr->pt_rma_puts_accs,
                                                &total_pt_rma_puts_accs, 1,
                                                MPI_INT, MPI_SUM, comm_ptr, &errflag);
     if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
     MPIU_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
-    MPIU_INSTR_DURATION_END(winfree_rs);
+    MPIR_T_PVAR_TIMER_END(RMA, rma_winfree_rs);
 
     if (total_pt_rma_puts_accs != win_ptr->my_pt_rma_puts_accs)
     {
 	MPID_Progress_state progress_state;
 
 	/* poke the progress engine until the two are equal */
-	MPIU_INSTR_DURATION_START(winfree_complete);
+	MPIR_T_PVAR_TIMER_START(RMA, rma_winfree_complete);
 	MPID_Progress_start(&progress_state);
 	while (total_pt_rma_puts_accs != win_ptr->my_pt_rma_puts_accs)
 	{
@@ -1089,7 +1087,7 @@ static inline int MPIDI_CH3I_Wait_for_pt_ops_finish(MPID_Win *win_ptr)
 	    /* --END ERROR HANDLING-- */
 	}
 	MPID_Progress_end(&progress_state);
-	MPIU_INSTR_DURATION_END(winfree_complete);
+	MPIR_T_PVAR_TIMER_END(RMA, rma_winfree_complete);
     }
 
  fn_exit:

@@ -9,15 +9,14 @@
 
 
 MPIU_THREADSAFE_INIT_DECL(initRMAoptions);
-#ifdef USE_MPIU_INSTR
-MPIU_INSTR_DURATION_DECL(wincreate_allgather);
-MPIU_INSTR_DURATION_DECL(winfree_rs);
-MPIU_INSTR_DURATION_DECL(winfree_complete);
-MPIU_INSTR_DURATION_DECL(rmaqueue_alloc);
-MPIU_INSTR_DURATION_DECL(rmaqueue_set);
-extern void MPIDI_CH3_RMA_InitInstr(void);
-#endif
 
+MPIR_T_PVAR_DOUBLE_TIMER_DECL_EXTERN(RMA, rma_wincreate_allgather);
+MPIR_T_PVAR_DOUBLE_TIMER_DECL_EXTERN(RMA, rma_winfree_rs);
+MPIR_T_PVAR_DOUBLE_TIMER_DECL_EXTERN(RMA, rma_winfree_complete);
+MPIR_T_PVAR_DOUBLE_TIMER_DECL_EXTERN(RMA, rma_rmaqueue_alloc);
+MPIR_T_PVAR_DOUBLE_TIMER_DECL_EXTERN(RMA, rma_rmaqueue_set);
+
+extern void MPIDI_CH3_RMA_Init_Pvars(void);
 
 static int win_init(MPI_Aint size, int disp_unit, int create_flavor, int model,
                     MPID_Comm *comm_ptr, MPID_Win **win_ptr);
@@ -255,15 +254,8 @@ static int win_init(MPI_Aint size, int disp_unit, int create_flavor, int model,
 
     if(initRMAoptions) {
         MPIU_THREADSAFE_INIT_BLOCK_BEGIN(initRMAoptions);
-#ifdef USE_MPIU_INSTR
-        /* Define all instrumentation handles used in the CH3 RMA here*/
-        MPIU_INSTR_DURATION_INIT(wincreate_allgather,0,"WIN_CREATE:Allgather");
-        MPIU_INSTR_DURATION_INIT(winfree_rs,0,"WIN_FREE:ReduceScatterBlock");
-        MPIU_INSTR_DURATION_INIT(winfree_complete,0,"WIN_FREE:Complete");
-        MPIU_INSTR_DURATION_INIT(rmaqueue_alloc,0,"Allocate RMA Queue element");
-        MPIU_INSTR_DURATION_INIT(rmaqueue_set,0,"Set fields in RMA Queue element");
-        MPIDI_CH3_RMA_InitInstr();
-#endif
+
+        MPIDI_CH3_RMA_Init_Pvars();
 
         MPIU_THREADSAFE_INIT_CLEAR(initRMAoptions);
         MPIU_THREADSAFE_INIT_BLOCK_END(initRMAoptions);

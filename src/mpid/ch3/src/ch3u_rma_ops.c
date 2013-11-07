@@ -8,11 +8,9 @@
 
 static int enableShortACC=1;
 
-#ifdef USE_MPIU_INSTR
-MPIU_INSTR_DURATION_EXTERN_DECL(rmaqueue_alloc);
-MPIU_INSTR_DURATION_EXTERN_DECL(rmaqueue_set);
-extern void MPIDI_CH3_RMA_InitInstr(void);
-#endif
+MPIR_T_PVAR_DOUBLE_TIMER_DECL_EXTERN(RMA, rma_rmaqueue_alloc);
+MPIR_T_PVAR_DOUBLE_TIMER_DECL_EXTERN(RMA, rma_rmaqueue_set);
+extern void MPIDI_CH3_RMA_Init_Pvars(void);
 
 #define MPIDI_PASSIVE_TARGET_DONE_TAG  348297
 #define MPIDI_PASSIVE_TARGET_RMA_TAG 563924
@@ -177,12 +175,12 @@ int MPIDI_Put(const void *origin_addr, int origin_count, MPI_Datatype
         MPIDI_RMA_Op_t *new_ptr = NULL;
 
 	/* queue it up */
-        MPIU_INSTR_DURATION_START(rmaqueue_alloc);
+        MPIR_T_PVAR_TIMER_START(RMA, rma_rmaqueue_alloc);
         mpi_errno = MPIDI_CH3I_RMA_Ops_alloc_tail(ops_list, &new_ptr);
-        MPIU_INSTR_DURATION_END(rmaqueue_alloc);
+        MPIR_T_PVAR_TIMER_END(RMA, rma_rmaqueue_alloc);
         if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
 
-	MPIU_INSTR_DURATION_START(rmaqueue_set);
+	MPIR_T_PVAR_TIMER_START(RMA, rma_rmaqueue_set);
 	/* FIXME: For contig and very short operations, use a streamlined op */
 	new_ptr->type = MPIDI_RMA_PUT;
         /* Cast away const'ness for the origin address, as the
@@ -195,7 +193,7 @@ int MPIDI_Put(const void *origin_addr, int origin_count, MPI_Datatype
 	new_ptr->target_disp = target_disp;
 	new_ptr->target_count = target_count;
 	new_ptr->target_datatype = target_datatype;
-	MPIU_INSTR_DURATION_END(rmaqueue_set);
+	MPIR_T_PVAR_TIMER_END(RMA, rma_rmaqueue_set);
 
 	/* if source or target datatypes are derived, increment their
 	   reference counts */
@@ -289,12 +287,12 @@ int MPIDI_Get(void *origin_addr, int origin_count, MPI_Datatype
         MPIDI_RMA_Op_t *new_ptr = NULL;
 
 	/* queue it up */
-        MPIU_INSTR_DURATION_START(rmaqueue_alloc);
+        MPIR_T_PVAR_TIMER_START(RMA, rma_rmaqueue_alloc);
         mpi_errno = MPIDI_CH3I_RMA_Ops_alloc_tail(ops_list, &new_ptr);
-        MPIU_INSTR_DURATION_END(rmaqueue_alloc);
+        MPIR_T_PVAR_TIMER_END(RMA, rma_rmaqueue_alloc);
         if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
 
-	MPIU_INSTR_DURATION_START(rmaqueue_set);
+	MPIR_T_PVAR_TIMER_START(RMA, rma_rmaqueue_set);
 	/* FIXME: For contig and very short operations, use a streamlined op */
 	new_ptr->type = MPIDI_RMA_GET;
 	new_ptr->origin_addr = origin_addr;
@@ -304,7 +302,7 @@ int MPIDI_Get(void *origin_addr, int origin_count, MPI_Datatype
 	new_ptr->target_disp = target_disp;
 	new_ptr->target_count = target_count;
 	new_ptr->target_datatype = target_datatype;
-	MPIU_INSTR_DURATION_END(rmaqueue_set);
+	MPIR_T_PVAR_TIMER_END(RMA, rma_rmaqueue_set);
 	
 	/* if source or target datatypes are derived, increment their
 	   reference counts */
@@ -401,15 +399,15 @@ int MPIDI_Accumulate(const void *origin_addr, int origin_count, MPI_Datatype
         MPIDI_RMA_Op_t *new_ptr = NULL;
 
 	/* queue it up */
-        MPIU_INSTR_DURATION_START(rmaqueue_alloc);
+        MPIR_T_PVAR_TIMER_START(RMA, rma_rmaqueue_alloc);
         mpi_errno = MPIDI_CH3I_RMA_Ops_alloc_tail(ops_list, &new_ptr);
-        MPIU_INSTR_DURATION_END(rmaqueue_alloc);
+        MPIR_T_PVAR_TIMER_END(RMA, rma_rmaqueue_alloc);
         if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
 
 	/* If predefined and contiguous, use a simplified element */
 	if (MPIR_DATATYPE_IS_PREDEFINED(origin_datatype) &&
             MPIR_DATATYPE_IS_PREDEFINED(target_datatype) && enableShortACC) {
-	    MPIU_INSTR_DURATION_START(rmaqueue_set);
+	    MPIR_T_PVAR_TIMER_START(RMA, rma_rmaqueue_set);
 	    new_ptr->type = MPIDI_RMA_ACC_CONTIG;
 	    /* Only the information needed for the contig/predefined acc */
             /* Cast away const'ness for origin_address as
@@ -422,11 +420,11 @@ int MPIDI_Accumulate(const void *origin_addr, int origin_count, MPI_Datatype
 	    new_ptr->target_count = target_count;
 	    new_ptr->target_datatype = target_datatype;
 	    new_ptr->op = op;
-	    MPIU_INSTR_DURATION_END(rmaqueue_set);
+	    MPIR_T_PVAR_TIMER_END(RMA, rma_rmaqueue_set);
 	    goto fn_exit;
 	}
 
-	MPIU_INSTR_DURATION_START(rmaqueue_set);
+	MPIR_T_PVAR_TIMER_START(RMA, rma_rmaqueue_set);
 	new_ptr->type = MPIDI_RMA_ACCUMULATE;
         /* Cast away const'ness for origin_address as MPIDI_RMA_Op_t
          * contain both PUT and GET like ops */
@@ -438,7 +436,7 @@ int MPIDI_Accumulate(const void *origin_addr, int origin_count, MPI_Datatype
 	new_ptr->target_count = target_count;
 	new_ptr->target_datatype = target_datatype;
 	new_ptr->op = op;
-	MPIU_INSTR_DURATION_END(rmaqueue_set);
+	MPIR_T_PVAR_TIMER_END(RMA, rma_rmaqueue_set);
 	
 	/* if source or target datatypes are derived, increment their
 	   reference counts */
