@@ -330,6 +330,8 @@ static inline cvar_table_entry_t * LOOKUP_CVAR_BY_NAME(const char* cvar_name)
     MPIR_T_PVAR_COUNTER_GET_impl(name_)
 #define MPIR_T_PVAR_COUNTER_INC(MODULE, name_, inc_) \
     PVAR_GATED_ACTION(MODULE, MPIR_T_PVAR_COUNTER_INC_impl(name_, inc_))
+#define MPIR_T_PVAR_COUNTER_ADDR(name_) \
+    MPIR_T_PVAR_COUNTER_ADDR_impl(name_)
 
 #define MPIR_T_PVAR_COUNTER_REGISTER_STATIC(MODULE, dtype_, name_, \
             verb_, bind_, flags_, cat_, desc_) \
@@ -468,6 +470,8 @@ static inline cvar_table_entry_t * LOOKUP_CVAR_BY_NAME(const char* cvar_name)
     PVAR_GATED_ACTION(MODULE, MPIR_T_PVAR_TIMER_START_impl(name_))
 #define MPIR_T_PVAR_TIMER_END(MODULE, name_) \
     PVAR_GATED_ACTION(MODULE, MPIR_T_PVAR_TIMER_END_impl(name_))
+#define MPIR_T_PVAR_TIMER_ADDR(name_) \
+    MPIR_T_PVAR_TIMER_ADDR_impl(name_)
 
 /* This macro actually register twins of a timer and a counter to MPIR_T */
 #define MPIR_T_PVAR_TIMER_REGISTER_STATIC(MODULE, dtype_, name_, \

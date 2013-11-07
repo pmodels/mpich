@@ -665,6 +665,8 @@ extern void MPIR_T_PVAR_REGISTER_impl(
     MPIR_T_PVAR_COUNTER_GET_VAR_impl(&PVAR_COUNTER_##name_)
 #define MPIR_T_PVAR_COUNTER_INC_impl(name_, inc_) \
     MPIR_T_PVAR_COUNTER_INC_VAR_impl(&PVAR_COUNTER_##name_, inc_)
+#define MPIR_T_PVAR_COUNTER_ADDR_impl(name_) \
+    (&PVAR_COUNTER_##name_)
 
 /* Registration AND initialization to zero for static pvar.  */
 #define MPIR_T_PVAR_COUNTER_REGISTER_STATIC_impl(dtype_, name_, \
@@ -875,6 +877,8 @@ extern void MPIR_T_PVAR_REGISTER_impl(
     MPIR_T_PVAR_TIMER_START_VAR_impl(&PVAR_TIMER_##name_)
 #define MPIR_T_PVAR_TIMER_END_impl(name_) \
     MPIR_T_PVAR_TIMER_END_VAR_impl(&PVAR_TIMER_##name_)
+#define MPIR_T_PVAR_TIMER_ADDR_impl(name_) \
+    (&PVAR_TIMER_##name_)
 
 /* Customized get_value() for MPIR_T_pvar_timer_t */
 static inline
