@@ -12,6 +12,7 @@
 /errors/f90/errhan/Makefile.am
 /errors/f90/errhan/testlist
 /errors/f90/errhan/uerrhandf90.f90
+/errors/f90/io
 /errors/f77/errhan/addsize.h
 /errors/f77/errhan/iooffset.h
 /f90/coll/
