@@ -241,8 +241,14 @@ typedef struct {
 
 /* Timer type */
 typedef struct {
+    /* Accumulated time */
     MPID_Time_t total;
+
+    /* Time when the timer was started recently */
     MPID_Time_t curstart;
+
+    /* A counter recording how many times the timer is started */
+    unsigned long long count;
 } MPIR_T_pvar_timer_t;
 
 /* An union to represent a watermark value */
@@ -852,6 +858,7 @@ extern void MPIR_T_PVAR_REGISTER_impl(
 #define MPIR_T_PVAR_TIMER_START_VAR_impl(ptr_) \
     do { \
         MPID_Wtime(&((ptr_)->curstart)); \
+        (ptr_)->count++; \
     } while (0)
 #define MPIR_T_PVAR_TIMER_END_VAR_impl(ptr_) \
     do { \
@@ -871,7 +878,7 @@ extern void MPIR_T_PVAR_REGISTER_impl(
 
 /* Customized get_value() for MPIR_T_pvar_timer_t */
 static inline
-void get_timer_in_double(MPIR_T_pvar_timer_t *timer, void *obj_handle,
+void get_timer_time_in_double(MPIR_T_pvar_timer_t *timer, void *obj_handle,
                     int count, double *buf)
 {
     int i;
@@ -887,23 +894,13 @@ void get_timer_in_double(MPIR_T_pvar_timer_t *timer, void *obj_handle,
         MPIU_Assert(dtype_ == MPI_DOUBLE); \
         MPIR_T_PVAR_TIMER_INIT_impl(name_); \
         void *addr_ = &PVAR_TIMER_##name_; \
+        void *count_addr_ = &(PVAR_TIMER_##name_.count); \
         MPIR_T_PVAR_REGISTER_impl(MPI_T_PVAR_CLASS_TIMER, dtype_, #name_, \
             addr_, 1, MPI_T_ENUM_NULL, verb_, bind_, flags_, \
-            (MPIR_T_pvar_get_value_cb *)&get_timer_in_double, NULL, cat_, desc_); \
-    } while (0)
-
-/* Registration for dynamic pvar w/ or w/o callback. Init is left to users.
- * (Probably, the callback still is get_timer_in_double)
- */
-#define MPIR_T_PVAR_TIMER_REGISTER_DYNAMIC_impl(dtype_, name_, \
-            addr_, count_, verb_, bind_, flags_, get_value_, get_count_, cat_, desc_) \
-    do { \
-        /* Allowable datatypes only */ \
-        MPIU_Assert(dtype_ == MPI_DOUBLE); \
-        MPIU_Assert(addr_ != NULL || get_value_ != NULL); \
-        MPIR_T_PVAR_REGISTER_impl(MPI_T_PVAR_CLASS_TIMER, dtype_, #name_, \
-            addr_, count_, MPI_T_ENUM_NULL, verb_, bind_, flags_, \
-            get_value_, get_count_, cat_, desc_); \
+            (MPIR_T_pvar_get_value_cb *)&get_timer_time_in_double, NULL, cat_, desc_); \
+        MPIR_T_PVAR_REGISTER_impl(MPI_T_PVAR_CLASS_COUNTER, MPI_UNSIGNED_LONG_LONG, #name_, \
+            count_addr_, 1, MPI_T_ENUM_NULL, verb_, bind_, flags_, \
+            NULL, NULL, cat_, desc_); \
     } while (0)
 
 

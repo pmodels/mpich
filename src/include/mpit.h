@@ -435,6 +435,13 @@ static inline cvar_table_entry_t * LOOKUP_CVAR_BY_NAME(const char* cvar_name)
             addr_, count_, verb_, bind_, flags_, get_value_, get_count_, cat_, desc_))
 
 /* TIMER */
+
+/* A timer actually has a twin, i.e., a counter, which counts how many times
+ the timer is started/stopped so that we could know the average time
+ for events measured. In our impl, the twins are exposed to MPI_T through the
+ same name, but in two MPI_T_PVAR classes (timer and counter) and two data types
+ (double and unsigned long long) respectively.
+*/
 #define MPIR_T_PVAR_DOUBLE_TIMER_DECL(MODULE, name_) \
     PVAR_GATED_DECL(MODULE, MPIR_T_PVAR_DOUBLE_TIMER_DECL_impl(name_))
 
@@ -462,15 +469,11 @@ static inline cvar_table_entry_t * LOOKUP_CVAR_BY_NAME(const char* cvar_name)
 #define MPIR_T_PVAR_TIMER_END(MODULE, name_) \
     PVAR_GATED_ACTION(MODULE, MPIR_T_PVAR_TIMER_END_impl(name_))
 
+/* This macro actually register twins of a timer and a counter to MPIR_T */
 #define MPIR_T_PVAR_TIMER_REGISTER_STATIC(MODULE, dtype_, name_, \
             verb_, bind_, flags_, cat_, desc_) \
     PVAR_GATED_ACTION(MODULE, MPIR_T_PVAR_TIMER_REGISTER_STATIC_impl(dtype_, name_, \
             verb_, bind_, flags_, cat_, desc_))
-
-#define MPIR_T_PVAR_TIMER_REGISTER_DYNAMIC(MODULE, dtype_, name_, \
-            addr_, count_, verb_, bind_, flags_, get_value_, get_count_, cat_, desc_) \
-    PVAR_GATED_ACTION(MODULE, MPIR_T_PVAR_TIMER_REGISTER_DYNAMIC_impl(dtype_, name_, \
-            addr_, count_, verb_, bind_, flags_, get_value_, get_count_, cat_, desc_))
 
 /* HIGHWATERMARK */
 #define MPIR_T_PVAR_UINT_HIGHWATERMARK_DECL(MODULE, name_) \
