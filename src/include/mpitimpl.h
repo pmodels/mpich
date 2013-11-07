@@ -1083,7 +1083,7 @@ void get_timer_time_in_double(MPIR_T_pvar_timer_t *timer, void *obj_handle,
         }; \
         void *addr_ = &PVAR_HIGHWATERMARK_##name_; \
         MPIR_T_PVAR_REGISTER_impl(MPI_T_PVAR_CLASS_HIGHWATERMARK, dtype_, #name_, \
-            addr_, 1, MPI_T_ENUM_NULL, verb_, bind_, flags_, NULL, cat_, desc_); \
+            addr_, 1, MPI_T_ENUM_NULL, verb_, bind_, flags_, NULL, NULL, cat_, desc_); \
     } while (0)
 
 /* Registration for dynamic pvar w/ or w/o callback. Init is left to users */
@@ -1271,7 +1271,7 @@ void get_timer_time_in_double(MPIR_T_pvar_timer_t *timer, void *obj_handle,
         }; \
         void *addr_ = &PVAR_LOWWATERMARK_##name_; \
         MPIR_T_PVAR_REGISTER_impl(MPI_T_PVAR_CLASS_LOWWATERMARK, dtype_, #name_, \
-            addr_, 1, MPI_T_ENUM_NULL, verb_, bind_, flags_, NULL, cat_, desc_); \
+            addr_, 1, MPI_T_ENUM_NULL, verb_, bind_, flags_, NULL, NULL, cat_, desc_); \
     } while (0)
 
 /* Registration for dynamic pvar w/ or w/o callback. Init is left to users */
