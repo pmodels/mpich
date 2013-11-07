@@ -142,8 +142,8 @@ void MPIR_T_CVAR_REGISTER_impl(
 struct MPIR_T_pvar_handle_s;
 struct MPIR_T_pvar_session_s;
 
-typedef int MPIR_T_pvar_get_value_cb(void *addr, void *obj_handle, int count, void *buf);
-typedef int MPIR_T_pvar_get_count_cb(void *addr, void *obj_handle, int *count);
+typedef void MPIR_T_pvar_get_value_cb(void *addr, void *obj_handle, int count, void *buf);
+typedef void MPIR_T_pvar_get_count_cb(void *addr, void *obj_handle, int *count);
 
 /* Basic pvar flags defined by MPI_T standard */
 #define MPIR_T_PVAR_FLAG_READONLY      0x01
@@ -871,15 +871,12 @@ extern void MPIR_T_PVAR_REGISTER_impl(
 
 /* Customized get_value() for MPIR_T_pvar_timer_t */
 static inline
-int get_timer_in_double(MPIR_T_pvar_timer_t *timer, void *obj_handle,
+void get_timer_in_double(MPIR_T_pvar_timer_t *timer, void *obj_handle,
                     int count, double *buf)
 {
-    int i, mpi_errno = MPI_SUCCESS;
-
+    int i;
     for (i = 0; i < count; i++)
         MPID_Wtime_todouble(&(timer[i].total), &buf[i]);
-
-    return mpi_errno;
 }
 
 /* Registration for static storage */

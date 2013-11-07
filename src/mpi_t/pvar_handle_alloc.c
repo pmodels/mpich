@@ -55,8 +55,7 @@ int MPIR_T_pvar_handle_alloc_impl(MPI_T_pvar_session session, int pvar_index,
     if (info->get_count == NULL) {
         cnt = info->count;
     } else {
-        mpi_errno = info->get_count(info->addr, obj_handle, &cnt);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        info->get_count(info->addr, obj_handle, &cnt);
     }
 
     bytes = MPID_Datatype_get_basic_size(info->datatype);
