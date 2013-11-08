@@ -2627,7 +2627,7 @@ on all link lines (consider adding it to LDFLAGS)])
     eval SHLIB_EXT='"'$shrext_cmds'"'
 
     if test -z "$MPICH_DEBUGLIBNAME" ; then
-        DEBUGLIBNAME=libtvmpich.$SHLIB_EXT
+        DEBUGLIBNAME=libtvmpich$SHLIB_EXT
     else
         # FIXME DJG I don't think this can be supported arbitrarily by the new
         # build system (I'm not sure it was supported correctly by the old
