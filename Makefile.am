@@ -161,8 +161,8 @@ install-exec-hook:
 			rm -f $${e}.tmp ; \
 		fi ; \
 	done ; \
-	if test -e ${DESTDIR}${bindir}/mpicxx ; then \
-		cd ${DESTDIR}${bindir} && ln -f -s mpicxx mpic++ ; fi
+	if test -e ${DESTDIR}${bindir}/@MPICXX_NAME@ ; then \
+		cd ${DESTDIR}${bindir} && ln -f -s @MPICXX_NAME@ @MPICPP_NAME@ ; fi
 
 # the configure step checks for the 'lib' dir to decide whether a source
 # directory has been previously used for an in-path build before allowing a
@@ -179,7 +179,7 @@ DISTCLEANFILES += config.system
 # we can only have one clean-local, so we hook into it via conditionally
 # defined variables in the dependencies section
 clean-local: $(CLEAN_LOCAL_TARGETS)
-	rm -f ${DESTDIR}${bindir}/mpic++
+	rm -f ${DESTDIR}${bindir}/@MPICPP_NAME@
 
 # --------------------------------------------------------------------------
 #  coverage rules

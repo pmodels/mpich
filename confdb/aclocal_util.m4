@@ -199,3 +199,17 @@ dnl I think that printf like this will be sufficiently portable, but I don't
 dnl have any guarantee of it.  If not, we can fall back to AS_VAR_ARITH
 dnl and/or AC_COMPUTE_INT (the latter will probably be slow)
 AC_DEFUN([PAC_CONV_HEX_TO_DEC],[AS_VAR_SET([$2],[`printf "%d" $1`])])
+
+dnl PAC_GET_EXENAME(exe_name, out_exe_name)
+dnl
+dnl Prepends and appends program prefix and suffix as supplied by --program_prefix
+dnl and --program-sufix
+AC_DEFUN([PAC_GET_EXENAME],[
+$2=$1
+if test "$program_prefix" != "NONE" ; then
+    $2="${program_prefix}$$2"
+fi
+if test "$program_suffix" != "NONE" ; then
+    $2="$$2$program_suffix"
+fi
+])

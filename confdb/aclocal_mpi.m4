@@ -165,6 +165,8 @@ dnl   MPI_FIND_COMPILER_SCRIPTS
 dnl which can fail (i.e., not find a script), and
 dnl   MPI_FIND_COMPILERS
 dnl which runs the various PROC_xx for the compilers.
+dnl WARNING: this function ignores --program-suffix and --program-prefix.
+dnl However, this function is not currently used at all.
 AC_DEFUN([PAC_MPI_FIND_COMPILER_SCRIPTS],[
 # Set defaults
 MPIRUN_NP="-np "

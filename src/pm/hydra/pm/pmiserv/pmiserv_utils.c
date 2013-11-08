@@ -48,7 +48,7 @@ HYD_status HYD_pmcd_pmi_fill_in_proxy_args(struct HYD_string_stash *proxy_stash,
 
     HYD_STRING_STASH_INIT(stash);
     HYD_STRING_STASH(stash, HYDU_strdup(HYD_server_info.base_path), status);
-    HYD_STRING_STASH(stash, HYDU_strdup("hydra_pmi_proxy"), status);
+    HYD_STRING_STASH(stash, HYDU_strdup(HYDRA_PMI_PROXY), status);
     HYD_STRING_SPIT(stash, str, status);
 
     HYD_STRING_STASH(*proxy_stash, str, status);

@@ -448,6 +448,13 @@ AC_ARG_VAR([WRAPPER_FFLAGS],[])
 AC_ARG_VAR([WRAPPER_FCFLAGS],[])
 AC_ARG_VAR([WRAPPER_CXXFLAGS],[])
 
+# Attach program prefix and suffix to executable names
+PAC_GET_EXENAME("mpicc", MPICC_NAME)
+PAC_GET_EXENAME("mpif77", MPIF77_NAME)
+PAC_GET_EXENAME("mpif90", MPIF90_NAME)
+PAC_GET_EXENAME("mpicxx", MPICXX_NAME)
+PAC_GET_EXENAME("mpiexec", MPIEXEC_NAME)
+
 if test "$FROM_MPICH" = "yes" ; then
     # perform configure tests with the normal compilers ($CC/$F77/etc), but use
     # the WRAPPER_xFLAGS computed by MPICH as our flags instead.  Then at the
@@ -467,44 +474,44 @@ if test "$FROM_MPICH" = "yes" ; then
 
 elif test -n "$with_mpi" ; then
     if test -z "$MPICC" ; then
-        CC=$with_mpi/bin/mpicc
+        CC=$with_mpi/bin/$MPICC_NAME
     else
         CC=$MPICC
     fi
     if test -z "$MPIF77" ; then
-        F77=$with_mpi/bin/mpif77
+        F77=$with_mpi/bin/$MPIF77_NAME
     else
         F77=$MPIF77
     fi
     if test -z "$MPIFC" ; then
-        FC=$with_mpi/bin/mpif90
+        FC=$with_mpi/bin/$MPIF90_NAME
     else
         FC=$MPIFC
     fi
     if test -z "$MPICXX" ; then
-        CXX=$with_mpi/bin/mpicxx
+        CXX=$with_mpi/bin/$MPICXX_NAME
     else
         CXX=$MPICXX
     fi
     if test -z "$MPIEXEC" ; then
-        MPIEXEC=$with_mpi/bin/mpiexec
+        MPIEXEC=$with_mpi/bin/$MPIEXEC_NAME
     fi
 else
     # Try to use mpicc etc names
     if test -z "$MPICC" ; then
-        AC_PATH_PROG(MPICC,mpicc mpcc)
+        AC_PATH_PROG(MPICC,$MPICC_NAME mpcc)
     fi
     if test "x$MPICC" != "x" ; then
         CC=$MPICC
     fi 
     if test -z "$MPIF77" ; then
-        AC_PATH_PROG(MPIF77,mpif77 mpf77)
+        AC_PATH_PROG(MPIF77,$MPIF77_NAME mpf77)
     fi
     if test "x$MPIF77" != "x" ; then 
         F77=$MPIF77
     fi
     if test -z "$MPIFC" ; then
-        AC_PATH_PROG(MPIFC,mpif90 mpftn)
+        AC_PATH_PROG(MPIFC,$MPIF90_NAME mpftn)
     fi
     if test "x$MPIFC" != "x" ; then
         FC=$MPIFC
@@ -512,13 +519,13 @@ else
     if test -z "$MPICXX" ; then
         # We left mpiCC off of this list because mpicc and mpiCC are the 
         # same on Mac OSX systems.
-        AC_PATH_PROG(MPICXX,mpicxx mpCC)
+        AC_PATH_PROG(MPICXX,$MPICXX_NAME mpCC)
     fi
     if test "x$MPICXX" != "x" ; then
         CXX=$MPICXX
     fi 
     if test -z "$MPIEXEC" ; then
-        AC_PATH_PROG(MPIEXEC,mpiexec)
+        AC_PATH_PROG(MPIEXEC,$MPIEXEC_NAME)
     fi
 fi
 
@@ -1396,11 +1403,11 @@ if test "$FROM_MPICH" = yes ; then
 
     # we did our tests with the base compilers, now point the make system at the
     # installed compiler wrappers for actually building the tests
-    CC=$mpibindir/mpicc
-    F77=$mpibindir/mpif77
-    FC=$mpibindir/mpif90
-    CXX=$mpibindir/mpicxx
-    MPIEXEC=$mpibindir/mpiexec
+    CC=$mpibindir/$MPICC_NAME
+    F77=$mpibindir/$MPIF77_NAME
+    FC=$mpibindir/$MPIF90_NAME
+    CXX=$mpibindir/$MPICXX_NAME
+    MPIEXEC=$mpibindir/$MPIEXEC_NAME
 
     # Zero out the flags, since they are already contained in the compiler
     # wrapper scripts.  Note that this will kill any flags that have been added
@@ -1422,7 +1429,7 @@ if test "$FROM_MPICH" = yes ; then
 else
     # We need either mpiexec or mpirun.  If we don't find them,
     # the user will need to determine how to run a program
-    AC_PATH_PROG(MPIEXEC,mpiexec)
+    AC_PATH_PROG(MPIEXEC,$MPIEXEC_NAME)
 fi
 
 AC_OUTPUT_COMMANDS([chmod a+x maint/testmerge])

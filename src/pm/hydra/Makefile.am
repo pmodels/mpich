@@ -38,9 +38,9 @@ DIST_SUBDIRS = ${external_dist_subdirs}
 # Provide an alias for mpirun to support tools that assume that
 # mpiexec is called mpirun
 install-exec-hook:
-	if [ -x ${DESTDIR}${bindir}/mpiexec.hydra ] ; then \
-	    cd ${DESTDIR}${bindir} && ln -f -s mpiexec.hydra mpiexec ; \
-	    cd ${DESTDIR}${bindir} && ln -f -s mpiexec.hydra mpirun ; \
+	if [ -x ${DESTDIR}${bindir}/@MPIEXEC_HYDRA_NAME@ ] ; then \
+	    cd ${DESTDIR}${bindir} && ln -f -s @MPIEXEC_HYDRA_NAME@ @MPIEXEC_NAME@ ; \
+	    cd ${DESTDIR}${bindir} && ln -f -s @MPIEXEC_HYDRA_NAME@ @MPIRUN_NAME@ ; \
 	fi
 
 # A special alternate installation target when using multiple process
@@ -50,7 +50,7 @@ install-alt: $(bin_PROGRAMS)
 	@for foo in $? ; do $(MAKE) install $$foo ; done
 
 uninstall-local:
-	rm -f ${DESTDIR}${bindir}/mpirun ${DESTDIR}${bindir}/mpiexec
+	rm -f ${DESTDIR}${bindir}/@MPIRUN_NAME@ ${DESTDIR}${bindir}/@MPIEXEC_NAME@
 
 htmldoc:
 	if test "@DOXYGEN@" != "" ; then @DOXYGEN@ hydra-doxygen.cfg ; fi
