@@ -255,7 +255,6 @@ int mqs_image_has_queues (mqs_image *image, char **message)
 {
     mpich_image_info * i_info = 
 	(mpich_image_info *)dbgr_get_image_info (image);
-    int have_co = 0, have_cl = 0, have_req = 0, have_dreq = 0;
 
     /* Default failure message ! */
     *message = (char *)"The symbols and types in the MPICH library used by TotalView\n"
@@ -282,7 +281,6 @@ int mqs_image_has_queues (mqs_image *image, char **message)
 	mqs_type *cl_type = dbgr_find_type( image, (char *)"MPIR_Comm_list", 
 					    mqs_lang_c );
 	if (cl_type) {
-	    have_cl = 1;
 	    i_info->sequence_number_offs = 
 		dbgr_field_offset( cl_type, (char *)"sequence_number" );
 	    i_info->comm_head_offs = dbgr_field_offset( cl_type, (char *)"head" );
@@ -291,7 +289,6 @@ int mqs_image_has_queues (mqs_image *image, char **message)
     {
 	mqs_type *co_type = dbgr_find_type( image, (char *)"MPID_Comm", mqs_lang_c );
 	if (co_type) {
-	    have_co = 1;
 	    i_info->comm_name_offs = dbgr_field_offset( co_type, (char *)"name" );
 	    i_info->comm_next_offs = dbgr_field_offset( co_type, (char *)"comm_next" );
 	    i_info->comm_rsize_offs = dbgr_field_offset( co_type, (char *)"remote_size" );
@@ -310,7 +307,6 @@ int mqs_image_has_queues (mqs_image *image, char **message)
 	mqs_type *req_type = dbgr_find_type( image, (char *)"MPID_Request", mqs_lang_c );
     if (req_type) {
 	    int mpid_offs;
-	    have_req = 1;
 	    mpid_offs = dbgr_field_offset( req_type, (char *)"mpid" );
 	    i_info->req_status_offs = dbgr_field_offset( req_type, (char *)"status" );
 	    i_info->req_cc_offs     = dbgr_field_offset( req_type, (char *)"cc" );
@@ -321,7 +317,6 @@ int mqs_image_has_queues (mqs_image *image, char **message)
 		i_info->req_mpid_offs = mpid_offs;
 		if (dreq_type) {
 		    int loff, envelope_offs;
-		    have_dreq = 1;
 		    loff = dbgr_field_offset( dreq_type, (char *)"next" );
 		    i_info->req_next_offs = mpid_offs + loff;
 		    loff = dbgr_field_offset( dreq_type, (char *)"userbuf" );
@@ -655,8 +650,6 @@ static int fetch_receive (mqs_process *proc, mpich_process_info *p_info,
 	    int is_complete   = fetch_int ( proc, base + i_info->req_cc_offs, p_info);
         mqs_taddr_t buffer = 0;
         unsigned buf_count = -1;
-        int datatype;
-        datatype = fetch_int(proc, base + i_info->req_datatype_offs, p_info);
 
         if(look_for_user_buffer)
          {
