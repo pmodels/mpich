@@ -251,6 +251,8 @@ static HYD_status control_cb(int fd, HYD_event_t events, void *userp)
                     HYDU_dump_noprefix(stdout, "=================================\n");
                     HYDU_dump_noprefix
                         (stdout, "=   BAD TERMINATION OF ONE OF YOUR APPLICATION PROCESSES\n");
+                    HYDU_dump_noprefix(stdout, "=   PID %d RUNNING AT %s\n", proxy->pid[i],
+                                       proxy->node->hostname);
                     HYDU_dump_noprefix(stdout, "=   EXIT CODE: %d\n", code);
                     HYDU_dump_noprefix(stdout, "=   CLEANING UP REMAINING PROCESSES\n");
                     HYDU_dump_noprefix(stdout, "=   YOU CAN IGNORE THE BELOW CLEANUP MESSAGES\n");
