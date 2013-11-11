@@ -799,8 +799,10 @@ static HYD_status parse_exec_params(char **t_argv)
     if (HYD_pmcd_pmip.user_global.topolib == NULL && HYDRA_DEFAULT_TOPOLIB)
         HYD_pmcd_pmip.user_global.topolib = HYDU_strdup(HYDRA_DEFAULT_TOPOLIB);
 
-    if (HYD_pmcd_pmip.user_global.ckpointlib == NULL && HYDRA_DEFAULT_CKPOINTLIB)
+#ifdef HYDRA_DEFAULT_CKPOINTLIB
+    if (HYD_pmcd_pmip.user_global.ckpointlib == NULL)
         HYD_pmcd_pmip.user_global.ckpointlib = HYDU_strdup(HYDRA_DEFAULT_CKPOINTLIB);
+#endif
 
   fn_exit:
     HYDU_FUNC_EXIT();

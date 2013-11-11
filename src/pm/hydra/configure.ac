@@ -520,8 +520,6 @@ AC_DEFINE_UNQUOTED(HYDRA_AVAILABLE_CKPOINTLIBS,"$available_ckpointlibs",
 if test "$hydra_default_ckpointlib" != "" ; then
    AC_DEFINE_UNQUOTED(HYDRA_DEFAULT_CKPOINTLIB,"$hydra_default_ckpointlib",
 		[Default checkpointing library])
-else
-   AC_DEFINE(HYDRA_DEFAULT_CKPOINTLIB,NULL,[Default checkpointing library])
 fi
 AM_CONDITIONAL([hydra_have_blcr], [test "${have_blcr}" = "yes"])
 
