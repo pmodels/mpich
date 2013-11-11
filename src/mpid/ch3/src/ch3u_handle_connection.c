@@ -314,11 +314,12 @@ int MPIDI_CH3_PktHandler_Close( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 	else /* (vc->state == MPIDI_VC_STATE_ACTIVE) */
         {
 	    if (vc->state != MPIDI_VC_STATE_ACTIVE)
+            {
 		MPIU_DBG_MSG_FMT(CH3_DISCONNECT, TYPICAL, (MPIU_DBG_FDEST, "Unexpected state %s in vc %p (rank=%d) (expecting MPIDI_VC_STATE_ACTIVE)\n", MPIDI_VC_GetStateString(vc->state), vc, vc->pg_rank ));
 	    MPIU_DBG_MSG_D(CH3_DISCONNECT,TYPICAL,
                      "received close(FALSE) from %d, moving to REMOTE_CLOSE.",
 				   vc->pg_rank);
-            
+            }
 	    MPIU_Assert(vc->state == MPIDI_VC_STATE_ACTIVE);
             MPIDI_CHANGE_VC_STATE(vc, REMOTE_CLOSE);
 	}
