@@ -551,7 +551,7 @@ Notes for Fortran:
 int MPI_Init_thread( int *argc, char ***argv, int required, int *provided )
 {
     int mpi_errno = MPI_SUCCESS;
-    int rc, reqd = required;
+    int rc ATTRIBUTE((unused)), reqd = required;
     MPID_MPI_INIT_STATE_DECL(MPID_STATE_MPI_INIT_THREAD);
 
     rc = MPID_Wtime_init();

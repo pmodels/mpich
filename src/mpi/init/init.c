@@ -75,7 +75,7 @@ int MPI_Init( int *argc, char ***argv )
 {
     static const char FCNAME[] = "MPI_Init";
     int mpi_errno = MPI_SUCCESS;
-    int rc;
+    int rc ATTRIBUTE((unused));
     int threadLevel, provided;
     MPID_MPI_INIT_STATE_DECL(MPID_STATE_MPI_INIT);
 
