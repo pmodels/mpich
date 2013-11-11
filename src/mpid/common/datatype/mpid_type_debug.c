@@ -233,6 +233,7 @@ void MPIDI_Datatype_printf(MPI_Datatype type,
 			   int blocklength,
 			   int header)
 {
+#ifdef USE_DBG_LOGGING
     char *string;
     MPI_Aint size;
     MPI_Aint extent, true_lb, true_ub, lb, ub, sticky_lb, sticky_ub;
@@ -278,6 +279,7 @@ void MPIDI_Datatype_printf(MPI_Datatype type,
 		    (MPI_Aint) sticky_ub,
 		    (MPI_Aint) displacement,
 		    (int) blocklength));
+#endif
     return;
 }
 /* --END ERROR HANDLING-- */
