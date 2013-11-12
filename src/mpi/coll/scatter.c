@@ -7,6 +7,24 @@
 
 #include "mpiimpl.h"
 
+/*
+=== BEGIN_MPI_T_CVAR_INFO_BLOCK ===
+
+cvars:
+    - name        : MPIR_CVAR_SCATTER_INTER_SHORT_MSG_SIZE
+      category    : COLLECTIVE
+      type        : int
+      default     : 2048
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        use the short message algorithm for intercommunicator MPI_Scatter if the
+        send buffer size is < this value (in bytes)
+
+=== END_MPI_T_CVAR_INFO_BLOCK ===
+*/
+
 /* -- Begin Profiling Symbol Block for routine MPI_Scatter */
 #if defined(HAVE_PRAGMA_WEAK)
 #pragma weak MPI_Scatter = PMPI_Scatter

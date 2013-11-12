@@ -7,6 +7,47 @@
 #include "mpiimpl.h"
 #include "mpi_init.h"
 
+/*
+=== BEGIN_MPI_T_CVAR_INFO_BLOCK ===
+
+categories:
+    - name        : THREADS
+      description : multi-threading cvars
+
+cvars:
+    - name        : MPIR_CVAR_ASYNC_PROGRESS
+      category    : THREADS
+      type        : boolean
+      default     : false
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        If set to true, MPICH will initiate an additional thread to
+        make asynchronous progress on all communication operations
+        including point-to-point, collective, one-sided operations and
+        I/O.  Setting this variable will automatically increase the
+        thread-safety level to MPI_THREAD_MULTIPLE.  While this
+        improves the progress semantics, it might cause a small amount
+        of performance overhead for regular MPI operations.  The user
+        is encouraged to leave one or more hardware threads vacant in
+        order to prevent contention between the application threads
+        and the progress thread(s).  The impact of oversubscription is
+        highly system dependent but may be substantial in some cases,
+        hence this recommendation.
+
+    - name        : MPIR_CVAR_DEFAULT_THREAD_LEVEL
+      category    : THREADS
+      type        : string
+      default     : "MPI_THREAD_SINGLE"
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Sets the default thread level to use when using MPI_INIT.
+
+=== END_MPI_T_CVAR_INFO_BLOCK ===
+*/
 
 /* -- Begin Profiling Symbol Block for routine MPI_Init */
 #if defined(HAVE_PRAGMA_WEAK)

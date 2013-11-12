@@ -6,6 +6,26 @@
 #if !defined(MPIUTIL_H_INCLUDED)
 #define MPIUTIL_H_INCLUDED
 
+/*
+=== BEGIN_MPI_T_CVAR_INFO_BLOCK ===
+
+cvars:
+    - name        : MPIR_CVAR_NEMESIS_POLLS_BEFORE_YIELD
+      category    : NEMESIS
+      type        : int
+      default     : 1000
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        When MPICH is in a busy waiting loop, it will periodically
+        call a function to yield the processor.  This cvar sets
+        the number of loops before the yield function is called.  A
+        value of 0 disables yielding.
+
+=== END_MPI_T_CVAR_INFO_BLOCK ===
+*/
+
 #ifndef HAS_MPID_ABORT_DECL
 /* FIXME: 4th arg is undocumented and bogus */
 struct MPID_Comm;

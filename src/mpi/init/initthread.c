@@ -24,6 +24,43 @@
 #include <unistd.h>
 #endif
 
+/*
+=== BEGIN_MPI_T_CVAR_INFO_BLOCK ===
+
+categories:
+    - name        : DEBUGGER
+      description : cvars relevant to the "MPIR" debugger interface
+
+cvars:
+    - name        : MPIR_CVAR_DEBUG_HOLD
+      category    : DEBUGGER
+      type        : boolean
+      default     : false
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        If true, causes processes to wait in MPI_Init and
+        MPI_Initthread for a debugger to be attached.  Once the
+        debugger has attached, the variable 'hold' should be set to 0
+        in order to allow the process to continue (e.g., in gdb, "set
+        hold=0").
+
+    - name        : MPIR_CVAR_ERROR_CHECKING
+      category    : ERROR_HANDLING
+      type        : boolean
+      default     : true
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
+      description : >-
+        If true, perform checks for errors, typically to verify valid inputs
+        to MPI routines.  Only effective when MPICH is configured with
+        --enable-error-checking=runtime .
+
+=== END_MPI_T_CVAR_INFO_BLOCK ===
+*/
+
 /* -- Begin Profiling Symbol Block for routine MPI_Init_thread */
 #if defined(HAVE_PRAGMA_WEAK)
 #pragma weak MPI_Init_thread = PMPI_Init_thread

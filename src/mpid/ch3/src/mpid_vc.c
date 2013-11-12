@@ -22,6 +22,49 @@
 #endif
 #include <ctype.h>
 
+/*
+=== BEGIN_MPI_T_CVAR_INFO_BLOCK ===
+
+cvars:
+    - name        : MPIR_CVAR_CH3_NOLOCAL
+      category    : CH3
+      alt-env     : MPIR_CVAR_CH3_NO_LOCAL
+      type        : boolean
+      default     : false
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        If true, force all processes to operate as though all processes
+        are located on another node.  For example, this disables shared
+        memory communication hierarchical collectives.
+
+    - name        : MPIR_CVAR_CH3_ODD_EVEN_CLIQUES
+      category    : CH3
+      alt-env     : MPIR_CVAR_CH3_EVEN_ODD_CLIQUES
+      type        : boolean
+      default     : false
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        If true, odd procs on a node are seen as local to each other, and even
+        procs on a node are seen as local to each other.  Used for debugging on
+        a single machine.
+
+    - name        : MPIR_CVAR_CH3_EAGER_MAX_MSG_SIZE
+      category    : CH3
+      type        : int
+      default     : 131072
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        This cvar controls the message size at which CH3 switches
+        from eager to rendezvous mode.
+
+=== END_MPI_T_CVAR_INFO_BLOCK ===
+*/
 
 /*S
  * MPIDI_VCRT - virtual connection reference table

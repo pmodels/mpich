@@ -7,6 +7,75 @@
 #include "mpidimpl.h"
 #include "mpidrma.h"
 
+/*
+=== BEGIN_MPI_T_CVAR_INFO_BLOCK ===
+
+categories:
+    - name        : CH3
+      description : cvars that control behavior of ch3
+
+cvars:
+    - name        : MPIR_CVAR_CH3_RMA_ACC_IMMED
+      category    : CH3
+      type        : boolean
+      default     : true
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Use the immediate accumulate optimization
+
+    - name        : MPIR_CVAR_CH3_RMA_NREQUEST_THRESHOLD
+      category    : CH3
+      type        : int
+      default     : 4000
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Threshold at which the RMA implementation attempts to complete requests
+        while completing RMA operations and while using the lazy synchonization
+        approach.  Change this value if programs fail because they run out of
+        requests or other internal resources
+
+    - name        : MPIR_CVAR_CH3_RMA_NREQUEST_NEW_THRESHOLD
+      category    : CH3
+      type        : int
+      default     : 128
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Threshold for the number of new requests since the last attempt to
+        complete pending requests.  Higher values can increase performance,
+        but may run the risk of exceeding the available number of requests
+        or other internal resources.
+
+    - name        : MPIR_CVAR_CH3_RMA_LOCK_IMMED
+      category    : CH3
+      type        : boolean
+      default     : false
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Issue a request for the passive target RMA lock immediately.  Default
+        behavior is to defer the lock request until the call to MPI_Win_unlock.
+
+    - name        : MPIR_CVAR_CH3_RMA_MERGE_LOCK_OP_UNLOCK
+      category    : CH3
+      type        : boolean
+      default     : true
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Enable/disable an optimization that merges lock, op, and unlock
+        messages, for single-operation passive target epochs.
+
+=== END_MPI_T_CVAR_INFO_BLOCK ===
+*/
+
 MPIR_T_PVAR_DOUBLE_TIMER_DECL(RMA, rma_lockqueue_alloc);
 
 MPIR_T_PVAR_DOUBLE_TIMER_DECL(RMA, rma_winfence_clearlock);

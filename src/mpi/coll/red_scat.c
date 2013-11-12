@@ -8,6 +8,24 @@
 #include "mpiimpl.h"
 #include "collutil.h"
 
+/*
+=== BEGIN_MPI_T_CVAR_INFO_BLOCK ===
+
+cvars:
+    - name        : MPIR_CVAR_REDSCAT_COMMUTATIVE_LONG_MSG_SIZE
+      category    : COLLECTIVE
+      type        : int
+      default     : 524288
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        the long message algorithm will be used if the operation is commutative
+        and the send buffer size is >= this value (in bytes)
+
+=== END_MPI_T_CVAR_INFO_BLOCK ===
+*/
+
 /* -- Begin Profiling Symbol Block for routine MPI_Reduce_scatter */
 #if defined(HAVE_PRAGMA_WEAK)
 #pragma weak MPI_Reduce_scatter = PMPI_Reduce_scatter

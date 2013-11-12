@@ -7,6 +7,24 @@
 
 #include "mpiimpl.h"
 
+/*
+=== BEGIN_MPI_T_CVAR_INFO_BLOCK ===
+
+cvars:
+    - name        : MPIR_CVAR_ALLGATHERV_PIPELINE_MSG_SIZE
+      category    : COLLECTIVE
+      type        : int
+      default     : 32768
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        The smallest message size that will be used for the pipelined, large-message,
+        ring algorithm in the MPI_Allgatherv implementation.
+
+=== END_MPI_T_CVAR_INFO_BLOCK ===
+*/
+
 /* -- Begin Profiling Symbol Block for routine MPI_Allgatherv */
 #if defined(HAVE_PRAGMA_WEAK)
 #pragma weak MPI_Allgatherv = PMPI_Allgatherv

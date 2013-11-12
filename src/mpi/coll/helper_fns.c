@@ -8,6 +8,32 @@
 #include "mpiimpl.h"
 #include "datatype.h"
 
+/*
+=== BEGIN_MPI_T_CVAR_INFO_BLOCK ===
+
+categories:
+    - name        : FAULT_TOLERANCE
+      description : cvars that control fault tolerance behavior
+
+cvars:
+    - name        : MPIR_CVAR_ENABLE_COLL_FT_RET
+      category    : FAULT_TOLERANCE
+      type        : boolean
+      default     : true
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        DEPRECATED! Will be removed in MPICH-3.2
+        Collectives called on a communicator with a failed process
+        should not hang, however the result of the operation may be
+        invalid even though the function returns MPI_SUCCESS.  This
+        option enables an experimental feature that will return an error
+        if the result of the collective is invalid.
+
+=== END_MPI_T_CVAR_INFO_BLOCK ===
+*/
+
 #define COPY_BUFFER_SZ 16384
 
 /* These functions are used in the implementation of collective

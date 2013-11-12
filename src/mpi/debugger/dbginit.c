@@ -11,6 +11,33 @@
 #include <unistd.h>
 #endif
 
+/*
+=== BEGIN_MPI_T_CVAR_INFO_BLOCK ===
+
+cvars:
+    - name        : MPIR_CVAR_PROCTABLE_SIZE
+      category    : DEBUGGER
+      type        : int
+      default     : 64
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Size of the "MPIR" debugger interface proctable (process table).
+
+    - name        : MPIR_CVAR_PROCTABLE_PRINT
+      category    : DEBUGGER
+      type        : boolean
+      default     : false
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        If true, dump the proctable entries at MPIR_WaitForDebugger-time.
+
+=== END_MPI_T_CVAR_INFO_BLOCK ===
+*/
+
 /* There are two versions of the debugger startup:
    1. The debugger starts mpiexec - then mpiexec provides the MPIR_proctable
       information

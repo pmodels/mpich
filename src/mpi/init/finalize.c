@@ -8,6 +8,28 @@
 #include "mpiimpl.h"
 #include "mpi_init.h"
 
+/*
+=== BEGIN_MPI_T_CVAR_INFO_BLOCK ===
+
+categories:
+    - name        : DEVELOPER
+      description : useful for developers working on MPICH itself
+
+cvars:
+    - name        : MPIR_CVAR_MEMDUMP
+      category    : DEVELOPER
+      type        : boolean
+      default     : true
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_MPIDEV_DETAIL
+      scope       : MPI_T_SCOPE_LOCAL
+      description : >-
+        If true, list any memory that was allocated by MPICH and that
+        remains allocated when MPI_Finalize completes.
+
+=== END_MPI_T_CVAR_INFO_BLOCK ===
+*/
+
 /* -- Begin Profiling Symbol Block for routine MPI_Finalize */
 #if defined(HAVE_PRAGMA_WEAK)
 #pragma weak MPI_Finalize = PMPI_Finalize

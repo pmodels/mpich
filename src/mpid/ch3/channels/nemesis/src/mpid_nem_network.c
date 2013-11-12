@@ -9,6 +9,24 @@
     #include "strings.h"
 #endif
 
+/*
+=== BEGIN_MPI_T_CVAR_INFO_BLOCK ===
+
+cvars:
+    - name        : MPIR_CVAR_NEMESIS_NETMOD
+      category    : NEMESIS
+      type        : string
+      default     : ""
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        If non-empty, this cvar specifies which network module
+        should be used for communication.
+
+=== END_MPI_T_CVAR_INFO_BLOCK ===
+*/
+
 /* initialize to prevent the compiler from generating common symbols */
 MPID_nem_netmod_funcs_t *MPID_nem_netmod_func = NULL;
 int MPID_nem_netmod_id = -1;

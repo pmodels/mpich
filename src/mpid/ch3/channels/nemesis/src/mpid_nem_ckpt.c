@@ -6,6 +6,23 @@
 
 #include "mpid_nem_impl.h"
 
+/*
+=== BEGIN_MPI_T_CVAR_INFO_BLOCK ===
+cvars:
+    - name        : MPIR_CVAR_NEMESIS_ENABLE_CKPOINT
+      category    : NEMESIS
+      type        : boolean
+      default     : false
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        If true, enables checkpointing support and returns an error if
+        checkpointing library cannot be initialized.
+
+=== END_MPI_T_CVAR_INFO_BLOCK ===
+*/
+
 MPIU_SUPPRESS_OSX_HAS_NO_SYMBOLS_WARNING;
 
 #ifdef ENABLE_CHECKPOINTING

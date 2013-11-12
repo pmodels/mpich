@@ -21,6 +21,69 @@
 #include <signal.h>
 #endif
 
+/*
+=== BEGIN_MPI_T_CVAR_INFO_BLOCK ===
+
+cvars:
+    - name        : MPIR_CVAR_CH3_INTERFACE_HOSTNAME
+      category    : CH3
+      alt-env     : MPIR_CVAR_INTERFACE_HOSTNAME
+      type        : string
+      default     : NULL
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
+      description : >-
+        If non-NULL, this cvar specifies the IP address that
+        other processes should use when connecting to this process.
+        This cvar is mutually exclusive with the
+        MPIR_CVAR_CH3_NETWORK_IFACE cvar and it is an error to set them
+        both.
+
+    - name        : MPIR_CVAR_CH3_PORT_RANGE
+      category    : CH3
+      alt-env     : MPIR_CVAR_PORTRANGE, MPIR_CVAR_PORT_RANGE
+      type        : range
+      default     : "0:0"
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        The MPIR_CVAR_CH3_PORT_RANGE environment variable allows you to
+        specify the range of TCP ports to be used by the process
+        manager and the MPICH library. The format of this variable is
+        <low>:<high>.  To specify any available port, use 0:0.
+
+    - name        : MPIR_CVAR_NEMESIS_TCP_NETWORK_IFACE
+      category    : NEMESIS
+      alt-env     : MPIR_CVAR_NETWORK_IFACE
+      type        : string
+      default     : NULL
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        If non-NULL, this cvar specifies which pseudo-ethernet
+        interface the tcp netmod should use (e.g., "eth1", "ib0").
+        Note, this is a Linux-specific cvar.
+        This cvar is mutually exclusive with the
+        MPIR_CVAR_CH3_INTERFACE_HOSTNAME cvar and it is an error to set
+        them both.
+
+    - name        : MPIR_CVAR_NEMESIS_TCP_HOST_LOOKUP_RETRIES
+      category    : NEMESIS
+      type        : int
+      default     : 10
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        This cvar controls the number of times to retry the
+        gethostbyname() function before giving up.
+
+=== END_MPI_T_CVAR_INFO_BLOCK ===
+*/
+
 #define DBG_IFNAME 0
 
 #ifdef ENABLE_CHECKPOINTING

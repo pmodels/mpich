@@ -11,6 +11,44 @@
 #include "mpidi_nem_statistics.h"
 #include "mpit.h"
 
+/*
+=== BEGIN_MPI_T_CVAR_INFO_BLOCK ===
+
+categories:
+    - name        : NEMESIS
+      description : cvars that control behavior of the ch3:nemesis channel
+
+cvars:
+    - name        : MPIR_CVAR_NEMESIS_SHM_EAGER_MAX_SZ
+      category    : NEMESIS
+      type        : int
+      default     : -1
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        This cvar controls the message size at which Nemesis
+        switches from eager to rendezvous mode for shared memory.
+        If this cvar is set to -1, then Nemesis will choose
+        an appropriate value.
+
+    - name        : MPIR_CVAR_NEMESIS_SHM_READY_EAGER_MAX_SZ
+      category    : NEMESIS
+      type        : int
+      default     : -2
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        This cvar controls the message size at which Nemesis
+        switches from eager to rendezvous mode for ready-send
+        messages.  If this cvar is set to -1, then ready messages
+        will always be sent eagerly.  If this cvar is set to -2,
+        then Nemesis will choose an appropriate value.
+
+=== END_MPI_T_CVAR_INFO_BLOCK ===
+*/
+
 /* constants for configure time selection of local LMT implementations */
 #define MPID_NEM_LOCAL_LMT_NONE 0
 #define MPID_NEM_LOCAL_LMT_SHM_COPY 1

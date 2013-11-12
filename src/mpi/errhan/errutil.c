@@ -33,6 +33,38 @@
 #include <stdio.h>
 
 /*
+=== BEGIN_MPI_T_CVAR_INFO_BLOCK ===
+
+categories:
+    - name        : ERROR_HANDLING
+      description : cvars that control error handling behavior (stack traces, aborts, etc)
+
+cvars:
+    - name        : MPIR_CVAR_PRINT_ERROR_STACK
+      category    : ERROR_HANDLING
+      type        : boolean
+      default     : true
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
+      description : >-
+        If true, print an error stack trace at error handling time.
+
+    - name        : MPIR_CVAR_CHOP_ERROR_STACK
+      category    : ERROR_HANDLING
+      type        : int
+      default     : 0
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_LOCAL
+      description : >-
+        If >0, truncate error stack output lines this many characters
+        wide.  If 0, do not truncate, and if <0 use a sensible default.
+
+=== END_MPI_T_CVAR_INFO_BLOCK ===
+*/
+
+/*
  * Structure of this file
  *
  * This file contains several groups of routines user for error handling

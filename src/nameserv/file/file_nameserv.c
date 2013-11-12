@@ -19,6 +19,31 @@
 #endif
 #include <errno.h>
 
+/*
+=== BEGIN_MPI_T_CVAR_INFO_BLOCK ===
+
+categories:
+    - name        : PROCESS_MANAGER
+      description : cvars that control the client-side process manager code
+
+cvars:
+    - name        : MPIR_CVAR_NAMESERV_FILE_PUBDIR
+      category    : PROCESS_MANAGER
+      alt-env     : MPIR_CVAR_NAMEPUB_DIR
+      type        : string
+      default     : NULL
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Sets the directory to use for MPI service publishing in the
+        file nameserv implementation.  Allows the user to override
+        where the publish and lookup information is placed for
+        connect/accept based applications.
+
+=== END_MPI_T_CVAR_INFO_BLOCK ===
+*/
+
 /* For writing the name/service pair */
 /* style: allow:fprintf:1 sig:0 */   
 

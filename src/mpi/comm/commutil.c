@@ -17,6 +17,27 @@
 #define MPID_COMM_PREALLOC 8
 #endif
 
+/*
+=== BEGIN_MPI_T_CVAR_INFO_BLOCK ===
+
+cvars:
+    - name        : MPIR_CVAR_CTXID_EAGER_SIZE
+      category    : THREADS
+      type        : int
+      default     : 2
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        The MPIR_CVAR_CTXID_EAGER_SIZE environment variable allows you to
+        specify how many words in the context ID mask will be set aside
+        for the eager allocation protocol.  If the application is running
+        out of context IDs, reducing this value may help.
+
+=== END_MPI_T_CVAR_INFO_BLOCK ===
+*/
+
+
 /* Preallocated comm objects */
 /* initialized in initthread.c */
 MPID_Comm MPID_Comm_builtin[MPID_COMM_N_BUILTIN] = { {0} };

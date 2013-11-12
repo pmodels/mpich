@@ -7,6 +7,52 @@
 
 #include "mpiimpl.h"
 
+/*
+=== BEGIN_MPI_T_CVAR_INFO_BLOCK ===
+
+categories :
+   - name : COLLECTIVE
+     description : A category for collective communication variables.
+
+cvars:
+   - name      : MPIR_CVAR_ALLTOALL_SHORT_MSG_SIZE
+     category  : COLLECTIVE
+     type      : int
+     default   : 256
+     class     : device
+     verbosity : MPI_T_VERBOSITY_USER_BASIC
+     scope     : MPI_T_SCOPE_ALL_EQ
+     description : >-
+        the short message algorithm will be used if the per-destination
+        message size (sendcount*size(sendtype)) is <= this value
+
+   - name      : MPIR_CVAR_ALLTOALL_MEDIUM_MSG_SIZE
+     category  : COLLECTIVE
+     type      : int
+     default   : 32768
+     class     : device
+     verbosity : MPI_T_VERBOSITY_USER_BASIC
+     scope     : MPI_T_SCOPE_ALL_EQ
+     description : >-
+         the medium message algorithm will be used if the per-destination
+         message size (sendcount*size(sendtype)) is <= this value and
+         larger than ALLTOALL_SHORT_MSG_SIZE
+
+   - name      : MPIR_CVAR_ALLTOALL_THROTTLE
+     category  : COLLECTIVE
+     type      : int
+     default   : 32
+     class     : device
+     verbosity : MPI_T_VERBOSITY_USER_BASIC
+     scope     : MPI_T_SCOPE_ALL_EQ
+     description : >-
+       max no. of irecvs/isends posted at a time in some alltoall
+       algorithms. Setting it to 0 causes all irecvs/isends to be
+       posted at once
+
+=== END_MPI_T_CVAR_INFO_BLOCK ===
+*/
+
 /* -- Begin Profiling Symbol Block for routine MPI_Alltoall */
 #if defined(HAVE_PRAGMA_WEAK)
 #pragma weak MPI_Alltoall = PMPI_Alltoall
