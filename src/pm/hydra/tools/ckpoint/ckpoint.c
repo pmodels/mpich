@@ -83,7 +83,7 @@ static void *ckpoint_thread(void *arg)
 
   fn_exit:
     in_ckpt = HYDT_CKPOINT_FINISHED;
-    return (void *) status;
+    return (void *) (long) status;
 
   fn_fail:
     HYDT_ftb_publish("FTB_MPI_PROCS_CKPT_FAIL", ftb_event_payload);
