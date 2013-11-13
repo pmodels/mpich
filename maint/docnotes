@@ -467,6 +467,62 @@ N*/
 . MPI_ERR_UNSUPPORTED_DATAREP - 
 N*/
 
+/*N MPI_T_ERR_NOT_INITIALIZED
+. MPI_T_ERR_NOT_INITIALIZED - The MPI tool information interface is not initialized.
+N*/
+
+/*N MPI_T_ERR_MEMORY
+. MPI_T_ERR_MEMORY - The MPI tool information interface is out of memory.
+N*/
+
+/*N MPI_T_ERR_CANNOT_INIT
+. MPI_T_ERR_CANNOT_INIT - The MPI tool information interface is not in the state to be initialized.
+N*/
+
+/*N MPI_T_ERR_INVALID_INDEX
+. MPI_T_ERR_INVALID_INDEX - Index is invalid or has been deleted.
+N*/
+
+/*N MPI_T_ERR_INVALID_ITEM
+. MPI_T_ERR_INVALID_ITEM - Item index queried is out of range.
+N*/
+
+/*N MPI_T_ERR_INVALID_HANDLE
+. MPI_T_ERR_INVALID_HANDLE - The handle is invalid.
+N*/
+
+/*N MPI_T_ERR_OUT_OF_HANDLES
+. MPI_T_ERR_OUT_OF_HANDLES - No more handles available.
+N*/
+
+/*N MPI_T_ERR_OUT_OF_SESSIONS
+. MPI_T_ERR_OUT_OF_SESSIONS - No more sessions available.
+N*/
+
+/*N MPI_T_ERR_INVALID_SESSION
+. MPI_T_ERR_INVALID_SESSION - Session argument is not valid.
+N*/
+
+/*N MPI_T_ERR_CVAR_SET_NOT_NOW
+. MPI_T_ERR_CVAR_SET_NOT_NOW - The control variable can't be set at this moment.
+N*/
+
+/*N MPI_T_ERR_CVAR_SET_NEVER
+. MPI_T_ERR_CVAR_SET_NEVER -  The control variable can't be set until end of execution.
+N*/
+
+/*N MPI_T_ERR_PVAR_NO_STARTSTOP
+. MPI_T_ERR_PVAR_NO_STARTSTOP - The performance variable can't be started or stopped.
+N*/
+
+/*N MPI_T_ERR_PVAR_NO_WRITE
+. MPI_T_ERR_PVAR_NO_WRITE - The performance variable can't be written or reset.
+N*/
+
+/*N MPI_T_ERR_PVAR_NO_ATOMIC
+. MPI_T_ERR_PVAR_NO_ATOMIC - The performance variable can't be read/write atomically.
+N*/
+
 /*N NULL
 Null Handles:
 The MPI 1.1 specification, in the section on opaque objects, explicitly
