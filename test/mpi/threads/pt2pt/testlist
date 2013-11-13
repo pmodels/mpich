@@ -8,4 +8,4 @@ multisend3 5
 multisend4 5
 greq_wait 1
 greq_test 1
-ibtest 2
+ibsend 2
