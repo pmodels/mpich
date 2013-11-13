@@ -28,7 +28,7 @@
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 /*@
-MPI_T_enum_get_item - XXX description here
+MPI_T_enum_get_item - Get the information about an item in an enumeration
 
 Input/Output Parameters:
 . name_len - length of the string and/or buffer for name (integer)
@@ -43,9 +43,11 @@ Output Parameters:
 
 .N ThreadSafe
 
-.N Fortran
-
 .N Errors
+.N MPI_SUCCESS
+.N MPI_T_ERR_NOT_INITIALIZED
+.N MPI_T_ERR_INVALID_HANDLE
+.N MPI_T_ERR_INVALID_ITEM
 @*/
 int MPI_T_enum_get_item(MPI_T_enum enumtype, int index, int *value, char *name, int *name_len)
 {

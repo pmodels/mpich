@@ -55,7 +55,7 @@ fn_fail:
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 /*@
-MPI_T_category_get_categories - XXX description here
+MPI_T_category_get_categories - Get sub-categories in a category
 
 Input Parameters:
 + cat_index - index of the category to be queried, in the range [0,N-1] (integer)
@@ -66,9 +66,10 @@ Output Parameters:
 
 .N ThreadSafe
 
-.N Fortran
-
 .N Errors
+.N MPI_SUCCESS
+.N MPI_T_ERR_NOT_INITIALIZED
+.N MPI_T_ERR_INVALID_INDEX
 @*/
 int MPI_T_category_get_categories(int cat_index, int len, int indices[])
 {

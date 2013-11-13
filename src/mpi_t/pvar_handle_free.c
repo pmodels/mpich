@@ -73,7 +73,7 @@ fn_fail:
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 /*@
-MPI_T_pvar_handle_free - XXX description here
+MPI_T_pvar_handle_free - Free an existing handle for a performance variable
 
 Input/Output Parameters:
 + session - identifier of performance experiment session (handle)
@@ -81,9 +81,11 @@ Input/Output Parameters:
 
 .N ThreadSafe
 
-.N Fortran
-
 .N Errors
+.N MPI_SUCCESS
+.N MPI_T_ERR_NOT_INITIALIZED
+.N MPI_T_ERR_INVALID_SESSION
+.N MPI_T_ERR_INVALID_HANDLE
 @*/
 int MPI_T_pvar_handle_free(MPI_T_pvar_session session, MPI_T_pvar_handle *handle)
 {

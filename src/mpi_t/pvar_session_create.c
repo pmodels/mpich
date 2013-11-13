@@ -55,16 +55,17 @@ fn_fail:
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 /*@
-MPI_T_pvar_session_create - XXX description here
+MPI_T_pvar_session_create - Create a new session for accessing performance variables
 
 Output Parameters:
 . session - identifier of performance session (handle)
 
 .N ThreadSafe
 
-.N Fortran
-
 .N Errors
+.N MPI_SUCCESS
+.N MPI_T_ERR_NOT_INITIALIZED
+.N MPI_T_ERR_OUT_OF_SESSIONS
 @*/
 int MPI_T_pvar_session_create(MPI_T_pvar_session *session)
 {

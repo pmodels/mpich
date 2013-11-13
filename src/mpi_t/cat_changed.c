@@ -28,16 +28,21 @@
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 /*@
-MPI_T_category_changed - XXX description here
+MPI_T_category_changed - Get the timestamp indicating the last change to the categories
 
 Output Parameters:
 . stamp - a virtual time stamp to indicate the last change to the categories (integer)
 
+Notes:
+If two subsequent calls to this routine return the same timestamp, it is guaranteed that
+the category information has not changed between the two calls. If the timestamp retrieved
+from the second call is higher, then some categories have been added or expanded.
+
 .N ThreadSafe
 
-.N Fortran
-
 .N Errors
+.N MPI_SUCCESS
+.N MPI_T_ERR_NOT_INITIALIZED
 @*/
 int MPI_T_category_changed(int *stamp)
 {

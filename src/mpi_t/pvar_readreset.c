@@ -51,7 +51,7 @@ fn_fail:
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 /*@
-MPI_T_pvar_readreset - XXX description here
+MPI_T_pvar_readreset - Read the value of a performance variable and then reset it
 
 Input Parameters:
 + session - identifier of performance experiment session (handle)
@@ -62,9 +62,13 @@ Output Parameters:
 
 .N ThreadSafe
 
-.N Fortran
-
 .N Errors
+.N MPI_SUCCESS
+.N MPI_T_ERR_NOT_INITIALIZED
+.N MPI_T_ERR_INVALID_SESSION
+.N MPI_T_ERR_INVALID_HANDLE
+.N MPI_T_ERR_PVAR_NO_WRITE
+.N MPI_T_ERR_PVAR_NO_ATOMIC
 @*/
 int MPI_T_pvar_readreset(MPI_T_pvar_session session, MPI_T_pvar_handle handle, void *buf)
 {

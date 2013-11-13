@@ -41,18 +41,32 @@ int MPIR_T_pvar_write_impl(MPI_T_pvar_session session, MPI_T_pvar_handle handle,
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 /*@
-MPI_T_pvar_write - XXX description here
+MPI_T_pvar_write - Write a performance variable
 
 Input Parameters:
 + session - identifier of performance experiment session (handle)
 . handle - handle of a performance variable (handle)
 - buf - initial address of storage location for variable value (choice)
 
+Notes:
+The MPI_T_pvar_write() call attempts to write the value of the performance variable
+with the handle identified by the parameter handle in the session identified by the parameter
+session. The value to be written is passed in the buffer identified by the parameter buf. The
+user must ensure that the buffer is of the appropriate size to hold the entire value of the
+performance variable (based on the datatype and count returned by the corresponding previous
+calls to MPI_T_pvar_get_info() and MPI_T_pvar_handle_alloc(), respectively).
+
+The constant MPI_T_PVAR_ALL_HANDLES cannot be used as an argument for the function
+MPI_T_pvar_write().
+
 .N ThreadSafe
 
-.N Fortran
-
 .N Errors
+.N MPI_SUCCESS
+.N MPI_T_ERR_NOT_INITIALIZED
+.N MPI_T_ERR_INVALID_SESSION
+.N MPI_T_ERR_INVALID_HANDLE
+.N MPI_T_ERR_PVAR_NO_WRITE
 @*/
 int MPI_T_pvar_write(MPI_T_pvar_session session, MPI_T_pvar_handle handle, void *buf)
 {

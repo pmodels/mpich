@@ -167,7 +167,7 @@ fn_fail:
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 /*@
-MPI_T_pvar_handle_alloc - XXX description here
+MPI_T_pvar_handle_alloc - Allocate a handle for a performance variable
 
 Input Parameters:
 + session - identifier of performance experiment session (handle)
@@ -180,9 +180,12 @@ Output Parameters:
 
 .N ThreadSafe
 
-.N Fortran
-
 .N Errors
+.N MPI_SUCCESS
+.N MPI_T_ERR_NOT_INITIALIZED
+.N MPI_T_ERR_INVALID_SESSION
+.N MPI_T_ERR_INVALID_INDEX
+.N MPI_T_ERR_OUT_OF_HANDLES
 @*/
 int MPI_T_pvar_handle_alloc(MPI_T_pvar_session session, int pvar_index,
                             void *obj_handle, MPI_T_pvar_handle *handle, int *count)

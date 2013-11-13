@@ -74,7 +74,7 @@ fn_fail:
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 /*@
-MPI_T_cvar_handle_alloc - XXX description here
+MPI_T_cvar_handle_alloc - Allocate a handle for a control variable
 
 Input Parameters:
 + cvar_index - index of control variable for which handle is to be allocated (index)
@@ -86,9 +86,12 @@ Output Parameters:
 
 .N ThreadSafe
 
-.N Fortran
-
 .N Errors
+.N MPI_SUCCESS
+.N MPI_T_ERR_NOT_INITIALIZED
+.N MPI_T_ERR_INVALID_INDEX
+.N MPI_T_ERR_INVALID_HANDLE
+.N MPI_T_ERR_OUT_OF_HANDLES
 @*/
 int MPI_T_cvar_handle_alloc(int cvar_index, void *obj_handle, MPI_T_cvar_handle *handle, int *count)
 {

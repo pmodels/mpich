@@ -104,17 +104,31 @@ fn_fail:
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 /*@
-MPI_T_pvar_stop - XXX description here
+MPI_T_pvar_stop - Stop a performance variable
 
 Input Parameters:
 + session - identifier of performance experiment session (handle)
 - handle - handle of a performance variable (handle)
 
+Notes:
+This functions stops the performance variable with the handle identified by the parameter
+handle in the session identified by the parameter session.
+
+If the constant MPI_T_PVAR_ALL_HANDLES is passed in handle, the MPI implementation
+attempts to stop all variables within the session identified by the parameter session for
+which handles have been allocated. In this case, the routine returns MPI_SUCCESS if all
+variables are stopped successfully, otherwise MPI_T_ERR_PVAR_NO_STARTSTOP is returned.
+Continuous variables and variables that are already stopped are ignored when
+MPI_T_PVAR_ALL_HANDLES is specified.
+
 .N ThreadSafe
 
-.N Fortran
-
 .N Errors
+.N MPI_SUCCESS
+.N MPI_T_ERR_NOT_INITIALIZED
+.N MPI_T_ERR_INVALID_SESSION
+.N MPI_T_ERR_INVALID_HANDLE
+.N MPI_T_ERR_PVAR_NO_STARTSTOP
 @*/
 int MPI_T_pvar_stop(MPI_T_pvar_session session, MPI_T_pvar_handle handle)
 {

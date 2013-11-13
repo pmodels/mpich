@@ -78,17 +78,30 @@ fn_fail:
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 /*@
-MPI_T_pvar_reset - XXX description here
+MPI_T_pvar_reset - Reset a performance variable
 
 Input Parameters:
 + session - identifier of performance experiment session (handle)
 - handle - handle of a performance variable (handle)
 
+Notes:
+The MPI_T_pvar_reset() call sets the performance variable with the handle identified
+by the parameter handle to its starting value. If it is not possible
+to change the variable, the function returns MPI_T_ERR_PVAR_NO_WRITE.
+If the constant MPI_T_PVAR_ALL_HANDLES is passed in handle, the MPI implementation
+attempts to reset all variables within the session identified by the parameter session for
+which handles have been allocated. In this case, the routine returns MPI_SUCCESS if all
+variables are reset successfully, otherwise MPI_T_ERR_PVAR_NO_WRITE is returned. Readonly
+variables are ignored when MPI_T_PVAR_ALL_HANDLES is specified.
+
 .N ThreadSafe
 
-.N Fortran
-
 .N Errors
+.N MPI_SUCCESS
+.N MPI_T_ERR_NOT_INITIALIZED
+.N MPI_T_ERR_INVALID_SESSION
+.N MPI_T_ERR_INVALID_HANDLE
+.N MPI_T_ERR_PVAR_NO_WRITE
 @*/
 int MPI_T_pvar_reset(MPI_T_pvar_session session, MPI_T_pvar_handle handle)
 {

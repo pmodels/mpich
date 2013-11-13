@@ -82,7 +82,7 @@ fn_fail:
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 /*@
-MPI_T_cvar_read - XXX description here
+MPI_T_cvar_read - Read the value of a control variable
 
 Input Parameters:
 . handle - handle to the control variable to be read (handle)
@@ -92,9 +92,10 @@ Output Parameters:
 
 .N ThreadSafe
 
-.N Fortran
-
 .N Errors
+.N MPI_SUCCESS
+.N MPI_T_ERR_NOT_INITIALIZED
+.N MPI_T_ERR_INVALID_HANDLE
 @*/
 int MPI_T_cvar_read(MPI_T_cvar_handle handle, void *buf)
 {

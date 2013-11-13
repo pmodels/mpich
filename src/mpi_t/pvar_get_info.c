@@ -28,7 +28,7 @@
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 /*@
-MPI_T_pvar_get_info - XXX description here
+MPI_T_pvar_get_info - Get the inforamtion about a performance variable
 
 Input/Output Parameters:
 + name_len - length of the string and/or buffer for name (integer)
@@ -51,9 +51,10 @@ Output Parameters:
 
 .N ThreadSafe
 
-.N Fortran
-
 .N Errors
+.N MPI_SUCCESS
+.N MPI_T_ERR_NOT_INITIALIZED
+.N MPI_T_ERR_INVALID_INDEX
 @*/
 int MPI_T_pvar_get_info(int pvar_index, char *name, int *name_len, int *verbosity,
     int *var_class, MPI_Datatype *datatype, MPI_T_enum *enumtype, char *desc,

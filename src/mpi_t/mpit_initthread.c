@@ -83,7 +83,7 @@ void MPIR_T_env_init(void)
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 /*@
-MPI_T_init_thread - XXX description here
+MPI_T_init_thread - Initialize the MPI_T execution environment
 
 Input Parameters:
 . required - desired level of thread support (integer)
@@ -91,11 +91,23 @@ Input Parameters:
 Output Parameters:
 . provided - provided level of thread support (integer)
 
+Notes:
+  The valid values for the level of thread support are:
++ MPI_THREAD_SINGLE - Only one thread will execute.
+. MPI_THREAD_FUNNELED - The process may be multi-threaded, but only the main
+  thread will make MPI_T calls (all MPI_T calls are funneled to the
+  main thread).
+. MPI_THREAD_SERIALIZED - The process may be multi-threaded, and multiple
+  threads may make MPI_T calls, but only one at a time: MPI_T calls are not
+  made concurrently from two distinct threads (all MPI_T calls are serialized).
+- MPI_THREAD_MULTIPLE - Multiple threads may call MPI_T, with no restrictions.
+
 .N ThreadSafe
 
-.N Fortran
-
 .N Errors
+.N MPI_SUCCESS
+
+.seealso MPI_T_finalize
 @*/
 int MPI_T_init_thread(int required, int *provided)
 {

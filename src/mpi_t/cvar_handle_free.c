@@ -28,16 +28,17 @@
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 /*@
-MPI_T_cvar_handle_free - XXX description here
+MPI_T_cvar_handle_free - Free an existing handle for a control variable
 
 Input/Output Parameters:
 . handle - handle to be freed (handle)
 
 .N ThreadSafe
 
-.N Fortran
-
 .N Errors
+.N MPI_SUCCESS
+.N MPI_T_ERR_NOT_INITIALIZED
+.N MPI_T_ERR_INVALID_HANDLE
 @*/
 int MPI_T_cvar_handle_free(MPI_T_cvar_handle *handle)
 {

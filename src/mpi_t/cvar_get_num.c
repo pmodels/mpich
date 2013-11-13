@@ -28,16 +28,16 @@
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 /*@
-MPI_T_cvar_get_num - XXX description here
+MPI_T_cvar_get_num - Get the number of control variables
 
 Output Parameters:
 . num_cvar - returns number of control variables (integer)
 
 .N ThreadSafe
 
-.N Fortran
-
 .N Errors
+.N MPI_SUCCESS
+.N MPI_T_ERR_NOT_INITIALIZED
 @*/
 int MPI_T_cvar_get_num(int *num_cvar)
 {

@@ -28,7 +28,7 @@
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 /*@
-MPI_T_category_get_info - XXX description here
+MPI_T_category_get_info - Get the information about a category
 
 Input/Output Parameters:
 + name_len - length of the string and/or buffer for name (integer)
@@ -46,9 +46,10 @@ Output Parameters:
 
 .N ThreadSafe
 
-.N Fortran
-
 .N Errors
+.N MPI_SUCCESS
+.N MPI_T_ERR_NOT_INITIALIZED
+.N MPI_T_ERR_INVALID_INDEX
 @*/
 int MPI_T_category_get_info(int cat_index, char *name, int *name_len, char *desc,
         int *desc_len, int *num_cvars, int *num_pvars, int *num_categories)

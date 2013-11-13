@@ -170,13 +170,30 @@ void MPIR_T_env_finalize(void)
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 /*@
-MPI_T_finalize - XXX description here
+MPI_T_finalize - Finalize the MPI tool information interface
+
+Notes:
+This routine may be called as often as the corresponding MPI_T_init_thread() routine
+up to the current point of execution. Calling it more times returns a corresponding
+error code. As long as the number of calls to MPI_T_finalize() is smaller than the
+number of calls to MPI_T_init_thread() up to the current point of execution, the MPI
+tool information interface remains initialized and calls to its routines are permissible.
+Further, additional calls to MPI_T_init_thread() after one or more calls to MPI_T_finalize()
+are permissible. Once MPI_T_finalize() is called the same number of times as the routine
+MPI_T_init_thread() up to the current point of execution, the MPI tool information
+interface is no longer initialized. The interface can be reinitialized by subsequent calls
+to MPI_T_init_thread().
+
+At the end of the program execution, unless MPI_Abort() is called, an application must
+have called MPI_T_init_thread() and MPI_T_finalize() an equal number of times.
 
 .N ThreadSafe
 
-.N Fortran
-
 .N Errors
+.N MPI_SUCCESS
+.N MPI_T_ERR_NOT_INITIALIZED
+
+.seealso MPI_T_init_thread
 @*/
 int MPI_T_finalize(void)
 {

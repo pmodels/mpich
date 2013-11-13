@@ -28,16 +28,16 @@
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 /*@
-MPI_T_category_get_num - XXX description here
+MPI_T_category_get_num - Get the number of categories
 
 Output Parameters:
 . num_cat - current number of categories (integer)
 
 .N ThreadSafe
 
-.N Fortran
-
 .N Errors
+.N MPI_SUCCESS
+.N MPI_T_ERR_NOT_INITIALIZED
 @*/
 int MPI_T_category_get_num(int *num_cat)
 {

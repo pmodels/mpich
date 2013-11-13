@@ -60,16 +60,22 @@ fn_fail:
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 /*@
-MPI_T_pvar_session_free - XXX description here
+MPI_T_pvar_session_free - Free an existing performance variable session
 
 Input/Output Parameters:
 . session - identifier of performance experiment session (handle)
 
+Notes:
+Calls to the MPI tool information interface can no longer be made
+within the context of a session after it is freed. On a successful
+return, MPI sets the session identifier to MPI_T_PVAR_SESSION_NULL.
+
 .N ThreadSafe
 
-.N Fortran
-
 .N Errors
+.N MPI_SUCCESS
+.N MPI_T_ERR_NOT_INITIALIZEDE
+.N MPI_T_ERR_INVALID_SESSION
 @*/
 int MPI_T_pvar_session_free(MPI_T_pvar_session *session)
 {
