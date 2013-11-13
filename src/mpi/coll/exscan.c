@@ -137,7 +137,7 @@ int MPIR_Exscan (
     /* adjust for potential negative lower bound in datatype */
     tmp_buf = (void *)((char*)tmp_buf - true_lb);
 
-    mpi_errno = MPIR_Localcopy((sendbuf == MPI_IN_PLACE ? recvbuf : sendbuf), count, datatype,
+    mpi_errno = MPIR_Localcopy((sendbuf == MPI_IN_PLACE ? (const void *)recvbuf : sendbuf), count, datatype,
                                partial_scan, count, datatype);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
