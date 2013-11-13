@@ -700,7 +700,7 @@ static inline int MPIDI_CH3I_Shm_acc_op(const void *origin_addr, int origin_coun
 
             MPID_Segment_pack_vector(segp, first, &last, dloop_vec, &vec_len);
 
-            source_buf = (tmp_buf != NULL) ? tmp_buf : origin_addr;
+            source_buf = (tmp_buf != NULL) ? (const void *)tmp_buf : origin_addr;
             target_buf = (char *) base + disp_unit * target_disp;
             type = dtp->eltype;
             type_size = MPID_Datatype_get_basic_size(type);
@@ -861,7 +861,7 @@ static inline int MPIDI_CH3I_Shm_get_acc_op(const void *origin_addr, int origin_
 
             MPID_Segment_pack_vector(segp, first, &last, dloop_vec, &vec_len);
 
-            source_buf = (tmp_buf != NULL) ? tmp_buf : origin_addr;
+            source_buf = (tmp_buf != NULL) ? (const void *)tmp_buf : origin_addr;
             target_buf = (char *) base + disp_unit * target_disp;
             type = dtp->eltype;
             type_size = MPID_Datatype_get_basic_size(type);
