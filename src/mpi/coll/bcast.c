@@ -20,8 +20,16 @@ cvars:
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
-        the minimum number of processes in a communicator to use a non-binomial
-        broadcast algorithm
+        Let's define short messages as messages with size < MPIR_CVAR_BCAST_SHORT_MSG_SIZE,
+        and medium messages as messages with size >= MPIR_CVAR_BCAST_SHORT_MSG_SIZE but
+        < MPIR_CVAR_BCAST_LONG_MSG_SIZE, and long messages as messages with size >=
+        MPIR_CVAR_BCAST_LONG_MSG_SIZE. The broadcast algorithms selection procedure is
+        as follows. For short messages or when the number of processes is <
+        MPIR_CVAR_BCAST_MIN_PROCS, we do broadcast using the binomial tree algorithm.
+        Otherwise, for medium messages and with a power-of-two number of processes, we do
+        broadcast based on a scatter followed by a recursive doubling allgather algorithm.
+        Otherwise, for long messages or with non power-of-two number of processes, we do
+        broadcast based on a scatter followed by a ring allgather algorithm.
 
     - name        : MPIR_CVAR_BCAST_SHORT_MSG_SIZE
       category    : COLLECTIVE
@@ -31,8 +39,17 @@ cvars:
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
-        the short message algorithm will be used if the send buffer size is <
-        this value (in bytes)
+        (Same description as that for MPIR_CVAR_BCAST_MIN_PROCS)
+        Let's define short messages as messages with size < MPIR_CVAR_BCAST_SHORT_MSG_SIZE,
+        and medium messages as messages with size >= MPIR_CVAR_BCAST_SHORT_MSG_SIZE but
+        < MPIR_CVAR_BCAST_LONG_MSG_SIZE, and long messages as messages with size >=
+        MPIR_CVAR_BCAST_LONG_MSG_SIZE. The broadcast algorithms selection procedure is
+        as follows. For short messages or when the number of processes is <
+        MPIR_CVAR_BCAST_MIN_PROCS, we do broadcast using the binomial tree algorithm.
+        Otherwise, for medium messages and with a power-of-two number of processes, we do
+        broadcast based on a scatter followed by a recursive doubling allgather algorithm.
+        Otherwise, for long messages or with non power-of-two number of processes, we do
+        broadcast based on a scatter followed by a ring allgather algorithm.
 
     - name        : MPIR_CVAR_BCAST_LONG_MSG_SIZE
       category    : COLLECTIVE
@@ -42,8 +59,17 @@ cvars:
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
-        the long message algorithm will be used if the send buffer size is >=
-        this value (in bytes)
+        (Same description as that for MPIR_CVAR_BCAST_MIN_PROCS)
+        Let's define short messages as messages with size < MPIR_CVAR_BCAST_SHORT_MSG_SIZE,
+        and medium messages as messages with size >= MPIR_CVAR_BCAST_SHORT_MSG_SIZE but
+        < MPIR_CVAR_BCAST_LONG_MSG_SIZE, and long messages as messages with size >=
+        MPIR_CVAR_BCAST_LONG_MSG_SIZE. The broadcast algorithms selection procedure is
+        as follows. For short messages or when the number of processes is <
+        MPIR_CVAR_BCAST_MIN_PROCS, we do broadcast using the binomial tree algorithm.
+        Otherwise, for medium messages and with a power-of-two number of processes, we do
+        broadcast based on a scatter followed by a recursive doubling allgather algorithm.
+        Otherwise, for long messages or with non power-of-two number of processes, we do
+        broadcast based on a scatter followed by a ring allgather algorithm.
 
     - name        : MPIR_CVAR_ENABLE_SMP_BCAST
       category    : COLLECTIVE
