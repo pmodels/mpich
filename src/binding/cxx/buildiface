@@ -2394,7 +2394,11 @@ if ($do_DistGraphComm) {
     }
 EOT
 }
-
+else {
+    print $OUTFD <<EOT;
+    else return MPI_ERR_INTERN;
+EOT
+}
     print $OUTFD <<EOT;
 }
 static
@@ -2457,6 +2461,11 @@ else
         MPI::Distgraphcomm c = comm;
         return f( c, keyval, extra_state, value, new_value, *(bool*)flag );
     }
+EOT
+}
+else {
+    print $OUTFD <<EOT;
+    else return MPI_ERR_INTERN;
 EOT
 }
     print $OUTFD <<EOT;
