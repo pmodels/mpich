@@ -105,6 +105,7 @@ int main( int argc, char *argv[] )
     MPI_Comm      comm;
     MPI_Win       win;
     MPI_Request   req;
+    MPI_Datatype  derived_dtp;
 
     MTest_Init( &argc, &argv );
 
@@ -127,6 +128,9 @@ int main( int argc, char *argv[] )
         MPI_Abort( MPI_COMM_WORLD, 1 );
     }
 
+    MPI_Type_contiguous(2, MPI_INT, &derived_dtp);
+    MPI_Type_commit(&derived_dtp);
+
     /* The following loop is used to run through a series of communicators
      * that are subsets of MPI_COMM_WORLD, of size 1 or greater. */
     while (MTestGetIntracommGeneral( &comm, 1, 1 )) {
@@ -137,7 +141,7 @@ int main( int argc, char *argv[] )
         MPI_Comm_rank( comm, &rank );
         MPI_Comm_size( comm, &size );
 
-        MPI_Win_create( buf, bufsize, sizeof(int), MPI_INFO_NULL, comm, &win );
+        MPI_Win_create( buf, bufsize, 2*sizeof(int), MPI_INFO_NULL, comm, &win );
         /* To improve reporting of problems about operations, we
            change the error handler to errors return */
         MPI_Win_set_errhandler( win, MPI_ERRORS_RETURN );
@@ -157,6 +161,10 @@ int main( int argc, char *argv[] )
         TEST_FENCE_OP("Accumulate",
                       MPI_Accumulate( rmabuf, count, MPI_INT, TARGET,
                                       0, count, MPI_INT, MPI_SUM, win );
+                     );
+        TEST_FENCE_OP("Accumulate_derived",
+                      MPI_Accumulate( rmabuf, count, derived_dtp, TARGET,
+                                      0, count, derived_dtp, MPI_SUM, win );
                      );
         TEST_FENCE_OP("Get accumulate",
                       MPI_Get_accumulate( rmabuf, count, MPI_INT, result,
@@ -178,6 +186,10 @@ int main( int argc, char *argv[] )
         TEST_PT_OP("Accumulate",
                    MPI_Accumulate( rmabuf, count, MPI_INT, TARGET, 0,
                                    count, MPI_INT, MPI_SUM, win );
+                   );
+        TEST_PT_OP("Accumulate_derived",
+                   MPI_Accumulate( rmabuf, count, derived_dtp, TARGET, 0,
+                                   count, derived_dtp, MPI_SUM, win );
                    );
         TEST_PT_OP("Get accumulate",
                    MPI_Get_accumulate( rmabuf, count, MPI_INT, result, count,
@@ -201,6 +213,10 @@ int main( int argc, char *argv[] )
                     MPI_Raccumulate( rmabuf, count, MPI_INT, TARGET, 0,
                                      count, MPI_INT, MPI_SUM, win, &req );
                    );
+        TEST_REQ_OP("Raccumulate_derived", req,
+                    MPI_Raccumulate( rmabuf, count, derived_dtp, TARGET, 0,
+                                     count, derived_dtp, MPI_SUM, win, &req );
+                   );
         TEST_REQ_OP("Rget_accumulate", req,
                     MPI_Rget_accumulate( rmabuf, count, MPI_INT, result,
                                          count, MPI_INT, TARGET, 0,
@@ -210,6 +226,8 @@ int main( int argc, char *argv[] )
         MPI_Win_free( &win );
         MTestFreeComm(&comm);
     }
+
+    MPI_Type_free(&derived_dtp);
 
     free( result );
     free( buf );
