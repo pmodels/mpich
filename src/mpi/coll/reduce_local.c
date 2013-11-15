@@ -143,7 +143,6 @@ Output Parameters:
 int MPI_Reduce_local(const void *inbuf, void *inoutbuf, int count, MPI_Datatype datatype, MPI_Op op)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_Op *op_ptr;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_REDUCE_LOCAL);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
@@ -159,6 +158,7 @@ int MPI_Reduce_local(const void *inbuf, void *inoutbuf, int count, MPI_Datatype 
             MPIR_ERRTEST_OP(op, mpi_errno);
 
             if (HANDLE_GET_KIND(op) != HANDLE_KIND_BUILTIN) {
+                MPID_Op *op_ptr;
                 MPID_Op_get_ptr(op, op_ptr);
                 MPID_Op_valid_ptr( op_ptr, mpi_errno );
                 if (mpi_errno != MPI_SUCCESS) goto fn_fail;
