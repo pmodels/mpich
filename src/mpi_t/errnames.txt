@@ -1,3 +1,16 @@
+**mpitinit: MPI tool information interface is not initialized
+**catindex: Category index is invalid
+**enumhandlenull: Enum handle is NULL
+**enumhandle: Enum handle is invalid
+**itemindex: Enum item index is invalid
+**cvarindex: Control variable index is invalid
+**cvarhandlenull: Control variable handle is NULL
+**cvarhandle: Control variable handle is invalid
+**pvarindex: Performance variable index is invalid
+**pvarhandlenull: Performance variable handle is NULL
+**pvarhandle: Performance variable handle is invalid
+**pvarsessionnull: Performance variable session is NULL
+**pvarsession: Performance variable session is invalid
 **mpi_t_init_thread: MPI_T_init_thread failed
 **mpi_t_init_thread %d %p: MPI_T_init_thread(required=%d, provided=%p)
 **mpi_t_finalize: MPI_T_finalize failed
