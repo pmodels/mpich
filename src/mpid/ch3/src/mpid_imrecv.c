@@ -115,7 +115,9 @@ int MPID_Imrecv(void *buf, int count, MPI_Datatype datatype,
     else
     {
         /* --BEGIN ERROR HANDLING-- */
+#ifdef HAVE_ERROR_CHECKING
         int msg_type = MPIDI_Request_get_msg_type(rreq);
+#endif
         MPID_Request_release(rreq);
         rreq = NULL;
         MPIU_ERR_SETANDJUMP1(mpi_errno,MPI_ERR_INTERN, "**ch3|badmsgtype",
