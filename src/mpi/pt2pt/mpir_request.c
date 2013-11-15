@@ -73,7 +73,6 @@ int MPIR_Request_complete(MPI_Request * request, MPID_Request * request_ptr,
 		MPIR_STATUS_SET_CANCEL_BIT(*status, MPIR_STATUS_GET_CANCEL_BIT(request_ptr->status));
 	    }
 	    mpi_errno = request_ptr->status.MPI_ERROR;
-	    /* FIXME: are Ibsend requests added to the send queue? */
 	    MPIR_SENDQ_FORGET(request_ptr);
 	    MPID_Request_release(request_ptr);
 	    *request = MPI_REQUEST_NULL;
@@ -132,10 +131,6 @@ int MPIR_Request_complete(MPI_Request * request, MPID_Request * request_ptr,
                     }
 		}
 
-		/* FIXME: MPIR_SENDQ_FORGET(request_ptr); -- it appears that
-		   persistent sends are not currently being added to the send
-		   queue.  should they be, or should this release be
-		   conditional? */
 		MPID_Request_release(prequest_ptr);
 	    }
 	    else

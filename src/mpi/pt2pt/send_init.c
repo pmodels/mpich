@@ -125,6 +125,7 @@ int MPI_Send_init(const void *buf, int count, MPI_Datatype datatype, int dest,
     mpi_errno = MPID_Send_init(buf, count, datatype, dest, tag, comm_ptr,
 			       MPID_CONTEXT_INTRA_PT2PT, &request_ptr);
     if (mpi_errno != MPI_SUCCESS) goto fn_fail;
+    MPIR_SENDQ_REMEMBER(request_ptr, dest, tag, comm_ptr->context_id);
     
     /* return the handle of the request to the user */
     MPIU_OBJ_PUBLISH_HANDLE(*request, request_ptr->handle);

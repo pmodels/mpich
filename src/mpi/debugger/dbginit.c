@@ -299,8 +299,6 @@ void MPIR_DebuggerSetAborting( const char *msg )
  * (more specifically, requests created with MPI_Isend, MPI_Issend, or 
  * MPI_Irsend).
  *
- * FIXME: We need to add MPI_Ibsend and the persistent send requests to
- * the known send requests.
  * FIXME: We should exploit this to allow Finalize to report on 
  * send requests that were never completed.
  */

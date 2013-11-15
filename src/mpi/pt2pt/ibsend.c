@@ -105,6 +105,7 @@ int MPIR_Ibsend_impl(const void *buf, int count, MPI_Datatype datatype, int dest
     mpi_errno = MPIR_Bsend_isend( buf, count, datatype, dest, tag, comm_ptr,
 				  IBSEND, &request_ptr );
     if (mpi_errno != MPI_SUCCESS) goto fn_fail;
+    MPIR_SENDQ_REMEMBER(request_ptr, dest, tag, comm_ptr->context_id);
 
     /* FIXME: use the memory management macros */
     ibinfo = (ibsend_req_info *)MPIU_Malloc( sizeof(ibsend_req_info) );
