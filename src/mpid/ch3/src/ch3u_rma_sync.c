@@ -2308,7 +2308,6 @@ int MPIDI_Win_flush(int rank, MPID_Win *win_ptr)
     }
 
  fn_exit:
-    MPIU_Assert(MPIDI_CH3I_RMA_Ops_isempty(&win_ptr->targets[rank].rma_ops_list));
     MPIDI_RMA_FUNC_EXIT(MPID_STATE_MPIDI_WIN_FLUSH);
     return mpi_errno;
     /* --BEGIN ERROR HANDLING-- */
