@@ -2706,7 +2706,6 @@ Errhandler Win::Create_errhandler( Errhandler_function *f )
 // cover the ERRORS_THROW_EXCEPTIONS case.
 void Comm::Call_errhandler( int errorcode ) const
 {
-    int err;
     // we must free the Errhandler object returned from Get_errhandler because
     // Get_errhandler adds a reference (the MPI Standard says as though a new
     // object were created)
@@ -2725,12 +2724,11 @@ void Comm::Call_errhandler( int errorcode ) const
     else {
         current.Free();
     }
-    err = MPI_Comm_call_errhandler( (MPI_Comm) the_real_comm, errorcode );
+    MPI_Comm_call_errhandler( (MPI_Comm) the_real_comm, errorcode );
 }
 
 void Win::Call_errhandler( int errorcode ) const
 {
-    int err;
     // we must free the Errhandler object returned from Get_errhandler because
     // Get_errhandler adds a reference (the MPI Standard says as though a new
     // object were created)
@@ -2749,13 +2747,12 @@ void Win::Call_errhandler( int errorcode ) const
     else {
         current.Free();
     }
-    err = MPI_Win_call_errhandler( (MPI_Win) the_real_win, errorcode );
+    MPI_Win_call_errhandler( (MPI_Win) the_real_win, errorcode );
 }
 
 #ifdef MPI_MODE_RDONLY
 void File::Call_errhandler( int errorcode ) const
 {
-    int err;
     // we must free the Errhandler object returned from Get_errhandler because
     // Get_errhandler adds a reference (the MPI Standard says as though a new
     // object were created)
@@ -2768,7 +2765,7 @@ void File::Call_errhandler( int errorcode ) const
     else {
         current.Free();
     }
-    err = MPI_File_call_errhandler( (MPI_File) the_real_file, errorcode );
+    MPI_File_call_errhandler( (MPI_File) the_real_file, errorcode );
 }
 #endif // IO
 
