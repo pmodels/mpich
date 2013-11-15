@@ -158,13 +158,7 @@ int MPIR_Alltoallw_intra(const void *sendbuf, const int sendcounts[], const int 
                                                   MPIR_ALLTOALLW_TAG, comm,
                                                   &reqarray[outstanding_requests], errflag);
                         if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
-#ifdef HAVE_DEBUGGER_SUPPORT
-                        {
-                            MPID_Request *request_ptr;
-                            MPID_Request_get_ptr(reqarray[outstanding_requests], request_ptr);
-                            MPIR_SENDQ_REMEMBER(request_ptr, dst, MPIR_ALLTOALLW_TAG, comm_ptr->context_id);
-                        }
-#endif
+
                         outstanding_requests++;
                     }
                 }

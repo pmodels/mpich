@@ -451,8 +451,6 @@ int MPIR_Alltoall_intra(
         MPIU_CHKLMEM_MALLOC(starray, MPI_Status *, 2*bblock*sizeof(MPI_Status), mpi_errno, "starray");
 
         for (ii=0; ii<comm_size; ii+=bblock) {
-            int reqidx;
-
             ss = comm_size-ii < bblock ? comm_size-ii : bblock;
             /* do the communication -- post ss sends and receives: */
             for ( i=0; i<ss; i++ ) { 
@@ -465,23 +463,14 @@ int MPIR_Alltoall_intra(
                 if (mpi_errno) MPIU_ERR_POP(mpi_errno);
             }
 
-            reqidx = ss;
             for ( i=0; i<ss; i++ ) { 
                 dst = (rank-i-ii+comm_size) % comm_size;
                 mpi_errno = MPIC_Isend((char *)sendbuf +
                                           dst*sendcount*sendtype_extent, 
                                           sendcount, sendtype, dst,
                                           MPIR_ALLTOALL_TAG, comm,
-                                          &reqarray[reqidx], errflag);
+                                          &reqarray[i+ss], errflag);
                 if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-#ifdef HAVE_DEBUGGER_SUPPORT
-                {
-                    MPID_Request *request_ptr;
-                    MPID_Request_get_ptr(reqarray[reqidx], request_ptr);
-                    MPIR_SENDQ_REMEMBER(request_ptr, dst, MPIR_ALLTOALL_TAG, comm_ptr->context_id);
-                }
-#endif
-                ++reqidx;
             }
   
             /* ... then wait for them to finish: */

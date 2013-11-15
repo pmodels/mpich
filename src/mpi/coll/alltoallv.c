@@ -183,13 +183,6 @@ int MPIR_Alltoallv_intra(const void *sendbuf, const int *sendcounts, const int *
                             MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**fail");
                             MPIU_ERR_ADD(mpi_errno_ret, mpi_errno);
                         }
-#ifdef HAVE_DEBUGGER_SUPPORT
-                        {
-                            MPID_Request *request_ptr;
-                            MPID_Request_get_ptr(reqarray[req_cnt], request_ptr);
-                            MPIR_SENDQ_REMEMBER(request_ptr, dst, MPIR_ALLTOALLV_TAG, comm_ptr->context_id);
-                        }
-#endif
                         req_cnt++;
                     }
                 }

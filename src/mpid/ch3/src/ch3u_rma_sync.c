@@ -1388,7 +1388,6 @@ int MPIDI_Win_post(MPID_Group *post_grp_ptr, int assert, MPID_Win *win_ptr)
 		mpi_errno = MPID_Isend(&i, 0, MPI_INT, dst, SYNC_POST_TAG, win_comm_ptr,
                                        MPID_CONTEXT_INTRA_PT2PT, &req_ptr);
 		if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-                MPIR_SENDQ_REMEMBER(req_ptr, dst, SYNC_POST_TAG, win_comm_ptr->context_id);
                 req[i] = req_ptr->handle;
 	    } else {
                 req[i] = MPI_REQUEST_NULL;

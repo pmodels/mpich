@@ -165,7 +165,6 @@ int MPI_Bsend(const void *buf, int count, MPI_Datatype datatype, int dest, int t
     /* Note that we can ignore the request_ptr because it is handled internally
        by the bsend util routines */
     if (mpi_errno != MPI_SUCCESS) goto fn_fail;
-    MPIR_SENDQ_REMEMBER(request_ptr, dest, tag, comm_ptr->context_id);
 
     /* ... end of body of routine ... */
     

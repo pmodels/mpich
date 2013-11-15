@@ -271,29 +271,13 @@ int MPI_Dist_graph_create(MPI_Comm comm_old, int n, const int sources[],
     for (i = 0; i < comm_size; ++i) {
         if (rin_sizes[i]) {
             /* send edges where i is a destination to process i */
-            mpi_errno = MPIC_Isend(&rin[i][0], rin_sizes[i], MPI_INT, i, MPIR_TOPO_A_TAG, comm_old, &reqs[idx], &errflag);
+            mpi_errno = MPIC_Isend(&rin[i][0], rin_sizes[i], MPI_INT, i, MPIR_TOPO_A_TAG, comm_old, &reqs[idx++], &errflag);
             if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-#ifdef HAVE_DEBUGGER_SUPPORT
-            {
-                MPID_Request *request_ptr;
-                MPID_Request_get_ptr(reqs[idx], request_ptr);
-                MPIR_SENDQ_REMEMBER(request_ptr, i, MPIR_TOPO_A_TAG, comm_ptr->context_id);
-            }
-#endif
-            ++idx;
         }
         if (rout_sizes[i]) {
             /* send edges where i is a source to process i */
-            mpi_errno = MPIC_Isend(&rout[i][0], rout_sizes[i], MPI_INT, i, MPIR_TOPO_B_TAG, comm_old, &reqs[idx], &errflag);
+            mpi_errno = MPIC_Isend(&rout[i][0], rout_sizes[i], MPI_INT, i, MPIR_TOPO_B_TAG, comm_old, &reqs[idx++], &errflag);
             if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-#ifdef HAVE_DEBUGGER_SUPPORT
-            {
-                MPID_Request *request_ptr;
-                MPID_Request_get_ptr(reqs[idx], request_ptr);
-                MPIR_SENDQ_REMEMBER(request_ptr, i, MPIR_TOPO_B_TAG, comm_ptr->context_id);
-            }
-#endif
-            ++idx;
         }
     }
     MPIU_Assert(idx <= (2 * comm_size));
