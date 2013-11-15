@@ -57,6 +57,7 @@ extern double 	bgmpio_prof_cr    [BGMPIO_CIO_LAST];
 /* corresponds to environment variables to select optimizations and timing level */
 extern int 	bgmpio_timing;
 extern int 	bgmpio_timing2;
+extern int      bgmpio_timing_cw_level;
 extern int 	bgmpio_comm;
 extern int 	bgmpio_tunegather;
 extern int 	bgmpio_tuneblocking;
@@ -86,24 +87,21 @@ void ad_bg_timing_crw_report( int rw, ADIO_File fd, int myrank, int nprocs );
  *   T := timing; 
  * CIO := collective I/O 
  */
-#define BGMPIO_T_CIO_RESET( LEVEL, RW ) \
-	if (bgmpio_timing_cw_level >= LEVEL) { \
+#define BGMPIO_T_CIO_RESET( RW ) \
+	{ \
 	  int i; \
-	  for ( i = 0; i < BGMPIO_T_LAST; i ++ ) \
+	  for ( i = 0; i < BGMPIO_CIO_LAST; i ++ ) \
 	    bgmpio_prof_c##RW [ i ] = 0; \
 	}
 
-#define BGMPIO_T_CIO_REPORT( LEVEL, RW, FD, MYRANK, NPROCS ) \
-	if (bgmpio_timing_cw_level >= LEVEL) { \
-	  ad_bg_timing_crw_report ( RW, FD, MYRANK, NPROCS ); \
-   	}
+#define BGMPIO_T_CIO_REPORT( RW, FD, MYRANK, NPROCS ) \
+	ad_bg_timing_crw_report ( RW, FD, MYRANK, NPROCS ); \
 
-#define BGMPIO_T_CIO_SET_GET( LEVEL, RW, DOBAR, ISSET, ISGET, VAR1, VAR2 ) \
-	if (bgmpio_timing_cw_level >= LEVEL) { \
-	  if ( DOBAR ) MPI_Barrier( fd->comm ); \
-	  double temp = MPI_Wtime(); \
-	  if ( ISSET ) bgmpio_prof_c##RW [ VAR1 ] = temp; \
-	  if ( ISGET ) bgmpio_prof_c##RW [ VAR2 ] = temp - bgmpio_prof_c##RW [ VAR2 ] ; \
-	}
+#define BGMPIO_T_CIO_SET_GET(RW, ISSET, ISGET, VAR1, VAR2 ) \
+         {\
+	 double temp = MPI_Wtime(); \
+	 if ( ISSET ) bgmpio_prof_c##RW [ VAR1 ] = temp; \
+	 if ( ISGET ) bgmpio_prof_c##RW [ VAR2 ] = temp - bgmpio_prof_c##RW [ VAR2 ] ;\
+	 }
 
 #endif  /* AD_BG_TUNING_H_ */

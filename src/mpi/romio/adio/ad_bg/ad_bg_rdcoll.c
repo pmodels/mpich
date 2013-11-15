@@ -117,9 +117,8 @@ void ADIOI_BG_ReadStridedColl(ADIO_File fd, void *buf, int count,
     int  ii;
     ADIO_Offset *len_list = NULL;
     int *buf_idx = NULL;
-#if BG_PROFILE 
-    BGMPIO_T_CIO_RESET( 0, r )
-#endif
+
+    BGMPIO_T_CIO_RESET( r)
 
 #ifdef HAVE_STATUS_SET_BYTES
     MPI_Count bufsize, size;
@@ -144,9 +143,8 @@ void ADIOI_BG_ReadStridedColl(ADIO_File fd, void *buf, int count,
     nprocs_for_coll = fd->hints->cb_nodes;
     orig_fp = fd->fp_ind;
 
-#if BG_PROFILE 
-    BGMPIO_T_CIO_SET_GET( 0, r, 0, 1, 0, BGMPIO_CIO_LCOMP, BGMPIO_CIO_LAST )
-#endif
+    BGMPIO_T_CIO_SET_GET( r, 1, 0, BGMPIO_CIO_T_MPIO_CRW, BGMPIO_CIO_LAST)
+    BGMPIO_T_CIO_SET_GET( r, 1, 0, BGMPIO_CIO_T_LCOMP, BGMPIO_CIO_LAST )
 
     /* only check for interleaving if cb_read isn't disabled */
     if (fd->hints->cb_read != ADIOI_HINT_DISABLE) {
@@ -160,9 +158,7 @@ void ADIOI_BG_ReadStridedColl(ADIO_File fd, void *buf, int count,
 			      &offset_list, &len_list, &start_offset,
 			      &end_offset, &contig_access_count); 
     
-#if BG_PROFILE 
-    BGMPIO_T_CIO_SET_GET( 0, r, 1, 1, 1, BGMPIO_CIO_GATHER, BGMPIO_CIO_LCOMP )
-#endif
+    BGMPIO_T_CIO_SET_GET( r, 1, 1, BGMPIO_CIO_T_GATHER, BGMPIO_CIO_T_LCOMP )
 
 #ifdef RDCOLL_DEBUG
     for (i=0; i<contig_access_count; i++) {
@@ -203,9 +199,7 @@ void ADIOI_BG_ReadStridedColl(ADIO_File fd, void *buf, int count,
                       ADIO_OFFSET, fd->comm);
     }
 
-#if BG_PROFILE 
-    BGMPIO_T_CIO_SET_GET( 0, r, 0, 1, 1, BGMPIO_CIO_PATANA, BGMPIO_CIO_GATHER )
-#endif
+    BGMPIO_T_CIO_SET_GET( r, 1, 1, BGMPIO_CIO_T_PATANA, BGMPIO_CIO_T_GATHER )
 
 	/* are the accesses of different processes interleaved? */
 	for (i=1; i<nprocs; i++)
@@ -247,9 +241,7 @@ void ADIOI_BG_ReadStridedColl(ADIO_File fd, void *buf, int count,
 	return;
     }
 
-#if BG_PROFILE 
-    BGMPIO_T_CIO_SET_GET( 0, r, 1, 1, 1, BGMPIO_CIO_FD_PART, BGMPIO_CIO_PATANA )
-#endif
+    BGMPIO_T_CIO_SET_GET( r, 1, 1, BGMPIO_CIO_T_FD_PART, BGMPIO_CIO_T_PATANA )
 
     /* We're going to perform aggregation of I/O.  Here we call
      * ADIOI_Calc_file_domains() to determine what processes will handle I/O
@@ -278,9 +270,7 @@ void ADIOI_BG_ReadStridedColl(ADIO_File fd, void *buf, int count,
 			    fd->hints->min_fdomain_size, &fd_size, 
 			    fd->hints->striping_unit);
 
-#if BG_PROFILE 
-    BGMPIO_T_CIO_SET_GET( 0, r, 0, 1, 1, BGMPIO_CIO_MYREQ, BGMPIO_CIO_FD_PART )
-#endif
+    BGMPIO_T_CIO_SET_GET( r, 1, 1, BGMPIO_CIO_T_MYREQ, BGMPIO_CIO_T_FD_PART )
 
     /* calculate where the portions of the access requests of this process 
      * are located in terms of the file domains.  this could be on the same
@@ -307,9 +297,7 @@ void ADIOI_BG_ReadStridedColl(ADIO_File fd, void *buf, int count,
 		      &count_my_req_per_proc, &my_req,
 		      &buf_idx);
 
-#if BG_PROFILE 
-    BGMPIO_T_CIO_SET_GET( 0, r, 1, 1, 1, BGMPIO_CIO_OTHREQ, BGMPIO_CIO_MYREQ )
-#endif
+    BGMPIO_T_CIO_SET_GET( r, 1, 1, BGMPIO_CIO_T_OTHREQ, BGMPIO_CIO_T_MYREQ )
 
     /* perform a collective communication in order to distribute the
      * data calculated above.  fills in the following:
@@ -330,9 +318,7 @@ void ADIOI_BG_ReadStridedColl(ADIO_File fd, void *buf, int count,
 			  nprocs, myrank, &count_others_req_procs, 
 			  &others_req); 
 
-#if BG_PROFILE 
-    BGMPIO_T_CIO_SET_GET( 0, r, 1, 1, 1, BGMPIO_CIO_DEXCH, BGMPIO_CIO_OTHREQ )
-#endif
+    BGMPIO_T_CIO_SET_GET( r, 1, 1, BGMPIO_CIO_T_DEXCH, BGMPIO_CIO_T_OTHREQ )
 
     /* my_req[] and count_my_req_per_proc aren't needed at this point, so 
      * let's free the memory 
@@ -355,12 +341,10 @@ void ADIOI_BG_ReadStridedColl(ADIO_File fd, void *buf, int count,
 			len_list, contig_access_count, min_st_offset,
 			fd_size, fd_start, fd_end, buf_idx, error_code);
 
-#if BG_PROFILE 
-    BGMPIO_T_CIO_SET_GET( 0, r, 1, 0, 1, BGMPIO_CIO_LAST, BGMPIO_CIO_T_DEXCH )
-    BGMPIO_T_CIO_SET_GET( 0, r, 0, 0, 1, BGMPIO_CIO_LAST, BGMPIO_CIO_T_MPIO_CRW )
+    BGMPIO_T_CIO_SET_GET( r, 0, 1, BGMPIO_CIO_LAST, BGMPIO_CIO_T_DEXCH )
+    BGMPIO_T_CIO_SET_GET( r, 0, 1, BGMPIO_CIO_LAST, BGMPIO_CIO_T_MPIO_CRW )
 
-    BGMPIO_T_CIO_REPORT( 0, r, fd, myrank )
-#endif
+    BGMPIO_T_CIO_REPORT( 0, fd, myrank, nprocs)
 
     if (!buftype_is_contig) ADIOI_Delete_flattened(datatype);
 

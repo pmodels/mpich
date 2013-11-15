@@ -124,9 +124,7 @@ void ADIOI_BG_WriteStridedColl(ADIO_File fd, const void *buf, int count,
 
     int *buf_idx = NULL;
     ADIO_Offset *len_list = NULL;
-#if BG_PROFILE 
-    BGMPIO_T_CIO_RESET( 0, w )
-#endif
+    BGMPIO_T_CIO_RESET( w )
 #if 0
     /* From common code - not implemented for bg.*/
     int old_error, tmp_error;
@@ -152,9 +150,8 @@ void ADIOI_BG_WriteStridedColl(ADIO_File fd, const void *buf, int count,
     nprocs_for_coll = fd->hints->cb_nodes;
     orig_fp = fd->fp_ind;
 
-#if BG_PROFILE 
-    BGMPIO_T_CIO_SET_GET( 0, w, 0, 1, 0, BGMPIO_CIO_LCOMP, BGMPIO_CIO_LAST )
-#endif
+    BGMPIO_T_CIO_SET_GET( w, 1, 0, BGMPIO_CIO_T_MPIO_CRW, BGMPIO_CIO_LAST)
+    BGMPIO_T_CIO_SET_GET( w, 1, 0, BGMPIO_CIO_T_LCOMP, BGMPIO_CIO_LAST )
 
 
     /* only check for interleaving if cb_write isn't disabled */
@@ -169,9 +166,7 @@ void ADIOI_BG_WriteStridedColl(ADIO_File fd, const void *buf, int count,
 			      &offset_list, &len_list, &start_offset,
 			      &end_offset, &contig_access_count); 
 
-#if BG_PROFILE 
-    BGMPIO_T_CIO_SET_GET( 0, w, 1, 1, 1, BGMPIO_CIO_GATHER, BGMPIO_CIO_LCOMP )
-#endif
+    BGMPIO_T_CIO_SET_GET( w, 1, 1, BGMPIO_CIO_T_GATHER, BGMPIO_CIO_T_LCOMP )
 
 	/* each process communicates its start and end offsets to other 
 	   processes. The result is an array each of start and end offsets stored
@@ -205,9 +200,7 @@ void ADIOI_BG_WriteStridedColl(ADIO_File fd, const void *buf, int count,
 		      ADIO_OFFSET, fd->comm);
     }
 
-#if BG_PROFILE 
-    BGMPIO_T_CIO_SET_GET( 0, w, 0, 1, 1, BGMPIO_CIO_PATANA, BGMPIO_CIO_GATHER )
-#endif
+    BGMPIO_T_CIO_SET_GET(w, 1, 1, BGMPIO_CIO_T_PATANA, BGMPIO_CIO_T_GATHER )
 
 	/* are the accesses of different processes interleaved? */
 	for (i=1; i<nprocs; i++)
@@ -251,9 +244,7 @@ void ADIOI_BG_WriteStridedColl(ADIO_File fd, const void *buf, int count,
 	return;
     }
 
-#if BG_PROFILE 
-    BGMPIO_T_CIO_SET_GET( 0, w, 1, 1, 1, BGMPIO_CIO_FD_PART, BGMPIO_CIO_PATANA )
-#endif
+    BGMPIO_T_CIO_SET_GET( w, 1, 1, BGMPIO_CIO_T_FD_PART, BGMPIO_CIO_T_PATANA )
 	
 /* Divide the I/O workload among "nprocs_for_coll" processes. This is
    done by (logically) dividing the file into file domains (FDs); each
@@ -270,9 +261,7 @@ void ADIOI_BG_WriteStridedColl(ADIO_File fd, const void *buf, int count,
 			    fd->hints->min_fdomain_size, &fd_size,
 			    fd->hints->striping_unit);   
 
-#if BG_PROFILE 
-    BGMPIO_T_CIO_SET_GET( 0, w, 0, 1, 1, BGMPIO_CIO_MYREQ, BGMPIO_CIO_FD_PART )
-#endif
+    BGMPIO_T_CIO_SET_GET( w, 1, 1, BGMPIO_CIO_T_MYREQ, BGMPIO_CIO_T_FD_PART )
 	
 /* calculate what portions of the access requests of this process are
    located in what file domains */
@@ -290,9 +279,7 @@ void ADIOI_BG_WriteStridedColl(ADIO_File fd, const void *buf, int count,
 		      &count_my_req_per_proc, &my_req,
 		      &buf_idx); 
 
-#if BG_PROFILE 
-    BGMPIO_T_CIO_SET_GET( 0, w, 1, 1, 1, BGMPIO_CIO_OTHREQ, BGMPIO_CIO_MYREQ )
-#endif
+    BGMPIO_T_CIO_SET_GET( w, 1, 1, BGMPIO_CIO_T_OTHREQ, BGMPIO_CIO_T_MYREQ )
 	
 /* based on everyone's my_req, calculate what requests of other
    processes lie in this process's file domain.
@@ -312,9 +299,7 @@ void ADIOI_BG_WriteStridedColl(ADIO_File fd, const void *buf, int count,
 			  nprocs, myrank,
 			  &count_others_req_procs, &others_req); 
     
-#if BG_PROFILE 
-    BGMPIO_T_CIO_SET_GET( 0, w, 1, 1, 1, BGMPIO_CIO_DEXCH, BGMPIO_CIO_OTHREQ )
-#endif
+    BGMPIO_T_CIO_SET_GET( w, 1, 1, BGMPIO_CIO_T_DEXCH, BGMPIO_CIO_T_OTHREQ )
 
     ADIOI_Free(count_my_req_per_proc);
     for (i=0; i < nprocs; i++) {
@@ -331,12 +316,10 @@ void ADIOI_BG_WriteStridedColl(ADIO_File fd, const void *buf, int count,
 			len_list, contig_access_count, min_st_offset,
 			fd_size, fd_start, fd_end, buf_idx, error_code);
 
-#if BG_PROFILE 
-    BGMPIO_T_CIO_SET_GET( 0, w, 1, 0, 1, BGMPIO_CIO_LAST, BGMPIO_CIO_T_DEXCH )
-    BGMPIO_T_CIO_SET_GET( 0, w, 0, 0, 1, BGMPIO_CIO_LAST, BGMPIO_CIO_T_MPIO_CRW )
+    BGMPIO_T_CIO_SET_GET( w, 0, 1, BGMPIO_CIO_LAST, BGMPIO_CIO_T_DEXCH )
+    BGMPIO_T_CIO_SET_GET( w, 0, 1, BGMPIO_CIO_LAST, BGMPIO_CIO_T_MPIO_CRW )
 
-    BGMPIO_T_CIO_REPORT( 0, w, fd, myrank )
-#endif
+    BGMPIO_T_CIO_REPORT( 1, fd, myrank, nprocs)
 #if 0
     /* From common code - not implemented for bg.
      * 

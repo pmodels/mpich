@@ -30,85 +30,51 @@ void ADIOI_BG_ReadContig(ADIO_File fd, void *buf, int count,
 #ifdef AGGREGATION_PROFILE
     MPE_Log_event (5034, 0, NULL);
 #endif
-#if BG_PROFILE
-		/* timing */
-		double io_time, io_time2;
-
-		if (bgmpio_timing) {
-		    io_time = MPI_Wtime();
-		    bgmpio_prof_cr[ BGMPIO_CIO_DATA_SIZE ] += len;
-		}
-#endif
+    /* timing */
+    double io_time, io_time2;
 
     MPI_Type_size_x(datatype, &datatype_size);
     len = (ADIO_Offset)datatype_size * (ADIO_Offset)count;
     ADIOI_Assert(len == (unsigned int) len); /* read takes an unsigned int parm */
 
-#if BG_PROFILE
+    if (bgmpio_timing) {
+	io_time = MPI_Wtime();
+	bgmpio_prof_cr[ BGMPIO_CIO_DATA_SIZE ] += len;
+    }
 
     if (file_ptr_type == ADIO_EXPLICIT_OFFSET) {
-        	if (bgmpio_timing2) io_time2 = MPI_Wtime();
+	if (bgmpio_timing2) io_time2 = MPI_Wtime();
 	if (fd->fp_sys_posn != offset)
 	    lseek(fd->fd_sys, offset, SEEK_SET);
-        	if (bgmpio_timing2) bgmpio_prof_cr[ BGMPIO_CIO_T_SEEK ] += (MPI_Wtime() - io_time2);
+	if (bgmpio_timing2) bgmpio_prof_cr[ BGMPIO_CIO_T_SEEK ] += (MPI_Wtime() - io_time2);
 	if (fd->atomicity)
 	    ADIOI_WRITE_LOCK(fd, offset, SEEK_SET, len);
 	else ADIOI_READ_LOCK(fd, offset, SEEK_SET, len);
-        	if (bgmpio_timing2) io_time2 = MPI_Wtime();
+	if (bgmpio_timing2) io_time2 = MPI_Wtime();
 	err = read(fd->fd_sys, buf, (unsigned int)len);
-        	if (bgmpio_timing2) bgmpio_prof_cr[ BGMPIO_CIO_T_POSI_RW ] += (MPI_Wtime() - io_time2);
+	if (bgmpio_timing2) bgmpio_prof_cr[ BGMPIO_CIO_T_POSI_RW ] += (MPI_Wtime() - io_time2);
 	ADIOI_UNLOCK(fd, offset, SEEK_SET, len);
 	fd->fp_sys_posn = offset + err;
 	/* individual file pointer not updated */        
     }
     else {  /* read from curr. location of ind. file pointer */
 	offset = fd->fp_ind;
-        	if (bgmpio_timing2) io_time2 = MPI_Wtime();
+	if (bgmpio_timing2) io_time2 = MPI_Wtime();
 	if (fd->fp_sys_posn != fd->fp_ind)
 	    lseek(fd->fd_sys, fd->fp_ind, SEEK_SET);
-        	if (bgmpio_timing2) bgmpio_prof_cr[ BGMPIO_CIO_T_SEEK ] += (MPI_Wtime() - io_time2);
+	if (bgmpio_timing2) bgmpio_prof_cr[ BGMPIO_CIO_T_SEEK ] += (MPI_Wtime() - io_time2);
 	if (fd->atomicity)
 	    ADIOI_WRITE_LOCK(fd, offset, SEEK_SET, len);
 	else ADIOI_READ_LOCK(fd, offset, SEEK_SET, len);
-        	if (bgmpio_timing2) io_time2 = MPI_Wtime();
+	if (bgmpio_timing2) io_time2 = MPI_Wtime();
 	err = read(fd->fd_sys, buf, (unsigned int)len);
-        	if (bgmpio_timing2) bgmpio_prof_cr[ BGMPIO_CIO_T_POSI_RW ] += (MPI_Wtime() - io_time2);
+	if (bgmpio_timing2) bgmpio_prof_cr[ BGMPIO_CIO_T_POSI_RW ] += (MPI_Wtime() - io_time2);
 	ADIOI_UNLOCK(fd, offset, SEEK_SET, len);
 	fd->fp_ind += err;
 	fd->fp_sys_posn = fd->fp_ind;
     }
 
-#else	/* BG_PROFILE */
-
-    if (file_ptr_type == ADIO_EXPLICIT_OFFSET) {
-	if (fd->fp_sys_posn != offset)
-	    lseek(fd->fd_sys, offset, SEEK_SET);
-	if (fd->atomicity)
-	    ADIOI_WRITE_LOCK(fd, offset, SEEK_SET, len);
-	else ADIOI_READ_LOCK(fd, offset, SEEK_SET, len);
-	err = read(fd->fd_sys, buf, (unsigned int)len);
-	ADIOI_UNLOCK(fd, offset, SEEK_SET, len);
-	fd->fp_sys_posn = offset + err;
-	/* individual file pointer not updated */        
-    }
-    else {  /* read from curr. location of ind. file pointer */
-	offset = fd->fp_ind;
-	if (fd->fp_sys_posn != fd->fp_ind)
-	    lseek(fd->fd_sys, fd->fp_ind, SEEK_SET);
-	if (fd->atomicity)
-	    ADIOI_WRITE_LOCK(fd, offset, SEEK_SET, len);
-	else ADIOI_READ_LOCK(fd, offset, SEEK_SET, len);
-	err = read(fd->fd_sys, buf, (unsigned int)len);
-	ADIOI_UNLOCK(fd, offset, SEEK_SET, len);
-	fd->fp_ind += err;
-	fd->fp_sys_posn = fd->fp_ind;
-    }
-
-#endif   /* BG_PROFILE */
-
-#if BG_PROFILE
-    		if (bgmpio_timing) bgmpio_prof_cr[ BGMPIO_CIO_T_MPIO_RW ] += (MPI_Wtime() - io_time);
-#endif
+    if (bgmpio_timing) bgmpio_prof_cr[ BGMPIO_CIO_T_MPIO_RW ] += (MPI_Wtime() - io_time);
 
     /* --BEGIN ERROR HANDLING-- */
     if (err == -1) {
