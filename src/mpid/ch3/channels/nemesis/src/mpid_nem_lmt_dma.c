@@ -6,6 +6,24 @@
 #include "mpid_nem_impl.h"
 #include "mpid_nem_datatypes.h"
 
+/*
+=== BEGIN_MPI_T_CVAR_INFO_BLOCK ===
+
+cvars:
+    - name        : MPIR_CVAR_NEMESIS_LMT_DMA_THRESHOLD
+      category    : NEMESIS
+      type        : int
+      default     : 2097152
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Messages larger than this size will use the "dma" (knem)
+        intranode LMT implementation, if it is enabled and available.
+
+=== END_MPI_T_CVAR_INFO_BLOCK ===
+*/
+
 MPIU_SUPPRESS_OSX_HAS_NO_SYMBOLS_WARNING;
 
 #if defined(HAVE_KNEM_IO_H)
