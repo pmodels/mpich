@@ -44,6 +44,9 @@ void MPIR_T_enum_create(const char *enum_name, MPI_T_enum *handle)
     e = (MPIR_T_enum_t *)utarray_back(enum_table);
     e->name = MPIU_Strdup(enum_name);
     MPIU_Assert(e->name);
+#ifdef HAVE_ERROR_CHECKING
+    e->kind = MPIR_T_ENUM_HANDLE;
+#endif
     utarray_new(e->items, &enum_item_icd);
     (*handle) = e;
 }

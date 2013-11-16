@@ -49,14 +49,24 @@ int MPI_T_category_changed(int *stamp)
     int mpi_errno = MPI_SUCCESS;
 
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_T_CATEGORY_CHANGED);
-    MPIR_T_FAIL_IF_UNINITIALIZED();
+    MPIR_ERRTEST_MPIT_INITIALIZED(mpi_errno);
     MPIR_T_THREAD_CS_ENTER();
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_T_CATEGORY_CHANGED);
 
+    /* Validate parameters */
+#   ifdef HAVE_ERROR_CHECKING
+    {
+        MPID_BEGIN_ERROR_CHECKS
+        {
+            MPIR_ERRTEST_ARGNULL(stamp, "stamp", mpi_errno);
+        }
+        MPID_END_ERROR_CHECKS
+    }
+#   endif /* HAVE_ERROR_CHECKING */
+
     /* ... body of routine ...  */
 
-    if (stamp != NULL)
-        *stamp = cat_stamp;
+    *stamp = cat_stamp;
 
     /* ... end of body of routine ... */
 

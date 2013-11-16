@@ -52,7 +52,7 @@ int MPI_T_enum_get_info(MPI_T_enum enumtype, int *num, char *name, int *name_len
     int mpi_errno = MPI_SUCCESS;
 
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_T_ENUM_GET_INFO);
-    MPIR_T_FAIL_IF_UNINITIALIZED();
+    MPIR_ERRTEST_MPIT_INITIALIZED(mpi_errno);
     MPIR_T_THREAD_CS_ENTER();
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_T_ENUM_GET_INFO);
 
@@ -61,7 +61,7 @@ int MPI_T_enum_get_info(MPI_T_enum enumtype, int *num, char *name, int *name_len
     {
         MPID_BEGIN_ERROR_CHECKS
         {
-            MPIR_ERRTEST_ARGNULL(enumtype, "enumtype", mpi_errno);
+            MPIR_ERRTEST_ENUM_HANDLE(enumtype, mpi_errno);
             MPIR_ERRTEST_ARGNULL(num, "num", mpi_errno);
             /* Do not do _TEST_ARGNULL for name or name_len, since this is
              * permitted per MPI_T standard.

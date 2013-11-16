@@ -40,6 +40,10 @@ int MPIR_T_pvar_session_create_impl(MPI_T_pvar_session *session)
     /* essential for utlist to work */
     (*session)->hlist = NULL;
 
+#ifdef HAVE_ERROR_CHECKING
+    (*session)->kind = MPIR_T_PVAR_SESSION;
+#endif
+
     MPIU_CHKPMEM_COMMIT();
 fn_exit:
     return mpi_errno;
@@ -72,7 +76,7 @@ int MPI_T_pvar_session_create(MPI_T_pvar_session *session)
     int mpi_errno = MPI_SUCCESS;
 
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_T_PVAR_SESSION_CREATE);
-    MPIR_T_FAIL_IF_UNINITIALIZED();
+    MPIR_ERRTEST_MPIT_INITIALIZED(mpi_errno);
     MPIR_T_THREAD_CS_ENTER();
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_T_PVAR_SESSION_CREATE);
 

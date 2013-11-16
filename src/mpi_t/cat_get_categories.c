@@ -76,7 +76,7 @@ int MPI_T_category_get_categories(int cat_index, int len, int indices[])
     int mpi_errno = MPI_SUCCESS;
 
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_T_CATEGORY_GET_CATEGORIES);
-    MPIR_T_FAIL_IF_UNINITIALIZED();
+    MPIR_ERRTEST_MPIT_INITIALIZED(mpi_errno);
     MPIR_T_THREAD_CS_ENTER();
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_T_CATEGORY_GET_CATEGORIES);
 
@@ -85,6 +85,7 @@ int MPI_T_category_get_categories(int cat_index, int len, int indices[])
     {
         MPID_BEGIN_ERROR_CHECKS
         {
+            MPIR_ERRTEST_CAT_INDEX(cat_index, mpi_errno);
             if (len != 0)
                 MPIR_ERRTEST_ARGNULL(indices, "indices", mpi_errno);
         }
@@ -93,10 +94,6 @@ int MPI_T_category_get_categories(int cat_index, int len, int indices[])
 #   endif /* HAVE_ERROR_CHECKING */
 
     /* ... body of routine ...  */
-    if (cat_index < 0 || cat_index >= utarray_len(cat_table)) {
-        mpi_errno = MPI_T_ERR_INVALID_INDEX;
-        goto fn_fail;
-    }
 
     if (len == 0) goto fn_exit;
 

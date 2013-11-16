@@ -44,14 +44,24 @@ int MPI_T_category_get_num(int *num_cat)
     int mpi_errno = MPI_SUCCESS;
 
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_T_CATEGORY_GET_NUM);
-    MPIR_T_FAIL_IF_UNINITIALIZED();
+    MPIR_ERRTEST_MPIT_INITIALIZED(mpi_errno);
     MPIR_T_THREAD_CS_ENTER();
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_T_CATEGORY_GET_NUM);
 
+    /* Validate parameters */
+#   ifdef HAVE_ERROR_CHECKING
+    {
+        MPID_BEGIN_ERROR_CHECKS
+        {
+            MPIR_ERRTEST_ARGNULL(num_cat, "num_cat", mpi_errno);
+        }
+        MPID_END_ERROR_CHECKS
+    }
+#   endif /* HAVE_ERROR_CHECKING */
+
     /* ... body of routine ...  */
 
-    if (*num_cat)
-        *num_cat = utarray_len(cat_table);
+    *num_cat = utarray_len(cat_table);
 
     /* ... end of body of routine ... */
 

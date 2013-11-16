@@ -39,6 +39,9 @@ int MPIR_T_cvar_handle_alloc_impl(int cvar_index, void *obj_handle, MPI_T_cvar_h
 
     /* Allocate handle memory */
     MPIU_CHKPMEM_MALLOC(hnd, MPIR_T_cvar_handle_t*, sizeof(*hnd), mpi_errno, "control variable handle");
+#ifdef HAVE_ERROR_CHECKING
+    hnd->kind = MPIR_T_CVAR_HANDLE;
+#endif
 
     /* It is time to fix addr and count if they are unknown */
     if (cvar->get_count != NULL)
@@ -98,7 +101,7 @@ int MPI_T_cvar_handle_alloc(int cvar_index, void *obj_handle, MPI_T_cvar_handle 
     int mpi_errno = MPI_SUCCESS;
 
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_T_CVAR_HANDLE_ALLOC);
-    MPIR_T_FAIL_IF_UNINITIALIZED();
+    MPIR_ERRTEST_MPIT_INITIALIZED(mpi_errno);
     MPIR_T_THREAD_CS_ENTER();
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_T_CVAR_HANDLE_ALLOC);
 
@@ -107,6 +110,9 @@ int MPI_T_cvar_handle_alloc(int cvar_index, void *obj_handle, MPI_T_cvar_handle 
     {
         MPID_BEGIN_ERROR_CHECKS
         {
+            MPIR_ERRTEST_CVAR_INDEX(cvar_index, mpi_errno);
+            /* obj_handle is ignored if cvar has no binding, so no
+               TEST_ARGNULL for it */
             MPIR_ERRTEST_ARGNULL(handle, "handle", mpi_errno);
             MPIR_ERRTEST_ARGNULL(count, "count", mpi_errno);
         }
@@ -115,10 +121,6 @@ int MPI_T_cvar_handle_alloc(int cvar_index, void *obj_handle, MPI_T_cvar_handle 
 #   endif /* HAVE_ERROR_CHECKING */
 
     /* ... body of routine ...  */
-    if (cvar_index < 0 || cvar_index >= utarray_len(cvar_table)) {
-        mpi_errno = MPI_T_ERR_INVALID_INDEX;
-        goto fn_fail;
-    }
 
     mpi_errno = MPIR_T_cvar_handle_alloc_impl(cvar_index, obj_handle, handle, count);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);

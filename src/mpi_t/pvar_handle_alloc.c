@@ -24,7 +24,13 @@
 #define MPI_T_pvar_handle_alloc PMPI_T_pvar_handle_alloc
 
 /* Define storage for the ALL_HANDLES constant */
-MPIR_T_pvar_handle_t MPIR_T_pvar_all_handles_obj = {0};
+MPIR_T_pvar_handle_t MPIR_T_pvar_all_handles_obj =
+{
+#ifdef HAVE_ERROR_CHECKING
+MPIR_T_PVAR_HANDLE, /* pvar handle tag for error checking */
+#endif
+0
+};
 MPIR_T_pvar_handle_t * const MPI_T_PVAR_ALL_HANDLES = &MPIR_T_pvar_all_handles_obj;
 
 /* any non-MPI functions go here, especially non-static ones */
@@ -74,6 +80,9 @@ int MPIR_T_pvar_handle_alloc_impl(MPI_T_pvar_session session, int pvar_index,
     /* Allocate memory and bzero it */
     MPIU_CHKPMEM_CALLOC(hnd, MPIR_T_pvar_handle_t*, sizeof(*hnd) + extra,
                         mpi_errno, "performance variable handle");
+#ifdef HAVE_ERROR_CHECKING
+    hnd->kind = MPIR_T_PVAR_HANDLE;
+#endif
 
     /* Setup the common fields */
     if (is_sum)
@@ -193,7 +202,7 @@ int MPI_T_pvar_handle_alloc(MPI_T_pvar_session session, int pvar_index,
     int mpi_errno = MPI_SUCCESS;
 
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_T_PVAR_HANDLE_ALLOC);
-    MPIR_T_FAIL_IF_UNINITIALIZED();
+    MPIR_ERRTEST_MPIT_INITIALIZED(mpi_errno);
     MPIR_T_THREAD_CS_ENTER();
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_T_PVAR_HANDLE_ALLOC);
 
@@ -202,6 +211,8 @@ int MPI_T_pvar_handle_alloc(MPI_T_pvar_session session, int pvar_index,
     {
         MPID_BEGIN_ERROR_CHECKS
         {
+            MPIR_ERRTEST_PVAR_SESSION(session, mpi_errno);
+            MPIR_ERRTEST_PVAR_INDEX(pvar_index, mpi_errno);
             MPIR_ERRTEST_ARGNULL(count, "count", mpi_errno);
             MPIR_ERRTEST_ARGNULL(handle, "handle", mpi_errno);
             /* Do not test obj_handle since it may be NULL when no binding */
@@ -212,13 +223,7 @@ int MPI_T_pvar_handle_alloc(MPI_T_pvar_session session, int pvar_index,
 
     /* ... body of routine ...  */
 
-    pvar_table_entry_t *entry;
-    if (pvar_index < 0 || pvar_index >= utarray_len(pvar_table)) {
-        mpi_errno = MPI_T_ERR_INVALID_INDEX;
-        goto fn_fail;
-    }
-
-    entry = (pvar_table_entry_t *) utarray_eltptr(pvar_table, pvar_index);
+    pvar_table_entry_t *entry = (pvar_table_entry_t *) utarray_eltptr(pvar_table, pvar_index);
     if (!entry->active) {
         mpi_errno = MPI_T_ERR_INVALID_INDEX;
         goto fn_fail;

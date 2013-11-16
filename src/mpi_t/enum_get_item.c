@@ -54,7 +54,7 @@ int MPI_T_enum_get_item(MPI_T_enum enumtype, int index, int *value, char *name, 
     int mpi_errno = MPI_SUCCESS;
 
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_T_ENUM_GET_ITEM);
-    MPIR_T_FAIL_IF_UNINITIALIZED();
+    MPIR_ERRTEST_MPIT_INITIALIZED(mpi_errno);
     MPIR_T_THREAD_CS_ENTER();
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_T_ENUM_GET_ITEM);
 
@@ -63,7 +63,8 @@ int MPI_T_enum_get_item(MPI_T_enum enumtype, int index, int *value, char *name, 
     {
         MPID_BEGIN_ERROR_CHECKS
         {
-            MPIR_ERRTEST_ARGNULL(enumtype, "enumtype", mpi_errno);
+            MPIR_ERRTEST_ENUM_HANDLE(enumtype, mpi_errno);
+            MPIR_ERRTEST_ENUM_ITEM(enumtype, index, mpi_errno);
             MPIR_ERRTEST_ARGNULL(value, "value", mpi_errno);
             /* Do not do TEST_ARGNULL for name or name_len, since this is
              * permitted per MPI_T standard.
@@ -74,11 +75,6 @@ int MPI_T_enum_get_item(MPI_T_enum enumtype, int index, int *value, char *name, 
 #   endif /* HAVE_ERROR_CHECKING */
 
     /* ... body of routine ...  */
-
-    if (index < 0 || index > utarray_len(enumtype->items) - 1) {
-        mpi_errno = MPI_T_ERR_INVALID_ITEM;
-        goto fn_fail;
-    }
 
     enum_item_t *item = (enum_item_t *)utarray_eltptr(enumtype->items, index);
     *value = item->value;

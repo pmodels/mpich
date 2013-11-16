@@ -45,17 +45,26 @@ int MPI_T_cvar_handle_free(MPI_T_cvar_handle *handle)
     int mpi_errno = MPI_SUCCESS;
 
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_T_CVAR_HANDLE_FREE);
-    MPIR_T_FAIL_IF_UNINITIALIZED();
+    MPIR_ERRTEST_MPIT_INITIALIZED(mpi_errno);
     MPIR_T_THREAD_CS_ENTER();
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_T_CVAR_HANDLE_FREE);
 
+    /* Validate parameters */
+#   ifdef HAVE_ERROR_CHECKING
+    {
+        MPID_BEGIN_ERROR_CHECKS
+        {
+            MPIR_ERRTEST_ARGNULL(handle, "handle", mpi_errno);
+        }
+        MPID_END_ERROR_CHECKS
+    }
+#   endif /* HAVE_ERROR_CHECKING */
+
     /* ... body of routine ...  */
 
-    if (handle != NULL) {
-        MPIR_T_cvar_handle_t *hnd = *handle;
-        MPIU_Free(hnd);
-        *handle = MPI_T_CVAR_HANDLE_NULL;
-    }
+    MPIR_T_cvar_handle_t *hnd = *handle;
+    MPIU_Free(hnd);
+    *handle = MPI_T_CVAR_HANDLE_NULL;
 
     /* ... end of body of routine ... */
 

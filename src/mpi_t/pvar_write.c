@@ -73,7 +73,7 @@ int MPI_T_pvar_write(MPI_T_pvar_session session, MPI_T_pvar_handle handle, void 
     int mpi_errno = MPI_SUCCESS;
 
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_T_PVAR_WRITE);
-    MPIR_T_FAIL_IF_UNINITIALIZED();
+    MPIR_ERRTEST_MPIT_INITIALIZED(mpi_errno);
     MPIR_T_THREAD_CS_ENTER();
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_T_PVAR_WRITE);
 
@@ -82,9 +82,13 @@ int MPI_T_pvar_write(MPI_T_pvar_session session, MPI_T_pvar_handle handle, void 
     {
         MPID_BEGIN_ERROR_CHECKS
         {
-            MPIR_ERRTEST_ARGNULL(session, "session", mpi_errno);
-            MPIR_ERRTEST_ARGNULL(handle, "handle", mpi_errno);
+            MPIR_ERRTEST_PVAR_SESSION(session, mpi_errno);
+            MPIR_ERRTEST_PVAR_HANDLE(handle, mpi_errno);
             MPIR_ERRTEST_ARGNULL(buf, "buf", mpi_errno);
+            if (handle == MPI_T_PVAR_ALL_HANDLES || handle->session != session) {
+                mpi_errno = MPI_T_ERR_INVALID_HANDLE;
+                goto fn_fail;
+            }
         }
         MPID_END_ERROR_CHECKS
     }
@@ -92,10 +96,7 @@ int MPI_T_pvar_write(MPI_T_pvar_session session, MPI_T_pvar_handle handle, void 
 
     /* ... body of routine ...  */
 
-    if (handle == MPI_T_PVAR_ALL_HANDLES || handle->session != session) {
-        mpi_errno = MPI_T_ERR_INVALID_HANDLE;
-        goto fn_fail;
-    } if (MPIR_T_pvar_is_readonly(handle)) {
+    if (MPIR_T_pvar_is_readonly(handle)) {
         mpi_errno = MPI_T_ERR_PVAR_NO_WRITE;
         goto fn_fail;
     } else {

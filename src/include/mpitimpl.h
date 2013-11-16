@@ -15,6 +15,16 @@
 #include "mpiu_uthash.h"
 #include "mpiimplthread.h" /* For MPICH_IS_THREADED */
 
+#ifdef HAVE_ERROR_CHECKING
+typedef enum {
+    MPIR_T_OBJECT_INVALID = 0,
+    MPIR_T_ENUM_HANDLE,
+    MPIR_T_CVAR_HANDLE,
+    MPIR_T_PVAR_HANDLE,
+    MPIR_T_PVAR_SESSION
+} MPIR_T_object_kind;
+#endif
+
 /* MPI_T enum
  */
 typedef struct enum_item_s {
@@ -23,6 +33,9 @@ typedef struct enum_item_s {
 } enum_item_t;
 
 typedef struct MPIR_T_enum_s {
+#ifdef HAVE_ERROR_CHECKING
+    MPIR_T_object_kind kind;
+#endif
     const char *name;
     UT_array *items;
 } MPIR_T_enum_t;
@@ -102,6 +115,10 @@ typedef struct cvar_table_entry_s {
 } cvar_table_entry_t;
 
 typedef struct MPIR_T_cvar_handle_s {
+#ifdef HAVE_ERROR_CHECKING
+    MPIR_T_object_kind kind;
+#endif
+
      /* Address and count of the cvar. Set at handle allocation time */
     void *addr;
     int count;
@@ -257,6 +274,10 @@ typedef struct {
 } MPIR_T_pvar_watermark_t;
 
 typedef struct MPIR_T_pvar_handle_s {
+#ifdef HAVE_ERROR_CHECKING
+    MPIR_T_object_kind kind;
+#endif
+
     /* These are cached fields from pvar table. Do so to avoid extra
      * indirection when accessing them through pvar handles.
      */
@@ -315,6 +336,10 @@ typedef struct MPIR_T_pvar_handle_s {
 } MPIR_T_pvar_handle_t;
 
 typedef struct MPIR_T_pvar_session_s {
+#ifdef HAVE_ERROR_CHECKING
+    MPIR_T_object_kind kind;
+#endif
+
     /* A linked list of pvar handles */
     MPIR_T_pvar_handle_t *hlist;
 } MPIR_T_pvar_session_t;
@@ -1392,13 +1417,5 @@ extern MPIU_Thread_mutex_t mpi_t_mutex;
 /* Init and finalize routines */
 extern void MPIR_T_env_init(void);
 extern void MPIR_T_env_finalize(void);
-
-#define MPIR_T_FAIL_IF_UNINITIALIZED() \
-    do { \
-        if (!MPIR_T_is_initialized()) { \
-            mpi_errno = MPI_T_ERR_NOT_INITIALIZED; \
-            goto fn_fail; \
-        } \
-    } while (0)
 
 #endif

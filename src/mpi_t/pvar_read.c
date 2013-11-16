@@ -241,7 +241,7 @@ int MPI_T_pvar_read(MPI_T_pvar_session session, MPI_T_pvar_handle handle, void *
     int mpi_errno = MPI_SUCCESS;
 
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_T_PVAR_READ);
-    MPIR_T_FAIL_IF_UNINITIALIZED();
+    MPIR_ERRTEST_MPIT_INITIALIZED(mpi_errno);
     MPIR_T_THREAD_CS_ENTER();
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_T_PVAR_READ);
 
@@ -250,22 +250,21 @@ int MPI_T_pvar_read(MPI_T_pvar_session session, MPI_T_pvar_handle handle, void *
     {
         MPID_BEGIN_ERROR_CHECKS
         {
-            MPIR_ERRTEST_ARGNULL(session, "session", mpi_errno);
-            MPIR_ERRTEST_ARGNULL(handle, "handle", mpi_errno);
+            MPIR_ERRTEST_PVAR_SESSION(session, mpi_errno);
+            MPIR_ERRTEST_PVAR_HANDLE(handle, mpi_errno);
             MPIR_ERRTEST_ARGNULL(buf, "buf", mpi_errno);
+            if (handle == MPI_T_PVAR_ALL_HANDLES  || session != handle->session
+                || !MPIR_T_pvar_is_oncestarted(handle))
+            {
+                mpi_errno = MPI_T_ERR_INVALID_HANDLE;
+                goto fn_fail;
+            }
         }
         MPID_END_ERROR_CHECKS
     }
 #   endif /* HAVE_ERROR_CHECKING */
 
     /* ... body of routine ...  */
-
-    if (handle == MPI_T_PVAR_ALL_HANDLES  || session != handle->session
-        || !MPIR_T_pvar_is_oncestarted(handle))
-    {
-        mpi_errno = MPI_T_ERR_INVALID_HANDLE;
-        goto fn_fail;
-    }
 
     mpi_errno = MPIR_T_pvar_read_impl(session, handle, buf);
     if (mpi_errno) goto fn_fail;

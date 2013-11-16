@@ -63,7 +63,7 @@ int MPI_T_pvar_get_info(int pvar_index, char *name, int *name_len, int *verbosit
     int mpi_errno = MPI_SUCCESS;
 
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_T_PVAR_GET_INFO);
-    MPIR_T_FAIL_IF_UNINITIALIZED();
+    MPIR_ERRTEST_MPIT_INITIALIZED(mpi_errno);
     MPIR_T_THREAD_CS_ENTER();
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_T_PVAR_GET_INFO);
 
@@ -72,7 +72,8 @@ int MPI_T_pvar_get_info(int pvar_index, char *name, int *name_len, int *verbosit
     {
         MPID_BEGIN_ERROR_CHECKS
         {
-            /* Do not do _TEST_ARGNULL for any argument, since this is
+            MPIR_ERRTEST_PVAR_INDEX(pvar_index, mpi_errno);
+            /* Do not do _TEST_ARGNULL for other arguments, since this is
              * allowed or will be allowed by MPI_T standard.
              */
         }
@@ -82,11 +83,6 @@ int MPI_T_pvar_get_info(int pvar_index, char *name, int *name_len, int *verbosit
 
     /* ... body of routine ...  */
     const pvar_table_entry_t *entry;
-
-    if (pvar_index < 0 || pvar_index >= utarray_len(pvar_table)) {
-        mpi_errno = MPI_T_ERR_INVALID_INDEX;
-        goto fn_fail;
-    }
 
     entry = (pvar_table_entry_t *) utarray_eltptr(pvar_table, pvar_index);
     if (!entry->active) {

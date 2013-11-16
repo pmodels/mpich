@@ -110,7 +110,7 @@ int MPI_T_cvar_write(MPI_T_cvar_handle handle, void *buf)
     int mpi_errno = MPI_SUCCESS;
 
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_T_CVAR_WRITE);
-    MPIR_T_FAIL_IF_UNINITIALIZED();
+    MPIR_ERRTEST_MPIT_INITIALIZED(mpi_errno);
     MPIR_T_THREAD_CS_ENTER();
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_T_CVAR_WRITE);
 
@@ -119,7 +119,7 @@ int MPI_T_cvar_write(MPI_T_cvar_handle handle, void *buf)
     {
         MPID_BEGIN_ERROR_CHECKS
         {
-            MPIR_ERRTEST_ARGNULL(handle, "handle", mpi_errno);
+            MPIR_ERRTEST_CVAR_HANDLE(handle, mpi_errno);
             MPIR_ERRTEST_ARGNULL(buf, "buf", mpi_errno);
         }
         MPID_END_ERROR_CHECKS

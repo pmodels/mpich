@@ -57,7 +57,7 @@ int MPI_T_category_get_info(int cat_index, char *name, int *name_len, char *desc
     int mpi_errno = MPI_SUCCESS;
 
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_T_CATEGORY_GET_INFO);
-    MPIR_T_FAIL_IF_UNINITIALIZED();
+    MPIR_ERRTEST_MPIT_INITIALIZED(mpi_errno);
     MPIR_T_THREAD_CS_ENTER();
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_T_CATEGORY_GET_INFO);
 
@@ -66,7 +66,8 @@ int MPI_T_category_get_info(int cat_index, char *name, int *name_len, char *desc
     {
         MPID_BEGIN_ERROR_CHECKS
         {
-            /* Do not do _TEST_ARGNULL for any argument, since this is
+            MPIR_ERRTEST_CAT_INDEX(cat_index, mpi_errno);
+            /* Do not do _TEST_ARGNULL for other arguments, since this is
              * allowed or will be allowed by MPI_T standard.
              */
         }
@@ -75,10 +76,6 @@ int MPI_T_category_get_info(int cat_index, char *name, int *name_len, char *desc
 #   endif /* HAVE_ERROR_CHECKING */
 
     /* ... body of routine ...  */
-    if (cat_index < 0 || cat_index >= utarray_len(cat_table)) {
-        mpi_errno = MPI_T_ERR_INVALID_INDEX;
-        goto fn_fail;
-    }
 
     cat_table_entry_t *cat;
     cat = (cat_table_entry_t *)utarray_eltptr(cat_table, cat_index);
