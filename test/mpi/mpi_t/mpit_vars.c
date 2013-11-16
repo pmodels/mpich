@@ -518,6 +518,8 @@ int perfvarReadInt(int pvarIndex, int isContinuous, int *found)
     MPI_T_pvar_handle pvarHandle;
     MPI_T_pvar_session_create(&session);
     MPI_T_pvar_handle_alloc(session, pvarIndex, NULL, &pvarHandle, &count);
+    MPI_T_pvar_start(session, MPI_T_PVAR_ALL_HANDLES);
+    MPI_T_pvar_stop(session, MPI_T_PVAR_ALL_HANDLES);
     if (count == 1) {
         *found = 1;
         if (!isContinuous) {
@@ -554,6 +556,8 @@ unsigned int perfvarReadUint(int pvarIndex, int isContinuous, int *found)
     *found = 0;
     MPI_T_pvar_session_create(&session);
     MPI_T_pvar_handle_alloc(session, pvarIndex, NULL, &pvarHandle, &count);
+    MPI_T_pvar_start(session, MPI_T_PVAR_ALL_HANDLES);
+    MPI_T_pvar_stop(session, MPI_T_PVAR_ALL_HANDLES);
     if (count == 1) {
         *found = 1;
         if (!isContinuous) {
@@ -589,6 +593,8 @@ double perfvarReadDouble(int pvarIndex, int isContinuous, int *found)
     *found = 0;
     MPI_T_pvar_session_create(&session);
     MPI_T_pvar_handle_alloc(session, pvarIndex, NULL, &pvarHandle, &count);
+    MPI_T_pvar_start(session, MPI_T_PVAR_ALL_HANDLES);
+    MPI_T_pvar_stop(session, MPI_T_PVAR_ALL_HANDLES);
     if (count == 1) {
         *found = 1;
         if (!isContinuous) {
