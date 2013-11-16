@@ -355,7 +355,7 @@ int MPID_nem_lmt_dma_start_recv(MPIDI_VC_t *vc, MPID_Request *rreq, MPID_IOV s_c
     MPIDI_Datatype_get_info(rreq->dev.user_count, rreq->dev.datatype,
                             dt_contig, data_sz, dt_ptr, dt_true_lb);
 
-    nodma = !knem_has_dma || data_sz < MPIR_CVAR_NEM_LMT_DMA_THRESHOLD;
+    nodma = !knem_has_dma || data_sz < MPIR_CVAR_NEMESIS_LMT_DMA_THRESHOLD;
 
     if (dt_contig) {
         /* handle the iov creation ourselves */
