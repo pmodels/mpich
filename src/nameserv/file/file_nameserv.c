@@ -172,10 +172,12 @@ int MPID_NS_Publish( MPID_NS_Handle handle, const MPID_Info *info_ptr,
 int MPID_NS_Lookup( MPID_NS_Handle handle, const MPID_Info *info_ptr,
                     const char service_name[], char port[] )
 {
-    /* static const char FCNAME[] = "MPID_NS_Lookup"; */
     FILE *fp;
     char filename[MAXPATHLEN];
     int  mpi_errno = MPI_SUCCESS;
+#ifdef HAVE_ERROR_CHECKING
+    static const char FCNAME[] = "MPID_NS_Lookup";
+#endif
     
     /* Determine file and directory name.  The file name is from
        the service name */
