@@ -725,6 +725,7 @@ sub ProcessFile
 	    }
 	    if ($errClassLoc >= 0 && $checkErrClass) {
 		if (!($args[$errClassLoc] =~ /^MPI_ERR_/)  &&
+		    !($args[$errClassLoc] =~ /^MPI_T_ERR_/) &&
 		    !($args[$errClassLoc] =~ /^MPIDU_SOCK_ERR_/) &&
 		    !($args[$errClassLoc] =~ /^MPIX_ERR_/) &&
 		    !($args[$errClassLoc] =~ /^errclass/) ) {
