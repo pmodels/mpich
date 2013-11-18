@@ -434,7 +434,7 @@ void MPIDU_Datatype_debug(MPI_Datatype type,
 			  int array_ct)
 {
     int is_builtin;
-    MPID_Datatype *dtp;
+    MPID_Datatype *dtp ATTRIBUTE((unused));
 
     is_builtin = (HANDLE_GET_KIND(type) == HANDLE_KIND_BUILTIN);
 

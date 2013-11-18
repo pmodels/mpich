@@ -317,7 +317,7 @@ int MPIR_Ibcast_scatter_rec_dbl_allgather(void *buffer, int count, MPI_Datatype 
     int rank, comm_size, dst;
     int relative_rank, mask;
     int scatter_size, nbytes, curr_size, incoming_count;
-    int type_size, j, k, i, tmp_mask, is_contig, is_homogeneous;
+    int type_size, j, k, i, tmp_mask, is_contig, is_homogeneous ATTRIBUTE((unused));
     int relative_dst, dst_tree_root, my_tree_root, send_offset;
     int recv_offset, tree_root, nprocs_completed, offset;
     MPID_Datatype *dtp;
@@ -556,7 +556,7 @@ int MPIR_Ibcast_scatter_ring_allgather(void *buffer, int count, MPI_Datatype dat
 {
     int mpi_errno = MPI_SUCCESS;
     int comm_size, rank;
-    int is_contig, is_homogeneous, type_size, nbytes;
+    int is_contig, is_homogeneous ATTRIBUTE((unused)), type_size, nbytes;
     int scatter_size;
     int i, j, jnext, left, right;
     MPI_Aint true_extent, true_lb;
@@ -755,7 +755,7 @@ fn_fail:
 int MPIR_Ibcast_intra(void *buffer, int count, MPI_Datatype datatype, int root, MPID_Comm *comm_ptr, MPID_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
-    int comm_size, is_homogeneous;
+    int comm_size, is_homogeneous ATTRIBUTE((unused));
     MPI_Aint type_size, nbytes;
 
     MPIU_Assert(comm_ptr->comm_kind == MPID_INTRACOMM);

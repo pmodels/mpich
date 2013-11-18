@@ -805,7 +805,7 @@ MPID_Request * MPIDI_CH3U_Recvq_FDP_or_AEU(MPIDI_Message_match * match,
     /* A matching request was not found in the posted queue, so we 
        need to allocate a new request and add it to the unexpected queue */
     {
-	int mpi_errno=0;
+        int mpi_errno ATTRIBUTE((unused)) = 0;
 	MPIDI_Request_create_rreq( rreq, mpi_errno, 
 				   found=FALSE;goto lock_exit );
         MPIU_Assert(mpi_errno == 0);

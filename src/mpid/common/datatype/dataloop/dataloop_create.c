@@ -23,7 +23,7 @@ void PREPEND_PREFIX(Dataloop_create)(MPI_Datatype type,
 				     int flag)
 {
     int i;
-    int err;
+    int err ATTRIBUTE((unused));
 
     int nr_ints, nr_aints, nr_types, combiner;
     MPI_Datatype *types;

@@ -1820,7 +1820,7 @@ int MPID_nem_tcp_connpoll(int in_blocking_poll)
                 int req_errno = MPI_SUCCESS;
                 ssize_t rc;
                 char dummy;
-                const char *err_str = "UNKNOWN";
+                const char *err_str ATTRIBUTE((unused)) = "UNKNOWN";
 
                 /* See if we can get a specific error for this fd
                    (Stevens Network Programming Vol 1, pg 184) */

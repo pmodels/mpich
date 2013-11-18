@@ -139,7 +139,7 @@ int MPIDI_CH3I_Seg_commit(MPID_nem_seg_ptr_t memory, int num_local, int local_ra
     char *kvs_name;
     char *serialized_hnd = NULL;
     void *current_addr;
-    void *start_addr;
+    void *start_addr ATTRIBUTE((unused));
     size_t size_left;
     MPIU_CHKPMEM_DECL (1);
     MPIU_CHKLMEM_DECL (2);

@@ -226,7 +226,7 @@ fn_fail:
 int MPIR_Ireduce_redscat_gather(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op, int root, MPID_Comm *comm_ptr, MPID_Sched_t s)
 {
     int mpi_errno = MPI_SUCCESS;
-    int i, j, comm_size, rank, pof2, is_commutative;
+    int i, j, comm_size, rank, pof2, is_commutative ATTRIBUTE((unused));
     int rem, dst, newrank, newdst, mask, send_idx, recv_idx, last_idx;
     int send_cnt, recv_cnt, newroot, newdst_tree_root, newroot_tree_root;
     void *tmp_buf = NULL;

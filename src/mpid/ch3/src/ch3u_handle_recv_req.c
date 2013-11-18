@@ -19,7 +19,7 @@ static int do_simple_get(MPID_Win *win_ptr, MPIDI_Win_lock_queue *lock_queue);
 int MPIDI_CH3U_Handle_recv_req(MPIDI_VC_t * vc, MPID_Request * rreq, 
 			       int * complete)
 {
-    static int in_routine = FALSE;
+    static int in_routine ATTRIBUTE((unused)) = FALSE;
     int mpi_errno = MPI_SUCCESS;
     int (*reqFn)(MPIDI_VC_t *, MPID_Request *, int *);
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3U_HANDLE_RECV_REQ);

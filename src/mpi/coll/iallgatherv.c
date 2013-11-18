@@ -36,7 +36,7 @@ int MPIR_Iallgatherv_rec_dbl(const void *sendbuf, int sendcount, MPI_Datatype se
     int mask, dst, total_count, position, offset, my_tree_root, dst_tree_root;
     MPI_Aint recvtype_extent, recvtype_true_extent, recvtype_true_lb;
     void *tmp_buf = NULL;
-    int is_homogeneous;
+    int is_homogeneous ATTRIBUTE((unused));
     MPIR_SCHED_CHKPMEM_DECL(1);
 
     comm_size = comm_ptr->local_size;
