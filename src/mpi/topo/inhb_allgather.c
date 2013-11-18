@@ -35,17 +35,14 @@ int MPIR_Ineighbor_allgather_default(const void *sendbuf, int sendcount, MPI_Dat
     int indegree, outdegree, weighted;
     int k,l;
     int *srcs, *dsts;
-    int comm_size;
     MPI_Aint recvtype_extent;
     MPIU_CHKLMEM_DECL(2);
-
-    comm_size = comm_ptr->local_size;
 
     MPID_Datatype_get_extent_macro(recvtype, recvtype_extent);
 
     /* This is the largest offset we add to recvbuf */
     MPID_Ensure_Aint_fits_in_pointer(MPI_VOID_PTR_CAST_TO_MPI_AINT recvbuf +
-                                     (comm_size * recvcount * recvtype_extent));
+                                     (comm_ptr->local_size * recvcount * recvtype_extent));
 
     mpi_errno = MPIR_Topo_canon_nhb_count(comm_ptr, &indegree, &outdegree, &weighted);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
