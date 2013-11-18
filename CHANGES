@@ -2,6 +2,10 @@
                                Changes in 3.1
 ===============================================================================
 
+ # Implement runtime compatibility with MPICH-derived impelmentations as per
+   the ABI Compatibility Initiative (see www.mpich.org/abi for more
+   information).
+
  # Integrated MPICH-PAMI code base for Blue Gene/Q and other IBM
    platforms.
 
