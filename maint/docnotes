@@ -504,23 +504,23 @@ N*/
 N*/
 
 /*N MPI_T_ERR_CVAR_SET_NOT_NOW
-. MPI_T_ERR_CVAR_SET_NOT_NOW - The control variable can't be set at this moment.
+. MPI_T_ERR_CVAR_SET_NOT_NOW - The control variable can not be set at this moment.
 N*/
 
 /*N MPI_T_ERR_CVAR_SET_NEVER
-. MPI_T_ERR_CVAR_SET_NEVER -  The control variable can't be set until end of execution.
+. MPI_T_ERR_CVAR_SET_NEVER -  The control variable can not be set until end of execution.
 N*/
 
 /*N MPI_T_ERR_PVAR_NO_STARTSTOP
-. MPI_T_ERR_PVAR_NO_STARTSTOP - The performance variable can't be started or stopped.
+. MPI_T_ERR_PVAR_NO_STARTSTOP - The performance variable can not be started or stopped.
 N*/
 
 /*N MPI_T_ERR_PVAR_NO_WRITE
-. MPI_T_ERR_PVAR_NO_WRITE - The performance variable can't be written or reset.
+. MPI_T_ERR_PVAR_NO_WRITE - The performance variable can not be written or reset.
 N*/
 
 /*N MPI_T_ERR_PVAR_NO_ATOMIC
-. MPI_T_ERR_PVAR_NO_ATOMIC - The performance variable can't be read/write atomically.
+. MPI_T_ERR_PVAR_NO_ATOMIC - The performance variable can not be read/write atomically.
 N*/
 
 /*N NULL

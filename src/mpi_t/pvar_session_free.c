@@ -74,7 +74,7 @@ return, MPI sets the session identifier to MPI_T_PVAR_SESSION_NULL.
 
 .N Errors
 .N MPI_SUCCESS
-.N MPI_T_ERR_NOT_INITIALIZEDE
+.N MPI_T_ERR_NOT_INITIALIZED
 .N MPI_T_ERR_INVALID_SESSION
 @*/
 int MPI_T_pvar_session_free(MPI_T_pvar_session *session)
