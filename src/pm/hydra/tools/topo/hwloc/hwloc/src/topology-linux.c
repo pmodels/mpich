@@ -2719,7 +2719,7 @@ look_sysfsnode(struct hwloc_topology *topology,
       for (index_ = 0; index_ < nbnodes; index_++) {
           char nodepath[SYSFS_NUMA_NODE_PATH_LEN];
           hwloc_bitmap_t cpuset;
-          hwloc_obj_t node, res_obj;
+          hwloc_obj_t node, res_obj __hwloc_attribute_unused;
 
 	  osnode = indexes[index_];
 
