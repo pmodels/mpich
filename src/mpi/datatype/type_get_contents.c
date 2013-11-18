@@ -59,7 +59,6 @@ int MPI_Type_get_contents(MPI_Datatype datatype,
 {
     static const char FCNAME[] = "MPI_Type_get_contents";
     int mpi_errno = MPI_SUCCESS;
-    MPID_Datatype *datatype_ptr = NULL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_TYPE_GET_CONTENTS);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
@@ -78,14 +77,13 @@ int MPI_Type_get_contents(MPI_Datatype datatype,
     }
 #   endif
     
-    /* Convert MPI object handles to object pointers */
-    MPID_Datatype_get_ptr(datatype, datatype_ptr);
-
     /* Validate parameters and objects (post conversion) */
 #   ifdef HAVE_ERROR_CHECKING
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
+            MPID_Datatype *datatype_ptr = NULL;
+
 	    /* Check for built-in type */
 	    if (HANDLE_GET_KIND(datatype) == HANDLE_KIND_BUILTIN) {
 		mpi_errno = MPIR_Err_create_code(MPI_SUCCESS,
@@ -112,6 +110,9 @@ int MPI_Type_get_contents(MPI_Datatype datatype,
 						 "**contentspredef", 0);
 		goto fn_fail;
 	    }
+
+            /* Convert MPI object handles to object pointers */
+            MPID_Datatype_get_ptr(datatype, datatype_ptr);
 
             /* Validate datatype_ptr */
             MPID_Datatype_valid_ptr(datatype_ptr, mpi_errno);

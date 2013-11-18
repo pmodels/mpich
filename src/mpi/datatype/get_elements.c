@@ -57,7 +57,6 @@ int MPI_Get_elements(const MPI_Status *status, MPI_Datatype datatype, int *count
 {
     int mpi_errno = MPI_SUCCESS;
     MPI_Count count_x;
-    MPID_Datatype *datatype_ptr = NULL;
 
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_GET_ELEMENTS);
 
@@ -76,16 +75,17 @@ int MPI_Get_elements(const MPI_Status *status, MPI_Datatype datatype, int *count
     }
 #   endif
 
-    /* Convert MPI object handles to object pointers */
-    MPID_Datatype_get_ptr(datatype, datatype_ptr);
-
     /* Validate parameters and objects (post conversion) */
 #   ifdef HAVE_ERROR_CHECKING
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
+            MPID_Datatype *datatype_ptr = NULL;
+
 	    MPIR_ERRTEST_ARGNULL(status, "status", mpi_errno);
 	    MPIR_ERRTEST_ARGNULL(count, "count", mpi_errno);
+            /* Convert MPI object handles to object pointers */
+            MPID_Datatype_get_ptr(datatype, datatype_ptr);
             /* Validate datatype_ptr */
 	    if (HANDLE_GET_KIND(datatype) != HANDLE_KIND_BUILTIN) {
 		MPID_Datatype_get_ptr(datatype, datatype_ptr);

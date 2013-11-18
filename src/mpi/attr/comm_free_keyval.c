@@ -71,7 +71,6 @@ Key values are global (they can be used with any and all communicators)
 @*/
 int MPI_Comm_free_keyval(int *comm_keyval)
 {
-    MPID_Keyval *keyval_ptr = NULL;
     int          mpi_errno = MPI_SUCCESS;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_COMM_FREE_KEYVAL);
 
@@ -93,14 +92,16 @@ int MPI_Comm_free_keyval(int *comm_keyval)
     }
 #   endif
 
-    /* Convert MPI object handles to object pointers */
-    MPID_Keyval_get_ptr( *comm_keyval, keyval_ptr );
-
     /* Validate parameters and objects (post conversion) */
 #   ifdef HAVE_ERROR_CHECKING
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
+            MPID_Keyval *keyval_ptr = NULL;
+
+            /* Convert MPI object handles to object pointers */
+            MPID_Keyval_get_ptr( *comm_keyval, keyval_ptr );
+
 	    MPID_Keyval_valid_ptr( keyval_ptr, mpi_errno );
             if (mpi_errno) goto fn_fail;
         }

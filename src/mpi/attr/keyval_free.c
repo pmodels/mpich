@@ -57,7 +57,6 @@ int MPI_Keyval_free(int *keyval)
 {
     static const char FCNAME[] = "MPI_Keyval_free";
     int mpi_errno = MPI_SUCCESS;
-    MPID_Keyval *keyval_ptr = NULL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_KEYVAL_FREE);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();
@@ -74,14 +73,16 @@ int MPI_Keyval_free(int *keyval)
     }
 #   endif /* HAVE_ERROR_CHECKING */
 
-    /* Convert MPI object handles to object pointers */
-    MPID_Keyval_get_ptr( *keyval, keyval_ptr );
-
     /* Validate parameters and objects (post conversion) */
 #   ifdef HAVE_ERROR_CHECKING
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
+            MPID_Keyval *keyval_ptr = NULL;
+
+            /* Convert MPI object handles to object pointers */
+            MPID_Keyval_get_ptr( *keyval, keyval_ptr );
+
 	    MPID_Keyval_valid_ptr( keyval_ptr, mpi_errno );
             if (mpi_errno) goto fn_fail;
         }
