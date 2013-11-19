@@ -356,6 +356,14 @@ if test "$enable_checkpointing" = "yes" ; then
 fi
 AC_SUBST(ckpointdir)
 
+AC_CHECK_SIZEOF(void *)
+# for tests that require large mem
+largetest="#"
+if test $ac_cv_sizeof_void_p -ge 8; then
+    largetest=""
+fi
+AC_SUBST(largetest)
+
 #
 # Only run xfail tests if enabled
 RUN_XFAIL=false
@@ -1447,6 +1455,7 @@ AC_OUTPUT(maint/testmerge \
           coll/Makefile \
           comm/Makefile \
           datatype/Makefile \
+          datatype/testlist \
           errhan/Makefile \
           group/Makefile \
           info/Makefile \
