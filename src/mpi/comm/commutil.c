@@ -1130,6 +1130,8 @@ int MPIR_Get_contextid_sparse_group(MPID_Comm *comm_ptr, MPID_Group *group_ptr, 
             /* --BEGIN ERROR HANDLING-- */
             int nfree = 0;
             int ntotal = 0;
+            int minfree;
+
             if (own_mask) {
                 MPIU_THREAD_CS_ENTER(CONTEXTID,);
                 mask_in_use = 0;
@@ -1141,9 +1143,29 @@ int MPIR_Get_contextid_sparse_group(MPID_Comm *comm_ptr, MPID_Group *group_ptr, 
             }
 
             MPIR_ContextMaskStats(&nfree, &ntotal);
-            MPIU_ERR_SETANDJUMP3(mpi_errno, MPI_ERR_OTHER,
-                                 "**toomanycommfrag", "**toomanycommfrag %d %d %d",
-                                 nfree, ntotal, ignore_id);
+            if (ignore_id)
+                minfree = INT_MAX;
+            else
+                minfree = nfree;
+
+            if (group_ptr != NULL) {
+                int coll_tag = tag | MPIR_Process.tagged_coll_mask; /* Shift tag into the tagged coll space */
+                mpi_errno = MPIR_Allreduce_group(MPI_IN_PLACE, &minfree, 1, MPI_INT, MPI_MIN,
+                                                 comm_ptr, group_ptr, coll_tag, &errflag);
+            } else {
+                mpi_errno = MPIR_Allreduce_impl(MPI_IN_PLACE, &minfree, 1, MPI_INT,
+                                                 MPI_MIN, comm_ptr, &errflag);
+            }
+
+            if (minfree > 0) {
+                MPIU_ERR_SETANDJUMP3(mpi_errno, MPI_ERR_OTHER,
+                                     "**toomanycommfrag", "**toomanycommfrag %d %d %d",
+                                     nfree, ntotal, ignore_id);
+            } else {
+                MPIU_ERR_SETANDJUMP3(mpi_errno, MPI_ERR_OTHER,
+                                     "**toomanycomm", "**toomanycomm %d %d %d",
+                                     nfree, ntotal, ignore_id);
+            }
             /* --END ERROR HANDLING-- */
         }
 
