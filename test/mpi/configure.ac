@@ -356,14 +356,6 @@ if test "$enable_checkpointing" = "yes" ; then
 fi
 AC_SUBST(ckpointdir)
 
-AC_CHECK_SIZEOF(void *)
-# for tests that require large mem
-largetest="#"
-if test $ac_cv_sizeof_void_p -ge 8; then
-    largetest=""
-fi
-AC_SUBST(largetest)
-
 #
 # Only run xfail tests if enabled
 RUN_XFAIL=false
@@ -631,6 +623,14 @@ AC_TYPE_UINT64_T
 
 # Check for availability of C99 types
 AC_CHECK_TYPES([_Bool, float _Complex, double _Complex, long double _Complex])
+AC_CHECK_SIZEOF(void *,8)
+# for tests that require large mem
+largetest="#"
+if test $ac_cv_sizeof_void_p -ge 8; then
+    largetest=""
+fi
+AC_SUBST(largetest)
+
 
 # Only run the long double complex tests if that type is available
 if test "x$enable_long_double" = "xyes" && \
