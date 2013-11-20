@@ -233,8 +233,8 @@ int MPIR_Comm_create_intra(MPID_Comm *comm_ptr, MPID_Group *group_ptr,
        member of the group */
     /* In the multi-threaded case, MPIR_Get_contextid assumes that the
        calling routine already holds the single criticial section */
-    /* TODO should be converted to use MPIR_Get_contextid_sparse instead */
-    mpi_errno = MPIR_Get_contextid( comm_ptr, &new_context_id );
+    mpi_errno = MPIR_Get_contextid_sparse( comm_ptr, &new_context_id,
+                                           group_ptr->rank == MPI_UNDEFINED );
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     MPIU_Assert(new_context_id != 0);
 
@@ -278,7 +278,6 @@ int MPIR_Comm_create_intra(MPID_Comm *comm_ptr, MPID_Group *group_ptr,
     }
     else {
         /* This process is not in the group */
-        MPIR_Free_contextid( new_context_id );
         new_context_id = 0;
     }
 
@@ -294,8 +293,9 @@ fn_fail:
         MPIR_Comm_release(*newcomm_ptr, 0/*isDisconnect*/);
         new_context_id = 0; /* MPIR_Comm_release frees the new ctx id */
     }
-    if (new_context_id != 0)
+    if (new_context_id != 0 && group_ptr->rank != MPI_UNDEFINED) {
         MPIR_Free_contextid(new_context_id);
+    }
     /* --END ERROR HANDLING-- */
     goto fn_exit;
 }
