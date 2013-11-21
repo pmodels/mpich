@@ -135,6 +135,11 @@ void    MPIDI_Request_allocate_pool();
 
 #endif
 
+#ifdef HAVE_DEBUGGER_SUPPORT
+#define MPIDI_Request_clear_dbg(req_) ((req_)->dbg_next = NULL)
+#else
+#define MPIDI_Request_clear_dbg(req_)
+#endif
 
 /**
  * \brief Create a very generic request
@@ -157,6 +162,7 @@ MPIDI_Request_create_basic()
   memset(&req->mpid, 0xFFFFFFFF, sizeof(struct MPIDI_Request));
 #endif
   req->mpid.next = NULL;
+  MPIDI_Request_clear_dbg(req);
 
   return req;
 }
