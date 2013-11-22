@@ -689,9 +689,14 @@ static void MPIR_Init_contextid(void)
     for (i=1; i<MPIR_MAX_CONTEXT_MASK; i++) {
 	context_mask[i] = 0xFFFFFFFF;
     }
-    /* the first three values are already used (comm_world, comm_self,
-       and the internal-only copy of comm_world) */
-    context_mask[0] = 0xFFFFFFF8; 
+    /* The first two values are already used (comm_world, comm_self).
+       The third value is also used for the internal-only copy of
+       comm_world, if needed by mpid. */
+#ifdef MPID_NEEDS_ICOMM_WORLD
+    context_mask[0] = 0xFFFFFFF8;
+#else
+    context_mask[0] = 0xFFFFFFFC;
+#endif
     initialize_context_mask = 0;
 
 #ifdef MPICH_DEBUG_HANDLEALLOC
