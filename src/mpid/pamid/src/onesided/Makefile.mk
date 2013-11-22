@@ -33,11 +33,18 @@ lib_lib@MPILIBNAME@_la_SOURCES +=                                    \
   src/mpid/pamid/src/onesided/mpid_win_free.c                        \
   src/mpid/pamid/src/onesided/mpid_win_get.c                         \
   src/mpid/pamid/src/onesided/mpid_win_lock.c                        \
+  src/mpid/pamid/src/onesided/mpid_win_lock_all.c                    \
   src/mpid/pamid/src/onesided/mpid_win_pscw.c                        \
   src/mpid/pamid/src/onesided/mpid_win_put.c                         \
-  src/mpid/pamid/src/onesided/mpidi_win_control.c                    \
+  src/mpid/pamid/src/onesided/mpid_win_allocate.c                    \
+  src/mpid/pamid/src/onesided/mpid_win_create_dynamic.c              \
+  src/mpid/pamid/src/onesided/mpid_win_flush.c                       \
+  src/mpid/pamid/src/onesided/mpid_win_attach.c                      \
+  src/mpid/pamid/src/onesided/mpid_win_detach.c                      \
+  src/mpid/pamid/src/onesided/mpid_win_sync.c                        \
   src/mpid/pamid/src/onesided/mpid_win_get_info.c                    \
-  src/mpid/pamid/src/onesided/mpid_win_set_info.c                     
+  src/mpid/pamid/src/onesided/mpid_win_set_info.c                    \
+  src/mpid/pamid/src/onesided/mpidi_win_control.c
 
 
 endif BUILD_PAMID

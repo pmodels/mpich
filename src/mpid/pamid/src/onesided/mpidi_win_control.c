@@ -39,7 +39,8 @@ MPIDI_WinCtrlSend(pami_context_t       context,
   rc = PAMI_Endpoint_create(MPIDI_Client,taskid, 0, &dest);
   MPID_assert(rc == PAMI_SUCCESS);
 
-  if(control->type == MPIDI_WIN_MSGTYPE_UNLOCK) {
+  if ((control->type == MPIDI_WIN_MSGTYPE_UNLOCK) ||
+      (control->type == MPIDI_WIN_MSGTYPE_UNLOCKALL)) {
     pami_send_t params = {
       .send   = {
         .dispatch = MPIDI_Protocols_WinCtrl,
@@ -81,7 +82,16 @@ MPIDI_WinUnlockDoneCB(pami_context_t   context,
                       pami_result_t    result)
 {
   MPID_Win *win = (MPID_Win *)cookie;
-  win->mpid.sync.lock.remote.locked = 0;
+  if (win->mpid.sync.origin_epoch_type == MPID_EPOTYPE_LOCK) {
+     win->mpid.sync.lock.remote.locked = 0;
+  }
+  else if (win->mpid.sync.origin_epoch_type == MPID_EPOTYPE_LOCK_ALL)
+  {
+     MPID_assert((int)win->mpid.sync.lock.remote.allLocked > 0);
+     win->mpid.sync.lock.remote.allLocked -= 1;
+  }
+  else
+     MPID_assert_always(0);
 }
 
 
@@ -105,15 +115,17 @@ MPIDI_WinControlCB(pami_context_t    context,
   switch (control->type)
     {
     case MPIDI_WIN_MSGTYPE_LOCKREQ:
+    case MPIDI_WIN_MSGTYPE_LOCKALLREQ:
       MPIDI_WinLockReq_proc(context, control, senderrank);
       break;
     case MPIDI_WIN_MSGTYPE_LOCKACK:
+    case MPIDI_WIN_MSGTYPE_LOCKALLACK:
       MPIDI_WinLockAck_proc(context, control, senderrank);
       break;
     case MPIDI_WIN_MSGTYPE_UNLOCK:
+    case MPIDI_WIN_MSGTYPE_UNLOCKALL:
       MPIDI_WinUnlock_proc(context, control, senderrank);
       break;
-
     case MPIDI_WIN_MSGTYPE_COMPLETE:
       MPIDI_WinComplete_proc(context, control, senderrank);
       break;

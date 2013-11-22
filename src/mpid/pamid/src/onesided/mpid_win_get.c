@@ -53,9 +53,6 @@ MPIDI_Get(pami_context_t   context,
   if(rc == PAMI_EAGAIN)
     return rc;
 
-  if (!freed)
-      MPIDI_Win_datatype_unmap(&req->target.dt);
-
   return PAMI_SUCCESS;
 }
 
@@ -104,7 +101,6 @@ MPIDI_Get_use_pami_rget(pami_context_t context, MPIDI_Win_request * req, int *fr
 	will not change till that RMA has completed. In the meanwhile
 	the rest of the RMAs will have memory leaks */
     if (req->target.dt.num_contig - req->state.index == 1) {
-    //if (sync->total - sync->complete == 1) {
           map=NULL;
           if (req->target.dt.map != &req->target.dt.__map) {
               map=(void *) req->target.dt.map;
@@ -174,16 +170,8 @@ MPIDI_Get_use_pami_get(pami_context_t context, MPIDI_Win_request * req, int *fre
 	will not change till that RMA has completed. In the meanwhile
 	the rest of the RMAs will have memory leaks */
     if (req->target.dt.num_contig - req->state.index == 1) {
-    //if (sync->total - sync->complete == 1) {
-        map=NULL;
-        if (req->target.dt.map != &req->target.dt.__map) {
-            map=(void *) req->target.dt.map;
-        }
         rc = PAMI_Get(context, &params);
         MPID_assert(rc == PAMI_SUCCESS);
-        if (map)
-            MPIU_Free(map);
-        *freed=1;
         return PAMI_SUCCESS;
     } else {
         rc = PAMI_Get(context, &params);
@@ -226,6 +214,7 @@ MPID_Get(void         *origin_addr,
 {
   int mpi_errno = MPI_SUCCESS;
   MPIDI_Win_request *req = MPIU_Calloc0(1, MPIDI_Win_request);
+  *req = zero_req;
   req->win          = win;
   req->type         = MPIDI_WIN_REQUEST_GET;
 
@@ -242,6 +231,7 @@ MPID_Get(void         *origin_addr,
   }
 
   req->offset = target_disp * win->mpid.info[target_rank].disp_unit;
+  win->mpid.origin[target_rank].nStarted++;
 
   MPIDI_Win_datatype_basic(origin_count,
                            origin_datatype,
@@ -252,11 +242,7 @@ MPID_Get(void         *origin_addr,
   #ifndef MPIDI_NO_ASSERT
      MPID_assert(req->origin.dt.size == req->target.dt.size);
   #else
-  /* temp fix, should be fixed as part of error injection for one sided comm.*/
-  /* by 10/12                                                                */
-  if (req->origin.dt.size != req->target.dt.size) {
-       exit(1);
-  }
+     MPIU_ERR_CHKANDJUMP((req->origin.dt.size != req->target.dt.size), mpi_errno, MPI_ERR_SIZE, "**rmasize");
   #endif
 
   if ( (req->origin.dt.size == 0) ||
@@ -270,6 +256,7 @@ MPID_Get(void         *origin_addr,
   if (target_rank == win->comm_ptr->rank)
     {
       size_t offset = req->offset;
+      req->win->mpid.origin[target_rank].nCompleted++;
       MPIU_Free(req);
       return MPIR_Localcopy(win->base + offset,
                             target_count,

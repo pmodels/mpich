@@ -45,6 +45,7 @@ MPIDI_Win_DoneCB(pami_context_t  context,
                                      req->origin.count,
                                      req->origin.datatype);
           MPID_assert(mpi_errno == MPI_SUCCESS);
+          MPIDI_Win_datatype_unmap(&req->target.dt);
           MPID_Datatype_release(req->origin.dt.pointer);
           MPIU_Free(req->buffer);
           MPIU_Free(req->user_buffer);
@@ -52,7 +53,6 @@ MPIDI_Win_DoneCB(pami_context_t  context,
         }
     }
 
-  //if (req->win->mpid.sync.total == req->win->mpid.sync.complete)
   if (req->origin.completed == req->target.dt.num_contig)
     {
       req->win->mpid.origin[target_rank].nCompleted++;

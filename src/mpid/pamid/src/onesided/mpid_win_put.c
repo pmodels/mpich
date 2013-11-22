@@ -106,7 +106,6 @@ MPIDI_Put_use_pami_rput(pami_context_t context, MPIDI_Win_request * req,int *fre
 	will not change till that RMA has completed. In the meanwhile
 	the rest of the RMAs will have memory leaks */
     if (req->target.dt.num_contig - req->state.index == 1) {
-    //if (sync->total - sync->complete == 1) {
          map=NULL;
          if (req->target.dt.map != &req->target.dt.__map) {
              map=(void *) req->target.dt.map;
@@ -228,6 +227,7 @@ MPID_Put(void         *origin_addr,
 {
   int mpi_errno = MPI_SUCCESS;
   MPIDI_Win_request *req = MPIU_Calloc0(1, MPIDI_Win_request);
+  *req = zero_req;
   req->win          = win;
   req->type         = MPIDI_WIN_REQUEST_PUT;
 
@@ -254,12 +254,9 @@ MPID_Put(void         *origin_addr,
   #ifndef MPIDI_NO_ASSERT
      MPID_assert(req->origin.dt.size == req->target.dt.size);
   #else
-  /* temp fix, should be fixed as part of error injection for one sided comm.*/
-  /* in 10/12                                                                */
-     if (req->origin.dt.size != req->target.dt.size) {
-         exit(1);
-     }
+     MPIU_ERR_CHKANDJUMP((req->origin.dt.size != req->target.dt.size), mpi_errno, MPI_ERR_SIZE, "**rmasize");
   #endif
+
 
 
   if ( (req->origin.dt.size == 0) ||
@@ -269,10 +266,13 @@ MPID_Put(void         *origin_addr,
       return MPI_SUCCESS;
     }
 
+  win->mpid.origin[target_rank].nStarted++;
+
   /* If the get is a local operation, do it here */
   if (target_rank == win->comm_ptr->rank)
     {
       size_t offset = req->offset;
+      win->mpid.origin[target_rank].nCompleted++;
       MPIU_Free(req);
       return MPIR_Localcopy(origin_addr,
                             origin_count,
@@ -360,7 +360,6 @@ MPID_Put(void         *origin_addr,
    *        better latency for one-sided operations.
    */
   PAMI_Context_post(MPIDI_Context[0], &req->post_request, MPIDI_Put, req);  
-  //MPIDI_Put(MPIDI_Context[0], req);
 
 fn_fail:
   return mpi_errno;

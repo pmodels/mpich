@@ -93,6 +93,7 @@ MPID_EPOTYPE_START     = 2,       /**< MPI_Win_start access epoch */
 MPID_EPOTYPE_POST      = 3,       /**< MPI_Win_post exposure epoch */
 MPID_EPOTYPE_FENCE     = 4,       /**< MPI_Win_fence access/exposure epoch */
 MPID_EPOTYPE_REFENCE   = 5,       /**< MPI_Win_fence possible access/exposure epoch */
+MPID_EPOTYPE_LOCK_ALL  = 6,       /**< MPI_Win_lock_all access epoch */
 };
 
 enum
