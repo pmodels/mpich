@@ -361,18 +361,13 @@ pac_cv_attr_weak_import=yes,pac_cv_attr_weak_import=no)])
 # Check if the alias option for weak attributes is allowed
 AC_CACHE_CHECK([whether __attribute__((weak,alias(...))) allowed],
 pac_cv_attr_weak_alias,[
-# We add -Werror if it's gcc to force an error exit if the weak attribute
-# isn't understood
-if test $GCC = yes ; then
-  save_CFLAGS=$CFLAGS
-  CFLAGS=-Werror
-fi
+PAC_PUSH_FLAG([CFLAGS])
+# force an error exit if the weak attribute isn't understood
+CFLAGS=-Werror
 AC_TRY_COMPILE([int foo(int) __attribute__((weak,alias("__foo")));],[int a;],
 pac_cv_attr_weak_alias=yes,pac_cv_attr_weak_alias=no)
 # Restore original CFLAGS
-if test $GCC = yes ; then
-  CFLAGS=$save_CFLAGS
-fi])
+PAC_POP_FLAG([CFLAGS])])
 if test "$pac_cv_attr_weak_alias" = "yes" ; then
     AC_DEFINE(HAVE_WEAK_ATTRIBUTE,1,[Attribute style weak pragma])
 fi
