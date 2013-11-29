@@ -224,7 +224,7 @@ static inline void MPID_nem_dcfa_cbf_add(uint64_t addr, uint8_t* array) {
     MPID_nem_dcfa_cbf_inc(array, MPID_nem_dcfa_cbf_hash1(addr));
     MPID_nem_dcfa_cbf_inc(array, MPID_nem_dcfa_cbf_hash2(addr));
     MPID_nem_dcfa_cbf_inc(array, MPID_nem_dcfa_cbf_hash3(addr));
-    dprintf("cbf_add,%d,%d,%d\n", MPID_nem_dcfa_cbf_get(array, MPID_nem_dcfa_cbf_hash1(addr)), MPID_nem_dcfa_cbf_get(array, MPID_nem_dcfa_cbf_hash2(addr)), MPID_nem_dcfa_cbf_get(array, MPID_nem_dcfa_cbf_hash3(addr)));
+    //dprintf("cbf_add,%d,%d,%d\n", MPID_nem_dcfa_cbf_get(array, MPID_nem_dcfa_cbf_hash1(addr)), MPID_nem_dcfa_cbf_get(array, MPID_nem_dcfa_cbf_hash2(addr)), MPID_nem_dcfa_cbf_get(array, MPID_nem_dcfa_cbf_hash3(addr)));
 }
 static inline void MPID_nem_dcfa_cbf_delete(uint64_t addr, uint8_t* array) {
     //dprintf("cbf_delete,addr=%08lx,%08x,%08x,%08x\n", addr, MPID_nem_dcfa_cbf_hash1(addr), MPID_nem_dcfa_cbf_hash2(addr), MPID_nem_dcfa_cbf_hash3(addr));
@@ -232,7 +232,7 @@ static inline void MPID_nem_dcfa_cbf_delete(uint64_t addr, uint8_t* array) {
     MPID_nem_dcfa_cbf_dec(array, MPID_nem_dcfa_cbf_hash1(addr));
     MPID_nem_dcfa_cbf_dec(array, MPID_nem_dcfa_cbf_hash2(addr));
     MPID_nem_dcfa_cbf_dec(array, MPID_nem_dcfa_cbf_hash3(addr));
-    dprintf("cbf_delete,%d,%d,%d\n", MPID_nem_dcfa_cbf_get(array, MPID_nem_dcfa_cbf_hash1(addr)), MPID_nem_dcfa_cbf_get(array, MPID_nem_dcfa_cbf_hash2(addr)), MPID_nem_dcfa_cbf_get(array, MPID_nem_dcfa_cbf_hash3(addr)));
+    //dprintf("cbf_delete,%d,%d,%d\n", MPID_nem_dcfa_cbf_get(array, MPID_nem_dcfa_cbf_hash1(addr)), MPID_nem_dcfa_cbf_get(array, MPID_nem_dcfa_cbf_hash2(addr)), MPID_nem_dcfa_cbf_get(array, MPID_nem_dcfa_cbf_hash3(addr)));
 }
 static inline int MPID_nem_dcfa_cbf_query(uint64_t addr, uint8_t* array) {
     //dprintf("cbf_query,addr=%08lx,%08x,%08x,%08x\n", addr, MPID_nem_dcfa_cbf_hash1(addr), MPID_nem_dcfa_cbf_hash2(addr), MPID_nem_dcfa_cbf_hash3(addr));
