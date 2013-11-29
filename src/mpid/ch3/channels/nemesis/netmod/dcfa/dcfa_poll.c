@@ -1698,7 +1698,7 @@ int MPID_nem_dcfa_cm_poll()
         cmd.type = MPID_NEM_DCFA_CM_SYNACK;
         goto common_tail;
         break;
-    case MPID_NEM_DCFA_CM_BUSINESSCARD: {
+    case MPID_NEM_DCFA_CM_BUSINESSCARD:
         ibcom_errno = ibcom_rts(MPID_nem_dcfa_conns[*owner].fd, received->qpnum, received->lid, &(received->gid));
         MPIU_ERR_CHKANDJUMP(ibcom_errno, mpi_errno, MPI_ERR_OTHER, "**ibcom_rts");
         ibcom_errno = ibcom_reg_mr_connect(MPID_nem_dcfa_conns[*owner].fd, received->rmem, received->rkey);
