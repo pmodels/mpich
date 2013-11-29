@@ -837,20 +837,20 @@ int MPID_nem_dcfa_poll(int in_blocking_poll) {
 
    // lazy feching of completion queue entry because it causes cache-miss
 #if !defined (LMT_PUT_DONE) && defined (LMT_GET_CQE)
-   if(MPID_nem_dcfa_ncqe_to_drain > 0 || MPID_nem_dcfa_ncqe_nces > 0 || MPID_nem_dcfa_ncqe >= IBCOM_MAX_CQ_HEIGHT_DRAIN || ncom_almost_full) {
+   if(MPID_nem_dcfa_ncqe_to_drain > 0 || MPID_nem_dcfa_ncqe_nces > 0 || MPID_nem_dcfa_ncqe >= IBCOM_MAX_CQ_HEIGHT_DRAIN || ncom_almost_full)
 #endif
 #if !defined (LMT_PUT_DONE) && !defined (LMT_GET_CQE)
-   if(/*(in_blocking_poll && result == 0) ||*/ MPID_nem_dcfa_ncqe_nces > 0 || MPID_nem_dcfa_ncqe >= IBCOM_MAX_CQ_HEIGHT_DRAIN || ncom_almost_full) {
-
+   if(/*(in_blocking_poll && result == 0) ||*/ MPID_nem_dcfa_ncqe_nces > 0 || MPID_nem_dcfa_ncqe >= IBCOM_MAX_CQ_HEIGHT_DRAIN || ncom_almost_full)
 #endif
+   {
 #if defined (TIMER_WAIT_DCFA_POLL)
-   if(in_blocking_poll) { tsc[0] = MPI_rdtsc(); }
+       if(in_blocking_poll) { tsc[0] = MPI_rdtsc(); }
 #endif
-   //dprintf("dcfa_poll,calling drain_scq\n");
+       //dprintf("dcfa_poll,calling drain_scq\n");
        ibcom_errno = MPID_nem_dcfa_drain_scq(0);
        MPIU_ERR_CHKANDJUMP(ibcom_errno, mpi_errno, MPI_ERR_OTHER, "**MPID_nem_dcfa_drain_scq");
 #if defined (TIMER_WAIT_DCFA_POLL)
-   if(in_blocking_poll) { stsc[0] += MPI_rdtsc() - tsc[0]; }
+       if(in_blocking_poll) { stsc[0] += MPI_rdtsc() - tsc[0]; }
 #endif
    }
 #if 1
