@@ -1725,11 +1725,11 @@ int MPID_nem_dcfa_cm_poll()
         *owner = (uint32_t)-1; /* release */
 
         mpi_errno = MPID_nem_dcfa_cm_send_core(rank, &cmd);
-        MPIU_ERR_CHKANDJUMP(mp_errno, mpi_errno, MPI_ERR_OTHER, "MPID_nem_dcfa_cm_send_core"); 
+        MPIU_ERR_CHKANDJUMP(mp_errno, mpi_errno, MPI_ERR_OTHER, "**MPID_nem_dcfa_cm_send_core"); 
         break;
     default:
         printf("unknown connection command\n");
-        MPIU_ERR_CHKANDJUMP(1, mpi_errno, MPI_ERR_OTHER, "MPID_nem_dcfa_cm_poll");
+        MPIU_ERR_CHKANDJUMP(1, mpi_errno, MPI_ERR_OTHER, "**MPID_nem_dcfa_cm_poll");
     }
 
  fn_exit:

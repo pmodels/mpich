@@ -973,7 +973,7 @@ int MPID_nem_dcfa_cm_connect(MPIDI_VC_t * vc) {
 
     cmd.type = MPID_NEM_DCFA_CM_SYN;
     mpi_errno = MPID_nem_dcfa_cm_send_core(rank, &cmd);
-    MPIU_ERR_CHKANDJUMP(mp_errno, mpi_errno, MPI_ERR_OTHER, "MPID_nem_dcfa_cm_put"); 
+    MPIU_ERR_CHKANDJUMP(mp_errno, mpi_errno, MPI_ERR_OTHER, "**MPID_nem_dcfa_cm_put"); 
     
  fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_DCFA_CM_CONNECT);
