@@ -449,7 +449,7 @@ int MPID_nem_dcfa_lmt_done_recv(struct MPIDI_VC *vc, struct MPID_Request *rreq)
             /* received data was not entirely consumed by unpack() 
                because too few bytes remained to fill the next basic
                datatype */
-            rreq->status.count = (int)last;
+            MPIR_STATUS_SET_COUNT(rreq->status, last);
             rreq->status.MPI_ERROR = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_TYPE, "**MPID_nem_dcfa_lmt_done_recv", 0);
             /* --END ERROR HANDLING-- */
         }

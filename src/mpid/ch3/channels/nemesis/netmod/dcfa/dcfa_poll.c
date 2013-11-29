@@ -271,7 +271,7 @@ int MPID_nem_dcfa_drain_scq(int dont_call_progress) {
                    /* received data was not entirely consumed by unpack() 
                       because too few bytes remained to fill the next basic
                       datatype */
-                   req->status.count = (int)last;
+                   MPIR_STATUS_SET_COUNT(req->status, last);
                    req->status.MPI_ERROR = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_TYPE, "**MPID_nem_dcfa_poll", 0);
                    /* --END ERROR HANDLING-- */
                }
@@ -745,7 +745,7 @@ int MPID_nem_dcfa_poll(int in_blocking_poll) {
                    /* received data was not entirely consumed by unpack() 
                       because too few bytes remained to fill the next basic
                       datatype */
-                   rreq->status.count = (int)last;
+                   MPIR_STATUS_SET_COUNT(rreq->status, last);
                    rreq->status.MPI_ERROR = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_TYPE, "**MPID_nem_dcfa_poll", 0);
                    /* --END ERROR HANDLING-- */
                }
