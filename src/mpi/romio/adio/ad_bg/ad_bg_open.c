@@ -116,7 +116,7 @@ static void scaleable_stat(ADIO_File fd)
     long buf[2];
     MPI_Comm_rank(fd->comm, &rank);
 
-    if (rank == 0) {
+    if (rank == fd->hints->ranklist[0]) {
 	/* Get the (real) underlying file system block size */
 	rc = stat64(fd->filename, &bg_stat);
 	if (rc >= 0)
@@ -161,7 +161,13 @@ static void scaleable_stat(ADIO_File fd)
 	}
     }
     /* now we can broadcast the stat/statfs data to everyone else */
-    MPI_Bcast(buf, 2, MPI_LONG, 0, fd->comm);
+    if (fd->comm != MPI_COMM_SELF) { /* if indep open, there's no one to talk to*/
+	if (fd->agg_comm != MPI_COMM_NULL) /* deferred open: only a subset of
+					      processes participate */
+	    MPI_Bcast(buf, 2, MPI_LONG, 0, fd->agg_comm);
+	else
+	    MPI_Bcast(buf, 2, MPI_LONG, 0, fd->comm);
+    }
     bg_stat.st_blksize = buf[0];
     bg_statfs.f_type = buf[1];
 
@@ -178,7 +184,7 @@ static void scaleable_stat(ADIO_File fd)
 
       /* Only one rank is an "fsync aggregator" because only one 
       * fsync is needed */
-      if (rank == 0)
+      if (rank == fd->hints->ranklist[0])
       {
          ((ADIOI_BG_fs*)fd->fs_ptr)->fsync_aggr |= 
             ADIOI_BG_FSYNC_AGGREGATOR;
