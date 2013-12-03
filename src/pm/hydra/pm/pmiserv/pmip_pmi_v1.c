@@ -46,7 +46,7 @@ static HYD_status send_cmd_upstream(const char *start, int fd, int num_args, cha
 
     j = 0;
     tmp[j++] = HYDU_strdup(start);
-    for (i = 0; args[i]; i++) {
+    for (i = 0; i < num_args; i++) {
         tmp[j++] = HYDU_strdup(args[i]);
         if (args[i + 1])
             tmp[j++] = HYDU_strdup(" ");
