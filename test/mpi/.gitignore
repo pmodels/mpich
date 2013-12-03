@@ -13,6 +13,7 @@
 /errors/f90/errhan/testlist
 /errors/f90/errhan/uerrhandf90.f90
 /errors/f90/io
+/errors/f90/testlist
 /errors/f77/errhan/addsize.h
 /errors/f77/errhan/iooffset.h
 /f90/coll/
@@ -189,6 +190,7 @@
 /cxx/spawn/spawnintrax
 /cxx/spawn/spawnargvx
 /cxx/spawn/selfconaccx
+/datatype/testlist
 /datatype/segtest
 /datatype/typename
 /datatype/contents
@@ -217,6 +219,9 @@
 /errors/errhan/errcode
 /errors/errhan/adderr
 /errors/errhan/errring
+/errors/f77/io/iooffset.h
+/errors/f77/io/addsize.h
+/errors/f77/testlist
 /errors/group/rerr
 /errors/io/fileerrret
 /errors/pt2pt/proberank
@@ -998,3 +1003,5 @@
 /topo/graphcr
 /topo/graphcr2
 /topo/neighb_coll
+/impls/mpich/testlist
+/impls/testlist
