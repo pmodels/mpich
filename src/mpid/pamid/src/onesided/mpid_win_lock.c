@@ -174,6 +174,7 @@ MPID_Win_lock(int       lock_type,
     MPIU_ERR_SETANDSTMT(mpi_errno, MPI_ERR_RMA_SYNC,
                         return mpi_errno, "**rmasync");
    }
+  if (rank == MPI_PROC_NULL) goto fn_exit;
   struct MPIDI_Win_sync* sync = &win->mpid.sync;
 
   MPIDI_WinLock_info info = {
@@ -185,7 +186,7 @@ MPID_Win_lock(int       lock_type,
 
   MPIDI_Context_post(MPIDI_Context[0], &info.work, MPIDI_WinLockReq_post, &info);
   MPID_PROGRESS_WAIT_WHILE(!slock->remote.locked);
-
+fn_exit:
   win->mpid.sync.origin_epoch_type = MPID_EPOTYPE_LOCK;
 
   return mpi_errno;
@@ -203,7 +204,7 @@ MPID_Win_unlock(int       rank,
     MPIU_ERR_SETANDSTMT(mpi_errno, MPI_ERR_RMA_SYNC,
                         return mpi_errno, "**rmasync");
    }
-
+  if (rank == MPI_PROC_NULL) goto fn_exit;
   struct MPIDI_Win_sync* sync = &win->mpid.sync;
   MPID_PROGRESS_WAIT_WHILE(win->mpid.origin[rank].nStarted != win->mpid.origin[rank].nCompleted);
   win->mpid.origin[rank].nCompleted=0;
@@ -216,7 +217,7 @@ MPID_Win_unlock(int       rank,
   };
   MPIDI_Context_post(MPIDI_Context[0], &info.work, MPIDI_WinUnlock_post, &info);
   MPID_PROGRESS_WAIT_WHILE(sync->lock.remote.locked);
-
+fn_exit:
   if(win->mpid.sync.target_epoch_type == MPID_EPOTYPE_REFENCE)
   {
     win->mpid.sync.origin_epoch_type = MPID_EPOTYPE_REFENCE;
