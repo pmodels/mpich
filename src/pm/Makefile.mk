@@ -29,6 +29,7 @@ include $(top_srcdir)/src/pm/remshell/Makefile.mk
 if BUILD_PM_HYDRA
 SUBDIRS += src/pm/hydra
 DIST_SUBDIRS += src/pm/hydra
+MANDOC_SUBDIRS += src/pm/hydra
 endif BUILD_PM_HYDRA
 
 # uses a separate Makefile.sm, not Makefile.mk

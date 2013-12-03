@@ -33,7 +33,7 @@ AS_CASE([$host],
 )
 
 
-AM_INIT_AUTOMAKE([-Wall -Werror foreign 1.12.3 subdir-objects])
+AM_INIT_AUTOMAKE([-Wall -Wno-portability-recursive -Werror foreign 1.12.3 subdir-objects])
 
 AM_PROG_AR
 
@@ -47,6 +47,13 @@ PAC_RESET_LINK_FLAGS()
 
 
 PAC_ARG_STRICT
+
+# In case the documentation targets are used, find doctext and attempt to find
+# the source for the doctext LaTex style files. Use "false" if doctext is not
+# found
+AC_PATH_PROG(DOCTEXT,doctext,false)
+export DOCTEXT
+AC_SUBST(DOCTEXT)
 
 AC_C_CONST
 AC_C_VOLATILE

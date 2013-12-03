@@ -12,6 +12,9 @@ external_libs = -lmpl
 bin_PROGRAMS =
 noinst_HEADERS =
 DISTCLEANFILES =
+EXTRA_DIST =
+SUFFIXES =
+doc1_src_txt =
 
 ACLOCAL_AMFLAGS = -I confdb
 AM_CPPFLAGS = -I$(top_srcdir)/include -I$(top_srcdir)/@mpl_srcdir@/include \
@@ -19,7 +22,7 @@ AM_CPPFLAGS = -I$(top_srcdir)/include -I$(top_srcdir)/@mpl_srcdir@/include \
 
 noinst_HEADERS += include/hydra.h include/hydra_server.h
 
-EXTRA_DIST = autogen.sh
+EXTRA_DIST += autogen.sh
 
 noinst_LTLIBRARIES = libhydra.la
 libhydra_la_SOURCES =
@@ -52,8 +55,54 @@ install-alt: $(bin_PROGRAMS)
 uninstall-local:
 	rm -f ${DESTDIR}${bindir}/@MPIRUN_NAME@ ${DESTDIR}${bindir}/@MPIEXEC_NAME@
 
+# --------------------------------------------------------------------------
+#.PHONY: mandoc mandoc-local htmldoc htmldoc-local
+SUFFIXES += .man-phony .html-phony .man1-phony .html1-phony .txt
+
+# "make V=1" support for our documentation recipes
+doctextman_verbose = $(doctextman_verbose_$(V))
+doctextman_verbose_ = $(doctextman_verbose_$(AM_DEFAULT_VERBOSITY))
+doctextman_verbose_0 = @echo "   DOCTEXTMAN  " $@;
+doctexthtml_verbose = $(doctexthtml_verbose_$(V))
+doctexthtml_verbose_ = $(doctexthtml_verbose_$(AM_DEFAULT_VERBOSITY))
+doctexthtml_verbose_0 = @echo "   DOCTEXTHTML  " $@;
+
+# Build dir paths where the man pages will be created. Will usually be
+# overridden by MPICH make.
+mandoc_path1=${DESTDIR}${sharedir}/man/man1
+mandoc_path3=${DESTDIR}${sharedir}/man/man3
+htmldoc_path1=${DESTDIR}${sharedir}/www/www1
+htmldoc_path3=${DESTDIR}${sharedir}/www/www3
+doctext_docnotes=
+
+.c.man-phony:
+	$(doctextman_verbose)$(DOCTEXT) -man -mpath $(mandoc_path3) -ext 3 \
+	    -heading HYDRA -quotefmt $(doctext_docnotes) $<
+.c.html-phony:
+	$(doctexthtml_verbose)$(DOCTEXT) -html -mpath $(htmldoc_path3) \
+	    -heading HYDRA -quotefmt $(doctext_docnotes) $<
+
+.txt.man1-phony:
+	$(doctextman_verbose)$(DOCTEXT) -man -mpath $(mandoc_path1) -ext 1 \
+	    -heading HYDRA -quotefmt $(doctext_docnotes) $<
+.txt.html1-phony:
+	$(doctexthtml_verbose)$(DOCTEXT) -html -mpath $(htmldoc_path1) \
+	    -heading HYDRA -quotefmt $(doctext_docnotes) $<
+
+# use mandoc-local target to force directory creation before running DOCTEXT
+mandoc:
+	test -d $(mandoc_path1) || $(MKDIR_P) $(mandoc_path1)
+	test -d $(mandoc_path3) || $(MKDIR_P) $(mandoc_path3)
+	$(MAKE) $(AM_MAKEFLAGS) mandoc-local
+mandoc-local: $(doc1_src_txt:.txt=.man1-phony)
+
+# use htmldoc-local target to force directory creation before running DOCTEXT
 htmldoc:
 	if test "@DOXYGEN@" != "" ; then @DOXYGEN@ hydra-doxygen.cfg ; fi
+	test -d $(top_builddir)/www/www1 || $(MKDIR_P) $(top_builddir)/www/www1
+	test -d $(top_builddir)/www/www3 || $(MKDIR_P) $(top_builddir)/www/www3
+	$(MAKE) $(AM_MAKEFLAGS) htmldoc-local
+htmldoc-local: $(doc1_src_txt:.txt=.man1-phony)
 
 # created by confdb/aclocal_cache.m4
 DISTCLEANFILES += config.system
