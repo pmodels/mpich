@@ -37,3 +37,5 @@ libpm_la_SOURCES += pm/pmiserv/pmiserv_pmi.c \
 	pm/pmiserv/pmiserv_utils.c \
 	pm/pmiserv/common.c \
 	pm/pmiserv/pmi_v2_common.c
+
+doc1_src_txt += pm/pmiserv/hydra_pmi_proxy.txt
