@@ -114,7 +114,7 @@ static int modify_qp_to_rtr(struct ibv_qp *qp, uint32_t remote_qpn, uint16_t dli
 
     /* In dcfa gid is not set and for testing here it is also not set */
 #if 1
-#ifdef DCFA     /* DCFA doesn't use gid */
+#ifdef HAVE_LIBDCFA     /* DCFA doesn't use gid */
 #else
     if (gid_idx >= 0) {
         attr.ah_attr.is_global = 1;
@@ -187,7 +187,7 @@ static int ibcomDeviceinit()
         return -1;
     }
 
-#ifdef DCFA
+#ifdef HAVE_LIBDCFA
     for (i = 0; i < dev_num; i++) {
         if (ib_devlist[i]) {
             goto dev_found;
@@ -216,7 +216,7 @@ static int ibcomDeviceinit()
         goto err_exit;
     }
     ib_ctx_export = ib_ctx;
-#ifdef DCFA
+#ifdef HAVE_LIBDCFA
 #else
     dev_name = strdup(ibv_get_device_name(ib_devlist[i]));
     dprintf("ibcomDeviceinit,dev_name=%s\n", dev_name);
@@ -368,7 +368,7 @@ int ibcomOpen(int ib_port, int ibcom_open_flag, int *condesc)
     conp->rdmabuf_occupancy_notify_lstate = IBCOM_RDMABUF_OCCUPANCY_NOTIFY_STATE_LW;
     //dprintf("ibcomOpen,ptr=%p,rsr_seq_num_poll=%d\n", conp, conp->rsr_seq_num_poll);
 
-#ifdef DCFA
+#ifdef HAVE_LIBDCFA
 #else
     if (ibv_query_port(ib_ctx, ib_port, &conp->icom_pattr)) {
         dprintf("ibv_query_port on port %u failed\n", ib_port);
@@ -380,7 +380,7 @@ int ibcomOpen(int ib_port, int ibcom_open_flag, int *condesc)
     switch (ibcom_open_flag) {
     case IBCOM_OPEN_RC:
         if (!rc_shared_scq) {
-#ifdef DCFA
+#ifdef HAVE_LIBDCFA
             rc_shared_scq = ibv_create_cq(ib_ctx, IBCOM_MAX_CQ_CAPACITY);
 #else
             rc_shared_scq = ibv_create_cq(ib_ctx, IBCOM_MAX_CQ_CAPACITY, NULL, NULL, 0);
@@ -390,7 +390,7 @@ int ibcomOpen(int ib_port, int ibcom_open_flag, int *condesc)
         conp->icom_scq = rc_shared_scq;
 
         if (!rc_shared_rcq) {
-#ifdef DCFA
+#ifdef HAVE_LIBDCFA
             rc_shared_rcq = ibv_create_cq(ib_ctx, IBCOM_MAX_CQ_CAPACITY);
 #else
             rc_shared_rcq = ibv_create_cq(ib_ctx, IBCOM_MAX_CQ_CAPACITY, NULL, NULL, 0);
@@ -401,7 +401,7 @@ int ibcomOpen(int ib_port, int ibcom_open_flag, int *condesc)
         break;
     case IBCOM_OPEN_SCRATCH_PAD:
         if (!rc_shared_scq_scratch_pad) {
-#ifdef DCFA
+#ifdef HAVE_LIBDCFA
             rc_shared_scq_scratch_pad = ibv_create_cq(ib_ctx, IBCOM_MAX_CQ_CAPACITY);
 #else
             rc_shared_scq_scratch_pad = ibv_create_cq(ib_ctx, IBCOM_MAX_CQ_CAPACITY, NULL, NULL, 0);
@@ -411,7 +411,7 @@ int ibcomOpen(int ib_port, int ibcom_open_flag, int *condesc)
         conp->icom_scq = rc_shared_scq_scratch_pad;
 
         if (!rc_shared_rcq_scratch_pad) {
-#ifdef DCFA
+#ifdef HAVE_LIBDCFA
             rc_shared_rcq_scratch_pad = ibv_create_cq(ib_ctx, IBCOM_MAX_CQ_CAPACITY);
 #else
             rc_shared_rcq_scratch_pad = ibv_create_cq(ib_ctx, IBCOM_MAX_CQ_CAPACITY, NULL, NULL, 0);
@@ -422,7 +422,7 @@ int ibcomOpen(int ib_port, int ibcom_open_flag, int *condesc)
         break;
     case IBCOM_OPEN_RC_LMT_PUT:
         if (!rc_shared_scq_lmt_put) {
-#ifdef DCFA
+#ifdef HAVE_LIBDCFA
             rc_shared_scq_lmt_put = ibv_create_cq(ib_ctx, IBCOM_MAX_CQ_CAPACITY);
 #else
             rc_shared_scq_lmt_put = ibv_create_cq(ib_ctx, IBCOM_MAX_CQ_CAPACITY, NULL, NULL, 0);
@@ -432,7 +432,7 @@ int ibcomOpen(int ib_port, int ibcom_open_flag, int *condesc)
         conp->icom_scq = rc_shared_scq_lmt_put;
 
         if (!rc_shared_rcq_lmt_put) {
-#ifdef DCFA
+#ifdef HAVE_LIBDCFA
             rc_shared_rcq_lmt_put = ibv_create_cq(ib_ctx, IBCOM_MAX_CQ_CAPACITY);
 #else
             rc_shared_rcq_lmt_put = ibv_create_cq(ib_ctx, IBCOM_MAX_CQ_CAPACITY, NULL, NULL, 0);
@@ -443,7 +443,7 @@ int ibcomOpen(int ib_port, int ibcom_open_flag, int *condesc)
         break;
     case IBCOM_OPEN_UD:
         if (!ud_shared_scq) {
-#ifdef DCFA
+#ifdef HAVE_LIBDCFA
             ud_shared_scq = ibv_create_cq(ib_ctx, IBCOM_MAX_CQ_CAPACITY);
 #else
             ud_shared_scq = ibv_create_cq(ib_ctx, IBCOM_MAX_CQ_CAPACITY, NULL, NULL, 0);
@@ -453,7 +453,7 @@ int ibcomOpen(int ib_port, int ibcom_open_flag, int *condesc)
         conp->icom_scq = ud_shared_scq;
 
         if (!ud_shared_rcq) {
-#ifdef DCFA
+#ifdef HAVE_LIBDCFA
             ud_shared_rcq = ibv_create_cq(ib_ctx, IBCOM_MAX_CQ_CAPACITY);
 #else
             ud_shared_rcq = ibv_create_cq(ib_ctx, IBCOM_MAX_CQ_CAPACITY, NULL, NULL, 0);
@@ -499,13 +499,13 @@ int ibcomOpen(int ib_port, int ibcom_open_flag, int *condesc)
             qp_init_attr.cap.max_send_wr, qp_init_attr.cap.max_recv_wr,
             qp_init_attr.cap.max_inline_data);
     dprintf("ibcomOpen,fd=%d,qpn=%08x\n", *condesc, conp->icom_qp->qp_num);
-#ifdef DCFA
+#ifdef HAVE_LIBDCFA
     dprintf("ibcomOpen,fd=%d,lid=%04x\n", *condesc, ib_ctx->lid);
 #else
     dprintf("ibcomOpen,fd=%d,lid=%04x\n", *condesc, conp->icom_pattr.lid);
 #endif
 
-#ifdef DCFA
+#ifdef HAVE_LIBDCFA
     /* DCFA doesn't use gid */
     for (i = 0; i < 16; i++) {
         conp->icom_gid.raw[i] = 0;
@@ -584,7 +584,7 @@ int ibcomOpen(int ib_port, int ibcom_open_flag, int *condesc)
             fprintf(stderr, "ibv_reg_mr failed with mr_flags=0x%x\n", mr_flags);
             goto err_exit;
         }
-#ifdef DCFA
+#ifdef HAVE_LIBDCFA
         dprintf("ibcomOpen,fd=%d,rmem=%p\n", *condesc, conp->icom_mrlist[IBCOM_RDMAWR_TO]->buf);
 #else
         dprintf("ibcomOpen,fd=%d,rmem=%p\n", *condesc, conp->icom_mrlist[IBCOM_RDMAWR_TO]->addr);
@@ -697,7 +697,7 @@ int ibcomOpen(int ib_port, int ibcom_open_flag, int *condesc)
         int i;
         for (i = 0; i < IBCOM_SMT_INLINE_NCHAIN; i++) {
             /* SGE (RDMA-send-from memory) template */
-#ifdef DCFA
+#ifdef HAVE_LIBDCFA
             memset(&(conp->icom_sr[IBCOM_SMT_INLINE_CHAINED0 + i].sg_list[0]), 0,
                    sizeof(struct ibv_sge) * WR_SG_NUM);
 #else
@@ -709,7 +709,7 @@ int ibcomOpen(int ib_port, int ibcom_open_flag, int *condesc)
                 (i ==
                  IBCOM_SMT_INLINE_NCHAIN - 1) ? NULL : &conp->icom_sr[IBCOM_SMT_INLINE_CHAINED0 +
                                                                       i + 1];
-#ifdef DCFA
+#ifdef HAVE_LIBDCFA
 #else
             conp->icom_sr[IBCOM_SMT_INLINE_CHAINED0 + i].sg_list = sge;
 #endif
@@ -719,7 +719,7 @@ int ibcomOpen(int ib_port, int ibcom_open_flag, int *condesc)
         }
 
         {
-#ifdef DCFA
+#ifdef HAVE_LIBDCFA
             memset(&(conp->icom_sr[IBCOM_SMT_NOINLINE].sg_list[0]), 0,
                    sizeof(struct ibv_sge) * WR_SG_NUM);
 #else
@@ -729,7 +729,7 @@ int ibcomOpen(int ib_port, int ibcom_open_flag, int *condesc)
             memset(sge, 0, sizeof(struct ibv_sge) * IBCOM_SMT_NOINLINE_INITIATOR_NSGE);
 #endif
             conp->icom_sr[IBCOM_SMT_NOINLINE].next = NULL;
-#ifdef DCFA
+#ifdef HAVE_LIBDCFA
 #else
             conp->icom_sr[IBCOM_SMT_NOINLINE].sg_list = sge;
 #endif
@@ -738,7 +738,7 @@ int ibcomOpen(int ib_port, int ibcom_open_flag, int *condesc)
         }
         {
             /* SR (send request) template for IBCOM_LMT_INITIATOR */
-#ifdef DCFA
+#ifdef HAVE_LIBDCFA
             memset(&(conp->icom_sr[IBCOM_LMT_INITIATOR].sg_list[0]), 0,
                    sizeof(struct ibv_sge) * WR_SG_NUM);
 #else
@@ -747,7 +747,7 @@ int ibcomOpen(int ib_port, int ibcom_open_flag, int *condesc)
             memset(sge, 0, sizeof(struct ibv_sge) * IBCOM_LMT_INITIATOR_NSGE);
 #endif
             conp->icom_sr[IBCOM_LMT_INITIATOR].next = NULL;
-#ifdef DCFA
+#ifdef HAVE_LIBDCFA
 #else
             conp->icom_sr[IBCOM_LMT_INITIATOR].sg_list = sge;
 #endif
@@ -756,14 +756,14 @@ int ibcomOpen(int ib_port, int ibcom_open_flag, int *condesc)
         }
 
         /* SR (send request) template for IBCOM_LMT_PUT *//* for lmt-put-done */
-#ifdef DCFA
+#ifdef HAVE_LIBDCFA
         memset(&(conp->icom_sr[IBCOM_LMT_PUT].sg_list[0]), 0, sizeof(struct ibv_sge) * WR_SG_NUM);
 #else
         sge = (struct ibv_sge *) malloc(sizeof(struct ibv_sge) * IBCOM_LMT_PUT_NSGE);
         memset(sge, 0, sizeof(struct ibv_sge) * IBCOM_LMT_PUT_NSGE);
 #endif
         conp->icom_sr[IBCOM_LMT_PUT].next = NULL;
-#ifdef DCFA
+#ifdef HAVE_LIBDCFA
 #else
         conp->icom_sr[IBCOM_LMT_PUT].sg_list = sge;
 #endif
@@ -783,7 +783,7 @@ int ibcomOpen(int ib_port, int ibcom_open_flag, int *condesc)
 
         /* create one dummy RR to ibv_post_recv */
         conp->icom_rr[IBCOM_RDMAWR_RESPONDER].next = NULL;
-#ifdef DCFA
+#ifdef HAVE_LIBDCFA
 #else
         conp->icom_rr[IBCOM_RDMAWR_RESPONDER].sg_list = NULL;
 #endif
@@ -798,7 +798,7 @@ int ibcomOpen(int ib_port, int ibcom_open_flag, int *condesc)
             memset(conp->icom_sr, 0, sizeof(struct ibv_send_wr) * IBCOM_SCRATCH_PAD_SR_NTEMPLATE);
 
             /* SR (send request) template for IBCOM_SCRATCH_PAD_INITIATOR */
-#ifdef DCFA
+#ifdef HAVE_LIBDCFA
             memset(&(conp->icom_sr[IBCOM_SCRATCH_PAD_INITIATOR].sg_list[0]), 0,
                    sizeof(struct ibv_sge) * WR_SG_NUM);
 #else
@@ -808,7 +808,7 @@ int ibcomOpen(int ib_port, int ibcom_open_flag, int *condesc)
             memset(sge, 0, sizeof(struct ibv_sge) * IBCOM_SCRATCH_PAD_INITIATOR_NSGE);
 #endif
             conp->icom_sr[IBCOM_SCRATCH_PAD_INITIATOR].next = NULL;
-#ifdef DCFA
+#ifdef HAVE_LIBDCFA
 #else
             conp->icom_sr[IBCOM_SCRATCH_PAD_INITIATOR].sg_list = sge;
 #endif
@@ -825,14 +825,14 @@ int ibcomOpen(int ib_port, int ibcom_open_flag, int *condesc)
                                           IBCOM_RC_SR_LMT_PUT_NTEMPLATE);
         memset(conp->icom_sr, 0, sizeof(struct ibv_send_wr) * IBCOM_RC_SR_LMT_PUT_NTEMPLATE);
         /* SR (send request) template for IBCOM_LMT_PUT */
-#ifdef DCFA
+#ifdef HAVE_LIBDCFA
         memset(&(conp->icom_sr[IBCOM_LMT_PUT].sg_list[0]), 0, sizeof(struct ibv_sge) * WR_SG_NUM);
 #else
         sge = (struct ibv_sge *) malloc(sizeof(struct ibv_sge) * IBCOM_LMT_PUT_NSGE);
         memset(sge, 0, sizeof(struct ibv_sge) * IBCOM_LMT_PUT_NSGE);
 #endif
         conp->icom_sr[IBCOM_LMT_PUT].next = NULL;
-#ifdef DCFA
+#ifdef HAVE_LIBDCFA
 #else
         conp->icom_sr[IBCOM_LMT_PUT].sg_list = sge;
 #endif
@@ -842,7 +842,7 @@ int ibcomOpen(int ib_port, int ibcom_open_flag, int *condesc)
 
     case IBCOM_OPEN_UD:
         /* SGE (RDMA-send-from memory) template for IBCOM_UD_INITIATOR */
-#ifdef DCFA
+#ifdef HAVE_LIBDCFA
         sge = &(conp->icom_sr[IBCOM_UD_INITIATOR].sg_list[0]);
         memset(sge, 0, sizeof(struct ibv_sge) * WR_SG_NUM);
 #else
@@ -876,7 +876,7 @@ int ibcomOpen(int ib_port, int ibcom_open_flag, int *condesc)
             (struct ibv_send_wr *) calloc(IBCOM_UD_SR_NTEMPLATE, sizeof(struct ibv_send_wr));
 
         conp->icom_sr[IBCOM_UD_INITIATOR].next = NULL;
-#ifdef DCFA
+#ifdef HAVE_LIBDCFA
 #else
         conp->icom_sr[IBCOM_UD_INITIATOR].sg_list = sge;
 #endif
@@ -887,7 +887,7 @@ int ibcomOpen(int ib_port, int ibcom_open_flag, int *condesc)
         conp->icom_sr[IBCOM_UD_INITIATOR].wr.ud.remote_qkey = IBCOM_QKEY;
 
         /* SGE (scatter gather element) template for recv */
-#ifdef DCFA
+#ifdef HAVE_LIBDCFA
         sge = &(conp->icom_rr[IBCOM_UD_RESPONDER].sg_list[0]);
         memset(sge, 0, sizeof(struct ibv_sge) * WR_SG_NUM);
 #else
@@ -903,7 +903,7 @@ int ibcomOpen(int ib_port, int ibcom_open_flag, int *condesc)
 
         /* create one dummy RR to ibv_post_recv */
         conp->icom_rr[IBCOM_UD_RESPONDER].next = NULL;
-#ifdef DCFA
+#ifdef HAVE_LIBDCFA
 #else
         conp->icom_rr[IBCOM_UD_RESPONDER].sg_list = sge;
 #endif
@@ -955,7 +955,7 @@ int ibcom_alloc(int condesc, int sz)
         IBCOM_ERR_CHKANDJUMP(!conp->icom_mrlist[IBCOM_SCRATCH_PAD_TO], -1,
                              dprintf("ibv_reg_mr failed with mr_flags=0x%x\n", mr_flags));
 
-#ifdef DCFA
+#ifdef HAVE_LIBDCFA
         dprintf("ibcom_alloc,fd=%d,rmem=%p\n", condesc,
                 conp->icom_mrlist[IBCOM_SCRATCH_PAD_TO]->buf);
 #else
@@ -1112,7 +1112,7 @@ int ibcom_isend(int condesc, uint64_t wr_id, void *prefix, int sz_prefix, void *
     void *hdr_copy = buf_from + sizeof(sz_hdrmagic_t);
     memcpy(hdr_copy, prefix, sz_prefix);
     memcpy(hdr_copy + sz_prefix, hdr, sz_hdr);
-#ifdef DCFA
+#ifdef HAVE_LIBDCFA
     conp->icom_sr[IBCOM_SMT_NOINLINE].sg_list[num_sge].mic_addr = (uint64_t) sz_hdrmagic;
     conp->icom_sr[IBCOM_SMT_NOINLINE].sg_list[num_sge].addr =
         conp->icom_mrlist[IBCOM_RDMAWR_FROM]->host_addr + ((uint64_t) sz_hdrmagic -
@@ -1131,7 +1131,7 @@ int ibcom_isend(int condesc, uint64_t wr_id, void *prefix, int sz_prefix, void *
         //dprintf("ibcom_isend,data=%p,sz_data=%d\n", data, sz_data);
         struct ibv_mr *mr_data = ibcom_reg_mr_fetch(data, sz_data);
         IBCOM_ERR_CHKANDJUMP(!mr_data, -1, printf("ibcom_isend,ibv_reg_mr_fetch failed\n"));
-#ifdef DCFA
+#ifdef HAVE_LIBDCFA
         conp->icom_sr[IBCOM_SMT_NOINLINE].sg_list[num_sge].mic_addr = (uint64_t) data;
         conp->icom_sr[IBCOM_SMT_NOINLINE].sg_list[num_sge].addr =
             mr_data->host_addr + ((uint64_t) data - (uint64_t) data);
@@ -1147,7 +1147,7 @@ int ibcom_isend(int condesc, uint64_t wr_id, void *prefix, int sz_prefix, void *
     tailmagic_t *tailmagic =
         (tailmagic_t *) (buf_from + sizeof(sz_hdrmagic_t) + sz_prefix + sz_hdr + sz_pad);
     tailmagic->magic = IBCOM_MAGIC;
-#ifdef DCFA
+#ifdef HAVE_LIBDCFA
     conp->icom_sr[IBCOM_SMT_NOINLINE].sg_list[num_sge].mic_addr =
         (uint64_t) buf_from + sizeof(sz_hdrmagic_t) + sz_prefix + sz_hdr;
     conp->icom_sr[IBCOM_SMT_NOINLINE].sg_list[num_sge].addr =
@@ -1192,7 +1192,7 @@ int ibcom_isend(int condesc, uint64_t wr_id, void *prefix, int sz_prefix, void *
         *copied = 0;
     }
 #endif
-#ifdef DCFA
+#ifdef HAVE_LIBDCFA
     ib_errno = ibv_post_send(conp->icom_qp, &conp->icom_sr[IBCOM_SMT_NOINLINE]);
     IBCOM_ERR_CHKANDJUMP(ib_errno, -1, dprintf("ibcom_isend, ibv_post_send, rc=%d\n", ib_errno));
 #else
@@ -1267,7 +1267,7 @@ int ibcom_isend_chain(int condesc, uint64_t wr_id, void *hdr, int sz_hdr, void *
             sz_hdrmagic->sz = sumsz;
             sz_hdrmagic->magic = IBCOM_MAGIC;
             memcpy(buf_from + sizeof(sz_hdrmagic_t), hdr, sz_hdr);
-#ifdef DCFA
+#ifdef HAVE_LIBDCFA
             conp->icom_sr[IBCOM_SMT_INLINE_CHAINED0 + i].sg_list[num_sge].mic_addr =
                 (uint64_t) buf_from;
             conp->icom_sr[IBCOM_SMT_INLINE_CHAINED0 + i].sg_list[num_sge].addr =
@@ -1291,7 +1291,7 @@ int ibcom_isend_chain(int condesc, uint64_t wr_id, void *hdr, int sz_hdr, void *
 
         //tscs = MPID_nem_dcfa_rdtsc();
         if (sz_data_rem > 0) {
-#ifdef DCFA
+#ifdef HAVE_LIBDCFA
 #else
             conp->icom_sr[IBCOM_SMT_INLINE_CHAINED0 + i].sg_list[num_sge].addr =
                 (uint64_t) data + sz_data - sz_data_rem;
@@ -1310,7 +1310,7 @@ int ibcom_isend_chain(int condesc, uint64_t wr_id, void *hdr, int sz_hdr, void *
                 mr_data = ibcom_reg_mr_fetch(data, sz_data);
                 IBCOM_ERR_CHKANDJUMP(!mr_data, -1, printf("ibcom_isend,ibv_reg_mr_fetch failed\n"));
             }
-#ifdef DCFA
+#ifdef HAVE_LIBDCFA
             conp->icom_sr[IBCOM_SMT_INLINE_CHAINED0 + i].sg_list[num_sge].mic_addr =
                 (uint64_t) data + sz_data - sz_data_rem;
             conp->icom_sr[IBCOM_SMT_INLINE_CHAINED0 + i].sg_list[num_sge].addr =
@@ -1330,7 +1330,7 @@ int ibcom_isend_chain(int condesc, uint64_t wr_id, void *hdr, int sz_hdr, void *
             int sz_pad = sz_data_pow2 - sz_data;
             tailmagic_t *tailmagic = (tailmagic_t *) (buf_from + sz_pad);
             tailmagic->magic = IBCOM_MAGIC;
-#ifdef DCFA
+#ifdef HAVE_LIBDCFA
             conp->icom_sr[IBCOM_SMT_INLINE_CHAINED0 + i].sg_list[num_sge].mic_addr =
                 (uint64_t) buf_from;
             conp->icom_sr[IBCOM_SMT_INLINE_CHAINED0 + i].sg_list[num_sge].addr =
@@ -1358,7 +1358,7 @@ int ibcom_isend_chain(int condesc, uint64_t wr_id, void *hdr, int sz_hdr, void *
                                  printf
                                  ("ibcom_isend_chain,tail-magic gets over packet-boundary\n"));
             int sz_pad = IBCOM_INLINE_DATA - sz_used;
-#ifdef DCFA
+#ifdef HAVE_LIBDCFA
             conp->icom_sr[IBCOM_SMT_INLINE_CHAINED0 + i].sg_list[num_sge].mic_addr =
                 (uint64_t) buf_from;
             conp->icom_sr[IBCOM_SMT_INLINE_CHAINED0 + i].sg_list[num_sge].addr =
@@ -1397,7 +1397,7 @@ int ibcom_isend_chain(int condesc, uint64_t wr_id, void *hdr, int sz_hdr, void *
         conp->icom_sr[IBCOM_SMT_INLINE_CHAINED0 + s].send_flags |= IBV_SEND_FENCE;
     }
 #endif
-#ifdef DCFA
+#ifdef HAVE_LIBDCFA
     ib_errno = ibv_post_send(conp->icom_qp, &conp->icom_sr[IBCOM_SMT_INLINE_CHAINED0 + s]);
 #else
     ib_errno = ibv_post_send(conp->icom_qp, &conp->icom_sr[IBCOM_SMT_INLINE_CHAINED0 + s], &bad_wr);
@@ -1408,7 +1408,7 @@ int ibcom_isend_chain(int condesc, uint64_t wr_id, void *hdr, int sz_hdr, void *
         conp->after_rdma_rd = 0;
     }
 #endif
-#ifdef DCFA
+#ifdef HAVE_LIBDCFA
     IBCOM_ERR_CHKANDJUMP(ib_errno, -1, dprintf("ibcom_isend, ibv_post_send, rc=%d\n", ib_errno));
 #else
     IBCOM_ERR_CHKANDJUMP(ib_errno, -1,
@@ -1437,13 +1437,13 @@ int ibcom_irecv(int condesc, uint64_t wr_id)
     //dprintf("ibcom_irecv,condesc=%d,wr_id=%016lx\n", condesc, wr_id);
 
     conp->icom_rr[IBCOM_RDMAWR_RESPONDER].wr_id = wr_id;
-#ifdef DCFA
+#ifdef HAVE_LIBDCFA
     ib_errno = ibv_post_recv(conp->icom_qp, &conp->icom_rr[IBCOM_RDMAWR_RESPONDER]);
 #else
     ib_errno = ibv_post_recv(conp->icom_qp, &conp->icom_rr[IBCOM_RDMAWR_RESPONDER], &bad_wr);
 #endif
     if (ib_errno) {
-#ifdef DCFA
+#ifdef HAVE_LIBDCFA
         fprintf(stderr, "ibcom_irecv: failed to post receive, ib_errno=%d\n", ib_errno);
 #else
         fprintf(stderr, "ibcom_irecv: failed to post receive, ib_errno=%d,bad_wr=%p\n", ib_errno,
@@ -1467,7 +1467,7 @@ int ibcom_udsend(int condesc, union ibv_gid *remote_gid, uint16_t remote_lid, ui
 
     RANGE_CHECK_WITH_ERROR(condesc, conp);
 
-#ifdef DCFA
+#ifdef HAVE_LIBDCFA
     IBCOM_ERR_CHKANDJUMP(1, -1,
                          dprintf
                          ("ibcom_udsend not supported by DCFA because DCFA doesn't have ibv_create_ah\n"));
@@ -1502,7 +1502,7 @@ int ibcom_udsend(int condesc, union ibv_gid *remote_gid, uint16_t remote_lid, ui
     }
 #endif
 
-#ifdef DCFA
+#ifdef HAVE_LIBDCFA
     ib_errno = ibv_post_send(conp->icom_qp, &conp->icom_sr[IBCOM_UD_INITIATOR]);
 #else
     ib_errno = ibv_post_send(conp->icom_qp, &conp->icom_sr[IBCOM_UD_INITIATOR], &bad_wr);
@@ -1530,7 +1530,7 @@ int ibcom_udrecv(int condesc)
     conp->icom_rr[IBCOM_UD_RESPONDER].wr_id = 0;
 
     /* Post RR to RQ */
-#ifdef DCFA
+#ifdef HAVE_LIBDCFA
     ib_errno = ibv_post_recv(conp->icom_qp, &conp->icom_rr[IBCOM_UD_RESPONDER]);
 #else
     ib_errno = ibv_post_recv(conp->icom_qp, &conp->icom_rr[IBCOM_UD_RESPONDER], &bad_wr);
@@ -1565,7 +1565,7 @@ int ibcom_lrecv(int condesc, uint64_t wr_id, void *raddr, int sz_data, uint32_t 
 
     /* Erase magic, super bug!! */
     //((tailmagic_t*)(laddr + sz_data - sizeof(tailmagic_t)))->magic = 0;
-#ifdef DCFA
+#ifdef HAVE_LIBDCFA
     conp->icom_sr[IBCOM_LMT_INITIATOR].sg_list[num_sge].mic_addr = (uint64_t) laddr;
     conp->icom_sr[IBCOM_LMT_INITIATOR].sg_list[num_sge].addr =
         mr_data->host_addr + ((uint64_t) laddr - (uint64_t) laddr);
@@ -1581,7 +1581,7 @@ int ibcom_lrecv(int condesc, uint64_t wr_id, void *raddr, int sz_data, uint32_t 
     conp->icom_sr[IBCOM_LMT_INITIATOR].wr.rdma.remote_addr = (uint64_t) raddr;
     conp->icom_sr[IBCOM_LMT_INITIATOR].wr.rdma.rkey = rkey;
 
-#ifdef DCFA
+#ifdef HAVE_LIBDCFA
     ib_errno = ibv_post_send(conp->icom_qp, &conp->icom_sr[IBCOM_LMT_INITIATOR]);
     IBCOM_ERR_CHKANDJUMP(ib_errno, -1, dprintf("ibcom_lrecv, ibv_post_send, rc=%d\n", ib_errno));
 #else
@@ -1625,7 +1625,7 @@ int ibcom_put_lmt(int condesc, uint64_t wr_id, void *raddr, int sz_data, uint32_
     struct ibv_mr *mr_data = ibcom_reg_mr_fetch(laddr, sz_data);
     IBCOM_ERR_CHKANDJUMP(!mr_data, -1, dprintf("ibcom_put_lmt,ibv_reg_mr_fetch failed\n"));
 
-#ifdef DCFA
+#ifdef HAVE_LIBDCFA
     conp->icom_sr[IBCOM_LMT_PUT].sg_list[num_sge].mic_addr = (uint64_t) laddr;
     conp->icom_sr[IBCOM_LMT_PUT].sg_list[num_sge].addr =
         mr_data->host_addr + ((uint64_t) laddr - (uint64_t) laddr);
@@ -1641,7 +1641,7 @@ int ibcom_put_lmt(int condesc, uint64_t wr_id, void *raddr, int sz_data, uint32_
     conp->icom_sr[IBCOM_LMT_PUT].wr.rdma.remote_addr = (uint64_t) raddr;
     conp->icom_sr[IBCOM_LMT_PUT].wr.rdma.rkey = rkey;
 
-#ifdef DCFA
+#ifdef HAVE_LIBDCFA
     ib_errno = ibv_post_send(conp->icom_qp, &conp->icom_sr[IBCOM_LMT_PUT]);
     IBCOM_ERR_CHKANDJUMP(ib_errno, -1, dprintf("ibcom_put_lmt, ibv_post_send, rc=%d\n", ib_errno));
 #else
@@ -1683,7 +1683,7 @@ int ibcom_put_scratch_pad(int condesc, uint64_t wr_id, uint64_t offset, int sz, 
     IBCOM_ERR_CHKANDJUMP(!mr_data, -1, dprintf("ibcom_put_scratch_pad,ibv_reg_mr_fetch failed\n"));
     dprintf("ibcom_put_scratch_pad,");
 
-#ifdef DCFA
+#ifdef HAVE_LIBDCFA
     conp->icom_sr[IBCOM_SCRATCH_PAD_INITIATOR].sg_list[0].mic_addr = (uint64_t) laddr;
     conp->icom_sr[IBCOM_SCRATCH_PAD_INITIATOR].sg_list[0].addr =
         mr_data->host_addr + ((uint64_t) laddr - (uint64_t) laddr);
@@ -1702,7 +1702,7 @@ int ibcom_put_scratch_pad(int condesc, uint64_t wr_id, uint64_t offset, int sz, 
     dprintf("ibcom_put_scratch_pad,wr.rdma.remote_addr=%llx\n",
             (unsigned long long) conp->icom_sr[IBCOM_SCRATCH_PAD_INITIATOR].wr.rdma.remote_addr);
 
-#ifdef DCFA
+#ifdef HAVE_LIBDCFA
     ib_errno = ibv_post_send(conp->icom_qp, &conp->icom_sr[IBCOM_SCRATCH_PAD_INITIATOR]);
     IBCOM_ERR_CHKANDJUMP(ib_errno, -1,
                          dprintf("ibcom_put_scratch_pad, ibv_post_send, rc=%d\n", ib_errno));
@@ -1746,7 +1746,7 @@ int ibcom_cas_scratch_pad(int condesc, uint64_t wr_id, uint64_t offset, uint64_t
     IBCOM_ERR_CHKANDJUMP(!mr_data, -1, dprintf("ibcom_put_scratch_pad,ibv_reg_mr_fetch failed\n"));
     dprintf("ibcom_put_scratch_pad,");
 
-#ifdef DCFA
+#ifdef HAVE_LIBDCFA
     conp->icom_sr[IBCOM_SCRATCH_PAD_INITIATOR].sg_list[0].mic_addr = (uint64_t) laddr;
     conp->icom_sr[IBCOM_SCRATCH_PAD_INITIATOR].sg_list[0].addr =
         mr_data->host_addr + ((uint64_t) laddr - (uint64_t) laddr);
@@ -1767,7 +1767,7 @@ int ibcom_cas_scratch_pad(int condesc, uint64_t wr_id, uint64_t offset, uint64_t
     dprintf("ibcom_put_scratch_pad,wr.rdma.remote_addr=%llx\n",
             (unsigned long long) conp->icom_sr[IBCOM_SCRATCH_PAD_INITIATOR].wr.rdma.remote_addr);
 
-#ifdef DCFA
+#ifdef HAVE_LIBDCFA
     ib_errno = ibv_post_send(conp->icom_qp, &conp->icom_sr[IBCOM_SCRATCH_PAD_INITIATOR]);
     IBCOM_ERR_CHKANDJUMP(ib_errno, -1,
                          dprintf("ibcom_put_scratch_pad, ibv_post_send, rc=%d\n", ib_errno));
@@ -1869,7 +1869,7 @@ int ibcom_get_info_conn(int condesc, int key, void *out, uint32_t out_len)
         memcpy(out, &conp->icom_qp->qp_num, out_len);
         break;
     case IBCOM_INFOKEY_PORT_LID:
-#ifdef DCFA
+#ifdef HAVE_LIBDCFA
         dprintf("ibcom_get_info_conn,lid=%04x\n", ib_ctx->lid);
         memcpy(out, &ib_ctx->lid, out_len);
 #else
@@ -1881,7 +1881,7 @@ int ibcom_get_info_conn(int condesc, int key, void *out, uint32_t out_len)
         memcpy(out, &conp->icom_gid, out_len);
         break;
     case IBCOM_INFOKEY_PATTR_MAX_MSG_SZ:{
-#ifdef DCFA
+#ifdef HAVE_LIBDCFA
             uint32_t max_msg_sz = 1073741824;   /* ConnectX-3 */
             memcpy(out, &max_msg_sz, out_len);
 #else
@@ -1912,7 +1912,7 @@ int ibcom_get_info_mr(int condesc, int memid, int key, void *out, int out_len)
 
     switch (key) {
     case IBCOM_INFOKEY_MR_ADDR:
-#ifdef DCFA
+#ifdef HAVE_LIBDCFA
         /* host_addr is created by ibv_reg_mr in ibcomOpen, */
         /* dcfa_init read this host-addr, put it into KVS, the counter-party read it through KVS */
         memcpy(out, &mr->host_addr, out_len);
@@ -1921,7 +1921,7 @@ int ibcom_get_info_mr(int condesc, int memid, int key, void *out, int out_len)
 #endif
         break;
     case IBCOM_INFOKEY_MR_LENGTH:{
-#ifdef DCFA
+#ifdef HAVE_LIBDCFA
             assert(out_len == sizeof(size_t));
             size_t length = mr->size;   /* type of mr->size is int */
             memcpy(out, &length, out_len);
@@ -2134,7 +2134,7 @@ void ibcomShow(int condesc)
 
     RANGE_CHECK(condesc, conp);
     fprintf(stdout, "qp_num = %d\n", conp->icom_qp->qp_num);
-#ifdef DCFA
+#ifdef HAVE_LIBDCFA
     fprintf(stdout, "lid    = %d\n", ib_ctx->lid);
 #else
     fprintf(stdout, "lid    = %d\n", conp->icom_pattr.lid);
@@ -2203,7 +2203,7 @@ int ibcom_dereg_mr(struct ibv_mr *mr)
         fprintf(stderr, "cannot deregister memory\n");
         goto fn_fail;
     }
-#ifdef DCFA
+#ifdef HAVE_LIBDCFA
     dprintf("ibcom_dereg_mr, addr=%p\n", mr->buf);
 #else
     dprintf("ibcom_dereg_mr, addr=%p\n", mr->addr);

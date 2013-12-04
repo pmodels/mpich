@@ -175,7 +175,7 @@ struct ibv_mr *ibcom_reg_mr_fetch(void *addr, int len)
     int key;
     struct ibcom_reg_mr_cache_entry_t *e;
 
-#if 1   /*def DCFA */
+#if 1   /*def HAVE_LIBDCFA */
     /* we can't change addr because ibv_post_send assumes mr->host_addr (output of this function)
      * must have an exact mirror value of addr (input of this function) */
     void *addr_aligned = addr;

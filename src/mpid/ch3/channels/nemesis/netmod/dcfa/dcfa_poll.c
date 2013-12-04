@@ -63,7 +63,7 @@ int MPID_nem_dcfa_drain_scq(int dont_call_progress)
     }
     entered_drain_scq = 1;
 
-#if 0   /*def DCFA */
+#if 0   /*def HAVE_LIBDCFA */
     result = ibv_poll_cq(rc_shared_scq, 1, &cqe[0]);
 #else
     result = ibv_poll_cq(rc_shared_scq, /*3 */ IBCOM_MAX_CQ_HEIGHT_DRAIN, &cqe[0]);
@@ -95,7 +95,7 @@ int MPID_nem_dcfa_drain_scq(int dont_call_progress)
             printf("%d\n", *(int *) 0);
         }
 
-#ifdef DCFA
+#ifdef HAVE_LIBDCFA
         if (cqe[i].status != IBV_WC_SUCCESS) {
             dprintf("drain_scq,kind=%d,req_type=%d,msg_type=%d,cqe.status=%08x\n", kind, req_type,
                     msg_type, cqe[i].status);
@@ -411,7 +411,7 @@ int MPID_nem_dcfa_drain_scq_lmt_put()
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_DCFA_DRAIN_SCQ_LMT_PUT);
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_DCFA_DRAIN_SCQ_LMT_PUT);
 
-#if 0   /*def DCFA */
+#if 0   /*def HAVE_LIBDCFA */
     result = ibv_poll_cq(rc_shared_scq_lmt_put, 1, &cqe[0]);
 #else
     result = ibv_poll_cq(rc_shared_scq_lmt_put, IBCOM_MAX_CQ_HEIGHT_DRAIN, &cqe[0]);
@@ -427,7 +427,7 @@ int MPID_nem_dcfa_drain_scq_lmt_put()
         MPID_Request_kind_t kind;
         int req_type, msg_type;
 
-#ifdef DCFA
+#ifdef HAVE_LIBDCFA
         if (cqe[i].status != IBV_WC_SUCCESS) {
             dprintf("drain_scq_lmt_put,status=%08x\n", cqe[i].status);
         }
@@ -521,7 +521,7 @@ int MPID_nem_dcfa_drain_scq_scratch_pad()
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_DCFA_DRAIN_SCQ_SCRATCH_PAD);
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_DCFA_DRAIN_SCQ_SCRATCH_PAD);
 
-#if 0   /*def DCFA */
+#if 0   /*def HAVE_LIBDCFA */
     result = ibv_poll_cq(rc_shared_scq_scratch_pad, 1, &cqe[0]);
 #else
     result = ibv_poll_cq(rc_shared_scq_scratch_pad, IBCOM_MAX_CQ_HEIGHT_DRAIN, &cqe[0]);
@@ -533,7 +533,7 @@ int MPID_nem_dcfa_drain_scq_scratch_pad()
     }
     for (i = 0; i < result; i++) {
 
-#ifdef DCFA
+#ifdef HAVE_LIBDCFA
         if (cqe[i].status != IBV_WC_SUCCESS) {
             dprintf("drain_scq_scratch_pad,status=%08x\n", cqe[i].status);
         }
@@ -1872,7 +1872,7 @@ int MPID_nem_dcfa_cm_drain_scq()
     }
     for (i = 0; i < result; i++) {
 
-#ifdef DCFA
+#ifdef HAVE_LIBDCFA
         if (cqe[i].status != IBV_WC_SUCCESS) {
             dprintf("cm_drain_scq,status=%08x\n", cqe[i].status);
         }

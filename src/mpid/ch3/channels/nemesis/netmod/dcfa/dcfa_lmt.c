@@ -82,7 +82,7 @@ int MPID_nem_dcfa_lmt_initiate_lmt(struct MPIDI_VC *vc, union MPIDI_CH3_Pkt *rts
         ("lmt_initate_lmt,dt_contig=%d,write_from_buf=%p,req->dev.user_buf=%p,REQ_FIELD(req, lmt_pack_buf)=%p\n",
          dt_contig, write_from_buf, req->dev.user_buf, REQ_FIELD(req, lmt_pack_buf));
 
-#ifdef DCFA
+#ifdef HAVE_LIBDCFA
 #else
     s_cookie_buf->addr = write_from_buf;
 #endif
@@ -111,7 +111,7 @@ int MPID_nem_dcfa_lmt_initiate_lmt(struct MPIDI_VC *vc, union MPIDI_CH3_Pkt *rts
     /* put IB rkey */
     struct ibv_mr *mr = ibcom_reg_mr_fetch(write_from_buf, data_sz);
     MPIU_ERR_CHKANDJUMP(!mr, mpi_errno, MPI_ERR_OTHER, "**ibcom_reg_mr_fetch");
-#ifdef DCFA
+#ifdef HAVE_LIBDCFA
     s_cookie_buf->addr = (void *) mr->host_addr;
     dprintf("lmt_initiate_lmt,s_cookie_buf->addr=%p\n", s_cookie_buf->addr);
 #endif

@@ -13,6 +13,7 @@
 #include <stdint.h>
 #include <sys/types.h>
 #include <sys/mman.h>
+#include "mpid_nem_impl.h"
 
 //#define DEBUG_ON      1
 #ifdef DEBUG_ON
@@ -21,7 +22,7 @@
 #define DEBUG	if (0)
 #endif
 
-#ifdef DCFA
+#ifdef HAVE_LIBDCFA
 #include "dcfa.h"
 
 /*
@@ -271,7 +272,7 @@ typedef struct IbCom {
     short icom_used;
     short icom_connected;
     int icom_port;
-#ifdef DCFA
+#ifdef HAVE_LIBDCFA
 #else
     struct ibv_port_attr icom_pattr;    /* IB port attributes */
 #endif
