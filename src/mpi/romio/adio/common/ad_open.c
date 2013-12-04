@@ -215,28 +215,21 @@ int is_aggregator(int rank, ADIO_File fd ) {
         return 0;
 }
 
-/* 
- * we special-case TESTFS because all it does is wrap logging info around GEN 
+/*
+ * If file system implements some version of two-phase -- doesn't have to be
+ * generic -- we can still carry out the defered open optimization
  */
 static int uses_generic_read(ADIO_File fd)
 {
-    ADIOI_Fns *fns = fd->fns;
-    if (fns->ADIOI_xxx_ReadStridedColl == ADIOI_GEN_ReadStridedColl || 
-        fd->file_system == ADIO_TESTFS )
-    {
+    if (ADIO_Feature(fd, ADIO_TWO_PHASE))
         return 1;
-    }
     return 0;
 }
 
 static int uses_generic_write(ADIO_File fd)
 {
-    ADIOI_Fns *fns = fd->fns;
-    if (fns->ADIOI_xxx_WriteStridedColl == ADIOI_GEN_WriteStridedColl ||
-        fd->file_system == ADIO_TESTFS )
-    {
+    if (ADIO_Feature(fd, ADIO_TWO_PHASE))
         return 1;
-    }
     return 0;
 }
 

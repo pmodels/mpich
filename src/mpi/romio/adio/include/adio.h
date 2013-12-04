@@ -314,6 +314,9 @@ typedef struct {
 #define ADIO_UNLINK_AFTER_CLOSE  305 /* supports posix semantic of keeping a
 					deleted file around until all
 					processors have closed it */
+#define ADIO_TWO_PHASE           306 /* file system implements some version of
+					two-phase collective buffering with
+					aggregation */
 
 /* for default file permissions */
 #define ADIO_PERM_NULL           -1
