@@ -49,9 +49,9 @@ static int MPID_nem_init_stats(int n_local_ranks)
 {
     int mpi_errno = MPI_SUCCESS;
 
-#ifdef ENABLE_PVAR_NEM
-    MPID_nem_fbox_fall_back_to_queue_count = MPIU_Calloc(n_local_ranks, sizeof(unsigned long long));
-#endif
+    if (ENABLE_PVAR_NEM) {
+        MPID_nem_fbox_fall_back_to_queue_count = MPIU_Calloc(n_local_ranks, sizeof(unsigned long long));
+    }
 
     MPIR_T_PVAR_COUNTER_REGISTER_DYNAMIC(
         NEM,
