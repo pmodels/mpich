@@ -1,5 +1,5 @@
 .\" -*- nroff -*-
-.\" Copyright © 2009-2012 Inria.  All rights reserved.
+.\" Copyright © 2009-2013 Inria.  All rights reserved.
 .\" Copyright © 2010 Université of Bordeaux
 .\" Copyright © 2009-2010 Cisco Systems, Inc.  All rights reserved.
 .\" See COPYING in top-level directory.
@@ -76,6 +76,12 @@ program instead of hwloc-specific CPU set string format.
 This option has no impact on the format of input CPU set strings,
 both formats are always accepted.
 .TP
+\fB\-\-restrict\fR <cpuset>
+Restrict the topology to the given cpuset.
+.TP
+\fB\-\-whole\-system\fR
+Do not consider administration limitations.
+.TP
 \fB\-f\fR \fB\-\-force\fR
 Launch the executable even if binding failed.
 .TP
@@ -101,6 +107,7 @@ that is bound to the specified location (or list of locations).  Upon
 successful execution, hwloc-bind simply sets bindings and then execs
 the executable over itself.
 .
+.PP
 If binding fails, or if the binding set is empty, and \fB\-\-force\fR
 was not given, hwloc-bind returns with an error instead of launching
 the executable.

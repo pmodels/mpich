@@ -1,5 +1,5 @@
 .\" -*- nroff -*-
-.\" Copyright © 2010-2012 Inria.  All rights reserved.
+.\" Copyright © 2010-2013 Inria.  All rights reserved.
 .\" Copyright © 2009-2010 Cisco Systems, Inc.  All rights reserved.
 .\" See COPYING in top-level directory.
 .TH HWLOC-DISTRIB "1" "#HWLOC_DATE#" "#PACKAGE_VERSION#" "#PACKAGE_NAME#"
@@ -71,6 +71,9 @@ both \fB\-\-from\fR and \fB\-\-to\fR at the same time.
 \fB\-\-restrict\fR <cpuset>
 Restrict the topology to the given cpuset.
 .TP
+\fB\-\-whole\-system\fR
+Do not consider administration limitations.
+.TP
 \fB\-\-version\fR
 Report version and exit.
 .
@@ -86,7 +89,8 @@ by option \fB\-\-from\fR) down to the bottom of the hierarchy (or down to the
 level specified by option \fB\-\-to\fR, or until only one element remains),
 splitting the number of elements at each encountered hierarchy level not ignored
 by options \fB\-\-ignore\fR.
-
+.
+.PP
 This can e.g. be used to distribute a set of processes hierarchically according
 to the topology of a machine. These masks can be used with hwloc-bind(1).
 .

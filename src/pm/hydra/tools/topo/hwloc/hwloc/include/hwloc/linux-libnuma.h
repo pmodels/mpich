@@ -1,6 +1,6 @@
 /*
  * Copyright © 2009 CNRS
- * Copyright © 2009-2012 inria.  All rights reserved.
+ * Copyright © 2009-2013 Inria.  All rights reserved.
  * Copyright © 2009-2010, 2012 Université Bordeaux 1
  * See COPYING in top-level directory.
  */
@@ -10,18 +10,7 @@
  *
  * Applications that use both Linux libnuma and hwloc may want to
  * include this file so as to ease conversion between their respective types.
- *
- * This helper also offers a consistent behavior on non-NUMA machines
- * or non-NUMA-aware kernels by assuming that the machines have a single
- * NUMA node.
- *
- * \note Topology \p topology must match the current machine.
- *
- * \note The behavior of libnuma is undefined if the kernel is not NUMA-aware.
- * (when CONFIG_NUMA is not set in the kernel configuration).
- * This helper and libnuma may thus not be strictly compatible in this case,
- * which may be detected by checking whether numa_available() returns -1.
- */
+*/
 
 #ifndef HWLOC_LINUX_LIBNUMA_H
 #define HWLOC_LINUX_LIBNUMA_H
@@ -35,7 +24,22 @@ extern "C" {
 #endif
 
 
-/** \defgroup hwlocality_linux_libnuma_ulongs Helpers for manipulating Linux libnuma unsigned long masks
+/** \defgroup hwlocality_linux_libnuma_ulongs Interoperability with Linux libnuma unsigned long masks
+ *
+ * This interface helps converting between Linux libnuma unsigned long masks
+ * and hwloc cpusets and nodesets. 
+ *
+ * It also offers a consistent behavior on non-NUMA machines
+ * or non-NUMA-aware kernels by assuming that the machines have a single
+ * NUMA node.
+ *
+ * \note Topology \p topology must match the current machine.
+ *
+ * \note The behavior of libnuma is undefined if the kernel is not NUMA-aware.
+ * (when CONFIG_NUMA is not set in the kernel configuration).
+ * This helper and libnuma may thus not be strictly compatible in this case,
+ * which may be detected by checking whether numa_available() returns -1.
+ *
  * @{
  */
 
@@ -198,7 +202,22 @@ hwloc_nodeset_from_linux_libnuma_ulongs(hwloc_topology_t topology, hwloc_nodeset
 
 
 
-/** \defgroup hwlocality_linux_libnuma_bitmask Helpers for manipulating Linux libnuma bitmask
+/** \defgroup hwlocality_linux_libnuma_bitmask Interoperability with Linux libnuma bitmask
+ *
+ * This interface helps converting between Linux libnuma bitmasks
+ * and hwloc cpusets and nodesets. 
+ *
+ * It also offers a consistent behavior on non-NUMA machines
+ * or non-NUMA-aware kernels by assuming that the machines have a single
+ * NUMA node.
+ *
+ * \note Topology \p topology must match the current machine.
+ *
+ * \note The behavior of libnuma is undefined if the kernel is not NUMA-aware.
+ * (when CONFIG_NUMA is not set in the kernel configuration).
+ * This helper and libnuma may thus not be strictly compatible in this case,
+ * which may be detected by checking whether numa_available() returns -1.
+ *
  * @{
  */
 

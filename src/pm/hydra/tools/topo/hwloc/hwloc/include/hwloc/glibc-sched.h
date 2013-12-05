@@ -12,8 +12,6 @@
  * Applications that use both hwloc and glibc scheduling routines such as
  * sched_getaffinity() or pthread_attr_setaffinity_np() may want to include
  * this file so as to ease conversion between their respective types.
- *
- * \note Topology \p topology must match the current machine.
  */
 
 #ifndef HWLOC_GLIBC_SCHED_H
@@ -36,7 +34,13 @@ extern "C" {
 #ifdef HWLOC_HAVE_CPU_SET
 
 
-/** \defgroup hwlocality_glibc_sched Helpers for manipulating glibc sched affinity
+/** \defgroup hwlocality_glibc_sched Interoperability with glibc sched affinity
+ *
+ * This interface offers ways to convert between hwloc cpusets and glibc cpusets
+ * such as those manipulated by sched_getaffinity() or pthread_attr_setaffinity_np().
+ *
+ * \note Topology \p topology must match the current machine.
+ *
  * @{
  */
 

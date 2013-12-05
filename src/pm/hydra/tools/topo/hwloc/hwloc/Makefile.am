@@ -9,10 +9,10 @@ ACLOCAL_AMFLAGS = -I ./config
 
 SUBDIRS = src include
 if HWLOC_BUILD_STANDALONE
-# SUBDIRS += utils tests
+SUBDIRS += utils tests
 # We need doc/ if HWLOC_BUILD_DOXYGEN, or during make install if HWLOC_INSTALL_DOXYGEN.
 # There's no INSTALL_SUBDIRS, so always enter doc/ and check HWLOC_BUILD/INSTALL_DOXYGEN there
-# SUBDIRS += doc
+SUBDIRS += doc
 endif
 
 # Do not let automake automatically add the non-standalone dirs to the
@@ -62,7 +62,7 @@ if !HWLOC_BUILD_README
 dist-hook: cannot-dist
 else
 dist-hook:
-	csh "$(top_srcdir)/config/distscript.csh" "$(top_srcdir)" "$(distdir)" "$(HWLOC_VERSION)" "$(HWLOC_SVN_R)"
+	csh "$(top_srcdir)/config/distscript.csh" "$(top_srcdir)" "$(distdir)" "$(HWLOC_VERSION)"
 endif HWLOC_BUILD_README
 endif HWLOC_BUILD_DOXYGEN
 endif HWLOC_BUILD_STANDALONE

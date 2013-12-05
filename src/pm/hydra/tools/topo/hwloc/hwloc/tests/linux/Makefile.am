@@ -45,6 +45,9 @@ sysfs_outputs = \
 		16em64t-4s2c2t.xml.output \
 		16em64t-2m4c2t.output \
 		16ia64-8n2s.output \
+		24em64t-2n6c2t+2mic.olddriver.output \
+		32em64t-2n8c+1mic.output \
+		40intel64-2g2n4c+pci.output \
 		48amd64-4d2n6c-sparse.output \
 		64amd64-4s2n4ca2co.output \
 		64fake-4n2s2ca2c2t.output \
@@ -98,6 +101,9 @@ sysfs_tarballs = \
 		16em64t-4s2c2t_ncaches.source \
 		16em64t-4s2c2t.xml.source \
 		16ia64-8n2s.tar.bz2 \
+		24em64t-2n6c2t+2mic.olddriver.tar.bz2 \
+		32em64t-2n8c+1mic.tar.bz2 \
+		40intel64-2g2n4c+pci.tar.bz2 \
 		48amd64-4d2n6c-sparse.tar.bz2 \
 		64amd64-4s2n4ca2co.tar.bz2 \
 		64fake-4n2s2ca2c2t.tar.bz2 \
@@ -130,14 +136,18 @@ sysfs_options = \
 		16em64t-4s2c2t_ncaches.options \
 		16em64t-4s2c2t_merge.options \
 		16em64t-4s2c2t.xml.options \
-		32amd64-4s2n4c-cgroup.xml.options
+		32amd64-4s2n4c-cgroup.xml.options \
+		24em64t-2n6c2t+2mic.olddriver.options \
+		32em64t-2n8c+1mic.options \
+		40intel64-2g2n4c+pci.options
 
 # Each output `xyz.output' may have a corresponding `xyz.env'
-# modifying the environment of lsopo
+# modifying the environment of lstopo
 sysfs_envs = \
 		2i386-2t-hugepagesizecount.xml.env \
 		32amd64-4s2n4c-cgroup.env \
 		32amd64-4s2n4c-cgroup.xml.env \
+		40intel64-2g2n4c+pci.env \
 		96em64t-4n4d3ca2co-forcecpuinfo.env
 
 if HWLOC_HAVE_OPENAT

@@ -23,6 +23,11 @@ hwloc-annotate \- Add info attributes to a XML topology
 .SH OPTIONS
 .
 .TP 10
+\fB\-\-ri\fR
+Remove all info attributes that exist with the same name before adding the new one.
+This option is only accepted in "info" mode.
+If the info value is omitted, existing infos are replaced with nothing.
+.TP
 \fB\-\-ci\fR
 Clear the existing info attributes in the target objects before annotating.
 If no new annotation has to be added after clearing, \fImode\fR should be
@@ -37,8 +42,10 @@ hwloc-annotate loads a topology from a XML file, adds some annotations,
 and export the resulting topology to another XML file.
 The input and output files may be the same.
 .
+.PP
 The annotation may be string info attributes.
 This is specified by the \fImode\fR:
+.
 .TP
 .B info <name> <value>
 Specifies a new string info attribute whose name is \fIname\fR and
@@ -91,6 +98,10 @@ and modify the input XML directly:
 
     $ hwloc-annotate file.xml file.xml root info infoname infovalue
 
+Change socket objects to green with red text in the lstopo graphical output:
+
+    $ hwloc-annotate topo.xml topo.xml socket:all info lstopoStyle "Background=#00ff00;Text=#ff0000"
+    $ lstopo -i topo.xml
 .
 .\" **************************
 .\" Return value section

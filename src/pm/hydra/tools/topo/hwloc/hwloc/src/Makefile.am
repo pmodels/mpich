@@ -19,10 +19,10 @@ else
 noinst_LTLIBRARIES = libhwloc_embedded.la
 endif
 
-pluginsdir = $(libdir)/hwloc
+pluginsdir = @HWLOC_PLUGINS_DIR@
 plugins_LTLIBRARIES = 
-plugins_ldflags = -module -avoid-version
-AM_CPPFLAGS += -DHWLOC_PLUGINS_DIR=\"$(pluginsdir)\"
+plugins_ldflags = -module -avoid-version -lltdl
+AM_CPPFLAGS += -DHWLOC_PLUGINS_PATH=\"$(HWLOC_PLUGINS_PATH)\"
 
 # Sources and ldflags
 
@@ -33,6 +33,8 @@ sources = \
         components.c \
         bind.c \
         bitmap.c \
+        pci-common.c \
+        diff.c \
         misc.c \
         base64.c \
         topology-noos.c \

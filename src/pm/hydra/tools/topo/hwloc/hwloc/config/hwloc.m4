@@ -184,6 +184,11 @@ EOF])
         hwloc_linux=yes
         AC_MSG_RESULT([Linux])
         hwloc_components="$hwloc_components linux"
+	if test x$enable_pci != xno; then
+	  hwloc_components="$hwloc_components linuxpci"
+	  AC_DEFINE(HWLOC_HAVE_LINUXPCI, 1, [Define to 1 if building the Linux PCI component])
+	  hwloc_linuxpci_happy=yes
+	fi				    
         ;;
       *-*-irix*)
         AC_DEFINE(HWLOC_IRIX_SYS, 1, [Define to 1 on Irix])
@@ -439,6 +444,7 @@ EOF])
       #include <sys/param.h>
       #endif
     ])
+
     AC_CHECK_DECLS([strtoull], [], [], [AC_INCLUDES_DEFAULT])
 
     # Do a full link test instead of just using AC_CHECK_FUNCS, which
@@ -449,15 +455,17 @@ EOF])
     # "sysctlbyname" might still be available in libc (which autoconf
     # checks for), they might not be actually usable.
     AC_TRY_LINK([
-		#include <stdio.h>
-		#include <sys/sysctl.h>
-		],
+               #include <stdio.h>
+               #include <sys/types.h>
+               #include <sys/sysctl.h>
+               ],
                 [return sysctl(NULL,0,NULL,NULL,NULL,0);],
                 AC_DEFINE([HAVE_SYSCTL],[1],[Define to '1' if sysctl is present and usable]))
     AC_TRY_LINK([
-		#include <stdio.h>
-		#include <sys/sysctl.h>
-		],
+               #include <stdio.h>
+               #include <sys/types.h>
+               #include <sys/sysctl.h>
+               ],
                 [return sysctlbyname(NULL,NULL,NULL,NULL,0);],
                 AC_DEFINE([HAVE_SYSCTLBYNAME],[1],[Define to '1' if sysctlbyname is present and usable]))
 
@@ -906,15 +914,39 @@ EOF])
     fi
     # don't add LIBS/CFLAGS/REQUIRES yet, depends on plugins
 
+    # X11 support
+    AC_PATH_XTRA
+
+    CPPFLAGS_save=$CPPFLAGS
+    LIBS_save=$LIBS
+
+    CPPFLAGS="$CPPFLAGS $X_CFLAGS"
+    LIBS="$LIBS $X_PRE_LIBS $X_LIBS $X_EXTRA_LIBS"
+    AC_CHECK_HEADERS([X11/Xlib.h],
+        [AC_CHECK_LIB([X11], [XOpenDisplay],
+            [
+             # the GL backend just needs XOpenDisplay
+             hwloc_enable_X11=yes
+             # lstopo needs more
+             AC_CHECK_HEADERS([X11/Xutil.h],
+                [AC_CHECK_HEADERS([X11/keysym.h],
+                    [AC_DEFINE([HWLOC_HAVE_X11_KEYSYM], [1], [Define to 1 if X11 headers including Xutil.h and keysym.h are available.])])
+                     AC_SUBST([HWLOC_X11_LIBS], ["-lX11"])
+                ])
+            ])
+         ])
+    CPPFLAGS=$CPPFLAGS_save
+    LIBS=$LIBS_save
+
     # GL Support 
     hwloc_gl_happy=no
     if test "x$enable_gl" != "xno"; then
-    	hwloc_gl_happy=yes								
+	hwloc_gl_happy=yes
 
-        AC_CHECK_HEADERS([X11/Xlib.h], [
-          AC_CHECK_LIB([X11], [XOpenDisplay], [:], [hwloc_gl_happy=no])
-        ], [hwloc_gl_happy=no])
-       
+	AS_IF([test "$hwloc_enable_X11" != "yes"],
+              [AC_MSG_WARN([X11 not found; GL disabled])
+               hwloc_gl_happy=no])
+
         AC_CHECK_HEADERS([NVCtrl/NVCtrl.h], [
           AC_CHECK_LIB([XNVCtrl], [XNVCTRLQueryTargetAttribute], [:], [hwloc_gl_happy=no], [-lXext])
         ], [hwloc_gl_happy=no])
@@ -1045,6 +1077,15 @@ EOF])
       # Add libltdl static-build dependencies to hwloc.pc
       HWLOC_CHECK_LTDL_DEPS
     fi
+
+    AC_ARG_WITH([hwloc-plugins-path],
+		AC_HELP_STRING([--with-hwloc-plugins-path=dir:...],
+                               [Colon-separated list of plugin directories. Default: "$prefix/lib/hwloc". Plugins will be installed in the first directory. They will be loaded from all of them, in order.]),
+		[HWLOC_PLUGINS_PATH="$with_hwloc_plugins_path"],
+		[HWLOC_PLUGINS_PATH="\$(libdir)/hwloc"])
+    AC_SUBST(HWLOC_PLUGINS_PATH)
+    HWLOC_PLUGINS_DIR=`echo "$HWLOC_PLUGINS_PATH" | cut -d: -f1`
+    AC_SUBST(HWLOC_PLUGINS_DIR)
 
     # Static components output file
     hwloc_static_components_dir=${HWLOC_top_builddir}/src
@@ -1251,9 +1292,9 @@ AC_DEFUN([_HWLOC_CHECK_DECL], [
   AC_MSG_CHECKING([whether function $1 is declared])
   AC_REQUIRE([AC_PROG_CC])
   AC_COMPILE_IFELSE([AC_LANG_PROGRAM(
-	[AC_INCLUDES_DEFAULT([$4])
-	$1(int,long,int,long,int,long,int,long,int,long);],
-	[$1(1,2,3,4,5,6,7,8,9,10);])],
+       [AC_INCLUDES_DEFAULT([$4])
+       $1(int,long,int,long,int,long,int,long,int,long);],
+       [$1(1,2,3,4,5,6,7,8,9,10);])],
     [AC_MSG_RESULT([no])
      $3],
     [AC_MSG_RESULT([yes])

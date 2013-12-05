@@ -31,7 +31,11 @@ extern "C" {
 #endif
 
 
-/** \defgroup hwlocality_cuda CUDA Driver API Specific Functions
+/** \defgroup hwlocality_cuda Interoperability with the CUDA Driver API
+ *
+ * This interface offers ways to retrieve topology information about
+ * CUDA devices when using the CUDA Driver API.
+ *
  * @{
  */
 

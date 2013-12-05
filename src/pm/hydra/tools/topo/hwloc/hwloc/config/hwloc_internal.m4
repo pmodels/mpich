@@ -116,7 +116,7 @@ AC_DEFUN([HWLOC_SETUP_DOCS],[
 EOF
 
     AC_MSG_CHECKING([if this is a developer build])
-    AS_IF([test ! -d "$srcdir/.svn" -a ! -d "$srcdir/.hg" -a ! -d "$srcdir/.git"],
+    AS_IF([test ! -d "$srcdir/.hg" -a ! -d "$srcdir/.git"],
           [AC_MSG_RESULT([no (doxygen generation is optional)])],
           [AC_MSG_RESULT([yes])])
     
@@ -203,7 +203,7 @@ EOF
     AC_MSG_CHECKING([whether to enable "picky" compiler mode])
     hwloc_want_picky=0
     AS_IF([test "$hwloc_c_vendor" = "gnu"],
-          [AS_IF([test -d "$srcdir/.svn" -o -d "$srcdir/.hg" -o -d "$srcdir/.git"],
+          [AS_IF([test -d "$srcdir/.hg" -o -d "$srcdir/.git"],
                  [hwloc_want_picky=1])])
     if test "$enable_picky" = "yes"; then
         if test "$GCC" = "yes"; then
@@ -255,31 +255,6 @@ EOF
       HWLOC_PKG_CHECK_MODULES([CAIRO], [cairo], [cairo_fill],
                               [hwloc_cairo_happy=yes],
                               [hwloc_cairo_happy=no])
-      if test "x$hwloc_cairo_happy" = "xyes"; then
-        AC_PATH_XTRA
-	CFLAGS_save=$CFLAGS
-	LIBS_save=$LIBS
-
-	CFLAGS="$CFLAGS $X_CFLAGS"
-	LIBS="$LIBS $X_PRE_LIBS $X_LIBS $X_EXTRA_LIBS"
-        AC_CHECK_HEADERS([X11/Xlib.h], [
-          AC_CHECK_HEADERS([X11/Xutil.h X11/keysym.h], [
-            AC_CHECK_LIB([X11], [XOpenDisplay], [
-              enable_X11=yes
-              AC_SUBST([HWLOC_X11_LIBS], ["-lX11"])
-              AC_DEFINE([HWLOC_HAVE_X11], [1], [Define to 1 if X11 libraries are available.])
-            ])]
-          )],,
-          [[#include <X11/Xlib.h>]]
-        )
-        if test "x$enable_X11" != "xyes"; then
-          AC_MSG_WARN([X11 headers not found, Cairo/X11 back-end disabled])
-          hwloc_cairo_happy=no
-        fi
-
-	CFLAGS=$CFLAGS_save
-	LIBS=$LIBS_save
-      fi
     fi
     
     if test "x$hwloc_cairo_happy" = "xyes"; then
@@ -409,16 +384,19 @@ int foo(void) {
         hwloc_config_prefix[tests/xml/test-topology.sh]
         hwloc_config_prefix[tests/wrapper.sh]
         hwloc_config_prefix[utils/hwloc-assembler-remote]
+        hwloc_config_prefix[utils/hwloc-compress-dir]
         hwloc_config_prefix[utils/test-hwloc-annotate.sh]
         hwloc_config_prefix[utils/test-hwloc-assembler.sh]
         hwloc_config_prefix[utils/test-hwloc-calc.sh]
+        hwloc_config_prefix[utils/test-hwloc-compress-dir.sh]
+        hwloc_config_prefix[utils/test-hwloc-diffpatch.sh]
         hwloc_config_prefix[utils/test-hwloc-distances.sh]
         hwloc_config_prefix[utils/test-hwloc-distrib.sh]
         hwloc_config_prefix[utils/test-hwloc-info.sh]
         hwloc_config_prefix[utils/test-hwloc-ls.sh]
         hwloc_config_prefix[utils/test-fake-plugin.sh])
 
-    AC_CONFIG_COMMANDS([chmoding-scripts], [chmod +x ]hwloc_config_prefix[tests/linux/test-topology.sh ]hwloc_config_prefix[tests/xml/test-topology.sh ]hwloc_config_prefix[tests/linux/hwloc-gather-topology ]hwloc_config_prefix[tests/linux/gather/test-gather-topology.sh ]hwloc_config_prefix[tests/wrapper.sh ]hwloc_config_prefix[utils/hwloc-assembler-remote ]hwloc_config_prefix[utils/test-hwloc-annotate.sh ]hwloc_config_prefix[utils/test-hwloc-assembler.sh ]hwloc_config_prefix[utils/test-hwloc-calc.sh ]hwloc_config_prefix[utils/test-hwloc-distances.sh ]hwloc_config_prefix[utils/test-hwloc-distrib.sh ]hwloc_config_prefix[utils/test-hwloc-info.sh ]hwloc_config_prefix[utils/test-hwloc-ls.sh ]hwloc_config_prefix[utils/test-fake-plugin.sh])
+    AC_CONFIG_COMMANDS([chmoding-scripts], [chmod +x ]hwloc_config_prefix[tests/linux/test-topology.sh ]hwloc_config_prefix[tests/xml/test-topology.sh ]hwloc_config_prefix[tests/linux/hwloc-gather-topology ]hwloc_config_prefix[tests/linux/gather/test-gather-topology.sh ]hwloc_config_prefix[tests/wrapper.sh ]hwloc_config_prefix[utils/hwloc-assembler-remote ]hwloc_config_prefix[utils/hwloc-compress-dir ]hwloc_config_prefix[utils/test-hwloc-annotate.sh ]hwloc_config_prefix[utils/test-hwloc-assembler.sh ]hwloc_config_prefix[utils/test-hwloc-calc.sh ]hwloc_config_prefix[utils/test-hwloc-compress-dir.sh ]hwloc_config_prefix[utils/test-hwloc-diffpatch.sh ]hwloc_config_prefix[utils/test-hwloc-distances.sh ]hwloc_config_prefix[utils/test-hwloc-distrib.sh ]hwloc_config_prefix[utils/test-hwloc-info.sh ]hwloc_config_prefix[utils/test-hwloc-ls.sh ]hwloc_config_prefix[utils/test-fake-plugin.sh])
 
     # These links are only needed in standalone mode.  It would
     # be nice to m4 foreach this somehow, but whenever I tried
