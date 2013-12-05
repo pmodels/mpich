@@ -140,17 +140,17 @@ void ADIOI_LUSTRE_SetInfo(ADIO_File fd, MPI_Info users_info, int *error_code)
         /* CO: IO Clients/OST,
          * to keep the load balancing between clients and OSTs */
 	ADIOI_Info_check_and_install_int(fd, users_info, "romio_lustre_co_ratio", 
-		&(fd->hints->fs_hints.lustre.co_ratio));
+		&(fd->hints->fs_hints.lustre.co_ratio), myname, error_code );
 
         /* coll_threshold:
          * if the req size is bigger than this, collective IO may not be performed.
          */
 	ADIOI_Info_check_and_install_int(fd, users_info, "romio_lustre_coll_threshold",
-		&(fd->hints->fs_hints.lustre.coll_threshold) );
+		&(fd->hints->fs_hints.lustre.coll_threshold), myname, error_code );
 
         /* ds_in_coll: disable data sieving in collective IO */
 	ADIOI_Info_check_and_install_enabled(fd, users_info, "romio_lustre_ds_in_coll",
-		&(fd->hints->fs_hints.lustre.ds_in_coll) );
+		&(fd->hints->fs_hints.lustre.ds_in_coll), myname, error_code );
 
     }
     /* set the values for collective I/O and data sieving parameters */
