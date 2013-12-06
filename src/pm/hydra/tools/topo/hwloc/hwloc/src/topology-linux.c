@@ -4435,6 +4435,7 @@ hwloc_look_linuxfs_pci(struct hwloc_backend *backend)
     unsigned os_index;
     char path[64];
     char value[16];
+    size_t dummy __hwloc_attribute_unused;
     FILE *file;
 
     if (sscanf(dirent->d_name, "%04x:%02x:%02x.%01x", &domain, &bus, &dev, &func) != 4)
@@ -4463,35 +4464,35 @@ hwloc_look_linuxfs_pci(struct hwloc_backend *backend)
     snprintf(path, sizeof(path), "/sys/bus/pci/devices/%s/vendor", dirent->d_name);
     file = hwloc_fopen(path, "r", root_fd);
     if (file) {
-      fread(value, sizeof(value), 1, file);
+      dummy = fread(value, sizeof(value), 1, file);
       fclose(file);
       attr->vendor_id = strtoul(value, NULL, 16);
     }
     snprintf(path, sizeof(path), "/sys/bus/pci/devices/%s/device", dirent->d_name);
     file = hwloc_fopen(path, "r", root_fd);
     if (file) {
-      fread(value, sizeof(value), 1, file);
+      dummy = fread(value, sizeof(value), 1, file);
       fclose(file);
       attr->device_id = strtoul(value, NULL, 16);
     }
     snprintf(path, sizeof(path), "/sys/bus/pci/devices/%s/class", dirent->d_name);
     file = hwloc_fopen(path, "r", root_fd);
     if (file) {
-      fread(value, sizeof(value), 1, file);
+      dummy = fread(value, sizeof(value), 1, file);
       fclose(file);
       attr->class_id = strtoul(value, NULL, 16) >> 8;
     }
     snprintf(path, sizeof(path), "/sys/bus/pci/devices/%s/subsystem_vendor", dirent->d_name);
     file = hwloc_fopen(path, "r", root_fd);
     if (file) {
-      fread(value, sizeof(value), 1, file);
+      dummy = fread(value, sizeof(value), 1, file);
       fclose(file);
       attr->subvendor_id = strtoul(value, NULL, 16);
     }
     snprintf(path, sizeof(path), "/sys/bus/pci/devices/%s/subsystem_device", dirent->d_name);
     file = hwloc_fopen(path, "r", root_fd);
     if (file) {
-      fread(value, sizeof(value), 1, file);
+      dummy = fread(value, sizeof(value), 1, file);
       fclose(file);
       attr->subdevice_id = strtoul(value, NULL, 16);
     }
@@ -4505,7 +4506,7 @@ hwloc_look_linuxfs_pci(struct hwloc_backend *backend)
 
       /* initialize the config space in case we fail to read it (missing permissions, etc). */
       memset(config_space_cache, 0xff, CONFIG_SPACE_CACHESIZE);
-      (void) fread(config_space_cache, 1, CONFIG_SPACE_CACHESIZE, file);
+      dummy = fread(config_space_cache, 1, CONFIG_SPACE_CACHESIZE, file);
       fclose(file);
 
       /* is this a bridge? */
