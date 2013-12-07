@@ -29,7 +29,7 @@
 
  # Enable shared library builds by default.
 
- # Upgraded hwloc to 1.7.2.
+ # Upgraded hwloc to 1.8.
 
  # Several improvements to the Hydra-SLURM integration.
 
