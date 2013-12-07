@@ -474,6 +474,46 @@ shared memory has limits on the size of shared memory segments so
 using this for Nemesis may limit the number of processes that can be
 started on a single node.
 
+dcfa network module
+```````````````````
+The DCFA netmod provides support for InfiniBand on x86_64 platforms
+(including Xeon Phi).  It can be built in the following
+configurations:
+
+1. InfiniBand Open Fabrics, x86_64 (host), Linux
+
+   For this mode, configure with the following option:
+
+       --with-device=ch3:nemesis:dcfa
+
+2. InfiniBand Open Fabrics, Xeon Phi, Intel MPSS Linux
+
+   For this mode, configure with the following options:
+
+       --with-device=ch3:nemesis:dcfa
+       --with-cross=<mpich-source>/src/mpid/ch3/channels/nemesis/netmod/dcfa/cross_values.txt
+       --host=x86_64-k1om-linux
+       --with-dcfa=/opt/intel/mic/ofed/card/usr
+       CC=icc CXX=icpc F77=ifort FC=ifort
+       CFLAGS=-mmic CXXFLAGS=-mmic FFLAGS=-mmic FCFLAGS=-mmic LDFLAGS=-mmic
+
+3. InfiniBand Open Fabrics, Xeon Phi, McKernel (developed by
+   University of Tokyo)
+
+   For this mode, configure with the following options:
+
+       --with-device=ch3:nemesis:dcfa
+       --with-cross=<mpich-source>/src/mpid/ch3/channels/nemesis/netmod/dcfa/cross_values.txt
+       --host=x86_64-k1om-linux
+       --with-dcfa=<mckernel-source>/attached
+       --disable-shared
+       CC=icc CXX=icpc F77=ifort FC=ifort
+       CFLAGS=-mmic CXXFLAGS=-mmic FFLAGS=-mmic FCFLAGS=-mmic LDFLAGS=-mmic
+
+    Note that shared builds are not supported for the third
+    configuration right now.
+
+
 sock channel
 ------------
 sock is the traditional TCP sockets based communication channel. It
