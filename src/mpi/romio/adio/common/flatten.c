@@ -454,7 +454,9 @@ void ADIOI_Flatten(MPI_Datatype datatype, ADIOI_Flatlist_node *flat,
         /* FIXME: using the same code as indexed_block for
          * hindexed_block doesn't look correct.  Needs to be carefully
          * looked into. */
+#if defined HAVE_DECL_MPI_COMBINER_HINDEXED_BLOCK && HAVE_DECL_MPI_COMBINER_HINDEXED_BLOCK
     case MPI_COMBINER_HINDEXED_BLOCK:
+#endif
     case MPI_COMBINER_INDEXED_BLOCK:
     #ifdef FLATTEN_DEBUG 
     DBG_FPRINTF(stderr,"ADIOI_Flatten:: MPI_COMBINER_INDEXED_BLOCK\n");
