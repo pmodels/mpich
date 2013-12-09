@@ -17,14 +17,17 @@ AC_DEFUN([PAC_SUBCFG_BODY_]PAC_SUBCFG_AUTO_SUFFIX,[
 AM_COND_IF([BUILD_NEMESIS_NETMOD_DCFA],[
     AC_MSG_NOTICE([RUNNING CONFIGURE FOR ch3:nemesis:dcfa])
 
-    AC_ARG_ENABLE(dcfa, [--enable-dcfa - use DCFA library instead of IB Verbs library for MPICH/DCFA/McKernel/MIC],,enable_dcfa=no)
-    if test "$enable_dcfa" = "yes" ; then
-        AC_MSG_NOTICE([--enable-dcfa detected])
-        PAC_CHECK_HEADER_LIB_FATAL(dcfa, dcfa.h, dcfa, ibv_open_device)
-# see confdb/aclocal_libs.m4
-    else   
-        PAC_CHECK_HEADER_LIB_FATAL(ib, infiniband/verbs.h, ibverbs, ibv_open_device)
-    fi                 
+    PAC_CHECK_HEADER_LIB(dcfa.h,dcfa,ibv_open_device,dcfa_found=yes,dcfa_found=no)
+    if test "${dcfa_found}" = "yes" ; then
+        AC_MSG_NOTICE([libdcfa is going to be linked.])
+    else
+        PAC_CHECK_HEADER_LIB([infiniband/verbs.h],ibverbs,ibv_open_device,ibverbs_found=yes,ibverbs_found=no)
+        if test "${ibverbs_found}" = "yes" ; then
+            AC_MSG_NOTICE([libibverbs is going to be linked.])
+        else
+            AC_MSG_ERROR([Internal error: neither ibverbs nor dcfa was found])
+        fi
+    fi
 
     AC_DEFINE([MPID_NEM_DCFA_VERSION], ["0.9.0"], [Version of netmod/DCFA])
     AC_DEFINE([MPID_NEM_DCFA_RELEASE_DATE], ["2013-11-18"], [Release date of netmod/DCFA])
