@@ -49,24 +49,9 @@
   Argonne National Laboratory}
 
 \author{
-Pavan Balaji\\
-Wesley Bland\\
-William Gropp\\
-Rob Latham\\
-Antonio Pe$\tilde{n}$a\\
-Rajeev Thakur\\[2.0ex]
-\textbf{Past Contributors:}\\
-David Ashton\\
-Darius Buntinas\\
-Ralph Butler\\
-Anthony Chan\\
-James Dinan\\
-David Goodell\\
-Jayesh Krishna\\
-Ewing Lusk\\
-Guillaume Mercier\\
-Rob Ross\\
-Brian Toonen
+Pavan Balaji \and Wesley Bland \and William Gropp \and Rob Latham \and
+Huiwei Lu \and Antonio J. Pe\~na \and Ken Raffenetti \and Rajeev
+Thakur \and Junchao Zhang
 }
 
 \maketitle
