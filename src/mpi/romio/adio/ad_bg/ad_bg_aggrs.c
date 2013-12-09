@@ -23,7 +23,6 @@
 #include "mpe.h"
 #endif
 
-#include "mpidi_macros.h"
 
 #ifdef USE_DBG_LOGGING
   #define AGG_DEBUG 1

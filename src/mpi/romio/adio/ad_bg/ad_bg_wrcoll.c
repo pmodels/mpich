@@ -18,7 +18,6 @@
 #include "ad_bg_pset.h"
 #include "ad_bg_aggrs.h"
 
-#include "mpitypedefs.h"
 
 #ifdef AGGREGATION_PROFILE
 #include "mpe.h"

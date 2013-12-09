@@ -16,9 +16,11 @@
 #include <stdlib.h>
 #include "ad_bg.h"
 #include "ad_bg_pset.h"
-#include "mpidimpl.h"
 #include <firmware/include/personality.h>
 
+#ifdef HAVE_MPIX_H
+#include <mpix.h>
+#endif
 
 ADIOI_BG_ProcInfo_t *
 ADIOI_BG_ProcInfo_new()

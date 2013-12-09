@@ -427,6 +427,7 @@ AC_TYPE_OFF_T
 # Find the CPP before the header check
 AC_PROG_CPP
 AC_CHECK_HEADERS([unistd.h fcntl.h malloc.h stddef.h sys/types.h])
+AC_CHECK_HEADERS(mpix.h,,,[#include <mpi.h>])
 #
 
 # When compiling ROMIO on Darwin with _POSIX_C_SOURCE defined (such as when
@@ -1546,6 +1547,7 @@ elif test $FROM_MPICH = yes ; then
    AC_DEFINE(HAVE_STATUS_SET_BYTES,1,[Define if status_set_bytes available])
    DEFINE_HAVE_MPI_GREQUEST="#define HAVE_MPI_GREQUEST 1"
    AC_DEFINE(HAVE_MPIU_FUNCS,1,[Define if MPICH memory tracing macros defined])
+   AC_DEFINE(HAVE_MPIX_H, 1, [])
 fi
 #
 #
