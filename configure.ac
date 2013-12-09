@@ -1805,6 +1805,12 @@ cc_shlib_conf=src/env/cc_shlib.conf
 PAC_COMPILER_SHLIB_FLAGS([CC],[$cc_shlib_conf])
 AC_SUBST_FILE([cc_shlib_conf])
 
+# output rpath flags in a usable format for mpich.pc (pkg-config)
+if test "X$enable_wrapper_rpath" = "Xyes"; then
+    eval WRAPPER_RPATH_LDFLAGS=\"$hardcode_libdir_flag_spec\"
+fi
+AC_SUBST(WRAPPER_RPATH_LDFLAGS)
+
 # ---------------------------------------------------------------------------
 # Support for MPI_T performance variables
 
