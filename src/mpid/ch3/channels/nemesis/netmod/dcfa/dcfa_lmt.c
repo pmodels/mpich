@@ -241,7 +241,7 @@ int MPID_nem_dcfa_lmt_start_recv(struct MPIDI_VC *vc, struct MPID_Request *req, 
     REQ_FIELD(req, lmt_tail) = s_cookie_buf->tail;
     dprintf("lmt_start_recv,mem-tail=%p,%02x\n",
             write_to_buf + req->ch.lmt_data_sz - sizeof(uint8_t),
-            *((uint32_t *) (write_to_buf + req->ch.lmt_data_sz - sizeof(uint8_t))));
+            *((uint8_t *) (write_to_buf + req->ch.lmt_data_sz - sizeof(uint8_t))));
 
     //dprintf("lmt_start_recv,sendq_empty=%d,ncom=%d,ncqe=%d\n", MPID_nem_dcfa_sendq_empty(vc_dcfa->sendq), vc_dcfa->ibcom->ncom < IBCOM_MAX_SQ_CAPACITY, MPID_nem_dcfa_ncqe < IBCOM_MAX_CQ_CAPACITY);
 
