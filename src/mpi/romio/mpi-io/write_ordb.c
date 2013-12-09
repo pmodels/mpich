@@ -36,7 +36,7 @@ Output Parameters:
 
 .N fortran
 @*/
-int MPI_File_write_ordered_begin(MPI_File fh, const void *buf, int count,
+int MPI_File_write_ordered_begin(MPI_File fh, ROMIO_CONST void *buf, int count,
 				 MPI_Datatype datatype)
 {
     int error_code, nprocs, myrank;

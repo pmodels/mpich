@@ -48,7 +48,7 @@ Input Parameters:
 .N fortran
   
   @*/
-int MPI_Register_datarep(const char *datarep,
+int MPI_Register_datarep(ROMIO_CONST char *datarep,
 			 MPI_Datarep_conversion_function *read_conversion_fn,
 			 MPI_Datarep_conversion_function *write_conversion_fn,
 			 MPI_Datarep_extent_function *dtype_file_extent_fn,

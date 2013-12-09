@@ -14,7 +14,6 @@
 
 #include "adio.h"
 #include "mpio.h"
-#include "mpiu_external32.h"
 
 #ifdef ROMIO_INSIDE_MPICH
 #include "glue_romio.h"
@@ -58,6 +57,14 @@ MPI_Delete_function ADIOI_End_call;
 
 /* common initialization routine */
 void MPIR_MPIOInit(int * error_code);
+
+#ifdef HAVE_MPIIO_CONST
+#define ROMIO_CONST const
+#else
+#define ROMIO_CONST
+#endif
+
+#include "mpiu_external32.h"
 
 
 #include "mpioprof.h"

@@ -37,7 +37,7 @@ Input Parameters:
 .N fortran
 @*/
 int MPI_File_set_view(MPI_File fh, MPI_Offset disp, MPI_Datatype etype,
-		      MPI_Datatype filetype, const char *datarep, MPI_Info info)
+		      MPI_Datatype filetype, ROMIO_CONST char *datarep, MPI_Info info)
 {
     int error_code;
     MPI_Count filetype_size, etype_size;

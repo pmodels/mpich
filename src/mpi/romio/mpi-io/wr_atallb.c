@@ -36,7 +36,7 @@ Input Parameters:
 
 .N fortran
 @*/
-int MPI_File_write_at_all_begin(MPI_File fh, MPI_Offset offset, const void *buf,
+int MPI_File_write_at_all_begin(MPI_File fh, MPI_Offset offset, ROMIO_CONST void *buf,
 				int count, MPI_Datatype datatype)
 {
     int error_code;

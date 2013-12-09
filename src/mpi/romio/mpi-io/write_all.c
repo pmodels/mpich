@@ -39,7 +39,7 @@ Output Parameters:
 
 .N fortran
 @*/
-int MPI_File_write_all(MPI_File fh, const void *buf, int count,
+int MPI_File_write_all(MPI_File fh, ROMIO_CONST void *buf, int count,
                        MPI_Datatype datatype, MPI_Status *status)
 {
     int error_code;

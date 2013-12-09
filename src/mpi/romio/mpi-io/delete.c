@@ -32,7 +32,7 @@ Input Parameters:
 
 .N fortran
 @*/
-int MPI_File_delete(const char *filename, MPI_Info info)
+int MPI_File_delete(ROMIO_CONST char *filename, MPI_Info info)
 {
     int error_code, file_system;
     char *tmp;
