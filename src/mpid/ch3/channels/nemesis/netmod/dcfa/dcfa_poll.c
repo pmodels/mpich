@@ -1290,7 +1290,7 @@ int MPID_nem_dcfa_PktHandler_EagerSend(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_DCFA_PKTHANDLER_EAGERSEND);
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_DCFA_PKTHANDLER_EAGERSEND);
 
-    printf("dcfa_pkthandler_eagersend,tag=%d\n", ch3_pkt->match.parts.tag);
+    dprintf("dcfa_pkthandler_eagersend,tag=%d\n", ch3_pkt->match.parts.tag);
 
     /* Check the assumption on sizeof(MPIDI_CH3_Pkt_t).
      * It is utilized to point the payload location in MPIDI_CH3_PktHandler_EagerSend
@@ -1341,12 +1341,12 @@ int MPID_nem_dcfa_PktHandler_EagerSend(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
 #if 0
         mpi_errno = MPID_nem_handle_pkt(vc, (char *) pkt_parent_class, *buflen);
 #else
-        printf("dcfa_poll.c,before PktHandler_EagerSend,buflen=%ld\n", *buflen);
+        dprintf("dcfa_poll.c,before PktHandler_EagerSend,buflen=%ld\n", *buflen);
     MPIDI_msg_sz_t ch3_buflen = *buflen - sizeof(MPID_nem_dcfa_pkt_prefix_t);
     mpi_errno = MPIDI_CH3_PktHandler_EagerSend(vc, (MPIDI_CH3_Pkt_t *) ch3_pkt, &ch3_buflen, rreqp);
-    printf("dcfa_poll.c,after PktHandler_EagerSend,buflen=%ld\n", ch3_buflen);
+    dprintf("dcfa_poll.c,after PktHandler_EagerSend,buflen=%ld\n", ch3_buflen);
     *buflen = ch3_buflen + sizeof(MPID_nem_dcfa_pkt_prefix_t);
-    printf("dcfa_poll.c,after addition,buflen=%ld\n", *buflen);
+    dprintf("dcfa_poll.c,after addition,buflen=%ld\n", *buflen);
 #endif
     if (mpi_errno) {
         MPIU_ERR_POP(mpi_errno);

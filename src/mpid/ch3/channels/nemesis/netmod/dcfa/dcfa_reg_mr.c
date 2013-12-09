@@ -199,9 +199,9 @@ struct ibv_mr *ibcom_reg_mr_fetch(void *addr, int len)
         //dprintf("e=%p, e->hash_next=%p\n", e, e->lru_next);
 
         if (e->addr <= addr_aligned && (uint8_t *) addr_aligned + len_aligned <= (uint8_t *) e->addr + e->len) {
-            dprintf
-                ("ibcom_reg_mr_fetch,hit,entry addr=%p,len=%d,mr addr=%p,len=%ld,requested addr=%p,len=%d\n",
-                 e->addr, e->len, e->mr->addr, e->mr->length, addr, len);
+            //dprintf
+            //("ibcom_reg_mr_fetch,hit,entry addr=%p,len=%d,mr addr=%p,len=%ld,requested addr=%p,len=%d\n",
+            //e->addr, e->len, e->mr->addr, e->mr->length, addr, len);
             goto hit;
         }
     }
@@ -214,8 +214,8 @@ struct ibv_mr *ibcom_reg_mr_fetch(void *addr, int len)
             (struct ibcom_reg_mr_cache_entry_t *) e->lru_prev;
         ibcom_reg_mr_unlink((struct ibcom_reg_mr_listnode_t *) victim);
 
-        dprintf("ibcom_reg_mr,evict,entry addr=%p,len=%d,mr addr=%p,len=%ld\n", e->addr, e->len,
-                e->mr->addr, e->mr->length);
+        //dprintf("ibcom_reg_mr,evict,entry addr=%p,len=%d,mr addr=%p,len=%ld\n", e->addr, e->len,
+        //e->mr->addr, e->mr->length);
         ibcom_errno = ibcom_dereg_mr(victim->mr);
         if (ibcom_errno) {
             printf("mrcache,ibcom_dereg_mr\n");
@@ -238,8 +238,8 @@ struct ibv_mr *ibcom_reg_mr_fetch(void *addr, int len)
     e->addr = addr_aligned;
     e->len = len_aligned;
 
-    dprintf("ibcom_reg_mr_fetch,fill,e=%p,key=%d,mr=%p,mr addr=%p,len=%ld,lkey=%08x,rkey=%08x\n", e,
-            key, e->mr, e->mr->addr, e->mr->length, e->mr->lkey, e->mr->rkey);
+    //dprintf("ibcom_reg_mr_fetch,fill,e=%p,key=%d,mr=%p,mr addr=%p,len=%ld,lkey=%08x,rkey=%08x\n", e,
+    //key, e->mr, e->mr->addr, e->mr->length, e->mr->lkey, e->mr->rkey);
 
     /* register to cache */
     ibcom_reg_mr_insert(&ibcom_reg_mr_cache[key], (struct ibcom_reg_mr_listnode_t *) e);
@@ -259,8 +259,8 @@ struct ibv_mr *ibcom_reg_mr_fetch(void *addr, int len)
         ibcom_reg_mr_insert(&ibcom_reg_mr_cache[key], (struct ibcom_reg_mr_listnode_t *) e);
     }
 #endif
-    dprintf("[MrCache] reuse e=%p,key=%d,mr=%p,refc=%d,addr=%p,len=%ld,lkey=%08x,rkey=%08x\n", e,
-            key, e->mr, e->refc, e->mr->addr, e->mr->length, e->mr->lkey, e->mr->rkey);
+    //dprintf("[MrCache] reuse e=%p,key=%d,mr=%p,refc=%d,addr=%p,len=%ld,lkey=%08x,rkey=%08x\n", e,
+    //key, e->mr, e->refc, e->mr->addr, e->mr->length, e->mr->lkey, e->mr->rkey);
 
     //__lru_queue_display();
 
@@ -280,8 +280,8 @@ static void ibcom_reg_mr_dereg(struct ibv_mr *mr)
     e = (struct ibcom_reg_mr_cache_entry_t *) ((unsigned long) mr - offset);
     e->refc--;
 
-    dprintf("ibcom_reg_mr_dereg,entry=%p,mr=%p,addr=%p,refc=%d,offset=%lx\n", e, mr, e->mr->addr,
-            e->refc, offset);
+    //dprintf("ibcom_reg_mr_dereg,entry=%p,mr=%p,addr=%p,refc=%d,offset=%lx\n", e, mr, e->mr->addr,
+    //e->refc, offset);
 }
 
 void ibcom_RegisterCacheInit()
