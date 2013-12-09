@@ -86,7 +86,7 @@ else
         ccc*)
           wl='-Wl,'
           ;;
-        xl* | bgxl* | bgf* | mpixl*)
+        xl* | bgxl* | bgf* | mpixl* | *bgq-linux-xl* )
           wl='-Wl,'
           ;;
         como)
