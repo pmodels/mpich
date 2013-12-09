@@ -222,7 +222,7 @@ extern struct ibv_cq *rc_shared_scq_scratch_pad;
 #define IBCOM_RDMABUF_OCCUPANCY_NOTIFY_STATE_LW 2
 #define IBCOM_RDMABUF_OCCUPANCY_NOTIFY_RATE_HW /*1*/(((IBCOM_RDMABUF_NSEG)>>4) == 0 ? 1 : ((IBCOM_RDMABUF_NSEG)>>4))
 #define IBCOM_RDMABUF_OCCUPANCY_NOTIFY_RATE_LW (((IBCOM_RDMABUF_NSEG)>>2)) /*12*/       /* receiver tries to notify sender the number of releases when receiver find not-noticed releases of more than this number */
-#define IBCOM_RDMABUF_OCCUPANCY_NOTIFY_RATE_DELAY_MULTIPLIER(notify_rate) /*(notify_rate + (notify_rate>>1))*/(notify_rate)     /* send seq_num to the sender side if there is no chance to embed seq_num into a packet bound for the sender side for this number of release events */
+#define IBCOM_RDMABUF_OCCUPANCY_NOTIFY_RATE_DELAY_MULTIPLIER(notify_rate) (notify_rate + (notify_rate>>1)) /* (notify_rate) */    /* send seq_num to the sender side if there is no chance to embed seq_num into a packet bound for the sender side for this number of release events */
 
 #define IBCOM_NBUF_UD 2 /* number of <addr, sz, lkey, rkey> */
 #define IBCOM_UDWR_FROM 0       /* index to UD-write-from buffer */
