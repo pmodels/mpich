@@ -1557,6 +1557,7 @@ if test $WITHIN_KNOWN_MPI_IMPL = no ; then
    PAC_TEST_MPI_GREQUEST
    PAC_TEST_MPIU_FUNCS
    AC_DEFINE(PRINT_ERR_MSG,1,[Define for printing error messages])
+   AC_CHECK_TYPE(MPI_Count,[],[AC_DEFINE_UNQUOTED([MPI_Count],[MPI_Aint],[Define to "MPI_Aint" if MPI does not provide MPI_Count]) ])
 fi
 #
 if test -z "$TEST_CC" ; then
