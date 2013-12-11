@@ -16,10 +16,15 @@
 #include <stdlib.h>
 #include "ad_bg.h"
 #include "ad_bg_pset.h"
+#include <spi/include/kernel/process.h>
 #include <firmware/include/personality.h>
 
 #ifdef HAVE_MPIX_H
 #include <mpix.h>
+#endif
+
+#ifndef TRACE_ERR
+#  define TRACE_ERR(fmt...)
 #endif
 
 ADIOI_BG_ProcInfo_t *
@@ -258,7 +263,7 @@ ADIOI_BG_persInfo_init(ADIOI_BG_ConfInfo_t *conf,
       if(conf->nAggrs <=0) 
          conf->nAggrs = bgmpio_bg_nagg_pset;
       if(conf->ioMinSize <= conf->nAggrs) 
-        conf->nAggrs = MAX(1,conf->ioMinSize-1); /* not including bridge itself */
+        conf->nAggrs = ADIOI_MAX(1,conf->ioMinSize-1); /* not including bridge itself */
 /*      if(conf->nAggrs > conf->numBridgeRanks) 
          conf->nAggrs = conf->numBridgeRanks; 
 */

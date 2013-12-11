@@ -28,6 +28,10 @@
   #define AGG_DEBUG 1
 #endif
 
+#ifndef TRACE_ERR
+#  define TRACE_ERR(format...)
+#endif
+
 /* Comments copied from common:
  * This file contains four functions:
  *
