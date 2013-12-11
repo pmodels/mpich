@@ -86,7 +86,12 @@ libpromio_la_CPPFLAGS = $(AM_CPPFLAGS) -DMPIO_BUILD_PROFILING
 endif BUILD_PROFILING_LIB
 
 else !BUILD_ROMIO_EMBEDDED
-## TODO build a libromio.la (non-convenience) and possibly a libglue.la or something?
+lib_LTLIBRARIES = libromio.la
+libromio_la_SOURCES = $(romio_mpi_sources) $(romio_other_sources) $(glue_sources)
+if BUILD_PROFILING_LIB
+libpromio_la_SOURCES = $(romio_mpi_sources)
+libpromio_la_CPPFLAGS = $(AM_CPPFLAGS) -DMPIO_BUILD_PROFILING
+endif BUILD_PROFILING_LIB
 
 endif
 
