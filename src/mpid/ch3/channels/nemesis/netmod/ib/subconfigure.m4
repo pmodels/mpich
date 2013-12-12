@@ -4,18 +4,18 @@ dnl MPICH_SUBCFG_AFTER=src/mpid/ch3/channels/nemesis
 AC_DEFUN([PAC_SUBCFG_PREREQ_]PAC_SUBCFG_AUTO_SUFFIX,[
     AM_COND_IF([BUILD_CH3_NEMESIS],[
         for net in $nemesis_networks ; do
-            AS_CASE([$net],[dcfa],[build_nemesis_netmod_dcfa=yes])
+            AS_CASE([$net],[ib],[build_nemesis_netmod_ib=yes])
         done
     ])
-    AM_CONDITIONAL([BUILD_NEMESIS_NETMOD_DCFA],[test "X$build_nemesis_netmod_dcfa" = "Xyes"])
+    AM_CONDITIONAL([BUILD_NEMESIS_NETMOD_IB],[test "X$build_nemesis_netmod_ib" = "Xyes"])
 
     # check if getpagesize is available
     AC_CHECK_FUNCS(getpagesize)
 ])dnl
 
 AC_DEFUN([PAC_SUBCFG_BODY_]PAC_SUBCFG_AUTO_SUFFIX,[
-AM_COND_IF([BUILD_NEMESIS_NETMOD_DCFA],[
-    AC_MSG_NOTICE([RUNNING CONFIGURE FOR ch3:nemesis:dcfa])
+AM_COND_IF([BUILD_NEMESIS_NETMOD_IB],[
+    AC_MSG_NOTICE([RUNNING CONFIGURE FOR ch3:nemesis:ib])
 
     PAC_CHECK_HEADER_LIB(dcfa.h,dcfa,ibv_open_device,dcfa_found=yes,dcfa_found=no)
     if test "${dcfa_found}" = "yes" ; then
@@ -29,11 +29,11 @@ AM_COND_IF([BUILD_NEMESIS_NETMOD_DCFA],[
         fi
     fi
 
-    AC_DEFINE([MPID_NEM_DCFA_VERSION], ["0.9.0"], [Version of netmod/DCFA])
-    AC_DEFINE([MPID_NEM_DCFA_RELEASE_DATE], ["2013-11-18"], [Release date of netmod/DCFA])
-    AC_DEFINE([ENABLE_COMM_OVERRIDES], 1, [define to add per-vc function pointers to override send and recv functions, registered in dcfa_init.c])
+    AC_DEFINE([MPID_NEM_IB_VERSION], ["0.9.0"], [Version of the IB netmod])
+    AC_DEFINE([MPID_NEM_IB_RELEASE_DATE], ["2013-11-18"], [Release date of the IB netmod])
+    AC_DEFINE([ENABLE_COMM_OVERRIDES], 1, [define to add per-vc function pointers to override send and recv functions, registered in ib_init.c])
 #    AC_DEFINE([ENABLE_RNDV_WAIT_TIMER], 1, [make MPI_Wtime returns wait time. Wait time is elapsed time from MPIDI_CH3_Progress_start to MPIDI_CH3_Progress_end])
-])dnl end AM_COND_IF(BUILD_NEMESIS_NETMOD_DCFA,...)
+])dnl end AM_COND_IF(BUILD_NEMESIS_NETMOD_IB,...)
 ])dnl end _BODY
 
 [#] end of __file__

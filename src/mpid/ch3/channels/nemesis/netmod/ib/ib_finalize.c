@@ -5,40 +5,40 @@
  *      See COPYRIGHT in top-level directory.
  */
 
-#include "dcfa_impl.h"
+#include "ib_impl.h"
 
-//#define DEBUG_DCFA_FINALIZE
+//#define MPID_NEM_IB_DEBUG_FINALIZE
 #ifdef dprintf  /* avoid redefinition with src/mpid/ch3/include/mpidimpl.h */
 #undef dprintf
 #endif
-#ifdef DEBUG_DCFA_FINALIZE
+#ifdef MPID_NEM_IB_DEBUG_FINALIZE
 #define dprintf printf
 #else
 #define dprintf(...)
 #endif
 
 #undef FUNCNAME
-#define FUNCNAME MPID_nem_dcfa_finalize
+#define FUNCNAME MPID_nem_ib_finalize
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-int MPID_nem_dcfa_finalize(void)
+int MPID_nem_ib_finalize(void)
 {
     int mpi_errno = MPI_SUCCESS;
     int ibcom_errno;
     int i;
 
-    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_DCFA_FINALIZE);
-    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_DCFA_FINALIZE);
+    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_IB_FINALIZE);
+    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_IB_FINALIZE);
 
 #if 0
-    for (i = 0; i < MPID_nem_dcfa_nranks; i++) {
-        ibcom_errno = ibcom_close(MPID_nem_dcfa_conns[i].fd);
-        MPIU_ERR_CHKANDJUMP(ibcom_errno, mpi_errno, MPI_ERR_OTHER, "**ibcom_close");
+    for (i = 0; i < MPID_nem_ib_nranks; i++) {
+        ibcom_errno = MPID_nem_ib_com_close(MPID_nem_ib_conns[i].fd);
+        MPIU_ERR_CHKANDJUMP(ibcom_errno, mpi_errno, MPI_ERR_OTHER, "**MPID_nem_ib_com_close");
 
     }
 #endif
 
-    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_DCFA_FINALIZE);
+    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_IB_FINALIZE);
 
   fn_exit:
     return mpi_errno;
