@@ -17,6 +17,7 @@ lib_lib@MPILIBNAME@_la_SOURCES +=				\
     src/mpid/ch3/channels/nemesis/netmod/ib/ib_ibcom.c 
 
 noinst_HEADERS +=						\
-    src/mpid/ch3/channels/nemesis/netmod/ib/ib_impl.h
+    src/mpid/ch3/channels/nemesis/netmod/ib/ib_impl.h           \
+    src/mpid/ch3/channels/nemesis/netmod/ib/ib_ibcom.h
 
 endif BUILD_NEMESIS_NETMOD_IB
