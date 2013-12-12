@@ -95,7 +95,7 @@ int MPID_nem_dcfa_lmt_initiate_lmt(struct MPIDI_VC *vc, union MPIDI_CH3_Pkt *rts
     /* preserve and put tail, because tail magic is written on the tail of payload
      * because we don't want to add another SGE or RDMA command */
     MPIU_Assert(((MPID_nem_pkt_lmt_rts_t *) rts_pkt)->data_sz == data_sz);
-    s_cookie_buf->tail = *((uint8_t *) (write_from_buf + data_sz - sizeof(uint8_t)));
+    s_cookie_buf->tail = *((uint8_t *) ((uint8_t *) write_from_buf + data_sz - sizeof(uint8_t)));
     /* prepare magic */
     //*((uint32_t*)(write_from_buf + data_sz - sizeof(tailmagic_t))) = IBCOM_MAGIC;
 
@@ -360,7 +360,7 @@ int MPID_nem_dcfa_lmt_switch_send(struct MPIDI_VC *vc, struct MPID_Request *req)
     }
 
     //assert(dt_true_lb == 0);
-    uint8_t *tailp = (uint8_t *) (write_from_buf /*+ dt_true_lb */  + data_sz - sizeof(uint8_t));
+    uint8_t *tailp = (uint8_t *) ((uint8_t *) write_from_buf /*+ dt_true_lb */  + data_sz - sizeof(uint8_t));
 #if 0
     *is_end_flag_same = (r_cookie_buf->tail == *tailp) ? 1 : 0;
 #else
@@ -368,7 +368,7 @@ int MPID_nem_dcfa_lmt_switch_send(struct MPIDI_VC *vc, struct MPID_Request *req)
     REQ_FIELD(req, lmt_sender_tail) = *tailp;
     dprintf("lmt_switch_send,tail on sender=%02x,tail onreceiver=%02x,req=%p\n", *tailp,
             r_cookie_buf->tail, req);
-    uint8_t *tail_wordp = (uint8_t *) (write_from_buf + data_sz - sizeof(uint32_t) * 2);
+    uint8_t *tail_wordp = (uint8_t *) ((uint8_t *) write_from_buf + data_sz - sizeof(uint32_t) * 2);
     dprintf("lmt_switch_send,tail on sender=%d\n", *tail_wordp);
     fflush(stdout);
 #endif
@@ -398,7 +398,7 @@ int MPID_nem_dcfa_lmt_handle_cookie(struct MPIDI_VC *vc, struct MPID_Request *re
   fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_DCFA_LMT_HANDLE_COOKIE);
     return mpi_errno;
-  fn_fail:
+    //fn_fail:
     goto fn_exit;
 }
 
@@ -526,7 +526,7 @@ int MPID_nem_dcfa_lmt_done_recv(struct MPIDI_VC *vc, struct MPID_Request *rreq)
   fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_DCFA_LMT_DONE_RECV);
     return mpi_errno;
-  fn_fail:
+    //fn_fail:
     goto fn_exit;
 }
 
@@ -547,6 +547,6 @@ int MPID_nem_dcfa_lmt_vc_terminated(struct MPIDI_VC *vc)
   fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_DCFA_LMT_VC_TERMINATED);
     return mpi_errno;
-  fn_fail:
+    //fn_fail:
     goto fn_exit;
 }

@@ -112,7 +112,7 @@ uint64_t MPID_nem_dcfa_rdtsc()
 #define FUNCNAME MPID_nem_dcfa_kvs_put_binary
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-int MPID_nem_dcfa_kvs_put_binary(int from, const char *postfix, const uint8_t * buf, int length)
+static int MPID_nem_dcfa_kvs_put_binary(int from, const char *postfix, const uint8_t * buf, int length)
 {
     int mpi_errno = MPI_SUCCESS;
     int pmi_errno;
@@ -148,7 +148,7 @@ int MPID_nem_dcfa_kvs_put_binary(int from, const char *postfix, const uint8_t * 
 #define FUNCNAME MPID_nem_dcfa_kvs_get_binary
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-int MPID_nem_dcfa_kvs_get_binary(int from, const char *postfix, char *buf, int length)
+static int MPID_nem_dcfa_kvs_get_binary(int from, const char *postfix, char *buf, int length)
 {
     int mpi_errno = MPI_SUCCESS;
     int pmi_errno;
@@ -185,6 +185,8 @@ int MPID_nem_dcfa_kvs_get_binary(int from, const char *postfix, char *buf, int l
     goto fn_exit;
 }
 
+static int MPID_nem_dcfa_announce_network_addr(int my_rank, char **bc_val_p, int *val_max_sz_p);
+
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_dcfa_init
 #undef FCNAME
@@ -194,7 +196,7 @@ int MPID_nem_dcfa_init(MPIDI_PG_t * pg_p, int pg_rank, char **bc_val_p, int *val
     int mpi_errno = MPI_SUCCESS;
     int ibcom_errno = 0, pmi_errno;
     int ret;
-    int i, j;
+    int i, j, k;
     int ib_port = 1;
 
     MPIU_CHKPMEM_DECL(7);
@@ -380,13 +382,11 @@ int MPID_nem_dcfa_init(MPIDI_PG_t * pg_p, int pg_rank, char **bc_val_p, int *val
             MPIU_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER,
                                 "**MPID_nem_dcfa_kvs_put_binary");
 
-            {
-                dprintf("dcfa_init,scratch pad,gid ");
-                int i;
-                for (i = 0; i < 16; i++) {
-                    dprintf("%02x", (int) my_gid.raw[i]);
-                } dprintf("\n");
+            dprintf("dcfa_init,scratch pad,gid ");
+            for (k = 0; k < 16; k++) {
+                dprintf("%02x", (int) my_gid.raw[k]);
             }
+            dprintf("\n");
         }
 
         /* put bc/me/sp/qpn/you  */
@@ -662,12 +662,12 @@ int MPID_nem_dcfa_get_business_card(int my_rank, char **bc_val_p, int *val_max_s
 #define FUNCNAME MPID_nem_dcfa_announce_network_addr
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-int MPID_nem_dcfa_announce_network_addr(int my_rank, char **bc_val_p, int *val_max_sz_p)
+static int MPID_nem_dcfa_announce_network_addr(int my_rank, char **bc_val_p, int *val_max_sz_p)
 {
     int mpi_errno = MPI_SUCCESS;
     int str_errno = MPIU_STR_SUCCESS;
     int ibcom_errno;
-    int i, nranks;
+    int i, j, nranks;
 
     uint32_t my_qpnum;
     uint16_t my_lid;
@@ -714,15 +714,14 @@ int MPID_nem_dcfa_announce_network_addr(int my_rank, char **bc_val_p, int *val_m
             ibcom_errno =
                 ibcom_get_info_conn(MPID_nem_dcfa_conns[i].fd, IBCOM_INFOKEY_PORT_GID, &my_gid,
                                     sizeof(union ibv_gid));
-            {
-                dprintf("get_business_card,val_max_sz=%d\n", *val_max_sz_p);
-                dprintf("get_business_card,sz=%ld,my_gid=", sizeof(union ibv_gid));
-                int i;
-                for (i = 0; i < 16; i++) {
-                    dprintf("%02x", (int) my_gid.raw[i]);
-                }
-                dprintf("\n");
+
+            dprintf("get_business_card,val_max_sz=%d\n", *val_max_sz_p);
+            dprintf("get_business_card,sz=%ld,my_gid=", sizeof(union ibv_gid));
+            for (j = 0; j < 16; j++) {
+                dprintf("%02x", (int) my_gid.raw[j]);
             }
+            dprintf("\n");
+
             MPIU_ERR_CHKANDJUMP(ibcom_errno, mpi_errno, MPI_ERR_OTHER, "**ibcom_get_info_conn");
 
             mpi_errno =
@@ -820,7 +819,7 @@ int MPID_nem_dcfa_connect_to_root(const char *business_card, MPIDI_VC_t * new_vc
     dprintf("toroot,%d->%d", MPID_nem_dcfa_myrank, new_vc->pg_rank);
     /* not implemented */
 
-  fn_exit:
+    //fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_DCFA_CONNECT_TO_ROOT);
     return MPI_SUCCESS;
 }
@@ -884,7 +883,7 @@ int MPID_nem_dcfa_vc_init(MPIDI_VC_t * vc)
 
     int ntrial = 0;
     volatile ibcom_qp_state_t *rstate =
-        (ibcom_qp_state_t *) (ibcom_scratch_pad->icom_mem[IBCOM_SCRATCH_PAD_TO] +
+        (ibcom_qp_state_t *) ((uint8_t *) ibcom_scratch_pad->icom_mem[IBCOM_SCRATCH_PAD_TO] +
                               vc->pg_rank * sizeof(ibcom_qp_state_t));
     dprintf("dcfa_init,rstate=%p,*rstate=%08x\n", rstate, *((uint32_t *) rstate));
     while (rstate->state != IBCOM_QP_STATE_RTR) {

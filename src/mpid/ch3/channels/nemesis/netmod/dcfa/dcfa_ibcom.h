@@ -12,7 +12,6 @@
 #include <unistd.h>
 #include <stdint.h>
 #include <sys/types.h>
-#include <sys/mman.h>
 #include "mpid_nem_impl.h"
 
 //#define DEBUG_ON      1
@@ -322,6 +321,9 @@ extern int ibcom_rts(int condesc, int remote_qpnum, uint16_t remote_lid, union i
 extern int ibcom_reg_mr_connect(int condesc, void *rmem, int rkey);
 extern int ibcom_isend(int condesc, uint64_t wr_id, void *prefix, int sz_prefix, void *hdr,
                        int sz_hdr, void *data, int sz_data, int *copied);
+extern int ibcom_isend_chain(int condesc, uint64_t wr_id, void *hdr, int sz_hdr, void *data,
+                             int sz_data);
+extern int ibcom_put_scratch_pad(int condesc, uint64_t wr_id, uint64_t offset, int sz, void *laddr);
 //extern int ibcom_isend(int condesc, uint64_t wr_id, void* hdr, int sz_hdr, void* data, int sz_data);
 extern int ibcom_irecv(int condesc, uint64_t wr_id);
 extern int ibcom_udsend(int condesc, union ibv_gid *remote_gid, uint16_t remote_lid,
@@ -329,14 +331,20 @@ extern int ibcom_udsend(int condesc, union ibv_gid *remote_gid, uint16_t remote_
 extern int ibcom_udrecv(int condesc);
 extern int ibcom_lrecv(int condesc, uint64_t wr_id, void *raddr, int sz_data, uint32_t rkey,
                        void *laddr);
+extern int ibcom_put_lmt(int condesc, uint64_t wr_id, void *raddr, int sz_data, uint32_t rkey,
+                         void *laddr);
 extern int ibcom_poll_cq(int which_cq, struct ibv_wc *wc, int *result);
+
+extern int ibcom_obtain_pointer(int condesc, IbCom ** ibcom);
 
 /* for dcfa_reg_mr.c */
 extern int ibcom_reg_mr(void *addr, int len, struct ibv_mr **mr);
+extern int ibcom_dereg_mr(struct ibv_mr *mr);
 
 extern int ibcom_get_info_conn(int condesc, int key, void *out, uint32_t out_len);
 extern int ibcom_get_info_mr(int condesc, int memid, int key, void *out, int out_len);
 
+extern int ibcom_sseq_num_get(int condesc, int *seq_num);
 extern int ibcom_lsr_seq_num_tail_get(int condesc, int **seq_num);
 extern int ibcom_rsr_seq_num_tail_get(int condesc, int **seq_num);
 extern int ibcom_rsr_seq_num_tail_last_sent_get(int condesc, int **seq_num);
@@ -345,7 +353,7 @@ extern int ibcom_rdmabuf_occupancy_notify_rstate_get(int condesc, int **rstate);
 extern int ibcom_rdmabuf_occupancy_notify_lstate_get(int condesc, int **lstate);
 
 extern int ibcomMemInfo(int, int, void **, size_t *, int *);
-extern char *ibcom_strerror(int);
+extern char *ibcom_strerror(int errno);
 extern int dflag;
 
 extern int ibcom_mem_rdmawr_from(int condesc, void **out);
@@ -354,7 +362,8 @@ extern int ibcom_mem_udwr_from(int condesc, void **out);
 extern int ibcom_mem_udwr_to(int condesc, void **out);
 
 /* dcfa_reg_mr.c */
-extern void ibcom_RegisterCacheInit();
+extern void ibcom_RegisterCacheInit(void);
+extern void ibcom_RegisterCacheDestroy(void);
 extern struct ibv_mr *ibcom_reg_mr_fetch(void *addr, int len);
 
 /* dcfa_ctlmsg.c */

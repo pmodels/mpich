@@ -23,12 +23,11 @@ static int entered_drain_scq = 0;
 #define MPID_NEM_DCFA_SEND_PROGRESS_POLLINGSET MPID_nem_dcfa_send_progress(vc_dcfa);
 #else
 #define MPID_NEM_DCFA_SEND_PROGRESS_POLLINGSET {     \
-   int i; \
-   for(i = 0; i < MPID_nem_dcfa_npollingset; i++) { \
-       MPIDI_VC_t *vc = MPID_nem_dcfa_pollingset[i]; \
-       MPID_nem_dcfa_vc_area *_vc_dcfa = VC_DCFA(vc); \
+   int n; \
+   for(n = 0; n < MPID_nem_dcfa_npollingset; n++) { \
+       MPIDI_VC_t *vc_n = MPID_nem_dcfa_pollingset[n]; \
        /*MPID_nem_dcfa_debug_current_vc_dcfa = vc_dcfa;*/   \
-       MPID_nem_dcfa_send_progress(_vc_dcfa); \
+       MPID_nem_dcfa_send_progress(VC_DCFA(vc_n)); \
    } \
 }
 #endif
@@ -195,15 +194,15 @@ int MPID_nem_dcfa_drain_scq(int dont_call_progress)
                         IBCOM_RDMABUF_NSEG);
 
                 MPID_Request *sreq = MPID_nem_dcfa_sendq_head(vc_dcfa->sendq);
-                int msg_type = MPIDI_Request_get_msg_type(sreq);
+                int msg_type_sreq = MPIDI_Request_get_msg_type(sreq);
 
-                if (sreq->kind == MPID_REQUEST_SEND && msg_type == MPIDI_REQUEST_EAGER_MSG) {
+                if (sreq->kind == MPID_REQUEST_SEND && msg_type_sreq == MPIDI_REQUEST_EAGER_MSG) {
                     dprintf("drain_scq,eager-send,head is eager-send\n");
                 }
-                else if (sreq->kind == MPID_REQUEST_RECV && msg_type == MPIDI_REQUEST_RNDV_MSG) {
+                else if (sreq->kind == MPID_REQUEST_RECV && msg_type_sreq == MPIDI_REQUEST_RNDV_MSG) {
                     dprintf("drain_scq,eager-send,head is lmt RDMA-read\n");
                 }
-                else if (sreq->kind == MPID_REQUEST_SEND && msg_type == MPIDI_REQUEST_RNDV_MSG) {
+                else if (sreq->kind == MPID_REQUEST_SEND && msg_type_sreq == MPIDI_REQUEST_RNDV_MSG) {
                     dprintf("drain_scq,eager-send,head is lmt RDMA-write\n");
                 }
             }
@@ -360,12 +359,12 @@ int MPID_nem_dcfa_drain_scq(int dont_call_progress)
                                              vc_dcfa->ibcom->lsr_seq_num_tail) <
                         IBCOM_RDMABUF_NSEG);
                 MPID_Request *sreq = MPID_nem_dcfa_sendq_head(vc_dcfa->sendq);
-                int msg_type = MPIDI_Request_get_msg_type(sreq);
+                int msg_type_sreq = MPIDI_Request_get_msg_type(sreq);
 
-                if (sreq->kind == MPID_REQUEST_SEND && msg_type == MPIDI_REQUEST_EAGER_MSG) {
+                if (sreq->kind == MPID_REQUEST_SEND && msg_type_sreq == MPIDI_REQUEST_EAGER_MSG) {
                     dprintf("drain_scq,eager-send,head is eager-send\n");
                 }
-                else if (sreq->kind == MPID_REQUEST_RECV && msg_type == MPIDI_REQUEST_RNDV_MSG) {
+                else if (sreq->kind == MPID_REQUEST_RECV && msg_type_sreq == MPIDI_REQUEST_RNDV_MSG) {
                     dprintf("drain_scq,eager-send,head is lmt\n");
                 }
             }
@@ -580,7 +579,7 @@ int MPID_nem_dcfa_poll_eager(MPIDI_VC_t * vc)
     MPID_nem_dcfa_vc_area *vc_dcfa = VC_DCFA(vc);
     //dprintf("dcfa_poll,ld,rsr_seq_num_poll=%d\n", vc_dcfa->ibcom->rsr_seq_num_poll);
     volatile void *buf =
-        vc_dcfa->ibcom->icom_mem[IBCOM_RDMAWR_TO] +
+        (uint8_t *) vc_dcfa->ibcom->icom_mem[IBCOM_RDMAWR_TO] +
         IBCOM_RDMABUF_SZSEG * ((uint32_t) vc_dcfa->ibcom->rsr_seq_num_poll % IBCOM_RDMABUF_NSEG);
     volatile sz_hdrmagic_t *sz_hdrmagic = (sz_hdrmagic_t *) buf;
     if (sz_hdrmagic->magic != IBCOM_MAGIC) {
@@ -600,7 +599,7 @@ int MPID_nem_dcfa_poll_eager(MPIDI_VC_t * vc)
 
     int sz_data_pow2;
     DCFA_NEM_SZ_DATA_POW2(sz_hdrmagic->sz);
-    volatile tailmagic_t *tailmagic = (tailmagic_t *) (buf + sz_data_pow2);
+    volatile tailmagic_t *tailmagic = (tailmagic_t *) ((uint8_t *) buf + sz_data_pow2);
     dprintf("poll,sz_data_pow2=%d,tailmagic=%p,sz=%d\n", sz_data_pow2, tailmagic, sz_hdrmagic->sz);
     int k = 0;
     //tsce = MPID_nem_dcfa_rdtsc(); printf("9,%ld\n", tsce - tscs); // 55 for 512-byte
@@ -639,7 +638,7 @@ int MPID_nem_dcfa_poll_eager(MPIDI_VC_t * vc)
 
 #if 1
     void *rsi;
-    for (rsi = (void *) buf; rsi < buf + sz_hdrmagic->sz; rsi += 64 * 4) {
+    for (rsi = (void *) buf; rsi < (uint8_t *) buf + sz_hdrmagic->sz; rsi = (uint8_t *) rsi + 64 * 4) {
 #ifdef __MIC__
         __asm__ __volatile__
             ("movq %0, %%rsi;"
@@ -657,11 +656,11 @@ int MPID_nem_dcfa_poll_eager(MPIDI_VC_t * vc)
     }
 #endif
 
-    MPIDI_CH3_Pkt_eager_send_t *pkt = (MPIDI_CH3_Pkt_eager_send_t *) (buf + sizeof(sz_hdrmagic_t));
+    MPIDI_CH3_Pkt_eager_send_t *pkt = (MPIDI_CH3_Pkt_eager_send_t *) ((uint8_t *) buf + sizeof(sz_hdrmagic_t));
     MPIU_Assert(sz_hdrmagic->sz >=
                 sizeof(sz_hdrmagic_t) + sizeof(MPIDI_CH3_Pkt_t) + sizeof(tailmagic_t));
     MPIDI_CH3_Pkt_eager_send_t *pkt2 =
-        (MPIDI_CH3_Pkt_eager_send_t *) (buf + sizeof(sz_hdrmagic_t) +
+        (MPIDI_CH3_Pkt_eager_send_t *) ((uint8_t *) buf + sizeof(sz_hdrmagic_t) +
                                         sizeof(MPID_nem_dcfa_pkt_prefix_t));
     dprintf
         ("handle_pkt,before,%d<-%d,id=%d,pkt->type=%d,pcc=%d,MPIDI_NEM_PKT_END=%d,pkt=%p,subtype=%d\n",
@@ -670,7 +669,7 @@ int MPID_nem_dcfa_poll_eager(MPIDI_VC_t * vc)
          ((MPID_nem_pkt_netmod_t *) pkt)->subtype);
     /* see MPIDI_CH3_PktHandler_EagerSend (in src/mpid/ch3/src/ch3u_eager.c) */
     mpi_errno =
-        MPID_nem_handle_pkt(vc, (char *) (buf + sizeof(sz_hdrmagic_t)),
+        MPID_nem_handle_pkt(vc, (char *) ((uint8_t *) buf + sizeof(sz_hdrmagic_t)),
                             (MPIDI_msg_sz_t) (sz_hdrmagic->sz - sizeof(sz_hdrmagic_t) -
                                               sizeof(tailmagic_t)));
     if (mpi_errno) {
@@ -716,8 +715,8 @@ int MPID_nem_dcfa_poll_eager(MPIDI_VC_t * vc)
         dprintf("poll_eager,released,type=%d,MPIDI_NEM_DCFA_REPLY_SEQ_NUM=%d\n", pkt->type,
                 MPIDI_NEM_DCFA_REPLY_SEQ_NUM);
         MPID_nem_dcfa_recv_buf_released(vc,
-                                        (void *) buf + sizeof(sz_hdrmagic_t) +
-                                        sizeof(MPIDI_CH3_Pkt_t));
+                                        (void *) ((uint8_t *) buf + sizeof(sz_hdrmagic_t) +
+                                                  sizeof(MPIDI_CH3_Pkt_t)));
     }
     else {
         if (sz_hdrmagic->sz ==
@@ -738,7 +737,6 @@ int MPID_nem_dcfa_poll_eager(MPIDI_VC_t * vc)
     vc_dcfa->ibcom->rsr_seq_num_poll += 1;
     dprintf("dcfa_poll,inc,rsr_seq_num_poll=%d\n", vc_dcfa->ibcom->rsr_seq_num_poll);
 
-  out:
   fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_DCFA_POLL_EAGER);
     return mpi_errno;
@@ -803,7 +801,7 @@ int MPID_nem_dcfa_poll(int in_blocking_poll)
 
             //assert(REQ_FIELD(rreq, lmt_dt_true_lb) == 0);
             volatile uint8_t *tailmagic =
-                (uint8_t *) (write_to_buf /*+ REQ_FIELD(rreq, lmt_dt_true_lb) */  +
+                (uint8_t *) ((uint8_t *) write_to_buf /*+ REQ_FIELD(rreq, lmt_dt_true_lb) */  +
                              rreq->ch.lmt_data_sz - sizeof(uint8_t));
 
             uint8_t lmt_tail = REQ_FIELD(rreq, lmt_tail);
@@ -1002,7 +1000,6 @@ int MPID_nem_dcfa_poll(int in_blocking_poll)
 #endif
     //if (in_blocking_poll) { goto prev; }
 
-  out:
   fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_DCFA_POLL);
     return mpi_errno;
@@ -1117,10 +1114,10 @@ int MPID_nem_dcfa_recv_buf_released(struct MPIDI_VC *vc, void *user_data)
     MPIU_Assert(vc_dcfa->ibcom->icom_mem[IBCOM_RDMAWR_TO] <= user_data &&
                 user_data < vc_dcfa->ibcom->icom_mem[IBCOM_RDMAWR_TO] + IBCOM_RDMABUF_SZ);
     unsigned long mod =
-        (unsigned long) (user_data -
-                         vc_dcfa->ibcom->icom_mem[IBCOM_RDMAWR_TO]) & (IBCOM_RDMABUF_SZSEG - 1);
+        (unsigned long) ((uint8_t *) user_data -
+                         (uint8_t *) vc_dcfa->ibcom->icom_mem[IBCOM_RDMAWR_TO]) & (IBCOM_RDMABUF_SZSEG - 1);
 
-    void *buf = (void *) (user_data - mod);
+    void *buf = (void *) ((uint8_t *) user_data - mod);
     //dprintf("recv_buf_released,clearing,buf=%p\n", buf);
     sz_hdrmagic_t *sz_hdrmagic = (sz_hdrmagic_t *) buf;
 
@@ -1134,7 +1131,7 @@ int MPID_nem_dcfa_recv_buf_released(struct MPIDI_VC *vc, void *user_data)
          offset ? ((((offset + 1) << 1) - 1) >
                    DCFA_NEM_MAX_DATA_POW2 ? DCFA_NEM_MAX_DATA_POW2 : (((offset + 1) << 1) -
                                                                       1)) : 15) {
-        volatile tailmagic_t *ptr = (tailmagic_t *) (buf + offset);
+        volatile tailmagic_t *ptr = (tailmagic_t *) ((uint8_t *) buf + offset);
         MPIU_Assert(vc_dcfa->ibcom->icom_mem[IBCOM_RDMAWR_TO] <= ptr &&
                     ptr < vc_dcfa->ibcom->icom_mem[IBCOM_RDMAWR_TO] + IBCOM_RDMABUF_SZ);
         ptr->magic = 0 /*0xde */ ;
@@ -1148,8 +1145,8 @@ int MPID_nem_dcfa_recv_buf_released(struct MPIDI_VC *vc, void *user_data)
 #if 1   /* moving from dcfa_poll */
     /* mark that one eager-send RDMA-write-to buffer has been released */
     int index_slot =
-        (unsigned long) (user_data -
-                         vc_dcfa->ibcom->icom_mem[IBCOM_RDMAWR_TO]) / IBCOM_RDMABUF_SZSEG;
+        (unsigned long) ((uint8_t *) user_data -
+                         (uint8_t *) vc_dcfa->ibcom->icom_mem[IBCOM_RDMAWR_TO]) / IBCOM_RDMABUF_SZSEG;
     MPIU_Assert(0 <= index_slot && index_slot < IBCOM_RDMABUF_NSEG);
     //dprintf("user_data=%p,mem=%p,sub=%08lx,index_slot=%d\n", user_data, vc_dcfa->ibcom->icom_mem[IBCOM_RDMAWR_TO], (unsigned long)user_data - (unsigned long)vc_dcfa->ibcom->icom_mem[IBCOM_RDMAWR_TO], index_slot);
     //dprintf("index_slot=%d,released=%016lx\n", index_slot, vc_dcfa->ibcom->rsr_seq_num_released[index_slot / 64]);
@@ -1281,7 +1278,7 @@ int MPID_nem_dcfa_PktHandler_EagerSend(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
 {
     MPID_nem_dcfa_pkt_prefix_t *netmod_pkt = (MPID_nem_dcfa_pkt_prefix_t *) pkt;
     MPIDI_CH3_Pkt_eager_send_t *ch3_pkt =
-        (MPIDI_CH3_Pkt_eager_send_t *) ((void *) pkt + sizeof(MPID_nem_dcfa_pkt_prefix_t));
+        (MPIDI_CH3_Pkt_eager_send_t *) ((uint8_t *) pkt + sizeof(MPID_nem_dcfa_pkt_prefix_t));
     MPID_Request *rreq;
     int found;
     int complete;
@@ -1375,7 +1372,7 @@ int MPID_nem_dcfa_PktHandler_Put(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
 {
     MPID_nem_dcfa_pkt_prefix_t *netmod_pkt = (MPID_nem_dcfa_pkt_prefix_t *) pkt;
     MPIDI_CH3_Pkt_put_t *ch3_pkt =
-        (MPIDI_CH3_Pkt_put_t *) ((void *) pkt + sizeof(MPID_nem_dcfa_pkt_prefix_t));
+        (MPIDI_CH3_Pkt_put_t *) ((uint8_t *) pkt + sizeof(MPID_nem_dcfa_pkt_prefix_t));
     MPID_Request *rreq;
     int found;
     int complete;
@@ -1443,7 +1440,7 @@ int MPID_nem_dcfa_PktHandler_Accumulate(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
 {
     MPID_nem_dcfa_pkt_prefix_t *netmod_pkt = (MPID_nem_dcfa_pkt_prefix_t *) pkt;
     MPIDI_CH3_Pkt_accum_t *ch3_pkt =
-        (MPIDI_CH3_Pkt_accum_t *) ((void *) pkt + sizeof(MPID_nem_dcfa_pkt_prefix_t));
+        (MPIDI_CH3_Pkt_accum_t *) ((uint8_t *) pkt + sizeof(MPID_nem_dcfa_pkt_prefix_t));
     MPID_Request *rreq;
     int found;
     int complete;
@@ -1510,7 +1507,7 @@ int MPID_nem_dcfa_PktHandler_Get(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
 {
     MPID_nem_dcfa_pkt_prefix_t *netmod_pkt = (MPID_nem_dcfa_pkt_prefix_t *) pkt;
     MPIDI_CH3_Pkt_get_t *ch3_pkt =
-        (MPIDI_CH3_Pkt_get_t *) ((void *) pkt + sizeof(MPID_nem_dcfa_pkt_prefix_t));
+        (MPIDI_CH3_Pkt_get_t *) ((uint8_t *) pkt + sizeof(MPID_nem_dcfa_pkt_prefix_t));
     MPID_Request *rreq;
     int found;
     int complete;
@@ -1576,7 +1573,7 @@ int MPID_nem_dcfa_PktHandler_GetResp(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
 {
     MPID_nem_dcfa_pkt_prefix_t *netmod_pkt = (MPID_nem_dcfa_pkt_prefix_t *) pkt;
     MPIDI_CH3_Pkt_get_t *ch3_pkt =
-        (MPIDI_CH3_Pkt_get_t *) ((void *) pkt + sizeof(MPID_nem_dcfa_pkt_prefix_t));
+        (MPIDI_CH3_Pkt_get_t *) ((uint8_t *) pkt + sizeof(MPID_nem_dcfa_pkt_prefix_t));
     MPID_Request *rreq;
     int found;
     int complete;

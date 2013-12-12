@@ -42,6 +42,6 @@ int MPID_nem_dcfa_finalize(void)
 
   fn_exit:
     return mpi_errno;
-  fn_fail:
+    //fn_fail:
     goto fn_exit;
 }

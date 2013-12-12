@@ -636,7 +636,7 @@ int MPID_nem_dcfa_iStartContigMsg(MPIDI_VC_t * vc, void *hdr, MPIDI_msg_sz_t hdr
 #define FUNCNAME MPID_nem_dcfa_SendNoncontig_core
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-int MPID_nem_dcfa_SendNoncontig_core(MPIDI_VC_t * vc, MPID_Request * sreq, void *hdr,
+static int MPID_nem_dcfa_SendNoncontig_core(MPIDI_VC_t * vc, MPID_Request * sreq, void *hdr,
                                      MPIDI_msg_sz_t hdr_sz)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -1046,14 +1046,12 @@ int MPID_nem_dcfa_send_progress(MPID_nem_dcfa_vc_area * vc_dcfa)
             MPID_Request *tmp_sreq = sreq;
             sreq = MPID_nem_dcfa_sendq_next(sreq);
             goto next_unlinked;
-          next:
+            //next:
             prev_sreq = sreq;
             sreq = MPID_nem_dcfa_sendq_next(sreq);
           next_unlinked:;
         } while (sreq);
     }
-
-  out:
 
     //dprintf("send_progress,exit,sendq_empty=%d,ncom=%d,ncqe=%d,rdmabuf_occ=%d\n", MPID_nem_dcfa_sendq_empty(vc_dcfa->sendq), vc_dcfa->ibcom->ncom, MPID_nem_dcfa_ncqe, MPID_nem_dcfa_diff32(vc_dcfa->ibcom->sseq_num, vc_dcfa->ibcom->lsr_seq_num_tail));
 

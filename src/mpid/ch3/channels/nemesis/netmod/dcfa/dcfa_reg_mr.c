@@ -115,7 +115,7 @@ __inline__ int ibcom_hash_func(char *addr)
     return (int) v;
 }
 
-void ibcom_reg_mr_insert(struct ibcom_reg_mr_listnode_t *c, struct ibcom_reg_mr_listnode_t *e)
+static void ibcom_reg_mr_insert(struct ibcom_reg_mr_listnode_t *c, struct ibcom_reg_mr_listnode_t *e)
 {
     struct ibcom_reg_mr_listnode_t *next;
     struct ibcom_reg_mr_listnode_t *prev;
@@ -127,7 +127,7 @@ void ibcom_reg_mr_insert(struct ibcom_reg_mr_listnode_t *c, struct ibcom_reg_mr_
     prev->lru_next = e;
 }
 
-void ibcom_reg_mr_unlink(struct ibcom_reg_mr_listnode_t *e)
+static void ibcom_reg_mr_unlink(struct ibcom_reg_mr_listnode_t *e)
 {
     struct ibcom_reg_mr_listnode_t *next, *prev;
     next = e->lru_next;
@@ -198,7 +198,7 @@ struct ibv_mr *ibcom_reg_mr_fetch(void *addr, int len)
          e = (struct ibcom_reg_mr_cache_entry_t *) e->lru_next, way++) {
         //dprintf("e=%p, e->hash_next=%p\n", e, e->lru_next);
 
-        if (e->addr <= addr_aligned && addr_aligned + len_aligned <= e->addr + e->len) {
+        if (e->addr <= addr_aligned && (uint8_t *) addr_aligned + len_aligned <= (uint8_t *) e->addr + e->len) {
             dprintf
                 ("ibcom_reg_mr_fetch,hit,entry addr=%p,len=%d,mr addr=%p,len=%ld,requested addr=%p,len=%d\n",
                  e->addr, e->len, e->mr->addr, e->mr->length, addr, len);
@@ -216,7 +216,7 @@ struct ibv_mr *ibcom_reg_mr_fetch(void *addr, int len)
 
         dprintf("ibcom_reg_mr,evict,entry addr=%p,len=%d,mr addr=%p,len=%ld\n", e->addr, e->len,
                 e->mr->addr, e->mr->length);
-        int ibcom_errno = ibcom_dereg_mr(victim->mr);
+        ibcom_errno = ibcom_dereg_mr(victim->mr);
         if (ibcom_errno) {
             printf("mrcache,ibcom_dereg_mr\n");
             goto fn_fail;
@@ -271,7 +271,7 @@ struct ibv_mr *ibcom_reg_mr_fetch(void *addr, int len)
 #endif
 }
 
-void ibcom_reg_mr_dereg(struct ibv_mr *mr)
+static void ibcom_reg_mr_dereg(struct ibv_mr *mr)
 {
 
     struct ibcom_reg_mr_cache_entry_t *e;

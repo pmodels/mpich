@@ -17,6 +17,8 @@
 #include <sys/shm.h>
 #include <sys/types.h>
 #include <assert.h>
+#include <linux/mman.h> /* make it define MAP_ANONYMOUS */
+#include <sys/mman.h>
 
 //#define DEBUG_IBCOM
 #ifdef dprintf  /* avoid redefinition with src/mpid/ch3/include/mpidimpl.h */
@@ -694,14 +696,13 @@ int ibcomOpen(int ib_port, int ibcom_open_flag, int *condesc)
             (struct ibv_send_wr *) malloc(sizeof(struct ibv_send_wr) * IBCOM_RC_SR_NTEMPLATE);
         memset(conp->icom_sr, 0, sizeof(struct ibv_send_wr) * IBCOM_RC_SR_NTEMPLATE);
 
-        int i;
         for (i = 0; i < IBCOM_SMT_INLINE_NCHAIN; i++) {
             /* SGE (RDMA-send-from memory) template */
 #ifdef HAVE_LIBDCFA
             memset(&(conp->icom_sr[IBCOM_SMT_INLINE_CHAINED0 + i].sg_list[0]), 0,
                    sizeof(struct ibv_sge) * WR_SG_NUM);
 #else
-            struct ibv_sge *sge =
+            sge =
                 (struct ibv_sge *) malloc(sizeof(struct ibv_sge) * IBCOM_SMT_INLINE_INITIATOR_NSGE);
             memset(sge, 0, sizeof(struct ibv_sge) * IBCOM_SMT_INLINE_INITIATOR_NSGE);
 #endif
@@ -723,7 +724,7 @@ int ibcomOpen(int ib_port, int ibcom_open_flag, int *condesc)
             memset(&(conp->icom_sr[IBCOM_SMT_NOINLINE].sg_list[0]), 0,
                    sizeof(struct ibv_sge) * WR_SG_NUM);
 #else
-            struct ibv_sge *sge =
+            sge =
                 (struct ibv_sge *) malloc(sizeof(struct ibv_sge) *
                                           IBCOM_SMT_NOINLINE_INITIATOR_NSGE);
             memset(sge, 0, sizeof(struct ibv_sge) * IBCOM_SMT_NOINLINE_INITIATOR_NSGE);
@@ -742,7 +743,7 @@ int ibcomOpen(int ib_port, int ibcom_open_flag, int *condesc)
             memset(&(conp->icom_sr[IBCOM_LMT_INITIATOR].sg_list[0]), 0,
                    sizeof(struct ibv_sge) * WR_SG_NUM);
 #else
-            struct ibv_sge *sge =
+            sge =
                 (struct ibv_sge *) malloc(sizeof(struct ibv_sge) * IBCOM_LMT_INITIATOR_NSGE);
             memset(sge, 0, sizeof(struct ibv_sge) * IBCOM_LMT_INITIATOR_NSGE);
 #endif
@@ -802,7 +803,7 @@ int ibcomOpen(int ib_port, int ibcom_open_flag, int *condesc)
             memset(&(conp->icom_sr[IBCOM_SCRATCH_PAD_INITIATOR].sg_list[0]), 0,
                    sizeof(struct ibv_sge) * WR_SG_NUM);
 #else
-            struct ibv_sge *sge =
+            sge =
                 (struct ibv_sge *) malloc(sizeof(struct ibv_sge) *
                                           IBCOM_SCRATCH_PAD_INITIATOR_NSGE);
             memset(sge, 0, sizeof(struct ibv_sge) * IBCOM_SCRATCH_PAD_INITIATOR_NSGE);
@@ -1100,7 +1101,7 @@ int ibcom_isend(int condesc, uint64_t wr_id, void *prefix, int sz_prefix, void *
     num_sge = 0;
 
     void *buf_from =
-        conp->icom_mem[IBCOM_RDMAWR_FROM] +
+        (uint8_t *) conp->icom_mem[IBCOM_RDMAWR_FROM] +
         IBCOM_RDMABUF_SZSEG * (conp->sseq_num % IBCOM_RDMABUF_NSEG);
 
     sz_hdrmagic_t *sz_hdrmagic = (sz_hdrmagic_t *) buf_from;
@@ -1109,9 +1110,9 @@ int ibcom_isend(int condesc, uint64_t wr_id, void *prefix, int sz_prefix, void *
 
     /* memcpy hdr is needed because hdr resides in stack when sending close-VC command */
     /* memcpy is performed onto IBCOM_RDMAWR_FROM buffer */
-    void *hdr_copy = buf_from + sizeof(sz_hdrmagic_t);
+    void *hdr_copy = (uint8_t *) buf_from + sizeof(sz_hdrmagic_t);
     memcpy(hdr_copy, prefix, sz_prefix);
-    memcpy(hdr_copy + sz_prefix, hdr, sz_hdr);
+    memcpy((uint8_t *) hdr_copy + sz_prefix, hdr, sz_hdr);
 #ifdef HAVE_LIBDCFA
     conp->icom_sr[IBCOM_SMT_NOINLINE].sg_list[num_sge].mic_addr = (uint64_t) sz_hdrmagic;
     conp->icom_sr[IBCOM_SMT_NOINLINE].sg_list[num_sge].addr =
@@ -1145,7 +1146,7 @@ int ibcom_isend(int condesc, uint64_t wr_id, void *prefix, int sz_prefix, void *
 
     int sz_pad = sz_data_pow2 - (sizeof(sz_hdrmagic_t) + sz_prefix + sz_hdr + sz_data);
     tailmagic_t *tailmagic =
-        (tailmagic_t *) (buf_from + sizeof(sz_hdrmagic_t) + sz_prefix + sz_hdr + sz_pad);
+        (tailmagic_t *) ((uint8_t *) buf_from + sizeof(sz_hdrmagic_t) + sz_prefix + sz_hdr + sz_pad);
     tailmagic->magic = IBCOM_MAGIC;
 #ifdef HAVE_LIBDCFA
     conp->icom_sr[IBCOM_SMT_NOINLINE].sg_list[num_sge].mic_addr =
@@ -1240,7 +1241,7 @@ int ibcom_isend_chain(int condesc, uint64_t wr_id, void *hdr, int sz_hdr, void *
                          printf("ibcom_isend_chain,icom_connected==0\n"));
 
     void *buf_from =
-        conp->icom_mem[IBCOM_RDMAWR_FROM] +
+        (uint8_t *) conp->icom_mem[IBCOM_RDMAWR_FROM] +
         IBCOM_RDMABUF_SZSEG * (conp->sseq_num % IBCOM_RDMABUF_NSEG);
 
     /* make a tail-magic position is in a fixed set */
@@ -1266,7 +1267,7 @@ int ibcom_isend_chain(int condesc, uint64_t wr_id, void *hdr, int sz_hdr, void *
             sz_hdrmagic_t *sz_hdrmagic = (sz_hdrmagic_t *) buf_from;
             sz_hdrmagic->sz = sumsz;
             sz_hdrmagic->magic = IBCOM_MAGIC;
-            memcpy(buf_from + sizeof(sz_hdrmagic_t), hdr, sz_hdr);
+            memcpy((uint8_t *) buf_from + sizeof(sz_hdrmagic_t), hdr, sz_hdr);
 #ifdef HAVE_LIBDCFA
             conp->icom_sr[IBCOM_SMT_INLINE_CHAINED0 + i].sg_list[num_sge].mic_addr =
                 (uint64_t) buf_from;
@@ -1278,7 +1279,7 @@ int ibcom_isend_chain(int condesc, uint64_t wr_id, void *hdr, int sz_hdr, void *
             conp->icom_sr[IBCOM_SMT_INLINE_CHAINED0 + i].sg_list[num_sge].addr =
                 (uint64_t) buf_from;
 #endif
-            buf_from += sizeof(sz_hdrmagic_t) + sz_hdr;
+            buf_from = (uint8_t *) buf_from + sizeof(sz_hdrmagic_t) + sz_hdr;
             conp->icom_sr[IBCOM_SMT_INLINE_CHAINED0 + i].sg_list[num_sge].length =
                 sizeof(sz_hdrmagic_t) + sz_hdr;
             sz_used += sizeof(sz_hdrmagic_t) + sz_hdr;
@@ -1328,7 +1329,7 @@ int ibcom_isend_chain(int condesc, uint64_t wr_id, void *hdr, int sz_hdr, void *
         //tscs = MPID_nem_dcfa_rdtsc();
         if (i == IBCOM_SMT_INLINE_NCHAIN - 1) { /* append tailmagic */
             int sz_pad = sz_data_pow2 - sz_data;
-            tailmagic_t *tailmagic = (tailmagic_t *) (buf_from + sz_pad);
+            tailmagic_t *tailmagic = (tailmagic_t *) ((uint8_t *) buf_from + sz_pad);
             tailmagic->magic = IBCOM_MAGIC;
 #ifdef HAVE_LIBDCFA
             conp->icom_sr[IBCOM_SMT_INLINE_CHAINED0 + i].sg_list[num_sge].mic_addr =
@@ -1369,7 +1370,7 @@ int ibcom_isend_chain(int condesc, uint64_t wr_id, void *hdr, int sz_hdr, void *
             conp->icom_sr[IBCOM_SMT_INLINE_CHAINED0 + i].sg_list[num_sge].addr =
                 (uint64_t) buf_from;
 #endif
-            buf_from += sz_pad;
+            buf_from = (uint8_t *) buf_from + sz_pad;
             conp->icom_sr[IBCOM_SMT_INLINE_CHAINED0 + i].sg_list[num_sge].length = sz_pad;
             sz_used += sz_pad;
             IBCOM_ERR_CHKANDJUMP(sz_used != IBCOM_INLINE_DATA, -1,
@@ -1951,7 +1952,7 @@ int ibcom_mem_rdmawr_from(int condesc, void **out)
 
     RANGE_CHECK_WITH_ERROR(condesc, conp);
     *out =
-        conp->icom_mem[IBCOM_RDMAWR_FROM] +
+        (uint8_t *) conp->icom_mem[IBCOM_RDMAWR_FROM] +
         IBCOM_RDMABUF_SZSEG * (conp->sseq_num % IBCOM_RDMABUF_NSEG);
 
   fn_exit:
@@ -1966,7 +1967,7 @@ int ibcom_mem_rdmawr_to(int condesc, int seq_num, void **out)
     int ibcom_errno = 0;
 
     RANGE_CHECK_WITH_ERROR(condesc, conp);
-    *out = conp->icom_mem[IBCOM_RDMAWR_TO] + IBCOM_RDMABUF_SZSEG * (seq_num % IBCOM_RDMABUF_NSEG);
+    *out = (uint8_t *) conp->icom_mem[IBCOM_RDMAWR_TO] + IBCOM_RDMABUF_SZSEG * (seq_num % IBCOM_RDMABUF_NSEG);
 
   fn_exit:
     return ibcom_errno;
@@ -2126,7 +2127,7 @@ int ibcom_obtain_pointer(int condesc, IbCom ** ibcom)
     goto fn_exit;
 }
 
-void ibcomShow(int condesc)
+static void ibcomShow(int condesc)
 {
     IbCom *conp;
     uint8_t *p;
@@ -2167,7 +2168,7 @@ char *ibcom_strerror(int errno)
     }
   fn_exit:
     return r;
-  fn_fail:
+    //fn_fail:
     goto fn_exit;
 }
 

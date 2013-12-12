@@ -12,6 +12,8 @@
 #include "dcfa_ibcom.h"
 #include <sys/types.h>
 #include <errno.h>
+#include <linux/mman.h> /* make it define MAP_ANONYMOUS */
+#include <sys/mman.h>
 
 #define LMT_GET_CQE     /* detect RDMA completion by CQE */
 //#define LMT_PUT_DONE
@@ -276,12 +278,13 @@ static inline int MPID_nem_dcfa_cbf_would_overflow(uint64_t addr, uint8_t * arra
 }
 
 /* functions */
-uint64_t MPID_nem_dcfa_rdtsc();
+uint8_t MPID_nem_dcfa_rand(void);
+uint64_t MPID_nem_dcfa_rdtsc(void);
 int MPID_nem_dcfa_init(MPIDI_PG_t * pg_p, int pg_rank, char **bc_val_p, int *val_max_sz_p);
 int MPID_nem_dcfa_finalize(void);
-int MPID_nem_dcfa_drain_scq();
-int MPID_nem_dcfa_drain_scq_lmt_put();
-int MPID_nem_dcfa_drain_scq_scratch_pad();
+int MPID_nem_dcfa_drain_scq(int dont_call_progress);
+int MPID_nem_dcfa_drain_scq_lmt_put(void);
+int MPID_nem_dcfa_drain_scq_scratch_pad(void);
 int MPID_nem_dcfa_poll(int in_blocking_poll);
 int MPID_nem_dcfa_poll_eager(MPIDI_VC_t * vc);
 
@@ -307,8 +310,11 @@ int MPID_nem_dcfa_send_progress(MPID_nem_dcfa_vc_area * vc_dcfa);
 /* CH3--lmt send/recv functions */
 int MPID_nem_dcfa_lmt_initiate_lmt(struct MPIDI_VC *vc, union MPIDI_CH3_Pkt *rts_pkt,
                                    struct MPID_Request *req);
+int MPID_nem_dcfa_lmt_start_recv_core(struct MPID_Request *req, void *raddr, uint32_t rkey,
+                                      void *write_to_buf);
 int MPID_nem_dcfa_lmt_start_recv(struct MPIDI_VC *vc, struct MPID_Request *req, MPID_IOV s_cookie);
 int MPID_nem_dcfa_lmt_handle_cookie(struct MPIDI_VC *vc, struct MPID_Request *req, MPID_IOV cookie);
+int MPID_nem_dcfa_lmt_switch_send(struct MPIDI_VC *vc, struct MPID_Request *req);
 int MPID_nem_dcfa_lmt_done_send(struct MPIDI_VC *vc, struct MPID_Request *req);
 int MPID_nem_dcfa_lmt_done_recv(struct MPIDI_VC *vc, struct MPID_Request *req);
 int MPID_nem_dcfa_lmt_vc_terminated(struct MPIDI_VC *vc);
@@ -500,13 +506,12 @@ int pkt_DONE_handler(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt, MPIDI_msg_sz_t * bu
         _pkt->subtype = MPIDI_NEM_DCFA_REPLY_SEQ_NUM; \
                                                                                                               \
         int *rsr_seq_num_tail;                                                                                \
-        MPID_nem_dcfa_vc_area *vc_dcfa = VC_DCFA(vc);                                                         \
-        ibcom_errno = ibcom_rsr_seq_num_tail_get(vc_dcfa->sc->fd, &rsr_seq_num_tail);                         \
+        ibcom_errno = ibcom_rsr_seq_num_tail_get(VC_FIELD(vc, sc->fd), &rsr_seq_num_tail); \
         MPIU_ERR_CHKANDJUMP(ibcom_errno, mpi_errno, MPI_ERR_OTHER, "**ibcom_rsr_seq_num_tail_get");           \
         _pkt->seq_num_tail = *rsr_seq_num_tail;                                                               \
                                                                                                               \
         int *rsr_seq_num_tail_last_sent;                                                                      \
-        ibcom_errno = ibcom_rsr_seq_num_tail_last_sent_get(vc_dcfa->sc->fd, &rsr_seq_num_tail_last_sent);     \
+        ibcom_errno = ibcom_rsr_seq_num_tail_last_sent_get(VC_FIELD(vc, sc->fd), &rsr_seq_num_tail_last_sent); \
         MPIU_ERR_CHKANDJUMP(ibcom_errno, mpi_errno, MPI_ERR_OTHER, "**ibcom_rsr_seq_num_tail_last_sent_get");           \
         *rsr_seq_num_tail_last_sent = *rsr_seq_num_tail;                                                      \
 \
@@ -561,17 +566,16 @@ int pkt_DONE_handler(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt, MPIDI_msg_sz_t * bu
 #define MPID_nem_dcfa_lmt_send_GET_DONE(vc, rreq) do {                                                                   \
         MPID_PKT_DECL_CAST(_upkt, MPID_nem_dcfa_pkt_lmt_get_done_t, _done_pkt);                                          \
         MPID_Request *_done_req;                                                                                \
-        MPID_nem_dcfa_vc_area *vc_dcfa = VC_DCFA(vc); \
                                                                                                                 \
         MPIU_DBG_MSG(CH3_OTHER,VERBOSE,"sending rndv DONE packet"); \
         MPIDI_Pkt_init(_done_pkt, MPIDI_NEM_PKT_NETMOD); \
         _done_pkt->subtype = MPIDI_NEM_DCFA_PKT_LMT_GET_DONE;\
         _done_pkt->req_id = (rreq)->ch.lmt_req_id; \
             /* embed SR occupancy information */ \
-        _done_pkt->seq_num_tail = vc_dcfa->ibcom->rsr_seq_num_tail; \
+        _done_pkt->seq_num_tail = VC_FIELD(vc, ibcom->rsr_seq_num_tail); \
  \
             /* remember the last one sent */ \
-            vc_dcfa->ibcom->rsr_seq_num_tail_last_sent = vc_dcfa->ibcom->rsr_seq_num_tail; \
+        VC_FIELD(vc, ibcom->rsr_seq_num_tail_last_sent) = VC_FIELD(vc, ibcom->rsr_seq_num_tail); \
                                                                                                                 \
         mpi_errno = MPIDI_CH3_iStartMsg((vc), _done_pkt, sizeof(*_done_pkt), &_done_req);                       \
         MPIU_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**donepkt");                                  \
