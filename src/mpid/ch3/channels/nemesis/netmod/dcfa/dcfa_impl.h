@@ -368,7 +368,7 @@ extern MPID_nem_dcfa_vc_area *MPID_nem_dcfa_debug_current_vc_dcfa;
 extern uint8_t MPID_nem_dcfa_lmt_tail_addr_cbf[MPID_nem_dcfa_cbf_nslot *
                                                MPID_nem_dcfa_cbf_bitsperslot / 8];
 
-#define MPID_NEM_DCFA_MAX_POLLINGSET 64
+#define MPID_NEM_DCFA_MAX_POLLINGSET 65536
 
 /* xfer.c manages memory region using memid */
 #define MPID_NEM_DCFA_MEMID_RDMA 0
