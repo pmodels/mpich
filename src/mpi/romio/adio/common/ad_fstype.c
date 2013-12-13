@@ -262,12 +262,17 @@ static void ADIO_FileSysType_fncall(const char *filename, int *fstype, int *erro
 #endif
     static char myname[] = "ADIO_RESOLVEFILETYPE_FNCALL";
 
+/* NFS can get stuck and end up returing ESTALE "forever" */
+#define MAX_ESTALE_RETRY 10000
+    int retry_cnt;
+
     *error_code = MPI_SUCCESS;
 
 #ifdef ROMIO_HAVE_STRUCT_STATVFS_WITH_F_BASETYPE
+    retry_cnt=0;
     do {
 	err = statvfs(filename, &vfsbuf);
-    } while (err && (errno == ESTALE));
+    } while (err && (errno == ESTALE) && retry_cnt++ < MAX_ESTALE_RETRY);
 
     if (err) {
 	/* ENOENT may be returned in two cases:
@@ -322,9 +327,10 @@ static void ADIO_FileSysType_fncall(const char *filename, int *fstype, int *erro
 #endif /* STATVFS APPROACH */
 
 #ifdef HAVE_STRUCT_STATFS
+    retry_cnt = 0;
     do {
 	err = statfs(filename, &fsbuf);
-    } while (err && (errno == ESTALE));
+    } while (err && (errno == ESTALE) && retry_cnt++ < MAX_ESTALE_RETRY);
 
     if (err) {
 	if(errno == ENOENT) {
@@ -451,9 +457,10 @@ static void ADIO_FileSysType_fncall(const char *filename, int *fstype, int *erro
 #endif /* STATFS APPROACH */
 
 #ifdef ROMIO_HAVE_STRUCT_STAT_WITH_ST_FSTYPE
+    retry_cnt = 0;
     do {
 	err = stat(filename, &sbuf);
-    } while (err && (errno == ESTALE));
+    } while (err && (errno == ESTALE) && retry_cnt++ < MAX_ESTALE_RETRY);
 
     if (err) {
 	if(errno == ENOENT) {
