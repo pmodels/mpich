@@ -90,6 +90,10 @@ int MPID_Close_port(const char *port_name)
     return mpi_errno;
 }
 
+#undef FUNCNAME
+#define FUNCNAME MPID_Comm_accept
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPID_Comm_accept(const char * port_name, MPID_Info * info, int root,
 		     MPID_Comm * comm, MPID_Comm ** newcomm_ptr)
 {
@@ -114,6 +118,10 @@ int MPID_Comm_accept(const char * port_name, MPID_Info * info, int root,
     return mpi_errno;
 }
 
+#undef FUNCNAME
+#define FUNCNAME MPID_Comm_connect
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPID_Comm_connect(const char * port_name, MPID_Info * info, int root,
 		      MPID_Comm * comm, MPID_Comm ** newcomm_ptr)
 {
