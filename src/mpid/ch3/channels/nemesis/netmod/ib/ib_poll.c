@@ -1199,9 +1199,9 @@ int MPID_nem_ib_recv_buf_released(struct MPIDI_VC *vc, void *user_data)
         sreq = MPID_nem_ib_sendq_head(vc_ib->sendq);
         if (sreq) {
             int msg_type = MPIDI_Request_get_msg_type(sreq);
-            MPIDI_CH3_Pkt_t *ch3_hdr = (MPIDI_CH3_Pkt_t *) sreq->dev.iov[0].MPID_IOV_BUF;
             if (msg_type == MPIDI_REQUEST_EAGER_MSG &&  /* guard for the following pointer dereference */
-                ch3_hdr->type == MPIDI_NEM_IB_PKT_REPLY_SEQ_NUM) {
+                ((MPIDI_CH3_Pkt_t *) sreq->dev.iov[0].MPID_IOV_BUF)->type == MPIDI_NEM_PKT_NETMOD &&
+                ((MPID_nem_pkt_netmod_t *) sreq->dev.iov[0].MPID_IOV_BUF)->subtype == MPIDI_NEM_IB_PKT_REPLY_SEQ_NUM) {
                 goto skip;
             }
         }

@@ -525,27 +525,39 @@ int MPID_nem_ib_iSendContig(MPIDI_VC_t * vc, MPID_Request * sreq, void *hdr,
          */
         dprintf("isendcontig,enqueuing,type=%d,\n", ((MPIDI_CH3_Pkt_t *) hdr)->type);
 #if 0
-        if (((MPIDI_CH3_Pkt_t *) hdr)->type == MPIDI_NEM_IB_PKT_REPLY_SEQ_NUM) {
-            printf("enqueuing REPLY_SEQ_NUM\ %d->%d,%d\n", MPID_nem_ib_myrank, vc->pg_rank,
-                   MPID_nem_ib_ncqe);
-        }
-        //if (((MPIDI_CH3_Pkt_t *)hdr)->type == MPIDI_CH3_PKT_ACCUMULATE) {
-        //printf("enqueuing ACCUMULATE\n");
-        //}
-        if (((MPIDI_CH3_Pkt_t *) hdr)->type == MPIDI_CH3_PKT_GET_RESP) {
-            printf("enqueuing GET_RESP\n");
-        }
-        if (((MPIDI_CH3_Pkt_t *) hdr)->type == MPIDI_CH3_PKT_GET) {
-            printf("enqueuing GET\n");
-        }
-        if (((MPIDI_CH3_Pkt_t *) hdr)->type == MPIDI_CH3_PKT_PUT) {
-            printf("enqueuing PUT\n");
+        if (((MPIDI_CH3_Pkt_t *) hdr)->type == MPIDI_NEM_PKT_NETMOD) {
+            switch(((MPID_nem_pkt_netmod_t *) hdr)->subtype) {
+            case MPIDI_NEM_IB_PKT_REPLY_SEQ_NUM:
+                dprintf("enqueuing REPLY_SEQ_NUM\ %d->%d,%d\n", MPID_nem_ib_myrank, vc->pg_rank,
+                        MPID_nem_ib_ncqe);
+                break;
+            default:
+                break;
+            }
+        } else {
+            switch(((MPIDI_CH3_Pkt_t *) hdr)->type) {
+            case MPIDI_CH3_PKT_ACCUMULATE:
+                dprintf("enqueuing ACCUMULATE\n");
+                break;
+            case MPIDI_CH3_PKT_GET_RESP:
+                dprintf("enqueuing GET_RESP\n");
+                break;
+            case MPIDI_CH3_PKT_GET:
+                dprintf("enqueuing GET\n");
+                break;
+            case MPIDI_CH3_PKT_PUT:
+                dprintf("enqueuing PUT\n");
+                break;
+            case MPIDI_NEM_PKT_LMT_DONE:
+                dprintf("isendcontig,enqueue,DONE\n");
+                break;
+            default:
+                break;
+            }
         }
 #endif
-        if (((MPIDI_CH3_Pkt_t *) hdr)->type == MPIDI_NEM_PKT_LMT_DONE) {
-            dprintf("isendcontig,enqueue,DONE\n");
-        }
-        if (((MPIDI_CH3_Pkt_t *) hdr)->type == MPIDI_NEM_IB_PKT_REPLY_SEQ_NUM) {
+        if (((MPIDI_CH3_Pkt_t *) hdr)->type == MPIDI_NEM_PKT_NETMOD &&
+            ((MPID_nem_pkt_netmod_t *) hdr)->subtype == MPIDI_NEM_IB_PKT_REPLY_SEQ_NUM) {
             dprintf("isendcontig,REPLY_SEQ_NUM,enqueue_at_head\n");
             MPID_nem_ib_sendq_enqueue_at_head(&vc_ib->sendq, sreq);
         }
