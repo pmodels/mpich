@@ -946,11 +946,11 @@ int MPID_nem_dcfa_poll(int in_blocking_poll)
 #endif
 
     // lazy feching of completion queue entry because it causes cache-miss
-#if !defined (LMT_PUT_DONE) && defined (LMT_GET_CQE)
+#if defined (LMT_GET_CQE)
     if (MPID_nem_dcfa_ncqe_to_drain > 0 || MPID_nem_dcfa_ncqe_nces > 0 ||
         MPID_nem_dcfa_ncqe >= IBCOM_MAX_CQ_HEIGHT_DRAIN || ncom_almost_full)
 #endif
-#if !defined (LMT_PUT_DONE) && !defined (LMT_GET_CQE)
+#if !defined (LMT_GET_CQE)
         if (/*(in_blocking_poll && result == 0) || */ MPID_nem_dcfa_ncqe_nces > 0 ||
             MPID_nem_dcfa_ncqe >= IBCOM_MAX_CQ_HEIGHT_DRAIN || ncom_almost_full)
 #endif

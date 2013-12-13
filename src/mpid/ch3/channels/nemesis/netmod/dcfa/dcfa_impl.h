@@ -16,7 +16,6 @@
 #include <sys/mman.h>
 
 #define LMT_GET_CQE     /* detect RDMA completion by CQE */
-//#define LMT_PUT_DONE
 #define DISABLE_VAR_OCC_NOTIFY_RATE
 /* lmt-put:
    (1) receiver sends cts to sender (2) sender RDMA-write to receiver
