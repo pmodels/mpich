@@ -425,28 +425,6 @@ int MPID_nem_ib_lmt_done_send(struct MPIDI_VC *vc, struct MPID_Request *req)
     MPIU_Free(req->ch.s_cookie);
     //dprintf("lmt_done_send,free cookie,%p\n", req->ch.s_cookie);
 
-#ifdef LMT_PRED
-    if (MPID_rndv_pred_nlearn == 1 || MPID_rndv_pred_npractice > 1) {
-        if (req->dev.rndv_pred_decision == MPIDI_CH3_RNDV_SEND_RTS) {
-            MPID_rndv_pred_hit++;
-            MPID_rndv_pred_count++;
-        }
-    }
-    if (MPID_rndv_pred_nlearn > 1) {
-        MPID_hist = (MPID_hist << 1) | 1;
-        pht_update((uint64_t) buf, MPID_hist, 1);
-        MPID_rndv_pred_nlearn++;
-        if (MPID_rndv_pred_nlearn > MPID_RNDV_PRED_MAXLEARN) {
-            MPID_rndv_pred_nlearn = 0;
-            MPID_rndv_pred_npractice = 1;
-        }
-    }
-    if (MPID_rndv_pred_nlearn == 1) {
-        MPID_rndv_pred_nlearn++;
-    }
-#endif
-
-
     /* free temporal buffer for eager-send non-contiguous data.
      * MPIDI_CH3U_Recvq_FDU_or_AEP (in mpid_isend.c) sets req->dev.datatype */
     int is_contig;

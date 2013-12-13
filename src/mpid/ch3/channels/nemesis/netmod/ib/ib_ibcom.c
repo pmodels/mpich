@@ -30,8 +30,6 @@
 #define dprintf(...)
 #endif
 
-int dflag;
-
 static int sendwr_id = 10;
 static MPID_nem_ib_com_t contab[MPID_NEM_IB_COM_SIZE];
 static int ib_initialized = 0;

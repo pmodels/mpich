@@ -325,9 +325,6 @@ int MPID_nem_ib_lmt_vc_terminated(struct MPIDI_VC *vc);
 int MPID_nem_ib_recv_posted(struct MPIDI_VC *vc, struct MPID_Request *req);
 int MPID_nem_ib_recv_buf_released(struct MPIDI_VC *vc, void *user_data);
 
-void pht_update(uint64_t vpc, uint32_t hist, int32_t taken);
-int pht_pred(uint64_t vpc, uint32_t hist);
-
 /* Keys for business cards */
 #define MPID_NEM_IB_GID_KEY "gid"
 #define MPID_NEM_IB_LID_KEY "lid"

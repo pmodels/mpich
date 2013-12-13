@@ -346,9 +346,7 @@ extern int MPID_nem_ib_com_rdmabuf_occupancy_notify_rate_get(int condesc, int *n
 extern int MPID_nem_ib_com_rdmabuf_occupancy_notify_rstate_get(int condesc, int **rstate);
 extern int MPID_nem_ib_com_rdmabuf_occupancy_notify_lstate_get(int condesc, int **lstate);
 
-extern int MPID_nem_ib_comMemInfo(int, int, void **, size_t *, int *);
 extern char *MPID_nem_ib_com_strerror(int errno);
-extern int dflag;
 
 extern int MPID_nem_ib_com_mem_rdmawr_from(int condesc, void **out);
 extern int MPID_nem_ib_com_mem_rdmawr_to(int condesc, int seq_num, void **out);
@@ -360,7 +358,6 @@ extern void MPID_nem_ib_com_register_cache_init(void);
 extern void MPID_nem_ib_com_register_cache_destroy(void);
 extern struct ibv_mr *MPID_nem_ib_com_reg_mr_fetch(void *addr, int len);
 
-/* dcfa_ctlmsg.c */
 extern int MPID_nem_ib_com_udbuf_init(void *q);
 
 #define MPID_NEM_IB_COM_RC_SHARED_RCQ 0
