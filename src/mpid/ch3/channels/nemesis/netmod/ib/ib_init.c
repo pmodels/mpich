@@ -1005,7 +1005,7 @@ int MPID_nem_ib_vc_destroy(MPIDI_VC_t * vc)
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_ib_vc_terminate
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
 int MPID_nem_ib_vc_terminate(MPIDI_VC_t * vc)
 {
     dprintf("ib_vc_terminate,enter\n");

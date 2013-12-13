@@ -830,7 +830,7 @@ int MPID_nem_ib_SendNoncontig(MPIDI_VC_t * vc, MPID_Request * sreq, void *hdr,
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_ib_send_progress
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
 int MPID_nem_ib_send_progress(MPID_nem_ib_vc_area * vc_ib)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -1089,7 +1089,7 @@ int MPID_nem_ib_cm_send_core(int rank, MPID_nem_ib_cm_cmd_t * cmd)
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_ib_cm_connect
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
 int MPID_nem_ib_cm_connect(MPIDI_VC_t * vc)
 {
     int mpi_errno = MPI_SUCCESS;

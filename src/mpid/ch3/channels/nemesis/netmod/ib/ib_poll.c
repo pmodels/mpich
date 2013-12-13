@@ -1911,7 +1911,7 @@ int MPID_nem_ib_cm_drain_scq()
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_ib_cm_poll
 #undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
 int MPID_nem_ib_cm_poll()
 {
     int mpi_errno = MPI_SUCCESS;
