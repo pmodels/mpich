@@ -9,7 +9,6 @@
 
 void ADIO_ImmediateOpen(ADIO_File fd, int *error_code)
 { 
-	int nprocs, myrank; 
 	MPI_Comm tmp_comm;
 	tmp_comm = fd->comm;
 	/* some file systems might try to be clever inside their open routine.
