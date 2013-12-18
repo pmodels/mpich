@@ -43,7 +43,9 @@ sub ReadInterface {
                 print STDERR "Error in processing comment within interface file $prototype_file in line $origline";
             }
         }
-        print "binding: read $_" if $gDebug;
+
+        # Parse all routines returning an error code
+        print "\nParsing : $_" if $gDebug;
         if (/^int\s+$routine_prefix($routine_pattern)\s*\((.*)/) {
             $routine_name = $1;
             $args = $2;
@@ -56,7 +58,7 @@ sub ReadInterface {
             # remove qualifiers from args
             $args =~ s/\s*const\s+//g;
 
-            print "binding: $routine_name ( $args )\n" if $gDebug;
+            print "Found   : $routine_name($args)\n" if $gDebug;
             # Eventually, we'll create a new file here.
             # For C++, we may create similar files by looking up
             # the corresponding routines.
@@ -65,27 +67,32 @@ sub ReadInterface {
                 print STDERR "Duplicate prototypes for $routine_name\n";
                 next;
             }
-            # Clear variables
-            $args = &clean_args( $args );
+            # Seperate argument types and names
+            my ($argtypes, $argnames) = &separate_args_and_append_ierror($args);
             # # Handle special cases
             # my $testname = $routine_name . "_args";
             # if (defined($$testname)) {
             # print "replacing args for $routine_name\n" if $gDebug;
             # $args = $$testname;
             # }
-            $$routine_hash{$routine_name} = $args;
+            $$routine_hash{$routine_name} = [$argtypes, $argnames];
         }
     }
 }
 
 #
-# Look through $args for parameter names (foo\s+name)
-# and remove them
-sub clean_args {
-    my $args = $_[0];
-    my $newargs = "";
-    my $comma = "";
-    for my $parm (split(',',$args)) {
+# Look through $args, separate type and name of each argument. Then group argument
+# types and names separately. In addition, append "int", "ierror" to existing
+# argument types and names respectively.
+# Input: an argument string
+# Output: ($argtypes, $argnames), in which types (names) are delimited by comma.
+sub separate_args_and_append_ierror {
+    my $argtypes = "";
+    my $argnames = "";
+    my $comma = ""; # no comma before the first arg
+    for my $parm (split(',', $_[0])) {
+        my $argtype = "";
+        my $argname = "";
         # Remove any leading or trailing spaces
         $parm =~ s/^\s*//;
         $parm =~ s/\s*$//;
@@ -95,36 +102,51 @@ sub clean_args {
             $qualifier = "const ";
             $parm = $1;
         }
+
+        if ($parm eq "void") { # e.g., MPI_Finalize(void)
+            last;
+        }
+
         # Question: What to do with the qualifier?
         # Handle parameters with parameter names
         # 1. "int foo"
         # 2. "int *foo"
         # 3. "int foo[]"
-        # 4. "int *foo[]"
-        if ( ($parm =~ /^([A-Za-z0-9_]+)\s+[A-Za-z0-9_]+$/) ) {
-            $parm = $1;
+        # 4. "int *foo[]" or "int **foo[]"
+        if ( ($parm =~ /^([A-Za-z0-9_]+)\s+([A-Za-z0-9_]+)$/) ) {
+            $argtype = $1;
+            $argname = $2;
         }
-        elsif ( ($parm =~ /^([A-Za-z0-9_]+\s*\*)\s*[A-Za-z0-9_]+$/) ) {
-            $parm = $1;
+        elsif ( ($parm =~ /^([A-Za-z0-9_]+\s*\*)\s*([A-Za-z0-9_]+)$/) ) {
+            $argtype = $1;
+            $argname = $2;
         }
-        elsif ( ($parm =~ /^([A-Za-z0-9_]+)\s*[A-Za-z0-9_]+(\[.*\])\s*$/) ) {
-            my $basename = $1;
-            my $arrayarg = $2;
-            #if ($arrayarg =~ /\[\s*\]/) { $arrayarg = "*"; }
-            $parm = $basename . $arrayarg;
+        elsif ( ($parm =~ /^([A-Za-z0-9_]+)\s*([A-Za-z0-9_]+)(\[.*\])\s*$/) ) {
+            my $basetype = $1;
+            my $arraytype = $3;
+            #if ($arraytype =~ /\[\s*\]/) { $arraytype = "*"; }
+            $argtype = $basetype . $arraytype;
+            $argname = $2;
         }
-        elsif ( ($parm =~ /^([A-Za-z0-9_]+)\s(\*?\*?)\s*[A-Za-z0-9_]+(\[.*\])\s*$/) ) {
-            my $basename = $1;
-            my $arrayarg = $2 . $3;
-            #if ($arrayarg =~ /\[\s*\]/) { $arrayarg = "*"; }
-            $parm = $basename . $arrayarg;
+        elsif ( ($parm =~ /^([A-Za-z0-9_]+)\s(\*?\*?)\s*([A-Za-z0-9_]+)(\[.*\])\s*$/) ) {
+            my $basetype = $1;
+            my $arraytype = $2 . $4;
+            #if ($arraytype =~ /\[\s*\]/) { $arraytype = "*"; }
+            $argtype = $basetype . $arraytype;
+            $argname = $3;
         }
-        $newargs .= "$comma$parm";
+
+        $argtypes .= "$comma$argtype";
+        $argnames .= "$comma$argname";
         $comma = ",";
     }
-    print "$newargs\n" if $gDebug;
-    $args = $newargs;
-    return $args;
+
+    # Append "int ierror"
+    $argtypes .= "${comma}int";
+    $argnames .= "${comma}ierror";
+    print "argtypes= $argtypes\n" if $gDebug;
+    print "argnames= $argnames\n" if $gDebug;
+    return ($argtypes, $argnames);
 }
 
 # Since this is a required package, indicate that we are successful.
