@@ -95,7 +95,7 @@ MPIDI_Accumulate(pami_context_t   context,
     ++sync->started;
 
 
-    params.send.header.iov_base = &req->accum_headers[req->state.index];
+    params.send.header.iov_base = &(((MPIDI_Win_MsgInfo *)req->accum_headers)[req->state.index]);
     params.send.data.iov_len    = req->target.dt.map[req->state.index].DLOOP_VECTOR_LEN;
     params.send.data.iov_base   = req->buffer + req->state.local_offset;
 

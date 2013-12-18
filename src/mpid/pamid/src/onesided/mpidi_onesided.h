@@ -115,9 +115,27 @@ typedef struct
   size_t          len;                /* length of the send data         */
 } MPIDI_Win_MsgInfo;
 
+typedef struct
+{
+  void         * addr;
+  void         * req;
+  MPID_Win     * win;
+  MPI_Datatype   type;
+  MPI_Op         op;
+  int            count;
+  int            counter;
+  int            num_contig;
+  void         * request;
+  void         * result_addr;
+  int            result_count;
+  MPI_Datatype   result_datatype;
+  int            result_num_contig;		      
+  pami_endpoint_t src_endpoint;    
+} MPIDI_Win_GetAccMsgInfo;
+
 
 /** \todo make sure that the extra fields are removed */
-typedef struct
+typedef struct _mpidi_win_request
 {
   MPID_Win               *win;
   MPIDI_Win_requesttype_t type;
@@ -131,7 +149,7 @@ typedef struct
     size_t   local_offset;
   } state;
 
-  MPIDI_Win_MsgInfo * accum_headers;
+  void      * accum_headers;
 
   struct
   {
@@ -153,9 +171,15 @@ typedef struct
     MPIDI_Datatype   dt;
   } target;
 
-  void     *buffer;
   void     *user_buffer;
   uint32_t  buffer_free;
+  void     *buffer;
+  struct _mpidi_win_request *next; 
+  void     * compare_addr;
+  void     * result_addr;  
+  MPI_Op     op;
+  int        result_num_contig;   
+
 } MPIDI_Win_request;
 
 MPIDI_Win_request  zero_req;    /* used for init. request structure to 0 */

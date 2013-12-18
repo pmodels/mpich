@@ -158,6 +158,8 @@ enum
     MPIDI_Protocols_WinCtrl,
     MPIDI_Protocols_WinAccum,
     MPIDI_Protocols_RVZ_zerobyte,
+    MPIDI_Protocols_WinGetAccum,
+    MPIDI_Protocols_WinGetAccumAck,
 #ifdef DYNAMIC_TASKING
     MPIDI_Protocols_Dyntask,
     MPIDI_Protocols_Dyntask_disconnect,

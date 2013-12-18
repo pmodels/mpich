@@ -28,6 +28,7 @@ noinst_HEADERS +=                                                    \
 lib_lib@MPILIBNAME@_la_SOURCES +=                                    \
   src/mpid/pamid/src/onesided/mpid_1s.c                              \
   src/mpid/pamid/src/onesided/mpid_win_accumulate.c                  \
+  src/mpid/pamid/src/onesided/mpid_win_get_accumulate.c              \
   src/mpid/pamid/src/onesided/mpid_win_create.c                      \
   src/mpid/pamid/src/onesided/mpid_win_fence.c                       \
   src/mpid/pamid/src/onesided/mpid_win_free.c                        \

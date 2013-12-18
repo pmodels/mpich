@@ -161,12 +161,4 @@ int MPID_Rget(void *origin_addr, int origin_count,
   return 0;
 }
 
-int MPID_Get_accumulate(const void *origin_addr, int origin_count,
-                        MPI_Datatype origin_datatype, void *result_addr, int result_count,
-                        MPI_Datatype result_datatype, int target_rank, MPI_Aint target_disp,
-                        int target_count, MPI_Datatype target_datatype, MPI_Op op, MPID_Win *win)
-{
-  MPID_abort();
-  return 0;
-}
 

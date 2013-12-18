@@ -151,6 +151,8 @@ static struct
   struct protocol_t WinCtrl;
   struct protocol_t WinAccum;
   struct protocol_t RVZ_zerobyte;
+  struct protocol_t WinGetAccum;
+  struct protocol_t WinGetAccumAck;
 #ifdef DYNAMIC_TASKING
   struct protocol_t Dyntask;
   struct protocol_t Dyntask_disconnect;
@@ -251,6 +253,26 @@ static struct
       .use_rdma        = PAMI_HINT_DISABLE,
     },
     .immediate_min     = sizeof(MPIDI_MsgEnvelope),
+  },
+  .WinGetAccum = {
+    .func = MPIDI_WinGetAccumCB,
+    .dispatch = MPIDI_Protocols_WinGetAccum,
+    .options = {
+      .consistency    = PAMI_HINT_ENABLE,
+      .long_header     = PAMI_HINT_DISABLE,
+      .recv_immediate  = PAMI_HINT_DISABLE,
+    },
+    .immediate_min     = sizeof(MPIDI_Win_GetAccMsgInfo),
+  },
+  .WinGetAccumAck = {
+    .func = MPIDI_WinGetAccumAckCB,
+    .dispatch = MPIDI_Protocols_WinGetAccumAck,
+    .options = {
+      .consistency    = PAMI_HINT_ENABLE,
+      .long_header     = PAMI_HINT_DISABLE,
+      .recv_immediate  = PAMI_HINT_DISABLE,
+    },
+    .immediate_min     = sizeof(MPIDI_Win_GetAccMsgInfo),
   },
 #ifdef DYNAMIC_TASKING
   .Dyntask = {
@@ -802,6 +824,8 @@ MPIDI_PAMI_dispath_init()
   MPIDI_PAMI_dispath_set(MPIDI_Protocols_WinCtrl,   &proto_list.WinCtrl,   NULL);
   MPIDI_PAMI_dispath_set(MPIDI_Protocols_WinAccum,  &proto_list.WinAccum,  NULL);
   MPIDI_PAMI_dispath_set(MPIDI_Protocols_RVZ_zerobyte, &proto_list.RVZ_zerobyte, NULL);
+  MPIDI_PAMI_dispath_set(MPIDI_Protocols_WinGetAccum, &proto_list.WinGetAccum, NULL);
+  MPIDI_PAMI_dispath_set(MPIDI_Protocols_WinGetAccumAck, &proto_list.WinGetAccumAck, NULL);
 #ifdef DYNAMIC_TASKING
   MPIDI_PAMI_dispath_set(MPIDI_Protocols_Dyntask,   &proto_list.Dyntask,  NULL);
   MPIDI_PAMI_dispath_set(MPIDI_Protocols_Dyntask_disconnect,   &proto_list.Dyntask_disconnect,  NULL);
