@@ -40,6 +40,7 @@ $outfile_prefix = "mpi";
 %CtoFName = ();
 %mpi_routines = ();
 %NeedConstants = ();   # constants needed for declaration, hashed by routine
+my $line_limit = 80; # Max line length
 
 #
 # ToDo: Fortran 90 allows some additional checks not possible in Fortran 77.
@@ -51,7 +52,7 @@ $outfile_prefix = "mpi";
 #
 
 #
-# parmc2f translates the C/C++ names to the Fortran 90 name.  %name% will
+# argtypec2f translates the C/C++ names to the Fortran 90 name.  %name% will
 # be replaced with the argument name in declarations.
 #
 # Some picky compilers want an interface description where Fortran 77
@@ -60,7 +61,7 @@ $outfile_prefix = "mpi";
 #  INTERFACE %nl%SUBROUTINE %name%(<args>)%nl%<type decls>%nl%END SUBROUTINE%nl%END INTERFACE
 # where %nl% is newline/indent.
 #
-%parmc2f = ( 'int' => 'INTEGER',
+%argtypec2f = ( 'int' => 'INTEGER',
          'int[]' => 'INTEGER %name%(*)',
          'int[][3]' => 'INTEGER %name%(3,*)',
          'int*' => 'INTEGER',      # assume output scalar (see array
@@ -120,7 +121,7 @@ $outfile_prefix = "mpi";
          'char*' => 'CHARACTER (LEN=*)',
          'char[]' => 'CHARACTER (LEN=*)',
          'char*[]' => 'CHARACTER (LEN=*) %name%(*)',
-         'char**[]' => 'CHARACTER (LEN=*) %name%(v0,*)',  #special case
+         'char**[]' => 'CHARACTER (LEN=*) %name%(count,*)',  #special case
                 # from Comm_Spawn_multiple
          'MPI_Win' => 'INTEGER',
          'MPI_Win*' => 'INTEGER', # Never an array of win
@@ -387,12 +388,13 @@ foreach $routine (keys(%mpi_routines)) {
         $routine = $CtoFName{$routine};
     }
     $ucname = uc($routine);
-    $args   = $mpi_routines{$routine};
-    @parms  = split(/,/, $args );
+    my @argtypes = split(/,/, $mpi_routines{$routine}[0]);
+    my @argnames = split(/,/, $mpi_routines{$routine}[1]);
 
-    print "$routine\n" if $gDebug;
+    print "Trying to bind $routine\n" if $gDebug;
     # Check for a routine to skip
     if (defined($skip_routines{$routine})) {
+        print "Skipping $routine as required\n" if $gDebug;
         next;
     }
 
@@ -405,19 +407,20 @@ foreach $routine (keys(%mpi_routines)) {
     # As noted above, we don't include the routines with choice arguments
     # in the base module.
 
-    if ($args =~ /void/) {
-        $mpi_choice_routines{$routine} = $args;
+    if ($mpi_routines{$routine}[0] =~ /void/) {
+        $mpi_choice_routines{$routine} = $mpi_routines{$routine}[0];
         print "Skipping $routine because of void argument\n" if $gDebug;
         next;
     }
 
-    print MPIBASEFD "       SUBROUTINE $out_prefix$ucname(";
-    for ($i=0; $i<=$#parms; $i++) {
-        print MPIBASEFD "v$i,";
-    }
-    print MPIBASEFD "ierror)\n";
+    print MPIBASEFD "      SUBROUTINE $out_prefix$ucname";
+    &PrintArgBrace(MPIBASEFD,
+        length("      SUBROUTINE $out_prefix$ucname"),
+        length("      SUBROUTINE  "),
+        $line_limit,
+        @argnames);
     &PrintArgDecls( $routine, 0, "" );
-    print MPIBASEFD "       END SUBROUTINE $out_prefix$ucname\n\n";
+    print MPIBASEFD "      END SUBROUTINE $out_prefix$ucname\n\n";
 }
 
 # Add special routines (e.g., the ones with unusual arguments)
@@ -455,80 +458,97 @@ if ($is_MPI) {
             \@WTIME_DOUBLE_TYPE\@ PMPI_WTICK
         END FUNCTION PMPI_WTICK
 
-        SUBROUTINE MPI_NULL_DELETE_FN(a,b,c,d,e)
-          INTEGER a,b,c,d,e
+        SUBROUTINE MPI_NULL_DELETE_FN(COMM, KEYVAL, ATTRIBUTE_VAL,&
+          EXTRA_STATE, IERROR)
+            USE MPI_CONSTANTS,ONLY: MPI_ADDRESS_KIND
+            INTEGER COMM, KEYVAL, IERROR
+            INTEGER(KIND=MPI_ADDRESS_KIND) ATTRIBUTE_VAL, EXTRA_STATE
         END SUBROUTINE MPI_NULL_DELETE_FN
 
-        SUBROUTINE MPI_DUP_FN(a,b,c,d,e,f,g)
-          INTEGER a,b,c,d,e,g
-          LOGICAL f
+        SUBROUTINE MPI_DUP_FN(OLDCOMM, KEYVAL, EXTRA_STATE,&
+          ATTRIBUTE_VAL_IN, ATTRIBUTE_VAL_OUT, FLAG, IERROR)
+            USE MPI_CONSTANTS,ONLY: MPI_ADDRESS_KIND
+            INTEGER OLDCOMM, KEYVAL, IERROR
+            INTEGER(KIND=MPI_ADDRESS_KIND) EXTRA_STATE, ATTRIBUTE_VAL_IN, ATTRIBUTE_VAL_OUT
+            LOGICAL FLAG
         END SUBROUTINE MPI_DUP_FN
 
-        SUBROUTINE MPI_NULL_COPY_FN(a,b,c,d,e,f,g)
-          INTEGER a,b,c,d,e,g
-          LOGICAL f
+        SUBROUTINE MPI_NULL_COPY_FN(OLDCOMM, KEYVAL, EXTRA_STATE,&
+          ATTRIBUTE_VAL_IN, ATTRIBUTE_VAL_OUT, FLAG, IERROR)
+            USE MPI_CONSTANTS,ONLY: MPI_ADDRESS_KIND
+            INTEGER OLDCOMM, KEYVAL, IERROR
+            INTEGER(KIND=MPI_ADDRESS_KIND) EXTRA_STATE, ATTRIBUTE_VAL_IN, ATTRIBUTE_VAL_OUT
+            LOGICAL FLAG
         END SUBROUTINE MPI_NULL_COPY_FN
 
-        SUBROUTINE MPI_COMM_NULL_DELETE_FN(a,b,c,d,e)
-          USE MPI_CONSTANTS,ONLY: MPI_ADDRESS_KIND
-          INTEGER a,b,e
-          INTEGER (KIND=MPI_ADDRESS_KIND) c, d
+        SUBROUTINE MPI_COMM_NULL_DELETE_FN(COMM, COMM_KEYVAL, ATTRIBUTE_VAL,&
+          EXTRA_STATE, IERROR)
+            USE MPI_CONSTANTS,ONLY: MPI_ADDRESS_KIND
+            INTEGER COMM, COMM_KEYVAL, IERROR
+            INTEGER(KIND=MPI_ADDRESS_KIND) ATTRIBUTE_VAL, EXTRA_STATE
         END SUBROUTINE MPI_COMM_NULL_DELETE_FN
 
-        SUBROUTINE MPI_COMM_DUP_FN(a,b,c,d,e,f,g)
-          USE MPI_CONSTANTS,ONLY: MPI_ADDRESS_KIND
-          INTEGER a,b,g
-          INTEGER (KIND=MPI_ADDRESS_KIND) c,d,e
-          LOGICAL f
+        SUBROUTINE MPI_COMM_DUP_FN(OLDCOMM, COMM_KEYVAL, EXTRA_STATE,&
+          ATTRIBUTE_VAL_IN, ATTRIBUTE_VAL_OUT, FLAG, IERROR)
+            USE MPI_CONSTANTS,ONLY: MPI_ADDRESS_KIND
+            INTEGER OLDCOMM, COMM_KEYVAL, IERROR
+            INTEGER(KIND=MPI_ADDRESS_KIND) EXTRA_STATE, ATTRIBUTE_VAL_IN, ATTRIBUTE_VAL_OUT
+            LOGICAL FLAG
         END SUBROUTINE MPI_COMM_DUP_FN
 
-        SUBROUTINE MPI_COMM_NULL_COPY_FN(a,b,c,d,e,f,g)
-          USE MPI_CONSTANTS,ONLY: MPI_ADDRESS_KIND
-          INTEGER a,b,g
-          INTEGER (KIND=MPI_ADDRESS_KIND) c,d,e
-          LOGICAL f
+        SUBROUTINE MPI_COMM_NULL_COPY_FN(OLDCOMM, COMM_KEYVAL, EXTRA_STATE,&
+          ATTRIBUTE_VAL_IN, ATTRIBUTE_VAL_OUT, FLAG, IERROR)
+            USE MPI_CONSTANTS,ONLY: MPI_ADDRESS_KIND
+            INTEGER OLDCOMM, COMM_KEYVAL, IERROR
+            INTEGER(KIND=MPI_ADDRESS_KIND) EXTRA_STATE, ATTRIBUTE_VAL_IN, ATTRIBUTE_VAL_OUT
+            LOGICAL FLAG
         END SUBROUTINE MPI_COMM_NULL_COPY_FN
 
-        SUBROUTINE MPI_TYPE_NULL_DELETE_FN(a,b,c,d,e)
-          USE MPI_CONSTANTS,ONLY: MPI_ADDRESS_KIND
-          INTEGER a,b,e
-          INTEGER (KIND=MPI_ADDRESS_KIND) c, d
+        SUBROUTINE MPI_TYPE_NULL_DELETE_FN(DATATYPE, TYPE_KEYVAL, ATTRIBUTE_VAL,&
+          EXTRA_STATE, IERROR)
+            USE MPI_CONSTANTS,ONLY: MPI_ADDRESS_KIND
+            INTEGER DATATYPE, TYPE_KEYVAL, IERROR
+            INTEGER(KIND=MPI_ADDRESS_KIND) ATTRIBUTE_VAL, EXTRA_STATE
         END SUBROUTINE MPI_TYPE_NULL_DELETE_FN
 
-        SUBROUTINE MPI_TYPE_DUP_FN(a,b,c,d,e,f,g)
-          USE MPI_CONSTANTS,ONLY: MPI_ADDRESS_KIND
-          INTEGER a,b,g
-          INTEGER (KIND=MPI_ADDRESS_KIND) c,d,e
-          LOGICAL f
+        SUBROUTINE MPI_TYPE_DUP_FN(OLDTYPE, TYPE_KEYVAL, EXTRA_STATE,&
+          ATTRIBUTE_VAL_IN, ATTRIBUTE_VAL_OUT, FLAG, IERROR)
+            USE MPI_CONSTANTS,ONLY: MPI_ADDRESS_KIND
+            INTEGER OLDTYPE, TYPE_KEYVAL, IERROR
+            INTEGER(KIND=MPI_ADDRESS_KIND) EXTRA_STATE, ATTRIBUTE_VAL_IN, ATTRIBUTE_VAL_OUT
+            LOGICAL FLAG
         END SUBROUTINE MPI_TYPE_DUP_FN
 
-        SUBROUTINE MPI_TYPE_NULL_COPY_FN(a,b,c,d,e,f,g)
-          USE MPI_CONSTANTS,ONLY: MPI_ADDRESS_KIND
-          INTEGER a,b,g
-          INTEGER (KIND=MPI_ADDRESS_KIND) c,d,e
-          LOGICAL f
+        SUBROUTINE MPI_TYPE_NULL_COPY_FN(OLDTYPE, TYPE_KEYVAL, EXTRA_STATE,&
+          ATTRIBUTE_VAL_IN, ATTRIBUTE_VAL_OUT, FLAG, IERROR)
+            USE MPI_CONSTANTS,ONLY: MPI_ADDRESS_KIND
+            INTEGER OLDTYPE, TYPE_KEYVAL, IERROR
+            INTEGER(KIND=MPI_ADDRESS_KIND) EXTRA_STATE, ATTRIBUTE_VAL_IN, ATTRIBUTE_VAL_OUT
+            LOGICAL FLAG
         END SUBROUTINE MPI_TYPE_NULL_COPY_FN
 
-        SUBROUTINE MPI_WIN_NULL_DELETE_FN(a,b,c,d,e)
-          USE MPI_CONSTANTS,ONLY: MPI_ADDRESS_KIND
-          INTEGER a,b,e
-          INTEGER (KIND=MPI_ADDRESS_KIND) c, d
+        SUBROUTINE MPI_WIN_NULL_DELETE_FN(WIN, WIN_KEYVAL, ATTRIBUTE_VAL,&
+          EXTRA_STATE, IERROR)
+            USE MPI_CONSTANTS,ONLY: MPI_ADDRESS_KIND
+            INTEGER WIN, WIN_KEYVAL, IERROR
+            INTEGER(KIND=MPI_ADDRESS_KIND) ATTRIBUTE_VAL, EXTRA_STATE
         END SUBROUTINE MPI_WIN_NULL_DELETE_FN
 
-        SUBROUTINE MPI_WIN_DUP_FN(a,b,c,d,e,f,g)
-          USE MPI_CONSTANTS,ONLY: MPI_ADDRESS_KIND
-          INTEGER a,b,g
-          INTEGER (KIND=MPI_ADDRESS_KIND) c,d,e
-          LOGICAL f
+        SUBROUTINE MPI_WIN_DUP_FN(OLDWIN, WIN_KEYVAL, EXTRA_STATE,&
+          ATTRIBUTE_VAL_IN, ATTRIBUTE_VAL_OUT, FLAG, IERROR)
+            USE MPI_CONSTANTS,ONLY: MPI_ADDRESS_KIND
+            INTEGER OLDWIN, WIN_KEYVAL, IERROR
+            INTEGER(KIND=MPI_ADDRESS_KIND) EXTRA_STATE, ATTRIBUTE_VAL_IN, ATTRIBUTE_VAL_OUT
+            LOGICAL FLAG
         END SUBROUTINE MPI_WIN_DUP_FN
 
-        SUBROUTINE MPI_WIN_NULL_COPY_FN(a,b,c,d,e,f,g)
-          USE MPI_CONSTANTS,ONLY: MPI_ADDRESS_KIND
-          INTEGER a,b,g
-          INTEGER (KIND=MPI_ADDRESS_KIND) c,d,e
-          LOGICAL f
+        SUBROUTINE MPI_WIN_NULL_COPY_FN(OLDWIN, WIN_KEYVAL, EXTRA_STATE,&
+          ATTRIBUTE_VAL_IN, ATTRIBUTE_VAL_OUT, FLAG, IERROR)
+            USE MPI_CONSTANTS,ONLY: MPI_ADDRESS_KIND
+            INTEGER OLDWIN, WIN_KEYVAL, IERROR
+            INTEGER(KIND=MPI_ADDRESS_KIND) EXTRA_STATE, ATTRIBUTE_VAL_IN, ATTRIBUTE_VAL_OUT
+            LOGICAL FLAG
         END SUBROUTINE MPI_WIN_NULL_COPY_FN
-
 ";
 }
 # Here's where we need to place the interface definitions for the functions
@@ -563,44 +583,45 @@ if ($buildScalarVector) {
     # This is much like the base name (interface) block code
     foreach my $routine (keys(%scalarVectorRoutines)) {
         $ucname = uc($routine);
-        $args   = $mpi_routines{$routine};
-        @parms  = split(/,/, $args );
+        my @argtypes  = split(/,/, $mpi_routines{$routine}[0]);
+        my @argnames  = split(/,/, $mpi_routines{$routine}[1]);
         $svArgs = $scalarVectorRoutines{$routine};
 
         # The scalar version
-        print MPIBASEFD "       SUBROUTINE ${out_prefix}${ucname}_S(";
-        for ($i=0; $i<=$#parms; $i++) {
-            print MPIBASEFD "v$i,";
-        }
-        print MPIBASEFD "ierror)\n";
+        print MPIBASEFD "       SUBROUTINE ${out_prefix}${ucname}_S";
+        &PrintArgBrace(MPIBASEFD,
+            length("       SUBROUTINE ${out_prefix}${ucname}_S"),
+            length("       SUBROUTINE  "),
+            $line_limit,
+            @argnames);
         &PrintArgDecls( $routine, 1, $svArgs );
 
         print MPIBASEFD "       EXTERNAL ${out_prefix}${ucname}\n";
-        print MPIBASEFD "       call ${out_prefix}$ucname(";
-        for ($i=0; $i<=$#parms; $i++) {
-            print MPIBASEFD "v$i,";
-        }
-        print MPIBASEFD "ierror)\n";
-
+        print MPIBASEFD "       call ${out_prefix}$ucname";
+        &PrintArgBrace(MPIBASEFD,
+            length("       call ${out_prefix}$ucname"),
+            length("       call  "),
+            $line_limit,
+            @argnames);
         print MPIBASEFD "       END SUBROUTINE ${out_prefix}${ucname}_S\n\n";
 
         # The vector version
         print MPIBASEFD "       SUBROUTINE ${out_prefix}${ucname}_V(";
-        for ($i=0; $i<=$#parms; $i++) {
-            print MPIBASEFD "v$i,";
-        }
-        print MPIBASEFD "ierror)\n";
+        &PrintArgBrace(MPIBASEFD,
+            length("       SUBROUTINE ${out_prefix}${ucname}_S"),
+            length("       SUBROUTINE  "),
+            $line_limit,
+            @argnames);
         &PrintArgDecls( $routine, 0, "" );
 
         print MPIBASEFD "       EXTERNAL ${out_prefix}${ucname}\n";
-        print MPIBASEFD "       call ${out_prefix}$ucname(";
-        for ($i=0; $i<=$#parms; $i++) {
-            print MPIBASEFD "v$i,";
-        }
-        print MPIBASEFD "ierror)\n";
-
+        print MPIBASEFD "       call ${out_prefix}$ucname";
+        &PrintArgBrace(MPIBASEFD,
+            length("       call ${out_prefix}$ucname"),
+            length("       call  "),
+            $line_limit,
+            @argnames);
         print MPIBASEFD "       END SUBROUTINE ${out_prefix}${ucname}_V\n\n";
-
     }
 }
 
@@ -765,17 +786,18 @@ foreach $routine (keys(%mpi_choice_routines)) {
 # For each choice routine, add the modules
 foreach $routine (keys(%mpi_choice_routines)) {
     $ucname = uc($routine);
-    $args   = $mpi_routines{$routine};
-    @parms  = split(/,/, $args );
+    my @argtypes  = split(/,/, $mpi_routines{$routine}[0]);
+    my @argnames  = split(/,/, $mpi_routines{$routine}[1]);
 
-    print MPIFD "        SUBROUTINE ${out_prefix}${ucname}_T(";
-    for ($i=0; $i<=$#parms; $i++) {
-        print MPIFD "v$i,";
-    }
-    print MPIFD "ierror)\n";
+    print MPIFD "      SUBROUTINE ${out_prefix}${ucname}_T";
+    &PrintArgBrace(MPIFD,
+         length("      SUBROUTINE ${out_prefix}${ucname}_T"),
+         length("      SUBROUTINE  "),
+         $line_limit,
+         @argnames);
 
     if (defined($NeedConstants{$routine})) {
-        print MPIFD "       USE ${out_prefix}CONSTANTS,ONLY:";
+        print MPIFD "      USE ${out_prefix}CONSTANTS,ONLY:";
         $sep = "";
         foreach $name (split(/\s+/,$NeedConstants{$routine})) {
             print MPIFD "$sep$name";
@@ -788,59 +810,60 @@ foreach $routine (keys(%mpi_choice_routines)) {
     # convert %type% to the various types and %dims% to the dimensions,
     # including scalar.
     $nchoice = 0;
-    for ($i=0; $i<=$#parms; $i++) {
-        $parms[$i] =~ s/^const\s//;  # Remove const if present
-        $parm = $parms[$i];
+    for ($i=0; $i<=$#argtypes; $i++) {
+        $argtypes[$i] =~ s/^const\s//;  # Remove const if present
+        $argtype = $argtypes[$i];
         # Check for special args
         $loc = $i+1;
         if (defined($special_args{"$routine-$loc"})) {
-            $parm = $special_args{"$routine-$loc"};
+            $argtype = $special_args{"$routine-$loc"};
         }
 
-        if ($parm =~ /void/) {
+        if ($argtype =~ /void/) {
             # An alternative to this is to have a separate file for
             # routines with 2 choice arguments
             if ($nchoice == 0) {
-                print MPIFD "        <type> v$i<dims>\n";
+                print MPIFD "        <type> $argnames[$i]<dims>\n";
             }
             else {
-                print MPIFD "        <type$nchoice> v$i<dims$nchoice>\n";
+                print MPIFD "        <type$nchoice> $argnames[$i]<dims$nchoice>\n";
             }
             $nchoice ++;
         }
         else {
             # Map the C type to the Fortran type
-            $cparm = $parm;
-            $cparm =~ s/\s+//g;
-            $fparm = $parmc2f{$cparm};
-            if ($fparm eq "") {
-                print STDERR "$routine: No parm type for $cparm ($parm)\n";
+            $cargtype = $argtype;
+            $cargtype =~ s/\s+//g;
+            $fargtype = $argtypec2f{$cargtype};
+            if ($fargtype eq "") {
+                print STDERR "$routine: No Fortran type for $cargtype ($argtype)\n";
             }
-            if ($fparm =~ /%name%/) {
-                $fparm =~ s/%name%/v$i/;
+            if ($fargtype =~ /%name%/) {
+                $fargtype =~ s/%name%/$argnames[$i]/;
                 # In the name case, convert any %nl% to newlines and spaces
-                $fparm =~ s/%nl%/\n       /g;
-                print MPIFD "        $fparm\n";
+                $fargtype =~ s/%nl%/\n       /g;
+                print MPIFD "        $fargtype\n";
             }
             else {
-                print MPIFD "        $fparm v$i\n";
+                print MPIFD "        $fargtype $argnames[$i]\n";
             }
         }
     }
 
-    print MPIFD "        INTEGER ierror\n";
     print MPIFD "        EXTERNAL ${out_prefix}${ucname}\n";
-    print MPIFD "        CALL ${out_prefix}${ucname}(";
-    for ($i=0; $i<=$#parms; $i++) {
-        print MPIFD "v$i,";
-    }
-    print MPIFD "ierror)\n";
-    print MPIFD "        END SUBROUTINE ${out_prefix}${ucname}_T\n\n";
+    print MPIFD "        CALL ${out_prefix}${ucname}";
+    &PrintArgBrace(MPIFD,
+        length("              CALL ${out_prefix}${ucname}"),
+        length("              CALL  "),
+        $line_limit,
+        @argnames);
+
+    print MPIFD "      END SUBROUTINE ${out_prefix}${ucname}_T\n\n";
 }
 
 # The base sizeof's are handled separately now in their own file
 
-print MPIFD "        END MODULE ${ucoutfile_prefix}_t1_s\n";
+print MPIFD "      END MODULE ${ucoutfile_prefix}_t1_s\n";
 close MPIFD;
 &ReplaceIfDifferent( "${outfile_prefix}_t1.f90", "${outfile_prefix}_t1.f90.new" );
 
@@ -1220,13 +1243,49 @@ EOT
 
 }
 
+# Print arguments in a pair of braces and end with a new line.
+# $fd : File handle to print to.
+# $curlen : Length of the current line.
+# $indent : Indention length of the following lines when they exist.
+# $line_length : Maximal length of a line.
+# @argnames : argument names to print out.
+sub PrintArgBrace {
+    my ($fd, $curlen, $indent, $line_length, @argnames) = @_;
+    my $i = 0;
+
+    print $fd "(";
+    $curlen++;
+    foreach my $arg (@argnames) {
+        if ($curlen + length($arg) + 2 > $line_length) { # + 2 for the trailing ',&'
+            $curlen = $indent;
+            print $fd "&\n";
+            print $fd " " x $indent;
+            print $fd "$arg";
+        } else {
+            print $fd "$arg";
+        }
+
+        if ($i++ < $#argnames) {
+            print $fd ",";
+        }
+
+        $curlen += length($arg) + 1;
+    }
+
+    print $fd ")\n";
+}
+
 # Print the declarations for the given routine.
 sub PrintArgDecls {
     my ($routine,$svflag,$svArgs) = @_;
 
     my $ucname = uc($routine);
-    my $args   = $mpi_routines{$routine};
-    my @parms  = split(/,/, $args );
+    my @argtypes = split(/,/, $mpi_routines{$routine}[0]);
+    my @argnames = split(/,/, $mpi_routines{$routine}[1]);
+
+    print "Printing argument delartion for $ucname\n" if $gDebug;
+    print "argtypes = $mpi_routines{$routine}[0]\n" if $gDebug;
+    print "argnames = $mpi_routines{$routine}[1]\n" if $gDebug;
 
     # preload the svargs if requested.  This is used to decide whether
     # an array arg is output as a scalar or a vector
@@ -1246,29 +1305,29 @@ sub PrintArgDecls {
     # MPI_OFFSET_KIND)
     my %use_constants = ();
     my $found_constants = 0;
-    for (my $i=0; $i<=$#parms; $i++) {
-    $parms[$i] =~ s/^const\s+//;  # Remove const if present
-    $parm = $parms[$i];
+    for (my $i=0; $i<=$#argtypes; $i++) {
+    $argtypes[$i] =~ s/^const\s+//;  # Remove const if present
+    my $argtype = $argtypes[$i];
     # Check for special args
     $loc = $i+1;
     if (defined($special_args{"$routine-$loc"})) {
-        $parm = $special_args{"$routine-$loc"};
+        $argtype = $special_args{"$routine-$loc"};
     }
     # Map the C type to the Fortran type
-    $cparm = $parm;
-    $cparm =~ s/\s+//g;
-    $fparm = $parmc2f{$cparm};
+    my $cargtype = $argtype;
+    $cargtype =~ s/\s+//g;
+    my $fargtype = $argtypec2f{$cargtype};
     # Now, does this type contain an MPI constant?
-    if (!defined($fparm)) {
-        print "$cparm value has no matching fortran parm\n";
+    if (!defined($fargtype)) {
+        print "$cargtype value has no matching fortran argtype\n";
     }
-    if ($fparm =~ /(MPI_[A-Z_]*)/) {
+    if ($fargtype =~ /(MPI_[A-Z_]*)/) {
         $use_constants{$1} = 1;
         $found_constants = 1;
     }
     }
     if ($found_constants) {
-        print MPIBASEFD "       USE MPI_CONSTANTS,ONLY:";
+        print MPIBASEFD "           USE MPI_CONSTANTS,ONLY:";
         $sep = "";
         foreach $name (keys(%use_constants)) {
             print MPIBASEFD "$sep$name";
@@ -1279,30 +1338,29 @@ sub PrintArgDecls {
     }
 
     # Output argument types
-    $lastParmType = "<none>";
-    for (my $i=0; $i<=$#parms; $i++) {
-        $parm = $parms[$i];
+    for (my $i=0; $i<=$#argtypes; $i++) {
+        $argtype = $argtypes[$i];
         # Check for special args
         $loc = $i+1;
         if (defined($special_args{"$routine-$loc"})) {
-            $parm = $special_args{"$routine-$loc"};
+            $argtype = $special_args{"$routine-$loc"};
         }
         # Map the C type to the Fortran type
-        $cparm = $parm;
-        $cparm =~ s/\s+//g;
-        $fparm = $parmc2f{$cparm};
-        if ($fparm eq "") {
-            print STDERR "$routine: No parm type for $cparm ($parm)\n";
+        $cargtype = $argtype;
+        $cargtype =~ s/\s+//g;
+        $fargtype = $argtypec2f{$cargtype};
+        if ($fargtype eq "") {
+            print STDERR "$routine: No Fortran type for $cargtype ($argtype)\n";
         }
         # Split out the base type from the name
-        if ($fparm =~ /(\w+.*)\s+(%name\S.*)/) {
-            $parmType = $1;
+        if ($fargtype =~ /(\w+.*)\s+(%name\S.*)/) {
+            $varType = $1;
             $varName  = $2;
             if ($varName =~ /%name%/) {
-            $varName =~ s/%name%/v$i/;
+            $varName =~ s/%name%/$argnames[$i]/;
             }
             $varName =~ s/%nl%/\n       /g;
-            $parmType =~ s/%nl%/\n       /g;
+            $varType =~ s/%nl%/\n       /g;
 
             # Here's where we might change vector to scalar args
             if ($svflag) {
@@ -1317,26 +1375,17 @@ sub PrintArgDecls {
                     }
                     else {
                         print STDERR "Failed to make arg $i in $routine a scalar\n";
+                    }
                 }
             }
-            }
-        }
-        else {
-            $parmType = $fparm;
-            $varName  = "v$i";
-        }
-        if ($parmType ne $lastParmType) {
-            if ($lastParmType ne "<none>" ) { print MPIBASEFD "\n"; }
-            print MPIBASEFD "       $parmType $varName";
-            $lastParmType = $parmType;
-        }
-        else {
-            print MPIBASEFD ", $varName";
-        }
-    }
-    if ($lastParmType ne "<none>" ) { print MPIBASEFD "\n"; }
+         }
+         else {
+            $varType = $fargtype;
+            $varName = $argnames[$i];
+         }
 
-    print MPIBASEFD "       INTEGER ierror\n";
+         print MPIBASEFD "           $varType $varName\n";
+    }
 }
 
 #
