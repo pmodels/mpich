@@ -66,5 +66,5 @@ noinst_HEADERS +=                   \
     src/include/oputil.h            \
     src/include/mpiinfo.h
 
-src/include/mpich_cvars.h: src/util/cvar/cvars.yml
-	$(top_srcdir)/maint/gencvars
+src/include/mpich_cvars.h:
+	$(top_srcdir)/maint/extractcvars --dirs="`cat $(top_srcdir)/maint/cvardirs`"

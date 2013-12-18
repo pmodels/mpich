@@ -25,7 +25,7 @@ dist_noinst_SCRIPTS +=                \
     maint/gcovmerge.in                \
     maint/getcoverage.in              \
     maint/gen_subcfg_m4               \
-    maint/gencvars                   \
+    maint/extractcvars                   \
     maint/genstates.in                \
     maint/getcoverage.in              \
     maint/local_perl/lib/YAML/Tiny.pm \
@@ -42,6 +42,7 @@ dist_noinst_DATA +=                        \
     maint/Version.base.m4                  \
     maint/docnotes                         \
     maint/errmsgdirs                       \
+    maint/cvardirs                         \
     maint/gccimpgen.cpp                    \
     maint/impgen.vcproj                    \
     maint/local_perl/README                \

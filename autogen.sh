@@ -144,7 +144,7 @@ echo "done"
 # Default choices
 do_bindings=yes
 do_geterrmsgs=yes
-do_getparms=yes
+do_getcvars=yes
 do_f77=yes
 do_f77tof90=yes
 do_build_configure=yes
@@ -841,13 +841,13 @@ fi
 echo "done"
 
 # new parameter code
-echo_n "Generating parameter handling code... "
-if test -x maint/gencvars -a "$do_getparms" = "yes" ; then
-    if ./maint/gencvars ; then
+echo_n "Extracting control variables (cvar) ... "
+if test -x maint/extractcvars -a "$do_getcvars" = "yes" ; then
+    if ./maint/extractcvars --dirs="`cat maint/cvardirs`"; then
         echo "done"
     else
         echo "failed"
-        error "unable to generate parameter handling code"
+        error "unable to extract control variables"
         exit 1
     fi
 else
