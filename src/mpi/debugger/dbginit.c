@@ -206,7 +206,6 @@ void MPIR_WaitForDebugger( void )
 	}
 
 	MPIR_proctable_size               = size;
-#if 0
 	/* Debugging hook */
 	if (MPIR_CVAR_PROCTABLE_PRINT) {
 	    for (i=0; i<maxsize; i++) {
@@ -215,7 +214,6 @@ void MPIR_WaitForDebugger( void )
 	    }
 	    fflush( stdout );
 	}
-#endif
 	MPIR_Add_finalize( MPIR_FreeProctable, MPIR_proctable, 0 );
     }
     else {
