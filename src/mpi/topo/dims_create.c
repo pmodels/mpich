@@ -306,11 +306,6 @@ int MPIR_Dims_create( int nnodes, int ndims, int dims[] )
     }
     else {
 	/* We must combine some of the factors */
-	/* This is what the fancy code is for in the MPICH-1 code.
-	   If the number of distinct factors is 1 (e.g., a power of 2),
-	   then this code can be much simpler */
-	/* NOT DONE */
-	/* FIXME */
 	if (nfactors == 1) {
 	    /* Special case for k**n, such as powers of 2 */
 	    int factor = factors[0].val;
