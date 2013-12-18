@@ -145,7 +145,7 @@ int MPIR_Gatherv (
             if (min_procs == -1)
                 min_procs = comm_size + 1; /* Disable ssend */
             else if (min_procs == 0) /* backwards compatibility, use default value */
-                MPIR_CVAR_GET_DEFAULT_INT(GATHERV_INTER_SSEND_MIN_PROCS,&min_procs);
+                MPIR_CVAR_GET_DEFAULT_INT(MPIR_CVAR_GATHERV_INTER_SSEND_MIN_PROCS,&min_procs);
 
             if (comm_size >= min_procs) {
                 mpi_errno = MPIC_Ssend(sendbuf, sendcount, sendtype, root,
