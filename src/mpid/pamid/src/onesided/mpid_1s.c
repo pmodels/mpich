@@ -53,12 +53,12 @@ MPIDI_Win_DoneCB(pami_context_t  context,
         }
     }
 
-  if (req->origin.completed == req->target.dt.num_contig)
+
+    if (req->origin.completed == req->target.dt.num_contig)
     {
       req->win->mpid.origin[target_rank].nCompleted++;
-	if(req->req_handle) {
+      if(req->req_handle)
           MPID_cc_set(req->req_handle->cc_ptr, 0);
-        }
 
       if (req->buffer_free) {
           MPIU_Free(req->buffer);
@@ -66,11 +66,13 @@ MPIDI_Win_DoneCB(pami_context_t  context,
           req->buffer_free = 0;
       }
       if (req->accum_headers)
-        MPIU_Free(req->accum_headers);
-
-      if( (req->type != MPIDI_WIN_REQUEST_RPUT) && (req->type != MPIDI_WIN_REQUEST_RGET) && (req->type != MPIDI_WIN_REQUEST_RACCUMULATE) && (req->type != MPIDI_WIN_REQUEST_RGET_ACCUMULATE) )
-        MPIU_Free(req);
+          MPIU_Free(req->accum_headers);
+      if (!((req->type > MPIDI_WIN_REQUEST_GET_ACCUMULATE) && (req->type <=MPIDI_WIN_REQUEST_RGET_ACCUMULATE)))
+          MPIU_Free(req);
     }
+
+    if ( (req->origin.completed == req->origin.dt.num_contig) && ( (req->type == MPIDI_WIN_REQUEST_FETCH_AND_OP) || (req->type == MPIDI_WIN_REQUEST_COMPARE_AND_SWAP) ) )
+          MPIU_Free(req);
   MPIDI_Progress_signal();
 }
 

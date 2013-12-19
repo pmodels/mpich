@@ -171,7 +171,6 @@ MPID_Accumulate(void         *origin_addr,
 {
   int mpi_errno = MPI_SUCCESS;
   MPIDI_Win_request *req = MPIU_Calloc0(1, MPIDI_Win_request);
-  *req = zero_req;
   req->win          = win;
   if(win->mpid.request_based != 1)
     req->type         = MPIDI_WIN_REQUEST_ACCUMULATE;
@@ -252,7 +251,7 @@ MPID_Accumulate(void         *origin_addr,
         MPIU_Free(req);
       return MPI_SUCCESS;
     }
-  win->mpid.origin[target_rank].nStarted++; 
+  win->mpid.origin[target_rank].nStarted++;
 
   req->target.rank = target_rank;
 

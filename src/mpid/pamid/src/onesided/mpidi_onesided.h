@@ -29,7 +29,9 @@ pami_get_simple_t zero_get_parms;
 pami_rput_simple_t zero_rput_parms;
 pami_put_simple_t zero_put_parms;
 pami_send_t   zero_send_parms;
+pami_send_immediate_t   zero_send_immediate_parms;
 pami_recv_t   zero_recv_parms;
+pami_rmw_t   zero_rmw_parms;
 
 /**
  * \brief One-sided Message Types
@@ -57,6 +59,8 @@ typedef enum
     MPIDI_WIN_REQUEST_RGET,
     MPIDI_WIN_REQUEST_RPUT,
     MPIDI_WIN_REQUEST_RGET_ACCUMULATE,
+    MPIDI_WIN_REQUEST_COMPARE_AND_SWAP,
+    MPIDI_WIN_REQUEST_FETCH_AND_OP,
   } MPIDI_Win_requesttype_t;
 
 typedef enum
@@ -79,6 +83,20 @@ typedef struct
     } lock;
   } data;
 } MPIDI_Win_control_t;
+
+
+#define MAX_ATOMIC_TYPE_SIZE 32
+typedef struct
+{
+  char    buf[MAX_ATOMIC_TYPE_SIZE];   //Origin value or ack result value
+  char    test[MAX_ATOMIC_TYPE_SIZE];  //Test element for CAS
+  void  * result_addr;                 //Address on source to store output
+  void  * remote_addr;                 //Address of target on destination
+  void  * request_addr;                //Address of the request object
+  MPI_Datatype  datatype;
+  MPI_Op        op;
+  int           atomic_type;
+} MPIDI_AtomicHeader_t;
 
 
 typedef struct MPIDI_WinLock_info
@@ -177,6 +195,7 @@ typedef struct _mpidi_win_request
   } target;
 
   void     *user_buffer;
+  void     *compare_buffer;     /* anchor of compare buffer for compare and swap */
   uint32_t  buffer_free;
   void     *buffer;
   struct _mpidi_win_request *next; 
@@ -185,6 +204,12 @@ typedef struct _mpidi_win_request
   MPI_Op     op;
   int        result_num_contig;   
 
+
+  /* for RMA atomic functions */
+  
+  pami_atomic_t      pami_op;        
+  pami_type_t        pami_datatype;  
+ 
   int request_based;            /* flag for request based rma */
   MPID_Request *req_handle;     /* anchor of MPID_Request struc for request based rma*/
 } MPIDI_Win_request;

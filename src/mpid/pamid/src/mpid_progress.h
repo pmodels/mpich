@@ -170,6 +170,29 @@ typedef enum
 
 
 /**
+ * \brief A macro to easily implement advancing until a specific
+ * condition becomes false.
+ *
+ * \param[in] COND This is not a true parameter.  It is *specifically*
+ * designed to be evaluated several times, allowing for the result to
+ * change.  The condition would generally look something like
+ * "(cb.client == 0)".  This would be used as the condition on a while
+ * loop.
+ *
+ * \returns MPI_SUCCESS
+ *
+ * This macro makes one pami advance regardless of the state of the COND.
+ */
+#define MPID_PROGRESS_WAIT_DO_WHILE(COND)       \
+({                                              \
+  do {                                          \
+    MPID_Progress_wait(&__state);               \
+  } while(COND);                                \
+  MPI_SUCCESS;                                  \
+})
+
+
+/**
  * \brief Unused, provided since MPI calls it.
  * \param[in] state The previously seen state of advance
  */

@@ -227,7 +227,6 @@ MPID_Put(void         *origin_addr,
 {
   int mpi_errno = MPI_SUCCESS;
   MPIDI_Win_request *req = MPIU_Calloc0(1, MPIDI_Win_request);
-  *req = zero_req;
   req->win          = win;
   if(win->mpid.request_based != 1) 
     req->type         = MPIDI_WIN_REQUEST_PUT;

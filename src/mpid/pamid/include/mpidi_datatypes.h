@@ -31,7 +31,6 @@
 #ifdef MPIDI_STATISTICS
 #include <pami_ext_pe.h>
 #endif
-
 #include "mpidi_constants.h"
 #include "mpidi_platform.h"
 #include "pami.h"
@@ -164,6 +163,8 @@ enum
     MPIDI_Protocols_Dyntask,
     MPIDI_Protocols_Dyntask_disconnect,
 #endif
+    MPIDI_Protocols_WinAtomic,
+    MPIDI_Protocols_WinAtomicAck,
     MPIDI_Protocols_COUNT,
   };
 
@@ -375,23 +376,11 @@ struct MPID_Win;
 /** \brief Forward declaration of the MPID_Group structure */
 struct MPID_Group;
 
-
-/**
- * \brief Collective information related to a window
- *
- * This structure is used to share information about a local window with
- * all nodes in the window communicator. Part of that information includes
- * statistics about RMA operations during access/exposure epochs.
- *
- * The structure is allocated as an array sized for the window communicator.
- * Each entry in the array corresponds directly to the node of the same rank.
- */
 typedef enum
   {
     MPIDI_REQUEST_LOCK,
     MPIDI_REQUEST_LOCKALL,
   } MPIDI_LOCK_TYPE_t;
-
 
 struct MPIDI_Win_lock
 {
@@ -437,6 +426,17 @@ typedef struct workQ_t {
    int  count;
 } workQ_t;
 
+
+/**
+ * \brief Collective information related to a window
+ *
+ * This structure is used to share information about a local window with
+ * all nodes in the window communicator. Part of that information includes
+ * statistics about RMA operations during access/exposure epochs.
+ *
+ * The structure is allocated as an array sized for the window communicator.
+ * Each entry in the array corresponds directly to the node of the same rank.
+ */
 typedef struct MPIDI_Win_info
 {
   void             * base_addr;     /**< Node's exposure window base address                  */
@@ -450,10 +450,10 @@ typedef struct MPIDI_Win_info
  */
 struct MPIDI_Win
 {
-  struct MPIDI_Win_info * info;    /**< allocated array of collective info             */
+  struct MPIDI_Win_info     *info;          /**< allocated array of collective info             */
   MPIDI_Win_info_args info_args;
   void             ** shm_base_addrs; /* base address shared by all process in comm      */
-  workQ_t work;
+  workQ_t work;    
   RMA_nOps_t *origin;
   struct MPIDI_Win_sync
   {
@@ -490,7 +490,6 @@ struct MPIDI_Win
       } local;
     } lock;
   } sync;
-
   int request_based;          /* flag for request based rma */
   struct MPID_Request *rreq;  /* anchor of MPID_Request for request based rma */
 };

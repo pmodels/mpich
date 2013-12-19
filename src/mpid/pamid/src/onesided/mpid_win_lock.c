@@ -206,7 +206,7 @@ MPID_Win_unlock(int       rank,
    }
   if (rank == MPI_PROC_NULL) goto fn_exit;
   struct MPIDI_Win_sync* sync = &win->mpid.sync;
-  MPID_PROGRESS_WAIT_WHILE(win->mpid.origin[rank].nStarted != win->mpid.origin[rank].nCompleted);
+  MPID_PROGRESS_WAIT_DO_WHILE(win->mpid.origin[rank].nStarted != win->mpid.origin[rank].nCompleted);
   win->mpid.origin[rank].nCompleted=0;
   win->mpid.origin[rank].nStarted=0;
 

@@ -91,27 +91,8 @@ int MPID_Comm_group_failed(MPID_Comm *comm_ptr, MPID_Group **failed_group_ptr)
   return 0;
 }
 
-
 int MPID_Win_allocate_shared(MPI_Aint size, int disp_unit, MPID_Info *info_ptr, MPID_Comm *comm_ptr,
                              void **base_ptr, MPID_Win **win_ptr)
-{
-  MPID_abort();
-  return 0;
-}
-
-
-int MPID_Compare_and_swap(const void *origin_addr, const void *compare_addr,
-                          void *result_addr, MPI_Datatype datatype, int target_rank,
-                          MPI_Aint target_disp, MPID_Win *win)
-{
-  MPID_abort();
-  return 0;
-}
-
-
-int MPID_Fetch_and_op(const void *origin_addr, void *result_addr,
-                      MPI_Datatype datatype, int target_rank, MPI_Aint target_disp,
-                      MPI_Op op, MPID_Win *win)
 {
   MPID_abort();
   return 0;
@@ -123,5 +104,3 @@ int MPID_Win_shared_query(MPID_Win *win, int rank, MPI_Aint *size, int *disp_uni
   MPID_abort();
   return 0;
 }
-
-
