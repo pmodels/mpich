@@ -40,8 +40,8 @@ MPID_nem_netmod_funcs_t MPIDI_nem_ib_funcs = {
 MPIDI_CH3_PktHandler_Fcn *MPID_nem_ib_pkt_handler[MPIDI_NEM_IB_PKT_NUM_PKT_HANDLERS];
 
 static MPIDI_Comm_ops_t comm_ops = {
-                                                /*NULL, */ MPID_nem_ib_recv_posted,
-                                                /* recv_posted */
+    /*NULL, */ MPID_nem_ib_recv_posted,
+    /* recv_posted */
 
     NULL,       /* send */
     NULL,       /* rsend */
@@ -88,7 +88,7 @@ int MPID_nem_ib_ncqe_nces;
 MPID_nem_ib_lmtq_t MPID_nem_ib_lmtq = { NULL, NULL };
 MPID_nem_ib_lmtq_t MPID_nem_ib_lmt_orderq = { NULL, NULL };
 uint8_t MPID_nem_ib_lmt_tail_addr_cbf[MPID_nem_ib_cbf_nslot * MPID_nem_ib_cbf_bitsperslot /
-                                        8] = { 0 };
+                                      8] = { 0 };
 static uint32_t MPID_nem_ib_rand_next = 1;
 MPID_nem_ib_vc_area *MPID_nem_ib_debug_current_vc_ib;
 static int listen_fd;
@@ -112,7 +112,8 @@ uint64_t MPID_nem_ib_rdtsc()
 #define FUNCNAME MPID_nem_ib_kvs_put_binary
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-static int MPID_nem_ib_kvs_put_binary(int from, const char *postfix, const uint8_t * buf, int length)
+static int MPID_nem_ib_kvs_put_binary(int from, const char *postfix, const uint8_t * buf,
+                                      int length)
 {
     int mpi_errno = MPI_SUCCESS;
     int pmi_errno;
@@ -223,7 +224,9 @@ int MPID_nem_ib_init(MPIDI_PG_t * pg_p, int pg_rank, char **bc_val_p, int *val_m
     /* prepare UD QPN for dynamic connection */
     ibcom_errno = MPID_nem_ib_com_open(ib_port, MPID_NEM_IB_COM_OPEN_UD, &MPID_nem_ib_conn_ud_fd);
     MPIU_ERR_CHKANDJUMP(ibcom_errno, mpi_errno, MPI_ERR_OTHER, "**MPID_nem_ib_com_open");
-    ibcom_errno = MPID_nem_ib_com_obtain_pointer(MPID_nem_ib_conn_ud_fd, &MPID_nem_ib_conn_ud_MPID_nem_ib_com);
+    ibcom_errno =
+        MPID_nem_ib_com_obtain_pointer(MPID_nem_ib_conn_ud_fd,
+                                       &MPID_nem_ib_conn_ud_MPID_nem_ib_com);
     MPIU_ERR_CHKANDJUMP(ibcom_errno, mpi_errno, MPI_ERR_OTHER, "**MPID_nem_ib_com_obtain_pointer");
     ibcom_errno = MPID_nem_ib_com_rts(MPID_nem_ib_conn_ud_fd, 0, 0, 0);
     MPIU_ERR_CHKANDJUMP(ibcom_errno, mpi_errno, MPI_ERR_OTHER, "**MPID_nem_ib_com_rts");
@@ -244,11 +247,11 @@ int MPID_nem_ib_init(MPIDI_PG_t * pg_p, int pg_rank, char **bc_val_p, int *val_m
     uint16_t my_lid;
     union ibv_gid my_gid;
     MPID_nem_ib_com_get_info_conn(MPID_nem_ib_conn_ud_fd, MPID_NEM_IB_COM_INFOKEY_QP_QPN, &my_qpnum,
-                        sizeof(uint32_t));
+                                  sizeof(uint32_t));
     MPID_nem_ib_com_get_info_conn(MPID_nem_ib_conn_ud_fd, MPID_NEM_IB_COM_INFOKEY_PORT_LID, &my_lid,
-                        sizeof(uint16_t));
+                                  sizeof(uint16_t));
     MPID_nem_ib_com_get_info_conn(MPID_nem_ib_conn_ud_fd, MPID_NEM_IB_COM_INFOKEY_PORT_GID, &my_gid,
-                        sizeof(union ibv_gid));
+                                  sizeof(union ibv_gid));
 
     char *kvs_name;
     mpi_errno = MPIDI_PG_GetConnKVSname(&kvs_name);
@@ -295,15 +298,13 @@ int MPID_nem_ib_init(MPIDI_PG_t * pg_p, int pg_rank, char **bc_val_p, int *val_m
                 MPID_nem_ib_conn_ud[i].gid.raw[j] = strtol(str, NULL, 16);
                 strp += 2;
             }
-            sscanf(strp, ":%04x:%08x", &MPID_nem_ib_conn_ud[i].lid,
-                   &MPID_nem_ib_conn_ud[i].qpn);
+            sscanf(strp, ":%04x:%08x", &MPID_nem_ib_conn_ud[i].lid, &MPID_nem_ib_conn_ud[i].qpn);
 
             dprintf("remote rank=%d,gid=", i);
             for (j = 0; j < sizeof(union ibv_gid); j++) {
                 dprintf("%02x", MPID_nem_ib_conn_ud[i].gid.raw[j]);
             }
-            dprintf(",lid=%04x,qpn=%08x\n", MPID_nem_ib_conn_ud[i].lid,
-                    MPID_nem_ib_conn_ud[i].qpn);
+            dprintf(",lid=%04x,qpn=%08x\n", MPID_nem_ib_conn_ud[i].lid, MPID_nem_ib_conn_ud[i].qpn);
         }
     }
 #endif
@@ -315,12 +316,14 @@ int MPID_nem_ib_init(MPIDI_PG_t * pg_p, int pg_rank, char **bc_val_p, int *val_m
 
     /* prepare scrath-pad QP and malloc scratch-pad */
     for (i = 0; i < MPID_nem_ib_nranks; i++) {
-        ibcom_errno = MPID_nem_ib_com_open(ib_port, MPID_NEM_IB_COM_OPEN_SCRATCH_PAD, &MPID_nem_ib_scratch_pad_fds[i]);
+        ibcom_errno =
+            MPID_nem_ib_com_open(ib_port, MPID_NEM_IB_COM_OPEN_SCRATCH_PAD,
+                                 &MPID_nem_ib_scratch_pad_fds[i]);
         MPIU_ERR_CHKANDJUMP(ibcom_errno, mpi_errno, MPI_ERR_OTHER, "**MPID_nem_ib_com_open");
 
         ibcom_errno =
             MPID_nem_ib_com_alloc(MPID_nem_ib_scratch_pad_fds[i],
-                        MPID_nem_ib_nranks * sizeof(MPID_nem_ib_com_qp_state_t));
+                                  MPID_nem_ib_nranks * sizeof(MPID_nem_ib_com_qp_state_t));
         MPIU_ERR_CHKANDJUMP(ibcom_errno, mpi_errno, MPI_ERR_OTHER, "**MPID_nem_ib_com_alloc");
     }
 
@@ -355,14 +358,16 @@ int MPID_nem_ib_init(MPIDI_PG_t * pg_p, int pg_rank, char **bc_val_p, int *val_m
 
         if (i == 0) {
             ibcom_errno =
-                MPID_nem_ib_com_get_info_conn(MPID_nem_ib_scratch_pad_fds[i], MPID_NEM_IB_COM_INFOKEY_PORT_LID,
-                                    &my_lid, sizeof(uint16_t));
+                MPID_nem_ib_com_get_info_conn(MPID_nem_ib_scratch_pad_fds[i],
+                                              MPID_NEM_IB_COM_INFOKEY_PORT_LID, &my_lid,
+                                              sizeof(uint16_t));
             dprintf("ib_init,scratch pad,lid=%04x\n", my_lid);
-            MPIU_ERR_CHKANDJUMP(ibcom_errno, mpi_errno, MPI_ERR_OTHER, "**MPID_nem_ib_com_get_info_conn");
+            MPIU_ERR_CHKANDJUMP(ibcom_errno, mpi_errno, MPI_ERR_OTHER,
+                                "**MPID_nem_ib_com_get_info_conn");
 
             mpi_errno =
                 MPID_nem_ib_kvs_put_binary(MPID_nem_ib_myrank, "sp/lid", (uint8_t *) & my_lid,
-                                             sizeof(uint16_t));
+                                           sizeof(uint16_t));
             MPIU_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER,
                                 "**MPID_nem_ib_kvs_put_binary");
 
@@ -372,13 +377,15 @@ int MPID_nem_ib_init(MPIDI_PG_t * pg_p, int pg_rank, char **bc_val_p, int *val_m
             }
 
             ibcom_errno =
-                MPID_nem_ib_com_get_info_conn(MPID_nem_ib_scratch_pad_fds[i], MPID_NEM_IB_COM_INFOKEY_PORT_GID,
-                                    &my_gid, sizeof(union ibv_gid));
-            MPIU_ERR_CHKANDJUMP(ibcom_errno, mpi_errno, MPI_ERR_OTHER, "**MPID_nem_ib_com_get_info_conn");
+                MPID_nem_ib_com_get_info_conn(MPID_nem_ib_scratch_pad_fds[i],
+                                              MPID_NEM_IB_COM_INFOKEY_PORT_GID, &my_gid,
+                                              sizeof(union ibv_gid));
+            MPIU_ERR_CHKANDJUMP(ibcom_errno, mpi_errno, MPI_ERR_OTHER,
+                                "**MPID_nem_ib_com_get_info_conn");
 
             mpi_errno =
                 MPID_nem_ib_kvs_put_binary(MPID_nem_ib_myrank, "sp/gid", (uint8_t *) & my_gid,
-                                             sizeof(union ibv_gid));
+                                           sizeof(union ibv_gid));
             MPIU_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER,
                                 "**MPID_nem_ib_kvs_put_binary");
 
@@ -394,14 +401,16 @@ int MPID_nem_ib_init(MPIDI_PG_t * pg_p, int pg_rank, char **bc_val_p, int *val_m
         sprintf(remote_rank_str, "/%x", i);
         strcat(key_str, remote_rank_str);
         ibcom_errno =
-            MPID_nem_ib_com_get_info_conn(MPID_nem_ib_scratch_pad_fds[i], MPID_NEM_IB_COM_INFOKEY_QP_QPN, &my_qpnum,
-                                sizeof(uint32_t));
-        MPIU_ERR_CHKANDJUMP(ibcom_errno, mpi_errno, MPI_ERR_OTHER, "**MPID_nem_ib_com_get_info_conn");
+            MPID_nem_ib_com_get_info_conn(MPID_nem_ib_scratch_pad_fds[i],
+                                          MPID_NEM_IB_COM_INFOKEY_QP_QPN, &my_qpnum,
+                                          sizeof(uint32_t));
+        MPIU_ERR_CHKANDJUMP(ibcom_errno, mpi_errno, MPI_ERR_OTHER,
+                            "**MPID_nem_ib_com_get_info_conn");
         dprintf("ib_init,scratch pad,qpn=%08x\n", my_qpnum);
 
         mpi_errno =
             MPID_nem_ib_kvs_put_binary(MPID_nem_ib_myrank, key_str, (uint8_t *) & my_qpnum,
-                                         sizeof(uint32_t));
+                                       sizeof(uint32_t));
         MPIU_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**MPID_nem_ib_kvs_put_binary");
         dprintf("ib_init,scratch pad,kvs put done\n");
 
@@ -410,14 +419,15 @@ int MPID_nem_ib_init(MPIDI_PG_t * pg_p, int pg_rank, char **bc_val_p, int *val_m
         strcat(key_str, remote_rank_str);
 
         ibcom_errno =
-            MPID_nem_ib_com_get_info_mr(MPID_nem_ib_scratch_pad_fds[i], MPID_NEM_IB_COM_SCRATCH_PAD_TO,
-                              MPID_NEM_IB_COM_INFOKEY_MR_ADDR, &my_rmem, sizeof(void *));
+            MPID_nem_ib_com_get_info_mr(MPID_nem_ib_scratch_pad_fds[i],
+                                        MPID_NEM_IB_COM_SCRATCH_PAD_TO,
+                                        MPID_NEM_IB_COM_INFOKEY_MR_ADDR, &my_rmem, sizeof(void *));
         MPIU_ERR_CHKANDJUMP(ibcom_errno, mpi_errno, MPI_ERR_OTHER, "**MPID_nem_ib_com_get_info_mr");
 
         dprintf("ib_init,scratch_pad,rmem=%p\n", my_rmem);
         mpi_errno =
             MPID_nem_ib_kvs_put_binary(MPID_nem_ib_myrank, key_str, (uint8_t *) & my_rmem,
-                                         sizeof(void *));
+                                       sizeof(void *));
         MPIU_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**MPID_nem_ib_kvs_put_binary");
 
         strcpy(key_str, "sp/rkey");
@@ -425,14 +435,15 @@ int MPID_nem_ib_init(MPIDI_PG_t * pg_p, int pg_rank, char **bc_val_p, int *val_m
         strcat(key_str, remote_rank_str);
 
         ibcom_errno =
-            MPID_nem_ib_com_get_info_mr(MPID_nem_ib_scratch_pad_fds[i], MPID_NEM_IB_COM_SCRATCH_PAD_TO,
-                              MPID_NEM_IB_COM_INFOKEY_MR_RKEY, &my_rkey, sizeof(int));
+            MPID_nem_ib_com_get_info_mr(MPID_nem_ib_scratch_pad_fds[i],
+                                        MPID_NEM_IB_COM_SCRATCH_PAD_TO,
+                                        MPID_NEM_IB_COM_INFOKEY_MR_RKEY, &my_rkey, sizeof(int));
         MPIU_ERR_CHKANDJUMP(ibcom_errno, mpi_errno, MPI_ERR_OTHER, "**MPID_nem_ib_com_get_info_mr");
         dprintf("ib_init,scratch_pad,rkey=%08x\n", my_rkey);
 
         mpi_errno =
             MPID_nem_ib_kvs_put_binary(MPID_nem_ib_myrank, key_str, (uint8_t *) & my_rkey,
-                                         sizeof(uint32_t));
+                                       sizeof(uint32_t));
         MPIU_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**MPID_nem_ib_kvs_put_binary");
     }
 
@@ -447,7 +458,7 @@ int MPID_nem_ib_init(MPIDI_PG_t * pg_p, int pg_rank, char **bc_val_p, int *val_m
 
             mpi_errno =
                 MPID_nem_ib_kvs_get_binary(i, "sp/gid", (char *) &remote_gid,
-                                             sizeof(union ibv_gid));
+                                           sizeof(union ibv_gid));
             dprintf("ib_init,after kvs get\n");
             if (mpi_errno) {
                 MPIU_ERR_POP(mpi_errno);
@@ -472,7 +483,8 @@ int MPID_nem_ib_init(MPIDI_PG_t * pg_p, int pg_rank, char **bc_val_p, int *val_m
             dprintf("ib_init,get KVS,remote_qpnum=%08x\n", remote_qpnum);
 
             ibcom_errno =
-                MPID_nem_ib_com_rts(MPID_nem_ib_scratch_pad_fds[i], remote_qpnum, remote_lid, &remote_gid);
+                MPID_nem_ib_com_rts(MPID_nem_ib_scratch_pad_fds[i], remote_qpnum, remote_lid,
+                                    &remote_gid);
             MPIU_ERR_CHKANDJUMP(ibcom_errno, mpi_errno, MPI_ERR_OTHER, "**MPID_nem_ib_com_rts");
 
             strcpy(key_str, "sp/rmem");
@@ -497,8 +509,10 @@ int MPID_nem_ib_init(MPIDI_PG_t * pg_p, int pg_rank, char **bc_val_p, int *val_m
             dprintf("ib_init,get KVS,remote_rkey=%08x\n", remote_rkey);
 
             ibcom_errno =
-                MPID_nem_ib_com_reg_mr_connect(MPID_nem_ib_scratch_pad_fds[i], remote_rmem, remote_rkey);
-            MPIU_ERR_CHKANDJUMP(ibcom_errno, mpi_errno, MPI_ERR_OTHER, "**MPID_nem_ib_com_reg_mr_connect");
+                MPID_nem_ib_com_reg_mr_connect(MPID_nem_ib_scratch_pad_fds[i], remote_rmem,
+                                               remote_rkey);
+            MPIU_ERR_CHKANDJUMP(ibcom_errno, mpi_errno, MPI_ERR_OTHER,
+                                "**MPID_nem_ib_com_reg_mr_connect");
         }
     }
 
@@ -507,7 +521,8 @@ int MPID_nem_ib_init(MPIDI_PG_t * pg_p, int pg_rank, char **bc_val_p, int *val_m
     MPIU_ERR_CHKANDJUMP(pmi_errno != PMI_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**PMI_Barrier");
 
     MPIU_CHKPMEM_MALLOC(MPID_nem_ib_conns, MPID_nem_ib_conn_t *,
-                        MPID_nem_ib_nranks * sizeof(MPID_nem_ib_conn_t), mpi_errno, "connection table");
+                        MPID_nem_ib_nranks * sizeof(MPID_nem_ib_conn_t), mpi_errno,
+                        "connection table");
     memset(MPID_nem_ib_conns, 0, MPID_nem_ib_nranks * sizeof(MPID_nem_ib_conn_t));
 
     MPIU_CHKPMEM_MALLOC(MPID_nem_ib_pollingset, MPIDI_VC_t **,
@@ -517,14 +532,17 @@ int MPID_nem_ib_init(MPIDI_PG_t * pg_p, int pg_rank, char **bc_val_p, int *val_m
 
     /* prepare eager-send QP */
     for (i = 0; i < MPID_nem_ib_nranks; i++) {
-        ibcom_errno = MPID_nem_ib_com_open(ib_port, MPID_NEM_IB_COM_OPEN_RC, &MPID_nem_ib_conns[i].fd);
+        ibcom_errno =
+            MPID_nem_ib_com_open(ib_port, MPID_NEM_IB_COM_OPEN_RC, &MPID_nem_ib_conns[i].fd);
         dprintf("init,fd=%d\n", MPID_nem_ib_conns[i].fd);
         MPIU_ERR_CHKANDJUMP(ibcom_errno, mpi_errno, MPI_ERR_OTHER, "**MPID_nem_ib_com_open");
     }
 
 #if 0
     for (i = 0; i < MPID_nem_ib_nranks; i++) {
-        ibcom_errno = MPID_nem_ib_com_open(ib_port, MPID_NEM_IB_COM_OPEN_RC_LMT_PUT, &MPID_nem_ib_conns[i].fd_lmt_put);
+        ibcom_errno =
+            MPID_nem_ib_com_open(ib_port, MPID_NEM_IB_COM_OPEN_RC_LMT_PUT,
+                                 &MPID_nem_ib_conns[i].fd_lmt_put);
         dprintf("init,fd_lmt_put=%d\n", MPID_nem_ib_conns[i].fd_lmt_put);
         MPIU_ERR_CHKANDJUMP(ibcom_errno, mpi_errno, MPI_ERR_OTHER, "**MPID_nem_ib_com_open");
     }
@@ -546,13 +564,13 @@ int MPID_nem_ib_init(MPIDI_PG_t * pg_p, int pg_rank, char **bc_val_p, int *val_m
 
             mpi_errno =
                 MPID_nem_ib_kvs_get_binary(i, MPID_NEM_IB_LID_KEY, (char *) &remote_lid,
-                                             sizeof(uint16_t));
+                                           sizeof(uint16_t));
             if (mpi_errno) {
                 MPIU_ERR_POP(mpi_errno);
             }
             mpi_errno =
                 MPID_nem_ib_kvs_get_binary(i, MPID_NEM_IB_GID_KEY, (char *) &remote_gid,
-                                             sizeof(union ibv_gid));
+                                           sizeof(union ibv_gid));
             if (mpi_errno) {
                 MPIU_ERR_POP(mpi_errno);
             }
@@ -593,20 +611,27 @@ int MPID_nem_ib_init(MPIDI_PG_t * pg_p, int pg_rank, char **bc_val_p, int *val_m
             /* report me-to-you eager-send QP becomes RTR */
             MPID_nem_ib_com_t *MPID_nem_ib_com_scratch_pad;
             ibcom_errno =
-                MPID_nem_ib_com_obtain_pointer(MPID_nem_ib_scratch_pad_fds[i], &MPID_nem_ib_com_scratch_pad);
-            MPIU_ERR_CHKANDJUMP(ibcom_errno, mpi_errno, MPI_ERR_OTHER, "**MPID_nem_ib_com_obtain_pointer");
+                MPID_nem_ib_com_obtain_pointer(MPID_nem_ib_scratch_pad_fds[i],
+                                               &MPID_nem_ib_com_scratch_pad);
+            MPIU_ERR_CHKANDJUMP(ibcom_errno, mpi_errno, MPI_ERR_OTHER,
+                                "**MPID_nem_ib_com_obtain_pointer");
 
             MPID_nem_ib_com_qp_state_t state = {.state = MPID_NEM_IB_COM_QP_STATE_RTR };
             ibcom_errno =
                 MPID_nem_ib_com_put_scratch_pad(MPID_nem_ib_scratch_pad_fds[i],
-                                      (uint64_t) MPID_nem_ib_com_scratch_pad,
-                                      sizeof(MPID_nem_ib_com_qp_state_t) * MPID_nem_ib_myrank,
-                                      sizeof(MPID_nem_ib_com_qp_state_t), (void *) &state);
-            MPIU_ERR_CHKANDJUMP(ibcom_errno, mpi_errno, MPI_ERR_OTHER, "**MPID_nem_ib_com_put_scratch_pad");
+                                                (uint64_t) MPID_nem_ib_com_scratch_pad,
+                                                sizeof(MPID_nem_ib_com_qp_state_t) *
+                                                MPID_nem_ib_myrank,
+                                                sizeof(MPID_nem_ib_com_qp_state_t),
+                                                (void *) &state);
+            MPIU_ERR_CHKANDJUMP(ibcom_errno, mpi_errno, MPI_ERR_OTHER,
+                                "**MPID_nem_ib_com_put_scratch_pad");
             MPID_nem_ib_ncqe_scratch_pad += 1;
 
-            ibcom_errno = MPID_nem_ib_com_reg_mr_connect(MPID_nem_ib_conns[i].fd, remote_rmem, remote_rkey);
-            MPIU_ERR_CHKANDJUMP(ibcom_errno, mpi_errno, MPI_ERR_OTHER, "**MPID_nem_ib_com_reg_mr_connect");
+            ibcom_errno =
+                MPID_nem_ib_com_reg_mr_connect(MPID_nem_ib_conns[i].fd, remote_rmem, remote_rkey);
+            MPIU_ERR_CHKANDJUMP(ibcom_errno, mpi_errno, MPI_ERR_OTHER,
+                                "**MPID_nem_ib_com_reg_mr_connect");
             dprintf("ib_init,after mr_connect for me-to-you eager-send QP\n");
 
 #if 0
@@ -622,7 +647,8 @@ int MPID_nem_ib_init(MPIDI_PG_t * pg_p, int pg_rank, char **bc_val_p, int *val_m
             }
 
             ibcom_errno =
-                MPID_nem_ib_com_rts(MPID_nem_ib_conns[i].fd_lmt_put, remote_qpnum, remote_lid, &remote_gid);
+                MPID_nem_ib_com_rts(MPID_nem_ib_conns[i].fd_lmt_put, remote_qpnum, remote_lid,
+                                    &remote_gid);
             MPIU_ERR_CHKANDJUMP(ibcom_errno, mpi_errno, MPI_ERR_OTHER, "**MPID_nem_ib_com_rts");
 #endif
         }
@@ -685,7 +711,7 @@ static int MPID_nem_ib_announce_network_addr(int my_rank, char **bc_val_p, int *
     for (i = 0, nranks = MPID_nem_ib_nranks; nranks > 0; nranks /= 10, i++) {
     }
     MPIU_CHKLMEM_MALLOC(remote_rank_str, char *, i + 1, mpi_errno, "key_str");  /* alloca */
-    MPIU_CHKLMEM_MALLOC(key_str, char *, strlen(MPID_NEM_IB_QPN_KEY) + i + 1, mpi_errno, "key_str");     /* alloca */
+    MPIU_CHKLMEM_MALLOC(key_str, char *, strlen(MPID_NEM_IB_QPN_KEY) + i + 1, mpi_errno, "key_str");    /* alloca */
 
     /* We have one local qp and remote qp for each rank-pair,
      * so a rank should perform
@@ -700,20 +726,23 @@ static int MPID_nem_ib_announce_network_addr(int my_rank, char **bc_val_p, int *
         /* lid and gid are common for all remote-ranks */
         if (i == 0) {
             ibcom_errno =
-                MPID_nem_ib_com_get_info_conn(MPID_nem_ib_conns[i].fd, MPID_NEM_IB_COM_INFOKEY_PORT_LID, &my_lid,
-                                    sizeof(uint16_t));
+                MPID_nem_ib_com_get_info_conn(MPID_nem_ib_conns[i].fd,
+                                              MPID_NEM_IB_COM_INFOKEY_PORT_LID, &my_lid,
+                                              sizeof(uint16_t));
             dprintf("get_business_card,lid=%04x\n", my_lid);
-            MPIU_ERR_CHKANDJUMP(ibcom_errno, mpi_errno, MPI_ERR_OTHER, "**MPID_nem_ib_com_get_info_conn");
+            MPIU_ERR_CHKANDJUMP(ibcom_errno, mpi_errno, MPI_ERR_OTHER,
+                                "**MPID_nem_ib_com_get_info_conn");
 
             mpi_errno =
                 MPID_nem_ib_kvs_put_binary(MPID_nem_ib_myrank, MPID_NEM_IB_LID_KEY,
-                                             (uint8_t *) & my_lid, sizeof(uint16_t));
+                                           (uint8_t *) & my_lid, sizeof(uint16_t));
             MPIU_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER,
                                 "**MPID_nem_ib_kvs_put_binary");
 
             ibcom_errno =
-                MPID_nem_ib_com_get_info_conn(MPID_nem_ib_conns[i].fd, MPID_NEM_IB_COM_INFOKEY_PORT_GID, &my_gid,
-                                    sizeof(union ibv_gid));
+                MPID_nem_ib_com_get_info_conn(MPID_nem_ib_conns[i].fd,
+                                              MPID_NEM_IB_COM_INFOKEY_PORT_GID, &my_gid,
+                                              sizeof(union ibv_gid));
 
             dprintf("get_business_card,val_max_sz=%d\n", *val_max_sz_p);
             dprintf("get_business_card,sz=%ld,my_gid=", sizeof(union ibv_gid));
@@ -722,11 +751,12 @@ static int MPID_nem_ib_announce_network_addr(int my_rank, char **bc_val_p, int *
             }
             dprintf("\n");
 
-            MPIU_ERR_CHKANDJUMP(ibcom_errno, mpi_errno, MPI_ERR_OTHER, "**MPID_nem_ib_com_get_info_conn");
+            MPIU_ERR_CHKANDJUMP(ibcom_errno, mpi_errno, MPI_ERR_OTHER,
+                                "**MPID_nem_ib_com_get_info_conn");
 
             mpi_errno =
                 MPID_nem_ib_kvs_put_binary(MPID_nem_ib_myrank, MPID_NEM_IB_GID_KEY,
-                                             (uint8_t *) & my_gid, sizeof(union ibv_gid));
+                                           (uint8_t *) & my_gid, sizeof(union ibv_gid));
             MPIU_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER,
                                 "**MPID_nem_ib_kvs_put_binary");
             dprintf("get_business_card,val_max_sz=%d\n", *val_max_sz_p);
@@ -743,13 +773,14 @@ static int MPID_nem_ib_announce_network_addr(int my_rank, char **bc_val_p, int *
         sprintf(remote_rank_str, "/%x", i);
         strcat(key_str, remote_rank_str);
         ibcom_errno =
-            MPID_nem_ib_com_get_info_conn(MPID_nem_ib_conns[i].fd, MPID_NEM_IB_COM_INFOKEY_QP_QPN, &my_qpnum,
-                                sizeof(uint32_t));
-        MPIU_ERR_CHKANDJUMP(ibcom_errno, mpi_errno, MPI_ERR_OTHER, "**MPID_nem_ib_com_get_info_conn");
+            MPID_nem_ib_com_get_info_conn(MPID_nem_ib_conns[i].fd, MPID_NEM_IB_COM_INFOKEY_QP_QPN,
+                                          &my_qpnum, sizeof(uint32_t));
+        MPIU_ERR_CHKANDJUMP(ibcom_errno, mpi_errno, MPI_ERR_OTHER,
+                            "**MPID_nem_ib_com_get_info_conn");
 
         mpi_errno =
             MPID_nem_ib_kvs_put_binary(MPID_nem_ib_myrank, key_str, (uint8_t *) & my_qpnum,
-                                         sizeof(uint32_t));
+                                       sizeof(uint32_t));
         MPIU_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**MPID_nem_ib_kvs_put_binary");
 
 #if 0
@@ -759,13 +790,15 @@ static int MPID_nem_ib_announce_network_addr(int my_rank, char **bc_val_p, int *
         sprintf(remote_rank_str, "/%x", i);
         strcat(key_str, remote_rank_str);
         ibcom_errno =
-            MPID_nem_ib_com_get_info_conn(MPID_nem_ib_conns[i].fd_lmt_put, MPID_NEM_IB_COM_INFOKEY_QP_QPN, &my_qpnum,
-                                sizeof(uint32_t));
-        MPIU_ERR_CHKANDJUMP(ibcom_errno, mpi_errno, MPI_ERR_OTHER, "**MPID_nem_ib_com_get_info_conn");
+            MPID_nem_ib_com_get_info_conn(MPID_nem_ib_conns[i].fd_lmt_put,
+                                          MPID_NEM_IB_COM_INFOKEY_QP_QPN, &my_qpnum,
+                                          sizeof(uint32_t));
+        MPIU_ERR_CHKANDJUMP(ibcom_errno, mpi_errno, MPI_ERR_OTHER,
+                            "**MPID_nem_ib_com_get_info_conn");
 
         mpi_errno =
             MPID_nem_ib_kvs_put_binary(MPID_nem_ib_myrank, key_str, (uint8_t *) & my_qpnum,
-                                         sizeof(uint32_t));
+                                       sizeof(uint32_t));
         MPIU_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**MPID_nem_ib_kvs_put_binary");
 #endif
 
@@ -774,14 +807,14 @@ static int MPID_nem_ib_announce_network_addr(int my_rank, char **bc_val_p, int *
         strcat(key_str, remote_rank_str);
 
         ibcom_errno =
-            MPID_nem_ib_com_get_info_mr(MPID_nem_ib_conns[i].fd, MPID_NEM_IB_COM_RDMAWR_TO, MPID_NEM_IB_COM_INFOKEY_MR_ADDR,
-                              &my_rmem, sizeof(void *));
+            MPID_nem_ib_com_get_info_mr(MPID_nem_ib_conns[i].fd, MPID_NEM_IB_COM_RDMAWR_TO,
+                                        MPID_NEM_IB_COM_INFOKEY_MR_ADDR, &my_rmem, sizeof(void *));
         MPIU_ERR_CHKANDJUMP(ibcom_errno, mpi_errno, MPI_ERR_OTHER, "**MPID_nem_ib_com_get_info_mr");
 
         dprintf("rmem=%p\n", my_rmem);
         mpi_errno =
             MPID_nem_ib_kvs_put_binary(MPID_nem_ib_myrank, key_str, (uint8_t *) & my_rmem,
-                                         sizeof(void *));
+                                       sizeof(void *));
         MPIU_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**MPID_nem_ib_kvs_put_binary");
 
         strcpy(key_str, MPID_NEM_IB_RKEY_KEY);
@@ -789,13 +822,13 @@ static int MPID_nem_ib_announce_network_addr(int my_rank, char **bc_val_p, int *
         strcat(key_str, remote_rank_str);
 
         ibcom_errno =
-            MPID_nem_ib_com_get_info_mr(MPID_nem_ib_conns[i].fd, MPID_NEM_IB_COM_RDMAWR_TO, MPID_NEM_IB_COM_INFOKEY_MR_RKEY,
-                              &my_rkey, sizeof(int));
+            MPID_nem_ib_com_get_info_mr(MPID_nem_ib_conns[i].fd, MPID_NEM_IB_COM_RDMAWR_TO,
+                                        MPID_NEM_IB_COM_INFOKEY_MR_RKEY, &my_rkey, sizeof(int));
         MPIU_ERR_CHKANDJUMP(ibcom_errno, mpi_errno, MPI_ERR_OTHER, "**MPID_nem_ib_com_get_info_mr");
 
         mpi_errno =
             MPID_nem_ib_kvs_put_binary(MPID_nem_ib_myrank, key_str, (uint8_t *) & my_rkey,
-                                         sizeof(uint32_t));
+                                       sizeof(uint32_t));
         MPIU_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**MPID_nem_ib_kvs_put_binary");
     }
 
@@ -857,7 +890,8 @@ int MPID_nem_ib_vc_init(MPIDI_VC_t * vc)
     MPIU_ERR_CHKANDJUMP(ibcom_errno, mpi_errno, MPI_ERR_OTHER, "**MPID_nem_ib_com_obtain_pointer");
 
     ibcom_errno =
-        MPID_nem_ib_com_obtain_pointer(MPID_nem_ib_conns[vc->pg_rank].fd_lmt_put, &vc_ib->ibcom_lmt_put);
+        MPID_nem_ib_com_obtain_pointer(MPID_nem_ib_conns[vc->pg_rank].fd_lmt_put,
+                                       &vc_ib->ibcom_lmt_put);
     MPIU_ERR_CHKANDJUMP(ibcom_errno, mpi_errno, MPI_ERR_OTHER, "**MPID_nem_ib_com_obtain_pointer");
 
     //dprintf("vc_init,open,fd=%d,ptr=%p,rsr_seq_num_poll=%d\n", MPID_nem_ib_conns[vc->pg_rank].fd, vc_ib->MPID_nem_ib_com, vc_ib->ibcom->rsr_seq_num_poll);
@@ -878,13 +912,15 @@ int MPID_nem_ib_vc_init(MPIDI_VC_t * vc)
     /* wait until you-to-me eager-send QP becomes RTR */
     MPID_nem_ib_com_t *MPID_nem_ib_com_scratch_pad;
     ibcom_errno =
-        MPID_nem_ib_com_obtain_pointer(MPID_nem_ib_scratch_pad_fds[vc->pg_rank], &MPID_nem_ib_com_scratch_pad);
+        MPID_nem_ib_com_obtain_pointer(MPID_nem_ib_scratch_pad_fds[vc->pg_rank],
+                                       &MPID_nem_ib_com_scratch_pad);
     MPIU_ERR_CHKANDJUMP(ibcom_errno, mpi_errno, MPI_ERR_OTHER, "**MPID_nem_ib_com_obtain_pointer");
 
     int ntrial = 0;
     volatile MPID_nem_ib_com_qp_state_t *rstate =
-        (MPID_nem_ib_com_qp_state_t *) ((uint8_t *) MPID_nem_ib_com_scratch_pad->icom_mem[MPID_NEM_IB_COM_SCRATCH_PAD_TO] +
-                              vc->pg_rank * sizeof(MPID_nem_ib_com_qp_state_t));
+        (MPID_nem_ib_com_qp_state_t *) ((uint8_t *) MPID_nem_ib_com_scratch_pad->
+                                        icom_mem[MPID_NEM_IB_COM_SCRATCH_PAD_TO] +
+                                        vc->pg_rank * sizeof(MPID_nem_ib_com_qp_state_t));
     dprintf("ib_init,rstate=%p,*rstate=%08x\n", rstate, *((uint32_t *) rstate));
     while (rstate->state != MPID_NEM_IB_COM_QP_STATE_RTR) {
         __asm__ __volatile__("pause;":::"memory");
@@ -901,7 +937,8 @@ int MPID_nem_ib_vc_init(MPIDI_VC_t * vc)
     int i;
     for (i = 0; i < MPID_NEM_IB_COM_MAX_RQ_CAPACITY; i++) {
         //dprintf("irecv,%d->%d\n", MPID_nem_ib_myrank, vc->pg_rank);
-        ibcom_errno = MPID_nem_ib_com_irecv(MPID_nem_ib_conns[vc->pg_rank].fd, (uint64_t) vc->pg_rank);
+        ibcom_errno =
+            MPID_nem_ib_com_irecv(MPID_nem_ib_conns[vc->pg_rank].fd, (uint64_t) vc->pg_rank);
         MPIU_ERR_CHKANDJUMP(ibcom_errno, mpi_errno, MPI_ERR_OTHER, "**MPID_nem_ib_com_irecv");
     }
 
@@ -909,8 +946,9 @@ int MPID_nem_ib_vc_init(MPIDI_VC_t * vc)
 
 
     uint32_t max_msg_sz;
-    MPID_nem_ib_com_get_info_conn(MPID_nem_ib_conns[vc->pg_rank].fd, MPID_NEM_IB_COM_INFOKEY_PATTR_MAX_MSG_SZ,
-                        &max_msg_sz, sizeof(max_msg_sz));
+    MPID_nem_ib_com_get_info_conn(MPID_nem_ib_conns[vc->pg_rank].fd,
+                                  MPID_NEM_IB_COM_INFOKEY_PATTR_MAX_MSG_SZ, &max_msg_sz,
+                                  sizeof(max_msg_sz));
     VC_FIELD(vc, pending_sends) = 0;
 #ifdef MPID_NEM_IB_ONDEMAND
     VC_FIELD(vc, is_connected) = 0;
@@ -946,7 +984,7 @@ int MPID_nem_ib_vc_init(MPIDI_VC_t * vc)
     dprintf("ib_vc_init,vc->eager_max_msg_sz=%d\n", vc->eager_max_msg_sz);
 
     /* vc->rndvSend_fn is set in MPID_nem_vc_init (in src/mpid/ch3/channels/nemesis/src/mpid_nem_init.c) */
-        ;
+    ;
     vc->sendNoncontig_fn = MPID_nem_ib_SendNoncontig;
 
     vc->comm_ops = &comm_ops;
@@ -962,8 +1000,7 @@ int MPID_nem_ib_vc_init(MPIDI_VC_t * vc)
     MPID_nem_ib_pkt_handler[MPIDI_NEM_IB_PKT_ACCUMULATE] = MPID_nem_ib_PktHandler_Accumulate;
     MPID_nem_ib_pkt_handler[MPIDI_NEM_IB_PKT_LMT_GET_DONE] = MPID_nem_ib_pkt_GET_DONE_handler;
     MPID_nem_ib_pkt_handler[MPIDI_NEM_IB_PKT_REQ_SEQ_NUM] = MPID_nem_ib_PktHandler_req_seq_num;
-    MPID_nem_ib_pkt_handler[MPIDI_NEM_IB_PKT_REPLY_SEQ_NUM] =
-        MPID_nem_ib_PktHandler_reply_seq_num;
+    MPID_nem_ib_pkt_handler[MPIDI_NEM_IB_PKT_REPLY_SEQ_NUM] = MPID_nem_ib_PktHandler_reply_seq_num;
     MPID_nem_ib_pkt_handler[MPIDI_NEM_IB_PKT_CHG_RDMABUF_OCC_NOTIFY_STATE] =
         MPID_nem_ib_PktHandler_change_rdmabuf_occupancy_notify_state;
 
@@ -1025,10 +1062,9 @@ int MPID_nem_ib_vc_terminate(MPIDI_VC_t * vc)
     dprintf("init,before,%d->%d,r rdmaocc=%d,l rdmaocc=%d,sendq=%d,ncqe=%d,pending_sends=%d\n",
             MPID_nem_ib_myrank, vc->pg_rank,
             MPID_nem_ib_diff32(vc_ib->ibcom->rsr_seq_num_tail,
-                                 vc_ib->ibcom->rsr_seq_num_tail_last_sent),
+                               vc_ib->ibcom->rsr_seq_num_tail_last_sent),
             MPID_nem_ib_diff32(vc_ib->ibcom->sseq_num, vc_ib->ibcom->lsr_seq_num_tail),
-            MPID_nem_ib_sendq_empty(vc_ib->sendq), MPID_nem_ib_ncqe, VC_FIELD(vc,
-                                                                                    pending_sends));
+            MPID_nem_ib_sendq_empty(vc_ib->sendq), MPID_nem_ib_ncqe, VC_FIELD(vc, pending_sends));
 
     /* update remote RDMA-write-to buffer occupancy */
 #if 0   /* we can't send it when the other party has closed QP */
@@ -1053,10 +1089,9 @@ int MPID_nem_ib_vc_terminate(MPIDI_VC_t * vc)
     dprintf("init,middle,%d->%d,r rdmaocc=%d,l rdmaocc=%d,sendq=%d,ncqe=%d,pending_sends=%d\n",
             MPID_nem_ib_myrank, vc->pg_rank,
             MPID_nem_ib_diff32(vc_ib->ibcom->rsr_seq_num_tail,
-                                 vc_ib->ibcom->rsr_seq_num_tail_last_sent),
+                               vc_ib->ibcom->rsr_seq_num_tail_last_sent),
             MPID_nem_ib_diff32(vc_ib->ibcom->sseq_num, vc_ib->ibcom->lsr_seq_num_tail),
-            MPID_nem_ib_sendq_empty(vc_ib->sendq), MPID_nem_ib_ncqe, VC_FIELD(vc,
-                                                                                    pending_sends));
+            MPID_nem_ib_sendq_empty(vc_ib->sendq), MPID_nem_ib_ncqe, VC_FIELD(vc, pending_sends));
 
     if (MPID_nem_ib_ncqe > 0 || VC_FIELD(vc, pending_sends) > 0) {
         usleep(1000);
@@ -1065,10 +1100,9 @@ int MPID_nem_ib_vc_terminate(MPIDI_VC_t * vc)
     dprintf("init,middle2,%d->%d,r rdmaocc=%d,l rdmaocc=%d,sendq=%d,ncqe=%d,pending_sends=%d\n",
             MPID_nem_ib_myrank, vc->pg_rank,
             MPID_nem_ib_diff32(vc_ib->ibcom->rsr_seq_num_tail,
-                                 vc_ib->ibcom->rsr_seq_num_tail_last_sent),
+                               vc_ib->ibcom->rsr_seq_num_tail_last_sent),
             MPID_nem_ib_diff32(vc_ib->ibcom->sseq_num, vc_ib->ibcom->lsr_seq_num_tail),
-            MPID_nem_ib_sendq_empty(vc_ib->sendq), MPID_nem_ib_ncqe, VC_FIELD(vc,
-                                                                                    pending_sends));
+            MPID_nem_ib_sendq_empty(vc_ib->sendq), MPID_nem_ib_ncqe, VC_FIELD(vc, pending_sends));
 
     if (MPID_nem_ib_ncqe > 0 || VC_FIELD(vc, pending_sends) > 0) {
         usleep(1000);
@@ -1087,10 +1121,9 @@ int MPID_nem_ib_vc_terminate(MPIDI_VC_t * vc)
     dprintf("init,after ,%d->%d,r rdmaocc=%d,l rdmaocc=%d,sendq=%d,ncqe=%d,pending_sends=%d\n",
             MPID_nem_ib_myrank, vc->pg_rank,
             MPID_nem_ib_diff32(vc_ib->ibcom->rsr_seq_num_tail,
-                                 vc_ib->ibcom->rsr_seq_num_tail_last_sent),
+                               vc_ib->ibcom->rsr_seq_num_tail_last_sent),
             MPID_nem_ib_diff32(vc_ib->ibcom->sseq_num, vc_ib->ibcom->lsr_seq_num_tail),
-            MPID_nem_ib_sendq_empty(vc_ib->sendq), MPID_nem_ib_ncqe, VC_FIELD(vc,
-                                                                                    pending_sends));
+            MPID_nem_ib_sendq_empty(vc_ib->sendq), MPID_nem_ib_ncqe, VC_FIELD(vc, pending_sends));
 
     /* drain scratch-pad scq */
     ibcom_errno = MPID_nem_ib_drain_scq_scratch_pad();

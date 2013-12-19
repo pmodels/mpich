@@ -15,7 +15,7 @@
 #include <linux/mman.h> /* make it define MAP_ANONYMOUS */
 #include <sys/mman.h>
 
-#define MPID_NEM_IB_LMT_GET_CQE     /* detect RDMA completion by CQE */
+#define MPID_NEM_IB_LMT_GET_CQE /* detect RDMA completion by CQE */
 #define MPID_NEM_IB_DISABLE_VAR_OCC_NOTIFY_RATE
 /* lmt-put:
    (1) receiver sends cts to sender (2) sender RDMA-write to receiver
@@ -44,7 +44,7 @@ typedef struct {
     MPID_nem_ib_conn_t *sc;
     int pending_sends;          /* number of send in flight */
     MPID_nem_ib_com_t *ibcom, *ibcom_lmt_put;
-    MPID_nem_ib_sendq_t sendq;        /* overflow queue for IB commands */
+    MPID_nem_ib_sendq_t sendq;  /* overflow queue for IB commands */
     MPID_nem_ib_sendq_t sendq_lmt_put;
     int is_connected;           /* dynamic connection, checked in iSendContig, protocol processed there and in progress engine */
 } MPID_nem_ib_vc_area;
@@ -112,7 +112,7 @@ typedef union {
 
 typedef struct MPID_nem_ib_cm_sendq_entry {
     MPID_nem_ib_cm_pkt_t pending_pkt;
-    struct MPID_nem_ib_cm_sendq_entry *sendq_next;    /* for software command queue */
+    struct MPID_nem_ib_cm_sendq_entry *sendq_next;      /* for software command queue */
 } MPID_nem_ib_cm_sendq_entry_t;
 
 #ifdef MPID_NEM_IB_ONDEMAND
@@ -157,10 +157,10 @@ typedef GENERIC_Q_DECL(struct MPID_Request) MPID_nem_ib_cm_sendq_t;
 
 /* counting bloom filter to detect multiple lmt-sends in one send-wait period to
    avoid overwriting the last byte in the receive buffer */
-#define MPID_nem_ib_cbf_nslot 16      /* slots */
-#define MPID_nem_ib_cbf_bitsperslot 4 /* one slot can accomodate multiple bits */
+#define MPID_nem_ib_cbf_nslot 16        /* slots */
+#define MPID_nem_ib_cbf_bitsperslot 4   /* one slot can accomodate multiple bits */
 #define MPID_nem_ib_cbf_lognslot 4
-#define MPID_nem_ib_cbf_nhash 3       /* number of hash functions */
+#define MPID_nem_ib_cbf_nhash 3 /* number of hash functions */
 #define MPID_nem_ib_getpos \
     int pos_8b = pos / (8 / MPID_nem_ib_cbf_bitsperslot);\
     assert(0 <= pos_8b && pos_8b < MPID_nem_ib_cbf_nslot * MPID_nem_ib_cbf_bitsperslot / 8);\
@@ -266,13 +266,13 @@ static inline int MPID_nem_ib_cbf_would_overflow(uint64_t addr, uint8_t * array)
     //dprintf("cbf_would_overflow,%d,%d,%d\n", MPID_nem_ib_cbf_get(array, MPID_nem_ib_cbf_hash1(addr)), MPID_nem_ib_cbf_get(array, MPID_nem_ib_cbf_hash2(addr)), MPID_nem_ib_cbf_get(array, MPID_nem_ib_cbf_hash3(addr)));
     return
         MPID_nem_ib_cbf_get(array,
-                              MPID_nem_ib_cbf_hash1(addr)) ==
+                            MPID_nem_ib_cbf_hash1(addr)) ==
         (1ULL << MPID_nem_ib_cbf_bitsperslot) - 1 ||
         MPID_nem_ib_cbf_get(array,
-                              MPID_nem_ib_cbf_hash2(addr)) ==
+                            MPID_nem_ib_cbf_hash2(addr)) ==
         (1ULL << MPID_nem_ib_cbf_bitsperslot) - 1 ||
         MPID_nem_ib_cbf_get(array,
-                              MPID_nem_ib_cbf_hash3(addr)) ==
+                            MPID_nem_ib_cbf_hash3(addr)) ==
         (1ULL << MPID_nem_ib_cbf_bitsperslot) - 1;
 }
 
@@ -295,22 +295,22 @@ int MPID_nem_ib_vc_terminate(MPIDI_VC_t * vc);
 int MPID_nem_ib_pkthandler_init(MPIDI_CH3_PktHandler_Fcn * pktArray[], int arraySize);
 
 int MPID_nem_ib_SendNoncontig(MPIDI_VC_t * vc, MPID_Request * sreq, void *header,
-                                MPIDI_msg_sz_t hdr_sz);
+                              MPIDI_msg_sz_t hdr_sz);
 
 /* CH3 send/recv functions */
 int MPID_nem_ib_iSendContig(MPIDI_VC_t * vc, MPID_Request * sreq, void *hdr,
-                              MPIDI_msg_sz_t hdr_sz, void *data, MPIDI_msg_sz_t data_sz);
+                            MPIDI_msg_sz_t hdr_sz, void *data, MPIDI_msg_sz_t data_sz);
 int MPID_nem_ib_iStartContigMsg(MPIDI_VC_t * vc, void *hdr, MPIDI_msg_sz_t hdr_sz, void *data,
-                                  MPIDI_msg_sz_t data_sz, MPID_Request ** sreq_ptr);
+                                MPIDI_msg_sz_t data_sz, MPID_Request ** sreq_ptr);
 
 /* used by ib_poll.c */
 int MPID_nem_ib_send_progress(MPID_nem_ib_vc_area * vc_ib);
 
 /* CH3--lmt send/recv functions */
 int MPID_nem_ib_lmt_initiate_lmt(struct MPIDI_VC *vc, union MPIDI_CH3_Pkt *rts_pkt,
-                                   struct MPID_Request *req);
+                                 struct MPID_Request *req);
 int MPID_nem_ib_lmt_start_recv_core(struct MPID_Request *req, void *raddr, uint32_t rkey,
-                                      void *write_to_buf);
+                                    void *write_to_buf);
 int MPID_nem_ib_lmt_start_recv(struct MPIDI_VC *vc, struct MPID_Request *req, MPID_IOV s_cookie);
 int MPID_nem_ib_lmt_handle_cookie(struct MPIDI_VC *vc, struct MPID_Request *req, MPID_IOV cookie);
 int MPID_nem_ib_lmt_switch_send(struct MPIDI_VC *vc, struct MPID_Request *req);
@@ -345,24 +345,24 @@ extern void *MPID_nem_ib_fl[18];
 extern int MPID_nem_ib_nranks;
 //extern char *MPID_nem_ib_recv_buf;
 extern int MPID_nem_ib_myrank;
-extern uint64_t MPID_nem_ib_tsc_poll; /* to throttle ib_poll in recv_posted (in ib_poll.c) */
-extern int MPID_nem_ib_ncqe;  /* for lazy poll scq */
-extern int MPID_nem_ib_ncqe_lmt_put;  /* lmt-put uses another QP, SQ, CQ to speed-up fetching CQE */
+extern uint64_t MPID_nem_ib_tsc_poll;   /* to throttle ib_poll in recv_posted (in ib_poll.c) */
+extern int MPID_nem_ib_ncqe;    /* for lazy poll scq */
+extern int MPID_nem_ib_ncqe_lmt_put;    /* lmt-put uses another QP, SQ, CQ to speed-up fetching CQE */
 #ifdef MPID_NEM_IB_ONDEMAND
 extern MPID_nem_ib_cm_map_t MPID_nem_ib_cm_state;
-extern int MPID_nem_ib_ncqe_connect;  /* couting outstanding connection requests */
+extern int MPID_nem_ib_ncqe_connect;    /* couting outstanding connection requests */
 #endif
 extern int MPID_nem_ib_ncqe_scratch_pad;
-extern int MPID_nem_ib_ncqe_to_drain; /* count put in lmt-put-done protocol */
-extern int MPID_nem_ib_ncqe_nces;     /* counting non-copied eager-send */
-extern MPID_nem_ib_lmtq_t MPID_nem_ib_lmtq; /* poll queue for lmt */
-extern MPID_nem_ib_lmtq_t MPID_nem_ib_lmt_orderq;   /* force order when two or more rts_to_sender randomizes the last byte of receive buffer */
+extern int MPID_nem_ib_ncqe_to_drain;   /* count put in lmt-put-done protocol */
+extern int MPID_nem_ib_ncqe_nces;       /* counting non-copied eager-send */
+extern MPID_nem_ib_lmtq_t MPID_nem_ib_lmtq;     /* poll queue for lmt */
+extern MPID_nem_ib_lmtq_t MPID_nem_ib_lmt_orderq;       /* force order when two or more rts_to_sender randomizes the last byte of receive buffer */
 extern MPID_nem_ib_vc_area *MPID_nem_ib_debug_current_vc_ib;
 
 /* to detect multiple lmt-sends in one send-wait period to
    avoid overwriting the last byte in the receive buffer */
 extern uint8_t MPID_nem_ib_lmt_tail_addr_cbf[MPID_nem_ib_cbf_nslot *
-                                               MPID_nem_ib_cbf_bitsperslot / 8];
+                                             MPID_nem_ib_cbf_bitsperslot / 8];
 
 #define MPID_NEM_IB_MAX_POLLINGSET 65536
 
@@ -374,8 +374,8 @@ extern uint8_t MPID_nem_ib_lmt_tail_addr_cbf[MPID_nem_ib_cbf_nslot *
 #define MPID_NEM_IB_SYNC_SYNACK 1
 #define MPID_NEM_IB_SYNC_NACK 2
 
-#define MPID_NEM_IB_EAGER_MAX_MSG_SZ (MPID_NEM_IB_COM_RDMABUF_SZSEG/*1024*/-sizeof(MPIDI_CH3_Pkt_t)+sizeof(MPIDI_CH3_Pkt_eager_send_t)-sizeof(MPID_nem_ib_sz_hdrmagic_t)-sizeof(MPID_nem_ib_pkt_prefix_t)-sizeof(MPID_nem_ib_tailmagic_t))    /* when > this size, lmt is used. see src/mpid/ch3/src/mpid_isend.c */
-#define MPID_NEM_IB_POLL_PERIOD_RECV_POSTED 2000      /* minimum period from previous ib_poll to ib_poll in recv_posted */
+#define MPID_NEM_IB_EAGER_MAX_MSG_SZ (MPID_NEM_IB_COM_RDMABUF_SZSEG/*1024*/-sizeof(MPIDI_CH3_Pkt_t)+sizeof(MPIDI_CH3_Pkt_eager_send_t)-sizeof(MPID_nem_ib_sz_hdrmagic_t)-sizeof(MPID_nem_ib_pkt_prefix_t)-sizeof(MPID_nem_ib_tailmagic_t))      /* when > this size, lmt is used. see src/mpid/ch3/src/mpid_isend.c */
+#define MPID_NEM_IB_POLL_PERIOD_RECV_POSTED 2000        /* minimum period from previous ib_poll to ib_poll in recv_posted */
 #define MPID_NEM_IB_POLL_PERIOD_SEND_POSTED 2000
 
 typedef struct {
@@ -440,32 +440,32 @@ typedef struct MPID_nem_ib_pkt_change_rdmabuf_occupancy_notify_state_t {
 } MPID_nem_ib_pkt_change_rdmabuf_occupancy_notify_state_t;
 
 int MPID_nem_ib_PktHandler_EagerSend(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
-                                       MPIDI_msg_sz_t * buflen /* out */ ,
-                                       MPID_Request ** rreqp /* out */);
-int MPID_nem_ib_PktHandler_Put(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
-                                 MPIDI_msg_sz_t * buflen /* out */ ,
-                                 MPID_Request ** rreqp /* out */);
-int MPID_nem_ib_PktHandler_Accumulate(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
-                                        MPIDI_msg_sz_t * buflen /* out */ ,
-                                        MPID_Request ** rreqp /* out */);
-int MPID_nem_ib_PktHandler_Get(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
-                                 MPIDI_msg_sz_t * buflen /* out */ ,
-                                 MPID_Request ** rreqp /* out */);
-int MPID_nem_ib_PktHandler_GetResp(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
                                      MPIDI_msg_sz_t * buflen /* out */ ,
                                      MPID_Request ** rreqp /* out */);
+int MPID_nem_ib_PktHandler_Put(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
+                               MPIDI_msg_sz_t * buflen /* out */ ,
+                               MPID_Request ** rreqp /* out */);
+int MPID_nem_ib_PktHandler_Accumulate(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
+                                      MPIDI_msg_sz_t * buflen /* out */ ,
+                                      MPID_Request ** rreqp /* out */);
+int MPID_nem_ib_PktHandler_Get(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
+                               MPIDI_msg_sz_t * buflen /* out */ ,
+                               MPID_Request ** rreqp /* out */);
+int MPID_nem_ib_PktHandler_GetResp(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
+                                   MPIDI_msg_sz_t * buflen /* out */ ,
+                                   MPID_Request ** rreqp /* out */);
 int MPID_nem_ib_PktHandler_lmt_done(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
-                                      MPIDI_msg_sz_t * buflen, MPID_Request ** rreqp);
+                                    MPIDI_msg_sz_t * buflen, MPID_Request ** rreqp);
 int MPID_nem_ib_pkt_GET_DONE_handler(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
-                                       MPIDI_msg_sz_t * buflen, MPID_Request ** rreqp);
+                                     MPIDI_msg_sz_t * buflen, MPID_Request ** rreqp);
 int MPID_nem_ib_PktHandler_req_seq_num(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
-                                         MPIDI_msg_sz_t * buflen, MPID_Request ** rreqp);
+                                       MPIDI_msg_sz_t * buflen, MPID_Request ** rreqp);
 int MPID_nem_ib_PktHandler_reply_seq_num(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
-                                           MPIDI_msg_sz_t * buflen, MPID_Request ** rreqp);
+                                         MPIDI_msg_sz_t * buflen, MPID_Request ** rreqp);
 int MPID_nem_ib_PktHandler_change_rdmabuf_occupancy_notify_state(MPIDI_VC_t * vc,
-                                                                   MPIDI_CH3_Pkt_t * pkt,
-                                                                   MPIDI_msg_sz_t * buflen,
-                                                                   MPID_Request ** rreqp);
+                                                                 MPIDI_CH3_Pkt_t * pkt,
+                                                                 MPIDI_msg_sz_t * buflen,
+                                                                 MPID_Request ** rreqp);
 
 /* MPID_nem_ib_PktHandler_lmt_done is a wrapper of pkt_DONE_handler and calls it */
 /* pkt_DONE_handler (in src/mpid/ch3/channels/nemesis/src/mpid_nem_lmt.c) is not exported */

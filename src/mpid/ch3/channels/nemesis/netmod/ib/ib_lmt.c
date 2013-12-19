@@ -23,7 +23,7 @@
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 int MPID_nem_ib_lmt_initiate_lmt(struct MPIDI_VC *vc, union MPIDI_CH3_Pkt *rts_pkt,
-                                   struct MPID_Request *req)
+                                 struct MPID_Request *req)
 {
     int mpi_errno = MPI_SUCCESS;
     int dt_contig;
@@ -137,7 +137,7 @@ int MPID_nem_ib_lmt_initiate_lmt(struct MPIDI_VC *vc, union MPIDI_CH3_Pkt *rts_p
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 int MPID_nem_ib_lmt_start_recv_core(struct MPID_Request *req, void *raddr, uint32_t rkey,
-                                      void *write_to_buf)
+                                    void *write_to_buf)
 {
     int mpi_errno = MPI_SUCCESS;
     int ibcom_errno;
@@ -149,7 +149,7 @@ int MPID_nem_ib_lmt_start_recv_core(struct MPID_Request *req, void *raddr, uint3
 
     ibcom_errno =
         MPID_nem_ib_com_lrecv(vc_ib->sc->fd, (uint64_t) req, raddr, req->ch.lmt_data_sz, rkey,
-                    write_to_buf);
+                              write_to_buf);
     MPID_nem_ib_ncqe += 1;
     //dprintf("start_recv,ncqe=%d\n", MPID_nem_ib_ncqe);
     MPIU_ERR_CHKANDJUMP(ibcom_errno, mpi_errno, MPI_ERR_OTHER, "**MPID_nem_ib_com_lrecv");
@@ -161,7 +161,7 @@ int MPID_nem_ib_lmt_start_recv_core(struct MPID_Request *req, void *raddr, uint3
          *((uint8_t *) (write_to_buf + req->ch.lmt_data_sz - sizeof(uint8_t))));
 
 #ifdef MPID_NEM_IB_LMT_GET_CQE
-    MPID_nem_ib_ncqe_to_drain += 1;   /* use CQE instead of polling */
+    MPID_nem_ib_ncqe_to_drain += 1;     /* use CQE instead of polling */
 #else
     /* drain_scq and ib_poll is not ordered, so both can decrement ref_count */
     MPIR_Request_add_ref(req);
@@ -250,7 +250,7 @@ int MPID_nem_ib_lmt_start_recv(struct MPIDI_VC *vc, struct MPID_Request *req, MP
     if (MPID_nem_ib_sendq_empty(vc_ib->sendq) &&
         vc_ib->ibcom->ncom < MPID_NEM_IB_COM_MAX_SQ_CAPACITY - slack &&
         MPID_nem_ib_ncqe < MPID_NEM_IB_COM_MAX_CQ_CAPACITY - slack) {
-        mpi_errno = MPID_nem_ib_lmt_start_recv_core(req, s_cookie_buf->addr, s_cookie_buf->rkey, write_to_buf);       /* fast path not storing raddr and rkey */
+        mpi_errno = MPID_nem_ib_lmt_start_recv_core(req, s_cookie_buf->addr, s_cookie_buf->rkey, write_to_buf); /* fast path not storing raddr and rkey */
         if (mpi_errno) {
             MPIU_ERR_POP(mpi_errno);
         }
@@ -280,8 +280,7 @@ int MPID_nem_ib_lmt_start_recv(struct MPIDI_VC *vc, struct MPID_Request *req, MP
 #ifndef MPID_NEM_IB_DISABLE_VAR_OCC_NOTIFY_RATE
     /* change remote notification policy of RDMA-write-to buf */
     //dprintf("lmt_start_recv,reply_seq_num,old rstate=%d\n", vc_ib->ibcom->rdmabuf_occupancy_notify_rstate);
-    MPID_nem_ib_change_rdmabuf_occupancy_notify_policy_lw(vc_ib,
-                                                            &vc_ib->ibcom->lsr_seq_num_tail);
+    MPID_nem_ib_change_rdmabuf_occupancy_notify_policy_lw(vc_ib, &vc_ib->ibcom->lsr_seq_num_tail);
     //dprintf("lmt_start_recv,reply_seq_num,new rstate=%d\n", vc_ib->ibcom->rdmabuf_occupancy_notify_rstate);
 #endif
     //dprintf("lmt_start_recv,reply_seq_num,sendq_empty=%d,ncom=%d,ncqe=%d,rdmabuf_occ=%d\n", MPID_nem_ib_sendq_empty(vc_ib->sendq), vc_ib->ibcom->ncom, MPID_nem_ib_ncqe, MPID_nem_ib_diff32(vc_ib->ibcom->sseq_num, vc_ib->ibcom->lsr_seq_num_tail));
@@ -292,10 +291,9 @@ int MPID_nem_ib_lmt_start_recv(struct MPIDI_VC *vc, struct MPID_Request *req, MP
                 vc_ib->ibcom->ncom < MPID_NEM_IB_COM_MAX_SQ_CAPACITY,
                 MPID_nem_ib_ncqe < MPID_NEM_IB_COM_MAX_CQ_CAPACITY,
                 MPID_nem_ib_diff32(vc_ib->ibcom->sseq_num,
-                                     vc_ib->ibcom->lsr_seq_num_tail) < MPID_NEM_IB_COM_RDMABUF_NSEG);
+                                   vc_ib->ibcom->lsr_seq_num_tail) < MPID_NEM_IB_COM_RDMABUF_NSEG);
     }
-    if (!MPID_nem_ib_sendq_empty(vc_ib->sendq) &&
-        MPID_nem_ib_sendq_ready_to_send_head(vc_ib)) {
+    if (!MPID_nem_ib_sendq_empty(vc_ib->sendq) && MPID_nem_ib_sendq_ready_to_send_head(vc_ib)) {
         dprintf("lmt_start_recv,send_progress\n");
         fflush(stdout);
         MPID_nem_ib_send_progress(vc_ib);
@@ -360,7 +358,8 @@ int MPID_nem_ib_lmt_switch_send(struct MPIDI_VC *vc, struct MPID_Request *req)
     }
 
     //assert(dt_true_lb == 0);
-    uint8_t *tailp = (uint8_t *) ((uint8_t *) write_from_buf /*+ dt_true_lb */  + data_sz - sizeof(uint8_t));
+    uint8_t *tailp =
+        (uint8_t *) ((uint8_t *) write_from_buf /*+ dt_true_lb */  + data_sz - sizeof(uint8_t));
 #if 0
     *is_end_flag_same = (r_cookie_buf->tail == *tailp) ? 1 : 0;
 #else

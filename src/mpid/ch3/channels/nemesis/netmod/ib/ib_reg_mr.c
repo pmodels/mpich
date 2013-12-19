@@ -57,11 +57,13 @@ static inline void *aalloc(size_t sz, int id)
             arena_flist[id] = ((free_list_t *) arena_flist[id])->next;
         }
         else {
-            q = mmap(NULL, MPID_NEM_IB_ROUNDUP64(MPID_NEM_IB_SZARENA * MPID_NEM_IB_NCLUST_SLAB, 4096), PROT_READ | PROT_WRITE,
-                     MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+            q = mmap(NULL,
+                     MPID_NEM_IB_ROUNDUP64(MPID_NEM_IB_SZARENA * MPID_NEM_IB_NCLUST_SLAB, 4096),
+                     PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
 #if MPID_NEM_IB_NCLUST_SLAB > 1
             arena_flist[id] = q + MPID_NEM_IB_SZARENA;
-            for (p = arena_flist[id]; p < q + (MPID_NEM_IB_NCLUST_SLAB - 1) * MPID_NEM_IB_SZARENA; p += MPID_NEM_IB_SZARENA) {
+            for (p = arena_flist[id]; p < q + (MPID_NEM_IB_NCLUST_SLAB - 1) * MPID_NEM_IB_SZARENA;
+                 p += MPID_NEM_IB_SZARENA) {
                 ((free_list_t *) p)->next = p + MPID_NEM_IB_SZARENA;
             }
             ((free_list_t *) p)->next = 0;
@@ -105,7 +107,8 @@ struct MPID_nem_ib_com_reg_mr_cache_entry_t {
     int refc;
 };
 
-static struct MPID_nem_ib_com_reg_mr_listnode_t MPID_nem_ib_com_reg_mr_cache[MPID_NEM_IB_COM_REG_MR_NLINE];
+static struct MPID_nem_ib_com_reg_mr_listnode_t
+    MPID_nem_ib_com_reg_mr_cache[MPID_NEM_IB_COM_REG_MR_NLINE];
 
 __inline__ int MPID_nem_ib_com_hash_func(char *addr)
 {
@@ -115,7 +118,8 @@ __inline__ int MPID_nem_ib_com_hash_func(char *addr)
     return (int) v;
 }
 
-static void MPID_nem_ib_com_reg_mr_insert(struct MPID_nem_ib_com_reg_mr_listnode_t *c, struct MPID_nem_ib_com_reg_mr_listnode_t *e)
+static void MPID_nem_ib_com_reg_mr_insert(struct MPID_nem_ib_com_reg_mr_listnode_t *c,
+                                          struct MPID_nem_ib_com_reg_mr_listnode_t *e)
 {
     struct MPID_nem_ib_com_reg_mr_listnode_t *next;
     struct MPID_nem_ib_com_reg_mr_listnode_t *prev;
@@ -142,7 +146,9 @@ static inline void __lru_queue_display()
     int i = 0;
     for (i = 0; i < MPID_NEM_IB_COM_REG_MR_NLINE; i++) {
         dprintf("---- hash %d\n", i);
-        for (p = (struct MPID_nem_ib_com_reg_mr_cache_entry_t *) MPID_nem_ib_com_reg_mr_cache[i].lru_next;
+        for (p =
+             (struct MPID_nem_ib_com_reg_mr_cache_entry_t *) MPID_nem_ib_com_reg_mr_cache[i].
+             lru_next;
              p != (struct MPID_nem_ib_com_reg_mr_cache_entry_t *) &MPID_nem_ib_com_reg_mr_cache[i];
              p = (struct MPID_nem_ib_com_reg_mr_cache_entry_t *) p->lru_next) {
             if (p && p->addr) {
@@ -161,8 +167,8 @@ struct ibv_mr *MPID_nem_ib_com_reg_mr_fetch(void *addr, int len)
 #if 0   /* debug */
     struct ibv_mr *mr;
     int ibcom_errno = MPID_nem_ib_com_reg_mr(addr, len, &mr);
-    printf("mrcache,MPID_nem_ib_com_reg_mr,error,addr=%p,len=%d,lkey=%08x,rkey=%08x\n", addr, len, mr->lkey,
-           mr->rkey);
+    printf("mrcache,MPID_nem_ib_com_reg_mr,error,addr=%p,len=%d,lkey=%08x,rkey=%08x\n", addr, len,
+           mr->lkey, mr->rkey);
     if (ibcom_errno != 0) {
         goto fn_fail;
     }
@@ -183,8 +189,8 @@ struct ibv_mr *MPID_nem_ib_com_reg_mr_fetch(void *addr, int len)
 #else
     void *addr_aligned = (void *) ((unsigned long) addr & ~(MPID_NEM_IB_COM_REG_MR_SZPAGE - 1));
     int len_aligned =
-        ((((unsigned long) addr + len) - (unsigned long) addr_aligned + MPID_NEM_IB_COM_REG_MR_SZPAGE -
-          1) & ~(MPID_NEM_IB_COM_REG_MR_SZPAGE - 1));
+        ((((unsigned long) addr + len) - (unsigned long) addr_aligned +
+          MPID_NEM_IB_COM_REG_MR_SZPAGE - 1) & ~(MPID_NEM_IB_COM_REG_MR_SZPAGE - 1));
 #endif
     key = MPID_nem_ib_com_hash_func(addr);
 
@@ -193,12 +199,14 @@ struct ibv_mr *MPID_nem_ib_com_reg_mr_fetch(void *addr, int len)
 
     //__lru_queue_display();
     int way = 0;
-    for (e = (struct MPID_nem_ib_com_reg_mr_cache_entry_t *) MPID_nem_ib_com_reg_mr_cache[key].lru_next;
+    for (e =
+         (struct MPID_nem_ib_com_reg_mr_cache_entry_t *) MPID_nem_ib_com_reg_mr_cache[key].lru_next;
          e != (struct MPID_nem_ib_com_reg_mr_cache_entry_t *) &MPID_nem_ib_com_reg_mr_cache[key];
          e = (struct MPID_nem_ib_com_reg_mr_cache_entry_t *) e->lru_next, way++) {
         //dprintf("e=%p, e->hash_next=%p\n", e, e->lru_next);
 
-        if (e->addr <= addr_aligned && (uint8_t *) addr_aligned + len_aligned <= (uint8_t *) e->addr + e->len) {
+        if (e->addr <= addr_aligned &&
+            (uint8_t *) addr_aligned + len_aligned <= (uint8_t *) e->addr + e->len) {
             //dprintf
             //("MPID_nem_ib_com_reg_mr_fetch,hit,entry addr=%p,len=%d,mr addr=%p,len=%ld,requested addr=%p,len=%d\n",
             //e->addr, e->len, e->mr->addr, e->mr->length, addr, len);
@@ -224,7 +232,8 @@ struct ibv_mr *MPID_nem_ib_com_reg_mr_fetch(void *addr, int len)
         afree(victim, MPID_NEM_IB_COM_AALLOC_ID_MRCACHE);
     }
 
-    e = aalloc(sizeof(struct MPID_nem_ib_com_reg_mr_cache_entry_t), MPID_NEM_IB_COM_AALLOC_ID_MRCACHE);
+    e = aalloc(sizeof(struct MPID_nem_ib_com_reg_mr_cache_entry_t),
+               MPID_NEM_IB_COM_AALLOC_ID_MRCACHE);
     /* reference counter is used when evicting entry */
     e->refc = 1;
 
@@ -242,7 +251,8 @@ struct ibv_mr *MPID_nem_ib_com_reg_mr_fetch(void *addr, int len)
     //key, e->mr, e->mr->addr, e->mr->length, e->mr->lkey, e->mr->rkey);
 
     /* register to cache */
-    MPID_nem_ib_com_reg_mr_insert(&MPID_nem_ib_com_reg_mr_cache[key], (struct MPID_nem_ib_com_reg_mr_listnode_t *) e);
+    MPID_nem_ib_com_reg_mr_insert(&MPID_nem_ib_com_reg_mr_cache[key],
+                                  (struct MPID_nem_ib_com_reg_mr_listnode_t *) e);
 
     //__lru_queue_display();
 
@@ -254,9 +264,12 @@ struct ibv_mr *MPID_nem_ib_com_reg_mr_fetch(void *addr, int len)
     e->refc++;
 #if 0   /* disable for debug */
     /* move to head of the list */
-    if (e != (struct MPID_nem_ib_com_reg_mr_cache_entry_t *) MPID_nem_ib_com_reg_mr_cache[key].lru_next) {
+    if (e !=
+        (struct MPID_nem_ib_com_reg_mr_cache_entry_t *) MPID_nem_ib_com_reg_mr_cache[key].
+        lru_next) {
         MPID_nem_ib_com_reg_mr_unlink((struct MPID_nem_ib_com_reg_mr_listnode_t *) e);
-        MPID_nem_ib_com_reg_mr_insert(&MPID_nem_ib_com_reg_mr_cache[key], (struct MPID_nem_ib_com_reg_mr_listnode_t *) e);
+        MPID_nem_ib_com_reg_mr_insert(&MPID_nem_ib_com_reg_mr_cache[key],
+                                      (struct MPID_nem_ib_com_reg_mr_listnode_t *) e);
     }
 #endif
     //dprintf("[MrCache] reuse e=%p,key=%d,mr=%p,refc=%d,addr=%p,len=%ld,lkey=%08x,rkey=%08x\n", e,
@@ -291,8 +304,10 @@ void MPID_nem_ib_com_register_cache_init()
     /* Using the address to the start node to express the end of the list
      * instead of using NULL */
     for (i = 0; i < MPID_NEM_IB_COM_REG_MR_NLINE; i++) {
-        MPID_nem_ib_com_reg_mr_cache[i].lru_next = (struct MPID_nem_ib_com_reg_mr_listnode_t *) &MPID_nem_ib_com_reg_mr_cache[i];
-        MPID_nem_ib_com_reg_mr_cache[i].lru_prev = (struct MPID_nem_ib_com_reg_mr_listnode_t *) &MPID_nem_ib_com_reg_mr_cache[i];
+        MPID_nem_ib_com_reg_mr_cache[i].lru_next =
+            (struct MPID_nem_ib_com_reg_mr_listnode_t *) &MPID_nem_ib_com_reg_mr_cache[i];
+        MPID_nem_ib_com_reg_mr_cache[i].lru_prev =
+            (struct MPID_nem_ib_com_reg_mr_listnode_t *) &MPID_nem_ib_com_reg_mr_cache[i];
     }
 
     dprintf("[MrCache] cache initializes %d entries\n", MPID_NEM_IB_COM_REG_MR_NLINE);
@@ -304,7 +319,9 @@ void MPID_nem_ib_com_register_cache_destroy()
     int i = 0, cnt = 0;
 
     for (i = 0; i < MPID_NEM_IB_COM_REG_MR_NLINE; i++) {
-        for (p = (struct MPID_nem_ib_com_reg_mr_cache_entry_t *) MPID_nem_ib_com_reg_mr_cache[i].lru_next;
+        for (p =
+             (struct MPID_nem_ib_com_reg_mr_cache_entry_t *) MPID_nem_ib_com_reg_mr_cache[i].
+             lru_next;
              p != (struct MPID_nem_ib_com_reg_mr_cache_entry_t *) &MPID_nem_ib_com_reg_mr_cache[i];
              p = (struct MPID_nem_ib_com_reg_mr_cache_entry_t *) p->lru_next) {
             if (p && p->addr > 0) {

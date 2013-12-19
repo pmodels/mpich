@@ -65,7 +65,8 @@ int MPID_nem_ib_drain_scq(int dont_call_progress)
 #if 0   /*def HAVE_LIBDCFA */
     result = ibv_poll_cq(MPID_nem_ib_rc_shared_scq, 1, &cqe[0]);
 #else
-    result = ibv_poll_cq(MPID_nem_ib_rc_shared_scq, /*3 */ MPID_NEM_IB_COM_MAX_CQ_HEIGHT_DRAIN, &cqe[0]);
+    result =
+        ibv_poll_cq(MPID_nem_ib_rc_shared_scq, /*3 */ MPID_NEM_IB_COM_MAX_CQ_HEIGHT_DRAIN, &cqe[0]);
 #endif
 
     MPIU_ERR_CHKANDJUMP(result < 0, mpi_errno, MPI_ERR_OTHER, "**netmod,ib,ibv_poll_cq");
@@ -190,7 +191,7 @@ int MPID_nem_ib_drain_scq(int dont_call_progress)
                         vc_ib->ibcom->ncom < MPID_NEM_IB_COM_MAX_SQ_CAPACITY,
                         MPID_nem_ib_ncqe < MPID_NEM_IB_COM_MAX_CQ_CAPACITY,
                         MPID_nem_ib_diff32(vc_ib->ibcom->sseq_num,
-                                             vc_ib->ibcom->lsr_seq_num_tail) <
+                                           vc_ib->ibcom->lsr_seq_num_tail) <
                         MPID_NEM_IB_COM_RDMABUF_NSEG);
 
                 MPID_Request *sreq = MPID_nem_ib_sendq_head(vc_ib->sendq);
@@ -356,7 +357,7 @@ int MPID_nem_ib_drain_scq(int dont_call_progress)
                         vc_ib->ibcom->ncom < MPID_NEM_IB_COM_MAX_SQ_CAPACITY,
                         MPID_nem_ib_ncqe < MPID_NEM_IB_COM_MAX_CQ_CAPACITY,
                         MPID_nem_ib_diff32(vc_ib->ibcom->sseq_num,
-                                             vc_ib->ibcom->lsr_seq_num_tail) <
+                                           vc_ib->ibcom->lsr_seq_num_tail) <
                         MPID_NEM_IB_COM_RDMABUF_NSEG);
                 MPID_Request *sreq = MPID_nem_ib_sendq_head(vc_ib->sendq);
                 int msg_type_sreq = MPIDI_Request_get_msg_type(sreq);
@@ -413,7 +414,9 @@ int MPID_nem_ib_drain_scq_lmt_put()
 #if 0   /*def HAVE_LIBDCFA */
     result = ibv_poll_cq(MPID_nem_ib_rc_shared_scq_lmt_put, 1, &cqe[0]);
 #else
-    result = ibv_poll_cq(MPID_nem_ib_rc_shared_scq_lmt_put, MPID_NEM_IB_COM_MAX_CQ_HEIGHT_DRAIN, &cqe[0]);
+    result =
+        ibv_poll_cq(MPID_nem_ib_rc_shared_scq_lmt_put, MPID_NEM_IB_COM_MAX_CQ_HEIGHT_DRAIN,
+                    &cqe[0]);
 #endif
     MPIU_ERR_CHKANDJUMP(result < 0, mpi_errno, MPI_ERR_OTHER, "**netmod,ib,ibv_poll_cq");
 
@@ -463,7 +466,7 @@ int MPID_nem_ib_drain_scq_lmt_put()
             MPID_nem_ib_vc_area *vc_ib = VC_IB(req->ch.vc);
             vc_ib->ibcom->ncom_lmt_put -= 1;
             MPID_nem_ib_ncqe_lmt_put -= 1;
-            dprintf("drain_scq_lmt_put,rndv,ncqe=%d\n", MPID_nem_ib_ncqe_lmt_put);    /*suspicious */
+            dprintf("drain_scq_lmt_put,rndv,ncqe=%d\n", MPID_nem_ib_ncqe_lmt_put);      /*suspicious */
             int (*reqFn) (MPIDI_VC_t *, MPID_Request *, int *);
 
             (VC_FIELD(req->ch.vc, pending_sends)) -= 1;
@@ -523,7 +526,9 @@ int MPID_nem_ib_drain_scq_scratch_pad()
 #if 0   /*def HAVE_LIBDCFA */
     result = ibv_poll_cq(MPID_nem_ib_rc_shared_scq_scratch_pad, 1, &cqe[0]);
 #else
-    result = ibv_poll_cq(MPID_nem_ib_rc_shared_scq_scratch_pad, MPID_NEM_IB_COM_MAX_CQ_HEIGHT_DRAIN, &cqe[0]);
+    result =
+        ibv_poll_cq(MPID_nem_ib_rc_shared_scq_scratch_pad, MPID_NEM_IB_COM_MAX_CQ_HEIGHT_DRAIN,
+                    &cqe[0]);
 #endif
     MPIU_ERR_CHKANDJUMP(result < 0, mpi_errno, MPI_ERR_OTHER, "**netmod,ib,ibv_poll_cq");
 
@@ -580,7 +585,8 @@ int MPID_nem_ib_poll_eager(MPIDI_VC_t * vc)
     //dprintf("ib_poll,ld,rsr_seq_num_poll=%d\n", vc_ib->ibcom->rsr_seq_num_poll);
     volatile void *buf =
         (uint8_t *) vc_ib->ibcom->icom_mem[MPID_NEM_IB_COM_RDMAWR_TO] +
-        MPID_NEM_IB_COM_RDMABUF_SZSEG * ((uint32_t) vc_ib->ibcom->rsr_seq_num_poll % MPID_NEM_IB_COM_RDMABUF_NSEG);
+        MPID_NEM_IB_COM_RDMABUF_SZSEG * ((uint32_t) vc_ib->ibcom->rsr_seq_num_poll %
+                                         MPID_NEM_IB_COM_RDMABUF_NSEG);
     volatile MPID_nem_ib_sz_hdrmagic_t *sz_hdrmagic = (MPID_nem_ib_sz_hdrmagic_t *) buf;
     if (sz_hdrmagic->magic != MPID_NEM_IB_COM_MAGIC) {
         goto fn_exit;
@@ -599,7 +605,8 @@ int MPID_nem_ib_poll_eager(MPIDI_VC_t * vc)
 
     int sz_data_pow2;
     MPID_NEM_IB_SZ_DATA_POW2(sz_hdrmagic->sz);
-    volatile MPID_nem_ib_tailmagic_t *tailmagic = (MPID_nem_ib_tailmagic_t *) ((uint8_t *) buf + sz_data_pow2);
+    volatile MPID_nem_ib_tailmagic_t *tailmagic =
+        (MPID_nem_ib_tailmagic_t *) ((uint8_t *) buf + sz_data_pow2);
     dprintf("poll,sz_data_pow2=%d,tailmagic=%p,sz=%d\n", sz_data_pow2, tailmagic, sz_hdrmagic->sz);
     int k = 0;
     //tsce = MPID_nem_ib_rdtsc(); printf("9,%ld\n", tsce - tscs); // 55 for 512-byte
@@ -638,7 +645,8 @@ int MPID_nem_ib_poll_eager(MPIDI_VC_t * vc)
 
 #if 1
     void *rsi;
-    for (rsi = (void *) buf; rsi < (uint8_t *) buf + sz_hdrmagic->sz; rsi = (uint8_t *) rsi + 64 * 4) {
+    for (rsi = (void *) buf; rsi < (uint8_t *) buf + sz_hdrmagic->sz;
+         rsi = (uint8_t *) rsi + 64 * 4) {
 #ifdef __MIC__
         __asm__ __volatile__
             ("movq %0, %%rsi;"
@@ -656,9 +664,11 @@ int MPID_nem_ib_poll_eager(MPIDI_VC_t * vc)
     }
 #endif
 
-    MPIDI_CH3_Pkt_eager_send_t *pkt = (MPIDI_CH3_Pkt_eager_send_t *) ((uint8_t *) buf + sizeof(MPID_nem_ib_sz_hdrmagic_t));
+    MPIDI_CH3_Pkt_eager_send_t *pkt =
+        (MPIDI_CH3_Pkt_eager_send_t *) ((uint8_t *) buf + sizeof(MPID_nem_ib_sz_hdrmagic_t));
     MPIU_Assert(sz_hdrmagic->sz >=
-                sizeof(MPID_nem_ib_sz_hdrmagic_t) + sizeof(MPIDI_CH3_Pkt_t) + sizeof(MPID_nem_ib_tailmagic_t));
+                sizeof(MPID_nem_ib_sz_hdrmagic_t) + sizeof(MPIDI_CH3_Pkt_t) +
+                sizeof(MPID_nem_ib_tailmagic_t));
     MPIDI_CH3_Pkt_eager_send_t *pkt2 =
         (MPIDI_CH3_Pkt_eager_send_t *) ((uint8_t *) buf + sizeof(MPID_nem_ib_sz_hdrmagic_t) +
                                         sizeof(MPID_nem_ib_pkt_prefix_t));
@@ -691,16 +701,17 @@ int MPID_nem_ib_poll_eager(MPIDI_VC_t * vc)
 
     int notify_rate;
     ibcom_errno =
-        MPID_nem_ib_com_rdmabuf_occupancy_notify_rate_get(MPID_nem_ib_conns[vc->pg_rank].fd, &notify_rate);
+        MPID_nem_ib_com_rdmabuf_occupancy_notify_rate_get(MPID_nem_ib_conns[vc->pg_rank].fd,
+                                                          &notify_rate);
     dprintf("poll_eager,sendq=%d,ncom=%d,ncqe=%d,ldiff=%d(%d-%d),rdiff=%d(%d-%d),rate=%d\n",
-            MPID_nem_ib_sendq_empty(vc_ib->sendq), vc_ib->ibcom->ncom < MPID_NEM_IB_COM_MAX_SQ_CAPACITY,
+            MPID_nem_ib_sendq_empty(vc_ib->sendq),
+            vc_ib->ibcom->ncom < MPID_NEM_IB_COM_MAX_SQ_CAPACITY,
             MPID_nem_ib_ncqe < MPID_NEM_IB_COM_MAX_CQ_CAPACITY,
             MPID_nem_ib_diff32(vc_ib->ibcom->sseq_num, vc_ib->ibcom->lsr_seq_num_tail),
             vc_ib->ibcom->sseq_num, vc_ib->ibcom->lsr_seq_num_tail,
             MPID_nem_ib_diff32(vc_ib->ibcom->rsr_seq_num_tail,
-                                 vc_ib->ibcom->rsr_seq_num_tail_last_sent),
-            vc_ib->ibcom->rsr_seq_num_tail, vc_ib->ibcom->rsr_seq_num_tail_last_sent,
-            notify_rate);
+                               vc_ib->ibcom->rsr_seq_num_tail_last_sent),
+            vc_ib->ibcom->rsr_seq_num_tail, vc_ib->ibcom->rsr_seq_num_tail_last_sent, notify_rate);
 
     //dprintf("ib_poll,current pcc=%d\n", MPIDI_CH3I_progress_completion_count.v);
 
@@ -715,12 +726,14 @@ int MPID_nem_ib_poll_eager(MPIDI_VC_t * vc)
         dprintf("poll_eager,released,type=%d,MPIDI_NEM_IB_PKT_REPLY_SEQ_NUM=%d\n", pkt->type,
                 MPIDI_NEM_IB_PKT_REPLY_SEQ_NUM);
         MPID_nem_ib_recv_buf_released(vc,
-                                        (void *) ((uint8_t *) buf + sizeof(MPID_nem_ib_sz_hdrmagic_t) +
-                                                  sizeof(MPIDI_CH3_Pkt_t)));
+                                      (void *) ((uint8_t *) buf +
+                                                sizeof(MPID_nem_ib_sz_hdrmagic_t) +
+                                                sizeof(MPIDI_CH3_Pkt_t)));
     }
     else {
         if (sz_hdrmagic->sz ==
-            sizeof(MPID_nem_ib_sz_hdrmagic_t) + sizeof(MPIDI_CH3_Pkt_t) + sizeof(MPID_nem_ib_tailmagic_t)) {
+            sizeof(MPID_nem_ib_sz_hdrmagic_t) + sizeof(MPIDI_CH3_Pkt_t) +
+            sizeof(MPID_nem_ib_tailmagic_t)) {
             if (pkt->type == MPIDI_CH3_PKT_EAGERSHORT_SEND
                 //||                  pkt->type == MPIDI_CH3_PKT_GET
 ) {
@@ -1096,8 +1109,7 @@ int MPID_nem_ib_recv_buf_released(struct MPIDI_VC *vc, void *user_data)
 
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_IB_RECV_BUF_RELEASED);
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_IB_RECV_BUF_RELEASED);
-    dprintf("recv_buf_released,%d<-%d,user_data=%p\n", MPID_nem_ib_myrank, vc->pg_rank,
-            user_data);
+    dprintf("recv_buf_released,%d<-%d,user_data=%p\n", MPID_nem_ib_myrank, vc->pg_rank, user_data);
 #if 1   /* moving from ib_poll */
     /* unmark magic */
     /* magic is located at MPID_NEM_IB_COM_INLINE_DATA boundary and variable length entails multiple prospective locations for the future use */
@@ -1112,10 +1124,12 @@ int MPID_nem_ib_recv_buf_released(struct MPIDI_VC *vc, void *user_data)
     }
 
     MPIU_Assert(vc_ib->ibcom->icom_mem[MPID_NEM_IB_COM_RDMAWR_TO] <= user_data &&
-                user_data < vc_ib->ibcom->icom_mem[MPID_NEM_IB_COM_RDMAWR_TO] + MPID_NEM_IB_COM_RDMABUF_SZ);
+                user_data <
+                vc_ib->ibcom->icom_mem[MPID_NEM_IB_COM_RDMAWR_TO] + MPID_NEM_IB_COM_RDMABUF_SZ);
     unsigned long mod =
         (unsigned long) ((uint8_t *) user_data -
-                         (uint8_t *) vc_ib->ibcom->icom_mem[MPID_NEM_IB_COM_RDMAWR_TO]) & (MPID_NEM_IB_COM_RDMABUF_SZSEG - 1);
+                         (uint8_t *) vc_ib->ibcom->
+                         icom_mem[MPID_NEM_IB_COM_RDMAWR_TO]) & (MPID_NEM_IB_COM_RDMABUF_SZSEG - 1);
 
     void *buf = (void *) ((uint8_t *) user_data - mod);
     //dprintf("recv_buf_released,clearing,buf=%p\n", buf);
@@ -1130,10 +1144,12 @@ int MPID_nem_ib_recv_buf_released(struct MPIDI_VC *vc, void *user_data)
          offset =
          offset ? ((((offset + 1) << 1) - 1) >
                    MPID_NEM_IB_MAX_DATA_POW2 ? MPID_NEM_IB_MAX_DATA_POW2 : (((offset + 1) << 1) -
-                                                                      1)) : 15) {
-        volatile MPID_nem_ib_tailmagic_t *ptr = (MPID_nem_ib_tailmagic_t *) ((uint8_t *) buf + offset);
+                                                                            1)) : 15) {
+        volatile MPID_nem_ib_tailmagic_t *ptr =
+            (MPID_nem_ib_tailmagic_t *) ((uint8_t *) buf + offset);
         MPIU_Assert(vc_ib->ibcom->icom_mem[MPID_NEM_IB_COM_RDMAWR_TO] <= ptr &&
-                    ptr < vc_ib->ibcom->icom_mem[MPID_NEM_IB_COM_RDMAWR_TO] + MPID_NEM_IB_COM_RDMABUF_SZ);
+                    ptr <
+                    vc_ib->ibcom->icom_mem[MPID_NEM_IB_COM_RDMAWR_TO] + MPID_NEM_IB_COM_RDMABUF_SZ);
         ptr->magic = 0 /*0xde */ ;
         if (offset == sz_data_pow2) {
             break;
@@ -1146,7 +1162,8 @@ int MPID_nem_ib_recv_buf_released(struct MPIDI_VC *vc, void *user_data)
     /* mark that one eager-send RDMA-write-to buffer has been released */
     int index_slot =
         (unsigned long) ((uint8_t *) user_data -
-                         (uint8_t *) vc_ib->ibcom->icom_mem[MPID_NEM_IB_COM_RDMAWR_TO]) / MPID_NEM_IB_COM_RDMABUF_SZSEG;
+                         (uint8_t *) vc_ib->ibcom->icom_mem[MPID_NEM_IB_COM_RDMAWR_TO]) /
+        MPID_NEM_IB_COM_RDMABUF_SZSEG;
     MPIU_Assert(0 <= index_slot && index_slot < MPID_NEM_IB_COM_RDMABUF_NSEG);
     //dprintf("user_data=%p,mem=%p,sub=%08lx,index_slot=%d\n", user_data, vc_ib->ibcom->icom_mem[MPID_NEM_IB_COM_RDMAWR_TO], (unsigned long)user_data - (unsigned long)vc_ib->ibcom->icom_mem[MPID_NEM_IB_COM_RDMAWR_TO], index_slot);
     //dprintf("index_slot=%d,released=%016lx\n", index_slot, vc_ib->ibcom->rsr_seq_num_released[index_slot / 64]);
@@ -1158,11 +1175,10 @@ int MPID_nem_ib_recv_buf_released(struct MPIDI_VC *vc, void *user_data)
     //dprintf("released=%016lx\n", vc_ib->ibcom->rsr_seq_num_released[index_tail / 64]);
     if (1 || (index_tail & 7) || MPID_nem_ib_diff32(index_slot, index_tail) >= MPID_NEM_IB_COM_RDMABUF_NSEG - 8) {      /* avoid wrap-around */
         while (1) {
-            if (((vc_ib->ibcom->
-                  rsr_seq_num_released[index_tail / 64] >> (index_tail & 63)) & 1) == 1) {
+            if (((vc_ib->ibcom->rsr_seq_num_released[index_tail / 64] >> (index_tail & 63)) & 1) ==
+                1) {
                 vc_ib->ibcom->rsr_seq_num_tail += 1;
-                vc_ib->ibcom->rsr_seq_num_released[index_tail / 64] &=
-                    ~(1ULL << (index_tail & 63));
+                vc_ib->ibcom->rsr_seq_num_released[index_tail / 64] &= ~(1ULL << (index_tail & 63));
                 dprintf("rsr_seq_num_tail,incremented to %d\n", vc_ib->ibcom->rsr_seq_num_tail);
             }
             else {
@@ -1174,8 +1190,7 @@ int MPID_nem_ib_recv_buf_released(struct MPIDI_VC *vc, void *user_data)
         if (((vc_ib->ibcom->rsr_seq_num_released[index_tail / 64] >> (index_tail & 63)) & 0xff) ==
             0xff) {
             vc_ib->ibcom->rsr_seq_num_tail += 8;
-            vc_ib->ibcom->rsr_seq_num_released[index_tail / 64] &=
-                ~(0xffULL << (index_tail & 63));
+            vc_ib->ibcom->rsr_seq_num_released[index_tail / 64] &= ~(0xffULL << (index_tail & 63));
             //dprintf("released[index_tail/64]=%016lx\n", vc_ib->ibcom->rsr_seq_num_released[index_tail / 64]);
         }
     }
@@ -1184,7 +1199,8 @@ int MPID_nem_ib_recv_buf_released(struct MPIDI_VC *vc, void *user_data)
 
     int notify_rate;
     ibcom_errno =
-        MPID_nem_ib_com_rdmabuf_occupancy_notify_rate_get(MPID_nem_ib_conns[vc->pg_rank].fd, &notify_rate);
+        MPID_nem_ib_com_rdmabuf_occupancy_notify_rate_get(MPID_nem_ib_conns[vc->pg_rank].fd,
+                                                          &notify_rate);
     MPIU_ERR_CHKANDJUMP(ibcom_errno, mpi_errno, MPI_ERR_OTHER,
                         "**MPID_nem_ib_com_rdmabuf_occupancy_notify_rate_get");
 
@@ -1201,7 +1217,8 @@ int MPID_nem_ib_recv_buf_released(struct MPIDI_VC *vc, void *user_data)
             int msg_type = MPIDI_Request_get_msg_type(sreq);
             if (msg_type == MPIDI_REQUEST_EAGER_MSG &&  /* guard for the following pointer dereference */
                 ((MPIDI_CH3_Pkt_t *) sreq->dev.iov[0].MPID_IOV_BUF)->type == MPIDI_NEM_PKT_NETMOD &&
-                ((MPID_nem_pkt_netmod_t *) sreq->dev.iov[0].MPID_IOV_BUF)->subtype == MPIDI_NEM_IB_PKT_REPLY_SEQ_NUM) {
+                ((MPID_nem_pkt_netmod_t *) sreq->dev.iov[0].MPID_IOV_BUF)->subtype ==
+                MPIDI_NEM_IB_PKT_REPLY_SEQ_NUM) {
                 goto skip;
             }
         }
@@ -1226,7 +1243,7 @@ int MPID_nem_ib_recv_buf_released(struct MPIDI_VC *vc, void *user_data)
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 int MPID_nem_ib_PktHandler_lmt_done(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
-                                      MPIDI_msg_sz_t * buflen, MPID_Request ** rreqp)
+                                    MPIDI_msg_sz_t * buflen, MPID_Request ** rreqp)
 {
     int mpi_errno = MPI_SUCCESS;
     int ibcom_errno;
@@ -1273,8 +1290,8 @@ int MPID_nem_ib_PktHandler_lmt_done(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 int MPID_nem_ib_PktHandler_EagerSend(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
-                                       MPIDI_msg_sz_t * buflen /* out */ ,
-                                       MPID_Request ** rreqp /* out */)
+                                     MPIDI_msg_sz_t * buflen /* out */ ,
+                                     MPID_Request ** rreqp /* out */)
 {
     MPID_nem_ib_pkt_prefix_t *netmod_pkt = (MPID_nem_ib_pkt_prefix_t *) pkt;
     MPIDI_CH3_Pkt_eager_send_t *ch3_pkt =
@@ -1303,20 +1320,18 @@ int MPID_nem_ib_PktHandler_EagerSend(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
     int *lsr_seq_num_tail;
     MPID_nem_ib_vc_area *vc_ib = VC_IB(vc);
     ibcom_errno = MPID_nem_ib_com_lsr_seq_num_tail_get(vc_ib->sc->fd, &lsr_seq_num_tail);
-    MPIU_ERR_CHKANDJUMP(ibcom_errno, mpi_errno, MPI_ERR_OTHER, "**MPID_nem_ib_com_lsr_seq_num_tail_get");
+    MPIU_ERR_CHKANDJUMP(ibcom_errno, mpi_errno, MPI_ERR_OTHER,
+                        "**MPID_nem_ib_com_lsr_seq_num_tail_get");
     dprintf("MPID_nem_ib_PktHandler_EagerSend,lsr_seq_num_tail=%d,netmod_pkt->seq_num_tail=%d\n",
             *lsr_seq_num_tail, netmod_pkt->seq_num_tail);
     *lsr_seq_num_tail = MPID_NEM_IB_MAX(*lsr_seq_num_tail, netmod_pkt->seq_num_tail);
-    dprintf("MPID_nem_ib_PktHandler_EagerSend,lsr_seq_num_tail updated to %d\n",
-            *lsr_seq_num_tail);
+    dprintf("MPID_nem_ib_PktHandler_EagerSend,lsr_seq_num_tail updated to %d\n", *lsr_seq_num_tail);
 
 #ifndef MPID_NEM_IB_DISABLE_VAR_OCC_NOTIFY_RATE
     /* change remote notification policy of RDMA-write-to buf */
-    dprintf("pkthandler,eagersend,old rstate=%d\n",
-            vc_ib->ibcom->rdmabuf_occupancy_notify_rstate);
+    dprintf("pkthandler,eagersend,old rstate=%d\n", vc_ib->ibcom->rdmabuf_occupancy_notify_rstate);
     MPID_nem_ib_change_rdmabuf_occupancy_notify_policy_lw(vc_ib, lsr_seq_num_tail);
-    dprintf("pkthandler,eagersend,new rstate=%d\n",
-            vc_ib->ibcom->rdmabuf_occupancy_notify_rstate);
+    dprintf("pkthandler,eagersend,new rstate=%d\n", vc_ib->ibcom->rdmabuf_occupancy_notify_rstate);
 #endif
 
     dprintf("pkthandler,eagersend,sendq_empty=%d,ncom=%d,rdmabuf_occ=%d\n",
@@ -1367,8 +1382,8 @@ int MPID_nem_ib_PktHandler_EagerSend(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 int MPID_nem_ib_PktHandler_Put(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
-                                 MPIDI_msg_sz_t * buflen /* out */ ,
-                                 MPID_Request ** rreqp /* out */)
+                               MPIDI_msg_sz_t * buflen /* out */ ,
+                               MPID_Request ** rreqp /* out */)
 {
     MPID_nem_ib_pkt_prefix_t *netmod_pkt = (MPID_nem_ib_pkt_prefix_t *) pkt;
     MPIDI_CH3_Pkt_put_t *ch3_pkt =
@@ -1396,8 +1411,7 @@ int MPID_nem_ib_PktHandler_Put(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
 #ifndef MPID_NEM_IB_DISABLE_VAR_OCC_NOTIFY_RATE
     /* change remote notification policy of RDMA-write-to buf */
     dprintf("pkthandler,put,old rstate=%d\n", vc_ib->ibcom->rdmabuf_occupancy_notify_rstate);
-    MPID_nem_ib_change_rdmabuf_occupancy_notify_policy_lw(vc_ib,
-                                                            &vc_ib->ibcom->lsr_seq_num_tail);
+    MPID_nem_ib_change_rdmabuf_occupancy_notify_policy_lw(vc_ib, &vc_ib->ibcom->lsr_seq_num_tail);
     dprintf("pkthandler,put,new rstate=%d\n", vc_ib->ibcom->rdmabuf_occupancy_notify_rstate);
 #endif
     dprintf("pkthandler,put,sendq_empty=%d,ncom=%d,rdmabuf_occ=%d\n",
@@ -1435,8 +1449,8 @@ int MPID_nem_ib_PktHandler_Put(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 int MPID_nem_ib_PktHandler_Accumulate(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
-                                        MPIDI_msg_sz_t * buflen /* out */ ,
-                                        MPID_Request ** rreqp /* out */)
+                                      MPIDI_msg_sz_t * buflen /* out */ ,
+                                      MPID_Request ** rreqp /* out */)
 {
     MPID_nem_ib_pkt_prefix_t *netmod_pkt = (MPID_nem_ib_pkt_prefix_t *) pkt;
     MPIDI_CH3_Pkt_accum_t *ch3_pkt =
@@ -1464,8 +1478,7 @@ int MPID_nem_ib_PktHandler_Accumulate(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
 #ifndef MPID_NEM_IB_DISABLE_VAR_OCC_NOTIFY_RATE
     /* change remote notification policy of RDMA-write-to buf */
     dprintf("pkthandler,put,old rstate=%d\n", vc_ib->ibcom->rdmabuf_occupancy_notify_rstate);
-    MPID_nem_ib_change_rdmabuf_occupancy_notify_policy_lw(vc_ib,
-                                                            &vc_ib->ibcom->lsr_seq_num_tail);
+    MPID_nem_ib_change_rdmabuf_occupancy_notify_policy_lw(vc_ib, &vc_ib->ibcom->lsr_seq_num_tail);
     dprintf("pkthandler,put,new rstate=%d\n", vc_ib->ibcom->rdmabuf_occupancy_notify_rstate);
 #endif
     dprintf("pkthandler,put,sendq_empty=%d,ncom=%d,rdmabuf_occ=%d\n",
@@ -1502,8 +1515,8 @@ int MPID_nem_ib_PktHandler_Accumulate(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 int MPID_nem_ib_PktHandler_Get(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
-                                 MPIDI_msg_sz_t * buflen /* out */ ,
-                                 MPID_Request ** rreqp /* out */)
+                               MPIDI_msg_sz_t * buflen /* out */ ,
+                               MPID_Request ** rreqp /* out */)
 {
     MPID_nem_ib_pkt_prefix_t *netmod_pkt = (MPID_nem_ib_pkt_prefix_t *) pkt;
     MPIDI_CH3_Pkt_get_t *ch3_pkt =
@@ -1531,8 +1544,7 @@ int MPID_nem_ib_PktHandler_Get(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
 #ifndef MPID_NEM_IB_DISABLE_VAR_OCC_NOTIFY_RATE
     /* change remote notification policy of RDMA-write-to buf */
     dprintf("pkthandler,put,old rstate=%d\n", vc_ib->ibcom->rdmabuf_occupancy_notify_rstate);
-    MPID_nem_ib_change_rdmabuf_occupancy_notify_policy_lw(vc_ib,
-                                                            &vc_ib->ibcom->lsr_seq_num_tail);
+    MPID_nem_ib_change_rdmabuf_occupancy_notify_policy_lw(vc_ib, &vc_ib->ibcom->lsr_seq_num_tail);
     dprintf("pkthandler,put,new rstate=%d\n", vc_ib->ibcom->rdmabuf_occupancy_notify_rstate);
 #endif
     dprintf("pkthandler,put,sendq_empty=%d,ncom=%d,rdmabuf_occ=%d\n",
@@ -1568,8 +1580,8 @@ int MPID_nem_ib_PktHandler_Get(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 int MPID_nem_ib_PktHandler_GetResp(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
-                                     MPIDI_msg_sz_t * buflen /* out */ ,
-                                     MPID_Request ** rreqp /* out */)
+                                   MPIDI_msg_sz_t * buflen /* out */ ,
+                                   MPID_Request ** rreqp /* out */)
 {
     MPID_nem_ib_pkt_prefix_t *netmod_pkt = (MPID_nem_ib_pkt_prefix_t *) pkt;
     MPIDI_CH3_Pkt_get_t *ch3_pkt =
@@ -1597,8 +1609,7 @@ int MPID_nem_ib_PktHandler_GetResp(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
 #ifndef MPID_NEM_IB_DISABLE_VAR_OCC_NOTIFY_RATE
     /* change remote notification policy of RDMA-write-to buf */
     dprintf("pkthandler,put,old rstate=%d\n", vc_ib->ibcom->rdmabuf_occupancy_notify_rstate);
-    MPID_nem_ib_change_rdmabuf_occupancy_notify_policy_lw(vc_ib,
-                                                            &vc_ib->ibcom->lsr_seq_num_tail);
+    MPID_nem_ib_change_rdmabuf_occupancy_notify_policy_lw(vc_ib, &vc_ib->ibcom->lsr_seq_num_tail);
     dprintf("pkthandler,put,new rstate=%d\n", vc_ib->ibcom->rdmabuf_occupancy_notify_rstate);
 #endif
     dprintf("pkthandler,put,sendq_empty=%d,ncom=%d,rdmabuf_occ=%d\n",
@@ -1633,7 +1644,7 @@ int MPID_nem_ib_PktHandler_GetResp(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 int MPID_nem_ib_pkt_GET_DONE_handler(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
-                                       MPIDI_msg_sz_t * buflen, MPID_Request ** rreqp)
+                                     MPIDI_msg_sz_t * buflen, MPID_Request ** rreqp)
 {
     int mpi_errno = MPI_SUCCESS;
     int ibcom_errno;
@@ -1671,7 +1682,7 @@ int MPID_nem_ib_pkt_GET_DONE_handler(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
         /* change remote notification policy of RDMA-write-to buf */
         //dprintf("lmt_start_recv,reply_seq_num,old rstate=%d\n", vc_ib->ibcom->rdmabuf_occupancy_notify_rstate);
         MPID_nem_ib_change_rdmabuf_occupancy_notify_policy_lw(vc_ib,
-                                                                &vc_ib->ibcom->lsr_seq_num_tail);
+                                                              &vc_ib->ibcom->lsr_seq_num_tail);
         //dprintf("lmt_start_recv,reply_seq_num,new rstate=%d\n", vc_ib->ibcom->rdmabuf_occupancy_notify_rstate);
 #endif
         //dprintf("lmt_start_recv,reply_seq_num,sendq_empty=%d,ncom=%d,ncqe=%d,rdmabuf_occ=%d\n", MPID_nem_ib_sendq_empty(vc_ib->sendq), vc_ib->ibcom->ncom, MPID_nem_ib_ncqe, MPID_nem_ib_diff32(vc_ib->ibcom->sseq_num, vc_ib->ibcom->lsr_seq_num_tail));
@@ -1682,8 +1693,9 @@ int MPID_nem_ib_pkt_GET_DONE_handler(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
                     vc_ib->ibcom->ncom < MPID_NEM_IB_COM_MAX_SQ_CAPACITY,
                     MPID_nem_ib_ncqe < MPID_NEM_IB_COM_MAX_CQ_CAPACITY,
                     MPID_nem_ib_diff32(vc_ib->ibcom->sseq_num,
-                                         vc_ib->ibcom->lsr_seq_num_tail) < MPID_NEM_IB_COM_RDMABUF_NSEG,
-                    vc_ib->ibcom->sseq_num, vc_ib->ibcom->lsr_seq_num_tail);
+                                       vc_ib->ibcom->lsr_seq_num_tail) <
+                    MPID_NEM_IB_COM_RDMABUF_NSEG, vc_ib->ibcom->sseq_num,
+                    vc_ib->ibcom->lsr_seq_num_tail);
         }
         dprintf("get_done_handler,send_progress\n");
         fflush(stdout);
@@ -1711,7 +1723,7 @@ int MPID_nem_ib_pkt_GET_DONE_handler(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 int MPID_nem_ib_PktHandler_req_seq_num(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
-                                         MPIDI_msg_sz_t * buflen, MPID_Request ** rreqp)
+                                       MPIDI_msg_sz_t * buflen, MPID_Request ** rreqp)
 {
     int mpi_errno = MPI_SUCCESS;
     int ibcom_errno;
@@ -1737,7 +1749,7 @@ int MPID_nem_ib_PktHandler_req_seq_num(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
             vc_ib->ibcom->ncom < MPID_NEM_IB_COM_MAX_SQ_CAPACITY,
             MPID_nem_ib_ncqe < MPID_NEM_IB_COM_MAX_CQ_CAPACITY,
             MPID_nem_ib_diff32(vc_ib->ibcom->sseq_num,
-                                 vc_ib->ibcom->lsr_seq_num_tail) < MPID_NEM_IB_COM_RDMABUF_NSEG,
+                               vc_ib->ibcom->lsr_seq_num_tail) < MPID_NEM_IB_COM_RDMABUF_NSEG,
             vc_ib->ibcom->sseq_num, vc_ib->ibcom->lsr_seq_num_tail);
 
     /* send reply */
@@ -1756,7 +1768,7 @@ int MPID_nem_ib_PktHandler_req_seq_num(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 int MPID_nem_ib_PktHandler_reply_seq_num(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
-                                           MPIDI_msg_sz_t * buflen, MPID_Request ** rreqp)
+                                         MPIDI_msg_sz_t * buflen, MPID_Request ** rreqp)
 {
     int mpi_errno = MPI_SUCCESS;
     int ibcom_errno;
@@ -1778,7 +1790,8 @@ int MPID_nem_ib_PktHandler_reply_seq_num(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
     dprintf("pkthandler,reply_seq_num,old lsr_seq_num=%d,reply_pkt->seq_num_tail=%d\n",
             vc_ib->ibcom->lsr_seq_num_tail, reply_pkt->seq_num_tail);
     ibcom_errno = MPID_nem_ib_com_lsr_seq_num_tail_get(vc_ib->sc->fd, &lsr_seq_num_tail);
-    MPIU_ERR_CHKANDJUMP(ibcom_errno, mpi_errno, MPI_ERR_OTHER, "**MPID_nem_ib_com_lsr_seq_num_tail_get");
+    MPIU_ERR_CHKANDJUMP(ibcom_errno, mpi_errno, MPI_ERR_OTHER,
+                        "**MPID_nem_ib_com_lsr_seq_num_tail_get");
     *lsr_seq_num_tail = MPID_NEM_IB_MAX(*lsr_seq_num_tail, reply_pkt->seq_num_tail);
     //dprintf("pkthandler,reply_seq_num,new lsr_seq_num=%d\n", vc_ib->ibcom->lsr_seq_num_tail);
 
@@ -1793,8 +1806,8 @@ int MPID_nem_ib_PktHandler_reply_seq_num(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
     /* try to send from sendq because at least one RDMA-write-to buffer has been released */
     //dprintf("pkthandler,reply_seq_num,send_progress\n");
     dprintf("pkthandler,reply_seq_num,send_progress\n");
-  MPID_NEM_IB_CHECK_AND_SEND_PROGRESS fn_exit:
-    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_IB_PKTHANDLER_REPLY_SEQ_NUM);
+    MPID_NEM_IB_CHECK_AND_SEND_PROGRESS fn_exit:
+        MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_IB_PKTHANDLER_REPLY_SEQ_NUM);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -1805,9 +1818,9 @@ int MPID_nem_ib_PktHandler_reply_seq_num(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 int MPID_nem_ib_PktHandler_change_rdmabuf_occupancy_notify_state(MPIDI_VC_t * vc,
-                                                                   MPIDI_CH3_Pkt_t * pkt,
-                                                                   MPIDI_msg_sz_t * buflen,
-                                                                   MPID_Request ** rreqp)
+                                                                 MPIDI_CH3_Pkt_t * pkt,
+                                                                 MPIDI_msg_sz_t * buflen,
+                                                                 MPID_Request ** rreqp)
 {
     int mpi_errno = MPI_SUCCESS;
     int ibcom_errno;
@@ -1831,7 +1844,7 @@ int MPID_nem_ib_PktHandler_change_rdmabuf_occupancy_notify_state(MPIDI_VC_t * vc
     int *rdmabuf_occupancy_notify_lstate;
     ibcom_errno =
         MPID_nem_ib_com_rdmabuf_occupancy_notify_lstate_get(vc_ib->sc->fd,
-                                                  &rdmabuf_occupancy_notify_lstate);
+                                                            &rdmabuf_occupancy_notify_lstate);
     MPIU_ERR_CHKANDJUMP(ibcom_errno, mpi_errno, MPI_ERR_OTHER,
                         "**MPID_nem_ib_com_rdmabuf_occupancy_notify_lstate_get");
     *rdmabuf_occupancy_notify_lstate = reply_pkt->state;
@@ -1861,7 +1874,9 @@ int MPID_nem_ib_cm_drain_scq()
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_IB_CM_DRAIN_SCQ);
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_IB_CM_DRAIN_SCQ);
 
-    result = ibv_poll_cq(MPID_nem_ib_rc_shared_scq_lmt_put, MPID_NEM_IB_COM_MAX_CQ_HEIGHT_DRAIN, &cqe[0]);
+    result =
+        ibv_poll_cq(MPID_nem_ib_rc_shared_scq_lmt_put, MPID_NEM_IB_COM_MAX_CQ_HEIGHT_DRAIN,
+                    &cqe[0]);
     MPIU_ERR_CHKANDJUMP(result < 0, mpi_errno, MPI_ERR_OTHER, "**netmod,ib,ibv_poll_cq");
 
     if (result > 0) {
@@ -1922,23 +1937,26 @@ int MPID_nem_ib_cm_poll()
     dprintf("cm_poll,enter\n");
 
 
-    volatile uint32_t *owner = (uint32_t *) (MPID_nem_ib_com_scratch_pad->icom_mem[MPID_NEM_IB_COM_SCRATCH_PAD_TO]);
+    volatile uint32_t *owner =
+        (uint32_t *) (MPID_nem_ib_com_scratch_pad->icom_mem[MPID_NEM_IB_COM_SCRATCH_PAD_TO]);
     if (*owner == (uint32_t) - 1) {
         goto fn_exit;
     }   /* not acquired */
 
     MPID_nem_ib_com *ibcom_scratch_pad;
-    ibcom_errno = MPID_nem_ib_com_obtain_pointer(MPID_nem_ib_scratch_pad_fds[*owner], &ibcom_scratch_pad);
+    ibcom_errno =
+        MPID_nem_ib_com_obtain_pointer(MPID_nem_ib_scratch_pad_fds[*owner], &ibcom_scratch_pad);
     MPIU_ERR_CHKANDJUMP(ibcom_errno, mpi_errno, MPI_ERR_OTHER, "**MPID_nem_ib_com_obtain_pointer");
 
     MPID_nem_ib_cm_cmd_t *received =
         (MPID_nem_ib_cm_cmd_t *) (ibcom_scratch_pad->icom_mem[MPID_NEM_IB_COM_SCRATCH_PAD_TO] +
-                                    sizeof(uint32_t));
+                                  sizeof(uint32_t));
     MPID_nem_ib_cm_cmd_t cmd;
     MPID_nem_ib_vc_area *vc_ib;
     switch (received->type) {
     case MPID_NEM_IB_CM_SYN:
-        ibcom_errno = MPID_nem_ib_com_open(ib_port, MPID_NEM_IB_COM_OPEN_RC, &MPID_nem_ib_conns[*owner].fd);
+        ibcom_errno =
+            MPID_nem_ib_com_open(ib_port, MPID_NEM_IB_COM_OPEN_RC, &MPID_nem_ib_conns[*owner].fd);
         MPIU_ERR_CHKANDJUMP(ibcom_errno, mpi_errno, MPI_ERR_OTHER, "**MPID_nem_ib_com_open");
         cmd.type = MPID_NEM_IB_CM_SYNACK;
         goto common_tail;
@@ -1946,38 +1964,49 @@ int MPID_nem_ib_cm_poll()
     case MPID_NEM_IB_CM_BUSINESSCARD:
         ibcom_errno =
             MPID_nem_ib_com_rts(MPID_nem_ib_conns[*owner].fd, received->qpnum, received->lid,
-                      &(received->gid));
+                                &(received->gid));
         MPIU_ERR_CHKANDJUMP(ibcom_errno, mpi_errno, MPI_ERR_OTHER, "**MPID_nem_ib_com_rts");
         ibcom_errno =
-            MPID_nem_ib_com_reg_mr_connect(MPID_nem_ib_conns[*owner].fd, received->rmem, received->rkey);
-        MPIU_ERR_CHKANDJUMP(ibcom_errno, mpi_errno, MPI_ERR_OTHER, "**MPID_nem_ib_com_reg_mr_connect");
+            MPID_nem_ib_com_reg_mr_connect(MPID_nem_ib_conns[*owner].fd, received->rmem,
+                                           received->rkey);
+        MPIU_ERR_CHKANDJUMP(ibcom_errno, mpi_errno, MPI_ERR_OTHER,
+                            "**MPID_nem_ib_com_reg_mr_connect");
         VC_FIELD(MPID_nem_ib_conns[owner].vc, is_connected) = 1;
 
         cmd.type = MPID_NEM_IB_CM_ACK;
       common_tail:
         ibcom_errno =
-            MPID_nem_ib_com_get_info_conn(MPID_nem_ib_conns[*owner].fd, MPID_NEM_IB_COM_INFOKEY_PORT_LID, &(cmd.lid),
-                                sizeof(uint16_t));
-        MPIU_ERR_CHKANDJUMP(ibcom_errno, mpi_errno, MPI_ERR_OTHER, "**MPID_nem_ib_com_get_info_conn");
+            MPID_nem_ib_com_get_info_conn(MPID_nem_ib_conns[*owner].fd,
+                                          MPID_NEM_IB_COM_INFOKEY_PORT_LID, &(cmd.lid),
+                                          sizeof(uint16_t));
+        MPIU_ERR_CHKANDJUMP(ibcom_errno, mpi_errno, MPI_ERR_OTHER,
+                            "**MPID_nem_ib_com_get_info_conn");
 
         ibcom_errno =
-            MPID_nem_ib_com_get_info_conn(MPID_nem_ib_conns[*owner].fd, MPID_NEM_IB_COM_INFOKEY_PORT_GID, &(cmd.gid),
-                                sizeof(union ibv_gid));
-        MPIU_ERR_CHKANDJUMP(ibcom_errno, mpi_errno, MPI_ERR_OTHER, "**MPID_nem_ib_com_get_info_conn");
+            MPID_nem_ib_com_get_info_conn(MPID_nem_ib_conns[*owner].fd,
+                                          MPID_NEM_IB_COM_INFOKEY_PORT_GID, &(cmd.gid),
+                                          sizeof(union ibv_gid));
+        MPIU_ERR_CHKANDJUMP(ibcom_errno, mpi_errno, MPI_ERR_OTHER,
+                            "**MPID_nem_ib_com_get_info_conn");
 
         ibcom_errno =
-            MPID_nem_ib_com_get_info_conn(MPID_nem_ib_conns[*owner].fd, MPID_NEM_IB_COM_INFOKEY_QP_QPN, &(cmd.qpnum),
-                                sizeof(uint32_t));
-        MPIU_ERR_CHKANDJUMP(ibcom_errno, mpi_errno, MPI_ERR_OTHER, "**MPID_nem_ib_com_get_info_conn");
+            MPID_nem_ib_com_get_info_conn(MPID_nem_ib_conns[*owner].fd,
+                                          MPID_NEM_IB_COM_INFOKEY_QP_QPN, &(cmd.qpnum),
+                                          sizeof(uint32_t));
+        MPIU_ERR_CHKANDJUMP(ibcom_errno, mpi_errno, MPI_ERR_OTHER,
+                            "**MPID_nem_ib_com_get_info_conn");
 
         ibcom_errno =
-            MPID_nem_ib_com_get_info_mr(MPID_nem_ib_conns[*owner].fd, MPID_NEM_IB_COM_SCRATCH_PAD_TO,
-                              MPID_NEM_IB_COM_INFOKEY_MR_ADDR, &(cmd.rmem), sizeof(void *));
+            MPID_nem_ib_com_get_info_mr(MPID_nem_ib_conns[*owner].fd,
+                                        MPID_NEM_IB_COM_SCRATCH_PAD_TO,
+                                        MPID_NEM_IB_COM_INFOKEY_MR_ADDR, &(cmd.rmem),
+                                        sizeof(void *));
         MPIU_ERR_CHKANDJUMP(ibcom_errno, mpi_errno, MPI_ERR_OTHER, "**MPID_nem_ib_com_get_info_mr");
 
         ibcom_errno =
-            MPID_nem_ib_com_get_info_mr(MPID_nem_ib_conns[*owner].fd, MPID_NEM_IB_COM_SCRATCH_PAD_TO,
-                              MPID_NEM_IB_COM_INFOKEY_MR_RKEY, &(cmd.rkey), sizeof(int));
+            MPID_nem_ib_com_get_info_mr(MPID_nem_ib_conns[*owner].fd,
+                                        MPID_NEM_IB_COM_SCRATCH_PAD_TO,
+                                        MPID_NEM_IB_COM_INFOKEY_MR_RKEY, &(cmd.rkey), sizeof(int));
         MPIU_ERR_CHKANDJUMP(ibcom_errno, mpi_errno, MPI_ERR_OTHER, "**MPID_nem_ib_com_get_info_mr");
 
         *owner = (uint32_t) - 1;        /* release */
@@ -2030,30 +2059,38 @@ int MPID_nem_ib_cm_accept()
         MPID_nem_ib_conn_pkt_t *rpkt = (MPID_nem_ib_conn_pkt_t *) (rbuf + 40);
         if (rpkt->type == MPID_NEM_IB_SYN) {
 
-            dprintf("accept,%d<-%d,type=%08x\n", MPID_nem_ib_myrank, rpkt->remote_rank,
-                    rpkt->type);
+            dprintf("accept,%d<-%d,type=%08x\n", MPID_nem_ib_myrank, rpkt->remote_rank, rpkt->type);
 
             void *sbuf;
             ibcom_errno = MPID_nem_ib_com_mem_udwr_from(MPID_nem_ib_conn_ud_fd, &sbuf);
-            MPIU_ERR_CHKANDJUMP(ibcom_errno, mpi_errno, MPI_ERR_OTHER, "**MPID_nem_ib_com_mem_udwr_from");
+            MPIU_ERR_CHKANDJUMP(ibcom_errno, mpi_errno, MPI_ERR_OTHER,
+                                "**MPID_nem_ib_com_mem_udwr_from");
             MPID_nem_ib_conn_pkt_t *spkt = (MPID_nem_ib_conn_pkt_t *) (sbuf + 40);
             spkt->remote_rank = MPID_nem_ib_myrank;
             spkt->type = MPID_NEM_IB_SYNACK;
 
             ibcom_errno =
-                MPID_nem_ib_com_get_info_conn(MPID_nem_ib_conns[rpkt->remote_rank].fd, MPID_NEM_IB_COM_INFOKEY_QP_QPN,
-                                    &spkt->qpn, sizeof(uint32_t));
-            MPIU_ERR_CHKANDJUMP(ibcom_errno, mpi_errno, MPI_ERR_OTHER, "**MPID_nem_ib_com_get_info_conn");
+                MPID_nem_ib_com_get_info_conn(MPID_nem_ib_conns[rpkt->remote_rank].fd,
+                                              MPID_NEM_IB_COM_INFOKEY_QP_QPN, &spkt->qpn,
+                                              sizeof(uint32_t));
+            MPIU_ERR_CHKANDJUMP(ibcom_errno, mpi_errno, MPI_ERR_OTHER,
+                                "**MPID_nem_ib_com_get_info_conn");
 
             ibcom_errno =
-                MPID_nem_ib_com_get_info_mr(MPID_nem_ib_conns[remote_rank].fd, MPID_NEM_IB_COM_RDMAWR_TO,
-                                  MPID_NEM_IB_COM_INFOKEY_MR_ADDR, &spkt->rmem, sizeof(void *));
-            MPIU_ERR_CHKANDJUMP(ibcom_errno, mpi_errno, MPI_ERR_OTHER, "**MPID_nem_ib_com_get_info_mr");
+                MPID_nem_ib_com_get_info_mr(MPID_nem_ib_conns[remote_rank].fd,
+                                            MPID_NEM_IB_COM_RDMAWR_TO,
+                                            MPID_NEM_IB_COM_INFOKEY_MR_ADDR, &spkt->rmem,
+                                            sizeof(void *));
+            MPIU_ERR_CHKANDJUMP(ibcom_errno, mpi_errno, MPI_ERR_OTHER,
+                                "**MPID_nem_ib_com_get_info_mr");
 
             ibcom_errno =
-                MPID_nem_ib_com_get_info_mr(MPID_nem_ib_conns[remote_rank].fd, MPID_NEM_IB_COM_RDMAWR_TO,
-                                  MPID_NEM_IB_COM_INFOKEY_MR_RKEY, &spkt->rkey, sizeof(int));
-            MPIU_ERR_CHKANDJUMP(ibcom_errno, mpi_errno, MPI_ERR_OTHER, "**MPID_nem_ib_com_get_info_mr");
+                MPID_nem_ib_com_get_info_mr(MPID_nem_ib_conns[remote_rank].fd,
+                                            MPID_NEM_IB_COM_RDMAWR_TO,
+                                            MPID_NEM_IB_COM_INFOKEY_MR_RKEY, &spkt->rkey,
+                                            sizeof(int));
+            MPIU_ERR_CHKANDJUMP(ibcom_errno, mpi_errno, MPI_ERR_OTHER,
+                                "**MPID_nem_ib_com_get_info_mr");
 
             /* kokomade. add udsend_core(synack) */
             if (MPID_nem_ib_conn_ibcom->ncom < &&MPID_nem_ib_ncqe_connect <) {

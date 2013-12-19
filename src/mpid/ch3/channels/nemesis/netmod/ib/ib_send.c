@@ -54,7 +54,8 @@ void MPID_nem_ib_cm_map_set(MPID_nem_ib_cm_map_t * map, char *key, int key_lengt
     }
     int s1_minus_s2;
     while (1) {
-        int lmin = key_length < MPID_NEM_IB_MAP_LEN(pTree) ? key_length : MPID_NEM_IB_MAP_LEN(pTree);
+        int lmin =
+            key_length < MPID_NEM_IB_MAP_LEN(pTree) ? key_length : MPID_NEM_IB_MAP_LEN(pTree);
         int residual = key_length - MPID_NEM_IB_MAP_LEN(pTree);
         s1_minus_s2 = memcmp(key, MPID_NEM_IB_MAP_PBODY(pTree), lmin);
 
@@ -66,24 +67,24 @@ void MPID_nem_ib_cm_map_set(MPID_nem_ib_cm_map_t * map, char *key, int key_lengt
         else if (s1_minus_s2 < 0 || !s1_minus_s2 && residual < 0) {
             // psArg is "smaller" OR same substring, psArg is shorter
             if (MPID_NEM_IB_MAP_LPTR(pTree) == 0) {
-                MPID_NEM_IB_MAP_LPTR(pTree) = map->length;        // pointer write
+                MPID_NEM_IB_MAP_LPTR(pTree) = map->length;      // pointer write
                 /* left child */
                 MPID_NEM_IB_MAP_ALLOCATE(map, key, key_length, val);
                 dprintf("stored as left child\n");
                 return;
             }
-            pTree = map->data + MPID_NEM_IB_MAP_LPTR(pTree);      // go to left child
+            pTree = map->data + MPID_NEM_IB_MAP_LPTR(pTree);    // go to left child
         }
         else {
             //  psArg is "larger" OR same substring, psArg is longer
             if (MPID_NEM_IB_MAP_RPTR(pTree) == 0) {
-                MPID_NEM_IB_MAP_RPTR(pTree) = map->length;        // pointer write
+                MPID_NEM_IB_MAP_RPTR(pTree) = map->length;      // pointer write
                 /* right child */
                 MPID_NEM_IB_MAP_ALLOCATE(map, key, key_length, val);
                 dprintf("stored as right child\n");
                 return;
             }
-            pTree = map->data + MPID_NEM_IB_MAP_RPTR(pTree);      // go to right child
+            pTree = map->data + MPID_NEM_IB_MAP_RPTR(pTree);    // go to right child
         }
     }
 }
@@ -102,7 +103,8 @@ int MPID_nem_ib_cm_map_get(MPID_nem_ib_cm_map_t * map, char *key, int key_length
     }
     int s1_minus_s2;
     while (1) {
-        int lmin = key_length < MPID_NEM_IB_MAP_LEN(pTree) ? key_length : MPID_NEM_IB_MAP_LEN(pTree);
+        int lmin =
+            key_length < MPID_NEM_IB_MAP_LEN(pTree) ? key_length : MPID_NEM_IB_MAP_LEN(pTree);
         int residual = key_length - MPID_NEM_IB_MAP_LEN(pTree);
         s1_minus_s2 = memcmp(key, MPID_NEM_IB_MAP_PBODY(pTree), lmin);
 
@@ -118,7 +120,7 @@ int MPID_nem_ib_cm_map_get(MPID_nem_ib_cm_map_t * map, char *key, int key_length
                 dprintf("left is null\n");
                 goto fn_fail;
             }
-            pTree = map->data + MPID_NEM_IB_MAP_LPTR(pTree);      // go to left child
+            pTree = map->data + MPID_NEM_IB_MAP_LPTR(pTree);    // go to left child
         }
         else {
             //  psArg is "larger" OR same substring, psArg is longer
@@ -127,7 +129,7 @@ int MPID_nem_ib_cm_map_get(MPID_nem_ib_cm_map_t * map, char *key, int key_length
                 dprintf("right is null\n");
                 goto fn_fail;
             }
-            pTree = map->data + MPID_NEM_IB_MAP_RPTR(pTree);      // go to right child
+            pTree = map->data + MPID_NEM_IB_MAP_RPTR(pTree);    // go to right child
         }
     }
   fn_exit:
@@ -142,7 +144,7 @@ int MPID_nem_ib_cm_map_get(MPID_nem_ib_cm_map_t * map, char *key, int key_length
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 static int MPID_nem_ib_iSendContig_core(MPIDI_VC_t * vc, MPID_Request * sreq, void *hdr,
-                                          MPIDI_msg_sz_t hdr_sz, void *data, MPIDI_msg_sz_t data_sz)
+                                        MPIDI_msg_sz_t hdr_sz, void *data, MPIDI_msg_sz_t data_sz)
 {
     int mpi_errno = MPI_SUCCESS;
     int ibcom_errno;
@@ -159,7 +161,8 @@ static int MPID_nem_ib_iSendContig_core(MPIDI_VC_t * vc, MPID_Request * sreq, vo
     /* remote SR sequence number which is last sent */
     int *rsr_seq_num_tail;
     ibcom_errno = MPID_nem_ib_com_rsr_seq_num_tail_get(vc_ib->sc->fd, &rsr_seq_num_tail);
-    MPIU_ERR_CHKANDJUMP(ibcom_errno, mpi_errno, MPI_ERR_OTHER, "**MPID_nem_ib_com_rsr_seq_num_tail_get");
+    MPIU_ERR_CHKANDJUMP(ibcom_errno, mpi_errno, MPI_ERR_OTHER,
+                        "**MPID_nem_ib_com_rsr_seq_num_tail_get");
 
     /* remote SR sequence number which is last sent */
     int *rsr_seq_num_tail_last_sent;
@@ -256,14 +259,14 @@ static int MPID_nem_ib_iSendContig_core(MPIDI_VC_t * vc, MPID_Request * sreq, vo
 
     int copied;
     ibcom_errno =
-        MPID_nem_ib_com_isend(vc_ib->sc->fd, (uint64_t) sreq, netmod_hdr, sz_netmod_hdr, hdr, hdr_sz, data,
-                    (int) data_sz, &copied);
+        MPID_nem_ib_com_isend(vc_ib->sc->fd, (uint64_t) sreq, netmod_hdr, sz_netmod_hdr, hdr,
+                              hdr_sz, data, (int) data_sz, &copied);
     MPIU_ERR_CHKFATALANDJUMP(ibcom_errno, mpi_errno, MPI_ERR_OTHER, "**MPID_nem_ib_com_isend");
     MPID_nem_ib_ncqe += 1;
     //dprintf("isendcontig_core,ncqe=%d\n", MPID_nem_ib_ncqe);
     dprintf("isendcontig_core,isend,kind=%d,msg_type=%d,copied=%d\n", sreq->kind, msg_type, copied);    /*suspicious lines,(if1,on,on,off,if0) works */
 #if 0
-#define MPID_NEM_IB_TLBPREF_SEND 20        //20
+#define MPID_NEM_IB_TLBPREF_SEND 20     //20
     int tlb_pref_ahd = 4096 * MPID_NEM_IB_TLBPREF_SEND;
     __asm__ __volatile__
         ("movq %0, %%rsi;"
@@ -336,16 +339,17 @@ static int MPID_nem_ib_iSendContig_core(MPIDI_VC_t * vc, MPID_Request * sreq, vo
         }
     }
     else {
-        MPID_nem_ib_ncqe_nces += 1;   /* it has different meaning, counting non-copied eager-send */
+        MPID_nem_ib_ncqe_nces += 1;     /* it has different meaning, counting non-copied eager-send */
     }
 #else
-    MPID_nem_ib_ncqe_nces += 1;       /* it has different meaning, counting non-copied eager-send */
+    MPID_nem_ib_ncqe_nces += 1; /* it has different meaning, counting non-copied eager-send */
 #endif
 
 #ifndef MPID_NEM_IB_DISABLE_VAR_OCC_NOTIFY_RATE
     //dprintf("isendcontig,old rstate=%d\n", vc_ib->ibcom->rdmabuf_occupancy_notify_rstate);
     int *notify_rstate;
-    ibcom_errno = MPID_nem_ib_com_rdmabuf_occupancy_notify_rstate_get(vc_ib->sc->fd, &notify_rstate);
+    ibcom_errno =
+        MPID_nem_ib_com_rdmabuf_occupancy_notify_rstate_get(vc_ib->sc->fd, &notify_rstate);
     MPIU_ERR_CHKANDJUMP(ibcom_errno, mpi_errno, MPI_ERR_OTHER,
                         "**MPID_nem_ib_com_rdmabuf_occupancy_notify_rstate_get");
 
@@ -354,13 +358,14 @@ static int MPID_nem_ib_iSendContig_core(MPIDI_VC_t * vc, MPID_Request * sreq, vo
     /* if the number of slots in RMDA-write-to buffer have hit the high water-mark */
     if (*notify_rstate == MPID_NEM_IB_COM_RDMABUF_OCCUPANCY_NOTIFY_STATE_LW &&
         MPID_nem_ib_diff32(vc_ib->ibcom->sseq_num,
-                             vc_ib->ibcom->lsr_seq_num_tail) > MPID_NEM_IB_COM_RDMABUF_HIGH_WATER_MARK) {
+                           vc_ib->ibcom->lsr_seq_num_tail) >
+        MPID_NEM_IB_COM_RDMABUF_HIGH_WATER_MARK) {
         dprintf("changing notify_rstate,id=%d\n", vc_ib->ibcom->sseq_num);
         /* remember remote notifying policy so that local can know when to change remote policy back to LW */
         *notify_rstate = MPID_NEM_IB_COM_RDMABUF_OCCUPANCY_NOTIFY_STATE_HW;
         /* change remote notifying policy of RDMA-write-to buf occupancy info */
         MPID_nem_ib_send_change_rdmabuf_occupancy_notify_state(vc,
-                                                                 MPID_NEM_IB_COM_RDMABUF_OCCUPANCY_NOTIFY_STATE_HW);
+                                                               MPID_NEM_IB_COM_RDMABUF_OCCUPANCY_NOTIFY_STATE_HW);
     }
     //dprintf("isendcontig_core,new rstate=%d\n", vc_ib->ibcom->rdmabuf_occupancy_notify_rstate);
 #endif
@@ -377,7 +382,7 @@ static int MPID_nem_ib_iSendContig_core(MPIDI_VC_t * vc, MPID_Request * sreq, vo
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 int MPID_nem_ib_iSendContig(MPIDI_VC_t * vc, MPID_Request * sreq, void *hdr,
-                              MPIDI_msg_sz_t hdr_sz, void *data, MPIDI_msg_sz_t data_sz)
+                            MPIDI_msg_sz_t hdr_sz, void *data, MPIDI_msg_sz_t data_sz)
 {
     int mpi_errno = MPI_SUCCESS;
     int ibcom_errno;
@@ -399,10 +404,12 @@ int MPID_nem_ib_iSendContig(MPIDI_VC_t * vc, MPID_Request * sreq, void *hdr,
 #if 0
     /* aggressively perform drain_scq */
     /* try to clear the road blocks, i.e. ncom, ncqe */
-    if (vc_ib->ibcom->ncom >= /*MPID_NEM_IB_COM_MAX_SQ_CAPACITY */ MPID_NEM_IB_COM_MAX_SQ_HEIGHT_DRAIN ||
-        MPID_nem_ib_ncqe >= /*MPID_NEM_IB_COM_MAX_CQ_CAPACITY */ MPID_NEM_IB_COM_MAX_CQ_HEIGHT_DRAIN) {
+    if (vc_ib->ibcom->ncom >=
+        /*MPID_NEM_IB_COM_MAX_SQ_CAPACITY */ MPID_NEM_IB_COM_MAX_SQ_HEIGHT_DRAIN ||
+        MPID_nem_ib_ncqe >=
+        /*MPID_NEM_IB_COM_MAX_CQ_CAPACITY */ MPID_NEM_IB_COM_MAX_CQ_HEIGHT_DRAIN) {
         //printf("isendcontig,kick drain_scq\n");
-        ibcom_errno = MPID_nem_ib_drain_scq(1);       /* set 1st arg to one which means asking it for not calling send_progress because it recursively call isendcontig_core */
+        ibcom_errno = MPID_nem_ib_drain_scq(1); /* set 1st arg to one which means asking it for not calling send_progress because it recursively call isendcontig_core */
         MPIU_ERR_CHKANDJUMP(ibcom_errno, mpi_errno, MPI_ERR_OTHER, "**MPID_nem_ib_drain_scq");
     }
 #endif
@@ -425,7 +432,8 @@ int MPID_nem_ib_iSendContig(MPIDI_VC_t * vc, MPID_Request * sreq, void *hdr,
     int *lsr_seq_num_tail;
     /* sequence number of (largest) completed send command */
     ibcom_errno = MPID_nem_ib_com_lsr_seq_num_tail_get(vc_ib->sc->fd, &lsr_seq_num_tail);
-    MPIU_ERR_CHKANDJUMP(ibcom_errno, mpi_errno, MPI_ERR_OTHER, "**MPID_nem_ib_com_lsr_seq_num_tail_get");
+    MPIU_ERR_CHKANDJUMP(ibcom_errno, mpi_errno, MPI_ERR_OTHER,
+                        "**MPID_nem_ib_com_lsr_seq_num_tail_get");
 
     int lsr_seq_num_head;
     /* sequence number of (largest) in-flight send command */
@@ -438,7 +446,7 @@ int MPID_nem_ib_iSendContig(MPIDI_VC_t * vc, MPID_Request * sreq, void *hdr,
             MPID_nem_ib_diff32(vc_ib->ibcom->sseq_num, vc_ib->ibcom->lsr_seq_num_tail),
             vc_ib->ibcom->sseq_num, vc_ib->ibcom->lsr_seq_num_tail,
             MPID_nem_ib_diff32(vc_ib->ibcom->rsr_seq_num_tail,
-                                 vc_ib->ibcom->rsr_seq_num_tail_last_sent),
+                               vc_ib->ibcom->rsr_seq_num_tail_last_sent),
             vc_ib->ibcom->rsr_seq_num_tail, vc_ib->ibcom->rsr_seq_num_tail_last_sent);
     dprintf("isendcontig,sendq_empty=%d,ncom=%d,ncqe=%d,rdmabuf_occ=%d\n",
             MPID_nem_ib_sendq_empty(vc_ib->sendq), vc_ib->ibcom->ncom, MPID_nem_ib_ncqe,
@@ -459,7 +467,8 @@ int MPID_nem_ib_iSendContig(MPIDI_VC_t * vc, MPID_Request * sreq, void *hdr,
     /* make control packet bringing sequence number go ahead of
      * queued packets to avoid dead-lock */
     int goahead =
-        (ch3_hdr->type == MPIDI_NEM_PKT_NETMOD && netmod_hdr->subtype == MPIDI_NEM_IB_PKT_REQ_SEQ_NUM)
+        (ch3_hdr->type == MPIDI_NEM_PKT_NETMOD &&
+         netmod_hdr->subtype == MPIDI_NEM_IB_PKT_REQ_SEQ_NUM)
         || (ch3_hdr->type == MPIDI_NEM_PKT_NETMOD &&
             netmod_hdr->subtype == MPIDI_NEM_IB_PKT_REPLY_SEQ_NUM) ||
         (ch3_hdr->type == MPIDI_NEM_PKT_NETMOD &&
@@ -474,7 +483,8 @@ int MPID_nem_ib_iSendContig(MPIDI_VC_t * vc, MPID_Request * sreq, void *hdr,
            (goahead || MPID_nem_ib_sendq_empty(vc_ib->sendq)) &&
            vc_ib->ibcom->ncom < MPID_NEM_IB_COM_MAX_SQ_CAPACITY - slack &&
            MPID_nem_ib_ncqe < MPID_NEM_IB_COM_MAX_CQ_CAPACITY - slack &&
-           MPID_nem_ib_diff32(lsr_seq_num_head, *lsr_seq_num_tail) < MPID_NEM_IB_COM_RDMABUF_NSEG - slack) {
+           MPID_nem_ib_diff32(lsr_seq_num_head,
+                              *lsr_seq_num_tail) < MPID_NEM_IB_COM_RDMABUF_NSEG - slack) {
 
         mpi_errno = MPID_nem_ib_iSendContig_core(vc, sreq, hdr, hdr_sz, data, data_sz);
         if (mpi_errno) {
@@ -526,7 +536,7 @@ int MPID_nem_ib_iSendContig(MPIDI_VC_t * vc, MPID_Request * sreq, void *hdr,
         dprintf("isendcontig,enqueuing,type=%d,\n", ((MPIDI_CH3_Pkt_t *) hdr)->type);
 #if 0
         if (((MPIDI_CH3_Pkt_t *) hdr)->type == MPIDI_NEM_PKT_NETMOD) {
-            switch(((MPID_nem_pkt_netmod_t *) hdr)->subtype) {
+            switch (((MPID_nem_pkt_netmod_t *) hdr)->subtype) {
             case MPIDI_NEM_IB_PKT_REPLY_SEQ_NUM:
                 dprintf("enqueuing REPLY_SEQ_NUM\ %d->%d,%d\n", MPID_nem_ib_myrank, vc->pg_rank,
                         MPID_nem_ib_ncqe);
@@ -534,8 +544,9 @@ int MPID_nem_ib_iSendContig(MPIDI_VC_t * vc, MPID_Request * sreq, void *hdr,
             default:
                 break;
             }
-        } else {
-            switch(((MPIDI_CH3_Pkt_t *) hdr)->type) {
+        }
+        else {
+            switch (((MPIDI_CH3_Pkt_t *) hdr)->type) {
             case MPIDI_CH3_PKT_ACCUMULATE:
                 dprintf("enqueuing ACCUMULATE\n");
                 break;
@@ -581,7 +592,7 @@ int MPID_nem_ib_iSendContig(MPIDI_VC_t * vc, MPID_Request * sreq, void *hdr,
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 int MPID_nem_ib_iStartContigMsg(MPIDI_VC_t * vc, void *hdr, MPIDI_msg_sz_t hdr_sz,
-                                  void *data, MPIDI_msg_sz_t data_sz, MPID_Request ** sreq_ptr)
+                                void *data, MPIDI_msg_sz_t data_sz, MPID_Request ** sreq_ptr)
 {
     MPID_Request *sreq = NULL;
     int mpi_errno = MPI_SUCCESS;
@@ -649,7 +660,7 @@ int MPID_nem_ib_iStartContigMsg(MPIDI_VC_t * vc, void *hdr, MPIDI_msg_sz_t hdr_s
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 static int MPID_nem_ib_SendNoncontig_core(MPIDI_VC_t * vc, MPID_Request * sreq, void *hdr,
-                                     MPIDI_msg_sz_t hdr_sz)
+                                          MPIDI_msg_sz_t hdr_sz)
 {
     int mpi_errno = MPI_SUCCESS;
     int ibcom_errno;
@@ -677,14 +688,15 @@ static int MPID_nem_ib_SendNoncontig_core(MPIDI_VC_t * vc, MPID_Request * sreq, 
     }
 
     ibcom_errno = MPID_nem_ib_com_sseq_num_get(vc_ib->sc->fd, &sseq_num);
-    MPIU_ERR_CHKANDJUMP(ibcom_errno != 0, mpi_errno, MPI_ERR_OTHER, "**MPID_nem_ib_com_sseq_num_get");
+    MPIU_ERR_CHKANDJUMP(ibcom_errno != 0, mpi_errno, MPI_ERR_OTHER,
+                        "**MPID_nem_ib_com_sseq_num_get");
 
     int copied;
     dprintf("sendnoncontig_core,isend,%d->%d,seq_num=%d\n", MPID_nem_ib_myrank, vc->pg_rank,
             sseq_num);
     ibcom_errno =
         MPID_nem_ib_com_isend(vc_ib->sc->fd, (uint64_t) sreq, NULL, 0, hdr, sizeof(MPIDI_CH3_Pkt_t),
-                    (void *) REQ_FIELD(sreq, lmt_pack_buf), (int) last, &copied);
+                              (void *) REQ_FIELD(sreq, lmt_pack_buf), (int) last, &copied);
     MPIU_ERR_CHKANDJUMP(ibcom_errno != 0, mpi_errno, MPI_ERR_OTHER, "**MPID_nem_ib_com_isend");
     MPID_nem_ib_ncqe += 1;
     dprintf("sendnoncontig_core,ncqe=%d\n", MPID_nem_ib_ncqe);
@@ -727,17 +739,18 @@ static int MPID_nem_ib_SendNoncontig_core(MPIDI_VC_t * vc, MPID_Request * sreq, 
         }
     }
     else {
-        MPID_nem_ib_ncqe_nces += 1;   /* it has different meaning, counting non-copied eager-short */
+        MPID_nem_ib_ncqe_nces += 1;     /* it has different meaning, counting non-copied eager-short */
     }
 #else
-    MPID_nem_ib_ncqe_nces += 1;       /* it has different meaning, counting non-copied eager-short */
+    MPID_nem_ib_ncqe_nces += 1; /* it has different meaning, counting non-copied eager-short */
 #endif
 
 #ifndef MPID_NEM_IB_DISABLE_VAR_OCC_NOTIFY_RATE
 #if 1
     //dprintf("isendcontig,old rstate=%d\n", vc_ib->ibcom->rdmabuf_occupancy_notify_rstate);
     int *notify_rstate;
-    ibcom_errno = MPID_nem_ib_com_rdmabuf_occupancy_notify_rstate_get(vc_ib->sc->fd, &notify_rstate);
+    ibcom_errno =
+        MPID_nem_ib_com_rdmabuf_occupancy_notify_rstate_get(vc_ib->sc->fd, &notify_rstate);
     MPIU_ERR_CHKANDJUMP(ibcom_errno, mpi_errno, MPI_ERR_OTHER,
                         "**MPID_nem_ib_com_rdmabuf_occupancy_notify_rstate_get");
 
@@ -746,13 +759,14 @@ static int MPID_nem_ib_SendNoncontig_core(MPIDI_VC_t * vc, MPID_Request * sreq, 
     /* if the number of slots in RMDA-write-to buffer have hit the high water-mark */
     if (*notify_rstate == MPID_NEM_IB_COM_RDMABUF_OCCUPANCY_NOTIFY_STATE_LW &&
         MPID_nem_ib_diff32(vc_ib->ibcom->sseq_num,
-                             vc_ib->ibcom->lsr_seq_num_tail) > MPID_NEM_IB_COM_RDMABUF_HIGH_WATER_MARK) {
+                           vc_ib->ibcom->lsr_seq_num_tail) >
+        MPID_NEM_IB_COM_RDMABUF_HIGH_WATER_MARK) {
         dprintf("changing notify_rstate,id=%d\n", vc_ib->ibcom->sseq_num);
         /* remember remote notifying policy so that local can know when to change remote policy back to LW */
         *notify_rstate = MPID_NEM_IB_COM_RDMABUF_OCCUPANCY_NOTIFY_STATE_HW;
         /* change remote notifying policy of RDMA-write-to buf occupancy info */
         MPID_nem_ib_send_change_rdmabuf_occupancy_notify_state(vc,
-                                                                 MPID_NEM_IB_COM_RDMABUF_OCCUPANCY_NOTIFY_STATE_HW);
+                                                               MPID_NEM_IB_COM_RDMABUF_OCCUPANCY_NOTIFY_STATE_HW);
     }
     //dprintf("isendcontig_core,new rstate=%d\n", vc_ib->ibcom->rdmabuf_occupancy_notify_rstate);
 #endif
@@ -770,7 +784,7 @@ static int MPID_nem_ib_SendNoncontig_core(MPIDI_VC_t * vc, MPID_Request * sreq, 
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 int MPID_nem_ib_SendNoncontig(MPIDI_VC_t * vc, MPID_Request * sreq, void *hdr,
-                                MPIDI_msg_sz_t hdr_sz)
+                              MPIDI_msg_sz_t hdr_sz)
 {
     int mpi_errno = MPI_SUCCESS;
     int ibcom_errno;
@@ -789,10 +803,12 @@ int MPID_nem_ib_SendNoncontig(MPIDI_VC_t * vc, MPID_Request * sreq, void *hdr,
 #if 0
     /* aggressively perform drain_scq */
     /* try to clear the road blocks, i.e. ncom, ncqe */
-    if (vc_ib->ibcom->ncom >= /*MPID_NEM_IB_COM_MAX_SQ_CAPACITY */ MPID_NEM_IB_COM_MAX_SQ_HEIGHT_DRAIN ||
-        MPID_nem_ib_ncqe >= /*MPID_NEM_IB_COM_MAX_CQ_CAPACITY */ MPID_NEM_IB_COM_MAX_CQ_HEIGHT_DRAIN) {
+    if (vc_ib->ibcom->ncom >=
+        /*MPID_NEM_IB_COM_MAX_SQ_CAPACITY */ MPID_NEM_IB_COM_MAX_SQ_HEIGHT_DRAIN ||
+        MPID_nem_ib_ncqe >=
+        /*MPID_NEM_IB_COM_MAX_CQ_CAPACITY */ MPID_NEM_IB_COM_MAX_CQ_HEIGHT_DRAIN) {
         //printf("isendcontig,kick drain_scq\n");
-        ibcom_errno = MPID_nem_ib_drain_scq(1);       /* set 1st arg to one which means asking it for not calling send_progress because it recursively call isendcontig_core */
+        ibcom_errno = MPID_nem_ib_drain_scq(1); /* set 1st arg to one which means asking it for not calling send_progress because it recursively call isendcontig_core */
         MPIU_ERR_CHKANDJUMP(ibcom_errno, mpi_errno, MPI_ERR_OTHER, "**MPID_nem_ib_drain_scq");
     }
 #endif
@@ -801,12 +817,12 @@ int MPID_nem_ib_SendNoncontig(MPIDI_VC_t * vc, MPID_Request * sreq, void *hdr,
 
     /* if IB command overflow-queue is empty AND local IB command queue isn't full AND remote RDMA-write-to buf isn't getting overrun */
     /* set it for drain_scq */
-    int slack = MPID_NEM_IB_COM_AMT_SLACK;        /* slack for control packet bringing sequence number */
+    int slack = MPID_NEM_IB_COM_AMT_SLACK;      /* slack for control packet bringing sequence number */
     if (MPID_nem_ib_sendq_empty(vc_ib->sendq) &&
         vc_ib->ibcom->ncom < MPID_NEM_IB_COM_MAX_SQ_CAPACITY - slack &&
         MPID_nem_ib_ncqe < MPID_NEM_IB_COM_MAX_CQ_CAPACITY - slack &&
         MPID_nem_ib_diff32(vc_ib->ibcom->sseq_num,
-                             vc_ib->ibcom->lsr_seq_num_tail) < MPID_NEM_IB_COM_RDMABUF_NSEG - slack) {
+                           vc_ib->ibcom->lsr_seq_num_tail) < MPID_NEM_IB_COM_RDMABUF_NSEG - slack) {
 
         mpi_errno = MPID_nem_ib_SendNoncontig_core(vc, sreq, hdr, hdr_sz);
         if (mpi_errno) {
@@ -871,10 +887,12 @@ int MPID_nem_ib_send_progress(MPID_nem_ib_vc_area * vc_ib)
 #if 0
             /* aggressively perform drain_scq */
             /* try to clear the road blocks, i.e. ncom, ncqe */
-            if (vc_ib->ibcom->ncom >= /*MPID_NEM_IB_COM_MAX_SQ_CAPACITY */ MPID_NEM_IB_COM_MAX_SQ_HEIGHT_DRAIN ||
-                MPID_nem_ib_ncqe >= /*MPID_NEM_IB_COM_MAX_CQ_CAPACITY */ MPID_NEM_IB_COM_MAX_CQ_HEIGHT_DRAIN) {
+            if (vc_ib->ibcom->ncom >=
+                /*MPID_NEM_IB_COM_MAX_SQ_CAPACITY */ MPID_NEM_IB_COM_MAX_SQ_HEIGHT_DRAIN ||
+                MPID_nem_ib_ncqe >=
+                /*MPID_NEM_IB_COM_MAX_CQ_CAPACITY */ MPID_NEM_IB_COM_MAX_CQ_HEIGHT_DRAIN) {
                 dprintf("send_progress,kick drain_scq\n");
-                ibcom_errno = MPID_nem_ib_drain_scq(1);       /* set 1st arg to one which means asking it for not calling send_progress because it recursively call isendcontig_core */
+                ibcom_errno = MPID_nem_ib_drain_scq(1); /* set 1st arg to one which means asking it for not calling send_progress because it recursively call isendcontig_core */
                 MPIU_ERR_CHKANDJUMP(ibcom_errno, mpi_errno, MPI_ERR_OTHER,
                                     "**MPID_nem_ib_drain_scq");
             }
@@ -892,11 +910,13 @@ int MPID_nem_ib_send_progress(MPID_nem_ib_vc_area * vc_ib)
                   (ch3_hdr->type != MPIDI_NEM_PKT_NETMOD ||
                    netmod_hdr->subtype != MPIDI_NEM_IB_PKT_LMT_GET_DONE) &&
                   ch3_hdr->type != MPIDI_NEM_PKT_LMT_RTS &&
-                  ch3_hdr->type != MPIDI_NEM_PKT_LMT_CTS) ? MPID_NEM_IB_COM_AMT_SLACK : 0) : MPID_NEM_IB_COM_AMT_SLACK;
+                  ch3_hdr->type !=
+                  MPIDI_NEM_PKT_LMT_CTS) ? MPID_NEM_IB_COM_AMT_SLACK : 0) :
+                MPID_NEM_IB_COM_AMT_SLACK;
             if (vc_ib->ibcom->ncom >= MPID_NEM_IB_COM_MAX_SQ_CAPACITY - slack ||
                 MPID_nem_ib_ncqe >= MPID_NEM_IB_COM_MAX_CQ_CAPACITY - slack ||
                 MPID_nem_ib_diff32(vc_ib->ibcom->sseq_num,
-                                     vc_ib->ibcom->lsr_seq_num_tail) >=
+                                   vc_ib->ibcom->lsr_seq_num_tail) >=
                 MPID_NEM_IB_COM_RDMABUF_NSEG - slack) {
                 break;
             }
@@ -912,10 +932,10 @@ int MPID_nem_ib_send_progress(MPID_nem_ib_vc_area * vc_ib)
             dprintf("send_progress,%d->%d,rdiff=%d(%d-%d),ldiff=%d(%d-%d),slack=%d\n",
                     MPID_nem_ib_myrank, sreq->ch.vc->pg_rank,
                     MPID_nem_ib_diff32(vc_ib->ibcom->rsr_seq_num_tail,
-                                         vc_ib->ibcom->rsr_seq_num_tail_last_sent),
+                                       vc_ib->ibcom->rsr_seq_num_tail_last_sent),
                     vc_ib->ibcom->rsr_seq_num_tail, vc_ib->ibcom->rsr_seq_num_tail_last_sent,
                     MPID_nem_ib_diff32(vc_ib->ibcom->sseq_num,
-                                         vc_ib->ibcom->lsr_seq_num_tail),
+                                       vc_ib->ibcom->lsr_seq_num_tail),
                     vc_ib->ibcom->sseq_num, vc_ib->ibcom->lsr_seq_num_tail, slack);
             if (sreq->kind == MPID_REQUEST_SEND && msg_type == MPIDI_REQUEST_EAGER_MSG) {
                 if (!sreq->ch.noncontig) {
@@ -969,8 +989,8 @@ int MPID_nem_ib_send_progress(MPID_nem_ib_vc_area * vc_ib)
                              * might have happened while being queued */
                         case MPIDI_NEM_IB_PKT_LMT_GET_DONE:{
                                 MPID_nem_ib_pkt_lmt_get_done_t *_done_pkt =
-                                    (MPID_nem_ib_pkt_lmt_get_done_t *) sreq->dev.iov[0].
-                                    MPID_IOV_BUF;
+                                    (MPID_nem_ib_pkt_lmt_get_done_t *) sreq->dev.
+                                    iov[0].MPID_IOV_BUF;
                                 dprintf
                                     ("send_progress,MPIDI_NEM_IB_PKT_LMT_GET_DONE,rsr_seq_num_tail=%d\n",
                                      vc_ib->ibcom->rsr_seq_num_tail);
@@ -983,8 +1003,8 @@ int MPID_nem_ib_send_progress(MPID_nem_ib_vc_area * vc_ib)
                             }
                         case MPIDI_NEM_IB_PKT_REPLY_SEQ_NUM:{
                                 MPID_nem_ib_pkt_reply_seq_num_t *_pkt =
-                                    (MPID_nem_ib_pkt_reply_seq_num_t *) sreq->dev.iov[0].
-                                    MPID_IOV_BUF;
+                                    (MPID_nem_ib_pkt_reply_seq_num_t *) sreq->dev.
+                                    iov[0].MPID_IOV_BUF;
                                 dprintf
                                     ("send_progress,MPIDI_NEM_IB_PKT_REPLY_SEQ_NUM,rsr_seq_num_tail=%d\n",
                                      vc_ib->ibcom->rsr_seq_num_tail);
@@ -1003,10 +1023,10 @@ int MPID_nem_ib_send_progress(MPID_nem_ib_vc_area * vc_ib)
 
                     mpi_errno =
                         MPID_nem_ib_iSendContig_core(sreq->ch.vc, sreq,
-                                                       sreq->dev.iov[0].MPID_IOV_BUF,
-                                                       sreq->dev.iov[0].MPID_IOV_LEN,
-                                                       sreq->dev.iov[1].MPID_IOV_BUF,
-                                                       sreq->dev.iov[1].MPID_IOV_LEN);
+                                                     sreq->dev.iov[0].MPID_IOV_BUF,
+                                                     sreq->dev.iov[0].MPID_IOV_LEN,
+                                                     sreq->dev.iov[1].MPID_IOV_BUF,
+                                                     sreq->dev.iov[1].MPID_IOV_LEN);
                     if (mpi_errno) {
                         MPIU_ERR_POP(mpi_errno);
                     }
@@ -1015,8 +1035,8 @@ int MPID_nem_ib_send_progress(MPID_nem_ib_vc_area * vc_ib)
                     dprintf("send_progress,send,noncontig\n");
                     mpi_errno =
                         MPID_nem_ib_SendNoncontig_core(sreq->ch.vc, sreq,
-                                                         sreq->dev.iov[0].MPID_IOV_BUF,
-                                                         sreq->dev.iov[0].MPID_IOV_LEN);
+                                                       sreq->dev.iov[0].MPID_IOV_BUF,
+                                                       sreq->dev.iov[0].MPID_IOV_LEN);
                     if (mpi_errno) {
                         MPIU_ERR_POP(mpi_errno);
                     }
@@ -1028,8 +1048,8 @@ int MPID_nem_ib_send_progress(MPID_nem_ib_vc_area * vc_ib)
                         MPID_nem_ib_sendq_next(sreq));
                 mpi_errno =
                     MPID_nem_ib_lmt_start_recv_core(sreq, REQ_FIELD(sreq, lmt_raddr),
-                                                      REQ_FIELD(sreq, lmt_rkey), REQ_FIELD(sreq,
-                                                                                           lmt_write_to_buf));
+                                                    REQ_FIELD(sreq, lmt_rkey), REQ_FIELD(sreq,
+                                                                                         lmt_write_to_buf));
                 if (mpi_errno) {
                     MPIU_ERR_POP(mpi_errno);
                 }
@@ -1079,7 +1099,8 @@ int MPID_nem_ib_send_progress(MPID_nem_ib_vc_area * vc_ib)
 int MPID_nem_ib_cm_send_core(int rank, MPID_nem_ib_cm_cmd_t * cmd)
 {
     MPID_nem_ib_com *ibcom_scratch_pad;
-    ibcom_errno = MPID_nem_ib_com_obtain_pointer(MPID_nem_ib_scratch_pad_fds[rank], &ibcom_scratch_pad);
+    ibcom_errno =
+        MPID_nem_ib_com_obtain_pointer(MPID_nem_ib_scratch_pad_fds[rank], &ibcom_scratch_pad);
     MPIU_ERR_CHKANDJUMP(ibcom_errno, mpi_errno, MPI_ERR_OTHER, "**MPID_nem_ib_com_obtain_pointer");
 
     if (MPID_nem_ib_ncqe_scratch_pad >= MPID_NEM_IB_COM_MAX_SQ_CAPACITY ||
@@ -1090,8 +1111,9 @@ int MPID_nem_ib_cm_send_core(int rank, MPID_nem_ib_cm_cmd_t * cmd)
     }
 
     ibcom_errno =
-        MPID_nem_ib_com_put_scratch_pad(MPID_nem_ib_scratch_pad_fds[rank], (uint64_t) ibcom_scratch_pad,
-                              sizeof(uint32_t), sizeof(MPID_nem_ib_cm_cmd_t), (void *) cmd);
+        MPID_nem_ib_com_put_scratch_pad(MPID_nem_ib_scratch_pad_fds[rank],
+                                        (uint64_t) ibcom_scratch_pad, sizeof(uint32_t),
+                                        sizeof(MPID_nem_ib_cm_cmd_t), (void *) cmd);
     MPIU_ERR_CHKANDJUMP(ibcom_errno, mpi_errno, MPI_ERR_OTHER, "**MPID_nem_ib_com_put_scratch_pad");
     MPID_nem_ib_ncqe_scratch_pad += 1;
 
