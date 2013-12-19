@@ -588,15 +588,15 @@ sub ExpandDir {
     my @subdirs = ();
     my $DIR_HANDLE;
     opendir $DIR_HANDLE, "$dir" or die "Error: open directory $dir -- $!\n";
-    while (readdir $DIR_HANDLE) {
-        if (/^\./) {
+    while (my $filename = readdir $DIR_HANDLE) {
+        if ($filename =~ /^\./) {
             next;
-        } elsif (-d "$dir/$_") {
-            $subdirs[$#subdirs + 1] = "$dir/$_";
-        } elsif (/(.*\.[Cchi])(pp){0,1}$/) {
-            if (!defined($skipfiles{"$dir/$_"}))
+        } elsif (-d "$dir/$filename") {
+            $subdirs[$#subdirs + 1] = "$dir/$filename";
+        } elsif ($filename =~ /(.*\.[Cchi])(pp){0,1}$/) {
+            if (!defined($skipfiles{"$dir/$filename"}))
             {
-                $cfiles[$#cfiles + 1] = "$dir/$_";
+                $cfiles[$#cfiles + 1] = "$dir/$filename";
             }
         }
     }
