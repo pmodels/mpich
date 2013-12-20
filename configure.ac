@@ -1797,14 +1797,6 @@ export NEEDSPLIB
 
 AM_CONDITIONAL([BUILD_PROFILING_LIB],[test "$NEEDSPLIB" = "yes"])
 
-# ---------------------------------------------------------------------------
-# determine rpath and other shared library flags for CC
-# src/env may not exist yet in a vpath build
-$MKDIR_P src/env
-cc_shlib_conf=src/env/cc_shlib.conf
-PAC_COMPILER_SHLIB_FLAGS([CC],[$cc_shlib_conf])
-AC_SUBST_FILE([cc_shlib_conf])
-
 # output rpath flags in a usable format for mpich.pc (pkg-config)
 if test "X$enable_wrapper_rpath" = "Xyes"; then
     eval WRAPPER_RPATH_LDFLAGS=\"$hardcode_libdir_flag_spec\"
@@ -2090,11 +2082,6 @@ fi
 # Now test for Fortran compiler characteristics
 # ----------------------------------------------------------------------------
 if test "$enable_f77" = "yes" ; then
-    # determine rpath and other shared library flags for F77
-    f77_shlib_conf=src/env/f77_shlib.conf
-    PAC_COMPILER_SHLIB_FLAGS([F77],[$f77_shlib_conf])
-    AC_SUBST_FILE([f77_shlib_conf])
-
     AC_LANG_FORTRAN77
     PAC_PROG_F77_EXCLAIM_COMMENTS(has_exclaim="yes",has_exclaim="no")
     PAC_PROG_F77_HAS_INCDIR(src)
@@ -2191,11 +2178,6 @@ MPICONSTMODNAME=mpi_constants
 MPISIZEOFMODNAME=mpi_sizeofs
 MPIBASEMODNAME=mpi_base
 if test "$enable_fc" = "yes" ; then
-    # determine rpath and other shared library flags for FC
-    fc_shlib_conf=src/env/fc_shlib.conf
-    PAC_COMPILER_SHLIB_FLAGS([FC],[$fc_shlib_conf])
-    AC_SUBST_FILE([fc_shlib_conf])
-
     # Determine characteristics of the Fortran 90 compiler
     # Find a Fortran 90 compiler.  Sets FC
     # Work around bug in autoconf that adds -g to FCFLAGS
@@ -2430,11 +2412,6 @@ int main() {
     AC_SUBST(MPIR_CXX_COMPLEX)
     AC_SUBST(MPIR_CXX_DOUBLE_COMPLEX)
     AC_SUBST(MPIR_CXX_LONG_DOUBLE_COMPLEX)
-
-    # determine rpath and other shared library flags for CXX
-    cxx_shlib_conf=src/env/cxx_shlib.conf
-    PAC_COMPILER_SHLIB_FLAGS([CXX],[$cxx_shlib_conf])
-    AC_SUBST_FILE([cxx_shlib_conf])
 fi
 
 if test "$enable_cxx" = yes; then

@@ -59,11 +59,7 @@ src/env/mpif90: $(top_builddir)/src/env/mpif90.sh
 	cp -p $? $@
 endif !BUILD_BASH_SCRIPTS
 
-DISTCLEANFILES += $(top_builddir)/src/env/cc_shlib.conf  \
-                  $(top_builddir)/src/env/cxx_shlib.conf \
-                  $(top_builddir)/src/env/f77_shlib.conf \
-                  $(top_builddir)/src/env/fc_shlib.conf  \
-                  $(top_builddir)/src/env/mpicc          \
+DISTCLEANFILES += $(top_builddir)/src/env/mpicc          \
                   $(top_builddir)/src/env/mpicxx         \
                   $(top_builddir)/src/env/mpif77         \
                   $(top_builddir)/src/env/mpif90
