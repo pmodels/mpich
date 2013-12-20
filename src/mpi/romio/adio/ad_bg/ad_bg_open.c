@@ -164,9 +164,9 @@ static void scaleable_stat(ADIO_File fd)
     if (fd->comm != MPI_COMM_SELF) { /* if indep open, there's no one to talk to*/
 	if (fd->agg_comm != MPI_COMM_NULL) /* deferred open: only a subset of
 					      processes participate */
-	    MPI_Bcast(buf, 2, MPI_LONG, 0, fd->agg_comm);
+	    MPI_Bcast(buf, 2, MPI_LONG, fd->hints->ranklist[0], fd->agg_comm);
 	else
-	    MPI_Bcast(buf, 2, MPI_LONG, 0, fd->comm);
+	    MPI_Bcast(buf, 2, MPI_LONG, fd->hints->ranklist[0], fd->comm);
     }
     bg_stat.st_blksize = buf[0];
     bg_statfs.f_type = buf[1];
@@ -258,6 +258,9 @@ void ADIOI_BG_Open(ADIO_File fd, int *error_code)
 #ifdef ADIOI_MPE_LOGGING
         MPE_Log_event(ADIOI_MPE_stat_b, 0, NULL);
 #endif
+	/* file domain code will get terribly confused in a hard-to-debug way
+	 * if gpfs blocksize not sensible */
+        ADIOI_BG_assert( ((ADIOI_BG_fs*)fd->fs_ptr)->blksize > 0);
     }
 
   if (fd->fd_sys == -1)  {
