@@ -36,7 +36,7 @@ cvars:
      description : >-
          the medium message algorithm will be used if the per-destination
          message size (sendcount*size(sendtype)) is <= this value and
-         larger than ALLTOALL_SHORT_MSG_SIZE
+         larger than MPIR_CVAR_ALLTOALL_SHORT_MSG_SIZE
 
    - name      : MPIR_CVAR_ALLTOALL_THROTTLE
      category  : COLLECTIVE
