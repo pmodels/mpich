@@ -23,8 +23,8 @@ cvars:
      verbosity : MPI_T_VERBOSITY_USER_BASIC
      scope     : MPI_T_SCOPE_ALL_EQ
      description : >-
-        the short message algorithm will be used if the per-destination
-        message size (sendcount*size(sendtype)) is <= this value
+       the short message algorithm will be used if the per-destination
+       message size (sendcount*size(sendtype)) is <= this value
 
    - name      : MPIR_CVAR_ALLTOALL_MEDIUM_MSG_SIZE
      category  : COLLECTIVE
@@ -34,9 +34,9 @@ cvars:
      verbosity : MPI_T_VERBOSITY_USER_BASIC
      scope     : MPI_T_SCOPE_ALL_EQ
      description : >-
-         the medium message algorithm will be used if the per-destination
-         message size (sendcount*size(sendtype)) is <= this value and
-         larger than MPIR_CVAR_ALLTOALL_SHORT_MSG_SIZE
+       the medium message algorithm will be used if the per-destination
+       message size (sendcount*size(sendtype)) is <= this value and
+       larger than MPIR_CVAR_ALLTOALL_SHORT_MSG_SIZE
 
    - name      : MPIR_CVAR_ALLTOALL_THROTTLE
      category  : COLLECTIVE
