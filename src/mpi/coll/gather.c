@@ -21,6 +21,7 @@ cvars:
       description : >-
         use a temporary buffer for intracommunicator MPI_Gather if the send
         buffer size is < this value (in bytes)
+        (See also: MPIR_CVAR_GATHER_INTER_SHORT_MSG_SIZE)
 
     - name        : MPIR_CVAR_GATHER_INTER_SHORT_MSG_SIZE
       category    : COLLECTIVE
@@ -32,6 +33,7 @@ cvars:
       description : >-
         use the short message algorithm for intercommunicator MPI_Gather if the
         send buffer size is < this value (in bytes)
+        (See also: MPIR_CVAR_GATHER_VSMALL_MSG_SIZE)
 
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */

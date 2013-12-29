@@ -21,6 +21,7 @@ cvars:
       description : >-
         For MPI_Allgather and MPI_Allgatherv, the short message algorithm will
         be used if the send buffer size is < this value (in bytes).
+        (See also: MPIR_CVAR_ALLGATHER_LONG_MSG_SIZE)
 
     - name        : MPIR_CVAR_ALLGATHER_LONG_MSG_SIZE
       category    : COLLECTIVE
@@ -32,6 +33,7 @@ cvars:
       description : >-
         For MPI_Allgather and MPI_Allgatherv, the long message algorithm will be
         used if the send buffer size is >= this value (in bytes)
+        (See also: MPIR_CVAR_ALLGATHER_SHORT_MSG_SIZE)
 
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */

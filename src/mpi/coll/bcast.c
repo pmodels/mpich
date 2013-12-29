@@ -30,6 +30,7 @@ cvars:
         broadcast based on a scatter followed by a recursive doubling allgather algorithm.
         Otherwise, for long messages or with non power-of-two number of processes, we do
         broadcast based on a scatter followed by a ring allgather algorithm.
+        (See also: MPIR_CVAR_BCAST_SHORT_MSG_SIZE, MPIR_CVAR_BCAST_LONG_MSG_SIZE)
 
     - name        : MPIR_CVAR_BCAST_SHORT_MSG_SIZE
       category    : COLLECTIVE
@@ -39,7 +40,6 @@ cvars:
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
-        (Same description as that for MPIR_CVAR_BCAST_MIN_PROCS)
         Let's define short messages as messages with size < MPIR_CVAR_BCAST_SHORT_MSG_SIZE,
         and medium messages as messages with size >= MPIR_CVAR_BCAST_SHORT_MSG_SIZE but
         < MPIR_CVAR_BCAST_LONG_MSG_SIZE, and long messages as messages with size >=
@@ -50,6 +50,7 @@ cvars:
         broadcast based on a scatter followed by a recursive doubling allgather algorithm.
         Otherwise, for long messages or with non power-of-two number of processes, we do
         broadcast based on a scatter followed by a ring allgather algorithm.
+        (See also: MPIR_CVAR_BCAST_MIN_PROCS, MPIR_CVAR_BCAST_LONG_MSG_SIZE)
 
     - name        : MPIR_CVAR_BCAST_LONG_MSG_SIZE
       category    : COLLECTIVE
@@ -59,7 +60,6 @@ cvars:
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
       description : >-
-        (Same description as that for MPIR_CVAR_BCAST_MIN_PROCS)
         Let's define short messages as messages with size < MPIR_CVAR_BCAST_SHORT_MSG_SIZE,
         and medium messages as messages with size >= MPIR_CVAR_BCAST_SHORT_MSG_SIZE but
         < MPIR_CVAR_BCAST_LONG_MSG_SIZE, and long messages as messages with size >=
@@ -70,6 +70,7 @@ cvars:
         broadcast based on a scatter followed by a recursive doubling allgather algorithm.
         Otherwise, for long messages or with non power-of-two number of processes, we do
         broadcast based on a scatter followed by a ring allgather algorithm.
+        (See also: MPIR_CVAR_BCAST_MIN_PROCS, MPIR_CVAR_BCAST_SHORT_MSG_SIZE)
 
     - name        : MPIR_CVAR_ENABLE_SMP_BCAST
       category    : COLLECTIVE
@@ -78,7 +79,7 @@ cvars:
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
-      description : Enable SMP aware broadcast.
+      description : Enable SMP aware broadcast (See also: MPIR_CVAR_MAX_SMP_BCAST_MSG_SIZE)
 
     - name        : MPIR_CVAR_MAX_SMP_BCAST_MSG_SIZE
       category    : COLLECTIVE
@@ -90,6 +91,7 @@ cvars:
       description : >-
         Maximum message size for which SMP-aware broadcast is used.  A
         value of '0' uses SMP-aware broadcast for all message sizes.
+        (See also: MPIR_CVAR_ENABLE_SMP_BCAST)
 
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
