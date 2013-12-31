@@ -69,9 +69,6 @@ MPIDI_Win_DoneCB(pami_context_t  context,
       if (!((req->type > MPIDI_WIN_REQUEST_GET_ACCUMULATE) && (req->type <=MPIDI_WIN_REQUEST_RGET_ACCUMULATE)))
           MPIU_Free(req);
     }
-
-    if ( (req->origin.completed == req->origin.dt.num_contig) && ( (req->type == MPIDI_WIN_REQUEST_FETCH_AND_OP) || (req->type == MPIDI_WIN_REQUEST_COMPARE_AND_SWAP) ) )
-          MPIU_Free(req);
   MPIDI_Progress_signal();
 }
 
