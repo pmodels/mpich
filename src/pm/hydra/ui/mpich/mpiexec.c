@@ -132,7 +132,7 @@ int main(int argc, char **argv)
     struct HYD_proxy *proxy;
     struct HYD_exec *exec;
     struct HYD_node *node;
-    int exit_status = 0, i, timeout, reset_rmk, global_core_count;
+    int exit_status = 0, i, timeout, user_provided_host_list, global_core_count;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -172,7 +172,7 @@ int main(int argc, char **argv)
                        HYD_server_info.user_global.enablex, HYD_server_info.user_global.debug);
     HYDU_ERR_POP(status, "unable to initialize the bootstrap server\n");
 
-    reset_rmk = 0;
+    user_provided_host_list = 0;
 
     if (HYD_server_info.node_list == NULL) {
         /* Node list is not created yet. The user might not have
@@ -190,7 +190,7 @@ int main(int argc, char **argv)
             status = HYDU_add_to_node_list(localhost, 1, &HYD_server_info.node_list);
             HYDU_ERR_POP(status, "unable to add to node list\n");
 
-            reset_rmk = 1;
+            user_provided_host_list = 1;
         }
     }
 
@@ -218,17 +218,23 @@ int main(int argc, char **argv)
     if (HYD_ui_mpich_info.ppn != -1) {
         for (node = HYD_server_info.node_list; node; node = node->next)
             node->core_count = HYD_ui_mpich_info.ppn;
-        reset_rmk = 1;
+
+        /* The user modified how we look at the lists of hosts, so we
+         * consider it a user-provided host list */
+        user_provided_host_list = 1;
     }
 
     /* The RMK returned a node list. See if the user requested us to
      * manipulate it in some way */
     if (HYD_ui_mpich_info.sort_order != NONE) {
         qsort_node_list();
-        reset_rmk = 1;
+
+        /* The user modified how we look at the lists of hosts, so we
+         * consider it a user-provided host list */
+        user_provided_host_list = 1;
     }
 
-    if (reset_rmk) {
+    if (user_provided_host_list) {
         /* Reassign node IDs to each node */
         for (node = HYD_server_info.node_list, i = 0; node; node = node->next, i++)
             node->node_id = i;
