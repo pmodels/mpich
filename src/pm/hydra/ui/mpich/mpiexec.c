@@ -174,7 +174,12 @@ int main(int argc, char **argv)
 
     user_provided_host_list = 0;
 
-    if (HYD_server_info.node_list == NULL) {
+    if (HYD_server_info.node_list) {
+        /* If we already have a host list at this point, it must have
+         * come from the user */
+        user_provided_host_list = 1;
+    }
+    else {
         /* Node list is not created yet. The user might not have
          * provided the host file. Query the RMK. */
         status = HYDT_bsci_query_node_list(&HYD_server_info.node_list);
