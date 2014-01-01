@@ -462,7 +462,7 @@ static int local_to_global_id(int local_id)
 
 static HYD_status launch_procs(void)
 {
-    int i, j, process_id;
+    int i, j, process_id, dummy;
     int using_pmi_port = 0;
     char *str, *envstr, *list, *pmi_port;
     struct HYD_string_stash stash;
@@ -688,8 +688,17 @@ static HYD_status launch_procs(void)
             for (j = 0; exec->exec[j]; j++)
                 HYD_STRING_STASH(stash, HYDU_strdup(exec->exec[j]), status);
 
+            /* For non rank-0 processes, store the stdin socket in a
+             * dummy variable instead of passing NULL.  Passing NULL
+             * will cause the create_process function to close the
+             * STDIN socket, allowing the process to reuse that
+             * socket.  However, if an application reopens stdin, it
+             * causes an incorrect socket (which is not STDIN) to be
+             * closed.  This is technically a user application bug,
+             * but this is a safe-guard to workaround that.  See
+             * ticket #1622 for more details. */
             status = HYDU_create_process(stash.strlist, force_env,
-                                         HYD_pmcd_pmip.downstream.pmi_rank[process_id] ? NULL :
+                                         HYD_pmcd_pmip.downstream.pmi_rank[process_id] ? &dummy :
                                          &HYD_pmcd_pmip.downstream.in,
                                          &HYD_pmcd_pmip.downstream.out[process_id],
                                          &HYD_pmcd_pmip.downstream.err[process_id],
