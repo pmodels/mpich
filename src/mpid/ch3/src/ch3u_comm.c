@@ -206,6 +206,9 @@ int comm_created(MPID_Comm *comm, void *param)
     comm->ch.coll_active = TRUE;
     comm->ch.anysource_enabled = TRUE;
 
+    /* Use the VC's eager threshold by default. */
+    comm->ch.eager_max_msg_sz = -1;
+
     COMM_ADD(comm);
 
  fn_exit:
