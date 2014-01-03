@@ -23,15 +23,7 @@ static HYD_status handle_user_binding(const char *binding)
 
     HYDU_FUNC_ENTER();
 
-    HYDT_topo_hwloc_info.num_bitmaps = hwloc_get_nbobjs_by_type(topology, HWLOC_OBJ_PU);
-    HYDU_MALLOC(HYDT_topo_hwloc_info.bitmap, hwloc_bitmap_t *,
-                HYDT_topo_hwloc_info.num_bitmaps * sizeof(hwloc_bitmap_t), status);
-
-    /* Initialize all values to map to all CPUs */
-    for (i = 0; i < HYDT_topo_hwloc_info.num_bitmaps; i++) {
-        HYDT_topo_hwloc_info.bitmap[i] = hwloc_bitmap_alloc();
-        hwloc_bitmap_zero(HYDT_topo_hwloc_info.bitmap[i]);
-    }
+    HYDU_ASSERT(hwloc_initialized, status);
 
     num_bind_entries = 1;
     for (i = 0; binding[i]; i++)
@@ -68,15 +60,23 @@ static HYD_status handle_user_binding(const char *binding)
     }
     bind_entries[j][k++] = 0;
 
+    /* initialize bitmaps */
+    HYDU_MALLOC(HYDT_topo_hwloc_info.bitmap, hwloc_bitmap_t *,
+                num_bind_entries * sizeof(hwloc_bitmap_t), status);
 
     for (i = 0; i < num_bind_entries; i++) {
+        HYDT_topo_hwloc_info.bitmap[i] = hwloc_bitmap_alloc();
+        hwloc_bitmap_zero(HYDT_topo_hwloc_info.bitmap[i]);
         bindstr = strtok(bind_entries[i], "+");
         while (bindstr) {
             hwloc_bitmap_set(HYDT_topo_hwloc_info.bitmap[i],
-                             atoi(bindstr) % HYDT_topo_hwloc_info.num_bitmaps);
+                             atoi(bindstr));
             bindstr = strtok(NULL, "+");
         }
     }
+
+    HYDT_topo_hwloc_info.num_bitmaps = num_bind_entries;
+    HYDT_topo_hwloc_info.user_binding = 1;
 
   fn_exit:
     HYDU_FUNC_EXIT();
@@ -93,7 +93,11 @@ static HYD_status handle_rr_binding(void)
 
     HYDU_FUNC_ENTER();
 
+    HYDU_ASSERT(hwloc_initialized, status);
+
+    /* initialize bitmaps */
     HYDT_topo_hwloc_info.num_bitmaps = hwloc_get_nbobjs_by_type(topology, HWLOC_OBJ_PU);
+
     HYDU_MALLOC(HYDT_topo_hwloc_info.bitmap, hwloc_bitmap_t *,
                 HYDT_topo_hwloc_info.num_bitmaps * sizeof(hwloc_bitmap_t), status);
 
@@ -429,6 +433,16 @@ static HYD_status handle_bitmap_binding(const char *binding, const char *mapping
         }
     }
 
+    /* initialize bitmaps */
+    HYDT_topo_hwloc_info.num_bitmaps = hwloc_get_nbobjs_by_type(topology, HWLOC_OBJ_PU);
+
+    HYDU_MALLOC(HYDT_topo_hwloc_info.bitmap, hwloc_bitmap_t *,
+                HYDT_topo_hwloc_info.num_bitmaps * sizeof(hwloc_bitmap_t), status);
+
+    for (i = 0; i < HYDT_topo_hwloc_info.num_bitmaps; i++) {
+        HYDT_topo_hwloc_info.bitmap[i] = hwloc_bitmap_alloc();
+        hwloc_bitmap_zero(HYDT_topo_hwloc_info.bitmap[i]);
+    }
 
     for (i = 0; i < MAP_LENGTH; i++) {
         if (map_str[i] == 'T')
@@ -479,7 +493,6 @@ static HYD_status handle_bitmap_binding(const char *binding, const char *mapping
 
 HYD_status HYDT_topo_hwloc_init(const char *binding, const char *mapping, const char *membind)
 {
-    int i;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -490,20 +503,6 @@ HYD_status HYDT_topo_hwloc_init(const char *binding, const char *mapping, const 
     hwloc_topology_load(topology);
 
     hwloc_initialized = 1;
-
-
-    /* initialize bitmaps */
-    status = get_nbobjs_by_type(HWLOC_OBJ_PU, &HYDT_topo_hwloc_info.num_bitmaps, NULL);
-    HYDU_ERR_POP(status, "unable to get number of PUs\n");
-
-    HYDU_MALLOC(HYDT_topo_hwloc_info.bitmap, hwloc_bitmap_t *,
-                HYDT_topo_hwloc_info.num_bitmaps * sizeof(hwloc_bitmap_t), status);
-
-    for (i = 0; i < HYDT_topo_hwloc_info.num_bitmaps; i++) {
-        HYDT_topo_hwloc_info.bitmap[i] = hwloc_bitmap_alloc();
-        hwloc_bitmap_zero(HYDT_topo_hwloc_info.bitmap[i]);
-    }
-
 
     /* bindings that don't require mapping */
     if (!strncmp(binding, "user:", strlen("user:"))) {
@@ -552,13 +551,17 @@ HYD_status HYDT_topo_hwloc_init(const char *binding, const char *mapping, const 
 
 HYD_status HYDT_topo_hwloc_bind(int idx)
 {
-    int id = idx % HYDT_topo_hwloc_info.num_bitmaps;
+    int id;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
 
-    hwloc_set_cpubind(topology, HYDT_topo_hwloc_info.bitmap[id], 0);
-    hwloc_set_membind(topology, HYDT_topo_hwloc_info.bitmap[id], HYDT_topo_hwloc_info.membind, 0);
+    /* For processes where the user did not specify a binding unit, no binding is needed. */
+    if (!HYDT_topo_hwloc_info.user_binding || (idx < HYDT_topo_hwloc_info.num_bitmaps)) {
+        id = idx % HYDT_topo_hwloc_info.num_bitmaps;
+        hwloc_set_cpubind(topology, HYDT_topo_hwloc_info.bitmap[id], 0);
+        hwloc_set_membind(topology, HYDT_topo_hwloc_info.bitmap[id], HYDT_topo_hwloc_info.membind, 0);
+    }
 
     HYDU_FUNC_EXIT();
     return status;
