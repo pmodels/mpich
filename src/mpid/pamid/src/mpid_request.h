@@ -307,7 +307,7 @@ MPID_Request_discard_inline(MPID_Request *req)
 }
 
 #define MPID_REQUEST_SET_COMPLETED(req_) \
-  MPIDI_Request_complete_inline(req_)
+  MPIDI_Request_complete_norelease_inline(req_)
 
 static inline void
 MPIDI_Request_complete_inline(MPID_Request *req)
