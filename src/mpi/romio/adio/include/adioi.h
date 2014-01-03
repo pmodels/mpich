@@ -824,6 +824,7 @@ int  ADIOI_MPE_iwrite_b;
   /* Use MPID_Ensure_Aint_fits_in_pointer from mpiutil.h and 
          MPI_AINT_CAST_TO_VOID_PTR from configure (mpi.h) */
   #include "glue_romio.h"
+  #include "mpitypedefs.h"  /* for MPI_AINT_CAST_TO_VOID_PTR */
 
   #define ADIOI_AINT_CAST_TO_VOID_PTR (void*)(MPIR_Pint)
   /* The next two casts are only used when you don't want sign extension
