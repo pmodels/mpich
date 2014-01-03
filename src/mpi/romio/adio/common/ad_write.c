@@ -14,6 +14,11 @@
 #include "mpe.h"
 #endif
 
+#ifdef ROMIO_BG
+#include "adio/ad_bg/ad_bg_tuning.h"
+#endif
+
+
 void ADIOI_GEN_WriteContig(ADIO_File fd, const void *buf, int count,
 			   MPI_Datatype datatype, int file_ptr_type,
 			   ADIO_Offset offset, ADIO_Status *status,
@@ -25,6 +30,7 @@ void ADIOI_GEN_WriteContig(ADIO_File fd, const void *buf, int count,
     ADIO_Offset len, bytes_xfered=0;
     size_t wr_count;
     static char myname[] = "ADIOI_GEN_WRITECONTIG";
+    double io_time=0, io_time2=0;
     char * p;
 
 #ifdef AGGREGATION_PROFILE
@@ -34,6 +40,13 @@ void ADIOI_GEN_WriteContig(ADIO_File fd, const void *buf, int count,
     MPI_Type_size_x(datatype, &datatype_size);
     len = (ADIO_Offset)datatype_size * (ADIO_Offset)count;
 
+#ifdef ROMIO_BG
+    if (bgmpio_timing) {
+	io_time = MPI_Wtime();
+	bgmpio_prof_cw[ BGMPIO_CIO_DATA_SIZE ] += len;
+    }
+#endif
+
     if (file_ptr_type == ADIO_INDIVIDUAL) {
 	offset = fd->fp_ind;
     }
@@ -42,7 +55,13 @@ void ADIOI_GEN_WriteContig(ADIO_File fd, const void *buf, int count,
 #ifdef ADIOI_MPE_LOGGING
         MPE_Log_event( ADIOI_MPE_lseek_a, 0, NULL );
 #endif
+#ifdef ROMIO_BG
+	if (bgmpio_timing2) io_time2 = MPI_Wtime();
+#endif
 	err_lseek = lseek(fd->fd_sys, offset, SEEK_SET);
+#ifdef ROMIO_BG
+	if (bgmpio_timing2) bgmpio_prof_cw[ BGMPIO_CIO_T_SEEK ] += (MPI_Wtime() - io_time2);
+#endif
 #ifdef ADIOI_MPE_LOGGING
         MPE_Log_event( ADIOI_MPE_lseek_b, 0, NULL );
 #endif
@@ -59,6 +78,9 @@ void ADIOI_GEN_WriteContig(ADIO_File fd, const void *buf, int count,
 	/* --END ERROR HANDLING-- */
     }
     
+#ifdef ROMIO_BG
+    if (bgmpio_timing2) io_time2 = MPI_Wtime();
+#endif
     p = (char *)buf;
     while (bytes_xfered < len) {
 #ifdef ADIOI_MPE_LOGGING
@@ -84,11 +106,18 @@ void ADIOI_GEN_WriteContig(ADIO_File fd, const void *buf, int count,
 	p += err;
     }
 
+#ifdef ROMIO_BG
+    if (bgmpio_timing2) bgmpio_prof_cw[ BGMPIO_CIO_T_POSI_RW ] += (MPI_Wtime() - io_time2);
+#endif
     fd->fp_sys_posn = offset + bytes_xfered;
 
     if (file_ptr_type == ADIO_INDIVIDUAL) {
 	fd->fp_ind += bytes_xfered; 
     }
+
+#ifdef ROMIO_BG
+    if (bgmpio_timing) bgmpio_prof_cw[ BGMPIO_CIO_T_MPIO_RW ] += (MPI_Wtime() - io_time);
+#endif
 
 #ifdef HAVE_STATUS_SET_BYTES
     /* bytes_xfered could be larger than int */

@@ -13,6 +13,9 @@
 #ifdef AGGREGATION_PROFILE
 #include "mpe.h"
 #endif
+#ifdef ROMIO_BG
+# include "adio/ad_bg/ad_bg_tuning.h"
+#endif
 
 void ADIOI_GEN_ReadContig(ADIO_File fd, void *buf, int count, 
 			  MPI_Datatype datatype, int file_ptr_type,
@@ -25,6 +28,7 @@ void ADIOI_GEN_ReadContig(ADIO_File fd, void *buf, int count,
     ADIO_Offset len, bytes_xfered=0;
     size_t rd_count;
     static char myname[] = "ADIOI_GEN_READCONTIG";
+    double io_time=0, io_time2=0;
     char *p;
 
 #ifdef AGGREGATION_PROFILE
@@ -33,9 +37,20 @@ void ADIOI_GEN_ReadContig(ADIO_File fd, void *buf, int count,
     MPI_Type_size_x(datatype, &datatype_size);
     len = datatype_size * (ADIO_Offset)count;
 
+#ifdef ROMIO_BG
+    if (bgmpio_timing) {
+	io_time = MPI_Wtime();
+	bgmpio_prof_cr[ BGMPIO_CIO_DATA_SIZE ] += len;
+    }
+#endif
+
     if (file_ptr_type == ADIO_INDIVIDUAL) {
 	offset = fd->fp_ind;
     }
+ 
+#ifdef ROMIO_BG
+    if (bgmpio_timing2) io_time2 = MPI_Wtime();
+#endif
 
     if (fd->fp_sys_posn != offset) {
 #ifdef ADIOI_MPE_LOGGING
@@ -44,6 +59,9 @@ void ADIOI_GEN_ReadContig(ADIO_File fd, void *buf, int count,
 	err_lseek = lseek(fd->fd_sys, offset, SEEK_SET);
 #ifdef ADIOI_MPE_LOGGING
         MPE_Log_event( ADIOI_MPE_lseek_b, 0, NULL );
+#endif
+#ifdef ROMIO_BG
+	if (bgmpio_timing2) bgmpio_prof_cr[ BGMPIO_CIO_T_SEEK ] += (MPI_Wtime() - io_time2);
 #endif
 	/* --BEGIN ERROR HANDLING-- */
 	if (err_lseek == -1) {
@@ -58,6 +76,9 @@ void ADIOI_GEN_ReadContig(ADIO_File fd, void *buf, int count,
 	/* --END ERROR HANDLING-- */
     }
 
+#if ROMIO_BG
+    if (bgmpio_timing2) io_time2 = MPI_Wtime();
+#endif
     p=buf;
     while (bytes_xfered < len) {
 #ifdef ADIOI_MPE_LOGGING
@@ -87,7 +108,9 @@ void ADIOI_GEN_ReadContig(ADIO_File fd, void *buf, int count,
 	bytes_xfered += err;
 	p += err;
     }
-
+#if ROMIO_BG
+    if (bgmpio_timing2) bgmpio_prof_cr[ BGMPIO_CIO_T_POSI_RW ] += (MPI_Wtime() - io_time2);
+#endif
     fd->fp_sys_posn = offset + bytes_xfered;
 
     if (file_ptr_type == ADIO_INDIVIDUAL) {
@@ -104,4 +127,5 @@ void ADIOI_GEN_ReadContig(ADIO_File fd, void *buf, int count,
 #ifdef AGGREGATION_PROFILE
     MPE_Log_event (5035, 0, NULL);
 #endif
+    if (bgmpio_timing) bgmpio_prof_cr[ BGMPIO_CIO_T_MPIO_RW ] += (MPI_Wtime() - io_time);
 }
