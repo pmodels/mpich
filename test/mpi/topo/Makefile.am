@@ -21,6 +21,7 @@ noinst_PROGRAMS = \
     dims1         \
     dims2         \
     dims3         \
+    dims4         \
     graphmap1     \
     topotest      \
     topodup       \
