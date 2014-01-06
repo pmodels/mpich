@@ -45,7 +45,7 @@
 #define PAMI_ASYNC_EXT_ATTR 2000
 
 #if (MPIDI_PRINTENV || MPIDI_STATISTICS || MPIDI_BANNER)
-MPIDI_printenv_t  *mpich_env;
+MPIDI_printenv_t  *mpich_env=NULL;
 extern char* mp_euilib;
 char mp_euidevice[20];
 extern pami_extension_t pe_extension;

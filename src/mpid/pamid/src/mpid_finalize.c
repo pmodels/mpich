@@ -37,12 +37,19 @@ extern conn_info  *_conn_info_list;
 
 
 void MPIDI_close_pe_extension() {
+     extern MPIDI_printenv_t  *mpich_env;
+     extern MPIX_stats_t *mpid_statp;
      int rc;
      /* PAMI_Extension_open in pami_init   */
      rc = PAMI_Extension_close (pe_extension);
      if (rc != PAMI_SUCCESS) {
          TRACE_ERR("ERROR close PAMI_Extension failed rc %d", rc);
      }
+     if (mpich_env)
+         MPIU_Free(mpich_env);
+     if (mpid_statp)
+         MPIU_Free(mpid_statp);
+
 }
 #endif
 

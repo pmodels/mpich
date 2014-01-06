@@ -54,7 +54,9 @@ MPIDI_Win_DoneCB(pami_context_t  context,
     }
 
 
-    if (req->origin.completed == req->target.dt.num_contig)
+    if ((req->origin.completed == req->target.dt.num_contig) || 
+        ((req->type >= MPIDI_WIN_REQUEST_COMPARE_AND_SWAP) && 
+         (req->origin.completed == req->origin.dt.num_contig)))
     {
       if(req->req_handle)
           MPID_cc_set(req->req_handle->cc_ptr, 0);
