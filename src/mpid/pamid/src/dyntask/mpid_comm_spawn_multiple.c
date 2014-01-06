@@ -112,7 +112,6 @@ int MPID_Comm_spawn_multiple(int count, char *array_of_commands[],
 			     int array_of_errcodes[])
 {
     int mpi_errno = MPI_SUCCESS;
-    static char FCNAME[] = "MPID_Comm_spawn_multiple";
 
     if(mpidi_dynamic_tasking == 0) {
 	fprintf(stderr, "Received spawn request for non-dynamic jobs\n");
@@ -359,7 +358,10 @@ int MPIDI_Comm_spawn_multiple(int count, char **commands,
 static char *parent_port_name = 0;    /* Name of parent port if this
 					 process was spawned (and is root
 					 of comm world) or null */
-
+#undef FUNCNAME
+#define FUNCNAME MPIDI_GetParentPort
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIDI_GetParentPort(char ** parent_port)
 {
     int mpi_errno = MPI_SUCCESS;

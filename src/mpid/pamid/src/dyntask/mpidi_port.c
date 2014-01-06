@@ -50,7 +50,6 @@ static int maxAcceptQueueSize = 0;
 static int AcceptQueueSize    = 0;
 
 pthread_mutex_t rem_connlist_mutex = PTHREAD_MUTEX_INITIALIZER;
-extern struct transactionID;
 
 /* FIXME: If dynamic processes are not supported, this file will contain
    no code and some compilers may warn about an "empty translation unit" */
