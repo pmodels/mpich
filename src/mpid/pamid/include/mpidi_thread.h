@@ -107,45 +107,45 @@
 
 #elif MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_PER_OBJECT
 
-#define MPIDI_CS_ENTER(m)                       \
-    do {                                        \
-        MPIU_THREAD_CHECK_BEGIN                 \
-            MPIDI_Mutex_acquire(m);             \
-        MPIU_THREAD_CHECK_END                   \
+#define MPIDI_CS_ENTER(m)                               \
+    do {                                                \
+        if (likely(MPIR_ThreadInfo.isThreaded)) {       \
+            MPIDI_Mutex_acquire(m);                     \
+        }                                               \
     } while (0)
 
-#define MPIDI_CS_EXIT(m)                        \
-    do {                                        \
-        MPIU_THREAD_CHECK_BEGIN                 \
-            MPIDI_Mutex_sync();                 \
-            MPIDI_Mutex_release(m);             \
-        MPIU_THREAD_CHECK_END                   \
+#define MPIDI_CS_EXIT(m)                                \
+    do {                                                \
+        if (likely(MPIR_ThreadInfo.isThreaded)) {       \
+            MPIDI_Mutex_sync();                         \
+            MPIDI_Mutex_release(m);                     \
+        }                                               \
     } while (0)
 
-#define MPIDI_CS_YIELD(m)                       \
-    do {                                        \
-        MPIU_THREAD_CHECK_BEGIN                 \
-            MPIDI_Mutex_sync();                 \
-            MPIDI_Mutex_release(m);             \
-            MPIDI_Mutex_acquire(m);             \
-        MPIU_THREAD_CHECK_END                   \
+#define MPIDI_CS_YIELD(m)                               \
+    do {                                                \
+        if (likely(MPIR_ThreadInfo.isThreaded)) {       \
+            MPIDI_Mutex_sync();                         \
+            MPIDI_Mutex_release(m);                     \
+            MPIDI_Mutex_acquire(m);                     \
+        }                                               \
     } while (0)
 
-#define MPIDI_CS_TRY(m)                         \
-    do {                                        \
-        MPIU_THREAD_CHECK_BEGIN                 \
-            MPIDI_Mutex_try_acquire(m);         \
-        MPIU_THREAD_CHECK_END                   \
+#define MPIDI_CS_TRY(m)                                 \
+    do {                                                \
+        if (likely(MPIR_ThreadInfo.isThreaded)) {       \
+            MPIDI_Mutex_try_acquire(m);                 \
+        }                                               \
     } while (0)
 
-#define MPIDI_CS_SCHED_YIELD(m)                 \
-    do {                                        \
-        MPIU_THREAD_CHECK_BEGIN                 \
-            MPIDI_Mutex_sync();                 \
-            MPIDI_Mutex_release(m);             \
-            sched_yield();                      \
-            MPIDI_Mutex_acquire(m);             \
-        MPIU_THREAD_CHECK_END                   \
+#define MPIDI_CS_SCHED_YIELD(m)                         \
+    do {                                                \
+        if (likely(MPIR_ThreadInfo.isThreaded)) {       \
+            MPIDI_Mutex_sync();                         \
+            MPIDI_Mutex_release(m);                     \
+            sched_yield();                              \
+            MPIDI_Mutex_acquire(m);                     \
+        }                                               \
     } while (0)
 
 #define MPIU_THREAD_CS_ALLFUNC_ENTER(_context)
