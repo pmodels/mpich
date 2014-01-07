@@ -118,9 +118,9 @@ int MPI_T_init_thread(int required, int *provided)
 
     /* ... body of routine ...  */
 
-#ifdef HAVE_RUNTIME_THREADCHECK
+#if defined MPICH_IS_THREADED
     MPIR_T_is_threaded = (required == MPI_THREAD_MULTIPLE);
-#endif
+#endif /* MPICH_IS_THREADED */
 
     if (provided != NULL) {
 	    /* This must be min(required,MPICH_THREAD_LEVEL) if runtime

@@ -160,7 +160,7 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpReserved)
 MPICH_PerThread_t  MPIR_Thread = { 0 };
 #elif defined(MPIU_TLS_SPECIFIER)
 MPIU_TLS_SPECIFIER MPICH_PerThread_t MPIR_Thread = { 0 };
-#elif defined(HAVE_RUNTIME_THREADCHECK)
+#else
 /* If we may be single threaded, we need a preallocated version to use
    if we are single threaded case */
 MPICH_PerThread_t  MPIR_ThreadSingle = { 0 };
@@ -302,9 +302,9 @@ int MPIR_Init_thread(int * argc, char ***argv, int required, int * provided)
     /* For any code in the device that wants to check for runtime 
        decisions on the value of isThreaded, set a provisional
        value here. We could let the MPID_Init routine override this */
-#ifdef HAVE_RUNTIME_THREADCHECK
+#if defined MPICH_IS_THREADED
     MPIR_ThreadInfo.isThreaded = required == MPI_THREAD_MULTIPLE;
-#endif
+#endif /* MPICH_IS_THREADED */
 
     MPIU_THREAD_CS_INIT;
 
@@ -479,9 +479,9 @@ int MPIR_Init_thread(int * argc, char ***argv, int required, int * provided)
     /* Capture the level of thread support provided */
     MPIR_ThreadInfo.thread_provided = thread_provided;
     if (provided) *provided = thread_provided;
-#ifdef HAVE_RUNTIME_THREADCHECK
+#if defined MPICH_IS_THREADED
     MPIR_ThreadInfo.isThreaded = (thread_provided == MPI_THREAD_MULTIPLE);
-#endif
+#endif /* MPICH_IS_THREADED */
 
     /* FIXME: Define these in the interface.  Does Timer init belong here? */
     MPIU_dbg_init(MPIR_Process.comm_world->rank);
@@ -618,12 +618,9 @@ int MPI_Init_thread( int *argc, char ***argv, int required, int *provided )
      * mutexes are not initialized yet, and we don't want to
      * accidentally use them before they are initialized.  We will
      * reset this value once it is properly initialized. */
-    /* FIXME: This only works when runtime thread-safety is enabled.
-     * When we use configure-time thread-levels, we might still have a
-     * problem. */
-#ifdef HAVE_RUNTIME_THREADCHECK
+#if defined MPICH_IS_THREADED
     MPIR_ThreadInfo.isThreaded = 0;
-#endif
+#endif /* MPICH_IS_THREADED */
 
     MPIR_T_env_init();
 

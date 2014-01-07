@@ -146,12 +146,9 @@ int MPI_Init( int *argc, char ***argv )
      * mutexes are not initialized yet, and we don't want to
      * accidentally use them before they are initialized.  We will
      * reset this value once it is properly initialized. */
-    /* FIXME: This only works when runtime thread-safety is enabled.
-     * When we use configure-time thread-levels, we might still have a
-     * problem. */
-#ifdef HAVE_RUNTIME_THREADCHECK
+#if defined MPICH_IS_THREADED
     MPIR_ThreadInfo.isThreaded = 0;
-#endif
+#endif /* MPICH_IS_THREADED */
 
     MPIR_T_env_init();
 

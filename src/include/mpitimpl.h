@@ -1363,14 +1363,9 @@ static inline int MPIR_T_is_initialized() {
 extern void MPIR_T_strncpy(char *dst, const char *src, int *len);
 
 /* Stuffs to support multithreaded MPI_T */
-#ifdef HAVE_RUNTIME_THREADCHECK
 extern int MPIR_T_is_threaded;
 #define MPIR_T_THREAD_CHECK_BEGIN if (MPIR_T_is_threaded) {
 #define MPIR_T_THREAD_CHECK_END }
-#else /* !HAVE_RUNTIME_THREADCHECK */
-#define MPIR_T_THREAD_CHECK_BEGIN
-#define MPIR_T_THREAD_CHECK_END
-#endif
 
 #ifdef MPICH_IS_THREADED
 extern MPIU_Thread_mutex_t mpi_t_mutex;

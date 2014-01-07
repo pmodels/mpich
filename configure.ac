@@ -486,9 +486,6 @@ AC_ARG_WITH(logging,
 	AC_HELP_STRING([--with-logging=name], [Specify the logging library for MPICH]),
 	[if test -z "$withval" ; then with_logging=rlog ; fi],with_logging=none)
 
-dnl The default option needs to be defined in terms of a specific choice 
-dnl (runtime in this case).  Note that the default choice is the same as
-dnl runtime only for certain devices - not for every device.
 AC_ARG_ENABLE(threads,
 [  --enable-threads=level - Control the level of thread support in the 
                            MPICH implementation.  The following levels
@@ -496,14 +493,8 @@ AC_ARG_ENABLE(threads,
         single          - No threads (MPI_THREAD_SINGLE)
         funneled        - Only the main thread calls MPI (MPI_THREAD_FUNNELED)
         serialized      - User serializes calls to MPI (MPI_THREAD_SERIALIZED)
-        runtime         - The level of thread support is determined by 
-                          the arguments to MPI_Init_thread, with
-                          MPI_THREAD_MULTIPLE available.  The default option
-                          for many communication devices.
-        multiple        - Fully multi-threaded (MPI_THREAD_MULTIPLE) always. 
-                          DO NOT select this option. The option runtime is more
-                          efficient and also supports thread_multiple. 
-                          (multiple aliased to runtime now)
+        multiple        - Fully multi-threaded (MPI_THREAD_MULTIPLE)
+        runtime         - Alias to "multiple"
 
         See also the --enable-thread-cs option for controlling the granularity of
         the concurrency inside of the library
@@ -1278,7 +1269,10 @@ fi
 #
 # Threads must be supported by the device.  First, set the default to
 # be the highest supported by the device
+# "runtime" was an old (now deprecated) option; just map it to multiple
+if test "$enable_threads" = "runtime" ; then enable_threads=multiple ; fi
 if test "$enable_threads" = "yes" ; then enable_threads=default ; fi
+if test "$enable_threads" = "no" ; then enable_threads=single ; fi
 if test "$enable_threads" = default ; then
     # XXX DJG bug is here, PREREQ is not being used right now
     if test -n "$MPID_MAX_THREAD_LEVEL" ; then
@@ -1286,25 +1280,13 @@ if test "$enable_threads" = default ; then
             MPI_THREAD_SINGLE)     enable_threads=single ;;
             MPI_THREAD_FUNNELED)   enable_threads=funneled ;;
             MPI_THREAD_SERIALIZED) enable_threads=serialized ;;
-            MPI_THREAD_MULTIPLE)   enable_threads=runtime ;;
+            MPI_THREAD_MULTIPLE)   enable_threads=multiple ;;
             *) AC_MSG_ERROR([Unrecognized thread level from device $MPID_MAX_THREAD_LEVEL])
     	    ;;
         esac
     else
         enable_threads=single
     fi
-fi
-
-if test "$enable_threads" = "default" ; then
-    enable_threads=runtime
-elif test "$enable_threads" = "no" ; then
-    enable_threads=single
-fi
-
-# Runtime is an alias for multiple with an additional value
-if test "$enable_threads" = "runtime" ; then
-    AC_DEFINE(HAVE_RUNTIME_THREADCHECK,1,[Define if MPI supports MPI_THREAD_MULTIPLE with a runtime check for thread level])
-    enable_threads=multiple
 fi
 
 MPICH_THREAD_LEVEL=MPI_THREAD_FUNNELED

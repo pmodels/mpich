@@ -72,10 +72,11 @@ typedef struct MPICH_ThreadInfo_t {
 #  endif /* !TLS */
     MPID_Thread_id_t  master_thread;    /* Thread that started MPI */
 #endif
-#ifdef HAVE_RUNTIME_THREADCHECK
+
+#if defined MPICH_IS_THREADED
     int isThreaded;                      /* Set to true if user requested
 					    THREAD_MULTIPLE */
-#endif
+#endif /* MPICH_IS_THREADED */
 
     /* Define the mutex values used for each kind of implementation */
 #if MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_GLOBAL || \
@@ -107,11 +108,6 @@ extern MPICH_ThreadInfo_t MPIR_ThreadInfo;
 
 #else /* defined(MPICH_IS_THREADED) */
 
-/* We want to avoid the overhead of the thread call if we're in the
-   runtime state and threads are not in use.  In that case, MPIR_Thread
-   is still a pointer but it was already allocated in InitThread */
-#ifdef HAVE_RUNTIME_THREADCHECK
-
 #define MPIU_THREAD_CHECK_BEGIN if (MPIR_ThreadInfo.isThreaded) {
 #define MPIU_THREAD_CHECK_END   }
 /* This macro used to take an argument of one or more statements that
@@ -123,14 +119,6 @@ extern MPICH_ThreadInfo_t MPIR_ThreadInfo;
  * don't have any other conditions that you need to check in order to
  * completely eliminate unnecessary if's. */
 #define MPIU_ISTHREADED (MPIR_ThreadInfo.isThreaded)
-
-#else /* !defined(HAVE_RUNTIME_THREADCHECK) */
-
-#define MPIU_THREAD_CHECK_BEGIN
-#define MPIU_THREAD_CHECK_END
-#define MPIU_ISTHREADED (1)
-
-#endif /* HAVE_RUNTIME_THREADCHECK */
 
 #endif /* MPICH_IS_THREADED */
 
@@ -218,7 +206,6 @@ extern MPICH_PerThread_t MPIR_Thread;
 void MPIR_CleanupThreadStorage(void *a);
 
 #if !defined(MPIU_TLS_SPECIFIER)
-#  if defined(HAVE_RUNTIME_THREADCHECK)
 /* In the case where the thread level is set in MPI_Init_thread, we
    need a blended version of the non-threaded and the thread-multiple
    definitions.
@@ -267,36 +254,6 @@ extern MPICH_PerThread_t MPIR_ThreadSingle;
             MPIU_Assert(MPIR_Thread);                                               \
         }                                                                           \
     } while (0)
-
-#  else /* unconditional thread multiple */
-
-/* We initialize the MPIR_Thread pointer to null so that we need call the
- * routine to get the thread-private storage only once in an invocation of a
- * routine.  */
-#define MPIU_THREADPRIV_INITKEY                                         \
-    do {                                                                \
-        int err_;                                                       \
-        MPID_Thread_tls_create(MPIR_CleanupThreadStorage,&MPIR_ThreadInfo.thread_storage,&err_); \
-        MPIU_Assert(err_ == 0);                                         \
-    } while (0)
-#define MPIU_THREADPRIV_INIT                                                                        \
-    do {                                                                                            \
-        MPIR_Thread = (MPICH_PerThread_t *) MPIU_Calloc(1, sizeof(MPICH_PerThread_t));              \
-        MPIU_Assert(MPIR_Thread);                                                                   \
-        MPID_Thread_tls_set(&MPIR_ThreadInfo.thread_storage, (void *)MPIR_Thread);                  \
-    } while (0)
-#define MPIU_THREADPRIV_GET                                                     \
-    do {                                                                        \
-        if (!MPIR_Thread) {                                                     \
-            MPID_Thread_tls_get(&MPIR_ThreadInfo.thread_storage, &MPIR_Thread); \
-            if (!MPIR_Thread) {                                                 \
-                MPIU_THREADPRIV_INIT; /* subtle, sets MPIR_Thread */            \
-            }                                                                   \
-            MPIU_Assert(MPIR_Thread);                                           \
-        }                                                                       \
-    } while (0)
-
-#  endif /* runtime vs. unconditional */
 
 /* common definitions when using MPID_Thread-based TLS */
 #define MPIU_THREADPRIV_DECL MPICH_PerThread_t *MPIR_Thread=NULL

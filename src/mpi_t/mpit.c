@@ -10,9 +10,6 @@ int MPIR_T_init_balance = 0;
 
 #ifdef MPICH_IS_THREADED
 MPIU_Thread_mutex_t mpi_t_mutex;
-#endif
-
-#ifdef HAVE_RUNTIME_THREADCHECK
 int MPIR_T_is_threaded;
 #endif
 

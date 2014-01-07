@@ -118,7 +118,6 @@ int MPIDU_Sock_wait(struct MPIDU_Sock_set * sock_set, int millisecond_timeout,
 		 just use the same code as above.  Otherwise, use 
 		 multithreaded code (and we don't then need the 
 		 MPIU_THREAD_CHECK_BEGIN/END macros) */
-#ifdef HAVE_RUNTIME_THREADCHECK
 		if (!MPIR_ThreadInfo.isThreaded) {
 		    MPIDI_FUNC_ENTER(MPID_STATE_POLL);
 		    n_fds = poll(sock_set->pollfds, sock_set->poll_array_elems, 
@@ -126,7 +125,6 @@ int MPIDU_Sock_wait(struct MPIDU_Sock_set * sock_set, int millisecond_timeout,
 		    MPIDI_FUNC_EXIT(MPID_STATE_POLL);
 		}
 		else
-#endif
 		{    
 		/*
 		 * First try a non-blocking poll to see if any immediate 

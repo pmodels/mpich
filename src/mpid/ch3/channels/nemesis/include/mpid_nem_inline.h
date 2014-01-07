@@ -878,11 +878,7 @@ MPID_nem_mpich_blocking_recv(MPID_nem_cell_ptr_t *cell, int *in_fbox, int comple
 
 #ifdef MPICH_IS_THREADED
     /* We should never enter this function in a multithreaded app */
-#ifdef HAVE_RUNTIME_THREADCHECK
     MPIU_Assert(!MPIR_ThreadInfo.isThreaded);
-#else
-    MPIU_Assert(0);
-#endif
 #endif
 
 #ifdef USE_FASTBOX
