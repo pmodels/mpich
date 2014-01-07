@@ -49,7 +49,7 @@ MPID_Win_create_dynamic( MPID_Info  * info,
   MPID_Win     *win;
   int          rank,i;  
 
-  rc=MPIDI_Win_init(0,1,win_ptr, info, comm_ptr, MPI_WIN_FLAVOR_DYNAMIC, MPI_WIN_SEPARATE);
+  rc=MPIDI_Win_init(0,1,win_ptr, info, comm_ptr, MPI_WIN_FLAVOR_DYNAMIC, MPI_WIN_UNIFIED);
   win = *win_ptr;
 
   win->base = MPI_BOTTOM;

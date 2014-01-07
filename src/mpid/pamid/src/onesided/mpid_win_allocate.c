@@ -61,7 +61,7 @@ MPID_Win_allocate(MPI_Aint     size,
   MPID_Win   *win;
   int        rank;
 
-  rc=MPIDI_Win_init(size,disp_unit,win_ptr, info, comm_ptr, MPI_WIN_FLAVOR_ALLOCATE, MPI_WIN_SEPARATE);
+  rc=MPIDI_Win_init(size,disp_unit,win_ptr, info, comm_ptr, MPI_WIN_FLAVOR_ALLOCATE, MPI_WIN_UNIFIED);
   win = *win_ptr;
 
   if (size > 0) {

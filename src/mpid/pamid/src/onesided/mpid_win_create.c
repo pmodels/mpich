@@ -199,7 +199,7 @@ MPID_Win_create(void       * base,
   pami_task_t  taskid;
   MPIDI_Win_info *winfo;
 
-  rc=MPIDI_Win_init(size,disp_unit,win_ptr, info, comm_ptr, MPI_WIN_FLAVOR_CREATE, MPI_WIN_SEPARATE);
+  rc=MPIDI_Win_init(size,disp_unit,win_ptr, info, comm_ptr, MPI_WIN_FLAVOR_CREATE, MPI_WIN_UNIFIED);
   win = *win_ptr;
   win->base = base;
   rank = comm_ptr->rank;
