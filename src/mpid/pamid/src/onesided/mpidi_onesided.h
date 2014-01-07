@@ -199,11 +199,9 @@ typedef struct
   int            count;
   int            counter;
   int            num_contig;
+  int            size;
   void         * request;
   void         * result_addr;
-  int            result_count;
-  MPI_Datatype   result_datatype;
-  int            result_num_contig;		      
   pami_endpoint_t src_endpoint;    
 } MPIDI_Win_GetAccMsgInfo;
 
@@ -245,13 +243,19 @@ typedef struct _mpidi_win_request
     MPIDI_Datatype   dt;
   } target;
 
+  struct
+  {
+    void            *addr;
+    int              count;
+    MPI_Datatype     datatype;
+    MPIDI_Datatype   dt;
+  } result;
+
   void     *user_buffer;
-  void     *compare_buffer;     /* anchor of compare buffer for compare and swap */
+  void     *compare_buffer;    /* anchor of compare buffer for compare and swap */
   uint32_t  buffer_free;
   void     *buffer;
   struct _mpidi_win_request *next; 
-  void     * compare_addr;
-  void     * result_addr;  
   MPI_Op     op;
   int        result_num_contig;   
 

@@ -45,7 +45,9 @@ MPIDI_Win_DoneCB(pami_context_t  context,
                                      req->origin.count,
                                      req->origin.datatype);
           MPID_assert(mpi_errno == MPI_SUCCESS);
+#ifndef USE_PAMI_RDMA
           MPIDI_Win_datatype_unmap(&req->target.dt);
+#endif
           MPID_Datatype_release(req->origin.dt.pointer);
           MPIU_Free(req->buffer);
           MPIU_Free(req->user_buffer);
