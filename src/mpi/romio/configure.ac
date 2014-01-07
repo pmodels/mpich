@@ -1420,6 +1420,8 @@ if test -n "$mpi_hp"; then
 fi
 #
 AC_CHECK_FUNCS(strerror)
+AC_CHECK_FUNCS(pwrite pread ,, AC_MSG_ERROR([pwrite/pread not detected and no workaround has been implemented]))
+
 if test -z "$srcdir" -o "$srcdir" = "." ; then srcdir="$ROMIO_HOME" ; fi
 AC_SUBST(srcdir)
 

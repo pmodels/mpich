@@ -51,33 +51,6 @@ void ADIOI_GEN_WriteContig(ADIO_File fd, const void *buf, int count,
 	offset = fd->fp_ind;
     }
 
-    if (fd->fp_sys_posn != offset) {
-#ifdef ADIOI_MPE_LOGGING
-        MPE_Log_event( ADIOI_MPE_lseek_a, 0, NULL );
-#endif
-#ifdef ROMIO_BG
-	if (bgmpio_timing2) io_time2 = MPI_Wtime();
-#endif
-	err_lseek = lseek(fd->fd_sys, offset, SEEK_SET);
-#ifdef ROMIO_BG
-	if (bgmpio_timing2) bgmpio_prof_cw[ BGMPIO_CIO_T_SEEK ] += (MPI_Wtime() - io_time2);
-#endif
-#ifdef ADIOI_MPE_LOGGING
-        MPE_Log_event( ADIOI_MPE_lseek_b, 0, NULL );
-#endif
-	/* --BEGIN ERROR HANDLING-- */
-	if (err_lseek == -1) {
-	    *error_code = MPIO_Err_create_code(MPI_SUCCESS,
-					       MPIR_ERR_RECOVERABLE,
-					       myname, __LINE__,
-					       MPI_ERR_IO, "**io",
-					       "**io %s", strerror(errno));
-	    fd->fp_sys_posn = -1;
-	    return;
-	}
-	/* --END ERROR HANDLING-- */
-    }
-    
 #ifdef ROMIO_BG
     if (bgmpio_timing2) io_time2 = MPI_Wtime();
 #endif
@@ -87,7 +60,7 @@ void ADIOI_GEN_WriteContig(ADIO_File fd, const void *buf, int count,
 	MPE_Log_event( ADIOI_MPE_write_a, 0, NULL );
 #endif
 	wr_count = len - bytes_xfered;
-	err = write(fd->fd_sys, p, wr_count);
+	err = pwrite(fd->fd_sys, p, wr_count, offset+bytes_xfered);
 	/* --BEGIN ERROR HANDLING-- */
 	if (err == -1) {
 	    *error_code = MPIO_Err_create_code(MPI_SUCCESS,
