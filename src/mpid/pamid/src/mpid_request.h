@@ -209,6 +209,7 @@ MPIDI_Request_initialize(MPID_Request * req)
   mpid->nextR            = NULL;
   mpid->oo_peer          = NULL;
 #endif
+  mpid->win_req          = NULL;
   MPIDI_Request_setCA(req, MPIDI_CA_COMPLETE);
 }
 
