@@ -42,9 +42,10 @@ extern int MPIR_Ext_dbg_romio_terse_enabled;
 extern int MPIR_Ext_dbg_romio_typical_enabled;
 extern int MPIR_Ext_dbg_romio_verbose_enabled;
 
-/* a copy of MPID_Ensure_Aint_fits_in_pointer for external use */
+/* a copy of MPID_Ensure_Aint_fits_in_pointer for external use, slightly
+ * modified to use ROMIO's version of the pointer-casting macro */
 #define MPIR_Ext_ensure_Aint_fits_in_pointer(aint) \
-  MPIR_Ext_assert((aint) == (MPI_Aint)(MPIR_Upint) MPI_AINT_CAST_TO_VOID_PTR(aint));
+  MPIR_Ext_assert((aint) == (MPI_Aint)(MPIR_Upint) ADIOI_AINT_CAST_TO_VOID_PTR(aint));
 
 /* to be called early by ROMIO's initialization process in order to setup init-time
  * glue code that cannot be initialized statically */
