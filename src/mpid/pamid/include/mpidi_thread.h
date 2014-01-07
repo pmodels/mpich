@@ -50,7 +50,6 @@
 #error Need HAVE_RUNTIME_THREADCHECK
 #endif
 
-
 #define MPIU_THREAD_CS_INIT     ({ MPIDI_Mutex_initialize(); })
 #define MPIU_THREAD_CS_FINALIZE
 
@@ -111,19 +110,55 @@
 
 #elif MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_PER_OBJECT
 
-#define MPIDI_CS_ENTER(m) ({                     MPIDI_Mutex_acquire(m); })
-#define MPIDI_CS_EXIT(m)  ({ MPIDI_Mutex_sync(); MPIDI_Mutex_release(m); })
-#define MPIDI_CS_YIELD(m) ({ MPIDI_Mutex_sync(); MPIDI_Mutex_release(m); MPIDI_Mutex_acquire(m); })
-#define MPIDI_CS_TRY(m)   ({ (0==MPIDI_Mutex_try_acquire(m)); })
-#define MPIDI_CS_SCHED_YIELD(m) ({ MPIDI_Mutex_sync(); MPIDI_Mutex_release(m); sched_yield(); MPIDI_Mutex_acquire(m); })
+#define MPIDI_CS_ENTER(m)                       \
+    do {                                        \
+        MPIU_THREAD_CHECK_BEGIN                 \
+            MPIDI_Mutex_acquire(m);             \
+        MPIU_THREAD_CHECK_END                   \
+    } while (0)
+
+#define MPIDI_CS_EXIT(m)                        \
+    do {                                        \
+        MPIU_THREAD_CHECK_BEGIN                 \
+            MPIDI_Mutex_sync();                 \
+            MPIDI_Mutex_release(m);             \
+        MPIU_THREAD_CHECK_END                   \
+    } while (0)
+
+#define MPIDI_CS_YIELD(m)                       \
+    do {                                        \
+        MPIU_THREAD_CHECK_BEGIN                 \
+            MPIDI_Mutex_sync();                 \
+            MPIDI_Mutex_release(m);             \
+            MPIDI_Mutex_acquire(m);             \
+        MPIU_THREAD_CHECK_END                   \
+    } while (0)
+
+#define MPIDI_CS_TRY(m)                         \
+    do {                                        \
+        MPIU_THREAD_CHECK_BEGIN                 \
+            MPIDI_Mutex_try_acquire(m);         \
+        MPIU_THREAD_CHECK_END                   \
+    } while (0)
+
+#define MPIDI_CS_SCHED_YIELD(m)                 \
+    do {                                        \
+        MPIU_THREAD_CHECK_BEGIN                 \
+            MPIDI_Mutex_sync();                 \
+            MPIDI_Mutex_release(m);             \
+            sched_yield();                      \
+            MPIDI_Mutex_acquire(m);             \
+        MPIU_THREAD_CHECK_END                   \
+    } while (0)
 
 #define MPIU_THREAD_CS_ALLFUNC_ENTER(_context)
 #define MPIU_THREAD_CS_ALLFUNC_EXIT(_context)
 #define MPIU_THREAD_CS_ALLFUNC_YIELD(_context)
 #define MPIU_THREAD_CS_ALLFUNC_SCHED_YIELD(_context)
 #define MPIU_THREAD_CS_ALLFUNC_TRY(_context)        (0)
-#define MPIU_THREAD_CS_INIT_ENTER(_context)         MPIDI_Mutex_acquire(0)
-#define MPIU_THREAD_CS_INIT_EXIT(_context)          MPIDI_Mutex_release(0)
+
+#define MPIU_THREAD_CS_INIT_ENTER(_context)         MPIDI_CS_ENTER(0)
+#define MPIU_THREAD_CS_INIT_EXIT(_context)          MPIDI_CS_EXIT(0)
 
 #define MPIU_THREAD_CS_CONTEXTID_ENTER(_context)    MPIDI_CS_ENTER(0)
 #define MPIU_THREAD_CS_CONTEXTID_EXIT(_context)     MPIDI_CS_EXIT (0)

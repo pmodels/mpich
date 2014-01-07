@@ -142,6 +142,17 @@ int MPI_Init( int *argc, char ***argv )
 
     /* ... body of routine ... */
 
+    /* Temporarily disable thread-safety.  This is needed because the
+     * mutexes are not initialized yet, and we don't want to
+     * accidentally use them before they are initialized.  We will
+     * reset this value once it is properly initialized. */
+    /* FIXME: This only works when runtime thread-safety is enabled.
+     * When we use configure-time thread-levels, we might still have a
+     * problem. */
+#ifdef HAVE_RUNTIME_THREADCHECK
+    MPIR_ThreadInfo.isThreaded = 0;
+#endif
+
     MPIR_T_env_init();
 
     if (!strcmp(MPIR_CVAR_DEFAULT_THREAD_LEVEL, "MPI_THREAD_MULTIPLE"))
