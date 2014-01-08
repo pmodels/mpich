@@ -159,7 +159,7 @@ MPIDI_Accumulate(pami_context_t   context,
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 int
-MPID_Accumulate(void         *origin_addr,
+MPID_Accumulate(const void   *origin_addr,
                 int           origin_count,
                 MPI_Datatype  origin_datatype,
                 int           target_rank,
@@ -265,7 +265,7 @@ MPID_Accumulate(void         *origin_addr,
   if (req->origin.dt.contig)
     {
       req->buffer_free = 0;
-      req->buffer      = origin_addr + req->origin.dt.true_lb;
+      req->buffer      = (void *) ((uintptr_t) origin_addr + req->origin.dt.true_lb);
     }
   else
     {

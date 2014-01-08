@@ -216,7 +216,7 @@ MPIDI_Put_use_pami_put(pami_context_t   context, MPIDI_Win_request * req,int *fr
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 int
-MPID_Put(void         *origin_addr,
+MPID_Put(const void   *origin_addr,
          int           origin_count,
          MPI_Datatype  origin_datatype,
          int           target_rank,
@@ -303,7 +303,7 @@ MPID_Put(void         *origin_addr,
   if (req->origin.dt.contig)
     {
       req->buffer_free = 0;
-      req->buffer      = origin_addr + req->origin.dt.true_lb;
+      req->buffer      = (void *) ((uintptr_t) origin_addr + req->origin.dt.true_lb);
     }
   else
     {
