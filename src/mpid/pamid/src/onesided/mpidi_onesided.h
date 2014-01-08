@@ -207,7 +207,7 @@ typedef struct
 
 
 /** \todo make sure that the extra fields are removed */
-typedef struct _mpidi_win_request
+typedef struct MPIDI_Win_request
 {
   MPID_Win               *win;
   MPIDI_Win_requesttype_t type;
@@ -255,7 +255,7 @@ typedef struct _mpidi_win_request
   void     *compare_buffer;    /* anchor of compare buffer for compare and swap */
   uint32_t  buffer_free;
   void     *buffer;
-  struct _mpidi_win_request *next; 
+  struct MPIDI_Win_request *next; 
   MPI_Op     op;
   int        result_num_contig;   
 

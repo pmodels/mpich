@@ -342,7 +342,7 @@ int MPID_Fetch_and_op(const void *origin_addr, void *result_addr,
     req->op = op;
     req->pami_datatype = pami_type;
     /* MPI_Fetch_and_op only supports predefined datatype */
-    req->buffer      = origin_addr + req->origin.dt.true_lb;
+    req->buffer           = (void *) ((uintptr_t) origin_addr + req->origin.dt.true_lb);
     req->user_buffer      = result_addr + req->origin.dt.true_lb;
 
     pami_result_t rc;

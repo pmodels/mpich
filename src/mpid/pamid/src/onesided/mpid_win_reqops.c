@@ -163,7 +163,7 @@ MPID_Rget(void         *origin_addr,
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 int
-MPID_Raccumulate(const void         *origin_addr,
+MPID_Raccumulate(const void  *origin_addr,
                 int           origin_count,
                 MPI_Datatype  origin_datatype,
                 int           target_rank,

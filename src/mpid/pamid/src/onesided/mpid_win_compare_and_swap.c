@@ -150,9 +150,9 @@ int MPID_Compare_and_swap(const void *origin_addr, const void *compare_addr,
         MPIU_Free(req);
     } 
   else {
-    req->buffer      = origin_addr + req->origin.dt.true_lb;
+    req->buffer           = (void *) ((uintptr_t) origin_addr + req->origin.dt.true_lb);
     req->user_buffer      = result_addr + req->origin.dt.true_lb;
-    req->compare_buffer      = compare_addr + req->origin.dt.true_lb;
+    req->compare_buffer   = (void *) ((uintptr_t) compare_addr + req->origin.dt.true_lb);
 
     pami_result_t rc;
     pami_task_t task = MPID_VCR_GET_LPID(win->comm_ptr->vcr, target_rank);
