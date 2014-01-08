@@ -49,7 +49,7 @@ void ADIOI_GEN_ReadContig(ADIO_File fd, void *buf, int count,
     }
  
 #if ROMIO_BG
-    if (bgmpio_timing2) io_time2 = MPI_Wtime();
+    if (bgmpio_timing) io_time2 = MPI_Wtime();
 #endif
     p=buf;
     while (bytes_xfered < len) {
@@ -81,7 +81,7 @@ void ADIOI_GEN_ReadContig(ADIO_File fd, void *buf, int count,
 	p += err;
     }
 #if ROMIO_BG
-    if (bgmpio_timing2) bgmpio_prof_cr[ BGMPIO_CIO_T_POSI_RW ] += (MPI_Wtime() - io_time2);
+    if (bgmpio_timing) bgmpio_prof_cr[ BGMPIO_CIO_T_POSI_RW ] += (MPI_Wtime() - io_time2);
 #endif
     fd->fp_sys_posn = offset + bytes_xfered;
 

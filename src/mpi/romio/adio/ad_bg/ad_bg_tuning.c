@@ -54,12 +54,6 @@ double	bgmpio_prof_cr    [BGMPIO_CIO_LAST];
  *   - 1 - Collect/report timing.
  *   - Default is 0.
  *
- * - BGMPIO_TIMING2 - collect additional averages for MPI I/O collective calls.
- *   Possible values:
- *   - 0 - Do not collect/report averages.
- *   - 1 - Collect/report averages.
- *   - Default is 0.
- *
  * - BGMPIO_TUNEGATHER - Tune how starting and ending offsets are communicated
  *   for aggregator collective i/o.  Possible values:
  *   - 0 - Use two MPI_Allgather's to collect starting and ending offsets.
@@ -97,9 +91,6 @@ void ad_bg_get_env_vars() {
     bgmpio_timing = 0;
 	x = getenv( "BGMPIO_TIMING"       ); 
 	if (x) bgmpio_timing       = atoi(x);
-    bgmpio_timing2 = 0;
-	x = getenv( "BGMPIO_TIMING2"      ); 
-	if (x) bgmpio_timing2      = atoi(x);
     bgmpio_tunegather = 1;
 	x = getenv( "BGMPIO_TUNEGATHER"   ); 
 	if (x) bgmpio_tunegather   = atoi(x);
@@ -156,25 +147,19 @@ void ad_bg_timing_crw_report( int rw, ADIO_File fd, int myrank, int nprocs )
 
 	    for (i=0; i<BGMPIO_CIO_LAST; i++) bgmpio_prof_avg[i] /= nr_aggs;
 
-	    if (bgmpio_timing2) {
-		bgmpio_prof_avg[ BGMPIO_CIO_B_POSI_RW  ] =
-		    bgmpio_prof_avg[ BGMPIO_CIO_DATA_SIZE ] * nr_aggs /
-		    bgmpio_prof_max[ BGMPIO_CIO_T_POSI_RW  ];
-		bgmpio_prof_avg[ BGMPIO_CIO_B_MPIO_RW  ] =
-		    bgmpio_prof_avg[ BGMPIO_CIO_DATA_SIZE ] * nr_aggs /
-		    bgmpio_prof_max[ BGMPIO_CIO_T_MPIO_RW  ];
-	    } else {
-
-		bgmpio_prof_avg[ BGMPIO_CIO_B_POSI_RW  ] = -1;
-		bgmpio_prof_avg[ BGMPIO_CIO_B_MPIO_RW  ] = -1;
-	    }
+	    bgmpio_prof_avg[ BGMPIO_CIO_B_POSI_RW  ] =
+		bgmpio_prof_avg[ BGMPIO_CIO_DATA_SIZE ] * nr_aggs /
+		bgmpio_prof_max[ BGMPIO_CIO_T_POSI_RW  ];
+	    bgmpio_prof_avg[ BGMPIO_CIO_B_MPIO_RW  ] =
+		bgmpio_prof_avg[ BGMPIO_CIO_DATA_SIZE ] * nr_aggs /
+		bgmpio_prof_max[ BGMPIO_CIO_T_MPIO_RW  ];
 
 	    bgmpio_prof_avg[ BGMPIO_CIO_B_MPIO_CRW ] =
 		bgmpio_prof_avg[ BGMPIO_CIO_DATA_SIZE ] * nr_aggs /
 		bgmpio_prof_max[ BGMPIO_CIO_T_MPIO_CRW ];
 
-	    fprintf(stderr,"TIMING-1 %1s,", (rw ? "W" : "R") );
-	    fprintf(stderr,"SIZE: %12.4f , ", bgmpio_prof_avg[ BGMPIO_CIO_DATA_SIZE ] * nr_aggs);
+	    fprintf(stderr,"TIMING-%1s,", (rw ? "W" : "R") );
+	    fprintf(stderr,"SIZE: %12.4lld , ", (long long int)(bgmpio_prof_avg[ BGMPIO_CIO_DATA_SIZE ] * nr_aggs));
 	    fprintf(stderr,"SEEK-avg: %10.3f , ",
 		    bgmpio_prof_avg[ BGMPIO_CIO_T_SEEK ]     );
 	    fprintf(stderr,"SEEK-max: %10.3f , ",
@@ -191,9 +176,16 @@ void ad_bg_timing_crw_report( int rw, ADIO_File fd, int myrank, int nprocs )
 		    bgmpio_prof_avg[ BGMPIO_CIO_T_MYREQ ]    );
 	    fprintf(stderr,"OTHERREQ-max: %10.3f , ",
 		    bgmpio_prof_max[ BGMPIO_CIO_T_OTHREQ ]   );
-	    fprintf(stderr,"EXCHANGE-max: %10.3f \n",
+	    fprintf(stderr,"EXCHANGE-max: %10.3f , ",
 		    bgmpio_prof_max[ BGMPIO_CIO_T_DEXCH ]    );
-	    fprintf(stderr,"TIMING-2 %1s,", (rw ? "W" : "R") );
+	    fprintf(stderr, "EXCHANGE-SETUP-max: %10.3f , ",
+		    bgmpio_prof_max[ BGMPIO_CIO_T_DEXCH_SETUP]  );
+	    fprintf(stderr, "EXCHANGE-NET-max: %10.3f , ",
+		    bgmpio_prof_max[ BGMPIO_CIO_T_DEXCH_NET]  );
+	    fprintf(stderr, "EXCHANGE-SORT-max: %10.3f , ",
+		    bgmpio_prof_max[ BGMPIO_CIO_T_DEXCH_SORT]  );
+	    fprintf(stderr, "EXCHANGE-SIEVE-max: %10.3f , ",
+		    bgmpio_prof_max[ BGMPIO_CIO_T_DEXCH_SIEVE]  );
 	    fprintf(stderr,"POSIX-TIME-avg: %10.3f , ",
 		    bgmpio_prof_avg[ BGMPIO_CIO_T_POSI_RW ]  );
 	    fprintf(stderr,"MPIIO-CONTIG-TIME-avg: %10.3f , ",

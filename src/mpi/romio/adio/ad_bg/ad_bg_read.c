@@ -43,32 +43,32 @@ void ADIOI_BG_ReadContig(ADIO_File fd, void *buf, int count,
     }
 
     if (file_ptr_type == ADIO_EXPLICIT_OFFSET) {
-	if (bgmpio_timing2) io_time2 = MPI_Wtime();
+	if (bgmpio_timing) io_time2 = MPI_Wtime();
 	if (fd->fp_sys_posn != offset)
 	    lseek(fd->fd_sys, offset, SEEK_SET);
-	if (bgmpio_timing2) bgmpio_prof_cr[ BGMPIO_CIO_T_SEEK ] += (MPI_Wtime() - io_time2);
+	if (bgmpio_timing) bgmpio_prof_cr[ BGMPIO_CIO_T_SEEK ] += (MPI_Wtime() - io_time2);
 	if (fd->atomicity)
 	    ADIOI_WRITE_LOCK(fd, offset, SEEK_SET, len);
 	else ADIOI_READ_LOCK(fd, offset, SEEK_SET, len);
-	if (bgmpio_timing2) io_time2 = MPI_Wtime();
+	if (bgmpio_timing) io_time2 = MPI_Wtime();
 	err = read(fd->fd_sys, buf, (unsigned int)len);
-	if (bgmpio_timing2) bgmpio_prof_cr[ BGMPIO_CIO_T_POSI_RW ] += (MPI_Wtime() - io_time2);
+	if (bgmpio_timing) bgmpio_prof_cr[ BGMPIO_CIO_T_POSI_RW ] += (MPI_Wtime() - io_time2);
 	ADIOI_UNLOCK(fd, offset, SEEK_SET, len);
 	fd->fp_sys_posn = offset + err;
 	/* individual file pointer not updated */        
     }
     else {  /* read from curr. location of ind. file pointer */
 	offset = fd->fp_ind;
-	if (bgmpio_timing2) io_time2 = MPI_Wtime();
+	if (bgmpio_timing) io_time2 = MPI_Wtime();
 	if (fd->fp_sys_posn != fd->fp_ind)
 	    lseek(fd->fd_sys, fd->fp_ind, SEEK_SET);
-	if (bgmpio_timing2) bgmpio_prof_cr[ BGMPIO_CIO_T_SEEK ] += (MPI_Wtime() - io_time2);
+	if (bgmpio_timing) bgmpio_prof_cr[ BGMPIO_CIO_T_SEEK ] += (MPI_Wtime() - io_time2);
 	if (fd->atomicity)
 	    ADIOI_WRITE_LOCK(fd, offset, SEEK_SET, len);
 	else ADIOI_READ_LOCK(fd, offset, SEEK_SET, len);
-	if (bgmpio_timing2) io_time2 = MPI_Wtime();
+	if (bgmpio_timing) io_time2 = MPI_Wtime();
 	err = read(fd->fd_sys, buf, (unsigned int)len);
-	if (bgmpio_timing2) bgmpio_prof_cr[ BGMPIO_CIO_T_POSI_RW ] += (MPI_Wtime() - io_time2);
+	if (bgmpio_timing) bgmpio_prof_cr[ BGMPIO_CIO_T_POSI_RW ] += (MPI_Wtime() - io_time2);
 	ADIOI_UNLOCK(fd, offset, SEEK_SET, len);
 	fd->fp_ind += err;
 	fd->fp_sys_posn = fd->fp_ind;

@@ -1266,8 +1266,10 @@ static void ADIOI_W_Exchange_data_alltoallv(
     int *srt_len, sum;
     ADIO_Offset *srt_off;
     static char myname[] = "ADIOI_W_EXCHANGE_DATA";
+    double io_time;
 
 
+    io_time = MPI_Wtime();
   /* exchange recv_size info so that each process knows how much to
      send to whom. */
     MPI_Alltoall(recv_size, 1, MPI_INT, send_size, 1, MPI_INT, fd->comm);
@@ -1316,6 +1318,9 @@ static void ADIOI_W_Exchange_data_alltoallv(
 	ADIOI_Free(send_buf);
     }
 
+    bgmpio_prof_cw[BGMPIO_CIO_T_DEXCH_SETUP] += MPI_Wtime() - io_time;
+
+    io_time = MPI_Wtime();
   /* alltoallv */
     MPI_Alltoallv( 
             all_send_buf, send_size, sdispls, MPI_BYTE,
@@ -1325,6 +1330,8 @@ static void ADIOI_W_Exchange_data_alltoallv(
     ADIOI_Free( all_send_buf );
     ADIOI_Free(sdispls);
 
+    bgmpio_prof_cw[BGMPIO_CIO_T_DEXCH_NET] += MPI_Wtime() - io_time;
+    io_time = MPI_Wtime();
   /* data sieving pre-read */
   /* To avoid a read-modify-write, check if there are holes in the 
      data to be written. For this, merge the (sorted) offset lists
@@ -1356,6 +1363,8 @@ static void ADIOI_W_Exchange_data_alltoallv(
     ADIOI_Free(srt_off);
     ADIOI_Free(srt_len);
 
+    bgmpio_prof_cw[BGMPIO_CIO_T_DEXCH_SORT] += MPI_Wtime() - io_time;
+    io_time = MPI_Wtime();
     if (nprocs_recv) {
         if (*hole) {
             ADIO_ReadContig(fd, write_buf, size, MPI_BYTE,
@@ -1371,7 +1380,8 @@ static void ADIOI_W_Exchange_data_alltoallv(
             /* --END ERROR HANDLING-- */
         }
     }
-    
+    bgmpio_prof_cw[BGMPIO_CIO_T_DEXCH_SIEVE] += MPI_Wtime() - io_time;
+
   /* scater all_recv_buf into 4M cb_buffer */
     tmp_len = (int *) ADIOI_Malloc(nprocs*sizeof(int));
     for (i=0; i<nprocs; i++)

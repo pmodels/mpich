@@ -41,6 +41,10 @@ enum {
     BGMPIO_CIO_T_MYREQ,	/* time for ADIOI_BG_Calc_my_req(), local */
     BGMPIO_CIO_T_OTHREQ,	/* time for ADIOI_Calc_others_req(), short Alltoall */
     BGMPIO_CIO_T_DEXCH,	/* time for I/O data exchange */
+    BGMPIO_CIO_T_DEXCH_SETUP,	/* time for setup portion of I/O data exchange */
+    BGMPIO_CIO_T_DEXCH_NET,	/* time for network portion of I/O data exchange */
+    BGMPIO_CIO_T_DEXCH_SORT, 	/* time to sort requesst in I/O data exchange */
+    BGMPIO_CIO_T_DEXCH_SIEVE, 	/* time for read portion of RMW in two phase */
     BGMPIO_CIO_T_POSI_RW,
     BGMPIO_CIO_B_POSI_RW,
     BGMPIO_CIO_T_MPIO_RW,	/* time for ADIOI_BG_WriteContig() */
@@ -56,7 +60,6 @@ extern double 	bgmpio_prof_cr    [BGMPIO_CIO_LAST];
 
 /* corresponds to environment variables to select optimizations and timing level */
 extern int 	bgmpio_timing;
-extern int 	bgmpio_timing2;
 extern int      bgmpio_timing_cw_level;
 extern int 	bgmpio_comm;
 extern int 	bgmpio_tunegather;
