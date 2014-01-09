@@ -236,6 +236,13 @@ MPID_Get(void         *origin_addr,
   }
 
   req->offset = target_disp * win->mpid.info[target_rank].disp_unit;
+#ifdef __BGQ__
+  /* PAMI limitation as it doesnt permit VA of 0 to be passed into
+   * memregion create, so we must pass base_va of heap computed from
+   * an SPI call instead. So the target offset must be adjusted */
+  if (req->win->create_flavor == MPI_WIN_FLAVOR_DYNAMIC)
+    req->offset -= (size_t)req->win->mpid.info[target_rank].base_addr;
+#endif
 
   MPIDI_Win_datatype_basic(origin_count,
                            origin_datatype,

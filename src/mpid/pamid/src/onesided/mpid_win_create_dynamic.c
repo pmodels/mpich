@@ -52,10 +52,33 @@ MPID_Win_create_dynamic( MPID_Info  * info,
   rc=MPIDI_Win_init(0,1,win_ptr, info, comm_ptr, MPI_WIN_FLAVOR_DYNAMIC, MPI_WIN_UNIFIED);
   win = *win_ptr;
 
-  win->base = MPI_BOTTOM;
   rank = comm_ptr->rank;
+  win->base = MPI_BOTTOM;
   winfo = &win->mpid.info[rank];
   winfo->win = win;
+
+#ifdef __BGQ__
+  void *base = NULL;
+  size_t length = 0;
+  Kernel_MemoryRegion_t memregion;
+  void *tmpbuf = malloc(sizeof(int));
+  Kernel_CreateMemoryRegion(&memregion, tmpbuf, sizeof(int));
+  //Reset base to base VA of local heap
+  base = memregion.BaseVa;
+  length = memregion.Bytes;
+  free(tmpbuf);
+  
+  if (length != 0)
+    {
+      size_t length_out = 0;
+      pami_result_t rc;
+      rc = PAMI_Memregion_create(MPIDI_Context[0], base, length, &length_out, &winfo->memregion);
+      MPID_assert(rc == PAMI_SUCCESS);
+      MPID_assert(length == length_out);
+    }
+  win->base = base;
+  winfo->base_addr = base;  
+#endif
 
   rc= MPIDI_Win_allgather(0,win_ptr);
   if (rc != MPI_SUCCESS)

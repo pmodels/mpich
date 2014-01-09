@@ -95,6 +95,13 @@ int MPID_Compare_and_swap(const void *origin_addr, const void *compare_addr,
   req->type         = MPIDI_WIN_REQUEST_COMPARE_AND_SWAP;
 
   req->offset = target_disp * win->mpid.info[target_rank].disp_unit;
+#ifdef __BGQ__
+  /* PAMI limitation as it doesnt permit VA of 0 to be passed into
+   * memregion create, so we must pass base_va of heap computed from
+   * an SPI call instead. So the target offset must be adjusted */
+  if (req->win->create_flavor == MPI_WIN_FLAVOR_DYNAMIC)
+    req->offset -= (size_t)req->win->mpid.info[target_rank].base_addr;
+#endif
 
   MPIDI_Win_datatype_basic(1, datatype, &req->origin.dt);
 
@@ -119,6 +126,10 @@ int MPID_Compare_and_swap(const void *origin_addr, const void *compare_addr,
             base = win->mpid.info[target_rank].base_addr;
             disp_unit = win->disp_unit;
         }
+	else if (win->create_flavor == MPI_WIN_FLAVOR_DYNAMIC) {
+	    base = NULL;
+	    disp_unit = win->disp_unit;
+	}
         else {
             base = win->base;
             disp_unit = win->disp_unit;
@@ -178,10 +189,13 @@ int MPID_Compare_and_swap(const void *origin_addr, const void *compare_addr,
     
   MPI_Op null_op=0;
   pami_data_function  pami_op;
+#ifndef __BGQ__
   if(MPIDI_Datatype_is_pami_rmw_supported(basic_type, &pami_type, null_op, &pami_op)  ) {
       req->pami_datatype = pami_type;
       PAMI_Context_post(MPIDI_Context[0], &req->post_request, MPIDI_Compare_and_swap_using_pami_rmw, req);
-    } else {
+    } else 
+#endif
+      {
       PAMI_Context_post(MPIDI_Context[0], &req->post_request, MPIDI_Atomic, req);
     }
    }

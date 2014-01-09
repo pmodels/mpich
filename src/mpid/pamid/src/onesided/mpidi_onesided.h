@@ -201,7 +201,7 @@ typedef struct
   int            num_contig;
   int            size;
   void         * request;
-  void         * result_addr;
+  void         * tptr;
   pami_endpoint_t src_endpoint;    
 } MPIDI_Win_GetAccMsgInfo;
 

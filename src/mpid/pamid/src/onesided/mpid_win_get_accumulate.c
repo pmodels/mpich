@@ -23,10 +23,12 @@
 
 static void 
 MPIDI_Win_GetAccSendAckDoneCB(pami_context_t   context,
-			     void           * _buf,
+			     void           * _info,
 			     pami_result_t    result)
 {
-  MPIU_Free (_buf);
+  MPIDI_Win_GetAccMsgInfo *msginfo = (MPIDI_Win_GetAccMsgInfo *) _info;
+  MPIU_Free(msginfo->tptr);
+  MPIU_Free(msginfo);
 }
 
 static void 
@@ -69,19 +71,18 @@ MPIDI_Win_GetAccumSendAck(pami_context_t   context,
       .dest     = msginfo->src_endpoint,
     },
     .events = {
-       .cookie   = buffer,
+       .cookie   = msginfo,
        .local_fn = MPIDI_Win_GetAccSendAckDoneCB, //cleanup buffer
      },
   };
+
+  msginfo->tptr = buffer;
 
   params.send.data.iov_len    = msginfo->size;
   params.send.data.iov_base   = buffer;
   
   rc = PAMI_Send(context, &params);
   MPID_assert(rc == PAMI_SUCCESS);
-  
-  //free msginfo
-  //MPIU_Free(msginfo);  
 }
 
 void
@@ -148,6 +149,9 @@ MPIDI_Win_GetAccDoneCB(pami_context_t  context,
       if (req->accum_headers)
         MPIU_Free(req->accum_headers);
 
+      MPIDI_Win_datatype_unmap(&req->target.dt);
+      MPIDI_Win_datatype_unmap(&req->result.dt);      
+
       if( req->type != MPIDI_WIN_REQUEST_RGET_ACCUMULATE )
         MPIU_Free(req);
     }
@@ -166,10 +170,10 @@ MPIDI_Win_GetAccAckDoneCB(pami_context_t   context,
     MPIR_Localcopy(req->result.addr,
 		   req->result.count,
 		   req->result.datatype,
-		   msginfo->result_addr,
+		   msginfo->tptr,
 		   msginfo->size,
 		   MPI_CHAR);
-    MPIU_Free(msginfo->result_addr);
+    MPIU_Free(msginfo->tptr);
   }
   MPIU_Free(msginfo);
   
@@ -194,10 +198,10 @@ MPIDI_WinGetAccumAckCB(pami_context_t    context,
   *msginfo = *(const MPIDI_Win_GetAccMsgInfo *)_msginfo;
   MPIDI_Win_request *req = (MPIDI_Win_request *) msginfo->request;
   
-  msginfo->result_addr = NULL;
+  msginfo->tptr = NULL;
   recv->addr = req->result.addr;
   if (req->result_num_contig > 1)
-    recv->addr = msginfo->result_addr = MPIU_Malloc(msginfo->size); 
+    recv->addr = msginfo->tptr = MPIU_Malloc(msginfo->size); 
   
   recv->type        = PAMI_TYPE_BYTE;
   recv->offset      = 0;
@@ -213,7 +217,6 @@ MPIDI_Get_accumulate(pami_context_t   context,
 {
   MPIDI_Win_request *req = (MPIDI_Win_request*)_req;
   pami_result_t rc;
-  void *map;
 
   pami_send_t params = {
     .send = {
@@ -248,15 +251,8 @@ MPIDI_Get_accumulate(pami_context_t   context,
     params.send.data.iov_base   = req->buffer + req->state.local_offset;
 
     if (req->target.dt.num_contig - req->state.index == 1) {
-      map=NULL;
-      if (req->target.dt.map != &req->target.dt.__map) {
-	map=(void *) req->target.dt.map;
-      }
-
       rc = PAMI_Send(context, &params);
       MPID_assert(rc == PAMI_SUCCESS);
-      if (map)
-	MPIU_Free(map);
       return PAMI_SUCCESS;
     } else {
       rc = PAMI_Send(context, &params);
@@ -265,9 +261,6 @@ MPIDI_Get_accumulate(pami_context_t   context,
       ++req->state.index;
     }
   }
-
-  MPIDI_Win_datatype_unmap(&req->target.dt);
-
   return PAMI_SUCCESS;
 }
 

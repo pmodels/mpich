@@ -229,7 +229,9 @@ int MPID_Fetch_and_op(const void *origin_addr, void *result_addr,
     MPID_assert(basic_type != MPI_DATATYPE_NULL);
 
   if(MPIDI_Datatype_is_pami_rmw_supported(basic_type, &pami_type, op, &pami_op)  ) {
+#ifndef __BGQ__
     good_for_rmw = 1; 
+#endif
   } else {
      if((op == MPI_NO_OP) && (origin_addr == NULL) && (win->create_flavor != MPI_WIN_FLAVOR_SHARED) ) {
         /* essentially a MPI_Get to result buffer */
@@ -244,6 +246,13 @@ int MPID_Fetch_and_op(const void *origin_addr, void *result_addr,
   req->type         = MPIDI_WIN_REQUEST_FETCH_AND_OP;
 
   req->offset = target_disp * win->mpid.info[target_rank].disp_unit;
+#ifdef __BGQ__
+  /* PAMI limitation as it doesnt permit VA of 0 to be passed into
+   * memregion create, so we must pass base_va of heap computed from
+   * an SPI call instead. So the target offset must be adjusted */
+  if (req->win->create_flavor == MPI_WIN_FLAVOR_DYNAMIC)
+    req->offset -= (size_t)req->win->mpid.info[target_rank].base_addr;
+#endif
 
   if (datatype == MPI_DOUBLE_INT)
     {
@@ -300,6 +309,10 @@ int MPID_Fetch_and_op(const void *origin_addr, void *result_addr,
             disp_unit = win->disp_unit;
 
         }
+	else if (win->create_flavor == MPI_WIN_FLAVOR_DYNAMIC) {
+	    base = NULL;
+	    disp_unit = win->disp_unit;
+	}
         else {
             base = win->base;
             disp_unit = win->disp_unit;
