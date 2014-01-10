@@ -1,6 +1,6 @@
 die 4 mpiexecarg=-disable-auto-cleanup timeLimit=10 strict=false resultTest=TestStatusNoErrors xfail=ticket1996
 abort 2 mpiexecarg=-disable-auto-cleanup timeLimit=10 strict=false xfail=ticket1537
-sendalive 4 mpiexecarg=-disable-auto-cleanup timeLimit=10 strict=false resultTest=TestStatusNoErrors
+sendalive 4 mpiexecarg=-disable-auto-cleanup timeLimit=10 strict=false resultTest=TestStatusNoErrors xfail=ticket=1996
 isendalive 3 mpiexecarg=-disable-auto-cleanup resultTest=TestStatusNoErrors strict=false
 senddead 2 mpiexecarg=-disable-auto-cleanup resultTest=TestStatusNoErrors strict=false timeLimit=10 xfail=ticket1945
 recvdead 2 mpiexecarg=-disable-auto-cleanup resultTest=TestStatusNoErrors strict=false timeLimit=10
