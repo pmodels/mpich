@@ -20,7 +20,7 @@
                                                   MPIR_ERR_RECOVERABLE, myname, \
                                                   __LINE__, MPI_ERR_IO, \
                                                   "**iowswc", 0); \
-               return; \
+               goto fn_exit; \
            } \
         } \
 	writebuf_off = req_off; \
@@ -33,7 +33,7 @@
 					       MPIR_ERR_RECOVERABLE, myname, \
 					       __LINE__, MPI_ERR_IO, \
 					       "**iowsrc", 0); \
-	    return; \
+	    goto fn_exit; \
 	} \
     } \
     write_sz = (unsigned) (ADIOI_MIN(req_len, writebuf_off + writebuf_len - req_off)); \
@@ -48,7 +48,7 @@
                                                MPIR_ERR_RECOVERABLE, myname, \
                                                __LINE__, MPI_ERR_IO, \
                                                "**iowswc", 0); \
-            return; \
+            goto fn_exit; \
         } \
         req_len -= write_sz; \
         userbuf_off += write_sz; \
@@ -62,7 +62,7 @@
 					       MPIR_ERR_RECOVERABLE, myname, \
 					       __LINE__, MPI_ERR_IO, \
 					       "**iowsrc", 0); \
-	    return; \
+	    goto fn_exit; \
 	} \
         write_sz = ADIOI_MIN(req_len, writebuf_len); \
         memcpy(writebuf, (char *)buf + userbuf_off, write_sz);\
@@ -82,7 +82,7 @@
                                                MPIR_ERR_RECOVERABLE, myname, \
                                                __LINE__, MPI_ERR_IO, \
                                                "**iowswc", 0); \
-            return; \
+            goto fn_exit; \
         } \
 	writebuf_off = req_off; \
         writebuf_len = (unsigned) (ADIOI_MIN(max_bufsize,end_offset-writebuf_off+1));\
@@ -98,7 +98,7 @@
                                                MPIR_ERR_RECOVERABLE, myname, \
                                                __LINE__, MPI_ERR_IO, \
                                                "**iowswc", 0); \
-            return; \
+            goto fn_exit; \
         } \
         req_len -= write_sz; \
         userbuf_off += write_sz; \
@@ -126,7 +126,7 @@ void ADIOI_GEN_WriteStrided(ADIO_File fd, const void *buf, int count,
     int buf_count, buftype_is_contig, filetype_is_contig;
     ADIO_Offset userbuf_off;
     ADIO_Offset off, req_off, disp, end_offset=0, writebuf_off, start_off;
-    char *writebuf;
+    char *writebuf=NULL;
     unsigned writebuf_len, max_bufsize, write_sz;
     MPI_Aint bufsize;
     ADIO_Status status1;
@@ -215,9 +215,7 @@ void ADIOI_GEN_WriteStrided(ADIO_File fd, const void *buf, int count,
 	if (fd->atomicity) 
 	    ADIOI_UNLOCK(fd, start_off, SEEK_SET, end_offset-start_off+1);
 
-	if (*error_code != MPI_SUCCESS) return;
-
-	ADIOI_Free(writebuf); 
+	if (*error_code != MPI_SUCCESS) goto fn_exit;
 
         if (file_ptr_type == ADIO_INDIVIDUAL) fd->fp_ind = off;
     }
@@ -312,7 +310,7 @@ void ADIOI_GEN_WriteStrided(ADIO_File fd, const void *buf, int count,
 #ifdef HAVE_STATUS_SET_BYTES
 	    MPIR_Status_set_bytes(status, datatype, bufsize);
 #endif 
-            return;
+            goto fn_exit;
         }
 
        /* Calculate end_offset, the last byte-offset that will be accessed.
@@ -466,12 +464,10 @@ void ADIOI_GEN_WriteStrided(ADIO_File fd, const void *buf, int count,
 			writebuf_off, &status1, error_code);
 	    if (!(fd->atomicity)) 
 		ADIOI_UNLOCK(fd, writebuf_off, SEEK_SET, writebuf_len);
-	    if (*error_code != MPI_SUCCESS) return;
+	    if (*error_code != MPI_SUCCESS) goto fn_exit;
 	}
 	if (fd->atomicity) 
 	    ADIOI_UNLOCK(fd, start_off, SEEK_SET, end_offset-start_off+1);
-
-	ADIOI_Free(writebuf); 
 
 	if (file_ptr_type == ADIO_INDIVIDUAL) fd->fp_ind = off;
     }
@@ -486,5 +482,7 @@ void ADIOI_GEN_WriteStrided(ADIO_File fd, const void *buf, int count,
 #endif
 
     if (!buftype_is_contig) ADIOI_Delete_flattened(datatype);
+fn_exit:
+    if (writebuf != NULL) ADIOI_Free(writebuf);
 }
 
