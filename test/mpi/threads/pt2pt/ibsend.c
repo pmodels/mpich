@@ -153,4 +153,5 @@ int main(int argc, char *argv[])
     MPI_Buffer_detach(&ptr_dt, &bs);
     free(buffer);
     MPI_Finalize();
+    return 0;
 }
