@@ -94,5 +94,14 @@ DLOOP_Count PREPEND_PREFIX(Type_blockindexed_count_contig)(DLOOP_Count count,
                                                            const void *disp_array,
                                                            int dispinbytes,
                                                            DLOOP_Offset old_extent);
-                                                          
+
+int PREPEND_PREFIX(Dataloop_optimize)( DLOOP_Dataloop *dlpOld_p );
+
+int PREPEND_PREFIX(Dataloop_est_complexity)(DLOOP_Dataloop *,
+					    MPI_Aint *, MPI_Aint *);
+int PREPEND_PREFIX(Dataloop_est_struct_complexity)( int,
+						    const int [],
+						    const DLOOP_Type [],
+						    MPI_Aint *,
+						    MPI_Aint * );
 #endif

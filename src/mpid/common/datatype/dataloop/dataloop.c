@@ -54,7 +54,7 @@
 /*@
   Dataloop_free - deallocate the resources used to store a dataloop
 
-Input Parameters:
+Input/output Parameters:
 . dataloop - pointer to dataloop structure
 @*/
 void PREPEND_PREFIX(Dataloop_free)(DLOOP_Dataloop **dataloop)
@@ -483,7 +483,7 @@ void PREPEND_PREFIX(Dataloop_alloc_and_copy)(int kind,
 
 /*@
   Dataloop_struct_alloc - allocate the resources used to store a dataloop and
-                          copy in old dataloop as appropriate.  this version
+                          copy in old dataloop as appropriate.  This version
                           is specifically for use when a struct dataloop is
                           being created; the space to hold old dataloops in
                           this case must be described back to the
