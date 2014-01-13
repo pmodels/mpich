@@ -25,6 +25,7 @@ AC_ARG_ENABLE([coverage],
 if test "$enable_coverage" = "yes" ; then
     if test "$ac_cv_prog_gcc" = "yes" ; then
         CFLAGS="$CFLAGS -fprofile-arcs -ftest-coverage"
+        LIBS="$LIBS -lgcov"
         if test ${WRAPPER_CFLAGS+set} = set ; then
             WRAPPER_CFLAGS="$WRAPPER_CFLAGS -fprofile-arcs -ftest-coverage"
         fi
@@ -34,6 +35,7 @@ if test "$enable_coverage" = "yes" ; then
     if test "$enable_cxx" = "yes" ; then
         if test "$ac_cv_cxx_compiler_gnu" = "yes" ; then
             CXXFLAGS="$CXXFLAGS -fprofile-arcs -ftest-coverage"
+            LIBS="$LIBS -lgcov"
             if test ${WRAPPER_CXXFLAGS+set} = set ; then
                 WRAPPER_CXXFLAGS="$WRAPPER_CXXFLAGS -fprofile-arcs -ftest-coverage"
             fi
@@ -46,6 +48,7 @@ if test "$enable_coverage" = "yes" ; then
     if test "$enable_f77" = yes ; then
         if test "$ac_cv_f77_compiler_gnu" = "yes" ; then
              FFLAGS="$FFLAGS -fprofile-arcs -ftest-coverage"
+             LIBS="$LIBS -lgcov"
              if test ${WRAPPER_FFLAGS+set} = set ; then
                  WRAPPER_FFLAGS="$WRAPPER_FFLAGS -fprofile-arcs -ftest-coverage"
              fi
@@ -56,6 +59,7 @@ if test "$enable_coverage" = "yes" ; then
     if test "$enable_fc" = yes ; then
         if test "$ac_cv_fc_compiler_gnu" = "yes" ; then
              FCFLAGS="$FCFLAGS -fprofile-arcs -ftest-coverage"
+             LIBS="$LIBS -lgcov"
              if test ${WRAPPER_FCFLAGS+set} = set ; then
                  WRAPPER_FCFLAGS="$WRAPPER_FCFLAGS -fprofile-arcs -ftest-coverage"
              fi
