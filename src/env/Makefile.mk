@@ -19,6 +19,12 @@ endif BUILD_PROFILING_LIB
 
 src_env_mpichversion_LDFLAGS = $(mpich_libtool_static_flag)
 
+src_env_mpivars_SOURCES = src/env/mpivars.c
+src_env_mpivars_LDADD   = lib/lib@MPILIBNAME@.la
+if BUILD_PROFILING_LIB
+src_env_mpivars_LDADD += lib/lib@MPILIBNAME@.la
+endif BUILD_PROFILING_LIB
+
 if BUILD_F77_BINDING
 bin_SCRIPTS += src/env/mpif77
 endif BUILD_F77_BINDING
