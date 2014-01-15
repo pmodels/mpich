@@ -100,7 +100,7 @@ int main( int argc, char *argv[] )
 }
 
 /* Print all of the MPI_T control variables, along with their major properties
-   and if possible a value (if possible depends on both the complexity of the 
+   and if possible a value (if possible depends on both the complexity of the
    variable and whether a value is defined) */
 int PrintControlVars( FILE *fp )
 {
@@ -219,7 +219,7 @@ int PrintCategories( FILE *fp )
         checkStringLen( name, nameLen, "nameLen" );
 
         if (numCvars > 0 || numPvars > 0 || numSubcat > 0) {
-            fprintf( fp, "Category %s has %d control variables, %d performance variables, and %d subcategories\n", 
+            fprintf( fp, "Category %s has %d control variables, %d performance variables, and %d subcategories\n",
                      name, numCvars, numPvars, numSubcat );
         }
         else {
@@ -445,7 +445,7 @@ const char *mpit_errclasscheck( int err )
     return p;
 }
 
-/* Read a control variable value and return the value as a null terminated 
+/* Read a control variable value and return the value as a null terminated
    string.
    For numeric values, only return a value for scalars (count == 1).
    For character data, return the string if it fits in the available space.
@@ -496,7 +496,7 @@ int getCvarValueAsStr( int idx, MPI_Datatype datatype,
     return hasValue;
 }
 
-/* Read a performance variable value and return the value as a null terminated 
+/* Read a performance variable value and return the value as a null terminated
    string.
    For numeric values, only return a value for scalars (count == 1).
    For character data, return the string if it fits in the available space.
@@ -647,7 +647,7 @@ int checkStringLen( const char *str, int expectedLen, const char *strName )
 {
     int actLen = strlen(str) + 1;
     if (expectedLen != actLen) {
-        fpritnf( stderr, 
+        fprintf( stderr,
                  "Incorrect return value for %s = %d, should = %d\n",
                  strName, expectedLen, actLen );
         return 1;
