@@ -945,7 +945,6 @@ void ADIOI_BG_Calc_others_req(ADIO_File fd, int count_my_req_procs,
     if ( sendBufForLens    == (void*)0xFFFFFFFFFFFFFFFF) sendBufForLens    = NULL;
 
     /* Calculate the displacements from the sendBufForOffsets/Lens */
-    MPI_Barrier(fd->comm);/* Why?*/
     for (i=0; i<nprocs; i++)
     {
 	/* Send these offsets to process i.*/
