@@ -9,11 +9,20 @@
 #include <math.h>
 #include "mpi.h"
 
-/* Make sure datatype creation is independent of data size */
+/* Make sure datatype creation is independent of data size
+   Note, however, that there is no guarantee or expectation
+   that the time would be constant.  In particular, some
+   optimizations might take more time than others.
+
+   The real goal of this is to ensure that the time to create
+   a datatype doesn't increase strongly with the number of elements
+   within the datatype, particularly for these datatypes that are
+   quite simple patterns.
+ */
 
 #define SKIP 4
 #define NUM_SIZES 16
-#define FRACTION 0.2
+#define FRACTION 1.0
 
 /* Don't make the number of loops too high; we create so many
  * datatypes before trying to free them */
@@ -23,14 +32,15 @@ int main(int argc, char *argv[])
 {
     MPI_Datatype column[LOOPS], xpose[LOOPS];
     double t[NUM_SIZES], ttmp, tmin, tmax, tmean, tdiff;
+    double tMeanLower, tMeanHigher;
     int size;
-    int i, j, isMonotone, errs = 0, nrows, ncols, isvalid;
+    int i, j, errs = 0, nrows, ncols;
 
     MPI_Init(&argc, &argv);
 
     tmean = 0;
-    size = 1;
-    for (i = 0; i < NUM_SIZES + SKIP; i++) {
+    size  = 1;
+    for (i = -SKIP; i < NUM_SIZES; i++) {
         nrows = ncols = size;
 
         ttmp = MPI_Wtime();
@@ -41,9 +51,15 @@ int main(int argc, char *argv[])
             MPI_Type_commit(&xpose[j]);
         }
 
-        if (i >= SKIP) {
-            t[i - SKIP] = MPI_Wtime() - ttmp;
-            tmean += t[i - SKIP];
+        if (i >= 0) {
+            t[i] = MPI_Wtime() - ttmp;
+            if (t[i] < 100 * MPI_Wtick()) {
+                /* Time is too inaccurate to use.  Set to zero.
+                   Consider increasing the LOOPS value to make this
+                   time large enough */
+                t[i] = 0;
+            }
+            tmean += t[i];
         }
 
         for (j = 0; j < LOOPS; j++) {
@@ -51,19 +67,37 @@ int main(int argc, char *argv[])
             MPI_Type_free(&column[j]);
         }
 
-        if (i >= SKIP)
+        if (i >= 0)
             size *= 2;
     }
     tmean /= NUM_SIZES;
 
-    /* Now, analyze the times to see that they are nearly independent
-     * of size */
-    for (i = 0; i < NUM_SIZES; i++) {
-        /* The difference between the value and the mean is more than
-         * a "FRACTION" of mean. */
-        if (fabs(t[i] - tmean) > (FRACTION * tmean))
-            errs++;
-    }
+    /* Now, analyze the times to see that they do not grow too fast
+       as a function of size.  As that is a vague criteria, we do the
+       following as a simple test:
+          Compute the mean of the first half and the second half of the
+          data
+          Compare the two means
+          If the mean of the second half is more than FRACTION times the
+          mean of the first half, then the time may be growing too fast.
+     */
+    tMeanLower = tMeanHigher = 0;
+    for (i=0; i<NUM_SIZES/2; i++)
+        tMeanLower += t[i];
+    tMeanLower /= (NUM_SIZES/2);
+    for (i=NUM_SIZES/2; i<NUM_SIZES; i++)
+        tMeanHigher += t[i];
+    tMeanHigher /= (NUM_SIZES - NUM_SIZES/2);
+    /* A large value (even 1 or greater) is a good choice for
+       FRACTION here - the goal is to detect significant growth in
+       execution time as the size increases, and there is no MPI
+       standard requirement here to meet.
+
+       If the times were too small, then the test also passes - the
+       goal is to find implementation problems that lead to excessive
+       time in these routines.
+    */
+    if (tMeanLower > 0 && tMeanHigher > (1 + FRACTION) * tMeanLower) errs++;
 
     if (errs) {
         fprintf(stderr, "too much difference in performance: ");
