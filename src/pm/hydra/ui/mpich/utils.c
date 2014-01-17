@@ -926,8 +926,6 @@ static void bind_to_help_fn(void)
     printf("            l1cache          -- map to L1 cache domain\n");
     printf("            l2cache          -- map to L2 cache domain\n");
     printf("            l3cache          -- map to L3 cache domain\n");
-    printf("            TCSNB            -- map in order of T, C, S, N, B\n");
-    printf("            CTSNB            -- map in order of C, T, S, N, B\n");
 
     printf("\n\n");
 
