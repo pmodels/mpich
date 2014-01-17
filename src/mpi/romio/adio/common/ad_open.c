@@ -95,6 +95,10 @@ MPI_File ADIO_Open(MPI_Comm orig_comm,
 	if (*error_code != MPI_SUCCESS)
 	    goto fn_exit;
     }
+    /* Instead of repeatedly allocating this buffer in collective read/write,
+     * allocating up-front might make memory management on small platforms
+     * (e.g. Blue Gene) more efficent */
+    fd->io_buf = ADIOI_Malloc(fd->hints->cb_buffer_size);
 
      /* deferred open: 
      * we can only do this optimization if 'fd->hints->deferred_open' is set
@@ -175,6 +179,7 @@ MPI_File ADIO_Open(MPI_Comm orig_comm,
 	if (fd->hints->cb_config_list) ADIOI_Free(fd->hints->cb_config_list);
 	if (fd->hints) ADIOI_Free(fd->hints);
 	if (fd->info != MPI_INFO_NULL) MPI_Info_free(&(fd->info));
+	if (fd->io_buf) ADIOI_Free(fd->io_buf);
 	ADIOI_Free(fd);
         fd = ADIO_FILE_NULL;
 	if (*error_code == MPI_SUCCESS)

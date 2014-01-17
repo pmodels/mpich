@@ -479,7 +479,7 @@ static void ADIOI_Exch_and_write(ADIO_File fd, const void *buf, MPI_Datatype
     MPI_Allreduce(&ntimes, &max_ntimes, 1, MPI_INT, MPI_MAX,
 		  fd->comm); 
 
-    if (ntimes) write_buf = (char *) ADIOI_Malloc(coll_bufsize);
+    write_buf = fd->io_buf;
 
     curr_offlen_ptr = (int *) ADIOI_Calloc(nprocs, sizeof(int)); 
     /* its use is explained below. calloc initializes to 0. */
@@ -699,7 +699,6 @@ static void ADIOI_Exch_and_write(ADIO_File fd, const void *buf, MPI_Datatype
 	MPE_Log_event(8, 0, "end communication");
 #endif
 
-    if (ntimes) ADIOI_Free(write_buf);
     ADIOI_Free(curr_offlen_ptr);
     ADIOI_Free(count);
     ADIOI_Free(partial_recv);

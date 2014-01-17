@@ -570,7 +570,7 @@ static void ADIOI_Read_and_exch(ADIO_File fd, void *buf, MPI_Datatype
 
     MPI_Allreduce(&ntimes, &max_ntimes, 1, MPI_INT, MPI_MAX, fd->comm); 
 
-    if (ntimes) read_buf = (char *) ADIOI_Malloc(coll_bufsize);
+    read_buf = fd->io_buf;  /* Allocated at open time */
 
     curr_offlen_ptr = (int *) ADIOI_Calloc(nprocs, sizeof(int)); 
     /* its use is explained below. calloc initializes to 0. */
@@ -740,9 +740,10 @@ static void ADIOI_Read_and_exch(ADIO_File fd, void *buf, MPI_Datatype
       ADIOI_Assert((((ADIO_Offset)(MPIR_Upint)read_buf)+real_size-for_next_iter) == (ADIO_Offset)(MPIR_Upint)(read_buf+real_size-for_next_iter));
       ADIOI_Assert((for_next_iter+coll_bufsize) == (size_t)(for_next_iter+coll_bufsize));
 	    memcpy(tmp_buf, read_buf+real_size-for_next_iter, for_next_iter);
-	    ADIOI_Free(read_buf);
-	    read_buf = (char *) ADIOI_Malloc(for_next_iter+coll_bufsize);
-	    memcpy(read_buf, tmp_buf, for_next_iter);
+	    ADIOI_Free(fd->io_buf);
+	    fd->io_buf = (char *) ADIOI_Malloc(for_next_iter+coll_bufsize);
+	    memcpy(fd->io_buf, tmp_buf, for_next_iter);
+	    read_buf = fd->io_buf;
 	    ADIOI_Free(tmp_buf);
 	}
 
@@ -762,7 +763,6 @@ static void ADIOI_Read_and_exch(ADIO_File fd, void *buf, MPI_Datatype
 			    others_req, m,
                             buftype_extent, buf_idx); 
 
-    if (ntimes) ADIOI_Free(read_buf);
     ADIOI_Free(curr_offlen_ptr);
     ADIOI_Free(count);
     ADIOI_Free(partial_send);
