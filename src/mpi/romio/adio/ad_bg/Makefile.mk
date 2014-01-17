@@ -21,9 +21,7 @@ romio_other_sources +=                                               \
     adio/ad_bg/ad_bg_flush.c                                         \
     adio/ad_bg/ad_bg_hints.c                                         \
     adio/ad_bg/ad_bg_pset.c                                          \
-    adio/ad_bg/ad_bg_read.c                                          \
     adio/ad_bg/ad_bg_tuning.c                                        \
-    adio/ad_bg/ad_bg_write.c                                         \
     adio/ad_bg/ad_bg.c                                               \
     adio/ad_bg/ad_bg_fcntl.c                                         \
     adio/ad_bg/ad_bg_getsh.c                                         \

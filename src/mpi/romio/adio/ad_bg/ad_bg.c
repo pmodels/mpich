@@ -20,15 +20,15 @@
 struct ADIOI_Fns_struct ADIO_BG_operations = {
     ADIOI_BG_Open, /* Open */
     ADIOI_GEN_OpenColl, /* Collective open */
-    ADIOI_BG_ReadContig, /* ReadContig */
-    ADIOI_BG_WriteContig, /* WriteContig */
+    ADIOI_GEN_ReadContig, /* ReadContig */
+    ADIOI_GEN_WriteContig, /* WriteContig */
     ADIOI_BG_ReadStridedColl, /* ReadStridedColl */
     ADIOI_BG_WriteStridedColl, /* WriteStridedColl */
     ADIOI_GEN_SeekIndividual, /* SeekIndividual */
     ADIOI_BG_Fcntl, /* Fcntl */
     ADIOI_BG_SetInfo, /* SetInfo */
-    ADIOI_BG_ReadStrided, /* ReadStrided */
-    ADIOI_BG_WriteStrided, /* WriteStrided */
+    ADIOI_GEN_ReadStrided, /* ReadStrided */
+    ADIOI_GEN_WriteStrided, /* WriteStrided */
     ADIOI_BG_Close, /* Close */
 #ifdef ROMIO_HAVE_WORKING_AIO
 #warning Consider BG support for NFS before enabling this.
