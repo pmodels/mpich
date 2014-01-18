@@ -18,6 +18,7 @@
 #define MAX_COUNT 65536*4/16
 #define MAX_RMA_SIZE 2  /* 16 in manyrma performance test */
 #define MAX_RUNS 10
+#define MAX_ITER_TIME  5.0      /* seconds */
 
 typedef enum { SYNC_NONE = 0,
     SYNC_ALL = -1, SYNC_FENCE = 1, SYNC_LOCK = 2, SYNC_PSCW = 4
@@ -48,6 +49,7 @@ int main(int argc, char *argv[])
     MPI_Win win;
     MPI_Group wgroup, accessGroup, exposureGroup;
     int maxSz = MAX_RMA_SIZE;
+    double start, end;
 
     MPI_Init(&argc, &argv);
 
@@ -128,10 +130,12 @@ int main(int argc, char *argv[])
         for (sz = 1; sz <= maxSz; sz = sz + sz) {
             if (wrank == 0 && verbose)
                 printf("Accumulate with fence, %d elements\n", sz);
-            cnt = 1;
-            while (cnt <= maxCount) {
+            for (cnt = 1; cnt <= maxCount; cnt *= 2) {
+                start = MPI_Wtime();
                 RunAccFence(win, destRank, cnt, sz);
-                cnt = 2 * cnt;
+                end = MPI_Wtime();
+                if (end - start > MAX_ITER_TIME)
+                    break;
             }
         }
     }
@@ -140,10 +144,12 @@ int main(int argc, char *argv[])
         for (sz = 1; sz <= maxSz; sz = sz + sz) {
             if (wrank == 0 && verbose)
                 printf("Accumulate with lock, %d elements\n", sz);
-            cnt = 1;
-            while (cnt <= maxCount) {
+            for (cnt = 1; cnt <= maxCount; cnt *= 2) {
+                start = MPI_Wtime();
                 RunAccLock(win, destRank, cnt, sz);
-                cnt = 2 * cnt;
+                end = MPI_Wtime();
+                if (end - start > MAX_ITER_TIME)
+                    break;
             }
         }
     }
@@ -152,10 +158,12 @@ int main(int argc, char *argv[])
         for (sz = 1; sz <= maxSz; sz = sz + sz) {
             if (wrank == 0 && verbose)
                 printf("Put with fence, %d elements\n", sz);
-            cnt = 1;
-            while (cnt <= maxCount) {
+            for (cnt = 1; cnt <= maxCount; cnt *= 2) {
+                start = MPI_Wtime();
                 RunPutFence(win, destRank, cnt, sz);
-                cnt = 2 * cnt;
+                end = MPI_Wtime();
+                if (end - start > MAX_ITER_TIME)
+                    break;
             }
         }
     }
@@ -164,10 +172,12 @@ int main(int argc, char *argv[])
         for (sz = 1; sz <= maxSz; sz = sz + sz) {
             if (wrank == 0 && verbose)
                 printf("Put with lock, %d elements\n", sz);
-            cnt = 1;
-            while (cnt <= maxCount) {
+            for (cnt = 1; cnt <= maxCount; cnt *= 2) {
+                start = MPI_Wtime();
                 RunPutLock(win, destRank, cnt, sz);
-                cnt = 2 * cnt;
+                end = MPI_Wtime();
+                if (end - start > MAX_ITER_TIME)
+                    break;
             }
         }
     }
@@ -176,10 +186,12 @@ int main(int argc, char *argv[])
         for (sz = 1; sz <= maxSz; sz = sz + sz) {
             if (wrank == 0 && verbose)
                 printf("Put with pscw, %d elements\n", sz);
-            cnt = 1;
-            while (cnt <= maxCount) {
+            for (cnt = 1; cnt <= maxCount; cnt *= 2) {
+                start = MPI_Wtime();
                 RunPutPSCW(win, destRank, cnt, sz, exposureGroup, accessGroup);
-                cnt = 2 * cnt;
+                end = MPI_Wtime();
+                if (end - start > MAX_ITER_TIME)
+                    break;
             }
         }
     }
@@ -188,10 +200,12 @@ int main(int argc, char *argv[])
         for (sz = 1; sz <= maxSz; sz = sz + sz) {
             if (wrank == 0 && verbose)
                 printf("Accumulate with pscw, %d elements\n", sz);
-            cnt = 1;
-            while (cnt <= maxCount) {
+            for (cnt = 1; cnt <= maxCount; cnt *= 2) {
+                start = MPI_Wtime();
                 RunAccPSCW(win, destRank, cnt, sz, exposureGroup, accessGroup);
-                cnt = 2 * cnt;
+                end = MPI_Wtime();
+                if (end - start > MAX_ITER_TIME)
+                    break;
             }
         }
     }
