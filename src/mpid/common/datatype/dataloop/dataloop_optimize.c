@@ -173,8 +173,8 @@ static int dl_contig_isFinal( DLOOP_Dataloop *dp )
  *    with 1 element is really a contig type)
  *
  * Value of these optimizations
- * A 2012 paper compared performance of Open MPI, MPICH2, and user-written code
- * for some datatypes, and found MPICH2 often performed poorer than other
+ * A 2012 paper compared performance of Open MPI, MPICH, and user-written code
+ * for some datatypes, and found MPICH often performed poorer than other
  * options.  An investigation showed that some of the issues are due to
  * a failure to perform optimizations of these type (especially #1 and 2).
  * It may also be necessary to enhance the dataloop execution engine, but

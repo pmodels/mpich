@@ -431,7 +431,7 @@ char *MPIDU_Datatype_combiner_to_string(int combiner)
 
 /* --BEGIN DEBUG-- */
 /*
- * You must configure MPICH2 with the logging option enabled (--enable-g=log)
+ * You must configure MPICH with the logging option enabled (--enable-g=log)
  * for these routines to print - in which case, they use the same options
  * as the logging code, including print to file and control by class (DATATYPE)
  */
