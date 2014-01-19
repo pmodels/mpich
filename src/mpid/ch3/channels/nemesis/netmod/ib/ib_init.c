@@ -954,8 +954,8 @@ int MPID_nem_ib_vc_init(MPIDI_VC_t * vc)
     VC_FIELD(vc, is_connected) = 0;
 #endif
 
-    MPIU_Assert(sizeof(sz_hdrmagic_t) == 8);    /* assumption in ib_ibcom.h */
-    MPIU_Assert(sizeof(tailmagic_t) == 1);      /* assumption in ib_ibcom.h */
+    MPIU_Assert(sizeof(MPID_nem_ib_sz_hdrmagic_t) == 8);    /* assumption in ib_ibcom.h */
+    MPIU_Assert(sizeof(MPID_nem_ib_tailmagic_t) == 1);      /* assumption in ib_ibcom.h */
 
     uint32_t sz;
 #if 0
