@@ -219,7 +219,7 @@ static int MPID_nem_ib_com_device_init()
     MPID_nem_ib_ctx_export = ib_ctx;
 #ifdef HAVE_LIBDCFA
 #else
-    dev_name = strdup(ibv_get_device_name(ib_devlist[i]));
+    dev_name = MPIU_Strdup(ibv_get_device_name(ib_devlist[i]));
     dprintf("MPID_nem_ib_com_device_init,dev_name=%s\n", dev_name);
 #endif
     /* Create a PD */
@@ -282,7 +282,7 @@ static void MPID_nem_ib_com_clean(MPID_nem_ib_com_t * conp)
             }
             break;
         }
-        free(conp->icom_mrlist);
+        MPIU_Free(conp->icom_mrlist);
     }
     if (conp->icom_mem[MPID_NEM_IB_COM_RDMAWR_FROM]) {
         munmap(conp->icom_mem[MPID_NEM_IB_COM_RDMAWR_FROM], MPID_NEM_IB_COM_RDMABUF_SZ);
@@ -297,13 +297,13 @@ static void MPID_nem_ib_com_clean(MPID_nem_ib_com_t * conp)
         ibv_destroy_cq(conp->icom_rcq);
     }
     if (conp->icom_rmem) {
-        free(conp->icom_rmem);
+        MPIU_Free(conp->icom_rmem);
     }
     if (conp->icom_rsize) {
-        free(conp->icom_rsize);
+        MPIU_Free(conp->icom_rsize);
     }
     if (conp->icom_rkey) {
-        free(conp->icom_rkey);
+        MPIU_Free(conp->icom_rkey);
     }
     memset(conp, 0, sizeof(MPID_nem_ib_com_t));
     // TODO: free ah, sge, command template, ...
@@ -548,13 +548,13 @@ int MPID_nem_ib_com_open(int ib_port, int open_flag, int *condesc)
     switch (open_flag) {
     case MPID_NEM_IB_COM_OPEN_RC:
         /* RDMA-write-from and -to local memory area */
-        conp->icom_mrlist = malloc(sizeof(struct ibv_mr *) * MPID_NEM_IB_COM_NBUF_RDMA);
+        conp->icom_mrlist = MPIU_Malloc(sizeof(struct ibv_mr *) * MPID_NEM_IB_COM_NBUF_RDMA);
         memset(conp->icom_mrlist, 0, sizeof(struct ibv_mr *) * MPID_NEM_IB_COM_NBUF_RDMA);
         conp->icom_mrlen = MPID_NEM_IB_COM_NBUF_RDMA;
-        conp->icom_mem = (void **) malloc(sizeof(void **) * MPID_NEM_IB_COM_NBUF_RDMA);
+        conp->icom_mem = (void **) MPIU_Malloc(sizeof(void **) * MPID_NEM_IB_COM_NBUF_RDMA);
         //printf("open,icom_mem=%p\n", conp->icom_mem);
         memset(conp->icom_mem, 0, sizeof(void **) * MPID_NEM_IB_COM_NBUF_RDMA);
-        conp->icom_msize = (int *) malloc(sizeof(int *) * MPID_NEM_IB_COM_NBUF_RDMA);
+        conp->icom_msize = (int *) MPIU_Malloc(sizeof(int *) * MPID_NEM_IB_COM_NBUF_RDMA);
         memset(conp->icom_msize, 0, sizeof(int *) * MPID_NEM_IB_COM_NBUF_RDMA);
         mr_flags = IBV_ACCESS_LOCAL_WRITE | IBV_ACCESS_REMOTE_READ | IBV_ACCESS_REMOTE_WRITE;
 
@@ -624,54 +624,54 @@ int MPID_nem_ib_com_open(int ib_port, int open_flag, int *condesc)
                 conp->icom_mrlist[MPID_NEM_IB_COM_RDMAWR_TO]->rkey);
 
         /* RDMA-write-to remote memory area */
-        conp->icom_rmem = (void **) malloc(sizeof(void **) * MPID_NEM_IB_COM_NBUF_RDMA);
+        conp->icom_rmem = (void **) MPIU_Malloc(sizeof(void **) * MPID_NEM_IB_COM_NBUF_RDMA);
         if (conp->icom_rmem == 0)
             goto err_exit;
         memset(conp->icom_rmem, 0, sizeof(void **) * MPID_NEM_IB_COM_NBUF_RDMA);
 
-        conp->icom_rsize = (size_t *) malloc(sizeof(void **) * MPID_NEM_IB_COM_NBUF_RDMA);
+        conp->icom_rsize = (size_t *) MPIU_Malloc(sizeof(void **) * MPID_NEM_IB_COM_NBUF_RDMA);
         if (conp->icom_rsize == 0)
             goto err_exit;
         memset(conp->icom_rsize, 0, sizeof(void **) * MPID_NEM_IB_COM_NBUF_RDMA);
 
-        conp->icom_rkey = (int *) malloc(sizeof(int) * MPID_NEM_IB_COM_NBUF_RDMA);
+        conp->icom_rkey = (int *) MPIU_Malloc(sizeof(int) * MPID_NEM_IB_COM_NBUF_RDMA);
         if (conp->icom_rkey == 0)
             goto err_exit;
         memset(conp->icom_rkey, 0, sizeof(int) * MPID_NEM_IB_COM_NBUF_RDMA);
         break;
     case MPID_NEM_IB_COM_OPEN_SCRATCH_PAD:
         /* RDMA-write-from and -to local memory area */
-        conp->icom_mrlist = malloc(sizeof(struct ibv_mr *) * MPID_NEM_IB_COM_NBUF_SCRATCH_PAD);
+        conp->icom_mrlist = MPIU_Malloc(sizeof(struct ibv_mr *) * MPID_NEM_IB_COM_NBUF_SCRATCH_PAD);
         memset(conp->icom_mrlist, 0, sizeof(struct ibv_mr *) * MPID_NEM_IB_COM_NBUF_SCRATCH_PAD);
         conp->icom_mrlen = MPID_NEM_IB_COM_NBUF_SCRATCH_PAD;
-        conp->icom_mem = (void **) malloc(sizeof(void **) * MPID_NEM_IB_COM_NBUF_SCRATCH_PAD);
+        conp->icom_mem = (void **) MPIU_Malloc(sizeof(void **) * MPID_NEM_IB_COM_NBUF_SCRATCH_PAD);
         memset(conp->icom_mem, 0, sizeof(void **) * MPID_NEM_IB_COM_NBUF_SCRATCH_PAD);
-        conp->icom_msize = (int *) malloc(sizeof(int *) * MPID_NEM_IB_COM_NBUF_SCRATCH_PAD);
+        conp->icom_msize = (int *) MPIU_Malloc(sizeof(int *) * MPID_NEM_IB_COM_NBUF_SCRATCH_PAD);
         memset(conp->icom_msize, 0, sizeof(int *) * MPID_NEM_IB_COM_NBUF_SCRATCH_PAD);
         mr_flags = IBV_ACCESS_LOCAL_WRITE | IBV_ACCESS_REMOTE_READ | IBV_ACCESS_REMOTE_WRITE;
 
         /* RDMA-write-to remote memory area */
-        conp->icom_rmem = (void **) malloc(sizeof(void **) * MPID_NEM_IB_COM_NBUF_SCRATCH_PAD);
+        conp->icom_rmem = (void **) MPIU_Malloc(sizeof(void **) * MPID_NEM_IB_COM_NBUF_SCRATCH_PAD);
         MPID_NEM_IB_COM_ERR_CHKANDJUMP(conp->icom_rmem == 0, -1, dprintf("malloc failed\n"));
         memset(conp->icom_rmem, 0, sizeof(void **) * MPID_NEM_IB_COM_NBUF_SCRATCH_PAD);
 
-        conp->icom_rsize = (size_t *) malloc(sizeof(void **) * MPID_NEM_IB_COM_NBUF_SCRATCH_PAD);
+        conp->icom_rsize = (size_t *) MPIU_Malloc(sizeof(void **) * MPID_NEM_IB_COM_NBUF_SCRATCH_PAD);
         MPID_NEM_IB_COM_ERR_CHKANDJUMP(conp->icom_rsize == 0, -1, dprintf("malloc failed\n"));
         memset(conp->icom_rsize, 0, sizeof(void **) * MPID_NEM_IB_COM_NBUF_SCRATCH_PAD);
 
-        conp->icom_rkey = (int *) malloc(sizeof(int) * MPID_NEM_IB_COM_NBUF_SCRATCH_PAD);
+        conp->icom_rkey = (int *) MPIU_Malloc(sizeof(int) * MPID_NEM_IB_COM_NBUF_SCRATCH_PAD);
         MPID_NEM_IB_COM_ERR_CHKANDJUMP(conp->icom_rkey == 0, -1, dprintf("malloc failed\n"));
         memset(conp->icom_rkey, 0, sizeof(int) * MPID_NEM_IB_COM_NBUF_SCRATCH_PAD);
         break;
 
     case MPID_NEM_IB_COM_OPEN_UD:
         /* UD-write-from and -to local memory area */
-        conp->icom_mrlist = malloc(sizeof(struct ibv_mr *) * MPID_NEM_IB_COM_NBUF_UD);
+        conp->icom_mrlist = MPIU_Malloc(sizeof(struct ibv_mr *) * MPID_NEM_IB_COM_NBUF_UD);
         memset(conp->icom_mrlist, 0, sizeof(struct ibv_mr *) * MPID_NEM_IB_COM_NBUF_UD);
         conp->icom_mrlen = MPID_NEM_IB_COM_NBUF_UD;
-        conp->icom_mem = (void **) malloc(sizeof(void **) * MPID_NEM_IB_COM_NBUF_UD);
+        conp->icom_mem = (void **) MPIU_Malloc(sizeof(void **) * MPID_NEM_IB_COM_NBUF_UD);
         memset(conp->icom_mem, 0, sizeof(void **) * MPID_NEM_IB_COM_NBUF_UD);
-        conp->icom_msize = (int *) malloc(sizeof(int *) * MPID_NEM_IB_COM_NBUF_UD);
+        conp->icom_msize = (int *) MPIU_Malloc(sizeof(int *) * MPID_NEM_IB_COM_NBUF_UD);
         memset(conp->icom_msize, 0, sizeof(int *) * MPID_NEM_IB_COM_NBUF_UD);
         mr_flags = IBV_ACCESS_LOCAL_WRITE | IBV_ACCESS_REMOTE_READ | IBV_ACCESS_REMOTE_WRITE;
 
@@ -734,7 +734,7 @@ int MPID_nem_ib_com_open(int ib_port, int open_flag, int *condesc)
 
         /* SR (send request) template */
         conp->icom_sr =
-            (struct ibv_send_wr *) malloc(sizeof(struct ibv_send_wr) *
+            (struct ibv_send_wr *) MPIU_Malloc(sizeof(struct ibv_send_wr) *
                                           MPID_NEM_IB_COM_RC_SR_NTEMPLATE);
         memset(conp->icom_sr, 0, sizeof(struct ibv_send_wr) * MPID_NEM_IB_COM_RC_SR_NTEMPLATE);
 
@@ -745,7 +745,7 @@ int MPID_nem_ib_com_open(int ib_port, int open_flag, int *condesc)
                    sizeof(struct ibv_sge) * WR_SG_NUM);
 #else
             sge =
-                (struct ibv_sge *) malloc(sizeof(struct ibv_sge) *
+                (struct ibv_sge *) MPIU_Malloc(sizeof(struct ibv_sge) *
                                           MPID_NEM_IB_COM_SMT_INLINE_INITIATOR_NSGE);
             memset(sge, 0, sizeof(struct ibv_sge) * MPID_NEM_IB_COM_SMT_INLINE_INITIATOR_NSGE);
 #endif
@@ -768,7 +768,7 @@ int MPID_nem_ib_com_open(int ib_port, int open_flag, int *condesc)
                    sizeof(struct ibv_sge) * WR_SG_NUM);
 #else
             sge =
-                (struct ibv_sge *) malloc(sizeof(struct ibv_sge) *
+                (struct ibv_sge *) MPIU_Malloc(sizeof(struct ibv_sge) *
                                           MPID_NEM_IB_COM_SMT_NOINLINE_INITIATOR_NSGE);
             memset(sge, 0, sizeof(struct ibv_sge) * MPID_NEM_IB_COM_SMT_NOINLINE_INITIATOR_NSGE);
 #endif
@@ -787,7 +787,7 @@ int MPID_nem_ib_com_open(int ib_port, int open_flag, int *condesc)
                    sizeof(struct ibv_sge) * WR_SG_NUM);
 #else
             sge =
-                (struct ibv_sge *) malloc(sizeof(struct ibv_sge) *
+                (struct ibv_sge *) MPIU_Malloc(sizeof(struct ibv_sge) *
                                           MPID_NEM_IB_COM_LMT_INITIATOR_NSGE);
             memset(sge, 0, sizeof(struct ibv_sge) * MPID_NEM_IB_COM_LMT_INITIATOR_NSGE);
 #endif
@@ -805,7 +805,7 @@ int MPID_nem_ib_com_open(int ib_port, int open_flag, int *condesc)
         memset(&(conp->icom_sr[MPID_NEM_IB_COM_LMT_PUT].sg_list[0]), 0,
                sizeof(struct ibv_sge) * WR_SG_NUM);
 #else
-        sge = (struct ibv_sge *) malloc(sizeof(struct ibv_sge) * MPID_NEM_IB_COM_LMT_PUT_NSGE);
+        sge = (struct ibv_sge *) MPIU_Malloc(sizeof(struct ibv_sge) * MPID_NEM_IB_COM_LMT_PUT_NSGE);
         memset(sge, 0, sizeof(struct ibv_sge) * MPID_NEM_IB_COM_LMT_PUT_NSGE);
 #endif
         conp->icom_sr[MPID_NEM_IB_COM_LMT_PUT].next = NULL;
@@ -824,7 +824,7 @@ int MPID_nem_ib_com_open(int ib_port, int open_flag, int *condesc)
 
         /* RR (receive request) template for MPID_NEM_IB_COM_RDMAWR_RESPONDER */
         conp->icom_rr =
-            (struct ibv_recv_wr *) malloc(sizeof(struct ibv_recv_wr) *
+            (struct ibv_recv_wr *) MPIU_Malloc(sizeof(struct ibv_recv_wr) *
                                           MPID_NEM_IB_COM_RC_RR_NTEMPLATE);
         memset(conp->icom_rr, 0, sizeof(struct ibv_recv_wr) * MPID_NEM_IB_COM_RC_RR_NTEMPLATE);
 
@@ -840,7 +840,7 @@ int MPID_nem_ib_com_open(int ib_port, int open_flag, int *condesc)
     case MPID_NEM_IB_COM_OPEN_SCRATCH_PAD:{
             /* SR (send request) template */
             conp->icom_sr =
-                (struct ibv_send_wr *) malloc(sizeof(struct ibv_send_wr) *
+                (struct ibv_send_wr *) MPIU_Malloc(sizeof(struct ibv_send_wr) *
                                               MPID_NEM_IB_COM_SCRATCH_PAD_SR_NTEMPLATE);
             memset(conp->icom_sr, 0,
                    sizeof(struct ibv_send_wr) * MPID_NEM_IB_COM_SCRATCH_PAD_SR_NTEMPLATE);
@@ -851,7 +851,7 @@ int MPID_nem_ib_com_open(int ib_port, int open_flag, int *condesc)
                    sizeof(struct ibv_sge) * WR_SG_NUM);
 #else
             sge =
-                (struct ibv_sge *) malloc(sizeof(struct ibv_sge) *
+                (struct ibv_sge *) MPIU_Malloc(sizeof(struct ibv_sge) *
                                           MPID_NEM_IB_COM_SCRATCH_PAD_INITIATOR_NSGE);
             memset(sge, 0, sizeof(struct ibv_sge) * MPID_NEM_IB_COM_SCRATCH_PAD_INITIATOR_NSGE);
 #endif
@@ -869,7 +869,7 @@ int MPID_nem_ib_com_open(int ib_port, int open_flag, int *condesc)
     case MPID_NEM_IB_COM_OPEN_RC_LMT_PUT:
         /* SR (send request) template */
         conp->icom_sr =
-            (struct ibv_send_wr *) malloc(sizeof(struct ibv_send_wr) *
+            (struct ibv_send_wr *) MPIU_Malloc(sizeof(struct ibv_send_wr) *
                                           MPID_NEM_IB_COM_RC_SR_LMT_PUT_NTEMPLATE);
         memset(conp->icom_sr, 0,
                sizeof(struct ibv_send_wr) * MPID_NEM_IB_COM_RC_SR_LMT_PUT_NTEMPLATE);
@@ -878,7 +878,7 @@ int MPID_nem_ib_com_open(int ib_port, int open_flag, int *condesc)
         memset(&(conp->icom_sr[MPID_NEM_IB_COM_LMT_PUT].sg_list[0]), 0,
                sizeof(struct ibv_sge) * WR_SG_NUM);
 #else
-        sge = (struct ibv_sge *) malloc(sizeof(struct ibv_sge) * MPID_NEM_IB_COM_LMT_PUT_NSGE);
+        sge = (struct ibv_sge *) MPIU_Malloc(sizeof(struct ibv_sge) * MPID_NEM_IB_COM_LMT_PUT_NSGE);
         memset(sge, 0, sizeof(struct ibv_sge) * MPID_NEM_IB_COM_LMT_PUT_NSGE);
 #endif
         conp->icom_sr[MPID_NEM_IB_COM_LMT_PUT].next = NULL;
@@ -896,7 +896,7 @@ int MPID_nem_ib_com_open(int ib_port, int open_flag, int *condesc)
         sge = &(conp->icom_sr[MPID_NEM_IB_COM_UD_INITIATOR].sg_list[0]);
         memset(sge, 0, sizeof(struct ibv_sge) * WR_SG_NUM);
 #else
-        sge = (struct ibv_sge *) calloc(1, sizeof(struct ibv_sge));
+        sge = (struct ibv_sge *) MPIU_Calloc(1, sizeof(struct ibv_sge));
 #endif
         /* addr to addr + length - 1 will be on the payload, but search backword for "<= 40" */
         sge[0].addr = (uint64_t) conp->icom_mem[MPID_NEM_IB_COM_UDWR_FROM] + 40;
@@ -905,7 +905,7 @@ int MPID_nem_ib_com_open(int ib_port, int open_flag, int *condesc)
 
 
         conp->icom_ah_attr =
-            (struct ibv_ah_attr *) calloc(MPID_NEM_IB_COM_UD_SR_NTEMPLATE,
+            (struct ibv_ah_attr *) MPIU_Calloc(MPID_NEM_IB_COM_UD_SR_NTEMPLATE,
                                           sizeof(struct ibv_ah_attr));
 
         conp->icom_ah_attr[MPID_NEM_IB_COM_UD_INITIATOR].sl = 0;
@@ -924,7 +924,7 @@ int MPID_nem_ib_com_open(int ib_port, int open_flag, int *condesc)
 
         /* SR (send request) template for MPID_NEM_IB_COM_UD_INITIATOR */
         conp->icom_sr =
-            (struct ibv_send_wr *) calloc(MPID_NEM_IB_COM_UD_SR_NTEMPLATE,
+            (struct ibv_send_wr *) MPIU_Calloc(MPID_NEM_IB_COM_UD_SR_NTEMPLATE,
                                           sizeof(struct ibv_send_wr));
 
         conp->icom_sr[MPID_NEM_IB_COM_UD_INITIATOR].next = NULL;
@@ -943,7 +943,7 @@ int MPID_nem_ib_com_open(int ib_port, int open_flag, int *condesc)
         sge = &(conp->icom_rr[MPID_NEM_IB_COM_UD_RESPONDER].sg_list[0]);
         memset(sge, 0, sizeof(struct ibv_sge) * WR_SG_NUM);
 #else
-        sge = (struct ibv_sge *) calloc(1, sizeof(struct ibv_sge));
+        sge = (struct ibv_sge *) MPIU_Calloc(1, sizeof(struct ibv_sge));
 #endif
         sge[0].addr = (uint64_t) conp->icom_mem[MPID_NEM_IB_COM_UDWR_TO];
         sge[0].length = MPID_NEM_IB_COM_UDBUF_SZ;
@@ -951,7 +951,7 @@ int MPID_nem_ib_com_open(int ib_port, int open_flag, int *condesc)
 
         /* RR (receive request) template for MPID_NEM_IB_COM_UD_RESPONDER */
         conp->icom_rr =
-            (struct ibv_recv_wr *) calloc(MPID_NEM_IB_COM_UD_RR_NTEMPLATE,
+            (struct ibv_recv_wr *) MPIU_Calloc(MPID_NEM_IB_COM_UD_RR_NTEMPLATE,
                                           sizeof(struct ibv_recv_wr));
 
         /* create one dummy RR to ibv_post_recv */
@@ -2286,7 +2286,7 @@ char *MPID_nem_ib_com_strerror(int errno)
 {
     char *r;
     if (-errno > 3) {
-        r = malloc(256);
+        r = MPIU_Malloc(256);
         sprintf(r, "%d", -errno);
         goto fn_exit;
     }

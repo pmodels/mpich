@@ -43,7 +43,7 @@ static char *arena_flist[MPID_NEM_IB_NIALLOCID] = { 0 };
 static inline void *aalloc(size_t sz, int id)
 {
 #if 1   /* debug */
-    return malloc(sz);
+    return MPIU_Malloc(sz);
 #else
     char *p = free_list_front[id];
     if ((unsigned long) p & (MPID_NEM_IB_SZARENA - 1)) {
@@ -81,7 +81,7 @@ static inline void *aalloc(size_t sz, int id)
 static inline void afree(const void *p, int id)
 {
 #if 1   /* debug */
-    return free((void *) p);
+    return MPIU_Free((void *) p);
 #else
     p = (void *) ((unsigned long) p & ~(MPID_NEM_IB_SZARENA - 1));
     if (!(--(*((int *) p)))) {

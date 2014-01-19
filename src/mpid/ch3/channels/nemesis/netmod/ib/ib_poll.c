@@ -1123,9 +1123,11 @@ int MPID_nem_ib_recv_buf_released(struct MPIDI_VC *vc, void *user_data)
         goto fn_exit;
     }
 
-    MPIU_Assert(vc_ib->ibcom->icom_mem[MPID_NEM_IB_COM_RDMAWR_TO] <= user_data &&
-                user_data <
-                vc_ib->ibcom->icom_mem[MPID_NEM_IB_COM_RDMAWR_TO] + MPID_NEM_IB_COM_RDMABUF_SZ);
+    MPIU_Assert((uint8_t *) vc_ib->ibcom->icom_mem[MPID_NEM_IB_COM_RDMAWR_TO] <=
+                (uint8_t *) user_data &&
+                (uint8_t *) user_data <
+                (uint8_t *) vc_ib->ibcom->icom_mem[MPID_NEM_IB_COM_RDMAWR_TO] +
+                MPID_NEM_IB_COM_RDMABUF_SZ);
     unsigned long mod =
         (unsigned long) ((uint8_t *) user_data -
                          (uint8_t *) vc_ib->ibcom->
@@ -1147,9 +1149,11 @@ int MPID_nem_ib_recv_buf_released(struct MPIDI_VC *vc, void *user_data)
                                                                             1)) : 15) {
         volatile MPID_nem_ib_tailmagic_t *ptr =
             (MPID_nem_ib_tailmagic_t *) ((uint8_t *) buf + offset);
-        MPIU_Assert(vc_ib->ibcom->icom_mem[MPID_NEM_IB_COM_RDMAWR_TO] <= ptr &&
-                    ptr <
-                    vc_ib->ibcom->icom_mem[MPID_NEM_IB_COM_RDMAWR_TO] + MPID_NEM_IB_COM_RDMABUF_SZ);
+        MPIU_Assert((uint8_t *) vc_ib->ibcom->icom_mem[MPID_NEM_IB_COM_RDMAWR_TO] <=
+                    (uint8_t *) ptr &&
+                    (uint8_t *) ptr <
+                    (uint8_t *) vc_ib->ibcom->icom_mem[MPID_NEM_IB_COM_RDMAWR_TO] +
+                    MPID_NEM_IB_COM_RDMABUF_SZ);
         ptr->magic = 0 /*0xde */ ;
         if (offset == sz_data_pow2) {
             break;

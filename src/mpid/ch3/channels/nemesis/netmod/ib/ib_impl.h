@@ -593,7 +593,7 @@ static inline void *MPID_nem_ib_stmalloc(size_t _sz)
         sz >>= 1;
     } while (sz > 0);
     if (i < 12) {
-        return malloc(sz);
+        return MPIU_Malloc(sz);
     }
     if (i > 30) {
         return mmap(0, sz, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, -1, 0);
@@ -627,7 +627,7 @@ static inline void MPID_nem_ib_stfree(void *ptr, size_t sz)
         sz >>= 1;
     } while (sz > 0);
     if (i < 12) {
-        free(ptr);
+        MPIU_Free(ptr);
         goto fn_exit;
     }
     if (i > 30) {
