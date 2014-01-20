@@ -11,7 +11,6 @@
 #include "demux.h"
 #include "hydra.h"
 
-struct HYD_pmcd_pmip HYD_pmcd_pmip;
 
 void HYD_pmcd_pmip_send_signal(int sig)
 {
