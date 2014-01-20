@@ -25,7 +25,8 @@
 #define MPID_NEM_IB_COM_REG_MR_SZPAGE 4096
 #define MPID_NEM_IB_COM_REG_MR_LOGSZPAGE 12
 
-/* arena allocator */
+/* Allocator using reference count at the head of
+   aligned memory area */
 
 #define MPID_NEM_IB_NIALLOCID 32
 typedef struct {
@@ -110,7 +111,7 @@ struct MPID_nem_ib_com_reg_mr_cache_entry_t {
 static struct MPID_nem_ib_com_reg_mr_listnode_t
     MPID_nem_ib_com_reg_mr_cache[MPID_NEM_IB_COM_REG_MR_NLINE];
 
-__inline__ int MPID_nem_ib_com_hash_func(char *addr)
+static inline int MPID_nem_ib_com_hash_func(char *addr)
 {
     unsigned int v = (unsigned int) (unsigned long) addr;
     //v = v >> MPID_NEM_IB_COM_REG_MR_LOGSZPAGE; /* assume it is page aligned */
@@ -162,7 +163,7 @@ static inline void __lru_queue_display()
     }
 }
 
-struct ibv_mr *MPID_nem_ib_com_reg_mr_fetch(void *addr, int len)
+struct ibv_mr *MPID_nem_ib_com_reg_mr_fetch(void *addr, int len, enum ibv_access_flags additional_flags)
 {
 #if 0   /* debug */
     struct ibv_mr *mr;
@@ -239,7 +240,7 @@ struct ibv_mr *MPID_nem_ib_com_reg_mr_fetch(void *addr, int len)
 
     dprintf("MPID_nem_ib_com_reg_mr_fetch,miss,addr=%p,len=%d\n", addr_aligned, len_aligned);
     /* register memory */
-    ibcom_errno = MPID_nem_ib_com_reg_mr(addr_aligned, len_aligned, &e->mr);
+    ibcom_errno = MPID_nem_ib_com_reg_mr(addr_aligned, len_aligned, &e->mr, additional_flags);
     if (ibcom_errno != 0) {
         fprintf(stderr, "mrcache,MPID_nem_ib_com_reg_mr\n");
         goto fn_fail;
@@ -297,9 +298,12 @@ static void MPID_nem_ib_com_reg_mr_dereg(struct ibv_mr *mr)
     //e->refc, offset);
 }
 
-void MPID_nem_ib_com_register_cache_init()
+int MPID_nem_ib_com_register_cache_init()
 {
+    int ibcom_errno = 0;
     int i;
+
+    ref_cout++;
 
     /* Using the address to the start node to express the end of the list
      * instead of using NULL */
@@ -311,12 +315,24 @@ void MPID_nem_ib_com_register_cache_init()
     }
 
     dprintf("[MrCache] cache initializes %d entries\n", MPID_NEM_IB_COM_REG_MR_NLINE);
+
+    fn_exit:
+    return ibcom_errno;
+    //fn_fail:
+    goto fn_exit;
 }
 
-void MPID_nem_ib_com_register_cache_destroy()
+int MPID_nem_ib_com_register_cache_release()
 {
+    int ibcom_errno = 0;
+    int ib_errno;
     struct MPID_nem_ib_com_reg_mr_cache_entry_t *p;
     int i = 0, cnt = 0;
+
+    MPIU_Assert(ref_count > 0) {
+    if(--ref_count > 0) {
+        goto fn_exit;
+    } 
 
     for (i = 0; i < MPID_NEM_IB_COM_REG_MR_NLINE; i++) {
         for (p =
@@ -325,7 +341,8 @@ void MPID_nem_ib_com_register_cache_destroy()
              p != (struct MPID_nem_ib_com_reg_mr_cache_entry_t *) &MPID_nem_ib_com_reg_mr_cache[i];
              p = (struct MPID_nem_ib_com_reg_mr_cache_entry_t *) p->lru_next) {
             if (p && p->addr > 0) {
-                MPID_nem_ib_com_dereg_mr(p->mr);
+                ib_errno = MPID_nem_ib_com_dereg_mr(p->mr);
+                MPID_NEM_IB_COM_ERR_CHKANDJUMP(ib_errno, -1, printf("MPID_nem_ib_com_dereg_mr"));
                 afree(p, MPID_NEM_IB_COM_AALLOC_ID_MRCACHE);
                 cnt++;
             }
@@ -335,4 +352,8 @@ void MPID_nem_ib_com_register_cache_destroy()
     //__lru_queue_display();
 
     dprintf("[MrCache] cache destroyed %d entries\n", cnt);
+    fn_exit:
+    return ibcom_errno;
+    fn_fail:
+    goto fn_exit;
 }
