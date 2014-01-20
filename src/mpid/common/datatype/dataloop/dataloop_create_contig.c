@@ -11,16 +11,13 @@
    Dataloop_contiguous - create the dataloop representation for a
    contiguous datatype
 
-   Input Parameters:
+   Arguments:
 +  int icount,
-.  DLOOP_Type oldtype
+.  MPI_Datatype oldtype,
+.  DLOOP_Dataloop **dlp_p,
+.  int *dlsz_p,
+.  int *dldepth_p,
 -  int flag
-
-   Output Parameters:
-+  DLOOP_Dataloop **dlp_p,
-.  DLOOP_Size *dlsz_p,
--  int *dldepth_p,
-
 
 .N Errors
 .N Returns 0 on success, -1 on failure.

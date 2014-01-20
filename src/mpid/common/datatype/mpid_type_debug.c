@@ -429,12 +429,7 @@ char *MPIDU_Datatype_combiner_to_string(int combiner)
     return NULL;
 }
 
-/* --BEGIN DEBUG-- */
-/*
- * You must configure MPICH with the logging option enabled (--enable-g=log)
- * for these routines to print - in which case, they use the same options
- * as the logging code, including print to file and control by class (DATATYPE)
- */
+/* --BEGIN ERROR HANDLING-- */
 void MPIDU_Datatype_debug(MPI_Datatype type,
 			  int array_ct)
 {
@@ -665,4 +660,4 @@ void MPIDI_Datatype_contents_printf(MPI_Datatype type,
 	    __mpidi_datatype_free_and_return;
     }
 }
-/* --END DEBUG-- */
+/* --END ERROR HANDLING-- */

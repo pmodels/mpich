@@ -21,8 +21,7 @@ lib_lib@MPILIBNAME@_la_SOURCES +=                                    \
     src/mpid/common/datatype/dataloop/segment_count.c                \
     src/mpid/common/datatype/dataloop/segment_flatten.c              \
     src/mpid/common/datatype/dataloop/segment_packunpack.c           \
-    src/mpid/common/datatype/dataloop/subarray_support.c             \
-    src/mpid/common/datatype/dataloop/dataloop_optimize.c
+    src/mpid/common/datatype/dataloop/subarray_support.c
 
 # several headers are included by the rest of MPICH
 AM_CPPFLAGS += -I$(top_srcdir)/src/mpid/common/datatype
