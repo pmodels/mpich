@@ -1008,8 +1008,9 @@ static int MPIR_SMP_Bcast(
     MPI_Status status;
     int recvd_size;
 
-    if (!MPIR_CVAR_ENABLE_SMP_COLLECTIVES || !MPIR_CVAR_ENABLE_SMP_BCAST)
+    if (!MPIR_CVAR_ENABLE_SMP_COLLECTIVES || !MPIR_CVAR_ENABLE_SMP_BCAST) {
         MPIU_Assert(0);
+    }
     MPIU_Assert(MPIR_Comm_is_node_aware(comm_ptr));
 
     is_homogeneous = 1;
