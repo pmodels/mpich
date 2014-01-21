@@ -195,7 +195,7 @@ if test "${pamid_platform}" = "BGQ" ; then
   # of libstdc++.so unless this '-all-static' option is used. This seems to
   # be a problem specific to libstdc++.
   #
-  # Only the 'cpi' and 'mpichversion' executables have this problem.
+  # Only the 'cpi', 'mpivars', and 'mpichversion' executables have this problem.
   MPID_LIBTOOL_STATIC_FLAG="-all-static"
 fi
 
