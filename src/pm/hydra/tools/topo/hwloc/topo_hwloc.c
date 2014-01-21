@@ -6,6 +6,7 @@
  */
 
 #include "hydra.h"
+#include "topo.h"
 #include "topo_hwloc.h"
 
 #define MAP_LENGTH      (5)
@@ -165,8 +166,8 @@ static int parse_cache_string(const char *str)
 static HYD_status handle_bitmap_binding(const char *binding, const char *mapping)
 {
     int i, j, k, bind_count, map_count, cache_depth = 0, bind_depth = 0, map_depth = 0;
-    int total_num_pus, total_map_objs, total_bind_objs, num_pus_in_map_domain,
-        num_pus_in_bind_domain, total_map_domains;
+    int total_map_objs, total_bind_objs, num_pus_in_map_domain, num_pus_in_bind_domain,
+        total_map_domains;
     hwloc_obj_t map_obj, bind_obj, *start_pu;
     hwloc_cpuset_t *map_domains;
     char *bind_str, *map_str;
@@ -251,12 +252,11 @@ static HYD_status handle_bitmap_binding(const char *binding, const char *mapping
      */
 
     /* calculate the number of map domains */
-    total_num_pus = hwloc_get_nbobjs_by_type(topology, HWLOC_OBJ_PU);
-
     total_map_objs = hwloc_get_nbobjs_by_depth(topology, map_depth);
-    num_pus_in_map_domain = (total_num_pus / total_map_objs) * map_count;
-    HYDU_ERR_CHKANDJUMP(status, num_pus_in_map_domain > total_num_pus, HYD_INTERNAL_ERROR,
-                        "mapping option \"%s\" larger than total system size\n", mapping);
+    num_pus_in_map_domain = (HYDT_topo_hwloc_info.total_num_pus / total_map_objs) * map_count;
+    HYDU_ERR_CHKANDJUMP(status, num_pus_in_map_domain > HYDT_topo_hwloc_info.total_num_pus,
+                        HYD_INTERNAL_ERROR, "mapping option \"%s\" larger than total system size\n",
+                        mapping);
 
     /* The number of total_map_domains should be large enough to
      * contain all contiguous map object collections of length
@@ -307,11 +307,12 @@ static HYD_status handle_bitmap_binding(const char *binding, const char *mapping
 
     /* calculate the number of possible bindings and allocate bitmaps for them */
     total_bind_objs = hwloc_get_nbobjs_by_depth(topology, bind_depth);
-    num_pus_in_bind_domain = (total_num_pus / total_bind_objs) * bind_count;
+    num_pus_in_bind_domain = (HYDT_topo_hwloc_info.total_num_pus / total_bind_objs) * bind_count;
 
     if (num_pus_in_bind_domain < num_pus_in_map_domain) {
         for (i = 1; (i * num_pus_in_map_domain) % num_pus_in_bind_domain; i++);
-        HYDT_topo_hwloc_info.num_bitmaps = (i * num_pus_in_map_domain * total_map_domains) / num_pus_in_bind_domain;
+        HYDT_topo_hwloc_info.num_bitmaps =
+            (i * num_pus_in_map_domain * total_map_domains) / num_pus_in_bind_domain;
     }
     else {
         HYDT_topo_hwloc_info.num_bitmaps = total_map_domains;
@@ -393,6 +394,8 @@ HYD_status HYDT_topo_hwloc_init(const char *binding, const char *mapping, const 
     hwloc_topology_init(&topology);
     hwloc_topology_load(topology);
 
+    HYDT_topo_hwloc_info.total_num_pus = hwloc_get_nbobjs_by_type(topology, HWLOC_OBJ_PU);
+
     hwloc_initialized = 1;
 
     /* bindings that don't require mapping */
@@ -450,9 +453,24 @@ HYD_status HYDT_topo_hwloc_bind(int idx)
     /* For processes where the user did not specify a binding unit, no binding is needed. */
     if (!HYDT_topo_hwloc_info.user_binding || (idx < HYDT_topo_hwloc_info.num_bitmaps)) {
         id = idx % HYDT_topo_hwloc_info.num_bitmaps;
-        hwloc_set_cpubind(topology, HYDT_topo_hwloc_info.bitmap[id], 0);
-        hwloc_set_membind(topology, HYDT_topo_hwloc_info.bitmap[id], HYDT_topo_hwloc_info.membind,
-                          0);
+
+        /* For debugging, print the binding bitmaps but don't actually bind. */
+        if (HYDT_topo_info.debug) {
+            int i;
+
+            HYDU_dump_noprefix(stdout, "process %d binding: ", idx);
+
+            for (i = 0; i < HYDT_topo_hwloc_info.total_num_pus; i++)
+                HYDU_dump_noprefix(stdout, "%d ",
+                                   hwloc_bitmap_isset(HYDT_topo_hwloc_info.bitmap[id], i));
+
+            HYDU_dump_noprefix(stdout, "\n");
+        }
+        else {
+            hwloc_set_cpubind(topology, HYDT_topo_hwloc_info.bitmap[id], 0);
+            hwloc_set_membind(topology, HYDT_topo_hwloc_info.bitmap[id],
+                              HYDT_topo_hwloc_info.membind, 0);
+        }
     }
 
     HYDU_FUNC_EXIT();

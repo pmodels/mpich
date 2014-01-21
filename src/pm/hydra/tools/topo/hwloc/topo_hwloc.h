@@ -19,6 +19,7 @@ struct HYDT_topo_hwloc_info {
     hwloc_bitmap_t *bitmap;
     hwloc_membind_policy_t membind;
     int user_binding;
+    int total_num_pus;
 };
 extern struct HYDT_topo_hwloc_info HYDT_topo_hwloc_info;
 

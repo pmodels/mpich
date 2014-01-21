@@ -24,6 +24,8 @@
 struct HYDT_topo_info {
     /** \brief Topology library to use */
     char *topolib;
+    /** \brief Enable debugging output */
+    int debug;
 };
 
 /*! \cond */
