@@ -19,6 +19,28 @@ void mpir_is_statuses_ignore_( void *a, int *ierr );
 void mpir_is_errcodes_ignore_( void *a, int *ierr );
 void mpir_is_argvs_null_( void *a, int *ierr );
 
+extern void MPIR_IS_BOTTOM( void *a, int *ierr );
+extern void mpir_is_bottom( void *a, int *ierr );
+extern void mpir_is_bottom__( void *a, int *ierr );
+extern void MPIR_IS_IN_PLACE( void *a, int *ierr );
+extern void mpir_is_in_place( void *a, int *ierr );
+extern void mpir_is_in_place__( void *a, int *ierr );
+extern void MPIR_IS_UNWEIGHTED( void *a, int *ierr );
+extern void mpir_is_unweighted( void *a, int *ierr );
+extern void mpir_is_unweighted__( void *a, int *ierr );
+extern void MPIR_IS_STATUS_IGNORE( void *a, int *ierr );
+extern void mpir_is_status_ignore( void *a, int *ierr );
+extern void mpir_is_status_ignore__( void *a, int *ierr );
+extern void MPIR_IS_STATUSES_IGNORE( void *a, int *ierr );
+extern void mpir_is_statuses_ignore( void *a, int *ierr );
+extern void mpir_is_statuses_ignore__( void *a, int *ierr );
+extern void MPIR_IS_ERRCODES_IGNORE( void *a, int *ierr );
+extern void mpir_is_errcodes_ignore( void *a, int *ierr );
+extern void mpir_is_errcodes_ignore__( void *a, int *ierr );
+extern void MPIR_IS_ARGVS_NULL( void *a, int *ierr );
+extern void mpir_is_argvs_null( void *a, int *ierr );
+extern void mpir_is_argvs_null__( void *a, int *ierr );
+
   #pragma weak MPIR_IS_BOTTOM   = mpir_is_bottom_
   #pragma weak mpir_is_bottom   = mpir_is_bottom_
   #pragma weak mpir_is_bottom__ = mpir_is_bottom_
