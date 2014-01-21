@@ -361,7 +361,7 @@ void ADIOI_Calc_my_off_len(ADIO_File fd, int bufcount, MPI_Datatype
             int ii;
             DBG_FPRINTF(stderr, "flattened %3lld : ", flat_file->count );
             for (ii=0; ii<flat_file->count; ii++) {
-                DBG_FPRINTF(stderr, "%16qd:%-16qd", flat_file->indices[ii], flat_file->blocklens[ii] );
+                DBG_FPRINTF(stderr, "%16lld:%-16lld", flat_file->indices[ii], flat_file->blocklens[ii] );
             }
             DBG_FPRINTF(stderr, "\n" );
         }
