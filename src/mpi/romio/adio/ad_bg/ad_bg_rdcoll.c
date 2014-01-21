@@ -88,6 +88,8 @@ extern void ADIOI_Calc_my_off_len(ADIO_File fd, int bufcount, MPI_Datatype
 			    ADIO_Offset *end_offset_ptr, int
 			   *contig_access_count_ptr);
 
+
+
 void ADIOI_BG_ReadStridedColl(ADIO_File fd, void *buf, int count,
 			       MPI_Datatype datatype, int file_ptr_type,
 			       ADIO_Offset offset, ADIO_Status *status, int

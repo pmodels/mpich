@@ -35,6 +35,7 @@ int 	bgmpio_tunegather;
 int 	bgmpio_tuneblocking;
 long    bglocklessmpio_f_type;
 int     bgmpio_bg_nagg_pset;
+int     bgmpio_pthreadio;
 
 double	bgmpio_prof_cw    [BGMPIO_CIO_LAST];
 double	bgmpio_prof_cr    [BGMPIO_CIO_LAST];
@@ -81,7 +82,17 @@ double	bgmpio_prof_cr    [BGMPIO_CIO_LAST];
  *   - any integer
  *   - Default is 8
  *
+ * - BGMPIO_PTHREADIO - Enables a very simple form of asyncronous io where a
+ *   pthread is spawned to do the posix writes while the main thread does the
+ *   data aggregation - useful for large files where multiple rounds are
+ *   required (more that the cb_buffer_size of data per aggregator).   User
+ *   must ensure there is hw resource available for the thread to run.  I
+ *   am sure there is a better way to do this involving comm threads - this is
+ *   just a start.  NOTE: For some reason the stats collected when this is
+ *   enabled misses some of the data so the data sizes are off a bit - this is
+ *   a statistical issue only, the data is still accurately written out
 */
+
 void ad_bg_get_env_vars() {
     char *x, *dummy;
 
@@ -108,6 +119,12 @@ void ad_bg_get_env_vars() {
     bgmpio_bg_nagg_pset = ADIOI_BG_NAGG_PSET_DFLT;
     x = getenv("BGMPIO_NAGG_PSET");
     if (x) bgmpio_bg_nagg_pset = atoi(x);
+
+    bgmpio_pthreadio = 0;
+    x = getenv( "BGMPIO_PTHREADIO" );
+    if (x) bgmpio_pthreadio = atoi(x);
+
+
 }
 
 /* report timing breakdown for MPI I/O collective call */

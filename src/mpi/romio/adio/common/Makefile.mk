@@ -66,5 +66,6 @@ romio_other_sources +=                  \
     adio/common/status_setb.c           \
     adio/common/strfns.c                \
     adio/common/system_hints.c          \
-    adio/common/hint_fns.c
+    adio/common/hint_fns.c              \
+    adio/common/ad_threaded_io.c
 

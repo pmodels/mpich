@@ -65,6 +65,7 @@ extern int 	bgmpio_comm;
 extern int 	bgmpio_tunegather;
 extern int 	bgmpio_tuneblocking;
 extern long bglocklessmpio_f_type;
+extern int      bgmpio_pthreadio;
 
 /* Default is, well, kind of complicated. Blue Gene /L and /P had "psets": one
  * i/o node and all compute nodes wired to it.  On Blue Gene /Q that

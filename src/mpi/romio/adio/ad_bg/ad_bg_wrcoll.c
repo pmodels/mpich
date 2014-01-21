@@ -26,6 +26,8 @@
 #include "mpe.h"
 #endif
 
+#include <pthread.h>
+
 /* prototypes of functions used for collective writes only. */
 static void ADIOI_Exch_and_write(ADIO_File fd, const void *buf, MPI_Datatype
                          datatype, int nprocs, int myrank, ADIOI_Access
@@ -428,7 +430,7 @@ static void ADIOI_Exch_and_write(ADIO_File fd, const void *buf, MPI_Datatype
     ADIO_Offset size=0;
     int hole, i, j, m, ntimes, max_ntimes, buftype_is_contig;
     ADIO_Offset st_loc=-1, end_loc=-1, off, done, req_off;
-    char *write_buf=NULL;
+    char *write_buf=NULL, *write_buf2=NULL;
     int *curr_offlen_ptr, *count, *send_size, req_len, *recv_size;
     int *partial_recv, *sent_to_proc, *start_pos, flag;
     int *send_buf_idx, *curr_to_proc, *done_to_proc;
@@ -438,6 +440,9 @@ static void ADIOI_Exch_and_write(ADIO_File fd, const void *buf, MPI_Datatype
     int info_flag, coll_bufsize;
     char *value;
     static char myname[] = "ADIOI_EXCH_AND_WRITE";
+    pthread_t io_thread;
+    void *thread_ret;
+    ADIOI_IO_ThreadFuncData io_thread_args;
 
     *error_code = MPI_SUCCESS;  /* changed below if error */
     /* only I/O errors are currently reported */
@@ -452,6 +457,11 @@ static void ADIOI_Exch_and_write(ADIO_File fd, const void *buf, MPI_Datatype
     coll_bufsize = atoi(value);
     ADIOI_Free(value);
 
+    if (bgmpio_pthreadio == 1){
+	/* ROMIO will spawn an additional thread. both threads use separate
+	 * halves of the collective buffer*/
+	coll_bufsize = coll_bufsize/2;
+    }
 
     for (i=0; i < nprocs; i++) {
 	if (others_req[i].count) {
@@ -480,6 +490,9 @@ static void ADIOI_Exch_and_write(ADIO_File fd, const void *buf, MPI_Datatype
 		  fd->comm); 
 
     write_buf = fd->io_buf;
+    if (bgmpio_pthreadio == 1) {
+	write_buf2 = fd->io_buf + coll_bufsize;
+    }
 
     curr_offlen_ptr = (int *) ADIOI_Calloc(nprocs, sizeof(int)); 
     /* its use is explained below. calloc initializes to 0. */
@@ -535,6 +548,9 @@ static void ADIOI_Exch_and_write(ADIO_File fd, const void *buf, MPI_Datatype
 
     done = 0;
     off = st_loc;
+
+    if(bgmpio_pthreadio == 1)
+	io_thread = pthread_self();
 
 #ifdef PROFILE
 	MPE_Log_event(14, 0, "end computation");
@@ -658,13 +674,47 @@ static void ADIOI_Exch_and_write(ADIO_File fd, const void *buf, MPI_Datatype
 
 	if (flag) {
       ADIOI_Assert(size == (int)size);
-	    ADIO_WriteContig(fd, write_buf, (int)size, MPI_BYTE, ADIO_EXPLICIT_OFFSET, 
-                        off, &status, error_code);
-	    if (*error_code != MPI_SUCCESS) return;
+	    if (bgmpio_pthreadio == 1) {
+		/* there is no such thing as "invalid pthread identifier", so
+		 * we'll use pthread_self() instead.  Before we do I/O we want
+		 * to complete I/O from any previous iteration -- but only a
+		 * previous iteration that had I/O work to do (i.e. set 'flag')
+		 */
+		if(!pthread_equal(io_thread, pthread_self())) {
+		    pthread_join(io_thread, &thread_ret);
+		    *error_code = *(int *)thread_ret;
+		    if (*error_code != MPI_SUCCESS) return;
+		    io_thread = pthread_self();
+
+		}
+		io_thread_args.fd = fd;
+		/* do a little pointer shuffling: background I/O works from one
+		 * buffer while two-phase machinery fills up another */
+		io_thread_args.buf = write_buf;
+		ADIOI_SWAP(write_buf, write_buf2, char*);
+		io_thread_args.io_kind = ADIOI_WRITE;
+		io_thread_args.size = size;
+		io_thread_args.offset = off;
+		io_thread_args.status = status;
+		io_thread_args.error_code = *error_code;
+		if ( (pthread_create(&io_thread, NULL,
+			ADIOI_IO_Thread_Func, &(io_thread_args))) != 0)
+		    io_thread = pthread_self();
+	    } else {
+		ADIO_WriteContig(fd, write_buf, (int)size, MPI_BYTE,
+			ADIO_EXPLICIT_OFFSET, off, &status, error_code);
+		if (*error_code != MPI_SUCCESS) return;
+	    }
 	}
 
 	off += size;
 	done += size;
+    }
+    if (bgmpio_pthreadio == 1) {
+	if ( !pthread_equal(io_thread, pthread_self()) ) {
+	    pthread_join(io_thread, &thread_ret);
+	    *error_code = *(int *)thread_ret;
+	}
     }
 
     for (i=0; i<nprocs; i++) count[i] = recv_size[i] = 0;

@@ -197,6 +197,9 @@ struct ADIOI_Fns_struct {
 
 #define ADIOI_MIN(a, b) ((a) < (b) ? (a) : (b))
 #define ADIOI_MAX(a, b) ((a) > (b) ? (a) : (b))
+/* thanks stackoverflow:
+ * http://stackoverflow.com/questions/3982348/implement-generic-swap-macro-in-c */
+#define ADIOI_SWAP(x, y, T) do { T temp##x##y = x; x = y; y = temp##x##y; } while (0);
 
 #define ADIOI_PREALLOC_BUFSZ      16777216    /* buffer size used to 
                                                 preallocate disk space */
@@ -859,5 +862,23 @@ if (MPIR_Ext_dbg_romio_typical_enabled) fprintf
 #define DBG_FPRINTF if (0) fprintf
 #define DBGV_FPRINTF if (0) fprintf
 #endif
+
+/* declarations for threaded I/O */
+/* i/o thread data structure (bgmpio_pthreadwc) */
+typedef struct wcThreadFuncData {
+    ADIO_File fd;
+    int io_kind;
+    char *buf;
+    int size;
+    ADIO_Offset offset;
+    ADIO_Status status;
+    int error_code;
+} ADIOI_IO_ThreadFuncData;
+
+void *ADIOI_IO_Thread_Func(void *vptr_args);
+
+
+
+
 #endif
 
