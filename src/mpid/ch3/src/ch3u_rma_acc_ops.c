@@ -25,7 +25,7 @@ int MPIDI_Get_accumulate(const void *origin_addr, int origin_count,
     int dt_contig ATTRIBUTE((unused));
     MPI_Aint dt_true_lb ATTRIBUTE((unused));
     MPID_Datatype *dtp;
-    MPIDI_VC_t *orig_vc, *target_vc;
+    MPIDI_VC_t *orig_vc = NULL, *target_vc = NULL;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_GET_ACCUMULATE);
 
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_GET_ACCUMULATE);
@@ -140,7 +140,7 @@ int MPIDI_Compare_and_swap(const void *origin_addr, const void *compare_addr,
 {
     int mpi_errno = MPI_SUCCESS;
     int rank;
-    MPIDI_VC_t *orig_vc, *target_vc;
+    MPIDI_VC_t *orig_vc = NULL, *target_vc = NULL;
 
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_COMPARE_AND_SWAP);
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_COMPARE_AND_SWAP);
@@ -233,7 +233,7 @@ int MPIDI_Fetch_and_op(const void *origin_addr, void *result_addr,
 {
     int mpi_errno = MPI_SUCCESS;
     int rank;
-    MPIDI_VC_t *orig_vc, *target_vc;
+    MPIDI_VC_t *orig_vc = NULL, *target_vc = NULL;
 
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_FETCH_AND_OP);
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_FETCH_AND_OP);

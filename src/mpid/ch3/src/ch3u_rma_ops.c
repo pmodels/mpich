@@ -122,7 +122,7 @@ int MPIDI_Put(const void *origin_addr, int origin_count, MPI_Datatype
     MPID_Datatype *dtp;
     MPI_Aint dt_true_lb ATTRIBUTE((unused));
     MPIDI_msg_sz_t data_sz;
-    MPIDI_VC_t *orig_vc, *target_vc;
+    MPIDI_VC_t *orig_vc = NULL, *target_vc = NULL;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_PUT);
         
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_PUT);
@@ -234,7 +234,7 @@ int MPIDI_Get(void *origin_addr, int origin_count, MPI_Datatype
     int dt_contig ATTRIBUTE((unused)), rank;
     MPI_Aint dt_true_lb ATTRIBUTE((unused));
     MPID_Datatype *dtp;
-    MPIDI_VC_t *orig_vc, *target_vc;
+    MPIDI_VC_t *orig_vc = NULL, *target_vc = NULL;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_GET);
         
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_GET);
@@ -344,7 +344,7 @@ int MPIDI_Accumulate(const void *origin_addr, int origin_count, MPI_Datatype
     int dt_contig ATTRIBUTE((unused)), rank;
     MPI_Aint dt_true_lb ATTRIBUTE((unused));
     MPID_Datatype *dtp;
-    MPIDI_VC_t *orig_vc, *target_vc;
+    MPIDI_VC_t *orig_vc = NULL, *target_vc = NULL;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_ACCUMULATE);
     
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_ACCUMULATE);
