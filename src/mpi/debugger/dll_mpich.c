@@ -956,7 +956,7 @@ static int rebuild_communicator_list (mqs_process *proc)
 	int send_ctx = fetch_int16 (proc, comm_base+i_info->comm_context_id_offs, p_info);
 	communicator_t *old = find_communicator (p_info, comm_base, recv_ctx);
 
-	char *name = (char *)"--unnamed--";
+	const char *name = "--unnamed--";
 	char namebuffer[64];
 	/* In MPICH, the name is preallocated and of size MPI_MAX_OBJECT_NAME */
 	if (dbgr_fetch_data( proc, comm_base+i_info->comm_name_offs,64,
