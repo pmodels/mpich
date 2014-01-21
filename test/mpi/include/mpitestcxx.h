@@ -56,6 +56,8 @@ const char *MTestGetIntracommName( void );
 const char *MTestGetIntercommName( void );
 void MTestFreeComm( MPI::Comm &comm );
 
+int MTestSpawnPossible( int * );
+
 #ifdef HAVE_MPI_WIN_CREATE
 int MTestGetWin( MPI::Win &, bool );
 const char *MTestGetWinName( void );

@@ -1711,3 +1711,59 @@ static void MTestRMACleanup( void )
 #else 
 static void MTestRMACleanup( void ) {}
 #endif
+
+/* ------------------------------------------------------------------------ */
+/* This function determines if it is possible to spawn addition MPI
+ * processes using MPI_COMM_SPAWN and MPI_COMM_SPAWN_MULTIPLE.
+ *
+ * It sets the can_spawn value to one of the following:
+ * 1  = yes, additional processes can be spawned
+ * 0  = no, MPI_UNIVERSE_SIZE <= the size of MPI_COMM_WORLD
+ * -1 = it is unknown whether or not processes can be spawned
+ *      due to errors in the necessary query functions
+ *
+ */
+int MTestSpawnPossible(int * can_spawn)
+{
+    int    errs = 0;
+
+    void * v    = NULL;
+    int    flag = -1;
+    int    vval = -1;
+    int rc;
+
+    rc = MPI_Comm_get_attr( MPI_COMM_WORLD, MPI_UNIVERSE_SIZE, &v, &flag );
+    if (rc!=MPI_SUCCESS) {
+        /* MPI_UNIVERSE_SIZE keyval missing from MPI_COMM_WORLD attributes */
+        *can_spawn = -1;
+        errs++;
+    }
+    else {
+        /* MPI_UNIVERSE_SIZE need not be set */
+        if (flag) {
+
+            int size = -1;
+            rc = MPI_Comm_size(MPI_COMM_WORLD, &size);
+            if (rc!=MPI_SUCCESS) {
+                /* MPI_Comm_size failed for MPI_COMM_WORLD */
+                *can_spawn = -1;
+                errs++;
+            }
+
+            vval = *(int *)v;
+            if (vval <= size) {
+                /* no additional processes can be spawned */
+                *can_spawn = 0;
+            }
+            else {
+                *can_spawn = 1;
+            }
+        }
+        else {
+            /* No attribute associated with key MPI_UNIVERSE_SIZE of MPI_COMM_WORLD */
+            *can_spawn = -1;
+        }
+    }
+    return errs;
+}
+/* ------------------------------------------------------------------------ */

@@ -47,6 +47,7 @@ int main(int argc, char *argv[])
     MPI_Status status;
     int verbose = 0;
     char *env;
+    int can_spawn;
 
     env = getenv("MPITEST_VERBOSE");
     if (env)
@@ -57,75 +58,81 @@ int main(int argc, char *argv[])
 
     MTest_Init( &argc, &argv );
 
-    /* Set the num_spawns for the first process to MAX_NUM_SPAWNS */
-    MPI_Comm_get_parent( &parentcomm );
-    if (parentcomm == MPI_COMM_NULL)
-    {
-	num_spawns = MAX_NUM_SPAWNS;
-    }
+    errs += MTestSpawnPossible(&can_spawn);
 
-    /* If an argument is passed in use it for num_spawns */
-    /* This is the case for all spawned processes and optionally the first 
-       process as well */
-    if (argc > 1)
-    {
-	num_spawns = atoi(argv[1]);
-	if (num_spawns < 0)
-	    num_spawns = 0;
-	if (num_spawns > MAX_NUM_SPAWNS)
-	    num_spawns = MAX_NUM_SPAWNS;
-    }
+    if (can_spawn) {
+        /* Set the num_spawns for the first process to MAX_NUM_SPAWNS */
+        MPI_Comm_get_parent( &parentcomm );
+        if (parentcomm == MPI_COMM_NULL)
+        {
+            num_spawns = MAX_NUM_SPAWNS;
+        }
 
-    /* Send num_spawns - 1 on the command line to the spawned children */
-    sprintf(child_spawns, "%d", num_spawns-1 > 0 ? num_spawns-1 : 0);
+        /* If an argument is passed in use it for num_spawns */
+        /* This is the case for all spawned processes and optionally the first
+           process as well */
+        if (argc > 1)
+        {
+            num_spawns = atoi(argv[1]);
+            if (num_spawns < 0)
+                num_spawns = 0;
+            if (num_spawns > MAX_NUM_SPAWNS)
+                num_spawns = MAX_NUM_SPAWNS;
+        }
 
-    /* Spawn the children */
-    IF_VERBOSE(("spawning %d\n", num_spawns));
-    for (i=0; i<num_spawns; i++)
-    {
-	if (argc > 2)
-	{
-	    sprintf(description, "%s:%d", argv[2], i);
-	}
-	else
-	{
-	    sprintf(description, "%d", i);
-	}
-	IF_VERBOSE(("spawning %s\n", description));
-	MPI_Comm_spawn((char*)"./concurrent_spawns", argv1, 1,
-		MPI_INFO_NULL, 0, MPI_COMM_WORLD,
-		&intercomm[i], MPI_ERRCODES_IGNORE);
+        /* Send num_spawns - 1 on the command line to the spawned children */
+        sprintf(child_spawns, "%d", num_spawns-1 > 0 ? num_spawns-1 : 0);
 
-	MPI_Comm_remote_size(intercomm[i], &rsize);
-	MPI_Comm_size(intercomm[i], &size);
-	if (rsize != 1)
-	{
-	    errs++;
-	    printf("Did not create 1 process (got %d)\n", rsize);
-	    fflush(stdout);
-	}
-    }
+        /* Spawn the children */
+        IF_VERBOSE(("spawning %d\n", num_spawns));
+        for (i=0; i<num_spawns; i++)
+        {
+            if (argc > 2)
+            {
+                sprintf(description, "%s:%d", argv[2], i);
+            }
+            else
+            {
+                sprintf(description, "%d", i);
+            }
+            IF_VERBOSE(("spawning %s\n", description));
+            MPI_Comm_spawn((char*)"./concurrent_spawns", argv1, 1,
+                    MPI_INFO_NULL, 0, MPI_COMM_WORLD,
+                    &intercomm[i], MPI_ERRCODES_IGNORE);
 
-    /* Receive the error count from each of your children and add it to your 
-       error count */
-    for (i=0; i<num_spawns; i++)
-    {
-	MPI_Recv(&child_errs, 1, MPI_INT, 0, 0, intercomm[i], &status);
-	errs += child_errs;
-	MPI_Comm_disconnect( &intercomm[i] );
-    }
+            MPI_Comm_remote_size(intercomm[i], &rsize);
+            MPI_Comm_size(intercomm[i], &size);
+            if (rsize != 1)
+            {
+                errs++;
+                printf("Did not create 1 process (got %d)\n", rsize);
+                fflush(stdout);
+            }
+        }
 
-    /* If you are a spawned process send your errors to your parent */
-    if (parentcomm != MPI_COMM_NULL)
-    {
-	MPI_Send(&errs, 1, MPI_INT, 0, 0, parentcomm);
-	MPI_Comm_disconnect( &parentcomm );
-    }
-    else {
-	/* Note that the MTest_Finalize get errs only over COMM_WORLD */
-	/* Note also that both the parent and child will generate "No Errors"
-	   if both call MTest_Finalize */
-	MTest_Finalize( errs );
+        /* Receive the error count from each of your children and add it to your
+           error count */
+        for (i=0; i<num_spawns; i++)
+        {
+            MPI_Recv(&child_errs, 1, MPI_INT, 0, 0, intercomm[i], &status);
+            errs += child_errs;
+            MPI_Comm_disconnect( &intercomm[i] );
+        }
+
+        /* If you are a spawned process send your errors to your parent */
+        if (parentcomm != MPI_COMM_NULL)
+        {
+            MPI_Send(&errs, 1, MPI_INT, 0, 0, parentcomm);
+            MPI_Comm_disconnect( &parentcomm );
+        }
+        else {
+            /* Note that the MTest_Finalize get errs only over COMM_WORLD */
+            /* Note also that both the parent and child will generate "No Errors"
+               if both call MTest_Finalize */
+            MTest_Finalize( errs );
+        }
+    } else {
+        MTest_Finalize( errs );
     }
 
     IF_VERBOSE(("calling finalize\n"));

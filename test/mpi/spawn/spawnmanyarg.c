@@ -32,85 +32,92 @@ int main( int argc, char *argv[] )
     char *outargv[MAX_ARGV];
     int narg = 40;
     char *saveArgp = 0;
+    int can_spawn;
 
     MTest_Init( &argc, &argv );
 
-    /* Initialize the argument vectors */
-    for (i=0; i<MAX_ARGV; i++) {
-      char *p;
-      p = (char *)malloc( 9 );
-      if (!p) {
-	  fprintf( stderr, "Unable to allocated memory\n" );
-	  MPI_Abort( MPI_COMM_WORLD, 1 );
-      }
-      strcpy( p, "01234567" );
-      inargv[i] = p;
-      p = (char *)malloc( 9 );
-      if (!p) {
-	  fprintf( stderr, "Unable to allocated memory\n" );
-	  MPI_Abort( MPI_COMM_WORLD, 1 );
-      }
-      strcpy( p, "01234567" );
-      outargv[i] = p;
-    }
+    errs += MTestSpawnPossible(&can_spawn);
 
-    MPI_Comm_get_parent( &parentcomm );
+    if (can_spawn) {
+        /* Initialize the argument vectors */
+        for (i=0; i<MAX_ARGV; i++) {
+            char *p;
+            p = (char *)malloc( 9 );
+            if (!p) {
+                fprintf( stderr, "Unable to allocated memory\n" );
+                MPI_Abort( MPI_COMM_WORLD, 1 );
+            }
+            strcpy( p, "01234567" );
+            inargv[i] = p;
+            p = (char *)malloc( 9 );
+            if (!p) {
+                fprintf( stderr, "Unable to allocated memory\n" );
+                MPI_Abort( MPI_COMM_WORLD, 1 );
+            }
+            strcpy( p, "01234567" );
+            outargv[i] = p;
+        }
 
-    if (parentcomm == MPI_COMM_NULL) {
-	for (narg=16; narg < 512; narg += narg) {
-	    /* Create 2 more processes */
-	    /* Set a null at argument length narg */
-	    saveArgp = inargv[narg];
-	    inargv[narg] = 0;
-	    /* ./ is unix specific .
-	       The more generic approach would be to specify "spawnmanyarg" as 
-	       the executable and pass an info with ("path", ".") */
-	    MPI_Comm_spawn( (char*)"./spawnmanyarg", inargv, np,
-			    MPI_INFO_NULL, 0, MPI_COMM_WORLD,
-			    &intercomm, errcodes );
-	    inargv[narg] = saveArgp;
-	    /* We now have a valid intercomm */
-	    
-	    /* Master */
-	    MPI_Comm_remote_size( intercomm, &rsize );
-	    MPI_Comm_size( intercomm, &size );
-	    MPI_Comm_rank( intercomm, &rank );
-	    
-	    if (rsize != np) {
-		errs++;
-		printf( "Did not create %d processes (got %d)\n", np, rsize );
-	    }
-	    /* Send the expected rank */
-	    for (i=0; i<rsize; i++) {
-		MPI_Send( &i, 1, MPI_INT, i, 0, intercomm );
-	    }
-	    /* Send the number of arguments */
-	    for (i=0; i<rsize; i++) {
-		MPI_Send( &narg, 1, MPI_INT, i, 0, intercomm );
-	    }
-	    /* We could use intercomm reduce to get the errors from the 
-	       children, but we'll use a simpler loop to make sure that
-	       we get valid data */
-	    for (i=0; i<rsize; i++) {
-		MPI_Recv( &err, 1, MPI_INT, i, 1, intercomm, MPI_STATUS_IGNORE );
-		errs += err;
-	    }
-	    
-	    /* Free the intercomm before the next round of spawns */
-	    MPI_Comm_free( &intercomm );
-	}
-    }
-    else {
-	/* Note that worker also send errs to the parent */
-	errs += worker( argc, argv, parentcomm, outargv, np );
-	MPI_Comm_free( &parentcomm );
-	MPI_Finalize();
-	return 0;
-    }
+        MPI_Comm_get_parent( &parentcomm );
 
-    /* Note that the MTest_Finalize get errs only over COMM_WORLD */
-    if (parentcomm == MPI_COMM_NULL) {
-	MTest_Finalize( errs );
+        if (parentcomm == MPI_COMM_NULL) {
+            for (narg=16; narg < 512; narg += narg) {
+                /* Create 2 more processes */
+                /* Set a null at argument length narg */
+                saveArgp = inargv[narg];
+                inargv[narg] = 0;
+                /* ./ is unix specific .
+                   The more generic approach would be to specify "spawnmanyarg" as
+                   the executable and pass an info with ("path", ".") */
+                MPI_Comm_spawn( (char*)"./spawnmanyarg", inargv, np,
+                        MPI_INFO_NULL, 0, MPI_COMM_WORLD,
+                        &intercomm, errcodes );
+                inargv[narg] = saveArgp;
+                /* We now have a valid intercomm */
+
+                /* Master */
+                MPI_Comm_remote_size( intercomm, &rsize );
+                MPI_Comm_size( intercomm, &size );
+                MPI_Comm_rank( intercomm, &rank );
+
+                if (rsize != np) {
+                    errs++;
+                    printf( "Did not create %d processes (got %d)\n", np, rsize );
+                }
+                /* Send the expected rank */
+                for (i=0; i<rsize; i++) {
+                    MPI_Send( &i, 1, MPI_INT, i, 0, intercomm );
+                }
+                /* Send the number of arguments */
+                for (i=0; i<rsize; i++) {
+                    MPI_Send( &narg, 1, MPI_INT, i, 0, intercomm );
+                }
+                /* We could use intercomm reduce to get the errors from the
+                   children, but we'll use a simpler loop to make sure that
+                   we get valid data */
+                for (i=0; i<rsize; i++) {
+                    MPI_Recv( &err, 1, MPI_INT, i, 1, intercomm, MPI_STATUS_IGNORE );
+                    errs += err;
+                }
+
+                /* Free the intercomm before the next round of spawns */
+                MPI_Comm_free( &intercomm );
+            }
+        }
+        else {
+            /* Note that worker also send errs to the parent */
+            errs += worker( argc, argv, parentcomm, outargv, np );
+            MPI_Comm_free( &parentcomm );
+            MPI_Finalize();
+            return 0;
+        }
+
+        /* Note that the MTest_Finalize get errs only over COMM_WORLD */
+        if (parentcomm == MPI_COMM_NULL) {
+            MTest_Finalize( errs );
+        }
+    } else {
+        MTest_Finalize( errs );
     }
 
     MPI_Finalize();

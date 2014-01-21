@@ -29,6 +29,7 @@ int main(int argc, char *argv[])
     MPI_Comm      parentcomm, intercomm;
     int verbose = 0;
     char *env;
+    int can_spawn;
 
     env = getenv("MPITEST_VERBOSE");
     if (env)
@@ -39,75 +40,81 @@ int main(int argc, char *argv[])
 
     MTest_Init( &argc, &argv );
 
-    MPI_Comm_get_parent( &parentcomm );
+    errs += MTestSpawnPossible(&can_spawn);
 
-    if (parentcomm == MPI_COMM_NULL)
-    {
-	IF_VERBOSE(("spawning %d processes\n", np));
-	/* Create 3 more processes */
-	MPI_Comm_spawn((char*)"./disconnect", MPI_ARGV_NULL, np,
-			MPI_INFO_NULL, 0, MPI_COMM_WORLD,
-			&intercomm, MPI_ERRCODES_IGNORE);
-    }
-    else
-    {
-	intercomm = parentcomm;
-    }
+    if (can_spawn) {
+        MPI_Comm_get_parent( &parentcomm );
 
-    /* We now have a valid intercomm */
+        if (parentcomm == MPI_COMM_NULL)
+        {
+            IF_VERBOSE(("spawning %d processes\n", np));
+            /* Create 3 more processes */
+            MPI_Comm_spawn((char*)"./disconnect", MPI_ARGV_NULL, np,
+                    MPI_INFO_NULL, 0, MPI_COMM_WORLD,
+                    &intercomm, MPI_ERRCODES_IGNORE);
+        }
+        else
+        {
+            intercomm = parentcomm;
+        }
 
-    MPI_Comm_remote_size(intercomm, &rsize);
-    MPI_Comm_size(intercomm, &size);
-    MPI_Comm_rank(intercomm, &rank);
+        /* We now have a valid intercomm */
 
-    if (parentcomm == MPI_COMM_NULL)
-    {
-	IF_VERBOSE(("parent rank %d alive.\n", rank));
-	/* Parent */
-	if (rsize != np)
-	{
-	    errs++;
-	    printf("Did not create %d processes (got %d)\n", np, rsize);
-	    fflush(stdout);
-	}
-	IF_VERBOSE(("disconnecting child communicator\n"));
-	MPI_Comm_disconnect(&intercomm);
+        MPI_Comm_remote_size(intercomm, &rsize);
+        MPI_Comm_size(intercomm, &size);
+        MPI_Comm_rank(intercomm, &rank);
 
-	/* Errors cannot be sent back to the parent because there is no 
-	   communicator connected to the children
-	for (i=0; i<rsize; i++)
-	{
-	    MPI_Recv( &err, 1, MPI_INT, i, 1, intercomm, MPI_STATUS_IGNORE );
-	    errs += err;
-	}
-	*/
-    }
-    else
-    {
-	IF_VERBOSE(("child rank %d alive.\n", rank));
-	/* Child */
-	if (size != np)
-	{
-	    errs++;
-	    printf("(Child) Did not create %d processes (got %d)\n", np, size);
-	    fflush(stdout);
-	}
+        if (parentcomm == MPI_COMM_NULL)
+        {
+            IF_VERBOSE(("parent rank %d alive.\n", rank));
+            /* Parent */
+            if (rsize != np)
+            {
+                errs++;
+                printf("Did not create %d processes (got %d)\n", np, rsize);
+                fflush(stdout);
+            }
+            IF_VERBOSE(("disconnecting child communicator\n"));
+            MPI_Comm_disconnect(&intercomm);
 
-	IF_VERBOSE(("disconnecting communicator\n"));
-	MPI_Comm_disconnect(&intercomm);
+            /* Errors cannot be sent back to the parent because there is no
+               communicator connected to the children
+               for (i=0; i<rsize; i++)
+               {
+               MPI_Recv( &err, 1, MPI_INT, i, 1, intercomm, MPI_STATUS_IGNORE );
+               errs += err;
+               }
+               */
+        }
+        else
+        {
+            IF_VERBOSE(("child rank %d alive.\n", rank));
+            /* Child */
+            if (size != np)
+            {
+                errs++;
+                printf("(Child) Did not create %d processes (got %d)\n", np, size);
+                fflush(stdout);
+            }
 
-	/* Send the errs back to the master process */
-	/* Errors cannot be sent back to the parent because there is no 
-	   communicator connected to the parent */
-	/*MPI_Ssend( &errs, 1, MPI_INT, 0, 1, intercomm );*/
-    }
+            IF_VERBOSE(("disconnecting communicator\n"));
+            MPI_Comm_disconnect(&intercomm);
 
-    /* Note that the MTest_Finalize get errs only over COMM_WORLD */
-    /* Note also that both the parent and child will generate "No Errors"
-       if both call MTest_Finalize */
-    if (parentcomm == MPI_COMM_NULL)
-    {
-	MTest_Finalize( errs );
+            /* Send the errs back to the master process */
+            /* Errors cannot be sent back to the parent because there is no
+               communicator connected to the parent */
+            /*MPI_Ssend( &errs, 1, MPI_INT, 0, 1, intercomm );*/
+        }
+
+        /* Note that the MTest_Finalize get errs only over COMM_WORLD */
+        /* Note also that both the parent and child will generate "No Errors"
+           if both call MTest_Finalize */
+        if (parentcomm == MPI_COMM_NULL)
+        {
+            MTest_Finalize( errs );
+        }
+    } else {
+        MTest_Finalize( errs );
     }
 
     IF_VERBOSE(("calling finalize\n"));

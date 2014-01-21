@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <pthread.h>
 #include <mpi.h>
+#include "mpitest.h"
 
 #define DEFAULT_TASKS 128
 #define DEFAULT_TASK_WINDOW 2
@@ -65,6 +66,7 @@ int main(int argc, char *argv[])
 #else
     MPI_Comm * child;
 #endif /* USE_THREADS */
+    int can_spawn, errs = 0;
 
 #ifdef USE_THREADS
     CHECK_SUCCESS(MPI_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &provided));
@@ -75,6 +77,17 @@ int main(int argc, char *argv[])
 #else
     CHECK_SUCCESS(MPI_Init(&argc, &argv));
 #endif
+
+    errs += MTestSpawnPossible(&can_spawn);
+
+    if (!can_spawn) {
+        if (errs)
+            printf( " Found %d errors\n", errs );
+        else
+            printf( " No Errors\n" );
+        fflush( stdout );
+        goto fn_exit;
+    }
 
     CHECK_SUCCESS(MPI_Comm_get_parent(&parent));
 
