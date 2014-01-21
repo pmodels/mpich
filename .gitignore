@@ -448,6 +448,7 @@ Makefile.am-stamp
 /src/env/mpif90.conf
 /src/env/mpich2version
 /src/env/parkill
+/src/env/mpivars
 
 # /src/include/
 /src/include/mpi.h
