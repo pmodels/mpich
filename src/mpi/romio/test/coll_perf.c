@@ -64,9 +64,9 @@ int main(int argc, char **argv)
     ndims = 3;
     order = MPI_ORDER_C;
 
-    array_of_gsizes[0] = 128;
-    array_of_gsizes[1] = 128;
-    array_of_gsizes[2] = 128;
+    array_of_gsizes[0] = 128*17;
+    array_of_gsizes[1] = 128*9;
+    array_of_gsizes[2] = 128*11;
 
     array_of_distribs[0] = MPI_DISTRIBUTE_BLOCK;
     array_of_distribs[1] = MPI_DISTRIBUTE_BLOCK;
