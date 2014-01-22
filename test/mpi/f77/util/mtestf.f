@@ -111,3 +111,43 @@ C
         print *, msg, ": Error class ", errclass, "
      $       (", string(1:slen), ")" 
         end
+
+        subroutine MTestSpawnPossible( can_spawn, errs )
+        implicit none
+        include 'mpif.h'
+        integer can_spawn
+        integer errs
+        integer val, ierror
+        logical flag
+        integer comm_size
+
+        call mpi_comm_get_attr( MPI_COMM_WORLD, MPI_UNIVERSE_SIZE, val,
+     &                          flag, ierror )
+        if ( ierror .ne. MPI_SUCCESS ) then
+C       MPI_UNIVERSE_SIZE keyval missing from MPI_COMM_WORLD attributes
+            can_spawn = -1
+            errs = errs + 1
+        else
+            if ( flag ) then
+                comm_size = -1
+
+                call mpi_comm_size( MPI_COMM_WORLD, comm_size, ierror )
+                if ( ierror .ne. MPI_SUCCESS ) then
+C       MPI_COMM_SIZE failed for MPI_COMM_WORLD
+                    can_spawn = -1
+                    errs = errs + 1
+                    return
+                endif
+
+                if ( val .le. comm_size ) then
+C       no additional processes can be spawned
+                    can_spawn = 0
+                else
+                    can_spawn = 1
+                endif
+            else
+C       No attribute associated with key MPI_UNIVERSE_SIZE of MPI_COMM_WORLD
+                can_spawn = -1
+            endif
+        endif
+        end

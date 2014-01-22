@@ -21,12 +21,20 @@
         data inargv /"a", "b=c", "d e", "-pf", " Ss", " " /
         data outargv /"a", "b=c", "d e", "-pf", " Ss", " " /
         integer ierr
+        integer comm_size
+        integer can_spawn
 
         errs = 0
         np   = 2
 
 
         call MTest_Init( ierr )
+
+        call MTestSpawnPossible( can_spawn, errs )
+        if ( can_spawn .eq. 0 ) then
+            call MTest_Finalize( errs )
+            goto 300
+        endif
 
         call MPI_Comm_get_parent( parentcomm, ierr )
 
@@ -114,5 +122,6 @@
            call MTest_Finalize( errs )
         endif
 
+ 300    continue
         call MPI_Finalize( ierr )
         end
