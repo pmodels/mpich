@@ -195,6 +195,8 @@ void ad_bg_timing_crw_report( int rw, ADIO_File fd, int myrank, int nprocs )
 		    bgmpio_prof_max[ BGMPIO_CIO_T_OTHREQ ]   );
 	    fprintf(stderr,"EXCHANGE-max: %10.3f , ",
 		    bgmpio_prof_max[ BGMPIO_CIO_T_DEXCH ]    );
+	    fprintf(stderr, "EXCHANGE-RECV_EXCH-max: %10.3f , ",
+		    bgmpio_prof_max[ BGMPIO_CIO_T_DEXCH_RECV_EXCH]  );
 	    fprintf(stderr, "EXCHANGE-SETUP-max: %10.3f , ",
 		    bgmpio_prof_max[ BGMPIO_CIO_T_DEXCH_SETUP]  );
 	    fprintf(stderr, "EXCHANGE-NET-max: %10.3f , ",

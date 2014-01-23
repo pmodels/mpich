@@ -41,6 +41,9 @@ enum {
     BGMPIO_CIO_T_MYREQ,	/* time for ADIOI_BG_Calc_my_req(), local */
     BGMPIO_CIO_T_OTHREQ,	/* time for ADIOI_Calc_others_req(), short Alltoall */
     BGMPIO_CIO_T_DEXCH,	/* time for I/O data exchange */
+    /* the next DEXCH_* timers capture finer-grained portions of T_DEXCH */
+    BGMPIO_CIO_T_DEXCH_RECV_EXCH,/* time for each process to exchange recieve
+				    size info with everyone else */
     BGMPIO_CIO_T_DEXCH_SETUP,	/* time for setup portion of I/O data exchange */
     BGMPIO_CIO_T_DEXCH_NET,	/* time for network portion of I/O data exchange */
     BGMPIO_CIO_T_DEXCH_SORT, 	/* time to sort requesst in I/O data exchange */

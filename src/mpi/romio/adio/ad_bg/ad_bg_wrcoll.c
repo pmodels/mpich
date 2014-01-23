@@ -1322,6 +1322,9 @@ static void ADIOI_W_Exchange_data_alltoallv(
   /* exchange recv_size info so that each process knows how much to
      send to whom. */
     MPI_Alltoall(recv_size, 1, MPI_INT, send_size, 1, MPI_INT, fd->comm);
+
+    bgmpio_prof_cw[BGMPIO_CIO_T_DEXCH_RECV_EXCH] += MPI_Wtime() - io_time;
+    io_time = MPI_Wtime();
     
     nprocs_recv = 0;
     for (i=0; i<nprocs; i++) if (recv_size[i]) { nprocs_recv++; }
