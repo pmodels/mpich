@@ -13,12 +13,12 @@ int main(int argc, char **argv)
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-    MPI_Get_processor_name(processor_name,&namelen);
+    MPI_Get_processor_name(processor_name, &namelen);
 
     fp = popen("grep Cpus_allowed_list /proc/$$/status", "r");
 
     while (fgets(path, PATH_MAX, fp) != NULL) {
-      printf("%s[%d]: %s", processor_name, rank, path);
+        printf("%s[%d]: %s", processor_name, rank, path);
     }
 
     pclose(fp);
