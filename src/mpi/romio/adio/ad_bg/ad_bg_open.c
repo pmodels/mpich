@@ -116,7 +116,7 @@ static void scaleable_stat(ADIO_File fd)
     long buf[2];
     MPI_Comm_rank(fd->comm, &rank);
 
-    if (rank == fd->hints->ranklist[0]) {
+    if ((rank == fd->hints->ranklist[0]) || (fd->comm == MPI_COMM_SELF)) {
 	/* Get the (real) underlying file system block size */
 	rc = stat64(fd->filename, &bg_stat);
 	if (rc >= 0)
@@ -164,7 +164,7 @@ static void scaleable_stat(ADIO_File fd)
     if (fd->comm != MPI_COMM_SELF) { /* if indep open, there's no one to talk to*/
 	if (fd->agg_comm != MPI_COMM_NULL) /* deferred open: only a subset of
 					      processes participate */
-	    MPI_Bcast(buf, 2, MPI_LONG, fd->hints->ranklist[0], fd->agg_comm);
+	    MPI_Bcast(buf, 2, MPI_LONG, 0, fd->agg_comm);
 	else
 	    MPI_Bcast(buf, 2, MPI_LONG, fd->hints->ranklist[0], fd->comm);
     }
