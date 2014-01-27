@@ -123,7 +123,7 @@ typedef union {
  * macros to set/access this bit are in src/include/mpiimpl.h. If the
  * location of this bit changes, those macros also need to be adjusted.
  */
-#define MPIDI_TAG_UB (0x3fffffff)
+#define MPIDI_TAG_UB (0x7fffffff)
 
 /* Provides MPIDI_CH3_Pkt_t.  Must come after MPIDI_Message_match definition. */
 #include "mpidpkt.h"

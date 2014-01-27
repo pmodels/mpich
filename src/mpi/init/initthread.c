@@ -469,8 +469,10 @@ int MPIR_Init_thread(int * argc, char ***argv, int required, int * provided)
     /* Assert: tag_ub should be a power of 2 minus 1 */
     MPIU_Assert(((unsigned)MPIR_Process.attrs.tag_ub & ((unsigned)MPIR_Process.attrs.tag_ub + 1)) == 0);
 
-    /* Set aside tag space for tagged collectives */
-    MPIR_Process.attrs.tag_ub     >>= 1;
+    /* Set aside tag space for tagged collectives and failure notification */
+    MPIR_Process.attrs.tag_ub     >>= 2;
+    /* The bit for error checking is set in a macro in mpiimpl.h for
+     * performance reasons. */
     MPIR_Process.tagged_coll_mask   = MPIR_Process.attrs.tag_ub + 1;
 
     /* Assert: tag_ub is at least the minimum asked for in the MPI spec */
