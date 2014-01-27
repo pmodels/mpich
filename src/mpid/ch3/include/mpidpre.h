@@ -116,13 +116,6 @@ typedef union {
  * upper level code may then modify this value after MPID_Init and before the
  * end of MPIR_Init_thread.  Don't use this value directly, always check the
  * runtime global value. */
-/* The first bit of the tag space is reserved for error propagation. We are
- * still well over the required tag size and this allows us to retain the
- * matching semantics while piggybacking the notification. If the message is
- * propagating an error, the data being transmitted is probably garbage. The
- * macros to set/access this bit are in src/include/mpiimpl.h. If the
- * location of this bit changes, those macros also need to be adjusted.
- */
 #define MPIDI_TAG_UB (0x7fffffff)
 
 /* Provides MPIDI_CH3_Pkt_t.  Must come after MPIDI_Message_match definition. */
