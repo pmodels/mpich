@@ -1443,6 +1443,7 @@ fi
 AC_OUTPUT_COMMANDS([chmod a+x maint/testmerge])
 AC_OUTPUT_COMMANDS([chmod a+x runtests checktests])
 AC_OUTPUT_COMMANDS([chmod a+x manual/manyconnect])
+AC_OUTPUT_COMMANDS([chmod a+x impls/hydra/proc_binding.sh])
 dnl Note that this format for AC_OUTPUT can cause problems for autoconf
 dnl run under cygwin
 AC_OUTPUT(maint/testmerge \
@@ -1575,6 +1576,8 @@ AC_OUTPUT(maint/testmerge \
           errors/f90/testlist \
           impls/testlist \
           impls/Makefile \
+	  impls/hydra/Makefile \
+	  impls/hydra/proc_binding.sh \
           impls/mpich/Makefile \
           impls/mpich/testlist \
           impls/mpich/mpi_t/Makefile \

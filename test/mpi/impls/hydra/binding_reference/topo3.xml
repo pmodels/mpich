@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE topology SYSTEM "hwloc.dtd">
+<topology>
+  <object type="Machine" os_level="-1" os_index="0" cpuset="0x000000ff" complete_cpuset="0x000000ff" online_cpuset="0x000000ff" allowed_cpuset="0x000000ff" local_memory="8467828736">
+    <page_type size="4096" count="2067341"/>
+    <page_type size="2097152" count="0"/>
+    <info name="DMIProductName" value="H8QM8"/>
+    <info name="DMIProductVersion" value="1234567890"/>
+    <info name="DMIBoardVendor" value="Supermicro"/>
+    <info name="DMIBoardName" value="H8QM8"/>
+    <info name="DMIBoardVersion" value="1234567890"/>
+    <info name="DMIBoardAssetTag" value="To Be Filled By O.E.M."/>
+    <info name="DMIChassisVendor" value="To Be Filled By O.E.M."/>
+    <info name="DMIChassisType" value="3"/>
+    <info name="DMIChassisVersion" value="To Be Filled By O.E.M."/>
+    <info name="DMIChassisAssetTag" value="To Be Filled By O.E.M."/>
+    <info name="DMIBIOSVendor" value="American Megatrends Inc."/>
+    <info name="DMIBIOSVersion" value="080014 "/>
+    <info name="DMIBIOSDate" value="08/21/2006"/>
+    <info name="DMISysVendor" value="Supermicro"/>
+    <info name="Backend" value="Linux"/>
+    <info name="OSName" value="Linux"/>
+    <info name="OSRelease" value="3.2.0-31-generic-pae"/>
+    <info name="OSVersion" value="#50-Ubuntu SMP Fri Sep 7 16:39:45 UTC 2012"/>
+    <info name="HostName" value="octopus"/>
+    <info name="Architecture" value="i686"/>
+    <object type="Socket" os_level="-1" os_index="0" cpuset="0x00000003" complete_cpuset="0x00000003" online_cpuset="0x00000003" allowed_cpuset="0x00000003">
+      <object type="Cache" os_level="-1" cpuset="0x00000001" complete_cpuset="0x00000001" online_cpuset="0x00000001" allowed_cpuset="0x00000001" cache_size="1048576" depth="2" cache_linesize="64" cache_associativity="16">
+        <object type="Cache" os_level="-1" cpuset="0x00000001" complete_cpuset="0x00000001" online_cpuset="0x00000001" allowed_cpuset="0x00000001" cache_size="65536" depth="1" cache_linesize="64" cache_associativity="2">
+          <object type="Core" os_level="-1" os_index="0" cpuset="0x00000001" complete_cpuset="0x00000001" online_cpuset="0x00000001" allowed_cpuset="0x00000001">
+            <object type="PU" os_level="-1" os_index="0" cpuset="0x00000001" complete_cpuset="0x00000001" online_cpuset="0x00000001" allowed_cpuset="0x00000001"/>
+          </object>
+        </object>
+      </object>
+      <object type="Cache" os_level="-1" cpuset="0x00000002" complete_cpuset="0x00000002" online_cpuset="0x00000002" allowed_cpuset="0x00000002" cache_size="1048576" depth="2" cache_linesize="64" cache_associativity="16">
+        <object type="Cache" os_level="-1" cpuset="0x00000002" complete_cpuset="0x00000002" online_cpuset="0x00000002" allowed_cpuset="0x00000002" cache_size="65536" depth="1" cache_linesize="64" cache_associativity="2">
+          <object type="Core" os_level="-1" os_index="1" cpuset="0x00000002" complete_cpuset="0x00000002" online_cpuset="0x00000002" allowed_cpuset="0x00000002">
+            <object type="PU" os_level="-1" os_index="1" cpuset="0x00000002" complete_cpuset="0x00000002" online_cpuset="0x00000002" allowed_cpuset="0x00000002"/>
+          </object>
+        </object>
+      </object>
+    </object>
+    <object type="Socket" os_level="-1" os_index="1" cpuset="0x0000000c" complete_cpuset="0x0000000c" online_cpuset="0x0000000c" allowed_cpuset="0x0000000c">
+      <object type="Cache" os_level="-1" cpuset="0x00000004" complete_cpuset="0x00000004" online_cpuset="0x00000004" allowed_cpuset="0x00000004" cache_size="1048576" depth="2" cache_linesize="64" cache_associativity="16">
+        <object type="Cache" os_level="-1" cpuset="0x00000004" complete_cpuset="0x00000004" online_cpuset="0x00000004" allowed_cpuset="0x00000004" cache_size="65536" depth="1" cache_linesize="64" cache_associativity="2">
+          <object type="Core" os_level="-1" os_index="0" cpuset="0x00000004" complete_cpuset="0x00000004" online_cpuset="0x00000004" allowed_cpuset="0x00000004">
+            <object type="PU" os_level="-1" os_index="2" cpuset="0x00000004" complete_cpuset="0x00000004" online_cpuset="0x00000004" allowed_cpuset="0x00000004"/>
+          </object>
+        </object>
+      </object>
+      <object type="Cache" os_level="-1" cpuset="0x00000008" complete_cpuset="0x00000008" online_cpuset="0x00000008" allowed_cpuset="0x00000008" cache_size="1048576" depth="2" cache_linesize="64" cache_associativity="16">
+        <object type="Cache" os_level="-1" cpuset="0x00000008" complete_cpuset="0x00000008" online_cpuset="0x00000008" allowed_cpuset="0x00000008" cache_size="65536" depth="1" cache_linesize="64" cache_associativity="2">
+          <object type="Core" os_level="-1" os_index="1" cpuset="0x00000008" complete_cpuset="0x00000008" online_cpuset="0x00000008" allowed_cpuset="0x00000008">
+            <object type="PU" os_level="-1" os_index="3" cpuset="0x00000008" complete_cpuset="0x00000008" online_cpuset="0x00000008" allowed_cpuset="0x00000008"/>
+          </object>
+        </object>
+      </object>
+    </object>
+    <object type="Socket" os_level="-1" os_index="2" cpuset="0x00000030" complete_cpuset="0x00000030" online_cpuset="0x00000030" allowed_cpuset="0x00000030">
+      <object type="Cache" os_level="-1" cpuset="0x00000010" complete_cpuset="0x00000010" online_cpuset="0x00000010" allowed_cpuset="0x00000010" cache_size="1048576" depth="2" cache_linesize="64" cache_associativity="16">
+        <object type="Cache" os_level="-1" cpuset="0x00000010" complete_cpuset="0x00000010" online_cpuset="0x00000010" allowed_cpuset="0x00000010" cache_size="65536" depth="1" cache_linesize="64" cache_associativity="2">
+          <object type="Core" os_level="-1" os_index="0" cpuset="0x00000010" complete_cpuset="0x00000010" online_cpuset="0x00000010" allowed_cpuset="0x00000010">
+            <object type="PU" os_level="-1" os_index="4" cpuset="0x00000010" complete_cpuset="0x00000010" online_cpuset="0x00000010" allowed_cpuset="0x00000010"/>
+          </object>
+        </object>
+      </object>
+      <object type="Cache" os_level="-1" cpuset="0x00000020" complete_cpuset="0x00000020" online_cpuset="0x00000020" allowed_cpuset="0x00000020" cache_size="1048576" depth="2" cache_linesize="64" cache_associativity="16">
+        <object type="Cache" os_level="-1" cpuset="0x00000020" complete_cpuset="0x00000020" online_cpuset="0x00000020" allowed_cpuset="0x00000020" cache_size="65536" depth="1" cache_linesize="64" cache_associativity="2">
+          <object type="Core" os_level="-1" os_index="1" cpuset="0x00000020" complete_cpuset="0x00000020" online_cpuset="0x00000020" allowed_cpuset="0x00000020">
+            <object type="PU" os_level="-1" os_index="5" cpuset="0x00000020" complete_cpuset="0x00000020" online_cpuset="0x00000020" allowed_cpuset="0x00000020"/>
+          </object>
+        </object>
+      </object>
+    </object>
+    <object type="Socket" os_level="-1" os_index="3" cpuset="0x000000c0" complete_cpuset="0x000000c0" online_cpuset="0x000000c0" allowed_cpuset="0x000000c0">
+      <object type="Cache" os_level="-1" cpuset="0x00000040" complete_cpuset="0x00000040" online_cpuset="0x00000040" allowed_cpuset="0x00000040" cache_size="1048576" depth="2" cache_linesize="64" cache_associativity="16">
+        <object type="Cache" os_level="-1" cpuset="0x00000040" complete_cpuset="0x00000040" online_cpuset="0x00000040" allowed_cpuset="0x00000040" cache_size="65536" depth="1" cache_linesize="64" cache_associativity="2">
+          <object type="Core" os_level="-1" os_index="0" cpuset="0x00000040" complete_cpuset="0x00000040" online_cpuset="0x00000040" allowed_cpuset="0x00000040">
+            <object type="PU" os_level="-1" os_index="6" cpuset="0x00000040" complete_cpuset="0x00000040" online_cpuset="0x00000040" allowed_cpuset="0x00000040"/>
+          </object>
+        </object>
+      </object>
+      <object type="Cache" os_level="-1" cpuset="0x00000080" complete_cpuset="0x00000080" online_cpuset="0x00000080" allowed_cpuset="0x00000080" cache_size="1048576" depth="2" cache_linesize="64" cache_associativity="16">
+        <object type="Cache" os_level="-1" cpuset="0x00000080" complete_cpuset="0x00000080" online_cpuset="0x00000080" allowed_cpuset="0x00000080" cache_size="65536" depth="1" cache_linesize="64" cache_associativity="2">
+          <object type="Core" os_level="-1" os_index="1" cpuset="0x00000080" complete_cpuset="0x00000080" online_cpuset="0x00000080" allowed_cpuset="0x00000080">
+            <object type="PU" os_level="-1" os_index="7" cpuset="0x00000080" complete_cpuset="0x00000080" online_cpuset="0x00000080" allowed_cpuset="0x00000080"/>
+          </object>
+        </object>
+      </object>
+    </object>
+    <object type="Bridge" os_level="-1" os_index="0" bridge_type="0-1" depth="0" bridge_pci="0000:[00-07]">
+      <object type="PCIDev" os_level="-1" os_index="64" name="NVIDIA Corporation MCP55 IDE" pci_busid="0000:00:04.0" pci_type="0101 [10de:036e] [00de:0084] a1" pci_link_speed="0.000000">
+        <info name="PCIVendor" value="NVIDIA Corporation"/>
+        <info name="PCIDevice" value="MCP55 IDE"/>
+        <object type="OSDev" os_level="-1" name="sr0" osdev_type="0"/>
+      </object>
+      <object type="PCIDev" os_level="-1" os_index="80" name="NVIDIA Corporation MCP55 SATA Controller" pci_busid="0000:00:05.0" pci_type="0101 [10de:037f] [00de:0084] a3" pci_link_speed="0.000000">
+        <info name="PCIVendor" value="NVIDIA Corporation"/>
+        <info name="PCIDevice" value="MCP55 SATA Controller"/>
+        <object type="OSDev" os_level="-1" name="sda" osdev_type="0"/>
+        <object type="OSDev" os_level="-1" name="sdb" osdev_type="0"/>
+      </object>
+      <object type="PCIDev" os_level="-1" os_index="81" name="NVIDIA Corporation MCP55 SATA Controller" pci_busid="0000:00:05.1" pci_type="0101 [10de:037f] [00de:0084] a3" pci_link_speed="0.000000">
+        <info name="PCIVendor" value="NVIDIA Corporation"/>
+        <info name="PCIDevice" value="MCP55 SATA Controller"/>
+        <object type="OSDev" os_level="-1" name="sdc" osdev_type="0"/>
+      </object>
+      <object type="PCIDev" os_level="-1" os_index="82" name="NVIDIA Corporation MCP55 SATA Controller" pci_busid="0000:00:05.2" pci_type="0101 [10de:037f] [00de:0084] a3" pci_link_speed="0.000000">
+        <info name="PCIVendor" value="NVIDIA Corporation"/>
+        <info name="PCIDevice" value="MCP55 SATA Controller"/>
+      </object>
+      <object type="Bridge" os_level="-1" os_index="96" name="NVIDIA Corporation MCP55 PCI bridge" bridge_type="1-1" depth="1" bridge_pci="0000:[01-01]" pci_busid="0000:00:06.0" pci_type="0604 [10de:0370] [0000:0000] a2" pci_link_speed="0.000000">
+        <info name="PCIVendor" value="NVIDIA Corporation"/>
+        <info name="PCIDevice" value="MCP55 PCI bridge"/>
+        <object type="PCIDev" os_level="-1" os_index="4112" name="Advanced Micro Devices, Inc. [AMD/ATI] ES1000" pci_busid="0000:01:01.0" pci_type="0300 [1002:515e] [0002:005e] 02" pci_link_speed="0.000000">
+          <info name="PCIVendor" value="Advanced Micro Devices, Inc. [AMD/ATI]"/>
+          <info name="PCIDevice" value="ES1000"/>
+          <object type="OSDev" os_level="-1" name="controlD64" osdev_type="1"/>
+          <object type="OSDev" os_level="-1" name="card0" osdev_type="1"/>
+        </object>
+      </object>
+    </object>
+    <object type="Bridge" os_level="-1" os_index="1" bridge_type="0-1" depth="0" bridge_pci="0000:[08-0a]">
+      <object type="Bridge" os_level="-1" os_index="32800" name="Advanced Micro Devices, Inc. [AMD] AMD-8132 PCI-X Bridge" bridge_type="1-1" depth="1" bridge_pci="0000:[0a-0a]" pci_busid="0000:08:02.0" pci_type="0604 [1022:7458] [0000:0000] 12" pci_link_speed="0.000000">
+        <info name="PCIVendor" value="Advanced Micro Devices, Inc. [AMD]"/>
+        <info name="PCIDevice" value="AMD-8132 PCI-X Bridge"/>
+        <object type="PCIDev" os_level="-1" os_index="41008" name="Intel Corporation 82546GB Gigabit Ethernet Controller" pci_busid="0000:0a:03.0" pci_type="0200 [8086:1079] [00d9:007a] 03" pci_link_speed="0.000000">
+          <info name="PCIVendor" value="Intel Corporation"/>
+          <info name="PCIDevice" value="82546GB Gigabit Ethernet Controller"/>
+          <object type="OSDev" os_level="-1" name="eth0" osdev_type="2">
+            <info name="Address" value="00:30:48:57:8f:26"/>
+          </object>
+        </object>
+        <object type="PCIDev" os_level="-1" os_index="41009" name="Intel Corporation 82546GB Gigabit Ethernet Controller" pci_busid="0000:0a:03.1" pci_type="0200 [8086:1079] [00d9:007a] 03" pci_link_speed="0.000000">
+          <info name="PCIVendor" value="Intel Corporation"/>
+          <info name="PCIDevice" value="82546GB Gigabit Ethernet Controller"/>
+          <object type="OSDev" os_level="-1" name="eth1" osdev_type="2">
+            <info name="Address" value="00:30:48:57:8f:27"/>
+          </object>
+        </object>
+      </object>
+    </object>
+  </object>
+</topology>

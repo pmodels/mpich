@@ -11,4 +11,4 @@ EXTRA_DIST = testlist.in
 
 static_subdirs =
 SUBDIRS      = $(static_subdirs) $(impldir)
-DIST_SUBDIRS = $(static_subdirs) mpich
+DIST_SUBDIRS = $(static_subdirs) mpich hydra

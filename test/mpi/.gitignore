@@ -1004,5 +1004,7 @@
 /topo/graphcr
 /topo/graphcr2
 /topo/neighb_coll
+/impls/hydra/dummy
+/impls/hydra/proc_binding.sh
 /impls/mpich/testlist
 /impls/testlist
