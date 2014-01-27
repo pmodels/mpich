@@ -958,10 +958,8 @@ if test -n "$file_system_gridftp"; then
 	AC_DEFINE(ROMIO_GRIDFTP, 1, [Define for ROMIO with gridftp])
 fi
 
-if test -n "$file_system_bgl" -o -n "$file_system_bg"; then
-    SYSDEP_INC=-I${prefix}/include
-else
-    SYSDEP_INC=
+AS_IF([test -n "$file_system_bgl" -o -n "$file_system_bg"],
+    [SYSDEP_INC=-I${prefix}/include], [SYSDEP_INC=])
 
 # Check for presence and characteristics of async. I/O calls if
 # not disabled.
@@ -1246,7 +1244,6 @@ if test "$have_aio_h" = "yes" -o "$have_sys_aio_h" = "yes" -o "x$disable_aio" = 
 	AC_MSG_RESULT(no)
     )
 	
-fi
 fi
 # End of aio-related tests
 
