@@ -19,6 +19,10 @@
 #include "adio.h"
 #include <sys/stat.h>
 
+#ifdef HAVE_GPFS_H
+#include <gpfs.h>
+#endif
+
 
     /* overriding ADIOI_Calc_file_domains() to apply 'aligned file domain partitioning'. */
     void ADIOI_GPFS_Calc_file_domains(ADIO_File fd,

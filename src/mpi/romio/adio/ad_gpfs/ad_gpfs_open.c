@@ -19,6 +19,39 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#ifdef HAVE_GPFS_H
+#include <gpfs.h>
+#endif
+#ifdef HAVE_GPFS_FCNTL_H
+#include <gpfs_fcntl.h>
+#endif
+
+#ifdef HAVE_GPFS_FCNTL_H
+void gpfs_free_all_locks(int fd)
+{
+    int rc;
+    struct {
+	gpfsFcntlHeader_t header;
+	gpfsFreeRange_t release;
+    } release_all;
+
+    release_all.header.totalLength = sizeof(release_all);
+    release_all.header.fcntlVersion = GPFS_FCNTL_CURRENT_VERSION;
+    release_all.header.fcntlReserved = 0;
+
+    release_all.release.structLen = sizeof(release_all.release);
+    release_all.release.structType = GPFS_FREE_RANGE;
+    release_all.release.start = 0;
+    release_all.release.length = 0;
+
+    rc = gpfs_fcntl(fd, &release_all);
+    if (rc != 0) {
+	DBGV_FPRINTF(stderr,"GPFS fcntl release failed with rc=%d, errno=%d\n",
+		rc,errno);
+    }
+}
+#endif
+
 
 void ADIOI_GPFS_Open(ADIO_File fd, int *error_code)
 {
@@ -100,6 +133,14 @@ void ADIOI_GPFS_Open(ADIO_File fd, int *error_code)
 
 #ifdef ADIOI_MPE_LOGGING
         MPE_Log_event(ADIOI_MPE_stat_b, 0, NULL);
+#endif
+
+#ifdef HAVE_GPFS_FCNTL_H
+	/* in parallel workload, might be helpful to immediately release block
+	 * tokens.  Or, system call overhead will outweigh any benefits... */
+	if (getenv("ROMIO_GPFS_FREE_LOCKS")!=NULL)
+	    gpfs_free_all_locks(fd->fd_sys);
+
 #endif
     }
 
