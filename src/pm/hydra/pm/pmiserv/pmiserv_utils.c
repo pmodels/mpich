@@ -201,7 +201,6 @@ static HYD_status pmi_process_mapping(struct HYD_pg *pg, char **process_mapping_
         blocklist_tail = blocklist_head;
     }
 
-  create_mapping_key:
     /* Create the mapping out of the blocks */
     HYD_STRING_STASH_INIT(stash);
     HYD_STRING_STASH(stash, HYDU_strdup("("), status);
