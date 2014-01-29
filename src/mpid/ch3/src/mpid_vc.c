@@ -1056,6 +1056,19 @@ done:
 
 #endif
 
+static int compare_ints(const void *orig_x, const void *orig_y)
+{
+    int x = *((int *) orig_x);
+    int y = *((int *) orig_y);
+
+    if (x == y)
+        return 0;
+    else if (x < y)
+        return -1;
+    else
+        return 1;
+}
+
 #undef FUNCNAME
 #define FUNCNAME populate_ids_from_mapping
 #undef FCNAME
@@ -1069,6 +1082,8 @@ static int populate_ids_from_mapping(char *mapping, int *num_nodes, MPIDI_PG_t *
     int nblocks = 0;
     int rank;
     int block, block_node, node_proc;
+    int *tmp_rank_list, i;
+    MPIU_CHKLMEM_DECL(1);
 
     *did_map = 1; /* reset upon failure */
 
@@ -1078,31 +1093,43 @@ static int populate_ids_from_mapping(char *mapping, int *num_nodes, MPIDI_PG_t *
     if (NULL_MAPPING == mt) goto fn_fail;
     MPIU_ERR_CHKINTERNAL(mt != VECTOR_MAPPING, mpi_errno, "unsupported mapping type");
 
-    rank = 0;
-    /* for a representation like (block,N,(1,1)) this while loop causes us to
-     * re-use that sole map block over and over until we have assigned node
-     * ids to every process */
-    while (rank < pg->size) {
-        for (block = 0; block < nblocks; ++block) {
-            int node_id = mb[block].start_id;
-            for (block_node = 0; block_node < mb[block].count; ++block_node) {
-                if (node_id > *num_nodes)
-                    *num_nodes = node_id;
-
-                for (node_proc = 0; node_proc < mb[block].size; ++node_proc) {
-                    pg->vct[rank].node_id = node_id;
-                    ++rank;
-                    if (rank == pg->size)
-                        goto map_done;
+    /* allocate nodes to ranks */
+    for (rank = 0;;) {
+        for (block = 0; block < nblocks; block++) {
+            for (block_node = 0; block_node < mb[block].count; block_node++) {
+                for (node_proc = 0; node_proc < mb[block].size; node_proc++) {
+                    pg->vct[rank].node_id = mb[block].start_id + block_node;
+                    if (++rank == pg->size)
+                        goto break_out;
                 }
-                ++node_id;
             }
         }
     }
 
-map_done:
-    ++(*num_nodes); /* add one to get the num instead of the max */
+break_out:
+    /* Find the number of unique node ids.  This is the classic
+     * element distinctness problem, for which the lower bound time
+     * complexity is O(N log N).  Here we use a simple algorithm to
+     * sort the array and find the number of changes in the array
+     * through a linear search.  There are certainly better algorithms
+     * available, which can be employed. */
+    MPIU_CHKLMEM_MALLOC(tmp_rank_list, int *, pg->size * sizeof(int), mpi_errno, "tmp_rank_list");
+    for (i = 0; i < pg->size; i++)
+        tmp_rank_list[i] = pg->vct[i].node_id;
+
+#if defined HAVE_QSORT
+    qsort(tmp_rank_list, pg->size, sizeof(int), compare_ints);
+#else
+#error "qsort not available"
+#endif
+
+    *num_nodes = 1;
+    for (i = 1; i < pg->size; i++)
+        if (tmp_rank_list[i] != tmp_rank_list[i-1])
+            (*num_nodes)++;
+
 fn_exit:
+    MPIU_CHKLMEM_FREEALL();
     MPIU_Free(mb);
     return mpi_errno;
 fn_fail:
@@ -1226,7 +1253,6 @@ int MPIDI_Populate_vc_node_ids(MPIDI_PG_t *pg, int our_pg_rank)
 
     /* See if process manager supports PMI_process_mapping keyval */
 
-    /* FIXME 'PMI_process_mapping' only applies for the original PG (MPI_COMM_WORLD) */
     if (pmi_version == 1 && pmi_subversion == 1) {
         pmi_errno = PMI_KVS_Get(kvs_name, "PMI_process_mapping", value, val_max_sz);
         if (pmi_errno == 0) {
