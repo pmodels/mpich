@@ -93,17 +93,6 @@ int MPID_Finalize(void)
       *    cancel it, in which case an error shouldn't be generated.
       */
     
-#ifdef MPID_NEEDS_ICOMM_WORLD
-    mpi_errno = MPIR_Comm_release_always(MPIR_Process.icomm_world, 0);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-#endif
-
-    mpi_errno = MPIR_Comm_release_always(MPIR_Process.comm_self, 0);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-
-    mpi_errno = MPIR_Comm_release_always(MPIR_Process.comm_world, 0);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-
     /* Re-enabling the close step because many tests are failing
      * without it, particularly under gforker */
 #if 1
@@ -122,6 +111,17 @@ int MPID_Finalize(void)
        CH3_Finalize routine should call it */
     mpi_errno = MPIDI_CH3_Finalize();
     if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
+
+#ifdef MPID_NEEDS_ICOMM_WORLD
+    mpi_errno = MPIR_Comm_release_always(MPIR_Process.icomm_world, 0);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+#endif
+
+    mpi_errno = MPIR_Comm_release_always(MPIR_Process.comm_self, 0);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
+    mpi_errno = MPIR_Comm_release_always(MPIR_Process.comm_world, 0);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
     /* Tell the process group code that we're done with the process groups.
        This will notify PMI (with PMI_Finalize) if necessary.  It
