@@ -1,6 +1,6 @@
 winerr 2
 winerr2 2
-cas_type_check 2 mpiversion=3.0
+cas_type_check 2 mpiversion=3.0 xfail=ticket1906
 win_sync_unlock 2
 win_sync_free_pt 2
 win_sync_free_at 2
