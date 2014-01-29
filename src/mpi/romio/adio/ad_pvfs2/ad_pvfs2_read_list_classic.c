@@ -79,7 +79,7 @@ void ADIOI_PVFS2_OldReadStrided(ADIO_File fd, void *buf, int count,
     }
 
     MPI_Type_extent(fd->filetype, &filetype_extent);
-    MPI_Type_size(datatype, &buftype_size);
+    MPI_Type_size_x(datatype, &buftype_size);
     MPI_Type_extent(datatype, &buftype_extent);
     etype_size = fd->etype_size;
 

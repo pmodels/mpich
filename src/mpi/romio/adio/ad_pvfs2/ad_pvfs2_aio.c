@@ -47,7 +47,8 @@ void ADIOI_PVFS2_AIO_contig(ADIO_File fd, void *buf, int count,
 			    int flag, int *error_code)
 {
 
-    int ret, datatype_size, len;
+    int ret;
+    MPI_Count datatype_size, len;
     ADIOI_PVFS2_fs *pvfs_fs;
     ADIOI_AIO_Request *aio_req;
     static char myname[] = "ADIOI_PVFS2_AIO_contig";
@@ -56,7 +57,7 @@ void ADIOI_PVFS2_AIO_contig(ADIO_File fd, void *buf, int count,
 
     aio_req = (ADIOI_AIO_Request*)ADIOI_Calloc(sizeof(ADIOI_AIO_Request), 1);
 
-    MPI_Type_size(datatype, &datatype_size);
+    MPI_Type_size_x(datatype, &datatype_size);
     len = datatype_size * count;
 
     ret = PVFS_Request_contiguous(len, PVFS_BYTE, &(aio_req->mem_req));

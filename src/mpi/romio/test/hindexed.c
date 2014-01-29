@@ -43,7 +43,8 @@ int main(int argc, char **argv) {
     char        *buf, *filename;
     int          rank_dim[2], array_of_sizes[2];
     int          array_of_subsizes[2];
-    int          count, *blocklengths, global_array_size, ftype_size;
+    int          count, *blocklengths, global_array_size;
+    MPI_Count    ftype_size;
     MPI_Aint    *displacements;
     MPI_File     fh;
     MPI_Datatype ftype;
@@ -96,7 +97,7 @@ int main(int argc, char **argv) {
             displacements[i*2+j] = offset + i*2*array_of_sizes[1] + j * XLEN/2;
     MPI_Type_create_hindexed(count, blocklengths, displacements, MPI_CHAR, &ftype);
     MPI_Type_commit(&ftype);
-    MPI_Type_size(ftype, &ftype_size);
+    MPI_Type_size_x(ftype, &ftype_size);
 
 /* subarray's layout in the global array
 

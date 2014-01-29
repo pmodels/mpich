@@ -22,7 +22,8 @@ int main(int argc, char **argv)
 {
     MPI_Datatype newtype;
     int i, ndims, array_of_gsizes[3], array_of_distribs[3];
-    int order, nprocs, len, *buf, bufcount, mynod;
+    int order, nprocs, len, *buf, mynod;
+    MPI_Count bufcount;
     int array_of_dargs[3], array_of_psizes[3];
     MPI_File fh;
     MPI_Status status;
@@ -83,7 +84,7 @@ int main(int argc, char **argv)
 			   array_of_psizes, order, MPI_INT, &newtype);
     MPI_Type_commit(&newtype);
 
-    MPI_Type_size(newtype, &bufcount);
+    MPI_Type_size_x(newtype, &bufcount);
     bufcount = bufcount/sizeof(int);
     buf = (int *) malloc(bufcount * sizeof(int));
 

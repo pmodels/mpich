@@ -85,7 +85,7 @@ void ADIOI_ZOIDFS_WriteStrided(ADIO_File fd, void *buf, int count,
 	    filetype_is_contig = 1;
     }
 
-    MPI_Type_size(fd->filetype, &filetype_size);
+    MPI_Type_size_x(fd->filetype, &filetype_size);
     if ( ! filetype_size ) {
 #ifdef HAVE_STATUS_SET_BYTES
 	MPIR_Status_set_bytes(status, datatype, 0);
@@ -95,7 +95,7 @@ void ADIOI_ZOIDFS_WriteStrided(ADIO_File fd, void *buf, int count,
     }
 
     MPI_Type_extent(fd->filetype, &filetype_extent);
-    MPI_Type_size(datatype, &buftype_size);
+    MPI_Type_size_x(datatype, &buftype_size);
     MPI_Type_extent(datatype, &buftype_extent);
     etype_size = fd->etype_size;
     

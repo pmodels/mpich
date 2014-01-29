@@ -120,10 +120,11 @@ static void ADIOI_LUSTRE_IOContig(ADIO_File fd, void *buf, int count,
 	           ADIO_Offset offset, ADIO_Status *status, 
 		   int io_mode, int *error_code)
 {
-    int err=-1, datatype_size, len;
+    int err=-1;
+    MPI_Count datatype_size, len;
     static char myname[] = "ADIOI_LUSTRE_IOCONTIG";
 
-    MPI_Type_size(datatype, &datatype_size);
+    MPI_Type_size_x(datatype, &datatype_size);
     len = datatype_size * count;
 
     if (file_ptr_type == ADIO_INDIVIDUAL) {
