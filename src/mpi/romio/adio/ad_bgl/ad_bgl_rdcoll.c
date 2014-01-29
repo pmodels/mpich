@@ -121,7 +121,7 @@ void ADIOI_BGL_ReadStridedColl(ADIO_File fd, void *buf, int count,
 #endif
 
 #ifdef HAVE_STATUS_SET_BYTES
-    int bufsize, size;
+    MPI_Count bufsize, size;
 #endif
 
 #if 0

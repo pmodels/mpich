@@ -51,7 +51,7 @@ void ADIOI_GEN_ReadStrided(ADIO_File fd, void *buf, int count,
     ADIOI_Flatlist_node *flat_buf, *flat_file;
     ADIO_Offset i_offset, new_brd_size, brd_size, size;
     int i, j, k, st_index=0;
-    unsigned num, bufsize; 
+    MPI_Count num, bufsize;
     int n_etypes_in_filetype;
     ADIO_Offset n_filetypes, etype_in_filetype, st_n_filetypes, size_in_filetype;
     ADIO_Offset abs_off_in_filetype=0, new_frd_size, frd_size=0, st_frd_size;

@@ -20,7 +20,8 @@ void ADIOI_XFS_WriteContig(ADIO_File fd, void *buf, int count,
                      MPI_Datatype datatype, int file_ptr_type,
 		     ADIO_Offset offset, ADIO_Status *status, int *error_code)
 {
-    int err=-1, datatype_size, diff, size;
+    int diff, size;
+    MPI_Count err=-1, datatype_size;
     ssize_t len;
     void *newbuf;
     static char myname[] = "ADIOI_XFS_WRITECONTIG";

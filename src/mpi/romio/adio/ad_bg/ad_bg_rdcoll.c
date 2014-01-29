@@ -122,7 +122,7 @@ void ADIOI_BG_ReadStridedColl(ADIO_File fd, void *buf, int count,
 #endif
 
 #ifdef HAVE_STATUS_SET_BYTES
-    int bufsize, size;
+    MPI_Count bufsize, size;
 #endif
 
 #if 0
@@ -383,7 +383,7 @@ void ADIOI_BG_ReadStridedColl(ADIO_File fd, void *buf, int count,
     ADIOI_Free(fd_end);
 
 #ifdef HAVE_STATUS_SET_BYTES
-    MPI_Type_size(datatype, &size);
+    MPI_Type_size_x(datatype, &size);
     bufsize = size * count;
     MPIR_Status_set_bytes(status, datatype, bufsize);
 /* This is a temporary way of filling in status. The right way is to 

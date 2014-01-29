@@ -42,7 +42,7 @@ int ADIOI_PVFS2_StridedListIO(ADIO_File fd, void *buf, int count,
     int64_t cur_flat_buf_reg_off = 0;
     int64_t cur_flat_file_reg_off = 0;
     ADIOI_Flatlist_node *flat_buf_p, *flat_file_p;
-    int buftype_size = -1, buftype_extent = -1,
+    MPI_Count buftype_size = -1, buftype_extent = -1,
         filetype_size = -1, filetype_extent = -1;
     int buftype_is_contig = -1, filetype_is_contig = -1;
     
@@ -62,13 +62,13 @@ int ADIOI_PVFS2_StridedListIO(ADIO_File fd, void *buf, int count,
         return -1;
     }
 
-    MPI_Type_size(fd->filetype, &filetype_size);
+    MPI_Type_size_x(fd->filetype, &filetype_size);
     if (filetype_size == 0) {
         *error_code = MPI_SUCCESS;
         return -1;
     }
     MPI_Type_extent(fd->filetype, &filetype_extent);
-    MPI_Type_size(datatype, &buftype_size);
+    MPI_Type_size_x(datatype, &buftype_size);
     MPI_Type_extent(datatype, &buftype_extent);
     io_size = buftype_size*count;
 
@@ -327,7 +327,7 @@ int ADIOI_PVFS2_StridedListIO(ADIO_File fd, void *buf, int count,
 error_state:
 #ifdef HAVE_STATUS_SET_BYTES
     /* TODO: why the cast? */
-    MPIR_Status_set_bytes(status, datatype, (int)total_bytes_accessed);
+    MPIR_Status_set_bytes(status, datatype, total_bytes_accessed);
 /* This is a temporary way of filling in status. The right way is to
    keep track of how much data was actually written by ADIOI_BUFFERED_WRITE. */
 #endif

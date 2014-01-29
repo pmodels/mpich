@@ -26,10 +26,11 @@ void ADIOI_ZOIDFS_WriteStrided(ADIO_File fd, void *buf, int count,
 
     ADIOI_Flatlist_node *flat_buf, *flat_file;
     int i, j, k, bwr_size, fwr_size=0, st_index=0;
-    int bufsize, sum, n_etypes_in_filetype, size_in_filetype;
+    int sum, n_etypes_in_filetype, size_in_filetype;
+    MPI_Count bufsize;
     int n_filetypes, etype_in_filetype;
     ADIO_Offset abs_off_in_filetype=0;
-    int filetype_size, etype_size, buftype_size;
+    MPI_Count filetype_size, etype_size, buftype_size;
     MPI_Aint filetype_extent, buftype_extent;
     int buf_count, buftype_is_contig, filetype_is_contig;
     ADIO_Offset off, disp, start_off, initial_off;

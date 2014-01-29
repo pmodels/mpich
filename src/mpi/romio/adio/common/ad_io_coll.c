@@ -58,7 +58,7 @@ void ADIOI_IOStridedColl (ADIO_File fd, void *buf, int count, int rdwr,
 #ifdef DEBUG2
     MPI_Aint bufextent;
 #endif
-    int size;
+    MPI_Count size;
     int agg_rank;
 
     ADIO_Offset agg_disp; /* aggregated file offset */
@@ -195,8 +195,8 @@ void ADIOI_IOStridedColl (ADIO_File fd, void *buf, int count, int rdwr,
 #ifdef DEBUG2
     bufextent = extent * count;
 #endif
-    MPI_Type_size(datatype, &size);
-    bufsize = size * count;
+    MPI_Type_size_x(datatype, &size);
+    bufsize = size * (MPI_Count)count;
 
     /* Calculate file realms */
     if ((fd->hints->cb_pfr != ADIOI_HINT_ENABLE) ||

@@ -400,9 +400,9 @@ void ADIOI_BGL_WriteStridedColl(ADIO_File fd, void *buf, int count,
 
 #ifdef HAVE_STATUS_SET_BYTES
     if (status) {
-      int bufsize, size;
+      MPI_Count bufsize, size;
       /* Don't set status if it isn't needed */
-      MPI_Type_size(datatype, &size);
+      MPI_Type_size_x(datatype, &size);
       bufsize = size * count;
       MPIR_Status_set_bytes(status, datatype, bufsize);
     }
