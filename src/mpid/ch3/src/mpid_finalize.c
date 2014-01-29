@@ -93,6 +93,17 @@ int MPID_Finalize(void)
       *    cancel it, in which case an error shouldn't be generated.
       */
     
+#ifdef MPID_NEEDS_ICOMM_WORLD
+    mpi_errno = MPIR_Comm_release_always(MPIR_Process.icomm_world, 0);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+#endif
+
+    mpi_errno = MPIR_Comm_release_always(MPIR_Process.comm_self, 0);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
+    mpi_errno = MPIR_Comm_release_always(MPIR_Process.comm_world, 0);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
     /* Re-enabling the close step because many tests are failing
      * without it, particularly under gforker */
 #if 1
@@ -118,17 +129,6 @@ int MPID_Finalize(void)
        pointer is also saved in MPIDI_Process.my_pg */
     mpi_errno = MPIDI_PG_Finalize();
     if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
-
-#ifdef MPID_NEEDS_ICOMM_WORLD
-    mpi_errno = MPIR_Comm_release_always(MPIR_Process.icomm_world, 0);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-#endif
-
-    mpi_errno = MPIR_Comm_release_always(MPIR_Process.comm_self, 0);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-
-    mpi_errno = MPIR_Comm_release_always(MPIR_Process.comm_world, 0);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
 #ifndef MPIDI_CH3_HAS_NO_DYNAMIC_PROCESS
     MPIDI_CH3_FreeParentPort();
