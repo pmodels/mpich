@@ -130,6 +130,11 @@ AC_ARG_ENABLE(perftest,
 		[Include tests for basic performance consistency (default)])],,
 	[enable_perftest=yes])
 
+AC_ARG_ENABLE(ft-tests,
+	[AC_HELP_STRING([--enable-ft-tests],
+		[Include tests for fault tolerance (default)])],,
+	[enable_ft_tests=yes])
+
 AC_ARG_ENABLE(checkfaults,
 	[AC_HELP_STRING([--enable-checkfaults],
 		[Add some tests for checking on handling of faults in user programs])],,
@@ -225,13 +230,6 @@ if test "$with_pm" != "no" ; then
 else
     first_pm=""
 fi
-
-# Only run the fault tolerance tests if hydra is the primary PM
-ftdir="#ft"
-if test "$first_pm" = "hydra"; then
-    ftdir="ft"
-fi
-AC_SUBST(ftdir)
 
 AC_ARG_WITH(config-args,
 	[AC_HELP_STRING([--with-config-args=filename],
@@ -343,6 +341,14 @@ if test "$enable_strictmpi" = "yes" -o "$enable_perftest" = "no" ; then
      perfdir="#"
 fi
 AC_SUBST(perfdir)
+
+# The ft tests are not part of the MPI standard and some of the netmods can't handle them
+ftdir="#ft"
+if test "$first_pm" = "hydra" -a  "$enable_strictmpi" = "no" -a "$enable_ft_tests" = "yes" ; then
+    ftdir="ft"
+fi
+AC_SUBST(ftdir)
+
 # 
 # Only run the threads tests if multiple is specified
 if test "$enable_threads" = "multiple" -o "$enable_threads" = "runtime" ; then
