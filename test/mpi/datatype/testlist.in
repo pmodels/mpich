@@ -14,6 +14,8 @@ zeroparms 1
 getpartelm 2
 tresized 2
 tresized2 2
+sendrecvt2 2
+sendrecvt4 2
 tmatchsize 1
 tfree 2
 typelb 1
@@ -48,6 +50,7 @@ get-elements 1
 hindexed_block 1 mpiversion=3.0
 hindexed_block_contents 1 mpiversion=3.0
 longdouble 1
+dataalign 2
 @largetest@large-count 1 mpiversion=3.0 xfail=ticket1767
 cxx-types 1 mpiversion=3.0
 @largetest@large_type 1 mpiversion=3.0
