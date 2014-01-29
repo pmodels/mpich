@@ -1056,6 +1056,7 @@ done:
 
 #endif
 
+#if defined HAVE_QSORT
 static int compare_ints(const void *orig_x, const void *orig_y)
 {
     int x = *((int *) orig_x);
@@ -1068,6 +1069,7 @@ static int compare_ints(const void *orig_x, const void *orig_y)
     else
         return 1;
 }
+#endif
 
 #undef FUNCNAME
 #define FUNCNAME populate_ids_from_mapping
@@ -1120,7 +1122,27 @@ break_out:
 #if defined HAVE_QSORT
     qsort(tmp_rank_list, pg->size, sizeof(int), compare_ints);
 #else
-#error "qsort not available"
+    /* fall through to insertion sort if qsort is unavailable/disabled */
+    {
+        int j, tmp;
+
+        for (i = 1; i < pg->size; ++i) {
+            tmp = tmp_rank_list[i];
+            j = i - 1;
+            while (1) {
+                if (tmp_rank_list[j] > tmp) {
+                    tmp_rank_list[j+1] = tmp_rank_list[j];
+                    j = j - 1;
+                    if (j < 0)
+                        break;
+                }
+                else {
+                    break;
+                }
+            }
+            tmp_rank_list[j+1] = tmp;
+        }
+    }
 #endif
 
     *num_nodes = 1;
