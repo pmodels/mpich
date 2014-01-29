@@ -1085,6 +1085,7 @@ static int populate_ids_from_mapping(char *mapping, int *num_nodes, MPIDI_PG_t *
     int rank;
     int block, block_node, node_proc;
     int *tmp_rank_list, i;
+    int found_wrap;
     MPIU_CHKLMEM_DECL(1);
 
     *did_map = 1; /* reset upon failure */
@@ -1096,8 +1097,25 @@ static int populate_ids_from_mapping(char *mapping, int *num_nodes, MPIDI_PG_t *
     MPIU_ERR_CHKINTERNAL(mt != VECTOR_MAPPING, mpi_errno, "unsupported mapping type");
 
     /* allocate nodes to ranks */
+    found_wrap = 0;
     for (rank = 0;;) {
-        for (block = 0; block < nblocks; block++) {
+        /* FIXME: The patch is hacky because it assumes that seeing a
+         * start node ID of 0 means a wrap around.  This is not
+         * necessarily true.  A user-defined node list can, in theory,
+         * use the node ID 0 without actually creating a wrap around.
+         * The reason this patch still works in this case is because
+         * Hydra creates a new node list starting from node ID 0 for
+         * user-specified nodes during MPI_Comm_spawn{_multiple}.  If
+         * a different process manager searches for allocated nodes in
+         * the user-specified list, this patch will break. */
+
+        /* If we found that the blocks wrap around, repeat loops
+         * should only start at node id 0 */
+        for (block = 0; found_wrap && mb[block].start_id; block++);
+
+        for (; block < nblocks; block++) {
+            if (mb[block].start_id == 0)
+                found_wrap = 1;
             for (block_node = 0; block_node < mb[block].count; block_node++) {
                 for (node_proc = 0; node_proc < mb[block].size; node_proc++) {
                     pg->vct[rank].node_id = mb[block].start_id + block_node;
