@@ -21,7 +21,7 @@ static void ADIOI_LUSTRE_Exch_and_write(ADIO_File fd, const void *buf,
 					ADIO_Offset *len_list,
 					int contig_access_count,
 					int *striping_info,
-                                        int **buf_idx, int *error_code);
+                                        ADIO_Offset **buf_idx, int *error_code);
 static void ADIOI_LUSTRE_Fill_send_buffer(ADIO_File fd, const void *buf,
 					  ADIOI_Flatlist_node *flat_buf,
 					  char **send_buf,
@@ -31,7 +31,7 @@ static void ADIOI_LUSTRE_Fill_send_buffer(ADIO_File fd, const void *buf,
 					  int *sent_to_proc, int nprocs,
 					  int myrank, int contig_access_count,
 					  int *striping_info,
-					  int *send_buf_idx,
+					  ADIO_Offset *send_buf_idx,
                                           int *curr_to_proc,
 					  int *done_to_proc, int iter,
 					  MPI_Aint buftype_extent);
@@ -48,11 +48,11 @@ static void ADIOI_LUSTRE_W_Exchange_data(ADIO_File fd, const void *buf,
 					 int contig_access_count,
 					 int *striping_info,
 					 ADIOI_Access *others_req,
-					 int *send_buf_idx,
+					 ADIO_Offset *send_buf_idx,
 					 int *curr_to_proc,
 					 int *done_to_proc, int *hole,
 					 int iter, MPI_Aint buftype_extent,
-					 int *buf_idx,
+					 ADIO_Offset *buf_idx,
 					 ADIO_Offset **srt_off, int **srt_len, int *srt_num,
 					 int *error_code);
 void ADIOI_Heap_merge(ADIOI_Access *others_req, int *count,
@@ -85,7 +85,8 @@ void ADIOI_LUSTRE_WriteStridedColl(ADIO_File fd, const void *buf, int count,
     ADIO_Offset orig_fp, start_offset, end_offset, off;
     ADIO_Offset *offset_list = NULL, *st_offsets = NULL, *end_offsets = NULL;
     ADIO_Offset *len_list = NULL;
-    int **buf_idx = NULL, *striping_info = NULL;
+    int *striping_info = NULL;
+    ADIO_Offset **buf_idx = NULL;
     int old_error, tmp_error;
 
     MPI_Comm_size(fd->comm, &nprocs);
@@ -287,7 +288,7 @@ static void ADIOI_LUSTRE_Exch_and_write(ADIO_File fd, const void *buf,
 					ADIO_Offset *offset_list,
                                         ADIO_Offset *len_list, 
 					int contig_access_count,
-                                        int *striping_info, int **buf_idx,
+                                        int *striping_info, ADIO_Offset **buf_idx,
                                         int *error_code)
 {
     /* Send data to appropriate processes and write in sizes of no more
@@ -308,8 +309,8 @@ static void ADIOI_LUSTRE_Exch_and_write(ADIO_File fd, const void *buf,
     int *recv_curr_offlen_ptr, *recv_count, *recv_size;
     int *send_curr_offlen_ptr, *send_size;
     int *sent_to_proc, *recv_start_pos;
-    int *send_buf_idx, *curr_to_proc, *done_to_proc;
-    int *this_buf_idx;
+    int *curr_to_proc, *done_to_proc;
+    ADIO_Offset *send_buf_idx, *this_buf_idx;
     char *write_buf = NULL;
     MPI_Status status;
     ADIOI_Flatlist_node *flat_buf = NULL;
@@ -399,12 +400,12 @@ static void ADIOI_LUSTRE_Exch_and_write(ADIO_File fd, const void *buf,
     /* amount of data sent to each proc so far. Used in
        ADIOI_Fill_send_buffer. initialized to 0 here. */
 
-    send_buf_idx = (int *) ADIOI_Malloc(nprocs * sizeof(int));
+    send_buf_idx = (ADIO_Offset *) ADIOI_Malloc(nprocs * sizeof(ADIO_Offset));
     curr_to_proc = (int *) ADIOI_Malloc(nprocs * sizeof(int));
     done_to_proc = (int *) ADIOI_Malloc(nprocs * sizeof(int));
     /* Above three are used in ADIOI_Fill_send_buffer */
 
-    this_buf_idx = (int *) ADIOI_Malloc(nprocs * sizeof(int));
+    this_buf_idx = (ADIO_Offset *) ADIOI_Malloc(nprocs * sizeof(ADIO_Offset));
 
     recv_start_pos = (int *) ADIOI_Malloc(nprocs * sizeof(int));
     /* used to store the starting value of recv_curr_offlen_ptr[i] in
@@ -620,11 +621,11 @@ static void ADIOI_LUSTRE_W_Exchange_data(ADIO_File fd, const void *buf,
 					 int contig_access_count,
 					 int *striping_info,
 					 ADIOI_Access *others_req,
-					 int *send_buf_idx,
+					 ADIO_Offset *send_buf_idx,
 					 int *curr_to_proc, int *done_to_proc,
                                          int *hole, int iter,
                                          MPI_Aint buftype_extent,
-					 int *buf_idx,
+					 ADIO_Offset *buf_idx,
                           ADIO_Offset **srt_off, int **srt_len, int *srt_num,
                           int *error_code)
 {
@@ -889,7 +890,7 @@ static void ADIOI_LUSTRE_Fill_send_buffer(ADIO_File fd, const void *buf,
 					  int myrank,
 					  int contig_access_count,
 					  int *striping_info,
-					  int *send_buf_idx,
+					  ADIO_Offset *send_buf_idx,
 					  int *curr_to_proc,
 					  int *done_to_proc, int iter,
 					  MPI_Aint buftype_extent)

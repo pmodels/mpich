@@ -140,13 +140,13 @@ void ADIOI_LUSTRE_Calc_my_req(ADIO_File fd, ADIO_Offset *offset_list,
                               int *count_my_req_procs_ptr,
 			      int **count_my_req_per_proc_ptr,
 			      ADIOI_Access **my_req_ptr,
-			      int ***buf_idx_ptr)
+			      ADIO_Offset ***buf_idx_ptr)
 {
     /* Nothing different from ADIOI_Calc_my_req(), except calling
      * ADIOI_Lustre_Calc_aggregator() instead of the old one */
-    int *count_my_req_per_proc, count_my_req_procs, **buf_idx;
+    int *count_my_req_per_proc, count_my_req_procs;
     int i, l, proc;
-    ADIO_Offset avail_len, rem_len, curr_idx, off;
+    ADIO_Offset avail_len, rem_len, curr_idx, off, **buf_idx;
     ADIOI_Access *my_req;
 
     *count_my_req_per_proc_ptr = (int *) ADIOI_Calloc(nprocs, sizeof(int));
@@ -157,7 +157,7 @@ void ADIOI_LUSTRE_Calc_my_req(ADIO_File fd, ADIO_Offset *offset_list,
      * MPI_Alltoall later on.
      */
 
-    buf_idx = (int **) ADIOI_Malloc(nprocs * sizeof(int*));
+    buf_idx = (ADIO_Offset **) ADIOI_Malloc(nprocs * sizeof(ADIO_Offset *));
 
     /* one pass just to calculate how much space to allocate for my_req;
      * contig_access_count was calculated way back in ADIOI_Calc_my_off_len()
@@ -201,8 +201,8 @@ void ADIOI_LUSTRE_Calc_my_req(ADIO_File fd, ADIO_Offset *offset_list,
     /* initialize buf_idx vectors */
     for (i = 0; i < nprocs; i++) {
 	/* add one to count_my_req_per_proc[i] to avoid zero size malloc */
-	buf_idx[i] = (int *) ADIOI_Malloc((count_my_req_per_proc[i] + 1)
-			                   * sizeof(int)); 
+	buf_idx[i] = (ADIO_Offset *) ADIOI_Malloc((count_my_req_per_proc[i] + 1)
+			                   * sizeof(ADIO_Offset));
     }
 
     /* now allocate space for my_req, offset, and len */
@@ -235,9 +235,8 @@ void ADIOI_LUSTRE_Calc_my_req(ADIO_File fd, ADIO_Offset *offset_list,
 
 	l = my_req[proc].count;
 
-	ADIOI_Assert(curr_idx == (int) curr_idx);
 	ADIOI_Assert(l < count_my_req_per_proc[proc]);
-	buf_idx[proc][l] = (int) curr_idx;
+	buf_idx[proc][l] = curr_idx;
 	curr_idx += avail_len;
 
 	rem_len = len_list[i] - avail_len;
@@ -259,9 +258,8 @@ void ADIOI_LUSTRE_Calc_my_req(ADIO_File fd, ADIO_Offset *offset_list,
                                                 striping_info);
 
 	    l = my_req[proc].count;
-	    ADIOI_Assert(curr_idx == (int) curr_idx);
 	    ADIOI_Assert(l < count_my_req_per_proc[proc]);
-	    buf_idx[proc][l] = (int) curr_idx;
+	    buf_idx[proc][l] = curr_idx;
 
 	    curr_idx += avail_len;
 	    rem_len -= avail_len;
