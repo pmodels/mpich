@@ -38,6 +38,7 @@ int     bgmpio_bg_nagg_pset;
 int     bgmpio_pthreadio;
 int     bgmpio_p2pcontig;
 int	bgmpio_balancecontig;
+int     bgmpio_devnullio;
 
 double	bgmpio_prof_cw    [BGMPIO_CIO_LAST];
 double	bgmpio_prof_cr    [BGMPIO_CIO_LAST];
@@ -112,6 +113,13 @@ double	bgmpio_prof_cr    [BGMPIO_CIO_LAST];
  *   - 0 - assign file domain blocks in the traditional manner
  *   - 1 - if there are variable sized file domain blocks, spread them out
  *         (balance) across bridge nodes
+ *
+ * - BGMPIO_DEVNULLIO - do everything *except* write to / read from the file
+ *   system. When experimenting with different two-phase I/O strategies, it's
+ *   helpful to remove the highly variable file system from the experiment.
+ *   - 0 (disabled) or 1 (enabled)
+ *   - Default is 0
+ *
  */
 
 void ad_bg_get_env_vars() {
@@ -152,6 +160,10 @@ void ad_bg_get_env_vars() {
     bgmpio_balancecontig = 0;
     x = getenv( "BGMPIO_BALANCECONTIG" );
     if (x) bgmpio_balancecontig = atoi(x);
+
+    bgmpio_devnullio = 0;
+    x = getenv( "BGMPIO_DEVNULLIO" );
+    if (x) bgmpio_devnullio = atoi(x);
 }
 
 /* report timing breakdown for MPI I/O collective call */

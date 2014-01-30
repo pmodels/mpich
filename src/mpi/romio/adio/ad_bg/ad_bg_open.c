@@ -234,6 +234,12 @@ void ADIOI_BG_Open(ADIO_File fd, int *error_code)
   DBG_FPRINTF(stderr,"open('%s',%#X,%#X) rc=%d, errno=%d\n",fd->filename,amode,perm,fd->fd_sys,errno);
   fd->fd_direct = -1;
 
+  if (bgmpio_devnullio == 1) {
+      fd->null_fd = open("/dev/null", O_RDWR);
+  } else {
+      fd->null_fd = -1;
+  }
+
   if ((fd->fd_sys != -1) && (fd->access_mode & ADIO_APPEND))
     fd->fp_ind = fd->fp_sys_posn = lseek(fd->fd_sys, 0, SEEK_END);
 

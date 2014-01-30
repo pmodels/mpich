@@ -57,7 +57,10 @@ void ADIOI_GEN_ReadContig(ADIO_File fd, void *buf, int count,
 	MPE_Log_event( ADIOI_MPE_read_a, 0, NULL );
 #endif
 	rd_count = len - bytes_xfered;
-	err = pread(fd->fd_sys, p, rd_count, offset+bytes_xfered);
+	if (bgmpio_devnullio)
+	    err = pread(fd->null_fd, p, rd_count, offset+bytes_xfered);
+	else
+	    err = pread(fd->fd_sys, p, rd_count, offset+bytes_xfered);
 	/* --BEGIN ERROR HANDLING-- */
 	if (err == -1) {
 	    *error_code = MPIO_Err_create_code(MPI_SUCCESS,

@@ -24,6 +24,9 @@ void ADIOI_BG_Close(ADIO_File fd, int *error_code)
   MPE_Log_event(9, 0, "start close");
 #endif
 
+  if (fd->null_fd >= 0)
+      close(fd->null_fd);
+
   err = close(fd->fd_sys);
   if (fd->fd_direct >= 0)
   {
