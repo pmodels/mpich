@@ -10,6 +10,7 @@
 
 int HYDT_bscd_ssh_limit;
 int HYDT_bscd_ssh_limit_time;
+int HYDT_bscd_ssh_warnings;
 
 HYD_status HYDT_bsci_launcher_ssh_init(void)
 {
@@ -26,6 +27,10 @@ HYD_status HYDT_bsci_launcher_ssh_init(void)
     rc = MPL_env2int("HYDRA_LAUNCHER_SSH_LIMIT_TIME", &HYDT_bscd_ssh_limit_time);
     if (rc == 0)
         HYDT_bscd_ssh_limit_time = HYDRA_LAUNCHER_SSH_DEFAULT_LIMIT_TIME;
+
+    rc = MPL_env2bool("HYDRA_LAUNCHER_SSH_ENABLE_WARNINGS", &HYDT_bscd_ssh_warnings);
+    if (rc == 0)
+        HYDT_bscd_ssh_warnings = 1;
 
     return HYD_SUCCESS;
 }

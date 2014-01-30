@@ -28,6 +28,7 @@ struct HYDT_bscd_ssh_time {
 
 extern int HYDT_bscd_ssh_limit;
 extern int HYDT_bscd_ssh_limit_time;
+extern int HYDT_bscd_ssh_warnings;
 extern struct HYDT_bscd_ssh_time *HYDT_bscd_ssh_time;
 
 HYD_status HYDTI_bscd_ssh_store_launch_time(char *hostname);

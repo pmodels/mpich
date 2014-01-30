@@ -81,8 +81,9 @@ HYD_status HYDTI_bscd_ssh_store_launch_time(char *hostname)
      * mean that we need to deal with nested calls to the demux engine
      * and process launches. */
     if (time_left > 0) {
-        HYDU_dump(stdout, "WARNING: too many ssh connections to %s; waiting %d seconds\n",
-                  hostname, time_left);
+        if (HYDT_bscd_ssh_warnings)
+            HYDU_dump(stdout, "WARNING: too many ssh connections to %s; waiting %d seconds\n",
+                      hostname, time_left);
         sleep(time_left);
     }
 
