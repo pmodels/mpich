@@ -165,6 +165,12 @@ HYD_status HYD_pmcd_pmi_unpublish(char *name, int *success)
     *success = 0;
     if (HYD_server_info.nameserver == NULL) {
         /* no external nameserver available */
+
+        if (!HYD_pmcd_pmi_publish_list) {
+            /* nothing is published yet */
+            goto fn_exit;
+        }
+
         if (!strcmp(HYD_pmcd_pmi_publish_list->name, name)) {
             publish = HYD_pmcd_pmi_publish_list;
             HYD_pmcd_pmi_publish_list = HYD_pmcd_pmi_publish_list->next;
