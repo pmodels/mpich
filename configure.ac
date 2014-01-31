@@ -594,10 +594,10 @@ AC_ARG_WITH(namepublisher,
 [  --with-namepublisher=name   Choose the system that will support 
                               MPI_PUBLISH_NAME and MPI_LOOKUP_NAME.  Options
                               include
-                                   no (no service available)
-                                   mpd
+                                   pmi (default)
 			           file[:directory] (optional directory)
-                                   pmi],,with_namepublisher=default)
+                                   mpd
+                                   no (no service available)],,with_namepublisher=default)
 AC_ARG_WITH(name-publisher,
     [],
     with_namepublisher=$with_name_publisher,)
@@ -2649,8 +2649,8 @@ if test "$with_namepublisher" = "default" ; then
    if test -n "$MPID_PM_NAMESERVER" ; then
        with_namepublisher=$MPID_PM_NAMESERVER
    else
-       # The default is to use a file to communicate published names
-       with_namepublisher=file
+       # The default is to use pmi to communicate published names
+       with_namepublisher=pmi
    fi
 fi
 
