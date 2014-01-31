@@ -451,11 +451,12 @@ int PMI_Publish_name( const char service_name[], const char port[] )
 		       "cmd=publish_name service=%s port=%s\n",
 		       service_name, port );
 	err = GetResponse( cmd, "publish_result", 0 );
-	/* FIXME: This should have used rc and msg */
 	if (err == PMI_SUCCESS) {
-	    PMIU_getval( "info", buf, PMIU_MAXLINE );
-	    if ( strcmp(buf,"ok") != 0 ) {
-	        PMIU_printf( 1, "publish failed; reason = %s\n", buf );
+	    PMIU_getval( "rc", buf, PMIU_MAXLINE );
+	    if ( strcmp(buf,"0") != 0 ) {
+                PMIU_getval( "msg", buf, PMIU_MAXLINE );
+                PMIU_printf( PMI_debug, "publish failed; reason = %s\n", buf );
+
 	        return( PMI_FAIL );
 	    }
 	}
@@ -479,13 +480,12 @@ int PMI_Unpublish_name( const char service_name[] )
 		       service_name );
 	err = GetResponse( cmd, "unpublish_result", 0 );
 	if (err == PMI_SUCCESS) {
-	    PMIU_getval( "info", buf, PMIU_MAXLINE );
-	    if ( strcmp(buf,"ok") != 0 ) {
-		/* FIXME: Do correct error reporting */
-		/*
-	        PMIU_printf( 1, "unpublish failed; reason = %s\n", buf );
-		*/
-	        return( PMI_FAIL );
+	    PMIU_getval( "rc", buf, PMIU_MAXLINE );
+	    if ( strcmp(buf,"0") != 0 ) {
+                PMIU_getval( "msg", buf, PMIU_MAXLINE );
+                PMIU_printf( PMI_debug, "unpublish failed; reason = %s\n", buf );
+
+                return( PMI_FAIL );
 	    }
 	}
     }
@@ -508,12 +508,11 @@ int PMI_Lookup_name( const char service_name[], char port[] )
 		       service_name );
 	err = GetResponse( cmd, "lookup_result", 0 );
 	if (err == PMI_SUCCESS) {
-	    PMIU_getval( "info", buf, PMIU_MAXLINE );
-	    if ( strcmp(buf,"ok") != 0 ) {
-		/* FIXME: Do correct error reporting */
-		/****
-	        PMIU_printf( 1, "lookup failed; reason = %s\n", buf );
-		****/
+	    PMIU_getval( "rc", buf, PMIU_MAXLINE );
+	    if ( strcmp(buf,"0") != 0 ) {
+                PMIU_getval( "msg", buf, PMIU_MAXLINE );
+                PMIU_printf( PMI_debug, "lookup failed; reason = %s\n", buf );
+
 	        return( PMI_FAIL );
 	    }
 	    PMIU_getval( "port", port, MPI_MAX_PORT_NAME );
