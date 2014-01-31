@@ -80,7 +80,7 @@ $hasDemon   = 0;
 %chosenEnable = ();
 @with_array = (
 	       'logging;none;rlog',
-	       'pmi;simple;smpd',    #; uni no longer supported
+	       'pmi;simple',    #; uni no longer supported
 	       'pm;gforker;mpd', #;remshell
 	       'namepublisher;no;file;mpd', #;ldap:ldapserver',
 	       'device;ch3;ch3:sock',
@@ -410,9 +410,8 @@ sub RunTest {
 	# print "rc = $rc\n";
 	if ($rc == 0) {
 	    print $OUTFD $MakeStart;
-	    # Remove mpd and smpd just in case (see below)
+	    # Remove mpd just in case (see below)
 	    unlink "bin/mpd";
-	    unlink "bin/smpd";
 	    $rc = &RunProgram( "$makepgm $parallelBuild" );
 	    print $OUTFD $MakeEnd;
 	    $make_status = $rc;
@@ -444,13 +443,6 @@ sub RunTest {
 			$hasDemon   = 1;
 			$StartDemon = "RunMPD";
 			$StopDemon  = "StopMPD";
-		    }
-		    elsif (-x "$instdir/bin/smpd") {
-			$hasDemon   = 1;
-			$StartDemon = "RunSMPD";
-			$StopDemon  = "StopSMPD";
-			# FIXME: Remaining problem: smpd needs to be told what
-			# port to use on the mpiexec line
 		    }
 		    # Try the install check target
 		    print $OUTFD $MakeInstcheckStart;
@@ -1117,33 +1109,6 @@ sub StopMPD {
         }
     }
 }
-# ---------------------------------------------------------------------------
-#
-# We need a variation of this that will start SMPDs on mulitple hosts.
-# 
-sub RunSMPD {
-    system "$instdir/bin/smpd -port 10101 -s";
-    # FIXME: Placeholder for correct environment variable for providing
-    # mpiexec with the smpd port that should be used.
-    $ENV{"MPIEXEC_SMPD_PORT"} = 10101;
-    # print errors instead of prompting for input
-    $ENV{"MPIEXEC_NOPROMPT"} = 1;
-    # use only the local host
-    $ENV{"SMPD_OPTION_NO_DYNAMIC_HOSTS"} = 1;
-    $rc = $? >> 8;
-    if ($rc != 0) {
-	print $OUTFD "Error running $instdir/bin/smpd -port 10101 -s\n";
-    }
-    else {
-	print $OUTFD "Started mpd in demon mode\n";
-    }
-    sleep 1;
-    return;
-}
-sub StopSMPD {
-    `$instdir/bin/smpd -port 10101 -shutdown`;
-}
-# ---------------------------------------------------------------------------
 #
 # Change output style
 sub XMLStyle {

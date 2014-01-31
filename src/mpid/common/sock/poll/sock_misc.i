@@ -9,9 +9,7 @@
 /* FIXME: This routine is misnamed; it is really get_interface_name (in the 
    case where there are several networks available to the calling process,
    this picks one but even in the current code can pick a different
-   interface if a particular environment variable is set) .  
-
-   This routine is used in smpd so we should not change its name yet. */
+   interface if a particular environment variable is set) .  */
 #undef FUNCNAME
 #define FUNCNAME MPIDU_Sock_get_host_description
 #undef FCNAME
@@ -209,8 +207,6 @@ int MPIDU_Sock_set_user_ptr(struct MPIDU_Sock * sock, void * user_ptr)
 }
 
 
-/* FIXME: What is this for?  It appears to be used in debug printing and
-   in smpd */
 #undef FUNCNAME
 #define FUNCNAME MPIDU_Sock_get_sock_id
 #undef FCNAME
@@ -272,10 +268,9 @@ int MPIDU_Sock_get_sock_set_id(struct MPIDU_Sock_set * sock_set)
    Read the design documentation and if there is a problem, raise it rather 
    than ignoring it.  
 */
-/* FIXME: This appears to only be used in smpd */
 /* FIXME: It appears that this function was used instead of making use of the
    existing MPI-2 features to extend MPI error classes and code, of to export
-   messages to non-MPI application (smpd?) */
+   messages to non-MPI application */
 #undef FUNCNAME
 #define FUNCNAME MPIDU_Sock_get_error_class_string
 #undef FCNAME

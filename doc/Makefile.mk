@@ -6,8 +6,8 @@
 ##
 
 DEVELOPER_SUBDIRS = doc/pmi doc/namepub
-DOC_SUBDIRS += doc/mansrc doc/userguide doc/installguide doc/smpd doc/logging \
-	       doc/windev doc/design
+DOC_SUBDIRS += doc/mansrc doc/userguide doc/installguide doc/logging \
+	       doc/design
 
 userdocs:
 	for dir in $(DOC_SUBDIRS) ; do \

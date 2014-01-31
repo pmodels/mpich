@@ -2278,8 +2278,8 @@ extern MPICH_PerProcess_t MPIR_Process;
 #include "mpierror.h"
 #include "mpierrs.h"
 
-/* FIXME: This routine is only used within mpi/src/err/errutil.c and 
-   smpd.  We may not want to export it.  */
+/* FIXME: This routine is only used within mpi/src/err/errutil.c.  We
+ * may not want to export it.  */
 void MPIR_Err_print_stack(FILE *, int);
 
 /* ------------------------------------------------------------------------- */

@@ -34,7 +34,6 @@ dist_noinst_SCRIPTS +=                \
     maint/release.pl                  \
     maint/samplebuilds                \
     maint/testbuild                   \
-    maint/update_windows_version      \
     maint/testpmpi
 
 dist_noinst_DATA +=                        \
@@ -44,19 +43,15 @@ dist_noinst_DATA +=                        \
     maint/errmsgdirs                       \
     maint/cvardirs                         \
     maint/gccimpgen.cpp                    \
-    maint/impgen.vcproj                    \
     maint/local_perl/README                \
     maint/local_perl/YAML-Tiny-1.41.tar.gz \
     maint/makegcclibs.bat                  \
     maint/makegcclibs_64.bat               \
     maint/mpi1.lst                         \
-    maint/mpichi.vdproj                   \
-    maint/mpichx64i.vdproj                \
     maint/setup.jpg                        \
     maint/structalign.c                    \
     maint/template.c                       \
-    maint/version.m4                       \
-    maint/winbuild.wsf
+    maint/version.m4
 
 ### TODO FIXME what do we do about these?
 ##makedefs

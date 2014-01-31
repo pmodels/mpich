@@ -570,13 +570,6 @@ mpich-%VERSION%/src/pm/mpd/README has more information about
 interactive commands for managing the ring of MPDs. The MPD process
 manager is now deprecated.
 
-smpd
----- 
-SMPD is a process manager for interoperability between Microsoft
-Windows and UNIX, where some processes are running on Windows and
-others are running on a variant of UNIX. For more information, please
-see mpich-%VERSION%/src/pm/smpd/README.
-
 gforker
 -------
 gforker is a process manager that creates processes on a single

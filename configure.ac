@@ -1643,7 +1643,7 @@ hasError=no
 # 
 # Then, for the selected PMI, the setup script (if any) is run.  This is
 # necessary because the setup of the PM may require information discovered
-# or provided duing the PMI setup step (e.g., smpd requires this)
+# or provided duing the PMI setup step.
 #
 # Finally, for each PM, the setup script is executed.
 # 
@@ -1688,8 +1688,7 @@ fi
 pm_name=$first_pm_name
 AC_SUBST(pm_name)
 
-# Some versions of PM and PMI require a special definition (currently, only
-# smpd requires this)
+# Some versions of PM and PMI require a special definition
 if test "$PMI_REQUIRES_READABLE_TOKENS" = "yes" ; then
     AC_DEFINE(USE_HUMAN_READABLE_TOKENS,1,[Define to use ='s and spaces in the string utilities.])
 fi
@@ -6100,9 +6099,7 @@ AC_OUTPUT(Makefile \
           doc/installguide/Makefile \
           doc/logging/Makefile \
           doc/refman/Makefile \
-          doc/smpd/Makefile \
           doc/userguide/Makefile \
-          doc/windev/Makefile \
           test/commands/cmdtests)
 
 echo 'Configuration completed.'

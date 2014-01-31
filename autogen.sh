@@ -149,7 +149,6 @@ do_f77=yes
 do_f77tof90=yes
 do_build_configure=yes
 do_genstates=yes
-do_smpdversion=yes
 do_atdir_check=no
 do_atver_check=yes
 do_subcfg_m4=yes
@@ -173,7 +172,7 @@ export autoreconf_args
 
 # List of steps that we will consider (We do not include depend
 # because the values for depend are not just yes/no)
-AllSteps="geterrmsgs bindings f77 f77tof90 build_configure genstates smpdversion getparms"
+AllSteps="geterrmsgs bindings f77 f77tof90 build_configure genstates getparms"
 stepsCleared=no
 
 for arg in "$@" ; do
@@ -648,24 +647,6 @@ else
     error "README.vin file not present, unable to update README version number (perhaps we are running in a release tarball source tree?)"
 fi
 
-
-########################################################################
-## Update SMPD version
-########################################################################
-
-if [ "$do_smpdversion" = yes ] ; then
-    echo_n "Creating src/pm/smpd/smpd_version.h... "
-    smpdVersion=${MPICH_VERSION}
-    cat >src/pm/smpd/smpd_version.h <<EOF
-/* -*- Mode: C; c-basic-offset:4 ; -*- */
-/*  
- *  (C) 2005 by Argonne National Laboratory.
- *      See COPYRIGHT in top-level directory.
- */
-#define SMPD_VERSION "$smpdVersion"
-EOF
-    echo "done"
-fi
 
 ########################################################################
 ## Building subsys_include.m4
