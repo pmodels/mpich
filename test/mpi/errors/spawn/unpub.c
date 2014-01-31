@@ -15,7 +15,7 @@
 
 int main( int argc, char *argv[] )
 {
-    int errs = 0;
+    int rc, errclass, errs = 0;
     char port_name[MPI_MAX_PORT_NAME], serv_name[256];
 
     MTest_Init( &argc, &argv );
@@ -25,7 +25,10 @@ int main( int argc, char *argv[] )
 
     MPI_Comm_set_errhandler( MPI_COMM_WORLD, MPI_ERRORS_RETURN );
 
-    MPI_Unpublish_name( serv_name, MPI_INFO_NULL, port_name );
+    rc = MPI_Unpublish_name( serv_name, MPI_INFO_NULL, port_name );
+    MPI_Error_class(rc, &errclass);
+    if (errclass != MPI_ERR_SERVICE)
+        ++errs;
 
     MTest_Finalize( errs );
     MPI_Finalize();
