@@ -123,7 +123,7 @@ AC_ARG_ENABLE(long-double,
 AC_ARG_ENABLE(checkerrors,
 	[AC_HELP_STRING([--enable-checkerrors],
 		[Add some tests for checking for errors in user programs])],,
-	[enable_checkerrors=default])
+	[enable_checkerrors=yes])
 
 AC_ARG_ENABLE(perftest,
 	[AC_HELP_STRING([--enable-perftest],
@@ -309,24 +309,6 @@ elif test "$enable_threads" = default ; then
     fi
 fi
 
-if test "$enable_fast" = "yes" ; then
-    if test "$enable_checkerrors" = "default" ; then
-        enable_checkerrors=no
-    fi
-fi
-# default for MPICH is to check error handling; for other cases it
-# is to only check correct programs.
-if test "$FROM_MPICH" = "yes" ; then
-    if test "$enable_checkerrors" = "default" -a "$MPICH_FAST" != "YES" ; then
-         enable_checkerrors=yes
-    else 
-         enable_checkerrors=no
-    fi
-else
-    if test "$enable_checkerrors" = "default" ; then
-         enable_checkerrors=no
-    fi
-fi
 # errordir is substituted into the testlist file as errors when the
 # tests should check error handling and as a comment (#) otherwise.
 errordir="#"
