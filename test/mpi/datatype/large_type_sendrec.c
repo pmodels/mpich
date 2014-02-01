@@ -1,10 +1,8 @@
+/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- * Author(s):
  *
- * Jeff R. Hammond
- * Leadership Computing Facility
- * Argonne National Laboratory
- * jhammond@anl.gov
+ *  (C) 2013 by Argonne National Laboratory.
+ *      See COPYRIGHT in top-level directory.
  */
 
 #include <stdio.h>
