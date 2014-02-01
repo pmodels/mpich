@@ -393,22 +393,13 @@ AC_ARG_ENABLE(fast,
 [  --enable-fast=option - Control the level of fast execution in the
                          MPICH implementation.  option is a list of
                          comma separated names including
-        defopt   - Default compiler optimization -O2 for all language bindings,
-                   i.e. --enable-fast=O2, when neither --enable-fast
-                   nor --disable-fast is specified. (default)
         O<n>     - Appends default optimization flags, -O<n>, to all internal
                    compiler flags, i.e. MPICHLIB_CFLAGS, MPICHLIB_CXXFLAGS,
-                   MPICHLIB_FFLAGS, and MPICHLIB_FCFLAGS.
-        nochkmsg - No error checking, i.e. --disable-error-checking
-        notiming - No timing collection, i.e. --disable-timing.
+                   MPICHLIB_FFLAGS, and MPICHLIB_FCFLAGS. (default is -O2)
         ndebug   - Appends -DNDEBUG to MPICHLIB_CFLAGS.
-        nompit   - Equivalent to "--disable-mpit-pvars".
-        all|yes  - "defopt", "nochkmsg", "notiming" and "ndebug" are enabled
-                   when --enable-fast is specified without any option.
-        none     - None of above options, i.e. --disable-fast. Note that
-                   --enable-strict will add the -O2 option even if
-                   --enable-fast=none is given.
-],,enable_fast=defopt)
+        all|yes  - "O2" and "ndebug" are enabled
+        none     - None of above options, i.e. --disable-fast
+],,enable_fast=O2)
 
 AC_ARG_ENABLE(check-compiler-flags,
 	AC_HELP_STRING([--enable-check-compiler-flags], [enable the checks for all compiler
@@ -831,68 +822,25 @@ AC_SUBST(MPICXXLIBNAME)
 # We'll set FORTRAN_BINDING to 1 if we support Fortran 
 FORTRAN_BINDING=0
 
-# Set up default compiler optimization
-MPI_DEFAULT_COPTS="-O2"
-MPI_DEFAULT_CXXOPTS="-O2"
-MPI_DEFAULT_FOPTS="-O2"
-MPI_DEFAULT_FCOPTS="-O2"
-
 # enable-fast
 # strip off multiple options, separated by commas
 save_IFS="$IFS"
 IFS=","
 for option in $enable_fast ; do
     case "$option" in
-        defopt)
-        enable_default_optimize=yes
-        ;;
-        nochkmsg)
-        enable_fast_nochkmsg=yes
-        ;;
-        notiming)
-        enable_timing=no
+        O*)
+        enable_fast_opts=$option
         ;;
         ndebug)
-        enable_append_ndebug=yes
+        enable_fast_ndebug=yes
         ;;
-        nompit)
-        enable_mpit_pvars=no
-        ;;
-#
-# [BRT] removed the reseting of enable_g so that --with-enable=dbg,meminit
-# can be specified with -enable-fast.  This change was largely made for the
-# PETSc folks who want to use --enable-fast to eliminate parameter checking
-# overhead, but also wish to use meminit to eliminate initialization
-# warnings from valgrind.
-#
         all|yes)
-        enable_default_optimize=yes
-        enable_fast_nochkmsg=yes
-        # Disable timing/logging stuffs
-        enable_timing=no
-        enable_append_ndebug=yes
-        ;;
-        O*)
-        # Allows O<n> where <n> can be [0-9] or ' '.
-        opt_flags=`echo $option | sed -e 's%\(O[0-9] \)%\1%g'`
-        if test -n "$opt_flags" ; then
-            enable_default_optimize=yes
-            MPI_DEFAULT_COPTS="-$option"
-            MPI_DEFAULT_CXXOPTS="-$option"
-            MPI_DEFAULT_FOPTS="-$option"
-            MPI_DEFAULT_FCOPTS="-$option"
-        else
-	    IFS="$save_IFS"
-            AC_MSG_WARN([Unknown value $option for --enable-fast])
-	    IFS=","
-        fi
+        enable_fast_ndebug=yes
+        enable_fast_opts=O2
         ;;
         none|no)
-        enable_default_optimize=no
-        enable_fast_nochkmsg=no
-        # Reset timing/logging stuffs to when --enable-timing isn't specified.
-        enable_timing=default
-        enable_append_ndebug=no
+        enable_fast_ndebug=no
+        enable_fast_opts=O0
         ;;
         *)
 	IFS="$save_IFS"
@@ -903,19 +851,25 @@ for option in $enable_fast ; do
 done
 IFS="$save_IFS"
 
-# ----------------------------------------------------------------------------
-# Process any enable or with values
-# We must do enable-fast first, because it changes the other enable values
-if test "$enable_fast_nochkmsg" = "yes" ; then
-    # 
-    if test "$enable_error_checking" != "default" -a "$enable_error_checking" != "no" ; then
-        AC_MSG_ERROR([enable-fast overrides enable-error-checking; error-checking option $enable_error_checking ignored])
-    fi
-    enable_error_checking=no
-    # Export a variable that will allow the test suite to detect that
-    # MPICH has no error testing
-    MPICH_FAST=yes
-    export MPICH_FAST
+if test -n "$enable_fast_opts" ; then
+   # Allows O<n> where <n> can be [0-9] or ' '.
+   opt_flags=`echo $enable_fast_opts | sed -e 's%\(O[0-9] \)%\1%g'`
+   if test -n "$opt_flags" ; then
+      MPI_DEFAULT_COPTS="-$enable_fast_opts"
+      MPI_DEFAULT_CXXOPTS="-$enable_fast_opts"
+      MPI_DEFAULT_FOPTS="-$enable_fast_opts"
+      MPI_DEFAULT_FCOPTS="-$enable_fast_opts"
+   else
+      AC_MSG_WARN([Unknown value $enable_fast_opts for --enable-fast])
+   fi
+fi
+
+if test "$enable_fast_ndebug" = "yes" ; then
+    CFLAGS="$CFLAGS -DNDEBUG -DNVALGRIND"
+    CXXFLAGS="$CXXFLAGS -DNDEBUG -DNVALGRIND"
+    # MPICH does NOT assume any preprocessing support from the Fortran compiler,
+    # so no Fortran files contain any preprocessing statements.
+    # Don't set FFLAGS or FCFLAGS with any -D.
 fi
 
 # error-checking
@@ -1479,13 +1433,6 @@ if test "$enable_append_g" = "yes" ; then
     FFLAGS="$FFLAGS -g"
     FCFLAGS="$FCFLAGS -g"
 fi
-if test "$enable_append_ndebug" = "yes" ; then
-    CFLAGS="$CFLAGS -DNDEBUG -DNVALGRIND"
-    CXXFLAGS="$CXXFLAGS -DNDEBUG -DNVALGRIND"
-    # MPICH does NOT assume any preprocessing support from the Fortran compiler,
-    # so no Fortran files contain any preprocessing statements.
-    # Don't set FFLAGS or FCFLAGS with any -D.
-fi
 if test -n "$perform_meminit" ; then
     AC_DEFINE(MPICH_DEBUG_MEMINIT,1,[Define to enable preinitialization of memory used by structures and unions])
 fi
@@ -1761,8 +1708,7 @@ done
 PAC_CC_FUNCTION_NAME_SYMBOL
 
 # Check if $MPI_DEFAULT_COPTS is valid with $CC
-if test "$enable_default_optimize" = "yes" \
-     -a -n "$MPI_DEFAULT_COPTS" ; then
+if test -n "$MPI_DEFAULT_COPTS" ; then
     if test "$enable_check_compiler_flags" = "yes" ; then
         PAC_C_CHECK_COMPILER_OPTION( [$MPI_DEFAULT_COPTS], [
         CFLAGS="$CFLAGS $MPI_DEFAULT_COPTS"
@@ -1898,8 +1844,7 @@ fi
 
 if test "$enable_f77" = yes ; then
     # Check if $MPI_DEFAULT_FOPTS is valid with $F77
-    if test "$enable_default_optimize" = "yes" \
-         -a -n "$MPI_DEFAULT_FOPTS" ; then
+    if test -n "$MPI_DEFAULT_FOPTS" ; then
         if test "$enable_check_compiler_flags" = "yes" ; then
             PAC_F77_CHECK_COMPILER_OPTION( [$MPI_DEFAULT_FOPTS], [
             FFLAGS="$FFLAGS $MPI_DEFAULT_FOPTS"
