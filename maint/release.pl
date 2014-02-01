@@ -297,7 +297,6 @@ run_cmd("cp -a www ${expdir}");
 run_cmd("cp -a doc/userguide/user.pdf ${expdir}/doc/userguide");
 run_cmd("cp -a doc/installguide/install.pdf ${expdir}/doc/installguide");
 run_cmd("cp -a doc/logging/logging.pdf ${expdir}/doc/logging");
-run_cmd("cp -a doc/windev/windev.pdf ${expdir}/doc/windev");
 print("done\n");
 
 print("===> Creating ROMIO docs... ");
