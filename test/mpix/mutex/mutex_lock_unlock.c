@@ -1,5 +1,8 @@
+/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- * Copyright (C) 2010. See COPYRIGHT in top-level directory.
+ *
+ *  (C) 2010 by Argonne National Laboratory.
+ *      See COPYRIGHT in top-level directory.
  */
 
 /** MPI Mutex test -- James Dinan <dinan@mcs.anl.gov>

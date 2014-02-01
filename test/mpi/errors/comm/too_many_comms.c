@@ -1,7 +1,8 @@
-/* -*- mode: c; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
+/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *  (c) 2012 by argonne national laboratory.
- *      see copyright in top-level directory.
+ *
+ *  (C) 2012 by Argonne National Laboratory.
+ *      See COPYRIGHT in top-level directory.
  */
 
 /* This test attempts to create a large number of communicators, in an effort

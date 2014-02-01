@@ -1,11 +1,9 @@
+/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- * Copyright (C) 2013. See COPYRIGHT in top-level directory.
+ *
+ *  (C) 2013 by Argonne National Laboratory.
+ *      See COPYRIGHT in top-level directory.
  */
-
-/** MPI Mutex test -- James Dinan <dinan@mcs.anl.gov>
-  *
-  * All processes create a mutex then lock+unlock it N times.
-  */
 
 #include <stdio.h>
 #include <stdlib.h>
