@@ -1903,16 +1903,13 @@ int MPID_nem_tcp_state_listening_handler(struct pollfd *const unused_1, sockconn
         len = sizeof(SA_IN);
         MPIU_DBG_MSG_FMT(NEM_SOCK_DET, VERBOSE, (MPIU_DBG_FDEST, "before accept"));
         if ((connfd = accept(l_sc->fd, (SA *) &rmt_addr, &len)) < 0) {
-#ifdef HAVE_ERROR_CHECKING
-            int save_errno = errno;
-#endif
-            MPIU_DBG_MSG_FMT(NEM_SOCK_DET, VERBOSE, (MPIU_DBG_FDEST, "after accept, l_sc=%p lstnfd=%d connfd=%d, errno=%d:%s ", l_sc, l_sc->fd, connfd, errno, MPIU_Strerror(save_errno)));
+            MPIU_DBG_MSG_FMT(NEM_SOCK_DET, VERBOSE, (MPIU_DBG_FDEST, "after accept, l_sc=%p lstnfd=%d connfd=%d, errno=%d:%s ", l_sc, l_sc->fd, connfd, errno, MPIU_Strerror(errno)));
             if (errno == EINTR) 
                 continue;
             else if (errno == EWOULDBLOCK || errno == EAGAIN)
                 break; /*  no connection in the listen queue. get out of here.(N1) */
 
-            MPIU_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**sock_accept", "**sock_accept %s", MPIU_Strerror(save_errno));
+            MPIU_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**sock_accept", "**sock_accept %s", MPIU_Strerror(errno));
         }
         else {
             int idx = -1;
