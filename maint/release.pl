@@ -89,7 +89,8 @@ sub check_autotools_version
 
     $curr_ver = `$tool --version | head -1 | cut -f4 -d' ' | xargs echo -n`;
     if ("$curr_ver" ne "$req_ver") {
-	print("\tWARNING: $tool version mismatch ($req_ver) required\n\n");
+	print("\tERROR: $tool version mismatch ($req_ver) required\n\n");
+	exit;
     }
 }
 
@@ -171,7 +172,7 @@ print("\n");
 ## breakage. So make sure the ABI string in the release tarball is
 ## updated when you do that.
 check_autotools_version("autoconf", "2.69");
-check_autotools_version("automake", "1.12.4");
+check_autotools_version("automake", "1.14");
 check_autotools_version("libtool", "2.4.2");
 print("\n");
 
