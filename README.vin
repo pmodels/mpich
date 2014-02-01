@@ -359,6 +359,11 @@ Or to disable all compiler optimizations, one can do:
 For more details of --enable-fast, see the output of "configure
 --help".
 
+For performance testing, we recommend the following flags:
+
+  ./configure --enable-fast=O3,ndebug --disable-error-checking --without-timing \
+              --without-mpit-pvars
+
 
 Examples
 --------
