@@ -38,6 +38,7 @@
 #
 # Import the mkpath command
 use File::Path;
+use File::Copy qw(move);
 
 # Global variables
 $MPIMajorVersion = "@MPI_VERSION@";
@@ -48,6 +49,7 @@ $MPIhasMPIX   = "@MPI_HAS_MPIX@";
 $runxfail     = "@RUN_XFAIL@";
 $np_arg  = "-n";         # Name of argument to specify the number of processes
 $err_count = 0;          # Number of programs that failed.
+$skip_count = 0;         # Number of programs skipped
 $total_run = 0;          # Number of programs tested
 $total_seen = 0;         # Number of programs considered for testing
 $np_default = 2;         # Default number of processes to use
@@ -76,6 +78,11 @@ $batrundir = ".";        # Set to the directory into which to run the examples
 my $tapoutput = 0;
 my $tapfile = '';
 my $tapfullfile = '';
+
+# Junit format output
+my $junitoutput = 0;
+my $junitfile = '';
+my $junitfullfile = '';
 
 $debug = 1;
 
@@ -205,11 +212,25 @@ foreach $_ (@ARGV) {
         # we do not know at this point how many tests will be run, so do
         # not print a test plan line like "1..450" until the very end
     }
+    elsif (/--?junitfile=(.*)/) {
+        $junitfile = $1;
+        if ($junitfile !~ m|^/|) {
+            $thisdir = `pwd`;
+            chomp $thisdir;
+            $junitfullfile = $thisdir . "/" . $junitfile ;
+        }
+        else {
+            $junitfullfile = $junitfile;
+        }
+        $junitoutput = 1;
+        open( JUNITOUT, ">$junitfile" ) || die "Cannot open $junitfile\n";
+    }
     else {
 	print STDERR "Unrecognized argument $_\n";
 	print STDERR "runtests [-tests=testfile] [-np=nprocesses] \
         [-maxnp=max-nprocesses] [-srcdir=location-of-tests] \
-        [-xmlfile=filename ] [-noxmlclose] \
+        [-xmlfile=filename ] [-tapfile=filename ] \
+        [-junitfile=filename ] [-noxmlclose] \
         [-verbose] [-showprogress] [-debug] [-batch]\n";
 	exit(1);
     }
@@ -258,6 +279,40 @@ if ($tapoutput) {
     close TAPOUT;
 }
 
+if ($junitoutput) {
+    print JUNITOUT "    <system-out><![CDATA[\n";
+    if ($tapoutput) {
+        open(SYSTEMOUT, "<$tapfile") || die "Cannot open $tapfile\n";
+        print JUNITOUT <SYSTEMOUT>;
+        close(SYSTEMOUT);
+    }
+    print JUNITOUT "]]></system-out>\n";
+    print JUNITOUT "    <system-err></system-err>\n";
+    print JUNITOUT "  </testsuite>\n";
+    print JUNITOUT "</testsuites>\n";
+    close JUNITOUT;
+
+    # the second pass: insert the header
+    # Note: the field "errors" is not used now, but reserved for future uses.
+    open my $JUNITIN,  '<',  $junitfile      or die "Can't read old file: $!";
+    open my $JUNITOUTNEW, '>', "$junitfile.new" or die "Can't write new file: $!";
+    my $date = `date "+%Y-%m-%d-%H-%M"`;
+    $date =~ s/\r?\n//;
+    print $JUNITOUTNEW "<testsuites>\n";
+    print $JUNITOUTNEW "  <testsuite failures=\"$err_count\"\n";
+    print $JUNITOUTNEW "             errors=\"0\"\n";
+    print $JUNITOUTNEW "             skipped=\"$skip_count\"\n";
+    print $JUNITOUTNEW "             tests=\"$total_run\"\n";
+    print $JUNITOUTNEW "             date=\"${date}\"\n";
+    print $JUNITOUTNEW "             name=\"summary_junit_xml\">\n";
+    while( <$JUNITIN> ) {
+        print $JUNITOUTNEW $_;
+    }
+    close $JUNITIN;
+    close $JUNITOUTNEW;
+    move("$junitfile.new","$junitfile");
+}
+
 # Output a summary:
 if ($batchRun) {
     print "Programs created along with a runtest.batch file in $batrundir\n";
@@ -275,6 +330,9 @@ else {
     }
     if ($tapoutput) {
         print "TAP formatted results in $tapfullfile\n";
+    }
+    if ($junitoutput) {
+        print "JUNIT formatted results in $junitfullfile\n";
     }
 }
 #
@@ -436,7 +494,7 @@ sub RunList {
                 ($majorReq == $MPIMajorVersion && $minorReq > $MPIMinorVersion))
             {
                 unless (-d $programname) {
-                    SkippedTest($programname, $np, $workdir, "requires MPI version $mpiVersion");
+                    SkippedTest($programname, $np, $curdir, "requires MPI version $mpiVersion");
                 }
                 next;
             }
@@ -445,7 +503,7 @@ sub RunList {
 	# test (use strict=false for tests that use non-standard extensions)
         if (lc($requiresStrict) eq "false" && lc($testIsStrict) eq "true") {
             unless (-d $programname) {
-                SkippedTest($programname, $np, $workdir, "non-strict test, strict MPI mode requested");
+                SkippedTest($programname, $np, $curdir, "non-strict test, strict MPI mode requested");
             }
             next;
         }
@@ -461,14 +519,14 @@ sub RunList {
 	    # Skip xfail tests if they are not configured. Strict MPI tests that are
 	    # marked xfail will still run with --enable-strictmpi.
             unless (-d $programname) {
-		SkippedTest($programname, $np, $workdir, "xfail tests disabled");
+		SkippedTest($programname, $np, $curdir, "xfail tests disabled");
 	    }
 	    next;
 	}
 
         if (lc($requiresMPIX) eq "true" && lc($MPIHasMPIX) eq "no") {
             unless (-d $programname) {
-                SkippedTest($programname, $np, $workdir, "tests MPIX extensions, MPIX testing disabled");
+                SkippedTest($programname, $np, $curdir, "tests MPIX extensions, MPIX testing disabled");
             }
             next;
         }
@@ -1051,6 +1109,9 @@ sub RunTestPassed {
     if ($tapoutput) {
         print TAPOUT "ok ${total_run} - $workdir/$programname ${np}\n";
     }
+    if ($junitoutput) {
+        print JUNITOUT "    <testcase name=\"${total_run} - $workdir/$programname ${np}\"></testcase>\n";
+    }
 }
 sub RunTestFailed {
     my $programname = shift;
@@ -1108,6 +1169,38 @@ sub RunTestFailed {
             print TAPOUT "## $line\n";
         }
     }
+
+    if ($junitoutput) {
+        my $xfailstr = '';
+	my $testtag = "failure";
+        if ($xfail ne '') {
+            $xfailstr = " # TODO $xfail";
+	    $testtag  = "skipped";
+        }
+        print JUNITOUT "    <testcase name=\"${total_run} - $workdir/$programname ${np}\">\n";
+        print JUNITOUT "      <${testtag} type=\"TestFailed\"\n";
+        print JUNITOUT "               message=\"not ok ${total_run} - $workdir/$programname ${np}${xfailstr}\"><![CDATA[";
+        print JUNITOUT "not ok ${total_run} - $workdir/$programname ${np}${xfailstr}\n";
+        print JUNITOUT "  ---\n";
+        print JUNITOUT "  Directory: $workdir\n";
+        print JUNITOUT "  File: $programname\n";
+        print JUNITOUT "  Num-procs: $np\n";
+        print JUNITOUT "  Date: \"" . localtime . "\"\n";
+
+        print JUNITOUT "  ...\n";
+
+        # Alternative to the "Output:" YAML block literal above.  Do not put any
+        # spaces before the '#', this causes some JUNIT parsers (including Perl's
+        # JUNIT::Parser) to treat the line as "unknown" instead of a proper
+        # comment.
+        print JUNITOUT "## Test output (expected 'No Errors'):\n";
+        foreach my $line (split m/\r?\n/, $output) {
+            chomp $line;
+            print JUNITOUT "## $line\n";
+        }
+        print JUNITOUT "    ]]></${testtag}>\n";
+        print JUNITOUT "    </testcase>\n";
+    }
 }
 
 sub SkippedTest {
@@ -1121,6 +1214,14 @@ sub SkippedTest {
     if ($tapoutput) {
         print TAPOUT "ok ${total_seen} - $workdir/$programname $np  # SKIP $reason\n";
     }
+    if ($junitoutput) {
+        print JUNITOUT "    <testcase name=\"${total_seen} - $workdir/$programname ${np}\">\n";
+        print JUNITOUT "      <skipped type=\"TodoTestSkipped\">\n";
+        print JUNITOUT "             message=\"$reason\"><![CDATA[ok ${total_seen} - $workdir/$programname $np  # SKIP $reason]]></skipped>\n";
+        print JUNITOUT "    </testcase>\n";
+    }
+
+    $skip_count++;
 }
 
 # ----------------------------------------------------------------------------
