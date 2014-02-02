@@ -83,7 +83,7 @@ int main( int argc, char *argv[])
 	    if ( s1[j].c != 'a' + j + status.MPI_SOURCE ) {
 		errs++;
 		/* If the character is not a printing character,
-		   this can generate an file that diff, for example,
+		   this can generate a file that diff, for example,
 		   believes is a binary file */
 		if (isprint( (int)(s1[j].c) )) {
 		    fprintf( stderr, "Got s[%d].c = %c; expected %c\n",
