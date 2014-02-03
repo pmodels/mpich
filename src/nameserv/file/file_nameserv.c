@@ -273,7 +273,7 @@ int MPID_NS_Unpublish( MPID_NS_Handle handle, const MPID_Info *info_ptr,
 	/* --BEGIN ERROR HANDLING-- */
 	/* Error: this name was not found */
 	err = MPIR_Err_create_code( MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, 
-				    MPI_ERR_OTHER, "**namepubnotpub",
+				    MPI_ERR_SERVICE, "**namepubnotpub",
 				    "**namepubnotpub %s", service_name );
 	return err;
 	/* --END ERROR HANDLING-- */
