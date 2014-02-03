@@ -8,9 +8,11 @@ if test -f dummy; then
 
     for topo in topo1 topo2 topo3 topo4 ; do
 	export HWLOC_XMLFILE=@top_srcdir@/impls/hydra/binding_reference/$topo.xml
-	for bind in hwthread hwthread:2 hwthread:4 hwthread:8 core core:2 core:4 socket numa board ; do
-	    for map in hwthread hwthread:2 hwthread:4 hwthread:8 core core:2 core:4 socket numa board ; do
-		@MPIEXEC@ -bind-to $bind -map-by $map -n 16 ./dummy | sort -k2n > actual.${topo}.${bind}.${map}.out
+	for bind_ in hwthread hwthread:2 hwthread:4 hwthread:8 core core:2 core:4 socket numa board ; do
+	    for map_ in hwthread hwthread:2 hwthread:4 hwthread:8 core core:2 core:4 socket numa board ; do
+		bind=`echo $bind_ | sed -e 's/:/-/g'`
+		map=`echo $map_ | sed -e 's/:/-/g'`
+		@MPIEXEC@ -bind-to $bind_ -map-by $map_ -n 16 ./dummy | sort -k2n > actual.${topo}.${bind}.${map}.out
 		diff @top_srcdir@/impls/hydra/binding_reference/expected.${topo}.${bind}.${map}.out \
 		    actual.${topo}.${bind}.${map}.out
 		if test "$?" != "0" ; then
