@@ -10,20 +10,10 @@
 
 
 /*
-   This program is from mpich/tsuite/pt2pt and should be changed there only.
-   It needs gcomm and dtype from mpich/tsuite, and can be run with
-   any number of processes > 1.
+   This program is derived from one in the MPICH-1 test suite
 
    This version sends and receives EVERYTHING from MPI_BOTTOM, by putting
    the data into a structure.
-
-   This code isn't quite correct, since the MPI_Type_struct that is
-   created for the type may not have the correct extent.
-   One possible change is to make the struct type include the count, and
-   send/receive one instance of the data item.
-
-   The GenerateData call should return extents; when the extent of the
-   created structure doesn't match, we can at least issue an error message.
  */
 int main( int argc, char **argv )
 {

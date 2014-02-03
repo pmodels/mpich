@@ -9,9 +9,8 @@
 #include "dtypes.h"
 
 /*
-   This program is from mpich/tsuite/pt2pt and should be changed there only.
-   It needs gcomm and dtype from mpich/tsuite, and can be run with
-   any number of processes > 1.
+   This program is derived from one in the MPICH-1 test suite.  It
+   tests a wide variety of basic and derived datatypes.
  */
 int main( int argc, char **argv)
 {
