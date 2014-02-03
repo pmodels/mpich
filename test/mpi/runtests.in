@@ -544,7 +544,7 @@ sub RunList {
 				    $progEnv, $mpiexecArgs, $xfail );
 		}
 	    }
-	    elsif ($xfail ne '') {
+	    elsif ($xfail eq '') {
 		# We expected to run this program, so failure to build
 		# is an error
 		$found_error = 1;
