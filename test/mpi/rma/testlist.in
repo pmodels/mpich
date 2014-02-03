@@ -104,7 +104,7 @@ linked_list_bench_lock_shr_nocheck 4 mpiversion=3.0
 mutex_bench 4 mpiversion=3.0
 mutex_bench_shared 4 mpiversion=3.0
 mutex_bench_shm 4 mpiversion=3.0
-rma-contig 4 mpiversion=3.0 timeLimit=600
+rma-contig 2 mpiversion=3.0 timeLimit=600
 badrma 2 mpiversion=3.0
 
 ## This test is not strictly correct.  This was meant to test out the
