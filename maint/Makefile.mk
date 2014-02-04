@@ -45,8 +45,6 @@ dist_noinst_DATA +=                        \
     maint/gccimpgen.cpp                    \
     maint/local_perl/README                \
     maint/local_perl/YAML-Tiny-1.41.tar.gz \
-    maint/makegcclibs.bat                  \
-    maint/makegcclibs_64.bat               \
     maint/mpi1.lst                         \
     maint/setup.jpg                        \
     maint/structalign.c                    \
