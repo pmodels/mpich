@@ -2,15 +2,6 @@
                         KNOWN ISSUES
 ----------------------------------------------------------------------
 
-### ABI issues
-
- * The format of MPI_INFO_ENV was changed between v3.0 and v3.0.1 in
-   an ABI incompatible way.  The change was not caught, unfortunately,
-   and the ABI string not updated appropriately.
-
-   http://trac.mpich.org/projects/mpich/ticket/1719
-
-
 ### Fine-grained thread safety
 
  * ch3:sock does not (and will not) support fine-grained threading.
@@ -45,16 +36,6 @@
  * ch3 has known problems in some cases when threading and dynamic
    processes are used together on communicators of size greater than
    one.
-
-
-### Build Platforms
-
- * Build fails with Intel compiler suite 13.0, because of weak symbol
-   issues in the compiler.  A workaround is to disable weak symbol
-   support by passing --disable-weak-symbols to configure.  See the
-   following ticket for more information:
-
-     https://trac.mpich.org/projects/mpich/ticket/1659
 
 
 ### Process Managers
