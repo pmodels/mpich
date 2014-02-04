@@ -280,13 +280,7 @@ if ($tapoutput) {
 }
 
 if ($junitoutput) {
-    print JUNITOUT "    <system-out><![CDATA[\n";
-    if ($tapoutput) {
-        open(SYSTEMOUT, "<$tapfile") || die "Cannot open $tapfile\n";
-        print JUNITOUT <SYSTEMOUT>;
-        close(SYSTEMOUT);
-    }
-    print JUNITOUT "]]></system-out>\n";
+    print JUNITOUT "    <system-out></system-out>\n";
     print JUNITOUT "    <system-err></system-err>\n";
     print JUNITOUT "  </testsuite>\n";
     print JUNITOUT "</testsuites>\n";
