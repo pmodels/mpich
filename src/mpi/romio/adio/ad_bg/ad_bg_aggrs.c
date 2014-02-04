@@ -13,6 +13,7 @@
  */
 
 /*#define TRACE_ON */
+// #define balancecontigtrace 1
 
 #include "adio.h"
 #include "adio_cb_config_list.h"
@@ -112,6 +113,34 @@ ADIOI_BG_gen_agg_ranklist(ADIO_File fd, int n_aggrs_per_pset)
   /* Send the info of IO proxy CN to all processes and keep the info in fd->hints struct.
      Declared in adio_cb_config_list.h */
     ADIOI_cb_bcast_rank_map(fd);		
+    if (bgmpio_balancecontig == 1) { /* additionally need to send bridgelist,
+					bridgelistnum and numbridges to all
+					ranks */
+	if (r != 0) {
+	    fd->hints->fs_hints.bg.bridgelist =
+		ADIOI_Malloc(fd->hints->cb_nodes*sizeof(int));
+	    if (fd->hints->fs_hints.bg.bridgelist == NULL) {
+		/* NEED TO HANDLE ENOMEM */
+	    }
+	}
+	MPI_Bcast(fd->hints->fs_hints.bg.bridgelist, fd->hints->cb_nodes, MPI_INT, 0,
+		fd->comm);
+
+	if (r != 0) {
+	    fd->hints->fs_hints.bg.bridgelistnum =
+		ADIOI_Malloc(fd->hints->cb_nodes*sizeof(int));
+	    if (fd->hints->fs_hints.bg.bridgelistnum == NULL) {
+		/* NEED TO HANDLE ENOMEM */
+	    }
+	}
+	MPI_Bcast(fd->hints->fs_hints.bg.bridgelistnum, fd->hints->cb_nodes,
+		MPI_INT, 0, fd->comm);
+
+	MPI_Bcast(&fd->hints->fs_hints.bg.numbridges, 1, MPI_INT, 0,
+		fd->comm);
+
+    }
+
 
     ADIOI_BG_persInfo_free( confInfo, procInfo );
     TRACE_ERR("Leaving ADIOI_BG_gen_agg_ranklist\n");
@@ -317,16 +346,184 @@ ADIOI_BG_compute_agg_ranklist_serial ( ADIO_File fd,
       DBG_FPRINTF(stderr, "\taggr %-4d = %6d\n", i, tmp_ranklist[i] );
     }
 #   endif
+    if (bgmpio_balancecontig == 1) {
+	/* what comes out of this code block is the agg ranklist sorted by
+	 * bridge set and ion id with associated bridge info stored in the
+	 * hints structure for later access during file domain assignment */
 
-  /* copy the ranklist of IO aggregators to fd->hints */
-    if(fd->hints->ranklist != NULL) ADIOI_Free (fd->hints->ranklist);
+	// sort the agg ranklist by bridges
+	int *interleavedbridgeranklist = (int *) ADIOI_Malloc (naggs * sizeof(int)); // resorted agg rank list
+	int *bridgelist = (int *) ADIOI_Malloc (naggs * sizeof(int)); // list of all bride ranks
+	/* each entry here is the number of aggregators associated with the
+	 * bridge rank of the same index in bridgelist */
+	int *bridgelistnum = (int *) ADIOI_Malloc (naggs * sizeof(int));
 
-    fd->hints->cb_nodes = naggs;
-    fd->hints->ranklist = (int *) ADIOI_Malloc (naggs * sizeof(int));
-    memcpy( fd->hints->ranklist, tmp_ranklist, naggs*sizeof(int) );
+	int numbridges = 0;
 
-  /* */
-    ADIOI_Free( tmp_ranklist );
+	int i;
+	for (i=0;i<naggs;i++)
+	    bridgelistnum[i] = 0;
+	int *summaryranklistionids = (int *) ADIOI_Malloc (naggs * sizeof(int));
+	for (i=0;i<naggs;i++)
+	    summaryranklistionids[i] = -1;
+
+	/* build the bridgelist and bridgelistnum data by going thru each agg
+	 * entry and find the associated bridge list index - at the end we will
+	 * know how many aggs belong to each bridge */
+	for (i=0;i<naggs;i++) {
+	    int aggbridgerank = all_procInfo[tmp_ranklist[i]].bridgeRank;
+	    int ionid = all_procInfo[tmp_ranklist[i]].ionID;
+	    int foundrank = 0;
+	    int summaryranklistbridgeindex = 0;
+	    int j;
+	    for (j=0;(j<numbridges && !foundrank);j++) {
+		if (bridgelist[j] == aggbridgerank) {
+		    foundrank = 1;
+		    summaryranklistbridgeindex = j;
+		}
+		else
+		    summaryranklistbridgeindex++;
+	    }
+	    if (!foundrank) {
+		bridgelist[summaryranklistbridgeindex] = aggbridgerank;
+		if (summaryranklistionids[summaryranklistbridgeindex] == -1)
+		    summaryranklistionids[summaryranklistbridgeindex] = aggbridgerank;
+		else if (summaryranklistionids[summaryranklistbridgeindex] > aggbridgerank)
+		    summaryranklistionids[summaryranklistbridgeindex] = aggbridgerank;
+		numbridges++;
+	    }
+
+	    bridgelistnum[summaryranklistbridgeindex]++;
+	}
+
+	// resort bridgelist and bridgelistnum by io node minimum bridge rank
+	int x;
+	for (x=0;x<numbridges;x++) {
+	    for (i=0;i<(numbridges-1);i++) {
+		if (summaryranklistionids[i] > summaryranklistionids[i+1]) {
+		    int tmpionid = summaryranklistionids[i];
+		    summaryranklistionids[i] = summaryranklistionids[i+1];
+		    summaryranklistionids[i+1] = tmpionid;
+		    int tmpbridgerank = bridgelist[i];
+		    bridgelist[i] = bridgelist[i+1];
+		    bridgelist[i+1] = tmpbridgerank;
+		    int tmpbridgeranknum = bridgelistnum[i];
+		    bridgelistnum[i] = bridgelistnum[i+1];
+		    bridgelistnum[i+1] = tmpbridgeranknum;
+		}
+	    }
+	}
+
+	// for each ion make sure bridgelist is in rank order
+	int startSortIndex = -1;
+	int endSortIndex = -1;
+	int currentBridgeIndex = -1;
+
+	while (endSortIndex < numbridges) {
+	    int currentIonId = summaryranklistionids[currentBridgeIndex];
+	    startSortIndex = currentBridgeIndex;
+	    while ((summaryranklistionids[currentBridgeIndex] == currentIonId) &&
+		    (currentBridgeIndex < numbridges))
+		currentBridgeIndex++;
+	    endSortIndex = currentBridgeIndex;
+	    int x;
+	    for (x=startSortIndex;x<endSortIndex;x++) {
+		for (i=startSortIndex;i<(endSortIndex-1);i++) {
+		    if (bridgelist[i] > bridgelist[i+1]) {
+			int tmpbridgerank = bridgelist[i];
+			bridgelist[i] = bridgelist[i+1];
+			bridgelist[i+1] = tmpbridgerank;
+			int tmpbridgeranknum = bridgelistnum[i];
+			bridgelistnum[i] = bridgelistnum[i+1];
+			bridgelistnum[i+1] = tmpbridgeranknum;
+		    }
+		}
+	    }
+	}
+
+	/* populate interleavedbridgeranklist - essentially the agg rank list
+	 * is now sorted by the bridge node and ion minimum bridge rank */
+	int currentrankoffset = 0;
+	for (i=0;i<numbridges;i++) {
+	    int bridgerankiter = 0;
+	    int *thisBridgeAggList = (int *) ADIOI_Malloc (naggs * sizeof(int));
+	    int numAggsForThisBridge = 0;
+
+	    int k;
+	    for (k=0;k<naggs;k++) {
+		int aggbridgerank = all_procInfo[tmp_ranklist[k]].bridgeRank;
+		if (aggbridgerank == bridgelist[i]) {
+		    thisBridgeAggList[numAggsForThisBridge] = tmp_ranklist[k];
+		    numAggsForThisBridge++;
+		}
+	    }
+
+	    // sort thisBridgeAggList
+	    int x;
+	    for (x=0;x<numAggsForThisBridge;x++) {
+		int n;
+		for (n=0;n<(numAggsForThisBridge-1);n++) {
+		    if (thisBridgeAggList[n] > thisBridgeAggList[n+1]) {
+			int tmpthisBridgeAggList = thisBridgeAggList[n];
+			thisBridgeAggList[n] = thisBridgeAggList[n+1];
+			thisBridgeAggList[n+1] = tmpthisBridgeAggList;
+		    }
+		}
+	    }
+	    int n;
+	    for (n=0;n<numAggsForThisBridge;n++) {
+		interleavedbridgeranklist[currentrankoffset] = thisBridgeAggList[n];
+		currentrankoffset++;
+	    }
+	    ADIOI_Free(thisBridgeAggList);
+	}
+
+#ifdef balancecontigtrace
+	fprintf(stderr,"Interleaved aggregator list:\n");
+	for (i=0;i<naggs;i++) {
+	    fprintf(stderr,"Agg: %d Agg rank: %d with bridge rank %d\n",i,interleavedbridgeranklist[i],all_procInfo[interleavedbridgeranklist[i]].bridgeRank);
+	}
+	fprintf(stderr,"Bridges list:\n");
+	for (i=0;i<numbridges;i++) {
+	    fprintf(stderr,"bridge %d ion id %d rank %d num %d\n",i,summaryranklistionids[i],bridgelist[i],bridgelistnum[i]);
+	}
+
+#endif
+	/* copy the ranklist of IO aggregators to fd->hints */
+	if(fd->hints->ranklist != NULL)
+	    ADIOI_Free (fd->hints->ranklist);
+	if(fd->hints->fs_hints.bg.bridgelist != NULL)
+	    ADIOI_Free (fd->hints->fs_hints.bg.bridgelist);
+	if(fd->hints->fs_hints.bg.bridgelistnum != NULL)
+	    ADIOI_Free (fd->hints->fs_hints.bg.bridgelistnum);
+
+	fd->hints->cb_nodes = naggs;
+	fd->hints->fs_hints.bg.numbridges = numbridges;
+	fd->hints->ranklist = (int *) ADIOI_Malloc (naggs * sizeof(int));
+	memcpy( fd->hints->ranklist, interleavedbridgeranklist, naggs*sizeof(int) );
+
+	fd->hints->fs_hints.bg.bridgelist = (int *) ADIOI_Malloc (naggs * sizeof(int));
+	memcpy( fd->hints->fs_hints.bg.bridgelist, bridgelist, naggs*sizeof(int) );
+
+	fd->hints->fs_hints.bg.bridgelistnum = (int *) ADIOI_Malloc (naggs * sizeof(int));
+	memcpy( fd->hints->fs_hints.bg.bridgelistnum, bridgelistnum, naggs*sizeof(int) );
+
+	ADIOI_Free(summaryranklistionids);
+	ADIOI_Free( tmp_ranklist );
+	ADIOI_Free( bridgelistnum );
+	ADIOI_Free( bridgelist );
+	ADIOI_Free( interleavedbridgeranklist );
+    }  else {
+	/* classic topology-agnostic copy of the ranklist of IO aggregators to
+	 * fd->hints */
+	if(fd->hints->ranklist != NULL) ADIOI_Free (fd->hints->ranklist);
+
+	fd->hints->cb_nodes = naggs;
+	fd->hints->ranklist = (int *) ADIOI_Malloc (naggs * sizeof(int));
+	memcpy( fd->hints->ranklist, tmp_ranklist, naggs*sizeof(int) );
+
+	ADIOI_Free( tmp_ranklist );
+    }
     TRACE_ERR("Leaving ADIOI_BG_compute_agg_ranklist_serial\n");
     return;
 }
@@ -455,7 +652,8 @@ int ADIOI_BG_Calc_aggregator(ADIO_File fd,
  * It doesn't seem necessary here (using GPFS block sizes) but keep it in mind
  * (e.g. we could pass striping unit instead of using fs_ptr->blksize). 
  */
-void ADIOI_BG_GPFS_Calc_file_domains(ADIO_Offset *st_offsets,
+void ADIOI_BG_GPFS_Calc_file_domains(ADIO_File fd,
+	                              ADIO_Offset *st_offsets,
                                       ADIO_Offset *end_offsets,
                                       int          nprocs,
                                       int          nprocs_for_coll,
@@ -553,13 +751,91 @@ void ADIOI_BG_GPFS_Calc_file_domains(ADIO_Offset *st_offsets,
     ADIO_Offset naggs_large   = n_gpfs_blk - naggs * (n_gpfs_blk/naggs);
     ADIO_Offset naggs_small   = naggs - naggs_large;
 
-    for (i=0; i<naggs; i++) {
-	if (i < naggs_small) {
+    if (bgmpio_balancecontig == 1) {
+	/* File domains blocks are assigned to aggregators in a breadth-first
+	 * fashion relative to the ions - additionally, file domains on the
+	 * aggregators sharing the same bridgeset and ion have contiguous
+	 * offsets. */
+
+	// initialize everything to small
+	for (i=0; i<naggs; i++)
 	    fd_size[i] = nb_cn_small     * blksize;
-	} else {
-	    fd_size[i] = (nb_cn_small+1) * blksize;
+
+	// go thru and distribute the large across the bridges
+
+	/* bridelistoffset: agg rank list offsets using the bridgelist - each
+	 * entry is created by adding up the indexes for the aggs from all
+	 * previous bridges */
+	int *bridgelistoffset =
+	    (int *) ADIOI_Malloc(fd->hints->fs_hints.bg.numbridges*sizeof(int));
+	/* tmpbridgelistnum: copy of the bridgelistnum whose entries can be
+	 * decremented to keep track of bridge assignments during the actual
+	 * large block assignments to the agg rank list*/
+	int *tmpbridgelistnum =
+	    (int *) ADIOI_Malloc(fd->hints->fs_hints.bg.numbridges*sizeof(int));
+
+	int j;
+	for (j=0;j<fd->hints->fs_hints.bg.numbridges;j++) {
+	    int k, bridgerankoffset = 0;
+	    for (k=0;k<j;k++) {
+		bridgerankoffset += fd->hints->fs_hints.bg.bridgelistnum[k];
+	    }
+	    bridgelistoffset[j] = bridgerankoffset;
+	}
+
+	for (j=0;j<fd->hints->fs_hints.bg.numbridges;j++)
+	    tmpbridgelistnum[j] = fd->hints->fs_hints.bg.bridgelistnum[j];
+	int bridgeiter = 0;
+
+	/* distribute the large blocks across the aggs going breadth-first
+	 * across the bridgelist - this distributes the fd sizes across the
+	 * ions, so later in the file domain assignment when it iterates thru
+	 * the ranklist the offsets will be contiguous within the bridge and
+	 * ion as well */
+	for (j=0;j<naggs_large;j++) {
+	    int foundbridge = 0;
+	    while (!foundbridge) {
+		if (tmpbridgelistnum[bridgeiter] > 0) {
+		    foundbridge = 1;
+		    /*
+		       printf("bridgeiter is %d tmpbridgelistnum[bridgeiter] is %d bridgelistoffset[bridgeiter] is %d\n",bridgeiter,tmpbridgelistnum[bridgeiter],bridgelistoffset[bridgeiter]);
+		       printf("naggs is %d bridgeiter is %d bridgelistoffset[bridgeiter] is %d tmpbridgelistnum[bridgeiter] is %d\n",naggs, bridgeiter,bridgelistoffset[bridgeiter],tmpbridgelistnum[bridgeiter]);
+		       printf("naggs is %d bridgeiter is %d setting fd_size[%d]\n",naggs, bridgeiter,bridgelistoffset[bridgeiter]+(fd->hints->bridgelistnum[bridgeiter]-tmpbridgelistnum[bridgeiter]));
+		     */
+		    fd_size[bridgelistoffset[bridgeiter]+(fd->hints->fs_hints.bg.bridgelistnum[bridgeiter]-tmpbridgelistnum[bridgeiter])] =
+			(nb_cn_small+1) * blksize;
+		    tmpbridgelistnum[bridgeiter]--;
+		}
+		if (bridgeiter == (fd->hints->fs_hints.bg.numbridges-1))
+		    bridgeiter = 0;
+		else
+		    bridgeiter++;
+	    }
+	}
+	ADIOI_Free(tmpbridgelistnum);
+	ADIOI_Free(bridgelistoffset);
+
+    } else {
+	/* BG/L- and BG/P-style distribution of file domains: simple allocation of
+	 * file domins to each aggregator */
+	for (i=0; i<naggs; i++) {
+	    if (i < naggs_small) {
+		fd_size[i] = nb_cn_small     * blksize;
+	    } else {
+		fd_size[i] = (nb_cn_small+1) * blksize;
+	    }
 	}
     }
+#ifdef balancecontigtrace
+    int myrank;
+    MPI_Comm_rank(fd->comm,&myrank);
+    if (myrank == 0) {
+      fprintf(stderr,"naggs_small is %d nb_cn_small is %d\n",naggs_small,nb_cn_small);
+	for (i=0; i<naggs; i++) {
+	    fprintf(stderr,"fd_size[%d] set to %d agg rank is %d\n",i,fd_size[i],fd->hints->ranklist[i]);
+	}
+    }
+#endif
 
 #   if AGG_DEBUG
      DBG_FPRINTF(stderr,"%s(%d): "

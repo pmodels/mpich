@@ -41,7 +41,8 @@
     int ADIOI_BG_gen_agg_ranklist(ADIO_File fd, int n_aggrs_per_pset);
 
     /* overriding ADIOI_Calc_file_domains() to apply 'aligned file domain partitioning'. */
-    void ADIOI_BG_GPFS_Calc_file_domains(ADIO_Offset *st_offsets,
+    void ADIOI_BG_GPFS_Calc_file_domains(ADIO_File fd,
+	                                  ADIO_Offset *st_offsets,
 				          ADIO_Offset *end_offsets,
 				          int          nprocs,
 				          int          nprocs_for_coll,

@@ -37,6 +37,7 @@ long    bglocklessmpio_f_type;
 int     bgmpio_bg_nagg_pset;
 int     bgmpio_pthreadio;
 int     bgmpio_p2pcontig;
+int	bgmpio_balancecontig;
 
 double	bgmpio_prof_cw    [BGMPIO_CIO_LAST];
 double	bgmpio_prof_cr    [BGMPIO_CIO_LAST];
@@ -101,7 +102,17 @@ double	bgmpio_prof_cr    [BGMPIO_CIO_LAST];
  * 2.) The offsets are increasing in rank-order.
  * 3.) There are no gaps between the offsets.
  * 4.) No single rank has a data size which spans multiple file domains.
-*/
+ *
+ * - BGMPIO_BALANCECONTIG -  File domain blocks are assigned to aggregators in
+ *   a breadth-first fashion relative to the ions - additionally, file domains
+ *   on the aggregators sharing the same bridgeset and ion have contiguous
+ *   offsets.  The breadth-first assignment improves performance in the case of
+ *   a relatively small file of size less than the gpfs block size multiplied
+ *   by the number of ions. Files: ad_bg_wrcoll.c ad_bg_aggrs.c.  Possible Values
+ *   - 0 - assign file domain blocks in the traditional manner
+ *   - 1 - if there are variable sized file domain blocks, spread them out
+ *         (balance) across bridge nodes
+ */
 
 void ad_bg_get_env_vars() {
     char *x, *dummy;
@@ -138,6 +149,9 @@ void ad_bg_get_env_vars() {
     x = getenv( "BGMPIO_P2PCONTIG" );
     if (x) bgmpio_p2pcontig = atoi(x);
 
+    bgmpio_balancecontig = 0;
+    x = getenv( "BGMPIO_BALANCECONTIG" );
+    if (x) bgmpio_balancecontig = atoi(x);
 }
 
 /* report timing breakdown for MPI I/O collective call */

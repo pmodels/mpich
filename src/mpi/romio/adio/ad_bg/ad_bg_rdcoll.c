@@ -262,7 +262,7 @@ void ADIOI_BG_ReadStridedColl(ADIO_File fd, void *buf, int count,
      *
      */
     if (bgmpio_tuneblocking)
-    ADIOI_BG_GPFS_Calc_file_domains(st_offsets, end_offsets, nprocs,
+    ADIOI_BG_GPFS_Calc_file_domains(fd, st_offsets, end_offsets, nprocs,
 			    nprocs_for_coll, &min_st_offset,
 			    &fd_start, &fd_end, &fd_size, fd->fs_ptr);
     else

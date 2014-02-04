@@ -74,6 +74,13 @@ struct ADIOI_Hints_struct {
 			unsigned read_chunk_sz; /* chunk size for direct reads */
 			unsigned write_chunk_sz; /* chunk size for direct writes */
 		} xfs;
+	struct {
+	    int *bridgelist; /* list of all bride ranks */
+	    int *bridgelistnum; /* each entry here is the number of aggregators
+				   associated with the bridge rank of the same
+				   index in bridgelist */
+	    int numbridges; /* total number of bridges */
+	} bg;
     } fs_hints;
 
 };

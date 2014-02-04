@@ -21,6 +21,7 @@
 typedef struct {
    int ioNodeIndex; /* similar to psetNum on BGL/BGP */
    int rank; /* my rank */
+   int ionID;  /* ion id this cn is using */
 /*   int myCoords[5]; */
    int bridgeRank; /* my bridge node (or proxy) rank */
    unsigned char coreID;
