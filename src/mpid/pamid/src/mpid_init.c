@@ -128,7 +128,7 @@ MPIDI_Process_t  MPIDI_Process = {
     .num_requests        = 1,
   },
 
-  .mpir_nbc              = 0,
+  .mpir_nbc              = 1,
   .numTasks              = 0,
 };
 
