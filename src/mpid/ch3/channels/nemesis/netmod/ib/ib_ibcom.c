@@ -38,14 +38,21 @@ static struct ibv_device **ib_devlist;
 static struct ibv_context *ib_ctx;
 struct ibv_context *MPID_nem_ib_ctx_export;     /* for SC13 demo connector */
 static struct ibv_pd *ib_pd;
-struct ibv_pd *MPID_nem_ib_pd_export;   /* for SC13 demo connector */
-struct ibv_cq *MPID_nem_ib_rc_shared_scq;
-struct ibv_cq *MPID_nem_ib_rc_shared_scq_scratch_pad;
-static struct ibv_cq *MPID_nem_ib_rc_shared_rcq;
-static struct ibv_cq *MPID_nem_ib_rc_shared_rcq_scratch_pad;
+struct ibv_pd        *MPID_nem_ib_pd_export;   /* for SC13 demo connector */
+struct ibv_cq        *MPID_nem_ib_rc_shared_scq;
+static int            MPID_nem_ib_rc_shared_scq_ref_count;
+struct ibv_cq        *MPID_nem_ib_rc_shared_scq_scratch_pad;
+static int            MPID_nem_ib_rc_shared_scq_scratch_pad_ref_count;
 static struct ibv_cq *MPID_nem_ib_ud_shared_scq;
-struct ibv_cq *MPID_nem_ib_ud_shared_rcq;
+static int            MPID_nem_ib_ud_shared_scq_ref_count;
+static struct ibv_cq *MPID_nem_ib_rc_shared_rcq;
+static int            MPID_nem_ib_rc_shared_rcq_ref_count;
+static struct ibv_cq *MPID_nem_ib_rc_shared_rcq_scratch_pad;
+static int            MPID_nem_ib_rc_shared_rcq_scratch_pad_ref_count;
+struct ibv_cq        *MPID_nem_ib_ud_shared_rcq;
+static int            MPID_nem_ib_ud_shared_rcq_ref_count;
 uint8_t *MPID_nem_ib_scratch_pad = 0;
+int MPID_nem_ib_scratch_pad_ref_count;
 char *MPID_nem_ib_rdmawr_from_alloc_free_list_front[MPID_NEM_IB_RDMAWR_FROM_ALLOC_NID] = { 0 };
 char *MPID_nem_ib_rdmawr_from_alloc_arena_free_list[MPID_NEM_IB_RDMAWR_FROM_ALLOC_NID] = { 0 };
 struct ibv_mr* MPID_nem_ib_rdmawr_to_alloc_mr;
@@ -62,7 +69,9 @@ uint8_t *MPID_nem_ib_rdmawr_to_alloc_free_list;
 #define MPID_NEM_IB_RANGE_CHECK_WITH_ERROR(condesc, conp)		\
 {							\
     if (condesc < 0 || condesc >= MPID_NEM_IB_COM_SIZE) {		\
-        return -1;                                  \
+    dprintf("condesc=%d\n", condesc);\    
+MPID_nem_ib_segv;                                \
+    return -1;                                  \
     }                                               \
     conp = &contab[condesc];                        \
     MPID_NEM_IB_COM_ERR_CHKANDJUMP(conp->icom_used != 1, -1, dprintf("MPID_NEM_IB_RANGE_CHECK_WITH_ERROR,conp->icom_used=%d\n", conp->icom_used)); \
@@ -101,10 +110,10 @@ static int MPID_nem_ib_rdmawr_to_init(uint64_t sz)
     MPID_nem_ib_rdmawr_to_alloc_start = start;
     MPID_nem_ib_rdmawr_to_alloc_free_list = start;
     for (cur = start;
-         cur < start + sz - MPID_NEM_IB_COM_RDMABUF_SZSEG;
-         cur += MPID_NEM_IB_COM_RDMABUF_SZSEG) {
+         cur < (uint8_t *)start + sz - MPID_NEM_IB_COM_RDMABUF_SZSEG;
+         cur = (uint8_t *)cur + MPID_NEM_IB_COM_RDMABUF_SZSEG) {
         //dprintf("rdmawr_to_init,cur=%p\n", cur);
-        ((MPID_nem_ib_rdmawr_to_alloc_hdr_t *) cur)->next = cur + MPID_NEM_IB_COM_RDMABUF_SZSEG;
+        ((MPID_nem_ib_rdmawr_to_alloc_hdr_t *) cur)->next = (uint8_t*)cur + MPID_NEM_IB_COM_RDMABUF_SZSEG;
     }
     ((MPID_nem_ib_rdmawr_to_alloc_hdr_t *) cur)->next = 0;
 
@@ -142,10 +151,10 @@ void MPID_nem_ib_rdmawr_to_free(void *p, int nslots)
     ((MPID_nem_ib_rdmawr_to_alloc_hdr_t *)
      ((uint8_t*)p + MPID_NEM_IB_COM_RDMABUF_SZSEG * (nslots-1)))->next =
         MPID_nem_ib_rdmawr_to_alloc_free_list;
-    for (q = p + MPID_NEM_IB_COM_RDMABUF_SZSEG * (nslots-2);
+    for (q = (uint8_t *)p + MPID_NEM_IB_COM_RDMABUF_SZSEG * (nslots-2);
          q >= p;
-         q -= MPID_NEM_IB_COM_RDMABUF_SZSEG) {
-        ((MPID_nem_ib_rdmawr_to_alloc_hdr_t *) q)->next = q + MPID_NEM_IB_COM_RDMABUF_SZSEG;
+         q = (uint8_t *)q - MPID_NEM_IB_COM_RDMABUF_SZSEG) {
+        ((MPID_nem_ib_rdmawr_to_alloc_hdr_t *) q)->next = (uint8_t *)q + MPID_NEM_IB_COM_RDMABUF_SZSEG;
     }
     MPID_nem_ib_rdmawr_to_alloc_free_list = p;
 }
@@ -316,6 +325,7 @@ static int MPID_nem_ib_com_device_init()
 #else
     dev_name = MPIU_Strdup(ibv_get_device_name(ib_devlist[i]));
     dprintf("MPID_nem_ib_com_device_init,dev_name=%s\n", dev_name);
+    MPIU_Free(dev_name);
 #endif
     /* Create a PD */
     if (MPID_nem_ib_pd_export) {
@@ -351,6 +361,7 @@ static int MPID_nem_ib_com_clean(MPID_nem_ib_com_t * conp)
 {
     int i;
     int ibcom_errno = 0;
+    int ib_errno;
     int retval;
 
     if (conp->icom_qp) {
@@ -360,21 +371,30 @@ static int MPID_nem_ib_com_clean(MPID_nem_ib_com_t * conp)
     if (conp->icom_mrlist && conp->icom_mrlen > 0) {
         switch (conp->open_flag) {
         case MPID_NEM_IB_COM_OPEN_RC:
-            if(MPID_nem_ib_rc_shared_scq) {
+            MPIU_Assert(MPID_nem_ib_rc_shared_scq_ref_count > 0);
+            if(--MPID_nem_ib_rc_shared_scq_ref_count == 0) {
+                dprintf("ibcom,destroy MPID_nem_ib_rc_shared_scq\n");
                 ib_errno = ibv_destroy_cq(MPID_nem_ib_rc_shared_scq);
-                MPID_NEM_IB_COM_ERR_CHKANDJUMP(ib_errno, -1, dprintf("ibv_destroy_cq"));
+                MPID_NEM_IB_COM_ERR_CHKANDJUMP(ib_errno, -1, dprintf("ibv_destroy_cq failed\n")); 
+
+                /* Tell drain_scq that CQ is destroyed because
+                   drain_scq is called after poll_eager calls vc_terminate */
                 MPID_nem_ib_rc_shared_scq = NULL;
             }
-            if(MPID_nem_ib_rc_shared_rcq) {
+            MPIU_Assert(MPID_nem_ib_rc_shared_rcq_ref_count > 0);
+            if(--MPID_nem_ib_rc_shared_rcq_ref_count == 0) {
+                dprintf("ibcom,destroy MPID_nem_ib_rc_shared_rcq\n");
                 ib_errno = ibv_destroy_cq(MPID_nem_ib_rc_shared_rcq);
-                MPID_NEM_IB_COM_ERR_CHKANDJUMP(ib_errno, -1, dprintf("ibv_destroy_cq"));
-                MPID_nem_ib_rc_shared_rcq = NULL;
+                MPID_NEM_IB_COM_ERR_CHKANDJUMP(ib_errno, -1, dprintf("ibv_destroy_cq failed\n"));
             }
+#if 0 /* It's not used */
             retval = munmap(conp->icom_mem[MPID_NEM_IB_COM_RDMAWR_FROM], MPID_NEM_IB_COM_RDMABUF_SZ);
             MPID_NEM_IB_COM_ERR_CHKANDJUMP(retval, -1, dprintf("munmap"));
+#endif
+#if 0 /* Don't free it because it's managed through VC_FILED(vc, ibcom->remote_ringbuf) */
             retval = munmap(conp->icom_mem[MPID_NEM_IB_COM_RDMAWR_TO], MPID_NEM_IB_COM_RDMABUF_SZ);
             MPID_NEM_IB_COM_ERR_CHKANDJUMP(retval, -1, dprintf("munmap"));
-
+#endif
             MPIU_Free(conp->icom_mrlist);
             MPIU_Free(conp->icom_mem);
             MPIU_Free(conp->icom_msize);
@@ -394,16 +414,23 @@ static int MPID_nem_ib_com_clean(MPID_nem_ib_com_t * conp)
             MPIU_Free(conp->icom_rr);
             break;
         case MPID_NEM_IB_COM_OPEN_SCRATCH_PAD:
-            if(MPID_nem_ib_rc_shared_scq_scratch_pad) {
+            MPIU_Assert(MPID_nem_ib_rc_shared_scq_scratch_pad_ref_count > 0);
+            if(--MPID_nem_ib_rc_shared_scq_scratch_pad_ref_count == 0) {
                 ib_errno = ibv_destroy_cq(MPID_nem_ib_rc_shared_scq_scratch_pad);
-                MPID_NEM_IB_COM_ERR_CHKANDJUMP(ib_errno, -1, dprintf("ibv_destroy_cq"));
+                MPID_NEM_IB_COM_ERR_CHKANDJUMP(ib_errno, -1, dprintf("ibv_destroy_cq failed\n"));
+                /* Tell drain_scq that CQ is destroyed because
+                   drain_scq is called after poll_eager calls vc_terminate */
                 MPID_nem_ib_rc_shared_scq_scratch_pad = NULL;
             }
-            if(MPID_nem_ib_rc_shared_scq_scratch_pad) {
-                ib_errno = ibv_destroy_cq(MPID_nem_ib_rc_shared_scq_scratch_pad);
-                MPID_NEM_IB_COM_ERR_CHKANDJUMP(ib_errno, -1, dprintf("ibv_destroy_cq"));
-                MPID_nem_ib_rc_shared_scq_scratch_pad = NULL;
+            MPIU_Assert(MPID_nem_ib_rc_shared_rcq_scratch_pad_ref_count > 0);
+            if(--MPID_nem_ib_rc_shared_rcq_scratch_pad_ref_count == 0) {
+                ib_errno = ibv_destroy_cq(MPID_nem_ib_rc_shared_rcq_scratch_pad);
+                MPID_NEM_IB_COM_ERR_CHKANDJUMP(ib_errno, -1, dprintf("ibv_destroy_cq failed\n"));
             }
+            retval = munmap(conp->icom_mem[MPID_NEM_IB_COM_SCRATCH_PAD_FROM],
+                            MPID_NEM_IB_COM_SCRATCH_PAD_FROM_SZ);
+            MPID_NEM_IB_COM_ERR_CHKANDJUMP(retval, -1, dprintf("munmap"));
+
             MPIU_Free(conp->icom_mrlist);
             MPIU_Free(conp->icom_mem);
             MPIU_Free(conp->icom_msize);
@@ -414,19 +441,24 @@ static int MPID_nem_ib_com_clean(MPID_nem_ib_com_t * conp)
 
 #ifndef HAVE_LIBDCFA
             MPIU_Free(conp->icom_sr[MPID_NEM_IB_COM_SCRATCH_PAD_INITIATOR].sg_list);
+            MPIU_Free(conp->icom_sr[MPID_NEM_IB_COM_SCRATCH_PAD_GET].sg_list);
+            MPIU_Free(conp->icom_sr[MPID_NEM_IB_COM_SCRATCH_PAD_CAS].sg_list);
 #endif
             MPIU_Free(conp->icom_sr);
             break;
         case MPID_NEM_IB_COM_OPEN_UD:
-            if(MPID_nem_ib_ud_shared_scq) {
+            MPIU_Assert(MPID_nem_ib_ud_shared_scq_ref_count > 0);
+            if(--MPID_nem_ib_ud_shared_scq_ref_count == 0) {
                 ib_errno = ibv_destroy_cq(MPID_nem_ib_ud_shared_scq);
                 MPID_NEM_IB_COM_ERR_CHKANDJUMP(ib_errno, -1, dprintf("ibv_destroy_cq"));
+                /* Tell drain_scq that CQ is destroyed because
+                   drain_scq is called after poll_eager calls vc_terminate */
                 MPID_nem_ib_ud_shared_scq = NULL;
             }
-            if(MPID_nem_ib_ud_shared_rcq) {
+            MPIU_Assert(MPID_nem_ib_ud_shared_rcq_ref_count > 0);
+            if(--MPID_nem_ib_ud_shared_rcq_ref_count == 0) {
                 ib_errno = ibv_destroy_cq(MPID_nem_ib_ud_shared_rcq);
                 MPID_NEM_IB_COM_ERR_CHKANDJUMP(ib_errno, -1, dprintf("ibv_destroy_cq"));
-                MPID_nem_ib_ud_shared_rcq = NULL;
             }
             retval = munmap(conp->icom_mem[MPID_NEM_IB_COM_UDWR_FROM], MPID_NEM_IB_COM_UDBUF_SZ);
             MPID_NEM_IB_COM_ERR_CHKANDJUMP(retval, -1, dprintf("munmap"));
@@ -452,7 +484,7 @@ static int MPID_nem_ib_com_clean(MPID_nem_ib_com_t * conp)
 
  fn_exit:
     return ibcom_errno;
-    //fn_fail:
+ fn_fail:
     goto fn_exit;
 }
 
@@ -533,6 +565,7 @@ int MPID_nem_ib_com_open(int ib_port, int open_flag, int *condesc)
     /* Create send/recv CQ */
     switch (open_flag) {
     case MPID_NEM_IB_COM_OPEN_RC:
+        MPID_nem_ib_rc_shared_scq_ref_count++;
         if (!MPID_nem_ib_rc_shared_scq) {
 #ifdef HAVE_LIBDCFA
             MPID_nem_ib_rc_shared_scq = ibv_create_cq(ib_ctx, MPID_NEM_IB_COM_MAX_CQ_CAPACITY);
@@ -545,6 +578,7 @@ int MPID_nem_ib_com_open(int ib_port, int open_flag, int *condesc)
         }
         conp->icom_scq = MPID_nem_ib_rc_shared_scq;
 
+        MPID_nem_ib_rc_shared_rcq_ref_count++;
         if (!MPID_nem_ib_rc_shared_rcq) {
 #ifdef HAVE_LIBDCFA
             MPID_nem_ib_rc_shared_rcq = ibv_create_cq(ib_ctx, MPID_NEM_IB_COM_MAX_CQ_CAPACITY);
@@ -558,6 +592,7 @@ int MPID_nem_ib_com_open(int ib_port, int open_flag, int *condesc)
         conp->icom_rcq = MPID_nem_ib_rc_shared_rcq;
         break;
     case MPID_NEM_IB_COM_OPEN_SCRATCH_PAD:
+        MPID_nem_ib_rc_shared_scq_scratch_pad_ref_count++;
         if (!MPID_nem_ib_rc_shared_scq_scratch_pad) {
 #ifdef HAVE_LIBDCFA
             MPID_nem_ib_rc_shared_scq_scratch_pad =
@@ -571,6 +606,7 @@ int MPID_nem_ib_com_open(int ib_port, int open_flag, int *condesc)
         }
         conp->icom_scq = MPID_nem_ib_rc_shared_scq_scratch_pad;
 
+        MPID_nem_ib_rc_shared_rcq_scratch_pad_ref_count++;
         if (!MPID_nem_ib_rc_shared_rcq_scratch_pad) {
 #ifdef HAVE_LIBDCFA
             MPID_nem_ib_rc_shared_rcq_scratch_pad =
@@ -585,6 +621,7 @@ int MPID_nem_ib_com_open(int ib_port, int open_flag, int *condesc)
         conp->icom_rcq = MPID_nem_ib_rc_shared_rcq_scratch_pad;
         break;
     case MPID_NEM_IB_COM_OPEN_UD:
+        MPID_nem_ib_ud_shared_scq_ref_count++;
         if (!MPID_nem_ib_ud_shared_scq) {
 #ifdef HAVE_LIBDCFA
             MPID_nem_ib_ud_shared_scq = ibv_create_cq(ib_ctx, MPID_NEM_IB_COM_MAX_CQ_CAPACITY);
@@ -597,6 +634,7 @@ int MPID_nem_ib_com_open(int ib_port, int open_flag, int *condesc)
         }
         conp->icom_scq = MPID_nem_ib_ud_shared_scq;
 
+        MPID_nem_ib_ud_shared_rcq_ref_count++;
         if (!MPID_nem_ib_ud_shared_rcq) {
 #ifdef HAVE_LIBDCFA
             MPID_nem_ib_ud_shared_rcq = ibv_create_cq(ib_ctx, MPID_NEM_IB_COM_MAX_CQ_CAPACITY);
@@ -1114,6 +1152,7 @@ int MPID_nem_ib_com_alloc(int condesc, int sz)
 
     case MPID_NEM_IB_COM_OPEN_SCRATCH_PAD:
         /* RDMA-write-to local memory area */
+        MPID_nem_ib_scratch_pad_ref_count++;
         if (!MPID_nem_ib_scratch_pad) {
             MPID_nem_ib_scratch_pad = mmap(0, sz, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, -1, 0);
             dprintf("MPID_nem_ib_com_alloc,mmap=%p,len=%d\n", MPID_nem_ib_scratch_pad, sz);
@@ -1155,7 +1194,7 @@ int MPID_nem_ib_com_alloc(int condesc, int sz)
     goto fn_exit;
 }
 
-void MPID_nem_ib_com_free(int condesc, int sz) {
+int MPID_nem_ib_com_free(int condesc, int sz) {
     MPID_nem_ib_com_t *conp;
     int ibcom_errno = 0;
     int retval;
@@ -1165,10 +1204,12 @@ void MPID_nem_ib_com_free(int condesc, int sz) {
     switch (conp->open_flag) {
 
     case MPID_NEM_IB_COM_OPEN_SCRATCH_PAD:
-        MPIU_Assert(scratch_pad_ref_count > 0);
-        if(--scratch_pad_ref_count == 0) {
-            retval = munmap(scratch_pad, sz);
+        MPIU_Assert(MPID_nem_ib_scratch_pad_ref_count > 0);
+        if(--MPID_nem_ib_scratch_pad_ref_count == 0) {
+            retval = munmap(MPID_nem_ib_scratch_pad, sz);
             MPID_NEM_IB_COM_ERR_CHKANDJUMP(retval, -1, dprintf("munmap"));
+            MPID_nem_ib_scratch_pad = NULL;
+            dprintf("ib_com_free,MPID_nem_ib_scratch_pad is freed\n");
         }
         break;
     default:
@@ -1231,7 +1272,6 @@ int MPID_nem_ib_com_rts(int condesc, int remote_qpnum, uint16_t remote_lid,
         }
         goto common_tail;
     case MPID_NEM_IB_COM_OPEN_RC:
-    case MPID_NEM_IB_COM_OPEN_SCRATCH_PAD:
         /* Init QP  */
         ib_errno = modify_qp_to_init(conp->icom_qp, conp->icom_port, 0);
         if (ib_errno) {
@@ -1404,7 +1444,7 @@ int MPID_nem_ib_com_isend(int condesc,
     conp->icom_sr[MPID_NEM_IB_COM_SMT_NOINLINE].sg_list[num_sge].addr =
         mr_rdmawr_from->host_addr + 
         ((uint64_t) buf_from + MPID_NEM_IB_NETMOD_HDR_SIZEOF(local_ringbuf_type) + sz_prefix + sz_hdr -
-         (uint64_t) MPID_NEM_IB_RDMAWR_FROM_ALLOC_ARENA_START(REQ_FIELD(sreq, buf_from)));
+         (uint64_t) MPID_NEM_IB_RDMAWR_FROM_ALLOC_ARENA_START(buf_from));
 #else
     conp->icom_sr[MPID_NEM_IB_COM_SMT_NOINLINE].sg_list[num_sge].addr =
         (uint64_t) buf_from + MPID_NEM_IB_NETMOD_HDR_SIZEOF(local_ringbuf_type) + sz_prefix + sz_hdr;
@@ -1986,6 +2026,7 @@ int MPID_nem_ib_com_put_scratch_pad(int condesc, uint64_t wr_id, uint64_t offset
     /* Use inline so that we don't need to worry about overwriting write-from buffer */
     assert(sz <= conp->max_inline_data);
 
+    assert(conp->icom_mem[MPID_NEM_IB_COM_SCRATCH_PAD_FROM] == laddr);
     memcpy(conp->icom_mem[MPID_NEM_IB_COM_SCRATCH_PAD_FROM], laddr, sz);
 
     void *from =

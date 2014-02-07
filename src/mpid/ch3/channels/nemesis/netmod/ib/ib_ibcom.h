@@ -176,6 +176,7 @@ extern struct ibv_cq *MPID_nem_ib_rc_shared_scq;
 extern struct ibv_cq *MPID_nem_ib_rc_shared_scq_scratch_pad;
 extern struct ibv_cq *MPID_nem_ib_ud_shared_rcq;
 extern uint8_t *MPID_nem_ib_scratch_pad;
+extern int MPID_nem_ib_scratch_pad_ref_count;
 extern char *MPID_nem_ib_rdmawr_from_alloc_free_list_front[MPID_NEM_IB_RDMAWR_FROM_ALLOC_NID];
 extern char *MPID_nem_ib_rdmawr_from_alloc_arena_free_list[MPID_NEM_IB_RDMAWR_FROM_ALLOC_NID];
 extern struct ibv_mr* MPID_nem_ib_rdmawr_to_alloc_mr;
@@ -368,6 +369,7 @@ typedef struct {
     int nslot;
     MPIDI_VC_t * vc;
     uint64_t remote_released[(MPID_NEM_IB_COM_RDMABUF_NSEG + 63) / 64];
+    int ref_count; /* number of VCs sharing the ring-buffer */
 } MPID_nem_ib_ringbuf_t;
 
 /* Represent a ring-buffer is exclusively acquired */
@@ -472,6 +474,15 @@ typedef struct MPID_nem_ib_com {
     
     /* Ring buffer sectors obtained through ask-send protocol */
     MPID_nem_ib_ringbuf_sectorq_t sectorq; 
+
+
+    /* Two transactions from the both ends for a connection
+       can be outstanding at the same time when they were initiated
+       at the same time. This makes one end try to send ACK2 after
+       freeing scratch-pad QP for the connection. So we must monitor and
+       wait until all the onnection request transactions ends before
+       freeing scratch-pad QP.*/
+    int outstanding_connection_tx; 
 
 } MPID_nem_ib_com_t;
 

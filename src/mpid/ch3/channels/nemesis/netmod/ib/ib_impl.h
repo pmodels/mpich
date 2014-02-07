@@ -325,7 +325,7 @@ typedef struct {
 /* State store for connection protocol */
 typedef struct MPID_nem_ib_ringbuf_req {
     MPID_nem_ib_ringbuf_cmd_type_t state;
-    MPIDI_VC_t * vc;
+    MPIDI_VC_t * vc; /* You can eliminate this. */
     MPID_nem_ib_com_t *ibcom; /* ibcom of scratch pad, referenced in drain_scq */
 
     /* fetch the head and compare-and-swap head and head + 1 
@@ -526,10 +526,17 @@ int MPID_nem_ib_iSendContig(MPIDI_VC_t * vc, MPID_Request * sreq, void *hdr,
 int MPID_nem_ib_iStartContigMsg(MPIDI_VC_t * vc, void *hdr, MPIDI_msg_sz_t hdr_sz, void *data,
                                 MPIDI_msg_sz_t data_sz, MPID_Request ** sreq_ptr);
 
+int MPID_nem_ib_cm_cas_core(int rank, MPID_nem_ib_cm_cmd_shadow_t* shadow);
+int MPID_nem_ib_cm_cas(MPIDI_VC_t * vc, uint32_t ask_on_connect);
 int MPID_nem_ib_cm_cmd_core(int rank, MPID_nem_ib_cm_cmd_shadow_t* shadow, void* buf, MPIDI_msg_sz_t sz, uint32_t syn, uint16_t ringbuf_index);
-int MPID_nem_ib_ringbuf_alloc(MPIDI_VC_t * vc);
+int MPID_nem_ib_ringbuf_ask_cas(MPIDI_VC_t * vc, MPID_nem_ib_ringbuf_req_t* req);
+int MPID_nem_ib_ringbuf_ask_fetch_core(MPIDI_VC_t * vc, MPID_nem_ib_ringbuf_cmd_shadow_t* shadow, MPIDI_msg_sz_t sz);
+int MPID_nem_ib_ringbuf_ask_fetch(MPIDI_VC_t * vc);
 int MPID_nem_ib_ringbuf_ask_cas_core(MPIDI_VC_t * vc, MPID_nem_ib_ringbuf_cmd_shadow_t* shadow, uint64_t head);
 int MPID_nem_ib_ringbuf_progress(void);
+
+int MPID_nem_ib_ringbuf_alloc(MPIDI_VC_t * vc);
+int MPID_nem_ib_ringbuf_free(MPIDI_VC_t * vc);
 
 /* used by ib_poll.c */
 int MPID_nem_ib_send_progress(MPIDI_VC_t * vc);
@@ -566,8 +573,10 @@ extern int MPID_nem_ib_conn_ud_fd;
 extern MPID_nem_ib_com_t *MPID_nem_ib_conn_ud_ibcom;
 extern MPID_nem_ib_conn_ud_t *MPID_nem_ib_conn_ud;
 extern MPID_nem_ib_conn_t *MPID_nem_ib_conns;
+extern int MPID_nem_ib_conns_ref_count;
 //extern MPIDI_VC_t **MPID_nem_ib_pollingset;
 extern int *MPID_nem_ib_scratch_pad_fds; /* TODO: create structure including fds and ibcoms */
+extern int MPID_nem_ib_scratch_pad_fds_ref_count;
 extern MPID_nem_ib_com_t **MPID_nem_ib_scratch_pad_ibcoms;
 //extern int MPID_nem_ib_npollingset;
 extern void *MPID_nem_ib_fl[18];

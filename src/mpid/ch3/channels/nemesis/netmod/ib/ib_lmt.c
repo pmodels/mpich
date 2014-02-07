@@ -43,6 +43,7 @@ int MPID_nem_ib_lmt_initiate_lmt(struct MPIDI_VC *vc, union MPIDI_CH3_Pkt *rts_p
     MPIDI_Datatype_get_info(req->dev.user_count, req->dev.datatype, dt_contig, data_sz, dt_ptr,
                             dt_true_lb);
 
+    /* FIXME: who frees s_cookie_buf? */
     /* malloc memory area for cookie. auto variable is NG because isend does not copy payload */
     MPID_nem_ib_lmt_cookie_t *s_cookie_buf =
         (MPID_nem_ib_lmt_cookie_t *) MPIU_Malloc(sizeof(MPID_nem_ib_lmt_cookie_t));

@@ -20,6 +20,7 @@
 static int entered_send_progress = 0;
 
 #ifdef MPID_NEM_IB_ONDEMAND
+#if 0
 // tree format is
 // one or more <left_pointer(int), right_pointer(int), value(int), length(int), string(char[])>
 #define MPID_NEM_IB_MAP_LPTR(ptr) *(int*)((ptr) + sizeof(int)*0)
@@ -137,6 +138,7 @@ int MPID_nem_ib_cm_map_get(MPID_nem_ib_cm_map_t * map, char *key, int key_length
   fn_fail:
     goto fn_exit;
 }
+#endif
 #endif
 
 #undef FUNCNAME
@@ -405,7 +407,7 @@ int MPID_nem_ib_iSendContig(MPIDI_VC_t * vc, MPID_Request * sreq, void *hdr,
     if (vc_ib->connection_state != MPID_NEM_IB_CM_ESTABLISHED) {
         /* connected=closed/transit,ringbuf-type=shared,slot-available=no,
            going-to-be-enqueued=yes case */
-        REQ_FIELD(sreq, ask) = 0;
+        REQ_FIELD(sreq, ask) = 0; /* We can't ask because ring-buffer type is not determined yet. */
         MPIU_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**MPID_nem_ib_ringbuf_ask_fetch");
     } else {        
         /* connected=established,ringbuf-type=shared,slot-available=no,
@@ -994,7 +996,7 @@ int MPID_nem_ib_send_progress(MPIDI_VC_t * vc)
                                    vc_ib->ibcom->lsr_seq_num_tail) >= vc_ib->ibcom->local_ringbuf_nslot)) {
                 /* Prevent RDMA-read for rendezvous protocol from issuing ask */
 
-                if(!REQ_FIELD(sreq, ask)) {
+                if(!REQ_FIELD(sreq, ask)) { /* First packet after connection hasn't asked slot */
                     /* Transitioning from exclusive to shared and need to issue ask. 
                        This case is detected because exclusive entries in the queue are deleted
                        and deprived of slots of exclusive and the last state is set to
@@ -1449,6 +1451,11 @@ int MPID_nem_ib_cm_cas(MPIDI_VC_t * vc, uint32_t ask_on_connect)
     MPIU_ERR_CHKANDJUMP(ibcom_errno, mpi_errno, MPI_ERR_OTHER, "**MPID_nem_ib_com_obtain_pointer");
     dprintf("req->ibcom=%p\n", req->ibcom);
 
+    /* Increment transaction counter here because cm_cas is called only once
+       (cm_cas_core might be called more than once when retrying) */
+    req->ibcom->outstanding_connection_tx += 1;
+    dprintf("cm_cas,tx=%d\n", req->ibcom->outstanding_connection_tx);
+
     /* Acquire remote scratch pad */
     if (MPID_nem_ib_ncqe_scratch_pad < MPID_NEM_IB_COM_MAX_CQ_CAPACITY &&
         req->ibcom->ncom_scratch_pad < MPID_NEM_IB_COM_MAX_SQ_CAPACITY &&
@@ -1514,6 +1521,7 @@ int MPID_nem_ib_cm_cmd_core(int rank, MPID_nem_ib_cm_cmd_shadow_t* shadow, void*
             /* Prepare QP (RESET). Attempting to overlap it with preparing QP (RESET) on the responder side */
             ibcom_errno = MPID_nem_ib_com_open(ib_port, MPID_NEM_IB_COM_OPEN_RC, &MPID_nem_ib_conns[rank].fd);
             MPIU_ERR_CHKANDJUMP(ibcom_errno, mpi_errno, MPI_ERR_OTHER, "**MPID_nem_ib_com_open");
+            MPID_nem_ib_conns_ref_count++;
             VC_FIELD(MPID_nem_ib_conns[rank].vc, connection_state) |=
                 MPID_NEM_IB_CM_LOCAL_QP_RESET;
             

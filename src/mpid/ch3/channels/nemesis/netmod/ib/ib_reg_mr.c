@@ -25,6 +25,8 @@
 #define MPID_NEM_IB_COM_REG_MR_SZPAGE 4096
 #define MPID_NEM_IB_COM_REG_MR_LOGSZPAGE 12
 
+static int ref_count;
+
 /* Allocator using reference count at the head of
    aligned memory area */
 
@@ -303,8 +305,10 @@ int MPID_nem_ib_com_register_cache_init()
     int ibcom_errno = 0;
     int i;
 
-    ref_cout++;
-
+    ref_count++;
+    dprintf("cache_init,ref_count=%d\n", ref_count);
+    
+    if(ref_count == 1) {
     /* Using the address to the start node to express the end of the list
      * instead of using NULL */
     for (i = 0; i < MPID_NEM_IB_COM_REG_MR_NLINE; i++) {
@@ -315,6 +319,7 @@ int MPID_nem_ib_com_register_cache_init()
     }
 
     dprintf("[MrCache] cache initializes %d entries\n", MPID_NEM_IB_COM_REG_MR_NLINE);
+    }
 
     fn_exit:
     return ibcom_errno;
@@ -329,7 +334,9 @@ int MPID_nem_ib_com_register_cache_release()
     struct MPID_nem_ib_com_reg_mr_cache_entry_t *p;
     int i = 0, cnt = 0;
 
-    MPIU_Assert(ref_count > 0) {
+    dprintf("cache_release,ref_count=%d\n", ref_count);
+
+    MPIU_Assert(ref_count > 0);
     if(--ref_count > 0) {
         goto fn_exit;
     } 
@@ -339,14 +346,20 @@ int MPID_nem_ib_com_register_cache_release()
              (struct MPID_nem_ib_com_reg_mr_cache_entry_t *) MPID_nem_ib_com_reg_mr_cache[i].
              lru_next;
              p != (struct MPID_nem_ib_com_reg_mr_cache_entry_t *) &MPID_nem_ib_com_reg_mr_cache[i];
-             p = (struct MPID_nem_ib_com_reg_mr_cache_entry_t *) p->lru_next) {
+             ) {
             if (p && p->addr > 0) {
                 ib_errno = MPID_nem_ib_com_dereg_mr(p->mr);
                 MPID_NEM_IB_COM_ERR_CHKANDJUMP(ib_errno, -1, printf("MPID_nem_ib_com_dereg_mr"));
-                afree(p, MPID_NEM_IB_COM_AALLOC_ID_MRCACHE);
+                struct MPID_nem_ib_com_reg_mr_cache_entry_t *p_old = p;
+                p = (struct MPID_nem_ib_com_reg_mr_cache_entry_t *) p->lru_next;
+                afree(p_old, MPID_NEM_IB_COM_AALLOC_ID_MRCACHE);
                 cnt++;
             }
         }
+        MPID_nem_ib_com_reg_mr_cache[i].lru_next =
+            (struct MPID_nem_ib_com_reg_mr_listnode_t *) &MPID_nem_ib_com_reg_mr_cache[i];
+        MPID_nem_ib_com_reg_mr_cache[i].lru_prev =
+            (struct MPID_nem_ib_com_reg_mr_listnode_t *) &MPID_nem_ib_com_reg_mr_cache[i];
     }
 
     //__lru_queue_display();
