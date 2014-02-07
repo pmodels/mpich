@@ -119,24 +119,24 @@ int main(int argc, char * argv[])
     MPI_ASSERT(MPIX_Type_contiguous_x( (MPI_Count)count, MPI_CHAR, &bigtype));
     MPI_ASSERT(MPI_Type_commit(&bigtype));
 
-    char * rbuf = NULL;
-    char * sbuf = NULL;
-
-    rbuf = malloc( count * sizeof(char)); assert(rbuf!=NULL);
-    sbuf = malloc( count * sizeof(char)); assert(sbuf!=NULL);
-
-    for (i=0; i<count; i++)
-        rbuf[i] = 'a';
-    for (i=0; i<count; i++)
-        sbuf[i] = 'z';
-
     MPI_Request requests[2];
     MPI_Status statuses[2];
 
+    char * rbuf = NULL;
+    char * sbuf = NULL;
+
     if (rank==(size-1)) {
+        rbuf = malloc( count * sizeof(char)); assert(rbuf!=NULL);
+        for (i=0; i<count; i++)
+            rbuf[i] = 'a';
+
         MPI_ASSERT(MPI_Irecv(rbuf, 1, bigtype, 0,      0, MPI_COMM_WORLD, &(requests[1]) ));
     }
     if (rank==0) {
+        sbuf = malloc( count * sizeof(char)); assert(sbuf!=NULL);
+        for (i=0; i<count; i++)
+            sbuf[i] = 'z';
+
         MPI_ASSERT(MPI_Isend(sbuf, 1, bigtype, size-1, 0, MPI_COMM_WORLD, &(requests[0]) ));
     }
 
