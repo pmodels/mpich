@@ -608,9 +608,23 @@ HYD_status HYDU_sock_is_local(char *host, int *is_local)
 #else
 HYD_status HYDU_sock_is_local(char *host, int *is_local)
 {
+    char lhost[MAX_HOSTNAME_LEN];
+    HYD_status status = HYD_SUCCESS;
+
     *is_local = 0;
 
-    return HYD_SUCCESS;
+    if (gethostname(lhost, MAX_HOSTNAME_LEN) < 0) {
+        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "gethostname returned an error\n");
+    }
+    else if (!strcmp(lhost, host)) {
+        *is_local = 1;
+    }
+
+  fn_exit:
+    return status;
+
+  fn_fail:
+    goto fn_exit;
 }
 #endif /* HAVE_GETIFADDRS && HAVE_INET_NTOP */
 
