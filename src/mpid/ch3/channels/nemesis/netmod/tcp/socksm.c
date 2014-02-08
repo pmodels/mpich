@@ -493,7 +493,7 @@ static int send_id_info(const sockconn_t *const sc)
         ++iov_cnt;
     }
     
-    CHECK_EINTR (offset, writev(sc->fd, iov, iov_cnt));
+    offset = MPL_large_writev(sc->fd, iov, iov_cnt);
     MPIU_ERR_CHKANDJUMP1(offset == -1 && errno != EAGAIN, mpi_errno, MPI_ERR_OTHER, "**write", "**write %s", MPIU_Strerror(errno));
     MPIU_ERR_CHKANDJUMP1(offset != buf_size, mpi_errno, MPI_ERR_OTHER, "**write", "**write %s", MPIU_Strerror(errno));
 /*     FIXME log appropriate error */
@@ -543,7 +543,7 @@ static int send_tmpvc_info(const sockconn_t *const sc)
     iov[1].iov_len = sizeof(port_info);
     buf_size = sizeof(hdr) + sizeof(port_info);
     
-    CHECK_EINTR (offset, writev(sc->fd, iov, iov_cnt));
+    offset = MPL_large_writev(sc->fd, iov, iov_cnt);
     MPIU_ERR_CHKANDJUMP1(offset == -1 && errno != EAGAIN, mpi_errno, MPI_ERR_OTHER, "**write", "**write %s", MPIU_Strerror(errno));
     MPIU_ERR_CHKANDJUMP1(offset != buf_size, mpi_errno, MPI_ERR_OTHER, "**write", "**write %s", MPIU_Strerror(errno));
 /*     FIXME log appropriate error */

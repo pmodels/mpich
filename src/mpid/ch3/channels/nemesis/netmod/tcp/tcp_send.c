@@ -92,7 +92,7 @@ int MPID_nem_tcp_send_queued(MPIDI_VC_t *vc, MPIDI_nem_tcp_request_queue_t *send
 
         iov = &sreq->dev.iov[sreq->dev.iov_offset];
         
-        CHECK_EINTR(offset, writev(vc_tcp->sc->fd, iov, sreq->dev.iov_count));
+        offset = MPL_large_writev(vc_tcp->sc->fd, iov, sreq->dev.iov_count);
         if (offset == 0) {
             int req_errno = MPI_SUCCESS;
 
@@ -257,7 +257,7 @@ int MPID_nem_tcp_iStartContigMsg(MPIDI_VC_t *vc, void *hdr, MPIDI_msg_sz_t hdr_s
                 iov[1].MPID_IOV_BUF = data;
                 iov[1].MPID_IOV_LEN = data_sz;
                 
-                CHECK_EINTR(offset, writev(sc->fd, iov, 2));
+                offset = MPL_large_writev(sc->fd, iov, 2);
                 if (offset == 0) {
                     int req_errno = MPI_SUCCESS;
 
@@ -396,7 +396,7 @@ int MPID_nem_tcp_iStartContigMsg_paused(MPIDI_VC_t *vc, void *hdr, MPIDI_msg_sz_
             iov[1].MPID_IOV_BUF = data;
             iov[1].MPID_IOV_LEN = data_sz;
                 
-            CHECK_EINTR(offset, writev(sc->fd, iov, 2));
+            offset = MPL_large_writev(sc->fd, iov, 2);
             if (offset == 0) {
                 int req_errno = MPI_SUCCESS;
 
@@ -531,7 +531,7 @@ int MPID_nem_tcp_iSendContig(MPIDI_VC_t *vc, MPID_Request *sreq, void *hdr, MPID
                 iov[1].MPID_IOV_BUF = data;
                 iov[1].MPID_IOV_LEN = data_sz;
                 
-                CHECK_EINTR(offset, writev(sc->fd, iov, 2));
+                offset = MPL_large_writev(sc->fd, iov, 2);
                 if (offset == 0) {
                     int req_errno = MPI_SUCCESS;
 
@@ -690,7 +690,7 @@ int MPID_nem_tcp_SendNoncontig(MPIDI_VC_t *vc, MPID_Request *sreq, void *header,
         {
             if (MPIDI_CH3I_Sendq_empty(vc_tcp->send_queue))
             {
-                CHECK_EINTR(offset, writev(vc_tcp->sc->fd, iov, iov_n));
+                offset = MPL_large_writev(vc_tcp->sc->fd, iov, iov_n);
                 if (offset == 0) {
                     int req_errno = MPI_SUCCESS;
 
