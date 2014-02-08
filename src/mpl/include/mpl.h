@@ -61,5 +61,6 @@
 #include "mplstr.h"
 #include "mpltrmem.h"
 #include "mplenv.h"
+#include "mplsock.h"
 
 #endif /* MPL_H_INCLUDED */
