@@ -607,7 +607,7 @@ int MPIDU_Sock_writev(MPIDU_Sock_t sock, MPID_IOV * iov, int iov_n, MPIU_Size_t 
     do
     {
 	MPIDI_FUNC_ENTER(MPID_STATE_WRITEV);
-	nb = writev(pollinfo->fd, iov, iov_n);
+	nb = MPL_large_writev(pollinfo->fd, iov, iov_n);
 	MPIDI_FUNC_EXIT(MPID_STATE_WRITEV);
     }
     while (nb == -1 && errno == EINTR);

@@ -702,7 +702,7 @@ static int MPIDU_Socki_handle_write(struct pollfd * const pollfd, struct pollinf
 	if (pollinfo->write_iov_flag)
 	{ 
 	    MPIDI_FUNC_ENTER(MPID_STATE_WRITEV);
-	    nb = writev(pollinfo->fd, pollinfo->write.iov.ptr + pollinfo->write.iov.offset,
+	    nb = MPL_large_writev(pollinfo->fd, pollinfo->write.iov.ptr + pollinfo->write.iov.offset,
 			pollinfo->write.iov.count - pollinfo->write.iov.offset);
 	    MPIDI_FUNC_EXIT(MPID_STATE_WRITEV);
 	}
