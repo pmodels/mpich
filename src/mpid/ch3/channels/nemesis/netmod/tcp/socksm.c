@@ -606,7 +606,7 @@ static int recv_id_or_tmpvc_info(sockconn_t *const sc, int *got_sc_eof)
 	    iov[1].iov_len = pg_id_len;
 	    ++iov_cnt;
 	} 
-	CHECK_EINTR (nread, readv(sc->fd, iov, iov_cnt));
+	nread = MPL_large_readv(sc->fd, iov, iov_cnt);
         MPIU_ERR_CHKANDJUMP1(nread == -1 && errno != EAGAIN, mpi_errno, MPI_ERR_OTHER, "**read", "**read %s", MPIU_Strerror(errno));
 	MPIU_ERR_CHKANDJUMP(nread != hdr.datalen, mpi_errno, MPI_ERR_OTHER, "**read"); /* FIXME-Z1 */
 	if (pg_id_len == 0) {
@@ -666,7 +666,7 @@ static int recv_id_or_tmpvc_info(sockconn_t *const sc, int *got_sc_eof)
         iov[0].iov_base = (void *) &(sc->vc->port_name_tag);
         iov[0].iov_len = sizeof(sc->vc->port_name_tag);
 
-        CHECK_EINTR (nread, readv(sc->fd, iov, iov_cnt));
+        nread = MPL_large_readv(sc->fd, iov, iov_cnt);
         MPIU_ERR_CHKANDJUMP1(nread == -1 && errno != EAGAIN, mpi_errno, MPI_ERR_OTHER, "**read", "**read %s", MPIU_Strerror(errno));
         MPIU_ERR_CHKANDJUMP(nread != hdr.datalen, mpi_errno, MPI_ERR_OTHER, "**read"); /* FIXME-Z1 */
         sc->is_same_pg = FALSE;
@@ -1582,7 +1582,7 @@ static int MPID_nem_tcp_recv_handler(sockconn_t *const sc)
         MPIU_Assert(rreq->dev.iov_offset >= 0);
         MPIU_Assert(rreq->dev.iov_count + rreq->dev.iov_offset <= MPID_IOV_LIMIT);
 
-        CHECK_EINTR(bytes_recvd, readv(sc_fd, iov, rreq->dev.iov_count));
+        bytes_recvd = MPL_large_readv(sc_fd, iov, rreq->dev.iov_count);
         if (bytes_recvd <= 0)
         {
             if (bytes_recvd == -1 && errno == EAGAIN) /* handle this fast */

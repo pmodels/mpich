@@ -408,7 +408,7 @@ int MPIDU_Sock_readv(MPIDU_Sock_t sock, MPID_IOV * iov, int iov_n,
     do
     {
 	MPIDI_FUNC_ENTER(MPID_STATE_READV);
-	nb = readv(pollinfo->fd, iov, iov_n);
+	nb = MPL_large_readv(pollinfo->fd, iov, iov_n);
 	MPIDI_FUNC_EXIT(MPID_STATE_READV);
     }
     while (nb == -1 && errno == EINTR);

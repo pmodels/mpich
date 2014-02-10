@@ -583,7 +583,7 @@ static int MPIDU_Socki_handle_read(struct pollfd * const pollfd, struct pollinfo
 	if (pollinfo->read_iov_flag)
 	{ 
 	    MPIDI_FUNC_ENTER(MPID_STATE_READV);
-	    nb = readv(pollinfo->fd, pollinfo->read.iov.ptr + pollinfo->read.iov.offset,
+	    nb = MPL_large_readv(pollinfo->fd, pollinfo->read.iov.ptr + pollinfo->read.iov.offset,
 		       pollinfo->read.iov.count - pollinfo->read.iov.offset);
 	    MPIDI_FUNC_EXIT(MPID_STATE_READV);
 	}
