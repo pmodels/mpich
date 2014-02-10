@@ -86,8 +86,8 @@ int ADIOI_GEN_aio(ADIO_File fd, void *buf, int len, ADIO_Offset offset,
     int err=-1, fd_sys;
 
     int error_code;
-    struct aiocb *aiocbp;
-    ADIOI_AIO_Request *aio_req;
+    struct aiocb *aiocbp=NULL;
+    ADIOI_AIO_Request *aio_req=NULL;
     MPI_Status status;
 #if defined(ROMIO_XFS)
     unsigned maxiosz = wr ? fd->hints->fs_hints.xfs.write_chunk_sz :
@@ -158,6 +158,8 @@ int ADIOI_GEN_aio(ADIO_File fd, void *buf, int len, ADIO_Offset offset,
 			    ADIO_EXPLICIT_OFFSET, offset, &status, &error_code);  
 		    
 	    MPIO_Completed_request_create(&fd, len, &error_code, request);
+	    if (aiocbp != NULL) ADIOI_Free(aiocbp);
+	    if (aio_req != NULL) ADIOI_Free(aio_req);
 	    return 0;
 	} else {
 	    return errno;
