@@ -76,7 +76,9 @@ void MTest_Init( void )
 	provided = MPI::Init_thread( threadLevel );
     }
 
+#if defined(HAVE_MPI_IO)
     MPI::FILE_NULL.Set_errhandler(MPI::ERRORS_THROW_EXCEPTIONS);
+#endif
 
     /* Check for debugging control */
     if (getenv( "MPITEST_DEBUG" )) {
