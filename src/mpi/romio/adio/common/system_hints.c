@@ -156,7 +156,8 @@ void ADIOI_incorporate_system_hints(MPI_Info info,
 	MPI_Info sysinfo, 
 	MPI_Info *new_info) 
 {
-    int i, nkeys_sysinfo, flag;
+    int i, nkeys_sysinfo, flag=0; // must initialize flag to 0
+
     char  val[MPI_MAX_INFO_VAL], key[MPI_MAX_INFO_KEY];
 
     if (sysinfo == MPI_INFO_NULL)
