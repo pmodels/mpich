@@ -114,11 +114,8 @@ void *MPIR_Breakpoint(void);
    library that the debugger can load in order to access information about
    the parallel program, such as message queues */
 #ifdef HAVE_DEBUGGER_SUPPORT
-#undef MPICH_INFODLL_LOC
 #ifdef MPICH_INFODLL_LOC
 char MPIR_dll_name[] = MPICH_INFODLL_LOC;
-#else
-char MPIR_dll_name[] = "libtvmpich2.so";
 #endif
 #endif
 

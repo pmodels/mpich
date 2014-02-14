@@ -305,52 +305,55 @@ int mqs_image_has_queues (mqs_image *image, char **message)
        request definition */
     {
 	mqs_type *req_type = dbgr_find_type( image, (char *)"MPID_Request", mqs_lang_c );
-    if (req_type) {
-	    int mpid_offs;
-	    mpid_offs = dbgr_field_offset( req_type, (char *)"mpid" );
+	if (req_type) {
+	    int dev_offs;
+	    dev_offs = dbgr_field_offset( req_type, (char *)"dev" );
 	    i_info->req_status_offs = dbgr_field_offset( req_type, (char *)"status" );
 	    i_info->req_cc_offs     = dbgr_field_offset( req_type, (char *)"cc" );
-
-	    if (mpid_offs >= 0) {
+	    if (dev_offs >= 0) {
 		mqs_type *dreq_type = dbgr_find_type( image, (char *)"MPIDI_Request", 
 						      mqs_lang_c );
-		i_info->req_mpid_offs = mpid_offs;
+		i_info->req_dev_offs = dev_offs;
 		if (dreq_type) {
-		    int loff, envelope_offs;
+		    int loff, match_offs;
 		    loff = dbgr_field_offset( dreq_type, (char *)"next" );
-		    i_info->req_next_offs = mpid_offs + loff;
-		    loff = dbgr_field_offset( dreq_type, (char *)"userbuf" );
-		    i_info->req_userbuf_offs = mpid_offs + loff;
-		    loff = dbgr_field_offset( dreq_type, (char *)"userbufcount" );
-		    i_info->req_userbufcount_offs = mpid_offs + loff;
+		    i_info->req_next_offs = dev_offs + loff;
+		    loff = dbgr_field_offset( dreq_type, (char *)"user_buf" );
+		    i_info->req_user_buf_offs = dev_offs + loff;
+		    loff = dbgr_field_offset( dreq_type, (char *)"user_count" );
+		    i_info->req_user_count_offs = dev_offs + loff;
 		    loff = dbgr_field_offset( dreq_type, (char *)"datatype" );
-		    i_info->req_datatype_offs = mpid_offs + loff;
-            loff = dbgr_field_offset( dreq_type, (char *)"uebuflen" );
-            i_info->req_uebuflen_offs = mpid_offs + loff;
-            loff = dbgr_field_offset( dreq_type, (char *)"uebuf" );
-            i_info->req_uebuf_offs = mpid_offs + loff;
-		    envelope_offs = dbgr_field_offset( dreq_type, (char *)"envelope" );
-            envelope_offs += mpid_offs ;
+		    i_info->req_datatype_offs = dev_offs + loff;
+		    match_offs = dbgr_field_offset( dreq_type, (char *)"match" );
+		    /*
+		      Current definition from the mpidpre.h file for ch3.
 
-		    if (envelope_offs >= 0) {
-			mqs_type *envelope_type = dbgr_find_type( image, (char *)"MPIDI_MsgEnvelope", mqs_lang_c );
-			if (envelope_type) {
-			    int msginfo_offs= dbgr_field_offset( envelope_type, (char *)"msginfo" );
-                msginfo_offs = envelope_offs + msginfo_offs;
-
-			    if (msginfo_offs >= 0) {
-				mqs_type *msginfo_type= dbgr_find_type( image, (char *)"MPIDI_MsgInfo", mqs_lang_c );
-				if (msginfo_type) {
+		      typedef struct MPIDI_Message_match_parts {
+		      int32_t tag;
+		      MPIR_Rank_t rank;
+		      MPIR_Context_id_t context_id;
+		      } MPIDI_Message_match_parts_t;
+		      typedef union {
+		      MPIDI_Message_match_parts_t parts;
+		      MPIR_Upint whole;
+		      } MPIDI_Message_match;
+		    */
+		    if (match_offs >= 0) {
+			mqs_type *match_type = dbgr_find_type( image, (char *)"MPIDI_Message_match", mqs_lang_c );
+			if (match_type) {
+			    int parts_offs = dbgr_field_offset( match_type, (char *)"parts" );
+			    if (parts_offs >= 0) {
+				mqs_type *parts_type = dbgr_find_type( image, (char *)"MPIDI_Message_match_parts_t", mqs_lang_c );
+				if (parts_type) {
 				    int moff;
-				    moff = dbgr_field_offset( msginfo_type, (char *)"MPItag" );
-				    i_info->req_tag_offs = msginfo_offs + moff;
-				    moff = dbgr_field_offset( msginfo_type, (char *)"MPIrank" );
-				    i_info->req_rank_offs = msginfo_offs + moff;
-				    moff = dbgr_field_offset( msginfo_type, (char *)"MPIctxt" );
-				    i_info->req_context_id_offs = msginfo_offs + moff;
+				    moff = dbgr_field_offset( parts_type, (char *)"tag" );
+				    i_info->req_tag_offs = dev_offs + match_offs + moff;
+				    moff = dbgr_field_offset( parts_type, (char *)"rank" );
+				    i_info->req_rank_offs = dev_offs + match_offs + moff;
+				    moff = dbgr_field_offset( parts_type, (char *)"context_id" );
+				    i_info->req_context_id_offs = dev_offs + match_offs + moff;
 				}
 			    }
-
 			}
 		    }
 		}
@@ -637,7 +640,7 @@ static int fetch_receive (mqs_process *proc, mpich_process_info *p_info,
 #endif
     while (base != 0) {
 	/* Check this entry to see if the context matches */
-	int actual_context = fetch_int16( proc, base + i_info->req_context_id_offs, p_info );
+	int16_t actual_context = fetch_int16( proc, base + i_info->req_context_id_offs, p_info );
 
 #ifdef DEBUG_LIST_ITER
 	initLogFile();
@@ -646,37 +649,27 @@ static int fetch_receive (mqs_process *proc, mpich_process_info *p_info,
 	if (actual_context == wanted_context) {
 	    /* Found a request for this communicator */
 	    int tag = fetch_int( proc, base + i_info->req_tag_offs, p_info );
-	    int rank = fetch_int( proc, base + i_info->req_rank_offs, p_info );
+	    int rank = fetch_int16( proc, base + i_info->req_rank_offs, p_info );
 	    int is_complete   = fetch_int ( proc, base + i_info->req_cc_offs, p_info);
-        mqs_taddr_t buffer = 0;
-        unsigned buf_count = -1;
+	    mqs_tword_t user_buffer = fetch_pointer( proc,base+i_info->req_user_buf_offs, p_info);
+	    int   user_count  = fetch_int( proc,base + i_info->req_user_count_offs, p_info );
 
-        if(look_for_user_buffer)
-         {
-             buffer = fetch_pointer(proc, base + i_info->req_userbuf_offs, p_info);
-             buf_count = fetch_int(proc, base + i_info->req_userbufcount_offs, p_info);
-         }else{
-             /* unexpected buffer*/
-             buffer = fetch_pointer(proc, base + i_info->req_uebuf_offs, p_info);
-             buf_count = fetch_int(proc, base + i_info->req_uebuflen_offs, p_info);
-         }
-
-        /* Return -1 for ANY_TAG or ANY_SOURCE */
+	    /* Return -1 for ANY_TAG or ANY_SOURCE */
 	    res->desired_tag         = (tag >= 0) ? tag : -1;
 	    res->desired_local_rank  = (rank >= 0) ? rank : -1;
 	    res->desired_global_rank = -1;   /* Convert to rank in comm world,
 						if valid (in mpi-2, may
 						not be available) */
-	    res->desired_length      = buf_count; /* Count, not bytes */
+	    res->desired_length      = user_count; /* Count, not bytes */
 	    
 	    res->tag_wild = (tag < 0);
-	    res->buffer             = buffer;
+	    res->buffer             = user_buffer;
 	    /* We don't know the rest of these */
 	    res->system_buffer      = 0;
 	    res->actual_local_rank  = rank;
 	    res->actual_global_rank = -1;
 	    res->actual_tag         = tag;
-	    res->actual_length      = buf_count;
+	    res->actual_length      = -1;
 	    res->extra_text[0][0]   = 0;
 
 	    res->status = (is_complete != 0) ? mqs_st_pending : mqs_st_complete; 
@@ -797,7 +790,7 @@ static int fetch_send (mqs_process *proc, mpich_process_info *p_info,
 #ifdef DEBUG_LIST_ITER
     if (base) {
 	initLogFile();
-	fprintf( debugfp, "comm ptr = %p, comm context = %d\n", 
+	fprintf( debugf, "comm ptr = %p, comm context = %d\n", 
 		 comm, comm->context_id );
     }
 #endif
@@ -820,13 +813,13 @@ static int fetch_send (mqs_process *proc, mpich_process_info *p_info,
 	    mqs_taddr_t data   = 0;
 	    mqs_taddr_t sreq = fetch_pointer(proc, base+i_info->sendq_req_offs, p_info );
 	    mqs_tword_t is_complete = fetch_int( proc, sreq+i_info->req_cc_offs, p_info );
-	    data = fetch_pointer( proc, sreq+i_info->req_userbuf_offs, p_info );
-	    length = fetch_int( proc, sreq+i_info->req_userbufcount_offs, p_info );
+	    data = fetch_pointer( proc, sreq+i_info->req_user_buf_offs, p_info );
+	    length = fetch_int( proc, sreq+i_info->req_user_count_offs, p_info );
 	    /* mqs_tword_t complete=0; */
 
 #ifdef DEBUG_LIST_ITER
 	    initLogFile();
-	    fprintf( debugfp, "sendq entry = %p, rank off = %d, tag off = %d, context = %d\n", 
+	    fprintf( debugpf, "sendq entry = %p, rank off = %d, tag off = %d, context = %d\n", 
 		    base, i_info->sendq_rank_offs, i_info->sendq_tag_offs, actual_context );
 #endif
 	    
@@ -1103,14 +1096,14 @@ static mqs_tword_t fetch_int (mqs_process * proc, mqs_taddr_t addr,
 	dbgr_target_to_host (proc, buffer, 
 			     ((char *)&res) + (host_is_big_endian ? sizeof(mqs_tword_t)-isize : 0), 
 			     isize);
-
+    
     return res;
 } 
 static mqs_tword_t fetch_int16 (mqs_process * proc, mqs_taddr_t addr, 
 				mpich_process_info *p_info)
 {
     char buffer[8];			/* ASSUME an integer fits in 8 bytes */
-    mqs_tword_t res = 0;
+    int16_t res = 0;
 
     if (mqs_ok == dbgr_fetch_data (proc, addr, 2, buffer))
 	dbgr_target_to_host (proc, buffer, 
