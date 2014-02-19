@@ -15,6 +15,28 @@
 
 /* NOTE: bufp values are unused, ripe for removal */
 
+/* #define MPICH_DEBUG_SEGMENT_MOVE */
+/* TODO: Consider integrating this with the general debug support. */
+/* Note: This does not use the CVAR support for the environment variable
+   because (a) this is a temporary code and (b) it is expert developer
+   only */
+#ifdef MPICH_DEBUG_SEGMENT_MOVE
+static int printSegment = -1;
+static void setPrint( void ) {
+    char *s = getenv( "MPICH_DATALOOP_PRINT" );
+    if (s && (strcmp(s,"yes")==0 || strcmp(s,"YES") == 0)) {
+        printSegment = 1;
+    }
+    else {
+        printSegment = 0;
+    }
+}
+#define DBG_SEGMENT(_a) do { if (printSegment < 0) setPrint(); \
+        if (printSegment) { _a; } } while( 0 )
+#else
+#define DBG_SEGMENT(_a)
+#endif
+
 int PREPEND_PREFIX(Segment_contig_m2m)(DLOOP_Offset *blocks_p,
 				       DLOOP_Type el_type,
 				       DLOOP_Offset rel_off,
@@ -52,6 +74,7 @@ void PREPEND_PREFIX(Segment_pack)(DLOOP_Segment *segp,
 {
     struct PREPEND_PREFIX(m2m_params) params; /* defined in dataloop_parts.h */
 
+    DBG_SEGMENT(printf( "Segment_pack...\n" ));
     /* experimenting with discarding buf value in the segment, keeping in
      * per-use structure instead. would require moving the parameters around a
      * bit.
@@ -77,6 +100,7 @@ void PREPEND_PREFIX(Segment_unpack)(DLOOP_Segment *segp,
 {
     struct PREPEND_PREFIX(m2m_params) params;
 
+    DBG_SEGMENT(printf( "Segment_unpack...\n" ));
     /* experimenting with discarding buf value in the segment, keeping in
      * per-use structure instead. would require moving the parameters around a
      * bit.
@@ -110,6 +134,8 @@ int PREPEND_PREFIX(Segment_contig_m2m)(DLOOP_Offset *blocks_p,
     DLOOP_Handle_get_size_macro(el_type, el_size);
     size = *blocks_p * el_size;
 
+    DBG_SEGMENT(printf( "element type = %lx\n", (long)el_type ));
+    DBG_SEGMENT(printf( "contig m2m: elsize = %d, size = %d\n", (int)el_size, (int)size ));
 #ifdef MPID_SU_VERBOSE
     dbg_printf("\t[contig unpack: do=" DLOOP_OFFSET_FMT_DEC_SPEC ", dp=%x, bp=%x, sz=" DLOOP_OFFSET_FMT_DEC_SPEC ", blksz=" DLOOP_OFFSET_FMT_DEC_SPEC "]\n",
 	       rel_off,
@@ -165,6 +191,7 @@ int PREPEND_PREFIX(Segment_vector_m2m)(DLOOP_Offset *blocks_p,
     DLOOP_Ensure_Offset_fits_in_pointer((DLOOP_VOID_PTR_CAST_TO_OFFSET (paramp->userbuf)) + rel_off);
     cbufp = (char*) paramp->userbuf + rel_off;
     DLOOP_Handle_get_size_macro(el_type, el_size);
+    DBG_SEGMENT(printf( "vector m2m: elsize = %d, count = %d, stride = %d, blocksize = %d\n", (int)el_size, (int)count, (int)stride, (int)blksz ));
 
     whole_count = (DLOOP_Count)((blksz > 0) ? (*blocks_p / (DLOOP_Offset) blksz) : 0);
     blocks_left = (DLOOP_Count)((blksz > 0) ? (*blocks_p % (DLOOP_Offset) blksz) : 0);
@@ -195,6 +222,9 @@ int PREPEND_PREFIX(Segment_vector_m2m)(DLOOP_Offset *blocks_p,
 	else {
 	    for (i=0; i < whole_count; i++) {
 		DLOOP_Memcpy(cbufp, paramp->streambuf, ((DLOOP_Offset) blksz) * el_size);
+                DBG_SEGMENT(printf("vec: memcpy %p %p %d\n", cbufp,
+                                   paramp->streambuf,
+                                   (int)(blksz * el_size) ));
 		/* Ensure that pointer increment fits in a pointer */
 		/* streambuf is a pointer (not a displacement) since it is being used for a memory copy */
 		DLOOP_Ensure_Offset_fits_in_pointer((DLOOP_VOID_PTR_CAST_TO_OFFSET (paramp->streambuf)) +
@@ -206,6 +236,9 @@ int PREPEND_PREFIX(Segment_vector_m2m)(DLOOP_Offset *blocks_p,
 	    }
 	    if (blocks_left) {
 		DLOOP_Memcpy(cbufp, paramp->streambuf, ((DLOOP_Offset) blocks_left) * el_size);
+                DBG_SEGMENT(printf("vec(left): memcpy %p %p %d\n", cbufp,
+                                   paramp->streambuf,
+                                   (int)(blocks_left * el_size) ));
 		/* Ensure that pointer increment fits in a pointer */
 		/* streambuf is a pointer (not a displacement) since
 		 * it is being used for a memory copy */
@@ -244,6 +277,9 @@ int PREPEND_PREFIX(Segment_vector_m2m)(DLOOP_Offset *blocks_p,
 		/* Ensure that pointer increment fits in a pointer */
 		/* streambuf is a pointer (not a displacement) since
 		 * it is being used for a memory copy */
+                DBG_SEGMENT(printf("vec: memcpy %p %p %d\n",
+                                   paramp->streambuf, cbufp,
+                                   (int)(blksz * el_size) ));
 		DLOOP_Ensure_Offset_fits_in_pointer((DLOOP_VOID_PTR_CAST_TO_OFFSET (paramp->streambuf)) +
 						 (DLOOP_Offset) blksz * el_size);
 		paramp->streambuf += (DLOOP_Offset) blksz * el_size;
@@ -251,6 +287,9 @@ int PREPEND_PREFIX(Segment_vector_m2m)(DLOOP_Offset *blocks_p,
 	    }
 	    if (blocks_left) {
 		DLOOP_Memcpy(paramp->streambuf, cbufp, (DLOOP_Offset) blocks_left * el_size);
+                DBG_SEGMENT(printf("vec(left): memcpy %p %p %d\n",
+                                   paramp->streambuf, cbufp,
+                                   (int)(blocks_left * el_size) ));
 		/* Ensure that pointer increment fits in a pointer */
 		/* streambuf is a pointer (not a displacement) since
 		 * it is being used for a memory copy */
@@ -282,6 +321,23 @@ int PREPEND_PREFIX(Segment_blkidx_m2m)(DLOOP_Offset *blocks_p,
     struct PREPEND_PREFIX(m2m_params) *paramp = v_paramp;
 
     DLOOP_Handle_get_size_macro(el_type, el_size);
+    DBG_SEGMENT(printf( "blkidx m2m: elsize = %d, count = %d, blocklen = %d\n", (int)el_size, (int)count, (int)blocklen ));
+
+    /* If the blocklen * el_size is relatively small, then for
+       performance reasons, its important to hoist most of these
+       tests out of the loop.  Ignoring some of the issues of handling
+       the available buffer size (blocks_left), this should translate
+       directly into code that looks like this for blocksize == 1
+
+       for (i=0; i<count; i++) {
+            dest[i] = userbuf[offsetarray[i]];
+       }
+
+       where "dest" and "userbuf" are pointers to objects of the correct
+       size.  If blocksize is > 1, then various unrollings are important
+       until blocksize is large enough to make the overhead of memcpy
+       negligible.  Datatypes such as this are used in LAMMPS, for example.
+    */
 
     while (blocks_left) {
 	char *src, *dest;
@@ -326,6 +382,7 @@ int PREPEND_PREFIX(Segment_blkidx_m2m)(DLOOP_Offset *blocks_p,
 	}
 	else {
 	    DLOOP_Memcpy(dest, src, (DLOOP_Offset) blocklen * el_size);
+            DBG_SEGMENT(printf( "blkidx m3m:memcpy(%p,%p,%d)\n",dest,src,(int)(blocklen*el_size)));
 	}
 
 	/* Ensure that pointer increment fits in a pointer */
@@ -358,6 +415,7 @@ int PREPEND_PREFIX(Segment_index_m2m)(DLOOP_Offset *blocks_p,
     char *cbufp;
     struct PREPEND_PREFIX(m2m_params) *paramp = v_paramp;
 
+    DBG_SEGMENT(printf( "index m2m: elsize = %d, count = %d\n", (int)el_size, (int)count ));
     DLOOP_Handle_get_size_macro(el_type, el_size);
 
     while (blocks_left) {

@@ -11,6 +11,57 @@
 #error "You must explicitly include a header that sets the PREPEND_PREFIX and includes dataloop_parts.h"
 #endif
 
+
+/*
+=== BEGIN_MPI_T_CVAR_INFO_BLOCK ===
+
+categories :
+    - name        : DATATYPE
+      description : Datatype optimization parameters
+
+cvars:
+   - name         : MPIR_CVAR_DATALOOP_OPTIMIZE
+     category     : DATATYPE
+     type         : boolean
+     default      : true
+     class        : none
+     verbosity    : MPI_T_VERBOSITY_USER_BASIC
+     scope        : MPI_T_SCOPE_LOCAL
+     description  : >-
+       By default, the internal representation of an MPI datatype that
+       is used by MPICH to move data is very similar to the original
+       description of the datatype.  If this flag is true, additional
+       optimizations are used to improve the performance of datatypes.
+
+   - name        : MPIR_CVAR_DATALOOP_FLATTEN
+     category    : DATATYPE
+     type        : boolean
+     class       : none
+     default     : true
+     verbosity   : MPI_T_VERBOSITY_USER_BASIC
+     scope       : MPI_T_SCOPE_LOCAL
+     description : >-
+      If true, attempt to "flatten" the internal representation of
+      MPI struct datatypes (created with MPI_Type_create_struct).
+
+   - name        : MPIR_CVAR_DATALOOP_FLATTEN_MULT
+     category    : DATATYPE
+     type        : int
+     class       : none
+     default     : 2
+     verbosity   : MPI_T_VERBOSITY_USER_BASIC
+     scope       : MPI_T_SCOPE_LOCAL
+     description : >-
+       Flattening an MPI struct datatype does not always improve
+       performance.  This parameter is a threshold that is used in
+       comparing the size of the description with the amount of data
+       moved.  Larger values make it more likely that a struct datatype
+       will be flattened.  The default value is adequate for flattening
+       simple structs, and will usually avoid flattening structs
+       containing vectors or block-indexed data.
+
+=== END_MPI_T_CVAR_INFO_BLOCK ===
+*/
 static int DLOOP_Dataloop_create_struct_memory_error(void);
 static int DLOOP_Dataloop_create_unique_type_struct(DLOOP_Count count,
 						    const int *blklens,
@@ -238,19 +289,37 @@ int PREPEND_PREFIX(Dataloop_create_struct)(DLOOP_Count count,
      * if caller asked for homogeneous or all bytes representation,
      * flatten the type and store it as an indexed type so that
      * there are no branches in the dataloop tree.
+     *
+     * Note that this is not always an optimization - for example,
+     * replacing two long block_indexed with one longer indexed (with
+     * the additional blockcount array) is likely to be slower, because
+     * of the additional memory motion required.
      */
-    if ((flag == DLOOP_DATALOOP_HOMOGENEOUS) ||
-	     (flag == DLOOP_DATALOOP_ALL_BYTES))
-    {
-	return DLOOP_Dataloop_create_flattened_struct(count,
-						      blklens,
-						      disps,
-						      oldtypes,
-						      dlp_p,
-						      dlsz_p,
-						      dldepth_p,
-						      flag);
-    }
+    if (MPIR_CVAR_DATALOOP_FLATTEN && (
+	(flag == DLOOP_DATALOOP_HOMOGENEOUS) ||
+	(flag == DLOOP_DATALOOP_ALL_BYTES) ))
+	{
+	    MPI_Aint nElms = 0, nDesc = 0;
+	    PREPEND_PREFIX(Dataloop_est_struct_complexity)( count,
+							    blklens,
+							    oldtypes,
+							    &nElms,
+							    &nDesc );
+
+	    /* Only convert to flattened if the flattened description
+	       is likely to be more efficient.  The magic number of 24 was
+	       determined emperically.  */
+	    if ( nDesc * 24 * MPIR_CVAR_DATALOOP_FLATTEN_MULT > nElms) {
+		return DLOOP_Dataloop_create_flattened_struct(count,
+							      blklens,
+							      disps,
+							      oldtypes,
+							      dlp_p,
+							      dlsz_p,
+							      dldepth_p,
+							      flag);
+	    }
+	}
 
     /* scan through types and gather derived type info */
     for (i=0; i < count; i++)

@@ -19,6 +19,7 @@ Output Parameters:
   Return Value:
   0 on success, -1 on failure.
 @*/
+
 int MPID_Type_commit(MPI_Datatype *datatype_p)
 {
     int           mpi_errno=MPI_SUCCESS;
@@ -57,9 +58,21 @@ int MPID_Type_commit(MPI_Datatype *datatype_p)
 	MPIU_DBG_PRINTF(("# contig blocks = %d\n",
 			 (int) datatype_ptr->max_contig_blocks));
 
+	if (MPIR_CVAR_DATALOOP_OPTIMIZE) {
+	    MPID_Dataloop_optimize(datatype_ptr->dataloop, 0 );
+        }
+        else {
+            /* This allows the developer to output the final dataloops
+               in the case where the dataloops are not optimized.
+               It does nothing if that printing is not enabled.
+            */
+            MPID_Dataloop_debug_print( datatype_ptr->dataloop );
+        }
+
 #if 0
         MPIDI_Dataloop_dot_printf(datatype_ptr->dataloop, 0, 1);
 #endif
+
     }
 
     return mpi_errno;
