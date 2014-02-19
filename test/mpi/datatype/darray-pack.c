@@ -124,13 +124,13 @@ int darray_2d_c_test1(void)
 
 	    if ((i == rank) && (array[i] != rank)) {
 		errs++;
-		if (verbose) fprintf(stderr, "array[%d] = %d; should be %d\n",
-				     i, array[i], rank);
+		if (verbose) fprintf(stderr, "[2d array rank=%d]:array[%d] = %d; should be %d\n",
+				     rank, i, array[i], rank);
 	    }
 	    else if ((i != rank) && (array[i] != 0)) {
 		errs++;
-		if (verbose) fprintf(stderr, "array[%d] = %d; should be %d\n",
-				     i, array[i], 0);
+		if (verbose) fprintf(stderr, "[2d array rank=%d]:array[%d] = %d; should be %d\n",
+				     rank, i, array[i], 0);
 	    }
 	}
 	MPI_Type_free(&darray);
@@ -205,23 +205,23 @@ int darray_4d_c_test1(void)
 	for (i=0; i < 4*rank; i++) {
 	    if (array[i] != 0) {
 		errs++;
-		if (verbose) fprintf(stderr, "array[%d] = %d; should be %d\n",
-				     i, array[i], 0);
+		if (verbose) fprintf(stderr, "[4d array rank=%d]:array[%d] = %d; should be %d\n",
+				     rank, i, array[i], 0);
 	    }
 	}
 
 	for (i=4*rank; i < 4*rank + 4; i++) {
 	    if (array[i] != i) {
 		errs++;
-		if (verbose) fprintf(stderr, "array[%d] = %d; should be %d\n",
-				     i, array[i], i);
+		if (verbose) fprintf(stderr, "[4d array rank=%d]:array[%d] = %d; should be %d\n",
+				     rank, i, array[i], i);
 	    }
 	}
 	for (i=4*rank+4; i < 72; i++) {
 	    if (array[i] != 0) {
 		errs++;
-		if (verbose) fprintf(stderr, "array[%d] = %d; should be %d\n",
-				     i, array[i], 0);
+		if (verbose) fprintf(stderr, "[4d array rank=%d]:array[%d] = %d; should be %d\n",
+				     rank, i, array[i], 0);
 	    }
 	}
 
