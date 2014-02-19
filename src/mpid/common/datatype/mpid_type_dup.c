@@ -24,7 +24,7 @@ Output Parameters:
 . newtype - handle of newly created copy of datatype
 
   Return Value:
-  0 on success, -1 on failure.
+  0 on success, MPI error code on failure.
 @*/
 int MPID_Type_dup(MPI_Datatype oldtype,
 		  MPI_Datatype *newtype)
@@ -66,9 +66,12 @@ int MPID_Type_dup(MPI_Datatype oldtype,
 	new_dtp->has_sticky_lb = old_dtp->has_sticky_lb;
 	new_dtp->is_permanent  = old_dtp->is_permanent;
 	new_dtp->is_committed  = old_dtp->is_committed;
-	new_dtp->attributes    = NULL; /* ??? */
-	new_dtp->cache_id      = -1; /* ??? */
-	new_dtp->name[0]       = 0; /* ??? */
+
+	new_dtp->attributes    = NULL; /* Attributes are copied in the
+					top-level MPI_Type_dup routine */
+	new_dtp->cache_id      = -1;   /* ??? */
+	new_dtp->name[0]       = 0;    /* The Object name is not copied on
+					  a dup */
 	new_dtp->n_elements    = old_dtp->n_elements;
 	new_dtp->element_size  = old_dtp->element_size;
 	new_dtp->eltype        = old_dtp->eltype;
