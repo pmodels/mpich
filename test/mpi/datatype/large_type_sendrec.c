@@ -1,6 +1,5 @@
 /* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
- *
  *  (C) 2013 by Argonne National Laboratory.
  *      See COPYRIGHT in top-level directory.
  */
@@ -152,7 +151,8 @@ int main(int argc, char * argv[])
             MPI_ASSERT(MPI_Get_elements_x( &(statuses[1]), MPI_CHAR, &(ocount[1]) ));
         } else if (rank==0) {
             MPI_ASSERT(MPI_Wait( &(requests[0]), &(statuses[0]) ));
-            MPI_ASSERT(MPI_Get_elements_x( &(statuses[0]), MPI_CHAR, &(ocount[0]) ));
+	    /* No valid fields in status from a send request (MPI-3 p53,
+	       line 1-5) */
         }
     }
 
@@ -168,8 +168,8 @@ int main(int argc, char * argv[])
 	}
     }
 
-    free(rbuf);
-    free(sbuf);
+    if (rbuf) free(rbuf);
+    if (sbuf) free(sbuf);
 
     MPI_ASSERT(MPI_Type_free(&bigtype));
 
