@@ -170,6 +170,8 @@
 	"Scatterv",
 	"Get_name",
 	"Allgatherv",
+);
+@routinespostcomm = (
 	"Call_errhandler",
 	"Reduce_scatter_block",
 );
@@ -257,6 +259,8 @@
 	"Write_ordered_end",
 	"Write",
 	"Get_atomicity",
+);
+@routinespostfile = (
 	"Call_errhandler",
 );
 @routinesmpi2greq = (
@@ -315,5 +319,7 @@
 	"Lock",
 	"Get_errhandler",
 	"Get_name",
+);
+@routinespostwin = (
 	"Call_errhandler",
 );

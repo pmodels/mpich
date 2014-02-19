@@ -2,6 +2,8 @@
 # by using the perl script cxxtodecl.  However, that script cannot
 # handle every feature of the bindings, so the final changes 
 # were made by hand.
+<post>
+comm-Reduce_scatter_block void (in:const , , ,in:constref:Datatype ,in:constref:Op, ) const
 <mpi2>
 -Alloc_mem  void* ( ,in:constref:Info ,return)
 dtype-Create_darray Datatype (, , ,in:const ,in:const ,in:const ,in:const , , ,return) const
@@ -73,7 +75,6 @@ comm-Gather void (in:const , ,in:constref:Datatype , , ,in:constref:Datatype , )
 comm-Gatherv void (in:const , ,in:constref:Datatype , ,in:const ,in:const ,in:constref:Datatype , ) const
 comm-Reduce void (in:const , , ,in:constref:Datatype ,in:constref:Op , ) const
 comm-Reduce_scatter void (in:const , , ,in:constref:Datatype ,in:constref:Op, ) const
-comm-Reduce_scatter_block void (in:const , , ,in:constref:Datatype ,in:constref:Op, ) const
 comm-Scatter void (in:const , ,in:constref:Datatype , , ,in:constref:Datatype , ) const
 comm-Scatterv void (in:const ,in:const ,in:const ,in:constref:Datatype , , ,in:constref:Datatype , ) const
 # FIXME: this entry confuses buildiface, which groups it with

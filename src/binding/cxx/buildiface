@@ -84,7 +84,7 @@ $indent = "    ";
 $print_line_len = 0;
 $gDebug = 0;
 $gDebugRoutine = "NONE";
-@mpilevels = ( 'mpi1' , 'mpi2' );
+@mpilevels = ( 'mpi1' , 'mpi2', 'post' );
 # feature variables (for the -feature commandline option)
 $do_subdecls = 1;
 
@@ -457,12 +457,13 @@ $specialReturnType{"intra-Dup"} = "Intracomm";
 		    'Delete_attr' => '0',
 #		    'Create_keyval' => 'int',
 		    'Free_keyval' =>  'static:0:1',
-		    'Call_errhandler' => '0',
 		    'Set_name' => '0:2',
 		    'Get_name' => '0:3',
 		    'Disconnect' => '0',
 		    'Get_parent' => 'static:0;Intercomm',
 		   );
+%class_postcomm = ( 'Call_errhandler' => '0',
+                   );
 %class_mpi2cart = ();
 %class_mpi2dtype = ( 'Set_name' => '0:2', 
 		     'Get_name' => '0:3',
@@ -585,7 +586,8 @@ if ($build_io) {
 		   'Sync' => '0',
 		   'Get_errhandler' => 'MPI_Errhandler',
 		   'Set_errhandler' => '0',
- 		   'Call_errhandler' => '0',
+		   );
+    %class_postfile = ( 'Call_errhandler' => '0',
 		   );		
 #     %class_mpi2file = ( 
 # 		   'File_open' => 'static:MPI_File:2',
@@ -649,7 +651,6 @@ if ($build_io) {
 		    'Free' => '0',
 		    'Fence' => '0', 
 		    'Get_group' => 'MPI_Group',
-		    'Call_errhandler' => 0,
 		    'Get_attr' => '0',
 		    'Start' => '0',
 		    'Complete' => '0',
@@ -664,6 +665,8 @@ if ($build_io) {
 		    'Set_attr' => '0',
 		    'Delete_attr' => '0',
 		    'Free_keyval' =>  'static:0:1',
+		    );
+%class_postwin = ( 'Call_errhandler' => 0,
 		    );
 %class_mpi2info = ( 'Create' => 'static:1',
 		    'Set' => '0:2:3',
@@ -1228,6 +1231,7 @@ print $OUTFD "extern     File FILE_NULL;\n";
 
 # Build the routines by class
 foreach $class (@classes) {
+    my $printed_extra_fnc = 0;
     $shortclass = $class;
     $Class = $fullclassname{$class};
     #$mpi_type = $class_type{$class};
@@ -1253,6 +1257,14 @@ typedef int MPI_File;\
     }
 
     foreach $mpilevel (@mpilevels) {
+	if ($mpilevel eq "post") {
+	    $printed_extra_fnc = 1;
+	    if (defined($class_extra_fnc{$class})) {
+		$extrafnc = $class_extra_fnc{$class};
+		&$extrafnc( $OUTFD );
+	    }
+	}
+
         $mpiclass = "$mpilevel$class";
         $class_hash = "class_$mpiclass";
 	@routines = keys(%$class_hash);
@@ -1286,7 +1298,7 @@ typedef int MPI_File;\
 	    close (FD);
 	}
     }
-    if (defined($class_extra_fnc{$class})) {
+    if (defined($class_extra_fnc{$class}) && !$printed_extra_fnc) {
 	$extrafnc = $class_extra_fnc{$class};
 	&$extrafnc( $OUTFD );
     }
@@ -5016,8 +5028,14 @@ sub ReadFuncSpec {
 	}
 	# Handle special cases
 	if (/<(\w*)>/) {
+	    my $match = 0;
 	    $mpilevel = $1;
-	    if ($mpilevel ne "mpi1" && $mpilevel ne "mpi2") {
+	    foreach $level (@mpilevels) {
+		if ($mpilevel eq $level) {
+		    $match = 1;
+		}
+	    }
+	    if (!$match) {
 		print STDERR "Unrecognized MPI level $mpilevel\n";
 	    }
 	    next;
