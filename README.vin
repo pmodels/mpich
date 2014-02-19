@@ -26,6 +26,7 @@ information on bug fixes and new releases.
 8.  Fault Tolerance
 9.  Developer Builds
 10. Multiple Fortran compiler support
+11. ABI Compatibility
 
 
 -------------------------------------------------------------------------
@@ -788,3 +789,80 @@ Fortran program compiled/linked by another fortran compiler, say
 pgf77, say through mpif77 -f77=pgf77.  As long as the Fortran program
 is linked without any errors by one of these compilers, the program
 shall be running fine.
+
+-------------------------------------------------------------------------
+
+11. ABI Compatibility
+=====================
+
+The MPICH ABI compatibility initiative was announced at SC 2014
+(http://www.mpich.org/abi).  As a part of this initiative, Argonne,
+Intel, IBM and Cray, have committed to maintaining ABI compatibility
+with each other.
+
+As a first step in this initiative, starting with version 3.1, MPICH
+is binary (ABI) compatible with Intel MPI 5.0.  This means you can
+build your program with one MPI implementation and run with the other.
+Specifically, binary-only applications that were built and distributed
+with one of these MPI implementations and now be executed with the
+other MPI implementation.
+
+Some setup is required to achieve this.  Below details how to
+accomplish this.
+
+To run an MPICH-built program with Intel:
+----------------------------------------
+
+1. The current MPI library names do not currently match.  This is
+   planned to be fixed in the future, but for now, you need to employ
+   some symbolic links in order for the linker to find the necessary
+   libraries correctly.  We recommend doing this in a separate
+   directory.
+
+   For applications built with the default Intel MPI configuration:
+
+   ln -s /path/to/intel/lib/libmpi.so libmpich.so.12
+   ln -s /path/to/intel/lib/libmpigc4.so libmpichcxx.so.12
+   ln -s /path/to/intel/lib/libmpigf.so libfmpich.so.12
+   ln -s /path/to/intel/lib/libmpigf.so libmpichf90.so.12
+   ln -s /path/to/intel/lib/libmpi.so libmpl.so.1
+   ln -s /path/to/intel/lib/libmpi.so libopa.so.1
+
+   For applications built with the debug configuration of Intel MPI:
+
+   ln -s /path/to/intel/lib/libmpi_dbg.so libmpich.so.12
+   ln -s /path/to/intel/lib/libmpigc4.so libmpichcxx.so.12
+   ln -s /path/to/intel/lib/libmpigf.so libfmpich.so.12
+   ln -s /path/to/intel/lib/libmpigf.so libmpichf90.so.12
+   ln -s /path/to/intel/lib/libmpi_dbg.so libmpl.so.1
+   ln -s /path/to/intel/lib/libmpi_dbg.so libopa.so.1
+
+2. Add directory to LD_LIBRARY_PATH
+
+   export LD_LIBRARY_PATH=/path/to/symlinks:$LD_LIBRARY_PATH
+
+3. For Fortran programs, you must also modify LD_PRELOAD
+
+   export LD_PRELOAD=/path/to/intel/lib/libmpi.so:/path/to/intel/lib/libmpigf.so:$LD_PRELOAD
+
+4. Run your program
+
+   /path/to/intel/bin/mpiexec <mpi_program>
+
+To run an Intel-built program with MPICH:
+----------------------------------------
+
+1. Create symlinks
+
+   ln -s /path/to/mpich/lib/libmpich.so libmpi.so.5
+   ln -s /path/to/mpich/lib/libmpich.so libmpi_dbg.so.5
+   ln -s /path/to/mpich/lib/libmpichcxx.so libmpigc4.so.5
+   ln -s /path/to/mpich/lib/libmpichf90.so libmpigf.so.5
+
+2. Modify LD_LIBRARY_PATH
+
+   export LD_LIBRARY_PATH=/path/to/symlinks:$LD_LIBRARY_PATH
+
+3. Run your program
+
+   /path/to/mpich/bin/mpiexec <mpi_program>
