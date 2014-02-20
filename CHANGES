@@ -33,6 +33,10 @@
 
  # Several improvements to the Hydra-SLURM integration.
 
+ # Several improvements to the Hydra process binding code.  See the
+   Hydra wiki page for more information:
+   http://wiki.mpich.org/mpich/index.php/Using_the_Hydra_Process_Manager
+
  # MPICH now supports operations on very large datatypes (those that describe
    more than 32 bits of data).  This work also allows MPICH to fully support
    MPI-3's introduction of MPI_Count.
