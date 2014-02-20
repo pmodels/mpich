@@ -26,6 +26,13 @@
 
 #include <pthread.h>
 
+#ifdef HAVE_GPFS_H
+#include <gpfs.h>
+#endif
+#ifdef HAVE_GPFS_FCNTL_H
+#include <gpfs_fcntl.h>
+#endif
+
 /* prototypes of functions used for collective writes only. */
 static void ADIOI_Exch_and_write(ADIO_File fd, const void *buf, MPI_Datatype
                          datatype, int nprocs, int myrank, ADIOI_Access
@@ -368,6 +375,49 @@ void ADIOI_GPFS_WriteStridedColl(ADIO_File fd, const void *buf, int count,
 #endif
 }
 
+void gpfs_wr_access_start(int fd, ADIO_Offset offset, ADIO_Offset length)
+{
+        int rc;
+        struct {
+                gpfsFcntlHeader_t header;
+                gpfsAccessRange_t access;
+        } take_locks;
+
+        take_locks.header.totalLength = sizeof(take_locks);
+        take_locks.header.fcntlVersion = GPFS_FCNTL_CURRENT_VERSION;
+        take_locks.header.fcntlReserved = 0;
+
+        take_locks.access.structLen = sizeof(take_locks.access);
+        take_locks.access.structType = GPFS_ACCESS_RANGE;
+        take_locks.access.start = offset;
+        take_locks.access.length = length;
+        take_locks.access.isWrite = 1;
+
+        rc = gpfs_fcntl(fd, &take_locks);
+}
+
+void gpfs_wr_access_end(int fd, ADIO_Offset offset, ADIO_Offset length)
+{
+        int rc;
+        struct {
+                gpfsFcntlHeader_t header;
+                gpfsFreeRange_t free;
+        } free_locks;
+
+
+        free_locks.header.totalLength = sizeof(free_locks);
+        free_locks.header.fcntlVersion = GPFS_FCNTL_CURRENT_VERSION;
+        free_locks.header.fcntlReserved = 0;
+
+        free_locks.free.structLen = sizeof(free_locks.free);
+        free_locks.free.structType = GPFS_FREE_RANGE;
+        free_locks.free.start = offset;
+        free_locks.free.length = length;
+
+        rc = gpfs_fcntl(fd, &free_locks);
+}
+
+
 
 
 /* If successful, error_code is set to MPI_SUCCESS.  Otherwise an error
@@ -450,6 +500,17 @@ static void ADIOI_Exch_and_write(ADIO_File fd, const void *buf, MPI_Datatype
 
     if ((st_loc==-1) && (end_loc==-1)) {
 	ntimes = 0; /* this process does no writing. */
+    }
+    if (ntimes != 0 && getenv("ROMIO_GPFS_DECLARE_ACCESS")!=NULL) {
+	gpfs_wr_access_start(fd->fd_sys, st_loc, end_loc - st_loc);
+    }
+    ADIO_Offset st_loc_ion, end_loc_ion, needs_gpfs_access_cleanup=0;
+    if (getenv("ROMIO_GPFS_DECLARE_ION_ACCESS")!=NULL) {
+	if (gpfs_find_access_for_ion(fd, st_loc, end_loc, fd_start, fd_end,
+		    &st_loc_ion, &end_loc_ion)) {
+	    gpfs_wr_access_start(fd->fd_sys, st_loc_ion, end_loc_ion-st_loc_ion);
+	    needs_gpfs_access_cleanup=1;
+	}
     }
 
     MPI_Allreduce(&ntimes, &max_ntimes, 1, MPI_INT, MPI_MAX,
@@ -729,6 +790,14 @@ static void ADIOI_Exch_and_write(ADIO_File fd, const void *buf, MPI_Datatype
     ADIOI_Free(curr_to_proc);
     ADIOI_Free(done_to_proc);
 
+    if (ntimes != 0 && getenv("ROMIO_GPFS_DECLARE_ACCESS")!=NULL) {
+	gpfs_wr_access_end(fd->fd_sys, st_loc, end_loc-st_loc);
+    }
+
+    if (needs_gpfs_access_cleanup) {
+	gpfs_wr_access_end(fd->fd_sys, st_loc_ion, end_loc_ion-st_loc_ion);
+	needs_gpfs_access_cleanup=0;
+    }
     unsetenv("LIBIOLOG_EXTRA_INFO");
 }
 
