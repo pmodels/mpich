@@ -17,7 +17,7 @@ cvars:
     - name        : MPIR_CVAR_SUPPRESS_ABORT_MESSAGE
       category    : ERROR_HANDLING
       type        : boolean
-      default     : true
+      default     : false
       class       : device
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
@@ -129,8 +129,8 @@ int MPI_Abort(MPI_Comm comm, int errorcode)
     {
 	MPIU_Snprintf(comm_name, MPI_MAX_OBJECT_NAME, "comm=0x%X", comm);
     }
-    /* FIXME: This is not internationalized */
     if (!MPIR_CVAR_SUPPRESS_ABORT_MESSAGE)
+        /* FIXME: This is not internationalized */
         MPIU_Snprintf(abort_str, 100, "application called MPI_Abort(%s, %d) - process %d", comm_name, errorcode, comm_ptr->rank);
     mpi_errno = MPID_Abort( comm_ptr, mpi_errno, errorcode, abort_str );
     /* --BEGIN ERROR HANDLING-- */
