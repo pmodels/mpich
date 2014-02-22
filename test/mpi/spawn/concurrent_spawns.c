@@ -119,7 +119,7 @@ int main(int argc, char *argv[])
     if (parentcomm != MPI_COMM_NULL)
     {
 	MPI_Send(&errs, 1, MPI_INT, 0, 0, parentcomm);
-	MPI_Comm_free( &parentcomm );
+	MPI_Comm_disconnect( &parentcomm );
     }
     else {
 	/* Note that the MTest_Finalize get errs only over COMM_WORLD */
