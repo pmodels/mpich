@@ -27,7 +27,7 @@ const int verbose = 0;
 void pgroup_create(int grp_size, int *pid_list, MPI_Comm *group_out);
 void pgroup_free(MPI_Comm *group);
 
-/** Free an ARMCI group
+/** Free the group
   */
 void pgroup_free(MPI_Comm *group) {
   /* Note: It's ok to compare predefined handles */
@@ -38,7 +38,7 @@ void pgroup_free(MPI_Comm *group) {
 }
 
 
-/* Create an ARMCI processor group containing the processes in pid_list.
+/* Create a processor group containing the processes in pid_list.
  *
  * NOTE: pid_list list must be identical and sorted on all processes
  */
