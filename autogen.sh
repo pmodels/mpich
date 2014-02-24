@@ -92,7 +92,6 @@ confdb_dirs="${confdb_dirs} src/mpl/confdb"
 confdb_dirs="${confdb_dirs} src/pm/hydra/confdb"
 confdb_dirs="${confdb_dirs} src/pm/hydra/mpl/confdb"
 confdb_dirs="${confdb_dirs} test/mpi/confdb"
-confdb_dirs="${confdb_dirs} src/armci/m4"
 
 # hydra's copy of mpl
 sync_external src/mpl src/pm/hydra/mpl
@@ -159,7 +158,7 @@ export do_build_configure
 MAKE=${MAKE-make}
 
 # external packages that require autogen.sh to be run for each of them
-externals="src/pm/hydra src/mpi/romio src/armci src/pm/mpd src/openpa"
+externals="src/pm/hydra src/mpi/romio src/pm/mpd src/openpa"
 # amdirs are the directories that make use of autoreconf
 amdirs=". src/mpl src/util/logging/rlog"
 

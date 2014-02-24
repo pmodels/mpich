@@ -1,8 +1,0 @@
-#include "mpif.h"
-#define MP_TIMER() mpi_wtime()
-#define MP_FINALIZE() mpi_finalize(ierr)
-
-#ifndef MP_DEFINES_ONLY
-      integer ierr
-      call mpi_init(ierr)
-#endif
