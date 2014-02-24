@@ -74,7 +74,7 @@ int MPI_Abort(MPI_Comm comm, int errorcode)
     int mpi_errno = MPI_SUCCESS;
     MPID_Comm *comm_ptr = NULL;
     /* FIXME: 100 is arbitrary and may not be long enough */
-    char abort_str[100], comm_name[MPI_MAX_OBJECT_NAME];
+    char abort_str[100] = "", comm_name[MPI_MAX_OBJECT_NAME];
     int len = MPI_MAX_OBJECT_NAME;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_ABORT);
 

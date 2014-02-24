@@ -94,7 +94,7 @@ int MPID_Abort(MPID_Comm * comm, int mpi_errno, int exit_code,
 #elif defined(MPIDI_DEV_IMPLEMENTS_ABORT)
     MPIDI_CH3I_PMI_Abort(exit_code, error_msg);
 #else
-    MPIU_Error_printf("%s\n", error_msg);
+    if (error_msg[0]) MPIU_Error_printf("%s\n", error_msg);
     fflush(stderr);
 #endif
 
