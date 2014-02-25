@@ -6,6 +6,6 @@
 ##
 
 include $(top_srcdir)/src/binding/cxx/Makefile.mk
-include $(top_srcdir)/src/binding/f77/Makefile.mk
-include $(top_srcdir)/src/binding/f90/Makefile.mk
+include $(top_srcdir)/src/binding/fortran/mpif_h/Makefile.mk
+include $(top_srcdir)/src/binding/fortran/use_mpi/Makefile.mk
 

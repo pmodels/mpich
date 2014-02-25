@@ -9,7 +9,7 @@ AM_CONDITIONAL([BUILD_F90_LIB],[test "X$enable_fc" = "Xyes"])
 AC_DEFUN([PAC_SUBCFG_BODY_]PAC_SUBCFG_AUTO_SUFFIX,[
 
 AM_COND_IF([BUILD_F90_LIB],[
-# FIXME XXX DJG this code came from a sub-configure in src/binding/f90.  Why
+# FIXME XXX DJG this code came from a sub-configure in src/binding/fortran/use_mpi.  Why
 # isn't this just all up in the top-level configure?  Alternatively, why doesn't
 # most/all of the f90 configure code from the top level configure.ac live here
 # instead?  Is it because of the c/f77/f90 interplay?
@@ -58,7 +58,7 @@ PAC_FC_INTEGER_MODEL_MAP([FC_INTEGER_MODEL_MAP],
                          [$CROSS_F90_INTEGER_MODEL_MAP])
 AC_SUBST(FC_INTEGER_MODEL_MAP)    
 
-AC_CONFIG_FILES([src/binding/f90/mpif90model.h])
+AC_CONFIG_FILES([src/binding/fortran/use_mpi/mpif90model.h])
 
 ])dnl end AM_COND_IF(BUILD_F90_LIB,...)
 ])dnl end _BODY

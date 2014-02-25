@@ -666,14 +666,14 @@ if [ $do_bindings = "yes" ] ; then
     build_f90=no
     build_cxx=no
     if [ $do_f77 = "yes" ] ; then
-        if [ ! -s src/binding/f77/abortf.c ] ; then 
+        if [ ! -s src/binding/fortran/mpif_h/abortf.c ] ; then
 	    build_f77=yes
-        elif find src/binding/f77 -name 'buildiface' -newer 'src/binding/f77/abortf.c' >/dev/null 2>&1 ; then
+        elif find src/binding/fortran/mpif_h -name 'buildiface' -newer 'src/binding/fortran/mpif_h/abortf.c' >/dev/null 2>&1 ; then
 	    build_f77=yes
         fi
-        if [ ! -s src/binding/f90/mpi_base.f90 ] ; then
+        if [ ! -s src/binding/fortran/use_mpi/mpi_base.f90 ] ; then
  	    build_f90=yes
-        elif find src/binding/f90 -name 'buildiface' -newer 'src/binding/f90/mpi_base.f90' >/dev/null 2>&1 ; then
+        elif find src/binding/fortran/use_mpi -name 'buildiface' -newer 'src/binding/fortran/use_mpi/mpi_base.f90' >/dev/null 2>&1 ; then
 	    build_f90=yes
         fi
  
@@ -681,16 +681,16 @@ if [ $do_bindings = "yes" ] ; then
 
     if [ $build_f77 = "yes" ] ; then
 	echo_n "Building Fortran 77 interface... "
-	( cd src/binding/f77 && chmod a+x ./buildiface && ./buildiface )
+	( cd src/binding/fortran/mpif_h && chmod a+x ./buildiface && ./buildiface )
 	echo "done"
     fi
     if [ $build_f90 = "yes" ] ; then
 	echo_n "Building Fortran 90 interface... "
 	# Remove any copy of mpi_base.f90 (this is used to handle the
 	# Double precision vs. Real*8 option
-	rm -f src/binding/f90/mpi_base.f90.orig
-	( cd src/binding/f90 && chmod a+x ./buildiface && ./buildiface )
-	( cd src/binding/f90 && ../f77/buildiface -infile=cf90t.h -deffile=cf90tdefs)
+	rm -f src/binding/fortran/use_mpi/mpi_base.f90.orig
+	( cd src/binding/fortran/use_mpi && chmod a+x ./buildiface && ./buildiface )
+	( cd src/binding/fortran/use_mpi && ../mpif_h/buildiface -infile=cf90t.h -deffile=cf90tdefs)
 	echo "done"
     fi
 

@@ -2098,15 +2098,15 @@ dnl compilers without creating a separate version.
 dnl Note that this is run AFTER the AC_OUTPUT actions
 AC_OUTPUT_COMMANDS([if test "$enable_f77" = yes ; then 
 if test "$has_exclaim" = "yes" ; then
-    sed -e 's/^C/\!/g' src/binding/f77/mpif.h > src/include/mpif.h
-	cp src/include/mpif.h src/binding/f77/mpif.h
+    sed -e 's/^C/\!/g' src/binding/fortran/mpif_h/mpif.h > src/include/mpif.h
+	cp src/include/mpif.h src/binding/fortran/mpif_h/mpif.h
 else
-    cp src/binding/f77/mpif.h src/include
+    cp src/binding/fortran/mpif_h/mpif.h src/include
 fi
 if test "$has_fort_real8" = "yes" ; then
     sed -e 's/DOUBLE PRECISION/REAL*8/g' src/include/mpif.h > src/include/mpif.h.new
     mv src/include/mpif.h.new src/include/mpif.h
-    cp src/include/mpif.h src/binding/f77/mpif.h
+    cp src/include/mpif.h src/binding/fortran/mpif_h/mpif.h
 fi
 fi],
 master_top_srcdir=$master_top_srcdir
@@ -2123,7 +2123,7 @@ if test "$enable_fc" = "yes" ; then
         AC_MSG_WARN([Fortran 90 requires Fortran 77])
         enable_fc=no
     else 
-        bindingsubsystems="$bindingsubsystems src/binding/f90"
+        bindingsubsystems="$bindingsubsystems src/binding/fortran/use_mpi"
         bindings="$bindings f90"
     fi
 fi
@@ -3075,7 +3075,7 @@ if test "$len_long_double" != 0 -a "$MPID_NO_LONG_DOUBLE" != yes ; then
 else
     MPI_LONG_DOUBLE=MPI_DATATYPE_NULL
 fi
-# If you change MPI_BYTE, you must change it in src/binding/f77/buildiface
+# If you change MPI_BYTE, you must change it in src/binding/fortran/mpif_h/buildiface
 MPI_BYTE="0x4c00010d"
 MPI_WCHAR="0x4c00${len_wchar_t}0e"
 MPI_PACKED="0x4c00010f"
@@ -3907,7 +3907,7 @@ dnl     len_doublecplx=$hexlen
 	# interface (was error)
 	# Check to see if the f77 binding has enabled the code to support
 	# the case of int != fint. 
-	if grep HAVE_FINT_IS_INT $master_top_srcdir/src/binding/f77/testf.c 2>&1 1>/dev/null ; then
+	if grep HAVE_FINT_IS_INT $master_top_srcdir/src/binding/fortran/mpif_h/testf.c 2>&1 1>/dev/null ; then
 	    AC_MSG_WARN([Fortran integers and C ints are not the same size.  Support for this case is experimental; use at your own risk])
 	else 
             AC_MSG_ERROR([Fortran integers and C ints are not the same size.  The current Fortran binding does not support this case.  Either force the Fortran compiler to use integers of $ac_cv_sizeof_int bytes, or use --disable-f77 on the configure line for MPICH.])
@@ -5786,7 +5786,7 @@ fi
 
 dnl FIXME XXX DJG does this need to actually be conditional on something?
 dnl previously it was conditional on the successful execution of
-dnl "src/binding/f90/configure" but that would only fail if FC couldn't be
+dnl "src/binding/fortran/use_mpi/configure" but that would only fail if FC couldn't be
 dnl determined or a bad VPATH build env was detected
 AC_DEFINE(HAVE_FC_TYPE_ROUTINES,1,[Define if Fortran 90 type routines available])
 
@@ -5907,7 +5907,7 @@ if test -z "$libbuild_dir" ; then
 fi
 if test -z "$modincbuild_dir" ; then
     # The include files may be in a different directory from the mpif.h file
-    modincbuild_dir=`pwd`/src/binding/f90
+    modincbuild_dir=`pwd`/src/binding/fortran/use_mpi
 fi
 
 dnl
@@ -6021,12 +6021,12 @@ AC_OUTPUT(Makefile \
           src/include/glue_romio.h \
           src/include/mpichtimer.h \
           src/binding/cxx/mpicxx.h \
-	  src/binding/f77/mpif.h \
-	  src/binding/f77/setbotf.f \
-	  src/binding/f77/setbot.c \
-	  src/binding/f90/mpi_sizeofs.f90 \
-	  src/binding/f90/mpi_base.f90 \
-	  src/binding/f90/mpi_constants.f90 \
+	  src/binding/fortran/mpif_h/mpif.h \
+	  src/binding/fortran/mpif_h/setbotf.f \
+	  src/binding/fortran/mpif_h/setbot.c \
+	  src/binding/fortran/use_mpi/mpi_sizeofs.f90 \
+	  src/binding/fortran/use_mpi/mpi_base.f90 \
+	  src/binding/fortran/use_mpi/mpi_constants.f90 \
 	  src/packaging/pkgconfig/mpich.pc \
 	  src/packaging/envmods/mpich.module \
           src/env/mpixxx_opts.conf \
