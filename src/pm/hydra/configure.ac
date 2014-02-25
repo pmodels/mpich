@@ -158,8 +158,11 @@ AC_CHECK_HEADERS(unistd.h strings.h sys/types.h sys/socket.h sched.h sys/stat.h 
 		 netinet/in.h netinet/tcp.h sys/un.h netdb.h sys/time.h time.h ifaddrs.h arpa/inet.h \
 		 poll.h fcntl.h netdb.h winsock2.h windows.h)
 
-AC_CHECK_LIB(socket,socket,LDFLAGS="$LDFLAGS -lsocket",)
-AC_CHECK_LIB(nsl,gethostbyname,LDFLAGS="$LDFLAGS -lnsl",)
+# These functions are in additional libraries on some platforms (like Solaris).
+# Check to see if they are needed.
+AC_SEARCH_LIBS(socket,socket,)
+AC_SEARCH_LIBS(gethostbyname,nsl,)
+AC_SEARCH_LIBS(hstrerror, resolv,)
 
 # Check for necessary functions
 AC_CHECK_FUNCS(gettimeofday time strdup sigaction signal usleep alloca unsetenv \
