@@ -666,6 +666,7 @@ void ADIOI_BG_GPFS_Calc_file_domains(ADIO_File fd,
     ADIO_Offset min_st_offset, max_end_offset, *fd_start, *fd_end, *fd_size;
     int i, aggr;
     TRACE_ERR("Entering ADIOI_BG_GPFS_Calc_file_domains\n");
+    blksize_t blksize;
 
 #ifdef AGGREGATION_PROFILE
     MPE_Log_event (5004, 0, NULL);
@@ -676,9 +677,11 @@ void ADIOI_BG_GPFS_Calc_file_domains(ADIO_File fd,
     DBG_FPRINTF(stderr, "%s(%d): %d aggregator(s)\n", 
 	    myname,__LINE__,nprocs_for_coll);
 #   endif
-    __blksize_t blksize = 1048576; /* default to 1M */
-    if(fs_ptr && ((ADIOI_BG_fs*)fs_ptr)->blksize) /* ignore null ptr or 0 blksize */
-      blksize = ((ADIOI_BG_fs*)fs_ptr)->blksize;
+    if (fd->blksize <= 0)
+	/* default to 1M if blksize unset */
+	fd->blksize = 1048576;
+    blksize = fd->blksize;
+
 #   if AGG_DEBUG
     DBG_FPRINTF(stderr,"%s(%d): Blocksize=%ld\n",myname,__LINE__,blksize);
 #   endif

@@ -30,7 +30,6 @@
     /* File system (BG) specific information - 
          hung off of ADIOI_FileD file descriptor (fd->fs_ptr) at open */
     typedef struct ADIOI_BG_fs_s {
-      __blksize_t blksize;
       int         fsync_aggr; /* "fsync aggregation" flags (below) */
 #define ADIOI_BG_FSYNC_AGGREGATION_DISABLED  0x00
 #define ADIOI_BG_FSYNC_AGGREGATION_ENABLED   0x01

@@ -173,7 +173,7 @@ static void scaleable_stat(ADIO_File fd)
 
     /* data from stat64 */
     /* store the blksize in the file system specific storage */
-    ((ADIOI_BG_fs*)fd->fs_ptr)->blksize = bg_stat.st_blksize;
+    fd->blksize = bg_stat.st_blksize;
 
     /* data from statfs */
    if ((bg_statfs.f_type == GPFS_SUPER_MAGIC) ||
@@ -250,7 +250,7 @@ void ADIOI_BG_Open(ADIO_File fd, int *error_code)
         ADIOI_BG_assert(fd->fs_ptr == NULL);
         fd->fs_ptr = (ADIOI_BG_fs*) ADIOI_Malloc(sizeof(ADIOI_BG_fs));
 
-        ((ADIOI_BG_fs*)fd->fs_ptr)->blksize = 1048576; /* default to 1M */
+        fd->blksize = 1048576; /* default to 1M */
 
         /* default is no fsync aggregation */
         ((ADIOI_BG_fs*)fd->fs_ptr)->fsync_aggr = 
@@ -266,7 +266,7 @@ void ADIOI_BG_Open(ADIO_File fd, int *error_code)
 #endif
 	/* file domain code will get terribly confused in a hard-to-debug way
 	 * if gpfs blocksize not sensible */
-        ADIOI_BG_assert( ((ADIOI_BG_fs*)fd->fs_ptr)->blksize > 0);
+        ADIOI_BG_assert( fd->blksize > 0);
     }
 
   if (fd->fd_sys == -1)  {
