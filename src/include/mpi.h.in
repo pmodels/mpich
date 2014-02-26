@@ -571,7 +571,8 @@ static const MPI_Datatype mpich_mpi_aint   MPICH_ATTR_TYPE_TAG(MPI_Aint)   = MPI
 static const MPI_Datatype mpich_mpi_offset MPICH_ATTR_TYPE_TAG(MPI_Offset) = MPI_OFFSET;
 #endif
 
-/* The order of these elements must match that in mpif.h */
+/* The order of these elements must match that in mpif.h, mpi_f08_types.f90,
+   and mpi_c_interface_types.f90 */
 typedef struct MPI_Status {
     int count_lo;
     int count_hi_and_cancelled;
