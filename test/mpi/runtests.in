@@ -1137,7 +1137,7 @@ sub RunTestFailed {
         print TAPOUT "  Directory: $workdir\n";
         print TAPOUT "  File: $programname\n";
         print TAPOUT "  Num-procs: $np\n";
-        print TAPOUT "  Date: \"" . localtime . "\"\n";
+        print TAPOUT "  Date: \"" . localtime() . "\"\n";
 
         # The following would be nice, but it leads to unfortunate formatting in
         # the Jenkins web output for now.  Using comment lines instead, since
@@ -1179,7 +1179,7 @@ sub RunTestFailed {
         print JUNITOUT "  Directory: $workdir\n";
         print JUNITOUT "  File: $programname\n";
         print JUNITOUT "  Num-procs: $np\n";
-        print JUNITOUT "  Date: \"" . localtime . "\"\n";
+        print JUNITOUT "  Date: \"" . localtime() . "\"\n";
 
         print JUNITOUT "  ...\n";
 

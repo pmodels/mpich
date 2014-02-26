@@ -123,7 +123,7 @@ foreach my $p (@cvars) {
 print "Categories include: \n".Dumper(@categories) if $debug;
 print "Cvars include :\n".Dumper(@cvars)."\n" if $debug;
 
-my $run_timestamp = localtime;
+my $run_timestamp = localtime();
 my $uc_ns = uc($ns);
 
 # Setup output files
