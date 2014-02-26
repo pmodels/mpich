@@ -18,189 +18,9 @@
 #include <sys/statfs.h>
 #include <sys/vfs.h>
 
-/* COPIED FROM ad_fstype.c since it is static in that file
-
- ADIO_FileSysType_parentdir - determines a string pathname for the
- parent directory of a given filename.
-
-Input Parameters:
-. filename - pointer to file name character array
-
-Output Parameters:
-. dirnamep - pointer to location in which to store a pointer to a string
-
- Note that the caller should free the memory located at the pointer returned
- after the string is no longer needed.
-*/
-
-#ifndef PATH_MAX
-#define PATH_MAX 65535
-#endif
-
-/* In a strict ANSI environment, S_ISLNK may not be defined.  Fix that
-   here.  We assume that S_ISLNK is *always* defined as a macro.  If
-   that is not universally true, then add a test to the romio
-   configure that trys to link a program that references S_ISLNK */
-#if !defined(S_ISLNK) 
-#    if defined(S_IFLNK)
-     /* Check for the link bit */
-#    define S_ISLNK(mode) ((mode) & S_IFLNK)
-#    else
-     /* no way to check if it is a link, so say false */
-#    define S_ISLNK(mode) 0   
-#    endif
-#endif /* !(S_ISLNK) */
-
-/* ADIO_FileSysType_parentdir
- *
- * Returns pointer to string in dirnamep; that string is allocated with
- * strdup and must be free()'d.
- */
-static void ADIO_FileSysType_parentdir(char *filename, char **dirnamep)
-{
-    int err;
-    char *dir = NULL, *slash;
-    struct stat statbuf;
-    
-    err = lstat(filename, &statbuf);
-
-    if (err || (!S_ISLNK(statbuf.st_mode))) {
-	/* no such file, or file is not a link; these are the "normal"
-	 * cases where we can just return the parent directory.
-	 */
-	dir = ADIOI_Strdup(filename);
-    }
-    else {
-	/* filename is a symlink.  we've presumably already tried
-	 * to stat it and found it to be missing (dangling link),
-	 * but this code doesn't care if the target is really there
-	 * or not.
-	 */
-	int namelen;
-	char *linkbuf;
-
-	linkbuf = ADIOI_Malloc(PATH_MAX+1);
-	namelen = readlink(filename, linkbuf, PATH_MAX+1);
-	if (namelen == -1) {
-	    /* something strange has happened between the time that
-	     * we determined that this was a link and the time that
-	     * we attempted to read it; punt and use the old name.
-	     */
-	    dir = ADIOI_Strdup(filename);
-	}
-	else {
-	    /* successfully read the link */
-	    linkbuf[namelen] = '\0'; /* readlink doesn't null terminate */
-	    dir = ADIOI_Strdup(linkbuf);
-	    ADIOI_Free(linkbuf);
-	}
-    }
-
-    slash = strrchr(dir, '/');
-    if (!slash) ADIOI_Strncpy(dir, ".", 2);
-    else {
-	if (slash == dir) *(dir + 1) = '\0';
-	else *slash = '\0';
-    }
-
-    *dirnamep = dir;
-    return;
-}
-
-static void scaleable_stat(ADIO_File fd)
-{
-    struct stat64 bg_stat;
-    struct statfs bg_statfs;
-    int rank, rc;
-    char * dir;
-    long buf[2];
-    MPI_Comm_rank(fd->comm, &rank);
-
-    if ((rank == fd->hints->ranklist[0]) || (fd->comm == MPI_COMM_SELF)) {
-	/* Get the (real) underlying file system block size */
-	rc = stat64(fd->filename, &bg_stat);
-	if (rc >= 0)
-	{
-	    buf[0] = bg_stat.st_blksize;
-	    DBGV_FPRINTF(stderr,"Successful stat '%s'.  Blocksize=%ld\n",
-		    fd->filename,bg_stat.st_blksize);
-	}
-	else
-	{
-	    DBGV_FPRINTF(stderr,"Stat '%s' failed with rc=%d, errno=%d\n",
-		    fd->filename,rc,errno);
-	}
-	/* Get the (real) underlying file system type so we can 
-	 * plan our fsync scaling strategy */
-	rc = statfs(fd->filename,&bg_statfs);
-	if (rc >= 0)
-	{
-	    DBGV_FPRINTF(stderr,"Successful statfs '%s'.  Magic number=%#lX\n",
-		    fd->filename,bg_statfs.f_type);
-	    buf[1] = bg_statfs.f_type;
-	}
-	else
-	{
-	    DBGV_FPRINTF(stderr,"Statfs '%s' failed with rc=%d, errno=%d\n",
-		    fd->filename,rc,errno);
-	    ADIO_FileSysType_parentdir(fd->filename, &dir);
-	    rc = statfs(dir,&bg_statfs);
-	    if (rc >= 0)
-	    {
-		DBGV_FPRINTF(stderr,"Successful statfs '%s'.  Magic number=%#lX\n",dir,bg_statfs.f_type);
-		buf[1] = bg_statfs.f_type;
-	    }
-	    else
-	    {
-		/* Hmm.  Guess we'll assume the worst-case, that it's not GPFS
-		 * or BGLOCKLESSMPIO_F_TYPE (default PVFS2) below */
-		buf[1] = -1; /* bogus magic number */
-		DBGV_FPRINTF(stderr,"Statfs '%s' failed with rc=%d, errno=%d\n",dir,rc,errno);
-	    }
-	    free(dir);
-	}
-    }
-    /* now we can broadcast the stat/statfs data to everyone else */
-    if (fd->comm != MPI_COMM_SELF) { /* if indep open, there's no one to talk to*/
-	if (fd->agg_comm != MPI_COMM_NULL) /* deferred open: only a subset of
-					      processes participate */
-	    MPI_Bcast(buf, 2, MPI_LONG, 0, fd->agg_comm);
-	else
-	    MPI_Bcast(buf, 2, MPI_LONG, fd->hints->ranklist[0], fd->comm);
-    }
-    bg_stat.st_blksize = buf[0];
-    bg_statfs.f_type = buf[1];
-
-    /* data from stat64 */
-    /* store the blksize in the file system specific storage */
-    fd->blksize = bg_stat.st_blksize;
-
-    /* data from statfs */
-   if ((bg_statfs.f_type == GPFS_SUPER_MAGIC) ||
-       (bg_statfs.f_type == bglocklessmpio_f_type))
-   {
-      ((ADIOI_BG_fs*)fd->fs_ptr)->fsync_aggr = 
-            ADIOI_BG_FSYNC_AGGREGATION_ENABLED;
-
-      /* Only one rank is an "fsync aggregator" because only one 
-      * fsync is needed */
-      if (rank == fd->hints->ranklist[0])
-      {
-         ((ADIOI_BG_fs*)fd->fs_ptr)->fsync_aggr |= 
-            ADIOI_BG_FSYNC_AGGREGATOR;
-         DBG_FPRINTF(stderr,"fsync aggregator %d\n",rank);
-      }
-      else 
-         ; /* aggregation enabled but this rank is not an aggregator*/
-   }
-   else
-      ; /* Other filesystems default to no fsync aggregation */
-}
-
-
 void ADIOI_BG_Open(ADIO_File fd, int *error_code)
 {
-  int perm, old_mask, amode;
+  int perm, old_mask, amode, rank, rc;
   static char myname[] = "ADIOI_BG_OPEN";
 
   /* set internal variables for tuning environment variables */
@@ -246,27 +66,39 @@ void ADIOI_BG_Open(ADIO_File fd, int *error_code)
     if(fd->fd_sys != -1)
     {
 
-        /* Initialize the ad_bg file system specific information */
-        ADIOI_BG_assert(fd->fs_ptr == NULL);
-        fd->fs_ptr = (ADIOI_BG_fs*) ADIOI_Malloc(sizeof(ADIOI_BG_fs));
-
         fd->blksize = 1048576; /* default to 1M */
-
-        /* default is no fsync aggregation */
-        ((ADIOI_BG_fs*)fd->fs_ptr)->fsync_aggr = 
-	    ADIOI_BG_FSYNC_AGGREGATION_DISABLED; 
-
 
 #ifdef ADIOI_MPE_LOGGING
         MPE_Log_event(ADIOI_MPE_stat_a, 0, NULL);
 #endif
-        scaleable_stat(fd);
+	/* in this fs-specific routine, we might not be called over entire
+	 * communicator (deferred open).  Collect statistics on one process.
+	 * ADIOI_GEN_Opencoll (common-code caller) will take care of the
+	 * broadcast */
+
+	MPI_Comm_rank(fd->comm, &rank);
+	if ((rank == fd->hints->ranklist[0]) || (fd->comm == MPI_COMM_SELF)) {
+	    struct stat64 bg_stat;
+	    /* Get the (real) underlying file system block size */
+	    rc = stat64(fd->filename, &bg_stat);
+	    if (rc >= 0)
+	    {
+		fd->blksize = bg_stat.st_blksize;
+		DBGV_FPRINTF(stderr,"Successful stat '%s'.  Blocksize=%ld\n",
+			fd->filename,bg_stat.st_blksize);
+	    }
+	    else
+	    {
+		DBGV_FPRINTF(stderr,"Stat '%s' failed with rc=%d, errno=%d\n",
+			fd->filename,rc,errno);
+	    }
+	}
+	/* all other ranks have incorrect fd->blocksize, but ADIOI_GEN_Opencoll
+	 * will take care of that in both standard and deferred-open case */
+
 #ifdef ADIOI_MPE_LOGGING
         MPE_Log_event(ADIOI_MPE_stat_b, 0, NULL);
 #endif
-	/* file domain code will get terribly confused in a hard-to-debug way
-	 * if gpfs blocksize not sensible */
-        ADIOI_BG_assert( fd->blksize > 0);
     }
 
   if (fd->fd_sys == -1)  {

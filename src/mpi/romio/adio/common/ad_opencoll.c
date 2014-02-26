@@ -80,6 +80,7 @@ void ADIOI_GEN_OpenColl(ADIO_File fd, int rank,
 	     * (not all do)*/
 	    MPI_Bcast(&(fd->blksize), 1, MPI_LONG, fd->hints->ranklist[0], fd->comm);
 	    *error_code = MPI_SUCCESS;
+	    ADIOI_Assert(fd->blksize > 0);
 	    return;
         }
     }
@@ -114,6 +115,9 @@ void ADIOI_GEN_OpenColl(ADIO_File fd, int rank,
     /* broadcast a bit of information (blocksize for now) to all proceses in
      * communicator, not just those who participated in open */
     MPI_Bcast(&(fd->blksize), 1, MPI_LONG, fd->hints->ranklist[0], fd->comm);
+    /* file domain code will get terribly confused in a hard-to-debug way if
+     * gpfs blocksize not sensible */
+    ADIOI_Assert( fd->blksize > 0);
     /* for deferred open: this process has opened the file (because if we are
      * not an aggregaor and we are doing deferred open, we returned earlier)*/
     fd->is_open = 1;
