@@ -350,6 +350,7 @@ htmldoc-local: $(mpi_sources:.c=.html-phony) $(doc1_src_txt:.txt=.html1-phony)
 		fi \
 	    fi \
 	done
+	$(srcdir)/maint/createhtmlindex -wwwroot=$(top_builddir)
 
 # install-man does not have a special "-local" target for some reason
 INSTALL_DATA_LOCAL_TARGETS += install-man-local

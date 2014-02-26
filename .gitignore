@@ -385,6 +385,7 @@ Makefile.am-stamp
 /maint/extractstates
 /maint/extractfixme
 /maint/structalign
+/maint/createhtmlindex
 
 # /src/
 
