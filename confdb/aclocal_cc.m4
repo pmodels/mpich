@@ -1644,22 +1644,35 @@ AC_DEFUN([PAC_C_MACRO_VA_ARGS],[
     AC_MSG_CHECKING([for variable argument list macro functionality])
 
     # check if the program links correctly
-    rm -f pac_test.log
-    PAC_LINK_IFELSE_LOG([pac_test.log],[AC_LANG_PROGRAM([
+    rm -f pac_test1.log pac_test2.log
+
+    PAC_LINK_IFELSE_LOG([pac_test1.log],[AC_LANG_PROGRAM([
         #include <stdio.h>
         #define conftest_va_arg_macro(...) printf(__VA_ARGS__)
     ],
     [conftest_va_arg_macro("a test %d", 3);])],
     prog_links=yes,prog_links=no)
 
+    PAC_LINK_IFELSE_LOG([pac_test2.log],[AC_LANG_PROGRAM([
+        #include <stdio.h>
+        #define conftest_va_arg_macro printf
+    ],
+    [conftest_va_arg_macro("a test %d", 3);])])
+
     # If the program linked OK, make sure there were no warnings
-    if test "$prog_links" = "yes" -a "`cat pac_test.log`" = "" ; then
+    if test "$prog_links" = "yes" -a "`diff pac_test1.log pac_test2.log`" = "" ; then
        AC_DEFINE([HAVE_MACRO_VA_ARGS],[1],[Define if C99-style variable argument list macro functionality])
        AC_MSG_RESULT([yes])
+    elif "`diff pac_test1.log pac_test2.log`" = "" ; then
+       AC_MSG_RESULT([no, compiler generates warnings])
+       echo "With VA_ARGS:"
+       cat pac_test1.log
+       echo "Without VA_ARGS:"
+       cat pac_test2.log
     else
        AC_MSG_RESULT([no])
     fi
-    rm -f pac_test.log
+    rm -f pac_test1.log pac_test2.log
 ])dnl
 
 # Will AC_DEFINE([HAVE_BUILTIN_EXPECT]) if the compiler supports __builtin_expect.
