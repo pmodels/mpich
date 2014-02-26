@@ -18,73 +18,56 @@
 
 void ADIOI_BG_Flush(ADIO_File fd, int *error_code)
 {
-  int err=0;
-  static char myname[] = "ADIOI_BG_FLUSH";
+    int err=0;
+    static char myname[] = "ADIOI_BG_FLUSH";
 
 
-  if(((ADIOI_BG_fs*)fd->fs_ptr)->fsync_aggr & ADIOI_BG_FSYNC_AGGREGATION_ENABLED)
-  {
     int rank;
- 
-    /* Barrier so we can collectively do fewer fsync's */
-    MPI_Barrier(fd->comm);
-  
+
     MPI_Comm_rank(fd->comm, &rank);
-  
-    /* All ranks marked as "fsync aggregators" should fsync. 
-       (We currently only do one fsync on rank 0 but this is general 
-       enough to support >1 aggregator using allreduce to get the
-       results instead of simply bcast'ing the results from rank 0.)*/
-    if(((ADIOI_BG_fs*)fd->fs_ptr)->fsync_aggr & ADIOI_BG_FSYNC_AGGREGATOR)
-    {
-      err = fsync(fd->fd_sys);
-      DBG_FPRINTF(stderr,"aggregation:fsync %s, err=%#X, errno=%#X\n",fd->filename, err, errno);
-      /* We want errno, not the return code if it failed */
-      if (err == -1) err = errno;
-      else err = 0;
+
+    /* the old logic about who is an fsync aggregator and who is not fell down
+     * when deferred open was enabled.  Instead, make this look more like
+     * ad_pvfs2_flush.  If one day the I/O aggregators have something they need
+     * to flush, we can consult the 'fd->hints->ranklist[]' array.  For now, a
+     * flush from one process should suffice */
+
+    /* ensure all other proceses are done writing. On many platforms MPI_Reduce
+     * is fastest because it has the lightest constraints. On Blue Gene, BARRIER
+     * is optimized  */
+    MPI_Barrier(fd->comm);
+
+    if (rank == fd->hints->ranklist[0]) {
+	err = fsync(fd->fd_sys);
+	DBG_FPRINTF(stderr,"aggregation:fsync %s, err=%#X, errno=%#X\n",fd->filename, err, errno);
+	/* We want errno, not the return code if it failed */
+	if (err == -1) err = errno;
+	else err = 0;
     }
-    /* Just pick an errno (using unsigned MPI_MAX) from any failures */
+    /* Just pick an errno (using unsigned MPI_MAX) from any failures.  We use
+     * MPI_Allreduce in case one day we wish to fsync from more than one
+     * process */
     MPI_Allreduce( MPI_IN_PLACE, (unsigned*)&err, 1, MPI_UNSIGNED, MPI_MAX, fd->comm);
     DBGV_FPRINTF(stderr,"aggregation result:fsync %s, errno %#X,\n",fd->filename, err);
 
     if (err) /* if it's non-zero, it must be an errno */
     {
-      errno = err;
-      err = -1;
+	errno = err;
+	err = -1;
     }
-  }
-  else /* Non-aggregated fsync */
-  {
-#ifdef USE_DBG_LOGGING
-    int rank;
-#endif
-    err = fsync(fd->fd_sys);
-#ifdef USE_DBG_LOGGING
-    MPI_Comm_rank(fd->comm, &rank);
 
-    if(rank == 0)
+    /* --BEGIN ERROR HANDLING-- */
+    if (err == -1)
     {
-        DBG_FPRINTF(stderr,"no aggregation:fsync %s, err=%#X, errno=%#X\n",fd->filename, err, errno);
+	*error_code = MPIO_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
+		myname, __LINE__, MPI_ERR_IO,
+		"**io",
+		"**io %s", strerror(errno));
+	DBGT_FPRINTF(stderr,"fsync %s, err=%#X, errno=%#X\n",fd->filename, err, errno);
+	return;
     }
-    else
-    {
-        DBGV_FPRINTF(stderr,"no aggregation:fsync %s, err=%#X, errno=%#X\n",fd->filename, err, errno);
-    }
-#endif
-  }
+    /* --END ERROR HANDLING-- */
 
-  /* --BEGIN ERROR HANDLING-- */
-  if (err == -1)
-  {
-    *error_code = MPIO_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
-                                       myname, __LINE__, MPI_ERR_IO,
-                                       "**io",
-                                       "**io %s", strerror(errno));
-    DBGT_FPRINTF(stderr,"fsync %s, err=%#X, errno=%#X\n",fd->filename, err, errno);
-    return;
-  }
-  /* --END ERROR HANDLING-- */
-
-  *error_code = MPI_SUCCESS;
+    *error_code = MPI_SUCCESS;
 }
 
