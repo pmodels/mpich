@@ -327,6 +327,10 @@ void ADIOI_PANFS_Open(ADIO_File fd, int *error_code)
                         ADIOI_Snprintf(temp_buffer,TEMP_BUFFER_SIZE,"%u",file_query_args.layout.u.raid10.layout_visit_policy);
                         ADIOI_Info_set(fd->info, "panfs_layout_visit_policy", temp_buffer);
                         break;
+                    case PAN_FS_CLIENT_LAYOUT_TYPE__INVALID:
+                    case PAN_FS_CLIENT_LAYOUT_TYPE__DEFAULT:
+                        MPI_Info_set(fd->info, "panfs_layout_type",
+                                "PAN_FS_CLIENT_LAYOUT_TYPE__INVALID");
 		  default:
 			  break;
                 }
