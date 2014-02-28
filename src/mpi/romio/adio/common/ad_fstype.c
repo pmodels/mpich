@@ -326,7 +326,7 @@ static void ADIO_FileSysType_fncall(const char *filename, int *fstype, int *erro
     /* --END ERROR HANDLING-- */
 #endif /* STATVFS APPROACH */
 
-#ifdef HAVE_STRUCT_STATFS
+#if defined(HAVE_STRUCT_STATFS) && defined(HAVE_STATFS)
     retry_cnt = 0;
     do {
 	err = statfs(filename, &fsbuf);
