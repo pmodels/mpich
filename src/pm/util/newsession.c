@@ -24,7 +24,7 @@ void MPIE_CreateNewSession( void )
 {
 #if defined(HAVE_SETSID) && defined(HAVE_ISATTY) && \
     defined(USE_NEW_SESSION) && defined(HAVE_GETSID)
-#ifdef NEEDS_GETSID_PROTOTYPE
+#ifdef NEEDS_GETSID_DECL
 pid_t getsid(pid_t);
 #endif
 if (!isatty(0) && !isatty(1) && !isatty(2) && getsid(0) != getpid()) {
