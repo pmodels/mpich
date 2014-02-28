@@ -90,6 +90,10 @@ AC_ARG_VAR([FROM_LAM],[set to "yes" if building ROMIO inside of LAM])
 FROM_LAM=${FROM_LAM:-no}
 if test "$FROM_LAM" = 1 ; then FROM_LAM=yes ; fi
 
+AC_ARG_VAR([FROM_OMPI],[set to "yes" if building ROMIO inside of Open MPI])
+FROM_OMPI=${FROM_OMPI:-no}
+if test "$FROM_OMPI" = 1 ; then FROM_OMPI=yes ; fi
+
 CFLAGS=${CFLAGS:-""}
 LL="lld"
 AR_LOCAL=""
@@ -130,7 +134,7 @@ TEST_F77=""
 #
 have_aio=no
 #
-known_mpi_impls="mpich_mpi mpich_mpi sgi_mpi hp_mpi cray_mpi lam_mpi"
+known_mpi_impls="mpich_mpi mpich_mpi sgi_mpi hp_mpi cray_mpi lam_mpi open_mpi_mpi"
 
 dnl An m4 macro for use with m4_foreach_w and friends.  You should modify this
 dnl list if you want to add a known file system.  The list is just whitespace
@@ -269,11 +273,17 @@ AC_SUBST(htmldir)
 
 # If we are building within a known MPI implementation, we must avoid the
 # tests about an existing implementation
-if test "$FROM_MPICH" != no -o "$FROM_LAM" != no ; then
+if test "$FROM_MPICH" != no -o "$FROM_LAM" != no -o "$FROM_OMPI" != no ; then
     WITHIN_KNOWN_MPI_IMPL=yes
 else
     WITHIN_KNOWN_MPI_IMPL=no
 fi
+
+# Open MPI: Set the MPI implementation
+if test "$FROM_OMPI" = "yes" ; then
+    MPI_IMPL=open_mpi
+fi
+
 # check for valid MPI implementation
 if test -n "$MPI_IMPL" ; then
    found=no
@@ -1501,7 +1511,28 @@ fi
 #
 TEST_LIBNAME=$LIBNAME
 MPIRUN=mpirun
-if test $FROM_LAM = yes ; then
+if test $FROM_OMPI = yes ; then
+   # Open MPI does have the status set bytes functionality
+
+   AC_DEFINE(HAVE_STATUS_SET_BYTES,1,[Define if have MPIR_Status_set_bytes])
+
+   # Used in the tests/ subdirectory for after ROMIO is built
+
+   TEST_CC=mpicc
+   TEST_F77=mpif77
+   MPIRUN=mpirun
+   MPI_LIB=
+   NOPROFILE=1
+   ROMIO_INCLUDE=
+   USER_CFLAGS=
+   USER_FFLAGS=
+   TEST_LIBNAME=
+   AC_DEFINE(HAVE_MPI_DARRAY_SUBARRAY,1,[Define if Darray is available])
+   HAVE_MPI_DARRAY_SUBARRAY="#define HAVE_MPI_DARRAY_SUBARRAY"
+   # Open MPI: see comments in mpi-io/mpioprof.h
+   AC_DEFINE(MPIO_BUILD_PROFILING, 1, [hack to make ROMIO build without profiling])
+   DEFINE_HAVE_MPI_GREQUEST="#define HAVE_MPI_GREQUEST"
+elif test $FROM_LAM = yes ; then
    # LAM does have the status set bytes functionality
    AC_DEFINE(HAVE_STATUS_SET_BYTES,1,[Define if have MPIR_Status_set_bytes])
         
@@ -1623,11 +1654,14 @@ EXTRA_SRC_DIRS=""
 mpio_glue=""
 if test "$FROM_MPICH" = yes -o "${MPI_IMPL}_mpi" = "mpich_mpi"; then
     mpio_glue=mpich
+elif test "$FROM_OMPI" = yes -o "${MPI_IMPL}_mpi" = "open_mpi_mpi" ; then
+    mpio_glue=openmpi
 else
     mpio_glue=default
 fi
 
 AM_CONDITIONAL([MPIO_GLUE_MPICH],[test "X$mpio_glue" = "Xmpich"])
+AM_CONDITIONAL([MPIO_GLUE_OPENMPI],[test "X$mpio_glue" = "Xopenmpi"])
 AM_CONDITIONAL([MPIO_GLUE_DEFAULT],[test "X$mpio_glue" = "Xdefault"])
 
 if test "$BUILD_MPI_INFO" = 1 ; then
