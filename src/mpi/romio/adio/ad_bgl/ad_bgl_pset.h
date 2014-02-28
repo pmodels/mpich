@@ -49,7 +49,7 @@ typedef struct {
 
 
 #undef MIN
-#define MIN(a,b) ((a<b ? a : b))
+#define MIN(a,b) (((a)<(b) ? (a) : (b)))
 
 
 /* Default is to choose 8 aggregator nodes in each 32 CN pset. 
