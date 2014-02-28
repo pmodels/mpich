@@ -1827,11 +1827,5 @@ AC_CONFIG_FILES([
 ])
 AC_OUTPUT
 
-#
-rm -f *.o
-
-if test $FROM_MPICH = no ; then
-   AC_MSG_RESULT([Configure done. Now type make.])
-fi
 dnl PAC_SUBDIR_CACHE_CLEANUP
 exit 0
