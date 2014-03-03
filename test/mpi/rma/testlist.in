@@ -106,6 +106,7 @@ mutex_bench_shared 4 mpiversion=3.0
 mutex_bench_shm 4 mpiversion=3.0
 rma-contig 2 mpiversion=3.0 timeLimit=600
 badrma 2 mpiversion=3.0
+acc-loc 4
 
 ## This test is not strictly correct.  This was meant to test out the
 ## case when MPI_Test is not nonblocking.  However, we ended up
