@@ -67,5 +67,6 @@ romio_other_sources +=                  \
     adio/common/strfns.c                \
     adio/common/system_hints.c          \
     adio/common/hint_fns.c              \
-    adio/common/ad_threaded_io.c
+    adio/common/ad_threaded_io.c        \
+    adio/common/p2p_aggregation.c
 

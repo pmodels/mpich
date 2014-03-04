@@ -36,6 +36,7 @@ int 	bgmpio_tuneblocking;
 long    bglocklessmpio_f_type;
 int     bgmpio_bg_nagg_pset;
 int     bgmpio_pthreadio;
+int     bgmpio_p2pcontig;
 
 double	bgmpio_prof_cw    [BGMPIO_CIO_LAST];
 double	bgmpio_prof_cr    [BGMPIO_CIO_LAST];
@@ -91,6 +92,15 @@ double	bgmpio_prof_cr    [BGMPIO_CIO_LAST];
  *   just a start.  NOTE: For some reason the stats collected when this is
  *   enabled misses some of the data so the data sizes are off a bit - this is
  *   a statistical issue only, the data is still accurately written out
+ *
+ * - BGMPIO_P2PCONTIG -  Does simple point-to-point communication between the
+ *   aggregator and the procs that feed it.  Performance could be enhanced by a
+ *   one-sided put algorithm.  Current implementation allows only 1 round of
+ *   data.  Useful/allowed only when:
+ * 1.) The datatype is contiguous.
+ * 2.) The offsets are increasing in rank-order.
+ * 3.) There are no gaps between the offsets.
+ * 4.) No single rank has a data size which spans multiple file domains.
 */
 
 void ad_bg_get_env_vars() {
@@ -124,6 +134,9 @@ void ad_bg_get_env_vars() {
     x = getenv( "BGMPIO_PTHREADIO" );
     if (x) bgmpio_pthreadio = atoi(x);
 
+    bgmpio_p2pcontig = 0;
+    x = getenv( "BGMPIO_P2PCONTIG" );
+    if (x) bgmpio_p2pcontig = atoi(x);
 
 }
 

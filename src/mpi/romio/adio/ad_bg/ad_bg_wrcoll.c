@@ -263,8 +263,29 @@ void ADIOI_BG_WriteStridedColl(ADIO_File fd, const void *buf, int count,
 			    fd->hints->min_fdomain_size, &fd_size,
 			    fd->hints->striping_unit);   
 
-    BGMPIO_T_CIO_SET_GET( w, 1, 1, BGMPIO_CIO_T_MYREQ, BGMPIO_CIO_T_FD_PART )
-	
+    BGMPIO_T_CIO_SET_GET( w, 1, 1, BGMPIO_CIO_T_MYREQ, BGMPIO_CIO_T_FD_PART );
+
+    if (bgmpio_p2pcontig==1) {
+	/* For some simple yet common(?) workloads, full-on two-phase I/O is overkill.  We can establish sub-groups of processes and their aggregator, and then these sub-groups will carry out a simplified two-phase over that sub-group.
+	 *
+	 * First verify that the filetype is contig and the offsets are
+	 * increasing in rank order*/
+	int i, inOrderAndNoGaps = 1;
+	for (i=0;i<(nprocs-1);i++) {
+	    if (end_offsets[i] != (st_offsets[i+1]-1))
+		inOrderAndNoGaps = 0;
+	}
+	if (inOrderAndNoGaps && buftype_is_contig) {
+	    /* if these conditions exist then execute the P2PContig code else
+	     * execute the original code */
+	    P2PContigWriteAggregation(fd, buf, 
+		    error_code, st_offsets, end_offsets, fd_start, fd_end);
+	    /* NOTE: we are skipping the rest of two-phase in this path */
+            BGMPIO_T_CIO_REPORT( 1, fd, myrank, nprocs)
+	    return;
+	}
+    }
+
 /* calculate what portions of the access requests of this process are
    located in what file domains */
 
