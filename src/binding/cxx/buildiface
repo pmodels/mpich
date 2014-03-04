@@ -521,7 +521,7 @@ $specialReturnType{"intra-Dup"} = "Intracomm";
 		     );
 %class_mpi2op = (
                  'Is_commutative' => '2;bool',
-                 'Reduce_local'   => '0',
+                 'Reduce_local'   => '0:4',
                 );
 %class_mpi2preq = ();
 %class_mpi2req = ();
