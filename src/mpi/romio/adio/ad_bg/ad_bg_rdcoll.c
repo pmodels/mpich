@@ -638,6 +638,9 @@ static void ADIOI_Read_and_exch(ADIO_File fd, void *buf, MPI_Datatype
         MPE_Log_event(14, 0, "end computation");
 #endif
 	if (flag) {
+	    char round[50];
+	    sprintf(round, "two-phase-round=%d", m);
+	    setenv("LIBIOLOG_EXTRA_INFO", round, 1);
       ADIOI_Assert(size == (int)size);
 	    ADIO_ReadContig(fd, read_buf+for_curr_iter, (int)size, MPI_BYTE,
 			    ADIO_EXPLICIT_OFFSET, off, &status, error_code);
@@ -735,6 +738,8 @@ static void ADIOI_Read_and_exch(ADIO_File fd, void *buf, MPI_Datatype
     ADIOI_Free(recv_size);
     ADIOI_Free(recd_from_proc);
     ADIOI_Free(start_pos);
+
+    unsetenv("LIBIOLOG_EXTRA_INFO");
 }
 
 static void ADIOI_R_Exchange_data(ADIO_File fd, void *buf, ADIOI_Flatlist_node

@@ -694,6 +694,9 @@ static void ADIOI_Exch_and_write(ADIO_File fd, const void *buf, MPI_Datatype
 	    if (count[i]) flag = 1;
 
 	if (flag) {
+	    char round[50];
+	    sprintf(round, "two-phase-round=%d", m);
+	    setenv("LIBIOLOG_EXTRA_INFO", round, 1);
       ADIOI_Assert(size == (int)size);
 	    if (bgmpio_pthreadio == 1) {
 		/* there is no such thing as "invalid pthread identifier", so
@@ -780,6 +783,8 @@ static void ADIOI_Exch_and_write(ADIO_File fd, const void *buf, MPI_Datatype
     ADIOI_Free(send_buf_idx);
     ADIOI_Free(curr_to_proc);
     ADIOI_Free(done_to_proc);
+
+    unsetenv("LIBIOLOG_EXTRA_INFO");
 }
 
 
@@ -895,6 +900,8 @@ static void ADIOI_W_Exchange_data(ADIO_File fd, const void *buf, char *write_buf
 
     if (nprocs_recv) {
 	if (*hole) {
+	    char * stuff = "data-sieve-in-two-phase";
+	    setenv("LIBIOLOG_EXTRA_INFO", stuff, 1);
 	    ADIO_ReadContig(fd, write_buf, size, MPI_BYTE, 
 			    ADIO_EXPLICIT_OFFSET, off, &status, &err);
 	    /* --BEGIN ERROR HANDLING-- */
@@ -906,6 +913,7 @@ static void ADIOI_W_Exchange_data(ADIO_File fd, const void *buf, char *write_buf
 		return;
 	    } 
 	    /* --END ERROR HANDLING-- */
+	    unsetenv("LIBIOLOG_EXTRA_INFO");
 	}
     }
 
