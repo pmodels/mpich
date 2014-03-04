@@ -85,27 +85,27 @@ void ADIOI_PVFS2_SetInfo(ADIO_File fd, MPI_Info users_info, int *error_code)
 
 	    /* POSIX read */
 	    ADIOI_Info_check_and_install_enabled(fd, users_info, "romio_pvfs2_posix_read",
-		    &(fd->hints->pvfs2.posix_read), myname, error_code);
+		    &(fd->hints->fs_hints.pvfs2.posix_read), myname, error_code);
 
             /* POSIX write */
 	    ADIOI_Info_check_and_install_enabled(fd, users_info, "romio_pvfs2_posix_write",
-		    &(fd->hints->pvfs2.posix_write), myname, error_code);
+		    &(fd->hints->fs_hints.pvfs2.posix_write), myname, error_code);
 
 	    /* Datatype read */
 	    ADIOI_Info_check_and_install_enabled(fd, users_info, "romio_pvfs2_dtype_read",
-		    &(fd->hints->pvfs2.dtype_read), myname, error_code);
+		    &(fd->hints->fs_hints.pvfs2.dtype_read), myname, error_code);
 
             /* Datatype write */
 	    ADIOI_Info_check_and_install_enabled(fd, users_info, "romio_pvfs2_dtype_write",
-		    &(fd->hints->pvfs2.dtype_write), myname, error_code);
+		    &(fd->hints->fs_hints.pvfs2.dtype_write), myname, error_code);
 
 	    /* Listio read */
 	    ADIOI_Info_check_and_install_enabled(fd, users_info, "romio_pvfs2_listio_read",
-		    &(fd->hints->pvfs2.listio_read), myname, error_code);
+		    &(fd->hints->fs_hints.pvfs2.listio_read), myname, error_code);
 
             /* Datatype write */
 	    ADIOI_Info_check_and_install_enabled(fd, users_info, "romio_pvfs2_listio_write",
-		    &(fd->hints->pvfs2.listio_write), myname, error_code);
+		    &(fd->hints->fs_hints.pvfs2.listio_write), myname, error_code);
             ADIOI_Free(value);
 	}
     }
