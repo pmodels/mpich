@@ -44,7 +44,7 @@ fi
 
 AC_CONFIG_HEADER(adio/include/romioconf.h)
 AH_TOP([/*
- *  (C) 2008 by Argonne National Laboratory.
+ *  (C) 2011 by Argonne National Laboratory.
  *      See COPYRIGHT in top-level directory.
  */
 #ifndef ROMIOCONF_H_INCLUDED
@@ -77,6 +77,7 @@ AC_SUBST([MPI_H_INCLUDE])
 
 TEST_LIBNAME=""
 FILE_SYSTEM=""
+
 # Do not set variables to empty that may be communicated from the
 # outside environment (e.g., MPI_LIB, MPI_BIN_DIR, LIBNAME)
 DEBUG=no
@@ -140,7 +141,7 @@ dnl An m4 macro for use with m4_foreach_w and friends.  You should modify this
 dnl list if you want to add a known file system.  The list is just whitespace
 dnl separated, so you can use newlines and tabs as well.
 m4_define([known_filesystems_m4_w],
-          [nfs ufs pfs pvfs pvfs2 testfs xfs panfs gridftp lustre bg bgl bglockless zoidfs hfs piofs sfs])dnl
+          [nfs ufs pfs pvfs pvfs2 testfs xfs panfs gridftp lustre gpfs zoidfs hfs piofs sfs])dnl
 dnl
 dnl An m4 macro for use with m4_foreach and friends.  Expands to a quoted list of
 dnl quoted elements.  A bit easier to use without unintended expansion than the
@@ -198,8 +199,15 @@ if test -n "$with_mpi"; then
 fi
 
 # start with the set of file systems that the user asked for
-FILE_SYSTEM=$with_file_system
-
+# FILE_SYSTEM=$with_file_system
+FILE_SYSTEM=`echo $with_file_system | sed -e 's/:.*$//'`
+changequote(<<,>>)
+file_system_args=`echo $with_file_system | sed -e 's/^[^:]*//' -e 's/^://'`
+changequote([,])
+if test "$file_system_args" = "BGQ" ; then
+    AC_DEFINE(FSPLATFORM,BGQ,BGQ platform)
+fi
+echo "with_file_system is :"$with_file_system": file_system_args is :"$file_system_args": FILE_SYSTEM is :"$FILE_SYSTEM": FSPLATFORM is :"$FSPLATFORM":"
 
 # Check if Make is working
 PAC_PROG_MAKE
@@ -792,24 +800,8 @@ fi
 if test -n "$file_system_ufs"; then
     AC_DEFINE(ROMIO_UFS,1,[Define for ROMIO with UFS])
 fi
-if test -n "$file_system_bgl"; then	
-    AC_DEFINE(ROMIO_BGL,1,[Define for ROMIO with BGL])
-fi
-if test -n "$file_system_bg"; then
-    AC_DEFINE(ROMIO_BG,1,[Define for ROMIO with BG])
-fi
-if test -n "$file_system_bglockless"; then
-    if test -n "$file_system_bgl"; then
-        AC_DEFINE(ROMIO_BGLOCKLESS,1,[Define for lock-free ROMIO with BGL])
-    fi
-
-    if test -n "$file_system_bg"; then
-        AC_DEFINE(ROMIO_BGLOCKLESS,1,[Define for lock-free ROMIO with BG])
-    fi
-
-    if test -n "$ROMIO_BGLOCKLESS"; then
-        AC_MSG_ERROR("bglockless requested without [bgl|bg]")
-    fi
+if test -n "$file_system_gpfs"; then
+    AC_DEFINE(ROMIO_GPFS,1,[Define for ROMIO with GPFS])
 fi
 if test -n "$file_system_hfs"; then
     AC_DEFINE(ROMIO_HFS,1,[Define for ROMIO with HFS])
@@ -958,7 +950,7 @@ if test -n "$file_system_gridftp"; then
 	AC_DEFINE(ROMIO_GRIDFTP, 1, [Define for ROMIO with gridftp])
 fi
 
-AS_IF([test -n "$file_system_bgl" -o -n "$file_system_bg"],
+AS_IF([test -n "$file_system_gpfs"],
     [SYSDEP_INC=-I${prefix}/include], [SYSDEP_INC=])
 
 # Check for presence and characteristics of async. I/O calls if
@@ -1245,6 +1237,7 @@ if test "$have_aio_h" = "yes" -o "$have_sys_aio_h" = "yes" -o "x$disable_aio" = 
     )
 	
 fi
+
 # End of aio-related tests
 
 #

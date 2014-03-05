@@ -11,23 +11,23 @@ AM_CPPFLAGS += -DBGL_OPTIM_STEP1_2=1 -DBGL_OPTIM_STEP1_1=1
 
 noinst_HEADERS +=                                                    \
     adio/ad_bg/ad_bg_aggrs.h                                         \
-    adio/ad_bg/ad_bg.h                                               \
+    adio/ad_bg/ad_gpfs.h                                               \
     adio/ad_bg/ad_bg_pset.h                                          \
     adio/ad_bg/ad_bg_tuning.h
 
 romio_other_sources +=                                               \
     adio/ad_bg/ad_bg_aggrs.c                                         \
-    adio/ad_bg/ad_bg_close.c                                         \
-    adio/ad_bg/ad_bg_flush.c                                         \
+    adio/ad_bg/ad_gpfs_close.c                                         \
+    adio/ad_bg/ad_gpfs_flush.c                                         \
     adio/ad_bg/ad_bg_hints.c                                         \
     adio/ad_bg/ad_bg_pset.c                                          \
     adio/ad_bg/ad_bg_tuning.c                                        \
-    adio/ad_bg/ad_bg.c                                               \
-    adio/ad_bg/ad_bg_fcntl.c                                         \
-    adio/ad_bg/ad_bg_getsh.c                                         \
-    adio/ad_bg/ad_bg_open.c                                          \
-    adio/ad_bg/ad_bg_rdcoll.c                                        \
-    adio/ad_bg/ad_bg_setsh.c                                         \
-    adio/ad_bg/ad_bg_wrcoll.c
+    adio/ad_bg/ad_gpfs.c                                               \
+    adio/ad_bg/ad_gpfs_fcntl.c                                         \
+    adio/ad_bg/ad_gpfs_getsh.c                                         \
+    adio/ad_bg/ad_gpfs_open.c                                          \
+    adio/ad_bg/ad_gpfs_rdcoll.c                                        \
+    adio/ad_bg/ad_gpfs_setsh.c                                         \
+    adio/ad_bg/ad_gpfs_wrcoll.c
 
 endif BUILD_AD_BG
