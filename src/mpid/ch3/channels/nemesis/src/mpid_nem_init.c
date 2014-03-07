@@ -183,7 +183,8 @@ MPID_nem_init(int pg_rank, MPIDI_PG_t *pg_p, int has_parent ATTRIBUTE((unused)))
     MPID_nem_mem_region.local_rank     = local_rank;
     MPIU_CHKPMEM_MALLOC (MPID_nem_mem_region.local_ranks, int *, num_procs * sizeof(int), mpi_errno, "mem_region local ranks");
     MPID_nem_mem_region.ext_procs      = num_procs - num_local ;
-    MPIU_CHKPMEM_MALLOC (MPID_nem_mem_region.ext_ranks, int *, MPID_nem_mem_region.ext_procs * sizeof(int), mpi_errno, "mem_region ext ranks");
+    if (MPID_nem_mem_region.ext_procs > 0)
+        MPIU_CHKPMEM_MALLOC (MPID_nem_mem_region.ext_ranks, int *, MPID_nem_mem_region.ext_procs * sizeof(int), mpi_errno, "mem_region ext ranks");
     MPID_nem_mem_region.next           = NULL;
 
     for (idx = 0 ; idx < num_procs; idx++)
