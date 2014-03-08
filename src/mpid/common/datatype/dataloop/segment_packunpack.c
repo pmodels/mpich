@@ -415,8 +415,8 @@ int PREPEND_PREFIX(Segment_index_m2m)(DLOOP_Offset *blocks_p,
     char *cbufp;
     struct PREPEND_PREFIX(m2m_params) *paramp = v_paramp;
 
-    DBG_SEGMENT(printf( "index m2m: elsize = %d, count = %d\n", (int)el_size, (int)count ));
     DLOOP_Handle_get_size_macro(el_type, el_size);
+    DBG_SEGMENT(printf( "index m2m: elsize = %d, count = %d\n", (int)el_size, (int)count ));
 
     while (blocks_left) {
 	char *src, *dest;
