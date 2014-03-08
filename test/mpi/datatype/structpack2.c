@@ -23,7 +23,6 @@ int main( int argc, char *argv[])
 	MPI_Aint disps[2];
 	MPI_Datatype bases[2];
 	MPI_Datatype str, con;
-	MPI_Status status;
 	char *buffer;
 	int   bufsize, position, insize;
 
@@ -86,23 +85,23 @@ int main( int argc, char *argv[])
 		printf("%d Sent: %d %c, Got: %d %c\n", rank,
 			s[j].i, s[j].c, s1[j].i, s1[j].c );
 #endif
-		if ( s1[j].i != j + status.MPI_SOURCE ) {
+		if ( s1[j].i != j + rank ) {
 		    errs++;
 		    printf( "Got s[%d].i = %d (%x); expected %d\n", j, s1[j].i,
-			    s1[j].i, j + status.MPI_SOURCE );
+			    s1[j].i, j + rank );
 		}
-		if ( s1[j].c != 'a' + j + status.MPI_SOURCE ) {
+		if ( s1[j].c != 'a' + j + rank ) {
 		    errs++;
 		    /* If the character is not a printing character,
 		       this can generate an file that diff, for example,
 		       believes is a binary file */
 		    if (isprint( (int)(s1[j].c) )) {
 			printf( "Got s[%d].c = %c; expected %c\n", j, s1[j].c,
-				j + status.MPI_SOURCE + 'a');
+				j + rank + 'a');
 		    }
 		    else {
 			printf( "Got s[%d].c = %x; expected %c\n", j, (int)s1[j].c,
-				j + status.MPI_SOURCE + 'a');
+				j + rank + 'a');
 		    }
 		}
 	}
