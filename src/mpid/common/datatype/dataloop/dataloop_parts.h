@@ -116,7 +116,6 @@ typedef struct DLOOP_Dataloop_vector {
 + count - Number of blocks
 . blocksize - Number of elements in each block
 . offset_array - Array of offsets (in bytes) to each block
-. total_blocks - count of total blocks in the array (cached value)
 - dataloop - Dataloop of each element
 
   Module:
