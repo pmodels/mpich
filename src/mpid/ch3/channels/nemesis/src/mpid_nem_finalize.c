@@ -34,7 +34,8 @@ int MPID_nem_finalize(void)
     MPIU_Free(MPID_nem_mem_region.FreeQ);
     MPIU_Free(MPID_nem_mem_region.RecvQ);
     MPIU_Free(MPID_nem_mem_region.local_ranks);
-    MPIU_Free(MPID_nem_mem_region.ext_ranks);
+    if (MPID_nem_mem_region.ext_procs > 0)
+        MPIU_Free(MPID_nem_mem_region.ext_ranks);
     MPIU_Free(MPID_nem_mem_region.seg);
     MPIU_Free(MPID_nem_mem_region.mailboxes.out);
     MPIU_Free(MPID_nem_mem_region.mailboxes.in);
