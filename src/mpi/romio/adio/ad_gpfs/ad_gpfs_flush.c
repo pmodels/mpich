@@ -3,7 +3,7 @@
 /* ---------------------------------------------------------------- */
 /**
  * \file ad_gpfs_flush.c
- * \brief Scalable flush based on underlying filesystem and psets
+ * \brief Scalable flush for GPFS
  */
 
 /* -*- Mode: C; c-basic-offset:4 ; -*- */

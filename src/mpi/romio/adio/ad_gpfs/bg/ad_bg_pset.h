@@ -7,8 +7,8 @@
  */
 
 /* File: ad_bg_pset.h
- * 
- * Defines two structures that keep BG/L PSET specific information and their public interfaces:
+ *
+ * Defines two structures that keep BlueGene PSET specific information and their public interfaces:
  * 	. ADIOI_BG_ProcInfo_t object keeps specific information to each process
  * 	. ADIOI_BG_ConfInfo_t object keeps general information for the whole communicator, only kept
  *	  on process 0.
@@ -66,10 +66,10 @@ typedef struct {
 
 
 /* public funcs for a pair of ADIOI_BG_ConfInfo_t and ADIOI_BG_ProcInfo_t objects */
-    void ADIOI_BG_persInfo_init( ADIOI_BG_ConfInfo_t *conf, 
-				  ADIOI_BG_ProcInfo_t *proc, 
+    void ADIOI_BG_persInfo_init( ADIOI_BG_ConfInfo_t *conf,
+				  ADIOI_BG_ProcInfo_t *proc,
 				  int s, int r, int n_aggrs, MPI_Comm comm);
-    void ADIOI_BG_persInfo_free( ADIOI_BG_ConfInfo_t *conf, 
+    void ADIOI_BG_persInfo_free( ADIOI_BG_ConfInfo_t *conf,
 				  ADIOI_BG_ProcInfo_t *proc );
 
 

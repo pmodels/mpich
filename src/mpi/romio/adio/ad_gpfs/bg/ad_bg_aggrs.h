@@ -7,14 +7,11 @@
  */
 
 /* 
- * File: ad_bg_aggrs.h
- * 
- * Declares functions specific for BG/L - GPFS parallel I/O solution. The implemented optimizations are:
- * 	. Aligned file-domain partitioning, integrated in 7/28/2005
- * 
- * In addition, following optimizations are planned:
- * 	. Integrating multiple file-domain partitioning schemes 
- *	  (corresponding to Alok Chouhdary's persistent file domain work).
+ *
+ * Declares functions specific for the BlueGene platform within the GPFS
+ * parallel I/O solution.  Implements aligned file-domain partitioning
+ * (7/28/2005);  persistent file doamin work not implemented
+ *
  */
 
 #ifndef AD_BG_AGGRS_H_

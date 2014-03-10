@@ -6,10 +6,6 @@
 
 #include "adio.h"
 
-#ifdef ROMIO_GPFS
-void ADIOI_GPFS_Get_shared_fp(ADIO_File fd, int size, ADIO_Offset *shared_fp, int *error_code);
-#endif
-
 /* returns the current location of the shared_fp in terms of the
    no. of etypes relative to the current view, and also increments the
    shared_fp by the number of etypes to be accessed (incr) in the read
@@ -38,14 +34,6 @@ void ADIO_Get_shared_fp(ADIO_File fd, ADIO_Offset incr, ADIO_Offset *shared_fp,
 	return;
     }
 #endif
-
-#ifdef ROMIO_GPFS
-    if (fd->file_system == ADIO_GPFS) {
-	ADIOI_GPFS_Get_shared_fp(fd, incr, shared_fp, error_code);
-	return;
-    }
-#endif
-
 
     if (fd->shared_fp_fd == ADIO_FILE_NULL) {
 	MPI_Comm_dup(MPI_COMM_SELF, &dupcommself);

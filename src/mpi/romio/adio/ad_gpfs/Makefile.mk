@@ -25,10 +25,8 @@ romio_other_sources +=                                               \
     adio/ad_gpfs/bg/ad_bg_pset.c                                          \
     adio/ad_gpfs/ad_gpfs_tuning.c                                        \
     adio/ad_gpfs/ad_gpfs.c                                               \
-    adio/ad_gpfs/ad_gpfs_getsh.c                                         \
     adio/ad_gpfs/ad_gpfs_open.c                                          \
     adio/ad_gpfs/ad_gpfs_rdcoll.c                                        \
-    adio/ad_gpfs/ad_gpfs_setsh.c                                         \
     adio/ad_gpfs/ad_gpfs_wrcoll.c
 
 endif BUILD_AD_GPFS

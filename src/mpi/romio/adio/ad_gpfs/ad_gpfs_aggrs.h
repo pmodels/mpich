@@ -9,12 +9,8 @@
 /*
  * File: ad_gpfs_aggrs.h
  *
- * Declares functions specific for GPFS parallel I/O solution. The implemented optimizations are:
- * 	. Aligned file-domain partitioning, integrated in 7/28/2005
+ * Declares functions optimized specifically for GPFS parallel I/O solution.
  *
- * In addition, following optimizations are planned:
- * 	. Integrating multiple file-domain partitioning schemes
- *	  (corresponding to Alok Chouhdary's persistent file domain work).
  */
 
 #ifndef AD_GPFS_AGGRS_H_

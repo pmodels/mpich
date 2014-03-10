@@ -5,9 +5,6 @@
  */
 
 #include "adio.h"
-#ifdef ROMIO_GPFS
-void ADIOI_GPFS_Set_shared_fp(ADIO_File fd, ADIO_Offset offset, int *error_code);
-#endif
 
 /* set the shared file pointer to "offset" etypes relative to the current 
    view */
@@ -22,13 +19,6 @@ void ADIO_Set_shared_fp(ADIO_File fd, ADIO_Offset offset, int *error_code)
 #ifdef ROMIO_NFS
     if (fd->file_system == ADIO_NFS) {
 	ADIOI_NFS_Set_shared_fp(fd, offset, error_code);
-	return;
-    }
-#endif
-
-#ifdef ROMIO_GPFS
-    if (fd->file_system == ADIO_GPFS) {
-	ADIOI_GPFS_Set_shared_fp(fd, offset, error_code);
 	return;
     }
 #endif
