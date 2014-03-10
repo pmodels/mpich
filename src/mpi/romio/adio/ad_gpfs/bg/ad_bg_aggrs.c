@@ -13,11 +13,13 @@
  */
 
 /*#define TRACE_ON */
+
+// Uncomment this line to turn tracing on for the gpfsmpio_balancecontig aggr selection optimization
 // #define balancecontigtrace 1
 
 #include "adio.h"
 #include "adio_cb_config_list.h"
-#include "ad_gpfs.h"
+#include "../ad_gpfs.h"
 #include "ad_bg_pset.h"
 #include "ad_bg_aggrs.h"
 #ifdef AGGREGATION_PROFILE

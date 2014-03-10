@@ -14,7 +14,7 @@
 
 /* #define TRACE_ON */
 #include <stdlib.h>
-#include "ad_gpfs.h"
+#include "../ad_gpfs.h"
 #include "ad_bg_pset.h"
 #include <spi/include/kernel/process.h>
 #include <firmware/include/personality.h>

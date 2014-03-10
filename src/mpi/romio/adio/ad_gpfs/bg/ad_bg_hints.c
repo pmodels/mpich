@@ -16,7 +16,7 @@
 #include "adio_extern.h"
 #include "hint_fns.h"
 
-#include "ad_gpfs.h"
+#include "../ad_gpfs.h"
 #include "ad_bg_pset.h"
 #include "ad_bg_aggrs.h"
 
