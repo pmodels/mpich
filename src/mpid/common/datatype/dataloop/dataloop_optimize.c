@@ -396,19 +396,8 @@ int PREPEND_PREFIX(Dataloop_optimize)(DLOOP_Dataloop *dlpOld_p, int level )
 #endif
             }
         }
-        /* replace blockindexed of a single element with contig,
-           but with an offset (how?) */
-        /* TODO */
-        if (dlpOld_p->loop_params.bi_t.count == 1 &&
-            dlpOld_p->loop_params.bi_t.offset_array[0] == 0) {
-#ifdef MPICH_DEBUG_DATALOOP
-            if (printIfOptimized || printDataloop) {
-                printf( "replacement Contig is:(NOTDONE)\n" );
-                /* dl_print_blockindexed( level, dlpOld_p ); */
-                }
-#endif
-        }
         break;
+
     case DLOOP_KIND_INDEXED:
         /* if sub-dloop is (non-basic) contig, merge with blockcount */
 #ifdef MPICH_DEBUG_DATALOOP
@@ -422,8 +411,6 @@ int PREPEND_PREFIX(Dataloop_optimize)(DLOOP_Dataloop *dlpOld_p, int level )
                 /* Could include the child type in the blocksize counts */
             }
         }
-
-        /* replace indexed of constant block count with blockindexed */
 
         /* replace indexed of a single element with contig */
 
