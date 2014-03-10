@@ -374,7 +374,7 @@ MPID_Win_allocate_shared(MPI_Aint     size,
                          int          disp_unit,
                          MPID_Info  * info,
                          MPID_Comm  * comm_ptr,
-                         void **base_ptr,
+                         void *base_ptr,
                          MPID_Win  ** win_ptr)
 {
   int mpi_errno  = MPI_SUCCESS;

@@ -205,7 +205,7 @@ int MPID_Free_mem( void *ptr )
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 int MPID_Win_allocate_shared(MPI_Aint size, int disp_unit, MPID_Info *info, MPID_Comm *comm_ptr,
-                             void **base_ptr, MPID_Win **win_ptr)
+                             void *base_ptr, MPID_Win **win_ptr)
 {
     int mpi_errno=MPI_SUCCESS;
 

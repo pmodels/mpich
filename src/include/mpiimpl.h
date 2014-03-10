@@ -3360,7 +3360,7 @@ int MPID_Win_unlock(int dest, MPID_Win *win_ptr);
 int MPID_Win_allocate(MPI_Aint size, int disp_unit, MPID_Info *info,
                       MPID_Comm *comm, void *baseptr, MPID_Win **win);
 int MPID_Win_allocate_shared(MPI_Aint size, int disp_unit, MPID_Info *info_ptr, MPID_Comm *comm_ptr,
-                             void **base_ptr, MPID_Win **win_ptr);
+                             void *base_ptr, MPID_Win **win_ptr);
 int MPID_Win_shared_query(MPID_Win *win, int rank, MPI_Aint *size, int *disp_unit,
                           void *baseptr);
 int MPID_Win_create_dynamic(MPID_Info *info, MPID_Comm *comm, MPID_Win **win);
