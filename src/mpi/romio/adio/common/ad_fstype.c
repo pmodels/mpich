@@ -649,6 +649,10 @@ void ADIO_ResolveFileType(MPI_Comm comm, const char *filename, int *fstype,
     static char myname[] = "ADIO_RESOLVEFILETYPE";
 
     file_system = -1;
+    if (filename == NULL) {
+	    *error_code = ADIOI_Err_create_code(myname, filename, ENOENT);
+	    return;
+    }
     tmp = strchr(filename, ':');
     if (!tmp) {
 	int have_nfs_enabled=0;
