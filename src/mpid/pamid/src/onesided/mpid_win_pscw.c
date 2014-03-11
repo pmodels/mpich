@@ -262,6 +262,7 @@ MPID_Win_test(MPID_Win *win,
     }
   else
     {
+      *flag = 0;
       MPID_Progress_poke();
     }
 
