@@ -802,11 +802,15 @@ if test -n "$file_system_gpfs"; then
     AC_DEFINE(ROMIO_GPFS,1,[Define for ROMIO with GPFS])
 fi
 
+AM_CONDITIONAL([BUILD_AD_BG],[false])
+AM_CONDITIONAL([BUILD_AD_PE],[false])
 if test "$file_system_args" = "BGQ" -a -n "$file_system_gpfs"; then
     AC_DEFINE(BGQPLATFORM,1,BGQ platform)
+    AM_CONDITIONAL([BUILD_AD_BG],[true])
 fi
 if test "$file_system_args" = "PE" -a -n "$file_system_gpfs"; then
     AC_DEFINE(PEPLATFORM,1,PE platform)
+    AM_CONDITIONAL([BUILD_AD_PE],[true])
 fi
 
 # echo "with_file_system is :"$with_file_system": file_system_args is :"$file_system_args": FILE_SYSTEM is :"$FILE_SYSTEM":"
@@ -1418,8 +1422,6 @@ if test -n "$mpi_hp"; then
 fi
 #
 AC_CHECK_FUNCS(strerror)
-AC_CHECK_FUNCS(pwrite pread ,, AC_MSG_ERROR([pwrite/pread not detected and no workaround has been implemented]))
-
 if test -z "$srcdir" -o "$srcdir" = "." ; then srcdir="$ROMIO_HOME" ; fi
 AC_SUBST(srcdir)
 

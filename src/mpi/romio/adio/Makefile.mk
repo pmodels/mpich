@@ -22,6 +22,7 @@ noinst_HEADERS +=                      \
     adio/include/nopackage.h
 
 include $(top_srcdir)/adio/ad_gpfs/Makefile.mk
+include $(top_srcdir)/adio/ad_gpfs/bg/Makefile.mk
 include $(top_srcdir)/adio/ad_gridftp/Makefile.mk
 include $(top_srcdir)/adio/ad_hfs/Makefile.mk
 include $(top_srcdir)/adio/ad_lustre/Makefile.mk
