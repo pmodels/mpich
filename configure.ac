@@ -1318,6 +1318,7 @@ if test "$enable_threads" = "multiple" ; then
     thread_granularity=MPIU_THREAD_GRANULARITY_LOCK_FREE
     if test "$enable_refcount" = "default" ; then enable_refcount=lock-free ; fi
     if test "$enable_predefined_refcount" = "default" ; then enable_predefined_refcount=no ; fi
+    AC_MSG_ERROR([--enable-thread-cs=lock-free is not supported yet, please select a different granularity])
     ;;
     *)
     AC_MSG_ERROR([Unrecognized value $enable_thread_cs for --enable-thread-cs])
