@@ -2200,8 +2200,7 @@ if test "$enable_fc" = "yes" ; then
     AC_SUBST(FCINCFLAG)
 
     # Check if $MPI_DEFAULT_FCOPTS is valid with $F90
-    if test "$enable_default_optimize" = "yes" \
-         -a -n "$MPI_DEFAULT_FCOPTS" ; then
+    if test -n "$MPI_DEFAULT_FCOPTS" ; then
         if test "$enable_check_compiler_flags" = "yes" ; then
             PAC_FC_CHECK_COMPILER_OPTION( [$MPI_DEFAULT_FCOPTS], [
             FCFLAGS="$FCFLAGS $MPI_DEFAULT_FCOPTS"
@@ -2381,8 +2380,7 @@ fi
 
 if test "$enable_cxx" = yes; then
     # Check if $MPI_DEFAULT_CXXOPTS is valid with $CXX
-    if test "$enable_default_optimize" = "yes" \
-         -a -n "$MPI_DEFAULT_CXXOPTS" ; then
+    if test -n "$MPI_DEFAULT_CXXOPTS" ; then
         if test "$enable_check_compiler_flags" = "yes" ; then
             PAC_CXX_CHECK_COMPILER_OPTION( [$MPI_DEFAULT_CXXOPTS], [
             CXXFLAGS="$CXXFLAGS $MPI_DEFAULT_CXXOPTS"
