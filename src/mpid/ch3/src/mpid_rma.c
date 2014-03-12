@@ -16,8 +16,6 @@ MPIR_T_PVAR_DOUBLE_TIMER_DECL_EXTERN(RMA, rma_winfree_complete);
 MPIR_T_PVAR_DOUBLE_TIMER_DECL_EXTERN(RMA, rma_rmaqueue_alloc);
 MPIR_T_PVAR_DOUBLE_TIMER_DECL_EXTERN(RMA, rma_rmaqueue_set);
 
-extern void MPIDI_CH3_RMA_Init_Pvars(void);
-
 static int win_init(MPI_Aint size, int disp_unit, int create_flavor, int model,
                     MPID_Comm *comm_ptr, MPID_Win **win_ptr);
 

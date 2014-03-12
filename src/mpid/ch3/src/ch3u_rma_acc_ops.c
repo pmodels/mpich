@@ -8,7 +8,6 @@
 
 MPIR_T_PVAR_DOUBLE_TIMER_DECL_EXTERN(RMA, rma_rmaqueue_alloc);
 MPIR_T_PVAR_DOUBLE_TIMER_DECL_EXTERN(RMA, rma_rmaqueue_set);
-extern void MPIDI_CH3_RMA_Init_Pvars(void);
 
 #undef FUNCNAME
 #define FUNCNAME MPIDI_Get_accumulate
