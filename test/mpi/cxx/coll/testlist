@@ -2,6 +2,7 @@ arcomplex 4
 uallredx 5
 uallreduce 5
 ureduce 5
+ureducelocal 5
 uscan 5
 uexscan 5
 alltoallw2x 10

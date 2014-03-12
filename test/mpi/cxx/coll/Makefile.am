@@ -14,6 +14,7 @@ noinst_PROGRAMS = \
     uallredx      \
     uallreduce    \
     ureduce       \
+    ureducelocal  \
     uscan         \
     uexscan       \
     icbcastx      \
@@ -35,6 +36,7 @@ arcomplex_SOURCES = arcomplex.cxx
 uallredx_SOURCES = uallredx.cxx
 uallreduce_SOURCES = uallreduce.cxx
 ureduce_SOURCES = ureduce.cxx
+ureducelocal_SOURCES = ureducelocal.cxx
 uscan_SOURCES = uscan.cxx
 uexscan_SOURCES = uexscan.cxx
 icbcastx_SOURCES = icbcastx.cxx
