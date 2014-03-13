@@ -18,11 +18,6 @@
 
 #include "adio.h"
 
-#define ADIOI_GPFS_assert( a ) if (!(a)) { \
-                                fprintf( stderr, "AD_GPFS_assert, file=%s, line=%d\n", __FILE__, __LINE__ ); \
-                                MPI_Abort( MPI_COMM_WORLD, 1 ); \
-                           }
-
 
 /*-----------------------------------------
  *  Global variables for the control of

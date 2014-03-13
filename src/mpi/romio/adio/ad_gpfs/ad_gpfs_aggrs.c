@@ -105,7 +105,7 @@ int ADIOI_GPFS_Calc_aggregator(ADIO_File fd,
     ADIO_Offset avail_bytes;
     TRACE_ERR("Entering ADIOI_GPFS_Calc_aggregator\n");
 
-    ADIOI_GPFS_assert ( (off <= fd_end[fd->hints->cb_nodes-1] && off >= min_off && fd_start[0] >= min_off ) );
+    ADIOI_Assert ( (off <= fd_end[fd->hints->cb_nodes-1] && off >= min_off && fd_start[0] >= min_off ) );
 
     /* binary search --> rank_index is returned */
     int ub = fd->hints->cb_nodes;

@@ -70,7 +70,7 @@ void ADIOI_BG_SetInfo(ADIO_File fd, MPI_Info users_info, int *error_code)
      */
 
     value = (char *) ADIOI_Malloc((MPI_MAX_INFO_VAL+1)*sizeof(char));
-    ADIOI_GPFS_assert ((value != NULL));
+    ADIOI_Assert ((value != NULL));
 
     /* initialize info and hints to default values if they haven't been
      * previously initialized

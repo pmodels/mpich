@@ -31,7 +31,7 @@ ADIOI_BG_ProcInfo_t *
 ADIOI_BG_ProcInfo_new()
 {
     ADIOI_BG_ProcInfo_t *p = (ADIOI_BG_ProcInfo_t *) ADIOI_Malloc (sizeof(ADIOI_BG_ProcInfo_t));
-    ADIOI_GPFS_assert ((p != NULL));
+    ADIOI_Assert ((p != NULL));
     return p;
 }
 
@@ -39,7 +39,7 @@ ADIOI_BG_ProcInfo_t *
 ADIOI_BG_ProcInfo_new_n( int n )
 {
     ADIOI_BG_ProcInfo_t *p = (ADIOI_BG_ProcInfo_t *) ADIOI_Malloc (n * sizeof(ADIOI_BG_ProcInfo_t));
-    ADIOI_GPFS_assert ((p != NULL));
+    ADIOI_Assert ((p != NULL));
     return p;
 }
 
@@ -53,7 +53,7 @@ ADIOI_BG_ConfInfo_t *
 ADIOI_BG_ConfInfo_new ()
 {
     ADIOI_BG_ConfInfo_t *p = (ADIOI_BG_ConfInfo_t *) ADIOI_Malloc (sizeof(ADIOI_BG_ConfInfo_t));
-    ADIOI_GPFS_assert ((p != NULL));
+    ADIOI_Assert ((p != NULL));
     return p;
 }
 
@@ -135,7 +135,7 @@ ADIOI_BG_persInfo_init(ADIOI_BG_ConfInfo_t *conf,
                   pers.Network_Config.cnBridge_C << 12 | 
                   pers.Network_Config.cnBridge_D << 6 | 
                   pers.Network_Config.cnBridge_E << 2;
-   ADIOI_BG_assert((bridgeCoords >= 0)); /* A dim is < 6 bits or sorting won't work */
+   ADIOI_Assert((bridgeCoords >= 0)); /* A dim is < 6 bits or sorting won't work */
 
    if((hw.Coords[0] == pers.Network_Config.cnBridge_A) && 
       (hw.Coords[1] == pers.Network_Config.cnBridge_B) && 
@@ -273,7 +273,7 @@ ADIOI_BG_persInfo_init(ADIOI_BG_ConfInfo_t *conf,
       TRACE_ERR("Maximum ranks under a bridge rank: %d, minimum: %d, nAggrs: %d, numBridgeRanks: %d pset dflt: %d naggrs: %d ratio: %f\n", maxcompute, mincompute, conf->nAggrs, conf->numBridgeRanks, ADIOI_BG_NAGG_PSET_DFLT, conf->nAggrs, conf->aggRatio);
    }
 
-   ADIOI_GPFS_assert((bridgerank != -1));
+   ADIOI_Assert((bridgerank != -1));
    proc->bridgeRank = bridgerank;
    proc->iamBridge = iambridge;
    TRACE_ERR("Rank %d has bridge set index %d (bridge rank: %d) with %d other ranks, ioNodeIndex: %d\n", rank,  proc->ioNodeIndex, bridgerank, proc->myIOSize, proc->ioNodeIndex);

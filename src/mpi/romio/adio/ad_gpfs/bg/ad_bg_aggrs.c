@@ -255,7 +255,7 @@ ADIOI_BG_compute_agg_ranklist_serial_do (const ADIOI_BG_ConfInfo_t *confInfo,
        {
          for(j = 0; j < numAggs; j++)
          {
-           ADIOI_GPFS_assert(nextAggr<aggTotal);
+           ADIOI_Assert(nextAggr<aggTotal);
            aggList[nextAggr] = bridgelist[procIndex+j*distance+1].rank;
            TRACE_ERR("agglist[%d] -> bridgelist[%d] = %d\n", nextAggr, procIndex+j*distance+1,aggList[nextAggr]);
            if(aggList[nextAggr]==lastBridge) /* can't have bridge in the list twice */
