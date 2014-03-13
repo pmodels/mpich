@@ -299,6 +299,12 @@ int MPIDO_Doscan_simple(const void *sendbuf, void *recvbuf,
          else
            return MPIR_Scan(sendbuf, recvbuf, count, datatype, op, comm_ptr, mpierrno);
        }
+       else if(advisor_algorithms[0].metadata && advisor_algorithms[0].metadata->check_correct.values.asyncflowctl && !(--(comm_ptr->mpid.num_requests)))
+       {
+         comm_ptr->mpid.num_requests = MPIDI_Process.optimized.num_requests;
+         int tmpmpierrno;
+         MPIDO_Barrier(comm_ptr, &tmpmpierrno);
+       }
      }
    }
   

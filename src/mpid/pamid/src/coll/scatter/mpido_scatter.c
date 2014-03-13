@@ -367,6 +367,12 @@ int MPIDO_Scatter_simple(const void *sendbuf,
                             recvbuf, recvcount, recvtype,
                             root, comm_ptr, mpierrno);
         }
+        else if(advisor_algorithms[0].metadata && advisor_algorithms[0].metadata->check_correct.values.asyncflowctl && !(--(comm_ptr->mpid.num_requests)))
+        {
+          comm_ptr->mpid.num_requests = MPIDI_Process.optimized.num_requests;
+          int tmpmpierrno;
+          MPIDO_Barrier(comm_ptr, &tmpmpierrno);
+        }
       }
     }
   }
@@ -387,6 +393,13 @@ int MPIDO_Scatter_simple(const void *sendbuf,
                             recvbuf, recvcount, recvtype,
                             root, comm_ptr, mpierrno);
         }
+        else if(advisor_algorithms[0].metadata && advisor_algorithms[0].metadata->check_correct.values.asyncflowctl && !(--(comm_ptr->mpid.num_requests)))
+        {
+          comm_ptr->mpid.num_requests = MPIDI_Process.optimized.num_requests;
+          int tmpmpierrno;
+          MPIDO_Barrier(comm_ptr, &tmpmpierrno);
+        }
+
       }
     }
   }

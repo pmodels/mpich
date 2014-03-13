@@ -402,6 +402,12 @@ int MPIDO_Gather_simple(const void *sendbuf,
   const int rank = comm_ptr->rank;
   const int size = comm_ptr->local_size;
   const struct MPIDI_Comm* const mpid = &(comm_ptr->mpid);
+#if ASSERT_LEVEL==0
+   /* We can't afford the tracing in ndebug/performance libraries */
+    const unsigned verbose = 0;
+#else
+    const unsigned verbose = (MPIDI_Process.verbose >= MPIDI_VERBOSE_DETAILS_ALL) && (rank == 0);
+#endif
 
   if(sendbuf != MPI_IN_PLACE)
   {
@@ -418,6 +424,14 @@ int MPIDO_Gather_simple(const void *sendbuf,
           return MPIR_Gather(sendbuf, sendcount, sendtype,
                             recvbuf, recvcount, recvtype,
                             root, comm_ptr, mpierrno);
+        }
+        else if(advisor_algorithms[0].metadata && advisor_algorithms[0].metadata->check_correct.values.asyncflowctl && !(--(comm_ptr->mpid.num_requests)))
+        {
+          comm_ptr->mpid.num_requests = MPIDI_Process.optimized.num_requests;
+          int tmpmpierrno;
+          if(unlikely(verbose))
+            fprintf(stderr,"Query barrier required for %s\n", advisor_algorithms[0].metadata->name);
+          MPIDO_Barrier(comm_ptr, &tmpmpierrno);
         }
       }
     }
@@ -453,6 +467,15 @@ int MPIDO_Gather_simple(const void *sendbuf,
                            recvbuf, recvcount, recvtype,
                            root, comm_ptr, mpierrno);
        }
+       else if(advisor_algorithms[0].metadata && advisor_algorithms[0].metadata->check_correct.values.asyncflowctl && !(--(comm_ptr->mpid.num_requests)))
+       {
+         comm_ptr->mpid.num_requests = MPIDI_Process.optimized.num_requests;
+         int tmpmpierrno;
+         if(unlikely(verbose))
+           fprintf(stderr,"Query barrier required for %s\n", advisor_algorithms[0].metadata->name);
+         MPIDO_Barrier(comm_ptr, &tmpmpierrno);
+       }
+
      }
    }
   }

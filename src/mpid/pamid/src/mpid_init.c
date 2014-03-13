@@ -125,7 +125,7 @@ MPIDI_Process_t  MPIDI_Process = {
     .subcomms            = 1,
     .select_colls        = 2,
     .memory              = 0,
-    .num_requests        = 1,
+    .num_requests        = 16,
   },
 
   .mpir_nbc              = 1,

@@ -288,6 +288,12 @@ int MPIDO_Bcast_simple(void *buffer,
    MPIDI_Post_coll_t bcast_post;
    const struct MPIDI_Comm* const mpid = &(comm_ptr->mpid);
    const int rank = comm_ptr->rank;
+#if ASSERT_LEVEL==0
+   /* We can't afford the tracing in ndebug/performance libraries */
+    const unsigned verbose = 0;
+#else
+    const unsigned verbose = (MPIDI_Process.verbose >= MPIDI_VERBOSE_DETAILS_ALL) && (rank == 0);
+#endif
 
    /* Must calculate data_size based on count=1 in case it's total size is > integer */
    int data_size_one;
@@ -302,6 +308,14 @@ int MPIDO_Bcast_simple(void *buffer,
        if(advisor_algorithms[0].algorithm_type == COLLSEL_EXTERNAL_ALGO)
        {
          return MPIR_Bcast_intra(buffer, count, datatype, root, comm_ptr, mpierrno);
+       }
+       else if(advisor_algorithms[0].metadata && advisor_algorithms[0].metadata->check_correct.values.asyncflowctl && !(--(comm_ptr->mpid.num_requests)))
+       {
+         comm_ptr->mpid.num_requests = MPIDI_Process.optimized.num_requests;
+         int tmpmpierrno;
+         if(unlikely(verbose))
+           fprintf(stderr,"Query barrier required for %s\n", advisor_algorithms[0].metadata->name);
+         MPIDO_Barrier(comm_ptr, &tmpmpierrno);
        }
      }
    }

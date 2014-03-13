@@ -270,6 +270,12 @@ int MPIDO_Gatherv_simple(const void *sendbuf,
    volatile unsigned gatherv_active = 1;
    const int rank = comm_ptr->rank;
    const int size = comm_ptr->local_size;
+#if ASSERT_LEVEL==0
+   /* We can't afford the tracing in ndebug/performance libraries */
+    const unsigned verbose = 0;
+#else
+    const unsigned verbose = (MPIDI_Process.verbose >= MPIDI_VERBOSE_DETAILS_ALL) && (rank == 0);
+#endif
 
    const struct MPIDI_Comm* const mpid = &(comm_ptr->mpid);
   int recvok=PAMI_SUCCESS, recvcontinuous=0;
@@ -289,6 +295,14 @@ int MPIDO_Gatherv_simple(const void *sendbuf,
           return MPIR_Gatherv(sendbuf, sendcount, sendtype,
                               recvbuf, recvcounts, displs, recvtype,
                               root, comm_ptr, mpierrno);
+        }
+        else if(advisor_algorithms[0].metadata && advisor_algorithms[0].metadata->check_correct.values.asyncflowctl && !(--(comm_ptr->mpid.num_requests)))
+        {
+          comm_ptr->mpid.num_requests = MPIDI_Process.optimized.num_requests;
+          int tmpmpierrno;
+          if(unlikely(verbose))
+            fprintf(stderr,"Query barrier required for %s\n", advisor_algorithms[0].metadata->name);
+          MPIDO_Barrier(comm_ptr, &tmpmpierrno);
         }
       }
     }
@@ -323,6 +337,14 @@ int MPIDO_Gatherv_simple(const void *sendbuf,
           return MPIR_Gatherv(sendbuf, sendcount, sendtype,
                               recvbuf, recvcounts, displs, recvtype,
                               root, comm_ptr, mpierrno);
+        }
+        else if(advisor_algorithms[0].metadata && advisor_algorithms[0].metadata->check_correct.values.asyncflowctl && !(--(comm_ptr->mpid.num_requests)))
+        {
+          comm_ptr->mpid.num_requests = MPIDI_Process.optimized.num_requests;
+          int tmpmpierrno;
+          if(unlikely(verbose))
+            fprintf(stderr,"Query barrier required for %s\n", advisor_algorithms[0].metadata->name);
+          MPIDO_Barrier(comm_ptr, &tmpmpierrno);
         }
       }
     }

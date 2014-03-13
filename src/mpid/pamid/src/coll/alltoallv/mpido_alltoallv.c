@@ -429,6 +429,12 @@ int MPIDO_Alltoallv_simple(const void *sendbuf,
    int tmp;
    const int rank = comm_ptr->rank;
   const int size = comm_ptr->local_size;
+#if ASSERT_LEVEL==0
+   /* We can't afford the tracing in ndebug/performance libraries */
+    const unsigned verbose = 0;
+#else
+    const unsigned verbose = (MPIDI_Process.verbose >= MPIDI_VERBOSE_DETAILS_ALL) && (rank == 0);
+#endif
 
   int sendcontinuous , recvcontinuous=0;
   size_t recv_size=0, send_size=0;
@@ -466,6 +472,14 @@ int MPIDO_Alltoallv_simple(const void *sendbuf,
         return MPIR_Alltoallv(sendbuf, sendcounts, senddispls, sendtype,
                               recvbuf, recvcounts, recvdispls, recvtype,
                               comm_ptr, mpierrno);
+       }
+       else if(advisor_algorithms[0].metadata && advisor_algorithms[0].metadata->check_correct.values.asyncflowctl && !(--(comm_ptr->mpid.num_requests)))
+       {
+         comm_ptr->mpid.num_requests = MPIDI_Process.optimized.num_requests;
+         int tmpmpierrno;
+         if(unlikely(verbose))
+           fprintf(stderr,"Query barrier required for %s\n", advisor_algorithms[0].metadata->name);
+         MPIDO_Barrier(comm_ptr, &tmpmpierrno);
        }
      }
    }
