@@ -94,8 +94,11 @@ else
           ;;
         *)
           case `$CC -V 2>&1 | sed 5q` in
-            *Sun\ F* | *Sun*Fortran*)
+            *Sun\ Ceres\ Fortran* | *Sun*Fortran*\ [[1-7]].* | *Sun*Fortran*\ 8.[[0-4]]*)
               wl=
+              ;;
+            *Sun\ F* | *Sun*Fortran*)
+              wl='-Wl,'
               ;;
             *Sun\ C*)
               wl='-Wl,'
