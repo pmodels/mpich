@@ -6,7 +6,7 @@ dtypes.$(OBJEXT): dtypes.c
 nbc_pmpi_adapter.$(OBJEXT): nbc_pmpi_adapter.c
 all-local: mtest.$(OBJEXT) dtypes.$(OBJEXT) nbc_pmpi_adapter.$(OBJEXT)
 
-EXTRA_PROGRAMS = mtestcheck
+EXTRA_PROGRAMS = mtestcheck dtypes
 mtestcheck_SOURCES = mtestcheck.c mtest.c
 
 # exploiting the NBC PMPI adapter is still very much a manual process...

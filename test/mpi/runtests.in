@@ -255,7 +255,7 @@ else {
 # Process any files
 if ($listfiles eq "") {
     if ($batchRun) {
-	print STDERR "An implicit list of tests is not permitted in batch mode\n";
+	print STDERR "An implicit list of tests is not permitted in batch mode. See README for more details\n";
 	exit(1);
     } 
     else {
