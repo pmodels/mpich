@@ -72,7 +72,7 @@ int CheckSpaceType(MPID_Win **win_ptr, MPID_Info *info,int *noncontig) {
         char alloc_shared_nctg_value[MPI_MAX_INFO_VAL+1];
         MPIR_Info_get_impl(info, "alloc_shared_noncontig", MPI_MAX_INFO_VAL,
                            alloc_shared_nctg_value, &alloc_shared_nctg_flag);
-        if ((alloc_shared_nctg_flag == 1)) {
+        if (alloc_shared_nctg_flag == 1) {
             if (!strncmp(alloc_shared_nctg_value, "true", strlen("true")))
                 (*win_ptr)->mpid.info_args.alloc_shared_noncontig = 1;
             if (!strncmp(alloc_shared_nctg_value, "false", strlen("false")))

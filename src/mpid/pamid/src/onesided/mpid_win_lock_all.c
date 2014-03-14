@@ -100,7 +100,7 @@ MPID_Win_lock_all(int      assert,
    size = (MPIR_Comm_size(win->comm_ptr));
    win->mpid.max_ctrlsends = MAX_NUM_CTRLSEND;
    nMask= win->mpid.max_ctrlsends - 1;
-   if (cp=getenv("MP_MAX_NUM_CTRLSEND")) {
+   if ( (cp=getenv("MP_MAX_NUM_CTRLSEND")) ) {
        win->mpid.max_ctrlsends = atoi(cp);
    }
    nMask=(win->mpid.max_ctrlsends - 1);
