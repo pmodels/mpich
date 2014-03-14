@@ -77,7 +77,7 @@ extern int     bgmpio_bg_nagg_pset;
 
 
 /* set internal variables for tuning environment variables */
-void ad_bg_get_env_vars();
+void ad_bg_get_env_vars(void);
 
 /* report timing breakdown for MPI I/O collective call */
 void ad_bg_timing_crw_report( int rw, ADIO_File fd, int myrank, int nprocs );
