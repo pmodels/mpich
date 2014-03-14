@@ -317,6 +317,8 @@ typedef struct {
 #define ADIO_TWO_PHASE           306 /* file system implements some version of
 					two-phase collective buffering with
 					aggregation */
+#define ADIO_SCALABLE_RESIZE     307 /* file system supports resizing from one
+					processor (nfs, e.g. does not) */
 
 /* for default file permissions */
 #define ADIO_PERM_NULL           -1
