@@ -178,5 +178,7 @@ static inline pami_endpoint_t MPIDI_Task_to_endpoint(pami_task_t task, size_t of
   return ep;
 }
 
-
+int
+MPIDI_Win_set_info(MPID_Win *win,
+	           MPID_Info *info);
 #endif

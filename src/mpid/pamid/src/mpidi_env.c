@@ -22,6 +22,8 @@
 
 #include <mpidimpl.h>
 
+#include "mpidi_util.h"
+
 /** \page env_vars Environment Variables
  ***************************************************************************
  *                             Pt2Pt Options                               *

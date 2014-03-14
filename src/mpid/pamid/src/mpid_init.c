@@ -27,6 +27,8 @@
 #include "mpidi_platform.h"
 #include "onesided/mpidi_onesided.h"
 
+#include "mpidi_util.h"
+
 #ifdef DYNAMIC_TASKING
 #define PAMIX_CLIENT_DYNAMIC_TASKING 1032
 #define PAMIX_CLIENT_WORLD_TASKS     1033

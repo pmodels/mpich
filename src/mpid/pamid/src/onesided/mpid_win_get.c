@@ -20,6 +20,7 @@
  * \brief ???
  */
 #include "mpidi_onesided.h"
+#include "mpidi_util.h"
 
 
 static inline int

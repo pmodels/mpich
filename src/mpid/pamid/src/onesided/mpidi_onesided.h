@@ -350,4 +350,20 @@ void
 MPIDI_WinLockReq_proc(pami_context_t              context,
                       const MPIDI_Win_control_t * info,
                       unsigned                    peer);
+
+int
+MPIDI_Datatype_is_pami_rmw_supported(MPI_Datatype datatype,
+	                                 pami_type_t *pami_type,
+					 MPI_Op op,
+					 pami_atomic_t *pami_op);
+
+int
+MPIDI_valid_group_rank(int lpid,
+                       MPID_Group *grp);
+void
+MPIDI_WinLockAllAck_post(pami_context_t   context,
+                         unsigned         peer,
+                         MPID_Win       * win);
+
+
 #endif

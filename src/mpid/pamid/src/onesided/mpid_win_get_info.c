@@ -21,6 +21,7 @@
  *        associated with win.                                          
  */
 #include "mpidi_onesided.h"
+#include "mpiinfo.h"
 
 /**
  * \brief MPI-PAMI glue for MPI_WIN_GET_INFO function
