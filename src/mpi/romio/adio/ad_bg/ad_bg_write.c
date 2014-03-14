@@ -299,7 +299,6 @@ void ADIOI_BG_WriteStrided(ADIO_File fd, const void *buf, int count,
 
         for (j=0; j<count; j++) 
         {
-          int i;
             for (i=0; i<flat_buf->count; i++) {
                 userbuf_off = (ADIO_Offset)j*(ADIO_Offset)buftype_extent + flat_buf->indices[i];
 		req_off = off;
@@ -366,7 +365,6 @@ void ADIOI_BG_WriteStrided(ADIO_File fd, const void *buf, int count,
             offset += disp + (ADIO_Offset)n_filetypes*filetype_extent;
 	}
 	else {
-    int i;
 	    n_etypes_in_filetype = filetype_size/etype_size;
 	    n_filetypes = offset / n_etypes_in_filetype;
 	    etype_in_filetype = offset % n_etypes_in_filetype;
