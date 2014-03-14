@@ -285,7 +285,7 @@ MPID_getSharedSegment(MPI_Aint        size,
               MPIU_ERR_CHKANDJUMP((shm_id == -1), mpi_errno, MPI_ERR_RMA_SHARED, "**rmashared");
               win->mpid.shm->base_addr = (void *) shmat(shm_id,0,0);
               MPIU_ERR_CHKANDJUMP((win->mpid.shm->base_addr == NULL), mpi_errno,MPI_ERR_BUFFER, "**bufnull");
-              GetPageSize((void *) win->mpid.shm->base_addr, &pageSize2);
+              GetPageSize((void *) win->mpid.shm->base_addr, (ulong*)&pageSize2);
               MPID_assert(pageSize == pageSize2);
               /* set mutex_lock address and initialize it   */
               win->mpid.shm->mutex_lock = (pthread_mutex_t *) win->mpid.shm->base_addr;
@@ -399,7 +399,7 @@ MPID_Win_allocate_shared(MPI_Aint     size,
   win->mpid.shm = MPIU_Malloc(sizeof(MPIDI_Win_shm_t));
   win->mpid.shm->allocated=0;
   MPID_assert(win->mpid.shm != NULL);
-  MPID_getSharedSegment(size, disp_unit,comm_ptr,baseP, win_ptr,(ulong *)&pageSize,(int *)&noncontig);
+  MPID_getSharedSegment(size, disp_unit,comm_ptr,baseP, win_ptr,&pageSize,&noncontig);
 
   winfo = &win->mpid.info[rank];
   winfo->win = win;
