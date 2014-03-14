@@ -77,7 +77,7 @@ MPID_Rput(const void  *origin_addr,
                          target_disp, target_count,
                          target_datatype, win);
     MPID_assert(mpi_errno == MPI_SUCCESS);
-
+    return (mpi_errno);
 }
 
 
@@ -135,6 +135,7 @@ MPID_Rget(void         *origin_addr,
                          target_disp, target_count,
                          target_datatype, win);
     MPID_assert(mpi_errno == MPI_SUCCESS);
+    return(mpi_errno);
 }
 
 /**
@@ -201,7 +202,7 @@ MPID_Raccumulate(const void  *origin_addr,
                                 target_disp, target_count,
                                 target_datatype, op, win);
     MPID_assert(mpi_errno == MPI_SUCCESS);
-
+    return(mpi_errno);
 }
 
 
@@ -274,5 +275,6 @@ MPID_Rget_accumulate(const void         *origin_addr,
                                     target_count, target_datatype,
                                     op, win);
     MPID_assert(mpi_errno == MPI_SUCCESS);
+    return (mpi_errno);
 }
 
