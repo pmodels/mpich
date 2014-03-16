@@ -2098,6 +2098,9 @@ sub build_specials {
     print $OUTFD "#include <stdarg.h>\n";    # Required for pcontrol
     print $OUTFD "#include \"mpichconf.h\"\n"; # Requires for HAVE_FORTRAN_BINDING
 
+    # Add exception for coding style checker
+    print $OUTFD "/* style:PMPIuse:PMPI_Type_set_name:4 sig:0 */\n";
+
     # The coverage header is included in mpicxx.h.in
     #&printCoverageHeader( $OUTFD, 0 );
 
