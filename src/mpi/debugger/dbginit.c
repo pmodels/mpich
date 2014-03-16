@@ -6,6 +6,11 @@
 
 #include "mpiimpl.h"
 
+/* style:PMPIuse:PMPI_Get_processor_name:2 sig:0 */
+/* style:PMPIuse:PMPI_Recv:2 sig:0 */
+/* style:PMPIuse:PMPI_Ssend:2 sig:0 */
+/* style: allow:printf:1 sig:0 */
+
 /* For getpid */
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>

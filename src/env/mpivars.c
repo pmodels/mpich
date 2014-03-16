@@ -4,6 +4,12 @@
  *      See COPYRIGHT in top-level directory.
  */
 
+/* style:allow:snprintf:9 sig:0 */
+/* style:allow:strncpy:3 sig:0 */
+/* style:allow:fprintf:26 sig:0 */
+/* style:allow:free:3 sig:0 */
+/* style:allow:malloc:3 sig:0 */
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>

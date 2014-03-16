@@ -7,6 +7,8 @@
 #include "mpi.h"
 #include <stdio.h>
 
+/* style: allow:printf:6 sig:0 */
+
 /* This definition is almost the same as the MPIR_Comm_list in dbginit, 
    except a void * is used instead of MPID_Comm * for head; for the use
    here, void * is all that is needed */

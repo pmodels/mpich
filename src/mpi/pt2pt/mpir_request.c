@@ -7,6 +7,8 @@
 
 #include "mpiimpl.h"
 
+/* style:PMPIuse:PMPI_Status_f2c:2 sig:0 */
+
 #undef FUNCNAME
 #define FUNCNAME MPIR_Progress_wait_request
 #undef FCNAME

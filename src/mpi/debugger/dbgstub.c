@@ -4,6 +4,8 @@
  *      See COPYRIGHT in top-level directory.
  */
 
+/* style: allow:printf:13 sig:0 */
+
 #include "mpiimpl.h"
 /* These are pointers to the static variables in src/mpid/ch3/src/ch3u_recvq.c
    that contains the *addresses* of the posted and unexpected queue head 
