@@ -17,10 +17,6 @@
 #endif
 /* -- End Profiling Symbol Block */
 
-#ifndef MIN
-#define MIN(__a, __b) (((__a) < (__b)) ? (__a) : (__b))
-#endif
-
 PMPI_LOCAL int MPIR_Type_block(const int *array_of_gsizes,
 			       int dim,
 			       int ndims,
@@ -105,7 +101,7 @@ PMPI_LOCAL int MPIR_Type_block(const int *array_of_gsizes,
     }
 
     j = global_size - blksize*rank;
-    mysize = MIN(blksize, j);
+    mysize = MPIR_MIN(blksize, j);
     if (mysize < 0) mysize = 0;
 
     stride = orig_extent;
@@ -222,7 +218,7 @@ PMPI_LOCAL int MPIR_Type_cyclic(const int *array_of_gsizes,
     else {
 	local_size = ((end_index - st_index + 1)/(nprocs*blksize))*blksize;
 	rem = (end_index - st_index + 1) % (nprocs*blksize);
-	local_size += MIN(rem, blksize);
+	local_size += MPIR_MIN(rem, blksize);
     }
 
     count = local_size/blksize;
