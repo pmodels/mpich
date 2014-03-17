@@ -368,7 +368,7 @@ pac_cv_attr_weak_alias,[
 PAC_PUSH_FLAG([CFLAGS])
 # force an error exit if the weak attribute isn't understood
 CFLAGS=-Werror
-AC_TRY_COMPILE([int foo(int) __attribute__((weak,alias("__foo")));],[int a;],
+AC_TRY_COMPILE([int __foo(int a){return 0;} int foo(int) __attribute__((weak,alias("__foo")));],[int a;],
 pac_cv_attr_weak_alias=yes,pac_cv_attr_weak_alias=no)
 # Restore original CFLAGS
 PAC_POP_FLAG([CFLAGS])])
