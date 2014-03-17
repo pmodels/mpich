@@ -1834,7 +1834,7 @@ fi
 # Handle default choices for the Fortran compilers
 # Note that these have already been set above
 
-if test "$enable_f77" = "yes" -a "$F77" = "" ; then
+if test "$enable_f77" = "yes" -a "$F77" = "no" ; then
    # No Fortran 77 compiler found; abort
    AC_MSG_ERROR([No Fortran 77 compiler found. If you don't need to
    build any Fortran programs, you can disable Fortran support using
@@ -1982,7 +1982,7 @@ fi
 fc_with_f77=yes
 if test "$enable_fc" = "yes" -a "$enable_f77" = yes ; then
     enable_fc=no
-    if test -n "$FC" ; then 
+    if test "$FC" != "no" ; then
 	# If we allow multiple weak symbols, we should test a name
 	# that does not contain an underscore.  The Fortran binding uses
 	# this rule for enabling multiple weak symbols:
@@ -2008,7 +2008,7 @@ if test "$enable_fc" = "yes" -a "$enable_f77" = yes ; then
         AC_MSG_WARN([Use --disable-fc to keep configure from searching for a Fortran 90 compiler])
     fi
 
-    if test "$enable_fc" = "yes" -a "$FC" = "" ; then
+    if test "$enable_fc" = "yes" -a "$FC" = "no" ; then
        # No Fortran 90 compiler found; abort
        AC_MSG_ERROR([No Fortran 90 compiler found. If you don't need
        to build any Fortran 90 programs, you can disable Fortran 90
@@ -2152,10 +2152,10 @@ if test "$enable_fc" = "yes" ; then
     FCFLAGS=$saveFCFLAGS
     if test "$pac_cv_prog_fc_works" = no ; then 
         # Reject this compiler
-        if test -n "$FC" ; then
+        if test "$FC" != "no" ; then
             fc_rejected=yes
             oldFC="$FC"
-            FC=""
+            FC="no"
         fi
     fi
 
@@ -2163,7 +2163,7 @@ if test "$enable_fc" = "yes" ; then
     FCEXT=$ac_fc_srcext
     AC_SUBST(FCEXT)
 
-    if test -z "$FC" ; then
+    if test "$FC" = "no" ; then
         if test "$fc_rejected" = "yes" ; then
             AC_MSG_ERROR([Could not find a usable Fortran 90 compiler.  The compiler $oldFC may be incompatible with the Fortran 77 compiler $F77; check the output of configure and consult the installation manuals])
         else
@@ -4023,7 +4023,7 @@ dnl     len_doublecplx=$hexlen
     # For Fortran 90, we'll also need MPI_ADDRESS_KIND and MPI_OFFSET_KIND
     # Since our compiler might BE a Fortran 90 compiler, try and determine the
     # values.  
-    if test -z "$FC" ; then
+    if test "$FC" = "no" ; then
         PAC_F77_IS_FC([
             FC=$F77
             if test -z "$FCFLAGS" ; then
@@ -4031,7 +4031,7 @@ dnl     len_doublecplx=$hexlen
             fi
         ])
     fi
-    if test -n "$FC" ; then
+    if test "$FC" != "no" ; then
         # Offset kind should be for 8 bytes if possible (Romio prefers that)
         # address should be sizeof void * (unless --with-aint-size has
         # been set)
