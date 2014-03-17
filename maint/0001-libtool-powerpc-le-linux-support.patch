@@ -1,0 +1,111 @@
+From 723f678b8f297544b64880c8d80b60328e82cb45 Mon Sep 17 00:00:00 2001
+From: Alan Modra <amodra@bigpond.net.au>
+Date: Thu, 6 Jun 2013 14:48:22 +0930
+Subject: [PATCH] libtool: powerpc*le-linux support
+
+This is a combination of 5 commits.
+
+See libtool version 2.4.2.418
+http://git.savannah.gnu.org/cgit/libtool.git/log/?h=v2.4.2.418
+
+==========================================================================
+
+  commit 12bf693d2d317c3313ee91058b2289d65a57f386
+  Author: Alan Modra <amodra@bigpond.net.au>
+  Date:   Thu Jun 6 14:48:22 2013 +0930
+
+      libtool: fix refixed unmangled powerpc*le-linux support patch
+
+      * m4/libtool.m4: fix refixed badly unmangled hunks from earlier
+      powerpc*le changeset.
+      Reported by Peter Rosin.
+
+      Signed-off-by: Gary V. Vaughan <gary@gnu.org>
+
+  commit aa14ead14c5e375789f08026d9ece5963a9322c2
+  Author: Alan Modra <amodra@bigpond.net.au>
+  Date:   Thu Jun 6 14:48:22 2013 +0930
+
+      libtool: refix unmangled powerpc*le-linux support patch
+
+      * m4/libtool.m4: refix badly unmangled hunks from earlier
+      powerpc*le changeset.
+      Reported by Peter Rosin.
+
+      Signed-off-by: Gary V. Vaughan <gary@gnu.org>
+
+  commit bb1c8bca8aee6e487aaf6b320b8f56f6ac0d21ac
+  Author: Gary V. Vaughan <gary@gnu.org>
+  Date:   Thu Aug 22 15:38:00 2013 +0700
+
+      libtool: refactor powerpc*le-linux case branch expressions.
+
+      libtool (_LT_ENABLE_LOCK): make inner case branch expressions
+      consistent with outer case expression.
+      Reported by Peter Rosin.
+
+      Signed-off-by: Gary V. Vaughan <gary@gnu.org>
+
+  commit 03754a10041e86b2bd41b404a9ad824ef28bee7e
+  Author: Alan Modra <amodra@bigpond.net.au>
+  Date:   Thu Jun 6 14:48:22 2013 +0930
+
+      libtool: fix mangled powerpc*le-linux support patch
+
+      * m4/libtool.m4: unmangled badly pasted hunks from previous
+      changeset.
+
+  commit f21c4d470423ab5b108918eaa5db295f644b12d1
+  Author: Alan Modra <amodra@bigpond.net.au>
+  Date:   Thu Jun 6 14:48:22 2013 +0930
+
+      libtool: initial powerpc*le-linux support
+
+      * m4/libtool.m4 (ld -m flags): Remove non-canonical ppc host match.
+      Support little-endian powerpc linux host.
+
+==========================================================================
+---
+ libltdl/m4/libtool.m4 |   12 +++++++++---
+ 1 files changed, 9 insertions(+), 3 deletions(-)
+
+diff --git a/libltdl/m4/libtool.m4 b/libltdl/m4/libtool.m4
+index d812584..7aefebc 100644
+--- a/libltdl/m4/libtool.m4
++++ b/libltdl/m4/libtool.m4
+@@ -1268,7 +1268,7 @@ ia64-*-hpux*)
+   rm -rf conftest*
+   ;;
+ 
+-x86_64-*kfreebsd*-gnu|x86_64-*linux*|ppc*-*linux*|powerpc*-*linux*| \
++x86_64-*kfreebsd*-gnu|x86_64-*linux*|powerpc*-*linux*| \
+ s390*-*linux*|s390*-*tpf*|sparc*-*linux*)
+   # Find out which ABI we are using.
+   echo 'int i;' > conftest.$ac_ext
+@@ -1282,7 +1282,10 @@ s390*-*linux*|s390*-*tpf*|sparc*-*linux*)
+ 	  x86_64-*linux*)
+ 	    LD="${LD-ld} -m elf_i386"
+ 	    ;;
+-	  ppc64-*linux*|powerpc64-*linux*)
++	  powerpc64le-*linux*)
++	    LD="${LD-ld} -m elf32lppclinux"
++	    ;;
++	  powerpc64-*linux*)
+ 	    LD="${LD-ld} -m elf32ppclinux"
+ 	    ;;
+ 	  s390x-*linux*)
+@@ -1301,7 +1304,10 @@ s390*-*linux*|s390*-*tpf*|sparc*-*linux*)
+ 	  x86_64-*linux*)
+ 	    LD="${LD-ld} -m elf_x86_64"
+ 	    ;;
+-	  ppc*-*linux*|powerpc*-*linux*)
++	  powerpcle-*linux*)
++	    LD="${LD-ld} -m elf64lppc"
++	    ;;
++	  powerpc-*linux*)
+ 	    LD="${LD-ld} -m elf64ppc"
+ 	    ;;
+ 	  s390*-*linux*|s390*-*tpf*)
+-- 
+1.7.1
+
