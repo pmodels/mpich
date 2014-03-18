@@ -44,7 +44,7 @@ static void verbose_abort(int errorcode)
     return;
 }
 #define MPI_ASSERT(rc)  \
-        ((void) ((rc==MPI_SUCCESS) ? 0 : verbose_abort(rc) ))
+    do { if ((rc)!=MPI_SUCCESS) verbose_abort(rc); } while (0)
 
 int Type_contiguous_x(MPI_Count count, MPI_Datatype oldtype,
 	MPI_Datatype * newtype);
