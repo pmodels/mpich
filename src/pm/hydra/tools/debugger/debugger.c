@@ -57,13 +57,23 @@ HYD_status HYDT_dbg_setup_procdesc(struct HYD_pg * pg)
                     break;
                 if (k + np < round * proxy->node->core_count)
                     continue;
-                MPIR_proctable[i].host_name = HYDU_strdup(proxy->node->hostname);
+                /* avoid storing multiple copies of the host name */
+                if (i > 0 && strcmp(MPIR_proctable[i - 1].host_name, proxy->node->hostname) == 0)
+                    MPIR_proctable[i].host_name = MPIR_proctable[i - 1].host_name;
+                else
+                    MPIR_proctable[i].host_name = HYDU_strdup(proxy->node->hostname);
                 MPIR_proctable[i].pid = proxy->pid[(proxy->node->core_count * round) + j];
                 j++;
-                if (exec->exec[0])
-                    MPIR_proctable[i].executable_name = HYDU_strdup(exec->exec[0]);
-                else
+                if (exec->exec[0]) {
+                    /* avoid storing multiple copies of the executable name */
+                    if (i > 0 && strcmp(exec->exec[0], MPIR_proctable[i - 1].executable_name) == 0)
+                        MPIR_proctable[i].executable_name = MPIR_proctable[i - 1].executable_name;
+                    else
+                        MPIR_proctable[i].executable_name = HYDU_strdup(exec->exec[0]);
+                }
+                else {
                     MPIR_proctable[i].executable_name = NULL;
+                }
                 i++;
             }
             k += exec->proc_count;
@@ -90,10 +100,16 @@ void HYDT_dbg_free_procdesc(void)
     int i;
 
     for (i = 0; i < MPIR_proctable_size; i++) {
-        if (MPIR_proctable[i].host_name)
-            HYDU_FREE(MPIR_proctable[i].host_name);
-        if (MPIR_proctable[i].executable_name)
-            HYDU_FREE(MPIR_proctable[i].executable_name);
+        /* skip over duplicate pointers when freeing */
+        if (MPIR_proctable[i].host_name) {
+            if (i == 0 || MPIR_proctable[i].host_name != MPIR_proctable[i - 1].host_name)
+                HYDU_FREE(MPIR_proctable[i].host_name);
+        }
+        if (MPIR_proctable[i].executable_name) {
+            if (i == 0 ||
+                MPIR_proctable[i].executable_name != MPIR_proctable[i - 1].executable_name)
+                HYDU_FREE(MPIR_proctable[i].executable_name);
+        }
     }
     HYDU_FREE(MPIR_proctable);
 }
