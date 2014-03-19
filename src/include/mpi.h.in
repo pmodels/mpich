@@ -797,9 +797,9 @@ typedef int (MPIX_Grequest_wait_function)(int, void **, double, MPI_Status *);
 #define MPI_ERR_UNKNOWN     13      /* Unknown error */
 #define MPI_ERR_INTERN      16      /* Internal error code    */
 
-/* Multiple completion has two special error classes */
-#define MPI_ERR_IN_STATUS   17      /* Look in status for error value */
-#define MPI_ERR_PENDING     18      /* Pending request */
+/* Multiple completion has three special error classes */
+#define MPI_ERR_IN_STATUS           17      /* Look in status for error value */
+#define MPI_ERR_PENDING             18      /* Pending request */
 
 /* New MPI-2 Error classes */
 #define MPI_ERR_ACCESS      20      /* */
@@ -866,6 +866,7 @@ typedef int (MPIX_Grequest_wait_function)(int, void **, double, MPI_Status *);
 #define MPI_T_ERR_PVAR_NO_WRITE     71  /* Pvar can't be written or reset */
 #define MPI_T_ERR_PVAR_NO_ATOMIC    72  /* Pvar can't be R/W atomically */
 
+
 #define MPI_ERR_LASTCODE    0x3fffffff  /* Last valid error code for a 
 					   predefined error class */
 /* WARNING: this is also defined in mpishared.h.  Update both locations */
@@ -877,9 +878,11 @@ typedef int (MPIX_Grequest_wait_function)(int, void **, double, MPI_Status *);
                                   * range. All MPIX error codes will be
                                   * above this value to be ABI complaint. */
 
-#define MPIX_ERR_PROC_FAILED      MPICH_ERR_FIRST_MPIX+1   /* Process failure */
+#define MPIX_ERR_PROC_FAILED          MPICH_ERR_FIRST_MPIX+1 /* Process failure */
+#define MPIX_ERR_PROC_FAILED_PENDING  MPICH_ERR_FIRST_MPIX+2 /* A failure has caused this request
+                                                              * to be pending */
 
-#define MPICH_ERR_LAST_MPIX       MPICH_ERR_FIRST_MPIX+1
+#define MPICH_ERR_LAST_MPIX           MPICH_ERR_FIRST_MPIX+2
 
 
 /* End of MPI's error classes */
