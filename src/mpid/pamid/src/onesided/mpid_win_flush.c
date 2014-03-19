@@ -53,7 +53,7 @@ MPID_Win_flush(int       rank,
                         return mpi_errno, "**rmasync");
      }
   sync = &win->mpid.sync;
-  MPID_PROGRESS_WAIT_WHILE(sync->total != sync->complete);
+  MPID_PROGRESS_WAIT_DO_WHILE(sync->total != sync->complete);
   sync->total    = 0;
   sync->started  = 0;
   sync->complete = 0;
