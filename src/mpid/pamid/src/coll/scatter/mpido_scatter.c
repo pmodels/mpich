@@ -44,32 +44,23 @@ int MPIDO_Scatter_bcast(void * sendbuf,
                         int *mpierrno)
 {
   /* Pretty simple - bcast a temp buffer and copy our little chunk out */
-  int contig, nbytes, rc;
+  int nbytes, rc;
   const int rank = comm_ptr->rank;
   const int size = comm_ptr->local_size;
   char *tempbuf = NULL;
 
-  MPID_Datatype * dt_ptr;
-  MPI_Aint true_lb = 0;
-
   if(rank == root)
   {
-    MPIDI_Datatype_get_info(sendcount,
+    MPIDI_Datatype_get_data_size(sendcount,
                             sendtype,
-                            contig,
-                            nbytes,
-                            dt_ptr,
-                            true_lb);
+                            nbytes);
     tempbuf = sendbuf;
   }
   else
   {
-    MPIDI_Datatype_get_info(recvcount,
+    MPIDI_Datatype_get_data_size(recvcount,
                             recvtype,
-                            contig,
-                            nbytes,
-                            dt_ptr,
-                            true_lb);
+                            nbytes);
 
     tempbuf = MPIU_Malloc(nbytes * size);
     if(!tempbuf)
@@ -116,8 +107,8 @@ int MPIDO_Scatter(const void *sendbuf,
   }
 #endif
   MPID_Datatype * data_ptr;
-  MPI_Aint true_lb = 0;
-  int contig, nbytes = 0;
+  MPI_Aint true_lb ATTRIBUTE((unused));
+  int contig, nbytes ATTRIBUTE((unused));
   const int rank = comm_ptr->rank;
   int success = 1;
   pami_type_t stype, rtype;
@@ -250,13 +241,11 @@ int MPIDO_Scatter(const void *sendbuf,
            result.check.unspecified = 1;
          if(my_md->check_correct.values.rangeminmax)
          {
-           MPI_Aint data_true_lb;
-           MPID_Datatype *data_ptr;
-           int data_size, data_contig;
+           int data_size;
            if(rank == root)
-             MPIDI_Datatype_get_info(sendcount, sendtype, data_contig, data_size, data_ptr, data_true_lb); 
+             MPIDI_Datatype_get_data_size(sendcount, sendtype, data_size); 
            else
-             MPIDI_Datatype_get_info(recvcount, recvtype, data_contig, data_size, data_ptr, data_true_lb); 
+             MPIDI_Datatype_get_data_size(recvcount, recvtype, data_size); 
            if((my_md->range_lo <= data_size) &&
               (my_md->range_hi >= data_size))
               ; /* ok, algorithm selected */
@@ -345,8 +334,6 @@ int MPIDO_Scatter_simple(const void *sendbuf,
   size_t send_size = 0;
   size_t recv_size = 0;
   MPI_Aint snd_true_lb = 0, rcv_true_lb = 0; 
-  int tmp;
-  int use_pami = 1;
   MPID_Segment segment;
   const struct MPIDI_Comm* const mpid = &(comm_ptr->mpid);
   const int size = comm_ptr->local_size;
@@ -477,12 +464,10 @@ int MPIDO_Scatter_simple(const void *sendbuf,
 
    pami_xfer_t scatter;
    MPIDI_Post_coll_t scatter_post;
-   const pami_metadata_t *my_scatter_md;
    volatile unsigned scatter_active = 1;
 
  
    scatter.algorithm = mpid->coll_algorithm[PAMI_XFER_SCATTER][0][0];
-   my_scatter_md = &mpid->coll_metadata[PAMI_XFER_SCATTER][0][0];
 
    scatter.cb_done = cb_scatter;
    scatter.cookie = (void *)&scatter_active;

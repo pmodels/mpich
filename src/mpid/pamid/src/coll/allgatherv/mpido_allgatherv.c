@@ -313,7 +313,6 @@ MPIDO_Allgatherv(const void *sendbuf,
   size_t   send_size     = 0;
   size_t   recv_size     = 0;
   int config[6];
-  double msize;
   int scount=sendcount;
 
   int i, rc, buffer_sum = 0;
@@ -423,7 +422,6 @@ MPIDO_Allgatherv(const void *sendbuf,
       buffer_sum += recvcounts[size - 1];
 
       buffer_sum *= recv_size;
-      msize = (double)buffer_sum / (double)size;
 
       /* disable with "safe allgatherv" env var */
       if(mpid->preallreduces[MPID_ALLGATHERV_PREALLREDUCE])

@@ -277,13 +277,13 @@ MPIDI_Recvq_FDP(size_t source, pami_task_t pami_source, int tag, int context_id,
 {
   MPID_Request * rreq;
   MPID_Request * prev_rreq = NULL;
-  void * it;
 #ifdef USE_STATISTICS
   unsigned search_length = 0;
 #endif
   TRACE_MEMSET_R(pami_source,msg_seqno,recv_status);
 
 #ifdef QUEUE_BINARY_SEARCH_SUPPORT
+  void * it;
   if(MPIDI_Process.queue_binary_search_support_on)
   {
     MPIDI_Recvq_find_in_post(source, tag, context_id, &rreq, &it);

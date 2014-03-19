@@ -27,9 +27,7 @@ MPIDI_Win_DoneCB(pami_context_t  context,
                  void          * cookie,
                  pami_result_t   result)
 {
-  int   target_rank;
   MPIDI_Win_request *req = (MPIDI_Win_request*)cookie;
-  target_rank = req->target.rank;
   ++req->win->mpid.sync.complete;
   ++req->origin.completed;
 

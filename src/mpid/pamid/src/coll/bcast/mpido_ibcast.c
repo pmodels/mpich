@@ -33,24 +33,6 @@ int MPIDO_Ibcast(void *buffer,
 {
    TRACE_ERR("in mpido_ibcast\n");
 
-   const unsigned is_root_rank = (comm_ptr->rank == root);
-   const unsigned user_selected_type =
-     comm_ptr->mpid.user_selected_type[PAMI_XFER_BROADCAST];
-
-   int data_size, data_contig;
-   MPI_Aint data_true_lb = 0;
-   MPID_Datatype *data_ptr;
-
-   MPIDI_Datatype_get_info(count, datatype,
-               data_contig, data_size, data_ptr, data_true_lb);
-
-   /*
-    * If the user has constructed some weird 0-length datatype but
-    * count is not 0, or if the user forced a mpich bcast alogorith,
-    * perform a mpich bcast.
-    */
-   /*if (unlikely((data_size == 0) || (user_selected_type == MPID_COLL_USE_MPICH)))*/
-   {
       /*
        * If the mpich mpir non-blocking collectives are enabled, return without
        * first constructing the MPID_Request. This signals to MPIR_Ibcast_impl
@@ -79,7 +61,6 @@ int MPIDO_Ibcast(void *buffer,
       MPIDI_Request_complete_norelease_inline(mpid_request);
 
       return rc;
-   }
 
    TRACE_ERR("leaving ibcast\n");
    return 0;

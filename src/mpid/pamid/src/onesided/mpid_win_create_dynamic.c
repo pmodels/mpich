@@ -44,10 +44,9 @@ MPID_Win_create_dynamic( MPID_Info  * info,
 {
   int mpi_errno  = MPI_SUCCESS;
   int rc = MPI_SUCCESS;
-  static char FCNAME[] = "MPID_Win_allocate_dynamic";
   MPIDI_Win_info  *winfo;
   MPID_Win     *win;
-  int          rank,i;  
+  int          rank;  
 
   rc=MPIDI_Win_init(0,1,win_ptr, info, comm_ptr, MPI_WIN_FLAVOR_DYNAMIC, MPI_WIN_UNIFIED);
   win = *win_ptr;

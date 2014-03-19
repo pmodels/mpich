@@ -12,7 +12,6 @@ int MPID_Imrecv(void *buf, int count, MPI_Datatype datatype,
   int mpi_errno = MPI_SUCCESS;
 
   MPID_Request * rreq;
-  int found;
 
   /* ---------------------------------------- */
   /* NULL rank means empty request            */

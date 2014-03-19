@@ -60,7 +60,6 @@ int MPIDO_Alltoallv(const void *sendbuf,
    pami_type_t stype, rtype;
    MPI_Aint sdt_true_lb, rdt_true_lb;
    MPIDI_Post_coll_t alltoallv_post;
-   int pamidt = 1;
    int tmp;
    const int rank = comm_ptr->rank;
 #if ASSERT_LEVEL==0
@@ -629,11 +628,7 @@ int MPIDO_Alltoallv_simple(const void *sendbuf,
 
 
    pami_xfer_t alltoallv;
-   const pami_metadata_t *my_alltoallv_md;
-   my_alltoallv_md = &mpid->coll_metadata[PAMI_XFER_ALLTOALLV_INT][0][0];
-
    alltoallv.algorithm = mpid->coll_algorithm[PAMI_XFER_ALLTOALLV_INT][0][0];
-   char *pname = my_alltoallv_md->name;
 
    alltoallv.cb_done = cb_alltoallv;
    alltoallv.cookie = (void *)&active;

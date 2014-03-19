@@ -9,9 +9,7 @@
 int MPID_Improbe(int source, int tag, MPID_Comm *comm, int context_offset,
                  int *flag, MPID_Request **message, MPI_Status *status)
 {
-    int mpi_errno = MPI_SUCCESS;
     const int context = comm->recvcontext_id + context_offset;
-    int pami_source;
     int foundp = FALSE;
     MPID_Request * rreq = NULL;
 
@@ -25,14 +23,15 @@ int MPID_Improbe(int source, int tag, MPID_Comm *comm, int context_offset,
         return MPI_SUCCESS;
       }
 
+#ifndef OUT_OF_ORDER_HANDLING
+    rreq = MPIDI_Recvq_FDU(source, tag, context, &foundp);
+#else
+    int pami_source;
     if(source != MPI_ANY_SOURCE) {
       pami_source = MPID_VCR_GET_LPID(comm->vcr, source);
     } else {
       pami_source = MPI_ANY_SOURCE;
     }
-#ifndef OUT_OF_ORDER_HANDLING
-    rreq = MPIDI_Recvq_FDU(source, tag, context, &foundp);
-#else
     rreq = MPIDI_Recvq_FDU(source, pami_source, tag, context, &foundp);
 #endif
     if (rreq==NULL) {

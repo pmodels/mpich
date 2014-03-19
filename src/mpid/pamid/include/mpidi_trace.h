@@ -252,15 +252,15 @@ MPIDI_Trace_buf_t  *MPIDI_Trace_buf;
 int recv_status;
 int send_status;
 int posted_recv;
-#define MPIDI_SET_PR_REC(rreq,buf,ct,dt,pami_id,rank,tag,comm,is_blk) 0  
-#define MPIDI_GET_S_REC(dest,sreq,ctx,isSync,dataSize) 0 
-#define TRACE_SET_S_BIT(dd,ii,mbr) 0 
-#define TRACE_SET_R_BIT(dd,ii,mbr) 0 
-#define TRACE_SET_S_VAL(dd,ii,mbr,val) 0 
-#define TRACE_SET_R_VALX(dd,rr,mbr,val) 0
-#define TRACE_SET_R_VAL(dd,ii,mbr,val) 0 
-#define TRACE_SET_REQ_VAL(ww,val1) 0 
-#define TRACE_MEMSET_R(tt,nbr,str)  0 
+#define MPIDI_SET_PR_REC(rreq,buf,ct,dt,pami_id,rank,tag,comm,is_blk)
+#define MPIDI_GET_S_REC(dest,sreq,ctx,isSync,dataSize)
+#define TRACE_SET_S_BIT(dd,ii,mbr)
+#define TRACE_SET_R_BIT(dd,ii,mbr)
+#define TRACE_SET_S_VAL(dd,ii,mbr,val)
+#define TRACE_SET_R_VALX(dd,rr,mbr,val)
+#define TRACE_SET_R_VAL(dd,ii,mbr,val)
+#define TRACE_SET_REQ_VAL(ww,val1)
+#define TRACE_MEMSET_R(tt,nbr,str)
 
 #endif  /* MPIDI_TRACE             */
 #endif   /* include_mpidi_trace_h  */

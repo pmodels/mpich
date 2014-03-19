@@ -50,8 +50,7 @@ int MPIDO_Gatherv(const void *sendbuf,
   }
 #endif
    TRACE_ERR("Entering MPIDO_Gatherv\n");
-   int rc;
-   int contig, rsize=0, ssize=0;
+   int contig ATTRIBUTE((unused)), rsize ATTRIBUTE((unused)), ssize ATTRIBUTE((unused));
    int pamidt = 1;
    MPID_Datatype *dt_ptr = NULL;
    MPI_Aint send_true_lb, recv_true_lb;

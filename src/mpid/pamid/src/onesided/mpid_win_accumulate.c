@@ -38,9 +38,6 @@ MPIDI_WinAccumCB(pami_context_t    context,
   MPID_assert(msginfo_size == sizeof(MPIDI_Win_MsgInfo));
   MPID_assert(_msginfo != NULL);
   const MPIDI_Win_MsgInfo * msginfo = (const MPIDI_Win_MsgInfo*)_msginfo;
-  const MPIDI_Win_request * req = (const MPIDI_Win_request*)(msginfo->req);
-  char *tmpbuf;
-  int mpi_errno, rc;
 
   int null=0;
   pami_type_t         pami_type;

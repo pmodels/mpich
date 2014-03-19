@@ -176,10 +176,8 @@ int MPIDO_Allreduce(const void *sendbuf,
           /* Check if the message range if restricted */
           if(my_md->check_correct.values.rangeminmax)
           {
-            MPI_Aint data_true_lb;
-            MPID_Datatype *data_ptr;
-            int data_size, data_contig;
-            MPIDI_Datatype_get_info(count, dt, data_contig, data_size, data_ptr, data_true_lb); 
+            int data_size;
+            MPIDI_Datatype_get_data_size(count, dt, data_size); 
             if((my_md->range_lo <= data_size) &&
                (my_md->range_hi >= data_size))
               ; /* ok, algorithm selected */
@@ -276,10 +274,8 @@ int MPIDO_Allreduce(const void *sendbuf,
               /* Check if the message range if restricted */
               if(my_md->check_correct.values.rangeminmax)
               {
-                MPI_Aint data_true_lb;
-                MPID_Datatype *data_ptr;
-                int data_size, data_contig;
-                MPIDI_Datatype_get_info(count, dt, data_contig, data_size, data_ptr, data_true_lb); 
+                int data_size;
+                MPIDI_Datatype_get_data_size(count, dt, data_size); 
                 if((my_md->range_lo <= data_size) &&
                    (my_md->range_hi >= data_size))
                   ; /* ok, algorithm selected */
@@ -341,10 +337,8 @@ int MPIDO_Allreduce(const void *sendbuf,
           /* Check if the message range if restricted */
           if(my_md->check_correct.values.rangeminmax)
           {
-            MPI_Aint data_true_lb;
-            MPID_Datatype *data_ptr;
-            int data_size, data_contig;
-            MPIDI_Datatype_get_info(count, dt, data_contig, data_size, data_ptr, data_true_lb); 
+            int data_size;
+            MPIDI_Datatype_get_data_size(count, dt, data_size); 
             if((my_md->range_lo <= data_size) &&
                (my_md->range_hi >= data_size))
               alg_selected = 1; /* query algorithm successfully selected */
@@ -427,7 +421,6 @@ int MPIDO_Allreduce_simple(const void *sendbuf,
    volatile unsigned active = 1;
    pami_xfer_t allred;
    const pami_metadata_t *my_allred_md = (pami_metadata_t *)NULL;
-   const int rank = comm_ptr->rank;
    const struct MPIDI_Comm* const mpid = &(comm_ptr->mpid);
    MPID_Datatype *data_ptr;
    MPI_Aint data_true_lb = 0;

@@ -61,8 +61,6 @@ pami_result_t MPIDI_Comm_create_from_pami_geom(pami_geometry_range_t  *task_slic
   MPID_Comm  *comm_ptr  = NULL,  *new_comm_ptr  = NULL;
   MPID_Group *group_ptr = NULL,  *new_group_ptr = NULL;
   int i = 0, j = 0;
-  MPIR_Context_id_t new_context_id = 0;
-  int *mapping = NULL;
 
   /* Get comm_ptr for MPI_COMM_WORLD and get the group_ptr for it */
   MPID_Comm_get_ptr( MPI_COMM_WORLD, comm_ptr );

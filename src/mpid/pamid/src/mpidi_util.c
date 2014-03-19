@@ -1865,7 +1865,6 @@ static void MPIDI_collsel_print_params(advisor_params_t *params, char *output_fi
 
 int MPIDI_collsel_pami_tune_parse_params(int argc, char ** argv)
 {
-  pami_configuration_t config;
   MPIDI_Collsel_output_file = NULL;
   num_tasks = PAMIX_Client_query(MPIDI_Client, PAMI_CLIENT_NUM_TASKS).value.intval;
   task_id   = PAMIX_Client_query(MPIDI_Client, PAMI_CLIENT_TASK_ID  ).value.intval;

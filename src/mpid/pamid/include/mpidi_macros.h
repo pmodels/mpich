@@ -77,6 +77,25 @@ _dt_contig_out, _data_sz_out, _dt_ptr, _dt_true_lb)             \
     }                                                           \
 })
 
+/**
+ * \brief Gets data size of the datatype
+ */
+#define MPIDI_Datatype_get_data_size(_count, _datatype,         \
+_data_sz_out)                                                   \
+({                                                              \
+  if (HANDLE_GET_KIND(_datatype) == HANDLE_KIND_BUILTIN)        \
+    {                                                           \
+        (_data_sz_out)   = (_count) *                           \
+        MPID_Datatype_get_basic_size(_datatype);                \
+    }                                                           \
+  else                                                          \
+    {                                                           \
+        MPID_Datatype *_dt_ptr;                                 \
+        MPID_Datatype_get_ptr((_datatype), (_dt_ptr));          \
+        (_data_sz_out)   = (_count) * (_dt_ptr)->size;          \
+    }                                                           \
+})
+
 /* Add some error checking for size eventually */
 #define MPIDI_Update_last_algorithm(_comm, _name) \
 ({ strncpy( (_comm)->mpid.last_algorithm, (_name), strlen((_name))+1); })

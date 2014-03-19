@@ -38,11 +38,8 @@ MPIDI_Win_init( MPI_Aint length,
                 int model)
 {
   int mpi_errno=MPI_SUCCESS;
-  size_t length_out = 0;
-  pami_result_t rc;
   size_t rank, size;
   MPIDI_Win_info *winfo;
-  int i;
   static char FCNAME[] = "MPIDI_Win_init";
 
   /* ----------------------------------------- */
@@ -109,14 +106,11 @@ MPIDI_Win_allgather( MPI_Aint size, MPID_Win **win_ptr )
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_Win *win;
-    int i, k, comm_size, rank;;
-    MPI_Aint  temp;
-    int nErrors=0;
+    int rank;
     MPID_Comm *comm_ptr;
     size_t length_out = 0;
     pami_result_t rc;
     MPIDI_Win_info  *winfo;
-    pami_task_t  task_id;
     static char FCNAME[] = "MPIDI_Win_allgather";
 
   win = *win_ptr;
@@ -190,12 +184,9 @@ MPID_Win_create(void       * base,
                 MPID_Win  ** win_ptr)
 {
   int mpi_errno  = MPI_SUCCESS;
-  int rc  = MPI_SUCCESS,i;
-  static char FCNAME[] = "MPID_Win_create";
+  int rc  = MPI_SUCCESS;
   MPID_Win *win;
-  MPID_Win *sub_win;
-  size_t  rank,rk;
-  pami_task_t  taskid;
+  size_t  rank;
   MPIDI_Win_info *winfo;
 
   rc=MPIDI_Win_init(size,disp_unit,win_ptr, info, comm_ptr, MPI_WIN_FLAVOR_CREATE, MPI_WIN_UNIFIED);

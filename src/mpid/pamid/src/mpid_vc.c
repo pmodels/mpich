@@ -95,12 +95,13 @@ int MPID_VCRT_Add_ref(MPID_VCRT vcrt)
 
 int MPID_VCRT_Release(MPID_VCRT vcrt, int isDisconnect)
 {
-    int count, i, inuse;
+    int count, i;
 
     MPIU_Object_release_ref(vcrt, &count);
 
     if (count == 0) {
 #ifdef DYNAMIC_TASKING
+     int inuse;
      if(mpidi_dynamic_tasking) {
       for (i = 0; i < vcrt->size; i++)
         {

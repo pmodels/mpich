@@ -946,7 +946,6 @@ MPIDI_Env_setup(int rank, int requested)
   /* Check for deprecated collectives environment variables. These variables are
    * used in src/mpid/pamid/src/comm/mpid_selectcolls.c */
   {
-    unsigned tmp;
     {
       char* names[] = {"PAMID_COLLECTIVE_ALLGATHER", "PAMI_ALLGATHER", NULL};
       ENV_Deprecated(names, 1, &found_deprecated_env_var, rank, 0);

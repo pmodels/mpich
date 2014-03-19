@@ -41,13 +41,10 @@ extern int mpidi_dynamic_tasking;
 
 
 int CheckRankOnNode(MPID_Comm  * comm_ptr,int *onNode ) {
-      int rank,comm_size,i;
+      int comm_size,i;
       int mpi_errno=PAMI_SUCCESS;
 
-
-      rank=comm_ptr->rank;
       comm_size = comm_ptr->local_size;
-      rank      = comm_ptr->rank;
 
       *onNode=1;
       for (i=0; i< comm_size; i++) {
@@ -92,7 +89,6 @@ int GetPageSize(void *addr, ulong *pageSize)
   char A3[50],A4[50];
   int  i=0;
   char *t1,*t2;
-  int  len;
   #ifndef REDHAT
   char a='-';
   char *search = &a;
@@ -132,7 +128,6 @@ int GetPageSize(void *addr, ulong *pageSize)
          break;
     }
     if ((strlen(A2) == 4) && ((A2[0]=='r') || (A2[3]=='p'))) {
-         len = strlen(A1);
        #ifndef REDHAT
          t1=strtok(A1,search);
        #else
@@ -168,18 +163,15 @@ MPID_getSharedSegment(MPI_Aint        size,
 {
     int mpi_errno = MPI_SUCCESS;
     void **base_pp = base_ptr;
-    int i, k, comm_size, rank;
+    int i, comm_size, rank;
     uint32_t shm_key; 
-    int  node_rank;
     int  shm_id;
-    MPI_Aint *node_sizes;
     MPI_Aint *tmp_buf;
     int errflag = FALSE;
     MPI_Aint pageSize,pageSize2, len,new_size;
     char *cp;
     MPID_Win  *win;
     int    padSize;
-    MPIDI_Win_info *winfo;
     int shm_flag = IPC_CREAT | IPC_EXCL | S_IRUSR | S_IWUSR;
 
     win =  *win_ptr;

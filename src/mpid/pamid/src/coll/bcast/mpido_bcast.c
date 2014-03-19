@@ -193,7 +193,6 @@ int MPIDO_Bcast(void *buffer,
                 my_md->name, queryreq);
       if(my_md->check_fn != NULL) /* calling the check fn is sufficient */
       {
-         metadata_result_t result = {0};
          result = my_md->check_fn(&bcast);
          result.check.nonlocal = 0; /* #warning REMOVE THIS WHEN IMPLEMENTED */
       } 
@@ -343,7 +342,6 @@ int MPIDO_Bcast_simple(void *buffer,
 
    pami_xfer_t bcast;
    const pami_metadata_t *my_bcast_md;
-   int queryreq = 0;
 
    bcast.cb_done = cb_bcast;
    bcast.cookie = (void *)&active;

@@ -305,7 +305,7 @@ MPIDO_Allgather(const void *sendbuf,
    MPID_Datatype * dt_null = NULL;
    MPI_Aint send_true_lb = 0;
    MPI_Aint recv_true_lb = 0;
-   int rc, comm_size = comm_ptr->local_size;
+   int comm_size = comm_ptr->local_size;
    size_t send_bytes = 0;
    size_t recv_bytes = 0;
    volatile unsigned allred_active = 1;

@@ -34,11 +34,9 @@ int MPIDI_Win_set_info(MPID_Win *win, MPID_Info *info)
 {
 
     int mpi_errno = MPI_SUCCESS;
-    MPID_Info *curr_ptr, *prev_ptr;
-    MPID_Info *c_ptr, *p_ptr;
+    MPID_Info *curr_ptr;
     char *value, *token;
     char *savePtr;
-    prev_ptr = info;
     curr_ptr = info->next;
     uint    save_ordering;
 
@@ -85,7 +83,6 @@ int MPIDI_Win_set_info(MPID_Win *win, MPID_Info *info)
               if (!strcmp(curr_ptr->value,"same_op"))
                    win->mpid.info_args.accumulate_ops = MPIDI_ACCU_SAME_OP;
          }
-        prev_ptr = curr_ptr;
         curr_ptr = curr_ptr->next;
     }
 

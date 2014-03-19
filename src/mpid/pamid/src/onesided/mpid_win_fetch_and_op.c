@@ -27,11 +27,9 @@ MPIDI_Fetch_and_op_using_pami_rmw(pami_context_t   context,
 {
     MPIDI_Win_request *req = (MPIDI_Win_request*)_req;
     pami_result_t rc;
-    MPID_Win    *win;
     int  target_rank;  
   
     MPID_assert(req != NULL);
-    win = req->win;
     target_rank = req->target.rank;
 
     pami_rmw_t  params; 
@@ -106,7 +104,7 @@ MPIDI_WinAtomicCB(pami_context_t    context,
        .iov_base = NULL,
        .iov_len  = 0,
      },
-    .hints = 0, 
+    .hints = {0}, 
   };
   
   pami_result_t rc = PAMI_Send_immediate(context, &params);  
@@ -173,7 +171,7 @@ MPIDI_Atomic (pami_context_t   context,
        .iov_base = NULL,
        .iov_len  = 0,
      },
-    .hints = 0, 
+    .hints = {0}, 
   };
   
   rc = PAMI_Send_immediate(context, &params);  
@@ -191,7 +189,6 @@ int MPID_Fetch_and_op(const void *origin_addr, void *result_addr,
 {
   int mpi_errno = MPI_SUCCESS;
   MPIDI_Win_request *req;
-  int datatype_iscontig=0;
   int good_for_rmw=0;
   int count = 1;
   int shm_locked = 0;
@@ -207,8 +204,6 @@ int MPID_Fetch_and_op(const void *origin_addr, void *result_addr,
                         return mpi_errno, "**rmasync");
   }
 
-  int null=0;
-  MPI_Op null_op=0;
   pami_type_t         pami_type;
   pami_atomic_t  pami_op;
 

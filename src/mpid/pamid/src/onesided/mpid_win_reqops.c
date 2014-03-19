@@ -51,10 +51,6 @@ MPID_Rput(const void  *origin_addr,
          MPID_Request **request)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_Datatype *dtp;
-    int dt_contig ATTRIBUTE((unused));
-    MPI_Aint dt_true_lb ATTRIBUTE((unused));
-    MPIDI_msg_sz_t data_sz;
 
     if(win->mpid.sync.origin_epoch_type != MPID_EPOTYPE_LOCK &&
        win->mpid.sync.origin_epoch_type != MPID_EPOTYPE_LOCK_ALL){
@@ -62,9 +58,6 @@ MPID_Rput(const void  *origin_addr,
                           return mpi_errno, "**rmasync");
     }
   
-    MPIDI_Datatype_get_info(origin_count, origin_datatype,
-                            dt_contig, data_sz, dtp, dt_true_lb);
-
     MPID_Request *rreq = MPIDI_Request_create2();
     *request = rreq;
     rreq->kind = MPID_WIN_REQUEST;
@@ -110,10 +103,6 @@ MPID_Rget(void         *origin_addr,
          MPID_Request **request)
 {
     int mpi_errno = MPI_SUCCESS;
-    int dt_contig ATTRIBUTE((unused));
-    MPID_Datatype *dtp;
-    MPI_Aint dt_true_lb ATTRIBUTE((unused));
-    MPIDI_msg_sz_t data_sz;
 
     if(win->mpid.sync.origin_epoch_type != MPID_EPOTYPE_LOCK &&
        win->mpid.sync.origin_epoch_type != MPID_EPOTYPE_LOCK_ALL){
@@ -121,9 +110,6 @@ MPID_Rget(void         *origin_addr,
                           return mpi_errno, "**rmasync");
     }
 
-    MPIDI_Datatype_get_info(origin_count, origin_datatype,
-                            dt_contig, data_sz, dtp, dt_true_lb);
-    
     MPID_Request *rreq = MPIDI_Request_create2();
     rreq->kind = MPID_WIN_REQUEST;
     *request = rreq;
@@ -176,19 +162,12 @@ MPID_Raccumulate(const void  *origin_addr,
                 MPID_Request **request)
 {
     int mpi_errno = MPI_SUCCESS;
-    int dt_contig ATTRIBUTE((unused));
-    MPID_Datatype *dtp;
-    MPIDI_msg_sz_t data_sz;
-    MPI_Aint dt_true_lb ATTRIBUTE((unused));
 
     if(win->mpid.sync.origin_epoch_type != MPID_EPOTYPE_LOCK &&
        win->mpid.sync.origin_epoch_type != MPID_EPOTYPE_LOCK_ALL){
       MPIU_ERR_SETANDSTMT(mpi_errno, MPI_ERR_RMA_SYNC,
                           return mpi_errno, "**rmasync");
     }
-
-    MPIDI_Datatype_get_info(origin_count, origin_datatype,
-                            dt_contig, data_sz, dtp, dt_true_lb);
 
     MPID_Request *rreq = MPIDI_Request_create2();
     rreq->kind = MPID_WIN_REQUEST;
@@ -248,10 +227,6 @@ MPID_Rget_accumulate(const void         *origin_addr,
 {
 
     int mpi_errno = MPI_SUCCESS;
-    MPID_Datatype *dtp;
-    int dt_contig ATTRIBUTE((unused));
-    MPIDI_msg_sz_t data_sz;
-    MPI_Aint dt_true_lb ATTRIBUTE((unused));
 
     if(win->mpid.sync.origin_epoch_type != MPID_EPOTYPE_LOCK &&
        win->mpid.sync.origin_epoch_type != MPID_EPOTYPE_LOCK_ALL){
@@ -259,8 +234,6 @@ MPID_Rget_accumulate(const void         *origin_addr,
                           return mpi_errno, "**rmasync");
     }
 
-    MPIDI_Datatype_get_info(origin_count, origin_datatype,
-                            dt_contig, data_sz, dtp, dt_true_lb);
     MPID_Request *rreq = MPIDI_Request_create2();
     rreq->kind = MPID_WIN_REQUEST;
     *request = rreq;

@@ -48,10 +48,11 @@ int MPIDO_Gather_reduce(void * sendbuf,
 			int *mpierrno)
 {
   MPID_Datatype * data_ptr;
-  MPI_Aint true_lb;
+  MPI_Aint true_lb ATTRIBUTE((unused));
   const int rank = comm_ptr->rank;
   const int size = comm_ptr->local_size;
-  int rc, sbytes, rbytes, contig;
+  int rc, sbytes, rbytes;
+  int contig ATTRIBUTE((unused));
   char *tempbuf = NULL;
   char *inplacetemp = NULL;
 
@@ -138,7 +139,7 @@ int MPIDO_Gather(const void *sendbuf,
   }
 #endif
   MPID_Datatype * data_ptr;
-  MPI_Aint true_lb = 0;
+  MPI_Aint true_lb ATTRIBUTE((unused));
   pami_xfer_t gather;
   MPIDI_Post_coll_t gather_post;
   int use_opt = 1, contig=0, send_bytes=-1, recv_bytes = 0;

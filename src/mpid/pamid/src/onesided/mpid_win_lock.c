@@ -177,7 +177,6 @@ MPID_Win_lock(int       lock_type,
                         return mpi_errno, "**rmasync");
    }
   if (rank == MPI_PROC_NULL) goto fn_exit;
-  struct MPIDI_Win_sync* sync = &win->mpid.sync;
 
   MPIDI_WinLock_info info = {
   .done = 0,

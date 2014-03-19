@@ -49,7 +49,7 @@ int MPIDO_Reduce(const void *sendbuf,
 #endif
    MPID_Datatype *dt_null = NULL;
    MPI_Aint true_lb = 0;
-   int dt_contig, tsize;
+   int dt_contig ATTRIBUTE((unused)), tsize;
    int mu;
    char *sbuf, *rbuf;
    pami_data_function pop;
@@ -166,9 +166,9 @@ int MPIDO_Reduce(const void *sendbuf,
             result.check.unspecified = 1;
          if(my_md->check_correct.values.rangeminmax)
          {
-            MPI_Aint data_true_lb;
+            MPI_Aint data_true_lb ATTRIBUTE((unused));
             MPID_Datatype *data_ptr;
-            int data_size, data_contig;
+            int data_size, data_contig ATTRIBUTE((unused));
             MPIDI_Datatype_get_info(count, datatype, data_contig, data_size, data_ptr, data_true_lb); 
             if((my_md->range_lo <= data_size) &&
                (my_md->range_hi >= data_size))
@@ -269,7 +269,6 @@ int MPIDO_Reduce_simple(const void *sendbuf,
    pami_data_function pop;
    pami_type_t pdt;
    int rc;
-   int alg_selected = 0;
    const int rank = comm_ptr->rank;
 #if ASSERT_LEVEL==0
    /* We can't afford the tracing in ndebug/performance libraries */

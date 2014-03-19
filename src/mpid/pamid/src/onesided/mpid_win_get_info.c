@@ -62,7 +62,7 @@ int MPIDI_Win_get_info(MPID_Win *win, MPID_Info **info_used)
         MPID_assert(mpi_errno == MPI_SUCCESS);
 #undef BUFSIZE
     }
-    if (win->mpid.info_args.accumulate_ops == MPIDI_ACCU_OPS_SAME_OP)
+    if (win->mpid.info_args.accumulate_ops == (unsigned) MPIDI_ACCU_OPS_SAME_OP)
         mpi_errno = MPIR_Info_set_impl(*info_used, "accumulate_ops", "same_op");
     else
         mpi_errno = MPIR_Info_set_impl(*info_used, "accumulate_ops", "same_op_no_op");

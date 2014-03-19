@@ -39,20 +39,15 @@ int MPIDO_Scatterv_bcast(void *sendbuf,
   const int rank = comm_ptr->rank;
   const int size = comm_ptr->local_size;
   char *tempbuf;
-  int i, sum = 0, dtsize, rc=0, contig;
-  MPID_Datatype *dt_ptr;
-  MPI_Aint dt_lb;
+  int i, sum = 0, dtsize, rc=0;
 
   for (i = 0; i < size; i++)
     if (sendcounts > 0)
       sum += sendcounts[i];
 
-  MPIDI_Datatype_get_info(1,
+  MPIDI_Datatype_get_data_size(1,
 			  recvtype,
-			  contig,
-			  dtsize,
-			  dt_ptr,
-			  dt_lb);
+			  dtsize);
 
   if (rank != root)
   {
@@ -101,21 +96,12 @@ int MPIDO_Scatterv_alltoallv(void * sendbuf,
   int *sdispls, *scounts;
   int *rdispls, *rcounts;
   char *sbuf, *rbuf;
-  int contig, rbytes, sbytes;
+  int rbytes;
   int rc;
 
-  MPID_Datatype *dt_ptr;
-  MPI_Aint dt_lb=0;
-
-  MPIDI_Datatype_get_info(recvcount,
+  MPIDI_Datatype_get_data_size(recvcount,
                           recvtype,
-                          contig,
-                          rbytes,
-                          dt_ptr,
-                          dt_lb);
-
-  if(rank == root)
-    MPIDI_Datatype_get_info(1, sendtype, contig, sbytes, dt_ptr, dt_lb);
+                          rbytes);
 
   rbuf = MPIU_Malloc(size * rbytes * sizeof(char));
   if(!rbuf)
@@ -211,13 +197,6 @@ int MPIDO_Scatterv_alltoallv(void * sendbuf,
   return rc;
 }
 
-static void allred_cb_done(void *ctxt, void *clientdata, pami_result_t err)
-{
-   unsigned *active = (unsigned *)clientdata;
-   (*active)--;
-}
-
-
 static void cb_scatterv(void *ctxt, void *clientdata, pami_result_t err)
 {
    unsigned *active = (unsigned *)clientdata;
@@ -243,14 +222,13 @@ int MPIDO_Scatterv(const void *sendbuf,
     return -1;
   }
 #endif
-  int contig, tmp, pamidt = 1;
-  int ssize, rsize;
+  int tmp, pamidt = 1;
+  int contig ATTRIBUTE((unused));
+  int ssize ATTRIBUTE((unused));
+  int rsize ATTRIBUTE((unused));
   MPID_Datatype *dt_ptr = NULL;
   MPI_Aint send_true_lb=0, recv_true_lb;
   char *sbuf, *rbuf;
-  volatile unsigned allred_active = 1;
-  pami_xfer_t allred;
-  int optscatterv[3];
   pami_type_t stype, rtype;
   const int rank = comm_ptr->rank;
 #if ASSERT_LEVEL==0
@@ -261,18 +239,6 @@ int MPIDO_Scatterv(const void *sendbuf,
 #endif
    const struct MPIDI_Comm* const mpid = &(comm_ptr->mpid);
    const int selected_type = mpid->user_selected_type[PAMI_XFER_SCATTERV_INT];
-
-  allred.cb_done = allred_cb_done;
-  allred.cookie = (void *)&allred_active;
-  allred.algorithm = mpid->coll_algorithm[PAMI_XFER_ALLREDUCE][0][0];
-  allred.cmd.xfer_allreduce.sndbuf = (void *)optscatterv;
-  allred.cmd.xfer_allreduce.stype = PAMI_TYPE_SIGNED_INT;
-  allred.cmd.xfer_allreduce.rcvbuf = (void *)optscatterv;
-  allred.cmd.xfer_allreduce.rtype = PAMI_TYPE_SIGNED_INT;
-  allred.cmd.xfer_allreduce.stypecount = 3;
-  allred.cmd.xfer_allreduce.rtypecount = 3; 
-  allred.cmd.xfer_allreduce.op = PAMI_DATA_BAND;
-
 
    if(selected_type == MPID_COLL_USE_MPICH)
   {
@@ -468,7 +434,6 @@ int MPIDO_Scatterv_simple(const void *sendbuf,
   void *snd_noncontig_buff = NULL, *rcv_noncontig_buff = NULL;
   void *sbuf = NULL, *rbuf = NULL;
   int *sdispls = NULL, *scounts = NULL;
-  int sndlen    = 0;
   int sndcount  = 0;
   MPID_Segment segment;
   int tmp, i;

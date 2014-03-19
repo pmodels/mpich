@@ -534,7 +534,6 @@ int MPIX_IO_node_id ()
   int fd;
   char* uci_str;
   char buffer[4096];
-  unsigned long uci;
 
   fd = open("/dev/bgpers", O_RDONLY, 0);
   assert(fd>=0);
@@ -556,14 +555,13 @@ int MPIX_IO_node_id ()
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIX_IO_link_id ()
 {
-  int nA,  nB,  nC,  nD,  nE;                /* Size of each torus dimension  */
+  int nB,  nC,  nD,  nE;                /* Size of each torus dimension  */
   int brA, brB, brC, brD, brE;               /* The bridge node's coordinates */
 
   Personality_t personality;
 
   Kernel_GetPersonality(&personality, sizeof(personality));
 
-  nA  = personality.Network_Config.Anodes;
   nB  = personality.Network_Config.Bnodes;
   nC  = personality.Network_Config.Cnodes;
   nD  = personality.Network_Config.Dnodes;

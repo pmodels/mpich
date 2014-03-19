@@ -636,12 +636,12 @@ MPIDI_Recvq_FDPR(MPID_Request * req)
   MPID_Request * cur_rreq  = NULL;
   MPID_Request * prev_rreq = NULL;
   int found = FALSE;
-  void * it;
 #ifdef USE_STATISTICS
   unsigned search_length = 0;
 #endif
 
 #ifdef QUEUE_BINARY_SEARCH_SUPPORT
+  void * it;
   if(MPIDI_Process.queue_binary_search_support_on)
   {
     MPIDI_Recvq_find_in_post(MPIDI_Request_getMatchRank(req), MPIDI_Request_getMatchTag(req), MPIDI_Request_getMatchCtxt(req), &cur_rreq, &it);
@@ -823,7 +823,6 @@ MPIDI_Recvq_DumpQueues(int verbose)
     return;
 
   MPID_Request * rreq = MPIDI_Recvq.posted_head;
-  MPID_Request * prev_rreq = NULL;
   unsigned i=0, numposted=0, numue=0;
   unsigned postedbytes=0, uebytes=0;
 
@@ -840,7 +839,6 @@ MPIDI_Recvq_DumpQueues(int verbose)
               );
     numposted++;
     postedbytes+=rreq->mpid.userbufcount;
-    prev_rreq = rreq;
     rreq = rreq->mpid.next;
   }
   fprintf(stderr, "Posted Requests %d, Total Mem: %d bytes\n",
@@ -874,7 +872,6 @@ MPIDI_Recvq_DumpQueues(int verbose)
 #endif
     numue++;
     uebytes+=rreq->mpid.uebuflen;
-    prev_rreq = rreq;
     rreq = rreq->mpid.next;
   }
   fprintf(stderr, "Unexpected Requests %d, Total Mem: %d bytes\n",
