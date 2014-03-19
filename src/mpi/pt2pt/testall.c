@@ -87,6 +87,7 @@ int MPI_Testall(int count, MPI_Request array_of_requests[], int *flag,
     int n_completed;
     int active_flag;
     int rc;
+    int proc_failure = 0;
     int mpi_errno = MPI_SUCCESS;
     MPIU_CHKLMEM_DECL(1);
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_TESTALL);
@@ -168,10 +169,13 @@ int MPI_Testall(int count, MPI_Request array_of_requests[], int *flag,
 	if (request_ptrs[i] != NULL && MPID_Request_is_complete(request_ptrs[i]))
 	{
 	    n_completed++;
-	    if (MPIR_Request_get_error(request_ptrs[i]) != MPI_SUCCESS)
-	    {
-		mpi_errno = MPI_ERR_IN_STATUS;
-	    }
+            rc = MPIR_Request_get_error(request_ptrs[i]);
+            if (rc != MPI_SUCCESS)
+            {
+                if (MPIX_ERR_PROC_FAILED == MPIR_ERR_GET_CLASS(rc))
+                    proc_failure = 1;
+                mpi_errno = MPI_ERR_IN_STATUS;
+            }
 	}
     }
     
@@ -203,7 +207,10 @@ int MPI_Testall(int count, MPI_Request array_of_requests[], int *flag,
 		{
 		    if (mpi_errno == MPI_ERR_IN_STATUS && array_of_statuses != MPI_STATUSES_IGNORE)
 		    { 
-			array_of_statuses[i].MPI_ERROR = MPI_ERR_PENDING;
+                        if (!proc_failure)
+                            array_of_statuses[i].MPI_ERROR = MPI_ERR_PENDING;
+                        else
+                            array_of_statuses[i].MPI_ERROR = MPIX_ERR_PROC_FAILED_PENDING;
 		    }
 		}
 	    }

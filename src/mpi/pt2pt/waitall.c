@@ -47,6 +47,7 @@ int MPIR_Waitall_impl(int count, MPI_Request array_of_requests[],
     int active_flag;
     int rc;
     int n_greqs;
+    int proc_failure = 0;
     const int ignoring_statuses = (array_of_statuses == MPI_STATUSES_IGNORE);
     int optimize = ignoring_statuses; /* see NOTE-O1 */
     MPIU_CHKLMEM_DECL(1);
@@ -180,6 +181,12 @@ int MPIR_Waitall_impl(int count, MPI_Request array_of_requests[],
         {
             /* req completed with an error */
             mpi_errno = MPI_ERR_IN_STATUS;
+
+            if (!proc_failure) {
+                if (MPIX_ERR_PROC_FAILED == MPIR_ERR_GET_CLASS(rc))
+                    proc_failure = 1;
+            }
+
             if (!ignoring_statuses)
             {
                 /* set the error code for this request */
@@ -197,7 +204,10 @@ int MPIR_Waitall_impl(int count, MPI_Request array_of_requests[],
                         }
                         else
                         {
-                            array_of_statuses[j].MPI_ERROR = MPI_ERR_PENDING;
+                            if (!proc_failure)
+                                array_of_statuses[j].MPI_ERROR = MPI_ERR_PENDING;
+                            else
+                                array_of_statuses[j].MPI_ERROR = MPIX_ERR_PROC_FAILED_PENDING;
                         }
                     }
                 }
