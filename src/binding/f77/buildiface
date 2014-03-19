@@ -5261,17 +5261,17 @@ sub HelperForRegister_datarep {
        Like the attribute null functions, we provide multiple weak versions
        of this if possible */
 
+#if defined(USE_WEAK_SYMBOLS)
+
 /* Add the prototype so the routine knows what this is */
 extern FORT_DLL_SPEC int FORT_CALL mpi_conversion_fn_null_ ( void*v1, MPI_Fint*v2, MPI_Fint*v3, void*v4, MPI_Offset*v5, MPI_Fint *v6, MPI_Fint*v7, MPI_Fint *ierr );
 
-#if defined(USE_WEAK_SYMBOLS)
-
-#if defined(HAVE_MULTIPLE_PRAGMA_WEAK) /* If support multiple #pragma weak */
+#if defined(HAVE_MULTIPLE_PRAGMA_WEAK) && !defined(MPICH_MPI_FROM_PMPI) /* If support multiple #pragma weak */
 #pragma weak mpi_conversion_fn_null__ = mpi_conversion_fn_null_
 #pragma weak mpi_conversion_fn_null   = mpi_conversion_fn_null_
 #pragma weak MPI_CONVERSION_FN_NULL   = mpi_conversion_fn_null_
 
-#elif defined(HAVE_PRAGMA_WEAK) /* If support single #pragma weak */
+#elif defined(HAVE_PRAGMA_WEAK) && !defined(MPICH_MPI_FROM_PMPI) /* If support single #pragma weak */
 #if defined(F77_NAME_UPPER)
 #pragma weak MPI_CONVERSION_FN_NULL   = mpi_conversion_fn_null_
 #elif defined(F77_NAME_LOWER_2USCORE)
@@ -5280,7 +5280,7 @@ extern FORT_DLL_SPEC int FORT_CALL mpi_conversion_fn_null_ ( void*v1, MPI_Fint*v
 #pragma weak mpi_conversion_fn_null   = mpi_conversion_fn_null_
 #endif
 
-#elif defined(HAVE_PRAGMA_HP_SEC_DEF) /* If support _HP_SECONDARY_DEF */
+#elif defined(HAVE_PRAGMA_HP_SEC_DEF) && !defined(MPICH_MPI_FROM_PMPI) /* If support _HP_SECONDARY_DEF */
 #if defined(F77_NAME_UPPER)
 #pragma _HP_SECONDARY_DEF MPI_CONVERSION_FN_NULL   = mpi_conversion_fn_null_
 #elif defined(F77_NAME_LOWER_2USCORE)
@@ -5289,7 +5289,7 @@ extern FORT_DLL_SPEC int FORT_CALL mpi_conversion_fn_null_ ( void*v1, MPI_Fint*v
 #pragma _HP_SECONDARY_DEF mpi_conversion_fn_null  = mpi_conversion_fn_null_
 #endif
 
-#elif defined(HAVE_PRAGMA_CRI_DUP) /* If support _CRI duplicate */
+#elif defined(HAVE_PRAGMA_CRI_DUP) && !defined(MPICH_MPI_FROM_PMPI) /* If support _CRI duplicate */
 #if defined(F77_NAME_UPPER)
 #pragma _CRI duplicate MPI_CONVERSION_FN_NULL as mpi_conversion_fn_null_
 #elif defined(F77_NAME_LOWER_2USCORE)
@@ -5314,6 +5314,8 @@ extern FORT_DLL_SPEC int FORT_CALL MPI_CONVERSION_FN_NULL ( void*v1, MPI_Fint*v2
 MPICH_ATTR_WEAK_ALIAS(\"mpi_conversion_fn_null_\")
 #endif
 ;
+#endif
+
 #else /* No weak symbol support, so simply rename the one version to match the
          Fortran naming convention */
 #ifdef F77_NAME_UPPER
@@ -5325,14 +5327,17 @@ MPICH_ATTR_WEAK_ALIAS(\"mpi_conversion_fn_null_\")
 /* Else leave name alone */
 #endif /* End of test on name mapping without weak symbol support */
 
-#endif /* End of test on use weak symbols */
+/* Add the prototype so the routine knows what this is */
+extern FORT_DLL_SPEC int FORT_CALL mpi_conversion_fn_null_ ( void*v1, MPI_Fint*v2, MPI_Fint*v3, void*v4, MPI_Offset*v5, MPI_Fint *v6, MPI_Fint*v7, MPI_Fint *ierr );
 
 #endif
 
+#ifndef MPICH_MPI_FROM_PMPI
 /* This isn't a callable function */
 FORT_DLL_SPEC int FORT_CALL mpi_conversion_fn_null_ ( void*v1, MPI_Fint*v2, MPI_Fint*v3, void*v4, MPI_Offset*v5, MPI_Fint *v6, MPI_Fint*v7, MPI_Fint *ierr ) {
     return 0;
 }
+#endif
 
 ";
 
