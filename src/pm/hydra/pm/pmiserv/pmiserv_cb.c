@@ -339,100 +339,38 @@ static HYD_status control_cb(int fd, HYD_event_t events, void *userp)
                 /* FIXME: If the list of dead processes does not fit
                  * inside a single value length, set it as a
                  * multi-line value. */
-                struct proc_list {
-                    char *segment;
-                    int start;
-                    int end;
-                    struct proc_list *next;
-                } *list = NULL, *e, *tmp;
-                char *segment, *start, *end, *current_list, *str, *run;
-                int included = 0;
+                /* FIXME: This was changed from a sorted list where sequential
+                 * numbers could be compacted to an expanded list where they
+                 * couldn't. Obviously, this isn't sustainable on the PMI
+                 * side, but on the MPI side, it's necessary (see the
+                 * definition of MPI_COMM_FAILURE_ACK). In a future version of
+                 * PMI where we can pass around things other than strings,
+                 * this should improve. */
+                char *segment, *current_list, *str;
+                int included = 0, value;
 
                 /* Create a sorted list of processes */
                 current_list = HYDU_strdup(pg_scratch->dead_processes);
 
+                /* Search to see if this process is already in the list */
+                included = 0;
                 segment = strtok(current_list, ",");
                 do {
-                    HYDU_MALLOC(e, struct proc_list *, sizeof(struct proc_list), status);
-                    e->segment = HYDU_strdup(segment);
-                    e->next = NULL;
-
-                    if (list == NULL)
-                        list = e;
-                    else {
-                        for (tmp = list; tmp->next; tmp = tmp->next);
-                        tmp->next = e;
+                    value = strtol(segment, NULL, 10);
+                    if (value == hdr.pid) {
+                        included = 1;
+                        break;
                     }
-
                     segment = strtok(NULL, ",");
-                } while (segment);
+                } while (segment != NULL);
 
-                for (e = list; e; e = e->next) {
-                    start = strtok(e->segment, "-");
-                    end = strtok(NULL, "-");
-
-                    e->start = atoi(start);
-                    if (end)
-                        e->end = atoi(end);
-                    else
-                        e->end = atoi(start);
-
-                    if (hdr.pid == e->start - 1) {
-                        e->start = hdr.pid;
-                        included = 1;
-                    }
-                    else if (hdr.pid == e->end + 1) {
-                        e->end = hdr.pid;
-                        included = 1;
-                    }
-                }
-
+                /* Add this process to the end of the list */
                 if (!included) {
-                    HYDU_MALLOC(e, struct proc_list *, sizeof(struct proc_list), status);
-                    e->start = hdr.pid;
-                    e->end = hdr.pid;
-                    e->next = NULL;
+                    HYDU_MALLOC(str, char *, PMI_MAXVALLEN, status);
 
-                    if (hdr.pid < list->start) {
-                        e->next = list;
-                        list = e;
-                    }
-                    else {
-                        for (tmp = list; tmp->next && tmp->next->start < hdr.pid; tmp = tmp->next);
-                        e->next = tmp->next;
-                        tmp->next = e;
-                    }
-                }
-
-                for (e = list; e->next;) {
-                    if (e->end == e->next->start) {
-                        e->end = e->next->end;
-                        tmp = e->next;
-                        e->next = e->next->next;
-                        HYDU_FREE(tmp);
-                    }
-                    else
-                        e = e->next;
-                }
-
-                str = NULL;
-                for (e = list; e; e = e->next) {
-                    HYDU_MALLOC(run, char *, PMI_MAXVALLEN, status);
-                    if (str) {
-                        if (e->start == e->end)
-                            HYDU_snprintf(run, PMI_MAXVALLEN, "%s,%d", str, e->start);
-                        else
-                            HYDU_snprintf(run, PMI_MAXVALLEN, "%s,%d-%d", str, e->start, e->end);
-                    }
-                    else {
-                        if (e->start == e->end)
-                            HYDU_snprintf(run, PMI_MAXVALLEN, "%d", e->start);
-                        else
-                            HYDU_snprintf(run, PMI_MAXVALLEN, "%d-%d", e->start, e->end);
-                    }
-                    if (str)
-                        HYDU_FREE(str);
-                    str = run;
+                    HYDU_snprintf(str, PMI_MAXVALLEN, "%s,%d", pg_scratch->dead_processes, hdr.pid);
+                } else {
+                    str = current_list;
                 }
                 pg_scratch->dead_processes = str;
             }
