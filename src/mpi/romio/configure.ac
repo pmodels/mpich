@@ -807,6 +807,8 @@ AM_CONDITIONAL([BUILD_AD_PE],[false])
 if test "$file_system_args" = "BGQ" -a -n "$file_system_gpfs"; then
     AC_DEFINE(BGQPLATFORM,1,BGQ platform)
     AM_CONDITIONAL([BUILD_AD_BG],[true])
+    dnl what if anything can make Blue Gene support aio?
+    disable_aio=yes
 fi
 if test "$file_system_args" = "PE" -a -n "$file_system_gpfs"; then
     AC_DEFINE(PEPLATFORM,1,PE platform)
