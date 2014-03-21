@@ -2,7 +2,7 @@
 /* (C)Copyright IBM Corp.  2007, 2008                               */
 /* ---------------------------------------------------------------- */
 /**
- * \file ad_bg_open.c
+ * \file ad_gpfs_open.c
  * \brief ???
  */
 
@@ -12,19 +12,18 @@
  *   See COPYRIGHT notice in top-level directory.
  */
 
-#include "ad_bg.h"
-#include "ad_bg_aggrs.h"
+#include "ad_gpfs_tuning.h"
 
 #include <sys/statfs.h>
 #include <sys/vfs.h>
 
-void ADIOI_BG_Open(ADIO_File fd, int *error_code)
+void ADIOI_GPFS_Open(ADIO_File fd, int *error_code)
 {
   int perm, old_mask, amode, rank, rc;
-  static char myname[] = "ADIOI_BG_OPEN";
+  static char myname[] = "ADIOI_GPFS_OPEN";
 
   /* set internal variables for tuning environment variables */
-  ad_bg_get_env_vars();    
+  ad_gpfs_get_env_vars();
 
   if (fd->perm == ADIO_PERM_NULL)  {
     old_mask = umask(022);
@@ -54,7 +53,7 @@ void ADIOI_BG_Open(ADIO_File fd, int *error_code)
   DBG_FPRINTF(stderr,"open('%s',%#X,%#X) rc=%d, errno=%d\n",fd->filename,amode,perm,fd->fd_sys,errno);
   fd->fd_direct = -1;
 
-  if (bgmpio_devnullio == 1) {
+  if (gpfsmpio_devnullio == 1) {
       fd->null_fd = open("/dev/null", O_RDWR);
   } else {
       fd->null_fd = -1;
@@ -78,14 +77,14 @@ void ADIOI_BG_Open(ADIO_File fd, int *error_code)
 
 	MPI_Comm_rank(fd->comm, &rank);
 	if ((rank == fd->hints->ranklist[0]) || (fd->comm == MPI_COMM_SELF)) {
-	    struct stat64 bg_stat;
+	    struct stat64 gpfs_stat;
 	    /* Get the (real) underlying file system block size */
-	    rc = stat64(fd->filename, &bg_stat);
+	    rc = stat64(fd->filename, &gpfs_stat);
 	    if (rc >= 0)
 	    {
-		fd->blksize = bg_stat.st_blksize;
+		fd->blksize = gpfs_stat.st_blksize;
 		DBGV_FPRINTF(stderr,"Successful stat '%s'.  Blocksize=%ld\n",
-			fd->filename,bg_stat.st_blksize);
+			fd->filename,gpfs_stat.st_blksize);
 	    }
 	    else
 	    {

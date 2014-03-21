@@ -13,8 +13,8 @@
 #ifdef AGGREGATION_PROFILE
 #include "mpe.h"
 #endif
-#ifdef ROMIO_BG
-# include "adio/ad_bg/ad_bg_tuning.h"
+#ifdef ROMIO_GPFS
+# include "adio/ad_gpfs/ad_gpfs_tuning.h"
 #endif
 
 void ADIOI_GEN_ReadContig(ADIO_File fd, void *buf, int count, 
@@ -37,19 +37,19 @@ void ADIOI_GEN_ReadContig(ADIO_File fd, void *buf, int count,
     MPI_Type_size_x(datatype, &datatype_size);
     len = datatype_size * (ADIO_Offset)count;
 
-#ifdef ROMIO_BG
-    if (bgmpio_timing) {
+#ifdef ROMIO_GPFS
+    if (gpfsmpio_timing) {
 	io_time = MPI_Wtime();
-	bgmpio_prof_cr[ BGMPIO_CIO_DATA_SIZE ] += len;
+	gpfsmpio_prof_cr[ GPFSMPIO_CIO_DATA_SIZE ] += len;
     }
 #endif
 
     if (file_ptr_type == ADIO_INDIVIDUAL) {
 	offset = fd->fp_ind;
     }
- 
-#if ROMIO_BG
-    if (bgmpio_timing) io_time2 = MPI_Wtime();
+
+#ifdef ROMIO_GPFS
+    if (gpfsmpio_timing) io_time2 = MPI_Wtime();
 #endif
     p=buf;
     while (bytes_xfered < len) {
@@ -57,9 +57,11 @@ void ADIOI_GEN_ReadContig(ADIO_File fd, void *buf, int count,
 	MPE_Log_event( ADIOI_MPE_read_a, 0, NULL );
 #endif
 	rd_count = len - bytes_xfered;
-	if (bgmpio_devnullio)
+#ifdef ROMIO_GPFS
+	if (gpfsmpio_devnullio)
 	    err = pread(fd->null_fd, p, rd_count, offset+bytes_xfered);
 	else
+#endif
 	    err = pread(fd->fd_sys, p, rd_count, offset+bytes_xfered);
 	/* --BEGIN ERROR HANDLING-- */
 	if (err == -1) {
@@ -83,8 +85,8 @@ void ADIOI_GEN_ReadContig(ADIO_File fd, void *buf, int count,
 	bytes_xfered += err;
 	p += err;
     }
-#if ROMIO_BG
-    if (bgmpio_timing) bgmpio_prof_cr[ BGMPIO_CIO_T_POSI_RW ] += (MPI_Wtime() - io_time2);
+#ifdef ROMIO_GPFS
+    if (gpfsmpio_timing) gpfsmpio_prof_cr[ GPFSMPIO_CIO_T_POSI_RW ] += (MPI_Wtime() - io_time2);
 #endif
     fd->fp_sys_posn = offset + bytes_xfered;
 
@@ -102,5 +104,7 @@ void ADIOI_GEN_ReadContig(ADIO_File fd, void *buf, int count,
 #ifdef AGGREGATION_PROFILE
     MPE_Log_event (5035, 0, NULL);
 #endif
-    if (bgmpio_timing) bgmpio_prof_cr[ BGMPIO_CIO_T_MPIO_RW ] += (MPI_Wtime() - io_time);
+#ifdef ROMIO_GPFS
+    if (gpfsmpio_timing) gpfsmpio_prof_cr[ GPFSMPIO_CIO_T_MPIO_RW ] += (MPI_Wtime() - io_time);
+#endif
 }

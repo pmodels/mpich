@@ -2,7 +2,7 @@
 /* (C)Copyright IBM Corp.  2007, 2008                               */
 /* ---------------------------------------------------------------- */
 /**
- * \file ad_bg_flush.c
+ * \file ad_gpfs_flush.c
  * \brief Scalable flush based on underlying filesystem and psets
  */
 
@@ -13,14 +13,12 @@
  *   See COPYRIGHT notice in top-level directory.
  */
 
-#include "ad_bg.h"
-#include "ad_bg_aggrs.h"
+#include "ad_gpfs.h"
 
-void ADIOI_BG_Flush(ADIO_File fd, int *error_code)
+void ADIOI_GPFS_Flush(ADIO_File fd, int *error_code)
 {
     int err=0;
-    static char myname[] = "ADIOI_BG_FLUSH";
-
+    static char myname[] = "ADIOI_GPFS_FLUSH";
 
     int rank;
 

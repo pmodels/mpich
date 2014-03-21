@@ -2,7 +2,7 @@
 /* (C)Copyright IBM Corp.  2007, 2008                               */
 /* ---------------------------------------------------------------- */
 /**
- * \file ad_bg.c
+ * \file ad_gpfs.c
  * \brief ???
  */
 
@@ -11,25 +11,28 @@
  *   Copyright (C) 2001 University of Chicago. 
  *   See COPYRIGHT notice in top-level directory.
  */
-#define BG_OPTIM_STEP1_1 1
-#include "ad_bg.h"
+#include "ad_gpfs.h"
 
 /* adioi.h has the ADIOI_Fns_struct define */
 #include "adioi.h"
 
-struct ADIOI_Fns_struct ADIO_BG_operations = {
-    ADIOI_BG_Open, /* Open */
+struct ADIOI_Fns_struct ADIO_GPFS_operations = {
+    ADIOI_GPFS_Open, /* Open */
     ADIOI_GEN_OpenColl, /* Collective open */
     ADIOI_GEN_ReadContig, /* ReadContig */
     ADIOI_GEN_WriteContig, /* WriteContig */
-    ADIOI_BG_ReadStridedColl, /* ReadStridedColl */
-    ADIOI_BG_WriteStridedColl, /* WriteStridedColl */
+    ADIOI_GPFS_ReadStridedColl, /* ReadStridedColl */
+    ADIOI_GPFS_WriteStridedColl, /* WriteStridedColl */
     ADIOI_GEN_SeekIndividual, /* SeekIndividual */
-    ADIOI_BG_Fcntl, /* Fcntl */
+    ADIOI_GEN_Fcntl, /* Fcntl */
+#ifdef BGQPLATFORM
     ADIOI_BG_SetInfo, /* SetInfo */
+#else
+    ADIOI_GEN_SetInfo, /* SetInfo */
+#endif
     ADIOI_GEN_ReadStrided, /* ReadStrided */
     ADIOI_GEN_WriteStrided, /* WriteStrided */
-    ADIOI_BG_Close, /* Close */
+    ADIOI_GPFS_Close, /* Close */
 #ifdef ROMIO_HAVE_WORKING_AIO
 #warning Consider BG support for NFS before enabling this.
     ADIOI_GEN_IreadContig, /* IreadContig */
@@ -44,7 +47,7 @@ struct ADIOI_Fns_struct ADIO_BG_operations = {
     ADIOI_GEN_IOComplete, /* WriteComplete */
     ADIOI_GEN_IreadStrided, /* IreadStrided */
     ADIOI_GEN_IwriteStrided, /* IwriteStrided */
-    ADIOI_BG_Flush, /* Flush */
+    ADIOI_GPFS_Flush, /* Flush */
     ADIOI_GEN_Resize, /* Resize */
     ADIOI_GEN_Delete, /* Delete */
     ADIOI_GEN_Feature, /* Features */

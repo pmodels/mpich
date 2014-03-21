@@ -14,7 +14,7 @@
 
 /* #define TRACE_ON */
 #include <stdlib.h>
-#include "ad_bg.h"
+#include "ad_gpfs.h"
 #include "ad_bg_pset.h"
 #include <spi/include/kernel/process.h>
 #include <firmware/include/personality.h>
@@ -31,7 +31,7 @@ ADIOI_BG_ProcInfo_t *
 ADIOI_BG_ProcInfo_new()
 {
     ADIOI_BG_ProcInfo_t *p = (ADIOI_BG_ProcInfo_t *) ADIOI_Malloc (sizeof(ADIOI_BG_ProcInfo_t));
-    ADIOI_BG_assert ((p != NULL));
+    ADIOI_GPFS_assert ((p != NULL));
     return p;
 }
 
@@ -39,7 +39,7 @@ ADIOI_BG_ProcInfo_t *
 ADIOI_BG_ProcInfo_new_n( int n )
 {
     ADIOI_BG_ProcInfo_t *p = (ADIOI_BG_ProcInfo_t *) ADIOI_Malloc (n * sizeof(ADIOI_BG_ProcInfo_t));
-    ADIOI_BG_assert ((p != NULL));
+    ADIOI_GPFS_assert ((p != NULL));
     return p;
 }
 
@@ -53,7 +53,7 @@ ADIOI_BG_ConfInfo_t *
 ADIOI_BG_ConfInfo_new ()
 {
     ADIOI_BG_ConfInfo_t *p = (ADIOI_BG_ConfInfo_t *) ADIOI_Malloc (sizeof(ADIOI_BG_ConfInfo_t));
-    ADIOI_BG_assert ((p != NULL));
+    ADIOI_GPFS_assert ((p != NULL));
     return p;
 }
 
@@ -260,9 +260,9 @@ ADIOI_BG_persInfo_init(ADIOI_BG_ConfInfo_t *conf,
             
       conf->nAggrs = n_aggrs;
       /*    First pass gets nAggrs = -1 */
-      if(conf->nAggrs <=0) 
-         conf->nAggrs = bgmpio_bg_nagg_pset;
-      if(conf->ioMinSize <= conf->nAggrs) 
+      if(conf->nAggrs <=0)
+         conf->nAggrs = gpfsmpio_bg_nagg_pset;
+      if(conf->ioMinSize <= conf->nAggrs)
         conf->nAggrs = ADIOI_MAX(1,conf->ioMinSize-1); /* not including bridge itself */
 /*      if(conf->nAggrs > conf->numBridgeRanks) 
          conf->nAggrs = conf->numBridgeRanks; 
@@ -273,7 +273,7 @@ ADIOI_BG_persInfo_init(ADIOI_BG_ConfInfo_t *conf,
       TRACE_ERR("Maximum ranks under a bridge rank: %d, minimum: %d, nAggrs: %d, numBridgeRanks: %d pset dflt: %d naggrs: %d ratio: %f\n", maxcompute, mincompute, conf->nAggrs, conf->numBridgeRanks, ADIOI_BG_NAGG_PSET_DFLT, conf->nAggrs, conf->aggRatio);
    }
 
-   ADIOI_BG_assert((bridgerank != -1));
+   ADIOI_GPFS_assert((bridgerank != -1));
    proc->bridgeRank = bridgerank;
    proc->iamBridge = iambridge;
    TRACE_ERR("Rank %d has bridge set index %d (bridge rank: %d) with %d other ranks, ioNodeIndex: %d\n", rank,  proc->ioNodeIndex, bridgerank, proc->myIOSize, proc->ioNodeIndex);

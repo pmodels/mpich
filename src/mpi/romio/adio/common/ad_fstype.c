@@ -204,32 +204,8 @@ static void ADIO_FileSysType_parentdir(const char *filename, char **dirnamep)
 }
 #endif /* ROMIO_NTFS */
 
-#if defined(ROMIO_BGL) || defined(ROMIO_BG)
-		    /* BlueGene support for lockless i/o (necessary for PVFS.
-		      possibly beneficial for others, unless data sieving
-		      writes desired) */
-
-/* BlueGene environment variables can override lockless selection.*/
-#ifdef ROMIO_BG
-extern void ad_bg_get_env_vars();
-#else
-extern void ad_bgl_get_env_vars();
-#endif
-extern long bglocklessmpio_f_type;
-
-static void check_for_lockless_exceptions(long stat_type, int *fstype)
-{
-    /* exception for lockless file systems.  (PVFS2 is the default in ad_bgl_tuning.)
-     * The BGLOCKLESS_F_TYPE environment variable will override it by specifying 
-     * the appropriate file system magic number here. 
-     */ 
-    if (stat_type == bglocklessmpio_f_type) 
-      /* use lock-free driver on bluegene to support specified fs (defaults to pvfs2) */
-      *fstype = ADIO_BGLOCKLESS; 
-}
-#endif
 /*
- ADIO_FileSysType_fncall - determines the file system type for a given file 
+ ADIO_FileSysType_fncall - determines the file system type for a given file
  using a system-dependent function call
 
 Input Parameters:
@@ -361,28 +337,12 @@ static void ADIO_FileSysType_fncall(const char *filename, int *fstype, int *erro
     }
 # endif
 
-#ifdef ROMIO_BG
-/* The BlueGene generic ADIO is also a special case. */
-    ad_bg_get_env_vars();
 
-    *fstype = ADIO_BG;
-    check_for_lockless_exceptions(fsbuf.f_type, fstype);
-    *error_code = MPI_SUCCESS;
+#ifdef ROMIO_GPFS
+
+    *fstype = ADIO_GPFS;
     return;
 #endif
-
-#  ifdef ROMIO_BGL 
-    /* BlueGene is a special case: all file systems are AD_BGL, except for
-     * certain exceptions */
-
-    /* Bluegene needs to read enviroment variables before selecting the file system*/
-    ad_bgl_get_env_vars();
-
-    *fstype = ADIO_BGL;
-    check_for_lockless_exceptions(fsbuf.f_type, fstype);
-    *error_code = MPI_SUCCESS;
-    return;
-#  endif
 
     /* FPRINTF(stderr, "%d\n", fsbuf.f_type);*/
 # ifdef NFS_SUPER_MAGIC
@@ -598,15 +558,8 @@ static void ADIO_FileSysType_prefix(const char *filename, int *fstype, int *erro
     {
 	*fstype = ADIO_LUSTRE;
     }
-    else if (!strncmp(filename, "bgl:", 4) || !strncmp(filename, "BGL:", 4)) {
-	*fstype = ADIO_BGL;
-    }
-    else if (!strncmp(filename, "bg:", 3) || !strncmp(filename, "BG:", 3)) {
-	*fstype = ADIO_BG;
-    }
-    else if (!strncmp(filename, "bglockless:", 11) || 
-	    !strncmp(filename, "BGLOCKLESS:", 11)) {
-	*fstype = ADIO_BGLOCKLESS;
+    else if (!strncmp(filename, "gpfs:", 5) || !strncmp(filename, "GPFS:", 5)) {
+	*fstype = ADIO_GPFS;
     }
     else {
 #ifdef ROMIO_NTFS
@@ -843,34 +796,15 @@ void ADIO_ResolveFileType(MPI_Comm comm, const char *filename, int *fstype,
 	*ops = &ADIO_TESTFS_operations;
 #endif
     }
-    if (file_system == ADIO_BGL) {
-#ifndef ROMIO_BGL
-	*error_code = MPIO_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, 
-					   myname, __LINE__, MPI_ERR_IO, 
-					   "**iofstypeunsupported", 0);
-	return;
-#else
-	*ops = &ADIO_BGL_operations;
-#endif
-    }
-    if (file_system == ADIO_BG) {
-#ifndef ROMIO_BG
+
+    if (file_system == ADIO_GPFS) {
+#ifndef ROMIO_GPFS
 	*error_code = MPIO_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE,
 					myname, __LINE__, MPI_ERR_IO,
 					"**iofstypeunsupported", 0);
 	return;
 #else
-	*ops = &ADIO_BG_operations;
-#endif
-    }
-    if (file_system == ADIO_BGLOCKLESS) {
-#ifndef ROMIO_BGLOCKLESS
-	*error_code = MPIO_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, 
-					   myname, __LINE__, MPI_ERR_IO, 
-					   "**iofstypeunsupported", 0);
-	return;
-#else
-	*ops = &ADIO_BGLOCKLESS_operations;
+	*ops = &ADIO_GPFS_operations;
 #endif
     }
 

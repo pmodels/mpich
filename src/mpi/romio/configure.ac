@@ -201,13 +201,6 @@ fi
 # start with the set of file systems that the user asked for
 # FILE_SYSTEM=$with_file_system
 FILE_SYSTEM=`echo $with_file_system | sed -e 's/:.*$//'`
-changequote(<<,>>)
-file_system_args=`echo $with_file_system | sed -e 's/^[^:]*//' -e 's/^://'`
-changequote([,])
-if test "$file_system_args" = "BGQ" ; then
-    AC_DEFINE(FSPLATFORM,BGQ,BGQ platform)
-fi
-echo "with_file_system is :"$with_file_system": file_system_args is :"$file_system_args": FILE_SYSTEM is :"$FILE_SYSTEM": FSPLATFORM is :"$FSPLATFORM":"
 
 # Check if Make is working
 PAC_PROG_MAKE
@@ -800,9 +793,24 @@ fi
 if test -n "$file_system_ufs"; then
     AC_DEFINE(ROMIO_UFS,1,[Define for ROMIO with UFS])
 fi
+
+changequote(<<,>>)
+file_system_args=`echo $with_file_system | sed -e 's/^[^:]*//' -e 's/^://'`
+changequote([,])
+
 if test -n "$file_system_gpfs"; then
     AC_DEFINE(ROMIO_GPFS,1,[Define for ROMIO with GPFS])
 fi
+
+if test "$file_system_args" = "BGQ" -a -n "$file_system_gpfs"; then
+    AC_DEFINE(BGQPLATFORM,1,BGQ platform)
+fi
+if test "$file_system_args" = "PE" -a -n "$file_system_gpfs"; then
+    AC_DEFINE(PEPLATFORM,1,PE platform)
+fi
+
+# echo "with_file_system is :"$with_file_system": file_system_args is :"$file_system_args": FILE_SYSTEM is :"$FILE_SYSTEM":"
+
 if test -n "$file_system_hfs"; then
     AC_DEFINE(ROMIO_HFS,1,[Define for ROMIO with HFS])
 fi

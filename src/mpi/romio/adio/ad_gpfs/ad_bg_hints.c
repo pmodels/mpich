@@ -16,7 +16,7 @@
 #include "adio_extern.h"
 #include "hint_fns.h"
 
-#include "ad_bg.h"
+#include "ad_gpfs.h"
 #include "ad_bg_pset.h"
 #include "ad_bg_aggrs.h"
 
@@ -25,9 +25,9 @@
 #define   ADIOI_BG_IND_WR_BUFFER_SIZE_DFLT	"4194304"
 #define   ADIOI_BG_NAGG_IN_PSET_HINT_NAME	"bg_nodes_pset"
 /** \page mpiio_vars MPIIO Configuration
- *  
- * BlueGene MPIIO configuration and performance tuning. Used by ad_bg and ad_bglockless ADIO's.
- *  
+ *
+ * BlueGene MPIIO configuration and performance tuning. Used by ad_gpfs ADIO.
+ *
  * \section hint_sec Hints
  * - bg_nodes_pset - Specify how many aggregators to use per pset.
  *   This hint will override the cb_nodes hint based on BlueGene psets.
@@ -70,14 +70,14 @@ void ADIOI_BG_SetInfo(ADIO_File fd, MPI_Info users_info, int *error_code)
      */
 
     value = (char *) ADIOI_Malloc((MPI_MAX_INFO_VAL+1)*sizeof(char));
-    ADIOI_BG_assert ((value != NULL));
+    ADIOI_GPFS_assert ((value != NULL));
 
     /* initialize info and hints to default values if they haven't been
      * previously initialized
      */
     if (!fd->hints->initialized) {
 
-	ad_bg_get_env_vars();
+	ad_gpfs_get_env_vars();
 	did_anything = 1;
 
 	/* buffer size for collective I/O */

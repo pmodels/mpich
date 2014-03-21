@@ -2,7 +2,7 @@
 /* (C)Copyright IBM Corp.  2007, 2008                               */
 /* ---------------------------------------------------------------- */
 /**
- * \file ad_bg_wrcoll.c
+ * \file ad_gpfs_wrcoll.c
  * \brief ???
  */
 
@@ -14,10 +14,8 @@
 
 #include "adio.h"
 #include "adio_extern.h"
-#include "ad_bg.h"
-#include "ad_bg_pset.h"
-#include "ad_bg_aggrs.h"
-
+#include "ad_gpfs.h"
+#include "ad_gpfs_aggrs.h"
 
 #ifdef AGGREGATION_PROFILE
 #include "mpe.h"
@@ -96,7 +94,7 @@ static void ADIOI_Heap_merge(ADIOI_Access *others_req, int *count,
                       int nprocs, int nprocs_recv, int total_elements);
 
 
-void ADIOI_BG_WriteStridedColl(ADIO_File fd, const void *buf, int count,
+void ADIOI_GPFS_WriteStridedColl(ADIO_File fd, const void *buf, int count,
                        MPI_Datatype datatype, int file_ptr_type,
                        ADIO_Offset offset, ADIO_Status *status, int
                        *error_code)
@@ -121,28 +119,16 @@ void ADIOI_BG_WriteStridedColl(ADIO_File fd, const void *buf, int count,
     ADIO_Offset orig_fp, start_offset, end_offset, fd_size, min_st_offset, off;
     ADIO_Offset *offset_list = NULL, *st_offsets = NULL, *fd_start = NULL,
 	*fd_end = NULL, *end_offsets = NULL;
-    ADIO_Offset *bg_offsets0 = NULL, *bg_offsets = NULL;
+    ADIO_Offset *gpfs_offsets0 = NULL, *gpfs_offsets = NULL;
     int  ii;
 
     int *buf_idx = NULL;
     ADIO_Offset *len_list = NULL;
-    BGMPIO_T_CIO_RESET( w )
-#if 0
-    /* From common code - not implemented for bg.*/
-    int old_error, tmp_error;
-#endif
+    GPFSMPIO_T_CIO_RESET( w )
 #ifdef PROFILE
 	MPE_Log_event(13, 0, "start computation");
 #endif
 
-#if 0
-/*   From common code - not implemented for bg. */
-     if (fd->hints->cb_pfr != ADIOI_HINT_DISABLE) { 
-	ADIOI_IOStridedColl (fd, buf, count, ADIOI_WRITE, datatype, 
-			file_ptr_type, offset, status, error_code);
-	return;
-    }
-#endif
     MPI_Comm_size(fd->comm, &nprocs);
     MPI_Comm_rank(fd->comm, &myrank);
 
@@ -152,8 +138,8 @@ void ADIOI_BG_WriteStridedColl(ADIO_File fd, const void *buf, int count,
     nprocs_for_coll = fd->hints->cb_nodes;
     orig_fp = fd->fp_ind;
 
-    BGMPIO_T_CIO_SET_GET( w, 1, 0, BGMPIO_CIO_T_MPIO_CRW, BGMPIO_CIO_LAST)
-    BGMPIO_T_CIO_SET_GET( w, 1, 0, BGMPIO_CIO_T_LCOMP, BGMPIO_CIO_LAST )
+    GPFSMPIO_T_CIO_SET_GET( w, 1, 0, GPFSMPIO_CIO_T_MPIO_CRW, GPFSMPIO_CIO_LAST)
+    GPFSMPIO_T_CIO_SET_GET( w, 1, 0, GPFSMPIO_CIO_T_LCOMP, GPFSMPIO_CIO_LAST )
 
 
     /* only check for interleaving if cb_write isn't disabled */
@@ -168,7 +154,7 @@ void ADIOI_BG_WriteStridedColl(ADIO_File fd, const void *buf, int count,
 			      &offset_list, &len_list, &start_offset,
 			      &end_offset, &contig_access_count); 
 
-    BGMPIO_T_CIO_SET_GET( w, 1, 1, BGMPIO_CIO_T_GATHER, BGMPIO_CIO_T_LCOMP )
+    GPFSMPIO_T_CIO_SET_GET( w, 1, 1, GPFSMPIO_CIO_T_GATHER, GPFSMPIO_CIO_T_LCOMP )
 
 	/* each process communicates its start and end offsets to other 
 	   processes. The result is an array each of start and end offsets stored
@@ -177,24 +163,24 @@ void ADIOI_BG_WriteStridedColl(ADIO_File fd, const void *buf, int count,
 	st_offsets = (ADIO_Offset *) ADIOI_Malloc(nprocs*sizeof(ADIO_Offset));
 	end_offsets = (ADIO_Offset *) ADIOI_Malloc(nprocs*sizeof(ADIO_Offset));
 
-    if (bgmpio_tunegather) {
-            bg_offsets0 = (ADIO_Offset *) ADIOI_Malloc(2*nprocs*sizeof(ADIO_Offset));
-            bg_offsets  = (ADIO_Offset *) ADIOI_Malloc(2*nprocs*sizeof(ADIO_Offset));
+    if (gpfsmpio_tunegather) {
+            gpfs_offsets0 = (ADIO_Offset *) ADIOI_Malloc(2*nprocs*sizeof(ADIO_Offset));
+            gpfs_offsets  = (ADIO_Offset *) ADIOI_Malloc(2*nprocs*sizeof(ADIO_Offset));
             for (ii=0; ii<nprocs; ii++)  {
-                bg_offsets0[ii*2]   = 0;
-                bg_offsets0[ii*2+1] = 0;
+                gpfs_offsets0[ii*2]   = 0;
+                gpfs_offsets0[ii*2+1] = 0;
             }
-            bg_offsets0[myrank*2]   = start_offset;
-            bg_offsets0[myrank*2+1] =   end_offset;
+            gpfs_offsets0[myrank*2]   = start_offset;
+            gpfs_offsets0[myrank*2+1] =   end_offset;
 
-        MPI_Allreduce( bg_offsets0, bg_offsets, nprocs*2, ADIO_OFFSET, MPI_MAX, fd->comm );
+        MPI_Allreduce( gpfs_offsets0, gpfs_offsets, nprocs*2, ADIO_OFFSET, MPI_MAX, fd->comm );
 
             for (ii=0; ii<nprocs; ii++)  {
-                st_offsets [ii] = bg_offsets[ii*2]  ;
-                end_offsets[ii] = bg_offsets[ii*2+1];
+                st_offsets [ii] = gpfs_offsets[ii*2]  ;
+                end_offsets[ii] = gpfs_offsets[ii*2+1];
             }
-            ADIOI_Free( bg_offsets0 );
-            ADIOI_Free( bg_offsets  );
+            ADIOI_Free( gpfs_offsets0 );
+            ADIOI_Free( gpfs_offsets  );
     } else {
 	MPI_Allgather(&start_offset, 1, ADIO_OFFSET, st_offsets, 1,
 		      ADIO_OFFSET, fd->comm);
@@ -202,7 +188,7 @@ void ADIOI_BG_WriteStridedColl(ADIO_File fd, const void *buf, int count,
 		      ADIO_OFFSET, fd->comm);
     }
 
-    BGMPIO_T_CIO_SET_GET(w, 1, 1, BGMPIO_CIO_T_PATANA, BGMPIO_CIO_T_GATHER )
+    GPFSMPIO_T_CIO_SET_GET(w, 1, 1, GPFSMPIO_CIO_T_PATANA, GPFSMPIO_CIO_T_GATHER )
 
 	/* are the accesses of different processes interleaved? */
 	for (i=1; i<nprocs; i++)
@@ -246,14 +232,14 @@ void ADIOI_BG_WriteStridedColl(ADIO_File fd, const void *buf, int count,
 	return;
     }
 
-    BGMPIO_T_CIO_SET_GET( w, 1, 1, BGMPIO_CIO_T_FD_PART, BGMPIO_CIO_T_PATANA )
-	
+    GPFSMPIO_T_CIO_SET_GET( w, 1, 1, GPFSMPIO_CIO_T_FD_PART, GPFSMPIO_CIO_T_PATANA )
+
 /* Divide the I/O workload among "nprocs_for_coll" processes. This is
    done by (logically) dividing the file into file domains (FDs); each
    process may directly access only its own file domain. */
 
-    if (bgmpio_tuneblocking)
-    ADIOI_BG_GPFS_Calc_file_domains(fd, st_offsets, end_offsets, nprocs,
+    if (gpfsmpio_tuneblocking)
+    ADIOI_GPFS_Calc_file_domains(fd, st_offsets, end_offsets, nprocs,
 			    nprocs_for_coll, &min_st_offset,
 			    &fd_start, &fd_end, &fd_size, fd->fs_ptr);   
     else
@@ -263,9 +249,9 @@ void ADIOI_BG_WriteStridedColl(ADIO_File fd, const void *buf, int count,
 			    fd->hints->min_fdomain_size, &fd_size,
 			    fd->hints->striping_unit);   
 
-    BGMPIO_T_CIO_SET_GET( w, 1, 1, BGMPIO_CIO_T_MYREQ, BGMPIO_CIO_T_FD_PART );
+    GPFSMPIO_T_CIO_SET_GET( w, 1, 1, GPFSMPIO_CIO_T_MYREQ, GPFSMPIO_CIO_T_FD_PART );
 
-    if (bgmpio_p2pcontig==1) {
+    if (gpfsmpio_p2pcontig==1) {
 	/* For some simple yet common(?) workloads, full-on two-phase I/O is overkill.  We can establish sub-groups of processes and their aggregator, and then these sub-groups will carry out a simplified two-phase over that sub-group.
 	 *
 	 * First verify that the filetype is contig and the offsets are
@@ -281,7 +267,7 @@ void ADIOI_BG_WriteStridedColl(ADIO_File fd, const void *buf, int count,
 	    P2PContigWriteAggregation(fd, buf, 
 		    error_code, st_offsets, end_offsets, fd_start, fd_end);
 	    /* NOTE: we are skipping the rest of two-phase in this path */
-            BGMPIO_T_CIO_REPORT( 1, fd, myrank, nprocs)
+            GPFSMPIO_T_CIO_REPORT( 1, fd, myrank, nprocs)
 	    return;
 	}
     }
@@ -289,8 +275,8 @@ void ADIOI_BG_WriteStridedColl(ADIO_File fd, const void *buf, int count,
 /* calculate what portions of the access requests of this process are
    located in what file domains */
 
-    if (bgmpio_tuneblocking)
-    ADIOI_BG_Calc_my_req(fd, offset_list, len_list, contig_access_count,
+    if (gpfsmpio_tuneblocking)
+    ADIOI_GPFS_Calc_my_req(fd, offset_list, len_list, contig_access_count,
 		      min_st_offset, fd_start, fd_end, fd_size,
 		      nprocs, &count_my_req_procs, 
 		      &count_my_req_per_proc, &my_req,
@@ -300,10 +286,10 @@ void ADIOI_BG_WriteStridedColl(ADIO_File fd, const void *buf, int count,
 		      min_st_offset, fd_start, fd_end, fd_size,
 		      nprocs, &count_my_req_procs, 
 		      &count_my_req_per_proc, &my_req,
-		      &buf_idx); 
+		      &buf_idx);
 
-    BGMPIO_T_CIO_SET_GET( w, 1, 1, BGMPIO_CIO_T_OTHREQ, BGMPIO_CIO_T_MYREQ )
-	
+    GPFSMPIO_T_CIO_SET_GET( w, 1, 1, GPFSMPIO_CIO_T_OTHREQ, GPFSMPIO_CIO_T_MYREQ )
+
 /* based on everyone's my_req, calculate what requests of other
    processes lie in this process's file domain.
    count_others_req_procs = number of processes whose requests lie in
@@ -311,8 +297,8 @@ void ADIOI_BG_WriteStridedColl(ADIO_File fd, const void *buf, int count,
    count_others_req_per_proc[i] indicates how many separate contiguous
    requests of proc. i lie in this process's file domain. */
 
-    if (bgmpio_tuneblocking)
-	ADIOI_BG_Calc_others_req(fd, count_my_req_procs,
+    if (gpfsmpio_tuneblocking)
+	ADIOI_GPFS_Calc_others_req(fd, count_my_req_procs,
 			      count_my_req_per_proc, my_req,
 			      nprocs, myrank,
 			      &count_others_req_procs, &others_req);
@@ -320,9 +306,9 @@ void ADIOI_BG_WriteStridedColl(ADIO_File fd, const void *buf, int count,
     ADIOI_Calc_others_req(fd, count_my_req_procs, 
 			  count_my_req_per_proc, my_req, 
 			  nprocs, myrank,
-			  &count_others_req_procs, &others_req); 
-    
-    BGMPIO_T_CIO_SET_GET( w, 1, 1, BGMPIO_CIO_T_DEXCH, BGMPIO_CIO_T_OTHREQ )
+			  &count_others_req_procs, &others_req);
+
+    GPFSMPIO_T_CIO_SET_GET( w, 1, 1, GPFSMPIO_CIO_T_DEXCH, GPFSMPIO_CIO_T_OTHREQ )
 
     ADIOI_Free(count_my_req_per_proc);
     for (i=0; i < nprocs; i++) {
@@ -339,52 +325,11 @@ void ADIOI_BG_WriteStridedColl(ADIO_File fd, const void *buf, int count,
 			len_list, contig_access_count, min_st_offset,
 			fd_size, fd_start, fd_end, buf_idx, error_code);
 
-    BGMPIO_T_CIO_SET_GET( w, 0, 1, BGMPIO_CIO_LAST, BGMPIO_CIO_T_DEXCH )
-    BGMPIO_T_CIO_SET_GET( w, 0, 1, BGMPIO_CIO_LAST, BGMPIO_CIO_T_MPIO_CRW )
+    GPFSMPIO_T_CIO_SET_GET( w, 0, 1, GPFSMPIO_CIO_LAST, GPFSMPIO_CIO_T_DEXCH )
+    GPFSMPIO_T_CIO_SET_GET( w, 0, 1, GPFSMPIO_CIO_LAST, GPFSMPIO_CIO_T_MPIO_CRW )
 
-    BGMPIO_T_CIO_REPORT( 1, fd, myrank, nprocs)
-#if 0
-    /* From common code - not implemented for bg.
-     * 
-     * If this collective write is followed by an independent write,
-     * it's possible to have those subsequent writes on other processes
-     * race ahead and sneak in before the read-modify-write completes.
-     * We carry out a collective communication at the end here so no one
-     * can start independent i/o before collective I/O completes. 
-     *
-     * need to do some gymnastics with the error codes so that if something
-     * went wrong, all processes report error, but if a process has a more
-     * specific error code, we can still have that process report the
-     * additional information */
+    GPFSMPIO_T_CIO_REPORT( 1, fd, myrank, nprocs)
 
-    old_error = *error_code;
-    if (*error_code != MPI_SUCCESS) *error_code = MPI_ERR_IO;
-
-     /* optimization: if only one process performing i/o, we can perform
-     * a less-expensive Bcast  */
-#ifdef ADIOI_MPE_LOGGING
-    MPE_Log_event( ADIOI_MPE_postwrite_a, 0, NULL );
-#endif
-    if (fd->hints->cb_nodes == 1) 
-	    MPI_Bcast(error_code, 1, MPI_INT, 
-			    fd->hints->ranklist[0], fd->comm);
-    else {
-	    tmp_error = *error_code;
-	    MPI_Allreduce(&tmp_error, error_code, 1, MPI_INT, 
-			    MPI_MAX, fd->comm);
-    }
-#ifdef ADIOI_MPE_LOGGING
-    MPE_Log_event( ADIOI_MPE_postwrite_b, 0, NULL );
-#endif
-#ifdef AGGREGATION_PROFILE
-	MPE_Log_event (5012, 0, NULL);
-#endif
-
-    if ( (old_error != MPI_SUCCESS) && (old_error != MPI_ERR_IO) )
-	    *error_code = old_error;
-
-
-#endif
 /* free all memory allocated for collective I/O */
     if (!buftype_is_contig) ADIOI_Delete_flattened(datatype);
 
@@ -478,7 +423,7 @@ static void ADIOI_Exch_and_write(ADIO_File fd, const void *buf, MPI_Datatype
     coll_bufsize = atoi(value);
     ADIOI_Free(value);
 
-    if (bgmpio_pthreadio == 1){
+    if (gpfsmpio_pthreadio == 1){
 	/* ROMIO will spawn an additional thread. both threads use separate
 	 * halves of the collective buffer*/
 	coll_bufsize = coll_bufsize/2;
@@ -511,7 +456,7 @@ static void ADIOI_Exch_and_write(ADIO_File fd, const void *buf, MPI_Datatype
 		  fd->comm); 
 
     write_buf = fd->io_buf;
-    if (bgmpio_pthreadio == 1) {
+    if (gpfsmpio_pthreadio == 1) {
 	write_buf2 = fd->io_buf + coll_bufsize;
     }
 
@@ -570,7 +515,7 @@ static void ADIOI_Exch_and_write(ADIO_File fd, const void *buf, MPI_Datatype
     done = 0;
     off = st_loc;
 
-    if(bgmpio_pthreadio == 1)
+    if(gpfsmpio_pthreadio == 1)
 	io_thread = pthread_self();
 
 #ifdef PROFILE
@@ -663,22 +608,22 @@ static void ADIOI_Exch_and_write(ADIO_File fd, const void *buf, MPI_Datatype
 	MPE_Log_event(14, 0, "end computation");
 	MPE_Log_event(7, 0, "start communication");
 #endif
-        if (bgmpio_comm == 1)
-	ADIOI_W_Exchange_data(fd, buf, write_buf, flat_buf, offset_list, 
-                            len_list, send_size, recv_size, off, size, count, 
-                            start_pos, partial_recv, 
-                            sent_to_proc, nprocs, myrank, 
+        if (gpfsmpio_comm == 1)
+	ADIOI_W_Exchange_data(fd, buf, write_buf, flat_buf, offset_list,
+                            len_list, send_size, recv_size, off, size, count,
+                            start_pos, partial_recv,
+                            sent_to_proc, nprocs, myrank,
 			    buftype_is_contig, contig_access_count,
 			    min_st_offset, fd_size, fd_start, fd_end,
 			    others_req, send_buf_idx, curr_to_proc,
                             done_to_proc, &hole, m, buftype_extent, buf_idx,
 			    error_code); 
 	else
-        if (bgmpio_comm == 0)
-	ADIOI_W_Exchange_data_alltoallv(fd, buf, write_buf, flat_buf, offset_list, 
-                            len_list, send_size, recv_size, off, size, count, 
-                            start_pos, partial_recv, 
-                            sent_to_proc, nprocs, myrank, 
+        if (gpfsmpio_comm == 0)
+	ADIOI_W_Exchange_data_alltoallv(fd, buf, write_buf, flat_buf, offset_list,
+                            len_list, send_size, recv_size, off, size, count,
+                            start_pos, partial_recv,
+                            sent_to_proc, nprocs, myrank,
 			    buftype_is_contig, contig_access_count,
 			    min_st_offset, fd_size, fd_start, fd_end,
 			    others_req, send_buf_idx, curr_to_proc,
@@ -698,7 +643,7 @@ static void ADIOI_Exch_and_write(ADIO_File fd, const void *buf, MPI_Datatype
 	    sprintf(round, "two-phase-round=%d", m);
 	    setenv("LIBIOLOG_EXTRA_INFO", round, 1);
       ADIOI_Assert(size == (int)size);
-	    if (bgmpio_pthreadio == 1) {
+	    if (gpfsmpio_pthreadio == 1) {
 		/* there is no such thing as "invalid pthread identifier", so
 		 * we'll use pthread_self() instead.  Before we do I/O we want
 		 * to complete I/O from any previous iteration -- but only a
@@ -734,7 +679,7 @@ static void ADIOI_Exch_and_write(ADIO_File fd, const void *buf, MPI_Datatype
 	off += size;
 	done += size;
     }
-    if (bgmpio_pthreadio == 1) {
+    if (gpfsmpio_pthreadio == 1) {
 	if ( !pthread_equal(io_thread, pthread_self()) ) {
 	    pthread_join(io_thread, &thread_ret);
 	    *error_code = *(int *)thread_ret;
@@ -747,22 +692,22 @@ static void ADIOI_Exch_and_write(ADIO_File fd, const void *buf, MPI_Datatype
 #endif
     for (m=ntimes; m<max_ntimes; m++) 
 	/* nothing to recv, but check for send. */
-        if (bgmpio_comm == 1)
-	ADIOI_W_Exchange_data(fd, buf, write_buf, flat_buf, offset_list, 
-                            len_list, send_size, recv_size, off, size, count, 
-                            start_pos, partial_recv, 
-                            sent_to_proc, nprocs, myrank, 
+        if (gpfsmpio_comm == 1)
+	ADIOI_W_Exchange_data(fd, buf, write_buf, flat_buf, offset_list,
+                            len_list, send_size, recv_size, off, size, count,
+                            start_pos, partial_recv,
+                            sent_to_proc, nprocs, myrank,
 			    buftype_is_contig, contig_access_count,
 			    min_st_offset, fd_size, fd_start, fd_end,
 			    others_req, send_buf_idx, 
                             curr_to_proc, done_to_proc, &hole, m, 
                             buftype_extent, buf_idx, error_code); 
 	else
-        if (bgmpio_comm == 0)
-	ADIOI_W_Exchange_data_alltoallv(fd, buf, write_buf, flat_buf, offset_list, 
-                            len_list, send_size, recv_size, off, size, count, 
-                            start_pos, partial_recv, 
-                            sent_to_proc, nprocs, myrank, 
+        if (gpfsmpio_comm == 0)
+	ADIOI_W_Exchange_data_alltoallv(fd, buf, write_buf, flat_buf, offset_list,
+                            len_list, send_size, recv_size, off, size, count,
+                            start_pos, partial_recv,
+                            sent_to_proc, nprocs, myrank,
 			    buftype_is_contig, contig_access_count,
 			    min_st_offset, fd_size, fd_start, fd_end,
 			    others_req, send_buf_idx, 
@@ -1136,7 +1081,7 @@ static void ADIOI_Fill_send_buffer(ADIO_File fd, const void *buf, ADIOI_Flatlist
 	     * longer than the single region that processor "p" is responsible
 	     * for.
 	     */
-	    p = ADIOI_BG_Calc_aggregator(fd,
+	    p = ADIOI_GPFS_Calc_aggregator(fd,
 				      off,
 				      min_st_offset,
 				      &len,
@@ -1346,13 +1291,12 @@ static void ADIOI_W_Exchange_data_alltoallv(
     static char myname[] = "ADIOI_W_EXCHANGE_DATA";
     double io_time;
 
-
     io_time = MPI_Wtime();
   /* exchange recv_size info so that each process knows how much to
      send to whom. */
     MPI_Alltoall(recv_size, 1, MPI_INT, send_size, 1, MPI_INT, fd->comm);
 
-    bgmpio_prof_cw[BGMPIO_CIO_T_DEXCH_RECV_EXCH] += MPI_Wtime() - io_time;
+    gpfsmpio_prof_cw[GPFSMPIO_CIO_T_DEXCH_RECV_EXCH] += MPI_Wtime() - io_time;
     io_time = MPI_Wtime();
     
     nprocs_recv = 0;
@@ -1399,7 +1343,7 @@ static void ADIOI_W_Exchange_data_alltoallv(
 	ADIOI_Free(send_buf);
     }
 
-    bgmpio_prof_cw[BGMPIO_CIO_T_DEXCH_SETUP] += MPI_Wtime() - io_time;
+    gpfsmpio_prof_cw[GPFSMPIO_CIO_T_DEXCH_SETUP] += MPI_Wtime() - io_time;
 
     io_time = MPI_Wtime();
   /* alltoallv */
@@ -1411,7 +1355,7 @@ static void ADIOI_W_Exchange_data_alltoallv(
     ADIOI_Free( all_send_buf );
     ADIOI_Free(sdispls);
 
-    bgmpio_prof_cw[BGMPIO_CIO_T_DEXCH_NET] += MPI_Wtime() - io_time;
+    gpfsmpio_prof_cw[GPFSMPIO_CIO_T_DEXCH_NET] += MPI_Wtime() - io_time;
     io_time = MPI_Wtime();
   /* data sieving pre-read */
   /* To avoid a read-modify-write, check if there are holes in the 
@@ -1444,7 +1388,7 @@ static void ADIOI_W_Exchange_data_alltoallv(
     ADIOI_Free(srt_off);
     ADIOI_Free(srt_len);
 
-    bgmpio_prof_cw[BGMPIO_CIO_T_DEXCH_SORT] += MPI_Wtime() - io_time;
+    gpfsmpio_prof_cw[GPFSMPIO_CIO_T_DEXCH_SORT] += MPI_Wtime() - io_time;
     io_time = MPI_Wtime();
     if (nprocs_recv) {
         if (*hole) {
@@ -1461,7 +1405,7 @@ static void ADIOI_W_Exchange_data_alltoallv(
             /* --END ERROR HANDLING-- */
         }
     }
-    bgmpio_prof_cw[BGMPIO_CIO_T_DEXCH_SIEVE] += MPI_Wtime() - io_time;
+    gpfsmpio_prof_cw[GPFSMPIO_CIO_T_DEXCH_SIEVE] += MPI_Wtime() - io_time;
 
   /* scater all_recv_buf into 4M cb_buffer */
     tmp_len = (int *) ADIOI_Malloc(nprocs*sizeof(int));
@@ -1550,7 +1494,7 @@ static void ADIOI_Fill_send_buffer_nosend(ADIO_File fd, const void *buf, ADIOI_F
 	     * longer than the single region that processor "p" is responsible
 	     * for.
 	     */
-	    p = ADIOI_BG_Calc_aggregator(fd,
+	    p = ADIOI_GPFS_Calc_aggregator(fd,
 				      off,
 				      min_st_offset,
 				      &len,

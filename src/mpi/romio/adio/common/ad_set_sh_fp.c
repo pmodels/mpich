@@ -5,8 +5,8 @@
  */
 
 #include "adio.h"
-#ifdef ROMIO_BG
-void ADIOI_BG_Set_shared_fp(ADIO_File fd, ADIO_Offset offset, int *error_code);
+#ifdef ROMIO_GPFS
+void ADIOI_GPFS_Set_shared_fp(ADIO_File fd, ADIO_Offset offset, int *error_code);
 #endif
 
 /* set the shared file pointer to "offset" etypes relative to the current 
@@ -26,17 +26,9 @@ void ADIO_Set_shared_fp(ADIO_File fd, ADIO_Offset offset, int *error_code)
     }
 #endif
 
-#ifdef ROMIO_BGL
-    /* BGLOCKLESS won't support shared fp */
-    if (fd->file_system == ADIO_BGL) {
-	ADIOI_BGL_Set_shared_fp(fd, offset, error_code);
-	return;
-    }
-#endif
-#ifdef ROMIO_BG
-    /* BGLOCKLESS won't support shared fp */
-    if (fd->file_system == ADIO_BG) {
-	ADIOI_BG_Set_shared_fp(fd, offset, error_code);
+#ifdef ROMIO_GPFS
+    if (fd->file_system == ADIO_GPFS) {
+	ADIOI_GPFS_Set_shared_fp(fd, offset, error_code);
 	return;
     }
 #endif

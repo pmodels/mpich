@@ -2,7 +2,7 @@
 /* (C)Copyright IBM Corp.  2007, 2008                               */
 /* ---------------------------------------------------------------- */
 /**
- * \file ad_bg_close.c
+ * \file ad_gpfs_close.c
  * \brief ???
  */
 
@@ -12,13 +12,12 @@
  *   See COPYRIGHT notice in top-level directory.
  */
 
-#include "ad_bg.h"
-#include "ad_bg_aggrs.h"
+#include "ad_gpfs_tuning.h"
 
-void ADIOI_BG_Close(ADIO_File fd, int *error_code)
+void ADIOI_GPFS_Close(ADIO_File fd, int *error_code)
 {
   int err, derr=0;
-  static char myname[] = "ADIOI_BG_CLOSE";
+  static char myname[] = "ADIOI_GPFS_CLOSE";
 
 #ifdef PROFILE
   MPE_Log_event(9, 0, "start close");

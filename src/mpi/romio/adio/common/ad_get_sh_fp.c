@@ -6,11 +6,8 @@
 
 #include "adio.h"
 
-#ifdef ROMIO_BGL
-void ADIOI_BGL_Get_shared_fp(ADIO_File fd, int size, ADIO_Offset *shared_fp, int *error_code);
-#endif
-#ifdef ROMIO_BG
-void ADIOI_BG_Get_shared_fp(ADIO_File fd, int size, ADIO_Offset *shared_fp, int *error_code);
+#ifdef ROMIO_GPFS
+void ADIOI_GPFS_Get_shared_fp(ADIO_File fd, int size, ADIO_Offset *shared_fp, int *error_code);
 #endif
 
 /* returns the current location of the shared_fp in terms of the
@@ -42,17 +39,9 @@ void ADIO_Get_shared_fp(ADIO_File fd, ADIO_Offset incr, ADIO_Offset *shared_fp,
     }
 #endif
 
-#ifdef ROMIO_BGL
-    /* BGLOCKLESS won't support shared fp */
-    if (fd->file_system == ADIO_BGL) {
-	ADIOI_BGL_Get_shared_fp(fd, incr, shared_fp, error_code);
-	return;
-    }
-#endif
-#ifdef ROMIO_BG
-    /* BGLOCKLESS won't support shared fp */
-    if (fd->file_system == ADIO_BG) {
-	ADIOI_BG_Get_shared_fp(fd, incr, shared_fp, error_code);
+#ifdef ROMIO_GPFS
+    if (fd->file_system == ADIO_GPFS) {
+	ADIOI_GPFS_Get_shared_fp(fd, incr, shared_fp, error_code);
 	return;
     }
 #endif

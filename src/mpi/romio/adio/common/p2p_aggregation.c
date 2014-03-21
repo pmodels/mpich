@@ -1,8 +1,7 @@
 #include "adio.h"
 #include "adio_extern.h"
-//#include "ad_bg.h"
 #include <mpix.h>
-#include "../ad_bg/ad_bg_tuning.h"
+#include "../ad_gpfs/ad_gpfs_tuning.h"
 
 void P2PContigWriteAggregation(ADIO_File fd,
 	const void *buf,
@@ -33,7 +32,7 @@ void P2PContigWriteAggregation(ADIO_File fd,
 
     int naggs = fd->hints->cb_nodes;
     int coll_bufsize = fd->hints->cb_buffer_size;
-    if (bgmpio_pthreadio == 1) {
+    if (gpfsmpio_pthreadio == 1) {
 	/* split buffer in half for a kind of double buffering with the threads*/
 	coll_bufsize = fd->hints->cb_buffer_size/2;
     }
@@ -155,7 +154,7 @@ void P2PContigWriteAggregation(ADIO_File fd,
 
     int currentWriteBuf = 0;
     int useIOBuffer = 0;
-    if (bgmpio_pthreadio && (numberOfRounds>1)) {
+    if (gpfsmpio_pthreadio && (numberOfRounds>1)) {
 	useIOBuffer = 1;
 	io_thread = pthread_self();
     }
@@ -171,7 +170,7 @@ void P2PContigWriteAggregation(ADIO_File fd,
     int *mpiRequestMapPerProc = (int *)ADIOI_Malloc(numSourceProcs * sizeof(int));
 
     endTimeBase = MPI_Wtime();
-    bgmpio_prof_cw[BGMPIO_CIO_T_MYREQ] += (endTimeBase-startTimeBase);
+    gpfsmpio_prof_cw[GPFSMPIO_CIO_T_MYREQ] += (endTimeBase-startTimeBase);
     startTimeBase = MPI_Wtime();
 
     /* each iteration of this loop writes a coll_bufsize portion of the file
@@ -249,7 +248,7 @@ void P2PContigWriteAggregation(ADIO_File fd,
 
 	}
 
-	bgmpio_prof_cw[BGMPIO_CIO_T_DEXCH_SETUP] += (endTimeBase-startTimeBase);
+	gpfsmpio_prof_cw[GPFSMPIO_CIO_T_DEXCH_SETUP] += (endTimeBase-startTimeBase);
 	startTimeBase = MPI_Wtime();
 
 	// the aggs receive the data from the source procs
@@ -297,7 +296,7 @@ void P2PContigWriteAggregation(ADIO_File fd,
 	}
 
 	endTimeBase = MPI_Wtime();
-	bgmpio_prof_cw[BGMPIO_CIO_T_DEXCH_NET] += (endTimeBase-startTimeBase);
+	gpfsmpio_prof_cw[GPFSMPIO_CIO_T_DEXCH_NET] += (endTimeBase-startTimeBase);
 	// the aggs now write the data
 	if (numDataRecvToWaitFor > 0) {
 
@@ -351,7 +350,7 @@ void P2PContigWriteAggregation(ADIO_File fd,
     } // for-loop roundIter
 
     endTimeBase=MPI_Wtime();
-    bgmpio_prof_cw[BGMPIO_CIO_T_DEXCH] += (endTimeBase-startTimeBase);
+    gpfsmpio_prof_cw[GPFSMPIO_CIO_T_DEXCH] += (endTimeBase-startTimeBase);
 
     if (useIOBuffer) { // thread writer cleanup
 
@@ -414,7 +413,7 @@ void P2PContigReadAggregation(ADIO_File fd,
 
     int naggs = fd->hints->cb_nodes;
     int coll_bufsize = fd->hints->cb_buffer_size;
-    if (bgmpio_pthreadio == 1)
+    if (gpfsmpio_pthreadio == 1)
 	/* share buffer between working threads */
 	coll_bufsize = coll_bufsize/2;
 
@@ -551,13 +550,13 @@ void P2PContigReadAggregation(ADIO_File fd,
 
     int currentReadBuf = 0;
     int useIOBuffer = 0;
-    if (bgmpio_pthreadio && (numberOfRounds>1)) {
+    if (gpfsmpio_pthreadio && (numberOfRounds>1)) {
 	useIOBuffer = 1;
 	io_thread = pthread_self();
     }
 
     endTimeBase = MPI_Wtime();
-    bgmpio_prof_cw[BGMPIO_CIO_T_MYREQ] += (endTimeBase-startTimeBase);
+    gpfsmpio_prof_cw[GPFSMPIO_CIO_T_MYREQ] += (endTimeBase-startTimeBase);
 
 
     // each iteration of this loop reads a coll_bufsize portion of the file domain

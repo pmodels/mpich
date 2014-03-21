@@ -14,8 +14,8 @@
 #include "mpe.h"
 #endif
 
-#ifdef ROMIO_BG
-#include "adio/ad_bg/ad_bg_tuning.h"
+#ifdef ROMIO_GPFS
+#include "adio/ad_gpfs/ad_gpfs_tuning.h"
 #endif
 
 
@@ -40,10 +40,10 @@ void ADIOI_GEN_WriteContig(ADIO_File fd, const void *buf, int count,
     MPI_Type_size_x(datatype, &datatype_size);
     len = (ADIO_Offset)datatype_size * (ADIO_Offset)count;
 
-#ifdef ROMIO_BG
-    if (bgmpio_timing) {
+#ifdef ROMIO_GPFS
+    if (gpfsmpio_timing) {
 	io_time = MPI_Wtime();
-	bgmpio_prof_cw[ BGMPIO_CIO_DATA_SIZE ] += len;
+	gpfsmpio_prof_cw[ GPFSMPIO_CIO_DATA_SIZE ] += len;
     }
 #endif
 
@@ -51,8 +51,8 @@ void ADIOI_GEN_WriteContig(ADIO_File fd, const void *buf, int count,
 	offset = fd->fp_ind;
     }
 
-#ifdef ROMIO_BG
-    if (bgmpio_timing) io_time2 = MPI_Wtime();
+#ifdef ROMIO_GPFS
+    if (gpfsmpio_timing) io_time2 = MPI_Wtime();
 #endif
     p = (char *)buf;
     while (bytes_xfered < len) {
@@ -60,9 +60,11 @@ void ADIOI_GEN_WriteContig(ADIO_File fd, const void *buf, int count,
 	MPE_Log_event( ADIOI_MPE_write_a, 0, NULL );
 #endif
 	wr_count = len - bytes_xfered;
-	if (bgmpio_devnullio)
+#ifdef ROMIO_GPFS
+	if (gpfsmpio_devnullio)
 	    err = pwrite(fd->null_fd, p, wr_count, offset+bytes_xfered);
 	else
+#endif
 	    err = pwrite(fd->fd_sys, p, wr_count, offset+bytes_xfered);
 	/* --BEGIN ERROR HANDLING-- */
 	if (err == -1) {
@@ -82,8 +84,8 @@ void ADIOI_GEN_WriteContig(ADIO_File fd, const void *buf, int count,
 	p += err;
     }
 
-#ifdef ROMIO_BG
-    if (bgmpio_timing) bgmpio_prof_cw[ BGMPIO_CIO_T_POSI_RW ] += (MPI_Wtime() - io_time2);
+#ifdef ROMIO_GPFS
+    if (gpfsmpio_timing) gpfsmpio_prof_cw[ GPFSMPIO_CIO_T_POSI_RW ] += (MPI_Wtime() - io_time2);
 #endif
     fd->fp_sys_posn = offset + bytes_xfered;
 
@@ -91,8 +93,8 @@ void ADIOI_GEN_WriteContig(ADIO_File fd, const void *buf, int count,
 	fd->fp_ind += bytes_xfered; 
     }
 
-#ifdef ROMIO_BG
-    if (bgmpio_timing) bgmpio_prof_cw[ BGMPIO_CIO_T_MPIO_RW ] += (MPI_Wtime() - io_time);
+#ifdef ROMIO_GPFS
+    if (gpfsmpio_timing) gpfsmpio_prof_cw[ GPFSMPIO_CIO_T_MPIO_RW ] += (MPI_Wtime() - io_time);
 #endif
 
 #ifdef HAVE_STATUS_SET_BYTES

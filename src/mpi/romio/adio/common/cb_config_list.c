@@ -688,7 +688,7 @@ static int get_max_procs(int cb_nodes)
  *
  * Returns a token of types defined at top of this file.
  */
-#if defined(ROMIO_BGL) || defined(ROMIO_BG)
+#if defined(ROMIO_GPFS)
 /* On BlueGene, the ',' character shows up in get_processor_name, so we have to
  * use a different delimiter */
 #define COLON ':'
