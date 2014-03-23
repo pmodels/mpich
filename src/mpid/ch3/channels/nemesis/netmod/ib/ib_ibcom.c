@@ -299,7 +299,8 @@ static int MPID_nem_ib_com_device_init()
     }
 #else
     for (i = 0; i < dev_num; i++) {
-        if (!strcmp(ibv_get_device_name(ib_devlist[i]), "mlx4_0")) {
+        if (!strcmp(ibv_get_device_name(ib_devlist[i]), "mlx4_0") ||
+            !strcmp(ibv_get_device_name(ib_devlist[i]), "mlx5_0")) {
             goto dev_found;
         }
     }
