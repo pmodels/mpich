@@ -67,8 +67,8 @@ AC_MSG_NOTICE([RUNNING CONFIGURE FOR ch3:sock])
 #
 # ABIVERSION is needed when a separate sock dll library is built
 if test "X$ABIVERSION" = "X" ; then
-   if test "X$libmpich_so_version" != X ; then 
-      ABIVERSION="$libmpich_so_version"
+   if test "X$libmpi_so_version" != X ; then
+      ABIVERSION="$libmpi_so_version"
    else
       # Note that an install of a sock-dll will fail if the ABI version is not
       # available

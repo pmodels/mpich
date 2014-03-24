@@ -206,7 +206,7 @@ gcov_sources = $(lib_lib@MPILIBNAME@_la_SOURCES)
 #
 # Gcov has no good way to deal with source files that have been compiled twice
 # into two different object files, such as
-#   bcast.c --> {bcast.o,lib_libpmpich_la-bcast.o}
+#   bcast.c --> {bcast.o,lib_libpmpi_la-bcast.o}
 # It still generates a bcast.c.gcov output for each object file.  Long file
 # names and preserved paths do not help with this problem.
 # What we can do in this case is to move the second files to a separate 

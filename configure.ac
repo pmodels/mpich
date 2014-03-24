@@ -131,8 +131,8 @@ MPICH_VERSION=MPICH_VERSION_m4
 AC_SUBST([MPICH_VERSION])
 MPICH_RELEASE_DATE="MPICH_RELEASE_DATE_m4"
 AC_SUBST([MPICH_RELEASE_DATE])
-libmpich_so_version="libmpich_so_version_m4"
-AC_SUBST([libmpich_so_version])
+libmpi_so_version="libmpi_so_version_m4"
+AC_SUBST([libmpi_so_version])
 
 
 if test -z "$MPICH_VERSION" ; then
@@ -185,10 +185,10 @@ MPICH_NUMVERSION=`expr $V1$V2$V3$V4$V5 + 0`
 AC_SUBST(MPICH_NUMVERSION)
 
 # ABIVERSION is the name used by simplemake, so we reassign the
-# libmpich_so_version number to it
-ABIVERSION=${libmpich_so_version}
+# libmpi_so_version number to it
+ABIVERSION=${libmpi_so_version}
 export ABIVERSION
-export libmpich_so_version
+export libmpi_so_version
 AC_SUBST(ABIVERSION)
 
 # Print out the configure options
@@ -593,23 +593,6 @@ AC_ARG_WITH(name-publisher,
     [],
     with_namepublisher=$with_name_publisher,)
 
-AC_SUBST(MPIFLIBNAME)
-AC_SUBST(PMPIFLIBNAME)
-
-dnl The default is a special wrapper library
-AC_ARG_WITH(fwrapname,
-	AC_HELP_STRING([--with-fwrapname=name],
-		[Specify name of library containing Fortran interface routines]),
-	[FWRAPNAME=$withval;set_FWRAPNAME="yes"],FWRAPNAME=fmpich)
-AC_SUBST(FWRAPNAME)
-
-dnl The default is a special wrapper library
-AC_ARG_WITH(fcwrapname,
-	AC_HELP_STRING([--with-fcwrapname=name],
-		[Specify name of library containing Fortran 90 interface routines]),
-	[FCWRAPNAME=$withval;set_FCWRAPNAME="yes"],FCWRAPNAME=mpichf90)
-AC_SUBST(FCWRAPNAME)
-
 # Find a C compiler.
 # We also need to do this before the F77 and FC test to ensure that we
 # find the C preprocessor reliably.
@@ -799,10 +782,10 @@ m4_map([PAC_SUBCFG_DO_PREREQ], [PAC_SUBCFG_MODULE_LIST])
 
 # ----------------------------------------------------------------------------
 # Set default library names if names haven't already been provided
-AC_ARG_VAR([MPILIBNAME],[can be used to override the name of the MPI library (default: "mpich")])
+AC_ARG_VAR([MPILIBNAME],[can be used to override the name of the MPI library (default: "mpi")])
 AC_ARG_VAR([PMPILIBNAME],[can be used to override the name of the MPI profiling library (default: "p$MPILIBNAME")])
 AC_ARG_VAR([MPICXXLIBNAME],[can be used to override the name of the MPI C++ library (default: "${MPILIBNAME}cxx")])
-MPILIBNAME=${MPILIBNAME:-"mpich"}
+MPILIBNAME=${MPILIBNAME:-"mpi"}
 PMPILIBNAME_set=no
 if test -n "$PMPILIBNAME" ; then 
    PMPILIBNAME_set=yes
@@ -814,10 +797,14 @@ PMPILIBNAME=${PMPILIBNAME:-"p$MPILIBNAME"}
 # We use a different library for the C++ wrappers to avoid problems when
 # creating shared libraries
 if test -z "$MPICXXLIBNAME" ; then MPICXXLIBNAME="${MPILIBNAME}cxx" ; fi
-export MPIFLIBNAME
-export PMPIFLIBNAME
+if test -z "$MPIFLIBNAME" ; then MPIFLIBNAME="${MPILIBNAME}f77" ; fi
+if test -z "$MPIFCLIBNAME" ; then MPIFCLIBNAME="${MPILIBNAME}fort" ; fi
 export MPICXXLIBNAME
+export MPIFLIBNAME
+export MPIFCLIBNAME
 AC_SUBST(MPICXXLIBNAME)
+AC_SUBST(MPIFLIBNAME)
+AC_SUBST(MPIFCLIBNAME)
 
 # We'll set FORTRAN_BINDING to 1 if we support Fortran 
 FORTRAN_BINDING=0
@@ -2497,13 +2484,6 @@ AM_CONDITIONAL([BUILD_BASH_SCRIPTS], [test "x$bashWorks" = xyes])
 # can now set NEEDSPLIB.
 if test "$NEEDSPLIB" = yes -a "$PMPILIBNAME" = "$MPILIBNAME" ; then
     NEEDSPLIB=no
-fi
-# Set the defaults for the Fortran libraries to be the same as the C libraries
-if test -z "$MPIFLIBNAME" ; then 
-    MPIFLIBNAME=$MPILIBNAME 
-fi
-if test -z "$PMPIFLIBNAME" ; then
-    PMPIFLIBNAME=$PMPILIBNAME
 fi
 
 # ----------------------------------------------------------------------------

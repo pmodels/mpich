@@ -297,7 +297,7 @@ else
 fi
 
 # Handle the specification of the directory containing the modules
-modulelib="@FCWRAPNAME@"
+modulelib="@MPIFCLIBNAME@"
 if [ -n "$FCMODINCSPEC" ] ; then
     newarg=`echo A"$FCMODINCSPEC" | \
 	sed -e 's/^A//' -e 's%<dir>%'"$includedir%g" -e 's/<file>/mpi/g'`

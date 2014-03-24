@@ -78,8 +78,8 @@ if $srcdir/configure --prefix=$instdir $config_args ; then
     echo "</CONFIG>"
     echo "<MAKE>"
     # Remove any lingering libraries
-    rm -f lib/libmpich*.a lib/libpmpich*.a lib/libfmpich*.a 
-    rm -f lib/libmpich*.so lib/libpmpich*.so lib/libfmpich*.so
+    rm -f lib/libmpi*.a lib/libpmpi*.a lib/libmpif77*.a
+    rm -f lib/libmpi*.so lib/libpmpi*.so lib/libmpif77*.so
     if make ; then
         echo "</MAKE>"
 	echo "<MAKEINST>"

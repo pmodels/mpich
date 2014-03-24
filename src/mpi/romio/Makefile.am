@@ -68,17 +68,17 @@ libromio_la_SOURCES = $(romio_mpi_sources) $(romio_other_sources) $(glue_sources
 
 ## NOTE: ROMIO's old build system builds a bunch of _foo.o objects that contain
 ## PMPI_ implementations as well as calls to only other PMPI routines.  In
-## MPICH, these are the objects that need to go into libmpich, while the foo.o
-## objects should go into libpmpich.  Furthermore, the -D option for ROMIO's
+## MPICH, these are the objects that need to go into libmpi, while the foo.o
+## objects should go into libpmpi.  Furthermore, the -D option for ROMIO's
 ## source files is different and inverted (in the boolean sense) compared with
 ## MPICH's defintion.  And ROMIO was dumping all of the symbols into the main
-## libmpich library, regardless of the separate profiling library's existence.
+## libmpi library, regardless of the separate profiling library's existence.
 ##
 ## Annoying, right?
 if BUILD_PROFILING_LIB
 # The current best strategy for now is to build the PMPI symbols as a separate
 # convenience lib to permit adding the special "-D..." argument for all objects.
-# MPICH will then link in both convenience library into libmpich, since it
+# MPICH will then link in both convenience library into libmpi, since it
 # won't work very well the other way around.
 noinst_LTLIBRARIES += libpromio.la
 libpromio_la_SOURCES = $(romio_mpi_sources)

@@ -924,14 +924,14 @@ if BUILD_F90_LIB
 # in a VPATH build)
 AM_FCFLAGS += \@FCINCFLAG\@src/binding/fortran/use_mpi
 
-lib_LTLIBRARIES += lib/lib\@FCWRAPNAME\@.la
+lib_LTLIBRARIES += lib/lib\@MPIFCLIBNAME\@.la
 
 EOT
 
 print MAKEFD <<EOT;
 # C source that implements both the C and the Fortran bindings for the type
-# creation routines.  These go into libmpich.la and will be built a second time
-# for inclusion in libpmpich.la on platforms that do not support weak symbols.
+# creation routines.  These go into libmpi.la and will be built a second time
+# for inclusion in libpmpi.la on platforms that do not support weak symbols.
 # If shared libraries are enabled then the compilation space doubles again.
 mpi_f90_c_sources = \\
     src/binding/fortran/use_mpi/create_f90_int.c \\
@@ -956,27 +956,27 @@ nodist_noinst_HEADERS += \\
     src/binding/fortran/use_mpi/mpif90model.h
 
 # actual f90 code that also gets compiled into modules
-lib_lib\@FCWRAPNAME\@_la_LDFLAGS = \$(ABIVERSIONFLAGS)
+lib_lib\@MPIFCLIBNAME\@_la_LDFLAGS = \$(ABIVERSIONFLAGS)
 
 # cause any .\$(MOD) files to be output in the f90 bindings directory instead of
 # the current directory
 AM_FCFLAGS += \$(FCMODOUTFLAG)src/binding/fortran/use_mpi
 
 # we "manually" build the f90 sources and add them with LIBADD
-lib_lib\@FCWRAPNAME\@_la_SOURCES =
-lib_lib\@FCWRAPNAME\@_la_LIBADD = \\
+lib_lib\@MPIFCLIBNAME\@_la_SOURCES =
+lib_lib\@MPIFCLIBNAME\@_la_LIBADD = \\
     src/binding/fortran/use_mpi/mpi.lo \\
     src/binding/fortran/use_mpi/mpi_constants.lo \\
     src/binding/fortran/use_mpi/mpi_sizeofs.lo \\
     src/binding/fortran/use_mpi/${outfile_prefix}_base.lo
 
 # now force libtool FC rules/variables to be generated and cause FC linking to
-# be selected for lib/lib\@FCWRAPNAME\@.la
-EXTRA_lib_lib\@FCWRAPNAME\@_la_SOURCES = \\
+# be selected for lib/lib\@MPIFCLIBNAME\@.la
+EXTRA_lib_lib\@MPIFCLIBNAME\@_la_SOURCES = \\
     src/binding/fortran/use_mpi/mpi.f90 \\
     src/binding/fortran/use_mpi/mpi_constants.f90
 
-nodist_EXTRA_lib_lib\@FCWRAPNAME\@_la_SOURCES = \\
+nodist_EXTRA_lib_lib\@MPIFCLIBNAME\@_la_SOURCES = \\
     src/binding/fortran/use_mpi/mpi_sizeofs.f90 \\
     src/binding/fortran/use_mpi/${outfile_prefix}_base.f90
 

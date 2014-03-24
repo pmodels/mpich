@@ -821,19 +821,19 @@ To run an MPICH-built program with Intel:
 
    For applications built with the default Intel MPI configuration:
 
-   ln -s /path/to/intel/lib/libmpi.so libmpich.so.12
-   ln -s /path/to/intel/lib/libmpigc4.so libmpichcxx.so.12
-   ln -s /path/to/intel/lib/libmpigf.so libfmpich.so.12
-   ln -s /path/to/intel/lib/libmpigf.so libmpichf90.so.12
+   ln -s /path/to/intel/lib/libmpi.so libmpi.so.12
+   ln -s /path/to/intel/lib/libmpigc4.so libmpicxx.so.12
+   ln -s /path/to/intel/lib/libmpigf.so libmpif77.so.12
+   ln -s /path/to/intel/lib/libmpigf.so libmpifort.so.12
    ln -s /path/to/intel/lib/libmpi.so libmpl.so.1
    ln -s /path/to/intel/lib/libmpi.so libopa.so.1
 
    For applications built with the debug configuration of Intel MPI:
 
-   ln -s /path/to/intel/lib/libmpi_dbg.so libmpich.so.12
-   ln -s /path/to/intel/lib/libmpigc4.so libmpichcxx.so.12
-   ln -s /path/to/intel/lib/libmpigf.so libfmpich.so.12
-   ln -s /path/to/intel/lib/libmpigf.so libmpichf90.so.12
+   ln -s /path/to/intel/lib/libmpi_dbg.so libmpi.so.12
+   ln -s /path/to/intel/lib/libmpigc4.so libmpicxx.so.12
+   ln -s /path/to/intel/lib/libmpigf.so libmpif77.so.12
+   ln -s /path/to/intel/lib/libmpigf.so libmpifort.so.12
    ln -s /path/to/intel/lib/libmpi_dbg.so libmpl.so.1
    ln -s /path/to/intel/lib/libmpi_dbg.so libopa.so.1
 
@@ -854,10 +854,10 @@ To run an Intel-built program with MPICH:
 
 1. Create symlinks
 
-   ln -s /path/to/mpich/lib/libmpich.so libmpi.so.5
-   ln -s /path/to/mpich/lib/libmpich.so libmpi_dbg.so.5
-   ln -s /path/to/mpich/lib/libmpichcxx.so libmpigc4.so.5
-   ln -s /path/to/mpich/lib/libmpichf90.so libmpigf.so.5
+   ln -s /path/to/mpich/lib/libmpi.so libmpi.so.5
+   ln -s /path/to/mpich/lib/libmpi.so libmpi_dbg.so.5
+   ln -s /path/to/mpich/lib/libmpicxx.so libmpigc4.so.5
+   ln -s /path/to/mpich/lib/libmpifort.so libmpigf.so.5
 
 2. Modify LD_LIBRARY_PATH
 

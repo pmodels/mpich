@@ -285,14 +285,14 @@ sub RunTest {
     # but we should only do that if explicitly requested (we could
     # *require* an empty directory for the tests instead)
     if (-d "$instdir/lib") {
-	system "rm -f $instdir/lib/libmpich*.* $instdir/lib/libfmpich*.*";
+	system "rm -f $instdir/lib/libmpi*.* $instdir/lib/libmpif77*.*";
 	system "rm -f $instdir/lib/libmpe*.a";
     }
     if (-d "$instdir/bin") {
 	system "rm -f $instdir/bin/mpi* $instdir/bin/mpd*";
     }
     if (-d "$builddir/lib") {
-	system "rm -f $builddir/lib/libmpich*.* $builddir/lib/libfmpich*.*";
+	system "rm -f $builddir/lib/libmpi*.* $builddir/lib/libmpif77*.*";
 	system "rm -f $builddir/lib/libmpe*.a";
     }
     # 

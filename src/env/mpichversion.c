@@ -43,7 +43,7 @@ typedef enum { Version_number=0, Date=1,
 - -device  - Show the device for which MPICH was configured
 
   Using this program:
-  To use this program, link it against 'libmpich.a' (use 'mpicc' or 
+  To use this program, link it against 'libmpi.a' (use 'mpicc' or
   the whichever compiler command is used to create MPICH programs)
   D*/
 

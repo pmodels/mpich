@@ -33,7 +33,7 @@ cpi_DEPENDENCIES =
 # to get rebuilt whenever MPICH's core libraries are rebuilt, but perhaps there
 # is a better system?
 
-# the make-time instances of libpmpich.la and libmpich.la live here
+# the make-time instances of libpmpi.la and libmpi.la live here
 AM_LDFLAGS += -L../lib
 # the make-time instances of libmpl.la and libopa.la live here
 AM_LDFLAGS += -L@mpllibdir@ -L@opalibdir@
