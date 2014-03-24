@@ -26,7 +26,9 @@ mpi_sources +=                       \
     src/mpi/comm/comm_test_inter.c   \
     src/mpi/comm/intercomm_create.c  \
     src/mpi/comm/intercomm_merge.c   \
-    src/mpi/comm/comm_split_type.c
+    src/mpi/comm/comm_split_type.c   \
+    src/mpi/comm/comm_failure_ack.c            \
+    src/mpi/comm/comm_failure_get_acked.c
 
 mpi_core_sources += \
     src/mpi/comm/commutil.c

@@ -173,6 +173,7 @@ typedef struct MPIDI_CH3I_comm
     int eager_max_msg_sz;   /* comm-wide eager/rendezvous message threshold */
     int coll_active;        /* TRUE iff this communicator is collectively active */
     int anysource_enabled;  /* TRUE iff this anysource recvs can be posted on this communicator */
+    int last_ack_rank;      /* The rank of the last acknowledged failure */
     struct MPID_nem_barrier_vars *barrier_vars; /* shared memory variables used in barrier */
     struct MPID_Comm *next; /* next pointer for list of communicators */
     struct MPID_Comm *prev; /* prev pointer for list of communicators */

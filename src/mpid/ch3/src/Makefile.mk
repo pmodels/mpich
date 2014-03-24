@@ -29,6 +29,7 @@ mpi_core_sources +=                          \
     src/mpid/ch3/src/mpid_cancel_send.c                    \
     src/mpid/ch3/src/mpid_comm_disconnect.c                \
     src/mpid/ch3/src/mpid_comm_spawn_multiple.c            \
+    src/mpid/ch3/src/mpid_comm_failure_ack.c               \
     src/mpid/ch3/src/mpid_finalize.c                       \
     src/mpid/ch3/src/mpid_get_universe_size.c              \
     src/mpid/ch3/src/mpid_getpname.c                       \

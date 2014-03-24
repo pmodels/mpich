@@ -2754,6 +2754,31 @@ int MPID_Comm_spawn_multiple(int, char *[], char **[], const int [], MPID_Info* 
                              int, MPID_Comm *, MPID_Comm **, int []);
 
 /*@
+  MPID_Comm_failure_ack - MPID entry point for MPI_Comm_failure_ack
+
+  Input Parameters:
+. comm - communicator
+
+  Return Value:
+  'MPI_SUCCESS' or a valid MPI error code.
+@*/
+int MPID_Comm_failure_ack(MPID_Comm *comm);
+
+/*@
+  MPID_Comm_failure_get_acked - MPID entry point for MPI_Comm_failure_get_acked
+
+  Input Parameters:
+. comm - communicator
+
+  Output Parameters
+. failed_group_ptr - group of failed processes
+
+  Return Value:
+  'MPI_SUCCESS' or a valid MPI error code.
+@*/
+int MPID_Comm_failure_get_acked(MPID_Comm *comm, MPID_Group **failed_group_ptr);
+
+/*@
   MPID_Send - MPID entry point for MPI_Send
 
   Notes:

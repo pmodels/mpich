@@ -1534,6 +1534,8 @@ int MPI_T_category_changed(int *stamp);
 
 /* Non-standard but public extensions to MPI */
 /* Fault Tolerance Extensions */
+int MPIX_Comm_failure_ack(MPI_Comm comm);
+int MPIX_Comm_failure_get_acked(MPI_Comm comm, MPI_Group *failedgrp);
 
 
 /* End Prototypes */
@@ -2169,6 +2171,8 @@ int PMPI_T_category_changed(int *stamp);
 
 /* Non-standard but public extensions to MPI */
 /* Fault Tolerance Extensions */
+int PMPIX_Comm_failure_ack(MPI_Comm comm);
+int PMPIX_Comm_failure_get_acked(MPI_Comm comm, MPI_Group *failedgrp);
 
 
 #endif  /* MPI_BUILD_PROFILING */

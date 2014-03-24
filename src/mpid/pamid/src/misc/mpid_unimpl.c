@@ -71,3 +71,15 @@ int MPID_Comm_spawn_multiple(int count,
   return 0;
 }
 #endif
+
+int MPID_Comm_failure_ack(MPID_Comm *comm_ptr)
+{
+  MPID_abort();
+  return 0;
+}
+
+int MPID_Comm_failure_get_acked(MPID_Comm *comm_ptr, MPID_Group **failed_group_ptr)
+{
+  MPID_abort();
+  return 0;
+}
