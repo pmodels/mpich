@@ -19,6 +19,8 @@ static volatile int MPIDI_Outstanding_close_ops = 0;
 int MPIDI_Failed_vc_count = 0;
 
 MPID_Group *MPIDI_Failed_procs_group = NULL;
+int MPIDI_last_known_failed = MPI_PROC_NULL;
+char *MPIDI_failed_procs_string = NULL;
 
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3U_Handle_connection
@@ -430,6 +432,81 @@ static int terminate_failed_VCs(MPID_Group *new_failed_group)
             ++c;                                                                                \
     } while (0)
 
+/* There are three possible input values for `last_rank:
+ *
+ * < -1 = All failures regardless of acknowledgement
+ * -1 (MPI_PROC_NULL) = No failures have been acknowledged yet (return MPID_Group_empty)
+ * >= 0 = The last failure acknowledged. All failures returned will have
+ *        been acknowledged previously.
+ */
+#undef FUNCNAME
+#define FUNCNAME MPIDI_CH3U_Get_failed_group
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+int MPIDI_CH3U_Get_failed_group(int last_rank, MPID_Group **failed_group)
+{
+    char *c;
+    int i, mpi_errno = MPI_SUCCESS, rank;
+    UT_array *failed_procs = NULL;
+    MPID_Group *world_group;
+    MPIDI_STATE_DECL(MPID_STATE_GET_FAILED_GROUP);
+
+    MPIDI_FUNC_ENTER(MPID_STATE_GET_FAILED_GROUP);
+
+    MPIU_DBG_MSG_D(CH3_OTHER, VERBOSE, "Getting failed group with %d as last acknowledged\n", last_rank);
+
+    if (-1 == last_rank) {
+        MPIU_DBG_MSG(CH3_OTHER, VERBOSE, "No failure acknowledged");
+        *failed_group = MPID_Group_empty;
+        goto fn_exit;
+    }
+
+    if (*MPIDI_failed_procs_string == '\0') {
+        MPIU_DBG_MSG(CH3_OTHER, VERBOSE, "Found no failed ranks");
+        *failed_group = MPID_Group_empty;
+        goto fn_exit;
+    }
+
+    utarray_new(failed_procs, &ut_int_icd);
+
+    /* parse list of failed processes.  This is a comma separated list
+       of ranks or ranges of ranks (e.g., "1, 3-5, 11") */
+    i = 0;
+    c = MPIDI_failed_procs_string;
+    while(1) {
+        parse_rank(&rank);
+        ++i;
+        MPIU_DBG_MSG_D(CH3_OTHER, VERBOSE, "Found failed rank: %d", rank);
+        utarray_push_back(failed_procs, &rank);
+        MPIDI_last_known_failed = rank;
+        MPIU_ERR_CHKINTERNAL(*c != ',' && *c != '\0', mpi_errno, "error parsing failed process list");
+        if (*c == '\0' || last_rank == rank)
+            break;
+        ++c; /* skip ',' */
+    }
+
+    /* Create group of failed processes for comm_world.  Failed groups for other
+       communicators can be created from this one using group_intersection. */
+    mpi_errno = MPIR_Comm_group_impl(MPIR_Process.comm_world, &world_group);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
+    mpi_errno = MPIR_Group_incl_impl(world_group, i, ut_int_array(failed_procs), failed_group);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
+    mpi_errno = MPIR_Group_release(world_group);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
+fn_exit:
+    MPIDI_FUNC_EXIT(MPID_STATE_GET_FAILED_GROUP);
+    if (failed_procs)
+        utarray_free(failed_procs);
+    return mpi_errno;
+fn_oom:
+    MPIU_ERR_SET1(mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s", "utarray");
+fn_fail:
+    goto fn_exit;
+}
+
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3U_Check_for_failed_procs
 #undef FCNAME
@@ -438,15 +515,9 @@ int MPIDI_CH3U_Check_for_failed_procs(void)
 {
     int mpi_errno = MPI_SUCCESS;
     int pmi_errno;
-    char *val;
-    char *c;
     int len;
     char *kvsname;
-    int rank, rank_hi;
-    int i;
-    UT_array *failed_procs = NULL;
-    MPID_Group *world_group, *prev_failed_group, *new_failed_group;
-    MPIU_CHKLMEM_DECL(1);
+    MPID_Group *prev_failed_group, *new_failed_group;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3U_CHECK_FOR_FAILED_PROCS);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3U_CHECK_FOR_FAILED_PROCS);
@@ -460,87 +531,52 @@ int MPIDI_CH3U_Check_for_failed_procs(void)
 #ifdef USE_PMI2_API
     {
         int vallen = 0;
-        MPIU_CHKLMEM_MALLOC(val, char *, PMI2_MAX_VALLEN, mpi_errno, "val");
-        pmi_errno = PMI2_KVS_Get(kvsname, PMI2_ID_NULL, "PMI_dead_processes", val, PMI2_MAX_VALLEN, &vallen);
+        pmi_errno = PMI2_KVS_Get(kvsname, PMI2_ID_NULL, "PMI_dead_processes", MPIDI_failed_procs_string, PMI2_MAX_VALLEN, &vallen);
         MPIU_ERR_CHKANDJUMP(pmi_errno, mpi_errno, MPI_ERR_OTHER, "**pmi_kvs_get");
     }
 #else
     pmi_errno = PMI_KVS_Get_value_length_max(&len);
     MPIU_ERR_CHKANDJUMP(pmi_errno, mpi_errno, MPI_ERR_OTHER, "**pmi_kvs_get_value_length_max");
-    MPIU_CHKLMEM_MALLOC(val, char *, len, mpi_errno, "val");
-    pmi_errno = PMI_KVS_Get(kvsname, "PMI_dead_processes", val, len);
+    pmi_errno = PMI_KVS_Get(kvsname, "PMI_dead_processes", MPIDI_failed_procs_string, len);
     MPIU_ERR_CHKANDJUMP(pmi_errno, mpi_errno, MPI_ERR_OTHER, "**pmi_kvs_get");
 #endif
-    
-    MPIU_DBG_MSG_S(CH3_DISCONNECT, TYPICAL, "Received proc fail notification: %s", val);
-    
-    if (*val == '\0') {
+
+    if (*MPIDI_failed_procs_string == '\0') {
         /* there are no failed processes */
         MPIDI_Failed_procs_group = MPID_Group_empty;
         goto fn_exit;
     }
 
-    utarray_new(failed_procs, &ut_int_icd);
-    
-    /* parse list of failed processes.  This is a comma separated list
-       of ranks or ranges of ranks (e.g., "1, 3-5, 11") */
-    i = 0;
-    c = val;
-    while(1) {
-        parse_rank(&rank);
-        if (*c == '-') {
-            ++c; /* skip '-' */
-            parse_rank(&rank_hi);
-        } else
-            rank_hi = rank;
-        while (rank <= rank_hi) {
-            utarray_push_back(failed_procs, &rank);
-            ++i;
-            ++rank;
-        }
-        MPIU_ERR_CHKINTERNAL(*c != ',' && *c != '\0', mpi_errno, "error parsing failed process list");
-        if (*c == '\0')
-            break;
-        ++c; /* skip ',' */
-    }
+    MPIU_DBG_MSG_S(CH3_OTHER, TYPICAL, "Received proc fail notification: %s", MPIDI_failed_procs_string);
 
     /* save reference to previous group so we can identify new failures */
     prev_failed_group = MPIDI_Failed_procs_group;
 
-    /* Create group of failed processes for comm_world.  Failed groups for other
-       communicators can be created from this one using group_intersection. */
-    mpi_errno = MPIR_Comm_group_impl(MPIR_Process.comm_world, &world_group);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-
-    mpi_errno = MPIR_Group_incl_impl(world_group, i, ut_int_array(failed_procs), &MPIDI_Failed_procs_group);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-
-    mpi_errno = MPIR_Group_free_impl(world_group);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    /* Parse the list of failed processes */
+    MPIDI_CH3U_Get_failed_group(-2, &MPIDI_Failed_procs_group);
 
     /* get group of newly failed processes */
     mpi_errno = MPIR_Group_difference_impl(MPIDI_Failed_procs_group, prev_failed_group, &new_failed_group);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
-    mpi_errno = MPIDI_CH3I_Comm_handle_failed_procs(new_failed_group);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    if (new_failed_group != MPID_Group_empty) {
+        mpi_errno = MPIDI_CH3I_Comm_handle_failed_procs(new_failed_group);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
-    mpi_errno = terminate_failed_VCs(new_failed_group);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-    
-    mpi_errno = MPIR_Group_free_impl(new_failed_group);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        mpi_errno = terminate_failed_VCs(new_failed_group);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
+        mpi_errno = MPIR_Group_release(new_failed_group);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    }
 
     /* free prev group */
     if (prev_failed_group != MPID_Group_empty) {
-        mpi_errno = MPIR_Group_free_impl(prev_failed_group);
+        mpi_errno = MPIR_Group_release(prev_failed_group);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     }
 
  fn_exit:
-    MPIU_CHKLMEM_FREEALL();
-    if (failed_procs)
-        utarray_free(failed_procs);
     MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3U_CHECK_FOR_FAILED_PROCS);
     return mpi_errno;
 

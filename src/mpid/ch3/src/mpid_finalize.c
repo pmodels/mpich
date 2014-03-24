@@ -145,6 +145,8 @@ int MPID_Finalize(void)
 	}
     }
     
+    MPIU_Free(MPIDI_failed_procs_string);
+
     MPIDU_Ftb_finalize();
 
  fn_exit:

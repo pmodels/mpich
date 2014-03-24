@@ -48,6 +48,8 @@ int gethostname(char *name, size_t len);
 /* group of processes detected to have failed.  This is a subset of
    comm_world group. */
 extern MPID_Group *MPIDI_Failed_procs_group;
+extern int MPIDI_last_known_failed;
+extern char *MPIDI_failed_procs_string;
 
 extern int MPIDI_Use_pmi2_api;
 
@@ -1657,6 +1659,10 @@ int MPIDI_CH3_Channel_close( void );
 #else
 #define MPIDI_CH3_Channel_close( )   MPI_SUCCESS
 #endif
+
+/* MPIDI_CH3U_Get_failed_group() generates a group of failed processes based
+ * on the last list generated during MPIDI_CH3U_Check_for_failed_procs */
+int MPIDI_CH3U_Get_failed_group(int last_rank, MPID_Group **failed_group);
 /* MPIDI_CH3U_Check_for_failed_procs() reads PMI_dead_processes key
    and marks VCs to those processes as failed */
 int MPIDI_CH3U_Check_for_failed_procs(void);

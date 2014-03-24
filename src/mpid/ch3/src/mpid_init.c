@@ -99,6 +99,7 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided,
     MPID_Comm * comm;
     int p;
     MPIDI_STATE_DECL(MPID_STATE_MPID_INIT);
+    int val;
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_INIT);
 
@@ -117,13 +118,22 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided,
     MPIDI_Use_pmi2_api = TRUE;
 #else
     {
-        int ret, val;
+        int ret;
         ret = MPL_env2bool("MPICH_USE_PMI2_API", &val);
         if (ret == 1 && val)
             MPIDI_Use_pmi2_api = TRUE;
     }
 #endif
-    
+
+    /* Create the string that will cache the last group of failed processes
+     * we received from PMI */
+#ifdef USE_PMI2_API
+    MPIDI_failed_procs_string = MPIU_Malloc(sizeof(char) * PMI2_MAX_VALLEN);
+#else
+    PMI_KVS_Get_value_length_max(&val);
+    MPIDI_failed_procs_string = MPIU_Malloc(sizeof(char) * (val+1));
+#endif
+
     /*
      * Set global process attributes.  These can be overridden by the channel 
      * if necessary.
