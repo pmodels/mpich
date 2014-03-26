@@ -1361,6 +1361,17 @@ AC_CHECK_FUNCS(statvfs,
     )
 )
 
+AC_CHECK_TYPE([blksize_t],[],[AC_DEFINE_UNQUOTED([blksize_t],[__blksize_t],[Provide blksize_t if not available]) ], [[
+	       #ifdef HAVE_SYS_TYPES_H
+	       #include <sys/types.h>
+	       #endif
+	       #ifdef HAVE_SYS_STAT_H
+	       #include <sys/stat.h>
+	       #endif
+	       #ifdef HAVE_UNISTD_H
+	       #include <unistd.h>
+	       #endif]] )
+
 #
 # Check for large file support.  Make sure that we can use the off64_t 
 # type (in some cases, it is an array, and the ROMIO code isn't prepared for
