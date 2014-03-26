@@ -130,7 +130,7 @@ void ADIOI_PVFS2_AIO_contig(ADIO_File fd, void *buf, int count,
 		    &ADIOI_PVFS2_greq_class);
 	}
 	MPIX_Grequest_class_allocate(ADIOI_PVFS2_greq_class, aio_req, request);
-	memcpy(&(aio_req->req), request, sizeof(request));
+	memcpy(&(aio_req->req), request, sizeof(*request));
     }
 
     /* immediate completion */
