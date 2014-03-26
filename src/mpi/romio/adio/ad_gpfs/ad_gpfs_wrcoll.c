@@ -264,7 +264,7 @@ void ADIOI_GPFS_WriteStridedColl(ADIO_File fd, const void *buf, int count,
 	if (inOrderAndNoGaps && buftype_is_contig) {
 	    /* if these conditions exist then execute the P2PContig code else
 	     * execute the original code */
-	    P2PContigWriteAggregation(fd, buf, 
+	    ADIOI_P2PContigWriteAggregation(fd, buf,
 		    error_code, st_offsets, end_offsets, fd_start, fd_end);
 	    /* NOTE: we are skipping the rest of two-phase in this path */
             GPFSMPIO_T_CIO_REPORT( 1, fd, myrank, nprocs)

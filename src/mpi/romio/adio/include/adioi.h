@@ -558,6 +558,22 @@ int ADIOI_Build_client_req(ADIO_File fd,
 			   ADIO_Offset agg_comm_sz,
 			   MPI_Datatype *agg_comm_dtype_p);
 
+void ADIOI_P2PContigWriteAggregation(ADIO_File fd,
+	                             const void *buf,
+				     int *error_code,
+				     ADIO_Offset *st_offsets,
+				     ADIO_Offset *end_offset,
+				     ADIO_Offset *fd_start,
+				     ADIO_Offset *fd_end);
+
+void ADIOI_P2PContigReadAggregation(ADIO_File fd,
+	                             const void *buf,
+				     int *error_code,
+				     ADIO_Offset *st_offsets,
+				     ADIO_Offset *end_offset,
+				     ADIO_Offset *fd_start,
+				     ADIO_Offset *fd_end);
+
 ADIO_Offset ADIOI_GEN_SeekIndividual(ADIO_File fd, ADIO_Offset offset, 
 				     int whence, int *error_code);
 void ADIOI_GEN_Resize(ADIO_File fd, ADIO_Offset size, int *error_code);

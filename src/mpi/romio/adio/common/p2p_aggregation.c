@@ -1,9 +1,10 @@
 #include "adio.h"
 #include "adio_extern.h"
-#include <mpix.h>
 #include "../ad_gpfs/ad_gpfs_tuning.h"
 
-void P2PContigWriteAggregation(ADIO_File fd,
+#include <pthread.h>
+
+void ADIOI_P2PContigWriteAggregation(ADIO_File fd,
 	const void *buf,
 	int *error_code,
 	ADIO_Offset *st_offsets,
@@ -32,10 +33,12 @@ void P2PContigWriteAggregation(ADIO_File fd,
 
     int naggs = fd->hints->cb_nodes;
     int coll_bufsize = fd->hints->cb_buffer_size;
+#ifdef ROMIO_GPFS
     if (gpfsmpio_pthreadio == 1) {
 	/* split buffer in half for a kind of double buffering with the threads*/
 	coll_bufsize = fd->hints->cb_buffer_size/2;
     }
+#endif
 
     int j;
     for (j=0;j<naggs;j++) {
@@ -85,7 +88,6 @@ void P2PContigWriteAggregation(ADIO_File fd,
 			 need from what procs */
 
 	// count numSourceProcs so we know how large to make the arrays
-	int i;
 	for (i=0;i<nprocs;i++)
 	    if ( ((st_offsets[i] >= fd_start[myAggRank]) &&  (st_offsets[i] <= fd_end[myAggRank])) || ((end_offsets[i] >= fd_start[myAggRank]) &&  (end_offsets[i] <= fd_end[myAggRank])))
 		numSourceProcs++;
@@ -154,10 +156,12 @@ void P2PContigWriteAggregation(ADIO_File fd,
 
     int currentWriteBuf = 0;
     int useIOBuffer = 0;
+#ifdef ROMIO_GPFS
     if (gpfsmpio_pthreadio && (numberOfRounds>1)) {
 	useIOBuffer = 1;
 	io_thread = pthread_self();
     }
+#endif
 
     ADIO_Offset currentRoundFDStart = 0;
     ADIO_Offset currentRoundFDEnd = 0;
@@ -170,7 +174,9 @@ void P2PContigWriteAggregation(ADIO_File fd,
     int *mpiRequestMapPerProc = (int *)ADIOI_Malloc(numSourceProcs * sizeof(int));
 
     endTimeBase = MPI_Wtime();
+#ifdef ROMIO_GPFS
     gpfsmpio_prof_cw[GPFSMPIO_CIO_T_MYREQ] += (endTimeBase-startTimeBase);
+#endif
     startTimeBase = MPI_Wtime();
 
     /* each iteration of this loop writes a coll_bufsize portion of the file
@@ -194,7 +200,6 @@ void P2PContigWriteAggregation(ADIO_File fd,
 	int irecv;
 
 	/* the source procs receive the amount of data the aggs want them to send */
-	int i;
 	startTimeBase = MPI_Wtime();
 	for (i=0;i<numTargetAggs;i++) {
 	    MPI_Irecv(&amountOfDataReqestedByTargetAgg[i],1,
@@ -248,14 +253,16 @@ void P2PContigWriteAggregation(ADIO_File fd,
 
 	}
 
+#ifdef ROMIO_GPFS
 	gpfsmpio_prof_cw[GPFSMPIO_CIO_T_DEXCH_SETUP] += (endTimeBase-startTimeBase);
+#endif
 	startTimeBase = MPI_Wtime();
 
 	// the aggs receive the data from the source procs
 	int numDataRecvToWaitFor = 0;
 	for (i=0;i<numSourceProcs;i++) {
 
-	    int j, currentWBOffset = 0;
+	    int currentWBOffset = 0;
 	    for (j=0;j<i;j++)
 		currentWBOffset += dataSizeGottenThisRoundPerProc[j];
 
@@ -296,7 +303,9 @@ void P2PContigWriteAggregation(ADIO_File fd,
 	}
 
 	endTimeBase = MPI_Wtime();
+#ifdef ROMIO_GPFS
 	gpfsmpio_prof_cw[GPFSMPIO_CIO_T_DEXCH_NET] += (endTimeBase-startTimeBase);
+#endif
 	// the aggs now write the data
 	if (numDataRecvToWaitFor > 0) {
 
@@ -350,7 +359,9 @@ void P2PContigWriteAggregation(ADIO_File fd,
     } // for-loop roundIter
 
     endTimeBase=MPI_Wtime();
+#ifdef ROMIO_GPFS
     gpfsmpio_prof_cw[GPFSMPIO_CIO_T_DEXCH] += (endTimeBase-startTimeBase);
+#endif
 
     if (useIOBuffer) { // thread writer cleanup
 
@@ -385,7 +396,7 @@ void P2PContigWriteAggregation(ADIO_File fd,
     return;
 }
 
-void P2PContigReadAggregation(ADIO_File fd,
+void ADIOI_P2PContigReadAggregation(ADIO_File fd,
 	const void *buf,
 	int *error_code,
 	ADIO_Offset *st_offsets,
@@ -413,9 +424,11 @@ void P2PContigReadAggregation(ADIO_File fd,
 
     int naggs = fd->hints->cb_nodes;
     int coll_bufsize = fd->hints->cb_buffer_size;
+#ifdef ROMIO_GPFS
     if (gpfsmpio_pthreadio == 1)
 	/* share buffer between working threads */
 	coll_bufsize = coll_bufsize/2;
+#endif
 
     int j;
     for (j=0;j<naggs;j++) {
@@ -515,7 +528,6 @@ void P2PContigReadAggregation(ADIO_File fd,
 
 
     int totalAmountDataSent = 0;
-    int totalAmountDataReceived = 0;
     MPI_Request *mpiSizeToSendRequest = (MPI_Request *) ADIOI_Malloc(numSourceAggs * sizeof(MPI_Request));
     MPI_Request *mpiRecvDataFromSourceAggsRequest = (MPI_Request *) ADIOI_Malloc(numSourceAggs * sizeof(MPI_Request));
     MPI_Request *mpiSendDataSizeRequest = (MPI_Request *) ADIOI_Malloc(numTargetProcs * sizeof(MPI_Request));
@@ -550,13 +562,17 @@ void P2PContigReadAggregation(ADIO_File fd,
 
     int currentReadBuf = 0;
     int useIOBuffer = 0;
+#ifdef ROMIO_GPFS
     if (gpfsmpio_pthreadio && (numberOfRounds>1)) {
 	useIOBuffer = 1;
 	io_thread = pthread_self();
     }
+#endif
 
     endTimeBase = MPI_Wtime();
+#ifdef ROMIO_GPFS
     gpfsmpio_prof_cw[GPFSMPIO_CIO_T_MYREQ] += (endTimeBase-startTimeBase);
+#endif
 
 
     // each iteration of this loop reads a coll_bufsize portion of the file domain
@@ -658,7 +674,6 @@ void P2PContigReadAggregation(ADIO_File fd,
 	} // IAmUsedAgg
 
 	/* the source procs receive the amount of data the aggs will be sending them */
-	int i;
 	for (i=0;i<numSourceAggs;i++) {
 	    MPI_Irecv(&amountOfDataReqestedFromSourceAgg[i],1,
 		    MPI_INT,sourceAggsForMyData[i],0,
@@ -717,7 +732,7 @@ void P2PContigReadAggregation(ADIO_File fd,
 	// the aggs send the data to the source procs
 	for (i=0;i<numTargetProcs;i++) {
 
-	    int j, currentWBOffset = 0;
+	    int currentWBOffset = 0;
 	    for (j=0;j<i;j++)
 		currentWBOffset += dataSizeSentThisRoundPerProc[j];
 
