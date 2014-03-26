@@ -1303,7 +1303,7 @@ int MPIDI_Populate_vc_node_ids(MPIDI_PG_t *pg, int our_pg_rank)
             if (mpi_errno) MPIU_ERR_POP(mpi_errno);
             g_num_nodes = num_nodes;
             if (did_map) {
-                goto fn_exit;
+                goto odd_even_cliques;
             }
             else {
                 MPIU_DBG_MSG_S(CH3_OTHER,TERSE,"did_map==0, unable to populate node ids from mapping=%s",value);
@@ -1363,6 +1363,7 @@ int MPIDI_Populate_vc_node_ids(MPIDI_PG_t *pg, int our_pg_rank)
         pg->vct[i].node_id = j;
     }
 
+odd_even_cliques:
     if (odd_even_cliques)
     {
         /* Create new processes for all odd numbered processes. This
