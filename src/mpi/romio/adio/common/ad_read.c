@@ -22,13 +22,12 @@ void ADIOI_GEN_ReadContig(ADIO_File fd, void *buf, int count,
 			  ADIO_Offset offset, ADIO_Status *status,
 			  int *error_code)
 {
-    off_t err_lseek = -1;
     ssize_t err = -1;
     MPI_Count datatype_size;
     ADIO_Offset len, bytes_xfered=0;
     size_t rd_count;
     static char myname[] = "ADIOI_GEN_READCONTIG";
-    double io_time=0, io_time2=0;
+    double io_time=0;
     char *p;
 
 #ifdef AGGREGATION_PROFILE
@@ -37,9 +36,9 @@ void ADIOI_GEN_ReadContig(ADIO_File fd, void *buf, int count,
     MPI_Type_size_x(datatype, &datatype_size);
     len = datatype_size * (ADIO_Offset)count;
 
+    io_time = MPI_Wtime();
 #ifdef ROMIO_GPFS
     if (gpfsmpio_timing) {
-	io_time = MPI_Wtime();
 	gpfsmpio_prof_cr[ GPFSMPIO_CIO_DATA_SIZE ] += len;
     }
 #endif
@@ -48,9 +47,6 @@ void ADIOI_GEN_ReadContig(ADIO_File fd, void *buf, int count,
 	offset = fd->fp_ind;
     }
 
-#ifdef ROMIO_GPFS
-    if (gpfsmpio_timing) io_time2 = MPI_Wtime();
-#endif
     p=buf;
     while (bytes_xfered < len) {
 #ifdef ADIOI_MPE_LOGGING
@@ -86,7 +82,7 @@ void ADIOI_GEN_ReadContig(ADIO_File fd, void *buf, int count,
 	p += err;
     }
 #ifdef ROMIO_GPFS
-    if (gpfsmpio_timing) gpfsmpio_prof_cr[ GPFSMPIO_CIO_T_POSI_RW ] += (MPI_Wtime() - io_time2);
+    if (gpfsmpio_timing) gpfsmpio_prof_cr[ GPFSMPIO_CIO_T_POSI_RW ] += (MPI_Wtime() - io_time);
 #endif
     fd->fp_sys_posn = offset + bytes_xfered;
 
