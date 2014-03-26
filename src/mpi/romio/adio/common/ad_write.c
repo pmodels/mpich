@@ -5,11 +5,11 @@
  *   See COPYRIGHT notice in top-level directory.
  */
 
-#include "adio.h"
 
-#ifdef HAVE_UNISTD_H
+#define _XOPEN_SOURCE 500
 #include <unistd.h>
-#endif
+
+#include "adio.h"
 #ifdef AGGREGATION_PROFILE
 #include "mpe.h"
 #endif
