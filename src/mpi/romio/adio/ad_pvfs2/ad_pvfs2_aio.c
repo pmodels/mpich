@@ -32,12 +32,12 @@ void ADIOI_PVFS2_IReadContig(ADIO_File fd, void *buf, int count,
 	    offset, request, READ, error_code);
 }
 
-void ADIOI_PVFS2_IWriteContig(ADIO_File fd, void *buf, int count, 
+void ADIOI_PVFS2_IWriteContig(ADIO_File fd, const void *buf, int count,
 			    MPI_Datatype datatype, int file_ptr_type,
 			    ADIO_Offset offset, MPI_Request *request,
 			    int *error_code)
 {
-    ADIOI_PVFS2_AIO_contig(fd, buf, count, datatype, file_ptr_type,
+    ADIOI_PVFS2_AIO_contig(fd, (void *)buf, count, datatype, file_ptr_type,
 	    offset, request, WRITE, error_code);
 }
 

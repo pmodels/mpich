@@ -10,7 +10,7 @@
 #include "ad_pvfs2_io.h"
 #include "ad_pvfs2_common.h"
 
-void ADIOI_PVFS2_WriteContig(ADIO_File fd, void *buf, int count, 
+void ADIOI_PVFS2_WriteContig(ADIO_File fd, const void *buf, int count,
 			     MPI_Datatype datatype, int file_ptr_type,
 			     ADIO_Offset offset, ADIO_Status *status,
 			     int *error_code)
@@ -55,7 +55,7 @@ void ADIOI_PVFS2_WriteContig(ADIO_File fd, void *buf, int count,
 #ifdef ADIOI_MPE_LOGGING
         MPE_Log_event( ADIOI_MPE_write_a, 0, NULL );
 #endif
-	ret = PVFS_sys_write(pvfs_fs->object_ref, file_req, offset,  buf, 
+	ret = PVFS_sys_write(pvfs_fs->object_ref, file_req, offset,  (void *)buf,
 			     mem_req, &(pvfs_fs->credentials), &resp_io);
 #ifdef ADIOI_MPE_LOGGING
         MPE_Log_event( ADIOI_MPE_write_b, 0, NULL );
@@ -77,7 +77,7 @@ void ADIOI_PVFS2_WriteContig(ADIO_File fd, void *buf, int count,
 #ifdef ADIOI_MPE_LOGGING
         MPE_Log_event( ADIOI_MPE_write_a, 0, NULL );
 #endif
-	ret = PVFS_sys_write(pvfs_fs->object_ref, file_req, fd->fp_ind, buf, 
+	ret = PVFS_sys_write(pvfs_fs->object_ref, file_req, fd->fp_ind, (void *)buf,
 			     mem_req, &(pvfs_fs->credentials), &resp_io);
 #ifdef ADIOI_MPE_LOGGING
         MPE_Log_event( ADIOI_MPE_write_b, 0, NULL );
@@ -105,30 +105,30 @@ fn_exit:
     return;
 }
 
-int ADIOI_PVFS2_WriteStridedListIO(ADIO_File fd, void *buf, int count,
+int ADIOI_PVFS2_WriteStridedListIO(ADIO_File fd, const void *buf, int count,
 				   MPI_Datatype datatype, int file_ptr_type,
 				   ADIO_Offset offset, ADIO_Status *status,
 				   int *error_code)
 {
-    return ADIOI_PVFS2_StridedListIO(fd, buf, count,
+    return ADIOI_PVFS2_StridedListIO(fd, (void *)buf, count,
 				     datatype, file_ptr_type,
 				     offset, status,
 				     error_code, WRITE);
 }
 
-int ADIOI_PVFS2_WriteStridedDtypeIO(ADIO_File fd, void *buf, int count,
+int ADIOI_PVFS2_WriteStridedDtypeIO(ADIO_File fd, const void *buf, int count,
 				    MPI_Datatype datatype, int file_ptr_type,
 				    ADIO_Offset offset, ADIO_Status *status, 
 				    int *error_code)
 {
-    return ADIOI_PVFS2_StridedDtypeIO(fd, buf, count,
+    return ADIOI_PVFS2_StridedDtypeIO(fd, (void *)buf, count,
 				      datatype, file_ptr_type,
 				      offset, status, error_code,
 				      WRITE);
 }
 
 
-void ADIOI_PVFS2_WriteStrided(ADIO_File fd, void *buf, int count,
+void ADIOI_PVFS2_WriteStrided(ADIO_File fd, const void *buf, int count,
 			      MPI_Datatype datatype, int file_ptr_type,
 			      ADIO_Offset offset, ADIO_Status *status,
 			      int *error_code)
