@@ -42,8 +42,8 @@ int ADIOI_PVFS2_StridedListIO(ADIO_File fd, void *buf, int count,
     int64_t cur_flat_buf_reg_off = 0;
     int64_t cur_flat_file_reg_off = 0;
     ADIOI_Flatlist_node *flat_buf_p, *flat_file_p;
-    MPI_Count buftype_size = -1, buftype_extent = -1,
-        filetype_size = -1, filetype_extent = -1;
+    MPI_Count buftype_size = -1, filetype_size = -1;
+    MPI_Aint filetype_extent = -1, buftype_extent = -1;;
     int buftype_is_contig = -1, filetype_is_contig = -1;
     
     /* PVFS2 specific parameters */
@@ -297,8 +297,8 @@ int ADIOI_PVFS2_StridedListIO(ADIO_File fd, void *buf, int count,
 	if (ret != 0) 
 	{
 	    fprintf(stderr, "ADIOI_PVFS2_StridedListIO: Warning - PVFS_sys_"
-		    "read/write returned %d and completed %Ld bytes.\n", 
-		    ret, resp_io.total_completed);
+		    "read/write returned %d and completed %lld bytes.\n",
+		    ret, (long long)resp_io.total_completed);
 	    *error_code = MPIO_Err_create_code(MPI_SUCCESS,
 					       MPIR_ERR_RECOVERABLE,
 					       myname, __LINE__,
@@ -650,7 +650,7 @@ void print_buf_file_ol_pairs(int64_t buf_off_arr[],
 	    buf_ol_count);
     for (i = 0; i < buf_ol_count; i++)
     {
-	fprintf(stderr, "(%Ld, %d) ", buf_off_arr[i], buf_len_arr[i]);
+	fprintf(stderr, "(%lld, %d) ", (long long)buf_off_arr[i], buf_len_arr[i]);
     }
     fprintf(stderr, "\n");
 
@@ -658,7 +658,7 @@ void print_buf_file_ol_pairs(int64_t buf_off_arr[],
 	    file_ol_count);
     for (i = 0; i < file_ol_count; i++)
     {
-	fprintf(stderr, "(%Ld, %d) ", file_off_arr[i], file_len_arr[i]);
+	fprintf(stderr, "(%lld, %d) ", (long long)file_off_arr[i], file_len_arr[i]);
     }
     fprintf(stderr, "\n\n");
 

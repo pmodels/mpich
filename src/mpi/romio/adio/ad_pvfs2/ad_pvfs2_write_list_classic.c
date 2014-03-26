@@ -106,8 +106,8 @@ void ADIOI_PVFS2_OldWriteStrided(ADIO_File fd, const void *buf, int count,
     if (!buftype_is_contig && filetype_is_contig) {
 
 /* noncontiguous in memory, contiguous in file.  */
-        int64_t file_offsets;
-	int32_t file_lengths;
+       int64_t file_offset;
+	int32_t file_length;
 
 	ADIOI_Flatten_datatype(datatype);
 	flat_buf = ADIOI_Flatlist;
@@ -119,8 +119,8 @@ void ADIOI_PVFS2_OldWriteStrided(ADIO_File fd, const void *buf, int count,
 	else off = fd->fp_ind;
 
 	file_list_count = 1;
-	file_offsets = off;
-	file_lengths = 0;
+	file_offset = off;
+	file_length = 0;
 	total_blks_to_write = count*flat_buf->count;
 	b_blks_wrote = 0;
 
@@ -142,7 +142,7 @@ void ADIOI_PVFS2_OldWriteStrided(ADIO_File fd, const void *buf, int count,
 		    ((PVFS_size)buf + j*buftype_extent + flat_buf->indices[i]);
 		mem_lengths[b_blks_wrote % MAX_ARRAY_SIZE] = 
 		    flat_buf->blocklens[i];
-		file_lengths += flat_buf->blocklens[i];
+		file_length += flat_buf->blocklens[i];
 		b_blks_wrote++;
 		if (!(b_blks_wrote % MAX_ARRAY_SIZE) ||
 		    (b_blks_wrote == total_blks_to_write)) {
@@ -168,7 +168,7 @@ void ADIOI_PVFS2_OldWriteStrided(ADIO_File fd, const void *buf, int count,
 		    }
 		    /* --END ERROR HANDLING-- */
 
-		    err_flag = PVFS_Request_contiguous(file_lengths, 
+		    err_flag = PVFS_Request_contiguous(file_length,
 						       PVFS_BYTE, &file_req);
 		    /* --BEGIN ERROR HANDLING-- */
 		    if (err_flag != 0) {
@@ -185,7 +185,7 @@ void ADIOI_PVFS2_OldWriteStrided(ADIO_File fd, const void *buf, int count,
                     MPE_Log_event( ADIOI_MPE_write_a, 0, NULL );
 #endif
 		    err_flag = PVFS_sys_write(pvfs_fs->object_ref, file_req, 
-					      file_offsets, PVFS_BOTTOM,
+					      file_offset, PVFS_BOTTOM,
 					      mem_req, 
 					      &(pvfs_fs->credentials),
 					      &resp_io);
@@ -208,8 +208,8 @@ void ADIOI_PVFS2_OldWriteStrided(ADIO_File fd, const void *buf, int count,
 		    /* --END ERROR HANDLING-- */
 		    if (b_blks_wrote == total_blks_to_write) break;
 
-		    file_offsets += file_lengths;
-		    file_lengths = 0;
+		    file_offset += file_length;
+		    file_length = 0;
 		    PVFS_Request_free(&mem_req);
 		    PVFS_Request_free(&file_req);
 		} 
@@ -303,8 +303,8 @@ void ADIOI_PVFS2_OldWriteStrided(ADIO_File fd, const void *buf, int count,
 /* contiguous in memory, noncontiguous in file. should be the most
    common case. */
 
-        int mem_lengths;
-	char *mem_offsets;
+       int mem_length;
+	intptr_t mem_offset;
         
 	i = 0;
 	j = st_index;
@@ -333,8 +333,8 @@ void ADIOI_PVFS2_OldWriteStrided(ADIO_File fd, const void *buf, int count,
 	n_write_lists = total_blks_to_write/MAX_ARRAY_SIZE;
 	extra_blks = total_blks_to_write%MAX_ARRAY_SIZE;
         
-	mem_offsets = buf;
-	mem_lengths = 0;
+	mem_offset = (intptr_t) buf;
+	mem_length = 0;
         
 	/* if at least one full writelist, allocate file arrays
 	   at max array size and don't free until very end */
@@ -359,7 +359,7 @@ void ADIOI_PVFS2_OldWriteStrided(ADIO_File fd, const void *buf, int count,
             if(!i) {
                 file_offsets[0] = offset;
                 file_lengths[0] = st_fwr_size;
-                mem_lengths = st_fwr_size;
+                mem_length = st_fwr_size;
             }
             for (k=0; k<MAX_ARRAY_SIZE; k++) {
                 if (i || k) {
@@ -367,7 +367,7 @@ void ADIOI_PVFS2_OldWriteStrided(ADIO_File fd, const void *buf, int count,
 			((ADIO_Offset)n_filetypes)*filetype_extent
 			+ flat_file->indices[j];
                     file_lengths[k] = flat_file->blocklens[j];
-                    mem_lengths += file_lengths[k];
+                    mem_length += file_lengths[k];
                 }
                 if (j<(flat_file->count - 1)) j++;
                 else {
@@ -376,7 +376,7 @@ void ADIOI_PVFS2_OldWriteStrided(ADIO_File fd, const void *buf, int count,
                 }
             } /* for (k=0; k<MAX_ARRAY_SIZE; k++) */
 
-	    err_flag = PVFS_Request_contiguous(mem_lengths, 
+	    err_flag = PVFS_Request_contiguous(mem_length,
 					       PVFS_BYTE, &mem_req);
 	    /* --BEGIN ERROR HANDLING-- */
 	    if (err_flag != 0) {
@@ -410,7 +410,7 @@ void ADIOI_PVFS2_OldWriteStrided(ADIO_File fd, const void *buf, int count,
             MPE_Log_event( ADIOI_MPE_write_a, 0, NULL );
 #endif
 	    err_flag = PVFS_sys_write(pvfs_fs->object_ref, file_req, 0, 
-				      mem_offsets, mem_req,
+				      (void *)mem_offset, mem_req,
 				      &(pvfs_fs->credentials), &resp_io);
 #ifdef ADIOI_MPE_LOGGING
             MPE_Log_event( ADIOI_MPE_write_b, 0, NULL );
@@ -427,7 +427,7 @@ void ADIOI_PVFS2_OldWriteStrided(ADIO_File fd, const void *buf, int count,
 	    /* --END ERROR HANDLING-- */
 	    total_bytes_written += resp_io.total_completed;
 
-            mem_offsets += mem_lengths;
+            mem_offset += mem_length;
             mem_lengths = 0;
 	    PVFS_Request_free(&file_req);
 	    PVFS_Request_free(&mem_req);
@@ -448,7 +448,7 @@ void ADIOI_PVFS2_OldWriteStrided(ADIO_File fd, const void *buf, int count,
 			flat_file->indices[j];
                     if (k == (extra_blks - 1)) {
                         file_lengths[k] = bufsize - (int32_t) mem_lengths
-                          - (int32_t) mem_offsets + (int32_t)  buf;
+                          - mem_offset + (int32_t)  buf;
                     }
                     else file_lengths[k] = flat_file->blocklens[j];
                 } /* if(i || k) */
@@ -460,7 +460,7 @@ void ADIOI_PVFS2_OldWriteStrided(ADIO_File fd, const void *buf, int count,
                 }
             } /* for (k=0; k<extra_blks; k++) */
 
-	    err_flag = PVFS_Request_contiguous(mem_lengths, 
+	    err_flag = PVFS_Request_contiguous(mem_length,
 					       PVFS_BYTE, &mem_req);
 	    /* --BEGIN ERROR HANDLING-- */
 	    if (err_flag != 0) {
@@ -492,7 +492,7 @@ void ADIOI_PVFS2_OldWriteStrided(ADIO_File fd, const void *buf, int count,
             MPE_Log_event( ADIOI_MPE_write_a, 0, NULL );
 #endif
 	    err_flag = PVFS_sys_write(pvfs_fs->object_ref, file_req, 0, 
-				      mem_offsets, mem_req,
+				      (void *)mem_offset, mem_req,
 				      &(pvfs_fs->credentials), &resp_io);
 #ifdef ADIOI_MPE_LOGGING
             MPE_Log_event( ADIOI_MPE_write_b, 0, NULL );
