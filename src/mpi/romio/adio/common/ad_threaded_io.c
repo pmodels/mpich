@@ -7,6 +7,7 @@
 #include "adio.h"
 #include "adio_extern.h"
 
+#include <pthread.h>
 /* Function for running in another thread for doing the file reading while the
  * main thread is doing data aggregation - useful only when multiple rounds are
  * needed due to file size relative to the read buffer size and number of
