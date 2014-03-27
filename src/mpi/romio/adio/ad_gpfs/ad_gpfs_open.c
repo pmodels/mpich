@@ -16,6 +16,9 @@
 
 #include <sys/statfs.h>
 #include <sys/vfs.h>
+#include <sys/types.h>
+#include <unistd.h>
+
 
 void ADIOI_GPFS_Open(ADIO_File fd, int *error_code)
 {

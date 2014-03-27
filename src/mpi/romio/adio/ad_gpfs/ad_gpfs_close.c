@@ -13,6 +13,7 @@
  */
 
 #include "ad_gpfs_tuning.h"
+#include <unistd.h>
 
 void ADIOI_GPFS_Close(ADIO_File fd, int *error_code)
 {
