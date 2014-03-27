@@ -202,14 +202,6 @@ fi
 if test "${pamid_platform}" = "PE" ; then
         MPID_MAX_ERROR_STRING=512
 fi
-#
-# Check for gnu-style option to enable all warnings; if specified, then
-# add gnu option to treat all warnings as errors.
-#
-if echo $CFLAGS | grep -q -- -Wall
-then
-    PAC_APPEND_FLAG([-Werror],   [CFLAGS])
-fi
 
 PAC_APPEND_FLAG([-I${master_top_srcdir}/src/include],              [CPPFLAGS])
 PAC_APPEND_FLAG([-I${master_top_srcdir}/src/util/wrappers],        [CPPFLAGS])
