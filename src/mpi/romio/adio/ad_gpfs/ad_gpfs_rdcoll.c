@@ -287,7 +287,7 @@ void ADIOI_GPFS_ReadStridedColl(ADIO_File fd, void *buf, int count,
 	if (inOrderAndNoGaps && buftype_is_contig) {
 	    /* if these conditions exist then execute the P2PContig code else
 	     * execute the original code */
-	    P2PContigReadAggregation(fd, buf,
+	    ADIOI_P2PContigReadAggregation(fd, buf,
 		    error_code, st_offsets, end_offsets, fd_start, fd_end);
 
 	    /* NOTE: we are skipping the rest of two-phase in this path */
