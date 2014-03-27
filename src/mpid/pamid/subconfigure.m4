@@ -49,7 +49,7 @@ fi
 AC_MSG_NOTICE([Using the pamid platform '$pamid_platform'])
 
 
-# Set a value for the maximum processor name.
+dnl Set a value for the maximum processor name.
 MPID_MAX_PROCESSOR_NAME=128
 PM_REQUIRES_PMI=pmi2
 if test "${pamid_platform}" = "PE" ; then
@@ -62,7 +62,7 @@ fi
 MPID_DEVICE_TIMER_TYPE=double
 MPID_MAX_THREAD_LEVEL=MPI_THREAD_MULTIPLE
 
-# the PAMID device depends on the common NBC scheduler code
+dnl the PAMID device depends on the common NBC scheduler code
 build_mpid_common_sched=yes
 build_mpid_common_datatype=yes
 build_mpid_common_thread=yes
@@ -82,19 +82,19 @@ AC_ARG_WITH(assert-level,
 AC_SUBST(ASSERT_LEVEL)
 AC_DEFINE_UNQUOTED([ASSERT_LEVEL], $ASSERT_LEVEL, [The pamid assert level])
 
-#
-# This macro adds the -I to CPPFLAGS and/or the -L to LDFLAGS
-#
+dnl
+dnl This macro adds the -I to CPPFLAGS and/or the -L to LDFLAGS
+dnl
 PAC_SET_HEADER_LIB_PATH(pami)
 
-#
-# Set the pamid platform define.
-#
+dnl
+dnl Set the pamid platform define.
+dnl
 PAC_APPEND_FLAG([-D__${pamid_platform}__], [CPPFLAGS])
 
-#
-# This configure option allows "sandbox" bgq system software to be used.
-#
+dnl
+dnl This configure option allows "sandbox" bgq system software to be used.
+dnl
 AC_ARG_WITH(bgq-install-dir,
   AS_HELP_STRING([--with-bgq-install-dir=PATH],[specify path where bgq system software can be found;
                                                 may also be specified with the 'BGQ_INSTALL_DIR'
@@ -102,16 +102,16 @@ AC_ARG_WITH(bgq-install-dir,
   [ BGQ_INSTALL_DIR=$withval ])
 AC_SUBST(BGQ_INSTALL_DIR)
 
-#
-# Add bgq-specific build options.
-#
+dnl
+dnl Add bgq-specific build options.
+dnl
 if test "${pamid_platform}" = "BGQ" ; then
 
   AC_MSG_CHECKING([for BGQ system software directory])
 
-  #
-  # Specify the default bgq system software paths
-  #
+  dnl
+  dnl Specify the default bgq system software paths
+  dnl
   bgq_driver_search_path="${BGQ_INSTALL_DIR} "
   for bgq_version in `echo 4 3 2 1`; do
     for bgq_release in `echo 4 3 2 1`; do
@@ -121,7 +121,7 @@ if test "${pamid_platform}" = "BGQ" ; then
     done
   done
 
-  # Look for a bgq driver to use.
+  dnl Look for a bgq driver to use.
   for bgq_driver in $bgq_driver_search_path ; do
     if test -d ${bgq_driver}/spi/include ; then
 
@@ -179,9 +179,9 @@ if test "${pamid_platform}" = "BGQ" ; then
     AC_MSG_RESULT('no')
   fi
 
-  #
-  # The bgq compile requires these libraries.
-  #
+  dnl
+  dnl The bgq compile requires these libraries.
+  dnl
   PAC_APPEND_FLAG([-lSPI],            [LIBS])
   PAC_APPEND_FLAG([-lSPI_cnk],        [LIBS])
   PAC_APPEND_FLAG([-lrt],             [LIBS])
@@ -191,11 +191,11 @@ if test "${pamid_platform}" = "BGQ" ; then
   AC_SEARCH_LIBS([PAMI_Send], [${PAMILIBNAME} pami-gcc])
 
 
-  # For some reason, on bgq, libtool will incorrectly attempt a static link
-  # of libstdc++.so unless this '-all-static' option is used. This seems to
-  # be a problem specific to libstdc++.
-  #
-  # Only the 'cpi', 'mpivars', and 'mpichversion' executables have this problem.
+  dnl For some reason, on bgq, libtool will incorrectly attempt a static link
+  dnl of libstdc++.so unless this '-all-static' option is used. This seems to
+  dnl be a problem specific to libstdc++.
+  dnl
+  dnl Only the 'cpi', 'mpivars', and 'mpichversion' executables have this problem.
   MPID_LIBTOOL_STATIC_FLAG="-all-static"
 fi
 
