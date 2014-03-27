@@ -81,7 +81,7 @@ MPIDI_Win_init( MPI_Aint length,
   win->mpid.info_args.no_locks            = 0;
   win->mpid.info_args.accumulate_ordering =
       (MPIDI_ACCU_ORDER_RAR | MPIDI_ACCU_ORDER_RAW | MPIDI_ACCU_ORDER_WAR | MPIDI_ACCU_ORDER_WAW);
-  win->mpid.info_args.accumulate_ops      = MPIDI_ACCU_OPS_SAME_OP_NO_OP; /*default */
+  win->mpid.info_args.accumulate_ops      = MPIDI_ACCU_SAME_OP_NO_OP; /*default */
   win->mpid.info_args.same_size           = 0;
   win->mpid.info_args.alloc_shared_noncontig = 0;
 
