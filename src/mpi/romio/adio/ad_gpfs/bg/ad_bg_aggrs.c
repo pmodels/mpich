@@ -374,7 +374,6 @@ ADIOI_BG_compute_agg_ranklist_serial ( ADIO_File fd,
 	 * know how many aggs belong to each bridge */
 	for (i=0;i<naggs;i++) {
 	    int aggbridgerank = all_procInfo[tmp_ranklist[i]].bridgeRank;
-	    int ionid = all_procInfo[tmp_ranklist[i]].ionID;
 	    int foundrank = 0;
 	    int summaryranklistbridgeindex = 0;
 	    int j;
@@ -447,7 +446,6 @@ ADIOI_BG_compute_agg_ranklist_serial ( ADIO_File fd,
 	 * is now sorted by the bridge node and ion minimum bridge rank */
 	int currentrankoffset = 0;
 	for (i=0;i<numbridges;i++) {
-	    int bridgerankiter = 0;
 	    int *thisBridgeAggList = (int *) ADIOI_Malloc (naggs * sizeof(int));
 	    int numAggsForThisBridge = 0;
 
