@@ -2,6 +2,12 @@
                                Changes in 3.1.1
 ===============================================================================
 
+ # Significant rework of MPICH library management and which symbols go
+   into which libraries.  Also updated MPICH library names to make
+   them consistent with Intel MPI, Cray MPI and IBM PE MPI.  Backward
+   compatibility links are provided for older mpich-based build
+   systems.
+
  # Fixed the prototype of the Reduce_local C++ binding.  The previous
    prototype was completely incorrect.  Thanks to Jeff Squyres for
    reporting the issue.
