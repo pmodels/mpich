@@ -6,6 +6,18 @@
    prototype was completely incorrect.  Thanks to Jeff Squyres for
    reporting the issue.
 
+ # The ROMIO "Blue Gene" driver has seen significant rework.  We have separated
+   "file system" features from "platform" features, since GPFS shows up in more
+   places than just Blue Gene
+
+ # New ROMIO options for aggregator selection and placement on Blue Gene
+
+ # Optional new ROMIO two-phase algorithm requiring less communication for
+   certain workloads
+
+ # The old ROMIO optimization "deferred open" either stopped working or was
+   disabled on several platforms.
+
  # Several other minor bug fixes, memory leak fixes, and code cleanup.
 
    A full list of changes is available at the following link:
