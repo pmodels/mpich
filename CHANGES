@@ -1,4 +1,24 @@
 ===============================================================================
+                               Changes in 3.1.1
+===============================================================================
+
+ # Fixed the prototype of the Reduce_local C++ binding.  The previous
+   prototype was completely incorrect.  Thanks to Jeff Squyres for
+   reporting the issue.
+
+ # Several other minor bug fixes, memory leak fixes, and code cleanup.
+
+   A full list of changes is available at the following link:
+
+     http://git.mpich.org/mpich.git/shortlog/v3.1..v3.1.1
+
+   A full list of bugs that have been fixed is available at the
+   following link:
+
+     https://trac.mpich.org/projects/mpich/query?status=closed&group=resolution&milestone=mpich-3.1.1
+
+
+===============================================================================
                                Changes in 3.1
 ===============================================================================
 
