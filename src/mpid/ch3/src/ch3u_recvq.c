@@ -494,7 +494,8 @@ MPID_Request * MPIDI_CH3U_Recvq_FDU_or_AEP(int source, int tag,
                                            int context_id, MPID_Comm *comm, void *user_buf,
                                            int user_count, MPI_Datatype datatype, int * foundp)
 {
-    int found;
+    int mpi_errno = MPI_SUCCESS;
+    int found = FALSE;
     MPID_Request *rreq, *prev_rreq;
     MPIDI_Message_match match;
     MPIDI_Message_match mask;
@@ -556,8 +557,15 @@ MPID_Request * MPIDI_CH3U_Recvq_FDU_or_AEP(int source, int tag,
 	else {
 	    if (tag == MPI_ANY_TAG)
 		match.parts.tag = mask.parts.tag = 0;
-	    if (source == MPI_ANY_SOURCE)
-		match.parts.rank = mask.parts.rank = 0;
+            if (source == MPI_ANY_SOURCE) {
+                if (!MPIDI_CH3I_Comm_AS_enabled(comm)) {
+                    MPIU_ERR_SET(mpi_errno, MPIX_ERR_PROC_FAILED, "**comm_fail");
+                    rreq->status.MPI_ERROR = mpi_errno;
+                    MPIDI_CH3U_Request_complete(rreq);
+                    goto lock_exit;
+                }
+                match.parts.rank = mask.parts.rank = 0;
+            }
 
 	    do {
             MPIR_T_PVAR_COUNTER_INC(RECVQ, unexpected_recvq_match_attempts, 1);
@@ -594,8 +602,6 @@ MPID_Request * MPIDI_CH3U_Recvq_FDU_or_AEP(int source, int tag,
     /* A matching request was not found in the unexpected queue, so we 
        need to allocate a new request and add it to the posted queue */
     {
-	int mpi_errno = MPI_SUCCESS;
-
         found = FALSE;
 
 	MPIDI_Request_create_rreq( rreq, mpi_errno, goto lock_exit );
