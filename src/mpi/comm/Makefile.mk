@@ -26,10 +26,7 @@ mpi_sources +=                       \
     src/mpi/comm/comm_test_inter.c   \
     src/mpi/comm/intercomm_create.c  \
     src/mpi/comm/intercomm_merge.c   \
-    src/mpi/comm/comm_split_type.c   \
-    src/mpi/comm/comm_group_failed.c           \
-    src/mpi/comm/comm_reenable_anysource.c     \
-    src/mpi/comm/comm_remote_group_failed.c
+    src/mpi/comm/comm_split_type.c
 
 mpi_core_sources += \
     src/mpi/comm/commutil.c

@@ -1528,9 +1528,6 @@ int MPI_T_category_changed(int *stamp);
 
 /* Non-standard but public extensions to MPI */
 /* Fault Tolerance Extensions */
-int MPIX_Comm_group_failed(MPI_Comm comm, MPI_Group *failed_group);
-int MPIX_Comm_remote_group_failed(MPI_Comm comm, MPI_Group *failed_group);
-int MPIX_Comm_reenable_anysource(MPI_Comm comm, MPI_Group *failed_group);
 
 
 /* End Prototypes */
@@ -2166,9 +2163,6 @@ int PMPI_T_category_changed(int *stamp);
 
 /* Non-standard but public extensions to MPI */
 /* Fault Tolerance Extensions */
-int PMPIX_Comm_group_failed(MPI_Comm comm, MPI_Group *failed_group);
-int PMPIX_Comm_remote_group_failed(MPI_Comm comm, MPI_Group *failed_group);
-int PMPIX_Comm_reenable_anysource(MPI_Comm comm, MPI_Group *failed_group);
 
 
 #endif  /* MPI_BUILD_PROFILING */

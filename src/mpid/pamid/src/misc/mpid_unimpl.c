@@ -71,22 +71,3 @@ int MPID_Comm_spawn_multiple(int count,
   return 0;
 }
 #endif
-
-int MPID_Comm_reenable_anysource(MPID_Comm *comm,
-                                 MPID_Group **failed_group_ptr)
-{
-  MPID_abort();
-  return 0;
-}
-
-int MPID_Comm_remote_group_failed(MPID_Comm *comm, MPID_Group **failed_group_ptr)
-{
-  MPID_abort();
-  return 0;
-}
-
-int MPID_Comm_group_failed(MPID_Comm *comm_ptr, MPID_Group **failed_group_ptr)
-{
-  MPID_abort();
-  return 0;
-}

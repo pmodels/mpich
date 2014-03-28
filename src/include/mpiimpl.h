@@ -2754,48 +2754,6 @@ int MPID_Comm_spawn_multiple(int, char *[], char **[], const int [], MPID_Info* 
                              int, MPID_Comm *, MPID_Comm **, int []);
 
 /*@
-  MPID_Comm_group_failed - MPID entry point for MPI_Comm_group_failed
-
-  Input Parameters:
-. comm - communicator
-
-  Output Parameters
-. failed_group_ptr - group of failed processes
-
-  Return Value:
-  'MPI_SUCCESS' or a valid MPI error code.
-@*/
-int MPID_Comm_group_failed(MPID_Comm *comm, MPID_Group **failed_group_ptr);
-
-/*@
-  MPID_Comm_remote_group_failed - MPID entry point for MPI_Comm_remote_group_failed
-
-  Input Parameters:
-. comm - intercommunicator
-
-  Output Parameters
-. failed_group_ptr - group of failed processes in comm's remote group
-
-  Return Value:
-  'MPI_SUCCESS' or a valid MPI error code.
-@*/
-int MPID_Comm_remote_group_failed(MPID_Comm *comm, MPID_Group **failed_group_ptr);
-
-/*@
-  MPID_Comm_reenable_anysource - MPID entry point for MPI_Comm_reenable_anysource
-
-  Input Parameters:
-. comm - communicator
-
-  Output Parameters
-. failed_group_ptr - group of failed processes
-
-  Return Value:
-  'MPI_SUCCESS' or a valid MPI error code.
-@*/
-int MPID_Comm_reenable_anysource(MPID_Comm *comm, MPID_Group **failed_group_ptr);
-
-/*@
   MPID_Send - MPID entry point for MPI_Send
 
   Notes:
