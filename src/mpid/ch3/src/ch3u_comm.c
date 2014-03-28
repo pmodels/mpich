@@ -203,7 +203,6 @@ int comm_created(MPID_Comm *comm, void *param)
 
     MPIDI_FUNC_ENTER(MPID_STATE_COMM_CREATED);
 
-    comm->ch.coll_active = TRUE;
     comm->ch.anysource_enabled = TRUE;
 
     /* Use the VC's eager threshold by default. */
@@ -308,7 +307,7 @@ int MPIDI_CH3I_Comm_handle_failed_procs(MPID_Group *new_failed_procs)
     COMM_FOREACH(comm) {
         /* if this comm is already collectively inactive and
            anysources are disabled, there's no need to check */
-        if (!comm->ch.coll_active && !comm->ch.anysource_enabled)
+        if (!comm->ch.anysource_enabled)
             continue;
 
         mpi_errno = nonempty_intersection(comm, new_failed_procs, &flag);
@@ -316,9 +315,8 @@ int MPIDI_CH3I_Comm_handle_failed_procs(MPID_Group *new_failed_procs)
 
         if (flag) {
             MPIU_DBG_MSG_FMT(CH3_OTHER, VERBOSE,
-                             (MPIU_DBG_FDEST, "disabling AS and coll on communicator %p (%#08x)",
+                             (MPIU_DBG_FDEST, "disabling AS on communicator %p (%#08x)",
                               comm, comm->handle));
-            comm->ch.coll_active = FALSE;
             comm->ch.anysource_enabled = FALSE;
         }
     }
