@@ -31,13 +31,13 @@ if BUILD_F77_BINDING
 bin_SCRIPTS += src/env/mpif77
 endif BUILD_F77_BINDING
 
-if BUILD_F90_LIB
+if BUILD_FC_BINDING
 bin_SCRIPTS += src/env/mpif90
-endif BUILD_F90_LIB
+endif BUILD_FC_BINDING
 
-if BUILD_CXX_LIB
+if BUILD_CXX_BINDING
 bin_SCRIPTS += src/env/mpicxx
-endif BUILD_CXX_LIB
+endif BUILD_CXX_BINDING
 
 # create a local copy of the compiler wrapper that will actually be installed
 if BUILD_BASH_SCRIPTS

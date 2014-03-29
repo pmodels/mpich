@@ -3,12 +3,12 @@ dnl This configure is used ONLY to determine the Fortran 90 features
 dnl that are needed to implement the create_type_xxx routines.
 
 AC_DEFUN([PAC_SUBCFG_PREREQ_]PAC_SUBCFG_AUTO_SUFFIX,[
-AM_CONDITIONAL([BUILD_F90_LIB],[test "X$enable_fc" = "Xyes"])
+AM_CONDITIONAL([BUILD_FC_BINDING],[test "X$enable_fc" = "Xyes"])
 ])
 
 AC_DEFUN([PAC_SUBCFG_BODY_]PAC_SUBCFG_AUTO_SUFFIX,[
 
-AM_COND_IF([BUILD_F90_LIB],[
+AM_COND_IF([BUILD_FC_BINDING],[
 # FIXME XXX DJG this code came from a sub-configure in src/binding/fortran/use_mpi.  Why
 # isn't this just all up in the top-level configure?  Alternatively, why doesn't
 # most/all of the f90 configure code from the top level configure.ac live here
@@ -60,7 +60,7 @@ AC_SUBST(FC_INTEGER_MODEL_MAP)
 
 AC_CONFIG_FILES([src/binding/fortran/use_mpi/mpif90model.h])
 
-])dnl end AM_COND_IF(BUILD_F90_LIB,...)
+])dnl end AM_COND_IF(BUILD_FC_BINDING,...)
 ])dnl end _BODY
 
 [#] end of __file__

@@ -8,7 +8,7 @@
 # ensure that the buildiface script ends up in the release tarball
 EXTRA_DIST += src/binding/cxx/buildiface
 
-if BUILD_CXX_LIB
+if BUILD_CXX_BINDING
 
 # No profile library for C++.  All routines call the MPI, not PMPI, routines.
 lib_LTLIBRARIES += lib/lib@MPICXXLIBNAME@.la
@@ -49,5 +49,5 @@ mpicovsimple.o: mpicovsimple.cxx mpicovsimple.h
 	$(CXXCOMPILE) -c -DCOVERAGE_DIR='"@builddir@"' ${srcdir}/mpicovsimple.cxx
 endif BUILD_COVERAGE
 
-endif BUILD_CXX_LIB
+endif BUILD_CXX_BINDING
 

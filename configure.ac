@@ -5824,10 +5824,10 @@ MPICH_ENABLE_FC=$enable_fc
 export MPICH_ENABLE_CXX
 export MPICH_ENABLE_F77
 export MPICH_ENABLE_FC
-AM_CONDITIONAL([BUILD_CXX_LIB],[test "$enable_cxx" = "yes"])
+AM_CONDITIONAL([BUILD_CXX_BINDING],[test "$enable_cxx" = "yes"])
 AM_CONDITIONAL([BUILD_F77_BINDING],[test "$enable_f77" = "yes"])
 dnl FIXME DJG this has been moved to the f90 bindings subconfigure.m4 for now
-dnl AM_CONDITIONAL([BUILD_F90_LIB],[test "$enable_fc" = "yes"])
+dnl AM_CONDITIONAL([BUILD_FC_BINDING],[test "$enable_fc" = "yes"])
 # MPI_SRCDIR gives the test/mpi configure the location of the source
 # files for an MPI implementation
 if test -n "$ac_abs_srcdir" ; then

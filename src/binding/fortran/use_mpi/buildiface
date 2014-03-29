@@ -917,7 +917,7 @@ mod_verbose = \$(mod_verbose_\$(V))
 mod_verbose_ = \$(mod_verbose_\$(AM_DEFAULT_VERBOSITY))
 mod_verbose_0 = \@echo "  MOD     " \$\@;
 
-if BUILD_F90_LIB
+if BUILD_FC_BINDING
 
 # We need to tell some compilers (e.g., Solaris f90) to look for modules in the
 # current directory when the source file is not in the working directory (i.e.,
@@ -1089,7 +1089,7 @@ print MAKEFD "\n";
 # ----------------------------------------------------------------------------
 
 print MAKEFD "\n";
-print MAKEFD "endif BUILD_F90_LIB\n";
+print MAKEFD "endif BUILD_FC_BINDING\n";
 
 close( MAKEFD );
 &ReplaceIfDifferent( "Makefile.mk", "Makefile.mk.new" );
