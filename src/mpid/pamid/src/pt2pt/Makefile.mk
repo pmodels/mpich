@@ -30,7 +30,7 @@ noinst_HEADERS +=                                                    \
 
 include $(top_srcdir)/src/mpid/pamid/src/pt2pt/persistent/Makefile.mk
 
-lib_lib@MPILIBNAME@_la_SOURCES +=                                    \
+mpi_core_sources +=                                    \
   src/mpid/pamid/src/pt2pt/mpid_cancel.c                             \
   src/mpid/pamid/src/pt2pt/mpid_issend.c                             \
   src/mpid/pamid/src/pt2pt/mpid_recv.c                               \

@@ -21,7 +21,7 @@
 if BUILD_PAMID
 
 
-lib_lib@MPILIBNAME@_la_SOURCES +=                                    \
+mpi_core_sources +=                                    \
     src/mpid/pamid/src/coll/allgather/mpido_allgather.c              \
     src/mpid/pamid/src/coll/allgather/mpido_iallgather.c
 

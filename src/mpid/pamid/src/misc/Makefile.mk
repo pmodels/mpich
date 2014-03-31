@@ -21,7 +21,7 @@
 if BUILD_PAMID
 
 
-lib_lib@MPILIBNAME@_la_SOURCES +=                                    \
+mpi_core_sources +=                                    \
    src/mpid/pamid/src/misc/mpid_abort.c                              \
    src/mpid/pamid/src/misc/mpid_get_universe_size.c                  \
    src/mpid/pamid/src/misc/mpid_getpname.c                           \

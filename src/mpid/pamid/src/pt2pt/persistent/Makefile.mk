@@ -21,7 +21,7 @@
 if BUILD_PAMID
 
 
-lib_lib@MPILIBNAME@_la_SOURCES +=                                    \
+mpi_core_sources +=                                    \
   src/mpid/pamid/src/pt2pt/persistent/mpid_recv_init.c               \
   src/mpid/pamid/src/pt2pt/persistent/mpid_send_init.c               \
   src/mpid/pamid/src/pt2pt/persistent/mpid_startall.c

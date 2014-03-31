@@ -9,7 +9,7 @@ if BUILD_MPID_COMMON_DATATYPE
 
 include $(top_srcdir)/src/mpid/common/datatype/dataloop/Makefile.mk
 
-lib_lib@MPILIBNAME@_la_SOURCES +=                          \
+mpi_core_sources +=                          \
     src/mpid/common/datatype/mpid_contents_support.c       \
     src/mpid/common/datatype/mpid_datatype_contents.c      \
     src/mpid/common/datatype/mpid_datatype_free.c          \

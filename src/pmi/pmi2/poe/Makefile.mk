@@ -7,7 +7,7 @@
 
 if BUILD_PMI_PMI2_POE
 
-lib_lib@MPILIBNAME@_la_SOURCES += \
+mpi_core_sources += \
     src/pmi/pmi2/poe/poe2pmi.c
 
 AM_CPPFLAGS += -I$(top_srcdir)/src/pmi/pmi2/poe

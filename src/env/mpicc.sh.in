@@ -241,7 +241,7 @@ if [ "$linking" = yes ] ; then
         $Show $CC @WRAPPER_CPPFLAGS@ $PROFILE_INCPATHS @WRAPPER_CFLAGS@ @WRAPPER_LDFLAGS@ $allargs -I$includedir
         rc=$?
     else
-        $Show $CC @WRAPPER_CPPFLAGS@ $PROFILE_INCPATHS @WRAPPER_CFLAGS@ @WRAPPER_LDFLAGS@ $allargs -I$includedir -L$libdir $PROFILE_PRELIB $PROFILE_FOO $rpath_flags @LPMPILIBNAME@ -l@MPILIBNAME@ $PROFILE_POSTLIB @WRAPPER_LIBS@
+        $Show $CC @WRAPPER_CPPFLAGS@ $PROFILE_INCPATHS @WRAPPER_CFLAGS@ @WRAPPER_LDFLAGS@ $allargs -I$includedir -L$libdir $PROFILE_PRELIB $PROFILE_FOO $rpath_flags -l@MPILIBNAME@ @LPMPILIBNAME@ $PROFILE_POSTLIB @WRAPPER_LIBS@
         rc=$?
     fi
 else

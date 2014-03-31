@@ -21,7 +21,7 @@
 if BUILD_PAMID
 
 
-lib_lib@MPILIBNAME@_la_SOURCES +=               \
+mpi_core_sources +=               \
     src/mpid/pamid/src/comm/mpid_comm.c         \
     src/mpid/pamid/src/comm/mpid_selectcolls.c  \
     src/mpid/pamid/src/comm/mpid_optcolls.c

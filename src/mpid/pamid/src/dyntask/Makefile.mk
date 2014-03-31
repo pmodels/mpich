@@ -21,7 +21,7 @@
 if BUILD_PAMID
 
 
-lib_lib@MPILIBNAME@_la_SOURCES +=                                    \
+mpi_core_sources +=                                    \
   src/mpid/pamid/src/dyntask/mpid_comm_spawn_multiple.c              \
   src/mpid/pamid/src/dyntask/mpid_comm_disconnect.c                  \
   src/mpid/pamid/src/dyntask/mpid_port.c                             \

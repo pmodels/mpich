@@ -25,7 +25,7 @@ noinst_HEADERS +=                                                    \
     src/mpid/pamid/src/onesided/mpidi_onesided.h
 
 
-lib_lib@MPILIBNAME@_la_SOURCES +=                                    \
+mpi_core_sources +=                                    \
   src/mpid/pamid/src/onesided/mpid_1s.c                              \
   src/mpid/pamid/src/onesided/mpid_win_accumulate.c                  \
   src/mpid/pamid/src/onesided/mpid_win_create.c                      \

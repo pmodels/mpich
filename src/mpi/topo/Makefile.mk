@@ -36,7 +36,7 @@ mpi_sources +=                          \
     src/mpi/topo/nhb_alltoallv.c        \
     src/mpi/topo/nhb_alltoallw.c
 
-lib_lib@MPILIBNAME@_la_SOURCES +=       \
+mpi_core_sources +=       \
     src/mpi/topo/topoutil.c
 
 noinst_HEADERS += src/mpi/topo/topo.h

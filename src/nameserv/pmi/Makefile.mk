@@ -7,7 +7,7 @@
 
 if BUILD_NAMEPUB_PMI
 
-lib_lib@MPILIBNAME@_la_SOURCES +=   \
+mpi_core_sources +=   \
     src/nameserv/pmi/pmi_nameserv.c
 
 endif BUILD_NAMEPUB_PMI

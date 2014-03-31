@@ -7,7 +7,7 @@
 
 ## this code is commented out in the old Makefile.sm, so we leave it here but
 ## similarly disabled
-##lib_lib@MPILIBNAME@_la_SOURCES +=   \
+##mpi_core_sources +=   \
 ##    describe_states.c
 
 AM_CPPFLAGS += -Isrc/util/logging/common

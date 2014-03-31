@@ -48,7 +48,6 @@ pkgconfigdir = @pkgconfigdir@
 errnames_txt_files = 
 
 external_subdirs = @mplsrcdir@ @opasrcdir@
-# FIXME how/where does external_libs/ldflags get used?
 external_ldflags = -L@mpllibdir@ -L@opalibdir@
 external_libs = -l@MPLLIBNAME@ -l@OPALIBNAME@
 
@@ -63,23 +62,6 @@ external_libs = -l@MPLLIBNAME@ -l@OPALIBNAME@
 DIST_SUBDIRS = ${external_subdirs}
 SUBDIRS = ${external_subdirs}
 
-
-# lib/lib@MPILIBNAME@.la always contains the "PMPI_" functions and all of the
-# functions and symbols that actually make up the MPICH implementation.  If
-# weak symbols are fully supported (such as on Linux), then this library also
-# contains weak symbols for "MPI_" aliasing the "PMPI_" symbols.  This lib also
-# always contains the F77 bindings, but not the F90 or C++ bindings.
-#
-# if weak symbols are not supported (such as on Darwin), then
-# lib/lib@PMPILIBNAME@.la contains duplicate builds of all of the "PMPI_" routines
-# as "MPI_" routines, but none of the implementation routines under the hood
-# (such as MPIR_Bcast_impl).
-lib_LTLIBRARIES = lib/lib@MPILIBNAME@.la
-lib_lib@MPILIBNAME@_la_SOURCES =
-nodist_lib_lib@MPILIBNAME@_la_SOURCES =
-lib_lib@MPILIBNAME@_la_LIBADD = $(external_libs)
-lib_lib@MPILIBNAME@_la_LDFLAGS = $(external_ldflags) $(ABIVERSIONFLAGS)
-
 ## Automake attempts to guess the correct linker among the various compilers
 ## for each language (see "How the Linker is Chosen" in the AM manual).
 ## However, this process is static and doesn't assume that you will "disable"
@@ -93,36 +75,119 @@ lib_lib@MPILIBNAME@_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=F77 \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(F77LD) \
 	$(AM_FFLAGS) $(FFLAGS) $(lib_lib@MPILIBNAME@_la_LDFLAGS) \
 	$(LDFLAGS) -o $@
+lib_lib@PMPILIBNAME@_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=F77 \
+	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(F77LD) \
+	$(AM_FFLAGS) $(FFLAGS) $(lib_lib@PMPILIBNAME@_la_LDFLAGS) \
+	$(LDFLAGS) -o $@
 else !BUILD_F77_BINDING
 # link with libtool+CCLD
 lib_lib@MPILIBNAME@_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
 	$(lib_lib@MPILIBNAME@_la_CFLAGS) $(CFLAGS) \
 	$(lib_lib@MPILIBNAME@_la_LDFLAGS) $(LDFLAGS) -o $@
+lib_lib@PMPILIBNAME@_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
+	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
+	$(lib_lib@PMPILIBNAME@_la_CFLAGS) $(CFLAGS) \
+	$(lib_lib@PMPILIBNAME@_la_LDFLAGS) $(LDFLAGS) -o $@
 endif !BUILD_F77_BINDING
 
+## Create lists of files for different libraries
+##
+## mpi_sources: When compiled with -DMPICH_MPI_FROM_PMPI, these files
+## provide "MPI_" public functions for the C bindings and end up in
+## lib@MPILIBNAME@.  When compiled without this macro, these files
+## provide "PMPI_" public functions for the C bindings as well as a
+## few other internal MPICH functions, all of which end up in
+## lib@PMPILIBNAME@ (which is the same as lib@MPILIBNAME@ on systems
+## that support weak symbols).
+##
+## mpi_f77_sources: When compiled with -DMPICH_MPI_FROM_PMPI, these
+## files provide the "mpi_" public functions for the F77 bindings and
+## end up in lib@MPIFLIBNAME@.
+##
+## mpi_fc_sources: When compiled with -DMPICH_MPI_FROM_PMPI, these
+## files provide the "mpi_" public functions for the F90+ bindings and
+## end up in lib@MPIFCLIBNAME@.
+##
+## mpi_cxx_sources: When compiled with -DMPICH_MPI_FROM_PMPI, these
+## files provide the "MPI" public functions for the C++ bindings and
+## end up in lib@MPICXXLIBNAME@.
+##
+## mpi_core_sources: These files are internal non-public functions
+## that are used by all bindings.
+mpi_sources =
+mpi_f77_sources =
+mpi_fc_sources =
+mpi_cxx_sources =
+mpi_core_sources =
+
+lib_LTLIBRARIES =
+
 if BUILD_PROFILING_LIB
-lib_LTLIBRARIES += lib/lib@PMPILIBNAME@.la
-## FIXME XXX DJG is this "-DMPICH..." flag is in CFLAGS now, should it really be in CPPFLAGS?
-lib_lib@PMPILIBNAME@_la_CFLAGS = $(AM_CFLAGS) -DMPICH_MPI_FROM_PMPI
-lib_lib@PMPILIBNAME@_la_SOURCES =
-lib_lib@PMPILIBNAME@_la_LIBADD = lib/lib@MPILIBNAME@.la $(lib_lib@MPILIBNAME@_la_LIBADD)
-lib_lib@PMPILIBNAME@_la_LDFLAGS = $(ABIVERSIONFLAGS)
+lib_lib@PMPILIBNAME@_la_LIBADD =
 endif BUILD_PROFILING_LIB
 
-# these are files that provide "MPI_" functions with "PMPI_" profiling versions
-# (for the C language bindings only, fortran & C++ are handled separately)
-mpi_sources = 
+lib_lib@MPILIBNAME@_la_LIBADD =
+
+if BUILD_F77_BINDING
+lib_lib@MPIFLIBNAME@_la_LIBADD =
+endif BUILD_F77_BINDING
+
+if BUILD_FC_BINDING
+lib_lib@MPIFCLIBNAME@_la_LIBADD =
+endif BUILD_FC_BINDING
+
+if BUILD_CXX_BINDING
+lib_lib@MPICXXLIBNAME@_la_LIBADD =
+endif BUILD_CXX_BINDING
 
 # include our subdir automake fragments
 include maint/Makefile.mk
 include src/Makefile.mk
 
-lib_lib@MPILIBNAME@_la_SOURCES += $(mpi_sources)
+lib_LTLIBRARIES += lib/lib@MPILIBNAME@.la
+lib_lib@MPILIBNAME@_la_SOURCES = $(mpi_sources)
+lib_lib@MPILIBNAME@_la_LDFLAGS = $(external_ldflags) $(ABIVERSIONFLAGS)
+lib_lib@MPILIBNAME@_la_LIBADD += $(external_libs)
+lib_lib@MPILIBNAME@_la_CPPFLAGS = $(AM_CPPFLAGS)
 
 if BUILD_PROFILING_LIB
-lib_lib@PMPILIBNAME@_la_SOURCES += $(mpi_sources)
+lib_LTLIBRARIES += lib/lib@PMPILIBNAME@.la
+# dropping mpi_fc_sources and mpi_cxx_sources from the below PMPI list
+# since they don't contribute any PMPI symbols.
+lib_lib@PMPILIBNAME@_la_SOURCES = $(mpi_sources) $(mpi_f77_sources) $(mpi_core_sources)
+lib_lib@PMPILIBNAME@_la_LDFLAGS = $(ABIVERSIONFLAGS)
+lib_lib@MPILIBNAME@_la_CPPFLAGS += -DMPICH_MPI_FROM_PMPI
+lib_lib@MPILIBNAME@_la_LIBADD += lib/lib@PMPILIBNAME@.la
+else !BUILD_PROFILING_LIB
+lib_lib@MPILIBNAME@_la_SOURCES += $(mpi_core_sources)
+endif !BUILD_PROFILING_LIB
+
+if BUILD_F77_BINDING
+lib_LTLIBRARIES += lib/lib@MPIFLIBNAME@.la
+lib_lib@MPIFLIBNAME@_la_CPPFLAGS = $(AM_CPPFLAGS)
+if BUILD_PROFILING_LIB
+lib_lib@MPIFLIBNAME@_la_CPPFLAGS += -DMPICH_MPI_FROM_PMPI -DUSE_ONLY_MPI_NAMES
 endif BUILD_PROFILING_LIB
+lib_lib@MPIFLIBNAME@_la_SOURCES = $(mpi_f77_sources)
+lib_lib@MPIFLIBNAME@_la_LDFLAGS = $(ABIVERSIONFLAGS)
+lib_lib@MPIFLIBNAME@_la_LIBADD += lib/lib@MPILIBNAME@.la
+endif BUILD_F77_BINDING
+
+if BUILD_FC_BINDING
+lib_LTLIBRARIES += lib/lib@MPIFCLIBNAME@.la
+lib_lib@MPIFCLIBNAME@_la_CPPFLAGS = $(AM_CPPFLAGS) -DMPICH_MPI_FROM_PMPI -DUSE_ONLY_MPI_NAMES
+lib_lib@MPIFCLIBNAME@_la_SOURCES = $(mpi_fc_sources)
+lib_lib@MPIFCLIBNAME@_la_LDFLAGS = $(ABIVERSIONFLAGS)
+lib_lib@MPIFCLIBNAME@_la_LIBADD += lib/lib@MPIFLIBNAME@.la
+endif BUILD_FC_BINDING
+
+if BUILD_CXX_BINDING
+lib_LTLIBRARIES += lib/lib@MPICXXLIBNAME@.la
+lib_lib@MPICXXLIBNAME@_la_SOURCES = $(mpi_cxx_sources)
+lib_lib@MPICXXLIBNAME@_la_LDFLAGS = $(ABIVERSIONFLAGS)
+lib_lib@MPICXXLIBNAME@_la_LIBADD += lib/lib@MPILIBNAME@.la
+endif BUILD_CXX_BINDING
 
 # build the current directory and then the examples directory after everything else
 SUBDIRS += . examples

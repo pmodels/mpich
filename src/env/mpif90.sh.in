@@ -314,15 +314,12 @@ else
 fi
 
 # Handle the specification of the directory containing the modules
-modulelib="@MPIFCLIBNAME@"
 if [ -n "$FCMODINCSPEC" ] ; then
     newarg=`echo A"$FCMODINCSPEC" | \
 	sed -e 's/^A//' -e 's%<dir>%'"$includedir%g" -e 's/<file>/mpi/g'`
     FCMODDIRS="$newarg"
-    FCMODLIBS="-l$modulelib"
 elif [ -n "$FCMODINC" ] ; then
     FCMODDIRS="${FCMODINC}$modincdir"
-    FCMODLIBS="-l$modulelib"
 fi
 
 #
@@ -347,7 +344,7 @@ if [ "$linking" = yes ] ; then
         $Show $FC $PROFILE_INCPATHS @WRAPPER_FCFLAGS@ @WRAPPER_LDFLAGS@ $allargs
         rc=$?
     else
-        $Show $FC $PROFILE_INCPATHS @WRAPPER_FCFLAGS@ @WRAPPER_LDFLAGS@ $allargs $FCINCDIRS $FCMODDIRS -L$libdir $FCMODLIBS $PROFILE_PRELIB $PROFILE_FOO $rpath_flags @LPMPILIBNAME@ -l@MPILIBNAME@ $PROFILE_POSTLIB @WRAPPER_LIBS@ @FC_OTHER_LIBS@
+        $Show $FC $PROFILE_INCPATHS @WRAPPER_FCFLAGS@ @WRAPPER_LDFLAGS@ $allargs $FCINCDIRS $FCMODDIRS -L$libdir -l@MPIFCLIBNAME@ -l@MPIFLIBNAME@ $PROFILE_PRELIB $PROFILE_FOO $rpath_flags -l@MPILIBNAME@ @LPMPILIBNAME@ $PROFILE_POSTLIB @WRAPPER_LIBS@ @FC_OTHER_LIBS@
         rc=$?
     fi
 else

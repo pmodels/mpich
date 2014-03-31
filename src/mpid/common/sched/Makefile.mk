@@ -7,7 +7,7 @@
 
 if BUILD_MPID_COMMON_SCHED
 
-lib_lib@MPILIBNAME@_la_SOURCES +=      \
+mpi_core_sources +=      \
     src/mpid/common/sched/mpid_sched.c
 
 # so that the the device (e.g., ch3) can successfully include mpid_sched_pre.h

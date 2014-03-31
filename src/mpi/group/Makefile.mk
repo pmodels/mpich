@@ -19,7 +19,7 @@ mpi_sources +=                            \
     src/mpi/group/group_translate_ranks.c \
     src/mpi/group/group_union.c
 
-lib_lib@MPILIBNAME@_la_SOURCES += \
+mpi_core_sources += \
     src/mpi/group/grouputil.c
 
 noinst_HEADERS += src/mpi/group/group.h

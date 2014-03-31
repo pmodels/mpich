@@ -28,7 +28,7 @@ mpi_sources +=                                            \
     src/mpi/errhan/win_get_errhandler.c     \
     src/mpi/errhan/win_set_errhandler.c
 
-lib_lib@MPILIBNAME@_la_SOURCES +=                 \
+mpi_core_sources +=             \
     src/mpi/errhan/errutil.c    \
     src/mpi/errhan/dynerrutil.c
 

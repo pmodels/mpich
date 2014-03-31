@@ -1009,7 +1009,6 @@ src/binding/fortran/mpif_h/buildiface-stamp: \$(top_srcdir)/src/binding/fortran/
 	( cd \$(top_srcdir)/src/binding/fortran/mpif_h && ./buildiface )
 endif MAINTAINER_MODE
 
-mpi_f77_sources =
 if BUILD_F77_BINDING
 EOT
     &print_line(  MAKEFD, "mpi_f77_sources += ", 80, "\\\n\t", 8 );
@@ -1020,18 +1019,11 @@ EOT
     &print_endline( MAKEFD );
 
     # The definitions for the Fortran wrappers are special
-    &AddFwrapDefs;
     print MAKEFD <<EOT;
-# FIXME tension here: MPIFLIBNAME is always "mpich", so we don't want to
-# clobber flags set by other parts of MPICH, and we don't want to re-add that
-# lib to the lib_LTLIBRARIES list
-#lib_LTLIBRARIES += lib/lib\@MPIFLIBNAME\@.la
-#lib_lib\@MPIFLIBNAME\@_la_SOURCES = \$(mpi_f77_sources) src/binding/fortran/mpif_h/setbot.c src/binding/fortran/mpif_h/setbotf.f src/binding/fortran/mpif_h/fdebug.c
-#lib_lib\@MPIFLIBNAME\@_la_CPPFLAGS = -I\${master_top_srcdir}/src/binding/fortran/mpif_h
-lib_lib\@MPILIBNAME\@_la_SOURCES += \$(mpi_f77_sources) src/binding/fortran/mpif_h/fdebug.c
-
-# these files are created by config.status from ".in" files
-nodist_lib_lib\@MPILIBNAME\@_la_SOURCES += src/binding/fortran/mpif_h/setbot.c src/binding/fortran/mpif_h/setbotf.f
+mpi_core_sources += src/binding/fortran/mpif_h/fdebug.c \\
+		src/binding/fortran/mpif_h/setbot.c \\
+		src/binding/fortran/mpif_h/setbotf.f
+mpi_sources += src/binding/fortran/mpif_h/statusf2c.c
 
 # FIXME does AM_CPPFLAGS need to be included elsewhere somehow in the
 # target-specific variable?
@@ -1039,17 +1031,6 @@ AM_CPPFLAGS += -I\${master_top_srcdir}/src/binding/fortran/mpif_h
 
 
 noinst_HEADERS += src/binding/fortran/mpif_h/fproto.h src/binding/fortran/mpif_h/mpi_fortimpl.h
-
-if BUILD_PROFILING_LIB
-# FIXME tension here: PMPIFLIBNAME is always "pmpich", so we don't want to
-# clobber flags set by other parts of MPICH, and we don't want to re-add that
-# lib to the lib_LTLIBRARIES list
-#lib_LTLIBRARIES += lib/lib\@PMPIFLIBNAME\@.la
-#lib_lib\@PMPIFLIBNAME\@_la_SOURCES += \$(mpi_f77_sources)
-#lib_lib\@PMPIFLIBNAME\@_la_CPPFLAGS += -I\${master_top_srcdir}/src/binding/fortran/mpif_h
-lib_lib\@PMPILIBNAME\@_la_SOURCES += \$(mpi_f77_sources)
-#lib_lib\@PMPILIBNAME\@_la_CPPFLAGS += -I\${master_top_srcdir}/src/binding/fortran/mpif_h
-endif BUILD_PROFILING_LIB
 
 # config.status copies src/binding/fortran/mpif_h/mpif.h to src/include (see the relevant
 # AC_OUTPUT_COMMANDS in configure.ac), so we need to delete it at distclean time
@@ -4526,7 +4507,6 @@ MPIR_Comm_delete_attr_f77_proxy(
     $OUTFD = "STATUSF2C";
     $filename = "statusf2c.c";
     open ($OUTFD, ">$filename.new" ) || die "Cannot open $filename.new\n";
-    $files[$#files+1] = $filename;
     # Status_f2c and c2f will need to have const added before the input
     # argument for MPI 2.2
     print $OUTFD "
@@ -5533,29 +5513,6 @@ MPIR_Win_delete_attr_f90_proxy(
     ((F90_DeleteFunction*)user_function)( &fhandle, &fkeyval, &fvalue, fextra, &ierr );
     return (int)ierr;
 }\n";
-}
-#
-# FWRAPLIB is a special case.  We want to compile all of the same files,
-# but with MPICH_MPI_FROM_PMPI defined, even (or especially) if weak symbols 
-# are defined.  
-#
-sub AddFwrapDefs {
-    ## XXX DJG delete this eventually, I think
-    ##&print_line(  MAKEFD, "wrap_objs = ", 80, "\\\n\t", 8 );
-    ##for ($i=0; $i<=$#files; $i++) {
-    ##    $name = $files[$i];
-    ##    # files contains only the "mpi" files, which is what
-    ##    # we want
-    ##    my $basename = $name;
-    ##    $basename =~ s/\.c//;
-    ##    &print_line( MAKEFD, "_w$basename.o ", 80, "\\\n\t", 8 );
-    ##}
-    ##&print_endline( MAKEFD );
-    print MAKEFD "\n";
-    print MAKEFD "lib_LTLIBRARIES += lib/lib\@MPIFLIBNAME\@.la\n";
-    print MAKEFD "lib_lib\@MPIFLIBNAME\@_la_CPPFLAGS = \$(AM_CPPFLAGS) -DMPICH_MPI_FROM_PMPI -DUSE_ONLY_MPI_NAMES\n";
-    print MAKEFD "lib_lib\@MPIFLIBNAME\@_la_SOURCES = \$(mpi_f77_sources)\n";
-    print MAKEFD "lib_lib\@MPIFLIBNAME\@_la_LDFLAGS = \$(ABIVERSIONFLAGS)\n\n";
 }
 
 # Allow multiple underscore versions of names

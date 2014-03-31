@@ -10,7 +10,7 @@ errnames_txt_files += src/mpid/common/sock/poll/errnames.txt
 ## this whole file is also already guarded by "if BUILD_MPID_COMMON_SOCK"
 if BUILD_MPID_COMMON_SOCK_POLL
 
-lib_lib@MPILIBNAME@_la_SOURCES +=    \
+mpi_core_sources +=    \
     src/mpid/common/sock/poll/sock.c
 
 # FIXME these ".i" files are awful and should be fixed somehow.  They are

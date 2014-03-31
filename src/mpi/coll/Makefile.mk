@@ -48,7 +48,7 @@ mpi_sources +=                     \
     src/mpi/coll/iscatter.c        \
     src/mpi/coll/iscatterv.c
 
-lib_lib@MPILIBNAME@_la_SOURCES += \
+mpi_core_sources += \
     src/mpi/coll/allred_group.c   \
     src/mpi/coll/barrier_group.c  \
     src/mpi/coll/helper_fns.c     \

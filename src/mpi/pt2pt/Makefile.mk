@@ -49,7 +49,7 @@ mpi_sources +=                           \
     src/mpi/pt2pt/waitany.c              \
     src/mpi/pt2pt/waitsome.c
 
-lib_lib@MPILIBNAME@_la_SOURCES += \
+mpi_core_sources += \
     src/mpi/pt2pt/bsendutil.c     \
     src/mpi/pt2pt/mpir_request.c
 

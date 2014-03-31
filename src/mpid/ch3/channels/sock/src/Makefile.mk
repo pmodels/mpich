@@ -11,7 +11,7 @@ errnames_txt_files += src/mpid/ch3/channels/sock/src/errnames.txt
 
 if BUILD_CH3_SOCK
 
-lib_lib@MPILIBNAME@_la_SOURCES +=   \
+mpi_core_sources +=   \
     src/mpid/ch3/channels/sock/src/ch3_finalize.c    \
     src/mpid/ch3/channels/sock/src/ch3_init.c     \
     src/mpid/ch3/channels/sock/src/ch3_isend.c     \

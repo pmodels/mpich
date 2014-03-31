@@ -29,6 +29,6 @@ mpi_sources +=                                      \
 
 noinst_HEADERS += src/mpi/attr/attr.h
 
-lib_lib@MPILIBNAME@_la_SOURCES +=             \
+mpi_core_sources +=         \
     src/mpi/attr/attrutil.c \
     src/mpi/attr/dup_fn.c

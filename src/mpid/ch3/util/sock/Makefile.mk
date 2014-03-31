@@ -9,7 +9,7 @@ errnames_txt_files += src/mpid/ch3/util/sock/errnames.txt
 
 if BUILD_CH3_UTIL_SOCK
 
-lib_lib@MPILIBNAME@_la_SOURCES +=               \
+mpi_core_sources +=               \
     src/mpid/ch3/util/sock/ch3u_init_sock.c     \
     src/mpid/ch3/util/sock/ch3u_connect_sock.c  \
     src/mpid/ch3/util/sock/ch3u_getinterfaces.c

@@ -31,7 +31,7 @@ mpi_sources +=                       \
     src/mpi/comm/comm_reenable_anysource.c     \
     src/mpi/comm/comm_remote_group_failed.c
 
-lib_lib@MPILIBNAME@_la_SOURCES += \
+mpi_core_sources += \
     src/mpi/comm/commutil.c
 
 noinst_HEADERS += src/mpi/comm/mpicomm.h

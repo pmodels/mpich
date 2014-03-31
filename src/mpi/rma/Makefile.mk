@@ -47,7 +47,7 @@ mpi_sources +=                          \
     src/mpi/rma/win_unlock_all.c        \
     src/mpi/rma/win_wait.c
 
-lib_lib@MPILIBNAME@_la_SOURCES += \
+mpi_core_sources += \
     src/mpi/rma/winutil.c         \
     src/mpi/rma/rmatypeutil.c
 

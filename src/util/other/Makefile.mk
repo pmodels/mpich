@@ -5,7 +5,7 @@
 ##     See COPYRIGHT in top-level directory.
 ##
 
-lib_lib@MPILIBNAME@_la_SOURCES += \
+mpi_core_sources += \
     src/util/other/outliers.c     \
     src/util/other/assert.c
 

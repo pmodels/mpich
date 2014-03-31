@@ -7,7 +7,7 @@
 
 if BUILD_NAMEPUB_FILE
 
-lib_lib@MPILIBNAME@_la_SOURCES +=   \
+mpi_core_sources +=   \
     src/nameserv/file/file_nameserv.c
 
 endif BUILD_NAMEPUB_FILE

@@ -38,7 +38,7 @@ include $(top_srcdir)/src/mpid/pamid/src/coll/exscan/Makefile.mk
 include $(top_srcdir)/src/mpid/pamid/src/coll/ired_scat_block/Makefile.mk
 include $(top_srcdir)/src/mpid/pamid/src/coll/ired_scat/Makefile.mk
 
-lib_lib@MPILIBNAME@_la_SOURCES +=               \
+mpi_core_sources +=               \
     src/mpid/pamid/src/coll/coll_utils.c
 
 

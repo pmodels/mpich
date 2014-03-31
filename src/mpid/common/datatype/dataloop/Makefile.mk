@@ -7,7 +7,7 @@
 
 ## this file is already guarded by an "if BUILD_MPID_COMMON_DATATYPE"
 
-lib_lib@MPILIBNAME@_la_SOURCES +=                                    \
+mpi_core_sources +=                                    \
     src/mpid/common/datatype/dataloop/darray_support.c               \
     src/mpid/common/datatype/dataloop/dataloop.c                     \
     src/mpid/common/datatype/dataloop/dataloop_create.c              \

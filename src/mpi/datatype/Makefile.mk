@@ -59,6 +59,6 @@ mpi_sources +=                                   \
 
 noinst_HEADERS += src/mpi/datatype/datatype.h
 
-lib_lib@MPILIBNAME@_la_SOURCES +=              \
+mpi_core_sources +=              \
     src/mpi/datatype/typeutil.c
 

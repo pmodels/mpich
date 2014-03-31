@@ -5,7 +5,7 @@
 ##     See COPYRIGHT in top-level directory.
 ##
 
-lib_lib@MPILIBNAME@_la_SOURCES +=                          \
+mpi_core_sources +=                          \
     src/mpid/ch3/src/ch3u_buffer.c                         \
     src/mpid/ch3/src/ch3u_comm.c                           \
     src/mpid/ch3/src/ch3u_comm_spawn_multiple.c            \

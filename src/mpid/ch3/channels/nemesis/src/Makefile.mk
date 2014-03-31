@@ -5,7 +5,7 @@
 ##     See COPYRIGHT in top-level directory.
 ##
 
-lib_lib@MPILIBNAME@_la_SOURCES +=				\
+mpi_core_sources +=				\
     src/mpid/ch3/channels/nemesis/src/ch3_finalize.c		\
     src/mpid/ch3/channels/nemesis/src/ch3_init.c		\
     src/mpid/ch3/channels/nemesis/src/ch3_isend.c		\

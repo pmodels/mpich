@@ -5,6 +5,6 @@
 ##     See COPYRIGHT in top-level directory.
 ##
 
-lib_lib@MPILIBNAME@_la_SOURCES +=                                \
+mpi_core_sources +=                                \
     src/mpid/ch3/channels/nemesis/netmod/none/none.c
 

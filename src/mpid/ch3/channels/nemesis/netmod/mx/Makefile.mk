@@ -7,7 +7,7 @@
 
 if BUILD_NEMESIS_NETMOD_MX
 
-lib_lib@MPILIBNAME@_la_SOURCES +=                                 \
+mpi_core_sources +=                                 \
     src/mpid/ch3/channels/nemesis/netmod/mx/mx_alloc.c    \
     src/mpid/ch3/channels/nemesis/netmod/mx/mx_cancel.c   \
     src/mpid/ch3/channels/nemesis/netmod/mx/mx_finalize.c \

@@ -7,7 +7,7 @@
 
 if BUILD_PMI_SIMPLE
 
-lib_lib@MPILIBNAME@_la_SOURCES +=       \
+mpi_core_sources +=       \
     src/pmi/simple/simple_pmiutil.c \
     src/pmi/simple/simple_pmi.c
 

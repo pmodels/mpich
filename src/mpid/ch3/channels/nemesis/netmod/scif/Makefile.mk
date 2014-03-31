@@ -7,7 +7,7 @@
 
 if BUILD_NEMESIS_NETMOD_SCIF
 
-lib_lib@MPILIBNAME@_la_SOURCES +=				\
+mpi_core_sources +=				\
     src/mpid/ch3/channels/nemesis/netmod/scif/scif_finalize.c	\
     src/mpid/ch3/channels/nemesis/netmod/scif/scif_init.c	\
     src/mpid/ch3/channels/nemesis/netmod/scif/scif_send.c	\
