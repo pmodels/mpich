@@ -5553,8 +5553,7 @@ sub AddFwrapDefs {
     ##&print_endline( MAKEFD );
     print MAKEFD "\n";
     print MAKEFD "lib_LTLIBRARIES += lib/lib\@MPIFLIBNAME\@.la\n";
-    ## FIXME should these be CPPFLAGS instead?
-    print MAKEFD "lib_lib\@MPIFLIBNAME\@_la_CFLAGS = \$(AM_CFLAGS) -DMPICH_MPI_FROM_PMPI -DUSE_ONLY_MPI_NAMES\n";
+    print MAKEFD "lib_lib\@MPIFLIBNAME\@_la_CPPFLAGS = \$(AM_CPPFLAGS) -DMPICH_MPI_FROM_PMPI -DUSE_ONLY_MPI_NAMES\n";
     print MAKEFD "lib_lib\@MPIFLIBNAME\@_la_SOURCES = \$(mpi_f77_sources)\n";
     print MAKEFD "lib_lib\@MPIFLIBNAME\@_la_LDFLAGS = \$(ABIVERSIONFLAGS)\n\n";
 }

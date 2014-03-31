@@ -962,6 +962,7 @@ lib_lib\@MPIFCLIBNAME\@_la_LDFLAGS = \$(ABIVERSIONFLAGS)
 # the current directory
 AM_FCFLAGS += \$(FCMODOUTFLAG)src/binding/fortran/use_mpi
 
+lib_lib\@MPIFCLIBNAME\@_la_CPPFLAGS = \$(AM_CPPFLAGS) -DMPICH_MPI_FROM_PMPI -DUSE_ONLY_MPI_NAMES
 # we "manually" build the f90 sources and add them with LIBADD
 lib_lib\@MPIFCLIBNAME\@_la_SOURCES =
 lib_lib\@MPIFCLIBNAME\@_la_LIBADD = \\
