@@ -14,10 +14,11 @@
 
 #include "ad_gpfs_tuning.h"
 
-#include <sys/statfs.h>
-#include <sys/vfs.h>
 #include <sys/types.h>
+#include <sys/stat.h>
 #include <unistd.h>
+#include <fcntl.h>
+
 
 #ifdef HAVE_GPFS_H
 #include <gpfs.h>
