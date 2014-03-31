@@ -7,8 +7,6 @@
 
 if BUILD_AD_GPFS
 
-AM_CPPFLAGS += -DBGL_OPTIM_STEP1_2=1 -DBGL_OPTIM_STEP1_1=1
-
 noinst_HEADERS +=                                                    \
     adio/ad_gpfs/ad_gpfs_aggrs.h                                         \
     adio/ad_gpfs/ad_gpfs.h                                               \
