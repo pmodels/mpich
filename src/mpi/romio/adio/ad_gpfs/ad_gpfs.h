@@ -44,6 +44,8 @@ void ADIOI_GPFS_WriteContig(ADIO_File fd, const void *buf, int count,
 
 #ifdef BGQPLATFORM
 void ADIOI_BG_SetInfo(ADIO_File fd, MPI_Info users_info, int *error_code);
+#elif PEPLATFORM
+void ADIOI_PE_SetInfo(ADIO_File fd, MPI_Info users_info, int *error_code);
 #endif
 
 void ADIOI_GPFS_WriteStrided(ADIO_File fd, const void *buf, int count,

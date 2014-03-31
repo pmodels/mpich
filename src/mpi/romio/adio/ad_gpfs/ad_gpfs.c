@@ -27,6 +27,8 @@ struct ADIOI_Fns_struct ADIO_GPFS_operations = {
     ADIOI_GEN_Fcntl, /* Fcntl */
 #ifdef BGQPLATFORM
     ADIOI_BG_SetInfo, /* SetInfo */
+#elif PEPLATFORM
+    ADIOI_PE_SetInfo, /* SetInfo */
 #else
     ADIOI_GEN_SetInfo, /* SetInfo */
 #endif
