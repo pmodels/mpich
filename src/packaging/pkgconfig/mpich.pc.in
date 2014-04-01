@@ -9,7 +9,7 @@ Description: High Performance and portable MPI
 Version: @MPICH_VERSION@
 URL: http://www.mcs.anl.gov/research/projects/mpich
 Requires:
-Libs: @WRAPPER_RPATH_LDFLAGS@ @WRAPPER_LDFLAGS@ -L${libdir} @LPMPILIBNAME@ -l@MPILIBNAME@ @WRAPPER_LIBS@
+Libs: @WRAPPER_RPATH_LDFLAGS@ @WRAPPER_LDFLAGS@ -L${libdir} -l@MPILIBNAME@ @LPMPILIBNAME@ @WRAPPER_LIBS@
 Cflags: @WRAPPER_CPPFLAGS@ @WRAPPER_CFLAGS@ -I${includedir}
 
 # pkg-config does not understand Cxxflags, etc. So we allow users to
