@@ -284,6 +284,7 @@ WRAPPER_FFLAGS="$FFLAGS $MPICH_MPIF77_FLAGS"
 WRAPPER_FCFLAGS="$FCFLAGS $MPICH_MPIFC_FLAGS"
 WRAPPER_LDFLAGS="$MPICH_LDFLAGS"
 WRAPPER_LIBS="$MPICH_LIBS"
+WRAPPER_EXTRA_LIBS=""
 
 # Add MPICHLIB_* to the appropriate flags
 AC_ARG_VAR(MPICHLIB_CFLAGS,
@@ -400,6 +401,9 @@ AC_ARG_ENABLE(fast,
         all|yes  - "O2" and "ndebug" are enabled
         none     - None of above options, i.e. --disable-fast
 ],,enable_fast=O2)
+
+AC_ARG_ENABLE(interlib-deps,
+	[AC_HELP_STRING([--interlib-deps - Enable interlibrary dependencies])],,enable_interlib_deps=yes)
 
 AC_ARG_ENABLE(check-compiler-flags,
 	AC_HELP_STRING([--enable-check-compiler-flags], [enable the checks for all compiler
@@ -631,6 +635,15 @@ m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 if test "X$enable_shared" = "Xno" ; then
     enable_wrapper_rpath=no
 fi
+
+INTERLIB_DEPS=yes
+# We conservatively disable interlibrary dependencies if the libtool
+# support model is anything different from "pass_all"
+if test "X$enable_shared" = "Xno" -o "$deplibs_check_method" != "pass_all" -o "$enable_interlib_deps" = "no" ; then
+    INTERLIB_DEPS=no
+fi
+export INTERLIB_DEPS
+AC_SUBST(INTERLIB_DEPS)
 
 dnl AC_PROG_{CXX,F77,FC} must come early in configure.ac in order to avoid some
 dnl esoteric autoconf macro expansion errors
@@ -1109,7 +1122,7 @@ mpllibdir=""
 AC_SUBST([mpllibdir])
 if test "$with_mpl_prefix" = "embedded" ; then
     PAC_CONFIG_SUBDIR(src/mpl,,AC_MSG_ERROR(MPL configure failed))
-    PAC_PREPEND_FLAG([-l${MPLLIBNAME}], [WRAPPER_LIBS])
+    PAC_PREPEND_FLAG([-l${MPLLIBNAME}], [WRAPPER_EXTRA_LIBS])
     PAC_APPEND_FLAG([-I${master_top_builddir}/src/mpl/include], [CPPFLAGS])
     PAC_APPEND_FLAG([-I${use_top_srcdir}/src/mpl/include], [CPPFLAGS])
 
@@ -1121,7 +1134,7 @@ else
     AS_IF([test -s "${with_mpl_prefix}/include/mplconfig.h"],
           [:],[AC_MSG_ERROR([the MPL installation in "${with_mpl_prefix}" appears broken])])
     PAC_APPEND_FLAG([-I${with_mpl_prefix}/include],[CPPFLAGS])
-    PAC_PREPEND_FLAG([-l${MPLLIBNAME}],[WRAPPER_LIBS])
+    PAC_PREPEND_FLAG([-l${MPLLIBNAME}],[WRAPPER_EXTRA_LIBS])
     PAC_APPEND_FLAG([-L${with_mpl_prefix}/lib],[WRAPPER_LDFLAGS])
     mpllibdir="${with_mpl_prefix}/lib"
 fi
@@ -1178,12 +1191,12 @@ if test "$with_openpa_prefix" = "embedded" ; then
             opa_subdir_args="--with-atomic-primitives=auto_allow_emulation"
         fi
         PAC_CONFIG_SUBDIR_ARGS([src/openpa],[$opa_subdir_args],[],[AC_MSG_ERROR([OpenPA configure failed])])
-        PAC_PREPEND_FLAG([-l${OPALIBNAME}],[WRAPPER_LIBS])
+        PAC_PREPEND_FLAG([-l${OPALIBNAME}],[WRAPPER_EXTRA_LIBS])
     else
         AC_MSG_WARN([Attempted to use the embedded OpenPA source tree in "src/openpa", but it is missing.  Configuration or compilation may fail later.])
     fi
 elif test "$with_openpa_prefix" = "system" ; then
-    PAC_PREPEND_FLAG([-l${OPALIBNAME}],[WRAPPER_LIBS])
+    PAC_PREPEND_FLAG([-l${OPALIBNAME}],[WRAPPER_EXTRA_LIBS])
 elif test "$with_openpa_prefix" = "no" ; then
     # The user doesn't want to use OPA.  This may or may not cause MPICH to
     # fail to configure/build, depending on many other factors.
@@ -1194,7 +1207,7 @@ else
     AS_IF([test -s "${with_openpa_prefix}/include/opa_primitives.h" -a -s "${with_openpa_prefix}/include/opa_config.h"],
           [:],[AC_MSG_ERROR([the OpenPA installation in "${with_openpa_prefix}" appears broken])])
     PAC_APPEND_FLAG([-I${with_openpa_prefix}/include],[CPPFLAGS])
-    PAC_PREPEND_FLAG([-l${OPALIBNAME}],[WRAPPER_LIBS])
+    PAC_PREPEND_FLAG([-l${OPALIBNAME}],[WRAPPER_EXTRA_LIBS])
     if test -d ${with_openpa_prefix}/lib64 ; then
         PAC_APPEND_FLAG([-L${with_openpa_prefix}/lib64],[WRAPPER_LDFLAGS])
         opalibdir="${with_openpa_prefix}/lib64"

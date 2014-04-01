@@ -88,6 +88,7 @@ fi
 
 linking=yes
 allargs=""
+static_libs=no
 for arg in "$@" ; do
     # Set addarg to no if this arg should be ignored by the C compiler
     addarg=yes
@@ -119,6 +120,13 @@ for arg in "$@" ; do
     -show)
     addarg=no
     Show=echo
+    ;;
+    -static)
+    static_libs=yes
+    ;;
+    -mpich-alllibs)
+    addarg=no
+    static_libs=yes
     ;;
     -config=*)
     addarg=no
@@ -283,7 +291,11 @@ if [ -n "$profConf" ] ; then
 	. $profConffile
     fi
 fi
-#
+
+if test "@INTERLIB_DEPS@" = "no" -o "$static_libs" = "yes" ; then
+    extra_libs="@LPMPILIBNAME@ @WRAPPER_EXTRA_LIBS@"
+fi
+
 # A temporary statement to invoke the compiler
 # Place the -L before any args incase there are any mpi libraries in there.
 # Eventually, we'll want to move this after any non-MPI implementation 
@@ -305,7 +317,7 @@ if [ "$linking" = yes ] ; then
         $Show $F77 $PROFILE_INCPATHS @WRAPPER_FFLAGS@ @WRAPPER_LDFLAGS@ $allargs -I$includedir
         rc=$?
     else
-        $Show $F77 $PROFILE_INCPATHS @WRAPPER_FFLAGS@ @WRAPPER_LDFLAGS@ $allargs -I$includedir -L$libdir $f77libs $PROFILE_PRELIB $PROFILE_FOO $rpath_flags -l@MPILIBNAME@ @LPMPILIBNAME@ $PROFILE_POSTLIB @WRAPPER_LIBS@ @F77_OTHER_LIBS@
+        $Show $F77 $PROFILE_INCPATHS @WRAPPER_FFLAGS@ @WRAPPER_LDFLAGS@ $allargs -I$includedir -L$libdir $f77libs $PROFILE_PRELIB $PROFILE_FOO $rpath_flags -l@MPILIBNAME@ $extra_libs $PROFILE_POSTLIB @WRAPPER_LIBS@ @F77_OTHER_LIBS@
         rc=$?
     fi
 else
