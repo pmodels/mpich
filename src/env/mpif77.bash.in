@@ -248,8 +248,8 @@ fi
 # default, environment, configuration file (if any) and command-line
 # options (if any)
 f77libs=
-if [ "@MPIFLIBNAME@" != "@MPILIBNAME@" ] ; then
-    f77libs="-l@MPIFLIBNAME@"
+if [ "@MPIFCLIBNAME@" != "@MPILIBNAME@" ] ; then
+    f77libs="-l@MPIFCLIBNAME@"
 fi
 
 PROFILE_FOO=

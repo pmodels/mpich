@@ -810,13 +810,10 @@ PMPILIBNAME=${PMPILIBNAME:-"p$MPILIBNAME"}
 # We use a different library for the C++ wrappers to avoid problems when
 # creating shared libraries
 if test -z "$MPICXXLIBNAME" ; then MPICXXLIBNAME="${MPILIBNAME}cxx" ; fi
-if test -z "$MPIFLIBNAME" ; then MPIFLIBNAME="${MPILIBNAME}f77" ; fi
 if test -z "$MPIFCLIBNAME" ; then MPIFCLIBNAME="${MPILIBNAME}fort" ; fi
 export MPICXXLIBNAME
-export MPIFLIBNAME
 export MPIFCLIBNAME
 AC_SUBST(MPICXXLIBNAME)
-AC_SUBST(MPIFLIBNAME)
 AC_SUBST(MPIFCLIBNAME)
 
 # We'll set FORTRAN_BINDING to 1 if we support Fortran 

@@ -91,6 +91,20 @@ lib_lib@PMPILIBNAME@_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(lib_lib@PMPILIBNAME@_la_LDFLAGS) $(LDFLAGS) -o $@
 endif !BUILD_F77_BINDING
 
+if BUILD_F77_BINDING
+if BUILD_FC_BINDING
+lib_lib@MPIFCLIBNAME@_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=FC \
+	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(FCLD) \
+	$(AM_FCFLAGS) $(FCFLAGS) $(lib_lib@MPIFCLIBNAME@_la_LDFLAGS) \
+	$(LDFLAGS) -o $@
+else !BUILD_FC_BINDING
+lib_lib@MPIFCLIBNAME@_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=F77 \
+	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(F77LD) \
+	$(AM_FFLAGS) $(FFLAGS) $(lib_lib@MPIFCLIBNAME@_la_LDFLAGS) \
+	$(LDFLAGS) -o $@
+endif !BUILD_FC_BINDING
+endif BUILD_F77_BINDING
+
 ## Create lists of files for different libraries
 ##
 ## mpi_sources: When compiled with -DMPICH_MPI_FROM_PMPI, these files
@@ -103,7 +117,7 @@ endif !BUILD_F77_BINDING
 ##
 ## mpi_f77_sources: When compiled with -DMPICH_MPI_FROM_PMPI, these
 ## files provide the "mpi_" public functions for the F77 bindings and
-## end up in lib@MPIFLIBNAME@.
+## end up in lib@MPIFCLIBNAME@.
 ##
 ## mpi_fc_sources: When compiled with -DMPICH_MPI_FROM_PMPI, these
 ## files provide the "mpi_" public functions for the F90+ bindings and
@@ -130,12 +144,8 @@ endif BUILD_PROFILING_LIB
 lib_lib@MPILIBNAME@_la_LIBADD =
 
 if BUILD_F77_BINDING
-lib_lib@MPIFLIBNAME@_la_LIBADD =
-endif BUILD_F77_BINDING
-
-if BUILD_FC_BINDING
 lib_lib@MPIFCLIBNAME@_la_LIBADD =
-endif BUILD_FC_BINDING
+endif BUILD_F77_BINDING
 
 if BUILD_CXX_BINDING
 lib_lib@MPICXXLIBNAME@_la_LIBADD =
@@ -164,23 +174,18 @@ lib_lib@MPILIBNAME@_la_SOURCES += $(mpi_core_sources)
 endif !BUILD_PROFILING_LIB
 
 if BUILD_F77_BINDING
-lib_LTLIBRARIES += lib/lib@MPIFLIBNAME@.la
-lib_lib@MPIFLIBNAME@_la_CPPFLAGS = $(AM_CPPFLAGS)
-if BUILD_PROFILING_LIB
-lib_lib@MPIFLIBNAME@_la_CPPFLAGS += -DMPICH_MPI_FROM_PMPI -DUSE_ONLY_MPI_NAMES
-endif BUILD_PROFILING_LIB
-lib_lib@MPIFLIBNAME@_la_SOURCES = $(mpi_f77_sources)
-lib_lib@MPIFLIBNAME@_la_LDFLAGS = $(ABIVERSIONFLAGS)
-lib_lib@MPIFLIBNAME@_la_LIBADD += lib/lib@MPILIBNAME@.la
-endif BUILD_F77_BINDING
-
-if BUILD_FC_BINDING
 lib_LTLIBRARIES += lib/lib@MPIFCLIBNAME@.la
-lib_lib@MPIFCLIBNAME@_la_CPPFLAGS = $(AM_CPPFLAGS) -DMPICH_MPI_FROM_PMPI -DUSE_ONLY_MPI_NAMES
-lib_lib@MPIFCLIBNAME@_la_SOURCES = $(mpi_fc_sources)
-lib_lib@MPIFCLIBNAME@_la_LDFLAGS = $(ABIVERSIONFLAGS)
-lib_lib@MPIFCLIBNAME@_la_LIBADD += lib/lib@MPIFLIBNAME@.la
+lib_lib@MPIFCLIBNAME@_la_CPPFLAGS = $(AM_CPPFLAGS)
+if BUILD_PROFILING_LIB
+lib_lib@MPIFCLIBNAME@_la_CPPFLAGS += -DMPICH_MPI_FROM_PMPI -DUSE_ONLY_MPI_NAMES
+endif BUILD_PROFILING_LIB
+lib_lib@MPIFCLIBNAME@_la_SOURCES = $(mpi_f77_sources)
+if BUILD_FC_BINDING
+lib_lib@MPIFCLIBNAME@_la_SOURCES += $(mpi_fc_sources)
 endif BUILD_FC_BINDING
+lib_lib@MPIFCLIBNAME@_la_LDFLAGS = $(ABIVERSIONFLAGS)
+lib_lib@MPIFCLIBNAME@_la_LIBADD += lib/lib@MPILIBNAME@.la
+endif BUILD_F77_BINDING
 
 if BUILD_CXX_BINDING
 lib_LTLIBRARIES += lib/lib@MPICXXLIBNAME@.la
