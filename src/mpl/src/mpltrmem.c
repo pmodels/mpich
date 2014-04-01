@@ -606,19 +606,25 @@ void MPL_trdump(FILE * fp, int minid)
     }
     head = TRhead[1];
     while (head) {
+	/* these "rank and size" strings are supposed to be small: enough to
+	 * hold an mpi rank, a size, and a hexadecimal address. */
+#define ADDRESS_STR_BUFLEN 256
+
+	char address_str[ADDRESS_STR_BUFLEN];
         MPL_VG_MAKE_MEM_DEFINED(head, sizeof(*head));
         if (head->id >= minid) {
             addrToHex((char *) head + sizeof(TrSPACE), hexstring);
-            fprintf(fp, "[%d] %lu at [%s], ", world_rank, 
+            address_str[ADDRESS_STR_BUFLEN-1] = 0;
+            snprintf(address_str, ADDRESS_STR_BUFLEN-1, "[%d] %lu at [%s],", world_rank,
                     (unsigned long)head->size, hexstring);
             head->fname[TR_FNAME_LEN - 1] = 0;  /* Be extra careful */
             if (TRidSet) {
                 /* For head->id >= 0, we can add code to map the id to
                  * the name of a package, rather than using a raw number */
-                fprintf(fp, "id = %d %s[%d]\n", head->id, head->fname, head->lineno);
+                fprintf(fp, "%s id = %d %s[%d]\n", address_str, head->id, head->fname, head->lineno);
             }
             else {
-                fprintf(fp, "%s[%d]\n", head->fname, head->lineno);
+                fprintf(fp, "%s %s[%d]\n", address_str, head->fname, head->lineno);
             }
         }
 #ifdef VALGRIND_MAKE_MEM_NOACCESS
