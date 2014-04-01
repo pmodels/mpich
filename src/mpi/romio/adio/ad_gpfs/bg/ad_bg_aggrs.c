@@ -418,7 +418,7 @@ ADIOI_BG_compute_agg_ranklist_serial ( ADIO_File fd,
 	// for each ion make sure bridgelist is in rank order
 	int startSortIndex = -1;
 	int endSortIndex = -1;
-	int currentBridgeIndex = -1;
+	int currentBridgeIndex = 0;
 
 	while (endSortIndex < numbridges) {
 	    int currentIonId = summaryranklistionids[currentBridgeIndex];
