@@ -2496,6 +2496,13 @@ if test "$NEEDSPLIB" = yes -a "$PMPILIBNAME" = "$MPILIBNAME" ; then
     NEEDSPLIB=no
 fi
 
+# We are cheating a bit here and reaching inside of the libtool macros to
+# extract the correct shared library extension.  It would be nice if this
+# were publicly available in at least the same way that $libext is.
+eval SHLIB_EXT='"'$shrext_cmds'"'
+export SHLIB_EXT
+AC_SUBST(SHLIB_EXT)
+
 # ----------------------------------------------------------------------------
 # 
 # Add the steps for debugger support
@@ -2544,11 +2551,6 @@ on all link lines (consider adding it to LDFLAGS)])
     ## The default name is libtvmpich.$SHLIB_EXT (e.g., libtvmpich.so for
     ## most Unix versions, libtvmpich.dylib for Mac OSX).
     ##ENVVAR END:
-
-    # We are cheating a bit here and reaching inside of the libtool macros to
-    # extract the correct shared library extension.  It would be nice if this
-    # were publicly available in at least the same way that $libext is.
-    eval SHLIB_EXT='"'$shrext_cmds'"'
 
     if test -z "$MPICH_DEBUGLIBNAME" ; then
         DEBUGLIBNAME=libtvmpich$SHLIB_EXT
