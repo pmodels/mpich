@@ -1222,57 +1222,166 @@ fn_fail:
 struct gcn_state {
     MPIR_Context_id_t *ctx0;
     MPIR_Context_id_t *ctx1;
+    int own_mask;
+    MPID_Comm *comm_ptr;
+    MPID_Comm *comm_ptr_inter;
+    MPID_Sched_t s;
+    MPID_Comm_kind_t gcn_cid_kind;
     uint32_t local_mask[MPIR_MAX_CONTEXT_MASK];
 };
 
+static int sched_cb_gcn_copy_mask(MPID_Comm *comm, int tag, void *state);
+static int sched_cb_gcn_allocate_cid(MPID_Comm *comm, int tag, void *state);
+static int sched_cb_gcn_bcast(MPID_Comm *comm, int tag, void *state);
+
 #undef FUNCNAME
-#define FUNCNAME gcn_helper
+#define FUNCNAME sched_cb_gcn_bcast
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-static int gcn_helper(MPID_Comm *comm, int tag, void *state)
+static int sched_cb_gcn_bcast(MPID_Comm *comm, int tag, void *state)
+{
+    int mpi_errno = MPI_SUCCESS;
+    struct gcn_state *st = state;
+
+    if (st->gcn_cid_kind == MPID_INTERCOMM) {
+        if (st->comm_ptr_inter->rank == 0) {
+            mpi_errno = MPID_Sched_recv(st->ctx1, 1, MPIR_CONTEXT_ID_T_DATATYPE, 0, st->comm_ptr_inter, st->s);
+            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+            mpi_errno = MPID_Sched_send(st->ctx0, 1, MPIR_CONTEXT_ID_T_DATATYPE, 0, st->comm_ptr_inter, st->s);
+            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+            MPID_SCHED_BARRIER(st->s);
+        }
+
+        mpi_errno = st->comm_ptr->coll_fns->Ibcast_sched(st->ctx1, 1,
+                MPIR_CONTEXT_ID_T_DATATYPE, 0, st->comm_ptr, st->s);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        MPID_SCHED_BARRIER(st->s);
+    }
+
+    mpi_errno = MPID_Sched_cb(&MPIR_Sched_cb_free_buf, st, st->s);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
+fn_fail:
+    return mpi_errno;
+}
+
+#undef FUNCNAME
+#define FUNCNAME sched_cb_gcn_allocate_cid
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+static int sched_cb_gcn_allocate_cid(MPID_Comm *comm, int tag, void *state)
 {
     int mpi_errno = MPI_SUCCESS;
     struct gcn_state *st = state;
     MPIR_Context_id_t newctxid;
 
-    newctxid = MPIR_Find_and_allocate_context_id(st->local_mask);
-    if (!newctxid) {
-        int nfree = -1;
-        int ntotal = -1;
-        MPIR_ContextMaskStats(&nfree, &ntotal);
-        MPIU_ERR_SETANDJUMP3(mpi_errno, MPI_ERR_OTHER,
-                             "**toomanycomm", "**toomanycomm %d %d %d",
-                             nfree, ntotal, /*ignore_id=*/0);
+    MPIU_THREAD_CS_ENTER(CONTEXTID,);
+    if (st->own_mask) {
+        newctxid = MPIR_Find_and_allocate_context_id(st->local_mask);
+
+        if (st->ctx0)
+            *st->ctx0 = newctxid;
+        if (st->ctx1)
+            *st->ctx1 = newctxid;
+        mask_in_use = 0;
+
+        if (newctxid > 0) {
+            if (lowestContextId == st->comm_ptr->context_id)
+                lowestContextId = MPIR_MAXID;
+        }
+    }
+    MPIU_THREAD_CS_EXIT(CONTEXTID,);
+
+    if (*st->ctx0 == 0) {
+        /* do not own mask, try again */
+        mpi_errno = MPID_Sched_cb(&sched_cb_gcn_copy_mask, st, st->s);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        MPID_SCHED_BARRIER(st->s);
+    } else {
+        /* Successfully allocated a context id */
+        mpi_errno = MPID_Sched_cb(&sched_cb_gcn_bcast, st, st->s);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        MPID_SCHED_BARRIER(st->s);
     }
 
-    if (st->ctx0)
-        *st->ctx0 = newctxid;
-    if (st->ctx1)
-        *st->ctx1 = newctxid;
+    /* --BEGIN ERROR HANDLING-- */
+    /* --END ERROR HANDLING-- */
+fn_fail:
+    return mpi_errno;
+}
+
+#undef FUNCNAME
+#define FUNCNAME sched_cb_gcn_copy_mask
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+static int sched_cb_gcn_copy_mask(MPID_Comm *comm, int tag, void *state)
+{
+    int mpi_errno = MPI_SUCCESS;
+    struct gcn_state *st = state;
+
+    MPIU_THREAD_CS_ENTER(CONTEXTID,);
+    if (st->comm_ptr->context_id < lowestContextId) {
+        lowestContextId = st->comm_ptr->context_id;
+    }
+    if (mask_in_use || (st->comm_ptr->context_id != lowestContextId)) {
+        memset(st->local_mask, 0, MPIR_MAX_CONTEXT_MASK * sizeof(int));
+        st->own_mask = 0;
+    } else {
+        MPIU_Memcpy(st->local_mask, context_mask, MPIR_MAX_CONTEXT_MASK * sizeof(uint32_t));
+        mask_in_use = 1;
+        st->own_mask = 1;
+    }
+    MPIU_THREAD_CS_ENTER(CONTEXTID,);
+
+    mpi_errno = st->comm_ptr->coll_fns->Iallreduce_sched(MPI_IN_PLACE, st->local_mask, MPIR_MAX_CONTEXT_MASK,
+                                               MPI_UINT32_T, MPI_BAND, st->comm_ptr, st->s);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    MPID_SCHED_BARRIER(st->s);
+
+    mpi_errno = MPID_Sched_cb(&sched_cb_gcn_allocate_cid, st, st->s);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    MPID_SCHED_BARRIER(st->s);
 
 fn_fail:
     return mpi_errno;
 }
 
 
-/* Does the meat of the algorithm, adds the relevant entries to the schedule.
- * Assigns the resulting value to *ctx0 and *ctx1, as long as those respective
- * pointers are non-NULL. */
-/* FIXME this version only works for single-threaded code, it will totally fail
- * for any multithreaded communicator creation */
+/** The multi-threaded nonblocking algorithm of getting a context id
+ *
+ * 1. It shares the same global flag 'mask_in_use' with other communicator
+ * functions to protect access to context_mask. And use CONTEXTID lock to
+ * protext critical sections.
+ *
+ * 2. It uses the same algorithm as multithreaded MPI_Comm_dup (multi-threaded
+ * vertion of MPIR_Get_contextid_sparse_group) to allocate a context id, but in
+ * a nonblocking way. In the case of conflicts, the algorithm needs to retry
+ * the allocation process again. In the nonblocking algorithm, 1) new entries
+ * are inserted to the end of schedule to replace the 'while' loop in
+ * MPI_Comm_dup algorithm; 2) all arguments passed to sched_get_cid_nonblock
+ * are saved to gcn_state in order to be called in the future; 3) in
+ * sched_cb_gcn_allocate_cid, if the first try failed, it will insert
+ * sched_cb_gcn_copy_mask to the schedule again.
+ *
+ * 3. There is a subtle difference between INTRACOMM and INTERCOMM when
+ * duplicating a communicator.  They needed to be treated differently in
+ * current algorithm. Specifically, 1) when calling sched_get_cid_nonblock, the
+ * parameters are different; 2) updating newcommp->recvcontext_id in
+ * MPIR_Get_intercomm_contextid_nonblock has been moved to sched_cb_gcn_bcast
+ * because this should happen after sched_cb_gcn_allocate_cid has succeed.
+ */
 #undef FUNCNAME
-#define FUNCNAME gcn_sch
+#define FUNCNAME sched_get_cid_nonblock
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-static int gcn_sch(MPID_Comm *comm_ptr, MPIR_Context_id_t *ctx0, MPIR_Context_id_t *ctx1, MPID_Sched_t s)
+static int sched_get_cid_nonblock(MPID_Comm *comm_ptr, MPIR_Context_id_t *ctx0,
+        MPIR_Context_id_t *ctx1, MPID_Sched_t s, MPID_Comm_kind_t gcn_cid_kind)
 {
     int mpi_errno = MPI_SUCCESS;
     struct gcn_state *st = NULL;
     MPIU_CHKPMEM_DECL(1);
 
-    MPIU_Assert(comm_ptr->comm_kind == MPID_INTRACOMM);
-
-    /* first do as much local setup as we can */
+    MPIU_THREAD_CS_ENTER(CONTEXTID,);
     if (initialize_context_mask) {
         MPIR_Init_contextid();
     }
@@ -1280,21 +1389,21 @@ static int gcn_sch(MPID_Comm *comm_ptr, MPIR_Context_id_t *ctx0, MPIR_Context_id
     MPIU_CHKPMEM_MALLOC(st, struct gcn_state *, sizeof(struct gcn_state), mpi_errno, "gcn_state");
     st->ctx0 = ctx0;
     st->ctx1 = ctx1;
-    MPIU_Memcpy(st->local_mask, context_mask, MPIR_MAX_CONTEXT_MASK * sizeof(uint32_t));
+    if (gcn_cid_kind == MPID_INTRACOMM) {
+        st->comm_ptr = comm_ptr;
+        st->comm_ptr_inter = NULL;
+    } else {
+        st->comm_ptr = comm_ptr->local_comm;
+        st->comm_ptr_inter = comm_ptr;
+    }
+    st->s = s;
+    st->gcn_cid_kind = gcn_cid_kind;
+    *(st->ctx0) = 0;
+    MPIU_THREAD_CS_EXIT(CONTEXTID,);
 
-    mpi_errno = comm_ptr->coll_fns->Iallreduce_sched(MPI_IN_PLACE, st->local_mask, MPIR_MAX_CONTEXT_MASK,
-                                               MPI_UINT32_T, MPI_BAND, comm_ptr, s);
+    mpi_errno = MPID_Sched_cb(&sched_cb_gcn_copy_mask, st, s);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-
     MPID_SCHED_BARRIER(s);
-
-    mpi_errno = MPID_Sched_cb(&gcn_helper, st, s);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-
-    MPID_SCHED_BARRIER(s);
-
-    mpi_errno = MPID_Sched_cb(&MPIR_Sched_cb_free_buf, st, s);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
     MPIU_CHKPMEM_COMMIT();
 fn_exit:
@@ -1328,7 +1437,7 @@ int MPIR_Get_contextid_nonblock(MPID_Comm *comm_ptr, MPID_Comm *newcommp, MPID_R
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
     /* add some entries to it */
-    mpi_errno = gcn_sch(comm_ptr, &newcommp->context_id, &newcommp->recvcontext_id, s);
+    mpi_errno = sched_get_cid_nonblock(comm_ptr, &newcommp->context_id, &newcommp->recvcontext_id, s, MPID_INTRACOMM);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
     /* finally, kick off the schedule and give the caller a request */
@@ -1353,7 +1462,6 @@ int MPIR_Get_intercomm_contextid_nonblock(MPID_Comm *comm_ptr, MPID_Comm *newcom
     int mpi_errno = MPI_SUCCESS;
     int tag;
     MPID_Sched_t s;
-    MPID_Comm *lcomm = NULL;
     MPID_MPI_STATE_DECL(MPID_STATE_MPIR_GET_INTERCOMM_CONTEXTID_NONBLOCK);
 
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPIR_GET_INTERCOMM_CONTEXTID_NONBLOCK);
@@ -1363,7 +1471,6 @@ int MPIR_Get_intercomm_contextid_nonblock(MPID_Comm *comm_ptr, MPID_Comm *newcom
         mpi_errno = MPIR_Setup_intercomm_localcomm(comm_ptr);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     }
-    lcomm = comm_ptr->local_comm;
 
     /* now create a schedule */
     mpi_errno = MPID_Sched_next_tag(comm_ptr, &tag);
@@ -1374,22 +1481,7 @@ int MPIR_Get_intercomm_contextid_nonblock(MPID_Comm *comm_ptr, MPID_Comm *newcom
     /* add some entries to it */
 
     /* first get a context ID over the local comm */
-    mpi_errno = gcn_sch(lcomm, &newcommp->recvcontext_id, NULL, s);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-
-    MPID_SCHED_BARRIER(s);
-
-    if (comm_ptr->rank == 0) {
-        newcommp->recvcontext_id = -1;
-        mpi_errno = MPID_Sched_recv(&newcommp->context_id, 1, MPIR_CONTEXT_ID_T_DATATYPE, 0, comm_ptr, s);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-        mpi_errno = MPID_Sched_send(&newcommp->recvcontext_id, 1, MPIR_CONTEXT_ID_T_DATATYPE, 0, comm_ptr, s);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-        MPID_SCHED_BARRIER(s);
-    }
-
-    mpi_errno = lcomm->coll_fns->Ibcast_sched(&newcommp->context_id, 1,
-                                        MPIR_CONTEXT_ID_T_DATATYPE, 0, lcomm, s);
+    mpi_errno = sched_get_cid_nonblock(comm_ptr, &newcommp->recvcontext_id, &newcommp->context_id, s, MPID_INTERCOMM);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
     /* finally, kick off the schedule and give the caller a request */

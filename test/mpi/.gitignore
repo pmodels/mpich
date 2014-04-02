@@ -600,6 +600,7 @@
 /comm/comm_group_rand
 /comm/comm_idup
 /comm/comm_idup_mul
+/comm/comm_idup_overlap
 /comm/comm_info
 /comm/commcreate1
 /comm/ctxsplit
