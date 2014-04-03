@@ -78,7 +78,7 @@ int MPI_File_set_size(MPI_File fh, MPI_Offset size)
     }
     /* --END ERROR HANDLING-- */
 
-    if (ADIO_Feature(adio_fh, ADIO_SCALABLE_RESIZE)) {
+    if (!ADIO_Feature(adio_fh, ADIO_SCALABLE_RESIZE)) {
 	/* rare stupid file systems (like NFS) need to carry out resize on all
 	 * processes */
 	ADIOI_TEST_DEFERRED(adio_fh, "MPI_File_set_size", &error_code);
