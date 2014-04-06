@@ -141,6 +141,9 @@ if BUILD_PROFILING_LIB
 lib_lib@PMPILIBNAME@_la_LIBADD =
 endif BUILD_PROFILING_LIB
 
+lib_lib@MPILIBNAME@_la_SOURCES =
+lib_lib@MPILIBNAME@_la_LDFLAGS =
+lib_lib@MPILIBNAME@_la_CPPFLAGS =
 lib_lib@MPILIBNAME@_la_LIBADD =
 
 if BUILD_F77_BINDING
@@ -155,23 +158,27 @@ endif BUILD_CXX_BINDING
 include maint/Makefile.mk
 include src/Makefile.mk
 
-lib_LTLIBRARIES += lib/lib@MPILIBNAME@.la
-lib_lib@MPILIBNAME@_la_SOURCES = $(mpi_sources)
-lib_lib@MPILIBNAME@_la_LDFLAGS = $(external_ldflags) $(ABIVERSIONFLAGS)
-lib_lib@MPILIBNAME@_la_LIBADD += $(external_libs)
-lib_lib@MPILIBNAME@_la_CPPFLAGS = $(AM_CPPFLAGS)
-
 if BUILD_PROFILING_LIB
 lib_LTLIBRARIES += lib/lib@PMPILIBNAME@.la
 # dropping mpi_fc_sources and mpi_cxx_sources from the below PMPI list
 # since they don't contribute any PMPI symbols.
 lib_lib@PMPILIBNAME@_la_SOURCES = $(mpi_sources) $(mpi_f77_sources) $(mpi_core_sources)
-lib_lib@PMPILIBNAME@_la_LDFLAGS = $(ABIVERSIONFLAGS)
+lib_lib@PMPILIBNAME@_la_LDFLAGS = $(external_ldflags) $(ABIVERSIONFLAGS)
+lib_lib@PMPILIBNAME@_la_LIBADD += $(external_libs)
 lib_lib@MPILIBNAME@_la_CPPFLAGS += -DMPICH_MPI_FROM_PMPI
 lib_lib@MPILIBNAME@_la_LIBADD += lib/lib@PMPILIBNAME@.la
 else !BUILD_PROFILING_LIB
 lib_lib@MPILIBNAME@_la_SOURCES += $(mpi_core_sources)
+lib_lib@MPILIBNAME@_la_LIBADD += $(external_libs)
 endif !BUILD_PROFILING_LIB
+
+# lib@MPILIBNAME@.la might depend on lib@PMPILIBNAME@.la.  We add them
+# in that order to lib_LTLIBRARIES so libtool doesn't get
+# confused. (see https://bugzilla.redhat.com/show_bug.cgi?id=91110)
+lib_LTLIBRARIES += lib/lib@MPILIBNAME@.la
+lib_lib@MPILIBNAME@_la_SOURCES += $(mpi_sources)
+lib_lib@MPILIBNAME@_la_LDFLAGS += $(external_ldflags) $(ABIVERSIONFLAGS)
+lib_lib@MPILIBNAME@_la_CPPFLAGS += $(AM_CPPFLAGS)
 
 if BUILD_F77_BINDING
 lib_LTLIBRARIES += lib/lib@MPIFCLIBNAME@.la
