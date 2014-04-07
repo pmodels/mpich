@@ -1,0 +1,26 @@
+# -*- Mode: Makefile; -*-
+# vim: set ft=automake :
+#
+# (C) 2014 by Argonne National Laboratory.
+#     See COPYRIGHT in top-level directory.
+#
+
+# these CPPFLAGS are only used when building C/C++ source files, not for actual
+# F08 code itself
+AM_CPPFLAGS = -I$(top_builddir)/include -I$(top_srcdir)/include
+
+LDADD = $(top_builddir)/f08/util/mtestf08.o
+
+# This is right for many platforms, but not all.  The right fix involves a
+# configure test, but this version is no worse than the simplemake version was.
+AM_FFLAGS = -I.
+
+$(top_builddir)/f08/util/mtestf08.o: $(top_srcdir)/f08/util/mtestf08.f90
+	(cd $(top_builddir)/f08/util && $(MAKE) mtestf08.o)
+
+
+testing:
+	$(top_builddir)/runtests -srcdir=$(srcdir) -tests=testlist \
+		-mpiexec=${MPIEXEC} -xmlfile=summary.xml
+
+CLEANFILES = summary.xml summary.tap
