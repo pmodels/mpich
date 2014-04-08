@@ -102,6 +102,11 @@ void
 PAMIX_Progress_disable(pami_context_t   context,
                        pamix_progress_t event_type);
 
+pami_result_t
+PAMIX_is_local_task_get_node_info(pami_task_t  task,
+                                  uint32_t    *node_id,
+                                  uint32_t    *offset,
+                                  uint32_t    *max_nodes);
 
 #ifdef __BGQ__
 

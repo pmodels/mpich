@@ -36,6 +36,7 @@
 
 #ifdef __BGQ__
 #define __BG__
+#include <spi/include/kernel/location.h>
 #endif
 
 typedef pami_result_t (*pamix_progress_register_fn) (pami_context_t            context,
@@ -81,7 +82,6 @@ pamix_extension_info_t PAMIX_Extensions;
 ({                                                      \
   void* fn;                                             \
   fn = PAMI_Extension_symbol(ext, name);                \
-  PAMIX_assert_always(fn != NULL);                      \
   (type)fn;                                             \
 })
 void
@@ -115,6 +115,13 @@ PAMIX_Initialize(pami_client_t client)
         PAMIX_Extensions.is_local_task.bitmask = PAMI_EXTENSION_FUNCTION(uintptr_t, "bitmask", PAMIX_Extensions.is_local_task.extension);
 #if defined(MPID_USE_NODE_IDS)
         PAMIX_Extensions.is_local_task.node_info = PAMI_EXTENSION_FUNCTION(node_info_fn, "get_node_info", PAMIX_Extensions.is_local_task.extension);
+        if (PAMIX_Extensions.is_local_task.node_info == NULL)
+          {
+            /* The "node information" is not available via the "is_local_task"
+             * extension to pami - possibly due to a downlevel version of pami.
+             * */
+           PAMIX_Extensions.is_local_task.node_info = (node_info_fn) PAMIX_is_local_task_get_node_info;
+          }
 #endif
       }
 
@@ -267,6 +274,36 @@ PAMIX_Progress_disable(pami_context_t   context,
   PAMIX_assert(rc == PAMI_SUCCESS);
 }
 
+
+pami_result_t
+PAMIX_is_local_task_get_node_info(pami_task_t  task,
+                                  uint32_t    *node_id,
+                                  uint32_t    *offset,
+                                  uint32_t    *max_nodes)
+{
+#if defined(__BG__)
+  size_t coords[5];
+  if (PAMI_SUCCESS == PAMIX_Task2torus(task, coords))
+    {
+      const pamix_torus_info_t * info = PAMIX_Torus_info();
+
+      *node_id =
+        coords[0] +
+        coords[1] * info->size[0] +
+        coords[2] * info->size[0] * info->size[1] +
+        coords[3] * info->size[0] * info->size[1] * info->size[2] +
+        coords[1] * info->size[0] * info->size[1] * info->size[2] * info->size[3];
+
+      *max_nodes = info->size[0] * info->size[1] * info->size[2] * info->size[3] * info->size[4];
+
+      *offset = 0; /* ???????????????????????????????? */
+    }
+#else
+  MPID_abort(); /* Other platforms should not need a fallback implementation */
+#endif
+
+  return PAMI_SUCCESS;
+}
 
 #if defined(__BG__)
 
