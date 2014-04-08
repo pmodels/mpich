@@ -23,6 +23,7 @@
 
 #include <assert.h>
 #include <limits.h>
+#include "mpidimpl.h"
 #include <pamix.h>
 
 #define PAMIX_assert_always(x) assert(x)

@@ -48,15 +48,28 @@ int CheckRankOnNode(MPID_Comm  * comm_ptr,int *onNode ) {
 
       *onNode=1;
 
-      if (comm_ptr->intranode_table == NULL)
-        *onNode = 0;
-      else
+#ifdef __PE__
         for (i=0; i< comm_size; i++) {
           if (comm_ptr->intranode_table[i] == -1) {
             *onNode=0;
             break;
           }
       }
+#else
+#ifdef PAMIX_IS_LOCAL_TASK
+      for (i=0; i< comm_size; i++) {
+        if (!PAMIX_Task_is_local(comm_ptr->vcr[i]->taskid)) {
+          *onNode=0;
+          break;
+        }
+      } 
+#else
+      if (comm_ptr->intranode_table == NULL)
+        *onNode = 0;
+#endif
+#endif
+
+
      if (*onNode== 0) {
       MPIU_ERR_SETANDSTMT(mpi_errno, MPI_ERR_RMA_CONFLICT,
                           return mpi_errno, "**rmaconflict");
@@ -374,32 +387,71 @@ MPID_Win_allocate_shared(MPI_Aint     size,
                          MPID_Win  ** win_ptr)
 {
   int mpi_errno  = MPI_SUCCESS;
+  int onNode     = 0;
+  MPID_Win    *win = NULL;
+  int rank;
+
   void **baseP = base_ptr;
   MPIDI_Win_info  *winfo;
-  MPID_Win    *win;
-  int         rank, comm_size,i;
-  int         onNode,noncontig=FALSE;
+  int         comm_size,i;
+  int         noncontig=FALSE;
   MPI_Aint    pageSize=0;
- 
-  
-  
-  mpi_errno =MPIDI_Win_init(size,disp_unit,win_ptr, info, comm_ptr, MPI_WIN_FLAVOR_SHARED, MPI_WIN_UNIFIED);
-  if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-  win = *win_ptr;
+
+  /* Verify all ranks are on-node */
   mpi_errno=CheckRankOnNode(comm_ptr,&onNode);
   if (mpi_errno) MPIU_ERR_POP(mpi_errno);
   MPIU_ERR_CHKANDJUMP((onNode == 0), mpi_errno, MPI_ERR_RMA_SHARED, "**rmashared");
-  mpi_errno=CheckSpaceType(win_ptr,info,&noncontig);
-  rank     = (*win_ptr)->comm_ptr->rank;
-  comm_size = (*win_ptr)->comm_ptr->local_size;
+  
+  /* Initialize the window */
+  mpi_errno =MPIDI_Win_init(size,disp_unit,win_ptr, info, comm_ptr, MPI_WIN_FLAVOR_SHARED, MPI_WIN_UNIFIED);
+  if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+  win = *win_ptr;
   win->mpid.shm = MPIU_Malloc(sizeof(MPIDI_Win_shm_t));
-  win->mpid.shm->allocated=0;
   MPID_assert(win->mpid.shm != NULL);
+  memset(win->mpid.shm, 0, sizeof(MPIDI_Win_shm_t));
+
+  rank = comm_ptr->rank;
+  win->mpid.info[rank].win = win;
+  win->mpid.info[rank].disp_unit = disp_unit;
+
+#ifdef __BGQ__
+  /* verify BG_MAPCOMMONHEAP=1 env. variable is set */
+  if (rank == 0) {
+    assert(NULL!=getenv("BG_MAPCOMMONHEAP"));
+    baseP = MPIU_Malloc(size+sizeof(pthread_mutex_t));
+#ifdef MPIDI_NO_ASSERT
+    MPIU_ERR_CHKANDJUMP((baseP == NULL), mpi_errno, MPI_ERR_BUFFER, "**bufnull");
+#else
+    MPID_assert(baseP != NULL);
+#endif
+
+    pthread_mutex_t *mutex = (pthread_mutex_t *)(((uintptr_t) baseP) + size);
+    pthread_mutexattr_t attr;
+    pthread_mutexattr_init(&attr);
+    pthread_mutex_init(mutex, &attr);
+  }
+
+  int errflag = 0;
+  mpi_errno = MPIR_Bcast_impl(&baseP, sizeof(char*), MPI_BYTE, 0,
+                              win->comm_ptr, &errflag);
+
+  win->mpid.shm->mutex_lock = (pthread_mutex_t *)(((uintptr_t) baseP) + size);
+  win->mpid.shm->allocated = 1;
+  win->mpid.shm->base_addr = baseP;
+
+  win->base = baseP;
+  win->mpid.info[rank].base_addr = baseP;
+
+  mpi_errno = MPIDI_Win_allgather(size,win_ptr);
+  if (mpi_errno != MPI_SUCCESS) {
+    MPIU_Free(win->mpid.shm);
+    return mpi_errno;
+  }
+#else
+  mpi_errno=CheckSpaceType(win_ptr,info,&noncontig);
+  comm_size = (*win_ptr)->comm_ptr->local_size;
   MPID_getSharedSegment(size, disp_unit,comm_ptr,baseP, win_ptr,&pageSize,&noncontig);
 
-  winfo = &win->mpid.info[rank];
-  winfo->win = win;
-  winfo->disp_unit = disp_unit;
   mpi_errno = MPIDI_Win_allgather(size,win_ptr);
   if (mpi_errno != MPI_SUCCESS)
       return mpi_errno;
@@ -419,15 +471,18 @@ MPID_Win_allocate_shared(MPI_Aint     size,
            }
       }
   }
+#endif
+
   *(void**) base_ptr = (void *) win->mpid.info[rank].base_addr;
 
   mpi_errno = MPIR_Barrier_impl(comm_ptr, &mpi_errno);
-
 fn_exit:
     return mpi_errno;
     /* --BEGIN ERROR HANDLING-- */
 fn_fail:
-    MPIU_Free(win->mpid.shm);
+    if (win != NULL)
+      if (win->mpid.shm != NULL)
+        MPIU_Free(win->mpid.shm);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 
