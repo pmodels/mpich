@@ -12,6 +12,8 @@
 #include "mpid_nem_impl.h"
 #include "llc.h"
 
+extern int MPID_nem_tofu_my_llc_rank;
+
 /* The vc provides a generic buffer in which network modules can store
  *    private fields This removes all dependencies from the VC struction
  *       on the network module, facilitating dynamic module loading. */
@@ -34,6 +36,7 @@ typedef struct
 
 /* macro for tofu private in VC */
 #define VC_TOFU(vc) ((MPID_nem_tofu_vc_area *)(vc)->ch.netmod_area.padding)
+#define VC_FIELD(vcp, field) (((MPID_nem_tofu_vc_area *)(vc)->ch.netmod_area.padding)->field)
 
 typedef struct
 {
@@ -45,6 +48,11 @@ typedef struct
 #define REQ_TOFU(req) \
     ((MPID_nem_tofu_req_area *)(&(req)->ch.netmod_area.padding))
 #define REQ_FIELD(reqp, field) (((MPID_nem_tofu_req_area *)((reqp)->ch.netmod_area.padding))->field)
+
+struct llctofu_cmd_area {
+    void *cbarg;
+    uint32_t raddr;
+};
 
 /* functions */
 int MPID_nem_tofu_init (MPIDI_PG_t *pg_p, int pg_rank, char **bc_val_p, int *val_max_sz_p);
@@ -71,6 +79,9 @@ int MPID_nem_tofu_isend(struct MPIDI_VC *vc, const void *buf, int count, MPI_Dat
                         int dest, int tag, MPID_Comm *comm, int context_offset,
                         struct MPID_Request **request );
 int MPID_nem_tofu_recv_posted(struct MPIDI_VC *vc, struct MPID_Request *req);
+int MPID_nem_tofu_kvs_put_binary(int from, const char *postfix, const uint8_t * buf,
+                                 int length);
+int MPID_nem_tofu_kvs_get_binary(int from, const char *postfix, char *buf, int length);
 
 /*
  * temporary llctofu api

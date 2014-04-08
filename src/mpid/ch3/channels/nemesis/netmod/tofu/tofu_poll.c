@@ -9,6 +9,13 @@
 #include "mpid_nem_impl.h"
 #include "tofu_impl.h"
 
+#define MPID_NEM_TOFU_DEBUG_POLL
+#ifdef MPID_NEM_TOFU_DEBUG_POLL
+#define dprintf printf
+#else
+#define dprintf(...)
+#endif
+
 /* function prototypes */
 
 static void MPID_nem_tofu_send_handler(void *cba,
@@ -89,12 +96,26 @@ static void MPID_nem_tofu_send_handler(void *cba,
     case MPID_PREQUEST_SEND: {
         reqtype = MPIDI_Request_get_type(sreq);
         MPIU_Assert(reqtype != MPIDI_REQUEST_TYPE_GET_RESP);
-
-        int is_contig;
-        MPID_Datatype_is_contig(sreq->dev.datatype, &is_contig);
-        if (!is_contig && REQ_FIELD(sreq, pack_buf)) {
-            dprintf("tofu_send_handler,non-contiguous,free pack_buf\n");
-            MPIU_Free(REQ_FIELD(req, pack_buf));
+        
+        /* Free temporal buffer for non-contiguous data.
+         * MPIDI_Request_create_sreq (in mpid_isend.c) sets req->dev.datatype.
+         * A control message has a req_type of MPIDI_REQUEST_TYPE_RECV and
+         * msg_type of MPIDI_REQUEST_EAGER_MSG because
+         * control message send follows
+         * MPIDI_CH3_iStartMsg/v-->MPID_nem_tofu_iStartContigMsg-->MPID_nem_tofu_iSendContig
+         * and MPID_nem_tofu_iSendContig set req->dev.state to zero
+         * because MPID_Request_create (in src/mpid/ch3/src/ch3u_request.c)
+         * sets it to zero. In addition, eager-short message has req->comm of zero. */
+        if (reqtype != MPIDI_REQUEST_TYPE_RECV && sreq->comm) {
+            /* Exclude control messages which have MPIDI_REQUEST_TYPE_RECV.
+             * Note that RMA messages should be included.
+             * Exclude eager-short by requiring req->comm != 0. */
+            int is_contig;
+            MPID_Datatype_is_contig(sreq->dev.datatype, &is_contig);
+            if (!is_contig && REQ_FIELD(sreq, pack_buf)) {
+                dprintf("tofu_send_handler,non-contiguous,free pack_buf\n");
+                MPIU_Free(REQ_FIELD(sreq, pack_buf));
+            }
         }
         
         /* sreq: src/mpid/ch3/include/mpidpre.h */
@@ -131,6 +152,8 @@ static void MPID_nem_tofu_send_handler(void *cba,
         }
         break; }
     default:
+        printf("send_handler,unknown kind=%08x\n", sreq->kind);
+        MPID_nem_tofu_segv;
         break;
     }
     
@@ -209,21 +232,27 @@ static void MPID_nem_tofu_recv_handler(
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 int MPID_nem_tofu_recv_posted(struct MPIDI_VC *vc, struct MPID_Request *req)
 {
-    int mpi_errno = MPI_SUCCESS;
+    int mpi_errno = MPI_SUCCESS, llc_errno;
     int dt_contig;
     MPIDI_msg_sz_t data_sz;
     MPID_Datatype *dt_ptr;
     MPI_Aint dt_true_lb;
+    int i;
 
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_TOFU_RECV_POSTED);
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_TOFU_RECV_POSTED);
 
-    /* req->dev.datatype is set in MPIDI_CH3U_Recvq_FDU_or_AEP (in src/mpid/ch3/src/ch3u_recvq.c) */
+    /* req->dev.datatype is set in MPID_irecv --> MPIDI_CH3U_Recvq_FDU_or_AEP */
     MPIDI_Datatype_get_info(req->dev.user_count, req->dev.datatype, dt_contig, data_sz, dt_ptr,
                             dt_true_lb);
 
-    /* stash vc for ib_poll */
-    req->ch.vc = vc;
+    /* Don't save VC because it's not used in llctofu_poll */
+
+    /* Save data size for llctofu_poll */
+    req->dev.recv_data_sz = data_sz;
+
+    dprintf("tofu_recv_posted,%d<-%d,vc=%p,req=%p,user_buf=%p,data_sz=%ld,datatype=%08x,dt_contig=%d\n",
+            MPIDI_Process.my_pg_rank, vc->pg_rank, vc, req, req->dev.user_buf, req->dev.recv_data_sz, req->dev.datatype, dt_contig);
 
     void *write_to_buf;
     if (dt_contig) {
@@ -236,28 +265,47 @@ int MPID_nem_tofu_recv_posted(struct MPIDI_VC *vc, struct MPID_Request *req)
         write_to_buf = REQ_FIELD(req, pack_buf);
     }
 
+    int LLC_my_rank;
+    LLC_comm_rank(LLC_COMM_WORLD, &LLC_my_rank);
+    dprintf("tofu_isend,LLC_my_rank=%d\n", LLC_my_rank);
+
+    dprintf("tofu_recv_posted,remote_endpoint_addr=%ld\n", VC_FIELD(vc, remote_endpoint_addr));
+
+    LLC_cmd_t *cmd = LLC_cmd_alloc(1);
+
     cmd[0].opcode = LLC_OPCODE_RECV;
     cmd[0].comm = LLC_COMM_WORLD;
     cmd[0].rank = VC_FIELD(vc, remote_endpoint_addr);
+    cmd[0].req_id = cmd;
     
-    ((MPIDI_Message_match_parts_t*)(&cmd[0].match.bits))->rank = comm->rank;
-    ((MPIDI_Message_match_parts_t*)(&cmd[0].match.bits))->tag = tag;
- 	((MPIDI_Message_match_parts_t*)(&cmd[0].match.bits))->context_id = comm->context_id + context_offset;
+    /* req->comm is set in MPID_irecv --> MPIDI_CH3U_Recvq_FDU_or_AEP */
     MPIU_Assert(sizeof(LLC_match_t) >= sizeof(MPIDI_Message_match_parts_t));
-    memset((uint8_t*)&cmd[0].match.bits + sizeof(MPIDI_Message_match_parts_t),
+    memcpy(cmd[0].match.bits, &req->dev.match.parts, sizeof(MPIDI_Message_match_parts_t));
+    memset((uint8_t*)cmd[0].match.bits + sizeof(MPIDI_Message_match_parts_t),
            0, sizeof(LLC_match_t) - sizeof(MPIDI_Message_match_parts_t));
 
+    dprintf("tofu_recv_posted,match.bits=");
+    for(i = 0; i < sizeof(LLC_match_t); i++) {
+        dprintf("%02x", cmd[0].match.bits[i]);
+    }
+    dprintf("\n");
+
  
+    cmd[0].iov_local = LLC_iov_alloc(1);
     cmd[0].iov_local[0].addr = (uint64_t)write_to_buf;
     cmd[0].iov_local[0].length = data_sz;
     cmd[0].niov_local = 1;
     
+    cmd[0].iov_remote = LLC_iov_alloc(1);
     cmd[0].iov_remote[0].addr = 0;
     cmd[0].iov_remote[0].length = data_sz;;
     cmd[0].niov_remote = 1;
     
+    ((struct llctofu_cmd_area *)cmd[0].usr_area)->cbarg = req;
+    ((struct llctofu_cmd_area *)cmd[0].usr_area)->raddr = VC_FIELD(vc, remote_endpoint_addr);
+
     llc_errno = LLC_post(cmd, 1);
-    ERR_CHKANDJUMP(llc_errno != LLC_SUCCESS, -1, printf("LLC_post failed\n"));
+    MPIU_ERR_CHKANDJUMP(llc_errno != LLC_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**LLC_post");
 
   fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_TOFU_RECV_POSTED);

@@ -9,27 +9,57 @@
 #include "mpid_nem_impl.h"
 #include "tofu_impl.h"
 
+#define MPID_NEM_TOFU_DEBUG_SEND
+#ifdef MPID_NEM_TOFU_DEBUG_SEND
+#define dprintf printf
+#else
+#define dprintf(...)
+#endif
+
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_tofu_isend
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 int MPID_nem_tofu_isend(struct MPIDI_VC *vc, const void *buf, int count, MPI_Datatype datatype,
                         int dest, int tag, MPID_Comm *comm, int context_offset,
-                        struct MPID_Request **request )
+                        struct MPID_Request **req_out)
 {
-    int mpi_errno = MPI_SUCCESS;
+    int mpi_errno = MPI_SUCCESS, llc_errno;
     int dt_contig;
     MPIDI_msg_sz_t data_sz;
     MPID_Datatype *dt_ptr;
     MPI_Aint dt_true_lb;
+    int i;
 
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_TOFU_ISEND);
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_TOFU_ISEND);
 
+    dprintf("tofu_isend,%d->%d,buf=%p,count=%d,datatype=%08x,dest=%d,tag=%08x,comm=%p,context_offset=%d\n",
+            MPIDI_Process.my_pg_rank, vc->pg_rank, buf, count, datatype, dest, tag, comm, context_offset);
+
+    int LLC_my_rank;
+    LLC_comm_rank(LLC_COMM_WORLD, &LLC_my_rank);
+    dprintf("tofu_isend,LLC_my_rank=%d\n", LLC_my_rank);
+
+    struct MPID_Request * sreq = MPID_Request_create();
+    MPIU_Assert(sreq != NULL);
+    MPIU_Object_set_ref(sreq, 2);
+    sreq->kind = MPID_REQUEST_SEND;
+
+    /* Used in tofullc_poll --> MPID_nem_tofu_send_handler */
+    sreq->ch.vc = vc;
+    sreq->dev.OnDataAvail = 0;
+    /* Don't save iov_offset because it's not used. */
+
+    /* Save it because it's used in send_handler */
+    sreq->dev.datatype = datatype;
+
+    dprintf("tofu_isend,remote_endpoint_addr=%ld\n", VC_FIELD(vc, remote_endpoint_addr));
+
     LLC_cmd_t *cmd = LLC_cmd_alloc(1);
     cmd[0].opcode = LLC_OPCODE_SEND;
     cmd[0].comm = LLC_COMM_WORLD;
-    cmd[0].rank = vc_tofu->remote_endpoint_addr;
+    cmd[0].rank = VC_FIELD(vc, remote_endpoint_addr);
     cmd[0].req_id = cmd;
     
     /* Prepare bit-vector to perform tag-match. We use the same bit-vector as in CH3 layer. */
@@ -41,12 +71,20 @@ int MPID_nem_tofu_isend(struct MPIDI_VC *vc, const void *buf, int count, MPI_Dat
     memset((uint8_t*)&cmd[0].match.bits + sizeof(MPIDI_Message_match_parts_t),
            0, sizeof(LLC_match_t) - sizeof(MPIDI_Message_match_parts_t));
 
+    dprintf("tofu_isend,match.bits=");
+    for(i = 0; i < sizeof(LLC_match_t); i++) {
+        dprintf("%02x", cmd[0].match.bits[i]);
+    }
+    dprintf("\n");
 
     /* Prepare RDMA-write from buffer */
     MPIDI_Datatype_get_info(count, datatype, dt_contig, data_sz, dt_ptr,
                             dt_true_lb);
+    dprintf("tofu_isend,dt_contig=%d,data_sz=%ld\n",
+            dt_contig, data_sz);
 
-    void *write_from_buf;
+
+    const void *write_from_buf;
     if (dt_contig) {
         write_from_buf = buf;
     }
@@ -60,13 +98,13 @@ int MPID_nem_tofu_isend(struct MPIDI_VC *vc, const void *buf, int count, MPI_Dat
         MPIDI_msg_sz_t segment_size = data_sz;
         MPIDI_msg_sz_t last = segment_size;
         MPIU_Assert(last > 0);
-        REQ_FIELD(req, pack_buf) = MPIU_Malloc((size_t) data_sz);
-        MPIU_ERR_CHKANDJUMP(!REQ_FIELD(req, pack_buf), mpi_errno, MPI_ERR_OTHER,
+        REQ_FIELD(sreq, pack_buf) = MPIU_Malloc((size_t) data_sz);
+        MPIU_ERR_CHKANDJUMP(!REQ_FIELD(sreq, pack_buf), mpi_errno, MPI_ERR_OTHER,
                             "**outofmemory");
         MPID_Segment_pack(segment_ptr, segment_first, &last,
-                          (char *) (REQ_FIELD(req, pack_buf)));
+                          (char *) (REQ_FIELD(sreq, pack_buf)));
         MPIU_Assert(last == data_sz);
-        write_from_buf = REQ_FIELD(req, lmt_pack_buf);
+        write_from_buf = REQ_FIELD(sreq, pack_buf);
     }
 
     cmd[0].iov_local = LLC_iov_alloc(1);
@@ -79,10 +117,14 @@ int MPID_nem_tofu_isend(struct MPIDI_VC *vc, const void *buf, int count, MPI_Dat
     cmd[0].iov_remote[0].length = data_sz;
     cmd[0].niov_remote = 1;
     
+    ((struct llctofu_cmd_area *)cmd[0].usr_area)->cbarg = sreq;
+    ((struct llctofu_cmd_area *)cmd[0].usr_area)->raddr = VC_FIELD(vc, remote_endpoint_addr);
+    
     llc_errno = LLC_post(cmd, 1);
     MPIU_ERR_CHKANDJUMP(llc_errno != LLC_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**LLC_post");
 
   fn_exit:
+    *req_out = sreq;
     MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_TOFU_ISEND);
     return mpi_errno;
   fn_fail:
@@ -102,6 +144,9 @@ int MPID_nem_tofu_iStartContigMsg(MPIDI_VC_t *vc, void *hdr, MPIDI_msg_sz_t hdr_
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_TOFU_ISTARTCONTIGMSG);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_TOFU_ISTARTCONTIGMSG);
+
+    dprintf("tofu_iStartContigMsg,%d->%d,hdr=%p,hdr_sz=%ld,data=%p,data_sz=%ld\n",
+            MPIDI_Process.my_pg_rank, vc->pg_rank, hdr, hdr_sz, data, data_sz);
 
     MPIU_Assert(hdr_sz <= sizeof(MPIDI_CH3_Pkt_t));
     MPIU_DBG_MSG(CH3_CHANNEL, VERBOSE, "tofu_iStartContigMsg");
@@ -196,6 +241,9 @@ int MPID_nem_tofu_iSendContig(MPIDI_VC_t *vc, MPID_Request *sreq, void *hdr, MPI
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_TOFU_ISENDCONTIGMSG);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_TOFU_ISENDCONTIGMSG);
+
+    dprintf("tofu_iSendConitig,sreq=%p,hdr=%p,hdr_sz=%ld,data=%p,data_sz=%ld\n",
+            sreq, hdr, hdr_sz, data, data_sz);
 
     MPIU_Assert(hdr_sz <= sizeof(MPIDI_CH3_Pkt_t));
     MPIU_DBG_MSG(CH3_CHANNEL, VERBOSE, "tofu_iSendContig");
@@ -403,16 +451,13 @@ int MPIDI_nem_tofu_Rqst_iov_update(MPID_Request *mreq, MPIDI_msg_sz_t consume)
     return ret;
 }
 
-struct llctofu_cmd_area {
-    void *cbarg;
-    uint32_t raddr;
-};
-
 ssize_t llctofu_writev(void *endpt, uint64_t raddr,
     const struct iovec *iovs, int niov, void *cbarg, void **vpp_reqid)
 {
     ssize_t nw = 0;
     LLC_cmd_t *lcmd = 0;
+
+    dprintf("writev,raddr=%ld,niov=%d,sreq=%p", raddr, niov, cbarg);
 
     MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE, "llctofu_writev(%d)", (int)raddr);
     {
@@ -445,7 +490,11 @@ ssize_t llctofu_writev(void *endpt, uint64_t raddr,
             nw = -1; /* ENOMEM */
             goto bad;
         }
+        lcmd[0].iov_local = LLC_iov_alloc(1);
+        lcmd[0].iov_remote = LLC_iov_alloc(1);
+
         lcmd->opcode = LLC_OPCODE_UNSOLICITED;
+        lcmd->comm = LLC_COMM_WORLD;
         lcmd->rank = (uint32_t)raddr; /* XXX */
         lcmd->req_id = lcmd;
         
@@ -542,7 +591,7 @@ int llctofu_poll(int in_blocking_poll,
     int llc_errno;
     int nevents;
     LLC_event_t events[1];
-    
+
     while(1) { 
         llc_errno = LLC_poll(1, events, &nevents);
         MPIU_ERR_CHKANDJUMP(llc_errno, mpi_errno, MPI_ERR_OTHER, "**LLC_poll");
@@ -557,12 +606,31 @@ int llctofu_poll(int in_blocking_poll,
         MPIU_Assert(nevents == 1);
         
         switch(events[0].type) {
-        case LLC_EVENT_SEND_LEFT:
-        case LLC_EVENT_UNSOLICITED_LEFT: {
-            
+        case LLC_EVENT_SEND_LEFT: {
+            dprintf("llctofu_poll,EVENT_SEND_LEFT\n");
             lcmd = events[0].side.initiator.req_id;
             MPIU_Assert(lcmd != 0);
             MPIU_Assert(lcmd->opcode == LLC_OPCODE_SEND);
+            
+            if(events[0].side.initiator.error_code != LLC_ERROR_SUCCESS) {
+                printf("llctofu_poll,error_code=%d\n", events[0].side.initiator.error_code);
+                MPID_nem_tofu_segv;
+            }
+ 
+            /* Call send_handler. First arg is a pointer to MPID_Request */
+            (*sfnc)(((struct llctofu_cmd_area *)lcmd->usr_area)->cbarg, &reqid);
+            
+            /* Don't free iov_local[0].addr */
+
+            llc_errno = LLC_cmd_free(lcmd, 1);
+            MPIU_ERR_CHKANDJUMP(llc_errno, mpi_errno, MPI_ERR_OTHER, "**LLC_cmd_free");
+            break; }
+
+        case LLC_EVENT_UNSOLICITED_LEFT: {
+            dprintf("llctofu_poll,EVENT_UNSOLICITED_LEFT\n");
+            lcmd = events[0].side.initiator.req_id;
+            MPIU_Assert(lcmd != 0);
+            MPIU_Assert(lcmd->opcode == LLC_OPCODE_UNSOLICITED);
             
             struct llctofu_cmd_area *usr;
             usr = (void *)lcmd->usr_area;
@@ -583,6 +651,7 @@ int llctofu_poll(int in_blocking_poll,
             
             break; }
         case LLC_EVENT_UNSOLICITED_ARRIVED: {
+            dprintf("llctofu_poll,EVENT_UNSOLICITED_ARRIVED\n");
             void *vp_vc = 0;
             uint64_t addr;
             void *buff;
@@ -602,10 +671,11 @@ int llctofu_poll(int in_blocking_poll,
             
             break; }
         case LLC_EVENT_RECV_MATCHED: {
+            dprintf("llctofu_poll,EVENT_RECV_MATCHED\n");
             lcmd = events[0].side.initiator.req_id;
             MPID_Request *req =  ((struct llctofu_cmd_area*)lcmd->usr_area)->cbarg;
 
-            /* unpack non-contiguous dt */
+            /* Unpack non-contiguous dt */
             int is_contig;
             MPID_Datatype_is_contig(req->dev.datatype, &is_contig);
             if (!is_contig) {
@@ -613,10 +683,11 @@ int llctofu_poll(int in_blocking_poll,
 
                 /* see MPIDI_CH3U_Request_unpack_uebuf (in /src/mpid/ch3/src/ch3u_request.c) */
                 /* or MPIDI_CH3U_Receive_data_found (in src/mpid/ch3/src/ch3u_handle_recv_pkt.c) */
-                MPIDI_msg_sz_t unpack_sz = req->ch.lmt_data_sz;
+                MPIDI_msg_sz_t unpack_sz = req->dev.recv_data_sz;
                 MPID_Segment seg;
                 MPI_Aint last;
 
+                /* user_buf etc. are set in MPID_irecv --> MPIDI_CH3U_Recvq_FDU_or_AEP */
                 MPID_Segment_init(req->dev.user_buf, req->dev.user_count, req->dev.datatype, &seg,
                                   0);
                 last = unpack_sz;
@@ -634,12 +705,11 @@ int llctofu_poll(int in_blocking_poll,
                 }
                 dprintf("llctofu_poll,ref_count=%d,pack_buf=%p\n", req->ref_count,
                         REQ_FIELD(req, pack_buf));
-                MPIU_Free(REQ_FIELD(req, pack_buf), (size_t) req->ch.lmt_data_sz);
+                MPIU_Free(REQ_FIELD(req, pack_buf));
             }
 
             /* Dequeue request from posted queue.  
-               A request is posted to the queue, for example, in the following path.
-               MPID_Irecv --> MPIDI_CH3U_Recvq_FDU_or_AEP */
+               It's posted in MPID_Irecv --> MPIDI_CH3U_Recvq_FDU_or_AEP */
             int found = MPIDI_CH3U_Recvq_DP(req);
             MPIU_Assert(found);
 

@@ -8,14 +8,40 @@
 
 #include "mpid_nem_impl.h"
 #include "tofu_impl.h"
-#ifdef	NOTDEF
-#include <llc/llc-tofu.h>
-#endif	/* NOTDEF */
+
+#define MPID_NEM_TOFU_DEBUG_VC
+#ifdef MPID_NEM_TOFU_DEBUG_VC
+#define dprintf printf
+#else
+#define dprintf(...)
+#endif
 
 /* function prototypes */
 
 static int	tofu_vc_init (MPIDI_VC_t *vc);
 
+static MPIDI_Comm_ops_t comm_ops = {
+    .recv_posted = MPID_nem_tofu_recv_posted,
+    .send = MPID_nem_tofu_isend, /* wait is performed separately after calling this */
+    .rsend = NULL,
+    .ssend = NULL,
+    .isend = MPID_nem_tofu_isend,
+    .irsend = NULL,
+    .issend = NULL,
+    
+    .send_init = NULL,
+    .bsend_init = NULL,
+    .rsend_init = NULL,
+    .ssend_init = NULL,
+    .startall = NULL,
+    
+    .cancel_send = NULL,
+    .cancel_recv = NULL,
+
+    .probe = NULL,
+    .iprobe = NULL,
+    .improbe = NULL
+};
 
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_tofu_vc_init
@@ -52,18 +78,8 @@ int MPID_nem_tofu_vc_destroy(MPIDI_VC_t *vc)
     /* free any resources associated with this VC here */
 
     {
-#ifdef	NOTDEF
-	int rc;
-#endif	/* NOTDEF */
 	MPID_nem_tofu_vc_area *vc_tofu = VC_TOFU(vc);
 
-#ifdef	NOTDEF
-	rc = llctofu_unbind(vc_tofu->endpoint);
-	if (rc != 0 /* LLC_SUCCESS */) {
-	    mpi_errno = MPI_ERR_OTHER;
-	    MPIU_ERR_POP(mpi_errno);
-	}
-#endif	/* NOTDEF */
 	vc_tofu->endpoint = 0;
     }
 
@@ -103,6 +119,8 @@ int MPID_nem_tofu_vc_terminate (MPIDI_VC_t *vc)
 static int tofu_vc_init (MPIDI_VC_t *vc)
 {
     int mpi_errno = MPI_SUCCESS;
+    
+
 
     {
 	MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE,
@@ -121,26 +139,19 @@ static int tofu_vc_init (MPIDI_VC_t *vc)
 	MPIDI_CH3I_VC *vc_ch = &vc->ch;
 	MPID_nem_tofu_vc_area *vc_tofu = VC_TOFU(vc);
 
-#ifdef	NOTDEF
-	vc_tofu->endpoint		= 0;
-#else	/* NOTDEF */
 	vc_tofu->endpoint		= vc;
-#endif	/* NOTDEF */
-	vc_tofu->remote_endpoint_addr	= vc->pg_rank;
+    mpi_errno =
+        MPID_nem_tofu_kvs_get_binary(vc->pg_rank,
+                                   "llc_rank",
+                                   (char *) &vc_tofu->remote_endpoint_addr,
+                                   sizeof(int));
+    MPIU_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER,
+                        "**MPID_nem_ib_kvs_get_binary");
+    dprintf("tofu_vc_init,my_pg_rank=%d,pg_rank=%d,my_llc_rank=%d,llc_rank=%ld\n",
+            MPIDI_Process.my_pg_rank, vc->pg_rank, MPID_nem_tofu_my_llc_rank, vc_tofu->remote_endpoint_addr);
+
 	vc_tofu->send_queue.head	= 0; /* GENERIC_Q_DECL */
 	vc_tofu->send_queue.tail	= 0; /* GENERIC_Q_DECL */
-#ifdef	NOTDEF
-
-	{
-	    int rc;
-	    rc = llctofu_bind(&vc_tofu->endpoint,
-		    vc_tofu->remote_endpoint_addr, vc /* cba */);
-	    if (rc != 0 /* LLC_SUCCESS */) {
-		mpi_errno = MPI_ERR_OTHER;
-		MPIU_ERR_POP(mpi_errno);
-	    }
-	}
-#endif	/* NOTDEF */
 
 	vc->eager_max_msg_sz	    = (12 * 1024);
 	vc->ready_eager_max_msg_sz  = (12 * 1024);
@@ -148,7 +159,7 @@ static int tofu_vc_init (MPIDI_VC_t *vc)
 	/* vc->rndvRecv_fn = 0*/
 	vc->sendNoncontig_fn	    = MPID_nem_tofu_SendNoncontig;
 #ifdef	ENABLE_COMM_OVERRIDES
-	vc->comm_ops		    = 0 /* &comm_ops */;
+	vc->comm_ops		    = &comm_ops;
 #endif
 
 	vc_ch->iStartContigMsg	= MPID_nem_tofu_iStartContigMsg;
@@ -165,7 +176,7 @@ static int tofu_vc_init (MPIDI_VC_t *vc)
 
  fn_exit:
     return mpi_errno;
-    //fn_fail:
+ fn_fail:
     goto fn_exit;
 }
 
