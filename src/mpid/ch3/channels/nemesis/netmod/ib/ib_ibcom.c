@@ -2006,7 +2006,7 @@ int MPID_nem_ib_com_put_lmt(int condesc, uint64_t wr_id, void *raddr, int sz_dat
 }
 
 int MPID_nem_ib_com_put_scratch_pad(int condesc, uint64_t wr_id, uint64_t offset, int sz,
-                                    void *laddr)
+                                    void *laddr, void **buf_from_out, uint32_t* buf_from_sz_out)
 {
     MPID_nem_ib_com_t *conp;
     int ibcom_errno = 0;
@@ -2026,25 +2026,34 @@ int MPID_nem_ib_com_put_scratch_pad(int condesc, uint64_t wr_id, uint64_t offset
     MPID_NEM_IB_COM_ERR_CHKANDJUMP(!sz, -1, dprintf("MPID_nem_ib_com_put_scratch_pad,sz==0\n"));
 
     /* Use inline so that we don't need to worry about overwriting write-from buffer */
-    assert(sz <= conp->max_inline_data);
+//    assert(sz <= conp->max_inline_data);
 
     assert(conp->icom_mem[MPID_NEM_IB_COM_SCRATCH_PAD_FROM] == laddr);
-    memcpy(conp->icom_mem[MPID_NEM_IB_COM_SCRATCH_PAD_FROM], laddr, sz);
+//    memcpy(conp->icom_mem[MPID_NEM_IB_COM_SCRATCH_PAD_FROM], laddr, sz);
 
-    void *from =
-        (uint8_t *) conp->icom_mem[MPID_NEM_IB_COM_SCRATCH_PAD_FROM];
+    /* Instead of using the pre-mmaped memory (comp->icom_mem[MPID_NEM_IB_COM_SCRATCH_PAD_FROM]),
+       we allocate a memory. */
+    void *buf_from = MPID_nem_ib_rdmawr_from_alloc(sz);
+    memcpy(buf_from, laddr, sz);
+    dprintf("put_scratch_pad,rdmawr_from_alloc=%p,sz=%d\n", buf_from, sz);
+    struct ibv_mr *mr_rdmawr_from = MPID_NEM_IB_RDMAWR_FROM_ALLOC_ARENA_MR(buf_from);
+
+    *buf_from_out      = buf_from;
+    *buf_from_sz_out   = sz;
+
+    void *from = (uint8_t *) buf_from;
 
 #ifdef HAVE_LIBDCFA
     conp->icom_sr[MPID_NEM_IB_COM_SCRATCH_PAD_INITIATOR].sg_list[0].mic_addr = (uint64_t) from;
     conp->icom_sr[MPID_NEM_IB_COM_SCRATCH_PAD_INITIATOR].sg_list[0].addr =
-        conp->icom_mrlist[MPID_NEM_IB_COM_SCRATCH_PAD_FROM]->host_addr +
+        mr_rdmawr_from->host_addr +
         ((uint64_t) from - (uint64_t) from);
 #else
     conp->icom_sr[MPID_NEM_IB_COM_SCRATCH_PAD_INITIATOR].sg_list[0].addr = (uint64_t) from;
 #endif
     conp->icom_sr[MPID_NEM_IB_COM_SCRATCH_PAD_INITIATOR].sg_list[0].length = sz;
     conp->icom_sr[MPID_NEM_IB_COM_SCRATCH_PAD_INITIATOR].sg_list[0].lkey =
-        conp->icom_mrlist[MPID_NEM_IB_COM_SCRATCH_PAD_FROM]->lkey;
+        mr_rdmawr_from->lkey;
 
     /* num_sge is defined in MPID_nem_ib_com_open */
     conp->icom_sr[MPID_NEM_IB_COM_SCRATCH_PAD_INITIATOR].wr_id = wr_id;

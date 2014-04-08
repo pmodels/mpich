@@ -1508,7 +1508,8 @@ int MPID_nem_ib_cm_cmd_core(int rank, MPID_nem_ib_cm_cmd_shadow_t* shadow, void*
                                         sizeof(MPID_nem_ib_cm_cmd_t) *
                                         ((uint16_t)(ringbuf_index % MPID_NEM_IB_CM_NSEG)),
                                         sz,
-                                        buf);
+                                        buf,
+                                        &(shadow->buf_from), &(shadow->buf_from_sz));
 
     MPIU_ERR_CHKANDJUMP(ibcom_errno, mpi_errno, MPI_ERR_OTHER, "**MPID_nem_ib_com_put_scratch_pad");
     MPID_nem_ib_ncqe_scratch_pad += 1;

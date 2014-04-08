@@ -2049,6 +2049,11 @@ int MPID_nem_ib_cm_drain_scq()
             shadow_cm = (MPID_nem_ib_cm_cmd_shadow_t *) cqe[i].wr_id;
             shadow_cm->req->ibcom->ncom_scratch_pad -= 1;
             dprintf("cm_drain_scq,tx=%d\n", shadow_cm->req->ibcom->outstanding_connection_tx);
+
+            dprintf("cm_drain_scq,syn,buf_from=%p,sz=%d\n",
+                    shadow_cm->buf_from, shadow_cm->buf_from_sz);
+            MPID_nem_ib_rdmawr_from_free(shadow_cm->buf_from, shadow_cm->buf_from_sz);
+
             MPIU_Free(shadow_cm);
             break;
         case MPID_NEM_IB_CM_SYNACK:
@@ -2057,6 +2062,11 @@ int MPID_nem_ib_cm_drain_scq()
                     shadow_cm->req, shadow_cm->req->initiator_rank);
             shadow_cm->req->ibcom->ncom_scratch_pad -= 1;
             dprintf("cm_drain_scq,tx=%d\n", shadow_cm->req->ibcom->outstanding_connection_tx);
+
+            dprintf("cm_drain_scq,synack,buf_from=%p,sz=%d\n",
+                    shadow_cm->buf_from, shadow_cm->buf_from_sz);
+            MPID_nem_ib_rdmawr_from_free(shadow_cm->buf_from, shadow_cm->buf_from_sz);
+
             MPIU_Free(shadow_cm);
             break;
         case MPID_NEM_IB_CM_ACK1:
@@ -2065,6 +2075,10 @@ int MPID_nem_ib_cm_drain_scq()
             shadow_cm->req->ibcom->ncom_scratch_pad -= 1;
             shadow_cm->req->ibcom->outstanding_connection_tx -= 1;
             dprintf("cm_drain_scq,tx=%d\n", shadow_cm->req->ibcom->outstanding_connection_tx);
+
+            dprintf("cm_drain_scq,ack1,buf_from=%p,sz=%d\n",
+                    shadow_cm->buf_from, shadow_cm->buf_from_sz);
+            MPID_nem_ib_rdmawr_from_free(shadow_cm->buf_from, shadow_cm->buf_from_sz);
 
             /* Finalize protocol because there is no referer in cm_drain_scq and sendq.
                Note that there might be one in cm_poll.*/
@@ -2078,6 +2092,10 @@ int MPID_nem_ib_cm_drain_scq()
             shadow_cm->req->ibcom->ncom_scratch_pad -= 1;
             shadow_cm->req->ibcom->outstanding_connection_tx -= 1;
             dprintf("cm_drain_scq,tx=%d\n", shadow_cm->req->ibcom->outstanding_connection_tx);
+
+            dprintf("cm_drain_scq,ack2,buf_from=%p,sz=%d\n",
+                    shadow_cm->buf_from, shadow_cm->buf_from_sz);
+            MPID_nem_ib_rdmawr_from_free(shadow_cm->buf_from, shadow_cm->buf_from_sz);
 
             /* Let the guard down to let the following connection request go. */
             VC_FIELD(MPID_nem_ib_conns[shadow_cm->req->initiator_rank].vc, connection_guard) = 0;

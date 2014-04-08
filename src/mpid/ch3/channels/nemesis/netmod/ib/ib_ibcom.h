@@ -514,7 +514,7 @@ extern int MPID_nem_ib_com_isend(int condesc,
 extern int MPID_nem_ib_com_isend_chain(int condesc, uint64_t wr_id, void *hdr, int sz_hdr,
                                        void *data, int sz_data);
 extern int MPID_nem_ib_com_put_scratch_pad(int condesc, uint64_t wr_id, uint64_t offset, int sz,
-                                           void *laddr);
+                                           void *laddr, void **buf_from_out, uint32_t* buf_from_sz_out);
 extern int MPID_nem_ib_com_get_scratch_pad(int condesc,
                                            uint64_t wr_id,
                                            uint64_t offset, int sz,
