@@ -236,33 +236,35 @@ provides some extensions.
 \label{sec:mpiexec-standard}
 
 Here we describe the standard \texttt{mpiexec} arguments from the MPI
-Standard~\cite{mpi-forum:mpi2-journal}.  The simplest form of a
-command to start an MPI job is
+Standard~\cite{mpi-forum:mpi2-journal}.  To run a program with 'n'
+processes on your local machine, you can use:
 
 \begin{verbatim}
-   mpiexec -f machinefile -n 32 a.out
+   mpiexec -n <number> ./a.out
 \end{verbatim}
 
-to start the executable \texttt{a.out} with 32 processes (providing an
-\texttt{MPI\_COMM\_WORLD} of size 32 inside the MPI application).
-Other options are supported, for search paths for executables, working
-directories, and even a more general way of specifying a number of
-processes.  Multiple sets of processes can be run with different
-executables and different values for their arguments, with
-``\texttt{:}'' separating the sets of processes, as in:
+To test that you can run an 'n' process job on multiple nodes:
 
 \begin{verbatim}
-   mpiexec -f machinefile -n 1 ./master : -n 32 ./slave
+   mpiexec -f machinefile -n <number> ./a.out
 \end{verbatim}
 
-It is also possible to start a one process MPI job (with a
-\texttt{MPI\_COMM\_WORLD} whose size is equal to 1), without using
-\texttt{mpiexec}.  This process will become an MPI process when it
-calls \texttt{MPI\_Init}, and it may then call other MPI functions.
-Currently, MPICH does not fully support calling the dynamic process
-routines from the MPI standard (e.g., \texttt{MPI\_Comm\_spawn} or
-\texttt{MPI\_Comm\_accept}) from processes that are not started with
-\texttt{mpiexec}.
+The 'machinefile' is of the form:
+
+\begin{verbatim}
+   host1
+   host2:2
+   host3:4   # Random comments
+   host4:1
+\end{verbatim}
+
+'host1', 'host2', 'host3' and 'host4' are the hostnames of the
+machines you want to run the job on. The ':2', ':4', ':1' segments
+depict the number of processes you want to run on each node. If
+nothing is specified, ':1' is assumed.
+
+More details on interacting with Hydra can be found at
+\url{http://wiki.mpich.org/mpich/index.php/Using_the_Hydra_Process_Manager}
 
 
 \subsection{Extensions for All Process Management Environments}
