@@ -40,8 +40,8 @@ int     gpfsmpio_p2pcontig;
 int	gpfsmpio_balancecontig;
 int     gpfsmpio_devnullio;
 
-double	gpfsmpio_prof_cw    [GPFSMPIO_CIO_LAST];
-double	gpfsmpio_prof_cr    [GPFSMPIO_CIO_LAST];
+double	gpfsmpio_prof_cw    [GPFSMPIO_CIO_LAST+1];
+double	gpfsmpio_prof_cr    [GPFSMPIO_CIO_LAST+1];
 
 /* set internal variables for tuning environment variables */
 /** \page mpiio_vars MPIIO Configuration

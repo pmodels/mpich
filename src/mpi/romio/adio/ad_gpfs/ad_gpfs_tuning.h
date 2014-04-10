@@ -52,8 +52,9 @@ enum {
     GPFSMPIO_CIO_LAST
 };
 
-extern double 	gpfsmpio_prof_cw    [GPFSMPIO_CIO_LAST];
-extern double 	gpfsmpio_prof_cr    [GPFSMPIO_CIO_LAST];
+/* +1 because GPFSMPIO_CIO_LAST is actually used to say "zero this counter"" */
+extern double 	gpfsmpio_prof_cw    [GPFSMPIO_CIO_LAST+1];
+extern double 	gpfsmpio_prof_cr    [GPFSMPIO_CIO_LAST+1];
 
 
 /* corresponds to environment variables to select optimizations and timing level */
