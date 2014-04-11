@@ -499,6 +499,9 @@ int MPIU_Handle_free( void *((*)[]), int );
      if ((ptr) && MPIU_Object_get_ref(ptr) <= 0) {    \
          MPIU_ERR_SET(err,MPI_ERR_COMM,"**comm");     \
          ptr = 0;                                     \
+     } else if (ptr->revoked) {                       \
+         MPIU_ERR_SET(err,MPIX_ERR_REVOKED,"**comm"); \
+         ptr = 0;                                     \
      }                                                \
 }
 #define MPID_Group_valid_ptr(ptr,err) MPID_Valid_ptr_class(Group,ptr,MPI_ERR_GROUP,err)

@@ -872,15 +872,15 @@ static inline void dequeue_and_set_error(MPID_Request **req,  MPID_Request *prev
     }
     
     /* remove from queue */
-    if (*head == *req)
+    if (*head == *req) {
+        if (*head == recvq_posted_head) MPIR_T_PVAR_LEVEL_DEC(RECVQ, posted_recvq_length, 1);
+
         *head = (*req)->dev.next;
-    else
+    } else
         prev_req->dev.next = (*req)->dev.next;
+
     if (*tail == *req)
         *tail = prev_req;
-
-    if (*head == recvq_posted_head)
-        MPIR_T_PVAR_LEVEL_DEC(RECVQ, posted_recvq_length, 1);
 
     /* set error and complete */
     (*req)->status.MPI_ERROR = *error;
@@ -978,6 +978,7 @@ int MPIDI_CH3U_Clean_recvq(MPID_Comm *comm_ptr)
             continue;
         }
 
+        prev_rreq = rreq;
         rreq = rreq->dev.next;
     }
 
