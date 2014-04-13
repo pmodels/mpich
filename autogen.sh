@@ -656,6 +656,15 @@ if [ "X$do_subcfg_m4" = Xyes ] ; then
     echo "done"
 fi
 
+
+########################################################################
+## Building ROMIO glue code
+########################################################################
+echo_n "Building ROMIO glue code... "
+( cd src/glue/romio && chmod a+x ./all_romio_symbols && ./all_romio_symbols ../../mpi/romio/include/mpio.h.in )
+echo "done"
+
+
 ########################################################################
 ## Building non-C interfaces
 ########################################################################

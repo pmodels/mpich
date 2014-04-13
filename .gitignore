@@ -184,6 +184,7 @@ Makefile.am-stamp
 /src/include/mpichinfo.h
 /src/packaging/envmods/mpich.module
 /src/packaging/pkgconfig/mpich.pc
+/src/glue/romio/all_romio_symbols.c
 
 # stamp "witness" files from the new build system
 /src/binding/fortran/use_mpi/buildiface.stamp
