@@ -30,6 +30,10 @@
 #include "zoidfs.h"
 #endif
 
+#ifdef HAVE_GPFS_H
+#include "gpfs.h"
+#endif
+
 /* Notes on detection process:
  *
  * There are three more "general" mechanisms that we use for detecting
@@ -72,6 +76,10 @@
 
 #if !defined(PVFS2_SUPER_MAGIC)
 #define PVFS2_SUPER_MAGIC (0x20030528)
+#endif
+
+#if defined(ROMIO_GPFS) && !defined(GPFS_SUPER_MAGIC)
+# define GPFS_SUPER_MAGIC 0x47504653
 #endif
 
 #ifdef ROMIO_HAVE_STRUCT_STATVFS_WITH_F_BASETYPE

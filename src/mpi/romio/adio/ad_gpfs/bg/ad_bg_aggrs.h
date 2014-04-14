@@ -20,9 +20,6 @@
 #include "adio.h"
 #include <sys/stat.h>
 
-#if !defined(GPFS_SUPER_MAGIC)
-  #define GPFS_SUPER_MAGIC (0x47504653)
-#endif
 
     /* generate a list of I/O aggregators that utilizes BG-PSET orginization. */
     int ADIOI_BG_gen_agg_ranklist(ADIO_File fd, int n_aggrs_per_pset);

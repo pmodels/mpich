@@ -19,9 +19,6 @@
 #include "adio.h"
 #include <sys/stat.h>
 
-#if !defined(GPFS_SUPER_MAGIC)
-  #define GPFS_SUPER_MAGIC (0x47504653)
-#endif
 
     /* overriding ADIOI_Calc_file_domains() to apply 'aligned file domain partitioning'. */
     void ADIOI_GPFS_Calc_file_domains(ADIO_File fd,
