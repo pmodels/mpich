@@ -649,7 +649,8 @@ int MPID_nem_ib_poll_eager(MPID_nem_ib_ringbuf_t *ringbuf)
      * because MPID_nem_handle_pkt releases RDMA-wr-to buf by copying data out */
     /* responder releases resource and then embed largest sequence number into MPI message bound to initiator */
 #if 1
-    if(vc->state != MPIDI_VC_STATE_INACTIVE)
+    if((vc->state != MPIDI_VC_STATE_INACTIVE) ||
+       (vc->state == MPIDI_VC_STATE_INACTIVE && vc_ib->vc_terminate_buf == buf))
     dprintf
         ("handle_pkt,after,%d<-%d,id=%d,pkt->type=%d,eagershort=%d,close=%d,rts=%d,piggy-backed-eagersend=%d\n",
          MPID_nem_ib_myrank, vc->pg_rank, *remote_poll, pkt->type,
@@ -657,7 +658,8 @@ int MPID_nem_ib_poll_eager(MPID_nem_ib_ringbuf_t *ringbuf)
          MPIDI_NEM_IB_PKT_EAGER_SEND);
 
     int notify_rate;
-    if(vc->state != MPIDI_VC_STATE_INACTIVE) {
+    if((vc->state != MPIDI_VC_STATE_INACTIVE) ||
+       (vc->state == MPIDI_VC_STATE_INACTIVE && vc_ib->vc_terminate_buf == buf)) {
     ibcom_errno =
         MPID_nem_ib_com_rdmabuf_occupancy_notify_rate_get(MPID_nem_ib_conns[vc->pg_rank].fd,
                                                           &notify_rate);
@@ -687,10 +689,12 @@ int MPID_nem_ib_poll_eager(MPID_nem_ib_ringbuf_t *ringbuf)
          * because there is no way to trace the RDMA-write-to buffer addr
          * because rreq->dev.tmpbuf is set to zero in ch3_eager.c
          */
-        if(vc->state != MPIDI_VC_STATE_INACTIVE)
+        if((vc->state != MPIDI_VC_STATE_INACTIVE) ||
+           (vc->state == MPIDI_VC_STATE_INACTIVE && vc_ib->vc_terminate_buf == buf))
         dprintf("poll_eager,released,type=%d,MPIDI_NEM_IB_PKT_REPLY_SEQ_NUM=%d\n", pkt->type,
                 MPIDI_NEM_IB_PKT_REPLY_SEQ_NUM);
-        if(vc->state != MPIDI_VC_STATE_INACTIVE)
+        if((vc->state != MPIDI_VC_STATE_INACTIVE) ||
+           (vc->state == MPIDI_VC_STATE_INACTIVE && vc_ib->vc_terminate_buf == buf))
         MPID_nem_ib_recv_buf_released(vc,
                                       (void *) ((uint8_t *) buf +
                                                 sz_pkt +
@@ -713,10 +717,12 @@ int MPID_nem_ib_poll_eager(MPID_nem_ib_ringbuf_t *ringbuf)
     }
 #endif
 
-    if(vc->state != MPIDI_VC_STATE_INACTIVE)
+    if((vc->state != MPIDI_VC_STATE_INACTIVE) ||
+       (vc->state == MPIDI_VC_STATE_INACTIVE && vc_ib->vc_terminate_buf == buf))
     dprintf("ib_poll,hdr_ringbuf_type=%d\n", MPID_NEM_IB_NETMOD_HDR_RINGBUF_TYPE_GET(buf));
 
-    if(vc->state != MPIDI_VC_STATE_INACTIVE)
+    if((vc->state != MPIDI_VC_STATE_INACTIVE) ||
+       (vc->state == MPIDI_VC_STATE_INACTIVE && vc_ib->vc_terminate_buf == buf))
     if(MPID_NEM_IB_NETMOD_HDR_RINGBUF_TYPE_GET(buf) & MPID_NEM_IB_RINGBUF_RELINDEX) {
         vc_ib->ibcom->lsr_seq_num_tail = MPID_NEM_IB_NETMOD_HDR_RELINDEX_GET(buf);
         dprintf("ib_poll,local_tail is updated to %d\n",
@@ -724,8 +730,63 @@ int MPID_nem_ib_poll_eager(MPID_nem_ib_ringbuf_t *ringbuf)
     }
 
     /* Clear flag */
-    if(vc->state != MPIDI_VC_STATE_INACTIVE)
+    if((vc->state != MPIDI_VC_STATE_INACTIVE) ||
+       (vc->state == MPIDI_VC_STATE_INACTIVE && vc_ib->vc_terminate_buf == buf))
     MPID_NEM_IB_NETMOD_HDR_HEAD_FLAG_SET(buf, 0);
+
+#if 1 /* We move this code from the end of vc_terminate. */
+    if (vc->state == MPIDI_VC_STATE_INACTIVE && vc_ib->vc_terminate_buf == buf) {
+        /* clear stored data */
+        vc_ib->vc_terminate_buf = NULL;
+
+        /* Destroy ring-buffer */
+        ibcom_errno = MPID_nem_ib_ringbuf_free(vc);
+        MPIU_ERR_CHKANDJUMP(ibcom_errno, mpi_errno, MPI_ERR_OTHER,
+                            "**MPID_nem_ib_ringbuf_free");
+
+        /* Check connection status stored in VC when on-demand connection is used */
+        dprintf("vc_terminate,%d->%d,close\n", MPID_nem_ib_myrank, vc->pg_rank);
+        ibcom_errno = MPID_nem_ib_com_close(vc_ib->sc->fd);
+        MPIU_ERR_CHKANDJUMP(ibcom_errno, mpi_errno, MPI_ERR_OTHER,
+                            "**MPID_nem_ib_com_close");
+
+        /* Destroy array of scratch-pad QPs */
+        MPIU_Assert(MPID_nem_ib_conns_ref_count > 0);
+        if(--MPID_nem_ib_conns_ref_count == 0) {
+            MPIU_Free(MPID_nem_ib_conns);
+        }
+
+        /* TODO don't create them for shared memory vc */
+
+        /* Destroy scratch-pad */
+        ibcom_errno =
+            MPID_nem_ib_com_free(MPID_nem_ib_scratch_pad_fds[vc->pg_rank],
+#ifdef MPID_NEM_IB_ONDEMAND
+                                 MPID_NEM_IB_CM_OFF_CMD + 
+                                 MPID_NEM_IB_CM_NSEG * sizeof(MPID_nem_ib_cm_cmd_t) +
+                                 sizeof(MPID_nem_ib_ringbuf_headtail_t)
+#else
+                                 MPID_nem_ib_nranks * sizeof(MPID_nem_ib_com_qp_state_t)
+#endif
+                                 );
+
+        MPIU_ERR_CHKANDJUMP(ibcom_errno, mpi_errno, MPI_ERR_OTHER,
+                            "**MPID_nem_ib_com_free");
+
+        /* Destroy scratch-pad QP */
+        ibcom_errno =
+            MPID_nem_ib_com_close(MPID_nem_ib_scratch_pad_fds[vc->pg_rank]);
+        MPIU_ERR_CHKANDJUMP(ibcom_errno, mpi_errno, MPI_ERR_OTHER,
+                            "**MPID_nem_ib_com_close");
+
+        /* Destroy array of scratch-pad QPs */
+        MPIU_Assert(MPID_nem_ib_scratch_pad_fds_ref_count > 0);
+        if(--MPID_nem_ib_scratch_pad_fds_ref_count == 0) {
+            MPIU_Free(MPID_nem_ib_scratch_pad_fds);
+            MPIU_Free(MPID_nem_ib_scratch_pad_ibcoms);
+        }
+    }
+#endif
 
   fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_IB_POLL_EAGER);
@@ -910,7 +971,7 @@ int MPID_nem_ib_poll(int in_blocking_poll)
 
     /* [MPID_NEM_IB_NRINGBUF-1] stores shared ring buffer */
     for (i = 0; i < MPID_NEM_IB_NRINGBUF; i++) {
-        if (((MPID_nem_ib_ringbuf_allocated[i / 64] >> (i & 63)) & 1) == 0) {
+        if ((((MPID_nem_ib_ringbuf_allocated[i / 64] >> (i & 63)) & 1) == 0) || !MPID_nem_ib_ringbuf) {
             //dprintf("poll,cont\n");
             continue;
         }
@@ -918,6 +979,12 @@ int MPID_nem_ib_poll(int in_blocking_poll)
         //dprintf("poll,kicking progress engine for %d\n", i);
         mpi_errno = MPID_nem_ib_poll_eager(&MPID_nem_ib_ringbuf[i]);
         MPIU_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**MPID_nem_ib_poll_eager");
+
+        /* MPID_nem_ib_ringbuf may be freed in poll_eager, when we received CLOSE-packet. */
+        if (!MPID_nem_ib_ringbuf) {
+            dprintf("MPID_nem_ib_ringbuf is freed\n");
+            continue;
+        }
 
         /* without this, command in sendq doesn't have a chance
          * to perform send_progress
@@ -2671,7 +2738,7 @@ int MPID_nem_ib_ringbuf_alloc(MPIDI_VC_t * vc)
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_IB_RINGBUF_ALLOC);
     
     if(!MPID_nem_ib_ringbuf) {
-        MPID_nem_ib_ringbuf = MPIU_Malloc(sizeof(MPID_nem_ib_ringbuf_t) * MPID_NEM_IB_NRINGBUF);
+        MPID_nem_ib_ringbuf = MPIU_Calloc(1, sizeof(MPID_nem_ib_ringbuf_t) * MPID_NEM_IB_NRINGBUF);
         MPIU_ERR_CHKANDJUMP(!MPID_nem_ib_ringbuf, mpi_errno, MPI_ERR_OTHER,
                             "**malloc");
     }
@@ -2764,6 +2831,7 @@ int MPID_nem_ib_ringbuf_free(MPIDI_VC_t * vc)
     case MPID_NEM_IB_RINGBUF_EXCLUSIVE:
         dprintf("ringbuf_free,start=%p\n", VC_FIELD(vc, ibcom->remote_ringbuf)->start);
         MPID_nem_ib_rdmawr_to_free(VC_FIELD(vc, ibcom->remote_ringbuf)->start, MPID_NEM_IB_RINGBUF_NSLOT);
+        VC_FIELD(vc, ibcom->remote_ringbuf)->start = NULL; /* initialize for re-allocate */
         MPID_nem_ib_ringbuf_allocated[index / 64] &= ~(1ULL << (index & 63));
         VC_FIELD(vc, ibcom->remote_ringbuf) = NULL;
         MPID_nem_ib_ringbuf_acquired[index / 64] &= ~(1ULL << (index & 63));
@@ -2774,6 +2842,7 @@ int MPID_nem_ib_ringbuf_free(MPIDI_VC_t * vc)
         MPIU_Assert(VC_FIELD(vc, ibcom->remote_ringbuf)->ref_count > 0);
         if(--VC_FIELD(vc, ibcom->remote_ringbuf)->ref_count == 0) {
             MPID_nem_ib_rdmawr_to_free(VC_FIELD(vc, ibcom->remote_ringbuf)->start, MPID_NEM_IB_RINGBUF_NSLOT);
+            VC_FIELD(vc, ibcom->remote_ringbuf)->start = NULL; /* initialize for re-allocate */
             MPID_nem_ib_ringbuf_allocated[index / 64] &= ~(1ULL << (index & 63));
             dprintf("ringbuf_free,shared,allocated=%0lx\n", MPID_nem_ib_ringbuf_allocated[index / 64]);
         }
@@ -2794,6 +2863,7 @@ int MPID_nem_ib_ringbuf_free(MPIDI_VC_t * vc)
 
     if(!found) {
         MPIU_Free(MPID_nem_ib_ringbuf);
+        MPID_nem_ib_ringbuf = NULL;
     }
 
  fn_exit:

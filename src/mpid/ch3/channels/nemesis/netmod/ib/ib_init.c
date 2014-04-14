@@ -835,6 +835,7 @@ int MPID_nem_ib_vc_init(MPIDI_VC_t * vc)
     VC_FIELD(vc, connection_state) = MPID_NEM_IB_CM_CLOSED;
     VC_FIELD(vc, connection_guard) = 0;
 #endif
+    VC_FIELD(vc, vc_terminate_buf) = NULL;
 
     /* rank is sent as wr_id and used to obtain vc in poll */
     MPID_nem_ib_conns[vc->pg_rank].vc = vc;
@@ -995,6 +996,30 @@ int MPID_nem_ib_vc_terminate(MPIDI_VC_t * vc)
      * and control transactions always proceed after receiveing reply */
     MPID_nem_ib_vc_area *vc_ib = VC_IB(vc);
 
+    /* store address of ringbuffer to clear in poll_eager */
+    uint16_t remote_poll = 0;
+    MPID_nem_ib_ringbuf_t *ringbuf;
+    ringbuf = VC_FIELD(vc, ibcom->remote_ringbuf);
+
+    switch (ringbuf->type) {
+    case MPID_NEM_IB_RINGBUF_EXCLUSIVE:
+        remote_poll = VC_FIELD(vc, ibcom->rsr_seq_num_poll);
+        break;
+    case MPID_NEM_IB_RINGBUF_SHARED:
+        remote_poll = MPID_nem_ib_remote_poll_shared;
+        break;
+    default: /* FIXME */
+        printf("unknown ringbuf->type\n");
+        break;
+    }
+
+    /* Decrement because we increment this value in eager_poll. */
+    remote_poll--;
+
+    VC_FIELD(vc, vc_terminate_buf) =
+        (uint8_t *) ringbuf->start +
+        MPID_NEM_IB_COM_RDMABUF_SZSEG * ((uint16_t)(remote_poll % ringbuf->nslot));
+
     dprintf("vc_terminate,before,%d->%d,diff-rsr=%d,l diff-lsr=%d,sendq_empty=%d,ncqe=%d,pending_sends=%d\n",
             MPID_nem_ib_myrank, vc->pg_rank,
             MPID_nem_ib_diff16(vc_ib->ibcom->rsr_seq_num_tail,
@@ -1102,6 +1127,7 @@ int MPID_nem_ib_vc_terminate(MPIDI_VC_t * vc)
         MPIU_ERR_POP(mpi_errno);
     }
 
+#if 0 /* We move this code to the end of poll_eager. */
     /* Destroy VC QP */
 
     /* Destroy ring-buffer */
@@ -1151,6 +1177,7 @@ int MPID_nem_ib_vc_terminate(MPIDI_VC_t * vc)
         MPIU_Free(MPID_nem_ib_scratch_pad_fds);
         MPIU_Free(MPID_nem_ib_scratch_pad_ibcoms);
     }
+#endif
     dprintf("vc_terminate,exit\n");
 
   fn_exit:

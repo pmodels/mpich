@@ -50,6 +50,7 @@ typedef struct {
     /* Number of outstanding connection sequence started to eliminate
        duplicated connection reuests */
     uint8_t connection_guard; 
+    void *vc_terminate_buf;    /* address of ringbuffer which calls vc_terminate */
 } MPID_nem_ib_vc_area;
 
 /* macro for secret area in vc */
