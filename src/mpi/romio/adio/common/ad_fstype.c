@@ -253,6 +253,7 @@ static void ADIO_FileSysType_fncall(const char *filename, int *fstype, int *erro
     *error_code = MPI_SUCCESS;
 
 #ifdef ROMIO_HAVE_STRUCT_STATVFS_WITH_F_BASETYPE
+    /* rare: old solaris machines */
     retry_cnt=0;
     do {
 	err = statvfs(filename, &vfsbuf);
@@ -311,6 +312,8 @@ static void ADIO_FileSysType_fncall(const char *filename, int *fstype, int *erro
 #endif /* STATVFS APPROACH */
 
 #if defined(HAVE_STRUCT_STATFS) && defined(HAVE_STATFS)
+    /* common automagic fs-detection logic for any modern POSX-compliant
+     * environment */
     retry_cnt = 0;
     do {
 	err = statfs(filename, &fsbuf);
@@ -339,6 +342,7 @@ static void ADIO_FileSysType_fncall(const char *filename, int *fstype, int *erro
     /* --END ERROR HANDLING-- */
 
 # ifdef ROMIO_HAVE_STRUCT_STATFS_WITH_F_FSTYPENAME
+    /* uncommon: maybe only on Darwin ? */
     if ( !strncmp("nfs",fsbuf.f_fstypename,3) ) {
 	*fstype = ADIO_NFS;
 	return;
@@ -425,6 +429,7 @@ static void ADIO_FileSysType_fncall(const char *filename, int *fstype, int *erro
 #endif /* STATFS APPROACH */
 
 #ifdef ROMIO_HAVE_STRUCT_STAT_WITH_ST_FSTYPE
+    /* rare: maybe old NEC SX or SGI IRIX machines */
     retry_cnt = 0;
     do {
 	err = stat(filename, &sbuf);
