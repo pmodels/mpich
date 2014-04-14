@@ -351,9 +351,10 @@ static void ADIO_FileSysType_fncall(const char *filename, int *fstype, int *erro
 
 
 #ifdef ROMIO_GPFS
-
-    *fstype = ADIO_GPFS;
-    return;
+    if (fsbuf.f_type == GPFS_SUPER_MAGIC) {
+	*fstype = ADIO_GPFS;
+	return;
+    }
 #endif
 
     /* FPRINTF(stderr, "%d\n", fsbuf.f_type);*/
