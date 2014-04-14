@@ -397,6 +397,7 @@ void gpfs_wr_access_start(int fd, ADIO_Offset offset, ADIO_Offset length)
         take_locks.access.isWrite = 1;
 
         rc = gpfs_fcntl(fd, &take_locks);
+        ADIOI_Assert(rc == 0);
 }
 
 void gpfs_wr_access_end(int fd, ADIO_Offset offset, ADIO_Offset length)
@@ -418,6 +419,7 @@ void gpfs_wr_access_end(int fd, ADIO_Offset offset, ADIO_Offset length)
         free_locks.free.length = length;
 
         rc = gpfs_fcntl(fd, &free_locks);
+        ADIOI_Assert(rc == 0);
 }
 
 /* my_start, my_end: this processes file domain.  coudd be -1,-1 for "no i/o"
