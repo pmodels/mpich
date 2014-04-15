@@ -214,6 +214,7 @@ Makefile.am-stamp
 /maint/Version
 /src/binding/fortran/mpif_h/Makefile.mk
 /src/binding/fortran/use_mpi/Makefile.mk
+/src/binding/fortran/use_mpi_f08/Makefile.mk
 
 # MPICH2 parameter handling
 /src/include/mpich_cvars.h
@@ -427,6 +428,16 @@ Makefile.am-stamp
 /src/binding/fortran/use_mpi/typef90realf.c
 /src/binding/fortran/use_mpi/typef90cmplxf.c
 /src/binding/fortran/use_mpi/mpifnoext.h
+
+# /src/binding/fortran/use_mpi_f08
+/src/binding/fortran/use_mpi_f08/pmpi_f08.F90
+
+/src/binding/fortran/use_mpi_f08/wrappers_f/profiling/*.F90
+
+/src/binding/fortran/use_mpi_f08/wrappers_c/cdesc.c
+/src/binding/fortran/use_mpi_f08/wrappers_c/cdesc.h
+/src/binding/fortran/use_mpi_f08/wrappers_c/Makefile.mk
+/src/binding/fortran/use_mpi_f08/wrappers_c/*_cdesc.c
 
 # /src/env/
 /src/env/mpicc
