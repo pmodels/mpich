@@ -228,7 +228,7 @@ if [ -n "$profConf" ] ; then
 fi
 
 if test "@INTERLIB_DEPS@" = "no" -o "$static_libs" = "yes" ; then
-    extra_libs="@LPMPILIBNAME@ @WRAPPER_EXTRA_LIBS@"
+    extra_libs="@WRAPPER_EXTRA_LIBS@"
 fi
 
 # A temporary statement to invoke the compiler
@@ -251,7 +251,7 @@ if [ "$linking" = yes ] ; then
         $Show $CXX $PROFILE_INCPATHS @WRAPPER_CXXFLAGS@ @WRAPPER_LDFLAGS@ $allargs -I$includedir
         rc=$?
     else
-        $Show $CXX $PROFILE_INCPATHS @WRAPPER_CXXFLAGS@ @WRAPPER_LDFLAGS@ $allargs -I$includedir -L$libdir $cxxlibs $PROFILE_PRELIB $PROFILE_FOO $rpath_flags -l@MPILIBNAME@ $extra_libs $PROFILE_POSTLIB @WRAPPER_LIBS@
+        $Show $CXX $PROFILE_INCPATHS @WRAPPER_CXXFLAGS@ @WRAPPER_LDFLAGS@ $allargs -I$includedir -L$libdir $cxxlibs $PROFILE_PRELIB $PROFILE_FOO $rpath_flags -l@MPILIBNAME@ @LPMPILIBNAME@ $extra_libs $PROFILE_POSTLIB @WRAPPER_LIBS@
         rc=$?
     fi
 else
