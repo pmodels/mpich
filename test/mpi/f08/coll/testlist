@@ -1,0 +1,12 @@
+uallreducef08 4
+exscanf08 5
+alltoallwf08 7
+alltoallvf08 7
+inplacef08 4
+reducelocalf08 2 mpiversion=2.2
+redscatf08 4
+split_typef08 4 mpiversion=3.0
+nonblockingf08 4 mpiversion=3.0
+vw_inplacef08 4 mpiversion=2.2
+red_scat_blockf08 4 mpiversion=2.2
+nonblocking_inpf08 4 mpiversion=3.0
