@@ -50,6 +50,8 @@ errnames_txt_files =
 external_subdirs = @mplsrcdir@ @opasrcdir@
 external_ldflags = -L@mpllibdir@ -L@opalibdir@
 external_libs = -l@MPLLIBNAME@ -l@OPALIBNAME@
+mpi_convenience_libs =
+pmpi_convenience_libs =
 
 # NOTE on our semi-unconventional usage of DIST_SUBDIRS:
 # The automake manual recommends thinking of DIST_SUBDIRS as the list of all
@@ -137,48 +139,35 @@ mpi_core_sources =
 
 lib_LTLIBRARIES =
 
-if BUILD_PROFILING_LIB
-lib_lib@PMPILIBNAME@_la_LIBADD =
-endif BUILD_PROFILING_LIB
-
-lib_lib@MPILIBNAME@_la_SOURCES =
-lib_lib@MPILIBNAME@_la_LDFLAGS =
-lib_lib@MPILIBNAME@_la_CPPFLAGS =
-lib_lib@MPILIBNAME@_la_LIBADD =
-
-if BUILD_F77_BINDING
-lib_lib@MPIFCLIBNAME@_la_LIBADD =
-endif BUILD_F77_BINDING
-
-if BUILD_CXX_BINDING
-lib_lib@MPICXXLIBNAME@_la_LIBADD =
-endif BUILD_CXX_BINDING
-
 # include our subdir automake fragments
 include maint/Makefile.mk
 include src/Makefile.mk
 
 if BUILD_PROFILING_LIB
+# dropping mpi_fc_sources and mpi_cxx_sources from libmpmpi since they
+# don't contribute any PMPI symbols.
 lib_LTLIBRARIES += lib/lib@PMPILIBNAME@.la
-# dropping mpi_fc_sources and mpi_cxx_sources from the below PMPI list
-# since they don't contribute any PMPI symbols.
 lib_lib@PMPILIBNAME@_la_SOURCES = $(mpi_sources) $(mpi_f77_sources) $(mpi_core_sources)
 lib_lib@PMPILIBNAME@_la_LDFLAGS = $(external_ldflags) $(ABIVERSIONFLAGS)
-lib_lib@PMPILIBNAME@_la_LIBADD += $(external_libs)
-lib_lib@MPILIBNAME@_la_CPPFLAGS += -DMPICH_MPI_FROM_PMPI
-lib_lib@MPILIBNAME@_la_LIBADD += lib/lib@PMPILIBNAME@.la
-else !BUILD_PROFILING_LIB
-lib_lib@MPILIBNAME@_la_SOURCES += $(mpi_core_sources)
-lib_lib@MPILIBNAME@_la_LIBADD += $(external_libs)
-endif !BUILD_PROFILING_LIB
+lib_lib@PMPILIBNAME@_la_LIBADD = $(external_libs) $(pmpi_convenience_libs)
 
 # lib@MPILIBNAME@.la might depend on lib@PMPILIBNAME@.la.  We add them
 # in that order to lib_LTLIBRARIES so libtool doesn't get
 # confused. (see https://bugzilla.redhat.com/show_bug.cgi?id=91110)
 lib_LTLIBRARIES += lib/lib@MPILIBNAME@.la
-lib_lib@MPILIBNAME@_la_SOURCES += $(mpi_sources)
-lib_lib@MPILIBNAME@_la_LDFLAGS += $(external_ldflags) $(ABIVERSIONFLAGS)
-lib_lib@MPILIBNAME@_la_CPPFLAGS += $(AM_CPPFLAGS)
+lib_lib@MPILIBNAME@_la_SOURCES = $(mpi_sources)
+lib_lib@MPILIBNAME@_la_LDFLAGS = $(ABIVERSIONFLAGS)
+lib_lib@MPILIBNAME@_la_CPPFLAGS = $(AM_CPPFLAGS) -DMPICH_MPI_FROM_PMPI
+lib_lib@MPILIBNAME@_la_LIBADD = lib/lib@PMPILIBNAME@.la $(mpi_convenience_libs)
+
+else !BUILD_PROFILING_LIB
+
+lib_LTLIBRARIES += lib/lib@MPILIBNAME@.la
+lib_lib@MPILIBNAME@_la_SOURCES = $(mpi_sources) $(mpi_core_sources)
+lib_lib@MPILIBNAME@_la_LDFLAGS = $(external_ldflags) $(ABIVERSIONFLAGS)
+lib_lib@MPILIBNAME@_la_CPPFLAGS = $(AM_CPPFLAGS)
+lib_lib@MPILIBNAME@_la_LIBADD = $(external_libs) $(pmpi_convenience_libs) $(mpi_convenience_libs)
+endif !BUILD_PROFILING_LIB
 
 if BUILD_F77_BINDING
 lib_LTLIBRARIES += lib/lib@MPIFCLIBNAME@.la
@@ -191,14 +180,14 @@ if BUILD_FC_BINDING
 lib_lib@MPIFCLIBNAME@_la_SOURCES += $(mpi_fc_sources)
 endif BUILD_FC_BINDING
 lib_lib@MPIFCLIBNAME@_la_LDFLAGS = $(ABIVERSIONFLAGS)
-lib_lib@MPIFCLIBNAME@_la_LIBADD += lib/lib@MPILIBNAME@.la
+lib_lib@MPIFCLIBNAME@_la_LIBADD = lib/lib@MPILIBNAME@.la
 endif BUILD_F77_BINDING
 
 if BUILD_CXX_BINDING
 lib_LTLIBRARIES += lib/lib@MPICXXLIBNAME@.la
 lib_lib@MPICXXLIBNAME@_la_SOURCES = $(mpi_cxx_sources)
 lib_lib@MPICXXLIBNAME@_la_LDFLAGS = $(ABIVERSIONFLAGS)
-lib_lib@MPICXXLIBNAME@_la_LIBADD += lib/lib@MPILIBNAME@.la
+lib_lib@MPICXXLIBNAME@_la_LIBADD = lib/lib@MPILIBNAME@.la
 endif BUILD_CXX_BINDING
 
 # build the current directory and then the examples directory after everything else
