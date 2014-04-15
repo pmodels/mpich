@@ -12,7 +12,7 @@
 
 struct ADIOI_Fns_struct ADIO_NTFS_operations = {
     ADIOI_NTFS_Open, /* Open */
-	ADIOI_GEN_OpenColl, /* OpenColl */
+    ADIOI_FAILSAFE_OpenColl, /* OpenColl */
     ADIOI_NTFS_ReadContig, /* ReadContig */
     ADIOI_NTFS_WriteContig, /* WriteContig */
     ADIOI_GEN_ReadStridedColl, /* ReadStridedColl */
