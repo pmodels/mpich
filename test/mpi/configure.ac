@@ -439,7 +439,7 @@ AC_ARG_VAR([WRAPPER_CXXFLAGS],[])
 # Attach program prefix and suffix to executable names
 PAC_GET_EXENAME("mpicc", MPICC_NAME)
 PAC_GET_EXENAME("mpif77", MPIF77_NAME)
-PAC_GET_EXENAME("mpif90", MPIF90_NAME)
+PAC_GET_EXENAME("mpifort", MPIFORT_NAME)
 PAC_GET_EXENAME("mpicxx", MPICXX_NAME)
 PAC_GET_EXENAME("mpiexec", MPIEXEC_NAME)
 
@@ -472,7 +472,7 @@ elif test -n "$with_mpi" ; then
         F77=$MPIF77
     fi
     if test -z "$MPIFC" ; then
-        FC=$with_mpi/bin/$MPIF90_NAME
+        FC=$with_mpi/bin/$MPIFORT_NAME
     else
         FC=$MPIFC
     fi
@@ -499,7 +499,7 @@ else
         F77=$MPIF77
     fi
     if test -z "$MPIFC" ; then
-        AC_PATH_PROG(MPIFC,$MPIF90_NAME mpftn)
+        AC_PATH_PROG(MPIFC,$MPIFORT_NAME mpftn)
     fi
     if test "x$MPIFC" != "x" ; then
         FC=$MPIFC
@@ -1401,7 +1401,7 @@ if test "$FROM_MPICH" = yes ; then
     # installed compiler wrappers for actually building the tests
     CC=$mpibindir/$MPICC_NAME
     F77=$mpibindir/$MPIF77_NAME
-    FC=$mpibindir/$MPIF90_NAME
+    FC=$mpibindir/$MPIFORT_NAME
     CXX=$mpibindir/$MPICXX_NAME
     MPIEXEC=$mpibindir/$MPIEXEC_NAME
 

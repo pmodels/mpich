@@ -98,5 +98,5 @@ is a convenient way to build simple programs.
  argument '\-profile=myprof' will cause these
  definitions to be added to the relevant compile commands.
 
-.seealso: mpicc, mpicxx, mpif90, mpiexec
+.seealso: mpicc, mpicxx, mpifort, mpiexec
 D*/

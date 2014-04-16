@@ -6024,8 +6024,8 @@ AC_OUTPUT(Makefile \
 	  src/env/mpicxx.bash \
 	  src/env/mpif77.sh \
 	  src/env/mpif77.bash \
-	  src/env/mpif90.sh \
-	  src/env/mpif90.bash \
+	  src/env/mpifort.sh \
+	  src/env/mpifort.bash \
           src/env/parkill \
 	  src/util/dbg/getfuncstack \
           src/include/mpi.h \

@@ -216,7 +216,7 @@ CLEAN_LOCAL_TARGETS += test-clean
 ## common set of rules.
 install-exec-hook:
 	for e in ${DESTDIR}${bindir}/mpicc ${DESTDIR}${bindir}/mpicxx \
-		${DESTDIR}${bindir}/mpif77 ${DESTDIR}${bindir}/mpif90 ; do \
+		${DESTDIR}${bindir}/mpif77 ${DESTDIR}${bindir}/mpifort ; do \
 		if test -e $${e} ; then \
 			sed -e 's|__PREFIX_TO_BE_FILLED_AT_INSTALL_TIME__|${prefix}|g' \
 				-e 's|__EXEC_PREFIX_TO_BE_FILLED_AT_INSTALL_TIME__|${exec_prefix}|g' \

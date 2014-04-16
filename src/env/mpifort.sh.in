@@ -3,7 +3,7 @@
 # (C) 2006 by Argonne National Laboratory.
 #     See COPYRIGHT in top-level directory.
 #
-# mpif90
+# mpifort
 # Simple script to compile and/or link MPI programs.
 # This script knows the default flags and libraries, and can handle
 # alternative C compilers and the associated flags and libraries.
@@ -11,11 +11,11 @@
 #    includedir, libdir - Directories containing an *installed* mpich
 #    prefix, execprefix - Often used to define includedir and libdir
 #    FC                 - Fortran 90 compiler
-#    WRAPPER_FCFLAGS    - Any special flags needed to compile 
+#    WRAPPER_FCFLAGS    - Any special flags needed to compile
 #    WRAPPER_LDFLAGS    - Any special flags needed to link
 #    WRAPPER_LIBS       - Any special libraries needed in order to link
 #    FC_OTHER_LIBS      - Yet more libraries, needed just with FC
-#    
+#
 # We assume that (a) the C compiler can both compile and link programs
 #
 # Handling of command-line options:
@@ -44,8 +44,8 @@ FCCPP="@FCCPP@"
 # Fortran 90 Compiler characteristics
 FCINC="@FCINC@"
 # f90modinc specifies how to add a directory to the search path for modules.
-# Some compilers (Intel ifc version 5) do not support this concept, and 
-# instead need 
+# Some compilers (Intel ifc version 5) do not support this concept, and
+# instead need
 # a specific list of files that contain module names and directories.
 # The FCMODINCSPEC is a more general approach that uses <dir> and <file>
 # for the directory and file respectively.
@@ -59,42 +59,42 @@ enable_wrapper_rpath="@enable_wrapper_rpath@"
 @fc_shlib_conf@
 
 # Internal variables
-# Show is set to echo to cause the compilation command to be echoed instead 
+# Show is set to echo to cause the compilation command to be echoed instead
 # of executed.
 Show=eval
 #
 # End of initialization of variables
 #---------------------------------------------------------------------
 # Environment Variables.
-# The environment variables MPICH_F90 may be used to override the 
+# The environment variables MPICH_FC may be used to override the
 # default choices.
-# In addition, if there is a file $sysconfdir/mpif90-$FCname.conf, 
+# In addition, if there is a file $sysconfdir/mpifort-$FCname.conf,
 # where FCname is the name of the compiler with all spaces replaced by hyphens
-# (e.g., "f90 -64" becomes "f90--64", that file is sources, allowing other
-# changes to the compilation environment.  See the variables used by the 
+# (e.g., "fc -64" becomes "fc--64", that file is sources, allowing other
+# changes to the compilation environment.  See the variables used by the
 # script (defined above)
-# Added MPICH_F90_OLD, MPICH_F90 can be used to prefix FC with external utility,
-# e.g. setenv MPICH_F90 'eval linkcache $MPICH_F90_OLD'
-if [ -n "$MPICH_F90" ] ; then
-    MPICH_F90_OLD="$FC"
-    FC="$MPICH_F90"
+# Added MPICH_FC_OLD, MPICH_FC can be used to prefix FC with external utility,
+# e.g. setenv MPICH_FC 'eval linkcache $MPICH_FC_OLD'
+if [ -n "$MPICH_FC" ] ; then
+    MPICH_FC_OLD="$FC"
+    FC="$MPICH_FC"
     FCname=`echo $FC | sed 's/ /-/g'`
-    if [ -s $sysconfdir/mpif90-$FCname.conf ] ; then
-        . $sysconfdir/mpif90-$FCname.conf
+    if [ -s $sysconfdir/mpifort-$FCname.conf ] ; then
+        . $sysconfdir/mpifort-$FCname.conf
     fi
 fi
 # Allow a profiling option to be selected through an environment variable
-if [ -n "$MPIF90_PROFILE" ] ; then
-    profConf=$MPIF90_PROFILE
+if [ -n "$MPIFORT_PROFILE" ] ; then
+    profConf=$MPIFORT_PROFILE
 fi
 #
 # ------------------------------------------------------------------------
 # Argument processing.
 # This is somewhat awkward because of the handling of arguments within
-# the shell.  We want to handle arguments that include spaces without 
+# the shell.  We want to handle arguments that include spaces without
 # loosing the spacing (an alternative would be to use a more powerful
-# scripting language that would allow us to retain the array of values, 
-# which the basic (rather than enhanced) Bourne shell does not.  
+# scripting language that would allow us to retain the array of values,
+# which the basic (rather than enhanced) Bourne shell does not.
 #
 # Look through the arguments for arguments that indicate compile only.
 # If these are *not* found, add the library options
@@ -105,22 +105,22 @@ for arg in "$@" ; do
     # Set addarg to no if this arg should be ignored by the C compiler
     addarg=yes
     qarg=$arg
-    case $arg in 
- 	# ----------------------------------------------------------------
+    case $arg in
+	# ----------------------------------------------------------------
 	# Compiler options that affect whether we are linking or no
     -c|-S|-E|-M|-MM)
     # The compiler links by default
     linking=no
     ;;
 	# ----------------------------------------------------------------
-	# Options that control how we use mpif90 (e.g., -show, 
-	# -f90=* -config=*
+	# Options that control how we use mpifort (e.g., -show,
+	# -fc=* -config=*
     -echo)
     addarg=no
     set -x
     ;;
-    -f90=*)
-    FC=`echo A$arg | sed -e 's/A-f90=//g'`
+    -fc=*)
+    FC=`echo A$arg | sed -e 's/A-fc=//g'`
     addarg=no
     ;;
     -fc=*)
@@ -134,10 +134,10 @@ for arg in "$@" ; do
     -config=*)
     addarg=no
     FCname=`echo A$arg | sed -e 's/A-config=//g'`
-    if [ -s "$sysconfdir/mpif90-$FCname.conf" ] ; then
-        . "$sysconfdir/mpif90-$FCname.conf"
+    if [ -s "$sysconfdir/mpifort-$FCname.conf" ] ; then
+        . "$sysconfdir/mpifort-$FCname.conf"
     else
-	echo "Configuration file mpif90-$FCname.conf not found"
+	echo "Configuration file mpifort-$FCname.conf not found"
     fi
     ;;
     -compile-info|-compile_info)
@@ -152,7 +152,7 @@ for arg in "$@" ; do
     ;;
     -v)
     # Pass this argument to the compiler as well.
-    echo "mpif90 for MPICH version $MPICH_VERSION"
+    echo "mpifort for MPICH version $MPICH_VERSION"
     # if there is only 1 argument, it must be -v.
     if [ "$#" -eq "1" ] ; then
         linking=no
@@ -175,32 +175,30 @@ for arg in "$@" ; do
     NC=`echo "$FC" | sed 's%\/% %g' | awk '{print $NF}' -`
     if [ -f "$sysconfdir/mpixxx_opts.conf" ] ; then
         . $sysconfdir/mpixxx_opts.conf
-        echo "    -f90=xxx      - Reset the native compiler to xxx."
         echo "    -fc=xxx       - Reset the native compiler to xxx."
     else
         if [ -f "./mpixxx_opts.conf" ] ; then
             . ./mpixxx_opts.conf
-            echo "    -f90=xxx      - Reset the native compiler to xxx."
             echo "    -fc=xxx       - Reset the native compiler to xxx."
         fi
     fi
     exit 0
     ;;
         # -----------------------------------------------------------------
-	# Other arguments.  We are careful to handle arguments with 
-	# quotes (we try to quote all arguments in case they include 
+	# Other arguments.  We are careful to handle arguments with
+	# quotes (we try to quote all arguments in case they include
 	# any spaces)
-    *\"*) 
+    *\"*)
     qarg="'"$arg"'"
-    case $arg in 
+    case $arg in
        -D*)
        cppflags="$cppflags $qarg"
        ;;
     esac
     ;;
-    *\'*) 
+    *\'*)
     qarg='\"'"$arg"'\"'
-    case $arg in 
+    case $arg in
        -D*)
        cppflags="$cppflags $qarg"
        ;;
@@ -216,14 +214,14 @@ for arg in "$@" ; do
     ;;
     *.F|*.F90|.fpp|.FPP)
 # If FCCPP is not empty, then we need to do the following:
-#    If any input files have the .F or .F90 extension, then    
+#    If any input files have the .F or .F90 extension, then
 #        If FCCPP = false, then
 #            generate an error message and exit
-#        Use FCCPP to convert the file from .F to .f, using 
+#        Use FCCPP to convert the file from .F to .f, using
 #            $TMPDIR/f$$-$count.f as the output file name
 #            Replace the input file with this name in the args
 # This is needed only for very broken systems
-#     
+#
     if [ -n "$FCCPP" ] ; then
         if [ "$FCCPP" = "false" ] ; then
             echo "This Fortran compiler does not accept .F or .F90 files"
@@ -292,7 +290,7 @@ if [ -n "$profConf" ] ; then
     fi
 fi
 
-# Construct the line to add the include directory (not all compilers 
+# Construct the line to add the include directory (not all compilers
 # use -I, unfortunately)
 if [ -z "${FCINC}" ] ; then
     # If there is no path, add a link to the mpif.h file.
@@ -324,7 +322,7 @@ fi
 
 # A temporary statement to invoke the compiler
 # Place the -L before any args incase there are any mpi libraries in there.
-# Eventually, we'll want to move this after any non-MPI implementation 
+# Eventually, we'll want to move this after any non-MPI implementation
 # libraries
 
 if [ "$linking" = yes ] ; then
@@ -354,7 +352,7 @@ if [ -n "$rmfiles" ] ; then
     for file in $rmfiles ; do
         objfile=`basename $file .f`
 	if [ -s "${objfile}.o" ] ; then
-	    # Rename 
+	    # Rename
 	    destfile=`echo $objfile | sed -e "s/.*$$-//"`
 	    mv -f ${objfile}.o ${destfile}.o
 	fi

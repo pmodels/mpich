@@ -167,7 +167,7 @@ MPICH and have run an MPI program.
 
 A convenient way to compile and link your program is by using scripts
 that use the same compiler that MPICH was built with.  These are
-\texttt{mpicc}, \texttt{mpicxx}, \texttt{mpif77}, and \texttt{mpif90},
+\texttt{mpicc}, \texttt{mpicxx}, \texttt{mpif77}, and \texttt{mpifort},
 for C, C++, Fortran 77, and Fortran 90 programs, respectively.  If any
 of these commands are missing, it means that MPICH was configured
 without support for that particular language.

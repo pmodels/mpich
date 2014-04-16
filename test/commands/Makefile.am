@@ -8,13 +8,13 @@
 MPICC = $(bindir)/mpicc
 MPICXX = $(bindir)/mpicxx
 MPIF77 = $(bindir)/mpif77
-MPIF90 = $(bindir)/mpif90
+MPIFORT = $(bindir)/mpifort
 
 ## violate all automake standards and force CC and friends to be MPICC and friends
 CC=$(MPICC)
 CXX=$(MPICXX)
 F77=$(MPIF77)
-FC=$(MPIF90)
+FC=$(MPIFORT)
 
 noinst_PROGRAMS = stdiotest stdintest stdintest2 checkenv1 rtest rtestf rtestx \
 		  testout

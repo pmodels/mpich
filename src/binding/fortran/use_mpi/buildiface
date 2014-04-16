@@ -1045,11 +1045,11 @@ print MAKEFD "MAINTAINERCLEANFILES += \$(mpi_sources) fproto.h\n";
 print MAKEFD "CLEANFILES += \$(mpi_f90_modules)\n";
 print MAKEFD "\n";
 
-#print MAKEFD "install_BIN     = mpif90\n";
-#print MAKEFD "install_ETC     = mpif90.conf\n";
+#print MAKEFD "install_BIN     = mpifort\n";
+#print MAKEFD "install_ETC     = mpifort.conf\n";
 
     # Add the documentation
-#doc_sources = mpif90.txt manf90.txt
+#doc_sources = mpifort.txt manfort.txt
     print MAKEFD "# Documentation sources
 # FIXME disabled for now until we sort out how to handle docs correctly in the
 # new build system

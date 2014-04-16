@@ -32,7 +32,7 @@ bin_SCRIPTS += src/env/mpif77
 endif BUILD_F77_BINDING
 
 if BUILD_FC_BINDING
-bin_SCRIPTS += src/env/mpif90
+bin_SCRIPTS += src/env/mpifort
 endif BUILD_FC_BINDING
 
 if BUILD_CXX_BINDING
@@ -47,7 +47,7 @@ src/env/mpicxx: $(top_builddir)/src/env/mpicxx.bash
 	cp -p $? $@
 src/env/mpif77: $(top_builddir)/src/env/mpif77.bash
 	cp -p $? $@
-src/env/mpif90: $(top_builddir)/src/env/mpif90.bash
+src/env/mpifort: $(top_builddir)/src/env/mpifort.bash
 	cp -p $? $@
 else !BUILD_BASH_SCRIPTS
 src/env/mpicc: $(top_builddir)/src/env/mpicc.sh
@@ -56,7 +56,7 @@ src/env/mpicxx: $(top_builddir)/src/env/mpicxx.sh
 	cp -p $? $@
 src/env/mpif77: $(top_builddir)/src/env/mpif77.sh
 	cp -p $? $@
-src/env/mpif90: $(top_builddir)/src/env/mpif90.sh
+src/env/mpifort: $(top_builddir)/src/env/mpifort.sh
 	cp -p $? $@
 endif !BUILD_BASH_SCRIPTS
 
@@ -67,12 +67,12 @@ DISTCLEANFILES += $(top_builddir)/src/env/cc_shlib.conf  \
                   $(top_builddir)/src/env/mpicc          \
                   $(top_builddir)/src/env/mpicxx         \
                   $(top_builddir)/src/env/mpif77         \
-                  $(top_builddir)/src/env/mpif90
+                  $(top_builddir)/src/env/mpifort
 
 wrapper_doc_src = src/env/mpicc.txt \
                   src/env/mpif77.txt \
                   src/env/mpicxx.txt \
-                  src/env/mpif90.txt \
+                  src/env/mpifort.txt \
                   src/env/mpiexec.txt
 doc1_src_txt += $(wrapper_doc_src)
 EXTRA_DIST += $(wrapper_doc_src)
