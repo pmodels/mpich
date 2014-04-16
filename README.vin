@@ -779,14 +779,14 @@ platforms/compilers.  On linux, if the C compiler that builds MPICH
 is either gcc or icc, the above support will be enabled by configure.
 At the time of this writing, pgcc does not seem to have this multiple
 aliases of common symbols, so configure will detect the deficiency and
-disable the feature automatically.  The tested Fortran compiler
-includes GNU Forran compilers(gfortan, g77), Intel Fortran
-compiler(ifort), Portland Group Fortran compilers(pgf77, pgf90),
+disable the feature automatically.  The tested Fortran compilers
+include GNU Fortran compilers (gfortan), Intel Fortran
+compiler (ifort), Portland Group Fortran compilers (pgf77, pgf90),
 Absoft Fortran compilers (af77, af90), and IBM XL fortran
-compiler(xlf).  What this mean is that if mpich is built by
+compiler (xlf).  What this means is that if mpich is built by
 gcc/gfortran, the resulting mpich library can be used to link a
 Fortran program compiled/linked by another fortran compiler, say
-pgf77, say through mpif77 -f77=pgf77.  As long as the Fortran program
+pgf90, say through mpifort -fc=pgf90.  As long as the Fortran program
 is linked without any errors by one of these compilers, the program
 shall be running fine.
 
