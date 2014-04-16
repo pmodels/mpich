@@ -49,7 +49,7 @@ errnames_txt_files =
 
 external_subdirs = @mplsrcdir@ @opasrcdir@
 external_ldflags = -L@mpllibdir@ -L@opalibdir@
-external_libs = -l@MPLLIBNAME@ -l@OPALIBNAME@
+external_libs = @mpllib@ @opalib@
 mpi_convenience_libs =
 pmpi_convenience_libs =
 

@@ -7,7 +7,7 @@
 ACLOCAL_AMFLAGS = -I confdb
 AM_CPPFLAGS = -I$(top_srcdir)/include -I$(top_builddir)/include
 
-lib_LTLIBRARIES = lib@MPLLIBNAME@.la
+noinst_LTLIBRARIES = lib@MPLLIBNAME@.la
 lib@MPLLIBNAME@_la_SOURCES = src/mplstr.c src/mpltrmem.c src/mplenv.c src/mplsock.c
 lib@MPLLIBNAME@_la_LDFLAGS = ${lib@MPLLIBNAME@_so_versionflags}
 

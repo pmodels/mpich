@@ -3,7 +3,7 @@
 #  (C) 2008 by Argonne National Laboratory.
 #      See COPYRIGHT in top-level directory.
 
-lib_LTLIBRARIES = lib@OPALIBNAME@.la
+noinst_LTLIBRARIES = lib@OPALIBNAME@.la
 lib@OPALIBNAME@_la_SOURCES = opa_primitives.c opa_queue.c
 lib@OPALIBNAME@_la_LDFLAGS = ${lib@OPALIBNAME@_so_versionflags}
 
