@@ -1039,13 +1039,6 @@ noinst_HEADERS += src/binding/fortran/mpif_h/fproto.h src/binding/fortran/mpif_h
 DISTCLEANFILES += src/binding/fortran/mpif_h/mpif.h src/include/mpif.h
 nodist_include_HEADERS += src/binding/fortran/mpif_h/mpif.h
 
-# FIXME disabled for now, need to re-enable it the "autotools way"
-## Documentation sources
-#doc_sources = mpif77.txt
-#DOCDESTDIRS = html:www/www1,man:man/man1,latex:doc/refman
-#doc_HTML_SOURCES  = \${doc_sources}
-#doc_MAN_SOURCES   = \${doc_sources}
-#doc_LATEX_SOURCES = \${doc_sources}
 EOT
 
 ## XXX DJG I think this can go away, but maybe we need to do something special
@@ -1053,15 +1046,6 @@ EOT
 ##    print MAKEFD "\
 ##maint-clean:\
 ##\trm -f \${mpi_sources} $prototype_header_file\n";
-
-    ## XXX DJG FIXME consider not copying the mpif.h over to src/include, but
-    ## leaving it where it is
-    ## # Since configure copies mpif.h to the include dir, we need to remove it
-    ## # in a distclean step.  Ditto for mpif77; add the generated files.
-    ## print MAKEFD "distclean-local:\n";
-    ## print MAKEFD "\trm -f mpif_bottom.h\n";
-    ## print MAKEFD "\trm -f ../../../src/include/mpif.h\n";
-    ## print MAKEFD "\trm -f ../../../bin/mpif77\n";
 
     # XXX DJG I think this is all handled correctly by automake
     ## Add the generated files to the maintainer clean target

@@ -395,7 +395,7 @@ if test -z "$MPI_IMPL" ; then
 fi
 if test $MPI_IMPL = "mpich" ; then
 	TEST_CC=mpicc
-	TEST_F77=mpif77
+	TEST_F77=mpifort
 else
 	TEST_CC="$CC"
 	TEST_F77="$F77"
@@ -1534,7 +1534,7 @@ if test $FROM_OMPI = yes ; then
    # Used in the tests/ subdirectory for after ROMIO is built
 
    TEST_CC=mpicc
-   TEST_F77=mpif77
+   TEST_F77=mpifort
    MPIRUN=mpirun
    MPI_LIB=
    NOPROFILE=1
@@ -1553,7 +1553,7 @@ elif test $FROM_LAM = yes ; then
         
    # Used in the tests/ subdirectory for after ROMIO is built
    TEST_CC=mpicc
-   TEST_F77=mpif77
+   TEST_F77=mpifort
    MPIRUN=mpirun 
    MPI_LIB=
    ROMIO_INCLUDE=
@@ -1580,7 +1580,7 @@ elif test $FROM_MPICH = yes ; then
    #
    # set the compilers to the ones in MPICH bin directory (master_top_builddir/bin)
    TEST_CC='$(bindir)/mpicc'
-   TEST_F77='$(bindir)/mpif77'
+   TEST_F77='$(bindir)/mpifort'
    MPI_H_INCLUDE="-I${master_top_builddir}/src/include"
    ROMIO_INCLUDE=""
    USER_CFLAGS=""

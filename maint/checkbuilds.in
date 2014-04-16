@@ -285,14 +285,14 @@ sub RunTest {
     # but we should only do that if explicitly requested (we could
     # *require* an empty directory for the tests instead)
     if (-d "$instdir/lib") {
-	system "rm -f $instdir/lib/libmpi*.* $instdir/lib/libmpif77*.*";
+	system "rm -f $instdir/lib/libmpi*.* $instdir/lib/libmpifort*.*";
 	system "rm -f $instdir/lib/libmpe*.a";
     }
     if (-d "$instdir/bin") {
 	system "rm -f $instdir/bin/mpi* $instdir/bin/mpd*";
     }
     if (-d "$builddir/lib") {
-	system "rm -f $builddir/lib/libmpi*.* $builddir/lib/libmpif77*.*";
+	system "rm -f $builddir/lib/libmpi*.* $builddir/lib/libmpifort*.*";
 	system "rm -f $builddir/lib/libmpe*.a";
     }
     # 
@@ -670,8 +670,8 @@ sub RunMpichTestSuite {
     else {
 	$config[$nargs++] = "-cc=$ccname -I$instdir/include -L$instdir/lib";
     }
-    if (-x "$instdir/bin/mpif77" ) {
-	$config[$nargs++] = "-fc=$instdir/bin/mpif77";
+    if (-x "$instdir/bin/mpifort" ) {
+	$config[$nargs++] = "-fc=$instdir/bin/mpifort";
     }
     else {
 	$config[$nargs++] = "-fc=$fcname -I$instdir/include -L$instdir/lib";

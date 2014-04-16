@@ -19,7 +19,6 @@ $rootSrcDir = "";
 	      "rm", "mv", "cp", "chmod",
 	      "if", "make", "gnumake", 
 	      "[A-Za-z0-9_\/\.-]*\/mpicc",
-	      "[A-Za-z0-9_\/\.-]*\/mpif77",
 	      "[A-Za-z0-9_\/\.-]*\/mpifort",
 	      "[A-Za-z0-9_\/\.-]*\/mpicxx",
 	      "cleaning", "sleep", "date", "g77", "f77", "f90", "f95", "pgCC",

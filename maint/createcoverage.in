@@ -372,7 +372,7 @@ if [ $test_mpich1 = yes ] ; then
     MPITEST_IGNORE_RUNTEST=yes
     export MPITEST_IGNORE_RUNTEST
     $mpich1srcdir/configure --enable-coverage -cc=$mpiinstalldir/bin/mpicc \
-			-fc=$mpiinstalldir/bin/mpif77 --enable-io \
+			-fc=$mpiinstalldir/bin/mpifort --enable-io \
 			-mpilibname=mpich \
 			-prefix=$mpiinstalldir >&6 2>&6
     make clean  >&6 2>&6

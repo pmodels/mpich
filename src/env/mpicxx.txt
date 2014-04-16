@@ -103,5 +103,5 @@ is a convenient way to build simple programs.
  argument '\-profile=myprof' will cause these
  definitions to be added to the relevant compile commands.
 
-.seealso: mpif77, mpicc, mpifort, mpiexec
+.seealso: mpicc, mpifort, mpiexec
 D*/

@@ -90,11 +90,43 @@ AC_ARG_ENABLE(echo,
 	[AC_HELP_STRING([--enable-echo],[Turn on strong echoing. The default is enable=no.])],
 	[set -x])
 
-AC_ARG_ENABLE(f77,
-	[AC_HELP_STRING([--enable-f77],[Turn on Fortran 77 tests (default)])],,[enable_f77=yes])
-AC_ARG_ENABLE(fc,
-	[AC_HELP_STRING([--enable-fc],[Turn on Fortran 90 tests (if f90 available)])],,
-	[enable_fc=yes])
+AC_ARG_ENABLE(fortran,
+[  --enable-fortran=option - Control the level of Fortran support in the MPICH implementation.
+        yes|all   - Enable all available Fortran implementations (F77, F90)
+        f77       - Enable Fortran 77 support
+        f90       - Enable Fortran 90 support
+        no|none   - No Fortran support
+],,enable_fortran=all)
+
+save_IFS="$IFS"
+IFS=","
+enable_f77=no
+enable_fc=no
+for option in $enable_fortran ; do
+    case "$option" in
+        yes|all)
+                enable_f77=yes
+                enable_fc=yes
+                ;;
+        no|none)
+                enable_f77=no
+                enable_fc=no
+                ;;
+        f77)
+                enable_f77=yes
+                ;;
+        f90)
+                enable_fc=yes
+                ;;
+        *)
+                IFS="$save_IFS"
+                AC_MSG_WARN([Unknown value $option for --enable-fortran])
+                IFS=","
+                ;;
+    esac
+done
+IFS="$save_IFS"
+
 AC_ARG_ENABLE(cxx,
 	[AC_HELP_STRING([--enable-cxx],[Turn on C++ tests (default)])],,[enable_cxx=yes])
 
@@ -185,7 +217,7 @@ AC_ARG_ENABLE(xfail,
 AC_ARG_WITH(mpi,
 	[AC_HELP_STRING([--with-mpi=dir],
 		[Use the selected MPI; compilation scripts for mpicc,
-		mpif77 and mpicxx should be in dir/bin])],,)
+		mpifort and mpicxx should be in dir/bin])],,)
 
 AC_ARG_WITH(pm,
 	AC_HELP_STRING([--with-pm=name],

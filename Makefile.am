@@ -231,6 +231,8 @@ install-exec-hook:
 		cd ${DESTDIR}${bindir} && ln -f -s mpicxx mpic++ ; fi ; \
 	if test -e ${DESTDIR}${bindir}/mpifort ; then \
 		cd ${DESTDIR}${bindir} && ln -f -s mpifort mpif90 ; fi ; \
+	if test -e ${DESTDIR}${bindir}/mpifort -a ! -e ${DESTDIR}${bindir}/mpif77 ; then \
+		cd ${DESTDIR}${bindir} && ln -f -s mpifort mpif77 ; fi ; \
 	if test -e ${DESTDIR}${libdir}/lib@MPILIBNAME@@SHLIB_EXT@ ; then \
 		cd ${DESTDIR}${libdir} && ln -f -s lib@MPILIBNAME@@SHLIB_EXT@ libmpl@SHLIB_EXT@ ; \
 		cd ${DESTDIR}${libdir} && ln -f -s lib@MPILIBNAME@@SHLIB_EXT@ libopa@SHLIB_EXT@ ; \

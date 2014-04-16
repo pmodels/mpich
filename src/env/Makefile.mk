@@ -28,7 +28,9 @@ src_env_mpivars_LDADD += lib/lib@PMPILIBNAME@.la
 endif BUILD_PROFILING_LIB
 
 if BUILD_F77_BINDING
+if INSTALL_MPIF77
 bin_SCRIPTS += src/env/mpif77
+endif INSTALL_MPIF77
 endif BUILD_F77_BINDING
 
 if BUILD_FC_BINDING

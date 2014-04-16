@@ -411,18 +411,36 @@ AC_ARG_ENABLE(check-compiler-flags,
 
 dnl We enable f77 and fc if we can find compilers for them.
 dnl In addition, we check whether f77 and fc can work together.
-AC_ARG_ENABLE(f77,
-	AC_HELP_STRING([--enable-f77], [Enable Fortran 77 bindings]),,enable_f77=yes)
+AC_ARG_ENABLE(fortran,
+[  --enable-fortran=option - Control the level of Fortran support in the MPICH implementation.
+	yes|all   - Enable all available Fortran implementations (F77, F90)
+	f77       - Enable Fortran 77 support
+	f90       - Enable Fortran 90 support
+	no|none   - No Fortran support
+],,enable_fortran=all)
 
-AC_ARG_ENABLE(fc,
-	AC_HELP_STRING([--enable-fc], [Enable Fortran 90 bindings]),,enable_fc=yes)
+AC_ARG_ENABLE(f77,
+	AC_HELP_STRING([--enable-f77],
+		[Obsolete option: Use --enable-fortran or --disable-fortran instead]),
+	[AC_MSG_ERROR([
+--enable-f77 and --disable-f77 are NO longer valid configure options,
+use --enable-fortran or --disable-fortran instead])]
+)
 
 AC_ARG_ENABLE(f90,
 	AC_HELP_STRING([--enable-f90],
-		[Obsolete option: Use --enable-fc or --disable-fc instead]),
+		[Obsolete option: Use --enable-fortran or --disable-fortran instead]),
 	[AC_MSG_ERROR([
 --enable-f90 and --disable-f90 are NO longer valid configure options,
-use --enable-fc or --disable-fc instead])]
+use --enable-fortran or --disable-fortran instead])]
+)
+
+AC_ARG_ENABLE(fc,
+	AC_HELP_STRING([--enable-fc],
+		[Obsolete option: Use --enable-fortran or --disable-fortran instead]),
+	[AC_MSG_ERROR([
+--enable-fc and --disable-fc are NO longer valid configure options,
+use --enable-fortran or --disable-fortran instead])]
 )
 
 AC_ARG_ENABLE(cxx,
@@ -537,7 +555,7 @@ AC_ARG_ENABLE(weak-symbols,
 AC_ARG_ENABLE([two-level-namespace],
               [AS_HELP_STRING([--enable-two-level-namespace],
                               [(Darwin only) Build shared libraries and programs
-                               built with the mpicc/mpif77/etc. compiler
+                               built with the mpicc/mpifort/etc. compiler
                                wrappers with '-Wl,-commons,use_dylibs' and
                                without '-Wl,-flat_namespace'.  This may make the
                                MPICH installation and MPI programs more
@@ -672,6 +690,49 @@ AC_PROG_F77([PAC_F77_SEARCH_LIST])
 : ${FCFLAGS=""}
 AC_PROG_FC([PAC_FC_SEARCH_LIST])
 
+save_IFS="$IFS"
+IFS=","
+enable_f77=no
+enable_fc=no
+for option in $enable_fortran ; do
+    case "$option" in
+        yes|all)
+		enable_f77=yes
+		enable_fc=yes
+		;;
+        no|none)
+		enable_f77=no
+		enable_fc=no
+		;;
+        f77)
+		enable_f77=yes
+		;;
+        f90)
+		enable_fc=yes
+		;;
+        *)
+		IFS="$save_IFS"
+		AC_MSG_WARN([Unknown value $option for --enable-fortran])
+		IFS=","
+		;;
+    esac
+done
+IFS="$save_IFS"
+
+if test "$enable_f77" = "no" ; then
+   if test "$enable_f90" = "yes" ; then
+      AC_MSG_ERROR([Fortran 90 support requires enabling Fortran 77])
+   fi
+fi
+
+if test ! -z "$FC" -a -z "$F77" ; then
+   F77=$FC
+   if test ! -z "$FCFLAGS" -a -z "$FFLAGS" ; then
+      FFLAGS=$FCFLAGS
+   fi
+fi
+
+AM_CONDITIONAL([INSTALL_MPIF77],[test "$F77" != "$FC" -a "$FFLAGS" != "$FCFLAGS"])
 
 # compute canonical system types
 AC_CANONICAL_BUILD

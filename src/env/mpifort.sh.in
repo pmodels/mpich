@@ -299,7 +299,7 @@ if [ -z "${FCINC}" ] ; then
     if [ ! -r mpif.h ] ; then
         #echo "Adding a symbolic link for mpif.h"
 	trap "$Show rm -f mpif.h" 0
-	# This should really be the (related) f77includedir (see mpif77).
+	# This should really be the (related) f77includedir.
 	$Show ln -s ${includedir}/mpif.h mpif.h
 	# Remember to remove this file
 	rmfiles="$rmfiles mpif.h"
