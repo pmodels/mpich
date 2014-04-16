@@ -227,8 +227,8 @@ install-exec-hook:
 			rm -f $${e}.tmp ; \
 		fi ; \
 	done ; \
-	if test -e ${DESTDIR}${bindir}/@MPICXX_NAME@ ; then \
-		cd ${DESTDIR}${bindir} && ln -f -s @MPICXX_NAME@ @MPICPP_NAME@ ; fi ; \
+	if test -e ${DESTDIR}${bindir}/mpicxx ; then \
+		cd ${DESTDIR}${bindir} && ln -f -s mpicxx mpic++ ; fi ; \
 	if test -e ${DESTDIR}${libdir}/lib@MPILIBNAME@@SHLIB_EXT@ ; then \
 		cd ${DESTDIR}${libdir} && ln -f -s lib@MPILIBNAME@@SHLIB_EXT@ libmpich@SHLIB_EXT@ ; fi ; \
 	if test -e ${DESTDIR}${libdir}/lib@MPIFCLIBNAME@@SHLIB_EXT@ ; then \
