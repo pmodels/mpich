@@ -218,11 +218,11 @@ install-exec-hook:
 	for e in ${DESTDIR}${bindir}/mpicc ${DESTDIR}${bindir}/mpicxx \
 		${DESTDIR}${bindir}/mpif77 ${DESTDIR}${bindir}/mpif90 ; do \
 		if test -e $${e} ; then \
-			sed -e 's|^prefix=.*|prefix=${prefix}|g' \
-				-e 's|^exec_prefix=.*|exec_prefix=${exec_prefix}|g' \
-				-e 's|^sysconfdir=.*|sysconfdir=${sysconfdir}|g' \
-				-e 's|^includdir=.*|includedir=${includedir}|g' \
-				-e 's|^libdir=.*|libdir=${libdir}|g' $${e} > $${e}.tmp ; \
+			sed -e 's|__PREFIX_TO_BE_FILLED_AT_INSTALL_TIME__|${prefix}|g' \
+				-e 's|__EXEC_PREFIX_TO_BE_FILLED_AT_INSTALL_TIME__|${exec_prefix}|g' \
+				-e 's|__SYSCONFDIR_TO_BE_FILLED_AT_INSTALL_TIME__|${sysconfdir}|g' \
+				-e 's|__INCLUDEDIR_TO_BE_FILLED_AT_INSTALL_TIME__|${includedir}|g' \
+				-e 's|__LIBDIR_TO_BE_FILLED_AT_INSTALL_TIME__|${libdir}|g' $${e} > $${e}.tmp ; \
 			$(INSTALL_SCRIPT) $${e}.tmp $${e} ; \
 			rm -f $${e}.tmp ; \
 		fi ; \
