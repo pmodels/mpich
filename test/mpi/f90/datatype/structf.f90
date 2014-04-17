@@ -44,7 +44,7 @@
       call mpi_comm_size(MPI_COMM_WORLD, size, ierr )
       if (size .lt. 2) then
          print *, "Must have at least 2 processes"
-         call MPI_Abort( 1, MPI_COMM_WORLD, ierr )
+         call MPI_Abort( MPI_COMM_WORLD, 1, ierr )
       endif
 
       comm = MPI_COMM_WORLD

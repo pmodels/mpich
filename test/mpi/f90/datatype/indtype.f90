@@ -22,7 +22,7 @@
       call mpi_comm_rank( MPI_COMM_WORLD, rank, ierr )
       if (size .lt. 2) then
          print *, "Must have at least 2 processes"
-         call MPI_Abort( 1, MPI_COMM_WORLD, ierr )
+         call MPI_Abort( MPI_COMM_WORLD, 1, ierr )
       endif
 
       errs = 0
