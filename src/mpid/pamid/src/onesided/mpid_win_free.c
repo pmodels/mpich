@@ -86,6 +86,9 @@ MPID_Win_free(MPID_Win **win_ptr)
 
 
 
+  if (win->create_flavor == MPI_WIN_FLAVOR_ALLOCATE)
+    MPIU_Free(win->base);
+
   struct MPIDI_Win_info *winfo = &win->mpid.info[rank];
 #ifdef USE_PAMI_RDMA
   if (win->size != 0)

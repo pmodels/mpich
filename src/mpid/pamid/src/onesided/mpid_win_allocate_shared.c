@@ -47,10 +47,14 @@ int CheckRankOnNode(MPID_Comm  * comm_ptr,int *onNode ) {
       comm_size = comm_ptr->local_size;
 
       *onNode=1;
-      for (i=0; i< comm_size; i++) {
+
+      if (comm_ptr->intranode_table == NULL)
+        *onNode = 0;
+      else
+        for (i=0; i< comm_size; i++) {
           if (comm_ptr->intranode_table[i] == -1) {
-               *onNode=0;
-               break;
+            *onNode=0;
+            break;
           }
       }
      if (*onNode== 0) {
