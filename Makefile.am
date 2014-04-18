@@ -134,6 +134,7 @@ endif BUILD_F77_BINDING
 mpi_sources =
 mpi_f77_sources =
 mpi_fc_sources =
+mpi_f08_sources =
 mpi_cxx_sources =
 mpi_core_sources =
 
@@ -179,6 +180,9 @@ lib_lib@MPIFCLIBNAME@_la_SOURCES = $(mpi_f77_sources)
 if BUILD_FC_BINDING
 lib_lib@MPIFCLIBNAME@_la_SOURCES += $(mpi_fc_sources)
 endif BUILD_FC_BINDING
+if BUILD_F08_BINDING
+lib_lib@MPIFCLIBNAME@_la_SOURCES += $(mpi_f08_sources)
+endif BUILD_F08_BINDING
 lib_lib@MPIFCLIBNAME@_la_LDFLAGS = $(ABIVERSIONFLAGS)
 lib_lib@MPIFCLIBNAME@_la_LIBADD = lib/lib@MPILIBNAME@.la
 endif BUILD_F77_BINDING

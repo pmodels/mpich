@@ -1117,3 +1117,100 @@ if test "$pac_ccompile_ok" = "yes" ; then
     rm -f pac_conftest.$OBJEXT
 fi
 ])
+
+
+AC_DEFUN([PAC_FC_2008_SUPPORT],[
+AC_MSG_CHECKING([for Fortran 2008 support])
+
+AC_LANG_PUSH([C])
+f08_works=yes
+AC_COMPILE_IFELSE([
+	AC_LANG_SOURCE(
+[[
+#include <ISO_Fortran_binding.h>
+]],
+[[
+int foo_c(CFI_cdesc_t * a_desc, CFI_cdesc_t * b_desc)
+{
+	char * a_row = (char*) a_desc->base_addr;
+	if (a_desc->type != CFI_type_int) { return 1; }
+	if (a_desc->rank != 2) { return 2; }
+	if (a_desc->dim[1].extent != b_desc->dim[0].extent) { return 3; }
+	return 0;
+}
+]])],[mv conftest.$OBJEXT conftest1.$OBJEXT],[f08_works=no])
+AC_LANG_POP([C])
+
+AC_LANG_PUSH([Fortran])
+PAC_PUSH_FLAG([LIBS])
+LIBS="conftest1.$OBJEXT $LIBS"
+AC_LINK_IFELSE([
+    AC_LANG_SOURCE([
+MODULE F08TS_MODULE
+IMPLICIT NONE
+
+! Test public, private, protected
+REAL, PUBLIC       :: x
+REAL, PRIVATE      :: y
+LOGICAL, PROTECTED :: z
+
+! Test abstract
+ABSTRACT INTERFACE
+    SUBROUTINE user_func(x, y)
+        INTEGER  :: x(*)
+        REAL     :: y
+    END SUBROUTINE
+END INTERFACE
+
+! Test TS 29113 assumed type , assumed rank and bind(C)
+INTERFACE
+    FUNCTION FOO(A, B, C) &
+        BIND(C,name="foo_c") RESULT(err)
+        USE, intrinsic :: iso_c_binding, ONLY : c_int
+        TYPE(*), DIMENSION(..) :: A, B, C
+        INTEGER(c_int) :: err
+    END FUNCTION FOO
+END INTERFACE
+
+CONTAINS
+
+! Test TS 29113 asychronous attribute and optional
+SUBROUTINE test1(buf, count, ierr)
+    INTEGER, ASYNCHRONOUS :: buf(*)
+    INTEGER               :: count
+    INTEGER, OPTIONAL     :: ierr
+END SUBROUTINE
+
+! Test procedure
+SUBROUTINE test2(func)
+    PROCEDURE(user_func)  :: func
+END SUBROUTINE
+
+END MODULE
+
+!==============================================
+PROGRAM MAIN
+USE :: F08TS_MODULE, ONLY : FOO
+IMPLICIT NONE
+
+INTEGER, DIMENSION(4,4) :: A, B
+INTEGER, DIMENSION(2,2) :: C
+INTEGER                 :: ERRCODE
+
+! Test contiguous and non-contiguous array section passing
+! and linkage with C code
+ERRCODE = FOO(A(1:4:2, :), B(:, 2:4:2), C)
+
+END PROGRAM
+    ])],[],[f08_works=no])
+PAC_POP_FLAG([LIBS])
+AC_LANG_POP([Fortran])
+
+if test "$f08_works" = "yes" ; then
+   $1
+else
+   $2
+fi
+rm -f conftest1.$OBJEXT
+AC_MSG_RESULT([$f08_works])
+])

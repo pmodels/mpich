@@ -89,16 +89,7 @@ print $makefile_fh  <<EOT;
 #  This file is created by script $cur_dir/buildiface
 
 # ensure that the buildiface script ends up in the release tarball
-
-MOD = \@FCMODEXT\@
-
 EXTRA_DIST += $cur_dir/buildiface
-
-mpi_f08_module_sources =
-mpi_c_interface_sources =
-mpi_f08_wrappers_f_sources =
-pmpi_f08_wrappers_f_sources =
-mpi_f08_modules =
 
 if BUILD_F08_BINDING
 
@@ -106,7 +97,7 @@ EOT
 
 print $makefile_fh "AM_FCFLAGS += \@FCINCFLAG\@$cur_dir\n\n";
 
-print $makefile_fh "mpi_f08_module_sources += \\\n";
+print $makefile_fh "mpi_f08_sources += \\\n";
 @files = glob("*mpi_f08*.F90");
 for (my $i=0; $i<=$#files; $i++) {
     print $makefile_fh "\t$cur_dir/$files[$i]";
@@ -117,7 +108,7 @@ for (my $i=0; $i<=$#files; $i++) {
     }
 }
 
-print $makefile_fh "mpi_f08_modules += \\\n";
+print $makefile_fh "mpi_f08_sources += \\\n";
 @files = glob("*mpi_f08*.F90");
 for (my $i=0; $i<=$#files; $i++) {
     my $file = $files[$i];
@@ -129,32 +120,26 @@ for (my $i=0; $i<=$#files; $i++) {
 
 print $makefile_fh "modinc_HEADERS = \$(mpi_f08_modules)\n\n";
 
-print $makefile_fh "mpi_c_interface_sources += \\\n";
+print $makefile_fh "mpi_f08_sources += \\\n";
 @files = glob("mpi_c_interface_*.F90");
 for (my $i=0; $i<=$#files; $i++) {
     print $makefile_fh "\t$cur_dir/$files[$i]";
     if ($i != $#files) { print $makefile_fh " \\\n"; } else { print $makefile_fh "\n\n"; }
 }
 
-print $makefile_fh "mpi_f08_wrappers_f_sources += \\\n";
+print $makefile_fh "mpi_f08_sources += \\\n";
 @files = glob("$wrappers_f_dir/*.F90");
 for (my $i=0; $i<=$#files; $i++) {
     print $makefile_fh "\t$cur_dir/$files[$i]";
     if ($i != $#files) { print $makefile_fh " \\\n"; } else { print $makefile_fh "\n\n"; }
 }
 
-print $makefile_fh "pmpi_f08_wrappers_f_sources += \\\n";
+print $makefile_fh "mpi_core_sources += \\\n";
 @files = glob("$pmpi_dir/*.F90");
 for (my $i=0; $i<=$#files; $i++) {
     print $makefile_fh "\t$cur_dir/$files[$i]";
     if ($i != $#files) { print $makefile_fh " \\\n"; } else { print $makefile_fh "\n\n"; }
 }
-
-print $makefile_fh "lib_lib\@MPILIBNAME\@_la_SOURCES += \\
-    \$(mpi_f08_module_sources) \\
-    \$(mpi_c_interface_sources) \\
-    \$(mpi_f08_wrappers_f_sources) \\
-    \$(pmpi_f08_wrappers_f_sources)\n\n";
 
 print $makefile_fh "include \$(top_srcdir)/src/binding/fortran/use_mpi_f08/wrappers_c/Makefile.mk\n\n";
 

@@ -42,6 +42,7 @@ my @argbits;
 my $num_dtypes;
 my @dtype_bind;
 my $io_header;
+my $make_exists = 0;
 
 my %inplace = ('MPI_Allgather' => 0,
 	       'MPI_Allgatherv' => 0,
@@ -162,8 +163,9 @@ int cdesc_create_dtype(CFI_cdesc_t *cdesc, MPI_Datatype oldtype, MPI_Datatype *n
 EOT
 close OUTFD;
 
-open(MAKEFD, ">Makefile.mk") || die "Could not open Makefile.mk\n";
-print MAKEFD <<EOT;
+unless (-e "Makefile.mk") {
+    open(MAKEFD, ">Makefile.mk") || die "Could not open Makefile.mk\n";
+    print MAKEFD <<EOT;
 ## DO NOT EDIT
 ## This file created by buildiface
 ##
@@ -172,10 +174,13 @@ print MAKEFD <<EOT;
 # ensure that the buildiface script ends up in the release tarball
 EXTRA_DIST += src/binding/fortran/use_mpi_f08/wrappers_c/buildiface
 
-mpi_f08_sources =
 if BUILD_F08_BINDING
 mpi_f08_sources += \\
 EOT
+} else {
+    open(MAKEFD, ">>Makefile.mk") || die "Could not open Makefile.mk\n";
+    $make_exists = 1;
+}
 
 # if the Nth datatype does not correspond to the Nth void* buffer, set
 # the correct binding here.  A value of "2:4" means that the first
