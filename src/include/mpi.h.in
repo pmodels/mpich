@@ -736,6 +736,26 @@ extern MPIU_DLL_SPEC MPI_Fint * MPI_F_STATUSES_IGNORE;
 #define MPI_ARGV_NULL (char **)0
 #define MPI_ARGVS_NULL (char ***)0
 
+/* C type for MPI_STATUS in F08.
+   The field order should match that in mpi_f08_types.f90, and mpi_c_interface_types.f90.
+ */
+typedef struct {
+    int count_lo;
+    int count_hi_and_cancelled;
+    MPI_Fint MPI_SOURCE;
+    MPI_Fint MPI_TAG;
+    MPI_Fint MPI_ERROR;
+} MPI_F08_Status;
+
+extern MPI_F08_Status MPIR_F08_MPI_STATUS_IGNORE_OBJ;
+extern MPI_F08_Status MPIR_F08_MPI_STATUSES_IGNORE_OBJ[1];
+extern MPI_Fint MPIR_F08_MPI_IN_PLACE_OBJ;
+
+/* Pointers to above objects */
+extern MPI_F08_Status *MPI_F08_STATUS_IGNORE;
+extern MPI_F08_Status *MPI_F08_STATUSES_IGNORE;
+extern void *MPIR_F08_MPI_IN_PLACE;
+
 /* For supported thread levels */
 #define MPI_THREAD_SINGLE 0
 #define MPI_THREAD_FUNNELED 1

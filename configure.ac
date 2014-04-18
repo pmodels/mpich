@@ -2177,6 +2177,13 @@ if test "$enable_fc" = "yes" ; then
     fi
 fi
 
+if test -n "$f08_works" ; then
+    status_f08_works=1
+else
+    status_f08_works=0
+fi
+AC_DEFINE_UNQUOTED(HAVE_F08_BINDING, $status_f08_works, [Define to 1 to enable Fortran 2008 binding])
+
 # Set defaults for these values so that the Makefile in src/bindings/f90
 # is valid even if fc is not enabled (this is necessary for the 
 # distclean target)

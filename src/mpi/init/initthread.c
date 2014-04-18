@@ -285,6 +285,25 @@ int MPIR_Thread_CS_Finalize( void )
 #endif /* !MPID_DEVICE_DEFINES_THREAD_CS */
 #endif /* MPICH_IS_THREADED */
 
+#ifdef HAVE_F08_BINDING
+MPI_Status *MPIR_C_MPI_STATUS_IGNORE;
+MPI_Status *MPIR_C_MPI_STATUSES_IGNORE;
+char ** MPIR_C_MPI_ARGV_NULL;
+char ***MPIR_C_MPI_ARGVS_NULL;
+int *MPIR_C_MPI_UNWEIGHTED;
+int *MPIR_C_MPI_WEIGHTS_EMPTY;
+int *MPIR_C_MPI_ERRCODES_IGNORE;
+
+MPI_F08_Status MPIR_F08_MPI_STATUS_IGNORE_OBJ;
+MPI_F08_Status MPIR_F08_MPI_STATUSES_IGNORE_OBJ[1];
+MPI_Fint MPIR_F08_MPI_IN_PLACE_OBJ;
+
+/* Althought the two STATUS pointers are required but the MPI3.0,  they are not used in MPICH F08 binding */
+MPI_F08_Status *MPI_F08_STATUS_IGNORE = &MPIR_F08_MPI_STATUS_IGNORE_OBJ;
+MPI_F08_Status *MPI_F08_STATUSES_IGNORE = &MPIR_F08_MPI_STATUSES_IGNORE_OBJ[0];
+
+void *MPIR_F08_MPI_IN_PLACE = &MPIR_F08_MPI_IN_PLACE_OBJ;
+#endif
 
 #undef FUNCNAME
 #define FUNCNAME MPIR_Init_thread
@@ -371,6 +390,17 @@ int MPIR_Init_thread(int * argc, char ***argv, int required, int * provided)
     MPIR_Process.cxx_call_op_fn = 0;
 
 #endif
+
+#ifdef HAVE_F08_BINDING
+    MPIR_C_MPI_STATUS_IGNORE = MPI_STATUS_IGNORE;
+    MPIR_C_MPI_STATUSES_IGNORE = MPI_STATUSES_IGNORE;
+    MPIR_C_MPI_ARGV_NULL = MPI_ARGV_NULL;
+    MPIR_C_MPI_ARGVS_NULL = MPI_ARGVS_NULL;
+    MPIR_C_MPI_UNWEIGHTED = MPI_UNWEIGHTED;
+    MPIR_C_MPI_WEIGHTS_EMPTY = MPI_WEIGHTS_EMPTY;
+    MPIR_C_MPI_ERRCODES_IGNORE = MPI_ERRCODES_IGNORE;
+#endif
+
     /* This allows the device to select an alternative function for 
        dimsCreate */
     MPIR_Process.dimsCreate     = 0;
