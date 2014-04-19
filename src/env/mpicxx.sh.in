@@ -82,7 +82,6 @@ fi
 
 linking=yes
 allargs=""
-static_libs=no
 for arg in "$@" ; do
     # Set addarg to no if this arg should be ignored by the C compiler
     addarg=yes
@@ -113,13 +112,6 @@ for arg in "$@" ; do
     -show)
     addarg=no
     Show=echo
-    ;;
-    -static)
-    static_libs=yes
-    ;;
-    -mpich-alllibs)
-    addarg=no
-    static_libs=yes
     ;;
     -config=*)
     addarg=no
