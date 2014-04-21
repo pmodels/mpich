@@ -32,7 +32,7 @@ void ADIOI_PANFS_ReadContig(ADIO_File fd, void *buf, int count,
 			  ADIO_Offset offset, ADIO_Status *status,
 			  int *error_code);
 void ADIOI_PANFS_Resize(ADIO_File fd, ADIO_Offset size, int *error_code);
-void ADIOI_PANFS_WriteContig(ADIO_File fd, void *buf, int count, 
+void ADIOI_PANFS_WriteContig(ADIO_File fd, const void *buf, int count,
 			   MPI_Datatype datatype, int file_ptr_type,
 			   ADIO_Offset offset, ADIO_Status *status,
 			   int *error_code);
