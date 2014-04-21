@@ -788,8 +788,14 @@ users manual for instructions on testing and if necessary fixing this])
 fi
 
 if test -n "$file_system_panfs"; then
-    AC_DEFINE(ROMIO_PANFS,1,[Define for ROMIO with PANFS])
+    # TODO: are there ever any installations with the panfs SDK somewhere else?
+    CPPFLAGS="${CPPFLAGS} -I/opt/panfs/include"
+    AC_CHECK_HEADER(pan_fs_client_cw_mode.h,
+	AC_DEFINE(ROMIO_PANFS,1,[Define for ROMIO with PANFS]),
+	AC_MSG_ERROR([PANFS support requested but cannot find pan_fs_client_cw_mode.h header file])
+    )
 fi
+
 if test -n "$file_system_ufs"; then
     AC_DEFINE(ROMIO_UFS,1,[Define for ROMIO with UFS])
 fi
