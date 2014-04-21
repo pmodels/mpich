@@ -1657,6 +1657,12 @@ AC_CHECK_FUNCS(lseek64)
 if test "$ac_cv_func_lseek64" = "yes" ; then
     PAC_FUNC_NEEDS_DECL([#include <unistd.h>],lseek64)
 fi
+
+AC_CHECK_FUNCS(usleep)
+if test "$ac_cv_func_usleep" = "yes" ; then
+    PAC_FUNC_NEEDS_DECL([#include <unistd.h>],usleep)
+fi
+
 #
 # Create the directory lists for the Makefile
 FILE_SYS_DIRS=""

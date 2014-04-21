@@ -37,6 +37,12 @@ void ADIOI_PANFS_WriteContig(ADIO_File fd, const void *buf, int count,
 			   ADIO_Offset offset, ADIO_Status *status,
 			   int *error_code);
 
+/* TODO: move this to common code and have all routines retry. */
+/* TODO: also check for EWOULDBLOCK */
+#if defined(NEEDS_USLEEP_DECL)
+int usleep(useconds_t usec);
+#endif
+
 /* Delay 1 ms */
 #define AD_PANFS_RETRY_DELAY 1000
 
