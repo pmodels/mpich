@@ -102,6 +102,8 @@ ADIOI_BG_persInfo_init(ADIOI_BG_ConfInfo_t *conf,
 
    proc->rank = rank;
    proc->coreID = hw.coreID;
+   proc->ionID = MPIX_IO_node_id ();
+
    MPI_Comm_size(comm, &commsize);
 
    if(size == 1)

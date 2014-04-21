@@ -353,27 +353,36 @@ ADIOI_BG_compute_agg_ranklist_serial ( ADIO_File fd,
 	 * bridge set and ion id with associated bridge info stored in the
 	 * hints structure for later access during file domain assignment */
 
-	// sort the agg ranklist by bridges
+	// sort the agg ranklist by ions and bridges
+
 	int *interleavedbridgeranklist = (int *) ADIOI_Malloc (naggs * sizeof(int)); // resorted agg rank list
-	int *bridgelist = (int *) ADIOI_Malloc (naggs * sizeof(int)); // list of all bride ranks
+	/* list of all bridge ranks */
+	int *bridgelist = (int *) ADIOI_Malloc (naggs * sizeof(int));
+
 	/* each entry here is the number of aggregators associated with the
 	 * bridge rank of the same index in bridgelist */
 	int *bridgelistnum = (int *) ADIOI_Malloc (naggs * sizeof(int));
+	/* list of all ion IDs corresponding with bridgelist entries of same index */
+	int *ionlist = (int *) ADIOI_Malloc (naggs * sizeof(int));
 
 	int numbridges = 0;
 
 	int i;
 	for (i=0;i<naggs;i++)
 	    bridgelistnum[i] = 0;
-	int *summaryranklistionids = (int *) ADIOI_Malloc (naggs * sizeof(int));
-	for (i=0;i<naggs;i++)
-	    summaryranklistionids[i] = -1;
 
-	/* build the bridgelist and bridgelistnum data by going thru each agg
+	/* Each entry in this list corresponds with the bridgelist and will
+	 * contain the lowest bridge agg rank on that ion. */
+	int *summarybridgeminionaggrank = (int *) ADIOI_Malloc (naggs * sizeof(int));
+	for (i=0;i<naggs;i++)
+	    summarybridgeminionaggrank[i] = -1;
+
+	/* build the bridgelist, ionlist and bridgelistnum data by going thru each agg
 	 * entry and find the associated bridge list index - at the end we will
-	 * know how many aggs belong to each bridge */
+	 * know how many aggs belong to each bridge in each ion */
 	for (i=0;i<naggs;i++) {
 	    int aggbridgerank = all_procInfo[tmp_ranklist[i]].bridgeRank;
+	    int aggionid = all_procInfo[tmp_ranklist[i]].ionID;
 	    int foundrank = 0;
 	    int summaryranklistbridgeindex = 0;
 	    int j;
@@ -387,63 +396,82 @@ ADIOI_BG_compute_agg_ranklist_serial ( ADIO_File fd,
 	    }
 	    if (!foundrank) {
 		bridgelist[summaryranklistbridgeindex] = aggbridgerank;
-		if (summaryranklistionids[summaryranklistbridgeindex] == -1)
-		    summaryranklistionids[summaryranklistbridgeindex] = aggbridgerank;
-		else if (summaryranklistionids[summaryranklistbridgeindex] > aggbridgerank)
-		    summaryranklistionids[summaryranklistbridgeindex] = aggbridgerank;
+		ionlist[summaryranklistbridgeindex] = aggionid;
+
+		if (summarybridgeminionaggrank[summaryranklistbridgeindex] == -1)
+		    summarybridgeminionaggrank[summaryranklistbridgeindex] = aggbridgerank;
+		else if (summarybridgeminionaggrank[summaryranklistbridgeindex] > aggbridgerank)
+		    summarybridgeminionaggrank[summaryranklistbridgeindex] = aggbridgerank;
 		numbridges++;
 	    }
 
 	    bridgelistnum[summaryranklistbridgeindex]++;
 	}
 
-	// resort bridgelist and bridgelistnum by io node minimum bridge rank
+    /* at this point summarybridgeminionaggrank has the agg rank of the bridge
+     * for entries; now need to make each entry the minimum bridge rank for the
+     * entire ion. */
+    for (i=0;i<numbridges;i++) {
+        int aggIonId = ionlist[i];
+        int j;
+        for (j=0;j<numbridges;j++) {
+          if (ionlist[j] == aggIonId) {
+            if (summarybridgeminionaggrank[j] < summarybridgeminionaggrank[i])
+              summarybridgeminionaggrank[i] = summarybridgeminionaggrank[j];
+          }
+        }
+    }
+
+	// resort by io node minimum bridge rank
 	int x;
 	for (x=0;x<numbridges;x++) {
 	    for (i=0;i<(numbridges-1);i++) {
-		if (summaryranklistionids[i] > summaryranklistionids[i+1]) {
-		    int tmpionid = summaryranklistionids[i];
-		    summaryranklistionids[i] = summaryranklistionids[i+1];
-		    summaryranklistionids[i+1] = tmpionid;
+		if (summarybridgeminionaggrank[i] > summarybridgeminionaggrank[i+1]) {
+		    int tmpminionaggrank = summarybridgeminionaggrank[i];
+		    summarybridgeminionaggrank[i] = summarybridgeminionaggrank[i+1];
+		    summarybridgeminionaggrank[i+1] = tmpminionaggrank;
+		    int tmpionid = ionlist[i];
+		    ionlist[i] = ionlist[i+1];
+		    ionlist[i+1] = tmpionid;
 		    int tmpbridgerank = bridgelist[i];
 		    bridgelist[i] = bridgelist[i+1];
 		    bridgelist[i+1] = tmpbridgerank;
 		    int tmpbridgeranknum = bridgelistnum[i];
 		    bridgelistnum[i] = bridgelistnum[i+1];
 		    bridgelistnum[i+1] = tmpbridgeranknum;
-		}
+		  }
 	    }
 	}
 
-	// for each ion make sure bridgelist is in rank order
+	// for each io node make sure bridgelist is in rank order
 	int startSortIndex = -1;
 	int endSortIndex = -1;
 	int currentBridgeIndex = 0;
 
-	while (endSortIndex < numbridges) {
-	    int currentIonId = summaryranklistionids[currentBridgeIndex];
+	while (currentBridgeIndex < numbridges) {
+	    int currentIonId = ionlist[currentBridgeIndex];
 	    startSortIndex = currentBridgeIndex;
-	    while ((summaryranklistionids[currentBridgeIndex] == currentIonId) &&
-		    (currentBridgeIndex < numbridges))
-		currentBridgeIndex++;
-	    endSortIndex = currentBridgeIndex;
+	    while (ionlist[currentBridgeIndex] == currentIonId)
+		  currentBridgeIndex++;
+	    endSortIndex = currentBridgeIndex-1;
 	    int x;
-	    for (x=startSortIndex;x<endSortIndex;x++) {
-		for (i=startSortIndex;i<(endSortIndex-1);i++) {
+	    for (x=startSortIndex;x<=endSortIndex;x++) {
+		  for (i=startSortIndex;i<endSortIndex;i++) {
 		    if (bridgelist[i] > bridgelist[i+1]) {
-			int tmpbridgerank = bridgelist[i];
-			bridgelist[i] = bridgelist[i+1];
-			bridgelist[i+1] = tmpbridgerank;
-			int tmpbridgeranknum = bridgelistnum[i];
-			bridgelistnum[i] = bridgelistnum[i+1];
-			bridgelistnum[i+1] = tmpbridgeranknum;
+			  int tmpbridgerank = bridgelist[i];
+			  bridgelist[i] = bridgelist[i+1];
+			  bridgelist[i+1] = tmpbridgerank;
+			  int tmpbridgeranknum = bridgelistnum[i];
+			  bridgelistnum[i] = bridgelistnum[i+1];
+			  bridgelistnum[i+1] = tmpbridgeranknum;
 		    }
-		}
+		  }
 	    }
 	}
 
+
 	/* populate interleavedbridgeranklist - essentially the agg rank list
-	 * is now sorted by the bridge node and ion minimum bridge rank */
+	 * is now sorted by the ion minimum bridge rank and bridge node */
 	int currentrankoffset = 0;
 	for (i=0;i<numbridges;i++) {
 	    int *thisBridgeAggList = (int *) ADIOI_Malloc (naggs * sizeof(int));
@@ -481,11 +509,11 @@ ADIOI_BG_compute_agg_ranklist_serial ( ADIO_File fd,
 #ifdef balancecontigtrace
 	fprintf(stderr,"Interleaved aggregator list:\n");
 	for (i=0;i<naggs;i++) {
-	    fprintf(stderr,"Agg: %d Agg rank: %d with bridge rank %d\n",i,interleavedbridgeranklist[i],all_procInfo[interleavedbridgeranklist[i]].bridgeRank);
+	    fprintf(stderr,"Agg: %d Agg rank: %d with bridge rank %d and ion ID %d\n",i,interleavedbridgeranklist[i],all_procInfo[interleavedbridgeranklist[i]].bridgeRank,all_procInfo[interleavedbridgeranklist[i]].ionID);
 	}
 	fprintf(stderr,"Bridges list:\n");
 	for (i=0;i<numbridges;i++) {
-	    fprintf(stderr,"bridge %d ion id %d rank %d num %d\n",i,summaryranklistionids[i],bridgelist[i],bridgelistnum[i]);
+	    fprintf(stderr,"bridge %d ion min rank %d rank %d number of aggs %d ion id %d\n",i,summarybridgeminionaggrank[i],bridgelist[i],bridgelistnum[i],ionlist[i]);
 	}
 
 #endif
@@ -508,11 +536,13 @@ ADIOI_BG_compute_agg_ranklist_serial ( ADIO_File fd,
 	fd->hints->fs_hints.bg.bridgelistnum = (int *) ADIOI_Malloc (naggs * sizeof(int));
 	memcpy( fd->hints->fs_hints.bg.bridgelistnum, bridgelistnum, naggs*sizeof(int) );
 
-	ADIOI_Free(summaryranklistionids);
+	ADIOI_Free(summarybridgeminionaggrank);
 	ADIOI_Free( tmp_ranklist );
 	ADIOI_Free( bridgelistnum );
 	ADIOI_Free( bridgelist );
 	ADIOI_Free( interleavedbridgeranklist );
+	ADIOI_Free(ionlist);
+
     }  else {
 	/* classic topology-agnostic copy of the ranklist of IO aggregators to
 	 * fd->hints */
