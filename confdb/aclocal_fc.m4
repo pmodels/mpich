@@ -1128,8 +1128,7 @@ AC_COMPILE_IFELSE([
 	AC_LANG_SOURCE(
 [[
 #include <ISO_Fortran_binding.h>
-]],
-[[
+
 int foo_c(CFI_cdesc_t * a_desc, CFI_cdesc_t * b_desc)
 {
 	char * a_row = (char*) a_desc->base_addr;

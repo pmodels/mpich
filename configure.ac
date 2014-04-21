@@ -2182,8 +2182,6 @@ if test "$enable_fc" = "yes" ; then
         bindings="$bindings f90"
 
 	if test "$enable_f08" = "yes" ; then
-	   f08_works=yes
-	elif test "$enable_f08" = "auto" ; then
 	   PAC_FC_2008_SUPPORT([f08_works=yes],[f08_works=no])
 	fi
     fi

@@ -175,7 +175,7 @@ unless (-e "Makefile.mk") {
 EXTRA_DIST += src/binding/fortran/use_mpi_f08/wrappers_c/buildiface
 
 if BUILD_F08_BINDING
-mpi_f08_sources += \\
+mpi_fc_sources += \\
 EOT
 } else {
     open(MAKEFD, ">>Makefile.mk") || die "Could not open Makefile.mk\n";

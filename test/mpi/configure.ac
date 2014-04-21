@@ -1181,16 +1181,9 @@ AM_CONDITIONAL([BUILD_F90_TESTS],[test "X$f90dir" = "f90"])
 
 f08dir="#"
 AC_SUBST(f08dir)
-# Determine if tests for Fortran 2008 should be run.
-if test "$enable_f08" = "yes" ; then
-    otherlangs="$otherlangs f08"
-    f08dir=f08
-elif test "$enable_f08" = "auto" ; then
-    # FIXME add a test to compile a Fortran 2008 MPI program
-    PAC_FC_2008_SUPPORT([
-        otherlangs="$otherlangs f08"
-        f08dir=f08
-    ],[no])
+# FIXME if $FROM_MPICH is no, we should test build an MPI F08 program
+if test "$enable_f08" = "yes" -a "$FROM_MPICH" = "yes" ; then
+   f08dir=f08
 fi
 
 # Running C++ compiler tests
@@ -1605,6 +1598,8 @@ AC_OUTPUT(maint/testmerge \
           errors/f77/io/iooffset.h \
           errors/f90/Makefile \
 	  errors/f90/io/Makefile \
+          errors/f08/Makefile \
+	  errors/f08/io/Makefile \
 	  ckpoint/Makefile \
 	  ft/Makefile \
           manual/Makefile \

@@ -1012,18 +1012,15 @@ createModSteps('src/binding/fortran/use_mpi/$(MPIBASEMOD).$(MOD)',
 
 ## shouldn't be necessary, now the deps should be right...
 # avoid dependency problems and attain an effect similar to simplemake's "all-preamble"
-#BUILT_SOURCES += \$(mpi_f90_modules)
+#BUILT_SOURCES += \$(mpi_fc_modules)
 
 print MAKEFD <<EOT;
 
-mpi_f90_modules = \\
+mpi_fc_modules += \\
     src/binding/fortran/use_mpi/\$(MPIMOD).\$(MOD) \\
     src/binding/fortran/use_mpi/\$(MPISIZEOFMOD).\$(MOD) \\
     src/binding/fortran/use_mpi/\$(MPICONSTMOD).\$(MOD) \\
     src/binding/fortran/use_mpi/\$(MPIBASEMOD).\$(MOD)
-
-# the modules are effectively precompiled headers for Fortran programs
-modinc_HEADERS = \$(mpi_f90_modules)
 
 # We need a free-format version of mpif.h with no external commands,
 # including no wtime/wtick (removing MPI_WTICK also removes MPI_WTIME,
@@ -1042,7 +1039,7 @@ CLEANFILES += src/binding/fortran/use_mpi/mpifnoext.h
 EOT
 
 print MAKEFD "MAINTAINERCLEANFILES += \$(mpi_sources) fproto.h\n";
-print MAKEFD "CLEANFILES += \$(mpi_f90_modules)\n";
+print MAKEFD "CLEANFILES += \$(mpi_fc_modules)\n";
 print MAKEFD "\n";
 
 #print MAKEFD "install_BIN     = mpifort\n";

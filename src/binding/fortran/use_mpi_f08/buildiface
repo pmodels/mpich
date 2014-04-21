@@ -95,50 +95,89 @@ if BUILD_F08_BINDING
 
 EOT
 
-print $makefile_fh "AM_FCFLAGS += \@FCINCFLAG\@$cur_dir\n\n";
+print $makefile_fh "AM_FCFLAGS += \@FCINCFLAG\@src/binding/fortran/use_mpi\n\n";
 
-print $makefile_fh "mpi_f08_sources += \\\n";
-@files = glob("*mpi_f08*.F90");
-for (my $i=0; $i<=$#files; $i++) {
-    print $makefile_fh "\t$cur_dir/$files[$i]";
-    if ($i != $#files) {
-        print $makefile_fh " \\\n";
-    } else {
-        print $makefile_fh "\n\n";
-    }
+print $makefile_fh  <<EOT;
+
+mpi_fc_sources += \\
+	src/binding/fortran/use_mpi_f08/pmpi_f08.F90 \\
+	src/binding/fortran/use_mpi_f08/mpi_f08.F90 \\
+	src/binding/fortran/use_mpi_f08/mpi_f08_callbacks.F90 \\
+	src/binding/fortran/use_mpi_f08/mpi_f08_compile_constants.F90 \\
+	src/binding/fortran/use_mpi_f08/mpi_f08_link_constants.F90 \\
+	src/binding/fortran/use_mpi_f08/mpi_f08_types.F90 \\
+	src/binding/fortran/use_mpi_f08/mpi_c_interface_cdesc.F90 \\
+	src/binding/fortran/use_mpi_f08/mpi_c_interface_glue.F90 \\
+	src/binding/fortran/use_mpi_f08/mpi_c_interface_nobuf.F90 \\
+	src/binding/fortran/use_mpi_f08/mpi_c_interface_types.F90 \\
+	src/binding/fortran/use_mpi/pmpi_f08.\$(MOD) \\
+	src/binding/fortran/use_mpi/mpi_f08.\$(MOD) \\
+	src/binding/fortran/use_mpi/mpi_f08_callbacks.\$(MOD) \\
+	src/binding/fortran/use_mpi/mpi_f08_compile_constants.\$(MOD) \\
+	src/binding/fortran/use_mpi/mpi_f08_link_constants.\$(MOD) \\
+	src/binding/fortran/use_mpi/mpi_f08_types.\$(MOD)
+
+EOT
+
+print $makefile_fh "mpi_fc_modules += src/binding/fortran/use_mpi/mpi_f08.\$(MOD)\n\n";
+
+my %f08_mods = (
+    "mpi_c_interface" => "mpi_c_interface_cdesc",
+    "mpi_c_interface_cdesc" => "mpi_c_interface_nobuf",
+    "mpi_c_interface_nobuf" => "mpi_c_interface_glue",
+    "mpi_c_interface_glue" => "mpi_f08",
+    "mpi_f08" => "pmpi_f08",
+    "pmpi_f08" => "mpi_f08_link_constants",
+    "mpi_f08_link_constants" => "mpi_f08_callbacks",
+    "mpi_f08_callbacks" => "mpi_f08_compile_constants",
+    "mpi_f08_compile_constants" => "mpi_f08_types",
+    "mpi_f08_types" => "mpi_c_interface_types",
+    "mpi_c_interface_types" => "",
+    );
+
+print $makefile_fh "BUILT_SOURCES += ";
+foreach my $x (keys %f08_mods) {
+    print $makefile_fh "src/binding/fortran/use_mpi/$x.\$(MOD) ";
+}
+print $makefile_fh "\n\n";
+
+print $makefile_fh "CLEANFILES += ";
+foreach my $x (keys %f08_mods) {
+    print $makefile_fh "src/binding/fortran/use_mpi/$x.\$(MOD) ";
+}
+print $makefile_fh "\n\n";
+
+foreach my $x (keys %f08_mods) {
+    print $makefile_fh "src/binding/fortran/use_mpi/$x.\$(MOD) src/binding/fortran/use_mpi_f08/$x.lo:";
+    if ($f08_mods{$x}) {print $makefile_fh " src/binding/fortran/use_mpi/$f08_mods{$x}.\$(MOD)";}
+    print $makefile_fh "\n";
+    print $makefile_fh "\t\$(mod_verbose)\$(FC_COMPILE_MODS) -c src/binding/fortran/use_mpi_f08/`echo \$\@ | cut -f1 -d '.' | sed -e 's+.*/++g'`.F90 -o src/binding/fortran/use_mpi_f08/`echo \$\@ | cut -f1 -d '.' | sed -e 's+.*/++g'`.lo\n\n";
 }
 
-print $makefile_fh "mpi_f08_sources += \\\n";
-@files = glob("*mpi_f08*.F90");
-for (my $i=0; $i<=$#files; $i++) {
-    my $file = $files[$i];
-    $file =~ s{.*/}{};      # removes path
-    $file =~ s{\.[^.]+$}{}; # removes extension
-    print $makefile_fh "\t$cur_dir/$file.\$(MOD)";
-    if ($i != $#files) { print $makefile_fh " \\\n"; } else { print $makefile_fh "\n\n"; }
-}
-
-print $makefile_fh "modinc_HEADERS = \$(mpi_f08_modules)\n\n";
-
-print $makefile_fh "mpi_f08_sources += \\\n";
-@files = glob("mpi_c_interface_*.F90");
-for (my $i=0; $i<=$#files; $i++) {
-    print $makefile_fh "\t$cur_dir/$files[$i]";
-    if ($i != $#files) { print $makefile_fh " \\\n"; } else { print $makefile_fh "\n\n"; }
-}
-
-print $makefile_fh "mpi_f08_sources += \\\n";
+print $makefile_fh "mpi_fc_sources += \\\n";
 @files = glob("$wrappers_f_dir/*.F90");
 for (my $i=0; $i<=$#files; $i++) {
     print $makefile_fh "\t$cur_dir/$files[$i]";
     if ($i != $#files) { print $makefile_fh " \\\n"; } else { print $makefile_fh "\n\n"; }
 }
 
-print $makefile_fh "mpi_core_sources += \\\n";
+for (my $i=0; $i<=$#files; $i++) {
+    my $fname = $files[$i];
+    $fname =~ s/\.F90/.lo/g;
+    print $makefile_fh "$cur_dir/$fname: src/binding/fortran/use_mpi/mpi_f08.\$(MOD) src/binding/fortran/use_mpi/mpi_c_interface.\$(MOD)\n\n";
+}
+
+print $makefile_fh "mpi_fc_sources += \\\n";
 @files = glob("$pmpi_dir/*.F90");
 for (my $i=0; $i<=$#files; $i++) {
     print $makefile_fh "\t$cur_dir/$files[$i]";
     if ($i != $#files) { print $makefile_fh " \\\n"; } else { print $makefile_fh "\n\n"; }
+}
+
+for (my $i=0; $i<=$#files; $i++) {
+    my $fname = $files[$i];
+    $fname =~ s/\.F90/.lo/g;
+    print $makefile_fh "$cur_dir/$fname: src/binding/fortran/use_mpi/mpi_f08.\$(MOD) src/binding/fortran/use_mpi/mpi_c_interface.\$(MOD)\n\n";
 }
 
 print $makefile_fh "include \$(top_srcdir)/src/binding/fortran/use_mpi_f08/wrappers_c/Makefile.mk\n\n";
