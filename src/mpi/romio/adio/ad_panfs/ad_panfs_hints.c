@@ -15,15 +15,6 @@ void ADIOI_PANFS_SetInfo(ADIO_File fd, MPI_Info users_info, int *error_code)
 #if defined(MPICH) || !defined(PRINT_ERR_MSG)
     static char myname[] = "ADIOI_PANFS_SETINFO";
 #endif
-    char* value;
-    int flag, tmp_val = -1;
-    unsigned long int concurrent_write = 0; 
-    pan_fs_client_layout_agg_type_t layout_type = PAN_FS_CLIENT_LAYOUT_TYPE__DEFAULT;
-    unsigned long int layout_stripe_unit = 0;
-    unsigned long int layout_parity_stripe_width = 0;
-    unsigned long int layout_parity_stripe_depth = 0; 
-    unsigned long int layout_total_num_comps = 0;
-    pan_fs_client_layout_visit_t layout_visit_policy  = PAN_FS_CLIENT_LAYOUT_VISIT__ROUND_ROBIN;
     int gen_error_code;
 
     *error_code = MPI_SUCCESS;
