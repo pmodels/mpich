@@ -18,7 +18,8 @@ noinst_PROGRAMS = \
     adderr        \
     commcall      \
     errfatal      \
-    predef_eh
+    predef_eh     \
+    errstring2
 
 EXTRA_PROGRAMS = errcode errring errstring
 
