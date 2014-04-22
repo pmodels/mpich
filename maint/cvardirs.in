@@ -1,0 +1,1 @@
+@abs_srcdir@/../src/mpi @abs_srcdir@/../src/mpi_t @abs_srcdir@/../src/nameserv @abs_srcdir@/../src/util @abs_srcdir@/../src/binding @abs_srcdir@/../src/include @abs_srcdir@/../src/mpid @abs_srcdir@/../src/pmi @abs_srcdir@/../src/mutex

@@ -387,6 +387,8 @@ Makefile.am-stamp
 /maint/extractfixme
 /maint/structalign
 /maint/createhtmlindex
+/maint/extractcvars
+/maint/cvardirs
 
 # /src/
 
