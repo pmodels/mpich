@@ -108,6 +108,12 @@ static mpi_names_t mpi_names[] = {
     type_name_entry(MPI_C_DOUBLE_COMPLEX),
     type_name_entry(MPI_C_LONG_DOUBLE_COMPLEX),
 
+    /* C++ types */
+    type_name_entry(MPI_CXX_BOOL),
+    type_name_entry(MPI_CXX_FLOAT_COMPLEX),
+    type_name_entry(MPI_CXX_DOUBLE_COMPLEX),
+    type_name_entry(MPI_CXX_LONG_DOUBLE_COMPLEX),
+
     /* address/offset types */
     type_name_entry(MPI_AINT),
     type_name_entry(MPI_OFFSET),
