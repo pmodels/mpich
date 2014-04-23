@@ -1900,7 +1900,7 @@ if test "$enable_f77" = "yes" -a "$F77" = "no" ; then
    # No Fortran 77 compiler found; abort
    AC_MSG_ERROR([No Fortran 77 compiler found. If you don't need to
    build any Fortran programs, you can disable Fortran support using
-   --disable-f77 and --disable-fc. If you do want to build Fortran
+   --disable-fortran. If you do want to build Fortran
    programs, you need to install a Fortran compiler such as gfortran
    or ifort before you can proceed.])
 fi
@@ -1961,7 +1961,7 @@ information to configure with the FCFLAGS environment variable.])
         # If Fortran implicitly enabled, disable it now.  Otherwise,
 	# abort the configure since warning messages are often lost in
 	# the output.
-	AC_MSG_ERROR([Aborting configure because of mixed case names in Fortran.  Either select --disable-f77 or set FFLAGS to force the compiler to select monocase names])
+	AC_MSG_ERROR([Aborting configure because of mixed case names in Fortran.  Either select --disable-fortran or set FCFLAGS to force the compiler to select monocase names])
     fi
 
     # The MPI standard requires that MPI_Init in any language initialize
@@ -2085,10 +2085,10 @@ if test "$enable_fc" = "yes" -a "$enable_f77" != "yes" ; then
    AC_MSG_ERROR([
 Fortran 90 support requires compatible Fortran 77 support.
 To force the use of the Fortran 90 compiler for Fortran 77,
-do not use configure option --disable-f77, and set the environment
+do not use configure option --disable-fortran, and set the environment
 variable F77 to the name of the Fortran 90 compiler, or \$FC.
 If you do not want any Fortran support, use configure options
---disable-f77 and --disable-fc.])
+--disable-fortran.])
    # We should probably do the compatibility test as well
    enable_f77=yes
 fi
@@ -3965,7 +3965,7 @@ dnl     len_doublecplx=$hexlen
 	if grep HAVE_FINT_IS_INT $master_top_srcdir/src/binding/fortran/mpif_h/testf.c 2>&1 1>/dev/null ; then
 	    AC_MSG_WARN([Fortran integers and C ints are not the same size.  Support for this case is experimental; use at your own risk])
 	else 
-            AC_MSG_ERROR([Fortran integers and C ints are not the same size.  The current Fortran binding does not support this case.  Either force the Fortran compiler to use integers of $ac_cv_sizeof_int bytes, or use --disable-f77 on the configure line for MPICH.])
+            AC_MSG_ERROR([Fortran integers and C ints are not the same size.  The current Fortran binding does not support this case.  Either force the Fortran compiler to use integers of $ac_cv_sizeof_int bytes, or use --disable-fortran on the configure line for MPICH.])
 	fi
     fi
 

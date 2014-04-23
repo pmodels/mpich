@@ -50,18 +50,11 @@ shared memory), Hydra process management) of MPICH up and running.
       --disable-cxx (configuring MPICH is described in step 1(d)
       below).
 
-    - OPTIONAL: A Fortran 77 compiler, if Fortran 77 applications are
-      to be used (gfortran, ifort, etc.). If you do not require
-      support for Fortran 77 applications, you can disable this
-      support using --disable-f77 (configuring MPICH is described in
-      step 1(d) below).
-
-    - OPTIONAL: A Fortran 90 compiler, if Fortran 90 applications are
-      to be used (gfortran, ifort, etc.). If you do not require
-      support for Fortran 90 applications, you can disable this
-      support using --disable-fc. Note that Fortran 77 support is a
-      prerequisite for Fortran 90 support (configuring MPICH is
-      described in step 1(d) below).
+    - OPTIONAL: A Fortran compiler, if Fortran applications are to be
+      used (gfortran, ifort, etc.). If you do not require support for
+      Fortran applications, you can disable this support using
+      --disable-fortran (configuring MPICH is described in step 1(d)
+      below).
 
     Also, you need to know what shell you are using since different shell
     has different command syntax. Command "echo $SHELL" prints out the
@@ -100,11 +93,11 @@ shared memory), Hydra process management) of MPICH up and running.
     command will display the error. Most errors are straight-forward
     to follow. For example, if the configure command fails with:
 
-       "No Fortran 77 compiler found. If you don't need to build any
+       "No Fortran compiler found. If you don't need to build any
         Fortran programs, you can disable Fortran support using
-        --disable-f77 and --disable-fc. If you do want to build
-        Fortran programs, you need to install a Fortran compiler such
-        as gfortran or ifort before you can proceed."
+        --disable-fortran. If you do want to build Fortran programs,
+        you need to install a Fortran compiler such as gfortran or
+        ifort before you can proceed."
 
     ... it means that you don't have a Fortran compiler :-). You will
     need to either install one, or disable Fortran support in MPICH.
@@ -305,10 +298,10 @@ developers might be interested in, but which break existing configure
 tests (e.g., -Werror). These are NOT recommended for regular users.
 
 (d) MPICH_MPICC_FLAGS, MPICH_MPICPP_FLAGS, MPICH_MPICXX_FLAGS,
-MPICH_MPIF77_FLAGS, MPICH_MPIFC_FLAGS, MPICH_LDFLAGS and
-MPICH_LIBS (abbreviated as MPICH_MPIX_FLAGS): These flags do *not*
-affect the compilation of the MPICH library itself, but will be
-internally used by mpicc and friends.
+MPICH_MPIFC_FLAGS, MPICH_LDFLAGS and MPICH_LIBS (abbreviated as
+MPICH_MPIX_FLAGS): These flags do *not* affect the compilation of the
+MPICH library itself, but will be internally used by mpicc and
+friends.
 
 
   +--------------------------------------------------------------------+
@@ -500,8 +493,8 @@ configurations:
        --with-cross=<mpich-source>/src/mpid/ch3/channels/nemesis/netmod/ib/cross_values.txt
        --host=x86_64-k1om-linux
        --with-ib=/opt/intel/mic/ofed/card/usr
-       CC=icc CXX=icpc F77=ifort FC=ifort
-       CFLAGS=-mmic CXXFLAGS=-mmic FFLAGS=-mmic FCFLAGS=-mmic LDFLAGS=-mmic
+       CC=icc CXX=icpc FC=ifort
+       CFLAGS=-mmic CXXFLAGS=-mmic FCFLAGS=-mmic LDFLAGS=-mmic
 
 3. InfiniBand Open Fabrics, Xeon Phi, McKernel (developed by
    University of Tokyo)
@@ -513,8 +506,8 @@ configurations:
        --host=x86_64-k1om-linux
        --with-ib=<mckernel-source>/attached
        --disable-shared
-       CC=icc CXX=icpc F77=ifort FC=ifort
-       CFLAGS=-mmic CXXFLAGS=-mmic FFLAGS=-mmic FCFLAGS=-mmic LDFLAGS=-mmic
+       CC=icc CXX=icpc FC=ifort
+       CFLAGS=-mmic CXXFLAGS=-mmic FCFLAGS=-mmic LDFLAGS=-mmic
 
     Note that shared builds are not supported for the third
     configuration right now.
@@ -760,7 +753,7 @@ http://wiki.mpich.org/mpich/index.php/Getting_And_Building_MPICH
 
 If the C compiler that is used to build MPICH libraries supports both
 multiple weak symbols and multiple aliases of common symbols, the
-Fortran 77 binding can support multiple Fortran compilers. The
+Fortran binding can support multiple Fortran compilers. The
 multiple weak symbols support allow MPICH to provide different name
 mangling scheme (of subroutine names) required by differen Fortran
 compilers. The multiple aliases of common symbols support enables
@@ -775,20 +768,19 @@ e.g. linker warnings of different sizes of common symbols, MPIFCMB*
 (the warning should be harmless).
 
 We have only tested this support on a limited set of
-platforms/compilers.  On linux, if the C compiler that builds MPICH
-is either gcc or icc, the above support will be enabled by configure.
-At the time of this writing, pgcc does not seem to have this multiple
+platforms/compilers.  On linux, if the C compiler that builds MPICH is
+either gcc or icc, the above support will be enabled by configure.  At
+the time of this writing, pgcc does not seem to have this multiple
 aliases of common symbols, so configure will detect the deficiency and
 disable the feature automatically.  The tested Fortran compilers
-include GNU Fortran compilers (gfortan), Intel Fortran
-compiler (ifort), Portland Group Fortran compilers (pgf77, pgf90),
-Absoft Fortran compilers (af77, af90), and IBM XL fortran
-compiler (xlf).  What this means is that if mpich is built by
-gcc/gfortran, the resulting mpich library can be used to link a
-Fortran program compiled/linked by another fortran compiler, say
-pgf90, say through mpifort -fc=pgf90.  As long as the Fortran program
-is linked without any errors by one of these compilers, the program
-shall be running fine.
+include GNU Fortran compilers (gfortan), Intel Fortran compiler
+(ifort), Portland Group Fortran compilers (pgfortran), Absoft Fortran
+compilers (af90), and IBM XL fortran compiler (xlf).  What this means
+is that if mpich is built by gcc/gfortran, the resulting mpich library
+can be used to link a Fortran program compiled/linked by another
+fortran compiler, say pgf90, say through mpifort -fc=pgf90.  As long
+as the Fortran program is linked without any errors by one of these
+compilers, the program shall be running fine.
 
 -------------------------------------------------------------------------
 
