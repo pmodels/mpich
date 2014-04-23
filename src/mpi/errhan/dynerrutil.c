@@ -48,6 +48,7 @@ static const char *(user_class_msgs[ERROR_MAX_NCLASS]) = { 0 };
 static const char *(user_code_msgs[ERROR_MAX_NCODE]) = { 0 };
 static int  first_free_class = 0;
 static int  first_free_code  = 1;  /* code 0 is reserved */
+static const char empty_error_string[1] = { 0 };
 
 /* Forward reference */
 const char *MPIR_Err_get_dynerr_string( int code );
@@ -297,11 +298,13 @@ const char *MPIR_Err_get_dynerr_string( int code )
     if (errcode) {
 	if (errcode < first_free_code) {
 	    errstr = user_code_msgs[errcode];
+	    if (!errstr) errstr = empty_error_string;
 	}
     }
     else {
 	if (errclass < first_free_class) {
 	    errstr = user_class_msgs[errclass];
+	    if (!errstr) errstr = empty_error_string;
 	}
     }
        
