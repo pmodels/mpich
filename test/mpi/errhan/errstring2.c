@@ -1,5 +1,7 @@
 #include <stdio.h>
 #include <mpi.h>
+#include <string.h>
+
 int main(int argc, char *argv[])
 {
     int errorclass;
@@ -8,8 +10,12 @@ int main(int argc, char *argv[])
     MPI_Init(&argc, &argv);
     MPI_Add_error_class(&errorclass);
     MPI_Error_string(errorclass, errorstring, &slen);
-    printf("errorclass:%d errorstring:'%s' len:%d\n", errorclass,
+    if (strncmp(errorstring, "", 1)) {
+	fprintf(stderr, "errorclass:%d errorstring:'%s' len:%d\n", errorclass,
 	    errorstring, slen);
+    } else {
+	printf(" No Errors\n");
+    }
     MPI_Finalize();
     return 0;
 }
