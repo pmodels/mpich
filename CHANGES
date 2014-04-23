@@ -24,6 +24,9 @@
  # The old ROMIO optimization "deferred open" either stopped working or was
    disabled on several platforms.
 
+ # Fortran 2008 bindings (experimental). Build with --enable-fortran=all. Must have
+   a Fortran 2008 + TS 29113 capable compiler.
+
  # Several other minor bug fixes, memory leak fixes, and code cleanup.
 
    A full list of changes is available at the following link:
