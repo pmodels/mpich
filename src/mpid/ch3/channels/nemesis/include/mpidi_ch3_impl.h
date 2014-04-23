@@ -46,6 +46,7 @@ extern struct MPID_Request *MPIDI_CH3I_shm_active_send;
     /* the refcounts */                                                         \
     GENERIC_Q_ENQUEUE_MULTIPLE(qp, ep0, ep1, dev.next)
 
+int MPIDI_CH3I_Shm_supported(void);
 int MPIDI_CH3I_Progress_init(void);
 int MPIDI_CH3I_Progress_finalize(void);
 int MPIDI_CH3I_Shm_send_progress(void);

@@ -26,22 +26,11 @@ static int MPIDI_CH3I_Win_allocate_shm(MPI_Aint size, int disp_unit, MPID_Info *
 int MPIDI_CH3_Win_fns_init(MPIDI_CH3U_Win_fns_t *win_fns)
 {
     int mpi_errno = MPI_SUCCESS;
-    int mutex_err;
-    pthread_mutexattr_t attr;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3_WIN_FNS_INIT);
 
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_CH3_WIN_FNS_INIT);
 
-    /* Test for PTHREAD_PROCESS_SHARED support.  Some platforms do not support
-     * this capability even though it is a part of the pthreads core API (e.g.,
-     * FreeBSD does not support this as of version 9.1) */
-    pthread_mutexattr_init(&attr);
-    mutex_err = pthread_mutexattr_setpshared(&attr, PTHREAD_PROCESS_SHARED);
-    pthread_mutexattr_destroy(&attr);
-
-    /* Only allocate shared memory windows if we can use
-     * pthread_mutexattr_setpshared correctly. */
-    if (!mutex_err)
+    if (MPIDI_CH3I_Shm_supported())
         win_fns->allocate_shm = MPIDI_CH3I_Win_allocate_shm;
 
     MPIDI_RMA_FUNC_EXIT(MPID_STATE_MPIDI_CH3_WIN_FNS_INIT);
