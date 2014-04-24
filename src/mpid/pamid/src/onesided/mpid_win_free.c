@@ -53,6 +53,8 @@ int MPIDI_SHM_Win_free(MPID_Win **win_ptr)
 	rc=shmctl((*win_ptr)->mpid.shm->shm_id,IPC_RMID,NULL);
 	MPIU_ERR_CHKANDJUMP((rc == -1), errno,MPI_ERR_RMA_SHARED, "**shmctl");
     }
+  } else {/* one task on a node */
+    MPIU_Free((*win_ptr)->base);
   }
   MPIU_Free((*win_ptr)->mpid.shm);
   (*win_ptr)->mpid.shm = NULL;
