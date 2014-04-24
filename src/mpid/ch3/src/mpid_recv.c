@@ -40,7 +40,8 @@ int MPID_Recv(void * buf, int count, MPI_Datatype datatype, int rank, int tag,
     }
 
     /* Check to make sure the communicator hasn't already been revoked */
-    if (comm->revoked) {
+    if (comm->revoked &&
+            MPIR_SHRINK_TAG != MPIR_TAG_MASK_ERROR_BIT(tag & ~MPIR_Process.tagged_coll_mask)) {
         MPIU_ERR_SETANDJUMP(mpi_errno,MPIX_ERR_REVOKED,"**revoked");
     }
 

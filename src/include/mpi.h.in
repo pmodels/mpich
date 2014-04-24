@@ -1538,6 +1538,7 @@ int MPI_T_category_changed(int *stamp);
 int MPIX_Comm_failure_ack(MPI_Comm comm);
 int MPIX_Comm_failure_get_acked(MPI_Comm comm, MPI_Group *failedgrp);
 int MPIX_Comm_revoke(MPI_Comm comm);
+int MPIX_Comm_shrink(MPI_Comm comm, MPI_Comm *newcomm);
 
 
 /* End Prototypes */
@@ -2176,6 +2177,7 @@ int PMPI_T_category_changed(int *stamp);
 int PMPIX_Comm_failure_ack(MPI_Comm comm);
 int PMPIX_Comm_failure_get_acked(MPI_Comm comm, MPI_Group *failedgrp);
 int PMPIX_Comm_revoke(MPI_Comm comm);
+int PMPIX_Comm_shrink(MPI_Comm comm, MPI_Comm *newcomm);
 
 
 #endif  /* MPI_BUILD_PROFILING */

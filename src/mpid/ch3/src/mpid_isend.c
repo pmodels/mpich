@@ -51,7 +51,8 @@ int MPID_Isend(const void * buf, int count, MPI_Datatype datatype, int rank,
                   rank, tag, comm->context_id + context_offset));
 
     /* Check to make sure the communicator hasn't already been revoked */
-    if (comm->revoked) {
+    if (comm->revoked &&
+            MPIR_SHRINK_TAG != MPIR_TAG_MASK_ERROR_BIT(tag & ~MPIR_Process.tagged_coll_mask)) {
         MPIU_DBG_MSG(CH3_OTHER,VERBOSE,"Communicator revoked. MPID_ISEND returning");
         MPIU_ERR_SETANDJUMP(mpi_errno,MPIX_ERR_REVOKED,"**revoked");
     }

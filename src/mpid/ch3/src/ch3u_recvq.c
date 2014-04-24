@@ -941,11 +941,13 @@ int MPIDI_CH3U_Clean_recvq(MPID_Comm *comm_ptr)
         match.parts.context_id = comm_ptr->recvcontext_id + MPID_CONTEXT_INTRA_COLL;
 
         if (MATCH_WITH_LEFT_RIGHT_MASK(rreq->dev.match, match, mask)) {
-            MPIU_DBG_MSG_FMT(CH3_OTHER,VERBOSE,(MPIU_DBG_FDEST,
-                        "cleaning up unexpected collective pkt rank=%d tag=%d contextid=%d",
-                        rreq->dev.match.parts.rank, rreq->dev.match.parts.tag, rreq->dev.match.parts.context_id));
-            dequeue_and_set_error(&rreq, prev_rreq, &recvq_unexpected_head, &recvq_unexpected_tail, &error, MPI_PROC_NULL);
-            continue;
+            if (rreq->dev.match.parts.tag != MPIR_SHRINK_TAG) {
+                MPIU_DBG_MSG_FMT(CH3_OTHER,VERBOSE,(MPIU_DBG_FDEST,
+                            "cleaning up unexpected collective pkt rank=%d tag=%d contextid=%d",
+                            rreq->dev.match.parts.rank, rreq->dev.match.parts.tag, rreq->dev.match.parts.context_id));
+                dequeue_and_set_error(&rreq, prev_rreq, &recvq_unexpected_head, &recvq_unexpected_tail, &error, MPI_PROC_NULL);
+                continue;
+            }
         }
 
         prev_rreq = rreq;
@@ -971,11 +973,13 @@ int MPIDI_CH3U_Clean_recvq(MPID_Comm *comm_ptr)
         match.parts.context_id = comm_ptr->recvcontext_id + MPID_CONTEXT_INTRA_COLL;
 
         if (MATCH_WITH_LEFT_RIGHT_MASK(rreq->dev.match, match, mask)) {
-            MPIU_DBG_MSG_FMT(CH3_OTHER,VERBOSE,(MPIU_DBG_FDEST,
-                        "cleaning up unexpected collective pkt rank=%d tag=%d contextid=%d",
-                        rreq->dev.match.parts.rank, rreq->dev.match.parts.tag, rreq->dev.match.parts.context_id));
-            dequeue_and_set_error(&rreq, prev_rreq, &recvq_posted_head, &recvq_posted_tail, &error, MPI_PROC_NULL);
-            continue;
+            if (rreq->dev.match.parts.tag != MPIR_SHRINK_TAG) {
+                MPIU_DBG_MSG_FMT(CH3_OTHER,VERBOSE,(MPIU_DBG_FDEST,
+                            "cleaning up unexpected collective pkt rank=%d tag=%d contextid=%d",
+                            rreq->dev.match.parts.rank, rreq->dev.match.parts.tag, rreq->dev.match.parts.context_id));
+                dequeue_and_set_error(&rreq, prev_rreq, &recvq_posted_head, &recvq_posted_tail, &error, MPI_PROC_NULL);
+                continue;
+            }
         }
 
         prev_rreq = rreq;

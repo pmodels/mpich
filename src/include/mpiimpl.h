@@ -2785,6 +2785,36 @@ int MPID_Comm_failure_ack(MPID_Comm *comm);
 int MPID_Comm_failure_get_acked(MPID_Comm *comm, MPID_Group **failed_group_ptr);
 
 /*@
+  MPID_Comm_failed_bitarray - MPID function to get the bitarray including all of the failed processes
+
+  Input Parameters:
+. comm - communicator
+. acked - true if bitarray should contain only acked procs
+
+  Output Parameter:
+. bitarray - Bit array containing all of the failed processes in comm
+
+  Return Value:
+  'MPI_SUCCESS' or a valid MPI error code.
+@*/
+int MPID_Comm_failed_bitarray(MPID_Comm *comm, uint32_t **bitarray, int acked);
+
+/*@
+  MPID_Comm_get_all_failed_procs - Constructs a group of failed processes that it uniform over a communicator
+
+  Input Parameters:
+. comm - communicator
+. tag - Tag used to do communciation
+
+  Output Parameters:
+. failed_grp - group of all failed processes
+
+  Return Value:
+  'MPI_SUCCESS' or a valid MPI error code.
+@*/
+int MPID_Comm_get_all_failed_procs(MPID_Comm *comm_ptr, MPID_Group **failed_group, int tag);
+
+/*@
   MPID_Comm_revoke - MPID entry point for MPI_Comm_revoke
 
   Input Parameters:
@@ -3781,7 +3811,8 @@ int MPID_VCR_Get_lpid(MPID_VCR vcr, int * lpid_ptr);
 #define MPIR_TOPO_A_TAG               26
 #define MPIR_TOPO_B_TAG               27
 #define MPIR_REDUCE_SCATTER_BLOCK_TAG 28
-#define MPIR_FIRST_NBC_TAG            29
+#define MPIR_SHRINK_TAG               29
+#define MPIR_FIRST_NBC_TAG            30
 
 /* These macros must be used carefully. These macros will not work with
  * negative tags. By definition, users are not to use negative tags and the
@@ -4083,6 +4114,8 @@ int MPIR_Comm_is_node_consecutive( MPID_Comm *);
 void MPIR_Free_err_dyncodes( void );
 
 int MPIR_Comm_idup_impl(MPID_Comm *comm_ptr, MPID_Comm **newcomm, MPID_Request **reqp);
+
+int MPIR_Comm_shrink(MPID_Comm *comm_ptr, MPID_Comm **newcomm_ptr);
 
 int MPIR_Allreduce_group(void *sendbuf, void *recvbuf, int count,
                          MPI_Datatype datatype, MPI_Op op, MPID_Comm *comm_ptr,
