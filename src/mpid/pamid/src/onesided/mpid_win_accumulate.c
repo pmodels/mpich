@@ -108,14 +108,8 @@ MPIDI_Accumulate(pami_context_t   context,
 	will not change till that RMA has completed. In the meanwhile
 	the rest of the RMAs will have memory leaks */
       if (req->target.dt.num_contig - req->state.index == 1) {
-          map=NULL;
-          if (req->target.dt.map != &req->target.dt.__map) {
-              map=(void *) req->target.dt.map;
-          }
           rc = PAMI_Send(context, &params);
           MPID_assert(rc == PAMI_SUCCESS);
-          if (map)
-              MPIU_Free(map);
           return PAMI_SUCCESS;
       } else {
           rc = PAMI_Send(context, &params);
@@ -125,7 +119,6 @@ MPIDI_Accumulate(pami_context_t   context,
       }
   }
 
-  MPIDI_Win_datatype_unmap(&req->target.dt);
 
   return PAMI_SUCCESS;
 }

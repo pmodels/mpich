@@ -43,9 +43,6 @@ MPIDI_Win_DoneCB(pami_context_t  context,
                                      req->origin.count,
                                      req->origin.datatype);
           MPID_assert(mpi_errno == MPI_SUCCESS);
-#ifndef USE_PAMI_RDMA
-          MPIDI_Win_datatype_unmap(&req->target.dt);
-#endif
           MPID_Datatype_release(req->origin.dt.pointer);
           MPIU_Free(req->buffer);
           MPIU_Free(req->user_buffer);
@@ -66,6 +63,7 @@ MPIDI_Win_DoneCB(pami_context_t  context,
           MPIU_Free(req->user_buffer);
           req->buffer_free = 0;
       }
+      MPIDI_Win_datatype_unmap(&req->target.dt);
       if (req->accum_headers)
           MPIU_Free(req->accum_headers);
       if (!((req->type > MPIDI_WIN_REQUEST_GET_ACCUMULATE) && (req->type <=MPIDI_WIN_REQUEST_RGET_ACCUMULATE)))
