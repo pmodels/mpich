@@ -244,6 +244,15 @@ MPIDI_Request_create2()
   return req;
 }
 
+static inline MPID_Request *
+MPIDI_Request_create1()
+{
+  MPID_Request * req;
+  req = MPID_Request_create();
+  MPIU_Object_set_ref(req, 1);
+
+  return req;
+}
 
 /**
  * \brief Mark a request as cancel-pending

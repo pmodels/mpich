@@ -58,7 +58,7 @@ MPID_Rput(const void  *origin_addr,
                           return mpi_errno, "**rmasync");
     }
   
-    MPID_Request *rreq = MPIDI_Request_create2();
+    MPID_Request *rreq = MPIDI_Request_create1();
     *request = rreq;
     rreq->kind = MPID_WIN_REQUEST;
     win->mpid.rreq = rreq;
@@ -110,7 +110,7 @@ MPID_Rget(void         *origin_addr,
                           return mpi_errno, "**rmasync");
     }
 
-    MPID_Request *rreq = MPIDI_Request_create2();
+    MPID_Request *rreq = MPIDI_Request_create1();
     rreq->kind = MPID_WIN_REQUEST;
     *request = rreq;
     win->mpid.rreq = rreq;
@@ -169,7 +169,7 @@ MPID_Raccumulate(const void  *origin_addr,
                           return mpi_errno, "**rmasync");
     }
 
-    MPID_Request *rreq = MPIDI_Request_create2();
+    MPID_Request *rreq = MPIDI_Request_create1();
     rreq->kind = MPID_WIN_REQUEST;
     *request = rreq;
     win->mpid.rreq = rreq;
@@ -234,7 +234,7 @@ MPID_Rget_accumulate(const void         *origin_addr,
                           return mpi_errno, "**rmasync");
     }
 
-    MPID_Request *rreq = MPIDI_Request_create2();
+    MPID_Request *rreq = MPIDI_Request_create1();
     rreq->kind = MPID_WIN_REQUEST;
     *request = rreq;
     win->mpid.rreq = rreq;
