@@ -5544,41 +5544,10 @@ static inline int rma_list_complete( MPID_Win *win_ptr,
     MPID_Progress_start(&progress_state);
     /* Process all operations until they are complete */
     while (!MPIDI_CH3I_RMA_Ops_isempty(ops_list)) {
-	int loopcount = 0;
+        int nDone = 0;
+        mpi_errno = rma_list_gc(win_ptr, ops_list, NULL, &nDone);
+        if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
 	ntimes++;
-        curr_ptr = MPIDI_CH3I_RMA_Ops_head(ops_list);
-	do {
-	    if (MPID_Request_is_complete(curr_ptr->request)) {
-		/* Once we find a complete request, we complete
-		   as many as possible until we find an incomplete
-		   or null request */
-		do {
-		    mpi_errno = curr_ptr->request->status.MPI_ERROR;
-		    /* --BEGIN ERROR HANDLING-- */
-		    if (mpi_errno != MPI_SUCCESS) {
-			MPID_Progress_end(&progress_state);
-			MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**ch3|rma_msg");
-		    }
-		    /* --END ERROR HANDLING-- */
-		    MPID_Request_release(curr_ptr->request);
-                    MPIDI_CH3I_RMA_Ops_free_and_next(ops_list, &curr_ptr);
-		}
-		while (curr_ptr &&
-		       MPID_Request_is_complete(curr_ptr->request));
-		/* Once a request completes, we wait for another
-		   operation to arrive rather than check the
-		   rest of the requests.  */
-		break;
-	    }
-	    else {
-		/* In many cases, if the list of pending requests
-		   is long, there's no point in checking the entire
-		   list */
-		if (loopcount++ > 4) /* FIXME: threshold as parameter */
-		    break;  /* wait for an event */
-		curr_ptr    = curr_ptr->next;
-	    }
-	} while (curr_ptr);
         
 	/* Wait for something to arrive*/
 	/* In some tests, this hung unless the test ensured that 
