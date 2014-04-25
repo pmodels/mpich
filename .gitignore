@@ -161,7 +161,6 @@ Makefile.am-stamp
 /maint/extracterrmsgs
 /src/binding/fortran/use_mpi/mpi_base.f90.in
 /src/binding/fortran/use_mpi/mpi_constants.f90.in
-/src/env/mpixxx_opts.conf
 /src/mpi/romio/include/mpio.h
 /src/mpi/romio/include/mpiof.h
 /src/mpid/ch3/channels/nemesis/include/mpid_nem_net_module_defs.h
@@ -175,11 +174,6 @@ Makefile.am-stamp
 
 # random additions 2
 /mpich-doxygen
-/src/env/mpicc.sh
-/src/env/mpichversion
-/src/env/mpicxx.sh
-/src/env/mpif77.sh
-/src/env/mpif90.sh
 /src/include/glue_romio.h
 /src/include/mpichinfo.h
 /src/packaging/envmods/mpich.module
@@ -217,10 +211,6 @@ Makefile.am-stamp
 /src/mpi/romio/libtool
 /src/pm/mpd/aclocal.m4
 /src/pm/gforker/mpiexec.gforker
-/src/env/cc_shlib.conf
-/src/env/cxx_shlib.conf
-/src/env/f77_shlib.conf
-/src/env/fc_shlib.conf
 /maint/Version
 /src/binding/fortran/mpif_h/Makefile.mk
 /src/binding/fortran/use_mpi/Makefile.mk
@@ -440,20 +430,28 @@ Makefile.am-stamp
 
 # /src/env/
 /src/env/mpicc
+/src/env/mpicc.sh
 /src/env/mpicc.bash
 /src/env/mpicc.conf
 /src/env/mpicxx
+/src/env/mpicxx.sh
 /src/env/mpicxx.bash
 /src/env/mpicxx.conf
 /src/env/mpif77
+/src/env/mpif77.sh
 /src/env/mpif77.bash
 /src/env/mpif77.conf
-/src/env/mpif90
-/src/env/mpif90.bash
-/src/env/mpif90.conf
-/src/env/mpich2version
+/src/env/mpifort
+/src/env/mpifort.sh
+/src/env/mpifort.bash
+/src/env/mpichversion
 /src/env/parkill
 /src/env/mpivars
+/src/env/mpixxx_opts.conf
+/src/env/cc_shlib.conf
+/src/env/cxx_shlib.conf
+/src/env/f77_shlib.conf
+/src/env/fc_shlib.conf
 
 # /src/include/
 /src/include/mpi.h
