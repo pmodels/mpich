@@ -782,6 +782,7 @@ static int do_passive_target_rma(MPID_Win *win_ptr, int target_rank,
                                             MPIDI_CH3_Pkt_flags_t sync_flags);
 static int send_lock_put_or_acc(MPID_Win *, int);
 static int send_lock_get(MPID_Win *, int);
+static inline int poke_progress_engine(void);
 static inline int rma_list_complete(MPID_Win *win_ptr,
                                       MPIDI_RMA_Ops_list_t *ops_list);
 static inline int rma_list_gc(MPID_Win *win_ptr,
@@ -1050,6 +1051,8 @@ int MPIDI_Win_fence(int assert, MPID_Win *win_ptr)
 		if (nRequest > MPIR_CVAR_CH3_RMA_NREQUEST_THRESHOLD &&
 		    nRequest - nRequestNew > MPIR_CVAR_CH3_RMA_NREQUEST_NEW_THRESHOLD) {
 		    int nDone = 0;
+                    mpi_errno = poke_progress_engine();
+                    if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
             MPIR_T_PVAR_STMT(RMA, list_complete_timer=MPIR_T_PVAR_TIMER_ADDR(rma_winfence_complete));
             MPIR_T_PVAR_STMT(RMA, list_complete_counter=MPIR_T_PVAR_COUNTER_ADDR(rma_winfence_complete_aux));
 
@@ -2334,6 +2337,8 @@ int MPIDI_Win_complete(MPID_Win *win_ptr)
 	    if (nRequest > MPIR_CVAR_CH3_RMA_NREQUEST_THRESHOLD &&
 		nRequest - nRequestNew > MPIR_CVAR_CH3_RMA_NREQUEST_NEW_THRESHOLD) {
 		int nDone = 0;
+                mpi_errno = poke_progress_engine();
+                if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
             MPIR_T_PVAR_STMT(RMA, list_complete_timer=MPIR_T_PVAR_TIMER_ADDR(rma_wincomplete_complete));
             MPIR_T_PVAR_STMT(RMA, list_complete_counter=MPIR_T_PVAR_COUNTER_ADDR(rma_wincomplete_complete_aux));
                 mpi_errno = rma_list_gc(win_ptr, ops_list, curr_ptr, &nDone);
@@ -3358,6 +3363,8 @@ static int do_passive_target_rma(MPID_Win *win_ptr, int target_rank,
 	    if (nRequest > MPIR_CVAR_CH3_RMA_NREQUEST_THRESHOLD &&
 		nRequest - nRequestNew > MPIR_CVAR_CH3_RMA_NREQUEST_NEW_THRESHOLD) {
 		int nDone = 0;
+                mpi_errno = poke_progress_engine();
+                if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
 		MPIR_T_PVAR_STMT(RMA, list_complete_timer=MPIR_T_PVAR_TIMER_ADDR(rma_winunlock_complete));
 		MPIR_T_PVAR_STMT(RMA, list_complete_counter=MPIR_T_PVAR_COUNTER_ADDR(rma_winunlock_complete_aux));
                 mpi_errno = rma_list_gc(win_ptr,
@@ -5510,6 +5517,22 @@ int MPIDI_CH3_PktHandler_Flush( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 /* ------------------------------------------------------------------------ */
 /* list_complete_timer/counter and list_block_timer defined above */
 
+static inline int poke_progress_engine(void)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPID_Progress_state progress_state;
+
+    MPID_Progress_start(&progress_state);
+    mpi_errno = MPID_Progress_poke();
+    if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
+    MPID_Progress_end(&progress_state);
+
+ fn_exit:
+    return mpi_errno;
+ fn_fail:
+    goto fn_exit;
+}
+
 static inline int rma_list_complete( MPID_Win *win_ptr,
                                        MPIDI_RMA_Ops_list_t *ops_list )
 {
@@ -5594,14 +5617,11 @@ static inline int rma_list_gc( MPID_Win *win_ptr,
 {
     int mpi_errno=0;
     MPIDI_RMA_Op_t *curr_ptr;
-    MPID_Progress_state progress_state;
     int nComplete = 0;
 
     MPIR_T_PVAR_TIMER_START_VAR(RMA, list_complete_timer);
-    MPID_Progress_start(&progress_state);
 
     curr_ptr = MPIDI_CH3I_RMA_Ops_head(ops_list);
-    MPID_Progress_poke();
     do {
 	if (MPID_Request_is_complete(curr_ptr->request)) {
 	    /* Once we find a complete request, we complete
@@ -5612,7 +5632,6 @@ static inline int rma_list_gc( MPID_Win *win_ptr,
 		mpi_errno = curr_ptr->request->status.MPI_ERROR;
 		/* --BEGIN ERROR HANDLING-- */
 		if (mpi_errno != MPI_SUCCESS) {
-		    MPID_Progress_end(&progress_state);
 		    MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**ch3|rma_msg");
 		}
 		/* --END ERROR HANDLING-- */
@@ -5633,7 +5652,6 @@ static inline int rma_list_gc( MPID_Win *win_ptr,
     } while (curr_ptr && curr_ptr != last_elm);
         
     /* if (nComplete) printf( "Completed %d requests\n", nComplete ); */
-    MPID_Progress_end(&progress_state);
     MPIR_T_PVAR_COUNTER_INC_VAR(RMA, list_complete_counter, 1);
     MPIR_T_PVAR_TIMER_END_VAR(RMA, list_complete_timer);
 
