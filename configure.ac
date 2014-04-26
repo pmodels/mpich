@@ -423,14 +423,6 @@ AC_ARG_ENABLE(f77,
 	AC_HELP_STRING([--enable-f77],
 		[DEPRECATED: Use --enable-fortran or --disable-fortran instead]),,[enable_f77=yes])
 
-AC_ARG_ENABLE(f90,
-	AC_HELP_STRING([--enable-f90],
-		[Obsolete option: Use --enable-fortran or --disable-fortran instead]),
-	[AC_MSG_ERROR([
---enable-f90 and --disable-f90 are NO longer valid configure options,
-use --enable-fortran or --disable-fortran instead])]
-)
-
 AC_ARG_ENABLE(fc,
 	AC_HELP_STRING([--enable-fc],
 		[DEPRECATED: Use --enable-fortran or --disable-fortran instead]),,[enable_fc=yes])
