@@ -2172,7 +2172,6 @@ includebuild_dir=$includebuild_dir
 libbuild_dir=$libbuild_dir
 bashWorks=$bashWorks)
 
-f08_works=no
 if test "$enable_fc" = "yes" ; then
     if test "$enable_f77" != "yes" ; then
         AC_MSG_WARN([Fortran 90 requires Fortran 77])
@@ -2180,16 +2179,18 @@ if test "$enable_fc" = "yes" ; then
     else 
         bindingsubsystems="$bindingsubsystems src/binding/fortran/use_mpi"
         bindings="$bindings f90"
-
-	if test "$enable_f08" = "yes" ; then
-	   PAC_FC_2008_SUPPORT([f08_works=yes],[f08_works=no])
-	fi
     fi
+fi
+
+f08_works=no
+if test "$enable_f08" = "yes" ; then
+    PAC_FC_2008_SUPPORT([f08_works=yes],[f08_works=no])
 fi
 AM_CONDITIONAL([BUILD_F08_BINDING], [test "$f08_works" = "yes"])
 
 if test -n "$f08_works" ; then
     status_f08_works=1
+    bindings="$bindings f08"
 else
     status_f08_works=0
 fi
