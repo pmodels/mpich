@@ -1,11 +1,11 @@
-die 4 mpiexecarg=-disable-auto-cleanup timeLimit=10 strict=false resultTest=TestStatusNoErrors
+die 4 mpiexecarg=-disable-auto-cleanup timeLimit=10 strict=false resultTest=TestStatusNoErrors xfail=ticket1945
 abort 2 mpiexecarg=-disable-auto-cleanup timeLimit=10 strict=false xfail=ticket1537
-sendalive 4 mpiexecarg=-disable-auto-cleanup timeLimit=10 strict=false resultTest=TestStatusNoErrors
-isendalive 3 mpiexecarg=-disable-auto-cleanup resultTest=TestStatusNoErrors strict=false
+sendalive 4 mpiexecarg=-disable-auto-cleanup timeLimit=10 strict=false resultTest=TestStatusNoErrors xfail=ticket1945
+isendalive 3 mpiexecarg=-disable-auto-cleanup resultTest=TestStatusNoErrors strict=false xfail=ticket1945
 senddead 2 mpiexecarg=-disable-auto-cleanup resultTest=TestStatusNoErrors strict=false timeLimit=10 xfail=ticket1945
-recvdead 2 mpiexecarg=-disable-auto-cleanup resultTest=TestStatusNoErrors strict=false timeLimit=10
+recvdead 2 mpiexecarg=-disable-auto-cleanup resultTest=TestStatusNoErrors strict=false timeLimit=10 xfail=ticket1945
 isenddead 2 mpiexecarg=-disable-auto-cleanup resultTest=TestStatusNoErrors strict=false timeLimit=10 xfail=ticket1945
-irecvdead 2 mpiexecarg=-disable-auto-cleanup resultTest=TestStatusNoErrors strict=false timeLimit=10
+irecvdead 2 mpiexecarg=-disable-auto-cleanup resultTest=TestStatusNoErrors strict=false timeLimit=10 xfail=ticket1945
 barrier 4 mpiexecarg=-disable-auto-cleanup resultTest=TestStatusNoErrors strict=false timeLimit=10 xfail=ticket1945
 gather 4 mpiexecarg=-disable-auto-cleanup resultTest=TestStatusNoErrors strict=false timeLimit=10 xfail=ticket1945
 reduce 4 mpiexecarg=-disable-auto-cleanup resultTest=TestStatusNoErrors strict=false timeLimit=10 xfail=ticket1945
