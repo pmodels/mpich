@@ -55,8 +55,7 @@
 
   The singleton process (in a routine in simple_pmi.c) forks a process and
   execs mpiexe with these arguments, where port is the port to which 
-  mpiexec should connect, interfacename is the name of the network interface
-  (BUG: may not be correctly set as mpd currently ignores it), securitykey
+  mpiexec should connect, interfacename is the name of the network interface, securitykey
   is a place-holder for a key used by the singleton init process to verify
   that the process connecting on the port is the one that was intended, and
   pid is the pid of the singleton init process.
@@ -374,7 +373,6 @@ int myspawn( ProcessWorld *pWorld, void *data )
  * 1) Use an intermediate manager.  This would allow us to set up the
  *    environment as well:
  *    remshell-program remshell-args manager -port string
- *    One possibilty for the manager is the mpd manager
  * 2) Use the secure server (even the same one as in MPICH1); then 
  *    there is no remote shell command.
  * 

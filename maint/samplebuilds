@@ -62,8 +62,6 @@ fi
 #    config_args - arguments to pass to configure
 #    do_tests    - yes or no; controls tests
 #    srcdir,instdir - directories for source, installation
-#    use_mpd     - yes if mpd demon needs to be started.  The demon
-#                  will be terminated at the end of the tests
 # This uses XML-style tags to mark the various segments, but does not
 # filter the output from the individual steps for XML/SGML characters (e.g.,
 # the <,>,& characters aren't handled).
@@ -87,26 +85,12 @@ if $srcdir/configure --prefix=$instdir $config_args ; then
 	    echo "</MAKEINST>"
 	    if [ "$do_tests" = "yes" ] ; then
 	        echo "<RUNTEST>"
-		if [ "$use_mpd" = "yes" ] ; then
-		    if [ -x $instdir/bin/mpd ] ; then
-			$instdir/bin/mpd -d
-		    else
-		        echo "Cannot find $instdir/bin/mpd!"
-		    fi
-		fi
 	        if make testing ; then
 		    echo "Tests completed in test/mpi/summary.xml"
 		    # Really should copy failures if any
 	        else
 		    echo "Tests failed ($testname)"
 	        fi
-		if [ "$use_mpd" = "yes" ] ; then
-		    if [ -x $instdir/bin/mpdallexit ] ; then
-		        $instdir/bin/mpdallexit
-		    else
-		        echo "Cannot file $instdir/bin/mpdallexit!"
-		    fi
-		fi
 	        echo "</RUNTEST>"
 	    fi
 	else
@@ -136,56 +120,48 @@ echo "</DATE>"
 # Basic test
 testname="basic"
 config_args=""
-use_mpd=yes
 BuildMPICH2
 
 #
 # No Fortran or C++
 testname="no f77/c++"
 config_args="--disable-f77 --disable-cxx"
-use_mpd=yes
 BuildMPICH2
 
 #
 # No Weak symbols
 testname="no weak symbols"
 config_args="--disable-weak-symbols"
-use_mpd=yes
 BuildMPICH2
 
 #
 # --enable-fast
 testname="fast"
 config_args="--enable-fast"
-use_mpd=yes
 BuildMPICH2
 
 #
 # forker pm, strict
 testname="strict and forker"
 config_args="--enable-strict --with-pm=forker"
-use_mpd=no
 BuildMPICH2
 
 #
 # Build and link with a logging library
 testname="logging with lwlog"
 config_args="--with-logging=lwlog --with-pm=forker"
-use_mpd=no
 BuildMPICH2
 
 #
 # Build with memory checking
 testname="memory tests"
 config_args="--enable-g=all --enable-strict"
-use_mpd=yes
 BuildMPICH2
 
 #
 # Build with shared libraries
 testname="sharedlibs"
 config_args="--enable-sharedlibs=gcc"
-use_mpd=yes
 BuildMPICH2
 
 #
@@ -195,7 +171,6 @@ BuildMPICH2
 if [ -d /pvfs ] ; then
     testname="pvfs"
     config_args="--with-romio=--with-file-system=ufs+nfs+testfs+pvfs"
-    use_mpd=yes
     BuildMPICH2
 fi
 # ---------------------------------------------------------------------------

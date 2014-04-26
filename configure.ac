@@ -25,7 +25,7 @@ dnl Each of these is described in more detail below.
 dnl
 dnl 1. Identify the modules (most are specified by 
 dnl --with-<modulename>=instance,
-dnl for example, --with-pm=mpd or --with-device=ch3:nemesis).
+dnl for example, --with-pm=hydra or --with-device=ch3:nemesis).
 dnl For each module, source the file mpichprereq if present (in the
 dnl module's top-level directory).  This
 dnl must be a bourne (sh) shell script; it can access any of the variables
@@ -474,8 +474,8 @@ AC_ARG_WITH(pm,
                  valid values.  Multiple process managers may be specified as
                  long as they all use the same pmi interface by separating them
                  with colons.  The mpiexec for the first named process manager
-                 will be installed.  Example: "--with-pm=hydra:mpd:gforker"
-                 builds the three process managers hydra, mpd and gforker;
+                 will be installed.  Example: "--with-pm=hydra:gforker"
+                 builds the two process managers hydra, and gforker;
                  only the mpiexec from hydra is installed into the bin
                  directory.]),,with_pm=default)
 
@@ -593,7 +593,6 @@ AC_ARG_WITH(namepublisher,
                               include
                                    pmi (default)
 			           file[:directory] (optional directory)
-                                   mpd
                                    no (no service available)],,with_namepublisher=default)
 AC_ARG_WITH(name-publisher,
     [],
@@ -2683,21 +2682,6 @@ if test "$with_namepublisher" != no -a "$with_namepublisher" != "none" ; then
     AC_DEFINE(USE_FILE_FOR_NAMEPUB,1,[Define if file should be used for name publisher])
     ;;
 
-    mpd)
-    nameserv_name="mpd"
-    # The mpd nameserver is specific to the mpd process manager
-    foundMPD=no
-    for pm_name in $pm_names ; do
-        if test "$pm_name" = "mpd" ; then 
-	    foundMPD=yes
-	    break
-	fi
-    done
-    if test "$foundMPD" = no ; then
-        AC_MSG_ERROR([The mpd nameserver requires the mpd process manager])
-    fi
-    ;;
-
     *)
     # Check for a new namepublisher
     dir=$with_namepublisher
@@ -2719,7 +2703,6 @@ if test -n "$nameserv_name" ; then
    AC_DEFINE(HAVE_NAMEPUB_SERVICE,1,[Define if a name publishing service is available])
 fi
 AM_CONDITIONAL([BUILD_NAMEPUB_FILE],[test "X$nameserv_name" = "Xfile"])
-AM_CONDITIONAL([BUILD_NAMEPUB_MPD],[test "X$nameserv_name" = "Xmpd"])
 AM_CONDITIONAL([BUILD_NAMEPUB_PMI],[test "X$nameserv_name" = "Xpmi"])
 
 # In case the documentation targets are used, find doctext and attempt to 

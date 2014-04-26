@@ -1006,8 +1006,6 @@ sub TestTimeout {
 	if (/[Tt]imeout/) { next; }
 	# Allow 'signaled with Interrupt' (see gforker mpiexec)
 	if (/signaled with Interrupt/) { next; }
-	# Allow 'job ending due to env var MPIEXEC_TIMEOUT' (mpd)
-	if (/job ending due to env var MPIEXEC_TIMEOUT/) { next; }
 	# Allow 'APPLICATION TIMED OUT' (hydra)
 	if (/\[mpiexec@.*\] APPLICATION TIMED OUT/) { last; }
 	# ANY output is an error (other than timeout) 

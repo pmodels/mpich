@@ -407,7 +407,6 @@ We currently are using three separate implementations of the client side of PMI.
   assumes that a socket (the PMI socket) has been created that can be
   used to exchange commands with the server side of the implementation.
   It is used by multiple server implementations, as described below.
-\item[winmpd] is similar to simple, but used in the Windows environment.
 \end{description}
 
 
@@ -424,23 +423,6 @@ are in use or under development.
   also be used in production on SMP's.  It consists of an {\tt mpiexec}
   script that simply forks the parallel processes after setting up the
   PMI socket.  Thus all processes must be on the same machine.
-\item[MPD-2] is a process management system that consists of a ring of
-  daemons, one on each node.  It also supports the ``simple'' client
-  side PMI implementation.  It supplies multiple services for the
-  parallel processes, including scalable startup and stdio management.
-  The ring can be either permanent, run by root, or can be deployed
-  separately for each job.  The MPD daemons fork a ring of ``manager''
-  processes for a single job, and these managers set up the PMI socket
-  before forking the application processes.  The managers hold the KVS's
-  in a distributed way, so that {\tt put} operations are local but {\tt get}
-  requests may have to circulate in the manager ring.  The {\tt barrier}
-  operation is implemented by circulating a token around the manager
-  ring.  Other topologies (e.g. ring of rings) for the MPD's and
-  managers are possible, but have not yet been implemented.
-\item[WinMPD] is the Windows version of MPD-2.  It does not employ
-  intermediate manager processes.  The KVS's are held in a single
-  separate server process, which provides less scalability but is
-  simple and is adequate for small clusters.
 \item[Remshell] uses {\tt rsh} or {\tt ssh} to start the processes from
   the {\tt mpiexec} process, then they connect back to exchange the
   keyval information.  This illustrates the combination of an old ({\tt
@@ -608,23 +590,15 @@ MPICH or MPICH-derived MPI implementations.
 
 MPI and other library implementors are recommended to use the PMI
 functions to exchange data with other processes related to the setting
-up of the primary communication mechanism.  MPICH does this already for
-setting up TCP connections in the CH3 implementation of the Abstract
-Device Interface (ADI-3).  If one links with the ``simple''
+up of the primary communication mechanism.  MPICH does this already
+for setting up TCP connections in the CH3 implementation of the
+Abstract Device Interface (ADI-3).  If one links with the ``simple''
 implementation of the client side of the PMI implementation in MPICH,
-then MPI jobs can be started by any process management environment,
-including MPD2, that implements the server side.
+then MPI jobs can be started by any process management environment
+that implements the server side.
 
 Process management systems, such as PBS, YOD, or SLURM, have two options
-in the short run.  They can deploy the MPD-2 system separately for each
-job, using the {\tt mpdboot} command, before starting a user job with
-{\tt mpirun} or {\tt mpiexec}.  This is similar to the way PBS currently
-starts MPICH and LAM jobs.  A more scalable solution is to directly
-implement the PMI interface itself, by implementing the server side of
-the ``simple'' implementation.  Currently there is little
-documentation on the format of messages that traverse the PMI socket;
-one has to read the code.  We intend to document it in a further short paper
-like this one.
+in the short run.
 
 In the long run implementations may prefer to implement both sides
 themselves, meaning that one would link one's application with a PBS- or
@@ -632,13 +606,13 @@ SLURM- or Myricom-specific object file implementing the client side.
 
 The PMI-related code described here is available in the current MPICH
 distribution~\cite{mpich-web-page}, in the {\tt
-  src/pmi/\{simple,uni,winmpd\}} (client side) and {\tt
-  src/pm/\{forker,mpd,winmpd\}} (server side) subdirectories.
+  src/pmi/\{simple,uni\}} (client side) and {\tt
+  src/pm/forker} (server side) subdirectories.
 Different process managers (the server side) and different PMI
 implementations can be chosen when MPICH is configured.  The default is
 as if one had specified
 \begin{verbatim}
-     configure --with-pmi=simple --with-pm=mpd
+     configure --with-pmi=simple
 \end{verbatim}
 Please send questions and comments to mpich-discuss@mcs.anl.gov.
 

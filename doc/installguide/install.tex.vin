@@ -709,16 +709,14 @@ Other tests are run on an occasional basis.
 
 % 3) cd into that testing directory
 
-% 4) make sure the process manager (e.g., mpd) is running
-
-% 5) run "<ITS_SRC_DIR>/configure --with-mpich=<MPICH_INSTALL_DIR>", where
+% 4) run "<ITS_SRC_DIR>/configure --with-mpich=<MPICH_INSTALL_DIR>", where
 % <ITS_SRC_DIR> is the path to the directory Intel test suite source (e.g.,
 % /home/toonen/Projects/MPI-Tests/IntelMPITEST) and <MPICH_INSTALL_DIR> is
 % the directory containing your MPICH installation
 
-% 6) mkdir Test; cd Test
+% 5) mkdir Test; cd Test
 
-% 7) find tests in <ITS_SRC_DIR>/{c,fortran} that you are interested in
+% 6) find tests in <ITS_SRC_DIR>/{c,fortran} that you are interested in
 % running and place the test names in a file.  For example:
 
 % % ( cd /home/toonen/Projects/MPI-Tests/IntelMPITEST/Test ; \
@@ -744,14 +742,14 @@ Other tests are run on an occasional basis.
 % Test/fortran/probe_cancel/functional/MPI_Test_cancelled_false
 % %
 
-% 8) run the tests using ../bin/mtest:
+% 7) run the tests using ../bin/mtest:
 
 % % ../bin/mtest -testlist testlist -np 6 |& tee mtest.log
 % %
 
 % NOTE: some programs hang if less they are run with less than 6 processes.
 
-% 9) examine the summary.xml file.  look for '<STATUS>fail</STATUS>' to see if
+% 8) examine the summary.xml file.  look for '<STATUS>fail</STATUS>' to see if
 % any failures occurred.  (search for '>fail<' works as well)
 
 % \end{verbatim}

@@ -562,13 +562,6 @@ daemons on nodes (e.g., ssh, pbs, slurm, sge) to start MPI
 processes. More information on Hydra can be found at
 http://wiki.mpich.org/mpich/index.php/Using_the_Hydra_Process_Manager
 
-mpd
----
-MPD was the traditional process manager in MPICH. The file
-mpich-%VERSION%/src/pm/mpd/README has more information about
-interactive commands for managing the ring of MPDs. The MPD process
-manager is now deprecated.
-
 gforker
 -------
 gforker is a process manager that creates processes on a single

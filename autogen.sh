@@ -158,7 +158,7 @@ export do_build_configure
 MAKE=${MAKE-make}
 
 # external packages that require autogen.sh to be run for each of them
-externals="src/pm/hydra src/mpi/romio src/pm/mpd src/openpa"
+externals="src/pm/hydra src/mpi/romio src/openpa"
 # amdirs are the directories that make use of autoreconf
 amdirs=". src/mpl src/util/logging/rlog"
 

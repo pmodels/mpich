@@ -14,9 +14,8 @@ blddir=/tmp/$LOGNAME/mpich-cov
 mpiinstalldir=/tmp/$LOGNAME/mpich-cinst
 
 logfile=""
-# set pm=mpd if mpd is available
 #pm=gforker
-pm=mpd
+pm=hydra
 # device and channel
 # (we'll also want this to be in the path)
 device="ch3:sock"
@@ -144,14 +143,6 @@ EOF
     esac
 done
 
-if [ "$pm" = "mpd" ] ; then
-    # Make sure that we have a .mpd.conf file
-    if [ ! -s $HOME/.mpd.conf ] ; then
-        echo "mpd requires a .mpd.conf file"
-        exit 1
-    fi
-fi
-
 # Move everthing into a device-specific directory
 webloc="$weblocbase/$device"
 if [ "$update_web" = yes ] ; then
@@ -270,16 +261,8 @@ fi
 if [ $test_mpich = yes ] ; then
     # The mpich tests are easy
     echo "------ Run MPICH Tests ------" >&6
-    if [ "$pm" = mpd ] ; then
-        # Start by running the mpd demon
-        ($mpiinstalldir/bin/mpd -d & ) >&6 2>&6
-    fi
     cd $blddir
     make testing >&6 2>&6
-    if [ "$pm" = mpd ] ; then
-        # Stop the mpd demon
-        ($mpiinstalldir/bin/mpdallexit) >&6 2>&6
-    fi
     echo "------ End Run MPICH Tests ------" >&6
 fi
 
@@ -296,28 +279,16 @@ if [ $test_intel = yes ] ; then
     echo "------ Run Intel Tests ------" >&6
     # The intel tests aren't hard
 
-    if [ "$pm" = mpd ] ; then
-        # Start by running the mpd demon
-        ($mpiinstalldir/bin/mpd -d & ) >&6 2>&6
-    fi
     cd $blddir/othertest/intel
     $intelsrcdir/configure --enable-coverage \
 	--with-mpich=$mpiinstalldir >&6 2>&6
     make clean >&6 2>&6
     make testing >&6 2>&6
-    if [ "$pm" = mpd ] ; then
-        # Stop the mpd demon
-        ($mpiinstalldir/bin/mpdallexit) >&6 2>&6
-    fi
     echo "------ End Run Intel Tests ------" >&6
 fi
 
 if [ $test_cxx = yes ] ; then
     echo "------ Run C++ Tests ------" >&6
-    if [ "$pm" = mpd ] ; then
-        # Start by running the mpd demon
-        ($mpiinstalldir/bin/mpd -d & ) >&6 2>&6
-    fi
     # Neither are the cxx test
     # Build mpicxxtest --enable-coverage (still need to implement)
     cd $blddir/othertest/cxx
@@ -325,19 +296,11 @@ if [ $test_cxx = yes ] ; then
 	--enable-xml  >&6 2>&6
     make clean >&6 2>&6
     make testing >&6 2>&6
-    if [ "$pm" = mpd ] ; then
-        # Stop the mpd demon
-        ($mpiinstalldir/bin/mpdallexit) >&6 2>&6
-    fi
     echo "------ End Run C++ Tests ------" >&6
 fi
 
 if [ $test_io = yes ] ; then
     echo "------ Run MPI-IO Tests ------" >&6
-    if [ "$pm" = mpd ] ; then
-        # Start by running the mpd demon
-        ($mpiinstalldir/bin/mpd -d & ) >&6 2>&6
-    fi
     # These tests do not even have a configure or make!
     cd $blddir/othertest/Testmpio
     $mpiinstalldir/bin/mpicc -o testmpio $iosrcdir/testmpio.c >&6 2>&6
@@ -349,19 +312,11 @@ if [ $test_io = yes ] ; then
         export MPIO_USER_PATH
         $mpiinstalldir/bin/mpiexec -n 4 ./testmpio 1 >&6 2>&6
     fi
-    if [ "$pm" = mpd ] ; then
-        # Stop the mpd demon
-        ($mpiinstalldir/bin/mpdallexit) >&6 2>&6
-    fi
     echo "------ End Run MPI-IO Tests ------" >&6
 fi
 
 if [ $test_mpich1 = yes ] ; then
     echo "------ Run MPICH-1 Tests ------" >&6
-    if [ "$pm" = mpd ] ; then
-        # Start by running the mpd demon
-        ($mpiinstalldir/bin/mpd -d & ) >&6 2>&6
-    fi
     # Nor are the mpich1 tests
     # Build mpich tests --enable-coverage
     #   Need to provide a target that does not do the "runtest -check" step,
@@ -377,10 +332,6 @@ if [ $test_mpich1 = yes ] ; then
 			-prefix=$mpiinstalldir >&6 2>&6
     make clean  >&6 2>&6
     make testing >&6 2>&6
-    if [ "$pm" = mpd ] ; then
-        # Stop the mpd demon
-        ($mpiinstalldir/bin/mpdallexit) >&6 2>&6
-    fi
     echo "------ End Run MPICH-1 Tests ------" >&6
 fi
 

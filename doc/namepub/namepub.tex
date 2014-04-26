@@ -56,7 +56,7 @@ To see why another interface is needed, consider the situation in
 Figure~\ref{fig:multiple-pm}.  In this Figure, two MPI programs, each
 started by a different process manager, wish to connect.  For example,
 one MPI job may be run on a batch system (the PBS job in this example)
-and one on an interactive visualization cluster (the MPD job).  
+and one on an interactive visualization cluster.
 
 \begin{figure}
 \centerline{\includegraphics{twopm.eps}}
@@ -152,41 +152,6 @@ from OpenLDAP that can be used to implement the name interface.
 \item[\code{MPID\_NS\_Unpublish}]Use \code{ldap_modify_s} to remove the name
 \item[\code{MPID\_NS\_Free}]Use \code{ldap_unbind_s} and \code{ldap_memfree}
 \end{description}
-
-\subsection{MPD Process Manager}
-\label{sec:namepub-mpd}
-
-This name service works only for MPI jobs using the same MPD process
-manager.  However, within this restriction, an MPD name manager can
-exploit the internal communication used by other MPD services.
-Because of the non-collective semantics required by the name
-publishing operations, additional MPD routines must
-be defined.  For example, considering the following additional MPD
-routines:
-\begin{description}
-\item[\code{PMI\_PutIndep}]Put a key/value pair into the MPD system.
-  Associate a user id with the names so that keys are really
-  identified by a user,key pair.
-\item[\code{PMI\_GetIndep}]Get a key/value pair from the MPD system.
-\item[\code{PMI\_RmIndep}]Remove a key/value pair.
-\end{description}
-Values put into the system are removed when the job that inserted them
-exits.  Thus, there is no need for the expiration or reference count
-info values.  
-
-The implementation of the MPI name service calls in terms of these new
-\code{PMI} routines is straightforward:
-
-\begin{description}
-\item[\code{MPID\_NS\_Create}]No operation
-\item[\code{MPID\_NS\_Publish}]Call \code{PMI\_PutIndep}
-\item[\code{MPID\_NS\_Lookup}]Call \code{PMI\_GetIndep}
-\item[\code{MPID\_NS\_Unpublish}]Call \code{PMI\_RmIndep}
-\item[\code{MPID\_NS\_Free}]No operation
-\end{description}
-
-Note that these new PMI routines must be optional; we do not require
-that any process manager provides this service.
 
 \subsection{File}
 \label{sec:namepub-file}

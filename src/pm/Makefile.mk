@@ -30,9 +30,3 @@ SUBDIRS += src/pm/hydra
 DIST_SUBDIRS += src/pm/hydra
 MANDOC_SUBDIRS += src/pm/hydra
 endif BUILD_PM_HYDRA
-
-# uses a separate Makefile.sm, not Makefile.mk
-if BUILD_PM_MPD
-SUBDIRS += src/pm/mpd
-DIST_SUBDIRS += src/pm/mpd
-endif BUILD_PM_MPD

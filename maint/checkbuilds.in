@@ -81,8 +81,8 @@ $hasDemon   = 0;
 @with_array = (
 	       'logging;none;rlog',
 	       'pmi;simple',    #; uni no longer supported
-	       'pm;gforker;mpd', #;remshell
-	       'namepublisher;no;file;mpd', #;ldap:ldapserver',
+	       'pm;gforker', #;remshell
+	       'namepublisher;no;file', #;ldap:ldapserver',
 	       'device;ch3;ch3:sock',
 );
 %chosenWith = ();
@@ -289,7 +289,7 @@ sub RunTest {
 	system "rm -f $instdir/lib/libmpe*.a";
     }
     if (-d "$instdir/bin") {
-	system "rm -f $instdir/bin/mpi* $instdir/bin/mpd*";
+	system "rm -f $instdir/bin/mpi*";
     }
     if (-d "$builddir/lib") {
 	system "rm -f $builddir/lib/libmpi*.* $builddir/lib/libmpifort*.*";
@@ -410,8 +410,6 @@ sub RunTest {
 	# print "rc = $rc\n";
 	if ($rc == 0) {
 	    print $OUTFD $MakeStart;
-	    # Remove mpd just in case (see below)
-	    unlink "bin/mpd";
 	    $rc = &RunProgram( "$makepgm $parallelBuild" );
 	    print $OUTFD $MakeEnd;
 	    $make_status = $rc;
@@ -438,12 +436,6 @@ sub RunTest {
 		}
 		print $OUTFD $MakeInstEnd;
 		if ($install_status == 0) {
-		    # FIXME: Get mpd status from the with args ...
-		    if (-x "$instdir/bin/mpd") {
-			$hasDemon   = 1;
-			$StartDemon = "RunMPD";
-			$StopDemon  = "StopMPD";
-		    }
 		    # Try the install check target
 		    print $OUTFD $MakeInstcheckStart;
 		    $installcheck_status = &RunProgram( "$makepgm installcheck" );
@@ -1068,46 +1060,6 @@ sub RunProgram {
 	print STDOUT "Completed command with status $rc\n";
     }
     return $rc;
-}
-# ---------------------------------------------------------------------------
-#
-# We need a variation of this that will start MPDs on mulitple hosts.
-# 
-sub RunMPD {
-    # We need to background the mpd.
-    # If there is already an mpd running (for us), we want to stop it
-    my $mpdlocalsock = "/tmp/mpd2.console_". $ENV{"LOGNAME"};
-    my $rc = 0;
-    if (-S $mpdlocalsock) {
-	system "$instdir/bin/mpdallexit";
-        $rc = $? >> 8;
-        if ($rc != 0) {
-            print $OUTFD "Error running $instdir/bin/mpdallexit before starting MPD ($mpdlocalsock exists)\n";
-        }
-    }
-    #system "$instdir/bin/mpd -d";
-    # Try to background mpd
-    system "$instdir/bin/mpd &";
-    $rc = $? >> 8;
-    if ($rc != 0) {
-	print $OUTFD "Error running $instdir/bin/mpd -d\n";
-    }
-    else {
-	print $OUTFD "Started mpd in demon mode\n";
-    }
-    # Wait for the mpd to start
-    sleep 1;
-    return;
-}
-sub StopMPD {
-    my $mpdlocalsock = "/tmp/mpd2.console_". $ENV{"LOGNAME"};
-    if (-S $mpdlocalsock) {
-	system "$instdir/bin/mpdallexit";
-        my $rc = $? >> 8;
-        if ($rc != 0) {
-            print $OUTFD "Error running $instdir/bin/mpdallexit in StopMPD ($mpdlocalsock exists)\n";
-        }
-    }
 }
 #
 # Change output style
