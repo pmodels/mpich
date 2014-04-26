@@ -421,11 +421,7 @@ AC_ARG_ENABLE(fortran,
 
 AC_ARG_ENABLE(f77,
 	AC_HELP_STRING([--enable-f77],
-		[Obsolete option: Use --enable-fortran or --disable-fortran instead]),
-	[AC_MSG_ERROR([
---enable-f77 and --disable-f77 are NO longer valid configure options,
-use --enable-fortran or --disable-fortran instead])]
-)
+		[DEPRECATED: Use --enable-fortran or --disable-fortran instead]),,[enable_f77=yes])
 
 AC_ARG_ENABLE(f90,
 	AC_HELP_STRING([--enable-f90],
@@ -437,11 +433,7 @@ use --enable-fortran or --disable-fortran instead])]
 
 AC_ARG_ENABLE(fc,
 	AC_HELP_STRING([--enable-fc],
-		[Obsolete option: Use --enable-fortran or --disable-fortran instead]),
-	[AC_MSG_ERROR([
---enable-fc and --disable-fc are NO longer valid configure options,
-use --enable-fortran or --disable-fortran instead])]
-)
+		[DEPRECATED: Use --enable-fortran or --disable-fortran instead]),,[enable_fc=yes])
 
 AC_ARG_ENABLE(cxx,
 	AC_HELP_STRING([--enable-cxx], [Enable C++ bindings]),,enable_cxx=yes)
