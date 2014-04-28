@@ -666,10 +666,6 @@ AS_IF([test "x$enable_cxx" = "xno"],[CXX=no])
 : ${CXXFLAGS=""}
 AC_PROG_CXX([PAC_CXX_SEARCH_LIST])
 
-# suppress default "-g -O2" from AC_PROG_F77
-: ${FFLAGS=""}
-AC_PROG_F77([PAC_F77_SEARCH_LIST])
-
 # suppress default "-g -O2" from AC_PROG_FC
 : ${FCFLAGS=""}
 AC_PROG_FC([PAC_FC_SEARCH_LIST])
@@ -717,6 +713,13 @@ if test ! -z "$FC" -a -z "$F77" ; then
 fi
 
 AM_CONDITIONAL([INSTALL_MPIF77],[test "$F77" != "$FC" -a "$FFLAGS" != "$FCFLAGS"])
+
+# This needs to come after we've potentially set F77=$FC. Otherwise, we could
+# override the user's Fortran compiler selection when only specifying FC at configure
+# time, as is allowed.
+# suppress default "-g -O2" from AC_PROG_F77
+: ${FFLAGS=""}
+AC_PROG_F77([PAC_F77_SEARCH_LIST])
 
 # compute canonical system types
 AC_CANONICAL_BUILD
