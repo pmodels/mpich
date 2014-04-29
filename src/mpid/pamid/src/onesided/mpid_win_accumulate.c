@@ -270,7 +270,6 @@ MPID_Accumulate(const void   *origin_addr,
       req->buffer_free = 1;
       req->buffer      = MPIU_Malloc(req->origin.dt.size);
       MPID_assert(req->buffer != NULL);
-      MPID_Datatype_add_ref(req->origin.dt.pointer);
       int mpi_errno = 0;
       mpi_errno = MPIR_Localcopy(origin_addr,
                                  origin_count,
