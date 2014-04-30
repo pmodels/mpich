@@ -372,6 +372,13 @@ echo '**** Testing status.c ****'
 $mpirun -np 1 ./status -fname $FILENAME
 # CheckOutput status
 CleanExe status
+testfiles="$testfiles indexed_zeros.out"
+\rm -f indexed_zeros.out
+MakeExe indexed_zeros
+\rm -f $FILENAME*
+echo '**** Testing indexed_zeros ****'
+$mpirun -np 2 ./indexed_zeros $FILENAME
+CleanExe indexed_zeros
 #
 if [ @NOF77@ = 0 ] ; then 
     echo ""
