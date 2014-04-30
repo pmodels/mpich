@@ -14,3 +14,4 @@ scatter 4 mpiexecarg=-disable-auto-cleanup resultTest=TestStatusNoErrors strict=
 anysource 3 mpiexecarg=-disable-auto-cleanup resultTest=TestStatusNoErrors strict=false timeLimit=10
 revoke_nofail 4 mpiexecarg=-disable-auto-cleanup resultsTest=TestStatusNoErrors strict=false timelimit=10
 shrink 8 mpiexecarg=-disable-auto-cleanup resultTest=TestStatusNoErrors strict=false timeLimit=10
+agree 4 mpiexecarg=-disable-auto-cleanup resultTest=TestStatusNoErrors strict=false timeLimit=10

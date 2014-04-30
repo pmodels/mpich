@@ -941,7 +941,7 @@ int MPIDI_CH3U_Clean_recvq(MPID_Comm *comm_ptr)
         match.parts.context_id = comm_ptr->recvcontext_id + MPID_CONTEXT_INTRA_COLL;
 
         if (MATCH_WITH_LEFT_RIGHT_MASK(rreq->dev.match, match, mask)) {
-            if (rreq->dev.match.parts.tag != MPIR_SHRINK_TAG) {
+            if (rreq->dev.match.parts.tag != MPIR_AGREE_TAG && rreq->dev.match.parts.tag != MPIR_SHRINK_TAG) {
                 MPIU_DBG_MSG_FMT(CH3_OTHER,VERBOSE,(MPIU_DBG_FDEST,
                             "cleaning up unexpected collective pkt rank=%d tag=%d contextid=%d",
                             rreq->dev.match.parts.rank, rreq->dev.match.parts.tag, rreq->dev.match.parts.context_id));
@@ -973,7 +973,7 @@ int MPIDI_CH3U_Clean_recvq(MPID_Comm *comm_ptr)
         match.parts.context_id = comm_ptr->recvcontext_id + MPID_CONTEXT_INTRA_COLL;
 
         if (MATCH_WITH_LEFT_RIGHT_MASK(rreq->dev.match, match, mask)) {
-            if (rreq->dev.match.parts.tag != MPIR_SHRINK_TAG) {
+            if (rreq->dev.match.parts.tag != MPIR_AGREE_TAG && rreq->dev.match.parts.tag != MPIR_SHRINK_TAG) {
                 MPIU_DBG_MSG_FMT(CH3_OTHER,VERBOSE,(MPIU_DBG_FDEST,
                             "cleaning up unexpected collective pkt rank=%d tag=%d contextid=%d",
                             rreq->dev.match.parts.rank, rreq->dev.match.parts.tag, rreq->dev.match.parts.context_id));

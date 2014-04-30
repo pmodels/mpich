@@ -83,3 +83,9 @@ int MPID_Comm_failure_get_acked(MPID_Comm *comm_ptr, MPID_Group **failed_group_p
   MPID_abort();
   return 0;
 }
+
+int MPID_Comm_agree(MPID_Comm *comm_ptr, uint32_t *bitarray, int *flag, int new_fail)
+{
+  MPID_abort();
+  return 0;
+}

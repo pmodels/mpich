@@ -30,7 +30,8 @@ mpi_sources +=                       \
     src/mpi/comm/comm_failure_ack.c            \
     src/mpi/comm/comm_failure_get_acked.c      \
     src/mpi/comm/comm_revoke.c                 \
-    src/mpi/comm/comm_shrink.c
+    src/mpi/comm/comm_shrink.c                 \
+    src/mpi/comm/comm_agree.c
 
 mpi_core_sources += \
     src/mpi/comm/commutil.c

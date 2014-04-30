@@ -2827,6 +2827,23 @@ int MPID_Comm_get_all_failed_procs(MPID_Comm *comm_ptr, MPID_Group **failed_grou
 int MPID_Comm_revoke(MPID_Comm *comm, int is_remote);
 
 /*@
+  MPID_Comm_agree - MPID implementation of the last phase of the agreement
+
+  Input Parameters:
+. comm - communicator
+. bitarray - Bit array of all of the failures that have been discovered in comm
+. flag - flag input for agree from MPIX_Comm_agree
+. new_fail - If there is a new failure that we need to propagate, this should be true
+
+  Output Parameters:
+. flag - Bitwise AND of all of the flag input values
+
+  Return Value:
+  'MPI_SUCCESS' or a valid MPI error code.
+@*/
+int MPID_Comm_agree(MPID_Comm *comm, uint32_t *bitarray, int *flag, int new_fail);
+
+/*@
   MPID_Send - MPID entry point for MPI_Send
 
   Notes:
@@ -3812,7 +3829,8 @@ int MPID_VCR_Get_lpid(MPID_VCR vcr, int * lpid_ptr);
 #define MPIR_TOPO_B_TAG               27
 #define MPIR_REDUCE_SCATTER_BLOCK_TAG 28
 #define MPIR_SHRINK_TAG               29
-#define MPIR_FIRST_NBC_TAG            30
+#define MPIR_AGREE_TAG                30
+#define MPIR_FIRST_NBC_TAG            31
 
 /* These macros must be used carefully. These macros will not work with
  * negative tags. By definition, users are not to use negative tags and the
@@ -4116,6 +4134,7 @@ void MPIR_Free_err_dyncodes( void );
 int MPIR_Comm_idup_impl(MPID_Comm *comm_ptr, MPID_Comm **newcomm, MPID_Request **reqp);
 
 int MPIR_Comm_shrink(MPID_Comm *comm_ptr, MPID_Comm **newcomm_ptr);
+int MPIR_Comm_agree(MPID_Comm *comm_ptr, int *flag);
 
 int MPIR_Allreduce_group(void *sendbuf, void *recvbuf, int count,
                          MPI_Datatype datatype, MPI_Op op, MPID_Comm *comm_ptr,
