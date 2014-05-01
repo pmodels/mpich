@@ -1031,7 +1031,9 @@
 /threads/comm/comm_create_group_threads
 /threads/comm/comm_create_threads
 /threads/comm/comm_dup_deadlock
+/threads/comm/comm_idup
 /threads/comm/ctxdup
+/threads/comm/ctxidup
 /threads/comm/dup_leak_test
 /threads/init/initth
 /threads/pt2pt/threads
