@@ -17,21 +17,17 @@ static void handle_error(int errcode, const char *str)
 	fprintf(stderr, "%s: %s\n", str, msg);
 	MPI_Abort(MPI_COMM_WORLD, 1);
 }
-int main(int argc, char **argv) {
+
+int test_indexed_with_zeros(char *filename)
+{
     int i, rank, np, buflen, num, err, nr_errors;
     int  nelms[MAXLEN], buf[MAXLEN], indices[MAXLEN], blocklen[MAXLEN];
     MPI_File fh;
     MPI_Status status;
     MPI_Datatype filetype;
 
-    MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &np);
-
-    if (np != 2) {
-        if (rank == 0) fprintf(stderr,"Must run on 2 MPI processes\n");
-        MPI_Finalize(); return 1;
-    }
 
     /* set up the number of integers to write in each iteration */
     for (i=0; i<MAXLEN; i++) nelms[i] = 0;
@@ -41,7 +37,7 @@ int main(int argc, char **argv) {
     /* pre-fill the file with integers -999 */
     if (rank == 0) {
         for (i=0; i<MAXLEN; i++) buf[i] = -999;
-	err =MPI_File_open(MPI_COMM_SELF, argv[1], MPI_MODE_CREATE|MPI_MODE_WRONLY,
+	err =MPI_File_open(MPI_COMM_SELF, filename, MPI_MODE_CREATE|MPI_MODE_WRONLY,
 		MPI_INFO_NULL, &fh);
 	if (err != MPI_SUCCESS) handle_error(err, "MPI_File_open");
         err = MPI_File_write(fh, buf, MAXLEN, MPI_INT, &status);
@@ -64,7 +60,7 @@ int main(int argc, char **argv) {
 
     /* initialize write buffer and write to file*/
     for (i=0; i<MAXLEN; i++) buf[i] = 1;
-    err =MPI_File_open(MPI_COMM_WORLD, argv[1], MPI_MODE_WRONLY, MPI_INFO_NULL, &fh);
+    err =MPI_File_open(MPI_COMM_WORLD, filename, MPI_MODE_WRONLY, MPI_INFO_NULL, &fh);
     if (err != MPI_SUCCESS) handle_error(err, "MPI_File_open");
     err = MPI_File_set_view(fh, 0, MPI_INT, filetype, "native", MPI_INFO_NULL);
     if (err != MPI_SUCCESS) handle_error(err, "MPI_File_set_view");
@@ -76,7 +72,7 @@ int main(int argc, char **argv) {
 
     /* read back and check */
     if (rank == 0) {
-        err = MPI_File_open(MPI_COMM_SELF, argv[1], MPI_MODE_RDONLY, MPI_INFO_NULL, &fh);
+        err = MPI_File_open(MPI_COMM_SELF, filename, MPI_MODE_RDONLY, MPI_INFO_NULL, &fh);
 	if (err != MPI_SUCCESS) handle_error(err, "MPI_File_open");
         err = MPI_File_read(fh,buf, MAXLEN, MPI_INT, &status);
 	if (err != MPI_SUCCESS) handle_error(err, "MPI_File_read");
@@ -88,8 +84,26 @@ int main(int argc, char **argv) {
                 printf("Error: unexpected value at buf[%d] == %d\n",i,buf[i]);
 	    }
 	}
-	if (nr_errors == 0) printf(" No Errors\n");
     }
+    return nr_errors;
+}
+
+int main(int argc, char **argv)
+{
+
+    int nr_errors, rank, np;
+
+    MPI_Init(&argc, &argv);
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &np);
+
+    if (np != 2) {
+        if (rank == 0) fprintf(stderr,"Must run on 2 MPI processes\n");
+        MPI_Finalize(); return 1;
+    }
+    nr_errors += test_indexed_with_zeros(argv[1]);
+
+    if (rank == 0 && nr_errors == 0) printf(" No Errors\n");
 
     MPI_Finalize();
     return 0;
