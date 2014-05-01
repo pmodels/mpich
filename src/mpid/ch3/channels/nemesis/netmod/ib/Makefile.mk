@@ -14,7 +14,8 @@ mpi_core_sources +=				\
     src/mpid/ch3/channels/nemesis/netmod/ib/ib_poll.c	\
     src/mpid/ch3/channels/nemesis/netmod/ib/ib_reg_mr.c	\
     src/mpid/ch3/channels/nemesis/netmod/ib/ib_send.c	\
-    src/mpid/ch3/channels/nemesis/netmod/ib/ib_ibcom.c 
+    src/mpid/ch3/channels/nemesis/netmod/ib/ib_ibcom.c	\
+    src/mpid/ch3/channels/nemesis/netmod/ib/ib_malloc.c
 
 noinst_HEADERS +=						\
     src/mpid/ch3/channels/nemesis/netmod/ib/ib_impl.h           \
