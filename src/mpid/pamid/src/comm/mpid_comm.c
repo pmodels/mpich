@@ -355,7 +355,7 @@ void MPIDI_Coll_comm_create(MPID_Comm *comm)
    if(MPIDI_Process.optimized.select_colls)
       MPIDI_Comm_coll_select(comm);
    TRACE_ERR("mpir barrier\n");
-   int mpierrno;
+   int mpierrno = FALSE;
    /* Switch to comm->coll_fns->fn() */
    MPIDO_Barrier(comm, &mpierrno);
 
