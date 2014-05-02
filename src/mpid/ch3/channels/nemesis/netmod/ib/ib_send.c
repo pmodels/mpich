@@ -699,6 +699,9 @@ static int MPID_nem_ib_SendNoncontig_core(MPIDI_VC_t * vc, MPID_Request * sreq, 
         MPIU_Assert(last == sreq->dev.segment_size);
     }
 
+    /* packet handlers assume this */
+    hdr_sz = sizeof(MPIDI_CH3_Pkt_t);
+
     /* increment cc because PktHandler_EagerSyncAck, ssend.c, drain_scq decrement it */
     if (((MPIDI_CH3_Pkt_t *) hdr)->type == MPIDI_CH3_PKT_EAGER_SYNC_SEND) {
         MPIR_Request_add_ref(sreq);
