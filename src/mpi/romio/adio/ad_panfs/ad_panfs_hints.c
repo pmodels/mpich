@@ -25,6 +25,9 @@ void ADIOI_PANFS_SetInfo(ADIO_File fd, MPI_Info users_info, int *error_code)
          */ 
 	    MPI_Info_create(&(fd->info));
 
+	/* anticipate concurrent writes in an MPI-IO application */
+	ADIOI_Info_set (fd->info, "panfs_concurrent_write", "1");
+
         /* has user specified striping parameters 
                and do they have the same value on all processes? */
         if (users_info != MPI_INFO_NULL) {
