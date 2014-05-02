@@ -108,7 +108,7 @@ int MPI_Dist_graph_create_adjacent(MPI_Comm comm_old,
         MPID_BEGIN_ERROR_CHECKS;
         {
             /* Validate comm_ptr */
-            MPID_Comm_valid_ptr(comm_ptr, mpi_errno);
+            MPID_Comm_valid_ptr( comm_ptr, mpi_errno, FALSE );
             if (mpi_errno != MPI_SUCCESS) goto fn_fail;
             /* If comm_ptr is not valid, it will be reset to null */
             if (comm_ptr) {

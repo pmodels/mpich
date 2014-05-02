@@ -84,7 +84,7 @@ int MPI_Cartdim_get(MPI_Comm comm, int *ndims)
         {
 	    MPIR_ERRTEST_ARGNULL(ndims,"ndims",mpi_errno);
             /* Validate comm_ptr */
-            MPID_Comm_valid_ptr( comm_ptr, mpi_errno );
+            MPID_Comm_valid_ptr( comm_ptr, mpi_errno, TRUE );
 	    /* If comm_ptr is not valid, it will be reset to null */
             if (mpi_errno) goto fn_fail;
         }

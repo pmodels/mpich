@@ -110,7 +110,7 @@ int MPI_Pack_size(int incount,
 	    MPIR_ERRTEST_COUNT(incount, mpi_errno);
 	    MPIR_ERRTEST_ARGNULL(size, "size", mpi_errno);
 	    
-            MPID_Comm_valid_ptr( comm_ptr, mpi_errno );
+            MPID_Comm_valid_ptr( comm_ptr, mpi_errno, FALSE );
             if (mpi_errno) goto fn_fail;
 	    
 	    MPIR_ERRTEST_DATATYPE(datatype, "datatype", mpi_errno);

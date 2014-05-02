@@ -91,7 +91,7 @@ int MPI_Irecv(void *buf, int count, MPI_Datatype datatype, int source,
     {
         MPID_BEGIN_ERROR_CHECKS;
         {
-            MPID_Comm_valid_ptr( comm_ptr, mpi_errno );
+            MPID_Comm_valid_ptr( comm_ptr, mpi_errno, FALSE );
             if (mpi_errno) goto fn_fail;
 	    
 	    MPIR_ERRTEST_COUNT(count, mpi_errno);

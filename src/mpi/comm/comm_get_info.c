@@ -107,9 +107,8 @@ int MPI_Comm_get_info(MPI_Comm comm, MPI_Info * info_used)
         MPID_BEGIN_ERROR_CHECKS;
         {
             /* Validate pointers */
-            MPID_Comm_valid_ptr(comm_ptr, mpi_errno);
-            if (mpi_errno)
-                goto fn_fail;
+            MPID_Comm_valid_ptr( comm_ptr, mpi_errno, TRUE );
+            if (mpi_errno) goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;
     }

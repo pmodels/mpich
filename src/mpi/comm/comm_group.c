@@ -148,8 +148,8 @@ int MPI_Comm_group(MPI_Comm comm, MPI_Group *group)
         MPID_BEGIN_ERROR_CHECKS;
         {
             /* Validate comm_ptr */
-            MPID_Comm_valid_ptr( comm_ptr, mpi_errno );
-	    /* If comm_ptr is not valid, it will be reset to null */
+            MPID_Comm_valid_ptr( comm_ptr, mpi_errno, TRUE );
+            /* If comm_ptr is not valid, it will be reset to null */
             if (mpi_errno) goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;

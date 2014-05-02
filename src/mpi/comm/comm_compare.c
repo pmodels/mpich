@@ -101,9 +101,9 @@ int MPI_Comm_compare(MPI_Comm comm1, MPI_Comm comm2, int *result)
         MPID_BEGIN_ERROR_CHECKS;
         {
             /* Validate comm_ptr */
-            MPID_Comm_valid_ptr( comm_ptr1, mpi_errno );
+            MPID_Comm_valid_ptr( comm_ptr1, mpi_errno, TRUE );
             if (mpi_errno) goto fn_fail;
-            MPID_Comm_valid_ptr( comm_ptr2, mpi_errno );
+            MPID_Comm_valid_ptr( comm_ptr2, mpi_errno, TRUE );
             if (mpi_errno) goto fn_fail;
 	    MPIR_ERRTEST_ARGNULL( result, "result", mpi_errno );
         }

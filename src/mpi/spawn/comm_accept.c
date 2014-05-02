@@ -100,7 +100,7 @@ int MPI_Comm_accept(const char *port_name, MPI_Info info, int root, MPI_Comm com
         MPID_BEGIN_ERROR_CHECKS;
         {
             /* Validate comm_ptr */
-            MPID_Comm_valid_ptr( comm_ptr, mpi_errno );
+            MPID_Comm_valid_ptr( comm_ptr, mpi_errno, FALSE );
             if (mpi_errno) goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;

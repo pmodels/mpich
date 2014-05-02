@@ -116,7 +116,7 @@ int MPI_Win_allocate_shared(MPI_Aint size, int disp_unit, MPI_Info info, MPI_Com
         MPID_BEGIN_ERROR_CHECKS;
         {
             /* Validate pointers */
-	    MPID_Comm_valid_ptr( comm_ptr, mpi_errno );
+	    MPID_Comm_valid_ptr( comm_ptr, mpi_errno, FALSE );
             if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 
             MPIU_ERR_CHKANDJUMP1(disp_unit <= 0, mpi_errno, MPI_ERR_ARG,

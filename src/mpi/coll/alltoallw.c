@@ -466,7 +466,7 @@ int MPI_Alltoallw(const void *sendbuf, const int sendcounts[],
             int i, comm_size;
             int check_send;
 
-            MPID_Comm_valid_ptr( comm_ptr, mpi_errno );
+            MPID_Comm_valid_ptr( comm_ptr, mpi_errno, FALSE );
             if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 
             check_send = (comm_ptr->comm_kind == MPID_INTRACOMM && sendbuf != MPI_IN_PLACE);

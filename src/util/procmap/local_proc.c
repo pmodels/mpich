@@ -232,7 +232,7 @@ fn_fail:
 int MPIU_Get_internode_rank(MPID_Comm *comm_ptr, int r)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_Comm_valid_ptr( comm_ptr, mpi_errno );
+    MPID_Comm_valid_ptr( comm_ptr, mpi_errno, TRUE );
     MPIU_Assert(mpi_errno == MPI_SUCCESS);
     MPIU_Assert(r < comm_ptr->remote_size);
     MPIU_Assert(comm_ptr->comm_kind == MPID_INTRACOMM);
@@ -253,7 +253,7 @@ int MPIU_Get_internode_rank(MPID_Comm *comm_ptr, int r)
 int MPIU_Get_intranode_rank(MPID_Comm *comm_ptr, int r)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_Comm_valid_ptr( comm_ptr, mpi_errno );
+    MPID_Comm_valid_ptr( comm_ptr, mpi_errno, TRUE );
     MPIU_Assert(mpi_errno == MPI_SUCCESS);
     MPIU_Assert(r < comm_ptr->remote_size);
     MPIU_Assert(comm_ptr->comm_kind == MPID_INTRACOMM);

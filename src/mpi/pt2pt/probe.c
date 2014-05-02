@@ -83,7 +83,7 @@ int MPI_Probe(int source, int tag, MPI_Comm comm, MPI_Status *status)
         MPID_BEGIN_ERROR_CHECKS;
         {
 	    /* Validate communicator */
-            MPID_Comm_valid_ptr( comm_ptr, mpi_errno );
+            MPID_Comm_valid_ptr( comm_ptr, mpi_errno, FALSE );
             if (mpi_errno) goto fn_fail;
 
 	    MPIR_ERRTEST_RECV_TAG(tag,mpi_errno);

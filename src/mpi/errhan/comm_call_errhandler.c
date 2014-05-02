@@ -87,7 +87,7 @@ int MPI_Comm_call_errhandler(MPI_Comm comm, int errorcode)
         {
             /* Validate comm_ptr; if comm_ptr is not value, it will be reset
 	       to null */
-            MPID_Comm_valid_ptr( comm_ptr, mpi_errno );
+            MPID_Comm_valid_ptr( comm_ptr, mpi_errno, TRUE );
 	    if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 
 	    if (comm_ptr->errhandler) {

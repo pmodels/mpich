@@ -494,14 +494,13 @@ int MPIU_Handle_free( void *((*)[]), int );
    for now */
 /* ticket #1441: check (refcount<=0) to cover the case of 0, an "over-free" of
  * -1 or similar, and the 0xecec... case when --enable-g=mem is used */
-#define MPID_Comm_valid_ptr(ptr,err) {                \
+#define MPID_Comm_valid_ptr(ptr,err,ignore_rev) {     \
      MPID_Valid_ptr_class(Comm,ptr,MPI_ERR_COMM,err); \
      if ((ptr) && MPIU_Object_get_ref(ptr) <= 0) {    \
          MPIU_ERR_SET(err,MPI_ERR_COMM,"**comm");     \
          ptr = 0;                                     \
-     } else if (ptr->revoked) {                       \
+     } else if (ptr->revoked && !ignore_rev) {        \
          MPIU_ERR_SET(err,MPIX_ERR_REVOKED,"**comm"); \
-         ptr = 0;                                     \
      }                                                \
 }
 #define MPID_Group_valid_ptr(ptr,err) MPID_Valid_ptr_class(Group,ptr,MPI_ERR_GROUP,err)

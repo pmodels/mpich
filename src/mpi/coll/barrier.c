@@ -403,7 +403,7 @@ int MPI_Barrier( MPI_Comm comm )
         MPID_BEGIN_ERROR_CHECKS;
         {
 	    /* Validate communicator */
-            MPID_Comm_valid_ptr( comm_ptr, mpi_errno );
+            MPID_Comm_valid_ptr( comm_ptr, mpi_errno, FALSE );
             if (mpi_errno) goto fn_fail;
         }
         MPID_END_ERROR_CHECKS;
