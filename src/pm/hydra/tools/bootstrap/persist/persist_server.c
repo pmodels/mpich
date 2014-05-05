@@ -8,7 +8,7 @@
 #include "topo.h"
 #include "persist_server.h"
 
-struct HYDT_persist_handle HYDT_persist_handle;
+struct HYDT_persist_handle_s HYDT_persist_handle;
 static struct {
     enum {
         MASTER,

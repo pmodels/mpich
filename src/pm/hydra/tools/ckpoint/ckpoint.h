@@ -21,7 +21,7 @@
  * Contains private persistent information stored by the checkpointing
  * library.
  */
-struct HYDT_ckpoint_info {
+struct HYDT_ckpoint_info_s {
     /** \brief Checkpointing library to use */
     const char *ckpointlib;
     const char *prefix;
@@ -32,7 +32,7 @@ struct HYDT_ckpoint_info {
 };
 
 /** \cond */
-extern struct HYDT_ckpoint_info HYDT_ckpoint_info;
+extern struct HYDT_ckpoint_info_s HYDT_ckpoint_info;
 /** \endcond */
 
 /**

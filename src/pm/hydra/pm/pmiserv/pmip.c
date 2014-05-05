@@ -11,7 +11,7 @@
 #include "topo.h"
 #include "hydt_ftb.h"
 
-struct HYD_pmcd_pmip HYD_pmcd_pmip;
+struct HYD_pmcd_pmip_s HYD_pmcd_pmip;
 
 static HYD_status init_params(void)
 {

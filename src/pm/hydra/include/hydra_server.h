@@ -20,7 +20,7 @@ struct HYD_cmd {
     int signum;
 };
 
-struct HYD_server_info {
+struct HYD_server_info_s {
     struct HYD_user_global user_global;
 
     char *base_path;
@@ -47,6 +47,6 @@ struct HYD_server_info {
 #endif                          /* ENABLE_PROFILING */
 };
 
-extern struct HYD_server_info HYD_server_info;
+extern struct HYD_server_info_s HYD_server_info;
 
 #endif /* HYDRA_SERVER_H_INCLUDED */

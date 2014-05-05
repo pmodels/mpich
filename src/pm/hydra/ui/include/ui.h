@@ -7,12 +7,12 @@
 #ifndef UI_H_INCLUDED
 #define UI_H_INCLUDED
 
-struct HYD_ui_info {
+struct HYD_ui_info_s {
     char *prepend_pattern;
     char *outfile_pattern;
     char *errfile_pattern;
 };
 
-extern struct HYD_ui_info HYD_ui_info;
+extern struct HYD_ui_info_s HYD_ui_info;
 
 #endif /* UI_H_INCLUDED */

@@ -9,7 +9,7 @@
 #include "pbs.h"
 
 #if defined(HAVE_TM_H)
-struct HYDT_bscd_pbs_sys *HYDT_bscd_pbs_sys;
+struct HYDT_bscd_pbs_sys_s *HYDT_bscd_pbs_sys;
 
 HYD_status HYDT_bsci_launcher_pbs_init(void)
 {
@@ -24,8 +24,8 @@ HYD_status HYDT_bsci_launcher_pbs_init(void)
     HYDT_bsci_fns.wait_for_completion = HYDT_bscd_pbs_wait_for_completion;
     HYDT_bsci_fns.launcher_finalize = HYDT_bscd_pbs_launcher_finalize;
 
-    HYDU_MALLOC(HYDT_bscd_pbs_sys, struct HYDT_bscd_pbs_sys *,
-                sizeof(struct HYDT_bscd_pbs_sys), status);
+    HYDU_MALLOC(HYDT_bscd_pbs_sys, struct HYDT_bscd_pbs_sys_s *,
+                sizeof(struct HYDT_bscd_pbs_sys_s), status);
 
     /* Initialize TM and Hydra's PBS data structure */
     err = tm_init(NULL, &tm_root);
