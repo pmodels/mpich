@@ -20,7 +20,7 @@ public :: MPI_CONVERSION_FN_NULL
 
 abstract interface
 
-subroutine MPI_User_function(invec, inoutvec, len, datatype) BIND(C)
+subroutine MPI_User_function(invec, inoutvec, len, datatype)
     use, intrinsic :: iso_c_binding, only : c_ptr
     use mpi_f08_types, only : MPI_Datatype
     implicit none
@@ -30,7 +30,7 @@ subroutine MPI_User_function(invec, inoutvec, len, datatype) BIND(C)
 end subroutine
 
 subroutine MPI_Comm_copy_attr_function(oldcomm,comm_keyval,extra_state, &
-       attribute_val_in,attribute_val_out,flag,ierror) BIND(C)
+       attribute_val_in,attribute_val_out,flag,ierror)
     use mpi_f08_types, only : MPI_Comm
     use mpi_f08_compile_constants, only : MPI_ADDRESS_KIND
     implicit none
@@ -41,7 +41,7 @@ subroutine MPI_Comm_copy_attr_function(oldcomm,comm_keyval,extra_state, &
 end subroutine
 
 subroutine MPI_Comm_delete_attr_function(comm,comm_keyval, &
-       attribute_val, extra_state, ierror) BIND(C)
+       attribute_val, extra_state, ierror)
     use mpi_f08_types, only : MPI_Comm
     use mpi_f08_compile_constants, only : MPI_ADDRESS_KIND
     implicit none
@@ -51,7 +51,7 @@ subroutine MPI_Comm_delete_attr_function(comm,comm_keyval, &
 end subroutine
 
 subroutine MPI_Win_copy_attr_function(oldwin,win_keyval,extra_state, &
-       attribute_val_in,attribute_val_out,flag,ierror) BIND(C)
+       attribute_val_in,attribute_val_out,flag,ierror)
     use mpi_f08_types, only : MPI_Win
     use mpi_f08_compile_constants, only : MPI_ADDRESS_KIND
     implicit none
@@ -62,7 +62,7 @@ subroutine MPI_Win_copy_attr_function(oldwin,win_keyval,extra_state, &
 end subroutine
 
 subroutine MPI_Win_delete_attr_function(win,win_keyval,attribute_val, &
-       extra_state,ierror) BIND(C)
+       extra_state,ierror)
     use mpi_f08_types, only : MPI_Win
     use mpi_f08_compile_constants, only : MPI_ADDRESS_KIND
     implicit none
@@ -72,7 +72,7 @@ subroutine MPI_Win_delete_attr_function(win,win_keyval,attribute_val, &
 end subroutine
 
 subroutine MPI_Type_copy_attr_function(oldtype,type_keyval,extra_state, &
-       attribute_val_in,attribute_val_out,flag,ierror) BIND(C)
+       attribute_val_in,attribute_val_out,flag,ierror)
     use mpi_f08_types, only : MPI_Datatype
     use mpi_f08_compile_constants, only : MPI_ADDRESS_KIND
     implicit none
@@ -83,7 +83,7 @@ subroutine MPI_Type_copy_attr_function(oldtype,type_keyval,extra_state, &
 end subroutine
 
 subroutine MPI_Type_delete_attr_function(datatype,type_keyval, &
-       attribute_val,extra_state,ierror) BIND(C)
+       attribute_val,extra_state,ierror)
     use mpi_f08_types, only : MPI_Datatype
     use mpi_f08_compile_constants, only : MPI_ADDRESS_KIND
     implicit none
@@ -92,7 +92,7 @@ subroutine MPI_Type_delete_attr_function(datatype,type_keyval, &
     integer(kind=MPI_ADDRESS_KIND) :: attribute_val, extra_state
 end subroutine
 
-subroutine MPI_Comm_errhandler_function(comm,error_code) BIND(C)
+subroutine MPI_Comm_errhandler_function(comm,error_code)
     use mpi_f08_types, only : MPI_Comm
     use mpi_f08_compile_constants, only : MPI_ADDRESS_KIND
     implicit none
@@ -100,7 +100,7 @@ subroutine MPI_Comm_errhandler_function(comm,error_code) BIND(C)
     integer :: error_code
 end subroutine
 
-subroutine MPI_Win_errhandler_function(win, error_code) BIND(C)
+subroutine MPI_Win_errhandler_function(win, error_code)
     use mpi_f08_types, only : MPI_Win
     use mpi_f08_compile_constants, only : MPI_ADDRESS_KIND
     implicit none
@@ -108,7 +108,7 @@ subroutine MPI_Win_errhandler_function(win, error_code) BIND(C)
     integer :: error_code
 end subroutine
 
-subroutine MPI_File_errhandler_function(file, error_code) BIND(C)
+subroutine MPI_File_errhandler_function(file, error_code)
     use mpi_f08_types, only : MPI_File
     use mpi_f08_compile_constants, only : MPI_ADDRESS_KIND
     implicit none
@@ -116,7 +116,7 @@ subroutine MPI_File_errhandler_function(file, error_code) BIND(C)
     integer :: error_code
 end subroutine
 
-subroutine MPI_Grequest_query_function(extra_state,status,ierror) BIND(C)
+subroutine MPI_Grequest_query_function(extra_state,status,ierror)
     use mpi_f08_types, only : MPI_Status
     use mpi_f08_compile_constants, only : MPI_ADDRESS_KIND
     implicit none
@@ -125,14 +125,14 @@ subroutine MPI_Grequest_query_function(extra_state,status,ierror) BIND(C)
     integer(kind=MPI_ADDRESS_KIND) :: extra_state
 end subroutine
 
-subroutine MPI_Grequest_free_function(extra_state,ierror) BIND(C)
+subroutine MPI_Grequest_free_function(extra_state,ierror)
     use mpi_f08_compile_constants, only : MPI_ADDRESS_KIND
     implicit none
     integer :: ierror
     integer(kind=MPI_ADDRESS_KIND) :: extra_state
 end subroutine
 
-subroutine MPI_Grequest_cancel_function(extra_state,complete,ierror) BIND(C)
+subroutine MPI_Grequest_cancel_function(extra_state,complete,ierror)
     use mpi_f08_compile_constants, only : MPI_ADDRESS_KIND
     implicit none
     integer(kind=MPI_ADDRESS_KIND) :: extra_state
@@ -140,7 +140,7 @@ subroutine MPI_Grequest_cancel_function(extra_state,complete,ierror) BIND(C)
     integer :: ierror
 end subroutine
 
-subroutine MPI_Datarep_extent_function(datatype, extent, extra_state, ierror) BIND(C)
+subroutine MPI_Datarep_extent_function(datatype, extent, extra_state, ierror)
     use mpi_f08_types, only : MPI_Datatype
     use mpi_f08_compile_constants, only : MPI_ADDRESS_KIND
     implicit none
@@ -150,7 +150,7 @@ subroutine MPI_Datarep_extent_function(datatype, extent, extra_state, ierror) BI
 end subroutine
 
 subroutine MPI_Datarep_conversion_function(userbuf, datatype, count, &
-       filebuf, position, extra_state, ierror) BIND(C)
+       filebuf, position, extra_state, ierror)
     use, intrinsic :: iso_c_binding, only : c_ptr
     use mpi_f08_types, only : MPI_Datatype
     use mpi_f08_compile_constants, only : MPI_OFFSET_KIND, MPI_ADDRESS_KIND
@@ -291,7 +291,7 @@ subroutine MPI_WIN_NULL_DELETE_FN(win,win_keyval, &
 end subroutine
 
 subroutine MPI_CONVERSION_FN_NULL(userbuf, datatype, count, &
-       filebuf, position, extra_state, ierror) BIND(C)
+       filebuf, position, extra_state, ierror)
     use, intrinsic :: iso_c_binding, only : c_ptr
     use mpi_f08_types, only : MPI_Datatype
     use mpi_f08_compile_constants, only : MPI_OFFSET_KIND, MPI_ADDRESS_KIND

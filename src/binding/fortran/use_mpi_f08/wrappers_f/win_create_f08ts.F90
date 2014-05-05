@@ -4,9 +4,9 @@
 !   See COPYRIGHT in top-level directory.
 !
 subroutine MPI_Win_create_f08ts(base, size, disp_unit, info, comm, win, ierror)
+    use, intrinsic :: iso_c_binding, only : c_int
     use :: mpi_f08, only : MPI_Info, MPI_Comm, MPI_Win
     use :: mpi_f08, only : MPI_ADDRESS_KIND
-    use, intrinsic :: iso_c_binding, only : c_int
     use :: mpi_c_interface, only : c_Info, c_Comm, c_Win
     use :: mpi_c_interface, only : MPIR_Win_create_cdesc
 

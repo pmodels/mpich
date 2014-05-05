@@ -5,8 +5,8 @@
 !
 subroutine MPI_Type_get_envelope_f08(datatype, num_integers, num_addresses, num_datatypes, &
     combiner, ierror)
-    use :: mpi_f08, only : MPI_Datatype
     use, intrinsic :: iso_c_binding, only : c_int
+    use :: mpi_f08, only : MPI_Datatype
     use :: mpi_c_interface, only : c_Datatype
     use :: mpi_c_interface, only : MPIR_Type_get_envelope_c
 

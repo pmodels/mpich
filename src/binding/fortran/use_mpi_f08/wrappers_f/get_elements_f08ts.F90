@@ -4,10 +4,10 @@
 !   See COPYRIGHT in top-level directory.
 !
 subroutine MPI_Get_elements_f08(status, datatype, count, ierror)
-    use :: mpi_f08, only : MPI_Status, MPI_Datatype
     use, intrinsic :: iso_c_binding, only : c_loc
-    use :: mpi_f08, only : assignment(=)
     use, intrinsic :: iso_c_binding, only : c_int, c_ptr
+    use :: mpi_f08, only : MPI_Status, MPI_Datatype
+    use :: mpi_f08, only : assignment(=)
     use :: mpi_c_interface, only : c_Datatype
     use :: mpi_c_interface, only : c_Status
     use :: mpi_c_interface, only : MPIR_Get_elements_c

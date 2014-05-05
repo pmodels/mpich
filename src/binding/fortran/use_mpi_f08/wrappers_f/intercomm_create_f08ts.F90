@@ -5,8 +5,8 @@
 !
 subroutine MPI_Intercomm_create_f08(local_comm, local_leader, peer_comm, remote_leader, &
     tag, newintercomm, ierror)
-    use :: mpi_f08, only : MPI_Comm
     use, intrinsic :: iso_c_binding, only : c_int
+    use :: mpi_f08, only : MPI_Comm
     use :: mpi_c_interface, only : c_Comm
     use :: mpi_c_interface, only : MPIR_Intercomm_create_c
 

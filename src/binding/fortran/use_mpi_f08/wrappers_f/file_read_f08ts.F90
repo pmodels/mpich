@@ -4,11 +4,11 @@
 !   See COPYRIGHT in top-level directory.
 !
 subroutine MPI_File_read_f08ts(fh, buf, count, datatype, status, ierror)
-    use :: mpi_f08, only : MPI_File, MPI_Datatype, MPI_Status
     use, intrinsic :: iso_c_binding, only : c_loc, c_associated
+    use, intrinsic :: iso_c_binding, only : c_int, c_ptr
+    use :: mpi_f08, only : MPI_File, MPI_Datatype, MPI_Status
     use :: mpi_f08, only : MPI_STATUS_IGNORE, MPIR_C_MPI_STATUS_IGNORE, assignment(=)
     use :: mpi_f08, only : MPI_File_f2c, MPI_File_c2f
-    use, intrinsic :: iso_c_binding, only : c_int, c_ptr
     use :: mpi_c_interface, only : c_File, c_Datatype
     use :: mpi_c_interface, only : c_Status
     use :: mpi_c_interface, only : MPIR_File_read_cdesc

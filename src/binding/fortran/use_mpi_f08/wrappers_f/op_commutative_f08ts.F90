@@ -4,8 +4,8 @@
 !   See COPYRIGHT in top-level directory.
 !
 subroutine MPI_Op_commutative_f08(op, commute, ierror)
-    use :: mpi_f08, only : MPI_Op
     use, intrinsic :: iso_c_binding, only : c_int
+    use :: mpi_f08, only : MPI_Op
     use :: mpi_c_interface, only : c_Op
     use :: mpi_c_interface, only : MPIR_Op_commutative_c
 

@@ -4,9 +4,9 @@
 !   See COPYRIGHT in top-level directory.
 !
 subroutine MPI_Type_set_attr_f08(datatype, type_keyval, attribute_val, ierror)
+    use, intrinsic :: iso_c_binding, only : c_int
     use :: mpi_f08, only : MPI_Datatype
     use :: mpi_f08, only : MPI_ADDRESS_KIND
-    use, intrinsic :: iso_c_binding, only : c_int
     use :: mpi_c_interface, only : c_Datatype
     use :: mpi_c_interface, only : MPIR_ATTR_AINT
     use :: mpi_c_interface, only : MPIR_Type_set_attr_c

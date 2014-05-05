@@ -5,8 +5,8 @@
 !
 subroutine MPI_Accumulate_f08ts(origin_addr, origin_count, origin_datatype, target_rank, &
     target_disp, target_count, target_datatype, op, win, ierror)
-    use :: mpi_f08, only : MPI_Datatype, MPI_Op, MPI_Win
     use, intrinsic :: iso_c_binding, only : c_int
+    use :: mpi_f08, only : MPI_Datatype, MPI_Op, MPI_Win
     use :: mpi_f08, only : MPI_ADDRESS_KIND
     use :: mpi_c_interface, only : c_Datatype, c_Op, c_Win
     use :: mpi_c_interface, only : MPIR_Accumulate_cdesc

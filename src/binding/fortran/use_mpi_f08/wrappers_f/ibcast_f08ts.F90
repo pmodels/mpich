@@ -4,8 +4,8 @@
 !   See COPYRIGHT in top-level directory.
 !
 subroutine MPI_Ibcast_f08ts(buffer, count, datatype, root, comm, request, ierror)
-    use :: mpi_f08, only : MPI_Datatype, MPI_Comm, MPI_Request
     use, intrinsic :: iso_c_binding, only : c_int
+    use :: mpi_f08, only : MPI_Datatype, MPI_Comm, MPI_Request
     use :: mpi_c_interface, only : c_Datatype, c_Comm, c_Request
     use :: mpi_c_interface, only : MPIR_Ibcast_cdesc
 

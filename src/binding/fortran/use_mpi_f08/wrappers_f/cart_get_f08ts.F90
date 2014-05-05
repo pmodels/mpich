@@ -4,8 +4,8 @@
 !   See COPYRIGHT in top-level directory.
 !
 subroutine MPI_Cart_get_f08(comm, maxdims, dims, periods, coords, ierror)
-    use :: mpi_f08, only : MPI_Comm
     use, intrinsic :: iso_c_binding, only : c_int
+    use :: mpi_f08, only : MPI_Comm
     use :: mpi_c_interface, only : c_Comm
     use :: mpi_c_interface, only : MPIR_Cart_get_c
 
@@ -35,7 +35,7 @@ subroutine MPI_Cart_get_f08(comm, maxdims, dims, periods, coords, ierror)
         coords = coords_c
     end if
 
-    periods = merge(.true., .false., periods_c(:) /= 0)
+    periods = (periods_c /= 0)
 
     if(present(ierror)) ierror = ierror_c
 

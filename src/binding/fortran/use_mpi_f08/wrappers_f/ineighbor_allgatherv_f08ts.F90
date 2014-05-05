@@ -5,8 +5,8 @@
 !
 subroutine MPI_Ineighbor_allgatherv_f08ts(sendbuf, sendcount, sendtype, recvbuf, recvcounts, displs, &
     recvtype, comm, request, ierror)
-    use :: mpi_f08, only : MPI_Datatype, MPI_Comm, MPI_Request
     use, intrinsic :: iso_c_binding, only : c_int
+    use :: mpi_f08, only : MPI_Datatype, MPI_Comm, MPI_Request
     use :: mpi_c_interface, only : c_Datatype, c_Comm, c_Request
     use :: mpi_c_interface, only : MPIR_Ineighbor_allgatherv_cdesc, MPIR_Dist_graph_neighbors_count_c
 

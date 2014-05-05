@@ -4,10 +4,10 @@
 !   See COPYRIGHT in top-level directory.
 !
 subroutine MPI_Improbe_f08(source, tag, comm, flag, message, status, ierror)
-    use :: mpi_f08, only : MPI_Comm, MPI_Message, MPI_Status
     use, intrinsic :: iso_c_binding, only : c_loc, c_associated
-    use :: mpi_f08, only : MPI_STATUS_IGNORE, MPIR_C_MPI_STATUS_IGNORE, assignment(=)
     use, intrinsic :: iso_c_binding, only : c_int, c_ptr
+    use :: mpi_f08, only : MPI_Comm, MPI_Message, MPI_Status
+    use :: mpi_f08, only : MPI_STATUS_IGNORE, MPIR_C_MPI_STATUS_IGNORE, assignment(=)
     use :: mpi_c_interface, only : c_Comm, c_Message
     use :: mpi_c_interface, only : c_Status
     use :: mpi_c_interface, only : MPIR_Improbe_c

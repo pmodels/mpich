@@ -4,8 +4,8 @@
 !   See COPYRIGHT in top-level directory.
 !
 subroutine MPI_Comm_split_type_f08(comm, split_type, key, info, newcomm, ierror)
-    use :: mpi_f08, only : MPI_Comm, MPI_Info
     use, intrinsic :: iso_c_binding, only : c_int
+    use :: mpi_f08, only : MPI_Comm, MPI_Info
     use :: mpi_c_interface, only : c_Comm, c_Info
     use :: mpi_c_interface, only : MPIR_Comm_split_type_c
 

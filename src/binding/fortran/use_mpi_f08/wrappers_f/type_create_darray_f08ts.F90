@@ -6,8 +6,8 @@
 subroutine MPI_Type_create_darray_f08(size, rank, ndims, array_of_gsizes, &
     array_of_distribs, array_of_dargs, array_of_psizes, order, &
     oldtype, newtype, ierror)
-    use :: mpi_f08, only : MPI_Datatype
     use, intrinsic :: iso_c_binding, only : c_int
+    use :: mpi_f08, only : MPI_Datatype
     use :: mpi_c_interface, only : c_Datatype
     use :: mpi_c_interface, only : MPIR_Type_create_darray_c
 

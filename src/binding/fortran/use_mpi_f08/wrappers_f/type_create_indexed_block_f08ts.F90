@@ -5,8 +5,8 @@
 !
 subroutine MPI_Type_create_indexed_block_f08(count, blocklength, &
     array_of_displacements, oldtype, newtype, ierror)
-    use :: mpi_f08, only : MPI_Datatype
     use, intrinsic :: iso_c_binding, only : c_int
+    use :: mpi_f08, only : MPI_Datatype
     use :: mpi_c_interface, only : c_Datatype
     use :: mpi_c_interface, only : MPIR_Type_create_indexed_block_c
 

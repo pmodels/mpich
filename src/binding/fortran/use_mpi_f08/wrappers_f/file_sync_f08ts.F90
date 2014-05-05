@@ -4,9 +4,9 @@
 !   See COPYRIGHT in top-level directory.
 !
 subroutine MPI_File_sync_f08(fh, ierror)
+    use, intrinsic :: iso_c_binding, only : c_int
     use :: mpi_f08, only : MPI_File
     use :: mpi_f08, only : MPI_File_f2c, MPI_File_c2f
-    use, intrinsic :: iso_c_binding, only : c_int
     use :: mpi_c_interface, only : c_File
     use :: mpi_c_interface, only : MPIR_File_sync_c
 

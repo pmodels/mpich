@@ -5,10 +5,10 @@
 !
 subroutine MPI_Sendrecv_f08ts(sendbuf, sendcount, sendtype, dest, sendtag, recvbuf, &
     recvcount, recvtype, source, recvtag, comm, status, ierror)
-    use :: mpi_f08, only : MPI_Datatype, MPI_Comm, MPI_Status
     use, intrinsic :: iso_c_binding, only : c_loc, c_associated
-    use :: mpi_f08, only : MPI_STATUS_IGNORE, MPIR_C_MPI_STATUS_IGNORE, assignment(=)
     use, intrinsic :: iso_c_binding, only : c_int, c_ptr
+    use :: mpi_f08, only : MPI_Datatype, MPI_Comm, MPI_Status
+    use :: mpi_f08, only : MPI_STATUS_IGNORE, MPIR_C_MPI_STATUS_IGNORE, assignment(=)
     use :: mpi_c_interface, only : c_Datatype, c_Comm
     use :: mpi_c_interface, only : c_Status
     use :: mpi_c_interface, only : MPIR_Sendrecv_cdesc
@@ -44,10 +44,10 @@ subroutine MPI_Sendrecv_f08ts(sendbuf, sendcount, sendtype, dest, sendtag, recvb
     if (c_int == kind(0)) then
         if (c_associated(c_loc(status), c_loc(MPI_STATUS_IGNORE))) then
             ierror_c = MPIR_Sendrecv_cdesc(sendbuf, sendcount, sendtype%MPI_VAL, dest, sendtag, recvbuf, recvcount, &
-            recvtype%MPI_VAL, source, recvtag, comm%MPI_VAL, MPIR_C_MPI_STATUS_IGNORE)
+                recvtype%MPI_VAL, source, recvtag, comm%MPI_VAL, MPIR_C_MPI_STATUS_IGNORE)
         else
             ierror_c = MPIR_Sendrecv_cdesc(sendbuf, sendcount, sendtype%MPI_VAL, dest, sendtag, recvbuf, recvcount, &
-            recvtype%MPI_VAL, source, recvtag, comm%MPI_VAL, c_loc(status))
+                recvtype%MPI_VAL, source, recvtag, comm%MPI_VAL, c_loc(status))
         end if
     else
         sendcount_c = sendcount
@@ -61,10 +61,10 @@ subroutine MPI_Sendrecv_f08ts(sendbuf, sendcount, sendtype, dest, sendtag, recvb
         comm_c = comm%MPI_VAL
         if (c_associated(c_loc(status), c_loc(MPI_STATUS_IGNORE))) then
             ierror_c = MPIR_Sendrecv_cdesc(sendbuf, sendcount_c, sendtype_c, dest_c, sendtag_c, recvbuf, &
-            recvcount_c, recvtype_c, source_c, recvtag_c, comm_c, MPIR_C_MPI_STATUS_IGNORE)
+                recvcount_c, recvtype_c, source_c, recvtag_c, comm_c, MPIR_C_MPI_STATUS_IGNORE)
         else
             ierror_c = MPIR_Sendrecv_cdesc(sendbuf, sendcount_c, sendtype_c, dest_c, sendtag_c, recvbuf, &
-            recvcount_c, recvtype_c, source_c, recvtag_c, comm_c, c_loc(status_c))
+                recvcount_c, recvtype_c, source_c, recvtag_c, comm_c, c_loc(status_c))
             status = status_c
         end if
     end if

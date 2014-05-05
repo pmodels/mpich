@@ -5,8 +5,8 @@
 !
 subroutine MPI_Ialltoallv_f08ts(sendbuf, sendcounts, sdispls, sendtype, recvbuf, recvcounts, &
     rdispls, recvtype, comm, request, ierror)
-    use :: mpi_f08, only : MPI_Datatype, MPI_Comm, MPI_Request
     use, intrinsic :: iso_c_binding, only : c_int
+    use :: mpi_f08, only : MPI_Datatype, MPI_Comm, MPI_Request
     use :: mpi_c_interface, only : c_Datatype, c_Comm, c_Request
     use :: mpi_c_interface, only : MPIR_Ialltoallv_cdesc, MPIR_Comm_size_c
 

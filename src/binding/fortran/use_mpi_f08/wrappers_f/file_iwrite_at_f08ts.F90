@@ -4,10 +4,10 @@
 !   See COPYRIGHT in top-level directory.
 !
 subroutine MPI_File_iwrite_at_f08ts(fh, offset, buf, count, datatype, request, ierror)
+    use, intrinsic :: iso_c_binding, only : c_int
     use :: mpi_f08, only : MPI_File, MPI_Datatype, MPI_Request
     use :: mpi_f08, only : MPI_OFFSET_KIND
     use :: mpi_f08, only : MPI_File_f2c, MPI_File_c2f
-    use, intrinsic :: iso_c_binding, only : c_int
     use :: mpi_c_interface, only : c_File, c_Datatype, c_Request
     use :: mpi_c_interface, only : MPIR_File_iwrite_at_cdesc
 

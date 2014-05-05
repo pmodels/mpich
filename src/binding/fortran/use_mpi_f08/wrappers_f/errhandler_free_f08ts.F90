@@ -4,8 +4,8 @@
 !   See COPYRIGHT in top-level directory.
 !
 subroutine MPI_Errhandler_free_f08(errhandler, ierror)
-    use :: mpi_f08, only : MPI_Errhandler
     use, intrinsic :: iso_c_binding, only : c_int
+    use :: mpi_f08, only : MPI_Errhandler
     use :: mpi_c_interface, only : c_Errhandler
     use :: mpi_c_interface, only : MPIR_Errhandler_free_c
 

@@ -57,9 +57,9 @@ end type MPI_Message
 
 ! Fortran 2008 struct for status. Must be consistent with mpi.h, mpif.h
 type, bind(C) :: MPI_Status
-    integer(c_int) :: count_lo;
-    integer(c_int) :: count_hi_and_cancelled;
-    integer :: MPI_SOURCE ! Not conform to MPI_Status in C if integer kind is not c_int
+    integer :: count_lo;
+    integer :: count_hi_and_cancelled;
+    integer :: MPI_SOURCE
     integer :: MPI_TAG
     integer :: MPI_ERROR
 end type MPI_Status

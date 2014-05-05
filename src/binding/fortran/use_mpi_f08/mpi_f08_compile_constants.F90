@@ -2,8 +2,6 @@
 ! From A.1.1
 ! The module also contains the conversion routines for mpi_status
 !
-! Module mpi_f08_compile_constants is a helper module used by  mpi_f08
-! It is not defined in the spec and not intended for end users.
 !--------------------------------------------------------------
 
 module mpi_f08_compile_constants
@@ -11,7 +9,7 @@ module mpi_f08_compile_constants
 use,intrinsic :: iso_c_binding, only: c_int, c_ptr
 use,intrinsic :: iso_fortran_env, only: int32, int64, real32, real64
 use :: mpi_f08_types
-use :: mpi_c_interface_types, only: C_Aint, C_Count, C_Offset, c_Status
+use :: mpi_c_interface_types, only: c_Aint, c_Count, c_Offset, c_Status
 
 !====================================================================
 ! Make names brought in from other modules private if they should not
@@ -28,9 +26,9 @@ private :: real32
 private :: real64
 
 ! Make nmes from mpi_C_types private
-private :: C_Aint
-private :: C_Count
-private :: C_Offset
+private :: c_Aint
+private :: c_Count
+private :: c_Offset
 
 !=========================================
 ! Definitions of MPI Constants for Fortran
@@ -118,19 +116,6 @@ integer,parameter ::  MPI_ERR_SPAWN        = 42
 integer,parameter ::  MPI_ERR_UNSUPPORTED_DATAREP  = 43
 integer,parameter ::  MPI_ERR_UNSUPPORTED_OPERATION  = 44
 integer,parameter ::  MPI_ERR_WIN          = 45
-!integer,parameter ::  MPI_T_ERR_CANNOT_INIT      = 999905  ! **** NEED VALUE
-!integer,parameter ::  MPI_T_ERR_NOT_INITIALIZED  = 999906  ! **** NEED VALUE
-!integer,parameter ::  MPI_T_ERR_MEMORY           = 999907  ! **** NEED VALUE
-!integer,parameter ::  MPI_T_ERR_INVALID_INDEX    = 999908  ! **** NEED VALUE
-!integer,parameter ::  MPI_T_ERR_INVALID_ITEM     = 999909  ! **** NEED VALUE
-!integer,parameter ::  MPI_T_ERR_INVALID_SESSION  = 999910  ! **** NEED VALUE
-!integer,parameter ::  MPI_T_ERR_INVALID_HANDLE   = 999911  ! **** NEED VALUE
-!integer,parameter ::  MPI_T_ERR_OUT_OF_HANDLES   = 999912  ! **** NEED VALUE
-!integer,parameter ::  MPI_T_ERR_OUT_OF_SESSIONS  = 999913  ! **** NEED VALUE
-!integer,parameter ::  MPI_T_ERR_CVAR_SET_NOT_NOW = 999914  ! **** NEED VALUE
-!integer,parameter ::  MPI_T_ERR_CVAR_SET_NEVER   = 999915  ! **** NEED VALUE
-!integer,parameter ::  MPI_T_ERR_PVAR_NO_WRITE    = 999916  ! **** NEED VALUE
-!integer,parameter ::  MPI_T_ERR_PVAR_NO_STARTUP  = 999917  ! **** NEED VALUE
 integer,parameter ::  MPI_ERR_LASTCODE     = 1073741823
 
 ! Assorted Constants
@@ -154,19 +139,12 @@ type(MPI_Message),parameter    :: MPI_MESSAGE_NO_PROC = MPI_Message(1811939328)
 logical,parameter :: MPI_SUBARRAYS_SUPPORTED        = .false.
 logical,parameter :: MPI_ASYNC_PROTECTS_NONBLOCKING = .true.  ! Value differs from mpif.h
 
-! Status size and reserved index values
-! A.1.1 p. 664
-!integer,parameter :: MPI_STATUS_SIZE = 8   ! defined in mpi_C_types
-!integer,parameter :: MPI_SOURCE      = 1   ! defined in mpi_C_types
-!integer,parameter :: MPI_TAG         = 2   ! defined in mpi_C_types
-!integer,parameter :: MPI_ERROR       = 3   ! defined in mpi_C_types
-
 ! Variable Address Size
 ! A.1.1 p. 664
-integer,parameter :: MPI_ADDRESS_KIND = C_Aint     ! Defined in mpi_C_types
-integer,parameter :: MPI_COUNT_KIND   = C_Count    ! Defined in mpi_C_types
+integer,parameter :: MPI_ADDRESS_KIND = c_Aint     ! Defined in mpi_c_interface_types
+integer,parameter :: MPI_COUNT_KIND   = c_Count    ! Defined in mpi_c_interface_types
 integer,parameter :: MPI_INTEGER_KIND = KIND(0)
-integer,parameter :: MPI_OFFSET_KIND  = C_Offset   ! Defined in mpi_C_types
+integer,parameter :: MPI_OFFSET_KIND  = c_Offset   ! Defined in mpi_c_interface_types
 
 ! Error Handling Specifiers
 ! A.1.1 p. 664

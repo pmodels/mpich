@@ -5,8 +5,8 @@
 !
 subroutine MPI_Alloc_mem_f08(size, info, baseptr, ierror)
     use, intrinsic :: iso_c_binding, only : c_ptr
-    use :: mpi_f08, only : MPI_Info
     use, intrinsic :: iso_c_binding, only : c_ptr, c_int
+    use :: mpi_f08, only : MPI_Info
     use :: mpi_f08, only : MPI_ADDRESS_KIND
     use :: mpi_c_interface, only : c_Info
     use :: mpi_c_interface, only : MPIR_Alloc_mem_c

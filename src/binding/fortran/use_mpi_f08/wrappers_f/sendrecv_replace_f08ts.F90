@@ -5,10 +5,10 @@
 !
 subroutine MPI_Sendrecv_replace_f08ts(buf, count, datatype, dest, sendtag, source, recvtag, &
     comm, status, ierror)
-    use :: mpi_f08, only : MPI_Datatype, MPI_Comm, MPI_Status
     use, intrinsic :: iso_c_binding, only : c_loc, c_associated
-    use :: mpi_f08, only : MPI_STATUS_IGNORE, MPIR_C_MPI_STATUS_IGNORE, assignment(=)
     use, intrinsic :: iso_c_binding, only : c_int, c_ptr
+    use :: mpi_f08, only : MPI_Datatype, MPI_Comm, MPI_Status
+    use :: mpi_f08, only : MPI_STATUS_IGNORE, MPIR_C_MPI_STATUS_IGNORE, assignment(=)
     use :: mpi_c_interface, only : c_Datatype, c_Comm
     use :: mpi_c_interface, only : c_Status
     use :: mpi_c_interface, only : MPIR_Sendrecv_replace_cdesc

@@ -4,9 +4,9 @@
 !   See COPYRIGHT in top-level directory.
 !
 subroutine MPI_File_get_type_extent_f08(fh, datatype, extent, ierror)
+    use, intrinsic :: iso_c_binding, only : c_int
     use :: mpi_f08, only : MPI_File, MPI_Datatype
     use :: mpi_f08, only : MPI_File_f2c, MPI_File_c2f
-    use, intrinsic :: iso_c_binding, only : c_int
     use :: mpi_f08, only : MPI_ADDRESS_KIND
     use :: mpi_c_interface, only : c_File, c_Datatype
     use :: mpi_c_interface, only : MPIR_File_get_type_extent_c

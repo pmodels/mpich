@@ -4,8 +4,8 @@
 !   See COPYRIGHT in top-level directory.
 !
 subroutine MPI_Imrecv_f08ts(buf, count, datatype, message, request, ierror)
-    use :: mpi_f08, only : MPI_Datatype, MPI_Message, MPI_Request
     use, intrinsic :: iso_c_binding, only : c_int
+    use :: mpi_f08, only : MPI_Datatype, MPI_Message, MPI_Request
     use :: mpi_c_interface, only : c_Datatype, c_Message, c_Request
     use :: mpi_c_interface, only : MPIR_Imrecv_cdesc
 

@@ -4,13 +4,13 @@
 !   See COPYRIGHT in top-level directory.
 !
 subroutine MPI_File_open_f08(comm, filename, amode, info, fh, ierror)
+    use, intrinsic :: iso_c_binding, only : c_int, c_char
     use :: mpi_f08, only : MPI_Comm, MPI_Info, MPI_File
     use :: mpi_f08, only : MPI_File_f2c, MPI_File_c2f
-    use, intrinsic :: iso_c_binding, only : c_int, c_char
     use :: mpi_c_interface, only : c_Comm, c_Info, c_File
     use :: mpi_c_interface, only : MPIR_File_open_c
-
     use :: mpi_c_interface, only : MPIR_Fortran_string_f2c
+
     implicit none
 
     type(MPI_Comm), intent(in) :: comm

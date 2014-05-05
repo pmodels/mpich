@@ -4,8 +4,8 @@
 !   See COPYRIGHT in top-level directory.
 !
 subroutine MPI_Startall_f08(count, array_of_requests, ierror)
-    use :: mpi_f08, only : MPI_Request
     use, intrinsic :: iso_c_binding, only : c_int
+    use :: mpi_f08, only : MPI_Request
     use :: mpi_c_interface, only : c_Request
     use :: mpi_c_interface, only : MPIR_Startall_c
 

@@ -5,8 +5,8 @@
 !
 subroutine MPI_Neighbor_alltoall_f08ts(sendbuf, sendcount, sendtype, recvbuf, recvcount, recvtype, &
     comm, ierror)
-    use :: mpi_f08, only : MPI_Datatype, MPI_Comm
     use, intrinsic :: iso_c_binding, only : c_int
+    use :: mpi_f08, only : MPI_Datatype, MPI_Comm
     use :: mpi_c_interface, only : c_Datatype, c_Comm
     use :: mpi_c_interface, only : MPIR_Neighbor_alltoall_cdesc
 

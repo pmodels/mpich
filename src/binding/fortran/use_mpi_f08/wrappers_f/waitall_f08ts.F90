@@ -4,10 +4,10 @@
 !   See COPYRIGHT in top-level directory.
 !
 subroutine MPI_Waitall_f08(count, array_of_requests, array_of_statuses, ierror)
-    use :: mpi_f08, only : MPI_Request, MPI_Status
     use, intrinsic :: iso_c_binding, only : c_loc, c_associated
-    use :: mpi_f08, only : MPI_STATUSES_IGNORE, MPIR_C_MPI_STATUSES_IGNORE, assignment(=)
     use, intrinsic :: iso_c_binding, only : c_int
+    use :: mpi_f08, only : MPI_Request, MPI_Status
+    use :: mpi_f08, only : MPI_STATUSES_IGNORE, MPIR_C_MPI_STATUSES_IGNORE, assignment(=)
     use :: mpi_c_interface, only : c_Request
     use :: mpi_c_interface, only : c_Status
     use :: mpi_c_interface, only : MPIR_Waitall_c

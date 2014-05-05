@@ -4,8 +4,8 @@
 !   See COPYRIGHT in top-level directory.
 !
 subroutine MPI_Graphdims_get_f08(comm, nnodes, nedges, ierror)
-    use :: mpi_f08, only : MPI_Comm
     use, intrinsic :: iso_c_binding, only : c_int
+    use :: mpi_f08, only : MPI_Comm
     use :: mpi_c_interface, only : c_Comm
     use :: mpi_c_interface, only : MPIR_Graphdims_get_c
 

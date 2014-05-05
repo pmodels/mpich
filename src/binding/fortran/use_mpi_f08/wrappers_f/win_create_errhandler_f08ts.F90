@@ -4,10 +4,10 @@
 !   See COPYRIGHT in top-level directory.
 !
 subroutine MPI_Win_create_errhandler_f08(win_errhandler_fn, errhandler, ierror)
-    use :: mpi_f08, only : MPI_Errhandler
-    use :: mpi_f08, only : MPI_Win_errhandler_function
     use, intrinsic :: iso_c_binding, only : c_funloc
     use, intrinsic :: iso_c_binding, only : c_int, c_funptr
+    use :: mpi_f08, only : MPI_Errhandler
+    use :: mpi_f08, only : MPI_Win_errhandler_function
     use :: mpi_c_interface, only : c_Errhandler
     use :: mpi_c_interface, only : MPIR_Win_create_errhandler_c
 

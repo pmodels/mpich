@@ -5,9 +5,9 @@
 !
 subroutine MPI_Put_f08ts(origin_addr, origin_count, origin_datatype, target_rank, &
     target_disp, target_count, target_datatype, win, ierror)
+    use, intrinsic :: iso_c_binding, only : c_int
     use :: mpi_f08, only : MPI_Datatype, MPI_Win
     use :: mpi_f08, only : MPI_ADDRESS_KIND
-    use, intrinsic :: iso_c_binding, only : c_int
     use :: mpi_c_interface, only : c_Datatype, c_Win
     use :: mpi_c_interface, only : MPIR_Put_cdesc
 

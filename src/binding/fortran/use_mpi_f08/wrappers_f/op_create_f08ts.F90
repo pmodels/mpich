@@ -4,10 +4,10 @@
 !   See COPYRIGHT in top-level directory.
 !
 subroutine MPI_Op_create_f08(user_fn, commute, op, ierror)
-    use :: mpi_f08, only : MPI_Op
-    use :: mpi_f08, only : MPI_User_function
     use, intrinsic :: iso_c_binding, only : c_funloc
     use, intrinsic :: iso_c_binding, only : c_int, c_funptr
+    use :: mpi_f08, only : MPI_Op
+    use :: mpi_f08, only : MPI_User_function
     use :: mpi_c_interface, only : c_Op
     use :: mpi_c_interface, only : MPIR_Op_create_c
 
