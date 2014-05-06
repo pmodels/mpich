@@ -72,8 +72,7 @@ type(c_ptr), protected, bind(C, name="MPIR_C_MPI_WEIGHTS_EMPTY") :: MPIR_C_MPI_W
 !  MPI_IN_PLACE
 !
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-integer, bind(C, name="MPIR_F08_MPI_IN_PLACE_OBJ"), target :: MPI_IN_PLACE
-type(c_ptr), bind(C, name="MPIR_F08_MPI_IN_PLACE") :: MPIR_F08_MPI_IN_PLACE ! Point to MPI_IN_PLACE
+integer(c_int), bind(C, name="MPIR_F08_MPI_IN_PLACE"), target :: MPI_IN_PLACE
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !
@@ -82,6 +81,6 @@ type(c_ptr), bind(C, name="MPIR_F08_MPI_IN_PLACE") :: MPIR_F08_MPI_IN_PLACE ! Po
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! Buffer Address Constants
 ! A.1.1 p. 663
-integer, pointer :: MPI_BOTTOM => NULL()
+integer(c_int), bind(C, name="MPIR_F08_MPI_BOTTOM"), target :: MPI_BOTTOM
 
 end module mpi_f08_link_constants

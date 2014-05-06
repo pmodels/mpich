@@ -329,6 +329,7 @@ while (<FD>) {
 
 #include "cdesc.h"
 EOT
+        my @choice_buf_indices;
 
         print CFILE "\n$retarg $cdesc_routine(";
         print CDESCH "extern $retarg $cdesc_routine(";
@@ -358,9 +359,10 @@ EOT
                 }
             }
 
-            # replace void * with CFI_cdesc_t*
+            # replace void * with CFI_cdesc_t*, and record choice buffer arg indices.
             if ($arglist[$x] =~ /.*void\s*\*/) {
                 $arglist[$x] = "CFI_cdesc_t*";
+                push(@choice_buf_indices, $x);
             }
             @argbits = split(/ /, $arglist[$x]);
 
@@ -392,38 +394,48 @@ EOT
             print CFILE "#ifdef MPI_MODE_RDONLY\n"
         }
 
+        #================================================
+        #
+        #      Print body of the C wrapper function
+        #
+        #================================================
         print CFILE "${tab}int err = MPI_SUCCESS;\n";
-        print CFILE "${tab}int is_contig = 1;\n\n";
-
-        for ($x = 0; $x <= $#arglist; $x++) {
-            if ($arglist[$x] =~ /CFI_cdesc_t\*/) {
-                print CFILE "    /* When MPI_BOTTOM is passed in, base_addr is NULL and it is illegal to call CFI_is_contiguous. */\n";
-                print CFILE "${tab}if (x$x->base_addr != NULL) {\n";
-                print CFILE "${tab}${tab}if (!CFI_is_contiguous(x$x)) { is_contig = 0; }\n";
-                print CFILE "${tab}}\n"
-            }
+        print CFILE "${tab}int is_contig = 1;\n";
+        for my $i (@choice_buf_indices) {
+            print CFILE "    void *addr$i = x$i->base_addr;\n"
         }
         print CFILE "\n";
 
-        print CFILE "${tab}if (is_contig) {\n";
-        if (defined($inplace{$routine})) {
-            print CFILE "${tab}${tab}void *addr =  x$inplace{$routine}->base_addr;\n";
-            print CFILE "${tab}${tab}if (addr == MPIR_F08_MPI_IN_PLACE)\n";
-            print CFILE "${tab}${tab}${tab}addr = MPI_IN_PLACE;\n\n";
+        # Handle MPI_BOTTOM
+        for my $i (@choice_buf_indices) {
+            print CFILE "    if (addr$i == &MPIR_F08_MPI_BOTTOM) {\n";
+            print CFILE "        addr$i = MPI_BOTTOM;\n";
+            print CFILE "    }\n\n";
         }
-        print CFILE "${tab}${tab}err = $routine(";
-        for ($x = 0; $x <= $#arglist; $x++) {
-            if ($x) {
+
+        # Hanlde MPI_IN_PLACE
+        if (defined($inplace{$routine})) {
+            my $i = $inplace{$routine};
+            print CFILE "    if (addr$i == &MPIR_F08_MPI_IN_PLACE) {\n";
+            print CFILE "        addr$i = MPI_IN_PLACE;\n";
+            print CFILE "    }\n\n";
+        }
+
+        # Test if all choice buffers are contiguous
+        for my $i (@choice_buf_indices) {
+            print CFILE "    if (!CFI_is_contiguous(x$i)) is_contig = 0;\n\n";
+        }
+
+        print CFILE "    if (is_contig) {\n";
+        print CFILE "        err = $routine(";
+        for (my $i = 0; $i <= $#arglist; $i++) {
+            if ($i) {
                 print CFILE ", ";
             }
-            if (defined($inplace{$routine}) && $x eq $inplace{$routine}) {
-                print CFILE "addr";
-            }
-            else {
-                print CFILE "x$x";
-                if ($arglist[$x] =~ /CFI_cdesc_t\*/) {
-                    print CFILE "->base_addr";
-                }
+            if ($arglist[$i] =~ /CFI_cdesc_t\*/) {
+                print CFILE "addr$i";
+            } else {
+                print CFILE "x$i";
             }
         }
         print CFILE ");\n";
