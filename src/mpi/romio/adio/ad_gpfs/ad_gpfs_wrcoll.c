@@ -551,17 +551,25 @@ static void ADIOI_Exch_and_write(ADIO_File fd, const void *buf, MPI_Datatype
     if ((st_loc==-1) && (end_loc==-1)) {
 	ntimes = 0; /* this process does no writing. */
     }
-    if (ntimes != 0 && getenv("ROMIO_GPFS_DECLARE_ACCESS")!=NULL) {
+    if (ntimes > 0) { /* only set the gpfs hint if we have io - ie this rank is
+			 an aggregator -- otherwise will fail for deferred open */
+      if (getenv("ROMIO_GPFS_DECLARE_ACCESS")!=NULL) {
 	gpfs_wr_access_start(fd->fd_sys, st_loc, end_loc - st_loc);
+      }
     }
+
     ADIO_Offset st_loc_ion, end_loc_ion, needs_gpfs_access_cleanup=0;
 #ifdef BGQPLATFORM
-    if (getenv("ROMIO_GPFS_DECLARE_ION_ACCESS")!=NULL) {
+    if (ntimes > 0) { /* only set the gpfs hint if we have io - ie this rank is
+			 an aggregator -- otherwise will fail for deferred open */
+
+      if (getenv("ROMIO_GPFS_DECLARE_ION_ACCESS")!=NULL) {
 	if (gpfs_find_access_for_ion(fd, st_loc, end_loc, fd_start, fd_end,
 		    &st_loc_ion, &end_loc_ion)) {
 	    gpfs_wr_access_start(fd->fd_sys, st_loc_ion, end_loc_ion-st_loc_ion);
 	    needs_gpfs_access_cleanup=1;
 	}
+      }
     }
 #endif
 
@@ -851,10 +859,6 @@ static void ADIOI_Exch_and_write(ADIO_File fd, const void *buf, MPI_Datatype
 	needs_gpfs_access_cleanup=0;
     }
 
-    if (needs_gpfs_access_cleanup) {
-	gpfs_wr_access_end(fd->fd_sys, end_loc_ion-st_loc_ion, st_loc_ion);
-	needs_gpfs_access_cleanup=0;
-    }
     unsetenv("LIBIOLOG_EXTRA_INFO");
 }
 
