@@ -236,6 +236,11 @@ int MPID_nem_ib_init(MPIDI_PG_t * pg_p, int pg_rank, char **bc_val_p, int *val_m
     memset(MPID_nem_ib_cm_ringbuf_released, 0, (MPID_NEM_IB_CM_NSEG + 63) / 64);
 #endif
 
+    /* no need to malloc scratch-pad when the number of rank is '1' */
+    if (pg_p->size == 1) {
+        goto fn_exit;
+    }
+
     /* malloc scratch-pad fd */
     MPIU_CHKPMEM_MALLOC(MPID_nem_ib_scratch_pad_fds, int *, MPID_nem_ib_nranks * sizeof(int),
                         mpi_errno, "connection table");
