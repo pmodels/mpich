@@ -34,15 +34,15 @@ subroutine MPI_Neighbor_alltoallw_f08ts(sendbuf, sendcounts, sdispls, sendtypes,
     integer(c_int) :: ierror_c
     integer(c_int) :: err, indegree, outdegree, weighted ! To get length of assumed-size arrays
 
+    comm_c = comm%MPI_VAL
+    err = MPIR_Dist_graph_neighbors_count_c(comm_c, indegree, outdegree, weighted)
+
     if (c_int == kind(0)) then
-        ierror_c = MPIR_Neighbor_alltoallw_cdesc(sendbuf, sendcounts, sdispls, sendtypes%MPI_VAL, recvbuf, recvcounts, rdispls, &
-            recvtypes%MPI_VAL, comm%MPI_VAL)
+        ierror_c = MPIR_Neighbor_alltoallw_cdesc(sendbuf, sendcounts, sdispls, sendtypes(1:outdegree)%MPI_VAL, &
+            recvbuf, recvcounts, rdispls, recvtypes(1:indegree)%MPI_VAL, comm%MPI_VAL)
     else
-        err = MPIR_Dist_graph_neighbors_count_c(comm_c, indegree, outdegree, weighted)
         sendtypes_c = sendtypes(1:outdegree)%MPI_VAL
         recvtypes_c = recvtypes(1:indegree)%MPI_VAL
-        comm_c = comm%MPI_VAL
-
         sendcounts_c = sendcounts(1:outdegree)
         recvcounts_c = recvcounts(1:indegree)
 
