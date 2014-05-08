@@ -665,19 +665,15 @@ void ADIOI_Flatten(MPI_Datatype datatype, ADIOI_Flatlist_node *flat,
 /* simplest case, current type is basic or contiguous types */
         /* By using ADIO_Offset we preserve +/- sign and 
            avoid >2G integer arithmetic problems */
-		if (ints[1+n] > 0) {
-		    ADIO_Offset blocklength = ints[1+n];
-		    j = *curr_index;
-		    flat->indices[j] = st_offset + adds[n];
-		    MPI_Type_size_x(types[n], &old_size);
-		    flat->blocklens[j] = blocklength * old_size;
+		ADIO_Offset blocklength = ints[1+n];
+		j = *curr_index;
+		flat->indices[j] = st_offset + adds[n];
+		MPI_Type_size_x(types[n], &old_size);
+		flat->blocklens[j] = blocklength * old_size;
 #ifdef FLATTEN_DEBUG
-		    DBG_FPRINTF(stderr,"ADIOI_Flatten:: simple adds[%#X] "MPI_AINT_FMT_HEX_SPEC", flat->indices[%#llX] %#llX, flat->blocklens[%#llX] %#llX\n",n,adds[n],j, flat->indices[j], j, flat->blocklens[j]);
+		DBG_FPRINTF(stderr,"ADIOI_Flatten:: simple adds[%#X] "MPI_AINT_FMT_HEX_SPEC", flat->indices[%#llX] %#llX, flat->blocklens[%#llX] %#llX\n",n,adds[n],j, flat->indices[j], j, flat->blocklens[j]);
 #endif
-		    (*curr_index)++;
-		} else {
-		    flat->count--;
-		}
+		(*curr_index)++;
 	    }
 	    else {
 /* current type made up of noncontiguous derived types */
@@ -689,17 +685,13 @@ void ADIOI_Flatten(MPI_Datatype datatype, ADIOI_Flatlist_node *flat,
 		MPI_Type_extent(types[n], &old_extent);
 		for (m=1; m<ints[1+n]; m++) {
 		    for (i=0; i<num; i++) {
-			if (flat->blocklens[j-num] > 0) {
-			    flat->indices[j] =
-				flat->indices[j-num] + ADIOI_AINT_CAST_TO_OFFSET old_extent;
-			    flat->blocklens[j] = flat->blocklens[j-num];
+			flat->indices[j] =
+			    flat->indices[j-num] + ADIOI_AINT_CAST_TO_OFFSET old_extent;
+			flat->blocklens[j] = flat->blocklens[j-num];
 #ifdef FLATTEN_DEBUG
-			    DBG_FPRINTF(stderr,"ADIOI_Flatten:: simple old_extent "MPI_AINT_FMT_HEX_SPEC", flat->indices[%#llX] %#llX, flat->blocklens[%#llX] %#llX\n",old_extent,j, flat->indices[j], j, flat->blocklens[j]);
+			DBG_FPRINTF(stderr,"ADIOI_Flatten:: simple old_extent "MPI_AINT_FMT_HEX_SPEC", flat->indices[%#llX] %#llX, flat->blocklens[%#llX] %#llX\n",old_extent,j, flat->indices[j], j, flat->blocklens[j]);
 #endif
-			    j++;
-			} else {
-			    flat->count --;
-			}
+			j++;
 		    }
 		}
 		*curr_index = j;
