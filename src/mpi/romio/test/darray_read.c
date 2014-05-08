@@ -21,7 +21,7 @@ static void handle_error(int errcode, const char *str)
 
 int main(int argc, char *argv[]) 
 { 
-  int i, j; 
+  int i, j, nerrors=0, total_errors=0; 
 
   int rank, size;
   int bpos;
@@ -83,6 +83,7 @@ int main(int argc, char *argv[])
   CHECK(MPI_File_close(&mpi_fh));
 
   for(i = 0; i < size; i++) {
+#ifdef VERBOSE
     MPI_Barrier(MPI_COMM_WORLD);
     if(rank == i) {
       printf("=== Rank %i === (%i elements) \nPacked: ", rank, nelem);
@@ -98,13 +99,26 @@ int main(int argc, char *argv[])
       printf("\n\n");
       fflush(stdout);
     }
+#endif
+    if(rank == i) {
+	for (j=0; j< nelem; j++) {
+	    if (pdata[j] != ldata[j]) {
+		fprintf(stderr, "rank %d at index %d: packbuf %4.1f filebuf %4.1f\n",
+			rank, j, pdata[j], ldata[j]);
+		nerrors++;
+	    }
+	}
+    }
   }
+  MPI_Allreduce(&nerrors, &total_errors, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
+  if (rank == 0 && total_errors == 0)
+      printf(" No Errors\n");
 
   free(ldata);
   free(pdata);
   MPI_Type_free(&darray);
   MPI_Finalize();
 
-  exit(0);
+  exit(total_errors);
 
 } 
