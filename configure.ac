@@ -850,6 +850,7 @@ m4_map([PAC_SUBCFG_DO_PREREQ], [PAC_SUBCFG_MODULE_LIST])
 AC_ARG_VAR([MPILIBNAME],[can be used to override the name of the MPI library (default: "mpi")])
 AC_ARG_VAR([PMPILIBNAME],[can be used to override the name of the MPI profiling library (default: "p$MPILIBNAME")])
 AC_ARG_VAR([MPICXXLIBNAME],[can be used to override the name of the MPI C++ library (default: "${MPILIBNAME}cxx")])
+AC_ARG_VAR([MPIFCLIBNAME],[can be used to override the name of the MPI fortran library (default: "${MPILIBNAME}fort")])
 MPILIBNAME=${MPILIBNAME:-"mpi"}
 PMPILIBNAME_set=no
 if test -n "$PMPILIBNAME" ; then 
