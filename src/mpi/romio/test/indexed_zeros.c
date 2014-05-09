@@ -18,13 +18,21 @@ static void handle_error(int errcode, const char *str)
 	MPI_Abort(MPI_COMM_WORLD, 1);
 }
 
-int test_indexed_with_zeros(char *filename)
+enum {
+    INDEXED,
+    HINDEXED,
+    STRUCT
+} testcases;
+
+int test_indexed_with_zeros(char *filename, int testcase)
 {
     int i, rank, np, buflen, num, err, nr_errors;
     int  nelms[MAXLEN], buf[MAXLEN], indices[MAXLEN], blocklen[MAXLEN];
     MPI_File fh;
     MPI_Status status;
     MPI_Datatype filetype;
+    MPI_Datatype types[MAXLEN];
+    MPI_Aint addrs[MAXLEN];
 
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &np);
@@ -47,15 +55,32 @@ int test_indexed_with_zeros(char *filename)
     }
     MPI_Barrier(MPI_COMM_WORLD);
 
-    /* define a filetype using indexed constructor */
+    /* define a filetype with spurious leading zeros */
     buflen = num = 0;
     for (i=0; i<MAXLEN; i++) {
         buflen       += nelms[i];
         indices[num]  = i;
+        addrs[num] = i*sizeof(int);
         blocklen[num] = nelms[i];
+        types[num] = MPI_INT;
         num++;
     }
-    MPI_Type_indexed(num, blocklen, indices, MPI_INT, &filetype);
+    switch (testcase) {
+	case INDEXED:
+	    MPI_Type_indexed(num, blocklen, indices, MPI_INT, &filetype);
+	    break;
+	case HINDEXED:
+	    MPI_Type_hindexed(num, blocklen, addrs, MPI_INT, &filetype);
+	    break;
+	case STRUCT:
+	    MPI_Type_create_struct(num, blocklen, addrs, types, &filetype);
+	    break;
+	default:
+	    fprintf(stderr, "unknown testcase!\n");
+	    return(-100);
+
+    }
+
     MPI_Type_commit(&filetype);
 
     /* initialize write buffer and write to file*/
@@ -81,7 +106,8 @@ int test_indexed_with_zeros(char *filename)
         for (i=0; i<MAXLEN; i++) {
             if (buf[i] < 0) {
 		nr_errors++;
-                printf("Error: unexpected value at buf[%d] == %d\n",i,buf[i]);
+                printf("Error: unexpected value for case %d at buf[%d] == %d\n",
+			testcase,i,buf[i]);
 	    }
 	}
     }
@@ -101,7 +127,9 @@ int main(int argc, char **argv)
         if (rank == 0) fprintf(stderr,"Must run on 2 MPI processes\n");
         MPI_Finalize(); return 1;
     }
-    nr_errors += test_indexed_with_zeros(argv[1]);
+    nr_errors += test_indexed_with_zeros(argv[1], INDEXED);
+    nr_errors += test_indexed_with_zeros(argv[1], HINDEXED);
+    nr_errors += test_indexed_with_zeros(argv[1], STRUCT);
 
     if (rank == 0 && nr_errors == 0) printf(" No Errors\n");
 
