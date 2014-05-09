@@ -372,13 +372,13 @@ echo '**** Testing status.c ****'
 $mpirun -np 1 ./status -fname $FILENAME
 # CheckOutput status
 CleanExe status
-testfiles="$testfiles indexed_zeros.out"
-\rm -f indexed_zeros.out
-MakeExe indexed_zeros
+testfiles="$testfiles types_with_zeros.out"
+\rm -f types_with_zeros.out
+MakeExe types_with_zeros
 \rm -f $FILENAME*
-echo '**** Testing indexed_zeros ****'
-$mpirun -np 2 ./indexed_zeros $FILENAME
-CleanExe indexed_zeros
+echo '**** Testing types_with_zeros ****'
+$mpirun -np 2 ./types_with_zeros $FILENAME
+CleanExe types_with_zeros
 testfiles="$testfiles darray_read.out"
 \rm -f darray_read.out
 MakeExe darra_read
