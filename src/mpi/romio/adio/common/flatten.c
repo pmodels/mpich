@@ -665,15 +665,17 @@ void ADIOI_Flatten(MPI_Datatype datatype, ADIOI_Flatlist_node *flat,
 /* simplest case, current type is basic or contiguous types */
         /* By using ADIO_Offset we preserve +/- sign and 
            avoid >2G integer arithmetic problems */
-		ADIO_Offset blocklength = ints[1+n];
-		j = *curr_index;
-		flat->indices[j] = st_offset + adds[n];
-		MPI_Type_size_x(types[n], &old_size);
-		flat->blocklens[j] = blocklength * old_size;
+		if (ints[1+n] > 0 || types[n] == MPI_LB || types[n] == MPI_UB) {
+		    ADIO_Offset blocklength = ints[1+n];
+		    j = *curr_index;
+		    flat->indices[j] = st_offset + adds[n];
+		    MPI_Type_size_x(types[n], &old_size);
+		    flat->blocklens[j] = blocklength * old_size;
 #ifdef FLATTEN_DEBUG
-		DBG_FPRINTF(stderr,"ADIOI_Flatten:: simple adds[%#X] "MPI_AINT_FMT_HEX_SPEC", flat->indices[%#llX] %#llX, flat->blocklens[%#llX] %#llX\n",n,adds[n],j, flat->indices[j], j, flat->blocklens[j]);
+		    DBG_FPRINTF(stderr,"ADIOI_Flatten:: simple adds[%#X] "MPI_AINT_FMT_HEX_SPEC", flat->indices[%#llX] %#llX, flat->blocklens[%#llX] %#llX\n",n,adds[n],j, flat->indices[j], j, flat->blocklens[j]);
 #endif
-		(*curr_index)++;
+		    (*curr_index)++;
+		}
 	    }
 	    else {
 /* current type made up of noncontiguous derived types */
