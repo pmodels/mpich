@@ -43,7 +43,7 @@ void *receiver(void *ptr)
         MPI_Recv(buf, MSGSIZE, MPI_CHAR, MPI_ANY_SOURCE, MPI_ANY_TAG,
                  MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 
-    pthread_exit(NULL);
+    return NULL;
 }
 
 
@@ -53,7 +53,7 @@ void *sender_bsend(void *ptr)
     MPI_Bsend(buffer, MSGSIZE, MPI_CHAR, (rank + 1) % size, 0,
               MPI_COMM_WORLD);
 
-    pthread_exit(NULL);
+    return NULL;
 }
 
 void *sender_ibsend(void *ptr)
@@ -64,7 +64,7 @@ void *sender_ibsend(void *ptr)
                MPI_COMM_WORLD, &req);
     MPI_Wait(&req, MPI_STATUS_IGNORE);
 
-    pthread_exit(NULL);
+    return NULL;
 }
 
 void *sender_isend(void *ptr)
@@ -75,7 +75,7 @@ void *sender_isend(void *ptr)
               MPI_COMM_WORLD, &req);
     MPI_Wait(&req, MPI_STATUS_IGNORE);
 
-    pthread_exit(NULL);
+    return NULL;
 }
 
 void *sender_send(void *ptr)
@@ -84,7 +84,7 @@ void *sender_send(void *ptr)
     MPI_Send(buffer, MSGSIZE, MPI_CHAR, (rank + 1) % size, 0,
              MPI_COMM_WORLD);
 
-    pthread_exit(NULL);
+    return NULL;
 }
 
 int main(int argc, char *argv[])
