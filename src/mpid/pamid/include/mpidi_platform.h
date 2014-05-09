@@ -84,7 +84,7 @@ typedef int32_t MPID_Node_id_t;
 #define PAMIX_IS_LOCAL_TASK
 #define PAMIX_IS_LOCAL_TASK_STRIDE  (4)
 #define PAMIX_IS_LOCAL_TASK_SHIFT   (6)
-#define MPIDI_SMP_DETECT_DEFAULT 0
+#define MPIDI_SMP_DETECT_DEFAULT 1
 #define TOKEN_FLOW_CONTROL    0
 
 /*
