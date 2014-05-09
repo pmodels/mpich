@@ -293,7 +293,7 @@ PAMIX_is_local_task_get_node_info(pami_task_t  task,
         coords[1] * info->size[0] +
         coords[2] * info->size[0] * info->size[1] +
         coords[3] * info->size[0] * info->size[1] * info->size[2] +
-        coords[1] * info->size[0] * info->size[1] * info->size[2] * info->size[3];
+        coords[4] * info->size[0] * info->size[1] * info->size[2] * info->size[3];
 
       *max_nodes = info->size[0] * info->size[1] * info->size[2] * info->size[3] * info->size[4];
 
