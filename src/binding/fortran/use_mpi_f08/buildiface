@@ -106,6 +106,7 @@ mpi_fc_sources += \\
 	src/binding/fortran/use_mpi_f08/mpi_f08_compile_constants.F90 \\
 	src/binding/fortran/use_mpi_f08/mpi_f08_link_constants.F90 \\
 	src/binding/fortran/use_mpi_f08/mpi_f08_types.F90 \\
+	src/binding/fortran/use_mpi_f08/mpi_c_interface.F90 \\
 	src/binding/fortran/use_mpi_f08/mpi_c_interface_cdesc.F90 \\
 	src/binding/fortran/use_mpi_f08/mpi_c_interface_glue.F90 \\
 	src/binding/fortran/use_mpi_f08/mpi_c_interface_nobuf.F90 \\
