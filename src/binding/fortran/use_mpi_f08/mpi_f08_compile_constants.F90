@@ -136,7 +136,7 @@ type(MPI_Message),parameter    :: MPI_MESSAGE_NO_PROC = MPI_Message(1811939328)
 
 ! Fortran Support Method Specific Constants
 ! A.1.1 p. 664
-logical,parameter :: MPI_SUBARRAYS_SUPPORTED        = .false.
+logical,parameter :: MPI_SUBARRAYS_SUPPORTED        = .true.
 logical,parameter :: MPI_ASYNC_PROTECTS_NONBLOCKING = .true.  ! Value differs from mpif.h
 
 ! Variable Address Size
