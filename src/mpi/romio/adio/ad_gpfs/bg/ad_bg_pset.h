@@ -17,6 +17,10 @@
 #ifndef AD_BG_PSET_H_
 #define AD_BG_PSET_H_
 
+#ifdef HAVE_MPIX_H
+#include <mpix.h>
+#endif
+
 /* Keeps specific information to each process, will be exchanged among processes */
 typedef struct {
    int ioNodeIndex; /* similar to psetNum on BGL/BGP */
@@ -31,6 +35,8 @@ typedef struct {
       node, i.e. psetsize*/
    int iamBridge; /* am *I* the bridge rank? */
    int __ipad[2];
+   unsigned torusCoords[MPIX_TORUS_MAX_DIMS]; /* torus coordinates of node on which this rank resides */
+   unsigned manhattanDistanceToBridge; /* number of hops between this rank and the bridge node */
 } ADIOI_BG_ProcInfo_t __attribute__((aligned(16)));
 
 /* Keeps general information for the whole communicator, only on process 0 */

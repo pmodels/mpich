@@ -68,6 +68,7 @@ extern int      gpfsmpio_pthreadio;
 extern int      gpfsmpio_p2pcontig;
 extern int  gpfsmpio_balancecontig;
 extern int      gpfsmpio_devnullio;
+extern int      gpfsmpio_bridgeringagg;
 
 /* Default is, well, kind of complicated. Blue Gene /L and /P had "psets": one
  * i/o node and all compute nodes wired to it.  On Blue Gene /Q that

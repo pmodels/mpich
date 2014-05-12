@@ -39,6 +39,7 @@ int     gpfsmpio_pthreadio;
 int     gpfsmpio_p2pcontig;
 int	gpfsmpio_balancecontig;
 int     gpfsmpio_devnullio;
+int     gpfsmpio_bridgeringagg;
 
 double	gpfsmpio_prof_cw    [GPFSMPIO_CIO_LAST+1];
 double	gpfsmpio_prof_cr    [GPFSMPIO_CIO_LAST+1];
@@ -120,6 +121,13 @@ double	gpfsmpio_prof_cr    [GPFSMPIO_CIO_LAST+1];
  *   - 0 (disabled) or 1 (enabled)
  *   - Default is 0
  *
+ * - GPFSMPIO_BRIDGERINGAGG - Relevant only to BGQ.  Aggregator placement
+ *   optimization whch forms a 5-d ring around the bridge node starting at
+ *   GPFSMPIO_BRIDGERINGAGG hops away.  Experimental performance results
+ *   suggest best value is 1 and only in conjunction with GPFSMPIO_P2PCONTIG
+ *   and GPFSMPIO_BALANCECONTIG.  The number of aggregators selected is still
+ *   GPFSMPIO_NAGG_PSET however the bridge node itself is NOT selected.
+ *
  */
 
 void ad_gpfs_get_env_vars() {
@@ -164,6 +172,10 @@ void ad_gpfs_get_env_vars() {
     gpfsmpio_devnullio = 0;
     x = getenv( "GPFSMPIO_DEVNULLIO" );
     if (x) gpfsmpio_devnullio = atoi(x);
+
+    gpfsmpio_bridgeringagg = 0;
+    x = getenv( "GPFSMPIO_BRIDGERINGAGG" );
+    if (x) gpfsmpio_bridgeringagg = atoi(x);
 }
 
 /* report timing breakdown for MPI I/O collective call */

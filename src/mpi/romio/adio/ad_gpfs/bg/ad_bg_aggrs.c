@@ -16,6 +16,7 @@
 
 // Uncomment this line to turn tracing on for the gpfsmpio_balancecontig aggr selection optimization
 // #define balancecontigtrace 1
+// #define bridgeringaggtrace 1
 
 #include "adio.h"
 #include "adio_cb_config_list.h"
@@ -183,8 +184,132 @@ ADIOI_BG_compute_agg_ranklist_serial_do (const ADIOI_BG_ConfInfo_t *confInfo,
    /* BES: This should be done in the init routines probably. */
     int i, j;
     int aggTotal;
-    int distance, numAggs;
     int *aggList;
+
+    if (gpfsmpio_bridgeringagg > 0) {
+
+      int numAggs = confInfo->aggRatio * confInfo->ioMinSize /*virtualPsetSize*/;
+        /* the number of aggregators is (numAggs per bridgenode) */
+      if(numAggs == 1)
+        aggTotal = 1;
+      else
+        aggTotal = confInfo->numBridgeRanks * numAggs;
+
+      aggList = (int *)ADIOI_Malloc(aggTotal * sizeof(int));
+      if(aggTotal == 1) { /* special case when we only have one bridge node */
+
+        sortstruct *bridgelist = (sortstruct *)ADIOI_Malloc(confInfo->nProcs * sizeof(sortstruct));
+        for(i=0; i < confInfo->nProcs; i++)
+        {
+          bridgelist[i].bridge = all_procInfo[i].bridgeRank;
+          bridgelist[i].rank = i;
+          TRACE_ERR("bridgelist[%d].bridge: %d .rank: %d\n", i, bridgelist[i].bridge, i);
+        }
+
+        /* This list contains rank->bridge info. Now, we need to sort this list. */
+        qsort(bridgelist, confInfo->nProcs, sizeof(sortstruct), intsort);
+
+        aggList[0] = bridgelist[0].bridge;
+        ADIOI_Free(bridgelist);
+
+      }
+      else { // aggTotal > 1
+
+        ADIOI_BG_ProcInfo_t *allProcInfoAggNodeList = (ADIOI_BG_ProcInfo_t *) ADIOI_Malloc(confInfo->nProcs * sizeof(ADIOI_BG_ProcInfo_t));
+        int allProcInfoAggNodeListSize = 0;
+        int maxManhattanDistanceToBridge = 0;
+
+        // for ppn > 1, assign minumum rank as agg candidate
+        for (i=0;i<confInfo->nProcs;i++) {
+          int addProcToAggNodeList = 1;
+          for (j=0;j<allProcInfoAggNodeListSize;j++) {
+            if ((allProcInfoAggNodeList[j].torusCoords[0] == all_procInfo[i].torusCoords[0]) &&
+              (allProcInfoAggNodeList[j].torusCoords[1] == all_procInfo[i].torusCoords[1]) &&
+              (allProcInfoAggNodeList[j].torusCoords[2] == all_procInfo[i].torusCoords[2]) &&
+              (allProcInfoAggNodeList[j].torusCoords[3] == all_procInfo[i].torusCoords[3]) &&
+              (allProcInfoAggNodeList[j].torusCoords[4] == all_procInfo[i].torusCoords[4]) &&
+              addProcToAggNodeList) {
+              // proc is in the node list, replace if this rank is smaller
+              addProcToAggNodeList = 0;
+
+              if (allProcInfoAggNodeList[j].rank > all_procInfo[i].rank)
+                allProcInfoAggNodeList[j] = all_procInfo[i];
+            }
+          } // for j
+          if (addProcToAggNodeList) {
+            allProcInfoAggNodeList[allProcInfoAggNodeListSize] = all_procInfo[i];
+            if (allProcInfoAggNodeList[allProcInfoAggNodeListSize].manhattanDistanceToBridge > maxManhattanDistanceToBridge)
+              maxManhattanDistanceToBridge = allProcInfoAggNodeList[allProcInfoAggNodeListSize].manhattanDistanceToBridge;
+            allProcInfoAggNodeListSize++;
+          }
+        } // for i
+
+#ifdef bridgeringaggtrace
+      fprintf(stderr,"allProcInfoAggNodeListSize is %d aggTotal is %d\n",allProcInfoAggNodeListSize,aggTotal);
+#endif
+
+      int *aggNodeBridgeList = (int *) ADIOI_Malloc (allProcInfoAggNodeListSize * sizeof(int)); // list of all bridge ranks
+      int *aggNodeBridgeListNum = (int *) ADIOI_Malloc (allProcInfoAggNodeListSize * sizeof(int));
+      for (i=0;i<allProcInfoAggNodeListSize;i++) {
+        aggNodeBridgeList[i] = -1;
+        aggNodeBridgeListNum[i] = 0;
+      }
+
+      int aggNodeBridgeListSize = 0;
+      for (i=0;i<allProcInfoAggNodeListSize;i++) {
+        int foundBridge = 0;
+        for (j=0;(j<aggNodeBridgeListSize && !foundBridge);j++) {
+          if (aggNodeBridgeList[j] == allProcInfoAggNodeList[i].bridgeRank) {
+            foundBridge = 1;
+            aggNodeBridgeListNum[i]++;
+          }
+        }
+        if (!foundBridge) {
+          aggNodeBridgeList[aggNodeBridgeListSize] = allProcInfoAggNodeList[i].bridgeRank;
+          aggNodeBridgeListNum[aggNodeBridgeListSize] = 1;
+          aggNodeBridgeListSize++;
+        }
+      }
+
+      // add aggs based on numAggs per bridge, starting at gpfsmpio_bridgeringagg hops and increasing until numAggs aggs found
+      int currentAggListSize = 0;
+      for (i=0;i<aggNodeBridgeListSize;i++) {
+        int currentBridge = aggNodeBridgeList[i];
+        int currentNumHops = gpfsmpio_bridgeringagg;
+        int numAggsAssignedToThisBridge = 0;
+        while ((numAggsAssignedToThisBridge < numAggs) && (currentNumHops <= maxManhattanDistanceToBridge)) {
+          for (j=0;j<allProcInfoAggNodeListSize;j++) {
+            if (allProcInfoAggNodeList[j].bridgeRank == currentBridge) {
+              if (allProcInfoAggNodeList[j].manhattanDistanceToBridge == currentNumHops) {
+                aggList[currentAggListSize] = allProcInfoAggNodeList[j].rank;
+#ifdef bridgeringaggtrace
+                printf("Assigned agg rank %d at torus coords %u %u %u %u %u to bridge %d at torus coords %u %u %u %u %u at a distance of %d hops\n",allProcInfoAggNodeList[j].rank,allProcInfoAggNodeList[j].torusCoords[0],allProcInfoAggNodeList[j].torusCoords[1],allProcInfoAggNodeList[j].torusCoords[2],allProcInfoAggNodeList[j].torusCoords[3],allProcInfoAggNodeList[j].torusCoords[4], currentBridge, all_procInfo[currentBridge].torusCoords[0], all_procInfo[currentBridge].torusCoords[1], all_procInfo[currentBridge].torusCoords[2], all_procInfo[currentBridge].torusCoords[3], all_procInfo[currentBridge].torusCoords[4],currentNumHops);
+#endif
+                currentAggListSize++;
+                numAggsAssignedToThisBridge++;
+                if (numAggsAssignedToThisBridge >= numAggs)
+                  break;
+              }
+            }
+          }
+          currentNumHops++;
+        } // while
+        ADIOI_Assert(numAggsAssignedToThisBridge == numAggs);
+      } // for
+
+      ADIOI_Free(allProcInfoAggNodeList);
+      ADIOI_Free(aggNodeBridgeList);
+      ADIOI_Free(aggNodeBridgeListNum);
+
+      } // else aggTotal  > 1
+
+       memcpy(tmp_ranklist, aggList, aggTotal*sizeof(int));
+    } // gpfsmpio_bridgeringagg > 0
+
+    else { // gpfsmpio_bridgeringagg unset - default code
+
+    int distance, numAggs;
+
     /* Aggregators will be midpoints between sorted MPI rank lists of who shares a given
      * bridge node */
 
@@ -282,9 +407,11 @@ ADIOI_BG_compute_agg_ranklist_serial_do (const ADIOI_BG_ConfInfo_t *confInfo,
 
 
    ADIOI_Free (bridgelist);
-   ADIOI_Free (aggList);
 
    TRACE_ERR("Leaving ADIOI_BG_compute_agg_ranklist_serial_do\n");
+   }
+
+   ADIOI_Free (aggList);
    return aggTotal;
 
 }
@@ -371,8 +498,8 @@ ADIOI_BG_compute_agg_ranklist_serial ( ADIO_File fd,
 	for (i=0;i<naggs;i++)
 	    bridgelistnum[i] = 0;
 
-	/* Each entry in this list corresponds with the bridgelist and will
-	 * contain the lowest bridge agg rank on that ion. */
+	/* Each entry in this list corresponds with the bridgelist and will contain the lowest bridge
+	 * agg rank on that ion. */
 	int *summarybridgeminionaggrank = (int *) ADIOI_Malloc (naggs * sizeof(int));
 	for (i=0;i<naggs;i++)
 	    summarybridgeminionaggrank[i] = -1;
@@ -408,9 +535,8 @@ ADIOI_BG_compute_agg_ranklist_serial ( ADIO_File fd,
 	    bridgelistnum[summaryranklistbridgeindex]++;
 	}
 
-    /* at this point summarybridgeminionaggrank has the agg rank of the bridge
-     * for entries; now need to make each entry the minimum bridge rank for the
-     * entire ion. */
+    /* at this point summarybridgeminionaggrank has the agg rank of the bridge for entries,
+     * need to make each entry the minimum bridge rank for the entire ion. */
     for (i=0;i<numbridges;i++) {
         int aggIonId = ionlist[i];
         int j;

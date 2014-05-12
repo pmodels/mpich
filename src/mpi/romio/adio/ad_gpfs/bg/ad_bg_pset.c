@@ -13,6 +13,8 @@
  */
 
 /* #define TRACE_ON */
+// #define bridgeringaggtrace 1
+
 #include <stdlib.h>
 #include "../ad_gpfs.h"
 #include "ad_bg_pset.h"
@@ -79,6 +81,35 @@ static int intsort(const void *p1, const void *p2)
    return(i1->bridgeCoord - i2->bridgeCoord);
 }
 
+unsigned torusSize[MPIX_TORUS_MAX_DIMS];
+unsigned dimTorus[MPIX_TORUS_MAX_DIMS];
+
+/* This function computes the number of hops between the torus coordinates of the
+ * aggCoords and bridgeCoords parameters.
+*/
+static unsigned procManhattanDistance(unsigned *aggCoords, unsigned *bridgeCoords) {
+
+  unsigned totalDistance = 0;
+  int i;
+  for (i=0;i<MPIX_TORUS_MAX_DIMS;i++) {
+    unsigned dimDistance = abs(aggCoords[i] - bridgeCoords[i]);
+    if (dimDistance > 0) { // could torus make it closer?
+      if (dimTorus[i]) {
+        if (aggCoords[i] == torusSize[i]) { // is wrap-around closer
+          if ((bridgeCoords[i]+1) < dimDistance) // assume will use torus link
+            dimDistance = bridgeCoords[i]+1;
+        }
+        else if (bridgeCoords[i] == torusSize[i]) { // is wrap-around closer
+          if ((aggCoords[i]+1) < dimDistance) // assume will use torus link
+            dimDistance = aggCoords[i]+1;
+        }
+      }
+    }
+    totalDistance += dimDistance;
+  }
+  return totalDistance;
+}
+
 
 void 
 ADIOI_BG_persInfo_init(ADIOI_BG_ConfInfo_t *conf, 
@@ -102,14 +133,36 @@ ADIOI_BG_persInfo_init(ADIOI_BG_ConfInfo_t *conf,
 
    proc->rank = rank;
    proc->coreID = hw.coreID;
-   proc->ionID = MPIX_IO_node_id ();
+
+   if (gpfsmpio_bridgeringagg > 0) {
+     for (i=0;i<MPIX_TORUS_MAX_DIMS;i++) {
+       proc->torusCoords[i] = hw.Coords[i];
+     }
+#ifdef bridgeringaggtrace
+     if (rank == 0)
+       fprintf(stderr,"Block dimensions:\n");
+#endif
+     for (i=0;i<MPIX_TORUS_MAX_DIMS;i++) {
+       torusSize[i] = hw.Size[i];
+       dimTorus[i] = hw.isTorus[i];
+#ifdef bridgeringaggtrace
+       if (rank == 0)
+         fprintf(stderr,"Dimension %d has %d elements wrap-around value is %d\n",i,torusSize[i],dimTorus[i]);
+#endif
+     }
+   }
 
    MPI_Comm_size(comm, &commsize);
+
+   proc->ionID = MPIX_IO_node_id ();
 
    if(size == 1)
    {
       proc->iamBridge = 1;
       proc->bridgeRank = rank;
+      if (gpfsmpio_bridgeringagg > 0) {
+        proc->manhattanDistanceToBridge = 0;
+      }
 
       /* Set up the other parameters */
       proc->myIOSize = size;
@@ -143,8 +196,32 @@ ADIOI_BG_persInfo_init(ADIOI_BG_ConfInfo_t *conf,
       (hw.Coords[1] == pers.Network_Config.cnBridge_B) && 
       (hw.Coords[2] == pers.Network_Config.cnBridge_C) && 
       (hw.Coords[3] == pers.Network_Config.cnBridge_D) && 
-      (hw.Coords[4] == pers.Network_Config.cnBridge_E))
+      (hw.Coords[4] == pers.Network_Config.cnBridge_E)) {
       iambridge = 1;      /* I am bridge */
+      if (gpfsmpio_bridgeringagg > 0) {
+        proc->manhattanDistanceToBridge = 0;
+      }
+    }
+    else {  // calculate manhattan distance to bridge if gpfsmpio_bridgeringagg is set
+      if (gpfsmpio_bridgeringagg > 0) {
+        unsigned aggCoords[MPIX_TORUS_MAX_DIMS],manhattanBridgeCoords[MPIX_TORUS_MAX_DIMS];
+        aggCoords[0] = hw.Coords[0];
+        manhattanBridgeCoords[0] = pers.Network_Config.cnBridge_A;
+        aggCoords[1] = hw.Coords[1];
+        manhattanBridgeCoords[1] = pers.Network_Config.cnBridge_B;
+        aggCoords[2] = hw.Coords[2];
+        manhattanBridgeCoords[2] = pers.Network_Config.cnBridge_C;
+        aggCoords[3] = hw.Coords[3];
+        manhattanBridgeCoords[3] = pers.Network_Config.cnBridge_D;
+        aggCoords[4] = hw.Coords[4];
+        manhattanBridgeCoords[4] = pers.Network_Config.cnBridge_E;
+
+        proc->manhattanDistanceToBridge= procManhattanDistance(aggCoords, manhattanBridgeCoords);
+#ifdef bridgeringaggtrace
+        fprintf(stderr,"agg coords are %u %u %u %u %u bridge coords are %u %u %u %u %u distance is %u\n",aggCoords[0],aggCoords[1],aggCoords[2],aggCoords[3],aggCoords[4],manhattanBridgeCoords[0],manhattanBridgeCoords[1],manhattanBridgeCoords[2],manhattanBridgeCoords[3],manhattanBridgeCoords[4], proc->manhattanDistanceToBridge);
+#endif
+      }
+    }
 
    TRACE_ERR("Bridge coords(%8.8X): %d %d %d %d %d, %d. iambridge %d\n",bridgeCoords, pers.Network_Config.cnBridge_A,pers.Network_Config.cnBridge_B,pers.Network_Config.cnBridge_C,pers.Network_Config.cnBridge_D,pers.Network_Config.cnBridge_E,0, iambridge);
 
