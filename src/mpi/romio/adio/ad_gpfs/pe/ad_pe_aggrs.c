@@ -47,9 +47,17 @@ ADIOI_PE_gen_agg_ranklist(ADIO_File fd)
     char *ioTaskList = getenv( "MP_IOTASKLIST" );
     char *ioAgentCount = getenv("MP_IOAGENT_CNT");
     int i,j;
+    int inTERcommFlag = 0;
 
     int myRank;
     MPI_Comm_rank(fd->comm, &myRank);
+
+    MPI_Comm_test_inter(fd->comm, &inTERcommFlag);
+    if (inTERcommFlag) {
+      FPRINTF(stderr,"inTERcomms are not supported in MPI-IO - aborting....\n");
+      perror("ADIOI_PE_gen_agg_ranklist:");
+      MPI_Abort(MPI_COMM_WORLD, 1);
+    }
 
     if (ioTaskList) {
       char tmpBuf[8];   /* Big enough for 1M tasks (7 digits task ID). */
