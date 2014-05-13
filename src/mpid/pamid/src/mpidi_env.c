@@ -548,32 +548,27 @@ MPIDI_Env_setup(int rank, int requested)
     char* names[] = {"PAMID_THREAD_MULTIPLE", NULL};
     ENV_Unsigned(names, &value, 1, &found_deprecated_env_var, rank);
 #if (MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_PER_OBJECT)
+    /* Any mpich work function posted to a context that eventually initiates
+     * other communcation transfers will hang on a lock attempt if the
+     * 'context post' feature is not enabled. Until this code flow is fixed
+     * the context post must not be disabled.
+     *
+     * See discussion in src/mpid/pamid/include/mpidi_macros.h
+     * -> MPIDI_Context_post()
+     */
+    MPIDI_Process.perobj.context_post.requested = 1;
     if (value == 1)      /* force on  */
     {
-      /* The default value for context post should be enabled only if the
-       * default async progress mode is the 'locked' mode.
-       */
-      MPIDI_Process.perobj.context_post.requested =
-        (ASYNC_PROGRESS_MODE_DEFAULT == ASYNC_PROGRESS_MODE_LOCKED);
-
       MPIDI_Process.async_progress.mode    = ASYNC_PROGRESS_MODE_DEFAULT;
       MPIDI_Process.avail_contexts         = MPIDI_MAX_CONTEXTS;
     }
     else if (value == 0) /* force off */
     {
-      MPIDI_Process.perobj.context_post.requested = 0;
       MPIDI_Process.async_progress.mode    = ASYNC_PROGRESS_MODE_DISABLED;
       MPIDI_Process.avail_contexts         = 1;
     }
     else if (requested != MPI_THREAD_MULTIPLE)
     {
-      /* The PAMID_THREAD_MULTIPLE override was not set, yet the application
-       * requested a thread mode other than MPI_THREAD_MULTIPLE. Therefore,
-       * assume that the application prefers the 'latency optimization' over
-       * the 'throughput optimization' and set the async progress configuration
-       * to disable context post.
-       */
-      MPIDI_Process.perobj.context_post.requested = 0;
 #ifdef BGQ_SUPPORTS_TRIGGER_ASYNC_PROGRESS
       MPIDI_Process.async_progress.mode    = ASYNC_PROGRESS_MODE_TRIGGER;
       MPIDI_Process.avail_contexts         = MPIDI_MAX_CONTEXTS;

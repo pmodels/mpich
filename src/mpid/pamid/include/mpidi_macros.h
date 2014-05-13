@@ -168,23 +168,24 @@ MPIDI_Context_post(pami_context_t       context,
                    void               * cookie)
 {
 #if (MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_PER_OBJECT)
-  if (likely(MPIDI_Process.perobj.context_post.active > 0))
-    {
-      pami_result_t rc;
-      rc = PAMI_Context_post(context, work, fn, cookie);
-      MPID_assert(rc == PAMI_SUCCESS);
-    }
-  else
-    {
-      /* Lock access to the context. For more information see discussion of the
-       * simplifying assumption that the "per object" mpich lock mode does not
-       * expect a completely single threaded run environment in the file
-       * src/mpid/pamid/src/mpid_progress.h
-       */
-       PAMI_Context_lock(context);
-       fn(context, cookie);
-       PAMI_Context_unlock(context);
-    }
+  /* It is possible that a work function posted to a context may attempt to
+   * initiate a communication operation and, if context post were disabled, that
+   * operation would be performed directly on the context BY TAKING A LOCK that
+   * the is already held by the thread that is advancing the context. This will
+   * result in a hang.
+   *
+   * A solution would be to identify all code flows where this situation might
+   * occur and then change the code to avoid taking a lock that is already held.
+   *
+   * Another solution is to always disable the "non-context-post" configuration
+   * when compiled with per-object locking. This would only occur if the
+   * application requested !MPI_THREAD_MULTIPLE and the "pretend single threaded
+   * by disabling async progress, context post, and multiple contexts" optimization
+   * was in effect.
+   */
+  pami_result_t rc;
+  rc = PAMI_Context_post(context, work, fn, cookie);
+  MPID_assert(rc == PAMI_SUCCESS);
 #else /* (MPIU_THREAD_GRANULARITY != MPIU_THREAD_GRANULARITY_PER_OBJECT) */
   /*
    * It is not necessary to lock the context before access in the "global"
