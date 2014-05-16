@@ -24,6 +24,8 @@
 #include <sys/ipc.h>
 #include <sys/stat.h>
 
+#include <sys/mman.h>
+
 #undef FUNCNAME 
 #define FUNCNAME MPID_Win_allocate_shared
 #undef FCNAME
@@ -151,6 +153,57 @@ int GetPageSize(void *addr, ulong *pageSize)
        TRACE_ERR("LinuxPageSize %p not in %s  getpagesize=%ld\n", addr,fileName,*pageSize);
   }
   return 0;
+}
+
+void *
+MPID_getSharedSegment_mmap(MPID_Win * win)
+{
+  void * base_addr;
+  int rank, rc, fd;
+  int mpi_errno = MPI_SUCCESS;
+  int errflag = FALSE;
+  int first = 0;
+
+  snprintf (win->mpid.shm->shm_key, 63, "/mpich/comm-%d/win_shared", win->comm_ptr->context_id);
+  rc = shm_open (win->mpid.shm->shm_key, O_RDWR | O_CREAT | O_EXCL, 0600);
+  if (0 == rc)
+  {
+    first = 1;
+  } else {
+    rc = shm_open (win->mpid.shm->shm_key, O_RDWR, 0);
+    MPIU_ERR_CHKANDJUMP((rc == -1), mpi_errno, MPI_ERR_RMA_SHARED, "**rmashared");
+  }
+
+  fd = rc;
+  rc = ftruncate (fd, win->mpid.shm->segment_len);
+  MPIU_ERR_CHKANDJUMP((rc == -1), mpi_errno, MPI_ERR_RMA_SHARED, "**rmashared");
+
+
+  base_addr = mmap (NULL, win->mpid.shm->segment_len, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+  if (base_addr == NULL || base_addr == MAP_FAILED || base_addr == (void *) -1) { /* error */
+    if (0 == rank) shm_unlink (win->mpid.shm->shm_key);
+    MPIU_ERR_CHKANDJUMP((win->mpid.shm->shm_id == -1), mpi_errno, MPI_ERR_RMA_SHARED, "**rmashared");
+  }
+
+  close (fd); /* no longer needed */
+
+  /* set mutex_lock address and initialize it   */
+  win->mpid.shm->mutex_lock = (MPIDI_SHM_MUTEX *) base_addr;
+  if (1 == first) {
+    MPIDI_SHM_MUTEX_INIT(win);
+  }
+
+  mpi_errno = MPIR_Barrier_impl(win->comm_ptr, &errflag);
+  MPIU_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
+
+  win->mpid.shm->allocated = 1;
+
+fn_exit:
+    return base_addr;
+    /* --BEGIN ERROR HANDLING-- */
+fn_fail:
+    goto fn_exit;
+    /* --END ERROR HANDLING-- */
 }
 
 void *
@@ -335,8 +388,9 @@ MPID_getSharedSegment(MPI_Aint     size,
          * data buffer - possibly padded if non-contiguous.
          */
 #ifdef USE_SYSV_SHM
-        win->mpid.shm->base_addr =
-          MPID_getSharedSegment_sysv(win);
+        win->mpid.shm->base_addr = MPID_getSharedSegment_sysv(win);
+#elif  USE_MMAP_SHM
+        win->mpid.shm->base_addr = MPID_getSharedSegment_mmap(win);
 #else
         MPID_Abort();
 #endif
@@ -435,40 +489,6 @@ MPID_Win_allocate_shared(MPI_Aint     size,
   win->mpid.info[rank].win = win;
   win->mpid.info[rank].disp_unit = disp_unit;
 
-#ifdef __BGQ__
-  /* verify BG_MAPCOMMONHEAP=1 env. variable is set */
-  if (rank == 0) {
-    assert(NULL!=getenv("BG_MAPCOMMONHEAP"));
-    baseP = MPIU_Malloc(size+sizeof(pthread_mutex_t));
-#ifdef MPIDI_NO_ASSERT
-    MPIU_ERR_CHKANDJUMP((baseP == NULL), mpi_errno, MPI_ERR_BUFFER, "**bufnull");
-#else
-    MPID_assert(baseP != NULL);
-#endif
-
-    pthread_mutex_t *mutex = (pthread_mutex_t *)(((uintptr_t) baseP) + size);
-    pthread_mutexattr_t attr;
-    pthread_mutexattr_init(&attr);
-    pthread_mutex_init(mutex, &attr);
-  }
-
-  int errflag = 0;
-  mpi_errno = MPIR_Bcast_impl(&baseP, sizeof(char*), MPI_BYTE, 0,
-                              win->comm_ptr, &errflag);
-
-  win->mpid.shm->mutex_lock = (pthread_mutex_t *)(((uintptr_t) baseP) + size);
-  win->mpid.shm->allocated = 1;
-  win->mpid.shm->base_addr = baseP;
-
-  win->base = baseP;
-  win->mpid.info[rank].base_addr = baseP;
-
-  mpi_errno = MPIDI_Win_allgather(size,win_ptr);
-  if (mpi_errno != MPI_SUCCESS) {
-    MPIU_Free(win->mpid.shm);
-    return mpi_errno;
-  }
-#else
   mpi_errno=CheckSpaceType(win_ptr,info,&noncontig);
   comm_size = (*win_ptr)->comm_ptr->local_size;
   MPID_getSharedSegment(size, disp_unit,comm_ptr, win_ptr, &pageSize, &noncontig);
@@ -476,6 +496,7 @@ MPID_Win_allocate_shared(MPI_Aint     size,
   mpi_errno = MPIDI_Win_allgather(size,win_ptr);
   if (mpi_errno != MPI_SUCCESS)
       return mpi_errno;
+
   win->mpid.info[0].base_addr = win->base;
   if (comm_size > 1) {
      char *cur_base = (*win_ptr)->base;
@@ -492,7 +513,6 @@ MPID_Win_allocate_shared(MPI_Aint     size,
            }
       }
   }
-#endif
 
   *(void**) base_ptr = (void *) win->mpid.info[rank].base_addr;
 

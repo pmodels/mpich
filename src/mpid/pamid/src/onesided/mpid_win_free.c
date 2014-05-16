@@ -31,15 +31,6 @@ int MPIDI_SHM_Win_free(MPID_Win **win_ptr)
   int    rc;
   int mpi_errno = MPI_SUCCESS;
 
-#ifdef __BGQ__
-  if ((*win_ptr)->comm_ptr->rank == 0) {
-    MPIDI_SHM_MUTEX_DESTROY(*win_ptr);
-    MPIU_Free ((*win_ptr)->base);
-  }
-  (*win_ptr)->mpid.shm = NULL;
-#endif
-
-#ifdef __PE__
   /* Free shared memory region */
   /* free shm_base_addrs that's only used for shared memory windows */
   if ((*win_ptr)->mpid.shm->allocated) {
@@ -48,17 +39,23 @@ int MPIDI_SHM_Win_free(MPID_Win **win_ptr)
     if ((*win_ptr)->comm_ptr->rank == 0) {
       MPIDI_SHM_MUTEX_DESTROY(*win_ptr);
       }
+#ifdef USE_SYSV_SHM
     mpi_errno = shmdt((*win_ptr)->mpid.shm->base_addr);
     if ((*win_ptr)->comm_ptr->rank == 0) {
 	rc=shmctl((*win_ptr)->mpid.shm->shm_id,IPC_RMID,NULL);
 	MPIU_ERR_CHKANDJUMP((rc == -1), errno,MPI_ERR_RMA_SHARED, "**shmctl");
     }
+#elif USE_MMAP_SHM
+    munmap ((*win_ptr)->mpid.shm->base_addr, (*win_ptr)->mpid.shm->segment_len);
+    if (0 == (*win_ptr)->comm_ptr->rank) shm_unlink ((*win_ptr)->mpid.shm->shm_key);
+#else
+    MPID_Abort();
+#endif
   } else {/* one task on a node */
     MPIU_Free((*win_ptr)->base);
   }
   MPIU_Free((*win_ptr)->mpid.shm);
   (*win_ptr)->mpid.shm = NULL;
-#endif
 
  fn_fail:
   return mpi_errno;

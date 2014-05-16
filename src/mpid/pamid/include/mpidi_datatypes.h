@@ -457,7 +457,11 @@ typedef struct MPIDI_Win_shm_t
                                                  region associated with it */
     void *base_addr;                /* base address of shared memory region */
     MPI_Aint segment_len;           /* size of shared memory region         */
-    uint32_t  shm_id;                /* shared memory id                    */
+    union
+    {
+      uint32_t shm_id;                /* shared memory id - sysv            */
+      char     shm_key[64];         /* shared memory key - posix            */
+    };
     int       *shm_count;
     MPIDI_SHM_MUTEX *mutex_lock;    /* shared memory windows -- lock for    */
                                      /*     accumulate/atomic operations     */
