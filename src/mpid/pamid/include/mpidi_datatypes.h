@@ -36,6 +36,8 @@
 #include "pami.h"
 #include "mpidi_trace.h"
 
+#include "opa_primitives.h"
+
 #if (MPIU_HANDLE_ALLOCATION_METHOD == MPIU_HANDLE_ALLOCATION_THREAD_LOCAL) && defined(__BGQ__)
 struct MPID_Request;
 typedef struct
@@ -442,6 +444,12 @@ typedef struct MPIDI_Win_info
 } MPIDI_Win_info;
 
 typedef pthread_mutex_t MPIDI_SHM_MUTEX;
+
+typedef struct MPIDI_Win_shm_ctrl_t
+{
+  MPIDI_SHM_MUTEX mutex_lock;
+  OPA_int_t       active;
+} MPIDI_Win_shm_ctrl_t;
 
 typedef struct MPIDI_Win_shm_t
 {
