@@ -33,9 +33,8 @@
                                       /* in PMD (mp_pmd.c) as well.        */
 
 extern int mpidi_dynamic_tasking;
-#define MPIDI_PAGESIZE ((MPI_Aint)pageSize)
-#define MPIDI_PAGESIZE_MASK (~(MPIDI_PAGESIZE-1))
-#define MPIDI_ROUND_UP_PAGESIZE(x) ((((MPI_Aint)x)+(~MPIDI_PAGESIZE_MASK)) & MPIDI_PAGESIZE_MASK)
+#define MPIDI_PAGESIZE_MASK(y) (~(((MPI_Aint)y)-1))
+#define MPIDI_ROUND_UP_PAGESIZE(x,y) ((((MPI_Aint)x)+(~MPIDI_PAGESIZE_MASK(y))) & MPIDI_PAGESIZE_MASK(y))
 #define ALIGN_BOUNDARY 128     /* Align data structures to cache line */
 #define PAD_SIZE(s) (ALIGN_BOUNDARY - (sizeof(s) & (ALIGN_BOUNDARY-1)))
 
@@ -189,7 +188,7 @@ MPID_getSharedSegment(MPI_Aint        size,
     if (comm_size == 1) {
          if (size > 0) {
              if (*noncontig) 
-                 new_size = MPIDI_ROUND_UP_PAGESIZE(size);
+                 new_size = MPIDI_ROUND_UP_PAGESIZE(size,pageSize);
              else 
                  new_size = size;
              *base_pp = MPIU_Malloc(new_size);
@@ -219,7 +218,7 @@ MPID_getSharedSegment(MPI_Aint        size,
              len = tmp_buf[i];
              if (*noncontig)
                 /* Round up to next page size */
-                 win->mpid.shm->segment_len += MPIDI_ROUND_UP_PAGESIZE(len); 
+                 win->mpid.shm->segment_len += MPIDI_ROUND_UP_PAGESIZE(len,pageSize);
              else
                  win->mpid.shm->segment_len += len;
           }
@@ -447,7 +446,7 @@ MPID_Win_allocate_shared(MPI_Aint     size,
           if (size) {
               if (noncontig)  
                   /* Round up to next page size */
-                   win->mpid.info[i].base_addr =(void *) ((MPI_Aint) cur_base + (MPI_Aint) MPIDI_ROUND_UP_PAGESIZE(size));
+                   win->mpid.info[i].base_addr =(void *) ((MPI_Aint) cur_base + (MPI_Aint) MPIDI_ROUND_UP_PAGESIZE(size,pageSize));
                 else
                     win->mpid.info[i].base_addr = (void *) ((MPI_Aint) cur_base + (MPI_Aint) size);
                 cur_base = win->mpid.info[i].base_addr;
