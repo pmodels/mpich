@@ -41,38 +41,23 @@ extern int mpidi_dynamic_tasking;
 
 
 int CheckRankOnNode(MPID_Comm  * comm_ptr,int *onNode ) {
-      int comm_size,i;
-      int mpi_errno=PAMI_SUCCESS;
+    int comm_size, i;
+    int mpi_errno = PAMI_SUCCESS;
 
-      comm_size = comm_ptr->local_size;
+    comm_size = comm_ptr->local_size;
 
-      *onNode=1;
+    *onNode = 1;
 
-#ifdef __PE__
-        for (i=0; i< comm_size; i++) {
-          if (comm_ptr->intranode_table[i] == -1) {
-            *onNode=0;
+    for (i = 0; i < comm_size; i++) {
+        if (comm_ptr->intranode_table[i] == -1) {
+            *onNode = 0;
             break;
-          }
-      }
-#else
-#ifdef PAMIX_IS_LOCAL_TASK
-      for (i=0; i< comm_size; i++) {
-        if (!PAMIX_Task_is_local(comm_ptr->vcr[i]->taskid)) {
-          *onNode=0;
-          break;
         }
-      } 
-#else
-      if (comm_ptr->intranode_table == NULL)
-        *onNode = 0;
-#endif
-#endif
-
+     }
 
      if (*onNode== 0) {
-      MPIU_ERR_SETANDSTMT(mpi_errno, MPI_ERR_RMA_CONFLICT,
-                          return mpi_errno, "**rmaconflict");
+         MPIU_ERR_SETANDSTMT(mpi_errno, MPI_ERR_RMA_CONFLICT,
+                             return mpi_errno, "**rmaconflict");
      }
 
      return mpi_errno;
