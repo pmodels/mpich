@@ -1554,6 +1554,7 @@ AC_OUTPUT(maint/testmerge \
 	  f08/attr/Makefile \
 	  f08/comm/Makefile \
 	  f08/rma/Makefile \
+	  f08/subarray/Makefile \
           cxx/Makefile \
           cxx/util/Makefile \
           cxx/attr/Makefile \
