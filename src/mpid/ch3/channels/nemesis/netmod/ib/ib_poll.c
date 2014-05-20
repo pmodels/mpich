@@ -1262,6 +1262,8 @@ int MPID_nem_ib_recv_buf_released(struct MPIDI_VC *vc, void *user_data)
                             headtail->tail, headtail->head);
                 }
                 vc_ib->ibcom->remote_ringbuf->remote_released[index_tail / 64] &= ~(1ULL << (index_tail & 63));
+
+                index_tail = (uint16_t)(index_tail + 1) % vc_ib->ibcom->remote_ringbuf->nslot;
             }
             else {
                 break;
