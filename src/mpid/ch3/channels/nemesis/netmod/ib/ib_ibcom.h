@@ -483,6 +483,7 @@ typedef struct MPID_nem_ib_com {
        wait until all the onnection request transactions ends before
        freeing scratch-pad QP.*/
     int outstanding_connection_tx; 
+    int incoming_connection_tx;
 
 } MPID_nem_ib_com_t;
 

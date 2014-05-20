@@ -105,6 +105,9 @@ typedef GENERIC_Q_DECL(struct MPID_Request) MPID_nem_ib_lmtq_t;
 #define MPID_NEM_IB_CM_LOCAL_QP_RTS 8
 #define MPID_NEM_IB_CM_ESTABLISHED 15
 
+#define is_conn_established(rank) \
+    (VC_FIELD(MPID_nem_ib_conns[rank].vc, connection_state) == MPID_NEM_IB_CM_ESTABLISHED)
+
 typedef struct {
     char *data;
     int length;
@@ -120,7 +123,10 @@ enum MPID_nem_ib_cm_cmd_types {
     MPID_NEM_IB_CM_ACK1,
     MPID_NEM_IB_CM_ACK2,
     MPID_NEM_IB_RINGBUF_ASK_FETCH,
-    MPID_NEM_IB_RINGBUF_ASK_CAS
+    MPID_NEM_IB_RINGBUF_ASK_CAS,
+    MPID_NEM_IB_CM_CAS_RELEASE,
+    MPID_NEM_IB_CM_ALREADY_ESTABLISHED,
+    MPID_NEM_IB_CM_RESPONDER_IS_CONNECTING
 };
 
 /* Packet types of connection protocol */
@@ -263,6 +269,12 @@ typedef GENERIC_Q_DECL(MPID_nem_ib_cm_req_t) MPID_nem_ib_cm_sendq_t;
     (cmd)->tail_flag.tail_flag = MPID_NEM_IB_COM_MAGIC; \
 }
 
+#define MPID_NEM_IB_CM_COMPOSE_CAS_RELEASE(cmd, req) {  \
+    (cmd)->type = MPID_NEM_IB_CM_CAS_RELEASE; \
+    (cmd)->initiator_req = (req); \
+    (cmd)->tail_flag.tail_flag = MPID_NEM_IB_COM_MAGIC; \
+}
+
 #define MPID_NEM_IB_CM_COMPOSE_SYNACK(cmd, req, _initiator_req) {      \
     (cmd)->type = MPID_NEM_IB_CM_SYNACK;                                \
     MPID_NEM_IB_CM_COMPOSE_NETWORK_INFO((cmd), (req)->initiator_rank);  \
@@ -270,6 +282,13 @@ typedef GENERIC_Q_DECL(MPID_nem_ib_cm_req_t) MPID_nem_ib_cm_sendq_t;
     (cmd)->initiator_req = (_initiator_req); \ 
     (cmd)->responder_req = (req); \ 
     (cmd)->remote_vc = MPID_nem_ib_conns[req->initiator_rank].vc; \ 
+    (cmd)->tail_flag.tail_flag = MPID_NEM_IB_COM_MAGIC;    \
+}
+
+#define MPID_NEM_IB_CM_COMPOSE_END_CM(cmd, req, _initiator_req, _type) {      \
+    (cmd)->type = _type;                                \
+    (cmd)->initiator_req = (_initiator_req); \
+    (cmd)->responder_req = (req); \
     (cmd)->tail_flag.tail_flag = MPID_NEM_IB_COM_MAGIC;    \
 }
 

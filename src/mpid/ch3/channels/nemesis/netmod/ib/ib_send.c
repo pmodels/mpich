@@ -1243,6 +1243,7 @@ int MPID_nem_ib_cm_progress()
     int ibcom_errno;
     MPID_nem_ib_cm_req_t *sreq, *prev_sreq;
     MPID_nem_ib_cm_cmd_shadow_t* shadow;
+    int is_established = 0;
 
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_IB_CM_PROGRESS);
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_IB_CM_PROGRESS);
@@ -1261,6 +1262,12 @@ int MPID_nem_ib_cm_progress()
 
             switch (sreq->state) {
             case MPID_NEM_IB_CM_CAS:
+                if (is_conn_established(sreq->responder_rank)) {
+                    dprintf("cm_progress,cm_cas,connection is already established\n");
+                    is_established = 1;
+                    break;
+                }
+
                 /* This comparison is OK if the diff is within 63-bit range */
                 if (MPID_nem_ib_diff63(MPID_nem_ib_progress_engine_vt, sreq->retry_decided) <
                     sreq->retry_backoff) {
@@ -1285,12 +1292,42 @@ int MPID_nem_ib_cm_progress()
                                     "**MPID_nem_ib_cm_connect_cas_core");
                 break;
             case MPID_NEM_IB_CM_SYN:
+                if (is_conn_established(sreq->responder_rank)) {
+                    /* Connection was established while SYN command was enqueued.
+                     * So we replace SYN with CAS_RELEASE, and send. */
+
+                    /* override req->type */
+                    ((MPID_nem_ib_cm_cmd_syn_t*)&sreq->cmd)->type = MPID_NEM_IB_CM_CAS_RELEASE;
+                    ((MPID_nem_ib_cm_cmd_syn_t*)&sreq->cmd)->initiator_rank = MPID_nem_ib_myrank;
+
+                    /* Initiator does not receive SYNACK and ACK2, so we decrement incoming counter here. */
+                    sreq->ibcom->incoming_connection_tx -= 2;
+
+                    shadow =
+                        (MPID_nem_ib_cm_cmd_shadow_t *)MPIU_Malloc(sizeof(MPID_nem_ib_cm_cmd_shadow_t));
+
+                    /* override req->state */
+                    shadow->type = sreq->state = MPID_NEM_IB_CM_CAS_RELEASE;
+                    shadow->req = sreq;
+                    dprintf("shadow=%p,shadow->req=%p\n", shadow, shadow->req);
+                    mpi_errno =
+                        MPID_nem_ib_cm_cmd_core(sreq->responder_rank, shadow,
+                                                (void *)(&sreq->cmd),
+                                                sizeof(MPID_nem_ib_cm_cmd_synack_t), 1 /* syn:1 */, 0);
+                    MPIU_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER,
+                                        "**MPID_nem_ib_cm_send_core");
+                    break;
+                }
+
                 /* The initiator acqurire slot for the responder when sending syn */
                 if(MPID_nem_ib_diff16(MPID_nem_ib_cm_ringbuf_head,
                                       MPID_nem_ib_cm_ringbuf_tail) >= MPID_NEM_IB_CM_NSEG) {
                     goto next;
                 }
                 ((MPID_nem_ib_cm_cmd_syn_t*)&sreq->cmd)->responder_ringbuf_index = MPID_nem_ib_cm_ringbuf_head;
+                sreq->responder_ringbuf_index = MPID_nem_ib_cm_ringbuf_head;
+                ((MPID_nem_ib_cm_cmd_syn_t*)&sreq->cmd)->initiator_rank = MPID_nem_ib_myrank;
+
                 MPID_nem_ib_cm_ringbuf_head++;
                 shadow =
                     (MPID_nem_ib_cm_cmd_shadow_t *)MPIU_Malloc(sizeof(MPID_nem_ib_cm_cmd_shadow_t));
@@ -1304,6 +1341,21 @@ int MPID_nem_ib_cm_progress()
                 MPIU_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER, 
                                     "**MPID_nem_ib_cm_send_core"); 
                 break;
+            case MPID_NEM_IB_CM_CAS_RELEASE:
+                ((MPID_nem_ib_cm_cmd_syn_t*)&sreq->cmd)->initiator_rank = MPID_nem_ib_myrank;
+
+                shadow =
+                    (MPID_nem_ib_cm_cmd_shadow_t *)MPIU_Malloc(sizeof(MPID_nem_ib_cm_cmd_shadow_t));
+                shadow->type = sreq->state;
+                shadow->req = sreq;
+                dprintf("shadow=%p,shadow->req=%p\n", shadow, shadow->req);
+                mpi_errno =
+                    MPID_nem_ib_cm_cmd_core(sreq->responder_rank, shadow,
+                                            (void *)(&sreq->cmd),
+                                            sizeof(MPID_nem_ib_cm_cmd_synack_t), 1 /* syn:1 */, 0);
+                MPIU_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER,
+                                    "**MPID_nem_ib_cm_send_core");
+                break;
             case MPID_NEM_IB_CM_SYNACK:
                 /* The responder acquire slot for the initiator when sending synack */
                 if(MPID_nem_ib_diff16(MPID_nem_ib_cm_ringbuf_head,
@@ -1311,6 +1363,7 @@ int MPID_nem_ib_cm_progress()
                     goto next;
                 }
                 ((MPID_nem_ib_cm_cmd_synack_t*)&sreq->cmd)->initiator_ringbuf_index = MPID_nem_ib_cm_ringbuf_head;
+                sreq->initiator_ringbuf_index = MPID_nem_ib_cm_ringbuf_head;
                 MPID_nem_ib_cm_ringbuf_head++;
                 shadow =
                     (MPID_nem_ib_cm_cmd_shadow_t *)MPIU_Malloc(sizeof(MPID_nem_ib_cm_cmd_shadow_t));
@@ -1350,6 +1403,20 @@ int MPID_nem_ib_cm_progress()
                 MPIU_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER, 
                                     "**MPID_nem_ib_cm_send_core"); 
                 break;
+            case MPID_NEM_IB_CM_ALREADY_ESTABLISHED:
+            case MPID_NEM_IB_CM_RESPONDER_IS_CONNECTING:
+                shadow =
+                    (MPID_nem_ib_cm_cmd_shadow_t *)MPIU_Malloc(sizeof(MPID_nem_ib_cm_cmd_shadow_t));
+                shadow->type = sreq->state;
+                shadow->req = sreq;
+                dprintf("shadow=%p,shadow->req=%p\n", shadow, shadow->req);
+                mpi_errno =
+                    MPID_nem_ib_cm_cmd_core(sreq->initiator_rank, shadow,
+                                            (void *)(&sreq->cmd),
+                                            sizeof(MPID_nem_ib_cm_cmd_synack_t), 0, sreq->ringbuf_index);
+                MPIU_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER,
+                                    "**MPID_nem_ib_cm_send_core");
+                break;
             default:
                 dprintf("cm_progress,unknown state=%d\n", sreq->state);
                 assert(0);
@@ -1370,6 +1437,23 @@ int MPID_nem_ib_cm_progress()
             /* save sreq->dev.next (and sreq) because decrementing reference-counter might free sreq */
             MPID_nem_ib_cm_req_t *tmp_sreq = sreq;
             sreq = MPID_nem_ib_cm_sendq_next(sreq);
+
+            if (is_established) {
+                dprintf("cm_progress,destroy connect-op\n");
+
+                /* don't connect */
+                tmp_sreq->ibcom->outstanding_connection_tx -= 1;
+
+                /* Let the guard down to let the following connection request go. */
+                VC_FIELD(MPID_nem_ib_conns[tmp_sreq->responder_rank].vc, connection_guard) = 0;
+
+                /* free memory : req->ref_count is 2, so call MPIU_Free() directly */
+//                MPID_nem_ib_cm_request_release(tmp_sreq);
+                MPIU_Free(tmp_sreq);
+
+                is_established = 0;
+                break;
+            }
             goto next_unlinked;
         next:
             prev_sreq = sreq;
@@ -1525,7 +1609,7 @@ int MPID_nem_ib_cm_cmd_core(int rank, MPID_nem_ib_cm_cmd_shadow_t* shadow, void*
             /* Prepare QP (RESET). Attempting to overlap it with preparing QP (RESET) on the responder side */
             ibcom_errno = MPID_nem_ib_com_open(ib_port, MPID_NEM_IB_COM_OPEN_RC, &MPID_nem_ib_conns[rank].fd);
             MPIU_ERR_CHKANDJUMP(ibcom_errno, mpi_errno, MPI_ERR_OTHER, "**MPID_nem_ib_com_open");
-            MPID_nem_ib_conns_ref_count++;
+
             VC_FIELD(MPID_nem_ib_conns[rank].vc, connection_state) |=
                 MPID_NEM_IB_CM_LOCAL_QP_RESET;
             

@@ -590,6 +590,9 @@ int MPID_nem_ib_init(MPIDI_PG_t * pg_p, int pg_rank, char **bc_val_p, int *val_m
         dprintf("init,fd[%d]=%d\n", i, MPID_nem_ib_conns[i].fd);
     }
 #endif
+#else /* define(MPID_NEM_IB_ONDEMAND)  */
+    /* We need to communicate with all other ranks in close sequence.  */
+    MPID_nem_ib_conns_ref_count = MPID_nem_ib_nranks - 1;
 #endif
 
     MPIU_Free(remote_rank_str);
@@ -1050,7 +1053,8 @@ int MPID_nem_ib_vc_terminate(MPIDI_VC_t * vc)
     /* Empty sendq */
     while (!MPID_nem_ib_sendq_empty(vc_ib->sendq) ||
            VC_FIELD(vc, pending_sends) > 0 ||
-           MPID_nem_ib_scratch_pad_ibcoms[vc->pg_rank]->outstanding_connection_tx > 0) {
+           MPID_nem_ib_scratch_pad_ibcoms[vc->pg_rank]->outstanding_connection_tx > 0 ||
+           MPID_nem_ib_scratch_pad_ibcoms[vc->pg_rank]->incoming_connection_tx > 0) {
         /* mimic ib_poll because vc_terminate might be called from ib_poll_eager */
         mpi_errno = MPID_nem_ib_send_progress(vc);
         MPIU_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**MPID_nem_ib_send_progress");

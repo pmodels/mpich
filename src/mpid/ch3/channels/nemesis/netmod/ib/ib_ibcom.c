@@ -388,6 +388,8 @@ static int MPID_nem_ib_com_clean(MPID_nem_ib_com_t * conp)
                 dprintf("ibcom,destroy MPID_nem_ib_rc_shared_rcq\n");
                 ib_errno = ibv_destroy_cq(MPID_nem_ib_rc_shared_rcq);
                 MPID_NEM_IB_COM_ERR_CHKANDJUMP(ib_errno, -1, dprintf("ibv_destroy_cq failed\n"));
+
+                MPID_nem_ib_rc_shared_rcq = NULL;
             }
 #if 0 /* It's not used */
             retval = munmap(conp->icom_mem[MPID_NEM_IB_COM_RDMAWR_FROM], MPID_NEM_IB_COM_RDMABUF_SZ);
@@ -2028,7 +2030,8 @@ int MPID_nem_ib_com_put_scratch_pad(int condesc, uint64_t wr_id, uint64_t offset
     /* Use inline so that we don't need to worry about overwriting write-from buffer */
 //    assert(sz <= conp->max_inline_data);
 
-    assert(conp->icom_mem[MPID_NEM_IB_COM_SCRATCH_PAD_FROM] == laddr);
+    /* When cm_progress calls this function, 'comp->icom_mem' and 'laddr' are not equal. */
+//    assert(conp->icom_mem[MPID_NEM_IB_COM_SCRATCH_PAD_FROM] == laddr);
 //    memcpy(conp->icom_mem[MPID_NEM_IB_COM_SCRATCH_PAD_FROM], laddr, sz);
 
     /* Instead of using the pre-mmaped memory (comp->icom_mem[MPID_NEM_IB_COM_SCRATCH_PAD_FROM]),
