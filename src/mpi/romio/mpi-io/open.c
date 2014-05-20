@@ -48,7 +48,7 @@ int MPI_File_open(MPI_Comm comm, ROMIO_CONST char *filename, int amode,
 {
     int error_code = MPI_SUCCESS, file_system, flag, tmp_amode=0, rank;
     char *tmp;
-    MPI_Comm dupcomm;
+    MPI_Comm dupcomm = MPI_COMM_NULL;
     ADIOI_Fns *fsops;
     static char myname[] = "MPI_FILE_OPEN";
 #ifdef MPI_hpux
@@ -106,7 +106,12 @@ int MPI_File_open(MPI_Comm comm, ROMIO_CONST char *filename, int amode,
     MPIR_MPIOInit(&error_code);
     if (error_code != MPI_SUCCESS) goto fn_fail;
 
-/* check if amode is the same on all processes */
+/* check if amode is the same on all processes: at first glance, one might try
+ * to use a built-in operator like MPI_BAND, but we need every mpi process to
+ * agree the amode was not the same.  Consider process A with
+ * MPI_MODE_CREATE|MPI_MODE_RDWR, and B with MPI_MODE_RDWR:  MPI_BAND yields
+ * MPI_MODE_RDWR.  A determines amodes are different, but B proceeds having not
+ * detected an error */
     MPI_Allreduce(&amode, &tmp_amode, 1, MPI_INT, ADIO_same_amode, dupcomm);
 
     if (tmp_amode == ADIO_AMODE_NOMATCH) {
@@ -149,7 +154,6 @@ int MPI_File_open(MPI_Comm comm, ROMIO_CONST char *filename, int amode,
 
     /* --BEGIN ERROR HANDLING-- */
     if (error_code != MPI_SUCCESS) {
-        MPI_Comm_free(&dupcomm);
 	goto fn_fail;
     }
     /* --END ERROR HANDLING-- */
@@ -194,6 +198,7 @@ fn_exit:
     return error_code;
 fn_fail:
     /* --BEGIN ERROR HANDLING-- */
+    if (dupcomm != MPI_COMM_NULL) MPI_Comm_free(&dupcomm);
     error_code = MPIO_Err_return_file(MPI_FILE_NULL, error_code);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
