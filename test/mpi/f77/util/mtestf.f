@@ -117,7 +117,8 @@ C
         include 'mpif.h'
         integer can_spawn
         integer errs
-        integer val, ierror
+        integer(kind=MPI_ADDRESS_KIND) val
+        integer ierror
         logical flag
         integer comm_size
 
