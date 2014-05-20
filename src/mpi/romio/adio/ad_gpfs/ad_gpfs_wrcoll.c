@@ -422,6 +422,7 @@ void gpfs_wr_access_end(int fd, ADIO_Offset offset, ADIO_Offset length)
         ADIOI_Assert(rc == 0);
 }
 
+#ifdef BGQPLATFORM
 /* my_start, my_end: this processes file domain.  coudd be -1,-1 for "no i/o"
  * fd_start, fd_end: arrays of length fd->hints->cb_nodes specifying all file domains */
 int gpfs_find_access_for_ion(ADIO_File fd,
@@ -466,7 +467,7 @@ int gpfs_find_access_for_ion(ADIO_File fd,
     ADIOI_Free(rank_to_ionode);
     return 1;
 }
-
+#endif // BGQPLATFORM
 
 
 /* If successful, error_code is set to MPI_SUCCESS.  Otherwise an error
@@ -554,6 +555,7 @@ static void ADIOI_Exch_and_write(ADIO_File fd, const void *buf, MPI_Datatype
 	gpfs_wr_access_start(fd->fd_sys, st_loc, end_loc - st_loc);
     }
     ADIO_Offset st_loc_ion, end_loc_ion, needs_gpfs_access_cleanup=0;
+#ifdef BGQPLATFORM
     if (getenv("ROMIO_GPFS_DECLARE_ION_ACCESS")!=NULL) {
 	if (gpfs_find_access_for_ion(fd, st_loc, end_loc, fd_start, fd_end,
 		    &st_loc_ion, &end_loc_ion)) {
@@ -561,6 +563,7 @@ static void ADIOI_Exch_and_write(ADIO_File fd, const void *buf, MPI_Datatype
 	    needs_gpfs_access_cleanup=1;
 	}
     }
+#endif
 
     MPI_Allreduce(&ntimes, &max_ntimes, 1, MPI_INT, MPI_MAX,
 		  fd->comm); 
