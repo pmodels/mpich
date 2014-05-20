@@ -45,7 +45,7 @@ int main( int argc, char *argv[] )
 	    int *buf[MAX_NMSGS];
 
 	    for (i=0; i<nmsg; i++) {
-		buf[i] = (int *)malloc( msgSize );
+		buf[i] = (int *)malloc( msgSize * sizeof(int) );
 		if (!buf[i]) {
 		    fprintf( stderr, "Unable to allocate %d bytes\n", 
 			     msgSize );
@@ -59,11 +59,11 @@ int main( int argc, char *argv[] )
 			  MPI_STATUS_IGNORE );
 	    /* Try to fill up the outgoing message buffers */
 	    for (i=0; i<nmsg; i++) {
-		MPI_Isend( buf[i], msgSize, MPI_CHAR, partner, testnum, comm,
+		MPI_Isend( buf[i], msgSize, MPI_INT, partner, testnum, comm,
 			   &r[i] );
 	    }
 	    for (i=0; i<nmsg; i++) {
-		MPI_Recv( buf[i], msgSize, MPI_CHAR, partner, testnum, comm,
+		MPI_Recv( buf[i], msgSize, MPI_INT, partner, testnum, comm,
 			  MPI_STATUS_IGNORE );
 	    }
 	    MPI_Waitall( nmsg, r, MPI_STATUSES_IGNORE );
@@ -76,12 +76,12 @@ int main( int argc, char *argv[] )
 	    /* Try to fill up the outgoing message buffers */
 	    tsend = MPI_Wtime();
 	    for (i=0; i<nmsg; i++) {
-		MPI_Isend( buf[i], msgSize, MPI_CHAR, partner, testnum, comm,
+		MPI_Isend( buf[i], msgSize, MPI_INT, partner, testnum, comm,
 			   &r[i] );
 	    }
 	    tsend = MPI_Wtime() - tsend;
 	    for (i=0; i<nmsg; i++) {
-		MPI_Recv( buf[i], msgSize, MPI_CHAR, partner, testnum, comm,
+		MPI_Recv( buf[i], msgSize, MPI_INT, partner, testnum, comm,
 			  MPI_STATUS_IGNORE );
 	    }
 	    MPI_Waitall( nmsg, r, MPI_STATUSES_IGNORE );
