@@ -60,7 +60,7 @@ int main(int argc, char **argv)
     int *rdispls = NULL;
     int *sendtypes = NULL;
     int *recvtypes = NULL;
-    char *buf_alias = NULL;
+    signed char *buf_alias = NULL;
     MPI_Request req;
 
     MPI_Init(&argc, &argv);
@@ -96,7 +96,7 @@ int main(int argc, char **argv)
     }
 
     /* MPI_Ibcast (again, but designed to stress scatter/allgather impls) */
-    buf_alias = (char *)buf;
+    buf_alias = (signed char *)buf;
     my_assert(COUNT*size*sizeof(int) > PRIME); /* sanity */
     for (i = 0; i < PRIME; ++i) {
         if (rank == 0)
@@ -107,7 +107,7 @@ int main(int argc, char **argv)
     for (i = PRIME; i < COUNT * size * sizeof(int); ++i) {
         buf_alias[i] = 0xbf;
     }
-    MPI_Ibcast(buf, PRIME, MPI_SIGNED_CHAR, 0, MPI_COMM_WORLD, &req);
+    MPI_Ibcast(buf_alias, PRIME, MPI_SIGNED_CHAR, 0, MPI_COMM_WORLD, &req);
     MPI_Wait(&req, MPI_STATUS_IGNORE);
     for (i = 0; i < PRIME; ++i) {
         if (buf_alias[i] != i)

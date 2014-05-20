@@ -141,7 +141,7 @@ static void start_random_nonblocking(MPI_Comm comm, unsigned int rndnum, MPI_Req
     int *rdispls = NULL;
     int *sendtypes = NULL;
     int *recvtypes = NULL;
-    char *buf_alias = NULL;
+    signed char *buf_alias = NULL;
 
     MPI_Comm_rank(comm, &rank);
     MPI_Comm_size(comm, &size);
@@ -177,7 +177,7 @@ static void start_random_nonblocking(MPI_Comm comm, unsigned int rndnum, MPI_Req
 
         case 1: /* MPI_Ibcast (again, but designed to stress scatter/allgather impls) */
             /* FIXME fiddle with PRIME and buffer allocation s.t. PRIME is much larger (1021?) */
-            buf_alias = (char *)buf;
+            buf_alias = (signed char *)buf;
             my_assert(COUNT*size*sizeof(int) > PRIME); /* sanity */
             for (i = 0; i < PRIME; ++i) {
                 if (rank == 0)
@@ -188,7 +188,7 @@ static void start_random_nonblocking(MPI_Comm comm, unsigned int rndnum, MPI_Req
             for (i = PRIME; i < COUNT * size * sizeof(int); ++i) {
                 buf_alias[i] = 0xbf;
             }
-            MPI_Ibcast(buf, PRIME, MPI_SIGNED_CHAR, 0, comm, req);
+            MPI_Ibcast(buf_alias, PRIME, MPI_SIGNED_CHAR, 0, comm, req);
             break;
 
         case 2: /* MPI_Ibarrier */
