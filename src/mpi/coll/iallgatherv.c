@@ -796,13 +796,25 @@ int MPI_Iallgatherv(const void *sendbuf, int sendcount, MPI_Datatype sendtype, v
             MPID_Comm_valid_ptr(comm_ptr, mpi_errno);
             if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 
-            if (sendbuf != MPI_IN_PLACE && HANDLE_GET_KIND(sendtype) != HANDLE_KIND_BUILTIN) {
-                MPID_Datatype *sendtype_ptr = NULL;
-                MPID_Datatype_get_ptr(sendtype, sendtype_ptr);
-                MPID_Datatype_valid_ptr(sendtype_ptr, mpi_errno);
-                if (mpi_errno != MPI_SUCCESS) goto fn_fail;
-                MPID_Datatype_committed_ptr(sendtype_ptr, mpi_errno);
-                if (mpi_errno != MPI_SUCCESS) goto fn_fail;
+            if (sendbuf != MPI_IN_PLACE) {
+                if (HANDLE_GET_KIND(sendtype) != HANDLE_KIND_BUILTIN) {
+                    MPID_Datatype *sendtype_ptr = NULL;
+                    MPID_Datatype_get_ptr(sendtype, sendtype_ptr);
+                    MPID_Datatype_valid_ptr(sendtype_ptr, mpi_errno);
+                    if (mpi_errno != MPI_SUCCESS) goto fn_fail;
+                    MPID_Datatype_committed_ptr(sendtype_ptr, mpi_errno);
+                    if (mpi_errno != MPI_SUCCESS) goto fn_fail;
+                }
+
+                /* catch common aliasing cases */
+                if (comm_ptr->comm_kind == MPID_INTRACOMM &&
+                        sendtype == recvtype &&
+                        recvcounts[comm_ptr->rank] != 0 &&
+                        sendcount != 0) {
+                    int recvtype_size;
+                    MPID_Datatype_get_size_macro(recvtype, recvtype_size);
+                    MPIR_ERRTEST_ALIAS_COLL(sendbuf, (char*)recvbuf + displs[comm_ptr->rank]*recvtype_size, mpi_errno);
+                }
             }
 
             MPIR_ERRTEST_ARGNULL(recvcounts,"recvcounts", mpi_errno);

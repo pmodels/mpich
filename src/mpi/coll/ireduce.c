@@ -862,6 +862,8 @@ int MPI_Ireduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype data
     {
         MPID_BEGIN_ERROR_CHECKS
         {
+            int rank;
+
             MPID_Comm_valid_ptr(comm_ptr, mpi_errno);
             if (HANDLE_GET_KIND(datatype) != HANDLE_KIND_BUILTIN) {
                 MPID_Datatype *datatype_ptr = NULL;
@@ -883,7 +885,24 @@ int MPI_Ireduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype data
             if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 
             MPIR_ERRTEST_ARGNULL(request,"request", mpi_errno);
-            /* TODO more checks may be appropriate (counts, in_place, buffer aliasing, etc) */
+
+            if (comm_ptr->comm_kind == MPID_INTRACOMM) {
+                if (sendbuf != MPI_IN_PLACE)
+                    MPIR_ERRTEST_USERBUFFER(sendbuf,count,datatype,mpi_errno);
+
+                rank = comm_ptr->rank;
+                if (rank == root) {
+                    MPIR_ERRTEST_RECVBUF_INPLACE(recvbuf, count, mpi_errno);
+                    MPIR_ERRTEST_USERBUFFER(recvbuf,count,datatype,mpi_errno);
+                    if (count != 0 && sendbuf != MPI_IN_PLACE) {
+                        MPIR_ERRTEST_ALIAS_COLL(sendbuf, recvbuf, mpi_errno);
+                    }
+                }
+                else
+                    MPIR_ERRTEST_SENDBUF_INPLACE(sendbuf, count, mpi_errno);
+            }
+
+            /* TODO more checks may be appropriate (counts, in_place, etc) */
         }
         MPID_END_ERROR_CHECKS
     }

@@ -360,6 +360,11 @@ int MPI_Ialltoallw(const void *sendbuf, const int sendcounts[], const int sdispl
                 MPIR_ERRTEST_ARGNULL(sendcounts,"sendcounts", mpi_errno);
                 MPIR_ERRTEST_ARGNULL(sdispls,"sdispls", mpi_errno);
                 MPIR_ERRTEST_ARGNULL(sendtypes,"sendtypes", mpi_errno);
+
+                if (comm_ptr->comm_kind == MPID_INTRACOMM &&
+                        sendcounts == recvcounts &&
+                        sendtypes == recvtypes)
+                    MPIR_ERRTEST_ALIAS_COLL(sendbuf,recvbuf,mpi_errno);
             }
             MPIR_ERRTEST_ARGNULL(recvcounts,"recvcounts", mpi_errno);
             MPIR_ERRTEST_ARGNULL(rdispls,"rdispls", mpi_errno);
@@ -368,7 +373,7 @@ int MPI_Ialltoallw(const void *sendbuf, const int sendcounts[], const int sdispl
                 MPIU_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**sendbuf_inplace");
             }
             MPIR_ERRTEST_ARGNULL(request,"request", mpi_errno);
-            /* TODO more checks may be appropriate (counts, in_place, buffer aliasing, etc) */
+            /* TODO more checks may be appropriate (counts, in_place, etc) */
         }
         MPID_END_ERROR_CHECKS
     }

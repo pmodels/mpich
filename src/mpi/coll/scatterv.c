@@ -293,6 +293,12 @@ int MPI_Scatterv(const void *sendbuf, const int *sendcounts, const int *displs,
                             break;
                         }
                     }
+                    /* catch common aliasing cases */
+                    if (recvbuf != MPI_IN_PLACE && sendtype == recvtype && sendcounts[comm_ptr->rank] != 0 && recvcount != 0) {
+                        int sendtype_size;
+                        MPID_Datatype_get_size_macro(sendtype, sendtype_size);
+                        MPIR_ERRTEST_ALIAS_COLL(recvbuf, (char*)sendbuf + displs[comm_ptr->rank]*sendtype_size, mpi_errno);
+                    }
                 }
                 else 
                     MPIR_ERRTEST_RECVBUF_INPLACE(recvbuf, recvcount, mpi_errno);

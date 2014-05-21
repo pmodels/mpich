@@ -471,9 +471,12 @@ int MPI_Alltoallw(const void *sendbuf, const int sendcounts[],
                 MPIU_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**sendbuf_inplace");
             }
 
-            if (comm_ptr->comm_kind == MPID_INTRACOMM)
+            if (comm_ptr->comm_kind == MPID_INTRACOMM) {
                 comm_size = comm_ptr->local_size;
-            else
+
+                if (sendbuf != MPI_IN_PLACE && sendcounts == recvcounts && sendtypes == recvtypes)
+                    MPIR_ERRTEST_ALIAS_COLL(sendbuf, recvbuf, mpi_errno);
+            } else
                 comm_size = comm_ptr->remote_size;
 
             for (i=0; i<comm_size; i++) {

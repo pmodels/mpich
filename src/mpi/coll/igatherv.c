@@ -256,6 +256,13 @@ int MPI_Igatherv(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void
                             break;
                         }
                     }
+
+                    /* catch common aliasing cases */
+                    if (sendbuf != MPI_IN_PLACE && sendtype == recvtype && recvcounts[comm_ptr->rank] != 0 && sendcount != 0) {
+                        int recvtype_size;
+                        MPID_Datatype_get_size_macro(recvtype, recvtype_size);
+                        MPIR_ERRTEST_ALIAS_COLL(sendbuf, (char*)recvbuf + displs[comm_ptr->rank]*recvtype_size, mpi_errno);
+                    }
                 }
                 else
                     MPIR_ERRTEST_SENDBUF_INPLACE(sendbuf, sendcount, mpi_errno);

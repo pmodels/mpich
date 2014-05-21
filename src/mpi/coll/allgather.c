@@ -932,8 +932,18 @@ int MPI_Allgather(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
             MPID_Comm_valid_ptr( comm_ptr, mpi_errno );
             if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 
-	    if (comm_ptr->comm_kind == MPID_INTERCOMM)
+            if (comm_ptr->comm_kind == MPID_INTERCOMM) {
                 MPIR_ERRTEST_SENDBUF_INPLACE(sendbuf, sendcount, mpi_errno);
+            } else {
+                /* catch common aliasing cases */
+                if (sendbuf != MPI_IN_PLACE && sendtype == recvtype &&
+                        recvcount != 0 && sendcount != 0) {
+                    int recvtype_size;
+                    MPID_Datatype_get_size_macro(recvtype, recvtype_size);
+                    MPIR_ERRTEST_ALIAS_COLL(sendbuf, (char*)recvbuf + comm_ptr->rank*recvcount*recvtype_size, mpi_errno);
+                }
+            }
+
             if (sendbuf != MPI_IN_PLACE)
 	    {
                 MPIR_ERRTEST_COUNT(sendcount, mpi_errno);
@@ -961,10 +971,6 @@ int MPI_Allgather(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                 if (mpi_errno != MPI_SUCCESS) goto fn_fail;
             }
 	    MPIR_ERRTEST_USERBUFFER(recvbuf,recvcount,recvtype,mpi_errno);
-
-            /* catch common aliasing cases */
-            if (sendbuf != MPI_IN_PLACE && sendtype == recvtype && recvcount != 0 && sendcount != 0)
-                MPIR_ERRTEST_ALIAS_COLL(sendbuf,recvbuf,mpi_errno);
         }
         MPID_END_ERROR_CHECKS;
     }

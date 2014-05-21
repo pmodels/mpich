@@ -1057,6 +1057,16 @@ int MPI_Allgatherv(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                     if (mpi_errno != MPI_SUCCESS) goto fn_fail;
                 }
                 MPIR_ERRTEST_USERBUFFER(sendbuf,sendcount,sendtype,mpi_errno);
+
+                /* catch common aliasing cases */
+                if (comm_ptr->comm_kind == MPID_INTRACOMM &&
+                        sendtype == recvtype &&
+                        recvcounts[comm_ptr->rank] != 0 &&
+                        sendcount != 0) {
+                    int recvtype_size;
+                    MPID_Datatype_get_size_macro(recvtype, recvtype_size);
+                    MPIR_ERRTEST_ALIAS_COLL(sendbuf, (char*)recvbuf + displs[comm_ptr->rank]*recvtype_size, mpi_errno);
+                }
             }
 
             if (comm_ptr->comm_kind == MPID_INTRACOMM) 

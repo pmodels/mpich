@@ -772,6 +772,10 @@ int MPI_Iallreduce(const void *sendbuf, void *recvbuf, int count,
                 MPIR_ERRTEST_USERBUFFER(sendbuf,count,datatype,mpi_errno);
 
             MPIR_ERRTEST_ARGNULL(request,"request", mpi_errno);
+
+            if (comm_ptr->comm_kind == MPID_INTRACOMM && count != 0 && sendbuf != MPI_IN_PLACE)
+                MPIR_ERRTEST_ALIAS_COLL(sendbuf, recvbuf, mpi_errno);
+
             /* TODO more checks may be appropriate (counts, in_place, buffer aliasing, etc) */
         }
         MPID_END_ERROR_CHECKS

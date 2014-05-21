@@ -868,8 +868,12 @@ int MPI_Allreduce(const void *sendbuf, void *recvbuf, int count,
                 if (mpi_errno != MPI_SUCCESS) goto fn_fail;
             }
 
-	    if (comm_ptr->comm_kind == MPID_INTERCOMM)
+            if (comm_ptr->comm_kind == MPID_INTERCOMM) {
                 MPIR_ERRTEST_SENDBUF_INPLACE(sendbuf, count, mpi_errno);
+            } else {
+                if (count != 0 && sendbuf != MPI_IN_PLACE)
+                    MPIR_ERRTEST_ALIAS_COLL(sendbuf, recvbuf, mpi_errno);
+            }
             
             if (sendbuf != MPI_IN_PLACE) 
                 MPIR_ERRTEST_USERBUFFER(sendbuf,count,datatype,mpi_errno);
@@ -885,9 +889,6 @@ int MPI_Allreduce(const void *sendbuf, void *recvbuf, int count,
                 mpi_errno = 
                     ( * MPIR_OP_HDL_TO_DTYPE_FN(op) )(datatype); 
             }
-	    if (count != 0) {
-		MPIR_ERRTEST_ALIAS_COLL(sendbuf, recvbuf, mpi_errno);
-	    }
 	    if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 	}
         MPID_END_ERROR_CHECKS;

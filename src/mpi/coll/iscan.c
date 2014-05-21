@@ -441,7 +441,10 @@ int MPI_Iscan(const void *sendbuf, void *recvbuf, int count, MPI_Datatype dataty
             if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 
             MPIR_ERRTEST_ARGNULL(request,"request", mpi_errno);
-            /* TODO more checks may be appropriate (counts, in_place, buffer aliasing, etc) */
+
+            if (sendbuf != MPI_IN_PLACE)
+                MPIR_ERRTEST_ALIAS_COLL(sendbuf, recvbuf, mpi_errno);
+            /* TODO more checks may be appropriate (counts, in_place, etc) */
         }
         MPID_END_ERROR_CHECKS
     }

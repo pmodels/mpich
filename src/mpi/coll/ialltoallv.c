@@ -378,6 +378,12 @@ int MPI_Ialltoallv(const void *sendbuf, const int sendcounts[], const int sdispl
             }
 
             MPIR_ERRTEST_ARGNULL(request,"request", mpi_errno);
+
+            if (comm_ptr->comm_kind == MPID_INTRACOMM &&
+                    sendbuf != MPI_IN_PLACE &&
+                    sendcounts == recvcounts &&
+                    sendtype == recvtype)
+                MPIR_ERRTEST_ALIAS_COLL(sendbuf,recvbuf,mpi_errno);
             /* TODO more checks may be appropriate (counts, in_place, buffer aliasing, etc) */
         }
         MPID_END_ERROR_CHECKS

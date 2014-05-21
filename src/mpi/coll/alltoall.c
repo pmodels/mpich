@@ -845,6 +845,13 @@ int MPI_Alltoall(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                     MPID_Datatype_committed_ptr( sendtype_ptr, mpi_errno );
                     if (mpi_errno != MPI_SUCCESS) goto fn_fail;
                 }
+
+                if (comm_ptr->comm_kind == MPID_INTRACOMM &&
+                        sendbuf != MPI_IN_PLACE &&
+                        sendcount == recvcount &&
+                        sendtype == recvtype &&
+                        sendcount != 0)
+                    MPIR_ERRTEST_ALIAS_COLL(sendbuf,recvbuf,mpi_errno);
             }
 
 	    MPIR_ERRTEST_COUNT(recvcount, mpi_errno);

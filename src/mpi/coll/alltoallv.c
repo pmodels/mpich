@@ -469,9 +469,12 @@ int MPI_Alltoallv(const void *sendbuf, const int *sendcounts,
             MPID_Comm_valid_ptr( comm_ptr, mpi_errno );
             if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 
-            if (comm_ptr->comm_kind == MPID_INTRACOMM)
+            if (comm_ptr->comm_kind == MPID_INTRACOMM) {
                 comm_size = comm_ptr->local_size;
-            else
+
+                if (sendbuf != MPI_IN_PLACE && sendtype == recvtype && sendcounts == recvcounts)
+                    MPIR_ERRTEST_ALIAS_COLL(sendbuf, recvbuf, mpi_errno);
+            } else
                 comm_size = comm_ptr->remote_size;
 
             if (comm_ptr->comm_kind == MPID_INTERCOMM && sendbuf == MPI_IN_PLACE) {

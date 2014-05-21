@@ -1136,8 +1136,10 @@ int MPI_Reduce_scatter_block(const void *sendbuf, void *recvbuf,
             }
 
             MPIR_ERRTEST_RECVBUF_INPLACE(recvbuf, recvcount, mpi_errno);
-	    if (comm_ptr->comm_kind == MPID_INTERCOMM) 
+            if (comm_ptr->comm_kind == MPID_INTERCOMM) {
                 MPIR_ERRTEST_SENDBUF_INPLACE(sendbuf, recvcount, mpi_errno);
+            } else if (sendbuf != MPI_IN_PLACE)
+                MPIR_ERRTEST_ALIAS_COLL(sendbuf, recvbuf, mpi_errno)
 
             MPIR_ERRTEST_USERBUFFER(recvbuf,recvcount,datatype,mpi_errno);
             MPIR_ERRTEST_USERBUFFER(sendbuf,recvcount,datatype,mpi_errno); 
