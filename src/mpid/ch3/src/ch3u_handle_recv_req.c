@@ -380,8 +380,7 @@ int MPIDI_CH3_ReqHandler_GetRespDerivedDTComplete( MPIDI_VC_t *vc,
     /* --BEGIN ERROR HANDLING-- */
     if (mpi_errno != MPI_SUCCESS)
     {
-        MPIU_Object_set_ref(sreq, 0);
-        MPIDI_CH3_Request_destroy(sreq);
+        MPID_Request_release(sreq);
         sreq = NULL;
         MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**ch3|rmamsg");
     }
@@ -581,8 +580,7 @@ int MPIDI_CH3_ReqHandler_FOPComplete( MPIDI_VC_t *vc,
     /* --BEGIN ERROR HANDLING-- */
  fn_fail:
     if (resp_req != NULL) {
-        MPIU_Object_set_ref(resp_req, 0);
-        MPIDI_CH3_Request_destroy(resp_req);
+        MPID_Request_release(resp_req);
     }
     goto fn_exit;
     /* --END ERROR HANDLING-- */
@@ -1209,8 +1207,7 @@ static int do_simple_get(MPID_Win *win_ptr, MPIDI_Win_lock_queue *lock_queue)
     /* --BEGIN ERROR HANDLING-- */
     if (mpi_errno != MPI_SUCCESS)
     {
-        MPIU_Object_set_ref(req, 0);
-        MPIDI_CH3_Request_destroy(req);
+        MPID_Request_release(req);
 	MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**ch3|rmamsg");
     }
     /* --END ERROR HANDLING-- */

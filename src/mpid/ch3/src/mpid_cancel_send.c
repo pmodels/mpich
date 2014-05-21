@@ -67,8 +67,7 @@ int MPID_Cancel_send(MPID_Request * sreq)
              "send-to-self cancellation successful, sreq=0x%08x, rreq=0x%08x",
 						sreq->handle, rreq->handle));
 	    
-	    MPIU_Object_set_ref(rreq, 0);
-	    MPIDI_CH3_Request_destroy(rreq);
+            MPID_Request_release(rreq);
 	    
 	    MPIR_STATUS_SET_CANCEL_BIT(sreq->status, TRUE);
 	    /* no other thread should be waiting on sreq, so it is safe to 

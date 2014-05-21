@@ -449,8 +449,7 @@ static int send_msg(ptl_hdr_data_t ssend_flag, struct MPIDI_VC *vc, const void *
     return mpi_errno;
  fn_fail:
     if (sreq) {
-        MPIU_Object_set_ref(sreq, 0);
-        MPIDI_CH3_Request_destroy(sreq);
+        MPID_Request_release(sreq);
         sreq = NULL;
     }
     MPIU_CHKPMEM_REAP();

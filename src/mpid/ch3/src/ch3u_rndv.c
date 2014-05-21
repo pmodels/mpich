@@ -56,8 +56,7 @@ int MPIDI_CH3_RndvSend( MPID_Request **sreq_p, const void * buf, int count,
     /* --BEGIN ERROR HANDLING-- */
     if (mpi_errno != MPI_SUCCESS)
     {
-	MPIU_Object_set_ref(sreq, 0);
-	MPIDI_CH3_Request_destroy(sreq);
+        MPID_Request_release(sreq);
 	*sreq_p = NULL;
         MPIU_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**ch3|rtspkt");
     }
@@ -66,8 +65,7 @@ int MPIDI_CH3_RndvSend( MPID_Request **sreq_p, const void * buf, int count,
     {
 	if (rts_sreq->status.MPI_ERROR != MPI_SUCCESS)
 	{
-	    MPIU_Object_set_ref(sreq, 0);
-	    MPIDI_CH3_Request_destroy(sreq);
+            MPID_Request_release(sreq);
 	    *sreq_p = NULL;
             mpi_errno = rts_sreq->status.MPI_ERROR;
             MPID_Request_release(rts_sreq);

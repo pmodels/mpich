@@ -1498,16 +1498,14 @@ static int MPIDI_CH3I_Send_rma_msg(MPIDI_RMA_Op_t *rma_op, MPID_Win *win_ptr,
     /* --BEGIN ERROR HANDLING-- */
  fn_fail:
     if (resp_req) {
-        MPIU_Object_set_ref(resp_req, 0);
-        MPIDI_CH3_Request_destroy(resp_req);
+        MPID_Request_release(resp_req);
     }
     if (*request)
     {
         MPIU_CHKPMEM_REAP();
         if ((*request)->dev.datatype_ptr)
             MPID_Datatype_release((*request)->dev.datatype_ptr);
-        MPIU_Object_set_ref(*request, 0);
-        MPIDI_CH3_Request_destroy(*request);
+        MPID_Request_release(*request);
     }
     *request = NULL;
     goto fn_exit;
@@ -1621,8 +1619,7 @@ static int MPIDI_CH3I_Send_contig_acc_msg(MPIDI_RMA_Op_t *rma_op,
  fn_fail:
     if (*request)
     {
-        MPIU_Object_set_ref(*request, 0);
-        MPIDI_CH3_Request_destroy(*request);
+        MPID_Request_release(*request);
     }
     *request = NULL;
     goto fn_exit;
@@ -1772,13 +1769,11 @@ fn_exit:
     /* --BEGIN ERROR HANDLING-- */
 fn_fail:
     if (*request) {
-        MPIU_Object_set_ref(*request, 0);
-        MPIDI_CH3_Request_destroy(*request);
+        MPID_Request_release(*request);
     }
     *request = NULL;
     if (rmw_req) {
-        MPIU_Object_set_ref(rmw_req, 0);
-        MPIDI_CH3_Request_destroy(rmw_req);
+        MPID_Request_release(rmw_req);
     }
     goto fn_exit;
     /* --END ERROR HANDLING-- */
@@ -3787,8 +3782,7 @@ static int MPIDI_CH3I_Send_lock_put_or_acc(MPID_Win *win_ptr, int target_rank)
         if (mpi_errno)
         {
             MPID_Datatype_release(request->dev.datatype_ptr);
-            MPIU_Object_set_ref(request, 0);
-            MPIDI_CH3_Request_destroy(request);
+            MPID_Request_release(request);
 	    MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**ch3|loadsendiov");
         }
         /* --END ERROR HANDLING-- */        

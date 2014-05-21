@@ -805,8 +805,7 @@ fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_TCP_SENDNONCONTIG);
     return mpi_errno;
 fn_fail:
-    MPIU_Object_set_ref(sreq, 0);
-    MPIDI_CH3_Request_destroy(sreq);
+    MPID_Request_release(sreq);
     goto fn_exit;
 }
 
