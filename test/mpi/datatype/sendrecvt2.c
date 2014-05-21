@@ -6,6 +6,7 @@
 #include "mpi.h"
 #include "mpitest.h"
 #include <stdio.h>
+#include <string.h>
 #include "dtypes.h"
 
 /*
