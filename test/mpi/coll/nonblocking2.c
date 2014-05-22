@@ -5,7 +5,7 @@
  */
 
 /* A basic test of all 17 nonblocking collective operations specified by the
- * draft MPI-3 standard.  It only exercises the intracommunicator functionality,
+ * MPI-3 standard.  It only exercises the intracommunicator functionality,
  * does not use MPI_IN_PLACE, and only transmits/receives simple integer types
  * with relatively small counts.  It does check a few fancier issues, such as
  * ensuring that "premature user releases" of MPI_Op and MPI_Datatype objects
@@ -14,8 +14,6 @@
 #include "mpi.h"
 #include <stdlib.h>
 #include <stdio.h>
-/* USE_STRICT_MPI may be defined in mpitestconf.h */
-#include "mpitestconf.h"
 
 #define COUNT (10)
 #define PRIME (17)
@@ -27,15 +25,6 @@
             MPI_Abort(MPI_COMM_WORLD, 1);                                 \
         }                                                                 \
     } while (0)
-
-/* Since MPICH is currently the only NBC implementation in existence, just use
- * this quick-and-dirty #ifdef to decide whether to test the nonblocking
- * collectives.  Eventually we can add a configure option or configure test, or
- * the MPI-3 standard will be released and these can be gated on a MPI_VERSION
- * check */
-#if !defined(USE_STRICT_MPI) && defined(MPICH)
-#define TEST_NBC_ROUTINES 1
-#endif
 
 static void sum_fn(void *invec, void *inoutvec, int *len, MPI_Datatype *datatype)
 {
@@ -66,7 +55,6 @@ int main(int argc, char **argv)
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
-#if defined(TEST_NBC_ROUTINES)
 
     buf        = malloc(COUNT*size*sizeof(int));
     recvbuf    = malloc(COUNT*size*sizeof(int));
@@ -447,8 +435,6 @@ int main(int argc, char **argv)
             my_assert(recvbuf[i*COUNT+j] == (i + (rank * j)));
         }
     }
-
-#endif /* defined(TEST_NBC_ROUTINES) */
 
     if (rank == 0)
         printf(" No Errors\n");

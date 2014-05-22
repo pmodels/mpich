@@ -13,8 +13,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "mpitest.h"
-/* USE_STRICT_MPI may be defined in mpitestconf.h */
-#include "mpitestconf.h"
 
 #define NUM_INTS (2)
 
@@ -53,7 +51,6 @@ int main(int argc, char **argv)
 
     MPI_Comm_set_errhandler(MPI_COMM_WORLD, MPI_ERRORS_RETURN);
 
-#if !defined(USE_STRICT_MPI) && defined(MPICH)
     /* enough space for every process to contribute at least NUM_INTS ints to any
      * collective operation */
     sbuf = malloc(NUM_INTS*size*sizeof(int));
@@ -142,8 +139,6 @@ int main(int argc, char **argv)
     if (MPI_SUCCESS ==
             MPI_Iexscan(sbuf, sbuf, NUM_INTS, MPI_INT, MPI_SUM, comm, &req))
         errs++;
-
-#endif
 
     if (sbuf) free(sbuf);
     if (rbuf) free(rbuf);
