@@ -66,6 +66,11 @@ int main(int argc, char **argv)
         fprintf(stdout, "Did not get expected value for reduce scatter block\n");
         fprintf(stdout, "[%d] Got %d expected %d\n", rank, recvbuf[0], sumval);
     }
+
+    MPI_Comm_set_errhandler(MPI_COMM_WORLD, MPI_ERRORS_RETURN);
+    if (MPI_SUCCESS == MPI_Reduce_scatter_block(recvbuf, recvbuf, 1, MPI_INT, MPI_SUM, comm))
+        err++;
+
     free(recvbuf);
 #endif
 

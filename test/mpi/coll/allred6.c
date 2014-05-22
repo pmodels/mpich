@@ -67,6 +67,14 @@ int main( int argc, char *argv[] )
     }
     MPI_Op_free( &op );
 
+#if MTEST_HAVE_MIN_MPI_VERSION(2,2)
+    /* Check to make sure that aliasing is disallowed correctly */
+    MPI_Comm_set_errhandler(MPI_COMM_WORLD, MPI_ERRORS_RETURN);
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    if (MPI_SUCCESS == MPI_Allreduce(&rank, &rank, 1, MPI_INT, MPI_OP_NULL, MPI_COMM_WORLD))
+        errs++;
+#endif
+
     MTest_Finalize( errs );
     MPI_Finalize();
     return 0;

@@ -182,6 +182,16 @@ int main( int argc, char *argv[] )
 	    if (rank == root) {
 		errs += isShiftLeft( comm, bufout );
 	    }
+
+#if MTEST_HAVE_MIN_MPI_VERSION(2,2)
+            /* Try one more time without IN_PLACE to make sure we check
+             * aliasing correctly */
+            if (rank == root) {
+                MPI_Comm_set_errhandler(MPI_COMM_WORLD, MPI_ERRORS_RETURN);
+                if (MPI_SUCCESS == MPI_Reduce( bufout, bufout, count, mattype, op, root, comm ))
+                    errs++;
+            }
+#endif
 	}
 
 	free( buf );

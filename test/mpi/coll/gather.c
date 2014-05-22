@@ -66,6 +66,16 @@ int main( int argc, char **argv )
     /* do a zero length gather */
     MPI_Gather( NULL, 0, MPI_BYTE, NULL, 0, MPI_BYTE, 0, MPI_COMM_WORLD );
 
+#if MTEST_HAVE_MIN_MPI_VERSION(2,2)
+    /* Check to make sure that aliasing is disallowed correctly */
+    MPI_Comm_set_errhandler(MPI_COMM_WORLD, MPI_ERRORS_RETURN);
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    if (0 == rank)
+        if (MPI_SUCCESS == MPI_Gather(&rank, 1, MPI_INT,
+                                      &rank, 1, MPI_INT, 0, MPI_COMM_WORLD))
+            errs++;
+#endif
+
     MTest_Finalize( errs );
     MPI_Finalize();
     return 0;

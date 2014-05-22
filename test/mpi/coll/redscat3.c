@@ -80,6 +80,7 @@ int main( int argc, char **argv )
 	}
     }
 
+#if MTEST_HAVE_MIN_MPI_VERSION(2,2)
     MPI_Reduce_scatter( MPI_IN_PLACE, sendbuf, recvcounts, MPI_INT, MPI_SUM, 
 			comm );
 
@@ -95,6 +96,11 @@ int main( int argc, char **argv )
 	    }
 	}
     }
+
+    MPI_Comm_set_errhandler(MPI_COMM_WORLD, MPI_ERRORS_RETURN);
+    if (MPI_SUCCESS == MPI_Reduce_scatter(sendbuf, sendbuf, recvcounts, MPI_INT, MPI_SUM, comm))
+        err++;
+#endif
 
     free(sendbuf);
     free(recvbuf);

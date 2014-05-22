@@ -84,6 +84,11 @@ int main( int argc, char *argv[] )
                     }
                 }
             }
+
+            MPI_Comm_set_errhandler(MPI_COMM_WORLD, MPI_ERRORS_RETURN);
+            /* Make sure that we check for buffer aliasing properly */
+            if (MPI_SUCCESS == MPI_Exscan( recvbuf, recvbuf, count, MPI_INT, MPI_SUM, comm ))
+                errs++;
 #endif
 
 	    free( sendbuf );

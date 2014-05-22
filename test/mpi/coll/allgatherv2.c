@@ -57,11 +57,21 @@ int main( int argc, char **argv )
             }
             free( vecout );
         }
+
+#if MTEST_HAVE_MIN_MPI_VERSION(2,2)
+        MPI_Comm_set_errhandler(MPI_COMM_WORLD, MPI_ERRORS_RETURN);
+        vecout = (double *) malloc(size * sizeof(double));
+        if (MPI_SUCCESS == MPI_Allgatherv(&vecout[rank * recvcounts[rank]], recvcounts[rank], MPI_DOUBLE,
+                                           vecout, recvcounts, displs, MPI_DOUBLE, comm))
+            errs++;
+        free(vecout);
+#endif
+
 	free( displs );
 	free( recvcounts );
 	MTestFreeComm( &comm );
     }
-    
+
     MTest_Finalize( errs );
     MPI_Finalize();
     return 0;

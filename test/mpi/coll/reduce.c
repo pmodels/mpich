@@ -48,6 +48,15 @@ int main( int argc, char *argv[] )
 	    free( sendbuf );
 	    free( recvbuf );
 	}
+
+#if MTEST_HAVE_MIN_MPI_VERSION(2,2)
+        if (0 == rank) {
+            MPI_Comm_set_errhandler(MPI_COMM_WORLD, MPI_ERRORS_RETURN);
+            if (MPI_SUCCESS == MPI_Reduce(&rank, &rank, 1, MPI_INT, MPI_SUM, 0, comm))
+                errs++;
+        }
+#endif
+
 	MTestFreeComm( &comm );
     }
 

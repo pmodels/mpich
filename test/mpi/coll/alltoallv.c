@@ -122,6 +122,12 @@ int main( int argc, char **argv )
           }
         }
       }
+
+      /* Check to make sure that aliasing is disallowed correctly */
+      MPI_Comm_set_errhandler(MPI_COMM_WORLD, MPI_ERRORS_RETURN);
+      if (MPI_SUCCESS == MPI_Alltoallv(rbuf, recvcounts, rdispls, MPI_INT,
+                                       rbuf, recvcounts, rdispls, MPI_INT, comm))
+          err++;
 #endif
 
       free( rdispls );

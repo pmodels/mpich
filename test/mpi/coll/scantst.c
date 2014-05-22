@@ -5,6 +5,7 @@
  */
 #include "mpi.h"
 #include <stdio.h>
+#include "mpitest.h"
 
 void addem ( int *, int *, int *, MPI_Datatype * );
 void assoc ( int *, int *, int *, MPI_Datatype * );
@@ -101,6 +102,12 @@ int main( int argc, char **argv )
                  rank );
         errors++;
     }
+
+#if MTEST_HAVE_MIN_MPI_VERSION(2,2)
+    MPI_Comm_set_errhandler(MPI_COMM_WORLD, MPI_ERRORS_RETURN);
+    if (MPI_SUCCESS == MPI_Scan( &data, &data, 1, MPI_INT, op_assoc, comm))
+        errors++;
+#endif
 
     MPI_Op_free( &op_assoc );
     MPI_Op_free( &op_addem );

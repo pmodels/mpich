@@ -133,6 +133,11 @@ int main( int argc, char **argv )
           }
         }
       }
+
+      MPI_Comm_set_errhandler(MPI_COMM_WORLD, MPI_ERRORS_RETURN);
+      if (MPI_SUCCESS == MPI_Alltoallw(rbuf, recvcounts, rdispls, recvtypes,
+                                       rbuf, recvcounts, rdispls, recvtypes, comm))
+          err++;
 #endif
 
       free(recvtypes);

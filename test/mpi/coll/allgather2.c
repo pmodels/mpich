@@ -50,7 +50,18 @@ int main( int argc, char **argv )
 
 	MTestFreeComm( &comm );
     }
-    
+
+#if MTEST_HAVE_MIN_MPI_VERSION(2,2)
+    MPI_Comm_set_errhandler(MPI_COMM_WORLD, MPI_ERRORS_RETURN);
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &size);
+    vecout = (double *) malloc(size * sizeof(double));
+    if (MPI_SUCCESS == MPI_Allgather(&vecout[rank], 1, MPI_DOUBLE,
+                                      vecout, 1, MPI_DOUBLE, MPI_COMM_WORLD))
+        errs++;
+    free(vecout);
+#endif
+
     MTest_Finalize( errs );
     MPI_Finalize();
     return 0;
