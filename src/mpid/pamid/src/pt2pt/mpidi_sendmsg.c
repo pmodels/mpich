@@ -136,14 +136,14 @@ MPIDI_SendMsg_rzv(pami_context_t    context,
                   MPID_Request    * sreq,
                   pami_endpoint_t   dest,
                   void            * sndbuf,
-                  unsigned          sndlen)
+                  size_t            sndlen)
   __attribute__((__noinline__));
 static void
 MPIDI_SendMsg_rzv(pami_context_t    context,
                   MPID_Request    * sreq,
                   pami_endpoint_t   dest,
                   void            * sndbuf,
-                  unsigned          sndlen)
+                  size_t            sndlen)
 {
   pami_result_t rc;
 
@@ -166,7 +166,7 @@ MPIDI_SendMsg_rzv(pami_context_t    context,
 			     &sreq->mpid.envelope.memregion);
   MPID_assert(rc == PAMI_SUCCESS);
   MPID_assert(sndlen == sndlen_out);
-  TRACE_ERR("RZV send for mr=%#llx addr=%p *addr[0]=%#016llx *addr[1]=%#016llx bytes=%u\n",
+  TRACE_ERR("RZV send for mr=%#llx addr=%p *addr[0]=%#016llx *addr[1]=%#016llx bytes=%zu\n",
             *(unsigned long long*)&sreq->mpid.envelope.memregion,
             sndbuf,
             *(((unsigned long long*)sndbuf)+0),
@@ -189,7 +189,7 @@ MPIDI_SendMsg_rzv(pami_context_t    context,
       if(rc == PAMI_SUCCESS)
 	{
 	  MPID_assert(sndlen == sndlen_out);
-	  TRACE_ERR("RZV send for mr=%#llx addr=%p *addr[0]=%#016llx *addr[1]=%#016llx bytes=%u\n",
+	  TRACE_ERR("RZV send for mr=%#llx addr=%p *addr[0]=%#016llx *addr[1]=%#016llx bytes=%zu\n",
 		    *(unsigned long long*)&sreq->mpid.envelope.memregion,
 		    sndbuf,
 		    *(((unsigned long long*)sndbuf)+0),
@@ -201,7 +201,7 @@ MPIDI_SendMsg_rzv(pami_context_t    context,
     }
     else
     {
-      TRACE_ERR("RZV send (failed registration for sreq=%p addr=%p *addr[0]=%#016llx *addr[1]=%#016llx bytes=%u\n",
+      TRACE_ERR("RZV send (failed registration for sreq=%p addr=%p *addr[0]=%#016llx *addr[1]=%#016llx bytes=%zu\n",
 		sreq,sndbuf,
 		*(((unsigned long long*)sndbuf)+0),
 		*(((unsigned long long*)sndbuf)+1),
@@ -439,14 +439,14 @@ if (!TOKEN_FLOW_CONTROL_ON) {
 #endif
 
   const unsigned isLocal = PAMIX_Task_is_local(dest_tid);
-  const unsigned data_sz_limit = isSync?UINT_MAX:data_sz;
+  const size_t data_sz_limit = isSync?ULONG_MAX:data_sz;
 
   /*
    * Always use the short protocol when data_sz is small.
    */
   if (likely(data_sz < MPIDI_PT2PT_SHORT_LIMIT(isInternal,isLocal)))
     {
-      TRACE_ERR("Sending(short%s%s) bytes=%u (short_limit=%u)\n", isInternal==1?",internal":"", isLocal==1?",intranode":"", data_sz, MPIDI_PT2PT_SHORT_LIMIT(isInternal,isLocal));
+      TRACE_ERR("Sending(short%s%s) bytes=%zu (short_limit=%u)\n", isInternal==1?",internal":"", isLocal==1?",intranode":"", data_sz, MPIDI_PT2PT_SHORT_LIMIT(isInternal,isLocal));
       MPIDI_SendMsg_short(context,
                           sreq,
                           dest,
@@ -459,7 +459,7 @@ if (!TOKEN_FLOW_CONTROL_ON) {
    */
   else if (data_sz_limit < MPIDI_PT2PT_EAGER_LIMIT(isInternal,isLocal))
     {
-      TRACE_ERR("Sending(eager%s%s) bytes=%u (eager_limit=%u)\n", isInternal==1?",internal":"", isLocal==1?",intranode":"", data_sz, MPIDI_PT2PT_EAGER_LIMIT(isInternal,isLocal));
+      TRACE_ERR("Sending(eager%s%s) bytes=%zu (eager_limit=%u)\n", isInternal==1?",internal":"", isLocal==1?",intranode":"", data_sz, MPIDI_PT2PT_EAGER_LIMIT(isInternal,isLocal));
       MPIDI_SendMsg_eager(context,
                           sreq,
                           dest,
@@ -479,7 +479,7 @@ if (!TOKEN_FLOW_CONTROL_ON) {
    */
   else
     {
-      TRACE_ERR("Sending(rendezvous%s%s) bytes=%u (eager_limit=%u)\n", isInternal==1?",internal":"", isLocal==1?",intranode":"", data_sz, MPIDI_PT2PT_EAGER_LIMIT(isInternal,isLocal));
+      TRACE_ERR("Sending(rendezvous%s%s) bytes=%zu (eager_limit=%u)\n", isInternal==1?",internal":"", isLocal==1?",intranode":"", data_sz, MPIDI_PT2PT_EAGER_LIMIT(isInternal,isLocal));
 #ifdef OUT_OF_ORDER_HANDLING
       sreq->mpid.envelope.msginfo.noRDMA=isLocal;
 #endif

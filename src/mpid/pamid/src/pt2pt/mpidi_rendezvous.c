@@ -43,13 +43,14 @@ MPIDI_RendezvousTransfer(pami_context_t   context,
   MPID_Request * rreq = (MPID_Request*) _rreq;
 
   void *rcvbuf;
-  unsigned rcvlen;
+  size_t rcvlen;
 
   /* -------------------------------------- */
   /* calculate message length for reception */
   /* calculate receive message "count"      */
   /* -------------------------------------- */
-  unsigned dt_contig, dt_size;
+  unsigned dt_contig;
+  size_t dt_size;
   MPID_Datatype *dt_ptr;
   MPI_Aint dt_true_lb;
   MPIDI_Datatype_get_info(rreq->mpid.userbufcount,
