@@ -35,7 +35,7 @@
 #include "mpidi_util.h"
 
 #define PAMI_TUNE_MAX_ITER 2000
-
+#define _DEBUG  1
 /* Short hand for sizes */
 #define ONE  (1)
 #define ONEK (1<<10)
@@ -461,7 +461,7 @@ int MPIDI_Print_mpenv(int rank,int size)
         char *popenptr;
         char tempstr[128];
         int  mpi_errno;
-        int  errflag;
+        int  errflag=0;
 
         MPIDI_Set_mpich_env(rank,size);
         memset(&sender,0,sizeof(MPIDI_printenv_t));
