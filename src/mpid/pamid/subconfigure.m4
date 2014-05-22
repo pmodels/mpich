@@ -92,6 +92,12 @@ dnl Set the pamid platform define.
 dnl
 PAC_APPEND_FLAG([-D__${pamid_platform}__], [CPPFLAGS])
 
+dnl Check for available shared memory functions
+PAC_ARG_SHARED_MEMORY
+if test "$with_shared_memory" != "mmap" -a "$with_shared_memory" != "sysv"; then
+    AC_MSG_ERROR([cannot support shared memory:  need either sysv shared memory functions or mmap in order to support shared memory])
+fi
+
 dnl
 dnl This configure option allows "sandbox" bgq system software to be used.
 dnl
