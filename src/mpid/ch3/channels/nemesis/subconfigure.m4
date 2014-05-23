@@ -191,10 +191,6 @@ if test "$with_shared_memory" != "mmap" -a "$with_shared_memory" != "sysv"; then
     AC_MSG_ERROR([cannot support shared memory:  need either sysv shared memory functions or mmap in order to support shared memory])
 fi
 
-if test "$found_sysv_shm_funcs" = yes ; then
-   AC_CHECK_FUNCS(strtoll, , AC_MSG_ERROR([cannot find strtoll function needed by sysv shared memory implementation]))
-fi
-
 AC_ARG_ENABLE(nemesis-shm-collectives, [--enable-nemesis-shm-collectives - enables use of shared memory for collective comunication within a node],
     AC_DEFINE(ENABLED_SHM_COLLECTIVES, 1, [Define to enable shared-memory collectives]))
 
