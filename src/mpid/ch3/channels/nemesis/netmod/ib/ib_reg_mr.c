@@ -150,8 +150,8 @@ static inline void __lru_queue_display()
     for (i = 0; i < MPID_NEM_IB_COM_REG_MR_NLINE; i++) {
         dprintf("---- hash %d\n", i);
         for (p =
-             (struct MPID_nem_ib_com_reg_mr_cache_entry_t *) MPID_nem_ib_com_reg_mr_cache[i].
-             lru_next;
+             (struct MPID_nem_ib_com_reg_mr_cache_entry_t *)
+             MPID_nem_ib_com_reg_mr_cache[i].lru_next;
              p != (struct MPID_nem_ib_com_reg_mr_cache_entry_t *) &MPID_nem_ib_com_reg_mr_cache[i];
              p = (struct MPID_nem_ib_com_reg_mr_cache_entry_t *) p->lru_next) {
             if (p && p->addr) {
@@ -165,7 +165,8 @@ static inline void __lru_queue_display()
     }
 }
 
-struct ibv_mr *MPID_nem_ib_com_reg_mr_fetch(void *addr, int len, enum ibv_access_flags additional_flags)
+struct ibv_mr *MPID_nem_ib_com_reg_mr_fetch(void *addr, int len,
+                                            enum ibv_access_flags additional_flags)
 {
 #if 0   /* debug */
     struct ibv_mr *mr;
@@ -268,8 +269,8 @@ struct ibv_mr *MPID_nem_ib_com_reg_mr_fetch(void *addr, int len, enum ibv_access
 #if 0   /* disable for debug */
     /* move to head of the list */
     if (e !=
-        (struct MPID_nem_ib_com_reg_mr_cache_entry_t *) MPID_nem_ib_com_reg_mr_cache[key].
-        lru_next) {
+        (struct MPID_nem_ib_com_reg_mr_cache_entry_t *) MPID_nem_ib_com_reg_mr_cache[key].lru_next)
+    {
         MPID_nem_ib_com_reg_mr_unlink((struct MPID_nem_ib_com_reg_mr_listnode_t *) e);
         MPID_nem_ib_com_reg_mr_insert(&MPID_nem_ib_com_reg_mr_cache[key],
                                       (struct MPID_nem_ib_com_reg_mr_listnode_t *) e);
@@ -307,21 +308,21 @@ int MPID_nem_ib_com_register_cache_init()
 
     ref_count++;
     dprintf("cache_init,ref_count=%d\n", ref_count);
-    
-    if(ref_count == 1) {
-    /* Using the address to the start node to express the end of the list
-     * instead of using NULL */
-    for (i = 0; i < MPID_NEM_IB_COM_REG_MR_NLINE; i++) {
-        MPID_nem_ib_com_reg_mr_cache[i].lru_next =
-            (struct MPID_nem_ib_com_reg_mr_listnode_t *) &MPID_nem_ib_com_reg_mr_cache[i];
-        MPID_nem_ib_com_reg_mr_cache[i].lru_prev =
-            (struct MPID_nem_ib_com_reg_mr_listnode_t *) &MPID_nem_ib_com_reg_mr_cache[i];
+
+    if (ref_count == 1) {
+        /* Using the address to the start node to express the end of the list
+         * instead of using NULL */
+        for (i = 0; i < MPID_NEM_IB_COM_REG_MR_NLINE; i++) {
+            MPID_nem_ib_com_reg_mr_cache[i].lru_next =
+                (struct MPID_nem_ib_com_reg_mr_listnode_t *) &MPID_nem_ib_com_reg_mr_cache[i];
+            MPID_nem_ib_com_reg_mr_cache[i].lru_prev =
+                (struct MPID_nem_ib_com_reg_mr_listnode_t *) &MPID_nem_ib_com_reg_mr_cache[i];
+        }
+
+        dprintf("[MrCache] cache initializes %d entries\n", MPID_NEM_IB_COM_REG_MR_NLINE);
     }
 
-    dprintf("[MrCache] cache initializes %d entries\n", MPID_NEM_IB_COM_REG_MR_NLINE);
-    }
-
-    fn_exit:
+  fn_exit:
     return ibcom_errno;
     //fn_fail:
     goto fn_exit;
@@ -337,16 +338,16 @@ int MPID_nem_ib_com_register_cache_release()
     dprintf("cache_release,ref_count=%d\n", ref_count);
 
     MPIU_Assert(ref_count > 0);
-    if(--ref_count > 0) {
+    if (--ref_count > 0) {
         goto fn_exit;
-    } 
+    }
 
     for (i = 0; i < MPID_NEM_IB_COM_REG_MR_NLINE; i++) {
         for (p =
-             (struct MPID_nem_ib_com_reg_mr_cache_entry_t *) MPID_nem_ib_com_reg_mr_cache[i].
-             lru_next;
-             p != (struct MPID_nem_ib_com_reg_mr_cache_entry_t *) &MPID_nem_ib_com_reg_mr_cache[i];
-             ) {
+             (struct MPID_nem_ib_com_reg_mr_cache_entry_t *)
+             MPID_nem_ib_com_reg_mr_cache[i].lru_next;
+             p !=
+             (struct MPID_nem_ib_com_reg_mr_cache_entry_t *) &MPID_nem_ib_com_reg_mr_cache[i];) {
             if (p && p->addr > 0) {
                 ib_errno = MPID_nem_ib_com_dereg_mr(p->mr);
                 MPID_NEM_IB_COM_ERR_CHKANDJUMP(ib_errno, -1, printf("MPID_nem_ib_com_dereg_mr"));
@@ -365,8 +366,8 @@ int MPID_nem_ib_com_register_cache_release()
     //__lru_queue_display();
 
     dprintf("[MrCache] cache destroyed %d entries\n", cnt);
-    fn_exit:
+  fn_exit:
     return ibcom_errno;
-    fn_fail:
+  fn_fail:
     goto fn_exit;
 }

@@ -179,11 +179,11 @@ extern uint8_t *MPID_nem_ib_scratch_pad;
 extern int MPID_nem_ib_scratch_pad_ref_count;
 extern char *MPID_nem_ib_rdmawr_from_alloc_free_list_front[MPID_NEM_IB_RDMAWR_FROM_ALLOC_NID];
 extern char *MPID_nem_ib_rdmawr_from_alloc_arena_free_list[MPID_NEM_IB_RDMAWR_FROM_ALLOC_NID];
-extern struct ibv_mr* MPID_nem_ib_rdmawr_to_alloc_mr;
+extern struct ibv_mr *MPID_nem_ib_rdmawr_to_alloc_mr;
 extern uint8_t *MPID_nem_ib_rdmawr_to_alloc_start;
 extern uint8_t *MPID_nem_ib_rdmawr_to_alloc_free_list;
 
-#define MPID_NEM_IB_COM_SIZE		(65536*2)    /* Maxiumum number of QPs. One process uses 2 QPs. */
+#define MPID_NEM_IB_COM_SIZE		(65536*2)       /* Maxiumum number of QPs. One process uses 2 QPs. */
 #define MPID_NEM_IB_COM_INLINE_DATA (512-64) /* experimented max is 884 */      /* this is lower bound and more than this value is set. the more this value is, the more the actual value set is. you need to check it */
 
 #define MPID_NEM_IB_COM_MAX_SQ_CAPACITY (256/1)
@@ -239,10 +239,10 @@ extern uint8_t *MPID_nem_ib_rdmawr_to_alloc_free_list;
 #define MPID_NEM_IB_COM_UDBUF_SZSEG (128)
 #define MPID_NEM_IB_COM_UDBUF_NSEG (MPID_NEM_IB_COM_UDBUF_SZ / MPID_NEM_IB_COM_UDBUF_SZSEG)
 
-#define MPID_NEM_IB_COM_NBUF_SCRATCH_PAD 2        /* number of <addr, sz, lkey, rkey> */
+#define MPID_NEM_IB_COM_NBUF_SCRATCH_PAD 2      /* number of <addr, sz, lkey, rkey> */
 #define MPID_NEM_IB_COM_SCRATCH_PAD_FROM_SZ 4096
 #define MPID_NEM_IB_COM_SCRATCH_PAD_FROM 0
-#define MPID_NEM_IB_COM_SCRATCH_PAD_TO 1 /* index to RDMA-write-to buffer */
+#define MPID_NEM_IB_COM_SCRATCH_PAD_TO 1        /* index to RDMA-write-to buffer */
 
 /* send command templates */
 #define MPID_NEM_IB_COM_RC_SR_NTEMPLATE (8+1+2) /* number of request templates, 8 for inline-chained-smt, 1 for smt, 1 for lmt */
@@ -308,21 +308,21 @@ extern uint8_t *MPID_nem_ib_rdmawr_to_alloc_free_list;
 #define MPID_NEM_IB_NETMOD_HDR_HEAD_FLAG_SET(buf, val) ((MPID_nem_ib_netmod_hdr_shared_t *)(buf))->first = (val);
 
 typedef struct MPID_nem_ib_netmod_hdr_exclusive {
-    /* 
-       [63:61] ring buffer type
-       remote is exclusive:
-          [47:32]  largest index of contiguous released slots 16-bit
-       reply to slot request:
-          [51:20] Start address of acquired slots, MSB part
-          [19:16] Log_2 of amount of acquired slots
-       [15:0] Packet size without padding
-    */
+    /*
+     * [63:61] ring buffer type
+     * remote is exclusive:
+     * [47:32]  largest index of contiguous released slots 16-bit
+     * reply to slot request:
+     * [51:20] Start address of acquired slots, MSB part
+     * [19:16] Log_2 of amount of acquired slots
+     * [15:0] Packet size without padding
+     */
     uint64_t first;
     /* jump case:
-          [31:0] Start address of acquired slots, LSB part 
-    */
+     * [31:0] Start address of acquired slots, LSB part
+     */
     uint32_t second;
-   
+
 } MPID_nem_ib_netmod_hdr_exclusive_t;
 
 typedef struct MPID_nem_ib_netmod_hdr_shared {
@@ -330,11 +330,11 @@ typedef struct MPID_nem_ib_netmod_hdr_shared {
     uint32_t second;
 
     /* remote is one slot:
-              [31:0] VC pointer in remote node, MSB part */
+     * [31:0] VC pointer in remote node, MSB part */
     uint32_t third;
 
     /* remote is one slot:
-              [31:0] VC pointer in remote node, LSB part */
+     * [31:0] VC pointer in remote node, LSB part */
     uint32_t forth;
 } MPID_nem_ib_netmod_hdr_shared_t;
 
@@ -346,9 +346,10 @@ typedef struct MPID_nem_ib_netmod_trailer {
 /* Allocator for RDMA write to buffer */
 typedef struct {
     /* Avoid polluting netmod_hdr and trailer */
-    uint8_t padding[sizeof(MPID_nem_ib_netmod_hdr_shared_t)]; 
+    uint8_t padding[sizeof(MPID_nem_ib_netmod_hdr_shared_t)];
     uint8_t *next;
-} MPID_nem_ib_rdmawr_to_alloc_hdr_t;
+}
+MPID_nem_ib_rdmawr_to_alloc_hdr_t;
 
 /* Ring-buffer to which a remote note RDMA-writes */
 #define MPID_NEM_IB_NRINGBUF 64
@@ -364,12 +365,12 @@ typedef struct {
 #define MPID_NEM_IB_RINGBUF_RELINDEX 4
 
 typedef struct {
-    uint32_t type; /* acquiring contiguous slots or a single slot */
-    void* start;
+    uint32_t type;              /* acquiring contiguous slots or a single slot */
+    void *start;
     int nslot;
-    MPIDI_VC_t * vc;
+    MPIDI_VC_t *vc;
     uint64_t remote_released[(MPID_NEM_IB_COM_RDMABUF_NSEG + 63) / 64];
-    int ref_count; /* number of VCs sharing the ring-buffer */
+    int ref_count;              /* number of VCs sharing the ring-buffer */
 } MPID_nem_ib_ringbuf_t;
 
 /* Represent a ring-buffer is exclusively acquired */
@@ -381,22 +382,22 @@ extern uint64_t MPID_nem_ib_ringbuf_allocated[(MPID_NEM_IB_NRINGBUF + 63) / 64];
 extern MPID_nem_ib_ringbuf_t *MPID_nem_ib_ringbuf;
 
 
-/* Next ring-buffer type and slots 
+/* Next ring-buffer type and slots
    Exclusive slots are sticky.
    Shared slot is consumed.
    Use the type described here because we need to
-   use up acquired slots of shared ring-buffer when 
+   use up acquired slots of shared ring-buffer when
    transitioning from share to exclusive.
    The next type is absent means we're transitioning
    from exclusive to shared. */
 typedef struct MPID_nem_ib_ringbuf_sector {
     uint32_t type;
-    void* start;
+    void *start;
     int nslot;
     uint16_t head;
     uint16_t tail;
 
-    struct MPID_nem_ib_ringbuf_sector * sectorq_next;
+    struct MPID_nem_ib_ringbuf_sector *sectorq_next;
 } MPID_nem_ib_ringbuf_sector_t;
 
 typedef GENERIC_Q_DECL(MPID_nem_ib_ringbuf_sector_t) MPID_nem_ib_ringbuf_sectorq_t;
@@ -434,12 +435,12 @@ typedef struct MPID_nem_ib_com {
     size_t *icom_rsize;
     uint16_t sseq_num;
     uint16_t rsr_seq_num_poll;
-    uint16_t rsr_seq_num_tail;       /* occupation status of remote Send Request (SR) queue (it covers occupation status of local RDMA-wr-to buffer) */
-    uint16_t rsr_seq_num_tail_last_sent;     /* latest one sent to remote rank */
-    uint16_t lsr_seq_num_tail;       /* occupation status of local Send Request (SR) queue */
+    uint16_t rsr_seq_num_tail;  /* occupation status of remote Send Request (SR) queue (it covers occupation status of local RDMA-wr-to buffer) */
+    uint16_t rsr_seq_num_tail_last_sent;        /* latest one sent to remote rank */
+    uint16_t lsr_seq_num_tail;  /* occupation status of local Send Request (SR) queue */
     int lsr_seq_num_tail_last_requested;        /* value when lmt_start_send issued req_seq_num */
     int rdmabuf_occupancy_notify_rstate, rdmabuf_occupancy_notify_lstate;
-    int ncom, ncom_scratch_pad;   /* number of entries in the command queue */
+    int ncom, ncom_scratch_pad; /* number of entries in the command queue */
 
     uint32_t max_inline_data;   /* actual value obtained after ibv_create_qp */
     uint32_t max_send_wr;
@@ -453,36 +454,36 @@ typedef struct MPID_nem_ib_com {
     uint16_t after_rdma_rd;
 
     /* Ring-buffer information on the receiver side.
-       It's allocated on the receiver side. */
-    MPID_nem_ib_ringbuf_t* remote_ringbuf;
+     * It's allocated on the receiver side. */
+    MPID_nem_ib_ringbuf_t *remote_ringbuf;
 
     /* Ring buffer information on the sender side.
-       The information is passed from the receiver side on connection. */
-    uint32_t local_ringbuf_type; 
-    void* local_ringbuf_start;
+     * The information is passed from the receiver side on connection. */
+    uint32_t local_ringbuf_type;
+    void *local_ringbuf_start;
     int local_ringbuf_rkey;
     uint16_t local_ringbuf_nslot;
 
     /* VC of remote node. It's embedded in a packet going to the
-       shared ring buffer because no VC information is available on
-       the receiver side in the shared case. c.f. They are stored in
-       the individual exclusive ring-buffers in the exclusive case. */
-    MPIDI_VC_t *remote_vc; 
+     * shared ring buffer because no VC information is available on
+     * the receiver side in the shared case. c.f. They are stored in
+     * the individual exclusive ring-buffers in the exclusive case. */
+    MPIDI_VC_t *remote_vc;
 
     /* Delay the fetch of the second ask until the first issues CAS */
     uint8_t ask_guard;
-    
+
     /* Ring buffer sectors obtained through ask-send protocol */
-    MPID_nem_ib_ringbuf_sectorq_t sectorq; 
+    MPID_nem_ib_ringbuf_sectorq_t sectorq;
 
 
     /* Two transactions from the both ends for a connection
-       can be outstanding at the same time when they were initiated
-       at the same time. This makes one end try to send ACK2 after
-       freeing scratch-pad QP for the connection. So we must monitor and
-       wait until all the onnection request transactions ends before
-       freeing scratch-pad QP.*/
-    int outstanding_connection_tx; 
+     * can be outstanding at the same time when they were initiated
+     * at the same time. This makes one end try to send ACK2 after
+     * freeing scratch-pad QP for the connection. So we must monitor and
+     * wait until all the onnection request transactions ends before
+     * freeing scratch-pad QP. */
+    int outstanding_connection_tx;
     int incoming_connection_tx;
 
 } MPID_nem_ib_com_t;
@@ -499,31 +500,28 @@ extern int MPID_nem_ib_com_rts(int condesc, int remote_qpnum, uint16_t remote_li
 
 extern int MPID_nem_ib_com_reg_mr_connect(int condesc, void *rmem, int rkey);
 extern int MPID_nem_ib_com_connect_ringbuf(int condesc,
-                                    uint32_t ringbuf_type,
-                                    void *start, int rkey, int nslot,
-                                    MPIDI_VC_t * remote_vc,
-                                    uint32_t alloc_new_mr);
+                                           uint32_t ringbuf_type,
+                                           void *start, int rkey, int nslot,
+                                           MPIDI_VC_t * remote_vc, uint32_t alloc_new_mr);
 
 extern int MPID_nem_ib_com_isend(int condesc,
-                          uint64_t wr_id,
-                          void *prefix, int sz_prefix,
-                          void *hdr, int sz_hdr,
-                          void *data, int sz_data,
-                          int *copied,
-                          uint32_t local_ringbuf_type, uint32_t remote_ringbuf_type,
-                          void** buf_from_out, uint32_t* buf_from_sz_out);
+                                 uint64_t wr_id,
+                                 void *prefix, int sz_prefix,
+                                 void *hdr, int sz_hdr,
+                                 void *data, int sz_data,
+                                 int *copied,
+                                 uint32_t local_ringbuf_type, uint32_t remote_ringbuf_type,
+                                 void **buf_from_out, uint32_t * buf_from_sz_out);
 extern int MPID_nem_ib_com_isend_chain(int condesc, uint64_t wr_id, void *hdr, int sz_hdr,
                                        void *data, int sz_data);
 extern int MPID_nem_ib_com_put_scratch_pad(int condesc, uint64_t wr_id, uint64_t offset, int sz,
-                                           void *laddr, void **buf_from_out, uint32_t* buf_from_sz_out);
-extern int MPID_nem_ib_com_get_scratch_pad(int condesc,
-                                           uint64_t wr_id,
-                                           uint64_t offset, int sz,
-                                           void** buf_from_out, uint32_t * buf_from_sz_out);
-extern int MPID_nem_ib_com_cas_scratch_pad(int condesc,
-                                           uint64_t wr_id, uint64_t offset,
-                                           uint64_t compare, uint64_t swap,
-                                           void** buf_from_out, uint32_t * buf_from_sz_out);
+                                           void *laddr, void **buf_from_out,
+                                           uint32_t * buf_from_sz_out);
+extern int MPID_nem_ib_com_get_scratch_pad(int condesc, uint64_t wr_id, uint64_t offset, int sz,
+                                           void **buf_from_out, uint32_t * buf_from_sz_out);
+extern int MPID_nem_ib_com_cas_scratch_pad(int condesc, uint64_t wr_id, uint64_t offset,
+                                           uint64_t compare, uint64_t swap, void **buf_from_out,
+                                           uint32_t * buf_from_sz_out);
 
 //extern int MPID_nem_ib_com_isend(int condesc, uint64_t wr_id, void* hdr, int sz_hdr, void* data, int sz_data);
 extern int MPID_nem_ib_com_irecv(int condesc, uint64_t wr_id);
@@ -560,7 +558,8 @@ extern int MPID_nem_ib_com_mem_udwr_to(int condesc, void **out);
 /* ib_reg_mr.c */
 extern int MPID_nem_ib_com_register_cache_init(void);
 extern int MPID_nem_ib_com_register_cache_release(void);
-extern struct ibv_mr *MPID_nem_ib_com_reg_mr_fetch(void *addr, int len, enum ibv_access_flags additional_flags);
+extern struct ibv_mr *MPID_nem_ib_com_reg_mr_fetch(void *addr, int len,
+                                                   enum ibv_access_flags additional_flags);
 
 extern int MPID_nem_ib_com_udbuf_init(void *q);
 
@@ -623,7 +622,7 @@ typedef struct {
         uint32_t ref_count;
         char *next;
     } first;
-    struct ibv_mr* mr;
+    struct ibv_mr *mr;
 } MPID_nem_ib_rdmawr_from_alloc_hdr_t;
 #define MPID_NEM_IB_RDMAWR_FROM_ALLOC_SZARENA 65536
 #define MPID_NEM_IB_RDMAWR_FROM_ALLOC_ROUNDUP64(addr, align) ((addr + align - 1) & ~((unsigned long)align - 1))
@@ -632,7 +631,7 @@ typedef struct {
 #define MPID_NEM_IB_RDMAWR_FROM_ALLOC_ARENA_START(p) ((void *) ((uint64_t) (p) & ~(MPID_NEM_IB_RDMAWR_FROM_ALLOC_SZARENA - 1)))
 #define MPID_NEM_IB_RDMAWR_FROM_ALLOC_ARENA_MR(p) (((MPID_nem_ib_rdmawr_from_alloc_hdr_t *) ((uint64_t) (p) & ~(MPID_NEM_IB_RDMAWR_FROM_ALLOC_SZARENA - 1)))->mr)
 #define MPID_NEM_IB_RDMAWR_FROM_ALLOC_PREPROCESS_SZ                     \
-    if(_sz < 256) {                                                     \
+    if (_sz < 256) {                                                     \
         clz = 23;                                                       \
         sz = 256;                                                       \
     } else {                                                            \
@@ -646,7 +645,7 @@ static inline void *MPID_nem_ib_rdmawr_from_alloc(uint32_t _sz)
     int retval;
     int clz;
     uint32_t sz;
-    assert(_sz <= (1ULL<<31));
+    assert(_sz <= (1ULL << 31));
     MPID_NEM_IB_RDMAWR_FROM_ALLOC_PREPROCESS_SZ;
     char *p = MPID_nem_ib_rdmawr_from_alloc_free_list_front[clz];
     if ((unsigned long) p & (MPID_NEM_IB_RDMAWR_FROM_ALLOC_SZARENA - 1)) {
@@ -657,19 +656,25 @@ static inline void *MPID_nem_ib_rdmawr_from_alloc(uint32_t _sz)
         char *q, r;
         if (MPID_nem_ib_rdmawr_from_alloc_arena_free_list[clz]) {
             q = MPID_nem_ib_rdmawr_from_alloc_arena_free_list[clz];
-            MPID_nem_ib_rdmawr_from_alloc_arena_free_list[clz] = ((MPID_nem_ib_rdmawr_from_alloc_hdr_t *) MPID_nem_ib_rdmawr_from_alloc_arena_free_list[clz])->first.next;
+            MPID_nem_ib_rdmawr_from_alloc_arena_free_list[clz] =
+                ((MPID_nem_ib_rdmawr_from_alloc_hdr_t *)
+                 MPID_nem_ib_rdmawr_from_alloc_arena_free_list[clz])->first.next;
         }
         else {
-            unsigned long sz_clust = MPID_NEM_IB_RDMAWR_FROM_ALLOC_ROUNDUP64(MPID_NEM_IB_RDMAWR_FROM_ALLOC_SZARENA * MPID_NEM_IB_RDMAWR_FROM_ALLOC_NCLUST_SLAB, 4096);
-            char* unaligned = mmap(NULL,
-                     sz_clust + MPID_NEM_IB_RDMAWR_FROM_ALLOC_SZARENA,
-                     PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
-            if (unaligned == (void *)-1) {
+            unsigned long sz_clust =
+                MPID_NEM_IB_RDMAWR_FROM_ALLOC_ROUNDUP64(MPID_NEM_IB_RDMAWR_FROM_ALLOC_SZARENA *
+                                                        MPID_NEM_IB_RDMAWR_FROM_ALLOC_NCLUST_SLAB,
+                                                        4096);
+            char *unaligned = mmap(NULL,
+                                   sz_clust + MPID_NEM_IB_RDMAWR_FROM_ALLOC_SZARENA,
+                                   PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+            if (unaligned == (void *) -1) {
                 printf("mmap failed\n");
                 MPID_nem_ib_segv;
             }
 
-            q = MPID_NEM_IB_RDMAWR_FROM_ALLOC_ROUNDUP64_ADDR(unaligned, MPID_NEM_IB_RDMAWR_FROM_ALLOC_SZARENA);
+            q = MPID_NEM_IB_RDMAWR_FROM_ALLOC_ROUNDUP64_ADDR(unaligned,
+                                                             MPID_NEM_IB_RDMAWR_FROM_ALLOC_SZARENA);
             retval = munmap(unaligned, q - unaligned);
             if (q - unaligned != 0 && retval) {
                 printf("munmap failed\n");
@@ -681,28 +686,36 @@ static inline void *MPID_nem_ib_rdmawr_from_alloc(uint32_t _sz)
                 MPID_nem_ib_segv;
             }
 
-            ((MPID_nem_ib_rdmawr_from_alloc_hdr_t *) q)->mr = MPID_nem_ib_com_reg_mr_fetch(q, MPID_NEM_IB_RDMAWR_FROM_ALLOC_SZARENA, 0);
+            ((MPID_nem_ib_rdmawr_from_alloc_hdr_t *) q)->mr =
+                MPID_nem_ib_com_reg_mr_fetch(q, MPID_NEM_IB_RDMAWR_FROM_ALLOC_SZARENA, 0);
             if (!((MPID_nem_ib_rdmawr_from_alloc_hdr_t *) q)->mr) {
                 printf("ibv_reg_mr failed\n");
                 MPID_nem_ib_segv;
             }
-            
+
 #if MPID_NEM_IB_RDMAWR_FROM_ALLOC_NCLUST_SLAB > 1
-            MPID_nem_ib_rdmawr_from_alloc_arena_free_list[clz] = q + MPID_NEM_IB_RDMAWR_FROM_ALLOC_SZARENA;
-            for (p = q + MPID_NEM_IB_RDMAWR_FROM_ALLOC_SZARENA; p < q + (MPID_NEM_IB_RDMAWR_FROM_ALLOC_NCLUST_SLAB - 1) * MPID_NEM_IB_RDMAWR_FROM_ALLOC_SZARENA;
+            MPID_nem_ib_rdmawr_from_alloc_arena_free_list[clz] =
+                q + MPID_NEM_IB_RDMAWR_FROM_ALLOC_SZARENA;
+            for (p = q + MPID_NEM_IB_RDMAWR_FROM_ALLOC_SZARENA;
+                 p <
+                 q + (MPID_NEM_IB_RDMAWR_FROM_ALLOC_NCLUST_SLAB -
+                      1) * MPID_NEM_IB_RDMAWR_FROM_ALLOC_SZARENA;
                  p += MPID_NEM_IB_RDMAWR_FROM_ALLOC_SZARENA) {
-                ((MPID_nem_ib_rdmawr_from_alloc_hdr_t *) p)->mr = MPID_nem_ib_com_reg_mr_fetch(q, MPID_NEM_IB_RDMAWR_FROM_ALLOC_SZARENA, 0);
+                ((MPID_nem_ib_rdmawr_from_alloc_hdr_t *) p)->mr =
+                    MPID_nem_ib_com_reg_mr_fetch(q, MPID_NEM_IB_RDMAWR_FROM_ALLOC_SZARENA, 0);
                 if (!((MPID_nem_ib_rdmawr_from_alloc_hdr_t *) p)->mr) {
                     printf("ibv_reg_mr failed\n");
                     MPID_nem_ib_segv;
                 }
-                
-                ((MPID_nem_ib_rdmawr_from_alloc_hdr_t *) p)->first.next = p + MPID_NEM_IB_RDMAWR_FROM_ALLOC_SZARENA;
+
+                ((MPID_nem_ib_rdmawr_from_alloc_hdr_t *) p)->first.next =
+                    p + MPID_NEM_IB_RDMAWR_FROM_ALLOC_SZARENA;
             }
             ((MPID_nem_ib_rdmawr_from_alloc_hdr_t *) p)->first.next = 0;
 #endif
         }
-        ((MPID_nem_ib_rdmawr_from_alloc_hdr_t *) q)->first.ref_count = MPID_NEM_IB_RDMAWR_FROM_ALLOC_SZARENA / sz - 1;
+        ((MPID_nem_ib_rdmawr_from_alloc_hdr_t *) q)->first.ref_count =
+            MPID_NEM_IB_RDMAWR_FROM_ALLOC_SZARENA / sz - 1;
         q += sz + (MPID_NEM_IB_RDMAWR_FROM_ALLOC_SZARENA % sz);
         MPID_nem_ib_rdmawr_from_alloc_free_list_front[clz] = q + sz;
         return q;
@@ -713,12 +726,12 @@ static inline void MPID_nem_ib_rdmawr_from_free(const void *p, uint32_t _sz)
 {
     int clz;
     uint32_t sz;
-    assert(_sz <= (1ULL<<31));
+    assert(_sz <= (1ULL << 31));
     MPID_NEM_IB_RDMAWR_FROM_ALLOC_PREPROCESS_SZ;
     void *q = MPID_NEM_IB_RDMAWR_FROM_ALLOC_ARENA_START(p);
     if (!(--(((MPID_nem_ib_rdmawr_from_alloc_hdr_t *) q)->first.ref_count))) {
-        ((MPID_nem_ib_rdmawr_from_alloc_hdr_t *) q)->first.next = MPID_nem_ib_rdmawr_from_alloc_arena_free_list[clz];
+        ((MPID_nem_ib_rdmawr_from_alloc_hdr_t *) q)->first.next =
+            MPID_nem_ib_rdmawr_from_alloc_arena_free_list[clz];
         MPID_nem_ib_rdmawr_from_alloc_arena_free_list[clz] = (char *) q;
     }
 }
-

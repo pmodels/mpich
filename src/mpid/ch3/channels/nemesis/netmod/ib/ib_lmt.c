@@ -100,7 +100,7 @@ int MPID_nem_ib_lmt_initiate_lmt(struct MPIDI_VC *vc, union MPIDI_CH3_Pkt *rts_p
     /* prepare magic */
     //*((uint32_t*)(write_from_buf + data_sz - sizeof(tailmagic_t))) = MPID_NEM_IB_COM_MAGIC;
 
-#if 0   /* moving to packet header */ /* embed RDMA-write-to buffer occupancy information */
+#if 0   /* moving to packet header */   /* embed RDMA-write-to buffer occupancy information */
     dprintf("lmt_initiate_lmt,rsr_seq_num_tail=%d\n", vc_ib->ibcom->rsr_seq_num_tail);
     /* embed RDMA-write-to buffer occupancy information */
     s_cookie_buf->seq_num_tail = vc_ib->ibcom->rsr_seq_num_tail;
@@ -272,7 +272,7 @@ int MPID_nem_ib_lmt_start_recv(struct MPIDI_VC *vc, struct MPID_Request *req, MP
         MPID_nem_ib_sendq_enqueue(&vc_ib->sendq, req);
     }
 
-#if 0 /* moving to packet header */
+#if 0   /* moving to packet header */
     /* extract embeded RDMA-write-to buffer occupancy information */
     dprintf("lmt_start_recv,old lsr_seq_num=%d,s_cookie_buf->seq_num_tail=%d\n",
             vc_ib->ibcom->lsr_seq_num_tail, s_cookie_buf->seq_num_tail);

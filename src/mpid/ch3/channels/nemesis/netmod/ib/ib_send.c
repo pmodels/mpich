@@ -170,13 +170,14 @@ static int MPID_nem_ib_iSendContig_core(MPIDI_VC_t * vc, MPID_Request * sreq, vo
     /* send RDMA-write-to buffer occupancy information */
     /* embed SR occupancy information and remember the last one sent */
     MPIDI_CH3_Pkt_t *ch3_hdr = (MPIDI_CH3_Pkt_t *) hdr;
-    if (MPID_nem_ib_diff16(vc_ib->ibcom->rsr_seq_num_tail, vc_ib->ibcom->rsr_seq_num_tail_last_sent) > notify_rate) {
+    if (MPID_nem_ib_diff16(vc_ib->ibcom->rsr_seq_num_tail, vc_ib->ibcom->rsr_seq_num_tail_last_sent)
+        > notify_rate) {
 #if 0   /* debug, disabling piggy-back */
         switch (ch3_hdr->type) {
         case MPIDI_CH3_PKT_EAGER_SEND:
             pkt_netmod.subtype = MPIDI_NEM_IB_PKT_EAGER_SEND;
             goto common_tail;
-#if 0 /* modification of mpid_nem_lmt.c is required */
+#if 0   /* modification of mpid_nem_lmt.c is required */
         case MPIDI_NEM_PKT_LMT_RTS:
             pkt_netmod.subtype = MPIDI_NEM_IB_PKT_LMT_RTS;
             goto common_tail;
@@ -244,7 +245,8 @@ static int MPID_nem_ib_iSendContig_core(MPIDI_VC_t * vc, MPID_Request * sreq, vo
 
     dprintf
         ("isendcontig_core,sreq=%p,prefix=%p,sz_prefix=%d,hdr=%p,sz_hdr=%ld,data=%p,sz_data=%d,remote_ringbuf->type=%d\n",
-         sreq, prefix, sz_prefix, hdr, hdr_sz, data, (int) data_sz, vc_ib->ibcom->remote_ringbuf->type);
+         sreq, prefix, sz_prefix, hdr, hdr_sz, data, (int) data_sz,
+         vc_ib->ibcom->remote_ringbuf->type);
 
     if (sizeof(MPIDI_CH3_Pkt_t) != hdr_sz) {
         printf("type=%d,subtype=%d\n", ((MPID_nem_pkt_netmod_t *) hdr)->type,
@@ -253,7 +255,7 @@ static int MPID_nem_ib_iSendContig_core(MPIDI_VC_t * vc, MPID_Request * sreq, vo
 
     int copied;
     ibcom_errno =
-        MPID_nem_ib_com_isend(vc_ib->sc->fd, 
+        MPID_nem_ib_com_isend(vc_ib->sc->fd,
                               (uint64_t) sreq,
                               prefix, sz_prefix,
                               hdr, hdr_sz,
@@ -396,30 +398,34 @@ int MPID_nem_ib_iSendContig(MPIDI_VC_t * vc, MPID_Request * sreq, void *hdr,
     MPIDI_DBG_Print_packet((MPIDI_CH3_Pkt_t *) hdr);
 
     if (vc_ib->connection_state == MPID_NEM_IB_CM_CLOSED) {
-        if(vc_ib->connection_guard == 0) {
+        if (vc_ib->connection_guard == 0) {
             vc_ib->connection_guard = 1;
             /* connected=no,ringbuf-type=shared,slot-available=no,
-               going-to-be-enqueued=yes case */
-            MPID_nem_ib_cm_cas(vc, 0); /* Call ask_fetch just after it's connected */
+             * going-to-be-enqueued=yes case */
+            MPID_nem_ib_cm_cas(vc, 0);  /* Call ask_fetch just after it's connected */
         }
 
     }
     if (vc_ib->connection_state != MPID_NEM_IB_CM_ESTABLISHED) {
         /* connected=closed/transit,ringbuf-type=shared,slot-available=no,
-           going-to-be-enqueued=yes case */
-        REQ_FIELD(sreq, ask) = 0; /* We can't ask because ring-buffer type is not determined yet. */
+         * going-to-be-enqueued=yes case */
+        REQ_FIELD(sreq, ask) = 0;       /* We can't ask because ring-buffer type is not determined yet. */
         MPIU_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**MPID_nem_ib_ringbuf_ask_fetch");
-    } else {        
+    }
+    else {
         /* connected=established,ringbuf-type=shared,slot-available=no,
-           going-to-be-enqueued=yes case */
+         * going-to-be-enqueued=yes case */
         if (vc_ib->ibcom->local_ringbuf_type == MPID_NEM_IB_RINGBUF_SHARED &&
             MPID_nem_ib_diff16(vc_ib->ibcom->sseq_num,
-                               vc_ib->ibcom->lsr_seq_num_tail) >= vc_ib->ibcom->local_ringbuf_nslot) {
+                               vc_ib->ibcom->lsr_seq_num_tail) >=
+            vc_ib->ibcom->local_ringbuf_nslot) {
             dprintf("isendcontig,RINGBUF_SHARED and full,asking\n");
             mpi_errno = MPID_nem_ib_ringbuf_ask_fetch(vc);
             REQ_FIELD(sreq, ask) = 1;
-            MPIU_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**MPID_nem_ib_ringbuf_ask_fetch");        
-        } else {
+            MPIU_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER,
+                                "**MPID_nem_ib_ringbuf_ask_fetch");
+        }
+        else {
             REQ_FIELD(sreq, ask) = 0;
         }
     }
@@ -460,16 +466,15 @@ int MPID_nem_ib_iSendContig(MPIDI_VC_t * vc, MPID_Request * sreq, void *hdr,
     }
 #endif
 
-    dprintf("isendcontig,%d->%d,req=%p,type=%d,subtype=%d,data_sz=%ld,ldiff=%d(%d-%d),rdiff=%d(%d-%d)\n",
-            MPID_nem_ib_myrank, vc->pg_rank,
-            sreq,
-            ((MPIDI_CH3_Pkt_t *) hdr)->type,
-            ((MPID_nem_pkt_netmod_t *) hdr)->subtype, data_sz,
-            MPID_nem_ib_diff16(vc_ib->ibcom->sseq_num, vc_ib->ibcom->lsr_seq_num_tail),
-            vc_ib->ibcom->sseq_num, vc_ib->ibcom->lsr_seq_num_tail,
-            MPID_nem_ib_diff16(vc_ib->ibcom->rsr_seq_num_tail,
-                               vc_ib->ibcom->rsr_seq_num_tail_last_sent),
-            vc_ib->ibcom->rsr_seq_num_tail, vc_ib->ibcom->rsr_seq_num_tail_last_sent);
+    dprintf
+        ("isendcontig,%d->%d,req=%p,type=%d,subtype=%d,data_sz=%ld,ldiff=%d(%d-%d),rdiff=%d(%d-%d)\n",
+         MPID_nem_ib_myrank, vc->pg_rank, sreq, ((MPIDI_CH3_Pkt_t *) hdr)->type,
+         ((MPID_nem_pkt_netmod_t *) hdr)->subtype, data_sz,
+         MPID_nem_ib_diff16(vc_ib->ibcom->sseq_num, vc_ib->ibcom->lsr_seq_num_tail),
+         vc_ib->ibcom->sseq_num, vc_ib->ibcom->lsr_seq_num_tail,
+         MPID_nem_ib_diff16(vc_ib->ibcom->rsr_seq_num_tail,
+                            vc_ib->ibcom->rsr_seq_num_tail_last_sent),
+         vc_ib->ibcom->rsr_seq_num_tail, vc_ib->ibcom->rsr_seq_num_tail_last_sent);
     dprintf("isendcontig,sendq_empty=%d,ncom=%d,ncqe=%d,rdmabuf_occ=%d\n",
             MPID_nem_ib_sendq_empty(vc_ib->sendq), vc_ib->ibcom->ncom, MPID_nem_ib_ncqe,
             MPID_nem_ib_diff16(vc_ib->ibcom->sseq_num, vc_ib->ibcom->lsr_seq_num_tail));
@@ -489,21 +494,19 @@ int MPID_nem_ib_iSendContig(MPIDI_VC_t * vc, MPID_Request * sreq, void *hdr,
     /* make control packet bringing sequence number go ahead of
      * queued packets to avoid dead-lock */
     int goahead =
-        (ch3_hdr->type == MPIDI_NEM_PKT_NETMOD &&
-         prefix->subtype == MPIDI_NEM_IB_PKT_REQ_SEQ_NUM)
+        (ch3_hdr->type == MPIDI_NEM_PKT_NETMOD && prefix->subtype == MPIDI_NEM_IB_PKT_REQ_SEQ_NUM)
         || (ch3_hdr->type == MPIDI_NEM_PKT_NETMOD &&
             prefix->subtype == MPIDI_NEM_IB_PKT_REPLY_SEQ_NUM) ||
-        (ch3_hdr->type == MPIDI_NEM_PKT_NETMOD &&
-         prefix->subtype == MPIDI_NEM_IB_PKT_LMT_GET_DONE)
+        (ch3_hdr->type == MPIDI_NEM_PKT_NETMOD && prefix->subtype == MPIDI_NEM_IB_PKT_LMT_GET_DONE)
         ? 1 : 0;
     dprintf("isendcontig,slack=%d,goahead=%d\n", slack, goahead);
 
-    if (
-        (goahead || MPID_nem_ib_sendq_empty(vc_ib->sendq)) &&
+    if ((goahead || MPID_nem_ib_sendq_empty(vc_ib->sendq)) &&
         vc_ib->ibcom->ncom < MPID_NEM_IB_COM_MAX_SQ_CAPACITY - slack &&
         MPID_nem_ib_ncqe < MPID_NEM_IB_COM_MAX_CQ_CAPACITY - slack &&
         MPID_nem_ib_diff16(vc_ib->ibcom->sseq_num,
-                           vc_ib->ibcom->lsr_seq_num_tail) < vc_ib->ibcom->local_ringbuf_nslot - slack) {
+                           vc_ib->ibcom->lsr_seq_num_tail) <
+        vc_ib->ibcom->local_ringbuf_nslot - slack) {
 
         mpi_errno = MPID_nem_ib_iSendContig_core(vc, sreq, hdr, hdr_sz, data, data_sz);
         if (mpi_errno) {
@@ -513,15 +516,16 @@ int MPID_nem_ib_iSendContig(MPIDI_VC_t * vc, MPID_Request * sreq, void *hdr,
     }
     else {
         /* enqueue command into send_queue */
-        dprintf("isendcontig,enqueuing,goahead=%d,sendq=%d,ncom=%d,ncqe=%d,ldiff=%d(%d-%d),slack=%d\n",
-                goahead, MPID_nem_ib_sendq_empty(vc_ib->sendq),
-                vc_ib->ibcom->ncom < MPID_NEM_IB_COM_MAX_SQ_CAPACITY - slack,
-                MPID_nem_ib_ncqe < MPID_NEM_IB_COM_MAX_CQ_CAPACITY - slack,
-                MPID_nem_ib_diff16(vc_ib->ibcom->sseq_num, vc_ib->ibcom->lsr_seq_num_tail),
-                vc_ib->ibcom->sseq_num, vc_ib->ibcom->lsr_seq_num_tail, slack);
+        dprintf
+            ("isendcontig,enqueuing,goahead=%d,sendq=%d,ncom=%d,ncqe=%d,ldiff=%d(%d-%d),slack=%d\n",
+             goahead, MPID_nem_ib_sendq_empty(vc_ib->sendq),
+             vc_ib->ibcom->ncom < MPID_NEM_IB_COM_MAX_SQ_CAPACITY - slack,
+             MPID_nem_ib_ncqe < MPID_NEM_IB_COM_MAX_CQ_CAPACITY - slack,
+             MPID_nem_ib_diff16(vc_ib->ibcom->sseq_num, vc_ib->ibcom->lsr_seq_num_tail),
+             vc_ib->ibcom->sseq_num, vc_ib->ibcom->lsr_seq_num_tail, slack);
 
         /* this location because the above message refers undefined */
-    enqueue:
+      enqueue:
 
         /* store required info. see MPIDI_CH3_iSendv in src/mpid/ch3/channels/nemesis/src/ch3_isendv.c */
         sreq->dev.pending_pkt = *(MPIDI_CH3_Pkt_t *) hdr;
@@ -713,8 +717,9 @@ static int MPID_nem_ib_SendNoncontig_core(MPIDI_VC_t * vc, MPID_Request * sreq, 
     }
 
     int copied;
-    dprintf("sendnoncontig_core,isend,%d->%d,seq_num=%d,remote_ringbuf->type=%d\n", MPID_nem_ib_myrank, vc->pg_rank,
-            vc_ib->ibcom->sseq_num, vc_ib->ibcom->remote_ringbuf->type);
+    dprintf("sendnoncontig_core,isend,%d->%d,seq_num=%d,remote_ringbuf->type=%d\n",
+            MPID_nem_ib_myrank, vc->pg_rank, vc_ib->ibcom->sseq_num,
+            vc_ib->ibcom->remote_ringbuf->type);
 
     ibcom_errno =
         MPID_nem_ib_com_isend(vc_ib->sc->fd,
@@ -825,33 +830,37 @@ int MPID_nem_ib_SendNoncontig(MPIDI_VC_t * vc, MPID_Request * sreq, void *hdr,
     MPIU_DBG_MSG(CH3_CHANNEL, VERBOSE, "ib_SendNoncontig");
 
     if (vc_ib->connection_state == MPID_NEM_IB_CM_CLOSED) {
-        if(vc_ib->connection_guard == 0) {
+        if (vc_ib->connection_guard == 0) {
             vc_ib->connection_guard = 1;
             /* connected=closed,ringbuf-type=shared,slot-available=no,
-               going-to-be-enqueued=yes case */
-            MPID_nem_ib_cm_cas(vc, 0); /* Call ask_fetch just after it's connected */
+             * going-to-be-enqueued=yes case */
+            MPID_nem_ib_cm_cas(vc, 0);  /* Call ask_fetch just after it's connected */
         }
     }
     if (vc_ib->connection_state != MPID_NEM_IB_CM_ESTABLISHED) {
         /* connected=closed/transit,ringbuf-type=shared,slot-available=no,
-           going-to-be-enqueued=yes case */
+         * going-to-be-enqueued=yes case */
         REQ_FIELD(sreq, ask) = 0;
         MPIU_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**MPID_nem_ib_ringbuf_ask_fetch");
-    } else {
+    }
+    else {
         /* connected=established,ringbuf-type=shared,slot-available=no,
-           going-to-be-enqueued=yes case */
+         * going-to-be-enqueued=yes case */
         if (vc_ib->ibcom->local_ringbuf_type == MPID_NEM_IB_RINGBUF_SHARED &&
             MPID_nem_ib_diff16(vc_ib->ibcom->sseq_num,
-                               vc_ib->ibcom->lsr_seq_num_tail) >= vc_ib->ibcom->local_ringbuf_nslot) {
+                               vc_ib->ibcom->lsr_seq_num_tail) >=
+            vc_ib->ibcom->local_ringbuf_nslot) {
             dprintf("sendnoncontig,RINGBUF_SHARED and full,asking\n");
             REQ_FIELD(sreq, ask) = 1;
             mpi_errno = MPID_nem_ib_ringbuf_ask_fetch(vc);
-            MPIU_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**MPID_nem_ib_ringbuf_ask_fetch");        
-        } else {
+            MPIU_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER,
+                                "**MPID_nem_ib_ringbuf_ask_fetch");
+        }
+        else {
             REQ_FIELD(sreq, ask) = 0;
         }
     }
-    
+
     dprintf("sendnoncontig,%d->%d,sendq_empty=%d,ncom=%d,rdmabuf_occ=%d\n", MPID_nem_ib_myrank,
             vc->pg_rank, MPID_nem_ib_sendq_empty(vc_ib->sendq), vc_ib->ibcom->ncom,
             MPID_nem_ib_diff16(vc_ib->ibcom->sseq_num, vc_ib->ibcom->lsr_seq_num_tail));
@@ -876,13 +885,14 @@ int MPID_nem_ib_SendNoncontig(MPIDI_VC_t * vc, MPID_Request * sreq, void *hdr,
 
     if (
 #ifdef MPID_NEM_IB_ONDEMAND
-        vc_ib->connection_state == MPID_NEM_IB_CM_ESTABLISHED &&
+           vc_ib->connection_state == MPID_NEM_IB_CM_ESTABLISHED &&
 #endif
-        MPID_nem_ib_sendq_empty(vc_ib->sendq) &&
-        vc_ib->ibcom->ncom < MPID_NEM_IB_COM_MAX_SQ_CAPACITY - slack &&
-        MPID_nem_ib_ncqe < MPID_NEM_IB_COM_MAX_CQ_CAPACITY - slack &&
-        MPID_nem_ib_diff16(vc_ib->ibcom->sseq_num,
-                           vc_ib->ibcom->lsr_seq_num_tail) < vc_ib->ibcom->local_ringbuf_nslot - slack) {
+           MPID_nem_ib_sendq_empty(vc_ib->sendq) &&
+           vc_ib->ibcom->ncom < MPID_NEM_IB_COM_MAX_SQ_CAPACITY - slack &&
+           MPID_nem_ib_ncqe < MPID_NEM_IB_COM_MAX_CQ_CAPACITY - slack &&
+           MPID_nem_ib_diff16(vc_ib->ibcom->sseq_num,
+                              vc_ib->ibcom->lsr_seq_num_tail) <
+           vc_ib->ibcom->local_ringbuf_nslot - slack) {
 
         mpi_errno = MPID_nem_ib_SendNoncontig_core(vc, sreq, hdr, hdr_sz);
         if (mpi_errno) {
@@ -936,7 +946,7 @@ int MPID_nem_ib_send_progress(MPIDI_VC_t * vc)
     //dprintf("send_progress,enter\n");
 
 #ifdef MPID_NEM_IB_ONDEMAND
-    if(vc_ib->connection_state != MPID_NEM_IB_CM_ESTABLISHED) {
+    if (vc_ib->connection_state != MPID_NEM_IB_CM_ESTABLISHED) {
         //dprintf("send_progress,connection_state=%08x\n", vc_ib->connection_state);
         goto fn_exit;
     }
@@ -984,70 +994,70 @@ int MPID_nem_ib_send_progress(MPIDI_VC_t * vc)
                 MPID_NEM_IB_COM_AMT_SLACK;
 
             /* Temporary fix until removing slack */
-            if(vc_ib->ibcom->local_ringbuf_type == MPID_NEM_IB_RINGBUF_SHARED) {
+            if (vc_ib->ibcom->local_ringbuf_type == MPID_NEM_IB_RINGBUF_SHARED) {
                 slack = 0;
             }
 
             /* Refill slots from queue
-               We don't need refill code in sendcontig because
-               there is an order where (1) send, (2) it's queued, (3) then ask obtains slots,
-               (4) then we can refill them here. */
+             * We don't need refill code in sendcontig because
+             * there is an order where (1) send, (2) it's queued, (3) then ask obtains slots,
+             * (4) then we can refill them here. */
 
-            if(vc_ib->ibcom->local_ringbuf_type == MPID_NEM_IB_RINGBUF_SHARED &&
-               (msg_type == MPIDI_REQUEST_EAGER_MSG && 
-                MPID_nem_ib_diff16(vc_ib->ibcom->sseq_num,
-                                   vc_ib->ibcom->lsr_seq_num_tail) >= vc_ib->ibcom->local_ringbuf_nslot)) {
+            if (vc_ib->ibcom->local_ringbuf_type == MPID_NEM_IB_RINGBUF_SHARED &&
+                (msg_type == MPIDI_REQUEST_EAGER_MSG &&
+                 MPID_nem_ib_diff16(vc_ib->ibcom->sseq_num,
+                                    vc_ib->ibcom->lsr_seq_num_tail) >=
+                 vc_ib->ibcom->local_ringbuf_nslot)) {
                 /* Prevent RDMA-read for rendezvous protocol from issuing ask */
 
-                if(!REQ_FIELD(sreq, ask)) { /* First packet after connection hasn't asked slot */
-                    /* Transitioning from exclusive to shared and need to issue ask. 
-                       This case is detected because exclusive entries in the queue are deleted
-                       and deprived of slots of exclusive and the last state is set to
-                       shared when deciding a transition from exclusive to shared 
-                       and an issued or queued ask must be in the queue or ringbuf_sendq
-                       when staying shared. */
+                if (!REQ_FIELD(sreq, ask)) {    /* First packet after connection hasn't asked slot */
+                    /* Transitioning from exclusive to shared and need to issue ask.
+                     * This case is detected because exclusive entries in the queue are deleted
+                     * and deprived of slots of exclusive and the last state is set to
+                     * shared when deciding a transition from exclusive to shared
+                     * and an issued or queued ask must be in the queue or ringbuf_sendq
+                     * when staying shared. */
                     dprintf("send_progress,call ask_fetch,%d->%d\n",
                             MPID_nem_ib_myrank, vc->pg_rank);
                     mpi_errno = MPID_nem_ib_ringbuf_ask_fetch(vc);
                     REQ_FIELD(sreq, ask) = 1;
                     MPIU_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER,
                                         "**MPID_nem_ib_ringbuf_ask_fetch");
-                } else if(!MPID_nem_ib_ringbuf_sectorq_empty(vc_ib->ibcom->sectorq)) {
-                    /* Staying shared or transitioning from shared to exclusive. 
-                       We need to consume acquires slots in the latter case. 
-                       Transitioning from shared to exclusive is achieved by
-                       finding an exlusive entry. */
-                    MPID_nem_ib_ringbuf_sector_t* sector =
+                }
+                else if (!MPID_nem_ib_ringbuf_sectorq_empty(vc_ib->ibcom->sectorq)) {
+                    /* Staying shared or transitioning from shared to exclusive.
+                     * We need to consume acquires slots in the latter case.
+                     * Transitioning from shared to exclusive is achieved by
+                     * finding an exlusive entry. */
+                    MPID_nem_ib_ringbuf_sector_t *sector =
                         MPID_nem_ib_ringbuf_sectorq_head(vc_ib->ibcom->sectorq);
-                    
+
                     vc_ib->ibcom->local_ringbuf_type = sector->type;
                     vc_ib->ibcom->local_ringbuf_start = sector->start;
                     vc_ib->ibcom->local_ringbuf_nslot = sector->nslot;
                     vc_ib->ibcom->sseq_num = sector->head;
                     vc_ib->ibcom->lsr_seq_num_tail = sector->tail;
-                    
+
                     MPID_nem_ib_ringbuf_sectorq_dequeue(&vc_ib->ibcom->sectorq, &sector);
                     MPIU_Free(sector);
 
-                    dprintf("send_progress,refill,next type=%d,start=%p,local_head=%d,local_tail=%d\n",
-                            vc_ib->ibcom->local_ringbuf_type,
-                            vc_ib->ibcom->local_ringbuf_start,
-                            vc_ib->ibcom->sseq_num,
-                            vc_ib->ibcom->lsr_seq_num_tail
-                            );
+                    dprintf
+                        ("send_progress,refill,next type=%d,start=%p,local_head=%d,local_tail=%d\n",
+                         vc_ib->ibcom->local_ringbuf_type, vc_ib->ibcom->local_ringbuf_start,
+                         vc_ib->ibcom->sseq_num, vc_ib->ibcom->lsr_seq_num_tail);
                 }
             }
 
             if (vc_ib->ibcom->ncom >= MPID_NEM_IB_COM_MAX_SQ_CAPACITY - slack ||
                 MPID_nem_ib_ncqe >= MPID_NEM_IB_COM_MAX_CQ_CAPACITY - slack ||
-                (msg_type == MPIDI_REQUEST_EAGER_MSG && 
+                (msg_type == MPIDI_REQUEST_EAGER_MSG &&
                  MPID_nem_ib_diff16(vc_ib->ibcom->sseq_num,
                                     vc_ib->ibcom->lsr_seq_num_tail) >=
                  vc_ib->ibcom->local_ringbuf_nslot - slack)) {
-                /* Exit when full because this reduces the search cost. 
-                   Note that RDMA-read for rendezvous protocol can be issued even
-                   when no ring-buffer slot is available. */
-                goto fn_exit; 
+                /* Exit when full because this reduces the search cost.
+                 * Note that RDMA-read for rendezvous protocol can be issued even
+                 * when no ring-buffer slot is available. */
+                goto fn_exit;
             }
 
             if (vc_ib != MPID_nem_ib_debug_current_vc_ib) {
@@ -1087,7 +1097,7 @@ int MPID_nem_ib_send_progress(MPIDI_VC_t * vc)
                                 (MPID_nem_ib_lmt_cookie_t *) sreq->dev.iov[1].MPID_IOV_BUF;
                             dprintf("send_progress,MPIDI_NEM_PKT_LMT_RTS,rsr_seq_num_tail=%d\n",
                                     vc_ib->ibcom->rsr_seq_num_tail);
-#if 0 /* moving to packet header */
+#if 0   /* moving to packet header */
                             /* embed RDMA-write-to buffer occupancy information */
                             s_cookie_buf->seq_num_tail = vc_ib->ibcom->rsr_seq_num_tail;
                             /* remember the last one sent */
@@ -1102,7 +1112,7 @@ int MPID_nem_ib_send_progress(MPIDI_VC_t * vc)
                                 (MPID_nem_ib_lmt_cookie_t *) sreq->dev.iov[1].MPID_IOV_BUF;
                             dprintf("send_progress,MPIDI_NEM_PKT_LMT_CTS,rsr_seq_num_tail=%d\n",
                                     vc_ib->ibcom->rsr_seq_num_tail);
-#if 0 /* moving to packet header */
+#if 0   /* moving to packet header */
                             /* embed RDMA-write-to buffer occupancy information */
                             s_cookie_buf->seq_num_tail = vc_ib->ibcom->rsr_seq_num_tail;
                             /* remember the last one sent */
@@ -1122,8 +1132,8 @@ int MPID_nem_ib_send_progress(MPIDI_VC_t * vc)
                         case MPIDI_NEM_IB_PKT_LMT_GET_DONE:{
 #if 0
                                 MPID_nem_ib_pkt_lmt_get_done_t *_done_pkt =
-                                    (MPID_nem_ib_pkt_lmt_get_done_t *) sreq->dev.
-                                    iov[0].MPID_IOV_BUF;
+                                    (MPID_nem_ib_pkt_lmt_get_done_t *) sreq->dev.iov[0].
+                                    MPID_IOV_BUF;
                                 dprintf
                                     ("send_progress,MPIDI_NEM_IB_PKT_LMT_GET_DONE,rsr_seq_num_tail=%d\n",
                                      vc_ib->ibcom->rsr_seq_num_tail);
@@ -1137,8 +1147,8 @@ int MPID_nem_ib_send_progress(MPIDI_VC_t * vc)
                             }
                         case MPIDI_NEM_IB_PKT_REPLY_SEQ_NUM:{
                                 MPID_nem_ib_pkt_reply_seq_num_t *_pkt =
-                                    (MPID_nem_ib_pkt_reply_seq_num_t *) sreq->dev.
-                                    iov[0].MPID_IOV_BUF;
+                                    (MPID_nem_ib_pkt_reply_seq_num_t *) sreq->dev.iov[0].
+                                    MPID_IOV_BUF;
                                 dprintf
                                     ("send_progress,MPIDI_NEM_IB_PKT_REPLY_SEQ_NUM,rsr_seq_num_tail=%d\n",
                                      vc_ib->ibcom->rsr_seq_num_tail);
@@ -1191,7 +1201,8 @@ int MPID_nem_ib_send_progress(MPIDI_VC_t * vc)
             else if (sreq->kind == MPID_REQUEST_SEND && msg_type == MPIDI_REQUEST_RNDV_MSG) {
             }
             else {
-                dprintf("send_progress,unknown sreq=%p,sreq->kind=%d,msg_type=%d\n", sreq, sreq->kind, msg_type);
+                dprintf("send_progress,unknown sreq=%p,sreq->kind=%d,msg_type=%d\n", sreq,
+                        sreq->kind, msg_type);
                 assert(0);
                 MPIU_ERR_INTERNALANDJUMP(mpi_errno, "send_progress,unknown type");
             }
@@ -1216,7 +1227,7 @@ int MPID_nem_ib_send_progress(MPIDI_VC_t * vc)
             prev_sreq = sreq;
             sreq = MPID_nem_ib_sendq_next(sreq);
           next_unlinked:;
-            if(!sreq) {
+            if (!sreq) {
                 dprintf("send_progress,sendq has got empty!\n");
             }
         } while (sreq);
@@ -1242,7 +1253,7 @@ int MPID_nem_ib_cm_progress()
     int mpi_errno = MPI_SUCCESS;
     int ibcom_errno;
     MPID_nem_ib_cm_req_t *sreq, *prev_sreq;
-    MPID_nem_ib_cm_cmd_shadow_t* shadow;
+    MPID_nem_ib_cm_cmd_shadow_t *shadow;
     int is_established = 0;
 
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_IB_CM_PROGRESS);
@@ -1272,22 +1283,23 @@ int MPID_nem_ib_cm_progress()
                 if (MPID_nem_ib_diff63(MPID_nem_ib_progress_engine_vt, sreq->retry_decided) <
                     sreq->retry_backoff) {
 #if 0
-                    dprintf("cm_progress,vt=%ld,retry_decided=%ld,diff=%ld,backoff=%ld\n", 
+                    dprintf("cm_progress,vt=%ld,retry_decided=%ld,diff=%ld,backoff=%ld\n",
                             MPID_nem_ib_progress_engine_vt, sreq->retry_decided,
                             MPID_nem_ib_diff63(MPID_nem_ib_progress_engine_vt, sreq->retry_decided),
                             sreq->retry_backoff);
 #endif
                     goto next;
                 }
-                dprintf("cm_progress,retry CAS,responder_rank=%d,req=%p,decided=%ld,vt=%ld,backoff=%ld\n",
-                        sreq->responder_rank, sreq, sreq->retry_decided,
-                        MPID_nem_ib_progress_engine_vt, sreq->retry_backoff);
+                dprintf
+                    ("cm_progress,retry CAS,responder_rank=%d,req=%p,decided=%ld,vt=%ld,backoff=%ld\n",
+                     sreq->responder_rank, sreq, sreq->retry_decided,
+                     MPID_nem_ib_progress_engine_vt, sreq->retry_backoff);
                 shadow =
-                    (MPID_nem_ib_cm_cmd_shadow_t *)MPIU_Malloc(sizeof(MPID_nem_ib_cm_cmd_shadow_t));
+                    (MPID_nem_ib_cm_cmd_shadow_t *)
+                    MPIU_Malloc(sizeof(MPID_nem_ib_cm_cmd_shadow_t));
                 shadow->type = sreq->state;
                 shadow->req = sreq;
-                mpi_errno =
-                    MPID_nem_ib_cm_cas_core(sreq->responder_rank, shadow);
+                mpi_errno = MPID_nem_ib_cm_cas_core(sreq->responder_rank, shadow);
                 MPIU_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER,
                                     "**MPID_nem_ib_cm_connect_cas_core");
                 break;
@@ -1297,14 +1309,15 @@ int MPID_nem_ib_cm_progress()
                      * So we replace SYN with CAS_RELEASE, and send. */
 
                     /* override req->type */
-                    ((MPID_nem_ib_cm_cmd_syn_t*)&sreq->cmd)->type = MPID_NEM_IB_CM_CAS_RELEASE;
-                    ((MPID_nem_ib_cm_cmd_syn_t*)&sreq->cmd)->initiator_rank = MPID_nem_ib_myrank;
+                    ((MPID_nem_ib_cm_cmd_syn_t *) & sreq->cmd)->type = MPID_NEM_IB_CM_CAS_RELEASE;
+                    ((MPID_nem_ib_cm_cmd_syn_t *) & sreq->cmd)->initiator_rank = MPID_nem_ib_myrank;
 
                     /* Initiator does not receive SYNACK and ACK2, so we decrement incoming counter here. */
                     sreq->ibcom->incoming_connection_tx -= 2;
 
                     shadow =
-                        (MPID_nem_ib_cm_cmd_shadow_t *)MPIU_Malloc(sizeof(MPID_nem_ib_cm_cmd_shadow_t));
+                        (MPID_nem_ib_cm_cmd_shadow_t *)
+                        MPIU_Malloc(sizeof(MPID_nem_ib_cm_cmd_shadow_t));
 
                     /* override req->state */
                     shadow->type = sreq->state = MPID_NEM_IB_CM_CAS_RELEASE;
@@ -1312,108 +1325,121 @@ int MPID_nem_ib_cm_progress()
                     dprintf("shadow=%p,shadow->req=%p\n", shadow, shadow->req);
                     mpi_errno =
                         MPID_nem_ib_cm_cmd_core(sreq->responder_rank, shadow,
-                                                (void *)(&sreq->cmd),
-                                                sizeof(MPID_nem_ib_cm_cmd_synack_t), 1 /* syn:1 */, 0);
+                                                (void *) (&sreq->cmd),
+                                                sizeof(MPID_nem_ib_cm_cmd_synack_t), 1 /* syn:1 */ ,
+                                                0);
                     MPIU_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER,
                                         "**MPID_nem_ib_cm_send_core");
                     break;
                 }
 
                 /* The initiator acqurire slot for the responder when sending syn */
-                if(MPID_nem_ib_diff16(MPID_nem_ib_cm_ringbuf_head,
-                                      MPID_nem_ib_cm_ringbuf_tail) >= MPID_NEM_IB_CM_NSEG) {
+                if (MPID_nem_ib_diff16(MPID_nem_ib_cm_ringbuf_head,
+                                       MPID_nem_ib_cm_ringbuf_tail) >= MPID_NEM_IB_CM_NSEG) {
                     goto next;
                 }
-                ((MPID_nem_ib_cm_cmd_syn_t*)&sreq->cmd)->responder_ringbuf_index = MPID_nem_ib_cm_ringbuf_head;
+                ((MPID_nem_ib_cm_cmd_syn_t *) & sreq->cmd)->responder_ringbuf_index =
+                    MPID_nem_ib_cm_ringbuf_head;
                 sreq->responder_ringbuf_index = MPID_nem_ib_cm_ringbuf_head;
-                ((MPID_nem_ib_cm_cmd_syn_t*)&sreq->cmd)->initiator_rank = MPID_nem_ib_myrank;
+                ((MPID_nem_ib_cm_cmd_syn_t *) & sreq->cmd)->initiator_rank = MPID_nem_ib_myrank;
 
                 MPID_nem_ib_cm_ringbuf_head++;
                 shadow =
-                    (MPID_nem_ib_cm_cmd_shadow_t *)MPIU_Malloc(sizeof(MPID_nem_ib_cm_cmd_shadow_t));
-                shadow->type = sreq->state;
-                shadow->req = sreq;
-                dprintf("shadow=%p,shadow->req=%p\n", shadow, shadow->req);
-                mpi_errno = 
-                    MPID_nem_ib_cm_cmd_core(sreq->responder_rank, shadow,
-                                            (void *)(&sreq->cmd),
-                                            sizeof(MPID_nem_ib_cm_cmd_synack_t), 1 /* syn:1 */, 0);
-                MPIU_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER, 
-                                    "**MPID_nem_ib_cm_send_core"); 
-                break;
-            case MPID_NEM_IB_CM_CAS_RELEASE:
-                ((MPID_nem_ib_cm_cmd_syn_t*)&sreq->cmd)->initiator_rank = MPID_nem_ib_myrank;
-
-                shadow =
-                    (MPID_nem_ib_cm_cmd_shadow_t *)MPIU_Malloc(sizeof(MPID_nem_ib_cm_cmd_shadow_t));
+                    (MPID_nem_ib_cm_cmd_shadow_t *)
+                    MPIU_Malloc(sizeof(MPID_nem_ib_cm_cmd_shadow_t));
                 shadow->type = sreq->state;
                 shadow->req = sreq;
                 dprintf("shadow=%p,shadow->req=%p\n", shadow, shadow->req);
                 mpi_errno =
                     MPID_nem_ib_cm_cmd_core(sreq->responder_rank, shadow,
-                                            (void *)(&sreq->cmd),
-                                            sizeof(MPID_nem_ib_cm_cmd_synack_t), 1 /* syn:1 */, 0);
+                                            (void *) (&sreq->cmd),
+                                            sizeof(MPID_nem_ib_cm_cmd_synack_t), 1 /* syn:1 */ , 0);
+                MPIU_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER,
+                                    "**MPID_nem_ib_cm_send_core");
+                break;
+            case MPID_NEM_IB_CM_CAS_RELEASE:
+                ((MPID_nem_ib_cm_cmd_syn_t *) & sreq->cmd)->initiator_rank = MPID_nem_ib_myrank;
+
+                shadow =
+                    (MPID_nem_ib_cm_cmd_shadow_t *)
+                    MPIU_Malloc(sizeof(MPID_nem_ib_cm_cmd_shadow_t));
+                shadow->type = sreq->state;
+                shadow->req = sreq;
+                dprintf("shadow=%p,shadow->req=%p\n", shadow, shadow->req);
+                mpi_errno =
+                    MPID_nem_ib_cm_cmd_core(sreq->responder_rank, shadow,
+                                            (void *) (&sreq->cmd),
+                                            sizeof(MPID_nem_ib_cm_cmd_synack_t), 1 /* syn:1 */ , 0);
                 MPIU_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER,
                                     "**MPID_nem_ib_cm_send_core");
                 break;
             case MPID_NEM_IB_CM_SYNACK:
                 /* The responder acquire slot for the initiator when sending synack */
-                if(MPID_nem_ib_diff16(MPID_nem_ib_cm_ringbuf_head,
-                                      MPID_nem_ib_cm_ringbuf_tail) >= MPID_NEM_IB_CM_NSEG) {
+                if (MPID_nem_ib_diff16(MPID_nem_ib_cm_ringbuf_head,
+                                       MPID_nem_ib_cm_ringbuf_tail) >= MPID_NEM_IB_CM_NSEG) {
                     goto next;
                 }
-                ((MPID_nem_ib_cm_cmd_synack_t*)&sreq->cmd)->initiator_ringbuf_index = MPID_nem_ib_cm_ringbuf_head;
+                ((MPID_nem_ib_cm_cmd_synack_t *) & sreq->cmd)->initiator_ringbuf_index =
+                    MPID_nem_ib_cm_ringbuf_head;
                 sreq->initiator_ringbuf_index = MPID_nem_ib_cm_ringbuf_head;
                 MPID_nem_ib_cm_ringbuf_head++;
                 shadow =
-                    (MPID_nem_ib_cm_cmd_shadow_t *)MPIU_Malloc(sizeof(MPID_nem_ib_cm_cmd_shadow_t));
-                shadow->type = sreq->state;
-                shadow->req = sreq;
-                dprintf("shadow=%p,shadow->req=%p\n", shadow, shadow->req);
-                mpi_errno = 
-                    MPID_nem_ib_cm_cmd_core(sreq->initiator_rank, shadow,
-                                            (void *)(&sreq->cmd),
-                                            sizeof(MPID_nem_ib_cm_cmd_synack_t), 0, sreq->ringbuf_index);
-                MPIU_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER, 
-                                    "**MPID_nem_ib_cm_send_core"); 
-                break;
-            case MPID_NEM_IB_CM_ACK1:
-                shadow =
-                    (MPID_nem_ib_cm_cmd_shadow_t *)MPIU_Malloc(sizeof(MPID_nem_ib_cm_cmd_shadow_t));
-                shadow->type = sreq->state;
-                shadow->req = sreq;
-                dprintf("shadow=%p,shadow->req=%p\n", shadow, shadow->req);
-                mpi_errno = 
-                    MPID_nem_ib_cm_cmd_core(sreq->responder_rank, shadow,
-                                            (void *)(&sreq->cmd),
-                                            sizeof(MPID_nem_ib_cm_cmd_ack1_t), 0, sreq->ringbuf_index);
-                MPIU_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER, 
-                                    "**MPID_nem_ib_cm_send_core"); 
-                break;
-            case MPID_NEM_IB_CM_ACK2:
-                shadow =
-                    (MPID_nem_ib_cm_cmd_shadow_t *)MPIU_Malloc(sizeof(MPID_nem_ib_cm_cmd_shadow_t));
-                shadow->type = sreq->state;
-                shadow->req = sreq;
-                dprintf("shadow=%p,shadow->req=%p\n", shadow, shadow->req);
-                mpi_errno = 
-                    MPID_nem_ib_cm_cmd_core(sreq->initiator_rank, shadow,
-                                            (void *)(&sreq->cmd),
-                                            sizeof(MPID_nem_ib_cm_cmd_ack2_t), 0, sreq->ringbuf_index);
-                MPIU_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER, 
-                                    "**MPID_nem_ib_cm_send_core"); 
-                break;
-            case MPID_NEM_IB_CM_ALREADY_ESTABLISHED:
-            case MPID_NEM_IB_CM_RESPONDER_IS_CONNECTING:
-                shadow =
-                    (MPID_nem_ib_cm_cmd_shadow_t *)MPIU_Malloc(sizeof(MPID_nem_ib_cm_cmd_shadow_t));
+                    (MPID_nem_ib_cm_cmd_shadow_t *)
+                    MPIU_Malloc(sizeof(MPID_nem_ib_cm_cmd_shadow_t));
                 shadow->type = sreq->state;
                 shadow->req = sreq;
                 dprintf("shadow=%p,shadow->req=%p\n", shadow, shadow->req);
                 mpi_errno =
                     MPID_nem_ib_cm_cmd_core(sreq->initiator_rank, shadow,
-                                            (void *)(&sreq->cmd),
-                                            sizeof(MPID_nem_ib_cm_cmd_synack_t), 0, sreq->ringbuf_index);
+                                            (void *) (&sreq->cmd),
+                                            sizeof(MPID_nem_ib_cm_cmd_synack_t), 0,
+                                            sreq->ringbuf_index);
+                MPIU_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER,
+                                    "**MPID_nem_ib_cm_send_core");
+                break;
+            case MPID_NEM_IB_CM_ACK1:
+                shadow =
+                    (MPID_nem_ib_cm_cmd_shadow_t *)
+                    MPIU_Malloc(sizeof(MPID_nem_ib_cm_cmd_shadow_t));
+                shadow->type = sreq->state;
+                shadow->req = sreq;
+                dprintf("shadow=%p,shadow->req=%p\n", shadow, shadow->req);
+                mpi_errno =
+                    MPID_nem_ib_cm_cmd_core(sreq->responder_rank, shadow,
+                                            (void *) (&sreq->cmd),
+                                            sizeof(MPID_nem_ib_cm_cmd_ack1_t), 0,
+                                            sreq->ringbuf_index);
+                MPIU_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER,
+                                    "**MPID_nem_ib_cm_send_core");
+                break;
+            case MPID_NEM_IB_CM_ACK2:
+                shadow =
+                    (MPID_nem_ib_cm_cmd_shadow_t *)
+                    MPIU_Malloc(sizeof(MPID_nem_ib_cm_cmd_shadow_t));
+                shadow->type = sreq->state;
+                shadow->req = sreq;
+                dprintf("shadow=%p,shadow->req=%p\n", shadow, shadow->req);
+                mpi_errno =
+                    MPID_nem_ib_cm_cmd_core(sreq->initiator_rank, shadow,
+                                            (void *) (&sreq->cmd),
+                                            sizeof(MPID_nem_ib_cm_cmd_ack2_t), 0,
+                                            sreq->ringbuf_index);
+                MPIU_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER,
+                                    "**MPID_nem_ib_cm_send_core");
+                break;
+            case MPID_NEM_IB_CM_ALREADY_ESTABLISHED:
+            case MPID_NEM_IB_CM_RESPONDER_IS_CONNECTING:
+                shadow =
+                    (MPID_nem_ib_cm_cmd_shadow_t *)
+                    MPIU_Malloc(sizeof(MPID_nem_ib_cm_cmd_shadow_t));
+                shadow->type = sreq->state;
+                shadow->req = sreq;
+                dprintf("shadow=%p,shadow->req=%p\n", shadow, shadow->req);
+                mpi_errno =
+                    MPID_nem_ib_cm_cmd_core(sreq->initiator_rank, shadow,
+                                            (void *) (&sreq->cmd),
+                                            sizeof(MPID_nem_ib_cm_cmd_synack_t), 0,
+                                            sreq->ringbuf_index);
                 MPIU_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER,
                                     "**MPID_nem_ib_cm_send_core");
                 break;
@@ -1455,7 +1481,7 @@ int MPID_nem_ib_cm_progress()
                 break;
             }
             goto next_unlinked;
-        next:
+          next:
             prev_sreq = sreq;
             sreq = MPID_nem_ib_cm_sendq_next(sreq);
           next_unlinked:;
@@ -1474,7 +1500,7 @@ int MPID_nem_ib_cm_progress()
 #define FUNCNAME MPID_nem_ib_cm_cas_core
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-int MPID_nem_ib_cm_cas_core(int rank, MPID_nem_ib_cm_cmd_shadow_t* shadow)
+int MPID_nem_ib_cm_cas_core(int rank, MPID_nem_ib_cm_cmd_shadow_t * shadow)
 {
     int mpi_errno = MPI_SUCCESS;
     int ibcom_errno;
@@ -1496,9 +1522,8 @@ int MPID_nem_ib_cm_cas_core(int rank, MPID_nem_ib_cm_cmd_shadow_t* shadow)
     MPID_nem_ib_ncqe_scratch_pad += 1;
 
     /* Direct poll to drain CQ to check CAS result */
-    MPID_nem_ib_ncqe_scratch_pad_to_drain += 1;     
-    dprintf("ringbuf_cm_cas_core,scratch_pad_to_drain=%d\n",
-            MPID_nem_ib_ncqe_scratch_pad_to_drain);
+    MPID_nem_ib_ncqe_scratch_pad_to_drain += 1;
+    dprintf("ringbuf_cm_cas_core,scratch_pad_to_drain=%d\n", MPID_nem_ib_ncqe_scratch_pad_to_drain);
 
   fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_IB_CM_CAS_CORE);
@@ -1523,7 +1548,7 @@ int MPID_nem_ib_cm_cas(MPIDI_VC_t * vc, uint32_t ask_on_connect)
     dprintf("cm_cas,enter\n");
 
     /* Prepare request structure for enqueued case */
-    MPID_nem_ib_cm_req_t* req = MPIU_Malloc(sizeof(MPID_nem_ib_cm_req_t));
+    MPID_nem_ib_cm_req_t *req = MPIU_Malloc(sizeof(MPID_nem_ib_cm_req_t));
     MPIU_ERR_CHKANDJUMP(!req, mpi_errno, MPI_ERR_OTHER, "**malloc");
     dprintf("req=%p\n", req);
     req->state = MPID_NEM_IB_CM_CAS;
@@ -1533,29 +1558,29 @@ int MPID_nem_ib_cm_cas(MPIDI_VC_t * vc, uint32_t ask_on_connect)
     req->responder_rank = vc->pg_rank;
     req->ask_on_connect = ask_on_connect;
     ibcom_errno =
-        MPID_nem_ib_com_obtain_pointer(MPID_nem_ib_scratch_pad_fds[vc->pg_rank],
-                                       &req->ibcom);
+        MPID_nem_ib_com_obtain_pointer(MPID_nem_ib_scratch_pad_fds[vc->pg_rank], &req->ibcom);
     MPIU_ERR_CHKANDJUMP(ibcom_errno, mpi_errno, MPI_ERR_OTHER, "**MPID_nem_ib_com_obtain_pointer");
     dprintf("req->ibcom=%p\n", req->ibcom);
 
     /* Increment transaction counter here because cm_cas is called only once
-       (cm_cas_core might be called more than once when retrying) */
+     * (cm_cas_core might be called more than once when retrying) */
     req->ibcom->outstanding_connection_tx += 1;
     dprintf("cm_cas,tx=%d\n", req->ibcom->outstanding_connection_tx);
 
     /* Acquire remote scratch pad */
     if (MPID_nem_ib_ncqe_scratch_pad < MPID_NEM_IB_COM_MAX_CQ_CAPACITY &&
         req->ibcom->ncom_scratch_pad < MPID_NEM_IB_COM_MAX_SQ_CAPACITY &&
-        MPID_nem_ib_diff16(MPID_nem_ib_cm_ringbuf_head, MPID_nem_ib_cm_ringbuf_tail) < MPID_NEM_IB_CM_NSEG) {
-        MPID_nem_ib_cm_cmd_shadow_t * shadow =
-            (MPID_nem_ib_cm_cmd_shadow_t *)MPIU_Malloc(sizeof(MPID_nem_ib_cm_cmd_shadow_t));
+        MPID_nem_ib_diff16(MPID_nem_ib_cm_ringbuf_head,
+                           MPID_nem_ib_cm_ringbuf_tail) < MPID_NEM_IB_CM_NSEG) {
+        MPID_nem_ib_cm_cmd_shadow_t *shadow =
+            (MPID_nem_ib_cm_cmd_shadow_t *) MPIU_Malloc(sizeof(MPID_nem_ib_cm_cmd_shadow_t));
         shadow->type = req->state;
         shadow->req = req;
-                
+
         mpi_errno = MPID_nem_ib_cm_cas_core(req->responder_rank, shadow);
-        MPIU_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER,
-                            "**MPID_nem_ib_cm_cas");
-    } else {
+        MPIU_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**MPID_nem_ib_cm_cas");
+    }
+    else {
         dprintf("cm_cas,enqueue\n");
         req->retry_decided = MPID_nem_ib_progress_engine_vt;
         MPID_nem_ib_cm_sendq_enqueue(&MPID_nem_ib_cm_sendq, req);
@@ -1573,7 +1598,8 @@ int MPID_nem_ib_cm_cas(MPIDI_VC_t * vc, uint32_t ask_on_connect)
 #define FUNCNAME MPID_nem_ib_cm_cmd_core
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-int MPID_nem_ib_cm_cmd_core(int rank, MPID_nem_ib_cm_cmd_shadow_t* shadow, void* buf, MPIDI_msg_sz_t sz, uint32_t syn, uint16_t ringbuf_index)
+int MPID_nem_ib_cm_cmd_core(int rank, MPID_nem_ib_cm_cmd_shadow_t * shadow, void *buf,
+                            MPIDI_msg_sz_t sz, uint32_t syn, uint16_t ringbuf_index)
 {
     int mpi_errno = MPI_SUCCESS;
     int ibcom_errno;
@@ -1593,37 +1619,37 @@ int MPID_nem_ib_cm_cmd_core(int rank, MPID_nem_ib_cm_cmd_shadow_t* shadow, void*
                                         syn ? MPID_NEM_IB_CM_OFF_SYN :
                                         MPID_NEM_IB_CM_OFF_CMD +
                                         sizeof(MPID_nem_ib_cm_cmd_t) *
-                                        ((uint16_t)(ringbuf_index % MPID_NEM_IB_CM_NSEG)),
-                                        sz,
-                                        buf,
-                                        &(shadow->buf_from), &(shadow->buf_from_sz));
+                                        ((uint16_t) (ringbuf_index % MPID_NEM_IB_CM_NSEG)),
+                                        sz, buf, &(shadow->buf_from), &(shadow->buf_from_sz));
 
     MPIU_ERR_CHKANDJUMP(ibcom_errno, mpi_errno, MPI_ERR_OTHER, "**MPID_nem_ib_com_put_scratch_pad");
     MPID_nem_ib_ncqe_scratch_pad += 1;
 
-    if(syn) {
+    if (syn) {
         /* Skip QP createion on race condition */
-        if(!(VC_FIELD(MPID_nem_ib_conns[rank].vc, connection_state) &
-             MPID_NEM_IB_CM_LOCAL_QP_RESET)) {
+        if (!(VC_FIELD(MPID_nem_ib_conns[rank].vc, connection_state) &
+              MPID_NEM_IB_CM_LOCAL_QP_RESET)) {
 
             /* Prepare QP (RESET). Attempting to overlap it with preparing QP (RESET) on the responder side */
-            ibcom_errno = MPID_nem_ib_com_open(ib_port, MPID_NEM_IB_COM_OPEN_RC, &MPID_nem_ib_conns[rank].fd);
+            ibcom_errno =
+                MPID_nem_ib_com_open(ib_port, MPID_NEM_IB_COM_OPEN_RC, &MPID_nem_ib_conns[rank].fd);
             MPIU_ERR_CHKANDJUMP(ibcom_errno, mpi_errno, MPI_ERR_OTHER, "**MPID_nem_ib_com_open");
 
-            VC_FIELD(MPID_nem_ib_conns[rank].vc, connection_state) |=
-                MPID_NEM_IB_CM_LOCAL_QP_RESET;
-            
+            VC_FIELD(MPID_nem_ib_conns[rank].vc, connection_state) |= MPID_NEM_IB_CM_LOCAL_QP_RESET;
+
             /* Store pointer to MPID_nem_ib_com */
-            ibcom_errno = MPID_nem_ib_com_obtain_pointer(MPID_nem_ib_conns[rank].fd, 
-                                                         &VC_FIELD(MPID_nem_ib_conns[rank].vc, ibcom));
-            MPIU_ERR_CHKANDJUMP(ibcom_errno, mpi_errno, MPI_ERR_OTHER, "**MPID_nem_ib_com_obtain_pointer");
-            
+            ibcom_errno = MPID_nem_ib_com_obtain_pointer(MPID_nem_ib_conns[rank].fd,
+                                                         &VC_FIELD(MPID_nem_ib_conns[rank].vc,
+                                                                   ibcom));
+            MPIU_ERR_CHKANDJUMP(ibcom_errno, mpi_errno, MPI_ERR_OTHER,
+                                "**MPID_nem_ib_com_obtain_pointer");
+
             /* Allocate RDMA-write-to ring-buf for remote */
             mpi_errno = MPID_nem_ib_ringbuf_alloc(MPID_nem_ib_conns[rank].vc);
             MPIU_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**MPID_nem_ib_ring_alloc");
         }
     }
-    
+
   fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_IB_CM_CMD_CORE);
     return mpi_errno;
@@ -1637,7 +1663,8 @@ int MPID_nem_ib_cm_cmd_core(int rank, MPID_nem_ib_cm_cmd_shadow_t* shadow, void*
 #define FUNCNAME MPID_nem_ib_ringbuf_ask_fetch_core
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-int MPID_nem_ib_ringbuf_ask_fetch_core(MPIDI_VC_t * vc, MPID_nem_ib_ringbuf_cmd_shadow_t* shadow, MPIDI_msg_sz_t sz)
+int MPID_nem_ib_ringbuf_ask_fetch_core(MPIDI_VC_t * vc, MPID_nem_ib_ringbuf_cmd_shadow_t * shadow,
+                                       MPIDI_msg_sz_t sz)
 {
     int mpi_errno = MPI_SUCCESS;
     int ibcom_errno;
@@ -1651,14 +1678,13 @@ int MPID_nem_ib_ringbuf_ask_fetch_core(MPIDI_VC_t * vc, MPID_nem_ib_ringbuf_cmd_
         MPID_nem_ib_com_get_scratch_pad(MPID_nem_ib_scratch_pad_fds[vc->pg_rank],
                                         (uint64_t) shadow,
                                         MPID_NEM_IB_RINGBUF_OFF_HEAD,
-                                        sz,
-                                        &shadow->buf_from, &shadow->buf_from_sz);
+                                        sz, &shadow->buf_from, &shadow->buf_from_sz);
 
     MPIU_ERR_CHKANDJUMP(ibcom_errno, mpi_errno, MPI_ERR_OTHER, "**MPID_nem_ib_com_get_scratch_pad");
     MPID_nem_ib_ncqe_scratch_pad += 1;
 
     /* Direct poll to drain CQ to issue CAS */
-    MPID_nem_ib_ncqe_scratch_pad_to_drain += 1;     
+    MPID_nem_ib_ncqe_scratch_pad_to_drain += 1;
 
   fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_IB_RINGBUF_ASK_FETCH_CORE);
@@ -1683,45 +1709,44 @@ int MPID_nem_ib_ringbuf_ask_fetch(MPIDI_VC_t * vc)
     dprintf("ringbuf_ask_fetch,enter\n");
 
     /* Prepare state of ask-send */
-    MPID_nem_ib_ringbuf_req_t* req = MPIU_Malloc(sizeof(MPID_nem_ib_ringbuf_req_t));
+    MPID_nem_ib_ringbuf_req_t *req = MPIU_Malloc(sizeof(MPID_nem_ib_ringbuf_req_t));
     MPIU_ERR_CHKANDJUMP(!req, mpi_errno, MPI_ERR_OTHER, "**malloc");
     dprintf("ask_fetch,req=%p\n", req);
     req->state = MPID_NEM_IB_RINGBUF_ASK_FETCH;
     req->retry_backoff = 0;
     req->vc = vc;
     ibcom_errno =
-        MPID_nem_ib_com_obtain_pointer(MPID_nem_ib_scratch_pad_fds[vc->pg_rank],
-                                       &req->ibcom);
+        MPID_nem_ib_com_obtain_pointer(MPID_nem_ib_scratch_pad_fds[vc->pg_rank], &req->ibcom);
     MPIU_ERR_CHKANDJUMP(ibcom_errno, mpi_errno, MPI_ERR_OTHER, "**MPID_nem_ib_com_obtain_pointer");
 
     dprintf("ask_fetch,connection=%08x,ncqe=%d,ncom=%d,guard=%d\n",
             VC_FIELD(vc, connection_state),
             MPID_nem_ib_ncqe_scratch_pad,
-            req->ibcom->ncom_scratch_pad,
-            VC_FIELD(vc, ibcom->ask_guard)
-            );
+            req->ibcom->ncom_scratch_pad, VC_FIELD(vc, ibcom->ask_guard)
+);
 
     /* Acquire remote scratch pad */
     if (VC_FIELD(vc, connection_state) == MPID_NEM_IB_CM_ESTABLISHED &&
         MPID_nem_ib_ncqe_scratch_pad < MPID_NEM_IB_COM_MAX_CQ_CAPACITY &&
         req->ibcom->ncom_scratch_pad < MPID_NEM_IB_COM_MAX_SQ_CAPACITY &&
         !VC_FIELD(vc, ibcom->ask_guard)) {
-        
-        /* Let the guard up here to prevent CAS conflicts between consecutive asks 
-           from the same process */
+
+        /* Let the guard up here to prevent CAS conflicts between consecutive asks
+         * from the same process */
         VC_FIELD(vc, ibcom->ask_guard) = 1;
 
-        MPID_nem_ib_ringbuf_cmd_shadow_t * shadow =
-            (MPID_nem_ib_ringbuf_cmd_shadow_t *)MPIU_Malloc(sizeof(MPID_nem_ib_ringbuf_cmd_shadow_t));
+        MPID_nem_ib_ringbuf_cmd_shadow_t *shadow =
+            (MPID_nem_ib_ringbuf_cmd_shadow_t *)
+            MPIU_Malloc(sizeof(MPID_nem_ib_ringbuf_cmd_shadow_t));
         shadow->type = req->state;
         shadow->req = req;
-                
-        mpi_errno = 
+
+        mpi_errno =
             MPID_nem_ib_ringbuf_ask_fetch_core(req->vc, shadow,
                                                sizeof(MPID_nem_ib_ringbuf_headtail_t));
-        MPIU_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER,
-                            "**MPID_nem_ib_ringbuf_ask_fetch");
-    } else {
+        MPIU_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**MPID_nem_ib_ringbuf_ask_fetch");
+    }
+    else {
         dprintf("ask_fetch,enqueue,req=%p\n", req);
         MPID_nem_ib_ringbuf_sendq_enqueue(&MPID_nem_ib_ringbuf_sendq, req);
     }
@@ -1737,7 +1762,8 @@ int MPID_nem_ib_ringbuf_ask_fetch(MPIDI_VC_t * vc)
 #define FUNCNAME MPID_nem_ib_ringbuf_ask_cas_core
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-int MPID_nem_ib_ringbuf_ask_cas_core(MPIDI_VC_t * vc, MPID_nem_ib_ringbuf_cmd_shadow_t* shadow, uint64_t head)
+int MPID_nem_ib_ringbuf_ask_cas_core(MPIDI_VC_t * vc, MPID_nem_ib_ringbuf_cmd_shadow_t * shadow,
+                                     uint64_t head)
 {
     int mpi_errno = MPI_SUCCESS;
     int ibcom_errno;
@@ -1753,18 +1779,17 @@ int MPID_nem_ib_ringbuf_ask_cas_core(MPIDI_VC_t * vc, MPID_nem_ib_ringbuf_cmd_sh
         MPID_nem_ib_com_cas_scratch_pad(MPID_nem_ib_scratch_pad_fds[vc->pg_rank],
                                         (uint64_t) shadow,
                                         MPID_NEM_IB_RINGBUF_OFF_HEAD,
-                                        head, head + 1,
-                                        &shadow->buf_from, &shadow->buf_from_sz);
+                                        head, head + 1, &shadow->buf_from, &shadow->buf_from_sz);
     MPIU_ERR_CHKANDJUMP(ibcom_errno, mpi_errno, MPI_ERR_OTHER, "**MPID_nem_ib_com_cas_scratch_pad");
     MPID_nem_ib_ncqe_scratch_pad += 1;
 
     /* Direct poll to drain CQ to check CAS result */
-    MPID_nem_ib_ncqe_scratch_pad_to_drain += 1;     
+    MPID_nem_ib_ncqe_scratch_pad_to_drain += 1;
     dprintf("ringbuf_ask_cas_core,scratch_pad_to_drain=%d\n",
             MPID_nem_ib_ncqe_scratch_pad_to_drain);
 
-    /* Let the guard down here to overlap CAS with a fetch of the following request 
-       when CAS fails, out-of-order acquire may happen, but it's OK */
+    /* Let the guard down here to overlap CAS with a fetch of the following request
+     * when CAS fails, out-of-order acquire may happen, but it's OK */
     VC_FIELD(vc, ibcom->ask_guard) = 0;
 
   fn_exit:
@@ -1778,7 +1803,7 @@ int MPID_nem_ib_ringbuf_ask_cas_core(MPIDI_VC_t * vc, MPID_nem_ib_ringbuf_cmd_sh
 #define FUNCNAME MPID_nem_ib_ringbuf_ask_cas
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-int MPID_nem_ib_ringbuf_ask_cas(MPIDI_VC_t * vc, MPID_nem_ib_ringbuf_req_t* req)
+int MPID_nem_ib_ringbuf_ask_cas(MPIDI_VC_t * vc, MPID_nem_ib_ringbuf_req_t * req)
 {
     int mpi_errno = MPI_SUCCESS;
     int ibcom_errno;
@@ -1793,30 +1818,32 @@ int MPID_nem_ib_ringbuf_ask_cas(MPIDI_VC_t * vc, MPID_nem_ib_ringbuf_req_t* req)
             req->fetched.head, req->fetched.tail,
             MPID_nem_ib_diff16(req->fetched.head, req->fetched.tail),
             VC_FIELD(vc, ibcom->local_ringbuf_nslot)
-            );
+);
 
     /* Acquire one slot of the shared ring buffer */
     if (MPID_nem_ib_ncqe_scratch_pad < MPID_NEM_IB_COM_MAX_CQ_CAPACITY &&
         req->ibcom->ncom_scratch_pad < MPID_NEM_IB_COM_MAX_SQ_CAPACITY) {
-        
-        if(MPID_nem_ib_diff16(req->fetched.head, req->fetched.tail) < 
-           VC_FIELD(vc, ibcom->local_ringbuf_nslot)) {
+
+        if (MPID_nem_ib_diff16(req->fetched.head, req->fetched.tail) <
+            VC_FIELD(vc, ibcom->local_ringbuf_nslot)) {
 
             dprintf("ask_cas,core\n");
             req->state = MPID_NEM_IB_RINGBUF_ASK_CAS;
-            MPID_nem_ib_ringbuf_cmd_shadow_t * shadow =
-                (MPID_nem_ib_ringbuf_cmd_shadow_t *)MPIU_Malloc(sizeof(MPID_nem_ib_ringbuf_cmd_shadow_t));
+            MPID_nem_ib_ringbuf_cmd_shadow_t *shadow =
+                (MPID_nem_ib_ringbuf_cmd_shadow_t *)
+                MPIU_Malloc(sizeof(MPID_nem_ib_ringbuf_cmd_shadow_t));
             shadow->type = req->state;
             shadow->req = req;
-            mpi_errno = MPID_nem_ib_ringbuf_ask_cas_core(vc, shadow, (uint64_t)req->fetched.head);
+            mpi_errno = MPID_nem_ib_ringbuf_ask_cas_core(vc, shadow, (uint64_t) req->fetched.head);
             MPIU_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER,
                                 "**MPID_nem_ib_ringbuf_ask_cas");
-        } else {
+        }
+        else {
             dprintf("ask_cas,ringbuf full,enqueue\n");
             /* Ring-buffer is full */
 
             /* Let the guard down so that this ask-fetch can be issued in ringbuf_progress */
-#if 0 /*debug*/
+#if 0   /*debug */
             VC_FIELD(vc, ibcom->ask_guard) = 0;
 #endif
             /* Retry from fetch */
@@ -1828,7 +1855,8 @@ int MPID_nem_ib_ringbuf_ask_cas(MPIDI_VC_t * vc, MPID_nem_ib_ringbuf_req_t* req)
             /* Make the ask-fetch in order */
             MPID_nem_ib_ringbuf_sendq_enqueue_at_head(&MPID_nem_ib_ringbuf_sendq, req);
         }
-    } else {
+    }
+    else {
         dprintf("ask_cas,ncqe or ncom full,enqueue\n");
         req->retry_decided = MPID_nem_ib_progress_engine_vt;
         req->retry_backoff = 0;
@@ -1851,8 +1879,8 @@ int MPID_nem_ib_ringbuf_progress()
     int mpi_errno = MPI_SUCCESS;
     int ibcom_errno;
     MPID_nem_ib_ringbuf_req_t *sreq, *prev_sreq;
-    MPID_nem_ib_ringbuf_cmd_shadow_t* shadow;
-    
+    MPID_nem_ib_ringbuf_cmd_shadow_t *shadow;
+
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_IB_RINGBUF_PROGRESS);
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_IB_RINGBUF_PROGRESS);
 
@@ -1870,21 +1898,22 @@ int MPID_nem_ib_ringbuf_progress()
 
             switch (sreq->state) {
             case MPID_NEM_IB_RINGBUF_ASK_CAS:
-                dprintf("ringbuf_progress,ask_cas,req=%p\n", 
-                        sreq);
+                dprintf("ringbuf_progress,ask_cas,req=%p\n", sreq);
                 shadow =
-                    (MPID_nem_ib_ringbuf_cmd_shadow_t *)MPIU_Malloc(sizeof(MPID_nem_ib_ringbuf_cmd_shadow_t));
+                    (MPID_nem_ib_ringbuf_cmd_shadow_t *)
+                    MPIU_Malloc(sizeof(MPID_nem_ib_ringbuf_cmd_shadow_t));
                 shadow->type = sreq->state;
                 shadow->req = sreq;
                 mpi_errno =
-                    MPID_nem_ib_ringbuf_ask_cas_core(sreq->vc, shadow, (uint64_t)sreq->fetched.head);
+                    MPID_nem_ib_ringbuf_ask_cas_core(sreq->vc, shadow,
+                                                     (uint64_t) sreq->fetched.head);
                 MPIU_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER,
                                     "**MPID_nem_ib_ringbuf_connect_cas_core");
                 break;
             case MPID_NEM_IB_RINGBUF_ASK_FETCH:
                 if (MPID_nem_ib_diff63(MPID_nem_ib_progress_engine_vt, sreq->retry_decided) <
                     sreq->retry_backoff) {
-                    dprintf("ringbuf_progress,vt=%ld,retry_decided=%ld,diff=%ld,backoff=%ld\n", 
+                    dprintf("ringbuf_progress,vt=%ld,retry_decided=%ld,diff=%ld,backoff=%ld\n",
                             MPID_nem_ib_progress_engine_vt, sreq->retry_decided,
                             MPID_nem_ib_diff63(MPID_nem_ib_progress_engine_vt, sreq->retry_decided),
                             sreq->retry_backoff);
@@ -1898,18 +1927,18 @@ int MPID_nem_ib_ringbuf_progress()
                     if (VC_FIELD(sreq->vc, ibcom->ask_guard)) {
                         goto next;
                     }
-                    dprintf("ringbuf_progress,ask_fetch,req=%p\n", 
-                            sreq);
+                    dprintf("ringbuf_progress,ask_fetch,req=%p\n", sreq);
                     VC_FIELD(sreq->vc, ibcom->ask_guard) = 1;
                     shadow =
-                        (MPID_nem_ib_ringbuf_cmd_shadow_t *)MPIU_Malloc(sizeof(MPID_nem_ib_ringbuf_cmd_shadow_t));
+                        (MPID_nem_ib_ringbuf_cmd_shadow_t *)
+                        MPIU_Malloc(sizeof(MPID_nem_ib_ringbuf_cmd_shadow_t));
                     shadow->type = sreq->state;
                     shadow->req = sreq;
-                    mpi_errno = 
+                    mpi_errno =
                         MPID_nem_ib_ringbuf_ask_fetch_core(sreq->vc, shadow,
                                                            sizeof(MPID_nem_ib_ringbuf_headtail_t));
-                    MPIU_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER, 
-                                        "**MPID_nem_ib_ringbuf_send_core"); 
+                    MPIU_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER,
+                                        "**MPID_nem_ib_ringbuf_send_core");
                 }
                 break;
             default:
@@ -1923,7 +1952,8 @@ int MPID_nem_ib_ringbuf_progress()
                 MPID_nem_ib_ringbuf_sendq_next(prev_sreq) = MPID_nem_ib_ringbuf_sendq_next(sreq);
             }
             else {
-                MPID_nem_ib_ringbuf_sendq_head(MPID_nem_ib_ringbuf_sendq) = MPID_nem_ib_ringbuf_sendq_next(sreq);
+                MPID_nem_ib_ringbuf_sendq_head(MPID_nem_ib_ringbuf_sendq) =
+                    MPID_nem_ib_ringbuf_sendq_next(sreq);
             }
             if (MPID_nem_ib_ringbuf_sendq_next(sreq) == NULL) {
                 MPID_nem_ib_ringbuf_sendq.tail = prev_sreq;
@@ -1934,7 +1964,7 @@ int MPID_nem_ib_ringbuf_progress()
             sreq = MPID_nem_ib_ringbuf_sendq_next(sreq);
 
             goto next_unlinked;
-        next:
+          next:
             prev_sreq = sreq;
             sreq = MPID_nem_ib_ringbuf_sendq_next(sreq);
           next_unlinked:;
