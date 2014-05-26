@@ -550,7 +550,7 @@ EOT
 
         # Temp variable declaration
         for (my $i = 0; $i < $#vec; $i += 3) {
-            print CFILE "    void *buf$vec[$i] = x$vec[$i]->base_addr;\n";
+            print CFILE "    void *buf$vec[$i] = x$vec[$i]"."->base_addr;\n";
             if ($vec[$i + 1] >= 0) {
                 print CFILE "    int count$vec[$i] = x$vec[$i+1];\n";
                 print CFILE "    MPI_Datatype dtype$vec[$i] = x$vec[$i+2];\n";
@@ -572,7 +572,7 @@ EOT
         # Test if a subarray arg is contiguous. If it is, generate a new datatype for it.
         for (my $i = 0; $i < $#vec; $i += 3) {
             if ($vec[$i + 1] >= 0) {
-                print CFILE "    if (x$vec[$i]->rank != 0 && !CFI_is_contiguous(x$vec[$i])) {\n";
+                print CFILE "    if (x$vec[$i]"."->rank != 0 && !CFI_is_contiguous(x$vec[$i])) {\n";
                 print CFILE "        err = cdesc_create_datatype(x$vec[$i], x$vec[$i+1], x$vec[$i+2], &dtype$vec[$i]);\n";
                 print CFILE "        count$vec[$i] = 1;\n";
                 print CFILE "    }\n\n";
