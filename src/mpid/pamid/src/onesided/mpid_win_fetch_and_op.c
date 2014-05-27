@@ -300,7 +300,7 @@ int MPID_Fetch_and_op(const void *origin_addr, void *result_addr,
         if (win->create_flavor == MPI_WIN_FLAVOR_SHARED) {
             MPIDI_SHM_MUTEX_LOCK(win);
             shm_locked = 1;
-            base = win->mpid.shm->base_addr;
+            base = win->mpid.info[target_rank].base_addr;
             disp_unit = win->disp_unit;
 
         }

@@ -49,10 +49,10 @@ int MPIDI_SHM_Win_free(MPID_Win **win_ptr)
     munmap ((*win_ptr)->mpid.shm->base_addr, (*win_ptr)->mpid.shm->segment_len);
     if (0 == (*win_ptr)->comm_ptr->rank) shm_unlink ((*win_ptr)->mpid.shm->shm_key);
 #else
-    MPID_Abort();
+    MPID_Abort(NULL, MPI_ERR_RMA_SHARED, -1, "MPI_Win_free error");
 #endif
   } else {/* one task on a node */
-    MPIU_Free((*win_ptr)->base);
+    MPIU_Free((*win_ptr)->mpid.shm->base_addr);
   }
   MPIU_Free((*win_ptr)->mpid.shm);
   (*win_ptr)->mpid.shm = NULL;

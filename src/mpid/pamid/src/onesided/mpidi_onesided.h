@@ -37,14 +37,13 @@ pami_rmw_t   zero_rmw_parms;
 #define MPIDI_QUICKSLEEP     usleep(1);
 #define MAX_NUM_CTRLSEND  1024          /* no more than 1024 outstanding control sends */
 
-
 #define MPIDI_SHM_MUTEX_LOCK(win)                                                       \
     do {                                                                                \
         pthread_mutex_t *shm_mutex = win->mpid.shm->mutex_lock;                         \
         int rval = pthread_mutex_lock(shm_mutex);                                       \
         MPIU_ERR_CHKANDJUMP1(rval, mpi_errno, MPI_ERR_OTHER, "**pthread_lock",          \
                              "**pthread_lock %s", strerror(rval));                      \
-    } while (0)
+    } while (0);
 
 #define MPIDI_SHM_MUTEX_UNLOCK(win)                                                     \
     do {                                                                                \
@@ -52,7 +51,7 @@ pami_rmw_t   zero_rmw_parms;
         int rval = pthread_mutex_unlock(shm_mutex);                                     \
         MPIU_ERR_CHKANDJUMP1(rval, mpi_errno, MPI_ERR_OTHER, "**pthread_unlock",        \
                              "**pthread_unlock %s", strerror(rval));                    \
-    } while (0)
+    } while (0);
 
 #define MPIDI_SHM_MUTEX_INIT(win)                                                       \
     do {                                                                                \

@@ -23,7 +23,7 @@
 #include <sys/shm.h>
 #include <sys/ipc.h>
 #include <sys/stat.h>
-
+#include <fcntl.h>
 #include <sys/mman.h>
 
 #undef FUNCNAME 
@@ -39,7 +39,6 @@ extern int mpidi_dynamic_tasking;
 #define MPIDI_ROUND_UP_PAGESIZE(x,y) ((((MPI_Aint)x)+(~MPIDI_PAGESIZE_MASK(y))) & MPIDI_PAGESIZE_MASK(y))
 #define ALIGN_BOUNDARY 128     /* Align data structures to cache line */
 #define PAD_SIZE(s) (ALIGN_BOUNDARY - (sizeof(s) & (ALIGN_BOUNDARY-1)))
-
 
 int CheckRankOnNode(MPID_Comm  * comm_ptr,int *onNode ) {
     int comm_size, i;
@@ -318,6 +317,7 @@ MPID_getSharedSegment(MPI_Aint     size,
     MPI_Aint pageSize,pageSize2, len,new_size;
     MPID_Win  *win;
     int    padSize;
+    void   *base_pp;
 
     win =  *win_ptr;
     comm_size = win->comm_ptr->local_size;
@@ -332,26 +332,39 @@ MPID_getSharedSegment(MPI_Aint     size,
     if (comm_size == 1) {
         /* Do not use shared memory when there is only one rank on the node */
 
+        /* 'size' must not be < 0 */
+        MPIU_ERR_CHKANDSTMT(size < 0 , mpi_errno, MPI_ERR_SIZE,return mpi_errno, "**rmasize");
+
+        /* The beginning of the heap allocation contains a control block
+         * before the data begins.
+         */
+        new_size = MPIDI_ROUND_UP_PAGESIZE(sizeof(MPIDI_Win_shm_ctrl_t),pageSize);
+
         if (size > 0) {
             if (*noncontig)
-                new_size = MPIDI_ROUND_UP_PAGESIZE(size,pageSize);
+                new_size += MPIDI_ROUND_UP_PAGESIZE(size,pageSize);
             else
-                new_size = size;
-
-            win->base = MPIU_Malloc(new_size);
-            MPIU_ERR_CHKANDJUMP((win->base == NULL), mpi_errno, MPI_ERR_BUFFER, "**bufnull");
-
-        } else if (size == 0) {
-            win->base = NULL;
-
-        } else {
-            /* 'size' must be >= 0 */
-            MPIU_ERR_CHKANDSTMT(size >=0 , mpi_errno, MPI_ERR_SIZE,return mpi_errno, "**rmasize");
+                new_size += size;
         }
 
+        base_pp = MPIU_Malloc(new_size);
+        MPID_assert(base_pp !=NULL);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
         win->mpid.shm->segment_len = new_size;
+        win->mpid.shm->base_addr = base_pp;
+        if (size !=0) {
+            win->mpid.info[rank].base_addr = (void *)((MPI_Aint) base_pp + MPIDI_ROUND_UP_PAGESIZE(sizeof(MPIDI_Win_shm_ctrl_t),pageSize));
+        } else {
+            win->mpid.info[rank].base_addr = NULL;
+        }
+        win->base = win->mpid.info[rank].base_addr;
+
+        /* set mutex_lock address and initialize it   */
+        win->mpid.shm->mutex_lock = (pthread_mutex_t *) win->mpid.shm->base_addr;
+        win->mpid.shm->shm_count = (int *)((MPI_Aint) win->mpid.shm->mutex_lock + (MPI_Aint) sizeof(pthread_mutex_t));
+        MPIDI_SHM_MUTEX_INIT(win);
+        OPA_fetch_and_add_int((OPA_int_t *) win->mpid.shm->shm_count,1);
 
     } else {
         /* allocate a temporary buffer to gather the 'size' of each buffer on
@@ -392,7 +405,7 @@ MPID_getSharedSegment(MPI_Aint     size,
 #elif  USE_MMAP_SHM
         win->mpid.shm->base_addr = MPID_getSharedSegment_mmap(win);
 #else
-        MPID_Abort();
+        MPID_Abort(NULL, MPI_ERR_RMA_SHARED, -1, "RMA shared segment error");
 #endif
 
         /* increment the shared counter */
