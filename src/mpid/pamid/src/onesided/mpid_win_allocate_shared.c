@@ -154,16 +154,15 @@ int GetPageSize(void *addr, ulong *pageSize)
   return 0;
 }
 
-void *
+int
 MPID_getSharedSegment_mmap(MPID_Win * win)
 {
-  void * base_addr;
   int rank, rc, fd;
   int mpi_errno = MPI_SUCCESS;
   int errflag = FALSE;
   int first = 0;
 
-  snprintf (win->mpid.shm->shm_key, 63, "/mpich/comm-%d/win_shared", win->comm_ptr->context_id);
+  snprintf (win->mpid.shm->shm_key, 63, "/mpich.comm-%d.win_shared", win->comm_ptr->context_id);
   rc = shm_open (win->mpid.shm->shm_key, O_RDWR | O_CREAT | O_EXCL, 0600);
   if (0 == rc)
   {
@@ -177,17 +176,13 @@ MPID_getSharedSegment_mmap(MPID_Win * win)
   rc = ftruncate (fd, win->mpid.shm->segment_len);
   MPIU_ERR_CHKANDJUMP((rc == -1), mpi_errno, MPI_ERR_RMA_SHARED, "**rmashared");
 
-
-  base_addr = mmap (NULL, win->mpid.shm->segment_len, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
-  if (base_addr == NULL || base_addr == MAP_FAILED || base_addr == (void *) -1) { /* error */
-    if (0 == rank) shm_unlink (win->mpid.shm->shm_key);
-    MPIU_ERR_CHKANDJUMP((win->mpid.shm->shm_id == -1), mpi_errno, MPI_ERR_RMA_SHARED, "**rmashared");
-  }
+  win->mpid.shm->base_addr = mmap (NULL, win->mpid.shm->segment_len, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+  MPIU_ERR_CHKANDJUMP((win->mpid.shm->base_addr == MAP_FAILED), mpi_errno, MPI_ERR_RMA_SHARED, "**rmashared");
 
   close (fd); /* no longer needed */
 
   /* set mutex_lock address and initialize it   */
-  win->mpid.shm->mutex_lock = (MPIDI_SHM_MUTEX *) base_addr;
+  win->mpid.shm->mutex_lock = (MPIDI_SHM_MUTEX *) win->mpid.shm->base_addr;
   if (1 == first) {
     MPIDI_SHM_MUTEX_INIT(win);
   }
@@ -198,14 +193,15 @@ MPID_getSharedSegment_mmap(MPID_Win * win)
   win->mpid.shm->allocated = 1;
 
 fn_exit:
-    return base_addr;
+    return mpi_errno;
     /* --BEGIN ERROR HANDLING-- */
 fn_fail:
+    shm_unlink (win->mpid.shm->shm_key);
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }
 
-void *
+int
 MPID_getSharedSegment_sysv(MPID_Win * win)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -214,7 +210,6 @@ MPID_getSharedSegment_sysv(MPID_Win * win)
     int rank;
     char *cp;
     int shm_flag = IPC_CREAT | IPC_EXCL | S_IRUSR | S_IWUSR;
-    void * base_addr;
 
     shm_key = (uint32_t) -1;
 
@@ -272,11 +267,11 @@ MPID_getSharedSegment_sysv(MPID_Win * win)
         win->mpid.shm->shm_id = shmget(shm_key, win->mpid.shm->segment_len, shm_flag);
         MPIU_ERR_CHKANDJUMP((win->mpid.shm->shm_id == -1), mpi_errno, MPI_ERR_RMA_SHARED, "**rmashared");
 
-        base_addr = (void *) shmat(win->mpid.shm->shm_id,0,0);
-        MPIU_ERR_CHKANDJUMP((base_addr == (void*) -1), mpi_errno,MPI_ERR_BUFFER, "**bufnull");
+        win->mpid.shm->base_addr = (void *) shmat(win->mpid.shm->shm_id,0,0);
+        MPIU_ERR_CHKANDJUMP((win->mpid.shm->base_addr == (void*) -1), mpi_errno,MPI_ERR_BUFFER, "**bufnull");
 
         /* set mutex_lock address and initialize it */
-        win->mpid.shm->mutex_lock = (MPIDI_SHM_MUTEX *) base_addr;
+        win->mpid.shm->mutex_lock = (MPIDI_SHM_MUTEX *) win->mpid.shm->base_addr;
         MPIDI_SHM_MUTEX_INIT(win);
 
         /* successfully created shm segment - shared the key with other tasks */
@@ -288,15 +283,15 @@ MPID_getSharedSegment_sysv(MPID_Win * win)
 
         win->mpid.shm->shm_id = shmget(shm_key, 0, 0);
         if (win->mpid.shm->shm_id != -1) { /* shm segment is available */
-            base_addr = (void *) shmat(win->mpid.shm->shm_id,0,0);
+            win->mpid.shm->base_addr = (void *) shmat(win->mpid.shm->shm_id,0,0);
         }
-        win->mpid.shm->mutex_lock = (MPIDI_SHM_MUTEX *) base_addr;
+        win->mpid.shm->mutex_lock = (MPIDI_SHM_MUTEX *) win->mpid.shm->base_addr;
     }
 
     win->mpid.shm->allocated = 1;
 
 fn_exit:
-    return base_addr;
+    return mpi_errno;
     /* --BEGIN ERROR HANDLING-- */
 fn_fail:
     goto fn_exit;
@@ -401,12 +396,13 @@ MPID_getSharedSegment(MPI_Aint     size,
          * data buffer - possibly padded if non-contiguous.
          */
 #ifdef USE_SYSV_SHM
-        win->mpid.shm->base_addr = MPID_getSharedSegment_sysv(win);
+        mpi_errno = MPID_getSharedSegment_sysv(win);
 #elif  USE_MMAP_SHM
-        win->mpid.shm->base_addr = MPID_getSharedSegment_mmap(win);
+        mpi_errno = MPID_getSharedSegment_mmap(win);
 #else
         MPID_Abort(NULL, MPI_ERR_RMA_SHARED, -1, "RMA shared segment error");
 #endif
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
         /* increment the shared counter */
         win->mpid.shm->shm_count=(int *)((MPI_Aint) win->mpid.shm->mutex_lock + (MPI_Aint) sizeof(MPIDI_SHM_MUTEX));
@@ -504,7 +500,9 @@ MPID_Win_allocate_shared(MPI_Aint     size,
 
   mpi_errno=CheckSpaceType(win_ptr,info,&noncontig);
   comm_size = (*win_ptr)->comm_ptr->local_size;
-  MPID_getSharedSegment(size, disp_unit,comm_ptr, win_ptr, &pageSize, &noncontig);
+  mpi_errno = MPID_getSharedSegment(size, disp_unit,comm_ptr, win_ptr, &pageSize, &noncontig);
+  if (mpi_errno != MPI_SUCCESS)
+      return mpi_errno;
 
   mpi_errno = MPIDI_Win_allgather(size,win_ptr);
   if (mpi_errno != MPI_SUCCESS)
