@@ -380,7 +380,8 @@ void ADIOI_GPFS_WriteStridedColl(ADIO_File fd, const void *buf, int count,
 
 void gpfs_wr_access_start(int fd, ADIO_Offset offset, ADIO_Offset length)
 {
-        int rc;
+        int rc=0;
+#ifdef HAVE_GPFS_FCNTL_H
         struct {
                 gpfsFcntlHeader_t header;
                 gpfsAccessRange_t access;
@@ -397,12 +398,14 @@ void gpfs_wr_access_start(int fd, ADIO_Offset offset, ADIO_Offset length)
         take_locks.access.isWrite = 1;
 
         rc = gpfs_fcntl(fd, &take_locks);
+#endif
         ADIOI_Assert(rc == 0);
 }
 
 void gpfs_wr_access_end(int fd, ADIO_Offset offset, ADIO_Offset length)
 {
-        int rc;
+        int rc=0;
+#ifdef HAVE_GPFS_FCNTL_H
         struct {
                 gpfsFcntlHeader_t header;
                 gpfsFreeRange_t free;
@@ -419,6 +422,7 @@ void gpfs_wr_access_end(int fd, ADIO_Offset offset, ADIO_Offset length)
         free_locks.free.length = length;
 
         rc = gpfs_fcntl(fd, &free_locks);
+#endif
         ADIOI_Assert(rc == 0);
 }
 
