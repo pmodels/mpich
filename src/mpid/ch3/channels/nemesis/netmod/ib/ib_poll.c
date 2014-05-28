@@ -2327,6 +2327,13 @@ int MPID_nem_ib_cm_drain_scq()
                 MPIU_Free(shadow_ringbuf);
                 break;
             }
+        case MPID_NEM_IB_NOTIFY_OUTSTANDING_TX_EMPTY:
+            shadow_cm = (MPID_nem_ib_cm_cmd_shadow_t *) cqe[i].wr_id;
+            shadow_cm->req->ibcom->notify_outstanding_tx_empty |= NOTIFY_OUTSTANDING_TX_SCQ;
+            MPID_nem_ib_rdmawr_from_free(shadow_cm->buf_from, shadow_cm->buf_from_sz);
+            MPIU_Free(shadow_cm->req);
+            MPIU_Free(shadow_cm);
+            break;
         default:
             printf("unknown type=%d\n", *type);
             MPIU_ERR_CHKANDJUMP(1, mpi_errno, MPI_ERR_OTHER, "**MPID_nem_ib_cm_drain_scq");
@@ -2342,6 +2349,77 @@ int MPID_nem_ib_cm_drain_scq()
 
   fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_IB_CM_DRAIN_SCQ);
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+int MPID_nem_ib_cm_drain_rcq(void)
+{
+    int mpi_errno = MPI_SUCCESS;
+    int result;
+    int i;
+    struct ibv_wc cqe[MPID_NEM_IB_COM_MAX_CQ_HEIGHT_DRAIN];
+    MPID_nem_ib_cm_wr_send_t *shadow_cm;
+
+    if (!MPID_nem_ib_rc_shared_rcq_scratch_pad) {
+        dprintf("cm_drain_rcq,CQ is null\n");
+        goto fn_exit;
+    }
+
+    result =
+        ibv_poll_cq(MPID_nem_ib_rc_shared_rcq_scratch_pad, MPID_NEM_IB_COM_MAX_CQ_HEIGHT_DRAIN,
+                    &cqe[0]);
+    MPIU_ERR_CHKANDJUMP(result < 0, mpi_errno, MPI_ERR_OTHER, "**netmod,ib,ibv_poll_cq");
+
+    if (result > 0) {
+        dprintf("cm_drain_rcq,found,result=%d\n", result);
+    }
+    for (i = 0; i < result; i++) {
+
+        dprintf("cm_drain_rcq,wr_id=%p\n", (void *) cqe[i].wr_id);
+
+#ifdef HAVE_LIBDCFA
+        if (cqe[i].status != IBV_WC_SUCCESS) {
+            dprintf("cm_drain_rcq,status=%08x\n", cqe[i].status);
+            MPID_nem_ib_segv;
+        }
+#else
+        if (cqe[i].status != IBV_WC_SUCCESS) {
+            dprintf("cm_drain_rcq,status=%08x,%s\n", cqe[i].status,
+                    ibv_wc_status_str(cqe[i].status));
+            MPID_nem_ib_segv;
+        }
+#endif
+        MPIU_ERR_CHKANDJUMP(cqe[i].status != IBV_WC_SUCCESS, mpi_errno, MPI_ERR_OTHER,
+                            "**MPID_nem_ib_cm_drain_rcq");
+
+        MPID_nem_ib_cm_cmd_type_t *type = (MPID_nem_ib_cm_cmd_type_t *) cqe[i].wr_id;
+        switch (*type) {
+        case MPID_NEM_IB_NOTIFY_OUTSTANDING_TX_EMPTY:{
+                int initiator_rank;
+                MPID_nem_ib_com_t *ibcom;
+
+                dprintf("cm_drain_rcq,notify_outstanding_tx_empty\n");
+                shadow_cm = (MPID_nem_ib_cm_wr_send_t *) cqe[i].wr_id;
+                initiator_rank = shadow_cm->initiator_rank;
+
+                MPID_nem_ib_rdmawr_from_free(shadow_cm, sizeof(MPID_nem_ib_cm_wr_send_t));
+
+                MPID_nem_ib_com_obtain_pointer(MPID_nem_ib_scratch_pad_fds[initiator_rank], &ibcom);
+                ibcom->notify_outstanding_tx_empty |= NOTIFY_OUTSTANDING_TX_RCQ;
+                MPID_nem_ib_com_scratch_pad_recv(MPID_nem_ib_scratch_pad_fds[initiator_rank],
+                                                 sizeof(MPID_nem_ib_cm_wr_send_t));
+            }
+            break;
+        default:
+            printf("unknown type=%d\n", *type);
+            MPIU_ERR_CHKANDJUMP(1, mpi_errno, MPI_ERR_OTHER, "**MPID_nem_ib_cm_drain_rcq");
+            break;
+        }
+    }
+
+  fn_exit:
     return mpi_errno;
   fn_fail:
     goto fn_exit;

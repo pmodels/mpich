@@ -174,6 +174,7 @@ static inline unsigned long long MPID_nem_ib_rdtsc_cpuid(void)
 
 extern struct ibv_cq *MPID_nem_ib_rc_shared_scq;
 extern struct ibv_cq *MPID_nem_ib_rc_shared_scq_scratch_pad;
+extern struct ibv_cq *MPID_nem_ib_rc_shared_rcq_scratch_pad;
 extern struct ibv_cq *MPID_nem_ib_ud_shared_rcq;
 extern uint8_t *MPID_nem_ib_scratch_pad;
 extern int MPID_nem_ib_scratch_pad_ref_count;
@@ -270,11 +271,12 @@ extern uint8_t *MPID_nem_ib_rdmawr_to_alloc_free_list;
 #define MPID_NEM_IB_COM_UD_INITIATOR 0  /* index to send request template */
 #define MPID_NEM_IB_COM_UD_RESPONDER 0  /* index to recv request template */
 
-#define MPID_NEM_IB_COM_SCRATCH_PAD_SR_NTEMPLATE 3
+#define MPID_NEM_IB_COM_SCRATCH_PAD_SR_NTEMPLATE 4
 #define MPID_NEM_IB_COM_SCRATCH_PAD_RR_NTEMPLATE 1
 #define MPID_NEM_IB_COM_SCRATCH_PAD_INITIATOR 0 /* index to send request template */
 #define MPID_NEM_IB_COM_SCRATCH_PAD_CAS       1
 #define MPID_NEM_IB_COM_SCRATCH_PAD_GET       2
+#define MPID_NEM_IB_COM_SCRATCH_PAD_WR        3
 #define MPID_NEM_IB_COM_SCRATCH_PAD_RESPONDER 0 /* index to recv request template */
 
 /* Header prepended to the MPI packet */
@@ -485,6 +487,7 @@ typedef struct MPID_nem_ib_com {
      * freeing scratch-pad QP. */
     int outstanding_connection_tx;
     int incoming_connection_tx;
+    int notify_outstanding_tx_empty;
 
 } MPID_nem_ib_com_t;
 
@@ -522,6 +525,8 @@ extern int MPID_nem_ib_com_get_scratch_pad(int condesc, uint64_t wr_id, uint64_t
 extern int MPID_nem_ib_com_cas_scratch_pad(int condesc, uint64_t wr_id, uint64_t offset,
                                            uint64_t compare, uint64_t swap, void **buf_from_out,
                                            uint32_t * buf_from_sz_out);
+extern int MPID_nem_ib_com_wr_scratch_pad(int condesc, uint64_t wr_id,
+                                          void *buf_from, uint32_t buf_from_sz);
 
 //extern int MPID_nem_ib_com_isend(int condesc, uint64_t wr_id, void* hdr, int sz_hdr, void* data, int sz_data);
 extern int MPID_nem_ib_com_irecv(int condesc, uint64_t wr_id);
@@ -532,6 +537,7 @@ extern int MPID_nem_ib_com_lrecv(int condesc, uint64_t wr_id, void *raddr, int s
                                  uint32_t rkey, void *laddr);
 extern int MPID_nem_ib_com_put_lmt(int condesc, uint64_t wr_id, void *raddr, int sz_data,
                                    uint32_t rkey, void *laddr);
+extern int MPID_nem_ib_com_scratch_pad_recv(int condesc, int sz_data);
 extern int MPID_nem_ib_com_poll_cq(int which_cq, struct ibv_wc *wc, int *result);
 
 extern int MPID_nem_ib_com_obtain_pointer(int condesc, MPID_nem_ib_com_t ** MPID_nem_ib_com);

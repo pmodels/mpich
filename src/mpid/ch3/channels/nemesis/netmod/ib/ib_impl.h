@@ -126,8 +126,13 @@ enum MPID_nem_ib_cm_cmd_types {
     MPID_NEM_IB_RINGBUF_ASK_CAS,
     MPID_NEM_IB_CM_CAS_RELEASE,
     MPID_NEM_IB_CM_ALREADY_ESTABLISHED,
-    MPID_NEM_IB_CM_RESPONDER_IS_CONNECTING
+    MPID_NEM_IB_CM_RESPONDER_IS_CONNECTING,
+    MPID_NEM_IB_NOTIFY_OUTSTANDING_TX_EMPTY
 };
+
+#define NOTIFY_OUTSTANDING_TX_SCQ  (1 << 0)
+#define NOTIFY_OUTSTANDING_TX_RCQ  (1 << 1)
+#define NOTIFY_OUTSTANDING_TX_COMP (NOTIFY_OUTSTANDING_TX_SCQ | NOTIFY_OUTSTANDING_TX_RCQ)
 
 /* Packet types of connection protocol */
 struct MPID_nem_ib_cm_req;
@@ -220,6 +225,11 @@ typedef struct {
     void *buf_from;
     uint32_t buf_from_sz;
 } MPID_nem_ib_cm_cmd_shadow_t;
+
+typedef struct {
+    MPID_nem_ib_cm_cmd_type_t type;
+    int initiator_rank;
+} MPID_nem_ib_cm_wr_send_t;
 
 #define MPID_NEM_IB_CM_RELEASED ((uint64_t)(-1))
 #define MPID_NEM_IB_CM_OFF_SYN (256)    /* Align for 256-byte-write PCI command */
@@ -527,6 +537,7 @@ int MPID_nem_ib_poll_eager(MPID_nem_ib_ringbuf_t * ringbuf);
 int MPID_nem_ib_ring_alloc(MPIDI_VC_t * vc);
 
 int MPID_nem_ib_cm_drain_scq(void);
+int MPID_nem_ib_cm_drain_rcq(void);
 int MPID_nem_ib_cm_poll_syn(void);
 int MPID_nem_ib_cm_poll(void);
 
@@ -558,6 +569,7 @@ int MPID_nem_ib_ringbuf_ask_fetch(MPIDI_VC_t * vc);
 int MPID_nem_ib_ringbuf_ask_cas_core(MPIDI_VC_t * vc, MPID_nem_ib_ringbuf_cmd_shadow_t * shadow,
                                      uint64_t head);
 int MPID_nem_ib_ringbuf_progress(void);
+int MPID_nem_ib_cm_wr_send(int pg_rank, int myrank);
 
 int MPID_nem_ib_ringbuf_alloc(MPIDI_VC_t * vc);
 int MPID_nem_ib_ringbuf_free(MPIDI_VC_t * vc);

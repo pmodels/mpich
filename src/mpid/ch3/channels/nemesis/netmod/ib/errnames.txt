@@ -2,6 +2,7 @@
 **MPIDI_PG_GetConnKVSname:MPIDI_PG_GetConnKVSname failed
 **MPID_nem_ib_cm_cas:MPID_nem_ib_cm_cas failed
 **MPID_nem_ib_cm_connect_cas_core:MPID_nem_ib_cm_connect_cas_core failed
+**MPID_nem_ib_cm_drain_rcq:MPID_nem_ib_cm_drain_rcq failed
 **MPID_nem_ib_cm_drain_scq:MPID_nem_ib_cm_drain_scq failed
 **MPID_nem_ib_cm_poll:MPID_nem_ib_cm_poll failed
 **MPID_nem_ib_cm_poll_syn:MPID_nem_ib_cm_poll_syn failed
@@ -30,6 +31,7 @@
 **MPID_nem_ib_com_reg_mr_fetch:MPID_nem_ib_com_reg_mr_fetch failed
 **MPID_nem_ib_com_rts:MPID_nem_ib_com_rts failed
 **MPID_nem_ib_com_sq_occupancy_notify_rate_get:MPID_nem_ib_com_sq_occupancy_notify_rate_get failed
+**MPID_nem_ib_com_wr_scratch_pad:MPID_nem_ib_com_wr_scratch_pad failed
 **MPID_nem_ib_drain_scq:MPID_nem_ib_drain_scq failed
 **MPID_nem_ib_drain_scq_scratch_pad:MPID_nem_ib_drain_scq_scratch_pad failed
 **MPID_nem_ib_kvs_put_binary:MPID_nem_ib_kvs_put_binary failed
