@@ -441,6 +441,7 @@ typedef struct MPIDI_Win_info
   uint32_t           disp_unit;     /**< Node's exposure window displacement units            */
   pami_memregion_t   memregion;     /**< Memory region descriptor for each node               */
   uint32_t           memregion_used;
+  MPI_Aint           base_size;     /**< Node's exposure window base size in bytes            */
 } MPIDI_Win_info;
 
 typedef pthread_mutex_t MPIDI_SHM_MUTEX;

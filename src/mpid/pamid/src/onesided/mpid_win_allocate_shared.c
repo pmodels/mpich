@@ -354,6 +354,7 @@ MPID_getSharedSegment(MPI_Aint     size,
             win->mpid.info[rank].base_addr = NULL;
         }
         win->base = win->mpid.info[rank].base_addr;
+        win->mpid.info[rank].base_size = size;
 
         /* set mutex_lock address and initialize it   */
         win->mpid.shm->mutex_lock = (pthread_mutex_t *) win->mpid.shm->base_addr;
@@ -378,6 +379,7 @@ MPID_getSharedSegment(MPI_Aint     size,
 
         /* calculate total number of bytes needed */
         for (i = 0; i < comm_size; ++i) {
+            win->mpid.info[i].base_size = tmp_buf[i];
             len = tmp_buf[i];
             if (*noncontig)
                 /* Round up to next page size */
@@ -508,20 +510,19 @@ MPID_Win_allocate_shared(MPI_Aint     size,
   if (mpi_errno != MPI_SUCCESS)
       return mpi_errno;
 
-  win->mpid.info[0].base_addr = win->base;
   if (comm_size > 1) {
-     char *cur_base = (*win_ptr)->base;
-     for (i = 1; i < comm_size; ++i) {
-          if (size) {
+      char *cur_base = (*win_ptr)->base;
+      for (i = 0; i < comm_size; ++i) {
+          if (win->mpid.info[i].base_size) {
               if (noncontig)  
                   /* Round up to next page size */
-                   win->mpid.info[i].base_addr =(void *) ((MPI_Aint) cur_base + (MPI_Aint) MPIDI_ROUND_UP_PAGESIZE(size,pageSize));
-                else
-                    win->mpid.info[i].base_addr = (void *) ((MPI_Aint) cur_base + (MPI_Aint) size);
-                cur_base = win->mpid.info[i].base_addr;
-           } else {
-                 win->mpid.info[i].base_addr = NULL; 
-           }
+                  win->mpid.info[i].base_addr =(void *) ((MPI_Aint) cur_base + (MPI_Aint) MPIDI_ROUND_UP_PAGESIZE(size,pageSize));
+              else
+                  win->mpid.info[i].base_addr = (void *) ((MPI_Aint) cur_base + (MPI_Aint) size);
+              cur_base = win->mpid.info[i].base_addr;
+          } else {
+              win->mpid.info[i].base_addr = NULL; 
+          }
       }
   }
 

@@ -39,13 +39,25 @@ int
 MPID_Win_shared_query(MPID_Win *win, int rank, MPI_Aint *size,
                            int *disp_unit, void *base_ptr)
 {
-    int mpi_errno = MPI_SUCCESS;
+    int i, mpi_errno = MPI_SUCCESS;
     static char FCNAME[] = "MPID_Win_shared_query";
     MPIU_ERR_CHKANDSTMT((win->create_flavor != MPI_WIN_FLAVOR_SHARED), mpi_errno,
                          MPI_ERR_RMA_FLAVOR, return mpi_errno, "**rmaflavor");
-    *((void **) base_ptr) = (void *) win->base;
-    *size             = win->size;
-    *disp_unit        = win->disp_unit;
+
+    if (rank == MPI_PROC_NULL) {
+      for (i=0; i<win->comm_ptr->local_size; ++i) {
+          if (win->mpid.info[i].base_size != 0) {
+              *((void **) base_ptr) = win->mpid.info[i].base_addr;
+              *size                 = win->mpid.info[i].base_size;
+              *disp_unit            = win->mpid.info[i].disp_unit;
+              break;
+          }
+      }
+    } else {
+        *((void **) base_ptr) = win->mpid.info[rank].base_addr;
+        *size                 = win->mpid.info[rank].base_size;
+        *disp_unit            = win->mpid.info[rank].disp_unit;
+    }
 
     return mpi_errno;
 }
