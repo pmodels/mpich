@@ -110,7 +110,7 @@ static int MPID_nem_ib_rdmawr_to_init(uint64_t sz)
     MPID_nem_ib_rdmawr_to_alloc_start = start;
     MPID_nem_ib_rdmawr_to_alloc_free_list = start;
     for (cur = start;
-         cur < (uint8_t *) start + sz - MPID_NEM_IB_COM_RDMABUF_SZSEG;
+         cur < (void *) ((uint8_t *) start + sz - MPID_NEM_IB_COM_RDMABUF_SZSEG);
          cur = (uint8_t *) cur + MPID_NEM_IB_COM_RDMABUF_SZSEG) {
         //dprintf("rdmawr_to_init,cur=%p\n", cur);
         ((MPID_nem_ib_rdmawr_to_alloc_hdr_t *) cur)->next =

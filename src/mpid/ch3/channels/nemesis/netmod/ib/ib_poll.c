@@ -580,7 +580,7 @@ int MPID_nem_ib_poll_eager(MPID_nem_ib_ringbuf_t * ringbuf)
 
 #if 1
     void *rsi;
-    for (rsi = (void *) buf; rsi < (uint8_t *) buf + MPID_NEM_IB_NETMOD_HDR_SZ_GET(buf);
+    for (rsi = (void *) buf; rsi < (void *) ((uint8_t *) buf + MPID_NEM_IB_NETMOD_HDR_SZ_GET(buf));
          rsi = (uint8_t *) rsi + 64 * 4) {
 #ifdef __MIC__
         __asm__ __volatile__
@@ -1167,9 +1167,9 @@ int MPID_nem_ib_recv_buf_released(struct MPIDI_VC *vc, void *user_data)
         goto fn_exit;
     }
 
-    if (MPID_nem_ib_rdmawr_to_alloc_start > user_data &&
-        user_data >= MPID_nem_ib_rdmawr_to_alloc_start +
-        MPID_NEM_IB_COM_RDMABUF_SZ * MPID_NEM_IB_NRINGBUF) {
+    if ((void *) MPID_nem_ib_rdmawr_to_alloc_start > user_data &&
+        user_data >= (void *) (MPID_nem_ib_rdmawr_to_alloc_start +
+                               MPID_NEM_IB_COM_RDMABUF_SZ * MPID_NEM_IB_NRINGBUF)) {
         MPID_nem_ib_segv;
     }
     unsigned long mod =
@@ -1208,7 +1208,7 @@ int MPID_nem_ib_recv_buf_released(struct MPIDI_VC *vc, void *user_data)
         (unsigned long) ((uint8_t *) user_data -
                          (uint8_t *) vc_ib->ibcom->remote_ringbuf->start) /
         MPID_NEM_IB_COM_RDMABUF_SZSEG;
-    MPIU_Assert(0 <= index_slot && index_slot < vc_ib->ibcom->remote_ringbuf->nslot);
+    MPIU_Assert(0 <= index_slot && index_slot < (uint16_t) (vc_ib->ibcom->remote_ringbuf->nslot));
     dprintf("released,user_data=%p,mem=%p,sub=%08lx,index_slot=%d\n",
             user_data, vc_ib->ibcom->remote_ringbuf->start,
             (unsigned long) user_data -
