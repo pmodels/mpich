@@ -229,7 +229,7 @@ static int MPID_nem_ib_iSendContig_core(MPIDI_VC_t * vc, MPID_Request * sreq, vo
 
     /* increment cc because PktHandler_EagerSyncAck, ssend.c, drain_scq decrement it */
     if (((MPIDI_CH3_Pkt_t *) hdr)->type == MPIDI_CH3_PKT_EAGER_SYNC_SEND) {
-        MPIR_Request_add_ref(sreq);
+        //MPIR_Request_add_ref(sreq);
     }
     if (((MPIDI_CH3_Pkt_t *) hdr)->type == MPIDI_CH3_PKT_GET) {
         //printf("isendcontig_core,MPIDI_CH3_PKT_GET,ref_count=%d\n", sreq->ref_count);
@@ -708,7 +708,7 @@ static int MPID_nem_ib_SendNoncontig_core(MPIDI_VC_t * vc, MPID_Request * sreq, 
 
     /* increment cc because PktHandler_EagerSyncAck, ssend.c, drain_scq decrement it */
     if (((MPIDI_CH3_Pkt_t *) hdr)->type == MPIDI_CH3_PKT_EAGER_SYNC_SEND) {
-        MPIR_Request_add_ref(sreq);
+        //MPIR_Request_add_ref(sreq);
     }
 
     if (sizeof(MPIDI_CH3_Pkt_t) != hdr_sz) {
