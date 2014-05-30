@@ -100,7 +100,9 @@ int MPID_nem_ib_drain_scq(int dont_call_progress)
         int req_type, msg_type;
 
         /* Obtain sreq */
-        req = (MPID_Request *) cqe[i].wr_id;
+        //req = (MPID_Request *) cqe[i].wr_id;
+        MPID_nem_ib_rc_send_request *req_wrap = (MPID_nem_ib_rc_send_request *) cqe[i].wr_id;
+        req = (MPID_Request *) req_wrap->wr_id;
 
         kind = req->kind;
         req_type = MPIDI_Request_get_type(req);
@@ -244,6 +246,7 @@ int MPID_nem_ib_drain_scq(int dont_call_progress)
 
             dprintf("drain_scq,eager-send,next\n");
 
+            MPIU_Free(req_wrap);
         }
         else if (req_type == MPIDI_REQUEST_TYPE_GET_RESP && msg_type == MPIDI_REQUEST_EAGER_MSG) {
             dprintf("drain_scq,GET_RESP,eager,req_type=%d,,comm=%p,opcode=%d\n", req_type,
@@ -294,6 +297,7 @@ int MPID_nem_ib_drain_scq(int dont_call_progress)
 
             dprintf("drain_scq,GET_RESP,next\n");
 
+            MPIU_Free(req_wrap);
         }
         else if (req_type == MPIDI_REQUEST_TYPE_RECV && msg_type == MPIDI_REQUEST_RNDV_MSG &&
                  cqe[i].opcode == IBV_WC_RDMA_READ) {
@@ -309,42 +313,45 @@ int MPID_nem_ib_drain_scq(int dont_call_progress)
             MPID_nem_ib_vc_area *vc_ib = VC_IB(req->ch.vc);
 #if defined(MPID_NEM_IB_LMT_GET_CQE)
 
-            /* unpack non-contiguous dt */
-            int is_contig;
-            MPID_Datatype_is_contig(req->dev.datatype, &is_contig);
-            if (!is_contig) {
-                dprintf("drain_scq,lmt,GET_CQE,unpack noncontiguous data to user buffer\n");
+            /* end of packet */
+            if (req_wrap->mf == 0) {
+                /* unpack non-contiguous dt */
+                int is_contig;
+                MPID_Datatype_is_contig(req->dev.datatype, &is_contig);
+                if (!is_contig) {
+                    dprintf("drain_scq,lmt,GET_CQE,unpack noncontiguous data to user buffer\n");
 
-                /* see MPIDI_CH3U_Request_unpack_uebuf (in /src/mpid/ch3/src/ch3u_request.c) */
-                /* or MPIDI_CH3U_Receive_data_found (in src/mpid/ch3/src/ch3u_handle_recv_pkt.c) */
-                MPIDI_msg_sz_t unpack_sz = req->ch.lmt_data_sz;
-                MPID_Segment seg;
-                MPI_Aint last;
+                    /* see MPIDI_CH3U_Request_unpack_uebuf (in /src/mpid/ch3/src/ch3u_request.c) */
+                    /* or MPIDI_CH3U_Receive_data_found (in src/mpid/ch3/src/ch3u_handle_recv_pkt.c) */
+                    MPIDI_msg_sz_t unpack_sz = req->ch.lmt_data_sz;
+                    MPID_Segment seg;
+                    MPI_Aint last;
 
-                MPID_Segment_init(req->dev.user_buf, req->dev.user_count, req->dev.datatype, &seg,
-                                  0);
-                last = unpack_sz;
-                MPID_Segment_unpack(&seg, 0, &last, REQ_FIELD(req, lmt_pack_buf));
-                if (last != unpack_sz) {
-                    /* --BEGIN ERROR HANDLING-- */
-                    /* received data was not entirely consumed by unpack()
-                     * because too few bytes remained to fill the next basic
-                     * datatype */
-                    MPIR_STATUS_SET_COUNT(req->status, last);
-                    req->status.MPI_ERROR =
-                        MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__,
-                                             MPI_ERR_TYPE, "**MPID_nem_ib_poll", 0);
-                    /* --END ERROR HANDLING-- */
+                    MPID_Segment_init(req->dev.user_buf, req->dev.user_count, req->dev.datatype,
+                                      &seg, 0);
+                    last = unpack_sz;
+                    MPID_Segment_unpack(&seg, 0, &last, REQ_FIELD(req, lmt_pack_buf));
+                    if (last != unpack_sz) {
+                        /* --BEGIN ERROR HANDLING-- */
+                        /* received data was not entirely consumed by unpack()
+                         * because too few bytes remained to fill the next basic
+                         * datatype */
+                        MPIR_STATUS_SET_COUNT(req->status, last);
+                        req->status.MPI_ERROR =
+                            MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME,
+                                                 __LINE__, MPI_ERR_TYPE, "**MPID_nem_ib_poll", 0);
+                        /* --END ERROR HANDLING-- */
+                    }
+                    dprintf("drain_scq,lmt,GET_CQE,ref_count=%d,lmt_pack_buf=%p\n", req->ref_count,
+                            REQ_FIELD(req, lmt_pack_buf));
+                    MPID_nem_ib_stfree(REQ_FIELD(req, lmt_pack_buf), (size_t) req->ch.lmt_data_sz);
                 }
-                dprintf("drain_scq,lmt,GET_CQE,ref_count=%d,lmt_pack_buf=%p\n", req->ref_count,
-                        REQ_FIELD(req, lmt_pack_buf));
-                MPID_nem_ib_stfree(REQ_FIELD(req, lmt_pack_buf), (size_t) req->ch.lmt_data_sz);
-            }
-            dprintf("drain_scq,lmt,GET_CQE,lmt_send_GET_DONE,rsr_seq_num_tail=%d\n",
-                    vc_ib->ibcom->rsr_seq_num_tail);
+                dprintf("drain_scq,lmt,GET_CQE,lmt_send_GET_DONE,rsr_seq_num_tail=%d\n",
+                        vc_ib->ibcom->rsr_seq_num_tail);
 
-            /* send done to sender. vc is stashed in MPID_nem_ib_lmt_start_recv (in ib_lmt.c) */
-            MPID_nem_ib_lmt_send_GET_DONE(req->ch.vc, req);
+                /* send done to sender. vc is stashed in MPID_nem_ib_lmt_start_recv (in ib_lmt.c) */
+                MPID_nem_ib_lmt_send_GET_DONE(req->ch.vc, req);
+            }
 #endif
             /* unmark "lmt is going on" */
 
@@ -356,10 +363,12 @@ int MPID_nem_ib_drain_scq(int dont_call_progress)
             dprintf("drain_scq,rdma-read,ncqe=%d\n", MPID_nem_ib_ncqe);
 
 #ifdef MPID_NEM_IB_LMT_GET_CQE
-            dprintf("drain_scq,GET_CQE,Request_complete\n");
-            /* mark completion on rreq */
-            MPIDI_CH3U_Request_complete(req);
-            dprintf("drain_scq,complete,req=%p\n", req);
+            if (req_wrap->mf == 0) {
+                dprintf("drain_scq,GET_CQE,Request_complete\n");
+                /* mark completion on rreq */
+                MPIDI_CH3U_Request_complete(req);
+                dprintf("drain_scq,complete,req=%p\n", req);
+            }
 #else /* GET, and !GET_CQE */
 
             int is_contig;
@@ -382,6 +391,8 @@ int MPID_nem_ib_drain_scq(int dont_call_progress)
             MPID_Request_release(req);
             dprintf("drain_scq,relese,req=%p\n", req);
 #endif
+            MPIU_Free(req_wrap);
+
             /* try to send from sendq */
             if (!MPID_nem_ib_sendq_empty(vc_ib->sendq)) {
                 dprintf("drain_scq,GET,ncom=%d,ncqe=%d,diff=%d\n",
@@ -412,6 +423,7 @@ int MPID_nem_ib_drain_scq(int dont_call_progress)
 #else
             //printf("kind=%d\n", kind);
 #endif
+            MPIU_Free(req_wrap);
         }
     }
     if (!dont_call_progress) {

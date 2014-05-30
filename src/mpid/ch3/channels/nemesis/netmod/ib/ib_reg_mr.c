@@ -106,7 +106,7 @@ struct MPID_nem_ib_com_reg_mr_cache_entry_t {
 
     struct ibv_mr *mr;
     void *addr;
-    int len;
+    long len;
     int refc;
 };
 
@@ -165,7 +165,7 @@ static inline void __lru_queue_display()
     }
 }
 
-struct ibv_mr *MPID_nem_ib_com_reg_mr_fetch(void *addr, int len,
+struct ibv_mr *MPID_nem_ib_com_reg_mr_fetch(void *addr, long len,
                                             enum ibv_access_flags additional_flags)
 {
 #if 0   /* debug */
@@ -189,17 +189,17 @@ struct ibv_mr *MPID_nem_ib_com_reg_mr_fetch(void *addr, int len,
     /* we can't change addr because ibv_post_send assumes mr->host_addr (output of this function)
      * must have an exact mirror value of addr (input of this function) */
     void *addr_aligned = addr;
-    int len_aligned = len;
+    long len_aligned = len;
 #else
     void *addr_aligned = (void *) ((unsigned long) addr & ~(MPID_NEM_IB_COM_REG_MR_SZPAGE - 1));
-    int len_aligned =
+    long len_aligned =
         ((((unsigned long) addr + len) - (unsigned long) addr_aligned +
           MPID_NEM_IB_COM_REG_MR_SZPAGE - 1) & ~(MPID_NEM_IB_COM_REG_MR_SZPAGE - 1));
 #endif
     key = MPID_nem_ib_com_hash_func(addr);
 
     dprintf("[MrCache] addr=%p, len=%d\n", addr, len);
-    dprintf("[MrCache] aligned addr=%p, len=%d\n", addr_aligned, len_aligned);
+    dprintf("[MrCache] aligned addr=%p, len=%ld\n", addr_aligned, len_aligned);
 
     //__lru_queue_display();
     int way = 0;
@@ -241,7 +241,7 @@ struct ibv_mr *MPID_nem_ib_com_reg_mr_fetch(void *addr, int len,
     /* reference counter is used when evicting entry */
     e->refc = 1;
 
-    dprintf("MPID_nem_ib_com_reg_mr_fetch,miss,addr=%p,len=%d\n", addr_aligned, len_aligned);
+    dprintf("MPID_nem_ib_com_reg_mr_fetch,miss,addr=%p,len=%ld\n", addr_aligned, len_aligned);
     /* register memory */
     ibcom_errno = MPID_nem_ib_com_reg_mr(addr_aligned, len_aligned, &e->mr, additional_flags);
     if (ibcom_errno != 0) {

@@ -148,10 +148,19 @@ int MPID_nem_ib_lmt_start_recv_core(struct MPID_Request *req, void *raddr, uint3
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_IB_LMT_START_RECV_CORE);
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_IB_LMT_START_RECV_CORE);
 
+#if 1
+    int post_num = 1;
+
+    ibcom_errno =
+        MPID_nem_ib_com_lrecv(vc_ib->sc->fd, (uint64_t) req, raddr, req->ch.lmt_data_sz, rkey,
+                              write_to_buf, &post_num);
+    MPID_nem_ib_ncqe += post_num;
+#else
     ibcom_errno =
         MPID_nem_ib_com_lrecv(vc_ib->sc->fd, (uint64_t) req, raddr, req->ch.lmt_data_sz, rkey,
                               write_to_buf);
     MPID_nem_ib_ncqe += 1;
+#endif
     //dprintf("start_recv,ncqe=%d\n", MPID_nem_ib_ncqe);
     MPIU_ERR_CHKANDJUMP(ibcom_errno, mpi_errno, MPI_ERR_OTHER, "**MPID_nem_ib_com_lrecv");
     dprintf("lmt_start_recv_core,MPID_nem_ib_ncqe=%d\n", MPID_nem_ib_ncqe);
@@ -163,7 +172,11 @@ int MPID_nem_ib_lmt_start_recv_core(struct MPID_Request *req, void *raddr, uint3
     //fflush(stdout);
 
 #ifdef MPID_NEM_IB_LMT_GET_CQE
+#if 1
+    MPID_nem_ib_ncqe_to_drain += post_num;      /* use CQE instead of polling */
+#else
     MPID_nem_ib_ncqe_to_drain += 1;     /* use CQE instead of polling */
+#endif
 #else
     /* drain_scq and ib_poll is not ordered, so both can decrement ref_count */
     MPIR_Request_add_ref(req);
