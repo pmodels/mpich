@@ -135,7 +135,7 @@ int MPID_nem_ib_drain_scq(int dont_call_progress)
          */
         if (
                //req_type == MPIDI_REQUEST_TYPE_SEND
-               (req_type == MPIDI_REQUEST_TYPE_SEND ||
+               (req_type == MPIDI_REQUEST_TYPE_SEND || req_type == MPIDI_REQUEST_TYPE_RSEND ||
                 req_type == MPIDI_REQUEST_TYPE_RECV || req_type == MPIDI_REQUEST_TYPE_SSEND)
                && msg_type == MPIDI_REQUEST_EAGER_MSG) {
             dprintf("drain_scq,send/recv,eager,req_type=%d,,comm=%p,opcode=%d\n", req_type,
@@ -174,7 +174,7 @@ int MPID_nem_ib_drain_scq(int dont_call_progress)
                     REQ_FIELD(req, buf_from_sz));
 
             dprintf("drain_scq,eager-send,ncqe=%d\n", MPID_nem_ib_ncqe);
-            MPIU_Assert(req->ref_count == 1 || req->ref_count == 2);
+            MPIU_Assert(req->ref_count >= 1 && req->ref_count <= 3);
 
             /* ref_count is decremented in drain_scq and wait */
             if (*req->cc_ptr > 0) {
