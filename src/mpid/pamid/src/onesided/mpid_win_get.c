@@ -260,17 +260,27 @@ MPID_Get(void         *origin_addr,
   /* If the get is a local operation, do it here */
   if (target_rank == win->comm_ptr->rank)
     {
-      size_t offset = req->offset;
+      /* The operation is not complete until the local copy is performed */
+      mpi_errno = MPIR_Localcopy(win->base + req->offset,
+                                 target_count,
+                                 target_datatype,
+                                 origin_addr,
+                                 origin_count,
+                                 origin_datatype);
+
+      /* The instant this completion counter is set to zero another thread
+       * may notice the change and begin freeing request resources. The
+       * thread executing the code in this function must not touch any
+       * portion of the request structure after decrementing the completion
+       * counter.
+       *
+       * See MPID_Request_release_inline()
+       */
       if(req->req_handle)
         MPID_cc_set(req->req_handle->cc_ptr, 0);
       else
         MPIU_Free(req);
-      return MPIR_Localcopy(win->base + offset,
-                            target_count,
-                            target_datatype,
-                            origin_addr,
-                            origin_count,
-                            origin_datatype);
+      return mpi_errno;
     }
   req->target.rank = target_rank;
 

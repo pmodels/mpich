@@ -139,21 +139,34 @@ MPIDI_Win_GetAccDoneCB(pami_context_t  context,
 
   if (req->origin.completed == req->target.dt.num_contig + 1)
     {
-      if(req->req_handle)
-          MPID_cc_set(req->req_handle->cc_ptr, 0);
+      MPID_Request * req_handle = req->req_handle;
 
       if (req->buffer_free) {
           MPIU_Free(req->buffer);
           req->buffer_free = 0;
       }
       if (req->accum_headers)
-        MPIU_Free(req->accum_headers);
+          MPIU_Free(req->accum_headers);
 
       MPIDI_Win_datatype_unmap(&req->target.dt);
       MPIDI_Win_datatype_unmap(&req->result.dt);      
 
-      if( req->type != MPIDI_WIN_REQUEST_RGET_ACCUMULATE )
-        MPIU_Free(req);
+      if( req->type != MPIDI_WIN_REQUEST_RGET_ACCUMULATE ) {
+          if (req_handle) {
+              req_handle->mpid.win_req = NULL;
+          }
+          MPIU_Free(req);
+      }
+      /* The instant this completion counter is set to zero another thread
+       * may notice the change and begin freeing request resources. The
+       * thread executing the code in this function must not touch any
+       * portion of the request structure after decrementing the completion
+       * counter.
+       *
+       * See MPID_Request_release_inline()
+       */
+      if(req_handle)
+          MPID_cc_set(req_handle->cc_ptr, 0);
     }
   MPIDI_Progress_signal();
 }
