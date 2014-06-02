@@ -26,7 +26,7 @@ enum {
 
 int test_indexed_with_zeros(char *filename, int testcase)
 {
-    int i, rank, np, buflen, num, err, nr_errors;
+    int i, rank, np, buflen, num, err, nr_errors=0;
     int  nelms[MAXLEN], buf[MAXLEN], indices[MAXLEN], blocklen[MAXLEN];
     MPI_File fh;
     MPI_Status status;
@@ -127,7 +127,7 @@ int main(int argc, char **argv)
         if (rank == 0) fprintf(stderr,"Must run on 2 MPI processes\n");
         MPI_Finalize(); return 1;
     }
-    nr_errors += test_indexed_with_zeros(argv[1], INDEXED);
+    nr_errors = test_indexed_with_zeros(argv[1], INDEXED);
     nr_errors += test_indexed_with_zeros(argv[1], HINDEXED);
     nr_errors += test_indexed_with_zeros(argv[1], STRUCT);
 
