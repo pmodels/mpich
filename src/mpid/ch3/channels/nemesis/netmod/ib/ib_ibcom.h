@@ -648,7 +648,12 @@ typedef struct {
     } else {                                                            \
         clz = __builtin_clz(_sz);                                       \
         int ctz = __builtin_ctz(_sz);                                   \
-        sz = (clz + ctz == 31) ? _sz : (1ULL << (32 - clz));            \
+        if (clz + ctz == 31) {                                          \
+            sz = _sz;                                                   \
+        } else {                                                        \
+            sz = (1ULL << (32 - clz));                                  \
+            clz = clz - 1;                                              \
+        }                                                               \
     }
 
 static inline void *MPID_nem_ib_rdmawr_from_alloc(uint32_t _sz)
