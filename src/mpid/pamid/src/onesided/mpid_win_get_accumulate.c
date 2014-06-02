@@ -22,6 +22,57 @@
 #include "mpidi_onesided.h"
 
 static void 
+MPIDI_Fetch_data_op(const void   * origin_addr,
+                    int            origin_count,
+                    MPI_Datatype   origin_datatype,
+                    void         * result_addr,
+                    int            target_rank,
+                    MPI_Aint       target_disp,
+                    int            target_count,
+                    MPI_Datatype   target_datatype,
+                    MPI_Op         op,
+                    MPID_Win      *win)
+{
+        static char FCNAME[] = "MPIDI_Fetch_data_op";
+        int shm_locked;
+        MPI_User_function *uop;
+        void *base, *dest_addr;
+        int disp_unit;
+        int len, one;
+
+       if (win->create_flavor == MPI_WIN_FLAVOR_SHARED) {
+           MPIDI_SHM_MUTEX_LOCK(win);
+           shm_locked = 1;
+           base = win->mpid.info[target_rank].base_addr;
+           disp_unit = win->mpid.info[target_rank].disp_unit;
+        }
+        else if (win->create_flavor == MPI_WIN_FLAVOR_DYNAMIC) {
+           base = NULL;
+           disp_unit = win->disp_unit;
+        }
+        else {
+           base = win->mpid.info[target_rank].base_addr;
+           disp_unit = win->mpid.info[target_rank].disp_unit;
+        }
+        dest_addr = (char *) base + disp_unit * target_disp;
+
+        MPID_Datatype_get_size_macro(origin_datatype, len);
+        MPIU_Memcpy(result_addr, dest_addr, len);
+        if (op != MPI_NO_OP) {
+            uop = MPIR_OP_HDL_TO_FN(op);
+            one = 1;
+            (*uop)((void *) origin_addr, dest_addr, &one, &origin_datatype);
+        }
+
+        if (shm_locked) {
+            MPIDI_SHM_MUTEX_UNLOCK(win);
+            shm_locked = 0;
+        }
+   fn_fail: return;
+}
+
+
+static void 
 MPIDI_Win_GetAccSendAckDoneCB(pami_context_t   context,
 			     void           * _info,
 			     pami_result_t    result)
@@ -36,6 +87,7 @@ MPIDI_Win_GetAccumSendAck(pami_context_t   context,
 			  void           * _info,
 			  pami_result_t    result)
 {
+  static char FCNAME[] = "MPID_Win_GetAccumSendAck";
   MPIDI_Win_GetAccMsgInfo *msginfo = (MPIDI_Win_GetAccMsgInfo *) _info;  
   pami_result_t rc = PAMI_SUCCESS;
 
@@ -58,7 +110,6 @@ MPIDI_Win_GetAccumSendAck(pami_context_t   context,
                                  MPI_CHAR);
       MPID_assert(mpi_errno == MPI_SUCCESS);      
     }
-
   //Schedule sends to source to result buffer and trigger completion
   //callback there
   pami_send_t params = {
@@ -83,6 +134,7 @@ MPIDI_Win_GetAccumSendAck(pami_context_t   context,
   
   rc = PAMI_Send(context, &params);
   MPID_assert(rc == PAMI_SUCCESS);
+  fn_fail: return;
 }
 
 void
@@ -320,7 +372,14 @@ MPID_Get_accumulate(const void   * origin_addr,
   int mpi_errno = MPI_SUCCESS;
 
   if (op == MPI_NO_OP) {//we just need to fetch data    
-    mpi_errno = MPID_Get(result_addr,
+     if (win->create_flavor == MPI_WIN_FLAVOR_SHARED) {
+        win->mpid.sync.total++;
+        MPIDI_Fetch_data_op(origin_addr, origin_count, origin_datatype,
+                           result_addr, target_rank, target_disp,
+                           target_count, target_datatype, op, win);
+        ++win->mpid.sync.complete;
+     } else {
+        mpi_errno = MPID_Get(result_addr,
 			 result_count,
 			 result_datatype,
 			 target_rank,
@@ -328,6 +387,7 @@ MPID_Get_accumulate(const void   * origin_addr,
 			 target_count,
 			 target_datatype,
 			 win);  
+    }
     return mpi_errno;
   }
   
@@ -465,10 +525,29 @@ MPID_Get_accumulate(const void   * origin_addr,
   MPIDI_Win_datatype_basic(result_count, result_datatype, &req->result.dt);
   MPIDI_Win_datatype_map(&req->result.dt);
   req->result_num_contig = req->result.dt.num_contig;
-  
+  if (target_rank == win->comm_ptr->rank || win->create_flavor == MPI_WIN_FLAVOR_SHARED)
+   {
+        win->mpid.sync.total++;
+        MPIDI_Fetch_data_op(origin_addr, origin_count, origin_datatype,
+                           result_addr, target_rank, target_disp,
+                           target_count, target_datatype, op, win);
+        ++win->mpid.sync.complete;
+
+       if (req->buffer_free) {
+           MPIU_Free(req->buffer);
+           MPIU_Free(req->user_buffer);
+           req->buffer_free = 0;
+       }
+       MPIDI_Win_datatype_unmap(&req->target.dt);
+       MPIDI_Win_datatype_unmap(&req->result.dt);
+
+       if(req->req_handle)
+          MPID_cc_set(req->req_handle->cc_ptr, 0);
+       else 
+           MPIU_Free(req);
+   } else {    /* non-shared or target_rank != origin_rank  */
   //We wait for #messages depending on target and result_datatype
   win->mpid.sync.total += (1 + req->target.dt.num_contig);
-
   {
     MPI_Datatype basic_type = MPI_DATATYPE_NULL;
     MPID_Datatype_get_basic_type(origin_datatype, basic_type);
@@ -516,7 +595,7 @@ MPID_Get_accumulate(const void   * origin_addr,
    *        better latency for one-sided operations.
    */
   PAMI_Context_post(MPIDI_Context[0], &req->post_request, MPIDI_Get_accumulate, req);
-
+ }
 fn_fail:
   return mpi_errno;
 }
