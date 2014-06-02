@@ -448,8 +448,10 @@ typedef pthread_mutex_t MPIDI_SHM_MUTEX;
 
 typedef struct MPIDI_Win_shm_ctrl_t
 {
-  MPIDI_SHM_MUTEX mutex_lock;
+  MPIDI_SHM_MUTEX  mutex_lock;    /* shared memory windows -- lock for    */
+                                     /*     accumulate/atomic operations     */
   OPA_int_t       active;
+  int        shm_count;
 } MPIDI_Win_shm_ctrl_t;
 
 typedef struct MPIDI_Win_shm_t
@@ -463,9 +465,7 @@ typedef struct MPIDI_Win_shm_t
       uint32_t shm_id;                /* shared memory id - sysv            */
       char     shm_key[64];         /* shared memory key - posix            */
     };
-    int       *shm_count;
-    MPIDI_SHM_MUTEX *mutex_lock;    /* shared memory windows -- lock for    */
-                                     /*     accumulate/atomic operations     */
+    MPIDI_Win_shm_ctrl_t  *ctrl;
 } MPIDI_Win_shm_t;
 
 /**

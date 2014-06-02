@@ -34,8 +34,8 @@ int MPIDI_SHM_Win_free(MPID_Win **win_ptr)
   /* Free shared memory region */
   /* free shm_base_addrs that's only used for shared memory windows */
   if ((*win_ptr)->mpid.shm->allocated) {
-    OPA_fetch_and_add_int((OPA_int_t *) (*win_ptr)->mpid.shm->shm_count,-1);
-    while(*(*win_ptr)->mpid.shm->shm_count) MPIDI_QUICKSLEEP;
+    OPA_fetch_and_add_int((OPA_int_t *) &((*win_ptr)->mpid.shm->ctrl->shm_count),-1);
+    while((*win_ptr)->mpid.shm->ctrl->shm_count !=0) MPIDI_QUICKSLEEP;
     if ((*win_ptr)->comm_ptr->rank == 0) {
       MPIDI_SHM_MUTEX_DESTROY(*win_ptr);
       }
