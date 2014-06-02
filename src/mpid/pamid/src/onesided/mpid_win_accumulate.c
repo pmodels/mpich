@@ -161,6 +161,7 @@ MPID_Accumulate(const void   *origin_addr,
                 MPID_Win     *win)
 {
   int mpi_errno = MPI_SUCCESS;
+  int shm_locked = 0;
   MPIDI_Win_request *req = MPIU_Calloc0(1, MPIDI_Win_request);
   req->win          = win;
   if(win->mpid.request_based != 1)
@@ -288,10 +289,39 @@ MPID_Accumulate(const void   *origin_addr,
 
 
   MPIDI_Win_datatype_map(&req->target.dt);
-  win->mpid.sync.total += req->target.dt.num_contig;
 
+  if (win->create_flavor == MPI_WIN_FLAVOR_SHARED)
+   {
+       MPI_User_function *uop;
+       void *base, *dest_addr;
+       int disp_unit;
+       int len, one;
 
+       ++win->mpid.sync.total;
+       MPIDI_SHM_MUTEX_LOCK(win);
+       shm_locked = 1;
+       base = win->mpid.info[target_rank].base_addr;
+       disp_unit = win->mpid.info[target_rank].disp_unit;
+       dest_addr = (char *) base + disp_unit * target_disp;
+
+       MPID_Datatype_get_size_macro(origin_datatype, len);
+
+       uop = MPIR_OP_HDL_TO_FN(op);
+       one = 1;
+
+       (*uop)((void *) origin_addr, dest_addr, &one, &origin_datatype);
+
+       if (shm_locked) {
+           MPIDI_SHM_MUTEX_UNLOCK(win);
+           shm_locked = 0;
+       }
+
+        MPIU_Free(req);
+        ++win->mpid.sync.complete;
+
+   } else { /* non-shared    */
   {
+    win->mpid.sync.total += req->target.dt.num_contig;
     MPI_Datatype basic_type = MPI_DATATYPE_NULL;
     MPID_Datatype_get_basic_type(origin_datatype, basic_type);
     /* MPID_Datatype_get_basic_type() doesn't handle the struct types */
@@ -334,6 +364,7 @@ MPID_Accumulate(const void   *origin_addr,
    */
   PAMI_Context_post(MPIDI_Context[0], &req->post_request, MPIDI_Accumulate, req);
 
+ }
 fn_fail:
   return mpi_errno;
 }

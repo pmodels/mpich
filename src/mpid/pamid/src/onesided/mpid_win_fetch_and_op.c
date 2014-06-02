@@ -297,11 +297,12 @@ int MPID_Fetch_and_op(const void *origin_addr, void *result_addr,
         int disp_unit;
         int len, one;
 
+        ++win->mpid.sync.total;
         if (win->create_flavor == MPI_WIN_FLAVOR_SHARED) {
             MPIDI_SHM_MUTEX_LOCK(win);
             shm_locked = 1;
             base = win->mpid.info[target_rank].base_addr;
-            disp_unit = win->disp_unit;
+            disp_unit = win->mpid.info[target_rank].disp_unit;
 
         }
 	else if (win->create_flavor == MPI_WIN_FLAVOR_DYNAMIC) {
@@ -309,8 +310,8 @@ int MPID_Fetch_and_op(const void *origin_addr, void *result_addr,
 	    disp_unit = win->disp_unit;
 	}
         else {
-            base = win->base;
-            disp_unit = win->disp_unit;
+            base = win->mpid.info[target_rank].base_addr;
+            disp_unit = win->mpid.info[target_rank].disp_unit;
         }
 
         dest_addr = (char *) base + disp_unit * target_disp;
@@ -330,6 +331,7 @@ int MPID_Fetch_and_op(const void *origin_addr, void *result_addr,
 
         MPIU_Free(req);
 
+        ++win->mpid.sync.complete;
     }
   else {
     req->compare_buffer = NULL;

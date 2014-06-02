@@ -116,6 +116,7 @@ int MPID_Compare_and_swap(const void *origin_addr, const void *compare_addr,
         int disp_unit;
         int len;
 
+        ++win->mpid.sync.total;
         if (win->create_flavor == MPI_WIN_FLAVOR_SHARED) {
             MPIDI_SHM_MUTEX_LOCK(win);
             shm_locked = 1;
@@ -128,7 +129,7 @@ int MPID_Compare_and_swap(const void *origin_addr, const void *compare_addr,
 	    disp_unit = win->disp_unit;
 	}
         else {
-            base = win->base;
+            base = win->mpid.info[target_rank].base_addr;
             disp_unit = win->disp_unit;
         }
 
@@ -145,6 +146,7 @@ int MPID_Compare_and_swap(const void *origin_addr, const void *compare_addr,
             shm_locked = 0;
         }
         MPIU_Free(req);
+       ++win->mpid.sync.complete;
     } 
   else {
     req->buffer           = (void *) ((uintptr_t) origin_addr + req->origin.dt.true_lb);

@@ -206,6 +206,8 @@ MPID_Put(const void   *origin_addr,
          MPID_Win     *win)
 {
   int mpi_errno = MPI_SUCCESS;
+  int shm_locked=0;
+  void * target_addr;
   MPIDI_Win_request *req = MPIU_Calloc0(1, MPIDI_Win_request);
   req->win          = win;
   if(win->mpid.request_based != 1) 
@@ -262,16 +264,33 @@ MPID_Put(const void   *origin_addr,
     }
 
 
-  /* If the get is a local operation, do it here */
-  if (target_rank == win->comm_ptr->rank)
+  /* shared window  */
+  if ( (win->create_flavor == MPI_WIN_FLAVOR_SHARED))
     {
+      ++win->mpid.sync.total;
+
+      MPIDI_SHM_MUTEX_LOCK(win);
+      shm_locked=1;
+
+      if (target_rank == win->comm_ptr->rank)
+          target_addr=win->base + req->offset;
+      else 
+          target_addr = win->mpid.info[target_rank].base_addr + req->offset;
+
       /* The operation is not complete until the local copy is performed */
       mpi_errno = MPIR_Localcopy(origin_addr,
                                  origin_count,
                                  origin_datatype,
-                                 win->base + req->offset,
+                                 target_addr,
                                  target_count,
                                  target_datatype);
+
+      if (shm_locked) {
+          MPIDI_SHM_MUTEX_UNLOCK(win);
+          shm_locked=0;
+      }
+
+       ++win->mpid.sync.complete;
 
       /* The instant this completion counter is set to zero another thread
        * may notice the change and begin freeing request resources. The

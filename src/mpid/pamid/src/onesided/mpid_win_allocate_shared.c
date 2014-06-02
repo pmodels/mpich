@@ -512,11 +512,15 @@ MPID_Win_allocate_shared(MPI_Aint     size,
       char *cur_base = (*win_ptr)->base;
       for (i = 0; i < comm_size; ++i) {
           if (win->mpid.info[i].base_size) {
+             if (i == 0) 
+                 win->mpid.info[i].base_addr = (void *) ((MPI_Aint) cur_base);
+             else {
               if (noncontig)  
                   /* Round up to next page size */
-                  win->mpid.info[i].base_addr =(void *) ((MPI_Aint) cur_base + (MPI_Aint) MPIDI_ROUND_UP_PAGESIZE(size,pageSize));
+                  win->mpid.info[i].base_addr =(void *) ((MPI_Aint) cur_base + (MPI_Aint) MPIDI_ROUND_UP_PAGESIZE((win->mpid.info[i-1].base_size),pageSize));
               else
-                  win->mpid.info[i].base_addr = (void *) ((MPI_Aint) cur_base + (MPI_Aint) size);
+                  win->mpid.info[i].base_addr = (void *) ((MPI_Aint) cur_base + (MPI_Aint) (win->mpid.info[i-1].base_size));
+              }
               cur_base = win->mpid.info[i].base_addr;
           } else {
               win->mpid.info[i].base_addr = NULL; 
