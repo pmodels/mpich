@@ -34,7 +34,7 @@ MPIDI_Fetch_data_op(const void   * origin_addr,
                     MPID_Win      *win)
 {
         static char FCNAME[] = "MPIDI_Fetch_data_op";
-        int shm_locked;
+        int shm_locked=0;
         MPI_User_function *uop;
         void *base, *dest_addr;
         int disp_unit;
@@ -43,14 +43,6 @@ MPIDI_Fetch_data_op(const void   * origin_addr,
        if (win->create_flavor == MPI_WIN_FLAVOR_SHARED) {
            MPIDI_SHM_MUTEX_LOCK(win);
            shm_locked = 1;
-           base = win->mpid.info[target_rank].base_addr;
-           disp_unit = win->mpid.info[target_rank].disp_unit;
-        }
-        else if (win->create_flavor == MPI_WIN_FLAVOR_DYNAMIC) {
-           base = NULL;
-           disp_unit = win->disp_unit;
-        }
-        else {
            base = win->mpid.info[target_rank].base_addr;
            disp_unit = win->mpid.info[target_rank].disp_unit;
         }
@@ -525,7 +517,7 @@ MPID_Get_accumulate(const void   * origin_addr,
   MPIDI_Win_datatype_basic(result_count, result_datatype, &req->result.dt);
   MPIDI_Win_datatype_map(&req->result.dt);
   req->result_num_contig = req->result.dt.num_contig;
-  if (target_rank == win->comm_ptr->rank || win->create_flavor == MPI_WIN_FLAVOR_SHARED)
+  if (win->create_flavor == MPI_WIN_FLAVOR_SHARED)
    {
         win->mpid.sync.total++;
         MPIDI_Fetch_data_op(origin_addr, origin_count, origin_datatype,
@@ -541,11 +533,12 @@ MPID_Get_accumulate(const void   * origin_addr,
        MPIDI_Win_datatype_unmap(&req->target.dt);
        MPIDI_Win_datatype_unmap(&req->result.dt);
 
-       if(req->req_handle)
+       if(req->req_handle) {
           MPID_cc_set(req->req_handle->cc_ptr, 0);
-       else 
+       } else { 
            MPIU_Free(req);
-   } else {    /* non-shared or target_rank != origin_rank  */
+       }
+   } else {    /* non-shared  */
   //We wait for #messages depending on target and result_datatype
   win->mpid.sync.total += (1 + req->target.dt.num_contig);
   {
