@@ -1439,8 +1439,7 @@ int MPID_nem_ib_com_isend(int condesc,
     uint32_t hdr_ringbuf_type = local_ringbuf_type;
     MPID_NEM_IB_NETMOD_HDR_SZ_SET(buf_from,
                                   MPID_NEM_IB_NETMOD_HDR_SIZEOF(local_ringbuf_type) +
-                                  sz_prefix + sz_hdr + sz_data +
-                                  sizeof(MPID_nem_ib_netmod_trailer_t));
+                                  sz_prefix + sz_hdr + sz_data);
     if (remote_ringbuf_type == MPID_NEM_IB_RINGBUF_EXCLUSIVE) {
         hdr_ringbuf_type |= MPID_NEM_IB_RINGBUF_RELINDEX;
         MPID_NEM_IB_NETMOD_HDR_RELINDEX_SET(buf_from, conp->rsr_seq_num_tail);

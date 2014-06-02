@@ -633,8 +633,7 @@ int MPID_nem_ib_poll_eager(MPID_nem_ib_ringbuf_t * ringbuf)
     ssize_t sz_pkt = MPID_NEM_IB_NETMOD_HDR_SIZEOF_GET(buf);
     MPIDI_CH3_Pkt_eager_send_t *pkt = (MPIDI_CH3_Pkt_eager_send_t *) ((uint8_t *) buf + sz_pkt);
     dprintf("pkt=%p,sizeof=%ld\n", pkt, sz_pkt);
-    MPIU_Assert(MPID_NEM_IB_NETMOD_HDR_SZ_GET(buf) >=
-                sz_pkt + sizeof(MPIDI_CH3_Pkt_t) + sizeof(MPID_nem_ib_netmod_trailer_t));
+    MPIU_Assert(MPID_NEM_IB_NETMOD_HDR_SZ_GET(buf) >= sz_pkt + sizeof(MPIDI_CH3_Pkt_t));
     dprintf
         ("handle_pkt,before,%d<-%d,id=%d,pkt->type=%d,pcc=%d,MPIDI_CH3_PKT_END_ALL=%d,pkt=%p,subtype=%d\n",
          MPID_nem_ib_myrank, vc->pg_rank, *remote_poll, pkt->type,
@@ -643,8 +642,7 @@ int MPID_nem_ib_poll_eager(MPID_nem_ib_ringbuf_t * ringbuf)
     /* see MPIDI_CH3_PktHandler_EagerSend (in src/mpid/ch3/src/ch3u_eager.c) */
     mpi_errno =
         MPID_nem_handle_pkt(vc, (char *) ((uint8_t *) buf + sz_pkt),
-                            (MPIDI_msg_sz_t) (MPID_NEM_IB_NETMOD_HDR_SZ_GET(buf) -
-                                              sz_pkt - sizeof(MPID_nem_ib_netmod_trailer_t)));
+                            (MPIDI_msg_sz_t) (MPID_NEM_IB_NETMOD_HDR_SZ_GET(buf) - sz_pkt));
     if (mpi_errno) {
         MPIU_ERR_POP(mpi_errno);
     }
@@ -705,8 +703,7 @@ int MPID_nem_ib_poll_eager(MPID_nem_ib_ringbuf_t * ringbuf)
                                                     sz_pkt + sizeof(MPIDI_CH3_Pkt_t)));
     }
     else {
-        if (MPID_NEM_IB_NETMOD_HDR_SZ_GET(buf) ==
-            sz_pkt + sizeof(MPIDI_CH3_Pkt_t) + sizeof(MPID_nem_ib_netmod_trailer_t)) {
+        if (MPID_NEM_IB_NETMOD_HDR_SZ_GET(buf) == sz_pkt + sizeof(MPIDI_CH3_Pkt_t)) {
             if (pkt->type == MPIDI_CH3_PKT_EAGERSHORT_SEND
                 //||                  pkt->type == MPIDI_CH3_PKT_GET
 ) {
