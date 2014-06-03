@@ -55,7 +55,7 @@ int MPID_nem_ib_lmt_initiate_lmt(struct MPIDI_VC *vc, union MPIDI_CH3_Pkt *rts_p
     //assert(dt_true_lb == 0);
     void *write_from_buf;
     if (dt_contig) {
-        write_from_buf = req->dev.user_buf;
+        write_from_buf = (void *) ((char *) req->dev.user_buf + dt_true_lb);
     }
     else {
         /* see MPIDI_CH3_EagerNoncontigSend (in ch3u_eager.c) */
@@ -232,7 +232,7 @@ int MPID_nem_ib_lmt_start_recv(struct MPIDI_VC *vc, struct MPID_Request *req, MP
 
     void *write_to_buf;
     if (dt_contig) {
-        write_to_buf = (void *) ((char *) req->dev.user_buf /*+ REQ_FIELD(req, lmt_dt_true_lb) */);
+        write_to_buf = (void *) ((char *) req->dev.user_buf + dt_true_lb);
     }
     else {
         //REQ_FIELD(req, lmt_pack_buf) = MPIU_Malloc((size_t)req->ch.lmt_data_sz);
