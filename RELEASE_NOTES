@@ -1,4 +1,17 @@
 ----------------------------------------------------------------------
+                        NEW FEATURES
+----------------------------------------------------------------------
+
+### Blue Gene/Q implementation supports MPI-3
+
+ * This release contains a functional and compliant Blue Gene/Q
+   implementation of the MPI-3 standard. Instructions to build on
+   Blue Gene/Q are on the mpich.org wiki:
+
+     http://wiki.mpich.org/mpich/index.php/BGQ
+
+
+----------------------------------------------------------------------
                         KNOWN ISSUES
 ----------------------------------------------------------------------
 
