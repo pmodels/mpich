@@ -220,7 +220,16 @@ if test "$with_gnu_ld" = yes; then
       ;;
     gnu* | linux* | tpf* | k*bsd*-gnu | kopensolaris*-gnu)
       if $LD --help 2>&1 | grep ': supported targets:.* elf' > /dev/null; then
-        :
+        # use --enable-new-dtags for RUNPATH support, which is required for
+        # switching between ABI compatible libraries at runtime.
+        if test "$GCC" = yes; then
+          hardcode_libdir_flag_spec="${hardcode_libdir_flag_spec} ${wl}--enable-new-dtags"
+        else
+          case $cc_basename in ifort*)
+            hardcode_libdir_flag_spec="${hardcode_libdir_flag_spec} ${wl}--enable-new-dtags"
+            ;;
+          esac
+        fi
       else
         ld_shlibs=no
       fi
