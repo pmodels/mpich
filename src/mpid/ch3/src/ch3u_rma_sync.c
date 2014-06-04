@@ -51,6 +51,28 @@ cvars:
         but may run the risk of exceeding the available number of requests
         or other internal resources.
 
+    - name        : MPIR_CVAR_CH3_RMA_GC_NUM_COMPLETED
+      category    : CH3
+      type        : int
+      default     : 1
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Threshold for the number of completed requests the runtime finds
+        before it stops trying to find more completed requests in garbage
+        collection function.
+        When it is set to negative value, it means runtime will not stop
+        checking the operation list until it reaches the end of the list.
+        When it is set to positive value, it means runtime will not stop
+        checking the operation list until it finds certain number of
+        completed requests. When it is set to zero value, the outcome is
+        undefined.
+        Note that in garbage collection function, if runtime finds a chain
+        of completed RMA requests, it will temporarily ignore this CVAR
+        and try to find continuous completed requests as many as possible,
+        until it meets an incomplete request.
+
     - name        : MPIR_CVAR_CH3_RMA_LOCK_IMMED
       category    : CH3
       type        : boolean
@@ -5609,10 +5631,13 @@ static inline int rma_list_gc( MPID_Win *win_ptr,
 	    }
 	    while (curr_ptr && curr_ptr != last_elm && 
 		   MPID_Request_is_complete(curr_ptr->request)) ;
-	    /* Once a request completes, we wait for another
-	       operation to arrive rather than check the
-	       rest of the requests.  */
+            if (MPIR_CVAR_CH3_RMA_GC_NUM_COMPLETED >= 0 &&
+                nComplete >= MPIR_CVAR_CH3_RMA_GC_NUM_COMPLETED) {
+                /* MPIR_CVAR_CH3_RMA_GC_NUM_COMPLETED: Once we found
+                   certain number of completed requests, we stop checking
+                   the rest of the operation list and break out the loop. */
 	    break;
+            }
 	}
 	else {
 	    /* proceed to the next entry.  */
