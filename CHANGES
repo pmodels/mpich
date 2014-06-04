@@ -2,15 +2,19 @@
                                Changes in 3.1.1
 ===============================================================================
 
+ # Blue Gene/Q implementation supports MPI-3. This release contains a
+   functional and compliant Blue Gene/Q implementation of the MPI-3 standard.
+   Instructions to build on Blue Gene/Q are on the mpich.org wiki:
+   http://wiki.mpich.org/mpich/index.php/BGQ
+
+ # Fortran 2008 bindings (experimental). Build with --enable-fortran=all. Must have
+   a Fortran 2008 + TS 29113 capable compiler.
+
  # Significant rework of MPICH library management and which symbols go
    into which libraries.  Also updated MPICH library names to make
    them consistent with Intel MPI, Cray MPI and IBM PE MPI.  Backward
    compatibility links are provided for older mpich-based build
    systems.
-
- # Fixed the prototype of the Reduce_local C++ binding.  The previous
-   prototype was completely incorrect.  Thanks to Jeff Squyres for
-   reporting the issue.
 
  # The ROMIO "Blue Gene" driver has seen significant rework.  We have separated
    "file system" features from "platform" features, since GPFS shows up in more
@@ -24,8 +28,12 @@
  # The old ROMIO optimization "deferred open" either stopped working or was
    disabled on several platforms.
 
- # Fortran 2008 bindings (experimental). Build with --enable-fortran=all. Must have
-   a Fortran 2008 + TS 29113 capable compiler.
+ # Added support for powerpcle compiler. Patched libtool in MPICH to support
+   little-endian powerpc linux host.
+
+ # Fixed the prototype of the Reduce_local C++ binding.  The previous
+   prototype was completely incorrect.  Thanks to Jeff Squyres for
+   reporting the issue.
 
  # The mpd process manager, which was deprecated and unsupported for
    the past four major release series (1.3.x till 3.1), has now been
