@@ -1969,8 +1969,8 @@ int MPID_nem_ib_com_lrecv(int condesc, uint64_t wr_id, void *raddr, long sz_data
     *post_num = 1;
 
     /* Type of max_msg_sz is uint32_t. */
-    if ((uint32_t) (sz_data) > conp->icom_pattr.max_msg_sz) {
-        *post_num += (uint32_t) (sz_data) / conp->icom_pattr.max_msg_sz;
+    if (sz_data > (long) conp->icom_pattr.max_msg_sz) {
+        *post_num +=  sz_data / (long)conp->icom_pattr.max_msg_sz;
     }
 
     for (i = 0; i < *post_num; i++) {
@@ -1996,10 +1996,10 @@ int MPID_nem_ib_com_lrecv(int condesc, uint64_t wr_id, void *raddr, long sz_data
         conp->icom_sr[MPID_NEM_IB_COM_LMT_INITIATOR].sg_list[num_sge].addr =
             (uint64_t) laddr + (i * conp->icom_pattr.max_msg_sz);
 #endif
-        if ((uint32_t) sz_data > conp->icom_pattr.max_msg_sz) {
+        if (sz_data > (long) conp->icom_pattr.max_msg_sz) {
             if (i == *post_num - 1) {
                 conp->icom_sr[MPID_NEM_IB_COM_LMT_INITIATOR].sg_list[num_sge].length =
-                    (uint32_t) sz_data - i * conp->icom_pattr.max_msg_sz;
+                    (uint32_t) (sz_data - (long) conp->icom_pattr.max_msg_sz * i);
             }
             else {
                 conp->icom_sr[MPID_NEM_IB_COM_LMT_INITIATOR].sg_list[num_sge].length =
