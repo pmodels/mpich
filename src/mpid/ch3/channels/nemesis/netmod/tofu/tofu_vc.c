@@ -9,7 +9,7 @@
 #include "mpid_nem_impl.h"
 #include "tofu_impl.h"
 
-#define MPID_NEM_TOFU_DEBUG_VC
+//#define MPID_NEM_TOFU_DEBUG_VC
 #ifdef MPID_NEM_TOFU_DEBUG_VC
 #define dprintf printf
 #else
@@ -100,6 +100,8 @@ int MPID_nem_tofu_vc_terminate (MPIDI_VC_t *vc)
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_TOFU_VC_TERMINATE);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_TOFU_VC_TERMINATE);
+    
+    dprintf("tofu_vc_terminate,enter,%d->%d\n", MPIDI_Process.my_pg_rank, vc->pg_rank);
 
     mpi_errno = MPIDI_CH3U_Handle_connection (vc, MPIDI_VC_EVENT_TERMINATED);
 

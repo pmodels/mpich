@@ -9,7 +9,7 @@
 #include "mpid_nem_impl.h"
 #include "tofu_impl.h"
 
-#define MPID_NEM_TOFU_DEBUG_INIT
+//#define MPID_NEM_TOFU_DEBUG_INIT
 #ifdef MPID_NEM_TOFU_DEBUG_INIT
 #define dprintf printf
 #else

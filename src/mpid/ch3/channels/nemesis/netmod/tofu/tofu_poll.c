@@ -9,7 +9,7 @@
 #include "mpid_nem_impl.h"
 #include "tofu_impl.h"
 
-#define MPID_NEM_TOFU_DEBUG_POLL
+//#define MPID_NEM_TOFU_DEBUG_POLL
 #ifdef MPID_NEM_TOFU_DEBUG_POLL
 #define dprintf printf
 #else
@@ -279,14 +279,17 @@ int MPID_nem_tofu_recv_posted(struct MPIDI_VC *vc, struct MPID_Request *req)
     cmd[0].req_id = cmd;
     
     /* req->comm is set in MPID_irecv --> MPIDI_CH3U_Recvq_FDU_or_AEP */
-    MPIU_Assert(sizeof(LLC_match_t) >= sizeof(MPIDI_Message_match_parts_t));
-    memcpy(cmd[0].match.bits, &req->dev.match.parts, sizeof(MPIDI_Message_match_parts_t));
-    memset((uint8_t*)cmd[0].match.bits + sizeof(MPIDI_Message_match_parts_t),
-           0, sizeof(LLC_match_t) - sizeof(MPIDI_Message_match_parts_t));
+    *(int32_t*)((uint8_t*)&cmd[0].tag) = req->dev.match.parts.tag;
+ 	*(MPIR_Context_id_t*)((uint8_t*)&cmd[0].tag + sizeof(int32_t)) =
+        req->dev.match.parts.context_id;
+    MPIU_Assert(sizeof(LLC_tag_t) >= sizeof(int32_t) + sizeof(MPIR_Context_id_t));
+    memset((uint8_t*)&cmd[0].tag + sizeof(int32_t) + sizeof(MPIR_Context_id_t),
+           0, sizeof(LLC_tag_t) - sizeof(int32_t) - sizeof(MPIR_Context_id_t));
 
-    dprintf("tofu_recv_posted,match.bits=");
-    for(i = 0; i < sizeof(LLC_match_t); i++) {
-        dprintf("%02x", cmd[0].match.bits[i]);
+
+    dprintf("tofu_recv_posted,tag=");
+    for(i = 0; i < sizeof(LLC_tag_t); i++) {
+        dprintf("%02x", (int)*((uint8_t*)&cmd[0].tag + i));
     }
     dprintf("\n");
 

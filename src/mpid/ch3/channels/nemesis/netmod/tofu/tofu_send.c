@@ -9,7 +9,7 @@
 #include "mpid_nem_impl.h"
 #include "tofu_impl.h"
 
-#define MPID_NEM_TOFU_DEBUG_SEND
+//#define MPID_NEM_TOFU_DEBUG_SEND
 #ifdef MPID_NEM_TOFU_DEBUG_SEND
 #define dprintf printf
 #else
@@ -64,16 +64,16 @@ int MPID_nem_tofu_isend(struct MPIDI_VC *vc, const void *buf, int count, MPI_Dat
     
     /* Prepare bit-vector to perform tag-match. We use the same bit-vector as in CH3 layer. */
     /* See src/mpid/ch3/src/mpid_isend.c */
-    ((MPIDI_Message_match_parts_t*)(&cmd[0].match.bits))->rank = comm->rank;
-    ((MPIDI_Message_match_parts_t*)(&cmd[0].match.bits))->tag = tag;
- 	((MPIDI_Message_match_parts_t*)(&cmd[0].match.bits))->context_id = comm->context_id + context_offset;
-    MPIU_Assert(sizeof(LLC_match_t) >= sizeof(MPIDI_Message_match_parts_t));
-    memset((uint8_t*)&cmd[0].match.bits + sizeof(MPIDI_Message_match_parts_t),
-           0, sizeof(LLC_match_t) - sizeof(MPIDI_Message_match_parts_t));
+    *(int32_t*)((uint8_t*)&cmd[0].tag) = tag;
+ 	*(MPIR_Context_id_t*)((uint8_t*)&cmd[0].tag + sizeof(int32_t)) =
+        comm->context_id + context_offset;
+    MPIU_Assert(sizeof(LLC_tag_t) >= sizeof(int32_t) + sizeof(MPIR_Context_id_t));
+    memset((uint8_t*)&cmd[0].tag + sizeof(int32_t) + sizeof(MPIR_Context_id_t),
+           0, sizeof(LLC_tag_t) - sizeof(int32_t) - sizeof(MPIR_Context_id_t));
 
-    dprintf("tofu_isend,match.bits=");
-    for(i = 0; i < sizeof(LLC_match_t); i++) {
-        dprintf("%02x", cmd[0].match.bits[i]);
+    dprintf("tofu_isend,tag=");
+    for(i = 0; i < sizeof(LLC_tag_t); i++) {
+        dprintf("%02x", (int)*((uint8_t*)&cmd[0].tag + i));
     }
     dprintf("\n");
 
@@ -636,6 +636,7 @@ int llctofu_poll(int in_blocking_poll,
             usr = (void *)lcmd->usr_area;
             vp_sreq = usr->cbarg;
             
+
             if(events[0].side.initiator.error_code != LLC_ERROR_SUCCESS) {
                 printf("llctofu_poll,error_code=%d\n", events[0].side.initiator.error_code);
                 MPID_nem_tofu_segv;
@@ -651,7 +652,6 @@ int llctofu_poll(int in_blocking_poll,
             
             break; }
         case LLC_EVENT_UNSOLICITED_ARRIVED: {
-            dprintf("llctofu_poll,EVENT_UNSOLICITED_ARRIVED\n");
             void *vp_vc = 0;
             uint64_t addr;
             void *buff;
@@ -664,6 +664,10 @@ int llctofu_poll(int in_blocking_poll,
                                "LLC_leng   = %d", (int)bsiz);
                 MPIU_DBG_PKT(vp_vc, buff, "poll");
             }
+            dprintf("tofu_poll,EVENT_UNSOLICITED_ARRIVED,%d<-%d\n",
+                    MPIDI_Process.my_pg_rank,
+                    ((MPID_nem_tofu_netmod_hdr_t*)buff)->initiator_pg_rank
+                    );
             (*rfnc)(vp_vc,
                     ((MPID_nem_tofu_netmod_hdr_t*)buff)->initiator_pg_rank,
                     (uint8_t*)buff + sizeof(MPID_nem_tofu_netmod_hdr_t),
