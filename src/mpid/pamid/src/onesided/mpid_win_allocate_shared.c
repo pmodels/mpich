@@ -365,14 +365,14 @@ MPID_getSharedSegment(MPI_Aint     size,
         /* allocate a temporary buffer to gather the 'size' of each buffer on
          * the node to determine the amount of shared memory to allocate
          */
-        MPI_Aint *tmp_buf;
-        tmp_buf = MPIU_Malloc (2*comm_size*sizeof(MPI_Aint));
-        tmp_buf[rank] = (MPI_Aint) size;
+        MPI_Aint * size_array;
+        size_array = MPIU_Malloc (2*comm_size*sizeof(MPI_Aint));
+        size_array[rank] = (MPI_Aint) size;
         mpi_errno = MPIR_Allgather_impl(MPI_IN_PLACE, 0, MPI_DATATYPE_NULL,
-                                        tmp_buf, 1 * sizeof(MPI_Aint), MPI_BYTE,
+                                        size_array, 1 * sizeof(MPI_Aint), MPI_BYTE,
                                         (*win_ptr)->comm_ptr, &errflag);
         if (mpi_errno) {
-            MPIU_Free(tmp_buf);
+            MPIU_Free(size_array);
             MPIU_ERR_POP(mpi_errno);
         }
 
@@ -380,9 +380,9 @@ MPID_getSharedSegment(MPI_Aint     size,
         MPI_Aint actual_size;
         win->mpid.info[0].base_addr = NULL;
         for (i = 0; i < comm_size; ++i) {
-            win->mpid.info[i].base_size = tmp_buf[i];
+            win->mpid.info[i].base_size = size_array[i];
 
-            actual_size = (*noncontig)?MPIDI_ROUND_UP_PAGESIZE(tmp_buf[i],pageSize):tmp_buf[i];
+            actual_size = (*noncontig)?MPIDI_ROUND_UP_PAGESIZE(size_array[i],pageSize):size_array[i];
 
             win->mpid.shm->segment_len += actual_size;
 
@@ -394,7 +394,6 @@ MPID_getSharedSegment(MPI_Aint     size,
                 win->mpid.info[i+1].base_addr =
                     (void *) ((uintptr_t)win->mpid.info[i].base_addr + actual_size);
         }
-        MPIU_Free(tmp_buf);
 
         /* The beginning of the shared memory allocation contains a control
          * block before the data begins.
@@ -420,6 +419,12 @@ MPID_getSharedSegment(MPI_Aint     size,
             win->mpid.info[i].base_addr =
                 (void *) ((uintptr_t)win->mpid.info[i].base_addr + (uintptr_t)win->base);
         }
+
+        for (i = 0; i < comm_size; ++i) {
+            if (size_array[i] == 0) win->mpid.info[i].base_addr = NULL;
+        }
+
+        MPIU_Free(size_array);
 
         /* increment the shared counter */
         OPA_fetch_and_add_int((OPA_int_t *) &win->mpid.shm->ctrl->shm_count,(int) 1);
