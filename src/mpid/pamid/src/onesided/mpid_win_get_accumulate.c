@@ -40,12 +40,8 @@ MPIDI_Fetch_data_op(const void   * origin_addr,
         int disp_unit;
         int len, one;
 
-       if (win->create_flavor == MPI_WIN_FLAVOR_SHARED) {
-           MPIDI_SHM_MUTEX_LOCK(win);
-           shm_locked = 1;
            base = win->mpid.info[target_rank].base_addr;
            disp_unit = win->mpid.info[target_rank].disp_unit;
-        }
         dest_addr = (char *) base + disp_unit * target_disp;
 
         MPID_Datatype_get_size_macro(origin_datatype, len);
@@ -56,10 +52,6 @@ MPIDI_Fetch_data_op(const void   * origin_addr,
             (*uop)((void *) origin_addr, dest_addr, &one, &origin_datatype);
         }
 
-        if (shm_locked) {
-            MPIDI_SHM_MUTEX_UNLOCK(win);
-            shm_locked = 0;
-        }
    fn_fail: return;
 }
 

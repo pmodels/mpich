@@ -289,51 +289,6 @@ int MPID_Fetch_and_op(const void *origin_addr, void *result_addr,
 
   req->target.rank = target_rank;
 
-
-  if (target_rank == win->comm_ptr->rank || win->create_flavor == MPI_WIN_FLAVOR_SHARED)
-    {
-        MPI_User_function *uop;
-        void *base, *dest_addr;
-        int disp_unit;
-        int len, one;
-
-        ++win->mpid.sync.total;
-        if (win->create_flavor == MPI_WIN_FLAVOR_SHARED) {
-            MPIDI_SHM_MUTEX_LOCK(win);
-            shm_locked = 1;
-            base = win->mpid.info[target_rank].base_addr;
-            disp_unit = win->mpid.info[target_rank].disp_unit;
-
-        }
-	else if (win->create_flavor == MPI_WIN_FLAVOR_DYNAMIC) {
-	    base = NULL;
-	    disp_unit = win->disp_unit;
-	}
-        else {
-            base = win->mpid.info[target_rank].base_addr;
-            disp_unit = win->mpid.info[target_rank].disp_unit;
-        }
-
-        dest_addr = (char *) base + disp_unit * target_disp;
-
-        MPID_Datatype_get_size_macro(datatype, len);
-        MPIU_Memcpy(result_addr, dest_addr, len);
-
-        uop = MPIR_OP_HDL_TO_FN(op);
-        one = 1;
-
-        (*uop)((void *) origin_addr, dest_addr, &one, &datatype);
-
-        if (shm_locked) {
-            MPIDI_SHM_MUTEX_UNLOCK(win);
-            shm_locked = 0;
-        }
-
-        MPIU_Free(req);
-
-        ++win->mpid.sync.complete;
-    }
-  else {
     req->compare_buffer = NULL;
     req->pami_op = pami_op;
     req->op = op;
@@ -376,7 +331,6 @@ int MPID_Fetch_and_op(const void *origin_addr, void *result_addr,
       PAMI_Context_post(MPIDI_Context[0], &req->post_request, MPIDI_Atomic, req);
 
     }
-  }
 
 fn_fail:
   return mpi_errno;

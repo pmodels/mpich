@@ -298,8 +298,6 @@ MPID_Accumulate(const void   *origin_addr,
        int len, one;
 
        ++win->mpid.sync.total;
-       MPIDI_SHM_MUTEX_LOCK(win);
-       shm_locked = 1;
        base = win->mpid.info[target_rank].base_addr;
        disp_unit = win->mpid.info[target_rank].disp_unit;
        dest_addr = (char *) base + disp_unit * target_disp;
@@ -311,10 +309,6 @@ MPID_Accumulate(const void   *origin_addr,
 
        (*uop)((void *) origin_addr, dest_addr, &one, &origin_datatype);
 
-       if (shm_locked) {
-           MPIDI_SHM_MUTEX_UNLOCK(win);
-           shm_locked = 0;
-       }
 
         MPIU_Free(req);
         ++win->mpid.sync.complete;

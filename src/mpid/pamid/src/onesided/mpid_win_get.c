@@ -267,10 +267,6 @@ MPID_Get(void         *origin_addr,
       else
           target_addr = win->mpid.info[target_rank].base_addr + req->offset;
 
-      if (win->create_flavor == MPI_WIN_FLAVOR_SHARED) {
-          MPIDI_SHM_MUTEX_LOCK(win);
-          shm_locked=1;
-      }
 
       /* The operation is not complete until the local copy is performed */
       mpi_errno = MPIR_Localcopy(target_addr,
@@ -279,10 +275,6 @@ MPID_Get(void         *origin_addr,
                                  origin_addr,
                                  origin_count,
                                  origin_datatype);
-      if (shm_locked) {
-          MPIDI_SHM_MUTEX_UNLOCK(win);
-          shm_locked=0;
-      }
 
       /* The instant this completion counter is set to zero another thread
        * may notice the change and begin freeing request resources. The
