@@ -1352,6 +1352,13 @@ fi
 export MPICH_THREAD_LEVEL
 AC_DEFINE_UNQUOTED(MPICH_THREAD_LEVEL,$MPICH_THREAD_LEVEL,[Level of thread support selected at compile time])
 
+# If not in MPI_THREAD_SINGLE, we need -D_REENTRANT to get thread-safe "errno".
+# Most POSIX systems provide this by default when using -lpthread, but we only use it in MPI_THREAD_MULTIPLE.
+# Some systems (Solaris) still require an explicit define in any case.
+if test "$MPICH_THREAD_LEVEL" != "MPI_THREAD_SINGLE"; then
+    PAC_APPEND_FLAG([-D_REENTRANT], [CFLAGS])
+fi
+
 # Check for value thread_cs choice; set the refcount default if necessary
 thread_granularity=MPIU_THREAD_GRANULARITY_SINGLE
 thread_refcount=MPIU_REFCOUNT_NONE
