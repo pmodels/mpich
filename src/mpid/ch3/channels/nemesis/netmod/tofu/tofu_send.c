@@ -712,6 +712,10 @@ int llctofu_poll(int in_blocking_poll,
                 MPIU_Free(REQ_FIELD(req, pack_buf));
             }
 
+            req->status.MPI_TAG = req->dev.match.parts.tag;
+            req->status.MPI_SOURCE = req->dev.match.parts.rank;
+            MPIR_STATUS_SET_COUNT(req->status, events[0].side.initiator.length);
+
             /* Dequeue request from posted queue.  
                It's posted in MPID_Irecv --> MPIDI_CH3U_Recvq_FDU_or_AEP */
             int found = MPIDI_CH3U_Recvq_DP(req);
