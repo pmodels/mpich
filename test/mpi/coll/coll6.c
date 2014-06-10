@@ -53,9 +53,14 @@ int main( int argc, char **argv )
 	  table[i][j] = rank + 10;
       
       /* Everybody gets the gathered data */
-      MPI_Allgatherv(&table[begin_row][0], send_count, MPI_INT, 
-		     &table[0][0], recv_counts, displs, 
-                     MPI_INT, test_comm);
+      if ((char *) &table[begin_row][0] != (char *) table + displs[rank]*sizeof(int))
+          MPI_Allgatherv(&table[begin_row][0], send_count, MPI_INT,
+                         &table[0][0], recv_counts, displs,
+                         MPI_INT, test_comm);
+      else
+          MPI_Allgatherv(MPI_IN_PLACE, send_count, MPI_INT,
+                         &table[0][0], recv_counts, displs,
+                         MPI_INT, test_comm);
 
       /* Everybody should have the same table now.
 
