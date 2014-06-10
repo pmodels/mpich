@@ -256,7 +256,7 @@ int MPID_nem_tofu_recv_posted(struct MPIDI_VC *vc, struct MPID_Request *req)
 
     void *write_to_buf;
     if (dt_contig) {
-        write_to_buf = (void *) ((char *) req->dev.user_buf /*+ REQ_FIELD(req, lmt_dt_true_lb) */);
+        write_to_buf = (void *) ((char *) req->dev.user_buf + dt_true_lb);
     }
     else {
         REQ_FIELD(req, pack_buf) = MPIU_Malloc(data_sz);

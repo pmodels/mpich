@@ -86,7 +86,7 @@ int MPID_nem_tofu_isend(struct MPIDI_VC *vc, const void *buf, int count, MPI_Dat
 
     const void *write_from_buf;
     if (dt_contig) {
-        write_from_buf = buf;
+        write_from_buf = buf + dt_true_lb;
     }
     else {
         /* See MPIDI_CH3_EagerNoncontigSend (in ch3u_eager.c) */
