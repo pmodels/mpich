@@ -1,0 +1,593 @@
+#
+#  (C) 2004 by Argonne National Laboratory.
+#      See COPYRIGHT in top-level directory.
+#
+# Definitions for various MPI I/O Read/write tests
+
+# If we want a separate step to check the file as written different
+# from the read step, insert it here.
+<checkfile>
+</checkfile>
+#
+# If the open fails, jump to 111
+<openfile>
+call mpi_file_open( comm, filename, MPI_MODE_RDWR + MPI_MODE_CREATE, MPI_INFO_NULL, fh, ierr )
+<checkErr/>
+if (ierr .ne. MPI_SUCCESS) then
+    goto 111
+endif
+</openfile>
+<closefile>
+call mpi_file_close( fh, ierr )
+<checkErr/>
+</closefile>
+<deletefile>
+call mpi_barrier( comm, ierr )
+call mpi_comm_rank( comm, r, ierr )
+if (r .eq. 0) then
+    call mpi_file_delete( filename, MPI_INFO_NULL, ierr )
+    <checkErr/>
+endif
+call mpi_barrier( comm, ierr )
+</deletefile>
+
+# Common code to initialize the buffer for contiguous writes
+<setContigBuffer>
+do i=1, n
+    buf(i) = r*n + (k-1)*n*s + i-1
+enddo
+</setContigBuffer>
+# This is for double buffered tests
+<setContigBuffer2>
+do i=1, n
+    buf2(i) = r*n + (k)*n*s + i-1
+enddo
+</setContigBuffer2>
+
+<checkContigBuffer>
+do i=1, n
+    ans = r*n + (k-1)*n*s + i-1
+    if (buf(i) .ne. ans) then
+        errs = errs + 1
+        if (errs .le. 10) then
+            print *, r, k, ' buf(',i,') = ', buf(i), ' expected ', ans
+        endif
+    endif
+enddo
+</checkContigBuffer>
+<clearContigBuffer>
+do i=1, n
+    buf(i) = - (r*n + (k-1)*n*s + i)
+enddo
+</clearContigBuffer>
+<checkContigBuffer2>
+do i=1, n
+    if (buf2(i) .ne. r*n + (k)*n*s + i-1) then
+        errs = errs + 1
+        if (errs .le. 10) then
+            print *, r,k,' buf2(',i,') = ', buf2(i)
+        endif
+    endif
+enddo
+</checkContigBuffer2>
+<clearContigBuffer2>
+do i=1, n
+    buf2(i) = - (r*n + (k)*n*s + i)
+enddo
+</clearContigBuffer2>
+
+# Common error check
+<checkErr>
+if (ierr .ne. MPI_SUCCESS) then
+    errs = errs + 1
+    if (errs .le. 10) then
+        call MTestPrintError( ierr )
+    endif
+endif
+</checkErr>
+
+# Common error check when MPI_ERR_IN_STATUS is a possibility
+# (status array is then statuses, of length nreq (one status per request)
+<checkErrInStatus>
+if (ierr .ne. MPI_SUCCESS) then
+    errs = errs + 1
+    if (errs .le. 10) then
+        call MTestPrintError( ierr )
+        if (ierr .eq. MPI_ERR_IN_STATUS) then
+            do i=1, nreq
+                if (statuses(i)%MPI_ERROR .ne. MPI_SUCCESS) then
+                    print *, 'For statuses[', i, '], error is:'
+                    call MTestPrintError(statuses(i)%MPI_ERROR)
+                endif
+            enddo
+        endif
+    endif
+endif
+</checkErrInStatus>
+
+# Common offset computation, based on the block, rank, size
+<findOffset>
+offset = (r * n + (k - 1) * n * s) * intsize
+</findOffset>
+
+# Set the view of the file for this process; suitable for
+# collective I/O and independent file I/O without seek
+<setcontigview>
+call mpi_type_vector( b, n, n*s, MPI_INTEGER, filetype, ierr )
+call mpi_type_commit( filetype, ierr )
+offset = r * n * intsize
+call mpi_file_set_view( fh, offset, MPI_INTEGER, filetype, "native", MPI_INFO_NULL, ierr )
+<checkErr/>
+call mpi_type_free( filetype, ierr )
+</setcontigview>
+
+# Some tests require that the individual processes proceed in order.
+# The following definitions initialize the src and dest, and arrange
+# to pass a token using MPI_Ssend
+# Prereqs: r and s contain rank and size, and src,dest are declared.
+# The ring is executed b times, with index variable k
+<initRing>
+src  = mod( r + s - 1, s )
+dest = mod( r + 1, s )
+if (s .eq. 1) then
+    src = MPI_PROC_NULL
+    dest = MPI_PROC_NULL
+endif
+if (r .eq. s-1) then
+    call mpi_ssend( MPI_BOTTOM, 0, MPI_INTEGER, dest, 1, comm, ierr )
+endif
+</initRing>
+<waitRing>
+call mpi_recv( MPI_BOTTOM, 0, MPI_INTEGER, src, k, comm, MPI_STATUS_IGNORE, ierr )
+</waitRing>
+<nextRing>
+if (r .eq. s-1) then
+    call mpi_ssend( MPI_BOTTOM, 0, MPI_INTEGER, dest, k+1, comm, ierr )
+else
+    call mpi_ssend( MPI_BOTTOM, 0, MPI_INTEGER, dest, k, comm, ierr )
+endif
+</nextRing>
+<endRing>
+if (r .eq. 0) then
+    call mpi_recv( MPI_BOTTOM, 0, MPI_INTEGER, src, b+1, comm, MPI_STATUS_IGNORE, ierr )
+endif
+</endRing>
+#
+# ----------------------------------------------------------------------------
+# This test uses the individual file pointers.
+# To reach the correct locations, we seek to the position
+<TESTDEFN filename="writef90.f90">
+<writefiledecl>
+type(MPI_Status) status
+integer buf(MAX_BUFFER), ans
+integer (kind=MPI_OFFSET_KIND)offset
+</writefiledecl>
+<writefile>
+do k=1, b
+   <setContigBuffer/>
+   <findOffset/>
+   call mpi_file_seek( fh, offset, MPI_SEEK_SET, ierr )
+   <checkErr/>
+   call mpi_file_write( fh, buf, n, MPI_INTEGER, status, ierr )
+   <checkErr/>
+enddo
+</writefile>
+# No extra declarations are needed for the read step
+<readfiledecl>
+</readfiledecl>
+<readfile>
+do k=1, b
+    <clearContigBuffer/>
+    <findOffset/>
+    call mpi_file_seek( fh, offset, MPI_SEEK_SET, ierr )
+    <checkErr/>
+    call mpi_file_read( fh, buf, n, MPI_INTEGER, status, ierr )
+    <checkErr/>
+    <checkContigBuffer/>
+enddo
+</readfile>
+</TESTDEFN>
+
+# This test uses independent I/O with thread-safe, individual file pointers
+<TESTDEFN filename="writeatf90.f90">
+<writefiledecl>
+type(MPI_Status) status
+integer buf(MAX_BUFFER), ans
+integer (kind=MPI_OFFSET_KIND)offset
+</writefiledecl>
+<writefile>
+do k=1, b
+   <setContigBuffer/>
+   <findOffset/>
+   call mpi_file_write_at( fh, offset, buf, n, MPI_INTEGER, status, ierr )
+   <checkErr/>
+enddo
+</writefile>
+# No extra declarations are needed for the read step
+<readfiledecl>
+</readfiledecl>
+<readfile>
+do k=1, b
+   <clearContigBuffer/>
+   <findOffset/>
+   call mpi_file_read_at( fh, offset, buf, n, MPI_INTEGER, status, ierr )
+   <checkErr/>
+   <checkContigBuffer/>
+enddo
+</readfile>
+</TESTDEFN>
+
+# This test uses collective I/O with thread-safe, individual file pointers
+<TESTDEFN filename="writeatallf90.f90">
+<writefiledecl>
+type(MPI_Status) status
+integer buf(MAX_BUFFER), ans
+integer (kind=MPI_OFFSET_KIND)offset
+</writefiledecl>
+<writefile>
+do k=1, b
+   <setContigBuffer/>
+   <findOffset/>
+   call mpi_file_write_at_all( fh, offset, buf, n, MPI_INTEGER, status, ierr )
+   <checkErr/>
+enddo
+</writefile>
+# No extra declarations are needed for the read step
+<readfiledecl>
+</readfiledecl>
+<readfile>
+do k=1, b
+   <clearContigBuffer/>
+   <findOffset/>
+   call mpi_file_read_at_all( fh, offset, buf, n, MPI_INTEGER, status, ierr )
+   <checkErr/>
+   <checkContigBuffer/>
+enddo
+</readfile>
+</TESTDEFN>
+
+# This test uses collective I/O with thread-safe, individual file pointers
+<TESTDEFN filename="writeatallbef90.f90">
+<writefiledecl>
+type(MPI_Status) status
+integer buf(MAX_BUFFER), ans
+integer (kind=MPI_OFFSET_KIND)offset
+</writefiledecl>
+<writefile>
+do k=1, b
+   <setContigBuffer/>
+   <findOffset/>
+   call mpi_file_write_at_all_begin( fh, offset, buf, n, MPI_INTEGER, ierr )
+   <checkErr/>
+   call mpi_file_write_at_all_end( fh, buf, status, ierr )
+   <checkErr/>
+enddo
+</writefile>
+# No extra declarations are needed for the read step
+<readfiledecl>
+</readfiledecl>
+<readfile>
+do k=1, b
+   <clearContigBuffer/>
+   <findOffset/>
+   call mpi_file_read_at_all_begin( fh, offset, buf, n, MPI_INTEGER, ierr )
+   <checkErr/>
+   call mpi_file_read_at_all_end( fh, buf, status, ierr )
+   <checkErr/>
+   <checkContigBuffer/>
+enddo
+</readfile>
+</TESTDEFN>
+
+# This test uses nonblocking I/O with independent file pointers
+<TESTDEFN filename="iwriteatf90.f90">
+<writefiledecl>
+type(MPI_Status) statuses(2)
+integer buf(MAX_BUFFER), buf2(MAX_BUFFER), ans
+type(MPI_Request) req(2)
+integer nreq
+integer (kind=MPI_OFFSET_KIND)offset
+</writefiledecl>
+<writefile>
+do k=1, b ,2
+   <setContigBuffer/>
+   <findOffset/>
+   nreq = 1
+   call mpi_file_iwrite_at( fh, offset, buf, n, MPI_INTEGER, req(1), ierr )
+   <checkErr/>
+   if (k+1 .le. b) then
+       offset = offset + (s * n) * intsize
+       <setContigBuffer2/>
+       nreq = nreq + 1
+       call mpi_file_iwrite_at( fh, offset, buf2, n, MPI_INTEGER, req(2), ierr )
+       <checkErr/>
+   endif
+   call mpi_waitall( nreq, req, statuses, ierr )
+   <checkErrInStatus/>
+enddo
+</writefile>
+# No extra declarations are needed for the read step
+<readfiledecl>
+</readfiledecl>
+<readfile>
+do k=1, b ,2
+   <clearContigBuffer/>
+   <findOffset/>
+   nreq = 1
+   call mpi_file_iread_at( fh, offset, buf, n, MPI_INTEGER, req(1), ierr )
+   <checkErr/>
+   if (k+1 .le. b) then
+       offset = offset + (s * n) * intsize
+       <clearContigBuffer2/>
+       nreq = nreq + 1
+       call mpi_file_iread_at( fh, offset, buf2, n, MPI_INTEGER, req(2), ierr )
+       <checkErr/>
+   endif
+   call mpi_waitall( nreq, req, statuses, ierr )
+   <checkErrInStatus/>
+   <checkContigBuffer/>
+   if (nreq .eq. 2) then
+        <checkContigBuffer2/>
+   endif
+enddo
+</readfile>
+</TESTDEFN>
+
+# This test uses nonblocking I/O with independent file pointers and explicit
+# seeks
+<TESTDEFN filename="iwritef90.f90">
+<writefiledecl>
+type(MPI_Status) statuses(2)
+integer buf(MAX_BUFFER), buf2(MAX_BUFFER), ans
+type(MPI_Request) req(2)
+integer nreq
+integer (kind=MPI_OFFSET_KIND)offset
+</writefiledecl>
+<writefile>
+do k=1, b ,2
+   <setContigBuffer/>
+   <findOffset/>
+   nreq = 1
+   call mpi_file_seek( fh, offset, MPI_SEEK_SET, ierr )
+   <checkErr/>
+   call mpi_file_iwrite( fh, buf, n, MPI_INTEGER, req(1), ierr )
+   <checkErr/>
+   if (k+1 .le. b) then
+       offset = offset + (s * n) * intsize
+       call mpi_file_seek( fh, offset, MPI_SEEK_SET, ierr )
+       <checkErr/>
+       <setContigBuffer2/>
+       nreq = nreq + 1
+       call mpi_file_iwrite( fh, buf2, n, MPI_INTEGER, req(2), ierr )
+       <checkErr/>
+   endif
+   call mpi_waitall( nreq, req, statuses, ierr )
+   <checkErrInStatus/>
+enddo
+</writefile>
+# No extra declarations are needed for the read step
+<readfiledecl>
+</readfiledecl>
+<readfile>
+do k=1, b ,2
+   <clearContigBuffer/>
+   <findOffset/>
+   nreq = 1
+   call mpi_file_seek( fh, offset, MPI_SEEK_SET, ierr )
+   <checkErr/>
+   call mpi_file_iread( fh, buf, n, MPI_INTEGER, req(1), ierr )
+   <checkErr/>
+   if (k+1 .le. b) then
+       offset = offset + (s * n) * intsize
+       call mpi_file_seek( fh, offset, MPI_SEEK_SET, ierr )
+       <clearContigBuffer2/>
+       nreq = nreq + 1
+       call mpi_file_iread( fh, buf2, n, MPI_INTEGER, req(2), ierr )
+       <checkErr/>
+   endif
+   call mpi_waitall( nreq, req, statuses, ierr )
+   <checkErrInStatus/>
+   <checkContigBuffer/>
+   if (nreq .eq. 2) then
+        <checkContigBuffer2/>
+   endif
+enddo
+</readfile>
+</TESTDEFN>
+
+# This test uses nonblocking I/O with shared file pointers
+<TESTDEFN filename="iwriteshf90.f90">
+<writefiledecl>
+type(MPI_Status) status
+integer buf(MAX_BUFFER), ans
+integer src, dest
+type(MPI_Request) req
+</writefiledecl>
+<writefile>
+<initRing/>
+do k=1, b
+    <waitRing/>
+    <setContigBuffer/>
+    call mpi_file_iwrite_shared( fh, buf, n, MPI_INTEGER, req, ierr )
+    <checkErr/>
+    call mpi_wait( req, status, ierr )
+    <nextRing/>
+enddo
+<endRing/>
+</writefile>
+# No extra declarations are needed for the read step
+<readfiledecl>
+</readfiledecl>
+<readfile>
+<initRing/>
+do k=1, b
+    <waitRing/>
+    <clearContigBuffer/>
+    call mpi_file_iread_shared( fh, buf, n, MPI_INTEGER, req, ierr )
+    <checkErr/>
+    call mpi_wait( req, status, ierr )
+    <checkContigBuffer/>
+    <nextRing/>
+enddo
+<endRing/>
+</readfile>
+</TESTDEFN>
+
+
+# This test uses collective I/O
+<TESTDEFN filename="writeallf90.f90">
+<writefiledecl>
+type(MPI_Status) status
+integer buf(MAX_BUFFER), ans
+type(MPI_Datatype) filetype
+integer (kind=MPI_OFFSET_KIND)offset
+</writefiledecl>
+<writefile>
+<setcontigview/>
+do k=1, b
+     <setContigBuffer/>
+     call mpi_file_write_all( fh, buf, n, MPI_INTEGER, status, ierr )
+     <checkErr/>
+enddo
+</writefile>
+# No extra declarations are needed for the read step
+<readfiledecl>
+</readfiledecl>
+<readfile>
+<setcontigview/>
+do k=1, b
+    <clearContigBuffer/>
+    call mpi_file_read_all( fh, buf, n, MPI_INTEGER, status, ierr )
+    <checkErr/>
+    <checkContigBuffer/>
+enddo
+</readfile>
+</TESTDEFN>
+
+# This test uses split collective I/O
+<TESTDEFN filename="writeallbef90.f90">
+<writefiledecl>
+type(MPI_Status) status
+integer buf(MAX_BUFFER), ans
+type(MPI_Datatype) filetype
+integer (kind=MPI_OFFSET_KIND)offset
+</writefiledecl>
+<writefile>
+<setcontigview/>
+do k=1, b
+     <setContigBuffer/>
+     call mpi_file_write_all_begin( fh, buf, n, MPI_INTEGER, ierr )
+     <checkErr/>
+     call mpi_file_write_all_end( fh, buf, status, ierr )
+     <checkErr/>
+enddo
+</writefile>
+# No extra declarations are needed for the read step
+<readfiledecl>
+</readfiledecl>
+<readfile>
+<setcontigview/>
+do k=1, b
+    <clearContigBuffer/>
+    call mpi_file_read_all_begin( fh, buf, n, MPI_INTEGER, ierr )
+    <checkErr/>
+    call mpi_file_read_all_end( fh, buf, status, ierr )
+    <checkErr/>
+    <checkContigBuffer/>
+enddo
+</readfile>
+</TESTDEFN>
+
+# This test uses the shared file pointers collectively.
+<TESTDEFN filename="writeordf90.f90">
+<writefiledecl>
+type(MPI_Status) status
+integer buf(MAX_BUFFER), ans
+integer (kind=MPI_OFFSET_KIND)offset
+</writefiledecl>
+<writefile>
+do k=1, b
+   <setContigBuffer/>
+   call mpi_file_write_ordered( fh, buf, n, MPI_INTEGER, status, ierr )
+   <checkErr/>
+enddo
+</writefile>
+# No extra declarations are needed for the read step
+<readfiledecl>
+</readfiledecl>
+<readfile>
+do k=1, b
+    <clearContigBuffer/>
+    call mpi_file_read_ordered( fh, buf, n, MPI_INTEGER, status, ierr )
+    <checkErr/>
+    <checkContigBuffer/>
+enddo
+</readfile>
+</TESTDEFN>
+
+# This test uses the shared file pointers with split collectives.
+<TESTDEFN filename="writeordbef90.f90">
+<writefiledecl>
+type(MPI_Status) status
+integer buf(MAX_BUFFER), ans
+integer (kind=MPI_OFFSET_KIND)offset
+</writefiledecl>
+<writefile>
+do k=1, b
+   <setContigBuffer/>
+   call mpi_file_write_ordered_begin( fh, buf, n, MPI_INTEGER, ierr )
+   <checkErr/>
+   call mpi_file_write_ordered_end( fh, buf, status, ierr )
+   <checkErr/>
+enddo
+</writefile>
+# No extra declarations are needed for the read step
+<readfiledecl>
+</readfiledecl>
+<readfile>
+do k=1, b
+    <clearContigBuffer/>
+    call mpi_file_read_ordered_begin( fh, buf, n, MPI_INTEGER, ierr )
+    <checkErr/>
+    call mpi_file_read_ordered_end( fh, buf, status, ierr )
+    <checkErr/>
+    <checkContigBuffer/>
+enddo
+</readfile>
+</TESTDEFN>
+
+# This test uses the shared file pointers independently.
+# We pass a token to control the oredering
+<TESTDEFN filename="writeshf90.f90">
+<writefiledecl>
+type(MPI_Status) status
+integer buf(MAX_BUFFER), ans
+integer src, dest
+</writefiledecl>
+<writefile>
+<initRing/>
+do k=1, b
+    <waitRing/>
+    <setContigBuffer/>
+    call mpi_file_write_shared( fh, buf, n, MPI_INTEGER, status, ierr )
+    <checkErr/>
+    <nextRing/>
+enddo
+<endRing/>
+</writefile>
+# No extra declarations are needed for the read step
+<readfiledecl>
+</readfiledecl>
+<readfile>
+<initRing/>
+do k=1, b
+    <waitRing/>
+    <clearContigBuffer/>
+    call mpi_file_read_shared( fh, buf, n, MPI_INTEGER, status, ierr )
+    <checkErr/>
+    <checkContigBuffer/>
+    <nextRing/>
+enddo
+<endRing/>
+</readfile>
+</TESTDEFN>

@@ -1,0 +1,73 @@
+<f90header/>
+        program main
+        use mpi_f08
+        integer maxfparm
+        parameter (maxfparm=5)
+        integer max_buffer
+        parameter (max_buffer=65536)
+        integer maxftype
+        parameter (maxftype=3)
+!
+        type(MPI_Comm) comm
+        type(MPI_File) fh
+        integer ftype, itmp, fparm, n, b, i, k, r, s
+        integer intsize
+        integer errs, toterrs, err, ierr
+        integer wrank, wsize
+        integer fparms(2,maxfparm)
+        character *(100) filename
+        <writefiledecl/>
+        <readfiledecl/>
+        data fparms/1,4000,  4000,8,  4096,8,  64000,8,  65536,8 /
+
+        errs = 0
+
+        call MTest_Init( ierr )
+        call mpi_comm_rank( MPI_COMM_WORLD, wrank, ierr )
+        call mpi_comm_size( MPI_COMM_WORLD, wsize, ierr )
+
+        call mpi_type_size( MPI_INTEGER, intsize, ierr )
+        do ftype = 1, maxftype
+            filename = "iotest.txt"
+            if (ftype .eq. 1) then
+                comm = MPI_COMM_WORLD
+            elseif (ftype .eq. 2) then
+                call mpi_comm_split( MPI_COMM_WORLD, 0, wsize - wrank, comm, ierr )
+                <checkErr/>
+            else
+                itmp = 1
+                if (wrank .eq. 0) itmp = 0
+                call mpi_comm_split( MPI_COMM_WORLD, itmp, wrank, comm, ierr )
+                <checkErr/>
+                if (wrank .eq. 0) then
+                    goto 10
+                endif
+            endif
+            call mpi_comm_size( comm, s, ierr )
+            call mpi_comm_rank( comm, r, ierr )
+            do fparm=1, maxfparm
+                n = fparms(1,fparm)
+                b = fparms(2,fparm)
+! Try writing the file, then check it
+                <openfile/>
+                <writefile/>
+                <closefile/>
+                <checkfile/>
+! Now, open the same file for reading
+                <openfile/>
+                <readfile/>
+                <closefile/>
+                <deletefile/>
+            enddo
+10      continue
+!
+! Jump to 111 on a failure to open
+111	continue
+        if (comm .ne. MPI_COMM_WORLD) then
+            call mpi_comm_free( comm, ierr )
+        endif
+        enddo
+
+        call MTest_Finalize( errs )
+        call mpi_finalize( ierr )
+        end

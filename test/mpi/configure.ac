@@ -1545,17 +1545,26 @@ AC_OUTPUT(maint/testmerge \
           f90/ext/testlist \
           f90/io/Makefile \
           f90/misc/Makefile \
-	  f90/profile/Makefile \
+	      f90/profile/Makefile \
 	  f08/Makefile \
-	  f08/util/Makefile \
-	  f08/pt2pt/Makefile \
-	  f08/coll/Makefile \
-	  f08/datatype/Makefile \
-	  f08/attr/Makefile \
-	  f08/comm/Makefile \
-	  f08/rma/Makefile \
-	  f08/subarray/Makefile \
-          cxx/Makefile \
+	      f08/attr/Makefile \
+	      f08/datatype/Makefile \
+	      f08/util/Makefile \
+	      f08/coll/Makefile \
+	      f08/comm/Makefile \
+	      f08/pt2pt/Makefile \
+	      f08/rma/Makefile \
+	      f08/subarray/Makefile \
+	      f08/topo/Makefile \
+	      f08/io/Makefile \
+          f08/init/Makefile \
+          f08/info/Makefile \
+          f08/spawn/Makefile \
+          f08/timer/Makefile \
+          f08/ext/Makefile \
+          f08/misc/Makefile \
+          f08/profile/Makefile \
+     cxx/Makefile \
           cxx/util/Makefile \
           cxx/attr/Makefile \
           cxx/pt2pt/Makefile \
