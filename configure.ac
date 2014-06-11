@@ -1356,7 +1356,7 @@ AC_DEFINE_UNQUOTED(MPICH_THREAD_LEVEL,$MPICH_THREAD_LEVEL,[Level of thread suppo
 # Most POSIX systems provide this by default when using -lpthread, but we only use it in MPI_THREAD_MULTIPLE.
 # Some systems (Solaris) still require an explicit define in any case.
 if test "$MPICH_THREAD_LEVEL" != "MPI_THREAD_SINGLE"; then
-    PAC_APPEND_FLAG([-D_REENTRANT], [CFLAGS])
+    PAC_APPEND_FLAG([-D_REENTRANT], [CPPFLAGS])
 fi
 
 # Check for value thread_cs choice; set the refcount default if necessary
