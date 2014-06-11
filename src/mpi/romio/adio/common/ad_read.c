@@ -27,7 +27,9 @@ void ADIOI_GEN_ReadContig(ADIO_File fd, void *buf, int count,
     ADIO_Offset len, bytes_xfered=0;
     size_t rd_count;
     static char myname[] = "ADIOI_GEN_READCONTIG";
+#ifdef ROMIO_GPFS
     double io_time=0;
+#endif
     char *p;
 
 #ifdef AGGREGATION_PROFILE
@@ -36,8 +38,8 @@ void ADIOI_GEN_ReadContig(ADIO_File fd, void *buf, int count,
     MPI_Type_size_x(datatype, &datatype_size);
     len = datatype_size * (ADIO_Offset)count;
 
-    io_time = MPI_Wtime();
 #ifdef ROMIO_GPFS
+    io_time = MPI_Wtime();
     if (gpfsmpio_timing) {
 	gpfsmpio_prof_cr[ GPFSMPIO_CIO_DATA_SIZE ] += len;
     }
