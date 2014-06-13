@@ -85,8 +85,11 @@ int MPID_Abort(MPID_Comm * comm, int mpi_errno, int exit_code, const char *error
   MPIDI_Abort_core(comm, mpi_errno, exit_code, error_msg);
 
 #ifdef DYNAMIC_TASKING
-  return PMI2_Abort(1,error_msg);
-#else
+  extern int mpidi_dynamic_tasking;
+  if (mpidi_dynamic_tasking)
+      return PMI2_Abort(1,error_msg);
+#endif
+
   /* The POE and BGQ control systems both catch the exit value for additional
    * processing. If a process exits with '1' then all processes in the job
    * are terminated. The requested error code is lost in this process however
@@ -97,5 +100,4 @@ int MPID_Abort(MPID_Comm * comm, int mpi_errno, int exit_code, const char *error
    * dump by setting the environment variable 'BG_COREDUMPONERROR=1'.
    */
   exit(1);
-#endif
 }
