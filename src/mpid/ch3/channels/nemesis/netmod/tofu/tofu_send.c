@@ -672,6 +672,8 @@ int llctofu_poll(int in_blocking_poll,
                     ((MPID_nem_tofu_netmod_hdr_t*)buff)->initiator_pg_rank,
                     (uint8_t*)buff + sizeof(MPID_nem_tofu_netmod_hdr_t),
                     bsiz);
+            llc_errno = LLC_release_buffer(&events[0]);
+            MPIU_ERR_CHKANDJUMP(llc_errno, mpi_errno, MPI_ERR_OTHER, "**LLC_release_buffer");
             
             break; }
         case LLC_EVENT_RECV_MATCHED: {
@@ -724,6 +726,8 @@ int llctofu_poll(int in_blocking_poll,
             /* Mark completion on rreq */
             MPIDI_CH3U_Request_complete(req);
 
+            llc_errno = LLC_cmd_free(lcmd, 1);
+            MPIU_ERR_CHKANDJUMP(llc_errno, mpi_errno, MPI_ERR_OTHER, "**LLC_cmd_free");
             break; }
         default:
             printf("llctofu_poll,unknown event type=%d\n", events[0].type);

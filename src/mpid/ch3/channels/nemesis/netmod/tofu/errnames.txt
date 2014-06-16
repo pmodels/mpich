@@ -4,6 +4,7 @@
 **LLC_init:LLC_init failed
 **LLC_poll:LLC_poll failed
 **LLC_post:LLC_post failed
+**LLC_release_buffer:LLC_release_buffer failed
 **MPIDI_PG_GetConnKVSname:MPIDI_PG_GetConnKVSname failed
 **MPID_nem_ib_kvs_get_binary:MPID_nem_ib_kvs_get_binary failed
 **MPID_nem_ib_kvs_put_binary:MPID_nem_ib_kvs_put_binary failed
