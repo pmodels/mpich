@@ -23,7 +23,9 @@ function MPIR_Cancel_c(request) &
     use, intrinsic :: iso_c_binding, only : c_int
     use :: mpi_c_interface_types, only : c_Request
     implicit none
-    integer(c_Request), value, intent(in) :: request
+    ! No value attribute for request due to an oversight in MPI-1.0
+    ! See P72 of MPI-3.0
+    integer(c_Request), intent(in) :: request
     integer(c_int) :: ierror
 end function MPIR_Cancel_c
 
