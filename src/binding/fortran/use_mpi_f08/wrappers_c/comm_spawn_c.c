@@ -10,7 +10,8 @@ int MPIR_Comm_spawn_c(const char *command, char *argv_f, int maxprocs, MPI_Info 
     if ((char**)argv_f == MPI_ARGV_NULL) {
         argv_c = MPI_ARGV_NULL;
     } else {
-        mpi_errno = MPIR_Fortran_array_of_string_f2c(argv_f, &argv_c, argv_elem_len, 0, 0); /* Don't know size */
+        mpi_errno = MPIR_Fortran_array_of_string_f2c(argv_f, &argv_c, argv_elem_len,
+            0 /* Don't know size of argv_f */, 0);
         if (mpi_errno != MPI_SUCCESS) goto fn_fail;
     }
 
