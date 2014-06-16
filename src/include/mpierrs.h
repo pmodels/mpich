@@ -9,6 +9,23 @@
 /* mpierrs.h */
 /* ------------------------------------------------------------------------- */
 
+/*
+=== BEGIN_MPI_T_CVAR_INFO_BLOCK ===
+
+cvars:
+    - name        : MPIR_CVAR_COLL_ALIAS_CHECK
+      category    : COLLECTIVE
+      type        : int
+      default     : 1
+      class       : device
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Enable checking of aliasing in collective operations
+
+=== END_MPI_T_CVAR_INFO_BLOCK ===
+*/
+
 /* Error checking (see --enable-error-checking for control of this) */
 #ifdef HAVE_ERROR_CHECKING
 
@@ -113,7 +130,7 @@
 /* FIXME this test is probably too broad.  Comparing the (buffer,type,count)
  * tuples is really what is needed to check for aliasing. */
 #define MPIR_ERRTEST_ALIAS_COLL(ptr1,ptr2,err)			\
-    if ((ptr1)==(ptr2)) {		                        \
+    if (MPIR_CVAR_COLL_ALIAS_CHECK && (ptr1)==(ptr2)) {        \
         err = MPIR_Err_create_code(MPI_SUCCESS,			\
 				   MPIR_ERR_RECOVERABLE,	\
 				   FCNAME, __LINE__,		\
