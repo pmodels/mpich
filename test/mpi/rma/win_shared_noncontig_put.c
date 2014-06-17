@@ -63,7 +63,7 @@ int main(int argc, char **argv) {
         MPI_Win_shared_query(shm_win, i, &size, &disp_unit, &base);
 
         if (i % 2 == 0) {
-            assert(size == ELEM_PER_PROC * sizeof(int));
+            assert(size >= ELEM_PER_PROC * sizeof(int));
 
             for (j = 0; j < ELEM_PER_PROC; j++) {
                 if ( base[j] != j ) {
