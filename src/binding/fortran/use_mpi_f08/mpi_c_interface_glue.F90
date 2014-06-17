@@ -76,11 +76,8 @@ subroutine MPIR_Fortran_string_c2f(cstring, fstring)
 
     i = 1
     do while (cstring(i) /= C_NULL_CHAR)
+        fstring(i:i) = cstring(i)
         i = i + 1
-    end do
-
-    do j = 1, i - 1
-        fstring(j:j) = cstring(j)
     end do
 
     ! Zero out the trailing characters

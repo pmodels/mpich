@@ -3,7 +3,7 @@
 !   (C) 2014 by Argonne National Laboratory.
 !   See COPYRIGHT in top-level directory.
 !
-subroutine MPI_Info_get_nthkey_f08(info, n,key, ierror)
+subroutine MPI_Info_get_nthkey_f08(info, n, key, ierror)
     use, intrinsic :: iso_c_binding, only : c_int, c_char
     use :: mpi_f08, only : MPI_Info
     use :: mpi_c_interface, only : c_Info
