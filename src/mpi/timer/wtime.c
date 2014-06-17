@@ -53,8 +53,14 @@ double MPI_Wtime( void )
     MPIR_ERRTEST_INITIALIZED_ORDIE();
 
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPI_WTIME);
+#if 1 /* for rdtsc timer */
+    uint64_t _t = MPI_rdtsc_light();
+    if(_t & (0xffffULL<<48)) { _t &= ~(0xffffULL<<48); }
+    d = _t;
+#else
     MPID_Wtime( &t );
     MPID_Wtime_todouble( &t, &d );
+#endif
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_WTIME);
 
     return d;

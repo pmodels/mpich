@@ -7,9 +7,21 @@
 #if !defined(MPICH_MPIDI_CH3_POST_H_INCLUDED)
 #define MPICH_MPIDI_CH3_POST_H_INCLUDED
 
+#if 1 /* for rdtsc timer */
+#define MPIDI_CH3_Progress_start(progress_state_)                                                       \
+        (progress_state_)->ch.completion_count = OPA_load_int(&MPIDI_CH3I_progress_completion_count);   \
+        rdtsc_prog_start = MPI_rdtsc_light();
+#define MPIDI_CH3_Progress_end(progress_state_)                                              \
+        rdtsc_prog_end = MPI_rdtsc_light();                                                  \
+        if (rdtsc_prog_end < rdtsc_prog_start)                                               \
+           rdtsc_wait_sum += ((rdtsc_prog_end - rdtsc_prog_start) & ((1ULL << 48) - 1));     \
+        else                                                                                 \
+           rdtsc_wait_sum += (rdtsc_prog_end - rdtsc_prog_start);
+#else
 #define MPIDI_CH3_Progress_start(progress_state_)                                                       \
         (progress_state_)->ch.completion_count = OPA_load_int(&MPIDI_CH3I_progress_completion_count);
 #define MPIDI_CH3_Progress_end(progress_state_)
+#endif
 
 enum {
     MPIDI_CH3_start_packet_handler_id = 128,

@@ -65,6 +65,20 @@
 #include <limits.h>
 #endif
 
+#if 1 /* for rdtsc timer */
+extern uint64_t rdtsc_prog_start, rdtsc_prog_end, rdtsc_wait_sum;
+static inline uint64_t MPI_rdtsc_light(void )
+{
+    uint64_t x;
+    __asm__ __volatile__("rdtscp;" /* rdtscp don't jump over earlier instructions */
+                         "shl $32, %%rdx;"
+                         "or %%rdx, %%rax" :
+                         "=a"(x) :
+                         :
+                         "%rcx", "%rdx", "memory");
+    return x;
+}
+#endif
 #if defined(HAVE_LONG_LONG_INT)
 /* tt#1776: some platforms have "long long" but not a LLONG_MAX/ULLONG_MAX,
  * usually because some feature test macro has turned them off in glibc's

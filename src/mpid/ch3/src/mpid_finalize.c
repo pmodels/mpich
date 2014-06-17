@@ -22,6 +22,27 @@ int MPID_Finalize(void)
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_FINALIZE);
 
+#if 1 /* for rdtsc timer */
+
+    { /* MPID_Wtime_init */
+    unsigned long long t1, t2;
+    struct timeval tv1, tv2;
+    double td1, td2, nsec_per_tick;
+
+    gettimeofday(&tv1, NULL);
+    t1 = MPI_rdtsc_light();
+    usleep(250000);
+    gettimeofday(&tv2, NULL);
+    t2 = MPI_rdtsc_light();
+
+    td1 = (tv1.tv_sec * 1000000.0 + tv1.tv_usec) * 1000;
+    td2 = (tv2.tv_sec * 1000000.0 + tv2.tv_usec) * 1000;
+
+    nsec_per_tick = (td2 - td1) / (double)(t2 - t1);
+
+    printf("[%2d] : %llu(tick) * %f(nsec/tick) = %f(msec)\n", MPIDI_Process.my_pg_rank, rdtsc_wait_sum, nsec_per_tick,  rdtsc_wait_sum * nsec_per_tick / 1000000.0);
+    }
+#endif
     /*
      * Wait for all posted receives to complete.  For now we are not doing 
      * this since it will cause invalid programs to hang.
