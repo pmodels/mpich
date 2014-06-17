@@ -37,9 +37,12 @@ subroutine MPI_Info_get_f08(info, key, valuelen, value, flag, ierror)
         ierror_c = MPIR_Info_get_c(info_c, key_c, valuelen_c, value_c, flag_c)
     end if
 
-    call MPIR_Fortran_string_c2f(value_c, value)
-
     flag = (flag_c /= 0)
+
+    if (flag) then  ! value is unchanged when flag is false
+        call MPIR_Fortran_string_c2f(value_c, value)
+    end if
+
     if (present(ierror)) ierror = ierror_c
 
 end subroutine MPI_Info_get_f08

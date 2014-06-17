@@ -27,14 +27,15 @@ subroutine MPI_Info_get_valuelen_f08(info, key, valuelen, flag, ierror)
     call MPIR_Fortran_string_f2c(key, key_c)
 
     if (c_int == kind(0)) then
-        ierror_c = MPIR_Info_get_valuelen_c(info%MPI_VAL, key_c, valuelen, flag_c)
+        ierror_c = MPIR_Info_get_valuelen_c(info%MPI_VAL, key_c, valuelen_c, flag_c)
     else
         info_c = info%MPI_VAL
         ierror_c = MPIR_Info_get_valuelen_c(info_c, key_c, valuelen_c, flag_c)
-        valuelen = valuelen_c
     end if
 
     flag = (flag_c /= 0)
+
+    if (flag) valuelen = valuelen_c
     if (present(ierror)) ierror = ierror_c
 
 end subroutine MPI_Info_get_valuelen_f08
