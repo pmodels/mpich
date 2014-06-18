@@ -103,6 +103,7 @@ struct MPID_nem_ib_com_reg_mr_cache_entry_t {
     /* : public MPID_nem_ib_com_reg_mr_listnode_t */
     struct MPID_nem_ib_com_reg_mr_listnode_t *lru_next;
     struct MPID_nem_ib_com_reg_mr_listnode_t *lru_prev;
+    struct MPID_nem_ib_com_reg_mr_listnode_t g_lru;
 
     struct ibv_mr *mr;
     void *addr;
@@ -110,6 +111,7 @@ struct MPID_nem_ib_com_reg_mr_cache_entry_t {
     int refc;
 };
 
+static struct MPID_nem_ib_com_reg_mr_listnode_t MPID_nem_ib_com_reg_mr_global_cache;
 static struct MPID_nem_ib_com_reg_mr_listnode_t
     MPID_nem_ib_com_reg_mr_cache[MPID_NEM_IB_COM_REG_MR_NLINE];
 
@@ -166,7 +168,7 @@ static inline void __lru_queue_display()
 }
 
 struct ibv_mr *MPID_nem_ib_com_reg_mr_fetch(void *addr, long len,
-                                            enum ibv_access_flags additional_flags)
+                                            enum ibv_access_flags additional_flags, int mode)
 {
 #if 0   /* debug */
     struct ibv_mr *mr;
@@ -184,6 +186,7 @@ struct ibv_mr *MPID_nem_ib_com_reg_mr_fetch(void *addr, long len,
     int ibcom_errno;
     int key;
     struct MPID_nem_ib_com_reg_mr_cache_entry_t *e;
+    static unsigned long long num_global_cache = 0ULL;
 
 #if 1   /*def HAVE_LIBDCFA */
     /* we can't change addr because ibv_post_send assumes mr->host_addr (output of this function)
@@ -220,6 +223,7 @@ struct ibv_mr *MPID_nem_ib_com_reg_mr_fetch(void *addr, long len,
 
     // miss
 
+#if 0
     // evict an entry and de-register its MR when the cache-set is full
     if (way > MPID_NEM_IB_COM_REG_MR_NWAY) {
         struct MPID_nem_ib_com_reg_mr_cache_entry_t *victim =
@@ -235,6 +239,7 @@ struct ibv_mr *MPID_nem_ib_com_reg_mr_fetch(void *addr, long len,
         }
         afree(victim, MPID_NEM_IB_COM_AALLOC_ID_MRCACHE);
     }
+#endif
 
     e = aalloc(sizeof(struct MPID_nem_ib_com_reg_mr_cache_entry_t),
                MPID_NEM_IB_COM_AALLOC_ID_MRCACHE);
@@ -245,8 +250,47 @@ struct ibv_mr *MPID_nem_ib_com_reg_mr_fetch(void *addr, long len,
     /* register memory */
     ibcom_errno = MPID_nem_ib_com_reg_mr(addr_aligned, len_aligned, &e->mr, additional_flags);
     if (ibcom_errno != 0) {
-        fprintf(stderr, "mrcache,MPID_nem_ib_com_reg_mr\n");
-        goto fn_fail;
+        /* ib_com_reg_mr returns the errno of ibv_reg_mr */
+        if (ibcom_errno == ENOMEM) {
+            /* deregister memory region. The value of 'num_global_cache' means the number of global-cached.
+             * delete 5 percents of global-cached */
+            int i;
+            int del_num = num_global_cache / 20;
+            struct MPID_nem_ib_com_reg_mr_cache_entry_t *victim;
+
+            dprintf("mrcache,MPID_nem_ib_com_reg_mr,ENOMEM,del_num(%d)\n", del_num);
+
+            for (i = 0; i < del_num; i++) {
+                /* get LRU data from MPID_nem_ib_com_reg_mr_global_cache */
+                victim = list_entry(MPID_nem_ib_com_reg_mr_global_cache.lru_prev, struct MPID_nem_ib_com_reg_mr_cache_entry_t, g_lru);
+
+                MPID_nem_ib_com_reg_mr_unlink((struct MPID_nem_ib_com_reg_mr_listnode_t *)victim);
+                MPID_nem_ib_com_reg_mr_unlink(&(victim->g_lru));
+
+                ibcom_errno = MPID_nem_ib_com_dereg_mr(victim->mr);
+                if (ibcom_errno) {
+                    printf("mrcache,MPID_nem_ib_com_dereg_mr\n");
+                    afree(e, MPID_NEM_IB_COM_AALLOC_ID_MRCACHE);
+                    goto fn_fail;
+                }
+                afree(victim, MPID_NEM_IB_COM_AALLOC_ID_MRCACHE);
+                num_global_cache--;
+            }
+
+            /* re-registraion */
+            ibcom_errno = MPID_nem_ib_com_reg_mr(addr_aligned, len_aligned, &e->mr, additional_flags);
+            if (ibcom_errno != 0) {
+                fprintf(stderr, "mrcache,MPID_nem_ib_com_reg_mr,retry,errno=%d\n", ibcom_errno);
+                afree(e, MPID_NEM_IB_COM_AALLOC_ID_MRCACHE);
+                goto fn_fail;
+            }
+        }
+        else {
+            /* errno is not ENOMEM */
+            fprintf(stderr, "mrcache,MPID_nem_ib_com_reg_mr,errno=%d\n", ibcom_errno);
+            afree(e, MPID_NEM_IB_COM_AALLOC_ID_MRCACHE);
+            goto fn_fail;
+        }
     }
     e->addr = addr_aligned;
     e->len = len_aligned;
@@ -257,6 +301,11 @@ struct ibv_mr *MPID_nem_ib_com_reg_mr_fetch(void *addr, long len,
     /* register to cache */
     MPID_nem_ib_com_reg_mr_insert(&MPID_nem_ib_com_reg_mr_cache[key],
                                   (struct MPID_nem_ib_com_reg_mr_listnode_t *) e);
+    if (mode != MPID_NEM_IB_COM_REG_MR_STICKY) {
+        /* register to global-cache */
+        num_global_cache++;
+        MPID_nem_ib_com_reg_mr_insert(&MPID_nem_ib_com_reg_mr_global_cache, &(e->g_lru));
+    }
 
     //__lru_queue_display();
 
@@ -266,7 +315,7 @@ struct ibv_mr *MPID_nem_ib_com_reg_mr_fetch(void *addr, long len,
 
     /* reference counter is used when evicting entry */
     e->refc++;
-#if 0   /* disable for debug */
+#if 1
     /* move to head of the list */
     if (e !=
         (struct MPID_nem_ib_com_reg_mr_cache_entry_t *) MPID_nem_ib_com_reg_mr_cache[key].lru_next)
@@ -276,6 +325,11 @@ struct ibv_mr *MPID_nem_ib_com_reg_mr_fetch(void *addr, long len,
                                       (struct MPID_nem_ib_com_reg_mr_listnode_t *) e);
     }
 #endif
+    if (mode != MPID_NEM_IB_COM_REG_MR_STICKY) {
+        /* move to head of the list in global-cache */
+        MPID_nem_ib_com_reg_mr_unlink(&(e->g_lru));
+        MPID_nem_ib_com_reg_mr_insert(&MPID_nem_ib_com_reg_mr_global_cache, &(e->g_lru));
+    }
     //dprintf("[MrCache] reuse e=%p,key=%d,mr=%p,refc=%d,addr=%p,len=%ld,lkey=%08x,rkey=%08x\n", e,
     //key, e->mr, e->refc, e->mr->addr, e->mr->length, e->mr->lkey, e->mr->rkey);
 
@@ -318,6 +372,10 @@ int MPID_nem_ib_com_register_cache_init()
             MPID_nem_ib_com_reg_mr_cache[i].lru_prev =
                 (struct MPID_nem_ib_com_reg_mr_listnode_t *) &MPID_nem_ib_com_reg_mr_cache[i];
         }
+        MPID_nem_ib_com_reg_mr_global_cache.lru_next =
+            (struct MPID_nem_ib_com_reg_mr_listnode_t *) &MPID_nem_ib_com_reg_mr_global_cache;
+        MPID_nem_ib_com_reg_mr_global_cache.lru_prev =
+            (struct MPID_nem_ib_com_reg_mr_listnode_t *) &MPID_nem_ib_com_reg_mr_global_cache;
 
         dprintf("[MrCache] cache initializes %d entries\n", MPID_NEM_IB_COM_REG_MR_NLINE);
     }

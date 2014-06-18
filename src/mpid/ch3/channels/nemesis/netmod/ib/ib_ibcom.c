@@ -102,7 +102,8 @@ static int MPID_nem_ib_rdmawr_to_init(uint64_t sz)
 
     memset(start, 0, sz);
 
-    MPID_nem_ib_rdmawr_to_alloc_mr = MPID_nem_ib_com_reg_mr_fetch(start, sz, 0);
+    MPID_nem_ib_rdmawr_to_alloc_mr =
+        MPID_nem_ib_com_reg_mr_fetch(start, sz, 0, MPID_NEM_IB_COM_REG_MR_STICKY);
     MPID_NEM_IB_COM_ERR_CHKANDJUMP(!MPID_nem_ib_rdmawr_to_alloc_mr, -1,
                                    printf("MPID_nem_ib_com_reg_mr_fetchibv_reg_mr failed\n"));
     dprintf("rdmawr_to_init,rkey=%08x\n", MPID_nem_ib_rdmawr_to_alloc_mr->rkey);
@@ -808,7 +809,8 @@ int MPID_nem_ib_com_open(int ib_port, int open_flag, int *condesc)
 
         conp->icom_mrlist[MPID_NEM_IB_COM_SCRATCH_PAD_FROM] =
             MPID_nem_ib_com_reg_mr_fetch(conp->icom_mem[MPID_NEM_IB_COM_SCRATCH_PAD_FROM],
-                                         conp->icom_msize[MPID_NEM_IB_COM_SCRATCH_PAD_FROM], 0);
+                                         conp->icom_msize[MPID_NEM_IB_COM_SCRATCH_PAD_FROM], 0,
+                                         MPID_NEM_IB_COM_REG_MR_STICKY);
         MPID_NEM_IB_COM_ERR_CHKANDJUMP(!conp->icom_mrlist[MPID_NEM_IB_COM_SCRATCH_PAD_FROM], -1,
                                        printf("ibv_reg_mr failed\n"));
 
@@ -854,7 +856,8 @@ int MPID_nem_ib_com_open(int ib_port, int open_flag, int *condesc)
 
         conp->icom_mrlist[MPID_NEM_IB_COM_UDWR_FROM] =
             MPID_nem_ib_com_reg_mr_fetch(conp->icom_mem[MPID_NEM_IB_COM_UDWR_FROM],
-                                         conp->icom_msize[MPID_NEM_IB_COM_UDWR_FROM], 0);
+                                         conp->icom_msize[MPID_NEM_IB_COM_UDWR_FROM], 0,
+                                         MPID_NEM_IB_COM_REG_MR_STICKY);
         MPID_NEM_IB_COM_ERR_CHKANDJUMP(!conp->icom_mrlist[MPID_NEM_IB_COM_UDWR_FROM], -1,
                                        dprintf("ibv_reg_mr failed with mr_flags=0x%x\n", mr_flags));
 
@@ -875,7 +878,8 @@ int MPID_nem_ib_com_open(int ib_port, int open_flag, int *condesc)
 
         conp->icom_mrlist[MPID_NEM_IB_COM_UDWR_TO] =
             MPID_nem_ib_com_reg_mr_fetch(conp->icom_mem[MPID_NEM_IB_COM_UDWR_TO],
-                                         conp->icom_msize[MPID_NEM_IB_COM_UDWR_TO], 0);
+                                         conp->icom_msize[MPID_NEM_IB_COM_UDWR_TO], 0,
+                                         MPID_NEM_IB_COM_REG_MR_STICKY);
         MPID_NEM_IB_COM_ERR_CHKANDJUMP(!conp->icom_mrlist[MPID_NEM_IB_COM_UDWR_TO], -1,
                                        dprintf("ibv_reg_mr failed with mr_flags=0x%x\n", mr_flags));
 
@@ -1221,7 +1225,7 @@ int MPID_nem_ib_com_alloc(int condesc, int sz)
         conp->icom_mrlist[MPID_NEM_IB_COM_SCRATCH_PAD_TO] =
             MPID_nem_ib_com_reg_mr_fetch(conp->icom_mem[MPID_NEM_IB_COM_SCRATCH_PAD_TO],
                                          conp->icom_msize[MPID_NEM_IB_COM_SCRATCH_PAD_TO],
-                                         IBV_ACCESS_REMOTE_ATOMIC);
+                                         IBV_ACCESS_REMOTE_ATOMIC, MPID_NEM_IB_COM_REG_MR_STICKY);
         MPID_NEM_IB_COM_ERR_CHKANDJUMP(!conp->icom_mrlist[MPID_NEM_IB_COM_SCRATCH_PAD_TO], -1,
                                        dprintf("ibv_reg_mr failed with mr_flags=0x%x\n", mr_flags));
 
@@ -1474,7 +1478,8 @@ int MPID_nem_ib_com_isend(int condesc,
 
     if (sz_data) {
         //dprintf("MPID_nem_ib_com_isend,data=%p,sz_data=%d\n", data, sz_data);
-        struct ibv_mr *mr_data = MPID_nem_ib_com_reg_mr_fetch(data, sz_data, 0);
+        struct ibv_mr *mr_data =
+            MPID_nem_ib_com_reg_mr_fetch(data, sz_data, 0, MPID_NEM_IB_COM_REG_MR_GLOBAL);
         MPID_NEM_IB_COM_ERR_CHKANDJUMP(!mr_data, -1,
                                        printf("MPID_nem_ib_com_isend,ibv_reg_mr_fetch failed\n"));
 #ifdef HAVE_LIBDCFA
@@ -1961,7 +1966,8 @@ int MPID_nem_ib_com_lrecv(int condesc, uint64_t wr_id, void *raddr, long sz_data
     MPID_NEM_IB_COM_ERR_CHKANDJUMP(!sz_data, -1, dprintf("MPID_nem_ib_com_lrecv,sz_data==0\n"));
 
     /* register memory area containing data */
-    struct ibv_mr *mr_data = MPID_nem_ib_com_reg_mr_fetch(laddr, sz_data, 0);
+    struct ibv_mr *mr_data =
+        MPID_nem_ib_com_reg_mr_fetch(laddr, sz_data, 0, MPID_NEM_IB_COM_REG_MR_GLOBAL);
     MPID_NEM_IB_COM_ERR_CHKANDJUMP(!mr_data, -1,
                                    dprintf("MPID_nem_ib_com_lrecv,ibv_reg_mr_fetch failed\n"));
 
@@ -2103,7 +2109,8 @@ int MPID_nem_ib_com_put_lmt(int condesc, uint64_t wr_id, void *raddr, int sz_dat
     num_sge = 0;
 
     /* register memory area containing data */
-    struct ibv_mr *mr_data = MPID_nem_ib_com_reg_mr_fetch(laddr, sz_data, 0);
+    struct ibv_mr *mr_data =
+        MPID_nem_ib_com_reg_mr_fetch(laddr, sz_data, 0, MPID_NEM_IB_COM_REG_MR_GLOBAL);
     MPID_NEM_IB_COM_ERR_CHKANDJUMP(!mr_data, -1,
                                    dprintf("MPID_nem_ib_com_put_lmt,ibv_reg_mr_fetch failed\n"));
 
@@ -2860,6 +2867,7 @@ int MPID_nem_ib_com_reg_mr(void *addr, long len, struct ibv_mr **mr,
                            enum ibv_access_flags additional_flags)
 {
     int ibcom_errno = 0;
+    int err = -1;
     dprintf("MPID_nem_ib_com_reg_mr,addr=%p,len=%ld,mr=%p\n", addr, len, mr);
 
     *mr =
@@ -2867,7 +2875,12 @@ int MPID_nem_ib_com_reg_mr(void *addr, long len, struct ibv_mr **mr,
                    IBV_ACCESS_LOCAL_WRITE | IBV_ACCESS_REMOTE_WRITE |
                    IBV_ACCESS_REMOTE_READ | additional_flags);
 
-    MPID_NEM_IB_COM_ERR_CHKANDJUMP(*mr == 0, -1,
+    if (*mr == 0) {
+        err = errno;    /* copy errno of ibv_reg_mr */
+    }
+
+    /* return the errno of ibv_reg_mr when error occurs */
+    MPID_NEM_IB_COM_ERR_CHKANDJUMP(*mr == 0, err,
                                    dprintf("MPID_nem_ib_com_reg_mr,cannot register memory\n"));
 
   fn_exit:

@@ -570,7 +570,13 @@ extern int MPID_nem_ib_com_mem_udwr_to(int condesc, void **out);
 extern int MPID_nem_ib_com_register_cache_init(void);
 extern int MPID_nem_ib_com_register_cache_release(void);
 extern struct ibv_mr *MPID_nem_ib_com_reg_mr_fetch(void *addr, long len,
-                                                   enum ibv_access_flags additional_flags);
+                                                   enum ibv_access_flags additional_flags,
+                                                   int mode);
+#define MPID_NEM_IB_COM_REG_MR_GLOBAL (0)
+#define MPID_NEM_IB_COM_REG_MR_STICKY (1)
+
+#define list_entry(ptr, type, member) \
+            ((type *)((char *)(ptr)-(unsigned long)(&((type *)0)->member)))
 
 extern int MPID_nem_ib_com_udbuf_init(void *q);
 
@@ -703,7 +709,8 @@ static inline void *MPID_nem_ib_rdmawr_from_alloc(uint32_t _sz)
             }
 
             ((MPID_nem_ib_rdmawr_from_alloc_hdr_t *) q)->mr =
-                MPID_nem_ib_com_reg_mr_fetch(q, MPID_NEM_IB_RDMAWR_FROM_ALLOC_SZARENA, 0);
+                MPID_nem_ib_com_reg_mr_fetch(q, MPID_NEM_IB_RDMAWR_FROM_ALLOC_SZARENA, 0,
+                                             MPID_NEM_IB_COM_REG_MR_STICKY);
             if (!((MPID_nem_ib_rdmawr_from_alloc_hdr_t *) q)->mr) {
                 printf("ibv_reg_mr failed\n");
                 MPID_nem_ib_segv;
@@ -718,7 +725,8 @@ static inline void *MPID_nem_ib_rdmawr_from_alloc(uint32_t _sz)
                       1) * MPID_NEM_IB_RDMAWR_FROM_ALLOC_SZARENA;
                  p += MPID_NEM_IB_RDMAWR_FROM_ALLOC_SZARENA) {
                 ((MPID_nem_ib_rdmawr_from_alloc_hdr_t *) p)->mr =
-                    MPID_nem_ib_com_reg_mr_fetch(q, MPID_NEM_IB_RDMAWR_FROM_ALLOC_SZARENA, 0);
+                    MPID_nem_ib_com_reg_mr_fetch(q, MPID_NEM_IB_RDMAWR_FROM_ALLOC_SZARENA, 0,
+                                                 MPID_NEM_IB_COM_REG_MR_STICKY);
                 if (!((MPID_nem_ib_rdmawr_from_alloc_hdr_t *) p)->mr) {
                     printf("ibv_reg_mr failed\n");
                     MPID_nem_ib_segv;

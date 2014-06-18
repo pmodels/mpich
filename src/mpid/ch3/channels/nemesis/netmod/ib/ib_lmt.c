@@ -110,7 +110,8 @@ int MPID_nem_ib_lmt_initiate_lmt(struct MPIDI_VC *vc, union MPIDI_CH3_Pkt *rts_p
 #endif
 
     /* put IB rkey */
-    struct ibv_mr *mr = MPID_nem_ib_com_reg_mr_fetch(write_from_buf, data_sz, 0);
+    struct ibv_mr *mr =
+        MPID_nem_ib_com_reg_mr_fetch(write_from_buf, data_sz, 0, MPID_NEM_IB_COM_REG_MR_GLOBAL);
     MPIU_ERR_CHKANDJUMP(!mr, mpi_errno, MPI_ERR_OTHER, "**MPID_nem_ib_com_reg_mr_fetch");
 #ifdef HAVE_LIBDCFA
     s_cookie_buf->addr = (void *) mr->host_addr;
