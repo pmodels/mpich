@@ -475,13 +475,6 @@ if test "$enable_strict_done" != "yes" ; then
     #	    msg_sz_t) variables.
     #   -Wno-format-zero-length -- this warning is irritating and useless, since
     #                              a zero-length format string is very well defined
-    #   -Wno-type-limits -- There are places where we compare an unsigned to 
-    #	    a constant that happens to be zero e.g., if x is unsigned and 
-    #	    MIN_VAL is zero, we'd like to do "MPIU_Assert(x >= MIN_VAL);".
-    #       Note this option is not supported by gcc 4.2.  This needs to be added 
-    #	    after most other warning flags, so that we catch a gcc bug on 32-bit 
-    #	    that doesn't give a warning that this is unsupported, unless another
-    #	    warning is triggered, and then if gives an error.
     # These were removed to reduce warnings:
     #   -Wcast-qual -- Sometimes we need to cast "volatile char*" to 
     #	    "char*", e.g., for memcpy.
@@ -513,6 +506,18 @@ if test "$enable_strict_done" != "yes" ; then
     #       important check, but is temporarily disabled, since it is
     #       throwing too many (correct) warnings currently, causing us
     #       to miss other warnings.
+    #
+    # This was removed because it masks important failures (see ticket #2094).
+    # However, since Intel compiler currently does not include -Wtype-limits
+    # in -Wextra, -Wtype-limits was added to handle warnings with the Intel
+    # compiler.
+    #   -Wno-type-limits -- There are places where we compare an unsigned to 
+    #	    a constant that happens to be zero e.g., if x is unsigned and 
+    #	    MIN_VAL is zero, we'd like to do "MPIU_Assert(x >= MIN_VAL);".
+    #       Note this option is not supported by gcc 4.2.  This needs to be added 
+    #	    after most other warning flags, so that we catch a gcc bug on 32-bit 
+    #	    that doesn't give a warning that this is unsupported, unless another
+    #	    warning is triggered, and then if gives an error.
     # the embedded newlines in this string are safe because we evaluate each
     # argument in the for-loop below and append them to the CFLAGS with a space
     # as the separator instead
@@ -543,7 +548,7 @@ if test "$enable_strict_done" != "yes" ; then
         -Wno-pointer-sign
         -Wvariadic-macros
         -Wno-format-zero-length
-	-Wno-type-limits
+        -Wtype-limits
         -Werror-implicit-function-declaration
     "
 
