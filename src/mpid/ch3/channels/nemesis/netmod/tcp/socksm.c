@@ -1579,7 +1579,6 @@ static int MPID_nem_tcp_recv_handler(sockconn_t *const sc)
         int (*reqFn)(MPIDI_VC_t *, MPID_Request *, int *);
 
         MPIU_Assert(rreq->dev.iov_count > 0);
-        MPIU_Assert(rreq->dev.iov_offset >= 0);
         MPIU_Assert(rreq->dev.iov_count + rreq->dev.iov_offset <= MPID_IOV_LIMIT);
 
         bytes_recvd = MPL_large_readv(sc_fd, iov, rreq->dev.iov_count);
