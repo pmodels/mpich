@@ -87,10 +87,12 @@ uint16_t MPID_nem_ib_cm_ringbuf_head;
 uint16_t MPID_nem_ib_cm_ringbuf_tail;
 uint64_t MPID_nem_ib_cm_ringbuf_released[(MPID_NEM_IB_CM_NSEG + 63) / 64];
 MPID_nem_ib_cm_sendq_t MPID_nem_ib_cm_sendq = { NULL, NULL };
+MPID_nem_ib_cm_notify_sendq_t MPID_nem_ib_cm_notify_sendq = { NULL, NULL };
 
 int MPID_nem_ib_ncqe_scratch_pad_to_drain;
 #endif
 MPID_nem_ib_ringbuf_sendq_t MPID_nem_ib_ringbuf_sendq = { NULL, NULL };
+
 
 int MPID_nem_ib_ncqe_scratch_pad;
 int MPID_nem_ib_ncqe_to_drain;
@@ -493,7 +495,7 @@ int MPID_nem_ib_init(MPIDI_PG_t * pg_p, int pg_rank, char **bc_val_p, int *val_m
     for (i = 0; i < MPID_nem_ib_nranks; i++) {
         if (i != MPID_nem_ib_myrank) {
             for (j = 0; j < MPID_NEM_IB_COM_MAX_RQ_CAPACITY; j++) {
-                MPID_nem_ib_com_scratch_pad_recv(MPID_nem_ib_scratch_pad_fds[i], sizeof(MPID_nem_ib_cm_wr_send_t));
+                MPID_nem_ib_com_scratch_pad_recv(MPID_nem_ib_scratch_pad_fds[i], sizeof(MPID_nem_ib_cm_notify_send_t));
             }
         }
     }
@@ -1005,7 +1007,6 @@ int MPID_nem_ib_vc_terminate(MPIDI_VC_t * vc)
     int ibcom_errno;
     int req_errno = MPI_SUCCESS;
     int i;
-    int send_empty = 0;
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_IB_VC_TERMINATE);
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_IB_VC_TERMINATE);
 
@@ -1063,15 +1064,22 @@ int MPID_nem_ib_vc_terminate(MPIDI_VC_t * vc)
     }
 #endif
 
-#if 1
-    /* Wait until transmission and reception of NOTIFY_OUTSTANDING_TX_COMP are completed. */
-    while (1) {
-#else
+#ifdef MPID_NEM_IB_ONDEMAND
+    MPID_nem_ib_cm_notify_send_req_t *req = MPIU_Malloc(sizeof(MPID_nem_ib_cm_notify_send_req_t));
+    req->ibcom = MPID_nem_ib_scratch_pad_ibcoms[vc->pg_rank];
+    req->my_rank = MPID_nem_ib_myrank;
+    req->pg_rank = vc->pg_rank;
+    MPID_nem_ib_cm_notify_sendq_enqueue(&MPID_nem_ib_cm_notify_sendq, req);
+#endif
+
     /* Empty sendq */
     while (!MPID_nem_ib_sendq_empty(vc_ib->sendq) ||
            VC_FIELD(vc, pending_sends) > 0 ||
-           MPID_nem_ib_scratch_pad_ibcoms[vc->pg_rank]->outstanding_connection_tx > 0 ||
-           MPID_nem_ib_scratch_pad_ibcoms[vc->pg_rank]->incoming_connection_tx > 0) {
+           (MPID_nem_ib_scratch_pad_ibcoms[vc->pg_rank]->notify_outstanding_tx_empty !=
+            NOTIFY_OUTSTANDING_TX_COMP)) {
+#ifdef MPID_NEM_IB_ONDEMAND
+        MPID_nem_ib_cm_notify_progress();       /* progress cm_notify_sendq */
+        MPID_nem_ib_cm_drain_rcq();
 #endif
         /* mimic ib_poll because vc_terminate might be called from ib_poll_eager */
         mpi_errno = MPID_nem_ib_send_progress(vc);
@@ -1087,19 +1095,6 @@ int MPID_nem_ib_vc_terminate(MPIDI_VC_t * vc)
         MPIU_ERR_CHKANDJUMP(ibcom_errno, mpi_errno, MPI_ERR_OTHER, "**MPID_nem_ib_cm_progress");
         ibcom_errno = MPID_nem_ib_cm_drain_scq();
         MPIU_ERR_CHKANDJUMP(ibcom_errno, mpi_errno, MPI_ERR_OTHER, "**MPID_nem_ib_cm_drain_scq");
-
-        if ((send_empty == 0) &&
-            (MPID_nem_ib_scratch_pad_ibcoms[vc->pg_rank]->outstanding_connection_tx == 0)) {
-            MPID_nem_ib_cm_wr_send(vc->pg_rank, MPID_nem_ib_myrank);
-
-            send_empty = 1;
-        }
-        MPID_nem_ib_cm_drain_rcq();
-
-        if (MPID_nem_ib_scratch_pad_ibcoms[vc->pg_rank]->notify_outstanding_tx_empty ==
-            NOTIFY_OUTSTANDING_TX_COMP) {
-            break;
-        }
 #endif
         ibcom_errno = MPID_nem_ib_ringbuf_progress();
         MPIU_ERR_CHKANDJUMP(ibcom_errno, mpi_errno, MPI_ERR_OTHER,

@@ -1656,6 +1656,95 @@ int MPID_nem_ib_cm_cmd_core(int rank, MPID_nem_ib_cm_cmd_shadow_t * shadow, void
   fn_fail:
     goto fn_exit;
 }
+
+#undef FUNCNAME
+#define FUNCNAME MPID_nem_ib_cm_notify_send
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
+int MPID_nem_ib_cm_notify_send(int pg_rank, int myrank)
+{
+    int mpi_errno = MPI_SUCCESS;
+    int ibcom_errno;
+
+    MPID_nem_ib_cm_cmd_shadow_t *shadow =
+        (MPID_nem_ib_cm_cmd_shadow_t *) MPIU_Malloc(sizeof(MPID_nem_ib_cm_cmd_shadow_t));
+    MPID_nem_ib_cm_notify_send_t *buf_from = (MPID_nem_ib_cm_notify_send_t *)
+        MPID_nem_ib_rdmawr_from_alloc(sizeof(MPID_nem_ib_cm_notify_send_t));
+    MPID_nem_ib_cm_req_t *req = MPIU_Malloc(sizeof(MPID_nem_ib_cm_req_t));
+
+    shadow->type = MPID_NEM_IB_NOTIFY_OUTSTANDING_TX_EMPTY;
+
+    buf_from->type = MPID_NEM_IB_NOTIFY_OUTSTANDING_TX_EMPTY;
+    buf_from->initiator_rank = myrank;
+    shadow->req = req;
+    shadow->buf_from = (void *) buf_from;
+    shadow->buf_from_sz = sizeof(MPID_nem_ib_cm_notify_send_t);
+
+    shadow->req->ibcom = MPID_nem_ib_scratch_pad_ibcoms[pg_rank];
+
+    ibcom_errno =
+        MPID_nem_ib_com_wr_scratch_pad(MPID_nem_ib_scratch_pad_fds[pg_rank],
+                                       (uint64_t) shadow, shadow->buf_from, shadow->buf_from_sz);
+
+    MPIU_ERR_CHKANDJUMP(ibcom_errno, mpi_errno, MPI_ERR_OTHER, "**MPID_nem_ib_com_wr_scratch_pad");
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPID_nem_ib_cm_notify_progress
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
+int MPID_nem_ib_cm_notify_progress(void)
+{
+    int mpi_errno = MPI_SUCCESS;
+    int ibcom_errno;
+    MPID_nem_ib_cm_notify_send_req_t *sreq, *prev_sreq;
+
+    sreq = MPID_nem_ib_cm_notify_sendq_head(MPID_nem_ib_cm_notify_sendq);
+    if (sreq) {
+        prev_sreq = NULL;
+        do {
+            if (sreq->ibcom->outstanding_connection_tx != 0) {
+                goto next;
+            }
+
+            ibcom_errno = MPID_nem_ib_cm_notify_send(sreq->pg_rank, sreq->my_rank);
+            MPIU_ERR_CHKANDJUMP(ibcom_errno, mpi_errno, MPI_ERR_OTHER, "**MPID_nem_ib_cm_notify_send");
+
+            /* unlink sreq */
+            if (prev_sreq != NULL) {
+                MPID_nem_ib_cm_notify_sendq_next(prev_sreq) = MPID_nem_ib_cm_notify_sendq_next(sreq);
+            }
+            else {
+                MPID_nem_ib_cm_notify_sendq_head(MPID_nem_ib_cm_notify_sendq) =
+                    MPID_nem_ib_cm_notify_sendq_next(sreq);
+            }
+            if (MPID_nem_ib_cm_notify_sendq_next(sreq) == NULL) {
+                MPID_nem_ib_cm_notify_sendq.tail = prev_sreq;
+            }
+
+            MPID_nem_ib_cm_notify_send_req_t *tmp_sreq = sreq;
+            sreq = MPID_nem_ib_cm_notify_sendq_next(sreq);
+
+            MPIU_Free(tmp_sreq);
+
+            goto next_unlinked;
+          next:
+            prev_sreq = sreq;
+            sreq = MPID_nem_ib_cm_notify_sendq_next(sreq);
+          next_unlinked:;
+        } while (sreq);
+    }
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
 #endif /* MPID_NEM_ONDEMAND */
 
 /* RDMA-read the head pointer of the shared ring buffer */
@@ -1974,43 +2063,6 @@ int MPID_nem_ib_ringbuf_progress()
   fn_exit:
     entered_send_progress = 0;
     MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_IB_RINGBUF_PROGRESS);
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_ib_cm_wr_send
-#undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
-int MPID_nem_ib_cm_wr_send(int pg_rank, int myrank)
-{
-    int mpi_errno = MPI_SUCCESS;
-    int ibcom_errno;
-
-    MPID_nem_ib_cm_cmd_shadow_t *shadow =
-        (MPID_nem_ib_cm_cmd_shadow_t *) MPIU_Malloc(sizeof(MPID_nem_ib_cm_cmd_shadow_t));
-    MPID_nem_ib_cm_wr_send_t *buf_from = (MPID_nem_ib_cm_wr_send_t *)
-        MPID_nem_ib_rdmawr_from_alloc(sizeof(MPID_nem_ib_cm_wr_send_t));
-    MPID_nem_ib_cm_req_t *req = MPIU_Malloc(sizeof(MPID_nem_ib_cm_req_t));
-
-    shadow->type = MPID_NEM_IB_NOTIFY_OUTSTANDING_TX_EMPTY;
-
-    buf_from->type = MPID_NEM_IB_NOTIFY_OUTSTANDING_TX_EMPTY;
-    buf_from->initiator_rank = myrank;
-    shadow->req = req;
-    shadow->buf_from = (void *) buf_from;
-    shadow->buf_from_sz = sizeof(MPID_nem_ib_cm_wr_send_t);
-
-    shadow->req->ibcom = MPID_nem_ib_scratch_pad_ibcoms[pg_rank];
-
-    ibcom_errno =
-        MPID_nem_ib_com_wr_scratch_pad(MPID_nem_ib_scratch_pad_fds[pg_rank],
-                                       (uint64_t) shadow, shadow->buf_from, shadow->buf_from_sz);
-
-    MPIU_ERR_CHKANDJUMP(ibcom_errno, mpi_errno, MPI_ERR_OTHER, "**MPID_nem_ib_com_wr_scratch_pad");
-
-  fn_exit:
     return mpi_errno;
   fn_fail:
     goto fn_exit;

@@ -2369,7 +2369,7 @@ int MPID_nem_ib_cm_drain_rcq(void)
     int result;
     int i;
     struct ibv_wc cqe[MPID_NEM_IB_COM_MAX_CQ_HEIGHT_DRAIN];
-    MPID_nem_ib_cm_wr_send_t *shadow_cm;
+    MPID_nem_ib_cm_notify_send_t *shadow_cm;
 
     if (!MPID_nem_ib_rc_shared_rcq_scratch_pad) {
         dprintf("cm_drain_rcq,CQ is null\n");
@@ -2410,15 +2410,15 @@ int MPID_nem_ib_cm_drain_rcq(void)
                 MPID_nem_ib_com_t *ibcom;
 
                 dprintf("cm_drain_rcq,notify_outstanding_tx_empty\n");
-                shadow_cm = (MPID_nem_ib_cm_wr_send_t *) cqe[i].wr_id;
+                shadow_cm = (MPID_nem_ib_cm_notify_send_t *) cqe[i].wr_id;
                 initiator_rank = shadow_cm->initiator_rank;
 
-                MPID_nem_ib_rdmawr_from_free(shadow_cm, sizeof(MPID_nem_ib_cm_wr_send_t));
+                MPID_nem_ib_rdmawr_from_free(shadow_cm, sizeof(MPID_nem_ib_cm_notify_send_t));
 
                 MPID_nem_ib_com_obtain_pointer(MPID_nem_ib_scratch_pad_fds[initiator_rank], &ibcom);
                 ibcom->notify_outstanding_tx_empty |= NOTIFY_OUTSTANDING_TX_RCQ;
                 MPID_nem_ib_com_scratch_pad_recv(MPID_nem_ib_scratch_pad_fds[initiator_rank],
-                                                 sizeof(MPID_nem_ib_cm_wr_send_t));
+                                                 sizeof(MPID_nem_ib_cm_notify_send_t));
             }
             break;
         default:

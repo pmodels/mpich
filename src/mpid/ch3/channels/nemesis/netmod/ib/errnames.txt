@@ -8,6 +8,7 @@
 **MPID_nem_ib_cm_poll_syn:MPID_nem_ib_cm_poll_syn failed
 **MPID_nem_ib_cm_progress:MPID_nem_ib_cm_progress failed
 **MPID_nem_ib_cm_send_core:MPID_nem_ib_cm_send_core failed
+**MPID_nem_ib_cm_notify_send:MPID_nem_ib_cm_notify_send failed
 **MPID_nem_ib_com_alloc:MPID_nem_ib_com_alloc failed
 **MPID_nem_ib_com_cas_scratch_pad:MPID_nem_ib_com_cas_scratch_pad failed
 **MPID_nem_ib_com_close:MPID_nem_ib_com_close failed

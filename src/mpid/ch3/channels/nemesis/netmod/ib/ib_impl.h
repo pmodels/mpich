@@ -229,7 +229,14 @@ typedef struct {
 typedef struct {
     MPID_nem_ib_cm_cmd_type_t type;
     int initiator_rank;
-} MPID_nem_ib_cm_wr_send_t;
+} MPID_nem_ib_cm_notify_send_t;
+
+typedef struct MPID_nem_ib_cm_notify_send_req {
+    MPID_nem_ib_com_t *ibcom;
+    int my_rank;
+    int pg_rank;
+    struct MPID_nem_ib_cm_notify_send_req *sendq_next;
+} MPID_nem_ib_cm_notify_send_req_t;
 
 #define MPID_NEM_IB_CM_RELEASED ((uint64_t)(-1))
 #define MPID_NEM_IB_CM_OFF_SYN (256)    /* Align for 256-byte-write PCI command */
@@ -243,6 +250,14 @@ typedef GENERIC_Q_DECL(MPID_nem_ib_cm_req_t) MPID_nem_ib_cm_sendq_t;
 #define MPID_nem_ib_cm_sendq_next_field(ep, next_field) ((ep)->next_field)
 #define MPID_nem_ib_cm_sendq_next(ep) ((ep)->sendq_next)
 #define MPID_nem_ib_cm_sendq_enqueue(qp, ep) GENERICM_Q_ENQUEUE (qp, ep, MPID_nem_ib_cm_sendq_next_field, sendq_next);
+
+typedef GENERIC_Q_DECL(MPID_nem_ib_cm_notify_send_req_t) MPID_nem_ib_cm_notify_sendq_t;
+
+#define MPID_nem_ib_cm_notify_sendq_empty(q) GENERICM_Q_EMPTY (q)
+#define MPID_nem_ib_cm_notify_sendq_head(q) GENERICM_Q_HEAD (q)
+#define MPID_nem_ib_cm_notify_sendq_next_field(ep, next_field) ((ep)->next_field)
+#define MPID_nem_ib_cm_notify_sendq_next(ep) ((ep)->sendq_next)
+#define MPID_nem_ib_cm_notify_sendq_enqueue(qp, ep) GENERICM_Q_ENQUEUE (qp, ep, MPID_nem_ib_cm_notify_sendq_next_field, sendq_next);
 
 #ifdef HAVE_LIBDCFA
 #define MPID_NEM_IB_CM_COMPOSE_NETWORK_INFO_MR_ADDR host_adddr
@@ -336,6 +351,9 @@ static inline void MPID_nem_ib_cm_request_release(MPID_nem_ib_cm_req_t * req)
 
 int MPID_nem_ib_cm_progress(void);
 int MPID_nem_ib_cm_release(uint16_t index);
+
+int MPID_nem_ib_cm_notify_send(int pg_rank, int myrank);
+int MPID_nem_ib_cm_notify_progress(void);
 #endif
 
 /* Ring buffer protocol
@@ -569,7 +587,6 @@ int MPID_nem_ib_ringbuf_ask_fetch(MPIDI_VC_t * vc);
 int MPID_nem_ib_ringbuf_ask_cas_core(MPIDI_VC_t * vc, MPID_nem_ib_ringbuf_cmd_shadow_t * shadow,
                                      uint64_t head);
 int MPID_nem_ib_ringbuf_progress(void);
-int MPID_nem_ib_cm_wr_send(int pg_rank, int myrank);
 
 int MPID_nem_ib_ringbuf_alloc(MPIDI_VC_t * vc);
 int MPID_nem_ib_ringbuf_free(MPIDI_VC_t * vc);
@@ -630,6 +647,7 @@ extern uint64_t MPID_nem_ib_cm_ringbuf_released[(MPID_NEM_IB_CM_NSEG + 63) / 64]
 
 /* overflow queue when no more slots for responder to write on are available */
 extern MPID_nem_ib_cm_sendq_t MPID_nem_ib_cm_sendq;
+extern MPID_nem_ib_cm_notify_sendq_t MPID_nem_ib_cm_notify_sendq;
 
 extern MPID_nem_ib_ringbuf_sendq_t MPID_nem_ib_ringbuf_sendq;
 
