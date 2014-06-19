@@ -2,6 +2,15 @@
                         KNOWN ISSUES
 ----------------------------------------------------------------------
 
+### Solaris compilers
+
+ * Compilation on solaris will freeze when MPICH is configured with 
+   "--enable-strict". This is due to a solaris compiler bug related
+   to a specific order of assignments to long long and short variables.
+   See the following ticket for more information:
+
+     https://trac.mpich.org/projects/mpich/ticket/2105
+
 ### Fine-grained thread safety
 
  * ch3:sock does not (and will not) support fine-grained threading.
