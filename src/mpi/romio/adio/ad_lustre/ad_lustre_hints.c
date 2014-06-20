@@ -11,6 +11,9 @@
 #include "ad_lustre.h"
 #include "adio_extern.h"
 #include "hint_fns.h"
+#ifdef HAVE_LIMITS_H
+#include <limits.h>
+#endif
 
 void ADIOI_LUSTRE_SetInfo(ADIO_File fd, MPI_Info users_info, int *error_code)
 {
