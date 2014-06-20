@@ -782,9 +782,9 @@ static int do_passive_target_rma(MPID_Win *win_ptr, int target_rank,
                                             MPIDI_CH3_Pkt_flags_t sync_flags);
 static int send_lock_put_or_acc(MPID_Win *, int);
 static int send_lock_get(MPID_Win *, int);
-static int RMAListComplete(MPID_Win *win_ptr,
+static inline int rma_list_complete(MPID_Win *win_ptr,
                                       MPIDI_RMA_Ops_list_t *ops_list);
-static int RMAListPartialComplete(MPID_Win *win_ptr,
+static inline int rma_list_gc(MPID_Win *win_ptr,
                                              MPIDI_RMA_Ops_list_t *ops_list,
                                              MPIDI_RMA_Op_t *last_elm, int *nDone);
 
@@ -1053,7 +1053,8 @@ int MPIDI_Win_fence(int assert, MPID_Win *win_ptr)
             MPIR_T_PVAR_STMT(RMA, list_complete_timer=MPIR_T_PVAR_TIMER_ADDR(rma_winfence_complete));
             MPIR_T_PVAR_STMT(RMA, list_complete_counter=MPIR_T_PVAR_COUNTER_ADDR(rma_winfence_complete_aux));
 
-                    RMAListPartialComplete(win_ptr, ops_list, curr_ptr, &nDone);
+                    mpi_errno = rma_list_gc(win_ptr, ops_list, curr_ptr, &nDone);
+                    if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
 		    /* if (nDone > 0) printf( "nDone = %d\n", nDone ); */
 		    nRequest -= nDone;
 		    nRequestNew = nRequest;
@@ -1078,7 +1079,8 @@ int MPIDI_Win_fence(int assert, MPID_Win *win_ptr)
         MPIR_T_PVAR_STMT(RMA, list_complete_timer=MPIR_T_PVAR_TIMER_ADDR(rma_winfence_complete));
         MPIR_T_PVAR_STMT(RMA, list_complete_counter=MPIR_T_PVAR_COUNTER_ADDR(rma_winfence_complete_aux));
         MPIR_T_PVAR_STMT(RMA, list_block_timer=MPIR_T_PVAR_TIMER_ADDR(rma_winfence_block));
-            mpi_errno = RMAListComplete(win_ptr, ops_list);
+            mpi_errno = rma_list_complete(win_ptr, ops_list);
+            if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
 	}
 
         MPIU_Assert(MPIDI_CH3I_RMA_Ops_isempty(ops_list));
@@ -2334,7 +2336,8 @@ int MPIDI_Win_complete(MPID_Win *win_ptr)
 		int nDone = 0;
             MPIR_T_PVAR_STMT(RMA, list_complete_timer=MPIR_T_PVAR_TIMER_ADDR(rma_wincomplete_complete));
             MPIR_T_PVAR_STMT(RMA, list_complete_counter=MPIR_T_PVAR_COUNTER_ADDR(rma_wincomplete_complete_aux));
-                RMAListPartialComplete(win_ptr, ops_list, curr_ptr, &nDone);
+                mpi_errno = rma_list_gc(win_ptr, ops_list, curr_ptr, &nDone);
+                if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
 		nRequest -= nDone;
 		nRequestNew = nRequest;
 	    }
@@ -2403,7 +2406,8 @@ int MPIDI_Win_complete(MPID_Win *win_ptr)
         MPIR_T_PVAR_STMT(RMA, list_complete_timer=MPIR_T_PVAR_TIMER_ADDR(rma_wincomplete_complete));
         MPIR_T_PVAR_STMT(RMA, list_complete_counter=MPIR_T_PVAR_COUNTER_ADDR(rma_wincomplete_complete_aux));
         MPIR_T_PVAR_STMT(RMA, list_block_timer=MPIR_T_PVAR_TIMER_ADDR(rma_wincomplete_block));
-        mpi_errno = RMAListComplete(win_ptr, ops_list);
+        mpi_errno = rma_list_complete(win_ptr, ops_list);
+        if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
     }
 
     MPIU_Assert(MPIDI_CH3I_RMA_Ops_isempty(ops_list));
@@ -3356,9 +3360,10 @@ static int do_passive_target_rma(MPID_Win *win_ptr, int target_rank,
 		int nDone = 0;
 		MPIR_T_PVAR_STMT(RMA, list_complete_timer=MPIR_T_PVAR_TIMER_ADDR(rma_winunlock_complete));
 		MPIR_T_PVAR_STMT(RMA, list_complete_counter=MPIR_T_PVAR_COUNTER_ADDR(rma_winunlock_complete_aux));
-                RMAListPartialComplete(win_ptr,
+                mpi_errno = rma_list_gc(win_ptr,
                                                   &win_ptr->targets[target_rank].rma_ops_list,
                                                   curr_ptr, &nDone);
+                if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
 		/* if (nDone > 0) printf( "nDone = %d\n", nDone ); */
 		nRequest -= nDone;
 		nRequestNew = nRequest;
@@ -3372,7 +3377,8 @@ static int do_passive_target_rma(MPID_Win *win_ptr, int target_rank,
         MPIR_T_PVAR_STMT(RMA, list_complete_timer=MPIR_T_PVAR_TIMER_ADDR(rma_winunlock_complete));
         MPIR_T_PVAR_STMT(RMA, list_block_timer=MPIR_T_PVAR_TIMER_ADDR(rma_winunlock_block));
         MPIR_T_PVAR_STMT(RMA, list_complete_counter=MPIR_T_PVAR_COUNTER_ADDR(rma_winunlock_complete_aux));
-        mpi_errno = RMAListComplete(win_ptr, &win_ptr->targets[target_rank].rma_ops_list);
+        mpi_errno = rma_list_complete(win_ptr, &win_ptr->targets[target_rank].rma_ops_list);
+        if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
     }
     else if (sync_flags & MPIDI_CH3_PKT_FLAG_RMA_UNLOCK) {
         /* No communication operations were left to process, but the RMA epoch
@@ -5504,7 +5510,7 @@ int MPIDI_CH3_PktHandler_Flush( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 /* ------------------------------------------------------------------------ */
 /* list_complete_timer/counter and list_block_timer defined above */
 
-static int RMAListComplete( MPID_Win *win_ptr,
+static inline int rma_list_complete( MPID_Win *win_ptr,
                                        MPIDI_RMA_Ops_list_t *ops_list )
 {
     int ntimes = 0, mpi_errno=0;
@@ -5575,17 +5581,13 @@ static int RMAListComplete( MPID_Win *win_ptr,
     return mpi_errno;
 }
 
-/* This routine may be used to attempt to complete pending requests during
-   the initial processing of the list (to handle the case where the 
-   communication layer is returning uncompleted requests and may run the
-   danger of running out of internal data 
-
-   Unlike the completion routine, we call this when we expect to need a 
-   at least a few requests, so rather than stop looking after a few items
-   (the loopcount check in the other code), we search through the entire 
-   list until we find a completable request.
+/* This routine is used to do garbage collection work on completed RMA
+   requests so far. It is used to clean up the RMA requests that are
+   not completed immediately when issuing out but are completed later
+   when poking progress engine, so that they will not waste internal
+   resources.
 */
-static int RMAListPartialComplete( MPID_Win *win_ptr,
+static inline int rma_list_gc( MPID_Win *win_ptr,
                                               MPIDI_RMA_Ops_list_t *ops_list,
                                               MPIDI_RMA_Op_t *last_elm,
 					      int *nDone )
