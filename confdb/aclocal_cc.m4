@@ -46,7 +46,8 @@ CFLAGS_opt="$pac_opt $CFLAGS"
 pac_result="unknown"
 
 AC_LANG_CONFTEST([
-	AC_LANG_PROGRAM([[const char hw[] = "Hello, World\n";]],
+	AC_LANG_PROGRAM([[#include <stdio.h>
+                          const char hw[] = "Hello, World\n";]],
 		[[fputs (hw, stdout);]])
 ])
 CFLAGS="$CFLAGS_orig"
