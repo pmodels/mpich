@@ -48,6 +48,8 @@ struct free_list {
     struct free_list *prev;
 };
 
+#define CHUNK (sizeof(struct free_list))
+
 static inline void list_init(struct free_list *head)
 {
     head->next = head;
@@ -192,7 +194,7 @@ static void __init_pool_header(struct pool_info *info, int i, int size)
 
 static void _local_malloc_initialize_hook(void)
 {
-    int i;
+    int i, j;
     char *aligned;
     size_t size;
     int count;
@@ -229,13 +231,24 @@ static void _local_malloc_initialize_hook(void)
 
         info = (struct pool_info *) aligned;
 
-        if (i <= MMAPED_OFFSET_POW)
+        if (i <= MMAPED_OFFSET_POW) {
             __init_pool_header_with_hole(info, i, size);
-        else
-            __init_pool_header(info, i, size);
 
-        /* add list tail */
-        list_add_tail(&(info->list), &arena_flist[i]);
+            int elem = (DEFAULT_POOL_SIZE - (info->hole_num * info->size)) / (CHUNK + info->size);
+            struct free_list *block_head = (struct free_list *) info->next_pos;
+            for (j = 0; j < elem; j++) {
+                if (((size_t) ((char *) block_head + CHUNK) & ((size_t) PAGE_SIZE - 1)) !=
+                    MMAPED_OFFSET) {
+                    list_add_tail(block_head, &arena_flist[i]);
+                }
+                block_head = (struct free_list *) ((char *) block_head + CHUNK + info->size);
+            }
+        }
+        else {
+            __init_pool_header(info, i, size);
+            /* add list tail */
+            list_add_tail(&(info->list), &arena_flist[i]);
+        }
 
         aligned += size;
     }
@@ -245,6 +258,7 @@ static void _local_malloc_initialize_hook(void)
 
 void *malloc(size_t size)
 {
+    int i;
     int pow;
     char *ptr = NULL;
 
@@ -291,21 +305,39 @@ void *malloc(size_t size)
 
             info = (struct pool_info *) tmp;
 
-            if (pow <= MMAPED_OFFSET_POW)
+            if (pow <= MMAPED_OFFSET_POW) {
                 __init_pool_header_with_hole(info, pow, alloc_sz);
-            else
+
+                int elem =
+                    (DEFAULT_POOL_SIZE - (info->hole_num * info->size)) / (CHUNK + info->size);
+                struct free_list *block_head = (struct free_list *) info->next_pos;
+                for (i = 0; i < elem; i++) {
+                    if (((size_t) ((char *) block_head + CHUNK) & ((size_t) PAGE_SIZE - 1)) !=
+                        MMAPED_OFFSET) {
+                        list_add_tail(block_head, &arena_flist[pow]);
+                    }
+                    block_head = (struct free_list *) ((char *) block_head + CHUNK + info->size);
+                }
+
+                /* use head elem */
+                struct free_list *info = (struct free_list *) (arena_flist[pow].next);
+                ptr = (char *) info + CHUNK;
+                dprintf("malloc(%lu) [2^%d] ==> USE pool %p\n", size, pow, ptr);
+                list_del(info);
+            }
+            else {
                 __init_pool_header(info, pow, alloc_sz);
+                list_add_tail(&(info->list), &arena_flist[pow]);
 
-            list_add_tail(&(info->list), &arena_flist[pow]);
+                ptr = info->next_pos;
+                info->next_pos += info->size;
 
-            ptr = info->next_pos;
-            info->next_pos += info->size;
+                if (pow <= MMAPED_OFFSET_POW)
+                    info->count++;
 
-            if (pow <= MMAPED_OFFSET_POW)
-                info->count++;
-
-            dprintf("malloc(%lu) [2^%d] ==> CREATE pool %p   use = %lu\n", size, pow, ptr,
-                    NUM_USED(info->next_pos, POOL_ALIGN_SIZE, info->size));
+                dprintf("malloc(%lu) [2^%d] ==> CREATE pool %p   use = %lu\n", size, pow, ptr,
+                        NUM_USED(info->next_pos, POOL_ALIGN_SIZE, info->size));
+            }
         }
     }
     else {
@@ -319,7 +351,7 @@ void *malloc(size_t size)
 
             dprintf("malloc(%lu) [2^%d] ==> USE mmaped %p\n", size, pow, ptr);
         }
-        else {
+        else if (pow > MMAPED_OFFSET_POW) {
             struct pool_info *info = (struct pool_info *) (arena_flist[pow].next);
 
             ptr = info->next_pos;
@@ -332,15 +364,12 @@ void *malloc(size_t size)
             if (((size_t) info->next_pos & ~(POOL_ALIGN_SIZE - 1)) == (size_t) info->next_pos) {
                 list_del(&(info->list));
             }
-            else if (info->pow <= MMAPED_OFFSET_POW) {
-                info->count++;
-
-                if (info->count == info->num_per_page) {
-                    info->next_pos += (info->size * info->hole_num);
-                    info->count = info->hole_num;
-                    info->free_num += info->hole_num;
-                }
-            }
+        }
+        else {
+            char *info = (char *) (arena_flist[pow].next);
+            ptr = (char *) info + CHUNK;
+            dprintf("malloc(%lu) [2^%d] ==> USE pool %p\n", size, pow, ptr);
+            list_del((struct free_list *) info);
         }
     }
 
@@ -364,28 +393,28 @@ static inline void free_core(void *addr)
         struct pool_info *info =
             (struct pool_info *) ((size_t) addr & ~((size_t) POOL_ALIGN_SIZE - 1));
 
-        dprintf("free(%p) --> free POOL [2^%d] %lu / %u / %u (use / free / max)\n",
-                addr, info->pow,
-                NUM_USED(info->next_pos, POOL_ALIGN_SIZE, info->size),
-                info->free_num + 1, info->num);
+        if (info->pow <= MMAPED_OFFSET_POW) {
+            struct free_list *block_head = (struct free_list *) ((size_t) addr - CHUNK);
+            list_add_head(block_head, &arena_flist[info->pow]);
+            dprintf("free(%p) --> free BLOCK [2^%d]\n", addr, info->pow);
+        }
+        else {
+            dprintf("free(%p) --> free POOL [2^%d] %lu / %u / %u (use / free / max)\n",
+                    addr, info->pow,
+                    NUM_USED(info->next_pos, POOL_ALIGN_SIZE, info->size),
+                    info->free_num + 1, info->num);
 
-        info->free_num++;
-        if (info->free_num == info->num) {
-            /* intialize for reuse */
-            if (info->pow <= MMAPED_OFFSET_POW) {
-                info->count = info->hole_num;
-                info->free_num = info->hole_num;
-                info->next_pos = (char *) info + (info->size * info->hole_num);
-            }
-            else {
+            info->free_num++;
+            if (info->free_num == info->num) {
+                /* intialize for reuse */
                 info->free_num = 1;
                 info->next_pos = (char *) info + info->size;
+
+                list_add_tail(&(info->list), &arena_flist[info->pow]);
+
+                dprintf("       POOL [2^%d]   ALL FREED -> add list [%p]\n", info->pow,
+                        &arena_flist[info->pow]);
             }
-
-            list_add_tail(&(info->list), &arena_flist[info->pow]);
-
-            dprintf("       POOL [2^%d]   ALL FREED -> add list [%p]\n", info->pow,
-                    &arena_flist[info->pow]);
         }
     }
 
