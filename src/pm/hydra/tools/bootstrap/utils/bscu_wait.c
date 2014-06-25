@@ -41,7 +41,7 @@ HYD_status HYDT_bscu_wait_for_completion(int timeout)
                 time_elapsed = (now.tv_sec - start.tv_sec);     /* Ignore microsec granularity */
 
                 time_left = -1;
-                if (timeout > 0) {
+                if (timeout >= 0) {
                     if (time_elapsed > timeout) {
 #if defined(HAVE_GETPGID) && defined(HAVE_SETSID)
                         /* If we are able to get the process group ID,
