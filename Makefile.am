@@ -217,8 +217,8 @@ CLEAN_LOCAL_TARGETS += test-clean
 ## better approach might be to have each Makefile.mk append to a
 ## common set of rules.
 install-exec-hook:
-	for e in ${DESTDIR}${bindir}/mpicc ${DESTDIR}${bindir}/mpicxx \
-		${DESTDIR}${bindir}/mpif77 ${DESTDIR}${bindir}/mpifort ; do \
+	for e in ${DESTDIR}${bindir}/@MPICC_NAME@ ${DESTDIR}${bindir}/@MPICXX_NAME@ \
+		${DESTDIR}${bindir}/@MPIF77_NAME@ ${DESTDIR}${bindir}/@MPIFORT_NAME@ ; do \
 		if test -e $${e} ; then \
 			sed -e 's|__PREFIX_TO_BE_FILLED_AT_INSTALL_TIME__|${prefix}|g' \
 				-e 's|__EXEC_PREFIX_TO_BE_FILLED_AT_INSTALL_TIME__|${exec_prefix}|g' \
