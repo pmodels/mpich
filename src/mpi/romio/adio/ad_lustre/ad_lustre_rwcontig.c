@@ -8,7 +8,7 @@
  *   Copyright (C) 2008 Sun Microsystems, Lustre group
  */
 
-#define _XOPEN_SOURCE 500
+#define _XOPEN_SOURCE 600
 #include <unistd.h>
 
 #include <stdlib.h>
