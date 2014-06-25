@@ -629,6 +629,10 @@ if test "$enable_strict_done" != "yes" ; then
        # enabled. If C99 is enabled, we automatically disable C89.
        if test "${enable_c99}" = "yes" ; then
        	  PAC_APPEND_FLAG([-std=c99],[pac_cc_strict_flags])
+          # Use -D_STDC_C99= for Solaris compilers. See
+          # http://lists.gnu.org/archive/html/autoconf/2010-12/msg00059.html
+          # for discussion on why not to use -xc99
+          PAC_APPEND_FLAG([-D_STDC_C99=],[pac_cc_strict_flags])
        elif test "${enable_c89}" = "yes" ; then
        	  PAC_APPEND_FLAG([-std=c89],[pac_cc_strict_flags])
        	  PAC_APPEND_FLAG([-Wdeclaration-after-statement],[pac_cc_strict_flags])
