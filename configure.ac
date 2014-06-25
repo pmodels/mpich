@@ -5911,6 +5911,18 @@ export MPI_NO_SPAWN
 MPI_NO_RMA=$MPID_NO_RMA
 export MPI_NO_RMA
 
+# Attach program prefix and suffix to executable names for Makefile
+AC_SUBST(MPICXX_NAME)
+AC_SUBST(MPICPP_NAME)
+AC_SUBST(MPIFORT_NAME)
+AC_SUBST(MPIF90_NAME)
+AC_SUBST(MPIF77_NAME)
+PAC_GET_EXENAME("mpicxx", MPICXX_NAME)
+PAC_GET_EXENAME("mpic++", MPICPP_NAME)
+PAC_GET_EXENAME("mpifort", MPIFORT_NAME)
+PAC_GET_EXENAME("mpif90", MPIF90_NAME)
+PAC_GET_EXENAME("mpif77", MPIF77_NAME)
+
 AC_CONFIG_SUBDIRS([test/mpi])
 dnl
 dnl Generate the Makefiles from Makefile.in

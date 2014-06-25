@@ -229,12 +229,12 @@ install-exec-hook:
 			rm -f $${e}.tmp ; \
 		fi ; \
 	done ; \
-	if test -e ${DESTDIR}${bindir}/mpicxx ; then \
-		cd ${DESTDIR}${bindir} && ln -f -s mpicxx mpic++ ; fi ; \
-	if test -e ${DESTDIR}${bindir}/mpifort ; then \
-		cd ${DESTDIR}${bindir} && ln -f -s mpifort mpif90 ; fi ; \
-	if test -e ${DESTDIR}${bindir}/mpifort -a ! -e ${DESTDIR}${bindir}/mpif77 ; then \
-		cd ${DESTDIR}${bindir} && ln -f -s mpifort mpif77 ; fi ; \
+	if test -e ${DESTDIR}${bindir}/@MPICXX_NAME@ ; then \
+		cd ${DESTDIR}${bindir} && ln -f -s @MPICXX_NAME@ @MPICPP_NAME@ ; fi ; \
+	if test -e ${DESTDIR}${bindir}/@MPIFORT_NAME@ ; then \
+		cd ${DESTDIR}${bindir} && ln -f -s @MPIFORT_NAME@ @MPIF90_NAME@ ; fi ; \
+	if test -e ${DESTDIR}${bindir}/@MPIFORT_NAME@ -a ! -e ${DESTDIR}${bindir}/@MPIF77_NAME@ ; then \
+		cd ${DESTDIR}${bindir} && ln -f -s @MPIFORT_NAME@ @MPIF77_NAME@ ; fi ; \
 	if test -e ${DESTDIR}${libdir}/lib@MPILIBNAME@@SHLIB_EXT@ ; then \
 		cd ${DESTDIR}${libdir} && ln -f -s lib@MPILIBNAME@@SHLIB_EXT@ libmpl@SHLIB_EXT@ ; \
 		cd ${DESTDIR}${libdir} && ln -f -s lib@MPILIBNAME@@SHLIB_EXT@ libopa@SHLIB_EXT@ ; \
