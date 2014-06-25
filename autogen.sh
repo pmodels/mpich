@@ -925,7 +925,7 @@ if [ "$do_build_configure" = "yes" ] ; then
             if [ -f $amdir/confdb/libtool.m4 ] ; then
                 echo_n "Patching libtool.m4 to enable support for powerpcle... "
                 powerpcle_patch_requires_rebuild=no
-                patch --forward -s -l $amdir/confdb/libtool.m4 maint/0001-libtool-powerpc-le-linux-support.patch
+                patch -N -s -l $amdir/confdb/libtool.m4 maint/0001-libtool-powerpc-le-linux-support.patch
                 if [ $? -eq 0 ] ; then
                     powerpcle_patch_requires_rebuild=yes
                     # Remove possible leftovers, which don't imply a failure
@@ -939,7 +939,7 @@ if [ "$do_build_configure" = "yes" ] ; then
                 nagfor_patch_requires_rebuild=no
                 if [ $do_bindings = "yes" ] ; then
                     echo_n "Patching libtool.m4 for compatibility with nagfor shared libraries... "
-                    patch --forward -s -l $amdir/confdb/libtool.m4 maint/libtool.m4.patch
+                    patch -N -s -l $amdir/confdb/libtool.m4 maint/libtool.m4.patch
                     if [ $? -eq 0 ] ; then
                         nagfor_patch_requires_rebuild=yes
                         # Remove possible leftovers, which don't imply a failure
