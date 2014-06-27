@@ -154,7 +154,6 @@ int main(int argc, char **argv) {
         for (j = 0; j < nproc; j++) {
             TYPE_C rank_cnv = (TYPE_C) rank;
             MPI_Fetch_and_op(&rank_cnv, &res_ptr[j], TYPE_MPI, j, rank, MPI_SUM, win);
-            res_ptr[j] = i*rank;
         }
         MPI_Win_fence(MPI_MODE_NOSUCCEED, win);
         MPI_Barrier(MPI_COMM_WORLD);
@@ -188,7 +187,6 @@ int main(int argc, char **argv) {
         for (j = 0; j < nproc; j++) {
             TYPE_C rank_cnv = (TYPE_C) rank;
             MPI_Fetch_and_op(&rank_cnv, &res_ptr[j], TYPE_MPI, j, rank, MPI_SUM, win);
-            res_ptr[j] = i*rank;
         }
         MPI_Win_unlock_all(win);
         MPI_Barrier(MPI_COMM_WORLD);
@@ -222,7 +220,6 @@ int main(int argc, char **argv) {
         for (j = 0; j < nproc; j++) {
             TYPE_C rank_cnv = (TYPE_C) rank;
             MPI_Fetch_and_op(&rank_cnv, &res_ptr[j], TYPE_MPI, j, rank, MPI_SUM, win);
-            res_ptr[j] = i*rank;
             MPI_Win_flush(j, win);
         }
         MPI_Win_unlock_all(win);
