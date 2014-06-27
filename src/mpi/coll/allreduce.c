@@ -625,75 +625,66 @@ int MPIR_Allreduce_inter (
     int *errflag )
 {
 /* Intercommunicator Allreduce.
-   We first do an intercommunicator reduce to rank 0 on left group,
-   then an intercommunicator reduce to rank 0 on right group, followed
-   by local intracommunicator broadcasts in each group.
-
-   We don't do local reduces first and then intercommunicator
-   broadcasts because it would require allocation of a temporary buffer. 
+   We first do intracommunicator reduces to rank 0 on left and right
+   groups, then an exchange between left and right rank 0, and finally
+   intracommunicator broadcasts from rank 0 on left and right group.
 */
-    int rank, mpi_errno, root;
+    int mpi_errno;
     int mpi_errno_ret = MPI_SUCCESS;
+    MPI_Aint true_extent, true_lb, extent;
+    void *tmp_buf=NULL;
     MPID_Comm *newcomm_ptr = NULL;
-    
-    rank = comm_ptr->rank;
+    MPI_Comm comm;
+    MPIU_CHKLMEM_DECL(1);
 
-    /* first do a reduce from right group to rank 0 in left group,
-       then from left group to rank 0 in right group*/
-    if (comm_ptr->is_low_group) {
-        /* reduce from right group to rank 0*/
-        root = (rank == 0) ? MPI_ROOT : MPI_PROC_NULL;
-        mpi_errno = MPIR_Reduce_inter(sendbuf, recvbuf, count, datatype, op,
-				      root, comm_ptr, errflag);
-        if (mpi_errno) {
-            /* for communication errors, just record the error but continue */
-            *errflag = TRUE;
-            MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**fail");
-            MPIU_ERR_ADD(mpi_errno_ret, mpi_errno);
-        }
+    MPIDU_ERR_CHECK_MULTIPLE_THREADS_ENTER( comm_ptr );
 
-        /* reduce to rank 0 of right group */
-        root = 0;
-        mpi_errno = MPIR_Reduce_inter(sendbuf, recvbuf, count, datatype, op,
-				      root, comm_ptr, errflag);
-        if (mpi_errno) {
-            /* for communication errors, just record the error but continue */
-            *errflag = TRUE;
-            MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**fail");
-            MPIU_ERR_ADD(mpi_errno_ret, mpi_errno);
-        }
+    if (comm_ptr->rank == 0) {
+        MPIR_Type_get_true_extent_impl(datatype, &true_lb, &true_extent);
+        MPID_Datatype_get_extent_macro(datatype, extent);
+        /* I think this is the worse case, so we can avoid an assert()
+         * inside the for loop */
+        /* Should MPIU_CHKLMEM_MALLOC do this? */
+        MPID_Ensure_Aint_fits_in_pointer(count * MPIR_MAX(extent, true_extent));
+        MPIU_CHKLMEM_MALLOC(tmp_buf, void *, count*(MPIR_MAX(extent,true_extent)), mpi_errno, "temporary buffer");
+        /* adjust for potential negative lower bound in datatype */
+        tmp_buf = (void *)((char*)tmp_buf - true_lb);
     }
-    else {
-        /* reduce to rank 0 of left group */
-        root = 0;
-        mpi_errno = MPIR_Reduce_inter(sendbuf, recvbuf, count, datatype, op,
-				      root, comm_ptr, errflag);
-        if (mpi_errno) {
-            /* for communication errors, just record the error but continue */
-            *errflag = TRUE;
-            MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**fail");
-            MPIU_ERR_ADD(mpi_errno_ret, mpi_errno);
-        }
 
-        /* reduce from right group to rank 0 */
-        root = (rank == 0) ? MPI_ROOT : MPI_PROC_NULL;
-        mpi_errno = MPIR_Reduce_inter(sendbuf, recvbuf, count, datatype, op,
-				      root, comm_ptr, errflag);
-        if (mpi_errno) {
-            /* for communication errors, just record the error but continue */
-            *errflag = TRUE;
-            MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**fail");
-            MPIU_ERR_ADD(mpi_errno_ret, mpi_errno);
-        }
-    }
+    comm = comm_ptr->handle;
 
     /* Get the local intracommunicator */
     if (!comm_ptr->local_comm)
-	MPIR_Setup_intercomm_localcomm( comm_ptr );
+        MPIR_Setup_intercomm_localcomm( comm_ptr );
 
     newcomm_ptr = comm_ptr->local_comm;
 
-    mpi_errno = MPIR_Bcast_impl(recvbuf, count, datatype, 0, newcomm_ptr, errflag);
+    /* Do a local reduce on this intracommunicator */
+    mpi_errno = MPIR_Reduce_intra(sendbuf, tmp_buf, count, datatype,
+                                  op, 0, newcomm_ptr, errflag);
+    if (mpi_errno) {
+        /* for communication errors, just record the error but continue */
+        *errflag = TRUE;
+        MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**fail");
+        MPIU_ERR_ADD(mpi_errno_ret, mpi_errno);
+    }
+
+    /* Do a exchange between local and remote rank 0 on this intercommunicator */
+    if (comm_ptr->rank == 0) {
+        mpi_errno = MPIC_Sendrecv(tmp_buf, count, datatype, 0, MPIR_REDUCE_TAG,
+                                  recvbuf, count, datatype, 0, MPIR_REDUCE_TAG,
+                                  comm, MPI_STATUS_IGNORE, errflag);
+        if (mpi_errno) {
+            /* for communication errors, just record the error but continue */
+            *errflag = TRUE;
+            MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**fail");
+            MPIU_ERR_ADD(mpi_errno_ret, mpi_errno);
+        }
+    }
+
+    /* Do a local broadcast on this intracommunicator */
+    mpi_errno = MPIR_Bcast_impl(recvbuf, count, datatype,
+                                0, newcomm_ptr, errflag);
     if (mpi_errno) {
         /* for communication errors, just record the error but continue */
         *errflag = TRUE;
@@ -702,6 +693,8 @@ int MPIR_Allreduce_inter (
     }
 
   fn_exit:
+    MPIDU_ERR_CHECK_MULTIPLE_THREADS_EXIT( comm_ptr );
+    MPIU_CHKLMEM_FREEALL();
     if (mpi_errno_ret)
         mpi_errno = mpi_errno_ret;
     else if (*errflag)
