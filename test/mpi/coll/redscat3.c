@@ -87,14 +87,14 @@ int main( int argc, char **argv )
     sumval = size * rank + ((size - 1) * size)/2;
     /* recv'ed values for my process should be size * (rank + i) */
     for (i=0; i<mycount; i++) {
-	if (sendbuf[i] != sumval) {
-	    err++;
-	    if (err < MAX_ERRORS) {
-		fprintf( stdout, "Did not get expected value for reduce scatter (in place)\n" );
-		fprintf( stdout, "[%d] Got buf[%d] = %d expected %d\n", 
-			 rank, i, sendbuf[rank*mycount+i], sumval );
-	    }
-	}
+        if (sendbuf[i] != sumval) {
+            err++;
+            if (err < MAX_ERRORS) {
+                fprintf( stdout, "Did not get expected value for reduce scatter (in place)\n" );
+                fprintf( stdout, "[%d] Got buf[%d] = %d expected %d\n",
+                    rank, i, sendbuf[i], sumval );
+            }
+        }
     }
 
     MPI_Comm_set_errhandler(MPI_COMM_WORLD, MPI_ERRORS_RETURN);

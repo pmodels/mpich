@@ -71,11 +71,11 @@ int main( int argc, char **argv )
     sumval = size * rank + ((size - 1) * size)/2;
     /* recv'ed values for my process should be size * (rank + i) */
     for (i=0; i<mycount; i++) {
-	if (sendbuf[rank*mycount+i] != sumval) {
-	    err++;
-	    fprintf( stdout, "Did not get expected value for reduce scatter (in place)\n" );
-	    fprintf( stdout, "[%d] Got %d expected %d\n", rank, sendbuf[rank*mycount+i], sumval );
-	}
+        if (sendbuf[i] != sumval) {
+            err++;
+            fprintf( stdout, "Did not get expected value for reduce scatter (in place)\n" );
+            fprintf( stdout, "[%d] Got %d expected %d\n", rank, sendbuf[i], sumval );
+        }
     }
 
     free(sendbuf);
