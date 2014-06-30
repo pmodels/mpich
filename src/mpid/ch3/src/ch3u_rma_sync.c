@@ -62,6 +62,10 @@ cvars:
         Threshold for the number of completed requests the runtime finds
         before it stops trying to find more completed requests in garbage
         collection function.
+        Note that it works with MPIR_CVAR_CH3_RMA_GC_NUM_TESTED as an OR
+        relation, which means runtime will stop checking when either one
+        of its following conditions is satisfied or one of conditions of
+        MPIR_CVAR_CH3_RMA_GC_NUM_TESTED is satisfied.
         When it is set to negative value, it means runtime will not stop
         checking the operation list until it reaches the end of the list.
         When it is set to positive value, it means runtime will not stop
@@ -72,6 +76,36 @@ cvars:
         of completed RMA requests, it will temporarily ignore this CVAR
         and try to find continuous completed requests as many as possible,
         until it meets an incomplete request.
+
+    - name        : MPIR_CVAR_CH3_RMA_GC_NUM_TESTED
+      category    : CH3
+      type        : int
+      default     : (-1)
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Threshold for the number of RMA requests the runtime tests before
+        it stops trying to check more requests in garbage collection
+        routine.
+        Note that it works with MPIR_CVAR_CH3_RMA_GC_NUM_COMPLETED as an
+        OR relation, which means runtime will stop checking when either
+        one of its following conditions is satisfied or one of conditions
+        of MPIR_CVAR_CH3_RMA_GC_NUM_COMPLETED is satisfied.
+        When it is set to negative value, runtime will not stop checking
+        operation list until runtime reaches the end of the list. It has
+        the risk of O(N) traversing overhead if there is no completed
+        request in the list. When it is set to positive value, it means
+        runtime will not stop checking the operation list until it visits
+        such number of requests. Higher values may make more completed
+        requests to be found, but it has the risk of visiting too many
+        requests, leading to significant performance overhead. When it is
+        set to zero value, runtime will stop checking the operation list
+        immediately, which may cause weird performance in practice.
+        Note that in garbage collection function, if runtime finds a chain
+        of completed RMA requests, it will temporarily ignore this CVAR and
+        try to find continuous completed requests as many as possible, until
+        it meets an incomplete request.
 
     - name        : MPIR_CVAR_CH3_RMA_LOCK_IMMED
       category    : CH3
@@ -5609,6 +5643,7 @@ static inline int rma_list_gc( MPID_Win *win_ptr,
     int mpi_errno=0;
     MPIDI_RMA_Op_t *curr_ptr;
     int nComplete = 0;
+    int nVisit = 0;
 
     MPIR_T_PVAR_TIMER_START_VAR(RMA, list_complete_timer);
 
@@ -5628,11 +5663,17 @@ static inline int rma_list_gc( MPID_Win *win_ptr,
 		/* --END ERROR HANDLING-- */
 		MPID_Request_release(curr_ptr->request);
                 MPIDI_CH3I_RMA_Ops_free_and_next(ops_list, &curr_ptr);
+                nVisit++;
 	    }
 	    while (curr_ptr && curr_ptr != last_elm && 
 		   MPID_Request_is_complete(curr_ptr->request)) ;
-            if (MPIR_CVAR_CH3_RMA_GC_NUM_COMPLETED >= 0 &&
-                nComplete >= MPIR_CVAR_CH3_RMA_GC_NUM_COMPLETED) {
+            if ((MPIR_CVAR_CH3_RMA_GC_NUM_TESTED >= 0 &&
+                 nVisit >= MPIR_CVAR_CH3_RMA_GC_NUM_TESTED) ||
+                (MPIR_CVAR_CH3_RMA_GC_NUM_COMPLETED >= 0 &&
+                 nComplete >= MPIR_CVAR_CH3_RMA_GC_NUM_COMPLETED)) {
+                /* MPIR_CVAR_CH3_RMA_GC_NUM_TESTED: Once we tested certain
+                   number of requests, we stop checking the rest of the
+                   operation list and break out the loop. */
                 /* MPIR_CVAR_CH3_RMA_GC_NUM_COMPLETED: Once we found
                    certain number of completed requests, we stop checking
                    the rest of the operation list and break out the loop. */
@@ -5642,6 +5683,14 @@ static inline int rma_list_gc( MPID_Win *win_ptr,
 	else {
 	    /* proceed to the next entry.  */
 	    curr_ptr    = curr_ptr->next;
+            nVisit++;
+            if (MPIR_CVAR_CH3_RMA_GC_NUM_TESTED >= 0 &&
+                nVisit >= MPIR_CVAR_CH3_RMA_GC_NUM_TESTED) {
+                /* MPIR_CVAR_CH3_RMA_GC_NUM_TESTED: Once we tested certain
+                   number of requests, we stop checking the rest of the
+                   operation list and break out the loop. */
+                break;
+            }
 	}
     } while (curr_ptr && curr_ptr != last_elm);
         
