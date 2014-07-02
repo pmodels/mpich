@@ -960,6 +960,7 @@ int MPID_nem_ib_vc_init(MPIDI_VC_t * vc)
     MPID_nem_ib_pkt_handler[MPIDI_NEM_IB_PKT_REPLY_SEQ_NUM] = MPID_nem_ib_PktHandler_reply_seq_num;
     MPID_nem_ib_pkt_handler[MPIDI_NEM_IB_PKT_CHG_RDMABUF_OCC_NOTIFY_STATE] =
         MPID_nem_ib_PktHandler_change_rdmabuf_occupancy_notify_state;
+    MPID_nem_ib_pkt_handler[MPIDI_NEM_IB_PKT_RMA_LMT_GET_DONE] = MPID_nem_ib_pkt_rma_lmt_getdone;
 
     /* register CH3 send/recv functions */
     vc_ch->iStartContigMsg = MPID_nem_ib_iStartContigMsg;

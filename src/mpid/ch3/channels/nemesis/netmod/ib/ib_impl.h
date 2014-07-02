@@ -553,6 +553,8 @@ int MPID_nem_ib_drain_scq_scratch_pad(void);
 int MPID_nem_ib_poll(int in_blocking_poll);
 int MPID_nem_ib_poll_eager(MPID_nem_ib_ringbuf_t * ringbuf);
 int MPID_nem_ib_ring_alloc(MPIDI_VC_t * vc);
+int MPID_nem_ib_handle_pkt_bh(MPIDI_VC_t * vc, MPID_Request * req, char *buf,
+                              MPIDI_msg_sz_t buflen);
 
 int MPID_nem_ib_cm_drain_scq(void);
 int MPID_nem_ib_cm_drain_rcq(void);
@@ -689,6 +691,14 @@ typedef struct {
     uint8_t tail;               /* last word of payload */
 } MPID_nem_ib_lmt_cookie_t;
 
+typedef struct {
+    void *addr;
+    uint32_t rkey;
+    uint8_t tail;               /* last word of payload */
+    int len;
+    MPI_Request sender_req_id;  /* request id of sender side */
+} MPID_nem_ib_rma_lmt_cookie_t;
+
 typedef enum MPID_nem_ib_pkt_subtype {
     MPIDI_NEM_IB_PKT_EAGER_SEND,
 #if 0                           /* modification of mpid_nem_lmt.c is required */
@@ -702,6 +712,7 @@ typedef enum MPID_nem_ib_pkt_subtype {
     MPIDI_NEM_IB_PKT_REQ_SEQ_NUM,
     MPIDI_NEM_IB_PKT_REPLY_SEQ_NUM,
     MPIDI_NEM_IB_PKT_CHG_RDMABUF_OCC_NOTIFY_STATE,
+    MPIDI_NEM_IB_PKT_RMA_LMT_GET_DONE,
     MPIDI_NEM_IB_PKT_NUM_PKT_HANDLERS
 } MPID_nem_ib_pkt_subtype_t;
 
@@ -778,6 +789,9 @@ int MPID_nem_ib_PktHandler_change_rdmabuf_occupancy_notify_state(MPIDI_VC_t * vc
                                                                  MPIDI_CH3_Pkt_t * pkt,
                                                                  MPIDI_msg_sz_t * buflen,
                                                                  MPID_Request ** rreqp);
+int MPID_nem_ib_pkt_rma_lmt_getdone(MPIDI_VC_t * vc,
+                                    MPIDI_CH3_Pkt_t * pkt,
+                                    MPIDI_msg_sz_t * buflen, MPID_Request ** rreqp);
 
 /* MPID_nem_ib_PktHandler_lmt_done is a wrapper of pkt_DONE_handler and calls it */
 /* pkt_DONE_handler (in src/mpid/ch3/channels/nemesis/src/mpid_nem_lmt.c) is not exported */
@@ -868,6 +882,30 @@ int pkt_DONE_handler(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt, MPIDI_msg_sz_t * bu
         MPIU_DBG_MSG(CH3_OTHER,VERBOSE,"sending rndv DONE packet"); \
         MPIDI_Pkt_init(_done_pkt, MPIDI_NEM_PKT_NETMOD); \
         _done_pkt->subtype = MPIDI_NEM_IB_PKT_LMT_GET_DONE;\
+        _done_pkt->req_id = (rreq)->ch.lmt_req_id; \
+            /* embed SR occupancy information */ \
+        _done_pkt->seq_num_tail = VC_FIELD(vc, ibcom->rsr_seq_num_tail); \
+ \
+            /* remember the last one sent */ \
+        VC_FIELD(vc, ibcom->rsr_seq_num_tail_last_sent) = VC_FIELD(vc, ibcom->rsr_seq_num_tail); \
+                                                                                                                \
+        mpi_errno = MPIDI_CH3_iStartMsg((vc), _done_pkt, sizeof(*_done_pkt), &_done_req);                       \
+        MPIU_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**MPID_nem_ib_lmt_send_GET_DONE");                                  \
+        if (_done_req != NULL)                                                                                  \
+        {                                                                                                       \
+            MPIU_ERR_CHKANDJUMP(_done_req->status.MPI_ERROR, mpi_errno, MPI_ERR_OTHER, "**MPID_nem_ib_lmt_send_GET_DONE");            \
+            MPID_Request_release(_done_req);                                                                    \
+            dprintf("send_get_done,release,req=%p\n", _done_req);       \
+        }                                                                                                       \
+    } while (0)
+
+#define MPID_nem_ib_lmt_send_PKT_LMT_DONE(vc, rreq) do {                                                                   \
+        MPID_PKT_DECL_CAST(_upkt, MPID_nem_ib_pkt_lmt_get_done_t, _done_pkt);                                          \
+        MPID_Request *_done_req;                                                                                \
+                                                                                                                \
+        MPIU_DBG_MSG(CH3_OTHER,VERBOSE,"sending rndv DONE packet"); \
+        MPIDI_Pkt_init(_done_pkt, MPIDI_NEM_PKT_NETMOD); \
+        _done_pkt->subtype = MPIDI_NEM_IB_PKT_RMA_LMT_GET_DONE;\
         _done_pkt->req_id = (rreq)->ch.lmt_req_id; \
             /* embed SR occupancy information */ \
         _done_pkt->seq_num_tail = VC_FIELD(vc, ibcom->rsr_seq_num_tail); \

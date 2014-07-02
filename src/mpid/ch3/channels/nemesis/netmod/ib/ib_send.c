@@ -154,6 +154,8 @@ static int MPID_nem_ib_iSendContig_core(MPIDI_VC_t * vc, MPID_Request * sreq, vo
     MPID_nem_ib_pkt_prefix_t pkt_netmod;
     void *prefix;
     int sz_prefix;
+    void *s_data;
+    int s_data_sz;
 
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_IB_ISENDCONTIG_CORE);
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_IB_ISENDCONTIG_CORE);
@@ -215,6 +217,58 @@ static int MPID_nem_ib_iSendContig_core(MPIDI_VC_t * vc, MPID_Request * sreq, vo
         sz_prefix = 0;
     }
 
+    s_data = data;
+    s_data_sz = data_sz;
+
+    if (hdr &&
+          ((((MPIDI_CH3_Pkt_t *) hdr)->type == MPIDI_CH3_PKT_PUT)
+            || (((MPIDI_CH3_Pkt_t *) hdr)->type == MPIDI_CH3_PKT_GET_RESP)
+            || (((MPIDI_CH3_Pkt_t *) hdr)->type == MPIDI_CH3_PKT_ACCUMULATE))) {
+        /* If request length is too long, create LMT packet */
+        if (MPID_NEM_IB_NETMOD_HDR_SIZEOF(vc_ib->ibcom->local_ringbuf_type)
+               + sizeof(MPIDI_CH3_Pkt_t) + data_sz
+                 > MPID_NEM_IB_COM_RDMABUF_SZSEG - sizeof(MPID_nem_ib_netmod_trailer_t)) {
+            pkt_netmod.type = MPIDI_NEM_PKT_NETMOD;
+
+            if (((MPIDI_CH3_Pkt_t *) hdr)->type == MPIDI_CH3_PKT_PUT)
+                pkt_netmod.subtype = MPIDI_NEM_IB_PKT_PUT;
+            else if (((MPIDI_CH3_Pkt_t *) hdr)->type == MPIDI_CH3_PKT_GET_RESP)
+                pkt_netmod.subtype = MPIDI_NEM_IB_PKT_GET_RESP;
+            else if (((MPIDI_CH3_Pkt_t *) hdr)->type == MPIDI_CH3_PKT_ACCUMULATE)
+                pkt_netmod.subtype = MPIDI_NEM_IB_PKT_ACCUMULATE;
+
+            void *write_from_buf = data;
+
+            MPID_nem_ib_rma_lmt_cookie_t *s_cookie_buf = (MPID_nem_ib_rma_lmt_cookie_t *) MPIU_Malloc(sizeof(MPID_nem_ib_rma_lmt_cookie_t));
+
+            sreq->ch.s_cookie = s_cookie_buf;
+
+            s_cookie_buf->tail = *((uint8_t *) ((uint8_t *) write_from_buf + data_sz - sizeof(uint8_t)));
+            /* put IB rkey */
+            struct ibv_mr *mr =
+                MPID_nem_ib_com_reg_mr_fetch(write_from_buf, data_sz, 0, MPID_NEM_IB_COM_REG_MR_GLOBAL);
+            MPIU_ERR_CHKANDJUMP(!mr, mpi_errno, MPI_ERR_OTHER, "**MPID_nem_ib_com_reg_mr_fetch");
+#ifdef HAVE_LIBDCFA
+            s_cookie_buf->addr = (void *) mr->host_addr;
+#else
+            s_cookie_buf->addr = write_from_buf;
+#endif
+            s_cookie_buf->rkey = mr->rkey;
+            s_cookie_buf->len = data_sz;
+            s_cookie_buf->sender_req_id = sreq->handle;
+
+	    /* set for ib_com_isend */
+	    prefix = (void *)&pkt_netmod;
+	    sz_prefix = sizeof(MPIDI_CH3_Pkt_t);
+	    s_data = (void *)s_cookie_buf;
+	    s_data_sz = sizeof(MPID_nem_ib_rma_lmt_cookie_t);
+
+	    /* Release Request, when sender receives DONE packet. */
+            int incomplete;
+            MPIDI_CH3U_Request_increment_cc(sreq, &incomplete); // decrement in drain_scq and pkt_rma_lmt_getdone
+        }
+    }
+
     /* packet handlers including MPIDI_CH3_PktHandler_EagerSend and MPID_nem_handle_pkt assume this */
     hdr_sz = sizeof(MPIDI_CH3_Pkt_t);
 
@@ -259,7 +313,7 @@ static int MPID_nem_ib_iSendContig_core(MPIDI_VC_t * vc, MPID_Request * sreq, vo
                               (uint64_t) sreq,
                               prefix, sz_prefix,
                               hdr, hdr_sz,
-                              data, (int) data_sz,
+                              s_data, (int) s_data_sz,
                               &copied,
                               vc_ib->ibcom->local_ringbuf_type, vc_ib->ibcom->remote_ringbuf->type,
                               &REQ_FIELD(sreq, buf_from), &REQ_FIELD(sreq, buf_from_sz));
@@ -689,6 +743,15 @@ static int MPID_nem_ib_SendNoncontig_core(MPIDI_VC_t * vc, MPID_Request * sreq, 
     MPIDI_msg_sz_t last;
     MPID_nem_ib_vc_area *vc_ib = VC_IB(vc);
 
+    void *prefix;
+    int prefix_sz;
+    void *data;
+    int data_sz;
+    MPID_nem_ib_pkt_prefix_t pkt_netmod;
+
+    prefix = NULL;
+    prefix_sz = 0;
+
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_IB_SENDNONCONTIG_CORE);
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_IB_SENDNONCONTIG_CORE);
 
@@ -701,6 +764,58 @@ static int MPID_nem_ib_SendNoncontig_core(MPIDI_VC_t * vc, MPID_Request * sreq, 
         MPID_Segment_pack(sreq->dev.segment_ptr, sreq->dev.segment_first, &last,
                           (char *) REQ_FIELD(sreq, lmt_pack_buf));
         MPIU_Assert(last == sreq->dev.segment_size);
+    }
+
+    data = (void *)REQ_FIELD(sreq, lmt_pack_buf);
+    data_sz = last;
+
+    if (hdr &&
+          ((((MPIDI_CH3_Pkt_t *) hdr)->type == MPIDI_CH3_PKT_PUT)
+            || (((MPIDI_CH3_Pkt_t *) hdr)->type == MPIDI_CH3_PKT_GET_RESP)
+            || (((MPIDI_CH3_Pkt_t *) hdr)->type == MPIDI_CH3_PKT_ACCUMULATE))) {
+	/* If request length is too long, create LMT packet */
+	if ( MPID_NEM_IB_NETMOD_HDR_SIZEOF(vc_ib->ibcom->local_ringbuf_type)
+               + sizeof(MPIDI_CH3_Pkt_t) + sreq->dev.segment_size
+                 > MPID_NEM_IB_COM_RDMABUF_SZSEG - sizeof(MPID_nem_ib_netmod_trailer_t)) {
+            pkt_netmod.type = MPIDI_NEM_PKT_NETMOD;
+
+            if (((MPIDI_CH3_Pkt_t *) hdr)->type == MPIDI_CH3_PKT_PUT)
+                pkt_netmod.subtype = MPIDI_NEM_IB_PKT_PUT;
+            else if (((MPIDI_CH3_Pkt_t *) hdr)->type == MPIDI_CH3_PKT_GET_RESP)
+                pkt_netmod.subtype = MPIDI_NEM_IB_PKT_GET_RESP;
+            else if (((MPIDI_CH3_Pkt_t *) hdr)->type == MPIDI_CH3_PKT_ACCUMULATE)
+                pkt_netmod.subtype = MPIDI_NEM_IB_PKT_ACCUMULATE;
+
+            void *write_from_buf = REQ_FIELD(sreq, lmt_pack_buf);
+
+            MPID_nem_ib_rma_lmt_cookie_t *s_cookie_buf = (MPID_nem_ib_rma_lmt_cookie_t *) MPIU_Malloc(sizeof(MPID_nem_ib_rma_lmt_cookie_t));
+
+            sreq->ch.s_cookie = s_cookie_buf;
+
+            s_cookie_buf->tail = *((uint8_t *) ((uint8_t *) write_from_buf + last - sizeof(uint8_t)));
+            /* put IB rkey */
+            struct ibv_mr *mr =
+                MPID_nem_ib_com_reg_mr_fetch(write_from_buf, last, 0, MPID_NEM_IB_COM_REG_MR_GLOBAL);
+            MPIU_ERR_CHKANDJUMP(!mr, mpi_errno, MPI_ERR_OTHER, "**MPID_nem_ib_com_reg_mr_fetch");
+#ifdef HAVE_LIBDCFA
+            s_cookie_buf->addr = (void *) mr->host_addr;
+#else
+            s_cookie_buf->addr = write_from_buf;
+#endif
+            s_cookie_buf->rkey = mr->rkey;
+            s_cookie_buf->len = last;
+            s_cookie_buf->sender_req_id = sreq->handle;
+
+	    /* set for ib_com_isend */
+	    prefix = (void *)&pkt_netmod;
+	    prefix_sz = sizeof(MPIDI_CH3_Pkt_t);
+	    data = (void *)s_cookie_buf;
+	    data_sz = sizeof(MPID_nem_ib_rma_lmt_cookie_t);
+
+	    /* Release Request, when sender receives DONE packet. */
+            int incomplete;
+            MPIDI_CH3U_Request_increment_cc(sreq, &incomplete); // decrement in drain_scq and pkt_rma_lmt_getdone
+        }
     }
 
     /* packet handlers assume this */
@@ -724,9 +839,9 @@ static int MPID_nem_ib_SendNoncontig_core(MPIDI_VC_t * vc, MPID_Request * sreq, 
     ibcom_errno =
         MPID_nem_ib_com_isend(vc_ib->sc->fd,
                               (uint64_t) sreq,
-                              NULL, 0,
+                              prefix, prefix_sz,
                               hdr, hdr_sz,
-                              (void *) REQ_FIELD(sreq, lmt_pack_buf), (int) last,
+                              data, data_sz,
                               &copied,
                               vc_ib->ibcom->local_ringbuf_type, vc_ib->ibcom->remote_ringbuf->type,
                               &REQ_FIELD(sreq, buf_from), &REQ_FIELD(sreq, buf_from_sz));

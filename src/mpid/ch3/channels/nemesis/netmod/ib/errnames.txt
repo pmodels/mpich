@@ -35,6 +35,7 @@
 **MPID_nem_ib_com_wr_scratch_pad:MPID_nem_ib_com_wr_scratch_pad failed
 **MPID_nem_ib_drain_scq:MPID_nem_ib_drain_scq failed
 **MPID_nem_ib_drain_scq_scratch_pad:MPID_nem_ib_drain_scq_scratch_pad failed
+**MPID_nem_ib_handle_pkt_bh:MPID_nem_ib_handle_pkt_bh failed
 **MPID_nem_ib_kvs_put_binary:MPID_nem_ib_kvs_put_binary failed
 **MPID_nem_ib_lmt_done_recv:MPID_nem_ib_lmt_done_recv failed
 **MPID_nem_ib_lmt_done_send:MPID_nem_ib_lmt_done_send failed
