@@ -15,6 +15,8 @@
 #pragma _HP_SECONDARY_DEF PMPI_Cart_map  MPI_Cart_map
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Cart_map as PMPI_Cart_map
+#elif defined(HAVE_WEAK_ATTRIBUTE)
+int MPI_Cart_map(MPI_Comm comm, int ndims, const int dims[], const int periods[], int *newrank) __attribute__((weak,alias("PMPI_Cart_map")));
 #endif
 /* -- End Profiling Symbol Block */
 

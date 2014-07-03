@@ -14,6 +14,9 @@
 #pragma _HP_SECONDARY_DEF PMPI_Type_get_envelope  MPI_Type_get_envelope
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Type_get_envelope as PMPI_Type_get_envelope
+#elif defined(HAVE_WEAK_ATTRIBUTE)
+int MPI_Type_get_envelope(MPI_Datatype datatype, int *num_integers, int *num_addresses,
+                          int *num_datatypes, int *combiner) __attribute__((weak,alias("PMPI_Type_get_envelope")));
 #endif
 /* -- End Profiling Symbol Block */
 

@@ -16,6 +16,8 @@
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_File_set_info as PMPI_File_set_info
 /* end of weak pragmas */
+#elif defined(HAVE_WEAK_ATTRIBUTE)
+int MPI_File_set_info(MPI_File fh, MPI_Info info) __attribute__((weak,alias("PMPI_File_set_info")));
 #endif
 
 /* Include mapping from MPI->PMPI */

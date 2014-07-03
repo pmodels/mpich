@@ -15,6 +15,9 @@
 #pragma _HP_SECONDARY_DEF PMPI_Graph_create  MPI_Graph_create
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Graph_create as PMPI_Graph_create
+#elif defined(HAVE_WEAK_ATTRIBUTE)
+int MPI_Graph_create(MPI_Comm comm_old, int nnodes, const int indx[], const int edges[],
+                     int reorder, MPI_Comm *comm_graph) __attribute__((weak,alias("PMPI_Graph_create")));
 #endif
 /* -- End Profiling Symbol Block */
 

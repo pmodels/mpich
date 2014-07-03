@@ -32,6 +32,10 @@ cvars:
 #pragma _HP_SECONDARY_DEF PMPI_Scatter  MPI_Scatter
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Scatter as PMPI_Scatter
+#elif defined(HAVE_WEAK_ATTRIBUTE)
+int MPI_Scatter(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf,
+                int recvcount, MPI_Datatype recvtype, int root, MPI_Comm comm)
+                __attribute__((weak,alias("PMPI_Scatter")));
 #endif
 /* -- End Profiling Symbol Block */
 

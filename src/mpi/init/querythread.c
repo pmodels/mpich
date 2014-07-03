@@ -13,6 +13,8 @@
 #pragma _HP_SECONDARY_DEF PMPI_Query_thread  MPI_Query_thread
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Query_thread as PMPI_Query_thread
+#elif defined(HAVE_WEAK_ATTRIBUTE)
+int MPI_Query_thread(int *provided) __attribute__((weak,alias("PMPI_Query_thread")));
 #endif
 /* -- End Profiling Symbol Block */
 

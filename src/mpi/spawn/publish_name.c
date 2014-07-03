@@ -15,6 +15,8 @@
 #pragma _HP_SECONDARY_DEF PMPI_Publish_name  MPI_Publish_name
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Publish_name as PMPI_Publish_name
+#elif defined(HAVE_WEAK_ATTRIBUTE)
+int MPI_Publish_name(const char *service_name, MPI_Info info, const char *port_name) __attribute__((weak,alias("PMPI_Publish_name")));
 #endif
 /* -- End Profiling Symbol Block */
 

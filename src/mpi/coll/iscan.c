@@ -14,6 +14,10 @@
 #pragma _HP_SECONDARY_DEF PMPI_Iscan  MPI_Iscan
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Iscan as PMPI_Iscan
+#elif defined(HAVE_WEAK_ATTRIBUTE)
+int MPI_Iscan(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype, MPI_Op op,
+              MPI_Comm comm, MPI_Request *request)
+              __attribute__((weak,alias("PMPI_Iscan")));
 #endif
 /* -- End Profiling Symbol Block */
 

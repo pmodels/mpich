@@ -13,6 +13,9 @@
 #pragma _HP_SECONDARY_DEF PMPI_Mrecv  MPI_Mrecv
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Mrecv as PMPI_Mrecv
+#elif defined(HAVE_WEAK_ATTRIBUTE)
+int MPI_Mrecv(void *buf, int count, MPI_Datatype datatype, MPI_Message *message,
+              MPI_Status *status) __attribute__((weak,alias("PMPI_Mrecv")));
 #endif
 /* -- End Profiling Symbol Block */
 

@@ -14,6 +14,9 @@
 #pragma _HP_SECONDARY_DEF PMPI_T_pvar_handle_alloc  MPI_T_pvar_handle_alloc
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_T_pvar_handle_alloc as PMPI_T_pvar_handle_alloc
+#elif defined(HAVE_WEAK_ATTRIBUTE)
+int MPI_T_pvar_handle_alloc(MPI_T_pvar_session session, int pvar_index, void *obj_handle,
+                            MPI_T_pvar_handle *handle, int *count) __attribute__((weak,alias("PMPI_T_pvar_handle_alloc")));
 #endif
 /* -- End Profiling Symbol Block */
 

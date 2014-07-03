@@ -14,6 +14,8 @@
 #pragma _HP_SECONDARY_DEF PMPI_Comm_get_name  MPI_Comm_get_name
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Comm_get_name as PMPI_Comm_get_name
+#elif defined(HAVE_WEAK_ATTRIBUTE)
+int MPI_Comm_get_name(MPI_Comm comm, char *comm_name, int *resultlen) __attribute__((weak,alias("PMPI_Comm_get_name")));
 #endif
 /* -- End Profiling Symbol Block */
 

@@ -14,6 +14,8 @@
 #pragma _HP_SECONDARY_DEF PMPI_Dims_create  MPI_Dims_create
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Dims_create as PMPI_Dims_create
+#elif defined(HAVE_WEAK_ATTRIBUTE)
+int MPI_Dims_create(int nnodes, int ndims, int dims[]) __attribute__((weak,alias("PMPI_Dims_create")));
 #endif
 /* -- End Profiling Symbol Block */
 

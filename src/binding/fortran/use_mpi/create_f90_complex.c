@@ -22,6 +22,8 @@
 #pragma _HP_SECONDARY_DEF PMPI_Type_create_f90_complex  MPI_Type_create_f90_complex
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Type_create_f90_complex as PMPI_Type_create_f90_complex
+#elif defined(HAVE_WEAK_ATTRIBUTE)
+int MPI_Type_create_f90_complex(int precision, int range, MPI_Datatype *newtype) __attribute__((weak,alias("PMPI_Type_create_f90_complex")));
 #endif
 /* -- End Profiling Symbol Block */
 

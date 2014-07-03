@@ -14,6 +14,8 @@
 #pragma _HP_SECONDARY_DEF PMPI_Type_lb  MPI_Type_lb
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Type_lb as PMPI_Type_lb
+#elif defined(HAVE_WEAK_ATTRIBUTE)
+int MPI_Type_lb(MPI_Datatype datatype, MPI_Aint *displacement) __attribute__((weak,alias("PMPI_Type_lb")));
 #endif
 /* -- End Profiling Symbol Block */
 

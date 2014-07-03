@@ -13,6 +13,8 @@
 #pragma _HP_SECONDARY_DEF PMPI_T_category_get_pvars  MPI_T_category_get_pvars
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_T_category_get_pvars as PMPI_T_category_get_pvars
+#elif defined(HAVE_WEAK_ATTRIBUTE)
+int MPI_T_category_get_pvars(int cat_index, int len, int indices[]) __attribute__((weak,alias("PMPI_T_category_get_pvars")));
 #endif
 /* -- End Profiling Symbol Block */
 

@@ -13,6 +13,8 @@
 #pragma _HP_SECONDARY_DEF PMPI_Grequest_complete  MPI_Grequest_complete
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Grequest_complete as PMPI_Grequest_complete
+#elif defined(HAVE_WEAK_ATTRIBUTE)
+int MPI_Grequest_complete(MPI_Request request) __attribute__((weak,alias("PMPI_Grequest_complete")));
 #endif
 /* -- End Profiling Symbol Block */
 

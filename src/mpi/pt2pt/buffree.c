@@ -15,6 +15,8 @@
 #pragma _HP_SECONDARY_DEF PMPI_Buffer_detach  MPI_Buffer_detach
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Buffer_detach as PMPI_Buffer_detach
+#elif defined(HAVE_WEAK_ATTRIBUTE)
+int MPI_Buffer_detach(void *buffer_addr, int *size) __attribute__((weak,alias("PMPI_Buffer_detach")));
 #endif
 /* -- End Profiling Symbol Block */
 

@@ -15,6 +15,8 @@
 #pragma _HP_SECONDARY_DEF PMPI_Group_compare  MPI_Group_compare
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Group_compare as PMPI_Group_compare
+#elif defined(HAVE_WEAK_ATTRIBUTE)
+int MPI_Group_compare(MPI_Group group1, MPI_Group group2, int *result) __attribute__((weak,alias("PMPI_Group_compare")));
 #endif
 /* -- End Profiling Symbol Block */
 

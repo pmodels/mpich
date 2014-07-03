@@ -16,6 +16,8 @@
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_File_get_size as PMPI_File_get_size
 /* end of weak pragmas */
+#elif defined(HAVE_WEAK_ATTRIBUTE)
+int MPI_File_get_size(MPI_File fh, MPI_Offset *size) __attribute__((weak,alias("PMPI_File_get_size")));
 #endif
 
 /* Include mapping from MPI->PMPI */

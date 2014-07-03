@@ -13,6 +13,8 @@
 #pragma _HP_SECONDARY_DEF PMPI_Get_processor_name  MPI_Get_processor_name
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Get_processor_name as PMPI_Get_processor_name
+#elif defined(HAVE_WEAK_ATTRIBUTE)
+int MPI_Get_processor_name(char *name, int *resultlen) __attribute__((weak,alias("PMPI_Get_processor_name")));
 #endif
 /* -- End Profiling Symbol Block */
 

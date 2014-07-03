@@ -13,6 +13,8 @@
 #pragma _HP_SECONDARY_DEF PMPI_Status_set_elements_x  MPI_Status_set_elements_x
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Status_set_elements_x as PMPI_Status_set_elements_x
+#elif defined(HAVE_WEAK_ATTRIBUTE)
+int MPI_Status_set_elements_x(MPI_Status *status, MPI_Datatype datatype, MPI_Count count) __attribute__((weak,alias("PMPI_Status_set_elements_x")));
 #endif
 /* -- End Profiling Symbol Block */
 

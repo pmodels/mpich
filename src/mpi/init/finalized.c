@@ -13,6 +13,8 @@
 #pragma _HP_SECONDARY_DEF PMPI_Finalized  MPI_Finalized
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Finalized as PMPI_Finalized
+#elif defined(HAVE_WEAK_ATTRIBUTE)
+int MPI_Finalized(int *flag) __attribute__((weak,alias("PMPI_Finalized")));
 #endif
 /* -- End Profiling Symbol Block */
 

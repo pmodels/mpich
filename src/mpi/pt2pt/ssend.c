@@ -14,6 +14,9 @@
 #pragma _HP_SECONDARY_DEF PMPI_Ssend  MPI_Ssend
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Ssend as PMPI_Ssend
+#elif defined(HAVE_WEAK_ATTRIBUTE)
+int MPI_Ssend(const void *buf, int count, MPI_Datatype datatype, int dest, int tag,
+              MPI_Comm comm) __attribute__((weak,alias("PMPI_Ssend")));
 #endif
 /* -- End Profiling Symbol Block */
 

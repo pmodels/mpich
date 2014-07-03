@@ -15,6 +15,8 @@
 #pragma _HP_SECONDARY_DEF PMPI_Group_intersection  MPI_Group_intersection
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Group_intersection as PMPI_Group_intersection
+#elif defined(HAVE_WEAK_ATTRIBUTE)
+int MPI_Group_intersection(MPI_Group group1, MPI_Group group2, MPI_Group *newgroup) __attribute__((weak,alias("PMPI_Group_intersection")));
 #endif
 /* -- End Profiling Symbol Block */
 

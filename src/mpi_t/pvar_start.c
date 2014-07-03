@@ -14,6 +14,8 @@
 #pragma _HP_SECONDARY_DEF PMPI_T_pvar_start  MPI_T_pvar_start
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_T_pvar_start as PMPI_T_pvar_start
+#elif defined(HAVE_WEAK_ATTRIBUTE)
+int MPI_T_pvar_start(MPI_T_pvar_session session, MPI_T_pvar_handle handle) __attribute__((weak,alias("PMPI_T_pvar_start")));
 #endif
 /* -- End Profiling Symbol Block */
 

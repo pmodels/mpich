@@ -13,6 +13,8 @@
 #pragma _HP_SECONDARY_DEF PMPI_T_pvar_readreset  MPI_T_pvar_readreset
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_T_pvar_readreset as PMPI_T_pvar_readreset
+#elif defined(HAVE_WEAK_ATTRIBUTE)
+int MPI_T_pvar_readreset(MPI_T_pvar_session session, MPI_T_pvar_handle handle, void *buf) __attribute__((weak,alias("PMPI_T_pvar_readreset")));
 #endif
 /* -- End Profiling Symbol Block */
 

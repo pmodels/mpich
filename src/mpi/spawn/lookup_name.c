@@ -15,6 +15,8 @@
 #pragma _HP_SECONDARY_DEF PMPI_Lookup_name  MPI_Lookup_name
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Lookup_name as PMPI_Lookup_name
+#elif defined(HAVE_WEAK_ATTRIBUTE)
+int MPI_Lookup_name(const char *service_name, MPI_Info info, char *port_name) __attribute__((weak,alias("PMPI_Lookup_name")));
 #endif
 /* -- End Profiling Symbol Block */
 

@@ -14,6 +14,8 @@
 #pragma _HP_SECONDARY_DEF PMPI_Type_match_size  MPI_Type_match_size
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Type_match_size as PMPI_Type_match_size
+#elif defined(HAVE_WEAK_ATTRIBUTE)
+int MPI_Type_match_size(int typeclass, int size, MPI_Datatype *datatype) __attribute__((weak,alias("PMPI_Type_match_size")));
 #endif
 /* -- End Profiling Symbol Block */
 

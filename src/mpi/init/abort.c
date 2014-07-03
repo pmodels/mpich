@@ -33,6 +33,8 @@ cvars:
 #pragma _HP_SECONDARY_DEF PMPI_Abort  MPI_Abort
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Abort as PMPI_Abort
+#elif defined(HAVE_WEAK_ATTRIBUTE)
+int MPI_Abort(MPI_Comm comm, int errorcode) __attribute__((weak,alias("PMPI_Abort")));
 #endif
 /* -- End Profiling Symbol Block */
 

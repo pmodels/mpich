@@ -14,6 +14,8 @@
 #pragma _HP_SECONDARY_DEF PMPI_Group_size  MPI_Group_size
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Group_size as PMPI_Group_size
+#elif defined(HAVE_WEAK_ATTRIBUTE)
+int MPI_Group_size(MPI_Group group, int *size) __attribute__((weak,alias("PMPI_Group_size")));
 #endif
 /* -- End Profiling Symbol Block */
 

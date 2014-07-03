@@ -14,6 +14,10 @@
 #pragma _HP_SECONDARY_DEF PMPI_Ireduce  MPI_Ireduce
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Ireduce as PMPI_Ireduce
+#elif defined(HAVE_WEAK_ATTRIBUTE)
+int MPI_Ireduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
+                MPI_Op op, int root, MPI_Comm comm, MPI_Request *request)
+                __attribute__((weak,alias("PMPI_Ireduce")));
 #endif
 /* -- End Profiling Symbol Block */
 

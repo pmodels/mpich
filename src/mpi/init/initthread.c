@@ -68,6 +68,8 @@ cvars:
 #pragma _HP_SECONDARY_DEF PMPI_Init_thread  MPI_Init_thread
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Init_thread as PMPI_Init_thread
+#elif defined(HAVE_WEAK_ATTRIBUTE)
+int MPI_Init_thread(int *argc, char ***argv, int required, int *provided) __attribute__((weak,alias("PMPI_Init_thread")));
 #endif
 /* -- End Profiling Symbol Block */
 

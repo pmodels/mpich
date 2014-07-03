@@ -14,6 +14,10 @@
 #pragma _HP_SECONDARY_DEF PMPI_Unpack_external  MPI_Unpack_external
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Unpack_external as PMPI_Unpack_external
+#elif defined(HAVE_WEAK_ATTRIBUTE)
+int MPI_Unpack_external(const char datarep[], const void *inbuf, MPI_Aint insize,
+                        MPI_Aint *position, void *outbuf, int outcount, MPI_Datatype datatype)
+                        __attribute__((weak,alias("PMPI_Unpack_external")));
 #endif
 /* -- End Profiling Symbol Block */
 

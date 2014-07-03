@@ -14,6 +14,8 @@
 #pragma _HP_SECONDARY_DEF PMPI_Type_get_true_extent  MPI_Type_get_true_extent
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Type_get_true_extent as PMPI_Type_get_true_extent
+#elif defined(HAVE_WEAK_ATTRIBUTE)
+int MPI_Type_get_true_extent(MPI_Datatype datatype, MPI_Aint *true_lb, MPI_Aint *true_extent) __attribute__((weak,alias("PMPI_Type_get_true_extent")));
 #endif
 /* -- End Profiling Symbol Block */
 

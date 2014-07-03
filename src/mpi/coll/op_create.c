@@ -14,6 +14,8 @@
 #pragma _HP_SECONDARY_DEF PMPI_Op_create  MPI_Op_create
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Op_create as PMPI_Op_create
+#elif defined(HAVE_WEAK_ATTRIBUTE)
+int MPI_Op_create(MPI_User_function *user_fn, int commute, MPI_Op *op) __attribute__((weak,alias("PMPI_Op_create")));
 #endif
 /* -- End Profiling Symbol Block */
 

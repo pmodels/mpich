@@ -14,6 +14,8 @@
 #pragma _HP_SECONDARY_DEF PMPI_Win_lock  MPI_Win_lock
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Win_lock as PMPI_Win_lock
+#elif defined(HAVE_WEAK_ATTRIBUTE)
+int MPI_Win_lock(int lock_type, int rank, int assert, MPI_Win win) __attribute__((weak,alias("PMPI_Win_lock")));
 #endif
 /* -- End Profiling Symbol Block */
 

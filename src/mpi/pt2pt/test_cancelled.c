@@ -14,6 +14,8 @@
 #pragma _HP_SECONDARY_DEF PMPI_Test_cancelled  MPI_Test_cancelled
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Test_cancelled as PMPI_Test_cancelled
+#elif defined(HAVE_WEAK_ATTRIBUTE)
+int MPI_Test_cancelled(const MPI_Status *status, int *flag) __attribute__((weak,alias("PMPI_Test_cancelled")));
 #endif
 /* -- End Profiling Symbol Block */
 

@@ -13,6 +13,8 @@
 #pragma _HP_SECONDARY_DEF PMPI_Open_port  MPI_Open_port
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Open_port as PMPI_Open_port
+#elif defined(HAVE_WEAK_ATTRIBUTE)
+int MPI_Open_port(MPI_Info info, char *port_name) __attribute__((weak,alias("PMPI_Open_port")));
 #endif
 /* -- End Profiling Symbol Block */
 

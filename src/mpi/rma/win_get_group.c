@@ -14,6 +14,8 @@
 #pragma _HP_SECONDARY_DEF PMPI_Win_get_group  MPI_Win_get_group
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Win_get_group as PMPI_Win_get_group
+#elif defined(HAVE_WEAK_ATTRIBUTE)
+int MPI_Win_get_group(MPI_Win win, MPI_Group *group) __attribute__((weak,alias("PMPI_Win_get_group")));
 #endif
 /* -- End Profiling Symbol Block */
 

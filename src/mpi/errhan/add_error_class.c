@@ -15,6 +15,8 @@
 #pragma _HP_SECONDARY_DEF PMPI_Add_error_class  MPI_Add_error_class
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Add_error_class as PMPI_Add_error_class
+#elif defined(HAVE_WEAK_ATTRIBUTE)
+int MPI_Add_error_class(int *errorclass) __attribute__((weak,alias("PMPI_Add_error_class")));
 #endif
 /* -- End Profiling Symbol Block */
 

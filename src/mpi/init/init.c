@@ -56,6 +56,8 @@ cvars:
 #pragma _HP_SECONDARY_DEF PMPI_Init  MPI_Init
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Init as PMPI_Init
+#elif defined(HAVE_WEAK_ATTRIBUTE)
+int MPI_Init(int *argc, char ***argv) __attribute__((weak,alias("PMPI_Init")));
 #endif
 /* -- End Profiling Symbol Block */
 

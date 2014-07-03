@@ -15,6 +15,8 @@
 #pragma _HP_SECONDARY_DEF PMPI_Type_set_attr  MPI_Type_set_attr
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Type_set_attr as PMPI_Type_set_attr
+#elif defined(HAVE_WEAK_ATTRIBUTE)
+int MPI_Type_set_attr(MPI_Datatype datatype, int type_keyval, void *attribute_val) __attribute__((weak,alias("PMPI_Type_set_attr")));
 #endif
 /* -- End Profiling Symbol Block */
 

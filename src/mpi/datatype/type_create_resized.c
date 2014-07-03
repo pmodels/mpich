@@ -14,6 +14,9 @@
 #pragma _HP_SECONDARY_DEF PMPI_Type_create_resized  MPI_Type_create_resized
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Type_create_resized as PMPI_Type_create_resized
+#elif defined(HAVE_WEAK_ATTRIBUTE)
+int MPI_Type_create_resized(MPI_Datatype oldtype, MPI_Aint lb, MPI_Aint extent,
+                            MPI_Datatype *newtype) __attribute__((weak,alias("PMPI_Type_create_resized")));
 #endif
 /* -- End Profiling Symbol Block */
 

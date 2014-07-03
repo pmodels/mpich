@@ -14,6 +14,9 @@
 #pragma _HP_SECONDARY_DEF PMPI_Pack_external_size  MPI_Pack_external_size
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Pack_external_size as PMPI_Pack_external_size
+#elif defined(HAVE_WEAK_ATTRIBUTE)
+int MPI_Pack_external_size(const char datarep[], int incount, MPI_Datatype datatype,
+                           MPI_Aint *size) __attribute__((weak,alias("PMPI_Pack_external_size")));
 #endif
 /* -- End Profiling Symbol Block */
 

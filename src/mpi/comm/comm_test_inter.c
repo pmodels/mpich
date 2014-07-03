@@ -14,6 +14,8 @@
 #pragma _HP_SECONDARY_DEF PMPI_Comm_test_inter  MPI_Comm_test_inter
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Comm_test_inter as PMPI_Comm_test_inter
+#elif defined(HAVE_WEAK_ATTRIBUTE)
+int MPI_Comm_test_inter(MPI_Comm comm, int *flag) __attribute__((weak,alias("PMPI_Comm_test_inter")));
 #endif
 /* -- End Profiling Symbol Block */
 

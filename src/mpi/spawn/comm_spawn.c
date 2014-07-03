@@ -13,6 +13,9 @@
 #pragma _HP_SECONDARY_DEF PMPI_Comm_spawn  MPI_Comm_spawn
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Comm_spawn as PMPI_Comm_spawn
+#elif defined(HAVE_WEAK_ATTRIBUTE)
+int MPI_Comm_spawn(const char *command, char *argv[], int maxprocs, MPI_Info info, int root,
+                   MPI_Comm comm, MPI_Comm *intercomm, int array_of_errcodes[]) __attribute__((weak,alias("PMPI_Comm_spawn")));
 #endif
 /* -- End Profiling Symbol Block */
 

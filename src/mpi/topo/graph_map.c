@@ -15,6 +15,8 @@
 #pragma _HP_SECONDARY_DEF PMPI_Graph_map  MPI_Graph_map
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Graph_map as PMPI_Graph_map
+#elif defined(HAVE_WEAK_ATTRIBUTE)
+int MPI_Graph_map(MPI_Comm comm, int nnodes, const int indx[], const int edges[], int *newrank) __attribute__((weak,alias("PMPI_Graph_map")));
 #endif
 /* -- End Profiling Symbol Block */
 

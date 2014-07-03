@@ -15,6 +15,8 @@
 #pragma _HP_SECONDARY_DEF PMPI_Group_excl  MPI_Group_excl
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Group_excl as PMPI_Group_excl
+#elif defined(HAVE_WEAK_ATTRIBUTE)
+int MPI_Group_excl(MPI_Group group, int n, const int ranks[], MPI_Group *newgroup) __attribute__((weak,alias("PMPI_Group_excl")));
 #endif
 /* -- End Profiling Symbol Block */
 

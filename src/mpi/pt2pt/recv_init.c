@@ -14,6 +14,9 @@
 #pragma _HP_SECONDARY_DEF PMPI_Recv_init  MPI_Recv_init
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Recv_init as PMPI_Recv_init
+#elif defined(HAVE_WEAK_ATTRIBUTE)
+int MPI_Recv_init(void *buf, int count, MPI_Datatype datatype, int source, int tag,
+                  MPI_Comm comm, MPI_Request *request) __attribute__((weak,alias("PMPI_Recv_init")));
 #endif
 /* -- End Profiling Symbol Block */
 

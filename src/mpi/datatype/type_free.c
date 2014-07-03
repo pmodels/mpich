@@ -14,6 +14,8 @@
 #pragma _HP_SECONDARY_DEF PMPI_Type_free  MPI_Type_free
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Type_free as PMPI_Type_free
+#elif defined(HAVE_WEAK_ATTRIBUTE)
+int MPI_Type_free(MPI_Datatype *datatype) __attribute__((weak,alias("PMPI_Type_free")));
 #endif
 /* -- End Profiling Symbol Block */
 

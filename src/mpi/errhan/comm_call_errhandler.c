@@ -14,6 +14,8 @@
 #pragma _HP_SECONDARY_DEF PMPI_Comm_call_errhandler  MPI_Comm_call_errhandler
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Comm_call_errhandler as PMPI_Comm_call_errhandler
+#elif defined(HAVE_WEAK_ATTRIBUTE)
+int MPI_Comm_call_errhandler(MPI_Comm comm, int errorcode) __attribute__((weak,alias("PMPI_Comm_call_errhandler")));
 #endif
 /* -- End Profiling Symbol Block */
 

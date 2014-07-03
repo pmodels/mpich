@@ -14,6 +14,8 @@
 #pragma _HP_SECONDARY_DEF PMPI_Group_free  MPI_Group_free
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Group_free as PMPI_Group_free
+#elif defined(HAVE_WEAK_ATTRIBUTE)
+int MPI_Group_free(MPI_Group *group) __attribute__((weak,alias("PMPI_Group_free")));
 #endif
 /* -- End Profiling Symbol Block */
 

@@ -14,6 +14,8 @@
 #pragma _HP_SECONDARY_DEF PMPI_Win_set_name  MPI_Win_set_name
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Win_set_name as PMPI_Win_set_name
+#elif defined(HAVE_WEAK_ATTRIBUTE)
+int MPI_Win_set_name(MPI_Win win, const char *win_name) __attribute__((weak,alias("PMPI_Win_set_name")));
 #endif
 /* -- End Profiling Symbol Block */
 

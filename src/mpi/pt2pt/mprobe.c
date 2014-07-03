@@ -13,6 +13,8 @@
 #pragma _HP_SECONDARY_DEF PMPI_Mprobe  MPI_Mprobe
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Mprobe as PMPI_Mprobe
+#elif defined(HAVE_WEAK_ATTRIBUTE)
+int MPI_Mprobe(int source, int tag, MPI_Comm comm, MPI_Message *message, MPI_Status *status) __attribute__((weak,alias("PMPI_Mprobe")));
 #endif
 /* -- End Profiling Symbol Block */
 

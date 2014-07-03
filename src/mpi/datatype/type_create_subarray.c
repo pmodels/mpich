@@ -13,6 +13,10 @@
 #pragma _HP_SECONDARY_DEF PMPI_Type_create_subarray  MPI_Type_create_subarray
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Type_create_subarray as PMPI_Type_create_subarray
+#elif defined(HAVE_WEAK_ATTRIBUTE)
+int MPI_Type_create_subarray(int ndims, const int array_of_sizes[],
+                             const int array_of_subsizes[], const int array_of_starts[],
+                             int order, MPI_Datatype oldtype, MPI_Datatype *newtype) __attribute__((weak,alias("PMPI_Type_create_subarray")));
 #endif
 /* -- End Profiling Symbol Block */
 

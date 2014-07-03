@@ -14,6 +14,8 @@
 #pragma _HP_SECONDARY_DEF PMPI_Op_free  MPI_Op_free
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Op_free as PMPI_Op_free
+#elif defined(HAVE_WEAK_ATTRIBUTE)
+int MPI_Op_free(MPI_Op *op) __attribute__((weak,alias("PMPI_Op_free")));
 #endif
 /* -- End Profiling Symbol Block */
 

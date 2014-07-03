@@ -14,6 +14,8 @@
 #pragma _HP_SECONDARY_DEF PMPI_Info_create  MPI_Info_create
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Info_create as PMPI_Info_create
+#elif defined(HAVE_WEAK_ATTRIBUTE)
+int MPI_Info_create(MPI_Info *info) __attribute__((weak,alias("PMPI_Info_create")));
 #endif
 /* -- End Profiling Symbol Block */
 

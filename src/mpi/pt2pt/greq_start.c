@@ -13,6 +13,10 @@
 #pragma _HP_SECONDARY_DEF PMPI_Grequest_start  MPI_Grequest_start
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Grequest_start as PMPI_Grequest_start
+#elif defined(HAVE_WEAK_ATTRIBUTE)
+int MPI_Grequest_start(MPI_Grequest_query_function *query_fn, MPI_Grequest_free_function *free_fn,
+                       MPI_Grequest_cancel_function *cancel_fn, void *extra_state,
+                       MPI_Request *request) __attribute__((weak,alias("PMPI_Grequest_start")));
 #endif
 /* -- End Profiling Symbol Block */
 

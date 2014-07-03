@@ -13,6 +13,8 @@
 #pragma _HP_SECONDARY_DEF PMPI_Initialized  MPI_Initialized
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Initialized as PMPI_Initialized
+#elif defined(HAVE_WEAK_ATTRIBUTE)
+int MPI_Initialized(int *flag) __attribute__((weak,alias("PMPI_Initialized")));
 #endif
 /* -- End Profiling Symbol Block */
 

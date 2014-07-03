@@ -15,6 +15,8 @@
 #pragma _HP_SECONDARY_DEF PMPI_Cart_shift  MPI_Cart_shift
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Cart_shift as PMPI_Cart_shift
+#elif defined(HAVE_WEAK_ATTRIBUTE)
+int MPI_Cart_shift(MPI_Comm comm, int direction, int disp, int *rank_source, int *rank_dest) __attribute__((weak,alias("PMPI_Cart_shift")));
 #endif
 /* -- End Profiling Symbol Block */
 

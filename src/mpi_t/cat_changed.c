@@ -13,6 +13,8 @@
 #pragma _HP_SECONDARY_DEF PMPI_T_category_changed  MPI_T_category_changed
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_T_category_changed as PMPI_T_category_changed
+#elif defined(HAVE_WEAK_ATTRIBUTE)
+int MPI_T_category_changed(int *stamp) __attribute__((weak,alias("PMPI_T_category_changed")));
 #endif
 /* -- End Profiling Symbol Block */
 

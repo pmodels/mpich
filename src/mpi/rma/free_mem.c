@@ -14,6 +14,8 @@
 #pragma _HP_SECONDARY_DEF PMPI_Free_mem  MPI_Free_mem
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Free_mem as PMPI_Free_mem
+#elif defined(HAVE_WEAK_ATTRIBUTE)
+int MPI_Free_mem(void *base) __attribute__((weak,alias("PMPI_Free_mem")));
 #endif
 /* -- End Profiling Symbol Block */
 

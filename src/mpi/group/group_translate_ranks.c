@@ -15,6 +15,9 @@
 #pragma _HP_SECONDARY_DEF PMPI_Group_translate_ranks  MPI_Group_translate_ranks
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Group_translate_ranks as PMPI_Group_translate_ranks
+#elif defined(HAVE_WEAK_ATTRIBUTE)
+int MPI_Group_translate_ranks(MPI_Group group1, int n, const int ranks1[], MPI_Group group2,
+                              int ranks2[]) __attribute__((weak,alias("PMPI_Group_translate_ranks")));
 #endif
 /* -- End Profiling Symbol Block */
 

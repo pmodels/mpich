@@ -13,6 +13,11 @@
 #pragma _HP_SECONDARY_DEF PMPI_Iscatter  MPI_Iscatter
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Iscatter as PMPI_Iscatter
+#elif defined(HAVE_WEAK_ATTRIBUTE)
+int MPI_Iscatter(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf,
+                 int recvcount, MPI_Datatype recvtype, int root, MPI_Comm comm,
+                 MPI_Request *request)
+                 __attribute__((weak,alias("PMPI_Iscatter")));
 #endif
 /* -- End Profiling Symbol Block */
 

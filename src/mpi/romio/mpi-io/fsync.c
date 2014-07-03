@@ -16,6 +16,8 @@
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_File_sync as PMPI_File_sync
 /* end of weak pragmas */
+#elif defined(HAVE_WEAK_ATTRIBUTE)
+int MPI_File_sync(MPI_File fh) __attribute__((weak,alias("PMPI_File_sync")));
 #endif
 
 /* Include mapping from MPI->PMPI */

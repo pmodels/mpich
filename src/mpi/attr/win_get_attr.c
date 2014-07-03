@@ -14,6 +14,8 @@
 #pragma _HP_SECONDARY_DEF PMPI_Win_get_attr  MPI_Win_get_attr
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Win_get_attr as PMPI_Win_get_attr
+#elif defined(HAVE_WEAK_ATTRIBUTE)
+int MPI_Win_get_attr(MPI_Win win, int win_keyval, void *attribute_val, int *flag) __attribute__((weak,alias("PMPI_Win_get_attr")));
 #endif
 /* -- End Profiling Symbol Block */
 

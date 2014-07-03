@@ -15,6 +15,11 @@
 #pragma _HP_SECONDARY_DEF PMPI_Dist_graph_create_adjacent  MPI_Dist_graph_create_adjacent
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Dist_graph_create_adjacent as PMPI_Dist_graph_create_adjacent
+#elif defined(HAVE_WEAK_ATTRIBUTE)
+int MPI_Dist_graph_create_adjacent(MPI_Comm comm_old, int indegree, const int sources[],
+                                   const int sourceweights[], int outdegree,
+                                   const int destinations[], const int destweights[],
+                                   MPI_Info info, int reorder, MPI_Comm *comm_dist_graph) __attribute__((weak,alias("PMPI_Dist_graph_create_adjacent")));
 #endif
 /* -- End Profiling Symbol Block */
 

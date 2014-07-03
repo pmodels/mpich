@@ -15,6 +15,8 @@
 #pragma _HP_SECONDARY_DEF PMPI_Error_string  MPI_Error_string
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Error_string as PMPI_Error_string
+#elif defined(HAVE_WEAK_ATTRIBUTE)
+int MPI_Error_string(int errorcode, char *string, int *resultlen) __attribute__((weak,alias("PMPI_Error_string")));
 #endif
 /* -- End Profiling Symbol Block */
 

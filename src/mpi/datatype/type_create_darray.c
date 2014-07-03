@@ -14,6 +14,11 @@
 #pragma _HP_SECONDARY_DEF PMPI_Type_create_darray  MPI_Type_create_darray
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Type_create_darray as PMPI_Type_create_darray
+#elif defined(HAVE_WEAK_ATTRIBUTE)
+int MPI_Type_create_darray(int size, int rank, int ndims, const int array_of_gsizes[],
+                           const int array_of_distribs[], const int array_of_dargs[],
+                           const int array_of_psizes[], int order, MPI_Datatype oldtype,
+                           MPI_Datatype *newtype) __attribute__((weak,alias("PMPI_Type_create_darray")));
 #endif
 /* -- End Profiling Symbol Block */
 

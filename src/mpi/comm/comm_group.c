@@ -15,6 +15,8 @@
 #pragma _HP_SECONDARY_DEF PMPI_Comm_group  MPI_Comm_group
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Comm_group as PMPI_Comm_group
+#elif defined(HAVE_WEAK_ATTRIBUTE)
+int MPI_Comm_group(MPI_Comm comm, MPI_Group *group) __attribute__((weak,alias("PMPI_Comm_group")));
 #endif
 /* -- End Profiling Symbol Block */
 

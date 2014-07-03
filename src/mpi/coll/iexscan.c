@@ -14,6 +14,10 @@
 #pragma _HP_SECONDARY_DEF PMPI_Iexscan  MPI_Iexscan
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Iexscan as PMPI_Iexscan
+#elif defined(HAVE_WEAK_ATTRIBUTE)
+int MPI_Iexscan(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
+                MPI_Op op, MPI_Comm comm, MPI_Request *request)
+                __attribute__((weak,alias("PMPI_Iexscan")));
 #endif
 /* -- End Profiling Symbol Block */
 

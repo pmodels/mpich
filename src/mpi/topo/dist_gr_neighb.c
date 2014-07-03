@@ -15,6 +15,9 @@
 #pragma _HP_SECONDARY_DEF PMPI_Dist_graph_neighbors  MPI_Dist_graph_neighbors
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Dist_graph_neighbors as PMPI_Dist_graph_neighbors
+#elif defined(HAVE_WEAK_ATTRIBUTE)
+int MPI_Dist_graph_neighbors(MPI_Comm comm, int maxindegree, int sources[], int sourceweights[],
+                             int maxoutdegree, int destinations[], int destweights[]) __attribute__((weak,alias("PMPI_Dist_graph_neighbors")));
 #endif
 /* -- End Profiling Symbol Block */
 

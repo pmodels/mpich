@@ -14,6 +14,8 @@
 #pragma _HP_SECONDARY_DEF PMPI_Alloc_mem  MPI_Alloc_mem
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Alloc_mem as PMPI_Alloc_mem
+#elif defined(HAVE_WEAK_ATTRIBUTE)
+int MPI_Alloc_mem(MPI_Aint size, MPI_Info info, void *baseptr) __attribute__((weak,alias("PMPI_Alloc_mem")));
 #endif
 /* -- End Profiling Symbol Block */
 

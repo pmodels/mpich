@@ -15,6 +15,8 @@
 #pragma _HP_SECONDARY_DEF PMPI_Win_delete_attr  MPI_Win_delete_attr
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Win_delete_attr as PMPI_Win_delete_attr
+#elif defined(HAVE_WEAK_ATTRIBUTE)
+int MPI_Win_delete_attr(MPI_Win win, int win_keyval) __attribute__((weak,alias("PMPI_Win_delete_attr")));
 #endif
 /* -- End Profiling Symbol Block */
 

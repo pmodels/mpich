@@ -14,6 +14,8 @@
 #pragma _HP_SECONDARY_DEF PMPI_Comm_get_parent  MPI_Comm_get_parent
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Comm_get_parent as PMPI_Comm_get_parent
+#elif defined(HAVE_WEAK_ATTRIBUTE)
+int MPI_Comm_get_parent(MPI_Comm *parent) __attribute__((weak,alias("PMPI_Comm_get_parent")));
 #endif
 /* -- End Profiling Symbol Block */
 

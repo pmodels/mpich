@@ -14,6 +14,8 @@
 #pragma _HP_SECONDARY_DEF PMPI_Win_post  MPI_Win_post
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Win_post as PMPI_Win_post
+#elif defined(HAVE_WEAK_ATTRIBUTE)
+int MPI_Win_post(MPI_Group group, int assert, MPI_Win win) __attribute__((weak,alias("PMPI_Win_post")));
 #endif
 /* -- End Profiling Symbol Block */
 

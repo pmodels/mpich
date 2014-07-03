@@ -14,6 +14,8 @@
 #pragma _HP_SECONDARY_DEF PMPI_Close_port  MPI_Close_port
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Close_port as PMPI_Close_port
+#elif defined(HAVE_WEAK_ATTRIBUTE)
+int MPI_Close_port(const char *port_name) __attribute__((weak,alias("PMPI_Close_port")));
 #endif
 /* -- End Profiling Symbol Block */
 

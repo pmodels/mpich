@@ -15,6 +15,8 @@
 #pragma _HP_SECONDARY_DEF PMPI_Group_union  MPI_Group_union
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Group_union as PMPI_Group_union
+#elif defined(HAVE_WEAK_ATTRIBUTE)
+int MPI_Group_union(MPI_Group group1, MPI_Group group2, MPI_Group *newgroup) __attribute__((weak,alias("PMPI_Group_union")));
 #endif
 /* -- End Profiling Symbol Block */
 

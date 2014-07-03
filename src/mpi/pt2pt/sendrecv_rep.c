@@ -14,6 +14,10 @@
 #pragma _HP_SECONDARY_DEF PMPI_Sendrecv_replace  MPI_Sendrecv_replace
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Sendrecv_replace as PMPI_Sendrecv_replace
+#elif defined(HAVE_WEAK_ATTRIBUTE)
+int MPI_Sendrecv_replace(void *buf, int count, MPI_Datatype datatype, int dest,
+                         int sendtag, int source, int recvtag, MPI_Comm comm,
+                         MPI_Status *status) __attribute__((weak,alias("PMPI_Sendrecv_replace")));
 #endif
 /* -- End Profiling Symbol Block */
 

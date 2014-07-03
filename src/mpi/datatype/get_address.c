@@ -14,6 +14,8 @@
 #pragma _HP_SECONDARY_DEF PMPI_Get_address  MPI_Get_address
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Get_address as PMPI_Get_address
+#elif defined(HAVE_WEAK_ATTRIBUTE)
+int MPI_Get_address(const void *location, MPI_Aint *address) __attribute__((weak,alias("PMPI_Get_address")));
 #endif
 /* -- End Profiling Symbol Block */
 

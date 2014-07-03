@@ -63,6 +63,10 @@ cvars:
 #pragma _HP_SECONDARY_DEF PMPI_Allreduce  MPI_Allreduce
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Allreduce as PMPI_Allreduce
+#elif defined(HAVE_WEAK_ATTRIBUTE)
+int MPI_Allreduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
+                  MPI_Op op, MPI_Comm comm)
+                  __attribute__((weak,alias("PMPI_Allreduce")));
 #endif
 /* -- End Profiling Symbol Block */
 

@@ -14,6 +14,8 @@
 #pragma _HP_SECONDARY_DEF PMPI_Group_rank  MPI_Group_rank
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Group_rank as PMPI_Group_rank
+#elif defined(HAVE_WEAK_ATTRIBUTE)
+int MPI_Group_rank(MPI_Group group, int *rank) __attribute__((weak,alias("PMPI_Group_rank")));
 #endif
 /* -- End Profiling Symbol Block */
 

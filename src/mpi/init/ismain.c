@@ -13,6 +13,8 @@
 #pragma _HP_SECONDARY_DEF PMPI_Is_thread_main  MPI_Is_thread_main
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Is_thread_main as PMPI_Is_thread_main
+#elif defined(HAVE_WEAK_ATTRIBUTE)
+int MPI_Is_thread_main(int *flag) __attribute__((weak,alias("PMPI_Is_thread_main")));
 #endif
 /* -- End Profiling Symbol Block */
 

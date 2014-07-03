@@ -14,6 +14,11 @@
 #pragma _HP_SECONDARY_DEF PMPI_Fetch_and_op  MPI_Fetch_and_op
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Fetch_and_op as PMPI_Fetch_and_op
+#elif defined(HAVE_WEAK_ATTRIBUTE)
+int MPI_Fetch_and_op(const void *origin_addr, void *result_addr,
+                      MPI_Datatype datatype, int target_rank, MPI_Aint target_disp,
+                      MPI_Op op, MPI_Win win)
+                      __attribute__((weak,alias("PMPI_Fetch_and_op")));
 #endif
 /* -- End Profiling Symbol Block */
 

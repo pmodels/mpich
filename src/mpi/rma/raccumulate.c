@@ -14,6 +14,12 @@
 #pragma _HP_SECONDARY_DEF PMPI_Raccumulate  MPI_Raccumulate
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Raccumulate as PMPI_Raccumulate
+#elif defined(HAVE_WEAK_ATTRIBUTE)
+int MPI_Raccumulate(const void *origin_addr, int origin_count,
+                     MPI_Datatype origin_datatype, int target_rank, MPI_Aint target_disp,
+                     int target_count, MPI_Datatype target_datatype, MPI_Op op, MPI_Win win,
+                     MPI_Request *request)
+                     __attribute__((weak,alias("PMPI_Raccumulate")));
 #endif
 /* -- End Profiling Symbol Block */
 

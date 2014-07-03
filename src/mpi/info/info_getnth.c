@@ -14,6 +14,8 @@
 #pragma _HP_SECONDARY_DEF PMPI_Info_get_nthkey  MPI_Info_get_nthkey
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Info_get_nthkey as PMPI_Info_get_nthkey
+#elif defined(HAVE_WEAK_ATTRIBUTE)
+int MPI_Info_get_nthkey(MPI_Info info, int n, char *key) __attribute__((weak,alias("PMPI_Info_get_nthkey")));
 #endif
 /* -- End Profiling Symbol Block */
 

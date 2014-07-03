@@ -13,6 +13,10 @@
 #pragma _HP_SECONDARY_DEF PMPI_T_pvar_get_info  MPI_T_pvar_get_info
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_T_pvar_get_info as PMPI_T_pvar_get_info
+#elif defined(HAVE_WEAK_ATTRIBUTE)
+int MPI_T_pvar_get_info(int pvar_index, char *name, int *name_len, int *verbosity, int *var_class,
+                        MPI_Datatype *datatype, MPI_T_enum *enumtype, char *desc, int *desc_len,
+                        int *binding, int *readonly, int *continuous, int *atomic) __attribute__((weak,alias("PMPI_T_pvar_get_info")));
 #endif
 /* -- End Profiling Symbol Block */
 

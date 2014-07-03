@@ -16,6 +16,9 @@
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_File_iwrite_shared as PMPI_File_iwrite_shared
 /* end of weak pragmas */
+#elif defined(HAVE_WEAK_ATTRIBUTE)
+int MPI_File_iwrite_shared(MPI_File fh, const void *buf, int count, MPI_Datatype datatype,
+                           MPIO_Request *request) __attribute__((weak,alias("PMPI_File_iwrite_shared")));
 #endif
 
 /* Include mapping from MPI->PMPI */

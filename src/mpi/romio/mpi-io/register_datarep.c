@@ -16,6 +16,10 @@
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Register_datarep as PMPI_Register_datarep
 /* end of weak pragmas */
+#elif defined(HAVE_WEAK_ATTRIBUTE)
+int MPI_Register_datarep(const char *datarep, MPI_Datarep_conversion_function *read_conversion_fn,
+			 MPI_Datarep_conversion_function *write_conversion_fn,
+			 MPI_Datarep_extent_function *dtype_file_extent_fn, void *extra_state) __attribute__((weak,alias("PMPI_Register_datarep")));
 #endif
 
 /* Include mapping from MPI->PMPI */

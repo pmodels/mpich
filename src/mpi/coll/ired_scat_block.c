@@ -14,6 +14,11 @@
 #pragma _HP_SECONDARY_DEF PMPI_Ireduce_scatter_block  MPI_Ireduce_scatter_block
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Ireduce_scatter_block as PMPI_Ireduce_scatter_block
+#elif defined(HAVE_WEAK_ATTRIBUTE)
+int MPI_Ireduce_scatter_block(const void *sendbuf, void *recvbuf, int recvcount,
+                              MPI_Datatype datatype, MPI_Op op, MPI_Comm comm,
+                              MPI_Request *request)
+                              __attribute__((weak,alias("PMPI_Ireduce_scatter_block")));
 #endif
 /* -- End Profiling Symbol Block */
 

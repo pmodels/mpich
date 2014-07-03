@@ -15,6 +15,8 @@
 #pragma _HP_SECONDARY_DEF PMPI_Graph_neighbors_count  MPI_Graph_neighbors_count
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Graph_neighbors_count as PMPI_Graph_neighbors_count
+#elif defined(HAVE_WEAK_ATTRIBUTE)
+int MPI_Graph_neighbors_count(MPI_Comm comm, int rank, int *nneighbors) __attribute__((weak,alias("PMPI_Graph_neighbors_count")));
 #endif
 /* -- End Profiling Symbol Block */
 

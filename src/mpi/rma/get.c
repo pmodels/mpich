@@ -14,6 +14,10 @@
 #pragma _HP_SECONDARY_DEF PMPI_Get  MPI_Get
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Get as PMPI_Get
+#elif defined(HAVE_WEAK_ATTRIBUTE)
+int MPI_Get(void *origin_addr, int origin_count, MPI_Datatype origin_datatype,
+            int target_rank, MPI_Aint target_disp, int target_count,
+            MPI_Datatype target_datatype, MPI_Win win) __attribute__((weak,alias("PMPI_Get")));
 #endif
 /* -- End Profiling Symbol Block */
 

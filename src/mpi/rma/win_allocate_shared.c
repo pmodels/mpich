@@ -14,6 +14,9 @@
 #pragma _HP_SECONDARY_DEF PMPI_Win_allocate_shared  MPI_Win_allocate_shared
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Win_allocate_shared as PMPI_Win_allocate_shared
+#elif defined(HAVE_WEAK_ATTRIBUTE)
+int MPI_Win_allocate_shared(MPI_Aint size, int disp_unit, MPI_Info info, MPI_Comm comm,
+                            void *baseptr, MPI_Win *win) __attribute__((weak,alias("PMPI_Win_allocate_shared")));
 #endif
 /* -- End Profiling Symbol Block */
 

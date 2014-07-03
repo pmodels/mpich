@@ -19,6 +19,8 @@
 #pragma _HP_SECONDARY_DEF PMPI_Waitall  MPI_Waitall
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Waitall as PMPI_Waitall
+#elif defined(HAVE_WEAK_ATTRIBUTE)
+int MPI_Waitall(int count, MPI_Request array_of_requests[], MPI_Status array_of_statuses[]) __attribute__((weak,alias("PMPI_Waitall")));
 #endif
 /* -- End Profiling Symbol Block */
 

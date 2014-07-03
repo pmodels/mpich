@@ -13,6 +13,12 @@
 #pragma _HP_SECONDARY_DEF PMPI_Ialltoallv  MPI_Ialltoallv
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Ialltoallv as PMPI_Ialltoallv
+#elif defined(HAVE_WEAK_ATTRIBUTE)
+int MPI_Ialltoallv(const void *sendbuf, const int sendcounts[], const int sdispls[],
+                   MPI_Datatype sendtype, void *recvbuf, const int recvcounts[],
+                   const int rdispls[], MPI_Datatype recvtype, MPI_Comm comm,
+                   MPI_Request *request)
+                   __attribute__((weak,alias("PMPI_Ialltoallv")));
 #endif
 /* -- End Profiling Symbol Block */
 

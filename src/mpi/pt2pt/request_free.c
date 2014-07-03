@@ -14,6 +14,8 @@
 #pragma _HP_SECONDARY_DEF PMPI_Request_free  MPI_Request_free
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Request_free as PMPI_Request_free
+#elif defined(HAVE_WEAK_ATTRIBUTE)
+int MPI_Request_free(MPI_Request *request) __attribute__((weak,alias("PMPI_Request_free")));
 #endif
 /* -- End Profiling Symbol Block */
 

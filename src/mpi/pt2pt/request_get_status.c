@@ -15,6 +15,8 @@
 #pragma _HP_SECONDARY_DEF PMPI_Request_get_status  MPI_Request_get_status
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Request_get_status as PMPI_Request_get_status
+#elif defined(HAVE_WEAK_ATTRIBUTE)
+int MPI_Request_get_status(MPI_Request request, int *flag, MPI_Status *status) __attribute__((weak,alias("PMPI_Request_get_status")));
 #endif
 /* -- End Profiling Symbol Block */
 

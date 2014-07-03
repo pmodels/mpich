@@ -18,6 +18,8 @@
 #pragma _HP_SECONDARY_DEF PMPI_Waitany  MPI_Waitany
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Waitany as PMPI_Waitany
+#elif defined(HAVE_WEAK_ATTRIBUTE)
+int MPI_Waitany(int count, MPI_Request array_of_requests[], int *indx, MPI_Status *status) __attribute__((weak,alias("PMPI_Waitany")));
 #endif
 /* -- End Profiling Symbol Block */
 

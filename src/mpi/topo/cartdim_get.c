@@ -15,6 +15,8 @@
 #pragma _HP_SECONDARY_DEF PMPI_Cartdim_get  MPI_Cartdim_get
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Cartdim_get as PMPI_Cartdim_get
+#elif defined(HAVE_WEAK_ATTRIBUTE)
+int MPI_Cartdim_get(MPI_Comm comm, int *ndims) __attribute__((weak,alias("PMPI_Cartdim_get")));
 #endif
 /* -- End Profiling Symbol Block */
 

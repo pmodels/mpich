@@ -14,6 +14,11 @@
 #pragma _HP_SECONDARY_DEF PMPI_Accumulate  MPI_Accumulate
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Accumulate as PMPI_Accumulate
+#elif defined(HAVE_WEAK_ATTRIBUTE)
+int MPI_Accumulate(const void *origin_addr, int origin_count, MPI_Datatype origin_datatype,
+                   int target_rank, MPI_Aint target_disp, int target_count,
+                   MPI_Datatype target_datatype, MPI_Op op, MPI_Win win)
+                   __attribute__((weak,alias("PMPI_Accumulate")));
 #endif
 /* -- End Profiling Symbol Block */
 

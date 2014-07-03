@@ -14,6 +14,9 @@
 #pragma _HP_SECONDARY_DEF PMPI_Irsend  MPI_Irsend
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Irsend as PMPI_Irsend
+#elif defined(HAVE_WEAK_ATTRIBUTE)
+int MPI_Irsend(const void *buf, int count, MPI_Datatype datatype, int dest, int tag,
+               MPI_Comm comm, MPI_Request *request) __attribute__((weak,alias("PMPI_Irsend")));
 #endif
 /* -- End Profiling Symbol Block */
 

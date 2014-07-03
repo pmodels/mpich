@@ -14,6 +14,8 @@
 #pragma _HP_SECONDARY_DEF PMPI_Status_set_cancelled  MPI_Status_set_cancelled
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Status_set_cancelled as PMPI_Status_set_cancelled
+#elif defined(HAVE_WEAK_ATTRIBUTE)
+int MPI_Status_set_cancelled(MPI_Status *status, int flag) __attribute__((weak,alias("PMPI_Status_set_cancelled")));
 #endif
 /* -- End Profiling Symbol Block */
 

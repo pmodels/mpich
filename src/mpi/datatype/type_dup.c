@@ -14,6 +14,8 @@
 #pragma _HP_SECONDARY_DEF PMPI_Type_dup  MPI_Type_dup
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Type_dup as PMPI_Type_dup
+#elif defined(HAVE_WEAK_ATTRIBUTE)
+int MPI_Type_dup(MPI_Datatype oldtype, MPI_Datatype *newtype) __attribute__((weak,alias("PMPI_Type_dup")));
 #endif
 /* -- End Profiling Symbol Block */
 

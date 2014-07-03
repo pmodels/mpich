@@ -14,6 +14,8 @@
 #pragma _HP_SECONDARY_DEF PMPI_Get_version  MPI_Get_version
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Get_version as PMPI_Get_version
+#elif defined(HAVE_WEAK_ATTRIBUTE)
+int MPI_Get_version(int *version, int *subversion) __attribute__((weak,alias("PMPI_Get_version")));
 #endif
 /* -- End Profiling Symbol Block */
 

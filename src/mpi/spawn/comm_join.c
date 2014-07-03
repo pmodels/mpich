@@ -14,6 +14,8 @@
 #pragma _HP_SECONDARY_DEF PMPI_Comm_join  MPI_Comm_join
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Comm_join as PMPI_Comm_join
+#elif defined(HAVE_WEAK_ATTRIBUTE)
+int MPI_Comm_join(int fd, MPI_Comm *intercomm) __attribute__((weak,alias("PMPI_Comm_join")));
 #endif
 /* -- End Profiling Symbol Block */
 

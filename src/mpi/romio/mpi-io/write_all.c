@@ -16,6 +16,9 @@
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_File_write_all as PMPI_File_write_all
 /* end of weak pragmas */
+#elif defined(HAVE_WEAK_ATTRIBUTE)
+int MPI_File_write_all(MPI_File fh, const void *buf, int count, MPI_Datatype datatype,
+                       MPI_Status *status) __attribute__((weak,alias("PMPI_File_write_all")));
 #endif
 
 /* Include mapping from MPI->PMPI */

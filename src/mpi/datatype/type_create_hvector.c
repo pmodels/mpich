@@ -14,6 +14,9 @@
 #pragma _HP_SECONDARY_DEF PMPI_Type_create_hvector  MPI_Type_create_hvector
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Type_create_hvector as PMPI_Type_create_hvector
+#elif defined(HAVE_WEAK_ATTRIBUTE)
+int MPI_Type_create_hvector(int count, int blocklength, MPI_Aint stride, MPI_Datatype oldtype,
+                            MPI_Datatype *newtype) __attribute__((weak,alias("PMPI_Type_create_hvector")));
 #endif
 /* -- End Profiling Symbol Block */
 

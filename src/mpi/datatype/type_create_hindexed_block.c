@@ -14,6 +14,10 @@
 #pragma _HP_SECONDARY_DEF PMPI_Type_create_hindexed_block  MPI_Type_create_hindexed_block
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Type_create_hindexed_block as PMPI_Type_create_hindexed_block
+#elif defined(HAVE_WEAK_ATTRIBUTE)
+int MPI_Type_create_hindexed_block(int count, int blocklength,
+                                   const MPI_Aint array_of_displacements[],
+                                   MPI_Datatype oldtype, MPI_Datatype *newtype) __attribute__((weak,alias("PMPI_Type_create_hindexed_block")));
 #endif
 /* -- End Profiling Symbol Block */
 

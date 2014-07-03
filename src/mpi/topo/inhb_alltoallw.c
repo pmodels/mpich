@@ -14,6 +14,11 @@
 #pragma _HP_SECONDARY_DEF PMPI_Ineighbor_alltoallw  MPI_Ineighbor_alltoallw
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Ineighbor_alltoallw as PMPI_Ineighbor_alltoallw
+#elif defined(HAVE_WEAK_ATTRIBUTE)
+int MPI_Ineighbor_alltoallw(const void *sendbuf, const int sendcounts[],
+                            const MPI_Aint sdispls[], const MPI_Datatype sendtypes[],
+                            void *recvbuf, const int recvcounts[], const MPI_Aint rdispls[],
+                            const MPI_Datatype recvtypes[], MPI_Comm comm, MPI_Request *request) __attribute__((weak,alias("PMPI_Ineighbor_alltoallw")));
 #endif
 /* -- End Profiling Symbol Block */
 

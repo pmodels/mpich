@@ -32,6 +32,10 @@ cvars:
 #pragma _HP_SECONDARY_DEF PMPI_Allgatherv  MPI_Allgatherv
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Allgatherv as PMPI_Allgatherv
+#elif defined(HAVE_WEAK_ATTRIBUTE)
+int MPI_Allgatherv(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf,
+                   const int *recvcounts, const int *displs, MPI_Datatype recvtype, MPI_Comm comm)
+                   __attribute__((weak,alias("PMPI_Allgatherv")));
 #endif
 /* -- End Profiling Symbol Block */
 

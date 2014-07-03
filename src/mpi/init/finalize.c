@@ -37,6 +37,8 @@ cvars:
 #pragma _HP_SECONDARY_DEF PMPI_Finalize  MPI_Finalize
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Finalize as PMPI_Finalize
+#elif defined(HAVE_WEAK_ATTRIBUTE)
+int MPI_Finalize(void) __attribute__((weak,alias("PMPI_Finalize")));
 #endif
 /* -- End Profiling Symbol Block */
 

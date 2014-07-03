@@ -14,6 +14,8 @@
 #pragma _HP_SECONDARY_DEF PMPI_Wait  MPI_Wait
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Wait as PMPI_Wait
+#elif defined(HAVE_WEAK_ATTRIBUTE)
+int MPI_Wait(MPI_Request *request, MPI_Status *status) __attribute__((weak,alias("PMPI_Wait")));
 #endif
 /* -- End Profiling Symbol Block */
 

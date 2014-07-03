@@ -18,6 +18,9 @@
 #pragma _HP_SECONDARY_DEF PMPI_Testall  MPI_Testall
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Testall as PMPI_Testall
+#elif defined(HAVE_WEAK_ATTRIBUTE)
+int MPI_Testall(int count, MPI_Request array_of_requests[], int *flag,
+                MPI_Status array_of_statuses[]) __attribute__((weak,alias("PMPI_Testall")));
 #endif
 /* -- End Profiling Symbol Block */
 

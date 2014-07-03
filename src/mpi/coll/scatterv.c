@@ -14,6 +14,11 @@
 #pragma _HP_SECONDARY_DEF PMPI_Scatterv  MPI_Scatterv
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPI_Scatterv as PMPI_Scatterv
+#elif defined(HAVE_WEAK_ATTRIBUTE)
+int MPI_Scatterv(const void *sendbuf, const int *sendcounts, const int *displs,
+                 MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype,
+                 int root, MPI_Comm comm)
+                 __attribute__((weak,alias("PMPI_Scatterv")));
 #endif
 /* -- End Profiling Symbol Block */
 

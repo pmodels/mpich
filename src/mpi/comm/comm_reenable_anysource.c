@@ -14,6 +14,8 @@
 #pragma _HP_SECONDARY_DEF PMPIX_Comm_reenable_anysource  MPIX_Comm_reenable_anysource
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPIX_Comm_reenable_anysource as PMPIX_Comm_reenable_anysource
+#elif defined(HAVE_WEAK_ATTRIBUTE)
+int MPIX_Comm_reenable_anysource(MPI_Comm comm, MPI_Group *failed_group) __attribute__((weak,alias("PMPIX_Comm_reenable_anysource")));
 #endif
 /* -- End Profiling Symbol Block */
 
