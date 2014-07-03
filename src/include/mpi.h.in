@@ -14,8 +14,6 @@
 extern "C" {
 #endif
 
-#define MPICH_ATTR_WEAK_ALIAS(fname) @MPICH_ATTR_WEAK_ALIAS_DEFINITION@
-
 #undef MPICH_DEFINE_ATTR_TYPE_TYPES
 #if defined(__has_attribute)
 #  if __has_attribute(pointer_with_type_tag) && \

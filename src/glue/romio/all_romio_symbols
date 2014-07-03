@@ -107,7 +107,6 @@ while (<FD>) {
     $fullline =~ s+/\*.*\*/++g;
 
     # parse out attributes
-    $fullline =~ s/MPICH_ATTR_WEAK_ALIAS\(.*\)//g;
     $fullline =~ s/MPICH_ATTR_POINTER_WITH_TYPE_TAG\(.*\)//g;
 
     # cleanup pointer format
