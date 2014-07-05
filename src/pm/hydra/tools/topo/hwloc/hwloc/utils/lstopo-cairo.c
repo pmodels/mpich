@@ -1,7 +1,7 @@
 /*
  * Copyright © 2009 CNRS
- * Copyright © 2009-2012 Inria.  All rights reserved.
- * Copyright © 2009-2010 Université Bordeaux 1
+ * Copyright © 2009-2014 Inria.  All rights reserved.
+ * Copyright © 2009-2010, 2014 Université Bordeaux 1
  * Copyright © 2009-2011 Cisco Systems, Inc.  All rights reserved.
  * See COPYING in top-level directory.
  */
@@ -181,6 +181,8 @@ x11_start(void *output __hwloc_attribute_unused, int width, int height)
 
   root = RootWindow(dpy, scr);
   disp->top = top = XCreateSimpleWindow(dpy, root, 0, 0, screen_width, screen_height, 0, WhitePixel(dpy, scr), WhitePixel(dpy, scr));
+  XStoreName(dpy, top, "lstopo");
+  XSetIconName(dpy, top, "lstopo");
   XSelectInput(dpy,top, StructureNotifyMask);
   XMapWindow(dpy, top);
 
@@ -246,7 +248,7 @@ move_x11(struct display *disp, int logical, int legend, hwloc_topology_t topolog
 }
 
 void
-output_x11(hwloc_topology_t topology, const char *filename __hwloc_attribute_unused, int logical, int legend, int verbose_mode __hwloc_attribute_unused)
+output_x11(hwloc_topology_t topology, const char *filename __hwloc_attribute_unused, int overwrite __hwloc_attribute_unused, int logical, int legend, int verbose_mode __hwloc_attribute_unused)
 {
   struct display *disp = output_draw_start(&x11_draw_methods, logical, legend, topology, NULL);
   int finish = 0;
@@ -386,9 +388,9 @@ static struct draw_methods png_draw_methods = {
 };
 
 void
-output_png(hwloc_topology_t topology, const char *filename, int logical, int legend, int verbose_mode __hwloc_attribute_unused)
+output_png(hwloc_topology_t topology, const char *filename, int overwrite, int logical, int legend, int verbose_mode __hwloc_attribute_unused)
 {
-  FILE *output = open_file(filename, "w");
+  FILE *output = open_output(filename, overwrite);
   cairo_surface_t *cs;
 
   if (!output) {
@@ -425,9 +427,9 @@ static struct draw_methods pdf_draw_methods = {
 };
 
 void
-output_pdf(hwloc_topology_t topology, const char *filename, int logical, int legend, int verbose_mode __hwloc_attribute_unused)
+output_pdf(hwloc_topology_t topology, const char *filename, int overwrite, int logical, int legend, int verbose_mode __hwloc_attribute_unused)
 {
-  FILE *output = open_file(filename, "w");
+  FILE *output = open_output(filename, overwrite);
   cairo_surface_t *cs;
 
   if (!output) {
@@ -464,9 +466,9 @@ static struct draw_methods ps_draw_methods = {
 };
 
 void
-output_ps(hwloc_topology_t topology, const char *filename, int logical, int legend, int verbose_mode __hwloc_attribute_unused)
+output_ps(hwloc_topology_t topology, const char *filename, int overwrite, int logical, int legend, int verbose_mode __hwloc_attribute_unused)
 {
-  FILE *output = open_file(filename, "w");
+  FILE *output = open_output(filename, overwrite);
   cairo_surface_t *cs;
 
   if (!output) {
@@ -503,12 +505,12 @@ static struct draw_methods svg_draw_methods = {
 };
 
 void
-output_svg(hwloc_topology_t topology, const char *filename, int logical, int legend, int verbose_mode __hwloc_attribute_unused)
+output_svg(hwloc_topology_t topology, const char *filename, int overwrite, int logical, int legend, int verbose_mode __hwloc_attribute_unused)
 {
   FILE *output;
   cairo_surface_t *cs;
 
-  output = open_file(filename, "w");
+  output = open_output(filename, overwrite);
   if (!output) {
     fprintf(stderr, "Failed to open %s for writing (%s)\n", filename, strerror(errno));
     return;

@@ -1,4 +1,4 @@
-# Copyright © 2009      inria.  All rights reserved.
+# Copyright © 2009-2014 Inria.  All rights reserved.
 # Copyright © 2009      Université Bordeaux 1
 # Copyright © 2009-2010 Cisco Systems, Inc.  All rights reserved.
 # See COPYING in top-level directory.
@@ -9,10 +9,10 @@ ACLOCAL_AMFLAGS = -I ./config
 
 SUBDIRS = src include
 if HWLOC_BUILD_STANDALONE
-# SUBDIRS += utils tests
+SUBDIRS += utils tests
 # We need doc/ if HWLOC_BUILD_DOXYGEN, or during make install if HWLOC_INSTALL_DOXYGEN.
 # There's no INSTALL_SUBDIRS, so always enter doc/ and check HWLOC_BUILD/INSTALL_DOXYGEN there
-# SUBDIRS += doc
+SUBDIRS += doc
 endif
 
 # Do not let automake automatically add the non-standalone dirs to the
@@ -41,40 +41,23 @@ EXTRA_DIST = \
         config/hwloc_get_version.sh \
         config/distscript.csh
 
+# Only install entire visual studio subdirectory if we're building in standalone mode
 if HWLOC_BUILD_STANDALONE
-#
-# Double check that we generated both the doxygen docs and a new copy
-# of the top-level README file.
-#
-cannot-dist:
-	@echo "ERROR: Did not build both of the doxygen docs and README."
-	@echo "ERROR: This tarball is not complete!"
-	@echo "ERROR: Cowardly refusing to complete successfully..."
-	@exit 1
+EXTRA_DIST += contrib/windows
+endif
 
-# Refuse to make dist if we can't make the doxygen stuff (note that
-# BUILD_DOXYGEN will automatically be false if we're not building
-# standalone).
-if !HWLOC_BUILD_DOXYGEN
-dist-hook: cannot-dist
-else
-if !HWLOC_BUILD_README
-dist-hook: cannot-dist
-else
+if HWLOC_BUILD_STANDALONE
 dist-hook:
 	csh "$(top_srcdir)/config/distscript.csh" "$(top_srcdir)" "$(distdir)" "$(HWLOC_VERSION)"
-endif HWLOC_BUILD_README
-endif HWLOC_BUILD_DOXYGEN
 endif HWLOC_BUILD_STANDALONE
 
 #
-# Build the top-level README file
+# Build the documenation and top-level README file
 #
-
 if HWLOC_BUILD_STANDALONE
 .PHONY: doc readme
 doc readme:
-	$(MAKE) -C doc readme
+	$(MAKE) -C doc
 endif HWLOC_BUILD_STANDALONE
 
 if HWLOC_BUILD_STANDALONE

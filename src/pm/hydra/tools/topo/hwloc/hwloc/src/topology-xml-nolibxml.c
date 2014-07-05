@@ -1,6 +1,6 @@
 /*
  * Copyright © 2009 CNRS
- * Copyright © 2009-2013 Inria.  All rights reserved.
+ * Copyright © 2009-2014 Inria.  All rights reserved.
  * Copyright © 2009-2011 Université Bordeaux 1
  * Copyright © 2009-2011 Cisco Systems, Inc.  All rights reserved.
  * See COPYING in top-level directory.
@@ -17,7 +17,9 @@
 #include <assert.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#endif
 
 /*******************
  * Import routines *
@@ -467,7 +469,7 @@ hwloc_nolibxml_import_diff(const char *xmlpath, const char *xmlbuffer, int xmlbu
       free(refname);
       refname = strdup(attrvalue);
     } else
-      return -1;
+      goto out_with_buffer;
   }
 
   ret = hwloc__xml_import_diff(&childstate, firstdiffp);

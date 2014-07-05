@@ -1,6 +1,6 @@
 /*
  * Copyright © 2009-2011 Cisco Systems, Inc.  All rights reserved.
- * Copyright © 2010-2013 Inria.  All rights reserved.
+ * Copyright © 2010-2014 Inria.  All rights reserved.
  * See COPYING in top-level directory.
  */
 
@@ -176,7 +176,7 @@ extern "C" {
 #define hwloc_get_obj_by_type HWLOC_NAME(get_obj_by_type )
 
 #define hwloc_obj_type_string HWLOC_NAME(obj_type_string )
-#define hwloc_obj_type_of_string HWLOC_NAME(obj_type_of_string )
+#define hwloc_obj_type_sscanf HWLOC_NAME(obj_type_sscanf)
 #define hwloc_obj_type_snprintf HWLOC_NAME(obj_type_snprintf )
 #define hwloc_obj_attr_snprintf HWLOC_NAME(obj_attr_snprintf )
 #define hwloc_obj_cpuset_snprintf HWLOC_NAME(obj_cpuset_snprintf)
@@ -329,8 +329,9 @@ extern "C" {
 #define hwloc_get_closest_objs HWLOC_NAME(get_closest_objs)
 #define hwloc_get_obj_below_by_type HWLOC_NAME(get_obj_below_by_type)
 #define hwloc_get_obj_below_array_by_type HWLOC_NAME(get_obj_below_array_by_type)
-#define hwloc_distributev HWLOC_NAME(distributev)
-#define hwloc_distribute HWLOC_NAME(distribute)
+#define hwloc_distrib_flags_e HWLOC_NAME(distrib_flags_e)
+#define HWLOC_DISTRIB_FLAG_REVERSE HWLOC_NAME_CAPS(DISTRIB_FLAG_REVERSE)
+#define hwloc_distrib HWLOC_NAME(distrib)
 #define hwloc_alloc_membind_policy HWLOC_NAME(alloc_membind_policy)
 #define hwloc_alloc_membind_policy_nodeset HWLOC_NAME(alloc_membind_policy_nodeset)
 #define hwloc_topology_get_complete_cpuset HWLOC_NAME(topology_get_complete_cpuset)
@@ -353,17 +354,17 @@ extern "C" {
 
 #define hwloc_topology_diff_obj_attr_type_e HWLOC_NAME(topology_diff_obj_attr_type_e)
 #define hwloc_topology_diff_obj_attr_type_t HWLOC_NAME(topology_diff_obj_attr_type_t)
-#define HWLOC_TOPOLOGY_DIFF_OBJ_ATTR_SIZE HWLOC_NAME_CAPS(HWLOC_TOPOLOGY_DIFF_OBJ_ATTR_SIZE)
-#define HWLOC_TOPOLOGY_DIFF_OBJ_ATTR_NAME HWLOC_NAME_CAPS(HWLOC_TOPOLOGY_DIFF_OBJ_ATTR_NAME)
-#define HWLOC_TOPOLOGY_DIFF_OBJ_ATTR_INFO HWLOC_NAME_CAPS(HWLOC_TOPOLOGY_DIFF_OBJ_ATTR_INFO)
+#define HWLOC_TOPOLOGY_DIFF_OBJ_ATTR_SIZE HWLOC_NAME_CAPS(TOPOLOGY_DIFF_OBJ_ATTR_SIZE)
+#define HWLOC_TOPOLOGY_DIFF_OBJ_ATTR_NAME HWLOC_NAME_CAPS(TOPOLOGY_DIFF_OBJ_ATTR_NAME)
+#define HWLOC_TOPOLOGY_DIFF_OBJ_ATTR_INFO HWLOC_NAME_CAPS(TOPOLOGY_DIFF_OBJ_ATTR_INFO)
 #define hwloc_topology_diff_obj_attr_u HWLOC_NAME(topology_diff_obj_attr_u)
 #define hwloc_topology_diff_obj_attr_generic_s HWLOC_NAME(topology_diff_obj_attr_generic_s)
 #define hwloc_topology_diff_obj_attr_uint64_s HWLOC_NAME(topology_diff_obj_attr_uint64_s)
 #define hwloc_topology_diff_obj_attr_string_s HWLOC_NAME(topology_diff_obj_attr_string_s)
 #define hwloc_topology_diff_type_e HWLOC_NAME(topology_diff_type_e)
 #define hwloc_topology_diff_type_t HWLOC_NAME(topology_diff_type_t)
-#define HWLOC_TOPOLOGY_DIFF_OBJ_ATTR HWLOC_NAME_CAPS(HWLOC_TOPOLOGY_DIFF_OBJ_ATTR)
-#define HWLOC_TOPOLOGY_DIFF_TOO_COMPLEX HWLOC_NAME_CAPS(HWLOC_TOPOLOGY_DIFF_TOO_COMPLEX)
+#define HWLOC_TOPOLOGY_DIFF_OBJ_ATTR HWLOC_NAME_CAPS(TOPOLOGY_DIFF_OBJ_ATTR)
+#define HWLOC_TOPOLOGY_DIFF_TOO_COMPLEX HWLOC_NAME_CAPS(TOPOLOGY_DIFF_TOO_COMPLEX)
 #define hwloc_topology_diff_u HWLOC_NAME(topology_diff_u)
 #define hwloc_topology_diff_t HWLOC_NAME(topology_diff_t)
 #define hwloc_topology_diff_generic_s HWLOC_NAME(topology_diff_generic_s)
@@ -371,7 +372,7 @@ extern "C" {
 #define hwloc_topology_diff_too_complex_s HWLOC_NAME(topology_diff_too_complex_s)
 #define hwloc_topology_diff_build HWLOC_NAME(topology_diff_build)
 #define hwloc_topology_diff_apply_flags_e HWLOC_NAME(topology_diff_apply_flags_e)
-#define HWLOC_TOPOLOGY_DIFF_APPLY_REVERSE HWLOC_NAME_CAPS(HWLOC_TOPOLOGY_DIFF_APPLY_REVERSE)
+#define HWLOC_TOPOLOGY_DIFF_APPLY_REVERSE HWLOC_NAME_CAPS(TOPOLOGY_DIFF_APPLY_REVERSE)
 #define hwloc_topology_diff_apply HWLOC_NAME(topology_diff_apply)
 #define hwloc_topology_diff_destroy HWLOC_NAME(topology_diff_destroy)
 #define hwloc_topology_diff_load_xml HWLOC_NAME(topology_diff_load_xml)
@@ -400,6 +401,7 @@ extern "C" {
 #define hwloc_linux_parse_cpumap_file HWLOC_NAME(linux_parse_cpumap_file)
 #define hwloc_linux_set_tid_cpubind HWLOC_NAME(linux_set_tid_cpubind)
 #define hwloc_linux_get_tid_cpubind HWLOC_NAME(linux_get_tid_cpubind)
+#define hwloc_linux_get_tid_last_cpu_location HWLOC_NAME(linux_get_tid_last_cpu_location)
 
 /* openfabrics-verbs.h */
 
@@ -492,7 +494,10 @@ extern "C" {
 
 /* hwloc/deprecated.h */
 
+#define hwloc_obj_type_of_string HWLOC_NAME(obj_type_of_string )
 #define hwloc_obj_snprintf HWLOC_NAME(obj_snprintf)
+#define hwloc_distributev HWLOC_NAME(distributev)
+#define hwloc_distribute HWLOC_NAME(distribute)
 
 /* private/debug.h */
 
@@ -510,10 +515,10 @@ extern "C" {
 #define hwloc_flsl_from_fls32 HWLOC_NAME(flsl_from_fls32)
 #define hwloc_weight_long HWLOC_NAME(weight_long)
 
-/* private/cpuid.h */
+/* private/cpuid-x86.h */
 
-#define hwloc_have_cpuid HWLOC_NAME(have_cpuid)
-#define hwloc_cpuid HWLOC_NAME(cpuid)
+#define hwloc_have_x86_cpuid HWLOC_NAME(have_x86_cpuid)
+#define hwloc_x86_cpuid HWLOC_NAME(x86_cpuid)
 
 /* private/xml.h */
 
@@ -567,6 +572,11 @@ extern "C" {
 #define hwloc_topology_setup_defaults HWLOC_NAME(topology_setup_defaults)
 #define hwloc_topology_clear HWLOC_NAME(topology_clear)
 
+#define hwloc__add_info HWLOC_NAME(_add_info)
+#define hwloc__find_info_slot HWLOC_NAME(_find_info_slot)
+#define hwloc__move_infos HWLOC_NAME(_move_infos)
+#define hwloc__free_infos HWLOC_NAME(_free_infos)
+
 #define hwloc_binding_hooks HWLOC_NAME(binding_hooks)
 #define hwloc_set_native_binding_hooks HWLOC_NAME(set_native_binding_hooks)
 #define hwloc_set_binding_hooks HWLOC_NAME(set_binding_hooks)
@@ -606,6 +616,8 @@ extern "C" {
 
 #define hwloc_encode_to_base64 HWLOC_NAME(encode_to_base64)
 #define hwloc_decode_from_base64 HWLOC_NAME(decode_from_base64)
+
+#define hwloc_obj_add_info_nodup HWLOC_NAME(obj_add_info_nodup)
 
 /* private/solaris-chiptype.h */
 

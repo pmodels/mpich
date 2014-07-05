@@ -1,6 +1,6 @@
 /*
  * Copyright © 2009 CNRS
- * Copyright © 2009-2013 Inria.  All rights reserved.
+ * Copyright © 2009-2014 Inria.  All rights reserved.
  * Copyright © 2009-2012 Université Bordeaux 1
  * Copyright © 2009-2011 Cisco Systems, Inc.  All rights reserved.
  * See COPYING in top-level directory.
@@ -19,6 +19,7 @@
 #include <dirent.h>
 #endif
 #include <fcntl.h>
+#include <sys/stat.h>
 #include <assert.h>
 
 #ifdef LSTOPO_HAVE_GRAPHICS
@@ -48,22 +49,29 @@ unsigned int fontsize = 10;
 unsigned int gridsize = 10;
 enum lstopo_orient_e force_orient[HWLOC_OBJ_TYPE_MAX];
 
+static int overwrite = 0;
 static int logical = -1;
 static unsigned int legend = 1;
 static unsigned int top = 0;
 
-FILE *open_file(const char *filename, const char *mode)
+FILE *open_output(const char *filename, int overwrite)
 {
   const char *extn;
+  struct stat st;
 
-  if (!filename)
+  if (!filename || !strcmp(filename, "-"))
     return stdout;
 
   extn = strrchr(filename, '.');
   if (filename[0] == '-' && extn == filename + 1)
     return stdout;
 
-  return fopen(filename, mode);
+  if (!stat(filename, &st) && !overwrite) {
+    errno = EEXIST;
+    return NULL;
+  }
+
+  return fopen(filename, "w");
 }
 
 static hwloc_obj_t insert_task(hwloc_topology_t topology, hwloc_cpuset_t cpuset, const char * name)
@@ -109,7 +117,7 @@ static void add_process_objects(hwloc_topology_t topology)
 
   support = hwloc_topology_get_support(topology);
 
-  if (!support->cpubind->get_thisproc_cpubind)
+  if (!support->cpubind->get_proc_cpubind)
     return;
 
   dir  = opendir("/proc");
@@ -251,6 +259,7 @@ void usage(const char *name, FILE *where)
   fprintf (where, "Output options:\n");
   fprintf (where, "  --output-format <format>\n");
   fprintf (where, "  --of <format>         Force the output to use the given format\n");
+  fprintf (where, "  -f --force            Overwrite the output file if it exists\n");
   fprintf (where, "Textual output options:\n");
   fprintf (where, "  --only <type>         Only show objects of the given type in the textual output\n");
   fprintf (where, "  -v --verbose          Include additional details\n");
@@ -388,7 +397,9 @@ main (int argc, char *argv[])
       } else if (!strcmp (argv[0], "-h") || !strcmp (argv[0], "--help")) {
 	usage(callname, stdout);
         exit(EXIT_SUCCESS);
-      } else if (!strcmp (argv[0], "-l") || !strcmp (argv[0], "--logical"))
+      } else if (!strcmp (argv[0], "-f") || !strcmp (argv[0], "--force"))
+	overwrite = 1;
+      else if (!strcmp (argv[0], "-l") || !strcmp (argv[0], "--logical"))
 	logical = 1;
       else if (!strcmp (argv[0], "-p") || !strcmp (argv[0], "--physical"))
 	logical = 0;
@@ -405,8 +416,7 @@ main (int argc, char *argv[])
 	  usage (callname, stderr);
 	  exit(EXIT_FAILURE);
 	}
-        lstopo_show_only = hwloc_obj_type_of_string(argv[1]);
-	if (lstopo_show_only == (hwloc_obj_type_t) -1)
+        if (hwloc_obj_type_sscanf(argv[1], &lstopo_show_only, NULL, NULL, 0) < 0)
 	  fprintf(stderr, "Unsupported type `%s' passed to --only, ignoring.\n", argv[1]);
 	opt = 1;
       }
@@ -416,8 +426,7 @@ main (int argc, char *argv[])
 	  usage (callname, stderr);
 	  exit(EXIT_FAILURE);
 	}
-	type = hwloc_obj_type_of_string(argv[1]);
-	if (type == (hwloc_obj_type_t) -1)
+	if (hwloc_obj_type_sscanf(argv[1], &type, NULL, NULL, 0) < 0)
 	  fprintf(stderr, "Unsupported type `%s' passed to --ignore, ignoring.\n", argv[1]);
 	else if (type == HWLOC_OBJ_PU)
 	  lstopo_ignore_pus = 1;
@@ -467,11 +476,10 @@ main (int argc, char *argv[])
 	  hwloc_obj_type_t type;
 	  if (end)
 	    *end = '\0';
-	  type = hwloc_obj_type_of_string(tmp);
-	  if (type != (hwloc_obj_type_t) -1)
-	    force_orient[type] = orient;
-	  else
+	  if (hwloc_obj_type_sscanf(tmp, &type, NULL, NULL, 0) < 0)
 	    fprintf(stderr, "Unsupported type `%s' passed to %s, ignoring.\n", tmp, argv[0]);
+	  else
+	    force_orient[type] = orient;
 	  if (!end)
 	    break;
 	  tmp = end+1;
@@ -562,7 +570,7 @@ main (int argc, char *argv[])
       return err;
   }
 
-  if (lstopo_pid_number != -1 && lstopo_pid_number != 0) {
+  if (lstopo_pid_number > 0) {
     lstopo_pid = hwloc_pid_from_number(lstopo_pid_number, 0);
     if (hwloc_topology_set_pid(topology, lstopo_pid)) {
       perror("Setting target pid");
@@ -582,7 +590,7 @@ main (int argc, char *argv[])
   if (restrictstring) {
     hwloc_bitmap_t restrictset = hwloc_bitmap_alloc();
     if (!strcmp (restrictstring, "binding")) {
-      if (lstopo_pid_number != -1 && lstopo_pid_number != 0)
+      if (lstopo_pid_number > 0)
 	hwloc_get_proc_cpubind(topology, lstopo_pid, restrictset, HWLOC_CPUBIND_PROCESS);
       else
 	hwloc_get_cpubind(topology, restrictset, HWLOC_CPUBIND_PROCESS);
@@ -636,14 +644,14 @@ main (int argc, char *argv[])
       if (getenv("DISPLAY")) {
         if (logical == -1)
           logical = 0;
-        output_x11(topology, NULL, logical, legend, verbose_mode);
+        output_x11(topology, NULL, overwrite, logical, legend, verbose_mode);
       } else
 #endif /* CAIRO_HAS_XLIB_SURFACE */
 #ifdef HWLOC_WIN_SYS
       {
         if (logical == -1)
           logical = 0;
-        output_windows(topology, NULL, logical, legend, verbose_mode);
+        output_windows(topology, NULL, overwrite, logical, legend, verbose_mode);
       }
 #endif
 #endif /* !LSTOPO_HAVE_GRAPHICS */
@@ -651,47 +659,47 @@ main (int argc, char *argv[])
       {
         if (logical == -1)
           logical = 1;
-        output_console(topology, NULL, logical, legend, verbose_mode);
+        output_console(topology, NULL, overwrite, logical, legend, verbose_mode);
       }
 #endif
       break;
 
     case LSTOPO_OUTPUT_CONSOLE:
-      output_console(topology, filename, logical, legend, verbose_mode);
+      output_console(topology, filename, overwrite, logical, legend, verbose_mode);
       break;
     case LSTOPO_OUTPUT_SYNTHETIC:
-      output_synthetic(topology, filename, logical, legend, verbose_mode);
+      output_synthetic(topology, filename, overwrite, logical, legend, verbose_mode);
       break;
     case LSTOPO_OUTPUT_TEXT:
-      output_text(topology, filename, logical, legend, verbose_mode);
+      output_text(topology, filename, overwrite, logical, legend, verbose_mode);
       break;
     case LSTOPO_OUTPUT_FIG:
-      output_fig(topology, filename, logical, legend, verbose_mode);
+      output_fig(topology, filename, overwrite, logical, legend, verbose_mode);
       break;
 #ifdef LSTOPO_HAVE_GRAPHICS
 # if CAIRO_HAS_PNG_FUNCTIONS
     case LSTOPO_OUTPUT_PNG:
-      output_png(topology, filename, logical, legend, verbose_mode);
+      output_png(topology, filename, overwrite, logical, legend, verbose_mode);
       break;
 # endif /* CAIRO_HAS_PNG_FUNCTIONS */
 # if CAIRO_HAS_PDF_SURFACE
     case LSTOPO_OUTPUT_PDF:
-      output_pdf(topology, filename, logical, legend, verbose_mode);
+      output_pdf(topology, filename, overwrite, logical, legend, verbose_mode);
       break;
 # endif /* CAIRO_HAS_PDF_SURFACE */
 # if CAIRO_HAS_PS_SURFACE
     case LSTOPO_OUTPUT_PS:
-      output_ps(topology, filename, logical, legend, verbose_mode);
+      output_ps(topology, filename, overwrite, logical, legend, verbose_mode);
       break;
 #endif /* CAIRO_HAS_PS_SURFACE */
 #if CAIRO_HAS_SVG_SURFACE
     case LSTOPO_OUTPUT_SVG:
-      output_svg(topology, filename, logical, legend, verbose_mode);
+      output_svg(topology, filename, overwrite, logical, legend, verbose_mode);
       break;
 #endif /* CAIRO_HAS_SVG_SURFACE */
 #endif /* LSTOPO_HAVE_GRAPHICS */
     case LSTOPO_OUTPUT_XML:
-      output_xml(topology, filename, logical, legend, verbose_mode);
+      output_xml(topology, filename, overwrite, logical, legend, verbose_mode);
       break;
     default:
       fprintf(stderr, "file format not supported\n");

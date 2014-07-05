@@ -1,6 +1,6 @@
 /*
  * Copyright © 2009 CNRS
- * Copyright © 2009-2013 Inria.  All rights reserved.
+ * Copyright © 2009-2014 Inria.  All rights reserved.
  * Copyright © 2009-2012 Université Bordeaux 1
  * Copyright © 2009-2011 Cisco Systems, Inc.  All rights reserved.
  * See COPYING in top-level directory.
@@ -79,7 +79,7 @@ void hwloc_report_os_error(const char *msg, int line)
         fprintf(stderr, "*\n");
         fprintf(stderr, "* Please report this error message to the hwloc user's mailing list,\n");
 #ifdef HWLOC_LINUX_SYS
-        fprintf(stderr, "* along with the output from the hwloc-gather-topology.sh script.\n");
+        fprintf(stderr, "* along with the output from the hwloc-gather-topology script.\n");
 #else
 	fprintf(stderr, "* along with any relevant topology information from your platform.\n");
 #endif
@@ -259,32 +259,87 @@ print_objects(struct hwloc_topology *topology __hwloc_attribute_unused, int inde
 #endif
 }
 
-void hwloc_obj_add_info(hwloc_obj_t obj, const char *name, const char *value)
+void hwloc__free_infos(struct hwloc_obj_info_s *infos, unsigned count)
 {
+  unsigned i;
+  for(i=0; i<count; i++) {
+    free(infos[i].name);
+    free(infos[i].value);
+  }
+  free(infos);
+}
+
+void hwloc__add_info(struct hwloc_obj_info_s **infosp, unsigned *countp, const char *name, const char *value)
+{
+  unsigned count = *countp;
+  struct hwloc_obj_info_s *infos = *infosp;
 #define OBJECT_INFO_ALLOC 8
   /* nothing allocated initially, (re-)allocate by multiple of 8 */
-  unsigned alloccount = (obj->infos_count + 1 + (OBJECT_INFO_ALLOC-1)) & ~(OBJECT_INFO_ALLOC-1);
-  if (obj->infos_count != alloccount)
-    obj->infos = realloc(obj->infos, alloccount*sizeof(*obj->infos));
-  obj->infos[obj->infos_count].name = strdup(name);
-  obj->infos[obj->infos_count].value = strdup(value);
-  obj->infos_count++;
+  unsigned alloccount = (count + 1 + (OBJECT_INFO_ALLOC-1)) & ~(OBJECT_INFO_ALLOC-1);
+  if (count != alloccount)
+    infos = realloc(infos, alloccount*sizeof(*infos));
+  infos[count].name = strdup(name);
+  infos[count].value = value ? strdup(value) : NULL;
+  *infosp = infos;
+  *countp = count+1;
+}
+
+char ** hwloc__find_info_slot(struct hwloc_obj_info_s **infosp, unsigned *countp, const char *name)
+{
+  unsigned i;
+  for(i=0; i<*countp; i++) {
+    if (!strcmp((*infosp)[i].name, name))
+      return &(*infosp)[i].value;
+  }
+  hwloc__add_info(infosp, countp, name, NULL);
+  return &(*infosp)[*countp-1].value;
+}
+
+void hwloc__move_infos(struct hwloc_obj_info_s **dst_infosp, unsigned *dst_countp,
+		       struct hwloc_obj_info_s **src_infosp, unsigned *src_countp)
+{
+  unsigned dst_count = *dst_countp;
+  struct hwloc_obj_info_s *dst_infos = *dst_infosp;
+  unsigned src_count = *src_countp;
+  struct hwloc_obj_info_s *src_infos = *src_infosp;
+  unsigned i;
+#define OBJECT_INFO_ALLOC 8
+  /* nothing allocated initially, (re-)allocate by multiple of 8 */
+  unsigned alloccount = (dst_count + src_count + (OBJECT_INFO_ALLOC-1)) & ~(OBJECT_INFO_ALLOC-1);
+  if (dst_count != alloccount)
+    dst_infos = realloc(dst_infos, alloccount*sizeof(*dst_infos));
+  for(i=0; i<src_count; i++, dst_count++) {
+    dst_infos[dst_count].name = src_infos[i].name;
+    dst_infos[dst_count].value = src_infos[i].value;
+  }
+  *dst_infosp = dst_infos;
+  *dst_countp = dst_count;
+  free(src_infos);
+  *src_infosp = NULL;
+  *src_countp = 0;
+}
+
+void hwloc_obj_add_info(hwloc_obj_t obj, const char *name, const char *value)
+{
+  hwloc__add_info(&obj->infos, &obj->infos_count, name, value);
+}
+
+void hwloc_obj_add_info_nodup(hwloc_obj_t obj, const char *name, const char *value, int nodup)
+{
+  if (nodup && hwloc_obj_get_info_by_name(obj, name))
+    return;
+  hwloc__add_info(&obj->infos, &obj->infos_count, name, value);
 }
 
 /* Free an object and all its content.  */
 void
 hwloc_free_unlinked_object(hwloc_obj_t obj)
 {
-  unsigned i;
   switch (obj->type) {
   default:
     break;
   }
-  for(i=0; i<obj->infos_count; i++) {
-    free(obj->infos[i].name);
-    free(obj->infos[i].value);
-  }
-  free(obj->infos);
+  hwloc__free_infos(obj->infos, obj->infos_count);
   hwloc_clear_object_distances(obj);
   free(obj->memory.page_types);
   free(obj->attr);
@@ -334,7 +389,7 @@ hwloc__duplicate_object(struct hwloc_obj *newobj,
   /* don't duplicate distances, they'll be recreated at the end of the topology build */
 
   for(i=0; i<src->infos_count; i++)
-    hwloc_obj_add_info(newobj, src->infos[i].name, src->infos[i].value);
+    hwloc__add_info(&newobj->infos, &newobj->infos_count, src->infos[i].name, src->infos[i].value);
 }
 
 void
@@ -697,28 +752,35 @@ hwloc_obj_cmp(hwloc_obj_t obj1, hwloc_obj_t obj2)
   }
 }
 
-/* format must contain a single %s where to print obj infos */
+/* Compare object cpusets based on complete_cpuset if defined (always correctly ordered),
+ * or fallback to the main cpusets (only correctly ordered during early insert before disallowed/offline bits are cleared).
+ *
+ * This is the sane way to compare object among a horizontal level.
+ */
+static int
+hwloc__object_cpusets_compare_first(hwloc_obj_t obj1, hwloc_obj_t obj2)
+{
+  if (obj1->complete_cpuset && obj2->complete_cpuset)
+    return hwloc_bitmap_compare_first(obj1->complete_cpuset, obj2->complete_cpuset);
+  else
+    return hwloc_bitmap_compare_first(obj1->cpuset, obj2->cpuset);
+}
+
+/* format the obj info to print in error messages */
 static void
-hwloc___insert_object_by_cpuset_report_error(hwloc_report_error_t report_error, const char *fmt, hwloc_obj_t obj, int line)
+hwloc__report_error_format_obj(char *buf, size_t buflen, hwloc_obj_t obj)
 {
 	char typestr[64];
-	char objstr[512];
-	char msg[640];
 	char *cpusetstr;
-
 	hwloc_obj_type_snprintf(typestr, sizeof(typestr), obj, 0);
 	hwloc_bitmap_asprintf(&cpusetstr, obj->cpuset);
 	if (obj->os_index != (unsigned) -1)
-	  snprintf(objstr, sizeof(objstr), "%s P#%u cpuset %s",
+	  snprintf(buf, buflen, "%s (P#%u cpuset %s)",
 		   typestr, obj->os_index, cpusetstr);
 	else
-	  snprintf(objstr, sizeof(objstr), "%s cpuset %s",
+	  snprintf(buf, buflen, "%s (cpuset %s)",
 		   typestr, cpusetstr);
 	free(cpusetstr);
-
-	snprintf(msg, sizeof(msg), fmt,
-		 objstr);
-	report_error(msg, line);
 }
 
 /*
@@ -768,12 +830,22 @@ hwloc___insert_object_by_cpuset(struct hwloc_topology *topology, hwloc_obj_t cur
       case HWLOC_OBJ_EQUAL:
         merge_index(obj, child, os_level, signed);
 	if (obj->os_level != child->os_level) {
-          fprintf(stderr, "Different OS level\n");
+	  static int reported = 0;
+	  if (!reported && !hwloc_hide_errors()) {
+	    fprintf(stderr, "Cannot merge similar %s objects with different OS levels %u and %u\n",
+		    hwloc_obj_type_string(obj->type), child->os_level, obj->os_level);
+	    reported = 1;
+	  }
           return NULL;
         }
         merge_index(obj, child, os_index, unsigned);
 	if (obj->os_index != child->os_index) {
-          fprintf(stderr, "Different OS indexes\n");
+	  static int reported = 0;
+	  if (!reported && !hwloc_hide_errors()) {
+	    fprintf(stderr, "Cannot merge similar %s objects with different OS indexes %u and %u\n",
+		    hwloc_obj_type_string(obj->type), child->os_index, obj->os_index);
+	    reported = 1;
+	  }
           return NULL;
         }
 	if (obj->distances_count) {
@@ -840,8 +912,17 @@ hwloc___insert_object_by_cpuset(struct hwloc_topology *topology, hwloc_obj_t cur
 	return child;
       case HWLOC_OBJ_INCLUDED:
 	if (container) {
-          if (report_error)
-	    hwloc___insert_object_by_cpuset_report_error(report_error, "object (%s) included in several different objects!", obj, __LINE__);
+          if (report_error) {
+	    char containerstr[512];
+	    char childstr[512];
+	    char objstr[512];
+	    char msg[2048];
+	    hwloc__report_error_format_obj(containerstr, sizeof(containerstr), container);
+	    hwloc__report_error_format_obj(childstr, sizeof(childstr), child);
+	    hwloc__report_error_format_obj(objstr, sizeof(objstr), obj);
+	    snprintf(msg, sizeof(msg), "%s included in both %s and %s!", objstr, containerstr, childstr);
+	    report_error(msg, __LINE__);
+	  }
 	  /* We can't handle that.  */
 	  return NULL;
 	}
@@ -849,8 +930,15 @@ hwloc___insert_object_by_cpuset(struct hwloc_topology *topology, hwloc_obj_t cur
 	container = child;
 	break;
       case HWLOC_OBJ_INTERSECTS:
-        if (report_error)
-          hwloc___insert_object_by_cpuset_report_error(report_error, "object (%s) intersection without inclusion!", obj, __LINE__);
+        if (report_error) {
+	  char childstr[512];
+	  char objstr[512];
+	  char msg[1024];
+	  hwloc__report_error_format_obj(objstr, sizeof(objstr), obj);
+	  hwloc__report_error_format_obj(childstr, sizeof(childstr), child);
+	  snprintf(msg, sizeof(msg), "%s intersects with %s without inclusion!", objstr, childstr);
+	  report_error(msg, __LINE__);
+	}
 	/* We can't handle that.  */
 	return NULL;
       case HWLOC_OBJ_CONTAINS:
@@ -891,7 +979,7 @@ hwloc___insert_object_by_cpuset(struct hwloc_topology *topology, hwloc_obj_t cur
 
       case HWLOC_OBJ_DIFFERENT:
 	/* Leave CHILD in CUR.  */
-	if (!put && (!child->cpuset || hwloc_bitmap_compare_first(obj->cpuset, child->cpuset) < 0)) {
+	if (!put && (!child->cpuset || hwloc__object_cpusets_compare_first(obj, child) < 0)) {
 	  /* Sort children by cpuset: put OBJ before CHILD in CUR's children.  */
 	  *cur_children = obj;
 	  cur_children = &obj->next_sibling;
@@ -964,24 +1052,22 @@ hwloc_insert_object_by_parent(struct hwloc_topology *topology, hwloc_obj_t paren
   /* Append to the end of the list */
   for (current = &parent->first_child; *current; current = &(*current)->next_sibling) {
     hwloc_bitmap_t curcpuset = (*current)->cpuset;
-    if (obj->cpuset && (!curcpuset || hwloc_bitmap_compare_first(obj->cpuset, curcpuset) < 0)) {
+    if (obj->cpuset && (!curcpuset || hwloc__object_cpusets_compare_first(obj, *current) < 0)) {
       static int reported = 0;
       if (!reported && !hwloc_hide_errors()) {
-	char *a, *b;
+	char *a = "NULL", *b;
+	if (curcpuset)
+	  hwloc_bitmap_asprintf(&a, curcpuset);
 	hwloc_bitmap_asprintf(&b, obj->cpuset);
         fprintf(stderr, "****************************************************************************\n");
         fprintf(stderr, "* hwloc has encountered an out-of-order topology discovery.\n");
-	if (curcpuset) {
-	  hwloc_bitmap_asprintf(&a, curcpuset);
-	  fprintf(stderr, "* An object with cpuset %s was inserted after object with %s\n", b, a);
-	  free(a);
-	} else {
-	  fprintf(stderr, "* An object with cpuset %s was inserted after object with NULL\n", b);
-	}
+        fprintf(stderr, "* An object with (complete) cpuset %s was inserted after object with %s\n", b, a);
         fprintf(stderr, "* Please check that your input topology (XML file, etc.) is valid.\n");
         fprintf(stderr, "****************************************************************************\n");
+	if (curcpuset)
+	  free(a);
 	free(b);
-        reported = 1;
+	reported = 1;
       }
     }
   }
@@ -1583,7 +1669,7 @@ remove_ignored(hwloc_topology_t topology, hwloc_obj_t *pparent)
       prev = &parent->first_child;
       while (*prev
 	     && (!child->cpuset || !(*prev)->cpuset
-		 || hwloc_bitmap_compare_first(child->cpuset, (*prev)->cpuset) > 0))
+		 || hwloc__object_cpusets_compare_first(child, *prev) > 0))
 	prev = &((*prev)->next_sibling);
       /* enqueue */
       child->next_sibling = *prev;
@@ -2913,7 +2999,6 @@ hwloc_topology_get_depth(struct hwloc_topology *topology)
 static void
 hwloc__check_children(struct hwloc_obj *parent)
 {
-  hwloc_bitmap_t remaining_parent_set;
   unsigned j;
 
   if (!parent->arity) {
@@ -2938,28 +3023,37 @@ hwloc__check_children(struct hwloc_obj *parent)
   assert(parent->last_child == parent->children[parent->arity-1]);
   assert(parent->last_child->next_sibling == NULL);
 
+  /* check that parent->cpuset == exclusive OR of children
+   * (can be wrong for complete_cpuset since disallowed/offline/unknown PUs can be removed)
+   */
   if (parent->cpuset) {
-    remaining_parent_set = hwloc_bitmap_dup(parent->cpuset);
+    hwloc_bitmap_t remaining_parent_set = hwloc_bitmap_dup(parent->cpuset);
     for(j=0; j<parent->arity; j++) {
       if (!parent->children[j]->cpuset)
 	continue;
-      /* check that child cpuset is included in the parent */
+      /* check that child cpuset is included in the reminder of the parent */
       assert(hwloc_bitmap_isincluded(parent->children[j]->cpuset, remaining_parent_set));
-#if !defined(NDEBUG)
-      /* check that children are correctly ordered (see below), empty ones may be anywhere */
-      if (!hwloc_bitmap_iszero(parent->children[j]->cpuset)) {
-        int firstchild = hwloc_bitmap_first(parent->children[j]->cpuset);
-        int firstparent = hwloc_bitmap_first(remaining_parent_set);
-        assert(firstchild == firstparent);
-      }
-#endif
-      /* clear previously used parent cpuset bits so that we actually checked above
-       * that children cpusets do not intersect and are ordered properly
-       */
       hwloc_bitmap_andnot(remaining_parent_set, remaining_parent_set, parent->children[j]->cpuset);
     }
     assert(hwloc_bitmap_iszero(remaining_parent_set));
     hwloc_bitmap_free(remaining_parent_set);
+  }
+
+  /* check that children complete_cpuset are properly ordered, empty ones may be anywhere
+   * (can be wrong for main cpuset since removed PUs can break the ordering).
+   */
+  if (parent->complete_cpuset) {
+    int firstchild;
+    int prev_firstchild = -1; /* -1 works fine with first comparisons below */
+    for(j=0; j<parent->arity; j++) {
+      if (!parent->children[j]->complete_cpuset
+	  || hwloc_bitmap_iszero(parent->children[j]->complete_cpuset))
+	continue;
+
+      firstchild = hwloc_bitmap_first(parent->children[j]->complete_cpuset);
+      assert(prev_firstchild < firstchild);
+      prev_firstchild = firstchild;
+    }
   }
 
   /* checks for all children */

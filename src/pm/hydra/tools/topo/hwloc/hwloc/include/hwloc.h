@@ -1,6 +1,6 @@
 /*
  * Copyright © 2009 CNRS
- * Copyright © 2009-2013 Inria.  All rights reserved.
+ * Copyright © 2009-2014 Inria.  All rights reserved.
  * Copyright © 2009-2012 Université Bordeaux 1
  * Copyright © 2009-2011 Cisco Systems, Inc.  All rights reserved.
  * See COPYING in top-level directory.
@@ -75,7 +75,7 @@ extern "C" {
  */
 
 /** \brief Indicate at build time which hwloc API version is being used. */
-#define HWLOC_API_VERSION 0x00010800
+#define HWLOC_API_VERSION 0x00010900
 
 /** \brief Indicate at runtime which hwloc API version was used at build time. */
 HWLOC_DECLSPEC unsigned hwloc_get_api_version(void);
@@ -1173,11 +1173,36 @@ hwloc_get_next_obj_by_type (hwloc_topology_t topology, hwloc_obj_type_t type,
 /** \brief Return a stringified topology object type */
 HWLOC_DECLSPEC const char * hwloc_obj_type_string (hwloc_obj_type_t type) __hwloc_attribute_const;
 
-/** \brief Return an object type from the string
+/** \brief Return an object type and attributes from a type string.
  *
- * \return -1 if unrecognized.
+ * Convert strings such as "socket" or "cache" into the corresponding types.
+ * Matching is case-insensitive, and only the first letters are actually
+ * required to match.
+ *
+ * Types that have specific attributes, for instance caches and groups,
+ * may be returned in \p depthattrp and \p typeattrp. They are ignored
+ * when these pointers are \c NULL.
+ *
+ * For instance "L2i" or "L2iCache" would return
+ * type HWLOC_OBJ_CACHE in \p typep, 2 in \p depthattrp,
+ * and HWLOC_OBJ_CACHE_TYPE_INSTRUCTION in \p typeattrp
+ * (this last pointer should point to a hwloc_obj_cache_type_t).
+ * "Group3" would return type HWLOC_OBJ_GROUP type and 3 in \p depthattrp.
+ * Attributes that are not specified in the string (for instance "Group"
+ * without a depth, or "L2Cache" without a cache type) are set to -1.
+ *
+ * \p typeattrd is only filled if the size specified in \p typeattrsize
+ * is large enough. It is currently only used for caches, and the required
+ * size is at least the size of hwloc_obj_cache_type_t.
+ *
+ * \return 0 if a type was correctly identified, otherwise -1.
+ *
+ * \note This is an extended version of the now deprecated hwloc_obj_type_of_string()
  */
-HWLOC_DECLSPEC hwloc_obj_type_t hwloc_obj_type_of_string (const char * string) __hwloc_attribute_pure;
+HWLOC_DECLSPEC int hwloc_obj_type_sscanf(const char *string,
+					 hwloc_obj_type_t *typep,
+					 int *depthattrp,
+					 void *typeattrp, size_t typeattrsize);
 
 /** \brief Stringify the type of a given topology object into a human-readable form.
  *
@@ -1368,7 +1393,11 @@ HWLOC_DECLSPEC int hwloc_get_cpubind(hwloc_topology_t topology, hwloc_cpuset_t s
  * \note \p hwloc_pid_t is \p pid_t on Unix platforms,
  * and \p HANDLE on native Windows platforms.
  *
- * \note HWLOC_CPUBIND_THREAD can not be used in \p flags.
+ * \note As a special case on Linux, if a tid (thread ID) is supplied
+ * instead of a pid (process ID) and HWLOC_CPUBIND_THREAD is passed in flags,
+ * the binding is applied to that specific thread.
+ *
+ * \note On non-Linux systems, HWLOC_CPUBIND_THREAD can not be used in \p flags.
  */
 HWLOC_DECLSPEC int hwloc_set_proc_cpubind(hwloc_topology_t topology, hwloc_pid_t pid, hwloc_const_cpuset_t set, int flags);
 
@@ -1377,11 +1406,11 @@ HWLOC_DECLSPEC int hwloc_set_proc_cpubind(hwloc_topology_t topology, hwloc_pid_t
  * \note \p hwloc_pid_t is \p pid_t on Unix platforms,
  * and \p HANDLE on native Windows platforms.
  *
- * \note HWLOC_CPUBIND_THREAD can not be used in \p flags.
- *
  * \note As a special case on Linux, if a tid (thread ID) is supplied
- * instead of a pid (process ID), the binding for that specific thread
- * is returned.
+ * instead of a pid (process ID) and HWLOC_CPUBIND_THREAD is passed in flags,
+ * the binding for that specific thread is returned.
+ *
+ * \note On non-Linux systems, HWLOC_CPUBIND_THREAD can not be used in \p flags.
  */
 HWLOC_DECLSPEC int hwloc_get_proc_cpubind(hwloc_topology_t topology, hwloc_pid_t pid, hwloc_cpuset_t set, int flags);
 
@@ -1434,7 +1463,9 @@ HWLOC_DECLSPEC int hwloc_get_last_cpu_location(hwloc_topology_t topology, hwloc_
  *
  * \note As a special case on Linux, if a tid (thread ID) is supplied
  * instead of a pid (process ID) and HWLOC_CPUBIND_THREAD is passed in flags,
- * the binding for that specific thread is returned.
+ * the last CPU location of that specific thread is returned.
+ *
+ * \note On non-Linux systems, HWLOC_CPUBIND_THREAD can not be used in \p flags.
  */
 HWLOC_DECLSPEC int hwloc_get_proc_last_cpu_location(hwloc_topology_t topology, hwloc_pid_t pid, hwloc_cpuset_t set, int flags);
 
@@ -2120,6 +2151,8 @@ HWLOC_DECLSPEC hwloc_obj_t hwloc_custom_insert_group_object_by_parent(hwloc_topo
  * \note Only printable characters may be exported to XML string attributes.
  * Any other character, especially any non-ASCII character, will be silently
  * dropped.
+ *
+ * \note If \p name is "-", the XML output is sent to the standard output.
  */
 HWLOC_DECLSPEC int hwloc_topology_export_xml(hwloc_topology_t topology, const char *xmlpath);
 

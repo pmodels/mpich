@@ -1,6 +1,6 @@
 /*
  * Copyright © 2009      CNRS
- * Copyright © 2009-2012 Inria.  All rights reserved.
+ * Copyright © 2009-2014 Inria.  All rights reserved.
  * Copyright © 2009-2012 Université Bordeaux 1
  * Copyright © 2009-2011 Cisco Systems, Inc.  All rights reserved.
  *
@@ -139,6 +139,11 @@ extern int hwloc_connect_levels(hwloc_topology_t topology);
 extern void hwloc_topology_setup_defaults(struct hwloc_topology *topology);
 extern void hwloc_topology_clear(struct hwloc_topology *topology);
 
+extern void hwloc__add_info(struct hwloc_obj_info_s **infosp, unsigned *countp, const char *name, const char *value);
+extern char ** hwloc__find_info_slot(struct hwloc_obj_info_s **infosp, unsigned *countp, const char *name);
+extern void hwloc__move_infos(struct hwloc_obj_info_s **dst_infosp, unsigned *dst_countp, struct hwloc_obj_info_s **src_infosp, unsigned *src_countp);
+extern void hwloc__free_infos(struct hwloc_obj_info_s *infos, unsigned count);
+
 /* set native OS binding hooks */
 extern void hwloc_set_native_binding_hooks(struct hwloc_binding_hooks *hooks, struct hwloc_topology_support *support);
 /* set either native OS binding hooks (if thissystem), or dummy ones */
@@ -184,8 +189,11 @@ extern void hwloc_set_netbsd_hooks(struct hwloc_binding_hooks *binding_hooks, st
 extern void hwloc_set_hpux_hooks(struct hwloc_binding_hooks *binding_hooks, struct hwloc_topology_support *support);
 #endif /* HWLOC_HPUX_SYS */
 
-/* Insert uname-specific names/values in the object infos array */
-extern void hwloc_add_uname_info(struct hwloc_topology *topology);
+/* Insert uname-specific names/values in the object infos array.
+ * If cached_uname isn't NULL, it is used as a struct utsname instead of recalling uname.
+ * Any field that starts with \0 is ignored.
+ */
+extern void hwloc_add_uname_info(struct hwloc_topology *topology, void *cached_uname);
 
 /* Free obj and its attributes assuming it doesn't have any children/parent anymore */
 extern void hwloc_free_unlinked_object(hwloc_obj_t obj);
@@ -294,5 +302,7 @@ extern int hwloc_namecoloncmp(const char *haystack, const char *needle, size_t n
 /* On some systems, snprintf returns the size of written data, not the actually
  * required size.  hwloc_snprintf always report the actually required size. */
 extern int hwloc_snprintf(char *str, size_t size, const char *format, ...) __hwloc_attribute_format(printf, 3, 4);
+
+extern void hwloc_obj_add_info_nodup(hwloc_obj_t obj, const char *name, const char *value, int nodup);
 
 #endif /* HWLOC_PRIVATE_H */

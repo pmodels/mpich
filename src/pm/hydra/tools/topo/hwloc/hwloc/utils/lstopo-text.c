@@ -1,6 +1,6 @@
 /*
  * Copyright © 2009 CNRS
- * Copyright © 2009-2013 Inria.  All rights reserved.
+ * Copyright © 2009-2014 Inria.  All rights reserved.
  * Copyright © 2009-2012 Université Bordeaux 1
  * Copyright © 2009-2011 Cisco Systems, Inc.  All rights reserved.
  * See COPYING in top-level directory.
@@ -143,19 +143,15 @@ output_only (hwloc_topology_t topology, hwloc_obj_t l, FILE *output, int logical
     output_only (topology, l->children[x], output, logical, verbose_mode);
 }
 
-void output_console(hwloc_topology_t topology, const char *filename, int logical, int legend __hwloc_attribute_unused, int verbose_mode)
+void output_console(hwloc_topology_t topology, const char *filename, int overwrite, int logical, int legend __hwloc_attribute_unused, int verbose_mode)
 {
   unsigned topodepth;
   FILE *output;
 
-  if (!filename || !strcmp(filename, "-"))
-    output = stdout;
-  else {
-    output = open_file(filename, "w"); 
-    if (!output) {
-      fprintf(stderr, "Failed to open %s for writing (%s)\n", filename, strerror(errno));
-      return;
-    }
+  output = open_output(filename, overwrite);
+  if (!output) {
+    fprintf(stderr, "Failed to open %s for writing (%s)\n", filename, strerror(errno));
+    return;
   }
 
   topodepth = hwloc_topology_get_depth(topology);
@@ -251,7 +247,7 @@ void output_console(hwloc_topology_t topology, const char *filename, int logical
     fclose(output);
 }
 
-void output_synthetic(hwloc_topology_t topology, const char *filename, int logical __hwloc_attribute_unused, int legend __hwloc_attribute_unused, int verbose_mode __hwloc_attribute_unused)
+void output_synthetic(hwloc_topology_t topology, const char *filename, int overwrite, int logical __hwloc_attribute_unused, int legend __hwloc_attribute_unused, int verbose_mode __hwloc_attribute_unused)
 {
   FILE *output;
   hwloc_obj_t obj = hwloc_get_root_obj(topology);
@@ -263,20 +259,18 @@ void output_synthetic(hwloc_topology_t topology, const char *filename, int logic
     return;
   }
 
-  if (!filename || !strcmp(filename, "-"))
-    output = stdout;
-  else {
-    output = open_file(filename, "w");
-    if (!output) {
-      fprintf(stderr, "Failed to open %s for writing (%s)\n", filename, strerror(errno));
-      return;
-    }
+  output = open_output(filename, overwrite);
+  if (!output) {
+    fprintf(stderr, "Failed to open %s for writing (%s)\n", filename, strerror(errno));
+    return;
   }
 
   arity = obj->arity;
   while (arity) {
+    char types[64];
     obj = obj->first_child;
-    fprintf(output, "%s:%u ", hwloc_obj_type_string(obj->type), arity);
+    hwloc_obj_type_snprintf(types, sizeof(types), obj, 1);
+    fprintf(output, "%s:%u ", types, arity);
     arity = obj->arity;
   }
   fprintf(output, "\n");
@@ -661,7 +655,7 @@ text_text(void *output, int r, int g, int b, int size __hwloc_attribute_unused, 
   x /= (gridsize/2);
   y /= gridsize;
 
-#if defined(HAVE_PUTWC) && !defined(__MINGW32__)
+#if defined(HAVE_PUTWC) && !defined(__MINGW32__) && !defined(_MSC_VER)
   {
     size_t len = strlen(text) + 1;
     wchar_t *wbuf = malloc(len * sizeof(wchar_t)), *wtext;
@@ -684,7 +678,7 @@ static struct draw_methods text_draw_methods = {
   text_text,
 };
 
-void output_text(hwloc_topology_t topology, const char *filename, int logical, int legend, int verbose_mode __hwloc_attribute_unused)
+void output_text(hwloc_topology_t topology, const char *filename, int overwrite, int logical, int legend, int verbose_mode __hwloc_attribute_unused)
 {
   FILE *output;
   struct display *disp;
@@ -696,14 +690,10 @@ void output_text(hwloc_topology_t topology, const char *filename, int logical, i
   char *tmp;
 #endif
 
-  if (!filename || !strcmp(filename, "-"))
-    output = stdout;
-  else {
-    output = open_file(filename, "w"); 
-    if (!output) {
-      fprintf(stderr, "Failed to open %s for writing (%s)\n", filename, strerror(errno));
-      return;
-    }
+  output = open_output(filename, overwrite);
+  if (!output) {
+    fprintf(stderr, "Failed to open %s for writing (%s)\n", filename, strerror(errno));
+    return;
   }
 
   /* Try to use utf-8 characters */

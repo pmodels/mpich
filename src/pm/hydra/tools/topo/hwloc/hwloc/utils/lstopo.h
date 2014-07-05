@@ -1,6 +1,6 @@
 /*
  * Copyright © 2009 CNRS
- * Copyright © 2009-2013 Inria.  All rights reserved.
+ * Copyright © 2009-2014 Inria.  All rights reserved.
  * Copyright © 2009-2010, 2012 Université Bordeaux 1
  * Copyright © 2011 Cisco Systems, Inc.  All rights reserved.
  * See COPYING in top-level directory.
@@ -20,9 +20,9 @@ extern hwloc_pid_t lstopo_pid;
 extern char ** lstopo_append_legends;
 extern unsigned lstopo_append_legends_nr;
 
-typedef void output_method (struct hwloc_topology *topology, const char *output, int logical, int legend, int verbose_mode);
+typedef void output_method (struct hwloc_topology *topology, const char *output, int overwrite, int logical, int legend, int verbose_mode);
 
-FILE *open_file(const char *filename, const char *mode) __hwloc_attribute_malloc;
+FILE *open_output(const char *filename, int overwrite) __hwloc_attribute_malloc;
 
 extern output_method output_console, output_synthetic, output_text, output_x11, output_fig, output_png, output_pdf, output_ps, output_svg, output_windows, output_xml;
 

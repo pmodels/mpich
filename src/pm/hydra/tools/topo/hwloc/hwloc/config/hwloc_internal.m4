@@ -1,6 +1,6 @@
 dnl -*- Autoconf -*-
 dnl
-dnl Copyright (c) 2009-2012 Inria.  All rights reserved.
+dnl Copyright (c) 2009-2014 Inria.  All rights reserved.
 dnl Copyright (c) 2009, 2011 Université Bordeaux 1
 dnl Copyright (c) 2004-2005 The Trustees of Indiana University and Indiana
 dnl                         University Research and Technology
@@ -9,7 +9,7 @@ dnl Copyright (c) 2004-2005 The Regents of the University of California.
 dnl                         All rights reserved.
 dnl Copyright (c) 2004-2008 High Performance Computing Center Stuttgart, 
 dnl                         University of Stuttgart.  All rights reserved.
-dnl Copyright © 2010-2012 Inria.  All rights reserved.
+dnl Copyright © 2010-2014 Inria.  All rights reserved.
 dnl Copyright © 2006-2011 Cisco Systems, Inc.  All rights reserved.
 dnl
 dnl See COPYING in top-level directory.
@@ -117,8 +117,10 @@ EOF
 
     AC_MSG_CHECKING([if this is a developer build])
     AS_IF([test ! -d "$srcdir/.hg" -a ! -d "$srcdir/.git"],
-          [AC_MSG_RESULT([no (doxygen generation is optional)])],
-          [AC_MSG_RESULT([yes])])
+          [AC_MSG_RESULT([no (doxygen generation is optional)])
+	   test "x$enable_doxygen" = x && enable_doxygen=no],
+          [AC_MSG_RESULT([yes])
+	   test "x$enable_doxygen" = x && enable_doxygen=yes])
     
     # Generating the doxygen output requires a few tools.  If we
     # don't have all of them, refuse the build the docs.
@@ -190,7 +192,7 @@ EOF
     # See if we want to install the doxygen docs
     AC_MSG_CHECKING([if will install doxygen docs])
     AS_IF([test "x$hwloc_generate_doxs" = "xyes" -o \
-    	    -f "$srcdir/doc/doxygen-doc/man/man3/hwloc_distribute.3" -a \
+	    -f "$srcdir/doc/doxygen-doc/man/man3/hwloc_distrib.3" -a \
     	    -f "$srcdir/doc/doxygen-doc/hwloc-a4.pdf" -a \
     	    -f "$srcdir/doc/doxygen-doc/hwloc-letter.pdf"],
           [hwloc_install_doxs=yes],

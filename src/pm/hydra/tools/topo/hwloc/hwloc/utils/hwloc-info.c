@@ -226,6 +226,7 @@ hwloc_calc_process_arg_info_cb(void *_data __hwloc_attribute_unused,
 	  goto next;
 	if (parent->type == HWLOC_OBJ_CACHE
 	    && show_ancestor_attrcachetype != (hwloc_obj_cache_type_t) -1
+	    && parent->attr->cache.type != HWLOC_OBJ_CACHE_UNIFIED
 	    && show_ancestor_attrcachetype != parent->attr->cache.type)
 	  goto next;
 	hwloc_obj_type_snprintf(parents, sizeof(parents), parent, 1);
@@ -303,7 +304,7 @@ main (int argc, char *argv[])
 	  usage (callname, stderr);
 	  exit(EXIT_FAILURE);
 	}
-	err = hwloc_obj_type_sscanf(argv[1], &show_ancestor_type, &show_ancestor_attrdepth, &show_ancestor_attrcachetype);
+	err = hwloc_obj_type_sscanf(argv[1], &show_ancestor_type, &show_ancestor_attrdepth, &show_ancestor_attrcachetype, sizeof(show_ancestor_attrcachetype));
         if (err < 0) {
           fprintf(stderr, "unrecognized --ancestor type %s\n", argv[1]);
           usage(callname, stderr);
@@ -373,7 +374,7 @@ main (int argc, char *argv[])
       return err;
   }
 
-  if (pid_number != -1 && pid_number != 0) {
+  if (pid_number > 0) {
     pid = hwloc_pid_from_number(pid_number, 0);
     if (hwloc_topology_set_pid(topology, pid)) {
       perror("Setting target pid");
@@ -390,7 +391,7 @@ main (int argc, char *argv[])
   if (restrictstring) {
     hwloc_bitmap_t restrictset = hwloc_bitmap_alloc();
     if (!strcmp (restrictstring, "binding")) {
-      if (pid_number != -1 && pid_number != 0)
+      if (pid_number > 0)
 	hwloc_get_proc_cpubind(topology, pid, restrictset, HWLOC_CPUBIND_PROCESS);
       else
 	hwloc_get_cpubind(topology, restrictset, HWLOC_CPUBIND_PROCESS);

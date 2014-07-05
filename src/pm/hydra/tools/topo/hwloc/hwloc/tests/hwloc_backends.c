@@ -1,8 +1,9 @@
 /*
- * Copyright © 2012-2013 Inria.  All rights reserved.
+ * Copyright © 2012-2014 Inria.  All rights reserved.
  * See COPYING in top-level directory.
  */
 
+#include <private/autogen/config.h> /* for HWLOC_WIN_SYS */
 #include <hwloc.h>
 
 #include <stdlib.h>
@@ -13,6 +14,10 @@
 #include <string.h>
 #include <errno.h>
 #include <assert.h>
+
+#ifdef HWLOC_WIN_SYS
+#define mkstemp mktemp
+#endif
 
 /* mostly useful with valgrind, to check if backend cleanup properly */
 
@@ -34,7 +39,7 @@ int main(void)
     printf("XML buffer export failed (%s), ignoring\n", strerror(errno));
   else
     xmlbufok = 1;
-  mktemp(xmlfile);
+  mkstemp(xmlfile);
   if (hwloc_topology_export_xml(topology1, xmlfile) < 0)
     printf("XML file export failed (%s), ignoring\n", strerror(errno));
   else
