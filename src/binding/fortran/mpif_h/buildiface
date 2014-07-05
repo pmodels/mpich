@@ -1023,7 +1023,7 @@ EOT
 mpi_core_sources += src/binding/fortran/mpif_h/fdebug.c \\
 		src/binding/fortran/mpif_h/setbot.c \\
 		src/binding/fortran/mpif_h/setbotf.f
-mpi_sources += src/binding/fortran/mpif_h/statusf2c.c
+mpi_sources += src/binding/fortran/mpif_h/statusf2c.c src/binding/fortran/mpif_h/statusc2f.c
 
 # FIXME does AM_CPPFLAGS need to be included elsewhere somehow in the
 # target-specific variable?
@@ -4567,7 +4567,6 @@ print $OUTFD "\
     $OUTFD = "STATUSC2F";
     $filename = "statusc2f.c";
     open ($OUTFD, ">$filename.new" ) || die "Cannot open $filename.new\n";
-    $files[$#files+1] = $filename;
     print $OUTFD "
 /* -*- Mode: C; c-basic-offset:4 ; -*- */
 /*  
