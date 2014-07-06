@@ -306,7 +306,7 @@ int MPI_Iexscan(const void *sendbuf, void *recvbuf, int count, MPI_Datatype data
 
             MPIR_ERRTEST_ARGNULL(request,"request", mpi_errno);
 
-            if (sendbuf != MPI_IN_PLACE)
+            if (sendbuf != MPI_IN_PLACE && count != 0)
                 MPIR_ERRTEST_ALIAS_COLL(sendbuf, recvbuf, mpi_errno);
             /* TODO more checks may be appropriate (counts, in_place, etc) */
         }

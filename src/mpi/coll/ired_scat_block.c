@@ -1035,7 +1035,7 @@ int MPI_Ireduce_scatter_block(const void *sendbuf, void *recvbuf,
 
             MPIR_ERRTEST_ARGNULL(request,"request", mpi_errno);
 
-            if (comm_ptr->comm_kind == MPID_INTRACOMM && sendbuf != MPI_IN_PLACE)
+            if (comm_ptr->comm_kind == MPID_INTRACOMM && sendbuf != MPI_IN_PLACE && recvcount != 0)
                 MPIR_ERRTEST_ALIAS_COLL(sendbuf, recvbuf, mpi_errno)
             /* TODO more checks may be appropriate (counts, in_place, etc) */
         }

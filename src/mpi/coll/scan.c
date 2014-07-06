@@ -549,7 +549,7 @@ int MPI_Scan(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatyp
             }
             if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 
-            if (sendbuf != MPI_IN_PLACE)
+            if (sendbuf != MPI_IN_PLACE && count != 0)
                 MPIR_ERRTEST_ALIAS_COLL(sendbuf, recvbuf, mpi_errno);
         }
         MPID_END_ERROR_CHECKS;
