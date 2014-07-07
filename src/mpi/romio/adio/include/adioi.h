@@ -196,6 +196,7 @@ struct ADIOI_Fns_struct {
     void (*ADIOI_xxx_Resize) (ADIO_File fd, ADIO_Offset size, int *error_code);
     void (*ADIOI_xxx_Delete) (const char *filename, int *error_code);
     int  (*ADIOI_xxx_Feature) (ADIO_File fd, int flag);
+    const char *fsname;
 };
 
 /* optypes for ADIO_RequestD */

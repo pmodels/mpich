@@ -40,4 +40,5 @@ struct ADIOI_Fns_struct ADIO_XFS_operations = {
     ADIOI_XFS_Resize, /* Resize */
     ADIOI_GEN_Delete, /* Delete */
     ADIOI_GEN_Feature, /* Features */
+    "XFS: SGI XFS"
 };

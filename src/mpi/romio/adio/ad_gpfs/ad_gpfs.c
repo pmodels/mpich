@@ -51,4 +51,11 @@ struct ADIOI_Fns_struct ADIO_GPFS_operations = {
     ADIOI_GEN_Resize, /* Resize */
     ADIOI_GEN_Delete, /* Delete */
     ADIOI_GEN_Feature, /* Features */
+#ifdef BGQPLATFORM
+    "GPFS+BGQ: IBM GPFS for Blue Gene",
+#elif PEPLATFORM
+    "GPFS+PE: IBM GPFS for PE",
+#else
+    "GPFS: IBM GPFS"
+#endif
 };

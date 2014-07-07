@@ -35,4 +35,5 @@ struct ADIOI_Fns_struct ADIO_TESTFS_operations = {
     ADIOI_TESTFS_Resize, /* Resize */
     ADIOI_TESTFS_Delete, /* Delete */
     ADIOI_GEN_Feature, /* Features */
+    "TESTFS: the logging-only file system"
 };
