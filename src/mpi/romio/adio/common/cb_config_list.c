@@ -92,6 +92,13 @@ int ADIOI_cb_bcast_rank_map(ADIO_File fd)
     value = (char *) ADIOI_Malloc((MPI_MAX_INFO_VAL+1)*sizeof(char));
     ADIOI_Snprintf(value, MPI_MAX_INFO_VAL+1, "%d", fd->hints->cb_nodes);
     ADIOI_Info_set(fd->info, "cb_nodes", value);
+    char *p = value;
+    int i;
+    for (i=0; i< fd->hints->cb_nodes; i++) {
+	p += ADIOI_Snprintf(p, MPI_MAX_INFO_VAL+1, "%d ", fd->hints->ranklist[i]);
+	if (p - value > MPI_MAX_INFO_VAL+1) break;
+    }
+    ADIOI_Info_set(fd->info, "romio_aggregator_list", value);
     ADIOI_Free(value);
 
     return 0;
