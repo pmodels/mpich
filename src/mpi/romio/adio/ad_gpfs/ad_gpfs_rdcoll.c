@@ -292,6 +292,14 @@ void ADIOI_GPFS_ReadStridedColl(ADIO_File fd, void *buf, int count,
 
 	    /* NOTE: we are skipping the rest of two-phase in this path */
             GPFSMPIO_T_CIO_REPORT( 0, fd, myrank, nprocs)
+
+            ADIOI_Free(offset_list);
+            ADIOI_Free(len_list);
+            ADIOI_Free(st_offsets);
+            ADIOI_Free(end_offsets);
+            ADIOI_Free(fd_start);
+            ADIOI_Free(fd_end);
+
 	    return;
 	}
     }

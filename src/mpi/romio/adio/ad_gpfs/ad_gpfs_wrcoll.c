@@ -278,6 +278,14 @@ void ADIOI_GPFS_WriteStridedColl(ADIO_File fd, const void *buf, int count,
 		    error_code, st_offsets, end_offsets, fd_start, fd_end);
 	    /* NOTE: we are skipping the rest of two-phase in this path */
             GPFSMPIO_T_CIO_REPORT( 1, fd, myrank, nprocs)
+
+            ADIOI_Free(offset_list);
+            ADIOI_Free(len_list);
+            ADIOI_Free(st_offsets);
+            ADIOI_Free(end_offsets);
+            ADIOI_Free(fd_start);
+            ADIOI_Free(fd_end);
+
 	    return;
 	}
     }
