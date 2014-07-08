@@ -67,6 +67,11 @@ int MPIDI_CH3_SHM_Win_free(MPID_Win **win_ptr)
 
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_CH3_SHM_WIN_FREE);
 
+    if ((*win_ptr)->comm_ptr->node_comm == NULL) {
+        mpi_errno = MPIDI_Win_free(win_ptr);
+        goto fn_exit;
+    }
+
     mpi_errno = MPIDI_CH3I_Wait_for_pt_ops_finish(*win_ptr);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
