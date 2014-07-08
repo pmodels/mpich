@@ -30,7 +30,7 @@ int MPI_T_pvar_write(MPI_T_pvar_session session, MPI_T_pvar_handle handle, void 
 #define FUNCNAME MPIR_T_pvar_write_impl
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPIR_T_pvar_write_impl(MPI_T_pvar_session session, MPI_T_pvar_handle handle, void *buf)
+int MPIR_T_pvar_write_impl(MPI_T_pvar_session session, MPI_T_pvar_handle handle, const void *buf)
 {
     /* This function should never be called */
     return MPI_ERR_INTERN;
@@ -70,7 +70,7 @@ MPI_T_pvar_write().
 .N MPI_T_ERR_INVALID_HANDLE
 .N MPI_T_ERR_PVAR_NO_WRITE
 @*/
-int MPI_T_pvar_write(MPI_T_pvar_session session, MPI_T_pvar_handle handle, void *buf)
+int MPI_T_pvar_write(MPI_T_pvar_session session, MPI_T_pvar_handle handle, const void *buf)
 {
     int mpi_errno = MPI_SUCCESS;
 

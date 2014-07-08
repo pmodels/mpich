@@ -1501,7 +1501,7 @@ int MPI_T_cvar_handle_alloc(int cvar_index, void *obj_handle, MPI_T_cvar_handle 
                             int *count);
 int MPI_T_cvar_handle_free(MPI_T_cvar_handle *handle);
 int MPI_T_cvar_read(MPI_T_cvar_handle handle, void *buf);
-int MPI_T_cvar_write(MPI_T_cvar_handle handle, void *buf);
+int MPI_T_cvar_write(MPI_T_cvar_handle handle, const void *buf);
 int MPI_T_pvar_get_num(int *num_pvar);
 int MPI_T_pvar_get_info(int pvar_index, char *name, int *name_len, int *verbosity, int *var_class,
                         MPI_Datatype *datatype, MPI_T_enum *enumtype, char *desc, int *desc_len,
@@ -1514,7 +1514,7 @@ int MPI_T_pvar_handle_free(MPI_T_pvar_session session, MPI_T_pvar_handle *handle
 int MPI_T_pvar_start(MPI_T_pvar_session session, MPI_T_pvar_handle handle);
 int MPI_T_pvar_stop(MPI_T_pvar_session session, MPI_T_pvar_handle handle);
 int MPI_T_pvar_read(MPI_T_pvar_session session, MPI_T_pvar_handle handle, void *buf);
-int MPI_T_pvar_write(MPI_T_pvar_session session, MPI_T_pvar_handle handle, void *buf);
+int MPI_T_pvar_write(MPI_T_pvar_session session, MPI_T_pvar_handle handle, const void *buf);
 int MPI_T_pvar_reset(MPI_T_pvar_session session, MPI_T_pvar_handle handle);
 int MPI_T_pvar_readreset(MPI_T_pvar_session session, MPI_T_pvar_handle handle, void *buf);
 int MPI_T_category_get_num(int *num_cat);
@@ -2136,7 +2136,7 @@ int PMPI_T_cvar_handle_alloc(int cvar_index, void *obj_handle, MPI_T_cvar_handle
                              int *count);
 int PMPI_T_cvar_handle_free(MPI_T_cvar_handle *handle);
 int PMPI_T_cvar_read(MPI_T_cvar_handle handle, void *buf);
-int PMPI_T_cvar_write(MPI_T_cvar_handle handle, void *buf);
+int PMPI_T_cvar_write(MPI_T_cvar_handle handle, const void *buf);
 int PMPI_T_pvar_get_num(int *num_pvar);
 int PMPI_T_pvar_get_info(int pvar_index, char *name, int *name_len, int *verbosity, int *var_class,
                          MPI_Datatype *datatype, MPI_T_enum *enumtype, char *desc, int *desc_len,
@@ -2149,7 +2149,7 @@ int PMPI_T_pvar_handle_free(MPI_T_pvar_session session, MPI_T_pvar_handle *handl
 int PMPI_T_pvar_start(MPI_T_pvar_session session, MPI_T_pvar_handle handle);
 int PMPI_T_pvar_stop(MPI_T_pvar_session session, MPI_T_pvar_handle handle);
 int PMPI_T_pvar_read(MPI_T_pvar_session session, MPI_T_pvar_handle handle, void *buf);
-int PMPI_T_pvar_write(MPI_T_pvar_session session, MPI_T_pvar_handle handle, void *buf);
+int PMPI_T_pvar_write(MPI_T_pvar_session session, MPI_T_pvar_handle handle, const void *buf);
 int PMPI_T_pvar_reset(MPI_T_pvar_session session, MPI_T_pvar_handle handle);
 int PMPI_T_pvar_readreset(MPI_T_pvar_session session, MPI_T_pvar_handle handle, void *buf);
 int PMPI_T_category_get_num(int *num_cat);

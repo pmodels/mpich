@@ -30,7 +30,7 @@ int MPI_T_cvar_write(MPI_T_cvar_handle handle, void *buf) __attribute__((weak,al
 #define FUNCNAME MPIR_T_cvar_write_impl
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPIR_T_cvar_write_impl(MPI_T_cvar_handle handle, void *buf)
+int MPIR_T_cvar_write_impl(MPI_T_cvar_handle handle, const void *buf)
 {
     int mpi_errno = MPI_SUCCESS;
     int i, count;
@@ -108,7 +108,7 @@ Input Parameters:
 .N MPI_T_ERR_CVAR_SET_NOT_NOW
 .N MPI_T_ERR_CVAR_SET_NEVER
 @*/
-int MPI_T_cvar_write(MPI_T_cvar_handle handle, void *buf)
+int MPI_T_cvar_write(MPI_T_cvar_handle handle, const void *buf)
 {
     int mpi_errno = MPI_SUCCESS;
 
