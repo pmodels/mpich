@@ -2727,7 +2727,7 @@ look_sysfsnode(struct hwloc_topology *topology,
       for (index_ = 0; index_ < nbnodes; index_++) {
           char nodepath[SYSFS_NUMA_NODE_PATH_LEN];
           hwloc_bitmap_t cpuset;
-          hwloc_obj_t node, res_obj __hwloc_attribute_unused;
+          hwloc_obj_t node, res_obj;
 
 	  osnode = indexes[index_];
 
@@ -4688,7 +4688,7 @@ hwloc_look_linuxfs_pci(struct hwloc_backend *backend)
     unsigned os_index;
     char path[64];
     char value[16];
-    size_t read __hwloc_attribute_unused;
+    size_t read;
     FILE *file;
 
     if (sscanf(dirent->d_name, "%04x:%02x:%02x.%01x", &domain, &bus, &dev, &func) != 4)
