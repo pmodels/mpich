@@ -1546,7 +1546,8 @@ AC_OUTPUT(maint/testmerge \
           f90/io/Makefile \
           f90/misc/Makefile \
 	      f90/profile/Makefile \
-	  f08/attr/Makefile \
+	  f08/Makefile \
+	      f08/attr/Makefile \
 	      f08/datatype/Makefile \
 	      f08/util/Makefile \
 	      f08/coll/Makefile \
