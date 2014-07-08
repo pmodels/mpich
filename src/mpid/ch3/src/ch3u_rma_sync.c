@@ -968,6 +968,28 @@ int MPIDI_Win_fence(int assert, MPID_Win *win_ptr)
 	MPIR_T_PVAR_TIMER_END(RMA, rma_winfence_clearlock);
     }
 
+    if (!(assert & MPI_MODE_NOSUCCEED) &&
+        (assert & MPI_MODE_NOPRECEDE || win_ptr->fence_issued == 0)) {
+
+        /* In the FENCE that opens an epoch but does not close an epoch,
+           if SHM is allocated, perform a barrier among processes on the
+           same node, to prevent one process modifying another process's
+           memory before that process starts an epoch. */
+
+        if (win_ptr->shm_allocated == TRUE) {
+            MPID_Comm *node_comm_ptr = win_ptr->comm_ptr->node_comm;
+
+            /* Ensure ordering of load/store operations. */
+            OPA_read_write_barrier();
+
+            mpi_errno = MPIR_Barrier_impl(node_comm_ptr, &errflag);
+            if (mpi_errno) {goto fn_fail;}
+
+            /* Ensure ordering of load/store operations. */
+            OPA_read_write_barrier();
+        }
+    }
+
     /* Note that the NOPRECEDE and NOSUCCEED must be specified by all processes
        in the window's group if any specify it */
     if (assert & MPI_MODE_NOPRECEDE)
@@ -1053,6 +1075,11 @@ int MPIDI_Win_fence(int assert, MPID_Win *win_ptr)
 	/* result is stored in rma_target_proc[0] */
 	if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
         MPIU_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
+
+        /* Ensure ordering of load/store operations. */
+        if (win_ptr->shm_allocated == TRUE) {
+            OPA_read_write_barrier();
+        }
 
 	/* Set the completion counter */
 	/* FIXME: MT: this needs to be done atomically because other
