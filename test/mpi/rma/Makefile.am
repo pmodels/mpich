@@ -122,7 +122,8 @@ noinst_PROGRAMS =          \
     rma-contig             \
     badrma                 \
     nb_test                \
-    acc-loc
+    acc-loc                \
+    fence_shm
 
 strided_acc_indexed_LDADD       = $(LDADD) -lm
 strided_acc_onelock_LDADD       = $(LDADD) -lm
