@@ -431,6 +431,8 @@ int MPID_nem_ptl_init_id(MPIDI_VC_t *vc)
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
     vc_ptl->id_initialized = TRUE;
+
+    MPIDI_CHANGE_VC_STATE(vc, ACTIVE);
     
  fn_exit:
     MPIU_CHKLMEM_FREEALL();
