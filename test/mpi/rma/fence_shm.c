@@ -21,7 +21,7 @@ int main(int argc, char *argv[])
     MPI_Win shm_win;
     int *my_base;
     int one = 1;
-    int result_data[0];
+    int result_data;
 
     MTest_Init(&argc, &argv);
 
@@ -71,15 +71,15 @@ int main(int argc, char *argv[])
         }
 
         if (shm_rank == 0) {
-            result_data[0] = 0;
+            result_data = 0;
             MPI_Win_fence(MPI_MODE_NOPRECEDE, shm_win);
-            MPI_Get(result_data, 1, MPI_INT, 1, 0, 1, MPI_INT, shm_win);
+            MPI_Get(&result_data, 1, MPI_INT, 1, 0, 1, MPI_INT, shm_win);
             MPI_Win_fence(0, shm_win);
 
-            if (result_data[0] != one) {
+            if (result_data != one) {
                 errors++;
-                printf("Expected: result_data[0] = %d   Actual: result_data[0] = %d\n",
-                       one, result_data[0]);
+                printf("Expected: result_data = %d   Actual: result_data = %d\n",
+                       one, result_data);
             }
         }
 
