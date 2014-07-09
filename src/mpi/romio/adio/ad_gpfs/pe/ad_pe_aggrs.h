@@ -24,7 +24,7 @@
   #define GPFS_SUPER_MAGIC (0x47504653)
 #endif
 
-    /* generate a list of I/O aggregators for now based on the MP_IOTASKLIST. */
+    /* generate a list of I/O aggregators following a methodology specific for PE */
     int ADIOI_PE_gen_agg_ranklist(ADIO_File fd);
 
 #endif  /* AD_PE_AGGRS_H_ */

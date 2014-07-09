@@ -33,11 +33,22 @@
 #endif
 
 /*
- * Compute the aggregator-related parameters that are required in 2-phase collective IO of ADIO.
+ * Compute the aggregator-related parameters that are required in 2-phase
+ * collective IO of ADIO.
  * The parameters are
  * 	. the number of aggregators (proxies) : fd->hints->cb_nodes
  *	. the ranks of the aggregators :        fd->hints->ranklist
- * For now set these based on MP_IOTASKLIST
+ * If MP_IONODEFILE is defined, POE determines all tasks on every node listed
+ * in the node file and defines MP_IOTASKLIST with them, making them all
+ * aggregators.  Alternatively, the user can explictly set MP_IOTASKLIST
+ * themselves.  The format of the MP_IOTASKLIST is a colon-delimited list of
+ * task ids, the first entry being the total number of aggregators, for example
+ * to specify 4 aggregators on task ids 0,8,16,24  the value would be:
+ * 4:0:8:16:24.  If there is no MP_IONODEFILE, or MP_IOTASKLIST, then the
+ * default aggregator selection is 1 task per node for every node of the job -
+ * additionally, an environment variable MP_IOAGGR_CNT  can be specified, which
+ * defines the total number of aggregators, spread evenly across all the nodes.
+ * The romio_cb_nodes and romio_cb_config_list hint user settings are ignored.
  */
 int
 ADIOI_PE_gen_agg_ranklist(ADIO_File fd)
@@ -45,7 +56,7 @@ ADIOI_PE_gen_agg_ranklist(ADIO_File fd)
 
     int numAggs = 0;
     char *ioTaskList = getenv( "MP_IOTASKLIST" );
-    char *ioAgentCount = getenv("MP_IOAGENT_CNT");
+    char *ioAggrCount = getenv("MP_IOAGGR_CNT");
     int i,j;
     int inTERcommFlag = 0;
 
@@ -107,7 +118,7 @@ ADIOI_PE_gen_agg_ranklist(ADIO_File fd)
       MPI_Allgather(MPI_IN_PLACE, 1, MPI_INT, allNodeRanks, 1, MPI_INT, fd->comm);
 
 #ifdef AGG_DEBUG
-      printf("MPID_Comm data: remote_size is %d local_size is %d\nintranode_table entries:\n",mpidCommData->remote_size,mpidCommData->local_size);
+      printf("MPID_Comm data: local_size is %d\nintranode_table entries:\n",mpidCommData->local_size);
       for (i=0;i<localSize;i++) {
         printf("%d ",mpidCommData->intranode_table[i]);
       }
@@ -117,7 +128,7 @@ ADIOI_PE_gen_agg_ranklist(ADIO_File fd)
       }
       printf("\n");
 
-      printf("\allNodeRanks entries:\n");
+      printf("\nallNodeRanks entries:\n");
       for (i=0;i<localSize;i++) {
         printf("%d ",allNodeRanks[i]);
       }
@@ -125,25 +136,25 @@ ADIOI_PE_gen_agg_ranklist(ADIO_File fd)
 
 #endif
 
-      if (ioAgentCount) {
+      if (ioAggrCount) {
         int cntType = -1;
 
-        if ( strcasecmp(ioAgentCount, "ALL") ) {
-           if ( (cntType = atoi(ioAgentCount)) <= 0 ) {
+        if ( strcasecmp(ioAggrCount, "ALL") ) {
+           if ( (cntType = atoi(ioAggrCount)) <= 0 ) {
               /* Input is other non-digit or less than 1 the  assume */
-              /* 1 agent per node.  Note: atoi(-1) reutns -1.        */
+              /* 1 aggregator per node.  Note: atoi(-1) reutns -1.   */
               /* No warning message given here -- done earlier.      */
               cntType = -1;
            }
         }
         else {
-           /* ALL is specified set agent count to localSize */
+           /* ALL is specified set aggr count to localSize */
            cntType = -2;
         }
         switch(cntType) {
            case -1:
-              /* 1 agent/node case */
-             {
+              /* 1 aggr/node case */
+            {
              int rankListIndex = 0;
              fd->hints->ranklist = (int *) ADIOI_Malloc (localSize * sizeof(int));
              for (i=0;i<localSize;i++) {
@@ -152,7 +163,7 @@ ADIOI_PE_gen_agg_ranklist(ADIO_File fd)
                  numAggs++;
                }
              }
-             }
+            }
               break;
            case -2:
               /* ALL tasks case */
@@ -163,59 +174,56 @@ ADIOI_PE_gen_agg_ranklist(ADIO_File fd)
              }
               break;
            default:
-              /* Specific agent count case -- MUST be less than localSize. */
-              if (cntType <= localSize) {
-                 numAggs = cntType;
-                 // Round-robin thru allNodeRanks - pick the 0's, then the 1's, etc
-                 int currentNodeRank = 0;  // node rank currently being selected as aggregator
-                 int rankListIndex = 0;
-                 int currentAllNodeIndex = 0;
+              /* Specific aggr count case -- MUST be less than localSize, otherwise set to localSize */
+             if (cntType > localSize)
+               cntType = localSize;
 
-                 fd->hints->ranklist = (int *) ADIOI_Malloc (numAggs * sizeof(int));
+             numAggs = cntType;
+             // Round-robin thru allNodeRanks - pick the 0's, then the 1's, etc
+             int currentNodeRank = 0;  // node rank currently being selected as aggregator
+             int rankListIndex = 0;
+             int currentAllNodeIndex = 0;
 
-                 while (rankListIndex < numAggs) {
+             fd->hints->ranklist = (int *) ADIOI_Malloc (numAggs * sizeof(int));
 
-                   int foundEntry = 0;
-                   while (!foundEntry && (currentAllNodeIndex < localSize)) {
-                     if (allNodeRanks[currentAllNodeIndex] == currentNodeRank) {
-                       fd->hints->ranklist[rankListIndex++] = currentAllNodeIndex;
-                       foundEntry = 1;
-                     }
-                     currentAllNodeIndex++;
-                   }
-                   if (!foundEntry) {
-                     currentNodeRank++;
-                     currentAllNodeIndex = 0;
-                   }
-                } // while
-              } // (cntType <= localSize)
-              else {
-                ADIOI_Assert(1);
-              }
-              break;
-            } // switch(cntType)
-        } // if (ioAgentCount)
+             while (rankListIndex < numAggs) {
+               int foundEntry = 0;
+               while (!foundEntry && (currentAllNodeIndex < localSize)) {
+                 if (allNodeRanks[currentAllNodeIndex] == currentNodeRank) {
+                   fd->hints->ranklist[rankListIndex++] = currentAllNodeIndex;
+                   foundEntry = 1;
+                 }
+                 currentAllNodeIndex++;
+               }
+               if (!foundEntry) {
+                 currentNodeRank++;
+                 currentAllNodeIndex = 0;
+               }
+             } // while
+          break;
+        } // switch(cntType)
+      } // if (ioAggrCount)
 
       else { // default is 1 aggregator per node
         // take the 0 entries from allNodeRanks
-          int rankListIndex = 0;
-          fd->hints->ranklist = (int *) ADIOI_Malloc (localSize * sizeof(int));
-          for (i=0;i<localSize;i++) {
-            if (allNodeRanks[i] == 0) {
-              fd->hints->ranklist[rankListIndex++] = i;
-              numAggs++;
-            }
+        int rankListIndex = 0;
+        fd->hints->ranklist = (int *) ADIOI_Malloc (localSize * sizeof(int));
+        for (i=0;i<localSize;i++) {
+          if (allNodeRanks[i] == 0) {
+            fd->hints->ranklist[rankListIndex++] = i;
+            numAggs++;
           }
+        }
       }
     }
 
-    if ( getenv("MP_I_SHOW_AGENTS") ) {
+    if ( getenv("MP_I_SHOW_AGGRS") ) {
       if (myRank == 0) {
-      printf("Agg rank list of %d generated:\n", numAggs);
-      for (i=0;i<numAggs;i++) {
-        printf("%d ",fd->hints->ranklist[i]);
-      }
-      printf("\n");
+        printf("Agg rank list of %d generated:\n", numAggs);
+        for (i=0;i<numAggs;i++) {
+          printf("%d ",fd->hints->ranklist[i]);
+        }
+        printf("\n");
       }
     }
 
