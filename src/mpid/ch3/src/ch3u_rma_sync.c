@@ -2569,6 +2569,11 @@ int MPIDI_Win_complete(MPID_Win *win_ptr)
     /* free the group stored in window */
     MPIR_Group_release(win_ptr->start_group_ptr);
     win_ptr->start_group_ptr = NULL; 
+
+    /* Ensure ordering of load/store operations. */
+    if (win_ptr->shm_allocated == TRUE) {
+        OPA_read_write_barrier();
+    }
     
  fn_exit:
     MPIU_CHKLMEM_FREEALL();
