@@ -218,7 +218,8 @@ void ADIOI_GEN_ReadStrided(ADIO_File fd, void *buf, int count,
 	 * block e.g. with subarray types that actually describe the whole
 	 * array */
 	if (buftype_is_contig && bufsize <= frd_size) {
-            ADIO_ReadContig(fd, buf, bufsize, MPI_BYTE, ADIO_EXPLICIT_OFFSET,
+	    /* a count of bytes can overflow. operate on original type instead */
+            ADIO_ReadContig(fd, buf, count, datatype, ADIO_EXPLICIT_OFFSET,
                              offset, status, error_code);
 
 	    if (file_ptr_type == ADIO_INDIVIDUAL) {

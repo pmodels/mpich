@@ -285,9 +285,11 @@ void ADIOI_GEN_WriteStrided(ADIO_File fd, const void *buf, int count,
         if (buftype_is_contig && bufsize <= fwr_size) {
 	    /* though MPI api has an integer 'count' parameter, derived
 	     * datatypes might describe more bytes than can fit into an integer.
+	     * if we've made it this far, we can pass a count of original
+	     * datatypes, instead of a count of bytes (which might overflow)
 	     * Other WriteContig calls in this path are operating on data
 	     * sieving buffer */
-            ADIO_WriteContig(fd, buf, bufsize, MPI_BYTE, ADIO_EXPLICIT_OFFSET,
+            ADIO_WriteContig(fd, buf, count, datatype, ADIO_EXPLICIT_OFFSET,
                              offset, status, error_code);
 
 	    if (file_ptr_type == ADIO_INDIVIDUAL) {
