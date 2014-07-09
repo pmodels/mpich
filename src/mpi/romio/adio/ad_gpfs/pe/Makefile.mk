@@ -11,7 +11,6 @@ noinst_HEADERS +=                                                    \
     adio/ad_gpfs/pe/ad_pe_aggrs.h
 
 romio_other_sources +=                                               \
-    adio/ad_gpfs/pe/ad_pe_aggrs.c                                    \
-    adio/ad_gpfs/pe/ad_pe_hints.c
+    adio/ad_gpfs/pe/ad_pe_aggrs.c
 
 endif BUILD_AD_PE

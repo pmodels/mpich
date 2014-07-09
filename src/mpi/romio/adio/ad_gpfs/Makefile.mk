@@ -19,6 +19,7 @@ romio_other_sources +=                                               \
     adio/ad_gpfs/ad_gpfs_tuning.c                                        \
     adio/ad_gpfs/ad_gpfs.c                                               \
     adio/ad_gpfs/ad_gpfs_open.c                                          \
+    adio/ad_gpfs/ad_gpfs_hints.c                                         \
     adio/ad_gpfs/ad_gpfs_rdcoll.c                                        \
     adio/ad_gpfs/ad_gpfs_wrcoll.c
 

@@ -25,12 +25,10 @@ struct ADIOI_Fns_struct ADIO_GPFS_operations = {
     ADIOI_GPFS_WriteStridedColl, /* WriteStridedColl */
     ADIOI_GEN_SeekIndividual, /* SeekIndividual */
     ADIOI_GEN_Fcntl, /* Fcntl */
-#ifdef BGQPLATFORM
-    ADIOI_BG_SetInfo, /* SetInfo */
-#elif PEPLATFORM
-    ADIOI_PE_SetInfo, /* SetInfo */
+#if defined(BGQPLATFORM) || defined(PEPLATFORM)
+    ADIOI_GPFS_SetInfo, /* SetInfo for BlueGene or PE */
 #else
-    ADIOI_GEN_SetInfo, /* SetInfo */
+    ADIOI_GEN_SetInfo, /* SetInfo for any platform besides BlueGene or PE */
 #endif
     ADIOI_GEN_ReadStrided, /* ReadStrided */
     ADIOI_GEN_WriteStrided, /* WriteStrided */
