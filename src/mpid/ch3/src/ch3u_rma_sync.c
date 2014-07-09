@@ -2171,6 +2171,99 @@ int MPIDI_Win_post(MPID_Group *post_grp_ptr, int assert, MPID_Win *win_ptr)
 }
 
 
+static int recv_post_msgs(MPID_Group *group_ptr, MPID_Win *win_ptr, int local)
+{
+    int mpi_errno = MPI_SUCCESS;
+    int start_grp_size, *ranks_in_start_grp, *ranks_in_win_grp, src, rank, i, j;
+    MPI_Request *req;
+    MPI_Status *status;
+    MPID_Comm *comm_ptr = win_ptr->comm_ptr;
+    MPID_Group *win_grp_ptr;
+    MPIU_CHKLMEM_DECL(4);
+    MPIDI_STATE_DECL(MPID_STATE_RECV_POST_MSGS);
+
+    MPIDI_RMA_FUNC_ENTER(MPID_STATE_RECV_POST_MSGS);
+
+    /* Wait for 0-byte messages from processes either on the same node
+     * or not (depending on the "local" parameter), so we know they
+     * have entered post. */
+    start_grp_size = win_ptr->start_group_ptr->size;
+    MPIU_CHKLMEM_MALLOC(ranks_in_start_grp, int *, start_grp_size*sizeof(int),
+			mpi_errno, "ranks_in_start_grp");
+
+    MPIU_CHKLMEM_MALLOC(ranks_in_win_grp, int *, start_grp_size*sizeof(int),
+			mpi_errno, "ranks_in_win_grp");
+
+    for (i = 0; i < start_grp_size; i++)
+	ranks_in_start_grp[i] = i;
+
+    mpi_errno = MPIR_Comm_group_impl(comm_ptr, &win_grp_ptr);
+    if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
+
+    mpi_errno = MPIR_Group_translate_ranks_impl(win_ptr->start_group_ptr, start_grp_size,
+                                                ranks_in_start_grp,
+                                                win_grp_ptr, ranks_in_win_grp);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
+    rank = win_ptr->comm_ptr->rank;
+    MPIU_CHKLMEM_MALLOC(req, MPI_Request *, start_grp_size*sizeof(MPI_Request), mpi_errno, "req");
+    MPIU_CHKLMEM_MALLOC(status, MPI_Status *, start_grp_size*sizeof(MPI_Status), mpi_errno, "status");
+
+    j = 0;
+    for (i = 0; i < start_grp_size; i++) {
+        src = ranks_in_win_grp[i];
+
+        if (src == rank)
+            continue;
+
+        if (local && win_ptr->shm_allocated == TRUE) {
+            MPID_Request *req_ptr;
+            MPIDI_VC_t *orig_vc = NULL, *target_vc = NULL;
+
+            MPIDI_Comm_get_vc(win_ptr->comm_ptr, rank, &orig_vc);
+            MPIDI_Comm_get_vc(win_ptr->comm_ptr, src, &target_vc);
+
+            if (orig_vc->node_id == target_vc->node_id) {
+                mpi_errno = MPID_Irecv(NULL, 0, MPI_INT, src, SYNC_POST_TAG,
+                                       comm_ptr, MPID_CONTEXT_INTRA_PT2PT, &req_ptr);
+                if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+                req[j++] = req_ptr->handle;
+            }
+        }
+        else if (!local) {
+            MPID_Request *req_ptr;
+
+            mpi_errno = MPID_Irecv(NULL, 0, MPI_INT, src, SYNC_POST_TAG,
+                                   comm_ptr, MPID_CONTEXT_INTRA_PT2PT, &req_ptr);
+            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+            req[j++] = req_ptr->handle;
+        }
+    }
+
+    if (j) {
+        mpi_errno = MPIR_Waitall_impl(j, req, status);
+        if (mpi_errno && mpi_errno != MPI_ERR_IN_STATUS) MPIU_ERR_POP(mpi_errno);
+        /* --BEGIN ERROR HANDLING-- */
+        if (mpi_errno == MPI_ERR_IN_STATUS) {
+            for (i = 0; i < start_grp_size; i++) {
+                if (status[i].MPI_ERROR != MPI_SUCCESS) {
+                    mpi_errno = status[i].MPI_ERROR;
+                    MPIU_ERR_POP(mpi_errno);
+                }
+            }
+        }
+        /* --END ERROR HANDLING-- */
+    }
+
+    mpi_errno = MPIR_Group_free_impl(win_grp_ptr);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
+ fn_fail:
+    MPIU_CHKLMEM_FREEALL();
+    MPIDI_RMA_FUNC_EXIT(MPID_STATE_RECV_POST_MSGS);
+    return mpi_errno;
+}
+
 
 #undef FUNCNAME
 #define FUNCNAME MPIDI_Win_start
@@ -2232,6 +2325,10 @@ int MPIDI_Win_start(MPID_Group *group_ptr, int assert, MPID_Win *win_ptr)
     MPIR_Group_add_ref( group_ptr );
     win_ptr->start_assert = assert;
 
+    /* wait for messages from local processes */
+    mpi_errno = recv_post_msgs(group_ptr, win_ptr, 1);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
  fn_fail:
     MPIDI_RMA_FUNC_EXIT(MPID_STATE_MPIDI_WIN_START);
     return mpi_errno;
@@ -2246,7 +2343,7 @@ int MPIDI_Win_start(MPID_Group *group_ptr, int assert, MPID_Win *win_ptr)
 int MPIDI_Win_complete(MPID_Win *win_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
-    int comm_size, *nops_to_proc, src, new_total_op_count;
+    int comm_size, *nops_to_proc, new_total_op_count;
     int i, j, dst, total_op_count, *curr_ops_cnt;
     MPIDI_RMA_Op_t *curr_ptr;
     MPIDI_RMA_Ops_list_t *ops_list;
@@ -2256,7 +2353,7 @@ int MPIDI_Win_complete(MPID_Win *win_ptr)
     int start_grp_size, *ranks_in_start_grp, *ranks_in_win_grp, rank;
     int nRequest = 0;
     int nRequestNew = 0;
-    MPIU_CHKLMEM_DECL(9);
+    MPIU_CHKLMEM_DECL(7);
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_WIN_COMPLETE);
 
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_WIN_COMPLETE);
@@ -2311,43 +2408,9 @@ int MPIDI_Win_complete(MPID_Win *win_ptr)
        message from each target process */
     if ((win_ptr->start_assert & MPI_MODE_NOCHECK) == 0)
     {
-        MPI_Request *req;
-        MPI_Status *status;
-
-        MPIU_CHKLMEM_MALLOC(req, MPI_Request *, start_grp_size*sizeof(MPI_Request), mpi_errno, "req");
-        MPIU_CHKLMEM_MALLOC(status, MPI_Status *, start_grp_size*sizeof(MPI_Status), mpi_errno, "status");
-
-	MPIR_T_PVAR_COUNTER_INC(RMA, rma_wincomplete_recvsync_aux, start_grp_size);
-	for (i = 0; i < start_grp_size; i++) {
-	    src = ranks_in_win_grp[i];
-	    if (src != rank) {
-                MPID_Request *req_ptr;
-		/* FIXME: This is a heavyweight way to process these sync 
-		   messages - this should be handled with a special packet
-		   type and callback function.
-		*/
-                mpi_errno = MPID_Irecv(NULL, 0, MPI_INT, src, SYNC_POST_TAG,
-                                       comm_ptr, MPID_CONTEXT_INTRA_PT2PT, &req_ptr);
-		if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-                req[i] = req_ptr->handle;
-	    } else {
-                req[i] = MPI_REQUEST_NULL;
-            }
-
-	}
-        mpi_errno = MPIR_Waitall_impl(start_grp_size, req, status);
-        if (mpi_errno && mpi_errno != MPI_ERR_IN_STATUS) MPIU_ERR_POP(mpi_errno);
-
-        /* --BEGIN ERROR HANDLING-- */
-        if (mpi_errno == MPI_ERR_IN_STATUS) {
-            for (i = 0; i < start_grp_size; i++) {
-                if (status[i].MPI_ERROR != MPI_SUCCESS) {
-                    mpi_errno = status[i].MPI_ERROR;
-                    MPIU_ERR_POP(mpi_errno);
-                }
-            }
-        }
-        /* --END ERROR HANDLING-- */
+        /* wait for messages from non-local processes */
+        mpi_errno = recv_post_msgs(win_ptr->start_group_ptr, win_ptr, 0);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     }
     MPIR_T_PVAR_TIMER_END(RMA, rma_wincomplete_recvsync);
 
