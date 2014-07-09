@@ -24,6 +24,7 @@ void *MPL_trcalloc(size_t, size_t, int, const char[]);
 void *MPL_trrealloc(void *, size_t, int, const char[]);
 void *MPL_trstrdup(const char *, int, const char[]);
 void MPL_TrSetMaxMem(size_t);
+void MPL_TrSetMaxAlloc(size_t);
 
 /* Make sure that FILE is defined */
 #include <stdio.h>

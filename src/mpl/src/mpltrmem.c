@@ -127,6 +127,8 @@ static int TRSetBytes   = 0;
 /* Used to keep track of allocations */
 static volatile size_t TRMaxMem = 0;
 static volatile int    TRMaxMemId = 0;
+static volatile size_t TRNumAlloc = 0;
+static volatile size_t TRMaxAlloc = (size_t)2E6;
 /* Used to limit allocation */
 static volatile size_t TRMaxMemAllow = 0;
 
@@ -286,6 +288,16 @@ void *MPL_trmalloc(size_t a, int lineno, const char fname[])
                          world_rank, (long)a, (long)nsize, new, fname, lineno);
     }
 
+    /* Warn the user about tracing overhead if the total number of memory
+     * allocation is larger than the threshold, TRMaxAlloc. */
+    TRNumAlloc++;
+    if (TRNumAlloc >= TRMaxAlloc) {
+        MPL_error_printf("[%d] %.1lf MB was used for memory usage tracing!\n",
+                         world_rank,
+                         (double)(sizeof(TrSPACE) * TRNumAlloc) / 1024 / 1024);
+        MPL_TrSetMaxAlloc((size_t)(TRMaxAlloc + 1E6));
+    }
+
     /* Without these macros valgrind actually catches far fewer errors when
      * using --enable-g=mem. Note that it would be nice to use
      * MPL_VG_MALLOCLIKE_BLOCK and friends, but they don't work when the
@@ -426,6 +438,8 @@ void MPL_trfree(void *a_ptr, int line, const char file[])
                          world_rank, (unsigned long)head->size, hexstring, 
                          file, line);
     }
+
+    TRNumAlloc--;
 
     /*
      * Now, scrub the data (except possibly the first few ints) to
@@ -1024,6 +1038,11 @@ void MPL_trdumpGrouped(FILE * fp, int minid)
 void MPL_TrSetMaxMem(size_t size)
 {
     TRMaxMemAllow = size;
+}
+
+void MPL_TrSetMaxAlloc(size_t size)
+{
+    TRMaxAlloc = size;
 }
 
 static void addrToHex(void *addr, char string[MAX_ADDRESS_CHARS])
