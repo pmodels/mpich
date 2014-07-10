@@ -45,7 +45,10 @@ int MPIDI_Isend_self(const void * buf, int count, MPI_Datatype datatype, int ran
     /* --BEGIN ERROR HANDLING-- */
     if (rreq == NULL)
     {
-        MPID_Request_release(sreq);
+        /* Set the refcount to 0 since the user will never have a chance to
+         * release their reference */
+        MPIU_Object_set_ref(sreq, 0);
+        MPIDI_CH3_Request_destroy(sreq);
 	sreq = NULL;
         MPIU_ERR_SET1(mpi_errno, MPI_ERR_OTHER, "**nomem", 
 		      "**nomemuereq %d", MPIDI_CH3U_Recvq_count_unexp());
