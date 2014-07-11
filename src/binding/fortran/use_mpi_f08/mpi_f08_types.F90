@@ -1,10 +1,10 @@
-! MPI 3 Data types for Fortran.
+! MPI 3 data types for Fortran.
 ! From A.1.2, pp 676-677
 ! Note added MPI_Message type not in the spec by mistake
 !
 !--------------------------------------------------------------
 
-module mpi_f08_types
+module MPI_f08_types
 use, intrinsic :: iso_c_binding, only: c_int
 use :: mpi_c_interface_types, only: c_Count, c_Status
 
@@ -55,7 +55,22 @@ type, bind(C) :: MPI_Message
     integer :: MPI_VAL
 end type MPI_Message
 
-! Fortran 2008 struct for status. Must be consistent with mpi.h, mpif.h
+! MPI_File_f2c/c2f are implemented in C, so we do direct binding.
+interface
+    function MPI_File_f2c(file) bind(C, name="MPI_File_f2c") result (res)
+        use mpi_c_interface_types, only: c_File
+        integer, value :: file
+        integer(c_File) :: res
+    end function MPI_File_f2c
+
+    function MPI_File_c2f(file) bind(C, name="MPI_File_c2f") result (res)
+        use mpi_c_interface_types, only: c_File
+        integer(c_File), value :: file
+        integer :: res
+    end function MPI_File_c2f
+end interface
+
+! Fortran 2008 struct for status. Must be consistent with MPI.h, MPIf.h
 type, bind(C) :: MPI_Status
     integer :: count_lo;
     integer :: count_hi_and_cancelled;
@@ -72,150 +87,149 @@ integer,parameter :: MPI_ERROR  = 5
 integer,parameter :: MPI_STATUS_SIZE = 5
 
 interface assignment(=)
-    module procedure mpi_status_f08_assgn_c
-    module procedure mpi_status_c_assgn_f08
+    module procedure MPI_Status_f08_assgn_c
+    module procedure MPI_Status_c_assgn_f08
 end interface
 
-private :: mpi_status_f08_assgn_c
-private :: mpi_status_c_assgn_f08
-private :: mpi_status_f_assgn_c
-private :: mpi_status_c_assgn_f
+private :: MPI_Status_f08_assgn_c
+private :: MPI_Status_c_assgn_f08
+private :: MPI_Status_f_assgn_c
+private :: MPI_Status_c_assgn_f
 
 ! Required operator overloads for == and /= for opaque handles
 ! 2.5.1 pp 12-13
 
 interface operator(==)
-    module procedure mpi_comm_eq
-    module procedure mpi_datatype_eq
-    module procedure mpi_errhandler_eq
-    module procedure mpi_file_eq
-    module procedure mpi_group_eq
-    module procedure mpi_info_eq
-    module procedure mpi_op_eq
-    module procedure mpi_request_eq
-    module procedure mpi_win_eq
-    module procedure mpi_message_eq
+    module procedure MPI_Comm_eq
+    module procedure MPI_Datatype_eq
+    module procedure MPI_Errhandler_eq
+    module procedure MPI_File_eq
+    module procedure MPI_Group_eq
+    module procedure MPI_Info_eq
+    module procedure MPI_Op_eq
+    module procedure MPI_Request_eq
+    module procedure MPI_Win_eq
+    module procedure MPI_Message_eq
 
-    module procedure mpi_comm_f08_eq_f
-    module procedure mpi_comm_f_eq_f08
-    module procedure mpi_datatype_f08_eq_f
-    module procedure mpi_datatype_f_eq_f08
-    module procedure mpi_errhandler_f08_eq_f
-    module procedure mpi_errhandler_f_eq_f08
-    module procedure mpi_file_f08_eq_f
-    module procedure mpi_file_f_eq_f08
-    module procedure mpi_group_f08_eq_f
-    module procedure mpi_group_f_eq_f08
-    module procedure mpi_info_f08_eq_f
-    module procedure mpi_info_f_eq_f08
-    module procedure mpi_op_f08_eq_f
-    module procedure mpi_op_f_eq_f08
-    module procedure mpi_request_f08_eq_f
-    module procedure mpi_request_f_eq_f08
-    module procedure mpi_win_f08_eq_f
-    module procedure mpi_win_f_eq_f08
-    module procedure mpi_message_f08_eq_f
-    module procedure mpi_message_f_eq_f08
+    module procedure MPI_Comm_f08_eq_f
+    module procedure MPI_Comm_f_eq_f08
+    module procedure MPI_Datatype_f08_eq_f
+    module procedure MPI_Datatype_f_eq_f08
+    module procedure MPI_Errhandler_f08_eq_f
+    module procedure MPI_Errhandler_f_eq_f08
+    module procedure MPI_File_f08_eq_f
+    module procedure MPI_File_f_eq_f08
+    module procedure MPI_Group_f08_eq_f
+    module procedure MPI_Group_f_eq_f08
+    module procedure MPI_Info_f08_eq_f
+    module procedure MPI_Info_f_eq_f08
+    module procedure MPI_Op_f08_eq_f
+    module procedure MPI_Op_f_eq_f08
+    module procedure MPI_Request_f08_eq_f
+    module procedure MPI_Request_f_eq_f08
+    module procedure MPI_Win_f08_eq_f
+    module procedure MPI_Win_f_eq_f08
+    module procedure MPI_Message_f08_eq_f
+    module procedure MPI_Message_f_eq_f08
 end interface
 
-private :: mpi_comm_eq
-private :: mpi_datatype_eq
-private :: mpi_errhandler_eq
-private :: mpi_file_eq
-private :: mpi_group_eq
-private :: mpi_info_eq
-private :: mpi_op_eq
-private :: mpi_request_eq
-private :: mpi_win_eq
-private :: mpi_message_eq
+private :: MPI_Comm_eq
+private :: MPI_Datatype_eq
+private :: MPI_Errhandler_eq
+private :: MPI_File_eq
+private :: MPI_Group_eq
+private :: MPI_Info_eq
+private :: MPI_Op_eq
+private :: MPI_Request_eq
+private :: MPI_Win_eq
+private :: MPI_Message_eq
 
-private :: mpi_comm_f08_eq_f
-private :: mpi_comm_f_eq_f08
-private :: mpi_datatype_f08_eq_f
-private :: mpi_datatype_f_eq_f08
-private :: mpi_errhandler_f08_eq_f
-private :: mpi_errhandler_f_eq_f08
-private :: mpi_file_f08_eq_f
-private :: mpi_file_f_eq_f08
-private :: mpi_group_f08_eq_f
-private :: mpi_group_f_eq_f08
-private :: mpi_info_f08_eq_f
-private :: mpi_info_f_eq_f08
-private :: mpi_op_f08_eq_f
-private :: mpi_op_f_eq_f08
-private :: mpi_request_f08_eq_f
-private :: mpi_request_f_eq_f08
-private :: mpi_win_f08_eq_f
-private :: mpi_win_f_eq_f08
-private :: mpi_message_f08_eq_f
-private :: mpi_message_f_eq_f08
+private :: MPI_Comm_f08_eq_f
+private :: MPI_Comm_f_eq_f08
+private :: MPI_Datatype_f08_eq_f
+private :: MPI_Datatype_f_eq_f08
+private :: MPI_Errhandler_f08_eq_f
+private :: MPI_Errhandler_f_eq_f08
+private :: MPI_File_f08_eq_f
+private :: MPI_File_f_eq_f08
+private :: MPI_Group_f08_eq_f
+private :: MPI_Group_f_eq_f08
+private :: MPI_Info_f08_eq_f
+private :: MPI_Info_f_eq_f08
+private :: MPI_Op_f08_eq_f
+private :: MPI_Op_f_eq_f08
+private :: MPI_Request_f08_eq_f
+private :: MPI_Request_f_eq_f08
+private :: MPI_Win_f08_eq_f
+private :: MPI_Win_f_eq_f08
+private :: MPI_Message_f08_eq_f
+private :: MPI_Message_f_eq_f08
 
 interface operator(/=)
-    module procedure mpi_comm_neq
-    module procedure mpi_datatype_neq
-    module procedure mpi_errhandler_neq
-    module procedure mpi_file_neq
-    module procedure mpi_group_neq
-    module procedure mpi_info_neq
-    module procedure mpi_op_neq
-    module procedure mpi_request_neq
-    module procedure mpi_win_neq
-    module procedure mpi_message_neq
+    module procedure MPI_Comm_neq
+    module procedure MPI_Datatype_neq
+    module procedure MPI_Errhandler_neq
+    module procedure MPI_File_neq
+    module procedure MPI_Group_neq
+    module procedure MPI_Info_neq
+    module procedure MPI_Op_neq
+    module procedure MPI_Request_neq
+    module procedure MPI_Win_neq
+    module procedure MPI_Message_neq
 
-    module procedure mpi_comm_f08_ne_f
-    module procedure mpi_comm_f_ne_f08
-    module procedure mpi_datatype_f08_ne_f
-    module procedure mpi_datatype_f_ne_f08
-    module procedure mpi_errhandler_f08_ne_f
-    module procedure mpi_errhandler_f_ne_f08
-    module procedure mpi_file_f08_ne_f
-    module procedure mpi_file_f_ne_f08
-    module procedure mpi_group_f08_ne_f
-    module procedure mpi_group_f_ne_f08
-    module procedure mpi_info_f08_ne_f
-    module procedure mpi_info_f_ne_f08
-    module procedure mpi_op_f08_ne_f
-    module procedure mpi_op_f_ne_f08
-    module procedure mpi_request_f08_ne_f
-    module procedure mpi_request_f_ne_f08
-    module procedure mpi_win_f08_ne_f
-    module procedure mpi_win_f_ne_f08
-    module procedure mpi_message_f08_ne_f
-    module procedure mpi_message_f_ne_f08
+    module procedure MPI_Comm_f08_ne_f
+    module procedure MPI_Comm_f_ne_f08
+    module procedure MPI_Datatype_f08_ne_f
+    module procedure MPI_Datatype_f_ne_f08
+    module procedure MPI_Errhandler_f08_ne_f
+    module procedure MPI_Errhandler_f_ne_f08
+    module procedure MPI_File_f08_ne_f
+    module procedure MPI_File_f_ne_f08
+    module procedure MPI_Group_f08_ne_f
+    module procedure MPI_Group_f_ne_f08
+    module procedure MPI_Info_f08_ne_f
+    module procedure MPI_Info_f_ne_f08
+    module procedure MPI_Op_f08_ne_f
+    module procedure MPI_Op_f_ne_f08
+    module procedure MPI_Request_f08_ne_f
+    module procedure MPI_Request_f_ne_f08
+    module procedure MPI_Win_f08_ne_f
+    module procedure MPI_Win_f_ne_f08
+    module procedure MPI_Message_f08_ne_f
+    module procedure MPI_Message_f_ne_f08
 end interface
 
-private :: mpi_comm_neq
-private :: mpi_datatype_neq
-private :: mpi_errhandler_neq
-private :: mpi_file_neq
-private :: mpi_group_neq
-private :: mpi_info_neq
-private :: mpi_op_neq
-private :: mpi_request_neq
-private :: mpi_win_neq
-private :: mpi_message_neq
+private :: MPI_Comm_neq
+private :: MPI_Datatype_neq
+private :: MPI_Errhandler_neq
+private :: MPI_File_neq
+private :: MPI_Group_neq
+private :: MPI_Info_neq
+private :: MPI_Op_neq
+private :: MPI_Request_neq
+private :: MPI_Win_neq
+private :: MPI_Message_neq
 
-private :: mpi_comm_f08_ne_f
-private :: mpi_comm_f_ne_f08
-private :: mpi_datatype_f08_ne_f
-private :: mpi_datatype_f_ne_f08
-private :: mpi_errhandler_f08_ne_f
-private :: mpi_errhandler_f_ne_f08
-private :: mpi_file_f08_ne_f
-private :: mpi_file_f_ne_f08
-private :: mpi_group_f08_ne_f
-private :: mpi_group_f_ne_f08
-private :: mpi_info_f08_ne_f
-private :: mpi_info_f_ne_f08
-private :: mpi_op_f08_ne_f
-private :: mpi_op_f_ne_f08
-private :: mpi_request_f08_ne_f
-private :: mpi_request_f_ne_f08
-private :: mpi_win_f08_ne_f
-private :: mpi_win_f_ne_f08
-private :: mpi_message_f08_ne_f
-private :: mpi_message_f_ne_f08
-
+private :: MPI_Comm_f08_ne_f
+private :: MPI_Comm_f_ne_f08
+private :: MPI_Datatype_f08_ne_f
+private :: MPI_Datatype_f_ne_f08
+private :: MPI_Errhandler_f08_ne_f
+private :: MPI_Errhandler_f_ne_f08
+private :: MPI_File_f08_ne_f
+private :: MPI_File_f_ne_f08
+private :: MPI_Group_f08_ne_f
+private :: MPI_Group_f_ne_f08
+private :: MPI_Info_f08_ne_f
+private :: MPI_Info_f_ne_f08
+private :: MPI_Op_f08_ne_f
+private :: MPI_Op_f_ne_f08
+private :: MPI_Request_f08_ne_f
+private :: MPI_Request_f_ne_f08
+private :: MPI_Win_f08_ne_f
+private :: MPI_Win_f_ne_f08
+private :: MPI_Message_f08_ne_f
+private :: MPI_Message_f_ne_f08
 
 ! MPI_Sizeof in 17.1.9
 
@@ -371,31 +385,31 @@ subroutine MPI_Sizeof_xcomplex128 (x, size, ierror)
     ierror = 0
 end subroutine MPI_Sizeof_xcomplex128
 
-elemental subroutine mpi_status_f08_assgn_c (status_f08, status_c)
+elemental subroutine MPI_Status_f08_assgn_c (status_f08, status_c)
     ! Defined status_f08 = status_c
     type(MPI_Status),intent(out) :: status_f08
     type(c_Status),intent(in)    :: status_c
 
     status_f08%count_lo   = status_c%count_lo
     status_f08%count_hi_and_cancelled  = status_c%count_hi_and_cancelled
-    status_f08%mpi_source = status_c%mpi_source
-    status_f08%mpi_tag    = status_c%mpi_tag
-    status_f08%mpi_error  = status_c%mpi_error
-end subroutine mpi_status_f08_assgn_c
+    status_f08%MPI_source = status_c%MPI_source
+    status_f08%MPI_tag    = status_c%MPI_tag
+    status_f08%MPI_error  = status_c%MPI_error
+end subroutine MPI_Status_f08_assgn_c
 
-elemental subroutine mpi_status_c_assgn_f08 (status_c, status_f08)
+elemental subroutine MPI_Status_c_assgn_f08 (status_c, status_f08)
     ! Defined status_c = status_f08
     type(c_Status),intent(out) :: status_c
     type(MPI_Status),intent(in) :: status_f08
 
     status_c%count_lo   = status_f08%count_lo
     status_c%count_hi_and_cancelled  = status_f08%count_hi_and_cancelled
-    status_c%mpi_source = status_f08%mpi_source
-    status_c%mpi_tag    = status_f08%mpi_tag
-    status_c%mpi_error  = status_f08%mpi_error
-end subroutine mpi_status_c_assgn_f08
+    status_c%MPI_source = status_f08%MPI_source
+    status_c%MPI_tag    = status_f08%MPI_tag
+    status_c%MPI_error  = status_f08%MPI_error
+end subroutine MPI_Status_c_assgn_f08
 
-subroutine mpi_status_f_assgn_c (status_f, status_c)
+subroutine MPI_Status_f_assgn_c (status_f, status_c)
     ! Defined status_f = status_c
     use,intrinsic :: iso_fortran_env, only: int32
     integer,intent(out) :: status_f(MPI_STATUS_SIZE)
@@ -403,12 +417,12 @@ subroutine mpi_status_f_assgn_c (status_f, status_c)
 
     status_f(1) = status_c%count_lo
     status_f(2) = status_c%count_hi_and_cancelled
-    status_f(MPI_SOURCE) = status_c%mpi_source
-    status_f(MPI_TAG)    = status_c%mpi_tag
-    status_f(MPI_ERROR)  = status_c%mpi_error
-end subroutine mpi_status_f_assgn_c
+    status_f(MPI_SOURCE) = status_c%MPI_source
+    status_f(MPI_TAG)    = status_c%MPI_tag
+    status_f(MPI_ERROR)  = status_c%MPI_error
+end subroutine MPI_Status_f_assgn_c
 
-subroutine mpi_status_c_assgn_f (status_c, status_f)
+subroutine MPI_Status_c_assgn_f (status_c, status_f)
     ! Defined status_c = status_f
     use,intrinsic :: iso_fortran_env, only: int32
     integer,intent(in) :: status_f(MPI_STATUS_SIZE)
@@ -417,10 +431,10 @@ subroutine mpi_status_c_assgn_f (status_c, status_f)
 
     status_c%count_lo   = status_f(1);
     status_c%count_hi_and_cancelled  = status_f(2);
-    status_c%mpi_source = status_f(MPI_SOURCE)
-    status_c%mpi_tag    = status_f(MPI_TAG)
-    status_c%mpi_error  = status_f(MPI_ERROR)
-end subroutine mpi_status_c_assgn_f
+    status_c%MPI_source = status_f(MPI_SOURCE)
+    status_c%MPI_tag    = status_f(MPI_TAG)
+    status_c%MPI_error  = status_f(MPI_ERROR)
+end subroutine MPI_Status_c_assgn_f
 
 ! int MPI_Status_f082c(const MPI_F08_status *status_f08, MPI_Status *status_c)
 
@@ -447,7 +461,6 @@ function PMPI_Status_f082c (status_f08, status_c) &
 end function PMPI_Status_f082c
 
 ! int MPI_Status_c2f08(const MPI_Status *status_c, MPI_F08_status *status_f08)
-
 function MPI_Status_c2f08 (status_c, status_f08) &
               bind(C, name="MPI_Status_c2f08") result (res)
     use,intrinsic :: iso_c_binding, only: c_int
@@ -470,225 +483,225 @@ function PMPI_Status_c2f08 (status_c, status_f08) &
     res = 0
 end function PMPI_Status_c2f08
 
-function mpi_comm_eq (x, y) result(res)
+function MPI_Comm_eq (x, y) result(res)
     type(MPI_Comm), intent(in) :: x, y
     logical :: res
     res = (x%MPI_VAL == y%MPI_VAL)
-end function mpi_comm_eq
+end function MPI_Comm_eq
 
-function mpi_datatype_eq (x, y) result(res)
+function MPI_Datatype_eq (x, y) result(res)
     type(MPI_Datatype), intent(in) :: x, y
     logical :: res
     res = (x%MPI_VAL == y%MPI_VAL)
-end function mpi_datatype_eq
+end function MPI_Datatype_eq
 
-function mpi_errhandler_eq (x, y) result(res)
+function MPI_Errhandler_eq (x, y) result(res)
     type(MPI_Errhandler), intent(in) :: x, y
     logical :: res
     res = (x%MPI_VAL == y%MPI_VAL)
-end function mpi_errhandler_eq
+end function MPI_Errhandler_eq
 
-function mpi_file_eq (x, y) result(res)
+function MPI_File_eq (x, y) result(res)
     type(MPI_File), intent(in) :: x, y
     logical :: res
     res = (x%MPI_VAL == y%MPI_VAL)
-end function mpi_File_eq
+end function MPI_File_eq
 
-function mpi_group_eq (x, y) result(res)
+function MPI_Group_eq (x, y) result(res)
     type(MPI_Group), intent(in) :: x, y
     logical :: res
     res = (x%MPI_VAL == y%MPI_VAL)
-end function mpi_group_eq
+end function MPI_Group_eq
 
-function mpi_info_eq (x, y) result(res)
+function MPI_Info_eq (x, y) result(res)
     type(MPI_Info), intent(in) :: x, y
     logical :: res
     res = (x%MPI_VAL == y%MPI_VAL)
-end function mpi_info_eq
+end function MPI_Info_eq
 
-function mpi_op_eq (x, y) result(res)
+function MPI_Op_eq (x, y) result(res)
     type(MPI_Op), intent(in) :: x, y
     logical :: res
     res = (x%MPI_VAL == y%MPI_VAL)
-end function mpi_op_eq
+end function MPI_Op_eq
 
-function mpi_request_eq (x, y) result(res)
+function MPI_Request_eq (x, y) result(res)
     type(MPI_Request), intent(in) :: x, y
     logical :: res
     res = (x%MPI_VAL == y%MPI_VAL)
-end function mpi_request_eq
+end function MPI_Request_eq
 
-function mpi_win_eq (x, y) result(res)
+function MPI_Win_eq (x, y) result(res)
     type(MPI_Win), intent(in) :: x, y
     logical :: res
     res = (x%MPI_VAL == y%MPI_VAL)
-end function mpi_win_eq
+end function MPI_Win_eq
 
-function mpi_message_eq (x, y) result(res)
+function MPI_Message_eq (x, y) result(res)
     type(MPI_Message), intent(in) :: x, y
     logical :: res
     res = (x%MPI_VAL == y%MPI_VAL)
-end function mpi_message_eq
+end function MPI_Message_eq
 
-function mpi_comm_f08_eq_f (f08, f) result(res)
+function MPI_Comm_f08_eq_f (f08, f) result(res)
     ! Defined comparison for MPI_Comm and integer handles
     type(MPI_Comm),intent(in) :: f08
     integer,intent(in)        :: f
     logical                   :: res
     res = f08%MPI_VAL == f
-end function mpi_comm_f08_eq_f
+end function MPI_Comm_f08_eq_f
 
-function mpi_comm_f_eq_f08 (f, f08) result(res)
+function MPI_Comm_f_eq_f08 (f, f08) result(res)
     ! Defined comparison for MPI_Comm and integer handles
     type(MPI_Comm),intent(in) :: f08
     integer,intent(in)        :: f
     logical                   :: res
     res = f08%MPI_VAL == f
-end function mpi_comm_f_eq_f08
+end function MPI_Comm_f_eq_f08
 
-function mpi_datatype_f08_eq_f (f08, f) result(res)
+function MPI_Datatype_f08_eq_f (f08, f) result(res)
     ! Defined comparison for MPI_Datatype and integer handles
     type(MPI_Datatype),intent(in) :: f08
     integer,intent(in)        :: f
     logical                   :: res
     res = f08%MPI_VAL == f
-end function mpi_datatype_f08_eq_f
+end function MPI_Datatype_f08_eq_f
 
-function mpi_datatype_f_eq_f08 (f, f08) result(res)
+function MPI_Datatype_f_eq_f08 (f, f08) result(res)
     ! Defined comparison for MPI_Datatype and integer handles
     type(MPI_Datatype),intent(in) :: f08
     integer,intent(in)        :: f
     logical                   :: res
     res = f08%MPI_VAL == f
-end function mpi_datatype_f_eq_f08
+end function MPI_Datatype_f_eq_f08
 
-function mpi_errhandler_f08_eq_f (f08, f) result(res)
+function MPI_Errhandler_f08_eq_f (f08, f) result(res)
     ! Defined comparison for MPI_Errhandler and integer handles
     type(MPI_Errhandler),intent(in) :: f08
     integer,intent(in)        :: f
     logical                   :: res
     res = f08%MPI_VAL == f
-end function mpi_errhandler_f08_eq_f
+end function MPI_Errhandler_f08_eq_f
 
-function mpi_errhandler_f_eq_f08 (f, f08) result(res)
+function MPI_Errhandler_f_eq_f08 (f, f08) result(res)
     ! Defined comparison for MPI_Errhandler and integer handles
     type(MPI_Errhandler),intent(in) :: f08
     integer,intent(in)        :: f
     logical                   :: res
     res = f08%MPI_VAL == f
-end function mpi_errhandler_f_eq_f08
+end function MPI_Errhandler_f_eq_f08
 
-function mpi_file_f_eq_f08 (f, f08) result(res)
+function MPI_File_f_eq_f08 (f, f08) result(res)
     ! Defined comparison for MPI_File and integer handles
     type(MPI_File),intent(in) :: f08
     integer,intent(in)        :: f
     logical                   :: res
     res = f08%MPI_VAL == f
-end function mpi_file_f_eq_f08
+end function MPI_File_f_eq_f08
 
-function mpi_file_f08_eq_f (f08, f) result(res)
+function MPI_File_f08_eq_f (f08, f) result(res)
     ! Defined comparison for MPI_File and integer handles
     type(MPI_File),intent(in) :: f08
     integer,intent(in)        :: f
     logical                   :: res
     res = f08%MPI_VAL == f
-end function mpi_file_f08_eq_f
+end function MPI_File_f08_eq_f
 
-function mpi_group_f08_eq_f (f08, f) result(res)
+function MPI_Group_f08_eq_f (f08, f) result(res)
     ! Defined comparison for MPI_Group and integer handles
     type(MPI_Group),intent(in) :: f08
     integer,intent(in)        :: f
     logical                   :: res
     res = f08%MPI_VAL == f
-end function mpi_group_f08_eq_f
+end function MPI_Group_f08_eq_f
 
-function mpi_group_f_eq_f08 (f, f08) result(res)
+function MPI_Group_f_eq_f08 (f, f08) result(res)
     ! Defined comparison for MPI_Group and integer handles
     type(MPI_Group),intent(in) :: f08
     integer,intent(in)        :: f
     logical                   :: res
     res = f08%MPI_VAL == f
-end function mpi_group_f_eq_f08
+end function MPI_Group_f_eq_f08
 
-function mpi_info_f08_eq_f (f08, f) result(res)
+function MPI_Info_f08_eq_f (f08, f) result(res)
     ! Defined comparison for MPI_Info and integer handles
     type(MPI_Info),intent(in) :: f08
     integer,intent(in)        :: f
     logical                   :: res
     res = f08%MPI_VAL == f
-end function mpi_info_f08_eq_f
+end function MPI_Info_f08_eq_f
 
-function mpi_info_f_eq_f08 (f, f08) result(res)
+function MPI_Info_f_eq_f08 (f, f08) result(res)
     ! Defined comparison for MPI_Info and integer handles
     type(MPI_Info),intent(in) :: f08
     integer,intent(in)        :: f
     logical                   :: res
     res = f08%MPI_VAL == f
-end function mpi_info_f_eq_f08
+end function MPI_Info_f_eq_f08
 
-function mpi_op_f08_eq_f (f08, f) result(res)
+function MPI_Op_f08_eq_f (f08, f) result(res)
     ! Defined comparison for MPI_Op and integer handles
     type(MPI_Op),intent(in) :: f08
     integer,intent(in)        :: f
     logical                   :: res
     res = f08%MPI_VAL == f
-end function mpi_op_f08_eq_f
+end function MPI_Op_f08_eq_f
 
-function mpi_op_f_eq_f08 (f, f08) result(res)
+function MPI_Op_f_eq_f08 (f, f08) result(res)
     ! Defined comparison for MPI_Op and integer handles
     type(MPI_Op),intent(in) :: f08
     integer,intent(in)        :: f
     logical                   :: res
     res = f08%MPI_VAL == f
-end function mpi_op_f_eq_f08
+end function MPI_Op_f_eq_f08
 
-function mpi_request_f08_eq_f (f08, f) result(res)
+function MPI_Request_f08_eq_f (f08, f) result(res)
     ! Defined comparison for MPI_Request and integer handles
     type(MPI_Request),intent(in) :: f08
     integer,intent(in)        :: f
     logical                   :: res
     res = f08%MPI_VAL == f
-end function mpi_request_f08_eq_f
+end function MPI_Request_f08_eq_f
 
-function mpi_request_f_eq_f08 (f, f08) result(res)
+function MPI_Request_f_eq_f08 (f, f08) result(res)
     ! Defined comparison for MPI_Request and integer handles
     type(MPI_Request),intent(in) :: f08
     integer,intent(in)        :: f
     logical                   :: res
     res = f08%MPI_VAL == f
-end function mpi_request_f_eq_f08
+end function MPI_Request_f_eq_f08
 
-function mpi_win_f08_eq_f (f08, f) result(res)
+function MPI_Win_f08_eq_f (f08, f) result(res)
     ! Defined comparison for MPI_Win and integer handles
     type(MPI_Win),intent(in) :: f08
     integer,intent(in)        :: f
     logical                   :: res
     res = f08%MPI_VAL == f
-end function mpi_win_f08_eq_f
+end function MPI_Win_f08_eq_f
 
-function mpi_win_f_eq_f08 (f, f08) result(res)
+function MPI_Win_f_eq_f08 (f, f08) result(res)
     ! Defined comparison for MPI_Win and integer handles
     type(MPI_Win),intent(in) :: f08
     integer,intent(in)        :: f
     logical                   :: res
     res = f08%MPI_VAL == f
-end function mpi_win_f_eq_f08
+end function MPI_Win_f_eq_f08
 
-function mpi_message_f08_eq_f (f08, f) result(res)
+function MPI_Message_f08_eq_f (f08, f) result(res)
     ! Defined comparison for MPI_Message and integer handles
     type(MPI_Message),intent(in) :: f08
     integer,intent(in)        :: f
     logical                   :: res
     res = f08%MPI_VAL == f
-end function mpi_message_f08_eq_f
+end function MPI_Message_f08_eq_f
 
-function mpi_message_f_eq_f08 (f, f08) result(res)
+function MPI_Message_f_eq_f08 (f, f08) result(res)
     ! Defined comparison for MPI_Message and integer handles
     type(MPI_Message),intent(in) :: f08
     integer,intent(in)        :: f
     logical                   :: res
     res = f08%MPI_VAL == f
-end function mpi_message_f_eq_f08
+end function MPI_Message_f_eq_f08
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !
@@ -696,567 +709,362 @@ end function mpi_message_f_eq_f08
 !
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-function mpi_comm_neq (x, y) result(res)
+function MPI_Comm_neq (x, y) result(res)
     type(MPI_Comm), intent(in) :: x, y
     logical :: res
     res = (x%MPI_VAL /= y%MPI_VAL)
-end function mpi_comm_neq
+end function MPI_Comm_neq
 
-function mpi_datatype_neq (x, y) result(res)
+function MPI_Datatype_neq (x, y) result(res)
     type(MPI_Datatype), intent(in) :: x, y
     logical :: res
     res = (x%MPI_VAL /= y%MPI_VAL)
-end function mpi_datatype_neq
+end function MPI_Datatype_neq
 
-function mpi_errhandler_neq (x, y) result(res)
+function MPI_Errhandler_neq (x, y) result(res)
     type(MPI_Errhandler), intent(in) :: x, y
     logical :: res
     res = (x%MPI_VAL /= y%MPI_VAL)
-end function mpi_errhandler_neq
+end function MPI_Errhandler_neq
 
-function mpi_file_neq (x, y) result(res)
+function MPI_File_neq (x, y) result(res)
     type(MPI_File), intent(in) :: x, y
     logical :: res
     res = (x%MPI_VAL /= y%MPI_VAL)
-end function mpi_File_neq
+end function MPI_File_neq
 
-function mpi_group_neq (x, y) result(res)
+function MPI_Group_neq (x, y) result(res)
     type(MPI_Group), intent(in) :: x, y
     logical :: res
     res = (x%MPI_VAL /= y%MPI_VAL)
-end function mpi_group_neq
+end function MPI_Group_neq
 
-function mpi_info_neq (x, y) result(res)
+function MPI_Info_neq (x, y) result(res)
     type(MPI_Info), intent(in) :: x, y
     logical :: res
     res = (x%MPI_VAL /= y%MPI_VAL)
-end function mpi_info_neq
+end function MPI_Info_neq
 
-function mpi_op_neq (x, y) result(res)
+function MPI_Op_neq (x, y) result(res)
     type(MPI_Op), intent(in) :: x, y
     logical :: res
     res = (x%MPI_VAL /= y%MPI_VAL)
-end function mpi_op_neq
+end function MPI_Op_neq
 
-function mpi_request_neq (x, y) result(res)
+function MPI_Request_neq (x, y) result(res)
     type(MPI_Request), intent(in) :: x, y
     logical :: res
     res = (x%MPI_VAL /= y%MPI_VAL)
-end function mpi_request_neq
+end function MPI_Request_neq
 
-function mpi_win_neq (x, y) result(res)
+function MPI_Win_neq (x, y) result(res)
     type(MPI_Win), intent(in) :: x, y
     logical :: res
     res = (x%MPI_VAL /= y%MPI_VAL)
-end function mpi_win_neq
+end function MPI_Win_neq
 
-function mpi_message_neq (x, y) result(res)
+function MPI_Message_neq (x, y) result(res)
     type(MPI_Message), intent(in) :: x, y
     logical :: res
     res = (x%MPI_VAL /= y%MPI_VAL)
-end function mpi_message_neq
+end function MPI_Message_neq
 
-function mpi_comm_f08_ne_f (f08, f) result(res)
+function MPI_Comm_f08_ne_f (f08, f) result(res)
     ! Defined comparison for MPI_Comm and integer handles
     type(MPI_Comm),intent(in) :: f08
     integer,intent(in)        :: f
     logical                   :: res
     res = f08%MPI_VAL /= f
-end function mpi_comm_f08_ne_f
+end function MPI_Comm_f08_ne_f
 
-function mpi_comm_f_ne_f08 (f, f08) result(res)
+function MPI_Comm_f_ne_f08 (f, f08) result(res)
     ! Defined comparison for MPI_Comm and integer handles
     type(MPI_Comm),intent(in) :: f08
     integer,intent(in)        :: f
     logical                   :: res
     res = f08%MPI_VAL /= f
-end function mpi_comm_f_ne_f08
+end function MPI_Comm_f_ne_f08
 
-function mpi_datatype_f08_ne_f (f08, f) result(res)
+function MPI_Datatype_f08_ne_f (f08, f) result(res)
     ! Defined comparison for MPI_Datatype and integer handles
     type(MPI_Datatype),intent(in) :: f08
     integer,intent(in)        :: f
     logical                   :: res
     res = f08%MPI_VAL /= f
-end function mpi_datatype_f08_ne_f
+end function MPI_Datatype_f08_ne_f
 
-function mpi_datatype_f_ne_f08 (f, f08) result(res)
+function MPI_Datatype_f_ne_f08 (f, f08) result(res)
     ! Defined comparison for MPI_Datatype and integer handles
     type(MPI_Datatype),intent(in) :: f08
     integer,intent(in)        :: f
     logical                   :: res
     res = f08%MPI_VAL /= f
-end function mpi_datatype_f_ne_f08
+end function MPI_Datatype_f_ne_f08
 
-function mpi_errhandler_f08_ne_f (f08, f) result(res)
+function MPI_Errhandler_f08_ne_f (f08, f) result(res)
     ! Defined comparison for MPI_Errhandler and integer handles
     type(MPI_Errhandler),intent(in) :: f08
     integer,intent(in)        :: f
     logical                   :: res
     res = f08%MPI_VAL /= f
-end function mpi_errhandler_f08_ne_f
+end function MPI_Errhandler_f08_ne_f
 
-function mpi_errhandler_f_ne_f08 (f, f08) result(res)
+function MPI_Errhandler_f_ne_f08 (f, f08) result(res)
     ! Defined comparison for MPI_Errhandler and integer handles
     type(MPI_Errhandler),intent(in) :: f08
     integer,intent(in)        :: f
     logical                   :: res
     res = f08%MPI_VAL /= f
-end function mpi_errhandler_f_ne_f08
+end function MPI_Errhandler_f_ne_f08
 
-function mpi_file_f_ne_f08 (f, f08) result(res)
+function MPI_File_f_ne_f08 (f, f08) result(res)
     ! Defined comparison for MPI_File and integer handles
     type(MPI_File),intent(in) :: f08
     integer,intent(in)        :: f
     logical                   :: res
     res = f08%MPI_VAL /= f
-end function mpi_file_f_ne_f08
+end function MPI_File_f_ne_f08
 
-function mpi_file_f08_ne_f (f08, f) result(res)
+function MPI_File_f08_ne_f (f08, f) result(res)
     ! Defined comparison for MPI_File and integer handles
     type(MPI_File),intent(in) :: f08
     integer,intent(in)        :: f
     logical                   :: res
     res = f08%MPI_VAL /= f
-end function mpi_file_f08_ne_f
+end function MPI_File_f08_ne_f
 
-function mpi_group_f08_ne_f (f08, f) result(res)
+function MPI_Group_f08_ne_f (f08, f) result(res)
     ! Defined comparison for MPI_Group and integer handles
     type(MPI_Group),intent(in) :: f08
     integer,intent(in)        :: f
     logical                   :: res
     res = f08%MPI_VAL /= f
-end function mpi_group_f08_ne_f
+end function MPI_Group_f08_ne_f
 
-function mpi_group_f_ne_f08 (f, f08) result(res)
+function MPI_Group_f_ne_f08 (f, f08) result(res)
     ! Defined comparison for MPI_Group and integer handles
     type(MPI_Group),intent(in) :: f08
     integer,intent(in)        :: f
     logical                   :: res
     res = f08%MPI_VAL /= f
-end function mpi_group_f_ne_f08
+end function MPI_Group_f_ne_f08
 
-function mpi_info_f08_ne_f (f08, f) result(res)
+function MPI_Info_f08_ne_f (f08, f) result(res)
     ! Defined comparison for MPI_Info and integer handles
     type(MPI_Info),intent(in) :: f08
     integer,intent(in)        :: f
     logical                   :: res
     res = f08%MPI_VAL /= f
-end function mpi_info_f08_ne_f
+end function MPI_Info_f08_ne_f
 
-function mpi_info_f_ne_f08 (f, f08) result(res)
+function MPI_Info_f_ne_f08 (f, f08) result(res)
     ! Defined comparison for MPI_Info and integer handles
     type(MPI_Info),intent(in) :: f08
     integer,intent(in)        :: f
     logical                   :: res
     res = f08%MPI_VAL /= f
-end function mpi_info_f_ne_f08
+end function MPI_Info_f_ne_f08
 
-function mpi_op_f08_ne_f (f08, f) result(res)
+function MPI_Op_f08_ne_f (f08, f) result(res)
     ! Defined comparison for MPI_Op and integer handles
     type(MPI_Op),intent(in) :: f08
     integer,intent(in)        :: f
     logical                   :: res
     res = f08%MPI_VAL /= f
-end function mpi_op_f08_ne_f
+end function MPI_Op_f08_ne_f
 
-function mpi_op_f_ne_f08 (f, f08) result(res)
+function MPI_Op_f_ne_f08 (f, f08) result(res)
     ! Defined comparison for MPI_Op and integer handles
     type(MPI_Op),intent(in) :: f08
     integer,intent(in)        :: f
     logical                   :: res
     res = f08%MPI_VAL /= f
-end function mpi_op_f_ne_f08
+end function MPI_Op_f_ne_f08
 
-function mpi_request_f08_ne_f (f08, f) result(res)
+function MPI_Request_f08_ne_f (f08, f) result(res)
     ! Defined comparison for MPI_Request and integer handles
     type(MPI_Request),intent(in) :: f08
     integer,intent(in)        :: f
     logical                   :: res
     res = f08%MPI_VAL /= f
-end function mpi_request_f08_ne_f
+end function MPI_Request_f08_ne_f
 
-function mpi_request_f_ne_f08 (f, f08) result(res)
+function MPI_Request_f_ne_f08 (f, f08) result(res)
     ! Defined comparison for MPI_Request and integer handles
     type(MPI_Request),intent(in) :: f08
     integer,intent(in)        :: f
     logical                   :: res
     res = f08%MPI_VAL /= f
-end function mpi_request_f_ne_f08
+end function MPI_Request_f_ne_f08
 
-function mpi_win_f08_ne_f (f08, f) result(res)
+function MPI_Win_f08_ne_f (f08, f) result(res)
     ! Defined comparison for MPI_Win and integer handles
     type(MPI_Win),intent(in) :: f08
     integer,intent(in)        :: f
     logical                   :: res
     res = f08%MPI_VAL /= f
-end function mpi_win_f08_ne_f
+end function MPI_Win_f08_ne_f
 
-function mpi_win_f_ne_f08 (f, f08) result(res)
+function MPI_Win_f_ne_f08 (f, f08) result(res)
     ! Defined comparison for MPI_Win and integer handles
     type(MPI_Win),intent(in) :: f08
     integer,intent(in)        :: f
     logical                   :: res
     res = f08%MPI_VAL /= f
-end function mpi_win_f_ne_f08
+end function MPI_Win_f_ne_f08
 
-function mpi_message_f08_ne_f (f08, f) result(res)
+function MPI_Message_f08_ne_f (f08, f) result(res)
     ! Defined comparison for MPI_Message and integer handles
     type(MPI_Message),intent(in) :: f08
     integer,intent(in)        :: f
     logical                   :: res
     res = f08%MPI_VAL /= f
-end function mpi_message_f08_ne_f
+end function MPI_Message_f08_ne_f
 
-function mpi_message_f_ne_f08 (f, f08) result(res)
+function MPI_Message_f_ne_f08 (f, f08) result(res)
     ! Defined comparison for MPI_Message and integer handles
     type(MPI_Message),intent(in) :: f08
     integer,intent(in)        :: f
     logical                   :: res
     res = f08%MPI_VAL /= f
-end function mpi_message_f_ne_f08
+end function MPI_Message_f_ne_f08
 
-! 17.2.4 - Conversion between Fortran and C handles
+! 17.2.4 - Conversion functions between Fortran and C handles, which are only defined in
+! the C interface and can be implemented as macros. We extend them to Fortran.
+! TODO: Do we need the PMPI version? Probably not since they are not in standard.
 
-!  MPI_Comm MPI_Comm_f2c(MPI_Fint comm)
-function mpi_comm_f2c (comm) bind(c,name="MPI_Comm_f2c") result (res)
+function MPI_Comm_f2c (comm) result (res)
     use mpi_c_interface_types, only: c_Comm
     integer,value :: comm
     integer(c_Comm) :: res
-
     res = comm
-end function mpi_comm_f2c
+end function MPI_Comm_f2c
 
-function pmpi_comm_f2c (comm) bind(c,name="PMPI_Comm_f2c") result (res)
-    use mpi_c_interface_types, only: c_Comm
-    integer,value :: comm
-    integer(c_Comm) :: res
-
-    res = comm
-end function pmpi_comm_f2c
-
-!  MPI_Fint MPI_Comm_c2f(MPI_Comm comm)
-function mpi_comm_c2f (comm) bind(c,name="MPI_Comm_c2f") result (res)
+function MPI_Comm_c2f (comm) result (res)
     use mpi_c_interface_types, only: c_Comm
     integer(c_Comm),value :: comm
     integer :: res
-
     res = comm
-end function mpi_comm_c2f
+end function MPI_Comm_c2f
 
-function pmpi_comm_c2f (comm) bind(c,name="PMPI_Comm_c2f") result (res)
-    use mpi_c_interface_types, only: c_Comm
-    integer(c_Comm),value :: comm
-    integer :: res
-
-    res = comm
-end function pmpi_comm_c2f
-
-!  MPI_Type MPI_Type_f2c(MPI_Fint type)
-function mpi_type_f2c (datatype) bind(c,name="MPI_Type_f2c") result (res)
+function MPI_type_f2c (datatype) result (res)
     use mpi_c_interface_types, only: c_Datatype
     integer,value :: datatype
     integer(c_Datatype) :: res
-
     res = datatype
-end function mpi_type_f2c
+end function MPI_type_f2c
 
-function pmpi_type_f2c (datatype) bind(c,name="PMPI_Type_f2c") result (res)
-    use mpi_c_interface_types, only: c_Datatype
-    integer,value :: datatype
-    integer(c_Datatype) :: res
-
-    res = datatype
-end function pmpi_type_f2c
-
-!  MPI_Fint MPI_Type_c2f(MPI_Type type)
-function mpi_type_c2f (datatype) bind(c,name="MPI_Type_c2f") result (res)
+function MPI_type_c2f (datatype) result (res)
     use mpi_c_interface_types, only: c_Datatype
     integer(c_Datatype),value :: datatype
     integer :: res
-
     res = datatype
-end function mpi_type_c2f
+end function MPI_type_c2f
 
-function pmpi_type_c2f (datatype) bind(c,name="PMPI_Type_c2f") result (res)
-    use mpi_c_interface_types, only: c_Datatype
-    integer(c_Datatype),value :: datatype
-    integer :: res
-
-    res = datatype
-end function pmpi_type_c2f
-
-!  MPI_Group MPI_Group_f2c(MPI_Fint group)
-function mpi_group_f2c (group) bind(c,name="MPI_Group_f2c") result (res)
+function MPI_Group_f2c (group) result (res)
     use mpi_c_interface_types, only: c_Group
     integer,value :: group
     integer(c_Group) :: res
-
     res = group
-end function mpi_group_f2c
+end function MPI_Group_f2c
 
-function pmpi_group_f2c (group) bind(c,name="PMPI_Group_f2c") result (res)
-    use mpi_c_interface_types, only: c_Group
-    integer,value :: group
-    integer(c_Group) :: res
-
-    res = group
-end function pmpi_group_f2c
-
-
-! MPI_Fint MPI_Group_c2f(MPI_Datatype datatype)
-function mpi_group_c2f (group) bind(c,name="MPI_Group_c2f") result (res)
+function MPI_Group_c2f (group) result (res)
     use mpi_c_interface_types, only: c_Group
     integer(c_Group),value :: group
     integer :: res
-
     res = group
-end function mpi_group_c2f
+end function MPI_Group_c2f
 
-function pmpi_group_c2f (group) bind(c,name="PMPI_Group_c2f") result (res)
-    use mpi_c_interface_types, only: c_Group
-    integer(c_Group),value :: group
-    integer :: res
-
-    res = group
-end function pmpi_group_c2f
-
-
-! MPI_Request MPI_Request_f2c(MPI_Fint request)
-function mpi_request_f2c (request) bind(c,name="MPI_Request_f2c") result (res)
+function MPI_Request_f2c (request) result (res)
     use mpi_c_interface_types, only: c_Request
     integer,value :: request
     integer(c_Request) :: res
-
     res = request
-end function mpi_request_f2c
+end function MPI_Request_f2c
 
-function pmpi_request_f2c (request) bind(c,name="PMPI_Request_f2c") result (res)
-    use mpi_c_interface_types, only: c_Request
-    integer,value :: request
-    integer(c_Request) :: res
-
-    res = request
-end function pmpi_request_f2c
-
-
-! MPI_Fint MPI_Request_c2f(MPI_Datatype datatype)
-function mpi_request_c2f (request) bind(c,name="MPI_Request_c2f") result (res)
+function MPI_Request_c2f (request) result (res)
     use mpi_c_interface_types, only: c_Request
     integer(c_Request),value :: request
     integer :: res
-
     res = request
-end function mpi_request_c2f
+end function MPI_Request_c2f
 
-function pmpi_request_c2f (request) bind(c,name="PMPI_Request_c2f") result (res)
-    use mpi_c_interface_types, only: c_Request
-    integer(c_Request),value :: request
-    integer :: res
-
-    res = request
-end function pmpi_request_c2f
-
-! MPI_File MPI_File_f2c(MPI_Fint file)
-! The MPI_File_f2c/c2f functions are defined in C
-
-function MPI_File_f2c (file) bind(c,name="MPI_File_f2c") result (res)
-    use mpi_c_interface_types, only: c_File
-    integer,value :: file
-    integer(c_File) :: res
-end function MPI_File_f2c
-
-function pmpi_file_f2c (file) bind(c,name="PMPI_File_f2c") result (res)
-    use mpi_c_interface_types, only: c_File
-    integer,value :: file
-    integer(c_File) :: res
-
-    res = file
-end function pmpi_file_f2c
-
-! MPI_Fint MPI_File_c2f(MPI_Datatype datatype)
-function MPI_File_c2f (file) bind(c,name="MPI_File_c2f") result (res)
-    use mpi_c_interface_types, only: c_File
-    integer(c_File),value :: file
-    integer :: res
-end function MPI_File_c2f
-
-function pmpi_file_c2f (file) bind(c,name="PMPI_File_c2f") result (res)
-    use mpi_c_interface_types, only: c_File
-    integer(c_File),value :: file
-    integer :: res
-
-    res = file
-end function pmpi_file_c2f
-
-! MPI_Win MPI_Win_f2c(MPI_Fint win)
-function mpi_win_f2c (win) bind(c,name="MPI_Win_f2c") result (res)
+function MPI_Win_f2c (win) result (res)
     use mpi_c_interface_types, only: C_win
     integer,value :: win
     integer(C_win) :: res
-
     res = win
-end function mpi_win_f2c
+end function MPI_Win_f2c
 
-function pmpi_win_f2c (win) bind(c,name="PMPI_Win_f2c") result (res)
-    use mpi_c_interface_types, only: C_win
-    integer,value :: win
-    integer(C_win) :: res
-
-    res = win
-end function pmpi_win_f2c
-
-! MPI_Fint MPI_Win_c2f(MPI_Datatype datatype)
-function mpi_win_c2f (win) bind(c,name="MPI_Win_c2f") result (res)
+function MPI_Win_c2f (win) result (res)
     use mpi_c_interface_types, only: C_win
     integer(C_win),value :: win
     integer :: res
-
     res = win
-end function mpi_win_c2f
+end function MPI_Win_c2f
 
-function pmpi_win_c2f (win) bind(c,name="PMPI_Win_c2f") result (res)
+function pMPI_Win_c2f (win) result (res)
     use mpi_c_interface_types, only: C_win
     integer(C_win),value :: win
     integer :: res
-
     res = win
-end function pmpi_win_c2f
+end function pMPI_Win_c2f
 
-! MPI_Op MPI_Op_f2c(MPI_Fint op)
-function mpi_op_f2c (op) bind(c,name="MPI_Op_f2c") result (res)
+
+function MPI_Op_f2c (op) result (res)
     use mpi_c_interface_types, only: c_Op
     integer,value :: op
     integer(c_Op) :: res
-
     res = op
-end function mpi_op_f2c
+end function MPI_Op_f2c
 
-function pmpi_op_f2c (op) bind(c,name="PMPI_Op_f2c") result (res)
-    use mpi_c_interface_types, only: c_Op
-    integer,value :: op
-    integer(c_Op) :: res
-
-    res = op
-end function pmpi_op_f2c
-
-! MPI_Fint MPI_Op_c2f(MPI_Datatype datatype)
-function mpi_op_c2f (op) bind(c,name="MPI_Op_c2f") result (res)
+function MPI_Op_c2f (op) result (res)
     use mpi_c_interface_types, only: c_Op
     integer(c_Op),value :: op
     integer :: res
-
     res = op
-end function mpi_op_c2f
+end function MPI_Op_c2f
 
-function pmpi_op_c2f (op) bind(c,name="PMPI_Op_c2f") result (res)
-    use mpi_c_interface_types, only: c_Op
-    integer(c_Op),value :: op
-    integer :: res
-
-    res = op
-end function pmpi_op_c2f
-
-! MPI_Info MPI_Info_f2c(MPI_Fint info)
-function mpi_info_f2c (info) bind(c,name="MPI_Info_f2c") result (res)
+function MPI_Info_f2c (info) result (res)
     use mpi_c_interface_types, only: c_Info
     integer,value :: info
     integer(c_Info) :: res
-
     res = info
-end function mpi_info_f2c
+end function MPI_Info_f2c
 
-function pmpi_info_f2c (info) bind(c,name="PMPI_Info_f2c") result (res)
-    use mpi_c_interface_types, only: c_Info
-    integer,value :: info
-    integer(c_Info) :: res
-
-    res = info
-end function pmpi_info_f2c
-
-! MPI_Fint MPI_Info_c2f(MPI_Datatype datatype)
-function mpi_info_c2f (info) bind(c,name="MPI_Info_c2f") result (res)
+function MPI_Info_c2f (info) result (res)
     use mpi_c_interface_types, only: c_Info
     integer(c_Info),value :: info
     integer :: res
-
     res = info
-end function mpi_info_c2f
+end function MPI_Info_c2f
 
-function pmpi_info_c2f (info) bind(c,name="PMPI_Info_c2f") result (res)
-    use mpi_c_interface_types, only: c_Info
-    integer(c_Info),value :: info
-    integer :: res
-
-    res = info
-end function pmpi_info_c2f
-
-! MPI_Errhandler MPI_Errhandler_f2c(MPI_Fint errhandler)
-function mpi_errhandler_f2c (errhandler) bind(c,name="MPI_Errhandler_f2c") result (res)
+function MPI_Errhandler_f2c (errhandler) result (res)
     use mpi_c_interface_types, only: c_Errhandler
     integer,value :: errhandler
     integer(c_Errhandler) :: res
-
     res = errhandler
-end function mpi_errhandler_f2c
+end function MPI_Errhandler_f2c
 
-function pmpi_errhandler_f2c (errhandler) bind(c,name="PMPI_Errhandler_f2c") result (res)
-    use mpi_c_interface_types, only: c_Errhandler
-    integer,value :: errhandler
-    integer(c_Errhandler) :: res
-
-    res = errhandler
-end function pmpi_errhandler_f2c
-
-! MPI_Fint MPI_Errhandler_c2f(MPI_Datatype datatype)
-function mpi_errhandler_c2f (errhandler) bind(c,name="MPI_Errhandler_c2f") result (res)
+function MPI_Errhandler_c2f (errhandler) result (res)
     use mpi_c_interface_types, only: c_Errhandler
     integer(c_Errhandler),value :: errhandler
     integer :: res
-
     res = errhandler
-end function mpi_errhandler_c2f
+end function MPI_Errhandler_c2f
 
-function pmpi_errhandler_c2f (errhandler) bind(c,name="PMPI_Errhandler_c2f") result (res)
-    use mpi_c_interface_types, only: c_Errhandler
-    integer(c_Errhandler),value :: errhandler
-    integer :: res
-
-    res = errhandler
-end function pmpi_errhandler_c2f
-
-! MPI_Message MPI_Message_f2c(MPI_Fint message)
-function mpi_message_f2c (message) bind(c,name="MPI_Message_f2c") result (res)
+function MPI_Message_f2c (message) result (res)
     use mpi_c_interface_types, only: c_Message
     integer,value :: message
     integer(c_Message) :: res
-
     res = message
-end function mpi_message_f2c
+end function MPI_Message_f2c
 
-function pmpi_message_f2c (message) bind(c,name="PMPI_Message_f2c") result (res)
-    use mpi_c_interface_types, only: c_Message
-    integer,value :: message
-    integer(c_Message) :: res
-
-    res = message
-end function pmpi_message_f2c
-
-! MPI_Fint MPI_Message_c2f(MPI_Datatype datatype)
-function mpi_message_c2f (message) bind(c,name="MPI_Message_c2f") result (res)
+function MPI_Message_c2f (message) result (res)
     use mpi_c_interface_types, only: c_Message
     integer(c_Message),value :: message
     integer :: res
-
     res = message
-end function mpi_message_c2f
+end function MPI_Message_c2f
 
-function pmpi_message_c2f (message) bind(c,name="PMPI_Message_c2f") result (res)
-    use mpi_c_interface_types, only: c_Message
-    integer(c_Message),value :: message
-    integer :: res
-
-    res = message
-end function pmpi_message_c2f
-
-end module mpi_f08_types
+end module MPI_f08_types
