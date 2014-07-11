@@ -22,6 +22,10 @@
 #include "adio/ad_gpfs/ad_gpfs_tuning.h"
 #endif
 
+#ifdef HAVE_LIMITS_H
+#include <limits.h>
+#endif
+
 
 void ADIOI_GEN_WriteContig(ADIO_File fd, const void *buf, int count,
 			   MPI_Datatype datatype, int file_ptr_type,
@@ -62,6 +66,10 @@ void ADIOI_GEN_WriteContig(ADIO_File fd, const void *buf, int count,
 	MPE_Log_event( ADIOI_MPE_write_a, 0, NULL );
 #endif
 	wr_count = len - bytes_xfered;
+	/* Frustrating! FreeBSD and OS X do not like a count larger than 2^31 */
+        if (wr_count > INT_MAX)
+            wr_count = INT_MAX;
+
 #ifdef ROMIO_GPFS
 	if (gpfsmpio_devnullio)
 	    err = pwrite(fd->null_fd, p, wr_count, offset+bytes_xfered);
