@@ -99,7 +99,7 @@ void ADIOI_GEN_ReadStrided(ADIO_File fd, void *buf, int count,
     MPI_Type_extent(datatype, &buftype_extent);
     etype_size = fd->etype_size;
 
-    ADIOI_Assert((buftype_size * count) == ((ADIO_Offset)(unsigned)buftype_size * (ADIO_Offset)count));
+    ADIOI_Assert((buftype_size * count) == ((ADIO_Offset)(MPI_Count)buftype_size * (ADIO_Offset)count));
     bufsize = buftype_size * count;
 
 /* get max_bufsize from the info object. */
