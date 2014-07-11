@@ -127,8 +127,8 @@ static int TRSetBytes   = 0;
 /* Used to keep track of allocations */
 static volatile size_t TRMaxMem = 0;
 static volatile int    TRMaxMemId = 0;
-static volatile size_t TRNumAlloc = 0;
-static volatile size_t TRMaxAlloc = (size_t)2E6;
+static volatile size_t TRCurOverhead = 0;
+static volatile size_t TRMaxOverhead = 314572800;
 /* Used to limit allocation */
 static volatile size_t TRMaxMemAllow = 0;
 
@@ -180,6 +180,11 @@ void MPL_trinit(int rank)
         TRDefaultByte = 0;
         TRFreedByte = 0;
     }
+    s = getenv("MPICH_TRMEM_MAX_OVERHEAD");
+    if (s && *s) {
+        long l = atol(s);
+        TRMaxOverhead = (size_t)l;
+    }
     s = getenv("MPL_TRMEM_INIT");
     if (s && *s && (strcmp(s, "YES") == 0 || strcmp(s, "yes") == 0)) {
         TRSetBytes = 1;
@@ -197,6 +202,11 @@ void MPL_trinit(int rank)
     if (s && *s) {
         int l = atoi(s);
         TRlevel = l;
+    }
+    s = getenv("MPL_TRMEM_MAX_OVERHEAD");
+    if (s && *s) {
+        long l = atol(s);
+        TRMaxOverhead = (size_t)l;
     }
 
 }
@@ -288,14 +298,13 @@ void *MPL_trmalloc(size_t a, int lineno, const char fname[])
                          world_rank, (long)a, (long)nsize, new, fname, lineno);
     }
 
-    /* Warn the user about tracing overhead if the total number of memory
-     * allocation is larger than the threshold, TRMaxAlloc. */
-    TRNumAlloc++;
-    if (TRNumAlloc >= TRMaxAlloc) {
+    /* Warn the user about tracing overhead if the total memory overhead for
+     * tracing is larger than the threshold, TRMaxOverhead. */
+    TRCurOverhead += sizeof(TrSPACE);
+    if ((TRCurOverhead > TRMaxOverhead) && TRMaxOverhead) {
         MPL_error_printf("[%d] %.1lf MB was used for memory usage tracing!\n",
-                         world_rank,
-                         (double)(sizeof(TrSPACE) * TRNumAlloc) / 1024 / 1024);
-        MPL_TrSetMaxAlloc((size_t)(TRMaxAlloc + 1E6));
+                         world_rank, (double)TRCurOverhead / 1024 / 1024);
+        TRMaxOverhead = TRMaxOverhead * 2;
     }
 
     /* Without these macros valgrind actually catches far fewer errors when
@@ -439,7 +448,7 @@ void MPL_trfree(void *a_ptr, int line, const char file[])
                          file, line);
     }
 
-    TRNumAlloc--;
+    TRCurOverhead -= sizeof(TrSPACE);
 
     /*
      * Now, scrub the data (except possibly the first few ints) to
@@ -1038,11 +1047,6 @@ void MPL_trdumpGrouped(FILE * fp, int minid)
 void MPL_TrSetMaxMem(size_t size)
 {
     TRMaxMemAllow = size;
-}
-
-void MPL_TrSetMaxAlloc(size_t size)
-{
-    TRMaxAlloc = size;
 }
 
 static void addrToHex(void *addr, char string[MAX_ADDRESS_CHARS])
