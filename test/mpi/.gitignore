@@ -892,6 +892,7 @@
 /manual/testconnectserial
 /mpi_t/mpi_t_str
 /mpi_t/mpit_vars
+/mpi_t/cvarwrite
 /perf/allredtrace
 /perf/commcreatep
 /perf/dtpack

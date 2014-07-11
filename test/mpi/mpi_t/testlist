@@ -1,2 +1,3 @@
 mpi_t_str 1 mpiversion=3.0
 mpit_vars 1 mpiversion=3.0
+cvarwrite 1 mpiversion=3.0
