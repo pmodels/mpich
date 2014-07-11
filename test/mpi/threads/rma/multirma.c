@@ -15,14 +15,16 @@
 #define LOOPS 100000
 
 MPI_Win win;
-int errs = 0;
+int errs = 0, dummy;
 
 MTEST_THREAD_RETURN_TYPE run_test(void *arg)
 {
     int i;
 
     for (i = 0; i < LOOPS; i++) {
-        MPI_Put(&i, 1, MPI_INT, 0, 0, 1, MPI_INT, win);
+        /* send a global variable, rather than a stack variable, so
+         * other threads can access the address during flush */
+        MPI_Put(&dummy, 1, MPI_INT, 0, 0, 1, MPI_INT, win);
         MPI_Win_flush(0, win);
     }
 
