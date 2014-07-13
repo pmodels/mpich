@@ -2279,6 +2279,11 @@ int MPIDI_Win_post(MPID_Group *post_grp_ptr, int assert, MPID_Win *win_ptr)
     }
         
     post_grp_size = post_grp_ptr->size;
+
+    /* Ensure ordering of load/store operations. */
+    if (win_ptr->shm_allocated == TRUE) {
+        OPA_read_write_barrier();
+    }
         
     /* initialize the completion counter */
     win_ptr->my_counter = post_grp_size;
@@ -2553,6 +2558,11 @@ int MPIDI_Win_start(MPID_Group *group_ptr, int assert, MPID_Win *win_ptr)
     mpi_errno = recv_post_msgs(win_ptr, ranks_in_win_grp, 1);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
+    /* Ensure ordering of load/store operations */
+    if (win_ptr->shm_allocated == TRUE) {
+        OPA_read_write_barrier();
+    }
+
  fn_fail:
     MPIU_CHKLMEM_FREEALL();
     MPIDI_RMA_FUNC_EXIT(MPID_STATE_MPIDI_WIN_START);
@@ -2778,11 +2788,6 @@ int MPIDI_Win_complete(MPID_Win *win_ptr)
     /* free the group stored in window */
     MPIR_Group_release(win_ptr->start_group_ptr);
     win_ptr->start_group_ptr = NULL; 
-
-    /* Ensure ordering of load/store operations. */
-    if (win_ptr->shm_allocated == TRUE) {
-        OPA_read_write_barrier();
-    }
     
  fn_exit:
     MPIU_CHKLMEM_FREEALL();
@@ -2985,6 +2990,11 @@ int MPIDI_Win_lock(int lock_type, int dest, int assert, MPID_Win *win_ptr)
            argument or info key. */
         mpi_errno = send_lock_msg(dest, lock_type, win_ptr);
         MPIU_ERR_CHKANDJUMP(mpi_errno != MPI_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**ch3|rma_msg");
+    }
+
+    /* Ensure ordering of load/store operations. */
+    if (win_ptr->shm_allocated == TRUE) {
+        OPA_read_write_barrier();
     }
 
  fn_exit:
@@ -3240,6 +3250,11 @@ int MPIDI_Win_flush(int rank, MPID_Win *win_ptr)
     MPIU_ERR_CHKANDJUMP(win_ptr->targets[rank].remote_lock_state == MPIDI_CH3_WIN_LOCK_NONE,
                         mpi_errno, MPI_ERR_RMA_SYNC, "**rmasync");
 
+    /* Ensure ordering of read/write operations */
+    if (win_ptr->shm_allocated == TRUE) {
+        OPA_read_write_barrier();
+    }
+
     /* Local flush: ops are performed immediately on the local process */
     if (rank == win_ptr->comm_ptr->rank) {
         MPIU_Assert(win_ptr->targets[rank].remote_lock_state == MPIDI_CH3_WIN_LOCK_GRANTED);
@@ -3256,10 +3271,6 @@ int MPIDI_Win_flush(int rank, MPID_Win *win_ptr)
     /* NOTE: All flush and req-based operations are currently implemented in
        terms of MPIDI_Win_flush.  When this changes, those operations will also
        need to insert this read/write memory fence for shared memory windows. */
-
-    if (win_ptr->shm_allocated == TRUE) {
-        OPA_read_write_barrier();
-    }
 
     rma_op = MPIDI_CH3I_RMA_Ops_head(&win_ptr->targets[rank].rma_ops_list);
 
