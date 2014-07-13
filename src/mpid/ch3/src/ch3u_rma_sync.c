@@ -132,6 +132,208 @@ cvars:
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
+/* Notes for memory barriers in RMA synchronizations
+
+   When SHM is allocated for RMA window, we need to add memory berriers at proper
+   places in RMA synchronization routines to guarantee the ordering of read/write
+   operations, so that any operations after synchronization calls will see the
+   correct data.
+
+   There are four kinds of operations involved in the following explanation:
+
+   1. Local loads/stores: any operations happening outside RMA epoch and accessing
+      each process's own window memory.
+
+   2. SHM operations: any operations happening inside RMA epoch. They may access
+      any processes' window memory, which include direct loads/stores, and
+      RMA operations that are internally implemented as direct loads/stores in
+      MPI implementation.
+
+   3. PROC_SYNC: synchronzations among processes by sending/recving messages.
+
+   4. MEM_SYNC: a full memory barrier. It ensures the ordering of read/write
+      operations on each process.
+
+   (1) FENCE synchronization
+
+              RANK 0                           RANK 1
+
+       (local loads/stores)             (local loads/stores)
+
+           WIN_FENCE {                    WIN_FENCE {
+               MEM_SYNC                       MEM_SYNC
+               PROC_SYNC -------------------- PROC_SYNC
+               MEM_SYNC                       MEM_SYNC
+           }                              }
+
+        (SHM operations)                  (SHM operations)
+
+           WIN_FENCE {                     WIN_FENCE {
+               MEM_SYNC                        MEM_SYNC
+               PROC_SYNC --------------------- PROC_SYNC
+               MEM_SYNC                        MEM_SYNC
+           }                               }
+
+      (local loads/stores)              (local loads/stores)
+
+       We need MEM_SYNC before and after PROC_SYNC for both starting WIN_FENCE
+       and ending WIN_FENCE, to ensure the ordering between local loads/stores
+       and PROC_SYNC in starting WIN_FENCE (and vice versa in ending WIN_FENCE),
+       and the ordering between PROC_SYNC and SHM operations in starting WIN_FENCE
+       (and vice versa for ending WIN_FENCE).
+
+       In starting WIN_FENCE, the MEM_SYNC before PROC_SYNC essentially exposes
+       previous local loads/stores to other processes; after PROC_SYNC, each
+       process knows that everyone else already exposed their local loads/stores;
+       the MEM_SYNC after PROC_SYNC ensures that my following SHM operations will
+       happen after PROC_SYNC and will see the latest data on other processes.
+
+       In ending WIN_FENCE, the MEM_SYNC before PROC_SYNC essentially exposes
+       previous SHM operations to other processes; after PROC_SYNC, each process
+       knows everyone else already exposed their SHM operations; the MEM_SYNC
+       after PROC_SYNC ensures that my following local loads/stores will happen
+       after PROC_SYNC and will see the latest data in my memory region.
+
+   (2) POST-START-COMPLETE-WAIT synchronization
+
+              RANK 0                           RANK 1
+
+                                          (local loads/stores)
+
+           WIN_START {                      WIN_POST {
+                                                MEM_SYNC
+               PROC_SYNC ---------------------- PROC_SYNC
+               MEM_SYNC
+           }                                }
+
+         (SHM operations)
+
+           WIN_COMPLETE {                  WIN_WAIT/TEST {
+               MEM_SYNC
+               PROC_SYNC --------------------- PROC_SYNC
+                                               MEM_SYNC
+           }                               }
+
+                                          (local loads/stores)
+
+       We need MEM_SYNC before PROC_SYNC for WIN_POST and WIN_COMPLETE, and
+       MEM_SYNC after PROC_SYNC in WIN_START and WIN_WAIT/TEST, to ensure the
+       ordering between local loads/stores and PROC_SYNC in WIN_POST (and
+       vice versa in WIN_WAIT/TEST), and the ordering between PROC_SYNC and SHM
+       operations in WIN_START (and vice versa in WIN_COMPLETE).
+
+       In WIN_POST, the MEM_SYNC before PROC_SYNC essentially exposes previous
+       local loads/stores to group of origin processes; after PROC_SYNC, origin
+       processes knows all target processes already exposed their local
+       loads/stores; in WIN_START, the MEM_SYNC after PROC_SYNC ensures that
+       following SHM operations will happen after PROC_SYNC and will see the
+       latest data on target processes.
+
+       In WIN_COMPLETE, the MEM_SYNC before PROC_SYNC essentailly exposes previous
+       SHM operations to group of target processes; after PROC_SYNC, target
+       processes knows all origin process already exposed their SHM operations;
+       in WIN_WAIT/TEST, the MEM_SYNC after PROC_SYNC ensures that following local
+       loads/stores will happen after PROC_SYNC and will see the latest data in
+       my memory region.
+
+   (3) Passive target synchronization
+
+              RANK 0                          RANK 1
+
+                                        WIN_LOCK(target=1) {
+                                            PROC_SYNC (lock granted)
+                                            MEM_SYNC
+                                        }
+
+                                        (SHM operations)
+
+                                        WIN_UNLOCK(target=1) {
+                                            MEM_SYNC
+                                            PROC_SYNC (lock released)
+                                        }
+
+         PROC_SYNC -------------------- PROC_SYNC
+
+         WIN_LOCK (target=1) {
+             PROC_SYNC (lock granted)
+             MEM_SYNC
+         }
+
+         (SHM operations)
+
+         WIN_UNLOCK (target=1) {
+             MEM_SYNC
+             PROC_SYNC (lock released)
+         }
+
+         PROC_SYNC -------------------- PROC_SYNC
+
+                                        WIN_LOCK(target=1) {
+                                            PROC_SYNC (lock granted)
+                                            MEM_SYNC
+                                        }
+
+                                        (SHM operations)
+
+                                        WIN_UNLOCK(target=1) {
+                                            MEM_SYNC
+                                            PROC_SYNC (lock released)
+                                        }
+
+         We need MEM_SYNC after PROC_SYNC in WIN_LOCK, and MEM_SYNC before
+         PROC_SYNC in WIN_UNLOCK, to ensure the ordering between SHM operations
+         and PROC_SYNC and vice versa.
+
+         In WIN_LOCK, the MEM_SYNC after PROC_SYNC guarantees two things:
+         (a) it guarantees that following SHM operations will happen after
+         lock is granted; (b) it guarantees that following SHM operations
+         will happen after any PROC_SYNC with target before WIN_LOCK is called,
+         which means those SHM operations will see the latest data on target
+         process.
+
+         In WIN_UNLOCK, the MEM_SYNC before PROC_SYNC also guarantees two
+         things: (a) it guarantees that SHM operations will happen before
+         lock is released; (b) it guarantees that SHM operations will happen
+         before any PROC_SYNC with target after WIN_UNLOCK is returned, which
+         means following SHM operations on that target will see the latest data.
+
+         WIN_LOCK_ALL/UNLOCK_ALL are same with WIN_LOCK/UNLOCK.
+
+              RANK 0                          RANK 1
+
+         WIN_LOCK_ALL
+
+         (SHM operations)
+
+         WIN_FLUSH(target=1) {
+             MEM_SYNC
+         }
+
+         PROC_SYNC ------------------------PROC_SYNC
+
+                                           WIN_LOCK(target=1) {
+                                               PROC_SYNC (lock granted)
+                                               MEM_SYNC
+                                           }
+
+                                           (SHM operations)
+
+                                           WIN_UNLOCK(target=1) {
+                                               MEM_SYNC
+                                               PROC_SYNC (lock released)
+                                           }
+
+         WIN_UNLOCK_ALL
+
+         We need MEM_SYNC in WIN_FLUSH to ensure the ordering between SHM
+         operations and PROC_SYNC.
+
+         The MEM_SYNC in WIN_FLUSH guarantees that all SHM operations before
+         this WIN_FLUSH will happen before any PROC_SYNC with target after
+         this WIN_FLUSH, which means SHM operations on target process after
+         PROC_SYNC with origin will see the latest data.
+*/
+
 MPIR_T_PVAR_DOUBLE_TIMER_DECL(RMA, rma_lockqueue_alloc);
 
 MPIR_T_PVAR_DOUBLE_TIMER_DECL(RMA, rma_winfence_clearlock);
