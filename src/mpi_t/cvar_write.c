@@ -71,6 +71,7 @@ int MPIR_T_cvar_write_impl(MPI_T_cvar_handle handle, void *buf)
             ((double *)addr)[i] = ((double *)buf)[i];
         break;
     case MPI_CHAR:
+        MPIU_Assert(count > strlen(buf)); /* Make sure buf will not overflow this cvar */
         MPIU_Strncpy(addr, buf, count);
         break;
     default:
