@@ -112,7 +112,7 @@ int PrintControlVars( FILE *fp )
 {
     int          i, num_cvar, nameLen, verbosity, descLen, binding, scope;
     int          hasValue;
-    char         name[MAX_NAME_LEN], desc[MAX_DESC_LEN], varValue[21];
+    char         name[MAX_NAME_LEN], desc[MAX_DESC_LEN], varValue[512];
     MPI_T_enum   enumtype;
     MPI_Datatype datatype;
 
@@ -166,7 +166,7 @@ int PrintPerfVars( FILE *fp )
 {
     int          i, numPvar, nameLen, descLen, verbosity, varClass;
     int          binding, isReadonly, isContinuous, isAtomic;
-    char         name[MAX_NAME_LEN], desc[MAX_DESC_LEN], varValue[21];
+    char         name[MAX_NAME_LEN], desc[MAX_DESC_LEN], varValue[512];
     MPI_T_enum   enumtype;
     MPI_Datatype datatype;
 
