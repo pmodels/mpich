@@ -173,7 +173,7 @@ print OUTPUT_H <<EOT;
 #define ${ns}_assert MPIU_Assert
 
 /* Arbitrary, simplifies interaction with external interfaces like MPI_T_ */
-#define ${uc_ns}_MAX_STRLEN (4096)
+#define ${uc_ns}_MAX_STRLEN (384)
 
 #endif /* $hdr_guard */
 EOT
