@@ -315,7 +315,19 @@ void MPIR_T_CVAR_REGISTER_impl(
         cvar->datatype = dtype;
         cvar->name = MPIU_Strdup(name);
         MPIU_Assert(cvar->name);
-        cvar->addr = (void *)addr;
+        if (dtype != MPI_CHAR) {
+            cvar->addr = (void *)addr;
+        } else {
+            cvar->addr = MPIU_Malloc(count);
+            MPIU_Assert(cvar->addr);
+            if (defaultval.str == NULL) {
+                ((char *)(cvar->addr))[0] = '\0';
+            } else {
+                /* Use greater (>), since count includes the terminating '\0', but strlen does not */
+                MPIU_Assert(count > strlen(defaultval.str));
+                strcpy(cvar->addr, defaultval.str);
+            }
+        }
         cvar->count = count;
         cvar->verbosity = verb;
         cvar->bind = binding;
