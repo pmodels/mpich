@@ -11,6 +11,19 @@
 
      https://trac.mpich.org/projects/mpich/ticket/2105
 
+### PathScale compilers
+ * Due to bugs in the PathScale compiler suite, some configurations of MPICH
+   do not build correctly.
+    - v5.0.1: When the --disable-shared configure option is passed to MPICH,
+      applications will give a segfault.
+
+    - v5.0.5: Unless you pass the --enable-fast=O0 configure flag to MPICH,
+      applications will hang.
+
+   See the following ticket for more information:
+
+    https://trac.mpich.org/projects/mpich/ticket/2104
+
 ### Fine-grained thread safety
 
  * ch3:sock does not (and will not) support fine-grained threading.
