@@ -1288,14 +1288,14 @@ int num_tasks;
 static int MPIDI_collsel_print_usage()
 {
   if(!task_id)
-    fputs("Usage: pami_tune [options]\n\
+    fputs("Usage: pami_tune (MPICH) [options]\n\
 Options:\n\
   -c            Comma separated list of collectives to benchmark\n\
                 Valid options are: \n\
-                   allgather, allgatherv, allgatherv_int, allreduce, alltoall,\n\
-                   alltoallv, alltoallv_int, ambroadcast, amgather, amreduce,\n\
-                   amscatter, barrier, broadcast, gather, gatherv, gatherv_int,\n\
-                   reduce, reduce_scatter, scan, scatter, scatterv, scatterv_int\n\
+                   allgather, allgatherv_int, allreduce, alltoall,\n\
+                   alltoallv_int, ambroadcast, amgather, amreduce,\n\
+                   amscatter, barrier, broadcast, gather, gatherv_int,\n\
+                   reduce, reduce_scatter, scan, scatter, scatterv_int\n\
                    (Default: all collectives)\n\n\
   -m            Comma separated list of message sizes to benchmark\n\
                 (Default: 1 to 2^k, where k <= 20)\n\n\
@@ -1394,6 +1394,7 @@ static int MPIDI_collsel_process_collectives(char *coll_arg, advisor_params_t *p
   coll = strtok(collectives,",");
   while (coll != NULL)
   {
+    int invalid_collective = 0;
     for(i=0; i<PAMI_XFER_COUNT; i++)
     {
       if(strcmp(coll, xfer_array_str[i]) == 0)
@@ -1402,24 +1403,28 @@ static int MPIDI_collsel_process_collectives(char *coll_arg, advisor_params_t *p
         {
           if(infolevel >= 1) 
             fprintf(stderr,"WARNING: MPICH (pami_tune) doesn't support tuning for ALLGATHERV. ALLGATHERV tuning will be skipped.\nTune for ALLGATHERV_INT instead\n");
+          invalid_collective = 1;
           break;
         }
         else if(i == 7)
         {
           if(infolevel >= 1)
             fprintf(stderr,"WARNING: MPICH (pami_tune) doesn't support tuning for SCATTERV. SCATTERV tuning will be skipped.\nTune for SCATTERV_INT instead\n");
+          invalid_collective = 1;
           break;
         }
         else if(i == 10)
         {
           if(infolevel >= 1)
             fprintf(stderr,"WARNING: MPICH (pami_tune) doesn't support tuning for GATHERV. GATHERV tuning will be skipped.\nTune for GATHERV_INT instead\n");
+          invalid_collective = 1;
           break;
         }
         else if(i == 14)
         {
           if(infolevel >= 1)
             fprintf(stderr,"WARNING: MPICH (pami_tune) doesn't support tuning for ALLTOALLV. ALLTOALLV tuning will be skipped.\nTune for ALLTOALLV_INT instead\n");
+          invalid_collective = 1;
           break;
         }
         else
@@ -1430,19 +1435,23 @@ static int MPIDI_collsel_process_collectives(char *coll_arg, advisor_params_t *p
       }
     }
     /* arg did not match any collective */
-    if(i == PAMI_XFER_COUNT)
+    if(i == PAMI_XFER_COUNT || invalid_collective)
     {
-      MPIU_Free(params->collectives);
-      params->collectives = NULL;
       if(!task_id)
       {
         fprintf(stderr, "Invalid collective: %s\n", coll);
       }
-      ret = 1;
       break;
     }
     coll = strtok(NULL,",");
   }
+  if(params->num_collectives == 0)
+  {
+    MPIU_Free(params->collectives);
+    params->collectives = NULL;
+    ret = 1;
+  }
+
   MPIU_Free(collectives);
   return ret;
 }
