@@ -331,6 +331,7 @@ void ADIOI_GPFS_Calc_file_domains(ADIO_File fd,
 	 * ion as well */
 	for (j=0;j<naggs_large;j++) {
 	    int foundbridge = 0;
+	    int numbridgelistpasses = 0;
 	    while (!foundbridge) {
 		if (tmpbridgelistnum[bridgeiter] > 0) {
 		    foundbridge = 1;
@@ -339,12 +340,21 @@ void ADIOI_GPFS_Calc_file_domains(ADIO_File fd,
 		       printf("naggs is %d bridgeiter is %d bridgelistoffset[bridgeiter] is %d tmpbridgelistnum[bridgeiter] is %d\n",naggs, bridgeiter,bridgelistoffset[bridgeiter],tmpbridgelistnum[bridgeiter]);
 		       printf("naggs is %d bridgeiter is %d setting fd_size[%d]\n",naggs, bridgeiter,bridgelistoffset[bridgeiter]+(fd->hints->bridgelistnum[bridgeiter]-tmpbridgelistnum[bridgeiter]));
 		     */
-		    fd_size[bridgelistoffset[bridgeiter]+(fd->hints->fs_hints.bg.bridgelistnum[bridgeiter]-tmpbridgelistnum[bridgeiter])] =
-			(nb_cn_small+1) * blksize;
+		    int currentbridgelistnum =
+			(fd->hints->fs_hints.bg.bridgelistnum[bridgeiter]-
+			 tmpbridgelistnum[bridgeiter]);
+		    int currentfdsizeindex = bridgelistoffset[bridgeiter] +
+			currentbridgelistnum;
+		    fd_size[currentfdsizeindex] = (nb_cn_small+1) * blksize;
 		    tmpbridgelistnum[bridgeiter]--;
 		}
-		if (bridgeiter == (fd->hints->fs_hints.bg.numbridges-1))
+		if (bridgeiter == (fd->hints->fs_hints.bg.numbridges-1)) {
+		    /* guard against infinite loop - should only ever make 1 pass
+ 		     * thru bridgelist */
+		    ADIOI_Assert(numbridgelistpasses == 0);
+		    numbridgelistpasses++;
 		    bridgeiter = 0;
+		}
 		else
 		    bridgeiter++;
 	    }
