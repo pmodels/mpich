@@ -3,10 +3,10 @@
  *  (C) 2014 by Argonne National Laboratory.
  *      See COPYRIGHT in top-level directory.
  */
-#import <stdio.h>
-#import <stdlib.h>
-#import <assert.h>
-#import "mpi.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <assert.h>
+#include "mpi.h"
 
 int main(int argc, char **argv)
 {
