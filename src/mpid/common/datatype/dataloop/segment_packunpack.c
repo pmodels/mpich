@@ -13,8 +13,6 @@
 #include "dataloop.h"
 #include "veccpy.h"
 
-/* NOTE: bufp values are unused, ripe for removal */
-
 /* #define MPICH_DEBUG_SEGMENT_MOVE */
 /* TODO: Consider integrating this with the general debug support. */
 /* Note: This does not use the CVAR support for the environment variable
@@ -36,6 +34,8 @@ static void setPrint( void ) {
 #else
 #define DBG_SEGMENT(_a)
 #endif
+
+/* NOTE: bufp values are unused, ripe for removal */
 
 int PREPEND_PREFIX(Segment_contig_m2m)(DLOOP_Offset *blocks_p,
 				       DLOOP_Type el_type,
@@ -322,22 +322,6 @@ int PREPEND_PREFIX(Segment_blkidx_m2m)(DLOOP_Offset *blocks_p,
 
     DLOOP_Handle_get_size_macro(el_type, el_size);
     DBG_SEGMENT(printf( "blkidx m2m: elsize = %d, count = %d, blocklen = %d\n", (int)el_size, (int)count, (int)blocklen ));
-
-    /* If the blocklen * el_size is relatively small, then for
-       performance reasons, its important to hoist most of these
-       tests out of the loop.  Ignoring some of the issues of handling
-       the available buffer size (blocks_left), this should translate
-       directly into code that looks like this for blocksize == 1
-
-       for (i=0; i<count; i++) {
-            dest[i] = userbuf[offsetarray[i]];
-       }
-
-       where "dest" and "userbuf" are pointers to objects of the correct
-       size.  If blocksize is > 1, then various unrollings are important
-       until blocksize is large enough to make the overhead of memcpy
-       negligible.  Datatypes such as this are used in LAMMPS, for example.
-    */
 
     while (blocks_left) {
 	char *src, *dest;
