@@ -196,7 +196,7 @@ typedef struct ADIOI_FileD {
     unsigned d_mem;          /* data buffer memory alignment */
     unsigned d_miniosz;      /* min xfer size, xfer size multiple,
                                 and file seek offset alignment */
-    blksize_t blksize;       /* some optimizations benefit from knowing
+    long blksize;            /* some optimizations benefit from knowing
 				underlying block size */
     ADIO_Offset fp_ind;      /* individual file pointer in MPI-IO (in bytes)*/
     ADIO_Offset fp_sys_posn; /* current location of the system file-pointer
