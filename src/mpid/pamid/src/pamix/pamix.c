@@ -33,7 +33,9 @@
 #define PAMIX_assert(x)        assert(x)
 #endif
 
-#define MIN(a,b) ((a<b)?a:b)
+#ifndef MIN
+#define MIN(a,b) (((a)<(b))?(a):(b))
+#endif
 
 #ifdef __BGQ__
 #define __BG__
