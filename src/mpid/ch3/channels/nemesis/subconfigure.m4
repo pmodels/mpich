@@ -95,6 +95,7 @@ AC_CHECK_FUNCS(signal)
 PAC_SET_HEADER_LIB_PATH(mx)
 PAC_SET_HEADER_LIB_PATH(scif)
 PAC_SET_HEADER_LIB_PATH(ib)
+PAC_SET_HEADER_LIB_PATH(mxm)
 
 nemesis_nets_dirs=""
 nemesis_nets_strings=""

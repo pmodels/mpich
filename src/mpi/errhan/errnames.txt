@@ -719,6 +719,22 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **open %s:open failed - %s
 **setenv:setenv failed
 **putenv:putenv failed
+**mxm_config_read_opts: mxm_config_read_opts failed
+**mxm_config_read_opts %s:mxm_config_read_opts failed (%s)
+**mxm_init: mxm_init failed
+**mxm_init %s:mxm_init failed (%s)
+**mxm_set_am_handler: mxm_set_am_handler failed
+**mxm_set_am_handler %s:mxm_set_am_handler failed (%s)
+**mxm_mq_create: mxm_mq_create failed
+**mxm_mq_create %s:mxm_mq_create failed (%s)
+**mxm_ep_create: mxm_ep_create failed
+**mxm_ep_create %s:mxm_ep_create failed (%s)
+**mxm_ep_get_address: mxm_ep_get_address failed
+**mxm_ep_get_address %s:mxm_ep_get_address failed (%s)
+**mxm_ep_connect: mxm_ep_connect failed
+**mxm_ep_connect %s:mxm_ep_connect failed (%s)
+**mxm_ep_disconnect: mxm_ep_disconnect failed
+**mxm_ep_disconnect %s:mxm_ep_disconnect failed (%s)
 **mx_close_endpoint: mx_close_endpoint failed
 **mx_close_endpoint %s:mx_close_endpoint failed (%s)
 **mx_finalize:mx_finalize failed
