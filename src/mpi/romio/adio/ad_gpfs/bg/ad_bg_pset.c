@@ -92,7 +92,7 @@ static unsigned procManhattanDistance(unsigned *aggCoords, unsigned *bridgeCoord
   unsigned totalDistance = 0;
   int i;
   for (i=0;i<MPIX_TORUS_MAX_DIMS;i++) {
-    unsigned dimDistance = abs(aggCoords[i] - bridgeCoords[i]);
+    unsigned dimDistance = abs((int)aggCoords[i] - (int)bridgeCoords[i]);
     if (dimDistance > 0) { // could torus make it closer?
       if (dimTorus[i]) {
         if (aggCoords[i] == torusSize[i]) { // is wrap-around closer
@@ -104,7 +104,8 @@ static unsigned procManhattanDistance(unsigned *aggCoords, unsigned *bridgeCoord
             dimDistance = aggCoords[i]+1;
         }
       }
-    }
+    } /* else: dimDistance == 0, meaning aggCoords[i] and bridgeCoords[i] are
+	 the same and there's no closer point to pick */
     totalDistance += dimDistance;
   }
   return totalDistance;
