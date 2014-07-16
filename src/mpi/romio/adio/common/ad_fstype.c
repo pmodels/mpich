@@ -689,6 +689,22 @@ void ADIO_ResolveFileType(MPI_Comm comm, const char *filename, int *fstype,
 	}
     }
 
+    /* lastly, there may be situations where one cannot override the file
+     * system detection with a prefix -- maybe the file name is passed to both
+     * posix and MPI-IO routines, or maybe the file name is hard-coded into an
+     * application.
+     * Assumes all processes set the same environment varialble.
+     * Values: the same prefix you would stick on a file path. e.g. pvfs2: --
+     * including the colon! */
+    char * p = getenv("ROMIO_FSTYPE_FORCE");
+    if (p != NULL) {
+	ADIO_FileSysType_prefix(p, &file_system, &myerrcode);
+	if (myerrcode != MPI_SUCCESS) {
+	    *error_code = myerrcode;
+	    return;
+	}
+    }
+
     /* verify that we support this file system type and set ops pointer */
     if (file_system == ADIO_PFS) {
 #ifndef ROMIO_PFS
