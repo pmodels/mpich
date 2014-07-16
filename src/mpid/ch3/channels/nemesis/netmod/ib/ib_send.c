@@ -171,7 +171,9 @@ static int MPID_nem_ib_iSendContig_core(MPIDI_VC_t * vc, MPID_Request * sreq, vo
 
     /* send RDMA-write-to buffer occupancy information */
     /* embed SR occupancy information and remember the last one sent */
+#if 0
     MPIDI_CH3_Pkt_t *ch3_hdr = (MPIDI_CH3_Pkt_t *) hdr;
+#endif
     if (MPID_nem_ib_diff16(vc_ib->ibcom->rsr_seq_num_tail, vc_ib->ibcom->rsr_seq_num_tail_last_sent)
         > notify_rate) {
 #if 0   /* debug, disabling piggy-back */
@@ -295,7 +297,9 @@ static int MPID_nem_ib_iSendContig_core(MPIDI_VC_t * vc, MPID_Request * sreq, vo
         dprintf("isendcontig_core,MPIDI_CH3_PKT_ACCUMULATE,ref_count=%d\n", sreq->ref_count);
     }
 
+#ifdef MPID_NEM_IB_DEBUG_SEND
     int msg_type = MPIDI_Request_get_msg_type(sreq);
+#endif
 
     dprintf
         ("isendcontig_core,sreq=%p,prefix=%p,sz_prefix=%d,hdr=%p,sz_hdr=%ld,data=%p,sz_data=%d,remote_ringbuf->type=%d\n",
@@ -441,7 +445,9 @@ int MPID_nem_ib_iSendContig(MPIDI_VC_t * vc, MPID_Request * sreq, void *hdr,
                             MPIDI_msg_sz_t hdr_sz, void *data, MPIDI_msg_sz_t data_sz)
 {
     int mpi_errno = MPI_SUCCESS;
+#if 0
     int ibcom_errno;
+#endif
     MPID_nem_ib_vc_area *vc_ib = VC_IB(vc);
 
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_IB_ISENDCONTIG);
@@ -675,9 +681,11 @@ int MPID_nem_ib_iStartContigMsg(MPIDI_VC_t * vc, void *hdr, MPIDI_msg_sz_t hdr_s
 {
     MPID_Request *sreq = NULL;
     int mpi_errno = MPI_SUCCESS;
+#if 0
     int ibcom_errno;
     MPID_nem_ib_vc_area *vc_ib = VC_IB(vc);
     int sseq_num;
+#endif
     //uint64_t tscs, tsce;
 
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_IB_ISTARTCONTIGMSG);
@@ -935,8 +943,10 @@ int MPID_nem_ib_SendNoncontig(MPIDI_VC_t * vc, MPID_Request * sreq, void *hdr,
                               MPIDI_msg_sz_t hdr_sz)
 {
     int mpi_errno = MPI_SUCCESS;
+#if 0
     int ibcom_errno;
     MPIDI_msg_sz_t last;
+#endif
     MPID_nem_ib_vc_area *vc_ib = VC_IB(vc);
 
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_IB_SENDNONCONTIG);
@@ -1047,12 +1057,11 @@ int MPID_nem_ib_SendNoncontig(MPIDI_VC_t * vc, MPID_Request * sreq, void *hdr,
 int MPID_nem_ib_send_progress(MPIDI_VC_t * vc)
 {
     int mpi_errno = MPI_SUCCESS;
+#if 0
     int ibcom_errno;
+#endif
     MPID_nem_ib_vc_area *vc_ib = VC_IB(vc);
-    MPID_IOV *iov;
-    int n_iov;
     MPID_Request *sreq, *prev_sreq;
-    int again = 0;
     int req_type, msg_type;
 
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_IB_SEND_PROGRESS);
@@ -1208,8 +1217,10 @@ int MPID_nem_ib_send_progress(MPIDI_VC_t * vc)
                         /* send current rsr_seq_num_tail because message from target to initiator
                          * might have happened while being queued */
                     case MPIDI_NEM_PKT_LMT_RTS:{
+#if 0
                             MPID_nem_ib_lmt_cookie_t *s_cookie_buf =
                                 (MPID_nem_ib_lmt_cookie_t *) sreq->dev.iov[1].MPID_IOV_BUF;
+#endif
                             dprintf("send_progress,MPIDI_NEM_PKT_LMT_RTS,rsr_seq_num_tail=%d\n",
                                     vc_ib->ibcom->rsr_seq_num_tail);
 #if 0   /* moving to packet header */
@@ -1223,8 +1234,10 @@ int MPID_nem_ib_send_progress(MPIDI_VC_t * vc)
                         }
 
                     case MPIDI_NEM_PKT_LMT_CTS:{
+#if 0
                             MPID_nem_ib_lmt_cookie_t *s_cookie_buf =
                                 (MPID_nem_ib_lmt_cookie_t *) sreq->dev.iov[1].MPID_IOV_BUF;
+#endif
                             dprintf("send_progress,MPIDI_NEM_PKT_LMT_CTS,rsr_seq_num_tail=%d\n",
                                     vc_ib->ibcom->rsr_seq_num_tail);
 #if 0   /* moving to packet header */
@@ -1335,7 +1348,7 @@ int MPID_nem_ib_send_progress(MPIDI_VC_t * vc)
             }
 
             /* save sreq->dev.next (and sreq) because decrementing reference-counter might free sreq */
-            MPID_Request *tmp_sreq = sreq;
+            //MPID_Request *tmp_sreq = sreq;
             sreq = MPID_nem_ib_sendq_next(sreq);
             goto next_unlinked;
             //next:
@@ -1366,7 +1379,6 @@ int MPID_nem_ib_send_progress(MPIDI_VC_t * vc)
 int MPID_nem_ib_cm_progress()
 {
     int mpi_errno = MPI_SUCCESS;
-    int ibcom_errno;
     MPID_nem_ib_cm_req_t *sreq, *prev_sreq;
     MPID_nem_ib_cm_cmd_shadow_t *shadow;
     int is_established = 0;
@@ -1619,7 +1631,6 @@ int MPID_nem_ib_cm_cas_core(int rank, MPID_nem_ib_cm_cmd_shadow_t * shadow)
 {
     int mpi_errno = MPI_SUCCESS;
     int ibcom_errno;
-    int val;
 
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_IB_CM_CAS_CORE);
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_IB_CM_CAS_CORE);
@@ -1655,7 +1666,6 @@ int MPID_nem_ib_cm_cas(MPIDI_VC_t * vc, uint32_t ask_on_connect)
 {
     int mpi_errno = MPI_SUCCESS;
     int ibcom_errno;
-    int val;
 
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_IB_CM_CAS);
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_IB_CM_CAS);
@@ -1718,8 +1728,6 @@ int MPID_nem_ib_cm_cmd_core(int rank, MPID_nem_ib_cm_cmd_shadow_t * shadow, void
 {
     int mpi_errno = MPI_SUCCESS;
     int ibcom_errno;
-    int val;
-    MPID_nem_ib_cm_cmd_t cmd;
     int ib_port = 1;
 
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_IB_CM_CMD_CORE);
@@ -1905,7 +1913,6 @@ int MPID_nem_ib_ringbuf_ask_fetch(MPIDI_VC_t * vc)
 {
     int mpi_errno = MPI_SUCCESS;
     int ibcom_errno;
-    int val;
 
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_IB_RINGBUF_ASK_FETCH);
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_IB_RINGBUF_ASK_FETCH);
@@ -1971,7 +1978,6 @@ int MPID_nem_ib_ringbuf_ask_cas_core(MPIDI_VC_t * vc, MPID_nem_ib_ringbuf_cmd_sh
 {
     int mpi_errno = MPI_SUCCESS;
     int ibcom_errno;
-    int val;
 
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_IB_RINGBUF_ASK_CAS_CORE);
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_IB_RINGBUF_ASK_CAS_CORE);
@@ -2010,8 +2016,6 @@ int MPID_nem_ib_ringbuf_ask_cas_core(MPIDI_VC_t * vc, MPID_nem_ib_ringbuf_cmd_sh
 int MPID_nem_ib_ringbuf_ask_cas(MPIDI_VC_t * vc, MPID_nem_ib_ringbuf_req_t * req)
 {
     int mpi_errno = MPI_SUCCESS;
-    int ibcom_errno;
-    int val;
 
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_IB_RINGBUF_ASK_CAS);
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_IB_RINGBUF_ASK_CAS);
@@ -2081,7 +2085,6 @@ int MPID_nem_ib_ringbuf_ask_cas(MPIDI_VC_t * vc, MPID_nem_ib_ringbuf_req_t * req
 int MPID_nem_ib_ringbuf_progress()
 {
     int mpi_errno = MPI_SUCCESS;
-    int ibcom_errno;
     MPID_nem_ib_ringbuf_req_t *sreq, *prev_sreq;
     MPID_nem_ib_ringbuf_cmd_shadow_t *shadow;
 
@@ -2164,7 +2167,7 @@ int MPID_nem_ib_ringbuf_progress()
             }
 
             /* save sreq->dev.next (and sreq) because decrementing reference-counter might free sreq */
-            MPID_nem_ib_ringbuf_req_t *tmp_sreq = sreq;
+            //MPID_nem_ib_ringbuf_req_t *tmp_sreq = sreq;
             sreq = MPID_nem_ib_ringbuf_sendq_next(sreq);
 
             goto next_unlinked;

@@ -103,8 +103,6 @@ uint8_t MPID_nem_ib_lmt_tail_addr_cbf[MPID_nem_ib_cbf_nslot * MPID_nem_ib_cbf_bi
                                       8] = { 0 };
 static uint32_t MPID_nem_ib_rand_next = 1;
 MPID_nem_ib_vc_area *MPID_nem_ib_debug_current_vc_ib;
-static int listen_fd;
-static int listen_port;
 uint64_t MPID_nem_ib_ringbuf_acquired[(MPID_NEM_IB_NRINGBUF + 63) / 64];
 uint64_t MPID_nem_ib_ringbuf_allocated[(MPID_NEM_IB_NRINGBUF + 63) / 64];
 MPID_nem_ib_ringbuf_t *MPID_nem_ib_ringbuf;
@@ -201,7 +199,9 @@ static int MPID_nem_ib_kvs_get_binary(int from, const char *postfix, char *buf, 
     goto fn_exit;
 }
 
+#ifndef MPID_NEM_IB_ONDEMAND
 static int MPID_nem_ib_announce_network_addr(int my_rank, char **bc_val_p, int *val_max_sz_p);
+#endif
 
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_ib_init
@@ -211,7 +211,6 @@ int MPID_nem_ib_init(MPIDI_PG_t * pg_p, int pg_rank, char **bc_val_p, int *val_m
 {
     int mpi_errno = MPI_SUCCESS;
     int ibcom_errno = 0, pmi_errno;
-    int ret;
     int i, j, k;
     int ib_port = 1;
 
@@ -626,7 +625,6 @@ int MPID_nem_ib_init(MPIDI_PG_t * pg_p, int pg_rank, char **bc_val_p, int *val_m
 int MPID_nem_ib_get_business_card(int my_rank, char **bc_val_p, int *val_max_sz_p)
 {
     int mpi_errno = MPI_SUCCESS;
-    int str_errno = MPIU_STR_SUCCESS;
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_IB_GET_BUSINESS_CARD);
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_IB_GET_BUSINESS_CARD);
     dprintf("MPID_nem_ib_get_business_card,enter\n");
@@ -634,6 +632,7 @@ int MPID_nem_ib_get_business_card(int my_rank, char **bc_val_p, int *val_max_sz_
     return mpi_errno;
 }
 
+#ifndef MPID_NEM_IB_ONDEMAND
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_ib_announce_network_addr
 #undef FCNAME
@@ -641,7 +640,6 @@ int MPID_nem_ib_get_business_card(int my_rank, char **bc_val_p, int *val_max_sz_
 static int MPID_nem_ib_announce_network_addr(int my_rank, char **bc_val_p, int *val_max_sz_p)
 {
     int mpi_errno = MPI_SUCCESS;
-    int str_errno = MPIU_STR_SUCCESS;
     int ibcom_errno;
     int i, j, nranks;
 
@@ -772,6 +770,7 @@ static int MPID_nem_ib_announce_network_addr(int my_rank, char **bc_val_p, int *
     MPIU_CHKLMEM_FREEALL();
     goto fn_exit;
 }
+#endif
 
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_ib_connect_to_root
@@ -830,18 +829,6 @@ int MPID_nem_ib_vc_init(MPIDI_VC_t * vc)
     int mpi_errno = MPI_SUCCESS;
 
     MPID_nem_ib_vc_area *vc_ib = VC_IB(vc);
-    int ibcom_errno;
-    size_t s;
-    MPID_nem_ib_conn_t *sc;
-    off_t offset;
-
-    int remote_qpnum;
-    uint16_t remote_lid;
-    union ibv_gid remote_gid;
-    void *remote_rmem;
-    int remote_rkey;
-
-    char key_str[256], remote_rank_str[256];
 
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_IB_VC_INIT);
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_IB_VC_INIT);
@@ -1006,8 +993,6 @@ int MPID_nem_ib_vc_terminate(MPIDI_VC_t * vc)
     dprintf("ib_vc_terminate,pg_rank=%d\n", vc->pg_rank);
     int mpi_errno = MPI_SUCCESS;
     int ibcom_errno;
-    int req_errno = MPI_SUCCESS;
-    int i;
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_IB_VC_TERMINATE);
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_IB_VC_TERMINATE);
 

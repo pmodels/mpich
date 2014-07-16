@@ -34,8 +34,10 @@ static int ref_count;
 typedef struct {
     char *next;
 } free_list_t;
+#if 0
 static char *free_list_front[MPID_NEM_IB_NIALLOCID] = { 0 };
 static char *arena_flist[MPID_NEM_IB_NIALLOCID] = { 0 };
+#endif
 
 #define MPID_NEM_IB_SZARENA 4096
 #define MPID_NEM_IB_CLUSTER_SIZE (MPID_NEM_IB_SZARENA/sz)
@@ -157,7 +159,7 @@ static inline void __lru_queue_display()
              p != (struct MPID_nem_ib_com_reg_mr_cache_entry_t *) &MPID_nem_ib_com_reg_mr_cache[i];
              p = (struct MPID_nem_ib_com_reg_mr_cache_entry_t *) p->lru_next) {
             if (p && p->addr) {
-                dprintf("-------- p=%p,addr=%p,len=%d,refc=%d,lru_next=%p\n", p, p->addr, p->len,
+                dprintf("-------- p=%p,addr=%p,len=%ld,refc=%d,lru_next=%p\n", p, p->addr, p->len,
                         p->refc, p->lru_next);
             }
             else {
@@ -201,7 +203,7 @@ struct ibv_mr *MPID_nem_ib_com_reg_mr_fetch(void *addr, long len,
 #endif
     key = MPID_nem_ib_com_hash_func(addr);
 
-    dprintf("[MrCache] addr=%p, len=%d\n", addr, len);
+    dprintf("[MrCache] addr=%p, len=%ld\n", addr, len);
     dprintf("[MrCache] aligned addr=%p, len=%ld\n", addr_aligned, len_aligned);
 
     //__lru_queue_display();
@@ -342,6 +344,7 @@ struct ibv_mr *MPID_nem_ib_com_reg_mr_fetch(void *addr, long len,
 #endif
 }
 
+#if 0
 static void MPID_nem_ib_com_reg_mr_dereg(struct ibv_mr *mr)
 {
 
@@ -354,6 +357,7 @@ static void MPID_nem_ib_com_reg_mr_dereg(struct ibv_mr *mr)
     //dprintf("MPID_nem_ib_com_reg_mr_dereg,entry=%p,mr=%p,addr=%p,refc=%d,offset=%lx\n", e, mr, e->mr->addr,
     //e->refc, offset);
 }
+#endif
 
 int MPID_nem_ib_com_register_cache_init()
 {
@@ -406,7 +410,7 @@ int MPID_nem_ib_com_register_cache_release()
              MPID_nem_ib_com_reg_mr_cache[i].lru_next;
              p !=
              (struct MPID_nem_ib_com_reg_mr_cache_entry_t *) &MPID_nem_ib_com_reg_mr_cache[i];) {
-            if (p && p->addr > 0) {
+            if (p && p->addr) {
                 ib_errno = MPID_nem_ib_com_dereg_mr(p->mr);
                 MPID_NEM_IB_COM_ERR_CHKANDJUMP(ib_errno, -1, printf("MPID_nem_ib_com_dereg_mr"));
                 struct MPID_nem_ib_com_reg_mr_cache_entry_t *p_old = p;

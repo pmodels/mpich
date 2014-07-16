@@ -30,8 +30,9 @@ int MPID_nem_ib_lmt_initiate_lmt(struct MPIDI_VC *vc, union MPIDI_CH3_Pkt *rts_p
     MPIDI_msg_sz_t data_sz;
     MPID_Datatype *dt_ptr;
     MPI_Aint dt_true_lb;
-    MPIDI_CH3I_VC *vc_ch = VC_CH(vc);
+#if 0
     MPID_nem_ib_vc_area *vc_ib = VC_IB(vc);
+#endif
 
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_IB_LMT_INITIATE_LMT);
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_IB_LMT_INITIATE_LMT);
@@ -89,7 +90,7 @@ int MPID_nem_ib_lmt_initiate_lmt(struct MPIDI_VC *vc, union MPIDI_CH3_Pkt *rts_p
 #endif
     /* put sz, see MPID_nem_lmt_RndvSend (in src/mpid/ch3/channels/nemesis/src/mpid_nem_lmt.c) */
     /* TODO remove sz field
-     * /* pkt_RTS_handler (in src/mpid/ch3/channels/nemesis/src/mpid_nem_lmt.c)
+     *   pkt_RTS_handler (in src/mpid/ch3/channels/nemesis/src/mpid_nem_lmt.c)
      * rreq->ch.lmt_data_sz = rts_pkt->data_sz; */
     //s_cookie_buf->sz = (uint32_t)((MPID_nem_pkt_lmt_rts_t*)rts_pkt)->data_sz;
 
@@ -208,12 +209,10 @@ int MPID_nem_ib_lmt_start_recv_core(struct MPID_Request *req, void *raddr, uint3
 int MPID_nem_ib_lmt_start_recv(struct MPIDI_VC *vc, struct MPID_Request *req, MPID_IOV s_cookie)
 {
     int mpi_errno = MPI_SUCCESS;
-    int ibcom_errno;
     int dt_contig;
     MPIDI_msg_sz_t data_sz;
     MPID_Datatype *dt_ptr;
     MPI_Aint dt_true_lb;
-    MPIDI_CH3I_VC *vc_ch = VC_CH(vc);
     MPID_nem_ib_vc_area *vc_ib = VC_IB(vc);
 
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_IB_LMT_START_RECV);
@@ -384,7 +383,9 @@ int MPID_nem_ib_lmt_switch_send(struct MPIDI_VC *vc, struct MPID_Request *req)
     REQ_FIELD(req, lmt_sender_tail) = *tailp;
     dprintf("lmt_switch_send,tail on sender=%02x,tail onreceiver=%02x,req=%p\n", *tailp,
             r_cookie_buf->tail, req);
+#ifdef MPID_NEM_IB_DEBUG_LMT
     uint8_t *tail_wordp = (uint8_t *) ((uint8_t *) write_from_buf + data_sz - sizeof(uint32_t) * 2);
+#endif
     dprintf("lmt_switch_send,tail on sender=%d\n", *tail_wordp);
     fflush(stdout);
 #endif
@@ -426,7 +427,6 @@ int MPID_nem_ib_lmt_handle_cookie(struct MPIDI_VC *vc, struct MPID_Request *req,
 int MPID_nem_ib_lmt_done_send(struct MPIDI_VC *vc, struct MPID_Request *req)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPID_nem_ib_vc_area *vc_ib = VC_IB(vc);
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_IB_LMT_DONE_SEND);
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_IB_LMT_DONE_SEND);
 
@@ -476,7 +476,6 @@ int MPID_nem_ib_lmt_done_send(struct MPIDI_VC *vc, struct MPID_Request *req)
 int MPID_nem_ib_lmt_done_recv(struct MPIDI_VC *vc, struct MPID_Request *rreq)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_CH3I_VC *vc_ch = VC_CH(vc);
 
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_IB_LMT_DONE_RECV);
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_IB_LMT_DONE_RECV);

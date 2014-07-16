@@ -13,8 +13,8 @@
  *	  be deallocated. Look at all functions.
  */
 #include "ib_ibcom.h"
-#include <sys/ipc.h>
-#include <sys/shm.h>
+//#include <sys/ipc.h>
+//#include <sys/shm.h>
 #include <sys/types.h>
 #include <assert.h>
 #include <linux/mman.h> /* make it define MAP_ANONYMOUS */
@@ -30,7 +30,6 @@
 #define dprintf(...)
 #endif
 
-static int sendwr_id = 10;
 static MPID_nem_ib_com_t contab[MPID_NEM_IB_COM_SIZE];
 static int ib_initialized = 0;
 static int maxcon;
@@ -506,8 +505,6 @@ int MPID_nem_ib_com_open(int ib_port, int open_flag, int *condesc)
     MPID_nem_ib_com_t *conp;
     struct ibv_qp_init_attr qp_init_attr;
     struct ibv_sge *sge;
-    struct ibv_send_wr *sr;
-    struct ibv_recv_wr *rr, *bad_wr;
     int mr_flags;
     int i;
 
@@ -1201,7 +1198,9 @@ int MPID_nem_ib_com_alloc(int condesc, int sz)
 {
     MPID_nem_ib_com_t *conp;
     int ibcom_errno = 0;
+#ifdef MPID_NEM_IB_DEBUG_IBCOM
     int mr_flags = IBV_ACCESS_LOCAL_WRITE | IBV_ACCESS_REMOTE_READ | IBV_ACCESS_REMOTE_WRITE;
+#endif
 
     MPID_NEM_IB_RANGE_CHECK_WITH_ERROR(condesc, conp);
 
@@ -2559,7 +2558,6 @@ int MPID_nem_ib_com_connect_ringbuf(int condesc,
 {
     int ibcom_errno = 0;
     MPID_nem_ib_com_t *conp;
-    int i;
 
     MPID_NEM_IB_RANGE_CHECK_WITH_ERROR(condesc, conp);
 
@@ -2589,7 +2587,7 @@ int MPID_nem_ib_com_connect_ringbuf(int condesc,
         conp->icom_sr[MPID_NEM_IB_COM_SMT_NOINLINE].wr.rdma.rkey = rkey;
     }
     dprintf
-        ("connect_ringbuf,ringbuf_type=%d,rkey=%08x,start=%p,nslot=%d,sseq_num=%d,lsr_seq_num_tail=%d,remote_vc=%lx,alloc_new_mr=%d\n",
+        ("connect_ringbuf,ringbuf_type=%d,rkey=%08x,start=%p,nslot=%d,sseq_num=%d,lsr_seq_num_tail=%d,remote_vc=%p,alloc_new_mr=%d\n",
          conp->local_ringbuf_type, conp->local_ringbuf_rkey, conp->local_ringbuf_start,
          conp->local_ringbuf_nslot, conp->sseq_num, conp->lsr_seq_num_tail, conp->remote_vc,
          alloc_new_mr);
@@ -2818,6 +2816,7 @@ int MPID_nem_ib_com_obtain_pointer(int condesc, MPID_nem_ib_com_t ** MPID_nem_ib
     goto fn_exit;
 }
 
+#if 0
 static void MPID_nem_ib_comShow(int condesc)
 {
     MPID_nem_ib_com_t *conp;
@@ -2838,24 +2837,25 @@ static void MPID_nem_ib_comShow(int condesc)
     }
     fprintf(stdout, "\n");
 }
+#endif
 
-static char *strerror_tbl[] = {
+static const char *strerror_tbl[] = {
     [0] = "zero",
     [1] = "one",
     [2] = "two",
     [3] = "three",
 };
 
-char *MPID_nem_ib_com_strerror(int errno)
+char *MPID_nem_ib_com_strerror(int err)
 {
     char *r;
-    if (-errno > 3) {
+    if (-err > 3) {
         r = MPIU_Malloc(256);
-        sprintf(r, "%d", -errno);
+        sprintf(r, "%d", -err);
         goto fn_exit;
     }
     else {
-        r = strerror_tbl[-errno];
+        r = (char *)strerror_tbl[-err];
     }
   fn_exit:
     return r;
@@ -2891,7 +2891,6 @@ int MPID_nem_ib_com_reg_mr(void *addr, long len, struct ibv_mr **mr,
 
 int MPID_nem_ib_com_dereg_mr(struct ibv_mr *mr)
 {
-    int i;
     int ib_errno;
     int ibcom_errno = 0;
 

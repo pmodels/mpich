@@ -24,8 +24,10 @@
 int MPID_nem_ib_finalize(void)
 {
     int mpi_errno = MPI_SUCCESS;
+#if 0
     int ibcom_errno;
     int i;
+#endif
 
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_IB_FINALIZE);
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_IB_FINALIZE);

@@ -22,6 +22,10 @@
 #endif
 
 static void _local_malloc_initialize_hook(void);
+void *malloc(size_t size);
+void free(void *addr);
+void *realloc(void *addr, size_t size);
+void *calloc(size_t nmemb, size_t size);
 
 void (*__malloc_initialize_hook) (void) = _local_malloc_initialize_hook;
 
@@ -320,10 +324,10 @@ void *malloc(size_t size)
                 }
 
                 /* use head elem */
-                struct free_list *info = (struct free_list *) (arena_flist[pow].next);
-                ptr = (char *) info + CHUNK;
+                struct free_list *head = (struct free_list *) (arena_flist[pow].next);
+                ptr = (char *) head + CHUNK;
                 dprintf("malloc(%lu) [2^%d] ==> USE pool %p\n", size, pow, ptr);
-                list_del(info);
+                list_del(head);
             }
             else {
                 __init_pool_header(info, pow, alloc_sz);

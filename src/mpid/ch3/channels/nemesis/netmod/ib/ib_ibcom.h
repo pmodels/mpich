@@ -559,7 +559,7 @@ extern int MPID_nem_ib_com_rdmabuf_occupancy_notify_rate_get(int condesc, int *n
 extern int MPID_nem_ib_com_rdmabuf_occupancy_notify_rstate_get(int condesc, int **rstate);
 extern int MPID_nem_ib_com_rdmabuf_occupancy_notify_lstate_get(int condesc, int **lstate);
 
-extern char *MPID_nem_ib_com_strerror(int errno);
+extern char *MPID_nem_ib_com_strerror(int err);
 
 extern int MPID_nem_ib_com_mem_rdmawr_from(int condesc, void **out);
 //extern int MPID_nem_ib_com_mem_rdmawr_to(int condesc, int seq_num, void **out);
@@ -675,7 +675,7 @@ static inline void *MPID_nem_ib_rdmawr_from_alloc(uint32_t _sz)
         return p;
     }
     else {
-        char *q, r;
+        char *q;
         if (MPID_nem_ib_rdmawr_from_alloc_arena_free_list[clz]) {
             q = MPID_nem_ib_rdmawr_from_alloc_arena_free_list[clz];
             MPID_nem_ib_rdmawr_from_alloc_arena_free_list[clz] =
