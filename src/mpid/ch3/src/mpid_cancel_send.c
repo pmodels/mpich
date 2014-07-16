@@ -140,6 +140,16 @@ int MPID_Cancel_send(MPID_Request * sreq)
 	else
 	{
 	    cancelled = FALSE;
+	    /* code in mpid_cancel_send */
+#ifdef ENABLE_COMM_OVERRIDES
+        if (vc->comm_ops && vc->comm_ops->cancel_send)
+	    {
+	        mpi_errno = vc->comm_ops->cancel_send(vc, sreq);
+	        if (mpi_errno)
+	          goto fn_exit;
+	    }
+        cancelled = MPIR_STATUS_GET_CANCEL_BIT(sreq->status);
+#endif
 	    if (cancelled)
 	    {
 		MPIR_STATUS_SET_CANCEL_BIT(sreq->status, TRUE);
