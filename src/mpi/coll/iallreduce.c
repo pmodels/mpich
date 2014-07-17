@@ -732,6 +732,7 @@ int MPI_Iallreduce(const void *sendbuf, void *recvbuf, int count,
         MPID_BEGIN_ERROR_CHECKS
         {
             MPIR_ERRTEST_DATATYPE(datatype, "datatype", mpi_errno);
+            MPIR_ERRTEST_COUNT(count, mpi_errno);
             MPIR_ERRTEST_OP(op, mpi_errno);
             MPIR_ERRTEST_COMM(comm, mpi_errno);
 
