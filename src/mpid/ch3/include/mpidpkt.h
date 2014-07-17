@@ -62,7 +62,7 @@ typedef union {
    such as different RMA types. */
 enum MPIDI_CH3_Pkt_types
 {
-    MPIDI_CH3_PKT_EAGER_SEND = 0,
+    MPIDI_CH3_PKT_EAGER_SEND = 53,
 #if defined(USE_EAGER_SHORT)
     MPIDI_CH3_PKT_EAGERSHORT_SEND,
 #endif /* defined(USE_EAGER_SHORT) */
@@ -197,6 +197,43 @@ MPIDI_CH3_Pkt_cancel_send_resp_t;
 MPIDI_CH3_PKT_DEFS
 #endif
 
+#define MPIDI_CH3_PKT_RMA_GET_TARGET_DATATYPE(pkt_, datatype_)  \
+    {                                                           \
+        switch(pkt_.type) {                                     \
+        case (MPIDI_CH3_PKT_PUT):                               \
+        {                                                       \
+            MPIDI_CH3_Pkt_put_t put_pkt_ = pkt_.put;            \
+            datatype_ = put_pkt_.datatype;                      \
+            break;                                              \
+        }                                                       \
+        case (MPIDI_CH3_PKT_GET):                               \
+        {                                                       \
+            MPIDI_CH3_Pkt_get_t get_pkt_ = pkt_.get;            \
+            datatype_ = get_pkt_.datatype;                      \
+            break;                                              \
+        }                                                       \
+        case (MPIDI_CH3_PKT_ACCUMULATE):                        \
+        case (MPIDI_CH3_PKT_GET_ACCUM):                         \
+        {                                                       \
+            MPIDI_CH3_Pkt_accum_t acc_pkt_ = pkt_.accum;        \
+            datatype_ = acc_pkt_.datatype;                      \
+            break;                                              \
+        }                                                       \
+        case (MPIDI_CH3_PKT_CAS):                               \
+        {                                                       \
+            MPIDI_CH3_Pkt_cas_t cas_pkt_ = pkt_.cas;            \
+            datatype_ = cas_pkt_.datatype;                      \
+            break;                                              \
+        }                                                       \
+        case (MPIDI_CH3_PKT_FOP):                               \
+        {                                                       \
+            MPIDI_CH3_Pkt_fop_t fop_pkt_ = pkt_.fop;            \
+            datatype_ = fop_pkt_.datatype;                      \
+            break;                                              \
+        }                                                       \
+        }                                                       \
+    }
+
 typedef struct MPIDI_CH3_Pkt_put
 {
     MPIDI_CH3_Pkt_type_t type;
@@ -296,6 +333,7 @@ typedef struct MPIDI_CH3_Pkt_cas
     MPI_Datatype datatype;
     void *addr;
     MPI_Request request_handle;
+    MPI_Win source_win_handle;
     MPI_Win target_win_handle; /* Used in the last RMA operation in each
                                 * epoch for decrementing rma op counter in
                                 * active target rma and for unlocking window 
@@ -321,6 +359,7 @@ typedef struct MPIDI_CH3_Pkt_fop
     void *addr;
     MPI_Op op;
     MPI_Request request_handle;
+    MPI_Win source_win_handle;
     MPI_Win target_win_handle; /* Used in the last RMA operation in each
                                 * epoch for decrementing rma op counter in
                                 * active target rma and for unlocking window 
