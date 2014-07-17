@@ -40,24 +40,23 @@
 #define ROMIO_HINT_DEFAULT_CFG "/etc/romio-hints"
 #define ROMIO_HINT_ENV_VAR "ROMIO_HINTS"
 
- /* should suppress unused warnings on GCC */
-static void dump_keys(MPI_Info info) ATTRIBUTE((unused, used));
-
 /* debug function: a routine I want in the library to make my life easier when
- * using a source debugger. please ignore any "defined but not used" warnings
- */
-static void dump_keys(MPI_Info info)
+ * using a source debugger.  Now optionally used in ADIO_Open. */
+void ADIOI_Info_print_keyvals(MPI_Info info)
 {
     int i, nkeys, flag;
     char key[MPI_MAX_INFO_KEY];
     char value[MPI_MAX_INFO_VAL];
+
+    if (info == MPI_INFO_NULL)
+	return;
 
     MPI_Info_get_nkeys(info, &nkeys);
 
     for (i=0; i<nkeys; i++) {
 	MPI_Info_get_nthkey(info, i, key);
 	ADIOI_Info_get(info, key, MPI_MAX_INFO_VAL-1, value, &flag);
-	printf("key = %s, value = %s\n", key, value);
+	printf("key = %-25s value = %-10s\n", key, value);
     }
     return;
 }

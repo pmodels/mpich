@@ -126,7 +126,12 @@ MPI_File ADIO_Open(MPI_Comm orig_comm,
 	if (*error_code != MPI_SUCCESS) 
 	    goto fn_exit;
     }
-    
+    /* for debugging, it can be helpful to see the hints selected */
+    char *p = getenv("ROMIO_PRINT_HINTS");
+    if (rank == 0 && p != NULL ) {
+	ADIOI_Info_print_keyvals(fd->info);
+    }
+
      /* deferred open: if we are an aggregator, create a new communicator.
       * we'll use this aggregator communicator for opens and closes.
       * otherwise, we have a NULL communicator until we try to do independent

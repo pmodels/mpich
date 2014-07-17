@@ -345,6 +345,7 @@ void ADIOI_Get_byte_offset(ADIO_File fd, ADIO_Offset offset,
 void ADIOI_process_system_hints(MPI_Info info);
 void ADIOI_incorporate_system_hints(MPI_Info info, MPI_Info sysinfo, 
 		MPI_Info *new_info);
+void ADIOI_Info_print_keyvals(MPI_Info info);
 
 
 void ADIOI_GEN_Fcntl(ADIO_File fd, int flag, ADIO_Fcntl_t *fcntl_struct,
