@@ -961,7 +961,7 @@ int MPIDI_CH3I_Release_lock(MPID_Win *win_ptr)
 			    MPIDI_PT_single_op * single_op;
 			    
 			    single_op = lock_queue->pt_single_op;
-			    if (single_op->type == MPIDI_CH3_PKT_LOCK_PUT_UNLOCK) {
+			    if (single_op->type == MPIDI_RMA_PUT) {
 				mpi_errno = MPIR_Localcopy(single_op->data,
 							   single_op->count,
 							   single_op->datatype,
@@ -969,21 +969,21 @@ int MPIDI_CH3I_Release_lock(MPID_Win *win_ptr)
 							   single_op->count,
 							   single_op->datatype);
 			    }   
-			    else if (single_op->type == MPIDI_CH3_PKT_LOCK_ACCUM_UNLOCK) {
+			    else if (single_op->type == MPIDI_RMA_ACCUMULATE) {
 				if (win_ptr->shm_allocated == TRUE)
 				    MPIDI_CH3I_SHM_MUTEX_LOCK(win_ptr);
 				mpi_errno = do_simple_accumulate(single_op);
 				if (win_ptr->shm_allocated == TRUE)
 				    MPIDI_CH3I_SHM_MUTEX_UNLOCK(win_ptr);
 			    }
-			    else if (single_op->type == MPIDI_CH3_PKT_LOCK_GET_UNLOCK) {
+			    else if (single_op->type == MPIDI_RMA_GET) {
 				mpi_errno = do_simple_get(win_ptr, lock_queue);
 			    }
 			    
                             if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
 			    
 			    /* if put or accumulate, send rma done packet and release lock. */
-			    if (single_op->type != MPIDI_CH3_PKT_LOCK_GET_UNLOCK) {
+			    if (single_op->type != MPIDI_RMA_GET) {
                                 /* NOTE: Only *queued* single_op operations are completed here.
                                    Lock-op-unlock/single_op RMA ops can also be completed as
                                    they arrive within various packet/request handlers via

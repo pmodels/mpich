@@ -13,6 +13,17 @@ MPIR_T_PVAR_DOUBLE_TIMER_DECL_EXTERN(RMA, rma_wincreate_allgather);
 MPIR_T_PVAR_DOUBLE_TIMER_DECL_EXTERN(RMA, rma_winfree_rs);
 MPIR_T_PVAR_DOUBLE_TIMER_DECL_EXTERN(RMA, rma_winfree_complete);
 
+typedef enum MPIDI_RMA_Op_type {
+    MPIDI_RMA_PUT               = 23,
+    MPIDI_RMA_GET               = 24,
+    MPIDI_RMA_ACCUMULATE        = 25,
+ /* REMOVED: MPIDI_RMA_LOCK     = 26, */
+    MPIDI_RMA_ACC_CONTIG        = 27,
+    MPIDI_RMA_GET_ACCUMULATE    = 28,
+    MPIDI_RMA_COMPARE_AND_SWAP  = 29,
+    MPIDI_RMA_FETCH_AND_OP      = 30
+} MPIDI_RMA_Op_type_t;
+
 /* Special case RMA operations */
 
 enum MPIDI_RMA_Datatype {
@@ -51,29 +62,33 @@ typedef struct MPIDI_RMA_dtype_info { /* for derived datatypes */
 typedef struct MPIDI_RMA_Op {
     struct MPIDI_RMA_Op *prev;  /* pointer to next element in list */
     struct MPIDI_RMA_Op *next;  /* pointer to next element in list */
-
+    /* FIXME: It would be better to setup the packet that will be sent, at 
+       least in most cases (if, as a result of the sync/ops/sync sequence,
+       a different packet type is needed, it can be extracted from the 
+       information otherwise stored). */
+    MPIDI_RMA_Op_type_t type;
     void *origin_addr;
     int origin_count;
     MPI_Datatype origin_datatype;
-
-    void *compare_addr;
-    MPI_Datatype compare_datatype;
-
-    void *result_addr;
-    int result_count;
-    MPI_Datatype result_datatype;
-
+    int target_rank;
+    MPI_Aint target_disp;
+    int target_count;
+    MPI_Datatype target_datatype;
+    MPI_Op op;  /* for accumulate */
+    /* Used to complete operations */
     struct MPID_Request *request;
     MPIDI_RMA_dtype_info dtype_info;
     void *dataloop;
-
-    int target_rank;
-
-    MPIDI_CH3_Pkt_t pkt;
+    void *result_addr;
+    int result_count;
+    MPI_Datatype result_datatype;
+    void *compare_addr;
+    int compare_count;
+    MPI_Datatype compare_datatype;
 } MPIDI_RMA_Op_t;
 
 typedef struct MPIDI_PT_single_op {
-    enum MPIDI_CH3_Pkt_types type;  /* put, get, or accum. */
+    int type;  /* put, get, or accum. */
     void *addr;
     int count;
     MPI_Datatype datatype;
