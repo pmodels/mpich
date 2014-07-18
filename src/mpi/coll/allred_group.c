@@ -165,25 +165,26 @@ int MPIR_Allreduce_group_intra(void *sendbuf, void *recvbuf, int count,
                     *errflag = TRUE;
                     MPIU_ERR_SET(mpi_errno, MPI_ERR_OTHER, "**fail");
                     MPIU_ERR_ADD(mpi_errno_ret, mpi_errno);
-                }
+                } else {
 
-                /* tmp_buf contains data received in this step.
-                   recvbuf contains data accumulated so far */
+                    /* tmp_buf contains data received in this step.
+                       recvbuf contains data accumulated so far */
 
-                if (is_commutative  || (dst < group_rank)) {
-                    /* op is commutative OR the order is already right */
-                    mpi_errno = MPIR_Reduce_local_impl(tmp_buf, recvbuf, count, datatype, op);
-                    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-                }
-                else {
-                    /* op is noncommutative and the order is not right */
-                    mpi_errno = MPIR_Reduce_local_impl(recvbuf, tmp_buf, count, datatype, op);
-                    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+                    if (is_commutative  || (dst < group_rank)) {
+                        /* op is commutative OR the order is already right */
+                        mpi_errno = MPIR_Reduce_local_impl(tmp_buf, recvbuf, count, datatype, op);
+                        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+                    }
+                    else {
+                        /* op is noncommutative and the order is not right */
+                        mpi_errno = MPIR_Reduce_local_impl(recvbuf, tmp_buf, count, datatype, op);
+                        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
-                    /* copy result back into recvbuf */
-                    mpi_errno = MPIR_Localcopy(tmp_buf, count, datatype,
-                                               recvbuf, count, datatype);
-                    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+                        /* copy result back into recvbuf */
+                        mpi_errno = MPIR_Localcopy(tmp_buf, count, datatype,
+                                recvbuf, count, datatype);
+                        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+                    }
                 }
                 mask <<= 1;
             }
