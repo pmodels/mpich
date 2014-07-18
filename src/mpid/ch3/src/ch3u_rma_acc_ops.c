@@ -16,7 +16,8 @@ MPIR_T_PVAR_DOUBLE_TIMER_DECL_EXTERN(RMA, rma_rmaqueue_set);
 int MPIDI_Get_accumulate(const void *origin_addr, int origin_count,
                          MPI_Datatype origin_datatype, void *result_addr, int result_count,
                          MPI_Datatype result_datatype, int target_rank, MPI_Aint target_disp,
-                         int target_count, MPI_Datatype target_datatype, MPI_Op op, MPID_Win *win_ptr)
+                         int target_count, MPI_Datatype target_datatype, MPI_Op op,
+                         MPID_Win * win_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_msg_sz_t data_sz;
@@ -40,8 +41,7 @@ int MPIDI_Get_accumulate(const void *origin_addr, int origin_count,
     MPIU_ERR_CHKANDJUMP(win_ptr->epoch_state == MPIDI_EPOCH_NONE,
                         mpi_errno, MPI_ERR_RMA_SYNC, "**rmasync");
 
-    MPIDI_Datatype_get_info(target_count, target_datatype, dt_contig, data_sz,
-                            dtp, dt_true_lb);
+    MPIDI_Datatype_get_info(target_count, target_datatype, dt_contig, data_sz, dtp, dt_true_lb);
 
     if (data_sz == 0) {
         goto fn_exit;
@@ -49,29 +49,30 @@ int MPIDI_Get_accumulate(const void *origin_addr, int origin_count,
 
     rank = win_ptr->comm_ptr->rank;
 
-    if (win_ptr->shm_allocated == TRUE && target_rank != rank && win_ptr->create_flavor != MPI_WIN_FLAVOR_SHARED) {
+    if (win_ptr->shm_allocated == TRUE && target_rank != rank &&
+        win_ptr->create_flavor != MPI_WIN_FLAVOR_SHARED) {
         /* check if target is local and shared memory is allocated on window,
-           if so, we directly perform this operation on shared memory region. */
+         * if so, we directly perform this operation on shared memory region. */
 
         /* FIXME: Here we decide whether to perform SHM operations by checking if origin and target are on
-           the same node. However, in ch3:sock, even if origin and target are on the same node, they do
-           not within the same SHM region. Here we filter out ch3:sock by checking shm_allocated flag first,
-           which is only set to TRUE when SHM region is allocated in nemesis.
-           In future we need to figure out a way to check if origin and target are in the same "SHM comm".
-        */
+         * the same node. However, in ch3:sock, even if origin and target are on the same node, they do
+         * not within the same SHM region. Here we filter out ch3:sock by checking shm_allocated flag first,
+         * which is only set to TRUE when SHM region is allocated in nemesis.
+         * In future we need to figure out a way to check if origin and target are in the same "SHM comm".
+         */
         MPIDI_Comm_get_vc(win_ptr->comm_ptr, rank, &orig_vc);
         MPIDI_Comm_get_vc(win_ptr->comm_ptr, target_rank, &target_vc);
     }
 
     /* Do =! rank first (most likely branch?) */
     if (target_rank == rank || win_ptr->create_flavor == MPI_WIN_FLAVOR_SHARED ||
-        (win_ptr->shm_allocated == TRUE && orig_vc->node_id == target_vc->node_id))
-    {
+        (win_ptr->shm_allocated == TRUE && orig_vc->node_id == target_vc->node_id)) {
         mpi_errno = MPIDI_CH3I_Shm_get_acc_op(origin_addr, origin_count, origin_datatype,
                                               result_addr, result_count, result_datatype,
-                                              target_rank, target_disp, target_count, target_datatype,
-                                              op, win_ptr);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+                                              target_rank, target_disp, target_count,
+                                              target_datatype, op, win_ptr);
+        if (mpi_errno)
+            MPIU_ERR_POP(mpi_errno);
     }
     else {
         MPIDI_RMA_Ops_list_t *ops_list = MPIDI_CH3I_RMA_Get_ops_list(win_ptr, target_rank);
@@ -81,7 +82,9 @@ int MPIDI_Get_accumulate(const void *origin_addr, int origin_count,
         MPIR_T_PVAR_TIMER_START(RMA, rma_rmaqueue_alloc);
         mpi_errno = MPIDI_CH3I_RMA_Ops_alloc_tail(ops_list, &new_ptr);
         MPIR_T_PVAR_TIMER_END(RMA, rma_rmaqueue_alloc);
-        if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
+        if (mpi_errno) {
+            MPIU_ERR_POP(mpi_errno);
+        }
 
         /* TODO: Can we use the MPIDI_RMA_ACC_CONTIG optimization? */
 
@@ -103,7 +106,7 @@ int MPIDI_Get_accumulate(const void *origin_addr, int origin_count,
         MPIR_T_PVAR_TIMER_END(RMA, rma_rmaqueue_set);
 
         /* if source or target datatypes are derived, increment their
-           reference counts */
+         * reference counts */
         if (op != MPI_NO_OP && !MPIR_DATATYPE_IS_PREDEFINED(origin_datatype)) {
             MPID_Datatype_get_ptr(origin_datatype, dtp);
             MPID_Datatype_add_ref(dtp);
@@ -118,7 +121,7 @@ int MPIDI_Get_accumulate(const void *origin_addr, int origin_count,
         }
     }
 
- fn_exit:
+  fn_exit:
     MPIDI_RMA_FUNC_EXIT(MPID_STATE_MPIDI_GET_ACCUMULATE);
     return mpi_errno;
 
@@ -134,8 +137,8 @@ int MPIDI_Get_accumulate(const void *origin_addr, int origin_count,
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 int MPIDI_Compare_and_swap(const void *origin_addr, const void *compare_addr,
-                          void *result_addr, MPI_Datatype datatype, int target_rank,
-                          MPI_Aint target_disp, MPID_Win *win_ptr)
+                           void *result_addr, MPI_Datatype datatype, int target_rank,
+                           MPI_Aint target_disp, MPID_Win * win_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
     int rank;
@@ -157,16 +160,17 @@ int MPIDI_Compare_and_swap(const void *origin_addr, const void *compare_addr,
 
     rank = win_ptr->comm_ptr->rank;
 
-    if (win_ptr->shm_allocated == TRUE && target_rank != rank && win_ptr->create_flavor != MPI_WIN_FLAVOR_SHARED) {
+    if (win_ptr->shm_allocated == TRUE && target_rank != rank &&
+        win_ptr->create_flavor != MPI_WIN_FLAVOR_SHARED) {
         /* check if target is local and shared memory is allocated on window,
-           if so, we directly perform this operation on shared memory region. */
+         * if so, we directly perform this operation on shared memory region. */
 
         /* FIXME: Here we decide whether to perform SHM operations by checking if origin and target are on
-           the same node. However, in ch3:sock, even if origin and target are on the same node, they do
-           not within the same SHM region. Here we filter out ch3:sock by checking shm_allocated flag first,
-           which is only set to TRUE when SHM region is allocated in nemesis.
-           In future we need to figure out a way to check if origin and target are in the same "SHM comm".
-        */
+         * the same node. However, in ch3:sock, even if origin and target are on the same node, they do
+         * not within the same SHM region. Here we filter out ch3:sock by checking shm_allocated flag first,
+         * which is only set to TRUE when SHM region is allocated in nemesis.
+         * In future we need to figure out a way to check if origin and target are in the same "SHM comm".
+         */
         MPIDI_Comm_get_vc(win_ptr->comm_ptr, rank, &orig_vc);
         MPIDI_Comm_get_vc(win_ptr->comm_ptr, target_rank, &target_vc);
     }
@@ -178,11 +182,11 @@ int MPIDI_Compare_and_swap(const void *origin_addr, const void *compare_addr,
     /* FIXME: For shared memory windows, we should provide an implementation
      * that uses a processor atomic operation. */
     if (target_rank == rank || win_ptr->create_flavor == MPI_WIN_FLAVOR_SHARED ||
-        (win_ptr->shm_allocated == TRUE && orig_vc->node_id == target_vc->node_id))
-    {
+        (win_ptr->shm_allocated == TRUE && orig_vc->node_id == target_vc->node_id)) {
         mpi_errno = MPIDI_CH3I_Shm_cas_op(origin_addr, compare_addr, result_addr,
                                           datatype, target_rank, target_disp, win_ptr);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        if (mpi_errno)
+            MPIU_ERR_POP(mpi_errno);
     }
     else {
         MPIDI_RMA_Ops_list_t *ops_list = MPIDI_CH3I_RMA_Get_ops_list(win_ptr, target_rank);
@@ -192,7 +196,9 @@ int MPIDI_Compare_and_swap(const void *origin_addr, const void *compare_addr,
         MPIR_T_PVAR_TIMER_START(RMA, rma_rmaqueue_alloc);
         mpi_errno = MPIDI_CH3I_RMA_Ops_alloc_tail(ops_list, &new_ptr);
         MPIR_T_PVAR_TIMER_END(RMA, rma_rmaqueue_alloc);
-        if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
+        if (mpi_errno) {
+            MPIU_ERR_POP(mpi_errno);
+        }
 
         MPIR_T_PVAR_TIMER_START(RMA, rma_rmaqueue_set);
         new_ptr->type = MPIDI_RMA_COMPARE_AND_SWAP;
@@ -212,11 +218,11 @@ int MPIDI_Compare_and_swap(const void *origin_addr, const void *compare_addr,
         MPIR_T_PVAR_TIMER_END(RMA, rma_rmaqueue_set);
     }
 
-fn_exit:
+  fn_exit:
     MPIDI_RMA_FUNC_EXIT(MPID_STATE_MPIDI_COMPARE_AND_SWAP);
     return mpi_errno;
     /* --BEGIN ERROR HANDLING-- */
-fn_fail:
+  fn_fail:
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }
@@ -228,7 +234,7 @@ fn_fail:
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 int MPIDI_Fetch_and_op(const void *origin_addr, void *result_addr,
                        MPI_Datatype datatype, int target_rank,
-                       MPI_Aint target_disp, MPI_Op op, MPID_Win *win_ptr)
+                       MPI_Aint target_disp, MPI_Op op, MPID_Win * win_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
     int rank;
@@ -250,16 +256,17 @@ int MPIDI_Fetch_and_op(const void *origin_addr, void *result_addr,
 
     rank = win_ptr->comm_ptr->rank;
 
-    if (win_ptr->shm_allocated == TRUE && target_rank != rank && win_ptr->create_flavor != MPI_WIN_FLAVOR_SHARED) {
+    if (win_ptr->shm_allocated == TRUE && target_rank != rank &&
+        win_ptr->create_flavor != MPI_WIN_FLAVOR_SHARED) {
         /* check if target is local and shared memory is allocated on window,
-           if so, we directly perform this operation on shared memory region. */
+         * if so, we directly perform this operation on shared memory region. */
 
         /* FIXME: Here we decide whether to perform SHM operations by checking if origin and target are on
-           the same node. However, in ch3:sock, even if origin and target are on the same node, they do
-           not within the same SHM region. Here we filter out ch3:sock by checking shm_allocated flag first,
-           which is only set to TRUE when SHM region is allocated in nemesis.
-           In future we need to figure out a way to check if origin and target are in the same "SHM comm".
-        */
+         * the same node. However, in ch3:sock, even if origin and target are on the same node, they do
+         * not within the same SHM region. Here we filter out ch3:sock by checking shm_allocated flag first,
+         * which is only set to TRUE when SHM region is allocated in nemesis.
+         * In future we need to figure out a way to check if origin and target are in the same "SHM comm".
+         */
         MPIDI_Comm_get_vc(win_ptr->comm_ptr, rank, &orig_vc);
         MPIDI_Comm_get_vc(win_ptr->comm_ptr, target_rank, &target_vc);
     }
@@ -270,11 +277,11 @@ int MPIDI_Fetch_and_op(const void *origin_addr, void *result_addr,
     /* FIXME: For shared memory windows, we should provide an implementation
      * that uses a processor atomic operation. */
     if (target_rank == rank || win_ptr->create_flavor == MPI_WIN_FLAVOR_SHARED ||
-        (win_ptr->shm_allocated == TRUE && orig_vc->node_id == target_vc->node_id))
-    {
+        (win_ptr->shm_allocated == TRUE && orig_vc->node_id == target_vc->node_id)) {
         mpi_errno = MPIDI_CH3I_Shm_fop_op(origin_addr, result_addr, datatype,
                                           target_rank, target_disp, op, win_ptr);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        if (mpi_errno)
+            MPIU_ERR_POP(mpi_errno);
     }
     else {
         MPIDI_RMA_Ops_list_t *ops_list = MPIDI_CH3I_RMA_Get_ops_list(win_ptr, target_rank);
@@ -284,7 +291,9 @@ int MPIDI_Fetch_and_op(const void *origin_addr, void *result_addr,
         MPIR_T_PVAR_TIMER_START(RMA, rma_rmaqueue_alloc);
         mpi_errno = MPIDI_CH3I_RMA_Ops_alloc_tail(ops_list, &new_ptr);
         MPIR_T_PVAR_TIMER_END(RMA, rma_rmaqueue_alloc);
-        if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
+        if (mpi_errno) {
+            MPIU_ERR_POP(mpi_errno);
+        }
 
         MPIR_T_PVAR_TIMER_START(RMA, rma_rmaqueue_set);
         new_ptr->type = MPIDI_RMA_FETCH_AND_OP;
@@ -302,11 +311,11 @@ int MPIDI_Fetch_and_op(const void *origin_addr, void *result_addr,
         MPIR_T_PVAR_TIMER_END(RMA, rma_rmaqueue_set);
     }
 
-fn_exit:
+  fn_exit:
     MPIDI_RMA_FUNC_EXIT(MPID_STATE_MPIDI_FETCH_AND_OP);
     return mpi_errno;
     /* --BEGIN ERROR HANDLING-- */
-fn_fail:
+  fn_fail:
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }
