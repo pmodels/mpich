@@ -85,7 +85,7 @@ extern int     gpfsmpio_bg_nagg_pset;
 
 
 /* set internal variables for tuning environment variables */
-void ad_gpfs_get_env_vars();
+void ad_gpfs_get_env_vars(void);
 
 /* report timing breakdown for MPI I/O collective call */
 void ad_gpfs_timing_crw_report( int rw, ADIO_File fd, int myrank, int nprocs );
@@ -96,9 +96,9 @@ void ad_gpfs_timing_crw_report( int rw, ADIO_File fd, int myrank, int nprocs );
  */
 #define GPFSMPIO_T_CIO_RESET( RW ) \
 	{ \
-	  int i; \
-	  for ( i = 0; i < GPFSMPIO_CIO_LAST; i ++ ) \
-	    gpfsmpio_prof_c##RW [ i ] = 0; \
+	  int _i; \
+	  for ( _i = 0; _i < GPFSMPIO_CIO_LAST; _i ++ ) \
+	    gpfsmpio_prof_c##RW [ _i ] = 0; \
 	}
 
 #define GPFSMPIO_T_CIO_REPORT( RW, FD, MYRANK, NPROCS ) \

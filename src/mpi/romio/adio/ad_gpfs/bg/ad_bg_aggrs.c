@@ -494,7 +494,6 @@ ADIOI_BG_compute_agg_ranklist_serial ( ADIO_File fd,
 
 	int numbridges = 0;
 
-	int i;
 	for (i=0;i<naggs;i++)
 	    bridgelistnum[i] = 0;
 
@@ -580,7 +579,6 @@ ADIOI_BG_compute_agg_ranklist_serial ( ADIO_File fd,
 	    while (ionlist[currentBridgeIndex] == currentIonId)
 		  currentBridgeIndex++;
 	    endSortIndex = currentBridgeIndex-1;
-	    int x;
 	    for (x=startSortIndex;x<=endSortIndex;x++) {
 		  for (i=startSortIndex;i<endSortIndex;i++) {
 		    if (bridgelist[i] > bridgelist[i+1]) {
@@ -613,7 +611,6 @@ ADIOI_BG_compute_agg_ranklist_serial ( ADIO_File fd,
 	    }
 
 	    // sort thisBridgeAggList
-	    int x;
 	    for (x=0;x<numAggsForThisBridge;x++) {
 		int n;
 		for (n=0;n<(numAggsForThisBridge-1);n++) {

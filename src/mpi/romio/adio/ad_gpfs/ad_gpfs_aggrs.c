@@ -16,6 +16,7 @@
 #include "adio.h"
 #include "adio_cb_config_list.h"
 #include "ad_gpfs.h"
+#include "ad_gpfs_aggrs.h"
 
 #ifdef AGGREGATION_PROFILE
 #include "mpe.h"

@@ -12,6 +12,7 @@
  *   See COPYRIGHT notice in top-level directory.
  */
 
+#include "ad_gpfs.h"
 #include "ad_gpfs_tuning.h"
 #include <unistd.h>
 

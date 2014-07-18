@@ -12,6 +12,7 @@
  *   See COPYRIGHT notice in top-level directory.
  */
 
+#include "ad_gpfs.h"
 #include "ad_gpfs_tuning.h"
 
 #include <sys/types.h>
@@ -28,7 +29,7 @@
 #endif
 
 #ifdef HAVE_GPFS_FCNTL_H
-void gpfs_free_all_locks(int fd)
+static void gpfs_free_all_locks(int fd)
 {
     int rc;
     struct {

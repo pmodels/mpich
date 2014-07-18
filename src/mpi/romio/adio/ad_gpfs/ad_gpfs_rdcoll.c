@@ -279,9 +279,9 @@ void ADIOI_GPFS_ReadStridedColl(ADIO_File fd, void *buf, int count,
 	 *
 	 * First verify that the filetype is contig and the offsets are
 	 * increasing in rank order*/
-	int i, inOrderAndNoGaps = 1;
-	for (i=0;i<(nprocs-1);i++) {
-	    if (end_offsets[i] != (st_offsets[i+1]-1))
+	int x, inOrderAndNoGaps = 1;
+	for (x=0;x<(nprocs-1);x++) {
+	    if (end_offsets[x] != (st_offsets[x+1]-1))
 		inOrderAndNoGaps = 0;
 	}
 	if (inOrderAndNoGaps && buftype_is_contig) {
