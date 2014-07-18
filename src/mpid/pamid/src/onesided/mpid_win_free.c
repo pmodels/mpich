@@ -23,6 +23,9 @@
 #include <sys/shm.h>
 #include <sys/ipc.h>
 #include <sys/stat.h>
+#ifdef USE_MMAP_SHM
+#include <sys/mman.h>
+#endif
 
 
 int MPIDI_SHM_Win_free(MPID_Win **win_ptr)
