@@ -215,6 +215,9 @@ ADIOI_PE_gen_agg_ranklist(ADIO_File fd)
           }
         }
       }
+
+      ADIOI_Free(allNodeRanks);
+
     }
 
     if ( getenv("MP_I_SHOW_AGGRS") ) {
