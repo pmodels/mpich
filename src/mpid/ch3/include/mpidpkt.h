@@ -97,13 +97,13 @@ enum MPIDI_CH3_Pkt_types
     MPIDI_CH3_PKT_GET_ACCUM_RESP,
     MPIDI_CH3_PKT_FLOW_CNTL_UPDATE,  /* FIXME: Unused */
     MPIDI_CH3_PKT_CLOSE,
-    MPIDI_CH3_PKT_END_CH3
+    MPIDI_CH3_PKT_END_CH3,
     /* The channel can define additional types by defining the value
        MPIDI_CH3_PKT_ENUM */
 # if defined(MPIDI_CH3_PKT_ENUM)
-    , MPIDI_CH3_PKT_ENUM
+    MPIDI_CH3_PKT_ENUM,
 # endif    
-    , MPIDI_CH3_PKT_END_ALL,
+    MPIDI_CH3_PKT_END_ALL,
     MPIDI_CH3_PKT_INVALID = -1 /* forces a signed enum to quash warnings */
 };
 
