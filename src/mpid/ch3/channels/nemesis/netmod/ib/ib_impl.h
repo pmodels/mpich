@@ -677,7 +677,7 @@ typedef enum MPID_nem_ib_pkt_subtype {
 
 /* derived from MPID_nem_pkt_netmod_t */
 typedef struct MPID_nem_ib_pkt_prefix {
-    MPID_nem_pkt_type_t type;
+    MPIDI_CH3_Pkt_type_t type;
     unsigned subtype;
     /* additional field */
     int16_t seq_num_tail;
@@ -685,7 +685,7 @@ typedef struct MPID_nem_ib_pkt_prefix {
 
 /* derived from MPID_nem_pkt_netmod_t and MPID_nem_pkt_lmt_done_t */
 typedef struct MPID_nem_ib_pkt_lmt_get_done {
-    MPID_nem_pkt_type_t type;
+    MPIDI_CH3_Pkt_type_t type;
     unsigned subtype;
     /* additional field */
     MPI_Request req_id;
@@ -694,7 +694,7 @@ typedef struct MPID_nem_ib_pkt_lmt_get_done {
 
 /* derived from MPID_nem_pkt_netmod_t */
 typedef struct MPID_nem_ib_pkt_req_seq_num_t {
-    MPID_nem_pkt_type_t type;
+    MPIDI_CH3_Pkt_type_t type;
     unsigned subtype;
     /* additional field */
     int16_t seq_num_tail;
@@ -702,7 +702,7 @@ typedef struct MPID_nem_ib_pkt_req_seq_num_t {
 
 /* derived from MPID_nem_pkt_netmod_t */
 typedef struct MPID_nem_ib_pkt_reply_seq_num_t {
-    MPID_nem_pkt_type_t type;
+    MPIDI_CH3_Pkt_type_t type;
     unsigned subtype;
     /* additional field */
     int16_t seq_num_tail;
@@ -710,7 +710,7 @@ typedef struct MPID_nem_ib_pkt_reply_seq_num_t {
 
 /* derived from MPID_nem_pkt_netmod_t */
 typedef struct MPID_nem_ib_pkt_change_rdmabuf_occupancy_notify_state_t {
-    MPID_nem_pkt_type_t type;
+    MPIDI_CH3_Pkt_type_t type;
     unsigned subtype;
     /* additional field */
     int state;

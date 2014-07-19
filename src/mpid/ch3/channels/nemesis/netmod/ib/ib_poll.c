@@ -624,9 +624,9 @@ int MPID_nem_ib_poll_eager(MPID_nem_ib_ringbuf_t * ringbuf)
     MPIU_Assert(MPID_NEM_IB_NETMOD_HDR_SZ_GET(buf) >=
                 sz_pkt + sizeof(MPIDI_CH3_Pkt_t) + sizeof(MPID_nem_ib_netmod_trailer_t));
     dprintf
-        ("handle_pkt,before,%d<-%d,id=%d,pkt->type=%d,pcc=%d,MPIDI_NEM_PKT_END=%d,pkt=%p,subtype=%d\n",
+        ("handle_pkt,before,%d<-%d,id=%d,pkt->type=%d,pcc=%d,MPIDI_CH3_PKT_END_ALL=%d,pkt=%p,subtype=%d\n",
          MPID_nem_ib_myrank, vc->pg_rank, *remote_poll, pkt->type,
-         MPIDI_CH3I_progress_completion_count.v, MPIDI_NEM_PKT_END, pkt,
+         MPIDI_CH3I_progress_completion_count.v, MPIDI_CH3_PKT_END_ALL, pkt,
          ((MPID_nem_pkt_netmod_t *) pkt)->subtype);
     /* see MPIDI_CH3_PktHandler_EagerSend (in src/mpid/ch3/src/ch3u_eager.c) */
     mpi_errno =

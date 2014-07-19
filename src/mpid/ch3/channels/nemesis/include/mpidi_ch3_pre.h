@@ -19,6 +19,15 @@
 /*#define HAVE_CH3_PRE_INIT*/
 /* #define MPIDI_CH3_HAS_NO_DYNAMIC_PROCESS */
 #define MPIDI_DEV_IMPLEMENTS_KVS
+
+/* Nemesis packets */
+#define MPIDI_CH3_PKT_ENUM                  \
+    MPIDI_NEM_PKT_LMT_RTS,                  \
+    MPIDI_NEM_PKT_LMT_CTS,                  \
+    MPIDI_NEM_PKT_LMT_DONE,                 \
+    MPIDI_NEM_PKT_LMT_COOKIE,               \
+    MPIDI_NEM_PKT_CKPT_MARKER,              \
+    MPIDI_NEM_PKT_NETMOD
     
 typedef enum MPIDI_CH3I_VC_state
 {

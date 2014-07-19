@@ -579,7 +579,7 @@ int MPIDI_nem_ckpt_pkthandler_init(MPIDI_CH3_PktHandler_Fcn *pktArray[], int arr
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_CKPT_PKTHANDLER_INIT);
 
     /* Check that the array is large enough */
-    if (arraySize <= MPIDI_NEM_PKT_END) {
+    if (arraySize <= MPIDI_CH3_PKT_END_ALL) {
 	MPIU_ERR_SETFATALANDJUMP(mpi_errno,MPI_ERR_INTERN, "**ch3|pktarraytoosmall");
     }
 

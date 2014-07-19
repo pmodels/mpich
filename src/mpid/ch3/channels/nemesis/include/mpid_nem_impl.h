@@ -45,20 +45,6 @@ int MPID_nem_barrier_vars_init (MPID_nem_barrier_vars_t *barrier_region);
  * escape earlier than this check. */
 #define MPID_nem_fbox_is_full(pbox_) (OPA_load_acquire_int(&(pbox_)->flag.value))
 
-/* Nemesis packets */
-
-typedef enum MPID_nem_pkt_type
-{
-    MPIDI_NEM_PKT_LMT_RTS = MPIDI_CH3_PKT_END_ALL+1,
-    MPIDI_NEM_PKT_LMT_CTS,
-    MPIDI_NEM_PKT_LMT_DONE,
-    MPIDI_NEM_PKT_LMT_COOKIE,
-    MPIDI_NEM_PKT_CKPT_MARKER,
-    MPIDI_NEM_PKT_NETMOD,
-    MPIDI_NEM_PKT_END,
-    MPIDI_NEM_PKT_INVALID = -1 /* forces a signed enum to quash warnings */
-} MPID_nem_pkt_type_t;
-
 typedef struct MPID_nem_pkt_lmt_rts
 {
     MPIDI_CH3_Pkt_type_t type;
