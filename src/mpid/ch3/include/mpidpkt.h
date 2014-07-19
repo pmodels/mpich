@@ -63,7 +63,7 @@ typedef union {
 /* We start with an arbitrarily chosen number (42), to help with
  * debugging when a packet type is not initialized or wrongly
  * initialized. */
-enum MPIDI_CH3_Pkt_types
+typedef enum
 {
     MPIDI_CH3_PKT_EAGER_SEND = 42,
 #if defined(USE_EAGER_SHORT)
@@ -108,9 +108,8 @@ enum MPIDI_CH3_Pkt_types
 # endif    
     MPIDI_CH3_PKT_END_ALL,
     MPIDI_CH3_PKT_INVALID = -1 /* forces a signed enum to quash warnings */
-};
+} MPIDI_CH3_Pkt_type_t;
 
-typedef int16_t MPIDI_CH3_Pkt_type_t;
 typedef uint16_t MPIDI_CH3_Pkt_flags_t;
 
                                                    /* Flag vector bits:*/
