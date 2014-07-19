@@ -110,18 +110,17 @@ typedef enum
     MPIDI_CH3_PKT_INVALID = -1 /* forces a signed enum to quash warnings */
 } MPIDI_CH3_Pkt_type_t;
 
-typedef uint16_t MPIDI_CH3_Pkt_flags_t;
-
-                                                   /* Flag vector bits:*/
-#define MPIDI_CH3_PKT_FLAG_NONE                 0
-#define MPIDI_CH3_PKT_FLAG_RMA_LOCK             1  /* ...............X */
-#define MPIDI_CH3_PKT_FLAG_RMA_UNLOCK           2  /* ..............X. */
-#define MPIDI_CH3_PKT_FLAG_RMA_FLUSH            4  /* .............X.. */
-#define MPIDI_CH3_PKT_FLAG_RMA_REQ_ACK          8  /* ............X... */
-#define MPIDI_CH3_PKT_FLAG_RMA_AT_COMPLETE     16  /* ...........X.... */
-#define MPIDI_CH3_PKT_FLAG_RMA_NOCHECK         32  /* ..........X..... */
-#define MPIDI_CH3_PKT_FLAG_RMA_SHARED          64  /* .........X...... */
-#define MPIDI_CH3_PKT_FLAG_RMA_EXCLUSIVE      128  /* ........X....... */
+typedef enum {
+    MPIDI_CH3_PKT_FLAG_NONE = 0,
+    MPIDI_CH3_PKT_FLAG_RMA_LOCK = 1,
+    MPIDI_CH3_PKT_FLAG_RMA_UNLOCK = 2,
+    MPIDI_CH3_PKT_FLAG_RMA_FLUSH = 4,
+    MPIDI_CH3_PKT_FLAG_RMA_REQ_ACK = 8,
+    MPIDI_CH3_PKT_FLAG_RMA_AT_COMPLETE = 16,
+    MPIDI_CH3_PKT_FLAG_RMA_NOCHECK = 32,
+    MPIDI_CH3_PKT_FLAG_RMA_SHARED = 64,
+    MPIDI_CH3_PKT_FLAG_RMA_EXCLUSIVE = 128
+} MPIDI_CH3_Pkt_flags_t;
 
 typedef struct MPIDI_CH3_Pkt_send
 {
