@@ -60,9 +60,12 @@ typedef union {
  */
 /* FIXME: Having predefined names makes it harder to add new message types,
    such as different RMA types. */
+/* We start with an arbitrarily chosen number (42), to help with
+ * debugging when a packet type is not initialized or wrongly
+ * initialized. */
 enum MPIDI_CH3_Pkt_types
 {
-    MPIDI_CH3_PKT_EAGER_SEND = 0,
+    MPIDI_CH3_PKT_EAGER_SEND = 42,
 #if defined(USE_EAGER_SHORT)
     MPIDI_CH3_PKT_EAGERSHORT_SEND,
 #endif /* defined(USE_EAGER_SHORT) */

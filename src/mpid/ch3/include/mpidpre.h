@@ -196,8 +196,11 @@ typedef struct MPIDI_VC * MPID_VCR;
 #   define MPIDI_REQUEST_SEQNUM
 #endif
 
+/* We start with an arbitrarily chosen number (42), to help with
+ * debugging when a packet type is not initialized or wrongly
+ * initialized. */
 enum MPIDI_CH3_Lock_states {
-    MPIDI_CH3_WIN_LOCK_NONE = 0,
+    MPIDI_CH3_WIN_LOCK_NONE = 42,
     MPIDI_CH3_WIN_LOCK_CALLED,
     MPIDI_CH3_WIN_LOCK_REQUESTED,
     MPIDI_CH3_WIN_LOCK_GRANTED,
@@ -216,8 +219,11 @@ enum MPIDI_Win_info_arg_vals_accumulate_ops {
     MPIDI_ACC_OPS_SAME_OP_NO_OP
 };
 
+/* We start with an arbitrarily chosen number (42), to help with
+ * debugging when a packet type is not initialized or wrongly
+ * initialized. */
 enum MPIDI_Win_epoch_states {
-    MPIDI_EPOCH_NONE = 0,
+    MPIDI_EPOCH_NONE = 42,
     MPIDI_EPOCH_FENCE,
     MPIDI_EPOCH_POST,
     MPIDI_EPOCH_START,
