@@ -16,17 +16,17 @@ typedef struct {
     MPID_Request *request;
     MPID_Win *win_ptr;
     int target_rank;
-} MPIDI_CH3I_Rma_req_state_t;
+} req_state_t;
 
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_CH3I_Rma_req_poll
+#define FUNCNAME req_poll
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-static int MPIDI_CH3I_Rma_req_poll(void *state, MPI_Status * status)
+static int req_poll(void *state, MPI_Status * status)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_CH3I_Rma_req_state_t *req_state = (MPIDI_CH3I_Rma_req_state_t *) state;
+    req_state_t *req_state = (req_state_t *) state;
 
     MPIU_UNREFERENCED_ARG(status);
 
@@ -56,17 +56,17 @@ static int MPIDI_CH3I_Rma_req_poll(void *state, MPI_Status * status)
 
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_CH3I_Rma_req_wait
+#define FUNCNAME req_wait
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-static int MPIDI_CH3I_Rma_req_wait(int count, void **states, double timeout, MPI_Status * status)
+static int req_wait(int count, void **states, double timeout, MPI_Status * status)
 {
     int mpi_errno = MPI_SUCCESS;
     int i;
 
     for (i = 0; i < count; i++) {
         /* Call poll to complete the operation */
-        mpi_errno = MPIDI_CH3I_Rma_req_poll(states[i], status);
+        mpi_errno = req_poll(states[i], status);
         if (mpi_errno != MPI_SUCCESS) {
             MPIU_ERR_POP(mpi_errno);
         }
@@ -80,10 +80,10 @@ static int MPIDI_CH3I_Rma_req_wait(int count, void **states, double timeout, MPI
 
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_CH3I_Rma_req_query
+#define FUNCNAME req_query
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-static int MPIDI_CH3I_Rma_req_query(void *state, MPI_Status * status)
+static int req_query(void *state, MPI_Status * status)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -104,10 +104,10 @@ static int MPIDI_CH3I_Rma_req_query(void *state, MPI_Status * status)
 
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_CH3I_Rma_req_free
+#define FUNCNAME req_free
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-static int MPIDI_CH3I_Rma_req_free(void *state)
+static int req_free(void *state)
 {
     MPIU_Free(state);
 
@@ -116,10 +116,10 @@ static int MPIDI_CH3I_Rma_req_free(void *state)
 
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_CH3I_Rma_req_cancel
+#define FUNCNAME req_cancel
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-static int MPIDI_CH3I_Rma_req_cancel(void *state, int complete)
+static int req_cancel(void *state, int complete)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -151,7 +151,7 @@ int MPIDI_Rput(const void *origin_addr, int origin_count,
     MPID_Datatype *dtp;
     MPI_Aint dt_true_lb ATTRIBUTE((unused));
     MPIDI_msg_sz_t data_sz;
-    MPIDI_CH3I_Rma_req_state_t *req_state;
+    req_state_t *req_state;
     MPIDI_VC_t *orig_vc, *target_vc;
     MPIU_CHKPMEM_DECL(1);
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_RPUT);
@@ -165,8 +165,8 @@ int MPIDI_Rput(const void *origin_addr, int origin_count,
                         win_ptr->states.access_state != MPIDI_RMA_LOCK_ALL_GRANTED,
                         mpi_errno, MPI_ERR_RMA_SYNC, "**rmasync");
 
-    MPIU_CHKPMEM_MALLOC(req_state, MPIDI_CH3I_Rma_req_state_t *,
-                        sizeof(MPIDI_CH3I_Rma_req_state_t), mpi_errno, "req-based RMA state");
+    MPIU_CHKPMEM_MALLOC(req_state, req_state_t *,
+                        sizeof(req_state_t), mpi_errno, "req-based RMA state");
 
     req_state->win_ptr = win_ptr;
     req_state->target_rank = target_rank;
@@ -193,10 +193,8 @@ int MPIDI_Rput(const void *origin_addr, int origin_count,
     if (target_rank == MPI_PROC_NULL || target_rank == win_ptr->comm_ptr->rank ||
         (win_ptr->shm_allocated == TRUE && orig_vc->node_id == target_vc->node_id) || data_sz == 0)
     {
-        mpi_errno = MPIR_Grequest_start_impl(MPIDI_CH3I_Rma_req_query,
-                                             MPIDI_CH3I_Rma_req_free,
-                                             MPIDI_CH3I_Rma_req_cancel,
-                                             req_state, &req_state->request);
+        mpi_errno = MPIR_Grequest_start_impl(req_query,
+                                             req_free, req_cancel, req_state, &req_state->request);
         if (mpi_errno != MPI_SUCCESS) {
             MPIU_ERR_POP(mpi_errno);
         }
@@ -204,12 +202,10 @@ int MPIDI_Rput(const void *origin_addr, int origin_count,
         MPIR_Grequest_complete_impl(req_state->request);
     }
     else {
-        mpi_errno = MPIX_Grequest_start_impl(MPIDI_CH3I_Rma_req_query,
-                                             MPIDI_CH3I_Rma_req_free,
-                                             MPIDI_CH3I_Rma_req_cancel,
-                                             MPIDI_CH3I_Rma_req_poll,
-                                             MPIDI_CH3I_Rma_req_wait,
-                                             req_state, &req_state->request);
+        mpi_errno = MPIX_Grequest_start_impl(req_query,
+                                             req_free,
+                                             req_cancel,
+                                             req_poll, req_wait, req_state, &req_state->request);
 
         if (mpi_errno != MPI_SUCCESS) {
             MPIU_ERR_POP(mpi_errno);
@@ -241,7 +237,7 @@ int MPIDI_Rget(void *origin_addr, int origin_count,
     MPID_Datatype *dtp;
     MPI_Aint dt_true_lb ATTRIBUTE((unused));
     MPIDI_msg_sz_t data_sz;
-    MPIDI_CH3I_Rma_req_state_t *req_state;
+    req_state_t *req_state;
     MPIDI_VC_t *orig_vc, *target_vc;
     MPIU_CHKPMEM_DECL(1);
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_RGET);
@@ -255,8 +251,8 @@ int MPIDI_Rget(void *origin_addr, int origin_count,
                         win_ptr->states.access_state != MPIDI_RMA_LOCK_ALL_GRANTED,
                         mpi_errno, MPI_ERR_RMA_SYNC, "**rmasync");
 
-    MPIU_CHKPMEM_MALLOC(req_state, MPIDI_CH3I_Rma_req_state_t *,
-                        sizeof(MPIDI_CH3I_Rma_req_state_t), mpi_errno, "req-based RMA state");
+    MPIU_CHKPMEM_MALLOC(req_state, req_state_t *,
+                        sizeof(req_state_t), mpi_errno, "req-based RMA state");
 
     req_state->win_ptr = win_ptr;
     req_state->target_rank = target_rank;
@@ -283,10 +279,8 @@ int MPIDI_Rget(void *origin_addr, int origin_count,
     if (target_rank == MPI_PROC_NULL || target_rank == win_ptr->comm_ptr->rank ||
         (win_ptr->shm_allocated == TRUE && orig_vc->node_id == target_vc->node_id) || data_sz == 0)
     {
-        mpi_errno = MPIR_Grequest_start_impl(MPIDI_CH3I_Rma_req_query,
-                                             MPIDI_CH3I_Rma_req_free,
-                                             MPIDI_CH3I_Rma_req_cancel,
-                                             req_state, &req_state->request);
+        mpi_errno = MPIR_Grequest_start_impl(req_query,
+                                             req_free, req_cancel, req_state, &req_state->request);
         if (mpi_errno != MPI_SUCCESS) {
             MPIU_ERR_POP(mpi_errno);
         }
@@ -294,12 +288,10 @@ int MPIDI_Rget(void *origin_addr, int origin_count,
         MPIR_Grequest_complete_impl(req_state->request);
     }
     else {
-        mpi_errno = MPIX_Grequest_start_impl(MPIDI_CH3I_Rma_req_query,
-                                             MPIDI_CH3I_Rma_req_free,
-                                             MPIDI_CH3I_Rma_req_cancel,
-                                             MPIDI_CH3I_Rma_req_poll,
-                                             MPIDI_CH3I_Rma_req_wait,
-                                             req_state, &req_state->request);
+        mpi_errno = MPIX_Grequest_start_impl(req_query,
+                                             req_free,
+                                             req_cancel,
+                                             req_poll, req_wait, req_state, &req_state->request);
 
         if (mpi_errno != MPI_SUCCESS) {
             MPIU_ERR_POP(mpi_errno);
@@ -331,7 +323,7 @@ int MPIDI_Raccumulate(const void *origin_addr, int origin_count,
     MPID_Datatype *dtp;
     MPI_Aint dt_true_lb ATTRIBUTE((unused));
     MPIDI_msg_sz_t data_sz;
-    MPIDI_CH3I_Rma_req_state_t *req_state;
+    req_state_t *req_state;
     MPIDI_VC_t *orig_vc, *target_vc;
     MPIU_CHKPMEM_DECL(1);
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_RACCUMULATE);
@@ -345,8 +337,8 @@ int MPIDI_Raccumulate(const void *origin_addr, int origin_count,
                         win_ptr->states.access_state != MPIDI_RMA_LOCK_ALL_GRANTED,
                         mpi_errno, MPI_ERR_RMA_SYNC, "**rmasync");
 
-    MPIU_CHKPMEM_MALLOC(req_state, MPIDI_CH3I_Rma_req_state_t *,
-                        sizeof(MPIDI_CH3I_Rma_req_state_t), mpi_errno, "req-based RMA state");
+    MPIU_CHKPMEM_MALLOC(req_state, req_state_t *,
+                        sizeof(req_state_t), mpi_errno, "req-based RMA state");
 
     req_state->win_ptr = win_ptr;
     req_state->target_rank = target_rank;
@@ -373,10 +365,8 @@ int MPIDI_Raccumulate(const void *origin_addr, int origin_count,
     if (target_rank == MPI_PROC_NULL || target_rank == win_ptr->comm_ptr->rank ||
         (win_ptr->shm_allocated == TRUE && orig_vc->node_id == target_vc->node_id) || data_sz == 0)
     {
-        mpi_errno = MPIR_Grequest_start_impl(MPIDI_CH3I_Rma_req_query,
-                                             MPIDI_CH3I_Rma_req_free,
-                                             MPIDI_CH3I_Rma_req_cancel,
-                                             req_state, &req_state->request);
+        mpi_errno = MPIR_Grequest_start_impl(req_query,
+                                             req_free, req_cancel, req_state, &req_state->request);
         if (mpi_errno != MPI_SUCCESS) {
             MPIU_ERR_POP(mpi_errno);
         }
@@ -384,12 +374,10 @@ int MPIDI_Raccumulate(const void *origin_addr, int origin_count,
         MPIR_Grequest_complete_impl(req_state->request);
     }
     else {
-        mpi_errno = MPIX_Grequest_start_impl(MPIDI_CH3I_Rma_req_query,
-                                             MPIDI_CH3I_Rma_req_free,
-                                             MPIDI_CH3I_Rma_req_cancel,
-                                             MPIDI_CH3I_Rma_req_poll,
-                                             MPIDI_CH3I_Rma_req_wait,
-                                             req_state, &req_state->request);
+        mpi_errno = MPIX_Grequest_start_impl(req_query,
+                                             req_free,
+                                             req_cancel,
+                                             req_poll, req_wait, req_state, &req_state->request);
 
         if (mpi_errno != MPI_SUCCESS) {
             MPIU_ERR_POP(mpi_errno);
@@ -422,7 +410,7 @@ int MPIDI_Rget_accumulate(const void *origin_addr, int origin_count,
     MPID_Datatype *dtp;
     MPI_Aint dt_true_lb ATTRIBUTE((unused));
     MPIDI_msg_sz_t data_sz, trg_data_sz;
-    MPIDI_CH3I_Rma_req_state_t *req_state;
+    req_state_t *req_state;
     MPIDI_VC_t *orig_vc, *target_vc;
     MPIU_CHKPMEM_DECL(1);
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_RGET_ACCUMULATE);
@@ -436,8 +424,8 @@ int MPIDI_Rget_accumulate(const void *origin_addr, int origin_count,
                         win_ptr->states.access_state != MPIDI_RMA_LOCK_ALL_GRANTED,
                         mpi_errno, MPI_ERR_RMA_SYNC, "**rmasync");
 
-    MPIU_CHKPMEM_MALLOC(req_state, MPIDI_CH3I_Rma_req_state_t *,
-                        sizeof(MPIDI_CH3I_Rma_req_state_t), mpi_errno, "req-based RMA state");
+    MPIU_CHKPMEM_MALLOC(req_state, req_state_t *,
+                        sizeof(req_state_t), mpi_errno, "req-based RMA state");
 
     req_state->win_ptr = win_ptr;
     req_state->target_rank = target_rank;
@@ -467,10 +455,8 @@ int MPIDI_Rget_accumulate(const void *origin_addr, int origin_count,
     if (target_rank == MPI_PROC_NULL || target_rank == win_ptr->comm_ptr->rank ||
         (win_ptr->shm_allocated == TRUE && orig_vc->node_id == target_vc->node_id) ||
         (data_sz == 0 && trg_data_sz == 0)) {
-        mpi_errno = MPIR_Grequest_start_impl(MPIDI_CH3I_Rma_req_query,
-                                             MPIDI_CH3I_Rma_req_free,
-                                             MPIDI_CH3I_Rma_req_cancel,
-                                             req_state, &req_state->request);
+        mpi_errno = MPIR_Grequest_start_impl(req_query,
+                                             req_free, req_cancel, req_state, &req_state->request);
         if (mpi_errno != MPI_SUCCESS) {
             MPIU_ERR_POP(mpi_errno);
         }
@@ -478,12 +464,10 @@ int MPIDI_Rget_accumulate(const void *origin_addr, int origin_count,
         MPIR_Grequest_complete_impl(req_state->request);
     }
     else {
-        mpi_errno = MPIX_Grequest_start_impl(MPIDI_CH3I_Rma_req_query,
-                                             MPIDI_CH3I_Rma_req_free,
-                                             MPIDI_CH3I_Rma_req_cancel,
-                                             MPIDI_CH3I_Rma_req_poll,
-                                             MPIDI_CH3I_Rma_req_wait,
-                                             req_state, &req_state->request);
+        mpi_errno = MPIX_Grequest_start_impl(req_query,
+                                             req_free,
+                                             req_cancel,
+                                             req_poll, req_wait, req_state, &req_state->request);
 
         if (mpi_errno != MPI_SUCCESS) {
             MPIU_ERR_POP(mpi_errno);
