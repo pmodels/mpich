@@ -1,6 +1,12 @@
 ===============================================================================
                                Changes in 3.1.2
 ===============================================================================
+
+ # Significant enhancements to the BG/Q device, especially for RMA and
+   shared memory functionality.
+
+ # Several enhancements to ROMIO.
+
  # Upgraded to hwloc-1.9.
 
  # Added more Fortran 2008 (F08) tests and fixed a few F08 binding bugs.
@@ -8,9 +14,7 @@
 
  # Updated weak alias support to align with gcc-4.x
 
- # Enhancements to RMA implementation.
-
- # Enhancements to ROMIO.
+ # Minor enhancements to the CH3 RMA implementation.
 
  # Better implementation of MPI_Allreduce for intercommunicator.
 
@@ -18,7 +22,8 @@
 
  # Added flags to enable C99 mode with Solaris compilers.
 
- # Updated implementation of MPI-T CVARs of type MPI_CHAR, as interpreted in MPI-3.0 Errata.
+ # Updated implementation of MPI-T CVARs of type MPI_CHAR, as interpreted
+   in MPI-3.0 Errata.
 
  # Several other minor bug fixes, memory leak fixes, and code cleanup.
 
