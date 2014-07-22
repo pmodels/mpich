@@ -56,7 +56,7 @@ static int handler_large(const ptl_event_t *e)
         MPIU_Error_printf("ACK event expected, received %s ni_fail=%s list=%s user_ptr=%p hdr_data=%#lx\n",
                           MPID_nem_ptl_strevent(e), MPID_nem_ptl_strnifail(e->ni_fail_type),
                           MPID_nem_ptl_strlist(e->ptl_list), e->user_ptr, e->hdr_data);
-    MPIU_Assert(e->type == PTL_EVENT_ACK || e->type != PTL_EVENT_GET);
+    MPIU_Assert(e->type == PTL_EVENT_ACK || e->type == PTL_EVENT_GET);
     
     if (e->type == PTL_EVENT_ACK && e->mlength < PTL_LARGE_THRESHOLD) {
         /* truncated message */
