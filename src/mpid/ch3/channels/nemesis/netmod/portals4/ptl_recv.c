@@ -204,7 +204,7 @@ static int handler_recv_dequeue_large(const ptl_event_t *e)
     /* unpack data from unexpected buffer first */
     if (e->type == PTL_EVENT_PUT_OVERFLOW) {
         if (dt_contig) {
-            MPIU_Memcpy(e->start, rreq->dev.user_buf, e->mlength);
+            MPIU_Memcpy(rreq->dev.user_buf, e->start, e->mlength);
         } else {
             rreq->dev.segment_first = 0;
             last = e->mlength;
