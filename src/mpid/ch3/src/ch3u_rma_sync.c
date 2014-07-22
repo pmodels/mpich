@@ -2201,6 +2201,7 @@ static int send_lock_put_or_acc(MPID_Win * win_ptr, int target_rank)
         lock_put_unlock_pkt->target_win_handle = win_ptr->all_win_handles[rma_op->target_rank];
         lock_put_unlock_pkt->source_win_handle = win_ptr->handle;
         lock_put_unlock_pkt->lock_type = lock_type;
+        lock_put_unlock_pkt->origin_rank = win_ptr->comm_ptr->rank;
 
         lock_put_unlock_pkt->addr =
             (char *) win_ptr->base_addrs[rma_op->target_rank] +
@@ -2220,6 +2221,7 @@ static int send_lock_put_or_acc(MPID_Win * win_ptr, int target_rank)
         lock_accum_unlock_pkt->target_win_handle = win_ptr->all_win_handles[rma_op->target_rank];
         lock_accum_unlock_pkt->source_win_handle = win_ptr->handle;
         lock_accum_unlock_pkt->lock_type = lock_type;
+        lock_accum_unlock_pkt->origin_rank = win_ptr->comm_ptr->rank;
 
         lock_accum_unlock_pkt->addr =
             (char *) win_ptr->base_addrs[rma_op->target_rank] +
@@ -2239,6 +2241,7 @@ static int send_lock_put_or_acc(MPID_Win * win_ptr, int target_rank)
         lock_accum_unlock_pkt->target_win_handle = win_ptr->all_win_handles[rma_op->target_rank];
         lock_accum_unlock_pkt->source_win_handle = win_ptr->handle;
         lock_accum_unlock_pkt->lock_type = lock_type;
+        lock_accum_unlock_pkt->origin_rank = win_ptr->comm_ptr->rank;
 
         lock_accum_unlock_pkt->addr =
             (char *) win_ptr->base_addrs[rma_op->target_rank] +
@@ -2410,6 +2413,7 @@ static int send_lock_get(MPID_Win * win_ptr, int target_rank)
     lock_get_unlock_pkt->target_win_handle = win_ptr->all_win_handles[rma_op->target_rank];
     lock_get_unlock_pkt->source_win_handle = win_ptr->handle;
     lock_get_unlock_pkt->lock_type = lock_type;
+    lock_get_unlock_pkt->origin_rank = win_ptr->comm_ptr->rank;
 
     lock_get_unlock_pkt->addr =
         (char *) win_ptr->base_addrs[rma_op->target_rank] +

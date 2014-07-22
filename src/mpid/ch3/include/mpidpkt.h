@@ -320,6 +320,7 @@ typedef struct MPIDI_CH3_Pkt_lock {
     MPI_Win source_win_handle;
     int target_rank;            /* Used in unluck/flush response to look up the
                                  * target state at the origin. */
+    int origin_rank;
 } MPIDI_CH3_Pkt_lock_t;
 
 typedef struct MPIDI_CH3_Pkt_lock_granted {
@@ -338,6 +339,7 @@ typedef struct MPIDI_CH3_Pkt_lock_put_unlock {
     MPIDI_CH3_Pkt_flags_t flags;
     MPI_Win target_win_handle;
     MPI_Win source_win_handle;
+    int origin_rank;
     int lock_type;
     void *addr;
     int count;
@@ -349,6 +351,7 @@ typedef struct MPIDI_CH3_Pkt_lock_get_unlock {
     MPIDI_CH3_Pkt_flags_t flags;
     MPI_Win target_win_handle;
     MPI_Win source_win_handle;
+    int origin_rank;
     int lock_type;
     void *addr;
     int count;
@@ -361,6 +364,7 @@ typedef struct MPIDI_CH3_Pkt_lock_accum_unlock {
     MPIDI_CH3_Pkt_flags_t flags;
     MPI_Win target_win_handle;
     MPI_Win source_win_handle;
+    int origin_rank;
     int lock_type;
     void *addr;
     int count;

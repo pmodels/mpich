@@ -102,7 +102,7 @@ typedef struct MPIDI_Win_lock_queue {
     struct MPIDI_Win_lock_queue *next;
     int lock_type;
     MPI_Win source_win_handle;
-    MPIDI_VC_t *vc;
+    int origin_rank;
     struct MPIDI_PT_single_op *pt_single_op;    /* to store info for
                                                  * lock-put-unlock optimization */
 } MPIDI_Win_lock_queue;

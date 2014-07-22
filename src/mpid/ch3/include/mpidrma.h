@@ -37,6 +37,7 @@ static inline int send_lock_msg(int dest, int lock_type, MPID_Win * win_ptr)
     lock_pkt->target_win_handle = win_ptr->all_win_handles[dest];
     lock_pkt->source_win_handle = win_ptr->handle;
     lock_pkt->lock_type = lock_type;
+    lock_pkt->origin_rank = win_ptr->comm_ptr->rank;
 
     win_ptr->targets[dest].remote_lock_state = MPIDI_CH3_WIN_LOCK_REQUESTED;
     win_ptr->targets[dest].remote_lock_mode = lock_type;

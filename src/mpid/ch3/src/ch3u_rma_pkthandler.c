@@ -914,7 +914,7 @@ int MPIDI_CH3_PktHandler_Lock(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
         new_ptr->next = NULL;
         new_ptr->lock_type = lock_pkt->lock_type;
         new_ptr->source_win_handle = lock_pkt->source_win_handle;
-        new_ptr->vc = vc;
+        new_ptr->origin_rank = lock_pkt->origin_rank;
         new_ptr->pt_single_op = NULL;
     }
 
@@ -1001,7 +1001,7 @@ int MPIDI_CH3_PktHandler_LockPutUnlock(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
         new_ptr->next = NULL;
         new_ptr->lock_type = lock_put_unlock_pkt->lock_type;
         new_ptr->source_win_handle = lock_put_unlock_pkt->source_win_handle;
-        new_ptr->vc = vc;
+        new_ptr->origin_rank = lock_put_unlock_pkt->origin_rank;
 
         new_ptr->pt_single_op->type = MPIDI_RMA_PUT;
         new_ptr->pt_single_op->flags = lock_put_unlock_pkt->flags;
@@ -1149,7 +1149,7 @@ int MPIDI_CH3_PktHandler_LockGetUnlock(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
         new_ptr->next = NULL;
         new_ptr->lock_type = lock_get_unlock_pkt->lock_type;
         new_ptr->source_win_handle = lock_get_unlock_pkt->source_win_handle;
-        new_ptr->vc = vc;
+        new_ptr->origin_rank = lock_get_unlock_pkt->origin_rank;
 
         new_ptr->pt_single_op->type = MPIDI_RMA_GET;
         new_ptr->pt_single_op->flags = lock_get_unlock_pkt->flags;
@@ -1240,7 +1240,7 @@ int MPIDI_CH3_PktHandler_LockAccumUnlock(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
     new_ptr->next = NULL;
     new_ptr->lock_type = lock_accum_unlock_pkt->lock_type;
     new_ptr->source_win_handle = lock_accum_unlock_pkt->source_win_handle;
-    new_ptr->vc = vc;
+    new_ptr->origin_rank = lock_accum_unlock_pkt->origin_rank;
 
     new_ptr->pt_single_op->type = MPIDI_RMA_ACCUMULATE;
     new_ptr->pt_single_op->flags = lock_accum_unlock_pkt->flags;

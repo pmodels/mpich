@@ -933,9 +933,10 @@ int MPIDI_CH3I_Release_lock(MPID_Win *win_ptr)
                                    they arrive within various packet/request handlers via
                                    MPIDI_CH3_Finish_rma_op_target().  That call cannot be used
                                    here, because it would enter this function recursively. */
-
+                                MPIDI_VC_t *vc;
+                                MPIDI_Comm_get_vc(win_ptr->comm_ptr, lock_queue->origin_rank, &vc);
 				mpi_errno = 
-                                    MPIDI_CH3I_Send_pt_rma_done_pkt(lock_queue->vc, win_ptr,
+                                    MPIDI_CH3I_Send_pt_rma_done_pkt(vc, win_ptr,
 								    lock_queue->source_win_handle);
                                 if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
 				
@@ -982,8 +983,10 @@ int MPIDI_CH3I_Release_lock(MPID_Win *win_ptr)
 			
 			else {
 			    /* send lock granted packet. */
+                            MPIDI_VC_t *vc;
+                            MPIDI_Comm_get_vc(win_ptr->comm_ptr, lock_queue->origin_rank, &vc);
 			    mpi_errno = 
-                                MPIDI_CH3I_Send_lock_granted_pkt(lock_queue->vc, win_ptr,
+                                MPIDI_CH3I_Send_lock_granted_pkt(vc, win_ptr,
 								 lock_queue->source_win_handle);
 			    
 			    /* dequeue entry from lock queue */
@@ -1077,6 +1080,7 @@ static int do_simple_get(MPID_Win *win_ptr, MPIDI_Win_lock_queue *lock_queue)
     MPID_IOV iov[MPID_IOV_LIMIT];
     int mpi_errno=MPI_SUCCESS;
     MPI_Aint type_size;
+    MPIDI_VC_t *vc;
     MPIDI_STATE_DECL(MPID_STATE_DO_SIMPLE_GET);
     
     MPIDI_FUNC_ENTER(MPID_STATE_DO_SIMPLE_GET);
@@ -1108,9 +1112,10 @@ static int do_simple_get(MPID_Win *win_ptr, MPIDI_Win_lock_queue *lock_queue)
     MPID_Datatype_get_size_macro(lock_queue->pt_single_op->datatype, type_size);
     iov[1].MPID_IOV_LEN = lock_queue->pt_single_op->count * type_size;
     
+    MPIDI_Comm_get_vc(win_ptr->comm_ptr, lock_queue->origin_rank, &vc);
     /* Because this is in a packet handler, it is already within a critical section */	
     /* MPIU_THREAD_CS_ENTER(CH3COMM,vc); */
-    mpi_errno = MPIDI_CH3_iSendv(lock_queue->vc, req, iov, 2);
+    mpi_errno = MPIDI_CH3_iSendv(vc, req, iov, 2);
     /* MPIU_THREAD_CS_EXIT(CH3COMM,vc); */
     /* --BEGIN ERROR HANDLING-- */
     if (mpi_errno != MPI_SUCCESS)
