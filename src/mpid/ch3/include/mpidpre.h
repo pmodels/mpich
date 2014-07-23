@@ -176,7 +176,6 @@ typedef struct MPIDI_CH3I_comm
     struct MPID_nem_barrier_vars *barrier_vars; /* shared memory variables used in barrier */
     struct MPID_Comm *next; /* next pointer for list of communicators */
     struct MPID_Comm *prev; /* prev pointer for list of communicators */
-    void *netmod_comm;      /* netmod communicator context */
 }
 MPIDI_CH3I_comm_t;
 
