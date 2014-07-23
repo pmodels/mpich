@@ -1,4 +1,22 @@
 ===============================================================================
+                               Changes in 3.2
+===============================================================================
+
+ # Fortran 2008 bindings are enabled by default and fully supported.
+
+ # Several other minor bug fixes, memory leak fixes, and code cleanup.
+
+   A full list of changes is available at the following link:
+
+     http://git.mpich.org/mpich.git/shortlog/v3.1.2..v3.2a1
+
+   A full list of bugs that have been fixed is available at the
+   following link:
+
+     https://trac.mpich.org/projects/mpich/query?status=closed&group=resolution&milestone=mpich-3.2
+
+
+===============================================================================
                                Changes in 3.1.2
 ===============================================================================
 
