@@ -264,14 +264,18 @@ MPID_Put(const void   *origin_addr,
     }
 
 
-  if (target_rank == win->comm_ptr->rank)
+  if ((target_rank == win->comm_ptr->rank) || (win->create_flavor == MPI_WIN_FLAVOR_SHARED))
      {
        size_t offset = req->offset;
+       if (target_rank == win->comm_ptr->rank)
+           target_addr = win->base + req->offset;
+       else
+           target_addr = win->mpid.info[target_rank].base_addr + req->offset;
 
        mpi_errno = MPIR_Localcopy(origin_addr,
                                   origin_count,
                                   origin_datatype,
-                                  win->base + offset,
+                                  target_addr,
                                   target_count,
                                   target_datatype);
 

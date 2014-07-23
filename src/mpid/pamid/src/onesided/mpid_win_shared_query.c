@@ -52,11 +52,13 @@ MPID_Win_shared_query(MPID_Win *win, int rank, MPI_Aint *size,
               break;
           }
       }
+      *((void **) base_ptr) = win->base; /* return the begin. address of shared segment */
     } else {
+        *((void **) base_ptr) = win->mpid.info[rank].base_addr; /* return the begin. address of the rank */
         *size                 = win->mpid.info[rank].base_size;
         *disp_unit            = win->mpid.info[rank].disp_unit;
     }
-    *((void **) base_ptr) = win->base; /* should return the begin. address of shared segment */
+
 
     return mpi_errno;
 }
