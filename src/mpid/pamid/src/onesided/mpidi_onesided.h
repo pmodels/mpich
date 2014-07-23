@@ -37,24 +37,24 @@ pami_rmw_t   zero_rmw_parms;
 #define MPIDI_QUICKSLEEP     usleep(1);
 #define MAX_NUM_CTRLSEND  1024          /* no more than 1024 outstanding control sends */
 
-#define MPIDI_SHM_MUTEX_LOCK(win)                                                          \
+#define MPIDI_SHM_MUTEX_LOCK(win) {                                                        \
     int mpi_errno=0;                                                                       \
     do {                                                                                   \
         pthread_mutex_t *shm_mutex = (pthread_mutex_t *) &win->mpid.shm->ctrl->mutex_lock; \
         int rval = pthread_mutex_lock(shm_mutex);                                          \
         MPIU_ERR_CHKANDJUMP1(rval, mpi_errno, MPI_ERR_OTHER, "**pthread_lock",             \
                              "**pthread_lock %s", strerror(rval));                         \
-    } while (0);
+    } while (0); }
 
 
-#define MPIDI_SHM_MUTEX_UNLOCK(win)                                                        \
+#define MPIDI_SHM_MUTEX_UNLOCK(win) {                                                      \
     int mpi_errno=0;                                                                       \
     do {                                                                                   \
         pthread_mutex_t *shm_mutex = (pthread_mutex_t *) &win->mpid.shm->ctrl->mutex_lock; \
         int rval = pthread_mutex_unlock(shm_mutex);                                        \
         MPIU_ERR_CHKANDJUMP1(rval, mpi_errno, MPI_ERR_OTHER, "**pthread_unlock",           \
                              "**pthread_unlock %s", strerror(rval));                       \
-    } while (0);    
+    } while (0); }
 
 
 #define MPIDI_SHM_MUTEX_INIT(win)                                                          \
@@ -78,14 +78,14 @@ pami_rmw_t   zero_rmw_parms;
                              "**pthread_mutex %s", strerror(rval));                        \
     } while (0);
 
-#define MPIDI_SHM_MUTEX_DESTROY(win)                                                        \
+#define MPIDI_SHM_MUTEX_DESTROY(win) {                                                      \
     int mpi_errno=0;                                                                        \
     do {                                                                                    \
         pthread_mutex_t *shm_mutex = (pthread_mutex_t *) &(win)->mpid.shm->ctrl->mutex_lock;\
         int rval = pthread_mutex_destroy(shm_mutex);                                        \
         MPIU_ERR_CHKANDJUMP1(rval, mpi_errno, MPI_ERR_OTHER, "**pthread_mutex",             \
                              "**pthread_mutex %s", strerror(rval));                         \
-    } while (0);
+    } while (0); }
 
 #define MPIDI_ACQUIRE_SHARED_LOCK(win) {                                                    \
          MPIDI_SHM_MUTEX_LOCK(win);                                                         \
