@@ -412,17 +412,11 @@ MPID_getSharedSegment(MPI_Aint     size,
 #endif
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
+        /* assign base address here                                                    */
         /* compute the base addresses of each process within the shared memory segment */
+        /* will be done after MPI_Allgather in MID_Win_allocate_shared                 */
         win->base = (void *) ((long) win->mpid.shm->base_addr + (long ) MPIDI_ROUND_UP_PAGESIZE((sizeof(MPIDI_Win_shm_ctrl_t) + ((comm_size+1) * sizeof(void *))),pageSize));
 
-        for (i = 0; i < comm_size; ++i) {
-            win->mpid.info[i].base_addr =
-                (void *) ((uintptr_t)win->mpid.info[i].base_addr + (uintptr_t)win->base);
-        }
-
-        for (i = 0; i < comm_size; ++i) {
-            if (size_array[i] == 0) win->mpid.info[i].base_addr = NULL;
-        }
 
         MPIU_Free(size_array);
 
@@ -492,7 +486,7 @@ MPID_Win_allocate_shared(MPI_Aint     size,
   int mpi_errno  = MPI_SUCCESS;
   int onNode     = 0;
   MPID_Win    *win = NULL;
-  int rank;
+  int rank, prev_size;
 
   MPIDI_Win_info  *winfo;
   int         comm_size,i;
@@ -525,6 +519,29 @@ MPID_Win_allocate_shared(MPI_Aint     size,
   mpi_errno = MPIDI_Win_allgather(size,win_ptr);
   if (mpi_errno != MPI_SUCCESS)
       return mpi_errno;
+
+  win->mpid.info[0].base_addr = win->base;
+  char *cur_base = win->base;
+  prev_size=win->mpid.info[0].base_size;
+  for (i = 1; i < comm_size; ++i) {
+       if (win->mpid.info[i].base_size) {
+            if (prev_size) {
+               if (noncontig) {
+                  /* Round up to next page size */
+                   win->mpid.info[i].base_addr =
+                  (void *) ((MPI_Aint) cur_base + (MPI_Aint) MPIDI_ROUND_UP_PAGESIZE(prev_size,pageSize));
+               } else {
+                    win->mpid.info[i].base_addr = (void *) ((MPI_Aint) cur_base + (MPI_Aint) prev_size);
+               }
+            } else
+                    win->mpid.info[i].base_addr = (void *) ((MPI_Aint) cur_base);
+              prev_size=win->mpid.info[i].base_size;
+              cur_base = win->mpid.info[i].base_addr;
+        } else {
+                 win->mpid.info[i].base_addr = NULL;
+        }
+  }
+
 
   *(void**) base_ptr = (void *) win->mpid.info[rank].base_addr;
 
