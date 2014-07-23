@@ -7,5 +7,3 @@
 
 
 #include "mxm_impl.h"
-
-

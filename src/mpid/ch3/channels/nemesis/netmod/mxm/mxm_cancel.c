@@ -13,7 +13,7 @@
 #define FUNCNAME MPID_nem_mxm_cancel_send
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-int MPID_nem_mxm_cancel_send(MPIDI_VC_t *vc, MPID_Request *req)
+int MPID_nem_mxm_cancel_send(MPIDI_VC_t * vc, MPID_Request * req)
 {
     int mpi_errno = MPI_SUCCESS;
     mxm_error_t ret = MXM_OK;
@@ -27,17 +27,18 @@ int MPID_nem_mxm_cancel_send(MPIDI_VC_t *vc, MPID_Request *req)
             if (MPIR_STATUS_GET_CANCEL_BIT(req->status)) {
                 (VC_FIELD(req->ch.vc, pending_sends)) -= 1;
             }
-        } else {
+        }
+        else {
             mpi_errno = MPI_ERR_INTERN;
         }
     }
 
     _dbg_mxm_out_req(req);
 
- fn_exit:
+  fn_exit:
     return mpi_errno;
- fn_fail:  ATTRIBUTE((unused))
-    goto fn_exit;
+  fn_fail:ATTRIBUTE((unused))
+        goto fn_exit;
 }
 
 
@@ -45,7 +46,7 @@ int MPID_nem_mxm_cancel_send(MPIDI_VC_t *vc, MPID_Request *req)
 #define FUNCNAME MPID_nem_mxm_cancel_recv
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-int MPID_nem_mxm_cancel_recv(MPIDI_VC_t *vc, MPID_Request *req)
+int MPID_nem_mxm_cancel_recv(MPIDI_VC_t * vc, MPID_Request * req)
 {
     int mpi_errno = MPI_SUCCESS;
     mxm_error_t ret = MXM_OK;
@@ -56,15 +57,16 @@ int MPID_nem_mxm_cancel_recv(MPIDI_VC_t *vc, MPID_Request *req)
         ret = mxm_req_cancel_recv(&REQ_FIELD(req, mxm_req->item.recv));
         if ((MXM_OK == ret) || (MXM_ERR_NO_PROGRESS == ret)) {
             _mxm_req_wait(&REQ_FIELD(req, mxm_req->item.base));
-        } else {
+        }
+        else {
             mpi_errno = MPI_ERR_INTERN;
         }
     }
 
     _dbg_mxm_out_req(req);
 
- fn_exit:
+  fn_exit:
     return mpi_errno;
- fn_fail:  ATTRIBUTE((unused))
-    goto fn_exit;
+  fn_fail:ATTRIBUTE((unused))
+        goto fn_exit;
 }
