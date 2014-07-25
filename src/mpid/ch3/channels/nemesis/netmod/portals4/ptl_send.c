@@ -192,6 +192,7 @@ static int send_msg(ptl_hdr_data_t ssend_flag, struct MPIDI_VC *vc, const void *
     MPIDI_FUNC_ENTER(MPID_STATE_SEND_MSG);
 
     MPID_nem_ptl_request_create_sreq(sreq, mpi_errno, comm);
+    sreq->dev.match.parts.rank = dest;
 
     if (!vc_ptl->id_initialized) {
         mpi_errno = MPID_nem_ptl_init_id(vc);
