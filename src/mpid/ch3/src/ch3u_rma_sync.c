@@ -41,7 +41,7 @@ cvars:
     - name        : MPIR_CVAR_CH3_RMA_NREQUEST_NEW_THRESHOLD
       category    : CH3
       type        : int
-      default     : 128
+      default     : 0
       class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
@@ -54,7 +54,7 @@ cvars:
     - name        : MPIR_CVAR_CH3_RMA_GC_NUM_COMPLETED
       category    : CH3
       type        : int
-      default     : 1
+      default     : (-1)
       class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
@@ -80,7 +80,7 @@ cvars:
     - name        : MPIR_CVAR_CH3_RMA_GC_NUM_TESTED
       category    : CH3
       type        : int
-      default     : (-1)
+      default     : 100
       class       : none
       verbosity   : MPI_T_VERBOSITY_USER_BASIC
       scope       : MPI_T_SCOPE_ALL_EQ
