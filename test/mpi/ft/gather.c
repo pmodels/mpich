@@ -40,11 +40,11 @@ int main(int argc, char **argv)
     if (rank == 0) {
 #if defined (MPICH) && (MPICH_NUMVERSION >= 30100102)
         MPI_Error_class(err, &errclass);
-        if (errclass == MPIX_ERR_PROC_FAIL_STOP) {
+        if (errclass == MPIX_ERR_PROC_FAILED) {
             printf(" No Errors\n");
             fflush(stdout);
         } else {
-            fprintf(stderr, "Wrong error code (%d) returned. Expected MPIX_ERR_PROC_FAIL_STOP\n", errclass);
+            fprintf(stderr, "Wrong error code (%d) returned. Expected MPIX_ERR_PROC_FAILED\n", errclass);
         }
 #else
         if (err) {

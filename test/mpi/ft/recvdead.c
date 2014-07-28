@@ -11,7 +11,7 @@
 /*
  * This test attempts MPI_Recv with the source being a dead process. It should fail
  * and return an error. If we are testing sufficiently new MPICH, we look for the
- * MPIX_ERR_PROC_FAIL_STOP error code. These should be converted to look for the
+ * MPIX_ERR_PROC_FAILED error code. These should be converted to look for the
  * standarized error code once it is finalized.
  */
 int main(int argc, char **argv)
@@ -36,11 +36,11 @@ int main(int argc, char **argv)
         err = MPI_Recv(buf, 1, MPI_CHAR, 1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 #if defined (MPICH) && (MPICH_NUMVERSION >= 30100102)
         MPI_Error_class(err, &errclass);
-        if (errclass == MPIX_ERR_PROC_FAIL_STOP) {
+        if (errclass == MPIX_ERR_PROC_FAILED) {
             printf(" No Errors\n");
             fflush(stdout);
         } else {
-            fprintf(stderr, "Wrong error code (%d) returned. Expected MPIX_ERR_PROC_FAIL_STOP\n", errclass);
+            fprintf(stderr, "Wrong error code (%d) returned. Expected MPIX_ERR_PROC_FAILED\n", errclass);
         }
 #else
         if (err) {

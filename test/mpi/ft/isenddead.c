@@ -40,8 +40,8 @@ int main(int argc, char **argv)
         err = MPI_Wait(&request, MPI_STATUS_IGNORE);
 #if defined (MPICH) && (MPICH_NUMVERSION >= 30100102)
         MPI_Error_class(err, &errclass);
-        if ((err) && (errclass != MPIX_ERR_PROC_FAIL_STOP)) {
-            fprintf(stderr, "Wrong error code (%d) returned. Expected MPIX_ERR_PROC_FAIL_STOP\n", errclass);
+        if ((err) && (errclass != MPIX_ERR_PROC_FAILED)) {
+            fprintf(stderr, "Wrong error code (%d) returned. Expected MPIX_ERR_PROC_FAILED\n", errclass);
         } else {
             printf(" No Errors\n");
             fflush(stdout);
