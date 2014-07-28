@@ -802,18 +802,18 @@ typedef int (MPIX_Grequest_wait_function)(int, void **, double, MPI_Status *);
 #define MPI_ERR_PENDING     18      /* Pending request */
 
 /* New MPI-2 Error classes */
-#define MPI_ERR_FILE        27      /* */
 #define MPI_ERR_ACCESS      20      /* */
 #define MPI_ERR_AMODE       21      /* */
 #define MPI_ERR_BAD_FILE    22      /* */
-#define MPI_ERR_FILE_EXISTS 25      /* */
-#define MPI_ERR_FILE_IN_USE 26      /* */
-#define MPI_ERR_NO_SPACE    36      /* */
-#define MPI_ERR_NO_SUCH_FILE 37     /* */
-#define MPI_ERR_IO          32      /* */
-#define MPI_ERR_READ_ONLY   40      /* */
 #define MPI_ERR_CONVERSION  23      /* */
 #define MPI_ERR_DUP_DATAREP 24      /* */
+#define MPI_ERR_FILE_EXISTS 25      /* */
+#define MPI_ERR_FILE_IN_USE 26      /* */
+#define MPI_ERR_FILE        27      /* */
+#define MPI_ERR_IO          32      /* */
+#define MPI_ERR_NO_SPACE    36      /* */
+#define MPI_ERR_NO_SUCH_FILE 37     /* */
+#define MPI_ERR_READ_ONLY   40      /* */
 #define MPI_ERR_UNSUPPORTED_DATAREP   43  /* */
 
 /* MPI_ERR_INFO is NOT defined in the MPI-2 standard.  I believe that
@@ -873,6 +873,13 @@ typedef int (MPIX_Grequest_wait_function)(int, void **, double, MPI_Status *);
 /* WARNING: this is also defined in mpishared.h.  Update both locations */
 #define MPICH_ERR_LAST_CLASS 72     /* It is also helpful to know the
 				       last valid class */
+
+#define MPICH_ERR_FIRST_MPIX 100 /* Define a gap here because sock is
+                                  * already using some of the values in this
+                                  * range. All MPIX error codes will be
+                                  * above this value to be ABI complaint. */
+
+
 /* End of MPI's error classes */
 
 /* Function type defs */
