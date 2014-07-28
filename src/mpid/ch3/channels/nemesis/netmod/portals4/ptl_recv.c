@@ -91,12 +91,15 @@ static int handler_recv_dequeue_complete(const ptl_event_t *e)
         /* unpack the data from unexpected buffer */
         int is_contig;
         MPI_Aint last;
+        MPI_Aint dt_true_lb;
+        MPIDI_msg_sz_t data_sz ATTRIBUTE((unused));
+        MPID_Datatype *dt_ptr ATTRIBUTE((unused));
 
-        MPID_Datatype_is_contig(rreq->dev.datatype, &is_contig);
+        MPIDI_Datatype_get_info(rreq->dev.user_count, rreq->dev.datatype, is_contig, data_sz, dt_ptr, dt_true_lb);
         MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE, "is_contig = %d", is_contig);
 
         if (is_contig) {
-            MPIU_Memcpy(rreq->dev.user_buf, e->start, e->mlength);
+            MPIU_Memcpy((char *)rreq->dev.user_buf + dt_true_lb, e->start, e->mlength);
         } else {
             last = e->mlength;
             MPID_Segment_unpack(rreq->dev.segment_ptr, 0, &last, e->start);
@@ -204,7 +207,7 @@ static int handler_recv_dequeue_large(const ptl_event_t *e)
     /* unpack data from unexpected buffer first */
     if (e->type == PTL_EVENT_PUT_OVERFLOW) {
         if (dt_contig) {
-            MPIU_Memcpy(rreq->dev.user_buf, e->start, e->mlength);
+            MPIU_Memcpy((char *)rreq->dev.user_buf + dt_true_lb, e->start, e->mlength);
         } else {
             rreq->dev.segment_first = 0;
             last = e->mlength;
@@ -227,10 +230,10 @@ static int handler_recv_dequeue_large(const ptl_event_t *e)
     if (dt_contig) {
         /* recv buffer is contig */
         REQ_PTL(rreq)->event_handler = handler_recv_complete;
-        ret = PtlGet(MPIDI_nem_ptl_global_md, (ptl_size_t)rreq->dev.user_buf + PTL_LARGE_THRESHOLD, data_sz - PTL_LARGE_THRESHOLD,
-                     vc_ptl->id, vc_ptl->ptg, e->match_bits, 0, rreq);
+        ret = PtlGet(MPIDI_nem_ptl_global_md, (ptl_size_t)((char *)rreq->dev.user_buf + dt_true_lb + PTL_LARGE_THRESHOLD),
+                     data_sz - PTL_LARGE_THRESHOLD, vc_ptl->id, vc_ptl->ptg, e->match_bits, 0, rreq);
         DBG_MSG_GET("global", data_sz - PTL_LARGE_THRESHOLD, vc->pg_rank, e->match_bits);
-        MPIU_DBG_MSG_P(CH3_CHANNEL, VERBOSE, "   buf=%p", (char *)rreq->dev.user_buf + PTL_LARGE_THRESHOLD);
+        MPIU_DBG_MSG_P(CH3_CHANNEL, VERBOSE, "   buf=%p", (char *)rreq->dev.user_buf + dt_true_lb + PTL_LARGE_THRESHOLD);
         MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlget", "**ptlget %s", MPID_nem_ptl_strerror(ret));
         goto fn_exit;
     }
@@ -393,7 +396,7 @@ int MPID_nem_ptl_recv_posted(MPIDI_VC_t *vc, MPID_Request *rreq)
         if (dt_contig) {
             /* small contig message */
             MPIU_DBG_MSG(CH3_CHANNEL, VERBOSE, "Small contig message");
-            me.start = rreq->dev.user_buf;
+            me.start = (char *)rreq->dev.user_buf + dt_true_lb;
             me.length = data_sz;
             REQ_PTL(rreq)->event_handler = handler_recv_dequeue_complete;
         } else {
@@ -431,7 +434,7 @@ int MPID_nem_ptl_recv_posted(MPIDI_VC_t *vc, MPID_Request *rreq)
         if (dt_contig) {
             /* large contig message */
             MPIU_DBG_MSG(CH3_CHANNEL, VERBOSE, "Large contig message");
-            me.start = rreq->dev.user_buf;
+            me.start = (char *)rreq->dev.user_buf + dt_true_lb;
             me.length = PTL_LARGE_THRESHOLD;
             REQ_PTL(rreq)->event_handler = handler_recv_dequeue_large;
         } else {

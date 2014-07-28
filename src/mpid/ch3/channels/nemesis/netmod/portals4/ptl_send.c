@@ -207,7 +207,7 @@ static int send_msg(ptl_hdr_data_t ssend_flag, struct MPIDI_VC *vc, const void *
             MPIU_DBG_MSG(CH3_CHANNEL, VERBOSE, "Small contig message");
             REQ_PTL(sreq)->event_handler = handler_send_complete;
             MPIU_DBG_MSG_P(CH3_CHANNEL, VERBOSE, "&REQ_PTL(sreq)->event_handler = %p", &(REQ_PTL(sreq)->event_handler));
-            ret = PtlPut(MPIDI_nem_ptl_global_md, (ptl_size_t)buf, data_sz, PTL_ACK_REQ, vc_ptl->id, vc_ptl->pt,
+            ret = PtlPut(MPIDI_nem_ptl_global_md, (ptl_size_t)((char *)buf + dt_true_lb), data_sz, PTL_ACK_REQ, vc_ptl->id, vc_ptl->pt,
                          NPTL_MATCH(tag, comm->context_id + context_offset, comm->rank), 0, sreq,
                          NPTL_HEADER(ssend_flag, data_sz));
             MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlput", "**ptlput %s", MPID_nem_ptl_strerror(ret));
