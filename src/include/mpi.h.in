@@ -842,8 +842,6 @@ typedef int (MPIX_Grequest_wait_function)(int, void **, double, MPI_Status *);
 #define MPI_ERR_DISP        52      /* */
 #define MPI_ERR_ASSERT      53      /* */
 
-#define MPIX_ERR_PROC_FAIL_STOP 54   /* Process failure */
-
 #define MPI_ERR_RMA_RANGE  55       /* */
 #define MPI_ERR_RMA_ATTACH 56       /* */
 #define MPI_ERR_RMA_SHARED 57       /* */
@@ -879,6 +877,7 @@ typedef int (MPIX_Grequest_wait_function)(int, void **, double, MPI_Status *);
                                   * range. All MPIX error codes will be
                                   * above this value to be ABI complaint. */
 
+#define MPIX_ERR_PROC_FAIL_STOP MPICH_ERR_FIRST_MPIX+1   /* Process failure */
 
 /* End of MPI's error classes */
 
