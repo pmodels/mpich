@@ -346,6 +346,7 @@ int MPIDI_CH3_InitCompleted(void)
 {
     int mpi_errno = MPI_SUCCESS;
     initcomp_cb_t *ep;
+    initcomp_cb_t *ep_tmp;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3_INITCOMPLETED);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3_INITCOMPLETED);
@@ -354,7 +355,9 @@ int MPIDI_CH3_InitCompleted(void)
     {
         mpi_errno = ep->callback();
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        ep_tmp = ep;
         ep = ep->next;
+        MPIU_Free(ep_tmp);
     }
 
  fn_exit:
