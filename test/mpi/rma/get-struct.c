@@ -14,7 +14,7 @@
  *
  * The observed failure was a SEGV in the MPI_Get
  *
- * 
+ *
  */
 #define MAX_KEY_SIZE 64
 #define MAX_VALUE_SIZE 256

@@ -79,8 +79,7 @@ noinst_PROGRAMS =           \
     unusual-noncontigs      \
     vecblklen               \
     zeroblks                \
-    zeroparms               \
-    get-struct
+    zeroparms
 
 # Some of the tests use a more comprehensive set of datatype tests.
 # These must specify a different LDADD that includes the object file
