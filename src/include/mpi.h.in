@@ -877,7 +877,10 @@ typedef int (MPIX_Grequest_wait_function)(int, void **, double, MPI_Status *);
                                   * range. All MPIX error codes will be
                                   * above this value to be ABI complaint. */
 
-#define MPIX_ERR_PROC_FAIL_STOP MPICH_ERR_FIRST_MPIX+1   /* Process failure */
+#define MPIX_ERR_PROC_FAIL_STOP   MPICH_ERR_FIRST_MPIX+1   /* Process failure */
+
+#define MPICH_ERR_LAST_MPIX       MPICH_ERR_FIRST_MPIX+1
+
 
 /* End of MPI's error classes */
 
