@@ -37,6 +37,11 @@ int MPID_Ssend(const void * buf, int count, MPI_Datatype datatype, int rank, int
               "rank=%d, tag=%d, context=%d", 
               rank, tag, comm->context_id + context_offset));
 
+    /* Check to make sure the communicator hasn't already been revoked */
+    if (comm->revoked) {
+        MPIU_ERR_SETANDJUMP(mpi_errno,MPIX_ERR_REVOKED,"**revoked");
+    }
+
     if (rank == comm->rank && comm->comm_kind != MPID_INTERCOMM)
     {
 	mpi_errno = MPIDI_Isend_self(buf, count, datatype, rank, tag, comm, 
@@ -109,6 +114,7 @@ int MPID_Ssend(const void * buf, int count, MPI_Datatype datatype, int rank, int
 	   must wait until sreq completes */
     }
 
+  fn_fail:
   fn_exit:
     *request = sreq;
     

@@ -100,6 +100,7 @@ typedef enum
     MPIDI_CH3_PKT_GET_ACCUM_RESP,
     MPIDI_CH3_PKT_FLOW_CNTL_UPDATE,  /* FIXME: Unused */
     MPIDI_CH3_PKT_CLOSE,
+    MPIDI_CH3_PKT_REVOKE,
     MPIDI_CH3_PKT_END_CH3,
     /* The channel can define additional types by defining the value
        MPIDI_CH3_PKT_ENUM */
@@ -411,6 +412,13 @@ typedef struct MPIDI_CH3_Pkt_close
 }
 MPIDI_CH3_Pkt_close_t;
 
+typedef struct MPIDI_CH3_Pkt_revoke
+{
+    MPIDI_CH3_Pkt_type_t type;
+    MPIR_Context_id_t revoked_comm;
+}
+MPIDI_CH3_Pkt_revoke_t;
+
 typedef union MPIDI_CH3_Pkt
 {
     MPIDI_CH3_Pkt_type_t type;
@@ -445,6 +453,7 @@ typedef union MPIDI_CH3_Pkt
     MPIDI_CH3_Pkt_fop_t fop;
     MPIDI_CH3_Pkt_fop_resp_t fop_resp;
     MPIDI_CH3_Pkt_get_accum_resp_t get_accum_resp;
+    MPIDI_CH3_Pkt_revoke_t revoke;
 # if defined(MPIDI_CH3_PKT_DECL)
     MPIDI_CH3_PKT_DECL
 # endif

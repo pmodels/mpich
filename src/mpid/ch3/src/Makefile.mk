@@ -12,6 +12,7 @@ mpi_core_sources +=                          \
     src/mpid/ch3/src/ch3u_handle_connection.c              \
     src/mpid/ch3/src/ch3u_handle_recv_pkt.c                \
     src/mpid/ch3/src/ch3u_handle_recv_req.c                \
+    src/mpid/ch3/src/ch3u_handle_revoke_pkt.c              \
     src/mpid/ch3/src/ch3u_handle_send_req.c                \
     src/mpid/ch3/src/ch3u_port.c                           \
     src/mpid/ch3/src/ch3u_recvq.c                          \
@@ -30,6 +31,7 @@ mpi_core_sources +=                          \
     src/mpid/ch3/src/mpid_comm_disconnect.c                \
     src/mpid/ch3/src/mpid_comm_spawn_multiple.c            \
     src/mpid/ch3/src/mpid_comm_failure_ack.c               \
+    src/mpid/ch3/src/mpid_comm_revoke.c                    \
     src/mpid/ch3/src/mpid_finalize.c                       \
     src/mpid/ch3/src/mpid_get_universe_size.c              \
     src/mpid/ch3/src/mpid_getpname.c                       \

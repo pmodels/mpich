@@ -860,7 +860,7 @@ static inline int req_uses_vc(const MPID_Request* req, const MPIDI_VC_t *vc)
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 /* This dequeues req from the posted recv queue, set req's error code to comm_fail, and updates the req pointer.
    Note that this creates a new error code if one hasn't already been created (i.e., if *error is MPI_SUCCESS). */
-static inline void dequeue_and_set_error(MPID_Request **req,  MPID_Request *prev_req, int *error, int rank)
+static inline void dequeue_and_set_error(MPID_Request **req,  MPID_Request *prev_req, MPID_Request **head, MPID_Request **tail, int *error, int rank)
 {
     MPID_Request *next = (*req)->dev.next;
 
@@ -872,14 +872,15 @@ static inline void dequeue_and_set_error(MPID_Request **req,  MPID_Request *prev
     }
     
     /* remove from queue */
-    if (recvq_posted_head == *req)
-        recvq_posted_head = (*req)->dev.next;
+    if (*head == *req)
+        *head = (*req)->dev.next;
     else
         prev_req->dev.next = (*req)->dev.next;
-    if (recvq_posted_tail == *req)
-        recvq_posted_tail = prev_req;
+    if (*tail == *req)
+        *tail = prev_req;
 
-    MPIR_T_PVAR_LEVEL_DEC(RECVQ, posted_recvq_length, 1);
+    if (*head == recvq_posted_head)
+        MPIR_T_PVAR_LEVEL_DEC(RECVQ, posted_recvq_length, 1);
 
     /* set error and complete */
     (*req)->status.MPI_ERROR = *error;
@@ -888,6 +889,101 @@ static inline void dequeue_and_set_error(MPID_Request **req,  MPID_Request *prev
                      (MPIU_DBG_FDEST, "set error of req %p (%#08x) to %#x and completing.",
                       *req, (*req)->handle, *error));
     *req = next;
+}
+
+/*
+ * MPIDI_CH3U_Clean_recvq()
+ *
+ * Looks through the entire unexpected recv queue and the posted recv queues.
+ * If a request is found that involved the provided communicator (comm_ptr),
+ * it is dequeed and marked as failed via MPIX_ERR_REVOKED.
+ *
+ * Multithread - This routine must be called from within a MSGQUEUE
+ * critical section.  If a request is allocated, it must not release
+ * the MSGQUEUE until the request is completely valid, as another thread
+ * may then find it and dequeue it.
+ *
+ */
+int MPIDI_CH3U_Clean_recvq(MPID_Comm *comm_ptr)
+{
+    int mpi_errno = MPI_SUCCESS;
+    int error = MPIX_ERR_REVOKED;
+    MPID_Request *rreq, *prev_rreq = NULL;
+    MPIDI_Message_match match;
+    MPIDI_Message_match mask;
+    MPIDI_STATE_DECL(MPIDI_CH3U_CLEAN_RECVQ);
+
+    MPIDI_FUNC_ENTER(MPIDI_CH3U_CLEAN_RECVQ);
+
+    MPIU_THREAD_CS_ASSERT_HELD(MSGQUEUE);
+
+    rreq = recvq_unexpected_head;
+    mask.parts.context_id = ~0;
+    mask.parts.rank = mask.parts.tag = 0;
+
+    /* Clear the error bit in the tag since we don't care about whether or
+     * not we're trying to report an error anymore. */
+    MPIR_TAG_CLEAR_ERROR_BIT(mask.parts.tag);
+
+    while (NULL != rreq) {
+        /* We'll have to do this matching twice. Once for the pt2pt context id
+         * and once for the collective context id */
+        match.parts.context_id = comm_ptr->recvcontext_id + MPID_CONTEXT_INTRA_PT2PT;
+
+        if (MATCH_WITH_LEFT_RIGHT_MASK(rreq->dev.match, match, mask)) {
+            MPIU_DBG_MSG_FMT(CH3_OTHER,VERBOSE,(MPIU_DBG_FDEST,
+                        "cleaning up unexpected pt2pt pkt rank=%d tag=%d contextid=%d",
+                        rreq->dev.match.parts.rank, rreq->dev.match.parts.tag, rreq->dev.match.parts.context_id));
+            dequeue_and_set_error(&rreq, prev_rreq, &recvq_unexpected_head, &recvq_unexpected_tail, &error, MPI_PROC_NULL);
+            continue;
+        }
+
+        match.parts.context_id = comm_ptr->recvcontext_id + MPID_CONTEXT_INTRA_COLL;
+
+        if (MATCH_WITH_LEFT_RIGHT_MASK(rreq->dev.match, match, mask)) {
+            MPIU_DBG_MSG_FMT(CH3_OTHER,VERBOSE,(MPIU_DBG_FDEST,
+                        "cleaning up unexpected collective pkt rank=%d tag=%d contextid=%d",
+                        rreq->dev.match.parts.rank, rreq->dev.match.parts.tag, rreq->dev.match.parts.context_id));
+            dequeue_and_set_error(&rreq, prev_rreq, &recvq_unexpected_head, &recvq_unexpected_tail, &error, MPI_PROC_NULL);
+            continue;
+        }
+
+        prev_rreq = rreq;
+        rreq = rreq->dev.next;
+    }
+
+    rreq = recvq_posted_head;
+    prev_rreq = NULL;
+
+    while (NULL != rreq) {
+        /* We'll have to do this matching twice. Once for the pt2pt context id
+         * and once for the collective context id */
+        match.parts.context_id = comm_ptr->recvcontext_id + MPID_CONTEXT_INTRA_PT2PT;
+
+        if (MATCH_WITH_LEFT_RIGHT_MASK(rreq->dev.match, match, mask)) {
+            MPIU_DBG_MSG_FMT(CH3_OTHER,VERBOSE,(MPIU_DBG_FDEST,
+                        "cleaning up unexpected pt2pt pkt rank=%d tag=%d contextid=%d",
+                        rreq->dev.match.parts.rank, rreq->dev.match.parts.tag, rreq->dev.match.parts.context_id));
+            dequeue_and_set_error(&rreq, prev_rreq, &recvq_posted_head, &recvq_posted_tail, &error, MPI_PROC_NULL);
+            continue;
+        }
+
+        match.parts.context_id = comm_ptr->recvcontext_id + MPID_CONTEXT_INTRA_COLL;
+
+        if (MATCH_WITH_LEFT_RIGHT_MASK(rreq->dev.match, match, mask)) {
+            MPIU_DBG_MSG_FMT(CH3_OTHER,VERBOSE,(MPIU_DBG_FDEST,
+                        "cleaning up unexpected collective pkt rank=%d tag=%d contextid=%d",
+                        rreq->dev.match.parts.rank, rreq->dev.match.parts.tag, rreq->dev.match.parts.context_id));
+            dequeue_and_set_error(&rreq, prev_rreq, &recvq_posted_head, &recvq_posted_tail, &error, MPI_PROC_NULL);
+            continue;
+        }
+
+        rreq = rreq->dev.next;
+    }
+
+    MPIDI_FUNC_EXIT(MPIDI_CH3U_CLEAN_RECVQ);
+
+    return mpi_errno;
 }
 
 #undef FUNCNAME
@@ -911,7 +1007,7 @@ int MPIDI_CH3U_Complete_disabled_anysources(void)
     prev_req = NULL;
     while (req) {
         if (req->dev.match.parts.rank == MPI_ANY_SOURCE && !MPIDI_CH3I_Comm_AS_enabled(req->comm)) {
-            dequeue_and_set_error(&req, prev_req, &error, MPI_PROC_NULL); /* we don't know the rank of the failed proc */
+            dequeue_and_set_error(&req, prev_req, &recvq_posted_head, &recvq_posted_tail, &error, MPI_PROC_NULL); /* we don't know the rank of the failed proc */
         } else {
             prev_req = req;
             req = req->dev.next;
@@ -949,7 +1045,7 @@ int MPIDI_CH3U_Complete_posted_with_error(MPIDI_VC_t *vc)
     prev_req = NULL;
     while (req) {
         if (req->dev.match.parts.rank != MPI_ANY_SOURCE && req_uses_vc(req, vc)) {
-            dequeue_and_set_error(&req, prev_req, &error, vc->pg_rank);
+            dequeue_and_set_error(&req, prev_req, &recvq_posted_head, &recvq_posted_tail, &error, MPI_PROC_NULL);
         } else {
             prev_req = req;
             req = req->dev.next;

@@ -26,6 +26,11 @@ int MPID_Probe(int source, int tag, MPID_Comm * comm, int context_offset,
 	goto fn_exit;
     }
 
+    /* Check to make sure the communicator hasn't already been revoked */
+    if (comm->revoked) {
+        MPIU_ERR_SETANDJUMP(mpi_errno,MPIX_ERR_REVOKED,"**revoked");
+    }
+
 #ifdef ENABLE_COMM_OVERRIDES
     if (MPIDI_Anysource_iprobe_fn) {
         if (source == MPI_ANY_SOURCE) {

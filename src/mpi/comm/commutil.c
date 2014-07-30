@@ -135,6 +135,9 @@ int MPIR_Comm_init(MPID_Comm *comm_p)
     /* abstractions bleed a bit here... :( */
     comm_p->next_sched_tag = MPIR_FIRST_NBC_TAG;
 
+    /* Initialize the revoked flag as false */
+    comm_p->revoked = 0;
+
     /* Fields not set include context_id, remote and local size, and
        kind, since different communicator construction routines need
        different values */

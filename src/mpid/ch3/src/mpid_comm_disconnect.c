@@ -24,10 +24,15 @@
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 int MPID_Comm_disconnect(MPID_Comm *comm_ptr)
 {
-    int mpi_errno;
+    int mpi_errno = MPI_SUCCESS;
     MPIDI_STATE_DECL(MPID_STATE_MPID_COMM_DISCONNECT);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_COMM_DISCONNECT);
+
+    /* Check to make sure the communicator hasn't already been revoked */
+    if (comm_ptr->revoked) {
+        MPIU_ERR_SETANDJUMP(mpi_errno,MPIX_ERR_REVOKED,"**revoked");
+    }
 
     /* Before releasing the communicator, we need to ensure that all VCs are
        in a stable state.  In particular, if a VC is still in the process of

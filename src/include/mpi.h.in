@@ -881,8 +881,9 @@ typedef int (MPIX_Grequest_wait_function)(int, void **, double, MPI_Status *);
 #define MPIX_ERR_PROC_FAILED          MPICH_ERR_FIRST_MPIX+1 /* Process failure */
 #define MPIX_ERR_PROC_FAILED_PENDING  MPICH_ERR_FIRST_MPIX+2 /* A failure has caused this request
                                                               * to be pending */
+#define MPIX_ERR_REVOKED              MPICH_ERR_FIRST_MPIX+3 /* The communciation object has been revoked */
 
-#define MPICH_ERR_LAST_MPIX           MPICH_ERR_FIRST_MPIX+2
+#define MPICH_ERR_LAST_MPIX           MPICH_ERR_FIRST_MPIX+3
 
 
 /* End of MPI's error classes */
@@ -891,7 +892,7 @@ typedef int (MPIX_Grequest_wait_function)(int, void **, double, MPI_Status *);
 typedef int (MPI_Datarep_conversion_function)(void *, MPI_Datatype, int, 
              void *, MPI_Offset, void *);
 typedef int (MPI_Datarep_extent_function)(MPI_Datatype datatype, MPI_Aint *,
-					  void *);
+                      void *);
 #define MPI_CONVERSION_FN_NULL ((MPI_Datarep_conversion_function *)0)
 
 /* 
@@ -1536,6 +1537,7 @@ int MPI_T_category_changed(int *stamp);
 /* Fault Tolerance Extensions */
 int MPIX_Comm_failure_ack(MPI_Comm comm);
 int MPIX_Comm_failure_get_acked(MPI_Comm comm, MPI_Group *failedgrp);
+int MPIX_Comm_revoke(MPI_Comm comm);
 
 
 /* End Prototypes */
@@ -2173,6 +2175,7 @@ int PMPI_T_category_changed(int *stamp);
 /* Fault Tolerance Extensions */
 int PMPIX_Comm_failure_ack(MPI_Comm comm);
 int PMPIX_Comm_failure_get_acked(MPI_Comm comm, MPI_Group *failedgrp);
+int PMPIX_Comm_revoke(MPI_Comm comm);
 
 
 #endif  /* MPI_BUILD_PROFILING */

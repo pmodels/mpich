@@ -36,6 +36,11 @@ int MPID_Issend(const void * buf, int count, MPI_Datatype datatype, int rank, in
     MPIU_DBG_MSG_FMT(CH3_OTHER,VERBOSE,(MPIU_DBG_FDEST,
                  "rank=%d, tag=%d, context=%d", 
                  rank, tag, comm->context_id + context_offset));
+
+    /* Check to make sure the communicator hasn't already been revoked */
+    if (comm->revoked) {
+        MPIU_ERR_SETANDJUMP(mpi_errno,MPIX_ERR_REVOKED,"**revoked");
+    }
     
     if (rank == comm->rank && comm->comm_kind != MPID_INTERCOMM)
     {
@@ -124,6 +129,7 @@ int MPID_Issend(const void * buf, int count, MPI_Datatype datatype, int rank, in
     }
 		  )
     
+  fn_fail:
     MPIDI_FUNC_EXIT(MPID_STATE_MPID_ISSEND);
     return mpi_errno;
 }

@@ -333,3 +333,18 @@ int MPIDI_CH3I_Comm_handle_failed_procs(MPID_Group *new_failed_procs)
  fn_fail:
     goto fn_exit;
 }
+
+void MPIDI_CH3I_Comm_find(MPIR_Context_id_t context_id, MPID_Comm **comm)
+{
+    MPIDI_STATE_DECL(MPIDI_STATE_MPIDI_CH3I_COMM_FIND);
+    MPIDI_FUNC_ENTER(MPIDI_STATE_MPIDI_CH3I_COMM_FIND);
+
+    COMM_FOREACH((*comm)) {
+        if ((*comm)->context_id == context_id) {
+            MPIU_DBG_MSG_D(CH3_OTHER,VERBOSE,"Found matching context id: %d", context_id);
+            break;
+        }
+    }
+
+    MPIDI_FUNC_EXIT(MPIDI_STATE_MPIDI_CH3I_COMM_FIND);
+}

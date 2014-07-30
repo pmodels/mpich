@@ -43,6 +43,11 @@ int MPID_Comm_spawn_multiple(int count, char *array_of_commands[],
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_COMM_SPAWN_MULTIPLE);
 
+    /* Check to make sure the communicator hasn't already been revoked */
+    if (comm_ptr->revoked) {
+        MPIU_ERR_SETANDJUMP(mpi_errno,MPIX_ERR_REVOKED,"**revoked");
+    }
+
     /* We allow an empty implementation of this function to 
        simplify building MPICH on systems that have difficulty
        supporing process creation */
@@ -57,6 +62,8 @@ int MPID_Comm_spawn_multiple(int count, char *array_of_commands[],
 		  "**notimpl %s", FCNAME);
 #   endif
     
+fn_fail:
+fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_MPID_COMM_SPAWN_MULTIPLE);
     return mpi_errno;
 }

@@ -610,6 +610,10 @@ int MPIDI_CH3_PktHandler_Init( MPIDI_CH3_PktHandler_Fcn *pktArray[],
         MPIDI_CH3_PktHandler_Get_AccumResp;
     /* End of default RMA operations */
 
+    /* Fault tolerance */
+    pktArray[MPIDI_CH3_PKT_REVOKE] =
+        MPIDI_CH3_PktHandler_Revoke;
+
  fn_fail:
     MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3_PKTHANDLER_INIT);
     return mpi_errno;

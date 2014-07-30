@@ -39,6 +39,11 @@ int MPID_Recv(void * buf, int count, MPI_Datatype datatype, int rank, int tag,
 	goto fn_exit;
     }
 
+    /* Check to make sure the communicator hasn't already been revoked */
+    if (comm->revoked) {
+        MPIU_ERR_SETANDJUMP(mpi_errno,MPIX_ERR_REVOKED,"**revoked");
+    }
+
     MPIU_THREAD_CS_ENTER(MSGQUEUE,);
     rreq = MPIDI_CH3U_Recvq_FDU_or_AEP(rank, tag, 
 				       comm->recvcontext_id + context_offset,

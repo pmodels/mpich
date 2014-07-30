@@ -1240,6 +1240,9 @@ typedef struct MPID_Comm {
 				       implementting the topology routines */
     int next_sched_tag;             /* used by the NBC schedule code to allocate tags */
 
+    int revoked;                    /* Flag to track whether the communicator
+                                     * has been revoked */
+
     MPID_Info *info;                /* Hints to the communicator */
 
 #ifdef MPID_HAS_HETERO
@@ -2777,6 +2780,18 @@ int MPID_Comm_failure_ack(MPID_Comm *comm);
   'MPI_SUCCESS' or a valid MPI error code.
 @*/
 int MPID_Comm_failure_get_acked(MPID_Comm *comm, MPID_Group **failed_group_ptr);
+
+/*@
+  MPID_Comm_revoke - MPID entry point for MPI_Comm_revoke
+
+  Input Parameters:
+  comm - communicator
+  remote - True if we received the revoke message from a remote process
+
+  Return Value:
+  'MPI_SUCCESS' or a valid MPI error code.
+@*/
+int MPID_Comm_revoke(MPID_Comm *comm, int is_remote);
 
 /*@
   MPID_Send - MPID entry point for MPI_Send
