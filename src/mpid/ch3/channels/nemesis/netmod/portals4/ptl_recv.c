@@ -23,6 +23,10 @@ static void dequeue_req(const ptl_event_t *e)
     rreq->status.MPI_SOURCE = NPTL_MATCH_GET_RANK(e->match_bits);
     rreq->status.MPI_TAG = NPTL_MATCH_GET_TAG(e->match_bits);
 
+    /* At this point we know the ME is unlinked. Invalidate the handle to
+       prevent further accesses, e.g. an attempted cancel. */
+    REQ_PTL(rreq)->me = PTL_INVALID_HANDLE;
+
     MPID_Datatype_get_size_macro(rreq->dev.datatype, r_len);
     r_len *= rreq->dev.user_count;
 
@@ -515,11 +519,23 @@ void MPID_nem_ptl_anysource_posted(MPID_Request *rreq)
 static int cancel_recv(MPID_Request *rreq, int *cancelled)
 {
     int mpi_errno = MPI_SUCCESS;
+    int ptl_err   = PTL_OK;
     MPIDI_STATE_DECL(MPID_STATE_CANCEL_RECV);
 
     MPIDI_FUNC_ENTER(MPID_STATE_CANCEL_RECV);
 
-    MPIU_Assert(0 && "FIXME: Need to implement cancel_recv");
+    *cancelled = FALSE;
+
+    /* An invalid handle indicates the operation has been completed
+       and the matching list entry unlinked. At that point, the operation
+       cannot be cancelled. */
+    if (REQ_PTL(rreq)->me != PTL_INVALID_HANDLE) {
+        ptl_err = PtlMEUnlink(REQ_PTL(rreq)->me);
+        if (ptl_err == PTL_OK)
+            *cancelled = TRUE;
+        else if (ptl_err != PTL_IN_USE)
+            mpi_errno = MPI_ERR_INTERN;
+    }
 
  fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_CANCEL_RECV);
@@ -535,8 +551,8 @@ static int cancel_recv(MPID_Request *rreq, int *cancelled)
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPID_nem_ptl_anysource_matched(MPID_Request *rreq)
 {
-    int mpi_errno = MPI_SUCCESS;
-    int cancelled = 0;
+    int mpi_errno, cancelled;
+
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_PTL_ANYSOURCE_MATCHED);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_PTL_ANYSOURCE_MATCHED);
@@ -547,9 +563,11 @@ int MPID_nem_ptl_anysource_matched(MPID_Request *rreq)
        code. */
     MPIU_Assertp(mpi_errno == MPI_SUCCESS);
 
-    return !cancelled;
-
+ fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_PTL_ANYSOURCE_MATCHED);
+    return !cancelled;
+ fn_fail:
+    goto fn_exit;
 }
 
 
@@ -560,16 +578,21 @@ int MPID_nem_ptl_anysource_matched(MPID_Request *rreq)
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPID_nem_ptl_cancel_recv(MPIDI_VC_t *vc,  MPID_Request *rreq)
 {
-    int mpi_errno = MPI_SUCCESS;
+    int mpi_errno, cancelled;
+
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_PTL_CANCEL_RECV);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_PTL_CANCEL_RECV);
 
-    MPIU_Assert(0 && "implement me");
+    mpi_errno = cancel_recv(rreq, &cancelled);
+    /* FIXME: This function is does not return an error because the queue
+       functions (where the posted_recv hooks are called) return no error
+       code. */
+    MPIU_Assertp(mpi_errno == MPI_SUCCESS);
 
  fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_PTL_CANCEL_RECV);
-    return mpi_errno;
+    return !cancelled;
  fn_fail:
     goto fn_exit;
 }
