@@ -30,6 +30,7 @@ scancel2 2
 pscancel 2 xfail=ticket287
 rcancel 2
 cancelrecv 2 xfail=ticket287
+cancelanysrc 2
 isendselfprobe 1
 inactivereq 1
 waittestnull 1
