@@ -413,12 +413,11 @@ dnl We enable f77 and fc if we can find compilers for them.
 dnl In addition, we check whether f77 and fc can work together.
 AC_ARG_ENABLE(fortran,
 [  --enable-fortran=option - Control the level of Fortran support in the MPICH implementation.
-	yes|all   - Enable all available Fortran implementations (F77, F90, F08)
+	yes|all   - Enable all available Fortran implementations (F77, F90+)
 	f77       - Enable Fortran 77 support
-	f90       - Enable Fortran 90 support
-	f08       - Enable Fortran 2008 support
+	fc        - Enable Fortran 90 and 2008 support
 	no|none   - No Fortran support
-],,[enable_fortran=f77,f90])
+],,[enable_fortran=all])
 
 AC_ARG_ENABLE(f77,
 	AC_HELP_STRING([--enable-f77],
@@ -674,7 +673,6 @@ save_IFS="$IFS"
 IFS=","
 enable_f77=no
 enable_fc=no
-enable_f08=no
 for option in $enable_fortran ; do
     case "$option" in
         yes|all)
@@ -682,17 +680,12 @@ for option in $enable_fortran ; do
 		enable_fc=yes
 		;;
         no|none)
-		enable_f77=no
-		enable_fc=no
 		;;
         f77)
 		enable_f77=yes
 		;;
-        f90)
+        fc)
 		enable_fc=yes
-		;;
-        f08)
-		enable_f08=yes
 		;;
         *)
 		IFS="$save_IFS"
@@ -704,7 +697,7 @@ done
 IFS="$save_IFS"
 
 if test "$enable_f77" = "no" ; then
-   if test "$enable_f90" = "yes" ; then
+   if test "$enable_fc" = "yes" ; then
       AC_MSG_ERROR([Fortran 90 support requires enabling Fortran 77])
    fi
 fi
@@ -2185,7 +2178,7 @@ if test "$enable_fc" = "yes" ; then
 fi
 
 f08_works=no
-if test "$enable_f08" = "yes" ; then
+if test "$enable_fc" = "yes" ; then
     PAC_FC_2008_SUPPORT([f08_works=yes],[f08_works=no])
 fi
 AM_CONDITIONAL([BUILD_F08_BINDING], [test "$f08_works" = "yes"])
