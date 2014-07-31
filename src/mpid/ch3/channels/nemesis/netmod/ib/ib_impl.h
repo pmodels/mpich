@@ -241,7 +241,7 @@ typedef struct MPID_nem_ib_cm_notify_send_req {
 #define MPID_NEM_IB_CM_RELEASED ((uint64_t)(-1))
 #define MPID_NEM_IB_CM_OFF_SYN (256)    /* Align for 256-byte-write PCI command */
 #define MPID_NEM_IB_CM_OFF_CMD (256*2)  /* Align for 256-byte-write PCI command */
-#define MPID_NEM_IB_CM_NSEG 16  /* number of slots to which responder writes its response */
+#define MPID_NEM_IB_CM_NSEG 64  /* number of slots to which responder writes its response */
 
 typedef GENERIC_Q_DECL(MPID_nem_ib_cm_req_t) MPID_nem_ib_cm_sendq_t;
 
