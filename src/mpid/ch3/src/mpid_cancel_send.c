@@ -90,6 +90,16 @@ int MPID_Cancel_send(MPID_Request * sreq)
 	goto fn_exit;
     }
 
+    /* If the message went over a netmod and it provides a cancel_send
+       function, call it here. */
+#ifdef ENABLE_COMM_OVERRIDES
+    if (vc->comm_ops && vc->comm_ops->cancel_send)
+    {
+        mpi_errno = vc->comm_ops->cancel_send(vc, sreq);
+        goto fn_exit;
+    }
+#endif
+
     /* Check to see if the send is still in the send queue.  If so, remove it, 
        mark the request and cancelled and complete, and
        release the device's reference to the request object.  
