@@ -104,41 +104,43 @@ MPIDI_Win_init( MPI_Aint length,
 int
 MPIDI_Win_allgather( MPI_Aint size, MPID_Win **win_ptr )
 {
-    int mpi_errno = MPI_SUCCESS;
-    MPID_Win *win;
-    int rank;
-    MPID_Comm *comm_ptr;
-    size_t length_out = 0;
-    pami_result_t rc;
-    MPIDI_Win_info  *winfo;
-    static char FCNAME[] = "MPIDI_Win_allgather";
+  int mpi_errno = MPI_SUCCESS;
+  MPID_Win *win;
+  int rank;
+  MPID_Comm *comm_ptr;
+  size_t length_out = 0;
+  pami_result_t rc;
+  MPIDI_Win_info  *winfo;
+  static char FCNAME[] = "MPIDI_Win_allgather";
 
   win = *win_ptr;
   comm_ptr = win->comm_ptr;
   rank = comm_ptr->rank;
   winfo = &win->mpid.info[rank];
-  /* --------------------------------------- */
-  /*  Setup the PAMI sections of the window  */
-  /* --------------------------------------- */
-#ifdef USE_PAMI_RDMA
-  if (size != 0)
-    {
-      rc = PAMI_Memregion_create(MPIDI_Context[0], win->mpid.info[rank].base_addr, win->mpid.info[rank].base_size, &length_out, &winfo->memregion);
 
-      MPIU_ERR_CHKANDJUMP((rc != PAMI_SUCCESS), mpi_errno, MPI_ERR_OTHER, "**nomem");
-      MPIU_ERR_CHKANDJUMP((win->size < length_out), mpi_errno, MPI_ERR_OTHER, "**nomem");
-    }
-#else
-  if ( (!MPIDI_Process.mp_s_use_pami_get) && (size != 0) )
+  if (size != 0 && win->create_flavor != MPI_WIN_FLAVOR_SHARED)
     {
-      rc = PAMI_Memregion_create(MPIDI_Context[0], win->mpid.info[rank].base_addr, win->mpid.info[rank].base_size, &length_out, &winfo->memregion);
-      if(rc == PAMI_SUCCESS)
+#ifndef USE_PAMI_RDMA
+      if (!MPIDI_Process.mp_s_use_pami_get)
         {
-          winfo->memregion_used = 1;
-          MPID_assert(win->size == length_out);
-        }
-    }
 #endif
+          /* --------------------------------------- */
+          /*  Setup the PAMI sections of the window  */
+          /* --------------------------------------- */
+          rc = PAMI_Memregion_create(MPIDI_Context[0], win->mpid.info[rank].base_addr, win->mpid.info[rank].base_size, &length_out, &winfo->memregion);
+#ifdef USE_PAMI_RDMA
+          MPIU_ERR_CHKANDJUMP((rc != PAMI_SUCCESS), mpi_errno, MPI_ERR_OTHER, "**nomem");
+          MPIU_ERR_CHKANDJUMP((win->size < length_out), mpi_errno, MPI_ERR_OTHER, "**nomem");
+#else
+          if (rc == PAMI_SUCCESS)
+            {
+              winfo->memregion_used = 1;
+              MPID_assert(win->size == length_out);
+            }
+        }
+#endif
+    }
+
   mpi_errno = MPIR_Allgather_impl(MPI_IN_PLACE,
                                   0,
                                   MPI_DATATYPE_NULL,
