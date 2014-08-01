@@ -34,14 +34,6 @@ MPID_Win_fence(int       assert,
                         return mpi_errno, "**rmasync");
   }
 
-  if ((assert & MPI_MODE_NOPRECEDE) &&
-            win->mpid.sync.origin_epoch_type != MPID_EPOTYPE_NONE) {
-        /* --BEGIN ERROR HANDLING-- */
-        MPIU_ERR_SETANDSTMT(mpi_errno, MPI_ERR_RMA_SYNC,
-                return mpi_errno, "**rmasync");
-        /* --END ERROR HANDLING-- */
-  }
-
   if (!(assert & MPI_MODE_NOPRECEDE) &&
             win->mpid.sync.origin_epoch_type != MPID_EPOTYPE_FENCE &&
             win->mpid.sync.origin_epoch_type != MPID_EPOTYPE_REFENCE &&
@@ -69,6 +61,10 @@ MPID_Win_fence(int       assert,
     win->mpid.sync.target_epoch_type = MPID_EPOTYPE_REFENCE;
   }
 
-  mpi_errno = MPIR_Barrier_impl(win->comm_ptr, &mpi_errno);
+  if (!(assert & MPI_MODE_NOPRECEDE))
+    {
+      mpi_errno = MPIR_Barrier_impl(win->comm_ptr, &mpi_errno);
+    }
+
   return mpi_errno;
 }
