@@ -863,13 +863,6 @@ static inline int req_uses_vc(const MPID_Request* req, const MPIDI_VC_t *vc)
 static inline void dequeue_and_set_error(MPID_Request **req,  MPID_Request *prev_req, MPID_Request **head, MPID_Request **tail, int *error, int rank)
 {
     MPID_Request *next = (*req)->dev.next;
-
-    if (*error == MPI_SUCCESS) {
-        if (rank == MPI_PROC_NULL)
-            MPIU_ERR_SET(*error, MPIX_ERR_PROC_FAILED, "**comm_fail");
-        else
-            MPIU_ERR_SET1(*error, MPIX_ERR_PROC_FAILED, "**comm_fail", "**comm_fail %d", rank);
-    }
     
     /* remove from queue */
     if (*head == *req) {
@@ -907,7 +900,7 @@ static inline void dequeue_and_set_error(MPID_Request **req,  MPID_Request *prev
 int MPIDI_CH3U_Clean_recvq(MPID_Comm *comm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
-    int error = MPIX_ERR_REVOKED;
+    int error = MPI_SUCCESS;
     MPID_Request *rreq, *prev_rreq = NULL;
     MPIDI_Message_match match;
     MPIDI_Message_match mask;
@@ -916,6 +909,8 @@ int MPIDI_CH3U_Clean_recvq(MPID_Comm *comm_ptr)
     MPIDI_FUNC_ENTER(MPIDI_CH3U_CLEAN_RECVQ);
 
     MPIU_THREAD_CS_ASSERT_HELD(MSGQUEUE);
+
+    MPIU_ERR_SETSIMPLE(error, MPIX_ERR_REVOKED, "**revoked");
 
     rreq = recvq_unexpected_head;
     mask.parts.context_id = ~0;
@@ -1004,7 +999,9 @@ int MPIDI_CH3U_Complete_disabled_anysources(void)
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3U_COMPLETE_DISABLED_ANYSOURCES);
     MPIU_THREAD_CS_ENTER(MSGQUEUE,);
-    
+
+    MPIU_ERR_SETSIMPLE(error, MPIX_ERR_PROC_FAILED_PENDING, "**failure_pending");
+
     /* Check each request in the posted queue, and complete-with-error any
        anysource requests posted on communicators that have disabled
        anysources */
@@ -1043,6 +1040,8 @@ int MPIDI_CH3U_Complete_posted_with_error(MPIDI_VC_t *vc)
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDU_COMPLETE_POSTED_WITH_ERROR);
 
     MPIU_THREAD_CS_ENTER(MSGQUEUE,);
+
+    MPIU_ERR_SETSIMPLE(error, MPIX_ERR_PROC_FAILED, "**proc_failed");
 
     /* check each req in the posted queue and complete-with-error any requests
        using this VC. */
