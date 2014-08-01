@@ -107,7 +107,7 @@ void ADIOI_Flatten_datatype(MPI_Datatype datatype)
 void ADIOI_Flatten(MPI_Datatype datatype, ADIOI_Flatlist_node *flat, 
 		  ADIO_Offset st_offset, MPI_Count *curr_index)
 {
-    int i, k, m, n, basic_num, nonzeroth;
+    int i, k, m, n, basic_num, nonzeroth, is_hindexed_block=0;
     int combiner, old_combiner, old_is_contig;
     int nints, nadds, ntypes, old_nints, old_nadds, old_ntypes;
     /* By using ADIO_Offset we preserve +/- sign and 
@@ -484,11 +484,10 @@ void ADIOI_Flatten(MPI_Datatype datatype, ADIOI_Flatlist_node *flat,
 	}
 	break;
 
-        /* FIXME: using the same code as indexed_block for
-         * hindexed_block doesn't look correct.  Needs to be carefully
-         * looked into. */
 #if defined HAVE_DECL_MPI_COMBINER_HINDEXED_BLOCK && HAVE_DECL_MPI_COMBINER_HINDEXED_BLOCK
     case MPI_COMBINER_HINDEXED_BLOCK:
+	is_hindexed_block=1;
+	/* deliberate fall-through */
 #endif
     case MPI_COMBINER_INDEXED_BLOCK:
     #ifdef FLATTEN_DEBUG 
@@ -506,8 +505,13 @@ void ADIOI_Flatten(MPI_Datatype datatype, ADIOI_Flatlist_node *flat,
       /* By using ADIO_Offset we preserve +/- sign and 
          avoid >2G integer arithmetic problems */
       ADIO_Offset stride = ints[1+1];
-        ADIOI_Flatten(types[0], flat,
-         st_offset+stride* ADIOI_AINT_CAST_TO_OFFSET old_extent, curr_index);
+	if (is_hindexed_block) {
+	    ADIOI_Flatten(types[0], flat,
+		    st_offset+adds[0], curr_index);
+	} else {
+	    ADIOI_Flatten(types[0], flat,
+		    st_offset+stride* ADIOI_AINT_CAST_TO_OFFSET old_extent, curr_index);
+	}
   }
 
 	if (prev_index == *curr_index) {
@@ -516,8 +520,14 @@ void ADIOI_Flatten(MPI_Datatype datatype, ADIOI_Flatlist_node *flat,
 	    for (i=j; i<j+top_count; i++) {
       /* By using ADIO_Offset we preserve +/- sign and 
          avoid >2G integer arithmetic problems */
-      ADIO_Offset blocklength = ints[1], stride = ints[1+1+i-j];
-		flat->indices[i]   = st_offset + stride* ADIOI_AINT_CAST_TO_OFFSET old_extent;
+		ADIO_Offset blocklength = ints[1];
+		if (is_hindexed_block) {
+		    flat->indices[i] = st_offset + adds[i-j];
+		} else {
+		    ADIO_Offset stride = ints[1+1+i-j];
+		    flat->indices[i] = st_offset +
+			stride* ADIOI_AINT_CAST_TO_OFFSET old_extent;
+		}
 		flat->blocklens[i] = blocklength* ADIOI_AINT_CAST_TO_OFFSET old_extent;
 	    }
 	    *curr_index = i;
@@ -532,7 +542,13 @@ void ADIOI_Flatten(MPI_Datatype datatype, ADIOI_Flatlist_node *flat,
    and then strided. Replicate the first one. */
 	    for (m=1; m<ints[1]; m++) {
 		for (i=0; i<num; i++) {
-		    flat->indices[j]   = flat->indices[j-num] + ADIOI_AINT_CAST_TO_OFFSET old_extent;
+		    if (is_hindexed_block) {
+			/* this is the one place the hindexed case uses the
+			 * extent of a type */
+			MPI_Type_extent(types[0], &old_extent);
+		    }
+		    flat->indices[j] = flat->indices[j-num] +
+			ADIOI_AINT_CAST_TO_OFFSET old_extent;
 		    flat->blocklens[j] = flat->blocklens[j-num];
 		    j++;
 		}
@@ -543,10 +559,16 @@ void ADIOI_Flatten(MPI_Datatype datatype, ADIOI_Flatlist_node *flat,
 	    num = *curr_index - prev_index;
 	    for (i=1; i<top_count; i++) {
 		for (m=0; m<num; m++) {
-      /* By using ADIO_Offset we preserve +/- sign and 
-         avoid >2G integer arithmetic problems */
-      ADIO_Offset stride = ints[2+i]-ints[1+i];
-		    flat->indices[j]   = flat->indices[j-num] + stride* ADIOI_AINT_CAST_TO_OFFSET old_extent;
+		    if (is_hindexed_block) {
+			flat->indices[j] = flat->indices[j-num] +
+			    adds[i] - adds[i-1];
+		    } else {
+			/* By using ADIO_Offset we preserve +/- sign and
+			   avoid >2G integer arithmetic problems */
+			ADIO_Offset stride = ints[2+i]-ints[1+i];
+			flat->indices[j] = flat->indices[j-num] +
+			    stride* ADIOI_AINT_CAST_TO_OFFSET old_extent;
+		    }
 		    flat->blocklens[j] = flat->blocklens[j-num];
 		    j++;
 		}
@@ -963,6 +985,9 @@ MPI_Count ADIOI_Count_contiguous_blocks(MPI_Datatype datatype, MPI_Count *curr_i
 	}
 	break;
 
+#if defined HAVE_DECL_MPI_COMBINER_HINDEXED_BLOCK && HAVE_DECL_MPI_COMBINER_HINDEXED_BLOCK
+    case MPI_COMBINER_HINDEXED_BLOCK:
+#endif
     case MPI_COMBINER_INDEXED_BLOCK:
         top_count = ints[0];
         MPI_Type_get_envelope(types[0], &old_nints, &old_nadds,
