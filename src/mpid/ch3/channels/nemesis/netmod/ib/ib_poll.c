@@ -1477,7 +1477,7 @@ int MPID_nem_ib_recv_buf_released(struct MPIDI_VC *vc, void *user_data)
         (unsigned long) ((uint8_t *) user_data -
                          (uint8_t *) vc_ib->ibcom->remote_ringbuf->start) /
         MPID_NEM_IB_COM_RDMABUF_SZSEG;
-    MPIU_Assert(0 <= index_slot && index_slot < (uint16_t) (vc_ib->ibcom->remote_ringbuf->nslot));
+    MPIU_Assert(index_slot < (uint16_t) (vc_ib->ibcom->remote_ringbuf->nslot));
     dprintf("released,user_data=%p,mem=%p,sub=%08lx,index_slot=%d\n",
             user_data, vc_ib->ibcom->remote_ringbuf->start,
             (unsigned long) user_data -
