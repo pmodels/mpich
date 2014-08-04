@@ -28,18 +28,22 @@
         }                                                                         \
     } while (0)
 
+#define LARGE_DIM 512
+#define LARGE_SZ (LARGE_DIM * LARGE_DIM)
+
 int main(int argc, char **argv)
 {
     int errs = 0;
     int found, completed;
     int rank, size;
-    int sendbuf[8], recvbuf[8];
-    int count;
+    int sendbuf[LARGE_SZ], recvbuf[LARGE_SZ];
+    int count, i;
 #ifdef TEST_MPROBE_ROUTINES
     MPI_Message msg;
 #endif
     MPI_Request rreq;
     MPI_Status s1, s2;
+    MPI_Datatype vectype;
 
     MPI_Init(&argc, &argv);
 
@@ -354,6 +358,162 @@ int main(int argc, char **argv)
         MPI_Get_count(&s2, MPI_INT, &count);
         check(count == 0);
     }
+
+    /* test 8: simple ssend & mprobe+mrecv */
+    if (rank == 0) {
+        sendbuf[0] = 0xdeadbeef;
+        sendbuf[1] = 0xfeedface;
+        MPI_Ssend(sendbuf, 2, MPI_INT, 1, 5, MPI_COMM_WORLD);
+    }
+    else {
+        memset(&s1, 0xab, sizeof(MPI_Status));
+        memset(&s2, 0xab, sizeof(MPI_Status));
+        /* the error field should remain unmodified */
+        s1.MPI_ERROR = MPI_ERR_DIMS;
+        s2.MPI_ERROR = MPI_ERR_TOPOLOGY;
+
+        msg = MPI_MESSAGE_NULL;
+        MPI_Mprobe(0, 5, MPI_COMM_WORLD, &msg, &s1);
+        check(s1.MPI_SOURCE == 0);
+        check(s1.MPI_TAG == 5);
+        check(s1.MPI_ERROR == MPI_ERR_DIMS);
+        check(msg != MPI_MESSAGE_NULL);
+
+        count = -1;
+        MPI_Get_count(&s1, MPI_INT, &count);
+        check(count == 2);
+
+        recvbuf[0] = 0x01234567;
+        recvbuf[1] = 0x89abcdef;
+        MPI_Mrecv(recvbuf, count, MPI_INT, &msg, &s2);
+        check(recvbuf[0] == 0xdeadbeef);
+        check(recvbuf[1] == 0xfeedface);
+        check(s2.MPI_SOURCE == 0);
+        check(s2.MPI_TAG == 5);
+        check(s2.MPI_ERROR == MPI_ERR_TOPOLOGY);
+        check(msg == MPI_MESSAGE_NULL);
+    }
+
+    /* test 9: mprobe+mrecv LARGE */
+    if (rank == 0) {
+        for (i = 0; i < LARGE_SZ; i++)
+            sendbuf[i] = i;
+        MPI_Send(sendbuf, LARGE_SZ, MPI_INT, 1, 5, MPI_COMM_WORLD);
+    }
+    else {
+        memset(&s1, 0xab, sizeof(MPI_Status));
+        memset(&s2, 0xab, sizeof(MPI_Status));
+        /* the error field should remain unmodified */
+        s1.MPI_ERROR = MPI_ERR_DIMS;
+        s2.MPI_ERROR = MPI_ERR_TOPOLOGY;
+
+        msg = MPI_MESSAGE_NULL;
+        MPI_Mprobe(0, 5, MPI_COMM_WORLD, &msg, &s1);
+        check(s1.MPI_SOURCE == 0);
+        check(s1.MPI_TAG == 5);
+        check(s1.MPI_ERROR == MPI_ERR_DIMS);
+        check(msg != MPI_MESSAGE_NULL);
+
+        count = -1;
+        MPI_Get_count(&s1, MPI_INT, &count);
+        check(count == LARGE_SZ);
+
+        memset(recvbuf, 0xFF, LARGE_SZ * sizeof(int));
+        MPI_Mrecv(recvbuf, count, MPI_INT, &msg, &s2);
+        for (i = 0; i < LARGE_SZ; i++)
+            check(recvbuf[i] == i);
+        check(s2.MPI_SOURCE == 0);
+        check(s2.MPI_TAG == 5);
+        check(s2.MPI_ERROR == MPI_ERR_TOPOLOGY);
+        check(msg == MPI_MESSAGE_NULL);
+    }
+
+    /* test 10: mprobe+mrecv noncontiguous datatype */
+    MPI_Type_vector(2, 1, 4, MPI_INT, &vectype);
+    MPI_Type_commit(&vectype);
+    if (rank == 0) {
+        memset(sendbuf, 0, 8 * sizeof(int));
+        sendbuf[0] = 0xdeadbeef;
+        sendbuf[4] = 0xfeedface;
+        MPI_Send(sendbuf, 1, vectype, 1, 5, MPI_COMM_WORLD);
+    }
+    else {
+        memset(&s1, 0xab, sizeof(MPI_Status));
+        memset(&s2, 0xab, sizeof(MPI_Status));
+        /* the error field should remain unmodified */
+        s1.MPI_ERROR = MPI_ERR_DIMS;
+        s2.MPI_ERROR = MPI_ERR_TOPOLOGY;
+
+        msg = MPI_MESSAGE_NULL;
+        MPI_Mprobe(0, 5, MPI_COMM_WORLD, &msg, &s1);
+        check(s1.MPI_SOURCE == 0);
+        check(s1.MPI_TAG == 5);
+        check(s1.MPI_ERROR == MPI_ERR_DIMS);
+        check(msg != MPI_MESSAGE_NULL);
+
+        count = -1;
+        MPI_Get_count(&s1, vectype, &count);
+        check(count == 1);
+
+        memset(recvbuf, 0, 8 * sizeof(int));
+        MPI_Mrecv(recvbuf, 1, vectype, &msg, &s2);
+        check(recvbuf[0] == 0xdeadbeef);
+        for (i = 1; i < 4; i++)
+            check(recvbuf[i] == 0);
+        check(recvbuf[4] = 0xfeedface);
+        for (i = 5; i < 8; i++)
+            check(recvbuf[i] == 0);
+        check(s2.MPI_SOURCE == 0);
+        check(s2.MPI_TAG == 5);
+        check(s2.MPI_ERROR == MPI_ERR_TOPOLOGY);
+        check(msg == MPI_MESSAGE_NULL);
+    }
+    MPI_Type_free(&vectype);
+
+    /* test 11: mprobe+mrecv noncontiguous datatype LARGE */
+    MPI_Type_vector(LARGE_DIM, LARGE_DIM - 1, LARGE_DIM, MPI_INT, &vectype);
+    MPI_Type_commit(&vectype);
+    if (rank == 0) {
+        for (i = 0; i < LARGE_SZ; i++)
+            sendbuf[i] = i;
+        MPI_Send(sendbuf, 1, vectype, 1, 5, MPI_COMM_WORLD);
+    }
+    else {
+        int idx = 0;
+
+        memset(&s1, 0xab, sizeof(MPI_Status));
+        memset(&s2, 0xab, sizeof(MPI_Status));
+        /* the error field should remain unmodified */
+        s1.MPI_ERROR = MPI_ERR_DIMS;
+        s2.MPI_ERROR = MPI_ERR_TOPOLOGY;
+
+        msg = MPI_MESSAGE_NULL;
+        MPI_Mprobe(0, 5, MPI_COMM_WORLD, &msg, &s1);
+        check(s1.MPI_SOURCE == 0);
+        check(s1.MPI_TAG == 5);
+        check(s1.MPI_ERROR == MPI_ERR_DIMS);
+        check(msg != MPI_MESSAGE_NULL);
+
+        count = -1;
+        MPI_Get_count(&s1, vectype, &count);
+        check(count == 1);
+
+        memset(recvbuf, 0, LARGE_SZ * sizeof(int));
+        MPI_Mrecv(recvbuf, 1, vectype, &msg, &s2);
+        for (i = 0; i < LARGE_DIM; i++) {
+            int j;
+            for (j = 0; j < LARGE_DIM - 1; j++) {
+                check(recvbuf[idx] == idx);
+                ++idx;
+            }
+            check(recvbuf[idx++] == 0);
+        }
+        check(s2.MPI_SOURCE == 0);
+        check(s2.MPI_TAG == 5);
+        check(s2.MPI_ERROR == MPI_ERR_TOPOLOGY);
+        check(msg == MPI_MESSAGE_NULL);
+    }
+    MPI_Type_free(&vectype);
 
     /* TODO MPI_ANY_SOURCE and MPI_ANY_TAG should be tested as well */
     /* TODO a full range of message sizes should be tested too */
