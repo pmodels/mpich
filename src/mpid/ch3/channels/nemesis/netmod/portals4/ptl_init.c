@@ -97,7 +97,9 @@ static int ptl_init(MPIDI_PG_t *pg_p, int pg_rank, char **bc_val_p, int *val_max
 
     mpi_errno = MPIDI_CH3I_Register_anysource_notification(MPID_nem_ptl_anysource_posted, MPID_nem_ptl_anysource_matched);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-    
+
+    MPIDI_Anysource_improbe_fn = MPID_nem_ptl_anysource_improbe;
+
     /* init portals */
     ret = PtlInit();
     MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlinit", "**ptlinit %s", MPID_nem_ptl_strerror(ret));
@@ -280,6 +282,13 @@ static int vc_init(MPIDI_VC_t *vc)
     vc->sendNoncontig_fn   = MPID_nem_ptl_SendNoncontig;
     vc_ch->iStartContigMsg = MPID_nem_ptl_iStartContigMsg;
     vc_ch->iSendContig     = MPID_nem_ptl_iSendContig;
+
+    vc_ch->lmt_initiate_lmt  = MPID_nem_ptl_lmt_initiate_lmt;
+    vc_ch->lmt_start_recv    = MPID_nem_ptl_lmt_start_recv;
+    vc_ch->lmt_start_send    = MPID_nem_ptl_lmt_start_send;
+    vc_ch->lmt_handle_cookie = MPID_nem_ptl_lmt_handle_cookie;
+    vc_ch->lmt_done_send     = MPID_nem_ptl_lmt_done_send;
+    vc_ch->lmt_done_recv     = MPID_nem_ptl_lmt_done_recv;
 
     vc->comm_ops = &comm_ops;
 
