@@ -533,8 +533,10 @@ static int cancel_recv(MPID_Request *rreq, int *cancelled)
         ptl_err = PtlMEUnlink(REQ_PTL(rreq)->me);
         if (ptl_err == PTL_OK)
             *cancelled = TRUE;
-        else if (ptl_err != PTL_IN_USE)
-            mpi_errno = MPI_ERR_INTERN;
+        /* FIXME: if we properly invalidate matching list entry handles, we should be
+           able to ensure an unlink operation results in either PTL_OK or PTL_IN_USE.
+           Anything else would be an error. For now, though, we assume anything but PTL_OK
+           is uncancelable and return. */
     }
 
  fn_exit:
@@ -560,12 +562,12 @@ int MPID_nem_ptl_anysource_matched(MPID_Request *rreq)
     mpi_errno = cancel_recv(rreq, &cancelled);
     /* FIXME: This function is does not return an error because the queue
        functions (where the posted_recv hooks are called) return no error
-       code. */
+       code. See also comment on cancel_recv. */
     MPIU_Assertp(mpi_errno == MPI_SUCCESS);
 
  fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_PTL_ANYSOURCE_MATCHED);
-    return !cancelled;
+    return MPI_SUCCESS;
  fn_fail:
     goto fn_exit;
 }
