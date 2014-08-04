@@ -129,9 +129,9 @@ typedef struct {
 #define NPTL_MATCH_RANK_MASK (((ptl_match_bits_t)(1) << 16) - 1)
 #define NPTL_MATCH_CTX_MASK ((((ptl_match_bits_t)(1) << 16) - 1) << NPTL_MATCH_CTX_OFFSET)
 #define NPTL_MATCH_TAG_MASK ((((ptl_match_bits_t)(1) << 32) - 1) << NPTL_MATCH_TAG_OFFSET)
-#define NPTL_MATCH(tag_, ctx_, rank_) (((ptl_match_bits_t)(tag_) << NPTL_MATCH_TAG_OFFSET) |     \
-                                       ((ptl_match_bits_t)(ctx_) << NPTL_MATCH_CTX_OFFSET) |     \
-                                       ((ptl_match_bits_t)(rank_)))
+#define NPTL_MATCH(tag_, ctx_, rank_) ((((ptl_match_bits_t)(tag_) << NPTL_MATCH_TAG_OFFSET) & NPTL_MATCH_TAG_MASK) | \
+                                       (((ptl_match_bits_t)(ctx_) << NPTL_MATCH_CTX_OFFSET) & NPTL_MATCH_CTX_MASK) | \
+                                       ((ptl_match_bits_t)(rank_) & NPTL_MATCH_RANK_MASK))
 #define NPTL_MATCH_IGNORE NPTL_MATCH_RANK_MASK
 #define NPTL_MATCH_IGNORE_ANY_TAG (NPTL_MATCH_IGNORE | NPTL_MATCH_TAG_MASK)
 
