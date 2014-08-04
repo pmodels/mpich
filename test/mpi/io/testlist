@@ -10,3 +10,4 @@ userioerr 1
 resized 1
 resized2 1 xfail=ticket2088
 bigtype 1
+hindexed_io 1

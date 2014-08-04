@@ -24,7 +24,8 @@ noinst_PROGRAMS = \
     userioerr     \
     resized       \
     resized2      \
-    bigtype
+    bigtype       \
+    hindexed_io
 
 clean-local:
 	-rm -f testfile testfile.*
