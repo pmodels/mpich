@@ -1677,7 +1677,7 @@ int MPID_nem_ib_cm_cas(MPIDI_VC_t * vc, uint32_t ask_on_connect)
     MPIU_ERR_CHKANDJUMP(!req, mpi_errno, MPI_ERR_OTHER, "**malloc");
     dprintf("req=%p\n", req);
     req->state = MPID_NEM_IB_CM_CAS;
-    req->ref_count = 2; /* Released on receiving ACK2 and draining SCQ of ACK1 */
+    req->ref_count = 3; /* Released on receiving ACK2 and draining SCQ of SYN and ACK1 */
     req->retry_backoff = 0;
     req->initiator_rank = MPID_nem_ib_myrank;
     req->responder_rank = vc->pg_rank;

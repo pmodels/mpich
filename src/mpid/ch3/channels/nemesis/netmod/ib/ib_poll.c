@@ -2561,6 +2561,7 @@ int MPID_nem_ib_cm_drain_scq()
             dprintf("cm_drain_scq,tx=%d\n", shadow_cm->req->ibcom->outstanding_connection_tx);
             dprintf("cm_drain_scq,syn,buf_from=%p,sz=%d\n", shadow_cm->buf_from,
                     shadow_cm->buf_from_sz);
+            MPID_nem_ib_cm_request_release(shadow_cm->req);
             MPID_nem_ib_rdmawr_from_free(shadow_cm->buf_from, shadow_cm->buf_from_sz);
             MPIU_Free(shadow_cm);
             break;
@@ -3228,9 +3229,11 @@ int MPID_nem_ib_cm_poll()
                 MPID_nem_ib_send_progress(MPID_nem_ib_conns[req->responder_rank].vc);
                 /* Let the following connection request go */
                 VC_FIELD(MPID_nem_ib_conns[req->responder_rank].vc, connection_guard) = 0;
-                /* free memory : req->ref_count is 2, so call MPIU_Free() directly */
-                //MPID_nem_ib_cm_request_release(req);
-                MPIU_Free(req);
+                /* Call cm_request_release twice.
+                 * If ref_count == 2, the memory of request is released here.
+                 * If ref_count == 3, the memory of request will be released on draining SCQ of SYN. */
+                MPID_nem_ib_cm_request_release(req);
+                MPID_nem_ib_cm_request_release(req);
             }
             //goto common_tail;
             break;
