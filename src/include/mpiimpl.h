@@ -499,7 +499,7 @@ int MPIU_Handle_free( void *((*)[]), int );
      if ((ptr) && MPIU_Object_get_ref(ptr) <= 0) {    \
          MPIU_ERR_SET(err,MPI_ERR_COMM,"**comm");     \
          ptr = 0;                                     \
-     } else if (ptr->revoked && !ignore_rev) {        \
+     } else if ((ptr) && (ptr)->revoked && !(ignore_rev)) {        \
          MPIU_ERR_SET(err,MPIX_ERR_REVOKED,"**comm"); \
      }                                                \
 }
