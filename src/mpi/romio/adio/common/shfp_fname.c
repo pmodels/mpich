@@ -14,6 +14,9 @@
 #include <sys/types.h>
 #endif
 
+#ifdef HAVE_TIME_H
+#include <time.h>
+#endif
 /* The following function selects the name of the file to be used to 
    store the shared file pointer. The shared-file-pointer file is a 
    hidden file in the same directory as the real file being accessed.
