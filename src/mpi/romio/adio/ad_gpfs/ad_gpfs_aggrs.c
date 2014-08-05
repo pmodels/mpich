@@ -536,8 +536,8 @@ void ADIOI_GPFS_Calc_my_req(ADIO_File fd, ADIO_Offset *offset_list, ADIO_Offset 
 	if (count_my_req_per_proc[i]) {
 	    my_req[i].offsets = (ADIO_Offset *)
 		ADIOI_Malloc(count_my_req_per_proc[i] * sizeof(ADIO_Offset));
-	    my_req[i].lens = (int *)
-		ADIOI_Malloc(count_my_req_per_proc[i] * sizeof(int));
+	    my_req[i].lens =
+		ADIOI_Malloc(count_my_req_per_proc[i] * sizeof(ADIO_Offset));
 	    count_my_req_procs++;
 	}
 	my_req[i].count = 0;  /* will be incremented where needed
@@ -574,8 +574,7 @@ void ADIOI_GPFS_Calc_my_req(ADIO_File fd, ADIO_Offset *offset_list, ADIO_Offset 
 	 * and the associated count.
 	 */
 	my_req[proc].offsets[l] = off;
-  ADIOI_Assert(fd_len == (int) fd_len);
-	my_req[proc].lens[l] = (int) fd_len;
+	my_req[proc].lens[l] = fd_len;
 	my_req[proc].count++;
 
 	while (rem_len > 0) {
@@ -595,8 +594,7 @@ void ADIOI_GPFS_Calc_my_req(ADIO_File fd, ADIO_Offset *offset_list, ADIO_Offset 
 	    rem_len -= fd_len;
 
 	    my_req[proc].offsets[l] = off;
-      ADIOI_Assert(fd_len == (int) fd_len);
-	    my_req[proc].lens[l] = (int) fd_len;
+	    my_req[proc].lens[l] = fd_len;
 	    my_req[proc].count++;
 	}
     }
@@ -718,8 +716,8 @@ void ADIOI_GPFS_Calc_others_req(ADIO_File fd, int count_my_req_procs,
 
 	    others_req[i].offsets = (ADIO_Offset *)
 		ADIOI_Malloc(count_others_req_per_proc[i]*sizeof(ADIO_Offset));
-	    others_req[i].lens = (int *)
-		ADIOI_Malloc(count_others_req_per_proc[i]*sizeof(int));
+	    others_req[i].lens =
+		ADIOI_Malloc(count_others_req_per_proc[i]*sizeof(ADIO_Offset));
 
 	    if ( (MPIR_Upint)others_req[i].offsets < (MPIR_Upint)recvBufForOffsets )
 		recvBufForOffsets = others_req[i].offsets;
@@ -813,7 +811,7 @@ void ADIOI_GPFS_Calc_others_req(ADIO_File fd, int count_my_req_procs,
 	  sdispls[i] = (int)
 	               ( ( (MPIR_Upint)my_req[i].lens -
 			   (MPIR_Upint)sendBufForLens ) /
-			 (MPIR_Upint) sizeof(int) );
+			 (MPIR_Upint) sizeof(ADIO_Offset) );
 
 	/* Receive these offsets from process i. */
 	rcounts[i] = count_others_req_per_proc[i];
@@ -823,14 +821,14 @@ void ADIOI_GPFS_Calc_others_req(ADIO_File fd, int count_my_req_procs,
 	    rdispls[i] = (int)
 	                 ( ( (MPIR_Upint)others_req[i].lens -
 			     (MPIR_Upint)recvBufForLens ) /
-			   (MPIR_Upint) sizeof(int) );
+			   (MPIR_Upint) sizeof(ADIO_Offset) );
     }
 
     /* Exchange the lengths */
     MPI_Alltoallv(sendBufForLens,
-		  scounts, sdispls, MPI_INT,
+		  scounts, sdispls, ADIO_OFFSET,
 		  recvBufForLens,
-		  rcounts, rdispls, MPI_INT,
+		  rcounts, rdispls, ADIO_OFFSET,
 		  fd->comm);
 
     /* Clean up */

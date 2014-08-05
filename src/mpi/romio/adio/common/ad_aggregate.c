@@ -335,8 +335,8 @@ void ADIOI_Calc_my_req(ADIO_File fd, ADIO_Offset *offset_list, ADIO_Offset *len_
 	if (count_my_req_per_proc[i]) {
 	    my_req[i].offsets = (ADIO_Offset *)
 		ADIOI_Malloc(count_my_req_per_proc[i] * sizeof(ADIO_Offset));
-	    my_req[i].lens = (int *)
-		ADIOI_Malloc(count_my_req_per_proc[i] * sizeof(int));
+	    my_req[i].lens =
+		ADIOI_Malloc(count_my_req_per_proc[i] * sizeof(ADIO_Offset));
 	    count_my_req_procs++;
 	}	    
 	my_req[i].count = 0;  /* will be incremented where needed
@@ -373,8 +373,7 @@ void ADIOI_Calc_my_req(ADIO_File fd, ADIO_Offset *offset_list, ADIO_Offset *len_
 	 * and the associated count. 
 	 */
 	my_req[proc].offsets[l] = off;
-  ADIOI_Assert(fd_len == (int) fd_len);
-	my_req[proc].lens[l] = (int) fd_len;
+	my_req[proc].lens[l] = fd_len;
 	my_req[proc].count++;
 
 	while (rem_len != 0) {
@@ -394,8 +393,7 @@ void ADIOI_Calc_my_req(ADIO_File fd, ADIO_Offset *offset_list, ADIO_Offset *len_
 	    rem_len -= fd_len;
 
 	    my_req[proc].offsets[l] = off;
-      ADIOI_Assert(fd_len == (int) fd_len);
-	    my_req[proc].lens[l] = (int) fd_len;
+	    my_req[proc].lens[l] = fd_len;
 	    my_req[proc].count++;
 	}
     }
@@ -463,8 +461,8 @@ void ADIOI_Calc_others_req(ADIO_File fd, int count_my_req_procs,
 	    others_req[i].count = count_others_req_per_proc[i];
 	    others_req[i].offsets = (ADIO_Offset *)
 		ADIOI_Malloc(count_others_req_per_proc[i]*sizeof(ADIO_Offset));
-	    others_req[i].lens = (int *)
-		ADIOI_Malloc(count_others_req_per_proc[i]*sizeof(int)); 
+	    others_req[i].lens =
+		ADIOI_Malloc(count_others_req_per_proc[i]*sizeof(ADIO_Offset));
 	    others_req[i].mem_ptrs = (MPI_Aint *)
 		ADIOI_Malloc(count_others_req_per_proc[i]*sizeof(MPI_Aint)); 
 	    count_others_req_procs++;
@@ -485,7 +483,7 @@ void ADIOI_Calc_others_req(ADIO_File fd, int count_my_req_procs,
                       ADIO_OFFSET, i, i+myrank, fd->comm, &requests[j]);
 	    j++;
 	    MPI_Irecv(others_req[i].lens, others_req[i].count, 
-                      MPI_INT, i, i+myrank+1, fd->comm, &requests[j]);
+                      ADIO_OFFSET, i, i+myrank+1, fd->comm, &requests[j]);
 	    j++;
 	}
     }
@@ -496,7 +494,7 @@ void ADIOI_Calc_others_req(ADIO_File fd, int count_my_req_procs,
                       ADIO_OFFSET, i, i+myrank, fd->comm, &requests[j]);
 	    j++;
 	    MPI_Isend(my_req[i].lens, my_req[i].count, 
-                      MPI_INT, i, i+myrank+1, fd->comm, &requests[j]);
+                      ADIO_OFFSET, i, i+myrank+1, fd->comm, &requests[j]);
 	    j++;
 	}
     }

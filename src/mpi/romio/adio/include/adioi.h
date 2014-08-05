@@ -307,9 +307,7 @@ struct ADIOI_Fns_struct {
    as array of structures indexed by process number. */
 typedef struct {
     ADIO_Offset *offsets;   /* array of offsets */
-    int *lens;              /* array of lengths */ 
-    /* consider aints or offsets for lens? Seems to be used as in-memory
-       buffer lengths, so it should be < 2G and ok as an int          */
+    ADIO_Offset *lens;      /* array of lengths */
     MPI_Aint *mem_ptrs;     /* array of pointers. used in the read/write
 			       phase to indicate where the data
 			       is stored in memory */
@@ -320,7 +318,7 @@ typedef struct {
    file realms among other things */
 typedef struct {
     ADIO_Offset *offsets; /* array of offsets */
-    int *lens;           /* array of lengths */
+    ADIO_Offset *lens;    /* array of lengths */
     int count;            /* size of above arrays */
 } ADIOI_Offlen;
 

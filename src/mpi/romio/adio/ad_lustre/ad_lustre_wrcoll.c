@@ -656,7 +656,7 @@ static void ADIOI_LUSTRE_W_Exchange_data(ADIO_File fd, const void *buf,
     j = 0;
     for (i = 0; i < nprocs; i++) {
 	if (recv_size[i]) {
-	    MPI_Type_hindexed(count[i],
+	    ADIOI_Type_create_hindexed_x(count[i],
 			      &(others_req[i].lens[start_pos[i]]),
 			      &(others_req[i].mem_ptrs[start_pos[i]]),
 			      MPI_BYTE, recv_types + j);

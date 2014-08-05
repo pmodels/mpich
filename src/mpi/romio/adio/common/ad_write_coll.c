@@ -611,8 +611,8 @@ static void ADIOI_W_Exchange_data(ADIO_File fd, void *buf, char *write_buf,
 		tmp_len[i] = others_req[i].lens[k];
 		others_req[i].lens[k] = partial_recv[i];
 	    }
-	    MPI_Type_hindexed(count[i], 
-                 &(others_req[i].lens[start_pos[i]]),
+	    ADIOI_Type_create_hindexed_x(count[i],
+		     &(others_req[i].lens[start_pos[i]]),
 	             &(others_req[i].mem_ptrs[start_pos[i]]), 
 			 MPI_BYTE, recv_types+j);
 	    /* absolute displacements; use MPI_BOTTOM in recv */
@@ -974,7 +974,7 @@ void ADIOI_Heap_merge(ADIOI_Access *others_req, int *count,
 {
     typedef struct {
 	ADIO_Offset *off_list;
-	int *len_list;
+	ADIO_Offset *len_list;
 	int nelem;
     } heap_struct;
 
