@@ -24,7 +24,7 @@ enum {
     STRUCT
 } testcases;
 
-int test_indexed_with_zeros(char *filename, int testcase)
+static int test_indexed_with_zeros(char *filename, int testcase)
 {
     int i, rank, np, buflen, num, err, nr_errors=0;
     int  nelms[MAXLEN], buf[MAXLEN], indices[MAXLEN], blocklen[MAXLEN];
