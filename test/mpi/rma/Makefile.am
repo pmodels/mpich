@@ -84,6 +84,7 @@ noinst_PROGRAMS =          \
     win_shared             \
     win_shared_noncontig   \
     win_shared_noncontig_put \
+    win_shared_zerobyte    \
     win_zero               \
     win_large_shm          \
     win_dynamic_acc        \
