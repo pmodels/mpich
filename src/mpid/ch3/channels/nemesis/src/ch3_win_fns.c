@@ -303,17 +303,24 @@ static int MPIDI_CH3I_Win_allocate_shm(MPI_Aint size, int disp_unit, MPID_Info *
         }
 
         char *cur_base = (*win_ptr)->shm_base_addr;
+        int cur_rank = 0;
         node_shm_base_addrs[0] = (*win_ptr)->shm_base_addr;
         for (i = 1; i < node_size; ++i) {
             if (node_sizes[i]) {
+                /* For the base addresses, we track the previous
+                 * process that has allocated non-zero bytes of shared
+                 * memory.  We can not simply use "i-1" for the
+                 * previous process because rank "i-1" might not have
+                 * allocated any memory. */
                 if (noncontig) {
-                    node_shm_base_addrs[i] = cur_base + MPIDI_CH3_ROUND_UP_PAGESIZE(node_sizes[i-1]);
+                    node_shm_base_addrs[i] = cur_base + MPIDI_CH3_ROUND_UP_PAGESIZE(node_sizes[cur_rank]);
                 } else {
-                    node_shm_base_addrs[i] = cur_base + node_sizes[i-1];
+                    node_shm_base_addrs[i] = cur_base + node_sizes[cur_rank];
                 }
                 cur_base = node_shm_base_addrs[i];
+                cur_rank = i;
             } else {
-                node_shm_base_addrs[i] = NULL; /* FIXME: Is this right? */
+                node_shm_base_addrs[i] = NULL;
             }
         }
 
