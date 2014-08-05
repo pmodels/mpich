@@ -25,7 +25,6 @@
 
 void ADIOI_Shfp_fname(ADIO_File fd, int rank)
 {
-    double tm;
     int i;
     int len;
     char *slash, *ptr, tmp[128];
@@ -34,12 +33,8 @@ void ADIOI_Shfp_fname(ADIO_File fd, int rank)
     fd->shared_fp_fname = (char *) ADIOI_Malloc(256);
 
     if (!rank) {
-	tm = MPI_Wtime();
-	while (tm > 1000000000.0) tm -= 1000000000.0;
-	i = (int) tm;
-	tm = tm - (double) i;
-	tm *= 1000000.0;
-	i = (int) tm;
+        srand(time(NULL));
+        i = rand();
 	pid = (int)getpid();
 	
 	ADIOI_Strncpy(fd->shared_fp_fname, fd->filename, 256);
