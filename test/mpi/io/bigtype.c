@@ -119,11 +119,14 @@ int main(int argc, char** argv)
 
     for (k=0 ; k<NUM_X*NUM_Y ; k++) {
         if(buf_read[k] != buf_write[k]) {
-            fprintf(stderr, "Verfiy Failed at index %zu\n", k);
+            fprintf(stderr, "Verfiy Failed index %zu: expected %d found %d\n",
+		    k, buf_write[k], buf_read[k]);
             assert(0);
         }
     }
 
+    free(buf_write);
+    free(buf_read);
     MPI_File_close(&fh);
 
     MPI_Type_free (&mem_type);
