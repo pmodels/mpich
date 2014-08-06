@@ -17,7 +17,9 @@
 #include "ad_gpfs.h"
 #include "ad_gpfs_aggrs.h"
 
+#ifdef BGQPLATFORM
 #include <mpix.h>
+#endif
 
 #ifdef AGGREGATION_PROFILE
 #include "mpe.h"
