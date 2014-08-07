@@ -18,23 +18,23 @@ int main(int argc, char **argv)
     int rank, size;
     int rc, ec;
     char error[MPI_MAX_ERROR_STRING];
-    MPI_Comm world_dup, world_dup2;
+    MPI_Comm world_dup;
 
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
-    if (size < 4) {
-        fprintf( stderr, "Must run with at least 4 processes\n" );
+    if (size < 2) {
+        fprintf( stderr, "Must run with at least 2 processes\n" );
         MPI_Abort(MPI_COMM_WORLD, 1);
     }
 
     MPI_Comm_set_errhandler(MPI_COMM_WORLD, MPI_ERRORS_RETURN);
 
     MPI_Comm_dup(MPI_COMM_WORLD, &world_dup);
-    MPI_Comm_dup(MPI_COMM_WORLD, &world_dup2);
 
-    if (rank == 3)
+    if (rank == 1) {
         MPIX_Comm_revoke(world_dup);
+    }
 
     rc = MPI_Barrier(world_dup);
     MPI_Error_class(rc, &ec);
@@ -45,17 +45,7 @@ int main(int argc, char **argv)
         MPI_Abort(MPI_COMM_WORLD, 1);
     }
 
-    rc = MPI_Barrier(world_dup2);
-    MPI_Error_class(rc, &ec);
-    if (ec != MPI_SUCCESS) {
-        MPI_Error_string(ec, error, &size);
-        fprintf(stderr, "[%d] MPI_Barrier should have returned MPI_SUCCESS, but it actually returned: %d\n%s\n",
-                rank, ec, error);
-        MPI_Abort(MPI_COMM_WORLD, 1);
-    }
-
     MPI_Comm_free(&world_dup);
-    MPI_Comm_free(&world_dup2);
 
     if (rank == 0)
         fprintf(stdout, " No errors\n");

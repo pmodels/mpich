@@ -13,6 +13,6 @@ reduce 4 mpiexecarg=-disable-auto-cleanup resultTest=TestStatusNoErrors strict=f
 bcast 4 mpiexecarg=-disable-auto-cleanup resultTest=TestStatusNoErrors strict=false timeLimit=10 xfail=ticket1945
 scatter 4 mpiexecarg=-disable-auto-cleanup resultTest=TestStatusNoErrors strict=false timeLimit=10 xfail=ticket1945
 anysource 3 mpiexecarg=-disable-auto-cleanup resultTest=TestStatusNoErrors strict=false timeLimit=10 xfail=ticket1945
-revoke_nofail 4 mpiexecarg=-disable-auto-cleanup resultTest=TestStatusNoErrors strict=false timeLimit=10 xfail=ticket1945
+revoke_nofail 2 mpiexecarg=-disable-auto-cleanup resultTest=TestStatusNoErrors strict=false timeLimit=10 xfail=ticket1945
 shrink 8 mpiexecarg=-disable-auto-cleanup resultTest=TestStatusNoErrors strict=false timeLimit=10 xfail=ticket1945
 agree 4 mpiexecarg=-disable-auto-cleanup resultTest=TestStatusNoErrors strict=false timeLimit=10 xfail=ticket1945
