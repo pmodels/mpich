@@ -351,7 +351,7 @@ void ADIOI_GPFS_Calc_file_domains(ADIO_File fd,
 		}
 		if (bridgeiter == (fd->hints->fs_hints.bg.numbridges-1)) {
 		    /* guard against infinite loop - should only ever make 1 pass
- 		     * thru bridgelist */
+		     * thru bridgelist */
 		    ADIOI_Assert(numbridgelistpasses == 0);
 		    numbridgelistpasses++;
 		    bridgeiter = 0;
@@ -776,7 +776,7 @@ void ADIOI_GPFS_Calc_others_req(ADIO_File fd, int count_my_req_procs,
 	if ( scounts[i] == 0 )
 	    sdispls[i] = 0;
 	else
-  	  sdispls[i] =  (int)
+	    sdispls[i] =  (int)
 	                ( ( (MPIR_Upint)my_req[i].offsets -
 			   (MPIR_Upint)sendBufForOffsets ) /
 			  (MPIR_Upint)sizeof(ADIO_Offset) );
