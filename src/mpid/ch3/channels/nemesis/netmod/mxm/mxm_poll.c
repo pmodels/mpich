@@ -69,9 +69,9 @@ void MPID_nem_mxm_get_adi_msg(mxm_conn_h conn, mxm_imm_t imm, void *data,
 
     MPIU_DBG_MSG(CH3_CHANNEL, VERBOSE, "MPID_nem_mxm_get_adi_msg");
 
-    _dbg_mxm_output(5, "========> Getting ADI msg (data_size %d) \n", length);
-
     vc = mxm_conn_ctx_get(conn);
+
+    _dbg_mxm_output(5, "========> Getting ADI msg (from=%d data_size %d) \n", vc->pg_rank, length);
 
     MPID_nem_handle_pkt(vc, data, (MPIDI_msg_sz_t) (length));
 }
@@ -379,7 +379,6 @@ static int _mxm_irecv(MPID_nem_mxm_ep_t * ep, MPID_nem_mxm_req_area * req, int i
         mpi_errno = MPI_ERR_OTHER;
         goto fn_fail;
     }
-//    list_enqueue(&ep->out_queue, &req->mxm_req->queue);
 
   fn_exit:
     return mpi_errno;

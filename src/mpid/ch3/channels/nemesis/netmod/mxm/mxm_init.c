@@ -67,6 +67,7 @@ static int _mxm_connect(MPID_nem_mxm_ep_t * ep, const char *business_card,
 static int _mxm_disconnect(MPID_nem_mxm_ep_t * ep);
 static int _mxm_add_comm(MPID_Comm * comm, void *param);
 static int _mxm_del_comm(MPID_Comm * comm, void *param);
+static int _mxm_conf(void);
 
 
 #undef FUNCNAME
@@ -78,6 +79,7 @@ int MPID_nem_mxm_post_init(void)
     int mpi_errno = MPI_SUCCESS;
 
 #if MXM_API >= MXM_VERSION(3,1)
+    /* Current logic guarantees that all VCs have been initialized before post init call */
     if (_mxm_obj.conf.bulk_connect) {
         mxm_ep_wireup(_mxm_obj.mxm_ep);
     }
@@ -308,8 +310,16 @@ int MPID_nem_mxm_vc_terminate(MPIDI_VC_t * vc)
     MPIDI_STATE_DECL(MPID_STATE_MXM_VC_TERMINATE);
     MPIDI_FUNC_ENTER(MPID_STATE_MXM_VC_TERMINATE);
 
-    while ((VC_FIELD(vc, pending_sends)) > 0)
-        MPID_nem_mxm_poll(FALSE);
+    if (vc->state != MPIDI_VC_STATE_CLOSED) {
+        /* VC is terminated as a result of a fault.  Complete
+         * outstanding sends with an error and terminate connection
+         * immediately. */
+        MPIU_ERR_SET1(mpi_errno, MPI_ERR_OTHER, "**comm_fail", "**comm_fail %d", vc->pg_rank);
+    }
+    else {
+        while ((VC_FIELD(vc, pending_sends)) > 0)
+            MPID_nem_mxm_poll(FALSE);
+    }
 
     mpi_errno = MPIDI_CH3U_Handle_connection(vc, MPIDI_VC_EVENT_TERMINATED);
     if (mpi_errno)
@@ -322,11 +332,12 @@ int MPID_nem_mxm_vc_terminate(MPIDI_VC_t * vc)
     goto fn_exit;
 }
 
-static int _mxm_init(int rank, int size)
+static int _mxm_conf(void)
 {
     int mpi_errno = MPI_SUCCESS;
     mxm_error_t ret = MXM_OK;
     unsigned long cur_ver;
+    char *env_val = NULL;
 
     cur_ver = mxm_get_version();
     if (cur_ver != MXM_API) {
@@ -347,14 +358,34 @@ static int _mxm_init(int rank, int size)
              "%ld.%ld", (cur_ver >> MXM_MAJOR_BIT) & 0xff, (cur_ver >> MXM_MINOR_BIT) & 0xff);
 #endif
 
-    if (cur_ver < MXM_VERSION(3, 2)) {
+    env_val = getenv("MPICH_NETMOD_MXM_BULK_CONNECT");
+    _mxm_obj.conf.bulk_connect = (env_val ? atoi(env_val) : (cur_ver < MXM_VERSION(3, 2) ? 0 : 1));
+    env_val = getenv("MPICH_NETMOD_MXM_BULK_DISCONNECT");
+    _mxm_obj.conf.bulk_disconnect = (env_val ?
+                                     atoi(env_val) : (cur_ver < MXM_VERSION(3, 2) ? 0 : 1));
+    if (cur_ver < MXM_VERSION(3, 2) &&
+        (_mxm_obj.conf.bulk_connect || _mxm_obj.conf.bulk_disconnect)) {
         _mxm_obj.conf.bulk_connect = 0;
         _mxm_obj.conf.bulk_disconnect = 0;
+        MPIU_DBG_MSG_FMT(CH3_CHANNEL, VERBOSE,
+                         (MPIU_DBG_FDEST,
+                          "WARNING: MPICH runs with %s version of MXM that is less than 3.2, "
+                          "so bulk connect/disconnect cannot work properly and will be turn off.",
+                          _mxm_obj.runtime_version));
     }
-    else {
-        _mxm_obj.conf.bulk_connect = 1;
-        _mxm_obj.conf.bulk_disconnect = 1;
-    }
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+static int _mxm_init(int rank, int size)
+{
+    int mpi_errno = MPI_SUCCESS;
+    mxm_error_t ret = MXM_OK;
+
+    ret = _mxm_conf();
 
     ret = mxm_config_read_opts(&_mxm_obj.mxm_ctx_opts, &_mxm_obj.mxm_ep_opts, "MPICH2", NULL, 0);
     MPIU_ERR_CHKANDJUMP1(ret != MXM_OK,
@@ -369,7 +400,7 @@ static int _mxm_init(int rank, int size)
 
     ret =
         mxm_set_am_handler(_mxm_obj.mxm_context, MXM_MPICH_HID_ADI_MSG, MPID_nem_mxm_get_adi_msg,
-                           MXM_AM_FLAG_THREAD_SAFE);
+                           0);
     MPIU_ERR_CHKANDJUMP1(ret != MXM_OK, mpi_errno, MPI_ERR_OTHER, "**mxm_set_am_handler",
                          "**mxm_set_am_handler %s", mxm_error_string(ret));
 

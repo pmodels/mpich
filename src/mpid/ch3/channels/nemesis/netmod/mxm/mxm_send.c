@@ -54,8 +54,10 @@ int MPID_nem_mxm_iSendContig(MPIDI_VC_t * vc, MPID_Request * sreq, void *hdr, MP
         REQ_FIELD(sreq, iov_buf)[1].length = data_sz;
     }
 
-    _dbg_mxm_output(5, "iSendContig ========> Sending ADI msg for req %p (data_size %d, %d) \n",
-                    sreq, sizeof(MPIDI_CH3_Pkt_t), data_sz);
+    _dbg_mxm_output(5,
+                    "iSendContig ========> Sending ADI msg (to=%d type=%d) for req %p (data_size %d, %d) \n",
+                    vc->pg_rank, sreq->dev.pending_pkt.type, sreq, sizeof(MPIDI_CH3_Pkt_t),
+                    data_sz);
 
     (VC_FIELD(vc, pending_sends)) += 1;
     sreq->ch.vc = vc;
@@ -100,8 +102,10 @@ int MPID_nem_mxm_iStartContigMsg(MPIDI_VC_t * vc, void *hdr, MPIDI_msg_sz_t hdr_
     sreq->dev.OnDataAvail = NULL;
     sreq->dev.tmpbuf = NULL;
 
-    _dbg_mxm_output(5, "iStartContigMsg ========> Sending ADI msg for req %p (data_size %d, %d) \n",
-                    sreq, sizeof(MPIDI_CH3_Pkt_t), data_sz);
+    _dbg_mxm_output(5,
+                    "iStartContigMsg ========> Sending ADI msg (to=%d type=%d) for req %p (data_size %d, %d) \n",
+                    vc->pg_rank, sreq->dev.pending_pkt.type, sreq, sizeof(MPIDI_CH3_Pkt_t),
+                    data_sz);
 
     REQ_FIELD(sreq, ctx) = sreq;
     REQ_FIELD(sreq, iov_buf) = REQ_FIELD(sreq, tmp_buf);
@@ -151,8 +155,10 @@ int MPID_nem_mxm_SendNoncontig(MPIDI_VC_t * vc, MPID_Request * sreq, void *hdr,
     MPIU_Memcpy(&(sreq->dev.pending_pkt), (char *) hdr, sizeof(MPIDI_CH3_Pkt_t));
     sreq->dev.tmpbuf = NULL;
 
-    _dbg_mxm_output(5, "SendNoncontig ========> Sending ADI msg for req %p (data_size %d, %d) \n",
-                    sreq, sizeof(MPIDI_CH3_Pkt_t), sreq->dev.segment_size);
+    _dbg_mxm_output(5,
+                    "SendNoncontig ========> Sending ADI msg (to=%d type=%d) for req %p (data_size %d, %d) \n",
+                    vc->pg_rank, sreq->dev.pending_pkt.type, sreq, sizeof(MPIDI_CH3_Pkt_t),
+                    sreq->dev.segment_size);
 
     REQ_FIELD(sreq, ctx) = sreq;
     REQ_FIELD(sreq, iov_buf) = REQ_FIELD(sreq, tmp_buf);
@@ -269,8 +275,7 @@ int MPID_nem_mxm_send(MPIDI_VC_t * vc, const void *buf, int count, MPI_Datatype 
 
     mpi_errno = _mxm_isend(VC_FIELD(vc, mxm_ep), REQ_BASE(sreq), MXM_MPICH_ISEND,
                            (mxm_mq_h) comm->ch.netmod_comm, comm->rank, tag, _mxm_tag_mpi2mxm(tag,
-                                                                                              comm->
-                                                                                              context_id
+                                                                                              comm->context_id
                                                                                               +
                                                                                               context_offset),
                            1);
@@ -367,8 +372,7 @@ int MPID_nem_mxm_ssend(MPIDI_VC_t * vc, const void *buf, int count, MPI_Datatype
 
     mpi_errno = _mxm_isend(VC_FIELD(vc, mxm_ep), REQ_BASE(sreq), MXM_MPICH_ISEND_SYNC,
                            (mxm_mq_h) comm->ch.netmod_comm, comm->rank, tag, _mxm_tag_mpi2mxm(tag,
-                                                                                              comm->
-                                                                                              context_id
+                                                                                              comm->context_id
                                                                                               +
                                                                                               context_offset),
                            1);
@@ -465,8 +469,7 @@ int MPID_nem_mxm_isend(MPIDI_VC_t * vc, const void *buf, int count, MPI_Datatype
 
     mpi_errno = _mxm_isend(VC_FIELD(vc, mxm_ep), REQ_BASE(sreq), MXM_MPICH_ISEND,
                            (mxm_mq_h) comm->ch.netmod_comm, comm->rank, tag, _mxm_tag_mpi2mxm(tag,
-                                                                                              comm->
-                                                                                              context_id
+                                                                                              comm->context_id
                                                                                               +
                                                                                               context_offset),
                            0);
@@ -564,8 +567,7 @@ int MPID_nem_mxm_issend(MPIDI_VC_t * vc, const void *buf, int count, MPI_Datatyp
 
     mpi_errno = _mxm_isend(VC_FIELD(vc, mxm_ep), REQ_BASE(sreq), MXM_MPICH_ISEND_SYNC,
                            (mxm_mq_h) comm->ch.netmod_comm, comm->rank, tag, _mxm_tag_mpi2mxm(tag,
-                                                                                              comm->
-                                                                                              context_id
+                                                                                              comm->context_id
                                                                                               +
                                                                                               context_offset),
                            0);
@@ -712,7 +714,6 @@ static int _mxm_isend(MPID_nem_mxm_ep_t * ep, MPID_nem_mxm_req_area * req,
 
     if (block)
         _mxm_req_wait(&mxm_sreq->base);
-//    list_enqueue(&ep->out_queue, &req->mxm_req->queue);
 
   fn_exit:
     return mpi_errno;

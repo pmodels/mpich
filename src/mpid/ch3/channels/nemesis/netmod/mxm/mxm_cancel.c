@@ -66,7 +66,10 @@ int MPID_nem_mxm_cancel_recv(MPIDI_VC_t * vc, MPID_Request * req)
     _dbg_mxm_out_req(req);
 
   fn_exit:
-    return mpi_errno;
+    /* This function returns sero in case request is canceled
+     * and nonzero otherwise
+     */
+    return (!MPIR_STATUS_GET_CANCEL_BIT(req->status));
   fn_fail:ATTRIBUTE((unused))
         goto fn_exit;
 }
