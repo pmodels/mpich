@@ -500,6 +500,7 @@ int MPIR_Comm_commit(MPID_Comm *comm)
             comm->node_comm->comm_kind = MPID_INTRACOMM;
             comm->node_comm->hierarchy_kind = MPID_HIERARCHY_NODE;
             comm->node_comm->local_comm = NULL;
+            MPIU_DBG_MSG_D(CH3_OTHER,VERBOSE,"Create node_comm=%p\n", comm->node_comm);
 
             comm->node_comm->local_size  = num_local;
             comm->node_comm->remote_size = num_local;
