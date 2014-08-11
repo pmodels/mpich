@@ -94,7 +94,7 @@ int MPID_Comm_get_all_failed_procs(MPID_Comm *comm_ptr, MPID_Group **failed_grou
 
     /* Kick the progress engine in case it's been a while so we get all the
      * latest updates about failures */
-    MPIDI_CH3I_Progress(NULL, false);
+    MPID_Progress_poke();
 
     /* Generate the list of failed processes */
     MPIDI_CH3U_Check_for_failed_procs();
