@@ -1065,57 +1065,6 @@ static inline int MPIDI_CH3I_Shm_fop_op(const void *origin_addr, void *result_ad
 
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_CH3I_Wait_for_pt_ops_finish
-#undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
-static inline int MPIDI_CH3I_Wait_for_pt_ops_finish(MPID_Win * win_ptr)
-{
-    int mpi_errno = MPI_SUCCESS, total_pt_rma_puts_accs;
-    MPID_Comm *comm_ptr;
-    int errflag = FALSE;
-    MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3I_WAIT_FOR_PT_OPS_FINISH);
-
-    MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_CH3I_WAIT_FOR_PT_OPS_FINISH);
-
-    comm_ptr = win_ptr->comm_ptr;
-    MPIR_T_PVAR_TIMER_START(RMA, rma_winfree_rs);
-    mpi_errno = MPIR_Reduce_scatter_block_impl(win_ptr->pt_rma_puts_accs,
-                                               &total_pt_rma_puts_accs, 1,
-                                               MPI_INT, MPI_SUM, comm_ptr, &errflag);
-    if (mpi_errno) {
-        MPIU_ERR_POP(mpi_errno);
-    }
-    MPIU_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
-    MPIR_T_PVAR_TIMER_END(RMA, rma_winfree_rs);
-
-    if (total_pt_rma_puts_accs != win_ptr->my_pt_rma_puts_accs) {
-        MPID_Progress_state progress_state;
-
-        /* poke the progress engine until the two are equal */
-        MPIR_T_PVAR_TIMER_START(RMA, rma_winfree_complete);
-        MPID_Progress_start(&progress_state);
-        while (total_pt_rma_puts_accs != win_ptr->my_pt_rma_puts_accs) {
-            mpi_errno = MPID_Progress_wait(&progress_state);
-            /* --BEGIN ERROR HANDLING-- */
-            if (mpi_errno != MPI_SUCCESS) {
-                MPID_Progress_end(&progress_state);
-                MPIU_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**winnoprogress");
-            }
-            /* --END ERROR HANDLING-- */
-        }
-        MPID_Progress_end(&progress_state);
-        MPIR_T_PVAR_TIMER_END(RMA, rma_winfree_complete);
-    }
-
-  fn_exit:
-    MPIDI_RMA_FUNC_EXIT(MPID_STATE_MPIDI_CH3I_WAIT_FOR_PT_OPS_FINISH);
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
-
-#undef FUNCNAME
 #undef FCNAME
 
 #endif

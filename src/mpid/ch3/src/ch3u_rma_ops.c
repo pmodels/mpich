@@ -40,6 +40,7 @@ int MPIDI_Win_free(MPID_Win ** win_ptr)
     int mpi_errno = MPI_SUCCESS;
     int in_use;
     MPID_Comm *comm_ptr;
+    int errflag = FALSE;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_WIN_FREE);
 
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_WIN_FREE);
@@ -47,9 +48,13 @@ int MPIDI_Win_free(MPID_Win ** win_ptr)
     MPIU_ERR_CHKANDJUMP((*win_ptr)->epoch_state != MPIDI_EPOCH_NONE,
                         mpi_errno, MPI_ERR_RMA_SYNC, "**rmasync");
 
-    mpi_errno = MPIDI_CH3I_Wait_for_pt_ops_finish(*win_ptr);
-    if (mpi_errno)
-        MPIU_ERR_POP(mpi_errno);
+    if (!(*win_ptr)->shm_allocated) {
+        /* when SHM is allocated, we already did a global barrier in
+           MPIDI_CH3_SHM_Win_free, so we do not need to do it again here. */
+        mpi_errno = MPIR_Barrier_impl((*win_ptr)->comm_ptr, &errflag);
+        if (mpi_errno)
+            MPIU_ERR_POP(mpi_errno);
+    }
 
     comm_ptr = (*win_ptr)->comm_ptr;
     mpi_errno = MPIR_Comm_free_impl(comm_ptr);
@@ -61,7 +66,6 @@ int MPIDI_Win_free(MPID_Win ** win_ptr)
     MPIU_Free((*win_ptr)->sizes);
     MPIU_Free((*win_ptr)->disp_units);
     MPIU_Free((*win_ptr)->all_win_handles);
-    MPIU_Free((*win_ptr)->pt_rma_puts_accs);
 
     /* Free the attached buffer for windows created with MPI_Win_allocate() */
     if ((*win_ptr)->create_flavor == MPI_WIN_FLAVOR_ALLOCATE ||

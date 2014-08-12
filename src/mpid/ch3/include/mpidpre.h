@@ -277,12 +277,6 @@ struct MPIDI_Win_target_state {
     volatile int shared_lock_ref_cnt;                                    \
     struct MPIDI_Win_lock_queue volatile *lock_queue;  /* list of unsatisfied locks */  \
                                                                          \
-    int *pt_rma_puts_accs;  /* array containing the no. of passive target\
-                               puts/accums issued from this process to other \
-                               processes. */                             \
-    volatile int my_pt_rma_puts_accs;  /* no. of passive target puts/accums  \
-                                          that this process has          \
-                                          completed as target */         \
     MPI_Aint *sizes;      /* array of sizes of all windows */            \
     struct MPIDI_Win_info_args info_args;                                \
     struct MPIDI_Win_target_state *targets; /* Target state and ops      \

@@ -63,6 +63,7 @@ fn_fail:
 int MPIDI_CH3_SHM_Win_free(MPID_Win **win_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
+    int errflag = FALSE;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3_SHM_WIN_FREE);
 
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_CH3_SHM_WIN_FREE);
@@ -72,8 +73,9 @@ int MPIDI_CH3_SHM_Win_free(MPID_Win **win_ptr)
         goto fn_exit;
     }
 
-    mpi_errno = MPIDI_CH3I_Wait_for_pt_ops_finish(*win_ptr);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    mpi_errno = MPIR_Barrier_impl((*win_ptr)->comm_ptr, &errflag);
+    if (mpi_errno)
+        MPIU_ERR_POP(mpi_errno);
 
     /* Free shared memory region */
     if ((*win_ptr)->shm_allocated) {

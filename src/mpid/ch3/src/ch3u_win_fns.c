@@ -71,11 +71,6 @@ int MPIDI_CH3U_Win_create_gather( void *base, MPI_Aint size, int disp_unit,
                         comm_size*sizeof(MPI_Win),
                         mpi_errno, "(*win_ptr)->all_win_handles");
 
-    MPIU_CHKPMEM_MALLOC((*win_ptr)->pt_rma_puts_accs, int *,
-                        comm_size*sizeof(int),
-                        mpi_errno, "(*win_ptr)->pt_rma_puts_accs");
-    for (i=0; i<comm_size; i++) (*win_ptr)->pt_rma_puts_accs[i] = 0;
-
     /* get the addresses of the windows, window objects, and completion
        counters of all processes.  allocate temp. buffer for communication */
     MPIU_CHKLMEM_MALLOC(tmp_buf, MPI_Aint *, 4*comm_size*sizeof(MPI_Aint),

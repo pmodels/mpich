@@ -932,16 +932,12 @@ static int create_datatype(const MPIDI_RMA_dtype_info * dtype_info,
                            const void *o_addr, int o_count,
                            MPI_Datatype o_datatype, MPID_Datatype ** combined_dtp);
 
-/* Issue an RMA operation -- Before calling this macro, you must define the
- * MPIDI_CH3I_TRACK_RMA_WRITE helper macro.  This macro defines any extra action
- * that should be taken when a write (put/acc) operation is encountered. */
 #define MPIDI_CH3I_ISSUE_RMA_OP(op_ptr_, win_ptr_, flags_, source_win_handle_, target_win_handle_,err_) \
     do {                                                                \
         switch ((op_ptr_)->type)                                        \
         {                                                               \
         case (MPIDI_RMA_PUT):                                           \
         case (MPIDI_RMA_ACCUMULATE):                                    \
-            MPIDI_CH3I_TRACK_RMA_WRITE(op_ptr_, win_ptr_);              \
             (err_) = send_rma_msg((op_ptr_), (win_ptr_), (flags_), (source_win_handle_), \
                                   (target_win_handle_), &(op_ptr_)->dtype_info, \
                                   &(op_ptr_)->dataloop, &(op_ptr_)->request); \
@@ -962,7 +958,6 @@ static int create_datatype(const MPIDI_RMA_dtype_info * dtype_info,
                                       (target_win_handle_), &(op_ptr_)->dtype_info, \
                                       &(op_ptr_)->dataloop, &(op_ptr_)->request); \
             } else {                                                    \
-                MPIDI_CH3I_TRACK_RMA_WRITE(op_ptr_, win_ptr_);          \
                 (err_) = send_rma_msg((op_ptr_), (win_ptr_), (flags_), (source_win_handle_), \
                                       (target_win_handle_), &(op_ptr_)->dtype_info, \
                                       &(op_ptr_)->dataloop, &(op_ptr_)->request); \
@@ -970,7 +965,6 @@ static int create_datatype(const MPIDI_RMA_dtype_info * dtype_info,
             if (err_) { MPIU_ERR_POP(err_); }                           \
             break;                                                      \
         case MPIDI_RMA_ACC_CONTIG:                                      \
-            MPIDI_CH3I_TRACK_RMA_WRITE(op_ptr_, win_ptr_);              \
             (err_) = send_contig_acc_msg((op_ptr_), (win_ptr_), (flags_), \
                                          (source_win_handle_), (target_win_handle_), \
                                          &(op_ptr_)->request);          \
@@ -985,7 +979,6 @@ static int create_datatype(const MPIDI_RMA_dtype_info * dtype_info,
             break;                                                      \
         case (MPIDI_RMA_COMPARE_AND_SWAP):                              \
         case (MPIDI_RMA_FETCH_AND_OP):                                  \
-            MPIDI_CH3I_TRACK_RMA_WRITE(op_ptr_, win_ptr_);              \
             (err_) = send_immed_rmw_msg((op_ptr_), (win_ptr_), (flags_), \
                                         (source_win_handle_), (target_win_handle_), \
                                         &(op_ptr_)->request);           \
@@ -1021,31 +1014,6 @@ int MPIDI_Win_fence(int assert, MPID_Win * win_ptr)
     MPIU_ERR_CHKANDJUMP(win_ptr->epoch_state != MPIDI_EPOCH_NONE &&
                         win_ptr->epoch_state != MPIDI_EPOCH_FENCE,
                         mpi_errno, MPI_ERR_RMA_SYNC, "**rmasync");
-
-    /* In case this process was previously the target of passive target rma
-     * operations, we need to take care of the following...
-     * Since we allow MPI_Win_unlock to return without a done ack from
-     * the target in the case of multiple rma ops and exclusive lock,
-     * we need to check whether there is a lock on the window, and if
-     * there is a lock, poke the progress engine until the operartions
-     * have completed and the lock is released. */
-    if (win_ptr->current_lock_type != MPID_LOCK_NONE) {
-        MPIR_T_PVAR_TIMER_START(RMA, rma_winfence_clearlock);
-        MPID_Progress_start(&progress_state);
-        while (win_ptr->current_lock_type != MPID_LOCK_NONE) {
-            /* poke the progress engine */
-            mpi_errno = MPID_Progress_wait(&progress_state);
-            /* --BEGIN ERROR HANDLING-- */
-            if (mpi_errno != MPI_SUCCESS) {
-                MPID_Progress_end(&progress_state);
-                MPIU_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**winnoprogress");
-            }
-            /* --END ERROR HANDLING-- */
-            MPIR_T_PVAR_COUNTER_INC(RMA, rma_winfence_clearlock_aux, 1);
-        }
-        MPID_Progress_end(&progress_state);
-        MPIR_T_PVAR_TIMER_END(RMA, rma_winfence_clearlock);
-    }
 
     /* Note that the NOPRECEDE and NOSUCCEED must be specified by all processes
      * in the window's group if any specify it */
@@ -1169,10 +1137,8 @@ int MPIDI_Win_fence(int assert, MPID_Win * win_ptr)
             source_win_handle = win_ptr->handle;
             target_win_handle = win_ptr->all_win_handles[curr_ptr->target_rank];
 
-#define MPIDI_CH3I_TRACK_RMA_WRITE(op_ptr_, win_ptr_)   /* Not used by active mode */
             MPIDI_CH3I_ISSUE_RMA_OP(curr_ptr, win_ptr, flags,
                                     source_win_handle, target_win_handle, mpi_errno);
-#undef MPIDI_CH3I_TRACK_RMA_WRITE
 
             i++;
             curr_ops_cnt[curr_ptr->target_rank]++;
@@ -2114,33 +2080,6 @@ int MPIDI_Win_post(MPID_Group * post_grp_ptr, int assert, MPID_Win * win_ptr)
      * synchronization, we cannot do this because fence_issued must be
      * updated collectively */
 
-    /* In case this process was previously the target of passive target rma
-     * operations, we need to take care of the following...
-     * Since we allow MPI_Win_unlock to return without a done ack from
-     * the target in the case of multiple rma ops and exclusive lock,
-     * we need to check whether there is a lock on the window, and if
-     * there is a lock, poke the progress engine until the operations
-     * have completed and the lock is therefore released. */
-    if (win_ptr->current_lock_type != MPID_LOCK_NONE) {
-        MPID_Progress_state progress_state;
-
-        MPIR_T_PVAR_TIMER_START(RMA, rma_winpost_clearlock);
-        /* poke the progress engine */
-        MPID_Progress_start(&progress_state);
-        while (win_ptr->current_lock_type != MPID_LOCK_NONE) {
-            mpi_errno = MPID_Progress_wait(&progress_state);
-            /* --BEGIN ERROR HANDLING-- */
-            if (mpi_errno != MPI_SUCCESS) {
-                MPID_Progress_end(&progress_state);
-                MPIU_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**winnoprogress");
-            }
-            /* --END ERROR HANDLING-- */
-            MPIR_T_PVAR_COUNTER_INC(RMA, rma_winpost_clearlock_aux, 1);
-        }
-        MPID_Progress_end(&progress_state);
-        MPIR_T_PVAR_TIMER_END(RMA, rma_winpost_clearlock);
-    }
-
     post_grp_size = post_grp_ptr->size;
 
     /* Ensure ordering of load/store operations. */
@@ -2395,33 +2334,6 @@ int MPIDI_Win_start(MPID_Group * group_ptr, int assert, MPID_Win * win_ptr)
      * synchronization, we cannot do this because fence_issued must be
      * updated collectively */
 
-    /* In case this process was previously the target of passive target rma
-     * operations, we need to take care of the following...
-     * Since we allow MPI_Win_unlock to return without a done ack from
-     * the target in the case of multiple rma ops and exclusive lock,
-     * we need to check whether there is a lock on the window, and if
-     * there is a lock, poke the progress engine until the operations
-     * have completed and the lock is therefore released. */
-    if (win_ptr->current_lock_type != MPID_LOCK_NONE) {
-        MPID_Progress_state progress_state;
-
-        MPIR_T_PVAR_TIMER_START(RMA, rma_winstart_clearlock);
-        /* poke the progress engine */
-        MPID_Progress_start(&progress_state);
-        while (win_ptr->current_lock_type != MPID_LOCK_NONE) {
-            mpi_errno = MPID_Progress_wait(&progress_state);
-            /* --BEGIN ERROR HANDLING-- */
-            if (mpi_errno != MPI_SUCCESS) {
-                MPID_Progress_end(&progress_state);
-                MPIU_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**winnoprogress");
-            }
-            /* --END ERROR HANDLING-- */
-            MPIR_T_PVAR_COUNTER_INC(RMA, rma_winstart_clearlock_aux, 1);
-        }
-        MPID_Progress_end(&progress_state);
-        MPIR_T_PVAR_TIMER_END(RMA, rma_winstart_clearlock);
-    }
-
     win_ptr->start_group_ptr = group_ptr;
     MPIR_Group_add_ref(group_ptr);
     win_ptr->start_assert = assert;
@@ -2570,10 +2482,8 @@ int MPIDI_Win_complete(MPID_Win * win_ptr)
         source_win_handle = win_ptr->handle;
         target_win_handle = win_ptr->all_win_handles[curr_ptr->target_rank];
 
-#define MPIDI_CH3I_TRACK_RMA_WRITE(op_ptr_, win_ptr_)   /* Not used by active mode */
         MPIDI_CH3I_ISSUE_RMA_OP(curr_ptr, win_ptr, flags,
                                 source_win_handle, target_win_handle, mpi_errno);
-#undef MPIDI_CH3I_TRACK_RMA_WRITE
 
         i++;
         curr_ops_cnt[curr_ptr->target_rank]++;
@@ -3512,19 +3422,7 @@ static int do_passive_target_rma(MPID_Win * win_ptr, int target_rank,
                 (win_ptr->targets[target_rank].remote_lock_state == MPIDI_CH3_WIN_LOCK_CALLED &&
                  win_ptr->targets[target_rank].remote_lock_assert & MPI_MODE_NOCHECK));
 
-    if (win_ptr->targets[target_rank].remote_lock_mode == MPI_LOCK_EXCLUSIVE &&
-        win_ptr->targets[target_rank].remote_lock_state != MPIDI_CH3_WIN_LOCK_CALLED &&
-        win_ptr->targets[target_rank].remote_lock_state != MPIDI_CH3_WIN_LOCK_FLUSH) {
-        /* Exclusive lock already held -- no need to wait for rma done pkt at
-         * the end.  This is because the target won't grant another process
-         * access to the window until all of our operations complete at that
-         * target.  Thus, there is no third-party communication issue.
-         * However, flush still needs to wait for rma done, otherwise result
-         * may be unknown if user reads the updated location from a shared window of
-         * another target process after this flush. */
-        *wait_for_rma_done_pkt = 0;
-    }
-    else if (MPIDI_CH3I_RMA_Ops_isempty(&win_ptr->targets[target_rank].rma_ops_list)) {
+    if (MPIDI_CH3I_RMA_Ops_isempty(&win_ptr->targets[target_rank].rma_ops_list)) {
         /* The ops list is empty -- NOTE: we assume this is because the epoch
          * was flushed.  Any issued ops are already remote complete; done
          * packet is not needed for safe third party communication. */
@@ -3635,15 +3533,8 @@ static int do_passive_target_rma(MPID_Win * win_ptr, int target_rank,
             source_win_handle = win_ptr->handle;
         }
 
-        /* Track passive target write operations.  This is used during Win_free
-         * to ensure that all writes to a given target have completed at that
-         * process before the window is freed. */
-#define MPIDI_CH3I_TRACK_RMA_WRITE(op_, win_ptr_) \
-        do { (win_ptr_)->pt_rma_puts_accs[(op_)->target_rank]++; } while (0)
-
         MPIDI_CH3I_ISSUE_RMA_OP(curr_ptr, win_ptr, flags, source_win_handle,
                                 target_win_handle, mpi_errno);
-#undef MPIDI_CH3I_TRACK_RMA_WRITE
 
         /* If the request is null, we can remove it immediately */
         if (!curr_ptr->request) {
@@ -3968,8 +3859,6 @@ static int send_lock_put_or_acc(MPID_Win * win_ptr, int target_rank)
     lock_type = win_ptr->targets[target_rank].remote_lock_mode;
 
     rma_op = MPIDI_CH3I_RMA_Ops_head(&win_ptr->targets[target_rank].rma_ops_list);
-
-    win_ptr->pt_rma_puts_accs[rma_op->target_rank]++;
 
     if (rma_op->type == MPIDI_RMA_PUT) {
         MPIDI_Pkt_init(lock_put_unlock_pkt, MPIDI_CH3_PKT_LOCK_PUT_UNLOCK);
@@ -6000,12 +5889,6 @@ int MPIDI_CH3_Finish_rma_op_target(MPIDI_VC_t * vc, MPID_Win * win_ptr, int is_r
 
     /* This function should be called by the target process after each RMA
      * operation is completed, to update synchronization state. */
-
-    /* If this is a passive target RMA update operation, increment counter.  This is
-     * needed in Win_free to ensure that all ops are completed before a window
-     * is freed. */
-    if (win_ptr->current_lock_type != MPID_LOCK_NONE && is_rma_update)
-        win_ptr->my_pt_rma_puts_accs++;
 
     /* Last RMA operation from source. If active target RMA, decrement window
      * counter. */

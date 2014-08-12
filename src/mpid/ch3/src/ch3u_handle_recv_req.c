@@ -1037,9 +1037,6 @@ int MPIDI_CH3I_Release_lock(MPID_Win *win_ptr)
                                    MPIDI_CH3_Finish_rma_op_target().  That call cannot be used
                                    here, because it would enter this function recursively. */
 
-				/* increment counter */
-				win_ptr->my_pt_rma_puts_accs++;
-				
 				mpi_errno = 
                                     MPIDI_CH3I_Send_pt_rma_done_pkt(lock_queue->vc, win_ptr,
 								    lock_queue->source_win_handle);
