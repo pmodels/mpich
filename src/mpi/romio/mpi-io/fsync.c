@@ -60,8 +60,6 @@ int MPI_File_sync(MPI_File fh)
     MPIO_CHECK_WRITABLE(fh, myname, error_code);
     /* --END ERROR HANDLING-- */
 
-    ADIOI_TEST_DEFERRED(adio_fh, "MPI_File_sync", &error_code);
-
     ADIO_Flush(adio_fh, &error_code);
     /* --BEGIN ERROR HANDLING-- */
     if (error_code != MPI_SUCCESS)
