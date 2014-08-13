@@ -88,6 +88,24 @@ MPI_File ADIO_Open(MPI_Comm orig_comm,
     fd->hints->initialized = 0;
     fd->info = MPI_INFO_NULL;
 
+    /* move system-wide hint processing *back* into open, but this time the
+     * hintfile reader will do a scalable read-and-broadcast.  The global
+     * ADIOI_syshints will get initialized at first open.  subsequent open
+     * calls will just use result from first open.
+     *
+     * We have two goals here:
+     * 1: avoid processing the hintfile multiple times
+     * 2: have all processes participate in hintfile processing (so we can read-and-broadcast)
+     *
+     * a code might do an "initialize from 0", so we can only skip hint
+     * processing once everyone has particpiated in hint processing */
+    int dummy_info;
+    MPI_Allreduce(&ADIOI_syshints, &dummy_info, 1, MPI_INT, MPI_MIN, fd->comm);
+    if ((MPI_Info)dummy_info== MPI_INFO_NULL) {
+	MPI_Info_create(&ADIOI_syshints);
+	ADIOI_process_system_hints(fd, ADIOI_syshints);
+    }
+
     ADIOI_incorporate_system_hints(info, ADIOI_syshints, &dupinfo);
     ADIO_SetInfo(fd, dupinfo, &err);
     if (dupinfo != MPI_INFO_NULL) {

@@ -85,8 +85,11 @@ static int find_file(void)
  * alone on the assumption that the caller knows best. 
  *
  * because MPI-IO hints are optional, we can get away with limited error
- * reporting.  */
-static int file_to_info(int fd, MPI_Info info)
+ * reporting.
+ *
+ * for better scalability, the config file will be read on one processor and
+ * broadcast to all others */
+static int file_to_info_all(int fd, MPI_Info info, int rank, MPI_Comm comm)
 {
     char *buffer, *token, *key, *val, *garbage;
     char *pos1=NULL, *pos2=NULL;
@@ -97,11 +100,19 @@ static int file_to_info(int fd, MPI_Info info)
     /* assumption: config files will be small */
 #define HINTFILE_MAX_SIZE 1024*4
     buffer = (char *)ADIOI_Calloc(HINTFILE_MAX_SIZE, sizeof (char));
-    if (buffer == NULL) return -1;
 
-    ret = read(fd, buffer, HINTFILE_MAX_SIZE);
-    if (ret < 0) return -1;
+    if (rank == 0) {
+	ret = read(fd, buffer, HINTFILE_MAX_SIZE);
+	/* any error: bad/nonexistent fd, no perms, anything: set up a null
+	 * buffer and the subsequent string parsing will quit immediately */
+	if (ret == -1)
+	    buffer[0] = '\0';
+    }
+    MPI_Bcast(buffer, HINTFILE_MAX_SIZE, MPI_BYTE, 0, comm);
+
     token = strtok_r(buffer, "\n", &pos1);
+    if (token == NULL)
+	goto fn_exit;
     do {
 	if ( (key = strtok_r(token, " \t", &pos2)) == NULL) 
 	    /* malformed line: found no items */
@@ -125,23 +136,25 @@ static int file_to_info(int fd, MPI_Info info)
 	if (flag == 1) continue;
 	ADIOI_Info_set(info, key, val);
     } while ((token = strtok_r(NULL, "\n", &pos1)) != NULL);
+
+fn_exit:
     ADIOI_Free(buffer);
     return 0;
 }
 
-void ADIOI_process_system_hints(MPI_Info info)
+void ADIOI_process_system_hints(ADIO_File fd, MPI_Info info)
 {
-    int hintfd;
+    int hintfd=-1, rank;
 
-    hintfd = find_file();
-    if (hintfd < 0) {
-#ifdef SYSHINT_DEBUG
-	perror("ADIOI_process_system_hints");
-#endif
-	return;
+    MPI_Comm_rank(fd->comm, &rank);
+    if (rank == 0) {
+	hintfd = find_file();
     }
-    file_to_info(hintfd, info);
-    close(hintfd);
+    /* hintfd only significant on rank 0.  -1 (on rank 0) means no hintfile found  */
+    file_to_info_all(hintfd, info, rank, fd->comm);
+
+    if (hintfd != -1)
+	close(hintfd);
 }
 
 /* given 'info', incorporate any hints in 'sysinfo' that are not already set

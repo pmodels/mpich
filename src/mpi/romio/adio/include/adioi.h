@@ -340,7 +340,7 @@ void ADIOI_Get_position(ADIO_File fd, ADIO_Offset *offset);
 void ADIOI_Get_eof_offset(ADIO_File fd, ADIO_Offset *eof_offset);
 void ADIOI_Get_byte_offset(ADIO_File fd, ADIO_Offset offset,
 			   ADIO_Offset *disp);
-void ADIOI_process_system_hints(MPI_Info info);
+void ADIOI_process_system_hints(ADIO_File fd, MPI_Info info);
 void ADIOI_incorporate_system_hints(MPI_Info info, MPI_Info sysinfo, 
 		MPI_Info *new_info);
 void ADIOI_Info_print_keyvals(MPI_Info info);
