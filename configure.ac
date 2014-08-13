@@ -5972,9 +5972,12 @@ AC_OUTPUT_COMMANDS([chmod a+x test/commands/cmdtests])
 
 AC_DEFINE(HAVE_MPICHCONF,1,[Define so that we can test whether the mpichconf.h file has been included])
 
-# Add the LDFLAGS/LIBS we got so far to WRAPPERs
-WRAPPER_LDFLAGS="$WRAPPER_LDFLAGS $LDFLAGS"
-WRAPPER_LIBS="$WRAPPER_LIBS $LIBS"
+# If the platform does not support inter-library dependencies,
+# add the LDFLAGS/LIBS we got so far to WRAPPERs
+if test "$INTERLIB_DEPS" = "no" ; then
+   WRAPPER_LDFLAGS="$WRAPPER_LDFLAGS $LDFLAGS"
+   WRAPPER_LIBS="$WRAPPER_LIBS $LIBS"
+fi
 
 if test "$USE_PMI2_API" = "yes" ; then
    AC_DEFINE(USE_PMI2_API, 1, [Define if PMI2 API must be used])
