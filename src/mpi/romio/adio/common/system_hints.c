@@ -21,9 +21,6 @@
 #ifdef HAVE_STRING_H
 #include <string.h>
 #endif
-#ifdef HAVE_SYS_STAT_H
-#include <sys/stat.h>
-#endif
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif
@@ -96,15 +93,13 @@ static int file_to_info(int fd, MPI_Info info)
     int flag;
     ssize_t ret;
     char dummy;
-    struct stat statbuf;
 
-    /* assumption: config files will be small (less than 1MB) */
-    fstat(fd, &statbuf);
-    /* add 1 to size to make room for NULL termination */
-    buffer = (char *)ADIOI_Calloc(statbuf.st_size + 1, sizeof (char));
+    /* assumption: config files will be small */
+#define HINTFILE_MAX_SIZE 1024*4
+    buffer = (char *)ADIOI_Calloc(HINTFILE_MAX_SIZE, sizeof (char));
     if (buffer == NULL) return -1;
 
-    ret = read(fd, buffer, statbuf.st_size);
+    ret = read(fd, buffer, HINTFILE_MAX_SIZE);
     if (ret < 0) return -1;
     token = strtok_r(buffer, "\n", &pos1);
     do {
