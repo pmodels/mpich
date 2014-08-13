@@ -96,7 +96,6 @@ int main(int argc, char **argv)
 
     MPI_Win_unlock_all(shm_win);
     MPI_Win_free(&shm_win);
-    MPI_Comm_free(&shm_comm);
 
     MPI_Reduce(&errors, &all_errors, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
 
@@ -104,6 +103,8 @@ int main(int argc, char **argv)
 
     if (rank == 0 && all_errors == 0)
         printf(" No Errors\n");
+
+    MPI_Comm_free(&shm_comm);
 
     MPI_Finalize();
 
