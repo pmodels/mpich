@@ -41,3 +41,4 @@ noinst_PROGRAMS =         \
     pgroup_intercomm_test \
     concurrent_spawns
 
+join_LDADD = $(LDADD) @socklib@ @nslib@

@@ -182,3 +182,5 @@ mutex_bench_shm_ordered_SOURCES  = mutex_bench.c mcs-mutex.c mcs-mutex.h
 
 linked_list_bench_lock_shr_nocheck_SOURCES  = linked_list_bench_lock_shr.c
 linked_list_bench_lock_shr_nocheck_CPPFLAGS = -DUSE_MODE_NOCHECK $(AM_CPPFLAGS)
+
+ircpi_LDADD    = $(LDADD) -lm

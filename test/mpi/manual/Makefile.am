@@ -18,5 +18,7 @@ noinst_HEADERS = connectstuff.h
 testconnectserial_SOURCES = testconnectserial.c tchandlers.c tcutil.c 
 testconnectserial_LDADD   = $(LDADD) -lm
 
+singjoin_LDADD = $(LDADD) @socklib@ @nslib@
+
 CLEANFILES += test-port
 

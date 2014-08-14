@@ -664,6 +664,18 @@ if test "x$enable_long_double" = "xyes" && \
    AC_DEFINE(USE_LONG_DOUBLE_COMPLEX,1,[Define if tests with long double complex should be included])
 fi
 
+# extra libraries may be necessary on some platforms (solaris) for spawn/join
+if test "$spawndir" = "spawn" ; then
+    PAC_PUSH_FLAG(LIBS)
+    AC_SEARCH_LIBS(socket,socket,socklib=$LIBS)
+    PAC_POP_FLAG(LIBS)
+    PAC_PUSH_FLAG(LIBS)
+    AC_SEARCH_LIBS(gethostbyname,nsl,nslib=$LIBS)
+    PAC_POP_FLAG(LIBS)
+    AC_SUBST(socklib)
+    AC_SUBST(nslib)
+fi
+
 # Headers needed for threads tests
 if test "$threadsdir" = "threads" ; then
     # Check for needed threads headers and needed and optional routines
