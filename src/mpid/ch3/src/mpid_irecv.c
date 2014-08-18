@@ -27,7 +27,7 @@ int MPID_Irecv(void * buf, int count, MPI_Datatype datatype, int rank, int tag,
 
     if (rank == MPI_PROC_NULL)
     {
-        MPIDI_Request_create_null_rreq(rreq, mpi_errno, fn_fail);
+        MPIDI_Request_create_null_rreq(rreq, mpi_errno, goto fn_fail);
         goto fn_exit;
     }
 

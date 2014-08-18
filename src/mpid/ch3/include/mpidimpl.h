@@ -400,7 +400,9 @@ extern MPIDI_Process_t MPIDI_Process;
             MPIR_Status_set_procnull(&(rreq_)->status);                    \
         }                                                                  \
         else {                                                             \
-            MPIU_ERR_SETANDJUMP(mpi_errno_,MPI_ERR_OTHER,"**nomemreq");    \
+            MPIU_DBG_MSG(CH3_CHANNEL,TYPICAL,"unable to allocate a request");\
+            (mpi_errno_) = MPIR_ERR_MEMALLOCFAILED;                        \
+            FAIL_;                                                         \
         }                                                                  \
     } while (0)
 
