@@ -211,6 +211,17 @@ static inline void list_grow_mxm_req(list_head_t * list_head)
     }
 }
 
+static inline void _mxm_barrier(void)
+{
+    int pmi_errno;
+
+#ifdef USE_PMI2_API
+    pmi_errno = PMI2_KVS_Fence();
+#else
+    pmi_errno = PMI_Barrier();
+#endif
+}
+
 static inline void _mxm_to_mpi_status(mxm_error_t mxm_error, MPI_Status * mpi_status)
 {
     switch (mxm_error) {

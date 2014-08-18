@@ -78,6 +78,8 @@ int MPID_nem_mxm_post_init(void)
 {
     int mpi_errno = MPI_SUCCESS;
 
+    _mxm_barrier();
+
 #if MXM_API >= MXM_VERSION(3,1)
     /* Current logic guarantees that all VCs have been initialized before post init call */
     if (_mxm_obj.conf.bulk_connect) {
@@ -150,6 +152,8 @@ int MPID_nem_mxm_finalize(void)
 
     MPIDI_STATE_DECL(MPID_STATE_MXM_FINALIZE);
     MPIDI_FUNC_ENTER(MPID_STATE_MXM_FINALIZE);
+
+    _mxm_barrier();
 
     mpi_errno = _mxm_fini();
     if (mpi_errno)
