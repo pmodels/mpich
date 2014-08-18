@@ -235,6 +235,16 @@ foreach $_ (@ARGV) {
 	     'get-5' => 'MPI_Aint *',
 	     'alloc_mem-1' => 'MPI_Aint *',
              'win_shared_query-3' => 'MPI_Aint *',
+	     'compare_and_swap-6' => 'MPI_Aint *',
+	     'fetch_and_op-5' => 'MPI_Aint *',
+	     'get_accumulate-8' => 'MPI_Aint *',
+	     'rput-5' => 'MPI_Aint *',
+	     'rget-5' => 'MPI_Aint *',
+	     'raccumulate-5' => 'MPI_Aint *',
+	     'rget_accumulate-8' => 'MPI_Aint *',
+	     'win_attach-3' => 'MPI_Aint *',
+	     'win_allocate-1' => 'MPI_Aint *',
+	     'win_allocate_shared-1' => 'MPI_Aint *',
 	     #'status_set_elements_x-3' => 'MPI_Count *',
 	    );
 
@@ -744,6 +754,16 @@ foreach $_ (@ARGV) {
     'Put' => '5', 'Put-5' => 'in:aintToVal', 
     'Get' => '5', 'Get-5' => 'in:aintToVal',
     'Alloc_mem' => '1', 'Alloc_mem-1' => 'in:aintToVal', 
+    'Compare_and_swap' => '6', 'Compare_and_swap-6' => 'in:aintToVal',
+    'Fetch_and_op' => '5', 'Fetch_and_op-5' => 'in:aintToVal',
+    'Get_accumulate' => '8', 'Get_accumulate-8' => 'in:aintToVal',
+    'Rput' => '5', 'Rput-5' => 'in:aintToVal',
+    'Rget' => '5', 'Rget-5' => 'in:aintToVal',
+    'Raccumulate' => '5', 'Raccumulate-5' => 'in:aintToVal',
+    'Rget_accumulate' => '8', 'Rget_accumulate-8' => 'in:aintToVal',
+    'Win_attach' => '3', 'Win_attach-3' => 'in:aintToVal',
+    'Win_allocate' => '1', 'Win_allocate-1' => 'in:aintToVal',
+    'Win_allocate_shared' => '1', 'Win_allocate_shared-1' => 'in:aintToVal',
     'Win_get_name' => '2', 'Win_get_name-2' => 'out:blankpad',
     'Win_set_name' => '2', 'Win_set_name-2' => 'in:addnull',		  
     'Win_test' => '2', 'Win_test-2' => 'out:logical',
@@ -1661,6 +1681,10 @@ sub print_call_args {
 		    print $OUTFD "MPI_File_f2c(*v$count)";
 		}
 		else {
+            if ($parm =~ /^MPI_Aint$/) {
+            print STDERR "Warning: Found a cast to MPI_Aint in $routine_name\n";
+            print STDERR "This usually means that a conversion from MPI_Aint* to an MPI_Aint value is missing\n";
+            }
 		    if ($arg_addresses[$count] > 0) {
 			print "Adding ($parm) for $parm\n" if $debug;
 			print $OUTFD "($parm)";
