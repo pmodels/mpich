@@ -226,7 +226,7 @@ static int send_msg(ptl_hdr_data_t ssend_flag, struct MPIDI_VC *vc, const void *
         sreq->dev.segment_ptr = MPID_Segment_alloc();
         MPIU_ERR_CHKANDJUMP1(sreq->dev.segment_ptr == NULL, mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s", "MPID_Segment_alloc");
         MPID_Segment_init(buf, count, datatype, sreq->dev.segment_ptr, 0);
-        sreq->dev.segment_first = 0;
+        sreq->dev.segment_first = dt_true_lb;
         sreq->dev.segment_size = data_sz;
 
         last = sreq->dev.segment_size;
@@ -256,7 +256,7 @@ static int send_msg(ptl_hdr_data_t ssend_flag, struct MPIDI_VC *vc, const void *
         /* IOV is not long enough to describe entire message */
         MPIU_DBG_MSG(CH3_CHANNEL, VERBOSE, "    IOV too long: using bounce buffer");
         MPIU_CHKPMEM_MALLOC(REQ_PTL(sreq)->chunk_buffer[0], void *, data_sz, mpi_errno, "chunk_buffer");
-        sreq->dev.segment_first = 0;
+        sreq->dev.segment_first = dt_true_lb;
         last = data_sz;
         MPID_Segment_pack(sreq->dev.segment_ptr, sreq->dev.segment_first, &last, REQ_PTL(sreq)->chunk_buffer[0]);
         MPIU_Assert(last == sreq->dev.segment_size);
@@ -304,7 +304,7 @@ static int send_msg(ptl_hdr_data_t ssend_flag, struct MPIDI_VC *vc, const void *
     sreq->dev.segment_ptr = MPID_Segment_alloc();
     MPIU_ERR_CHKANDJUMP1(sreq->dev.segment_ptr == NULL, mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s", "MPID_Segment_alloc");
     MPID_Segment_init(buf, count, datatype, sreq->dev.segment_ptr, 0);
-    sreq->dev.segment_first = 0;
+    sreq->dev.segment_first = dt_true_lb;
     sreq->dev.segment_size = data_sz;
 
     last = PTL_LARGE_THRESHOLD;
