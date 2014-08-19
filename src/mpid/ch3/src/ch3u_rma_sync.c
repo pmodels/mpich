@@ -1371,8 +1371,14 @@ int MPIDI_Win_fence(int assert, MPID_Win *win_ptr)
             if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
 	}
 
+        /* MT: avoid processing unissued operations enqueued by other threads
+           in rma_list_complete() */
+        curr_ptr = MPIDI_CH3I_RMA_Ops_head(ops_list);
+        if (curr_ptr && !curr_ptr->request)
+            goto finish_up;
         MPIU_Assert(MPIDI_CH3I_RMA_Ops_isempty(ops_list));
 	
+ finish_up:
 	/* wait for all operations from other processes to finish */
 	if (win_ptr->my_counter)
 	{
@@ -3768,6 +3774,11 @@ static int do_passive_target_rma(MPID_Win *win_ptr, int target_rank,
     /* NOTE: Flush -- If RMA ops are issued eagerly, Send_flush_msg should be
        called here and wait_for_rma_done_pkt should be set. */
 
+    /* MT: avoid processing unissued operations enqueued by other threads
+       in rma_list_complete() */
+    curr_ptr = MPIDI_CH3I_RMA_Ops_head(&win_ptr->targets[target_rank].rma_ops_list);
+    if (curr_ptr && !curr_ptr->request)
+        goto fn_exit;
     MPIU_Assert(MPIDI_CH3I_RMA_Ops_isempty(&win_ptr->targets[target_rank].rma_ops_list));
 
  fn_exit:
@@ -5924,6 +5935,13 @@ static inline int rma_list_complete( MPID_Win *win_ptr,
 	/* In some tests, this hung unless the test ensured that 
 	   there was an incomplete request. */
         curr_ptr = MPIDI_CH3I_RMA_Ops_head(ops_list);
+
+        /* MT: avoid processing unissued operations enqueued by other
+           threads in MPID_Progress_wait() */
+        if (curr_ptr && !curr_ptr->request) {
+            /* This RMA operation has not been issued yet. */
+            break;
+        }
 	if (curr_ptr && !MPID_Request_is_complete(curr_ptr->request) ) {
 	    MPIR_T_PVAR_TIMER_START_VAR(RMA, list_block_timer);
 	    mpi_errno = MPID_Progress_wait(&progress_state);
@@ -5964,6 +5982,12 @@ static inline int rma_list_gc( MPID_Win *win_ptr,
 
     curr_ptr = MPIDI_CH3I_RMA_Ops_head(ops_list);
     do {
+        /* MT: avoid processing unissued operations enqueued by other threads
+           in rma_list_complete() */
+        if (curr_ptr && !curr_ptr->request) {
+            /* This RMA operation has not been issued yet. */
+            break;
+        }
 	if (MPID_Request_is_complete(curr_ptr->request)) {
 	    /* Once we find a complete request, we complete
 	       as many as possible until we find an incomplete
@@ -5979,6 +6003,13 @@ static inline int rma_list_gc( MPID_Win *win_ptr,
 		MPID_Request_release(curr_ptr->request);
                 MPIDI_CH3I_RMA_Ops_free_and_next(ops_list, &curr_ptr);
                 nVisit++;
+
+                /* MT: avoid processing unissued operations enqueued by other
+                   threads in rma_list_complete() */
+                if (curr_ptr && !curr_ptr->request) {
+                    /* This RMA operation has not been issued yet. */
+                    break;
+                }
 	    }
 	    while (curr_ptr && curr_ptr != last_elm && 
 		   MPID_Request_is_complete(curr_ptr->request)) ;

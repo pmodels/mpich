@@ -193,6 +193,7 @@ static inline int MPIDI_CH3I_RMA_Ops_alloc_tail(MPIDI_RMA_Ops_list_t *list,
 
     tmp_ptr->next = NULL;
     tmp_ptr->dataloop = NULL;
+    tmp_ptr->request = NULL;
 
     MPL_DL_APPEND(*list, tmp_ptr);
 
