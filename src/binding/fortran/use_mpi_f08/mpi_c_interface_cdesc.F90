@@ -795,11 +795,45 @@ function MPIR_Accumulate_cdesc(origin_addr, origin_count, origin_datatype, targe
     integer(c_int) :: ierror
 end function MPIR_Accumulate_cdesc
 
+function MPIR_Compare_and_swap_cdesc(origin_addr, compare_addr, result_addr, datatype, &
+        target_rank, target_disp, win) &
+    bind(C, name="MPIR_Compare_and_swap_cdesc") result(ierror)
+    use, intrinsic :: iso_c_binding, only : c_int
+    use :: mpi_f08_compile_constants, only : MPI_ADDRESS_KIND
+    use :: mpi_c_interface_types, only : c_Datatype, c_Win
+    implicit none
+    type(*), dimension(..), intent(in), asynchronous :: origin_addr
+    type(*), dimension(..), intent(in), asynchronous :: compare_addr
+    type(*), dimension(..), asynchronous :: result_addr
+    integer(c_Datatype), intent(in) :: datatype
+    integer(c_int), intent(in) :: target_rank
+    integer(kind=MPI_ADDRESS_KIND), intent(in) :: target_disp
+    integer(c_Win), intent(in) :: win
+    integer(c_int) :: ierror
+end function MPIR_Compare_and_swap_cdesc
+
+function MPIR_Fetch_and_op_cdesc(origin_addr, result_addr, datatype, target_rank, &
+        target_disp, op, win) &
+    bind(C, name="MPIR_Fetch_and_op_cdesc") result(ierror)
+    use, intrinsic :: iso_c_binding, only : c_int
+    use :: mpi_c_interface_types, only : c_Datatype, c_Op, c_Win
+    use :: mpi_f08_compile_constants, only : MPI_ADDRESS_KIND
+    implicit none
+    type(*), dimension(..), intent(in), asynchronous :: origin_addr
+    type(*), dimension(..), asynchronous :: result_addr
+    integer(c_Datatype), intent(in) :: datatype
+    integer(c_int), intent(in) :: target_rank
+    integer(kind=MPI_ADDRESS_KIND), intent(in) :: target_disp
+    integer(c_Op), intent(in) :: op
+    integer(c_Win), intent(in) :: win
+    integer(c_int) :: ierror
+end function MPIR_Fetch_and_op_cdesc
+
 function MPIR_Get_cdesc(origin_addr, origin_count, origin_datatype, target_rank, &
            target_disp, target_count, target_datatype, win) &
     bind(C, name="MPIR_Get_cdesc") result(ierror)
-    use :: mpi_f08_compile_constants, only : MPI_ADDRESS_KIND
     use, intrinsic :: iso_c_binding, only : c_int
+    use :: mpi_f08_compile_constants, only : MPI_ADDRESS_KIND
     use :: mpi_c_interface_types, only : c_Datatype, c_Win
     implicit none
     type(*), dimension(..) :: origin_addr
@@ -810,6 +844,24 @@ function MPIR_Get_cdesc(origin_addr, origin_count, origin_datatype, target_rank,
     integer(c_Win), value, intent(in) :: win
     integer(c_int) :: ierror
 end function MPIR_Get_cdesc
+
+function MPIR_Get_accumulate_cdesc(origin_addr, origin_count, origin_datatype, result_addr, &
+        result_count, result_datatype, target_rank, target_disp, &
+        target_count, target_datatype, op, win) &
+    bind(C, name="MPIR_Get_accumulate_cdesc") result(ierror)
+    use, intrinsic :: iso_c_binding, only : c_int
+    use :: mpi_c_interface_types, only : c_Datatype, c_Op, c_Win
+    use :: mpi_f08_compile_constants, only : MPI_ADDRESS_KIND
+    implicit none
+    type(*), dimension(..), intent(in), asynchronous :: origin_addr
+    type(*), dimension(..), asynchronous :: result_addr
+    integer(c_int), intent(in) :: origin_count, result_count, target_rank, target_count
+    integer(c_Datatype), intent(in) :: origin_datatype, target_datatype, result_datatype
+    integer(kind=MPI_ADDRESS_KIND), intent(in) :: target_disp
+    integer(c_Op), intent(in) :: op
+    integer(c_Win), intent(in) :: win
+    integer(c_int) :: ierror
+end function MPIR_Get_accumulate_cdesc
 
 function MPIR_Put_cdesc(origin_addr, origin_count, origin_datatype, target_rank, &
            target_disp, target_count, target_datatype, win) &
@@ -827,20 +879,90 @@ function MPIR_Put_cdesc(origin_addr, origin_count, origin_datatype, target_rank,
     integer(c_int) :: ierror
 end function MPIR_Put_cdesc
 
-function MPIR_Win_complete_f08(win) &
-    bind(C, name="MPIR_Win_complete_c") result(ierror)
+function MPIR_Raccumulate_cdesc(origin_addr, origin_count, origin_datatype, target_rank, &
+        target_disp, target_count, target_datatype, op, win, request) &
+    bind(C, name="MPIR_Raccumulate_cdesc") result(ierror)
     use, intrinsic :: iso_c_binding, only : c_int
+    use :: mpi_c_interface_types, only : c_Datatype, c_Op, c_Win, c_Request
     use :: mpi_f08_compile_constants, only : MPI_ADDRESS_KIND
-    use :: mpi_c_interface_types, only : c_Win
     implicit none
-    integer(c_Win), value, intent(in) :: win
+    type(*), dimension(..), intent(in), asynchronous :: origin_addr
+    integer, intent(in) :: origin_count, target_rank, target_count
+    integer(c_Datatype), intent(in) :: origin_datatype, target_datatype
+    integer(kind=MPI_ADDRESS_KIND), intent(in) :: target_disp
+    integer(c_Op), intent(in) :: op
+    integer(c_Win), intent(in) :: win
+    integer(c_Request), intent(out) :: request
     integer(c_int) :: ierror
-end function MPIR_Win_complete_f08
+end function MPIR_Raccumulate_cdesc
+
+function MPIR_Rget_cdesc(origin_addr, origin_count, origin_datatype, target_rank, &
+        target_disp, target_count, target_datatype, win, request) &
+    bind(C, name="MPIR_Rget_cdesc") result(ierror)
+    use, intrinsic :: iso_c_binding, only : c_int
+    use :: mpi_c_interface_types, only : c_Datatype, c_Win, c_Request
+    use :: mpi_f08_compile_constants, only : MPI_ADDRESS_KIND
+    implicit none
+    type(*), dimension(..), asynchronous :: origin_addr
+    integer, intent(in) :: origin_count, target_rank, target_count
+    integer(c_Datatype), intent(in) :: origin_datatype, target_datatype
+    integer(kind=MPI_ADDRESS_KIND), intent(in) :: target_disp
+    integer(c_Win), intent(in) :: win
+    integer(c_Request), intent(out) :: request
+    integer(c_int) :: ierror
+end function MPIR_Rget_cdesc
+
+function MPIR_Rget_accumulate_cdesc(origin_addr, origin_count, origin_datatype, &
+        result_addr, result_count, result_datatype, target_rank, &
+        target_disp, target_count, target_datatype, op, win, request) &
+    bind(C, name="MPIR_Rget_accumulate_cdesc") result(ierror)
+    use, intrinsic :: iso_c_binding, only : c_int
+    use :: mpi_c_interface_types, only : c_Datatype, c_Op, c_Win, c_Request
+    use :: mpi_f08_compile_constants, only : MPI_ADDRESS_KIND
+    implicit none
+    type(*), dimension(..), intent(in), asynchronous :: origin_addr
+    type(*), dimension(..), asynchronous :: result_addr
+    integer, intent(in) :: origin_count, result_count, target_rank, target_count
+    integer(c_Datatype), intent(in) :: origin_datatype, target_datatype, result_datatype
+    integer(kind=MPI_ADDRESS_KIND), intent(in) :: target_disp
+    integer(c_Op), intent(in) :: op
+    integer(c_Win), intent(in) :: win
+    integer(c_Request), intent(out) :: request
+    integer(c_int) :: ierror
+end function MPIR_Rget_accumulate_cdesc
+
+function MPIR_Rput_cdesc(origin_addr, origin_count, origin_datatype, target_rank, &
+        target_disp, target_count, target_datatype, win, request) &
+    bind(C, name="MPIR_Rput_cdesc") result(ierror)
+    use, intrinsic :: iso_c_binding, only : c_int
+    use :: mpi_c_interface_types, only : c_Datatype, c_Win, c_Request
+    use :: mpi_f08_compile_constants, only : MPI_ADDRESS_KIND
+    implicit none
+    type(*), dimension(..), intent(in), asynchronous :: origin_addr
+    integer, intent(in) :: origin_count, target_rank, target_count
+    integer(c_Datatype), intent(in) :: origin_datatype, target_datatype
+    integer(kind=MPI_ADDRESS_KIND), intent(in) :: target_disp
+    integer(c_Win), intent(in) :: win
+    integer(c_Request), intent(out) :: request
+    integer(c_int) :: ierror
+end function MPIR_Rput_cdesc
+
+function MPIR_Win_attach_cdesc(win, base, size) &
+    bind(C, name="MPIR_Win_attach_cdesc") result(ierror)
+    use, intrinsic :: iso_c_binding, only : c_int
+    use :: mpi_c_interface_types, only : c_Win
+    use :: mpi_f08_compile_constants, only : MPI_ADDRESS_KIND
+    implicit none
+    integer(c_Win), intent(in) :: win
+    type(*), dimension(..), asynchronous :: base
+    integer(kind=MPI_ADDRESS_KIND), intent(in) :: size
+    integer(c_int) :: ierror
+end function MPIR_Win_attach_cdesc
 
 function MPIR_Win_create_cdesc(base, size, disp_unit, info, comm, win) &
     bind(C, name="MPIR_Win_create_cdesc") result(ierror)
-    use :: mpi_f08_compile_constants, only : MPI_ADDRESS_KIND
     use, intrinsic :: iso_c_binding, only : c_int
+    use :: mpi_f08_compile_constants, only : MPI_ADDRESS_KIND
     use :: mpi_c_interface_types, only : c_Info, c_Comm, c_Win
     implicit none
     type(*), dimension(..) :: base
@@ -852,7 +974,15 @@ function MPIR_Win_create_cdesc(base, size, disp_unit, info, comm, win) &
     integer(c_int) :: ierror
 end function MPIR_Win_create_cdesc
 
-
+function MPIR_Win_detach_cdesc(win, base) &
+    bind(C, name="MPIR_Win_detach_cdesc") result(ierror)
+    use, intrinsic :: iso_c_binding, only : c_int
+    use :: mpi_c_interface_types, only : c_Win
+    implicit none
+    integer(c_Win), intent(in) :: win
+    type(*), dimension(..), asynchronous :: base
+    integer(c_int) :: ierror
+end function MPIR_Win_detach_cdesc
 
 function MPIR_File_iread_cdesc(fh, buf, count, datatype, request) &
     bind(C, name="MPIR_File_iread_cdesc") result(ierror)

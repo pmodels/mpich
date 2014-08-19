@@ -1482,6 +1482,16 @@ interface MPI_Comm_get_attr
     end subroutine MPI_Comm_get_attr_f08
 end interface MPI_Comm_get_attr
 
+interface MPI_Comm_get_info
+    subroutine MPI_Comm_get_info_f08(comm, info_used, ierror)
+        use :: mpi_f08_types, only : MPI_Comm, MPI_Info
+        implicit none
+        type(MPI_Comm), intent(in) :: comm
+        type(MPI_Info), intent(out) :: info_used
+        integer, optional, intent(out) :: ierror
+    end subroutine MPI_Comm_get_info_f08
+end interface MPI_Comm_get_info
+
 interface MPI_Comm_get_name
     subroutine MPI_Comm_get_name_f08(comm, comm_name, resultlen, ierror)
         use :: mpi_f08_types, only : MPI_Comm
@@ -1545,6 +1555,16 @@ interface MPI_Comm_set_attr
         integer, optional, intent(out) :: ierror
     end subroutine MPI_Comm_set_attr_f08
 end interface MPI_Comm_set_attr
+
+interface MPI_Comm_set_info
+    subroutine MPI_Comm_set_info_f08(comm, info_used, ierror)
+        use :: mpi_f08_types, only : MPI_Comm, MPI_Info
+        implicit none
+        type(MPI_Comm), intent(in) :: comm
+        type(MPI_Info), intent(in) :: info_used
+        integer, optional, intent(out) :: ierror
+    end subroutine MPI_Comm_set_info_f08
+end interface MPI_Comm_set_info
 
 interface MPI_Comm_set_name
     subroutine MPI_Comm_set_name_f08(comm, comm_name, ierror)
@@ -2634,6 +2654,40 @@ interface MPI_Accumulate
     end subroutine MPI_Accumulate_f08ts
 end interface MPI_Accumulate
 
+interface MPI_Compare_and_swap
+    subroutine MPI_Compare_and_swap_f08ts(origin_addr, compare_addr, result_addr, datatype, &
+            target_rank, target_disp, win, ierror)
+        use :: mpi_f08_types, only : MPI_Datatype, MPI_Win
+        use :: mpi_f08_compile_constants, only : MPI_ADDRESS_KIND
+        implicit none
+        type(*), dimension(..), intent(in), asynchronous :: origin_addr
+        type(*), dimension(..), intent(in), asynchronous :: compare_addr
+        type(*), dimension(..), asynchronous :: result_addr
+        type(MPI_Datatype), intent(in) :: datatype
+        integer, intent(in) :: target_rank
+        integer(kind=MPI_ADDRESS_KIND), intent(in) :: target_disp
+        type(MPI_Win), intent(in) :: win
+        integer, optional, intent(out) :: ierror
+    end subroutine MPI_Compare_and_swap_f08ts
+end interface MPI_Compare_and_swap
+
+interface MPI_Fetch_and_op
+    subroutine MPI_Fetch_and_op_f08ts(origin_addr, result_addr, datatype, target_rank, &
+            target_disp, op, win, ierror)
+        use :: mpi_f08_types, only : MPI_Datatype, MPI_Op, MPI_Win
+        use :: mpi_f08_compile_constants, only : MPI_ADDRESS_KIND
+        implicit none
+        type(*), dimension(..), intent(in), asynchronous :: origin_addr
+        type(*), dimension(..), asynchronous :: result_addr
+        type(MPI_Datatype), intent(in) :: datatype
+        integer, intent(in) :: target_rank
+        integer(kind=MPI_ADDRESS_KIND), intent(in) :: target_disp
+        type(MPI_Op), intent(in) :: op
+        type(MPI_Win), intent(in) :: win
+        integer, optional, intent(out) :: ierror
+    end subroutine MPI_Fetch_and_op_f08ts
+end interface MPI_Fetch_and_op
+
 interface MPI_Get
     subroutine MPI_Get_f08ts(origin_addr, origin_count, origin_datatype, target_rank, &
                                     target_disp, target_count, target_datatype, win, ierror)
@@ -2650,6 +2704,24 @@ interface MPI_Get
     end subroutine MPI_Get_f08ts
 end interface MPI_Get
 
+interface MPI_Get_accumulate
+    subroutine MPI_Get_accumulate_f08ts(origin_addr, origin_count, origin_datatype, result_addr, &
+            result_count, result_datatype, target_rank, target_disp, &
+            target_count, target_datatype, op, win, ierror)
+        use :: mpi_f08_types, only : MPI_Datatype, MPI_Op, MPI_Win
+        use :: mpi_f08_compile_constants, only : MPI_ADDRESS_KIND
+        implicit none
+        type(*), dimension(..), intent(in), asynchronous :: origin_addr
+        type(*), dimension(..), asynchronous :: result_addr
+        integer, intent(in) :: origin_count, result_count, target_rank, target_count
+        type(MPI_Datatype), intent(in) :: origin_datatype, target_datatype, result_datatype
+        integer(kind=MPI_ADDRESS_KIND), intent(in) :: target_disp
+        type(MPI_Op), intent(in) :: op
+        type(MPI_Win), intent(in) :: win
+        integer, optional, intent(out) :: ierror
+    end subroutine MPI_Get_accumulate_f08ts
+end interface MPI_Get_accumulate
+
 interface MPI_Put
     subroutine MPI_Put_f08ts(origin_addr, origin_count, origin_datatype, target_rank, &
                              target_disp, target_count, target_datatype, win, ierror)
@@ -2665,6 +2737,119 @@ interface MPI_Put
         integer, optional, intent(out) :: ierror
     end subroutine MPI_Put_f08ts
 end interface MPI_Put
+
+interface MPI_Raccumulate
+    subroutine MPI_Raccumulate_f08ts(origin_addr, origin_count, origin_datatype, target_rank, &
+            target_disp, target_count, target_datatype, op, win, request, ierror)
+        use :: mpi_f08_types, only : MPI_Datatype, MPI_Op, MPI_Win, MPI_Request
+        use :: mpi_f08_compile_constants, only : MPI_ADDRESS_KIND
+        implicit none
+        type(*), dimension(..), intent(in), asynchronous :: origin_addr
+        integer, intent(in) :: origin_count, target_rank, target_count
+        type(MPI_Datatype), intent(in) :: origin_datatype, target_datatype
+        integer(kind=MPI_ADDRESS_KIND), intent(in) :: target_disp
+        type(MPI_Op), intent(in) :: op
+        type(MPI_Win), intent(in) :: win
+        type(MPI_Request), intent(out) :: request
+        integer, optional, intent(out) :: ierror
+    end subroutine MPI_Raccumulate_f08ts
+end interface MPI_Raccumulate
+
+interface MPI_Rget
+    subroutine MPI_Rget_f08ts(origin_addr, origin_count, origin_datatype, target_rank, &
+            target_disp, target_count, target_datatype, win, request, ierror)
+        use :: mpi_f08_types, only : MPI_Datatype, MPI_Win, MPI_Request
+        use :: mpi_f08_compile_constants, only : MPI_ADDRESS_KIND
+        implicit none
+        type(*), dimension(..), asynchronous :: origin_addr
+        integer, intent(in) :: origin_count, target_rank, target_count
+        type(MPI_Datatype), intent(in) :: origin_datatype, target_datatype
+        integer(kind=MPI_ADDRESS_KIND), intent(in) :: target_disp
+        type(MPI_Win), intent(in) :: win
+        type(MPI_Request), intent(out) :: request
+        integer, optional, intent(out) :: ierror
+    end subroutine MPI_Rget_f08ts
+end interface MPI_Rget
+
+interface MPI_Rget_accumulate
+    subroutine MPI_Rget_accumulate_f08ts(origin_addr, origin_count, origin_datatype, &
+            result_addr, result_count, result_datatype, target_rank, &
+            target_disp, target_count, target_datatype, op, win, request, ierror)
+        use :: mpi_f08_types, only : MPI_Datatype, MPI_Op, MPI_Win, MPI_Request
+        use :: mpi_f08_compile_constants, only : MPI_ADDRESS_KIND
+        implicit none
+        type(*), dimension(..), intent(in), asynchronous :: origin_addr
+        type(*), dimension(..), asynchronous :: result_addr
+        integer, intent(in) :: origin_count, result_count, target_rank, target_count
+        type(MPI_Datatype), intent(in) :: origin_datatype, target_datatype, result_datatype
+        integer(kind=MPI_ADDRESS_KIND), intent(in) :: target_disp
+        type(MPI_Op), intent(in) :: op
+        type(MPI_Win), intent(in) :: win
+        type(MPI_Request), intent(out) :: request
+        integer, optional, intent(out) :: ierror
+    end subroutine MPI_Rget_accumulate_f08ts
+end interface MPI_Rget_accumulate
+
+interface MPI_Rput
+    subroutine MPI_Rput_f08ts(origin_addr, origin_count, origin_datatype, target_rank, &
+            target_disp, target_count, target_datatype, win, request, ierror)
+        use :: mpi_f08_types, only : MPI_Datatype, MPI_Win, MPI_Request
+        use :: mpi_f08_compile_constants, only : MPI_ADDRESS_KIND
+        implicit none
+        type(*), dimension(..), intent(in), asynchronous :: origin_addr
+        integer, intent(in) :: origin_count, target_rank, target_count
+        type(MPI_Datatype), intent(in) :: origin_datatype, target_datatype
+        integer(kind=MPI_ADDRESS_KIND), intent(in) :: target_disp
+        type(MPI_Win), intent(in) :: win
+        type(MPI_Request), intent(out) :: request
+        integer, optional, intent(out) :: ierror
+    end subroutine MPI_Rput_f08ts
+end interface MPI_Rput
+
+interface MPI_Win_allocate
+    subroutine MPI_Win_allocate_f08(size, disp_unit, info, comm, baseptr, win, ierror)
+        use, intrinsic :: iso_c_binding, only : c_ptr
+        use :: mpi_f08_types, only : MPI_Info, MPI_Comm, MPI_Win
+        use :: mpi_f08_compile_constants, only : MPI_ADDRESS_KIND
+        implicit none
+        integer(kind=MPI_ADDRESS_KIND), intent(in) :: size
+        integer, intent(in) :: disp_unit
+        type(MPI_Info), intent(in) :: info
+        type(MPI_Comm), intent(in) :: comm
+        type(c_ptr), intent(out) :: baseptr
+        type(MPI_Win), intent(out) :: win
+        integer, optional, intent(out) :: ierror
+    end subroutine MPI_Win_allocate_f08
+end interface MPI_Win_allocate
+
+interface MPI_Win_allocate_shared
+    subroutine MPI_Win_allocate_shared_f08(size, disp_unit, info, comm, baseptr, win, ierror)
+        use, intrinsic :: iso_c_binding, only : c_ptr
+        use :: mpi_f08_types, only : MPI_Info, MPI_Comm, MPI_Win
+        use :: mpi_f08_compile_constants, only : MPI_ADDRESS_KIND
+        implicit none
+        integer(kind=MPI_ADDRESS_KIND), intent(in) :: size
+        integer, intent(in) :: disp_unit
+        type(MPI_Info), intent(in) :: info
+        type(MPI_Comm), intent(in) :: comm
+        type(c_ptr), intent(out) :: baseptr
+        type(MPI_Win), intent(out) :: win
+        integer, optional, intent(out) :: ierror
+    end subroutine MPI_Win_allocate_shared_f08
+end interface MPI_Win_allocate_shared
+
+interface MPI_Win_attach
+    subroutine MPI_Win_attach_f08ts(win, base, size, ierror)
+        use :: mpi_f08_types, only : MPI_Win
+        use :: mpi_f08_compile_constants, only : MPI_ADDRESS_KIND
+        implicit none
+        type(MPI_Win), intent(in) :: win
+        type(*), dimension(..), asynchronous :: base
+        integer(kind=MPI_ADDRESS_KIND), intent(in) :: size
+        integer, optional, intent(out) :: ierror
+    end subroutine MPI_Win_attach_f08ts
+end interface MPI_Win_attach
+
 
 interface MPI_Win_complete
     subroutine MPI_Win_complete_f08(win, ierror)
@@ -2690,6 +2875,27 @@ interface MPI_Win_create
     end subroutine MPI_Win_create_f08ts
 end interface MPI_Win_create
 
+interface MPI_Win_create_dynamic
+    subroutine MPI_Win_create_dynamic_f08(info, comm, win, ierror)
+        use :: mpi_f08_types, only : MPI_Info, MPI_Comm, MPI_Win
+        implicit none
+        type(MPI_Info), intent(in) :: info
+        type(MPI_Comm), intent(in) :: comm
+        type(MPI_Win), intent(out) :: win
+        integer, optional, intent(out) :: ierror
+    end subroutine MPI_Win_create_dynamic_f08
+end interface MPI_Win_create_dynamic
+
+interface MPI_Win_detach
+    subroutine MPI_Win_detach_f08ts(win, base, ierror)
+        use :: mpi_f08_types, only : MPI_Win
+        implicit none
+        type(MPI_Win), intent(in) :: win
+        type(*), dimension(..), asynchronous :: base
+        integer, optional, intent(out) :: ierror
+    end subroutine MPI_Win_detach_f08ts
+end interface MPI_Win_detach
+
 interface MPI_Win_fence
     subroutine MPI_Win_fence_f08(assert, win, ierror)
         use :: mpi_f08_types, only : MPI_Win
@@ -2699,6 +2905,44 @@ interface MPI_Win_fence
         integer, optional, intent(out) :: ierror
     end subroutine MPI_Win_fence_f08
 end interface MPI_Win_fence
+
+interface MPI_Win_flush
+    subroutine MPI_Win_flush_f08(rank, win, ierror)
+        use :: mpi_f08_types, only : MPI_Win
+        implicit none
+        integer, intent(in) :: rank
+        type(MPI_Win), intent(in) :: win
+        integer, optional, intent(out) :: ierror
+    end subroutine MPI_Win_flush_f08
+end interface MPI_Win_flush
+
+interface MPI_Win_flush_all
+    subroutine MPI_Win_flush_all_f08(win, ierror)
+        use :: mpi_f08_types, only : MPI_Win
+        implicit none
+        type(MPI_Win), intent(in) :: win
+        integer, optional, intent(out) :: ierror
+    end subroutine MPI_Win_flush_all_f08
+end interface MPI_Win_flush_all
+
+interface MPI_Win_flush_local
+    subroutine MPI_Win_flush_local_f08(rank, win, ierror)
+        use :: mpi_f08_types, only : MPI_Win
+        implicit none
+        integer, intent(in) :: rank
+        type(MPI_Win), intent(in) :: win
+        integer, optional, intent(out) :: ierror
+    end subroutine MPI_Win_flush_local_f08
+end interface MPI_Win_flush_local
+
+interface MPI_Win_flush_local_all
+    subroutine MPI_Win_flush_local_all_f08(win, ierror)
+        use :: mpi_f08_types, only : MPI_Win
+        implicit none
+        type(MPI_Win), intent(in) :: win
+        integer, optional, intent(out) :: ierror
+    end subroutine MPI_Win_flush_local_all_f08
+end interface MPI_Win_flush_local_all
 
 interface MPI_Win_free
     subroutine MPI_Win_free_f08(win, ierror)
@@ -2719,6 +2963,16 @@ interface MPI_Win_get_group
     end subroutine MPI_Win_get_group_f08
 end interface MPI_Win_get_group
 
+interface MPI_Win_get_info
+    subroutine MPI_Win_get_info_f08(win, info_used, ierror)
+        use :: mpi_f08_types, only : MPI_Win, MPI_Info
+        implicit none
+        type(MPI_Win), intent(in) :: win
+        type(MPI_Info), intent(out) :: info_used
+        integer, optional, intent(out) :: ierror
+    end subroutine MPI_Win_get_info_f08
+end interface MPI_Win_get_info
+
 interface MPI_Win_lock
     subroutine MPI_Win_lock_f08(lock_type, rank, assert, win, ierror)
         use :: mpi_f08_types, only : MPI_Win
@@ -2728,6 +2982,16 @@ interface MPI_Win_lock
         integer, optional, intent(out) :: ierror
     end subroutine MPI_Win_lock_f08
 end interface MPI_Win_lock
+
+interface MPI_Win_lock_all
+    subroutine MPI_Win_lock_all_f08(assert, win, ierror)
+        use :: mpi_f08_types, only : MPI_Win
+        implicit none
+        integer, intent(in) :: assert
+        type(MPI_Win), intent(in) :: win
+        integer, optional, intent(out) :: ierror
+    end subroutine MPI_Win_lock_all_f08
+end interface MPI_Win_lock_all
 
 interface MPI_Win_post
     subroutine MPI_Win_post_f08(group, assert, win, ierror)
@@ -2740,6 +3004,31 @@ interface MPI_Win_post
     end subroutine MPI_Win_post_f08
 end interface MPI_Win_post
 
+interface MPI_Win_set_info
+    subroutine MPI_Win_set_info_f08(win, info, ierror)
+        use :: mpi_f08_types, only : MPI_Win, MPI_info
+        implicit none
+        type(MPI_Win), intent(in) :: win
+        type(MPI_Info), intent(in) :: info
+        integer, optional, intent(out) :: ierror
+    end subroutine MPI_Win_set_info_f08
+end interface MPI_Win_set_info
+
+interface MPI_Win_shared_query
+    subroutine MPI_Win_shared_query_f08(win, rank, size, disp_unit, baseptr, ierror)
+        use, intrinsic :: iso_c_binding, only : c_ptr
+        use :: mpi_f08_types, only : MPI_Win
+        use :: mpi_f08_compile_constants, only : MPI_ADDRESS_KIND
+        implicit none
+        type(MPI_Win), intent(in) :: win
+        integer, intent(in) :: rank
+        integer(kind=MPI_ADDRESS_KIND), intent(out) :: size
+        integer, intent(out) :: disp_unit
+        type(c_ptr), intent(out) :: baseptr
+        integer, optional, intent(out) :: ierror
+    end subroutine MPI_Win_shared_query_f08
+end interface MPI_Win_shared_query
+
 interface MPI_Win_start
     subroutine MPI_Win_start_f08(group, assert, win, ierror)
         use :: mpi_f08_types, only : MPI_Group, MPI_Win
@@ -2750,6 +3039,15 @@ interface MPI_Win_start
         integer, optional, intent(out) :: ierror
     end subroutine MPI_Win_start_f08
 end interface MPI_Win_start
+
+interface MPI_Win_sync
+    subroutine MPI_Win_sync_f08(win, ierror)
+        use :: mpi_f08_types, only : MPI_Win
+        implicit none
+        type(MPI_Win), intent(in) :: win
+        integer, optional, intent(out) :: ierror
+    end subroutine MPI_Win_sync_f08
+end interface MPI_Win_sync
 
 interface MPI_Win_test
     subroutine MPI_Win_test_f08(win, flag, ierror)
@@ -2770,6 +3068,15 @@ interface MPI_Win_unlock
         integer, optional, intent(out) :: ierror
     end subroutine MPI_Win_unlock_f08
 end interface MPI_Win_unlock
+
+interface MPI_Win_unlock_all
+    subroutine MPI_Win_unlock_all_f08(win, ierror)
+        use :: mpi_f08_types, only : MPI_Win
+        implicit none
+        type(MPI_Win), intent(in) :: win
+        integer, optional, intent(out) :: ierror
+    end subroutine MPI_Win_unlock_all_f08
+end interface MPI_Win_unlock_all
 
 interface MPI_Win_wait
     subroutine MPI_Win_wait_f08(win, ierror)
