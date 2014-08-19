@@ -24,6 +24,7 @@ ptl_pt_index_t  MPIDI_nem_ptl_get_pt; /* portal for gets by receiver */
 ptl_pt_index_t  MPIDI_nem_ptl_control_pt; /* portal for MPICH control messages */
 ptl_handle_eq_t MPIDI_nem_ptl_eq;
 ptl_handle_md_t MPIDI_nem_ptl_global_md;
+ptl_ni_limits_t MPIDI_nem_ptl_ni_limits;
 
 static int ptl_init(MPIDI_PG_t *pg_p, int pg_rank, char **bc_val_p, int *val_max_sz_p);
 static int ptl_finalize(void);
@@ -105,7 +106,7 @@ static int ptl_init(MPIDI_PG_t *pg_p, int pg_rank, char **bc_val_p, int *val_max
     MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlinit", "**ptlinit %s", MPID_nem_ptl_strerror(ret));
     
     ret = PtlNIInit(PTL_IFACE_DEFAULT, PTL_NI_MATCHING | PTL_NI_PHYSICAL,
-                    PTL_PID_ANY, NULL, NULL, &MPIDI_nem_ptl_ni);
+                    PTL_PID_ANY, NULL, &MPIDI_nem_ptl_ni_limits, &MPIDI_nem_ptl_ni);
     MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlniinit", "**ptlniinit %s", MPID_nem_ptl_strerror(ret));
 
     ret = PtlEQAlloc(MPIDI_nem_ptl_ni, EQ_COUNT, &MPIDI_nem_ptl_eq);
