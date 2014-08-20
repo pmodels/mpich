@@ -1180,10 +1180,20 @@ SUBROUTINE test1(buf, count, ierr)
     INTEGER, OPTIONAL     :: ierr
 END SUBROUTINE
 
-! Test procedure
+! Test procedure type and non-bind(c) x in C_FUNCLOC(x)
 SUBROUTINE test2(func)
+    USE, INTRINSIC :: ISO_C_BINDING, ONLY : C_FUNLOC, C_FUNPTR
     PROCEDURE(user_func)  :: func
+    TYPE(C_FUNPTR) :: errhandler_fn
+    errhandler_fn = C_FUNLOC(func)
 END SUBROUTINE
+
+! Test intrinsic storage_size
+SUBROUTINE test3(x, size)
+    CHARACTER, DIMENSION(..) :: x
+    INTEGER, INTENT(OUT) :: size
+    size = storage_size(x)/8
+END SUBROUTINE test3
 
 END MODULE
 
