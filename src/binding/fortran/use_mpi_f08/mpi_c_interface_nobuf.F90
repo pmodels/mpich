@@ -605,7 +605,7 @@ function MPIR_Comm_idup_c(comm, newcomm, request) &
     use :: mpi_c_interface_types, only : c_Comm, c_Request
     implicit none
     integer(c_Comm), value, intent(in) :: comm
-    integer(c_Comm), intent(out) :: newcomm
+    integer(c_Comm), intent(out), asynchronous :: newcomm
     integer(c_Request), intent(out) :: request
     integer(c_int) :: ierror
 end function MPIR_Comm_idup_c

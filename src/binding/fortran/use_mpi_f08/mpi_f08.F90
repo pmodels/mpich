@@ -1446,7 +1446,7 @@ interface MPI_Comm_idup
         use :: mpi_f08_types, only : MPI_Comm, MPI_Request
         implicit none
         type(MPI_Comm), intent(in) :: comm
-        type(MPI_Comm), intent(out) :: newcomm
+        type(MPI_Comm), intent(out), asynchronous :: newcomm
         type(MPI_Request), intent(out) :: request
         integer, optional, intent(out) :: ierror
     end subroutine MPI_Comm_idup_f08
