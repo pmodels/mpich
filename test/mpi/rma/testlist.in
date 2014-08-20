@@ -104,6 +104,7 @@ linked_list_bench_lock_shr_nocheck 4 mpiversion=3.0
 mutex_bench 4 mpiversion=3.0
 mutex_bench_shared 4 mpiversion=3.0
 mutex_bench_shm 4 mpiversion=3.0
+mutex_bench_shm_ordered 4 mpiversion=3.0 xfail=ticket2127
 rma-contig 2 mpiversion=3.0 timeLimit=600
 badrma 2 mpiversion=3.0
 acc-loc 4

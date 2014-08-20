@@ -120,6 +120,7 @@ noinst_PROGRAMS =          \
     mutex_bench            \
     mutex_bench_shared     \
     mutex_bench_shm        \
+    mutex_bench_shm_ordered\
     rma-contig             \
     badrma                 \
     nb_test                \
@@ -176,6 +177,8 @@ mutex_bench_shared_CPPFLAGS      = -DUSE_WIN_SHARED $(AM_CPPFLAGS)
 mutex_bench_shared_SOURCES       = mutex_bench.c mcs-mutex.c mcs-mutex.h
 mutex_bench_shm_CPPFLAGS         = -DUSE_WIN_ALLOC_SHM $(AM_CPPFLAGS)
 mutex_bench_shm_SOURCES          = mutex_bench.c mcs-mutex.c mcs-mutex.h
+mutex_bench_shm_ordered_CPPFLAGS = -DUSE_WIN_ALLOC_SHM -DUSE_CONTIGUOUS_RANK $(AM_CPPFLAGS)
+mutex_bench_shm_ordered_SOURCES  = mutex_bench.c mcs-mutex.c mcs-mutex.h
 
 linked_list_bench_lock_shr_nocheck_SOURCES  = linked_list_bench_lock_shr.c
 linked_list_bench_lock_shr_nocheck_CPPFLAGS = -DUSE_MODE_NOCHECK $(AM_CPPFLAGS)

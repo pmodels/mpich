@@ -45,7 +45,11 @@ int main(int argc, char ** argv) {
   for (i = 0; i < NUM_ITER; i++) {
     /* Combining trylock and lock here is helpful for testing because it makes
      * CAS and Fetch-and-op contend for the tail pointer. */
+#ifdef USE_CONTIGUOUS_RANK
+    if (rank < nproc / 2) {
+#else
     if (rank % 2) {
+#endif
       int success = 0;
       while (!success) {
         MCS_Mutex_trylock(mcs_mtx, &success);
