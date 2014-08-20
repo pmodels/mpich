@@ -606,12 +606,19 @@ int MPID_nem_ib_init(MPIDI_PG_t * pg_p, int pg_rank, char **bc_val_p, int *val_m
     /* We need to communicate with all other ranks in close sequence.  */
     MPID_nem_ib_conns_ref_count = MPID_nem_ib_nranks - MPID_nem_mem_region.num_local;
 
+    if (MPID_nem_ib_conns_ref_count == 0) {
+        MPIU_Free(MPID_nem_ib_conns);
+    }
+
     for (i = 0; i < MPID_nem_mem_region.num_local; i++) {
         if (MPID_nem_mem_region.local_procs[i] != MPID_nem_ib_myrank) {
             ibcom_errno =
                 MPID_nem_ib_com_close(MPID_nem_ib_scratch_pad_fds
                                       [MPID_nem_mem_region.local_procs[i]]);
-            MPID_nem_ib_scratch_pad_fds_ref_count--;
+            if (--MPID_nem_ib_scratch_pad_fds_ref_count == 0) {
+                MPIU_Free(MPID_nem_ib_scratch_pad_fds);
+                MPIU_Free(MPID_nem_ib_scratch_pad_ibcoms);
+            }
         }
     }
 #endif
