@@ -64,8 +64,8 @@ int MPID_Comm_agree(MPID_Comm *comm_ptr, uint32_t *bitarray, int *flag, int new_
     int errflag = new_fail;
     int tmp_flag;
 
-    MPID_MPI_STATE_DECL(MPID_STATE_MPID_COMM_AGREE);
-    MPID_MPI_FUNC_ENTER(MPID_STATE_MPID_COMM_AGREE);
+    MPIDI_STATE_DECL(MPID_STATE_MPID_COMM_AGREE);
+    MPIDI_FUNC_ENTER(MPID_STATE_MPID_COMM_AGREE);
 
     children = (int *) MPIU_Malloc(sizeof(int) * ((comm_ptr->local_size) / 2));
 
@@ -113,7 +113,7 @@ int MPID_Comm_agree(MPID_Comm *comm_ptr, uint32_t *bitarray, int *flag, int new_
     MPIU_Free(children);
 
   fn_exit:
-    MPID_MPI_FUNC_EXIT(MPID_STATE_MPID_COMM_AGREE);
+    MPIDI_FUNC_EXIT(MPID_STATE_MPID_COMM_AGREE);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
