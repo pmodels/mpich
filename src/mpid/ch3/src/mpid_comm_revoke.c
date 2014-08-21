@@ -35,6 +35,8 @@ int MPID_Comm_revoke(MPID_Comm *comm_ptr, int is_remote)
     if (0 == comm_ptr->revoked) {
         /* Mark the communicator as revoked locally */
         comm_ptr->revoked = 1;
+        if (comm_ptr->node_comm) comm_ptr->node_comm->revoked = 1;
+        if (comm_ptr->node_roots_comm) comm_ptr->node_roots_comm->revoked = 1;
 
         /* Keep a reference to this comm so it doesn't get destroyed while
          * it's being revoked */
