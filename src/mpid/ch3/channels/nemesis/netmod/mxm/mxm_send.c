@@ -129,7 +129,7 @@ int MPID_nem_mxm_iStartContigMsg(MPIDI_VC_t * vc, void *hdr, MPIDI_msg_sz_t hdr_
 
   fn_exit:
     *sreq_ptr = sreq;
-    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_MX_ISTARTCONTIGMSG);
+    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_MXM_ISTARTCONTIGMSG);
     return mpi_errno;
   fn_fail:
     goto fn_exit;

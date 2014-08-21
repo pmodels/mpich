@@ -642,6 +642,9 @@ int MPID_nem_ib_handle_pkt_bh(MPIDI_VC_t * vc, MPID_Request * req, char *buf, MP
     int mpi_errno = MPI_SUCCESS;
     int complete = 0;
 
+    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_IB_HANDLE_PKT_BH);
+    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_IB_HANDLE_PKT_BH);
+
     while (buflen && !complete) {
         MPID_IOV *iov;
         int n_iov;
@@ -691,7 +694,7 @@ int MPID_nem_ib_handle_pkt_bh(MPIDI_VC_t * vc, MPID_Request * req, char *buf, MP
         }
     }
   fn_exit:
-    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_IB_DRAIN_SCQ);
+    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_IB_HANDLE_PKT_BH);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
@@ -1794,6 +1797,9 @@ int MPID_nem_ib_PktHandler_Put(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
 
     MPID_Win *win_ptr;
 
+    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_IB_PKTHANDLER_PUT);
+    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_IB_PKTHANDLER_PUT);
+
     MPIU_Assert(put_pkt->target_win_handle != MPI_WIN_NULL);
     MPID_Win_get_ptr(put_pkt->target_win_handle, win_ptr);
     mpi_errno = MPIDI_CH3_Start_rma_op_target(win_ptr, put_pkt->flags);
@@ -1910,6 +1916,9 @@ int MPID_nem_ib_PktHandler_Accumulate(MPIDI_VC_t * vc,
     MPI_Aint true_lb, true_extent, extent;
     MPI_Aint type_size;
     MPID_Win *win_ptr;
+
+    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_IB_PKTHANDLER_ACCUMULATE);
+    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_IB_PKTHANDLER_ACCUMULATE);
 
     MPIU_Assert(accum_pkt->target_win_handle != MPI_WIN_NULL);
     MPID_Win_get_ptr(accum_pkt->target_win_handle, win_ptr);
@@ -2093,6 +2102,10 @@ int MPID_nem_ib_PktHandler_GetResp(MPIDI_VC_t * vc,
     MPID_nem_ib_rma_lmt_cookie_t *s_cookie_buf =
         (MPID_nem_ib_rma_lmt_cookie_t *) ((uint8_t *) pkt + sizeof(MPIDI_CH3_Pkt_t) +
                                           sizeof(MPIDI_CH3_Pkt_t));
+
+    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_IB_PKTHANDLER_GETRESP);
+    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_IB_PKTHANDLER_GETRESP);
+
     MPID_Request_get_ptr(get_resp_pkt->request_handle, req);
 
     void *write_to_buf;
