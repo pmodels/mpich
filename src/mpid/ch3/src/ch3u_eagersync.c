@@ -235,6 +235,14 @@ int MPIDI_CH3_PktHandler_EagerSyncSend( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 	    
     rreq = MPIDI_CH3U_Recvq_FDP_or_AEU(&es_pkt->match, &found);
     MPIU_ERR_CHKANDJUMP1(!rreq, mpi_errno,MPI_ERR_OTHER, "**nomemreq", "**nomemuereq %d", MPIDI_CH3U_Recvq_count_unexp());
+
+    /* If the completion counter is 0, that means that the communicator to
+     * which this message is being sent has been revoked and we shouldn't
+     * bother finishing this. */
+    if (!found && rreq->cc == 0) {
+        *rreqp = NULL;
+        goto fn_fail;
+    }
     
     set_request_info(rreq, es_pkt, MPIDI_REQUEST_EAGER_MSG);
 

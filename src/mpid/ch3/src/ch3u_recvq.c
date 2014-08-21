@@ -808,6 +808,26 @@ MPID_Request * MPIDI_CH3U_Recvq_FDP_or_AEU(MPIDI_Message_match * match,
     }
     MPIR_T_PVAR_TIMER_END(RECVQ, time_failed_matching_postedq);
 
+    /* If we didn't match the request, look to see if the communicator is
+     * revoked. If so, just throw this request away since it won't be used
+     * anyway. */
+    {
+        MPID_Comm *comm_ptr;
+        int mpi_errno;
+
+        MPIDI_CH3I_Comm_find(match->parts.context_id, &comm_ptr);
+
+        if (comm_ptr && comm_ptr->revoked && MPIR_TAG_MASK_ERROR_BIT(match->parts.tag) != MPIR_AGREE_TAG &&
+                        comm_ptr->revoked && MPIR_TAG_MASK_ERROR_BIT(match->parts.tag) != MPIR_SHRINK_TAG) {
+            *foundp = FALSE;
+            MPIDI_Request_create_null_rreq( rreq, mpi_errno, found=FALSE;goto lock_exit );
+
+            MPIU_DBG_MSG_FMT(CH3_OTHER, VERBOSE,
+                (MPIU_DBG_FDEST, "RECEIVED MESSAGE FOR REVOKED COMM (tag=%d,src=%d,cid=%d)\n", MPIR_TAG_MASK_ERROR_BIT(match->parts.tag), match->parts.rank, comm_ptr->context_id));
+            return rreq;
+        }
+    }
+
     /* A matching request was not found in the posted queue, so we 
        need to allocate a new request and add it to the unexpected queue */
     {

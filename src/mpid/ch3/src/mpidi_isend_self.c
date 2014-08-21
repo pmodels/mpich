@@ -56,6 +56,16 @@ int MPIDI_Isend_self(const void * buf, int count, MPI_Datatype datatype, int ran
     }
     /* --END ERROR HANDLING-- */
 
+    /* If the completion counter is 0, that means that the communicator to
+     * which this message is being sent has been revoked and we shouldn't
+     * bother finishing this. */
+    if (!found && rreq->cc == 0) {
+        MPIU_Object_set_ref(sreq, 0);
+        MPIDI_CH3_Request_destroy(sreq);
+        sreq = NULL;
+        goto fn_exit;
+    }
+
     MPIDI_Comm_get_vc_set_active(comm, rank, &vc);
     MPIDI_VC_FAI_send_seqnum(vc, seqnum);
     MPIDI_Request_set_seqnum(sreq, seqnum);
