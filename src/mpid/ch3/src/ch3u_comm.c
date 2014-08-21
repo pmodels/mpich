@@ -340,8 +340,10 @@ void MPIDI_CH3I_Comm_find(MPIR_Context_id_t context_id, MPID_Comm **comm)
     MPIDI_FUNC_ENTER(MPIDI_STATE_MPIDI_CH3I_COMM_FIND);
 
     COMM_FOREACH((*comm)) {
-        if ((*comm)->context_id == context_id) {
-            MPIU_DBG_MSG_D(CH3_OTHER,VERBOSE,"Found matching context id: %d", context_id);
+        if ((*comm)->context_id == context_id || ((*comm)->context_id + MPID_CONTEXT_INTRA_COLL) == context_id ||
+            ((*comm)->node_comm && ((*comm)->node_comm->context_id == context_id || ((*comm)->node_comm->context_id + MPID_CONTEXT_INTRA_COLL) == context_id)) ||
+            ((*comm)->node_roots_comm && ((*comm)->node_roots_comm->context_id == context_id || ((*comm)->node_roots_comm->context_id + MPID_CONTEXT_INTRA_COLL) == context_id)) ) {
+            MPIU_DBG_MSG_D(CH3_OTHER,VERBOSE,"Found matching context id: %d", (*comm)->context_id);
             break;
         }
     }
