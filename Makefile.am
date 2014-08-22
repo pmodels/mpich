@@ -264,7 +264,12 @@ DISTCLEANFILES += config.system
 clean-local: $(CLEAN_LOCAL_TARGETS)
 
 uninstall-local:
-	rm -f ${DESTDIR}${bindir}/@MPICPP_NAME@
+	for x in @MPICPP_NAME@ @MPIF90_NAME@ @MPIF77_NAME@ ; do \
+		rm -f ${DESTDIR}${bindir}/$$x ; \
+	done ; \
+	for x in mpl opa mpich fmpich mpichf90 mpichcxx ; do \
+		rm -f ${DESTDIR}${libdir}/lib$$x@SHLIB_EXT@ ; \
+	done
 
 # --------------------------------------------------------------------------
 #  coverage rules
