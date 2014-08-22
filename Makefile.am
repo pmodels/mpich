@@ -262,6 +262,8 @@ DISTCLEANFILES += config.system
 # we can only have one clean-local, so we hook into it via conditionally
 # defined variables in the dependencies section
 clean-local: $(CLEAN_LOCAL_TARGETS)
+
+uninstall-local:
 	rm -f ${DESTDIR}${bindir}/@MPICPP_NAME@
 
 # --------------------------------------------------------------------------
