@@ -112,6 +112,7 @@ noinst_PROGRAMS =          \
     get_accumulate_double_derived  \
     get_accumulate_int_derived     \
     flush                  \
+    win_shared_put_flush_get          \
     reqops                 \
     req_example            \
     req_example_shm        \
