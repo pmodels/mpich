@@ -3601,11 +3601,15 @@ static int do_passive_target_rma(MPID_Win *win_ptr, int target_rank,
                  win_ptr->targets[target_rank].remote_lock_assert & MPI_MODE_NOCHECK));
 
     if (win_ptr->targets[target_rank].remote_lock_mode == MPI_LOCK_EXCLUSIVE &&
-        win_ptr->targets[target_rank].remote_lock_state != MPIDI_CH3_WIN_LOCK_CALLED) {
+        win_ptr->targets[target_rank].remote_lock_state != MPIDI_CH3_WIN_LOCK_CALLED &&
+        win_ptr->targets[target_rank].remote_lock_state != MPIDI_CH3_WIN_LOCK_FLUSH) {
         /* Exclusive lock already held -- no need to wait for rma done pkt at
            the end.  This is because the target won't grant another process
            access to the window until all of our operations complete at that
-           target.  Thus, there is no third-party communication issue. */
+           target.  Thus, there is no third-party communication issue.
+           However, flush still needs to wait for rma done, otherwise result
+           may be unknown if user reads the updated location from a shared window of
+           another target process after this flush. */
         *wait_for_rma_done_pkt = 0;
     }
     else if (MPIDI_CH3I_RMA_Ops_isempty(&win_ptr->targets[target_rank].rma_ops_list)) {
