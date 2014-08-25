@@ -14,6 +14,36 @@
 #include "mpid_nem_impl.h"
 #include "mxm_impl.h"
 
+/*
+=== BEGIN_MPI_T_CVAR_INFO_BLOCK ===
+
+cvars:
+    - name        : MPIR_CVAR_NEMESIS_MXM_BULK_CONNECT
+      category    : CH3
+      type        : boolean
+      default     : false
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        If true, force mxm to connect all processes at initialization
+        time.
+
+    - name        : MPIR_CVAR_NEMESIS_MXM_BULK_DISCONNECT
+      category    : CH3
+      type        : boolean
+      default     : false
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        If true, force mxm to disconnect all processes at
+        finalization time.
+
+=== END_MPI_T_CVAR_INFO_BLOCK ===
+*/
+
+
 MPID_nem_netmod_funcs_t MPIDI_nem_mxm_funcs = {
     MPID_nem_mxm_init,
     MPID_nem_mxm_finalize,
@@ -362,11 +392,9 @@ static int _mxm_conf(void)
              "%ld.%ld", (cur_ver >> MXM_MAJOR_BIT) & 0xff, (cur_ver >> MXM_MINOR_BIT) & 0xff);
 #endif
 
-    env_val = getenv("MPICH_NETMOD_MXM_BULK_CONNECT");
-    _mxm_obj.conf.bulk_connect = (env_val ? atoi(env_val) : (cur_ver < MXM_VERSION(3, 2) ? 0 : 1));
-    env_val = getenv("MPICH_NETMOD_MXM_BULK_DISCONNECT");
-    _mxm_obj.conf.bulk_disconnect = (env_val ?
-                                     atoi(env_val) : (cur_ver < MXM_VERSION(3, 2) ? 0 : 1));
+    _mxm_obj.conf.bulk_connect = cur_ver < MXM_VERSION(3, 2) ? 0 : MPIR_CVAR_NEMESIS_MXM_BULK_CONNECT;
+    _mxm_obj.conf.bulk_disconnect = cur_ver < MXM_VERSION(3, 2) ? 0 : MPIR_CVAR_NEMESIS_MXM_BULK_DISCONNECT;
+
     if (cur_ver < MXM_VERSION(3, 2) &&
         (_mxm_obj.conf.bulk_connect || _mxm_obj.conf.bulk_disconnect)) {
         _mxm_obj.conf.bulk_connect = 0;
