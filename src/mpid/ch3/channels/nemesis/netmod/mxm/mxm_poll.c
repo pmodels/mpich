@@ -198,7 +198,7 @@ int MPID_nem_mxm_recv(MPIDI_VC_t * vc, MPID_Request * rreq)
 
         mpi_errno = _mxm_irecv((vc ? VC_FIELD(vc, mxm_ep) : NULL), REQ_BASE(rreq),
                                tag,
-                               (rreq->comm ? (mxm_mq_h) rreq->comm->ch.netmod_comm : mxm_obj->
+                               (rreq->comm ? (mxm_mq_h) rreq->comm->dev.ch.netmod_priv : mxm_obj->
                                 mxm_mq), _mxm_tag_mpi2mxm(tag, context_id));
         if (mpi_errno)
             MPIU_ERR_POP(mpi_errno);

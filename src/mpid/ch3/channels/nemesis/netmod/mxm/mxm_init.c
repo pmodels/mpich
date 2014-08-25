@@ -584,7 +584,7 @@ static int _mxm_add_comm(MPID_Comm * comm, void *param)
                          mpi_errno, MPI_ERR_OTHER,
                          "**mxm_mq_create", "**mxm_mq_create %s", mxm_error_string(ret));
 
-    comm->ch.netmod_comm = (void *) mxm_mq;
+    comm->dev.ch.netmod_priv = (void *) mxm_mq;
 
   fn_exit:
     return mpi_errno;
@@ -595,7 +595,7 @@ static int _mxm_add_comm(MPID_Comm * comm, void *param)
 static int _mxm_del_comm(MPID_Comm * comm, void *param)
 {
     int mpi_errno = MPI_SUCCESS;
-    mxm_mq_h mxm_mq = (mxm_mq_h) comm->ch.netmod_comm;
+    mxm_mq_h mxm_mq = (mxm_mq_h) comm->dev.ch.netmod_priv;
 
     _dbg_mxm_output(6, "Del COMM comm %p (context %d rank %d) \n",
                     comm, comm->context_id, comm->rank);
@@ -603,7 +603,7 @@ static int _mxm_del_comm(MPID_Comm * comm, void *param)
     if (mxm_mq)
         mxm_mq_destroy(mxm_mq);
 
-    comm->ch.netmod_comm = NULL;
+    comm->dev.ch.netmod_priv = NULL;
 
   fn_exit:
     return mpi_errno;

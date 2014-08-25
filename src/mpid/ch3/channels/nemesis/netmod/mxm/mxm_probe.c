@@ -24,7 +24,7 @@ int MPID_nem_mxm_probe(MPIDI_VC_t * vc, int source, int tag, MPID_Comm * comm, i
     MPIDI_FUNC_ENTER(MPID_STATE_MXM_PROBE);
 
     mxm_req.base.state = MXM_REQ_NEW;
-    mxm_req.base.mq = (mxm_mq_h) comm->ch.netmod_comm;
+    mxm_req.base.mq = (mxm_mq_h) comm->dev.ch.netmod_priv;
     mxm_req.base.conn = (vc ? VC_FIELD(vc, mxm_ep->mxm_conn) : 0);
 
     mxm_req.tag = _mxm_tag_mpi2mxm(tag, comm->context_id + context_offset);
@@ -68,7 +68,7 @@ int MPID_nem_mxm_iprobe(MPIDI_VC_t * vc, int source, int tag, MPID_Comm * comm, 
     MPIDI_FUNC_ENTER(MPID_STATE_MXM_IPROBE);
 
     mxm_req.base.state = MXM_REQ_NEW;
-    mxm_req.base.mq = (mxm_mq_h) comm->ch.netmod_comm;
+    mxm_req.base.mq = (mxm_mq_h) comm->dev.ch.netmod_priv;
     mxm_req.base.conn = (vc ? VC_FIELD(vc, mxm_ep->mxm_conn) : 0);
 
     mxm_req.tag = _mxm_tag_mpi2mxm(tag, comm->context_id + context_offset);

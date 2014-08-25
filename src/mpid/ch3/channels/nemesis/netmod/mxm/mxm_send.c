@@ -274,7 +274,7 @@ int MPID_nem_mxm_send(MPIDI_VC_t * vc, const void *buf, int count, MPI_Datatype 
     (VC_FIELD(vc, pending_sends)) += 1;
 
     mpi_errno = _mxm_isend(VC_FIELD(vc, mxm_ep), REQ_BASE(sreq), MXM_MPICH_ISEND,
-                           (mxm_mq_h) comm->ch.netmod_comm, comm->rank, tag, _mxm_tag_mpi2mxm(tag,
+                           (mxm_mq_h) comm->dev.ch.netmod_priv, comm->rank, tag, _mxm_tag_mpi2mxm(tag,
                                                                                               comm->context_id
                                                                                               +
                                                                                               context_offset),
@@ -371,7 +371,7 @@ int MPID_nem_mxm_ssend(MPIDI_VC_t * vc, const void *buf, int count, MPI_Datatype
     (VC_FIELD(vc, pending_sends)) += 1;
 
     mpi_errno = _mxm_isend(VC_FIELD(vc, mxm_ep), REQ_BASE(sreq), MXM_MPICH_ISEND_SYNC,
-                           (mxm_mq_h) comm->ch.netmod_comm, comm->rank, tag, _mxm_tag_mpi2mxm(tag,
+                           (mxm_mq_h) comm->dev.ch.netmod_priv, comm->rank, tag, _mxm_tag_mpi2mxm(tag,
                                                                                               comm->context_id
                                                                                               +
                                                                                               context_offset),
@@ -468,7 +468,7 @@ int MPID_nem_mxm_isend(MPIDI_VC_t * vc, const void *buf, int count, MPI_Datatype
     (VC_FIELD(vc, pending_sends)) += 1;
 
     mpi_errno = _mxm_isend(VC_FIELD(vc, mxm_ep), REQ_BASE(sreq), MXM_MPICH_ISEND,
-                           (mxm_mq_h) comm->ch.netmod_comm, comm->rank, tag, _mxm_tag_mpi2mxm(tag,
+                           (mxm_mq_h) comm->dev.ch.netmod_priv, comm->rank, tag, _mxm_tag_mpi2mxm(tag,
                                                                                               comm->context_id
                                                                                               +
                                                                                               context_offset),
@@ -566,7 +566,7 @@ int MPID_nem_mxm_issend(MPIDI_VC_t * vc, const void *buf, int count, MPI_Datatyp
     (VC_FIELD(vc, pending_sends)) += 1;
 
     mpi_errno = _mxm_isend(VC_FIELD(vc, mxm_ep), REQ_BASE(sreq), MXM_MPICH_ISEND_SYNC,
-                           (mxm_mq_h) comm->ch.netmod_comm, comm->rank, tag, _mxm_tag_mpi2mxm(tag,
+                           (mxm_mq_h) comm->dev.ch.netmod_priv, comm->rank, tag, _mxm_tag_mpi2mxm(tag,
                                                                                               comm->context_id
                                                                                               +
                                                                                               context_offset),
