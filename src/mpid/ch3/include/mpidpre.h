@@ -166,7 +166,7 @@ typedef union {
 #define MPID_Dev_comm_create_hook(comm_) MPIDI_CH3I_Comm_create_hook(comm_)
 #define MPID_Dev_comm_destroy_hook(comm_) MPIDI_CH3I_Comm_destroy_hook(comm_)
 
-#define MPIDI_CH3I_Comm_AS_enabled(comm) ((comm)->ch.anysource_enabled)
+#define MPIDI_CH3I_Comm_AS_enabled(comm) ((comm)->dev.anysource_enabled)
 
 typedef struct MPIDI_CH3I_comm
 {
@@ -176,13 +176,13 @@ typedef struct MPIDI_CH3I_comm
     int waiting_for_revoke; /* The number of other processes from which we are
                              * waiting for a revoke message before we can release
                              * the context id */
-    struct MPID_nem_barrier_vars *barrier_vars; /* shared memory variables used in barrier */
     struct MPID_Comm *next; /* next pointer for list of communicators */
     struct MPID_Comm *prev; /* prev pointer for list of communicators */
+    MPIDI_CH3I_CH_comm_t ch;
 }
 MPIDI_CH3I_comm_t;
 
-#define MPID_DEV_COMM_DECL MPIDI_CH3I_comm_t ch;
+#define MPID_DEV_COMM_DECL MPIDI_CH3I_comm_t dev;
 
 #ifndef HAVE_MPIDI_VCRT
 #define HAVE_MPIDI_VCRT

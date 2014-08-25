@@ -35,7 +35,7 @@ int MPIDI_CH3I_comm_create(MPID_Comm *comm, void *param)
     /* set up intranode barrier iff this is an intranode communicator */
     if (comm->hierarchy_kind == MPID_HIERARCHY_NODE) {
         MPID_Collops *cf, **cf_p;
-        comm->ch.barrier_vars = NULL;
+        comm->dev.ch.barrier_vars = NULL;
 
         /* We can't use a static coll_fns override table for our collectives
            because we store a pointer to the previous coll_fns in our coll_fns
@@ -109,9 +109,9 @@ int MPIDI_CH3I_comm_destroy(MPID_Comm *comm, void *param)
             MPIU_Free(cf);
         }
             
-        if (comm->ch.barrier_vars && OPA_fetch_and_decr_int(&comm->ch.barrier_vars->usage_cnt) == 1) {
+        if (comm->dev.ch.barrier_vars && OPA_fetch_and_decr_int(&comm->dev.ch.barrier_vars->usage_cnt) == 1) {
             OPA_write_barrier();
-            OPA_store_int(&comm->ch.barrier_vars->context_id, NULL_CONTEXT_ID);
+            OPA_store_int(&comm->dev.ch.barrier_vars->context_id, NULL_CONTEXT_ID);
         }
     }
     
@@ -178,11 +178,11 @@ static int barrier(MPID_Comm *comm_ptr, int *errflag)
        time */
     MPIDU_ERR_CHECK_MULTIPLE_THREADS_ENTER (comm_ptr);
 
-    if (comm_ptr->ch.barrier_vars == NULL) {
-        mpi_errno = alloc_barrier_vars (comm_ptr, &comm_ptr->ch.barrier_vars);
+    if (comm_ptr->dev.ch.barrier_vars == NULL) {
+        mpi_errno = alloc_barrier_vars (comm_ptr, &comm_ptr->dev.ch.barrier_vars);
         if (mpi_errno) MPIU_ERR_POP (mpi_errno);
 
-        if (comm_ptr->ch.barrier_vars == NULL) {
+        if (comm_ptr->dev.ch.barrier_vars == NULL) {
             /* no barrier_vars left -- revert to default barrier. */
             /* FIXME: need a better solution here.  e.g., allocate
                some barrier_vars on the first barrier for the life of
@@ -201,7 +201,7 @@ static int barrier(MPID_Comm *comm_ptr, int *errflag)
         }
     }
 
-    barrier_vars = comm_ptr->ch.barrier_vars;
+    barrier_vars = comm_ptr->dev.ch.barrier_vars;
 
     sense = OPA_load_int(&barrier_vars->sig);
     OPA_read_barrier();

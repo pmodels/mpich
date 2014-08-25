@@ -70,7 +70,7 @@ static int set_eager_threshold(MPID_Comm *comm_ptr, MPID_Info *info, void *state
 
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPIDI_CH3_SET_EAGER_THRESHOLD);
 
-    comm_ptr->ch.eager_max_msg_sz = strtol(info->value, &endptr, 0);
+    comm_ptr->dev.eager_max_msg_sz = strtol(info->value, &endptr, 0);
 
     MPIU_ERR_CHKANDJUMP1(*endptr, mpi_errno, MPI_ERR_ARG,
                          "**infohintparse", "**infohintparse %s",

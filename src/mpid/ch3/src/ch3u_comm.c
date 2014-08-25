@@ -12,9 +12,9 @@ static int comm_created(MPID_Comm *comm, void *param);
 static int comm_destroyed(MPID_Comm *comm, void *param);
 
 /* macros and head for list of communicators */
-#define COMM_ADD(comm) MPL_DL_PREPEND_NP(comm_list, comm, ch.next, ch.prev)
-#define COMM_DEL(comm) MPL_DL_DELETE_NP(comm_list, comm, ch.next, ch.prev)
-#define COMM_FOREACH(elt) MPL_DL_FOREACH_NP(comm_list, elt, ch.next, ch.prev)
+#define COMM_ADD(comm) MPL_DL_PREPEND_NP(comm_list, comm, dev.next, dev.prev)
+#define COMM_DEL(comm) MPL_DL_DELETE_NP(comm_list, comm, dev.next, dev.prev)
+#define COMM_FOREACH(elt) MPL_DL_FOREACH_NP(comm_list, elt, dev.next, dev.prev)
 static MPID_Comm *comm_list = NULL;
 
 typedef struct hook_elt
@@ -203,13 +203,13 @@ int comm_created(MPID_Comm *comm, void *param)
 
     MPIDI_FUNC_ENTER(MPID_STATE_COMM_CREATED);
 
-    comm->ch.anysource_enabled = TRUE;
+    comm->dev.anysource_enabled = TRUE;
 
     /* Use the VC's eager threshold by default. */
-    comm->ch.eager_max_msg_sz = -1;
+    comm->dev.eager_max_msg_sz = -1;
 
     /* Initialize the last acked failure to -1 */
-    comm->ch.last_ack_rank = -1;
+    comm->dev.last_ack_rank = -1;
 
     COMM_ADD(comm);
 
@@ -232,8 +232,8 @@ int comm_destroyed(MPID_Comm *comm, void *param)
     MPIDI_FUNC_ENTER(MPID_STATE_COMM_DESTROYED);
 
     COMM_DEL(comm);
-    comm->ch.next = NULL;
-    comm->ch.prev = NULL;
+    comm->dev.next = NULL;
+    comm->dev.prev = NULL;
 
  fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_COMM_DESTROYED);
@@ -307,7 +307,7 @@ int MPIDI_CH3I_Comm_handle_failed_procs(MPID_Group *new_failed_procs)
     COMM_FOREACH(comm) {
         /* if this comm is already collectively inactive and
            anysources are disabled, there's no need to check */
-        if (!comm->ch.anysource_enabled)
+        if (!comm->dev.anysource_enabled)
             continue;
 
         mpi_errno = nonempty_intersection(comm, new_failed_procs, &flag);
@@ -317,7 +317,7 @@ int MPIDI_CH3I_Comm_handle_failed_procs(MPID_Group *new_failed_procs)
             MPIU_DBG_MSG_FMT(CH3_OTHER, VERBOSE,
                              (MPIU_DBG_FDEST, "disabling AS on communicator %p (%#08x)",
                               comm, comm->handle));
-            comm->ch.anysource_enabled = FALSE;
+            comm->dev.anysource_enabled = FALSE;
         }
     }
 

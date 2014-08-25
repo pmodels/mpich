@@ -70,11 +70,11 @@ int MPID_Comm_revoke(MPID_Comm *comm_ptr, int is_remote)
 
         /* Start a counter to track how many revoke messages we've received from
          * other ranks */
-        comm_ptr->ch.waiting_for_revoke = comm_ptr->local_size - 1 - is_remote - failed; /* Subtract the processes who already know about the revoke */
-        MPIU_DBG_MSG_FMT(CH3_OTHER, VERBOSE, (MPIU_DBG_FDEST, "Comm %08x waiting_for_revoke: %d", comm_ptr->handle, comm_ptr->ch.waiting_for_revoke));
+        comm_ptr->dev.waiting_for_revoke = comm_ptr->local_size - 1 - is_remote - failed; /* Subtract the processes who already know about the revoke */
+        MPIU_DBG_MSG_FMT(CH3_OTHER, VERBOSE, (MPIU_DBG_FDEST, "Comm %08x waiting_for_revoke: %d", comm_ptr->handle, comm_ptr->dev.waiting_for_revoke));
 
         /* Check to see if we are done revoking */
-        if (comm_ptr->ch.waiting_for_revoke == 0) {
+        if (comm_ptr->dev.waiting_for_revoke == 0) {
             MPIR_Comm_release(comm_ptr, 0);
         }
 
@@ -89,11 +89,11 @@ int MPID_Comm_revoke(MPID_Comm *comm_ptr, int is_remote)
         MPIU_THREAD_CS_EXIT(MSGQUEUE,);
     } else if (is_remote)  { /* If this is local, we've already revoked and don't need to do it again. */
         /* Decrement the revoke counter */
-        comm_ptr->ch.waiting_for_revoke--;
-        MPIU_DBG_MSG_FMT(CH3_OTHER, VERBOSE, (MPIU_DBG_FDEST, "Comm %08x waiting_for_revoke: %d", comm_ptr->handle, comm_ptr->ch.waiting_for_revoke));
+        comm_ptr->dev.waiting_for_revoke--;
+        MPIU_DBG_MSG_FMT(CH3_OTHER, VERBOSE, (MPIU_DBG_FDEST, "Comm %08x waiting_for_revoke: %d", comm_ptr->handle, comm_ptr->dev.waiting_for_revoke));
 
         /* Check to see if we are done revoking */
-        if (comm_ptr->ch.waiting_for_revoke == 0) {
+        if (comm_ptr->dev.waiting_for_revoke == 0) {
             MPIR_Comm_release(comm_ptr, 0);
         }
     }

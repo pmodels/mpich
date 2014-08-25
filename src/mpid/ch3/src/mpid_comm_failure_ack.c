@@ -26,7 +26,7 @@ int MPID_Comm_failure_ack(MPID_Comm *comm_ptr)
 
     /* Update the marker for the last known failed process in this
      * communciator. */
-    comm_ptr->ch.last_ack_rank = MPIDI_last_known_failed;
+    comm_ptr->dev.last_ack_rank = MPIDI_last_known_failed;
 
 fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_MPID_COMM_FAILURE_ACK);
@@ -49,7 +49,7 @@ int MPID_Comm_failure_get_acked(MPID_Comm *comm_ptr, MPID_Group **group_ptr)
 
     /* Get the group of all failed processes */
     MPIDI_CH3U_Check_for_failed_procs();
-    MPIDI_CH3U_Get_failed_group(comm_ptr->ch.last_ack_rank, &failed_group);
+    MPIDI_CH3U_Get_failed_group(comm_ptr->dev.last_ack_rank, &failed_group);
     if (failed_group == MPID_Group_empty) {
         *group_ptr = MPID_Group_empty;
         goto fn_exit;
@@ -106,7 +106,7 @@ int MPID_Comm_failed_bitarray(MPID_Comm *comm_ptr, uint32_t **bitarray, int acke
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
     if (acked)
-        MPIDI_CH3U_Get_failed_group(comm_ptr->ch.last_ack_rank, &failed_group);
+        MPIDI_CH3U_Get_failed_group(comm_ptr->dev.last_ack_rank, &failed_group);
     else
         MPIDI_CH3U_Get_failed_group(-2, &failed_group);
 

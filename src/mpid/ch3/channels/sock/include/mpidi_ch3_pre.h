@@ -28,6 +28,10 @@ MPIDI_CH3I_PKT_SC_CONN_ACCEPT,		        \
 MPIDI_CH3I_PKT_SC_OPEN_RESP,			\
 MPIDI_CH3I_PKT_SC_CLOSE
 
+typedef struct {
+    int dummy;  /* dummy variable to ensure we don't have an empty structure */
+} MPIDI_CH3I_CH_comm_t;
+
 /* This channel has no special channel data for the process group structure */
 
 /* FIXME: Explain these; why is this separate from the VC state? */
