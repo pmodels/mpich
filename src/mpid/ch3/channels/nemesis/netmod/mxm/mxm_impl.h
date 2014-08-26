@@ -9,6 +9,7 @@
 #ifndef MX_MODULE_IMPL_H
 #define MX_MODULE_IMPL_H
 #include "mpid_nem_impl.h"
+#include "pmi.h"
 #include <mxm/api/mxm_api.h>
 
 
