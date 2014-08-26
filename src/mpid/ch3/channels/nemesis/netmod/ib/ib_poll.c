@@ -2453,12 +2453,30 @@ int MPID_nem_ib_cm_drain_scq()
 
                     dprintf("cm_drain_scq,cm_cas,succeeded\n");
                     if (is_conn_established(shadow_cm->req->responder_rank)) {
+#if 1
+                        /* Explicitly release CAS word because
+                         * ConnectX-3 doesn't support safe CAS with PCI device and CPU */
+                        MPID_nem_ib_cm_cas_release(MPID_nem_ib_conns
+                                                   [shadow_cm->req->responder_rank].vc);
+
+                        shadow_cm->req->ibcom->outstanding_connection_tx -= 1;
+                        dprintf("cm_drain_scq,cm_cas,established is true,%d->%d,tx=%d\n",
+                                MPID_nem_ib_myrank, shadow_cm->req->responder_rank,
+                                shadow_cm->req->ibcom->outstanding_connection_tx);
+                        /* Let the guard down to let the following connection request go. */
+                        VC_FIELD(MPID_nem_ib_conns[shadow_cm->req->responder_rank].vc,
+                                 connection_guard) = 0;
+                        /* free memory : req->ref_count is 3, so call MPIU_Free() directly */
+                        //MPID_nem_ib_cm_request_release(shadow_cm->req);
+                        MPIU_Free(shadow_cm->req);
+#else
                         /* Connection is already established.
                          * In this case, responder may already have performed vc_terminate.
                          * However, since initiator has to release responder's CAS word,
-                         * initiator sends CM_CAS_RELEASE. */
-
-                        shadow_cm->req->state = MPID_NEM_IB_CM_CAS_RELEASE;
+                         * initiator sends CM_CAS_RELEASE2. */
+                        dprintf("cm_drain_scq,cm_cas,established,%d->%d\n",
+                                MPID_nem_ib_myrank, shadow_cm->req->responder_rank);
+                        shadow_cm->req->state = MPID_NEM_IB_CM_CAS_RELEASE2;
                         if (MPID_nem_ib_ncqe_scratch_pad < MPID_NEM_IB_COM_MAX_CQ_CAPACITY &&
                             shadow_cm->req->ibcom->ncom_scratch_pad <
                             MPID_NEM_IB_COM_MAX_SQ_CAPACITY) {
@@ -2466,7 +2484,7 @@ int MPID_nem_ib_cm_drain_scq()
                             MPID_nem_ib_cm_cmd_syn_t *cmd =
                                 (MPID_nem_ib_cm_cmd_syn_t *) shadow_cm->req->ibcom->
                                 icom_mem[MPID_NEM_IB_COM_SCRATCH_PAD_FROM];
-                            MPID_NEM_IB_CM_COMPOSE_CAS_RELEASE(cmd, shadow_cm->req);
+                            MPID_NEM_IB_CM_COMPOSE_CAS_RELEASE2(cmd, shadow_cm->req);
                             cmd->initiator_rank = MPID_nem_ib_myrank;
                             MPID_nem_ib_cm_cmd_shadow_t *shadow_syn =
                                 (MPID_nem_ib_cm_cmd_shadow_t *)
@@ -2475,6 +2493,8 @@ int MPID_nem_ib_cm_drain_scq()
                             shadow_syn->req = shadow_cm->req;
                             dprintf("shadow_syn=%p,shadow_syn->req=%p\n", shadow_syn,
                                     shadow_syn->req);
+                            dprintf("cm_drain_scq,cm_cas,established,sending cas_release2,%d->%d\n",
+                                    MPID_nem_ib_myrank, shadow_cm->req->responder_rank);
                             mpi_errno =
                                 MPID_nem_ib_cm_cmd_core(shadow_cm->req->responder_rank, shadow_syn,
                                                         (void *) cmd,
@@ -2484,15 +2504,21 @@ int MPID_nem_ib_cm_drain_scq()
                                                 "**MPID_nem_ib_cm_send_core");
                         }
                         else {
-                            MPID_NEM_IB_CM_COMPOSE_CAS_RELEASE((MPID_nem_ib_cm_cmd_syn_t *) &
-                                                               (shadow_cm->req->cmd),
-                                                               shadow_cm->req);
+                            MPID_NEM_IB_CM_COMPOSE_CAS_RELEASE2((MPID_nem_ib_cm_cmd_syn_t *) &
+                                                                (shadow_cm->req->cmd),
+                                                                shadow_cm->req);
+                            ((MPID_nem_ib_cm_cmd_syn_t *) & shadow_cm->req->cmd)->initiator_rank =
+                                MPID_nem_ib_myrank;
                             MPID_nem_ib_cm_sendq_enqueue(&MPID_nem_ib_cm_sendq, shadow_cm->req);
                         }
+#endif
                     }
                     else {
                         /* Increment receiving transaction counter. Initiator receives SYNACK and ACK2 */
                         shadow_cm->req->ibcom->incoming_connection_tx += 2;
+                        dprintf("cm_drain_scq,cas succeeded,sending syn,%d->%d,connection_tx=%d\n",
+                                MPID_nem_ib_myrank, shadow_cm->req->responder_rank,
+                                shadow_cm->req->ibcom->outstanding_connection_tx);
                         shadow_cm->req->state = MPID_NEM_IB_CM_SYN;
                         if (MPID_nem_ib_ncqe_scratch_pad < MPID_NEM_IB_COM_MAX_CQ_CAPACITY &&
                             shadow_cm->req->ibcom->ncom_scratch_pad <
@@ -2530,6 +2556,8 @@ int MPID_nem_ib_cm_drain_scq()
                             MPID_NEM_IB_CM_COMPOSE_SYN((MPID_nem_ib_cm_cmd_syn_t *) &
                                                        (shadow_cm->req->cmd), shadow_cm->req);
                             MPID_nem_ib_cm_sendq_enqueue(&MPID_nem_ib_cm_sendq, shadow_cm->req);
+                            dprintf("cm_drain_scq,enqueue syn,%d->%d\n",
+                                    MPID_nem_ib_myrank, shadow_cm->req->responder_rank);
                         }
                     }
                 }
@@ -2541,6 +2569,9 @@ int MPID_nem_ib_cm_drain_scq()
                         MPID_nem_ib_ncqe_scratch_pad_to_drain -= 1;
                         shadow_cm->req->ibcom->ncom_scratch_pad -= 1;
                         shadow_cm->req->ibcom->outstanding_connection_tx -= 1;
+                        dprintf("cm_drain_scq,cm_cas,cas failed,established is true,%d->%d,tx=%d\n",
+                                MPID_nem_ib_myrank, shadow_cm->req->responder_rank,
+                                shadow_cm->req->ibcom->outstanding_connection_tx);
                         MPID_nem_ib_rdmawr_from_free(shadow_cm->buf_from, shadow_cm->buf_from_sz);
                         /* Let the guard down to let the following connection request go. */
                         VC_FIELD(MPID_nem_ib_conns[shadow_cm->req->responder_rank].vc,
@@ -2552,16 +2583,46 @@ int MPID_nem_ib_cm_drain_scq()
                         break;
                     }
 
-                    dprintf("cm_drain_scq,cm_cas,retval=%016lx,backoff=%ld\n", *cas_retval,
-                            shadow_cm->req->retry_backoff);
                     shadow_cm->req->retry_backoff =
                         shadow_cm->req->retry_backoff ? (shadow_cm->req->retry_backoff << 1) : 1;
                     shadow_cm->req->retry_decided = MPID_nem_ib_progress_engine_vt;     /* Schedule retry */
                     MPID_nem_ib_cm_sendq_enqueue(&MPID_nem_ib_cm_sendq, shadow_cm->req);
-                    dprintf("cm_drain_scq,cm_cas,failed,decided=%ld,backoff=%ld\n",
-                            shadow_cm->req->retry_decided, shadow_cm->req->retry_backoff);
+                    dprintf
+                        ("cm_drain_scq,cm_cas,cas failed,%d->%d,retval=%016lx,decided=%ld,backoff=%ld\n",
+                         MPID_nem_ib_myrank, shadow_cm->req->responder_rank, *cas_retval,
+                         shadow_cm->req->retry_decided, shadow_cm->req->retry_backoff);
                 }
                 MPID_nem_ib_ncqe_scratch_pad_to_drain -= 1;
+                shadow_cm->req->ibcom->ncom_scratch_pad -= 1;
+                MPID_nem_ib_rdmawr_from_free(shadow_cm->buf_from, shadow_cm->buf_from_sz);
+                MPIU_Free(shadow_cm);
+                break;
+            }
+        case MPID_NEM_IB_CM_CAS_RELEASE:{
+                shadow_cm = (MPID_nem_ib_cm_cmd_shadow_t *) cqe[i].wr_id;
+                dprintf("cm_drain_scq,cm_cas_release,req=%p,responder_rank=%d\n",
+                        shadow_cm->req, shadow_cm->req->responder_rank);
+                /* Check if CAS have succeeded */
+                uint64_t *cas_retval = (uint64_t *) shadow_cm->buf_from;
+                if (*cas_retval == MPID_nem_ib_myrank) {
+                    /* CAS succeeded */
+                    dprintf("cm_drain_scq,cm_cas_release,cas succeeded,%d->%d,retval=%016lx\n",
+                            MPID_nem_ib_myrank, shadow_cm->req->responder_rank, *cas_retval);
+                    shadow_cm->req->ibcom->outstanding_connection_tx -= 1;
+                    MPID_nem_ib_cm_request_release(shadow_cm->req);
+                }
+                else {
+
+                    shadow_cm->req->retry_backoff =
+                        shadow_cm->req->retry_backoff ? (shadow_cm->req->retry_backoff << 1) : 1;
+                    shadow_cm->req->retry_decided = MPID_nem_ib_progress_engine_vt;     /* Schedule retry */
+                    MPID_nem_ib_cm_sendq_enqueue(&MPID_nem_ib_cm_sendq, shadow_cm->req);
+                    dprintf
+                        ("cm_drain_scq,cm_cas_release,cas failed,%d->%d,retval=%016lx,decided=%ld,backoff=%ld\n",
+                         MPID_nem_ib_myrank, shadow_cm->req->responder_rank, *cas_retval,
+                         shadow_cm->req->retry_decided, shadow_cm->req->retry_backoff);
+                }
+
                 shadow_cm->req->ibcom->ncom_scratch_pad -= 1;
                 MPID_nem_ib_rdmawr_from_free(shadow_cm->buf_from, shadow_cm->buf_from_sz);
                 MPIU_Free(shadow_cm);
@@ -2571,19 +2632,23 @@ int MPID_nem_ib_cm_drain_scq()
             dprintf("cm_drain_scq,syn sent\n");
             shadow_cm = (MPID_nem_ib_cm_cmd_shadow_t *) cqe[i].wr_id;
             shadow_cm->req->ibcom->ncom_scratch_pad -= 1;
-            dprintf("cm_drain_scq,tx=%d\n", shadow_cm->req->ibcom->outstanding_connection_tx);
+            dprintf("cm_drain_scq,syn sent,%d->%d,connection_tx=%d\n",
+                    MPID_nem_ib_myrank, shadow_cm->req->responder_rank,
+                    shadow_cm->req->ibcom->outstanding_connection_tx);
             dprintf("cm_drain_scq,syn,buf_from=%p,sz=%d\n", shadow_cm->buf_from,
                     shadow_cm->buf_from_sz);
             MPID_nem_ib_cm_request_release(shadow_cm->req);
             MPID_nem_ib_rdmawr_from_free(shadow_cm->buf_from, shadow_cm->buf_from_sz);
             MPIU_Free(shadow_cm);
             break;
-        case MPID_NEM_IB_CM_CAS_RELEASE:
-            dprintf("cm_drain_scq,syn sent\n");
+        case MPID_NEM_IB_CM_CAS_RELEASE2:
+            dprintf("cm_drain_scq,release2 sent\n");
             shadow_cm = (MPID_nem_ib_cm_cmd_shadow_t *) cqe[i].wr_id;
             shadow_cm->req->ibcom->ncom_scratch_pad -= 1;
             shadow_cm->req->ibcom->outstanding_connection_tx -= 1;
-            dprintf("cm_drain_scq,tx=%d\n", shadow_cm->req->ibcom->outstanding_connection_tx);
+            dprintf("cm_drain_scq,cas_release2 sent,%d->%d,connection_tx=%d\n",
+                    MPID_nem_ib_myrank, shadow_cm->req->responder_rank,
+                    shadow_cm->req->ibcom->outstanding_connection_tx);
             dprintf("cm_drain_scq,syn,buf_from=%p,sz=%d\n", shadow_cm->buf_from,
                     shadow_cm->buf_from_sz);
             MPID_nem_ib_rdmawr_from_free(shadow_cm->buf_from, shadow_cm->buf_from_sz);
@@ -2597,7 +2662,9 @@ int MPID_nem_ib_cm_drain_scq()
             dprintf("cm_drain_scq,synack sent,req=%p,initiator_rank=%d\n", shadow_cm->req,
                     shadow_cm->req->initiator_rank);
             shadow_cm->req->ibcom->ncom_scratch_pad -= 1;
-            dprintf("cm_drain_scq,tx=%d\n", shadow_cm->req->ibcom->outstanding_connection_tx);
+            dprintf("cm_drain_scq,synack sent,%d->%d,tx=%d\n",
+                    MPID_nem_ib_myrank, shadow_cm->req->initiator_rank,
+                    shadow_cm->req->ibcom->outstanding_connection_tx);
             dprintf("cm_drain_scq,synack,buf_from=%p,sz=%d\n", shadow_cm->buf_from,
                     shadow_cm->buf_from_sz);
             MPID_nem_ib_rdmawr_from_free(shadow_cm->buf_from, shadow_cm->buf_from_sz);
@@ -2608,7 +2675,9 @@ int MPID_nem_ib_cm_drain_scq()
             shadow_cm = (MPID_nem_ib_cm_cmd_shadow_t *) cqe[i].wr_id;
             shadow_cm->req->ibcom->ncom_scratch_pad -= 1;
             shadow_cm->req->ibcom->outstanding_connection_tx -= 1;
-            dprintf("cm_drain_scq,tx=%d\n", shadow_cm->req->ibcom->outstanding_connection_tx);
+            dprintf("cm_drain_scq,ack1,%d->%d,connection_tx=%d\n",
+                    MPID_nem_ib_myrank, shadow_cm->req->responder_rank,
+                    shadow_cm->req->ibcom->outstanding_connection_tx);
             dprintf("cm_drain_scq,ack1,buf_from=%p,sz=%d\n", shadow_cm->buf_from,
                     shadow_cm->buf_from_sz);
             MPID_nem_ib_rdmawr_from_free(shadow_cm->buf_from, shadow_cm->buf_from_sz);
@@ -2624,7 +2693,9 @@ int MPID_nem_ib_cm_drain_scq()
                     shadow_cm->req->initiator_rank);
             shadow_cm->req->ibcom->ncom_scratch_pad -= 1;
             shadow_cm->req->ibcom->outstanding_connection_tx -= 1;
-            dprintf("cm_drain_scq,tx=%d\n", shadow_cm->req->ibcom->outstanding_connection_tx);
+            dprintf("cm_drain_scq,ack2,%d->%d,tx=%d\n",
+                    MPID_nem_ib_myrank, shadow_cm->req->initiator_rank,
+                    shadow_cm->req->ibcom->outstanding_connection_tx);
             dprintf("cm_drain_scq,ack2,buf_from=%p,sz=%d\n", shadow_cm->buf_from,
                     shadow_cm->buf_from_sz);
             MPID_nem_ib_rdmawr_from_free(shadow_cm->buf_from, shadow_cm->buf_from_sz);
@@ -2644,7 +2715,9 @@ int MPID_nem_ib_cm_drain_scq()
                  shadow_cm->req, &shadow_cm->req->initiator_rank, shadow_cm->req->initiator_rank);
             shadow_cm->req->ibcom->ncom_scratch_pad -= 1;
             shadow_cm->req->ibcom->outstanding_connection_tx -= 1;
-            dprintf("cm_drain_scq,tx=%d\n", shadow_cm->req->ibcom->outstanding_connection_tx);
+            dprintf("cm_drain_scq,established or connecting sent,%d->%d,connection_tx=%d,type=%d\n",
+                    MPID_nem_ib_myrank, shadow_cm->req->initiator_rank,
+                    shadow_cm->req->ibcom->outstanding_connection_tx, *type);
             shadow_cm->req->ibcom->incoming_connection_tx -= 1;
             MPID_nem_ib_rdmawr_from_free(shadow_cm->buf_from, shadow_cm->buf_from_sz);
             /* Let the guard down to let the following connection request go. */
@@ -2658,11 +2731,10 @@ int MPID_nem_ib_cm_drain_scq()
             shadow_ringbuf = (MPID_nem_ib_ringbuf_cmd_shadow_t *) cqe[i].wr_id;
             memcpy(&shadow_ringbuf->req->fetched,
                    shadow_ringbuf->buf_from, sizeof(MPID_nem_ib_ringbuf_headtail_t));
-            dprintf
-                ("cm_drain_scq,ask_fetch sent,%d->%d,req=%p,fetched->head=%ld,tail=%d\n",
-                 MPID_nem_ib_myrank, shadow_ringbuf->req->vc->pg_rank,
-                 shadow_ringbuf->req, shadow_ringbuf->req->fetched.head,
-                 shadow_ringbuf->req->fetched.tail);
+            dprintf("cm_drain_scq,ask_fetch sent,%d->%d,req=%p,fetched->head=%ld,tail=%d\n",
+                    MPID_nem_ib_myrank, shadow_ringbuf->req->vc->pg_rank,
+                    shadow_ringbuf->req, shadow_ringbuf->req->fetched.head,
+                    shadow_ringbuf->req->fetched.tail);
             /* Proceed to cas */
             MPID_nem_ib_ringbuf_ask_cas(shadow_ringbuf->req->vc, shadow_ringbuf->req);
             MPID_nem_ib_ncqe_scratch_pad_to_drain -= 1;
@@ -2742,7 +2814,7 @@ int MPID_nem_ib_cm_drain_scq()
                 }
                 else {
                     /* CAS failed */
-                    printf("ask-cas,failed\n");
+                    dprintf("ask-cas,failed\n");
                     MPID_nem_ib_segv;
                     /* Let the guard down so that this ask-fetch can be issued in ringbuf_progress */
                     VC_FIELD(shadow_ringbuf->req->vc, ibcom->ask_guard) = 0;
@@ -2880,6 +2952,15 @@ int MPID_nem_ib_cm_poll_syn()
         goto fn_exit;
     }
 
+    /* Make the following store instruction onto the CAS word switch
+     * the value from "acquired" to "released" by
+     * waiting until modification on CAS word by a PCIe device
+     * propagated to the cache tag. */
+    volatile uint64_t *cas_word = (uint64_t *) (MPID_nem_ib_scratch_pad);
+    if (*cas_word == MPID_NEM_IB_CM_RELEASED) {
+        goto fn_exit;
+    }
+
     /* Memory layout is (CAS-word:SYN#0:SYN#1:...:SYN#N:CMD#0:CMD#1:...CMD#M) */
     void *slot = (MPID_nem_ib_scratch_pad + MPID_NEM_IB_CM_OFF_SYN +
                   sizeof(MPID_nem_ib_cm_cmd_t) * (0 % MPID_NEM_IB_CM_NSEG));
@@ -2888,18 +2969,18 @@ int MPID_nem_ib_cm_poll_syn()
         goto fn_exit;
     }   /* Incoming message hasn't arrived */
 
+    volatile MPID_nem_ib_cm_cmd_syn_t *syn_tail_flag = (MPID_nem_ib_cm_cmd_syn_t *) slot;
+
     switch (*head_flag) {
     case MPID_NEM_IB_CM_SYN:{
             int is_synack = 0;
-            volatile MPID_nem_ib_cm_cmd_syn_t *syn_tail_flag = (MPID_nem_ib_cm_cmd_syn_t *) slot;
             while (syn_tail_flag->tail_flag.tail_flag != MPID_NEM_IB_COM_MAGIC) {
                 /* __asm__ __volatile__("pause;":::"memory"); */
             }
 
-            volatile uint64_t *cas_word = (uint64_t *) (MPID_nem_ib_scratch_pad);
             MPID_nem_ib_cm_cmd_syn_t *syn = (MPID_nem_ib_cm_cmd_syn_t *) slot;
-            dprintf("cm_poll_syn,syn detected!,initiator_rank=%d,ringbuf_index=%d\n",
-                    syn->initiator_rank, syn->responder_ringbuf_index);
+            dprintf("cm_poll_syn,syn detected!,%d->%d,ringbuf_index given=%d\n",
+                    syn->initiator_rank, MPID_nem_ib_myrank, syn->responder_ringbuf_index);
             MPID_nem_ib_cm_req_t *req = MPIU_Malloc(sizeof(MPID_nem_ib_cm_req_t));
             MPIU_ERR_CHKANDJUMP(!req, mpi_errno, MPI_ERR_OTHER, "**malloc");
             req->ref_count = 1; /* Released when draining SCQ of ACK2 */
@@ -2912,10 +2993,16 @@ int MPID_nem_ib_cm_poll_syn()
             MPIU_ERR_CHKANDJUMP(ibcom_errno, mpi_errno, MPI_ERR_OTHER,
                                 "**MPID_nem_ib_com_obtain_pointer");
             if (is_conn_established(syn->initiator_rank)) {
+                dprintf("cm_poll_syn,established is true,%d->%d,connection_tx=%d\n",
+                        syn->initiator_rank, MPID_nem_ib_myrank,
+                        req->ibcom->outstanding_connection_tx);
                 req->state = MPID_NEM_IB_CM_ALREADY_ESTABLISHED;
             }
             else if ((MPID_nem_ib_myrank > syn->initiator_rank) &&
-                     (req->ibcom->outstanding_connection_tx == 1)) {
+                     (req->ibcom->outstanding_connection_tx > 0)) {
+                dprintf("cm_poll_syn,connection_tx>0,%d->%d,connection_tx=%d\n",
+                        syn->initiator_rank, MPID_nem_ib_myrank,
+                        req->ibcom->outstanding_connection_tx);
                 req->state = MPID_NEM_IB_CM_RESPONDER_IS_CONNECTING;
             }
             else {
@@ -2954,7 +3041,6 @@ int MPID_nem_ib_cm_poll_syn()
 
             /* Increment transaction counter here because this path is executed only once */
             req->ibcom->outstanding_connection_tx += 1;
-            dprintf("cm_poll_syn,tx=%d\n", req->ibcom->outstanding_connection_tx);
             /* Increment receiving transaction counter.
              * In the case of SYNACK, Responder receives ack1
              * In the case of ALREADY_ESTABLISHED or RESPONDER_IS_CONNECTING,
@@ -2970,6 +3056,9 @@ int MPID_nem_ib_cm_poll_syn()
                     (MPID_nem_ib_cm_cmd_synack_t *) req->ibcom->
                     icom_mem[MPID_NEM_IB_COM_SCRATCH_PAD_FROM];
                 if (is_synack) {
+                    dprintf("cm_poll_syn,sending synack,%d->%d[%d],connection_tx=%d\n",
+                            MPID_nem_ib_myrank, syn->initiator_rank, req->ringbuf_index,
+                            req->ibcom->outstanding_connection_tx);
                     MPID_NEM_IB_CM_COMPOSE_SYNACK(cmd, req, syn->initiator_req);
                     dprintf
                         ("cm_poll_syn,composing synack,responder_req=%p,cmd->rmem=%p,rkey=%08x,ringbuf_nslot=%d,remote_vc=%p\n",
@@ -2981,13 +3070,17 @@ int MPID_nem_ib_cm_poll_syn()
                     MPID_nem_ib_cm_ringbuf_head++;
                 }
                 else {
+                    dprintf
+                        ("cm_poll_syn,sending established or connecting,%d->%d[%d],connection_tx=%d,state=%d\n",
+                         MPID_nem_ib_myrank, syn->initiator_rank, req->ringbuf_index,
+                         req->ibcom->outstanding_connection_tx, req->state);
                     MPID_NEM_IB_CM_COMPOSE_END_CM(cmd, req, syn->initiator_req, req->state);
                 }
                 MPID_nem_ib_cm_cmd_shadow_t *shadow = (MPID_nem_ib_cm_cmd_shadow_t *)
                     MPIU_Malloc(sizeof(MPID_nem_ib_cm_cmd_shadow_t));
                 shadow->type = req->state;
                 shadow->req = req;
-                dprintf("shadow=%p,shadow->req=%p\n", shadow, shadow->req);
+                dprintf("cm_poll_syn,shadow=%p,shadow->req=%p\n", shadow, shadow->req);
                 mpi_errno =
                     MPID_nem_ib_cm_cmd_core(req->initiator_rank, shadow, (void *) cmd,
                                             sizeof(MPID_nem_ib_cm_cmd_synack_t), 0,
@@ -3000,39 +3093,60 @@ int MPID_nem_ib_cm_poll_syn()
                         MPID_nem_ib_ncqe_scratch_pad, req->ibcom->ncom_scratch_pad,
                         MPID_nem_ib_cm_ringbuf_head, MPID_nem_ib_cm_ringbuf_tail);
                 if (is_synack) {
+                    dprintf("cm_poll_syn,queueing syn,%d->%d,connection_tx=%d\n",
+                            MPID_nem_ib_myrank, syn->initiator_rank,
+                            req->ibcom->outstanding_connection_tx);
                     MPID_NEM_IB_CM_COMPOSE_SYNACK((MPID_nem_ib_cm_cmd_synack_t *) &
                                                   (req->cmd), req, syn->initiator_req);
                 }
                 else {
-                    MPID_NEM_IB_CM_COMPOSE_END_CM((MPID_nem_ib_cm_cmd_synack_t *) &
-                                                  (req->cmd), req, syn->initiator_req, req->state);
+                    dprintf
+                        ("cm_poll_syn,queueing established or connecting,%d->%d,connection_tx=%d,state=%d\n",
+                         MPID_nem_ib_myrank, syn->initiator_rank,
+                         req->ibcom->outstanding_connection_tx, req->state);
+                    MPID_NEM_IB_CM_COMPOSE_END_CM((MPID_nem_ib_cm_cmd_synack_t *) & (req->cmd), req,
+                                                  syn->initiator_req, req->state);
                 }
                 MPID_nem_ib_cm_sendq_enqueue(&MPID_nem_ib_cm_sendq, req);
             }
-            /* Release CAS word because there's no next write on this syn slot */
-            *cas_word = MPID_NEM_IB_CM_RELEASED;
         }
         goto common_tail;
         break;
-    case MPID_NEM_IB_CM_CAS_RELEASE:{
+    case MPID_NEM_IB_CM_CAS_RELEASE2:{
+            MPID_nem_ib_segv;
             /* Initiator requests to release CAS word.
              * Because connection is already established.
              * In this case, responder may already have performed vc_terminate. */
 
-            volatile MPID_nem_ib_cm_cmd_syn_t *syn_tail_flag = (MPID_nem_ib_cm_cmd_syn_t *) slot;
             while (syn_tail_flag->tail_flag.tail_flag != MPID_NEM_IB_COM_MAGIC) {
                 /* __asm__ __volatile__("pause;":::"memory"); */
             }
 
-            volatile uint64_t *cas_word = (uint64_t *) (MPID_nem_ib_scratch_pad);
-            /* release */
-            *cas_word = MPID_NEM_IB_CM_RELEASED;
+#ifdef MPID_NEM_IB_DEBUG_POLL
+            MPID_nem_ib_cm_cmd_syn_t *syn = (MPID_nem_ib_cm_cmd_syn_t *) slot;
+#endif
+            dprintf("cm_poll_syn,release2 detected,%d->%d\n",
+                    syn->initiator_rank, MPID_nem_ib_myrank);
         }
 
       common_tail:
-        *head_flag = MPID_NEM_IB_CM_HEAD_FLAG_ZERO;     /* Clear head-flag */
-        /* Clear all possible tail-flag slots */
-        ((MPID_nem_ib_cm_cmd_syn_t *) slot)->tail_flag.tail_flag = 0;
+
+        /* Clear head-flag */
+        *head_flag = MPID_NEM_IB_CM_HEAD_FLAG_ZERO;
+
+        /* Clear tail-flag */
+        syn_tail_flag->tail_flag.tail_flag = 0;
+
+        /* Release CAS word.
+         * Note that the following store instruction switches the value from "acquired" to "released"
+         * because the load instruction above made the cache tag for the CAS word
+         * reflect the switch of the value from "released" to "acquired".
+         * We want to prevent the case where the store instruction switches the value from
+         * "released" to "released" then a write command from a PCI device arrives
+         * and switches the value from "released" to "acquired")
+         */
+        //*cas_word = MPID_NEM_IB_CM_RELEASED;
+        dprintf("cm_poll_syn,exit,%d,cas_word,%p,%lx\n", MPID_nem_ib_myrank, cas_word, *cas_word);
         break;
     default:
         printf("unknown connection command\n");
@@ -3128,11 +3242,12 @@ int MPID_nem_ib_cm_poll()
                 MPID_nem_ib_cm_cmd_synack_t *synack = (MPID_nem_ib_cm_cmd_synack_t *) slot;
                 MPID_nem_ib_cm_req_t *req = (MPID_nem_ib_cm_req_t *) synack->initiator_req;
                 req->ringbuf_index = synack->initiator_ringbuf_index;
-                dprintf
-                    ("cm_poll,synack detected!,responder_req=%p,responder_rank=%d,ringbuf_index=%d,tx=%d\n",
-                     synack->responder_req, req->responder_rank, synack->initiator_ringbuf_index,
-                     req->ibcom->outstanding_connection_tx);
                 req->ibcom->incoming_connection_tx -= 1;        /* SYNACK */
+                dprintf
+                    ("cm_poll,synack detected!,%d->%d[%d],responder_req=%p,ringbuf_index=%d,tx=%d\n",
+                     req->responder_rank, MPID_nem_ib_myrank, i,
+                     synack->responder_req, synack->initiator_ringbuf_index,
+                     req->ibcom->outstanding_connection_tx);
                 /* Deduct it from the packet */
                 VC_FIELD(MPID_nem_ib_conns[req->responder_rank].vc,
                          connection_state) |= MPID_NEM_IB_CM_REMOTE_QP_RESET;
@@ -3203,13 +3318,16 @@ int MPID_nem_ib_cm_poll()
                                                 (req->cmd), req, synack->responder_req);
                     MPID_nem_ib_cm_sendq_enqueue(&MPID_nem_ib_cm_sendq, req);
                 }
-            }
 
-            *head_flag = MPID_NEM_IB_CM_HEAD_FLAG_ZERO; /* Clear head-flag */
-            /* Clear all possible tail-flag slots */
-            MPID_NEM_IB_CM_CLEAR_TAIL_FLAGS(slot);
-            //goto common_tail;
-            break;
+                *head_flag = MPID_NEM_IB_CM_HEAD_FLAG_ZERO;     /* Clear head-flag */
+                /* Clear all possible tail-flag slots */
+                MPID_NEM_IB_CM_CLEAR_TAIL_FLAGS(slot);
+
+                /* Explicitly release CAS word because
+                 * ConnectX-3 doesn't support safe CAS with PCI device and CPU */
+                MPID_nem_ib_cm_cas_release(MPID_nem_ib_conns[req->responder_rank].vc);
+                break;
+            }
         case MPID_NEM_IB_CM_ALREADY_ESTABLISHED:
         case MPID_NEM_IB_CM_RESPONDER_IS_CONNECTING:
             {
@@ -3221,13 +3339,14 @@ int MPID_nem_ib_cm_poll()
 
                 MPID_nem_ib_cm_cmd_synack_t *synack = (MPID_nem_ib_cm_cmd_synack_t *) slot;
                 MPID_nem_ib_cm_req_t *req = (MPID_nem_ib_cm_req_t *) synack->initiator_req;
-                dprintf
-                    ("cm_poll,synack detected!,responder_req=%p,responder_rank=%d,ringbuf_index=%d,tx=%d\n",
-                     synack->responder_req, req->responder_rank, synack->initiator_ringbuf_index,
-                     req->ibcom->outstanding_connection_tx);
                 /* These mean the end of CM-op, so decrement here. */
                 req->ibcom->outstanding_connection_tx -= 1;
                 req->ibcom->incoming_connection_tx -= 2;
+                dprintf
+                    ("cm_poll,established or connecting detected!,%d->%d[%d],responder_req=%p,ringbuf_index=%d,tx=%d\n",
+                     req->responder_rank, MPID_nem_ib_myrank, i,
+                     synack->responder_req, synack->initiator_ringbuf_index,
+                     req->ibcom->outstanding_connection_tx);
                 /* cm_release calls cm_progress, so we have to clear scratch_pad here. */
                 *head_flag = MPID_NEM_IB_CM_HEAD_FLAG_ZERO;     /* Clear head-flag */
                 /* Clear all possible tail-flag slots */
@@ -3247,9 +3366,12 @@ int MPID_nem_ib_cm_poll()
                  * If ref_count == 3, the memory of request will be released on draining SCQ of SYN. */
                 MPID_nem_ib_cm_request_release(req);
                 MPID_nem_ib_cm_request_release(req);
+
+                /* Explicitly release CAS word because
+                 * ConnectX-3 doesn't support safe CAS with PCI device and CPU */
+                MPID_nem_ib_cm_cas_release(MPID_nem_ib_conns[req->responder_rank].vc);
+                break;
             }
-            //goto common_tail;
-            break;
         case MPID_NEM_IB_CM_ACK1:{
                 volatile MPID_nem_ib_cm_cmd_ack1_t *ack1_tail_flag =
                     (MPID_nem_ib_cm_cmd_ack1_t *) slot;
@@ -3259,10 +3381,10 @@ int MPID_nem_ib_cm_poll()
 
                 MPID_nem_ib_cm_cmd_ack1_t *ack1 = (MPID_nem_ib_cm_cmd_ack1_t *) slot;
                 MPID_nem_ib_cm_req_t *req = (MPID_nem_ib_cm_req_t *) ack1->responder_req;
-                dprintf("cm_poll,ack1 detected!,responder_req=%p,initiator_rank=%d,tx=%d\n",
-                        ack1->responder_req, req->initiator_rank,
-                        req->ibcom->outstanding_connection_tx);
                 req->ibcom->incoming_connection_tx -= 1;        /* ACK1 */
+                dprintf("cm_poll,ack1 detected!,%d->%d[%d],responder_req=%p,tx=%d\n",
+                        req->initiator_rank, MPID_nem_ib_myrank, i,
+                        ack1->responder_req, req->ibcom->outstanding_connection_tx);
                 /* Deduct it from the packet */
                 VC_FIELD(MPID_nem_ib_conns[req->initiator_rank].vc,
                          connection_state) |=
@@ -3357,8 +3479,9 @@ int MPID_nem_ib_cm_poll()
                 }
                 MPID_nem_ib_cm_cmd_ack2_t *ack2 = (MPID_nem_ib_cm_cmd_ack2_t *) slot;
                 MPID_nem_ib_cm_req_t *req = (MPID_nem_ib_cm_req_t *) ack2->initiator_req;
-                dprintf("cm_poll,ack2 detected!,req=%p,responder_rank=%d,tx=%d\n", req,
-                        req->responder_rank, req->ibcom->outstanding_connection_tx);
+                dprintf("cm_poll,ack2 detected!,%d->%d[%d],connection_tx=%d\n",
+                        req->responder_rank, MPID_nem_ib_myrank, i,
+                        req->ibcom->outstanding_connection_tx);
                 req->ibcom->incoming_connection_tx -= 1;        /* ACK2 */
                 /* Deduct it from the packet */
                 if (!

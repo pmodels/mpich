@@ -118,13 +118,14 @@ typedef struct {
 enum MPID_nem_ib_cm_cmd_types {
     MPID_NEM_IB_CM_HEAD_FLAG_ZERO = 0,
     MPID_NEM_IB_CM_CAS,
+    MPID_NEM_IB_CM_CAS_RELEASE,
     MPID_NEM_IB_CM_SYN,
     MPID_NEM_IB_CM_SYNACK,
     MPID_NEM_IB_CM_ACK1,
     MPID_NEM_IB_CM_ACK2,
     MPID_NEM_IB_RINGBUF_ASK_FETCH,
     MPID_NEM_IB_RINGBUF_ASK_CAS,
-    MPID_NEM_IB_CM_CAS_RELEASE,
+    MPID_NEM_IB_CM_CAS_RELEASE2,
     MPID_NEM_IB_CM_ALREADY_ESTABLISHED,
     MPID_NEM_IB_CM_RESPONDER_IS_CONNECTING,
     MPID_NEM_IB_NOTIFY_OUTSTANDING_TX_EMPTY
@@ -294,8 +295,8 @@ typedef GENERIC_Q_DECL(MPID_nem_ib_cm_notify_send_req_t) MPID_nem_ib_cm_notify_s
     (cmd)->tail_flag.tail_flag = MPID_NEM_IB_COM_MAGIC; \
 }
 
-#define MPID_NEM_IB_CM_COMPOSE_CAS_RELEASE(cmd, req) {  \
-    (cmd)->type = MPID_NEM_IB_CM_CAS_RELEASE; \
+#define MPID_NEM_IB_CM_COMPOSE_CAS_RELEASE2(cmd, req) {  \
+    (cmd)->type = MPID_NEM_IB_CM_CAS_RELEASE2; \
     (cmd)->initiator_req = (req); \
     (cmd)->tail_flag.tail_flag = MPID_NEM_IB_COM_MAGIC; \
 }
@@ -580,6 +581,8 @@ int MPID_nem_ib_iStartContigMsg(MPIDI_VC_t * vc, void *hdr, MPIDI_msg_sz_t hdr_s
 
 int MPID_nem_ib_cm_cas_core(int rank, MPID_nem_ib_cm_cmd_shadow_t * shadow);
 int MPID_nem_ib_cm_cas(MPIDI_VC_t * vc, uint32_t ask_on_connect);
+int MPID_nem_ib_cm_cas_release_core(int rank, MPID_nem_ib_cm_cmd_shadow_t * shadow);
+int MPID_nem_ib_cm_cas_release(MPIDI_VC_t * vc);
 int MPID_nem_ib_cm_cmd_core(int rank, MPID_nem_ib_cm_cmd_shadow_t * shadow, void *buf,
                             MPIDI_msg_sz_t sz, uint32_t syn, uint16_t ringbuf_index);
 int MPID_nem_ib_ringbuf_ask_cas(MPIDI_VC_t * vc, MPID_nem_ib_ringbuf_req_t * req);

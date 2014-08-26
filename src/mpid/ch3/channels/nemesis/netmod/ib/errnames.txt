@@ -1,6 +1,8 @@
 
 **MPIDI_PG_GetConnKVSname:MPIDI_PG_GetConnKVSname failed
 **MPID_nem_ib_cm_cas:MPID_nem_ib_cm_cas failed
+**MPID_nem_ib_cm_cas_release:MPID_nem_ib_cm_cas_release failed
+**MPID_nem_ib_cm_cas_release_core:MPID_nem_ib_cm_cas_release_core failed
 **MPID_nem_ib_cm_connect_cas_core:MPID_nem_ib_cm_connect_cas_core failed
 **MPID_nem_ib_cm_drain_rcq:MPID_nem_ib_cm_drain_rcq failed
 **MPID_nem_ib_cm_drain_scq:MPID_nem_ib_cm_drain_scq failed

@@ -1430,13 +1430,38 @@ int MPID_nem_ib_cm_progress()
                 MPIU_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER,
                                     "**MPID_nem_ib_cm_connect_cas_core");
                 break;
+            case MPID_NEM_IB_CM_CAS_RELEASE:
+                dprintf
+                    ("cm_progress,retry CAS_RELEASE,responder_rank=%d,req=%p,decided=%ld,vt=%ld,backoff=%ld\n",
+                     sreq->responder_rank, sreq, sreq->retry_decided,
+                     MPID_nem_ib_progress_engine_vt, sreq->retry_backoff);
+                shadow =
+                    (MPID_nem_ib_cm_cmd_shadow_t *)
+                    MPIU_Malloc(sizeof(MPID_nem_ib_cm_cmd_shadow_t));
+                shadow->type = sreq->state;
+                shadow->req = sreq;
+                mpi_errno = MPID_nem_ib_cm_cas_release_core(sreq->responder_rank, shadow);
+                MPIU_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**MPID_nem_ib_cm_cas_release_core");
+                break;
             case MPID_NEM_IB_CM_SYN:
                 if (is_conn_established(sreq->responder_rank)) {
+#if 1
+                    /* Explicitly release CAS word because
+                     * ConnectX-3 doesn't support safe CAS with PCI device and CPU */
+                    MPID_nem_ib_cm_cas_release(MPID_nem_ib_conns[sreq->responder_rank].vc);
+                    dprintf("cm_progress,syn,established is true,%d->%d,connection_tx=%d\n",
+                            MPID_nem_ib_myrank, sreq->responder_rank,
+                            sreq->ibcom->outstanding_connection_tx);
+                    is_established = 1;
+                    break;
+#else
+                    dprintf("cm_progress,syn,switching to cas_release,%d->%d\n",
+                            MPID_nem_ib_myrank, sreq->responder_rank);
                     /* Connection was established while SYN command was enqueued.
                      * So we replace SYN with CAS_RELEASE, and send. */
 
                     /* override req->type */
-                    ((MPID_nem_ib_cm_cmd_syn_t *) & sreq->cmd)->type = MPID_NEM_IB_CM_CAS_RELEASE;
+                    ((MPID_nem_ib_cm_cmd_syn_t *) & sreq->cmd)->type = MPID_NEM_IB_CM_CAS_RELEASE2;
                     ((MPID_nem_ib_cm_cmd_syn_t *) & sreq->cmd)->initiator_rank = MPID_nem_ib_myrank;
 
                     /* Initiator does not receive SYNACK and ACK2, so we decrement incoming counter here. */
@@ -1447,7 +1472,7 @@ int MPID_nem_ib_cm_progress()
                         MPIU_Malloc(sizeof(MPID_nem_ib_cm_cmd_shadow_t));
 
                     /* override req->state */
-                    shadow->type = sreq->state = MPID_NEM_IB_CM_CAS_RELEASE;
+                    shadow->type = sreq->state = MPID_NEM_IB_CM_CAS_RELEASE2;
                     shadow->req = sreq;
                     dprintf("shadow=%p,shadow->req=%p\n", shadow, shadow->req);
                     mpi_errno =
@@ -1457,6 +1482,7 @@ int MPID_nem_ib_cm_progress()
                                                 0);
                     MPIU_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER,
                                         "**MPID_nem_ib_cm_send_core");
+#endif
                     break;
                 }
 
@@ -1484,7 +1510,10 @@ int MPID_nem_ib_cm_progress()
                 MPIU_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER,
                                     "**MPID_nem_ib_cm_send_core");
                 break;
-            case MPID_NEM_IB_CM_CAS_RELEASE:
+            case MPID_NEM_IB_CM_CAS_RELEASE2:
+                dprintf("cm_progress,sending cas_release2,%d->%d\n", MPID_nem_ib_myrank,
+                        sreq->responder_rank);
+
                 ((MPID_nem_ib_cm_cmd_syn_t *) & sreq->cmd)->initiator_rank = MPID_nem_ib_myrank;
 
                 shadow =
@@ -1635,14 +1664,20 @@ int MPID_nem_ib_cm_cas_core(int rank, MPID_nem_ib_cm_cmd_shadow_t * shadow)
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_IB_CM_CAS_CORE);
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_IB_CM_CAS_CORE);
 
-    dprintf("cm_cas_core,enter\n");
+    MPID_nem_ib_com_t *conp;
+    ibcom_errno = MPID_nem_ib_com_obtain_pointer(MPID_nem_ib_scratch_pad_fds[rank], &conp);
+    MPIU_ERR_CHKANDJUMP(ibcom_errno, mpi_errno, MPI_ERR_OTHER, "**MPID_nem_ib_com_cas_scratch_pad");
+    dprintf("cm_cas_core,%d->%d,conp=%p,remote_addr=%lx\n",
+            MPID_nem_ib_myrank, rank, conp,
+            (unsigned long) conp->icom_rmem[MPID_NEM_IB_COM_SCRATCH_PAD_TO] + 0);
 
     /* Compare-and-swap rank to acquire communication manager port */
     ibcom_errno =
         MPID_nem_ib_com_cas_scratch_pad(MPID_nem_ib_scratch_pad_fds[rank],
                                         (uint64_t) shadow,
                                         0,
-                                        MPID_NEM_IB_CM_RELEASED, rank,
+                                        MPID_NEM_IB_CM_RELEASED,
+                                        MPID_nem_ib_myrank/*rank*/, /*debug*/
                                         &shadow->buf_from, &shadow->buf_from_sz);
     MPIU_ERR_CHKANDJUMP(ibcom_errno, mpi_errno, MPI_ERR_OTHER, "**MPID_nem_ib_com_cas_scratch_pad");
     MPID_nem_ib_ncqe_scratch_pad += 1;
@@ -1690,7 +1725,8 @@ int MPID_nem_ib_cm_cas(MPIDI_VC_t * vc, uint32_t ask_on_connect)
     /* Increment transaction counter here because cm_cas is called only once
      * (cm_cas_core might be called more than once when retrying) */
     req->ibcom->outstanding_connection_tx += 1;
-    dprintf("cm_cas,tx=%d\n", req->ibcom->outstanding_connection_tx);
+    dprintf("cm_cas,%d->%d,connection_tx=%d\n", MPID_nem_ib_myrank, vc->pg_rank,
+            req->ibcom->outstanding_connection_tx);
 
     /* Acquire remote scratch pad */
     if (MPID_nem_ib_ncqe_scratch_pad < MPID_NEM_IB_COM_MAX_CQ_CAPACITY &&
@@ -1713,6 +1749,101 @@ int MPID_nem_ib_cm_cas(MPIDI_VC_t * vc, uint32_t ask_on_connect)
 
   fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_IB_CM_CAS);
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPID_nem_ib_cm_cas_release_core
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
+int MPID_nem_ib_cm_cas_release_core(int rank, MPID_nem_ib_cm_cmd_shadow_t * shadow)
+{
+    int mpi_errno = MPI_SUCCESS;
+    int ibcom_errno;
+
+    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_IB_CM_CAS_RELEASE_CORE);
+    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_IB_CM_CAS_RELEASE_CORE);
+
+    MPID_nem_ib_com_t *conp;
+    ibcom_errno = MPID_nem_ib_com_obtain_pointer(MPID_nem_ib_scratch_pad_fds[rank], &conp);
+    MPIU_ERR_CHKANDJUMP(ibcom_errno, mpi_errno, MPI_ERR_OTHER, "**MPID_nem_ib_com_cas_scratch_pad");
+    dprintf("cm_cas_release_core,%d->%d,conp=%p,remote_addr=%lx\n",
+            MPID_nem_ib_myrank, rank, conp,
+            (unsigned long) conp->icom_rmem[MPID_NEM_IB_COM_SCRATCH_PAD_TO] + 0);
+
+    /* Compare-and-swap rank to acquire communication manager port */
+    ibcom_errno =
+        MPID_nem_ib_com_cas_scratch_pad(MPID_nem_ib_scratch_pad_fds[rank],
+                                        (uint64_t) shadow,
+                                        0,
+                                        MPID_nem_ib_myrank,
+                                        MPID_NEM_IB_CM_RELEASED/*rank*/, /*debug*/
+                                        &shadow->buf_from, &shadow->buf_from_sz);
+    MPIU_ERR_CHKANDJUMP(ibcom_errno, mpi_errno, MPI_ERR_OTHER, "**MPID_nem_ib_com_cas_scratch_pad");
+    MPID_nem_ib_ncqe_scratch_pad += 1;
+
+  fn_exit:
+    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_IB_CM_CAS_RELEASE_CORE);
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPID_nem_ib_cm_cas_release
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
+int MPID_nem_ib_cm_cas_release(MPIDI_VC_t * vc)
+{
+    int mpi_errno = MPI_SUCCESS;
+    int ibcom_errno;
+
+    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_IB_CM_CAS_RELEASE);
+    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_IB_CM_CAS_RELEASE);
+
+    dprintf("cm_cas_release,enter\n");
+
+    /* Prepare request structure for enqueued case */
+    MPID_nem_ib_cm_req_t *req = MPIU_Malloc(sizeof(MPID_nem_ib_cm_req_t));
+    MPIU_ERR_CHKANDJUMP(!req, mpi_errno, MPI_ERR_OTHER, "**malloc");
+    dprintf("req=%p\n", req);
+    req->state = MPID_NEM_IB_CM_CAS_RELEASE;
+    req->ref_count = 1; /* Released on draining SCQ */
+    req->retry_backoff = 0;
+    req->initiator_rank = MPID_nem_ib_myrank;
+    req->responder_rank = vc->pg_rank;
+    ibcom_errno =
+        MPID_nem_ib_com_obtain_pointer(MPID_nem_ib_scratch_pad_fds[vc->pg_rank], &req->ibcom);
+    MPIU_ERR_CHKANDJUMP(ibcom_errno, mpi_errno, MPI_ERR_OTHER, "**MPID_nem_ib_com_obtain_pointer");
+    dprintf("req->ibcom=%p\n", req->ibcom);
+
+    /* Increment transaction counter here because cm_cas_release is called only once
+     * (cm_cas_release_core might be called more than once when retrying) */
+    req->ibcom->outstanding_connection_tx += 1;
+    dprintf("cm_cas_release,%d->%d,connection_tx=%d\n", MPID_nem_ib_myrank, vc->pg_rank,
+            req->ibcom->outstanding_connection_tx);
+
+    /* Acquire remote scratch pad */
+    if (MPID_nem_ib_ncqe_scratch_pad < MPID_NEM_IB_COM_MAX_CQ_CAPACITY &&
+        req->ibcom->ncom_scratch_pad < MPID_NEM_IB_COM_MAX_SQ_CAPACITY) {
+        MPID_nem_ib_cm_cmd_shadow_t *shadow =
+            (MPID_nem_ib_cm_cmd_shadow_t *) MPIU_Malloc(sizeof(MPID_nem_ib_cm_cmd_shadow_t));
+        shadow->type = req->state;
+        shadow->req = req;
+
+        mpi_errno = MPID_nem_ib_cm_cas_release_core(req->responder_rank, shadow);
+        MPIU_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**MPID_nem_ib_cm_cas_release");
+    }
+    else {
+        dprintf("cm_cas_release,enqueue\n");
+        req->retry_decided = MPID_nem_ib_progress_engine_vt;
+        MPID_nem_ib_cm_sendq_enqueue(&MPID_nem_ib_cm_sendq, req);
+    }
+
+  fn_exit:
+    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_IB_CM_CAS_RELEASE);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
