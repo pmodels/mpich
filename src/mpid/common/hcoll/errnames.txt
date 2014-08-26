@@ -1,0 +1,6 @@
+#
+# HCOLL errors
+#
+**hcoll_wrong_arg:Error in hcolrte api: wrong null argument
+**hcoll_wrong_arg %p %d:Error in hcolrte api: wrong null argument (ec_h.handle = %p, ec_h.rank = %d)
+**null_buff_ptr:Error in hcolrte api: buffer pointer is NULL for non DTE_ZERO INLINE data representation

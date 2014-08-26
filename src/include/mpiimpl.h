@@ -237,6 +237,10 @@ static MPIU_DBG_INLINE_KEYWORD void MPIUI_Memcpy(void * dst, const void * src, s
 /* Routines for memory management */
 #include "mpimem.h"
 
+#if defined HAVE_LIBHCOLL
+#include "../mpid/common/hcoll/hcollpre.h"
+#endif
+
 /*
  * Use MPIU_SYSCALL to wrap system calls; this provides a convenient point
  * for timing the calls and keeping track of the use of system calls.
@@ -1250,6 +1254,11 @@ typedef struct MPID_Comm {
 #ifdef MPID_HAS_HETERO
     int is_hetero;
 #endif
+
+#if defined HAVE_LIBHCOLL
+    hcoll_comm_priv_t hcoll_priv;
+#endif /* HAVE_LIBHCOLL */
+
   /* Other, device-specific information */
 #ifdef MPID_DEV_COMM_DECL
     MPID_DEV_COMM_DECL

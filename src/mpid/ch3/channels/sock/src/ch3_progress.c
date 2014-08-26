@@ -88,6 +88,13 @@ static int MPIDI_CH3i_Progress_test(void)
     mpi_errno = MPIDU_Sched_progress(&made_progress);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
+#if defined HAVE_LIBHCOLL
+    if (MPIR_CVAR_CH3_ENABLE_HCOLL) {
+        mpi_errno = hcoll_do_progress();
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    }
+#endif /* HAVE_LIBHCOLL */
+
     mpi_errno = MPIDU_Sock_wait(MPIDI_CH3I_sock_set, 0, &event);
 
     if (mpi_errno == MPI_SUCCESS)
@@ -183,6 +190,18 @@ static int MPIDI_CH3i_Progress_wait(MPID_Progress_state * progress_state)
             MPIDI_CH3_Progress_signal_completion();
             break;
         }
+
+#if defined HAVE_LIBHCOLL
+        if (MPIR_CVAR_CH3_ENABLE_HCOLL) {
+            mpi_errno = hcoll_do_progress();
+            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
+            /* if hcoll completed any pending requests, break.  Else,
+             * we are expecting at least one more socket event */
+            if (progress_state->ch.completion_count != MPIDI_CH3I_progress_completion_count)
+                break;
+        }
+#endif /* HAVE_LIBHCOLL */
 
 #       ifdef MPICH_IS_THREADED
 

@@ -6,6 +6,26 @@
 
 #include "mpidimpl.h"
 #include "mpl_utlist.h"
+#if defined HAVE_LIBHCOLL
+#include "../../common/hcoll/hcoll.h"
+#endif
+
+/*
+=== BEGIN_MPI_T_CVAR_INFO_BLOCK ===
+
+cvars:
+    - name        : MPIR_CVAR_CH3_ENABLE_HCOLL
+      category    : CH3
+      type        : boolean
+      default     : false
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        If true, enable HCOLL collectives.
+
+=== END_MPI_T_CVAR_INFO_BLOCK ===
+*/
 
 static int register_hook_finalize(void *param);
 static int comm_created(MPID_Comm *comm, void *param);
@@ -44,6 +64,16 @@ int MPIDI_CH3I_Comm_init(void)
     /* register hooks for keeping track of communicators */
     mpi_errno = MPIDI_CH3U_Comm_register_create_hook(comm_created, NULL);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
+#if defined HAVE_LIBHCOLL
+    if (MPIR_CVAR_CH3_ENABLE_HCOLL) {
+        mpi_errno = MPIDI_CH3U_Comm_register_create_hook(hcoll_comm_create, NULL);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        mpi_errno = MPIDI_CH3U_Comm_register_destroy_hook(hcoll_comm_destroy, NULL);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    }
+#endif
+
     mpi_errno = MPIDI_CH3U_Comm_register_destroy_hook(comm_destroyed, NULL);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     

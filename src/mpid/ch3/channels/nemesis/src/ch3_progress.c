@@ -464,6 +464,13 @@ int MPIDI_CH3I_Progress (MPID_Progress_state *progress_state, int is_blocking)
             MPIDI_CH3_Progress_signal_completion();
         }
 
+#if defined HAVE_LIBHCOLL
+        if (MPIR_CVAR_CH3_ENABLE_HCOLL) {
+            mpi_errno = hcoll_do_progress();
+            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        }
+#endif /* HAVE_LIBHCOLL */
+
         /* in the case of progress_wait, bail out if anything completed (CC-1) */
         if (is_blocking) {
             int completion_count = OPA_load_int(&MPIDI_CH3I_progress_completion_count);
