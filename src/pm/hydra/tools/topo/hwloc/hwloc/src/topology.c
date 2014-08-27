@@ -3046,7 +3046,7 @@ hwloc__check_children(struct hwloc_obj *parent)
    */
   if (parent->complete_cpuset) {
     int firstchild;
-    int prev_firstchild = -1; /* -1 works fine with first comparisons below */
+    int prev_firstchild __hwloc_attribute_unused = -1; /* -1 works fine with first comparisons below */
     for(j=0; j<parent->arity; j++) {
       if (!parent->children[j]->complete_cpuset
 	  || hwloc_bitmap_iszero(parent->children[j]->complete_cpuset))
