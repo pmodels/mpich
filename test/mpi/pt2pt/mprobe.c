@@ -36,7 +36,7 @@ int main(int argc, char **argv)
     int errs = 0;
     int found, completed;
     int rank, size;
-    int sendbuf[LARGE_SZ], recvbuf[LARGE_SZ];
+    int *sendbuf = NULL, *recvbuf = NULL;
     int count, i;
 #ifdef TEST_MPROBE_ROUTINES
     MPI_Message msg;
@@ -61,6 +61,13 @@ int main(int argc, char **argv)
     }
 
 #ifdef TEST_MPROBE_ROUTINES
+    sendbuf = (int *) malloc(LARGE_SZ * sizeof(int));
+    recvbuf = (int *) malloc(LARGE_SZ * sizeof(int));
+    if (sendbuf == NULL || recvbuf == NULL) {
+        printf("Error in memory allocation\n");
+        MPI_Abort(MPI_COMM_WORLD, 1);
+    }
+
     /* test 0: simple send & mprobe+mrecv */
     if (rank == 0) {
         sendbuf[0] = 0xdeadbeef;
@@ -514,6 +521,9 @@ int main(int argc, char **argv)
         check(msg == MPI_MESSAGE_NULL);
     }
     MPI_Type_free(&vectype);
+
+    free(sendbuf);
+    free(recvbuf);
 
     /* TODO MPI_ANY_SOURCE and MPI_ANY_TAG should be tested as well */
     /* TODO a full range of message sizes should be tested too */
