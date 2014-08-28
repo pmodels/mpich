@@ -23,7 +23,8 @@ int test_count(MPI_Count count)
     MPI_Get_elements_x(&stat, MPI_BYTE, &bcount2);
     MPI_Test_cancelled(&stat, &cancelled2);
     if (bcount != bcount2) {
-        fprintf(stderr, "Count Error: expected %lx, got %lx\n", bcount, bcount2);
+        fprintf(stderr, "Count Error: expected %llx, got %llx\n",
+		(long long int)bcount, (long long int)bcount2);
         nerrs++;
     }
     if (cancelled != cancelled2) {

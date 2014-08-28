@@ -35,7 +35,7 @@ int main(int argc, char *argv[])
         if (MPI_LONG_DOUBLE != MPI_DATATYPE_NULL) {
             MPI_Type_size(MPI_LONG_DOUBLE, &type_size);
             if (type_size != sizeof(long double)) {
-                printf("type_size != sizeof(long double) : (%zd != %zd)\n",
+                printf("type_size != sizeof(long double) : (%d != %zd)\n",
                        type_size, sizeof(long double));
                 ++errs;
             }
@@ -45,7 +45,7 @@ int main(int argc, char *argv[])
         if (MPI_C_LONG_DOUBLE_COMPLEX != MPI_DATATYPE_NULL) {
             MPI_Type_size(MPI_C_LONG_DOUBLE_COMPLEX, &type_size);
             if (type_size != sizeof(long double _Complex)) {
-                printf("type_size != sizeof(long double _Complex) : (%zd != %zd)\n",
+                printf("type_size != sizeof(long double _Complex) : (%d != %zd)\n",
                        type_size, sizeof(long double _Complex));
                 ++errs;
             }
