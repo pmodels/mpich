@@ -461,6 +461,13 @@ export enable_strict_done
 if test "$enable_strict_done" != "yes" ; then
 
     # Some comments on strict warning options.
+    # These were added to improve portability
+    #   -Wstack-usage=262144 -- 32 bit FreeBSD did not like the mprobe test
+    #       allocating a big variable on the stack. (See tt#2160).  The "right"
+    #       value requires further investigation; 1 MiB would have at least
+    #       caught #2160 at compile-time, and only two other tests show a
+    #       warning at 256k.
+    #
     # These were added to reduce warnings:
     #   -Wno-missing-field-initializers  -- We want to allow a struct to be 
     #       initialized to zero using "struct x y = {0};" and not require 
@@ -551,6 +558,7 @@ if test "$enable_strict_done" != "yes" ; then
         -Wno-format-zero-length
         -Wtype-limits
         -Werror-implicit-function-declaration
+        -Wstack-usage=262144
     "
 
     enable_c89=no
