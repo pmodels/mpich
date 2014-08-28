@@ -80,7 +80,10 @@ int MPIDI_CH3_SHM_Win_free(MPID_Win **win_ptr)
         /* free shm_base_addrs that's only used for shared memory windows */
         MPIU_Free((*win_ptr)->shm_base_addrs);
 
-        if ((*win_ptr)->shm_segment_len > 0) {
+        /* Only allocate and allocate_shared allocate new shared segments */
+        if (((*win_ptr)->create_flavor == MPI_WIN_FLAVOR_SHARED ||
+             (*win_ptr)->create_flavor == MPI_WIN_FLAVOR_ALLOCATE) &&
+            (*win_ptr)->shm_segment_len > 0) {
             /* detach from shared memory segment */
             mpi_errno = MPIU_SHMW_Seg_detach((*win_ptr)->shm_segment_handle, (char **)&(*win_ptr)->shm_base_addr,
                                          (*win_ptr)->shm_segment_len);
@@ -91,7 +94,11 @@ int MPIDI_CH3_SHM_Win_free(MPID_Win **win_ptr)
     }
 
     /* Free shared process mutex memory region */
-    if ((*win_ptr)->shm_mutex && (*win_ptr)->shm_segment_len > 0) {
+    /* Only allocate and allocate_shared allocate new shared mutex.
+     * FIXME: it causes unnecessary synchronization when using the same mutex.  */
+    if (((*win_ptr)->create_flavor == MPI_WIN_FLAVOR_SHARED ||
+         (*win_ptr)->create_flavor == MPI_WIN_FLAVOR_ALLOCATE) &&
+        (*win_ptr)->shm_mutex && (*win_ptr)->shm_segment_len > 0) {
         MPID_Comm *node_comm_ptr = NULL;
 
         /* When allocating shared memory region segment, we need comm of processes
@@ -114,6 +121,12 @@ int MPIDI_CH3_SHM_Win_free(MPID_Win **win_ptr)
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
         MPIU_SHMW_Hnd_finalize(&(*win_ptr)->shm_mutex_segment_handle);
+    }
+
+    /* Unlink from global SHM window list if it is original shared window */
+    if ((*win_ptr)->create_flavor == MPI_WIN_FLAVOR_SHARED ||
+        (*win_ptr)->create_flavor == MPI_WIN_FLAVOR_ALLOCATE) {
+        MPIDI_CH3I_SHM_Wins_unlink(&shm_wins_list, (*win_ptr));
     }
 
     mpi_errno = MPIDI_Win_free(win_ptr);
