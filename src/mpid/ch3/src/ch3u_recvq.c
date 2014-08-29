@@ -813,7 +813,7 @@ MPID_Request * MPIDI_CH3U_Recvq_FDP_or_AEU(MPIDI_Message_match * match,
      * anyway. */
     {
         MPID_Comm *comm_ptr;
-        int mpi_errno;
+        int mpi_errno ATTRIBUTE((unused)) = MPI_SUCCESS;
 
         MPIDI_CH3I_Comm_find(match->parts.context_id, &comm_ptr);
 
@@ -821,6 +821,7 @@ MPID_Request * MPIDI_CH3U_Recvq_FDP_or_AEU(MPIDI_Message_match * match,
                         comm_ptr->revoked && MPIR_TAG_MASK_ERROR_BIT(match->parts.tag) != MPIR_SHRINK_TAG) {
             *foundp = FALSE;
             MPIDI_Request_create_null_rreq( rreq, mpi_errno, found=FALSE;goto lock_exit );
+            MPIU_Assert(mpi_errno == MPI_SUCCESS);
 
             MPIU_DBG_MSG_FMT(CH3_OTHER, VERBOSE,
                 (MPIU_DBG_FDEST, "RECEIVED MESSAGE FOR REVOKED COMM (tag=%d,src=%d,cid=%d)\n", MPIR_TAG_MASK_ERROR_BIT(match->parts.tag), match->parts.rank, comm_ptr->context_id));
