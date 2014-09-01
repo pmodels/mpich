@@ -167,6 +167,12 @@ typedef struct
    int bridge;
 } sortstruct;
 
+typedef struct
+{
+   int bridgeRank;
+   int numAggsAssigned;
+} bridgeAggAssignment;
+
 static int intsort(const void *p1, const void *p2)
 {
    sortstruct *i1, *i2;
@@ -215,91 +221,78 @@ ADIOI_BG_compute_agg_ranklist_serial_do (const ADIOI_BG_ConfInfo_t *confInfo,
       }
       else { // aggTotal > 1
 
-        ADIOI_BG_ProcInfo_t *allProcInfoAggNodeList = (ADIOI_BG_ProcInfo_t *) ADIOI_Malloc(confInfo->nProcs * sizeof(ADIOI_BG_ProcInfo_t));
-        int allProcInfoAggNodeListSize = 0;
-        int maxManhattanDistanceToBridge = 0;
+        int currentAggListSize = 0;
+        int numBridgesWithAggAssignments = 0;
+        bridgeAggAssignment *aggAssignments = (bridgeAggAssignment *)ADIOI_Malloc(confInfo->numBridgeRanks * sizeof(bridgeAggAssignment));
 
-        // for ppn > 1, assign minumum rank as agg candidate
-        for (i=0;i<confInfo->nProcs;i++) {
-          int addProcToAggNodeList = 1;
-          for (j=0;j<allProcInfoAggNodeListSize;j++) {
-            if ((allProcInfoAggNodeList[j].torusCoords[0] == all_procInfo[i].torusCoords[0]) &&
-              (allProcInfoAggNodeList[j].torusCoords[1] == all_procInfo[i].torusCoords[1]) &&
-              (allProcInfoAggNodeList[j].torusCoords[2] == all_procInfo[i].torusCoords[2]) &&
-              (allProcInfoAggNodeList[j].torusCoords[3] == all_procInfo[i].torusCoords[3]) &&
-              (allProcInfoAggNodeList[j].torusCoords[4] == all_procInfo[i].torusCoords[4]) &&
-              addProcToAggNodeList) {
-              // proc is in the node list, replace if this rank is smaller
-              addProcToAggNodeList = 0;
+        int partitionSize = all_procInfo[0].numNodesInPartition;
+        int *nodesAssigned = (int *)ADIOI_Malloc(partitionSize * sizeof(int));
+        for (i=0;i<partitionSize;i++)
+          nodesAssigned[i] = 0;
 
-              if (allProcInfoAggNodeList[j].rank > all_procInfo[i].rank)
-                allProcInfoAggNodeList[j] = all_procInfo[i];
-            }
-          } // for j
-          if (addProcToAggNodeList) {
-            allProcInfoAggNodeList[allProcInfoAggNodeListSize] = all_procInfo[i];
-            if (allProcInfoAggNodeList[allProcInfoAggNodeListSize].manhattanDistanceToBridge > maxManhattanDistanceToBridge)
-              maxManhattanDistanceToBridge = allProcInfoAggNodeList[allProcInfoAggNodeListSize].manhattanDistanceToBridge;
-            allProcInfoAggNodeListSize++;
-          }
-        } // for i
-
-#ifdef bridgeringaggtrace
-      fprintf(stderr,"allProcInfoAggNodeListSize is %d aggTotal is %d\n",allProcInfoAggNodeListSize,aggTotal);
-#endif
-
-      int *aggNodeBridgeList = (int *) ADIOI_Malloc (allProcInfoAggNodeListSize * sizeof(int)); // list of all bridge ranks
-      int *aggNodeBridgeListNum = (int *) ADIOI_Malloc (allProcInfoAggNodeListSize * sizeof(int));
-      for (i=0;i<allProcInfoAggNodeListSize;i++) {
-        aggNodeBridgeList[i] = -1;
-        aggNodeBridgeListNum[i] = 0;
-      }
-
-      int aggNodeBridgeListSize = 0;
-      for (i=0;i<allProcInfoAggNodeListSize;i++) {
-        int foundBridge = 0;
-        for (j=0;(j<aggNodeBridgeListSize && !foundBridge);j++) {
-          if (aggNodeBridgeList[j] == allProcInfoAggNodeList[i].bridgeRank) {
-            foundBridge = 1;
-            aggNodeBridgeListNum[i]++;
-          }
-        }
-        if (!foundBridge) {
-          aggNodeBridgeList[aggNodeBridgeListSize] = allProcInfoAggNodeList[i].bridgeRank;
-          aggNodeBridgeListNum[aggNodeBridgeListSize] = 1;
-          aggNodeBridgeListSize++;
-        }
-      }
-
-      // add aggs based on numAggs per bridge, starting at gpfsmpio_bridgeringagg hops and increasing until numAggs aggs found
-      int currentAggListSize = 0;
-      for (i=0;i<aggNodeBridgeListSize;i++) {
-        int currentBridge = aggNodeBridgeList[i];
         int currentNumHops = gpfsmpio_bridgeringagg;
-        int numAggsAssignedToThisBridge = 0;
-        while ((numAggsAssignedToThisBridge < numAggs) && (currentNumHops <= maxManhattanDistanceToBridge)) {
-          for (j=0;j<allProcInfoAggNodeListSize;j++) {
-            if (allProcInfoAggNodeList[j].bridgeRank == currentBridge) {
-              if (allProcInfoAggNodeList[j].manhattanDistanceToBridge == currentNumHops) {
-                aggList[currentAggListSize] = allProcInfoAggNodeList[j].rank;
+        int allAggsAssigned = 0;
+
+        /* Iterate thru the process infos and select aggregators starting at currentNumHops
+           away.  Increase the currentNumHops until all bridges have numAggs assigned to them.
+        */
+        while (!allAggsAssigned) {
+          /* track whether any aggs are selected durng this round */
+          int startingCurrentAggListSize = currentAggListSize;
+          int numIterForHopsWithNoAggs = 0;
+          for (i=0;i<confInfo->nProcs;i++) {
+          if (all_procInfo[i].manhattanDistanceToBridge == currentNumHops) {
+            if (nodesAssigned[all_procInfo[i].nodeRank] == 0) { // node is not assigned as an agg yet
+              int foundBridge = 0;
+              for (j=0;(j<numBridgesWithAggAssignments && !foundBridge);j++) {
+                if (aggAssignments[j].bridgeRank == all_procInfo[i].bridgeRank) {
+                  foundBridge = 1;
+                  if (aggAssignments[j].numAggsAssigned < numAggs) {
+                    aggAssignments[j].numAggsAssigned++;
+                    nodesAssigned[all_procInfo[i].nodeRank] = 1;
+                    aggList[currentAggListSize] = all_procInfo[i].rank;
+                    currentAggListSize++;
 #ifdef bridgeringaggtrace
-                printf("Assigned agg rank %d at torus coords %u %u %u %u %u to bridge %d at torus coords %u %u %u %u %u at a distance of %d hops\n",allProcInfoAggNodeList[j].rank,allProcInfoAggNodeList[j].torusCoords[0],allProcInfoAggNodeList[j].torusCoords[1],allProcInfoAggNodeList[j].torusCoords[2],allProcInfoAggNodeList[j].torusCoords[3],allProcInfoAggNodeList[j].torusCoords[4], currentBridge, all_procInfo[currentBridge].torusCoords[0], all_procInfo[currentBridge].torusCoords[1], all_procInfo[currentBridge].torusCoords[2], all_procInfo[currentBridge].torusCoords[3], all_procInfo[currentBridge].torusCoords[4],currentNumHops);
+                printf("Assigned agg rank %d at nodeRank %d to bridge rank %d at a distance of %d hops\n",all_procInfo[i].rank,all_procInfo[i].nodeRank,all_procInfo[i].bridgeRank,currentNumHops);
 #endif
+                  }
+                }
+              }
+              if (!foundBridge) {
+                aggAssignments[numBridgesWithAggAssignments].bridgeRank = all_procInfo[i].bridgeRank;
+                aggAssignments[numBridgesWithAggAssignments].numAggsAssigned = 1;
+                numBridgesWithAggAssignments++;
+                nodesAssigned[all_procInfo[i].nodeRank] = 1;
+                aggList[currentAggListSize] = all_procInfo[i].rank;
                 currentAggListSize++;
-                numAggsAssignedToThisBridge++;
-                if (numAggsAssignedToThisBridge >= numAggs)
-                  break;
+#ifdef bridgeringaggtrace
+                printf("Assigned agg rank %d at nodeRank %d to bridge rank %d at a distance of %d hops\n",all_procInfo[i].rank,all_procInfo[i].nodeRank,all_procInfo[i].bridgeRank,currentNumHops);
+#endif
               }
             }
           }
-          currentNumHops++;
-        } // while
-        ADIOI_Assert(numAggsAssignedToThisBridge == numAggs);
-      } // for
+        }
 
-      ADIOI_Free(allProcInfoAggNodeList);
-      ADIOI_Free(aggNodeBridgeList);
-      ADIOI_Free(aggNodeBridgeListNum);
+        if (numBridgesWithAggAssignments == confInfo->numBridgeRanks) {
+          allAggsAssigned = 1;
+          for (i=0;(i<numBridgesWithAggAssignments && allAggsAssigned);i++) {
+            if (aggAssignments[i].numAggsAssigned < numAggs)
+              allAggsAssigned = 0;
+          }
+        }
+        currentNumHops++;
+        /* If 3 rounds go by without selecting an agg abort to avoid
+           infinite loop.
+        */
+        if (startingCurrentAggListSize == currentAggListSize)
+          numIterForHopsWithNoAggs++;
+        else
+          numIterForHopsWithNoAggs = 0;
+        ADIOI_Assert(numIterForHopsWithNoAggs <= 3);
+        }
+
+        ADIOI_Free(aggAssignments);
+        ADIOI_Free(nodesAssigned);
 
       } // else aggTotal  > 1
 

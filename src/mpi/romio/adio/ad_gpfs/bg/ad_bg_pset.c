@@ -136,16 +136,23 @@ ADIOI_BG_persInfo_init(ADIOI_BG_ConfInfo_t *conf,
    proc->coreID = hw.coreID;
 
    if (gpfsmpio_bridgeringagg > 0) {
-     for (i=0;i<MPIX_TORUS_MAX_DIMS;i++) {
-       proc->torusCoords[i] = hw.Coords[i];
-     }
 #ifdef bridgeringaggtrace
      if (rank == 0)
        fprintf(stderr,"Block dimensions:\n");
 #endif
+
+     /* Set the numNodesInPartition and nodeRank for this proc
+     */
+     proc->numNodesInPartition = 1;
+     proc->nodeRank = 0;
      for (i=0;i<MPIX_TORUS_MAX_DIMS;i++) {
        torusSize[i] = hw.Size[i];
        dimTorus[i] = hw.isTorus[i];
+       proc->numNodesInPartition *= hw.Size[i];
+         int baseNum = 1;
+         for (int j=0;j<i;j++)
+           baseNum *= hw.Size[j];
+         proc->nodeRank += (hw.Coords[i] * baseNum);
 #ifdef bridgeringaggtrace
        if (rank == 0)
          fprintf(stderr,"Dimension %d has %d elements wrap-around value is %d\n",i,torusSize[i],dimTorus[i]);
