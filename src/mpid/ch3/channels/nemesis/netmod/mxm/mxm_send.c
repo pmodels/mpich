@@ -41,7 +41,6 @@ int MPID_nem_mxm_iSendContig(MPIDI_VC_t * vc, MPID_Request * sreq, void *hdr, MP
     MPIDI_DBG_Print_packet((MPIDI_CH3_Pkt_t *) hdr);
 
     MPIU_Memcpy(&(sreq->dev.pending_pkt), (char *) hdr, sizeof(MPIDI_CH3_Pkt_t));
-    sreq->dev.tmpbuf = NULL;
 
     REQ_FIELD(sreq, ctx) = sreq;
     REQ_FIELD(sreq, iov_buf) = REQ_FIELD(sreq, tmp_buf);
@@ -153,7 +152,6 @@ int MPID_nem_mxm_SendNoncontig(MPIDI_VC_t * vc, MPID_Request * sreq, void *hdr,
     MPIU_DBG_MSG(CH3_CHANNEL, VERBOSE, "MPID_nem_mxm_iSendNoncontig");
 
     MPIU_Memcpy(&(sreq->dev.pending_pkt), (char *) hdr, sizeof(MPIDI_CH3_Pkt_t));
-    sreq->dev.tmpbuf = NULL;
 
     _dbg_mxm_output(5,
                     "SendNoncontig ========> Sending ADI msg (to=%d type=%d) for req %p (data_size %d, %d) \n",
@@ -629,7 +627,6 @@ static void _mxm_send_completion_cb(void *context)
     MPID_Request *req = (MPID_Request *) context;
 
     MPIU_Assert(req);
-    MPIU_Assert((req->kind == MPID_REQUEST_SEND) || (req->kind == MPID_PREQUEST_SEND));
     _dbg_mxm_out_req(req);
 
     _mxm_to_mpi_status(REQ_FIELD(req, mxm_req->item.base.error), &req->status);
