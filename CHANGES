@@ -4,6 +4,9 @@
 
  # Fortran 2008 bindings are enabled by default and fully supported.
 
+ # Added support for OFED IB on Xeon and Xeon Phi.  (thanks to RIKEN
+   and University of Tokyo for the contribution).
+
  # Several other minor bug fixes, memory leak fixes, and code cleanup.
 
    A full list of changes is available at the following link:
