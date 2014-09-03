@@ -572,7 +572,7 @@ static void ADIOI_Exch_and_write(ADIO_File fd, const void *buf, MPI_Datatype
       }
     }
 
-    ADIO_Offset st_loc_ion, end_loc_ion, needs_gpfs_access_cleanup=0;
+    ADIO_Offset st_loc_ion=0, end_loc_ion=0, needs_gpfs_access_cleanup=0;
 #ifdef BGQPLATFORM
     if (ntimes > 0) { /* only set the gpfs hint if we have io - ie this rank is
 			 an aggregator -- otherwise will fail for deferred open */
