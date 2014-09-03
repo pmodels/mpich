@@ -269,13 +269,10 @@ PAC_PREFIX_ALL_FLAGS(USER)
 # as include paths).
 #
 # All libraries that are detected by MPICH as needed for some of its
-# functionality (such as -lpthread) should be added to LIBS so
-# autoconf link tests can use them. Libraries that are built by MPICH
-# at make time (and hence are not available for autoconf link tests to
-# use), such as OPA and MPL, should be added to WRAPPER_LIBS for
-# static builds. All libraries in LIBS are added to WRAPPER_LIBS
-# (similarly LDFLAGS are added to WRAPPER_LDFLAGS) as well, at the end
-# of configure.
+# functionality (such as -lpthread) should be added to EXTERNAL_LIBS
+# so executables built within MPICH use them.  If inter-library
+# dependencies are not supported on the platform, these libraries are
+# added to the MPICH wrappers (mpicc and friends) as well.
 PAC_PREFIX_ALL_FLAGS(WRAPPER)
 WRAPPER_CFLAGS="$CFLAGS $MPICH_MPICC_FLAGS"
 WRAPPER_CPPFLAGS="$CPPFLAGS $MPICH_MPICPP_FLAGS"
