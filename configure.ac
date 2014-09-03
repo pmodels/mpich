@@ -1179,7 +1179,6 @@ else
     AS_IF([test -s "${with_mpl_prefix}/include/mplconfig.h"],
           [:],[AC_MSG_ERROR([the MPL installation in "${with_mpl_prefix}" appears broken])])
     PAC_APPEND_FLAG([-I${with_mpl_prefix}/include],[CPPFLAGS])
-    PAC_PREPEND_FLAG([-l${MPLLIBNAME}],[WRAPPER_LIBS])
     PAC_PREPEND_FLAG([-l${MPLLIBNAME}],[EXTERNAL_LIBS])
     PAC_APPEND_FLAG([-L${with_mpl_prefix}/lib],[WRAPPER_LDFLAGS])
     mpllibdir="${with_mpl_prefix}/lib"
@@ -1244,7 +1243,6 @@ if test "$with_openpa_prefix" = "embedded" ; then
         AC_MSG_WARN([Attempted to use the embedded OpenPA source tree in "src/openpa", but it is missing.  Configuration or compilation may fail later.])
     fi
 elif test "$with_openpa_prefix" = "system" ; then
-    PAC_PREPEND_FLAG([-l${OPALIBNAME}],[WRAPPER_LIBS])
     PAC_PREPEND_FLAG([-l${OPALIBNAME}],[EXTERNAL_LIBS])
 elif test "$with_openpa_prefix" = "no" ; then
     # The user doesn't want to use OPA.  This may or may not cause MPICH to
@@ -1256,7 +1254,6 @@ else
     AS_IF([test -s "${with_openpa_prefix}/include/opa_primitives.h" -a -s "${with_openpa_prefix}/include/opa_config.h"],
           [:],[AC_MSG_ERROR([the OpenPA installation in "${with_openpa_prefix}" appears broken])])
     PAC_APPEND_FLAG([-I${with_openpa_prefix}/include],[CPPFLAGS])
-    PAC_PREPEND_FLAG([-l${OPALIBNAME}],[WRAPPER_LIBS])
     PAC_PREPEND_FLAG([-l${OPALIBNAME}],[EXTERNAL_LIBS])
     if test -d ${with_openpa_prefix}/lib64 ; then
         PAC_APPEND_FLAG([-L${with_openpa_prefix}/lib64],[WRAPPER_LDFLAGS])
@@ -5982,7 +5979,7 @@ AC_DEFINE(HAVE_MPICHCONF,1,[Define so that we can test whether the mpichconf.h f
 # add the LDFLAGS/LIBS we got so far to WRAPPERs
 if test "$INTERLIB_DEPS" = "no" ; then
    WRAPPER_LDFLAGS="$WRAPPER_LDFLAGS $LDFLAGS"
-   WRAPPER_LIBS="$WRAPPER_LIBS $LIBS"
+   WRAPPER_LIBS="$WRAPPER_LIBS $EXTERNAL_LIBS"
 fi
 
 if test "$USE_PMI2_API" = "yes" ; then
