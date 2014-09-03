@@ -1180,9 +1180,9 @@ else
           [:],[AC_MSG_ERROR([the MPL installation in "${with_mpl_prefix}" appears broken])])
     PAC_APPEND_FLAG([-I${with_mpl_prefix}/include],[CPPFLAGS])
     PAC_PREPEND_FLAG([-l${MPLLIBNAME}],[WRAPPER_LIBS])
+    PAC_PREPEND_FLAG([-l${MPLLIBNAME}],[EXTERNAL_LIBS])
     PAC_APPEND_FLAG([-L${with_mpl_prefix}/lib],[WRAPPER_LDFLAGS])
     mpllibdir="${with_mpl_prefix}/lib"
-    mpllib="-l${MPLLIBNAME}"
 fi
 
 # OpenPA
@@ -1245,7 +1245,7 @@ if test "$with_openpa_prefix" = "embedded" ; then
     fi
 elif test "$with_openpa_prefix" = "system" ; then
     PAC_PREPEND_FLAG([-l${OPALIBNAME}],[WRAPPER_LIBS])
-    opalib="-l${OPALIBNAME}"
+    PAC_PREPEND_FLAG([-l${OPALIBNAME}],[EXTERNAL_LIBS])
 elif test "$with_openpa_prefix" = "no" ; then
     # The user doesn't want to use OPA.  This may or may not cause MPICH to
     # fail to configure/build, depending on many other factors.
@@ -1257,7 +1257,7 @@ else
           [:],[AC_MSG_ERROR([the OpenPA installation in "${with_openpa_prefix}" appears broken])])
     PAC_APPEND_FLAG([-I${with_openpa_prefix}/include],[CPPFLAGS])
     PAC_PREPEND_FLAG([-l${OPALIBNAME}],[WRAPPER_LIBS])
-    opalib="-l${OPALIBNAME}"
+    PAC_PREPEND_FLAG([-l${OPALIBNAME}],[EXTERNAL_LIBS])
     if test -d ${with_openpa_prefix}/lib64 ; then
         PAC_APPEND_FLAG([-L${with_openpa_prefix}/lib64],[WRAPPER_LDFLAGS])
         opalibdir="${with_openpa_prefix}/lib64"
