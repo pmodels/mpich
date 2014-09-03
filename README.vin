@@ -473,6 +473,25 @@ shared memory has limits on the size of shared memory segments so
 using this for Nemesis may limit the number of processes that can be
 started on a single node.
 
+mxm network module
+``````````````````
+The mxm netmod provides support for Mellanox InfiniBand adapters.  It
+can be built with the following configure option:
+
+  --with-device=ch3:nemesis:mxm
+
+If your MXM library is installed in a non-standard location, you might
+need to help configure find it using the following configure option
+(assuming the libraries are present in /path/to/mxm/lib and the
+include headers are present in /path/to/mxm/include):
+
+  --with-mxm=/path/to/mxm
+
+(or)
+
+  --with-mxm-lib=/path/to/mxm/lib
+  --with-mxm-include=/path/to/mxm/include
+
 ib network module
 `````````````````
 The IB netmod provides support for InfiniBand on x86_64 platforms
