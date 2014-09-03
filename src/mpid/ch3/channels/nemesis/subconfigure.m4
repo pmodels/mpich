@@ -91,12 +91,6 @@ This turns off error checking and timing collection],,enable_fast=no)
 AC_CHECK_HEADERS(signal.h)
 AC_CHECK_FUNCS(signal)
 
-# Check for netmod relevant headers and libraries
-PAC_SET_HEADER_LIB_PATH(mx)
-PAC_SET_HEADER_LIB_PATH(scif)
-PAC_SET_HEADER_LIB_PATH(ib)
-PAC_SET_HEADER_LIB_PATH(mxm)
-
 nemesis_nets_dirs=""
 nemesis_nets_strings=""
 nemesis_nets_array=""   
