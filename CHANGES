@@ -4,6 +4,9 @@
 
  # Fortran 2008 bindings are enabled by default and fully supported.
 
+ # Added support for the Mellanox MXM InfiniBand interface.  (thanks
+   to Mellanox for the code contribution).
+
  # Added support for OFED IB on Xeon and Xeon Phi.  (thanks to RIKEN
    and University of Tokyo for the contribution).
 
