@@ -149,8 +149,8 @@ ADIOI_BG_persInfo_init(ADIOI_BG_ConfInfo_t *conf,
        torusSize[i] = hw.Size[i];
        dimTorus[i] = hw.isTorus[i];
        proc->numNodesInPartition *= hw.Size[i];
-         int baseNum = 1;
-         for (int j=0;j<i;j++)
+         int baseNum = 1, j;
+         for (j=0;j<i;j++)
            baseNum *= hw.Size[j];
          proc->nodeRank += (hw.Coords[i] * baseNum);
 #ifdef bridgeringaggtrace
