@@ -284,6 +284,9 @@ WRAPPER_FFLAGS="$FFLAGS $MPICH_MPIF77_FLAGS"
 WRAPPER_FCFLAGS="$FCFLAGS $MPICH_MPIFC_FLAGS"
 WRAPPER_LDFLAGS="$MPICH_LDFLAGS"
 WRAPPER_LIBS="$MPICH_LIBS"
+EXTERNAL_LIBS=""
+export EXTERNAL_LIBS
+AC_SUBST(EXTERNAL_LIBS)
 
 # Add MPICHLIB_* to the appropriate flags
 AC_ARG_VAR(MPICHLIB_CFLAGS,
@@ -5507,7 +5510,10 @@ AC_ARG_ENABLE(checkpointing,
     [AC_HELP_STRING([--enable-checkpointing], [Enable application checkpointing])],
     [ if test "$enableval" != "no" ; then
         PAC_SET_HEADER_LIB_PATH(blcr)
+	PAC_PUSH_FLAG([LIBS])
 	PAC_CHECK_HEADER_LIB_FATAL(blcr, libcr.h, cr, cr_init)
+	PAC_APPEND_FLAG([-lblcr],[EXTERNAL_LIBS])
+	PAC_POP_FLAG([LIBS])
         AC_DEFINE(ENABLE_CHECKPOINTING,1,[Application checkpointing enabled])
       fi ],
 )

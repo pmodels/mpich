@@ -15,7 +15,10 @@ AM_COND_IF([BUILD_NEMESIS_NETMOD_PORTALS4],[
     AC_MSG_NOTICE([RUNNING CONFIGURE FOR ch3:nemesis:portals4])
 
     PAC_SET_HEADER_LIB_PATH(portals4)
+    PAC_PUSH_FLAG(LIBS)
     PAC_CHECK_HEADER_LIB_FATAL(portals4, portals4.h, portals, PtlInit)
+    PAC_APPEND_FLAG([-lportals4],[EXTERNAL_LIBS])
+    PAC_POP_FLAG(LIBS)
     
     AC_DEFINE([ENABLE_COMM_OVERRIDES], 1, [define to add per-vc function pointers to override send and recv functions]) 
 

@@ -14,7 +14,9 @@ AC_DEFUN([PAC_SUBCFG_BODY_]PAC_SUBCFG_AUTO_SUFFIX,[
 AM_COND_IF([BUILD_NEMESIS_NETMOD_MXM],[
     AC_MSG_NOTICE([RUNNING CONFIGURE FOR ch3:nemesis:mxm])
 
+    PAC_PUSH_FLAG(LIBS)
     PAC_CHECK_HEADER_LIB_FATAL(mxm, [mxm/api/mxm_api.h], mxm, mxm_get_version)
+    PAC_POP_FLAG(LIBS)
     AC_CHECK_HEADER([mxm/api/mxm_api.h], , [
              AC_MSG_ERROR(['mxm/api/mxm_api.h not found.'])
      ])
@@ -34,6 +36,7 @@ AM_COND_IF([BUILD_NEMESIS_NETMOD_MXM],[
         AC_MSG_ERROR(['MXM API version Problem.  Are you running a recent version of MXM (at least 3.0)?'])
      fi;
      AC_DEFINE([ENABLE_COMM_OVERRIDES], 1, [define to add per-vc function pointers to override send and recv functions])
+     PAC_APPEND_FLAG([-lmxm],[EXTERNAL_LIBS])
 
 ])dnl end AM_COND_IF(BUILD_NEMESIS_NETMOD_MXM,...)
 ])dnl end _BODY

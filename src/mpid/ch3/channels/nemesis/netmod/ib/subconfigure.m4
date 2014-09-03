@@ -17,13 +17,19 @@ AC_DEFUN([PAC_SUBCFG_BODY_]PAC_SUBCFG_AUTO_SUFFIX,[
 AM_COND_IF([BUILD_NEMESIS_NETMOD_IB],[
     AC_MSG_NOTICE([RUNNING CONFIGURE FOR ch3:nemesis:ib])
 
+    PAC_PUSH_FLAG(LIBS)
     PAC_CHECK_HEADER_LIB(dcfa.h,dcfa,ibv_open_device,dcfa_found=yes,dcfa_found=no)
+    PAC_POP_FLAG(LIBS)
     if test "${dcfa_found}" = "yes" ; then
         AC_MSG_NOTICE([libdcfa is going to be linked.])
+	PAC_APPEND_FLAG([-ldcfa],[EXTERNAL_LIBS])
     else
+	PAC_PUSH_FLAG(LIBS)
         PAC_CHECK_HEADER_LIB([infiniband/verbs.h],ibverbs,ibv_open_device,ibverbs_found=yes,ibverbs_found=no)
+	PAC_POP_FLAG(LIBS)
         if test "${ibverbs_found}" = "yes" ; then
             AC_MSG_NOTICE([libibverbs is going to be linked.])
+	    PAC_APPEND_FLAG([-libverbs],[EXTERNAL_LIBS])
         else
             AC_MSG_ERROR([Internal error: neither ibverbs nor dcfa was found])
         fi

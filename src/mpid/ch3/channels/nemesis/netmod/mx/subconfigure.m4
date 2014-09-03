@@ -14,7 +14,9 @@ AC_DEFUN([PAC_SUBCFG_BODY_]PAC_SUBCFG_AUTO_SUFFIX,[
 AM_COND_IF([BUILD_NEMESIS_NETMOD_MX],[
     AC_MSG_NOTICE([RUNNING CONFIGURE FOR ch3:nemesis:mx])
 
+    PAC_PUSH_FLAG(LIBS)
     PAC_CHECK_HEADER_LIB_FATAL(mx, myriexpress.h, myriexpress, mx_finalize)
+    PAC_POP_FLAG(LIBS)
     AC_CHECK_HEADER([mx_extensions.h], , [
              AC_MSG_ERROR(['mx_extensions.h not found. Are you running a recent version of MX (at least 1.2.1)?'])
      ])
@@ -31,6 +33,7 @@ AM_COND_IF([BUILD_NEMESIS_NETMOD_MX],[
         AC_MSG_ERROR(['MX API version Problem.  Are you running a recent version of MX (at least 1.2.1)?'])
      fi;
      AC_DEFINE([ENABLE_COMM_OVERRIDES], 1, [define to add per-vc function pointers to override send and recv functions])
+     PAC_APPEND_FLAG([-lmx],[EXTERNAL_LIBS])
 
 ])dnl end AM_COND_IF(BUILD_NEMESIS_NETMOD_MX,...)
 ])dnl end _BODY
