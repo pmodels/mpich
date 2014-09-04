@@ -19,13 +19,14 @@ int MPID_nem_mxm_probe(MPIDI_VC_t * vc, int source, int tag, MPID_Comm * comm, i
     int mpi_errno = MPI_SUCCESS;
     mxm_error_t err;
     mxm_recv_req_t mxm_req;
+    MPID_nem_mxm_vc_area *vc_area = (vc ? VC_BASE(vc) : NULL);
 
     MPIDI_STATE_DECL(MPID_STATE_MXM_PROBE);
     MPIDI_FUNC_ENTER(MPID_STATE_MXM_PROBE);
 
     mxm_req.base.state = MXM_REQ_NEW;
     mxm_req.base.mq = (mxm_mq_h) comm->dev.ch.netmod_priv;
-    mxm_req.base.conn = (vc ? VC_FIELD(vc, mxm_ep->mxm_conn) : 0);
+    mxm_req.base.conn = (vc_area ? vc_area->mxm_ep->mxm_conn : 0);
 
     mxm_req.tag = _mxm_tag_mpi2mxm(tag, comm->context_id + context_offset);
     mxm_req.tag_mask = _mxm_tag_mask(tag);
@@ -63,13 +64,14 @@ int MPID_nem_mxm_iprobe(MPIDI_VC_t * vc, int source, int tag, MPID_Comm * comm, 
     int mpi_errno = MPI_SUCCESS;
     mxm_error_t err;
     mxm_recv_req_t mxm_req;
+    MPID_nem_mxm_vc_area *vc_area = (vc ? VC_BASE(vc) : NULL);
 
     MPIDI_STATE_DECL(MPID_STATE_MXM_IPROBE);
     MPIDI_FUNC_ENTER(MPID_STATE_MXM_IPROBE);
 
     mxm_req.base.state = MXM_REQ_NEW;
     mxm_req.base.mq = (mxm_mq_h) comm->dev.ch.netmod_priv;
-    mxm_req.base.conn = (vc ? VC_FIELD(vc, mxm_ep->mxm_conn) : 0);
+    mxm_req.base.conn = (vc_area ? vc_area->mxm_ep->mxm_conn : 0);
 
     mxm_req.tag = _mxm_tag_mpi2mxm(tag, comm->context_id + context_offset);
     mxm_req.tag_mask = _mxm_tag_mask(tag);

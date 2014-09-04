@@ -148,9 +148,8 @@ typedef struct {
     int pending_sends;
 } MPID_nem_mxm_vc_area;
 
-/* direct macro to private fields in VC */
-#define VC_FIELD(vcp, field) (((MPID_nem_mxm_vc_area *)vcp->ch.netmod_area.padding)->field)
-#define VC_BASE(vcp) ((MPID_nem_mxm_vc_area *)vcp->ch.netmod_area.padding)
+/* macro for mxm private in VC */
+#define VC_BASE(vcp) ((MPID_nem_mxm_vc_area *)((vcp)->ch.netmod_area.padding))
 
 /* The req provides a generic buffer in which network modules can store
    private fields This removes all dependencies from the req structure
@@ -172,13 +171,12 @@ typedef struct {
     mxm_req_buffer_t tmp_buf[MXM_MPICH_MAX_IOV];
 } MPID_nem_mxm_req_area;
 
-/* direct macro to private fields in REQ */
-#define REQ_FIELD(reqp, field) (((MPID_nem_mxm_req_area *)((reqp)->ch.netmod_area.padding))->field)
+/* macro for mxm private in REQ */
 #define REQ_BASE(reqp) ((MPID_nem_mxm_req_area *)((reqp)->ch.netmod_area.padding))
 
 typedef struct MPID_nem_mxm_module_t {
     char *runtime_version;
-    char *compiletime_version;
+    const char *compiletime_version;
     mxm_context_opts_t *mxm_ctx_opts;
     mxm_ep_opts_t *mxm_ep_opts;
     mxm_h mxm_context;
@@ -331,7 +329,7 @@ static inline void _dbg_mxm_out(int level,
     }
 }
 
-static void _dbg_mxm_hexdump(void *ptr, int buflen)
+static inline void _dbg_mxm_hexdump(void *ptr, int buflen)
 {
     unsigned char *buf = (unsigned char *) ptr;
     char *str = NULL;
@@ -387,7 +385,6 @@ static inline char *_rank_val_to_str(int rank, char *out, int max)
 
 static inline void _dbg_mxm_req(MPID_Request * req)
 {
-    FILE *stream = stderr;
     char tag_buf[128];
     char rank_buf[128];
 

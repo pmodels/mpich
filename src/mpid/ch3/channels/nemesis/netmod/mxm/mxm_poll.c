@@ -105,8 +105,8 @@ void MPID_nem_mxm_anysource_posted(MPID_Request * req)
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 int MPID_nem_mxm_anysource_matched(MPID_Request * req)
 {
-    int mpi_errno = MPI_SUCCESS;
     mxm_error_t ret = MXM_OK;
+    MPID_nem_mxm_req_area *req_area = NULL;
     int matched = FALSE;
 
     /* This function is called when an anysource request in the posted
@@ -123,12 +123,13 @@ int MPID_nem_mxm_anysource_matched(MPID_Request * req)
 
     _dbg_mxm_output(5, "Any Source ========> Matching req %p \n", req);
 
-    ret = mxm_req_cancel_recv(&REQ_FIELD(req, mxm_req->item.recv));
+    req_area = REQ_BASE(req);
+    ret = mxm_req_cancel_recv(&req_area->mxm_req->item.recv);
     if ((MXM_OK == ret) || (MXM_ERR_NO_PROGRESS == ret)) {
         MPID_Segment_free(req->dev.segment_ptr);
     }
     else {
-        _mxm_req_wait(&REQ_FIELD(req, mxm_req->item.base));
+        _mxm_req_wait(&req_area->mxm_req->item.base);
         matched = TRUE;
     }
 
@@ -146,8 +147,6 @@ int MPID_nem_mxm_anysource_matched(MPID_Request * req)
 int MPID_nem_mxm_recv(MPIDI_VC_t * vc, MPID_Request * rreq)
 {
     int mpi_errno = MPI_SUCCESS;
-    mxm_error_t ret = MXM_OK;
-    mxm_recv_req_t *mxm_rreq;
 
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_MXM_RECV);
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_MXM_RECV);
@@ -157,16 +156,15 @@ int MPID_nem_mxm_recv(MPIDI_VC_t * vc, MPID_Request * rreq)
                 (vc && !vc->ch.is_local));
 
     {
-        MPIR_Rank_t source = rreq->dev.match.parts.rank;
         MPIR_Context_id_t context_id = rreq->dev.match.parts.context_id;
         int tag = rreq->dev.match.parts.tag;
-        int ret;
         MPIDI_msg_sz_t data_sz;
         int dt_contig;
         MPI_Aint dt_true_lb;
         MPID_Datatype *dt_ptr;
+        MPID_nem_mxm_vc_area *vc_area = VC_BASE(vc);
+        MPID_nem_mxm_req_area *req_area = REQ_BASE(rreq);
 
-        MPIU_Assert((rreq->kind == MPID_REQUEST_RECV) || (rreq->kind == MPID_PREQUEST_RECV));
         MPIDI_Datatype_get_info(rreq->dev.user_count, rreq->dev.datatype, dt_contig, data_sz,
                                 dt_ptr, dt_true_lb);
         rreq->dev.OnDataAvail = NULL;
@@ -177,26 +175,26 @@ int MPID_nem_mxm_recv(MPIDI_VC_t * vc, MPID_Request * rreq)
                         "Recv ========> Getting USER msg for req %p (context %d rank %d tag %d size %d) \n",
                         rreq, context_id, source, tag, data_sz);
 
-        REQ_FIELD(rreq, ctx) = rreq;
-        REQ_FIELD(rreq, iov_buf) = REQ_FIELD(rreq, tmp_buf);
-        REQ_FIELD(rreq, iov_count) = 0;
-        REQ_FIELD(rreq, iov_buf)[0].ptr = NULL;
-        REQ_FIELD(rreq, iov_buf)[0].length = 0;
+        req_area->ctx = rreq;
+        req_area->iov_buf = req_area->tmp_buf;
+        req_area->iov_count = 0;
+        req_area->iov_buf[0].ptr = NULL;
+        req_area->iov_buf[0].length = 0;
 
         if (dt_contig) {
-            REQ_FIELD(rreq, iov_count) = 1;
-            REQ_FIELD(rreq, iov_buf)[0].ptr = (char *) (rreq->dev.user_buf) + dt_true_lb;
-            REQ_FIELD(rreq, iov_buf)[0].length = data_sz;
+            req_area->iov_count = 1;
+            req_area->iov_buf[0].ptr = (char *) (rreq->dev.user_buf) + dt_true_lb;
+            req_area->iov_buf[0].length = data_sz;
         }
         else {
             mpi_errno = _mxm_process_rdtype(&rreq, rreq->dev.datatype, dt_ptr, data_sz,
                                             rreq->dev.user_buf, rreq->dev.user_count,
-                                            &REQ_FIELD(rreq, iov_buf), &REQ_FIELD(rreq, iov_count));
+                                            &req_area->iov_buf, &req_area->iov_count);
             if (mpi_errno)
                 MPIU_ERR_POP(mpi_errno);
         }
 
-        mpi_errno = _mxm_irecv((vc ? VC_FIELD(vc, mxm_ep) : NULL), REQ_BASE(rreq),
+        mpi_errno = _mxm_irecv((vc ? vc_area->mxm_ep : NULL), req_area,
                                tag,
                                (rreq->comm ? (mxm_mq_h) rreq->comm->dev.ch.netmod_priv : mxm_obj->
                                 mxm_mq), _mxm_tag_mpi2mxm(tag, context_id));
@@ -217,7 +215,6 @@ int MPID_nem_mxm_recv(MPIDI_VC_t * vc, MPID_Request * rreq)
 
 static int _mxm_handle_rreq(MPID_Request * req)
 {
-    int mpi_errno = MPI_SUCCESS;
     int complete = FALSE;
     int dt_contig;
     MPI_Aint dt_true_lb;
@@ -225,6 +222,8 @@ static int _mxm_handle_rreq(MPID_Request * req)
     MPID_Datatype *dt_ptr;
     MPIDI_msg_sz_t data_sz;
     MPIDI_VC_t *vc = NULL;
+    MPID_nem_mxm_vc_area *vc_area = NULL;
+    MPID_nem_mxm_req_area *req_area = NULL
 
     MPIU_THREAD_CS_ENTER(MSGQUEUE, req);
     complete = MPIDI_CH3U_Recvq_DP(req)
@@ -236,10 +235,13 @@ static int _mxm_handle_rreq(MPID_Request * req)
     MPIDI_Datatype_get_info(req->dev.user_count, req->dev.datatype, dt_contig, userbuf_sz, dt_ptr,
                             dt_true_lb);
 
+    vc_area = VC_BASE(req->ch.vc);
+    req_area = REQ_BASE(req);
+
     _dbg_mxm_output(5, "========> Completing RECV req %p status %d\n", req, req->status.MPI_ERROR);
-    _dbg_mxm_out_buf(REQ_FIELD(req, iov_buf)[0].ptr,
-                     (REQ_FIELD(req, iov_buf)[0].length >
-                      16 ? 16 : REQ_FIELD(req, iov_buf)[0].length));
+    _dbg_mxm_out_buf(req_area->iov_buf[0].ptr,
+                     (req_area->iov_buf[0].length >
+                      16 ? 16 : req_area->iov_buf[0].length));
 
     if (req->dev.recv_data_sz <= userbuf_sz) {
         data_sz = req->dev.recv_data_sz;
@@ -282,10 +284,10 @@ static int _mxm_handle_rreq(MPID_Request * req)
         }
     }
 
-    if (REQ_FIELD(req, iov_count) > MXM_MPICH_MAX_IOV) {
-        MPIU_Free(REQ_FIELD(req, iov_buf));
-        REQ_FIELD(req, iov_buf) = REQ_FIELD(req, tmp_buf);
-        REQ_FIELD(req, iov_count) = 0;
+    if (req_area->iov_count > MXM_MPICH_MAX_IOV) {
+        MPIU_Free(req_area->iov_buf);
+        req_area->iov_buf = req_area->tmp_buf;
+        req_area->iov_count = 0;
     }
 
     MPIDI_CH3U_Handle_recv_req(vc, req, &complete);
@@ -299,24 +301,26 @@ static void _mxm_recv_completion_cb(void *context)
 {
     MPID_Request *req = (MPID_Request *) context;
     mxm_recv_req_t *mxm_rreq;
+    MPID_nem_mxm_req_area *req_area = NULL;
 
     MPIU_Assert(req);
-    MPIU_Assert((req->kind == MPID_REQUEST_RECV) || (req->kind == MPID_PREQUEST_RECV));
     _dbg_mxm_out_req(req);
 
-    _mxm_to_mpi_status(REQ_FIELD(req, mxm_req->item.base.error), &req->status);
+    req_area = REQ_BASE(req);
+    _mxm_to_mpi_status(req_area->mxm_req->item.base.error, &req->status);
 
-    mxm_rreq = &REQ_FIELD(req, mxm_req->item.recv);
+    mxm_rreq = &req_area->mxm_req->item.recv;
     req->status.MPI_TAG = _mxm_tag_mxm2mpi(mxm_rreq->completion.sender_tag);
     req->status.MPI_SOURCE = mxm_rreq->completion.sender_imm;
     req->dev.recv_data_sz = mxm_rreq->completion.actual_len;
     MPIR_STATUS_SET_COUNT(req->status, req->dev.recv_data_sz);
 
     if (req->ch.vc) {
-        list_enqueue(&VC_FIELD(req->ch.vc, mxm_ep->free_queue), &REQ_FIELD(req, mxm_req->queue));
+        MPID_nem_mxm_vc_area *vc_area = VC_BASE(req->ch.vc);
+        list_enqueue(&vc_area->mxm_ep->free_queue, &req_area->mxm_req->queue);
     }
     else {
-        list_enqueue(&mxm_obj->free_queue, &REQ_FIELD(req, mxm_req->queue));
+        list_enqueue(&mxm_obj->free_queue, &req_area->mxm_req->queue);
     }
 
     if (likely(!MPIR_STATUS_GET_CANCEL_BIT(req->status))) {

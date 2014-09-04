@@ -17,15 +17,17 @@ int MPID_nem_mxm_cancel_send(MPIDI_VC_t * vc, MPID_Request * req)
 {
     int mpi_errno = MPI_SUCCESS;
     mxm_error_t ret = MXM_OK;
+    MPID_nem_mxm_vc_area *vc_area = VC_BASE(req->ch.vc);
+    MPID_nem_mxm_req_area *req_area = REQ_BASE(req);
 
     _dbg_mxm_output(5, "========> Canceling SEND req %p\n", req);
 
-    if (likely(!_mxm_req_test(&REQ_FIELD(req, mxm_req->item.base)))) {
-        ret = mxm_req_cancel_send(&REQ_FIELD(req, mxm_req->item.send));
+    if (likely(!_mxm_req_test(&req_area->mxm_req->item.base))) {
+        ret = mxm_req_cancel_send(&req_area->mxm_req->item.send);
         if ((MXM_OK == ret) || (MXM_ERR_NO_PROGRESS == ret)) {
-            _mxm_req_wait(&REQ_FIELD(req, mxm_req->item.base));
+            _mxm_req_wait(&req_area->mxm_req->item.base);
             if (MPIR_STATUS_GET_CANCEL_BIT(req->status)) {
-                (VC_FIELD(req->ch.vc, pending_sends)) -= 1;
+                vc_area->pending_sends -= 1;
             }
         }
         else {
@@ -50,13 +52,14 @@ int MPID_nem_mxm_cancel_recv(MPIDI_VC_t * vc, MPID_Request * req)
 {
     int mpi_errno = MPI_SUCCESS;
     mxm_error_t ret = MXM_OK;
+    MPID_nem_mxm_req_area *req_area = REQ_BASE(req);
 
     _dbg_mxm_output(5, "========> Canceling RECV req %p\n", req);
 
-    if (likely(!_mxm_req_test(&REQ_FIELD(req, mxm_req->item.base)))) {
-        ret = mxm_req_cancel_recv(&REQ_FIELD(req, mxm_req->item.recv));
+    if (likely(!_mxm_req_test(&req_area->mxm_req->item.base))) {
+        ret = mxm_req_cancel_recv(&req_area->mxm_req->item.recv);
         if ((MXM_OK == ret) || (MXM_ERR_NO_PROGRESS == ret)) {
-            _mxm_req_wait(&REQ_FIELD(req, mxm_req->item.base));
+            _mxm_req_wait(&req_area-> mxm_req->item.base);
         }
         else {
             mpi_errno = MPI_ERR_INTERN;
