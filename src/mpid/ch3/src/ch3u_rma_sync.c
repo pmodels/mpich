@@ -5361,6 +5361,7 @@ int MPIDI_CH3_PktHandler_LockPutUnlock( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
     char *data_buf = NULL;
     MPIDI_msg_sz_t data_len;
     int mpi_errno = MPI_SUCCESS;
+    int (*fcn)( MPIDI_VC_t *, struct MPID_Request *, int * );
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3_PKTHANDLER_LOCKPUTUNLOCK);
     
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3_PKTHANDLER_LOCKPUTUNLOCK);
@@ -5450,7 +5451,6 @@ int MPIDI_CH3_PktHandler_LockPutUnlock( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 	req->dev.lock_queue_entry = new_ptr;
     }
 
-    int (*fcn)( MPIDI_VC_t *, struct MPID_Request *, int * );
     fcn = req->dev.OnDataAvail;
     mpi_errno = MPIDI_CH3U_Receive_data_found(req, data_buf, &data_len,
                                               &complete);

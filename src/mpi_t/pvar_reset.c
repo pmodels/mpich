@@ -108,6 +108,7 @@ variables are ignored when MPI_T_PVAR_ALL_HANDLES is specified.
 int MPI_T_pvar_reset(MPI_T_pvar_session session, MPI_T_pvar_handle handle)
 {
     int mpi_errno = MPI_SUCCESS;
+    MPIR_T_pvar_handle_t *hnd;
 
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_T_PVAR_RESET);
     MPIR_ERRTEST_MPIT_INITIALIZED(mpi_errno);
@@ -131,7 +132,6 @@ int MPI_T_pvar_reset(MPI_T_pvar_session session, MPI_T_pvar_handle handle)
     /* If handle is MPI_T_PVAR_ALL_HANDLES, dispatch the call.
      * Otherwise, do correctness check, then go to impl.
      */
-    MPIR_T_pvar_handle_t *hnd;
     if (handle == MPI_T_PVAR_ALL_HANDLES) {
         MPL_DL_FOREACH(session->hlist, hnd) {
             if (!MPIR_T_pvar_is_readonly(hnd)) {

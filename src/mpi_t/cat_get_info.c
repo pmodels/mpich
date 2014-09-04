@@ -58,6 +58,7 @@ int MPI_T_category_get_info(int cat_index, char *name, int *name_len, char *desc
         int *desc_len, int *num_cvars, int *num_pvars, int *num_categories)
 {
     int mpi_errno = MPI_SUCCESS;
+    cat_table_entry_t *cat;
 
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_T_CATEGORY_GET_INFO);
     MPIR_ERRTEST_MPIT_INITIALIZED(mpi_errno);
@@ -80,7 +81,6 @@ int MPI_T_category_get_info(int cat_index, char *name, int *name_len, char *desc
 
     /* ... body of routine ...  */
 
-    cat_table_entry_t *cat;
     cat = (cat_table_entry_t *)utarray_eltptr(cat_table, cat_index);
     MPIR_T_strncpy(name, cat->name, name_len);
     MPIR_T_strncpy(desc, cat->desc, desc_len);

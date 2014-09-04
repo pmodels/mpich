@@ -62,6 +62,7 @@ int MPI_T_cvar_get_info(int cvar_index, char *name, int *name_len,
     char *desc, int *desc_len, int *binding, int *scope)
 {
     int mpi_errno = MPI_SUCCESS;
+    const cvar_table_entry_t *cvar;
 
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_T_CVAR_GET_INFO);
     MPIR_ERRTEST_MPIT_INITIALIZED(mpi_errno);
@@ -84,7 +85,6 @@ int MPI_T_cvar_get_info(int cvar_index, char *name, int *name_len,
 
     /* ... body of routine ...  */
 
-    const cvar_table_entry_t *cvar;
     cvar = (cvar_table_entry_t *)utarray_eltptr(cvar_table, cvar_index);
 
     MPIR_T_strncpy(name, cvar->name,  name_len);

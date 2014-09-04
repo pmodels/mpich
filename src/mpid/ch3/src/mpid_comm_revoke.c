@@ -21,14 +21,14 @@
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 int MPID_Comm_revoke(MPID_Comm *comm_ptr, int is_remote)
 {
+    MPIDI_VC_t *vc;
+    MPID_IOV iov[MPID_IOV_LIMIT];
     int mpi_errno = MPI_SUCCESS;
+    int i, size, my_rank, failed=0;
+    MPID_Request *request;
     MPIDI_CH3_Pkt_t upkt;
     MPIDI_CH3_Pkt_revoke_t *revoke_pkt = &upkt.revoke;
     MPIDI_STATE_DECL(MPID_STATE_MPID_COMM_REVOKE);
-    MPIDI_VC_t *vc;
-    MPID_IOV iov[MPID_IOV_LIMIT];
-    int i, size, my_rank, failed = 0;
-    MPID_Request *request;
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_COMM_REVOKE);
 

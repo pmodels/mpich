@@ -42,10 +42,11 @@ extern int MPIR_T_cat_add_desc(const char *cat_name, const char *cat_desc);
 
 static inline cvar_table_entry_t * LOOKUP_CVAR_BY_NAME(const char* cvar_name)
 {
+    int cvar_idx;
     name2index_hash_t *hash_entry;
     HASH_FIND_STR(cvar_hash, cvar_name, hash_entry);
     MPIU_Assert(hash_entry != NULL);
-    int cvar_idx = hash_entry->idx;
+    cvar_idx = hash_entry->idx;
     return (cvar_table_entry_t *)utarray_eltptr(cvar_table, cvar_idx);
 }
 

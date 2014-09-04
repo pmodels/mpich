@@ -54,6 +54,7 @@ Output Parameters:
 int MPI_T_enum_get_item(MPI_T_enum enumtype, int index, int *value, char *name, int *name_len)
 {
     int mpi_errno = MPI_SUCCESS;
+    enum_item_t *item;
 
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_T_ENUM_GET_ITEM);
     MPIR_ERRTEST_MPIT_INITIALIZED(mpi_errno);
@@ -78,7 +79,7 @@ int MPI_T_enum_get_item(MPI_T_enum enumtype, int index, int *value, char *name, 
 
     /* ... body of routine ...  */
 
-    enum_item_t *item = (enum_item_t *)utarray_eltptr(enumtype->items, index);
+    item = (enum_item_t *)utarray_eltptr(enumtype->items, index);
     *value = item->value;
     MPIR_T_strncpy(name, item->name, name_len);
 

@@ -614,6 +614,7 @@ void ADIO_ResolveFileType(MPI_Comm comm, const char *filename, int *fstype,
     int myerrcode, file_system, min_code, max_code;
     char *tmp;
     static char myname[] = "ADIO_RESOLVEFILETYPE";
+    char * p;
 
     file_system = -1;
     if (filename == NULL) {
@@ -696,7 +697,7 @@ void ADIO_ResolveFileType(MPI_Comm comm, const char *filename, int *fstype,
      * Assumes all processes set the same environment varialble.
      * Values: the same prefix you would stick on a file path. e.g. pvfs2: --
      * including the colon! */
-    char * p = getenv("ROMIO_FSTYPE_FORCE");
+    p = getenv("ROMIO_FSTYPE_FORCE");
     if (p != NULL) {
 	ADIO_FileSysType_prefix(p, &file_system, &myerrcode);
 	if (myerrcode != MPI_SUCCESS) {

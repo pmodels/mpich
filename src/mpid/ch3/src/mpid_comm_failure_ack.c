@@ -81,8 +81,8 @@ int MPID_Comm_failed_bitarray(MPID_Comm *comm_ptr, uint32_t **bitarray, int acke
     uint32_t bit;
     int *failed_procs, *group_procs;
     MPID_Group *failed_group, *comm_group;
-    MPIDI_STATE_DECL(MPID_STATE_COMM_FAILED_BITARRAY);
     MPIU_CHKLMEM_DECL(2);
+    MPIDI_STATE_DECL(MPID_STATE_COMM_FAILED_BITARRAY);
 
     MPIDI_FUNC_ENTER(MPID_STATE_COMM_FAILED_BITARRAY);
 

@@ -58,8 +58,9 @@ int MPIR_Comm_spawn_multiple_c(int count, char* array_of_commands_f,
 
         for (i = 0; i < count; i++) {
             /* Extract args of command i, and put them in buf */
+            char *arg;
             offset = 0; /* offset in bytes in buf to put next arg */
-            char* arg = array_of_argv_f + argv_elem_len * i; /* Point to 1st arg of command i */
+            arg = array_of_argv_f + argv_elem_len * i; /* Point to 1st arg of command i */
             do {
                 if (offset + argv_elem_len > len) { /* Make sure buf is big enough */
                     len = offset + argv_elem_len;

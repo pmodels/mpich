@@ -54,6 +54,8 @@ static int MPIDI_CH3I_SHM_Wins_match(MPID_Win ** win_ptr, MPID_Win ** matched_wi
     int mpi_errno = MPI_SUCCESS;
     int i, comm_size;
     int node_size, node_rank, shm_node_size;
+    int group_diff;
+    int base_diff;
 
     MPID_Comm *node_comm_ptr = NULL, *shm_node_comm_ptr = NULL;
     int *node_ranks = NULL, *node_ranks_in_shm_node = NULL;
@@ -62,13 +64,13 @@ static int MPIDI_CH3I_SHM_Wins_match(MPID_Win ** win_ptr, MPID_Win ** matched_wi
     MPI_Aint *base_shm_offs;
 
     MPIDI_SHM_Win_t *elem = shm_wins_list;
-    *matched_win = NULL;
-    base_shm_offs = *base_shm_offs_ptr;
 
     MPIU_CHKLMEM_DECL(2);
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3I_SHM_WINS_MATCH);
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_CH3I_SHM_WINS_MATCH);
 
+    *matched_win = NULL;
+    base_shm_offs = *base_shm_offs_ptr;
     node_comm_ptr = (*win_ptr)->comm_ptr->node_comm;
     MPIU_Assert(node_comm_ptr != NULL);
     node_size = node_comm_ptr->local_size;
@@ -116,7 +118,7 @@ static int MPIDI_CH3I_SHM_Wins_match(MPID_Win ** win_ptr, MPID_Win ** matched_wi
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
         shm_node_group_ptr = NULL;
 
-        int group_diff = 0;
+        group_diff = 0;
         for (i = 0; i < node_size; i++) {
             /* not exist in shm_comm->node_comm */
             if (node_ranks_in_shm_node[i] == MPI_UNDEFINED) {
@@ -140,7 +142,7 @@ static int MPIDI_CH3I_SHM_Wins_match(MPID_Win ** win_ptr, MPID_Win ** matched_wi
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
         MPIU_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
 
-        int base_diff = 0;
+        base_diff = 0;
         for (i = 0; i < comm_size; ++i) {
             int i_node_rank = (*win_ptr)->comm_ptr->intranode_table[i];
             if (i_node_rank >= 0) {
@@ -499,6 +501,8 @@ static int MPIDI_CH3I_Win_allocate_shm(MPI_Aint size, int disp_unit, MPID_Info *
 
     /* compute the base addresses of each process within the shared memory segment */
     {
+        char *cur_base;
+        int cur_rank;
         if ((*win_ptr)->create_flavor != MPI_WIN_FLAVOR_SHARED) {
             /* If create flavor is not MPI_WIN_FLAVOR_SHARED, all processes on this
                window may not be on the same node. Because we only need to calculate
@@ -512,8 +516,8 @@ static int MPIDI_CH3I_Win_allocate_shm(MPI_Aint size, int disp_unit, MPID_Info *
             node_shm_base_addrs = (*win_ptr)->shm_base_addrs;
         }
 
-        char *cur_base = (*win_ptr)->shm_base_addr;
-        int cur_rank = 0;
+        cur_base = (*win_ptr)->shm_base_addr;
+        cur_rank = 0;
         node_shm_base_addrs[0] = (*win_ptr)->shm_base_addr;
         for (i = 1; i < node_size; ++i) {
             if (node_sizes[i]) {

@@ -98,8 +98,8 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided,
     int pg_size;
     MPID_Comm * comm;
     int p;
-    MPIDI_STATE_DECL(MPID_STATE_MPID_INIT);
     int val;
+    MPIDI_STATE_DECL(MPID_STATE_MPID_INIT);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_INIT);
 

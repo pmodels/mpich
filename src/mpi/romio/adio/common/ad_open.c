@@ -31,6 +31,8 @@ MPI_File ADIO_Open(MPI_Comm orig_comm,
     static char myname[] = "ADIO_OPEN";
     int  max_error_code;
     MPI_Info dupinfo;
+    int syshints_processed, can_skip;
+    char *p;
 
     *error_code = MPI_SUCCESS;
 
@@ -98,7 +100,6 @@ MPI_File ADIO_Open(MPI_Comm orig_comm,
      *
      * a code might do an "initialize from 0", so we can only skip hint
      * processing once everyone has particpiated in hint processing */
-    int syshints_processed, can_skip;
     if (ADIOI_syshints == MPI_INFO_NULL)
 	syshints_processed = 0;
     else
@@ -150,7 +151,7 @@ MPI_File ADIO_Open(MPI_Comm orig_comm,
 	    goto fn_exit;
     }
     /* for debugging, it can be helpful to see the hints selected */
-    char *p = getenv("ROMIO_PRINT_HINTS");
+    p = getenv("ROMIO_PRINT_HINTS");
     if (rank == 0 && p != NULL ) {
 	ADIOI_Info_print_keyvals(fd->info);
     }
