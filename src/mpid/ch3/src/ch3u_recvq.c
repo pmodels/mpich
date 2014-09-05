@@ -699,6 +699,7 @@ int MPIDI_CH3U_Recvq_DP(MPID_Request * rreq)
     MPIR_T_PVAR_TIMER_START(RECVQ, time_failed_matching_postedq);
     cur_rreq = recvq_posted_head;
     while (cur_rreq != NULL) {
+        MPIR_T_PVAR_COUNTER_INC(RECVQ, posted_recvq_match_attempts, 1);
 	if (cur_rreq == rreq) {
 	    if (prev_rreq != NULL) {
 		prev_rreq->dev.next = cur_rreq->dev.next;
