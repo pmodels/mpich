@@ -45,55 +45,47 @@ int main(int argc, char* argv[])
 
         MPI_T_cvar_handle_alloc(i, NULL, &chandle, &count);
         if (count == 1 || (datatype == MPI_CHAR && count < sizeof(cin))) {
-            switch (datatype) {
-                case MPI_INT:
-                    iin = 123;
-                    iout = 456;
-                    MPI_T_cvar_read(chandle, &iold); /* Read the old value */
-                    MPI_T_cvar_write(chandle, &iin); /* Write an arbitrary value */
-                    MPI_T_cvar_read(chandle, &iout); /* Read the value again */
-                    MPI_T_cvar_write(chandle, &iold); /* Restore the old value */
-                    if (iin != iout) errs++;
-                    break;
-                case MPI_UNSIGNED:
-                    uin = 133;
-                    uout = 986;
-                    MPI_T_cvar_read(chandle, &uold);
-                    MPI_T_cvar_write(chandle, &uin);
-                    MPI_T_cvar_read(chandle, &uout);
-                    MPI_T_cvar_write(chandle, &uold);
-                    if (uin != uout) errs++;
-                    break;
-                case MPI_UNSIGNED_LONG:
-                    ulin = 1830;
-                    ulout = 2014;
-                    MPI_T_cvar_read(chandle, &ulold);
-                    MPI_T_cvar_write(chandle, &ulin);
-                    MPI_T_cvar_read(chandle, &ulout);
-                    MPI_T_cvar_write(chandle, &ulold);
-                    if (ulin != ulout) errs++;
-                    break;
-                case MPI_UNSIGNED_LONG_LONG:
-                    ullin = 11930;
-                    ullout = 52014;
-                    MPI_T_cvar_read(chandle, &ullold);
-                    MPI_T_cvar_write(chandle, &ullin);
-                    MPI_T_cvar_read(chandle, &ullout);
-                    MPI_T_cvar_write(chandle, &ullold);
-                    if (ullin != ullout) errs++;
-                    break;
-                case MPI_CHAR:
-                    strcpy(cin,  "GARBAGE MPI_CHAR CVAR VALUE");
-                    strcpy(cout, "TEMPORARY MPI_CHAR CVAR VALUE");
-                    MPI_T_cvar_read(chandle, cold);
-                    MPI_T_cvar_write(chandle, cin);
-                    MPI_T_cvar_read(chandle, cout);
-                    MPI_T_cvar_write(chandle, cold);
-                    /* printf("%s = %s\n", name, cold); */
-                    if (strcmp(cin, cout)) errs++;
-                    break;
-                default:
-                    break;
+            if (MPI_INT == datatype) {
+                iin = 123;
+                iout = 456;
+                MPI_T_cvar_read(chandle, &iold); /* Read the old value */
+                MPI_T_cvar_write(chandle, &iin); /* Write an arbitrary value */
+                MPI_T_cvar_read(chandle, &iout); /* Read the value again */
+                MPI_T_cvar_write(chandle, &iold); /* Restore the old value */
+                if (iin != iout) errs++;
+            } else if (MPI_UNSIGNED == datatype) {
+                uin = 133;
+                uout = 986;
+                MPI_T_cvar_read(chandle, &uold);
+                MPI_T_cvar_write(chandle, &uin);
+                MPI_T_cvar_read(chandle, &uout);
+                MPI_T_cvar_write(chandle, &uold);
+                if (uin != uout) errs++;
+            } else if (MPI_UNSIGNED_LONG == datatype) {
+                ulin = 1830;
+                ulout = 2014;
+                MPI_T_cvar_read(chandle, &ulold);
+                MPI_T_cvar_write(chandle, &ulin);
+                MPI_T_cvar_read(chandle, &ulout);
+                MPI_T_cvar_write(chandle, &ulold);
+                if (ulin != ulout) errs++;
+            } else if (MPI_UNSIGNED_LONG_LONG == datatype) {
+                ullin = 11930;
+                ullout = 52014;
+                MPI_T_cvar_read(chandle, &ullold);
+                MPI_T_cvar_write(chandle, &ullin);
+                MPI_T_cvar_read(chandle, &ullout);
+                MPI_T_cvar_write(chandle, &ullold);
+                if (ullin != ullout) errs++;
+            } else if (MPI_CHAR == datatype) {
+                strcpy(cin,  "GARBAGE MPI_CHAR CVAR VALUE");
+                strcpy(cout, "TEMPORARY MPI_CHAR CVAR VALUE");
+                MPI_T_cvar_read(chandle, cold);
+                MPI_T_cvar_write(chandle, cin);
+                MPI_T_cvar_read(chandle, cout);
+                MPI_T_cvar_write(chandle, cold);
+                /* printf("%s = %s\n", name, cold); */
+                if (strcmp(cin, cout)) errs++;
             }
         }
 
