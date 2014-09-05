@@ -42,6 +42,7 @@
 **MPID_nem_ib_lmt_done_recv:MPID_nem_ib_lmt_done_recv failed
 **MPID_nem_ib_lmt_done_send:MPID_nem_ib_lmt_done_send failed
 **MPID_nem_ib_lmt_send_GET_DONE:MPID_nem_ib_lmt_send_GET_DONE failed
+**MPID_nem_ib_lmt_send_RTS:MPID_nem_ib_lmt_send_RTS failed
 **MPID_nem_ib_npollingset:MPID_nem_ib_npollingset failed
 **MPID_nem_ib_poll:MPID_nem_ib_poll failed
 **MPID_nem_ib_poll_eager:MPID_nem_ib_poll_eager failed

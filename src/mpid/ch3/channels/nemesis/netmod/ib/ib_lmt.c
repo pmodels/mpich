@@ -110,9 +110,35 @@ int MPID_nem_ib_lmt_initiate_lmt(struct MPIDI_VC *vc, union MPIDI_CH3_Pkt *rts_p
     vc_ib->ibcom->rsr_seq_num_tail_last_sent = vc_ib->ibcom->rsr_seq_num_tail;
 #endif
 
+    int post_num;
+    uint32_t max_msg_sz;
+    MPID_nem_ib_vc_area *vc_ib = VC_IB(vc);
+    MPID_nem_ib_com_get_info_conn(vc_ib->sc->fd, MPID_NEM_IB_COM_INFOKEY_PATTR_MAX_MSG_SZ,
+                                  &max_msg_sz, sizeof(uint32_t));
+
+    /* Type of max_msg_sz is uint32_t. */
+    post_num = (data_sz + (long) max_msg_sz - 1) / (long) max_msg_sz;
+
+    s_cookie_buf->max_msg_sz = max_msg_sz;
+    s_cookie_buf->seg_seq_num = 1;
+    s_cookie_buf->seg_num = post_num;
+
+    REQ_FIELD(req, buf.from) = write_from_buf;
+    REQ_FIELD(req, data_sz) = data_sz;
+    REQ_FIELD(req, seg_seq_num) = 1;    // only send 1st-segment, even if there are some segments.
+    REQ_FIELD(req, seg_num) = post_num;
+    REQ_FIELD(req, max_msg_sz) = max_msg_sz;
+
+    long length;
+    if (post_num > 1) {
+        length = max_msg_sz;
+    }
+    else {
+        length = data_sz;
+    }
     /* put IB rkey */
     struct ibv_mr *mr =
-        MPID_nem_ib_com_reg_mr_fetch(write_from_buf, data_sz, 0, MPID_NEM_IB_COM_REG_MR_GLOBAL);
+        MPID_nem_ib_com_reg_mr_fetch(write_from_buf, length, 0, MPID_NEM_IB_COM_REG_MR_GLOBAL);
     MPIU_ERR_CHKANDJUMP(!mr, mpi_errno, MPI_ERR_OTHER, "**MPID_nem_ib_com_reg_mr_fetch");
 #ifdef HAVE_LIBDCFA
     s_cookie_buf->addr = (void *) mr->host_addr;
@@ -139,32 +165,73 @@ int MPID_nem_ib_lmt_initiate_lmt(struct MPIDI_VC *vc, union MPIDI_CH3_Pkt *rts_p
 #define FUNCNAME MPID_nem_ib_lmt_start_recv_core
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-int MPID_nem_ib_lmt_start_recv_core(struct MPID_Request *req, void *raddr, uint32_t rkey,
-                                    void *write_to_buf)
+int MPID_nem_ib_lmt_start_recv_core(struct MPID_Request *req, void *raddr, uint32_t rkey, long len,
+                                    void *write_to_buf, uint32_t max_msg_sz, int end)
 {
     int mpi_errno = MPI_SUCCESS;
     int ibcom_errno;
     struct MPIDI_VC *vc = req->ch.vc;
     MPID_nem_ib_vc_area *vc_ib = VC_IB(vc);
+    int i;
+    int divide;
+    int posted_num;
+    int last;
+    uint32_t r_max_msg_sz;      /* responder's max_msg_sz */
+    void *write_pos;
+    void *addr;
+    long data_sz;
+    MPIDI_msg_sz_t rest_data_sz;
 
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_IB_LMT_START_RECV_CORE);
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_IB_LMT_START_RECV_CORE);
 
-#if 1
-    int post_num = 1;
+    MPID_nem_ib_com_get_info_conn(vc_ib->sc->fd, MPID_NEM_IB_COM_INFOKEY_PATTR_MAX_MSG_SZ,
+                                  &r_max_msg_sz, sizeof(uint32_t));
 
-    ibcom_errno =
-        MPID_nem_ib_com_lrecv(vc_ib->sc->fd, (uint64_t) req, raddr, req->ch.lmt_data_sz, rkey,
-                              write_to_buf, &post_num);
-    MPID_nem_ib_ncqe += post_num;
-#else
-    ibcom_errno =
-        MPID_nem_ib_com_lrecv(vc_ib->sc->fd, (uint64_t) req, raddr, req->ch.lmt_data_sz, rkey,
-                              write_to_buf);
-    MPID_nem_ib_ncqe += 1;
-#endif
+    divide = (max_msg_sz + r_max_msg_sz - 1) / r_max_msg_sz;
+
+    write_pos = write_to_buf;
+    posted_num = 0;
+    last = MPID_NEM_IB_LMT_PART_OF_SEGMENT;
+    rest_data_sz = len;
+    addr = raddr;
+
+    for (i = 0; i < divide; i++) {
+        if (i == divide - 1)
+            data_sz = max_msg_sz - i * r_max_msg_sz;
+        else
+            data_sz = r_max_msg_sz;
+
+        if (i == divide - 1) {
+            if (end)
+                last = MPID_NEM_IB_LMT_LAST_PKT;        /* last part of last segment packet */
+            else
+                last = MPID_NEM_IB_LMT_SEGMENT_LAST;    /* last part of this segment */
+
+            /* last data may be smaller than initiator's max_msg_sz */
+            if (rest_data_sz < max_msg_sz)
+                data_sz = rest_data_sz;
+        }
+
+        ibcom_errno =
+            MPID_nem_ib_com_lrecv(vc_ib->sc->fd, (uint64_t) req, addr, data_sz, rkey,
+                                  write_pos, last);
+        MPIU_ERR_CHKANDJUMP(ibcom_errno, mpi_errno, MPI_ERR_OTHER, "**MPID_nem_ib_com_lrecv");
+
+        /* update position */
+        write_pos = (void *) ((char *) write_pos + data_sz);
+        addr = (void *) ((char *) addr + data_sz);
+
+        /* update rest data size */
+        rest_data_sz -= data_sz;
+
+        /* count request number */
+        posted_num++;
+    }
+
+    MPIU_Assert(rest_data_sz == 0);
+    MPID_nem_ib_ncqe += posted_num;
     //dprintf("start_recv,ncqe=%d\n", MPID_nem_ib_ncqe);
-    MPIU_ERR_CHKANDJUMP(ibcom_errno, mpi_errno, MPI_ERR_OTHER, "**MPID_nem_ib_com_lrecv");
     dprintf("lmt_start_recv_core,MPID_nem_ib_ncqe=%d\n", MPID_nem_ib_ncqe);
     dprintf
         ("lmt_start_recv_core,req=%p,sz=%ld,write_to_buf=%p,lmt_pack_buf=%p,user_buf=%p,raddr=%p,rkey=%08x,tail=%p=%02x\n",
@@ -174,11 +241,7 @@ int MPID_nem_ib_lmt_start_recv_core(struct MPID_Request *req, void *raddr, uint3
     //fflush(stdout);
 
 #ifdef MPID_NEM_IB_LMT_GET_CQE
-#if 1
-    MPID_nem_ib_ncqe_to_drain += post_num;      /* use CQE instead of polling */
-#else
-    MPID_nem_ib_ncqe_to_drain += 1;     /* use CQE instead of polling */
-#endif
+    MPID_nem_ib_ncqe_to_drain += posted_num;    /* use CQE instead of polling */
 #else
     /* drain_scq and ib_poll is not ordered, so both can decrement ref_count */
     MPIR_Request_add_ref(req);
@@ -242,6 +305,8 @@ int MPID_nem_ib_lmt_start_recv(struct MPIDI_VC *vc, struct MPID_Request *req, MP
         write_to_buf = REQ_FIELD(req, lmt_pack_buf);
     }
 
+    REQ_FIELD(req, buf.to) = write_to_buf;
+
 #ifdef MPID_NEM_IB_LMT_GET_CQE
 #else
     /* unmark magic */
@@ -260,12 +325,25 @@ int MPID_nem_ib_lmt_start_recv(struct MPIDI_VC *vc, struct MPID_Request *req, MP
 
     //dprintf("lmt_start_recv,sendq_empty=%d,ncom=%d,ncqe=%d\n", MPID_nem_ib_sendq_empty(vc_ib->sendq), vc_ib->ibcom->ncom < MPID_NEM_IB_COM_MAX_SQ_CAPACITY, MPID_nem_ib_ncqe < MPID_NEM_IB_COM_MAX_CQ_CAPACITY);
 
+    int last = 1;
+    long length = req->ch.lmt_data_sz;
+
+    if (s_cookie_buf->seg_seq_num != s_cookie_buf->seg_num) {
+        last = 0;
+        length = s_cookie_buf->max_msg_sz;
+    }
+
+    REQ_FIELD(req, max_msg_sz) = s_cookie_buf->max_msg_sz; /* store initiator's max_msg_sz */
+    REQ_FIELD(req, seg_num) = s_cookie_buf->seg_num; /* store number of segments */
+
     /* try to issue RDMA-read command */
     int slack = 1;              /* slack for control packet bringing sequence number */
     if (MPID_nem_ib_sendq_empty(vc_ib->sendq) &&
         vc_ib->ibcom->ncom < MPID_NEM_IB_COM_MAX_SQ_CAPACITY - slack &&
         MPID_nem_ib_ncqe < MPID_NEM_IB_COM_MAX_CQ_CAPACITY - slack) {
-        mpi_errno = MPID_nem_ib_lmt_start_recv_core(req, s_cookie_buf->addr, s_cookie_buf->rkey, write_to_buf); /* fast path not storing raddr and rkey */
+        mpi_errno =
+            MPID_nem_ib_lmt_start_recv_core(req, s_cookie_buf->addr, s_cookie_buf->rkey, length,
+                                            write_to_buf, s_cookie_buf->max_msg_sz, last);
         if (mpi_errno) {
             MPIU_ERR_POP(mpi_errno);
         }
@@ -281,6 +359,8 @@ int MPID_nem_ib_lmt_start_recv(struct MPIDI_VC *vc, struct MPID_Request *req, MP
         REQ_FIELD(req, lmt_raddr) = s_cookie_buf->addr;
         REQ_FIELD(req, lmt_rkey) = s_cookie_buf->rkey;
         REQ_FIELD(req, lmt_write_to_buf) = write_to_buf;
+        REQ_FIELD(req, lmt_szsend) = length;
+        REQ_FIELD(req, last) = last;
 
         MPID_nem_ib_sendq_enqueue(&vc_ib->sendq, req);
     }
@@ -322,6 +402,7 @@ int MPID_nem_ib_lmt_start_recv(struct MPIDI_VC *vc, struct MPID_Request *req, MP
     goto fn_exit;
 }
 
+#if 0   /* unused function */
 /* fall-back to lmt-get if end-flag of send-buf has the same value as the end-flag of recv-buf */
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_ib_lmt_switch_send
@@ -396,6 +477,7 @@ int MPID_nem_ib_lmt_switch_send(struct MPIDI_VC *vc, struct MPID_Request *req)
   fn_fail:
     goto fn_exit;
 }
+#endif
 
 /* when cookie is received in the middle of the lmt */
 #undef FUNCNAME

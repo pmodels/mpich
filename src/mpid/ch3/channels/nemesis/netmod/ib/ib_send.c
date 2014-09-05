@@ -241,12 +241,19 @@ static int MPID_nem_ib_iSendContig_core(MPIDI_VC_t * vc, MPID_Request * sreq, vo
 
             void *write_from_buf = data;
 
+            uint32_t max_msg_sz;
+            MPID_nem_ib_com_get_info_conn(vc_ib->sc->fd, MPID_NEM_IB_COM_INFOKEY_PATTR_MAX_MSG_SZ,
+                                          &max_msg_sz, sizeof(uint32_t));
+
+            /* RMA : Netmod IB supports only smaller size than max_msg_sz. */
+            MPIU_Assert(data_sz <= max_msg_sz);
+
             MPID_nem_ib_rma_lmt_cookie_t *s_cookie_buf = (MPID_nem_ib_rma_lmt_cookie_t *) MPIU_Malloc(sizeof(MPID_nem_ib_rma_lmt_cookie_t));
 
             sreq->ch.s_cookie = s_cookie_buf;
 
             s_cookie_buf->tail = *((uint8_t *) ((uint8_t *) write_from_buf + data_sz - sizeof(uint8_t)));
-            /* put IB rkey */
+
             struct ibv_mr *mr =
                 MPID_nem_ib_com_reg_mr_fetch(write_from_buf, data_sz, 0, MPID_NEM_IB_COM_REG_MR_GLOBAL);
             MPIU_ERR_CHKANDJUMP(!mr, mpi_errno, MPI_ERR_OTHER, "**MPID_nem_ib_com_reg_mr_fetch");
@@ -258,6 +265,7 @@ static int MPID_nem_ib_iSendContig_core(MPIDI_VC_t * vc, MPID_Request * sreq, vo
             s_cookie_buf->rkey = mr->rkey;
             s_cookie_buf->len = data_sz;
             s_cookie_buf->sender_req_id = sreq->handle;
+            s_cookie_buf->max_msg_sz = max_msg_sz;
 
 	    /* set for ib_com_isend */
 	    prefix = (void *)&pkt_netmod;
@@ -796,14 +804,20 @@ static int MPID_nem_ib_SendNoncontig_core(MPIDI_VC_t * vc, MPID_Request * sreq, 
 
             void *write_from_buf = REQ_FIELD(sreq, lmt_pack_buf);
 
+            uint32_t max_msg_sz;
+            MPID_nem_ib_com_get_info_conn(vc_ib->sc->fd, MPID_NEM_IB_COM_INFOKEY_PATTR_MAX_MSG_SZ,
+                                          &max_msg_sz, sizeof(uint32_t));
+
+            /* RMA : Netmod IB supports only smaller size than max_msg_sz. */
+            MPIU_Assert(data_sz <= max_msg_sz);
+
             MPID_nem_ib_rma_lmt_cookie_t *s_cookie_buf = (MPID_nem_ib_rma_lmt_cookie_t *) MPIU_Malloc(sizeof(MPID_nem_ib_rma_lmt_cookie_t));
 
             sreq->ch.s_cookie = s_cookie_buf;
 
             s_cookie_buf->tail = *((uint8_t *) ((uint8_t *) write_from_buf + last - sizeof(uint8_t)));
-            /* put IB rkey */
-            struct ibv_mr *mr =
-                MPID_nem_ib_com_reg_mr_fetch(write_from_buf, last, 0, MPID_NEM_IB_COM_REG_MR_GLOBAL);
+
+            struct ibv_mr *mr = MPID_nem_ib_com_reg_mr_fetch(write_from_buf, last, 0, MPID_NEM_IB_COM_REG_MR_GLOBAL);
             MPIU_ERR_CHKANDJUMP(!mr, mpi_errno, MPI_ERR_OTHER, "**MPID_nem_ib_com_reg_mr_fetch");
 #ifdef HAVE_LIBDCFA
             s_cookie_buf->addr = (void *) mr->host_addr;
@@ -813,6 +827,7 @@ static int MPID_nem_ib_SendNoncontig_core(MPIDI_VC_t * vc, MPID_Request * sreq, 
             s_cookie_buf->rkey = mr->rkey;
             s_cookie_buf->len = last;
             s_cookie_buf->sender_req_id = sreq->handle;
+            s_cookie_buf->max_msg_sz = max_msg_sz;
 
 	    /* set for ib_com_isend */
 	    prefix = (void *)&pkt_netmod;
@@ -1321,7 +1336,10 @@ int MPID_nem_ib_send_progress(MPIDI_VC_t * vc)
                 mpi_errno =
                     MPID_nem_ib_lmt_start_recv_core(sreq, REQ_FIELD(sreq, lmt_raddr),
                                                     REQ_FIELD(sreq, lmt_rkey), REQ_FIELD(sreq,
-                                                                                         lmt_write_to_buf));
+                                                                                         lmt_szsend),
+                                                    REQ_FIELD(sreq, lmt_write_to_buf),
+                                                    REQ_FIELD(sreq, max_msg_sz), REQ_FIELD(sreq,
+                                                                                           last));
                 if (mpi_errno) {
                     MPIU_ERR_POP(mpi_errno);
                 }

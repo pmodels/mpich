@@ -1523,7 +1523,7 @@ int MPID_nem_ib_com_isend(int condesc,
 #if 1
     MPID_nem_ib_rc_send_request *wrap_wr_id = MPIU_Malloc(sizeof(MPID_nem_ib_rc_send_request));
     wrap_wr_id->wr_id = wr_id;
-    wrap_wr_id->mf = 0;
+    wrap_wr_id->mf = MPID_NEM_IB_LAST_PKT;
 
     conp->icom_sr[MPID_NEM_IB_COM_SMT_NOINLINE].wr_id = (uint64_t) wrap_wr_id;
 #else
@@ -1948,14 +1948,13 @@ int MPID_nem_ib_com_udrecv(int condesc)
 }
 
 int MPID_nem_ib_com_lrecv(int condesc, uint64_t wr_id, void *raddr, long sz_data, uint32_t rkey,
-                          void *laddr, int *post_num)
+                          void *laddr, int last)
 {
     MPID_nem_ib_com_t *conp;
     int ibcom_errno = 0;
     struct ibv_send_wr *bad_wr;
     int ib_errno;
     int num_sge = 0;
-    int i;
 
     dprintf("MPID_nem_ib_com_lrecv,enter,raddr=%p,sz_data=%ld,laddr=%p\n", raddr, sz_data, laddr);
 
@@ -1970,79 +1969,12 @@ int MPID_nem_ib_com_lrecv(int condesc, uint64_t wr_id, void *raddr, long sz_data
     MPID_NEM_IB_COM_ERR_CHKANDJUMP(!mr_data, -1,
                                    dprintf("MPID_nem_ib_com_lrecv,ibv_reg_mr_fetch failed\n"));
 
-#if 1
-    *post_num = 1;
+    MPID_nem_ib_rc_send_request *wrap_wr_id = MPIU_Malloc(sizeof(MPID_nem_ib_rc_send_request));
+    wrap_wr_id->wr_id = wr_id;
+    wrap_wr_id->mf = last;
 
-    /* Type of max_msg_sz is uint32_t. */
-    if (sz_data > (long) conp->icom_pattr.max_msg_sz) {
-        *post_num +=  sz_data / (long)conp->icom_pattr.max_msg_sz;
-    }
+    num_sge = 0;
 
-    for (i = 0; i < *post_num; i++) {
-        MPID_nem_ib_rc_send_request *wrap_wr_id = MPIU_Malloc(sizeof(MPID_nem_ib_rc_send_request));
-        wrap_wr_id->wr_id = wr_id;
-
-        if (i == *post_num - 1)
-            wrap_wr_id->mf = 0; /* end of packet */
-        else
-            wrap_wr_id->mf = 1;
-
-        dprintf("MPID_nem_ib_com_lrecv,mf=%d,post=%d/%d\n", wrap_wr_id->mf, i + 1, *post_num);
-
-        num_sge = 0;
-
-#ifdef HAVE_LIBDCFA
-        conp->icom_sr[MPID_NEM_IB_COM_LMT_INITIATOR].sg_list[num_sge].mic_addr =
-            (uint64_t) laddr + (i * conp->icom_pattr.max_msg_sz);
-        conp->icom_sr[MPID_NEM_IB_COM_LMT_INITIATOR].sg_list[num_sge].addr =
-            mr_data->host_addr + (i * conp->icom_pattr.max_msg_sz) + ((uint64_t) laddr -
-                                                                      (uint64_t) laddr);
-#else
-        conp->icom_sr[MPID_NEM_IB_COM_LMT_INITIATOR].sg_list[num_sge].addr =
-            (uint64_t) laddr + (i * conp->icom_pattr.max_msg_sz);
-#endif
-        if (sz_data > (long) conp->icom_pattr.max_msg_sz) {
-            if (i == *post_num - 1) {
-                conp->icom_sr[MPID_NEM_IB_COM_LMT_INITIATOR].sg_list[num_sge].length =
-                    (uint32_t) (sz_data - (long) conp->icom_pattr.max_msg_sz * i);
-            }
-            else {
-                conp->icom_sr[MPID_NEM_IB_COM_LMT_INITIATOR].sg_list[num_sge].length =
-                    conp->icom_pattr.max_msg_sz;
-            }
-        }
-        else {
-            conp->icom_sr[MPID_NEM_IB_COM_LMT_INITIATOR].sg_list[num_sge].length = sz_data;
-        }
-        conp->icom_sr[MPID_NEM_IB_COM_LMT_INITIATOR].sg_list[num_sge].lkey = mr_data->lkey;
-        num_sge += 1;
-
-        conp->icom_sr[MPID_NEM_IB_COM_LMT_INITIATOR].num_sge = num_sge;
-        conp->icom_sr[MPID_NEM_IB_COM_LMT_INITIATOR].wr_id = (uint64_t) wrap_wr_id;
-        conp->icom_sr[MPID_NEM_IB_COM_LMT_INITIATOR].wr.rdma.remote_addr =
-            (uint64_t) raddr + (i * conp->icom_pattr.max_msg_sz);
-        conp->icom_sr[MPID_NEM_IB_COM_LMT_INITIATOR].wr.rdma.rkey = rkey;
-
-#ifdef HAVE_LIBDCFA
-        ib_errno = ibv_post_send(conp->icom_qp, &conp->icom_sr[MPID_NEM_IB_COM_LMT_INITIATOR]);
-        MPID_NEM_IB_COM_ERR_CHKANDJUMP(ib_errno, -1,
-                                       dprintf("MPID_nem_ib_com_lrecv, ibv_post_send, rc=%d\n",
-                                               ib_errno));
-#else
-        ib_errno =
-            ibv_post_send(conp->icom_qp, &conp->icom_sr[MPID_NEM_IB_COM_LMT_INITIATOR], &bad_wr);
-        MPID_NEM_IB_COM_ERR_CHKANDJUMP(ib_errno, -1,
-                                       printf
-                                       ("MPID_nem_ib_com_lrecv, ibv_post_send, rc=%d, bad_wr=%p\n",
-                                        ib_errno, bad_wr));
-#endif
-
-        /* other commands can be executed before RDMA-rd command */
-        /* see the "Ordering and the Fence Indicator" section in "InfiniBand Architecture" by William T. Futral */
-
-        conp->ncom += 1;
-    }
-#else
     /* Erase magic, super bug!! */
     //((MPID_nem_ib_netmod_trailer_t*)(laddr + sz_data - sizeof(MPID_nem_ib_netmod_trailer_t)))->magic = 0;
 #ifdef HAVE_LIBDCFA
@@ -2057,7 +1989,7 @@ int MPID_nem_ib_com_lrecv(int condesc, uint64_t wr_id, void *raddr, long sz_data
     num_sge += 1;
 
     conp->icom_sr[MPID_NEM_IB_COM_LMT_INITIATOR].num_sge = num_sge;
-    conp->icom_sr[MPID_NEM_IB_COM_LMT_INITIATOR].wr_id = wr_id;
+    conp->icom_sr[MPID_NEM_IB_COM_LMT_INITIATOR].wr_id = (uint64_t) wrap_wr_id;
     conp->icom_sr[MPID_NEM_IB_COM_LMT_INITIATOR].wr.rdma.remote_addr = (uint64_t) raddr;
     conp->icom_sr[MPID_NEM_IB_COM_LMT_INITIATOR].wr.rdma.rkey = rkey;
 
@@ -2080,7 +2012,6 @@ int MPID_nem_ib_com_lrecv(int condesc, uint64_t wr_id, void *raddr, long sz_data
     conp->after_rdma_rd = 1;
 #endif
     conp->ncom += 1;
-#endif
 
   fn_exit:
     return ibcom_errno;
@@ -2128,7 +2059,7 @@ int MPID_nem_ib_com_put_lmt(int condesc, uint64_t wr_id, void *raddr, int sz_dat
 #if 1
     MPID_nem_ib_rc_send_request *wrap_wr_id = MPIU_Malloc(sizeof(MPID_nem_ib_rc_send_request));
     wrap_wr_id->wr_id = wr_id;
-    wrap_wr_id->mf = 0;
+    wrap_wr_id->mf = MPID_NEM_IB_LAST_PKT;
 
     conp->icom_sr[MPID_NEM_IB_COM_LMT_PUT].wr_id = (uint64_t) wrap_wr_id;
 #else

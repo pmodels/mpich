@@ -67,7 +67,7 @@ typedef struct {
     struct MPID_Request *sendq_next;    /* for sendq */
     void *lmt_raddr;            /* remember this for sendq, it might be better to use sreq->dev.iov[0].MPID_IOV_BUF instead */
     uint32_t lmt_rkey;          /* remember this for sendq, survive over lrecv and referenced when dequeueing from sendq */
-    uint32_t lmt_szsend;        /* remember this for sendq */
+    long lmt_szsend;            /* remember this for sendq */
     uint8_t lmt_tail, lmt_sender_tail, lmt_receiver_tail;       /* survive over lrecv and referenced when polling */
     MPI_Aint lmt_dt_true_lb;    /* to locate the last byte of receive buffer */
     void *lmt_write_to_buf;     /* user buffer or temporary buffer for pack and remember it for lmt_orderq */
@@ -75,6 +75,16 @@ typedef struct {
     void *buf_from;             /* address of RDMA write from buffer */
     uint32_t buf_from_sz;       /* size of RDMA write from buffer. It's set on sending, referenced on freeing */
     uint8_t ask;                /* Issued ask or not on send */
+    union {
+        void *from;
+        void *to;
+    } buf;
+    uint32_t max_msg_sz;        /* remember this for sendq, max message size */
+    MPIDI_msg_sz_t data_sz;
+    int seg_seq_num;            /* sequence number of segments */
+    int seg_num;                /* number of segments */
+    int last;                   /* flag for last packet or not */
+    void *lmt_mr_cache;         /* address of mr_cache_entry */
 } MPID_nem_ib_req_area;
 
 /* macro for secret area in req */
@@ -602,8 +612,8 @@ int MPID_nem_ib_send_progress(MPIDI_VC_t * vc);
 /* CH3--lmt send/recv functions */
 int MPID_nem_ib_lmt_initiate_lmt(struct MPIDI_VC *vc, union MPIDI_CH3_Pkt *rts_pkt,
                                  struct MPID_Request *req);
-int MPID_nem_ib_lmt_start_recv_core(struct MPID_Request *req, void *raddr, uint32_t rkey,
-                                    void *write_to_buf);
+int MPID_nem_ib_lmt_start_recv_core(struct MPID_Request *req, void *raddr, uint32_t rkey, long len,
+                                    void *write_to_buf, uint32_t max_msg_sz, int end);
 int MPID_nem_ib_lmt_start_recv(struct MPIDI_VC *vc, struct MPID_Request *req, MPID_IOV s_cookie);
 int MPID_nem_ib_lmt_handle_cookie(struct MPIDI_VC *vc, struct MPID_Request *req, MPID_IOV cookie);
 int MPID_nem_ib_lmt_switch_send(struct MPIDI_VC *vc, struct MPID_Request *req);
@@ -692,6 +702,9 @@ typedef struct {
     int seq_num_tail;           /* notify RDMA-write-to buffer occupation */
 #endif
     uint8_t tail;               /* last word of payload */
+    uint32_t max_msg_sz;        /* max message size */
+    int seg_seq_num;
+    int seg_num;
 } MPID_nem_ib_lmt_cookie_t;
 
 typedef struct {
@@ -700,6 +713,7 @@ typedef struct {
     uint8_t tail;               /* last word of payload */
     int len;
     MPI_Request sender_req_id;  /* request id of sender side */
+    uint32_t max_msg_sz;        /* max message size */
 } MPID_nem_ib_rma_lmt_cookie_t;
 
 typedef enum MPID_nem_ib_pkt_subtype {
@@ -712,6 +726,7 @@ typedef enum MPID_nem_ib_pkt_subtype {
     MPIDI_NEM_IB_PKT_GET,
     MPIDI_NEM_IB_PKT_GET_RESP,
     MPIDI_NEM_IB_PKT_LMT_GET_DONE,
+    MPIDI_NEM_IB_PKT_LMT_RTS,
     MPIDI_NEM_IB_PKT_REQ_SEQ_NUM,
     MPIDI_NEM_IB_PKT_REPLY_SEQ_NUM,
     MPIDI_NEM_IB_PKT_CHG_RDMABUF_OCC_NOTIFY_STATE,
@@ -734,7 +749,19 @@ typedef struct MPID_nem_ib_pkt_lmt_get_done {
     /* additional field */
     MPI_Request req_id;
     int16_t seq_num_tail;
+    MPI_Request receiver_req_id;
 } MPID_nem_ib_pkt_lmt_get_done_t;
+
+typedef struct MPID_nem_ib_pkt_lmt_rts {
+    MPIDI_CH3_Pkt_type_t type;
+    unsigned subtype;
+    /* additional field */
+    MPI_Request req_id;
+    int16_t seq_num_tail;
+    void *addr;
+    uint32_t rkey;
+    int seg_seq_num;
+} MPID_nem_ib_pkt_lmt_rts_t;
 
 /* derived from MPID_nem_pkt_netmod_t */
 typedef struct MPID_nem_ib_pkt_req_seq_num_t {
@@ -784,6 +811,8 @@ int MPID_nem_ib_PktHandler_lmt_done(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
                                     MPIDI_msg_sz_t * buflen, MPID_Request ** rreqp);
 int MPID_nem_ib_pkt_GET_DONE_handler(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
                                      MPIDI_msg_sz_t * buflen, MPID_Request ** rreqp);
+int MPID_nem_ib_pkt_RTS_handler(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
+                                MPIDI_msg_sz_t * buflen, MPID_Request ** rreqp);
 int MPID_nem_ib_PktHandler_req_seq_num(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
                                        MPIDI_msg_sz_t * buflen, MPID_Request ** rreqp);
 int MPID_nem_ib_PktHandler_reply_seq_num(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
@@ -886,6 +915,7 @@ int pkt_DONE_handler(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt, MPIDI_msg_sz_t * bu
         MPIDI_Pkt_init(_done_pkt, MPIDI_NEM_PKT_NETMOD); \
         _done_pkt->subtype = MPIDI_NEM_IB_PKT_LMT_GET_DONE;\
         _done_pkt->req_id = (rreq)->ch.lmt_req_id; \
+        _done_pkt->receiver_req_id = (rreq)->handle; \
             /* embed SR occupancy information */ \
         _done_pkt->seq_num_tail = VC_FIELD(vc, ibcom->rsr_seq_num_tail); \
  \
@@ -899,6 +929,33 @@ int pkt_DONE_handler(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt, MPIDI_msg_sz_t * bu
             MPIU_ERR_CHKANDJUMP(_done_req->status.MPI_ERROR, mpi_errno, MPI_ERR_OTHER, "**MPID_nem_ib_lmt_send_GET_DONE");            \
             MPID_Request_release(_done_req);                                                                    \
             dprintf("send_get_done,release,req=%p\n", _done_req);       \
+        }                                                                                                       \
+    } while (0)
+
+#define MPID_nem_ib_lmt_send_RTS(vc, _req_id, _addr, _rkey, _seg_seq_num) do {          \
+        MPID_PKT_DECL_CAST(_upkt, MPID_nem_ib_pkt_lmt_rts_t, _rts_pkt);                                        \
+        MPID_Request *_rts_req;                                                                                \
+                                                                                                               \
+        MPIU_DBG_MSG(CH3_OTHER,VERBOSE,"sending rndv RTS segment packet"); \
+        MPIDI_Pkt_init(_rts_pkt, MPIDI_NEM_PKT_NETMOD); \
+        _rts_pkt->subtype = MPIDI_NEM_IB_PKT_LMT_RTS;\
+        _rts_pkt->req_id = _req_id; \
+        _rts_pkt->addr = _addr; \
+        _rts_pkt->rkey = _rkey; \
+        _rts_pkt->seg_seq_num = _seg_seq_num; \
+            /* embed SR occupancy information */ \
+        _rts_pkt->seq_num_tail = VC_FIELD(vc, ibcom->rsr_seq_num_tail); \
+ \
+            /* remember the last one sent */ \
+        VC_FIELD(vc, ibcom->rsr_seq_num_tail_last_sent) = VC_FIELD(vc, ibcom->rsr_seq_num_tail); \
+                                                                                                                \
+        mpi_errno = MPIDI_CH3_iStartMsg((vc), _rts_pkt, sizeof(*_rts_pkt), &_rts_req);                       \
+        MPIU_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**MPID_nem_ib_lmt_send_RTS");                                  \
+        if (_rts_req != NULL)                                                                                  \
+        {                                                                                                       \
+            MPIU_ERR_CHKANDJUMP(_rts_req->status.MPI_ERROR, mpi_errno, MPI_ERR_OTHER, "**MPID_nem_ib_lmt_send_RTS");            \
+            MPID_Request_release(_rts_req);                                                                    \
+            dprintf("send_rts,release,req=%p\n", _rts_req);       \
         }                                                                                                       \
     } while (0)
 
