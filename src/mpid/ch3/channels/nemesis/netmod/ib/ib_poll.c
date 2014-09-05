@@ -107,6 +107,13 @@ int MPID_nem_ib_drain_scq(int dont_call_progress)
         MPID_nem_ib_rc_send_request *req_wrap = (MPID_nem_ib_rc_send_request *) cqe[i].wr_id;
         req = (MPID_Request *) req_wrap->wr_id;
 
+        /* decrement reference counter of mr_cache_entry registered by ib_com_isend or ib_com_lrecv */
+        struct MPID_nem_ib_com_reg_mr_cache_entry_t *mr_cache =
+            (struct MPID_nem_ib_com_reg_mr_cache_entry_t *) req_wrap->mr_cache;
+        if (mr_cache) {
+            MPID_nem_ib_com_reg_mr_release(mr_cache);
+        }
+
         kind = req->kind;
         req_type = MPIDI_Request_get_type(req);
         msg_type = MPIDI_Request_get_msg_type(req);
@@ -2227,6 +2234,10 @@ int MPID_nem_ib_pkt_GET_DONE_handler(MPIDI_VC_t * vc,
 #endif
         //dprintf("lmt_start_recv,reply_seq_num,sendq_empty=%d,ncom=%d,ncqe=%d,rdmabuf_occ=%d\n", MPID_nem_ib_sendq_empty(vc_ib->sendq), vc_ib->ibcom->ncom, MPID_nem_ib_ncqe, MPID_nem_ib_diff16(vc_ib->ibcom->sseq_num, vc_ib->ibcom->lsr_seq_num_tail));
 #endif
+
+        /* decrement reference counter of mr_cache_entry */
+        MPID_nem_ib_com_reg_mr_release(REQ_FIELD(req, lmt_mr_cache));
+
         /* try to send from sendq because at least one RDMA-write-to buffer has been released */
         //dprintf("lmt_start_recv,reply_seq_num,send_progress\n");
         if (!MPID_nem_ib_sendq_empty(vc_ib->sendq)) {
@@ -2261,9 +2272,13 @@ int MPID_nem_ib_pkt_GET_DONE_handler(MPIDI_VC_t * vc,
             void *addr =
                 (void *) ((char *) REQ_FIELD(req, buf.from) +
                           (long) (next_seg_seq_num - 1) * REQ_FIELD(req, max_msg_sz));
-            struct ibv_mr *mr =
+            struct MPID_nem_ib_com_reg_mr_cache_entry_t *mr_cache =
                 MPID_nem_ib_com_reg_mr_fetch(addr, length, 0, MPID_NEM_IB_COM_REG_MR_GLOBAL);
-            MPIU_ERR_CHKANDJUMP(!mr, mpi_errno, MPI_ERR_OTHER, "**MPID_nem_ib_com_reg_mr_fetch");
+            MPIU_ERR_CHKANDJUMP(!mr_cache, mpi_errno, MPI_ERR_OTHER,
+                                "**MPID_nem_ib_com_reg_mr_fetch");
+            struct ibv_mr *mr = mr_cache->mr;
+            /* store new cache entry */
+            REQ_FIELD(req, lmt_mr_cache) = (void *) mr_cache;
 
 #ifdef HAVE_LIBDCFA
             void *_addr = mr->host_addr;
@@ -2491,6 +2506,9 @@ int MPID_nem_ib_pkt_rma_lmt_getdone(MPIDI_VC_t * vc,
     MPID_Request_get_ptr(done_pkt->req_id, req);
 
     MPIU_THREAD_CS_ENTER(LMT,);
+
+    /* decrement reference counter of mr_cache_entry */
+    MPID_nem_ib_com_reg_mr_release(REQ_FIELD(req, lmt_mr_cache));
 
     req_type = MPIDI_Request_get_type(req);
     /* free memory area for cookie */

@@ -1475,12 +1475,13 @@ int MPID_nem_ib_com_isend(int condesc,
     conp->icom_sr[MPID_NEM_IB_COM_SMT_NOINLINE].sg_list[num_sge].lkey = mr_rdmawr_from->lkey;
     num_sge += 1;
 
+    struct MPID_nem_ib_com_reg_mr_cache_entry_t *mr_cache = NULL;
     if (sz_data) {
         //dprintf("MPID_nem_ib_com_isend,data=%p,sz_data=%d\n", data, sz_data);
-        struct ibv_mr *mr_data =
-            MPID_nem_ib_com_reg_mr_fetch(data, sz_data, 0, MPID_NEM_IB_COM_REG_MR_GLOBAL);
-        MPID_NEM_IB_COM_ERR_CHKANDJUMP(!mr_data, -1,
+        mr_cache = MPID_nem_ib_com_reg_mr_fetch(data, sz_data, 0, MPID_NEM_IB_COM_REG_MR_GLOBAL);
+        MPID_NEM_IB_COM_ERR_CHKANDJUMP(!mr_cache, -1,
                                        printf("MPID_nem_ib_com_isend,ibv_reg_mr_fetch failed\n"));
+        struct ibv_mr *mr_data = mr_cache->mr;
 #ifdef HAVE_LIBDCFA
         conp->icom_sr[MPID_NEM_IB_COM_SMT_NOINLINE].sg_list[num_sge].mic_addr = (uint64_t) data;
         conp->icom_sr[MPID_NEM_IB_COM_SMT_NOINLINE].sg_list[num_sge].addr =
@@ -1524,6 +1525,7 @@ int MPID_nem_ib_com_isend(int condesc,
     MPID_nem_ib_rc_send_request *wrap_wr_id = MPIU_Malloc(sizeof(MPID_nem_ib_rc_send_request));
     wrap_wr_id->wr_id = wr_id;
     wrap_wr_id->mf = MPID_NEM_IB_LAST_PKT;
+    wrap_wr_id->mr_cache = (void *) mr_cache;
 
     conp->icom_sr[MPID_NEM_IB_COM_SMT_NOINLINE].wr_id = (uint64_t) wrap_wr_id;
 #else
@@ -1964,14 +1966,16 @@ int MPID_nem_ib_com_lrecv(int condesc, uint64_t wr_id, void *raddr, long sz_data
     MPID_NEM_IB_COM_ERR_CHKANDJUMP(!sz_data, -1, dprintf("MPID_nem_ib_com_lrecv,sz_data==0\n"));
 
     /* register memory area containing data */
-    struct ibv_mr *mr_data =
+    struct MPID_nem_ib_com_reg_mr_cache_entry_t *mr_cache =
         MPID_nem_ib_com_reg_mr_fetch(laddr, sz_data, 0, MPID_NEM_IB_COM_REG_MR_GLOBAL);
-    MPID_NEM_IB_COM_ERR_CHKANDJUMP(!mr_data, -1,
+    MPID_NEM_IB_COM_ERR_CHKANDJUMP(!mr_cache, -1,
                                    dprintf("MPID_nem_ib_com_lrecv,ibv_reg_mr_fetch failed\n"));
+    struct ibv_mr *mr_data = mr_cache->mr;
 
     MPID_nem_ib_rc_send_request *wrap_wr_id = MPIU_Malloc(sizeof(MPID_nem_ib_rc_send_request));
     wrap_wr_id->wr_id = wr_id;
     wrap_wr_id->mf = last;
+    wrap_wr_id->mr_cache = (void *) mr_cache;
 
     num_sge = 0;
 
@@ -2039,10 +2043,11 @@ int MPID_nem_ib_com_put_lmt(int condesc, uint64_t wr_id, void *raddr, int sz_dat
     num_sge = 0;
 
     /* register memory area containing data */
-    struct ibv_mr *mr_data =
+    struct MPID_nem_ib_com_reg_mr_cache_entry_t *mr_cache =
         MPID_nem_ib_com_reg_mr_fetch(laddr, sz_data, 0, MPID_NEM_IB_COM_REG_MR_GLOBAL);
-    MPID_NEM_IB_COM_ERR_CHKANDJUMP(!mr_data, -1,
+    MPID_NEM_IB_COM_ERR_CHKANDJUMP(!mr_cache, -1,
                                    dprintf("MPID_nem_ib_com_put_lmt,ibv_reg_mr_fetch failed\n"));
+    struct ibv_mr *mr_data = mr_cache->mr;
 
 #ifdef HAVE_LIBDCFA
     conp->icom_sr[MPID_NEM_IB_COM_LMT_PUT].sg_list[num_sge].mic_addr = (uint64_t) laddr;
@@ -2060,6 +2065,7 @@ int MPID_nem_ib_com_put_lmt(int condesc, uint64_t wr_id, void *raddr, int sz_dat
     MPID_nem_ib_rc_send_request *wrap_wr_id = MPIU_Malloc(sizeof(MPID_nem_ib_rc_send_request));
     wrap_wr_id->wr_id = wr_id;
     wrap_wr_id->mf = MPID_NEM_IB_LAST_PKT;
+    wrap_wr_id->mr_cache = (void *) mr_cache;
 
     conp->icom_sr[MPID_NEM_IB_COM_LMT_PUT].wr_id = (uint64_t) wrap_wr_id;
 #else

@@ -137,9 +137,11 @@ int MPID_nem_ib_lmt_initiate_lmt(struct MPIDI_VC *vc, union MPIDI_CH3_Pkt *rts_p
         length = data_sz;
     }
     /* put IB rkey */
-    struct ibv_mr *mr =
+    struct MPID_nem_ib_com_reg_mr_cache_entry_t *mr_cache =
         MPID_nem_ib_com_reg_mr_fetch(write_from_buf, length, 0, MPID_NEM_IB_COM_REG_MR_GLOBAL);
-    MPIU_ERR_CHKANDJUMP(!mr, mpi_errno, MPI_ERR_OTHER, "**MPID_nem_ib_com_reg_mr_fetch");
+    MPIU_ERR_CHKANDJUMP(!mr_cache, mpi_errno, MPI_ERR_OTHER, "**MPID_nem_ib_com_reg_mr_fetch");
+    struct ibv_mr *mr = mr_cache->mr;
+    REQ_FIELD(req, lmt_mr_cache) = (void *) mr_cache;
 #ifdef HAVE_LIBDCFA
     s_cookie_buf->addr = (void *) mr->host_addr;
     dprintf("lmt_initiate_lmt,s_cookie_buf->addr=%p\n", s_cookie_buf->addr);

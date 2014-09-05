@@ -356,6 +356,7 @@ MPID_nem_ib_rdmawr_to_alloc_hdr_t;
 typedef struct {
     uint64_t wr_id;             /* address of MPID_Request */
     int mf;                     /* more fragment (0 means the end of packet) */
+    void *mr_cache;             /* address of mr_cache_entry. derecement refc in drain_scq */
 } MPID_nem_ib_rc_send_request;
 
 #define MPID_NEM_IB_LMT_LAST_PKT        0
@@ -572,11 +573,27 @@ extern int MPID_nem_ib_com_mem_udwr_from(int condesc, void **out);
 extern int MPID_nem_ib_com_mem_udwr_to(int condesc, void **out);
 
 /* ib_reg_mr.c */
+struct MPID_nem_ib_com_reg_mr_listnode_t {
+    struct MPID_nem_ib_com_reg_mr_listnode_t *lru_next;
+    struct MPID_nem_ib_com_reg_mr_listnode_t *lru_prev;
+};
+
+struct MPID_nem_ib_com_reg_mr_cache_entry_t {
+    /* : public MPID_nem_ib_com_reg_mr_listnode_t */
+    struct MPID_nem_ib_com_reg_mr_listnode_t *lru_next;
+    struct MPID_nem_ib_com_reg_mr_listnode_t *lru_prev;
+    struct MPID_nem_ib_com_reg_mr_listnode_t g_lru;
+
+    struct ibv_mr *mr;
+    void *addr;
+    long len;
+    int refc;
+};
 extern int MPID_nem_ib_com_register_cache_init(void);
 extern int MPID_nem_ib_com_register_cache_release(void);
-extern struct ibv_mr *MPID_nem_ib_com_reg_mr_fetch(void *addr, long len,
-                                                   enum ibv_access_flags additional_flags,
-                                                   int mode);
+extern void *MPID_nem_ib_com_reg_mr_fetch(void *addr, long len,
+                                          enum ibv_access_flags additional_flags, int mode);
+extern void MPID_nem_ib_com_reg_mr_release(struct MPID_nem_ib_com_reg_mr_cache_entry_t *entry);
 #define MPID_NEM_IB_COM_REG_MR_GLOBAL (0)
 #define MPID_NEM_IB_COM_REG_MR_STICKY (1)
 

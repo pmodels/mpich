@@ -253,10 +253,14 @@ static int MPID_nem_ib_iSendContig_core(MPIDI_VC_t * vc, MPID_Request * sreq, vo
             sreq->ch.s_cookie = s_cookie_buf;
 
             s_cookie_buf->tail = *((uint8_t *) ((uint8_t *) write_from_buf + data_sz - sizeof(uint8_t)));
-
-            struct ibv_mr *mr =
-                MPID_nem_ib_com_reg_mr_fetch(write_from_buf, data_sz, 0, MPID_NEM_IB_COM_REG_MR_GLOBAL);
-            MPIU_ERR_CHKANDJUMP(!mr, mpi_errno, MPI_ERR_OTHER, "**MPID_nem_ib_com_reg_mr_fetch");
+            /* put IB rkey */
+            struct MPID_nem_ib_com_reg_mr_cache_entry_t *mr_cache =
+                MPID_nem_ib_com_reg_mr_fetch(write_from_buf, data_sz, 0,
+                                             MPID_NEM_IB_COM_REG_MR_GLOBAL);
+            MPIU_ERR_CHKANDJUMP(!mr_cache, mpi_errno, MPI_ERR_OTHER,
+                                "**MPID_nem_ib_com_reg_mr_fetch");
+            struct ibv_mr *mr = mr_cache->mr;
+            REQ_FIELD(sreq, lmt_mr_cache) = (void *) mr_cache;
 #ifdef HAVE_LIBDCFA
             s_cookie_buf->addr = (void *) mr->host_addr;
 #else
@@ -816,9 +820,14 @@ static int MPID_nem_ib_SendNoncontig_core(MPIDI_VC_t * vc, MPID_Request * sreq, 
             sreq->ch.s_cookie = s_cookie_buf;
 
             s_cookie_buf->tail = *((uint8_t *) ((uint8_t *) write_from_buf + last - sizeof(uint8_t)));
-
-            struct ibv_mr *mr = MPID_nem_ib_com_reg_mr_fetch(write_from_buf, last, 0, MPID_NEM_IB_COM_REG_MR_GLOBAL);
-            MPIU_ERR_CHKANDJUMP(!mr, mpi_errno, MPI_ERR_OTHER, "**MPID_nem_ib_com_reg_mr_fetch");
+            /* put IB rkey */
+            struct MPID_nem_ib_com_reg_mr_cache_entry_t *mr_cache =
+                MPID_nem_ib_com_reg_mr_fetch(write_from_buf, last, 0,
+                                             MPID_NEM_IB_COM_REG_MR_GLOBAL);
+            MPIU_ERR_CHKANDJUMP(!mr_cache, mpi_errno, MPI_ERR_OTHER,
+                                "**MPID_nem_ib_com_reg_mr_fetch");
+            struct ibv_mr *mr = mr_cache->mr;
+            REQ_FIELD(sreq, lmt_mr_cache) = (void *) mr_cache;
 #ifdef HAVE_LIBDCFA
             s_cookie_buf->addr = (void *) mr->host_addr;
 #else

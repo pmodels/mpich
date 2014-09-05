@@ -96,23 +96,6 @@ static inline void afree(const void *p, int id)
 #endif
 }
 
-struct MPID_nem_ib_com_reg_mr_listnode_t {
-    struct MPID_nem_ib_com_reg_mr_listnode_t *lru_next;
-    struct MPID_nem_ib_com_reg_mr_listnode_t *lru_prev;
-};
-
-struct MPID_nem_ib_com_reg_mr_cache_entry_t {
-    /* : public MPID_nem_ib_com_reg_mr_listnode_t */
-    struct MPID_nem_ib_com_reg_mr_listnode_t *lru_next;
-    struct MPID_nem_ib_com_reg_mr_listnode_t *lru_prev;
-    struct MPID_nem_ib_com_reg_mr_listnode_t g_lru;
-
-    struct ibv_mr *mr;
-    void *addr;
-    long len;
-    int refc;
-};
-
 static struct MPID_nem_ib_com_reg_mr_listnode_t MPID_nem_ib_com_reg_mr_global_cache;
 static struct MPID_nem_ib_com_reg_mr_listnode_t
     MPID_nem_ib_com_reg_mr_cache[MPID_NEM_IB_COM_REG_MR_NLINE];
@@ -169,8 +152,8 @@ static inline void __lru_queue_display()
     }
 }
 
-struct ibv_mr *MPID_nem_ib_com_reg_mr_fetch(void *addr, long len,
-                                            enum ibv_access_flags additional_flags, int mode)
+void *MPID_nem_ib_com_reg_mr_fetch(void *addr, long len,
+                                   enum ibv_access_flags additional_flags, int mode)
 {
 #if 0   /* debug */
     struct ibv_mr *mr;
@@ -254,10 +237,61 @@ struct ibv_mr *MPID_nem_ib_com_reg_mr_fetch(void *addr, long len,
     if (ibcom_errno != 0) {
         /* ib_com_reg_mr returns the errno of ibv_reg_mr */
         if (ibcom_errno == ENOMEM) {
+#if 1
+            /* deregister memory region unused and re-register new one */
+            struct MPID_nem_ib_com_reg_mr_listnode_t *ptr;
+            struct MPID_nem_ib_com_reg_mr_cache_entry_t *victim;
+            unsigned long long dereg_total = 0;
+            int reg_success = 0;
+            for (ptr = MPID_nem_ib_com_reg_mr_global_cache.lru_prev;
+                 ptr !=
+                 (struct MPID_nem_ib_com_reg_mr_listnode_t *) &MPID_nem_ib_com_reg_mr_global_cache;)
+            {
+                victim = list_entry(ptr, struct MPID_nem_ib_com_reg_mr_cache_entry_t, g_lru);
+                ptr = ptr->lru_prev;
+                /* 'refc == 0' means this cache_entry is not used */
+                if (victim && victim->addr && (victim->refc == 0)) {
+                    MPID_nem_ib_com_reg_mr_unlink((struct MPID_nem_ib_com_reg_mr_listnode_t *)
+                                                  victim);
+                    MPID_nem_ib_com_reg_mr_unlink(&(victim->g_lru));
+
+                    ibcom_errno = MPID_nem_ib_com_dereg_mr(victim->mr);
+                    if (ibcom_errno) {
+                        printf("mrcache,MPID_nem_ib_com_dereg_mr\n");
+                        afree(e, MPID_NEM_IB_COM_AALLOC_ID_MRCACHE);
+                        goto fn_fail;
+                    }
+                    dereg_total += (unsigned long long) victim->len;
+                    afree(victim, MPID_NEM_IB_COM_AALLOC_ID_MRCACHE);
+                    num_global_cache--;
+
+                    /* end loop if the total length released exceeds the requested */
+                    if (dereg_total > len_aligned) {
+                        dprintf("ib_com_reg_mr_fetch,dereg=%llu,len=%ld\n", dereg_total,
+                                len_aligned);
+                        /* re-registraion */
+                        ibcom_errno =
+                            MPID_nem_ib_com_reg_mr(addr_aligned, len_aligned, &e->mr,
+                                                   additional_flags);
+                        if (ibcom_errno == 0) {
+                            /* ibv_reg_mr success */
+                            reg_success = 1;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if (reg_success == 0) {
+                fprintf(stderr, "mrcache,MPID_nem_ib_com_reg_mr,failed\n");
+                afree(e, MPID_NEM_IB_COM_AALLOC_ID_MRCACHE);
+                goto fn_fail;
+            }
+#else
             /* deregister memory region. The value of 'num_global_cache' means the number of global-cached.
              * delete 5 percents of global-cached */
             int i;
-            int del_num = num_global_cache / 20;
+            int del_num = (num_global_cache + 19) / 20;
             struct MPID_nem_ib_com_reg_mr_cache_entry_t *victim;
 
             dprintf("mrcache,MPID_nem_ib_com_reg_mr,ENOMEM,del_num(%d)\n", del_num);
@@ -286,6 +320,7 @@ struct ibv_mr *MPID_nem_ib_com_reg_mr_fetch(void *addr, long len,
                 afree(e, MPID_NEM_IB_COM_AALLOC_ID_MRCACHE);
                 goto fn_fail;
             }
+#endif
         }
         else {
             /* errno is not ENOMEM */
@@ -338,7 +373,10 @@ struct ibv_mr *MPID_nem_ib_com_reg_mr_fetch(void *addr, long len,
     //__lru_queue_display();
 
   fn_exit:
-    return e->mr;
+    if (mode == MPID_NEM_IB_COM_REG_MR_STICKY)
+        return e->mr;
+    else
+        return e;
   fn_fail:
     goto fn_exit;
 #endif
@@ -358,6 +396,11 @@ static void MPID_nem_ib_com_reg_mr_dereg(struct ibv_mr *mr)
     //e->refc, offset);
 }
 #endif
+void MPID_nem_ib_com_reg_mr_release(struct MPID_nem_ib_com_reg_mr_cache_entry_t *entry)
+{
+    entry->refc--;
+    MPIU_Assert(ref_count >= 0);
+}
 
 int MPID_nem_ib_com_register_cache_init()
 {
