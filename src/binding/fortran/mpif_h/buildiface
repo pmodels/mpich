@@ -4185,21 +4185,30 @@ sub build_specials {
     &ReplaceIfDifferent( $filename, $filename . ".new" );
     &AddPrototype( $out_prefix, "init_thread", $args );
 
+    # MPI_Pcontrol does not have the ierror argument.
     $OUTFD = "PCONTROLFFD";
     $filename = "pcontrolf.c";
     open( $OUTFD, ">$filename.new" ) || die "Cannot open $filename.new\n";
     $files[$#files+1] = $filename;
-    $args = "int";
-    &print_header( "mpi_", "MPI_Pcontrol", "pcontrol", $args );
+    $returnType = "void";
+    &set_weak_decl( "MPI_Pcontrol", "MPI_Fint *", "void" );
+    &set_weak_decl( "PMPI_Pcontrol", "MPI_Fint *", "void" );
+    &print_header( "mpi_", "MPI_Pcontrol", "pcontrol", "");
     &print_routine_type_decl( $OUTFD, $out_prefix, "pcontrol" );
-    &print_args( $OUTFD, $args, 0, "pcontrol" );
-    #&print_attr;
+    print $OUTFD "(MPI_Fint *v1)\n";
     print $OUTFD "{\n";
-    print $OUTFD "    *ierr = MPI_Pcontrol( (int)*v1 );\n";
+    print $OUTFD "    int ierr;\n";
+    print $OUTFD "    ierr = MPI_Pcontrol( (int)*v1 );\n";
     print $OUTFD "}\n";
     close ($OUTFD);
     &ReplaceIfDifferent( $filename, $filename . ".new" );
-    &AddPrototype( $out_prefix, "pcontrol", $args );
+    if ($build_prototypes) {
+        print PROTOFD "extern ";
+        &print_routine_type_decl( PROTOFD, $out_prefix, "pcontrol" );
+        print PROTOFD "( MPI_Fint * )";
+        &print_attr( PROTOFD, $out_prefix."pcontrol_" );
+        print PROTOFD ";\n";
+    }
 
     $OUTFD = "ADDRESSFFD";
     $filename = "addressf.c";
