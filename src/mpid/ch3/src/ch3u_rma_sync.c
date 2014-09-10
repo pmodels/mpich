@@ -2391,6 +2391,7 @@ static int recv_post_msgs(MPID_Win *win_ptr, int *ranks_in_win_grp, int local)
     MPI_Request *req;
     MPI_Status *status;
     MPID_Comm *comm_ptr = win_ptr->comm_ptr;
+    MPIDI_VC_t *orig_vc = NULL, *target_vc = NULL;
     MPIU_CHKLMEM_DECL(2);
     MPIDI_STATE_DECL(MPID_STATE_RECV_POST_MSGS);
 
@@ -2415,7 +2416,6 @@ static int recv_post_msgs(MPID_Win *win_ptr, int *ranks_in_win_grp, int local)
 
         if (local && win_ptr->shm_allocated == TRUE) {
             MPID_Request *req_ptr;
-            MPIDI_VC_t *orig_vc = NULL, *target_vc = NULL;
 
             MPIDI_Comm_get_vc(win_ptr->comm_ptr, rank, &orig_vc);
             MPIDI_Comm_get_vc(win_ptr->comm_ptr, src, &target_vc);
@@ -2430,10 +2430,16 @@ static int recv_post_msgs(MPID_Win *win_ptr, int *ranks_in_win_grp, int local)
         else if (!local) {
             MPID_Request *req_ptr;
 
-            mpi_errno = MPID_Irecv(NULL, 0, MPI_INT, src, SYNC_POST_TAG,
-                                   comm_ptr, MPID_CONTEXT_INTRA_PT2PT, &req_ptr);
-            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-            req[j++] = req_ptr->handle;
+            MPIDI_Comm_get_vc(win_ptr->comm_ptr, rank, &orig_vc);
+            MPIDI_Comm_get_vc(win_ptr->comm_ptr, src, &target_vc);
+
+            if (win_ptr->shm_allocated != TRUE ||
+                orig_vc->node_id != target_vc->node_id) {
+                mpi_errno = MPID_Irecv(NULL, 0, MPI_INT, src, SYNC_POST_TAG,
+                                       comm_ptr, MPID_CONTEXT_INTRA_PT2PT, &req_ptr);
+                if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+                req[j++] = req_ptr->handle;
+            }
         }
     }
 
@@ -2442,7 +2448,7 @@ static int recv_post_msgs(MPID_Win *win_ptr, int *ranks_in_win_grp, int local)
         if (mpi_errno && mpi_errno != MPI_ERR_IN_STATUS) MPIU_ERR_POP(mpi_errno);
         /* --BEGIN ERROR HANDLING-- */
         if (mpi_errno == MPI_ERR_IN_STATUS) {
-            for (i = 0; i < start_grp_size; i++) {
+            for (i = 0; i < j; i++) {
                 if (status[i].MPI_ERROR != MPI_SUCCESS) {
                     mpi_errno = status[i].MPI_ERROR;
                     MPIU_ERR_POP(mpi_errno);
