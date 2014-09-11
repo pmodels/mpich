@@ -4197,8 +4197,7 @@ sub build_specials {
     &print_routine_type_decl( $OUTFD, $out_prefix, "pcontrol" );
     print $OUTFD "(MPI_Fint *v1)\n";
     print $OUTFD "{\n";
-    print $OUTFD "    int ierr;\n";
-    print $OUTFD "    ierr = MPI_Pcontrol( (int)*v1 );\n";
+    print $OUTFD "    MPI_Pcontrol( (int)*v1 );\n";
     print $OUTFD "}\n";
     close ($OUTFD);
     &ReplaceIfDifferent( $filename, $filename . ".new" );
