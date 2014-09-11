@@ -127,7 +127,7 @@ MPIDI_Win_allgather( MPI_Aint size, MPID_Win **win_ptr )
           /* --------------------------------------- */
           /*  Setup the PAMI sections of the window  */
           /* --------------------------------------- */
-          rc = PAMI_Memregion_create(MPIDI_Context[0], win->mpid.info[rank].base_addr, win->mpid.info[rank].base_size, &length_out, &winfo->memregion);
+          rc = PAMI_Memregion_create(MPIDI_Context[0], win->mpid.info[rank].base_addr, win->size, &length_out, &winfo->memregion);
 #ifdef USE_PAMI_RDMA
           MPIU_ERR_CHKANDJUMP((rc != PAMI_SUCCESS), mpi_errno, MPI_ERR_OTHER, "**nomem");
           MPIU_ERR_CHKANDJUMP((win->size < length_out), mpi_errno, MPI_ERR_OTHER, "**nomem");
