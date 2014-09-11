@@ -31,7 +31,6 @@ MPI_File ADIO_Open(MPI_Comm orig_comm,
     static char myname[] = "ADIO_OPEN";
     int  max_error_code;
     MPI_Info dupinfo;
-    MPI_Comm aggregator_comm = MPI_COMM_NULL; /* just for deferred opens */
 
     *error_code = MPI_SUCCESS;
 
@@ -156,28 +155,12 @@ MPI_File ADIO_Open(MPI_Comm orig_comm,
 	ADIOI_Info_print_keyvals(fd->info);
     }
 
-     /* deferred open: if we are an aggregator, create a new communicator.
-      * we'll use this aggregator communicator for opens and closes.
-      * otherwise, we have a NULL communicator until we try to do independent
-      * IO */
-    fd->agg_comm = MPI_COMM_NULL;
     fd->is_open = 0;
     fd->my_cb_nodes_index = -2;
     fd->is_agg = is_aggregator(rank, fd);
-    if (fd->hints->deferred_open) {
-	    /* MPI_Comm_split will create a communication group of aggregators.
-	     * for non-aggregators it will return MPI_COMM_NULL .  we rely on
-	     * fd->agg_comm == MPI_COMM_NULL for non-aggregators in several
-	     * tests in the code  */
-	    if (fd->is_agg) {
-		    MPI_Comm_split(fd->comm, 1, 0, &aggregator_comm);
-		    fd->agg_comm = aggregator_comm;
-	    } else {
-		    MPI_Comm_split(fd->comm, MPI_UNDEFINED, 0, &aggregator_comm);
-		    fd->agg_comm = aggregator_comm;
-	    }
-
-    }
+    /* deferred open used to split the communicator to create an "aggregator
+     * communicator", but we only used it as a way to indicate that deferred
+     * open happened.  fd->is_open and fd->is_agg are sufficient */
 
     /* actual opens start here */
     /* generic open: one process opens to create the file, all others open */
@@ -197,7 +180,7 @@ MPI_File ADIO_Open(MPI_Comm orig_comm,
             /* in the deferred open case, only those who have actually
                opened the file should close it */
             if (fd->hints->deferred_open)  {
-                if (fd->agg_comm != MPI_COMM_NULL) {
+                if (fd->is_agg) {
                     (*(fd->fns->ADIOI_xxx_Close))(fd, error_code);
                 }
             }

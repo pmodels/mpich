@@ -67,7 +67,7 @@ void ADIOI_GEN_OpenColl(ADIO_File fd, int rank,
 
     /* if we are doing deferred open, non-aggregators should return now */
     if (fd->hints->deferred_open ) {
-        if (fd->agg_comm == MPI_COMM_NULL) {
+        if (!(fd->is_agg)) {
             /* we might have turned off EXCL for the aggregators.
              * restore access_mode that non-aggregators get the right
              * value from get_amode */
@@ -82,7 +82,7 @@ void ADIOI_GEN_OpenColl(ADIO_File fd, int rank,
 	    *error_code = MPI_SUCCESS;
 	    ADIOI_Assert(fd->blksize > 0);
 	    return;
-        }
+	}
     }
 
 /* For writing with data sieving, a read-modify-write is needed. If 
