@@ -99,10 +99,16 @@ MPI_File ADIO_Open(MPI_Comm orig_comm,
      *
      * a code might do an "initialize from 0", so we can only skip hint
      * processing once everyone has particpiated in hint processing */
-    int dummy_info;
-    MPI_Allreduce(&ADIOI_syshints, &dummy_info, 1, MPI_INT, MPI_MIN, fd->comm);
-    if ((MPI_Info)dummy_info== MPI_INFO_NULL) {
-	MPI_Info_create(&ADIOI_syshints);
+    int syshints_processed, can_skip;
+    if (ADIOI_syshints == MPI_INFO_NULL)
+	syshints_processed = 0;
+    else
+	syshints_processed = 1;
+
+    MPI_Allreduce(&syshints_processed, &can_skip, 1, MPI_INT, MPI_MIN, fd->comm);
+    if (!can_skip) {
+	if (ADIOI_syshints == MPI_INFO_NULL)
+	    MPI_Info_create(&ADIOI_syshints);
 	ADIOI_process_system_hints(fd, ADIOI_syshints);
     }
 
