@@ -88,7 +88,9 @@ write_file( char *target, int rank, MPI_Info *info ) {
     MPI_Status mpi_stat;
     int mpi_ret;
     int i;
-    char buffer[OBJ_SIZE];
+    char *buffer;
+
+    buffer = malloc(OBJ_SIZE);
 
     if ( debug ) printf( "%d writing file %s\n", rank, target );
     
@@ -116,6 +118,7 @@ write_file( char *target, int rank, MPI_Info *info ) {
         fatal_error( mpi_ret, NULL, "close for write" );
     }
     if ( debug ) printf( "%d wrote file %s\n", rank, target );
+    free(buffer);
 }
 
 static int
@@ -136,8 +139,9 @@ read_file( char *target, int rank, MPI_Info *info, int *corrupt_blocks ) {
     MPI_Status mpi_stat;
     int mpi_ret;
     int i;
-    char buffer[OBJ_SIZE];
+    char *buffer;
     char *verify_buf = NULL;
+    buffer = malloc(OBJ_SIZE);
     verify_buf = (char *)malloc(OBJ_SIZE);
 
     if ( debug ) printf( "%d reading file %s\n", rank, target );
@@ -171,6 +175,7 @@ read_file( char *target, int rank, MPI_Info *info, int *corrupt_blocks ) {
     if( (mpi_ret = MPI_File_close( &rfh ) ) != MPI_SUCCESS ) {
         fatal_error( mpi_ret, NULL, "close for read" );
     }
+    free (buffer);
     free(verify_buf);
 
 }
