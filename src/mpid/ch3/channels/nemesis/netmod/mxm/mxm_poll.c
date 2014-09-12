@@ -162,18 +162,22 @@ int MPID_nem_mxm_recv(MPIDI_VC_t * vc, MPID_Request * rreq)
         int dt_contig;
         MPI_Aint dt_true_lb;
         MPID_Datatype *dt_ptr;
-        MPID_nem_mxm_vc_area *vc_area = VC_BASE(vc);
-        MPID_nem_mxm_req_area *req_area = REQ_BASE(rreq);
+        MPID_nem_mxm_vc_area *vc_area = NULL;
+        MPID_nem_mxm_req_area *req_area = NULL;
 
         MPIDI_Datatype_get_info(rreq->dev.user_count, rreq->dev.datatype, dt_contig, data_sz,
                                 dt_ptr, dt_true_lb);
         rreq->dev.OnDataAvail = NULL;
         rreq->dev.tmpbuf = NULL;
         rreq->ch.vc = vc;
+        rreq->ch.noncontig = FALSE;
 
         _dbg_mxm_output(5,
                         "Recv ========> Getting USER msg for req %p (context %d rank %d tag %d size %d) \n",
-                        rreq, context_id, source, tag, data_sz);
+                        rreq, context_id, rreq->dev.match.parts.rank, tag, data_sz);
+
+        vc_area = VC_BASE(vc);
+        req_area = REQ_BASE(rreq);
 
         req_area->ctx = rreq;
         req_area->iov_buf = req_area->tmp_buf;
@@ -187,6 +191,7 @@ int MPID_nem_mxm_recv(MPIDI_VC_t * vc, MPID_Request * rreq)
             req_area->iov_buf[0].length = data_sz;
         }
         else {
+            rreq->ch.noncontig = TRUE;
             mpi_errno = _mxm_process_rdtype(&rreq, rreq->dev.datatype, dt_ptr, data_sz,
                                             rreq->dev.user_buf, rreq->dev.user_count,
                                             &req_area->iov_buf, &req_area->iov_count);
@@ -194,7 +199,7 @@ int MPID_nem_mxm_recv(MPIDI_VC_t * vc, MPID_Request * rreq)
                 MPIU_ERR_POP(mpi_errno);
         }
 
-        mpi_errno = _mxm_irecv((vc ? vc_area->mxm_ep : NULL), req_area,
+        mpi_errno = _mxm_irecv((vc_area ? vc_area->mxm_ep : NULL), req_area,
                                tag,
                                (rreq->comm ? (mxm_mq_h) rreq->comm->dev.ch.netmod_priv : mxm_obj->
                                 mxm_mq), _mxm_tag_mpi2mxm(tag, context_id));
@@ -217,17 +222,18 @@ static int _mxm_handle_rreq(MPID_Request * req)
 {
     int complete = FALSE;
     int dt_contig;
-    MPI_Aint dt_true_lb;
+    MPI_Aint dt_true_lb ATTRIBUTE((unused));
     MPIDI_msg_sz_t userbuf_sz;
     MPID_Datatype *dt_ptr;
     MPIDI_msg_sz_t data_sz;
     MPIDI_VC_t *vc = NULL;
-    MPID_nem_mxm_vc_area *vc_area = NULL;
-    MPID_nem_mxm_req_area *req_area = NULL
+    MPID_nem_mxm_vc_area *vc_area ATTRIBUTE((unused)) = NULL;
+    MPID_nem_mxm_req_area *req_area = NULL;
+    void *tmp_buf = NULL;
 
     MPIU_THREAD_CS_ENTER(MSGQUEUE, req);
-    complete = MPIDI_CH3U_Recvq_DP(req)
-        MPIU_THREAD_CS_EXIT(MSGQUEUE, req);
+    complete = MPIDI_CH3U_Recvq_DP(req);
+    MPIU_THREAD_CS_EXIT(MSGQUEUE, req);
     if (!complete) {
         return TRUE;
     }
@@ -270,28 +276,59 @@ static int _mxm_handle_rreq(MPID_Request * req)
                                                      req->dev.recv_data_sz, userbuf_sz);
     }
 
-    if ((!dt_contig) && (req->dev.tmpbuf != NULL)) {
-        MPIDI_msg_sz_t last;
+    if (!dt_contig) {
+        MPIDI_msg_sz_t last = 0;
 
-        last = req->dev.recv_data_sz;
-        MPID_Segment_unpack(req->dev.segment_ptr, 0, &last, req->dev.tmpbuf);
-        MPIU_Free(req->dev.tmpbuf);
+        if (req->dev.tmpbuf != NULL) {
+            last = req->dev.recv_data_sz;
+            MPID_Segment_unpack(req->dev.segment_ptr, 0, &last, req->dev.tmpbuf);
+            tmp_buf = req->dev.tmpbuf;
+        }
+        else {
+            mxm_req_buffer_t * iov_buf;
+            MPID_IOV *iov;
+            int n_iov = 0;
+            int index;
+
+            last = req->dev.recv_data_sz;
+            n_iov = req_area->iov_count;
+            iov_buf = req_area->iov_buf;
+            if (last && n_iov > 0) {
+                iov = MPIU_Malloc(n_iov * sizeof(*iov));
+                MPIU_Assert(iov);
+
+                n_iov = req_area->iov_count;
+                iov_buf = req_area->iov_buf;
+                for (index = 0; index < n_iov; index++) {
+                    iov[index].MPID_IOV_BUF = iov_buf[index].ptr;
+                    iov[index].MPID_IOV_LEN = iov_buf[index].length;
+                }
+
+                MPID_Segment_unpack_vector(req->dev.segment_ptr, req->dev.segment_first, &last, iov, &n_iov);
+                MPIU_Free(iov);
+            }
+            if (req_area->iov_count > MXM_MPICH_MAX_IOV) {
+                tmp_buf = req_area->iov_buf;
+                req_area->iov_buf = req_area->tmp_buf;
+                req_area->iov_count = 0;
+            }
+        }
         if (last != data_sz) {
             MPIR_STATUS_SET_COUNT(req->status, last);
             if (req->dev.recv_data_sz <= userbuf_sz) {
+                /* If the data can't be unpacked, the we have a
+                 *  mismatch between the datatype and the amount of
+                 *  data received.  Throw away received data.
+                 */
                 MPIU_ERR_SETSIMPLE(req->status.MPI_ERROR, MPI_ERR_TYPE, "**dtypemismatch");
             }
         }
     }
 
-    if (req_area->iov_count > MXM_MPICH_MAX_IOV) {
-        MPIU_Free(req_area->iov_buf);
-        req_area->iov_buf = req_area->tmp_buf;
-        req_area->iov_count = 0;
-    }
-
     MPIDI_CH3U_Handle_recv_req(vc, req, &complete);
     MPIU_Assert(complete == TRUE);
+
+    if (tmp_buf) MPIU_Free(tmp_buf);
 
     return complete;
 }
@@ -421,6 +458,14 @@ static int _mxm_process_rdtype(MPID_Request ** rreq_p, MPI_Datatype datatype,
     last = rreq->dev.segment_size;
     MPID_Segment_unpack_vector(rreq->dev.segment_ptr, rreq->dev.segment_first, &last, iov, &n_iov);
     MPIU_Assert(last == rreq->dev.segment_size);
+
+#if defined(MXM_DEBUG) && (MXM_DEBUG > 0)
+    _dbg_mxm_output(7, "Recv Noncontiguous data vector %i entries (free slots : %i)\n", n_iov, MXM_REQ_DATA_MAX_IOV);
+    for(index = 0; index < n_iov; index++) {
+        _dbg_mxm_output(7, "======= Recv iov[%i] = ptr : %p, len : %i \n",
+                        index, iov[index].MPID_IOV_BUF, iov[index].MPID_IOV_LEN);
+    }
+#endif
 
     if (n_iov <= MXM_REQ_DATA_MAX_IOV) {
         if (n_iov > MXM_MPICH_MAX_IOV) {

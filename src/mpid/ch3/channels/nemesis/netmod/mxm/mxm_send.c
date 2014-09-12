@@ -577,6 +577,7 @@ int MPID_nem_mxm_issend(MPIDI_VC_t * vc, const void *buf, int count, MPI_Datatyp
             MPIDI_msg_sz_t last;
             MPI_Aint packsize = 0;
 
+            sreq->ch.noncontig = TRUE;
             sreq->dev.segment_ptr = MPID_Segment_alloc();
             MPIU_ERR_CHKANDJUMP1((sreq->dev.segment_ptr == NULL), mpi_errno, MPI_ERR_OTHER,
                                  "**nomem", "**nomem %s", "MPID_Segment_alloc");
@@ -593,7 +594,6 @@ int MPID_nem_mxm_issend(MPIDI_VC_t * vc, const void *buf, int count, MPI_Datatyp
                 req_area->iov_buf[0].ptr = sreq->dev.tmpbuf;
                 req_area->iov_buf[0].length = last;
             }
-            sreq->ch.noncontig = TRUE;
         }
     }
 
@@ -795,6 +795,14 @@ static int _mxm_process_sdtype(MPID_Request ** sreq_p, MPI_Datatype datatype,
     last = sreq->dev.segment_size;
     MPID_Segment_pack_vector(sreq->dev.segment_ptr, sreq->dev.segment_first, &last, iov, &n_iov);
     MPIU_Assert(last == sreq->dev.segment_size);
+
+#if defined(MXM_DEBUG) && (MXM_DEBUG > 0)
+    _dbg_mxm_output(7, "Send Noncontiguous data vector %i entries (free slots : %i)\n", n_iov, MXM_REQ_DATA_MAX_IOV);
+    for(index = 0; index < n_iov; index++) {
+        _dbg_mxm_output(7, "======= Recv iov[%i] = ptr : %p, len : %i \n",
+                        index, iov[index].MPID_IOV_BUF, iov[index].MPID_IOV_LEN);
+    }
+#endif
 
     if (n_iov > MXM_MPICH_MAX_IOV) {
         *iov_buf = (mxm_req_buffer_t *) MPIU_Malloc(n_iov * sizeof(**iov_buf));

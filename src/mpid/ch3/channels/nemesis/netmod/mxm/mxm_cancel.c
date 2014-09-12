@@ -50,7 +50,7 @@ int MPID_nem_mxm_cancel_send(MPIDI_VC_t * vc, MPID_Request * req)
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 int MPID_nem_mxm_cancel_recv(MPIDI_VC_t * vc, MPID_Request * req)
 {
-    int mpi_errno = MPI_SUCCESS;
+    int mpi_errno ATTRIBUTE((unused)) = MPI_SUCCESS;
     mxm_error_t ret = MXM_OK;
     MPID_nem_mxm_req_area *req_area = REQ_BASE(req);
 

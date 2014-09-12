@@ -27,14 +27,14 @@ AM_COND_IF([BUILD_NEMESIS_NETMOD_MXM],[
 #error "MXM Version is less than 1.5, please upgrade"
 #endif
 #
-#if MXM_API < MXM_VERSION(3,0)
-#error "MXM Version is less than 3.0, please upgrade"
+#if MXM_API < MXM_VERSION(3,1)
+#error "MXM Version is less than 3.1, please upgrade"
 #endif],
      [int a=0;],
      mxm_api_version=yes,
      mxm_api_version=no)
      if test "$mxm_api_version" = no ; then
-        AC_MSG_ERROR(['MXM API version Problem.  Are you running a recent version of MXM (at least 3.0)?'])
+        AC_MSG_ERROR(['MXM API version Problem.  Are you running a recent version of MXM (at least 3.1)?'])
      fi;
      AC_DEFINE([ENABLE_COMM_OVERRIDES], 1, [define to add per-vc function pointers to override send and recv functions])
      PAC_APPEND_FLAG([-lmxm],[EXTERNAL_LIBS])

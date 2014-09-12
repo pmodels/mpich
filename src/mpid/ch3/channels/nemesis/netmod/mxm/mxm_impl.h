@@ -149,7 +149,7 @@ typedef struct {
 } MPID_nem_mxm_vc_area;
 
 /* macro for mxm private in VC */
-#define VC_BASE(vcp) ((MPID_nem_mxm_vc_area *)((vcp)->ch.netmod_area.padding))
+#define VC_BASE(vcp) ((vcp) ? (MPID_nem_mxm_vc_area *)((vcp)->ch.netmod_area.padding) : NULL)
 
 /* The req provides a generic buffer in which network modules can store
    private fields This removes all dependencies from the req structure
@@ -172,7 +172,7 @@ typedef struct {
 } MPID_nem_mxm_req_area;
 
 /* macro for mxm private in REQ */
-#define REQ_BASE(reqp) ((MPID_nem_mxm_req_area *)((reqp)->ch.netmod_area.padding))
+#define REQ_BASE(reqp) ((reqp) ? (MPID_nem_mxm_req_area *)((reqp)->ch.netmod_area.padding) : NULL)
 
 typedef struct MPID_nem_mxm_module_t {
     char *runtime_version;
@@ -212,7 +212,7 @@ static inline void list_grow_mxm_req(list_head_t * list_head)
 
 static inline void _mxm_barrier(void)
 {
-    int pmi_errno;
+    int pmi_errno ATTRIBUTE((unused));
 
 #ifdef USE_PMI2_API
     pmi_errno = PMI2_KVS_Fence();
