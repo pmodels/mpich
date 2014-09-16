@@ -15,7 +15,12 @@ int main(int argc, char* argv[])
 
   MTest_Init(&argc,&argv); 
 
+#ifdef USE_WIN_ALLOCATE
+  char *baseptr;
+  MPI_Win_allocate(0, 1, MPI_INFO_NULL, MPI_COMM_WORLD, &baseptr, &win);
+#else
   MPI_Win_create(NULL, 0, 1, MPI_INFO_NULL, MPI_COMM_WORLD, &win);
+#endif
   MPI_Win_get_group(win, &group);
   
   MPI_Win_post(group, 0, win);

@@ -59,13 +59,18 @@ int main(int argc, char **argv) {
 
     /* Create the window */
 
+#ifdef USE_WIN_ALLOCATE
+    MPI_Win_allocate(nproc*sizeof(int), sizeof(int), MPI_INFO_NULL,
+                     MPI_COMM_WORLD, &win_buf, &win);
+#else
     MPI_Alloc_mem(nproc*sizeof(int), MPI_INFO_NULL, &win_buf);
-
-    for (i = 0; i < nproc; i++)
-        win_buf[i] = -1;
-
     MPI_Win_create(win_buf, nproc*sizeof(int), sizeof(int), MPI_INFO_NULL,
                    MPI_COMM_WORLD, &win);
+#endif
+    MPI_Win_lock(MPI_LOCK_SHARED, rank, 0, win);
+    for (i = 0; i < nproc; i++)
+        win_buf[i] = -1;
+    MPI_Win_unlock(rank, win);
 
     /* Perform PSCW communication: Odd/even matchup */
 
@@ -124,7 +129,9 @@ int main(int argc, char **argv) {
     }
 
     MPI_Win_free(&win);
+#ifndef USE_WIN_ALLOCATE
     MPI_Free_mem(win_buf);
+#endif
 
     MPI_Group_free(&world_group);
     MPI_Group_free(&odd_group);

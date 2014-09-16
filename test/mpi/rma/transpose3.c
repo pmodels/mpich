@@ -17,7 +17,7 @@
 
 int main(int argc, char *argv[]) 
 { 
-    int rank, nprocs, A[NROWS][NCOLS], i, j, destrank;
+    int rank, nprocs, i, j, destrank;
     MPI_Comm CommDeuce;
     MPI_Win win;
     MPI_Datatype column, xpose;
@@ -41,6 +41,8 @@ int main(int argc, char *argv[])
 
         if (rank == 0)
         {
+            int A[NROWS][NCOLS];
+
             for (i=0; i<NROWS; i++)
                 for (j=0; j<NCOLS; j++)
                     A[i][j] = i*NCOLS + j;
@@ -51,7 +53,12 @@ int main(int argc, char *argv[])
             MPI_Type_hvector(NCOLS, 1, sizeof(int), column, &xpose);
             MPI_Type_commit(&xpose);
 
+#ifdef USE_WIN_ALLOCATE
+            int *base_ptr = NULL;
+            MPI_Win_allocate(0, 1, MPI_INFO_NULL, CommDeuce, &base_ptr, &win);
+#else
             MPI_Win_create(NULL, 0, 1, MPI_INFO_NULL, CommDeuce, &win);
+#endif
 
             destrank = 1;
             MPI_Group_incl(comm_group, 1, &destrank, &group);
@@ -66,10 +73,19 @@ int main(int argc, char *argv[])
         }
         else
         { /* rank=1 */
+            int *A;
+#ifdef USE_WIN_ALLOCATE
+            MPI_Win_allocate(NROWS*NCOLS*sizeof(int), sizeof(int), MPI_INFO_NULL, CommDeuce, &A, &win);
+#else
+            MPI_Alloc_mem(NROWS*NCOLS*sizeof(int), MPI_INFO_NULL, &A);
+            MPI_Win_create(A, NROWS*NCOLS*sizeof(int), sizeof(int), MPI_INFO_NULL, CommDeuce, &win);
+#endif
+            MPI_Win_lock(MPI_LOCK_SHARED, rank, 0, win);
             for (i=0; i<NROWS; i++)
                 for (j=0; j<NCOLS; j++)
-                    A[i][j] = -1;
-            MPI_Win_create(A, NROWS*NCOLS*sizeof(int), sizeof(int), MPI_INFO_NULL, CommDeuce, &win);
+                    A[i*NCOLS+j] = -1;
+            MPI_Win_unlock(rank, win);
+
             destrank = 0;
             MPI_Group_incl(comm_group, 1, &destrank, &group);
             MPI_Win_post(group, 0, win);
@@ -79,12 +95,12 @@ int main(int argc, char *argv[])
             {
                 for (i=0; i<NROWS; i++)
                 {
-                    if (A[j][i] != i*NCOLS + j)
+                    if (A[j*NROWS+i] != i*NCOLS + j)
                     {
                         if (errs < 50)
                         {
                             SQUELCH( printf("Error: A[%d][%d]=%d should be %d\n", j, i,
-                                            A[j][i], i*NCOLS + j); );
+                                            A[j*NROWS+i], i*NCOLS + j); );
                         }
                         errs++;
                     }
@@ -94,6 +110,9 @@ int main(int argc, char *argv[])
             {
                 printf("Total number of errors: %d\n", errs);
             }
+#ifndef USE_WIN_ALLOCATE
+            MPI_Free_mem(A);
+#endif
         }
 
         MPI_Group_free(&group);

@@ -12,12 +12,15 @@ getgroup 4
 transpose1 2
 transpose2 2
 transpose3 2
+transpose3_shm 2
 transpose5 2
 transpose6 1
 transpose7 2
 test1 2
 test2 2
+test2_shm 2
 test3 2
+test3_shm 2
 test4 2
 test5 2
 lockcontention 3
@@ -29,10 +32,13 @@ transpose4 2
 fetchandadd 7
 fetchandadd_tree 7
 wintest 2
+wintest_shm 2
 contig_displ 1
 test1_am 2
 test2_am 2
+test2_am_shm 2
 test3_am 2
+test3_am_shm 2
 test4_am 2
 test5_am 2
 fetchandadd_am 7
@@ -40,6 +46,7 @@ fetchandadd_tree_am 7
 accfence2_am 4
 test1_dt 2 timeLimit=30
 nullpscw 7
+nullpscw_shm 7
 attrorderwin 1
 wincall 2
 baseattrwin 1
@@ -65,6 +72,7 @@ put_base 2
 put_bottom 2
 win_flavors 4 mpiversion=3.0
 manyrma2 2 timeLimit=500
+manyrma2_shm 2 timeLimit=500
 manyrma3 2
 win_shared 4 mpiversion=3.0
 win_shared_noncontig 4 mpiversion=3.0
@@ -97,6 +105,7 @@ req_example_shm 4 mpiversion=3.0
 win_info 4 mpiversion=3.0
 linked_list_lockall 4 mpiversion=3.0
 pscw_ordering 4 mpiversion=3.0
+pscw_ordering_shm 4 mpiversion=3.0
 linked_list_bench_lock_all 4 mpiversion=3.0
 linked_list_bench_lock_excl 4 mpiversion=3.0
 linked_list_bench_lock_shr 4 mpiversion=3.0

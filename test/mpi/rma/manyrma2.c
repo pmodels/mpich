@@ -112,6 +112,14 @@ int main(int argc, char *argv[])
     MPI_Group_free(&wgroup);
 
     arraysize = maxSz * MAX_COUNT;
+#ifdef USE_WIN_ALLOCATE
+    MPI_Win_allocate(arraysize * sizeof(int), (int) sizeof(int), MPI_INFO_NULL,
+                     MPI_COMM_WORLD, &arraybuffer, &win);
+    if (!arraybuffer) {
+        fprintf(stderr, "Unable to allocate %d words\n", arraysize);
+        MPI_Abort(MPI_COMM_WORLD, 1);
+    }
+#else
     arraybuffer = (int *) malloc(arraysize * sizeof(int));
     if (!arraybuffer) {
         fprintf(stderr, "Unable to allocate %d words\n", arraysize);
@@ -120,6 +128,7 @@ int main(int argc, char *argv[])
 
     MPI_Win_create(arraybuffer, arraysize * sizeof(int), (int) sizeof(int),
                    MPI_INFO_NULL, MPI_COMM_WORLD, &win);
+#endif
 
     if (maxCount > MAX_COUNT) {
         fprintf(stderr, "MaxCount must not exceed %d\n", MAX_COUNT);
@@ -211,6 +220,10 @@ int main(int argc, char *argv[])
     }
 
     MPI_Win_free(&win);
+
+#ifndef USE_WIN_ALLOCATE
+    free(arraybuffer);
+#endif
 
     MPI_Group_free(&accessGroup);
     MPI_Group_free(&exposureGroup);

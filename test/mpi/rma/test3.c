@@ -44,31 +44,51 @@ int main(int argc, char *argv[])
             printf("Can't allocate memory in test program\n");
             MPI_Abort(MPI_COMM_WORLD, 1);
         }
-        B = (int *) malloc(SIZE * sizeof(int));
-        if (!B) {
-            printf("Can't allocate memory in test program\n");
-            MPI_Abort(MPI_COMM_WORLD, 1);
-        }
 
         MPI_Comm_group(CommDeuce, &comm_group);
 
         if (rank == 0) {
+            B = (int *) malloc(SIZE * sizeof(int));
+            if (!B) {
+                printf("Can't allocate memory in test program\n");
+                MPI_Abort(MPI_COMM_WORLD, 1);
+            }
+
             for (i=0; i<SIZE; i++) {
                 A[i] = i;
                 B[i] = SIZE + i;
             }
+#ifdef USE_WIN_ALLOCATE
+            char *base_ptr;
+            MPI_Win_allocate(0, 1, MPI_INFO_NULL, CommDeuce, &base_ptr, &win);
+#else
             MPI_Win_create(NULL, 0, 1, MPI_INFO_NULL, CommDeuce, &win);
+#endif
             destrank = 1;
             MPI_Group_incl(comm_group, 1, &destrank, &group);
             MPI_Win_start(group, 0, win);
             MPI_Put(A, SIZE, MPI_INT, 1, 0, SIZE, MPI_INT, win);
             MPI_Win_complete(win);
             MPI_Send(B, SIZE, MPI_INT, 1, 100, MPI_COMM_WORLD);
+
+            free(B);
         }
 
         else if (rank == 1) {
-            for (i=0; i<SIZE; i++) A[i] = B[i] = (-4)*i;
+#ifdef USE_WIN_ALLOCATE
+            MPI_Win_allocate(SIZE*sizeof(int), sizeof(int), MPI_INFO_NULL, CommDeuce, &B, &win);
+#else
+            B = (int *) malloc(SIZE * sizeof(int));
+            if (!B) {
+                printf("Can't allocate memory in test program\n");
+                MPI_Abort(MPI_COMM_WORLD, 1);
+            }
             MPI_Win_create(B, SIZE*sizeof(int), sizeof(int), MPI_INFO_NULL, CommDeuce, &win);
+#endif
+            MPI_Win_lock(MPI_LOCK_SHARED, rank, 0, win);
+            for (i=0; i<SIZE; i++) A[i] = B[i] = (-4)*i;
+            MPI_Win_unlock(rank, win);
+
             destrank = 0;
             MPI_Group_incl(comm_group, 1, &destrank, &group);
             MPI_Win_post(group, 0, win);
@@ -85,13 +105,15 @@ int main(int argc, char *argv[])
                     errs++;
                 }
             }
+#ifndef USE_WIN_ALLOCATE
+            free(B);
+#endif
         }
 
         MPI_Group_free(&group);
         MPI_Group_free(&comm_group);
         MPI_Win_free(&win);
         free(A);
-        free(B);
     }
     MPI_Comm_free(&CommDeuce);
     MTest_Finalize(errs);

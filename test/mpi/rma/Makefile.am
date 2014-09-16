@@ -17,7 +17,9 @@ noinst_PROGRAMS =          \
     ircpi                  \
     test1                  \
     test2                  \
+    test2_shm              \
     test3                  \
+    test3_shm              \
     test4                  \
     test5                  \
     lockcontention         \
@@ -30,9 +32,11 @@ noinst_PROGRAMS =          \
     put_bottom             \
     locknull               \
     wintest                \
+    wintest_shm            \
     transpose1             \
     transpose2             \
     transpose3             \
+    transpose3_shm         \
     transpose4             \
     transpose5             \
     transpose6             \
@@ -53,7 +57,9 @@ noinst_PROGRAMS =          \
     contig_displ           \
     test1_am               \
     test2_am               \
+    test2_am_shm           \
     test3_am               \
+    test3_am_shm           \
     test4_am               \
     test5_am               \
     fetchandadd_am         \
@@ -65,10 +71,12 @@ noinst_PROGRAMS =          \
     fkeyvalwin             \
     baseattrwin            \
     nullpscw               \
+    nullpscw_shm	   \
     rmanull                \
     rmazero                \
     mixedsync              \
     manyrma2		   \
+    manyrma2_shm           \
     manyrma3		   \
     selfrma                \
     strided_acc_onelock    \
@@ -118,6 +126,7 @@ noinst_PROGRAMS =          \
     req_example_shm        \
     win_info               \
     pscw_ordering          \
+    pscw_ordering_shm	   \
     mutex_bench            \
     mutex_bench_shared     \
     mutex_bench_shm        \
@@ -172,6 +181,26 @@ get_accumulate_int_derived_SOURCES      = get_accumulate.c
 
 req_example_shm_CPPFLAGS         = -DUSE_WIN_ALLOC_SHM $(AM_CPPFLAGS)
 req_example_shm_SOURCES          = req_example.c
+
+manyrma2_shm_CPPFLAGS            = -DUSE_WIN_ALLOCATE $(AM_CPPFLAGS)
+wintest_shm_CPPFLAGS             = -DUSE_WIN_ALLOCATE $(AM_CPPFLAGS)
+transpose3_shm_CPPFLAGS          = -DUSE_WIN_ALLOCATE $(AM_CPPFLAGS)
+nullpscw_shm_CPPFLAGS            = -DUSE_WIN_ALLOCATE $(AM_CPPFLAGS)
+pscw_ordering_shm_CPPFLAGS       = -DUSE_WIN_ALLOCATE $(AM_CPPFLAGS)
+test2_shm_CPPFLAGS               = -DUSE_WIN_ALLOCATE $(AM_CPPFLAGS)
+test2_am_shm_CPPFLAGS            = -DUSE_WIN_ALLOCATE $(AM_CPPFLAGS)
+test3_shm_CPPFLAGS               = -DUSE_WIN_ALLOCATE $(AM_CPPFLAGS)
+test3_am_shm_CPPFLAGS            = -DUSE_WIN_ALLOCATE $(AM_CPPFLAGS)
+
+manyrma2_shm_SOURCES             = manyrma2.c
+wintest_shm_SOURCES              = wintest.c
+transpose3_shm_SOURCES           = transpose3.c
+nullpscw_shm_SOURCES             = nullpscw.c
+pscw_ordering_shm_SOURCES        = pscw_ordering.c
+test2_shm_SOURCES                = test2.c
+test2_am_shm_SOURCES             = test2_am.c
+test3_shm_SOURCES                = test3.c
+test3_am_shm_SOURCES             = test3_am.c
 
 mutex_bench_SOURCES              = mutex_bench.c mcs-mutex.c mcs-mutex.h
 mutex_bench_shared_CPPFLAGS      = -DUSE_WIN_SHARED $(AM_CPPFLAGS)
