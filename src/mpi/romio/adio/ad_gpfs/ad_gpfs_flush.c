@@ -42,10 +42,7 @@ void ADIOI_GPFS_Flush(ADIO_File fd, int *error_code)
 	if (err == -1) err = errno;
 	else err = 0;
     }
-    /* Just pick an errno (using unsigned MPI_MAX) from any failures.  We use
-     * MPI_Allreduce in case one day we wish to fsync from more than one
-     * process */
-    MPI_Allreduce( MPI_IN_PLACE, (unsigned*)&err, 1, MPI_UNSIGNED, MPI_MAX, fd->comm);
+    MPI_Bcast(&err, 1, MPI_UNSIGNED, fd->hints->ranklist[0], fd->comm);
     DBGV_FPRINTF(stderr,"aggregation result:fsync %s, errno %#X,\n",fd->filename, err);
 
     if (err) /* if it's non-zero, it must be an errno */
