@@ -2567,8 +2567,14 @@ int MPIDI_Win_start(MPID_Group *group_ptr, int assert, MPID_Win *win_ptr)
     mpi_errno = fill_ranks_in_win_grp(win_ptr, ranks_in_win_grp);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
-    mpi_errno = recv_post_msgs(win_ptr, ranks_in_win_grp, 1);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    /* If MPI_MODE_NOCHECK was not specified, we need to check if
+       Win_post was called on the target processes on SHM window.
+       Wait for a 0-byte sync message from each target process. */
+    if ((win_ptr->start_assert & MPI_MODE_NOCHECK) == 0)
+    {
+        mpi_errno = recv_post_msgs(win_ptr, ranks_in_win_grp, 1);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    }
 
     /* Ensure ordering of load/store operations */
     if (win_ptr->shm_allocated == TRUE) {
