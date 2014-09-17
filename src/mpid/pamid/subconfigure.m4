@@ -196,6 +196,17 @@ if test "${pamid_platform}" = "BGQ" ; then
   PAC_APPEND_FLAG([-lpthread],        [LIBS])
   PAC_APPEND_FLAG([-lstdc++],         [LIBS])
 
+  dnl
+  dnl The wrapper scripts require these libraries.
+  dnl
+  PAC_APPEND_FLAG([-l${PAMILIBNAME}], [WRAPPER_LIBS])
+  PAC_APPEND_FLAG([-lSPI],            [WRAPPER_LIBS])
+  PAC_APPEND_FLAG([-lSPI_cnk],        [WRAPPER_LIBS])
+  PAC_APPEND_FLAG([-lrt],             [WRAPPER_LIBS])
+  PAC_APPEND_FLAG([-lpthread],        [WRAPPER_LIBS])
+  PAC_APPEND_FLAG([-lstdc++],         [WRAPPER_LIBS])
+
+
   AC_SEARCH_LIBS([PAMI_Send], [${PAMILIBNAME} pami-gcc])
 
 
