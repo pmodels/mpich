@@ -101,6 +101,19 @@ if test "$with_shared_memory" != "mmap" -a "$with_shared_memory" != "sysv"; then
 fi
 
 dnl
+dnl The default is to enable the use of the recv queue binary search
+dnl ... except on BGQ
+dnl
+enable_queue_binary_search=yes
+if test "${pamid_platform}" = "BGQ" ; then
+  enable_queue_binary_search=no
+fi
+
+AC_ARG_ENABLE(queue-binary-search,
+        AC_HELP_STRING([--queue-binary-search], [Enable C++ binary search]),enable_queue_binary_search=no,enable_queue_binary_search=yes)
+AM_CONDITIONAL([QUEUE_BINARY_SEARCH_SUPPORT],[test "$enable_queue_binary_search" = "yes"])
+
+dnl
 dnl This configure option allows "sandbox" bgq system software to be used.
 dnl
 AC_ARG_WITH(bgq-install-dir,
@@ -315,7 +328,6 @@ if test "$have_pami_geometry_memory_optimize" != "0"; then
 else
   AC_MSG_RESULT('no')
 fi
-
 
 
 

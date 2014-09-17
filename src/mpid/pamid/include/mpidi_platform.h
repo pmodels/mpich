@@ -142,7 +142,6 @@ static const char _ibm_release_version_[] = "V1R2M0";
 #define MPIDI_NO_ASSERT       1
 #define TOKEN_FLOW_CONTROL    1
 #define DYNAMIC_TASKING       1
-#define QUEUE_BINARY_SEARCH_SUPPORT 1
 
 /* 'is local task' extension and limits */
 #define PAMIX_IS_LOCAL_TASK

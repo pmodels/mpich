@@ -58,8 +58,14 @@ mpi_core_sources +=               \
     src/mpid/pamid/src/mpid_mprobe.c            \
     src/mpid/pamid/src/mpid_imrecv.c            \
     src/mpid/pamid/src/mpid_improbe.c           \
-    src/mpid/pamid/src/mpidi_nbc_sched.c        \
+    src/mpid/pamid/src/mpidi_nbc_sched.c
+
+if QUEUE_BINARY_SEARCH_SUPPORT
+mpi_core_sources +=                             \
     src/mpid/pamid/src/mpid_recvq_mmap.cpp
+endif QUEUE_BINARY_SEARCH_SUPPORT
+
+
 
 endif BUILD_PAMID
 
