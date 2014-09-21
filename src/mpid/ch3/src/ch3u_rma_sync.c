@@ -1308,6 +1308,11 @@ int MPIDI_Win_fence(int assert, MPID_Win *win_ptr)
 	    if (curr_ops_cnt[curr_ptr->target_rank] ==
                 nops_to_proc[curr_ptr->target_rank] - 1) {
                 flags = MPIDI_CH3_PKT_FLAG_RMA_AT_COMPLETE;
+                if (curr_ptr->type == MPIDI_RMA_PUT ||
+                    curr_ptr->type == MPIDI_RMA_ACCUMULATE) {
+                    flags |= MPIDI_CH3_PKT_FLAG_RMA_REQ_ACK;
+                    win_ptr->ack_counter++;
+                }
             }
 
             source_win_handle = win_ptr->handle;
@@ -1380,11 +1385,12 @@ int MPIDI_Win_fence(int assert, MPID_Win *win_ptr)
 	
  finish_up:
 	/* wait for all operations from other processes to finish */
-	if (win_ptr->my_counter)
+        /* waiting for acknowledgement packets from targets to arrive */
+	if (win_ptr->my_counter || win_ptr->ack_counter)
 	{
 	    MPIR_T_PVAR_TIMER_START(RMA, rma_winfence_wait);
 	    MPID_Progress_start(&progress_state);
-	    while (win_ptr->my_counter)
+	    while (win_ptr->my_counter || win_ptr->ack_counter)
 	    {
 		mpi_errno = MPID_Progress_wait(&progress_state);
 		/* --BEGIN ERROR HANDLING-- */
@@ -2603,6 +2609,7 @@ int MPIDI_Win_complete(MPID_Win *win_ptr)
     MPID_Comm *comm_ptr;
     MPI_Win source_win_handle, target_win_handle;
     int start_grp_size, *ranks_in_win_grp, rank;
+    MPID_Progress_state progress_state;
     int nRequest = 0;
     int nRequestNew = 0;
     MPIU_CHKLMEM_DECL(6);
@@ -2613,12 +2620,6 @@ int MPIDI_Win_complete(MPID_Win *win_ptr)
     MPIU_ERR_CHKANDJUMP(win_ptr->epoch_state != MPIDI_EPOCH_PSCW &&
                         win_ptr->epoch_state != MPIDI_EPOCH_START,
                         mpi_errno, MPI_ERR_RMA_SYNC, "**rmasync");
-
-    /* Track access epoch state */
-    if (win_ptr->epoch_state == MPIDI_EPOCH_PSCW)
-        win_ptr->epoch_state = MPIDI_EPOCH_POST;
-    else
-        win_ptr->epoch_state = MPIDI_EPOCH_NONE;
 
     comm_ptr = win_ptr->comm_ptr;
     comm_size = comm_ptr->local_size;
@@ -2700,6 +2701,11 @@ int MPIDI_Win_complete(MPID_Win *win_ptr)
 	if (curr_ops_cnt[curr_ptr->target_rank] ==
 	    nops_to_proc[curr_ptr->target_rank] - 1) {
             flags = MPIDI_CH3_PKT_FLAG_RMA_AT_COMPLETE;
+            if (curr_ptr->type == MPIDI_RMA_PUT ||
+                curr_ptr->type == MPIDI_RMA_ACCUMULATE) {
+                win_ptr->ack_counter++;
+                flags |= MPIDI_CH3_PKT_FLAG_RMA_REQ_ACK;
+            }
         }
 
         source_win_handle = win_ptr->handle;
@@ -2802,10 +2808,33 @@ int MPIDI_Win_complete(MPID_Win *win_ptr)
     }
 
     MPIU_Assert(MPIDI_CH3I_RMA_Ops_isempty(ops_list));
+
+    /* waiting for acknowledgement packets from targets to arrive */
+    if (win_ptr->ack_counter)
+    {
+        MPID_Progress_start(&progress_state);
+        while (win_ptr->ack_counter)
+        {
+            mpi_errno = MPID_Progress_wait(&progress_state);
+            /* --BEGIN ERROR HANDLING-- */
+            if (mpi_errno != MPI_SUCCESS) {
+                MPID_Progress_end(&progress_state);
+                MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**winnoprogress");
+            }
+            /* --END ERROR HANDLING-- */
+        }
+        MPID_Progress_end(&progress_state);
+    }
     
     /* free the group stored in window */
     MPIR_Group_release(win_ptr->start_group_ptr);
     win_ptr->start_group_ptr = NULL; 
+
+    /* Track access epoch state */
+    if (win_ptr->epoch_state == MPIDI_EPOCH_PSCW)
+        win_ptr->epoch_state = MPIDI_EPOCH_POST;
+    else
+        win_ptr->epoch_state = MPIDI_EPOCH_NONE;
     
  fn_exit:
     MPIU_CHKLMEM_FREEALL();
@@ -5807,12 +5836,21 @@ int MPIDI_CH3_PktHandler_PtRMADone( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
     *buflen = sizeof(MPIDI_CH3_Pkt_t);
 
     MPID_Win_get_ptr(pt_rma_done_pkt->source_win_handle, win_ptr);
+
+    if (win_ptr->epoch_state == MPIDI_EPOCH_FENCE ||
+        win_ptr->epoch_state == MPIDI_EPOCH_PSCW ||
+        win_ptr->epoch_state == MPIDI_EPOCH_START) {
+        win_ptr->ack_counter--;
+        MPIU_Assert(win_ptr->ack_counter >= 0);
+    }
+    else {
     MPIU_Assert(win_ptr->targets[pt_rma_done_pkt->target_rank].remote_lock_state != MPIDI_CH3_WIN_LOCK_NONE);
 
     if (win_ptr->targets[pt_rma_done_pkt->target_rank].remote_lock_state == MPIDI_CH3_WIN_LOCK_FLUSH)
         win_ptr->targets[pt_rma_done_pkt->target_rank].remote_lock_state = MPIDI_CH3_WIN_LOCK_GRANTED;
     else
         win_ptr->targets[pt_rma_done_pkt->target_rank].remote_lock_state = MPIDI_CH3_WIN_LOCK_NONE;
+    }
 
     *rreqp = NULL;
     MPIDI_CH3_Progress_signal_completion();	
@@ -6136,6 +6174,11 @@ int MPIDI_CH3_Finish_rma_op_target(MPIDI_VC_t *vc, MPID_Win *win_ptr, int is_rma
 
         win_ptr->my_counter -= 1;
         MPIU_Assert(win_ptr->my_counter >= 0);
+
+        if (flags & MPIDI_CH3_PKT_FLAG_RMA_REQ_ACK) {
+            mpi_errno = MPIDI_CH3I_Send_pt_rma_done_pkt(vc, win_ptr, source_win_handle);
+            if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
+        }
 
         /* Signal the local process when the op counter reaches 0. */
         if (win_ptr->my_counter == 0)

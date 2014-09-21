@@ -302,6 +302,7 @@ struct MPIDI_Win_target_state {
     int start_assert;   /* assert passed to MPI_Win_start */             \
     int shm_allocated; /* flag: TRUE iff this window has a shared memory \
                           region associated with it */                   \
+    int ack_counter; /* counter for acknowledgement message at origin */ \
 
 #ifdef MPIDI_CH3_WIN_DECL
 #define MPID_DEV_WIN_DECL \
