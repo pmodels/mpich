@@ -6205,6 +6205,10 @@ int MPIDI_CH3_Finish_rma_op_target(MPIDI_VC_t *vc, MPID_Win *win_ptr, int is_rma
         MPIDI_CH3_Progress_signal_completion();
     }
     else if (flags & MPIDI_CH3_PKT_FLAG_RMA_FLUSH) {
+        /* Ensure store instructions have been performed before flush call is
+         * finished on origin process. */
+        OPA_read_write_barrier();
+
         if (flags & MPIDI_CH3_PKT_FLAG_RMA_REQ_ACK) {
             MPIDI_CH3_Pkt_t upkt;
             MPIDI_CH3_Pkt_flush_t *flush_pkt = &upkt.flush;
