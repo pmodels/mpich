@@ -326,46 +326,48 @@ do {                                                                            
 /******************************************************************************
  * singly linked list macros (non-circular)                                   *
  *****************************************************************************/
-#define MPL_LL_PREPEND(head,add) MPL_LL_PREPEND_N(head,add,next)
-#define MPL_LL_PREPEND_N(head,add,_next)                                                       \
+#define MPL_LL_PREPEND(head,tail,add) MPL_LL_PREPEND_N(head,tail,add,next)
+#define MPL_LL_PREPEND_N(head,tail,add,_next)                                                  \
 do {                                                                                           \
   (add)->_next = head;                                                                         \
   head = add;                                                                                  \
+  if ((add)->_next == NULL)                                                                    \
+    (tail) = (add);                                                                            \
 } while (0)
 
-#define MPL_LL_CONCAT(head1,head2) MPL_LL_CONCAT_N(head1,head2,next)
-#define MPL_LL_CONCAT_N(head1,head2,_next)                                                     \
+#define MPL_LL_CONCAT(head1,head2,tail1,tail2) MPL_LL_CONCAT_N(head1,head2,tail1,tail2,next)
+#define MPL_LL_CONCAT_N(head1,head2,tail1,tail2,_next)                                         \
 do {                                                                                           \
-  MPL_LDECLTYPE(head1) _tmp;                                                                   \
-  if (head1) {                                                                                 \
-    _tmp = head1;                                                                              \
-    while (_tmp->_next) { _tmp = _tmp->_next; }                                                \
-    _tmp->_next=(head2);                                                                       \
+  if (tail1) {                                                                                 \
+    (tail1)->_next=(head2);                                                                    \
   } else {                                                                                     \
     (head1)=(head2);                                                                           \
   }                                                                                            \
-} while (0)
-
-#define MPL_LL_APPEND(head,add) MPL_LL_APPEND_N(head,add,next)
-#define MPL_LL_APPEND_N(head,add,_next)                                                        \
-do {                                                                                           \
-  MPL_LDECLTYPE(head) _tmp;                                                                    \
-  (add)->_next=NULL;                                                                           \
-  if (head) {                                                                                  \
-    _tmp = head;                                                                               \
-    while (_tmp->_next) { _tmp = _tmp->_next; }                                                \
-    _tmp->_next=(add);                                                                         \
-  } else {                                                                                     \
-    (head)=(add);                                                                              \
+  if (tail2) {                                                                                 \
+    (tail1)=(tail2);                                                                           \
   }                                                                                            \
 } while (0)
 
-#define MPL_LL_DELETE(head,del) MPL_LL_DELETE_N(head,del,next)
-#define MPL_LL_DELETE_N(head,del,_next)                                                        \
+#define MPL_LL_APPEND(head,tail,add) MPL_LL_APPEND_N(head,tail,add,next)
+#define MPL_LL_APPEND_N(head,tail,add,_next)                                                   \
+do {                                                                                           \
+  (add)->_next=NULL;                                                                           \
+  if (tail) {                                                                                  \
+    (tail)->_next=(add);                                                                       \
+  } else {                                                                                     \
+    (head)=(add);                                                                              \
+  }                                                                                            \
+  (tail)=(add);                                                                                \
+} while (0)
+
+#define MPL_LL_DELETE(head,tail,del) MPL_LL_DELETE_N(head,tail,del,next)
+#define MPL_LL_DELETE_N(head,tail,del,_next)                                                   \
 do {                                                                                           \
   MPL_LDECLTYPE(head) _tmp;                                                                    \
   if ((head) == (del)) {                                                                       \
     (head)=(head)->_next;                                                                      \
+    if ((tail) == (del))                                                                       \
+      (tail)=(head);                                                                           \
   } else {                                                                                     \
     _tmp = head;                                                                               \
     while (_tmp->_next && (_tmp->_next != (del))) {                                            \
@@ -373,29 +375,20 @@ do {                                                                            
     }                                                                                          \
     if (_tmp->_next) {                                                                         \
       _tmp->_next = ((del)->_next);                                                            \
+      if ((tail) == (del))                                                                     \
+        (tail)=_tmp;                                                                           \
     }                                                                                          \
   }                                                                                            \
 } while (0)
 
-/* Here are VS2008 replacements for MPL_LL_APPEND and MPL_LL_DELETE */
-#define MPL_LL_APPEND_VS2008(head,add) MPL_LL_APPEND_N_VS2008(head,add,next)
-#define MPL_LL_APPEND_N_VS2008(head,add,_next)                                                 \
-do {                                                                                           \
-  if (head) {                                                                                  \
-    (add)->_next = head;     /* use add->_next as a temp variable */                           \
-    while ((add)->_next->_next) { (add)->_next = (add)->_next->_next; }                        \
-    (add)->_next->_next=(add);                                                                 \
-  } else {                                                                                     \
-    (head)=(add);                                                                              \
-  }                                                                                            \
-  (add)->_next=NULL;                                                                           \
-} while (0)
-
-#define MPL_LL_DELETE_VS2008(head,del) MPL_LL_DELETE_N_VS2008(head,del,next)
-#define MPL_LL_DELETE_N_VS2008(head,del,_next)                                                 \
+/* Here are VS2008 replacements for MPL_LL_DELETE */
+#define MPL_LL_DELETE_VS2008(head,tail,del) MPL_LL_DELETE_N_VS2008(head,tail,del,next)
+#define MPL_LL_DELETE_N_VS2008(head,tail,del,_next)                                            \
 do {                                                                                           \
   if ((head) == (del)) {                                                                       \
     (head)=(head)->_next;                                                                      \
+    if ((tail) == (del))                                                                       \
+      (tail)=(head);                                                                           \
   } else {                                                                                     \
     char *_tmp = (char*)(head);                                                                \
     while (head->_next && (head->_next != (del))) {                                            \
@@ -403,6 +396,8 @@ do {                                                                            
     }                                                                                          \
     if (head->_next) {                                                                         \
       head->_next = ((del)->_next);                                                            \
+      if ((tail) == (del))                                                                     \
+        (tail)=(head);                                                                         \
     }                                                                                          \
     {                                                                                          \
       char **_head_alias = (char**)&(head);                                                    \
@@ -411,11 +406,8 @@ do {                                                                            
   }                                                                                            \
 } while (0)
 #ifdef MPL_NO_DECLTYPE
-#undef MPL_LL_APPEND
-#define MPL_LL_APPEND MPL_LL_APPEND_VS2008
 #undef MPL_LL_DELETE
 #define MPL_LL_DELETE MPL_LL_DELETE_VS2008
-#undef MPL_LL_CONCAT /* no MPL_LL_CONCAT_VS2008 */
 #undef MPL_DL_CONCAT /* no MPL_DL_CONCAT_VS2008 */
 #endif
 /* end VS2008 replacements */

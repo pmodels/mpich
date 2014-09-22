@@ -24,6 +24,7 @@ typedef struct MPID_nem_ptl_sendbuf {
 
 static MPID_nem_ptl_sendbuf_t sendbuf[NUM_SEND_BUFS];
 static MPID_nem_ptl_sendbuf_t *free_head = NULL;
+static MPID_nem_ptl_sendbuf_t *free_tail = NULL;
 
 static char recvbuf[BUFLEN][NUM_RECV_BUFS];
 static ptl_me_t recvbuf_me[NUM_RECV_BUFS];
@@ -31,8 +32,8 @@ static ptl_handle_me_t recvbuf_me_handle[NUM_RECV_BUFS];
 
 #define FREE_EMPTY() (free_head == NULL)
 #define FREE_HEAD() free_head
-#define FREE_PUSH(buf_p) MPL_LL_PREPEND(free_head, buf_p)
-#define FREE_POP(buf_pp) do { *(buf_pp) = free_head; MPL_LL_DELETE(free_head, free_head); } while (0)
+#define FREE_PUSH(buf_p) MPL_LL_PREPEND(free_head, free_tail, buf_p)
+#define FREE_POP(buf_pp) do { *(buf_pp) = free_head; MPL_LL_DELETE(free_head, free_tail, free_head); } while (0)
 
 static struct {MPID_Request *head, *tail;} send_queue;
 

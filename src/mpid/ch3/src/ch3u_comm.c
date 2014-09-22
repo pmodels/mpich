@@ -45,8 +45,10 @@ typedef struct hook_elt
     struct hook_elt *next;
 } hook_elt;
 
-static hook_elt *create_hooks = NULL;
-static hook_elt *destroy_hooks = NULL;
+static hook_elt *create_hooks_head = NULL;
+static hook_elt *destroy_hooks_head = NULL;
+static hook_elt *create_hooks_tail = NULL;
+static hook_elt *destroy_hooks_tail = NULL;
 
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3U_Comm_init
@@ -98,7 +100,7 @@ int MPIDI_CH3I_Comm_create_hook(MPID_Comm *comm)
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3U_COMM_CREATE_HOOK);
 
-    MPL_LL_FOREACH(create_hooks, elt) {
+    MPL_LL_FOREACH(create_hooks_head, elt) {
         mpi_errno = elt->hook_fn(comm, elt->param);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);;
     }
@@ -122,7 +124,7 @@ int MPIDI_CH3I_Comm_destroy_hook(MPID_Comm *comm)
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3U_COMM_DESTROY_HOOK);
 
-    MPL_LL_FOREACH(destroy_hooks, elt) {
+    MPL_LL_FOREACH(destroy_hooks_head, elt) {
         mpi_errno = elt->hook_fn(comm, elt->param);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     }
@@ -153,7 +155,7 @@ int MPIDI_CH3U_Comm_register_create_hook(int (*hook_fn)(struct MPID_Comm *, void
     elt->hook_fn = hook_fn;
     elt->param = param;
     
-    MPL_LL_PREPEND(create_hooks, elt);
+    MPL_LL_PREPEND(create_hooks_head, create_hooks_tail, elt);
 
  fn_exit:
     MPIU_CHKPMEM_COMMIT();
@@ -182,7 +184,7 @@ int MPIDI_CH3U_Comm_register_destroy_hook(int (*hook_fn)(struct MPID_Comm *, voi
     elt->hook_fn = hook_fn;
     elt->param = param;
     
-    MPL_LL_PREPEND(destroy_hooks, elt);
+    MPL_LL_PREPEND(destroy_hooks_head, destroy_hooks_tail, elt);
 
  fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3U_COMM_REGISTER_DESTROY_HOOK);
@@ -204,13 +206,13 @@ static int register_hook_finalize(void *param)
 
     MPIDI_FUNC_ENTER(MPID_STATE_REGISTER_HOOK_FINALIZE);
 
-    MPL_LL_FOREACH_SAFE(create_hooks, elt, tmp) {
-        MPL_LL_DELETE(create_hooks, elt);
+    MPL_LL_FOREACH_SAFE(create_hooks_head, elt, tmp) {
+        MPL_LL_DELETE(create_hooks_head, create_hooks_tail, elt);
         MPIU_Free(elt);
     }
     
-    MPL_LL_FOREACH_SAFE(destroy_hooks, elt, tmp) {
-        MPL_LL_DELETE(destroy_hooks, elt);
+    MPL_LL_FOREACH_SAFE(destroy_hooks_head, elt, tmp) {
+        MPL_LL_DELETE(destroy_hooks_head, destroy_hooks_tail, elt);
         MPIU_Free(elt);
     }
 
