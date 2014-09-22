@@ -3,13 +3,6 @@
 # (C) 2008 by Argonne National Laboratory.
 #     See COPYRIGHT in top-level directory.
 #
-#
-# Known limitations:
-#
-#    1. ABI mismatch checks are run using a git diff in mpi.h.in and
-#    the binding directory. This can come up with false positives, and
-#    is only meant to be a worst-case guess.
-#
 
 use strict;
 use warnings;
@@ -20,17 +13,12 @@ use File::Temp qw( tempdir );
 
 my $arg = 0;
 my $branch = "";
-my $pbranch = "";
 my $version = "";
 my $append_commit_id;
-my $since = "";
 my $root = cwd();
 my $with_autoconf = "";
 my $with_automake = "";
-my $remote_git_repo = "";
-
-# Default to MPICH
-my $prefix = "mpich";
+my $git_repo = "";
 
 my $logfile = "release.log";
 
@@ -39,14 +27,10 @@ sub usage
     print "Usage: $0 [OPTIONS]\n\n";
     print "OPTIONS:\n";
 
+    print "\t--git-repo           path to root of the git repository (required)\n";
     print "\t--branch             git branch to be packaged (required)\n";
-    print "\t--pbranch            git previous version branch for ABI compliance (required)\n";
     print "\t--version            tarball version (required)\n";
-    print "\t--remote-git-repo    path to root of the git repository (required)\n";
-
-    print "\t--prefix             package prefix to use (optional)\n";
-    print "\t--append-commit-id   append git commit ID (optional)\n";
-    print "\t--newer-than         date (optional)\n";
+    print "\t--append-commit-id   append git commit description (optional)\n";
 
     print "\n";
 
@@ -137,14 +121,11 @@ sub run_cmd
 
 GetOptions(
     "branch=s" => \$branch,
-    "pbranch=s" => \$pbranch,
-    "prefix:s"  => \$prefix,
     "version=s" => \$version,
     "append-commit-id!" => \$append_commit_id,
-    "newer-than=s" => \$since,
     "with-autoconf" => \$with_autoconf,
     "with-automake" => \$with_automake,
-    "remote-git-repo=s" => \$remote_git_repo,
+    "git-repo=s" => \$git_repo,
     "help"     => \&usage,
 
     # old deprecated args, retained with usage() to help catch non-updated cron
@@ -156,7 +137,7 @@ if (scalar(@ARGV) != 0) {
     usage();
 }
 
-if (!$branch || !$version || !$pbranch) {
+if (!$branch || !$version) {
     usage();
 }
 
@@ -178,41 +159,22 @@ print("\n");
 
 
 my $tdir = tempdir(CLEANUP => 1);
-my $local_git_clone = "${tdir}/${prefix}-clone";
+my $local_git_clone = "${tdir}/mpich-clone";
 
 
 # clone git repo
 print("===> Cloning git repo... ");
-run_cmd("git clone ${remote_git_repo} ${local_git_clone}");
+run_cmd("git clone ${git_repo} ${local_git_clone}");
 print("done\n");
 
 # chdirs to $local_git_clone if valid
 check_git_repo($local_git_clone);
 print("\n");
 
-if ($since) {
-    # If there have been no commits in the past some amount of time,
-    # do not create a tarball
-    if (!(`git log --since='$since' ${branch}`)) {
-	chdir("${tdir}/..");
-	print "No recent commits found... aborting\n";
-	exit;
-    }
-}
-
 my $current_ver = `git show ${branch}:maint/version.m4 | grep MPICH_VERSION_m4 | \
                    sed -e 's/^.*\\[MPICH_VERSION_m4\\],\\[\\(.*\\)\\].*/\\1/g'`;
 if ("$current_ver" ne "$version\n") {
     print("\tWARNING: Version mismatch\n\n");
-}
-
-if ($pbranch) {
-    # Check diff
-    my $d = `git diff ${pbranch}:src/include/mpi.h.in ${branch}:src/include/mpi.h.in`;
-    $d .= `git diff ${pbranch}:src/binding ${branch}:src/binding`;
-    if ("$d" ne "") {
-	print("\tWARNING: ABI mismatch\n\n");
-    }
 }
 
 if ($append_commit_id) {
@@ -221,7 +183,7 @@ if ($append_commit_id) {
     $version .= "-${desc}";
 }
 
-my $expdir = "${tdir}/${prefix}-${version}";
+my $expdir = "${tdir}/mpich-${version}";
 
 # Clean up the log file
 system("rm -f ${root}/$logfile");
@@ -230,7 +192,7 @@ system("rm -f ${root}/$logfile");
 print("===> Exporting code from git... ");
 run_cmd("rm -rf ${expdir}");
 run_cmd("mkdir -p ${expdir}");
-run_cmd("git archive ${branch} --prefix='${prefix}-${version}/' | tar -x -C $tdir");
+run_cmd("git archive ${branch} --prefix='mpich-${version}/' | tar -x -C $tdir");
 print("done\n");
 
 print("===> Create release date and version information... ");
@@ -307,10 +269,10 @@ run_cmd("rm -f users-guide.blg users-guide.toc users-guide.aux users-guide.bbl u
 print("done\n");
 
 # Create the main tarball
-print("===> Creating the final ${prefix} tarball... ");
+print("===> Creating the final mpich tarball... ");
 chdir("${tdir}");
-run_cmd("tar -czvf ${prefix}-${version}.tar.gz ${prefix}-${version}");
-run_cmd("cp -a ${prefix}-${version}.tar.gz ${root}/");
+run_cmd("tar -czvf mpich-${version}.tar.gz mpich-${version}");
+run_cmd("cp -a mpich-${version}.tar.gz ${root}/");
 print("done\n");
 
 # Create the hydra tarball
