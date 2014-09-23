@@ -89,3 +89,15 @@ int MPID_Comm_agree(MPID_Comm *comm_ptr, uint32_t *bitarray, int *flag, int new_
   MPID_abort();
   return 0;
 }
+
+int MPID_Comm_get_all_failed_procs(MPID_Comm *comm_ptr, MPID_Group **failed_group, int tag)
+{
+  MPID_abort();
+  return 0;
+}
+
+int MPID_Comm_revoke(MPID_Comm *comm_ptr, int is_remote)
+{
+  MPID_abort();
+  return 0;
+}
