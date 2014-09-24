@@ -25,6 +25,7 @@ dnl _PREREQ handles the former role of mpichprereq, setup_device, etc
 [#] expansion is: PAC_SUBCFG_PREREQ_[]PAC_SUBCFG_AUTO_SUFFIX
 AC_DEFUN([PAC_SUBCFG_PREREQ_]PAC_SUBCFG_AUTO_SUFFIX,[
 AM_CONDITIONAL([BUILD_PAMID],[test "$device_name" = "pamid"])
+AM_CONDITIONAL([QUEUE_BINARY_SEARCH_SUPPORT],[test "$enable_queue_binary_search" = "yes"])
 
 AC_ARG_VAR([PAMILIBNAME],[can be used to override the name of the PAMI library (default: "pami")])
 original_PAMILIBNAME=${PAMILIBNAME}
@@ -109,8 +110,6 @@ if test "${pamid_platform}" = "BGQ" ; then
   enable_queue_binary_search=no
 fi
 
-AC_ARG_ENABLE(queue-binary-search,
-        AC_HELP_STRING([--queue-binary-search], [Enable C++ binary search]),enable_queue_binary_search=no,enable_queue_binary_search=yes)
 AM_CONDITIONAL([QUEUE_BINARY_SEARCH_SUPPORT],[test "$enable_queue_binary_search" = "yes"])
 
 dnl
