@@ -390,7 +390,11 @@ int MPID_nem_ptl_recv_posted(MPIDI_VC_t *vc, MPID_Request *rreq)
     MPIU_DBG_MSG_FMT(CH3_CHANNEL, VERBOSE, (MPIU_DBG_FDEST, "tag=%#x ctx=%#x rank=%#x", rreq->dev.match.parts.tag, rreq->dev.match.parts.context_id, rreq->dev.match.parts.rank));
     me.match_bits = NPTL_MATCH(rreq->dev.match.parts.tag, rreq->dev.match.parts.context_id,
                                rreq->dev.match.parts.rank);
-    me.ignore_bits = NPTL_MATCH_IGNORE;
+    if (rreq->dev.match.parts.tag == MPI_ANY_TAG)
+        me.ignore_bits = NPTL_MATCH_IGNORE_ANY_TAG;
+    else
+        me.ignore_bits = NPTL_MATCH_IGNORE;
+
     me.min_free = 0;
 
     MPIDI_Datatype_get_info(rreq->dev.user_count, rreq->dev.datatype, dt_contig, data_sz, dt_ptr, dt_true_lb);
