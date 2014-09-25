@@ -136,7 +136,8 @@ noinst_PROGRAMS =          \
     nb_test                \
     acc-loc                \
     fence_shm              \
-    get-struct
+    get-struct             \
+    at_complete
 
 strided_acc_indexed_LDADD       = $(LDADD) -lm
 strided_acc_onelock_LDADD       = $(LDADD) -lm
