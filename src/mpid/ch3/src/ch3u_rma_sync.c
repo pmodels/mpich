@@ -1269,7 +1269,7 @@ int MPIDI_Win_fence(int assert, MPID_Win *win_ptr)
 	   RMA ops on its window */  
             
 	/* first initialize the completion counter. */
-	win_ptr->my_counter = comm_size;
+	win_ptr->my_counter += comm_size;
             
 	mpi_errno = MPIR_Reduce_scatter_block_impl(MPI_IN_PLACE, rma_target_proc, 1,
                                                    MPI_INT, MPI_SUM, comm_ptr, &errflag);
@@ -1286,8 +1286,8 @@ int MPIDI_Win_fence(int assert, MPID_Win *win_ptr)
 	/* Set the completion counter */
 	/* FIXME: MT: this needs to be done atomically because other
 	   procs have the address and could decrement it. */
-	win_ptr->my_counter = win_ptr->my_counter - comm_size + 
-	    rma_target_proc[0];  
+        win_ptr->my_counter -= comm_size;
+        win_ptr->my_counter += rma_target_proc[0];
 
     MPIR_T_PVAR_TIMER_START(RMA, rma_winfence_issue);
     MPIR_T_PVAR_COUNTER_INC(RMA, rma_winfence_issue_aux, total_op_count);
@@ -2292,7 +2292,7 @@ int MPIDI_Win_post(MPID_Group *post_grp_ptr, int assert, MPID_Win *win_ptr)
     }
         
     /* initialize the completion counter */
-    win_ptr->my_counter = post_grp_size;
+    win_ptr->my_counter += post_grp_size;
         
     if ((assert & MPI_MODE_NOCHECK) == 0)
     {
@@ -4600,6 +4600,10 @@ int MPIDI_CH3_PktHandler_Get( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
     req->dev.target_win_handle = get_pkt->target_win_handle;
     req->dev.source_win_handle = get_pkt->source_win_handle;
     req->dev.flags = get_pkt->flags;
+
+    /* here we increment the Active Target counter to guarantee the GET-like
+       operation are completed when counter reaches zero. */
+    win_ptr->my_counter++;
     
     if (MPIR_DATATYPE_IS_PREDEFINED(get_pkt->datatype))
     {
@@ -4733,6 +4737,12 @@ int MPIDI_CH3_PktHandler_Accumulate( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
     req = MPID_Request_create();
     MPIU_Object_set_ref(req, 1);
     *rreqp = req;
+
+    if (accum_pkt->type == MPIDI_CH3_PKT_GET_ACCUM) {
+        /* here we increment the Active Target counter to guarantee the GET-like
+           operation are completed when counter reaches zero. */
+        win_ptr->my_counter++;
+    }
     
     req->dev.user_count = accum_pkt->count;
     req->dev.op = accum_pkt->op;
@@ -5085,6 +5095,10 @@ int MPIDI_CH3_PktHandler_FOP( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
     MPIU_ERR_CHKANDJUMP(req == NULL, mpi_errno, MPI_ERR_OTHER, "**nomemreq");
     MPIU_Object_set_ref(req, 1); /* Ref is held by progress engine */
     *rreqp = NULL;
+
+    /* here we increment the Active Target counter to guarantee the GET-like
+       operation are completed when counter reaches zero. */
+    win_ptr->my_counter++;
 
     req->dev.user_buf = NULL; /* will be set later */
     req->dev.user_count = 1;
@@ -5511,6 +5525,10 @@ int MPIDI_CH3_PktHandler_LockGetUnlock( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 	req->dev.OnDataAvail = MPIDI_CH3_ReqHandler_GetSendRespComplete;
 	req->dev.OnFinal     = MPIDI_CH3_ReqHandler_GetSendRespComplete;
 	req->kind = MPID_REQUEST_SEND;
+
+        /* here we increment the Active Target counter to guarantee the GET-like
+           operation are completed when counter reaches zero. */
+        win_ptr->my_counter++;
 	
 	MPIDI_Pkt_init(get_resp_pkt, MPIDI_CH3_PKT_GET_RESP);
 	get_resp_pkt->request_handle = lock_get_unlock_pkt->request_handle;
