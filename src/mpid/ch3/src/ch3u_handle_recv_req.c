@@ -125,6 +125,8 @@ int MPIDI_CH3_ReqHandler_PutAccumRespComplete( MPIDI_VC_t *vc,
 
         resp_req->dev.OnFinal = MPIDI_CH3_ReqHandler_GetAccumRespComplete;
         resp_req->dev.OnDataAvail = MPIDI_CH3_ReqHandler_GetAccumRespComplete;
+        resp_req->dev.target_win_handle = rreq->dev.target_win_handle;
+        resp_req->dev.flags = rreq->dev.flags;
 
         iov[0].MPID_IOV_BUF = (MPID_IOV_BUF_CAST) get_accum_resp_pkt;
         iov[0].MPID_IOV_LEN = sizeof(*get_accum_resp_pkt);
@@ -160,9 +162,11 @@ int MPIDI_CH3_ReqHandler_PutAccumRespComplete( MPIDI_VC_t *vc,
 	}
     }
     
+    if (!get_acc_flag) {
     mpi_errno = MPIDI_CH3_Finish_rma_op_target(vc, win_ptr, TRUE, rreq->dev.flags,
                                                rreq->dev.source_win_handle);
     if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
+    }
 
     if (get_acc_flag) {
         /* here we decrement the Active Target counter to guarantee the GET-like
@@ -317,10 +321,17 @@ int MPIDI_CH3_ReqHandler_GetAccumRespComplete( MPIDI_VC_t *vc,
                                                int *complete )
 {
     int mpi_errno = MPI_SUCCESS;
+    MPID_Win *win_ptr;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3_REQHANDLER_GETACCUMRESPCOMPLETE);
     
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3_REQHANDLER_GETACCUMRESPCOMPLETE);
     MPIU_Free(rreq->dev.user_buf);
+
+    MPID_Win_get_ptr(rreq->dev.target_win_handle, win_ptr);
+
+    mpi_errno = MPIDI_CH3_Finish_rma_op_target(vc, win_ptr, TRUE, rreq->dev.flags,
+                                               MPI_WIN_NULL);
+    if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
 
     MPIDI_CH3U_Request_complete(rreq);
     *complete = TRUE;
@@ -524,6 +535,10 @@ int MPIDI_CH3_ReqHandler_FOPComplete( MPIDI_VC_t *vc,
         MPIU_ERR_CHKANDJUMP(resp_req == NULL, mpi_errno, MPI_ERR_OTHER, "**nomemreq");
         MPIU_Object_set_ref(resp_req, 1);
 
+        resp_req->dev.target_win_handle = rreq->dev.target_win_handle;
+        resp_req->dev.flags = rreq->dev.flags;
+        resp_req->dev.OnDataAvail = MPIDI_CH3_ReqHandler_GetAccumRespComplete;
+
         MPIDI_CH3U_SRBuf_alloc(resp_req, len);
         MPIU_ERR_CHKANDJUMP(resp_req->dev.tmpbuf_sz < len, mpi_errno, MPI_ERR_OTHER, "**nomemreq");
         MPIU_Memcpy( resp_req->dev.tmpbuf, rreq->dev.real_user_buf, len );
@@ -552,8 +567,25 @@ int MPIDI_CH3_ReqHandler_FOPComplete( MPIDI_VC_t *vc,
         MPIU_ERR_CHKANDJUMP(mpi_errno != MPI_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**ch3|rmamsg");
 
         if (resp_req != NULL) {
-            MPID_Request_release(resp_req);
+            if (!MPID_Request_is_complete(resp_req)) {
+                /* sending process is not completed, set proper OnDataAvail
+                   (it is initialized to NULL by lower layer) */
+                resp_req->dev.target_win_handle = rreq->dev.target_win_handle;
+                resp_req->dev.flags = rreq->dev.flags;
+                resp_req->dev.OnDataAvail = MPIDI_CH3_ReqHandler_GetAccumRespComplete;
+                MPID_Request_release(resp_req);
+                goto finish_up;
+            }
+            else {
+                MPID_Request_release(resp_req);
+            }
         }
+
+        /* There are additional steps to take if this is a passive
+           target RMA or the last operation from the source */
+        mpi_errno = MPIDI_CH3_Finish_rma_op_target(vc, win_ptr, TRUE, rreq->dev.flags,
+                                                   rreq->dev.source_win_handle);
+        if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
     }
     else {
         MPID_IOV iov[MPID_IOV_LIMIT];
@@ -569,17 +601,11 @@ int MPIDI_CH3_ReqHandler_FOPComplete( MPIDI_VC_t *vc,
         MPIU_ERR_CHKANDJUMP(mpi_errno != MPI_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**ch3|rmamsg");
     }
 
+ finish_up:
     /* Free temporary buffer allocated in PktHandler_FOP */
     if (len > sizeof(int) * MPIDI_RMA_FOP_IMMED_INTS && rreq->dev.op != MPI_NO_OP) {
         MPIU_Free(rreq->dev.user_buf);
     }
-
-    /* There are additional steps to take if this is a passive 
-       target RMA or the last operation from the source */
-
-    mpi_errno = MPIDI_CH3_Finish_rma_op_target(vc, win_ptr, TRUE, rreq->dev.flags,
-                                               rreq->dev.source_win_handle);
-    if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
 
     /* here we decrement the Active Target counter to guarantee the GET-like
        operation are completed when counter reaches zero. */

@@ -5009,7 +5009,17 @@ int MPIDI_CH3_PktHandler_CAS( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
     MPIU_ERR_CHKANDJUMP(mpi_errno != MPI_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**ch3|rmamsg");
 
     if (req != NULL) {
-        MPID_Request_release(req);
+        if (!MPID_Request_is_complete(req)) {
+            /* sending process is not completed, set proper OnDataAvail
+               (it is initialized to NULL by lower layer) */
+            req->dev.target_win_handle = cas_pkt->target_win_handle;
+            req->dev.flags = cas_pkt->flags;
+            req->dev.OnDataAvail = MPIDI_CH3_ReqHandler_GetAccumRespComplete;
+            MPID_Request_release(req);
+            goto fn_exit;
+        }
+        else
+            MPID_Request_release(req);
     }
 
 
