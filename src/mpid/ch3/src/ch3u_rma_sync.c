@@ -4738,12 +4738,6 @@ int MPIDI_CH3_PktHandler_Accumulate( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
     MPIU_Object_set_ref(req, 1);
     *rreqp = req;
 
-    if (accum_pkt->type == MPIDI_CH3_PKT_GET_ACCUM) {
-        /* here we increment the Active Target counter to guarantee the GET-like
-           operation are completed when counter reaches zero. */
-        win_ptr->my_counter++;
-    }
-    
     req->dev.user_count = accum_pkt->count;
     req->dev.op = accum_pkt->op;
     req->dev.real_user_buf = accum_pkt->addr;
@@ -5015,6 +5009,11 @@ int MPIDI_CH3_PktHandler_CAS( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
             req->dev.target_win_handle = cas_pkt->target_win_handle;
             req->dev.flags = cas_pkt->flags;
             req->dev.OnDataAvail = MPIDI_CH3_ReqHandler_GetAccumRespComplete;
+
+            /* here we increment the Active Target counter to guarantee the GET-like
+               operation are completed when counter reaches zero. */
+            win_ptr->my_counter++;
+
             MPID_Request_release(req);
             goto fn_exit;
         }
@@ -5105,10 +5104,6 @@ int MPIDI_CH3_PktHandler_FOP( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
     MPIU_ERR_CHKANDJUMP(req == NULL, mpi_errno, MPI_ERR_OTHER, "**nomemreq");
     MPIU_Object_set_ref(req, 1); /* Ref is held by progress engine */
     *rreqp = NULL;
-
-    /* here we increment the Active Target counter to guarantee the GET-like
-       operation are completed when counter reaches zero. */
-    win_ptr->my_counter++;
 
     req->dev.user_buf = NULL; /* will be set later */
     req->dev.user_count = 1;

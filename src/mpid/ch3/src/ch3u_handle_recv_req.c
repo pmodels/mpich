@@ -89,6 +89,8 @@ int MPIDI_CH3_ReqHandler_PutAccumRespComplete( MPIDI_VC_t *vc,
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3_REQHANDLER_PUTACCUMRESPCOMPLETE);
 
+    MPID_Win_get_ptr(rreq->dev.target_win_handle, win_ptr);
+
     /* Perform get in get-accumulate */
     if (rreq->dev.resp_request_handle != MPI_REQUEST_NULL) {
         MPI_Aint type_size;
@@ -128,6 +130,10 @@ int MPIDI_CH3_ReqHandler_PutAccumRespComplete( MPIDI_VC_t *vc,
         resp_req->dev.target_win_handle = rreq->dev.target_win_handle;
         resp_req->dev.flags = rreq->dev.flags;
 
+        /* here we increment the Active Target counter to guarantee the GET-like
+           operation are completed when counter reaches zero. */
+        win_ptr->my_counter++;
+
         iov[0].MPID_IOV_BUF = (MPID_IOV_BUF_CAST) get_accum_resp_pkt;
         iov[0].MPID_IOV_LEN = sizeof(*get_accum_resp_pkt);
 
@@ -145,8 +151,6 @@ int MPIDI_CH3_ReqHandler_PutAccumRespComplete( MPIDI_VC_t *vc,
 
         get_acc_flag = 1;
     }
-
-    MPID_Win_get_ptr(rreq->dev.target_win_handle, win_ptr);
 
     if (MPIDI_Request_get_type(rreq) == MPIDI_REQUEST_TYPE_ACCUM_RESP) {
 
@@ -166,13 +170,6 @@ int MPIDI_CH3_ReqHandler_PutAccumRespComplete( MPIDI_VC_t *vc,
     mpi_errno = MPIDI_CH3_Finish_rma_op_target(vc, win_ptr, TRUE, rreq->dev.flags,
                                                rreq->dev.source_win_handle);
     if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
-    }
-
-    if (get_acc_flag) {
-        /* here we decrement the Active Target counter to guarantee the GET-like
-           operation are completed when counter reaches zero. */
-        win_ptr->my_counter--;
-        MPIU_Assert(win_ptr->my_counter >= 0);
     }
 
     /* mark data transfer as complete and decrement CC */
@@ -332,6 +329,11 @@ int MPIDI_CH3_ReqHandler_GetAccumRespComplete( MPIDI_VC_t *vc,
     mpi_errno = MPIDI_CH3_Finish_rma_op_target(vc, win_ptr, TRUE, rreq->dev.flags,
                                                MPI_WIN_NULL);
     if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
+
+    /* here we decrement the Active Target counter to guarantee the GET-like
+       operation are completed when counter reaches zero. */
+    win_ptr->my_counter--;
+    MPIU_Assert(win_ptr->my_counter >= 0);
 
     MPIDI_CH3U_Request_complete(rreq);
     *complete = TRUE;
@@ -525,6 +527,8 @@ int MPIDI_CH3_ReqHandler_FOPComplete( MPIDI_VC_t *vc,
     MPIDI_Pkt_init(fop_resp_pkt, MPIDI_CH3_PKT_FOP_RESP);
     fop_resp_pkt->request_handle = rreq->dev.request_handle;
 
+    MPID_Win_get_ptr(rreq->dev.target_win_handle, win_ptr);
+
     /* Copy original data into the send buffer.  If data will fit in the
        header, use that.  Otherwise allocate a temporary buffer.  */
     if (len <= sizeof(fop_resp_pkt->data)) {
@@ -539,12 +543,14 @@ int MPIDI_CH3_ReqHandler_FOPComplete( MPIDI_VC_t *vc,
         resp_req->dev.flags = rreq->dev.flags;
         resp_req->dev.OnDataAvail = MPIDI_CH3_ReqHandler_GetAccumRespComplete;
 
+        /* here we increment the Active Target counter to guarantee the GET-like
+           operation are completed when counter reaches zero. */
+        win_ptr->my_counter++;
+
         MPIDI_CH3U_SRBuf_alloc(resp_req, len);
         MPIU_ERR_CHKANDJUMP(resp_req->dev.tmpbuf_sz < len, mpi_errno, MPI_ERR_OTHER, "**nomemreq");
         MPIU_Memcpy( resp_req->dev.tmpbuf, rreq->dev.real_user_buf, len );
     }
-
-    MPID_Win_get_ptr(rreq->dev.target_win_handle, win_ptr);
 
     /* Apply the op */
     if (rreq->dev.op != MPI_NO_OP) {
@@ -573,6 +579,11 @@ int MPIDI_CH3_ReqHandler_FOPComplete( MPIDI_VC_t *vc,
                 resp_req->dev.target_win_handle = rreq->dev.target_win_handle;
                 resp_req->dev.flags = rreq->dev.flags;
                 resp_req->dev.OnDataAvail = MPIDI_CH3_ReqHandler_GetAccumRespComplete;
+
+                /* here we increment the Active Target counter to guarantee the GET-like
+                   operation are completed when counter reaches zero. */
+                win_ptr->my_counter++;
+
                 MPID_Request_release(resp_req);
                 goto finish_up;
             }
@@ -606,11 +617,6 @@ int MPIDI_CH3_ReqHandler_FOPComplete( MPIDI_VC_t *vc,
     if (len > sizeof(int) * MPIDI_RMA_FOP_IMMED_INTS && rreq->dev.op != MPI_NO_OP) {
         MPIU_Free(rreq->dev.user_buf);
     }
-
-    /* here we decrement the Active Target counter to guarantee the GET-like
-       operation are completed when counter reaches zero. */
-    win_ptr->my_counter--;
-    MPIU_Assert(win_ptr->my_counter >= 0);
 
     *complete = 1;
 
