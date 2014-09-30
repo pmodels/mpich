@@ -331,72 +331,53 @@ int MPIDO_Scatter_simple(const void *sendbuf,
   int success = 1, snd_contig = 1, rcv_contig = 1;
   void *snd_noncontig_buff = NULL, *rcv_noncontig_buff = NULL;
   void *sbuf = NULL, *rbuf = NULL;
-  size_t send_size = 0;
-  size_t recv_size = 0;
+  size_t send_size = 0, recv_size = 0, data_size = 0;
   MPI_Aint snd_true_lb = 0, rcv_true_lb = 0; 
   MPID_Segment segment;
   const struct MPIDI_Comm* const mpid = &(comm_ptr->mpid);
   const int size = comm_ptr->local_size;
+  advisor_algorithm_t advisor_algorithms[1];
 
-  if (rank == root && sendtype != MPI_DATATYPE_NULL && sendcount >= 0)
+  if (rank == root)
   {
-    MPIDI_Datatype_get_info(sendcount, sendtype, snd_contig,
-                            send_size, data_ptr, snd_true_lb);
-    if(MPIDI_Pamix_collsel_advise != NULL && mpid->collsel_fast_query != NULL)
-    {
-      advisor_algorithm_t advisor_algorithms[1];
-      int num_algorithms = MPIDI_Pamix_collsel_advise(mpid->collsel_fast_query, PAMI_XFER_SCATTER, send_size, advisor_algorithms, 1);
-      if(num_algorithms)
-      {
-        if(advisor_algorithms[0].algorithm_type == COLLSEL_EXTERNAL_ALGO)
-        {
-          return MPIR_Scatter(sendbuf, sendcount, sendtype,
-                            recvbuf, recvcount, recvtype,
-                            root, comm_ptr, mpierrno);
-        }
-        else if(advisor_algorithms[0].metadata && advisor_algorithms[0].metadata->check_correct.values.asyncflowctl && !(--(comm_ptr->mpid.num_requests)))
-        {
-          comm_ptr->mpid.num_requests = MPIDI_Process.optimized.num_requests;
-          int tmpmpierrno;
-          MPIDO_Barrier(comm_ptr, &tmpmpierrno);
-        }
-      }
-    }
-  }
+      MPIDI_Datatype_get_info(sendcount, sendtype, snd_contig,
+                              send_size, data_ptr, snd_true_lb);
 
-  if (recvtype != MPI_DATATYPE_NULL && recvcount >= 0)
+    if (recvbuf != MPI_IN_PLACE && recvtype != MPI_DATATYPE_NULL && recvcount >= 0)
+    {  
+      MPIDI_Datatype_get_info(recvcount, recvtype, rcv_contig,
+                              recv_size, data_ptr, rcv_true_lb);
+    }
+    data_size = send_size;
+  }
+  else if (recvtype != MPI_DATATYPE_NULL && recvcount >= 0)
   {
     MPIDI_Datatype_get_info(recvcount, recvtype, rcv_contig,
                             recv_size, data_ptr, rcv_true_lb);
-    if(MPIDI_Pamix_collsel_advise != NULL && mpid->collsel_fast_query != NULL)
-    {
-      advisor_algorithm_t advisor_algorithms[1];
-      int num_algorithms = MPIDI_Pamix_collsel_advise(mpid->collsel_fast_query, PAMI_XFER_SCATTER, recv_size, advisor_algorithms, 1);
-      if(num_algorithms)
-      {
-        if(advisor_algorithms[0].algorithm_type == COLLSEL_EXTERNAL_ALGO)
-        {
-          return MPIR_Scatter(sendbuf, sendcount, sendtype,
-                            recvbuf, recvcount, recvtype,
-                            root, comm_ptr, mpierrno);
-        }
-        else if(advisor_algorithms[0].metadata && advisor_algorithms[0].metadata->check_correct.values.asyncflowctl && !(--(comm_ptr->mpid.num_requests)))
-        {
-          comm_ptr->mpid.num_requests = MPIDI_Process.optimized.num_requests;
-          int tmpmpierrno;
-          MPIDO_Barrier(comm_ptr, &tmpmpierrno);
-        }
+    data_size = recv_size;
+  }
 
+  advisor_algorithms[0].metadata = NULL;/* We check for NULL further down */
+  if(MPIDI_Pamix_collsel_advise != NULL && mpid->collsel_fast_query != NULL)
+  {
+    int num_algorithms = MPIDI_Pamix_collsel_advise(mpid->collsel_fast_query,
+                           PAMI_XFER_SCATTER, data_size, advisor_algorithms, 1);
+    if(num_algorithms)
+    {
+      if(advisor_algorithms[0].algorithm_type == COLLSEL_EXTERNAL_ALGO)
+      {
+        return MPIR_Scatter(sendbuf, sendcount, sendtype,
+                          recvbuf, recvcount, recvtype,
+                          root, comm_ptr, mpierrno);
       }
     }
   }
   sbuf = (char *)sendbuf + snd_true_lb;
   rbuf = (char *)recvbuf + rcv_true_lb;
   if (rank == root)
-  {
+  {    
     if (send_size)
     {
-      sbuf = (char *)sendbuf + snd_true_lb;
       if (!snd_contig)
       {
         snd_noncontig_buff = MPIU_Malloc(send_size * size);
@@ -418,7 +399,6 @@ int MPIDO_Scatter_simple(const void *sendbuf,
     {
       if (recv_size)
       {
-        rbuf = (char *)recvbuf + rcv_true_lb;
         if (!rcv_contig)
         {
           rcv_noncontig_buff = MPIU_Malloc(recv_size);
@@ -433,12 +413,10 @@ int MPIDO_Scatter_simple(const void *sendbuf,
       else success = 0;
     }
   }
-
   else
   {
     if (recv_size)/* Should this be send or recv? */
     {
-      rbuf = (char *)recvbuf + rcv_true_lb;
       if (!rcv_contig)
       {
         rcv_noncontig_buff = MPIU_Malloc(recv_size);
@@ -462,6 +440,15 @@ int MPIDO_Scatter_simple(const void *sendbuf,
                         root, comm_ptr, mpierrno);
   }
 
+  if(advisor_algorithms[0].metadata &&
+     advisor_algorithms[0].metadata->check_correct.values.asyncflowctl &&
+     !(--(comm_ptr->mpid.num_requests)))
+  {
+    comm_ptr->mpid.num_requests = MPIDI_Process.optimized.num_requests;
+    int tmpmpierrno;
+    MPIDO_Barrier(comm_ptr, &tmpmpierrno);
+  }
+
    pami_xfer_t scatter;
    MPIDI_Post_coll_t scatter_post;
    volatile unsigned scatter_active = 1;
@@ -483,8 +470,7 @@ int MPIDO_Scatter_simple(const void *sendbuf,
    {
      scatter.cmd.xfer_scatter.rcvbuf = PAMI_IN_PLACE;
    }
-
-
+       
    TRACE_ERR("%s scatter\n", MPIDI_Process.context_post.active>0?"Posting":"Invoking");
    MPIDI_Context_post(MPIDI_Context[0], &scatter_post.state,
                       MPIDI_Pami_post_wrapper, (void *)&scatter);
