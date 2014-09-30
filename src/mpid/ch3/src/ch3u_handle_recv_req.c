@@ -132,7 +132,7 @@ int MPIDI_CH3_ReqHandler_PutAccumRespComplete( MPIDI_VC_t *vc,
 
         /* here we increment the Active Target counter to guarantee the GET-like
            operation are completed when counter reaches zero. */
-        win_ptr->my_counter++;
+        win_ptr->at_completion_counter++;
 
         iov[0].MPID_IOV_BUF = (MPID_IOV_BUF_CAST) get_accum_resp_pkt;
         iov[0].MPID_IOV_LEN = sizeof(*get_accum_resp_pkt);
@@ -332,8 +332,8 @@ int MPIDI_CH3_ReqHandler_GetAccumRespComplete( MPIDI_VC_t *vc,
 
     /* here we decrement the Active Target counter to guarantee the GET-like
        operation are completed when counter reaches zero. */
-    win_ptr->my_counter--;
-    MPIU_Assert(win_ptr->my_counter >= 0);
+    win_ptr->at_completion_counter--;
+    MPIU_Assert(win_ptr->at_completion_counter >= 0);
 
     MPIDI_CH3U_Request_complete(rreq);
     *complete = TRUE;
@@ -545,7 +545,7 @@ int MPIDI_CH3_ReqHandler_FOPComplete( MPIDI_VC_t *vc,
 
         /* here we increment the Active Target counter to guarantee the GET-like
            operation are completed when counter reaches zero. */
-        win_ptr->my_counter++;
+        win_ptr->at_completion_counter++;
 
         MPIDI_CH3U_SRBuf_alloc(resp_req, len);
         MPIU_ERR_CHKANDJUMP(resp_req->dev.tmpbuf_sz < len, mpi_errno, MPI_ERR_OTHER, "**nomemreq");
@@ -582,7 +582,7 @@ int MPIDI_CH3_ReqHandler_FOPComplete( MPIDI_VC_t *vc,
 
                 /* here we increment the Active Target counter to guarantee the GET-like
                    operation are completed when counter reaches zero. */
-                win_ptr->my_counter++;
+                win_ptr->at_completion_counter++;
 
                 MPID_Request_release(resp_req);
                 goto finish_up;
@@ -1239,7 +1239,7 @@ static int do_simple_get(MPID_Win *win_ptr, MPIDI_Win_lock_queue *lock_queue)
 
     /* here we increment the Active Target counter to guarantee the GET-like
        operation are completed when counter reaches zero. */
-    win_ptr->my_counter++;
+    win_ptr->at_completion_counter++;
     
     MPIDI_Pkt_init(get_resp_pkt, MPIDI_CH3_PKT_GET_RESP);
     get_resp_pkt->request_handle = lock_queue->pt_single_op->request_handle;

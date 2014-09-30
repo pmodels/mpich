@@ -1269,7 +1269,7 @@ int MPIDI_Win_fence(int assert, MPID_Win *win_ptr)
 	   RMA ops on its window */  
             
 	/* first initialize the completion counter. */
-	win_ptr->my_counter += comm_size;
+	win_ptr->at_completion_counter += comm_size;
             
 	mpi_errno = MPIR_Reduce_scatter_block_impl(MPI_IN_PLACE, rma_target_proc, 1,
                                                    MPI_INT, MPI_SUM, comm_ptr, &errflag);
@@ -1286,8 +1286,8 @@ int MPIDI_Win_fence(int assert, MPID_Win *win_ptr)
 	/* Set the completion counter */
 	/* FIXME: MT: this needs to be done atomically because other
 	   procs have the address and could decrement it. */
-        win_ptr->my_counter -= comm_size;
-        win_ptr->my_counter += rma_target_proc[0];
+        win_ptr->at_completion_counter -= comm_size;
+        win_ptr->at_completion_counter += rma_target_proc[0];
 
     MPIR_T_PVAR_TIMER_START(RMA, rma_winfence_issue);
     MPIR_T_PVAR_COUNTER_INC(RMA, rma_winfence_issue_aux, total_op_count);
@@ -1380,11 +1380,11 @@ int MPIDI_Win_fence(int assert, MPID_Win *win_ptr)
 	
  finish_up:
 	/* wait for all operations from other processes to finish */
-	if (win_ptr->my_counter)
+	if (win_ptr->at_completion_counter)
 	{
 	    MPIR_T_PVAR_TIMER_START(RMA, rma_winfence_wait);
 	    MPID_Progress_start(&progress_state);
-	    while (win_ptr->my_counter)
+	    while (win_ptr->at_completion_counter)
 	    {
 		mpi_errno = MPID_Progress_wait(&progress_state);
 		/* --BEGIN ERROR HANDLING-- */
@@ -2292,7 +2292,7 @@ int MPIDI_Win_post(MPID_Group *post_grp_ptr, int assert, MPID_Win *win_ptr)
     }
         
     /* initialize the completion counter */
-    win_ptr->my_counter += post_grp_size;
+    win_ptr->at_completion_counter += post_grp_size;
         
     if ((assert & MPI_MODE_NOCHECK) == 0)
     {
@@ -2748,7 +2748,7 @@ int MPIDI_Win_complete(MPID_Win *win_ptr)
 	dst = ranks_in_win_grp[i];
 	if (dst == rank) {
 	    /* FIXME: MT: this has to be done atomically */
-	    win_ptr->my_counter -= 1;
+	    win_ptr->at_completion_counter -= 1;
 	}
 	else if (nops_to_proc[dst] == 0)
 	{
@@ -2842,13 +2842,13 @@ int MPIDI_Win_wait(MPID_Win *win_ptr)
         win_ptr->epoch_state = MPIDI_EPOCH_NONE;
 
     /* wait for all operations from other processes to finish */
-    if (win_ptr->my_counter)
+    if (win_ptr->at_completion_counter)
     {
 	MPID_Progress_state progress_state;
 	
 	MPIR_T_PVAR_TIMER_START(RMA, rma_winwait_wait);
 	MPID_Progress_start(&progress_state);
-	while (win_ptr->my_counter)
+	while (win_ptr->at_completion_counter)
 	{
 	    mpi_errno = MPID_Progress_wait(&progress_state);
 	    /* --BEGIN ERROR HANDLING-- */
@@ -2900,7 +2900,7 @@ int MPIDI_Win_test(MPID_Win *win_ptr, int *flag)
 	MPIU_ERR_POP(mpi_errno);
     }
 
-    *flag = (win_ptr->my_counter) ? 0 : 1;
+    *flag = (win_ptr->at_completion_counter) ? 0 : 1;
 
     if (*flag) {
         /* Track access epoch state */
@@ -4603,7 +4603,7 @@ int MPIDI_CH3_PktHandler_Get( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 
     /* here we increment the Active Target counter to guarantee the GET-like
        operation are completed when counter reaches zero. */
-    win_ptr->my_counter++;
+    win_ptr->at_completion_counter++;
     
     if (MPIR_DATATYPE_IS_PREDEFINED(get_pkt->datatype))
     {
@@ -5012,7 +5012,7 @@ int MPIDI_CH3_PktHandler_CAS( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 
             /* here we increment the Active Target counter to guarantee the GET-like
                operation are completed when counter reaches zero. */
-            win_ptr->my_counter++;
+            win_ptr->at_completion_counter++;
 
             MPID_Request_release(req);
             goto fn_exit;
@@ -5533,7 +5533,7 @@ int MPIDI_CH3_PktHandler_LockGetUnlock( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 
         /* here we increment the Active Target counter to guarantee the GET-like
            operation are completed when counter reaches zero. */
-        win_ptr->my_counter++;
+        win_ptr->at_completion_counter++;
 	
 	MPIDI_Pkt_init(get_resp_pkt, MPIDI_CH3_PKT_GET_RESP);
 	get_resp_pkt->request_handle = lock_get_unlock_pkt->request_handle;
@@ -6157,11 +6157,11 @@ int MPIDI_CH3_Finish_rma_op_target(MPIDI_VC_t *vc, MPID_Win *win_ptr, int is_rma
     if (flags & MPIDI_CH3_PKT_FLAG_RMA_AT_COMPLETE) {
         MPIU_Assert(win_ptr->current_lock_type == MPID_LOCK_NONE);
 
-        win_ptr->my_counter -= 1;
-        MPIU_Assert(win_ptr->my_counter >= 0);
+        win_ptr->at_completion_counter -= 1;
+        MPIU_Assert(win_ptr->at_completion_counter >= 0);
 
         /* Signal the local process when the op counter reaches 0. */
-        if (win_ptr->my_counter == 0)
+        if (win_ptr->at_completion_counter == 0)
             MPIDI_CH3_Progress_signal_completion();
     }
 

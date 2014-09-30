@@ -57,8 +57,8 @@ int MPIDI_CH3_ReqHandler_GetSendRespComplete( MPIDI_VC_t *vc ATTRIBUTE((unused))
 
     /* here we decrement the Active Target counter to guarantee the GET-like
        operation are completed when counter reaches zero. */
-    win_ptr->my_counter--;
-    MPIU_Assert(win_ptr->my_counter >= 0);
+    win_ptr->at_completion_counter--;
+    MPIU_Assert(win_ptr->at_completion_counter >= 0);
 
     /* mark data transfer as complete and decrement CC */
     MPIDI_CH3U_Request_complete(sreq);
