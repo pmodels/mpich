@@ -106,7 +106,7 @@ static int handler_recv_dequeue_complete(const ptl_event_t *e)
             MPIU_Memcpy((char *)rreq->dev.user_buf + dt_true_lb, e->start, e->mlength);
         } else {
             last = e->mlength;
-            MPID_Segment_unpack(rreq->dev.segment_ptr, dt_true_lb, &last, e->start);
+            MPID_Segment_unpack(rreq->dev.segment_ptr, rreq->dev.segment_first, &last, e->start);
             MPIU_ERR_CHKANDJUMP(last != e->mlength, mpi_errno, MPI_ERR_OTHER, "**dtypemismatch");
         }
     }
@@ -213,7 +213,6 @@ static int handler_recv_dequeue_large(const ptl_event_t *e)
         if (dt_contig) {
             MPIU_Memcpy((char *)rreq->dev.user_buf + dt_true_lb, e->start, e->mlength);
         } else {
-            rreq->dev.segment_first = dt_true_lb;
             last = e->mlength;
             MPID_Segment_unpack(rreq->dev.segment_ptr, rreq->dev.segment_first, &last, e->start);
             MPIU_Assert(last == e->mlength);
@@ -412,8 +411,8 @@ int MPID_nem_ptl_recv_posted(MPIDI_VC_t *vc, MPID_Request *rreq)
             MPIU_DBG_MSG(CH3_CHANNEL, VERBOSE, "Small noncontig message");
             rreq->dev.segment_ptr = MPID_Segment_alloc();
             MPIU_ERR_CHKANDJUMP1(rreq->dev.segment_ptr == NULL, mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s", "MPID_Segment_alloc");
-            MPID_Segment_init((char *)rreq->dev.user_buf, rreq->dev.user_count, rreq->dev.datatype, rreq->dev.segment_ptr, 0);
-            rreq->dev.segment_first = dt_true_lb;
+            MPID_Segment_init(rreq->dev.user_buf, rreq->dev.user_count, rreq->dev.datatype, rreq->dev.segment_ptr, 0);
+            rreq->dev.segment_first = 0;
             rreq->dev.segment_size = data_sz;
 
             last = rreq->dev.segment_size;
@@ -451,7 +450,7 @@ int MPID_nem_ptl_recv_posted(MPIDI_VC_t *vc, MPID_Request *rreq)
             rreq->dev.segment_ptr = MPID_Segment_alloc();
             MPIU_ERR_CHKANDJUMP1(rreq->dev.segment_ptr == NULL, mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s", "MPID_Segment_alloc");
             MPID_Segment_init(rreq->dev.user_buf, rreq->dev.user_count, rreq->dev.datatype, rreq->dev.segment_ptr, 0);
-            rreq->dev.segment_first = dt_true_lb;
+            rreq->dev.segment_first = 0;
             rreq->dev.segment_size = data_sz;
 
             last = PTL_LARGE_THRESHOLD;
@@ -663,7 +662,7 @@ int MPID_nem_ptl_lmt_start_recv(MPIDI_VC_t *vc,  MPID_Request *rreq, MPID_IOV s_
                              "**nomem %s", "MPID_Segment_alloc");
         MPID_Segment_init(rreq->dev.user_buf, rreq->dev.user_count, rreq->dev.datatype,
                           rreq->dev.segment_ptr, 0);
-        rreq->dev.segment_first = dt_true_lb;
+        rreq->dev.segment_first = 0;
         rreq->dev.segment_size = data_sz - PTL_LARGE_THRESHOLD;
         last = PTL_LARGE_THRESHOLD;
         MPID_Segment_unpack(rreq->dev.segment_ptr, rreq->dev.segment_first, &last, rreq->dev.tmpbuf);
