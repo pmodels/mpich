@@ -32,11 +32,25 @@ typedef struct
     uint64_t remote_endpoint_addr;
     void *endpoint;
     rque_t	send_queue; /* MPID_Request Queue */
+    unsigned int unsolicited_count;
 } MPID_nem_tofu_vc_area;
 
 /* macro for tofu private in VC */
 #define VC_TOFU(vc) ((MPID_nem_tofu_vc_area *)(vc)->ch.netmod_area.padding)
 #define VC_FIELD(vcp, field) (((MPID_nem_tofu_vc_area *)(vc)->ch.netmod_area.padding)->field)
+
+#define UNSOLICITED_NUM_INC(req) \
+{ \
+    MPID_Request *sreq = req; \
+    MPIDI_VC_t *vc = sreq->ch.vc; \
+    VC_FIELD(vc, unsolicited_count)++; \
+}
+#define UNSOLICITED_NUM_DEC(req) \
+{ \
+    MPID_Request *sreq = req; \
+    MPIDI_VC_t *vc = sreq->ch.vc; \
+    VC_FIELD(vc, unsolicited_count)--; \
+}
 
 typedef struct
 {

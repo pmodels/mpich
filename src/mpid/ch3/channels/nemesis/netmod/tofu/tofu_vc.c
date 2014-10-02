@@ -83,6 +83,11 @@ int MPID_nem_tofu_vc_destroy(MPIDI_VC_t *vc)
 	vc_tofu->endpoint = 0;
     }
 
+    /* wait until all UNSOLICITED are done */
+    while (VC_FIELD(vc, unsolicited_count)) {
+        MPID_nem_tofu_poll(1);
+    }
+
  fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_TOFU_VC_DESTROY);
     return mpi_errno;

@@ -493,6 +493,7 @@ ssize_t llctofu_writev(void *endpt, uint64_t raddr,
         lcmd[0].iov_local = LLC_iov_alloc(1);
         lcmd[0].iov_remote = LLC_iov_alloc(1);
 
+        UNSOLICITED_NUM_INC(cbarg);
         lcmd->opcode = LLC_OPCODE_UNSOLICITED;
         lcmd->comm = LLC_COMM_WORLD;
         lcmd->rank = (uint32_t)raddr; /* XXX */
@@ -636,6 +637,7 @@ int llctofu_poll(int in_blocking_poll,
             usr = (void *)lcmd->usr_area;
             vp_sreq = usr->cbarg;
             
+            UNSOLICITED_NUM_DEC(vp_sreq);
 
             if(events[0].side.initiator.error_code != LLC_ERROR_SUCCESS) {
                 printf("llctofu_poll,error_code=%d\n", events[0].side.initiator.error_code);
