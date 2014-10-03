@@ -19,9 +19,6 @@ int MPI_Wait(MPI_Request *request, MPI_Status *status) __attribute__((weak,alias
 #endif
 /* -- End Profiling Symbol Block */
 
-#if 1 /* for rdtsc timer */
-uint64_t rdtsc_prog_start, rdtsc_prog_end, rdtsc_wait_sum;
-#endif
 /* Define MPICH_MPI_FROM_PMPI if weak symbols are not supported to build
    the MPI routines */
 #ifndef MPICH_MPI_FROM_PMPI
