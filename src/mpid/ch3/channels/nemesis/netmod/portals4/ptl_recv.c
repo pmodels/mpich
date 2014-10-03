@@ -16,16 +16,16 @@ static void dequeue_req(const ptl_event_t *e)
     MPID_Request *const rreq = e->user_ptr;
     int s_len, r_len;
 
+    /* At this point we know the ME is unlinked. Invalidate the handle to
+       prevent further accesses, e.g. an attempted cancel. */
+    REQ_PTL(rreq)->me = PTL_INVALID_HANDLE;
+
     found = MPIDI_CH3U_Recvq_DP(rreq);
     MPIU_Assert(found);
 
     rreq->status.MPI_ERROR = MPI_SUCCESS;
     rreq->status.MPI_SOURCE = NPTL_MATCH_GET_RANK(e->match_bits);
     rreq->status.MPI_TAG = NPTL_MATCH_GET_TAG(e->match_bits);
-
-    /* At this point we know the ME is unlinked. Invalidate the handle to
-       prevent further accesses, e.g. an attempted cancel. */
-    REQ_PTL(rreq)->me = PTL_INVALID_HANDLE;
 
     MPID_Datatype_get_size_macro(rreq->dev.datatype, r_len);
     r_len *= rreq->dev.user_count;
