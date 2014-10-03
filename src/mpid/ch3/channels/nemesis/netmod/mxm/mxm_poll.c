@@ -125,11 +125,8 @@ int MPID_nem_mxm_anysource_matched(MPID_Request * req)
 
     req_area = REQ_BASE(req);
     ret = mxm_req_cancel_recv(&req_area->mxm_req->item.recv);
-    if ((MXM_OK == ret) || (MXM_ERR_NO_PROGRESS == ret)) {
-        MPID_Segment_free(req->dev.segment_ptr);
-    }
-    else {
-        _mxm_req_wait(&req_area->mxm_req->item.base);
+    mxm_req_wait(&req_area->mxm_req->item.base);
+    if ((MXM_OK != ret) && (MXM_ERR_NO_PROGRESS != ret)) {
         matched = TRUE;
     }
 
@@ -173,7 +170,7 @@ int MPID_nem_mxm_recv(MPIDI_VC_t * vc, MPID_Request * rreq)
         rreq->ch.noncontig = FALSE;
 
         _dbg_mxm_output(5,
-                        "Recv ========> Getting USER msg for req %p (context %d rank %d tag %d size %d) \n",
+                        "Recv ========> Getting USER msg for req %p (context %d from %d tag %d size %d) \n",
                         rreq, context_id, rreq->dev.match.parts.rank, tag, data_sz);
 
         vc_area = VC_BASE(vc);
@@ -244,7 +241,6 @@ static int _mxm_handle_rreq(MPID_Request * req)
     vc_area = VC_BASE(req->ch.vc);
     req_area = REQ_BASE(req);
 
-    _dbg_mxm_output(5, "========> Completing RECV req %p status %d\n", req, req->status.MPI_ERROR);
     _dbg_mxm_out_buf(req_area->iov_buf[0].ptr,
                      (req_area->iov_buf[0].length >
                       16 ? 16 : req_area->iov_buf[0].length));
@@ -297,8 +293,6 @@ static int _mxm_handle_rreq(MPID_Request * req)
                 iov = MPIU_Malloc(n_iov * sizeof(*iov));
                 MPIU_Assert(iov);
 
-                n_iov = req_area->iov_count;
-                iov_buf = req_area->iov_buf;
                 for (index = 0; index < n_iov; index++) {
                     iov[index].MPID_IOV_BUF = iov_buf[index].ptr;
                     iov[index].MPID_IOV_LEN = iov_buf[index].length;
@@ -360,6 +354,10 @@ static void _mxm_recv_completion_cb(void *context)
         list_enqueue(&mxm_obj->free_queue, &req_area->mxm_req->queue);
     }
 
+    _dbg_mxm_output(5, "========> %s RECV req %p status %d\n",
+                    (MPIR_STATUS_GET_CANCEL_BIT(req->status) ? "Canceling" : "Completing"),
+                    req, req->status.MPI_ERROR);
+
     if (likely(!MPIR_STATUS_GET_CANCEL_BIT(req->status))) {
         _mxm_handle_rreq(req);
     }
@@ -411,12 +409,7 @@ static int _mxm_irecv(MPID_nem_mxm_ep_t * ep, MPID_nem_mxm_req_area * req, int i
 
     ret = mxm_req_recv(mxm_rreq);
     if (MXM_OK != ret) {
-        if (ep) {
-            list_enqueue(&ep->free_queue, &req->mxm_req->queue);
-        }
-        else {
-            list_enqueue(&mxm_obj->free_queue, &req->mxm_req->queue);
-        }
+        list_enqueue(free_queue, &req->mxm_req->queue);
         mpi_errno = MPI_ERR_OTHER;
         goto fn_fail;
     }
