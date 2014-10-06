@@ -492,6 +492,16 @@ include headers are present in /path/to/mxm/include):
   --with-mxm-lib=/path/to/mxm/lib
   --with-mxm-include=/path/to/mxm/include
 
+By default, the mxm library throws warnings when the system does not
+enable certain features that might hurt performance.  These are
+important warnings that might cause performance degradation on your
+system.  But you might need root privileges to fix some of them.  If
+you would like to disable such warnings, you can set the MXM log level
+to "error" instead of the default "warn" by using:
+
+  MXM_LOG_LEVEL=error
+  export MXM_LOG_LEVEL
+
 ib network module
 `````````````````
 The IB netmod provides support for InfiniBand on x86_64 platforms
