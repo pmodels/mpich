@@ -123,7 +123,7 @@ int main( int argc, char *argv[] )
     srcbuf = malloc(RMA_SIZE*sizeof(*srcbuf));
     assert(srcbuf);
 
-    MPI_Win_create( rmabuffer, bufsize, sizeof(int), MPI_INFO_NULL,
+    MPI_Win_create( rmabuffer, bufsize * sizeof(int), sizeof(int), MPI_INFO_NULL,
 		    MPI_COMM_WORLD, &win );
     
     /* Run a sequence of tests */
