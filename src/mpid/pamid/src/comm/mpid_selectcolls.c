@@ -714,6 +714,11 @@ void MPIDI_Comm_coll_query(MPID_Comm *comm)
    comm->coll_fns->Neighbor_alltoall     = MPIR_Neighbor_alltoall_default;
    comm->coll_fns->Neighbor_alltoallv    = MPIR_Neighbor_alltoallv_default;
    comm->coll_fns->Neighbor_alltoallw    = MPIR_Neighbor_alltoallw_default;
+   comm->coll_fns->Ineighbor_allgather   = MPIR_Ineighbor_allgather_default;
+   comm->coll_fns->Ineighbor_allgatherv  = MPIR_Ineighbor_allgatherv_default;
+   comm->coll_fns->Ineighbor_alltoall    = MPIR_Ineighbor_alltoall_default;
+   comm->coll_fns->Ineighbor_alltoallv   = MPIR_Ineighbor_alltoallv_default;
+   comm->coll_fns->Ineighbor_alltoallw   = MPIR_Ineighbor_alltoallw_default;
 
    /* MPI-3 Support, optimized collectives hooked in */
    comm->coll_fns->Ibarrier_req              = MPIDO_Ibarrier;
