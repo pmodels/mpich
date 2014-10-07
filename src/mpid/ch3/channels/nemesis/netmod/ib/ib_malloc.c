@@ -1,11 +1,14 @@
 #define _GNU_SOURCE 1
 #include <stdio.h>
+#include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
 #include <sys/mman.h>
 #include <unistd.h>
 #include <sys/syscall.h>
 #include <pthread.h>
+#include <malloc.h>
+#include "mpid_nem_impl.h"
 
 //#define __DEBUG__
 
@@ -22,10 +25,9 @@
 #endif
 
 static void _local_malloc_initialize_hook(void);
-void *malloc(size_t size);
-void free(void *addr);
-void *realloc(void *addr, size_t size);
-void *calloc(size_t nmemb, size_t size);
+void *ib_malloc_hook(size_t size, const void *caller);
+void ib_free_hook(void *addr, const void *caller);
+void *ib_realloc_hook(void *addr, size_t size, const void *caller);
 
 void (*__malloc_initialize_hook) (void) = _local_malloc_initialize_hook;
 
@@ -46,6 +48,38 @@ static int __tunnel_munmap = 0;
 #define POOL_ALIGN_SIZE (DEFAULT_POOL_SIZE)
 
 #define do_segfault  (*(unsigned int*)0 = 0)    // segmentation fault
+
+static int use_ib_malloc = 0;
+
+static void ib_check_env(void)
+{
+    char *target = NULL, *tmp_str = NULL;
+
+    /* The order of comparison is the same as MPIR_T_cvar_init in mpich_cvars.c */
+    tmp_str = getenv("MPICH_NEMESIS_NETMOD");
+    if (tmp_str) {
+        target = tmp_str;
+    }
+    tmp_str = getenv("MPIR_PARAM_NEMESIS_NETMOD");
+    if (tmp_str) {
+        target = tmp_str;
+    }
+    tmp_str = getenv("MPIR_CVAR_NEMESIS_NETMOD");
+    if (tmp_str) {
+        target = tmp_str;
+    }
+
+    /* If environment variable is set, then compare with it.
+     * If environment variables are not set, then compare with the first element of netmod-list.
+     */
+    if ((target && !strncmp(target, "ib", MPID_NEM_MAX_NETMOD_STRING_LEN)) ||
+        (!target && !strncmp(MPID_nem_netmod_strings[0], "ib", MPID_NEM_MAX_NETMOD_STRING_LEN))) {
+        use_ib_malloc = 1;
+        __malloc_hook = ib_malloc_hook;
+        __free_hook = ib_free_hook;
+        __realloc_hook = ib_realloc_hook;
+    }
+}
 
 struct free_list {
     struct free_list *next;
@@ -206,6 +240,13 @@ static void _local_malloc_initialize_hook(void)
     pthread_mutex_init(&mutex, NULL);
 
     pthread_mutex_lock(&mutex);
+
+    ib_check_env();
+    if (!use_ib_malloc) {
+        pthread_mutex_unlock(&mutex);
+        return;
+    }
+
     __initialized_malloc = 1;
 
     for (i = 0; i < ARRAY_SIZE; i++) {
@@ -260,7 +301,7 @@ static void _local_malloc_initialize_hook(void)
     pthread_mutex_unlock(&mutex);
 }
 
-void *malloc(size_t size)
+void *ib_malloc_hook(size_t size, const void *caller)
 {
     int i;
     int pow;
@@ -425,7 +466,7 @@ static inline void free_core(void *addr)
     pthread_mutex_unlock(&mutex);
 }
 
-void free(void *addr)
+void ib_free_hook(void *addr, const void *caller)
 {
     if (addr) {
         free_core(addr);
@@ -433,13 +474,13 @@ void free(void *addr)
     }
 }
 
-void *realloc(void *addr, size_t size)
+void *ib_realloc_hook(void *addr, size_t size, const void *caller)
 {
     void *tmp;
 
     dprintf("realloc(%p, %lu)\n", addr, size);
 
-    tmp = malloc(size);
+    tmp = ib_malloc_hook(size, NULL);
 
     if (addr != NULL) {
         int old_pow, new_pow, power;
@@ -472,27 +513,9 @@ void *realloc(void *addr, size_t size)
     return tmp;
 }
 
-void *calloc(size_t nmemb, size_t size)
-{
-    size_t total_sz;
-    char *ptr;
-
-    if (!nmemb || !size)
-        return NULL;
-
-    total_sz = nmemb * size;
-    ptr = malloc(total_sz);
-    if (ptr == NULL)
-        return NULL;
-
-    memset(ptr, 0, total_sz);
-
-    return ptr;
-}
-
 int munmap(void *addr, size_t length)
 {
-    if (__tunnel_munmap) {
+    if (!use_ib_malloc || __tunnel_munmap) {
         dprintf("munmap(%p, 0x%lx)\n", addr, length);
 
         return syscall(__NR_munmap, addr, length);
