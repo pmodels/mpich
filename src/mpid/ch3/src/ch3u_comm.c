@@ -57,6 +57,9 @@ static hook_elt *destroy_hooks_tail = NULL;
 int MPIDI_CH3I_Comm_init(void)
 {
     int mpi_errno = MPI_SUCCESS;
+#if defined HAVE_LIBHCOLL && MPID_CH3I_CH_HCOLL_BCOL
+    MPIU_CHKLMEM_DECL(1);
+#endif
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3U_COMM_INIT);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3U_COMM_INIT);
@@ -69,6 +72,31 @@ int MPIDI_CH3I_Comm_init(void)
 
 #if defined HAVE_LIBHCOLL
     if (MPIR_CVAR_CH3_ENABLE_HCOLL) {
+        int r;
+
+        /* check if the user is not trying to override the multicast
+         * setting before resetting it */
+        if (getenv("HCOLL_ENABLE_MCAST_ALL") == NULL) {
+            /* FIXME: We should not unconditionally disable multicast.
+             * Test to make sure it's available before choosing to
+             * enable or disable it. */
+            r = MPL_putenv("HCOLL_ENABLE_MCAST_ALL=0");
+            MPIU_ERR_CHKANDJUMP(r, mpi_errno, MPI_ERR_OTHER, "**putenv");
+        }
+
+#if defined MPID_CH3I_CH_HCOLL_BCOL
+        if (getenv("HCOLL_BCOL") == NULL) {
+            char *envstr;
+            int size = strlen("HCOLL_BCOL=") + strlen(MPID_CH3I_CH_HCOLL_BCOL) + 1;
+
+            MPIU_CHKLMEM_MALLOC(envstr, char *, size, mpi_errno, "**malloc");
+            MPL_snprintf(envstr, size, "HCOLL_BCOL=%s", MPID_CH3I_CH_HCOLL_BCOL);
+
+            r = MPL_putenv(envstr);
+            MPIU_ERR_CHKANDJUMP(r, mpi_errno, MPI_ERR_OTHER, "**putenv");
+        }
+#endif
+
         mpi_errno = MPIDI_CH3U_Comm_register_create_hook(hcoll_comm_create, NULL);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
         mpi_errno = MPIDI_CH3U_Comm_register_destroy_hook(hcoll_comm_destroy, NULL);
@@ -81,6 +109,9 @@ int MPIDI_CH3I_Comm_init(void)
     
  fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3U_COMM_INIT);
+#if defined HAVE_LIBHCOLL && MPID_CH3I_CH_HCOLL_BCOL
+    MPIU_CHKLMEM_FREEALL();
+#endif
     return mpi_errno;
  fn_fail:
     goto fn_exit;
