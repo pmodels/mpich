@@ -227,11 +227,11 @@ void MPIDI_Coll_comm_create(MPID_Comm *comm)
   if (!MPIDI_Process.optimized.collectives)
     return;
 
-  comm->coll_fns = MPIU_Calloc0(1, MPID_Collops);
-  MPID_assert(comm->coll_fns != NULL);
-
   if(comm->comm_kind != MPID_INTRACOMM) return;
   /* Create a geometry */
+
+  comm->coll_fns = MPIU_Calloc0(1, MPID_Collops);
+  MPID_assert(comm->coll_fns != NULL);
 
    if(comm->mpid.geometry != MPIDI_Process.world_geometry)
    {
