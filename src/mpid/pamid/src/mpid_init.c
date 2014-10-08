@@ -810,8 +810,12 @@ MPIDI_PAMI_context_init(int* threading, int *size)
   /* Get collective selection advisor and cache it */
   /* --------------------------------------------- */
   /* Context is created, i.e. collective selection extension is initialized in PAMI. Now I can get the
-     advisor if I am not in TUNE mode. If in TUNE mode, I can init collsel and generate the table */
+     advisor if I am not in TUNE mode. If in TUNE mode, I can init collsel and generate the table.
+     This is not supported on BGQ.
+  */
+#ifndef __BGQ_
   MPIDI_Init_collsel_extension();
+#endif
 
 #if (MPIDI_STATISTICS || MPIDI_PRINTENV)
   MPIDI_open_pe_extension();
