@@ -40,6 +40,18 @@ cvars:
         If true, force mxm to disconnect all processes at
         finalization time.
 
+    - name        : MPIR_CVAR_NEMESIS_MXM_HUGEPAGE
+      category    : CH3
+      type        : boolean
+      default     : false
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        If true, mxm tries detecting hugepage support.  On HPC-X 2.3
+        and earlier, this might cause problems on Ubuntu and other
+        platforms even if the system provides hugepage support.
+
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
@@ -125,6 +137,20 @@ int MPID_nem_mxm_init(MPIDI_PG_t * pg_p, int pg_rank, char **bc_val_p, int *val_
         r = MPL_putenv("MXM_TLS=rc,dc,ud");
         MPIU_ERR_CHKANDJUMP(r, mpi_errno, MPI_ERR_OTHER, "**putenv");
     }
+
+    /* [PB @ 2014-10-06] If hugepage support is not enabled, we force
+     * memory allocation to go through mmap.  This is mainly to
+     * workaround issues in MXM with Ubuntu where the detection has
+     * some issues (either because of bugs on the platform or within
+     * MXM) causing errors.  This can probably be deleted eventually
+     * when this issue is resolved.  */
+    if (MPIR_CVAR_NEMESIS_MXM_HUGEPAGE == 0) {
+        if (getenv("MXM_MEM_ALLOC") == NULL) {
+            r = MPL_putenv("MXM_MEM_ALLOC=mmap,libc,sysv");
+            MPIU_ERR_CHKANDJUMP(r, mpi_errno, MPI_ERR_OTHER, "**putenv");
+        }
+    }
+
 
     mpi_errno = _mxm_init(pg_rank, pg_p->size);
     if (mpi_errno)
