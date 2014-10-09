@@ -163,6 +163,8 @@ static inline void save_iov(MPID_Request *sreq, void *hdr, void *data, MPIDI_msg
         ++index;
     }
     sreq->dev.iov_count = index;
+
+    MPIDI_FUNC_EXIT(MPID_STATE_SAVE_IOV);
 }
 
 #undef FUNCNAME

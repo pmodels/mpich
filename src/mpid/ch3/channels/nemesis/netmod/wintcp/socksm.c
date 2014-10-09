@@ -1972,7 +1972,7 @@ static int state_c_tmpvcack_success_handler(MPIU_EXOVERLAPPED *rd_ov)
     }
 
  fn_exit:
-    MPIDI_FUNC_ENTER(MPID_STATE_STATE_C_TMPVCACK_SUCCESS_HANDLER);
+    MPIDI_FUNC_EXIT(MPID_STATE_STATE_C_TMPVCACK_SUCCESS_HANDLER);
     return mpi_errno;
  fn_fail:
     goto fn_exit;

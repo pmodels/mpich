@@ -82,6 +82,7 @@ int MPIR_Comm_shrink(MPID_Comm *comm_ptr, MPID_Comm **newcomm_ptr)
 
   fn_exit:
     MPIR_Group_release(comm_grp);
+    MPID_MPI_FUNC_EXIT(MPID_STATE_MPIR_COMM_SHRINK);
     return mpi_errno;
   fn_fail:
     if (*newcomm_ptr) MPIU_Object_set_ref(*newcomm_ptr, 0);

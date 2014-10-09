@@ -62,6 +62,7 @@ int MPIR_Comm_set_info_impl(MPID_Comm * comm_ptr, MPID_Info * info_ptr)
     }
 
   fn_exit:
+    MPID_MPI_FUNC_EXIT(MPID_STATE_MPIR_COMM_SET_INFO_IMPL);
     return mpi_errno;
   fn_fail:
     goto fn_exit;

@@ -98,6 +98,7 @@ int MPIR_Comm_agree(MPID_Comm *comm_ptr, int *flag)
     }
 
   fn_exit:
+    MPID_MPI_FUNC_EXIT(MPID_STATE_MPIR_COMM_AGREE);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
