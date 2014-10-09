@@ -265,6 +265,11 @@ static inline void _mxm_req_wait(mxm_req_base_t * req)
     mxm_wait(&mxm_wreq);
 }
 
+static inline int _mxm_eager_threshold(void)
+{
+    return 262144;
+}
+
 /*
  * Tag management section
  */

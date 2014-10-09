@@ -70,7 +70,7 @@ static MPIDI_Comm_ops_t comm_ops = {
     MPID_nem_mxm_ssend, /* ssend */
     MPID_nem_mxm_isend, /* isend */
     MPID_nem_mxm_isend, /* irsend */
-    MPID_nem_mxm_issend,        /* issend */
+    MPID_nem_mxm_issend,/* issend */
 
     NULL,       /* send_init */
     NULL,       /* bsend_init */
@@ -141,6 +141,8 @@ int MPID_nem_mxm_init(MPIDI_PG_t * pg_p, int pg_rank, char **bc_val_p, int *val_
     mpi_errno = MPIDI_CH3U_Comm_register_destroy_hook(_mxm_del_comm, NULL);
     if (mpi_errno)
         MPIU_ERR_POP(mpi_errno);
+
+    MPIDI_Anysource_improbe_fn = MPID_nem_mxm_anysource_improbe;
 
   fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_MXM_INIT);
@@ -266,8 +268,12 @@ int MPID_nem_mxm_vc_init(MPIDI_VC_t * vc)
 
     vc_area->pending_sends = 0;
 
-    vc->rndvSend_fn = NULL;
-    vc->rndvRecv_fn = NULL;
+    /* Use default rendezvous functions */
+    vc->eager_max_msg_sz = _mxm_eager_threshold();
+    vc->ready_eager_max_msg_sz = vc->eager_max_msg_sz;
+    vc->rndvSend_fn = MPID_nem_lmt_RndvSend;
+    vc->rndvRecv_fn = MPID_nem_lmt_RndvRecv;
+
     vc->sendNoncontig_fn = MPID_nem_mxm_SendNoncontig;
     vc->comm_ops = &comm_ops;
 
