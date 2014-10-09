@@ -139,6 +139,7 @@ int MPID_Comm_failed_bitarray(MPID_Comm *comm_ptr, uint32_t **bitarray, int acke
 
   fn_exit:
     MPIU_CHKLMEM_FREEALL();
+    MPIDI_FUNC_EXIT(MPID_STATE_COMM_FAILED_BITARRAY);
     return mpi_errno;
   fn_fail:
     goto fn_exit;
