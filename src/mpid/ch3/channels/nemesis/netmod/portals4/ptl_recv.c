@@ -19,7 +19,7 @@ static void dequeue_req(const ptl_event_t *e)
 
     /* At this point we know the ME is unlinked. Invalidate the handle to
        prevent further accesses, e.g. an attempted cancel. */
-    REQ_PTL(rreq)->me = PTL_INVALID_HANDLE;
+    REQ_PTL(rreq)->put_me = PTL_INVALID_HANDLE;
 
     found = MPIDI_CH3U_Recvq_DP(rreq);
     MPIU_Assert(found);
@@ -233,12 +233,32 @@ static int handler_recv_dequeue_large(const ptl_event_t *e)
     /* we need to GET the rest of the data from the sender's buffer */
     if (dt_contig) {
         /* recv buffer is contig */
+        ptl_size_t start, left_to_get, get_sz;
+        void * user_ptr = NULL;
+
         REQ_PTL(rreq)->event_handler = handler_recv_complete;
-        ret = MPID_nem_ptl_rptl_get(MPIDI_nem_ptl_global_md, (ptl_size_t)((char *)rreq->dev.user_buf + dt_true_lb + PTL_LARGE_THRESHOLD),
-                     data_sz - PTL_LARGE_THRESHOLD, vc_ptl->id, vc_ptl->ptg, e->match_bits, 0, rreq);
-        DBG_MSG_GET("global", data_sz - PTL_LARGE_THRESHOLD, vc->pg_rank, e->match_bits);
-        MPIU_DBG_MSG_P(CH3_CHANNEL, VERBOSE, "   buf=%p", (char *)rreq->dev.user_buf + dt_true_lb + PTL_LARGE_THRESHOLD);
-        MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlget", "**ptlget %s", MPID_nem_ptl_strerror(ret));
+
+        start = (ptl_size_t)((char *)rreq->dev.user_buf + dt_true_lb + PTL_LARGE_THRESHOLD);
+        left_to_get = data_sz - PTL_LARGE_THRESHOLD;
+
+        while (left_to_get > 0) {
+            /* get up to the maximum allowed by the portals interface */
+            if (left_to_get > MPIDI_nem_ptl_ni_limits.max_msg_size) {
+                get_sz = MPIDI_nem_ptl_ni_limits.max_msg_size;
+            } else {
+                get_sz = left_to_get;
+                /* attach the request to the final operation */
+                user_ptr = rreq;
+            }
+            ret = MPID_nem_ptl_rptl_get(MPIDI_nem_ptl_global_md, start, get_sz, vc_ptl->id, vc_ptl->ptg, e->match_bits, 0, user_ptr);
+            DBG_MSG_GET("global", get_sz, vc->pg_rank, e->match_bits);
+            MPIU_DBG_MSG_P(CH3_CHANNEL, VERBOSE, "   buf=%p", (char *)start);
+            MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlget", "**ptlget %s", MPID_nem_ptl_strerror(ret));
+
+            /* account for what has been sent */
+            start += get_sz;
+            left_to_get -= get_sz;
+        }
         goto fn_exit;
     }
 
@@ -479,7 +499,7 @@ int MPID_nem_ptl_recv_posted(MPIDI_VC_t *vc, MPID_Request *rreq)
         
     }
 
-    ret = PtlMEAppend(MPIDI_nem_ptl_ni, MPIDI_nem_ptl_pt, &me, PTL_PRIORITY_LIST, rreq, &REQ_PTL(rreq)->me);
+    ret = PtlMEAppend(MPIDI_nem_ptl_ni, MPIDI_nem_ptl_pt, &me, PTL_PRIORITY_LIST, rreq, &REQ_PTL(rreq)->put_me);
     MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlmeappend", "**ptlmeappend %s", MPID_nem_ptl_strerror(ret));
     DBG_MSG_MEAPPEND("REG", vc ? vc->pg_rank : MPI_ANY_SOURCE, me, rreq);
     MPIU_DBG_MSG_P(CH3_CHANNEL, VERBOSE, "    buf=%p", me.start);
@@ -533,8 +553,8 @@ static int cancel_recv(MPID_Request *rreq, int *cancelled)
     /* An invalid handle indicates the operation has been completed
        and the matching list entry unlinked. At that point, the operation
        cannot be cancelled. */
-    if (REQ_PTL(rreq)->me != PTL_INVALID_HANDLE) {
-        ptl_err = PtlMEUnlink(REQ_PTL(rreq)->me);
+    if (REQ_PTL(rreq)->put_me != PTL_INVALID_HANDLE) {
+        ptl_err = PtlMEUnlink(REQ_PTL(rreq)->put_me);
         if (ptl_err == PTL_OK)
             *cancelled = TRUE;
         /* FIXME: if we properly invalidate matching list entry handles, we should be
