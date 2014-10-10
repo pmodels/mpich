@@ -165,11 +165,14 @@ int MPID_nem_ptl_poll(int is_blocking_poll)
         case PTL_EVENT_ACK:
         case PTL_EVENT_REPLY:
         case PTL_EVENT_SEARCH: {
-            MPID_Request * const req = event.user_ptr;
-            MPIU_DBG_MSG_P(CH3_CHANNEL, VERBOSE, "req = %p", req);
-            MPIU_DBG_MSG_P(CH3_CHANNEL, VERBOSE, "REQ_PTL(req)->event_handler = %p", REQ_PTL(req)->event_handler);
-            mpi_errno = REQ_PTL(req)->event_handler(&event);
-            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+            /* intermediate operations for large messages pass a NULL user_ptr. we can ignore these events */
+            if (event.user_ptr) {
+                MPID_Request * const req = event.user_ptr;
+                MPIU_DBG_MSG_P(CH3_CHANNEL, VERBOSE, "req = %p", req);
+                MPIU_DBG_MSG_P(CH3_CHANNEL, VERBOSE, "REQ_PTL(req)->event_handler = %p", REQ_PTL(req)->event_handler);
+                mpi_errno = REQ_PTL(req)->event_handler(&event);
+                if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+            }
             break;
         }
         case PTL_EVENT_AUTO_FREE:

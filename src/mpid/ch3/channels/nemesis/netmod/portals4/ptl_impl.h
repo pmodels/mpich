@@ -42,7 +42,8 @@ typedef struct {
     int noncontig;
     int large;
     ptl_handle_md_t md;
-    ptl_handle_me_t me;
+    ptl_handle_me_t put_me;
+    ptl_handle_me_t *get_me_p;
     void *chunk_buffer[MPID_NEM_PTL_NUM_CHUNK_BUFFERS];
     MPIDI_msg_sz_t bytes_put;
     int found; /* used in probes with PtlMESearch() */
@@ -61,7 +62,8 @@ typedef struct {
         REQ_PTL(req_)->noncontig     = FALSE;                   \
         REQ_PTL(req_)->large         = FALSE;                   \
         REQ_PTL(req_)->md            = PTL_INVALID_HANDLE;      \
-        REQ_PTL(req_)->me            = PTL_INVALID_HANDLE;      \
+        REQ_PTL(req_)->put_me        = PTL_INVALID_HANDLE;      \
+        REQ_PTL(req_)->get_me_p      = NULL;                    \
         REQ_PTL(req_)->event_handler = NULL;                    \
     } while (0)
 

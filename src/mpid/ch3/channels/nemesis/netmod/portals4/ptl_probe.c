@@ -73,7 +73,7 @@ static int handle_mprobe(const ptl_event_t *e)
 
     /* At this point we know the ME is unlinked. Invalidate the handle to
        prevent further accesses, e.g. an attempted cancel. */
-    REQ_PTL(req)->me = PTL_INVALID_HANDLE;
+    REQ_PTL(req)->put_me = PTL_INVALID_HANDLE;
     req->dev.recv_pending_count = 1;
 
   fn_exit:
