@@ -135,10 +135,10 @@ MPID_nem_tofu_init (MPIDI_PG_t *pg_p, int pg_rank,
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_TOFU_INIT);
 
-    llc_errno = LLC_init();
+    llc_errno = LLC_init(TYPE_MPI);
     MPIU_ERR_CHKANDJUMP(llc_errno, mpi_errno, MPI_ERR_OTHER, "**LLC_init");
 
-    llc_errno = LLC_comm_rank(LLC_COMM_WORLD, &MPID_nem_tofu_my_llc_rank);
+    llc_errno = LLC_comm_rank(LLC_COMM_MPICH, &MPID_nem_tofu_my_llc_rank);
     MPIU_ERR_CHKANDJUMP(llc_errno, mpi_errno, MPI_ERR_OTHER, "**LLC_comm_rank");
 
     /* Announce my LLC rank */

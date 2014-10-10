@@ -266,7 +266,7 @@ int MPID_nem_tofu_recv_posted(struct MPIDI_VC *vc, struct MPID_Request *req)
     }
 
     int LLC_my_rank;
-    LLC_comm_rank(LLC_COMM_WORLD, &LLC_my_rank);
+    LLC_comm_rank(LLC_COMM_MPICH, &LLC_my_rank);
     dprintf("tofu_isend,LLC_my_rank=%d\n", LLC_my_rank);
 
     dprintf("tofu_recv_posted,remote_endpoint_addr=%ld\n", VC_FIELD(vc, remote_endpoint_addr));
@@ -274,7 +274,7 @@ int MPID_nem_tofu_recv_posted(struct MPIDI_VC *vc, struct MPID_Request *req)
     LLC_cmd_t *cmd = LLC_cmd_alloc(1);
 
     cmd[0].opcode = LLC_OPCODE_RECV;
-    cmd[0].comm = LLC_COMM_WORLD;
+    cmd[0].comm = LLC_COMM_MPICH;
     cmd[0].rank = VC_FIELD(vc, remote_endpoint_addr);
     cmd[0].req_id = cmd;
     

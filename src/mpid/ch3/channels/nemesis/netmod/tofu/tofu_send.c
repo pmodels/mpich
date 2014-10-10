@@ -38,7 +38,7 @@ int MPID_nem_tofu_isend(struct MPIDI_VC *vc, const void *buf, int count, MPI_Dat
             MPIDI_Process.my_pg_rank, vc->pg_rank, buf, count, datatype, dest, tag, comm, context_offset);
 
     int LLC_my_rank;
-    LLC_comm_rank(LLC_COMM_WORLD, &LLC_my_rank);
+    LLC_comm_rank(LLC_COMM_MPICH, &LLC_my_rank);
     dprintf("tofu_isend,LLC_my_rank=%d\n", LLC_my_rank);
 
     struct MPID_Request * sreq = MPID_Request_create();
@@ -58,7 +58,7 @@ int MPID_nem_tofu_isend(struct MPIDI_VC *vc, const void *buf, int count, MPI_Dat
 
     LLC_cmd_t *cmd = LLC_cmd_alloc(1);
     cmd[0].opcode = LLC_OPCODE_SEND;
-    cmd[0].comm = LLC_COMM_WORLD;
+    cmd[0].comm = LLC_COMM_MPICH;
     cmd[0].rank = VC_FIELD(vc, remote_endpoint_addr);
     cmd[0].req_id = cmd;
     
@@ -495,7 +495,7 @@ ssize_t llctofu_writev(void *endpt, uint64_t raddr,
 
         UNSOLICITED_NUM_INC(cbarg);
         lcmd->opcode = LLC_OPCODE_UNSOLICITED;
-        lcmd->comm = LLC_COMM_WORLD;
+        lcmd->comm = LLC_COMM_MPICH;
         lcmd->rank = (uint32_t)raddr; /* XXX */
         lcmd->req_id = lcmd;
         
@@ -594,7 +594,7 @@ int llctofu_poll(int in_blocking_poll,
     LLC_event_t events[1];
 
     while(1) { 
-        llc_errno = LLC_poll(1, events, &nevents);
+        llc_errno = LLC_poll(LLC_COMM_MPICH, 1, events, &nevents);
         MPIU_ERR_CHKANDJUMP(llc_errno, mpi_errno, MPI_ERR_OTHER, "**LLC_poll");
 
         LLC_cmd_t *lcmd;
