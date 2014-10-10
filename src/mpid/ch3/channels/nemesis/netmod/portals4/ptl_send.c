@@ -20,7 +20,7 @@ static int handler_send_complete(const ptl_event_t *e)
 
     MPIDI_FUNC_ENTER(MPID_STATE_HANDLER_SEND_COMPLETE);
 
-    MPIU_Assert(e->type == PTL_EVENT_ACK || e->type == PTL_EVENT_PUT || e->type == PTL_EVENT_GET);
+    MPIU_Assert(e->type == PTL_EVENT_ACK || e->type == PTL_EVENT_GET);
 
     if (REQ_PTL(sreq)->md != PTL_INVALID_HANDLE) {
         ret = PtlMDRelease(REQ_PTL(sreq)->md);
