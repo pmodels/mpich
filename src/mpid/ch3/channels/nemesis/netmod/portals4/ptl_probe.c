@@ -241,7 +241,6 @@ int MPID_nem_ptl_improbe(MPIDI_VC_t *vc, int source, int tag, MPID_Comm *comm, i
     }
     else {
         MPID_Request_release(req);
-        *message = MPI_MESSAGE_NULL;
     }
 
  fn_exit:
