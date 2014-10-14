@@ -5977,7 +5977,7 @@ AC_DEFINE(HAVE_MPICHCONF,1,[Define so that we can test whether the mpichconf.h f
 # add the LDFLAGS/LIBS we got so far to WRAPPERs
 if test "$INTERLIB_DEPS" = "no" ; then
    WRAPPER_LDFLAGS="$WRAPPER_LDFLAGS $LDFLAGS"
-   WRAPPER_LIBS="$WRAPPER_LIBS $EXTERNAL_LIBS $ROMIO_EXTERNAL_LIBS"
+   WRAPPER_LIBS="$WRAPPER_LIBS $EXTERNAL_LIBS"
 fi
 
 if test "$USE_PMI2_API" = "yes" ; then
