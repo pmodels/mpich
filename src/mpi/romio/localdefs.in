@@ -1,4 +1,7 @@
 #! /bin/sh
-ROMIO_EXTERNAL_LIBS="@LIBS@"
+
+# Append ROMIO library dependencies to the global list
+EXTERNAL_LIBS="$EXTERNAL_LIBS @LIBS@"
+
 MPI_OFFSET_TYPE="@MPI_OFFSET_TYPE@"
 FORTRAN_MPI_OFFSET="@FORTRAN_MPI_OFFSET@"
