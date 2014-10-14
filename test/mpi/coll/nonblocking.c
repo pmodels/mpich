@@ -86,46 +86,106 @@ int main(int argc, char **argv)
     MPI_Igather(sbuf, NUM_INTS, MPI_INT, rbuf, NUM_INTS, MPI_INT, 0, comm, &req);
     MPI_Wait(&req, MPI_STATUS_IGNORE);
 
+    if (0 == rank)
+        MPI_Igather(MPI_IN_PLACE, -1, MPI_DATATYPE_NULL, rbuf, NUM_INTS, MPI_INT, 0, comm, &req);
+    else
+        MPI_Igather(sbuf, NUM_INTS, MPI_INT, rbuf, NUM_INTS, MPI_INT, 0, comm, &req);
+    MPI_Wait(&req, MPI_STATUS_IGNORE);
+
     MPI_Igatherv(sbuf, NUM_INTS, MPI_INT, rbuf, rcounts, rdispls, MPI_INT, 0, comm, &req);
+    MPI_Wait(&req, MPI_STATUS_IGNORE);
+
+    if (0 == rank)
+        MPI_Igatherv(MPI_IN_PLACE, -1, MPI_DATATYPE_NULL, rbuf, rcounts, rdispls, MPI_INT, 0, comm, &req);
+    else
+        MPI_Igatherv(sbuf, NUM_INTS, MPI_INT, rbuf, rcounts, rdispls, MPI_INT, 0, comm, &req);
     MPI_Wait(&req, MPI_STATUS_IGNORE);
 
     MPI_Iscatter(sbuf, NUM_INTS, MPI_INT, rbuf, NUM_INTS, MPI_INT, 0, comm, &req);
     MPI_Wait(&req, MPI_STATUS_IGNORE);
 
+    if (0 == rank)
+        MPI_Iscatter(sbuf, NUM_INTS, MPI_INT, MPI_IN_PLACE, -1, MPI_DATATYPE_NULL, 0, comm, &req);
+    else
+        MPI_Iscatter(sbuf, NUM_INTS, MPI_INT, rbuf, NUM_INTS, MPI_INT, 0, comm, &req);
+    MPI_Wait(&req, MPI_STATUS_IGNORE);
+
     MPI_Iscatterv(sbuf, scounts, sdispls, MPI_INT, rbuf, NUM_INTS, MPI_INT, 0, comm, &req);
+    MPI_Wait(&req, MPI_STATUS_IGNORE);
+
+    if (0 == rank)
+        MPI_Iscatterv(sbuf, scounts, sdispls, MPI_INT, MPI_IN_PLACE, -1, MPI_DATATYPE_NULL, 0, comm, &req);
+    else
+        MPI_Iscatterv(sbuf, scounts, sdispls, MPI_INT, rbuf, NUM_INTS, MPI_INT, 0, comm, &req);
     MPI_Wait(&req, MPI_STATUS_IGNORE);
 
     MPI_Iallgather(sbuf, NUM_INTS, MPI_INT, rbuf, NUM_INTS, MPI_INT, comm, &req);
     MPI_Wait(&req, MPI_STATUS_IGNORE);
 
+    MPI_Iallgather(MPI_IN_PLACE, -1, MPI_DATATYPE_NULL, rbuf, NUM_INTS, MPI_INT, comm, &req);
+    MPI_Wait(&req, MPI_STATUS_IGNORE);
+
     MPI_Iallgatherv(sbuf, NUM_INTS, MPI_INT, rbuf, rcounts, rdispls, MPI_INT, comm, &req);
+    MPI_Wait(&req, MPI_STATUS_IGNORE);
+
+    MPI_Iallgatherv(MPI_IN_PLACE, -1, MPI_DATATYPE_NULL, rbuf, rcounts, rdispls, MPI_INT, comm, &req);
     MPI_Wait(&req, MPI_STATUS_IGNORE);
 
     MPI_Ialltoall(sbuf, NUM_INTS, MPI_INT, rbuf, NUM_INTS, MPI_INT, comm, &req);
     MPI_Wait(&req, MPI_STATUS_IGNORE);
 
+    MPI_Ialltoall(MPI_IN_PLACE, -1, MPI_DATATYPE_NULL, rbuf, NUM_INTS, MPI_INT, comm, &req);
+    MPI_Wait(&req, MPI_STATUS_IGNORE);
+
     MPI_Ialltoallv(sbuf, scounts, sdispls, MPI_INT, rbuf, rcounts, rdispls, MPI_INT, comm, &req);
+    MPI_Wait(&req, MPI_STATUS_IGNORE);
+
+    MPI_Ialltoallv(MPI_IN_PLACE, NULL, NULL, MPI_DATATYPE_NULL, rbuf, rcounts, rdispls, MPI_INT, comm, &req);
     MPI_Wait(&req, MPI_STATUS_IGNORE);
 
     MPI_Ialltoallw(sbuf, scounts, sdispls, types, rbuf, rcounts, rdispls, types, comm, &req);
     MPI_Wait(&req, MPI_STATUS_IGNORE);
 
+    MPI_Ialltoallw(MPI_IN_PLACE, NULL, NULL, NULL, rbuf, rcounts, rdispls, types, comm, &req);
+    MPI_Wait(&req, MPI_STATUS_IGNORE);
+
     MPI_Ireduce(sbuf, rbuf, NUM_INTS, MPI_INT, MPI_SUM, 0, comm, &req);
+    MPI_Wait(&req, MPI_STATUS_IGNORE);
+
+    if (0 == rank)
+        MPI_Ireduce(MPI_IN_PLACE, rbuf, NUM_INTS, MPI_INT, MPI_SUM, 0, comm, &req);
+    else
+        MPI_Ireduce(sbuf, rbuf, NUM_INTS, MPI_INT, MPI_SUM, 0, comm, &req);
     MPI_Wait(&req, MPI_STATUS_IGNORE);
 
     MPI_Iallreduce(sbuf, rbuf, NUM_INTS, MPI_INT, MPI_SUM, comm, &req);
     MPI_Wait(&req, MPI_STATUS_IGNORE);
 
+    MPI_Iallreduce(MPI_IN_PLACE, rbuf, NUM_INTS, MPI_INT, MPI_SUM, comm, &req);
+    MPI_Wait(&req, MPI_STATUS_IGNORE);
+
     MPI_Ireduce_scatter(sbuf, rbuf, rcounts, MPI_INT, MPI_SUM, comm, &req);
+    MPI_Wait(&req, MPI_STATUS_IGNORE);
+
+    MPI_Ireduce_scatter(MPI_IN_PLACE, rbuf, rcounts, MPI_INT, MPI_SUM, comm, &req);
     MPI_Wait(&req, MPI_STATUS_IGNORE);
 
     MPI_Ireduce_scatter_block(sbuf, rbuf, NUM_INTS, MPI_INT, MPI_SUM, comm, &req);
     MPI_Wait(&req, MPI_STATUS_IGNORE);
 
+    MPI_Ireduce_scatter_block(MPI_IN_PLACE, rbuf, NUM_INTS, MPI_INT, MPI_SUM, comm, &req);
+    MPI_Wait(&req, MPI_STATUS_IGNORE);
+
     MPI_Iscan(sbuf, rbuf, NUM_INTS, MPI_INT, MPI_SUM, comm, &req);
     MPI_Wait(&req, MPI_STATUS_IGNORE);
 
+    MPI_Iscan(MPI_IN_PLACE, rbuf, NUM_INTS, MPI_INT, MPI_SUM, comm, &req);
+    MPI_Wait(&req, MPI_STATUS_IGNORE);
+
     MPI_Iexscan(sbuf, rbuf, NUM_INTS, MPI_INT, MPI_SUM, comm, &req);
+    MPI_Wait(&req, MPI_STATUS_IGNORE);
+
+    MPI_Iexscan(MPI_IN_PLACE, rbuf, NUM_INTS, MPI_INT, MPI_SUM, comm, &req);
     MPI_Wait(&req, MPI_STATUS_IGNORE);
 
     if (sbuf) free(sbuf);
