@@ -399,7 +399,7 @@ int MPID_nem_ptl_recv_posted(MPIDI_VC_t *vc, MPID_Request *rreq)
     MPIDI_Datatype_get_info(rreq->dev.user_count, rreq->dev.datatype, dt_contig, data_sz, dt_ptr, dt_true_lb);
     MPIU_DBG_MSG_FMT(CH3_CHANNEL, VERBOSE, (MPIU_DBG_FDEST, "count=%d datatype=%#x contig=%d data_sz=%lu", rreq->dev.user_count, rreq->dev.datatype, dt_contig, data_sz));
 
-    if (data_sz < PTL_LARGE_THRESHOLD) {
+    if (data_sz <= PTL_LARGE_THRESHOLD) {
         if (dt_contig) {
             /* small contig message */
             MPIU_DBG_MSG(CH3_CHANNEL, VERBOSE, "Small contig message");
