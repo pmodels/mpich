@@ -328,7 +328,6 @@ int MPIC_Recv(void *buf, int count, MPI_Datatype datatype, int source, int tag,
         mpi_errno = MPIC_Wait(request_ptr);
         if (mpi_errno == MPI_SUCCESS) {
             *status = request_ptr->status;
-            mpi_errno = request_ptr->status.MPI_ERROR;
         } else {
             MPIU_ERR_POP(mpi_errno);
         }
@@ -336,10 +335,14 @@ int MPIC_Recv(void *buf, int count, MPI_Datatype datatype, int source, int tag,
     }
 
     if (source != MPI_PROC_NULL) {
-        if (MPIR_TAG_CHECK_ERROR_BIT(status->MPI_TAG)) {
+        int ec;
+        MPI_Error_class(status->MPI_ERROR, &ec);
+        if (MPIX_ERR_REVOKED != MPIR_ERR_GET_CLASS(status->MPI_ERROR) &&
+            MPIX_ERR_PROC_FAILED != MPIR_ERR_GET_CLASS(status->MPI_ERROR) &&
+            MPIR_TAG_CHECK_ERROR_BIT(status->MPI_TAG)) {
             *errflag = TRUE;
             MPIR_TAG_CLEAR_ERROR_BIT(status->MPI_TAG);
-        } else if (MPIX_ERR_REVOKED != MPIR_ERR_GET_CLASS(status->MPI_ERROR)) {
+        } else if (MPI_SUCCESS == MPIR_ERR_GET_CLASS(status->MPI_ERROR)) {
             MPIU_Assert(status->MPI_TAG == tag);
         }
     }
