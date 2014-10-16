@@ -24,14 +24,16 @@ static int entered_drain_scq = 0;
 #define MPID_NEM_IB_SEND_PROGRESS_POLLINGSET MPID_nem_ib_send_progress(vc);
 #else
 #define MPID_NEM_IB_SEND_PROGRESS_POLLINGSET {     \
-    int n;                                         \
-    for (n = 0; n < MPID_NEM_IB_NRINGBUF; n++) {                    \
-        if (((MPID_nem_ib_ringbuf_allocated[n / 64] >> (n & 63)) & 1) == 0) { \
-            continue;                                               \
-        } \
-        mpi_errno = MPID_nem_ib_poll_eager(&MPID_nem_ib_ringbuf[n]); /*FIXME: perform send_progress for all sendqs */\
-        MPIU_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**MPID_nem_ib_poll_eager"); \
-         } \
+        do {                                                        \
+            int n;                                                      \
+            for (n = 0; n < MPID_NEM_IB_NRINGBUF; n++) {                \
+                if (((MPID_nem_ib_ringbuf_allocated[n / 64] >> (n & 63)) & 1) == 0) { \
+                    continue;                                           \
+                }                                                       \
+                mpi_errno = MPID_nem_ib_poll_eager(&MPID_nem_ib_ringbuf[n]); /*FIXME: perform send_progress for all sendqs */ \
+                MPIU_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**MPID_nem_ib_poll_eager"); \
+            }                                                           \
+        } while (0)
 }
 #if 0
    int n;                                         \
@@ -45,11 +47,16 @@ static int entered_drain_scq = 0;
 #endif
 #if 1
 #define MPID_NEM_IB_CHECK_AND_SEND_PROGRESS \
-    if (!MPID_nem_ib_sendq_empty(vc_ib->sendq) && MPID_nem_ib_sendq_ready_to_send_head(vc_ib)) { \
-    MPID_nem_ib_send_progress(vc); \
-}
+    do {                                                                \
+        if (!MPID_nem_ib_sendq_empty(vc_ib->sendq) && MPID_nem_ib_sendq_ready_to_send_head(vc_ib)) { \
+            MPID_nem_ib_send_progress(vc);                              \
+        }                                                               \
+    } while (0)
 #else
-#define MPID_NEM_IB_CHECK_AND_SEND_PROGRESS MPID_NEM_IB_SEND_PROGRESS_POLLINGSET
+#define MPID_NEM_IB_CHECK_AND_SEND_PROGRESS \
+    do { \
+        MPID_NEM_IB_SEND_PROGRESS_POLLINGSET; \
+    } while (0)
 #endif
 
 #undef FUNCNAME
@@ -1690,13 +1697,13 @@ int MPID_nem_ib_PktHandler_EagerSend(MPIDI_VC_t * vc,
      * progress_send for all of VCs using nces in ib_poll. */
     dprintf("pkthandler,eagersend,send_progress\n");
     fflush(stdout);
-    MPID_NEM_IB_CHECK_AND_SEND_PROGRESS
-        /* fall back to the original handler */
-        /* we don't need to worry about the difference caused by embedding seq_num
-         * because size of MPI-header of MPIDI_CH3_PKT_EAGER_SEND equals to sizeof(MPIDI_CH3_Pkt_t)
-         * see MPID_nem_ib_iSendContig
-         */
-        //ch3_pkt->type = MPIDI_CH3_PKT_EAGER_SEND;
+    MPID_NEM_IB_CHECK_AND_SEND_PROGRESS;
+    /* fall back to the original handler */
+    /* we don't need to worry about the difference caused by embedding seq_num
+     * because size of MPI-header of MPIDI_CH3_PKT_EAGER_SEND equals to sizeof(MPIDI_CH3_Pkt_t)
+     * see MPID_nem_ib_iSendContig
+     */
+    //ch3_pkt->type = MPIDI_CH3_PKT_EAGER_SEND;
 #if 0
         mpi_errno = MPID_nem_handle_pkt(vc, (char *) pkt_parent_class, *buflen);
 #else
@@ -2254,7 +2261,8 @@ int MPID_nem_ib_pkt_GET_DONE_handler(MPIDI_VC_t * vc,
 
         if (REQ_FIELD(req, seg_seq_num) == REQ_FIELD(req, seg_num)) {
             /* last packet of segments */
-            MPID_NEM_IB_CHECK_AND_SEND_PROGRESS mpi_errno = vc->ch.lmt_done_send(vc, req);
+            MPID_NEM_IB_CHECK_AND_SEND_PROGRESS;
+            mpi_errno = vc->ch.lmt_done_send(vc, req);
             if (mpi_errno)
                 MPIU_ERR_POP(mpi_errno);
         }
@@ -2446,8 +2454,10 @@ int MPID_nem_ib_PktHandler_reply_seq_num(MPIDI_VC_t * vc,
     /* try to send from sendq because at least one RDMA-write-to buffer has been released */
     //dprintf("pkthandler,reply_seq_num,send_progress\n");
     dprintf("pkthandler,reply_seq_num,send_progress\n");
-    MPID_NEM_IB_CHECK_AND_SEND_PROGRESS fn_exit:MPIDI_FUNC_EXIT
-        (MPID_STATE_MPID_NEM_IB_PKTHANDLER_REPLY_SEQ_NUM);
+    MPID_NEM_IB_CHECK_AND_SEND_PROGRESS;
+
+  fn_exit:
+    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_IB_PKTHANDLER_REPLY_SEQ_NUM);
     return mpi_errno;
     //fn_fail:
     goto fn_exit;
