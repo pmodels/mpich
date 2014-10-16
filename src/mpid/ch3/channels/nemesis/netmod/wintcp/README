@@ -1,5 +1,0 @@
-This directory contains the network module for windows. Eventually this network module should be merged with the new_tcpmodule.
-Since WSAPoll() is available on windows ver > Vista/Srv2008 we modify socksm.c in newtcp to use select() instead of poll() for now and later merge windows tcp module with the unix tcp module once WSAPoll() becomes the default polling method.
-Creating an abstraction for select() and poll() is not easy due to the difference in the usage model for the funcs. Some differences which make the performance sensitive abstraction difficult are given below,
-1) select() overwrites the input arg/fd_sets => If one needs to select() on the same set of fds the fd_set has to be saved and copied back each time (and is there a reliable way to do that considering the fact that fd_set is opaque)
-2) select() returns the number of available events while poll() returns the number of fds which have events 
