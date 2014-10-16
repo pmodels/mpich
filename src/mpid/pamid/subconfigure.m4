@@ -228,6 +228,13 @@ if test "${pamid_platform}" = "BGQ" ; then
   dnl
   dnl Only the 'cpi', 'mpivars', and 'mpichversion' executables have this problem.
   MPID_LIBTOOL_STATIC_FLAG="-all-static"
+
+  dnl Another bgq special case. The default linker behavior is to use static versions
+  dnl of libraries. This makes supporting interlibrary dependencies difficult. Just
+  dnl disable them to make our lives easier.
+  if test "$INTERLIB_DEPS" = "yes"; then
+	INTERLIB_DEPS="no"
+  fi
 fi
 
 if test "${pamid_platform}" = "PE" ; then
