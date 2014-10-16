@@ -65,29 +65,6 @@ int MPID_nem_mx_cancel_send(MPIDI_VC_t *vc, MPID_Request *sreq)
 }
 
 
-/* code in cancel_recv */
-/* FIXME: The vc is only needed to find which function to call*/
-/* This is otherwise any_source ready */
-/*
-#ifdef ENABLE_COMM_OVERRIDES
- {                                                              
-      MPIDI_VC_t *vc;
-      MPIU_Assert(rreq->dev.match.parts.rank != MPI_ANY_SOURCE);
-      MPIDI_Comm_get_vc_set_active(rreq->comm, rreq->dev.match.parts.rank, &vc);
-      if (vc->comm_ops && vc->comm_ops->cancel_recv)
-      {
-         int handled;
-         handled = vc->comm_ops->cancel_recv(NULL, rreq);
-         if (handled)
-         {
-            MPIDI_FUNC_EXIT(MPID_STATE_MPID_CANCEL_RECV);
-            return MPI_SUCCESS;
-         }
-      }
-  }
-  #endif
-*/
-
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_mx_cancel_recv
 #undef FCNAME
