@@ -4502,6 +4502,7 @@ int MPIDI_CH3_PktHandler_Put( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
         /* derived datatype */
         MPIDI_Request_set_type(req, MPIDI_REQUEST_TYPE_PUT_RESP_DERIVED_DT);
         req->dev.datatype = MPI_DATATYPE_NULL;
+        req->dev.OnFinal = MPIDI_CH3_ReqHandler_PutAccumRespComplete;
 	    
         req->dev.dtype_info = (MPIDI_RMA_dtype_info *) 
             MPIU_Malloc(sizeof(MPIDI_RMA_dtype_info));
@@ -4806,6 +4807,7 @@ int MPIDI_CH3_PktHandler_Accumulate( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 	MPIDI_Request_set_type(req, MPIDI_REQUEST_TYPE_ACCUM_RESP_DERIVED_DT);
 	req->dev.OnDataAvail = MPIDI_CH3_ReqHandler_AccumRespDerivedDTComplete;
 	req->dev.datatype = MPI_DATATYPE_NULL;
+        req->dev.OnFinal = MPIDI_CH3_ReqHandler_PutAccumRespComplete;
                 
 	req->dev.dtype_info = (MPIDI_RMA_dtype_info *) 
 	    MPIU_Malloc(sizeof(MPIDI_RMA_dtype_info));

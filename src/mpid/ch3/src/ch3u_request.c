@@ -88,6 +88,8 @@ MPID_Request * MPID_Request_create(void)
 	req->dev.iov_offset        = 0;
         req->dev.flags             = MPIDI_CH3_PKT_FLAG_NONE;
         req->dev.resp_request_handle = MPI_REQUEST_NULL;
+        req->dev.OnDataAvail       = NULL;
+        req->dev.OnFinal           = NULL;
 #ifdef MPIDI_CH3_REQUEST_INIT
 	MPIDI_CH3_REQUEST_INIT(req);
 #endif
@@ -397,7 +399,7 @@ int MPIDI_CH3U_Request_load_recv_iov(MPID_Request * const rreq)
 	    MPIU_DBG_MSG(CH3_CHANNEL,VERBOSE,
      "updating rreq to read the remaining data directly into the user buffer");
 	    /* Eventually, use OnFinal for this instead */
-	    rreq->dev.OnDataAvail = 0;
+	    rreq->dev.OnDataAvail = rreq->dev.OnFinal;
 	}
 	else if (last == rreq->dev.segment_size || 
 		 (last - rreq->dev.segment_first) / rreq->dev.iov_count >= MPIDI_IOV_DENSITY_MIN)
@@ -466,7 +468,7 @@ int MPIDI_CH3U_Request_load_recv_iov(MPID_Request * const rreq)
 	    rreq->dev.iov[0].MPID_IOV_LEN = data_sz;
 	    MPIU_Assert(MPIDI_Request_get_type(rreq) == MPIDI_REQUEST_TYPE_RECV);
 	    /* Eventually, use OnFinal for this instead */
-	    rreq->dev.OnDataAvail = 0;
+	    rreq->dev.OnDataAvail = rreq->dev.OnFinal;
 	}
 	else
 	{
