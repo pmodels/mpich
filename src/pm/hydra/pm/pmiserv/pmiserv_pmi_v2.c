@@ -747,9 +747,9 @@ static HYD_status fn_spawn(int fd, int pid, int pgid, char *args[])
 static HYD_status fn_name_publish(int fd, int pid, int pgid, char *args[])
 {
     struct HYD_string_stash stash;
-    char *cmd, *thrid, *val, *name, *port;
+    char *cmd, *thrid, *val, *name = NULL, *port = NULL;
     int token_count, success;
-    struct HYD_pmcd_token *tokens;
+    struct HYD_pmcd_token *tokens = NULL;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -792,6 +792,12 @@ static HYD_status fn_name_publish(int fd, int pid, int pgid, char *args[])
     HYDU_FREE(cmd);
 
   fn_exit:
+    if (tokens)
+        HYD_pmcd_pmi_free_tokens(tokens, token_count);
+    if (name)
+        HYDU_FREE(name);
+    if (port)
+        HYDU_FREE(port);
     HYDU_FUNC_EXIT();
     return status;
 
@@ -804,7 +810,7 @@ static HYD_status fn_name_unpublish(int fd, int pid, int pgid, char *args[])
     struct HYD_string_stash stash;
     char *cmd, *thrid, *name;
     int token_count, success;
-    struct HYD_pmcd_token *tokens;
+    struct HYD_pmcd_token *tokens = NULL;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -842,6 +848,8 @@ static HYD_status fn_name_unpublish(int fd, int pid, int pgid, char *args[])
     HYDU_FREE(cmd);
 
   fn_exit:
+    if (tokens)
+        HYD_pmcd_pmi_free_tokens(tokens, token_count);
     HYDU_FUNC_EXIT();
     return status;
 
@@ -853,9 +861,8 @@ static HYD_status fn_name_lookup(int fd, int pid, int pgid, char *args[])
 {
     struct HYD_string_stash stash;
     char *cmd, *thrid, *name, *value;
-    struct HYD_pmcd_pmi_publish *publish;
     int token_count;
-    struct HYD_pmcd_token *tokens;
+    struct HYD_pmcd_token *tokens = NULL;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -864,9 +871,6 @@ static HYD_status fn_name_lookup(int fd, int pid, int pgid, char *args[])
     HYDU_ERR_POP(status, "unable to convert args to tokens\n");
 
     thrid = HYD_pmcd_pmi_find_token_keyval(tokens, token_count, "thrid");
-
-    HYDU_MALLOC(publish, struct HYD_pmcd_pmi_publish *, sizeof(struct HYD_pmcd_pmi_publish),
-                status);
 
     if ((name = HYD_pmcd_pmi_find_token_keyval(tokens, token_count, "name")) == NULL)
         HYDU_ERR_POP(status, "cannot find token: name\n");
@@ -897,6 +901,8 @@ static HYD_status fn_name_lookup(int fd, int pid, int pgid, char *args[])
     HYDU_FREE(cmd);
 
   fn_exit:
+    if (tokens)
+        HYD_pmcd_pmi_free_tokens(tokens, token_count);
     HYDU_FUNC_EXIT();
     return status;
 
