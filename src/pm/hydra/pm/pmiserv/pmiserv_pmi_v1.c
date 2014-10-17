@@ -629,8 +629,8 @@ static HYD_status fn_publish_name(int fd, int pid, int pgid, char *args[])
     struct HYD_string_stash stash;
     char *cmd, *val;
     int token_count;
-    struct HYD_pmcd_token *tokens;
-    char *name, *port;
+    struct HYD_pmcd_token *tokens = NULL;
+    char *name = NULL, *port = NULL;
     int success = 0;
     HYD_status status = HYD_SUCCESS;
 
@@ -666,6 +666,13 @@ static HYD_status fn_publish_name(int fd, int pid, int pgid, char *args[])
     HYDU_FREE(cmd);
 
   fn_exit:
+    if (tokens)
+        HYD_pmcd_pmi_free_tokens(tokens, token_count);
+    if (name)
+        HYDU_FREE(name);
+    if (port)
+        HYDU_FREE(port);
+
     HYDU_FUNC_EXIT();
     return status;
 
@@ -678,7 +685,7 @@ static HYD_status fn_unpublish_name(int fd, int pid, int pgid, char *args[])
     struct HYD_string_stash stash;
     char *cmd, *name;
     int token_count;
-    struct HYD_pmcd_token *tokens;
+    struct HYD_pmcd_token *tokens = NULL;
     int success = 0;
     HYD_status status = HYD_SUCCESS;
 
@@ -709,6 +716,8 @@ static HYD_status fn_unpublish_name(int fd, int pid, int pgid, char *args[])
     HYDU_FREE(cmd);
 
   fn_exit:
+    if (tokens)
+        HYD_pmcd_pmi_free_tokens(tokens, token_count);
     HYDU_FUNC_EXIT();
     return status;
 
@@ -719,9 +728,9 @@ static HYD_status fn_unpublish_name(int fd, int pid, int pgid, char *args[])
 static HYD_status fn_lookup_name(int fd, int pid, int pgid, char *args[])
 {
     struct HYD_string_stash stash;
-    char *cmd, *name, *value;
+    char *cmd, *name, *value = NULL;
     int token_count;
-    struct HYD_pmcd_token *tokens;
+    struct HYD_pmcd_token *tokens = NULL;
     HYD_status status = HYD_SUCCESS;
 
     HYDU_FUNC_ENTER();
@@ -753,6 +762,10 @@ static HYD_status fn_lookup_name(int fd, int pid, int pgid, char *args[])
     HYDU_FREE(cmd);
 
   fn_exit:
+    if (tokens)
+        HYD_pmcd_pmi_free_tokens(tokens, token_count);
+    if (value)
+        HYDU_FREE(value);
     HYDU_FUNC_EXIT();
     return status;
 

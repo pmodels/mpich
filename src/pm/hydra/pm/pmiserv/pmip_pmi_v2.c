@@ -19,7 +19,7 @@ static HYD_status send_cmd_upstream(const char *start, int fd, char *args[])
 {
     int i, sent, closed;
     struct HYD_string_stash stash;
-    char *buf;
+    char *buf = NULL;
     struct HYD_pmcd_hdr hdr;
     HYD_status status = HYD_SUCCESS;
 
@@ -56,6 +56,8 @@ static HYD_status send_cmd_upstream(const char *start, int fd, char *args[])
     HYDU_ASSERT(!closed, status);
 
   fn_exit:
+    if (buf)
+        HYDU_FREE(buf);
     HYDU_FUNC_EXIT();
     return status;
 
@@ -216,7 +218,7 @@ static HYD_status fn_job_getid(int fd, char *args[])
 {
     struct HYD_string_stash stash;
     char *cmd, *thrid;
-    struct HYD_pmcd_token *tokens;
+    struct HYD_pmcd_token *tokens = NULL;
     int token_count;
     HYD_status status = HYD_SUCCESS;
 
@@ -244,6 +246,8 @@ static HYD_status fn_job_getid(int fd, char *args[])
     HYDU_FREE(cmd);
 
   fn_exit:
+    if (tokens)
+        HYD_pmcd_pmi_free_tokens(tokens, token_count);
     HYDU_FUNC_EXIT();
     return status;
 
@@ -255,7 +259,7 @@ static HYD_status fn_info_putnodeattr(int fd, char *args[])
 {
     struct HYD_string_stash stash;
     char *key, *val, *thrid, *cmd;
-    struct HYD_pmcd_token *tokens;
+    struct HYD_pmcd_token *tokens = NULL;
     int token_count, ret;
     struct HYD_pmcd_pmi_v2_reqs *req;
     HYD_status status = HYD_SUCCESS;
@@ -302,6 +306,8 @@ static HYD_status fn_info_putnodeattr(int fd, char *args[])
     }
 
   fn_exit:
+    if (tokens)
+        HYD_pmcd_pmi_free_tokens(tokens, token_count);
     HYDU_FUNC_EXIT();
     return status;
 
@@ -316,7 +322,7 @@ static HYD_status fn_info_getnodeattr(int fd, char *args[])
     char *key, *waitval, *thrid;
     struct HYD_string_stash stash;
     char *cmd;
-    struct HYD_pmcd_token *tokens;
+    struct HYD_pmcd_token *tokens = NULL;
     int token_count;
     HYD_status status = HYD_SUCCESS;
 
@@ -384,6 +390,8 @@ static HYD_status fn_info_getnodeattr(int fd, char *args[])
     }
 
   fn_exit:
+    if (tokens)
+        HYD_pmcd_pmi_free_tokens(tokens, token_count);
     HYDU_FUNC_EXIT();
     return status;
 
@@ -446,7 +454,7 @@ static HYD_status fn_finalize(int fd, char *args[])
     char *thrid;
     struct HYD_string_stash stash;
     char *cmd;
-    struct HYD_pmcd_token *tokens;
+    struct HYD_pmcd_token *tokens = NULL;
     int token_count;
     HYD_status status = HYD_SUCCESS;
 
@@ -476,6 +484,8 @@ static HYD_status fn_finalize(int fd, char *args[])
     close(fd);
 
   fn_exit:
+    if (tokens)
+        HYD_pmcd_pmi_free_tokens(tokens, token_count);
     HYDU_FUNC_EXIT();
     return status;
 
