@@ -299,8 +299,8 @@ void ADIOI_GPFS_ReadStridedColl(ADIO_File fd, void *buf, int count,
             ADIOI_Free(end_offsets);
             ADIOI_Free(fd_start);
             ADIOI_Free(fd_end);
+	    goto fn_exit;
 
-	    return;
 	}
     }
 
@@ -398,6 +398,7 @@ void ADIOI_GPFS_ReadStridedColl(ADIO_File fd, void *buf, int count,
     ADIOI_Free(fd_start);
     ADIOI_Free(fd_end);
 
+fn_exit:
 #ifdef HAVE_STATUS_SET_BYTES
     MPI_Type_size_x(datatype, &size);
     bufsize = size * count;

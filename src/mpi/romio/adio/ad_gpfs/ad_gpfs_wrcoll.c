@@ -288,7 +288,7 @@ void ADIOI_GPFS_WriteStridedColl(ADIO_File fd, const void *buf, int count,
             ADIOI_Free(fd_start);
             ADIOI_Free(fd_end);
 
-	    return;
+	    goto fn_exit;
 	}
     }
 
@@ -370,6 +370,7 @@ void ADIOI_GPFS_WriteStridedColl(ADIO_File fd, const void *buf, int count,
     ADIOI_Free(fd_start);
     ADIOI_Free(fd_end);
 
+fn_exit:
 #ifdef HAVE_STATUS_SET_BYTES
     if (status) {
       MPI_Count bufsize, size;
