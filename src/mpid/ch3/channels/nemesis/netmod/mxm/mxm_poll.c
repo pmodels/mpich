@@ -24,9 +24,15 @@ static int _mxm_process_rdtype(MPID_Request ** rreq_p, MPI_Datatype datatype,
 int MPID_nem_mxm_poll(int in_blocking_progress)
 {
     int mpi_errno = MPI_SUCCESS;
+    MPID_Request *req = NULL;
 
     MPIDI_STATE_DECL(MPID_STATE_MXM_POLL);
     MPIDI_FUNC_ENTER(MPID_STATE_MXM_POLL);
+
+    while (!MPID_nem_mxm_queue_empty(mxm_obj->sreq_queue)) {
+        MPID_nem_mxm_queue_dequeue(&mxm_obj->sreq_queue, &req);
+        _mxm_handle_sreq(req);
+    }
 
     mpi_errno = _mxm_poll();
     if (mpi_errno)
@@ -72,6 +78,7 @@ void MPID_nem_mxm_get_adi_msg(mxm_conn_h conn, mxm_imm_t imm, void *data,
     vc = mxm_conn_ctx_get(conn);
 
     _dbg_mxm_output(5, "========> Getting ADI msg (from=%d data_size %d) \n", vc->pg_rank, length);
+    _dbg_mxm_out_buf(data, (length > 16 ? 16 : length));
 
     MPID_nem_handle_pkt(vc, data, (MPIDI_msg_sz_t) (length));
 }
@@ -144,6 +151,10 @@ int MPID_nem_mxm_anysource_matched(MPID_Request * req)
 int MPID_nem_mxm_recv(MPIDI_VC_t * vc, MPID_Request * rreq)
 {
     int mpi_errno = MPI_SUCCESS;
+    MPIDI_msg_sz_t data_sz;
+    int dt_contig;
+    MPI_Aint dt_true_lb;
+    MPID_Datatype *dt_ptr;
 
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_MXM_RECV);
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_MXM_RECV);
@@ -152,18 +163,15 @@ int MPID_nem_mxm_recv(MPIDI_VC_t * vc, MPID_Request * rreq)
     MPIU_Assert(((rreq->dev.match.parts.rank == MPI_ANY_SOURCE) && (vc == NULL)) ||
                 (vc && !vc->ch.is_local));
 
+    MPIDI_Datatype_get_info(rreq->dev.user_count, rreq->dev.datatype, dt_contig, data_sz,
+                            dt_ptr, dt_true_lb);
+
     {
         MPIR_Context_id_t context_id = rreq->dev.match.parts.context_id;
         int tag = rreq->dev.match.parts.tag;
-        MPIDI_msg_sz_t data_sz;
-        int dt_contig;
-        MPI_Aint dt_true_lb;
-        MPID_Datatype *dt_ptr;
         MPID_nem_mxm_vc_area *vc_area = NULL;
         MPID_nem_mxm_req_area *req_area = NULL;
 
-        MPIDI_Datatype_get_info(rreq->dev.user_count, rreq->dev.datatype, dt_contig, data_sz,
-                                dt_ptr, dt_true_lb);
         rreq->dev.OnDataAvail = NULL;
         rreq->dev.tmpbuf = NULL;
         rreq->ch.vc = vc;
@@ -223,7 +231,6 @@ static int _mxm_handle_rreq(MPID_Request * req)
     MPIDI_msg_sz_t userbuf_sz;
     MPID_Datatype *dt_ptr;
     MPIDI_msg_sz_t data_sz;
-    MPIDI_VC_t *vc = NULL;
     MPID_nem_mxm_vc_area *vc_area ATTRIBUTE((unused)) = NULL;
     MPID_nem_mxm_req_area *req_area = NULL;
     void *tmp_buf = NULL;
@@ -319,7 +326,7 @@ static int _mxm_handle_rreq(MPID_Request * req)
         }
     }
 
-    MPIDI_CH3U_Handle_recv_req(vc, req, &complete);
+    MPIDI_CH3U_Handle_recv_req(req->ch.vc, req, &complete);
     MPIU_Assert(complete == TRUE);
 
     if (tmp_buf) MPIU_Free(tmp_buf);

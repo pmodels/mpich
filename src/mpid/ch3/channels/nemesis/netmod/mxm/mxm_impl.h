@@ -69,6 +69,8 @@ void MPID_nem_mxm_get_adi_msg(mxm_conn_h conn, mxm_imm_t imm, void *data,
 void MPID_nem_mxm_anysource_posted(MPID_Request * req);
 int MPID_nem_mxm_anysource_matched(MPID_Request * req);
 
+int _mxm_handle_sreq(MPID_Request * req);
+
 /* List type as queue
  * Operations, initialization etc
  */
@@ -174,6 +176,25 @@ typedef struct {
 /* macro for mxm private in REQ */
 #define REQ_BASE(reqp) ((reqp) ? (MPID_nem_mxm_req_area *)((reqp)->ch.netmod_area.padding) : NULL)
 
+typedef GENERIC_Q_DECL(struct MPID_Request) MPID_nem_mxm_reqq_t;
+#define MPID_nem_mxm_queue_empty(q) GENERIC_Q_EMPTY (q)
+#define MPID_nem_mxm_queue_head(q) GENERIC_Q_HEAD (q)
+#define MPID_nem_mxm_queue_enqueue(qp, ep) do {                                           \
+        /* add refcount so req doesn't get freed before it's dequeued */                \
+        MPIR_Request_add_ref(ep);                                                       \
+        MPIU_DBG_MSG_FMT(CH3_CHANNEL, VERBOSE, (MPIU_DBG_FDEST,                         \
+                          "MPID_nem_mxm_queue_enqueue req=%p (handle=%#x), queue=%p",     \
+                          ep, (ep)->handle, qp));                                       \
+        GENERIC_Q_ENQUEUE (qp, ep, dev.next);                                           \
+    } while (0)
+#define MPID_nem_mxm_queue_dequeue(qp, ep)  do {                                          \
+        GENERIC_Q_DEQUEUE (qp, ep, dev.next);                                           \
+        MPIU_DBG_MSG_FMT(CH3_CHANNEL, VERBOSE, (MPIU_DBG_FDEST,                         \
+                          "MPID_nem_mxm_queue_dequeuereq=%p (handle=%#x), queue=%p",      \
+                          *(ep), *(ep) ? (*(ep))->handle : -1, qp));                    \
+        MPID_Request_release(*(ep));                                                    \
+    } while (0)
+
 typedef struct MPID_nem_mxm_module_t {
     char *runtime_version;
     const char *compiletime_version;
@@ -188,6 +209,7 @@ typedef struct MPID_nem_mxm_module_t {
     int mxm_np;
     MPID_nem_mxm_ep_t *endpoint;
     list_head_t free_queue;
+    MPID_nem_mxm_reqq_t sreq_queue;
     struct {
         int bulk_connect;       /* use bulk connect */
         int bulk_disconnect;    /* use bulk disconnect */
