@@ -326,19 +326,17 @@ int MPIC_Recv(void *buf, int count, MPI_Datatype datatype, int source, int tag,
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     if (request_ptr) {
         mpi_errno = MPIC_Wait(request_ptr);
-        if (mpi_errno == MPI_SUCCESS) {
-            *status = request_ptr->status;
-        } else {
+        if (mpi_errno != MPI_SUCCESS)
             MPIU_ERR_POP(mpi_errno);
-        }
+
+        *status = request_ptr->status;
+        mpi_errno = status->MPI_ERROR;
         MPID_Request_release(request_ptr);
     }
 
     if (source != MPI_PROC_NULL) {
-        int ec;
-        MPI_Error_class(status->MPI_ERROR, &ec);
-        if (MPIX_ERR_REVOKED != MPIR_ERR_GET_CLASS(status->MPI_ERROR) &&
-            MPIX_ERR_PROC_FAILED != MPIR_ERR_GET_CLASS(status->MPI_ERROR) &&
+        if (MPIX_ERR_REVOKED == MPIR_ERR_GET_CLASS(status->MPI_ERROR) ||
+            MPIX_ERR_PROC_FAILED == MPIR_ERR_GET_CLASS(status->MPI_ERROR) ||
             MPIR_TAG_CHECK_ERROR_BIT(status->MPI_TAG)) {
             *errflag = TRUE;
             MPIR_TAG_CLEAR_ERROR_BIT(status->MPI_TAG);
@@ -455,10 +453,12 @@ int MPIC_Sendrecv(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
     MPID_Request_release(recv_req_ptr);
 
     if (source != MPI_PROC_NULL) {
-        if (MPIR_TAG_CHECK_ERROR_BIT(status->MPI_TAG)) {
+        if (MPIX_ERR_REVOKED == MPIR_ERR_GET_CLASS(status->MPI_ERROR) ||
+            MPIX_ERR_PROC_FAILED == MPIR_ERR_GET_CLASS(status->MPI_ERROR) ||
+            MPIR_TAG_CHECK_ERROR_BIT(status->MPI_TAG)) {
             *errflag = TRUE;
             MPIR_TAG_CLEAR_ERROR_BIT(status->MPI_TAG);
-        } else if (MPIX_ERR_REVOKED != MPIR_ERR_GET_CLASS(status->MPI_ERROR)) {
+        } else if (MPI_SUCCESS == MPIR_ERR_GET_CLASS(status->MPI_ERROR)) {
             MPIU_Assert(status->MPI_TAG == recvtag);
         }
     }
@@ -567,12 +567,14 @@ int MPIC_Sendrecv_replace(void *buf, int count, MPI_Datatype datatype,
     MPID_Request_release(rreq);
 
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-    
+
     if (source != MPI_PROC_NULL) {
-        if (MPIR_TAG_CHECK_ERROR_BIT(status->MPI_TAG)) {
+        if (MPIX_ERR_REVOKED == MPIR_ERR_GET_CLASS(status->MPI_ERROR) ||
+            MPIX_ERR_PROC_FAILED == MPIR_ERR_GET_CLASS(status->MPI_ERROR) ||
+            MPIR_TAG_CHECK_ERROR_BIT(status->MPI_TAG)) {
             *errflag = TRUE;
             MPIR_TAG_CLEAR_ERROR_BIT(status->MPI_TAG);
-        } else if (MPIX_ERR_REVOKED != MPIR_ERR_GET_CLASS(status->MPI_ERROR)) {
+        } else if (MPI_SUCCESS == MPIR_ERR_GET_CLASS(status->MPI_ERROR)) {
             MPIU_Assert(status->MPI_TAG == recvtag);
         }
     }
