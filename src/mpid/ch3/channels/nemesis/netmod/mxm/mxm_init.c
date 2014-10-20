@@ -446,6 +446,8 @@ static int _mxm_init(int rank, int size)
     list_grow_mxm_req(&_mxm_obj.free_queue);
     MPIU_Assert(list_length(&_mxm_obj.free_queue) == MXM_MPICH_MAX_REQ);
 
+    _mxm_obj.sreq_queue.head = _mxm_obj.sreq_queue.tail = NULL;
+
     mxm_obj = &_mxm_obj;
 
   fn_exit:
