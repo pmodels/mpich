@@ -25,6 +25,7 @@ int MTestReturnValue( int );
  * Utilities
  */
 void MTestSleep( int );
+void MTestGetDbgInfo(int *dbgflag, int *verbose);
 
 /*
  * This structure contains the information used to test datatypes
@@ -43,9 +44,9 @@ typedef struct _MTestDatatype {
 			       (used by the CheckBuf routines) */
     /* The following is optional data that is used by some of
        the derived datatypes */
-    int  stride, nelm, blksize, *index;
+    int  stride, nblock, blksize, *index;
     /* stride, nelm, and blksize are in bytes */
-    int *displs, basesize;
+    int *displs, *displ_in_bytes, basesize;
     /* displacements are in multiples of base type; basesize is the
        size of that type*/
     void *(*InitBuf)( struct _MTestDatatype * );
