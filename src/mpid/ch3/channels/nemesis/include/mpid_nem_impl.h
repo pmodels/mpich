@@ -151,8 +151,10 @@ typedef union MPIDI_CH3_nem_pkt
         /* --BEGIN ERROR HANDLING-- */                                                                  \
         if (mpi_errno != MPI_SUCCESS)                                                                   \
         {                                                                                               \
-            MPIU_Object_set_ref(_rts_req, 0);                                                           \
-            MPIDI_CH3_Request_destroy(_rts_req);                                                        \
+            if (NULL != _rts_req) {                                                                     \
+                MPIU_Object_set_ref(_rts_req, 0);                                                       \
+                MPIDI_CH3_Request_destroy(_rts_req);                                                    \
+            }                                                                                           \
             MPIU_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**rtspkt");                                  \
         }                                                                                               \
         /* --END ERROR HANDLING-- */                                                                    \
