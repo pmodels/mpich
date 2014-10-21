@@ -69,7 +69,7 @@ int MPI_Initialized( int *flag )
 
     /* ... body of routine ...  */
     
-    *flag = (MPIR_Process.initialized >= MPICH_WITHIN_MPI);
+    *flag = (OPA_load_int(&MPIR_Process.mpich_state) >= MPICH_POST_INIT);
     
     /* ... end of body of routine ... */
 
@@ -82,8 +82,9 @@ int MPI_Initialized( int *flag )
     /* --BEGIN ERROR HANDLING-- */
 #   ifdef HAVE_ERROR_CHECKING
   fn_fail:
-    if (MPIR_Process.initialized == MPICH_WITHIN_MPI)
-    { 
+    if (OPA_load_int(&MPIR_Process.mpich_state) == MPICH_WITHIN_MPI ||
+        OPA_load_int(&MPIR_Process.mpich_state) == MPICH_POST_INIT)
+    {
 	{
 	    mpi_errno = MPIR_Err_create_code(
 		mpi_errno, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, 

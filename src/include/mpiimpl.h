@@ -2168,6 +2168,7 @@ extern struct MPID_CommOps  *MPID_Comm_fns; /* Communicator creation functions *
 typedef enum MPIR_MPI_State_t {
     MPICH_PRE_INIT=0,
     MPICH_WITHIN_MPI,
+    MPICH_POST_INIT,
     MPICH_POST_FINALIZED
 } MPIR_MPI_State_t;
 
@@ -2184,7 +2185,8 @@ typedef struct PreDefined_attrs {
 struct MPID_Datatype;
 
 typedef struct MPICH_PerProcess_t {
-    MPIR_MPI_State_t  initialized;      /* Is MPI initalized? */
+    OPA_int_t mpich_state; /* State of MPICH. Use OPA_int_t to make MPI_Initialized() etc.
+                              thread-safe per MPI-3.1.  See MPI-Forum ticket 357 */
     int               do_error_checks;  /* runtime error check control */
     struct MPID_Comm  *comm_world;      /* Easy access to comm_world for
                                            error handler */

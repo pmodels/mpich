@@ -75,9 +75,11 @@ void MPIR_Add_finalize( int (*f)( void * ), void *extra_data, int priority )
     /* --BEGIN ERROR HANDLING-- */
     if (fstack_sp >= MAX_FINALIZE_FUNC) {
 	/* This is a little tricky.  We may want to check the state of
-	   MPIR_Process.initialized to decide how to signal the error */
+	   MPIR_Process.mpich_state to decide how to signal the error */
 	(void)MPIU_Internal_error_printf( "overflow in finalize stack!\n" );
-	if (MPIR_Process.initialized == MPICH_WITHIN_MPI) {
+    if (OPA_load_int(&MPIR_Process.mpich_state) == MPICH_WITHIN_MPI ||
+        OPA_load_int(&MPIR_Process.mpich_state) == MPICH_POST_INIT)
+    {
 	    MPID_Abort( NULL, MPI_SUCCESS, 13, NULL );
 	}
 	else {
@@ -256,7 +258,7 @@ int MPI_Finalize( void )
        finalize callbacks */
 
     MPIU_THREAD_CS_EXIT(ALLFUNC,);
-    MPIR_Process.initialized = MPICH_POST_FINALIZED;
+    OPA_store_int(&MPIR_Process.mpich_state, MPICH_POST_FINALIZED);
 
     MPIU_THREAD_CS_FINALIZE;
 
@@ -314,7 +316,7 @@ int MPI_Finalize( void )
     }
 #   endif
     mpi_errno = MPIR_Err_return_comm( 0, FCNAME, mpi_errno );
-    if (MPIR_Process.initialized < MPICH_POST_FINALIZED) {
+    if (OPA_load_int(&MPIR_Process.mpich_state) < MPICH_POST_FINALIZED) {
         MPIU_THREAD_CS_EXIT(ALLFUNC,);
     }
     goto fn_exit;

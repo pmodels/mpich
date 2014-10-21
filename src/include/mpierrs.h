@@ -832,7 +832,8 @@ cvars:
 #ifdef HAVE_ERROR_CHECKING
 #define MPIR_ERRTEST_INITIALIZED_ORDIE()			\
 do {								\
-    if (MPIR_Process.initialized != MPICH_WITHIN_MPI)		\
+    if (OPA_load_int(&MPIR_Process.mpich_state) == MPICH_PRE_INIT || \
+        OPA_load_int(&MPIR_Process.mpich_state) == MPICH_POST_FINALIZED) \
     {								\
 	MPIR_Err_preOrPostInit();				\
     }                                                           \

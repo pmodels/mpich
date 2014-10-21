@@ -211,10 +211,10 @@ void MPIR_Errhandler_set_fc( MPI_Errhandler errhand )
 /* --BEGIN ERROR HANDLING-- */
 void MPIR_Err_preOrPostInit( void )
 {
-    if (MPIR_Process.initialized == MPICH_PRE_INIT) {
+    if (OPA_load_int(&MPIR_Process.mpich_state) == MPICH_PRE_INIT) {
 	MPIU_Error_printf("Attempting to use an MPI routine before initializing MPICH\n");
     }
-    else if (MPIR_Process.initialized == MPICH_POST_FINALIZED) {
+    else if (OPA_load_int(&MPIR_Process.mpich_state) == MPICH_POST_FINALIZED) {
 	MPIU_Error_printf("Attempting to use an MPI routine after finalizing MPICH\n");
     }
     else {
@@ -244,8 +244,8 @@ int MPIR_Err_return_comm( MPID_Comm  *comm_ptr, const char fcname[],
     checkValidErrcode( error_class, fcname, &errcode );
 
     /* --BEGIN ERROR HANDLING-- */
-    if (MPIR_Process.initialized == MPICH_PRE_INIT ||
-        MPIR_Process.initialized == MPICH_POST_FINALIZED)
+    if (OPA_load_int(&MPIR_Process.mpich_state) == MPICH_PRE_INIT ||
+        OPA_load_int(&MPIR_Process.mpich_state) == MPICH_POST_FINALIZED)
     {
         /* for whatever reason, we aren't initialized (perhaps error 
 	   during MPI_Init) */
