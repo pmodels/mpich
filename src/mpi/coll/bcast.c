@@ -982,7 +982,7 @@ fn_fail:
             /* for communication errors, just record the error but continue */                   \
             *(errflag_) = TRUE;                                                                  \
             MPIU_ERR_SET(mpi_errno_, MPI_ERR_OTHER, "**fail");                                   \
-            MPIU_ERR_ADD(mpi_errno_ret_, mpi_errno);                                             \
+            MPIU_ERR_ADD(mpi_errno_ret_, mpi_errno_);                                            \
         }                                                                                        \
     } while (0)
 
