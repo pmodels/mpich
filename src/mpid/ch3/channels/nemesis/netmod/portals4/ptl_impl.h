@@ -18,6 +18,7 @@ extern ptl_handle_ni_t MPIDI_nem_ptl_ni;
 extern ptl_pt_index_t  MPIDI_nem_ptl_pt;
 extern ptl_pt_index_t  MPIDI_nem_ptl_get_pt; /* portal for gets by receiver */
 extern ptl_pt_index_t  MPIDI_nem_ptl_control_pt; /* portal for MPICH control messages */
+extern ptl_pt_index_t  MPIDI_nem_ptl_rpt_pt; /* portal for MPICH control messages */
 extern ptl_handle_eq_t MPIDI_nem_ptl_eq;
 
 extern ptl_handle_md_t MPIDI_nem_ptl_global_md;
@@ -88,6 +89,7 @@ typedef struct {
     ptl_pt_index_t pt;
     ptl_pt_index_t ptg;
     ptl_pt_index_t ptc;
+    ptl_pt_index_t ptr;
     int id_initialized; /* TRUE iff id and pt have been initialized */
     MPIDI_msg_sz_t num_queued_sends; /* number of reqs for this vc in sendq */
 } MPID_nem_ptl_vc_area;
@@ -154,7 +156,7 @@ int MPID_nem_ptl_poll_finalize(void);
 int MPID_nem_ptl_poll(int is_blocking_poll);
 int MPID_nem_ptl_vc_terminated(MPIDI_VC_t *vc);
 int MPID_nem_ptl_get_id_from_bc(const char *business_card, ptl_process_t *id, ptl_pt_index_t *pt, ptl_pt_index_t *ptg,
-                                ptl_pt_index_t *ptc);
+                                ptl_pt_index_t *ptc, ptl_pt_index_t *ptr);
 void MPI_nem_ptl_pack_byte(MPID_Segment *segment, MPI_Aint first, MPI_Aint last, void *buf,
                            MPID_nem_ptl_pack_overflow_t *overflow);
 int MPID_nem_ptl_unpack_byte(MPID_Segment *segment, MPI_Aint first, MPI_Aint last, void *buf,
@@ -197,7 +199,7 @@ const char *MPID_nem_ptl_strnifail(ptl_ni_fail_t ni_fail);
 const char *MPID_nem_ptl_strlist(ptl_list_t list);
 
 #define DBG_MSG_PUT(md_, data_sz_, pg_rank_, match_, header_) do {                                                                          \
-        MPIU_DBG_MSG_FMT(CH3_CHANNEL, VERBOSE, (MPIU_DBG_FDEST, "PtlPut: md=%s data_sz=%lu pg_rank=%d", md_, data_sz_, pg_rank_));          \
+        MPIU_DBG_MSG_FMT(CH3_CHANNEL, VERBOSE, (MPIU_DBG_FDEST, "MPID_nem_ptl_rptl_put: md=%s data_sz=%lu pg_rank=%d", md_, data_sz_, pg_rank_));          \
         MPIU_DBG_MSG_FMT(CH3_CHANNEL, VERBOSE, (MPIU_DBG_FDEST, "        tag=%#lx ctx=%#lx rank=%ld match=%#lx",                            \
                                                 NPTL_MATCH_GET_TAG(match_), NPTL_MATCH_GET_CTX(match_), NPTL_MATCH_GET_RANK(match_), match_)); \
         MPIU_DBG_MSG_FMT(CH3_CHANNEL, VERBOSE, (MPIU_DBG_FDEST, "        flags=%c%c%c data_sz=%ld header=%#lx",                             \

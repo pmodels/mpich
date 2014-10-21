@@ -5,6 +5,7 @@
  */
 
 #include "ptl_impl.h"
+#include "rptl.h"
 
 #define OVERFLOW_LENGTH (1024*1024)
 #define NUM_OVERFLOW_ME 8
@@ -130,7 +131,7 @@ int MPID_nem_ptl_poll(int is_blocking_poll)
     /* MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_PTL_POLL); */
 
     while (1) {
-        ret = PtlEQGet(MPIDI_nem_ptl_eq, &event);
+        ret = MPID_nem_ptl_rptl_eqget(MPIDI_nem_ptl_eq, &event);
         if (ret == PTL_EQ_EMPTY)
             break;
         MPIU_ERR_CHKANDJUMP(ret == PTL_EQ_DROPPED, mpi_errno, MPI_ERR_OTHER, "**eqdropped");
