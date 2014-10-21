@@ -5,6 +5,7 @@
  */
 
 #include "ptl_impl.h"
+#include "rptl.h"
 
 #undef FUNCNAME
 #define FUNCNAME dequeue_req
@@ -233,7 +234,7 @@ static int handler_recv_dequeue_large(const ptl_event_t *e)
     if (dt_contig) {
         /* recv buffer is contig */
         REQ_PTL(rreq)->event_handler = handler_recv_complete;
-        ret = PtlGet(MPIDI_nem_ptl_global_md, (ptl_size_t)((char *)rreq->dev.user_buf + dt_true_lb + PTL_LARGE_THRESHOLD),
+        ret = MPID_nem_ptl_rptl_get(MPIDI_nem_ptl_global_md, (ptl_size_t)((char *)rreq->dev.user_buf + dt_true_lb + PTL_LARGE_THRESHOLD),
                      data_sz - PTL_LARGE_THRESHOLD, vc_ptl->id, vc_ptl->ptg, e->match_bits, 0, rreq);
         DBG_MSG_GET("global", data_sz - PTL_LARGE_THRESHOLD, vc->pg_rank, e->match_bits);
         MPIU_DBG_MSG_P(CH3_CHANNEL, VERBOSE, "   buf=%p", (char *)rreq->dev.user_buf + dt_true_lb + PTL_LARGE_THRESHOLD);
@@ -260,7 +261,7 @@ static int handler_recv_dequeue_large(const ptl_event_t *e)
         MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlmdbind", "**ptlmdbind %s", MPID_nem_ptl_strerror(ret));
 
         REQ_PTL(rreq)->event_handler = handler_recv_complete;
-        ret = PtlGet(REQ_PTL(rreq)->md, 0, rreq->dev.segment_size - rreq->dev.segment_first, vc_ptl->id, vc_ptl->ptg,
+        ret = MPID_nem_ptl_rptl_get(REQ_PTL(rreq)->md, 0, rreq->dev.segment_size - rreq->dev.segment_first, vc_ptl->id, vc_ptl->ptg,
                      e->match_bits, 0, rreq);
         MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlget", "**ptlget %s", MPID_nem_ptl_strerror(ret));
         goto fn_exit;
@@ -271,7 +272,7 @@ static int handler_recv_dequeue_large(const ptl_event_t *e)
     MPIU_CHKPMEM_MALLOC(REQ_PTL(rreq)->chunk_buffer[0], void *, rreq->dev.segment_size - rreq->dev.segment_first, mpi_errno, "chunk_buffer");
 
     REQ_PTL(rreq)->event_handler = handler_recv_unpack_complete;
-    ret = PtlGet(MPIDI_nem_ptl_global_md, (ptl_size_t)REQ_PTL(rreq)->chunk_buffer[0],
+    ret = MPID_nem_ptl_rptl_get(MPIDI_nem_ptl_global_md, (ptl_size_t)REQ_PTL(rreq)->chunk_buffer[0],
                  rreq->dev.segment_size - rreq->dev.segment_first, vc_ptl->id, vc_ptl->ptg, e->match_bits, 0, rreq);
     MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlget", "**ptlget %s", MPID_nem_ptl_strerror(ret));
 
@@ -331,7 +332,7 @@ static int handler_recv_dequeue_unpack_large(const ptl_event_t *e)
     MPIU_CHKPMEM_MALLOC(REQ_PTL(rreq)->chunk_buffer[0], void *, rreq->dev.segment_size - rreq->dev.segment_first, mpi_errno, "chunk_buffer");
 
     REQ_PTL(rreq)->event_handler = handler_recv_unpack_complete;
-    ret = PtlGet(MPIDI_nem_ptl_global_md, (ptl_size_t)REQ_PTL(rreq)->chunk_buffer[0],
+    ret = MPID_nem_ptl_rptl_get(MPIDI_nem_ptl_global_md, (ptl_size_t)REQ_PTL(rreq)->chunk_buffer[0],
                  rreq->dev.segment_size - rreq->dev.segment_first, vc_ptl->id, vc_ptl->ptg, e->match_bits, 0, rreq);
     MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlget", "**ptlget %s", MPID_nem_ptl_strerror(ret));
 
@@ -645,7 +646,7 @@ int MPID_nem_ptl_lmt_start_recv(MPIDI_VC_t *vc,  MPID_Request *rreq, MPID_IOV s_
         void * real_user_buf = (char *)rreq->dev.user_buf + dt_true_lb;
 
         REQ_PTL(rreq)->event_handler = handler_recv_complete;
-        ret = PtlGet(MPIDI_nem_ptl_global_md, (ptl_size_t)((char *)real_user_buf + PTL_LARGE_THRESHOLD),
+        ret = MPID_nem_ptl_rptl_get(MPIDI_nem_ptl_global_md, (ptl_size_t)((char *)real_user_buf + PTL_LARGE_THRESHOLD),
                      data_sz - PTL_LARGE_THRESHOLD, vc_ptl->id, vc_ptl->ptg, match_bits, 0, rreq);
         DBG_MSG_GET("global", data_sz - PTL_LARGE_THRESHOLD, vc->pg_rank, match_bits);
         MPIU_DBG_MSG_P(CH3_CHANNEL, VERBOSE, "   buf=%p", (char *)real_user_buf + PTL_LARGE_THRESHOLD);
@@ -686,7 +687,7 @@ int MPID_nem_ptl_lmt_start_recv(MPIDI_VC_t *vc,  MPID_Request *rreq, MPID_IOV s_
                                  MPID_nem_ptl_strerror(ret));
 
             REQ_PTL(rreq)->event_handler = handler_recv_complete;
-            ret = PtlGet(REQ_PTL(rreq)->md, 0, rreq->dev.segment_size, vc_ptl->id, vc_ptl->ptg,
+            ret = MPID_nem_ptl_rptl_get(REQ_PTL(rreq)->md, 0, rreq->dev.segment_size, vc_ptl->id, vc_ptl->ptg,
                          match_bits, PTL_LARGE_THRESHOLD, rreq);
             MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlget", "**ptlget %s",
                                  MPID_nem_ptl_strerror(ret));
@@ -697,7 +698,7 @@ int MPID_nem_ptl_lmt_start_recv(MPIDI_VC_t *vc,  MPID_Request *rreq, MPID_IOV s_
             MPIU_CHKPMEM_MALLOC(REQ_PTL(rreq)->chunk_buffer[0], void *, rreq->dev.segment_size,
                                 mpi_errno, "chunk_buffer");
             REQ_PTL(rreq)->event_handler = handler_recv_unpack_complete;
-            ret = PtlGet(MPIDI_nem_ptl_global_md, (ptl_size_t)REQ_PTL(rreq)->chunk_buffer[0],
+            ret = MPID_nem_ptl_rptl_get(MPIDI_nem_ptl_global_md, (ptl_size_t)REQ_PTL(rreq)->chunk_buffer[0],
                          rreq->dev.segment_size, vc_ptl->id, vc_ptl->ptg, match_bits,
                          PTL_LARGE_THRESHOLD, rreq);
             MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlget", "**ptlget %s",
