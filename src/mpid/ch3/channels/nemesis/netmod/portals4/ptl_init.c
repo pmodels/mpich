@@ -177,6 +177,12 @@ static int ptl_finalize(void)
     ret = PtlPTFree(MPIDI_nem_ptl_ni, MPIDI_nem_ptl_pt);
     MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlptfree", "**ptlptfree %s", MPID_nem_ptl_strerror(ret));
 
+    ret = PtlPTFree(MPIDI_nem_ptl_ni, MPIDI_nem_ptl_get_pt);
+    MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlptfree", "**ptlptfree %s", MPID_nem_ptl_strerror(ret));
+
+    ret = PtlPTFree(MPIDI_nem_ptl_ni, MPIDI_nem_ptl_control_pt);
+    MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlptfree", "**ptlptfree %s", MPID_nem_ptl_strerror(ret));
+
     ret = PtlNIFini(MPIDI_nem_ptl_ni);
     MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlnifini", "**ptlnifini %s", MPID_nem_ptl_strerror(ret));
 
