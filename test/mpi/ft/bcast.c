@@ -27,6 +27,10 @@ int main(int argc, char **argv)
     MPI_Comm_size(MPI_COMM_WORLD, &size);
     MPI_Comm_set_errhandler(MPI_COMM_WORLD, MPI_ERRORS_RETURN);
 
+    MPI_Comm_group(MPI_COMM_WORLD, &world);
+    MPI_Group_excl(world, 1, deadprocs, &newgroup);
+    MPI_Comm_create_group(MPI_COMM_WORLD, newgroup, 0, &newcomm);
+
     if (size < 3) {
         fprintf( stderr, "Must run with at least 3 processes\n" );
         MPI_Abort( MPI_COMM_WORLD, 1 );
@@ -65,10 +69,6 @@ int main(int argc, char **argv)
         errs++;
     }
 #endif
-
-    MPI_Comm_group(MPI_COMM_WORLD, &world);
-    MPI_Group_excl(world, 1, deadprocs, &newgroup);
-    MPI_Comm_create_group(MPI_COMM_WORLD, newgroup, 0, &newcomm);
 
     rc = MPI_Reduce(&errs, &toterrs, 1, MPI_INT, MPI_SUM, 0, newcomm);
     if(rc)
