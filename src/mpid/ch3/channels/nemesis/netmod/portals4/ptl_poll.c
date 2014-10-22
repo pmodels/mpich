@@ -143,23 +143,21 @@ int MPID_nem_ptl_poll(int is_blocking_poll)
                 break;
         }
         MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptleqget", "**ptleqget %s", MPID_nem_ptl_strerror(ret));
-        MPIU_DBG_MSG_FMT(CH3_CHANNEL, VERBOSE, (MPIU_DBG_FDEST, "Received event %s ni_fail=%s list=%s user_ptr=%p hdr_data=%#lx mlength=%lu",
-                                                MPID_nem_ptl_strevent(&event), MPID_nem_ptl_strnifail(event.ni_fail_type),
-                                                MPID_nem_ptl_strlist(event.ptl_list), event.user_ptr, event.hdr_data, event.mlength));
-
+        MPIU_DBG_MSG_FMT(CH3_CHANNEL, VERBOSE, (MPIU_DBG_FDEST, "Received event %s pt_idx=%d ni_fail=%s list=%s user_ptr=%p hdr_data=%#lx mlength=%lu rlength=%lu",
+                                                MPID_nem_ptl_strevent(&event), event.pt_index, MPID_nem_ptl_strnifail(event.ni_fail_type),
+                                                MPID_nem_ptl_strlist(event.ptl_list), event.user_ptr, event.hdr_data, event.mlength, event.rlength));
         MPIU_ERR_CHKANDJUMP2(event.ni_fail_type != PTL_NI_OK && event.ni_fail_type != PTL_NI_NO_MATCH, mpi_errno, MPI_ERR_OTHER, "**ptlni_fail", "**ptlni_fail %s %s", MPID_nem_ptl_strevent(&event), MPID_nem_ptl_strnifail(event.ni_fail_type));
-        
-        /* handle control messages */
-        if (event.pt_index == MPIDI_nem_ptl_control_pt) {
-            mpi_errno = MPID_nem_ptl_nm_event_handler(&event);
-            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-            goto fn_exit;
-        }
-        
+
         switch (event.type) {
         case PTL_EVENT_PUT:
             if (event.ptl_list == PTL_OVERFLOW_LIST)
                 break;
+            if (event.pt_index == MPIDI_nem_ptl_control_pt) {
+                mpi_errno = MPID_nem_ptl_nm_ctl_event_handler(&event);
+                if (mpi_errno)
+                    MPIU_ERR_POP(mpi_errno);
+                break;
+            }
         case PTL_EVENT_PUT_OVERFLOW:
         case PTL_EVENT_GET:
         case PTL_EVENT_ACK:
@@ -168,8 +166,10 @@ int MPID_nem_ptl_poll(int is_blocking_poll)
             MPID_Request * const req = event.user_ptr;
             MPIU_DBG_MSG_P(CH3_CHANNEL, VERBOSE, "req = %p", req);
             MPIU_DBG_MSG_P(CH3_CHANNEL, VERBOSE, "REQ_PTL(req)->event_handler = %p", REQ_PTL(req)->event_handler);
-            mpi_errno = REQ_PTL(req)->event_handler(&event);
-            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+            if (REQ_PTL(req)->event_handler) {
+                mpi_errno = REQ_PTL(req)->event_handler(&event);
+                if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+            }
             break;
         }
         case PTL_EVENT_AUTO_FREE:
@@ -179,8 +179,8 @@ int MPID_nem_ptl_poll(int is_blocking_poll)
         case PTL_EVENT_AUTO_UNLINK:
             overflow_me_handle[(size_t)event.user_ptr] = PTL_INVALID_HANDLE;
             break;
-        case PTL_EVENT_LINK:
         case PTL_EVENT_SEND:
+        case PTL_EVENT_LINK:
             /* ignore */
             break;
         default:
