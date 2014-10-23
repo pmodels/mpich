@@ -39,6 +39,7 @@ noinst_PROGRAMS =           \
     large-count             \
     large_type              \
     large_type_sendrec      \
+    large_vec	            \
     lbub                    \
     localpack               \
     longdouble              \
