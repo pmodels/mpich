@@ -379,8 +379,8 @@ static int send_msg(ptl_hdr_data_t ssend_flag, struct MPIDI_VC *vc, const void *
     MPI_nem_ptl_pack_byte(sreq->dev.segment_ptr, 0, data_sz, REQ_PTL(sreq)->chunk_buffer[0], &REQ_PTL(sreq)->overflow[0]);
 
     /* create ME for buffer so receiver can issue a GET for the data */
-    me.start = REQ_PTL(sreq)->chunk_buffer[0];
-    me.length = data_sz;
+    me.start = (char *)REQ_PTL(sreq)->chunk_buffer[0] + PTL_LARGE_THRESHOLD;
+    me.length = data_sz - PTL_LARGE_THRESHOLD;
     me.ct_handle = PTL_CT_NONE;
     me.uid = PTL_UID_ANY;
     me.options = ( PTL_ME_OP_PUT | PTL_ME_OP_GET | PTL_ME_USE_ONCE | PTL_ME_IS_ACCESSIBLE | PTL_ME_EVENT_LINK_DISABLE |
