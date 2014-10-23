@@ -87,6 +87,7 @@ int MPIDI_CH3_SHM_Win_free(MPID_Win **win_ptr);
 
 /* Shared memory window atomic/accumulate mutex implementation */
 
+#if !defined(HAVE_WINDOWS_H)
 #define MPIDI_CH3I_SHM_MUTEX_LOCK(win_ptr)                                              \
     do {                                                                                \
         int pt_err = pthread_mutex_lock((win_ptr)->shm_mutex);                          \
@@ -126,6 +127,64 @@ int MPIDI_CH3_SHM_Win_free(MPID_Win **win_ptr);
         MPIU_ERR_CHKANDJUMP1(pt_err, mpi_errno, MPI_ERR_OTHER, "**pthread_mutex",       \
                              "**pthread_mutex %s", strerror(pt_err));                   \
     } while (0);
+#else
+#define HANDLE_WIN_MUTEX_ERROR()                                                        \
+    do {                                                                                \
+        HLOCAL str;                                                                     \
+        char error_msg[MPIU_STRERROR_BUF_SIZE];                                         \
+        DWORD error = GetLastError();                                                   \
+        int num_bytes = FormatMessage(                                                  \
+        FORMAT_MESSAGE_FROM_SYSTEM |                                                    \
+        FORMAT_MESSAGE_ALLOCATE_BUFFER,                                                 \
+        0,                                                                              \
+        error,                                                                          \
+        MAKELANGID( LANG_NEUTRAL, SUBLANG_DEFAULT ),                                    \
+        (LPTSTR) &str,                                                                  \
+        0,0);                                                                           \
+                                                                                        \
+        if (num_bytes != 0) {                                                           \
+            int pt_err = 1;                                                             \
+            int mpi_errno = MPI_ERR_OTHER;                                              \
+            MPIU_Strncpy(error_msg, str, MPIU_STRERROR_BUF_SIZE);                       \
+            LocalFree(str);                                                             \
+            strtok(error_msg, "\r\n");                                                  \
+            MPIU_ERR_CHKANDJUMP1(pt_err, mpi_errno, MPI_ERR_OTHER, "**windows_mutex",   \
+                                 "**windows_mutex %s", error_msg);                      \
+        }                                                                               \
+    } while (0);
+
+#define MPIDI_CH3I_SHM_MUTEX_LOCK(win_ptr)                                              \
+    do {                                                                                \
+        DWORD result = WaitForSingleObject(*((win_ptr)->shm_mutex), INFINITE);          \
+        if (result == WAIT_FAILED) {                                                    \
+            HANDLE_WIN_MUTEX_ERROR();                                                   \
+        }                                                                               \
+    } while (0);
+
+#define MPIDI_CH3I_SHM_MUTEX_UNLOCK(win_ptr)                                            \
+    do {                                                                                \
+        BOOL result = ReleaseMutex(*((win_ptr)->shm_mutex));                            \
+        if (!result) {                                                                  \
+            HANDLE_WIN_MUTEX_ERROR();                                                   \
+        }                                                                               \
+    } while (0);
+
+#define MPIDI_CH3I_SHM_MUTEX_INIT(win_ptr)                                              \
+    do {                                                                                \
+        *((win_ptr)->shm_mutex) = CreateMutex(NULL, FALSE, NULL);                       \
+        if (*((win_ptr)->shm_mutex) == NULL) {                                          \
+            HANDLE_WIN_MUTEX_ERROR();                                                   \
+        }                                                                               \
+    } while (0);
+
+#define MPIDI_CH3I_SHM_MUTEX_DESTROY(win_ptr)                                           \
+    do {                                                                                \
+        BOOL result = CloseHandle(*((win_ptr)->shm_mutex));                             \
+        if (!result) {                                                                  \
+            HANDLE_WIN_MUTEX_ERROR();                                                   \
+        }                                                                               \
+    } while (0);
+#endif /* !defined(HAVE_WINDOWS_H) */
 
 
 /* Starting of shared window list */

@@ -585,7 +585,6 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **msgrcv:msgrcv failed
 **msgrcv %d:msgrcv returned %d
 **nextbootmsg:failed to get the next bootstrap message
-**winwait:WaitForSingleObject failed
 **CreateThread:CreateThread failed
 **CreateThread %d:CreateThread failed, error %d
 **FindWindowEx:FindWindowEx failed
@@ -810,6 +809,8 @@ is too big (> MPIU_SHMW_GHND_SZ)
 **pthread_unlock %s:pthread_unlock failed (%s)
 **pthread_mutex:pthread mutex routine failed
 **pthread_mutex %s:pthread mutex routine failed (%s)
+**windows_mutex:Windows mutex routine failed
+**windows_mutex %s:Windows mutex routine failed (%s)
 **badportrange:MPICH_PORT_RANGE - invalid range specified
 **argstr_missingifname:Missing ifname or invalid host/port description in business card
 **rtspkt:failure occurred while attempting to send RTS packet
