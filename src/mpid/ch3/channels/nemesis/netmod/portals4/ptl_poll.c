@@ -7,7 +7,7 @@
 #include "ptl_impl.h"
 
 #define OVERFLOW_LENGTH (1024*1024)
-#define NUM_OVERFLOW_ME 50
+#define NUM_OVERFLOW_ME 512
 
 static ptl_handle_me_t overflow_me_handle[NUM_OVERFLOW_ME];
 static void *overflow_buf[NUM_OVERFLOW_ME];
