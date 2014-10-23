@@ -37,6 +37,13 @@ int main(int argc, char **argv)
         MPI_Error_class(err, &errclass);
         if ((err) && (errclass != MPIX_ERR_PROC_FAILED)) {
             fprintf(stderr, "Wrong error code (%d) returned. Expected MPIX_ERR_PROC_FAILED\n", errclass);
+        }
+#endif
+        err = MPI_Send(buf, 100000, MPI_CHAR, 1, 0, MPI_COMM_WORLD);
+#if defined (MPICH) && (MPICH_NUMVERSION >= 30100102)
+        MPI_Error_class(err, &errclass);
+        if ((err) && (errclass != MPIX_ERR_PROC_FAILED)) {
+            fprintf(stderr, "Wrong error code (%d) returned. Expected MPIX_ERR_PROC_FAILED\n", errclass);
         } else {
             printf(" No Errors\n");
             fflush(stdout);
