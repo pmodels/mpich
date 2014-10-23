@@ -701,7 +701,7 @@ int MPIC_Waitall(int numreq, MPI_Request requests[], MPI_Status statuses[], int 
 
  fn_exit:
     MPIU_DBG_MSG_S(PT2PT, TYPICAL, "OUT: errflag = %s", *errflag?"TRUE":"FALSE");
-    MPIDI_FUNC_EXIT(MPID_STATE_MPIC_WAITALL
+    MPIDI_FUNC_EXIT(MPID_STATE_MPIC_WAITALL);
     return mpi_errno;
  fn_fail:
     goto fn_exit;
