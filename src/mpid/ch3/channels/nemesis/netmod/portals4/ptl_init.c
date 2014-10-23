@@ -101,6 +101,13 @@ static int ptl_init(MPIDI_PG_t *pg_p, int pg_rank, char **bc_val_p, int *val_max
 
     MPIDI_Anysource_improbe_fn = MPID_nem_ptl_anysource_improbe;
 
+    /* set the unexpected header limit before PtlInit, unless it is already set in the env */
+    if (getenv("PTL_LIM_MAX_UNEXPECTED_HEADERS") == NULL) {
+        char *envstr = MPIU_Strdup("PTL_LIM_MAX_UNEXPECTED_HEADERS=2000000");
+        MPL_putenv(envstr);
+        MPIU_Free(envstr);
+    }
+
     /* init portals */
     ret = PtlInit();
     MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlinit", "**ptlinit %s", MPID_nem_ptl_strerror(ret));
