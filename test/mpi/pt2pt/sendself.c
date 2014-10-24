@@ -31,7 +31,7 @@ int main( int argc, char *argv[] )
        change the error handler to errors return */
     MPI_Comm_set_errhandler( comm, MPI_ERRORS_RETURN );
     
-    for (count = 1; count < 65000; count = count * 2) {
+    MTEST_DATATYPE_FOR_EACH_COUNT(count) {
 	while (MTestGetDatatypes( &sendtype, &recvtype, count )) {
 	    
 	    sendtype.InitBuf( &sendtype );

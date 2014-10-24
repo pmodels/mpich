@@ -37,9 +37,7 @@ int main( int argc, char *argv[] )
 	   change the error handler to errors return */
 	MPI_Errhandler_set( comm, MPI_ERRORS_RETURN );
 
-	/* The max value of count must be very large to ensure that we 
-	   reach the long message algorithms */
-	for (count = 1; count < 280000; count = count * 4) {
+    MTEST_DATATYPE_FOR_EACH_COUNT(count) {
 	    while (MTestGetDatatypes( &sendtype, &recvtype, count )) {
 		for (root=0; root<size; root++) {
 		    if (rank == root) {
