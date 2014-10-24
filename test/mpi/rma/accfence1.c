@@ -36,7 +36,7 @@ int main( int argc, char *argv[] )
 	source = 0;
 	dest   = size - 1;
 	
-	for (count = 1; count < 65000; count = count * 2) {
+	MTEST_DATATYPE_FOR_EACH_COUNT(count) {
 	    while (MTestGetDatatypes( &sendtype, &recvtype, count )) {
 		/* Make sure that everyone has a recv buffer */
 		recvtype.InitBuf( &recvtype );

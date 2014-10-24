@@ -33,9 +33,7 @@ int main( int argc, char *argv[] )
 	MPI_Comm_size( comm, &size );
 	
 	count = 1;
-	/* This must be very large to ensure that we reach the long message
-	   algorithms */
-	for (count = 4; count < 66000; count = count * 4) {
+	MTEST_DATATYPE_FOR_EACH_COUNT(count) {
 	    while (MTestGetDatatypes( &sendtype, &recvtype, count-1 )) {
 		for (root=0; root<size; root++) {
 		    if (rank == root) {
