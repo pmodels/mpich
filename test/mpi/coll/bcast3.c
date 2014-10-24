@@ -34,7 +34,7 @@ int main( int argc, char *argv[] )
 	
 	count = 1;
 	MTEST_DATATYPE_FOR_EACH_COUNT(count) {
-	    while (MTestGetDatatypes( &sendtype, &recvtype, count-1 )) {
+	    while (MTestGetDatatypes( &sendtype, &recvtype, count )) {
 		for (root=0; root<size; root++) {
 		    if (rank == root) {
 			sendtype.InitBuf( &sendtype );
