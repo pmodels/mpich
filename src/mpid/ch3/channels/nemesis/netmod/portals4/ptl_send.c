@@ -8,6 +8,54 @@
 #include "rptl.h"
 
 #undef FUNCNAME
+#define FUNCNAME big_meappend
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+static void big_meappend(void *buf, ptl_size_t left_to_send, MPIDI_VC_t *vc, ptl_match_bits_t match_bits, MPID_Request *sreq)
+{
+    void * user_ptr = NULL;
+    int i, ret;
+    MPID_nem_ptl_vc_area *vc_ptl;
+    ptl_me_t me;
+
+    vc_ptl = VC_PTL(vc);
+
+    me.start = buf;
+    me.ct_handle = PTL_CT_NONE;
+    me.uid = PTL_UID_ANY;
+    me.options = ( PTL_ME_OP_PUT | PTL_ME_OP_GET | PTL_ME_USE_ONCE | PTL_ME_IS_ACCESSIBLE | PTL_ME_EVENT_LINK_DISABLE |
+                   PTL_ME_EVENT_UNLINK_DISABLE );
+    me.match_id = vc_ptl->id;
+    me.match_bits = match_bits;
+    me.ignore_bits = 0;
+    me.min_free = 0;
+
+    /* allocate enough handles to cover all get operations */
+    REQ_PTL(sreq)->get_me_p = MPIU_Malloc(sizeof(ptl_handle_me_t) *
+                                        ((left_to_send / MPIDI_nem_ptl_ni_limits.max_msg_size) + 1));
+
+    /* queue up as many entries as necessary to describe the entire message */
+    for (i = 0; left_to_send > 0; i++) {
+        /* send up to the maximum allowed by the portals interface */
+        if (left_to_send > MPIDI_nem_ptl_ni_limits.max_msg_size)
+            me.length = MPIDI_nem_ptl_ni_limits.max_msg_size;
+        else {
+            me.length = left_to_send;
+            /* attach the request to the final operation */
+            user_ptr = sreq;
+        }
+
+        ret = PtlMEAppend(MPIDI_nem_ptl_ni, MPIDI_nem_ptl_get_pt, &me, PTL_PRIORITY_LIST, user_ptr, &REQ_PTL(sreq)->get_me_p[i]);
+        DBG_MSG_MEAPPEND("CTL", vc->pg_rank, me, sreq);
+        MPIU_Assert(ret == 0);
+
+        /* account for what has been sent */
+        me.start = (char *)me.start + me.length;
+        left_to_send -= me.length;
+    }
+}
+
+#undef FUNCNAME
 #define FUNCNAME handler_send_complete
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
@@ -277,47 +325,9 @@ static int send_msg(ptl_hdr_data_t ssend_flag, struct MPIDI_VC *vc, const void *
     /* Large message.  Send first chunk of data and let receiver get the rest */
     if (dt_contig) {
         /* create ME for buffer so receiver can issue a GET for the data */
-        ptl_size_t left_to_send;
-        void * user_ptr = NULL;
-        int i;
-
         MPIU_DBG_MSG(CH3_CHANNEL, VERBOSE, "Large contig message");
-        me.start = (char *)buf + dt_true_lb + PTL_LARGE_THRESHOLD;
-        left_to_send = data_sz - PTL_LARGE_THRESHOLD;
-        me.ct_handle = PTL_CT_NONE;
-        me.uid = PTL_UID_ANY;
-        me.options = ( PTL_ME_OP_PUT | PTL_ME_OP_GET | PTL_ME_USE_ONCE | PTL_ME_IS_ACCESSIBLE | PTL_ME_EVENT_LINK_DISABLE |
-                       PTL_ME_EVENT_UNLINK_DISABLE );
-        me.match_id = vc_ptl->id;
-        me.match_bits = NPTL_MATCH(tag, comm->context_id + context_offset, comm->rank);
-        me.ignore_bits = 0;
-        me.min_free = 0;
-
-        /* allocate enough handles to cover all get operations */
-        MPIU_CHKPMEM_MALLOC(REQ_PTL(sreq)->get_me, ptl_handle_me_t *,
-                            sizeof(ptl_handle_me_t) * ((left_to_send / MPIDI_nem_ptl_ni_limits.max_msg_size) + 1),
-                            mpi_errno, "get_me");
-
-        /* queue up as many entries as necessary to describe the entire message */
-        for (i = 0; left_to_send > 0; i++) {
-            /* send up to the maximum allowed by the portals interface */
-            if (left_to_send > MPIDI_nem_ptl_ni_limits.max_msg_size)
-                me.length = MPIDI_nem_ptl_ni_limits.max_msg_size;
-            else {
-                me.length = left_to_send;
-                /* attach the request to the final operation */
-                user_ptr = sreq;
-            }
-
-            ret = PtlMEAppend(MPIDI_nem_ptl_ni, MPIDI_nem_ptl_get_pt, &me, PTL_PRIORITY_LIST, user_ptr, &REQ_PTL(sreq)->get_me[i]);
-            MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlmeappend", "**ptlmeappend %s", MPID_nem_ptl_strerror(ret));
-            DBG_MSG_MEAPPEND("CTL", vc->pg_rank, me, sreq);
-
-            /* account for what has been sent */
-            me.start = (char *)me.start + me.length;
-            left_to_send -= me.length;
-        }
-
+        big_meappend((char *)buf + dt_true_lb + PTL_LARGE_THRESHOLD, data_sz - PTL_LARGE_THRESHOLD, vc,
+                     NPTL_MATCH(tag, comm->context_id + context_offset, comm->rank), sreq);
         REQ_PTL(sreq)->large = TRUE;
 
         REQ_PTL(sreq)->event_handler = handler_large;
@@ -402,11 +412,6 @@ static int send_msg(ptl_hdr_data_t ssend_flag, struct MPIDI_VC *vc, const void *
         /* Don't handle this case separately */
     }
 
-    /* same code as large contig */
-    ptl_size_t left_to_send;
-    void * user_ptr = NULL;
-    int i;
-
     /* allocate a temporary buffer and copy all the data to send */
     MPIU_CHKPMEM_MALLOC(REQ_PTL(sreq)->chunk_buffer[0], void *, data_sz, mpi_errno, "tmpbuf");
 
@@ -414,42 +419,8 @@ static int send_msg(ptl_hdr_data_t ssend_flag, struct MPIDI_VC *vc, const void *
     MPID_Segment_pack(sreq->dev.segment_ptr, 0, &last, REQ_PTL(sreq)->chunk_buffer[0]);
     MPIU_Assert(last == data_sz);
 
-    me.start = (char *)REQ_PTL(sreq)->chunk_buffer[0] + PTL_LARGE_THRESHOLD;
-    left_to_send = data_sz - PTL_LARGE_THRESHOLD;
-    me.ct_handle = PTL_CT_NONE;
-    me.uid = PTL_UID_ANY;
-    me.options = ( PTL_ME_OP_PUT | PTL_ME_OP_GET | PTL_ME_USE_ONCE | PTL_ME_IS_ACCESSIBLE | PTL_ME_EVENT_LINK_DISABLE |
-                   PTL_ME_EVENT_UNLINK_DISABLE );
-    me.match_id = vc_ptl->id;
-    me.match_bits = NPTL_MATCH(tag, comm->context_id + context_offset, comm->rank);
-    me.ignore_bits = 0;
-    me.min_free = 0;
-
-    /* allocate enough handles to cover all get operations */
-    MPIU_CHKPMEM_MALLOC(REQ_PTL(sreq)->get_me, ptl_handle_me_t *,
-                        sizeof(ptl_handle_me_t) * ((left_to_send / MPIDI_nem_ptl_ni_limits.max_msg_size) + 1),
-                        mpi_errno, "get_me");
-
-    /* queue up as many entries as necessary to describe the entire message */
-    for (i = 0; left_to_send > 0; i++) {
-        /* send up to the maximum allowed by the portals interface */
-        if (left_to_send > MPIDI_nem_ptl_ni_limits.max_msg_size)
-            me.length = MPIDI_nem_ptl_ni_limits.max_msg_size;
-        else {
-            me.length = left_to_send;
-            /* attach the request to the final operation */
-            user_ptr = sreq;
-        }
-
-        ret = PtlMEAppend(MPIDI_nem_ptl_ni, MPIDI_nem_ptl_get_pt, &me, PTL_PRIORITY_LIST, user_ptr, &REQ_PTL(sreq)->get_me[i]);
-        MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlmeappend", "**ptlmeappend %s", MPID_nem_ptl_strerror(ret));
-        DBG_MSG_MEAPPEND("CTL", vc->pg_rank, me, sreq);
-
-        /* account for what has been sent */
-        me.start = (char *)me.start + me.length;
-        left_to_send -= me.length;
-    }
-
+    big_meappend((char *)REQ_PTL(sreq)->chunk_buffer[0] + PTL_LARGE_THRESHOLD, data_sz - PTL_LARGE_THRESHOLD, vc,
+                 NPTL_MATCH(tag, comm->context_id + context_offset, comm->rank), sreq);
     REQ_PTL(sreq)->large = TRUE;
 
     REQ_PTL(sreq)->event_handler = handler_large;
