@@ -3,4 +3,4 @@ comm
 init
 mpi_t
 @spawndir@
-rma
+@rmadir@
