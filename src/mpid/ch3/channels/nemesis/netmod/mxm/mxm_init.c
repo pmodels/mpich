@@ -107,7 +107,6 @@ static int _mxm_conf(void);
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 int MPID_nem_mxm_init(MPIDI_PG_t * pg_p, int pg_rank, char **bc_val_p, int *val_max_sz_p)
 {
-    int r;
     int mpi_errno = MPI_SUCCESS;
 
     MPIDI_STATE_DECL(MPID_STATE_MXM_INIT);
@@ -116,15 +115,6 @@ int MPID_nem_mxm_init(MPIDI_PG_t * pg_p, int pg_rank, char **bc_val_p, int *val_
     /* first make sure that our private fields in the vc and req fit into the area provided  */
     MPIU_Assert(sizeof(MPID_nem_mxm_vc_area) <= MPID_NEM_VC_NETMOD_AREA_LEN);
     MPIU_Assert(sizeof(MPID_nem_mxm_req_area) <= MPID_NEM_REQ_NETMOD_AREA_LEN);
-
-
-    /* mpich-specific initialization of mxm */
-    /* check if the user is not trying to override the tls setting
-     * before resetting it */
-    if (getenv("MXM_TLS") == NULL) {
-        r = MPL_putenv("MXM_TLS=rc,dc,ud");
-        MPIU_ERR_CHKANDJUMP(r, mpi_errno, MPI_ERR_OTHER, "**putenv");
-    }
 
     mpi_errno = _mxm_init(pg_rank, pg_p->size);
     if (mpi_errno)
