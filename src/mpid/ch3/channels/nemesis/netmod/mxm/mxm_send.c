@@ -297,7 +297,7 @@ int MPID_nem_mxm_send(MPIDI_VC_t * vc, const void *buf, int count, MPI_Datatype 
                                                                                               comm->context_id
                                                                                               +
                                                                                               context_offset),
-                           1);
+                           0);
     if (mpi_errno)
         MPIU_ERR_POP(mpi_errno);
 
@@ -400,7 +400,7 @@ int MPID_nem_mxm_ssend(MPIDI_VC_t * vc, const void *buf, int count, MPI_Datatype
                                                                                               comm->context_id
                                                                                               +
                                                                                               context_offset),
-                           1);
+                           0);
     if (mpi_errno)
         MPIU_ERR_POP(mpi_errno);
 
