@@ -376,6 +376,10 @@ struct MPIDI_Win_target_state {
         enum MPIDI_RMA_states exposure_state;                            \
     } states;                                                            \
     int non_empty_slots;                                                 \
+    int posted_ops_cnt; /* keep track of number of posted RMA operations \
+                           in current epoch (accumulated value, not      \
+                           current value) to control when to poke        \
+                           progress engine in RMA operation routines. */ \
 
 #ifdef MPIDI_CH3_WIN_DECL
 #define MPID_DEV_WIN_DECL \
