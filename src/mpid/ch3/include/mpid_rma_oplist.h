@@ -375,6 +375,8 @@ static inline int MPIDI_CH3I_RMA_Cleanup_ops_target(MPID_Win * win_ptr, MPIDI_RM
             /* dequeue the operation and free it */
             MPL_LL_DELETE(*op_list, *op_list_tail, curr_op);
             MPIDI_CH3I_Win_op_free(win_ptr, curr_op);
+            win_ptr->active_req_cnt--;
+
             if (*op_list == NULL) {
                 if (read_flag == 1) {
                     read_flag = 0;

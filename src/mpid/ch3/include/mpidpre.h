@@ -380,6 +380,9 @@ struct MPIDI_Win_target_state {
                            in current epoch (accumulated value, not      \
                            current value) to control when to poke        \
                            progress engine in RMA operation routines. */ \
+    int active_req_cnt; /* keep track of number of active requests in    \
+                           current epoch, i.e., number of issued but     \
+                           incomplete RMA operations. */                 \
 
 #ifdef MPIDI_CH3_WIN_DECL
 #define MPID_DEV_WIN_DECL \

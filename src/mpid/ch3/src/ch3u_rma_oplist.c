@@ -21,6 +21,24 @@ cvars:
       description : >-
         Use the immediate accumulate optimization
 
+    - name        : MPIR_CVAR_CH3_RMA_ACTIVE_REQ_THRESHOLD
+      category    : CH3
+      type        : int
+      default     : 2097152
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+         Threshold of number of active requests to trigger
+         blocking waiting in operation routines. When the
+         value is negative, we never blockingly wait in
+         operation routines. When the value is zero, we always
+         trigger blocking waiting in operation routines to
+         wait until no. of active requests becomes zero. When the
+         value is positive, we do blocking waiting in operation
+         routines to wait until no. of active requests being
+         reduced to this value.
+
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
@@ -356,6 +374,7 @@ static inline int issue_ops_target(MPID_Win * win_ptr, MPIDI_RMA_Target_t *targe
                 MPIDI_CH3I_RMA_Ops_append(&(target->read_op_list),
                                           &(target->read_op_list_tail), curr_op);
             }
+            win_ptr->active_req_cnt++;
         }
 
         curr_op = target->next_op_to_issue;
