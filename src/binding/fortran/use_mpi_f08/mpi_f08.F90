@@ -4090,16 +4090,16 @@ interface MPI_Ineighbor_alltoallw
 end interface MPI_Ineighbor_alltoallw
 
 interface MPI_Wtick
-    function  MPI_Wtick_f08()
+    function  MPI_Wtick_f08() result(res)
         implicit none
-        double precision :: MPI_Wtick_f08
+        double precision :: res
     end function MPI_Wtick_f08
 end interface MPI_Wtick
 
 interface MPI_Wtime
-    function MPI_Wtime_f08()
+    function MPI_Wtime_f08() result(res)
         implicit none
-        double precision :: MPI_Wtime_f08
+        double precision :: res
     end function MPI_Wtime_f08
 end interface MPI_Wtime
 
