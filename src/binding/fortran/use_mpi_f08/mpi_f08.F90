@@ -4103,4 +4103,22 @@ interface MPI_Wtime
     end function MPI_Wtime_f08
 end interface MPI_Wtime
 
+interface MPIX_Aint_add
+    function MPIX_Aint_add_f08(base, disp) result(res)
+        use :: mpi_f08_compile_constants, only : MPI_ADDRESS_KIND
+        implicit none
+        integer(MPI_ADDRESS_KIND), intent(in) :: base, disp
+        integer(MPI_ADDRESS_KIND) :: res
+    end function MPIX_Aint_add_f08
+end interface MPIX_Aint_add
+
+interface MPIX_Aint_diff
+    function MPIX_Aint_diff_f08(addr1, addr2) result(res)
+        use :: mpi_f08_compile_constants, only : MPI_ADDRESS_KIND
+        implicit none
+        integer(MPI_ADDRESS_KIND), intent(in) :: addr1, addr2
+        integer(MPI_ADDRESS_KIND) :: res
+    end function MPIX_Aint_diff_f08
+end interface MPIX_Aint_diff
+
 end module mpi_f08

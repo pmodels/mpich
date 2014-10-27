@@ -1,0 +1,14 @@
+!   -*- Mode: Fortran; -*-
+!
+!   (C) 2014 by Argonne National Laboratory.
+!   See COPYRIGHT in top-level directory.
+!
+function MPIX_Aint_diff_f08(addr1, addr2) result(res)
+    use :: mpi_f08_compile_constants, only : MPI_ADDRESS_KIND
+    use :: mpi_c_interface_nobuf, only : MPIR_Aint_diff_c
+    implicit none
+    integer(MPI_ADDRESS_KIND), intent(in) :: addr1, addr2
+    integer(MPI_ADDRESS_KIND) :: res
+
+    res = MPIR_Aint_diff_c(addr1, addr2)
+end function MPIX_Aint_diff_f08
