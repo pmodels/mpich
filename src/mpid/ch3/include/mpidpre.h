@@ -367,6 +367,7 @@ struct MPIDI_Win_target_state {
         enum MPIDI_RMA_states access_state;                              \
         enum MPIDI_RMA_states exposure_state;                            \
     } states;                                                            \
+    int non_empty_slots;                                                 \
 
 #ifdef MPIDI_CH3_WIN_DECL
 #define MPID_DEV_WIN_DECL \
