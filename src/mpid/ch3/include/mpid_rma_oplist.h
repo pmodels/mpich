@@ -142,6 +142,104 @@ static inline int MPIDI_CH3I_Win_target_free(MPID_Win * win_ptr, MPIDI_RMA_Targe
     return mpi_errno;
 }
 
+/* MPIDI_CH3I_Win_create_target(): given a rank, create
+ * corresponding target in RMA slots. */
+#undef FUNCNAME
+#define FUNCNAME MPIDI_CH3I_Win_create_target
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
+static inline int MPIDI_CH3I_Win_create_target(MPID_Win * win_ptr, int target_rank,
+                                               MPIDI_RMA_Target_t **e)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIDI_RMA_Slot_t *slot = NULL;
+    MPIDI_RMA_Target_t *t = NULL;
+
+    if (win_ptr->num_slots < win_ptr->comm_ptr->local_size)
+        slot = &(win_ptr->slots[target_rank % win_ptr->num_slots]);
+    else
+        slot = &(win_ptr->slots[target_rank]);
+
+    t = MPIDI_CH3I_Win_target_alloc(win_ptr);
+    MPIU_ERR_CHKANDJUMP(t == NULL, mpi_errno, MPI_ERR_OTHER, "**nomem");
+
+    t->target_rank = target_rank;
+
+    /* Enqueue target into target list. */
+    MPL_LL_APPEND(slot->target_list, slot->target_list_tail, t);
+
+    assert(t != NULL);
+
+    (*e) = t;
+
+ fn_exit:
+    return mpi_errno;
+ fn_fail:
+    goto fn_exit;
+}
+
+/* MPIDI_CH3I_Win_find_target(): given a rank, find
+ * corresponding target in RMA slots. */
+#undef FUNCNAME
+#define FUNCNAME MPIDI_CH3I_Win_find_target
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
+static inline int MPIDI_CH3I_Win_find_target(MPID_Win * win_ptr, int target_rank,
+                                             MPIDI_RMA_Target_t **e)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIDI_RMA_Slot_t *slot = NULL;
+    MPIDI_RMA_Target_t *t = NULL;
+
+    if (win_ptr->num_slots < win_ptr->comm_ptr->local_size)
+        slot = &(win_ptr->slots[target_rank % win_ptr->num_slots]);
+    else
+        slot = &(win_ptr->slots[target_rank]);
+
+    t = slot->target_list;
+    while (t != NULL) {
+        if (t->target_rank == target_rank)
+            break;
+    }
+
+    (*e) = t;
+
+ fn_exit:
+    return mpi_errno;
+ fn_fail:
+    goto fn_exit;
+}
+
+
+/* MPIDI_CH3I_Win_target_dequeue_and_free(): dequeue and free
+ * the target in RMA slots. */
+#undef FUNCNAME
+#define FUNCNAME MPIDI_CH3I_Win_target_dequeue_and_free
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
+static inline int MPIDI_CH3I_Win_target_dequeue_and_free(MPID_Win * win_ptr,
+                                                         MPIDI_RMA_Target_t * e)
+{
+    int mpi_errno = MPI_SUCCESS;
+    int target_rank = e->target_rank;
+    MPIDI_RMA_Slot_t *slot;
+
+    if (win_ptr->num_slots < win_ptr->comm_ptr->local_size)
+        slot = &(win_ptr->slots[target_rank % win_ptr->num_slots]);
+    else
+        slot = &(win_ptr->slots[target_rank]);
+
+    MPL_LL_DELETE(slot->target_list, slot->target_list_tail, e);
+
+    mpi_errno = MPIDI_CH3I_Win_target_free(win_ptr, e);
+    if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
+
+ fn_exit:
+    return mpi_errno;
+ fn_fail:
+    goto fn_exit;
+}
+
 /* Return nonzero if the RMA operations list is empty.
  */
 #undef FUNCNAME

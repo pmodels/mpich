@@ -7,6 +7,25 @@
 #include "mpidimpl.h"
 #include "mpidrma.h"
 
+/*
+=== BEGIN_MPI_T_CVAR_INFO_BLOCK ===
+
+cvars:
+    - name        : MPIR_CVAR_CH3_RMA_SLOTS_SIZE
+      category    : CH3
+      type        : int
+      default     : 262144
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Number of RMA slots during window creation. Each slot contains
+        a linked list of target elements. The distribution of ranks among
+        slots follows a round-robin pattern. Requires a positive value.
+
+=== END_MPI_T_CVAR_INFO_BLOCK ===
+*/
+
 
 MPIU_THREADSAFE_INIT_DECL(initRMAoptions);
 
@@ -258,7 +277,7 @@ static int win_init(MPI_Aint size, int disp_unit, int create_flavor, int model,
     int i;
     MPID_Comm *win_comm_ptr;
     int win_target_pool_size;
-    MPIU_CHKPMEM_DECL(3);
+    MPIU_CHKPMEM_DECL(4);
     MPIDI_STATE_DECL(MPID_STATE_WIN_INIT);
 
     MPIDI_FUNC_ENTER(MPID_STATE_WIN_INIT);
@@ -347,6 +366,14 @@ static int win_init(MPI_Aint size, int disp_unit, int create_flavor, int model,
     for (i = 0; i < win_target_pool_size; i++) {
         (*win_ptr)->target_pool_start[i].pool_type = MPIDI_RMA_POOL_WIN;
         MPL_LL_APPEND((*win_ptr)->target_pool, (*win_ptr)->target_pool_tail, &((*win_ptr)->target_pool_start[i]));
+    }
+
+    (*win_ptr)->num_slots = MPIR_MIN(MPIR_CVAR_CH3_RMA_SLOTS_SIZE, MPIR_Comm_size(win_comm_ptr));
+    MPIU_CHKPMEM_MALLOC((*win_ptr)->slots, struct MPIDI_RMA_Slot *,
+                        sizeof(MPIDI_RMA_Slot_t) * (*win_ptr)->num_slots, mpi_errno, "RMA slots");
+    for (i = 0; i < (*win_ptr)->num_slots; i++) {
+        (*win_ptr)->slots[i].target_list = NULL;
+        (*win_ptr)->slots[i].target_list_tail = NULL;
     }
 
     MPID_WIN_FTABLE_SET_DEFAULTS(win_ptr);

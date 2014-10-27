@@ -339,6 +339,8 @@ struct MPIDI_Win_target_state {
     struct MPIDI_RMA_Target *target_pool_start; /* start pointer used for freeing */\
     struct MPIDI_RMA_Target *target_pool; /* pool of targets */          \
     struct MPIDI_RMA_Target *target_pool_tail; /* tail pointer to pool of targets */\
+    struct MPIDI_RMA_Slot *slots;                                        \
+    int num_slots;                                                       \
 
 #ifdef MPIDI_CH3_WIN_DECL
 #define MPID_DEV_WIN_DECL \

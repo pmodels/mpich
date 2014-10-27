@@ -119,6 +119,11 @@ typedef struct MPIDI_RMA_Target {
     MPIDI_RMA_Pool_type_t pool_type;
 } MPIDI_RMA_Target_t;
 
+typedef struct MPIDI_RMA_Slot {
+    struct MPIDI_RMA_Target *target_list;
+    struct MPIDI_RMA_Target *target_list_tail;
+} MPIDI_RMA_Slot_t;
+
 typedef struct MPIDI_PT_single_op {
     MPIDI_CH3_Pkt_type_t type;  /* put, get, or accum. */
     void *addr;

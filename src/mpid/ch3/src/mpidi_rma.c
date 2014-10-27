@@ -160,6 +160,7 @@ int MPIDI_Win_free(MPID_Win ** win_ptr)
     MPIU_Free((*win_ptr)->all_win_handles);
     MPIU_Free((*win_ptr)->op_pool_start);
     MPIU_Free((*win_ptr)->target_pool_start);
+    MPIU_Free((*win_ptr)->slots);
 
     /* Free the attached buffer for windows created with MPI_Win_allocate() */
     if ((*win_ptr)->create_flavor == MPI_WIN_FLAVOR_ALLOCATE ||
