@@ -60,50 +60,89 @@ ADIOI_PE_gen_agg_ranklist(ADIO_File fd)
     int i,j;
     int inTERcommFlag = 0;
 
-    int myRank;
+    int myRank,commSize;
     MPI_Comm_rank(fd->comm, &myRank);
+    MPI_Comm_size(fd->comm, &commSize);
 
     MPI_Comm_test_inter(fd->comm, &inTERcommFlag);
     if (inTERcommFlag) {
-      FPRINTF(stderr,"inTERcomms are not supported in MPI-IO - aborting....\n");
+      FPRINTF(stderr,"ERROR: ATTENTION: inTERcomms are not supported in MPI-IO - aborting....\n");
       perror("ADIOI_PE_gen_agg_ranklist:");
       MPI_Abort(MPI_COMM_WORLD, 1);
     }
 
     if (ioTaskList) {
+      int ioTaskListLen = strlen(ioTaskList);
+      int ioTaskListPos = 0;
       char tmpBuf[8];   /* Big enough for 1M tasks (7 digits task ID). */
       tmpBuf[7] = '\0';
       for (i=0; i<7; i++) {
          tmpBuf[i] = *ioTaskList++;      /* Maximum is 7 digits for 1 million. */
+         ioTaskListPos++;
          if (*ioTaskList == ':') {       /* If the next char is a ':' ends it. */
              tmpBuf[i+1] = '\0';
              break;
          }
       }
       numAggs = atoi(tmpBuf);
+      if (numAggs == 0)
+        FPRINTF(stderr,"ERROR: ATTENTION: Number of aggregators specified in MP_IOTASKLIST set at 0 - default aggregator selection will be used.\n");
+      else if (!((numAggs > 0 ) && (numAggs <= commSize))) {
+        FPRINTF(stderr,"ERROR: ATTENTION: The number of aggregators (%s) specified in MP_IOTASKLIST is outside the communicator task range of %d.\n",tmpBuf,commSize);
+        numAggs = commSize;
+      }
       fd->hints->ranklist = (int *) ADIOI_Malloc (numAggs * sizeof(int));
 
-      for (j=0; j<numAggs; j++) {
+      int aggIndex = 0;
+      while (aggIndex < numAggs) {
          ioTaskList++;                /* Advance past the ':' */
+         ioTaskListPos++;
+         int allDigits=1;
          for (i=0; i<7; i++) {
+            if (*ioTaskList < '0' || *ioTaskList > '9')
+              allDigits=0;
             tmpBuf[i] = *ioTaskList++;
+            ioTaskListPos++;
             if ( (*ioTaskList == ':') || (*ioTaskList == '\0') ) {
                 tmpBuf[i+1] = '\0';
                 break;
             }
          }
-         fd->hints->ranklist[j] = atoi(tmpBuf);
+         if (allDigits) {
+           int newAggRank = atoi(tmpBuf);
+           if (!((newAggRank >= 0 ) && (newAggRank < commSize))) {
+             FPRINTF(stderr,"ERROR: ATTENTION: The aggregator '%s' specified in MP_IOTASKLIST is not within the communicator task range of 0 to %d  - it will be ignored.\n",tmpBuf,commSize-1);
+           }
+           else {
+             int aggAlreadyAdded = 0;
+             for (i=0;i<aggIndex;i++)
+               if (fd->hints->ranklist[i] == newAggRank) {
+                 aggAlreadyAdded = 1;
+                 break;
+               }
+             if (!aggAlreadyAdded)
+               fd->hints->ranklist[aggIndex++] = newAggRank;
+             else
+               FPRINTF(stderr,"ERROR: ATTENTION: The aggregator '%d' is specified multiple times in MP_IOTASKLIST - duplicates are ignored.\n",newAggRank);
+           }
+         }
+         else {
+           FPRINTF(stderr,"ERROR: ATTENTION: The aggregator '%s' specified in MP_IOTASKLIST is not a valid integer task id  - it will be ignored.\n",tmpBuf);
+         }
 
          /* At the end check whether the list is shorter than specified. */
-         if (*ioTaskList == '\0') {
-            if (j < (numAggs-1)) {
-               numAggs = j;
-            }
-            break;
+         if (ioTaskListPos == ioTaskListLen) {
+           if (aggIndex == 0) {
+             FPRINTF(stderr,"ERROR: ATTENTION: No aggregators were correctly specified in MP_IOTASKLIST - default aggregator selection will be used.\n");
+             ADIOI_Free(fd->hints->ranklist);
+           }
+           else if (aggIndex < numAggs)
+             FPRINTF(stderr,"ERROR: ATTENTION: %d aggregators were specified in MP_IOTASKLIST but only %d were correctly specified - setting the number of aggregators to %d.\n",numAggs, aggIndex,aggIndex);
+           numAggs = aggIndex;
          }
       }
     }
-    else {
+    if (numAggs == 0)  {
       MPID_Comm *mpidCommData;
 
       MPID_Comm_get_ptr(fd->comm,mpidCommData);
