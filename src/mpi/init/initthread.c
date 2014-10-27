@@ -475,7 +475,7 @@ int MPIR_Init_thread(int * argc, char ***argv, int required, int * provided)
 
     /* define MPI as initialized so that we can use MPI functions within 
        MPID_Init if necessary */
-    OPA_store_int(&MPIR_Process.mpich_state, MPICH_WITHIN_MPI);
+    OPA_store_int(&MPIR_Process.mpich_state, MPICH_IN_INIT);
 
     /* We can't acquire any critical sections until this point.  Any
      * earlier the basic data structures haven't been initialized */

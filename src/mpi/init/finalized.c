@@ -82,7 +82,7 @@ int MPI_Finalized( int *flag )
     /* --BEGIN ERROR HANDLING-- */
 #   ifdef HAVE_ERROR_CHECKING
   fn_fail:
-    if (OPA_load_int(&MPIR_Process.mpich_state) == MPICH_WITHIN_MPI ||
+    if (OPA_load_int(&MPIR_Process.mpich_state) == MPICH_IN_INIT ||
         OPA_load_int(&MPIR_Process.mpich_state) == MPICH_POST_INIT)
     {
 	{

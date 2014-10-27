@@ -2167,7 +2167,7 @@ extern struct MPID_CommOps  *MPID_Comm_fns; /* Communicator creation functions *
 /* Per process data */
 typedef enum MPIR_MPI_State_t {
     MPICH_PRE_INIT=0,
-    MPICH_WITHIN_MPI,
+    MPICH_IN_INIT,
     MPICH_POST_INIT,
     MPICH_POST_FINALIZED
 } MPIR_MPI_State_t;
