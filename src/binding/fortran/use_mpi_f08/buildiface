@@ -33,10 +33,6 @@ while (<$mpi_f08_fh>) {
         $_ =~ s/subroutine\s+MPI_/subroutine PMPIR_/;
     } elsif (/function\s+MPI_/) {
         $_ =~ s/function\s+MPI_/function PMPIR_/;
-    } elsif (/MPI_Wtick_f08/) { # Replace return value
-        $_ =~ s/MPI_Wtick_f08/PMPIR_Wtick_f08/;
-    } elsif (/MPI_Wtime_f08/) { # Replace return value
-        $_ =~ s/MPI_Wtime_f08/PMPIR_Wtime_f08/;
     }
     print $pmpi_f08_fh $_;
 }
