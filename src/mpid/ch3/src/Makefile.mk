@@ -59,6 +59,7 @@ mpi_core_sources +=                          \
     src/mpid/ch3/src/mpid_vc.c                             \
     src/mpid/ch3/src/mpid_rma.c                            \
     src/mpid/ch3/src/mpidi_rma.c                           \
+    src/mpid/ch3/src/mpid_aint.c                           \
     src/mpid/ch3/src/mpidi_isend_self.c                    \
     src/mpid/ch3/src/mpidi_pg.c                            \
     src/mpid/ch3/src/mpidi_printf.c

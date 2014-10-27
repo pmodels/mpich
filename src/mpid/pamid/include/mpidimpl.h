@@ -181,4 +181,14 @@ static inline pami_endpoint_t MPIDI_Task_to_endpoint(pami_task_t task, size_t of
 int
 MPIDI_Win_set_info(MPID_Win *win,
 	           MPID_Info *info);
+
+static inline MPI_Aint MPID_Aint_add(MPI_Aint base, MPI_Aint disp)
+{
+    return  MPI_VOID_PTR_CAST_TO_MPI_AINT ((char*)MPI_AINT_CAST_TO_VOID_PTR(base) + disp);
+}
+
+static inline MPI_Aint MPID_Aint_diff(MPI_Aint addr1, MPI_Aint addr2)
+{
+    return MPI_PTR_DISP_CAST_TO_MPI_AINT ((char*)MPI_AINT_CAST_TO_VOID_PTR(addr1) - (char*)MPI_AINT_CAST_TO_VOID_PTR(addr2));
+}
 #endif

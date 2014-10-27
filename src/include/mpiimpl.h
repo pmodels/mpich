@@ -3393,6 +3393,30 @@ int MPID_Cancel_send(MPID_Request *);
   @*/
 int MPID_Cancel_recv(MPID_Request *);
 
+/*@
+  MPID_Aint_add - Returns the sum of base and disp
+
+  Input Parameters:
++ base - base address (integer)
+- disp - displacement (integer)
+
+  Return value:
+  Sum of the base and disp argument
+  @*/
+MPI_Aint MPID_Aint_add(MPI_Aint base, MPI_Aint disp);
+
+/*@
+  MPID_Aint_diff - Returns the difference between addr1 and addr2
+
+  Input Parameters:
++ addr1 - minuend address (integer)
+- addr2 - subtrahend address (integer)
+
+  Return value:
+  Difference between addr1 and addr2
+  @*/
+MPI_Aint MPID_Aint_diff(MPI_Aint addr1, MPI_Aint addr2);
+
 /* MPI-2 RMA Routines */
 
 int MPID_Win_create(void *, MPI_Aint, int, MPID_Info *, MPID_Comm *,

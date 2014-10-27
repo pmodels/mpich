@@ -1541,6 +1541,9 @@ int MPIX_Comm_revoke(MPI_Comm comm);
 int MPIX_Comm_shrink(MPI_Comm comm, MPI_Comm *newcomm);
 int MPIX_Comm_agree(MPI_Comm comm, int *flag);
 
+/* MPI_Aint addressing arithmetic */
+MPI_Aint MPIX_Aint_add(MPI_Aint base, MPI_Aint disp);
+MPI_Aint MPIX_Aint_diff(MPI_Aint addr1, MPI_Aint addr2);
 
 /* End Prototypes */
 #endif /* MPICH_SUPPRESS_PROTOTYPES */
@@ -2181,6 +2184,9 @@ int PMPIX_Comm_revoke(MPI_Comm comm);
 int PMPIX_Comm_shrink(MPI_Comm comm, MPI_Comm *newcomm);
 int PMPIX_Comm_agree(MPI_Comm comm, int *flag);
 
+/* MPI_Aint addressing arithmetic */
+MPI_Aint PMPIX_Aint_add(MPI_Aint base, MPI_Aint disp);
+MPI_Aint PMPIX_Aint_diff(MPI_Aint addr1, MPI_Aint addr2);
 
 #endif  /* MPI_BUILD_PROFILING */
 /* End of MPI bindings */
