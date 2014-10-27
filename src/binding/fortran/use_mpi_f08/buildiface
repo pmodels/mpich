@@ -25,7 +25,9 @@ open($pmpi_f08_fh, ">", $pmpi_f08_file) || die "Error: Could not open $pmpi_f08_
 while (<$mpi_f08_fh>) {
     if (/pmpi_f08/) {
         next; # Skip the "use :: pmpi_f08" line
-    } elsif (/module\s+mpi_f08/) {
+    }
+    # MPI_ part
+    elsif (/module\s+mpi_f08/) {
         $_ =~ s/module\s+mpi_f08/module pmpi_f08/;
     } elsif (/interface\s+MPI_/) {
         $_ =~ s/interface\s+MPI_/interface PMPI_/;
@@ -33,6 +35,14 @@ while (<$mpi_f08_fh>) {
         $_ =~ s/subroutine\s+MPI_/subroutine PMPIR_/;
     } elsif (/function\s+MPI_/) {
         $_ =~ s/function\s+MPI_/function PMPIR_/;
+    }
+    # MPIX_ part
+    elsif (/interface\s+MPIX_/) {
+        $_ =~ s/interface\s+MPIX_/interface PMPIX_/;
+    } elsif (/subroutine\s+MPIX_/) {
+        $_ =~ s/subroutine\s+MPIX_/subroutine PMPIXR_/;
+    } elsif (/function\s+MPIX_/) {
+        $_ =~ s/function\s+MPIX_/function PMPIXR_/;
     }
     print $pmpi_f08_fh $_;
 }
@@ -59,6 +69,12 @@ foreach my $mpi_file (glob("$wrappers_f_dir/*.F90")) {
         } elsif (/function\s+MPI_/) {
             $_ =~ s/function\s+MPI_/function PMPIR_/
         }
+        elsif (/subroutine\s+MPIX_/) {
+            $_ =~ s/subroutine\s+MPIX_/subroutine PMPIXR_/
+        } elsif (/function\s+MPIX_/) {
+            $_ =~ s/function\s+MPIX_/function PMPIXR_/
+        }
+
         print $pmpi_fh $_;
     }
 
