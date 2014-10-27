@@ -39,6 +39,7 @@ static inline MPIDI_RMA_Op_t *MPIDI_CH3I_Win_op_alloc(MPID_Win * win_ptr)
 
     e->dataloop = NULL;
     e->request = NULL;
+    e->is_dt = 0;
 
     return e;
 }

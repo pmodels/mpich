@@ -80,6 +80,7 @@ typedef struct MPIDI_RMA_Op {
 
     MPIDI_CH3_Pkt_t pkt;
     MPIDI_RMA_Pool_type_t pool_type;
+    int is_dt;
 } MPIDI_RMA_Op_t;
 
 typedef struct MPIDI_RMA_Target {

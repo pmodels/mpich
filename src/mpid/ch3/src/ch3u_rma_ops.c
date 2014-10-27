@@ -104,10 +104,12 @@ int MPIDI_Put(const void *origin_addr, int origin_count, MPI_Datatype
         if (!MPIR_DATATYPE_IS_PREDEFINED(origin_datatype)) {
             MPID_Datatype_get_ptr(origin_datatype, dtp);
             MPID_Datatype_add_ref(dtp);
+            new_ptr->is_dt = 1;
         }
         if (!MPIR_DATATYPE_IS_PREDEFINED(target_datatype)) {
             MPID_Datatype_get_ptr(target_datatype, dtp);
             MPID_Datatype_add_ref(dtp);
+            new_ptr->is_dt = 1;
         }
     }
 
@@ -216,10 +218,12 @@ int MPIDI_Get(void *origin_addr, int origin_count, MPI_Datatype
         if (!MPIR_DATATYPE_IS_PREDEFINED(origin_datatype)) {
             MPID_Datatype_get_ptr(origin_datatype, dtp);
             MPID_Datatype_add_ref(dtp);
+            new_ptr->is_dt = 1;
         }
         if (!MPIR_DATATYPE_IS_PREDEFINED(target_datatype)) {
             MPID_Datatype_get_ptr(target_datatype, dtp);
             MPID_Datatype_add_ref(dtp);
+            new_ptr->is_dt = 1;
         }
     }
 
@@ -364,10 +368,12 @@ int MPIDI_Accumulate(const void *origin_addr, int origin_count, MPI_Datatype
         if (!MPIR_DATATYPE_IS_PREDEFINED(origin_datatype)) {
             MPID_Datatype_get_ptr(origin_datatype, dtp);
             MPID_Datatype_add_ref(dtp);
+            new_ptr->is_dt = 1;
         }
         if (!MPIR_DATATYPE_IS_PREDEFINED(target_datatype)) {
             MPID_Datatype_get_ptr(target_datatype, dtp);
             MPID_Datatype_add_ref(dtp);
+            new_ptr->is_dt = 1;
         }
     }
 
@@ -504,14 +510,17 @@ int MPIDI_Get_accumulate(const void *origin_addr, int origin_count,
         if (op != MPI_NO_OP && !MPIR_DATATYPE_IS_PREDEFINED(origin_datatype)) {
             MPID_Datatype_get_ptr(origin_datatype, dtp);
             MPID_Datatype_add_ref(dtp);
+            new_ptr->is_dt = 1;
         }
         if (!MPIR_DATATYPE_IS_PREDEFINED(result_datatype)) {
             MPID_Datatype_get_ptr(result_datatype, dtp);
             MPID_Datatype_add_ref(dtp);
+            new_ptr->is_dt = 1;
         }
         if (!MPIR_DATATYPE_IS_PREDEFINED(target_datatype)) {
             MPID_Datatype_get_ptr(target_datatype, dtp);
             MPID_Datatype_add_ref(dtp);
+            new_ptr->is_dt = 1;
         }
     }
 
