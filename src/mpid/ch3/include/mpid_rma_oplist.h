@@ -11,6 +11,7 @@
 #include "mpid_rma_types.h"
 
 extern struct MPIDI_RMA_Op *global_rma_op_pool, *global_rma_op_pool_tail, *global_rma_op_pool_start;
+extern struct MPIDI_RMA_Target *global_rma_target_pool, *global_rma_target_pool_tail, *global_rma_target_pool_start;
 
 /* MPIDI_CH3I_Win_op_alloc(): get a new op element from op pool and
  * initialize it. If we cannot get one, return NULL. */
@@ -66,6 +67,77 @@ static inline int MPIDI_CH3I_Win_op_free(MPID_Win * win_ptr, MPIDI_RMA_Op_t * e)
         MPL_LL_PREPEND(win_ptr->op_pool, win_ptr->op_pool_tail, e);
     else
         MPL_LL_PREPEND(global_rma_op_pool, global_rma_op_pool_tail, e);
+
+    return mpi_errno;
+}
+
+/* MPIDI_CH3I_Win_target_alloc(): get a target element from the target pool.
+ * If we cannot get one, return NULL. */
+#undef FUNCNAME
+#define FUNCNAME MPIDI_CH3I_Win_target_alloc
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
+static inline MPIDI_RMA_Target_t *MPIDI_CH3I_Win_target_alloc(MPID_Win * win_ptr)
+{
+    MPIDI_RMA_Target_t *e;
+
+    if (win_ptr->target_pool == NULL) {
+        /* local pool is empty, try to find something in the global pool */
+        if (global_rma_target_pool == NULL)
+            return NULL;
+        else {
+            e = global_rma_target_pool;
+            MPL_LL_DELETE(global_rma_target_pool, global_rma_target_pool_tail, e);
+        }
+    }
+    else {
+        e = win_ptr->target_pool;
+        MPL_LL_DELETE(win_ptr->target_pool, win_ptr->target_pool_tail, e);
+    }
+
+    e->read_op_list = e->read_op_list_tail = NULL;
+    e->write_op_list = e->write_op_list_tail = NULL;
+    e->dt_op_list = e->dt_op_list_tail = NULL;
+    e->pending_op_list = e->pending_op_list_tail = NULL;
+    e->next_op_to_issue = NULL;
+
+    e->target_rank = -1;
+    e->lock_type = MPIDI_RMA_LOCK_TYPE_NONE;
+    e->lock_mode = 0;
+    e->outstanding_lock = 0;
+
+    e->sync.sync_flag = MPIDI_RMA_NONE;
+    e->sync.outstanding_acks = 0;
+    e->sync.have_remote_incomplete_ops = 1; /* When I create a new target, there must be
+                                               incomplete ops until a FLUSH/UNLOCK packet
+                                               is sent. */
+    return e;
+}
+
+/* MPIDI_CH3I_Win_target_free(): put a target element back to the target pool
+ * it belongs to. */
+#undef FUNCNAME
+#define FUNCNAME MPIDI_CH3I_Win_target_free
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
+static inline int MPIDI_CH3I_Win_target_free(MPID_Win * win_ptr, MPIDI_RMA_Target_t * e)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    /* We enqueue elements to the right pool, so when they get freed
+     * at window free time, they won't conflict with the global pool
+     * or other windows */
+    MPIU_Assert(e->read_op_list == NULL);
+    MPIU_Assert(e->write_op_list == NULL);
+    MPIU_Assert(e->dt_op_list == NULL);
+    MPIU_Assert(e->pending_op_list == NULL);
+
+    /* use PREPEND when return objects back to the pool
+       in order to improve cache performance */
+    if (e->pool_type == MPIDI_RMA_POOL_WIN)
+        MPL_LL_PREPEND(win_ptr->target_pool, win_ptr->target_pool_tail, e);
+    else
+        MPL_LL_PREPEND(global_rma_target_pool, global_rma_target_pool_tail, e);
 
     return mpi_errno;
 }

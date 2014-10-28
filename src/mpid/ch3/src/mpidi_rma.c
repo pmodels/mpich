@@ -35,11 +35,36 @@ cvars:
         operations) that stores information about RMA operations that
         could not be issued immediatly.  Requires a positive value.
 
+    - name        : MPIR_CVAR_CH3_RMA_TARGET_WIN_POOL_SIZE
+      category    : CH3
+      type        : int
+      default     : 256
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Size of the window-private RMA target pool (in number of
+        targets) that stores information about RMA targets that
+        could not be issued immediately.  Requires a positive value.
+
+    - name        : MPIR_CVAR_CH3_RMA_TARGET_GLOBAL_POOL_SIZE
+      category    : CH3
+      type        : int
+      default     : 16384
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Size of the Global RMA targets pool (in number of
+        targets) that stores information about RMA targets that
+        could not be issued immediatly.  Requires a positive value.
+
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
 
 struct MPIDI_RMA_Op *global_rma_op_pool = NULL, *global_rma_op_pool_tail = NULL, *global_rma_op_pool_start = NULL;
+struct MPIDI_RMA_Target *global_rma_target_pool = NULL, *global_rma_target_pool_tail = NULL, *global_rma_target_pool_start = NULL;
 
 #undef FUNCNAME
 #define FUNCNAME MPIDI_RMA_init
@@ -49,7 +74,7 @@ int MPIDI_RMA_init(void)
 {
     int mpi_errno = MPI_SUCCESS;
     int i;
-    MPIU_CHKPMEM_DECL(1);
+    MPIU_CHKPMEM_DECL(2);
 
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_RMA_INIT);
 
@@ -61,6 +86,14 @@ int MPIDI_RMA_init(void)
     for (i = 0; i < MPIR_CVAR_CH3_RMA_OP_GLOBAL_POOL_SIZE; i++) {
         global_rma_op_pool_start[i].pool_type = MPIDI_RMA_POOL_GLOBAL;
         MPL_LL_APPEND(global_rma_op_pool, global_rma_op_pool_tail, &(global_rma_op_pool_start[i]));
+    }
+
+    MPIU_CHKPMEM_MALLOC(global_rma_target_pool_start, struct MPIDI_RMA_Target *,
+                        sizeof(struct MPIDI_RMA_Target) * MPIR_CVAR_CH3_RMA_TARGET_GLOBAL_POOL_SIZE,
+                        mpi_errno, "RMA target pool");
+    for (i = 0; i < MPIR_CVAR_CH3_RMA_TARGET_GLOBAL_POOL_SIZE; i++) {
+        global_rma_target_pool_start[i].pool_type = MPIDI_RMA_POOL_GLOBAL;
+        MPL_LL_APPEND(global_rma_target_pool, global_rma_target_pool_tail, &(global_rma_target_pool_start[i]));
     }
 
   fn_exit:
@@ -84,6 +117,7 @@ void MPIDI_RMA_finalize(void)
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_RMA_FINALIZE);
 
     MPIU_Free(global_rma_op_pool_start);
+    MPIU_Free(global_rma_target_pool_start);
 
     MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_RMA_FINALIZE);
 }
@@ -125,6 +159,7 @@ int MPIDI_Win_free(MPID_Win ** win_ptr)
     MPIU_Free((*win_ptr)->disp_units);
     MPIU_Free((*win_ptr)->all_win_handles);
     MPIU_Free((*win_ptr)->op_pool_start);
+    MPIU_Free((*win_ptr)->target_pool_start);
 
     /* Free the attached buffer for windows created with MPI_Win_allocate() */
     if ((*win_ptr)->create_flavor == MPI_WIN_FLAVOR_ALLOCATE ||

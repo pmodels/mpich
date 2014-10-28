@@ -257,7 +257,8 @@ static int win_init(MPI_Aint size, int disp_unit, int create_flavor, int model,
     int mpi_errno = MPI_SUCCESS;
     int i;
     MPID_Comm *win_comm_ptr;
-    MPIU_CHKPMEM_DECL(2);
+    int win_target_pool_size;
+    MPIU_CHKPMEM_DECL(3);
     MPIDI_STATE_DECL(MPID_STATE_WIN_INIT);
 
     MPIDI_FUNC_ENTER(MPID_STATE_WIN_INIT);
@@ -335,6 +336,17 @@ static int win_init(MPI_Aint size, int disp_unit, int create_flavor, int model,
     for (i = 0; i < MPIR_CVAR_CH3_RMA_OP_WIN_POOL_SIZE; i++) {
         (*win_ptr)->op_pool_start[i].pool_type = MPIDI_RMA_POOL_WIN;
         MPL_LL_APPEND((*win_ptr)->op_pool, (*win_ptr)->op_pool_tail, &((*win_ptr)->op_pool_start[i]));
+    }
+
+    win_target_pool_size = MPIR_MIN(MPIR_CVAR_CH3_RMA_TARGET_WIN_POOL_SIZE, MPIR_Comm_size(win_comm_ptr));
+    MPIU_CHKPMEM_MALLOC((*win_ptr)->target_pool_start, struct MPIDI_RMA_Target *,
+                        sizeof(MPIDI_RMA_Target_t) * win_target_pool_size,
+                        mpi_errno, "RMA target pool");
+    (*win_ptr)->target_pool = NULL;
+    (*win_ptr)->target_pool_tail = NULL;
+    for (i = 0; i < win_target_pool_size; i++) {
+        (*win_ptr)->target_pool_start[i].pool_type = MPIDI_RMA_POOL_WIN;
+        MPL_LL_APPEND((*win_ptr)->target_pool, (*win_ptr)->target_pool_tail, &((*win_ptr)->target_pool_start[i]));
     }
 
     MPID_WIN_FTABLE_SET_DEFAULTS(win_ptr);

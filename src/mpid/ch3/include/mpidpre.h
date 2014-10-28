@@ -199,6 +199,41 @@ typedef struct MPIDI_VC * MPID_VCR;
 #   define MPIDI_REQUEST_SEQNUM
 #endif
 
+/* Here we add RMA sync types to specify types
+ * of synchronizations the origin is going to
+ * perform to the target. */
+
+/* There are four kinds of synchronizations: NONE,
+ * FLUSH_LOCAL, FLUSH, UNLOCK.
+ * (1) NONE means there is no special synchronization,
+ * origin just issues as many operations as it can,
+ * excluding the last operation which is a piggyback
+ * candidate;
+ * (2) FLUSH_LOCAL means origin wants to do a
+ * FLUSH_LOCAL sync and issues out all pending
+ * operations including the piggyback candidate;
+ * (3) FLUSH means origin wants to do a FLUSH sync
+ * and issues out all pending operations including
+ * the last op piggybacked with a FLUSH flag to
+ * detect remote completion;
+ * (4) UNLOCK means origin issues all pending operations
+ * incuding the last op piggybacked with an UNLOCK
+ * flag to release the lock on target and detect remote
+ * completion.
+ * Note that FLUSH_LOCAL is a superset of NONE, FLUSH
+ * is a superset of FLUSH_LOCAL, and UNLOCK is a superset
+ * of FLUSH.
+ */
+/* We start with an arbitrarily chosen number (42), to help with
+ * debugging when a packet type is not initialized or wrongly
+ * initialized. */
+enum MPIDI_RMA_sync_types {
+    MPIDI_RMA_SYNC_NONE = 42,
+    MPIDI_RMA_SYNC_FLUSH_LOCAL,
+    MPIDI_RMA_SYNC_FLUSH,
+    MPIDI_RMA_SYNC_UNLOCK
+};
+
 /* We start with an arbitrarily chosen number (42), to help with
  * debugging when a packet type is not initialized or wrongly
  * initialized. */
@@ -301,6 +336,9 @@ struct MPIDI_Win_target_state {
     struct MPIDI_RMA_Op *op_pool_start; /* start pointer used for freeing */\
     struct MPIDI_RMA_Op *op_pool;  /* pool of operations */              \
     struct MPIDI_RMA_Op *op_pool_tail; /* tail pointer to pool of operations. */ \
+    struct MPIDI_RMA_Target *target_pool_start; /* start pointer used for freeing */\
+    struct MPIDI_RMA_Target *target_pool; /* pool of targets */          \
+    struct MPIDI_RMA_Target *target_pool_tail; /* tail pointer to pool of targets */\
 
 #ifdef MPIDI_CH3_WIN_DECL
 #define MPID_DEV_WIN_DECL \
