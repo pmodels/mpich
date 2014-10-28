@@ -43,7 +43,7 @@ int MPIDI_CH3U_Handle_send_req(MPIDI_VC_t * vc, MPID_Request * sreq,
  */
 /* ----------------------------------------------------------------------- */
 
-int MPIDI_CH3_ReqHandler_GetSendRespComplete( MPIDI_VC_t *vc ATTRIBUTE((unused)), 
+int MPIDI_CH3_ReqHandler_GetSendComplete( MPIDI_VC_t *vc ATTRIBUTE((unused)),
 					      MPID_Request *sreq, 
 					      int *complete )
 {
@@ -66,6 +66,42 @@ int MPIDI_CH3_ReqHandler_GetSendRespComplete( MPIDI_VC_t *vc ATTRIBUTE((unused))
 
  fn_exit:
     return mpi_errno;
+ fn_fail:
+    goto fn_exit;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_CH3_ReqHandler_GaccumLikeSendComplete
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
+int MPIDI_CH3_ReqHandler_GaccumLikeSendComplete( MPIDI_VC_t *vc,
+                                                 MPID_Request *rreq,
+                                                 int *complete )
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPID_Win *win_ptr;
+    MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3_REQHANDLER_GACCUMLIKESENDCOMPLETE);
+
+    MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3_REQHANDLER_GACCUMLIKESENDCOMPLETE);
+    /* This function is triggered when sending back process of GACC/FOP/CAS
+       is finished. Only GACC used user_buf. FOP and CAS can fit all data
+       in response packet. */
+    if (rreq->dev.user_buf != NULL)
+        MPIU_Free(rreq->dev.user_buf);
+
+    MPID_Win_get_ptr(rreq->dev.target_win_handle, win_ptr);
+
+    /* here we decrement the Active Target counter to guarantee the GET-like
+       operation are completed when counter reaches zero. */
+    win_ptr->at_completion_counter--;
+    MPIU_Assert(win_ptr->at_completion_counter >= 0);
+
+    MPIDI_CH3U_Request_complete(rreq);
+    *complete = TRUE;
+ fn_exit:
+    MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3_REQHANDLER_GACCUMLIKESENDCOMPLETE);
+    return mpi_errno;
+
  fn_fail:
     goto fn_exit;
 }

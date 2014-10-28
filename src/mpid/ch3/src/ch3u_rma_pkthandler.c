@@ -84,14 +84,14 @@ int MPIDI_CH3_PktHandler_Put(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
          * post_data_receive reset the handler.  There should
          * be a cleaner way to do this */
         if (!req->dev.OnDataAvail) {
-            req->dev.OnDataAvail = MPIDI_CH3_ReqHandler_PutAccumRespComplete;
+            req->dev.OnDataAvail = MPIDI_CH3_ReqHandler_PutRecvComplete;
         }
 
         /* return the number of bytes processed in this function */
         *buflen = sizeof(MPIDI_CH3_Pkt_t) + data_len;
 
         if (complete) {
-            mpi_errno = MPIDI_CH3_ReqHandler_PutAccumRespComplete(vc, req, &complete);
+            mpi_errno = MPIDI_CH3_ReqHandler_PutRecvComplete(vc, req, &complete);
             if (mpi_errno)
                 MPIU_ERR_POP(mpi_errno);
             if (complete) {
@@ -104,7 +104,7 @@ int MPIDI_CH3_PktHandler_Put(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
         /* derived datatype */
         MPIDI_Request_set_type(req, MPIDI_REQUEST_TYPE_PUT_RESP_DERIVED_DT);
         req->dev.datatype = MPI_DATATYPE_NULL;
-        req->dev.OnFinal = MPIDI_CH3_ReqHandler_PutAccumRespComplete;
+        req->dev.OnFinal = MPIDI_CH3_ReqHandler_PutRecvComplete;
 
         req->dev.dtype_info = (MPIDI_RMA_dtype_info *)
             MPIU_Malloc(sizeof(MPIDI_RMA_dtype_info));
@@ -132,7 +132,7 @@ int MPIDI_CH3_PktHandler_Put(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
                 sizeof(MPIDI_CH3_Pkt_t) + sizeof(MPIDI_RMA_dtype_info) + put_pkt->dataloop_size;
 
             /* All dtype data has been received, call req handler */
-            mpi_errno = MPIDI_CH3_ReqHandler_PutRespDerivedDTComplete(vc, req, &complete);
+            mpi_errno = MPIDI_CH3_ReqHandler_PutDerivedDTRecvComplete(vc, req, &complete);
             MPIU_ERR_CHKANDJUMP1(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**ch3|postrecv",
                                  "**ch3|postrecv %s", "MPIDI_CH3_PKT_PUT");
             if (complete) {
@@ -149,7 +149,7 @@ int MPIDI_CH3_PktHandler_Put(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
 
             *buflen = sizeof(MPIDI_CH3_Pkt_t);
 
-            req->dev.OnDataAvail = MPIDI_CH3_ReqHandler_PutRespDerivedDTComplete;
+            req->dev.OnDataAvail = MPIDI_CH3_ReqHandler_PutDerivedDTRecvComplete;
         }
 
     }
@@ -213,8 +213,8 @@ int MPIDI_CH3_PktHandler_Get(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
         MPIDI_CH3_Pkt_get_resp_t *get_resp_pkt = &upkt.get_resp;
 
         MPIDI_Request_set_type(req, MPIDI_REQUEST_TYPE_GET_RESP);
-        req->dev.OnDataAvail = MPIDI_CH3_ReqHandler_GetSendRespComplete;
-        req->dev.OnFinal = MPIDI_CH3_ReqHandler_GetSendRespComplete;
+        req->dev.OnDataAvail = MPIDI_CH3_ReqHandler_GetSendComplete;
+        req->dev.OnFinal = MPIDI_CH3_ReqHandler_GetSendComplete;
         req->kind = MPID_REQUEST_SEND;
 
         MPIDI_Pkt_init(get_resp_pkt, MPIDI_CH3_PKT_GET_RESP);
@@ -245,7 +245,7 @@ int MPIDI_CH3_PktHandler_Get(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
         /* derived datatype. first get the dtype_info and dataloop. */
 
         MPIDI_Request_set_type(req, MPIDI_REQUEST_TYPE_GET_RESP_DERIVED_DT);
-        req->dev.OnDataAvail = MPIDI_CH3_ReqHandler_GetRespDerivedDTComplete;
+        req->dev.OnDataAvail = MPIDI_CH3_ReqHandler_GetDerivedDTRecvComplete;
         req->dev.OnFinal = 0;
         req->dev.user_buf = get_pkt->addr;
         req->dev.user_count = get_pkt->count;
@@ -278,7 +278,7 @@ int MPIDI_CH3_PktHandler_Get(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
                 sizeof(MPIDI_CH3_Pkt_t) + sizeof(MPIDI_RMA_dtype_info) + get_pkt->dataloop_size;
 
             /* All dtype data has been received, call req handler */
-            mpi_errno = MPIDI_CH3_ReqHandler_GetRespDerivedDTComplete(vc, req, &complete);
+            mpi_errno = MPIDI_CH3_ReqHandler_GetDerivedDTRecvComplete(vc, req, &complete);
             MPIU_ERR_CHKANDJUMP1(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**ch3|postrecv",
                                  "**ch3|postrecv %s", "MPIDI_CH3_PKT_GET");
             if (complete)
@@ -373,13 +373,13 @@ int MPIDI_CH3_PktHandler_Accumulate(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
          * post_data_receive reset the handler.  There should
          * be a cleaner way to do this */
         if (!req->dev.OnDataAvail) {
-            req->dev.OnDataAvail = MPIDI_CH3_ReqHandler_PutAccumRespComplete;
+            req->dev.OnDataAvail = MPIDI_CH3_ReqHandler_AccumRecvComplete;
         }
         /* return the number of bytes processed in this function */
         *buflen = data_len + sizeof(MPIDI_CH3_Pkt_t);
 
         if (complete) {
-            mpi_errno = MPIDI_CH3_ReqHandler_PutAccumRespComplete(vc, req, &complete);
+            mpi_errno = MPIDI_CH3_ReqHandler_AccumRecvComplete(vc, req, &complete);
             if (mpi_errno)
                 MPIU_ERR_POP(mpi_errno);
             if (complete) {
@@ -390,9 +390,9 @@ int MPIDI_CH3_PktHandler_Accumulate(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
     }
     else {
         MPIDI_Request_set_type(req, MPIDI_REQUEST_TYPE_ACCUM_RESP_DERIVED_DT);
-        req->dev.OnDataAvail = MPIDI_CH3_ReqHandler_AccumRespDerivedDTComplete;
+        req->dev.OnDataAvail = MPIDI_CH3_ReqHandler_AccumDerivedDTRecvComplete;
         req->dev.datatype = MPI_DATATYPE_NULL;
-        req->dev.OnFinal = MPIDI_CH3_ReqHandler_PutAccumRespComplete;
+        req->dev.OnFinal = MPIDI_CH3_ReqHandler_AccumRecvComplete;
 
         req->dev.dtype_info = (MPIDI_RMA_dtype_info *)
             MPIU_Malloc(sizeof(MPIDI_RMA_dtype_info));
@@ -417,7 +417,7 @@ int MPIDI_CH3_PktHandler_Accumulate(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
                 sizeof(MPIDI_CH3_Pkt_t) + sizeof(MPIDI_RMA_dtype_info) + accum_pkt->dataloop_size;
 
             /* All dtype data has been received, call req handler */
-            mpi_errno = MPIDI_CH3_ReqHandler_AccumRespDerivedDTComplete(vc, req, &complete);
+            mpi_errno = MPIDI_CH3_ReqHandler_AccumDerivedDTRecvComplete(vc, req, &complete);
             MPIU_ERR_CHKANDJUMP1(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**ch3|postrecv",
                                  "**ch3|postrecv %s", "MPIDI_CH3_ACCUMULATE");
             if (complete) {
@@ -520,13 +520,13 @@ int MPIDI_CH3_PktHandler_GetAccumulate(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
          * post_data_receive reset the handler.  There should
          * be a cleaner way to do this */
         if (!req->dev.OnDataAvail) {
-            req->dev.OnDataAvail = MPIDI_CH3_ReqHandler_PutAccumRespComplete;
+            req->dev.OnDataAvail = MPIDI_CH3_ReqHandler_GaccumRecvComplete;
         }
         /* return the number of bytes processed in this function */
         *buflen = data_len + sizeof(MPIDI_CH3_Pkt_t);
 
         if (complete) {
-            mpi_errno = MPIDI_CH3_ReqHandler_PutAccumRespComplete(vc, req, &complete);
+            mpi_errno = MPIDI_CH3_ReqHandler_GaccumRecvComplete(vc, req, &complete);
             if (mpi_errno)
                 MPIU_ERR_POP(mpi_errno);
             if (complete) {
@@ -537,9 +537,9 @@ int MPIDI_CH3_PktHandler_GetAccumulate(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
     }
     else {
         MPIDI_Request_set_type(req, MPIDI_REQUEST_TYPE_GET_ACCUM_RESP_DERIVED_DT);
-        req->dev.OnDataAvail = MPIDI_CH3_ReqHandler_AccumRespDerivedDTComplete;
+        req->dev.OnDataAvail = MPIDI_CH3_ReqHandler_GaccumDerivedDTRecvComplete;
         req->dev.datatype = MPI_DATATYPE_NULL;
-        req->dev.OnFinal = MPIDI_CH3_ReqHandler_PutAccumRespComplete;
+        req->dev.OnFinal = MPIDI_CH3_ReqHandler_GaccumRecvComplete;
 
         req->dev.dtype_info = (MPIDI_RMA_dtype_info *)
             MPIU_Malloc(sizeof(MPIDI_RMA_dtype_info));
@@ -564,7 +564,7 @@ int MPIDI_CH3_PktHandler_GetAccumulate(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
                 sizeof(MPIDI_CH3_Pkt_t) + sizeof(MPIDI_RMA_dtype_info) + get_accum_pkt->dataloop_size;
 
             /* All dtype data has been received, call req handler */
-            mpi_errno = MPIDI_CH3_ReqHandler_AccumRespDerivedDTComplete(vc, req, &complete);
+            mpi_errno = MPIDI_CH3_ReqHandler_GaccumDerivedDTRecvComplete(vc, req, &complete);
             MPIU_ERR_CHKANDJUMP1(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**ch3|postrecv",
                                  "**ch3|postrecv %s", "MPIDI_CH3_ACCUMULATE");
             if (complete) {
@@ -734,7 +734,7 @@ int MPIDI_CH3_PktHandler_CAS(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
                (it is initialized to NULL by lower layer) */
             req->dev.target_win_handle = cas_pkt->target_win_handle;
             req->dev.flags = cas_pkt->flags;
-            req->dev.OnDataAvail = MPIDI_CH3_ReqHandler_GetAccumRespComplete;
+            req->dev.OnDataAvail = MPIDI_CH3_ReqHandler_GaccumLikeSendComplete;
 
             /* here we increment the Active Target counter to guarantee the GET-like
                operation are completed when counter reaches zero. */

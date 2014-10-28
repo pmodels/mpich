@@ -1889,27 +1889,33 @@ int MPIDI_CH3_ReqHandler_UnpackSRBufReloadIOV( MPIDI_VC_t *, MPID_Request *,
 					       int * );
 int MPIDI_CH3_ReqHandler_UnpackSRBufComplete( MPIDI_VC_t *, MPID_Request *,
 					      int * );
-int MPIDI_CH3_ReqHandler_PutRespDerivedDTComplete( MPIDI_VC_t *, 
+int MPIDI_CH3_ReqHandler_PutDerivedDTRecvComplete( MPIDI_VC_t *,
 						   MPID_Request *, int * );
-int MPIDI_CH3_ReqHandler_PutAccumRespComplete( MPIDI_VC_t *, MPID_Request *,
-					       int * );
-int MPIDI_CH3_ReqHandler_AccumRespDerivedDTComplete( MPIDI_VC_t *, 
+int MPIDI_CH3_ReqHandler_PutRecvComplete( MPIDI_VC_t *, MPID_Request *,
+                                          int * );
+int MPIDI_CH3_ReqHandler_AccumRecvComplete( MPIDI_VC_t *, MPID_Request *,
+                                            int * );
+int MPIDI_CH3_ReqHandler_GaccumRecvComplete( MPIDI_VC_t *, MPID_Request *,
+                                             int * );
+int MPIDI_CH3_ReqHandler_AccumDerivedDTRecvComplete( MPIDI_VC_t *,
 						     MPID_Request *,
 						     int * );
-int MPIDI_CH3_ReqHandler_GetAccumRespComplete( MPIDI_VC_t *vc, 
-                                               MPID_Request *rreq, 
-                                               int *complete );
+int MPIDI_CH3_ReqHandler_GaccumDerivedDTRecvComplete( MPIDI_VC_t *,
+                                                      MPID_Request *,
+                                                      int * );
 int MPIDI_CH3_ReqHandler_SinglePutAccumComplete( MPIDI_VC_t *, MPID_Request *,
 						 int * );
-int MPIDI_CH3_ReqHandler_GetRespDerivedDTComplete( MPIDI_VC_t *, 
+int MPIDI_CH3_ReqHandler_GetDerivedDTRecvComplete( MPIDI_VC_t *,
 						   MPID_Request *, int * );
 int MPIDI_CH3_ReqHandler_FOPComplete( MPIDI_VC_t *, MPID_Request *, int * );
 
 /* Send Handlers */
 int MPIDI_CH3_ReqHandler_SendReloadIOV( MPIDI_VC_t *vc, MPID_Request *sreq, 
 					int *complete );
-int MPIDI_CH3_ReqHandler_GetSendRespComplete( MPIDI_VC_t *, MPID_Request *,
-					      int * );
+int MPIDI_CH3_ReqHandler_GetSendComplete( MPIDI_VC_t *, MPID_Request *,
+                                          int * );
+int MPIDI_CH3_ReqHandler_GaccumLikeSendComplete( MPIDI_VC_t *, MPID_Request *,
+                                                 int * );
 /* Thread Support */
 #ifdef MPICH_IS_THREADED
 #if MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_GLOBAL
