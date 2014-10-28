@@ -367,10 +367,10 @@ void ADIOI_GPFS_Calc_file_domains(ADIO_File fd,
 	/* BG/L- and BG/P-style distribution of file domains: simple allocation of
 	 * file domins to each aggregator */
 	for (i=0; i<naggs; i++) {
-	    if (i < naggs_small) {
-		fd_size[i] = nb_cn_small     * blksize;
-	    } else {
+	    if (i < naggs_large) {
 		fd_size[i] = (nb_cn_small+1) * blksize;
+	    } else {
+		fd_size[i] = nb_cn_small     * blksize;
 	    }
 	}
     }
@@ -387,12 +387,12 @@ void ADIOI_GPFS_Calc_file_domains(ADIO_File fd,
 
 #else // not BGQ platform
 	for (i=0; i<naggs; i++) {
-	    if (i < naggs_small) {
-		fd_size[i] = nb_cn_small     * blksize;
-	    } else {
+	    if (i < naggs_large) {
 		fd_size[i] = (nb_cn_small+1) * blksize;
+	    } else {
+		fd_size[i] = nb_cn_small     * blksize;
 	    }
-	}
+    }
 
 #endif
 
