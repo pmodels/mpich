@@ -57,7 +57,7 @@ static int handler_recv_complete(const ptl_event_t *e)
     MPIDI_FUNC_ENTER(MPID_STATE_HANDLER_RECV_COMPLETE);
     
     MPIU_Assert(e->type == PTL_EVENT_REPLY || e->type == PTL_EVENT_PUT || e->type == PTL_EVENT_PUT_OVERFLOW);
-    
+
     if (REQ_PTL(rreq)->md != PTL_INVALID_HANDLE) {
         ret = PtlMDRelease(REQ_PTL(rreq)->md);
         MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlmdrelease", "**ptlmdrelease %s", MPID_nem_ptl_strerror(ret));
@@ -122,10 +122,10 @@ static int handler_recv_dequeue_complete(const ptl_event_t *e)
 }
 
 #undef FUNCNAME
-#define FUNCNAME handler_recv_unpack
+#define FUNCNAME handler_recv_big_get
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-static int handler_recv_unpack(const ptl_event_t *e)
+static int handler_recv_big_get(const ptl_event_t *e)
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_Request *const rreq = e->user_ptr;
@@ -137,14 +137,17 @@ static int handler_recv_unpack(const ptl_event_t *e)
 
     MPIU_Assert(e->type == PTL_EVENT_REPLY);
 
-    last = rreq->dev.segment_size;
-    MPID_Segment_unpack(rreq->dev.segment_ptr, rreq->dev.segment_first, &last,
-                        (char *)REQ_PTL(rreq)->chunk_buffer[0] + REQ_PTL(rreq)->chunk_offset);
-
-    rreq->dev.segment_first += e->mlength;
-    REQ_PTL(rreq)->chunk_offset += e->mlength;
-    if (rreq->dev.segment_first == rreq->dev.segment_size)
+    /* decrement the number of remaining gets */
+    REQ_PTL(rreq)->num_gets--;
+    if (REQ_PTL(rreq)->num_gets == 0) {
+        /* if we used a temporary buffer, unpack the data */
+        if (REQ_PTL(rreq)->chunk_buffer[0]) {
+            last = rreq->dev.segment_size;
+            MPID_Segment_unpack(rreq->dev.segment_ptr, rreq->dev.segment_first, &last, REQ_PTL(rreq)->chunk_buffer[0]);
+            MPIU_Assert(last == rreq->dev.segment_size);
+        }
         mpi_errno = handler_recv_complete(e);
+    }
 
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
@@ -164,25 +167,21 @@ static void big_get(void *buf, ptl_size_t left_to_get, MPIDI_VC_t *vc, ptl_match
     int ret;
     MPID_nem_ptl_vc_area *vc_ptl;
     ptl_size_t start, get_sz;
-    void *user_ptr = NULL;
 
     vc_ptl = VC_PTL(vc);
     start = (ptl_size_t)buf;
 
-    /* we need to handle all event if we are unpacking from the chunk_buffer */
-    if (REQ_PTL(rreq)->event_handler == handler_recv_unpack)
-        user_ptr = rreq;
+    /* we need to handle all events */
+    REQ_PTL(rreq)->event_handler = handler_recv_big_get;
 
     while (left_to_get > 0) {
         /* get up to the maximum allowed by the portals interface */
-        if (left_to_get > MPIDI_nem_ptl_ni_limits.max_msg_size) {
+        if (left_to_get > MPIDI_nem_ptl_ni_limits.max_msg_size)
             get_sz = MPIDI_nem_ptl_ni_limits.max_msg_size;
-        } else {
+        else
             get_sz = left_to_get;
-            /* attach the request to the final operation */
-            user_ptr = rreq;
-        }
-        ret = MPID_nem_ptl_rptl_get(MPIDI_nem_ptl_global_md, start, get_sz, vc_ptl->id, vc_ptl->ptg, match_bits, 0, user_ptr);
+
+        ret = MPID_nem_ptl_rptl_get(MPIDI_nem_ptl_global_md, start, get_sz, vc_ptl->id, vc_ptl->ptg, match_bits, 0, rreq);
         DBG_MSG_GET("global", get_sz, vc->pg_rank, match_bits);
         MPIU_DBG_MSG_P(CH3_CHANNEL, VERBOSE, "   buf=%p", (char *)start);
         MPIU_Assert(ret == 0);
@@ -190,6 +189,7 @@ static void big_get(void *buf, ptl_size_t left_to_get, MPIDI_VC_t *vc, ptl_match
         /* account for what has been sent */
         start += get_sz;
         left_to_get -= get_sz;
+        REQ_PTL(rreq)->num_gets++;
     }
 }
 
@@ -304,8 +304,6 @@ static int handler_recv_dequeue_large(const ptl_event_t *e)
 
     /* we need to GET the rest of the data from the sender's buffer */
     if (dt_contig) {
-        REQ_PTL(rreq)->event_handler = handler_recv_complete;
-
         big_get((char *)rreq->dev.user_buf + dt_true_lb + PTL_LARGE_THRESHOLD, data_sz - PTL_LARGE_THRESHOLD,
                 vc, e->match_bits, rreq);
         goto fn_exit;
@@ -338,10 +336,9 @@ static int handler_recv_dequeue_large(const ptl_event_t *e)
         
     /* message won't fit in a single IOV, allocate buffer and unpack when received */
     /* FIXME: For now, allocate a single large buffer to hold entire message */
-    MPIU_CHKPMEM_MALLOC(REQ_PTL(rreq)->chunk_buffer[0], void *, rreq->dev.segment_size - rreq->dev.segment_first,
+    MPIU_CHKPMEM_MALLOC(REQ_PTL(rreq)->chunk_buffer[0], void *, data_sz - PTL_LARGE_THRESHOLD,
                         mpi_errno, "chunk_buffer");
-    REQ_PTL(rreq)->event_handler = handler_recv_unpack;
-    big_get(REQ_PTL(rreq)->chunk_buffer[0], rreq->dev.segment_size - rreq->dev.segment_first, vc, e->match_bits, rreq);
+    big_get(REQ_PTL(rreq)->chunk_buffer[0], data_sz - PTL_LARGE_THRESHOLD, vc, e->match_bits, rreq);
 
  fn_exit:
     MPIU_CHKPMEM_COMMIT();
@@ -396,7 +393,6 @@ static int handler_recv_dequeue_unpack_large(const ptl_event_t *e)
 
     MPIU_CHKPMEM_MALLOC(REQ_PTL(rreq)->chunk_buffer[0], void *, rreq->dev.segment_size - rreq->dev.segment_first,
                         mpi_errno, "chunk_buffer");
-    REQ_PTL(rreq)->event_handler = handler_recv_unpack;
     big_get(REQ_PTL(rreq)->chunk_buffer[0], rreq->dev.segment_size - rreq->dev.segment_first, vc, e->match_bits, rreq);
 
  fn_exit:
@@ -708,7 +704,6 @@ int MPID_nem_ptl_lmt_start_recv(MPIDI_VC_t *vc,  MPID_Request *rreq, MPID_IOV s_
     if (dt_contig) {
         void * real_user_buf = (char *)rreq->dev.user_buf + dt_true_lb;
 
-        REQ_PTL(rreq)->event_handler = handler_recv_complete;
         big_get((char *)real_user_buf + PTL_LARGE_THRESHOLD, data_sz - PTL_LARGE_THRESHOLD, vc, match_bits, rreq);
 
         /* The memcpy is done after the get purposely for overlapping */
@@ -756,7 +751,6 @@ int MPID_nem_ptl_lmt_start_recv(MPIDI_VC_t *vc,  MPID_Request *rreq, MPID_IOV s_
             /* FIXME: For now, allocate a single large buffer to hold entire message */
             MPIU_CHKPMEM_MALLOC(REQ_PTL(rreq)->chunk_buffer[0], void *, rreq->dev.segment_size - rreq->dev.segment_first,
                                 mpi_errno, "chunk_buffer");
-            REQ_PTL(rreq)->event_handler = handler_recv_unpack;
             big_get(REQ_PTL(rreq)->chunk_buffer[0], rreq->dev.segment_size - rreq->dev.segment_first, vc, match_bits, rreq);
         }
     }
