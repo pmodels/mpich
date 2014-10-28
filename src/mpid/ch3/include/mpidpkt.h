@@ -198,24 +198,24 @@ MPIDI_CH3_PKT_DEFS
 #define MPIDI_CH3_PKT_RMA_GET_TARGET_DATATYPE(pkt_, datatype_, err_)    \
     {                                                                   \
         err_ = MPI_SUCCESS;                                             \
-        switch(pkt_.type) {                                             \
+        switch((pkt_).type) {                                           \
         case (MPIDI_CH3_PKT_PUT):                                       \
-            datatype_ = pkt_.put.datatype;                              \
+            datatype_ = (pkt_).put.datatype;                            \
             break;                                                      \
         case (MPIDI_CH3_PKT_GET):                                       \
-            datatype_ = pkt_.get.datatype;                              \
+            datatype_ = (pkt_).get.datatype;                            \
             break;                                                      \
         case (MPIDI_CH3_PKT_ACCUMULATE):                                \
-            datatype_ = pkt_.accum.datatype;                            \
+            datatype_ = (pkt_).accum.datatype;                          \
             break;                                                      \
         case (MPIDI_CH3_PKT_GET_ACCUM):                                 \
-            datatype_ = pkt_.get_accum.datatype;                        \
+            datatype_ = (pkt_).get_accum.datatype;                      \
             break;                                                      \
         case (MPIDI_CH3_PKT_CAS):                                       \
-            datatype_ = pkt_.cas.datatype;                              \
+            datatype_ = (pkt_).cas.datatype;                            \
             break;                                                      \
         case (MPIDI_CH3_PKT_FOP):                                       \
-            datatype_ = pkt_.fop.datatype;                              \
+            datatype_ = (pkt_).fop.datatype;                            \
             break;                                                      \
         case (MPIDI_CH3_PKT_LOCK_PUT_UNLOCK):                           \
             datatype_ = pkt_.lock_put_unlock.datatype;                  \
@@ -230,9 +230,172 @@ MPIDI_CH3_PKT_DEFS
             datatype_ = pkt_.accum_immed.datatype;                      \
             break;                                                      \
         default:                                                        \
-            MPIU_ERR_SETANDJUMP1(err_, MPI_ERR_OTHER, "**invalidpkt", "**invalidpkt %d", pkt_.type); \
+            MPIU_ERR_SETANDJUMP1(err_, MPI_ERR_OTHER, "**invalidpkt", "**invalidpkt %d", (pkt_).type); \
         }                                                               \
     }
+
+#define MPIDI_CH3_PKT_RMA_GET_LOCK_TYPE(pkt_, lock_type_, err_)         \
+    {                                                                   \
+        err_ = MPI_SUCCESS;                                             \
+        switch((pkt_).type) {                                           \
+        case (MPIDI_CH3_PKT_PUT):                                       \
+            lock_type_ = (pkt_).put.lock_type;                          \
+            break;                                                      \
+        case (MPIDI_CH3_PKT_GET):                                       \
+            lock_type_ = (pkt_).get.lock_type;                          \
+            break;                                                      \
+        case (MPIDI_CH3_PKT_ACCUMULATE):                                \
+            lock_type_ = (pkt_).accum.lock_type;                        \
+            break;                                                      \
+        case (MPIDI_CH3_PKT_GET_ACCUM):                                 \
+            lock_type_ = (pkt_).get_accum.lock_type;                    \
+            break;                                                      \
+        case (MPIDI_CH3_PKT_CAS):                                       \
+            lock_type_ = (pkt_).cas.lock_type;                          \
+            break;                                                      \
+        case (MPIDI_CH3_PKT_FOP):                                       \
+            lock_type_ = (pkt_).fop.lock_type;                          \
+            break;                                                      \
+        case (MPIDI_CH3_PKT_LOCK):                                      \
+            lock_type_ = (pkt_).lock.lock_type;                         \
+            break;                                                      \
+        default:                                                        \
+            MPIU_ERR_SETANDJUMP1(err_, MPI_ERR_OTHER, "**invalidpkt", "**invalidpkt %d", (pkt_).type); \
+        }                                                               \
+    }
+
+#define MPIDI_CH3_PKT_RMA_GET_ORIGIN_RANK(pkt_, origin_rank_, err_)     \
+    {                                                                   \
+        err_ = MPI_SUCCESS;                                             \
+        switch((pkt_).type) {                                           \
+        case (MPIDI_CH3_PKT_PUT):                                       \
+            origin_rank_ = (pkt_).put.origin_rank;                      \
+            break;                                                      \
+        case (MPIDI_CH3_PKT_GET):                                       \
+            origin_rank_ = (pkt_).get.origin_rank;                      \
+            break;                                                      \
+        case (MPIDI_CH3_PKT_ACCUMULATE):                                \
+            origin_rank_ = (pkt_).accum.origin_rank;                    \
+            break;                                                      \
+        case (MPIDI_CH3_PKT_GET_ACCUM):                                 \
+            origin_rank_ = (pkt_).get_accum.origin_rank;                \
+            break;                                                      \
+        case (MPIDI_CH3_PKT_CAS):                                       \
+            origin_rank_ = (pkt_).cas.origin_rank;                      \
+            break;                                                      \
+        case (MPIDI_CH3_PKT_FOP):                                       \
+            origin_rank_ = (pkt_).fop.origin_rank;                      \
+            break;                                                      \
+        case (MPIDI_CH3_PKT_LOCK):                                      \
+            origin_rank_ = (pkt_).lock.origin_rank;                     \
+            break;                                                      \
+        default:                                                        \
+            MPIU_ERR_SETANDJUMP1(err_, MPI_ERR_OTHER, "**invalidpkt", "**invalidpkt %d", (pkt_).type); \
+        }                                                               \
+    }
+
+#define MPIDI_CH3_PKT_RMA_GET_FLAGS(pkt_, flags_, err_)                 \
+    {                                                                   \
+        err_ = MPI_SUCCESS;                                             \
+        switch((pkt_).type) {                                           \
+        case (MPIDI_CH3_PKT_PUT):                                       \
+            flags_ = (pkt_).put.flags;                                  \
+            break;                                                      \
+        case (MPIDI_CH3_PKT_GET):                                       \
+            flags_ = (pkt_).get.flags;                                  \
+            break;                                                      \
+        case (MPIDI_CH3_PKT_ACCUMULATE):                                \
+            flags_ = (pkt_).accum.flags;                                \
+            break;                                                      \
+        case (MPIDI_CH3_PKT_GET_ACCUM):                                 \
+            flags_ = (pkt_).get_accum.flags;                            \
+            break;                                                      \
+        case (MPIDI_CH3_PKT_CAS):                                       \
+            flags_ = (pkt_).cas.flags;                                  \
+            break;                                                      \
+        case (MPIDI_CH3_PKT_FOP):                                       \
+            flags_ = (pkt_).fop.flags;                                  \
+            break;                                                      \
+        default:                                                        \
+            MPIU_ERR_SETANDJUMP1(err_, MPI_ERR_OTHER, "**invalidpkt", "**invalidpkt %d", (pkt_).type); \
+        }                                                               \
+    }
+
+#define MPIDI_CH3_PKT_RMA_UNSET_FLAG(pkt_, flag_, err_)                 \
+    {                                                                   \
+        err_ = MPI_SUCCESS;                                             \
+        switch((pkt_).type) {                                           \
+        case (MPIDI_CH3_PKT_PUT):                                       \
+            (pkt_).put.flags &= ~(flag_);                               \
+            break;                                                      \
+        case (MPIDI_CH3_PKT_GET):                                       \
+            (pkt_).get.flags &= ~(flag_);                               \
+            break;                                                      \
+        case (MPIDI_CH3_PKT_ACCUMULATE):                                \
+            (pkt_).accum.flags &= ~(flag_);                             \
+            break;                                                      \
+        case (MPIDI_CH3_PKT_GET_ACCUM):                                 \
+            (pkt_).get_accum.flags &= ~(flag_);                         \
+            break;                                                      \
+        case (MPIDI_CH3_PKT_CAS):                                       \
+            (pkt_).cas.flags &= ~(flag_);                               \
+            break;                                                      \
+        case (MPIDI_CH3_PKT_FOP):                                       \
+            (pkt_).fop.flags &= ~(flag_);                               \
+            break;                                                      \
+        default:                                                        \
+            MPIU_ERR_SETANDJUMP1(err_, MPI_ERR_OTHER, "**invalidpkt", "**invalidpkt %d", (pkt_).type); \
+        }                                                               \
+    }
+
+#define MPIDI_CH3_PKT_RMA_SET_FLAG(pkt_, flag_, err_)                   \
+    {                                                                   \
+        err_ = MPI_SUCCESS;                                             \
+        switch((pkt_).type) {                                           \
+        case (MPIDI_CH3_PKT_PUT):                                       \
+            (pkt_).put.flags |= (flag_);                                \
+            break;                                                      \
+        case (MPIDI_CH3_PKT_GET):                                       \
+            (pkt_).get.flags |= (flag_);                                \
+            break;                                                      \
+        case (MPIDI_CH3_PKT_ACCUMULATE):                                \
+            (pkt_).accum.flags |= (flag_);                              \
+            break;                                                      \
+        case (MPIDI_CH3_PKT_GET_ACCUM):                                 \
+            (pkt_).get_accum.flags |= (flag_);                          \
+            break;                                                      \
+        case (MPIDI_CH3_PKT_CAS):                                       \
+            (pkt_).cas.flags |= (flag_);                                \
+            break;                                                      \
+        case (MPIDI_CH3_PKT_FOP):                                       \
+            (pkt_).fop.flags |= (flag_);                                \
+            break;                                                      \
+        default:                                                        \
+            MPIU_ERR_SETANDJUMP1(err_, MPI_ERR_OTHER, "**invalidpkt", "**invalidpkt %d", (pkt_).type); \
+        }                                                               \
+    }
+
+#define MPIDI_CH3_PKT_RMA_SET_DATALOOP_SIZE(pkt_, dataloop_size_, err_) \
+    {                                                                   \
+        err_ = MPI_SUCCESS;                                             \
+        switch((pkt_).type) {                                           \
+        case (MPIDI_CH3_PKT_PUT):                                       \
+            (pkt_).put.dataloop_size = (dataloop_size_);                \
+            break;                                                      \
+        case (MPIDI_CH3_PKT_GET):                                       \
+            (pkt_).get.dataloop_size = (dataloop_size_);                \
+            break;                                                      \
+        case (MPIDI_CH3_PKT_ACCUMULATE):                                \
+            (pkt_).accum.dataloop_size = (dataloop_size_);              \
+            break;                                                      \
+        case (MPIDI_CH3_PKT_GET_ACCUM):                                 \
+            (pkt_).get_accum.dataloop_size = (dataloop_size_);          \
+            break;                                                      \
+        default:                                                        \
+            MPIU_ERR_SETANDJUMP1(err_, MPI_ERR_OTHER, "**invalidpkt", "**invalidpkt %d", (pkt_).type); \
+        }                                                               \
+    }
+
 
 typedef struct MPIDI_CH3_Pkt_put {
     MPIDI_CH3_Pkt_type_t type;
