@@ -11,7 +11,8 @@
 #error Checkpointing not implemented
 #endif
 
-#define EQ_COUNT 1024
+#define UNEXPECTED_HDR_COUNT 32768
+#define EQ_COUNT             32768
 #define NID_KEY  "NID"
 #define PID_KEY  "PID"
 #define PTI_KEY  "PTI"
@@ -81,6 +82,7 @@ static int ptl_init(MPIDI_PG_t *pg_p, int pg_rank, char **bc_val_p, int *val_max
     int mpi_errno = MPI_SUCCESS;
     int ret;
     ptl_md_t md;
+    ptl_ni_limits_t desired;
     MPIDI_STATE_DECL(MPID_STATE_PTL_INIT);
 
     MPIDI_FUNC_ENTER(MPID_STATE_PTL_INIT);
@@ -101,19 +103,28 @@ static int ptl_init(MPIDI_PG_t *pg_p, int pg_rank, char **bc_val_p, int *val_max
 
     MPIDI_Anysource_improbe_fn = MPID_nem_ptl_anysource_improbe;
 
-    /* set the unexpected header limit before PtlInit, unless it is already set in the env */
-    if (getenv("PTL_LIM_MAX_UNEXPECTED_HEADERS") == NULL) {
-        char *envstr = MPIU_Strdup("PTL_LIM_MAX_UNEXPECTED_HEADERS=2000000");
-        MPL_putenv(envstr);
-        MPIU_Free(envstr);
-    }
-
     /* init portals */
     ret = PtlInit();
     MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlinit", "**ptlinit %s", MPID_nem_ptl_strerror(ret));
     
+    /* do an interface pre-init to get the default limits struct */
     ret = PtlNIInit(PTL_IFACE_DEFAULT, PTL_NI_MATCHING | PTL_NI_PHYSICAL,
-                    PTL_PID_ANY, NULL, &MPIDI_nem_ptl_ni_limits, &MPIDI_nem_ptl_ni);
+                    PTL_PID_ANY, NULL, &desired, &MPIDI_nem_ptl_ni);
+    MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlniinit", "**ptlniinit %s", MPID_nem_ptl_strerror(ret));
+
+    /* finalize the interface so we can re-init with our desired maximums */
+    ret = PtlNIFini(MPIDI_nem_ptl_ni);
+    MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlnifini", "**ptlnifini %s", MPID_nem_ptl_strerror(ret));
+
+    /* set higher limits if they are determined to be too low */
+    if (desired.max_unexpected_headers < UNEXPECTED_HDR_COUNT && getenv("PTL_LIM_MAX_UNEXPECTED_HEADERS") == NULL)
+        desired.max_unexpected_headers = UNEXPECTED_HDR_COUNT;
+    if (desired.max_eqs < EQ_COUNT && getenv("PTL_LIM_MAX_EQS") == NULL)
+        desired.max_eqs = EQ_COUNT;
+
+    /* do the real init */
+    ret = PtlNIInit(PTL_IFACE_DEFAULT, PTL_NI_MATCHING | PTL_NI_PHYSICAL,
+                    PTL_PID_ANY, &desired, &MPIDI_nem_ptl_ni_limits, &MPIDI_nem_ptl_ni);
     MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlniinit", "**ptlniinit %s", MPID_nem_ptl_strerror(ret));
 
     ret = PtlEQAlloc(MPIDI_nem_ptl_ni, EQ_COUNT, &MPIDI_nem_ptl_eq);
