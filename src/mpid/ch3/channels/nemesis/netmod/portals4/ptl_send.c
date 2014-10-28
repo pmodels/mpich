@@ -13,7 +13,6 @@
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 static void big_meappend(void *buf, ptl_size_t left_to_send, MPIDI_VC_t *vc, ptl_match_bits_t match_bits, MPID_Request *sreq)
 {
-    void * user_ptr = NULL;
     int i, ret;
     MPID_nem_ptl_vc_area *vc_ptl;
     ptl_me_t me;
@@ -39,19 +38,17 @@ static void big_meappend(void *buf, ptl_size_t left_to_send, MPIDI_VC_t *vc, ptl
         /* send up to the maximum allowed by the portals interface */
         if (left_to_send > MPIDI_nem_ptl_ni_limits.max_msg_size)
             me.length = MPIDI_nem_ptl_ni_limits.max_msg_size;
-        else {
+        else
             me.length = left_to_send;
-            /* attach the request to the final operation */
-            user_ptr = sreq;
-        }
 
-        ret = PtlMEAppend(MPIDI_nem_ptl_ni, MPIDI_nem_ptl_get_pt, &me, PTL_PRIORITY_LIST, user_ptr, &REQ_PTL(sreq)->get_me_p[i]);
+        ret = PtlMEAppend(MPIDI_nem_ptl_ni, MPIDI_nem_ptl_get_pt, &me, PTL_PRIORITY_LIST, sreq, &REQ_PTL(sreq)->get_me_p[i]);
         DBG_MSG_MEAPPEND("CTL", vc->pg_rank, me, sreq);
         MPIU_Assert(ret == 0);
 
         /* account for what has been sent */
         me.start = (char *)me.start + me.length;
         left_to_send -= me.length;
+        REQ_PTL(sreq)->num_gets++;
     }
 }
 
@@ -114,8 +111,10 @@ static int handler_large(const ptl_event_t *e)
         /* truncated message */
         mpi_errno = handler_send_complete(e);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-    } else {
-        REQ_PTL(sreq)->event_handler = handler_send_complete;
+    } else if (e->type == PTL_EVENT_GET) {
+        /* decrement the remaining get operations */
+        if (--REQ_PTL(sreq)->num_gets == 0)
+            mpi_errno = handler_send_complete(e);
     }
 
  fn_exit:
@@ -382,7 +381,8 @@ static int send_msg(ptl_hdr_data_t ssend_flag, struct MPIDI_VC *vc, const void *
                 me.min_free = 0;
 
                 MPIU_CHKPMEM_MALLOC(REQ_PTL(sreq)->get_me_p, ptl_handle_me_t *, sizeof(ptl_handle_me_t), mpi_errno, "get_me_p");
-                        
+
+                REQ_PTL(sreq)->num_gets = 1;
                 ret = PtlMEAppend(MPIDI_nem_ptl_ni, MPIDI_nem_ptl_get_pt, &me, PTL_PRIORITY_LIST, sreq,
                                   &REQ_PTL(sreq)->get_me_p[0]);
                 MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlmeappend", "**ptlmeappend %s", MPID_nem_ptl_strerror(ret));
