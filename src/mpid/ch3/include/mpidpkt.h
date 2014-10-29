@@ -61,9 +61,6 @@ typedef union {
  */
 /* FIXME: Having predefined names makes it harder to add new message types,
    such as different RMA types. */
-/* We start with an arbitrarily chosen number (42), to help with
- * debugging when a packet type is not initialized or wrongly
- * initialized. */
 typedef enum {
     MPIDI_CH3_PKT_EAGER_SEND = 42,
 #if defined(USE_EAGER_SHORT)
@@ -77,10 +74,18 @@ typedef enum {
     MPIDI_CH3_PKT_RNDV_SEND,    /* FIXME: should be stream put */
     MPIDI_CH3_PKT_CANCEL_SEND_REQ,
     MPIDI_CH3_PKT_CANCEL_SEND_RESP,
-    MPIDI_CH3_PKT_PUT,  /* RMA Packets begin here */
+    /* RMA Packets begin here */
+    MPIDI_CH3_PKT_PUT,
     MPIDI_CH3_PKT_GET,
-    MPIDI_CH3_PKT_GET_RESP,
     MPIDI_CH3_PKT_ACCUMULATE,
+    MPIDI_CH3_PKT_GET_ACCUM,
+    MPIDI_CH3_PKT_ACCUM_IMMED,  /* optimization for short accumulate */
+    MPIDI_CH3_PKT_FOP,
+    MPIDI_CH3_PKT_CAS,
+    MPIDI_CH3_PKT_GET_RESP,
+    MPIDI_CH3_PKT_GET_ACCUM_RESP,
+    MPIDI_CH3_PKT_FOP_RESP,
+    MPIDI_CH3_PKT_CAS_RESP,
     MPIDI_CH3_PKT_LOCK,
     MPIDI_CH3_PKT_LOCK_GRANTED,
     MPIDI_CH3_PKT_UNLOCK,
@@ -91,14 +96,6 @@ typedef enum {
     MPIDI_CH3_PKT_LOCK_GET_UNLOCK,      /* optimization for single gets */
     MPIDI_CH3_PKT_LOCK_ACCUM_UNLOCK,    /* optimization for single accumulates */
     /* RMA Packets end here */
-    MPIDI_CH3_PKT_ACCUM_IMMED,  /* optimization for short accumulate */
-    /* FIXME: Add PUT, GET_IMMED packet types */
-    MPIDI_CH3_PKT_CAS,
-    MPIDI_CH3_PKT_CAS_RESP,
-    MPIDI_CH3_PKT_FOP,
-    MPIDI_CH3_PKT_FOP_RESP,
-    MPIDI_CH3_PKT_GET_ACCUM,
-    MPIDI_CH3_PKT_GET_ACCUM_RESP,
     MPIDI_CH3_PKT_FLOW_CNTL_UPDATE,     /* FIXME: Unused */
     MPIDI_CH3_PKT_CLOSE,
     MPIDI_CH3_PKT_REVOKE,
