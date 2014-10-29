@@ -2,6 +2,7 @@
 **LLC_cmd_free:LLC_cmd_free failed
 **LLC_comm_rank:LLC_comm_rank failed
 **LLC_init:LLC_init failed
+**LLC_iov_free:LLC_iov_free failed
 **LLC_poll:LLC_poll failed
 **LLC_post:LLC_post failed
 **LLC_release_buffer:LLC_release_buffer failed

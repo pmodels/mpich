@@ -623,6 +623,10 @@ int llctofu_poll(int in_blocking_poll,
             
             /* Don't free iov_local[0].addr */
 
+            llc_errno = LLC_iov_free(lcmd[0].iov_remote, 1);
+            MPIU_ERR_CHKANDJUMP(llc_errno, mpi_errno, MPI_ERR_OTHER, "**LLC_iov_free");
+            llc_errno = LLC_iov_free(lcmd[0].iov_local, 1);
+            MPIU_ERR_CHKANDJUMP(llc_errno, mpi_errno, MPI_ERR_OTHER, "**LLC_iov_free");
             llc_errno = LLC_cmd_free(lcmd, 1);
             MPIU_ERR_CHKANDJUMP(llc_errno, mpi_errno, MPI_ERR_OTHER, "**LLC_cmd_free");
             break; }
@@ -649,6 +653,10 @@ int llctofu_poll(int in_blocking_poll,
                 MPIU_Free((void *)lcmd->iov_local[0].addr);
                 lcmd->iov_local[0].addr = 0;
             }
+            llc_errno = LLC_iov_free(lcmd[0].iov_remote, 1);
+            MPIU_ERR_CHKANDJUMP(llc_errno, mpi_errno, MPI_ERR_OTHER, "**LLC_iov_free");
+            llc_errno = LLC_iov_free(lcmd[0].iov_local, 1);
+            MPIU_ERR_CHKANDJUMP(llc_errno, mpi_errno, MPI_ERR_OTHER, "**LLC_iov_free");
             llc_errno = LLC_cmd_free(lcmd, 1);
             MPIU_ERR_CHKANDJUMP(llc_errno, mpi_errno, MPI_ERR_OTHER, "**LLC_cmd_free");
             
@@ -728,6 +736,10 @@ int llctofu_poll(int in_blocking_poll,
             /* Mark completion on rreq */
             MPIDI_CH3U_Request_complete(req);
 
+            llc_errno = LLC_iov_free(lcmd[0].iov_remote, 1);
+            MPIU_ERR_CHKANDJUMP(llc_errno, mpi_errno, MPI_ERR_OTHER, "**LLC_iov_free");
+            llc_errno = LLC_iov_free(lcmd[0].iov_local, 1);
+            MPIU_ERR_CHKANDJUMP(llc_errno, mpi_errno, MPI_ERR_OTHER, "**LLC_iov_free");
             llc_errno = LLC_cmd_free(lcmd, 1);
             MPIU_ERR_CHKANDJUMP(llc_errno, mpi_errno, MPI_ERR_OTHER, "**LLC_cmd_free");
             break; }
