@@ -15,6 +15,7 @@ enum {
 };
 
 
+static int _mxm_handle_sreq(MPID_Request * req);
 static void _mxm_send_completion_cb(void *context);
 static int _mxm_isend(MPID_nem_mxm_ep_t * ep, MPID_nem_mxm_req_area * req,
                       int type, mxm_mq_h mxm_mq, int mxm_rank, int id, mxm_tag_t tag, int block);
@@ -234,7 +235,6 @@ int MPID_nem_mxm_send(MPIDI_VC_t * vc, const void *buf, int count, MPI_Datatype 
     MPIDI_Request_create_sreq(sreq, mpi_errno, goto fn_exit);
     MPIU_Assert(sreq != NULL);
     MPIDI_Request_set_type(sreq, MPIDI_REQUEST_TYPE_SEND);
-
     MPIDI_VC_FAI_send_seqnum(vc, seqnum);
     MPIDI_Request_set_seqnum(sreq, seqnum);
     if (HANDLE_GET_KIND(datatype) != HANDLE_KIND_BUILTIN) {
@@ -336,8 +336,7 @@ int MPID_nem_mxm_ssend(MPIDI_VC_t * vc, const void *buf, int count, MPI_Datatype
     /* create a request */
     MPIDI_Request_create_sreq(sreq, mpi_errno, goto fn_exit);
     MPIU_Assert(sreq != NULL);
-    MPIDI_Request_set_type(sreq, MPIDI_REQUEST_TYPE_SSEND);
-
+    MPIDI_Request_set_type(sreq, MPIDI_REQUEST_TYPE_SEND);
     MPIDI_VC_FAI_send_seqnum(vc, seqnum);
     MPIDI_Request_set_seqnum(sreq, seqnum);
     if (HANDLE_GET_KIND(datatype) != HANDLE_KIND_BUILTIN) {
@@ -440,7 +439,6 @@ int MPID_nem_mxm_isend(MPIDI_VC_t * vc, const void *buf, int count, MPI_Datatype
     MPIDI_Request_create_sreq(sreq, mpi_errno, goto fn_exit);
     MPIU_Assert(sreq != NULL);
     MPIDI_Request_set_type(sreq, MPIDI_REQUEST_TYPE_SEND);
-
     MPIDI_VC_FAI_send_seqnum(vc, seqnum);
     MPIDI_Request_set_seqnum(sreq, seqnum);
     if (HANDLE_GET_KIND(datatype) != HANDLE_KIND_BUILTIN) {
@@ -543,8 +541,7 @@ int MPID_nem_mxm_issend(MPIDI_VC_t * vc, const void *buf, int count, MPI_Datatyp
     /* create a request */
     MPIDI_Request_create_sreq(sreq, mpi_errno, goto fn_exit);
     MPIU_Assert(sreq != NULL);
-    MPIDI_Request_set_type(sreq, MPIDI_REQUEST_TYPE_SSEND);
-
+    MPIDI_Request_set_type(sreq, MPIDI_REQUEST_TYPE_SEND);
     MPIDI_VC_FAI_send_seqnum(vc, seqnum);
     MPIDI_Request_set_seqnum(sreq, seqnum);
     if (HANDLE_GET_KIND(datatype) != HANDLE_KIND_BUILTIN) {
@@ -622,9 +619,10 @@ int MPID_nem_mxm_issend(MPIDI_VC_t * vc, const void *buf, int count, MPI_Datatyp
 }
 
 
-int _mxm_handle_sreq(MPID_Request * req)
+static int _mxm_handle_sreq(MPID_Request * req)
 {
     int complete = FALSE;
+    int (*reqFn) (MPIDI_VC_t *, MPID_Request *, int *);
     MPID_nem_mxm_vc_area *vc_area = NULL;
     MPID_nem_mxm_req_area *req_area = NULL;
 
@@ -636,10 +634,8 @@ int _mxm_handle_sreq(MPID_Request * req)
                       16 ? 16 : req_area->iov_buf[0].length));
 
     vc_area->pending_sends -= 1;
-    if (req->dev.tmpbuf) {
-        if (req->dev.datatype_ptr || req->ch.noncontig) {
-            MPIU_Free(req->dev.tmpbuf);
-        }
+    if (((req->dev.datatype_ptr != NULL) && (req->dev.tmpbuf != NULL))) {
+        MPIU_Free(req->dev.tmpbuf);
     }
 
     if (req_area->iov_count > MXM_MPICH_MAX_IOV) {
@@ -648,8 +644,19 @@ int _mxm_handle_sreq(MPID_Request * req)
         req_area->iov_count = 0;
     }
 
-    MPIDI_CH3U_Handle_send_req(req->ch.vc, req, &complete);
-    MPIU_Assert(complete == TRUE);
+    reqFn = req->dev.OnDataAvail;
+    if (!reqFn) {
+        MPIDI_CH3U_Request_complete(req);
+        MPIU_DBG_MSG(CH3_CHANNEL, VERBOSE, ".... complete");
+    }
+    else {
+        MPIDI_VC_t *vc = req->ch.vc;
+
+        reqFn(vc, req, &complete);
+        if (!complete) {
+            MPIU_Assert(complete == TRUE);
+        }
+    }
 
     return complete;
 }
@@ -676,7 +683,7 @@ static void _mxm_send_completion_cb(void *context)
                     req, req->status.MPI_ERROR);
 
     if (likely(!MPIR_STATUS_GET_CANCEL_BIT(req->status))) {
-        MPID_nem_mxm_queue_enqueue(&mxm_obj->sreq_queue, req);
+        _mxm_handle_sreq(req);
     }
 }
 
