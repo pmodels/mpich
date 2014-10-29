@@ -32,7 +32,7 @@
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 int MPIDI_CH3_iStartMsgv (MPIDI_VC_t *vc, MPID_IOV *iov, int n_iov, MPID_Request **sreq_ptr)
 {
-    MPID_Request * sreq = NULL;
+    MPID_Request * sreq = *sreq_ptr = NULL;
     int mpi_errno = MPI_SUCCESS;
     int in_cs = FALSE;
     int again = 0;

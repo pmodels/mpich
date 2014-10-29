@@ -802,22 +802,53 @@ int MPID_nem_lmt_shm_vc_terminated(MPIDI_VC_t *vc)
     int mpi_errno = MPI_SUCCESS;
     MPIDI_CH3I_VC *vc_ch = &vc->ch;
     MPID_nem_lmt_shm_wait_element_t *we;
+    int req_errno = MPI_SUCCESS;
+    MPID_Request *req = NULL;
+    int i;
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_LMT_SHM_VC_TERMINATED);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_LMT_SHM_VC_TERMINATED);
+
+    if (vc->state != MPIDI_VC_STATE_CLOSED) {
+        MPIU_ERR_SET1(req_errno, MPIX_ERR_PROC_FAILED, "**comm_fail", "**comm_fail %d", vc->pg_rank);
+
+        /* If there is anything in the RTS queue, it needs to be cleared out. */
+        MPIU_THREAD_CS_ENTER(LMT,);
+        for (i = 0; i < MPID_NEM_LMT_RTS_QUEUE_SIZE; i++) {
+            if (MPI_REQUEST_NULL != MPID_nem_lmt_rts_queue[i]) {
+                MPID_Request_get_ptr(MPID_nem_lmt_rts_queue[i], req);
+                MPIU_DBG_MSG(CH3_CHANNEL, VERBOSE, "Checking RTS message");
+
+                if (req->ch.vc != NULL && req->ch.vc->pg_rank == vc->pg_rank) {
+                    MPIU_DBG_MSG(CH3_CHANNEL, VERBOSE, "Removing RTS message");
+                    req->status.MPI_ERROR = req_errno;
+                    MPIDI_CH3U_Request_complete(req);
+                    MPID_nem_lmt_rts_queue[i] = MPI_REQUEST_NULL;
+                }
+            }
+        }
+        MPIU_THREAD_CS_EXIT(LMT,);
+    }
 
     /* We empty the vc queue, but don't remove the vc from the global
        list.  That will eventually happen when lmt_shm_progress()
        calls lmt_shm_progress_vc() and it finds an empty queue. */
 
     if (vc_ch->lmt_active_lmt) {
+        MPIU_DBG_MSG(CH3_CHANNEL, VERBOSE, "Clearing active LMT");
+        vc_ch->lmt_active_lmt->req->status.MPI_ERROR = req_errno;
         MPIDI_CH3U_Request_complete(vc_ch->lmt_active_lmt->req);
         MPIU_Free(vc_ch->lmt_active_lmt);
         vc_ch->lmt_active_lmt = NULL;
     }
 
+    if (!LMT_SHM_Q_EMPTY(vc_ch->lmt_queue)) {
+        MPIU_DBG_MSG(CH3_CHANNEL, VERBOSE, "Empty LMT queue");
+    }
+
     while (!LMT_SHM_Q_EMPTY(vc_ch->lmt_queue)) {
         LMT_SHM_Q_DEQUEUE(&vc_ch->lmt_queue, &we);
+        we->req->status.MPI_ERROR = req_errno;
         MPIDI_CH3U_Request_complete(we->req);
         MPIU_Free(we);
     }

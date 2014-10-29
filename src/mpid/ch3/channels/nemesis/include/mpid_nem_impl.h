@@ -55,6 +55,10 @@ typedef struct MPID_nem_pkt_lmt_rts
 }
 MPID_nem_pkt_lmt_rts_t;
 
+#define MPID_NEM_LMT_RTS_QUEUE_SIZE 1024
+extern int *MPID_nem_lmt_rts_queue;
+extern int MPID_nem_lmt_rts_queue_last_inserted;
+
 typedef struct MPID_nem_pkt_lmt_cts
 {
     MPIDI_CH3_Pkt_type_t type;

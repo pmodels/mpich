@@ -29,6 +29,7 @@ int MPID_nem_finalize(void)
     /* these are allocated in MPID_nem_mpich_init, not MPID_nem_init */
     MPIU_Free(MPID_nem_recv_seqno);
     MPIU_Free(MPID_nem_fboxq_elem_list);
+    MPIU_Free(MPID_nem_lmt_rts_queue);
 
     /* from MPID_nem_init */
     MPIU_Free(MPID_nem_mem_region.FreeQ);
