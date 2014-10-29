@@ -25,7 +25,8 @@ noinst_PROGRAMS = \
     c2f2cwinf     \
     baseattrwinf  \
     winattrf      \
-    winattr2f
+    winattr2f	  \
+    aintf
 ## this test was commented out in the simplemake version...
 ##    allocmem
 
