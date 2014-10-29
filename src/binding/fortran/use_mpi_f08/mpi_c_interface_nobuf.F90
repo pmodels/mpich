@@ -755,7 +755,7 @@ function MPIR_Comm_get_info_c(comm, info_used) &
     use, intrinsic :: iso_c_binding, only : c_int
     use :: mpi_c_interface_types, only : c_Comm, c_Info
     implicit none
-    integer(c_Comm), intent(in) :: comm
+    integer(c_Comm), value, intent(in) :: comm
     integer(c_Info), intent(out) :: info_used
     integer(c_int) :: ierror
 end function MPIR_Comm_get_info_c
@@ -765,8 +765,8 @@ function MPIR_Comm_set_info_c(comm, info) &
     use, intrinsic :: iso_c_binding, only : c_int
     use :: mpi_c_interface_types, only : c_Comm, c_Info
     implicit none
-    integer(c_Comm), intent(in) :: comm
-    integer(c_Info), intent(in) :: info
+    integer(c_Comm), value, intent(in) :: comm
+    integer(c_Info), value, intent(in) :: info
     integer(c_int) :: ierror
 end function MPIR_Comm_set_info_c
 
@@ -1787,10 +1787,10 @@ function MPIR_Win_allocate_c(size, disp_unit, info, comm, baseptr, win) &
     use :: mpi_c_interface_types, only : c_Info, c_Comm, c_Win
     use :: mpi_f08_compile_constants, only : MPI_ADDRESS_KIND
     implicit none
-    integer(kind=MPI_ADDRESS_KIND), intent(in) :: size
-    integer(c_int), intent(in) :: disp_unit
-    integer(c_Info), intent(in) :: info
-    integer(c_Comm), intent(in) :: comm
+    integer(kind=MPI_ADDRESS_KIND), value, intent(in) :: size
+    integer(c_int), value, intent(in) :: disp_unit
+    integer(c_Info), value, intent(in) :: info
+    integer(c_Comm), value, intent(in) :: comm
     type(c_ptr), intent(out) :: baseptr
     integer(c_Win), intent(out) :: win
     integer(c_int) :: ierror
@@ -1802,10 +1802,10 @@ function MPIR_Win_allocate_shared_c(size, disp_unit, info, comm, baseptr, win) &
     use :: mpi_c_interface_types, only : c_Info, c_Comm, c_Win
     use :: mpi_f08_compile_constants, only : MPI_ADDRESS_KIND
     implicit none
-    integer(kind=MPI_ADDRESS_KIND), intent(in) :: size
-    integer(c_int), intent(in) :: disp_unit
-    integer(c_Info), intent(in) :: info
-    integer(c_Comm), intent(in) :: comm
+    integer(kind=MPI_ADDRESS_KIND), value, intent(in) :: size
+    integer(c_int), value, intent(in) :: disp_unit
+    integer(c_Info), value, intent(in) :: info
+    integer(c_Comm), value, intent(in) :: comm
     type(c_ptr), intent(out) :: baseptr
     integer(c_Win), intent(out) :: win
     integer(c_int) :: ierror
@@ -1825,8 +1825,8 @@ function MPIR_Win_create_dynamic_c(info, comm, win) &
     use, intrinsic :: iso_c_binding, only : c_int
     use :: mpi_c_interface_types, only : c_Info, c_Comm, c_Win
     implicit none
-    integer(c_Info), intent(in) :: info
-    integer(c_Comm), intent(in) :: comm
+    integer(c_Info), value, intent(in) :: info
+    integer(c_Comm), value, intent(in) :: comm
     integer(c_Win), intent(out) :: win
     integer(c_int) :: ierror
 end function MPIR_Win_create_dynamic_c
@@ -1846,8 +1846,8 @@ function MPIR_Win_flush_c(rank, win) &
     use, intrinsic :: iso_c_binding, only : c_int
     use :: mpi_c_interface_types, only : c_Win
     implicit none
-    integer(c_int), intent(in) :: rank
-    integer(c_Win), intent(in) :: win
+    integer(c_int), value, intent(in) :: rank
+    integer(c_Win), value, intent(in) :: win
     integer(c_int) :: ierror
 end function MPIR_Win_flush_c
 
@@ -1856,7 +1856,7 @@ function MPIR_Win_flush_all_c(win) &
     use, intrinsic :: iso_c_binding, only : c_int
     use :: mpi_c_interface_types, only : c_Win
     implicit none
-    integer(c_Win), intent(in) :: win
+    integer(c_Win), value, intent(in) :: win
     integer(c_int) :: ierror
 end function MPIR_Win_flush_all_c
 
@@ -1865,8 +1865,8 @@ function MPIR_Win_flush_local_c(rank, win) &
     use, intrinsic :: iso_c_binding, only : c_int
     use :: mpi_c_interface_types, only : c_Win
     implicit none
-    integer(c_int), intent(in) :: rank
-    integer(c_Win), intent(in) :: win
+    integer(c_int), value, intent(in) :: rank
+    integer(c_Win), value, intent(in) :: win
     integer(c_int) :: ierror
 end function MPIR_Win_flush_local_c
 
@@ -1875,7 +1875,7 @@ function MPIR_Win_flush_local_all_c(win) &
     use, intrinsic :: iso_c_binding, only : c_int
     use :: mpi_c_interface_types, only : c_Win
     implicit none
-    integer(c_Win), intent(in) :: win
+    integer(c_Win), value, intent(in) :: win
     integer(c_int) :: ierror
 end function MPIR_Win_flush_local_all_c
 
@@ -1903,7 +1903,7 @@ function MPIR_Win_get_info_c(win, info_used) &
     use, intrinsic :: iso_c_binding, only : c_int
     use :: mpi_c_interface_types, only : c_Win, c_Info
     implicit none
-    integer(c_Win), intent(in) :: win
+    integer(c_Win), value, intent(in) :: win
     integer(c_Info), intent(out) :: info_used
     integer(c_int) :: ierror
 end function MPIR_Win_get_info_c
@@ -1923,8 +1923,8 @@ function MPIR_Win_lock_all_c(assert, win) &
     use, intrinsic :: iso_c_binding, only : c_int
     use :: mpi_c_interface_types, only : c_Win
     implicit none
-    integer(c_int), intent(in) :: assert
-    integer(c_Win), intent(in) :: win
+    integer(c_int), value, intent(in) :: assert
+    integer(c_Win), value, intent(in) :: win
     integer(c_int) :: ierror
 end function MPIR_Win_lock_all_c
 
@@ -1944,8 +1944,8 @@ function MPIR_Win_set_info_c(win, info) &
     use, intrinsic :: iso_c_binding, only : c_int
     use :: mpi_c_interface_types, only : c_Win, c_Info
     implicit none
-    integer(c_Win), intent(in) :: win
-    integer(c_Info), intent(in) :: info
+    integer(c_Win), value, intent(in) :: win
+    integer(c_Info), value, intent(in) :: info
     integer(c_int) :: ierror
 end function MPIR_Win_set_info_c
 
@@ -1955,8 +1955,8 @@ function MPIR_Win_shared_query_c(win, rank, size, disp_unit, baseptr) &
     use :: mpi_c_interface_types, only : c_Win
     use :: mpi_f08_compile_constants, only : MPI_ADDRESS_KIND
     implicit none
-    integer(c_Win), intent(in) :: win
-    integer(c_int), intent(in) :: rank
+    integer(c_Win), value, intent(in) :: win
+    integer(c_int), value, intent(in) :: rank
     integer(kind=MPI_ADDRESS_KIND), intent(out) :: size
     integer(c_int), intent(out) :: disp_unit
     type(c_ptr), intent(out) :: baseptr
@@ -1979,7 +1979,7 @@ function MPIR_Win_sync_c(win) &
     use, intrinsic :: iso_c_binding, only : c_int
     use :: mpi_c_interface_types, only : c_Win
     implicit none
-    integer(c_Win), intent(in) :: win
+    integer(c_Win), value, intent(in) :: win
     integer(c_int) :: ierror
 end function MPIR_Win_sync_c
 
@@ -2008,7 +2008,7 @@ function MPIR_Win_unlock_all_c(win) &
     use, intrinsic :: iso_c_binding, only : c_int
     use :: mpi_c_interface_types, only : c_Win
     implicit none
-    integer(c_Win), intent(in) :: win
+    integer(c_Win), value, intent(in) :: win
     integer(c_int) :: ierror
 end function MPIR_Win_unlock_all_c
 
