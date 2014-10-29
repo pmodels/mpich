@@ -62,7 +62,7 @@ typedef union {
 /* FIXME: Having predefined names makes it harder to add new message types,
    such as different RMA types. */
 typedef enum {
-    MPIDI_CH3_PKT_EAGER_SEND = 42,
+    MPIDI_CH3_PKT_EAGER_SEND = 0,
 #if defined(USE_EAGER_SHORT)
     MPIDI_CH3_PKT_EAGERSHORT_SEND,
 #endif /* defined(USE_EAGER_SHORT) */
