@@ -1880,13 +1880,15 @@ fi
 # Handle default choices for the Fortran compilers
 # Note that these have already been set above
 
-if test "$enable_f77" = "yes" -a "$F77" = "no" ; then
-   # No Fortran 77 compiler found; abort
-   AC_MSG_ERROR([No Fortran 77 compiler found. If you don't need to
-   build any Fortran programs, you can disable Fortran support using
-   --disable-fortran. If you do want to build Fortran
-   programs, you need to install a Fortran compiler such as gfortran
-   or ifort before you can proceed.])
+if test "$enable_f77" = "yes"; then
+    if test "$F77" = "" -o "$F77" = "no"; then
+        # No Fortran 77 compiler found; abort
+        AC_MSG_ERROR([No Fortran 77 compiler found. If you don't need to
+        build any Fortran programs, you can disable Fortran support using
+        --disable-fortran. If you do want to build Fortran
+        programs, you need to install a Fortran compiler such as gfortran
+        or ifort before you can proceed.])
+    fi
 fi
 
 if test "$enable_f77" = yes ; then
@@ -2054,13 +2056,15 @@ if test "$enable_fc" = "yes" -a "$enable_f77" = yes ; then
         AC_MSG_WARN([Use --disable-fc to keep configure from searching for a Fortran 90 compiler])
     fi
 
-    if test "$enable_fc" = "yes" -a "$FC" = "no" ; then
-       # No Fortran 90 compiler found; abort
-       AC_MSG_ERROR([No Fortran 90 compiler found. If you don't need
-       to build any Fortran 90 programs, you can disable Fortran 90
-       support using --disable-fc. If you do want to build Fortran 90
-       programs, you need to install a Fortran 90 compiler such as
-       gfortran or ifort before you can proceed.])
+    if test "$enable_fc" = "yes"; then
+        if test "$FC" = "no" -o "$FC" = ""; then
+            # No Fortran 90 compiler found; abort
+            AC_MSG_ERROR([No Fortran 90 compiler found. If you don't need
+            to build any Fortran 90 programs, you can disable Fortran 90
+            support using --disable-fc. If you do want to build Fortran 90
+            programs, you need to install a Fortran 90 compiler such as
+            gfortran or ifort before you can proceed.])
+        fi
     fi
 fi
 
