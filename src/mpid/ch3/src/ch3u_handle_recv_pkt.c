@@ -164,10 +164,8 @@ int MPIDI_CH3U_Receive_data_found(MPID_Request *rreq, char *buf, MPIDI_msg_sz_t 
             *complete = FALSE;
         }
         
-	/* FIXME: We want to set the OnDataAvail to the appropriate 
-	   function, which depends on whether this is an RMA 
-	   request or a pt-to-pt request. */
-	rreq->dev.OnDataAvail = 0;
+        /* Trigger OnFinal when receiving the last segment */
+        rreq->dev.OnDataAvail = rreq->dev.OnFinal;
     }
     else {
 	/* user buffer is not contiguous or is too small to hold
@@ -206,7 +204,8 @@ int MPIDI_CH3U_Receive_data_found(MPID_Request *rreq, char *buf, MPIDI_msg_sz_t 
             }
             /* --END ERROR HANDLING-- */
             *buflen = data_sz;
-            rreq->dev.OnDataAvail = 0;
+            /* Trigger OnFinal when receiving the last segment */
+            rreq->dev.OnDataAvail = rreq->dev.OnFinal;
             *complete = TRUE;
         }
         else

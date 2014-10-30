@@ -225,6 +225,7 @@ int MPIDI_CH3_PktHandler_Put(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
     req->dev.target_win_handle = put_pkt->target_win_handle;
     req->dev.source_win_handle = put_pkt->source_win_handle;
     req->dev.flags = put_pkt->flags;
+    req->dev.OnFinal = MPIDI_CH3_ReqHandler_PutRecvComplete;
 
     if (MPIR_DATATYPE_IS_PREDEFINED(put_pkt->datatype)) {
         MPIDI_Request_set_type(req, MPIDI_REQUEST_TYPE_PUT_RESP);
@@ -256,12 +257,6 @@ int MPIDI_CH3_PktHandler_Put(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
         mpi_errno = MPIDI_CH3U_Receive_data_found(req, data_buf, &data_len, &complete);
         MPIU_ERR_CHKANDJUMP1(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**ch3|postrecv",
                              "**ch3|postrecv %s", "MPIDI_CH3_PKT_PUT");
-        /* FIXME:  Only change the handling of completion if
-         * post_data_receive reset the handler.  There should
-         * be a cleaner way to do this */
-        if (!req->dev.OnDataAvail) {
-            req->dev.OnDataAvail = MPIDI_CH3_ReqHandler_PutRecvComplete;
-        }
 
         /* return the number of bytes processed in this function */
         *buflen = sizeof(MPIDI_CH3_Pkt_t) + data_len;
@@ -280,7 +275,6 @@ int MPIDI_CH3_PktHandler_Put(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
         /* derived datatype */
         MPIDI_Request_set_type(req, MPIDI_REQUEST_TYPE_PUT_RESP_DERIVED_DT);
         req->dev.datatype = MPI_DATATYPE_NULL;
-        req->dev.OnFinal = MPIDI_CH3_ReqHandler_PutRecvComplete;
 
         req->dev.dtype_info = (MPIDI_RMA_dtype_info *)
             MPIU_Malloc(sizeof(MPIDI_RMA_dtype_info));
@@ -554,6 +548,7 @@ int MPIDI_CH3_PktHandler_Accumulate(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
     req->dev.flags = accum_pkt->flags;
 
     req->dev.resp_request_handle = MPI_REQUEST_NULL;
+    req->dev.OnFinal = MPIDI_CH3_ReqHandler_AccumRecvComplete;
 
     if (MPIR_DATATYPE_IS_PREDEFINED(accum_pkt->datatype)) {
         MPIDI_Request_set_type(req, MPIDI_REQUEST_TYPE_ACCUM_RESP);
@@ -598,12 +593,7 @@ int MPIDI_CH3_PktHandler_Accumulate(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
         mpi_errno = MPIDI_CH3U_Receive_data_found(req, data_buf, &data_len, &complete);
         MPIU_ERR_CHKANDJUMP1(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**ch3|postrecv",
                              "**ch3|postrecv %s", "MPIDI_CH3_PKT_ACCUMULATE");
-        /* FIXME:  Only change the handling of completion if
-         * post_data_receive reset the handler.  There should
-         * be a cleaner way to do this */
-        if (!req->dev.OnDataAvail) {
-            req->dev.OnDataAvail = MPIDI_CH3_ReqHandler_AccumRecvComplete;
-        }
+
         /* return the number of bytes processed in this function */
         *buflen = data_len + sizeof(MPIDI_CH3_Pkt_t);
 
@@ -621,7 +611,6 @@ int MPIDI_CH3_PktHandler_Accumulate(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
         MPIDI_Request_set_type(req, MPIDI_REQUEST_TYPE_ACCUM_RESP_DERIVED_DT);
         req->dev.OnDataAvail = MPIDI_CH3_ReqHandler_AccumDerivedDTRecvComplete;
         req->dev.datatype = MPI_DATATYPE_NULL;
-        req->dev.OnFinal = MPIDI_CH3_ReqHandler_AccumRecvComplete;
 
         req->dev.dtype_info = (MPIDI_RMA_dtype_info *)
             MPIU_Malloc(sizeof(MPIDI_RMA_dtype_info));
@@ -732,6 +721,7 @@ int MPIDI_CH3_PktHandler_GetAccumulate(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
     req->dev.flags = get_accum_pkt->flags;
 
     req->dev.resp_request_handle = get_accum_pkt->request_handle;
+    req->dev.OnFinal = MPIDI_CH3_ReqHandler_GaccumRecvComplete;
 
     if (MPIR_DATATYPE_IS_PREDEFINED(get_accum_pkt->datatype)) {
         MPIDI_Request_set_type(req, MPIDI_REQUEST_TYPE_GET_ACCUM_RESP);
@@ -778,12 +768,7 @@ int MPIDI_CH3_PktHandler_GetAccumulate(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
         mpi_errno = MPIDI_CH3U_Receive_data_found(req, data_buf, &data_len, &complete);
         MPIU_ERR_CHKANDJUMP1(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**ch3|postrecv",
                              "**ch3|postrecv %s", "MPIDI_CH3_PKT_ACCUMULATE");
-        /* FIXME:  Only change the handling of completion if
-         * post_data_receive reset the handler.  There should
-         * be a cleaner way to do this */
-        if (!req->dev.OnDataAvail) {
-            req->dev.OnDataAvail = MPIDI_CH3_ReqHandler_GaccumRecvComplete;
-        }
+
         /* return the number of bytes processed in this function */
         *buflen = data_len + sizeof(MPIDI_CH3_Pkt_t);
 
@@ -801,7 +786,6 @@ int MPIDI_CH3_PktHandler_GetAccumulate(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
         MPIDI_Request_set_type(req, MPIDI_REQUEST_TYPE_GET_ACCUM_RESP_DERIVED_DT);
         req->dev.OnDataAvail = MPIDI_CH3_ReqHandler_GaccumDerivedDTRecvComplete;
         req->dev.datatype = MPI_DATATYPE_NULL;
-        req->dev.OnFinal = MPIDI_CH3_ReqHandler_GaccumRecvComplete;
 
         req->dev.dtype_info = (MPIDI_RMA_dtype_info *)
             MPIU_Malloc(sizeof(MPIDI_RMA_dtype_info));
