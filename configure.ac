@@ -329,7 +329,7 @@ AC_ARG_ENABLE(error-checking,
         runtime   - error checking controllable at runtime through environment 
                     variables
         all       - error checking always enabled (default)
-],,enable_error_checking=default)
+],,enable_error_checking=all)
 
 AC_ARG_ENABLE(error-messages,
 [  --enable-error-messages=level - Control the amount of detail in error messages.
@@ -916,7 +916,7 @@ fi
 
 # error-checking
 # Change default into the specific value of the default
-if test "$enable_error_checking" = "default" ; then
+if test "$enable_error_checking" = "yes" ; then
    enable_error_checking=all
 fi
 # glue_romio.h needs the variable HAVE_ERROR_CHECKING to have the value 0 or 1
@@ -927,7 +927,7 @@ case "$enable_error_checking" in
     # checking tests in the test suite
     ac_configure_args="${ac_configure_args} --disable-checkerrors"
     ;;
-    all|yes|runtime)
+    all|runtime)
     error_checking_kind=`echo $enable_error_checking | \
     tr 'abcdefghijklmnopqrstuvwxyz' 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'`
     error_checking_kind=MPID_ERROR_LEVEL_$error_checking_kind
