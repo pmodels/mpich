@@ -322,7 +322,8 @@ int MPIDI_CH3_ReqHandler_GetAccumRespComplete( MPIDI_VC_t *vc,
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3_REQHANDLER_GETACCUMRESPCOMPLETE);
     
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3_REQHANDLER_GETACCUMRESPCOMPLETE);
-    MPIU_Free(rreq->dev.user_buf);
+    if (rreq->dev.user_buf != NULL)
+        MPIU_Free(rreq->dev.user_buf);
 
     MPID_Win_get_ptr(rreq->dev.target_win_handle, win_ptr);
 
@@ -616,6 +617,16 @@ int MPIDI_CH3_ReqHandler_FOPComplete( MPIDI_VC_t *vc,
     /* Free temporary buffer allocated in PktHandler_FOP */
     if (len > sizeof(int) * MPIDI_RMA_FOP_IMMED_INTS && rreq->dev.op != MPI_NO_OP) {
         MPIU_Free(rreq->dev.user_buf);
+        /* Assign user_buf to NULL so that reqHandler_GetAccumRespComplete()
+           will not try to free an empty buffer. */
+        rreq->dev.user_buf = NULL;
+    }
+    else {
+        /* FOP data fit in pkt header and user_buf just points to data area in pkt header
+           in pktHandler_FOP(), and it should be freed when pkt header is freed.
+           Here we assign user_buf to NULL so that reqHandler_GetAccumRespComplete()
+           will not try to free it. */
+        rreq->dev.user_buf = NULL;
     }
 
     *complete = 1;

@@ -88,6 +88,7 @@ MPID_Request * MPID_Request_create(void)
 	req->dev.iov_offset        = 0;
         req->dev.flags             = MPIDI_CH3_PKT_FLAG_NONE;
         req->dev.resp_request_handle = MPI_REQUEST_NULL;
+        req->dev.user_buf          = NULL;
         req->dev.OnDataAvail       = NULL;
         req->dev.OnFinal           = NULL;
 #ifdef MPIDI_CH3_REQUEST_INIT
