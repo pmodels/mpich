@@ -26,7 +26,8 @@ ptl_pt_index_t  MPIDI_nem_ptl_pt;
 ptl_pt_index_t  MPIDI_nem_ptl_get_pt; /* portal for gets by receiver */
 ptl_pt_index_t  MPIDI_nem_ptl_control_pt; /* portal for MPICH control messages */
 ptl_pt_index_t  MPIDI_nem_ptl_rpt_pt; /* portal for rportals control messages */
-ptl_handle_eq_t MPIDI_nem_ptl_eq;
+ptl_handle_eq_t MPIDI_nem_ptl_target_eq;
+ptl_handle_eq_t MPIDI_nem_ptl_origin_eq;
 ptl_handle_md_t MPIDI_nem_ptl_global_md;
 ptl_ni_limits_t MPIDI_nem_ptl_ni_limits;
 
@@ -178,26 +179,31 @@ static int ptl_init(MPIDI_PG_t *pg_p, int pg_rank, char **bc_val_p, int *val_max
                     PTL_PID_ANY, &desired, &MPIDI_nem_ptl_ni_limits, &MPIDI_nem_ptl_ni);
     MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlniinit", "**ptlniinit %s", MPID_nem_ptl_strerror(ret));
 
-    ret = PtlEQAlloc(MPIDI_nem_ptl_ni, MPIDI_nem_ptl_ni_limits.max_eqs, &MPIDI_nem_ptl_eq);
+    ret = PtlEQAlloc(MPIDI_nem_ptl_ni, MPIDI_nem_ptl_ni_limits.max_eqs, &MPIDI_nem_ptl_target_eq);
+    MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptleqalloc", "**ptleqalloc %s", MPID_nem_ptl_strerror(ret));
+
+    /* allocate a separate EQ for origin events. with this, we can implement rate-limit operations
+       to prevent a locally triggered flow control even */
+    ret = PtlEQAlloc(MPIDI_nem_ptl_ni, MPIDI_nem_ptl_ni_limits.max_eqs, &MPIDI_nem_ptl_origin_eq);
     MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptleqalloc", "**ptleqalloc %s", MPID_nem_ptl_strerror(ret));
 
     /* allocate portal for matching messages */
-    ret = PtlPTAlloc(MPIDI_nem_ptl_ni, PTL_PT_ONLY_USE_ONCE | PTL_PT_ONLY_TRUNCATE | PTL_PT_FLOWCTRL, MPIDI_nem_ptl_eq,
+    ret = PtlPTAlloc(MPIDI_nem_ptl_ni, PTL_PT_ONLY_USE_ONCE | PTL_PT_ONLY_TRUNCATE | PTL_PT_FLOWCTRL, MPIDI_nem_ptl_target_eq,
                      PTL_PT_ANY, &MPIDI_nem_ptl_pt);
     MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlptalloc", "**ptlptalloc %s", MPID_nem_ptl_strerror(ret));
 
     /* allocate portal for large messages where receiver does a get */
-    ret = PtlPTAlloc(MPIDI_nem_ptl_ni, PTL_PT_ONLY_USE_ONCE | PTL_PT_ONLY_TRUNCATE | PTL_PT_FLOWCTRL, MPIDI_nem_ptl_eq,
+    ret = PtlPTAlloc(MPIDI_nem_ptl_ni, PTL_PT_ONLY_USE_ONCE | PTL_PT_ONLY_TRUNCATE | PTL_PT_FLOWCTRL, MPIDI_nem_ptl_target_eq,
                      PTL_PT_ANY, &MPIDI_nem_ptl_get_pt);
     MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlptalloc", "**ptlptalloc %s", MPID_nem_ptl_strerror(ret));
 
     /* allocate portal for MPICH control messages */
-    ret = PtlPTAlloc(MPIDI_nem_ptl_ni, PTL_PT_ONLY_USE_ONCE | PTL_PT_ONLY_TRUNCATE | PTL_PT_FLOWCTRL, MPIDI_nem_ptl_eq,
+    ret = PtlPTAlloc(MPIDI_nem_ptl_ni, PTL_PT_ONLY_USE_ONCE | PTL_PT_ONLY_TRUNCATE | PTL_PT_FLOWCTRL, MPIDI_nem_ptl_target_eq,
                      PTL_PT_ANY, &MPIDI_nem_ptl_control_pt);
     MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlptalloc", "**ptlptalloc %s", MPID_nem_ptl_strerror(ret));
 
     /* allocate portal for MPICH control messages */
-    ret = PtlPTAlloc(MPIDI_nem_ptl_ni, PTL_PT_ONLY_USE_ONCE | PTL_PT_ONLY_TRUNCATE | PTL_PT_FLOWCTRL, MPIDI_nem_ptl_eq,
+    ret = PtlPTAlloc(MPIDI_nem_ptl_ni, PTL_PT_ONLY_USE_ONCE | PTL_PT_ONLY_TRUNCATE | PTL_PT_FLOWCTRL, MPIDI_nem_ptl_target_eq,
                      PTL_PT_ANY, &MPIDI_nem_ptl_rpt_pt);
     MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlptalloc", "**ptlptalloc %s", MPID_nem_ptl_strerror(ret));
 
@@ -205,7 +211,7 @@ static int ptl_init(MPIDI_PG_t *pg_p, int pg_rank, char **bc_val_p, int *val_max
     md.start = 0;
     md.length = (ptl_size_t)-1;
     md.options = 0x0;
-    md.eq_handle = MPIDI_nem_ptl_eq;
+    md.eq_handle = MPIDI_nem_ptl_origin_eq;
     md.ct_handle = PTL_CT_NONE;
     ret = PtlMDBind(MPIDI_nem_ptl_ni, &md, &MPIDI_nem_ptl_global_md);
     MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlmdbind", "**ptlmdbind %s", MPID_nem_ptl_strerror(ret));
@@ -215,7 +221,7 @@ static int ptl_init(MPIDI_PG_t *pg_p, int pg_rank, char **bc_val_p, int *val_max
     MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlniinit", "**ptlniinit %s", MPID_nem_ptl_strerror(ret));
 
     /* allow rportal to manage the primary portal and retransmit if needed */
-    ret = MPID_nem_ptl_rptl_ptinit(MPIDI_nem_ptl_ni, MPIDI_nem_ptl_eq, MPIDI_nem_ptl_pt, MPIDI_nem_ptl_rpt_pt);
+    ret = MPID_nem_ptl_rptl_ptinit(MPIDI_nem_ptl_ni, MPIDI_nem_ptl_origin_eq, MPIDI_nem_ptl_pt, MPIDI_nem_ptl_rpt_pt);
     MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlptalloc", "**ptlptalloc %s", MPID_nem_ptl_strerror(ret));
 
     /* allow rportal to manage the get and control portals, but we
@@ -223,10 +229,10 @@ static int ptl_init(MPIDI_PG_t *pg_p, int pg_rank, char **bc_val_p, int *val_max
      * we pass PTL_PT_ANY as the dummy portal.  unfortunately, portals
      * does not have an "invalid" PT constant, which would have been
      * more appropriate to pass over here. */
-    ret = MPID_nem_ptl_rptl_ptinit(MPIDI_nem_ptl_ni, MPIDI_nem_ptl_eq, MPIDI_nem_ptl_get_pt, PTL_PT_ANY);
+    ret = MPID_nem_ptl_rptl_ptinit(MPIDI_nem_ptl_ni, MPIDI_nem_ptl_origin_eq, MPIDI_nem_ptl_get_pt, PTL_PT_ANY);
     MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlptalloc", "**ptlptalloc %s", MPID_nem_ptl_strerror(ret));
 
-    ret = MPID_nem_ptl_rptl_ptinit(MPIDI_nem_ptl_ni, MPIDI_nem_ptl_eq, MPIDI_nem_ptl_control_pt, PTL_PT_ANY);
+    ret = MPID_nem_ptl_rptl_ptinit(MPIDI_nem_ptl_ni, MPIDI_nem_ptl_origin_eq, MPIDI_nem_ptl_control_pt, PTL_PT_ANY);
     MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlptalloc", "**ptlptalloc %s", MPID_nem_ptl_strerror(ret));
 
     /* create business card */
@@ -255,6 +261,7 @@ static int ptl_finalize(void)
 {
     int mpi_errno = MPI_SUCCESS;
     int ret;
+    ptl_handle_eq_t eqs[2];
     MPIDI_STATE_DECL(MPID_STATE_PTL_FINALIZE);
     MPIDI_FUNC_ENTER(MPID_STATE_PTL_FINALIZE);
 
@@ -266,7 +273,9 @@ static int ptl_finalize(void)
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
     /* shut down portals */
-    ret = MPID_nem_ptl_rptl_drain_eq(1, &MPIDI_nem_ptl_eq);
+    eqs[0] = MPIDI_nem_ptl_target_eq;
+    eqs[1] = MPIDI_nem_ptl_origin_eq;
+    ret = MPID_nem_ptl_rptl_drain_eq(2, eqs);
     MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlptfree", "**ptlptfree %s", MPID_nem_ptl_strerror(ret));
 
     ret = MPID_nem_ptl_rptl_ptfini(MPIDI_nem_ptl_pt);

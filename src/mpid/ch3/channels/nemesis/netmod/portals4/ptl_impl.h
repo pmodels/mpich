@@ -19,7 +19,8 @@ extern ptl_pt_index_t  MPIDI_nem_ptl_pt;
 extern ptl_pt_index_t  MPIDI_nem_ptl_get_pt; /* portal for gets by receiver */
 extern ptl_pt_index_t  MPIDI_nem_ptl_control_pt; /* portal for MPICH control messages */
 extern ptl_pt_index_t  MPIDI_nem_ptl_rpt_pt; /* portal for MPICH control messages */
-extern ptl_handle_eq_t MPIDI_nem_ptl_eq;
+extern ptl_handle_eq_t MPIDI_nem_ptl_target_eq;
+extern ptl_handle_eq_t MPIDI_nem_ptl_origin_eq;
 
 extern ptl_handle_md_t MPIDI_nem_ptl_global_md;
 extern ptl_ni_limits_t MPIDI_nem_ptl_ni_limits;
