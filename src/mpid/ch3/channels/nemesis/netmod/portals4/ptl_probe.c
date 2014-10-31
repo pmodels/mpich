@@ -158,7 +158,8 @@ int MPID_nem_ptl_iprobe(MPIDI_VC_t *vc, int source, int tag, MPID_Comm *comm, in
     } while (!MPID_Request_is_complete(req));
 
     *flag = REQ_PTL(req)->found;
-    *status = req->status;
+    if (status != MPI_STATUS_IGNORE)
+        *status = req->status;
     
     MPID_Request_release(req);
 
