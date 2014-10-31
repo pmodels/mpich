@@ -1815,6 +1815,8 @@ int MPIDI_CH3_PktHandler_Flush( MPIDI_VC_t *, MPIDI_CH3_Pkt_t *,
                                 MPIDI_msg_sz_t *, MPID_Request ** );
 int MPIDI_CH3_PktHandler_FlushAck( MPIDI_VC_t *, MPIDI_CH3_Pkt_t *,
 				    MPIDI_msg_sz_t *, MPID_Request ** );
+int MPIDI_CH3_PktHandler_DecrAtCnt( MPIDI_VC_t *, MPIDI_CH3_Pkt_t *,
+                                    MPIDI_msg_sz_t *, MPID_Request ** );
 int MPIDI_CH3_PktHandler_LockPutUnlock( MPIDI_VC_t *, MPIDI_CH3_Pkt_t *, 
 					MPIDI_msg_sz_t *, MPID_Request ** );
 int MPIDI_CH3_PktHandler_LockAccumUnlock( MPIDI_VC_t *, MPIDI_CH3_Pkt_t *, 

@@ -89,6 +89,7 @@ typedef enum {
     MPIDI_CH3_PKT_UNLOCK,
     MPIDI_CH3_PKT_FLUSH,
     MPIDI_CH3_PKT_FLUSH_ACK,
+    MPIDI_CH3_PKT_DECR_AT_COUNTER,
     MPIDI_CH3_PKT_LOCK_PUT_UNLOCK,      /* optimization for single puts */
     MPIDI_CH3_PKT_LOCK_GET_UNLOCK,      /* optimization for single gets */
     MPIDI_CH3_PKT_LOCK_ACCUM_UNLOCK,    /* optimization for single accumulates */
@@ -121,7 +122,7 @@ typedef enum {
     MPIDI_CH3_PKT_FLAG_RMA_UNLOCK = 2,
     MPIDI_CH3_PKT_FLAG_RMA_FLUSH = 4,
     MPIDI_CH3_PKT_FLAG_RMA_REQ_ACK = 8,
-    MPIDI_CH3_PKT_FLAG_RMA_AT_COMPLETE = 16,
+    MPIDI_CH3_PKT_FLAG_RMA_DECR_AT_COUNTER = 16,
     MPIDI_CH3_PKT_FLAG_RMA_NOCHECK = 32,
     MPIDI_CH3_PKT_FLAG_RMA_SHARED = 64,
     MPIDI_CH3_PKT_FLAG_RMA_EXCLUSIVE = 128,
@@ -432,6 +433,11 @@ typedef struct MPIDI_CH3_Pkt_flush_ack {
                                  * target state at the origin. */
 } MPIDI_CH3_Pkt_flush_ack_t;
 
+typedef struct MPIDI_CH3_Pkt_decr_at_counter {
+    MPIDI_CH3_Pkt_type_t type;
+    MPI_Win target_win_handle;
+} MPIDI_CH3_Pkt_decr_at_counter_t;
+
 typedef struct MPIDI_CH3_Pkt_lock_put_unlock {
     MPIDI_CH3_Pkt_type_t type;
     MPIDI_CH3_Pkt_flags_t flags;
@@ -506,6 +512,7 @@ typedef union MPIDI_CH3_Pkt {
     MPIDI_CH3_Pkt_unlock_t unlock;
     MPIDI_CH3_Pkt_flush_t flush;
     MPIDI_CH3_Pkt_flush_ack_t flush_ack;
+    MPIDI_CH3_Pkt_decr_at_counter_t decr_at_cnt;
     MPIDI_CH3_Pkt_lock_put_unlock_t lock_put_unlock;
     MPIDI_CH3_Pkt_lock_get_unlock_t lock_get_unlock;
     MPIDI_CH3_Pkt_lock_accum_unlock_t lock_accum_unlock;

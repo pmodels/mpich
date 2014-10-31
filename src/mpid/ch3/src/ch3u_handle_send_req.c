@@ -52,6 +52,14 @@ int MPIDI_CH3_ReqHandler_GetSendComplete( MPIDI_VC_t *vc ATTRIBUTE((unused)),
 
     MPID_Win_get_ptr(sreq->dev.target_win_handle, win_ptr);
 
+    if (sreq->dev.flags & MPIDI_CH3_PKT_FLAG_RMA_DECR_AT_COUNTER) {
+        win_ptr->at_completion_counter--;
+        MPIU_Assert(win_ptr->at_completion_counter >= 0);
+        /* Signal the local process when the op counter reaches 0. */
+        if (win_ptr->at_completion_counter == 0)
+            MPIDI_CH3_Progress_signal_completion();
+    }
+
     mpi_errno = MPIDI_CH3_Finish_rma_op_target(NULL, win_ptr, FALSE, sreq->dev.flags, MPI_WIN_NULL);
     if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
 
@@ -95,6 +103,14 @@ int MPIDI_CH3_ReqHandler_GaccumLikeSendComplete( MPIDI_VC_t *vc,
        operation are completed when counter reaches zero. */
     win_ptr->at_completion_counter--;
     MPIU_Assert(win_ptr->at_completion_counter >= 0);
+
+    if (rreq->dev.flags & MPIDI_CH3_PKT_FLAG_RMA_DECR_AT_COUNTER) {
+        win_ptr->at_completion_counter--;
+        MPIU_Assert(win_ptr->at_completion_counter >= 0);
+        /* Signal the local process when the op counter reaches 0. */
+        if (win_ptr->at_completion_counter == 0)
+            MPIDI_CH3_Progress_signal_completion();
+    }
 
     MPIDI_CH3U_Request_complete(rreq);
     *complete = TRUE;

@@ -36,24 +36,6 @@ int MPIDI_CH3_PktHandler_Put(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
 
     MPIU_DBG_MSG(CH3_OTHER, VERBOSE, "received put pkt");
 
-    if (put_pkt->count == 0) {
-        /* it's a 0-byte message sent just to decrement the
-         * completion counter. This happens only in
-         * post/start/complete/wait sync model; therefore, no need
-         * to check lock queue. */
-        if (put_pkt->target_win_handle != MPI_WIN_NULL) {
-            MPID_Win_get_ptr(put_pkt->target_win_handle, win_ptr);
-            mpi_errno =
-                MPIDI_CH3_Finish_rma_op_target(NULL, win_ptr, TRUE, put_pkt->flags, MPI_WIN_NULL);
-            if (mpi_errno) {
-                MPIU_ERR_POP(mpi_errno);
-            }
-        }
-        *buflen = sizeof(MPIDI_CH3_Pkt_t);
-        *rreqp = NULL;
-        goto fn_exit;
-    }
-
     MPIU_Assert(put_pkt->target_win_handle != MPI_WIN_NULL);
     MPID_Win_get_ptr(put_pkt->target_win_handle, win_ptr);
     mpi_errno = MPIDI_CH3_Start_rma_op_target(win_ptr, put_pkt->flags);
@@ -757,6 +739,13 @@ int MPIDI_CH3_PktHandler_CAS(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
             MPID_Request_release(req);
     }
 
+    if (cas_pkt->flags & MPIDI_CH3_PKT_FLAG_RMA_DECR_AT_COUNTER) {
+        win_ptr->at_completion_counter--;
+        MPIU_Assert(win_ptr->at_completion_counter >= 0);
+        /* Signal the local process when the op counter reaches 0. */
+        if (win_ptr->at_completion_counter == 0)
+            MPIDI_CH3_Progress_signal_completion();
+    }
 
     /* There are additional steps to take if this is a passive
      * target RMA or the last operation from the source */
@@ -1600,6 +1589,38 @@ int MPIDI_CH3_PktHandler_FlushAck(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
  fn_exit:
     return MPI_SUCCESS;
  fn_fail:
+    goto fn_exit;
+}
+
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_CH3_PktHandler_DecrAtCnt
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
+int MPIDI_CH3_PktHandler_DecrAtCnt(MPIDI_VC_t * vc ATTRIBUTE((unused)),
+                                   MPIDI_CH3_Pkt_t * pkt,
+                                   MPIDI_msg_sz_t * buflen, MPID_Request ** rreqp)
+{
+    MPIDI_CH3_Pkt_decr_at_counter_t *decr_at_cnt_pkt = &pkt->decr_at_cnt;
+    MPID_Win *win_ptr;
+    int mpi_errno = MPI_SUCCESS;
+    MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3_PKTHANDLER_DECRATCNT);
+
+    MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3_PKTHANDLER_DECRATCNT);
+
+    MPID_Win_get_ptr(decr_at_cnt_pkt->target_win_handle, win_ptr);
+
+    win_ptr->at_completion_counter--;
+    MPIU_Assert(win_ptr->at_completion_counter >= 0);
+
+    *buflen = sizeof(MPIDI_CH3_Pkt_t);
+    *rreqp = NULL;
+    MPIDI_CH3_Progress_signal_completion();
+
+ fn_exit:
+    MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3_PKTHANDLER_DECRATCNT);
+    return mpi_errno;
+   fn_fail:
     goto fn_exit;
 }
 

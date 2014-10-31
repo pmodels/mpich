@@ -187,6 +187,46 @@ static inline int MPIDI_CH3I_Send_flush_ack_pkt(MPIDI_VC_t *vc, MPID_Win *win_pt
 
 
 #undef FUNCNAME
+#define FUNCNAME send_decr_at_cnt_msg
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
+static inline int send_decr_at_cnt_msg(int dst, MPID_Win * win_ptr)
+{
+    MPIDI_CH3_Pkt_t upkt;
+    MPIDI_CH3_Pkt_decr_at_counter_t *decr_at_cnt_pkt = &upkt.decr_at_cnt;
+    MPIDI_VC_t * vc;
+    MPID_Request *request = NULL;
+    int mpi_errno = MPI_SUCCESS;
+    MPIDI_STATE_DECL(MPID_STATE_SEND_DECR_AT_CNT_MSG);
+    MPIDI_RMA_FUNC_ENTER(MPID_STATE_SEND_DECR_AT_CNT_MSG);
+
+    MPIDI_Pkt_init(decr_at_cnt_pkt, MPIDI_CH3_PKT_DECR_AT_COUNTER);
+    decr_at_cnt_pkt->target_win_handle = win_ptr->all_win_handles[dst];
+
+    MPIDI_Comm_get_vc_set_active(win_ptr->comm_ptr, dst, &vc);
+
+    MPIU_THREAD_CS_ENTER(CH3COMM,vc);
+    mpi_errno = MPIDI_CH3_iStartMsg(vc, decr_at_cnt_pkt,
+                                    sizeof(*decr_at_cnt_pkt), &request);
+    MPIU_THREAD_CS_EXIT(CH3COMM,vc);
+    if (mpi_errno != MPI_SUCCESS) {
+        MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**ch3|rmamsg" );
+    }
+
+    if (request != NULL) {
+        MPID_Request_release(request);
+    }
+
+  fn_exit:
+    MPIDI_RMA_FUNC_EXIT(MPID_STATE_SEND_DECR_AT_CNT_MSG);
+    return mpi_errno;
+    /* --BEGIN ERROR HANDLING-- */
+  fn_fail:
+    goto fn_exit;
+    /* --END ERROR HANDLING-- */
+}
+
+#undef FUNCNAME
 #define FUNCNAME acquire_local_lock
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)

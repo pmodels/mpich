@@ -93,6 +93,13 @@ int MPIDI_CH3_ReqHandler_PutRecvComplete( MPIDI_VC_t *vc,
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
         MPIDI_CH3_Progress_signal_completion();
     }
+    if (rreq->dev.flags & MPIDI_CH3_PKT_FLAG_RMA_DECR_AT_COUNTER) {
+        win_ptr->at_completion_counter--;
+        MPIU_Assert(win_ptr->at_completion_counter >= 0);
+        /* Signal the local process when the op counter reaches 0. */
+        if (win_ptr->at_completion_counter == 0)
+            MPIDI_CH3_Progress_signal_completion();
+    }
 
     mpi_errno = MPIDI_CH3_Finish_rma_op_target(vc, win_ptr, TRUE, rreq->dev.flags,
                                                rreq->dev.source_win_handle);
@@ -144,6 +151,13 @@ int MPIDI_CH3_ReqHandler_AccumRecvComplete( MPIDI_VC_t *vc,
         mpi_errno = MPIDI_CH3I_Send_flush_ack_pkt(vc, win_ptr, rreq->dev.source_win_handle);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
         MPIDI_CH3_Progress_signal_completion();
+    }
+    if (rreq->dev.flags & MPIDI_CH3_PKT_FLAG_RMA_DECR_AT_COUNTER) {
+        win_ptr->at_completion_counter--;
+        MPIU_Assert(win_ptr->at_completion_counter >= 0);
+        /* Signal the local process when the op counter reaches 0. */
+        if (win_ptr->at_completion_counter == 0)
+            MPIDI_CH3_Progress_signal_completion();
     }
 
     mpi_errno = MPIDI_CH3_Finish_rma_op_target(vc, win_ptr, TRUE, rreq->dev.flags,
@@ -718,6 +732,14 @@ int MPIDI_CH3_ReqHandler_FOPComplete( MPIDI_VC_t *vc,
             else {
                 MPID_Request_release(resp_req);
             }
+        }
+
+        if (rreq->dev.flags & MPIDI_CH3_PKT_FLAG_RMA_DECR_AT_COUNTER) {
+            win_ptr->at_completion_counter--;
+            MPIU_Assert(win_ptr->at_completion_counter >= 0);
+            /* Signal the local process when the op counter reaches 0. */
+            if (win_ptr->at_completion_counter == 0)
+                MPIDI_CH3_Progress_signal_completion();
         }
 
         /* There are additional steps to take if this is a passive
