@@ -114,9 +114,9 @@ int main( int argc, char *argv[] )
         assert(req != MPI_REQUEST_NULL);
         MPI_Wait(&req, MPI_STATUS_IGNORE);
 
-        MPI_Rput(&rank, 1, MPI_INT, 0, 0, 1, MPI_INT, window, &req);
-        assert(req != MPI_REQUEST_NULL);
-        MPI_Wait(&req, MPI_STATUS_IGNORE);
+        /* Use flush to guarantee remote completion */
+        MPI_Put(&rank, 1, MPI_INT, 0, 0, 1, MPI_INT, window);
+        MPI_Win_flush(0, window);
 
         exp = (rank + nproc-1) % nproc;
 
@@ -153,9 +153,9 @@ int main( int argc, char *argv[] )
         assert(req != MPI_REQUEST_NULL);
         MPI_Wait(&req, MPI_STATUS_IGNORE);
 
-        MPI_Raccumulate(&rank, 1, MPI_INT, 0, 0, 1, MPI_INT, MPI_REPLACE, window, &req);
-        assert(req != MPI_REQUEST_NULL);
-        MPI_Wait(&req, MPI_STATUS_IGNORE);
+        /* Use flush to guarantee remote completion */
+        MPI_Accumulate(&rank, 1, MPI_INT, 0, 0, 1, MPI_INT, MPI_REPLACE, window);
+        MPI_Win_flush(0, window);
 
         exp = (rank + nproc-1) % nproc;
 
