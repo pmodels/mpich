@@ -255,7 +255,7 @@ static int handler_recv_dequeue_large(const ptl_event_t *e)
         md.start = rreq->dev.iov;
         md.length = rreq->dev.iov_count;
         md.options = PTL_IOVEC;
-        md.eq_handle = MPIDI_nem_ptl_eq;
+        md.eq_handle = MPIDI_nem_ptl_origin_eq;
         md.ct_handle = PTL_CT_NONE;
         ret = PtlMDBind(MPIDI_nem_ptl_ni, &md, &REQ_PTL(rreq)->md);
         MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlmdbind", "**ptlmdbind %s", MPID_nem_ptl_strerror(ret));
@@ -680,7 +680,7 @@ int MPID_nem_ptl_lmt_start_recv(MPIDI_VC_t *vc,  MPID_Request *rreq, MPID_IOV s_
             md.start = rreq->dev.iov;
             md.length = rreq->dev.iov_count;
             md.options = PTL_IOVEC;
-            md.eq_handle = MPIDI_nem_ptl_eq;
+            md.eq_handle = MPIDI_nem_ptl_origin_eq;
             md.ct_handle = PTL_CT_NONE;
             ret = PtlMDBind(MPIDI_nem_ptl_ni, &md, &REQ_PTL(rreq)->md);
             MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlmdbind", "**ptlmdbind %s",

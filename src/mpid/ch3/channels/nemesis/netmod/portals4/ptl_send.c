@@ -240,7 +240,7 @@ static int send_msg(ptl_hdr_data_t ssend_flag, struct MPIDI_VC *vc, const void *
             md.start = sreq->dev.iov;
             md.length = sreq->dev.iov_count;
             md.options = PTL_IOVEC;
-            md.eq_handle = MPIDI_nem_ptl_eq;
+            md.eq_handle = MPIDI_nem_ptl_origin_eq;
             md.ct_handle = PTL_CT_NONE;
             ret = PtlMDBind(MPIDI_nem_ptl_ni, &md, &REQ_PTL(sreq)->md);
             MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlmdbind", "**ptlmdbind %s", MPID_nem_ptl_strerror(ret));
@@ -352,7 +352,7 @@ static int send_msg(ptl_hdr_data_t ssend_flag, struct MPIDI_VC *vc, const void *
                 md.start = sreq->dev.iov;
                 md.length = initial_iov_count;
                 md.options = PTL_IOVEC;
-                md.eq_handle = MPIDI_nem_ptl_eq;
+                md.eq_handle = MPIDI_nem_ptl_origin_eq;
                 md.ct_handle = PTL_CT_NONE;
                 ret = PtlMDBind(MPIDI_nem_ptl_ni, &md, &REQ_PTL(sreq)->md);
                 MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlmdbind", "**ptlmdbind %s", MPID_nem_ptl_strerror(ret));

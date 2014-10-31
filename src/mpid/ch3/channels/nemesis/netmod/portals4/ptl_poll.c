@@ -131,10 +131,17 @@ int MPID_nem_ptl_poll(int is_blocking_poll)
     /* MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_PTL_POLL); */
 
     while (1) {
-        ret = MPID_nem_ptl_rptl_eqget(MPIDI_nem_ptl_eq, &event);
-        if (ret == PTL_EQ_EMPTY)
-            break;
+        /* check both origin and target EQs for events */
+        ret = MPID_nem_ptl_rptl_eqget(MPIDI_nem_ptl_target_eq, &event);
         MPIU_ERR_CHKANDJUMP(ret == PTL_EQ_DROPPED, mpi_errno, MPI_ERR_OTHER, "**eqdropped");
+        if (ret == PTL_EQ_EMPTY) {
+            ret = MPID_nem_ptl_rptl_eqget(MPIDI_nem_ptl_origin_eq, &event);
+            MPIU_ERR_CHKANDJUMP(ret == PTL_EQ_DROPPED, mpi_errno, MPI_ERR_OTHER, "**eqdropped");
+
+            /* if both queues are empty, exit the loop */
+            if (ret == PTL_EQ_EMPTY)
+                break;
+        }
         MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptleqget", "**ptleqget %s", MPID_nem_ptl_strerror(ret));
         MPIU_DBG_MSG_FMT(CH3_CHANNEL, VERBOSE, (MPIU_DBG_FDEST, "Received event %s ni_fail=%s list=%s user_ptr=%p hdr_data=%#lx mlength=%lu",
                                                 MPID_nem_ptl_strevent(&event), MPID_nem_ptl_strnifail(event.ni_fail_type),
