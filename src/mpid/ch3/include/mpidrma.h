@@ -10,6 +10,7 @@
 #include "mpid_rma_types.h"
 #include "mpid_rma_oplist.h"
 #include "mpid_rma_shm.h"
+#include "mpid_rma_issue.h"
 
 int MPIDI_CH3I_Issue_rma_op(MPIDI_RMA_Op_t * op_ptr, MPID_Win * win_ptr,
                             MPIDI_CH3_Pkt_flags_t flags);
