@@ -34,8 +34,10 @@ static int MPIDI_CH3I_Rma_req_poll(void *state, MPI_Status * status)
      * is still active first; the user could complete the request after calling
      * unlock. */
     /* FIXME: We need per-operation completion to make this more efficient. */
-    if (req_state->win_ptr->targets[req_state->target_rank].remote_lock_state
-        != MPIDI_CH3_WIN_LOCK_NONE) {
+    if (req_state->win_ptr->states.access_state == MPIDI_RMA_PER_TARGET ||
+        req_state->win_ptr->states.access_state == MPIDI_RMA_LOCK_ALL_CALLED ||
+        req_state->win_ptr->states.access_state == MPIDI_RMA_LOCK_ALL_ISSUED ||
+        req_state->win_ptr->states.access_state == MPIDI_RMA_LOCK_ALL_GRANTED) {
         mpi_errno = req_state->win_ptr->RMAFns.Win_flush(req_state->target_rank,
                                                          req_state->win_ptr);
     }
@@ -156,9 +158,12 @@ int MPIDI_Rput(const void *origin_addr, int origin_count,
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_RPUT);
 
-    MPIU_ERR_CHKANDJUMP(win_ptr->epoch_state != MPIDI_EPOCH_LOCK &&
-                        win_ptr->epoch_state != MPIDI_EPOCH_LOCK_ALL &&
-                        target_rank != MPI_PROC_NULL, mpi_errno, MPI_ERR_RMA_SYNC, "**rmasync");
+    /* request-based RMA operations are only valid within a passive epoch */
+    MPIU_ERR_CHKANDJUMP(win_ptr->states.access_state != MPIDI_RMA_PER_TARGET &&
+                        win_ptr->states.access_state != MPIDI_RMA_LOCK_ALL_CALLED &&
+                        win_ptr->states.access_state != MPIDI_RMA_LOCK_ALL_ISSUED &&
+                        win_ptr->states.access_state != MPIDI_RMA_LOCK_ALL_GRANTED,
+                        mpi_errno, MPI_ERR_RMA_SYNC, "**rmasync");
 
     MPIU_CHKPMEM_MALLOC(req_state, MPIDI_CH3I_Rma_req_state_t *,
                         sizeof(MPIDI_CH3I_Rma_req_state_t), mpi_errno, "req-based RMA state");
@@ -243,9 +248,12 @@ int MPIDI_Rget(void *origin_addr, int origin_count,
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_RGET);
 
-    MPIU_ERR_CHKANDJUMP(win_ptr->epoch_state != MPIDI_EPOCH_LOCK &&
-                        win_ptr->epoch_state != MPIDI_EPOCH_LOCK_ALL &&
-                        target_rank != MPI_PROC_NULL, mpi_errno, MPI_ERR_RMA_SYNC, "**rmasync");
+    /* request-based RMA operations are only valid within a passive epoch */
+    MPIU_ERR_CHKANDJUMP(win_ptr->states.access_state != MPIDI_RMA_PER_TARGET &&
+                        win_ptr->states.access_state != MPIDI_RMA_LOCK_ALL_CALLED &&
+                        win_ptr->states.access_state != MPIDI_RMA_LOCK_ALL_ISSUED &&
+                        win_ptr->states.access_state != MPIDI_RMA_LOCK_ALL_GRANTED,
+                        mpi_errno, MPI_ERR_RMA_SYNC, "**rmasync");
 
     MPIU_CHKPMEM_MALLOC(req_state, MPIDI_CH3I_Rma_req_state_t *,
                         sizeof(MPIDI_CH3I_Rma_req_state_t), mpi_errno, "req-based RMA state");
@@ -330,9 +338,12 @@ int MPIDI_Raccumulate(const void *origin_addr, int origin_count,
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_RACCUMULATE);
 
-    MPIU_ERR_CHKANDJUMP(win_ptr->epoch_state != MPIDI_EPOCH_LOCK &&
-                        win_ptr->epoch_state != MPIDI_EPOCH_LOCK_ALL &&
-                        target_rank != MPI_PROC_NULL, mpi_errno, MPI_ERR_RMA_SYNC, "**rmasync");
+    /* request-based RMA operations are only valid within a passive epoch */
+    MPIU_ERR_CHKANDJUMP(win_ptr->states.access_state != MPIDI_RMA_PER_TARGET &&
+                        win_ptr->states.access_state != MPIDI_RMA_LOCK_ALL_CALLED &&
+                        win_ptr->states.access_state != MPIDI_RMA_LOCK_ALL_ISSUED &&
+                        win_ptr->states.access_state != MPIDI_RMA_LOCK_ALL_GRANTED,
+                        mpi_errno, MPI_ERR_RMA_SYNC, "**rmasync");
 
     MPIU_CHKPMEM_MALLOC(req_state, MPIDI_CH3I_Rma_req_state_t *,
                         sizeof(MPIDI_CH3I_Rma_req_state_t), mpi_errno, "req-based RMA state");
@@ -418,9 +429,12 @@ int MPIDI_Rget_accumulate(const void *origin_addr, int origin_count,
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_RGET_ACCUMULATE);
 
-    MPIU_ERR_CHKANDJUMP(win_ptr->epoch_state != MPIDI_EPOCH_LOCK &&
-                        win_ptr->epoch_state != MPIDI_EPOCH_LOCK_ALL &&
-                        target_rank != MPI_PROC_NULL, mpi_errno, MPI_ERR_RMA_SYNC, "**rmasync");
+    /* request-based RMA operations are only valid within a passive epoch */
+    MPIU_ERR_CHKANDJUMP(win_ptr->states.access_state != MPIDI_RMA_PER_TARGET &&
+                        win_ptr->states.access_state != MPIDI_RMA_LOCK_ALL_CALLED &&
+                        win_ptr->states.access_state != MPIDI_RMA_LOCK_ALL_ISSUED &&
+                        win_ptr->states.access_state != MPIDI_RMA_LOCK_ALL_GRANTED,
+                        mpi_errno, MPI_ERR_RMA_SYNC, "**rmasync");
 
     MPIU_CHKPMEM_MALLOC(req_state, MPIDI_CH3I_Rma_req_state_t *,
                         sizeof(MPIDI_CH3I_Rma_req_state_t), mpi_errno, "req-based RMA state");

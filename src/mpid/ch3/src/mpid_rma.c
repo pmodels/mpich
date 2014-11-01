@@ -329,6 +329,8 @@ static int win_init(MPI_Aint size, int disp_unit, int create_flavor, int model,
     (*win_ptr)->at_rma_ops_list = NULL;
     (*win_ptr)->at_rma_ops_list_tail = NULL;
     (*win_ptr)->shm_allocated = FALSE;
+    (*win_ptr)->states.access_state = MPIDI_RMA_NONE;
+    (*win_ptr)->states.exposure_state = MPIDI_RMA_NONE;
 
     /* Initialize the passive target lock state */
     MPIU_CHKPMEM_MALLOC((*win_ptr)->targets, struct MPIDI_Win_target_state *,

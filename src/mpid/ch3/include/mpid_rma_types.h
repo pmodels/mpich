@@ -91,6 +91,7 @@ typedef struct MPIDI_RMA_Target {
     struct MPIDI_RMA_Op *next_op_to_issue;
     struct MPIDI_RMA_Target *next;
     int target_rank;
+    enum MPIDI_RMA_states access_state;
     enum MPIDI_RMA_Lock_type lock_type; /* SHARED, EXCLUSIVE */
     int lock_mode;              /* e.g., MODE_NO_CHECK */
     int outstanding_lock;

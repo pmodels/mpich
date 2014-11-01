@@ -237,6 +237,28 @@ enum MPIDI_RMA_sync_types {
 /* We start with an arbitrarily chosen number (42), to help with
  * debugging when a packet type is not initialized or wrongly
  * initialized. */
+enum MPIDI_RMA_states {
+    /* window-wide states */
+    MPIDI_RMA_NONE = 42,
+    MPIDI_RMA_FENCE_ISSUED,           /* access / exposure */
+    MPIDI_RMA_FENCE_GRANTED,          /* access / exposure */
+    MPIDI_RMA_PSCW_ISSUED,            /* access */
+    MPIDI_RMA_PSCW_GRANTED,           /* access */
+    MPIDI_RMA_PSCW_EXPO,              /* exposure */
+    MPIDI_RMA_PER_TARGET,             /* access */
+    MPIDI_RMA_LOCK_ALL_CALLED,        /* access */
+    MPIDI_RMA_LOCK_ALL_ISSUED,        /* access */
+    MPIDI_RMA_LOCK_ALL_GRANTED,       /* access */
+
+    /* target-specific states */
+    MPIDI_RMA_LOCK_CALLED,            /* access */
+    MPIDI_RMA_LOCK_ISSUED,            /* access */
+    MPIDI_RMA_LOCK_GRANTED,           /* access */
+};
+
+/* We start with an arbitrarily chosen number (42), to help with
+ * debugging when a packet type is not initialized or wrongly
+ * initialized. */
 enum MPIDI_CH3_Lock_states {
     MPIDI_CH3_WIN_LOCK_NONE = 42,
     MPIDI_CH3_WIN_LOCK_CALLED,
@@ -341,6 +363,10 @@ struct MPIDI_Win_target_state {
     struct MPIDI_RMA_Target *target_pool_tail; /* tail pointer to pool of targets */\
     struct MPIDI_RMA_Slot *slots;                                        \
     int num_slots;                                                       \
+    struct {                                                             \
+        enum MPIDI_RMA_states access_state;                              \
+        enum MPIDI_RMA_states exposure_state;                            \
+    } states;                                                            \
 
 #ifdef MPIDI_CH3_WIN_DECL
 #define MPID_DEV_WIN_DECL \

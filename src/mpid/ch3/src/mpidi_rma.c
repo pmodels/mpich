@@ -138,7 +138,8 @@ int MPIDI_Win_free(MPID_Win ** win_ptr)
 
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_WIN_FREE);
 
-    MPIU_ERR_CHKANDJUMP((*win_ptr)->epoch_state != MPIDI_EPOCH_NONE,
+    MPIU_ERR_CHKANDJUMP((*win_ptr)->states.access_state != MPIDI_RMA_NONE ||
+                        (*win_ptr)->states.exposure_state != MPIDI_RMA_NONE,
                         mpi_errno, MPI_ERR_RMA_SYNC, "**rmasync");
 
     if (!(*win_ptr)->shm_allocated) {

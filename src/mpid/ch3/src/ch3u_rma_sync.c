@@ -2102,8 +2102,10 @@ int MPIDI_Win_sync(MPID_Win * win_ptr)
 
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_WIN_SYNC);
 
-    MPIU_ERR_CHKANDJUMP(win_ptr->epoch_state != MPIDI_EPOCH_LOCK &&
-                        win_ptr->epoch_state != MPIDI_EPOCH_LOCK_ALL,
+    MPIU_ERR_CHKANDJUMP(win_ptr->states.access_state != MPIDI_RMA_PER_TARGET &&
+                        win_ptr->states.access_state != MPIDI_RMA_LOCK_ALL_CALLED &&
+                        win_ptr->states.access_state != MPIDI_RMA_LOCK_ALL_ISSUED &&
+                        win_ptr->states.access_state != MPIDI_RMA_LOCK_ALL_GRANTED,
                         mpi_errno, MPI_ERR_RMA_SYNC, "**rmasync");
 
     OPA_read_write_barrier();
