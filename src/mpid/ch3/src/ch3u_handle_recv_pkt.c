@@ -605,7 +605,7 @@ int MPIDI_CH3_PktHandler_Init( MPIDI_CH3_PktHandler_Fcn *pktArray[],
     pktArray[MPIDI_CH3_PKT_FOP_RESP] =
         MPIDI_CH3_PktHandler_FOPResp;
     pktArray[MPIDI_CH3_PKT_GET_ACCUM] =
-        MPIDI_CH3_PktHandler_Accumulate;
+        MPIDI_CH3_PktHandler_GetAccumulate;
     pktArray[MPIDI_CH3_PKT_GET_ACCUM_RESP] =
         MPIDI_CH3_PktHandler_Get_AccumResp;
     /* End of default RMA operations */

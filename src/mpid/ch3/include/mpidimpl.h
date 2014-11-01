@@ -462,6 +462,8 @@ extern MPIDI_Process_t MPIDI_Process;
 #define MPIDI_REQUEST_TYPE_ACCUM_RESP_DERIVED_DT 10
 #define MPIDI_REQUEST_TYPE_PT_SINGLE_PUT 11
 #define MPIDI_REQUEST_TYPE_PT_SINGLE_ACCUM 12
+#define MPIDI_REQUEST_TYPE_GET_ACCUM_RESP 13
+#define MPIDI_REQUEST_TYPE_GET_ACCUM_RESP_DERIVED_DT 14
 
 
 #define MPIDI_Request_get_type(req_)						\
@@ -1785,6 +1787,8 @@ int MPIDI_CH3_PktHandler_Put( MPIDI_VC_t *, MPIDI_CH3_Pkt_t *,
 			      MPIDI_msg_sz_t *, MPID_Request ** );
 int MPIDI_CH3_PktHandler_Accumulate( MPIDI_VC_t *, MPIDI_CH3_Pkt_t *, 
 				     MPIDI_msg_sz_t *, MPID_Request ** );
+int MPIDI_CH3_PktHandler_GetAccumulate( MPIDI_VC_t *, MPIDI_CH3_Pkt_t *,
+                                        MPIDI_msg_sz_t *, MPID_Request ** );
 int MPIDI_CH3_PktHandler_Accumulate_Immed( MPIDI_VC_t *, MPIDI_CH3_Pkt_t *, 
 				     MPIDI_msg_sz_t *, MPID_Request ** );
 int MPIDI_CH3_PktHandler_CAS( MPIDI_VC_t *, MPIDI_CH3_Pkt_t *, 
