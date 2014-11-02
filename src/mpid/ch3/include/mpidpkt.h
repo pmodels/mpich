@@ -204,8 +204,10 @@ MPIDI_CH3_PKT_DEFS
             datatype_ = pkt_.get.datatype;                              \
             break;                                                      \
         case (MPIDI_CH3_PKT_ACCUMULATE):                                \
-        case (MPIDI_CH3_PKT_GET_ACCUM):                                 \
             datatype_ = pkt_.accum.datatype;                            \
+            break;                                                      \
+        case (MPIDI_CH3_PKT_GET_ACCUM):                                 \
+            datatype_ = pkt_.get_accum.datatype;                        \
             break;                                                      \
         case (MPIDI_CH3_PKT_CAS):                                       \
             datatype_ = pkt_.cas.datatype;                              \
@@ -271,7 +273,6 @@ typedef struct MPIDI_CH3_Pkt_get_resp {
 typedef struct MPIDI_CH3_Pkt_accum {
     MPIDI_CH3_Pkt_type_t type;
     MPIDI_CH3_Pkt_flags_t flags;
-    MPI_Request request_handle; /* For get_accumulate response */
     void *addr;
     int count;
     MPI_Datatype datatype;
@@ -285,6 +286,24 @@ typedef struct MPIDI_CH3_Pkt_accum {
                                  * epoch in the case of passive target rma
                                  * with shared locks. Otherwise set to NULL*/
 } MPIDI_CH3_Pkt_accum_t;
+
+typedef struct MPIDI_CH3_Pkt_get_accum {
+    MPIDI_CH3_Pkt_type_t type;
+    MPIDI_CH3_Pkt_flags_t flags;
+    MPI_Request request_handle; /* For get_accumulate response */
+    void *addr;
+    int count;
+    MPI_Datatype datatype;
+    int dataloop_size;          /* for derived datatypes */
+    MPI_Op op;
+    MPI_Win target_win_handle;  /* Used in the last RMA operation in each
+                                 * epoch for decrementing rma op counter in
+                                 * active target rma and for unlocking window
+                                 * in passive target rma. Otherwise set to NULL*/
+    MPI_Win source_win_handle;  /* Used in the last RMA operation in an
+                                 * epoch in the case of passive target rma
+                                 * with shared locks. Otherwise set to NULL*/
+} MPIDI_CH3_Pkt_get_accum_t;
 
 typedef struct MPIDI_CH3_Pkt_get_accum_resp {
     MPIDI_CH3_Pkt_type_t type;
@@ -362,6 +381,26 @@ typedef struct MPIDI_CH3_Pkt_lock {
     int origin_rank;
 } MPIDI_CH3_Pkt_lock_t;
 
+typedef struct MPIDI_CH3_Pkt_unlock {
+    MPIDI_CH3_Pkt_type_t type;
+    int lock_type;
+    MPI_Win target_win_handle;
+    MPI_Win source_win_handle;
+    int target_rank;            /* Used in unluck/flush response to look up the
+                                 * target state at the origin. */
+    int origin_rank;
+} MPIDI_CH3_Pkt_unlock_t;
+
+typedef struct MPIDI_CH3_Pkt_flush {
+    MPIDI_CH3_Pkt_type_t type;
+    int lock_type;
+    MPI_Win target_win_handle;
+    MPI_Win source_win_handle;
+    int target_rank;            /* Used in unluck/flush response to look up the
+                                 * target state at the origin. */
+    int origin_rank;
+} MPIDI_CH3_Pkt_flush_t;
+
 typedef struct MPIDI_CH3_Pkt_lock_granted {
     MPIDI_CH3_Pkt_type_t type;
     MPI_Win source_win_handle;
@@ -369,9 +408,12 @@ typedef struct MPIDI_CH3_Pkt_lock_granted {
                                  * target state at the origin. */
 } MPIDI_CH3_Pkt_lock_granted_t;
 
-typedef MPIDI_CH3_Pkt_lock_granted_t MPIDI_CH3_Pkt_flush_ack_t;
-typedef MPIDI_CH3_Pkt_lock_t MPIDI_CH3_Pkt_unlock_t;
-typedef MPIDI_CH3_Pkt_lock_t MPIDI_CH3_Pkt_flush_t;
+typedef struct MPIDI_CH3_Pkt_flush_ack {
+    MPIDI_CH3_Pkt_type_t type;
+    MPI_Win source_win_handle;
+    int target_rank;            /* Used in flush_ack response to look up the
+                                 * target state at the origin. */
+} MPIDI_CH3_Pkt_flush_ack_t;
 
 typedef struct MPIDI_CH3_Pkt_lock_put_unlock {
     MPIDI_CH3_Pkt_type_t type;
@@ -441,6 +483,7 @@ typedef union MPIDI_CH3_Pkt {
     MPIDI_CH3_Pkt_get_resp_t get_resp;
     MPIDI_CH3_Pkt_accum_t accum;
     MPIDI_CH3_Pkt_accum_immed_t accum_immed;
+    MPIDI_CH3_Pkt_get_accum_t get_accum;
     MPIDI_CH3_Pkt_lock_t lock;
     MPIDI_CH3_Pkt_lock_granted_t lock_granted;
     MPIDI_CH3_Pkt_unlock_t unlock;

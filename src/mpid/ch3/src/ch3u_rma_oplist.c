@@ -883,6 +883,7 @@ static int send_rma_msg(MPIDI_RMA_Op_t * rma_op, MPID_Win * win_ptr, MPIDI_CH3_P
 {
     MPIDI_CH3_Pkt_put_t *put_pkt = &rma_op->pkt.put;
     MPIDI_CH3_Pkt_accum_t *accum_pkt = &rma_op->pkt.accum;
+    MPIDI_CH3_Pkt_get_accum_t *get_accum_pkt = &rma_op->pkt.get_accum;
     MPID_IOV iov[MPID_IOV_LIMIT];
     int mpi_errno = MPI_SUCCESS;
     int origin_dt_derived, target_dt_derived, iovcnt;
@@ -918,8 +919,8 @@ static int send_rma_msg(MPIDI_RMA_Op_t * rma_op, MPID_Win * win_ptr, MPIDI_CH3_P
         resp_req->dev.user_buf = rma_op->result_addr;
         resp_req->dev.user_count = rma_op->result_count;
         resp_req->dev.datatype = rma_op->result_datatype;
-        resp_req->dev.target_win_handle = accum_pkt->target_win_handle;
-        resp_req->dev.source_win_handle = accum_pkt->source_win_handle;
+        resp_req->dev.target_win_handle = get_accum_pkt->target_win_handle;
+        resp_req->dev.source_win_handle = get_accum_pkt->source_win_handle;
 
         if (!MPIR_DATATYPE_IS_PREDEFINED(resp_req->dev.datatype)) {
             MPID_Datatype *result_dtp = NULL;
@@ -929,12 +930,11 @@ static int send_rma_msg(MPIDI_RMA_Op_t * rma_op, MPID_Win * win_ptr, MPIDI_CH3_P
              * request is freed. */
         }
 
-        /* Note: Get_accumulate uses the same packet type as accumulate */
-        accum_pkt->request_handle = resp_req->handle;
+        get_accum_pkt->request_handle = resp_req->handle;
 
-        accum_pkt->flags = flags;
-        iov[0].MPID_IOV_BUF = (MPID_IOV_BUF_CAST) accum_pkt;
-        iov[0].MPID_IOV_LEN = sizeof(*accum_pkt);
+        get_accum_pkt->flags = flags;
+        iov[0].MPID_IOV_BUF = (MPID_IOV_BUF_CAST) get_accum_pkt;
+        iov[0].MPID_IOV_LEN = sizeof(*get_accum_pkt);
     }
     else {
         accum_pkt->flags = flags;
@@ -998,8 +998,11 @@ static int send_rma_msg(MPIDI_RMA_Op_t * rma_op, MPID_Win * win_ptr, MPIDI_CH3_P
         if (rma_op->pkt.type == MPIDI_CH3_PKT_PUT) {
             put_pkt->dataloop_size = target_dtp->dataloop_size;
         }
-        else {
+        else if (rma_op->pkt.type == MPIDI_CH3_PKT_ACCUMULATE) {
             accum_pkt->dataloop_size = target_dtp->dataloop_size;
+        }
+        else {
+            get_accum_pkt->dataloop_size = target_dtp->dataloop_size;
         }
     }
 

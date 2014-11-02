@@ -569,16 +569,16 @@ int MPIDI_Get_accumulate(const void *origin_addr, int origin_count,
         }
 
         else {
-            MPIDI_CH3_Pkt_accum_t *accum_pkt = &(new_ptr->pkt.accum);
-            MPIDI_Pkt_init(accum_pkt, MPIDI_CH3_PKT_GET_ACCUM);
-            accum_pkt->addr = (char *) win_ptr->base_addrs[target_rank] +
+            MPIDI_CH3_Pkt_get_accum_t *get_accum_pkt = &(new_ptr->pkt.get_accum);
+            MPIDI_Pkt_init(get_accum_pkt, MPIDI_CH3_PKT_GET_ACCUM);
+            get_accum_pkt->addr = (char *) win_ptr->base_addrs[target_rank] +
                 win_ptr->disp_units[target_rank] * target_disp;
-            accum_pkt->count = target_count;
-            accum_pkt->datatype = target_datatype;
-            accum_pkt->dataloop_size = 0;
-            accum_pkt->op = op;
-            accum_pkt->target_win_handle = win_ptr->all_win_handles[target_rank];
-            accum_pkt->source_win_handle = win_ptr->handle;
+            get_accum_pkt->count = target_count;
+            get_accum_pkt->datatype = target_datatype;
+            get_accum_pkt->dataloop_size = 0;
+            get_accum_pkt->op = op;
+            get_accum_pkt->target_win_handle = win_ptr->all_win_handles[target_rank];
+            get_accum_pkt->source_win_handle = win_ptr->handle;
 
             new_ptr->origin_addr = (void *) origin_addr;
             new_ptr->origin_count = origin_count;

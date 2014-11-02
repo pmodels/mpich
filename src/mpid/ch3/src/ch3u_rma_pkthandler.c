@@ -456,7 +456,7 @@ int MPIDI_CH3_PktHandler_Accumulate(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
 int MPIDI_CH3_PktHandler_GetAccumulate(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
                                        MPIDI_msg_sz_t * buflen, MPID_Request ** rreqp)
 {
-    MPIDI_CH3_Pkt_accum_t *accum_pkt = &pkt->accum;
+    MPIDI_CH3_Pkt_get_accum_t *get_accum_pkt = &pkt->get_accum;
     MPID_Request *req = NULL;
     MPI_Aint true_lb, true_extent, extent;
     void *tmp_buf = NULL;
@@ -472,9 +472,9 @@ int MPIDI_CH3_PktHandler_GetAccumulate(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
 
     MPIU_DBG_MSG(CH3_OTHER, VERBOSE, "received accumulate pkt");
 
-    MPIU_Assert(accum_pkt->target_win_handle != MPI_WIN_NULL);
-    MPID_Win_get_ptr(accum_pkt->target_win_handle, win_ptr);
-    mpi_errno = MPIDI_CH3_Start_rma_op_target(win_ptr, accum_pkt->flags);
+    MPIU_Assert(get_accum_pkt->target_win_handle != MPI_WIN_NULL);
+    MPID_Win_get_ptr(get_accum_pkt->target_win_handle, win_ptr);
+    mpi_errno = MPIDI_CH3_Start_rma_op_target(win_ptr, get_accum_pkt->flags);
 
     data_len = *buflen - sizeof(MPIDI_CH3_Pkt_t);
     data_buf = (char *) pkt + sizeof(MPIDI_CH3_Pkt_t);
@@ -483,35 +483,35 @@ int MPIDI_CH3_PktHandler_GetAccumulate(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
     MPIU_Object_set_ref(req, 1);
     *rreqp = req;
 
-    req->dev.user_count = accum_pkt->count;
-    req->dev.op = accum_pkt->op;
-    req->dev.real_user_buf = accum_pkt->addr;
-    req->dev.target_win_handle = accum_pkt->target_win_handle;
-    req->dev.source_win_handle = accum_pkt->source_win_handle;
-    req->dev.flags = accum_pkt->flags;
+    req->dev.user_count = get_accum_pkt->count;
+    req->dev.op = get_accum_pkt->op;
+    req->dev.real_user_buf = get_accum_pkt->addr;
+    req->dev.target_win_handle = get_accum_pkt->target_win_handle;
+    req->dev.source_win_handle = get_accum_pkt->source_win_handle;
+    req->dev.flags = get_accum_pkt->flags;
 
-    req->dev.resp_request_handle = accum_pkt->request_handle;
+    req->dev.resp_request_handle = get_accum_pkt->request_handle;
 
-    if (MPIR_DATATYPE_IS_PREDEFINED(accum_pkt->datatype)) {
+    if (MPIR_DATATYPE_IS_PREDEFINED(get_accum_pkt->datatype)) {
         MPIDI_Request_set_type(req, MPIDI_REQUEST_TYPE_GET_ACCUM_RESP);
-        req->dev.datatype = accum_pkt->datatype;
+        req->dev.datatype = get_accum_pkt->datatype;
 
-        MPIR_Type_get_true_extent_impl(accum_pkt->datatype, &true_lb, &true_extent);
-        MPID_Datatype_get_extent_macro(accum_pkt->datatype, extent);
+        MPIR_Type_get_true_extent_impl(get_accum_pkt->datatype, &true_lb, &true_extent);
+        MPID_Datatype_get_extent_macro(get_accum_pkt->datatype, extent);
 
         /* Predefined types should always have zero lb */
         MPIU_Assert(true_lb == 0);
 
-        tmp_buf = MPIU_Malloc(accum_pkt->count * (MPIR_MAX(extent, true_extent)));
+        tmp_buf = MPIU_Malloc(get_accum_pkt->count * (MPIR_MAX(extent, true_extent)));
         if (!tmp_buf) {
             MPIU_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %d",
-                                 accum_pkt->count * MPIR_MAX(extent, true_extent));
+                                 get_accum_pkt->count * MPIR_MAX(extent, true_extent));
         }
 
         req->dev.user_buf = tmp_buf;
 
-        MPID_Datatype_get_size_macro(accum_pkt->datatype, type_size);
-        req->dev.recv_data_sz = type_size * accum_pkt->count;
+        MPID_Datatype_get_size_macro(get_accum_pkt->datatype, type_size);
+        req->dev.recv_data_sz = type_size * get_accum_pkt->count;
 
         mpi_errno = MPIDI_CH3U_Receive_data_found(req, data_buf, &data_len, &complete);
         MPIU_ERR_CHKANDJUMP1(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**ch3|postrecv",
@@ -548,20 +548,20 @@ int MPIDI_CH3_PktHandler_GetAccumulate(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
                                  "MPIDI_RMA_dtype_info");
         }
 
-        req->dev.dataloop = MPIU_Malloc(accum_pkt->dataloop_size);
+        req->dev.dataloop = MPIU_Malloc(get_accum_pkt->dataloop_size);
         if (!req->dev.dataloop) {
             MPIU_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %d",
-                                 accum_pkt->dataloop_size);
+                                 get_accum_pkt->dataloop_size);
         }
 
-        if (data_len >= sizeof(MPIDI_RMA_dtype_info) + accum_pkt->dataloop_size) {
+        if (data_len >= sizeof(MPIDI_RMA_dtype_info) + get_accum_pkt->dataloop_size) {
             /* copy all of dtype_info and dataloop */
             MPIU_Memcpy(req->dev.dtype_info, data_buf, sizeof(MPIDI_RMA_dtype_info));
             MPIU_Memcpy(req->dev.dataloop, data_buf + sizeof(MPIDI_RMA_dtype_info),
-                        accum_pkt->dataloop_size);
+                        get_accum_pkt->dataloop_size);
 
             *buflen =
-                sizeof(MPIDI_CH3_Pkt_t) + sizeof(MPIDI_RMA_dtype_info) + accum_pkt->dataloop_size;
+                sizeof(MPIDI_CH3_Pkt_t) + sizeof(MPIDI_RMA_dtype_info) + get_accum_pkt->dataloop_size;
 
             /* All dtype data has been received, call req handler */
             mpi_errno = MPIDI_CH3_ReqHandler_AccumRespDerivedDTComplete(vc, req, &complete);
@@ -576,7 +576,7 @@ int MPIDI_CH3_PktHandler_GetAccumulate(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
             req->dev.iov[0].MPID_IOV_BUF = (MPID_IOV_BUF_CAST) req->dev.dtype_info;
             req->dev.iov[0].MPID_IOV_LEN = sizeof(MPIDI_RMA_dtype_info);
             req->dev.iov[1].MPID_IOV_BUF = (MPID_IOV_BUF_CAST) req->dev.dataloop;
-            req->dev.iov[1].MPID_IOV_LEN = accum_pkt->dataloop_size;
+            req->dev.iov[1].MPID_IOV_LEN = get_accum_pkt->dataloop_size;
             req->dev.iov_count = 2;
             *buflen = sizeof(MPIDI_CH3_Pkt_t);
         }
