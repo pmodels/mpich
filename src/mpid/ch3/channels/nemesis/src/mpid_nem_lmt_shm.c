@@ -814,7 +814,7 @@ int MPID_nem_lmt_shm_vc_terminated(MPIDI_VC_t *vc)
 
         /* If there is anything in the RTS queue, it needs to be cleared out. */
         MPIU_THREAD_CS_ENTER(LMT,);
-        for (i = 0; i < MPID_NEM_LMT_RTS_QUEUE_SIZE; i++) {
+        for (i = 0; i < MPID_nem_lmt_rts_queue_size; i++) {
             if (MPI_REQUEST_NULL != MPID_nem_lmt_rts_queue[i]) {
                 MPID_Request_get_ptr(MPID_nem_lmt_rts_queue[i], req);
                 MPIU_DBG_MSG(CH3_CHANNEL, VERBOSE, "Checking RTS message");

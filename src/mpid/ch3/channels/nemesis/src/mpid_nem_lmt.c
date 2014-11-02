@@ -6,6 +6,24 @@
 
 #include "mpid_nem_impl.h"
 
+/*
+=== BEGIN_MPI_T_CVAR_INFO_BLOCK ===
+
+cvars:
+   - name       : MPIR_CVAR_NEM_LMT_RTS_QUEUE_SIZE
+     category   : CH3
+     type       : int
+     default    : 1024
+     class      : device
+     verbosity  : MPI_T_VERBOSITY_USER_BASIC
+     scope      : MPI_T_SCOPE_ALL_EQ
+     description : >-
+       The initial size of the NEM_LMT_RTS_QUEUE used to track RTS
+       messages before the LMT setup.
+
+=== END_MPI_T_CVAR_INFO_BLOCK ===
+*/
+
 #define set_request_info(rreq_, pkt_, msg_type_)		\
 {								\
     (rreq_)->status.MPI_SOURCE = (pkt_)->match.parts.rank;	\
@@ -112,7 +130,7 @@ int MPID_nem_lmt_RndvSend(MPID_Request **sreq_p, const void * buf, int count,
          * queue. It will print a message to warn the user. This should only
          * affect FT and not matching so we'll consider this ok for now. */
         for (i = MPID_nem_lmt_rts_queue_last_inserted + 1; ; i++) {
-            if (i == MPID_NEM_LMT_RTS_QUEUE_SIZE) {
+            if (i == MPID_nem_lmt_rts_queue_size) {
                 i = -1;
                 continue;
             }
@@ -329,7 +347,7 @@ static int pkt_CTS_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, MPIDI_msg_sz_t 
     for (i = MPID_nem_lmt_rts_queue_last_inserted + 1;
             i != MPID_nem_lmt_rts_queue_last_inserted;
             i++) {
-        if (i == MPID_NEM_LMT_RTS_QUEUE_SIZE) {
+        if (i == MPID_nem_lmt_rts_queue_size) {
             i = -1;
             continue;
         }
