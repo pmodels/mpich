@@ -137,6 +137,8 @@ noinst_PROGRAMS =          \
     acc-loc                \
     fence_shm              \
     get-struct             \
+    rput_local_comp        \
+    racc_local_comp        \
     at_complete
 
 strided_acc_indexed_LDADD       = $(LDADD) -lm
