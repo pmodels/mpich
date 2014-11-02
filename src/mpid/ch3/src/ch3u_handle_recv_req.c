@@ -88,6 +88,12 @@ int MPIDI_CH3_ReqHandler_PutRecvComplete( MPIDI_VC_t *vc,
 
     MPID_Win_get_ptr(rreq->dev.target_win_handle, win_ptr);
 
+    if (rreq->dev.flags & MPIDI_CH3_PKT_FLAG_RMA_FLUSH) {
+        mpi_errno = MPIDI_CH3I_Send_flush_ack_pkt(vc, win_ptr, rreq->dev.source_win_handle);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        MPIDI_CH3_Progress_signal_completion();
+    }
+
     mpi_errno = MPIDI_CH3_Finish_rma_op_target(vc, win_ptr, TRUE, rreq->dev.flags,
                                                rreq->dev.source_win_handle);
     if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
@@ -134,6 +140,12 @@ int MPIDI_CH3_ReqHandler_AccumRecvComplete( MPIDI_VC_t *vc,
         MPIU_ERR_POP(mpi_errno);
     }
 
+    if (rreq->dev.flags & MPIDI_CH3_PKT_FLAG_RMA_FLUSH) {
+        mpi_errno = MPIDI_CH3I_Send_flush_ack_pkt(vc, win_ptr, rreq->dev.source_win_handle);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        MPIDI_CH3_Progress_signal_completion();
+    }
+
     mpi_errno = MPIDI_CH3_Finish_rma_op_target(vc, win_ptr, TRUE, rreq->dev.flags,
                                                rreq->dev.source_win_handle);
     if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
@@ -178,6 +190,9 @@ int MPIDI_CH3_ReqHandler_GaccumRecvComplete( MPIDI_VC_t *vc,
     get_accum_resp_pkt->request_handle = rreq->dev.resp_request_handle;
     get_accum_resp_pkt->target_rank = win_ptr->comm_ptr->rank;
     get_accum_resp_pkt->source_win_handle = rreq->dev.source_win_handle;
+    get_accum_resp_pkt->flags = MPIDI_CH3_PKT_FLAG_NONE;
+    if (rreq->dev.flags & MPIDI_CH3_PKT_FLAG_RMA_FLUSH)
+        get_accum_resp_pkt->flags |= MPIDI_CH3_PKT_FLAG_RMA_FLUSH_ACK;
 
     MPID_Datatype_get_size_macro(rreq->dev.datatype, type_size);
 
@@ -459,10 +474,13 @@ int MPIDI_CH3_ReqHandler_GetDerivedDTRecvComplete( MPIDI_VC_t *vc,
     MPIDI_CH3_Pkt_t upkt;
     MPIDI_CH3_Pkt_get_resp_t * get_resp_pkt = &upkt.get_resp;
     MPID_Request * sreq;
+    MPID_Win *win_ptr;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3_REQHANDLER_GETDERIVEDDTRECVCOMPLETE);
     
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3_REQHANDLER_GETDERIVEDDTRECVCOMPLETE);
                 
+    MPID_Win_get_ptr(rreq->dev.target_win_handle, win_ptr);
+
     /* create derived datatype */
     create_derived_datatype(rreq, &new_dtp);
     MPIU_Free(rreq->dev.dtype_info);
@@ -485,6 +503,11 @@ int MPIDI_CH3_ReqHandler_GetDerivedDTRecvComplete( MPIDI_VC_t *vc,
     
     MPIDI_Pkt_init(get_resp_pkt, MPIDI_CH3_PKT_GET_RESP);
     get_resp_pkt->request_handle = rreq->dev.request_handle;    
+    get_resp_pkt->target_rank = win_ptr->comm_ptr->rank;
+    get_resp_pkt->source_win_handle = rreq->dev.source_win_handle;
+    get_resp_pkt->flags = MPIDI_CH3_PKT_FLAG_NONE;
+    if (rreq->dev.flags & MPIDI_CH3_PKT_FLAG_RMA_FLUSH)
+        get_resp_pkt->flags |= MPIDI_CH3_PKT_FLAG_RMA_FLUSH_ACK;
     
     sreq->dev.segment_ptr = MPID_Segment_alloc( );
     MPIU_ERR_CHKANDJUMP1((sreq->dev.segment_ptr == NULL), mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s", "MPID_Segment_alloc");
@@ -628,6 +651,11 @@ int MPIDI_CH3_ReqHandler_FOPComplete( MPIDI_VC_t *vc,
     fop_resp_pkt->request_handle = rreq->dev.request_handle;
 
     MPID_Win_get_ptr(rreq->dev.target_win_handle, win_ptr);
+    fop_resp_pkt->target_rank = win_ptr->comm_ptr->rank;
+    fop_resp_pkt->source_win_handle = rreq->dev.source_win_handle;
+    fop_resp_pkt->flags = MPIDI_CH3_PKT_FLAG_NONE;
+    if (rreq->dev.flags & MPIDI_CH3_PKT_FLAG_RMA_FLUSH)
+        fop_resp_pkt->flags |= MPIDI_CH3_PKT_FLAG_RMA_FLUSH_ACK;
 
     /* Copy original data into the send buffer.  If data will fit in the
        header, use that.  Otherwise allocate a temporary buffer.  */

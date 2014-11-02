@@ -227,6 +227,34 @@ static inline int acquire_local_lock(MPID_Win * win_ptr, int lock_type)
 
 
 #undef FUNCNAME
+#define FUNCNAME MPIDI_CH3I_RMA_Handle_flush_ack
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
+static inline int MPIDI_CH3I_RMA_Handle_flush_ack(MPID_Win * win_ptr, int target_rank)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIDI_RMA_Target_t *t;
+
+    mpi_errno = MPIDI_CH3I_Win_find_target(win_ptr, target_rank, &t);
+    if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
+
+    if (t == NULL) {
+        win_ptr->outstanding_unlocks--;
+        MPIU_Assert(win_ptr->outstanding_unlocks >= 0);
+    }
+    else {
+        t->sync.outstanding_acks--;
+        MPIU_Assert(t->sync.outstanding_acks >= 0);
+    }
+
+ fn_exit:
+    return mpi_errno;
+ fn_fail:
+    goto fn_exit;
+}
+
+
+#undef FUNCNAME
 #define FUNCNAME do_accumulate_op
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)

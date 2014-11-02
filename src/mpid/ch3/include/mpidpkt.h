@@ -124,7 +124,8 @@ typedef enum {
     MPIDI_CH3_PKT_FLAG_RMA_AT_COMPLETE = 16,
     MPIDI_CH3_PKT_FLAG_RMA_NOCHECK = 32,
     MPIDI_CH3_PKT_FLAG_RMA_SHARED = 64,
-    MPIDI_CH3_PKT_FLAG_RMA_EXCLUSIVE = 128
+    MPIDI_CH3_PKT_FLAG_RMA_EXCLUSIVE = 128,
+    MPIDI_CH3_PKT_FLAG_RMA_FLUSH_ACK = 256
 } MPIDI_CH3_Pkt_flags_t;
 
 typedef struct MPIDI_CH3_Pkt_send {
@@ -268,6 +269,10 @@ typedef struct MPIDI_CH3_Pkt_get {
 typedef struct MPIDI_CH3_Pkt_get_resp {
     MPIDI_CH3_Pkt_type_t type;
     MPI_Request request_handle;
+    /* followings are used to decrement ack_counter at origin */
+    int target_rank;
+    MPI_Win source_win_handle;
+    MPIDI_CH3_Pkt_flags_t flags;
 } MPIDI_CH3_Pkt_get_resp_t;
 
 typedef struct MPIDI_CH3_Pkt_accum {
@@ -308,6 +313,10 @@ typedef struct MPIDI_CH3_Pkt_get_accum {
 typedef struct MPIDI_CH3_Pkt_get_accum_resp {
     MPIDI_CH3_Pkt_type_t type;
     MPI_Request request_handle;
+    /* followings are used to decrement ack_counter at origin */
+    int target_rank;
+    MPI_Win source_win_handle;
+    MPIDI_CH3_Pkt_flags_t flags;
 } MPIDI_CH3_Pkt_get_accum_resp_t;
 
 typedef struct MPIDI_CH3_Pkt_accum_immed {
@@ -348,6 +357,10 @@ typedef struct MPIDI_CH3_Pkt_cas_resp {
     MPIDI_CH3_Pkt_type_t type;
     MPI_Request request_handle;
     MPIDI_CH3_CAS_Immed_u data;
+    /* followings are used to decrement ack_counter at orign */
+    int target_rank;
+    MPI_Win source_win_handle;
+    MPIDI_CH3_Pkt_flags_t flags;
 } MPIDI_CH3_Pkt_cas_resp_t;
 
 typedef struct MPIDI_CH3_Pkt_fop {
@@ -369,6 +382,10 @@ typedef struct MPIDI_CH3_Pkt_fop_resp {
     MPIDI_CH3_Pkt_type_t type;
     MPI_Request request_handle;
     int data[MPIDI_RMA_FOP_RESP_IMMED_INTS];
+    /* followings are used to decrement ack_counter at orign */
+    int target_rank;
+    MPI_Win source_win_handle;
+    MPIDI_CH3_Pkt_flags_t flags;
 } MPIDI_CH3_Pkt_fop_resp_t;
 
 typedef struct MPIDI_CH3_Pkt_lock {
