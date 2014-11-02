@@ -28,6 +28,8 @@ static int pkt_CTS_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, MPIDI_msg_sz_t 
 static int pkt_DONE_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, MPIDI_msg_sz_t *buflen, MPID_Request **rreqp);
 static int pkt_COOKIE_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, MPIDI_msg_sz_t *buflen, MPID_Request **rreqp);
 
+static int warning_printed = 0;
+
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_lmt_pkthandler_init
 #undef FCNAME
@@ -107,11 +109,9 @@ int MPID_nem_lmt_RndvSend(MPID_Request **sreq_p, const void * buf, int count,
     if (MPI_SUCCESS == mpi_errno) {
         /* If this loops all the way around and can't find a place to put the
          * RTS request, it will just drop the request and leave it out of the
-         * queue silently. This should only affect FT and not matching so we'll
-         * consider this ok for now. */
-        for (i = MPID_nem_lmt_rts_queue_last_inserted + 1;
-             i != MPID_nem_lmt_rts_queue_last_inserted;
-             i++) {
+         * queue. It will print a message to warn the user. This should only
+         * affect FT and not matching so we'll consider this ok for now. */
+        for (i = MPID_nem_lmt_rts_queue_last_inserted + 1; ; i++) {
             if (i == MPID_NEM_LMT_RTS_QUEUE_SIZE) {
                 i = -1;
                 continue;
@@ -120,6 +120,12 @@ int MPID_nem_lmt_RndvSend(MPID_Request **sreq_p, const void * buf, int count,
             if (MPID_nem_lmt_rts_queue[i] == MPI_REQUEST_NULL) {
                 MPID_nem_lmt_rts_queue[i] = sreq->handle;
                 MPID_nem_lmt_rts_queue_last_inserted = i;
+                break;
+            }
+
+            if (i == MPID_nem_lmt_rts_queue_last_inserted && !warning_printed) {
+                MPIU_Internal_error_printf("LMT RTS queue exceeded. FT not provided for overflowed messages.\n");
+                warning_printed = 1;
                 break;
             }
         }
