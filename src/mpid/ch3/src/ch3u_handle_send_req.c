@@ -65,9 +65,6 @@ int MPIDI_CH3_ReqHandler_GetSendComplete( MPIDI_VC_t *vc ATTRIBUTE((unused)),
             MPIDI_CH3_Progress_signal_completion();
     }
 
-    mpi_errno = MPIDI_CH3_Finish_rma_op_target(NULL, win_ptr, FALSE, sreq->dev.flags, MPI_WIN_NULL);
-    if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
-
     /* here we decrement the Active Target counter to guarantee the GET-like
        operation are completed when counter reaches zero. */
     win_ptr->at_completion_counter--;

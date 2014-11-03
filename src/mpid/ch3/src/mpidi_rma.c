@@ -185,7 +185,6 @@ int MPIDI_Win_free(MPID_Win ** win_ptr)
     if (mpi_errno)
         MPIU_ERR_POP(mpi_errno);
 
-    MPIU_Free((*win_ptr)->targets);
     MPIU_Free((*win_ptr)->base_addrs);
     MPIU_Free((*win_ptr)->sizes);
     MPIU_Free((*win_ptr)->disp_units);

@@ -311,22 +311,6 @@ typedef struct MPIDI_RMA_Pkt_orderings {
 
 extern MPIDI_RMA_Pkt_orderings_t *MPIDI_RMA_Pkt_orderings;
 
-struct MPIDI_Win_target_state {
-    struct MPIDI_RMA_Op *rma_ops_list;
-                                /* List of outstanding RMA operations */
-    struct MPIDI_RMA_Op *rma_ops_list_tail;
-    volatile enum MPIDI_CH3_Lock_states remote_lock_state;
-                                /* Indicates the state of the target
-                                   process' "lock" for passive target
-                                   RMA. */
-    int remote_lock_mode;       /* Indicates the access mode
-                                   (shared/exclusive) of the target
-                                   process for passive target RMA. Valid
-                                   whenever state != NONE. */
-    int remote_lock_assert;     /* Assertion value provided in the call
-                                   to Lock */
-};
-
 #define MPIDI_DEV_WIN_DECL                                               \
     volatile int at_completion_counter;  /* completion counter for operations \
                                  targeting this window */                \
@@ -346,14 +330,6 @@ struct MPIDI_Win_target_state {
                                                                          \
     MPI_Aint *sizes;      /* array of sizes of all windows */            \
     struct MPIDI_Win_info_args info_args;                                \
-    struct MPIDI_Win_target_state *targets; /* Target state and ops      \
-                                               lists for passive target  \
-                                               mode of operation */      \
-    struct MPIDI_RMA_Op *at_rma_ops_list; /* Ops list for active target  \
-                                             mode of operation. */       \
-    struct MPIDI_RMA_Op *at_rma_ops_list_tail;                           \
-    enum MPIDI_Win_epoch_states epoch_state;                             \
-    int epoch_count;                                                     \
     int shm_allocated; /* flag: TRUE iff this window has a shared memory \
                           region associated with it */                   \
     struct MPIDI_RMA_Op *op_pool_start; /* start pointer used for freeing */\

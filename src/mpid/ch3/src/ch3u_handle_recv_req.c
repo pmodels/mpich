@@ -8,8 +8,6 @@
 #include "mpidrma.h"
 
 static int create_derived_datatype(MPID_Request * rreq, MPID_Datatype ** dtp);
-static int do_simple_accumulate(MPIDI_PT_single_op *single_op);
-static int do_simple_get(MPID_Win *win_ptr, MPIDI_Win_lock_queue *lock_queue);
 
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3U_Handle_recv_req
@@ -117,9 +115,6 @@ int MPIDI_CH3_ReqHandler_PutRecvComplete( MPIDI_VC_t *vc,
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
         MPIDI_CH3_Progress_signal_completion();
     }
-    mpi_errno = MPIDI_CH3_Finish_rma_op_target(vc, win_ptr, TRUE, rreq->dev.flags,
-                                               rreq->dev.source_win_handle);
-    if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
 
     /* mark data transfer as complete and decrement CC */
     MPIDI_CH3U_Request_complete(rreq);
@@ -191,10 +186,6 @@ int MPIDI_CH3_ReqHandler_AccumRecvComplete( MPIDI_VC_t *vc,
                                                   rreq->dev.source_win_handle);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     }
-
-    mpi_errno = MPIDI_CH3_Finish_rma_op_target(vc, win_ptr, TRUE, rreq->dev.flags,
-                                               rreq->dev.source_win_handle);
-    if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
 
     /* mark data transfer as complete and decrement CC */
     MPIDI_CH3U_Request_complete(rreq);
@@ -513,6 +504,7 @@ int MPIDI_CH3_ReqHandler_GaccumDerivedDTRecvComplete( MPIDI_VC_t *vc ATTRIBUTE((
 }
 
 
+
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3_ReqHandler_GetDerivedDTRecvComplete
 #undef FCNAME
@@ -595,88 +587,6 @@ int MPIDI_CH3_ReqHandler_GetDerivedDTRecvComplete( MPIDI_VC_t *vc,
     
  fn_fail:
     MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3_REQHANDLER_GETDERIVEDDTRECVCOMPLETE);
-    return mpi_errno;
-}
-
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3_ReqHandler_SinglePutAccumComplete
-#undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
-int MPIDI_CH3_ReqHandler_SinglePutAccumComplete( MPIDI_VC_t *vc, 
-						 MPID_Request *rreq, 
-						 int *complete )
-{
-    int mpi_errno = MPI_SUCCESS;
-    MPID_Win *win_ptr;
-    MPIDI_Win_lock_queue *lock_queue_entry, *curr_ptr, **curr_ptr_ptr;
-    MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3_REQHANDLER_SINGLEPUTACCUMCOMPLETE);
-    
-    MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3_REQHANDLER_SINGLEPUTACCUMCOMPLETE);
-
-    /* received all the data for single lock-put(accum)-unlock 
-       optimization where the lock was not acquired in 
-       ch3u_handle_recv_pkt. Try to acquire the lock and do the 
-       operation. */
-    
-    MPID_Win_get_ptr(rreq->dev.target_win_handle, win_ptr);
-    
-    lock_queue_entry = rreq->dev.lock_queue_entry;
-    
-    if (MPIDI_CH3I_Try_acquire_win_lock(win_ptr, 
-					lock_queue_entry->lock_type) == 1)
-    {
-	
-	if (MPIDI_Request_get_type(rreq) == MPIDI_REQUEST_TYPE_PT_SINGLE_PUT) {
-	    /* copy the data over */
-	    mpi_errno = MPIR_Localcopy(rreq->dev.user_buf,
-				       rreq->dev.user_count,
-				       rreq->dev.datatype,
-				       lock_queue_entry->pt_single_op->addr,
-				       lock_queue_entry->pt_single_op->count,
-				       lock_queue_entry->pt_single_op->datatype);
-	}
-	else {
-	    if (win_ptr->shm_allocated == TRUE)
-		MPIDI_CH3I_SHM_MUTEX_LOCK(win_ptr);
-	    mpi_errno = do_simple_accumulate(lock_queue_entry->pt_single_op);
-	    if (win_ptr->shm_allocated == TRUE)
-		MPIDI_CH3I_SHM_MUTEX_UNLOCK(win_ptr);
-	}
-	
-	if (mpi_errno) {
-	    MPIU_ERR_POP(mpi_errno);
-	}
-	
-	/* free lock_queue_entry including data buffer and remove 
-	   it from the queue. */
-	curr_ptr = (MPIDI_Win_lock_queue *) win_ptr->lock_queue;
-	curr_ptr_ptr = (MPIDI_Win_lock_queue **) &(win_ptr->lock_queue);
-	while (curr_ptr != lock_queue_entry) {
-	    curr_ptr_ptr = &(curr_ptr->next);
-	    curr_ptr = curr_ptr->next;
-	}                    
-	*curr_ptr_ptr = curr_ptr->next;
-	
-        mpi_errno = MPIDI_CH3_Finish_rma_op_target(vc, win_ptr, TRUE,
-                                                   lock_queue_entry->pt_single_op->flags,
-                                                   lock_queue_entry->source_win_handle);
-
-	MPIU_Free(lock_queue_entry->pt_single_op->data);
-	MPIU_Free(lock_queue_entry->pt_single_op);
-	MPIU_Free(lock_queue_entry);
-	
-        if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
-    }
-    else {
-	/* could not acquire lock. mark data recd as 1 */
-	lock_queue_entry->pt_single_op->data_recd = 1;
-    }
-    
-    /* mark data transfer as complete and decrement CC */
-    MPIDI_CH3U_Request_complete(rreq);
-    *complete = TRUE;
- fn_fail:
-    MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3_REQHANDLER_SINGLEPUTACCUMCOMPLETE);
     return mpi_errno;
 }
 
@@ -1035,118 +945,4 @@ int MPIDI_CH3I_Release_lock(MPID_Win *win_ptr)
     return mpi_errno;
  fn_fail:
     goto fn_exit;
-}
-
-
-
-#undef FUNCNAME
-#define FUNCNAME do_simple_accumulate
-#undef FCNAME 
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
-static int do_simple_accumulate(MPIDI_PT_single_op *single_op)
-{
-    int mpi_errno = MPI_SUCCESS;
-    MPI_User_function *uop;
-    MPIDI_STATE_DECL(MPID_STATE_DO_SIMPLE_ACCUMULATE);
-    
-    MPIDI_FUNC_ENTER(MPID_STATE_DO_SIMPLE_ACCUMULATE);
-
-    if (single_op->op == MPI_REPLACE)
-    {
-        /* simply copy the data */
-        mpi_errno = MPIR_Localcopy(single_op->data, single_op->count,
-                                   single_op->datatype, single_op->addr,
-                                   single_op->count, single_op->datatype);
-        if (mpi_errno) {
-	    MPIU_ERR_POP(mpi_errno);
-	}
-        goto fn_exit;
-    }
-
-    if (HANDLE_GET_KIND(single_op->op) == HANDLE_KIND_BUILTIN)
-    {
-        /* get the function by indexing into the op table */
-        uop = MPIR_OP_HDL_TO_FN(single_op->op);
-    }
-    else
-    {
-	/* --BEGIN ERROR HANDLING-- */
-        mpi_errno = MPIR_Err_create_code( MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OP, "**opnotpredefined", "**opnotpredefined %d", single_op->op );
-        goto fn_fail;
-	/* --END ERROR HANDLING-- */
-    }
-    
-    /* only basic datatypes supported for this optimization. */
-    (*uop)(single_op->data, single_op->addr,
-           &(single_op->count), &(single_op->datatype));
-
- fn_fail:
- fn_exit:
-    MPIDI_FUNC_EXIT(MPID_STATE_DO_SIMPLE_ACCUMULATE);
-    return mpi_errno;
-}
-
-
-
-#undef FUNCNAME
-#define FUNCNAME do_simple_get
-#undef FCNAME 
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
-static int do_simple_get(MPID_Win *win_ptr, MPIDI_Win_lock_queue *lock_queue)
-{
-    MPIDI_CH3_Pkt_t upkt;
-    MPIDI_CH3_Pkt_get_resp_t * get_resp_pkt = &upkt.get_resp;
-    MPID_Request *req;
-    MPID_IOV iov[MPID_IOV_LIMIT];
-    int mpi_errno=MPI_SUCCESS;
-    MPI_Aint type_size;
-    MPIDI_VC_t *vc;
-    MPIDI_STATE_DECL(MPID_STATE_DO_SIMPLE_GET);
-    
-    MPIDI_FUNC_ENTER(MPID_STATE_DO_SIMPLE_GET);
-
-    req = MPID_Request_create();
-    if (req == NULL) {
-        MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**nomemreq");
-    }
-    req->dev.target_win_handle = win_ptr->handle;
-    req->dev.source_win_handle = lock_queue->source_win_handle;
-    req->dev.flags = lock_queue->pt_single_op->flags;
-    
-    MPIDI_Request_set_type(req, MPIDI_REQUEST_TYPE_GET_RESP); 
-    req->kind = MPID_REQUEST_SEND;
-    req->dev.OnDataAvail = MPIDI_CH3_ReqHandler_GetSendRespComplete;
-    req->dev.OnFinal     = MPIDI_CH3_ReqHandler_GetSendRespComplete;
-
-    /* here we increment the Active Target counter to guarantee the GET-like
-       operation are completed when counter reaches zero. */
-    win_ptr->at_completion_counter++;
-    
-    MPIDI_Pkt_init(get_resp_pkt, MPIDI_CH3_PKT_GET_RESP);
-    get_resp_pkt->request_handle = lock_queue->pt_single_op->request_handle;
-    
-    iov[0].MPID_IOV_BUF = (MPID_IOV_BUF_CAST) get_resp_pkt;
-    iov[0].MPID_IOV_LEN = sizeof(*get_resp_pkt);
-    
-    iov[1].MPID_IOV_BUF = (MPID_IOV_BUF_CAST)lock_queue->pt_single_op->addr;
-    MPID_Datatype_get_size_macro(lock_queue->pt_single_op->datatype, type_size);
-    iov[1].MPID_IOV_LEN = lock_queue->pt_single_op->count * type_size;
-    
-    MPIDI_Comm_get_vc(win_ptr->comm_ptr, lock_queue->origin_rank, &vc);
-    /* Because this is in a packet handler, it is already within a critical section */	
-    /* MPIU_THREAD_CS_ENTER(CH3COMM,vc); */
-    mpi_errno = MPIDI_CH3_iSendv(vc, req, iov, 2);
-    /* MPIU_THREAD_CS_EXIT(CH3COMM,vc); */
-    /* --BEGIN ERROR HANDLING-- */
-    if (mpi_errno != MPI_SUCCESS)
-    {
-        MPID_Request_release(req);
-	MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**ch3|rmamsg");
-    }
-    /* --END ERROR HANDLING-- */
-
- fn_fail:
-    MPIDI_FUNC_EXIT(MPID_STATE_DO_SIMPLE_GET);
-
-    return mpi_errno;
 }

@@ -143,15 +143,6 @@ void MPIDI_DBG_Print_packet(MPIDI_CH3_Pkt_t *pkt)
 	    case MPIDI_CH3_PKT_LOCK:
 		MPIDI_CH3_PktPrint_Lock( stdout, pkt );
 		break;
-	    case MPIDI_CH3_PKT_LOCK_PUT_UNLOCK:
-		MPIDI_CH3_PktPrint_LockPutUnlock( stdout, pkt );
-		break;
-	    case MPIDI_CH3_PKT_LOCK_ACCUM_UNLOCK:
-		MPIDI_CH3_PktPrint_LockAccumUnlock( stdout, pkt );
-		break;
-	    case MPIDI_CH3_PKT_LOCK_GET_UNLOCK:
-		MPIDI_CH3_PktPrint_LockGetUnlock( stdout, pkt );
-		break;
 	    case MPIDI_CH3_PKT_FLUSH_ACK:
 		MPIDI_CH3_PktPrint_FlushAck( stdout, pkt );
 		break;
@@ -341,28 +332,6 @@ const char *MPIDI_Pkt_GetDescString( MPIDI_CH3_Pkt_t *pkt )
 	MPIU_Snprintf( pktmsg, sizeof(pktmsg), 
 		       "LOCK - %d", 
 		       pkt->lock.target_win_handle );
-	break;
-    case MPIDI_CH3_PKT_LOCK_PUT_UNLOCK:
-	MPIU_Snprintf( pktmsg, sizeof(pktmsg), 
-		       "PUT_UNLOCK - (%p,%d,0x%08X)", 
-		       pkt->lock_put_unlock.addr,
-		       pkt->lock_put_unlock.count,
-		       pkt->lock_put_unlock.target_win_handle );
-	break;
-    case MPIDI_CH3_PKT_LOCK_ACCUM_UNLOCK:
-	MPIU_Snprintf( pktmsg, sizeof(pktmsg), 
-		       "LOCK_ACCUM_UNLOCK - (%p,%d,0x%08X)", 
-		       pkt->lock_accum_unlock.addr,
-		       pkt->lock_accum_unlock.count,
-		       pkt->lock_accum_unlock.target_win_handle );
-	break;
-    case MPIDI_CH3_PKT_LOCK_GET_UNLOCK:
-	MPIU_Snprintf( pktmsg, sizeof(pktmsg), 
-		       "LOCK_GET_UNLOCK - (%p,%d,0x%08X) req=%d", 
-		       pkt->lock_get_unlock.addr,
-		       pkt->lock_get_unlock.count,
-		       pkt->lock_get_unlock.target_win_handle, 
-		       pkt->lock_get_unlock.request_handle );
 	break;
     case MPIDI_CH3_PKT_FLUSH_ACK:
 	/* There is no rma_done packet type */

@@ -11,16 +11,6 @@
 === BEGIN_MPI_T_CVAR_INFO_BLOCK ===
 
 cvars:
-    - name        : MPIR_CVAR_CH3_RMA_ACC_IMMED
-      category    : CH3
-      type        : boolean
-      default     : true
-      class       : none
-      verbosity   : MPI_T_VERBOSITY_USER_BASIC
-      scope       : MPI_T_SCOPE_ALL_EQ
-      description : >-
-        Use the immediate accumulate optimization
-
     - name        : MPIR_CVAR_CH3_RMA_ACTIVE_REQ_THRESHOLD
       category    : CH3
       type        : int
@@ -323,8 +313,7 @@ static inline int issue_ops_target(MPID_Win * win_ptr, MPIDI_RMA_Target_t *targe
                                           &(target->dt_op_list_tail), curr_op);
             }
             else if (curr_op->pkt.type == MPIDI_CH3_PKT_PUT ||
-                     curr_op->pkt.type == MPIDI_CH3_PKT_ACCUMULATE ||
-                     curr_op->pkt.type == MPIDI_CH3_PKT_ACCUM_IMMED) {
+                     curr_op->pkt.type == MPIDI_CH3_PKT_ACCUMULATE) {
                 MPIDI_CH3I_RMA_Ops_append(&(target->write_op_list),
                                           &(target->write_op_list_tail), curr_op);
             }
@@ -782,47 +771,6 @@ static int send_flush_msg(int dest, MPID_Win * win_ptr)
 
   fn_exit:
     MPIDI_RMA_FUNC_EXIT(MPID_STATE_SEND_FLUSH_MSG);
-    return mpi_errno;
-    /* --BEGIN ERROR HANDLING-- */
-  fn_fail:
-    goto fn_exit;
-    /* --END ERROR HANDLING-- */
-}
-
-
-int MPIDI_CH3I_Issue_rma_op(MPIDI_RMA_Op_t * op_ptr, MPID_Win * win_ptr,
-                            MPIDI_CH3_Pkt_flags_t flags)
-{
-    int mpi_errno = MPI_SUCCESS;
-    MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3I_ISSUE_RMA_OP);
-
-    MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_CH3I_ISSUE_RMA_OP);
-
-    switch (op_ptr->pkt.type) {
-    case (MPIDI_CH3_PKT_PUT):
-    case (MPIDI_CH3_PKT_ACCUMULATE):
-    case (MPIDI_CH3_PKT_GET_ACCUM):
-        mpi_errno = send_rma_msg(op_ptr, win_ptr, flags);
-        break;
-    case (MPIDI_CH3_PKT_ACCUM_IMMED):
-        mpi_errno = send_contig_acc_msg(op_ptr, win_ptr, flags);
-        break;
-    case (MPIDI_CH3_PKT_GET):
-        mpi_errno = recv_rma_msg(op_ptr, win_ptr, flags);
-        break;
-    case (MPIDI_CH3_PKT_CAS):
-    case (MPIDI_CH3_PKT_FOP):
-        mpi_errno = send_immed_rmw_msg(op_ptr, win_ptr, flags);
-        break;
-    default:
-        MPIU_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**winInvalidOp");
-    }
-
-    if (mpi_errno)
-        MPIU_ERR_POP(mpi_errno);
-
-  fn_exit:
-    MPIDI_RMA_FUNC_EXIT(MPID_STATE_MPIDI_CH3I_ISSUE_RMA_OP);
     return mpi_errno;
     /* --BEGIN ERROR HANDLING-- */
   fn_fail:

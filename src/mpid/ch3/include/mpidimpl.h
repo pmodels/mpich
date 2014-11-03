@@ -1230,9 +1230,6 @@ void MPIDI_CH3_RMA_Init_Pvars(void);
 /* internal */
 int MPIDI_CH3I_Release_lock(MPID_Win * win_ptr);
 int MPIDI_CH3I_Try_acquire_win_lock(MPID_Win * win_ptr, int requested_lock);
-int MPIDI_CH3_Start_rma_op_target(MPID_Win *win_ptr, MPIDI_CH3_Pkt_flags_t flags);
-int MPIDI_CH3_Finish_rma_op_target(MPIDI_VC_t *vc, MPID_Win *win_ptr, int is_rma_update,
-                                   MPIDI_CH3_Pkt_flags_t flags, MPI_Win source_win_handle);
 
 int MPIDI_CH3I_Progress_finalize(void);
 
@@ -1789,8 +1786,6 @@ int MPIDI_CH3_PktHandler_Accumulate( MPIDI_VC_t *, MPIDI_CH3_Pkt_t *,
 				     MPIDI_msg_sz_t *, MPID_Request ** );
 int MPIDI_CH3_PktHandler_GetAccumulate( MPIDI_VC_t *, MPIDI_CH3_Pkt_t *,
                                         MPIDI_msg_sz_t *, MPID_Request ** );
-int MPIDI_CH3_PktHandler_Accumulate_Immed( MPIDI_VC_t *, MPIDI_CH3_Pkt_t *, 
-				     MPIDI_msg_sz_t *, MPID_Request ** );
 int MPIDI_CH3_PktHandler_CAS( MPIDI_VC_t *, MPIDI_CH3_Pkt_t *, 
                               MPIDI_msg_sz_t *, MPID_Request ** );
 int MPIDI_CH3_PktHandler_CASResp( MPIDI_VC_t *, MPIDI_CH3_Pkt_t *, 
@@ -1817,12 +1812,6 @@ int MPIDI_CH3_PktHandler_FlushAck( MPIDI_VC_t *, MPIDI_CH3_Pkt_t *,
 				    MPIDI_msg_sz_t *, MPID_Request ** );
 int MPIDI_CH3_PktHandler_DecrAtCnt( MPIDI_VC_t *, MPIDI_CH3_Pkt_t *,
                                     MPIDI_msg_sz_t *, MPID_Request ** );
-int MPIDI_CH3_PktHandler_LockPutUnlock( MPIDI_VC_t *, MPIDI_CH3_Pkt_t *, 
-					MPIDI_msg_sz_t *, MPID_Request ** );
-int MPIDI_CH3_PktHandler_LockAccumUnlock( MPIDI_VC_t *, MPIDI_CH3_Pkt_t *, 
-					  MPIDI_msg_sz_t *, MPID_Request ** );
-int MPIDI_CH3_PktHandler_LockGetUnlock( MPIDI_VC_t *, MPIDI_CH3_Pkt_t *, 
-					MPIDI_msg_sz_t *, MPID_Request ** );
 int MPIDI_CH3_PktHandler_FlowCntlUpdate( MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
 					 MPIDI_msg_sz_t *, MPID_Request ** );
 int MPIDI_CH3_PktHandler_Close( MPIDI_VC_t *, MPIDI_CH3_Pkt_t *, 
@@ -1905,8 +1894,6 @@ int MPIDI_CH3_ReqHandler_AccumDerivedDTRecvComplete( MPIDI_VC_t *,
 int MPIDI_CH3_ReqHandler_GaccumDerivedDTRecvComplete( MPIDI_VC_t *,
                                                       MPID_Request *,
                                                       int * );
-int MPIDI_CH3_ReqHandler_SinglePutAccumComplete( MPIDI_VC_t *, MPID_Request *,
-						 int * );
 int MPIDI_CH3_ReqHandler_GetDerivedDTRecvComplete( MPIDI_VC_t *,
 						   MPID_Request *, int * );
 /* Send Handlers */

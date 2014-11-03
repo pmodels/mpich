@@ -79,7 +79,6 @@ typedef enum {
     MPIDI_CH3_PKT_GET,
     MPIDI_CH3_PKT_ACCUMULATE,
     MPIDI_CH3_PKT_GET_ACCUM,
-    MPIDI_CH3_PKT_ACCUM_IMMED,  /* optimization for short accumulate */
     MPIDI_CH3_PKT_FOP,
     MPIDI_CH3_PKT_CAS,
     MPIDI_CH3_PKT_GET_RESP,
@@ -92,9 +91,6 @@ typedef enum {
     MPIDI_CH3_PKT_FLUSH,
     MPIDI_CH3_PKT_FLUSH_ACK,
     MPIDI_CH3_PKT_DECR_AT_COUNTER,
-    MPIDI_CH3_PKT_LOCK_PUT_UNLOCK,      /* optimization for single puts */
-    MPIDI_CH3_PKT_LOCK_GET_UNLOCK,      /* optimization for single gets */
-    MPIDI_CH3_PKT_LOCK_ACCUM_UNLOCK,    /* optimization for single accumulates */
     /* RMA Packets end here */
     MPIDI_CH3_PKT_FLOW_CNTL_UPDATE,     /* FIXME: Unused */
     MPIDI_CH3_PKT_CLOSE,
@@ -212,18 +208,6 @@ MPIDI_CH3_PKT_DEFS
             break;                                                      \
         case (MPIDI_CH3_PKT_FOP):                                       \
             datatype_ = (pkt_).fop.datatype;                            \
-            break;                                                      \
-        case (MPIDI_CH3_PKT_LOCK_PUT_UNLOCK):                           \
-            datatype_ = pkt_.lock_put_unlock.datatype;                  \
-            break;                                                      \
-        case (MPIDI_CH3_PKT_LOCK_GET_UNLOCK):                           \
-            datatype_ = pkt_.lock_get_unlock.datatype;                  \
-            break;                                                      \
-        case (MPIDI_CH3_PKT_LOCK_ACCUM_UNLOCK):                         \
-            datatype_ = pkt_.lock_accum_unlock.datatype;                \
-            break;                                                      \
-        case (MPIDI_CH3_PKT_ACCUM_IMMED):                               \
-            datatype_ = pkt_.accum_immed.datatype;                      \
             break;                                                      \
         default:                                                        \
             MPIU_ERR_SETANDJUMP1(err_, MPI_ERR_OTHER, "**invalidpkt", "**invalidpkt %d", (pkt_).type); \
@@ -493,25 +477,6 @@ typedef struct MPIDI_CH3_Pkt_get_accum_resp {
     MPIDI_CH3_Pkt_flags_t flags;
 } MPIDI_CH3_Pkt_get_accum_resp_t;
 
-typedef struct MPIDI_CH3_Pkt_accum_immed {
-    MPIDI_CH3_Pkt_type_t type;
-    MPIDI_CH3_Pkt_flags_t flags;
-    void *addr;
-    int count;
-    /* FIXME: Compress datatype/op into a single word (immedate mode) */
-    MPI_Datatype datatype;
-    MPI_Op op;
-    /* FIXME: do we need these (use a regular accum packet if we do?) */
-    MPI_Win target_win_handle;  /* Used in the last RMA operation in each
-                                 * epoch for decrementing rma op counter in
-                                 * active target rma and for unlocking window
-                                 * in passive target rma. Otherwise set to NULL*/
-    MPI_Win source_win_handle;  /* Used in the last RMA operation in an
-                                 * epoch in the case of passive target rma
-                                 * with shared locks. Otherwise set to NULL*/
-    int data[MPIDI_RMA_IMMED_INTS];
-} MPIDI_CH3_Pkt_accum_immed_t;
-
 typedef struct MPIDI_CH3_Pkt_cas {
     MPIDI_CH3_Pkt_type_t type;
     MPIDI_CH3_Pkt_flags_t flags;
@@ -618,45 +583,6 @@ typedef struct MPIDI_CH3_Pkt_decr_at_counter {
     MPI_Win target_win_handle;
 } MPIDI_CH3_Pkt_decr_at_counter_t;
 
-typedef struct MPIDI_CH3_Pkt_lock_put_unlock {
-    MPIDI_CH3_Pkt_type_t type;
-    MPIDI_CH3_Pkt_flags_t flags;
-    MPI_Win target_win_handle;
-    MPI_Win source_win_handle;
-    int origin_rank;
-    int lock_type;
-    void *addr;
-    int count;
-    MPI_Datatype datatype;
-} MPIDI_CH3_Pkt_lock_put_unlock_t;
-
-typedef struct MPIDI_CH3_Pkt_lock_get_unlock {
-    MPIDI_CH3_Pkt_type_t type;
-    MPIDI_CH3_Pkt_flags_t flags;
-    MPI_Win target_win_handle;
-    MPI_Win source_win_handle;
-    int origin_rank;
-    int lock_type;
-    void *addr;
-    int count;
-    MPI_Datatype datatype;
-    MPI_Request request_handle;
-} MPIDI_CH3_Pkt_lock_get_unlock_t;
-
-typedef struct MPIDI_CH3_Pkt_lock_accum_unlock {
-    MPIDI_CH3_Pkt_type_t type;
-    MPIDI_CH3_Pkt_flags_t flags;
-    MPI_Win target_win_handle;
-    MPI_Win source_win_handle;
-    int origin_rank;
-    int lock_type;
-    void *addr;
-    int count;
-    MPI_Datatype datatype;
-    MPI_Op op;
-} MPIDI_CH3_Pkt_lock_accum_unlock_t;
-
-
 typedef struct MPIDI_CH3_Pkt_close {
     MPIDI_CH3_Pkt_type_t type;
     int ack;
@@ -685,7 +611,6 @@ typedef union MPIDI_CH3_Pkt {
     MPIDI_CH3_Pkt_get_t get;
     MPIDI_CH3_Pkt_get_resp_t get_resp;
     MPIDI_CH3_Pkt_accum_t accum;
-    MPIDI_CH3_Pkt_accum_immed_t accum_immed;
     MPIDI_CH3_Pkt_get_accum_t get_accum;
     MPIDI_CH3_Pkt_lock_t lock;
     MPIDI_CH3_Pkt_lock_granted_t lock_granted;
@@ -693,9 +618,6 @@ typedef union MPIDI_CH3_Pkt {
     MPIDI_CH3_Pkt_flush_t flush;
     MPIDI_CH3_Pkt_flush_ack_t flush_ack;
     MPIDI_CH3_Pkt_decr_at_counter_t decr_at_cnt;
-    MPIDI_CH3_Pkt_lock_put_unlock_t lock_put_unlock;
-    MPIDI_CH3_Pkt_lock_get_unlock_t lock_get_unlock;
-    MPIDI_CH3_Pkt_lock_accum_unlock_t lock_accum_unlock;
     MPIDI_CH3_Pkt_close_t close;
     MPIDI_CH3_Pkt_cas_t cas;
     MPIDI_CH3_Pkt_cas_resp_t cas_resp;

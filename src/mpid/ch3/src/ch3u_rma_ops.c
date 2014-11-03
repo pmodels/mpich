@@ -6,8 +6,6 @@
 
 #include "mpidrma.h"
 
-static int enableShortACC = 1;
-
 #define MPIDI_PASSIVE_TARGET_DONE_TAG  348297
 #define MPIDI_PASSIVE_TARGET_RMA_TAG 563924
 
@@ -407,40 +405,6 @@ int MPIDI_Accumulate(const void *origin_addr, int origin_count, MPI_Datatype
         mpi_errno = MPIDI_CH3I_Win_get_op(win_ptr, &new_ptr);
         if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
 
-        /* If predefined and contiguous, use a simplified element */
-        if (MPIR_DATATYPE_IS_PREDEFINED(origin_datatype) &&
-            MPIR_DATATYPE_IS_PREDEFINED(target_datatype) && enableShortACC) {
-            MPI_Aint origin_type_size;
-            size_t len;
-
-            MPID_Datatype_get_size_macro(origin_datatype, origin_type_size);
-            MPIU_Assign_trunc(len, origin_count * origin_type_size, size_t);
-            if (MPIR_CVAR_CH3_RMA_ACC_IMMED && len <= MPIDI_RMA_IMMED_INTS * sizeof(int)) {
-                MPIDI_CH3_Pkt_accum_immed_t *accumi_pkt;
-
-                accumi_pkt = &(new_ptr->pkt.accum_immed);
-                MPIDI_Pkt_init(accumi_pkt, MPIDI_CH3_PKT_ACCUM_IMMED);
-                accumi_pkt->addr = (char *) win_ptr->base_addrs[target_rank] +
-                    win_ptr->disp_units[target_rank] * target_disp;
-                accumi_pkt->count = target_count;
-                accumi_pkt->datatype = target_datatype;
-                accumi_pkt->op = op;
-                accumi_pkt->target_win_handle = win_ptr->all_win_handles[target_rank];
-                accumi_pkt->source_win_handle = win_ptr->handle;
-
-                new_ptr->origin_addr = (void *) origin_addr;
-                new_ptr->origin_count = origin_count;
-                new_ptr->origin_datatype = origin_datatype;
-                new_ptr->target_rank = target_rank;
-
-                mpi_errno = MPIDI_CH3I_Win_enqueue_op(win_ptr, new_ptr);
-                if (mpi_errno)
-                    MPIU_ERR_POP(mpi_errno);
-
-                goto issue_ops;
-            }
-        }
-
         accum_pkt = &(new_ptr->pkt.accum);
 
         MPIDI_Pkt_init(accum_pkt, MPIDI_CH3_PKT_ACCUMULATE);
@@ -504,7 +468,6 @@ int MPIDI_Accumulate(const void *origin_addr, int origin_count, MPI_Datatype
             }
         }
 
- issue_ops:
         mpi_errno = MPIDI_CH3I_RMA_Make_progress_target(win_ptr, target_rank, &made_progress);
         if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
 

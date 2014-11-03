@@ -12,8 +12,6 @@
 #include "mpid_rma_shm.h"
 #include "mpid_rma_issue.h"
 
-int MPIDI_CH3I_Issue_rma_op(MPIDI_RMA_Op_t * op_ptr, MPID_Win * win_ptr,
-                            MPIDI_CH3_Pkt_flags_t flags);
 
 #undef FUNCNAME
 #define FUNCNAME send_lock_msg
@@ -29,8 +27,6 @@ static inline int send_lock_msg(int dest, int lock_type, MPID_Win * win_ptr)
     MPIDI_STATE_DECL(MPID_STATE_SEND_LOCK_MSG);
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_SEND_LOCK_MSG);
 
-    MPIU_Assert(win_ptr->targets[dest].remote_lock_state == MPIDI_CH3_WIN_LOCK_CALLED);
-
     MPIDI_Comm_get_vc_set_active(win_ptr->comm_ptr, dest, &vc);
 
     MPIDI_Pkt_init(lock_pkt, MPIDI_CH3_PKT_LOCK);
@@ -38,9 +34,6 @@ static inline int send_lock_msg(int dest, int lock_type, MPID_Win * win_ptr)
     lock_pkt->source_win_handle = win_ptr->handle;
     lock_pkt->lock_type = lock_type;
     lock_pkt->origin_rank = win_ptr->comm_ptr->rank;
-
-    win_ptr->targets[dest].remote_lock_state = MPIDI_CH3_WIN_LOCK_REQUESTED;
-    win_ptr->targets[dest].remote_lock_mode = lock_type;
 
     MPIU_THREAD_CS_ENTER(CH3COMM, vc);
     mpi_errno = MPIDI_CH3_iStartMsg(vc, lock_pkt, sizeof(*lock_pkt), &req);
@@ -75,8 +68,6 @@ static inline int send_unlock_msg(int dest, MPID_Win * win_ptr)
     MPIDI_STATE_DECL(MPID_STATE_SEND_UNLOCK_MSG);
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_SEND_UNLOCK_MSG);
 
-    MPIU_Assert(win_ptr->targets[dest].remote_lock_state == MPIDI_CH3_WIN_LOCK_GRANTED);
-
     MPIDI_Comm_get_vc_set_active(win_ptr->comm_ptr, dest, &vc);
 
     /* Send a lock packet over to the target. wait for the lock_granted
@@ -85,9 +76,6 @@ static inline int send_unlock_msg(int dest, MPID_Win * win_ptr)
     MPIDI_Pkt_init(unlock_pkt, MPIDI_CH3_PKT_UNLOCK);
     unlock_pkt->target_win_handle = win_ptr->all_win_handles[dest];
     unlock_pkt->source_win_handle = win_ptr->handle;
-
-    /* Reset the local state of the target to unlocked */
-    win_ptr->targets[dest].remote_lock_state = MPIDI_CH3_WIN_LOCK_NONE;
 
     MPIU_THREAD_CS_ENTER(CH3COMM, vc);
     mpi_errno = MPIDI_CH3_iStartMsg(vc, unlock_pkt, sizeof(*unlock_pkt), &req);
@@ -306,9 +294,6 @@ static inline int acquire_local_lock(MPID_Win * win_ptr, int lock_type)
         mpi_errno = enqueue_lock_origin(win_ptr, &pkt);
         if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
     }
-
-    win_ptr->targets[win_ptr->comm_ptr->rank].remote_lock_state = MPIDI_CH3_WIN_LOCK_GRANTED;
-    win_ptr->targets[win_ptr->comm_ptr->rank].remote_lock_mode = lock_type;
 
   fn_exit:
     MPIDI_RMA_FUNC_EXIT(MPID_STATE_ACQUIRE_LOCAL_LOCK);
