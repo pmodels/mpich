@@ -23,7 +23,7 @@
 #define MPIDI_EAGER_SHORT_SIZE 16
 
 /* This is the number of ints that can be carried within an RMA packet */
-#define MPIDI_RMA_IMMED_INTS 1
+#define MPIDI_RMA_IMMED_BYTES 16
 
 /* Union over all types (integer, logical, and multi-language types) that are
    allowed in a CAS operation.  This is used to allocate enough space in the
@@ -44,9 +44,6 @@ typedef union {
 /* Union over all types (all predefined types) that are allowed in a
    Fetch-and-op operation.  This can be too large for the packet header, so we
    limit the immediate space in the header to FOP_IMMED_INTS. */
-
-#define MPIDI_RMA_FOP_IMMED_INTS 2
-#define MPIDI_RMA_FOP_RESP_IMMED_INTS 8
 
 /* *INDENT-OFF* */
 /* Indentation turned off because "indent" is getting confused with
@@ -411,6 +408,8 @@ typedef struct MPIDI_CH3_Pkt_put {
     MPI_Win source_win_handle;  /* Used in the last RMA operation in an
                                  * epoch in the case of passive target rma
                                  * with shared locks. Otherwise set to NULL*/
+    char data[MPIDI_RMA_IMMED_BYTES];
+    size_t immed_len;
 } MPIDI_CH3_Pkt_put_t;
 
 typedef struct MPIDI_CH3_Pkt_get {
@@ -454,6 +453,8 @@ typedef struct MPIDI_CH3_Pkt_accum {
     MPI_Win source_win_handle;  /* Used in the last RMA operation in an
                                  * epoch in the case of passive target rma
                                  * with shared locks. Otherwise set to NULL*/
+    char data[MPIDI_RMA_IMMED_BYTES];
+    size_t immed_len;
 } MPIDI_CH3_Pkt_accum_t;
 
 typedef struct MPIDI_CH3_Pkt_get_accum {
@@ -472,6 +473,8 @@ typedef struct MPIDI_CH3_Pkt_get_accum {
     MPI_Win source_win_handle;  /* Used in the last RMA operation in an
                                  * epoch in the case of passive target rma
                                  * with shared locks. Otherwise set to NULL*/
+    char data[MPIDI_RMA_IMMED_BYTES];
+    size_t immed_len;
 } MPIDI_CH3_Pkt_get_accum_t;
 
 typedef struct MPIDI_CH3_Pkt_get_accum_resp {
@@ -539,13 +542,15 @@ typedef struct MPIDI_CH3_Pkt_fop {
                                  * epoch for decrementing rma op counter in
                                  * active target rma and for unlocking window
                                  * in passive target rma. Otherwise set to NULL*/
-    int origin_data[MPIDI_RMA_FOP_IMMED_INTS];
+    char data[MPIDI_RMA_IMMED_BYTES];
+    int immed_len;
 } MPIDI_CH3_Pkt_fop_t;
 
 typedef struct MPIDI_CH3_Pkt_fop_resp {
     MPIDI_CH3_Pkt_type_t type;
     MPI_Request request_handle;
-    int data[MPIDI_RMA_FOP_RESP_IMMED_INTS];
+    char data[MPIDI_RMA_IMMED_BYTES];
+    int immed_len;
     /* followings are used to decrement ack_counter at orign */
     int target_rank;
     MPI_Win source_win_handle;

@@ -307,10 +307,12 @@ static inline int do_accumulate_op(MPID_Request *rreq)
 
     MPIDI_FUNC_ENTER(MPID_STATE_DO_ACCUMULATE_OP);
 
+    MPIU_Assert(rreq->dev.final_user_buf != NULL);
+
     if (rreq->dev.op == MPI_REPLACE)
     {
         /* simply copy the data */
-        mpi_errno = MPIR_Localcopy(rreq->dev.user_buf, rreq->dev.user_count,
+        mpi_errno = MPIR_Localcopy(rreq->dev.final_user_buf, rreq->dev.user_count,
                                    rreq->dev.datatype,
                                    rreq->dev.real_user_buf,
                                    rreq->dev.user_count,
@@ -336,7 +338,7 @@ static inline int do_accumulate_op(MPID_Request *rreq)
 
     if (MPIR_DATATYPE_IS_PREDEFINED(rreq->dev.datatype))
     {
-        (*uop)(rreq->dev.user_buf, rreq->dev.real_user_buf,
+        (*uop)(rreq->dev.final_user_buf, rreq->dev.real_user_buf,
                &(rreq->dev.user_count), &(rreq->dev.datatype));
     }
     else
@@ -385,7 +387,7 @@ static inline int do_accumulate_op(MPID_Request *rreq)
         for (i=0; i<vec_len; i++)
 	{
             MPIU_Assign_trunc(count, (dloop_vec[i].DLOOP_VECTOR_LEN)/type_size, int);
-            (*uop)((char *)rreq->dev.user_buf + MPIU_PtrToAint(dloop_vec[i].DLOOP_VECTOR_BUF),
+            (*uop)((char *)rreq->dev.final_user_buf + MPIU_PtrToAint(dloop_vec[i].DLOOP_VECTOR_BUF),
                    (char *)rreq->dev.real_user_buf + MPIU_PtrToAint(dloop_vec[i].DLOOP_VECTOR_BUF),
                    &count, &type);
         }
@@ -397,7 +399,7 @@ static inline int do_accumulate_op(MPID_Request *rreq)
  fn_exit:
     /* free the temporary buffer */
     MPIR_Type_get_true_extent_impl(rreq->dev.datatype, &true_lb, &true_extent);
-    MPIU_Free((char *) rreq->dev.user_buf + true_lb);
+    MPIU_Free((char *) rreq->dev.final_user_buf + true_lb);
 
     MPIDI_FUNC_EXIT(MPID_STATE_DO_ACCUMULATE_OP);
 

@@ -371,6 +371,7 @@ int MPIDI_CH3_ReqHandler_AccumDerivedDTRecvComplete( MPIDI_VC_t *vc ATTRIBUTE((u
     tmp_buf = (void *)((char*)tmp_buf - true_lb);
     
     rreq->dev.user_buf = tmp_buf;
+    rreq->dev.final_user_buf = rreq->dev.user_buf;
     rreq->dev.datatype = new_dtp->handle;
     rreq->dev.recv_data_sz = new_dtp->size *
 	rreq->dev.user_count; 
@@ -442,6 +443,7 @@ int MPIDI_CH3_ReqHandler_GaccumDerivedDTRecvComplete( MPIDI_VC_t *vc ATTRIBUTE((
     tmp_buf = (void *)((char*)tmp_buf - true_lb);
 
     rreq->dev.user_buf = tmp_buf;
+    rreq->dev.final_user_buf = rreq->dev.user_buf;
     rreq->dev.datatype = new_dtp->handle;
     rreq->dev.recv_data_sz = new_dtp->size *
 	rreq->dev.user_count;

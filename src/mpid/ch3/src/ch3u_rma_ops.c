@@ -109,6 +109,7 @@ int MPIDI_Put(const void *origin_addr, int origin_count, MPI_Datatype
         put_pkt->dataloop_size = 0;
         put_pkt->target_win_handle = win_ptr->all_win_handles[target_rank];
         put_pkt->source_win_handle = win_ptr->handle;
+        put_pkt->immed_len = 0;
 
         /* FIXME: For contig and very short operations, use a streamlined op */
         new_ptr->origin_addr = (void *) origin_addr;
@@ -131,6 +132,28 @@ int MPIDI_Put(const void *origin_addr, int origin_count, MPI_Datatype
             MPID_Datatype_get_ptr(target_datatype, dtp);
             MPID_Datatype_add_ref(dtp);
             new_ptr->is_dt = 1;
+        }
+
+        /* If both origin and target are basic datatype, try to
+           copy origin data to packet header as much as possible. */
+        if (!new_ptr->is_dt) {
+            size_t len;
+            MPI_Aint origin_type_size;
+
+            MPID_Datatype_get_size_macro(new_ptr->origin_datatype, origin_type_size);
+            /* length of origin data */
+            MPIU_Assign_trunc(len, new_ptr->origin_count * origin_type_size, size_t);
+            /* length of origin data that can fit into immed area in pkt header */
+            MPIU_Assign_trunc(put_pkt->immed_len,
+                              MPIR_MIN(len, (MPIDI_RMA_IMMED_BYTES / origin_type_size) * origin_type_size),
+                              size_t);
+
+            if (put_pkt->immed_len > 0) {
+                void *src = new_ptr->origin_addr, *dest = put_pkt->data;
+                /* copy data from origin buffer to immed area in packet header */
+                mpi_errno = immed_copy(src, dest, put_pkt->immed_len);
+                if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
+            }
         }
 
         mpi_errno = MPIDI_CH3I_RMA_Make_progress_target(win_ptr, target_rank, &made_progress);
@@ -418,6 +441,7 @@ int MPIDI_Accumulate(const void *origin_addr, int origin_count, MPI_Datatype
         accum_pkt->op = op;
         accum_pkt->target_win_handle = win_ptr->all_win_handles[target_rank];
         accum_pkt->source_win_handle = win_ptr->handle;
+        accum_pkt->immed_len = 0;
 
         new_ptr->origin_addr = (void *) origin_addr;
         new_ptr->origin_count = origin_count;
@@ -439,6 +463,28 @@ int MPIDI_Accumulate(const void *origin_addr, int origin_count, MPI_Datatype
             MPID_Datatype_get_ptr(target_datatype, dtp);
             MPID_Datatype_add_ref(dtp);
             new_ptr->is_dt = 1;
+        }
+
+        /* If both origin and target are basic datatype, try to
+           copy origin data to packet header as much as possible. */
+        if (!new_ptr->is_dt) {
+            size_t len;
+            MPI_Aint origin_type_size;
+
+            MPID_Datatype_get_size_macro(new_ptr->origin_datatype, origin_type_size);
+            /* length of origin data */
+            MPIU_Assign_trunc(len, new_ptr->origin_count * origin_type_size, size_t);
+            /* length of origin data that can fit into immed areas in packet header */
+            MPIU_Assign_trunc(accum_pkt->immed_len,
+                              MPIR_MIN(len, (MPIDI_RMA_IMMED_BYTES / origin_type_size) * origin_type_size),
+                              size_t);
+
+            if (accum_pkt->immed_len > 0) {
+                void *src = new_ptr->origin_addr, *dest = accum_pkt->data;
+                /* copy data from origin buffer to immed area in packet header */
+                mpi_errno = immed_copy(src, dest, accum_pkt->immed_len);
+                if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
+            }
         }
 
  issue_ops:
@@ -590,6 +636,7 @@ int MPIDI_Get_accumulate(const void *origin_addr, int origin_count,
             get_accum_pkt->op = op;
             get_accum_pkt->target_win_handle = win_ptr->all_win_handles[target_rank];
             get_accum_pkt->source_win_handle = win_ptr->handle;
+            get_accum_pkt->immed_len = 0;
 
             new_ptr->origin_addr = (void *) origin_addr;
             new_ptr->origin_count = origin_count;
@@ -615,6 +662,28 @@ int MPIDI_Get_accumulate(const void *origin_addr, int origin_count,
                 MPID_Datatype_get_ptr(target_datatype, dtp);
                 MPID_Datatype_add_ref(dtp);
                 new_ptr->is_dt = 1;
+            }
+
+            /* If all buffers are basic datatype, try to copy origin data to
+               packet header as much as possible. */
+            if (!new_ptr->is_dt) {
+                size_t len;
+                MPI_Aint origin_type_size;
+
+                MPID_Datatype_get_size_macro(new_ptr->origin_datatype, origin_type_size);
+                /* length of origin data */
+                MPIU_Assign_trunc(len, new_ptr->origin_count * origin_type_size, size_t);
+                /* length of origin data that can fit into immed area in packet header */
+                MPIU_Assign_trunc(get_accum_pkt->immed_len,
+                                  MPIR_MIN(len, (MPIDI_RMA_IMMED_BYTES / origin_type_size) * origin_type_size),
+                                  size_t);
+
+                if (get_accum_pkt->immed_len > 0) {
+                    void *src = new_ptr->origin_addr, *dest = get_accum_pkt->data;
+                    /* copy data from origin buffer to immed area in packet header */
+                    mpi_errno = immed_copy(src, dest, get_accum_pkt->immed_len);
+                    if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
+                }
             }
         }
 
@@ -857,6 +926,9 @@ int MPIDI_Fetch_and_op(const void *origin_addr, void *result_addr,
         }
         else {
             MPIDI_CH3_Pkt_fop_t *fop_pkt = &(new_ptr->pkt.fop);
+            size_t len;
+            MPI_Aint origin_type_size;
+
             MPIDI_Pkt_init(fop_pkt, MPIDI_CH3_PKT_FOP);
             fop_pkt->addr = (char *) win_ptr->base_addrs[target_rank] +
                 win_ptr->disp_units[target_rank] * target_disp;
@@ -864,6 +936,7 @@ int MPIDI_Fetch_and_op(const void *origin_addr, void *result_addr,
             fop_pkt->op = op;
             fop_pkt->source_win_handle = win_ptr->handle;
             fop_pkt->target_win_handle = win_ptr->all_win_handles[target_rank];
+            fop_pkt->immed_len = 0;
 
             new_ptr->origin_addr = (void *) origin_addr;
             new_ptr->origin_count = 1;
@@ -871,6 +944,21 @@ int MPIDI_Fetch_and_op(const void *origin_addr, void *result_addr,
             new_ptr->result_addr = result_addr;
             new_ptr->result_datatype = datatype;
             new_ptr->target_rank = target_rank;
+
+            MPID_Datatype_get_size_macro(new_ptr->origin_datatype, origin_type_size);
+            /* length of origin data */
+            MPIU_Assign_trunc(len, new_ptr->origin_count * origin_type_size, size_t);
+            /* length of origin data that can fit into immed area in pkt header */
+            MPIU_Assign_trunc(fop_pkt->immed_len,
+                              MPIR_MIN(len, (MPIDI_RMA_IMMED_BYTES / origin_type_size) * origin_type_size),
+                              size_t);
+
+            if (fop_pkt->immed_len > 0) {
+                void *src = new_ptr->origin_addr, *dest = fop_pkt->data;
+                /* copy data from origin buffer to immed area in packet header */
+                mpi_errno = immed_copy(src, dest, fop_pkt->immed_len);
+                if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
+            }
         }
 
         mpi_errno = MPIDI_CH3I_Win_enqueue_op(win_ptr, new_ptr);

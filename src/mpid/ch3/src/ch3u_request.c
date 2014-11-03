@@ -92,6 +92,7 @@ MPID_Request * MPID_Request_create(void)
         req->dev.OnDataAvail       = NULL;
         req->dev.OnFinal           = NULL;
         req->dev.user_buf          = NULL;
+        req->dev.final_user_buf    = NULL;
 #ifdef MPIDI_CH3_REQUEST_INIT
 	MPIDI_CH3_REQUEST_INIT(req);
 #endif

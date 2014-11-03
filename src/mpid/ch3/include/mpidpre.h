@@ -465,6 +465,7 @@ typedef struct MPIDI_Request {
     MPI_Op op;
     /* For accumulate, since data is first read into a tmp_buf */
     void *real_user_buf;
+    void *final_user_buf;
     /* For derived datatypes at target */
     struct MPIDI_RMA_dtype_info *dtype_info;
     void *dataloop;

@@ -59,6 +59,26 @@ int MPIDI_CH3_PktHandler_Put(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
         MPID_Datatype_get_size_macro(put_pkt->datatype, type_size);
         req->dev.recv_data_sz = type_size * put_pkt->count;
 
+        if (put_pkt->immed_len > 0) {
+            /* See if we can receive some data from packet header. */
+            MPIU_Memcpy(req->dev.user_buf, put_pkt->data, put_pkt->immed_len);
+            req->dev.user_buf = (void*)((char*)req->dev.user_buf + put_pkt->immed_len);
+            req->dev.recv_data_sz -= put_pkt->immed_len;
+        }
+
+        if (req->dev.recv_data_sz == 0) {
+            /* All data received, trigger req handler. */
+
+            *buflen = sizeof(MPIDI_CH3_Pkt_t);
+            mpi_errno = MPIDI_CH3_ReqHandler_PutRecvComplete(vc, req, &complete);
+            if (mpi_errno)
+                MPIU_ERR_POP(mpi_errno);
+            if (complete) {
+                *rreqp = NULL;
+                goto fn_exit;
+            }
+        }
+
         mpi_errno = MPIDI_CH3U_Receive_data_found(req, data_buf, &data_len, &complete);
         MPIU_ERR_CHKANDJUMP1(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**ch3|postrecv",
                              "**ch3|postrecv %s", "MPIDI_CH3_PKT_PUT");
@@ -349,9 +369,28 @@ int MPIDI_CH3_PktHandler_Accumulate(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
         }
 
         req->dev.user_buf = tmp_buf;
+        req->dev.final_user_buf = req->dev.user_buf;
 
         MPID_Datatype_get_size_macro(accum_pkt->datatype, type_size);
         req->dev.recv_data_sz = type_size * accum_pkt->count;
+
+        if (accum_pkt->immed_len > 0) {
+            /* See if we can receive some data from packet header. */
+            MPIU_Memcpy(req->dev.user_buf, accum_pkt->data, accum_pkt->immed_len);
+            req->dev.user_buf = (void*)((char*)req->dev.user_buf + accum_pkt->immed_len);
+            req->dev.recv_data_sz -= accum_pkt->immed_len;
+        }
+
+        if (req->dev.recv_data_sz == 0) {
+            /* All data received, trigger req handler. */
+            *buflen = sizeof(MPIDI_CH3_Pkt_t);
+            mpi_errno = MPIDI_CH3_ReqHandler_AccumRecvComplete(vc, req, &complete);
+            if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
+            if (complete) {
+                *rreqp = NULL;
+                goto fn_exit;
+            }
+        }
 
         mpi_errno = MPIDI_CH3U_Receive_data_found(req, data_buf, &data_len, &complete);
         MPIU_ERR_CHKANDJUMP1(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**ch3|postrecv",
@@ -496,9 +535,30 @@ int MPIDI_CH3_PktHandler_GetAccumulate(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
         }
 
         req->dev.user_buf = tmp_buf;
+        req->dev.final_user_buf = req->dev.user_buf;
 
         MPID_Datatype_get_size_macro(get_accum_pkt->datatype, type_size);
         req->dev.recv_data_sz = type_size * get_accum_pkt->count;
+
+        if (get_accum_pkt->immed_len > 0) {
+            /* See if we can receive some data from packet header. */
+            MPIU_Memcpy(req->dev.user_buf, get_accum_pkt->data, get_accum_pkt->immed_len);
+            req->dev.user_buf = (void*)((char*)req->dev.user_buf + get_accum_pkt->immed_len);
+            req->dev.recv_data_sz -= get_accum_pkt->immed_len;
+        }
+
+        if (req->dev.recv_data_sz == 0) {
+            /* All data received. */
+
+            *buflen = sizeof(MPIDI_CH3_Pkt_t);
+
+            mpi_errno = MPIDI_CH3_ReqHandler_GaccumRecvComplete(vc, req, &complete);
+            if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
+            if (complete) {
+                *rreqp = NULL;
+                goto fn_exit;
+            }
+        }
 
         mpi_errno = MPIDI_CH3U_Receive_data_found(req, data_buf, &data_len, &complete);
         MPIU_ERR_CHKANDJUMP1(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**ch3|postrecv",
