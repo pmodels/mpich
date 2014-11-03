@@ -2165,8 +2165,11 @@ extern struct MPID_CommOps  *MPID_Comm_fns; /* Communicator creation functions *
 
 
 /* Per process data */
-typedef enum MPIR_MPI_State_t { MPICH_PRE_INIT=0, MPICH_WITHIN_MPI=1,
-               MPICH_POST_FINALIZED=2 } MPIR_MPI_State_t;
+typedef enum MPIR_MPI_State_t {
+    MPICH_PRE_INIT=0,
+    MPICH_WITHIN_MPI,
+    MPICH_POST_FINALIZED
+} MPIR_MPI_State_t;
 
 typedef struct PreDefined_attrs {
     int appnum;          /* Application number provided by mpiexec (MPI-2) */
