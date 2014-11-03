@@ -19,7 +19,7 @@ int MPIDI_CH3I_Issue_rma_op(MPIDI_RMA_Op_t * op_ptr, MPID_Win * win_ptr,
 #define FUNCNAME send_lock_msg
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-static int send_lock_msg(int dest, int lock_type, MPID_Win * win_ptr)
+static inline int send_lock_msg(int dest, int lock_type, MPID_Win * win_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_CH3_Pkt_t upkt;
@@ -64,7 +64,7 @@ static int send_lock_msg(int dest, int lock_type, MPID_Win * win_ptr)
 #define FUNCNAME send_unlock_msg
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-static int send_unlock_msg(int dest, MPID_Win * win_ptr)
+static inline int send_unlock_msg(int dest, MPID_Win * win_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_CH3_Pkt_t upkt;
@@ -111,7 +111,7 @@ static int send_unlock_msg(int dest, MPID_Win * win_ptr)
 #define FUNCNAME MPIDI_CH3I_Send_lock_granted_pkt
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-static int MPIDI_CH3I_Send_lock_granted_pkt(MPIDI_VC_t * vc, MPID_Win * win_ptr, MPI_Win source_win_handle)
+static inline int MPIDI_CH3I_Send_lock_granted_pkt(MPIDI_VC_t * vc, MPID_Win * win_ptr, MPI_Win source_win_handle)
 {
     MPIDI_CH3_Pkt_t upkt;
     MPIDI_CH3_Pkt_lock_granted_t *lock_granted_pkt = &upkt.lock_granted;
@@ -152,7 +152,7 @@ static int MPIDI_CH3I_Send_lock_granted_pkt(MPIDI_VC_t * vc, MPID_Win * win_ptr,
 #define FUNCNAME MPIDI_CH3I_Send_pt_rma_done_pkt
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-static int MPIDI_CH3I_Send_pt_rma_done_pkt(MPIDI_VC_t *vc, MPID_Win *win_ptr,
+static inline int MPIDI_CH3I_Send_pt_rma_done_pkt(MPIDI_VC_t *vc, MPID_Win *win_ptr,
                                     MPI_Win source_win_handle)
 {
     MPIDI_CH3_Pkt_t upkt;
@@ -190,7 +190,7 @@ static int MPIDI_CH3I_Send_pt_rma_done_pkt(MPIDI_VC_t *vc, MPID_Win *win_ptr,
 #define FUNCNAME acquire_local_lock
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-static int acquire_local_lock(MPID_Win * win_ptr, int lock_type)
+static inline int acquire_local_lock(MPID_Win * win_ptr, int lock_type)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_STATE_DECL(MPID_STATE_ACQUIRE_LOCAL_LOCK);
@@ -230,7 +230,7 @@ static int acquire_local_lock(MPID_Win * win_ptr, int lock_type)
 #define FUNCNAME do_accumulate_op
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-static int do_accumulate_op(MPID_Request *rreq)
+static inline int do_accumulate_op(MPID_Request *rreq)
 {
     int mpi_errno = MPI_SUCCESS;
     MPI_Aint true_lb, true_extent;
