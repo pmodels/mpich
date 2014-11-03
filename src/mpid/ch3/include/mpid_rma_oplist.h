@@ -210,6 +210,57 @@ static inline int MPIDI_CH3I_Win_find_target(MPID_Win * win_ptr, int target_rank
     goto fn_exit;
 }
 
+/* MPIDI_CH3I_Win_enqueue_op(): given an operation, enqueue it to the
+ * corresponding operation lists in corresponding target element. This
+ * routines is only called from operation routines. */
+#undef FUNCNAME
+#define FUNCNAME MPIDI_CH3I_Win_enqueue_op
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
+static inline int MPIDI_CH3I_Win_enqueue_op(MPID_Win * win_ptr,
+                                            MPIDI_RMA_Op_t * op)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIDI_RMA_Target_t *target = NULL;
+
+    mpi_errno = MPIDI_CH3I_Win_find_target(win_ptr, op->target_rank, &target);
+    if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
+    if (target == NULL) {
+        mpi_errno = MPIDI_CH3I_Win_create_target(win_ptr, op->target_rank, &target);
+        if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
+
+        if (win_ptr->states.access_state == MPIDI_RMA_PER_TARGET ||
+            win_ptr->states.access_state == MPIDI_RMA_LOCK_ALL_GRANTED) {
+            /* If global state is MPIDI_RMA_PER_TARGET, this must not
+             * be the first time to create this target (The first time
+             * is in Win_lock). Here we recreated it and set the access
+             * state to LOCK_GRANTED because before we free the previous
+             * one, the lock should already be granted. */
+            /* If global state is MPIDI_RMA_LOCK_ALL_GRANTED, all locks
+             * should already be granted. So the access state for this
+             * target is also set to MPIDI_RMA_LOCK_GRANTED. */
+            target->access_state = MPIDI_RMA_LOCK_GRANTED;
+        }
+        else if (win_ptr->states.access_state == MPIDI_RMA_LOCK_ALL_CALLED) {
+            /* If global state is MPIDI_RMA_LOCK_ALL_CALLED, this must
+               the first time to create this target, set its access state
+               to MPIDI_RMA_LOCK_CALLED. */
+            target->access_state = MPIDI_RMA_LOCK_CALLED;
+            target->lock_type = MPI_LOCK_SHARED;
+        }
+    }
+
+    /* Enqueue operation into pending list. */
+    MPL_LL_APPEND(target->pending_op_list, target->pending_op_list_tail, op);
+    if (target->next_op_to_issue == NULL)
+        target->next_op_to_issue = op;
+
+ fn_exit:
+    return mpi_errno;
+ fn_fail:
+    goto fn_exit;
+}
+
 
 /* MPIDI_CH3I_Win_target_dequeue_and_free(): dequeue and free
  * the target in RMA slots. */
