@@ -120,7 +120,9 @@ typedef enum {
     MPIDI_CH3_PKT_FLAG_RMA_NOCHECK = 32,
     MPIDI_CH3_PKT_FLAG_RMA_SHARED = 64,
     MPIDI_CH3_PKT_FLAG_RMA_EXCLUSIVE = 128,
-    MPIDI_CH3_PKT_FLAG_RMA_FLUSH_ACK = 256
+    MPIDI_CH3_PKT_FLAG_RMA_FLUSH_ACK = 256,
+    MPIDI_CH3_PKT_FLAG_RMA_UNLOCK_ACK = 512,
+    MPIDI_CH3_PKT_FLAG_RMA_LOCK_GRANTED = 1024
 } MPIDI_CH3_Pkt_flags_t;
 
 typedef struct MPIDI_CH3_Pkt_send {
@@ -407,6 +409,8 @@ typedef struct MPIDI_CH3_Pkt_put {
                                  * with shared locks. Otherwise set to NULL*/
     char data[MPIDI_RMA_IMMED_BYTES];
     size_t immed_len;
+    int lock_type;      /* used when piggybacking LOCK message. */
+    int origin_rank;    /* used when piggybacking LOCK message. */
 } MPIDI_CH3_Pkt_put_t;
 
 typedef struct MPIDI_CH3_Pkt_get {
@@ -424,6 +428,8 @@ typedef struct MPIDI_CH3_Pkt_get {
     MPI_Win source_win_handle;  /* Used in the last RMA operation in an
                                  * epoch in the case of passive target rma
                                  * with shared locks. Otherwise set to NULL*/
+    int lock_type;   /* used when piggybacking LOCK message. */
+    int origin_rank; /* used when piggybacking LOCK message. */
 } MPIDI_CH3_Pkt_get_t;
 
 typedef struct MPIDI_CH3_Pkt_get_resp {
@@ -452,6 +458,8 @@ typedef struct MPIDI_CH3_Pkt_accum {
                                  * with shared locks. Otherwise set to NULL*/
     char data[MPIDI_RMA_IMMED_BYTES];
     size_t immed_len;
+    int lock_type;    /* used when piggybacking LOCK message. */
+    int origin_rank;  /* used when piggybacking LOCK message. */
 } MPIDI_CH3_Pkt_accum_t;
 
 typedef struct MPIDI_CH3_Pkt_get_accum {
@@ -472,6 +480,8 @@ typedef struct MPIDI_CH3_Pkt_get_accum {
                                  * with shared locks. Otherwise set to NULL*/
     char data[MPIDI_RMA_IMMED_BYTES];
     size_t immed_len;
+    int lock_type;     /* used when piggybacking LOCK message. */
+    int origin_rank;   /* used when piggybacking LOCK message. */
 } MPIDI_CH3_Pkt_get_accum_t;
 
 typedef struct MPIDI_CH3_Pkt_get_accum_resp {
@@ -515,6 +525,8 @@ typedef struct MPIDI_CH3_Pkt_cas {
                                  * in passive target rma. Otherwise set to NULL*/
     MPIDI_CH3_CAS_Immed_u origin_data;
     MPIDI_CH3_CAS_Immed_u compare_data;
+    int lock_type;     /* used when piggybacking LOCK message. */
+    int origin_rank;   /* used when piggybacking LOCK message. */
 } MPIDI_CH3_Pkt_cas_t;
 
 typedef struct MPIDI_CH3_Pkt_cas_resp {
@@ -541,6 +553,8 @@ typedef struct MPIDI_CH3_Pkt_fop {
                                  * in passive target rma. Otherwise set to NULL*/
     char data[MPIDI_RMA_IMMED_BYTES];
     int immed_len;
+    int lock_type;     /* used when piggybacking LOCK message. */
+    int origin_rank;   /* used when piggybacking LOCK message. */
 } MPIDI_CH3_Pkt_fop_t;
 
 typedef struct MPIDI_CH3_Pkt_fop_resp {
@@ -596,6 +610,7 @@ typedef struct MPIDI_CH3_Pkt_flush_ack {
     MPI_Win source_win_handle;
     int target_rank;            /* Used in flush_ack response to look up the
                                  * target state at the origin. */
+    MPIDI_CH3_Pkt_flags_t flags;
 } MPIDI_CH3_Pkt_flush_ack_t;
 
 typedef struct MPIDI_CH3_Pkt_decr_at_counter {

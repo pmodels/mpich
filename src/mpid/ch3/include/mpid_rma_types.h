@@ -81,6 +81,7 @@ typedef struct MPIDI_RMA_Op {
     MPIDI_CH3_Pkt_t pkt;
     MPIDI_RMA_Pool_type_t pool_type;
     int is_dt;
+    int piggyback_lock_candidate;
 } MPIDI_RMA_Op_t;
 
 typedef struct MPIDI_RMA_Target {
@@ -135,25 +136,9 @@ typedef struct MPIDI_RMA_Win_list {
 
 extern MPIDI_RMA_Win_list_t *MPIDI_RMA_Win_list, *MPIDI_RMA_Win_list_tail;
 
-typedef struct MPIDI_PT_single_op {
-    MPIDI_CH3_Pkt_type_t type;  /* put, get, or accum. */
-    void *addr;
-    int count;
-    MPI_Datatype datatype;
-    MPI_Op op;
-    void *data;                 /* for queued puts and accumulates, data is copied here */
-    MPI_Request request_handle; /* for gets */
-    int data_recd;              /* to indicate if the data has been received */
-    MPIDI_CH3_Pkt_flags_t flags;
-} MPIDI_PT_single_op;
-
 typedef struct MPIDI_Win_lock_queue {
     struct MPIDI_Win_lock_queue *next;
-    int lock_type;
-    MPI_Win source_win_handle;
-    int origin_rank;
-    struct MPIDI_PT_single_op *pt_single_op;    /* to store info for
-                                                 * lock-put-unlock optimization */
+    MPIDI_CH3_Pkt_t pkt;    /* all information for this request packet */
 } MPIDI_Win_lock_queue;
 
 typedef MPIDI_RMA_Op_t *MPIDI_RMA_Ops_list_t;

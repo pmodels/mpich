@@ -52,6 +52,11 @@ int MPIDI_CH3_ReqHandler_GetSendComplete( MPIDI_VC_t *vc ATTRIBUTE((unused)),
 
     MPID_Win_get_ptr(sreq->dev.target_win_handle, win_ptr);
 
+    if (sreq->dev.flags & MPIDI_CH3_PKT_FLAG_RMA_UNLOCK) {
+        mpi_errno = MPIDI_CH3I_Release_lock(win_ptr);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        MPIDI_CH3_Progress_signal_completion();
+    }
     if (sreq->dev.flags & MPIDI_CH3_PKT_FLAG_RMA_DECR_AT_COUNTER) {
         win_ptr->at_completion_counter--;
         MPIU_Assert(win_ptr->at_completion_counter >= 0);
@@ -103,6 +108,12 @@ int MPIDI_CH3_ReqHandler_GaccumLikeSendComplete( MPIDI_VC_t *vc,
        operation are completed when counter reaches zero. */
     win_ptr->at_completion_counter--;
     MPIU_Assert(win_ptr->at_completion_counter >= 0);
+
+    if (rreq->dev.flags & MPIDI_CH3_PKT_FLAG_RMA_UNLOCK) {
+        mpi_errno = MPIDI_CH3I_Release_lock(win_ptr);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        MPIDI_CH3_Progress_signal_completion();
+    }
 
     if (rreq->dev.flags & MPIDI_CH3_PKT_FLAG_RMA_DECR_AT_COUNTER) {
         win_ptr->at_completion_counter--;

@@ -110,6 +110,7 @@ int MPIDI_Put(const void *origin_addr, int origin_count, MPI_Datatype
         put_pkt->target_win_handle = win_ptr->all_win_handles[target_rank];
         put_pkt->source_win_handle = win_ptr->handle;
         put_pkt->immed_len = 0;
+        put_pkt->origin_rank = rank;
 
         /* FIXME: For contig and very short operations, use a streamlined op */
         new_ptr->origin_addr = (void *) origin_addr;
@@ -153,6 +154,11 @@ int MPIDI_Put(const void *origin_addr, int origin_count, MPI_Datatype
                 /* copy data from origin buffer to immed area in packet header */
                 mpi_errno = immed_copy(src, dest, put_pkt->immed_len);
                 if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
+
+                /* If all data is in pkt header, mark this op as a candidate
+                   for piggybacking LOCK. */
+                if (put_pkt->immed_len == len)
+                    new_ptr->piggyback_lock_candidate = 1;
             }
         }
 
@@ -268,6 +274,7 @@ int MPIDI_Get(void *origin_addr, int origin_count, MPI_Datatype
         get_pkt->dataloop_size = 0;
         get_pkt->target_win_handle = win_ptr->all_win_handles[target_rank];
         get_pkt->source_win_handle = win_ptr->handle;
+        get_pkt->origin_rank = rank;
 
         /* FIXME: For contig and very short operations, use a streamlined op */
         new_ptr->origin_addr = origin_addr;
@@ -290,6 +297,10 @@ int MPIDI_Get(void *origin_addr, int origin_count, MPI_Datatype
             MPID_Datatype_get_ptr(target_datatype, dtp);
             MPID_Datatype_add_ref(dtp);
             new_ptr->is_dt = 1;
+        }
+
+        if (!new_ptr->is_dt) {
+            new_ptr->piggyback_lock_candidate = 1;
         }
 
         mpi_errno = MPIDI_CH3I_RMA_Make_progress_target(win_ptr, target_rank, &made_progress);
@@ -442,6 +453,7 @@ int MPIDI_Accumulate(const void *origin_addr, int origin_count, MPI_Datatype
         accum_pkt->target_win_handle = win_ptr->all_win_handles[target_rank];
         accum_pkt->source_win_handle = win_ptr->handle;
         accum_pkt->immed_len = 0;
+        accum_pkt->origin_rank = rank;
 
         new_ptr->origin_addr = (void *) origin_addr;
         new_ptr->origin_count = origin_count;
@@ -484,6 +496,11 @@ int MPIDI_Accumulate(const void *origin_addr, int origin_count, MPI_Datatype
                 /* copy data from origin buffer to immed area in packet header */
                 mpi_errno = immed_copy(src, dest, accum_pkt->immed_len);
                 if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
+
+                /* If all data is in pkt header, mark this op as
+                   a candidate for piggybacking LOCK. */
+                if (accum_pkt->immed_len == len)
+                    new_ptr->piggyback_lock_candidate = 1;
             }
         }
 
@@ -607,6 +624,7 @@ int MPIDI_Get_accumulate(const void *origin_addr, int origin_count,
             get_pkt->dataloop_size = 0;
             get_pkt->target_win_handle = win_ptr->all_win_handles[target_rank];
             get_pkt->source_win_handle = win_ptr->handle;
+            get_pkt->origin_rank = rank;
 
             new_ptr->origin_addr = result_addr;
             new_ptr->origin_count = result_count;
@@ -623,6 +641,10 @@ int MPIDI_Get_accumulate(const void *origin_addr, int origin_count,
                 MPID_Datatype_add_ref(dtp);
                 new_ptr->is_dt = 1;
             }
+
+            if (!new_ptr->is_dt) {
+                new_ptr->piggyback_lock_candidate = 1;
+            }
         }
 
         else {
@@ -637,6 +659,7 @@ int MPIDI_Get_accumulate(const void *origin_addr, int origin_count,
             get_accum_pkt->target_win_handle = win_ptr->all_win_handles[target_rank];
             get_accum_pkt->source_win_handle = win_ptr->handle;
             get_accum_pkt->immed_len = 0;
+            get_accum_pkt->origin_rank = rank;
 
             new_ptr->origin_addr = (void *) origin_addr;
             new_ptr->origin_count = origin_count;
@@ -683,6 +706,11 @@ int MPIDI_Get_accumulate(const void *origin_addr, int origin_count,
                     /* copy data from origin buffer to immed area in packet header */
                     mpi_errno = immed_copy(src, dest, get_accum_pkt->immed_len);
                     if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
+
+                    /* If all data is in pkt header, mark this op as a candidate
+                       for piggybacking LOCK. */
+                    if (get_accum_pkt->immed_len == len)
+                        new_ptr->piggyback_lock_candidate = 1;
                 }
             }
         }
@@ -797,6 +825,7 @@ int MPIDI_Compare_and_swap(const void *origin_addr, const void *compare_addr,
         cas_pkt->datatype = datatype;
         cas_pkt->target_win_handle = win_ptr->all_win_handles[target_rank];
         cas_pkt->source_win_handle = win_ptr->handle;
+        cas_pkt->origin_rank = rank;
 
         new_ptr->origin_addr = (void *) origin_addr;
         new_ptr->origin_count = 1;
@@ -806,6 +835,7 @@ int MPIDI_Compare_and_swap(const void *origin_addr, const void *compare_addr,
         new_ptr->compare_addr = (void *) compare_addr;
         new_ptr->compare_datatype = datatype;
         new_ptr->target_rank = target_rank;
+        new_ptr->piggyback_lock_candidate = 1; /* CAS is always able to piggyback LOCK */
 
         mpi_errno = MPIDI_CH3I_Win_enqueue_op(win_ptr, new_ptr);
         if (mpi_errno)
@@ -918,11 +948,13 @@ int MPIDI_Fetch_and_op(const void *origin_addr, void *result_addr,
             get_pkt->dataloop_size = 0;
             get_pkt->target_win_handle = win_ptr->all_win_handles[target_rank];
             get_pkt->source_win_handle = win_ptr->handle;
+            get_pkt->origin_rank = rank;
 
             new_ptr->origin_addr = result_addr;
             new_ptr->origin_count = 1;
             new_ptr->origin_datatype = datatype;
             new_ptr->target_rank = target_rank;
+            new_ptr->piggyback_lock_candidate = 1;
         }
         else {
             MPIDI_CH3_Pkt_fop_t *fop_pkt = &(new_ptr->pkt.fop);
@@ -937,6 +969,7 @@ int MPIDI_Fetch_and_op(const void *origin_addr, void *result_addr,
             fop_pkt->source_win_handle = win_ptr->handle;
             fop_pkt->target_win_handle = win_ptr->all_win_handles[target_rank];
             fop_pkt->immed_len = 0;
+            fop_pkt->origin_rank = rank;
 
             new_ptr->origin_addr = (void *) origin_addr;
             new_ptr->origin_count = 1;
@@ -944,6 +977,7 @@ int MPIDI_Fetch_and_op(const void *origin_addr, void *result_addr,
             new_ptr->result_addr = result_addr;
             new_ptr->result_datatype = datatype;
             new_ptr->target_rank = target_rank;
+            new_ptr->piggyback_lock_candidate = 1;
 
             MPID_Datatype_get_size_macro(new_ptr->origin_datatype, origin_type_size);
             /* length of origin data */

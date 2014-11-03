@@ -84,6 +84,7 @@ static inline int send_unlock_msg(int dest, MPID_Win * win_ptr)
 
     MPIDI_Pkt_init(unlock_pkt, MPIDI_CH3_PKT_UNLOCK);
     unlock_pkt->target_win_handle = win_ptr->all_win_handles[dest];
+    unlock_pkt->source_win_handle = win_ptr->handle;
 
     /* Reset the local state of the target to unlocked */
     win_ptr->targets[dest].remote_lock_state = MPIDI_CH3_WIN_LOCK_NONE;
@@ -154,6 +155,7 @@ static inline int MPIDI_CH3I_Send_lock_granted_pkt(MPIDI_VC_t * vc, MPID_Win * w
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 static inline int MPIDI_CH3I_Send_flush_ack_pkt(MPIDI_VC_t *vc, MPID_Win *win_ptr,
+                                                MPIDI_CH3_Pkt_flags_t flags,
                                     MPI_Win source_win_handle)
 {
     MPIDI_CH3_Pkt_t upkt;
@@ -167,6 +169,7 @@ static inline int MPIDI_CH3I_Send_flush_ack_pkt(MPIDI_VC_t *vc, MPID_Win *win_pt
     MPIDI_Pkt_init(flush_ack_pkt, MPIDI_CH3_PKT_FLUSH_ACK);
     flush_ack_pkt->source_win_handle = source_win_handle;
     flush_ack_pkt->target_rank = win_ptr->comm_ptr->rank;
+    flush_ack_pkt->flags = flags;
 
     /* Because this is in a packet handler, it is already within a critical section */	
     /* MPIU_THREAD_CS_ENTER(CH3COMM,vc); */
@@ -227,6 +230,56 @@ static inline int send_decr_at_cnt_msg(int dst, MPID_Win * win_ptr)
     /* --END ERROR HANDLING-- */
 }
 
+
+
+/* enqueue an unsatisfied origin in passive target at target side. */
+static inline int enqueue_lock_origin(MPID_Win *win_ptr, MPIDI_CH3_Pkt_t *pkt)
+{
+    MPIDI_Win_lock_queue *new_ptr = NULL;
+    int mpi_errno = MPI_SUCCESS;
+
+    new_ptr = (MPIDI_Win_lock_queue *) MPIU_Malloc(sizeof(MPIDI_Win_lock_queue));
+    if (!new_ptr) {
+        MPIU_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s",
+                             "MPIDI_Win_lock_queue");
+    }
+
+    new_ptr->next = NULL;
+    new_ptr->pkt = (*pkt);
+    MPL_LL_APPEND(win_ptr->lock_queue, win_ptr->lock_queue_tail, new_ptr);
+
+ fn_exit:
+    return mpi_errno;
+ fn_fail:
+    goto fn_exit;
+}
+
+
+static inline int set_lock_sync_counter(MPID_Win *win_ptr, int target_rank)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    if (win_ptr->outstanding_locks > 0) {
+        win_ptr->outstanding_locks--;
+        MPIU_Assert(win_ptr->outstanding_locks >= 0);
+    }
+    else {
+        MPIDI_RMA_Target_t *t = NULL;
+        mpi_errno = MPIDI_CH3I_Win_find_target(win_ptr, target_rank, &t);
+        if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
+        MPIU_Assert(t != NULL);
+
+        t->outstanding_lock--;
+        MPIU_Assert(t->outstanding_lock == 0);
+    }
+
+ fn_exit:
+    return mpi_errno;
+ fn_fail:
+    goto fn_exit;
+}
+
+
 #undef FUNCNAME
 #define FUNCNAME acquire_local_lock
 #undef FCNAME
@@ -237,21 +290,21 @@ static inline int acquire_local_lock(MPID_Win * win_ptr, int lock_type)
     MPIDI_STATE_DECL(MPID_STATE_ACQUIRE_LOCAL_LOCK);
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_ACQUIRE_LOCAL_LOCK);
 
-    /* poke the progress engine until the local lock is granted */
-    if (MPIDI_CH3I_Try_acquire_win_lock(win_ptr, lock_type) == 0) {
-        MPID_Progress_state progress_state;
+    if (MPIDI_CH3I_Try_acquire_win_lock(win_ptr, lock_type) == 1) {
+        mpi_errno = set_lock_sync_counter(win_ptr, win_ptr->comm_ptr->rank);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    }
+    else {
+        /* Queue the lock information. */
+        MPIDI_CH3_Pkt_t pkt;
+        MPIDI_CH3_Pkt_lock_t *lock_pkt = &pkt.lock;
 
-        MPID_Progress_start(&progress_state);
-        while (MPIDI_CH3I_Try_acquire_win_lock(win_ptr, lock_type) == 0) {
-            mpi_errno = MPID_Progress_wait(&progress_state);
-            /* --BEGIN ERROR HANDLING-- */
-            if (mpi_errno != MPI_SUCCESS) {
-                MPID_Progress_end(&progress_state);
-                MPIU_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**winnoprogress");
-            }
-            /* --END ERROR HANDLING-- */
-        }
-        MPID_Progress_end(&progress_state);
+        MPIDI_Pkt_init(lock_pkt, MPIDI_CH3_PKT_LOCK);
+        lock_pkt->lock_type = lock_type;
+        lock_pkt->origin_rank = win_ptr->comm_ptr->rank;
+
+        mpi_errno = enqueue_lock_origin(win_ptr, &pkt);
+        if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
     }
 
     win_ptr->targets[win_ptr->comm_ptr->rank].remote_lock_state = MPIDI_CH3_WIN_LOCK_GRANTED;
@@ -408,6 +461,41 @@ static inline int do_accumulate_op(MPID_Request *rreq)
  fn_fail:
     goto fn_exit;
 }
+
+
+static inline int check_piggyback_lock(MPID_Win *win_ptr, MPIDI_CH3_Pkt_t *pkt, int *acquire_lock_fail) {
+    int lock_type;
+    MPIDI_CH3_Pkt_flags_t flags;
+    int mpi_errno = MPI_SUCCESS;
+
+    (*acquire_lock_fail) = 0;
+
+    MPIDI_CH3_PKT_RMA_GET_FLAGS((*pkt), flags, mpi_errno);
+    MPIDI_CH3_PKT_RMA_GET_LOCK_TYPE((*pkt), lock_type, mpi_errno);
+
+    if (flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK) {
+        if (MPIDI_CH3I_Try_acquire_win_lock(win_ptr, lock_type) == 0) {
+
+            /* cannot acquire the lock, queue up this operation. */
+            mpi_errno = enqueue_lock_origin(win_ptr, pkt);
+            if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
+
+            (*acquire_lock_fail) = 1;
+        }
+        else {
+            /* unset LOCK flag */
+            MPIDI_CH3_PKT_RMA_UNSET_FLAG((*pkt), MPIDI_CH3_PKT_FLAG_RMA_LOCK, mpi_errno);
+            /* set LOCK_GRANTED flag */
+            MPIDI_CH3_PKT_RMA_SET_FLAG((*pkt), MPIDI_CH3_PKT_FLAG_RMA_LOCK_GRANTED, mpi_errno);
+        }
+    }
+
+ fn_exit:
+    return mpi_errno;
+ fn_fail:
+    goto fn_exit;
+}
+
 
 static inline int wait_progress_engine(void)
 {

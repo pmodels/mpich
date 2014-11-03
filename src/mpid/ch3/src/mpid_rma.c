@@ -323,6 +323,7 @@ static int win_init(MPI_Aint size, int disp_unit, int create_flavor, int model,
     (*win_ptr)->current_lock_type = MPID_LOCK_NONE;
     (*win_ptr)->shared_lock_ref_cnt = 0;
     (*win_ptr)->lock_queue = NULL;
+    (*win_ptr)->lock_queue_tail = NULL;
     (*win_ptr)->epoch_state = MPIDI_EPOCH_NONE;
     (*win_ptr)->epoch_count = 0;
     (*win_ptr)->at_rma_ops_list = NULL;

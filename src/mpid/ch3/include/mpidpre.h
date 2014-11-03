@@ -342,6 +342,7 @@ struct MPIDI_Win_target_state {
                               * (none, shared, exclusive) */             \
     volatile int shared_lock_ref_cnt;                                    \
     struct MPIDI_Win_lock_queue volatile *lock_queue;  /* list of unsatisfied locks */  \
+    struct MPIDI_Win_lock_queue volatile *lock_queue_tail; /* tail of unstaisfied locks. */ \
                                                                          \
     MPI_Aint *sizes;      /* array of sizes of all windows */            \
     struct MPIDI_Win_info_args info_args;                                \
@@ -474,7 +475,6 @@ typedef struct MPIDI_Request {
     MPI_Win     target_win_handle;
     MPI_Win     source_win_handle;
     MPIDI_CH3_Pkt_flags_t flags; /* flags that were included in the original RMA packet header */
-    struct MPIDI_Win_lock_queue *lock_queue_entry; /* for single lock-put-unlock optimization */
     MPI_Request resp_request_handle; /* Handle for get_accumulate response */
 
     MPIDI_REQUEST_SEQNUM
