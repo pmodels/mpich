@@ -12,8 +12,7 @@
 #include "mpid_rma_shm.h"
 
 int MPIDI_CH3I_Issue_rma_op(MPIDI_RMA_Op_t * op_ptr, MPID_Win * win_ptr,
-                            MPIDI_CH3_Pkt_flags_t flags, MPI_Win source_win_handle,
-                            MPI_Win target_win_handle);
+                            MPIDI_CH3_Pkt_flags_t flags);
 
 #undef FUNCNAME
 #define FUNCNAME send_lock_msg

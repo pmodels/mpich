@@ -189,6 +189,9 @@ MPI_TYPECLASS_INTEGER, or MPI_TYPECLASS_COMPLEX
 **memcpyalias:memcpy arguments alias each other
 **memcpyalias %p %p %L:memcpy arguments alias each other, dst=%p src=%p len=%L
 
+**invalidpkt: Invalid packet type
+**invalidpkt %d: Invalid packet type (%d)
+
 **rmatypenotatomic: Datatype not permitted for atomic operations
 **rmatypenotatomic %D: Datatype (%D) not permitted for atomic operations
 **winflavor: Window flavor is not compatible with the given operation

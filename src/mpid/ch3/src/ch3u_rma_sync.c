@@ -367,7 +367,6 @@ int MPIDI_Win_fence(int assert, MPID_Win * win_ptr)
     MPIDI_RMA_Op_t *curr_ptr;
     MPIDI_RMA_Ops_list_t *ops_list;
     MPID_Comm *comm_ptr;
-    MPI_Win source_win_handle, target_win_handle;
     MPID_Progress_state progress_state;
     int errflag = FALSE;
     MPIU_CHKLMEM_DECL(3);
@@ -487,11 +486,7 @@ int MPIDI_Win_fence(int assert, MPID_Win * win_ptr)
                 flags = MPIDI_CH3_PKT_FLAG_RMA_AT_COMPLETE;
             }
 
-            source_win_handle = win_ptr->handle;
-            target_win_handle = win_ptr->all_win_handles[curr_ptr->target_rank];
-
-            mpi_errno = MPIDI_CH3I_Issue_rma_op(curr_ptr, win_ptr, flags,
-                                                source_win_handle, target_win_handle);
+            mpi_errno = MPIDI_CH3I_Issue_rma_op(curr_ptr, win_ptr, flags);
             if (mpi_errno)
                 MPIU_ERR_POP(mpi_errno);
 
@@ -933,7 +928,6 @@ int MPIDI_Win_complete(MPID_Win * win_ptr)
     MPIDI_RMA_Op_t *curr_ptr;
     MPIDI_RMA_Ops_list_t *ops_list;
     MPID_Comm *comm_ptr;
-    MPI_Win source_win_handle, target_win_handle;
     int start_grp_size, *ranks_in_win_grp, rank;
     int nRequest = 0;
     int nRequestNew = 0;
@@ -1024,11 +1018,7 @@ int MPIDI_Win_complete(MPID_Win * win_ptr)
             flags = MPIDI_CH3_PKT_FLAG_RMA_AT_COMPLETE;
         }
 
-        source_win_handle = win_ptr->handle;
-        target_win_handle = win_ptr->all_win_handles[curr_ptr->target_rank];
-
-        mpi_errno = MPIDI_CH3I_Issue_rma_op(curr_ptr, win_ptr, flags,
-                                            source_win_handle, target_win_handle);
+        mpi_errno = MPIDI_CH3I_Issue_rma_op(curr_ptr, win_ptr, flags);
         if (mpi_errno)
             MPIU_ERR_POP(mpi_errno);
 
@@ -1410,8 +1400,8 @@ int MPIDI_Win_unlock(int dest, MPID_Win * win_ptr)
     if (MPIR_CVAR_CH3_RMA_MERGE_LOCK_OP_UNLOCK &&
         win_ptr->targets[dest].remote_lock_state == MPIDI_CH3_WIN_LOCK_CALLED &&
         rma_op && rma_op->next == NULL /* There is only one op */  &&
-        rma_op->type != MPIDI_RMA_COMPARE_AND_SWAP &&
-        rma_op->type != MPIDI_RMA_FETCH_AND_OP && rma_op->type != MPIDI_RMA_GET_ACCUMULATE) {
+        rma_op->pkt.type != MPIDI_CH3_PKT_CAS &&
+        rma_op->pkt.type != MPIDI_CH3_PKT_FOP && rma_op->pkt.type != MPIDI_CH3_PKT_GET_ACCUM) {
         /* Single put, get, or accumulate between the lock and unlock. If it
          * is of small size and predefined datatype at the target, we
          * do an optimization where the lock and the RMA operation are
@@ -1420,18 +1410,20 @@ int MPIDI_Win_unlock(int dest, MPID_Win * win_ptr)
         MPI_Aint type_size;
         MPIDI_VC_t *vc;
         MPIDI_RMA_Op_t *curr_op = rma_op;
+        MPI_Datatype target_datatype;
 
         MPIDI_Comm_get_vc_set_active(win_ptr->comm_ptr, dest, &vc);
 
         MPID_Datatype_get_size_macro(curr_op->origin_datatype, type_size);
 
         /* msg_sz typically = 65480 */
-        if (MPIR_DATATYPE_IS_PREDEFINED(curr_op->target_datatype) &&
+        MPIDI_CH3_PKT_RMA_GET_TARGET_DATATYPE(curr_op->pkt, target_datatype, mpi_errno);
+        if (MPIR_DATATYPE_IS_PREDEFINED(target_datatype) &&
             (type_size * curr_op->origin_count <= vc->eager_max_msg_sz)) {
             single_op_opt = 1;
             /* Set the lock granted flag to 1 */
             win_ptr->targets[dest].remote_lock_state = MPIDI_CH3_WIN_LOCK_GRANTED;
-            if (curr_op->type == MPIDI_RMA_GET) {
+            if (curr_op->pkt.type == MPIDI_CH3_PKT_GET) {
                 mpi_errno = send_lock_get(win_ptr, dest);
                 wait_for_rma_done_pkt = 0;
             }
@@ -1912,7 +1904,6 @@ static int do_passive_target_rma(MPID_Win * win_ptr, int target_rank,
 {
     int mpi_errno = MPI_SUCCESS, nops;
     MPIDI_RMA_Op_t *curr_ptr;
-    MPI_Win source_win_handle = MPI_WIN_NULL, target_win_handle = MPI_WIN_NULL;
     int nRequest = 0, nRequestNew = 0;
     MPIDI_STATE_DECL(MPID_STATE_DO_PASSIVE_TARGET_RMA);
 
@@ -1935,9 +1926,9 @@ static int do_passive_target_rma(MPID_Win * win_ptr, int target_rank,
         /* Check if we can piggyback the RMA done acknowlegdement on the last
          * operation in the epoch. */
 
-        if (tail->type == MPIDI_RMA_GET ||
-            tail->type == MPIDI_RMA_COMPARE_AND_SWAP ||
-            tail->type == MPIDI_RMA_FETCH_AND_OP || tail->type == MPIDI_RMA_GET_ACCUMULATE) {
+        if (tail->pkt.type == MPIDI_CH3_PKT_GET ||
+            tail->pkt.type == MPIDI_CH3_PKT_CAS ||
+            tail->pkt.type == MPIDI_CH3_PKT_FOP || tail->pkt.type == MPIDI_CH3_PKT_GET_ACCUM) {
             /* last operation sends a response message. no need to wait
              * for an additional rma done pkt */
             *wait_for_rma_done_pkt = 0;
@@ -1952,7 +1943,7 @@ static int do_passive_target_rma(MPID_Win * win_ptr, int target_rank,
             curr_ptr = MPIDI_CH3I_RMA_Ops_head(&win_ptr->targets[target_rank].rma_ops_list);
 
             while (curr_ptr != NULL) {
-                if (curr_ptr->type == MPIDI_RMA_GET) {
+                if (curr_ptr->pkt.type == MPIDI_CH3_PKT_GET) {
                     /* Found a GET, move it to the end */
                     *wait_for_rma_done_pkt = 0;
 
@@ -1978,10 +1969,6 @@ static int do_passive_target_rma(MPID_Win * win_ptr, int target_rank,
     }
 
     curr_ptr = MPIDI_CH3I_RMA_Ops_head(&win_ptr->targets[target_rank].rma_ops_list);
-
-    if (curr_ptr != NULL) {
-        target_win_handle = win_ptr->all_win_handles[curr_ptr->target_rank];
-    }
 
     while (curr_ptr != NULL) {
         MPIDI_CH3_Pkt_flags_t flags = MPIDI_CH3_PKT_FLAG_NONE;
@@ -2028,12 +2015,9 @@ static int do_passive_target_rma(MPID_Win * win_ptr, int target_rank,
             if (*wait_for_rma_done_pkt) {
                 flags |= MPIDI_CH3_PKT_FLAG_RMA_REQ_ACK;
             }
-
-            source_win_handle = win_ptr->handle;
         }
 
-        mpi_errno = MPIDI_CH3I_Issue_rma_op(curr_ptr, win_ptr, flags, source_win_handle,
-                                            target_win_handle);
+        mpi_errno = MPIDI_CH3I_Issue_rma_op(curr_ptr, win_ptr, flags);
         if (mpi_errno)
             MPIU_ERR_POP(mpi_errno);
 
@@ -2185,6 +2169,9 @@ static int send_lock_put_or_acc(MPID_Win * win_ptr, int target_rank)
     MPIDI_CH3_Pkt_t upkt;
     MPIDI_CH3_Pkt_lock_put_unlock_t *lock_put_unlock_pkt = &upkt.lock_put_unlock;
     MPIDI_CH3_Pkt_lock_accum_unlock_t *lock_accum_unlock_pkt = &upkt.lock_accum_unlock;
+    MPIDI_CH3_Pkt_put_t *put_pkt;
+    MPIDI_CH3_Pkt_accum_t *accum_pkt;
+    MPIDI_CH3_Pkt_accum_immed_t *accumi_pkt;
 
     MPIDI_STATE_DECL(MPID_STATE_SEND_LOCK_PUT_OR_ACC);
 
@@ -2194,7 +2181,9 @@ static int send_lock_put_or_acc(MPID_Win * win_ptr, int target_rank)
 
     rma_op = MPIDI_CH3I_RMA_Ops_head(&win_ptr->targets[target_rank].rma_ops_list);
 
-    if (rma_op->type == MPIDI_RMA_PUT) {
+    if (rma_op->pkt.type == MPIDI_CH3_PKT_PUT) {
+        put_pkt = &rma_op->pkt.put;
+
         MPIDI_Pkt_init(lock_put_unlock_pkt, MPIDI_CH3_PKT_LOCK_PUT_UNLOCK);
         lock_put_unlock_pkt->flags = MPIDI_CH3_PKT_FLAG_RMA_LOCK |
             MPIDI_CH3_PKT_FLAG_RMA_UNLOCK | MPIDI_CH3_PKT_FLAG_RMA_REQ_ACK;
@@ -2203,18 +2192,17 @@ static int send_lock_put_or_acc(MPID_Win * win_ptr, int target_rank)
         lock_put_unlock_pkt->lock_type = lock_type;
         lock_put_unlock_pkt->origin_rank = win_ptr->comm_ptr->rank;
 
-        lock_put_unlock_pkt->addr =
-            (char *) win_ptr->base_addrs[rma_op->target_rank] +
-            win_ptr->disp_units[rma_op->target_rank] * rma_op->target_disp;
-
-        lock_put_unlock_pkt->count = rma_op->target_count;
-        lock_put_unlock_pkt->datatype = rma_op->target_datatype;
+        lock_put_unlock_pkt->addr = put_pkt->addr;
+        lock_put_unlock_pkt->count = put_pkt->count;
+        lock_put_unlock_pkt->datatype = put_pkt->datatype;
 
         iov[0].MPID_IOV_BUF = (MPID_IOV_BUF_CAST) lock_put_unlock_pkt;
         iov[0].MPID_IOV_LEN = sizeof(*lock_put_unlock_pkt);
     }
 
-    else if (rma_op->type == MPIDI_RMA_ACCUMULATE) {
+    else if (rma_op->pkt.type == MPIDI_CH3_PKT_ACCUMULATE) {
+        accum_pkt = &rma_op->pkt.accum;
+
         MPIDI_Pkt_init(lock_accum_unlock_pkt, MPIDI_CH3_PKT_LOCK_ACCUM_UNLOCK);
         lock_accum_unlock_pkt->flags = MPIDI_CH3_PKT_FLAG_RMA_LOCK |
             MPIDI_CH3_PKT_FLAG_RMA_UNLOCK | MPIDI_CH3_PKT_FLAG_RMA_REQ_ACK;
@@ -2223,18 +2211,17 @@ static int send_lock_put_or_acc(MPID_Win * win_ptr, int target_rank)
         lock_accum_unlock_pkt->lock_type = lock_type;
         lock_accum_unlock_pkt->origin_rank = win_ptr->comm_ptr->rank;
 
-        lock_accum_unlock_pkt->addr =
-            (char *) win_ptr->base_addrs[rma_op->target_rank] +
-            win_ptr->disp_units[rma_op->target_rank] * rma_op->target_disp;
-
-        lock_accum_unlock_pkt->count = rma_op->target_count;
-        lock_accum_unlock_pkt->datatype = rma_op->target_datatype;
-        lock_accum_unlock_pkt->op = rma_op->op;
+        lock_accum_unlock_pkt->addr = accum_pkt->addr;
+        lock_accum_unlock_pkt->count = accum_pkt->count;
+        lock_accum_unlock_pkt->datatype = accum_pkt->datatype;
+        lock_accum_unlock_pkt->op = accum_pkt->op;
 
         iov[0].MPID_IOV_BUF = (MPID_IOV_BUF_CAST) lock_accum_unlock_pkt;
         iov[0].MPID_IOV_LEN = sizeof(*lock_accum_unlock_pkt);
     }
-    else if (rma_op->type == MPIDI_RMA_ACC_CONTIG) {
+    else if (rma_op->pkt.type == MPIDI_CH3_PKT_ACCUM_IMMED) {
+        accumi_pkt = &rma_op->pkt.accum_immed;
+
         MPIDI_Pkt_init(lock_accum_unlock_pkt, MPIDI_CH3_PKT_LOCK_ACCUM_UNLOCK);
         lock_accum_unlock_pkt->flags = MPIDI_CH3_PKT_FLAG_RMA_LOCK |
             MPIDI_CH3_PKT_FLAG_RMA_UNLOCK | MPIDI_CH3_PKT_FLAG_RMA_REQ_ACK;
@@ -2243,13 +2230,10 @@ static int send_lock_put_or_acc(MPID_Win * win_ptr, int target_rank)
         lock_accum_unlock_pkt->lock_type = lock_type;
         lock_accum_unlock_pkt->origin_rank = win_ptr->comm_ptr->rank;
 
-        lock_accum_unlock_pkt->addr =
-            (char *) win_ptr->base_addrs[rma_op->target_rank] +
-            win_ptr->disp_units[rma_op->target_rank] * rma_op->target_disp;
-
-        lock_accum_unlock_pkt->count = rma_op->target_count;
-        lock_accum_unlock_pkt->datatype = rma_op->target_datatype;
-        lock_accum_unlock_pkt->op = rma_op->op;
+        lock_accum_unlock_pkt->addr = accumi_pkt->addr;
+        lock_accum_unlock_pkt->count = accumi_pkt->count;
+        lock_accum_unlock_pkt->datatype = accumi_pkt->datatype;
+        lock_accum_unlock_pkt->op = accumi_pkt->op;
 
         iov[0].MPID_IOV_BUF = (MPID_IOV_BUF_CAST) lock_accum_unlock_pkt;
         iov[0].MPID_IOV_LEN = sizeof(*lock_accum_unlock_pkt);
@@ -2375,6 +2359,7 @@ static int send_lock_get(MPID_Win * win_ptr, int target_rank)
     MPID_Datatype *dtp;
     MPIDI_CH3_Pkt_t upkt;
     MPIDI_CH3_Pkt_lock_get_unlock_t *lock_get_unlock_pkt = &upkt.lock_get_unlock;
+    MPIDI_CH3_Pkt_get_t *get_pkt;
 
     MPIDI_STATE_DECL(MPID_STATE_SEND_LOCK_GET);
 
@@ -2408,6 +2393,8 @@ static int send_lock_get(MPID_Win * win_ptr, int target_rank)
          * request is freed. */
     }
 
+    get_pkt = &rma_op->pkt.get;
+
     MPIDI_Pkt_init(lock_get_unlock_pkt, MPIDI_CH3_PKT_LOCK_GET_UNLOCK);
     lock_get_unlock_pkt->flags = MPIDI_CH3_PKT_FLAG_RMA_LOCK | MPIDI_CH3_PKT_FLAG_RMA_UNLOCK;   /* FIXME | MPIDI_CH3_PKT_FLAG_RMA_REQ_ACK; */
     lock_get_unlock_pkt->target_win_handle = win_ptr->all_win_handles[rma_op->target_rank];
@@ -2415,12 +2402,9 @@ static int send_lock_get(MPID_Win * win_ptr, int target_rank)
     lock_get_unlock_pkt->lock_type = lock_type;
     lock_get_unlock_pkt->origin_rank = win_ptr->comm_ptr->rank;
 
-    lock_get_unlock_pkt->addr =
-        (char *) win_ptr->base_addrs[rma_op->target_rank] +
-        win_ptr->disp_units[rma_op->target_rank] * rma_op->target_disp;
-
-    lock_get_unlock_pkt->count = rma_op->target_count;
-    lock_get_unlock_pkt->datatype = rma_op->target_datatype;
+    lock_get_unlock_pkt->addr = get_pkt->addr;
+    lock_get_unlock_pkt->count = get_pkt->count;
+    lock_get_unlock_pkt->datatype = get_pkt->datatype;
     lock_get_unlock_pkt->request_handle = rreq->handle;
 
     comm_ptr = win_ptr->comm_ptr;

@@ -193,6 +193,43 @@ MPIDI_CH3_PKT_DEFS
 #endif
 /* *INDENT-ON* */
 
+#define MPIDI_CH3_PKT_RMA_GET_TARGET_DATATYPE(pkt_, datatype_, err_)    \
+    {                                                                   \
+        err_ = MPI_SUCCESS;                                             \
+        switch(pkt_.type) {                                             \
+        case (MPIDI_CH3_PKT_PUT):                                       \
+            datatype_ = pkt_.put.datatype;                              \
+            break;                                                      \
+        case (MPIDI_CH3_PKT_GET):                                       \
+            datatype_ = pkt_.get.datatype;                              \
+            break;                                                      \
+        case (MPIDI_CH3_PKT_ACCUMULATE):                                \
+        case (MPIDI_CH3_PKT_GET_ACCUM):                                 \
+            datatype_ = pkt_.accum.datatype;                            \
+            break;                                                      \
+        case (MPIDI_CH3_PKT_CAS):                                       \
+            datatype_ = pkt_.cas.datatype;                              \
+            break;                                                      \
+        case (MPIDI_CH3_PKT_FOP):                                       \
+            datatype_ = pkt_.fop.datatype;                              \
+            break;                                                      \
+        case (MPIDI_CH3_PKT_LOCK_PUT_UNLOCK):                           \
+            datatype_ = pkt_.lock_put_unlock.datatype;                  \
+            break;                                                      \
+        case (MPIDI_CH3_PKT_LOCK_GET_UNLOCK):                           \
+            datatype_ = pkt_.lock_get_unlock.datatype;                  \
+            break;                                                      \
+        case (MPIDI_CH3_PKT_LOCK_ACCUM_UNLOCK):                         \
+            datatype_ = pkt_.lock_accum_unlock.datatype;                \
+            break;                                                      \
+        case (MPIDI_CH3_PKT_ACCUM_IMMED):                               \
+            datatype_ = pkt_.accum_immed.datatype;                      \
+            break;                                                      \
+        default:                                                        \
+            MPIU_ERR_SETANDJUMP1(err_, MPI_ERR_OTHER, "**invalidpkt", "**invalidpkt %d", pkt_.type); \
+        }                                                               \
+    }
+
 typedef struct MPIDI_CH3_Pkt_put {
     MPIDI_CH3_Pkt_type_t type;
     MPIDI_CH3_Pkt_flags_t flags;
@@ -279,6 +316,7 @@ typedef struct MPIDI_CH3_Pkt_cas {
     MPI_Datatype datatype;
     void *addr;
     MPI_Request request_handle;
+    MPI_Win source_win_handle;
     MPI_Win target_win_handle;  /* Used in the last RMA operation in each
                                  * epoch for decrementing rma op counter in
                                  * active target rma and for unlocking window
@@ -300,6 +338,7 @@ typedef struct MPIDI_CH3_Pkt_fop {
     void *addr;
     MPI_Op op;
     MPI_Request request_handle;
+    MPI_Win source_win_handle;
     MPI_Win target_win_handle;  /* Used in the last RMA operation in each
                                  * epoch for decrementing rma op counter in
                                  * active target rma and for unlocking window

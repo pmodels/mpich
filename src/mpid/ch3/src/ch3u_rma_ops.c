@@ -74,6 +74,7 @@ int MPIDI_Put(const void *origin_addr, int origin_count, MPI_Datatype
     else {
         MPIDI_RMA_Ops_list_t *ops_list = MPIDI_CH3I_RMA_Get_ops_list(win_ptr, target_rank);
         MPIDI_RMA_Op_t *new_ptr = NULL;
+        MPIDI_CH3_Pkt_put_t *put_pkt = NULL;
 
         /* queue it up */
         mpi_errno = MPIDI_CH3I_RMA_Ops_alloc_tail(ops_list, &new_ptr);
@@ -81,18 +82,21 @@ int MPIDI_Put(const void *origin_addr, int origin_count, MPI_Datatype
             MPIU_ERR_POP(mpi_errno);
         }
 
+        put_pkt = &(new_ptr->pkt.put);
+        MPIDI_Pkt_init(put_pkt, MPIDI_CH3_PKT_PUT);
+        put_pkt->addr = (char *) win_ptr->base_addrs[target_rank] +
+            win_ptr->disp_units[target_rank] * target_disp;
+        put_pkt->count = target_count;
+        put_pkt->datatype = target_datatype;
+        put_pkt->dataloop_size = 0;
+        put_pkt->target_win_handle = win_ptr->all_win_handles[target_rank];
+        put_pkt->source_win_handle = win_ptr->handle;
+
         /* FIXME: For contig and very short operations, use a streamlined op */
-        new_ptr->type = MPIDI_RMA_PUT;
-        /* Cast away const'ness for the origin address, as the
-         * MPIDI_RMA_Op_t structure is used for both PUT and GET like
-         * operations */
         new_ptr->origin_addr = (void *) origin_addr;
         new_ptr->origin_count = origin_count;
         new_ptr->origin_datatype = origin_datatype;
         new_ptr->target_rank = target_rank;
-        new_ptr->target_disp = target_disp;
-        new_ptr->target_count = target_count;
-        new_ptr->target_datatype = target_datatype;
 
         /* if source or target datatypes are derived, increment their
          * reference counts */
@@ -181,6 +185,7 @@ int MPIDI_Get(void *origin_addr, int origin_count, MPI_Datatype
     else {
         MPIDI_RMA_Ops_list_t *ops_list = MPIDI_CH3I_RMA_Get_ops_list(win_ptr, target_rank);
         MPIDI_RMA_Op_t *new_ptr = NULL;
+        MPIDI_CH3_Pkt_get_t *get_pkt = NULL;
 
         /* queue it up */
         mpi_errno = MPIDI_CH3I_RMA_Ops_alloc_tail(ops_list, &new_ptr);
@@ -188,15 +193,21 @@ int MPIDI_Get(void *origin_addr, int origin_count, MPI_Datatype
             MPIU_ERR_POP(mpi_errno);
         }
 
+        get_pkt = &(new_ptr->pkt.get);
+        MPIDI_Pkt_init(get_pkt, MPIDI_CH3_PKT_GET);
+        get_pkt->addr = (char *) win_ptr->base_addrs[target_rank] +
+            win_ptr->disp_units[target_rank] * target_disp;
+        get_pkt->count = target_count;
+        get_pkt->datatype = target_datatype;
+        get_pkt->dataloop_size = 0;
+        get_pkt->target_win_handle = win_ptr->all_win_handles[target_rank];
+        get_pkt->source_win_handle = win_ptr->handle;
+
         /* FIXME: For contig and very short operations, use a streamlined op */
-        new_ptr->type = MPIDI_RMA_GET;
         new_ptr->origin_addr = origin_addr;
         new_ptr->origin_count = origin_count;
         new_ptr->origin_datatype = origin_datatype;
         new_ptr->target_rank = target_rank;
-        new_ptr->target_disp = target_disp;
-        new_ptr->target_count = target_count;
-        new_ptr->target_datatype = target_datatype;
 
         /* if source or target datatypes are derived, increment their
          * reference counts */
@@ -286,6 +297,7 @@ int MPIDI_Accumulate(const void *origin_addr, int origin_count, MPI_Datatype
     else {
         MPIDI_RMA_Ops_list_t *ops_list = MPIDI_CH3I_RMA_Get_ops_list(win_ptr, target_rank);
         MPIDI_RMA_Op_t *new_ptr = NULL;
+        MPIDI_CH3_Pkt_accum_t *accum_pkt = NULL;
 
         /* queue it up */
         mpi_errno = MPIDI_CH3I_RMA_Ops_alloc_tail(ops_list, &new_ptr);
@@ -296,32 +308,48 @@ int MPIDI_Accumulate(const void *origin_addr, int origin_count, MPI_Datatype
         /* If predefined and contiguous, use a simplified element */
         if (MPIR_DATATYPE_IS_PREDEFINED(origin_datatype) &&
             MPIR_DATATYPE_IS_PREDEFINED(target_datatype) && enableShortACC) {
-            new_ptr->type = MPIDI_RMA_ACC_CONTIG;
-            /* Only the information needed for the contig/predefined acc */
-            /* Cast away const'ness for origin_address as
-             * MPIDI_RMA_Op_t contain both PUT and GET like ops */
-            new_ptr->origin_addr = (void *) origin_addr;
-            new_ptr->origin_count = origin_count;
-            new_ptr->origin_datatype = origin_datatype;
-            new_ptr->target_rank = target_rank;
-            new_ptr->target_disp = target_disp;
-            new_ptr->target_count = target_count;
-            new_ptr->target_datatype = target_datatype;
-            new_ptr->op = op;
-            goto fn_exit;
+            MPI_Aint origin_type_size;
+            size_t len;
+
+            MPID_Datatype_get_size_macro(origin_datatype, origin_type_size);
+            MPIU_Assign_trunc(len, origin_count * origin_type_size, size_t);
+            if (MPIR_CVAR_CH3_RMA_ACC_IMMED && len <= MPIDI_RMA_IMMED_INTS * sizeof(int)) {
+                MPIDI_CH3_Pkt_accum_immed_t *accumi_pkt;
+
+                accumi_pkt = &(new_ptr->pkt.accum_immed);
+                MPIDI_Pkt_init(accumi_pkt, MPIDI_CH3_PKT_ACCUM_IMMED);
+                accumi_pkt->addr = (char *) win_ptr->base_addrs[target_rank] +
+                    win_ptr->disp_units[target_rank] * target_disp;
+                accumi_pkt->count = target_count;
+                accumi_pkt->datatype = target_datatype;
+                accumi_pkt->op = op;
+                accumi_pkt->target_win_handle = win_ptr->all_win_handles[target_rank];
+                accumi_pkt->source_win_handle = win_ptr->handle;
+
+                new_ptr->origin_addr = (void *) origin_addr;
+                new_ptr->origin_count = origin_count;
+                new_ptr->origin_datatype = origin_datatype;
+                new_ptr->target_rank = target_rank;
+                goto fn_exit;
+            }
         }
 
-        new_ptr->type = MPIDI_RMA_ACCUMULATE;
-        /* Cast away const'ness for origin_address as MPIDI_RMA_Op_t
-         * contain both PUT and GET like ops */
+        accum_pkt = &(new_ptr->pkt.accum);
+
+        MPIDI_Pkt_init(accum_pkt, MPIDI_CH3_PKT_ACCUMULATE);
+        accum_pkt->addr = (char *) win_ptr->base_addrs[target_rank] +
+            win_ptr->disp_units[target_rank] * target_disp;
+        accum_pkt->count = target_count;
+        accum_pkt->datatype = target_datatype;
+        accum_pkt->dataloop_size = 0;
+        accum_pkt->op = op;
+        accum_pkt->target_win_handle = win_ptr->all_win_handles[target_rank];
+        accum_pkt->source_win_handle = win_ptr->handle;
+
         new_ptr->origin_addr = (void *) origin_addr;
         new_ptr->origin_count = origin_count;
         new_ptr->origin_datatype = origin_datatype;
         new_ptr->target_rank = target_rank;
-        new_ptr->target_disp = target_disp;
-        new_ptr->target_count = target_count;
-        new_ptr->target_datatype = target_datatype;
-        new_ptr->op = op;
 
         /* if source or target datatypes are derived, increment their
          * reference counts */
@@ -423,20 +451,44 @@ int MPIDI_Get_accumulate(const void *origin_addr, int origin_count,
 
         /* TODO: Can we use the MPIDI_RMA_ACC_CONTIG optimization? */
 
-        new_ptr->type = MPIDI_RMA_GET_ACCUMULATE;
-        /* Cast away const'ness for origin_address as MPIDI_RMA_Op_t
-         * contain both PUT and GET like ops */
-        new_ptr->origin_addr = (void *) origin_addr;
-        new_ptr->origin_count = origin_count;
-        new_ptr->origin_datatype = origin_datatype;
-        new_ptr->result_addr = result_addr;
-        new_ptr->result_count = result_count;
-        new_ptr->result_datatype = result_datatype;
-        new_ptr->target_rank = target_rank;
-        new_ptr->target_disp = target_disp;
-        new_ptr->target_count = target_count;
-        new_ptr->target_datatype = target_datatype;
-        new_ptr->op = op;
+        if (op == MPI_NO_OP) {
+            /* Convert GAcc to a Get */
+            MPIDI_CH3_Pkt_get_t *get_pkt = &(new_ptr->pkt.get);
+            MPIDI_Pkt_init(get_pkt, MPIDI_CH3_PKT_GET);
+            get_pkt->addr = (char *) win_ptr->base_addrs[target_rank] +
+                win_ptr->disp_units[target_rank] * target_disp;
+            get_pkt->count = target_count;
+            get_pkt->datatype = target_datatype;
+            get_pkt->dataloop_size = 0;
+            get_pkt->target_win_handle = win_ptr->all_win_handles[target_rank];
+            get_pkt->source_win_handle = win_ptr->handle;
+
+            new_ptr->origin_addr = result_addr;
+            new_ptr->origin_count = result_count;
+            new_ptr->origin_datatype = result_datatype;
+            new_ptr->target_rank = target_rank;
+        }
+
+        else {
+            MPIDI_CH3_Pkt_accum_t *accum_pkt = &(new_ptr->pkt.accum);
+            MPIDI_Pkt_init(accum_pkt, MPIDI_CH3_PKT_GET_ACCUM);
+            accum_pkt->addr = (char *) win_ptr->base_addrs[target_rank] +
+                win_ptr->disp_units[target_rank] * target_disp;
+            accum_pkt->count = target_count;
+            accum_pkt->datatype = target_datatype;
+            accum_pkt->dataloop_size = 0;
+            accum_pkt->op = op;
+            accum_pkt->target_win_handle = win_ptr->all_win_handles[target_rank];
+            accum_pkt->source_win_handle = win_ptr->handle;
+
+            new_ptr->origin_addr = (void *) origin_addr;
+            new_ptr->origin_count = origin_count;
+            new_ptr->origin_datatype = origin_datatype;
+            new_ptr->result_addr = result_addr;
+            new_ptr->result_count = result_count;
+            new_ptr->result_datatype = result_datatype;
+            new_ptr->target_rank = target_rank;
+        }
 
         /* if source or target datatypes are derived, increment their
          * reference counts */
@@ -524,6 +576,7 @@ int MPIDI_Compare_and_swap(const void *origin_addr, const void *compare_addr,
     else {
         MPIDI_RMA_Ops_list_t *ops_list = MPIDI_CH3I_RMA_Get_ops_list(win_ptr, target_rank);
         MPIDI_RMA_Op_t *new_ptr = NULL;
+        MPIDI_CH3_Pkt_cas_t *cas_pkt = NULL;
 
         /* Append this operation to the RMA ops queue */
         mpi_errno = MPIDI_CH3I_RMA_Ops_alloc_tail(ops_list, &new_ptr);
@@ -531,20 +584,22 @@ int MPIDI_Compare_and_swap(const void *origin_addr, const void *compare_addr,
             MPIU_ERR_POP(mpi_errno);
         }
 
-        new_ptr->type = MPIDI_RMA_COMPARE_AND_SWAP;
+        cas_pkt = &(new_ptr->pkt.cas);
+        MPIDI_Pkt_init(cas_pkt, MPIDI_CH3_PKT_CAS);
+        cas_pkt->addr = (char *) win_ptr->base_addrs[target_rank] +
+            win_ptr->disp_units[target_rank] * target_disp;
+        cas_pkt->datatype = datatype;
+        cas_pkt->target_win_handle = win_ptr->all_win_handles[target_rank];
+        cas_pkt->source_win_handle = win_ptr->handle;
+
         new_ptr->origin_addr = (void *) origin_addr;
         new_ptr->origin_count = 1;
         new_ptr->origin_datatype = datatype;
-        new_ptr->target_rank = target_rank;
-        new_ptr->target_disp = target_disp;
-        new_ptr->target_count = 1;
-        new_ptr->target_datatype = datatype;
         new_ptr->result_addr = result_addr;
-        new_ptr->result_count = 1;
         new_ptr->result_datatype = datatype;
         new_ptr->compare_addr = (void *) compare_addr;
-        new_ptr->compare_count = 1;
         new_ptr->compare_datatype = datatype;
+        new_ptr->target_rank = target_rank;
     }
 
   fn_exit:
@@ -615,6 +670,7 @@ int MPIDI_Fetch_and_op(const void *origin_addr, void *result_addr,
     else {
         MPIDI_RMA_Ops_list_t *ops_list = MPIDI_CH3I_RMA_Get_ops_list(win_ptr, target_rank);
         MPIDI_RMA_Op_t *new_ptr = NULL;
+        MPIDI_CH3_Pkt_fop_t *fop_pkt = NULL;
 
         /* Append this operation to the RMA ops queue */
         mpi_errno = MPIDI_CH3I_RMA_Ops_alloc_tail(ops_list, &new_ptr);
@@ -622,18 +678,21 @@ int MPIDI_Fetch_and_op(const void *origin_addr, void *result_addr,
             MPIU_ERR_POP(mpi_errno);
         }
 
-        new_ptr->type = MPIDI_RMA_FETCH_AND_OP;
+        fop_pkt = &(new_ptr->pkt.fop);
+        MPIDI_Pkt_init(fop_pkt, MPIDI_CH3_PKT_FOP);
+        fop_pkt->addr = (char *) win_ptr->base_addrs[target_rank] +
+            win_ptr->disp_units[target_rank] * target_disp;
+        fop_pkt->datatype = datatype;
+        fop_pkt->op = op;
+        fop_pkt->source_win_handle = win_ptr->handle;
+        fop_pkt->target_win_handle = win_ptr->all_win_handles[target_rank];
+
         new_ptr->origin_addr = (void *) origin_addr;
         new_ptr->origin_count = 1;
         new_ptr->origin_datatype = datatype;
-        new_ptr->target_rank = target_rank;
-        new_ptr->target_disp = target_disp;
-        new_ptr->target_count = 1;
-        new_ptr->target_datatype = datatype;
         new_ptr->result_addr = result_addr;
-        new_ptr->result_count = 1;
         new_ptr->result_datatype = datatype;
-        new_ptr->op = op;
+        new_ptr->target_rank = target_rank;
     }
 
   fn_exit:
