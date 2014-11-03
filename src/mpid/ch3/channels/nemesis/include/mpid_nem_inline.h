@@ -16,6 +16,8 @@
 
 extern int MPID_nem_lmt_shm_pending;
 extern MPID_nem_cell_ptr_t MPID_nem_prefetched_cell;
+extern int num_active_issued_win;
+extern int num_passive_win;
 
 static inline int MPID_nem_mpich_send_header (void* buf, int size, MPIDI_VC_t *vc, int *again);
 static inline int MPID_nem_mpich_sendv (MPID_IOV **iov, int *n_iov, MPIDI_VC_t *vc, int *again);
@@ -39,7 +41,8 @@ static inline void MPID_nem_mpich_send_seg (MPID_Segment *segment, MPIDI_msg_sz_
     (!MPID_nem_local_lmt_pending &&             \
      !MPIDI_CH3I_shm_active_send &&             \
      !MPIDI_CH3I_Sendq_head(MPIDI_CH3I_shm_sendq) &&       \
-     !MPIDU_Sched_are_pending())
+     !MPIDU_Sched_are_pending() &&              \
+     !num_active_issued_win && !num_passive_win)
 
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_mpich_send_header

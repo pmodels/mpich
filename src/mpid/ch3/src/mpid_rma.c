@@ -30,6 +30,8 @@ cvars:
 MPIU_THREADSAFE_INIT_DECL(initRMAoptions);
 
 MPIDI_RMA_Win_list_t *MPIDI_RMA_Win_list = NULL, *MPIDI_RMA_Win_list_tail = NULL;
+int num_active_issued_win = 0;
+int num_passive_win = 0;
 
 static int win_init(MPI_Aint size, int disp_unit, int create_flavor, int model,
                     MPID_Comm * comm_ptr, MPID_Win ** win_ptr);
@@ -304,7 +306,6 @@ static int win_init(MPI_Aint size, int disp_unit, int create_flavor, int model,
 
     MPIU_Object_set_ref(*win_ptr, 1);
 
-    (*win_ptr)->fence_issued = 0;
     /* (*win_ptr)->errhandler is set by upper level; */
     /* (*win_ptr)->base is set by caller; */
     (*win_ptr)->size = size;
@@ -312,8 +313,6 @@ static int win_init(MPI_Aint size, int disp_unit, int create_flavor, int model,
     (*win_ptr)->create_flavor = create_flavor;
     (*win_ptr)->model = model;
     (*win_ptr)->attributes = NULL;
-    (*win_ptr)->start_group_ptr = NULL;
-    (*win_ptr)->start_assert = 0;
     (*win_ptr)->comm_ptr = win_comm_ptr;
 
     (*win_ptr)->at_completion_counter = 0;
@@ -334,6 +333,14 @@ static int win_init(MPI_Aint size, int disp_unit, int create_flavor, int model,
     (*win_ptr)->non_empty_slots = 0;
     (*win_ptr)->posted_ops_cnt = 0;
     (*win_ptr)->active_req_cnt = 0;
+    (*win_ptr)->fence_sync_req = MPI_REQUEST_NULL;
+    (*win_ptr)->start_req = NULL;
+    (*win_ptr)->start_ranks_in_win_grp = NULL;
+    (*win_ptr)->start_grp_size = 0;
+    (*win_ptr)->lock_all_assert = 0;
+    (*win_ptr)->lock_epoch_count = 0;
+    (*win_ptr)->outstanding_locks = 0;
+    (*win_ptr)->outstanding_unlocks = 0;
 
     /* Initialize the passive target lock state */
     MPIU_CHKPMEM_MALLOC((*win_ptr)->targets, struct MPIDI_Win_target_state *,

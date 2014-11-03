@@ -147,6 +147,20 @@ int MPIDI_Win_free(MPID_Win ** win_ptr)
 
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_WIN_FREE);
 
+    /* it is possible that there is a IBARRIER in MPI_WIN_FENCE with
+       MODE_NOPRECEDE not being completed, we let the progress engine
+       to delete its request when it is completed. */
+    if ((*win_ptr)->fence_sync_req != MPI_REQUEST_NULL) {
+        MPID_Request *req_ptr;
+        MPID_Request_get_ptr((*win_ptr)->fence_sync_req, req_ptr);
+        MPID_Request_release(req_ptr);
+        (*win_ptr)->fence_sync_req = MPI_REQUEST_NULL;
+        (*win_ptr)->states.access_state = MPIDI_RMA_NONE;
+    }
+
+    if ((*win_ptr)->states.access_state == MPIDI_RMA_FENCE_GRANTED)
+        (*win_ptr)->states.access_state = MPIDI_RMA_NONE;
+
     MPIU_ERR_CHKANDJUMP((*win_ptr)->states.access_state != MPIDI_RMA_NONE ||
                         (*win_ptr)->states.exposure_state != MPIDI_RMA_NONE,
                         mpi_errno, MPI_ERR_RMA_SYNC, "**rmasync");

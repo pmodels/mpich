@@ -96,9 +96,11 @@ static int MPIDI_CH3i_Progress_test(void)
 #endif /* HAVE_LIBHCOLL */
 
     /* make progress on RMA */
+    if (num_active_issued_win > 0 || num_passive_win > 0) {
     mpi_errno = MPIDI_CH3I_RMA_Make_progress_global(&made_progress);
     if (mpi_errno)
         MPIU_ERR_POP(mpi_errno);
+    }
 
     mpi_errno = MPIDU_Sock_wait(MPIDI_CH3I_sock_set, 0, &event);
 
@@ -209,12 +211,14 @@ static int MPIDI_CH3i_Progress_wait(MPID_Progress_state * progress_state)
 #endif /* HAVE_LIBHCOLL */
 
         /* make progress on RMA */
+        if (num_active_issued_win > 0 || num_passive_win > 0) {
         mpi_errno = MPIDI_CH3I_RMA_Make_progress_global(&made_progress);
         if (mpi_errno)
             MPIU_ERR_POP(mpi_errno);
         if (made_progress) {
             MPIDI_CH3_Progress_signal_completion();
             break;
+        }
         }
 
 #       ifdef MPICH_IS_THREADED

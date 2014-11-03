@@ -353,14 +353,6 @@ struct MPIDI_Win_target_state {
     struct MPIDI_RMA_Op *at_rma_ops_list_tail;                           \
     enum MPIDI_Win_epoch_states epoch_state;                             \
     int epoch_count;                                                     \
-    int fence_issued;   /* Indicates if fence has been called, and if an \
-                           active target fence epoch is possible. This   \
-                           is maintained separately from the epoch state;\
-                           this state must be updated collectively (in   \
-                           fence) to ensure that the fence state across  \
-                           all processes remains consistent. */          \
-    MPID_Group *start_group_ptr; /* group passed in MPI_Win_start */     \
-    int start_assert;   /* assert passed to MPI_Win_start */             \
     int shm_allocated; /* flag: TRUE iff this window has a shared memory \
                           region associated with it */                   \
     struct MPIDI_RMA_Op *op_pool_start; /* start pointer used for freeing */\
@@ -383,6 +375,16 @@ struct MPIDI_Win_target_state {
     int active_req_cnt; /* keep track of number of active requests in    \
                            current epoch, i.e., number of issued but     \
                            incomplete RMA operations. */                 \
+    MPI_Request fence_sync_req;                                          \
+    MPI_Request *start_req;                                              \
+    int *start_ranks_in_win_grp;                                         \
+    int start_grp_size;                                                  \
+    int lock_all_assert;                                                 \
+    int lock_epoch_count; /* number of lock access epoch on this process */ \
+    int outstanding_locks; /* when issuing multiple lock requests in     \
+                            MPI_WIN_LOCK_ALL, this counter keeps track   \
+                            of number of locks not being granted yet. */ \
+    int outstanding_unlocks;                                             \
 
 #ifdef MPIDI_CH3_WIN_DECL
 #define MPID_DEV_WIN_DECL \

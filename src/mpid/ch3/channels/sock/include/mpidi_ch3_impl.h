@@ -10,6 +10,8 @@
 #include "mpidimpl.h"
 #include "ch3usock.h"
 
+extern int num_active_issued_win;
+extern int num_passive_win;
 
 /* This is all socket connection definitions */
 
