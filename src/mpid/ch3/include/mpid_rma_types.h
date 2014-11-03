@@ -95,6 +95,7 @@ typedef struct MPIDI_RMA_Target {
     enum MPIDI_RMA_Lock_type lock_type; /* SHARED, EXCLUSIVE */
     int lock_mode;              /* e.g., MODE_NO_CHECK */
     int outstanding_lock;
+    int disable_flush_local;
 
     /* The target structure is free to be cleaned up when all of the
      * following conditions hold true:

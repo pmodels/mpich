@@ -10,6 +10,7 @@
 #include "mpl_utlist.h"
 #include "mpid_rma_types.h"
 
+int MPIDI_CH3I_RMA_Free_ops_before_completion(MPID_Win * win_ptr);
 int MPIDI_CH3I_RMA_Cleanup_ops_aggressive(MPID_Win * win_ptr);
 int MPIDI_CH3I_RMA_Cleanup_target_aggressive(MPID_Win * win_ptr, MPIDI_RMA_Target_t ** target);
 int MPIDI_CH3I_RMA_Make_progress_target(MPID_Win * win_ptr, int target_rank, int *made_progress);
@@ -112,6 +113,7 @@ static inline MPIDI_RMA_Target_t *MPIDI_CH3I_Win_target_alloc(MPID_Win * win_ptr
     e->lock_type = MPIDI_RMA_LOCK_TYPE_NONE;
     e->lock_mode = 0;
     e->outstanding_lock = 0;
+    e->disable_flush_local = 0;
 
     e->sync.sync_flag = MPIDI_RMA_NONE;
     e->sync.outstanding_acks = 0;

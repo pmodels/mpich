@@ -423,6 +423,77 @@ static inline int issue_ops_win(MPID_Win *win_ptr, int *made_progress)
 
 
 #undef FUNCNAME
+#define FUNCNAME MPIDI_CH3I_RMA_Free_ops_before_completion
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
+int MPIDI_CH3I_RMA_Free_ops_before_completion(MPID_Win * win_ptr)
+{
+    MPIDI_RMA_Op_t *curr_op = NULL;
+    MPIDI_RMA_Target_t *curr_target = NULL;
+    struct MPIDI_RMA_Op **op_list = NULL, **op_list_tail = NULL;
+    int read_flag = 0;
+    int i, made_progress = 0;
+    int mpi_errno = MPI_SUCCESS;
+
+    MPIU_ERR_CHKANDJUMP(win_ptr->non_empty_slots == 0, mpi_errno, MPI_ERR_OTHER,
+                        "**rmanoop");
+
+    /* make nonblocking progress once */
+    if (win_ptr->states.access_state == MPIDI_RMA_FENCE_ISSUED ||
+        win_ptr->states.access_state == MPIDI_RMA_PSCW_ISSUED) {
+        mpi_errno = issue_ops_win(win_ptr, &made_progress);
+        if (mpi_errno != MPI_SUCCESS) {MPIU_ERR_POP(mpi_errno);}
+    }
+    if (win_ptr->states.access_state != MPIDI_RMA_FENCE_GRANTED)
+        goto fn_exit;
+
+    /* find targets that have operations */
+    for (i = 0; i < win_ptr->num_slots; i++) {
+        if (win_ptr->slots[i].target_list != NULL) {
+            curr_target = win_ptr->slots[i].target_list;
+            while (curr_target != NULL && curr_target->read_op_list == NULL
+                   && curr_target->write_op_list == NULL)
+                curr_target = curr_target->next;
+            if (curr_target != NULL) break;
+        }
+    }
+    if (curr_target == NULL) goto fn_exit;
+
+    curr_target->disable_flush_local = 1;
+
+    if (curr_target->read_op_list != NULL) {
+        op_list = &curr_target->read_op_list;
+        op_list_tail = &curr_target->read_op_list_tail;
+        read_flag = 1;
+    }
+    else {
+        op_list = &curr_target->write_op_list;
+        op_list_tail = &curr_target->write_op_list_tail;
+    }
+
+    /* free all ops in the list since we do not need to maintain them anymore */
+    for (curr_op = *op_list; curr_op != NULL; ) {
+        MPID_Request_release(curr_op->request);
+        MPL_LL_DELETE(*op_list, *op_list_tail, curr_op);
+        MPIDI_CH3I_Win_op_free(win_ptr, curr_op);
+        if (*op_list == NULL) {
+            if (read_flag == 1) {
+                op_list = &curr_target->write_op_list;
+                op_list = &curr_target->write_op_list_tail;
+                read_flag = 0;
+            }
+        }
+        curr_op = *op_list;
+   }
+
+ fn_exit:
+    return mpi_errno;
+ fn_fail:
+    goto fn_exit;
+}
+
+
+#undef FUNCNAME
 #define FUNCNAME MPIDI_CH3I_RMA_Cleanup_ops_aggressive
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
