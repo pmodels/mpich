@@ -1228,8 +1228,6 @@ void MPIDI_CH3_RMA_Init_Pvars(void);
 /* internal */
 int MPIDI_CH3I_Release_lock(MPID_Win * win_ptr);
 int MPIDI_CH3I_Try_acquire_win_lock(MPID_Win * win_ptr, int requested_lock);
-int MPIDI_CH3I_Send_lock_granted_pkt(MPIDI_VC_t * vc, MPID_Win *win_ptr, int source_win_hdl);
-int MPIDI_CH3I_Send_pt_rma_done_pkt(MPIDI_VC_t * vc, MPID_Win *win_ptr, int source_win_hdl);
 int MPIDI_CH3_Start_rma_op_target(MPID_Win *win_ptr, MPIDI_CH3_Pkt_flags_t flags);
 int MPIDI_CH3_Finish_rma_op_target(MPIDI_VC_t *vc, MPID_Win *win_ptr, int is_rma_update,
                                    MPIDI_CH3_Pkt_flags_t flags, MPI_Win source_win_handle);

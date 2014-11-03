@@ -17,10 +17,11 @@ mpi_core_sources +=                          \
     src/mpid/ch3/src/ch3u_port.c                           \
     src/mpid/ch3/src/ch3u_recvq.c                          \
     src/mpid/ch3/src/ch3u_request.c                        \
-    src/mpid/ch3/src/ch3u_rma_acc_ops.c                    \
+    src/mpid/ch3/src/ch3u_rma_oplist.c                     \
     src/mpid/ch3/src/ch3u_rma_ops.c                        \
     src/mpid/ch3/src/ch3u_rma_reqops.c                     \
     src/mpid/ch3/src/ch3u_rma_sync.c                       \
+    src/mpid/ch3/src/ch3u_rma_pkthandler.c                 \
     src/mpid/ch3/src/ch3u_rndv.c                           \
     src/mpid/ch3/src/ch3u_eager.c                          \
     src/mpid/ch3/src/ch3u_eagersync.c                      \
@@ -56,6 +57,7 @@ mpi_core_sources +=                          \
     src/mpid/ch3/src/mpid_startall.c                       \
     src/mpid/ch3/src/mpid_vc.c                             \
     src/mpid/ch3/src/mpid_rma.c                            \
+    src/mpid/ch3/src/mpidi_rma.c                           \
     src/mpid/ch3/src/mpidi_isend_self.c                    \
     src/mpid/ch3/src/mpidi_pg.c                            \
     src/mpid/ch3/src/mpidi_printf.c

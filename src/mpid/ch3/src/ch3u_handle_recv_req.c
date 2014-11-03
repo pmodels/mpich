@@ -8,7 +8,6 @@
 #include "mpidrma.h"
 
 static int create_derived_datatype(MPID_Request * rreq, MPID_Datatype ** dtp);
-static int do_accumulate_op(MPID_Request * rreq);
 static int do_simple_accumulate(MPIDI_PT_single_op *single_op);
 static int do_simple_get(MPID_Win *win_ptr, MPIDI_Win_lock_queue *lock_queue);
 
@@ -827,119 +826,6 @@ static int create_derived_datatype(MPID_Request *req, MPID_Datatype **dtp)
     return mpi_errno;
 }
 
-
-#undef FUNCNAME
-#define FUNCNAME do_accumulate_op
-#undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
-static int do_accumulate_op(MPID_Request *rreq)
-{
-    int mpi_errno = MPI_SUCCESS;
-    MPI_Aint true_lb, true_extent;
-    MPI_User_function *uop;
-    MPIDI_STATE_DECL(MPID_STATE_DO_ACCUMULATE_OP);
-    
-    MPIDI_FUNC_ENTER(MPID_STATE_DO_ACCUMULATE_OP);
-
-    if (rreq->dev.op == MPI_REPLACE)
-    {
-        /* simply copy the data */
-        mpi_errno = MPIR_Localcopy(rreq->dev.user_buf, rreq->dev.user_count,
-                                   rreq->dev.datatype,
-                                   rreq->dev.real_user_buf,
-                                   rreq->dev.user_count,
-                                   rreq->dev.datatype);
-        if (mpi_errno) {
-	    MPIU_ERR_POP(mpi_errno);
-	}
-        goto fn_exit;
-    }
-
-    if (HANDLE_GET_KIND(rreq->dev.op) == HANDLE_KIND_BUILTIN)
-    {
-        /* get the function by indexing into the op table */
-        uop = MPIR_OP_HDL_TO_FN(rreq->dev.op);
-    }
-    else
-    {
-	/* --BEGIN ERROR HANDLING-- */
-        mpi_errno = MPIR_Err_create_code( MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OP, "**opnotpredefined", "**opnotpredefined %d", rreq->dev.op );
-        return mpi_errno;
-	/* --END ERROR HANDLING-- */
-    }
-    
-    if (MPIR_DATATYPE_IS_PREDEFINED(rreq->dev.datatype))
-    {
-        (*uop)(rreq->dev.user_buf, rreq->dev.real_user_buf,
-               &(rreq->dev.user_count), &(rreq->dev.datatype));
-    }
-    else
-    {
-	/* derived datatype */
-        MPID_Segment *segp;
-        DLOOP_VECTOR *dloop_vec;
-        MPI_Aint first, last;
-        int vec_len, i, count;
-        MPI_Aint type_size;
-        MPI_Datatype type;
-        MPID_Datatype *dtp;
-        
-        segp = MPID_Segment_alloc();
-	/* --BEGIN ERROR HANDLING-- */
-        if (!segp)
-	{
-            mpi_errno = MPIR_Err_create_code( MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, "**nomem", 0 ); 
-	    MPIDI_FUNC_EXIT(MPID_STATE_DO_ACCUMULATE_OP);
-            return mpi_errno;
-        }
-	/* --END ERROR HANDLING-- */
-        MPID_Segment_init(NULL, rreq->dev.user_count,
-			  rreq->dev.datatype, segp, 0);
-        first = 0;
-        last  = SEGMENT_IGNORE_LAST;
-        
-        MPID_Datatype_get_ptr(rreq->dev.datatype, dtp);
-        vec_len = dtp->max_contig_blocks * rreq->dev.user_count + 1; 
-        /* +1 needed because Rob says so */
-        dloop_vec = (DLOOP_VECTOR *)
-            MPIU_Malloc(vec_len * sizeof(DLOOP_VECTOR));
-	/* --BEGIN ERROR HANDLING-- */
-        if (!dloop_vec)
-	{
-            mpi_errno = MPIR_Err_create_code( MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OTHER, "**nomem", 0 ); 
-	    MPIDI_FUNC_EXIT(MPID_STATE_DO_ACCUMULATE_OP);
-            return mpi_errno;
-        }
-	/* --END ERROR HANDLING-- */
-
-        MPID_Segment_pack_vector(segp, first, &last, dloop_vec, &vec_len);
-        
-        type = dtp->eltype;
-        MPID_Datatype_get_size_macro(type, type_size);
-        for (i=0; i<vec_len; i++)
-	{
-            MPIU_Assign_trunc(count, (dloop_vec[i].DLOOP_VECTOR_LEN)/type_size, int);
-            (*uop)((char *)rreq->dev.user_buf + MPIU_PtrToAint(dloop_vec[i].DLOOP_VECTOR_BUF),
-                   (char *)rreq->dev.real_user_buf + MPIU_PtrToAint(dloop_vec[i].DLOOP_VECTOR_BUF),
-                   &count, &type);
-        }
-        
-        MPID_Segment_free(segp);
-        MPIU_Free(dloop_vec);
-    }
-
- fn_exit:
-    /* free the temporary buffer */
-    MPIR_Type_get_true_extent_impl(rreq->dev.datatype, &true_lb, &true_extent);
-    MPIU_Free((char *) rreq->dev.user_buf + true_lb);
-
-    MPIDI_FUNC_EXIT(MPID_STATE_DO_ACCUMULATE_OP);
-
-    return mpi_errno;
- fn_fail:
-    goto fn_exit;
-}
-
 static int entered_flag = 0;
 static int entered_count = 0;
 
@@ -1128,43 +1014,6 @@ int MPIDI_CH3I_Release_lock(MPID_Win *win_ptr)
     goto fn_exit;
 }
 
-
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3I_Send_pt_rma_done_pkt
-#undef FCNAME 
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
-int MPIDI_CH3I_Send_pt_rma_done_pkt(MPIDI_VC_t *vc, MPID_Win *win_ptr,
-                                    MPI_Win source_win_handle)
-{
-    MPIDI_CH3_Pkt_t upkt;
-    MPIDI_CH3_Pkt_pt_rma_done_t *pt_rma_done_pkt = &upkt.pt_rma_done;
-    MPID_Request *req;
-    int mpi_errno=MPI_SUCCESS;
-    MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3I_SEND_PT_RMA_DONE_PKT);
-    
-    MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3I_SEND_PT_RMA_DONE_PKT);
-
-    MPIDI_Pkt_init(pt_rma_done_pkt, MPIDI_CH3_PKT_PT_RMA_DONE);
-    pt_rma_done_pkt->source_win_handle = source_win_handle;
-    pt_rma_done_pkt->target_rank = win_ptr->comm_ptr->rank;
-
-    /* Because this is in a packet handler, it is already within a critical section */	
-    /* MPIU_THREAD_CS_ENTER(CH3COMM,vc); */
-    mpi_errno = MPIDI_CH3_iStartMsg(vc, pt_rma_done_pkt, sizeof(*pt_rma_done_pkt), &req);
-    /* MPIU_THREAD_CS_EXIT(CH3COMM,vc); */
-    if (mpi_errno != MPI_SUCCESS) {
-	MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**ch3|rmamsg");
-    }
-
-    if (req != NULL)
-    {
-        MPID_Request_release(req);
-    }
-
- fn_fail:
-    MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3I_SEND_PT_RMA_DONE_PKT);
-    return mpi_errno;
-}
 
 
 #undef FUNCNAME
