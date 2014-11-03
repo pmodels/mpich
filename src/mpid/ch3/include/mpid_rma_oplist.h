@@ -10,6 +10,8 @@
 #include "mpl_utlist.h"
 #include "mpid_rma_types.h"
 
+int MPIDI_CH3I_RMA_Cleanup_ops_aggressive(MPID_Win * win_ptr);
+int MPIDI_CH3I_RMA_Cleanup_target_aggressive(MPID_Win * win_ptr, MPIDI_RMA_Target_t ** target);
 int MPIDI_CH3I_RMA_Make_progress_target(MPID_Win * win_ptr, int target_rank, int *made_progress);
 int MPIDI_CH3I_RMA_Make_progress_win(MPID_Win * win_ptr, int *made_progress);
 
@@ -166,7 +168,10 @@ static inline int MPIDI_CH3I_Win_create_target(MPID_Win * win_ptr, int target_ra
         slot = &(win_ptr->slots[target_rank]);
 
     t = MPIDI_CH3I_Win_target_alloc(win_ptr);
-    MPIU_ERR_CHKANDJUMP(t == NULL, mpi_errno, MPI_ERR_OTHER, "**nomem");
+    if (t == NULL) {
+        mpi_errno = MPIDI_CH3I_RMA_Cleanup_target_aggressive(win_ptr, &t);
+        if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
+    }
 
     t->target_rank = target_rank;
 
@@ -580,7 +585,10 @@ static inline int MPIDI_CH3I_RMA_Ops_alloc_tail(MPID_Win * win_ptr, MPIDI_RMA_Op
     MPIDI_RMA_Op_t *tmp_ptr;
 
     tmp_ptr = MPIDI_CH3I_Win_op_alloc(win_ptr);
-    MPIU_ERR_CHKANDJUMP(tmp_ptr == NULL, mpi_errno, MPI_ERR_OTHER, "**nomem");
+    if (tmp_ptr == NULL) {
+        mpi_errno = MPIDI_CH3I_RMA_Cleanup_ops_aggressive(win_ptr, &tmp_ptr);
+        if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
+    }
 
     MPL_LL_APPEND(*list, *list_tail, tmp_ptr);
 

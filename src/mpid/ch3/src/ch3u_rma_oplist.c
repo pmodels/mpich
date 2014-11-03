@@ -423,6 +423,156 @@ static inline int issue_ops_win(MPID_Win *win_ptr, int *made_progress)
 
 
 #undef FUNCNAME
+#define FUNCNAME MPIDI_CH3I_RMA_Cleanup_ops_aggressive
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
+int MPIDI_CH3I_RMA_Cleanup_ops_aggressive(MPID_Win * win_ptr)
+{
+    int i, local_completed = 0, remote_completed = 0;
+    int mpi_errno = MPI_SUCCESS;
+    MPIDI_RMA_Target_t *curr_target = NULL;
+    int made_progress = 0;
+
+    /* If we are in an aggressive cleanup, the window must be holding
+     * up resources.  If it isn't, we are in the wrong window and
+     * incorrectly entered this function. */
+    MPIU_ERR_CHKANDJUMP(win_ptr->non_empty_slots == 0, mpi_errno, MPI_ERR_OTHER,
+                        "**rmanoop");
+
+    /* find the first target that has something to issue */
+    for (i = 0; i < win_ptr->num_slots; i++) {
+        if (win_ptr->slots[i].target_list != NULL) {
+            curr_target = win_ptr->slots[i].target_list;
+            while (curr_target != NULL && curr_target->pending_op_list == NULL)
+                curr_target = curr_target->next;
+            if (curr_target != NULL) break;
+        }
+    }
+
+    if (curr_target == NULL) goto fn_exit;
+
+    if (curr_target->sync.sync_flag < MPIDI_RMA_SYNC_FLUSH_LOCAL)
+        curr_target->sync.sync_flag = MPIDI_RMA_SYNC_FLUSH_LOCAL;
+
+    /* Issue out all operations. */
+    mpi_errno = MPIDI_CH3I_RMA_Make_progress_target(win_ptr, curr_target->target_rank,
+                                                    &made_progress);
+    if (mpi_errno != MPI_SUCCESS)
+        MPIU_ERR_POP(mpi_errno);
+
+    /* Wait for local completion. */
+    do {
+        mpi_errno = MPIDI_CH3I_RMA_Cleanup_ops_target(win_ptr, curr_target,
+                                                      &local_completed,
+                                                      &remote_completed);
+        if (mpi_errno != MPI_SUCCESS)
+            MPIU_ERR_POP(mpi_errno);
+        if (!local_completed) {
+            mpi_errno = wait_progress_engine();
+            if (mpi_errno != MPI_SUCCESS)
+                MPIU_ERR_POP(mpi_errno);
+        }
+    } while (!local_completed);
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_CH3I_RMA_Cleanup_target_aggressive
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
+int MPIDI_CH3I_RMA_Cleanup_target_aggressive(MPID_Win * win_ptr, MPIDI_RMA_Target_t ** target)
+{
+    int i, local_completed = 0, remote_completed = 0;
+    int made_progress = 0;
+    MPIDI_RMA_Target_t *curr_target = NULL;
+    int mpi_errno = MPI_SUCCESS;
+
+    (*target) = NULL;
+
+    /* If we are in an aggressive cleanup, the window must be holding
+     * up resources.  If it isn't, we are in the wrong window and
+     * incorrectly entered this function. */
+    MPIU_ERR_CHKANDJUMP(win_ptr->non_empty_slots == 0, mpi_errno, MPI_ERR_OTHER,
+                        "**rmanotarget");
+
+    if (win_ptr->states.access_state == MPIDI_RMA_LOCK_ALL_CALLED) {
+        /* switch to window-wide protocol */
+        MPIDI_VC_t *orig_vc = NULL, *target_vc = NULL;
+        MPIDI_Comm_get_vc(win_ptr->comm_ptr, win_ptr->comm_ptr->rank, &orig_vc);
+        for (i = 0; i < win_ptr->comm_ptr->local_size; i++) {
+            if (i == win_ptr->comm_ptr->rank)
+                continue;
+            MPIDI_Comm_get_vc(win_ptr->comm_ptr, i, &target_vc);
+            if (orig_vc->node_id != target_vc->node_id) {
+                mpi_errno = MPIDI_CH3I_Win_find_target(win_ptr, i, &curr_target);
+                if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+                if (curr_target == NULL) {
+                    win_ptr->outstanding_locks++;
+                    mpi_errno = send_lock_msg(i, MPI_LOCK_SHARED, win_ptr);
+                    if (mpi_errno != MPI_SUCCESS)
+                        MPIU_ERR_POP(mpi_errno);
+                }
+            }
+        }
+        win_ptr->states.access_state = MPIDI_RMA_LOCK_ALL_ISSUED;
+    }
+
+    do {
+        /* find a non-empty slot and set the FLUSH flag on the first
+         * target */
+        /* TODO: we should think about better strategies on selecting the target */
+        for (i = 0; i < win_ptr->num_slots; i++)
+            if (win_ptr->slots[i].target_list != NULL)
+                break;
+        curr_target = win_ptr->slots[i].target_list;
+        if (curr_target->sync.sync_flag < MPIDI_RMA_SYNC_FLUSH) {
+            curr_target->sync.sync_flag = MPIDI_RMA_SYNC_FLUSH;
+            curr_target->sync.have_remote_incomplete_ops = 0;
+            curr_target->sync.outstanding_acks++;
+        }
+
+        /* Issue out all operations. */
+        mpi_errno = MPIDI_CH3I_RMA_Make_progress_target(win_ptr, curr_target->target_rank,
+                                                        &made_progress);
+        if (mpi_errno != MPI_SUCCESS)
+            MPIU_ERR_POP(mpi_errno);
+
+        /* Wait for remote completion. */
+        do {
+            mpi_errno = MPIDI_CH3I_RMA_Cleanup_ops_target(win_ptr, curr_target,
+                                                          &local_completed,
+                                                          &remote_completed);
+            if (mpi_errno != MPI_SUCCESS)
+                MPIU_ERR_POP(mpi_errno);
+            if (!remote_completed) {
+                mpi_errno = wait_progress_engine();
+                if (mpi_errno != MPI_SUCCESS)
+                    MPIU_ERR_POP(mpi_errno);
+            }
+        } while (!remote_completed);
+
+        /* Cleanup the target. */
+        mpi_errno = MPIDI_CH3I_RMA_Cleanup_single_target(win_ptr, curr_target);
+        if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
+
+        /* check if we got a target */
+        (*target) = MPIDI_CH3I_Win_target_alloc(win_ptr);
+
+    } while ((*target) == NULL);
+
+  fn_exit:
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+
+#undef FUNCNAME
 #define FUNCNAME MPIDI_CH3I_RMA_Make_progress_target
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)

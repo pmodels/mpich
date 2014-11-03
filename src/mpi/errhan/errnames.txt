@@ -396,6 +396,8 @@ be in the range 0 to %d
 **rmaattach:Memory cannot be attached
 **rmashared:Memory cannot be shared
 **rmaflavor:Incorrect window flavor
+**rmanoop:No RMA operation resources can be freed from the window
+**rmanotarget:No RMA target resources can be freed from the window
 **assert:Invalid assert argument
 **lockassertval:Invalid assert argument passed to MPI_Win_lock
 **lockassertval %d: Invalid assert argument (%d) passed to MPI_Win_lock
