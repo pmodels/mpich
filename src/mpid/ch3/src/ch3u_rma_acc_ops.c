@@ -6,9 +6,6 @@
 
 #include "mpidrma.h"
 
-MPIR_T_PVAR_DOUBLE_TIMER_DECL_EXTERN(RMA, rma_rmaqueue_alloc);
-MPIR_T_PVAR_DOUBLE_TIMER_DECL_EXTERN(RMA, rma_rmaqueue_set);
-
 #undef FUNCNAME
 #define FUNCNAME MPIDI_Get_accumulate
 #undef FCNAME
@@ -79,16 +76,13 @@ int MPIDI_Get_accumulate(const void *origin_addr, int origin_count,
         MPIDI_RMA_Op_t *new_ptr = NULL;
 
         /* Append the operation to the window's RMA ops queue */
-        MPIR_T_PVAR_TIMER_START(RMA, rma_rmaqueue_alloc);
         mpi_errno = MPIDI_CH3I_RMA_Ops_alloc_tail(ops_list, &new_ptr);
-        MPIR_T_PVAR_TIMER_END(RMA, rma_rmaqueue_alloc);
         if (mpi_errno) {
             MPIU_ERR_POP(mpi_errno);
         }
 
         /* TODO: Can we use the MPIDI_RMA_ACC_CONTIG optimization? */
 
-        MPIR_T_PVAR_TIMER_START(RMA, rma_rmaqueue_set);
         new_ptr->type = MPIDI_RMA_GET_ACCUMULATE;
         /* Cast away const'ness for origin_address as MPIDI_RMA_Op_t
          * contain both PUT and GET like ops */
@@ -103,7 +97,6 @@ int MPIDI_Get_accumulate(const void *origin_addr, int origin_count,
         new_ptr->target_count = target_count;
         new_ptr->target_datatype = target_datatype;
         new_ptr->op = op;
-        MPIR_T_PVAR_TIMER_END(RMA, rma_rmaqueue_set);
 
         /* if source or target datatypes are derived, increment their
          * reference counts */
@@ -193,14 +186,11 @@ int MPIDI_Compare_and_swap(const void *origin_addr, const void *compare_addr,
         MPIDI_RMA_Op_t *new_ptr = NULL;
 
         /* Append this operation to the RMA ops queue */
-        MPIR_T_PVAR_TIMER_START(RMA, rma_rmaqueue_alloc);
         mpi_errno = MPIDI_CH3I_RMA_Ops_alloc_tail(ops_list, &new_ptr);
-        MPIR_T_PVAR_TIMER_END(RMA, rma_rmaqueue_alloc);
         if (mpi_errno) {
             MPIU_ERR_POP(mpi_errno);
         }
 
-        MPIR_T_PVAR_TIMER_START(RMA, rma_rmaqueue_set);
         new_ptr->type = MPIDI_RMA_COMPARE_AND_SWAP;
         new_ptr->origin_addr = (void *) origin_addr;
         new_ptr->origin_count = 1;
@@ -215,7 +205,6 @@ int MPIDI_Compare_and_swap(const void *origin_addr, const void *compare_addr,
         new_ptr->compare_addr = (void *) compare_addr;
         new_ptr->compare_count = 1;
         new_ptr->compare_datatype = datatype;
-        MPIR_T_PVAR_TIMER_END(RMA, rma_rmaqueue_set);
     }
 
   fn_exit:
@@ -288,14 +277,11 @@ int MPIDI_Fetch_and_op(const void *origin_addr, void *result_addr,
         MPIDI_RMA_Op_t *new_ptr = NULL;
 
         /* Append this operation to the RMA ops queue */
-        MPIR_T_PVAR_TIMER_START(RMA, rma_rmaqueue_alloc);
         mpi_errno = MPIDI_CH3I_RMA_Ops_alloc_tail(ops_list, &new_ptr);
-        MPIR_T_PVAR_TIMER_END(RMA, rma_rmaqueue_alloc);
         if (mpi_errno) {
             MPIU_ERR_POP(mpi_errno);
         }
 
-        MPIR_T_PVAR_TIMER_START(RMA, rma_rmaqueue_set);
         new_ptr->type = MPIDI_RMA_FETCH_AND_OP;
         new_ptr->origin_addr = (void *) origin_addr;
         new_ptr->origin_count = 1;
@@ -308,7 +294,6 @@ int MPIDI_Fetch_and_op(const void *origin_addr, void *result_addr,
         new_ptr->result_count = 1;
         new_ptr->result_datatype = datatype;
         new_ptr->op = op;
-        MPIR_T_PVAR_TIMER_END(RMA, rma_rmaqueue_set);
     }
 
   fn_exit:

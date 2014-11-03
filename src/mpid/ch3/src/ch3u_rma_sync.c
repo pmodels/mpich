@@ -334,547 +334,8 @@ cvars:
          PROC_SYNC with origin will see the latest data.
 */
 
-MPIR_T_PVAR_DOUBLE_TIMER_DECL(RMA, rma_lockqueue_alloc);
-
-MPIR_T_PVAR_DOUBLE_TIMER_DECL(RMA, rma_winfence_clearlock);
-MPIR_T_PVAR_ULONG2_COUNTER_DECL(RMA, rma_winfence_clearlock_aux);
-
-MPIR_T_PVAR_DOUBLE_TIMER_DECL(RMA, rma_winfence_rs);
-
-MPIR_T_PVAR_DOUBLE_TIMER_DECL(RMA, rma_winfence_issue);
-MPIR_T_PVAR_ULONG2_COUNTER_DECL(RMA, rma_winfence_issue_aux);
-MPIR_T_PVAR_ULONG2_HIGHWATERMARK_DECL(RMA, rma_winfence_issue_aux);
-
-MPIR_T_PVAR_DOUBLE_TIMER_DECL(RMA, rma_winfence_complete);
-MPIR_T_PVAR_ULONG2_COUNTER_DECL(RMA, rma_winfence_complete_aux);
-
-MPIR_T_PVAR_DOUBLE_TIMER_DECL(RMA, rma_winfence_wait);
-MPIR_T_PVAR_ULONG2_COUNTER_DECL(RMA, rma_winfence_wait_aux);
-
-MPIR_T_PVAR_DOUBLE_TIMER_DECL(RMA, rma_winfence_block);
-MPIR_T_PVAR_ULONG2_COUNTER_DECL(RMA, rma_winfence_block_aux);
-
-MPIR_T_PVAR_DOUBLE_TIMER_DECL(RMA, rma_winpost_clearlock);
-MPIR_T_PVAR_ULONG2_COUNTER_DECL(RMA, rma_winpost_clearlock_aux);
-
-MPIR_T_PVAR_DOUBLE_TIMER_DECL(RMA, rma_winpost_sendsync);
-MPIR_T_PVAR_ULONG2_COUNTER_DECL(RMA, rma_winpost_sendsync_aux);
-
-MPIR_T_PVAR_DOUBLE_TIMER_DECL(RMA, rma_winstart_clearlock);
-MPIR_T_PVAR_ULONG2_COUNTER_DECL(RMA, rma_winstart_clearlock_aux);
-
-MPIR_T_PVAR_DOUBLE_TIMER_DECL(RMA, rma_wincomplete_issue);
-MPIR_T_PVAR_ULONG2_COUNTER_DECL(RMA, rma_wincomplete_issue_aux);
-MPIR_T_PVAR_ULONG2_HIGHWATERMARK_DECL(RMA, rma_wincomplete_issue_aux);
-
-MPIR_T_PVAR_DOUBLE_TIMER_DECL(RMA, rma_wincomplete_complete);
-MPIR_T_PVAR_ULONG2_COUNTER_DECL(RMA, rma_wincomplete_complete_aux);
-
-MPIR_T_PVAR_DOUBLE_TIMER_DECL(RMA, rma_wincomplete_recvsync);
-MPIR_T_PVAR_ULONG2_COUNTER_DECL(RMA, rma_wincomplete_recvsync_aux);
-
-MPIR_T_PVAR_DOUBLE_TIMER_DECL(RMA, rma_wincomplete_block);
-MPIR_T_PVAR_ULONG2_COUNTER_DECL(RMA, rma_wincomplete_block_aux);
-
-MPIR_T_PVAR_DOUBLE_TIMER_DECL(RMA, rma_winwait_wait);
-MPIR_T_PVAR_ULONG2_COUNTER_DECL(RMA, rma_winwait_wait_aux);
-
-MPIR_T_PVAR_DOUBLE_TIMER_DECL(RMA, rma_winlock_getlocallock);
-MPIR_T_PVAR_DOUBLE_TIMER_DECL(RMA, rma_winunlock_getlock);
-MPIR_T_PVAR_DOUBLE_TIMER_DECL(RMA, rma_winunlock_issue);
-
-MPIR_T_PVAR_DOUBLE_TIMER_DECL(RMA, rma_winunlock_complete);
-MPIR_T_PVAR_ULONG2_COUNTER_DECL(RMA, rma_winunlock_complete_aux);
-
-MPIR_T_PVAR_DOUBLE_TIMER_DECL(RMA, rma_winunlock_block);
-MPIR_T_PVAR_ULONG2_COUNTER_DECL(RMA, rma_winunlock_block_aux);
-
-MPIR_T_PVAR_DOUBLE_TIMER_DECL(RMA, rma_rmapkt_acc);
-MPIR_T_PVAR_DOUBLE_TIMER_DECL(RMA, rma_rmapkt_acc_predef);
-MPIR_T_PVAR_DOUBLE_TIMER_DECL(RMA, rma_rmapkt_acc_immed);
-MPIR_T_PVAR_DOUBLE_TIMER_DECL(RMA, rma_rmapkt_acc_immed_op);
-MPIR_T_PVAR_DOUBLE_TIMER_DECL(RMA, rma_rmapkt_cas);
-MPIR_T_PVAR_DOUBLE_TIMER_DECL(RMA, rma_rmapkt_fop);
-MPIR_T_PVAR_DOUBLE_TIMER_DECL(RMA, rma_rmapkt_get_accum);
-
-MPIR_T_PVAR_ULONG2_LEVEL_DECL(RMA, rma_winfence_reqs);
-MPIR_T_PVAR_ULONG2_COUNTER_DECL(RMA, rma_winfence_reqs);
-MPIR_T_PVAR_ULONG2_HIGHWATERMARK_DECL(RMA, rma_winfence_reqs);
-
-MPIR_T_PVAR_ULONG2_COUNTER_DECL(RMA, rma_winunlock_reqs);
-MPIR_T_PVAR_ULONG2_COUNTER_DECL(RMA, rma_wincomplete_reqs);
-
-MPIR_T_PVAR_DOUBLE_TIMER_DECL(RMA, rma_wincreate_allgather);
-MPIR_T_PVAR_DOUBLE_TIMER_DECL(RMA, rma_winfree_rs);
-MPIR_T_PVAR_DOUBLE_TIMER_DECL(RMA, rma_winfree_complete);
-MPIR_T_PVAR_DOUBLE_TIMER_DECL(RMA, rma_rmaqueue_alloc);
-MPIR_T_PVAR_DOUBLE_TIMER_DECL(RMA, rma_rmaqueue_set);
-
 void MPIDI_CH3_RMA_Init_Pvars(void)
 {
-    /* rma_lockqueue_alloc */
-    MPIR_T_PVAR_TIMER_REGISTER_STATIC(RMA,
-                                      MPI_DOUBLE,
-                                      rma_lockqueue_alloc,
-                                      MPI_T_VERBOSITY_MPIDEV_DETAIL,
-                                      MPI_T_BIND_NO_OBJECT,
-                                      MPIR_T_PVAR_FLAG_READONLY,
-                                      "RMA", "Allocate Lock Queue element (in seconds)");
-
-    /* rma_winfence_clearlock */
-    MPIR_T_PVAR_TIMER_REGISTER_STATIC(RMA,
-                                      MPI_DOUBLE,
-                                      rma_winfence_clearlock,
-                                      MPI_T_VERBOSITY_MPIDEV_DETAIL,
-                                      MPI_T_BIND_NO_OBJECT,
-                                      MPIR_T_PVAR_FLAG_READONLY,
-                                      "RMA", "WIN_FENCE:Clear prior lock (in seconds)");
-
-    MPIR_T_PVAR_COUNTER_REGISTER_STATIC(RMA,
-                                        MPI_UNSIGNED_LONG_LONG,
-                                        rma_winfence_clearlock_aux,
-                                        MPI_T_VERBOSITY_MPIDEV_DETAIL,
-                                        MPI_T_BIND_NO_OBJECT,
-                                        MPIR_T_PVAR_FLAG_READONLY,
-                                        "RMA", "WIN_FENCE:Clear prior lock");
-
-    /* rma_winfence_rs */
-    MPIR_T_PVAR_TIMER_REGISTER_STATIC(RMA,
-                                      MPI_DOUBLE,
-                                      rma_winfence_rs,
-                                      MPI_T_VERBOSITY_MPIDEV_DETAIL,
-                                      MPI_T_BIND_NO_OBJECT,
-                                      MPIR_T_PVAR_FLAG_READONLY,
-                                      "RMA", "WIN_FENCE:ReduceScatterBlock (in seconds)");
-
-    /* rma_winfence_issue and auxiliaries */
-    MPIR_T_PVAR_TIMER_REGISTER_STATIC(RMA,
-                                      MPI_DOUBLE,
-                                      rma_winfence_issue,
-                                      MPI_T_VERBOSITY_MPIDEV_DETAIL,
-                                      MPI_T_BIND_NO_OBJECT,
-                                      MPIR_T_PVAR_FLAG_READONLY,
-                                      "RMA", "WIN_FENCE:Issue RMA ops (in seconds)");
-
-    MPIR_T_PVAR_COUNTER_REGISTER_STATIC(RMA,
-                                        MPI_UNSIGNED_LONG_LONG,
-                                        rma_winfence_issue_aux,
-                                        MPI_T_VERBOSITY_MPIDEV_DETAIL,
-                                        MPI_T_BIND_NO_OBJECT,
-                                        MPIR_T_PVAR_FLAG_READONLY,
-                                        "RMA", "WIN_FENCE:Issue RMA ops");
-
-    MPIR_T_PVAR_HIGHWATERMARK_REGISTER_STATIC(RMA, MPI_UNSIGNED_LONG_LONG, rma_winfence_issue_aux, 0,   /* init value */
-                                              MPI_T_VERBOSITY_MPIDEV_DETAIL,
-                                              MPI_T_BIND_NO_OBJECT,
-                                              MPIR_T_PVAR_FLAG_READONLY,
-                                              "RMA", "WIN_FENCE:Issue RMA ops");
-
-    /* rma_winfence_complete */
-    MPIR_T_PVAR_TIMER_REGISTER_STATIC(RMA,
-                                      MPI_DOUBLE,
-                                      rma_winfence_complete,
-                                      MPI_T_VERBOSITY_MPIDEV_DETAIL,
-                                      MPI_T_BIND_NO_OBJECT,
-                                      MPIR_T_PVAR_FLAG_READONLY,
-                                      "RMA", "WIN_FENCE:Complete RMA ops (in seconds)");
-
-    MPIR_T_PVAR_COUNTER_REGISTER_STATIC(RMA,
-                                        MPI_UNSIGNED_LONG_LONG,
-                                        rma_winfence_complete_aux,
-                                        MPI_T_VERBOSITY_MPIDEV_DETAIL,
-                                        MPI_T_BIND_NO_OBJECT,
-                                        MPIR_T_PVAR_FLAG_READONLY,
-                                        "RMA", "WIN_FENCE:Complete RMA ops");
-
-    /* rma_winfence_wait */
-    MPIR_T_PVAR_TIMER_REGISTER_STATIC(RMA,
-                                      MPI_DOUBLE,
-                                      rma_winfence_wait,
-                                      MPI_T_VERBOSITY_MPIDEV_DETAIL,
-                                      MPI_T_BIND_NO_OBJECT,
-                                      MPIR_T_PVAR_FLAG_READONLY,
-                                      "RMA",
-                                      "WIN_FENCE:Wait for ops from other processes (in seconds)");
-
-    MPIR_T_PVAR_COUNTER_REGISTER_STATIC(RMA,
-                                        MPI_UNSIGNED_LONG_LONG,
-                                        rma_winfence_wait_aux,
-                                        MPI_T_VERBOSITY_MPIDEV_DETAIL,
-                                        MPI_T_BIND_NO_OBJECT,
-                                        MPIR_T_PVAR_FLAG_READONLY,
-                                        "RMA", "WIN_FENCE:Wait for ops from other processes");
-
-    /* rma_winfence_block */
-    MPIR_T_PVAR_TIMER_REGISTER_STATIC(RMA,
-                                      MPI_DOUBLE,
-                                      rma_winfence_block,
-                                      MPI_T_VERBOSITY_MPIDEV_DETAIL,
-                                      MPI_T_BIND_NO_OBJECT,
-                                      MPIR_T_PVAR_FLAG_READONLY,
-                                      "RMA", "WIN_FENCE:Wait for any progress (in seconds)");
-
-    MPIR_T_PVAR_COUNTER_REGISTER_STATIC(RMA,
-                                        MPI_UNSIGNED_LONG_LONG,
-                                        rma_winfence_block_aux,
-                                        MPI_T_VERBOSITY_MPIDEV_DETAIL,
-                                        MPI_T_BIND_NO_OBJECT,
-                                        MPIR_T_PVAR_FLAG_READONLY,
-                                        "RMA", "WIN_FENCE:Wait for any progress");
-
-
-    /* rma_winpost_clearlock */
-    MPIR_T_PVAR_TIMER_REGISTER_STATIC(RMA,
-                                      MPI_DOUBLE,
-                                      rma_winpost_clearlock,
-                                      MPI_T_VERBOSITY_MPIDEV_DETAIL,
-                                      MPI_T_BIND_NO_OBJECT,
-                                      MPIR_T_PVAR_FLAG_READONLY,
-                                      "RMA", "WIN_POST:Clear prior lock  (in seconds)");
-
-    MPIR_T_PVAR_COUNTER_REGISTER_STATIC(RMA,
-                                        MPI_UNSIGNED_LONG_LONG,
-                                        rma_winpost_clearlock_aux,
-                                        MPI_T_VERBOSITY_MPIDEV_DETAIL,
-                                        MPI_T_BIND_NO_OBJECT,
-                                        MPIR_T_PVAR_FLAG_READONLY,
-                                        "RMA", "WIN_POST:Clear prior lock");
-
-    /* rma_winpost_sendsync */
-    MPIR_T_PVAR_TIMER_REGISTER_STATIC(RMA,
-                                      MPI_DOUBLE,
-                                      rma_winpost_sendsync,
-                                      MPI_T_VERBOSITY_MPIDEV_DETAIL,
-                                      MPI_T_BIND_NO_OBJECT,
-                                      MPIR_T_PVAR_FLAG_READONLY,
-                                      "RMA", "WIN_POST:Senc sync messages (in seconds)");
-
-    MPIR_T_PVAR_COUNTER_REGISTER_STATIC(RMA,
-                                        MPI_UNSIGNED_LONG_LONG,
-                                        rma_winpost_sendsync_aux,
-                                        MPI_T_VERBOSITY_MPIDEV_DETAIL,
-                                        MPI_T_BIND_NO_OBJECT,
-                                        MPIR_T_PVAR_FLAG_READONLY,
-                                        "RMA", "WIN_POST:Senc sync messages");
-
-    /* rma_winstart_clearlock */
-    MPIR_T_PVAR_TIMER_REGISTER_STATIC(RMA,
-                                      MPI_DOUBLE,
-                                      rma_winstart_clearlock,
-                                      MPI_T_VERBOSITY_MPIDEV_DETAIL,
-                                      MPI_T_BIND_NO_OBJECT,
-                                      MPIR_T_PVAR_FLAG_READONLY,
-                                      "RMA", "WIN_START:Clear prior lock (in seconds)");
-
-    MPIR_T_PVAR_COUNTER_REGISTER_STATIC(RMA,
-                                        MPI_UNSIGNED_LONG_LONG,
-                                        rma_winstart_clearlock_aux,
-                                        MPI_T_VERBOSITY_MPIDEV_DETAIL,
-                                        MPI_T_BIND_NO_OBJECT,
-                                        MPIR_T_PVAR_FLAG_READONLY,
-                                        "RMA", "WIN_START:Clear prior lock");
-
-    /* rma_wincomplete_issue and auxiliaries */
-    MPIR_T_PVAR_TIMER_REGISTER_STATIC(RMA,
-                                      MPI_DOUBLE,
-                                      rma_wincomplete_issue,
-                                      MPI_T_VERBOSITY_MPIDEV_DETAIL,
-                                      MPI_T_BIND_NO_OBJECT,
-                                      MPIR_T_PVAR_FLAG_READONLY,
-                                      "RMA", "WIN_COMPLETE:Issue RMA ops (in seconds)");
-
-    MPIR_T_PVAR_COUNTER_REGISTER_STATIC(RMA,
-                                        MPI_UNSIGNED_LONG_LONG,
-                                        rma_wincomplete_issue_aux,
-                                        MPI_T_VERBOSITY_MPIDEV_DETAIL,
-                                        MPI_T_BIND_NO_OBJECT,
-                                        MPIR_T_PVAR_FLAG_READONLY,
-                                        "RMA", "WIN_COMPLETE:Issue RMA ops");
-
-    MPIR_T_PVAR_HIGHWATERMARK_REGISTER_STATIC(RMA, MPI_UNSIGNED_LONG_LONG, rma_wincomplete_issue_aux, 0,        /* init value */
-                                              MPI_T_VERBOSITY_MPIDEV_DETAIL,
-                                              MPI_T_BIND_NO_OBJECT,
-                                              MPIR_T_PVAR_FLAG_READONLY,
-                                              "RMA", "WIN_COMPLETE:Issue RMA ops");
-
-    /* rma_wincomplete_complete */
-    MPIR_T_PVAR_TIMER_REGISTER_STATIC(RMA,
-                                      MPI_DOUBLE,
-                                      rma_wincomplete_complete,
-                                      MPI_T_VERBOSITY_MPIDEV_DETAIL,
-                                      MPI_T_BIND_NO_OBJECT,
-                                      MPIR_T_PVAR_FLAG_READONLY,
-                                      "RMA", "WIN_COMPLETE:Complete RMA ops (in seconds)");
-
-    MPIR_T_PVAR_COUNTER_REGISTER_STATIC(RMA,
-                                        MPI_UNSIGNED_LONG_LONG,
-                                        rma_wincomplete_complete_aux,
-                                        MPI_T_VERBOSITY_MPIDEV_DETAIL,
-                                        MPI_T_BIND_NO_OBJECT,
-                                        MPIR_T_PVAR_FLAG_READONLY,
-                                        "RMA", "WIN_COMPLETE:Complete RMA ops");
-
-    /* rma_wincomplete_recvsync */
-    MPIR_T_PVAR_TIMER_REGISTER_STATIC(RMA,
-                                      MPI_DOUBLE,
-                                      rma_wincomplete_recvsync,
-                                      MPI_T_VERBOSITY_MPIDEV_DETAIL,
-                                      MPI_T_BIND_NO_OBJECT,
-                                      MPIR_T_PVAR_FLAG_READONLY,
-                                      "RMA", "WIN_COMPLETE:Recv sync messages (in seconds)");
-
-    MPIR_T_PVAR_COUNTER_REGISTER_STATIC(RMA,
-                                        MPI_UNSIGNED_LONG_LONG,
-                                        rma_wincomplete_recvsync_aux,
-                                        MPI_T_VERBOSITY_MPIDEV_DETAIL,
-                                        MPI_T_BIND_NO_OBJECT,
-                                        MPIR_T_PVAR_FLAG_READONLY,
-                                        "RMA", "WIN_COMPLETE:Recv sync messages");
-
-    /* rma_wincomplete_block */
-    MPIR_T_PVAR_TIMER_REGISTER_STATIC(RMA,
-                                      MPI_DOUBLE,
-                                      rma_wincomplete_block,
-                                      MPI_T_VERBOSITY_MPIDEV_DETAIL,
-                                      MPI_T_BIND_NO_OBJECT,
-                                      MPIR_T_PVAR_FLAG_READONLY,
-                                      "RMA", "WIN_COMPLETE:Wait for any progress (in seconds)");
-
-    MPIR_T_PVAR_COUNTER_REGISTER_STATIC(RMA,
-                                        MPI_UNSIGNED_LONG_LONG,
-                                        rma_wincomplete_block_aux,
-                                        MPI_T_VERBOSITY_MPIDEV_DETAIL,
-                                        MPI_T_BIND_NO_OBJECT,
-                                        MPIR_T_PVAR_FLAG_READONLY,
-                                        "RMA", "WIN_COMPLETE:Wait for any progress");
-
-    /* rma_winwait_wait */
-    MPIR_T_PVAR_TIMER_REGISTER_STATIC(RMA,
-                                      MPI_DOUBLE,
-                                      rma_winwait_wait,
-                                      MPI_T_VERBOSITY_MPIDEV_DETAIL,
-                                      MPI_T_BIND_NO_OBJECT,
-                                      MPIR_T_PVAR_FLAG_READONLY,
-                                      "RMA",
-                                      "WIN_WAIT:Wait for ops from other processes (in seconds)");
-
-    MPIR_T_PVAR_COUNTER_REGISTER_STATIC(RMA,
-                                        MPI_UNSIGNED_LONG_LONG,
-                                        rma_winwait_wait_aux,
-                                        MPI_T_VERBOSITY_MPIDEV_DETAIL,
-                                        MPI_T_BIND_NO_OBJECT,
-                                        MPIR_T_PVAR_FLAG_READONLY,
-                                        "RMA", "WIN_WAIT:Wait for ops from other processes");
-
-    /* rma_winlock_getlocallock */
-    MPIR_T_PVAR_TIMER_REGISTER_STATIC(RMA,
-                                      MPI_DOUBLE,
-                                      rma_winlock_getlocallock,
-                                      MPI_T_VERBOSITY_MPIDEV_DETAIL,
-                                      MPI_T_BIND_NO_OBJECT,
-                                      MPIR_T_PVAR_FLAG_READONLY,
-                                      "RMA", "WIN_LOCK:Get local lock (in seconds)");
-
-    /* rma_winunlock_getlock */
-    MPIR_T_PVAR_TIMER_REGISTER_STATIC(RMA,
-                                      MPI_DOUBLE,
-                                      rma_winunlock_getlock,
-                                      MPI_T_VERBOSITY_MPIDEV_DETAIL,
-                                      MPI_T_BIND_NO_OBJECT,
-                                      MPIR_T_PVAR_FLAG_READONLY,
-                                      "RMA", "WIN_UNLOCK:Acquire lock (in seconds)");
-
-    /* rma_winunlock_issue */
-    MPIR_T_PVAR_TIMER_REGISTER_STATIC(RMA,
-                                      MPI_DOUBLE,
-                                      rma_winunlock_issue,
-                                      MPI_T_VERBOSITY_MPIDEV_DETAIL,
-                                      MPI_T_BIND_NO_OBJECT,
-                                      MPIR_T_PVAR_FLAG_READONLY,
-                                      "RMA", "WIN_UNLOCK:Issue RMA ops (in seconds)");
-
-    /* rma_winunlock_complete */
-    MPIR_T_PVAR_TIMER_REGISTER_STATIC(RMA,
-                                      MPI_DOUBLE,
-                                      rma_winunlock_complete,
-                                      MPI_T_VERBOSITY_MPIDEV_DETAIL,
-                                      MPI_T_BIND_NO_OBJECT,
-                                      MPIR_T_PVAR_FLAG_READONLY,
-                                      "RMA", "WIN_UNLOCK:Complete RMA ops (in seconds)");
-
-    MPIR_T_PVAR_COUNTER_REGISTER_STATIC(RMA,
-                                        MPI_UNSIGNED_LONG_LONG,
-                                        rma_winunlock_complete_aux,
-                                        MPI_T_VERBOSITY_MPIDEV_DETAIL,
-                                        MPI_T_BIND_NO_OBJECT,
-                                        MPIR_T_PVAR_FLAG_READONLY,
-                                        "RMA", "WIN_UNLOCK:Complete RMA ops (in seconds)");
-
-    /* rma_winunlock_block */
-    MPIR_T_PVAR_TIMER_REGISTER_STATIC(RMA,
-                                      MPI_DOUBLE,
-                                      rma_winunlock_block,
-                                      MPI_T_VERBOSITY_MPIDEV_DETAIL,
-                                      MPI_T_BIND_NO_OBJECT,
-                                      MPIR_T_PVAR_FLAG_READONLY,
-                                      "RMA", "WIN_UNLOCK:Wait for any progress (in seconds)");
-
-    MPIR_T_PVAR_COUNTER_REGISTER_STATIC(RMA,
-                                        MPI_UNSIGNED_LONG_LONG,
-                                        rma_winunlock_block_aux,
-                                        MPI_T_VERBOSITY_MPIDEV_DETAIL,
-                                        MPI_T_BIND_NO_OBJECT,
-                                        MPIR_T_PVAR_FLAG_READONLY,
-                                        "RMA", "WIN_UNLOCK:Wait for any progress");
-
-    /* rma_rmapkt_acc */
-    MPIR_T_PVAR_TIMER_REGISTER_STATIC(RMA,
-                                      MPI_DOUBLE,
-                                      rma_rmapkt_acc,
-                                      MPI_T_VERBOSITY_MPIDEV_DETAIL,
-                                      MPI_T_BIND_NO_OBJECT,
-                                      MPIR_T_PVAR_FLAG_READONLY,
-                                      "RMA", "RMA:PKTHANDLER for Accumulate (in seconds)");
-
-    /* rma_rmapkt_acc_predef */
-    MPIR_T_PVAR_TIMER_REGISTER_STATIC(RMA,
-                                      MPI_DOUBLE,
-                                      rma_rmapkt_acc_predef,
-                                      MPI_T_VERBOSITY_MPIDEV_DETAIL,
-                                      MPI_T_BIND_NO_OBJECT,
-                                      MPIR_T_PVAR_FLAG_READONLY,
-                                      "RMA",
-                                      "RMA:PKTHANDLER for Accumulate: predef dtype (in seconds)");
-
-    /* rma_rmapkt_acc_immed */
-    MPIR_T_PVAR_TIMER_REGISTER_STATIC(RMA,
-                                      MPI_DOUBLE,
-                                      rma_rmapkt_acc_immed,
-                                      MPI_T_VERBOSITY_MPIDEV_DETAIL,
-                                      MPI_T_BIND_NO_OBJECT,
-                                      MPIR_T_PVAR_FLAG_READONLY,
-                                      "RMA", "RMA:PKTHANDLER for Accum immed (in seconds)");
-
-    /* rma_rmapkt_acc_immed_op */
-    MPIR_T_PVAR_TIMER_REGISTER_STATIC(RMA,
-                                      MPI_DOUBLE,
-                                      rma_rmapkt_acc_immed_op,
-                                      MPI_T_VERBOSITY_MPIDEV_DETAIL,
-                                      MPI_T_BIND_NO_OBJECT,
-                                      MPIR_T_PVAR_FLAG_READONLY,
-                                      "RMA",
-                                      "RMA:PKTHANDLER for Accum immed operation (in seconds)");
-
-    /* rma_rmapkt_cas */
-    MPIR_T_PVAR_TIMER_REGISTER_STATIC(RMA,
-                                      MPI_DOUBLE,
-                                      rma_rmapkt_cas,
-                                      MPI_T_VERBOSITY_MPIDEV_DETAIL,
-                                      MPI_T_BIND_NO_OBJECT,
-                                      MPIR_T_PVAR_FLAG_READONLY,
-                                      "RMA", "RMA:PKTHANDLER for Compare-and-swap (in seconds)");
-
-    /* rma_rmapkt_fop */
-    MPIR_T_PVAR_TIMER_REGISTER_STATIC(RMA,
-                                      MPI_DOUBLE,
-                                      rma_rmapkt_fop,
-                                      MPI_T_VERBOSITY_MPIDEV_DETAIL,
-                                      MPI_T_BIND_NO_OBJECT,
-                                      MPIR_T_PVAR_FLAG_READONLY,
-                                      "RMA", "RMA:PKTHANDLER for Fetch-and-op (in seconds)");
-
-    /* rma_rmapkt_get_accum */
-    MPIR_T_PVAR_TIMER_REGISTER_STATIC(RMA,
-                                      MPI_DOUBLE,
-                                      rma_rmapkt_get_accum,
-                                      MPI_T_VERBOSITY_MPIDEV_DETAIL,
-                                      MPI_T_BIND_NO_OBJECT,
-                                      MPIR_T_PVAR_FLAG_READONLY,
-                                      "RMA", "RMA:PKTHANDLER for Get-Accumulate (in seconds)");
-
-    /* Level, counter and highwatermark for rma_winfence_reqs */
-    MPIR_T_PVAR_LEVEL_REGISTER_STATIC(RMA, MPI_UNSIGNED_LONG_LONG, rma_winfence_reqs, 0,        /* init value */
-                                      MPI_T_VERBOSITY_MPIDEV_DETAIL,
-                                      MPI_T_BIND_NO_OBJECT,
-                                      MPIR_T_PVAR_FLAG_READONLY | MPIR_T_PVAR_FLAG_CONTINUOUS,
-                                      "RMA", "WIN_FENCE:Pending requests");
-
-    MPIR_T_PVAR_COUNTER_REGISTER_STATIC(RMA,
-                                        MPI_UNSIGNED_LONG_LONG,
-                                        rma_winfence_reqs,
-                                        MPI_T_VERBOSITY_MPIDEV_DETAIL,
-                                        MPI_T_BIND_NO_OBJECT,
-                                        MPIR_T_PVAR_FLAG_READONLY,
-                                        "RMA", "WIN_FENCE:Pending requests");
-
-    MPIR_T_PVAR_HIGHWATERMARK_REGISTER_STATIC(RMA, MPI_UNSIGNED_LONG_LONG, rma_winfence_reqs, 0,        /* init value */
-                                              MPI_T_VERBOSITY_MPIDEV_DETAIL,
-                                              MPI_T_BIND_NO_OBJECT,
-                                              MPIR_T_PVAR_FLAG_READONLY,
-                                              "RMA", "WIN_FENCE:Pending requests");
-
-    /* rma_winunlock_reqs */
-    MPIR_T_PVAR_COUNTER_REGISTER_STATIC(RMA,
-                                        MPI_UNSIGNED_LONG_LONG,
-                                        rma_winunlock_reqs,
-                                        MPI_T_VERBOSITY_MPIDEV_DETAIL,
-                                        MPI_T_BIND_NO_OBJECT,
-                                        MPIR_T_PVAR_FLAG_READONLY,
-                                        "RMA", "WIN_UNLOCK:Pending requests");
-
-    /* rma_wincomplete_reqs */
-    MPIR_T_PVAR_COUNTER_REGISTER_STATIC(RMA,
-                                        MPI_UNSIGNED_LONG_LONG,
-                                        rma_wincomplete_reqs,
-                                        MPI_T_VERBOSITY_MPIDEV_DETAIL,
-                                        MPI_T_BIND_NO_OBJECT,
-                                        MPIR_T_PVAR_FLAG_READONLY,
-                                        "RMA", "WIN_COMPLETE:Pending requests");
-
-    /* rma_wincreate_allgather */
-    MPIR_T_PVAR_TIMER_REGISTER_STATIC(RMA,
-                                      MPI_DOUBLE,
-                                      rma_wincreate_allgather,
-                                      MPI_T_VERBOSITY_MPIDEV_DETAIL,
-                                      MPI_T_BIND_NO_OBJECT,
-                                      MPIR_T_PVAR_FLAG_READONLY,
-                                      "RMA", "WIN_CREATE:Allgather (in seconds)");
-
-    /* rma_winfree_rs */
-    MPIR_T_PVAR_TIMER_REGISTER_STATIC(RMA,
-                                      MPI_DOUBLE,
-                                      rma_winfree_rs,
-                                      MPI_T_VERBOSITY_MPIDEV_DETAIL,
-                                      MPI_T_BIND_NO_OBJECT,
-                                      MPIR_T_PVAR_FLAG_READONLY,
-                                      "RMA", "WIN_FREE:ReduceScatterBlock (in seconds)");
-
-    /* rma_winfree_complete */
-    MPIR_T_PVAR_TIMER_REGISTER_STATIC(RMA,
-                                      MPI_DOUBLE,
-                                      rma_winfree_complete,
-                                      MPI_T_VERBOSITY_MPIDEV_DETAIL,
-                                      MPI_T_BIND_NO_OBJECT,
-                                      MPIR_T_PVAR_FLAG_READONLY,
-                                      "RMA", "WIN_FREE:Complete (in seconds)");
-
-    /* rma_rmaqueue_alloc */
-    MPIR_T_PVAR_TIMER_REGISTER_STATIC(RMA,
-                                      MPI_DOUBLE,
-                                      rma_rmaqueue_alloc,
-                                      MPI_T_VERBOSITY_MPIDEV_DETAIL,
-                                      MPI_T_BIND_NO_OBJECT,
-                                      MPIR_T_PVAR_FLAG_READONLY,
-                                      "RMA", "Allocate RMA Queue element (in seconds)");
-
-    /* rma_rmaqueue_set */
-    MPIR_T_PVAR_TIMER_REGISTER_STATIC(RMA,
-                                      MPI_DOUBLE,
-                                      rma_rmaqueue_set,
-                                      MPI_T_VERBOSITY_MPIDEV_DETAIL,
-                                      MPI_T_BIND_NO_OBJECT,
-                                      MPIR_T_PVAR_FLAG_READONLY,
-                                      "RMA", "Set fields in RMA Queue element (in seconds)");
 }
 
 /* These are used to use a common routine to complete lists of RMA
@@ -883,9 +344,6 @@ void MPIDI_CH3_RMA_Init_Pvars(void)
    thread-safe; the best choice for thread-safety is to eliminate this
    ability to discriminate between the different types of RMA synchronization.
 */
-static MPIR_T_pvar_timer_t *list_complete_timer;        /* outer */
-static unsigned long long *list_complete_counter;
-static MPIR_T_pvar_timer_t *list_block_timer;   /* Inner; while waiting */
 
 /*
  * These routines provide a default implementation of the MPI RMA operations
@@ -1046,7 +504,6 @@ int MPIDI_Win_fence(int assert, MPID_Win * win_ptr)
             OPA_read_write_barrier();
         }
 
-        MPIR_T_PVAR_TIMER_START(RMA, rma_winfence_rs);
         /* This is the second or later fence. Do all the preceding RMA ops. */
         comm_ptr = win_ptr->comm_ptr;
         /* First inform every process whether it is a target of RMA
@@ -1096,7 +553,6 @@ int MPIDI_Win_fence(int assert, MPID_Win * win_ptr)
 
         mpi_errno = MPIR_Reduce_scatter_block_impl(MPI_IN_PLACE, rma_target_proc, 1,
                                                    MPI_INT, MPI_SUM, comm_ptr, &errflag);
-        MPIR_T_PVAR_TIMER_END(RMA, rma_winfence_rs);
         /* result is stored in rma_target_proc[0] */
         if (mpi_errno) {
             MPIU_ERR_POP(mpi_errno);
@@ -1113,15 +569,6 @@ int MPIDI_Win_fence(int assert, MPID_Win * win_ptr)
          * procs have the address and could decrement it. */
         win_ptr->at_completion_counter -= comm_size;
         win_ptr->at_completion_counter += rma_target_proc[0];
-
-        MPIR_T_PVAR_TIMER_START(RMA, rma_winfence_issue);
-        MPIR_T_PVAR_COUNTER_INC(RMA, rma_winfence_issue_aux, total_op_count);
-        MPIR_T_PVAR_ULONG2_HIGHWATERMARK_UPDATE(RMA, rma_winfence_issue_aux, total_op_count);
-
-        MPIR_T_PVAR_ULONG2_HIGHWATERMARK_UPDATE(RMA, rma_winfence_reqs,
-                                                MPIR_T_PVAR_LEVEL_GET(rma_winfence_reqs));
-        MPIR_T_PVAR_LEVEL_SET(RMA, rma_winfence_reqs, 0);       /* reset the level */
-        MPIR_T_PVAR_COUNTER_INC(RMA, rma_winfence_reqs, 1);
 
         i = 0;
         curr_ptr = MPIDI_CH3I_RMA_Ops_head(ops_list);
@@ -1148,7 +595,6 @@ int MPIDI_Win_fence(int assert, MPID_Win * win_ptr)
             }
             else {
                 nRequest++;
-                MPIR_T_PVAR_LEVEL_INC(RMA, rma_winfence_reqs, 1);
                 curr_ptr = curr_ptr->next;
                 /* The test on the difference is to reduce the number
                  * of times the partial complete routine is called. Without
@@ -1161,10 +607,6 @@ int MPIDI_Win_fence(int assert, MPID_Win * win_ptr)
                     mpi_errno = poke_progress_engine();
                     if (mpi_errno != MPI_SUCCESS)
                         MPIU_ERR_POP(mpi_errno);
-                    MPIR_T_PVAR_STMT(RMA, list_complete_timer =
-                                     MPIR_T_PVAR_TIMER_ADDR(rma_winfence_complete));
-                    MPIR_T_PVAR_STMT(RMA, list_complete_counter =
-                                     MPIR_T_PVAR_COUNTER_ADDR(rma_winfence_complete_aux));
 
                     mpi_errno = rma_list_gc(win_ptr, ops_list, curr_ptr, &nDone);
                     if (mpi_errno != MPI_SUCCESS)
@@ -1175,7 +617,6 @@ int MPIDI_Win_fence(int assert, MPID_Win * win_ptr)
                 }
             }
         }
-        MPIR_T_PVAR_TIMER_END(RMA, rma_winfence_issue);
 
         /* We replaced a loop over an array of requests with a list of the
          * incomplete requests.  The reason to do
@@ -1189,11 +630,6 @@ int MPIDI_Win_fence(int assert, MPID_Win * win_ptr)
          * needed while looping through the requests.
          */
         if (total_op_count) {
-            MPIR_T_PVAR_STMT(RMA, list_complete_timer =
-                             MPIR_T_PVAR_TIMER_ADDR(rma_winfence_complete));
-            MPIR_T_PVAR_STMT(RMA, list_complete_counter =
-                             MPIR_T_PVAR_COUNTER_ADDR(rma_winfence_complete_aux));
-            MPIR_T_PVAR_STMT(RMA, list_block_timer = MPIR_T_PVAR_TIMER_ADDR(rma_winfence_block));
             mpi_errno = rma_list_complete(win_ptr, ops_list);
             if (mpi_errno != MPI_SUCCESS)
                 MPIU_ERR_POP(mpi_errno);
@@ -1209,7 +645,6 @@ int MPIDI_Win_fence(int assert, MPID_Win * win_ptr)
  finish_up:
 	/* wait for all operations from other processes to finish */
         if (win_ptr->at_completion_counter) {
-            MPIR_T_PVAR_TIMER_START(RMA, rma_winfence_wait);
             MPID_Progress_start(&progress_state);
             while (win_ptr->at_completion_counter) {
                 mpi_errno = MPID_Progress_wait(&progress_state);
@@ -1219,10 +654,8 @@ int MPIDI_Win_fence(int assert, MPID_Win * win_ptr)
                     MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**winnoprogress");
                 }
                 /* --END ERROR HANDLING-- */
-                MPIR_T_PVAR_COUNTER_INC(RMA, rma_winfence_wait_aux, 1);
             }
             MPID_Progress_end(&progress_state);
-            MPIR_T_PVAR_TIMER_END(RMA, rma_winfence_wait);
         }
 
         if (assert & MPI_MODE_NOSUCCEED) {
@@ -2094,8 +1527,6 @@ int MPIDI_Win_post(MPID_Group * post_grp_ptr, int assert, MPID_Win * win_ptr)
         MPI_Request *req;
         MPI_Status *status;
 
-        MPIR_T_PVAR_TIMER_START(RMA, rma_winpost_sendsync);
-
         /* NOCHECK not specified. We need to notify the source
          * processes that Post has been called. */
 
@@ -2132,7 +1563,6 @@ int MPIDI_Win_post(MPID_Group * post_grp_ptr, int assert, MPID_Win * win_ptr)
                             "status");
 
         /* Send a 0-byte message to the source processes */
-        MPIR_T_PVAR_COUNTER_INC(RMA, rma_winpost_sendsync_aux, post_grp_size);
         for (i = 0; i < post_grp_size; i++) {
             dst = ranks_in_win_grp[i];
 
@@ -2170,7 +1600,6 @@ int MPIDI_Win_post(MPID_Group * post_grp_ptr, int assert, MPID_Win * win_ptr)
         mpi_errno = MPIR_Group_free_impl(win_grp_ptr);
         if (mpi_errno)
             MPIU_ERR_POP(mpi_errno);
-        MPIR_T_PVAR_TIMER_END(RMA, rma_winpost_sendsync);
     }
 
   fn_exit:
@@ -2412,8 +1841,6 @@ int MPIDI_Win_complete(MPID_Win * win_ptr)
 
     start_grp_size = win_ptr->start_group_ptr->size;
 
-    MPIR_T_PVAR_TIMER_START(RMA, rma_wincomplete_recvsync);
-
     MPIU_CHKLMEM_MALLOC(ranks_in_win_grp, int *, start_grp_size * sizeof(int),
                         mpi_errno, "ranks_in_win_grp");
 
@@ -2432,14 +1859,11 @@ int MPIDI_Win_complete(MPID_Win * win_ptr)
         if (mpi_errno)
             MPIU_ERR_POP(mpi_errno);
     }
-    MPIR_T_PVAR_TIMER_END(RMA, rma_wincomplete_recvsync);
 
     /* keep track of no. of ops to each proc. Needed for knowing
      * whether or not to decrement the completion counter. The
      * completion counter is decremented only on the last
      * operation. */
-
-    MPIR_T_PVAR_TIMER_START(RMA, rma_wincomplete_issue);
 
     /* Note, active target uses the following ops list, and passive
      * target uses win_ptr->targets[..] */
@@ -2456,9 +1880,6 @@ int MPIDI_Win_complete(MPID_Win * win_ptr)
         total_op_count++;
         curr_ptr = curr_ptr->next;
     }
-
-    MPIR_T_PVAR_COUNTER_INC(RMA, rma_wincomplete_issue_aux, total_op_count);
-    MPIR_T_PVAR_ULONG2_HIGHWATERMARK_UPDATE(RMA, rma_wincomplete_issue_aux, total_op_count);
 
     /* We allocate a few extra requests because if there are no RMA
      * ops to a target process, we need to send a 0-byte message just
@@ -2493,7 +1914,6 @@ int MPIDI_Win_complete(MPID_Win * win_ptr)
         }
         else {
             nRequest++;
-            MPIR_T_PVAR_COUNTER_INC(RMA, rma_wincomplete_reqs, 1);
             curr_ptr = curr_ptr->next;
             if (nRequest > MPIR_CVAR_CH3_RMA_NREQUEST_THRESHOLD &&
                 nRequest - nRequestNew > MPIR_CVAR_CH3_RMA_NREQUEST_NEW_THRESHOLD) {
@@ -2501,10 +1921,6 @@ int MPIDI_Win_complete(MPID_Win * win_ptr)
                 mpi_errno = poke_progress_engine();
                 if (mpi_errno != MPI_SUCCESS)
                     MPIU_ERR_POP(mpi_errno);
-                MPIR_T_PVAR_STMT(RMA, list_complete_timer =
-                                 MPIR_T_PVAR_TIMER_ADDR(rma_wincomplete_complete));
-                MPIR_T_PVAR_STMT(RMA, list_complete_counter =
-                                 MPIR_T_PVAR_COUNTER_ADDR(rma_wincomplete_complete_aux));
                 mpi_errno = rma_list_gc(win_ptr, ops_list, curr_ptr, &nDone);
                 if (mpi_errno != MPI_SUCCESS)
                     MPIU_ERR_POP(mpi_errno);
@@ -2513,7 +1929,6 @@ int MPIDI_Win_complete(MPID_Win * win_ptr)
             }
         }
     }
-    MPIR_T_PVAR_TIMER_END(RMA, rma_wincomplete_issue);
 
     /* If the start_group included some processes that did not end up
      * becoming targets of  RMA operations from this process, we need
@@ -2555,16 +1970,12 @@ int MPIDI_Win_complete(MPID_Win * win_ptr)
             if (request) {
                 MPIDI_RMA_Op_t *new_ptr = NULL;
 
-                MPIR_T_PVAR_TIMER_START(RMA, rma_rmaqueue_alloc);
                 mpi_errno = MPIDI_CH3I_RMA_Ops_alloc_tail(ops_list, &new_ptr);
-                MPIR_T_PVAR_TIMER_END(RMA, rma_rmaqueue_alloc);
                 if (mpi_errno) {
                     MPIU_ERR_POP(mpi_errno);
                 }
 
-                MPIR_T_PVAR_TIMER_START(RMA, rma_rmaqueue_set);
                 new_ptr->request = request;
-                MPIR_T_PVAR_TIMER_END(RMA, rma_rmaqueue_set);
             }
             j++;
             new_total_op_count++;
@@ -2572,11 +1983,6 @@ int MPIDI_Win_complete(MPID_Win * win_ptr)
     }
 
     if (new_total_op_count) {
-        MPIR_T_PVAR_STMT(RMA, list_complete_timer =
-                         MPIR_T_PVAR_TIMER_ADDR(rma_wincomplete_complete));
-        MPIR_T_PVAR_STMT(RMA, list_complete_counter =
-                         MPIR_T_PVAR_COUNTER_ADDR(rma_wincomplete_complete_aux));
-        MPIR_T_PVAR_STMT(RMA, list_block_timer = MPIR_T_PVAR_TIMER_ADDR(rma_wincomplete_block));
         mpi_errno = rma_list_complete(win_ptr, ops_list);
         if (mpi_errno != MPI_SUCCESS)
             MPIU_ERR_POP(mpi_errno);
@@ -2626,7 +2032,6 @@ int MPIDI_Win_wait(MPID_Win * win_ptr)
     if (win_ptr->at_completion_counter) {
         MPID_Progress_state progress_state;
 
-        MPIR_T_PVAR_TIMER_START(RMA, rma_winwait_wait);
         MPID_Progress_start(&progress_state);
         while (win_ptr->at_completion_counter) {
             mpi_errno = MPID_Progress_wait(&progress_state);
@@ -2637,10 +2042,8 @@ int MPIDI_Win_wait(MPID_Win * win_ptr)
                 return mpi_errno;
             }
             /* --END ERROR HANDLING-- */
-            MPIR_T_PVAR_COUNTER_INC(RMA, rma_winwait_wait_aux, 1);
         }
         MPID_Progress_end(&progress_state);
-        MPIR_T_PVAR_TIMER_END(RMA, rma_winwait_wait);
     }
 
     /* Ensure ordering of load/store operations. */
@@ -3476,8 +2879,6 @@ static int do_passive_target_rma(MPID_Win * win_ptr, int target_rank,
         curr_ptr = curr_ptr->next;
     }
 
-    MPIR_T_PVAR_TIMER_START(RMA, rma_winunlock_issue);
-
     curr_ptr = MPIDI_CH3I_RMA_Ops_head(&win_ptr->targets[target_rank].rma_ops_list);
 
     if (curr_ptr != NULL) {
@@ -3543,7 +2944,6 @@ static int do_passive_target_rma(MPID_Win * win_ptr, int target_rank,
         }
         else {
             nRequest++;
-            MPIR_T_PVAR_COUNTER_INC(RMA, rma_winunlock_reqs, 1);
             curr_ptr = curr_ptr->next;
             if (nRequest > MPIR_CVAR_CH3_RMA_NREQUEST_THRESHOLD &&
                 nRequest - nRequestNew > MPIR_CVAR_CH3_RMA_NREQUEST_NEW_THRESHOLD) {
@@ -3551,10 +2951,6 @@ static int do_passive_target_rma(MPID_Win * win_ptr, int target_rank,
                 mpi_errno = poke_progress_engine();
                 if (mpi_errno != MPI_SUCCESS)
                     MPIU_ERR_POP(mpi_errno);
-                MPIR_T_PVAR_STMT(RMA, list_complete_timer =
-                                 MPIR_T_PVAR_TIMER_ADDR(rma_winunlock_complete));
-                MPIR_T_PVAR_STMT(RMA, list_complete_counter =
-                                 MPIR_T_PVAR_COUNTER_ADDR(rma_winunlock_complete_aux));
                 mpi_errno =
                     rma_list_gc(win_ptr, &win_ptr->targets[target_rank].rma_ops_list, curr_ptr,
                                 &nDone);
@@ -3566,13 +2962,8 @@ static int do_passive_target_rma(MPID_Win * win_ptr, int target_rank,
             }
         }
     }
-    MPIR_T_PVAR_TIMER_END(RMA, rma_winunlock_issue);
 
     if (nops) {
-        MPIR_T_PVAR_STMT(RMA, list_complete_timer = MPIR_T_PVAR_TIMER_ADDR(rma_winunlock_complete));
-        MPIR_T_PVAR_STMT(RMA, list_block_timer = MPIR_T_PVAR_TIMER_ADDR(rma_winunlock_block));
-        MPIR_T_PVAR_STMT(RMA, list_complete_counter =
-                         MPIR_T_PVAR_COUNTER_ADDR(rma_winunlock_complete_aux));
         mpi_errno = rma_list_complete(win_ptr, &win_ptr->targets[target_rank].rma_ops_list);
         if (mpi_errno != MPI_SUCCESS)
             MPIU_ERR_POP(mpi_errno);
@@ -3666,7 +3057,6 @@ static int acquire_local_lock(MPID_Win * win_ptr, int lock_type)
     if (MPIDI_CH3I_Try_acquire_win_lock(win_ptr, lock_type) == 0) {
         MPID_Progress_state progress_state;
 
-        MPIR_T_PVAR_TIMER_START(RMA, rma_winlock_getlocallock);
         MPID_Progress_start(&progress_state);
         while (MPIDI_CH3I_Try_acquire_win_lock(win_ptr, lock_type) == 0) {
             mpi_errno = MPID_Progress_wait(&progress_state);
@@ -3678,7 +3068,6 @@ static int acquire_local_lock(MPID_Win * win_ptr, int lock_type)
             /* --END ERROR HANDLING-- */
         }
         MPID_Progress_end(&progress_state);
-        MPIR_T_PVAR_TIMER_END(RMA, rma_winlock_getlocallock);
     }
 
     win_ptr->targets[win_ptr->comm_ptr->rank].remote_lock_state = MPIDI_CH3_WIN_LOCK_GRANTED;
@@ -3716,7 +3105,6 @@ static int wait_for_lock_granted(MPID_Win * win_ptr, int target_rank)
     if (win_ptr->targets[target_rank].remote_lock_state != MPIDI_CH3_WIN_LOCK_GRANTED) {
         MPID_Progress_state progress_state;
 
-        MPIR_T_PVAR_TIMER_START(RMA, rma_winunlock_getlock);
         MPID_Progress_start(&progress_state);
         while (win_ptr->targets[target_rank].remote_lock_state != MPIDI_CH3_WIN_LOCK_GRANTED) {
             mpi_errno = MPID_Progress_wait(&progress_state);
@@ -3728,7 +3116,6 @@ static int wait_for_lock_granted(MPID_Win * win_ptr, int target_rank)
             /* --END ERROR HANDLING-- */
         }
         MPID_Progress_end(&progress_state);
-        MPIR_T_PVAR_TIMER_END(RMA, rma_winunlock_getlock);
     }
 
   fn_exit:
@@ -4497,7 +3884,6 @@ int MPIDI_CH3_PktHandler_Accumulate(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
 
     MPIU_DBG_MSG(CH3_OTHER, VERBOSE, "received accumulate pkt");
 
-    MPIR_T_PVAR_TIMER_START(RMA, rma_rmapkt_acc);
     MPIU_Assert(accum_pkt->target_win_handle != MPI_WIN_NULL);
     MPID_Win_get_ptr(accum_pkt->target_win_handle, win_ptr);
     mpi_errno = MPIDI_CH3_Start_rma_op_target(win_ptr, accum_pkt->flags);
@@ -4524,7 +3910,6 @@ int MPIDI_CH3_PktHandler_Accumulate(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
     }
 
     if (MPIR_DATATYPE_IS_PREDEFINED(accum_pkt->datatype)) {
-        MPIR_T_PVAR_TIMER_START(RMA, rma_rmapkt_acc_predef);
         MPIDI_Request_set_type(req, MPIDI_REQUEST_TYPE_ACCUM_RESP);
         req->dev.datatype = accum_pkt->datatype;
 
@@ -4563,11 +3948,9 @@ int MPIDI_CH3_PktHandler_Accumulate(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
                 MPIU_ERR_POP(mpi_errno);
             if (complete) {
                 *rreqp = NULL;
-                MPIR_T_PVAR_TIMER_END(RMA, rma_rmapkt_acc_predef);
                 goto fn_exit;
             }
         }
-        MPIR_T_PVAR_TIMER_END(RMA, rma_rmapkt_acc_predef);
     }
     else {
         MPIDI_Request_set_type(req, MPIDI_REQUEST_TYPE_ACCUM_RESP_DERIVED_DT);
@@ -4623,7 +4006,6 @@ int MPIDI_CH3_PktHandler_Accumulate(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
     }
 
   fn_exit:
-    MPIR_T_PVAR_TIMER_END(RMA, rma_rmapkt_acc);
     MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3_PKTHANDLER_ACCUMULATE);
     return mpi_errno;
   fn_fail:
@@ -4649,7 +4031,6 @@ int MPIDI_CH3_PktHandler_Accumulate_Immed(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt
 
     MPIU_DBG_MSG(CH3_OTHER, VERBOSE, "received accumulate immedidate pkt");
 
-    MPIR_T_PVAR_TIMER_START(RMA, rma_rmapkt_acc_immed);
     MPIU_Assert(accum_pkt->target_win_handle != MPI_WIN_NULL);
     MPID_Win_get_ptr(accum_pkt->target_win_handle, win_ptr);
     mpi_errno = MPIDI_CH3_Start_rma_op_target(win_ptr, accum_pkt->flags);
@@ -4661,7 +4042,6 @@ int MPIDI_CH3_PktHandler_Accumulate_Immed(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt
 
     MPID_Datatype_get_extent_macro(accum_pkt->datatype, extent);
 
-    MPIR_T_PVAR_TIMER_START(RMA, rma_rmapkt_acc_immed_op);
     if (win_ptr->shm_allocated == TRUE)
         MPIDI_CH3I_SHM_MUTEX_LOCK(win_ptr);
     /* Data is already present */
@@ -4686,7 +4066,6 @@ int MPIDI_CH3_PktHandler_Accumulate_Immed(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt
     }
     if (win_ptr->shm_allocated == TRUE)
         MPIDI_CH3I_SHM_MUTEX_UNLOCK(win_ptr);
-    MPIR_T_PVAR_TIMER_END(RMA, rma_rmapkt_acc_immed_op);
 
     /* There are additional steps to take if this is a passive
      * target RMA or the last operation from the source */
@@ -4702,7 +4081,6 @@ int MPIDI_CH3_PktHandler_Accumulate_Immed(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt
     }
 
   fn_exit:
-    MPIR_T_PVAR_TIMER_END(RMA, rma_rmapkt_acc_immed);
     MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3_PKTHANDLER_ACCUMULATE_IMMED);
     return mpi_errno;
   fn_fail:
@@ -4731,7 +4109,6 @@ int MPIDI_CH3_PktHandler_CAS(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
 
     MPIU_DBG_MSG(CH3_OTHER, VERBOSE, "received CAS pkt");
 
-    MPIR_T_PVAR_TIMER_START(RMA, rma_rmapkt_cas);
     MPIU_Assert(cas_pkt->target_win_handle != MPI_WIN_NULL);
     MPID_Win_get_ptr(cas_pkt->target_win_handle, win_ptr);
     mpi_errno = MPIDI_CH3_Start_rma_op_target(win_ptr, cas_pkt->flags);
@@ -4797,7 +4174,6 @@ int MPIDI_CH3_PktHandler_CAS(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
     }
 
   fn_exit:
-    MPIR_T_PVAR_TIMER_END(RMA, rma_rmapkt_cas);
     MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3_PKTHANDLER_CAS);
     return mpi_errno;
   fn_fail:
@@ -4861,7 +4237,6 @@ int MPIDI_CH3_PktHandler_FOP(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
 
     MPIU_DBG_MSG(CH3_OTHER, VERBOSE, "received FOP pkt");
 
-    MPIR_T_PVAR_TIMER_START(RMA, rma_rmapkt_fop);
     MPIU_Assert(fop_pkt->target_win_handle != MPI_WIN_NULL);
     MPID_Win_get_ptr(fop_pkt->target_win_handle, win_ptr);
     mpi_errno = MPIDI_CH3_Start_rma_op_target(win_ptr, fop_pkt->flags);
@@ -4925,7 +4300,6 @@ int MPIDI_CH3_PktHandler_FOP(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
 
   fn_exit:
     MPIU_CHKPMEM_COMMIT();
-    MPIR_T_PVAR_TIMER_END(RMA, rma_rmapkt_fop);
     MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3_PKTHANDLER_FOP);
     return mpi_errno;
     /* --BEGIN ERROR HANDLING-- */
@@ -5015,7 +4389,6 @@ int MPIDI_CH3_PktHandler_Get_AccumResp(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3_PKTHANDLER_GET_ACCUM_RESP);
 
     MPIU_DBG_MSG(CH3_OTHER, VERBOSE, "received Get-Accumulate response pkt");
-    MPIR_T_PVAR_TIMER_START(RMA, rma_rmapkt_get_accum);
 
     data_len = *buflen - sizeof(MPIDI_CH3_Pkt_t);
     data_buf = (char *) pkt + sizeof(MPIDI_CH3_Pkt_t);
@@ -5037,7 +4410,6 @@ int MPIDI_CH3_PktHandler_Get_AccumResp(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
     *buflen = data_len + sizeof(MPIDI_CH3_Pkt_t);
 
   fn_exit:
-    MPIR_T_PVAR_TIMER_END(RMA, rma_rmapkt_get_accum);
     MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3_PKTHANDLER_GET_ACCUM_RESP);
     return mpi_errno;
   fn_fail:
@@ -5087,9 +4459,7 @@ int MPIDI_CH3_PktHandler_Lock(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
             curr_ptr = curr_ptr->next;
         }
 
-        MPIR_T_PVAR_TIMER_START(RMA, rma_lockqueue_alloc);
         new_ptr = (MPIDI_Win_lock_queue *) MPIU_Malloc(sizeof(MPIDI_Win_lock_queue));
-        MPIR_T_PVAR_TIMER_END(RMA, rma_lockqueue_alloc);
         if (!new_ptr) {
             MPIU_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s",
                                  "MPIDI_Win_lock_queue");
@@ -5161,9 +4531,7 @@ int MPIDI_CH3_PktHandler_LockPutUnlock(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
         /* queue the information */
         MPIDI_Win_lock_queue *curr_ptr, *prev_ptr, *new_ptr;
 
-        MPIR_T_PVAR_TIMER_START(RMA, rma_lockqueue_alloc);
         new_ptr = (MPIDI_Win_lock_queue *) MPIU_Malloc(sizeof(MPIDI_Win_lock_queue));
-        MPIR_T_PVAR_TIMER_END(RMA, rma_lockqueue_alloc);
         if (!new_ptr) {
             MPIU_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s",
                                  "MPIDI_Win_lock_queue");
@@ -5320,9 +4688,7 @@ int MPIDI_CH3_PktHandler_LockGetUnlock(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
             curr_ptr = curr_ptr->next;
         }
 
-        MPIR_T_PVAR_TIMER_START(RMA, rma_lockqueue_alloc);
         new_ptr = (MPIDI_Win_lock_queue *) MPIU_Malloc(sizeof(MPIDI_Win_lock_queue));
-        MPIR_T_PVAR_TIMER_END(RMA, rma_lockqueue_alloc);
         if (!new_ptr) {
             MPIU_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s",
                                  "MPIDI_Win_lock_queue");
@@ -5401,9 +4767,7 @@ int MPIDI_CH3_PktHandler_LockAccumUnlock(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
 
     /* queue the information */
 
-    MPIR_T_PVAR_TIMER_START(RMA, rma_lockqueue_alloc);
     new_ptr = (MPIDI_Win_lock_queue *) MPIU_Malloc(sizeof(MPIDI_Win_lock_queue));
-    MPIR_T_PVAR_TIMER_END(RMA, rma_lockqueue_alloc);
     if (!new_ptr) {
         MPIU_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s",
                              "MPIDI_Win_lock_queue");
@@ -5708,7 +5072,6 @@ static inline int rma_list_complete(MPID_Win * win_ptr, MPIDI_RMA_Ops_list_t * o
     MPIDI_RMA_Op_t *curr_ptr;
     MPID_Progress_state progress_state;
 
-    MPIR_T_PVAR_TIMER_START_VAR(RMA, list_complete_timer);
     MPID_Progress_start(&progress_state);
     /* Process all operations until they are complete */
     while (!MPIDI_CH3I_RMA_Ops_isempty(ops_list)) {
@@ -5729,7 +5092,6 @@ static inline int rma_list_complete(MPID_Win * win_ptr, MPIDI_RMA_Ops_list_t * o
             break;
         }
         if (curr_ptr && !MPID_Request_is_complete(curr_ptr->request)) {
-            MPIR_T_PVAR_TIMER_START_VAR(RMA, list_block_timer);
             mpi_errno = MPID_Progress_wait(&progress_state);
             /* --BEGIN ERROR HANDLING-- */
             if (mpi_errno != MPI_SUCCESS) {
@@ -5737,12 +5099,9 @@ static inline int rma_list_complete(MPID_Win * win_ptr, MPIDI_RMA_Ops_list_t * o
                 MPIU_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**winnoprogress");
             }
             /* --END ERROR HANDLING-- */
-            MPIR_T_PVAR_TIMER_END_VAR(RMA, list_block_timer);
         }
     }   /* While list of rma operation is non-empty */
     MPID_Progress_end(&progress_state);
-    MPIR_T_PVAR_COUNTER_INC_VAR(RMA, list_complete_counter, ntimes);
-    MPIR_T_PVAR_TIMER_END_VAR(RMA, list_complete_timer);
 
   fn_fail:
     return mpi_errno;
@@ -5762,8 +5121,6 @@ static inline int rma_list_gc(MPID_Win * win_ptr,
     MPIDI_RMA_Op_t *curr_ptr;
     int nComplete = 0;
     int nVisit = 0;
-
-    MPIR_T_PVAR_TIMER_START_VAR(RMA, list_complete_timer);
 
     curr_ptr = MPIDI_CH3I_RMA_Ops_head(ops_list);
     do {
@@ -5824,8 +5181,6 @@ static inline int rma_list_gc(MPID_Win * win_ptr,
     } while (curr_ptr && curr_ptr != last_elm);
 
     /* if (nComplete) printf("Completed %d requests\n", nComplete); */
-    MPIR_T_PVAR_COUNTER_INC_VAR(RMA, list_complete_counter, 1);
-    MPIR_T_PVAR_TIMER_END_VAR(RMA, list_complete_timer);
 
     *nDone = nComplete;
 

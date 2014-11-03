@@ -9,10 +9,6 @@
 #include "mpl_utlist.h"
 #include "mpidi_ch3_impl.h"
 
-MPIR_T_PVAR_DOUBLE_TIMER_DECL_EXTERN(RMA, rma_wincreate_allgather);
-MPIR_T_PVAR_DOUBLE_TIMER_DECL_EXTERN(RMA, rma_winfree_rs);
-MPIR_T_PVAR_DOUBLE_TIMER_DECL_EXTERN(RMA, rma_winfree_complete);
-
 typedef enum MPIDI_RMA_Op_type {
     MPIDI_RMA_PUT = 23,
     MPIDI_RMA_GET = 24,

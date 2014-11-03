@@ -14,8 +14,6 @@
 #define MPIDI_CH3_PAGESIZE_MASK (~(MPIDI_CH3_PAGESIZE-1))
 #define MPIDI_CH3_ROUND_UP_PAGESIZE(x) ((((MPI_Aint)x)+(~MPIDI_CH3_PAGESIZE_MASK)) & MPIDI_CH3_PAGESIZE_MASK)
 
-MPIR_T_PVAR_DOUBLE_TIMER_DECL_EXTERN(RMA, rma_wincreate_allgather);
-
 MPIDI_SHM_Wins_list_t shm_wins_list;
 
 static int MPIDI_CH3I_Win_allocate_shm(MPI_Aint size, int disp_unit, MPID_Info *info, MPID_Comm *comm_ptr,
@@ -317,7 +315,6 @@ static int MPIDI_CH3I_Win_allocate_shm(MPI_Aint size, int disp_unit, MPID_Info *
     node_size = node_comm_ptr->local_size;
     node_rank = node_comm_ptr->rank;
 
-    MPIR_T_PVAR_TIMER_START(RMA, rma_wincreate_allgather);
     /* allocate memory for the base addresses, disp_units, and
        completion counters of all processes */
     MPIU_CHKPMEM_MALLOC((*win_ptr)->base_addrs, void **,
@@ -350,7 +347,6 @@ static int MPIDI_CH3I_Win_allocate_shm(MPI_Aint size, int disp_unit, MPID_Info *
     mpi_errno = MPIR_Allgather_impl(MPI_IN_PLACE, 0, MPI_DATATYPE_NULL,
                                     tmp_buf, 3 * sizeof(MPI_Aint), MPI_BYTE,
                                     (*win_ptr)->comm_ptr, &errflag);
-    MPIR_T_PVAR_TIMER_END(RMA, rma_wincreate_allgather);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     MPIU_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
 
