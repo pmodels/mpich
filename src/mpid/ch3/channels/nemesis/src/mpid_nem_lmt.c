@@ -90,7 +90,6 @@ int MPID_nem_lmt_RndvSend(MPID_Request **sreq_p, const void * buf, int count,
     MPID_PKT_DECL_CAST(upkt, MPID_nem_pkt_lmt_rts_t, rts_pkt);
     MPIDI_VC_t *vc;
     MPID_Request *sreq =*sreq_p;
-    int i;
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_LMT_RNDVSEND);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_LMT_RNDVSEND);
@@ -124,30 +123,8 @@ int MPID_nem_lmt_RndvSend(MPID_Request **sreq_p, const void * buf, int count,
 
     MPIU_THREAD_CS_ENTER(LMT,);
     mpi_errno = vc->ch.lmt_initiate_lmt(vc, &upkt.p, sreq);
-    if (MPI_SUCCESS == mpi_errno) {
-        /* If this loops all the way around and can't find a place to put the
-         * RTS request, it will just drop the request and leave it out of the
-         * queue. It will print a message to warn the user. This should only
-         * affect FT and not matching so we'll consider this ok for now. */
-        for (i = MPID_nem_lmt_rts_queue_last_inserted + 1; ; i++) {
-            if (i == MPID_nem_lmt_rts_queue_size) {
-                i = -1;
-                continue;
-            }
-
-            if (MPID_nem_lmt_rts_queue[i] == MPI_REQUEST_NULL) {
-                MPID_nem_lmt_rts_queue[i] = sreq->handle;
-                MPID_nem_lmt_rts_queue_last_inserted = i;
-                break;
-            }
-
-            if (i == MPID_nem_lmt_rts_queue_last_inserted && !warning_printed) {
-                MPIU_Internal_error_printf("LMT RTS queue exceeded. FT not provided for overflowed messages.\n");
-                warning_printed = 1;
-                break;
-            }
-        }
-    }
+    if (MPI_SUCCESS == mpi_errno)
+        MPID_nem_lmt_rtsq_enqueue(&vc->ch.lmt_rts_queue, sreq);
     MPIU_THREAD_CS_EXIT(LMT,);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
@@ -329,7 +306,6 @@ static int pkt_CTS_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, MPIDI_msg_sz_t 
     char *data_buf;
     MPIDI_msg_sz_t data_len;
     int mpi_errno = MPI_SUCCESS;
-    int i;
     MPIU_CHKPMEM_DECL(1);
     MPIDI_STATE_DECL(MPID_STATE_PKT_CTS_HANDLER);
 
@@ -343,20 +319,8 @@ static int pkt_CTS_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, MPIDI_msg_sz_t 
     MPID_Request_get_ptr(cts_pkt->sender_req_id, sreq);
 
     MPIU_THREAD_CS_ENTER(LMT,);
-    /* Remove the request from the RTS queue. */
-    for (i = MPID_nem_lmt_rts_queue_last_inserted + 1;
-            i != MPID_nem_lmt_rts_queue_last_inserted;
-            i++) {
-        if (i == MPID_nem_lmt_rts_queue_size) {
-            i = -1;
-            continue;
-        }
-
-        if (MPID_nem_lmt_rts_queue[i] == cts_pkt->sender_req_id) {
-            MPID_nem_lmt_rts_queue[i] = MPI_REQUEST_NULL;
-            break;
-        }
-    }
+    /* Remove the request from the VC RTS queue. */
+    MPID_nem_lmt_rtsq_search_remove(&vc->ch.lmt_rts_queue, cts_pkt->sender_req_id, &rts_sreq);
     MPIU_THREAD_CS_EXIT(LMT,);
 
     sreq->ch.lmt_req_id = cts_pkt->receiver_req_id;

@@ -7,6 +7,7 @@
 #if !defined(MPICH_MPIDI_CH3_PRE_H_INCLUDED)
 #define MPICH_MPIDI_CH3_PRE_H_INCLUDED
 #include "mpid_nem_pre.h"
+#include "mpid_nem_generic_queue.h"
 
 #if defined(HAVE_NETINET_IN_H)
     #include <netinet/in.h>
@@ -46,6 +47,30 @@ MPIDI_CH3I_VC_state_t;
 /* size of private data area in vc and req for network modules */
 #define MPID_NEM_VC_NETMOD_AREA_LEN 128
 #define MPID_NEM_REQ_NETMOD_AREA_LEN 192
+
+/* define functions for access MPID_nem_lmt_rts_queue_t */
+typedef GENERIC_Q_DECL(struct MPID_Request) MPID_nem_lmt_rts_queue_t;
+#define MPID_nem_lmt_rtsq_empty(q) GENERIC_Q_EMPTY (q)
+#define MPID_nem_lmt_rtsq_head(q) GENERIC_Q_HEAD (q)
+#define MPID_nem_lmt_rtsq_enqueue(qp, ep) do {                                          \
+        MPIU_DBG_MSG_FMT(CH3_CHANNEL, VERBOSE, (MPIU_DBG_FDEST,                         \
+                          "MPID_nem_lmt_rtsq_enqueue req=%p (handle=%#x), queue=%p",    \
+                          ep, (ep)->handle, qp));                                       \
+        GENERIC_Q_ENQUEUE (qp, ep, dev.next);                                           \
+    } while (0)
+#define MPID_nem_lmt_rtsq_dequeue(qp, epp)  do {                                        \
+        GENERIC_Q_DEQUEUE (qp, epp, dev.next);                                          \
+        MPIU_DBG_MSG_FMT(CH3_CHANNEL, VERBOSE, (MPIU_DBG_FDEST,                         \
+                          "MPID_nem_lmt_rtsq_dequeue req=%p (handle=%#x), queue=%p",    \
+                          *(epp), *(epp) ? (*(epp))->handle : -1, qp));                 \
+    } while (0)
+#define MPID_nem_lmt_rtsq_search_remove(qp, req_id, epp) do {                           \
+        GENERIC_Q_SEARCH_REMOVE(qp, _e->handle == (req_id), epp,                        \
+                struct MPID_Request, dev.next);                                         \
+        MPIU_DBG_MSG_FMT(CH3_CHANNEL, VERBOSE, (MPIU_DBG_FDEST,                         \
+                    "MPID_nem_lmt_rtsq_search_remove req=%p (handle=%#x), queue=%p",    \
+                    *(epp), req_id, qp));                                               \
+} while (0)
 
 typedef struct MPIDI_CH3I_VC
 {
@@ -110,6 +135,7 @@ typedef struct MPIDI_CH3I_VC
     struct {struct MPID_nem_lmt_shm_wait_element *head, *tail;} lmt_queue;
     struct MPID_nem_lmt_shm_wait_element *lmt_active_lmt;
     int lmt_enqueued; /* FIXME: used for debugging */
+    MPID_nem_lmt_rts_queue_t lmt_rts_queue;
 
     /* Pointer to per-vc packet handlers */
     MPIDI_CH3_PktHandler_Fcn **pkt_handler;

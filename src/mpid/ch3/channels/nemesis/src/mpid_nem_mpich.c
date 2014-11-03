@@ -23,10 +23,6 @@ MPID_nem_cell_ptr_t MPID_nem_prefetched_cell = 0;
 
 unsigned short *MPID_nem_recv_seqno = 0;
 
-int *MPID_nem_lmt_rts_queue;
-int MPID_nem_lmt_rts_queue_size;
-int MPID_nem_lmt_rts_queue_last_inserted = 0;
-
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_mpich_init
 #undef FCNAME
@@ -36,7 +32,7 @@ MPID_nem_mpich_init(void)
 {
     int mpi_errno = MPI_SUCCESS;
     int i;
-    MPIU_CHKPMEM_DECL (3);
+    MPIU_CHKPMEM_DECL (2);
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_MPICH_INIT);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_MPICH_INIT);
@@ -67,15 +63,6 @@ MPID_nem_mpich_init(void)
     MPID_nem_curr_fboxq_elem = NULL;
     MPID_nem_curr_fbox_all_poll = &MPID_nem_fboxq_elem_list[0];
     MPID_nem_fboxq_elem_list_last = &MPID_nem_fboxq_elem_list[MPID_nem_mem_region.num_local - 1];
-
-    /* Create a queue of MPID_NEM_LMT_RTS_QUEUE_SIZE ints to hold outstanding
-     * RTS requests. If we run out of space, we'll just drop the extra
-     * requests. This won't cause a matching problem, it will just prevent FT
-     * from working for those requests that get dropped. */
-    MPID_nem_lmt_rts_queue_size = MPIR_CVAR_NEM_LMT_RTS_QUEUE_SIZE;
-    MPIU_CHKPMEM_MALLOC(MPID_nem_lmt_rts_queue, int *, sizeof(int) * MPID_nem_lmt_rts_queue_size, mpi_errno, "lmt rts queue");
-    for (i = 0; i < MPID_nem_lmt_rts_queue_size; i++)
-        MPID_nem_lmt_rts_queue[i] = MPI_REQUEST_NULL;
 
     MPIU_CHKPMEM_COMMIT();
 fn_exit:

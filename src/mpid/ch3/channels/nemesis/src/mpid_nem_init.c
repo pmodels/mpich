@@ -544,6 +544,8 @@ MPID_nem_vc_init (MPIDI_VC_t *vc)
         vc_ch->lmt_queue.tail      = NULL;
         vc_ch->lmt_active_lmt      = NULL;
         vc_ch->lmt_enqueued        = FALSE;
+        vc_ch->lmt_rts_queue.head  = NULL;
+        vc_ch->lmt_rts_queue.tail  = NULL;
 
         if (MPIR_CVAR_NEMESIS_SHM_EAGER_MAX_SZ == -1)
             vc->eager_max_msg_sz = MPID_NEM_MPICH_DATA_LEN - sizeof(MPIDI_CH3_Pkt_t);
