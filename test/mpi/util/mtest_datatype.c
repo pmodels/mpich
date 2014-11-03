@@ -28,6 +28,30 @@
 #endif
 #include <errno.h>
 
+
+/* ------------------------------------------------------------------------ */
+/* General datatype routines                        */
+/* ------------------------------------------------------------------------ */
+
+static void *MTestTypeFree(MTestDatatype * mtype)
+{
+    if (mtype->buf)
+        free(mtype->buf);
+    if (mtype->displs)
+        free(mtype->displs);
+    if (mtype->displ_in_bytes)
+        free(mtype->displ_in_bytes);
+    if (mtype->index)
+        free(mtype->index);
+    mtype->buf = 0;
+    mtype->displs = 0;
+    mtype->displ_in_bytes = 0;
+    mtype->index = 0;
+
+    return 0;
+}
+
+
 /* ------------------------------------------------------------------------ */
 /* Datatype routines for contiguous datatypes                               */
 /* ------------------------------------------------------------------------ */
@@ -66,18 +90,6 @@ static void *MTestTypeContigInit(MTestDatatype * mtype)
         mtype->buf = 0;
     }
     return mtype->buf;
-}
-
-/*
- * Free buffer of basic datatype
- */
-static void *MTestTypeContigFree(MTestDatatype * mtype)
-{
-    if (mtype->buf) {
-        free(mtype->buf);
-        mtype->buf = 0;
-    }
-    return 0;
 }
 
 /*
@@ -167,18 +179,6 @@ static void *MTestTypeVectorInit(MTestDatatype * mtype)
         mtype->buf = 0;
     }
     return mtype->buf;
-}
-
-/*
- * Free buffer of vector datatype
- */
-static void *MTestTypeVectorFree(MTestDatatype * mtype)
-{
-    if (mtype->buf) {
-        free(mtype->buf);
-        mtype->buf = 0;
-    }
-    return 0;
 }
 
 /*
@@ -294,24 +294,6 @@ static void *MTestTypeIndexedInit(MTestDatatype * mtype)
 }
 
 /*
- * Free buffer of indexed datatype
- */
-static void *MTestTypeIndexedFree(MTestDatatype * mtype)
-{
-    if (mtype->buf) {
-        free(mtype->buf);
-        free(mtype->displs);
-        free(mtype->displ_in_bytes);
-        free(mtype->index);
-        mtype->buf = 0;
-        mtype->displs = 0;
-        mtype->displ_in_bytes = 0;
-        mtype->index = 0;
-    }
-    return 0;
-}
-
-/*
  * Check value of received indexed datatype buffer
  */
 static int MTestTypeIndexedCheckbuf(MTestDatatype * mtype)
@@ -360,7 +342,7 @@ static int MTestTypeIndexedCheckbuf(MTestDatatype * mtype)
 
 
 /* ------------------------------------------------------------------------ */
-/* Datatype generators                                                      */
+/* Datatype creators                                                      */
 /* ------------------------------------------------------------------------ */
 
 /*
@@ -400,7 +382,7 @@ static int MTestTypeContiguousCreate(int nblock, int blocklen, int stride,
         MTestPrintError(merr);
 
     mtype->InitBuf = MTestTypeContigInit;
-    mtype->FreeBuf = MTestTypeContigFree;
+    mtype->FreeBuf = MTestTypeFree;
     mtype->CheckBuf = MTestTypeContigCheckbuf;
     return merr;
 }
@@ -446,7 +428,7 @@ static int MTestTypeVectorCreate(int nblock, int blocklen, int stride,
         MTestPrintError(merr);
 
     mtype->InitBuf = MTestTypeVectorInit;
-    mtype->FreeBuf = MTestTypeVectorFree;
+    mtype->FreeBuf = MTestTypeFree;
     mtype->CheckBuf = MTestTypeVectorCheckbuf;
     return merr;
 }
@@ -505,7 +487,7 @@ static int MTestTypeIndexedCreate(int nblock, int blocklen, int stride,
         MTestPrintError(merr);
 
     mtype->InitBuf = MTestTypeIndexedInit;
-    mtype->FreeBuf = MTestTypeIndexedFree;
+    mtype->FreeBuf = MTestTypeFree;
     mtype->CheckBuf = MTestTypeIndexedCheckbuf;
 
     return merr;
@@ -525,7 +507,7 @@ int MTestTypeBasicCreate(MPI_Datatype oldtype, MTestDatatype * mtype)
     mtype->datatype = oldtype;
     mtype->isBasic = 1;
     mtype->InitBuf = MTestTypeContigInit;
-    mtype->FreeBuf = MTestTypeContigFree;
+    mtype->FreeBuf = MTestTypeFree;
     mtype->CheckBuf = MTestTypeContigCheckbuf;
 
     return merr;
@@ -553,7 +535,7 @@ int MTestTypeDupCreate(MPI_Datatype oldtype, MTestDatatype * mtype)
      * was committed (MPI-2, section 8.8) */
 
     mtype->InitBuf = MTestTypeContigInit;
-    mtype->FreeBuf = MTestTypeContigFree;
+    mtype->FreeBuf = MTestTypeFree;
     mtype->CheckBuf = MTestTypeContigCheckbuf;
 
     return merr;
