@@ -34,6 +34,14 @@ int main( int argc, char *argv[] )
 	
 	count = 1;
 	MTEST_DATATYPE_FOR_EACH_COUNT(count) {
+
+        /* Only run full datatype tests in comm world to shorten test time. */
+        if (comm == MPI_COMM_WORLD) {
+            MTestInitFullDatatypes();
+        } else {
+            MTestInitMinDatatypes();
+        }
+
 	    while (MTestGetDatatypes( &sendtype, &recvtype, count )) {
 		for (root=0; root<size; root++) {
 		    if (rank == root) {

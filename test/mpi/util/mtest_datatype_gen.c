@@ -61,35 +61,117 @@ static int verbose = 0;         /* Message level (0 is none) */
  *  Datatype definition:
  *    Every type is initialized by the creation function stored in
  *    mtestDdtCreators variable, all of their create/init/check functions are
- *    defined in file mtest_datatype.c. Following derived datatypes are defined:
- *    Contiguous | Vector | HVector | Indexed | Hindexed | Indexed-block |
- *    Hindexed-block | Struct | Subarray with order-C | Subarray with order-Fortran
+ *    defined in file mtest_datatype.c.
  *
  *  How to add a new derived datatype:
  *    1. Add the new datatype in enum MTEST_DERIVED_DT.
  *    2. Add its create/init/check functions in file mtest_datatype.c
  *    3. Add its creator function to mtestDdtCreators variable
+ *
+ *  Following two datatype generators are defined.
+ *    1. Full datatypes generator:
+ *      All basic datatypes | Vector | Hvector | Indexed | Hindexed |
+ *      Indexed-block | Hindexed-block | Subarray with order-C | Subarray with order-Fortran
+ *    2. Minimum datatypes generator:
+ *      All basic datatypes | Vector | Indexed
+ *
+ *  MPI test can initialize either generator by calling the corresponding init
+ *  function before datatype loop, The full generator is set by default.
+ *    Full generator : MTestInitFullDatatypes
+ *    Minimum generator : MTestInitMinDatatypes
  */
 
 static int datatype_index = 0;
 
-
-#define MTEST_BDT_START_IDX 0
-#define MTEST_BDT_NUM_TESTS (MTEST_BDT_MAX)
-#define MTEST_BDT_RANGE (MTEST_BDT_START_IDX + MTEST_BDT_NUM_TESTS)
-
+/* ------------------------------------------------------------------------ */
+/* Routine and internal parameters to define the range of datatype tests */
+/* ------------------------------------------------------------------------ */
 #define MTEST_DDT_NUM_SUBTESTS 4        /* 4 kinds of derived datatype structure */
-#define MTEST_DDT_NUM_TYPES (MTEST_DDT_MAX)
-
-#define MTEST_SEND_DDT_START_IDX (MTEST_BDT_NUM_TESTS)
-#define MTEST_SEND_DDT_NUM_TESTS (MTEST_DDT_NUM_TYPES * MTEST_DDT_NUM_SUBTESTS)
-#define MTEST_SEND_DDT_RANGE (MTEST_SEND_DDT_START_IDX + MTEST_SEND_DDT_NUM_TESTS)
-
-#define MTEST_RECV_DDT_START_IDX (MTEST_SEND_DDT_START_IDX + MTEST_SEND_DDT_NUM_TESTS)
-#define MTEST_RECV_DDT_NUM_TESTS (MTEST_DDT_NUM_TYPES * MTEST_DDT_NUM_SUBTESTS)
-#define MTEST_RECV_DDT_RANGE (MTEST_RECV_DDT_START_IDX + MTEST_RECV_DDT_NUM_TESTS)
-
 static MTestDdtCreator mtestDdtCreators[MTEST_DDT_MAX];
+
+static int MTEST_BDT_START_IDX = -1;
+static int MTEST_BDT_NUM_TESTS = 0;
+static int MTEST_BDT_RANGE = 0;
+
+static int MTEST_DDT_NUM_TYPES = 0;
+static int MTEST_SEND_DDT_START_IDX = 0;
+static int MTEST_SEND_DDT_NUM_TESTS = 0;
+static int MTEST_SEND_DDT_RANGE = 0;
+
+static int MTEST_RECV_DDT_START_IDX = 0;
+static int MTEST_RECV_DDT_NUM_TESTS = 0;
+static int MTEST_RECV_DDT_RANGE = 0;
+
+enum {
+    MTEST_DATATYPE_VERSION_FULL,
+    MTEST_DATATYPE_VERSION_MIN
+};
+
+static int MTEST_DATATYPE_VERSION = MTEST_DATATYPE_VERSION_FULL;
+
+static void MTestInitDatatypeGen(int basic_dt_num, int derived_dt_num)
+{
+    MTEST_BDT_START_IDX = 0;
+    MTEST_BDT_NUM_TESTS = basic_dt_num;
+    MTEST_BDT_RANGE = MTEST_BDT_START_IDX + MTEST_BDT_NUM_TESTS;
+    MTEST_DDT_NUM_TYPES = derived_dt_num;
+    MTEST_SEND_DDT_START_IDX = MTEST_BDT_NUM_TESTS;
+    MTEST_SEND_DDT_NUM_TESTS = MTEST_DDT_NUM_TYPES * MTEST_DDT_NUM_SUBTESTS;
+    MTEST_SEND_DDT_RANGE = MTEST_SEND_DDT_START_IDX + MTEST_SEND_DDT_NUM_TESTS;
+    MTEST_RECV_DDT_START_IDX = MTEST_SEND_DDT_START_IDX + MTEST_SEND_DDT_NUM_TESTS;
+    MTEST_RECV_DDT_NUM_TESTS = MTEST_DDT_NUM_TYPES * MTEST_DDT_NUM_SUBTESTS;
+    MTEST_RECV_DDT_RANGE = MTEST_RECV_DDT_START_IDX + MTEST_RECV_DDT_NUM_TESTS;
+}
+
+static int MTestIsDatatypeGenInited()
+{
+    return (MTEST_BDT_START_IDX < 0) ? 0 : 1;
+}
+
+static void MTestPrintDatatypeGen()
+{
+    MTestPrintfMsg(1, "MTest datatype version : %s. %d basic datatype tests, "
+                   "%d derived datatype tests will be generated\n",
+                   (MTEST_DATATYPE_VERSION == MTEST_DATATYPE_VERSION_FULL) ? "FULL" : "MIN",
+                   MTEST_BDT_NUM_TESTS, MTEST_SEND_DDT_NUM_TESTS + MTEST_RECV_DDT_NUM_TESTS);
+}
+
+static void MTestResetDatatypeGen()
+{
+    MTEST_BDT_START_IDX = -1;
+}
+
+void MTestInitFullDatatypes()
+{
+    /* Do not allow to change datatype version during loop.
+     * Otherwise indexes will be wrong.
+     * Test must explicitly call reset or wait for current datatype loop being
+     * done before changing to another datatype version. */
+    if (!MTestIsDatatypeGenInited()) {
+        MTEST_DATATYPE_VERSION = MTEST_DATATYPE_VERSION_FULL;
+        MTestTypeCreatorInit((MTestDdtCreator *) mtestDdtCreators);
+        MTestInitDatatypeGen(MTEST_BDT_MAX, MTEST_DDT_MAX);
+    }
+    else {
+        printf("Warning: trying to reinitialize mtest datatype during " "datatype iteration!");
+    }
+}
+
+void MTestInitMinDatatypes()
+{
+    /* Do not allow to change datatype version during loop.
+     * Otherwise indexes will be wrong.
+     * Test must explicitly call reset or wait for current datatype loop being
+     * done before changing to another datatype version. */
+    if (!MTestIsDatatypeGenInited()) {
+        MTEST_DATATYPE_VERSION = MTEST_DATATYPE_VERSION_MIN;
+        MTestTypeMinCreatorInit((MTestDdtCreator *) mtestDdtCreators);
+        MTestInitDatatypeGen(MTEST_BDT_MAX, MTEST_MIN_DDT_MAX);
+    }
+    else {
+        printf("Warning: trying to reinitialize mtest datatype during " "datatype iteration!");
+    }
+}
 
 
 /* -------------------------------------------------------------------------------*/
@@ -325,8 +407,16 @@ int MTestGetDatatypes(MTestDatatype * sendtype, MTestDatatype * recvtype, int to
     MTestGetDbgInfo(&dbgflag, &verbose);
     MPI_Comm_rank(MPI_COMM_WORLD, &wrank);
 
-    MTestTypeCreatorInit((MTestDdtCreator *) mtestDdtCreators);
+    /* Initialize the full version if test does not specify. */
+    if (!MTestIsDatatypeGenInited()) {
+        MTestInitFullDatatypes();
+    }
 
+    if (datatype_index == 0) {
+        MTestPrintDatatypeGen();
+    }
+
+    /* Start generating tests */
     if (datatype_index < MTEST_BDT_RANGE) {
         merr = MTestGetBasicDatatypes(sendtype, recvtype, tot_count);
 
@@ -342,6 +432,7 @@ int MTestGetDatatypes(MTestDatatype * sendtype, MTestDatatype * recvtype, int to
     else {
         /* out of range */
         datatype_index = -1;
+        MTestResetDatatypeGen();
     }
 
     /* stop if error reported */
@@ -356,17 +447,18 @@ int MTestGetDatatypes(MTestDatatype * sendtype, MTestDatatype * recvtype, int to
 
     datatype_index++;
 
-    if ((verbose || dbgflag) && datatype_index > 0) {
+    if (verbose >= 2 && datatype_index > 0) {
         int ssize, rsize;
         const char *sendtype_nm = MTestGetDatatypeName(sendtype);
         const char *recvtype_nm = MTestGetDatatypeName(recvtype);
         MPI_Type_size(sendtype->datatype, &ssize);
         MPI_Type_size(recvtype->datatype, &rsize);
-        printf("Get datatypes: send = %s(size %d count %d basesize %d), "
-               "recv = %s(size %d count %d basesize %d), tot_count=%d\n",
-               sendtype_nm, ssize, sendtype->count, sendtype->basesize,
-               recvtype_nm, rsize, recvtype->count, recvtype->basesize,
-               tot_count);
+
+        MTestPrintfMsg(2, "Get datatypes: send = %s(size %d count %d basesize %d), "
+                       "recv = %s(size %d count %d basesize %d), tot_count=%d\n",
+                       sendtype_nm, ssize, sendtype->count, sendtype->basesize,
+                       recvtype_nm, rsize, recvtype->count, recvtype->basesize,
+                       tot_count);
         fflush(stdout);
     }
 
@@ -380,6 +472,7 @@ int MTestGetDatatypes(MTestDatatype * sendtype, MTestDatatype * recvtype, int to
 void MTestResetDatatypes(void)
 {
     datatype_index = 0;
+    MTestResetDatatypeGen();
 }
 
 /* Return the index of the current datatype.  This is rarely needed and
