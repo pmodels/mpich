@@ -936,7 +936,7 @@ int MPIDI_CH3I_Release_lock(MPID_Win *win_ptr)
                                 MPIDI_VC_t *vc;
                                 MPIDI_Comm_get_vc(win_ptr->comm_ptr, lock_queue->origin_rank, &vc);
 				mpi_errno = 
-                                    MPIDI_CH3I_Send_pt_rma_done_pkt(vc, win_ptr,
+                                    MPIDI_CH3I_Send_flush_ack_pkt(vc, win_ptr,
 								    lock_queue->source_win_handle);
                                 if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
 				

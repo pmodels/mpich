@@ -152,8 +152,8 @@ void MPIDI_DBG_Print_packet(MPIDI_CH3_Pkt_t *pkt)
 	    case MPIDI_CH3_PKT_LOCK_GET_UNLOCK:
 		MPIDI_CH3_PktPrint_LockGetUnlock( stdout, pkt );
 		break;
-	    case MPIDI_CH3_PKT_PT_RMA_DONE:
-		MPIDI_CH3_PktPrint_PtRMADone( stdout, pkt );
+	    case MPIDI_CH3_PKT_FLUSH_ACK:
+		MPIDI_CH3_PktPrint_FlushAck( stdout, pkt );
 		break;
 	    case MPIDI_CH3_PKT_LOCK_GRANTED:
 		MPIDI_CH3_PktPrint_LockGranted( stdout, pkt );
@@ -364,11 +364,11 @@ const char *MPIDI_Pkt_GetDescString( MPIDI_CH3_Pkt_t *pkt )
 		       pkt->lock_get_unlock.target_win_handle, 
 		       pkt->lock_get_unlock.request_handle );
 	break;
-    case MPIDI_CH3_PKT_PT_RMA_DONE:
+    case MPIDI_CH3_PKT_FLUSH_ACK:
 	/* There is no rma_done packet type */
 	MPIU_Snprintf( pktmsg, sizeof(pktmsg), 
 		       "RMA_DONE - 0x%08X", 
-		       pkt->lock_accum_unlock.source_win_handle );
+		       pkt->flush_ack.source_win_handle );
 	break;
     case MPIDI_CH3_PKT_LOCK_GRANTED:
 	MPIU_Snprintf( pktmsg, sizeof(pktmsg), 
