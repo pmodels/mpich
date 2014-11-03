@@ -65,6 +65,7 @@ cvars:
 
 struct MPIDI_RMA_Op *global_rma_op_pool = NULL, *global_rma_op_pool_tail = NULL, *global_rma_op_pool_start = NULL;
 struct MPIDI_RMA_Target *global_rma_target_pool = NULL, *global_rma_target_pool_tail = NULL, *global_rma_target_pool_start = NULL;
+struct MPIDI_RMA_Pkt_orderings *MPIDI_RMA_Pkt_orderings = NULL;
 
 #undef FUNCNAME
 #define FUNCNAME MPIDI_RMA_init
@@ -74,7 +75,7 @@ int MPIDI_RMA_init(void)
 {
     int mpi_errno = MPI_SUCCESS;
     int i;
-    MPIU_CHKPMEM_DECL(2);
+    MPIU_CHKPMEM_DECL(3);
 
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_RMA_INIT);
 
@@ -95,6 +96,13 @@ int MPIDI_RMA_init(void)
         global_rma_target_pool_start[i].pool_type = MPIDI_RMA_POOL_GLOBAL;
         MPL_LL_APPEND(global_rma_target_pool, global_rma_target_pool_tail, &(global_rma_target_pool_start[i]));
     }
+
+    MPIU_CHKPMEM_MALLOC(MPIDI_RMA_Pkt_orderings, struct MPIDI_RMA_Pkt_orderings *,
+                        sizeof(struct MPIDI_RMA_Pkt_orderings),
+                        mpi_errno, "RMA packet orderings");
+    /* FIXME: here we should let channel to set ordering flags. For now we just set them
+       in CH3 layer. */
+    MPIDI_RMA_Pkt_orderings->flush_remote = 1;
 
   fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_RMA_INIT);
@@ -118,6 +126,7 @@ void MPIDI_RMA_finalize(void)
 
     MPIU_Free(global_rma_op_pool_start);
     MPIU_Free(global_rma_target_pool_start);
+    MPIU_Free(MPIDI_RMA_Pkt_orderings);
 
     MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_RMA_FINALIZE);
 }

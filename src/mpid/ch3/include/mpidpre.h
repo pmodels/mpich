@@ -303,6 +303,14 @@ struct MPIDI_Win_info_args {
 
 struct MPIDI_RMA_op;            /* forward decl from mpidrma.h */
 
+typedef struct MPIDI_RMA_Pkt_orderings {
+    int flush_remote; /* ordered FLUSH, for remote completion */
+    /* FIXME: in future we should also add local completin
+       ordering: WAW, WAR, RAW, RAR. */
+} MPIDI_RMA_Pkt_orderings_t;
+
+extern MPIDI_RMA_Pkt_orderings_t *MPIDI_RMA_Pkt_orderings;
+
 struct MPIDI_Win_target_state {
     struct MPIDI_RMA_Op *rma_ops_list;
                                 /* List of outstanding RMA operations */

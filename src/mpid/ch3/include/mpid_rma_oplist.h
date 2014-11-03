@@ -517,6 +517,49 @@ static inline int MPIDI_CH3I_RMA_Cleanup_targets_win(MPID_Win *win_ptr)
     goto fn_exit;
 }
 
+#undef FUNCNAME
+#define FUNCNAME MPIDI_CH3I_Win_get_op
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
+static inline int MPIDI_CH3I_Win_get_op(MPID_Win * win_ptr, MPIDI_RMA_Op_t **e)
+{
+    MPIDI_RMA_Op_t *new_ptr = NULL;
+    int local_completed = 0, remote_completed = 0;
+    int mpi_errno = MPI_SUCCESS;
+
+    while (1) {
+        new_ptr = MPIDI_CH3I_Win_op_alloc(win_ptr);
+        if (new_ptr != NULL) break;
+
+        mpi_errno = MPIDI_CH3I_RMA_Cleanup_ops_win(win_ptr,
+                                                   &local_completed,
+                                                   &remote_completed);
+        if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
+
+        new_ptr = MPIDI_CH3I_Win_op_alloc(win_ptr);
+        if (new_ptr != NULL) break;
+
+        if (MPIDI_RMA_Pkt_orderings->flush_remote) {
+            mpi_errno = MPIDI_CH3I_RMA_Free_ops_before_completion(win_ptr);
+            if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
+        }
+
+        new_ptr = MPIDI_CH3I_Win_op_alloc(win_ptr);
+        if (new_ptr != NULL) break;
+
+        mpi_errno = MPIDI_CH3I_RMA_Cleanup_ops_aggressive(win_ptr);
+        if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
+    }
+
+    (*e) = new_ptr;
+
+ fn_exit:
+    return mpi_errno;
+ fn_fail:
+    goto fn_exit;
+}
+
+
 /* Return nonzero if the RMA operations list is empty.
  */
 #undef FUNCNAME
@@ -586,11 +629,8 @@ static inline int MPIDI_CH3I_RMA_Ops_alloc_tail(MPID_Win * win_ptr, MPIDI_RMA_Op
     int mpi_errno = MPI_SUCCESS;
     MPIDI_RMA_Op_t *tmp_ptr;
 
-    tmp_ptr = MPIDI_CH3I_Win_op_alloc(win_ptr);
-    if (tmp_ptr == NULL) {
-        mpi_errno = MPIDI_CH3I_RMA_Cleanup_ops_aggressive(win_ptr, &tmp_ptr);
-        if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
-    }
+    mpi_errno = MPIDI_CH3I_Win_get_op(win_ptr, &tmp_ptr);
+    if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
 
     MPL_LL_APPEND(*list, *list_tail, tmp_ptr);
 

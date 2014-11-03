@@ -72,11 +72,8 @@ int MPIDI_Put(const void *origin_addr, int origin_count, MPI_Datatype
         MPIDI_CH3_Pkt_put_t *put_pkt = NULL;
 
         /* queue it up */
-        new_ptr = MPIDI_CH3I_Win_op_alloc(win_ptr);
-        if (new_ptr == NULL) {
-            mpi_errno = MPIDI_CH3I_RMA_Cleanup_ops_aggressive(win_ptr, &new_ptr);
-            if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
-        }
+        mpi_errno = MPIDI_CH3I_Win_get_op(win_ptr, &new_ptr);
+        if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
 
         put_pkt = &(new_ptr->pkt.put);
         MPIDI_Pkt_init(put_pkt, MPIDI_CH3_PKT_PUT);
@@ -185,11 +182,8 @@ int MPIDI_Get(void *origin_addr, int origin_count, MPI_Datatype
         MPIDI_CH3_Pkt_get_t *get_pkt = NULL;
 
         /* queue it up */
-        new_ptr = MPIDI_CH3I_Win_op_alloc(win_ptr);
-        if (new_ptr == NULL) {
-            mpi_errno = MPIDI_CH3I_RMA_Cleanup_ops_aggressive(win_ptr, &new_ptr);
-            if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
-        }
+        mpi_errno = MPIDI_CH3I_Win_get_op(win_ptr, &new_ptr);
+        if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
 
         get_pkt = &(new_ptr->pkt.get);
         MPIDI_Pkt_init(get_pkt, MPIDI_CH3_PKT_GET);
@@ -299,11 +293,8 @@ int MPIDI_Accumulate(const void *origin_addr, int origin_count, MPI_Datatype
         MPIDI_CH3_Pkt_accum_t *accum_pkt = NULL;
 
         /* queue it up */
-        new_ptr = MPIDI_CH3I_Win_op_alloc(win_ptr);
-        if (new_ptr == NULL) {
-            mpi_errno = MPIDI_CH3I_RMA_Cleanup_ops_aggressive(win_ptr, &new_ptr);
-            if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
-        }
+        mpi_errno = MPIDI_CH3I_Win_get_op(win_ptr, &new_ptr);
+        if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
 
         /* If predefined and contiguous, use a simplified element */
         if (MPIR_DATATYPE_IS_PREDEFINED(origin_datatype) &&
@@ -450,11 +441,8 @@ int MPIDI_Get_accumulate(const void *origin_addr, int origin_count,
         MPIDI_RMA_Op_t *new_ptr = NULL;
 
         /* Append the operation to the window's RMA ops queue */
-        new_ptr = MPIDI_CH3I_Win_op_alloc(win_ptr);
-        if (new_ptr == NULL) {
-            mpi_errno = MPIDI_CH3I_RMA_Cleanup_ops_aggressive(win_ptr, &new_ptr);
-            if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
-        }
+        mpi_errno = MPIDI_CH3I_Win_get_op(win_ptr, &new_ptr);
+        if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
 
         /* TODO: Can we use the MPIDI_RMA_ACC_CONTIG optimization? */
 
@@ -589,11 +577,8 @@ int MPIDI_Compare_and_swap(const void *origin_addr, const void *compare_addr,
         MPIDI_CH3_Pkt_cas_t *cas_pkt = NULL;
 
         /* Append this operation to the RMA ops queue */
-        new_ptr = MPIDI_CH3I_Win_op_alloc(win_ptr);
-        if (new_ptr == NULL) {
-            mpi_errno = MPIDI_CH3I_RMA_Cleanup_ops_aggressive(win_ptr, &new_ptr);
-            if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
-        }
+        mpi_errno = MPIDI_CH3I_Win_get_op(win_ptr, &new_ptr);
+        if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
 
         cas_pkt = &(new_ptr->pkt.cas);
         MPIDI_Pkt_init(cas_pkt, MPIDI_CH3_PKT_CAS);
@@ -684,11 +669,8 @@ int MPIDI_Fetch_and_op(const void *origin_addr, void *result_addr,
         MPIDI_CH3_Pkt_fop_t *fop_pkt = NULL;
 
         /* Append this operation to the RMA ops queue */
-        new_ptr = MPIDI_CH3I_Win_op_alloc(win_ptr);
-        if (new_ptr == NULL) {
-            mpi_errno = MPIDI_CH3I_RMA_Cleanup_ops_aggressive(win_ptr, &new_ptr);
-            if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
-        }
+        mpi_errno = MPIDI_CH3I_Win_get_op(win_ptr, &new_ptr);
+        if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
 
         fop_pkt = &(new_ptr->pkt.fop);
         MPIDI_Pkt_init(fop_pkt, MPIDI_CH3_PKT_FOP);
