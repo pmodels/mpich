@@ -44,9 +44,16 @@ enum MTEST_DERIVED_DT {
     MTEST_DDT_MAX
 };
 
+enum MTEST_MIN_DERIVED_DT {
+    MTEST_MIN_DDT_VECTOR,
+    MTEST_MIN_DDT_INDEXED,
+    MTEST_MIN_DDT_MAX
+};
+
 typedef int (*MTestDdtCreator) (int, int, int, MPI_Datatype, const char *, MTestDatatype *);
 
 extern void MTestTypeCreatorInit(MTestDdtCreator * creators);
+extern void MTestTypeMinCreatorInit(MTestDdtCreator * creators);
 extern void *MTestTypeInitRecv(MTestDatatype * mtype);
 
 extern int MTestTypeBasicCreate(MPI_Datatype oldtype, MTestDatatype * mtype);

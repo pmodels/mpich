@@ -1281,3 +1281,10 @@ void MTestTypeCreatorInit(MTestDdtCreator * creators)
     creators[MTEST_DDT_SUBARRAY_ORDER_C] = MTestTypeSubArrayOrderCCreate;
     creators[MTEST_DDT_SUBARRAY_ORDER_FORTRAN] = MTestTypeSubArrayOrderFortranCreate;
 }
+
+void MTestTypeMinCreatorInit(MTestDdtCreator * creators)
+{
+    memset(creators, 0, sizeof(MTestDdtCreator) * MTEST_DDT_MAX);
+    creators[MTEST_MIN_DDT_VECTOR] = MTestTypeVectorCreate;
+    creators[MTEST_MIN_DDT_INDEXED] = MTestTypeIndexedCreate;
+}

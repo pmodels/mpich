@@ -41,6 +41,14 @@ int main( int argc, char *argv[] )
 	MPI_Comm_set_errhandler( comm, MPI_ERRORS_RETURN );
 
 	for (count = 1; count < MAX_COUNT; count = count * 2) {
+
+        /* Only run full datatype tests in comm world to shorten test time. */
+        if (comm == MPI_COMM_WORLD) {
+            MTestInitFullDatatypes();
+        } else {
+            MTestInitMinDatatypes();
+        }
+
 	    while (MTestGetDatatypes( &sendtype, &recvtype, count )) {
 		int nbytes;
 		MPI_Type_size( sendtype.datatype, &nbytes );

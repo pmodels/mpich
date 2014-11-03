@@ -63,6 +63,14 @@ typedef struct _MTestDatatype {
 #define MTEST_DATATYPE_FOR_EACH_COUNT(count) \
         for (count = 1; count <= 262144; count *= 8)
 
+/* Setup the full version of datatype tests.
+ * It generate tests for all basic datatypes and all derived datatypes except darray. */
+void MTestInitFullDatatypes();
+
+/* Setup the minimum version of datatype tests.
+ * It generate tests for all basic datatypes, vector and indexed. */
+void MTestInitMinDatatypes();
+
 int MTestCheckRecv( MPI_Status *, MTestDatatype * );
 int MTestGetDatatypes( MTestDatatype *, MTestDatatype *, int );
 void MTestResetDatatypes( void );
