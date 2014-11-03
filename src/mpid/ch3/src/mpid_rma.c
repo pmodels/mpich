@@ -29,6 +29,8 @@ cvars:
 
 MPIU_THREADSAFE_INIT_DECL(initRMAoptions);
 
+MPIDI_RMA_Win_list_t *MPIDI_RMA_Win_list = NULL, *MPIDI_RMA_Win_list_tail = NULL;
+
 static int win_init(MPI_Aint size, int disp_unit, int create_flavor, int model,
                     MPID_Comm * comm_ptr, MPID_Win ** win_ptr);
 
@@ -277,7 +279,8 @@ static int win_init(MPI_Aint size, int disp_unit, int create_flavor, int model,
     int i;
     MPID_Comm *win_comm_ptr;
     int win_target_pool_size;
-    MPIU_CHKPMEM_DECL(4);
+    MPIDI_RMA_Win_list_t *win_elem;
+    MPIU_CHKPMEM_DECL(5);
     MPIDI_STATE_DECL(MPID_STATE_WIN_INIT);
 
     MPIDI_FUNC_ENTER(MPID_STATE_WIN_INIT);
@@ -377,6 +380,12 @@ static int win_init(MPI_Aint size, int disp_unit, int create_flavor, int model,
     }
 
     MPID_WIN_FTABLE_SET_DEFAULTS(win_ptr);
+
+    /* enqueue window into the global list */
+    MPIU_CHKPMEM_MALLOC(win_elem, MPIDI_RMA_Win_list_t *, sizeof(MPIDI_RMA_Win_list_t), mpi_errno,
+                        "Window list element");
+    win_elem->win_ptr = *win_ptr;
+    MPL_LL_APPEND(MPIDI_RMA_Win_list, MPIDI_RMA_Win_list_tail, win_elem);
 
   fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_WIN_INIT);

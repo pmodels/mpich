@@ -124,6 +124,13 @@ typedef struct MPIDI_RMA_Slot {
     struct MPIDI_RMA_Target *target_list_tail;
 } MPIDI_RMA_Slot_t;
 
+typedef struct MPIDI_RMA_Win_list {
+    MPID_Win *win_ptr;
+    struct MPIDI_RMA_Win_list *next;
+} MPIDI_RMA_Win_list_t;
+
+extern MPIDI_RMA_Win_list_t *MPIDI_RMA_Win_list, *MPIDI_RMA_Win_list_tail;
+
 typedef struct MPIDI_PT_single_op {
     MPIDI_CH3_Pkt_type_t type;  /* put, get, or accum. */
     void *addr;
