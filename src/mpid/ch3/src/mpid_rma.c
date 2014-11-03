@@ -257,7 +257,7 @@ static int win_init(MPI_Aint size, int disp_unit, int create_flavor, int model,
     int mpi_errno = MPI_SUCCESS;
     int i;
     MPID_Comm *win_comm_ptr;
-    MPIU_CHKPMEM_DECL(1);
+    MPIU_CHKPMEM_DECL(2);
     MPIDI_STATE_DECL(MPID_STATE_WIN_INIT);
 
     MPIDI_FUNC_ENTER(MPID_STATE_WIN_INIT);
@@ -304,6 +304,7 @@ static int win_init(MPI_Aint size, int disp_unit, int create_flavor, int model,
     (*win_ptr)->epoch_state = MPIDI_EPOCH_NONE;
     (*win_ptr)->epoch_count = 0;
     (*win_ptr)->at_rma_ops_list = NULL;
+    (*win_ptr)->at_rma_ops_list_tail = NULL;
     (*win_ptr)->shm_allocated = FALSE;
 
     /* Initialize the passive target lock state */
@@ -313,6 +314,7 @@ static int win_init(MPI_Aint size, int disp_unit, int create_flavor, int model,
 
     for (i = 0; i < MPIR_Comm_size(win_comm_ptr); i++) {
         (*win_ptr)->targets[i].rma_ops_list = NULL;
+        (*win_ptr)->targets[i].rma_ops_list_tail = NULL;
         (*win_ptr)->targets[i].remote_lock_state = MPIDI_CH3_WIN_LOCK_NONE;
     }
 
@@ -324,6 +326,16 @@ static int win_init(MPI_Aint size, int disp_unit, int create_flavor, int model,
     (*win_ptr)->info_args.same_size = 0;
     (*win_ptr)->info_args.alloc_shared_noncontig = 0;
     (*win_ptr)->info_args.alloc_shm = FALSE;
+
+    MPIU_CHKPMEM_MALLOC((*win_ptr)->op_pool_start, struct MPIDI_RMA_Op *,
+                        sizeof(MPIDI_RMA_Op_t) * MPIR_CVAR_CH3_RMA_OP_WIN_POOL_SIZE, mpi_errno,
+                        "RMA op pool");
+    (*win_ptr)->op_pool = NULL;
+    (*win_ptr)->op_pool_tail = NULL;
+    for (i = 0; i < MPIR_CVAR_CH3_RMA_OP_WIN_POOL_SIZE; i++) {
+        (*win_ptr)->op_pool_start[i].pool_type = MPIDI_RMA_POOL_WIN;
+        MPL_LL_APPEND((*win_ptr)->op_pool, (*win_ptr)->op_pool_tail, &((*win_ptr)->op_pool_start[i]));
+    }
 
     MPID_WIN_FTABLE_SET_DEFAULTS(win_ptr);
 

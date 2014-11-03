@@ -10,6 +10,66 @@
 #include "mpl_utlist.h"
 #include "mpid_rma_types.h"
 
+extern struct MPIDI_RMA_Op *global_rma_op_pool, *global_rma_op_pool_tail, *global_rma_op_pool_start;
+
+/* MPIDI_CH3I_Win_op_alloc(): get a new op element from op pool and
+ * initialize it. If we cannot get one, return NULL. */
+#undef FUNCNAME
+#define FUNCNAME MPIDI_CH3I_Win_op_alloc
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
+static inline MPIDI_RMA_Op_t *MPIDI_CH3I_Win_op_alloc(MPID_Win * win_ptr)
+{
+    MPIDI_RMA_Op_t *e;
+
+    if (win_ptr->op_pool == NULL) {
+        /* local pool is empty, try to find something in the global pool */
+        if (global_rma_op_pool == NULL)
+            return NULL;
+        else {
+            e = global_rma_op_pool;
+            MPL_LL_DELETE(global_rma_op_pool, global_rma_op_pool_tail, e);
+        }
+    }
+    else {
+        e = win_ptr->op_pool;
+        MPL_LL_DELETE(win_ptr->op_pool, win_ptr->op_pool_tail, e);
+    }
+
+    e->dataloop = NULL;
+    e->request = NULL;
+
+    return e;
+}
+
+/* MPIDI_CH3I_Win_op_free(): put an op element back to the op pool which
+ * it belongs to. */
+#undef FUNCNAME
+#define FUNCNAME MPIDI_CH3I_Win_op_free
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
+static inline int MPIDI_CH3I_Win_op_free(MPID_Win * win_ptr, MPIDI_RMA_Op_t * e)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    /* Check if we allocated a dataloop for this op (see send/recv_rma_msg) */
+    if (e->dataloop != NULL) {
+        MPIU_Free(e->dataloop);
+    }
+
+    /* We enqueue elements to the right pool, so when they get freed
+     * at window free time, they won't conflict with the global pool
+     * or other windows */
+    /* use PREPEND when return objects back to the pool
+       in order to improve cache performance */
+    if (e->pool_type == MPIDI_RMA_POOL_WIN)
+        MPL_LL_PREPEND(win_ptr->op_pool, win_ptr->op_pool_tail, e);
+    else
+        MPL_LL_PREPEND(global_rma_op_pool, global_rma_op_pool_tail, e);
+
+    return mpi_errno;
+}
+
 /* Return nonzero if the RMA operations list is empty.
  */
 #undef FUNCNAME
@@ -40,9 +100,9 @@ static inline MPIDI_RMA_Op_t *MPIDI_CH3I_RMA_Ops_head(MPIDI_RMA_Ops_list_t * lis
 #define FUNCNAME MPIDI_CH3I_RMA_Ops_tail
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-static inline MPIDI_RMA_Op_t *MPIDI_CH3I_RMA_Ops_tail(MPIDI_RMA_Ops_list_t * list)
+static inline MPIDI_RMA_Op_t *MPIDI_CH3I_RMA_Ops_tail(MPIDI_RMA_Ops_list_t * list_tail)
 {
-    return (*list) ? (*list)->prev : NULL;
+    return (*list_tail);
 }
 
 
@@ -55,9 +115,10 @@ static inline MPIDI_RMA_Op_t *MPIDI_CH3I_RMA_Ops_tail(MPIDI_RMA_Ops_list_t * lis
 #define FUNCNAME MPIDI_CH3I_RMA_Ops_append
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-static inline void MPIDI_CH3I_RMA_Ops_append(MPIDI_RMA_Ops_list_t * list, MPIDI_RMA_Op_t * elem)
+static inline void MPIDI_CH3I_RMA_Ops_append(MPIDI_RMA_Ops_list_t * list, MPIDI_RMA_Ops_list_t * list_tail,
+                                             MPIDI_RMA_Op_t * elem)
 {
-    MPL_DL_APPEND(*list, elem);
+    MPL_LL_APPEND(*list, *list_tail, elem);
 }
 
 
@@ -71,30 +132,23 @@ static inline void MPIDI_CH3I_RMA_Ops_append(MPIDI_RMA_Ops_list_t * list, MPIDI_
 #define FUNCNAME MPIDI_CH3I_RMA_Ops_alloc_tail
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-static inline int MPIDI_CH3I_RMA_Ops_alloc_tail(MPIDI_RMA_Ops_list_t * list,
+static inline int MPIDI_CH3I_RMA_Ops_alloc_tail(MPID_Win * win_ptr, MPIDI_RMA_Ops_list_t * list,
+                                                MPIDI_RMA_Ops_list_t * list_tail,
                                                 MPIDI_RMA_Op_t ** new_elem)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_RMA_Op_t *tmp_ptr;
-    MPIU_CHKPMEM_DECL(1);
 
-    /* FIXME: We should use a pool allocator here */
-    MPIU_CHKPMEM_MALLOC(tmp_ptr, MPIDI_RMA_Op_t *, sizeof(MPIDI_RMA_Op_t),
-                        mpi_errno, "RMA operation entry");
+    tmp_ptr = MPIDI_CH3I_Win_op_alloc(win_ptr);
+    MPIU_ERR_CHKANDJUMP(tmp_ptr == NULL, mpi_errno, MPI_ERR_OTHER, "**nomem");
 
-    tmp_ptr->next = NULL;
-    tmp_ptr->dataloop = NULL;
-    tmp_ptr->request = NULL;
-
-    MPL_DL_APPEND(*list, tmp_ptr);
+    MPL_LL_APPEND(*list, *list_tail, tmp_ptr);
 
     *new_elem = tmp_ptr;
 
   fn_exit:
-    MPIU_CHKPMEM_COMMIT();
     return mpi_errno;
   fn_fail:
-    MPIU_CHKPMEM_REAP();
     *new_elem = NULL;
     goto fn_exit;
 }
@@ -109,9 +163,10 @@ static inline int MPIDI_CH3I_RMA_Ops_alloc_tail(MPIDI_RMA_Ops_list_t * list,
 #define FUNCNAME MPIDI_CH3I_RMA_Ops_unlink
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-static inline void MPIDI_CH3I_RMA_Ops_unlink(MPIDI_RMA_Ops_list_t * list, MPIDI_RMA_Op_t * elem)
+static inline void MPIDI_CH3I_RMA_Ops_unlink(MPIDI_RMA_Ops_list_t * list, MPIDI_RMA_Ops_list_t *list_tail,
+                                             MPIDI_RMA_Op_t * elem)
 {
-    MPL_DL_DELETE(*list, elem);
+    MPL_LL_DELETE(*list, *list_tail, elem);
 }
 
 
@@ -124,19 +179,17 @@ static inline void MPIDI_CH3I_RMA_Ops_unlink(MPIDI_RMA_Ops_list_t * list, MPIDI_
 #define FUNCNAME MPIDI_CH3I_RMA_Ops_free_elem
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-static inline void MPIDI_CH3I_RMA_Ops_free_elem(MPIDI_RMA_Ops_list_t * list,
+static inline void MPIDI_CH3I_RMA_Ops_free_elem(MPID_Win * win_ptr, MPIDI_RMA_Ops_list_t * list,
+                                                MPIDI_RMA_Ops_list_t * list_tail,
                                                 MPIDI_RMA_Op_t * curr_ptr)
 {
     MPIDI_RMA_Op_t *tmp_ptr = curr_ptr;
 
     MPIU_Assert(curr_ptr != NULL);
 
-    MPL_DL_DELETE(*list, curr_ptr);
+    MPL_LL_DELETE(*list, *list_tail, curr_ptr);
 
-    /* Check if we allocated a dataloop for this op (see send/recv_rma_msg) */
-    if (tmp_ptr->dataloop != NULL)
-        MPIU_Free(tmp_ptr->dataloop);
-    MPIU_Free(tmp_ptr);
+    MPIDI_CH3I_Win_op_free(win_ptr, tmp_ptr);
 }
 
 
@@ -151,12 +204,13 @@ static inline void MPIDI_CH3I_RMA_Ops_free_elem(MPIDI_RMA_Ops_list_t * list,
 #define FUNCNAME MPIDI_CH3I_RMA_Ops_free_and_next
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-static inline void MPIDI_CH3I_RMA_Ops_free_and_next(MPIDI_RMA_Ops_list_t * list,
+static inline void MPIDI_CH3I_RMA_Ops_free_and_next(MPID_Win * win_ptr, MPIDI_RMA_Ops_list_t * list,
+                                                    MPIDI_RMA_Ops_list_t * list_tail,
                                                     MPIDI_RMA_Op_t ** curr_ptr)
 {
     MPIDI_RMA_Op_t *next_ptr = (*curr_ptr)->next;
 
-    MPIDI_CH3I_RMA_Ops_free_elem(list, *curr_ptr);
+    MPIDI_CH3I_RMA_Ops_free_elem(win_ptr, list, list_tail, *curr_ptr);
     *curr_ptr = next_ptr;
 }
 
@@ -167,12 +221,13 @@ static inline void MPIDI_CH3I_RMA_Ops_free_and_next(MPIDI_RMA_Ops_list_t * list,
 #define FUNCNAME MPIDI_CH3I_RMA_Ops_free
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-static inline void MPIDI_CH3I_RMA_Ops_free(MPIDI_RMA_Ops_list_t * list)
+static inline void MPIDI_CH3I_RMA_Ops_free(MPID_Win * win_ptr, MPIDI_RMA_Ops_list_t * list,
+                                           MPIDI_RMA_Ops_list_t * list_tail)
 {
     MPIDI_RMA_Op_t *curr_ptr, *tmp_ptr;
 
-    MPL_DL_FOREACH_SAFE(*list, curr_ptr, tmp_ptr) {
-        MPIDI_CH3I_RMA_Ops_free_elem(list, curr_ptr);
+    MPL_LL_FOREACH_SAFE(*list, curr_ptr, tmp_ptr) {
+        MPIDI_CH3I_RMA_Ops_free_elem(win_ptr, list, list_tail, curr_ptr);
     }
 }
 
@@ -194,6 +249,21 @@ static inline MPIDI_RMA_Ops_list_t *MPIDI_CH3I_RMA_Get_ops_list(MPID_Win * win_p
     }
     else {
         return &win_ptr->targets[target].rma_ops_list;
+    }
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_CH3I_RMA_Get_ops_list
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
+static inline MPIDI_RMA_Ops_list_t *MPIDI_CH3I_RMA_Get_ops_list_tail(MPID_Win * win_ptr, int target)
+{
+    if (win_ptr->epoch_state == MPIDI_EPOCH_FENCE ||
+        win_ptr->epoch_state == MPIDI_EPOCH_START || win_ptr->epoch_state == MPIDI_EPOCH_PSCW) {
+        return &win_ptr->at_rma_ops_list_tail;
+    }
+    else {
+        return &win_ptr->targets[target].rma_ops_list_tail;
     }
 }
 

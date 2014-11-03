@@ -144,6 +144,8 @@ int MPID_Finalize(void)
 	    p = pNext;
 	}
     }
+
+    MPIDI_RMA_finalize();
     
     MPIU_Free(MPIDI_failed_procs_string);
 

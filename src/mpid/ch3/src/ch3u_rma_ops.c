@@ -73,11 +73,12 @@ int MPIDI_Put(const void *origin_addr, int origin_count, MPI_Datatype
     }
     else {
         MPIDI_RMA_Ops_list_t *ops_list = MPIDI_CH3I_RMA_Get_ops_list(win_ptr, target_rank);
+        MPIDI_RMA_Ops_list_t *ops_list_tail = MPIDI_CH3I_RMA_Get_ops_list_tail(win_ptr, target_rank);
         MPIDI_RMA_Op_t *new_ptr = NULL;
         MPIDI_CH3_Pkt_put_t *put_pkt = NULL;
 
         /* queue it up */
-        mpi_errno = MPIDI_CH3I_RMA_Ops_alloc_tail(ops_list, &new_ptr);
+        mpi_errno = MPIDI_CH3I_RMA_Ops_alloc_tail(win_ptr, ops_list, ops_list_tail, &new_ptr);
         if (mpi_errno) {
             MPIU_ERR_POP(mpi_errno);
         }
@@ -184,11 +185,12 @@ int MPIDI_Get(void *origin_addr, int origin_count, MPI_Datatype
     }
     else {
         MPIDI_RMA_Ops_list_t *ops_list = MPIDI_CH3I_RMA_Get_ops_list(win_ptr, target_rank);
+        MPIDI_RMA_Ops_list_t *ops_list_tail = MPIDI_CH3I_RMA_Get_ops_list_tail(win_ptr, target_rank);
         MPIDI_RMA_Op_t *new_ptr = NULL;
         MPIDI_CH3_Pkt_get_t *get_pkt = NULL;
 
         /* queue it up */
-        mpi_errno = MPIDI_CH3I_RMA_Ops_alloc_tail(ops_list, &new_ptr);
+        mpi_errno = MPIDI_CH3I_RMA_Ops_alloc_tail(win_ptr, ops_list, ops_list_tail, &new_ptr);
         if (mpi_errno) {
             MPIU_ERR_POP(mpi_errno);
         }
@@ -296,11 +298,12 @@ int MPIDI_Accumulate(const void *origin_addr, int origin_count, MPI_Datatype
     }
     else {
         MPIDI_RMA_Ops_list_t *ops_list = MPIDI_CH3I_RMA_Get_ops_list(win_ptr, target_rank);
+        MPIDI_RMA_Ops_list_t *ops_list_tail = MPIDI_CH3I_RMA_Get_ops_list_tail(win_ptr, target_rank);
         MPIDI_RMA_Op_t *new_ptr = NULL;
         MPIDI_CH3_Pkt_accum_t *accum_pkt = NULL;
 
         /* queue it up */
-        mpi_errno = MPIDI_CH3I_RMA_Ops_alloc_tail(ops_list, &new_ptr);
+        mpi_errno = MPIDI_CH3I_RMA_Ops_alloc_tail(win_ptr, ops_list, ops_list_tail, &new_ptr);
         if (mpi_errno) {
             MPIU_ERR_POP(mpi_errno);
         }
@@ -441,10 +444,11 @@ int MPIDI_Get_accumulate(const void *origin_addr, int origin_count,
     }
     else {
         MPIDI_RMA_Ops_list_t *ops_list = MPIDI_CH3I_RMA_Get_ops_list(win_ptr, target_rank);
+        MPIDI_RMA_Ops_list_t *ops_list_tail = MPIDI_CH3I_RMA_Get_ops_list_tail(win_ptr, target_rank);
         MPIDI_RMA_Op_t *new_ptr = NULL;
 
         /* Append the operation to the window's RMA ops queue */
-        mpi_errno = MPIDI_CH3I_RMA_Ops_alloc_tail(ops_list, &new_ptr);
+        mpi_errno = MPIDI_CH3I_RMA_Ops_alloc_tail(win_ptr, ops_list, ops_list_tail, &new_ptr);
         if (mpi_errno) {
             MPIU_ERR_POP(mpi_errno);
         }
@@ -575,11 +579,12 @@ int MPIDI_Compare_and_swap(const void *origin_addr, const void *compare_addr,
     }
     else {
         MPIDI_RMA_Ops_list_t *ops_list = MPIDI_CH3I_RMA_Get_ops_list(win_ptr, target_rank);
+        MPIDI_RMA_Ops_list_t *ops_list_tail = MPIDI_CH3I_RMA_Get_ops_list_tail(win_ptr, target_rank);
         MPIDI_RMA_Op_t *new_ptr = NULL;
         MPIDI_CH3_Pkt_cas_t *cas_pkt = NULL;
 
         /* Append this operation to the RMA ops queue */
-        mpi_errno = MPIDI_CH3I_RMA_Ops_alloc_tail(ops_list, &new_ptr);
+        mpi_errno = MPIDI_CH3I_RMA_Ops_alloc_tail(win_ptr, ops_list, ops_list_tail, &new_ptr);
         if (mpi_errno) {
             MPIU_ERR_POP(mpi_errno);
         }
@@ -669,11 +674,12 @@ int MPIDI_Fetch_and_op(const void *origin_addr, void *result_addr,
     }
     else {
         MPIDI_RMA_Ops_list_t *ops_list = MPIDI_CH3I_RMA_Get_ops_list(win_ptr, target_rank);
+        MPIDI_RMA_Ops_list_t *ops_list_tail = MPIDI_CH3I_RMA_Get_ops_list_tail(win_ptr, target_rank);
         MPIDI_RMA_Op_t *new_ptr = NULL;
         MPIDI_CH3_Pkt_fop_t *fop_pkt = NULL;
 
         /* Append this operation to the RMA ops queue */
-        mpi_errno = MPIDI_CH3I_RMA_Ops_alloc_tail(ops_list, &new_ptr);
+        mpi_errno = MPIDI_CH3I_RMA_Ops_alloc_tail(win_ptr, ops_list, ops_list_tail, &new_ptr);
         if (mpi_errno) {
             MPIU_ERR_POP(mpi_errno);
         }

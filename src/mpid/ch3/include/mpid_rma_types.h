@@ -46,9 +46,13 @@ typedef struct MPIDI_RMA_dtype_info {   /* for derived datatypes */
     int has_sticky_ub, has_sticky_lb;
 } MPIDI_RMA_dtype_info;
 
+typedef enum MPIDI_RMA_Pool_type {
+    MPIDI_RMA_POOL_WIN = 6,
+    MPIDI_RMA_POOL_GLOBAL = 7
+} MPIDI_RMA_Pool_type_t;
+
 /* for keeping track of RMA ops, which will be executed at the next sync call */
 typedef struct MPIDI_RMA_Op {
-    struct MPIDI_RMA_Op *prev;  /* pointer to next element in list */
     struct MPIDI_RMA_Op *next;  /* pointer to next element in list */
 
     void *origin_addr;
@@ -69,6 +73,7 @@ typedef struct MPIDI_RMA_Op {
     int target_rank;
 
     MPIDI_CH3_Pkt_t pkt;
+    MPIDI_RMA_Pool_type_t pool_type;
 } MPIDI_RMA_Op_t;
 
 typedef struct MPIDI_PT_single_op {

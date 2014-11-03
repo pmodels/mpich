@@ -249,6 +249,7 @@ struct MPIDI_RMA_op;            /* forward decl from mpidrma.h */
 struct MPIDI_Win_target_state {
     struct MPIDI_RMA_Op *rma_ops_list;
                                 /* List of outstanding RMA operations */
+    struct MPIDI_RMA_Op *rma_ops_list_tail;
     volatile enum MPIDI_CH3_Lock_states remote_lock_state;
                                 /* Indicates the state of the target
                                    process' "lock" for passive target
@@ -284,6 +285,7 @@ struct MPIDI_Win_target_state {
                                                mode of operation */      \
     struct MPIDI_RMA_Op *at_rma_ops_list; /* Ops list for active target  \
                                              mode of operation. */       \
+    struct MPIDI_RMA_Op *at_rma_ops_list_tail;                           \
     enum MPIDI_Win_epoch_states epoch_state;                             \
     int epoch_count;                                                     \
     int fence_issued;   /* Indicates if fence has been called, and if an \
@@ -296,6 +298,9 @@ struct MPIDI_Win_target_state {
     int start_assert;   /* assert passed to MPI_Win_start */             \
     int shm_allocated; /* flag: TRUE iff this window has a shared memory \
                           region associated with it */                   \
+    struct MPIDI_RMA_Op *op_pool_start; /* start pointer used for freeing */\
+    struct MPIDI_RMA_Op *op_pool;  /* pool of operations */              \
+    struct MPIDI_RMA_Op *op_pool_tail; /* tail pointer to pool of operations. */ \
 
 #ifdef MPIDI_CH3_WIN_DECL
 #define MPID_DEV_WIN_DECL \
@@ -440,4 +445,8 @@ MPID_REQUEST_DECL
 /* Tell the RMA code to use a table of RMA functions provided by the 
    ADI */
 #define USE_MPID_RMA_TABLE
+
+int MPIDI_RMA_init(void);
+void MPIDI_RMA_finalize(void);
+
 #endif /* !defined(MPICH_MPIDPRE_H_INCLUDED) */
