@@ -566,6 +566,17 @@ int MPIDI_Get_accumulate(const void *origin_addr, int origin_count,
             new_ptr->origin_count = result_count;
             new_ptr->origin_datatype = result_datatype;
             new_ptr->target_rank = target_rank;
+
+            if (!MPIR_DATATYPE_IS_PREDEFINED(result_datatype)) {
+                MPID_Datatype_get_ptr(result_datatype, dtp);
+                MPID_Datatype_add_ref(dtp);
+                new_ptr->is_dt = 1;
+            }
+            if (!MPIR_DATATYPE_IS_PREDEFINED(target_datatype)) {
+                MPID_Datatype_get_ptr(target_datatype, dtp);
+                MPID_Datatype_add_ref(dtp);
+                new_ptr->is_dt = 1;
+            }
         }
 
         else {
@@ -587,29 +598,29 @@ int MPIDI_Get_accumulate(const void *origin_addr, int origin_count,
             new_ptr->result_count = result_count;
             new_ptr->result_datatype = result_datatype;
             new_ptr->target_rank = target_rank;
+
+            /* if source or target datatypes are derived, increment their
+             * reference counts */
+            if (!MPIR_DATATYPE_IS_PREDEFINED(origin_datatype)) {
+                MPID_Datatype_get_ptr(origin_datatype, dtp);
+                MPID_Datatype_add_ref(dtp);
+                new_ptr->is_dt = 1;
+            }
+            if (!MPIR_DATATYPE_IS_PREDEFINED(result_datatype)) {
+                MPID_Datatype_get_ptr(result_datatype, dtp);
+                MPID_Datatype_add_ref(dtp);
+                new_ptr->is_dt = 1;
+            }
+            if (!MPIR_DATATYPE_IS_PREDEFINED(target_datatype)) {
+                MPID_Datatype_get_ptr(target_datatype, dtp);
+                MPID_Datatype_add_ref(dtp);
+                new_ptr->is_dt = 1;
+            }
         }
 
         mpi_errno = MPIDI_CH3I_Win_enqueue_op(win_ptr, new_ptr);
         if (mpi_errno)
             MPIU_ERR_POP(mpi_errno);
-
-        /* if source or target datatypes are derived, increment their
-         * reference counts */
-        if (op != MPI_NO_OP && !MPIR_DATATYPE_IS_PREDEFINED(origin_datatype)) {
-            MPID_Datatype_get_ptr(origin_datatype, dtp);
-            MPID_Datatype_add_ref(dtp);
-            new_ptr->is_dt = 1;
-        }
-        if (!MPIR_DATATYPE_IS_PREDEFINED(result_datatype)) {
-            MPID_Datatype_get_ptr(result_datatype, dtp);
-            MPID_Datatype_add_ref(dtp);
-            new_ptr->is_dt = 1;
-        }
-        if (!MPIR_DATATYPE_IS_PREDEFINED(target_datatype)) {
-            MPID_Datatype_get_ptr(target_datatype, dtp);
-            MPID_Datatype_add_ref(dtp);
-            new_ptr->is_dt = 1;
-        }
 
         mpi_errno = MPIDI_CH3I_RMA_Make_progress_target(win_ptr, target_rank, &made_progress);
         if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
@@ -822,27 +833,45 @@ int MPIDI_Fetch_and_op(const void *origin_addr, void *result_addr,
     }
     else {
         MPIDI_RMA_Op_t *new_ptr = NULL;
-        MPIDI_CH3_Pkt_fop_t *fop_pkt = NULL;
 
         /* Append this operation to the RMA ops queue */
         mpi_errno = MPIDI_CH3I_Win_get_op(win_ptr, &new_ptr);
         if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
 
-        fop_pkt = &(new_ptr->pkt.fop);
-        MPIDI_Pkt_init(fop_pkt, MPIDI_CH3_PKT_FOP);
-        fop_pkt->addr = (char *) win_ptr->base_addrs[target_rank] +
-            win_ptr->disp_units[target_rank] * target_disp;
-        fop_pkt->datatype = datatype;
-        fop_pkt->op = op;
-        fop_pkt->source_win_handle = win_ptr->handle;
-        fop_pkt->target_win_handle = win_ptr->all_win_handles[target_rank];
+        if (op == MPI_NO_OP) {
+            /* Convert FOP to a Get */
+            MPIDI_CH3_Pkt_get_t *get_pkt = &(new_ptr->pkt.get);
+            MPIDI_Pkt_init(get_pkt, MPIDI_CH3_PKT_GET);
+            get_pkt->addr = (char *) win_ptr->base_addrs[target_rank] +
+                win_ptr->disp_units[target_rank] * target_disp;
+            get_pkt->count = 1;
+            get_pkt->datatype = datatype;
+            get_pkt->dataloop_size = 0;
+            get_pkt->target_win_handle = win_ptr->all_win_handles[target_rank];
+            get_pkt->source_win_handle = win_ptr->handle;
 
-        new_ptr->origin_addr = (void *) origin_addr;
-        new_ptr->origin_count = 1;
-        new_ptr->origin_datatype = datatype;
-        new_ptr->result_addr = result_addr;
-        new_ptr->result_datatype = datatype;
-        new_ptr->target_rank = target_rank;
+            new_ptr->origin_addr = result_addr;
+            new_ptr->origin_count = 1;
+            new_ptr->origin_datatype = datatype;
+            new_ptr->target_rank = target_rank;
+        }
+        else {
+            MPIDI_CH3_Pkt_fop_t *fop_pkt = &(new_ptr->pkt.fop);
+            MPIDI_Pkt_init(fop_pkt, MPIDI_CH3_PKT_FOP);
+            fop_pkt->addr = (char *) win_ptr->base_addrs[target_rank] +
+                win_ptr->disp_units[target_rank] * target_disp;
+            fop_pkt->datatype = datatype;
+            fop_pkt->op = op;
+            fop_pkt->source_win_handle = win_ptr->handle;
+            fop_pkt->target_win_handle = win_ptr->all_win_handles[target_rank];
+
+            new_ptr->origin_addr = (void *) origin_addr;
+            new_ptr->origin_count = 1;
+            new_ptr->origin_datatype = datatype;
+            new_ptr->result_addr = result_addr;
+            new_ptr->result_datatype = datatype;
+            new_ptr->target_rank = target_rank;
+        }
 
         mpi_errno = MPIDI_CH3I_Win_enqueue_op(win_ptr, new_ptr);
         if (mpi_errno)
