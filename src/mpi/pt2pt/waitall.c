@@ -154,7 +154,7 @@ int MPIR_Waitall_impl(int count, MPI_Request array_of_requests[],
         }
         
         /* wait for ith request to complete */
-        while (!MPID_Request_is_complete(request_ptrs[i]))
+        while (!MPID_Request_is_complete(request_ptrs[i]) && !MPID_Request_is_pending_failure(request_ptrs[i]))
         {
             /* generalized requests should already be finished */
             MPIU_Assert(request_ptrs[i]->kind != MPID_UREQUEST);
@@ -168,9 +168,16 @@ int MPIR_Waitall_impl(int count, MPI_Request array_of_requests[],
             }
         }
 
-        /* complete the request and check the status */
-        status_ptr = (ignoring_statuses) ? MPI_STATUS_IGNORE : &array_of_statuses[i];
-        rc = MPIR_Request_complete(&array_of_requests[i], request_ptrs[i], status_ptr, &active_flag);
+        if (MPID_Request_is_complete(request_ptrs[i])) {
+            /* complete the request and check the status */
+            status_ptr = (ignoring_statuses) ? MPI_STATUS_IGNORE : &array_of_statuses[i];
+            rc = MPIR_Request_complete(&array_of_requests[i], request_ptrs[i], status_ptr, &active_flag);
+        } else {
+            /* If the request isn't complete, it's because it's pending due
+             * to a failure so set the rc accordingly. */
+            rc = request_ptrs[i]->status.MPI_ERROR;
+            proc_failure = 1;
+        }
         if (rc == MPI_SUCCESS)
         {
             request_ptrs[i] = NULL;

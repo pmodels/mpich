@@ -197,7 +197,13 @@ int MPI_Testsome(int incount, MPI_Request array_of_requests[], int *outcount,
 		request_ptrs[i] = NULL;
 		n_inactive += 1;
 	    }
-	}
+        } else if (request_ptrs[i] != NULL && MPID_Request_is_pending_failure(request_ptrs[i])) {
+            mpi_errno = MPI_ERR_IN_STATUS;
+            array_of_indices[n_active] = i;
+            n_active += 1;
+            rc = request_ptrs[i]->status.MPI_ERROR;
+            status_ptr->MPI_ERROR = rc;
+        }
     }
 
     if (mpi_errno == MPI_ERR_IN_STATUS)

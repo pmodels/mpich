@@ -155,7 +155,12 @@ int MPI_Waitany(int count, MPI_Request array_of_requests[], int *indx,
                 continue;
             /* we found at least one non-null request */
             found_nonnull_req = TRUE;
-            
+
+            if (MPID_Request_is_pending_failure(request_ptrs[i])) {
+                mpi_errno = request_ptrs[i]->status.MPI_ERROR;
+                goto fn_progress_end_fail;
+            }
+
             if (request_ptrs[i]->kind == MPID_UREQUEST && request_ptrs[i]->greq_fns->poll_fn != NULL)
 	    {
                 /* this is a generalized request; make progress on it */

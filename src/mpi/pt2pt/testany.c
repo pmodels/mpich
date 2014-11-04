@@ -183,7 +183,12 @@ int MPI_Testany(int count, MPI_Request array_of_requests[], int *indx,
 	    {
 		n_inactive += 1;
 	    }
-	}
+        } else if (request_ptrs[i] != NULL && MPID_Request_is_pending_failure(request_ptrs[i])) {
+            mpi_errno = request_ptrs[i]->status.MPI_ERROR;
+            *flag = TRUE;
+            *indx = i;
+            goto fn_fail;
+        }
     }
     
     if (n_inactive == count)

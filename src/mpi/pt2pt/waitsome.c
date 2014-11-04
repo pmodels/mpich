@@ -221,7 +221,13 @@ int MPI_Waitsome(int incount, MPI_Request array_of_requests[],
 		    request_ptrs[i] = NULL;
 		    n_inactive += 1;
 		}
-	    }
+            } else if ( request_ptrs[i] != NULL && MPID_Request_is_pending_failure(request_ptrs[i])) {
+                n_active += 1;
+                mpi_errno = MPI_ERR_IN_STATUS;
+                if (status_ptr != MPI_STATUS_IGNORE) {
+                    status_ptr->MPI_ERROR = request_ptrs[i]->status.MPI_ERROR;
+                }
+            }
 	}
 
 	if (mpi_errno == MPI_ERR_IN_STATUS)

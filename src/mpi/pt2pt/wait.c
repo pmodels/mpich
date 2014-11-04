@@ -43,6 +43,11 @@ int MPIR_Wait_impl(MPI_Request *request, MPI_Status *status)
 
     MPID_Request_get_ptr(*request, request_ptr);
 
+    if (MPID_Request_is_pending_failure(request_ptr)) {
+        mpi_errno = request_ptr->status.MPI_ERROR;
+        goto fn_fail;
+    }
+
     if (!MPID_Request_is_complete(request_ptr))
     {
 	MPID_Progress_state progress_state;
