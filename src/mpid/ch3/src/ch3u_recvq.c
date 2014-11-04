@@ -555,46 +555,47 @@ MPID_Request * MPIDI_CH3U_Recvq_FDU_or_AEP(int source, int tag,
 	    } while (rreq);
 	}
 	else {
-	    if (tag == MPI_ANY_TAG)
-		match.parts.tag = mask.parts.tag = 0;
+        do { /* This loop is just to make it easy to break out if necessary */
+            if (tag == MPI_ANY_TAG)
+                match.parts.tag = mask.parts.tag = 0;
             if (source == MPI_ANY_SOURCE) {
                 if (!MPIDI_CH3I_Comm_AS_enabled(comm)) {
-                    MPIU_ERR_SET(mpi_errno, MPIX_ERR_PROC_FAILED, "**comm_fail");
-                    rreq->status.MPI_ERROR = mpi_errno;
-                    MPIDI_CH3U_Request_complete(rreq);
-                    goto lock_exit;
+                    /* If MPI_ANY_SOURCE is disabled right now, we should
+                     * just add this request to the posted queue instead and
+                     * return the appropriate error. */
+                    continue;
                 }
                 match.parts.rank = mask.parts.rank = 0;
             }
+            do {
+                MPIR_T_PVAR_COUNTER_INC(RECVQ, unexpected_recvq_match_attempts, 1);
+                if (MATCH_WITH_LEFT_MASK(rreq->dev.match, match, mask)) {
+                    if (prev_rreq != NULL) {
+                        prev_rreq->dev.next = rreq->dev.next;
+                    }
+                    else {
+                        recvq_unexpected_head = rreq->dev.next;
+                    }
+                    if (rreq->dev.next == NULL) {
+                        recvq_unexpected_tail = prev_rreq;
+                    }
+                    MPIR_T_PVAR_LEVEL_DEC(RECVQ, unexpected_recvq_length, 1);
 
-	    do {
-            MPIR_T_PVAR_COUNTER_INC(RECVQ, unexpected_recvq_match_attempts, 1);
-		if (MATCH_WITH_LEFT_MASK(rreq->dev.match, match, mask)) {
-		    if (prev_rreq != NULL) {
-			prev_rreq->dev.next = rreq->dev.next;
-		    }
-		    else {
-			recvq_unexpected_head = rreq->dev.next;
-		    }
-		    if (rreq->dev.next == NULL) {
-			recvq_unexpected_tail = prev_rreq;
-		    }
-            MPIR_T_PVAR_LEVEL_DEC(RECVQ, unexpected_recvq_length, 1);
+                    if (MPIDI_Request_get_msg_type(rreq) == MPIDI_REQUEST_EAGER_MSG)
+                        MPIR_T_PVAR_LEVEL_DEC(RECVQ, unexpected_recvq_buffer_size, rreq->dev.tmpbuf_sz);
 
-            if (MPIDI_Request_get_msg_type(rreq) == MPIDI_REQUEST_EAGER_MSG)
-                MPIR_T_PVAR_LEVEL_DEC(RECVQ, unexpected_recvq_buffer_size, rreq->dev.tmpbuf_sz);
-
-		    rreq->comm                 = comm;
-		    MPIR_Comm_add_ref(comm);
-		    rreq->dev.user_buf         = user_buf;
-		    rreq->dev.user_count       = user_count;
-		    rreq->dev.datatype         = datatype;
-		    found = TRUE;
-		    goto lock_exit;
-		}
-		prev_rreq = rreq;
-		rreq = rreq->dev.next;
-	    } while (rreq);
+                    rreq->comm                 = comm;
+                    MPIR_Comm_add_ref(comm);
+                    rreq->dev.user_buf         = user_buf;
+                    rreq->dev.user_count       = user_count;
+                    rreq->dev.datatype         = datatype;
+                    found = TRUE;
+                    goto lock_exit;
+                }
+                prev_rreq = rreq;
+                rreq = rreq->dev.next;
+            } while (rreq);
+        } while (false);
 	}
     }
     MPIR_T_PVAR_TIMER_END(RECVQ, time_matching_unexpectedq);
@@ -639,10 +640,14 @@ MPID_Request * MPIDI_CH3U_Recvq_FDU_or_AEP(int source, int tag,
                 goto lock_exit;
             }
         } else if (!MPIDI_CH3I_Comm_AS_enabled(comm)) {
-            MPIU_ERR_SET(mpi_errno, MPIX_ERR_PROC_FAILED, "**comm_fail");
+            /* If this receive is for MPI_ANY_SOURCE, we will still add the
+            * request to the queue for now, but we will also set the error
+            * class to MPIX_ERR_PROC_FAILED_PENDING since the request shouldn't
+            * be matched as long as there is a failure pending. This will get
+            * checked again later during the completion function to see if the
+            * request can be completed at that time. */
+            MPIU_ERR_SET(mpi_errno, MPIX_ERR_PROC_FAILED_PENDING, "**failure_pending");
             rreq->status.MPI_ERROR = mpi_errno;
-            MPIDI_CH3U_Request_complete(rreq);
-            goto lock_exit;
         }
         
 	rreq->dev.next = NULL;
