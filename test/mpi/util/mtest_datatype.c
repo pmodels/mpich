@@ -43,10 +43,13 @@ static void *MTestTypeFree(MTestDatatype * mtype)
         free(mtype->displ_in_bytes);
     if (mtype->index)
         free(mtype->index);
+    if (mtype->old_datatypes)
+        free(mtype->old_datatypes);
     mtype->buf = 0;
     mtype->displs = 0;
     mtype->displ_in_bytes = 0;
     mtype->index = 0;
+    mtype->old_datatypes = 0;
 
     return 0;
 }
@@ -63,6 +66,7 @@ static inline void MTestTypeReset(MTestDatatype * mtype)
     mtype->index = 0;
     mtype->displs = 0;
     mtype->displ_in_bytes = 0;
+    mtype->old_datatypes = 0;
 }
 
 /* ------------------------------------------------------------------------ */
@@ -248,12 +252,12 @@ static int MTestTypeVectorCheckbuf(MTestDatatype * mtype)
  */
 static void *MTestTypeIndexedInit(MTestDatatype * mtype)
 {
-    MPI_Aint size = 0, totsize;
+    MPI_Aint size = 0, totsize, dt_offset, offset;
     int merr;
 
     if (mtype->count > 0) {
         unsigned char *p;
-        int i, j, k, b, nc, offset, dt_offset;
+        int i, j, k, b, nc;
 
         /* Allocate buffer */
         merr = MPI_Type_extent(mtype->datatype, &size);
@@ -314,11 +318,11 @@ static int MTestTypeIndexedCheckbuf(MTestDatatype * mtype)
     unsigned char *p;
     unsigned char expected;
     int err = 0, merr;
-    MPI_Aint size = 0;
+    MPI_Aint size = 0, offset, dt_offset;
 
     p = (unsigned char *) mtype->buf;
     if (p) {
-        int i, j, k, b, nc, offset, dt_offset;
+        int i, j, k, b, nc;
         merr = MPI_Type_extent(mtype->datatype, &size);
         if (merr)
             MTestPrintError(merr);
@@ -353,6 +357,240 @@ static int MTestTypeIndexedCheckbuf(MTestDatatype * mtype)
     return err;
 }
 
+/* ------------------------------------------------------------------------ */
+/* Datatype routines for indexed-block datatypes                            */
+/* ------------------------------------------------------------------------ */
+
+/*
+ * Initialize buffer of indexed-block datatype
+ */
+static void *MTestTypeIndexedBlockInit(MTestDatatype * mtype)
+{
+    MPI_Aint size = 0, totsize, offset, dt_offset;
+    int merr;
+
+    if (mtype->count > 0) {
+        unsigned char *p;
+        int i, k, j, nc;
+
+        /* Allocate the send/recv buffer */
+        merr = MPI_Type_extent(mtype->datatype, &size);
+        if (merr)
+            MTestPrintError(merr);
+        totsize = size * mtype->count;
+
+        if (!mtype->buf) {
+            mtype->buf = (void *) malloc(totsize);
+        }
+        p = (unsigned char *) (mtype->buf);
+        if (!p) {
+            char errmsg[128] = { 0 };
+            sprintf(errmsg, "Out of memory in %s", __FUNCTION__);
+            MTestError(errmsg);
+        }
+
+        /* First, set to -1 */
+        for (i = 0; i < totsize; i++)
+            p[i] = 0xff;
+
+        /* Now, set the actual elements to the successive values.
+         * We require that the base type is a contiguous type */
+        nc = 0;
+        dt_offset = 0;
+        /* For each datatype */
+        for (k = 0; k < mtype->count; k++) {
+            /* For each block */
+            for (i = 0; i < mtype->nblock; i++) {
+                offset = dt_offset + mtype->displ_in_bytes[i];
+                /* For each byte in the block */
+                for (j = 0; j < mtype->blksize; j++) {
+                    p[offset + j] = (unsigned char) (0xff ^ (nc++ & 0xff));
+                }
+            }
+            dt_offset += size;
+        }
+    }
+    else {
+        /* count == 0 */
+        if (mtype->buf) {
+            free(mtype->buf);
+        }
+        mtype->buf = 0;
+    }
+    return mtype->buf;
+}
+
+/*
+ * Check value of received indexed-block datatype buffer
+ */
+static int MTestTypeIndexedBlockCheckbuf(MTestDatatype * mtype)
+{
+    unsigned char *p;
+    unsigned char expected;
+    int err = 0, merr;
+    MPI_Aint size = 0, offset, dt_offset;
+
+    p = (unsigned char *) mtype->buf;
+    if (p) {
+        int i, j, k, nc;
+        merr = MPI_Type_extent(mtype->datatype, &size);
+        if (merr)
+            MTestPrintError(merr);
+
+        nc = 0;
+        dt_offset = 0;
+        /* For each datatype */
+        for (k = 0; k < mtype->count; k++) {
+            /* For each block */
+            for (i = 0; i < mtype->nblock; i++) {
+                offset = dt_offset + mtype->displ_in_bytes[i];
+                /* For each byte in the block */
+                for (j = 0; j < mtype->blksize; j++) {
+                    expected = (unsigned char) (0xff ^ (nc++ & 0xff));
+                    if (p[offset + j] != expected) {
+                        err++;
+                        if (mtype->printErrors && err < 10) {
+                            printf("Data expected = %x but got p[%d,%d] = %x\n",
+                                   expected, i, j, p[offset + j]);
+                            fflush(stdout);
+                        }
+                    }
+                }
+            }
+            dt_offset += size;
+        }
+    }
+    return err;
+}
+
+/* ------------------------------------------------------------------------ */
+/* Datatype routines for subarray datatypes with order Fortran              */
+/* ------------------------------------------------------------------------ */
+
+/*
+ * Initialize buffer of subarray datatype.
+ */
+static void *MTestTypeSubarrayInit(MTestDatatype * mtype)
+{
+    MPI_Aint size = 0, totsize, offset, dt_offset, byte_offset;
+    int merr;
+
+    if (mtype->count > 0) {
+        unsigned char *p;
+        int i, k, j, b, nc;
+
+        /* Allocate the send/recv buffer */
+        merr = MPI_Type_extent(mtype->datatype, &size);
+        if (merr)
+            MTestPrintError(merr);
+        totsize = size * mtype->count;
+
+        if (!mtype->buf) {
+            mtype->buf = (void *) malloc(totsize);
+        }
+        p = (unsigned char *) (mtype->buf);
+        if (!p) {
+            char errmsg[128] = { 0 };
+            sprintf(errmsg, "Out of memory in %s", __FUNCTION__);
+            MTestError(errmsg);
+        }
+
+        /* First, set to -1 */
+        for (i = 0; i < totsize; i++)
+            p[i] = 0xff;
+
+        /* Now, set the actual elements to the successive values.
+         * We require that the base type is a contiguous type. */
+        int ncol, sub_ncol, sub_nrow, sub_col_start, sub_row_start;
+        ncol = mtype->arr_sizes[1];
+        sub_nrow = mtype->arr_subsizes[0];
+        sub_ncol = mtype->arr_subsizes[1];
+        sub_row_start = mtype->arr_starts[0];
+        sub_col_start = mtype->arr_starts[1];
+
+        nc = 0;
+        dt_offset = 0;
+        /* For each datatype */
+        for (k = 0; k < mtype->count; k++) {
+            /* For each row */
+            for (i = 0; i < sub_nrow; i++) {
+                offset = (sub_row_start + i) * ncol + sub_col_start;
+                /* For each element in row */
+                for (j = 0; j < sub_ncol; j++) {
+                    byte_offset = dt_offset + (offset + j) * mtype->basesize;
+                    /* For each byte in element */
+                    for (b = 0; b < mtype->basesize; b++)
+                        p[byte_offset + b] = (unsigned char) (0xff ^ (nc++ & 0xff));
+                }
+            }
+            dt_offset += size;
+        }
+    }
+    else {
+        /* count == 0 */
+        if (mtype->buf) {
+            free(mtype->buf);
+        }
+        mtype->buf = 0;
+    }
+    return mtype->buf;
+}
+
+/*
+ * Check value of received subarray datatype buffer
+ */
+static int MTestTypeSubarrayCheckbuf(MTestDatatype * mtype)
+{
+    unsigned char *p;
+    unsigned char expected;
+    int err = 0, merr;
+    MPI_Aint size, offset, dt_offset, byte_offset;
+
+    p = (unsigned char *) mtype->buf;
+    if (p) {
+        int j, k, i, b, nc;
+        merr = MPI_Type_extent(mtype->datatype, &size);
+        if (merr)
+            MTestPrintError(merr);
+
+        int ncol, sub_ncol, sub_nrow, sub_col_start, sub_row_start;
+        ncol = mtype->arr_sizes[1];
+        sub_nrow = mtype->arr_subsizes[0];
+        sub_ncol = mtype->arr_subsizes[1];
+        sub_row_start = mtype->arr_starts[0];
+        sub_col_start = mtype->arr_starts[1];
+
+        nc = 0;
+        dt_offset = 0;
+        /* For each datatype */
+        for (k = 0; k < mtype->count; k++) {
+            /* For each row */
+            for (i = 0; i < sub_nrow; i++) {
+                offset = (sub_row_start + i) * ncol + sub_col_start;
+                /* For each element in row */
+                for (j = 0; j < sub_ncol; j++) {
+                    byte_offset = dt_offset + (offset + j) * mtype->basesize;
+                    /* For each byte in element */
+                    for (b = 0; b < mtype->basesize; b++) {
+                        expected = (unsigned char) (0xff ^ (nc++ & 0xff));
+                        if (p[byte_offset + b] != expected) {
+                            err++;
+                            if (mtype->printErrors && err < 10) {
+                                printf("Data expected = %x but got p[%d,%d,%d] = %x\n",
+                                       expected, i, j, b, p[byte_offset + b]);
+                                fflush(stdout);
+                            }
+                        }
+                    }
+                }
+            }
+            dt_offset += size;
+        }
+    }
+    if (err)
+        printf("%s error\n", __FUNCTION__);
+    return err;
+}
 
 /* ------------------------------------------------------------------------ */
 /* Datatype creators                                                      */
@@ -451,6 +689,56 @@ static int MTestTypeVectorCreate(int nblock, int blocklen, int stride,
 }
 
 /*
+ * Setup hvector type info and handlers.
+ *
+ * A hvector datatype is created by using following parameters.
+ * nblock:   Number of blocks.
+ * blocklen: Number of elements in each block.
+ * stride:   Strided number of elements between blocks.
+ * oldtype:  Datatype of element.
+ */
+static int MTestTypeHvectorCreate(int nblock, int blocklen, int stride,
+                                  MPI_Datatype oldtype, const char *typename_prefix,
+                                  MTestDatatype * mtype)
+{
+    int merr;
+    char type_name[128];
+
+    MTestTypeReset(mtype);
+
+    merr = MPI_Type_size(oldtype, &mtype->basesize);
+    if (merr)
+        MTestPrintError(merr);
+
+    /* These sizes are in bytes (see the VectorInit code) */
+    mtype->stride = stride * mtype->basesize;
+    mtype->blksize = blocklen * mtype->basesize;
+    mtype->nblock = nblock;
+
+    /* Hvector uses stride in bytes */
+    merr = MPI_Type_create_hvector(nblock, blocklen, mtype->stride, oldtype, &mtype->datatype);
+    if (merr)
+        MTestPrintError(merr);
+    merr = MPI_Type_commit(&mtype->datatype);
+    if (merr)
+        MTestPrintError(merr);
+
+    memset(type_name, 0, sizeof(type_name));
+    sprintf(type_name, "%s %s (%d nblock %d blocklen %d stride)", typename_prefix, "hvector",
+            nblock, blocklen, stride);
+    merr = MPI_Type_set_name(mtype->datatype, (char *) type_name);
+    if (merr)
+        MTestPrintError(merr);
+
+    /* User the same functions as vector, because mtype->stride is in bytes */
+    mtype->InitBuf = MTestTypeVectorInit;
+    mtype->FreeBuf = MTestTypeFree;
+    mtype->CheckBuf = MTestTypeVectorCheckbuf;
+
+    return merr;
+}
+
+/*
  * Setup indexed type info and handlers.
  *
  * A indexed datatype is created by using following parameters.
@@ -475,7 +763,7 @@ static int MTestTypeIndexedCreate(int nblock, int blocklen, int stride,
         MTestPrintError(merr);
 
     mtype->displs = (int *) malloc(nblock * sizeof(int));
-    mtype->displ_in_bytes = (int *) malloc(nblock * sizeof(int));
+    mtype->displ_in_bytes = (MPI_Aint *) malloc(nblock * sizeof(MPI_Aint));
     mtype->index = (int *) malloc(nblock * sizeof(int));
     if (!mtype->displs || !mtype->displ_in_bytes || !mtype->index) {
         char errmsg[128] = { 0 };
@@ -511,6 +799,381 @@ static int MTestTypeIndexedCreate(int nblock, int blocklen, int stride,
 
     return merr;
 }
+
+/*
+ * Setup hindexed type info and handlers.
+ *
+ * A hindexed datatype is created by using following parameters.
+ * nblock:   Number of blocks.
+ * blocklen: Number of elements in each block. Each block has the same length.
+ * stride:   Strided number of elements between two adjacent blocks. The byte
+ *           displacement of each block is set as (index of current block * stride * size of oldtype).
+ * oldtype:  Datatype of element.
+ */
+static inline int MTestTypeHindexedCreate(int nblock, int blocklen, int stride,
+                                          MPI_Datatype oldtype, const char *typename_prefix,
+                                          MTestDatatype * mtype)
+{
+    int merr;
+    char type_name[128];
+    int i;
+
+    MTestTypeReset(mtype);
+
+    merr = MPI_Type_size(oldtype, &mtype->basesize);
+    if (merr)
+        MTestPrintError(merr);
+
+    mtype->index = (int *) malloc(nblock * sizeof(int));
+    mtype->displ_in_bytes = (MPI_Aint *) malloc(nblock * sizeof(MPI_Aint));
+    if (!mtype->displ_in_bytes || !mtype->index) {
+        char errmsg[128] = { 0 };
+        sprintf(errmsg, "Out of memory in %s", __FUNCTION__);
+        MTestError(errmsg);
+    }
+
+    mtype->nblock = nblock;
+    for (i = 0; i < nblock; i++) {
+        mtype->index[i] = blocklen;
+        mtype->displ_in_bytes[i] = stride * i * mtype->basesize;
+    }
+
+    /* Hindexed uses displacement in bytes */
+    merr = MPI_Type_create_hindexed(nblock, mtype->index, mtype->displ_in_bytes,
+                                    oldtype, &mtype->datatype);
+    if (merr)
+        MTestPrintError(merr);
+    merr = MPI_Type_commit(&mtype->datatype);
+    if (merr)
+        MTestPrintError(merr);
+
+    memset(type_name, 0, sizeof(type_name));
+    sprintf(type_name, "%s %s (%d nblock %d blocklen %d stride)", typename_prefix, "hindex", nblock,
+            blocklen, stride);
+    merr = MPI_Type_set_name(mtype->datatype, (char *) type_name);
+    if (merr)
+        MTestPrintError(merr);
+
+    /* Reuse indexed functions, because all of them only use displ_in_bytes */
+    mtype->InitBuf = MTestTypeIndexedInit;
+    mtype->FreeBuf = MTestTypeFree;
+    mtype->CheckBuf = MTestTypeIndexedCheckbuf;
+
+    return merr;
+}
+
+
+/*
+ * Setup indexed-block type info and handlers.
+ *
+ * A indexed-block datatype is created by using following parameters.
+ * nblock:   Number of blocks.
+ * blocklen: Number of elements in each block.
+ * stride:   Strided number of elements between two adjacent blocks. The
+ *           displacement of each block is set as (index of current block * stride).
+ * oldtype:  Datatype of element.
+ */
+static int MTestTypeIndexedBlockCreate(int nblock, int blocklen, int stride,
+                                       MPI_Datatype oldtype, const char *typename_prefix,
+                                       MTestDatatype * mtype)
+{
+    int merr;
+    char type_name[128];
+    int i;
+
+    MTestTypeReset(mtype);
+
+    merr = MPI_Type_size(oldtype, &mtype->basesize);
+    if (merr)
+        MTestPrintError(merr);
+
+    mtype->displs = (int *) malloc(nblock * sizeof(int));
+    mtype->displ_in_bytes = (MPI_Aint *) malloc(nblock * sizeof(MPI_Aint));
+    if (!mtype->displs || !mtype->displ_in_bytes) {
+        char errmsg[128] = { 0 };
+        sprintf(errmsg, "Out of memory in %s", __FUNCTION__);
+        MTestError(errmsg);
+    }
+
+    mtype->nblock = nblock;
+    mtype->blksize = blocklen * mtype->basesize;
+    for (i = 0; i < nblock; i++) {
+        mtype->displs[i] = stride * i;
+        mtype->displ_in_bytes[i] = stride * i * mtype->basesize;
+    }
+
+    /* Indexed-block uses displacement in oldtypes */
+    merr = MPI_Type_create_indexed_block(nblock, blocklen, mtype->displs,
+                                         oldtype, &mtype->datatype);
+    if (merr)
+        MTestPrintError(merr);
+    merr = MPI_Type_commit(&mtype->datatype);
+    if (merr)
+        MTestPrintError(merr);
+
+    memset(type_name, 0, sizeof(type_name));
+    sprintf(type_name, "%s %s (%d nblock %d blocklen %d stride)", typename_prefix, "index_block",
+            nblock, blocklen, stride);
+    merr = MPI_Type_set_name(mtype->datatype, (char *) type_name);
+    if (merr)
+        MTestPrintError(merr);
+
+    mtype->InitBuf = MTestTypeIndexedBlockInit;
+    mtype->FreeBuf = MTestTypeFree;
+    mtype->CheckBuf = MTestTypeIndexedBlockCheckbuf;
+
+    return merr;
+}
+
+/*
+ * Setup hindexed-block type info and handlers.
+ *
+ * A hindexed-block datatype is created by using following parameters.
+ * nblock:   Number of blocks.
+ * blocklen: Number of elements in each block.
+ * stride:   Strided number of elements between two adjacent blocks. The byte
+ *           displacement of each block is set as (index of current block * stride * size of oldtype).
+ * oldtype:  Datatype of element.
+ */
+static int MTestTypeHindexedBlockCreate(int nblock, int blocklen, int stride,
+                                        MPI_Datatype oldtype, const char *typename_prefix,
+                                        MTestDatatype * mtype)
+{
+    int merr;
+    char type_name[128];
+    int i;
+
+    MTestTypeReset(mtype);
+
+    merr = MPI_Type_size(oldtype, &mtype->basesize);
+    if (merr)
+        MTestPrintError(merr);
+
+    mtype->displ_in_bytes = (MPI_Aint *) malloc(nblock * sizeof(MPI_Aint));
+    if (!mtype->displ_in_bytes) {
+        char errmsg[128] = { 0 };
+        sprintf(errmsg, "Out of memory in %s", __FUNCTION__);
+        MTestError(errmsg);
+    }
+
+    mtype->nblock = nblock;
+    mtype->blksize = blocklen * mtype->basesize;
+    for (i = 0; i < nblock; i++) {
+        mtype->displ_in_bytes[i] = stride * i * mtype->basesize;
+    }
+
+    /* Hindexed-block uses displacement in bytes */
+    merr = MPI_Type_create_hindexed_block(nblock, blocklen, mtype->displ_in_bytes,
+                                          oldtype, &mtype->datatype);
+    if (merr)
+        MTestPrintError(merr);
+    merr = MPI_Type_commit(&mtype->datatype);
+    if (merr)
+        MTestPrintError(merr);
+
+    memset(type_name, 0, sizeof(type_name));
+    sprintf(type_name, "%s %s (%d nblock %d blocklen %d stride)", typename_prefix, "hindex_block",
+            nblock, blocklen, stride);
+    merr = MPI_Type_set_name(mtype->datatype, (char *) type_name);
+    if (merr)
+        MTestPrintError(merr);
+
+    /* Reuse indexed-block functions, because all of them only use displ_in_bytes */
+    mtype->InitBuf = MTestTypeIndexedBlockInit;
+    mtype->FreeBuf = MTestTypeFree;
+    mtype->CheckBuf = MTestTypeIndexedBlockCheckbuf;
+
+    return merr;
+}
+
+/*
+ * Setup struct type info and handlers.
+ *
+ * A struct datatype is created by using following parameters.
+ * nblock:   Number of blocks.
+ * blocklen: Number of elements in each block. Each block has the same length.
+ * stride:   Strided number of elements between two adjacent blocks. The byte
+ *           displacement of each block is set as (index of current block * stride * size of oldtype).
+ * oldtype:  Datatype of element. Each block has the same oldtype.
+ */
+static int MTestTypeStructCreate(int nblock, int blocklen, int stride,
+                                 MPI_Datatype oldtype, const char *typename_prefix,
+                                 MTestDatatype * mtype)
+{
+    int merr;
+    char type_name[128];
+    int i;
+
+    MTestTypeReset(mtype);
+
+    merr = MPI_Type_size(oldtype, &mtype->basesize);
+    if (merr)
+        MTestPrintError(merr);
+
+    mtype->old_datatypes = (MPI_Datatype *) malloc(nblock * sizeof(MPI_Datatype));
+    mtype->displ_in_bytes = (MPI_Aint *) malloc(nblock * sizeof(MPI_Aint));
+    mtype->index = (int *) malloc(nblock * sizeof(int));
+    if (!mtype->displ_in_bytes || !mtype->old_datatypes) {
+        char errmsg[128] = { 0 };
+        sprintf(errmsg, "Out of memory in %s", __FUNCTION__);
+        MTestError(errmsg);
+    }
+
+    mtype->nblock = nblock;
+    mtype->blksize = blocklen * mtype->basesize;
+    for (i = 0; i < nblock; i++) {
+        mtype->displ_in_bytes[i] = stride * i * mtype->basesize;
+        mtype->old_datatypes[i] = oldtype;
+        mtype->index[i] = blocklen;
+    }
+
+    /* Struct uses displacement in bytes */
+    merr = MPI_Type_create_struct(nblock, mtype->index, mtype->displ_in_bytes,
+                                  mtype->old_datatypes, &mtype->datatype);
+    if (merr)
+        MTestPrintError(merr);
+    merr = MPI_Type_commit(&mtype->datatype);
+    if (merr)
+        MTestPrintError(merr);
+
+    memset(type_name, 0, sizeof(type_name));
+    sprintf(type_name, "%s %s (%d nblock %d blocklen %d stride)", typename_prefix, "struct",
+            nblock, blocklen, stride);
+    merr = MPI_Type_set_name(mtype->datatype, (char *) type_name);
+    if (merr)
+        MTestPrintError(merr);
+
+    /* Reuse indexed functions, because they use the same displ_in_bytes and index */
+    mtype->InitBuf = MTestTypeIndexedInit;
+    mtype->FreeBuf = MTestTypeFree;
+    mtype->CheckBuf = MTestTypeIndexedCheckbuf;
+
+    return merr;
+}
+
+/*
+ * Setup order-C subarray type info and handlers.
+ *
+ * A 2D-subarray datatype specified with order C and located in the left-middle
+ * of the full array is created by using input parameters.
+ * Number of elements in the dimensions of the full array: {nblock + 2, stride}
+ * Number of elements in the dimensions of the subarray: {nblock, blocklen}
+ * Starting of the subarray in each dimension: {1, stride - blocklen}
+ * order: MPI_ORDER_C
+ * oldtype: oldtype
+ */
+static int MTestTypeSubArrayOrderCCreate(int nblock, int blocklen, int stride,
+                                         MPI_Datatype oldtype, const char *typename_prefix,
+                                         MTestDatatype * mtype)
+{
+    int merr;
+    char type_name[128];
+
+    MTestTypeReset(mtype);
+
+    merr = MPI_Type_size(oldtype, &mtype->basesize);
+    if (merr)
+        MTestPrintError(merr);
+
+    mtype->arr_sizes[0] = nblock + 2;   /* {row, col} */
+    mtype->arr_sizes[1] = stride;
+    mtype->arr_subsizes[0] = nblock;    /* {row, col} */
+    mtype->arr_subsizes[1] = blocklen;
+    mtype->arr_starts[0] = 1;   /* {row, col} */
+    mtype->arr_starts[1] = stride - blocklen;
+    mtype->order = MPI_ORDER_C;
+
+    merr = MPI_Type_create_subarray(2, mtype->arr_sizes, mtype->arr_subsizes, mtype->arr_starts,
+                                    mtype->order, oldtype, &mtype->datatype);
+    if (merr)
+        MTestPrintError(merr);
+    merr = MPI_Type_commit(&mtype->datatype);
+    if (merr)
+        MTestPrintError(merr);
+
+    memset(type_name, 0, sizeof(type_name));
+    sprintf(type_name, "%s %s (full{%d,%d}, sub{%d,%d},start{%d,%d})",
+            typename_prefix, "subarray-c", mtype->arr_sizes[0], mtype->arr_sizes[1],
+            mtype->arr_subsizes[0], mtype->arr_subsizes[1], mtype->arr_starts[0],
+            mtype->arr_starts[1]);
+    merr = MPI_Type_set_name(mtype->datatype, (char *) type_name);
+    if (merr)
+        MTestPrintError(merr);
+
+    mtype->InitBuf = MTestTypeSubarrayInit;
+    mtype->FreeBuf = MTestTypeFree;
+    mtype->CheckBuf = MTestTypeSubarrayCheckbuf;
+
+    return merr;
+}
+
+
+/*
+ * Setup order-Fortran subarray type info and handlers.
+ *
+ * A 2D-subarray datatype specified with order Fortran and located in the middle
+ * bottom of the full array is created by using input parameters.
+ * Number of elements in the dimensions of the full array: {stride, nblock + 2}
+ * Number of elements in the dimensions of the subarray: {blocklen, nblock}
+ * Starting of the subarray in each dimension: {stride - blocklen, 1}
+ * order: MPI_ORDER_FORTRAN
+ * oldtype: oldtype
+ */
+static int MTestTypeSubArrayOrderFortranCreate(int nblock, int blocklen, int stride,
+                                               MPI_Datatype oldtype, const char *typename_prefix,
+                                               MTestDatatype * mtype)
+{
+    int merr;
+    char type_name[128];
+
+    MTestTypeReset(mtype);
+
+    merr = MPI_Type_size(oldtype, &mtype->basesize);
+    if (merr)
+        MTestPrintError(merr);
+
+    /* use the same row and col as that of order-c subarray for buffer
+     * initialization and check because we access buffer in order-c */
+    mtype->arr_sizes[0] = nblock + 2;   /* {row, col} */
+    mtype->arr_sizes[1] = stride;
+    mtype->arr_subsizes[0] = nblock;    /* {row, col} */
+    mtype->arr_subsizes[1] = blocklen;
+    mtype->arr_starts[0] = 1;   /* {row, col} */
+    mtype->arr_starts[1] = stride - blocklen;
+    mtype->order = MPI_ORDER_FORTRAN;
+
+    /* reverse row and col when create datatype so that we can get the same
+     * packed data on the other side in order to reuse the contig check function */
+    int arr_sizes[2] = { mtype->arr_sizes[1], mtype->arr_sizes[0] };
+    int arr_subsizes[2] = { mtype->arr_subsizes[1], mtype->arr_subsizes[0] };
+    int arr_starts[2] = { mtype->arr_starts[1], mtype->arr_starts[0] };
+
+    merr = MPI_Type_create_subarray(2, arr_sizes, arr_subsizes, arr_starts,
+                                    mtype->order, oldtype, &mtype->datatype);
+    if (merr)
+        MTestPrintError(merr);
+    merr = MPI_Type_commit(&mtype->datatype);
+    if (merr)
+        MTestPrintError(merr);
+
+    memset(type_name, 0, sizeof(type_name));
+    sprintf(type_name, "%s %s (full{%d,%d}, sub{%d,%d},start{%d,%d})",
+            typename_prefix, "subarray-f", arr_sizes[0], arr_sizes[1],
+            arr_subsizes[0], arr_subsizes[1], arr_starts[0], arr_starts[1]);
+    merr = MPI_Type_set_name(mtype->datatype, (char *) type_name);
+    if (merr)
+        MTestPrintError(merr);
+
+    mtype->InitBuf = MTestTypeSubarrayInit;
+    mtype->FreeBuf = MTestTypeFree;
+    mtype->CheckBuf = MTestTypeSubarrayCheckbuf;
+
+    return merr;
+}
+
+/* ------------------------------------------------------------------------ */
+/* Datatype routines exposed to test generator                             */
+/* ------------------------------------------------------------------------ */
 
 /*
  * Setup basic type info and handlers.
@@ -609,5 +1272,12 @@ void MTestTypeCreatorInit(MTestDdtCreator * creators)
     memset(creators, 0, sizeof(MTestDdtCreator) * MTEST_DDT_MAX);
     creators[MTEST_DDT_CONTIGUOUS] = MTestTypeContiguousCreate;
     creators[MTEST_DDT_VECTOR] = MTestTypeVectorCreate;
+    creators[MTEST_DDT_HVECTOR] = MTestTypeHvectorCreate;
     creators[MTEST_DDT_INDEXED] = MTestTypeIndexedCreate;
+    creators[MTEST_DDT_HINDEXED] = MTestTypeHindexedCreate;
+    creators[MTEST_DDT_INDEXED_BLOCK] = MTestTypeIndexedBlockCreate;
+    creators[MTEST_DDT_HINDEXED_BLOCK] = MTestTypeHindexedBlockCreate;
+    creators[MTEST_DDT_STRUCT] = MTestTypeStructCreate;
+    creators[MTEST_DDT_SUBARRAY_ORDER_C] = MTestTypeSubArrayOrderCCreate;
+    creators[MTEST_DDT_SUBARRAY_ORDER_FORTRAN] = MTestTypeSubArrayOrderFortranCreate;
 }
