@@ -290,7 +290,8 @@ static int win_init(MPI_Aint size, int disp_unit, int create_flavor, int model,
     if (initRMAoptions) {
         MPIU_THREADSAFE_INIT_BLOCK_BEGIN(initRMAoptions);
 
-        MPIDI_CH3_RMA_Init_Pvars();
+        MPIDI_CH3_RMA_Init_sync_pvars();
+        MPIDI_CH3_RMA_Init_pkthandler_pvars();
 
         MPIU_THREADSAFE_INIT_CLEAR(initRMAoptions);
         MPIU_THREADSAFE_INIT_BLOCK_END(initRMAoptions);

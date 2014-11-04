@@ -1225,7 +1225,8 @@ void *MPIDI_Alloc_mem(size_t size, MPID_Info *info_ptr);
 int MPIDI_Free_mem(void *ptr);
 
 /* Pvars */
-void MPIDI_CH3_RMA_Init_Pvars(void);
+void MPIDI_CH3_RMA_Init_sync_pvars(void);
+void MPIDI_CH3_RMA_Init_pkthandler_pvars(void);
 
 /* internal */
 int MPIDI_CH3I_Release_lock(MPID_Win * win_ptr);

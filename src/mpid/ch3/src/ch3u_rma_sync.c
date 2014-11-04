@@ -209,8 +209,59 @@
          PROC_SYNC with origin will see the latest data.
 */
 
-void MPIDI_CH3_RMA_Init_Pvars(void)
+MPIR_T_PVAR_DOUBLE_TIMER_DECL(RMA, rma_lockqueue_alloc);
+MPIR_T_PVAR_DOUBLE_TIMER_DECL(RMA, rma_winlock_getlocallock);
+MPIR_T_PVAR_DOUBLE_TIMER_DECL(RMA, rma_wincreate_allgather);
+
+MPIR_T_PVAR_DOUBLE_TIMER_DECL(RMA, rma_rmaqueue_alloc);
+MPIR_T_PVAR_DOUBLE_TIMER_DECL(RMA, rma_rmaqueue_set);
+
+void MPIDI_CH3_RMA_Init_sync_pvars(void)
 {
+    /* rma_lockqueue_alloc */
+    MPIR_T_PVAR_TIMER_REGISTER_STATIC(RMA,
+                                      MPI_DOUBLE,
+                                      rma_lockqueue_alloc,
+                                      MPI_T_VERBOSITY_MPIDEV_DETAIL,
+                                      MPI_T_BIND_NO_OBJECT,
+                                      MPIR_T_PVAR_FLAG_READONLY,
+                                      "RMA", "Allocate Lock Queue element (in seconds)");
+
+    /* rma_winlock_getlocallock */
+    MPIR_T_PVAR_TIMER_REGISTER_STATIC(RMA,
+                                      MPI_DOUBLE,
+                                      rma_winlock_getlocallock,
+                                      MPI_T_VERBOSITY_MPIDEV_DETAIL,
+                                      MPI_T_BIND_NO_OBJECT,
+                                      MPIR_T_PVAR_FLAG_READONLY,
+                                      "RMA", "WIN_LOCK:Get local lock (in seconds)");
+
+    /* rma_wincreate_allgather */
+    MPIR_T_PVAR_TIMER_REGISTER_STATIC(RMA,
+                                      MPI_DOUBLE,
+                                      rma_wincreate_allgather,
+                                      MPI_T_VERBOSITY_MPIDEV_DETAIL,
+                                      MPI_T_BIND_NO_OBJECT,
+                                      MPIR_T_PVAR_FLAG_READONLY,
+                                      "RMA", "WIN_CREATE:Allgather (in seconds)");
+
+    /* rma_rmaqueue_alloc */
+    MPIR_T_PVAR_TIMER_REGISTER_STATIC(RMA,
+                                      MPI_DOUBLE,
+                                      rma_rmaqueue_alloc,
+                                      MPI_T_VERBOSITY_MPIDEV_DETAIL,
+                                      MPI_T_BIND_NO_OBJECT,
+                                      MPIR_T_PVAR_FLAG_READONLY,
+                                      "RMA", "Allocate RMA Queue element (in seconds)");
+
+    /* rma_rmaqueue_set */
+    MPIR_T_PVAR_TIMER_REGISTER_STATIC(RMA,
+                                      MPI_DOUBLE,
+                                      rma_rmaqueue_set,
+                                      MPI_T_VERBOSITY_MPIDEV_DETAIL,
+                                      MPI_T_BIND_NO_OBJECT,
+                                      MPIR_T_PVAR_FLAG_READONLY,
+                                      "RMA", "Set fields in RMA Queue element (in seconds)");
 }
 
 /* These are used to use a common routine to complete lists of RMA

@@ -21,6 +21,8 @@ extern struct MPIDI_RMA_Target *global_rma_target_pool, *global_rma_target_pool_
 extern int num_active_issued_win;
 extern int num_passive_win;
 
+MPIR_T_PVAR_DOUBLE_TIMER_DECL_EXTERN(RMA, rma_rmaqueue_alloc);
+
 /* MPIDI_CH3I_Win_op_alloc(): get a new op element from op pool and
  * initialize it. If we cannot get one, return NULL. */
 #undef FUNCNAME
@@ -534,7 +536,9 @@ static inline int MPIDI_CH3I_Win_get_op(MPID_Win * win_ptr, MPIDI_RMA_Op_t **e)
     int mpi_errno = MPI_SUCCESS;
 
     while (1) {
+        MPIR_T_PVAR_TIMER_START(RMA, rma_rmaqueue_alloc);
         new_ptr = MPIDI_CH3I_Win_op_alloc(win_ptr);
+        MPIR_T_PVAR_TIMER_END(RMA, rma_rmaqueue_alloc);
         if (new_ptr != NULL) break;
 
         mpi_errno = MPIDI_CH3I_RMA_Cleanup_ops_win(win_ptr,
@@ -542,7 +546,9 @@ static inline int MPIDI_CH3I_Win_get_op(MPID_Win * win_ptr, MPIDI_RMA_Op_t **e)
                                                    &remote_completed);
         if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
 
+        MPIR_T_PVAR_TIMER_START(RMA, rma_rmaqueue_alloc);
         new_ptr = MPIDI_CH3I_Win_op_alloc(win_ptr);
+        MPIR_T_PVAR_TIMER_END(RMA, rma_rmaqueue_alloc);
         if (new_ptr != NULL) break;
 
         if (MPIDI_RMA_Pkt_orderings->flush_remote) {
@@ -550,7 +556,9 @@ static inline int MPIDI_CH3I_Win_get_op(MPID_Win * win_ptr, MPIDI_RMA_Op_t **e)
             if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
         }
 
+        MPIR_T_PVAR_TIMER_START(RMA, rma_rmaqueue_alloc);
         new_ptr = MPIDI_CH3I_Win_op_alloc(win_ptr);
+        MPIR_T_PVAR_TIMER_END(RMA, rma_rmaqueue_alloc);
         if (new_ptr != NULL) break;
 
         mpi_errno = MPIDI_CH3I_RMA_Cleanup_ops_aggressive(win_ptr);

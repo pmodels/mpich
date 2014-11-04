@@ -6,6 +6,8 @@
 
 #include "mpidrma.h"
 
+MPIR_T_PVAR_DOUBLE_TIMER_DECL_EXTERN(RMA, rma_rmaqueue_set);
+
 #define MPIDI_PASSIVE_TARGET_DONE_TAG  348297
 #define MPIDI_PASSIVE_TARGET_RMA_TAG 563924
 
@@ -98,6 +100,8 @@ int MPIDI_Put(const void *origin_addr, int origin_count, MPI_Datatype
         mpi_errno = MPIDI_CH3I_Win_get_op(win_ptr, &new_ptr);
         if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
 
+        MPIR_T_PVAR_TIMER_START(RMA, rma_rmaqueue_set);
+
         put_pkt = &(new_ptr->pkt.put);
         MPIDI_Pkt_init(put_pkt, MPIDI_CH3_PKT_PUT);
         put_pkt->addr = (char *) win_ptr->base_addrs[target_rank] +
@@ -116,9 +120,13 @@ int MPIDI_Put(const void *origin_addr, int origin_count, MPI_Datatype
         new_ptr->origin_datatype = origin_datatype;
         new_ptr->target_rank = target_rank;
 
+        MPIR_T_PVAR_TIMER_END(RMA, rma_rmaqueue_set);
+
         mpi_errno = MPIDI_CH3I_Win_enqueue_op(win_ptr, new_ptr);
         if (mpi_errno)
             MPIU_ERR_POP(mpi_errno);
+
+        MPIR_T_PVAR_TIMER_START(RMA, rma_rmaqueue_set);
 
         /* if source or target datatypes are derived, increment their
          * reference counts */
@@ -159,6 +167,8 @@ int MPIDI_Put(const void *origin_addr, int origin_count, MPI_Datatype
                     new_ptr->piggyback_lock_candidate = 1;
             }
         }
+
+        MPIR_T_PVAR_TIMER_END(RMA, rma_rmaqueue_set);
 
         mpi_errno = MPIDI_CH3I_RMA_Make_progress_target(win_ptr, target_rank, &made_progress);
         if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
@@ -263,6 +273,8 @@ int MPIDI_Get(void *origin_addr, int origin_count, MPI_Datatype
         mpi_errno = MPIDI_CH3I_Win_get_op(win_ptr, &new_ptr);
         if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
 
+        MPIR_T_PVAR_TIMER_START(RMA, rma_rmaqueue_set);
+
         get_pkt = &(new_ptr->pkt.get);
         MPIDI_Pkt_init(get_pkt, MPIDI_CH3_PKT_GET);
         get_pkt->addr = (char *) win_ptr->base_addrs[target_rank] +
@@ -280,9 +292,13 @@ int MPIDI_Get(void *origin_addr, int origin_count, MPI_Datatype
         new_ptr->origin_datatype = origin_datatype;
         new_ptr->target_rank = target_rank;
 
+        MPIR_T_PVAR_TIMER_END(RMA, rma_rmaqueue_set);
+
         mpi_errno = MPIDI_CH3I_Win_enqueue_op(win_ptr, new_ptr);
         if (mpi_errno)
             MPIU_ERR_POP(mpi_errno);
+
+        MPIR_T_PVAR_TIMER_START(RMA, rma_rmaqueue_set);
 
         /* if source or target datatypes are derived, increment their
          * reference counts */
@@ -300,6 +316,8 @@ int MPIDI_Get(void *origin_addr, int origin_count, MPI_Datatype
         if (!new_ptr->is_dt) {
             new_ptr->piggyback_lock_candidate = 1;
         }
+
+        MPIR_T_PVAR_TIMER_END(RMA, rma_rmaqueue_set);
 
         mpi_errno = MPIDI_CH3I_RMA_Make_progress_target(win_ptr, target_rank, &made_progress);
         if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
@@ -405,6 +423,8 @@ int MPIDI_Accumulate(const void *origin_addr, int origin_count, MPI_Datatype
         mpi_errno = MPIDI_CH3I_Win_get_op(win_ptr, &new_ptr);
         if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
 
+        MPIR_T_PVAR_TIMER_START(RMA, rma_rmaqueue_set);
+
         accum_pkt = &(new_ptr->pkt.accum);
 
         MPIDI_Pkt_init(accum_pkt, MPIDI_CH3_PKT_ACCUMULATE);
@@ -424,9 +444,13 @@ int MPIDI_Accumulate(const void *origin_addr, int origin_count, MPI_Datatype
         new_ptr->origin_datatype = origin_datatype;
         new_ptr->target_rank = target_rank;
 
+        MPIR_T_PVAR_TIMER_END(RMA, rma_rmaqueue_set);
+
         mpi_errno = MPIDI_CH3I_Win_enqueue_op(win_ptr, new_ptr);
         if (mpi_errno)
             MPIU_ERR_POP(mpi_errno);
+
+        MPIR_T_PVAR_TIMER_START(RMA, rma_rmaqueue_set);
 
         /* if source or target datatypes are derived, increment their
          * reference counts */
@@ -467,6 +491,8 @@ int MPIDI_Accumulate(const void *origin_addr, int origin_count, MPI_Datatype
                     new_ptr->piggyback_lock_candidate = 1;
             }
         }
+
+        MPIR_T_PVAR_TIMER_END(RMA, rma_rmaqueue_set);
 
         mpi_errno = MPIDI_CH3I_RMA_Make_progress_target(win_ptr, target_rank, &made_progress);
         if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
@@ -576,6 +602,8 @@ int MPIDI_Get_accumulate(const void *origin_addr, int origin_count,
 
         /* TODO: Can we use the MPIDI_RMA_ACC_CONTIG optimization? */
 
+        MPIR_T_PVAR_TIMER_START(RMA, rma_rmaqueue_set);
+
         if (op == MPI_NO_OP) {
             /* Convert GAcc to a Get */
             MPIDI_CH3_Pkt_get_t *get_pkt = &(new_ptr->pkt.get);
@@ -677,6 +705,8 @@ int MPIDI_Get_accumulate(const void *origin_addr, int origin_count,
                 }
             }
         }
+
+        MPIR_T_PVAR_TIMER_END(RMA, rma_rmaqueue_set);
 
         mpi_errno = MPIDI_CH3I_Win_enqueue_op(win_ptr, new_ptr);
         if (mpi_errno)
@@ -781,6 +811,8 @@ int MPIDI_Compare_and_swap(const void *origin_addr, const void *compare_addr,
         mpi_errno = MPIDI_CH3I_Win_get_op(win_ptr, &new_ptr);
         if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
 
+        MPIR_T_PVAR_TIMER_START(RMA, rma_rmaqueue_set);
+
         cas_pkt = &(new_ptr->pkt.cas);
         MPIDI_Pkt_init(cas_pkt, MPIDI_CH3_PKT_CAS);
         cas_pkt->addr = (char *) win_ptr->base_addrs[target_rank] +
@@ -799,6 +831,8 @@ int MPIDI_Compare_and_swap(const void *origin_addr, const void *compare_addr,
         new_ptr->compare_datatype = datatype;
         new_ptr->target_rank = target_rank;
         new_ptr->piggyback_lock_candidate = 1; /* CAS is always able to piggyback LOCK */
+
+        MPIR_T_PVAR_TIMER_END(RMA, rma_rmaqueue_set);
 
         mpi_errno = MPIDI_CH3I_Win_enqueue_op(win_ptr, new_ptr);
         if (mpi_errno)
@@ -900,6 +934,8 @@ int MPIDI_Fetch_and_op(const void *origin_addr, void *result_addr,
         mpi_errno = MPIDI_CH3I_Win_get_op(win_ptr, &new_ptr);
         if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
 
+        MPIR_T_PVAR_TIMER_START(RMA, rma_rmaqueue_set);
+
         if (op == MPI_NO_OP) {
             /* Convert FOP to a Get */
             MPIDI_CH3_Pkt_get_t *get_pkt = &(new_ptr->pkt.get);
@@ -957,6 +993,8 @@ int MPIDI_Fetch_and_op(const void *origin_addr, void *result_addr,
                 if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
             }
         }
+
+        MPIR_T_PVAR_TIMER_END(RMA, rma_rmaqueue_set);
 
         mpi_errno = MPIDI_CH3I_Win_enqueue_op(win_ptr, new_ptr);
         if (mpi_errno)

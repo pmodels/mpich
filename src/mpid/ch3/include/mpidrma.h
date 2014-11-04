@@ -12,6 +12,8 @@
 #include "mpid_rma_shm.h"
 #include "mpid_rma_issue.h"
 
+MPIR_T_PVAR_DOUBLE_TIMER_DECL_EXTERN(RMA, rma_lockqueue_alloc);
+MPIR_T_PVAR_DOUBLE_TIMER_DECL_EXTERN(RMA, rma_winlock_getlocallock);
 
 #undef FUNCNAME
 #define FUNCNAME send_lock_msg
@@ -226,7 +228,9 @@ static inline int enqueue_lock_origin(MPID_Win *win_ptr, MPIDI_CH3_Pkt_t *pkt)
     MPIDI_Win_lock_queue *new_ptr = NULL;
     int mpi_errno = MPI_SUCCESS;
 
+    MPIR_T_PVAR_TIMER_START(RMA, rma_lockqueue_alloc);
     new_ptr = (MPIDI_Win_lock_queue *) MPIU_Malloc(sizeof(MPIDI_Win_lock_queue));
+    MPIR_T_PVAR_TIMER_END(RMA, rma_lockqueue_alloc);
     if (!new_ptr) {
         MPIU_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s",
                              "MPIDI_Win_lock_queue");
@@ -278,6 +282,8 @@ static inline int acquire_local_lock(MPID_Win * win_ptr, int lock_type)
     MPIDI_STATE_DECL(MPID_STATE_ACQUIRE_LOCAL_LOCK);
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_ACQUIRE_LOCAL_LOCK);
 
+    MPIR_T_PVAR_TIMER_START(RMA, rma_winlock_getlocallock);
+
     if (MPIDI_CH3I_Try_acquire_win_lock(win_ptr, lock_type) == 1) {
         mpi_errno = set_lock_sync_counter(win_ptr, win_ptr->comm_ptr->rank);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
@@ -296,6 +302,7 @@ static inline int acquire_local_lock(MPID_Win * win_ptr, int lock_type)
     }
 
   fn_exit:
+    MPIR_T_PVAR_TIMER_END(RMA, rma_winlock_getlocallock);
     MPIDI_RMA_FUNC_EXIT(MPID_STATE_ACQUIRE_LOCAL_LOCK);
     return mpi_errno;
     /* --BEGIN ERROR HANDLING-- */

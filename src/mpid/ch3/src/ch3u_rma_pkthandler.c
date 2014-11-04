@@ -7,6 +7,169 @@
 #include "mpidimpl.h"
 #include "mpidrma.h"
 
+MPIR_T_PVAR_DOUBLE_TIMER_DECL(RMA, rma_rmapkt_put);
+MPIR_T_PVAR_DOUBLE_TIMER_DECL(RMA, rma_rmapkt_get);
+MPIR_T_PVAR_DOUBLE_TIMER_DECL(RMA, rma_rmapkt_acc);
+MPIR_T_PVAR_DOUBLE_TIMER_DECL(RMA, rma_rmapkt_get_accum);
+MPIR_T_PVAR_DOUBLE_TIMER_DECL(RMA, rma_rmapkt_cas);
+MPIR_T_PVAR_DOUBLE_TIMER_DECL(RMA, rma_rmapkt_fop);
+MPIR_T_PVAR_DOUBLE_TIMER_DECL(RMA, rma_rmapkt_get_resp);
+MPIR_T_PVAR_DOUBLE_TIMER_DECL(RMA, rma_rmapkt_get_accum_resp);
+MPIR_T_PVAR_DOUBLE_TIMER_DECL(RMA, rma_rmapkt_cas_resp);
+MPIR_T_PVAR_DOUBLE_TIMER_DECL(RMA, rma_rmapkt_fop_resp);
+MPIR_T_PVAR_DOUBLE_TIMER_DECL(RMA, rma_rmapkt_lock);
+MPIR_T_PVAR_DOUBLE_TIMER_DECL(RMA, rma_rmapkt_lock_granted);
+MPIR_T_PVAR_DOUBLE_TIMER_DECL(RMA, rma_rmapkt_unlock);
+MPIR_T_PVAR_DOUBLE_TIMER_DECL(RMA, rma_rmapkt_flush);
+MPIR_T_PVAR_DOUBLE_TIMER_DECL(RMA, rma_rmapkt_flush_ack);
+MPIR_T_PVAR_DOUBLE_TIMER_DECL(RMA, rma_rmapkt_decr_at_cnt);
+
+void MPIDI_CH3_RMA_Init_pkthandler_pvars(void)
+{
+    /* rma_rmapkt_put */
+    MPIR_T_PVAR_TIMER_REGISTER_STATIC(RMA,
+                                      MPI_DOUBLE,
+                                      rma_rmapkt_put,
+                                      MPI_T_VERBOSITY_MPIDEV_DETAIL,
+                                      MPI_T_BIND_NO_OBJECT,
+                                      MPIR_T_PVAR_FLAG_READONLY,
+                                      "RMA", "RMA:PKTHANDLER for Put (in seconds)");
+
+    /* rma_rmapkt_get */
+    MPIR_T_PVAR_TIMER_REGISTER_STATIC(RMA,
+                                      MPI_DOUBLE,
+                                      rma_rmapkt_get,
+                                      MPI_T_VERBOSITY_MPIDEV_DETAIL,
+                                      MPI_T_BIND_NO_OBJECT,
+                                      MPIR_T_PVAR_FLAG_READONLY,
+                                      "RMA", "RMA:PKTHANDLER for Get (in seconds)");
+
+    /* rma_rmapkt_acc */
+    MPIR_T_PVAR_TIMER_REGISTER_STATIC(RMA,
+                                      MPI_DOUBLE,
+                                      rma_rmapkt_acc,
+                                      MPI_T_VERBOSITY_MPIDEV_DETAIL,
+                                      MPI_T_BIND_NO_OBJECT,
+                                      MPIR_T_PVAR_FLAG_READONLY,
+                                      "RMA", "RMA:PKTHANDLER for Accumulate (in seconds)");
+
+    /* rma_rmapkt_get_accum */
+    MPIR_T_PVAR_TIMER_REGISTER_STATIC(RMA,
+                                      MPI_DOUBLE,
+                                      rma_rmapkt_get_accum,
+                                      MPI_T_VERBOSITY_MPIDEV_DETAIL,
+                                      MPI_T_BIND_NO_OBJECT,
+                                      MPIR_T_PVAR_FLAG_READONLY,
+                                      "RMA", "RMA:PKTHANDLER for Get-Accumulate (in seconds)");
+
+    /* rma_rmapkt_cas */
+    MPIR_T_PVAR_TIMER_REGISTER_STATIC(RMA,
+                                      MPI_DOUBLE,
+                                      rma_rmapkt_cas,
+                                      MPI_T_VERBOSITY_MPIDEV_DETAIL,
+                                      MPI_T_BIND_NO_OBJECT,
+                                      MPIR_T_PVAR_FLAG_READONLY,
+                                      "RMA", "RMA:PKTHANDLER for Compare-and-swap (in seconds)");
+
+    /* rma_rmapkt_fop */
+    MPIR_T_PVAR_TIMER_REGISTER_STATIC(RMA,
+                                      MPI_DOUBLE,
+                                      rma_rmapkt_fop,
+                                      MPI_T_VERBOSITY_MPIDEV_DETAIL,
+                                      MPI_T_BIND_NO_OBJECT,
+                                      MPIR_T_PVAR_FLAG_READONLY,
+                                      "RMA", "RMA:PKTHANDLER for Fetch-and-op (in seconds)");
+
+    /* rma_rmapkt_get_resp */
+    MPIR_T_PVAR_TIMER_REGISTER_STATIC(RMA,
+                                      MPI_DOUBLE,
+                                      rma_rmapkt_get_resp,
+                                      MPI_T_VERBOSITY_MPIDEV_DETAIL,
+                                      MPI_T_BIND_NO_OBJECT,
+                                      MPIR_T_PVAR_FLAG_READONLY,
+                                      "RMA", "RMA:PKTHANDLER for Get response (in seconds)");
+
+    /* rma_rmapkt_get_accum_resp */
+    MPIR_T_PVAR_TIMER_REGISTER_STATIC(RMA,
+                                      MPI_DOUBLE,
+                                      rma_rmapkt_get_accum_resp,
+                                      MPI_T_VERBOSITY_MPIDEV_DETAIL,
+                                      MPI_T_BIND_NO_OBJECT,
+                                      MPIR_T_PVAR_FLAG_READONLY,
+                                      "RMA", "RMA:PKTHANDLER for Get-Accumulate response (in seconds)");
+
+    /* rma_rmapkt_cas_resp */
+    MPIR_T_PVAR_TIMER_REGISTER_STATIC(RMA,
+                                      MPI_DOUBLE,
+                                      rma_rmapkt_cas_resp,
+                                      MPI_T_VERBOSITY_MPIDEV_DETAIL,
+                                      MPI_T_BIND_NO_OBJECT,
+                                      MPIR_T_PVAR_FLAG_READONLY,
+                                      "RMA", "RMA:PKTHANDLER for Compare-and-Swap response (in seconds)");
+
+    /* rma_rmapkt_fop_resp */
+    MPIR_T_PVAR_TIMER_REGISTER_STATIC(RMA,
+                                      MPI_DOUBLE,
+                                      rma_rmapkt_fop_resp,
+                                      MPI_T_VERBOSITY_MPIDEV_DETAIL,
+                                      MPI_T_BIND_NO_OBJECT,
+                                      MPIR_T_PVAR_FLAG_READONLY,
+                                      "RMA", "RMA:PKTHANDLER for Fetch-and-op response (in seconds)");
+
+    /* rma_rmapkt_lock */
+    MPIR_T_PVAR_TIMER_REGISTER_STATIC(RMA,
+                                      MPI_DOUBLE,
+                                      rma_rmapkt_lock,
+                                      MPI_T_VERBOSITY_MPIDEV_DETAIL,
+                                      MPI_T_BIND_NO_OBJECT,
+                                      MPIR_T_PVAR_FLAG_READONLY,
+                                      "RMA", "RMA:PKTHANDLER for Lock (in seconds)");
+
+    /* rma_rmapkt_lock_granted */
+    MPIR_T_PVAR_TIMER_REGISTER_STATIC(RMA,
+                                      MPI_DOUBLE,
+                                      rma_rmapkt_lock_granted,
+                                      MPI_T_VERBOSITY_MPIDEV_DETAIL,
+                                      MPI_T_BIND_NO_OBJECT,
+                                      MPIR_T_PVAR_FLAG_READONLY,
+                                      "RMA", "RMA:PKTHANDLER for Lock-Granted (in seconds)");
+
+    /* rma_rmapkt_unlock */
+    MPIR_T_PVAR_TIMER_REGISTER_STATIC(RMA,
+                                      MPI_DOUBLE,
+                                      rma_rmapkt_unlock,
+                                      MPI_T_VERBOSITY_MPIDEV_DETAIL,
+                                      MPI_T_BIND_NO_OBJECT,
+                                      MPIR_T_PVAR_FLAG_READONLY,
+                                      "RMA", "RMA:PKTHANDLER for Unlock (in seconds)");
+
+    /* rma_rmapkt_flush */
+    MPIR_T_PVAR_TIMER_REGISTER_STATIC(RMA,
+                                      MPI_DOUBLE,
+                                      rma_rmapkt_flush,
+                                      MPI_T_VERBOSITY_MPIDEV_DETAIL,
+                                      MPI_T_BIND_NO_OBJECT,
+                                      MPIR_T_PVAR_FLAG_READONLY,
+                                      "RMA", "RMA:PKTHANDLER for Flush (in seconds)");
+
+    /* rma_rmapkt_flush_ack */
+    MPIR_T_PVAR_TIMER_REGISTER_STATIC(RMA,
+                                      MPI_DOUBLE,
+                                      rma_rmapkt_flush_ack,
+                                      MPI_T_VERBOSITY_MPIDEV_DETAIL,
+                                      MPI_T_BIND_NO_OBJECT,
+                                      MPIR_T_PVAR_FLAG_READONLY,
+                                      "RMA", "RMA:PKTHANDLER for Flush-Ack (in seconds)");
+
+    /* rma_rmapkt_decr_at_cnt */
+    MPIR_T_PVAR_TIMER_REGISTER_STATIC(RMA,
+                                      MPI_DOUBLE,
+                                      rma_rmapkt_decr_at_cnt,
+                                      MPI_T_VERBOSITY_MPIDEV_DETAIL,
+                                      MPI_T_BIND_NO_OBJECT,
+                                      MPIR_T_PVAR_FLAG_READONLY,
+                                      "RMA", "RMA:PKTHANDLER for Decr-At-Cnt (in seconds)");
+}
 
 /* ------------------------------------------------------------------------ */
 /*
@@ -36,6 +199,8 @@ int MPIDI_CH3_PktHandler_Put(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3_PKTHANDLER_PUT);
 
     MPIU_DBG_MSG(CH3_OTHER, VERBOSE, "received put pkt");
+
+    MPIR_T_PVAR_TIMER_START(RMA, rma_rmapkt_put);
 
     MPIU_Assert(put_pkt->target_win_handle != MPI_WIN_NULL);
     MPID_Win_get_ptr(put_pkt->target_win_handle, win_ptr);
@@ -174,6 +339,7 @@ int MPIDI_CH3_PktHandler_Put(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
 
 
   fn_exit:
+    MPIR_T_PVAR_TIMER_END(RMA, rma_rmapkt_put);
     MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3_PKTHANDLER_PUT);
     return mpi_errno;
   fn_fail:
@@ -202,6 +368,8 @@ int MPIDI_CH3_PktHandler_Get(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3_PKTHANDLER_GET);
 
     MPIU_DBG_MSG(CH3_OTHER, VERBOSE, "received get pkt");
+
+    MPIR_T_PVAR_TIMER_START(RMA, rma_rmapkt_get);
 
     MPIU_Assert(get_pkt->target_win_handle != MPI_WIN_NULL);
     MPID_Win_get_ptr(get_pkt->target_win_handle, win_ptr);
@@ -326,6 +494,7 @@ int MPIDI_CH3_PktHandler_Get(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
 
     }
   fn_exit:
+    MPIR_T_PVAR_TIMER_END(RMA, rma_rmapkt_get);
     MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3_PKTHANDLER_GET);
     return mpi_errno;
   fn_fail:
@@ -355,6 +524,8 @@ int MPIDI_CH3_PktHandler_Accumulate(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3_PKTHANDLER_ACCUMULATE);
 
     MPIU_DBG_MSG(CH3_OTHER, VERBOSE, "received accumulate pkt");
+
+    MPIR_T_PVAR_TIMER_START(RMA, rma_rmapkt_acc);
 
     MPIU_Assert(accum_pkt->target_win_handle != MPI_WIN_NULL);
     MPID_Win_get_ptr(accum_pkt->target_win_handle, win_ptr);
@@ -500,6 +671,7 @@ int MPIDI_CH3_PktHandler_Accumulate(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
     }
 
   fn_exit:
+    MPIR_T_PVAR_TIMER_END(RMA, rma_rmapkt_acc);
     MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3_PKTHANDLER_ACCUMULATE);
     return mpi_errno;
   fn_fail:
@@ -530,6 +702,8 @@ int MPIDI_CH3_PktHandler_GetAccumulate(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3_PKTHANDLER_GETACCUMULATE);
 
     MPIU_DBG_MSG(CH3_OTHER, VERBOSE, "received accumulate pkt");
+
+    MPIR_T_PVAR_TIMER_START(RMA, rma_rmapkt_get_accum);
 
     MPIU_Assert(get_accum_pkt->target_win_handle != MPI_WIN_NULL);
     MPID_Win_get_ptr(get_accum_pkt->target_win_handle, win_ptr);
@@ -677,6 +851,7 @@ int MPIDI_CH3_PktHandler_GetAccumulate(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
     }
 
   fn_exit:
+    MPIR_T_PVAR_TIMER_END(RMA, rma_rmapkt_get_accum);
     MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3_PKTHANDLER_GETACCUMULATE);
     return mpi_errno;
   fn_fail:
@@ -705,6 +880,8 @@ int MPIDI_CH3_PktHandler_CAS(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3_PKTHANDLER_CAS);
 
     MPIU_DBG_MSG(CH3_OTHER, VERBOSE, "received CAS pkt");
+
+    MPIR_T_PVAR_TIMER_START(RMA, rma_rmapkt_cas);
 
     MPIU_Assert(cas_pkt->target_win_handle != MPI_WIN_NULL);
     MPID_Win_get_ptr(cas_pkt->target_win_handle, win_ptr);
@@ -789,6 +966,7 @@ int MPIDI_CH3_PktHandler_CAS(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
     }
 
   fn_exit:
+    MPIR_T_PVAR_TIMER_END(RMA, rma_rmapkt_cas);
     MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3_PKTHANDLER_CAS);
     return mpi_errno;
   fn_fail:
@@ -817,6 +995,8 @@ int MPIDI_CH3_PktHandler_CASResp(MPIDI_VC_t * vc ATTRIBUTE((unused)),
 
     MPIU_DBG_MSG(CH3_OTHER, VERBOSE, "received CAS response pkt");
 
+    MPIR_T_PVAR_TIMER_START(RMA, rma_rmapkt_cas_resp);
+
     MPID_Win_get_ptr(cas_resp_pkt->source_win_handle, win_ptr);
 
     /* decrement ack_counter on this target */
@@ -843,6 +1023,7 @@ int MPIDI_CH3_PktHandler_CASResp(MPIDI_VC_t * vc ATTRIBUTE((unused)),
     *rreqp = NULL;
 
   fn_exit:
+    MPIR_T_PVAR_TIMER_END(RMA, rma_rmapkt_cas_resp);
     MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3_PKTHANDLER_CASRESP);
     return mpi_errno;
   fn_fail:
@@ -869,6 +1050,8 @@ int MPIDI_CH3_PktHandler_FOP(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3_PKTHANDLER_FOP);
 
     MPIU_DBG_MSG(CH3_OTHER, VERBOSE, "received FOP pkt");
+
+    MPIR_T_PVAR_TIMER_START(RMA, rma_rmapkt_fop);
 
     MPID_Win_get_ptr(fop_pkt->target_win_handle, win_ptr);
 
@@ -951,6 +1134,7 @@ int MPIDI_CH3_PktHandler_FOP(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
     }
 
   fn_exit:
+    MPIR_T_PVAR_TIMER_END(RMA, rma_rmapkt_fop);
     MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3_PKTHANDLER_FOP);
     return mpi_errno;
     /* --BEGIN ERROR HANDLING-- */
@@ -979,6 +1163,8 @@ int MPIDI_CH3_PktHandler_FOPResp(MPIDI_VC_t * vc ATTRIBUTE((unused)),
 
     MPIU_DBG_MSG(CH3_OTHER, VERBOSE, "received FOP response pkt");
 
+    MPIR_T_PVAR_TIMER_START(RMA, rma_rmapkt_fop_resp);
+
     MPID_Win_get_ptr(fop_resp_pkt->source_win_handle, win_ptr);
 
     /* Copy data to result buffer on orgin */
@@ -1004,6 +1190,7 @@ int MPIDI_CH3_PktHandler_FOPResp(MPIDI_VC_t * vc ATTRIBUTE((unused)),
     *rreqp = NULL;
 
   fn_exit:
+    MPIR_T_PVAR_TIMER_END(RMA, rma_rmapkt_fop_resp);
     MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3_PKTHANDLER_FOPRESP);
     return mpi_errno;
     /* --BEGIN ERROR HANDLING-- */
@@ -1034,6 +1221,8 @@ int MPIDI_CH3_PktHandler_Get_AccumResp(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3_PKTHANDLER_GET_ACCUM_RESP);
 
     MPIU_DBG_MSG(CH3_OTHER, VERBOSE, "received Get-Accumulate response pkt");
+
+    MPIR_T_PVAR_TIMER_START(RMA, rma_rmapkt_get_accum_resp);
 
     MPID_Win_get_ptr(get_accum_resp_pkt->source_win_handle, win_ptr);
 
@@ -1071,6 +1260,7 @@ int MPIDI_CH3_PktHandler_Get_AccumResp(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
     *buflen = data_len + sizeof(MPIDI_CH3_Pkt_t);
 
   fn_exit:
+    MPIR_T_PVAR_TIMER_END(RMA, rma_rmapkt_get_accum_resp);
     MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3_PKTHANDLER_GET_ACCUM_RESP);
     return mpi_errno;
   fn_fail:
@@ -1094,6 +1284,8 @@ int MPIDI_CH3_PktHandler_Lock(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
 
     MPIU_DBG_MSG(CH3_OTHER, VERBOSE, "received lock pkt");
 
+    MPIR_T_PVAR_TIMER_START(RMA, rma_rmapkt_lock);
+
     *buflen = sizeof(MPIDI_CH3_Pkt_t);
 
     MPID_Win_get_ptr(lock_pkt->target_win_handle, win_ptr);
@@ -1111,6 +1303,7 @@ int MPIDI_CH3_PktHandler_Lock(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
 
     *rreqp = NULL;
   fn_fail:
+    MPIR_T_PVAR_TIMER_END(RMA, rma_rmapkt_lock);
     MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3_PKTHANDLER_LOCK);
     return mpi_errno;
 }
@@ -1138,6 +1331,8 @@ int MPIDI_CH3_PktHandler_GetResp(MPIDI_VC_t * vc ATTRIBUTE((unused)),
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3_PKTHANDLER_GETRESP);
 
     MPIU_DBG_MSG(CH3_OTHER, VERBOSE, "received get response pkt");
+
+    MPIR_T_PVAR_TIMER_START(RMA, rma_rmapkt_get_resp);
 
     MPID_Win_get_ptr(get_resp_pkt->source_win_handle, win_ptr);
 
@@ -1175,6 +1370,7 @@ int MPIDI_CH3_PktHandler_GetResp(MPIDI_VC_t * vc ATTRIBUTE((unused)),
     *buflen = data_len + sizeof(MPIDI_CH3_Pkt_t);
 
   fn_exit:
+    MPIR_T_PVAR_TIMER_END(RMA, rma_rmapkt_get_resp);
     MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3_PKTHANDLER_GETRESP);
     return mpi_errno;
   fn_fail:
@@ -1198,6 +1394,8 @@ int MPIDI_CH3_PktHandler_LockGranted(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
 
     MPIU_DBG_MSG(CH3_OTHER, VERBOSE, "received lock granted pkt");
 
+    MPIR_T_PVAR_TIMER_START(RMA, rma_rmapkt_lock_granted);
+
     *buflen = sizeof(MPIDI_CH3_Pkt_t);
 
     MPID_Win_get_ptr(lock_granted_pkt->source_win_handle, win_ptr);
@@ -1208,6 +1406,7 @@ int MPIDI_CH3_PktHandler_LockGranted(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
     *rreqp = NULL;
     MPIDI_CH3_Progress_signal_completion();
 
+    MPIR_T_PVAR_TIMER_END(RMA, rma_rmapkt_lock_granted);
     MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3_PKTHANDLER_LOCKGRANTED);
  fn_exit:
     return MPI_SUCCESS;
@@ -1232,6 +1431,8 @@ int MPIDI_CH3_PktHandler_FlushAck(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
 
     MPIU_DBG_MSG(CH3_OTHER, VERBOSE, "received shared lock ops done pkt");
 
+    MPIR_T_PVAR_TIMER_START(RMA, rma_rmapkt_flush_ack);
+
     *buflen = sizeof(MPIDI_CH3_Pkt_t);
 
     MPID_Win_get_ptr(flush_ack_pkt->source_win_handle, win_ptr);
@@ -1248,6 +1449,7 @@ int MPIDI_CH3_PktHandler_FlushAck(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
     *rreqp = NULL;
     MPIDI_CH3_Progress_signal_completion();
 
+    MPIR_T_PVAR_TIMER_END(RMA, rma_rmapkt_flush_ack);
     MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3_PKTHANDLER_FLUSHACK);
  fn_exit:
     return MPI_SUCCESS;
@@ -1271,6 +1473,8 @@ int MPIDI_CH3_PktHandler_DecrAtCnt(MPIDI_VC_t * vc ATTRIBUTE((unused)),
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3_PKTHANDLER_DECRATCNT);
 
+    MPIR_T_PVAR_TIMER_START(RMA, rma_rmapkt_decr_at_cnt);
+
     MPID_Win_get_ptr(decr_at_cnt_pkt->target_win_handle, win_ptr);
 
     win_ptr->at_completion_counter--;
@@ -1281,6 +1485,7 @@ int MPIDI_CH3_PktHandler_DecrAtCnt(MPIDI_VC_t * vc ATTRIBUTE((unused)),
     MPIDI_CH3_Progress_signal_completion();
 
  fn_exit:
+    MPIR_T_PVAR_TIMER_END(RMA, rma_rmapkt_decr_at_cnt);
     MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3_PKTHANDLER_DECRATCNT);
     return mpi_errno;
    fn_fail:
@@ -1304,6 +1509,8 @@ int MPIDI_CH3_PktHandler_Unlock(MPIDI_VC_t * vc ATTRIBUTE((unused)),
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3_PKTHANDLER_UNLOCK);
     MPIU_DBG_MSG(CH3_OTHER, VERBOSE, "received unlock pkt");
 
+    MPIR_T_PVAR_TIMER_START(RMA, rma_rmapkt_unlock);
+
     *buflen = sizeof(MPIDI_CH3_Pkt_t);
     *rreqp = NULL;
 
@@ -1318,6 +1525,7 @@ int MPIDI_CH3_PktHandler_Unlock(MPIDI_VC_t * vc ATTRIBUTE((unused)),
     MPIDI_CH3_Progress_signal_completion();
 
   fn_exit:
+    MPIR_T_PVAR_TIMER_END(RMA, rma_rmapkt_unlock);
     MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3_PKTHANDLER_UNLOCK);
     return mpi_errno;
     /* --BEGIN ERROR HANDLING-- */
@@ -1342,6 +1550,8 @@ int MPIDI_CH3_PktHandler_Flush(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3_PKTHANDLER_FLUSH);
     MPIU_DBG_MSG(CH3_OTHER, VERBOSE, "received flush pkt");
 
+    MPIR_T_PVAR_TIMER_START(RMA, rma_rmapkt_flush);
+
     *buflen = sizeof(MPIDI_CH3_Pkt_t);
     *rreqp = NULL;
 
@@ -1352,6 +1562,7 @@ int MPIDI_CH3_PktHandler_Flush(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
     if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
 
   fn_exit:
+    MPIR_T_PVAR_TIMER_END(RMA, rma_rmapkt_flush);
     MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3_PKTHANDLER_FLUSH);
     return mpi_errno;
     /* --BEGIN ERROR HANDLING-- */
