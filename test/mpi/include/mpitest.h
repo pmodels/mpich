@@ -44,11 +44,14 @@ typedef struct _MTestDatatype {
 			       (used by the CheckBuf routines) */
     /* The following is optional data that is used by some of
        the derived datatypes */
-    int  stride, nblock, blksize, *index;
-    /* stride, nelm, and blksize are in bytes */
-    int *displs, *displ_in_bytes, basesize;
-    /* displacements are in multiples of base type; basesize is the
-       size of that type*/
+    int  nblock, *index;
+    /* stride, and blksize are in bytes */
+    MPI_Aint stride, blksize, *displ_in_bytes;
+    int *displs, basesize;
+    MPI_Datatype *old_datatypes;
+    /* used in subarray */
+    int arr_sizes[2], arr_subsizes[2], arr_starts[2], order;
+
     void *(*InitBuf)( struct _MTestDatatype * );
     void *(*FreeBuf)( struct _MTestDatatype * );
     int   (*CheckBuf)( struct _MTestDatatype * );

@@ -62,7 +62,8 @@ static int verbose = 0;         /* Message level (0 is none) */
  *    Every type is initialized by the creation function stored in
  *    mtestDdtCreators variable, all of their create/init/check functions are
  *    defined in file mtest_datatype.c. Following derived datatypes are defined:
- *    Contiguous | Vector | Indexed
+ *    Contiguous | Vector | HVector | Indexed | Hindexed | Indexed-block |
+ *    Hindexed-block | Struct | Subarray with order-C | Subarray with order-Fortran
  *
  *  How to add a new derived datatype:
  *    1. Add the new datatype in enum MTEST_DERIVED_DT.
