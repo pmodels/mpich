@@ -101,3 +101,9 @@ int MPID_Comm_revoke(MPID_Comm *comm_ptr, int is_remote)
   MPID_abort();
   return 0;
 }
+
+int MPID_Request_is_pending_failure(MPID_Request *request_ptr)
+{
+  MPID_abort();
+  return 0;
+}
