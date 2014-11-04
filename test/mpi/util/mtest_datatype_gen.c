@@ -314,18 +314,6 @@ static inline int MTestGetRecvDerivedDatatypes(MTestDatatype * sendtype,
     return merr;
 }
 
-static inline void MTestResetDatatype(MTestDatatype * mtype)
-{
-    mtype->InitBuf = 0;
-    mtype->FreeBuf = 0;
-    mtype->CheckBuf = 0;
-    mtype->datatype = 0;
-    mtype->isBasic = 0;
-    mtype->printErrors = 0;
-    mtype->buf = 0;
-}
-
-
 /* ------------------------------------------------------------------------ */
 /* Exposed routine to external tests                                         */
 /* ------------------------------------------------------------------------ */
@@ -335,9 +323,6 @@ int MTestGetDatatypes(MTestDatatype * sendtype, MTestDatatype * recvtype, int to
 
     MTestGetDbgInfo(&dbgflag, &verbose);
     MPI_Comm_rank(MPI_COMM_WORLD, &wrank);
-
-    MTestResetDatatype(sendtype);
-    MTestResetDatatype(recvtype);
 
     MTestTypeCreatorInit((MTestDdtCreator *) mtestDdtCreators);
 

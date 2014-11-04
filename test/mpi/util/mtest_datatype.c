@@ -51,6 +51,19 @@ static void *MTestTypeFree(MTestDatatype * mtype)
     return 0;
 }
 
+static inline void MTestTypeReset(MTestDatatype * mtype)
+{
+    mtype->InitBuf = 0;
+    mtype->FreeBuf = 0;
+    mtype->CheckBuf = 0;
+    mtype->datatype = 0;
+    mtype->isBasic = 0;
+    mtype->printErrors = 0;
+    mtype->buf = 0;
+    mtype->index = 0;
+    mtype->displs = 0;
+    mtype->displ_in_bytes = 0;
+}
 
 /* ------------------------------------------------------------------------ */
 /* Datatype routines for contiguous datatypes                               */
@@ -361,6 +374,8 @@ static int MTestTypeContiguousCreate(int nblock, int blocklen, int stride,
     int merr = 0;
     char type_name[128];
 
+    MTestTypeReset(mtype);
+
     merr = MPI_Type_size(oldtype, &mtype->basesize);
     if (merr)
         MTestPrintError(merr);
@@ -402,6 +417,8 @@ static int MTestTypeVectorCreate(int nblock, int blocklen, int stride,
 {
     int merr = 0;
     char type_name[128];
+
+    MTestTypeReset(mtype);
 
     merr = MPI_Type_size(oldtype, &mtype->basesize);
     if (merr)
@@ -450,6 +467,8 @@ static int MTestTypeIndexedCreate(int nblock, int blocklen, int stride,
     int merr = 0;
     char type_name[128];
     int i;
+
+    MTestTypeReset(mtype);
 
     merr = MPI_Type_size(oldtype, &mtype->basesize);
     if (merr)
@@ -500,6 +519,8 @@ int MTestTypeBasicCreate(MPI_Datatype oldtype, MTestDatatype * mtype)
 {
     int merr = 0;
 
+    MTestTypeReset(mtype);
+
     merr = MPI_Type_size(oldtype, &mtype->basesize);
     if (merr)
         MTestPrintError(merr);
@@ -522,6 +543,8 @@ int MTestTypeBasicCreate(MPI_Datatype oldtype, MTestDatatype * mtype)
 int MTestTypeDupCreate(MPI_Datatype oldtype, MTestDatatype * mtype)
 {
     int merr = 0;
+
+    MTestTypeReset(mtype);
 
     merr = MPI_Type_size(oldtype, &mtype->basesize);
     if (merr)
