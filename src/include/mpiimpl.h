@@ -1613,12 +1613,12 @@ struct MPID_Win;
 typedef struct MPID_RMA_Ops {
     int (*Win_free)(struct MPID_Win **);
 
-    int (*Put)(const void *, int, MPI_Datatype, int, MPI_Aint, int, MPI_Datatype,
-		struct MPID_Win *);
-    int (*Get)(void *, int, MPI_Datatype, int, MPI_Aint, int, MPI_Datatype,
-		struct MPID_Win *);
-    int (*Accumulate)(const void *, int, MPI_Datatype, int, MPI_Aint, int,
-		       MPI_Datatype, MPI_Op, struct MPID_Win *);
+    int (*Put) (const void *, int, MPI_Datatype, int, MPI_Aint, int,
+                MPI_Datatype, struct MPID_Win *, MPID_Request *);
+    int (*Get) (void *, int, MPI_Datatype, int, MPI_Aint, int, MPI_Datatype,
+                struct MPID_Win *, MPID_Request *);
+    int (*Accumulate) (const void *, int, MPI_Datatype, int, MPI_Aint, int,
+                       MPI_Datatype, MPI_Op, struct MPID_Win *, MPID_Request *);
 
     int (*Win_fence)(int, struct MPID_Win *);
     int (*Win_post)(MPID_Group *, int, struct MPID_Win *);
@@ -1649,7 +1649,7 @@ typedef struct MPID_RMA_Ops {
 
     int (*Get_accumulate)(const void *, int , MPI_Datatype, void *, int,
                           MPI_Datatype, int, MPI_Aint, int, MPI_Datatype, MPI_Op,
-                          struct MPID_Win *);
+                          struct MPID_Win *, MPID_Request *);
     int (*Fetch_and_op)(const void *, void *, MPI_Datatype, int, MPI_Aint, MPI_Op,
                         struct MPID_Win *);
     int (*Compare_and_swap)(const void *, const void *, void *, MPI_Datatype, int,

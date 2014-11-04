@@ -378,6 +378,15 @@ static inline int MPIDI_CH3I_RMA_Cleanup_ops_target(MPID_Win * win_ptr, MPIDI_RM
             /* No errors, free the request */
             MPID_Request_release(curr_op->request);
 
+            /* Release user request */
+            if (curr_op->ureq) {
+                /* User request must be completed by progress engine */
+                MPIU_Assert(MPID_Request_is_complete(curr_op->ureq));
+
+                /* Release the ch3 ref */
+                MPID_Request_release(curr_op->ureq);
+            }
+
             /* dequeue the operation and free it */
             MPL_LL_DELETE(*op_list, *op_list_tail, curr_op);
             MPIDI_CH3I_Win_op_free(win_ptr, curr_op);

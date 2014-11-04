@@ -264,7 +264,10 @@ static inline int issue_ops_target(MPID_Win * win_ptr, MPIDI_RMA_Target_t *targe
             goto fn_exit;
 
         if (curr_op->next == NULL &&
-            target->sync.sync_flag == MPIDI_RMA_SYNC_NONE) {
+            target->sync.sync_flag == MPIDI_RMA_SYNC_NONE &&
+                /* always issue if it is a request-based RMA,
+                 * otherwise a wait call before unlock will be blocked.*/
+                curr_op->ureq == NULL) {
             /* skip last OP. */
             goto finish_issue;
         }
@@ -300,6 +303,12 @@ static inline int issue_ops_target(MPID_Win * win_ptr, MPIDI_RMA_Target_t *targe
             MPIU_ERR_POP(mpi_errno);
 
         if (!curr_op->request) {
+            if (curr_op->ureq) {
+                /* Complete user request and release the ch3 ref */
+                MPID_Request_set_completed(curr_op->ureq);
+                MPID_Request_release(curr_op->ureq);
+            }
+
             /* Sending is completed immediately. */
             MPIDI_CH3I_RMA_Ops_free_elem(win_ptr, &(target->pending_op_list),
                                          &(target->pending_op_list_tail), curr_op);
@@ -320,6 +329,35 @@ static inline int issue_ops_target(MPID_Win * win_ptr, MPIDI_RMA_Target_t *targe
             else {
                 MPIDI_CH3I_RMA_Ops_append(&(target->read_op_list),
                                           &(target->read_op_list_tail), curr_op);
+            }
+
+            /* Setup user request info in order to be completed following send request.*/
+            if (curr_op->ureq) {
+                /* Increase ref for completion handler */
+                MPIU_Object_add_ref(curr_op->ureq);
+                curr_op->request->dev.request_handle = curr_op->ureq->handle;
+
+                /* Setup user request completion handler.
+                 *
+                 * The handler is triggered when send request is completed at
+                 * following places:
+                 * - progress engine: complete PUT/ACC req.
+                 * - GET/GET_ACC packet handler: complete GET/GET_ACC reqs.
+                 *
+                 * We always set OnFinal which should be called when sending or
+                 * receiving the last segment. However, short put/acc ops are
+                 * issued in one packet and the lower layer only check OnDataAvail
+                 * so we have to set OnDataAvail as well.
+                 *
+                 * Note that a noncontig send also uses OnDataAvail to loop all
+                 * segments but it must be changed to OnFinal when sending the
+                 * last segment, so it is also correct for us.
+                 *
+                 * TODO: implement stack for overriding functions*/
+                if (curr_op->request->dev.OnDataAvail == NULL) {
+                    curr_op->request->dev.OnDataAvail = MPIDI_CH3_ReqHandler_ReqOpsComplete;
+                }
+                curr_op->request->dev.OnFinal = MPIDI_CH3_ReqHandler_ReqOpsComplete;
             }
             win_ptr->active_req_cnt++;
         }

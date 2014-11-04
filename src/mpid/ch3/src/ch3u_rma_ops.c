@@ -41,7 +41,8 @@ cvars:
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 int MPIDI_Put(const void *origin_addr, int origin_count, MPI_Datatype
               origin_datatype, int target_rank, MPI_Aint target_disp,
-              int target_count, MPI_Datatype target_datatype, MPID_Win * win_ptr)
+              int target_count, MPI_Datatype target_datatype, MPID_Win * win_ptr,
+              MPID_Request * ureq)
 {
     int mpi_errno = MPI_SUCCESS;
     int dt_contig ATTRIBUTE((unused)), rank;
@@ -91,6 +92,12 @@ int MPIDI_Put(const void *origin_addr, int origin_count, MPI_Datatype
                                           target_disp, target_count, target_datatype, win_ptr);
         if (mpi_errno)
             MPIU_ERR_POP(mpi_errno);
+
+        if (ureq) {
+            /* Complete user request and release the ch3 ref */
+            MPID_Request_set_completed(ureq);
+            MPID_Request_release(ureq);
+        }
     }
     else {
         MPIDI_RMA_Op_t *new_ptr = NULL;
@@ -119,6 +126,12 @@ int MPIDI_Put(const void *origin_addr, int origin_count, MPI_Datatype
         new_ptr->origin_count = origin_count;
         new_ptr->origin_datatype = origin_datatype;
         new_ptr->target_rank = target_rank;
+        new_ptr->ureq = NULL; /* reset user request */
+
+        /* Remember user request */
+        if (ureq) {
+            new_ptr->ureq = ureq;
+        }
 
         MPIR_T_PVAR_TIMER_END(RMA, rma_rmaqueue_set);
 
@@ -214,7 +227,8 @@ int MPIDI_Put(const void *origin_addr, int origin_count, MPI_Datatype
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 int MPIDI_Get(void *origin_addr, int origin_count, MPI_Datatype
               origin_datatype, int target_rank, MPI_Aint target_disp,
-              int target_count, MPI_Datatype target_datatype, MPID_Win * win_ptr)
+              int target_count, MPI_Datatype target_datatype, MPID_Win * win_ptr,
+              MPID_Request * ureq)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_msg_sz_t data_sz;
@@ -264,6 +278,12 @@ int MPIDI_Get(void *origin_addr, int origin_count, MPI_Datatype
                                           target_disp, target_count, target_datatype, win_ptr);
         if (mpi_errno)
             MPIU_ERR_POP(mpi_errno);
+
+        if (ureq) {
+            /* Complete user request and release the ch3 ref */
+            MPID_Request_set_completed(ureq);
+            MPID_Request_release(ureq);
+        }
     }
     else {
         MPIDI_RMA_Op_t *new_ptr = NULL;
@@ -291,6 +311,12 @@ int MPIDI_Get(void *origin_addr, int origin_count, MPI_Datatype
         new_ptr->origin_count = origin_count;
         new_ptr->origin_datatype = origin_datatype;
         new_ptr->target_rank = target_rank;
+        new_ptr->ureq = NULL; /* reset user request */
+
+        /* Remember user request */
+        if (ureq) {
+            new_ptr->ureq = ureq;
+        }
 
         MPIR_T_PVAR_TIMER_END(RMA, rma_rmaqueue_set);
 
@@ -363,7 +389,8 @@ int MPIDI_Get(void *origin_addr, int origin_count, MPI_Datatype
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 int MPIDI_Accumulate(const void *origin_addr, int origin_count, MPI_Datatype
                      origin_datatype, int target_rank, MPI_Aint target_disp,
-                     int target_count, MPI_Datatype target_datatype, MPI_Op op, MPID_Win * win_ptr)
+                     int target_count, MPI_Datatype target_datatype, MPI_Op op,
+                     MPID_Win * win_ptr, MPID_Request * ureq)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_msg_sz_t data_sz;
@@ -414,6 +441,12 @@ int MPIDI_Accumulate(const void *origin_addr, int origin_count, MPI_Datatype
                                           op, win_ptr);
         if (mpi_errno)
             MPIU_ERR_POP(mpi_errno);
+
+        if (ureq) {
+            /* Complete user request and release the ch3 ref */
+            MPID_Request_set_completed(ureq);
+            MPID_Request_release(ureq);
+        }
     }
     else {
         MPIDI_RMA_Op_t *new_ptr = NULL;
@@ -443,6 +476,12 @@ int MPIDI_Accumulate(const void *origin_addr, int origin_count, MPI_Datatype
         new_ptr->origin_count = origin_count;
         new_ptr->origin_datatype = origin_datatype;
         new_ptr->target_rank = target_rank;
+        new_ptr->ureq = NULL; /* reset user request */
+
+        /* Remember user request */
+        if (ureq) {
+            new_ptr->ureq = ureq;
+        }
 
         MPIR_T_PVAR_TIMER_END(RMA, rma_rmaqueue_set);
 
@@ -539,7 +578,7 @@ int MPIDI_Get_accumulate(const void *origin_addr, int origin_count,
                          MPI_Datatype origin_datatype, void *result_addr, int result_count,
                          MPI_Datatype result_datatype, int target_rank, MPI_Aint target_disp,
                          int target_count, MPI_Datatype target_datatype, MPI_Op op,
-                         MPID_Win * win_ptr)
+                         MPID_Win * win_ptr, MPID_Request * ureq)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_msg_sz_t data_sz;
@@ -592,6 +631,12 @@ int MPIDI_Get_accumulate(const void *origin_addr, int origin_count,
                                               target_datatype, op, win_ptr);
         if (mpi_errno)
             MPIU_ERR_POP(mpi_errno);
+
+        if (ureq) {
+            /* Complete user request and release the ch3 ref */
+            MPID_Request_set_completed(ureq);
+            MPID_Request_release(ureq);
+        }
     }
     else {
         MPIDI_RMA_Op_t *new_ptr = NULL;
@@ -704,6 +749,13 @@ int MPIDI_Get_accumulate(const void *origin_addr, int origin_count,
                         new_ptr->piggyback_lock_candidate = 1;
                 }
             }
+        }
+
+        new_ptr->ureq = NULL; /* reset user request */
+
+        /* Remember user request */
+        if (ureq) {
+            new_ptr->ureq = ureq;
         }
 
         MPIR_T_PVAR_TIMER_END(RMA, rma_rmaqueue_set);
@@ -831,6 +883,7 @@ int MPIDI_Compare_and_swap(const void *origin_addr, const void *compare_addr,
         new_ptr->compare_datatype = datatype;
         new_ptr->target_rank = target_rank;
         new_ptr->piggyback_lock_candidate = 1; /* CAS is always able to piggyback LOCK */
+        new_ptr->ureq = NULL; /* reset user request */
 
         MPIR_T_PVAR_TIMER_END(RMA, rma_rmaqueue_set);
 
@@ -993,6 +1046,8 @@ int MPIDI_Fetch_and_op(const void *origin_addr, void *result_addr,
                 if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
             }
         }
+
+        new_ptr->ureq = NULL; /* reset user request */
 
         MPIR_T_PVAR_TIMER_END(RMA, rma_rmaqueue_set);
 

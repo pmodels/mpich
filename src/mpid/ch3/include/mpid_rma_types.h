@@ -82,6 +82,8 @@ typedef struct MPIDI_RMA_Op {
     MPIDI_RMA_Pool_type_t pool_type;
     int is_dt;
     int piggyback_lock_candidate;
+
+    MPID_Request *ureq;
 } MPIDI_RMA_Op_t;
 
 typedef struct MPIDI_RMA_Target {

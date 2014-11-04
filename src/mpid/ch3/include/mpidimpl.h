@@ -1154,11 +1154,11 @@ int MPIDI_Win_create(void *, MPI_Aint, int, MPID_Info *, MPID_Comm *,
 int MPIDI_Win_free(MPID_Win **); 
 
 int MPIDI_Put(const void *, int, MPI_Datatype, int, MPI_Aint, int,
-              MPI_Datatype, MPID_Win *); 
+              MPI_Datatype, MPID_Win *, MPID_Request * ureq);
 int MPIDI_Get(void *, int, MPI_Datatype, int, MPI_Aint, int,
-              MPI_Datatype, MPID_Win *);
+              MPI_Datatype, MPID_Win *, MPID_Request * ureq);
 int MPIDI_Accumulate(const void *, int, MPI_Datatype, int, MPI_Aint, int,
-                     MPI_Datatype, MPI_Op, MPID_Win *);
+                     MPI_Datatype, MPI_Op, MPID_Win *, MPID_Request * ureq);
 
 int MPIDI_Win_fence(int, MPID_Win *);
 int MPIDI_Win_post(MPID_Group *group_ptr, int assert, MPID_Win *win_ptr);
@@ -1187,7 +1187,8 @@ int MPIDI_Win_get_info(MPID_Win *win, MPID_Info **info_used);
 int MPIDI_Get_accumulate(const void *origin_addr, int origin_count,
                          MPI_Datatype origin_datatype, void *result_addr, int result_count,
                          MPI_Datatype result_datatype, int target_rank, MPI_Aint target_disp,
-                         int target_count, MPI_Datatype target_datatype, MPI_Op op, MPID_Win *win);
+                         int target_count, MPI_Datatype target_datatype, MPI_Op op, MPID_Win *win,
+                         MPID_Request * ureq);
 int MPIDI_Fetch_and_op(const void *origin_addr, void *result_addr,
                        MPI_Datatype datatype, int target_rank, MPI_Aint target_disp,
                        MPI_Op op, MPID_Win *win);
@@ -1904,6 +1905,10 @@ int MPIDI_CH3_ReqHandler_GetSendComplete( MPIDI_VC_t *, MPID_Request *,
                                           int * );
 int MPIDI_CH3_ReqHandler_GaccumLikeSendComplete( MPIDI_VC_t *, MPID_Request *,
                                                  int * );
+/* Request-based operation handler */
+int MPIDI_CH3_ReqHandler_ReqOpsComplete(MPIDI_VC_t *, MPID_Request *,
+                                        int *);
+
 /* Thread Support */
 #ifdef MPICH_IS_THREADED
 #if MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_GLOBAL

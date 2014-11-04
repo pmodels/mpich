@@ -1253,7 +1253,15 @@ int MPIDI_CH3_PktHandler_Get_AccumResp(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
     MPIU_ERR_CHKANDJUMP1(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**ch3|postrecv",
                          "**ch3|postrecv %s", "MPIDI_CH3_PKT_GET_ACCUM_RESP");
     if (complete) {
-        MPIDI_CH3U_Request_complete(req);
+        /* Request-based RMA defines final actions for completing user request. */
+        int (*reqFn)(MPIDI_VC_t *, MPID_Request *, int *);
+        reqFn = req->dev.OnFinal;
+
+        if (reqFn) {
+            mpi_errno = reqFn(vc, req, &complete);
+        } else {
+            MPIDI_CH3U_Request_complete(req);
+        }
         *rreqp = NULL;
     }
     /* return the number of bytes processed in this function */
@@ -1363,7 +1371,16 @@ int MPIDI_CH3_PktHandler_GetResp(MPIDI_VC_t * vc ATTRIBUTE((unused)),
     MPIU_ERR_CHKANDJUMP1(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**ch3|postrecv", "**ch3|postrecv %s",
                          "MPIDI_CH3_PKT_GET_RESP");
     if (complete) {
-        MPIDI_CH3U_Request_complete(req);
+        /* Request-based RMA defines final actions for completing user request. */
+        int (*reqFn)(MPIDI_VC_t *, MPID_Request *, int *);
+        reqFn = req->dev.OnFinal;
+
+        if (reqFn) {
+            mpi_errno = reqFn(vc, req, &complete);
+        } else {
+            MPIDI_CH3U_Request_complete(req);
+        }
+
         *rreqp = NULL;
     }
     /* return the number of bytes processed in this function */

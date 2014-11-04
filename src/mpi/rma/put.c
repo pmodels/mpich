@@ -142,7 +142,7 @@ int MPI_Put(const void *origin_addr, int origin_count, MPI_Datatype
     mpi_errno = MPIU_RMA_CALL(win_ptr,
 			      Put(origin_addr, origin_count, origin_datatype,
 				  target_rank, target_disp, target_count,
-				  target_datatype, win_ptr));
+				  target_datatype, win_ptr, NULL));
     if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 
     /* ... end of body of routine ... */

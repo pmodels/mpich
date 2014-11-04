@@ -446,7 +446,8 @@ typedef struct MPIDI_Request {
     /* For derived datatypes at target */
     struct MPIDI_RMA_dtype_info *dtype_info;
     void *dataloop;
-    /* req. handle needed to implement derived datatype gets  */
+    /* req. handle needed to implement derived datatype gets.
+     * It also used for remembering user request of request-based RMA operations. */
     MPI_Request request_handle;
     MPI_Win     target_win_handle;
     MPI_Win     source_win_handle;

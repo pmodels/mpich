@@ -14,6 +14,7 @@ mpi_core_sources +=                          \
     src/mpid/ch3/src/ch3u_handle_recv_req.c                \
     src/mpid/ch3/src/ch3u_handle_revoke_pkt.c              \
     src/mpid/ch3/src/ch3u_handle_send_req.c                \
+    src/mpid/ch3/src/ch3u_handle_op_req.c                  \
     src/mpid/ch3/src/ch3u_port.c                           \
     src/mpid/ch3/src/ch3u_recvq.c                          \
     src/mpid/ch3/src/ch3u_request.c                        \
