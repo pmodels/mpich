@@ -35,13 +35,13 @@ subroutine MPI_Register_datarep_f08(datarep, read_conversion_fn, write_conversio
     write_conversion_fn_c = c_funloc(write_conversion_fn)
     dtype_file_extent_fn_c = c_funloc(dtype_file_extent_fn)
 
-   !if (c_associated(read_conversion_fn_c, c_funloc(MPI_CONVERSION_FN_NULL))) then
-   !    read_conversion_fn_c = C_NULL_FUNPTR
-   !end if
+    if (c_associated(read_conversion_fn_c, c_funloc(MPI_CONVERSION_FN_NULL))) then
+        read_conversion_fn_c = C_NULL_FUNPTR
+    end if
 
-   !if (c_associated(write_conversion_fn_c, c_funloc(MPI_CONVERSION_FN_NULL))) then
-   !    read_conversion_fn_c = C_NULL_FUNPTR
-   !end if
+    if (c_associated(write_conversion_fn_c, c_funloc(MPI_CONVERSION_FN_NULL))) then
+        write_conversion_fn_c = C_NULL_FUNPTR
+    end if
 
     ierror_c = MPIR_Register_datarep_c(datarep_c, read_conversion_fn_c, write_conversion_fn_c, &
                                        dtype_file_extent_fn_c, extra_state)
