@@ -471,6 +471,13 @@ int MPIDI_CH3I_Progress (MPID_Progress_state *progress_state, int is_blocking)
         }
 #endif /* HAVE_LIBHCOLL */
 
+        /* make progress on RMA */
+        mpi_errno = MPIDI_CH3I_RMA_Make_progress_global(&made_progress);
+        if (mpi_errno)
+            MPIU_ERR_POP(mpi_errno);
+        if (made_progress)
+            MPIDI_CH3_Progress_signal_completion();
+
         /* in the case of progress_wait, bail out if anything completed (CC-1) */
         if (is_blocking) {
             int completion_count = OPA_load_int(&MPIDI_CH3I_progress_completion_count);

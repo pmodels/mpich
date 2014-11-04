@@ -10,6 +10,9 @@
 #include "mpl_utlist.h"
 #include "mpid_rma_types.h"
 
+int MPIDI_CH3I_RMA_Make_progress_target(MPID_Win * win_ptr, int target_rank, int *made_progress);
+int MPIDI_CH3I_RMA_Make_progress_win(MPID_Win * win_ptr, int *made_progress);
+
 extern struct MPIDI_RMA_Op *global_rma_op_pool, *global_rma_op_pool_tail, *global_rma_op_pool_start;
 extern struct MPIDI_RMA_Target *global_rma_target_pool, *global_rma_target_pool_tail, *global_rma_target_pool_start;
 
