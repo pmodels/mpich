@@ -120,6 +120,7 @@ int MPIDI_CH3I_Put(const void *origin_addr, int origin_count, MPI_Datatype
         put_pkt->source_win_handle = win_ptr->handle;
         put_pkt->immed_len = 0;
         put_pkt->origin_rank = rank;
+        put_pkt->flags = MPIDI_CH3_PKT_FLAG_NONE;
 
         /* FIXME: For contig and very short operations, use a streamlined op */
         new_ptr->origin_addr = (void *) origin_addr;
@@ -303,6 +304,7 @@ int MPIDI_CH3I_Get(void *origin_addr, int origin_count, MPI_Datatype
         get_pkt->target_win_handle = win_ptr->all_win_handles[target_rank];
         get_pkt->source_win_handle = win_ptr->handle;
         get_pkt->origin_rank = rank;
+        get_pkt->flags = MPIDI_CH3_PKT_FLAG_NONE;
 
         /* FIXME: For contig and very short operations, use a streamlined op */
         new_ptr->origin_addr = origin_addr;
@@ -468,6 +470,7 @@ int MPIDI_CH3I_Accumulate(const void *origin_addr, int origin_count, MPI_Datatyp
         accum_pkt->source_win_handle = win_ptr->handle;
         accum_pkt->immed_len = 0;
         accum_pkt->origin_rank = rank;
+        accum_pkt->flags = MPIDI_CH3_PKT_FLAG_NONE;
 
         new_ptr->origin_addr = (void *) origin_addr;
         new_ptr->origin_count = origin_count;
@@ -658,6 +661,7 @@ int MPIDI_CH3I_Get_accumulate(const void *origin_addr, int origin_count,
             get_pkt->target_win_handle = win_ptr->all_win_handles[target_rank];
             get_pkt->source_win_handle = win_ptr->handle;
             get_pkt->origin_rank = rank;
+            get_pkt->flags = MPIDI_CH3_PKT_FLAG_NONE;
 
             new_ptr->origin_addr = result_addr;
             new_ptr->origin_count = result_count;
@@ -693,6 +697,7 @@ int MPIDI_CH3I_Get_accumulate(const void *origin_addr, int origin_count,
             get_accum_pkt->source_win_handle = win_ptr->handle;
             get_accum_pkt->immed_len = 0;
             get_accum_pkt->origin_rank = rank;
+            get_accum_pkt->flags = MPIDI_CH3_PKT_FLAG_NONE;
 
             new_ptr->origin_addr = (void *) origin_addr;
             new_ptr->origin_count = origin_count;
@@ -982,6 +987,7 @@ int MPIDI_Compare_and_swap(const void *origin_addr, const void *compare_addr,
         cas_pkt->target_win_handle = win_ptr->all_win_handles[target_rank];
         cas_pkt->source_win_handle = win_ptr->handle;
         cas_pkt->origin_rank = rank;
+        cas_pkt->flags = MPIDI_CH3_PKT_FLAG_NONE;
 
         new_ptr->origin_addr = (void *) origin_addr;
         new_ptr->origin_count = 1;
@@ -1110,6 +1116,7 @@ int MPIDI_Fetch_and_op(const void *origin_addr, void *result_addr,
             get_pkt->target_win_handle = win_ptr->all_win_handles[target_rank];
             get_pkt->source_win_handle = win_ptr->handle;
             get_pkt->origin_rank = rank;
+            get_pkt->flags = MPIDI_CH3_PKT_FLAG_NONE;
 
             new_ptr->origin_addr = result_addr;
             new_ptr->origin_count = 1;
@@ -1131,6 +1138,7 @@ int MPIDI_Fetch_and_op(const void *origin_addr, void *result_addr,
             fop_pkt->target_win_handle = win_ptr->all_win_handles[target_rank];
             fop_pkt->immed_len = 0;
             fop_pkt->origin_rank = rank;
+            fop_pkt->flags = MPIDI_CH3_PKT_FLAG_NONE;
 
             new_ptr->origin_addr = (void *) origin_addr;
             new_ptr->origin_count = 1;

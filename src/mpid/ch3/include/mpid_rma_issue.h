@@ -338,7 +338,7 @@ static int issue_put_op(MPIDI_RMA_Op_t * rma_op, MPID_Win *win_ptr,
 
     rma_op->request = NULL;
 
-    put_pkt->flags = flags;
+    put_pkt->flags |= flags;
     if (flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK)
         put_pkt->lock_type = target_ptr->lock_type;
 
@@ -399,7 +399,7 @@ static int issue_acc_op(MPIDI_RMA_Op_t *rma_op, MPID_Win *win_ptr,
 
     rma_op->request = NULL;
 
-    accum_pkt->flags = flags;
+    accum_pkt->flags |= flags;
     if (flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK)
         accum_pkt->lock_type = target_ptr->lock_type;
 
@@ -484,7 +484,7 @@ static int issue_get_acc_op(MPIDI_RMA_Op_t *rma_op, MPID_Win *win_ptr,
     /* Note: Get_accumulate uses the same packet type as accumulate */
     get_accum_pkt->request_handle = resp_req->handle;
 
-    get_accum_pkt->flags = flags;
+    get_accum_pkt->flags |= flags;
     if (flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK)
         get_accum_pkt->lock_type = target_ptr->lock_type;
 
@@ -599,7 +599,7 @@ static int issue_get_op(MPIDI_RMA_Op_t * rma_op, MPID_Win * win_ptr,
     }
 
     get_pkt->request_handle = rma_op->request->handle;
-    get_pkt->flags = flags;
+    get_pkt->flags |= flags;
     if (flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK)
         get_pkt->lock_type = target_ptr->lock_type;
 
@@ -699,7 +699,7 @@ static int issue_cas_op(MPIDI_RMA_Op_t * rma_op,
     rma_op->request->dev.source_win_handle = cas_pkt->source_win_handle;
 
     cas_pkt->request_handle = rma_op->request->handle;
-    cas_pkt->flags = flags;
+    cas_pkt->flags |= flags;
     if (flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK)
         cas_pkt->lock_type = target_ptr->lock_type;
 
@@ -768,7 +768,7 @@ static int issue_fop_op(MPIDI_RMA_Op_t * rma_op,
 
     fop_pkt->request_handle = resp_req->handle;
 
-    fop_pkt->flags = flags;
+    fop_pkt->flags |= flags;
     if (flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK)
         fop_pkt->lock_type = target_ptr->lock_type;
 
