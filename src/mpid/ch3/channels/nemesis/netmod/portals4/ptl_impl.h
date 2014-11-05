@@ -45,6 +45,7 @@ typedef struct {
     ptl_handle_me_t put_me;
     ptl_handle_me_t *get_me_p;
     int num_gets;
+    int put_acked;
     ptl_size_t chunk_offset;
     void *chunk_buffer[MPID_NEM_PTL_NUM_CHUNK_BUFFERS];
     MPIDI_msg_sz_t bytes_put;
@@ -67,6 +68,7 @@ typedef struct {
         REQ_PTL(req_)->put_me        = PTL_INVALID_HANDLE;      \
         REQ_PTL(req_)->get_me_p      = NULL;                    \
         REQ_PTL(req_)->num_gets      = 0;                       \
+        REQ_PTL(req_)->put_acked     = 0;                       \
         REQ_PTL(req_)->event_handler = NULL;                    \
         REQ_PTL(req_)->chunk_offset  = 0;                       \
     } while (0)

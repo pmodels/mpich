@@ -111,11 +111,15 @@ static int handler_large(const ptl_event_t *e)
         /* truncated message */
         mpi_errno = handler_send_complete(e);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    } else if (e->type == PTL_EVENT_ACK) {
+        REQ_PTL(sreq)->put_acked = 1;
     } else if (e->type == PTL_EVENT_GET) {
         /* decrement the remaining get operations */
-        if (--REQ_PTL(sreq)->num_gets == 0)
-            mpi_errno = handler_send_complete(e);
+        REQ_PTL(sreq)->num_gets--;
     }
+
+    if (REQ_PTL(sreq)->num_gets == 0 && REQ_PTL(sreq)->put_acked)
+        mpi_errno = handler_send_complete(e);
 
  fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_HANDLER_LARGE);
