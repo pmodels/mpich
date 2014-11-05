@@ -30,6 +30,7 @@
         }                                                               \
     }
 
+struct rptl_target;
 struct rptl_op {
     enum {
         RPTL_OP_PUT,
@@ -73,6 +74,7 @@ struct rptl_op {
     } u;
 
     int events_ready;
+    struct rptl_target *target;
 
     struct rptl_op *next;
     struct rptl_op *prev;
@@ -85,7 +87,7 @@ struct rptl_op {
 struct rptl {
     /* local portal state */
     enum {
-        RPTL_LOCAL_STATE_NORMAL,
+        RPTL_LOCAL_STATE_ACTIVE,
         RPTL_LOCAL_STATE_AWAITING_PAUSE_ACKS
     } local_state;
     uint64_t pause_ack_counter;
@@ -120,6 +122,37 @@ struct rptl {
 
     struct rptl *next;
     struct rptl *prev;
+};
+
+#define RPTL_OP_POOL_SEGMENT_COUNT  (1024)
+
+struct rptl_target {
+    ptl_process_t id;
+
+    enum rptl_target_state {
+        RPTL_TARGET_STATE_ACTIVE,
+        RPTL_TARGET_STATE_DISABLED,
+        RPTL_TARGET_STATE_RECEIVED_PAUSE,
+        RPTL_TARGET_STATE_PAUSE_ACKED
+    } state;
+
+    /* when we get a pause message, we need to know which rptl it came
+     * in on, so we can figure out what the corresponding target
+     * portal is.  for this, we store the local rptl */
+    struct rptl *rptl;
+
+    struct rptl_op_pool_segment {
+        struct rptl_op op[RPTL_OP_POOL_SEGMENT_COUNT];
+        struct rptl_op_pool_segment *next;
+        struct rptl_op_pool_segment *prev;
+    } *op_segment_list;
+    struct rptl_op *op_pool;
+
+    struct rptl_op *data_op_list;
+    struct rptl_op *control_op_list;
+
+    struct rptl_target *next;
+    struct rptl_target *prev;
 };
 
 int MPID_nem_ptl_rptl_init(int world_size, uint64_t max_origin_events,
