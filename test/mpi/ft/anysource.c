@@ -15,8 +15,7 @@
 int main(int argc, char **argv)
 {
     int rank, size, err, ec;
-    char buf[10] = " No errors";
-    char error[MPI_MAX_ERROR_STRING];
+    char buf[10];
     MPI_Request request;
     MPI_Status status;
 
@@ -36,6 +35,7 @@ int main(int argc, char **argv)
 
     /* Make sure ANY_SOURCE returns correctly after a failure */
     if (rank == 0) {
+        char buf[10];
         err = MPI_Recv(buf, 10, MPI_CHAR, MPI_ANY_SOURCE, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
         if (MPI_SUCCESS == err) {
             fprintf(stderr, "Expected a failure for receive from ANY_SOURCE\n");
@@ -43,10 +43,29 @@ int main(int argc, char **argv)
         }
 
         /* Make sure that new ANY_SOURCE operations don't work yet */
-        MPI_Irecv(buf, 10, MPI_CHAR, MPI_ANY_SOURCE, 0, MPI_COMM_WORLD, &request);
+        err = MPI_Irecv(buf, 10, MPI_CHAR, MPI_ANY_SOURCE, 0, MPI_COMM_WORLD, &request);
+        if (request == MPI_REQUEST_NULL) {
+            fprintf(stderr, "Request for ANY_SOURCE receive is NULL\n");
+            MPI_Abort(MPI_COMM_WORLD, 1);
+        }
+        MPI_Error_class(err, &ec);
+        if (ec != MPI_SUCCESS && ec != MPIX_ERR_PROC_FAILED_PENDING) {
+            fprintf(stderr, "Expected SUCCESS or MPIX_ERR_PROC_FAILED_PENDING: %d\n", ec);
+            MPI_Abort(MPI_COMM_WORLD, 1);
+        }
+
         err = MPI_Wait(&request, &status);
-        if (MPI_SUCCESS == err) {
-            fprintf(stderr, "Expected a failure for receive from ANY_SOURCE\n");
+        MPI_Error_class(err, &ec);
+        if (MPIX_ERR_PROC_FAILED_PENDING != ec) {
+            fprintf(stderr, "Expected a MPIX_ERR_PROC_FAILED_PENDING (%d) for receive from ANY_SOURCE: %d\n", MPIX_ERR_PROC_FAILED_PENDING, ec);
+            fprintf(stderr, "BUF: %s\n", buf);
+            MPI_Abort(MPI_COMM_WORLD, 1);
+        }
+
+        err = MPI_Send(NULL, 0, MPI_INT, 2, 0, MPI_COMM_WORLD);
+        if (MPI_SUCCESS != err) {
+            MPI_Error_class(err, &ec);
+            fprintf(stderr, "MPI_SEND failed: %d", ec);
             MPI_Abort(MPI_COMM_WORLD, 1);
         }
 
@@ -55,21 +74,24 @@ int main(int argc, char **argv)
         err = MPI_Wait(&request, &status);
         if (MPI_SUCCESS != err) {
             MPI_Error_class(err, &ec);
-            MPI_Error_string(err, error, &size);
-            fprintf(stderr, "Unexpected failure after acknowledged failure (%d)\n%s", ec, error);
+            fprintf(stderr, "Unexpected failure after acknowledged failure (%d)\n", ec);
             MPI_Abort(MPI_COMM_WORLD, 1);
         }
 
-        fprintf(stdout, "%s\n", buf);
+        fprintf(stdout, " %s\n", buf);
     } else if (rank == 2) {
-        /* Make sure we don't send our first message too early */
-        sleep(2);
+        char buf[10] = "No errors";
+        err = MPI_Recv(NULL, 0, MPI_INT, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        if (MPI_SUCCESS != err) {
+            MPI_Error_class(err, &ec);
+            fprintf(stderr, "MPI_RECV failed: %d\n", ec);
+            MPI_Abort(MPI_COMM_WORLD, 1);
+        }
 
         err = MPI_Send(buf, 10, MPI_CHAR, 0, 0, MPI_COMM_WORLD);
         if (MPI_SUCCESS != err) {
             MPI_Error_class(err, &ec);
-            MPI_Error_string(err, error, &size);
-            fprintf(stderr, "Unexpected failure from MPI_Send (%d)\n%s", ec, error);
+            fprintf(stderr, "Unexpected failure from MPI_Send (%d)\n", ec);
             MPI_Abort(MPI_COMM_WORLD, 1);
         }
     }
