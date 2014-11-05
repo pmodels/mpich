@@ -9,17 +9,20 @@
 /*
 === BEGIN_MPI_T_CVAR_INFO_BLOCK ===
 
+categories:
+    - name        : FT
+      description : cvars that control behavior of fault tolerance
+
 cvars:
-   - name       : MPIR_CVAR_NEM_LMT_RTS_QUEUE_SIZE
-     category   : CH3
-     type       : int
-     default    : 1024
+   - name       : MPIR_CVAR_ENABLE_FT
+     category   : FT
+     type       : boolean
+     default    : false
      class      : device
      verbosity  : MPI_T_VERBOSITY_USER_BASIC
      scope      : MPI_T_SCOPE_ALL_EQ
      description : >-
-       The initial size of the NEM_LMT_RTS_QUEUE used to track RTS
-       messages before the LMT setup.
+       Enable fault tolerance functions
 
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
@@ -123,8 +126,10 @@ int MPID_nem_lmt_RndvSend(MPID_Request **sreq_p, const void * buf, int count,
 
     MPIU_THREAD_CS_ENTER(LMT,);
     mpi_errno = vc->ch.lmt_initiate_lmt(vc, &upkt.p, sreq);
-    if (MPI_SUCCESS == mpi_errno)
-        MPID_nem_lmt_rtsq_enqueue(&vc->ch.lmt_rts_queue, sreq);
+    if (MPIR_CVAR_ENABLE_FT) {
+        if (MPI_SUCCESS == mpi_errno)
+            MPID_nem_lmt_rtsq_enqueue(&vc->ch.lmt_rts_queue, sreq);
+    }
     MPIU_THREAD_CS_EXIT(LMT,);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
@@ -319,8 +324,10 @@ static int pkt_CTS_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt, MPIDI_msg_sz_t 
     MPID_Request_get_ptr(cts_pkt->sender_req_id, sreq);
 
     MPIU_THREAD_CS_ENTER(LMT,);
-    /* Remove the request from the VC RTS queue. */
-    MPID_nem_lmt_rtsq_search_remove(&vc->ch.lmt_rts_queue, cts_pkt->sender_req_id, &rts_sreq);
+    if (MPIR_CVAR_ENABLE_FT) {
+        /* Remove the request from the VC RTS queue. */
+        MPID_nem_lmt_rtsq_search_remove(&vc->ch.lmt_rts_queue, cts_pkt->sender_req_id, &rts_sreq);
+    }
     MPIU_THREAD_CS_EXIT(LMT,);
 
     sreq->ch.lmt_req_id = cts_pkt->receiver_req_id;

@@ -813,13 +813,15 @@ int MPID_nem_lmt_shm_vc_terminated(MPIDI_VC_t *vc)
     }
 
     /* If there is anything in the RTS queue, it needs to be cleared out. */
-    MPIU_THREAD_CS_ENTER(LMT,);
-    while (!MPID_nem_lmt_rtsq_empty(vc_ch->lmt_rts_queue)) {
-        MPID_nem_lmt_rtsq_dequeue(&vc_ch->lmt_rts_queue, &req);
-        req->status.MPI_ERROR = req_errno;
-        MPIDI_CH3U_Request_complete(req);
+    if (MPIR_CVAR_ENABLE_FT) {
+        MPIU_THREAD_CS_ENTER(LMT,);
+        while (!MPID_nem_lmt_rtsq_empty(vc_ch->lmt_rts_queue)) {
+            MPID_nem_lmt_rtsq_dequeue(&vc_ch->lmt_rts_queue, &req);
+            req->status.MPI_ERROR = req_errno;
+            MPIDI_CH3U_Request_complete(req);
+        }
+        MPIU_THREAD_CS_EXIT(LMT,);
     }
-    MPIU_THREAD_CS_EXIT(LMT,);
 
     /* We empty the vc queue, but don't remove the vc from the global
        list.  That will eventually happen when lmt_shm_progress()
