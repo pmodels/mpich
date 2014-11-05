@@ -125,13 +125,18 @@ int MPI_Irecv(void *buf, int count, MPI_Datatype datatype, int source,
     
     mpi_errno = MPID_Irecv(buf, count, datatype, source, tag, comm_ptr, 
 			   MPID_CONTEXT_INTRA_PT2PT, &request_ptr);
-    if (mpi_errno != MPI_SUCCESS) goto fn_fail;
-
     /* return the handle of the request to the user */
     /* MPIU_OBJ_HANDLE_PUBLISH is unnecessary for irecv, lower-level access is
      * responsible for its own consistency, while upper-level field access is
      * controlled by the completion counter */
     *request = request_ptr->handle;
+
+    /* Put this part after setting the request so that if the request is
+     * pending (which is still considered an error), it will still be set
+     * correctly here. For real error cases, the user might get garbage as
+     * their request value, but that's fine since the definition is
+     * undefined anyway. */
+    if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 
     /* ... end of body of routine ... */
     
