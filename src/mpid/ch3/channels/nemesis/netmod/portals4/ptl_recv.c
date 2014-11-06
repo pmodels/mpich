@@ -287,7 +287,7 @@ static int handler_recv_dequeue_large(const ptl_event_t *e)
             MPIU_Memcpy((char *)rreq->dev.user_buf + dt_true_lb, e->start, e->mlength);
         } else {
             last = e->mlength;
-            MPID_Segment_unpack(rreq->dev.segment_ptr, rreq->dev.segment_first, &last, e->start);
+            MPID_Segment_unpack(rreq->dev.segment_ptr, 0, &last, e->start);
             MPIU_Assert(last == e->mlength);
             rreq->dev.segment_first = e->mlength;
         }
