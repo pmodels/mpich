@@ -57,7 +57,7 @@ noinst_PROGRAMS = cpi
 # pmandel requires a separate set of socket calls (its a long story)
 # and may not build on most platforms
 EXTRA_PROGRAMS = pmandel pmandel_spawn pmandel_service pmandel_spaserv    \
-                 pmandel_fence hellow icpi parent child srtest \
+                 pmandel_fence hellow icpi ircpi parent child srtest \
                  spawn_merge_parent spawn_merge_child1 spawn_merge_child2
 
 # LIBS includes -lmpich and other libraries (e.g., -lpmpich if
@@ -82,6 +82,8 @@ cpi_LDFLAGS = $(AM_LDFLAGS) $(mpich_libtool_static_flag)
 
 icpi_SOURCES = icpi.c
 icpi_LDADD = -lm
+ircpi_SOURCES = ircpi.c
+ircpi_LDADD = -lm
 pmandel_SOURCES = pmandel.c
 pmandel_LDADD = -lm
 pmandel_spawn_SOURCES = pmandel_spawn.c
