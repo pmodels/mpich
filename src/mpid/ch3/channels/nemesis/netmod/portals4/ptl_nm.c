@@ -8,8 +8,8 @@
 #include <mpl_utlist.h>
 #include "rptl.h"
 
-#define NUM_SEND_BUFS 20
-#define NUM_RECV_BUFS 20
+#define NUM_SEND_BUFS 100
+#define NUM_RECV_BUFS 100
 #define BUFLEN  (sizeof(MPIDI_CH3_Pkt_t) + PTL_MAX_EAGER)
 
 typedef struct MPID_nem_ptl_sendbuf {
