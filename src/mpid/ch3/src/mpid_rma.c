@@ -30,8 +30,6 @@ cvars:
 MPIU_THREADSAFE_INIT_DECL(initRMAoptions);
 
 MPIDI_RMA_Win_list_t *MPIDI_RMA_Win_list = NULL, *MPIDI_RMA_Win_list_tail = NULL;
-int num_active_issued_win = 0;
-int num_passive_win = 0;
 
 static int win_init(MPI_Aint size, int disp_unit, int create_flavor, int model,
                     MPID_Comm * comm_ptr, MPID_Win ** win_ptr);

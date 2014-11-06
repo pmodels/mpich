@@ -46,6 +46,7 @@ extern MPID_Request ** const MPID_Recvq_unexpected_tail_ptr;
 #endif
 
 OPA_int_t MPIDI_CH3I_progress_completion_count = OPA_INT_T_INITIALIZER(0);
+int num_active_issued_win = 0, num_passive_win = 0;
 
 /* NEMESIS MULTITHREADING: Extra Data Structures Added */
 #ifdef MPICH_IS_THREADED

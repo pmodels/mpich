@@ -22,6 +22,8 @@ static int MPIDI_CH3i_Progress_test(void);
 /* FIXME: Move thread stuff into some set of abstractions in order to remove
    ifdefs */
 volatile unsigned int MPIDI_CH3I_progress_completion_count = 0;
+int num_active_issued_win = 0, num_passive_win = 0;
+
 #ifdef MPICH_IS_THREADED
     volatile int MPIDI_CH3I_progress_blocked = FALSE;
     volatile int MPIDI_CH3I_progress_wakeup_signalled = FALSE;
