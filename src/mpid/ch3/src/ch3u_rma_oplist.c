@@ -237,6 +237,8 @@ static inline int issue_ops_target(MPID_Win * win_ptr, MPIDI_RMA_Target_t *targe
                 mpi_errno = send_flush_msg(target->target_rank, win_ptr);
                 if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
             }
+            (*made_progress) = 1;
+            goto finish_issue;
         }
         else if (target->sync.sync_flag == MPIDI_RMA_SYNC_UNLOCK) {
             if (target->target_rank == rank) {
@@ -249,9 +251,9 @@ static inline int issue_ops_target(MPID_Win * win_ptr, MPIDI_RMA_Target_t *targe
                 mpi_errno = send_unlock_msg(target->target_rank, win_ptr);
                 if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
             }
+            (*made_progress) = 1;
+            goto finish_issue;
         }
-        (*made_progress) = 1;
-        goto finish_issue;
     }
 
     /* Issue out operations in the list. */
