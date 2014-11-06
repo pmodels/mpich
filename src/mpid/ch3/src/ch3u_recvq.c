@@ -1082,6 +1082,7 @@ int MPIDI_CH3U_Clean_recvq(MPID_Comm *comm_ptr)
             }
 
             offset = (comm_ptr->comm_kind == MPID_INTRACOMM) ?  MPID_CONTEXT_INTRA_COLL : MPID_CONTEXT_INTER_COLL;
+            match.parts.context_id = comm_ptr->recvcontext_id + MPID_CONTEXT_INTRANODE_OFFSET + offset;
 
             if (MATCH_WITH_LEFT_RIGHT_MASK(rreq->dev.match, match, mask)) {
                 if (MPIR_TAG_MASK_ERROR_BIT(rreq->dev.match.parts.tag) != MPIR_AGREE_TAG &&
@@ -1109,6 +1110,7 @@ int MPIDI_CH3U_Clean_recvq(MPID_Comm *comm_ptr)
             }
 
             offset = (comm_ptr->comm_kind == MPID_INTRACOMM) ?  MPID_CONTEXT_INTRA_COLL : MPID_CONTEXT_INTER_COLL;
+            match.parts.context_id = comm_ptr->recvcontext_id + MPID_CONTEXT_INTERNODE_OFFSET + offset;
 
             if (MATCH_WITH_LEFT_RIGHT_MASK(rreq->dev.match, match, mask)) {
                 if (MPIR_TAG_MASK_ERROR_BIT(rreq->dev.match.parts.tag) != MPIR_AGREE_TAG &&
