@@ -439,7 +439,12 @@ sub RunList {
 		    $mpiexecArgs = "$mpiexecArgs $value";
 		}
 		elsif ($key eq "env") {
-		    $progEnv = "$progEnv $value";
+		    if ($progEnv eq "") {
+			$progEnv = "$value";
+		    }
+		    else {
+			$progEnv = "$progEnv $value";
+		    }
 		}
 		elsif ($key eq "mpiversion") {
 		    $mpiVersion = $value;
