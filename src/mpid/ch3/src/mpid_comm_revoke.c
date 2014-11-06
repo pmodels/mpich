@@ -24,7 +24,7 @@ int MPID_Comm_revoke(MPID_Comm *comm_ptr, int is_remote)
     MPIDI_VC_t *vc;
     MPID_IOV iov[MPID_IOV_LIMIT];
     int mpi_errno = MPI_SUCCESS;
-    int i, size, my_rank, failed=0;
+    int i, size, my_rank;
     MPID_Request *request;
     MPIDI_CH3_Pkt_t upkt;
     MPIDI_CH3_Pkt_revoke_t *revoke_pkt = &upkt.revoke;
@@ -37,6 +37,11 @@ int MPID_Comm_revoke(MPID_Comm *comm_ptr, int is_remote)
         comm_ptr->revoked = 1;
         if (comm_ptr->node_comm) comm_ptr->node_comm->revoked = 1;
         if (comm_ptr->node_roots_comm) comm_ptr->node_roots_comm->revoked = 1;
+
+        /* Start a counter to track how many revoke messages we've received from
+         * other ranks */
+        comm_ptr->dev.waiting_for_revoke = comm_ptr->local_size - 1 - is_remote; /* Subtract the processes who already know about the revoke */
+        MPIU_DBG_MSG_FMT(CH3_OTHER, VERBOSE, (MPIU_DBG_FDEST, "Comm %08x waiting_for_revoke: %d", comm_ptr->handle, comm_ptr->dev.waiting_for_revoke));
 
         /* Keep a reference to this comm so it doesn't get destroyed while
          * it's being revoked */
@@ -60,18 +65,13 @@ int MPID_Comm_revoke(MPID_Comm *comm_ptr, int is_remote)
             MPIU_THREAD_CS_ENTER(CH3COMM, vc);
             mpi_errno = MPIDI_CH3_iStartMsgv(vc, iov, 1, &request);
             MPIU_THREAD_CS_EXIT(CH3COMM, vc);
-            if (mpi_errno) failed++;
+            if (mpi_errno) comm_ptr->dev.waiting_for_revoke--;
             if (NULL != request)
                 /* We don't need to keep a reference to this request. The
                  * progress engine will keep a reference until it completes
                  * later */
                 MPID_Request_release(request);
         }
-
-        /* Start a counter to track how many revoke messages we've received from
-         * other ranks */
-        comm_ptr->dev.waiting_for_revoke = comm_ptr->local_size - 1 - is_remote - failed; /* Subtract the processes who already know about the revoke */
-        MPIU_DBG_MSG_FMT(CH3_OTHER, VERBOSE, (MPIU_DBG_FDEST, "Comm %08x waiting_for_revoke: %d", comm_ptr->handle, comm_ptr->dev.waiting_for_revoke));
 
         /* Check to see if we are done revoking */
         if (comm_ptr->dev.waiting_for_revoke == 0) {
@@ -98,13 +98,6 @@ int MPID_Comm_revoke(MPID_Comm *comm_ptr, int is_remote)
         }
     }
 
-fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_MPID_COMM_REVOKE);
     return MPI_SUCCESS;
-fn_fail:
-    if (request) {
-        MPIU_Object_set_ref(request, 0);
-        MPIDI_CH3_Request_destroy(request);
-    }
-    goto fn_exit;
 }
