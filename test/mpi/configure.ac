@@ -804,7 +804,6 @@ if test "$f77dir" = "f77" ; then
     AC_DEFINE(HAVE_FORTRAN_BINDING,1,[Define if Fortran is supported])
 fi
 
-AM_CONDITIONAL([BUILD_F77_TESTS],[test "X$f77dir" = "f77"])
 
 AC_ARG_VAR([MPI_SIZEOF_AINT],[if set, force MPI_Aint to a width of this many bytes])
 AC_ARG_VAR([MPI_SIZEOF_OFFSET],[if set, force MPI_Offset to a width of this many bytes])
@@ -1189,7 +1188,6 @@ elif test "$enable_fc" = yes ; then
     ])
     AC_LANG_POP([Fortran])
 fi
-AM_CONDITIONAL([BUILD_F90_TESTS],[test "X$f90dir" = "f90"])
 
 f08dir="#"
 AC_SUBST(f08dir)
@@ -1294,7 +1292,6 @@ if test "$enable_cxx" = yes ; then
     fi
     AC_LANG_POP([C++])
 fi
-AM_CONDITIONAL([BUILD_CXX_TESTS],[test "X$cxxdir" = "cxx"])
 
 AC_LANG_C
 # IO
