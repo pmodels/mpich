@@ -56,6 +56,8 @@ struct ADIOI_Fns_struct ADIO_GPFS_operations = {
 #elif PEPLATFORM
     "GPFS+PE: IBM GPFS for PE",
 #else
-    "GPFS: IBM GPFS"
+    "GPFS: IBM GPFS",
 #endif
+    ADIOI_GEN_IreadStridedColl, /* IreadStridedColl */
+    ADIOI_GEN_IwriteStridedColl /* IwriteStridedColl */
 };

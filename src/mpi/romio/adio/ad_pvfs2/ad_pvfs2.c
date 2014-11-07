@@ -39,7 +39,9 @@ struct ADIOI_Fns_struct ADIO_PVFS2_operations = {
     ADIOI_PVFS2_Resize, /* Resize */
     ADIOI_PVFS2_Delete, /* Delete */
     ADIOI_PVFS2_Feature,
-    "PVFS2: the PVFS v2 or OrangeFS file systems"
+    "PVFS2: the PVFS v2 or OrangeFS file systems",
+    ADIOI_GEN_IreadStridedColl, /* IreadStridedColl */
+    ADIOI_GEN_IwriteStridedColl /* IwriteStridedColl */
 };
 
 /* 

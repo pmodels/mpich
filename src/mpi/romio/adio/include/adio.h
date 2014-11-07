@@ -398,6 +398,14 @@ void ADIO_IwriteStrided(ADIO_File fd, void *buf, int count,
 		       MPI_Datatype datatype, int file_ptr_type,
 		       ADIO_Offset offset, ADIO_Request *request, int
 		       *error_code);
+void ADIO_IreadStridedColl(ADIO_File fd, void *buf, int count,
+               MPI_Datatype datatype, int file_ptr_type,
+               ADIO_Offset offset, ADIO_Request *request,
+               int *error_code);
+void ADIO_IwriteStridedColl(ADIO_File fd, void *buf, int count,
+               MPI_Datatype datatype, int file_ptr_type,
+               ADIO_Offset offset, ADIO_Request *request,
+               int *error_code);
 ADIO_Offset ADIO_SeekIndividual(ADIO_File fd, ADIO_Offset offset, 
                        int whence, int *error_code);
 void ADIO_Delete(char *filename, int *error_code);

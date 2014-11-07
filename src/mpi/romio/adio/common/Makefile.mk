@@ -26,8 +26,10 @@ romio_other_sources +=                  \
     adio/common/ad_io_coll.c            \
     adio/common/ad_iopen.c              \
     adio/common/ad_iread.c              \
+    adio/common/ad_iread_coll.c         \
     adio/common/ad_iread_fake.c         \
     adio/common/ad_iwrite.c             \
+    adio/common/ad_iwrite_coll.c        \
     adio/common/ad_iwrite_fake.c        \
     adio/common/ad_open.c               \
     adio/common/ad_opencoll.c           \

@@ -39,7 +39,7 @@ static void ADIOI_R_Exchange_data(ADIO_File fd, void *buf, ADIOI_Flatlist_node
 				  ADIOI_Access *others_req, 
 				  int iter, 
 				  MPI_Aint buftype_extent, int *buf_idx);
-static void ADIOI_Fill_user_buffer(ADIO_File fd, void *buf, ADIOI_Flatlist_node
+void ADIOI_Fill_user_buffer(ADIO_File fd, void *buf, ADIOI_Flatlist_node
 				   *flat_buf, char **recv_buf, ADIO_Offset 
 				   *offset_list, ADIO_Offset *len_list, 
 				   unsigned *recv_size, 
@@ -954,7 +954,7 @@ static void ADIOI_R_Exchange_data(ADIO_File fd, void *buf, ADIOI_Flatlist_node
     ADIOI_BUF_INCR \
 }
 
-static void ADIOI_Fill_user_buffer(ADIO_File fd, void *buf, ADIOI_Flatlist_node
+void ADIOI_Fill_user_buffer(ADIO_File fd, void *buf, ADIOI_Flatlist_node
 				   *flat_buf, char **recv_buf, ADIO_Offset 
 				   *offset_list, ADIO_Offset *len_list, 
 				   unsigned *recv_size, 

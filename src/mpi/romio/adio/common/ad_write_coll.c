@@ -35,7 +35,7 @@ static void ADIOI_W_Exchange_data(ADIO_File fd, void *buf, char *write_buf,
                          int *send_buf_idx, int *curr_to_proc,
                          int *done_to_proc, int *hole, int iter, 
                          MPI_Aint buftype_extent, int *buf_idx, int *error_code);
-static void ADIOI_Fill_send_buffer(ADIO_File fd, void *buf, ADIOI_Flatlist_node
+void ADIOI_Fill_send_buffer(ADIO_File fd, void *buf, ADIOI_Flatlist_node
                            *flat_buf, char **send_buf, ADIO_Offset 
                            *offset_list, ADIO_Offset *len_list, int *send_size, 
                            MPI_Request *requests, int *sent_to_proc, 
@@ -860,7 +860,7 @@ static void ADIOI_W_Exchange_data(ADIO_File fd, void *buf, char *write_buf,
 
 
 
-static void ADIOI_Fill_send_buffer(ADIO_File fd, void *buf, ADIOI_Flatlist_node
+void ADIOI_Fill_send_buffer(ADIO_File fd, void *buf, ADIOI_Flatlist_node
                            *flat_buf, char **send_buf, ADIO_Offset 
                            *offset_list, ADIO_Offset *len_list, int *send_size, 
                            MPI_Request *requests, int *sent_to_proc, 
