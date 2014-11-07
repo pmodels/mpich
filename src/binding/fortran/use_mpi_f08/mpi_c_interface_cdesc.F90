@@ -1565,6 +1565,62 @@ function MPIR_Ineighbor_alltoallw_cdesc(sendbuf, sendcounts, sdispls, sendtypes,
     integer(c_int) :: ierror
 end function MPIR_Ineighbor_alltoallw_cdesc
 
+function MPIR_File_iread_all_cdesc(fh, buf, count, datatype, request) &
+    bind(C, name="MPIR_File_iread_all_cdesc") result(ierror)
+    use, intrinsic :: iso_c_binding, only : c_int
+    use :: mpi_c_interface_types, only : c_File, c_Datatype, c_Request
+    implicit none
+    integer(c_File), value, intent(in) :: fh
+    type(*), dimension(..) :: buf
+    integer(c_int), value, intent(in) :: count
+    integer(c_Datatype), value, intent(in) :: datatype
+    integer(c_Request), intent(out) :: request
+    integer(c_int) :: ierror
+end function MPIR_File_iread_all_cdesc
+
+function MPIR_File_iwrite_all_cdesc(fh, buf, count, datatype, request) &
+    bind(C, name="MPIR_File_iwrite_all_cdesc") result(ierror)
+    use, intrinsic :: iso_c_binding, only : c_int, c_ptr
+    use :: mpi_c_interface_types, only : c_File, c_Datatype, c_Request
+    implicit none
+    integer(c_File), value, intent(in) :: fh
+    type(*), dimension(..), intent(in) :: buf
+    integer(c_int), value, intent(in) :: count
+    integer(c_Datatype), value, intent(in) :: datatype
+    integer(c_Request), intent(out) :: request
+    integer(c_int) :: ierror
+end function MPIR_File_iwrite_all_cdesc
+
+function MPIR_File_iread_at_all_cdesc(fh, offset, buf, count, datatype, request) &
+    bind(C, name="MPIR_File_iread_at_all_cdesc") result(ierror)
+    use, intrinsic :: iso_c_binding, only : c_int
+    use :: mpi_f08_compile_constants, only : MPI_OFFSET_KIND
+    use :: mpi_c_interface_types, only : c_File, c_Datatype, c_Request
+    implicit none
+    integer(c_File), value, intent(in) :: fh
+    integer(MPI_OFFSET_KIND), value, intent(in) :: offset
+    type(*), dimension(..) :: buf
+    integer(c_int), value, intent(in) :: count
+    integer(c_Datatype), value, intent(in) :: datatype
+    integer(c_Request), intent(out) :: request
+    integer(c_int) :: ierror
+end function MPIR_File_iread_at_all_cdesc
+
+function MPIR_File_iwrite_at_all_cdesc(fh, offset, buf, count, datatype, request) &
+    bind(C, name="MPIR_File_iwrite_at_all_cdesc") result(ierror)
+    use, intrinsic :: iso_c_binding, only : c_int
+    use :: mpi_f08_compile_constants, only : MPI_OFFSET_KIND
+    use :: mpi_c_interface_types, only : c_File, c_Datatype, c_Request
+    implicit none
+    integer(c_File), value, intent(in) :: fh
+    integer(MPI_OFFSET_KIND), value, intent(in) :: offset
+    type(*), dimension(..) :: buf
+    integer(c_int), value, intent(in) :: count
+    integer(c_Datatype), value, intent(in) :: datatype
+    integer(c_Request), intent(out) :: request
+    integer(c_int) :: ierror
+end function MPIR_File_iwrite_at_all_cdesc
+
 end interface
 
 end module mpi_c_interface_cdesc

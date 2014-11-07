@@ -4121,4 +4121,60 @@ interface MPIX_Aint_diff
     end function MPIX_Aint_diff_f08
 end interface MPIX_Aint_diff
 
+interface MPIX_File_iread_all
+    subroutine MPIX_File_iread_all_f08ts(fh, buf, count, datatype, request, ierror)
+        use :: mpi_f08_types, only : MPI_File, MPI_Datatype, MPI_Request
+        implicit none
+        type(MPI_File), intent(in) :: fh
+        type(*), dimension(..) :: buf
+        integer, intent(in) :: count
+        type(MPI_Datatype), intent(in) :: datatype
+        type(MPI_Request), intent(out) :: request
+        integer, optional, intent(out) :: ierror
+    end subroutine MPIX_File_iread_all_f08ts
+end interface MPIX_File_iread_all
+
+interface MPIX_File_iwrite_all
+    subroutine MPIX_File_iwrite_all_f08ts(fh, buf, count, datatype, request, ierror)
+        use :: mpi_f08_types, only : MPI_File, MPI_Datatype, MPI_Request
+        implicit none
+        type(MPI_File), intent(in) :: fh
+        type(*), dimension(..), intent(in) :: buf
+        integer, intent(in) :: count
+        type(MPI_Datatype), intent(in) :: datatype
+        type(MPI_Request), intent(out) :: request
+        integer, optional, intent(out) :: ierror
+    end subroutine MPIX_File_iwrite_all_f08ts
+end interface MPIX_File_iwrite_all
+
+interface MPIX_File_iread_at_all
+    subroutine MPIX_File_iread_at_all_f08ts(fh, offset, buf, count, datatype, request, ierror)
+        use :: mpi_f08_types, only : MPI_File, MPI_Datatype, MPI_Request
+        use :: mpi_f08_compile_constants, only : MPI_OFFSET_KIND
+        implicit none
+        type(MPI_File), intent(in) :: fh
+        integer(MPI_OFFSET_KIND), intent(in) :: offset
+        type(*), dimension(..) :: buf
+        integer, intent(in) :: count
+        type(MPI_Datatype), intent(in) :: datatype
+        type(MPI_Request), intent(out) :: request
+        integer, optional, intent(out) :: ierror
+    end subroutine MPIX_File_iread_at_all_f08ts
+end interface MPIX_File_iread_at_all
+
+interface MPIX_File_iwrite_at_all
+    subroutine MPIX_File_iwrite_at_all_f08ts(fh, offset, buf, count, datatype, request, ierror)
+        use :: mpi_f08_types, only : MPI_File, MPI_Datatype, MPI_Request
+        use :: mpi_f08_compile_constants, only : MPI_OFFSET_KIND
+        implicit none
+        type(MPI_File), intent(in) :: fh
+        integer(MPI_OFFSET_KIND), intent(in) :: offset
+        type(*), dimension(..) :: buf
+        integer, intent(in) :: count
+        type(MPI_Datatype), intent(in) :: datatype
+        type(MPI_Request), intent(out) :: request
+        integer, optional, intent(out) :: ierror
+    end subroutine MPIX_File_iwrite_at_all_f08ts
+end interface MPIX_File_iwrite_at_all
+
 end module mpi_f08
