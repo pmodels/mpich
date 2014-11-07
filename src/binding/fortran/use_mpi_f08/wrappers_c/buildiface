@@ -411,6 +411,9 @@ while (<FD>) {
         }
     }
 
+    # Skip lines starting with # such as #ifdef or #endif
+    if (/^\s*#/) { next; }
+
     # If we found a semi-colon at the end, that's the end of the line.
     # This is not perfect (e.g., does not work when a single line has
     # multiple semi-colon separated statements), but should be good
