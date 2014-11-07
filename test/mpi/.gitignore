@@ -264,6 +264,7 @@
 /f77/io/ioaint.h
 /f77/pt2pt/attr1aints.h
 /f77/rma/addsize.h
+/f77/rma/testlist
 /f77/spawn/type1aint.h
 /f77/spawn/connaccf
 /f77/spawn/namepubf
@@ -361,6 +362,7 @@
 /f90/pt2pt/statusesf90
 /f90/rma/Makefile.sm
 /f90/rma/testlist
+/f90/rma/testlist.in
 /f90/rma/winaccf90.f90
 /f90/rma/winerrf90.f90
 /f90/rma/winfencef90.f90
@@ -377,6 +379,7 @@
 /f90/rma/winnamef90
 /f90/rma/winscale1f90
 /f90/rma/winscale2f90
+/f90/rma/aintf90.f90
 /f90/rma/c2f2cwinf90.f90
 /f90/rma/c2f902cwin.c
 /f90/spawn/Makefile.sm
@@ -438,6 +441,7 @@
 /f08/datatype/trf08
 /f08/datatype/get_elem_d
 /f08/datatype/get_elem_u
+/f08/rma/testlist
 /group/errstring
 /group/grouptest
 /group/groupcreate

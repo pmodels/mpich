@@ -1648,6 +1648,9 @@ AC_OUTPUT(maint/testmerge \
           errors/f77/testlist \
           errors/f90/testlist \
           impls/testlist \
+          f77/rma/testlist \
+          f90/rma/testlist \
+          f08/rma/testlist \
           impls/Makefile \
 	  impls/hydra/Makefile \
 	  impls/hydra/proc_binding.sh \
