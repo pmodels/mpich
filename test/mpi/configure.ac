@@ -464,6 +464,18 @@ if test "$FROM_MPICH" = "yes" -a "$enable_strictmpi" = "no" ; then
 fi
 AC_SUBST(MPI_HAS_MPIX)
 
+# Prepend @mpix@ to lines of tests in testlist.in which are MPIX tests so that
+# we can skip running these tests when we do strict MPI test.
+mpix="#"
+if test "$enable_strictmpi" = "no"; then
+    mpix=""
+fi
+AC_SUBST(mpix)
+
+# Use the conditional variable BUILD_MPIX_TESTS to conditionally add MPIX tests
+# to noninst_PROGRAMS to skip building the tests when we do strict MPI test
+AM_CONDITIONAL([BUILD_MPIX_TESTS], [test "$enable_strictmpi" = "no"])
+
 # preserve these values across a reconfigure
 AC_ARG_VAR([WRAPPER_CFLAGS],[])
 AC_ARG_VAR([WRAPPER_CPPFLAGS],[])
