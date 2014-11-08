@@ -38,7 +38,7 @@ void MTestGetDbgInfo(int *dbgflag, int *verbose);
 typedef struct _MTestDatatype {
     MPI_Datatype datatype;
     void *buf;              /* buffer to use in communication */
-    int  count;             /* count to use for this datatype */
+    MPI_Aint  count;        /* count to use for this datatype */
     int  isBasic;           /* true if the type is predefined */
     int  printErrors;       /* true if errors should be printed
 			       (used by the CheckBuf routines) */
@@ -72,7 +72,7 @@ void MTestInitFullDatatypes();
 void MTestInitMinDatatypes();
 
 int MTestCheckRecv( MPI_Status *, MTestDatatype * );
-int MTestGetDatatypes( MTestDatatype *, MTestDatatype *, int );
+int MTestGetDatatypes( MTestDatatype *, MTestDatatype *, MPI_Aint );
 void MTestResetDatatypes( void );
 void MTestFreeDatatype( MTestDatatype * );
 const char *MTestGetDatatypeName( MTestDatatype * );

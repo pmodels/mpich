@@ -178,12 +178,12 @@ void MTestInitMinDatatypes()
 /* Routine to define various sets of blocklen/count/stride for derived datatypes. */
 /* ------------------------------------------------------------------------------ */
 
-static inline int MTestDdtStructDefine(int ddt_index, int tot_count, int *count,
-                                       int *blen, int *stride, int *align_tot_count)
+static inline int MTestDdtStructDefine(int ddt_index, MPI_Aint tot_count, MPI_Aint *count,
+                                       MPI_Aint *blen, MPI_Aint *stride, MPI_Aint *align_tot_count)
 {
     int merr = 0;
     int ddt_c_st;
-    int _short = 0, _align_tot_count = 0, _count = 0, _blen = 0, _stride = 0;
+    MPI_Aint _short = 0, _align_tot_count = 0, _count = 0, _blen = 0, _stride = 0;
     ddt_c_st = ddt_index % MTEST_DDT_NUM_SUBTESTS;
 
     /* Get short value according to user specified tot_count.
@@ -244,7 +244,7 @@ static inline int MTestDdtStructDefine(int ddt_index, int tot_count, int *count,
 /* ------------------------------------------------------------------------ */
 
 static inline int MTestGetBasicDatatypes(MTestDatatype * sendtype,
-                                         MTestDatatype * recvtype, int tot_count)
+                                         MTestDatatype * recvtype, MPI_Aint tot_count)
 {
     int merr = 0;
     int bdt_index = datatype_index - MTEST_BDT_START_IDX;
@@ -303,11 +303,12 @@ static inline int MTestGetBasicDatatypes(MTestDatatype * sendtype,
 /* ------------------------------------------------------------------------ */
 
 static inline int MTestGetSendDerivedDatatypes(MTestDatatype * sendtype,
-                                               MTestDatatype * recvtype, int tot_count)
+                                               MTestDatatype * recvtype, MPI_Aint tot_count)
 {
     int merr = 0;
     int ddt_datatype_index, ddt_c_dt;
-    int blen, stride, count, align_tot_count, tsize = 1;
+    MPI_Count tsize = 1;
+    MPI_Aint blen, stride, count, align_tot_count;;
     MPI_Datatype old_type = MPI_DOUBLE;
 
     /* Check index */
@@ -336,7 +337,7 @@ static inline int MTestGetSendDerivedDatatypes(MTestDatatype * sendtype,
         return merr;
 
     sendtype->count = 1;
-    merr = MPI_Type_size(sendtype->datatype, &tsize);
+    merr = MPI_Type_size_x(sendtype->datatype, &tsize);
     if (merr)
         MTestPrintError(merr);
 
@@ -351,11 +352,12 @@ static inline int MTestGetSendDerivedDatatypes(MTestDatatype * sendtype,
 }
 
 static inline int MTestGetRecvDerivedDatatypes(MTestDatatype * sendtype,
-                                               MTestDatatype * recvtype, int tot_count)
+                                               MTestDatatype * recvtype, MPI_Aint tot_count)
 {
     int merr = 0;
     int ddt_datatype_index, ddt_c_dt;
-    int blen, stride, count, align_tot_count, tsize;
+    MPI_Count tsize;
+    MPI_Aint blen, stride, count, align_tot_count;
     MPI_Datatype old_type = MPI_DOUBLE;
 
     /* Check index */
@@ -383,7 +385,7 @@ static inline int MTestGetRecvDerivedDatatypes(MTestDatatype * sendtype,
         return merr;
 
     recvtype->count = 1;
-    merr = MPI_Type_size(recvtype->datatype, &tsize);
+    merr = MPI_Type_size_x(recvtype->datatype, &tsize);
     if (merr)
         MTestPrintError(merr);
 
@@ -400,7 +402,7 @@ static inline int MTestGetRecvDerivedDatatypes(MTestDatatype * sendtype,
 /* ------------------------------------------------------------------------ */
 /* Exposed routine to external tests                                         */
 /* ------------------------------------------------------------------------ */
-int MTestGetDatatypes(MTestDatatype * sendtype, MTestDatatype * recvtype, int tot_count)
+int MTestGetDatatypes(MTestDatatype * sendtype, MTestDatatype * recvtype, MPI_Aint tot_count)
 {
     int merr = 0;
 
@@ -448,11 +450,11 @@ int MTestGetDatatypes(MTestDatatype * sendtype, MTestDatatype * recvtype, int to
     datatype_index++;
 
     if (verbose >= 2 && datatype_index > 0) {
-        int ssize, rsize;
+        MPI_Count ssize, rsize;
         const char *sendtype_nm = MTestGetDatatypeName(sendtype);
         const char *recvtype_nm = MTestGetDatatypeName(recvtype);
-        MPI_Type_size(sendtype->datatype, &ssize);
-        MPI_Type_size(recvtype->datatype, &rsize);
+        MPI_Type_size_x(sendtype->datatype, &ssize);
+        MPI_Type_size_x(recvtype->datatype, &rsize);
 
         MTestPrintfMsg(2, "Get datatypes: send = %s(size %d count %d basesize %d), "
                        "recv = %s(size %d count %d basesize %d), tot_count=%d\n",

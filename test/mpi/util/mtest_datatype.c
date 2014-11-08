@@ -82,7 +82,7 @@ static void *MTestTypeContigInit(MTestDatatype * mtype)
 
     if (mtype->count > 0) {
         unsigned char *p;
-        int i, totsize;
+        MPI_Aint i, totsize;
         merr = MPI_Type_extent(mtype->datatype, &size);
         if (merr)
             MTestPrintError(merr);
@@ -116,8 +116,8 @@ static int MTestTypeContigCheckbuf(MTestDatatype * mtype)
 {
     unsigned char *p;
     unsigned char expected;
-    int i, totsize, err = 0, merr;
-    MPI_Aint size;
+    int err = 0, merr;
+    MPI_Aint i, totsize, size;
 
     p = (unsigned char *) mtype->buf;
     if (p) {
@@ -130,7 +130,7 @@ static int MTestTypeContigCheckbuf(MTestDatatype * mtype)
             if (p[i] != expected) {
                 err++;
                 if (mtype->printErrors && err < 10) {
-                    printf("Data expected = %x but got p[%d] = %x\n", expected, i, p[i]);
+                    printf("Data expected = %x but got p[%ld] = %x\n", expected, i, p[i]);
                     fflush(stdout);
                 }
             }
@@ -154,7 +154,8 @@ static void *MTestTypeVectorInit(MTestDatatype * mtype)
 
     if (mtype->count > 0) {
         unsigned char *p;
-        int i, j, k, nc;
+        int j, k, nc;
+        MPI_Aint i;
 
         merr = MPI_Type_extent(mtype->datatype, &size);
         if (merr)
@@ -257,7 +258,8 @@ static void *MTestTypeIndexedInit(MTestDatatype * mtype)
 
     if (mtype->count > 0) {
         unsigned char *p;
-        int i, j, k, b, nc;
+        int j, k, b, nc;
+        MPI_Aint i;
 
         /* Allocate buffer */
         merr = MPI_Type_extent(mtype->datatype, &size);
@@ -371,7 +373,8 @@ static void *MTestTypeIndexedBlockInit(MTestDatatype * mtype)
 
     if (mtype->count > 0) {
         unsigned char *p;
-        int i, k, j, nc;
+        int k, j, nc;
+        MPI_Aint i;
 
         /* Allocate the send/recv buffer */
         merr = MPI_Type_extent(mtype->datatype, &size);
@@ -477,7 +480,8 @@ static void *MTestTypeSubarrayInit(MTestDatatype * mtype)
 
     if (mtype->count > 0) {
         unsigned char *p;
-        int i, k, j, b, nc;
+        int k, j, b, nc;
+        MPI_Aint i;
 
         /* Allocate the send/recv buffer */
         merr = MPI_Type_extent(mtype->datatype, &size);
@@ -1240,7 +1244,7 @@ void *MTestTypeInitRecv(MTestDatatype * mtype)
 
     if (mtype->count > 0) {
         signed char *p;
-        int i, totsize;
+        MPI_Aint i, totsize;
         merr = MPI_Type_extent(mtype->datatype, &size);
         if (merr)
             MTestPrintError(merr);
