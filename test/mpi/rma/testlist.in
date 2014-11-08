@@ -2,7 +2,7 @@ winname 2
 allocmem 2
 putfence1 4
 putfidx 4
-getfence1 4
+getfence1 4 timeLimit=400
 accfence1 4
 adlb_mimic1 3
 accfence2 4
