@@ -24,8 +24,8 @@ int MPIR_Barrier_group( MPID_Comm *comm_ptr, MPID_Group *group_ptr, int tag, mpi
     mpi_errno = MPIR_Allreduce_group(&src, &dst, 1, MPI_INT, MPI_BAND, 
                                       comm_ptr, group_ptr, tag, errflag);
 
-    if (mpi_errno != MPI_SUCCESS)
-      *errflag = TRUE;
+    if (mpi_errno != MPI_SUCCESS || *errflag != MPIR_ERR_NONE)
+        *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
 
  fn_exit:
     return mpi_errno;

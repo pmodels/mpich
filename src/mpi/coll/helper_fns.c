@@ -272,7 +272,7 @@ int MPIC_Send(const void *buf, int count, MPI_Datatype datatype, int dest, int t
             break;
         case MPIR_ERR_PROC_FAILED:
             MPIR_TAG_SET_PROC_FAILURE_BIT(tag);
-        case MPIR_ERR_OTHER:
+        default:
             MPIR_TAG_SET_ERROR_BIT(tag);
     }
 
@@ -391,8 +391,14 @@ int MPIC_Ssend(const void *buf, int count, MPI_Datatype datatype, int dest, int 
     context_id = (comm_ptr->comm_kind == MPID_INTRACOMM) ?
         MPID_CONTEXT_INTRA_COLL : MPID_CONTEXT_INTER_COLL;
 
-    if (*errflag)
-        MPIR_TAG_SET_ERROR_BIT(tag);
+    switch(*errflag) {
+        case MPIR_ERR_NONE:
+            break;
+        case MPIR_ERR_PROC_FAILED:
+            MPIR_TAG_SET_PROC_FAILURE_BIT(tag);
+        default:
+            MPIR_TAG_SET_ERROR_BIT(tag);
+    }
 
     mpi_errno = MPID_Ssend(buf, count, datatype, dest, tag, comm_ptr,
                            context_id, &request_ptr);
@@ -448,7 +454,7 @@ int MPIC_Sendrecv(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
             break;
         case MPIR_ERR_PROC_FAILED:
             MPIR_TAG_SET_PROC_FAILURE_BIT(sendtag);
-        case MPIR_ERR_OTHER:
+        default:
             MPIR_TAG_SET_ERROR_BIT(sendtag);
     }
 
@@ -537,7 +543,7 @@ int MPIC_Sendrecv_replace(void *buf, int count, MPI_Datatype datatype,
             break;
         case MPIR_ERR_PROC_FAILED:
             MPIR_TAG_SET_PROC_FAILURE_BIT(sendtag);
-        case MPIR_ERR_OTHER:
+        default:
             MPIR_TAG_SET_ERROR_BIT(sendtag);
     }
 
@@ -650,7 +656,7 @@ int MPIC_Isend(const void *buf, int count, MPI_Datatype datatype, int dest, int 
             break;
         case MPIR_ERR_PROC_FAILED:
             MPIR_TAG_SET_PROC_FAILURE_BIT(tag);
-        case MPIR_ERR_OTHER:
+        default:
             MPIR_TAG_SET_ERROR_BIT(tag);
     }
 
