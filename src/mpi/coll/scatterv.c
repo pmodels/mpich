@@ -55,7 +55,7 @@ int MPI_Scatterv(const void *sendbuf, const int *sendcounts, const int *displs,
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIR_Scatterv(const void *sendbuf, const int *sendcounts, const int *displs,
                   MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype,
-                  int root, MPID_Comm *comm_ptr, int *errflag)
+                  int root, MPID_Comm *comm_ptr, mpir_errflag_t *errflag)
 {
     int rank, comm_size, mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
@@ -168,7 +168,7 @@ fn_fail:
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIR_Scatterv_impl(const void *sendbuf, const int *sendcounts, const int *displs,
                        MPI_Datatype sendtype, void *recvbuf, int recvcount, MPI_Datatype recvtype,
-                       int root, MPID_Comm *comm_ptr, int *errflag)
+                       int root, MPID_Comm *comm_ptr, mpir_errflag_t *errflag)
 {
     int mpi_errno = MPI_SUCCESS;
         
@@ -236,7 +236,7 @@ int MPI_Scatterv(const void *sendbuf, const int *sendcounts, const int *displs,
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_Comm *comm_ptr = NULL;
-    int errflag = FALSE;
+    mpir_errflag_t errflag = MPIR_ERR_NONE;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_SCATTERV);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();

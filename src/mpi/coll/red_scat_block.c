@@ -53,7 +53,7 @@ static int MPIR_Reduce_scatter_block_noncomm (
     MPI_Datatype datatype,
     MPI_Op op,
     MPID_Comm *comm_ptr,
-    int *errflag )
+    mpir_errflag_t *errflag )
 {
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
@@ -241,7 +241,7 @@ int MPIR_Reduce_scatter_block_intra (
     MPI_Datatype datatype, 
     MPI_Op op, 
     MPID_Comm *comm_ptr,
-    int *errflag )
+    mpir_errflag_t *errflag )
 {
     int   rank, comm_size, i;
     MPI_Aint extent, true_extent, true_lb; 
@@ -874,7 +874,7 @@ int MPIR_Reduce_scatter_block_inter (
     int recvcount, 
     MPI_Datatype datatype, 
     MPI_Op op, 
-    MPID_Comm *comm_ptr, int *errflag )
+    MPID_Comm *comm_ptr, mpir_errflag_t *errflag )
 {
 /* Intercommunicator Reduce_scatter_block.
    We first do an intercommunicator reduce to rank 0 on left group,
@@ -995,7 +995,7 @@ int MPIR_Reduce_scatter_block_inter (
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIR_Reduce_scatter_block(const void *sendbuf, void *recvbuf, 
                               int recvcount, MPI_Datatype datatype,
-                              MPI_Op op, MPID_Comm *comm_ptr, int *errflag)
+                              MPI_Op op, MPID_Comm *comm_ptr, mpir_errflag_t *errflag)
 {
     int mpi_errno = MPI_SUCCESS;
         
@@ -1026,7 +1026,7 @@ int MPIR_Reduce_scatter_block(const void *sendbuf, void *recvbuf,
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIR_Reduce_scatter_block_impl(const void *sendbuf, void *recvbuf, 
                                    int recvcount, MPI_Datatype datatype,
-                                   MPI_Op op, MPID_Comm *comm_ptr, int *errflag)
+                                   MPI_Op op, MPID_Comm *comm_ptr, mpir_errflag_t *errflag)
 {
     int mpi_errno = MPI_SUCCESS;
         
@@ -1095,7 +1095,7 @@ int MPI_Reduce_scatter_block(const void *sendbuf, void *recvbuf,
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_Comm *comm_ptr = NULL;
-    int errflag = FALSE;
+    mpir_errflag_t errflag = MPIR_ERR_NONE;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_REDUCE_SCATTER_BLOCK);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();

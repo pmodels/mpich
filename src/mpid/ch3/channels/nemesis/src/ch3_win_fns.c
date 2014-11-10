@@ -60,7 +60,7 @@ static int MPIDI_CH3I_SHM_Wins_match(MPID_Win ** win_ptr, MPID_Win ** matched_wi
     MPID_Comm *node_comm_ptr = NULL, *shm_node_comm_ptr = NULL;
     int *node_ranks = NULL, *node_ranks_in_shm_node = NULL;
     MPID_Group *node_group_ptr = NULL, *shm_node_group_ptr = NULL;
-    int errflag = FALSE;
+    mpir_errflag_t errflag = MPIR_ERR_NONE;
     MPI_Aint *base_shm_offs;
 
     MPIDI_SHM_Win_t *elem = shm_wins_list;
@@ -266,7 +266,7 @@ static int MPIDI_CH3I_Win_allocate_shm(MPI_Aint size, int disp_unit, MPID_Info *
     MPI_Aint *node_sizes;
     void **node_shm_base_addrs;
     MPI_Aint *tmp_buf;
-    int errflag = FALSE;
+    mpir_errflag_t errflag = MPIR_ERR_NONE;
     int noncontig = FALSE;
     MPIU_CHKPMEM_DECL(6);
     MPIU_CHKLMEM_DECL(3);

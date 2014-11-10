@@ -34,7 +34,7 @@ int MPIR_Comm_agree(MPID_Comm *comm_ptr, int *flag)
     int mpi_errno = MPI_SUCCESS, mpi_errno_tmp = MPI_SUCCESS;
     MPID_Group *comm_grp, *failed_grp, *new_group_ptr, *global_failed;
     int result, success = 1;
-    int errflag = 0;
+    mpir_errflag_t errflag = MPIR_ERR_NONE;
     int values[2];
 
     MPID_MPI_STATE_DECL(MPID_STATE_MPIR_COMM_AGREE);

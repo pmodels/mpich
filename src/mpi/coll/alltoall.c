@@ -135,7 +135,7 @@ int MPIR_Alltoall_intra(
     int recvcount, 
     MPI_Datatype recvtype, 
     MPID_Comm *comm_ptr,
-    int *errflag )
+    mpir_errflag_t *errflag )
 {
     int          comm_size, i, j, pof2;
     MPI_Aint     sendtype_extent, recvtype_extent;
@@ -629,7 +629,7 @@ int MPIR_Alltoall_inter(
     int recvcount, 
     MPI_Datatype recvtype, 
     MPID_Comm *comm_ptr,
-    int *errflag )
+    mpir_errflag_t *errflag )
 {
 /* Intercommunicator alltoall. We use a pairwise exchange algorithm
    similar to the one used in intracommunicator alltoall for long
@@ -717,7 +717,7 @@ int MPIR_Alltoall_inter(
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIR_Alltoall(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                   void *recvbuf, int recvcount, MPI_Datatype recvtype,
-                  MPID_Comm *comm_ptr, int *errflag)
+                  MPID_Comm *comm_ptr, mpir_errflag_t *errflag)
 {
     int mpi_errno = MPI_SUCCESS;
         
@@ -747,7 +747,7 @@ int MPIR_Alltoall(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIR_Alltoall_impl(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                        void *recvbuf, int recvcount, MPI_Datatype recvtype,
-                       MPID_Comm *comm_ptr, int *errflag)
+                       MPID_Comm *comm_ptr, mpir_errflag_t *errflag)
 {
     int mpi_errno = MPI_SUCCESS;
     if (comm_ptr->coll_fns != NULL && comm_ptr->coll_fns->Alltoall != NULL) {
@@ -807,7 +807,7 @@ int MPI_Alltoall(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_Comm *comm_ptr = NULL;
-    int errflag = FALSE;
+    mpir_errflag_t errflag = MPIR_ERR_NONE;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_ALLTOALL);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();

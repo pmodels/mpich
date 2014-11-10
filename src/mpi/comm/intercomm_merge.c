@@ -91,7 +91,7 @@ int MPIR_Intercomm_merge_impl(MPID_Comm *comm_ptr, int high, MPID_Comm **new_int
     int mpi_errno = MPI_SUCCESS;
     int  local_high, remote_high, new_size;
     MPIR_Context_id_t new_context_id;
-    int errflag = FALSE;
+    mpir_errflag_t errflag = MPIR_ERR_NONE;
     MPID_MPI_STATE_DECL(MPID_STATE_MPIR_INTERCOMM_MERGE_IMPL);
 
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPIR_INTERCOMM_MERGE_IMPL);
@@ -326,7 +326,7 @@ int MPI_Intercomm_merge(MPI_Comm intercomm, int high, MPI_Comm *newintracomm)
         MPID_BEGIN_ERROR_CHECKS;
         {
 	    int acthigh;
-            int errflag = FALSE;
+            mpir_errflag_t errflag = MPIR_ERR_NONE;
 	    /* Check for consistent valus of high in each local group.
                The Intel test suite checks for this; it is also an easy
                error to make */

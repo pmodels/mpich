@@ -50,7 +50,7 @@ int MPIR_Comm_shrink(MPID_Comm *comm_ptr, MPID_Comm **newcomm_ptr)
     int mpi_errno = MPI_SUCCESS;
     MPID_Group *global_failed, *comm_grp, *new_group_ptr;
     int attempts = 0;
-    int errflag = 0, tmp_errflag = 0;
+    mpir_errflag_t errflag = MPIR_ERR_NONE, tmp_errflag = MPIR_ERR_NONE;
 
     MPID_MPI_STATE_DECL(MPID_STATE_MPIR_COMM_SHRINK);
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPIR_COMM_SHRINK);

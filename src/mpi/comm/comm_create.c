@@ -320,7 +320,7 @@ PMPI_LOCAL int MPIR_Comm_create_inter(MPID_Comm *comm_ptr, MPID_Group *group_ptr
     int rinfo[2];
     MPID_VCR *mapping_vcr = NULL;
     MPID_VCR *remote_mapping_vcr = NULL;
-    int errflag = FALSE;
+    mpir_errflag_t errflag = MPIR_ERR_NONE;
     MPIU_CHKLMEM_DECL(1);
     MPID_MPI_STATE_DECL(MPID_STATE_MPIR_COMM_CREATE_INTER);
 

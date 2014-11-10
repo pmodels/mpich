@@ -290,7 +290,7 @@ int MPIDI_Win_fence(int assert, MPID_Win * win_ptr)
     int i, made_progress = 0;
     int local_completed = 0, remote_completed = 0;
     MPIDI_RMA_Target_t *curr_target = NULL;
-    int errflag = FALSE;
+    mpir_errflag_t errflag = MPIR_ERR_NONE;
     int mpi_errno = MPI_SUCCESS;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_WIN_FENCE);
 

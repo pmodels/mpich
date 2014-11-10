@@ -56,12 +56,12 @@ static void get_children(int rank, int size, uint32_t *bitarray, int *children, 
 #define FUNCNAME MPID_Comm_agree
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPID_Comm_agree(MPID_Comm *comm_ptr, uint32_t *bitarray, int *flag, int new_fail)
+int MPID_Comm_agree(MPID_Comm *comm_ptr, uint32_t *bitarray, int *flag, mpir_errflag_t new_fail)
 {
     int mpi_errno = MPI_SUCCESS;
     int *children, nchildren = 0, parent;
     int i;
-    int errflag = new_fail;
+    mpir_errflag_t errflag = new_fail;
     int tmp_flag;
 
     MPIDI_STATE_DECL(MPID_STATE_MPID_COMM_AGREE);

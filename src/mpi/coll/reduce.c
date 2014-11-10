@@ -84,7 +84,7 @@ static int MPIR_Reduce_binomial (
     MPI_Op op,
     int root,
     MPID_Comm *comm_ptr,
-    int *errflag )
+    mpir_errflag_t *errflag )
 {
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
@@ -292,7 +292,7 @@ static int MPIR_Reduce_redscat_gather (
     MPI_Op op,
     int root,
     MPID_Comm *comm_ptr,
-    int *errflag )
+    mpir_errflag_t *errflag )
 {
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
@@ -723,7 +723,7 @@ int MPIR_Reduce_intra (
     MPI_Op op,
     int root,
     MPID_Comm *comm_ptr,
-    int *errflag )
+    mpir_errflag_t *errflag )
 {
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
@@ -914,7 +914,7 @@ int MPIR_Reduce_inter (
     MPI_Op op,
     int root,
     MPID_Comm *comm_ptr,
-    int *errflag )
+    mpir_errflag_t *errflag )
 {
 /*  Intercommunicator reduce.
     Remote group does a local intracommunicator
@@ -1026,7 +1026,7 @@ int MPIR_Reduce_inter (
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIR_Reduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
-                MPI_Op op, int root, MPID_Comm *comm_ptr, int *errflag)
+                MPI_Op op, int root, MPID_Comm *comm_ptr, mpir_errflag_t *errflag)
 {
     int mpi_errno = MPI_SUCCESS;
         
@@ -1057,7 +1057,7 @@ int MPIR_Reduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype data
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIR_Reduce_impl(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
-                     MPI_Op op, int root, MPID_Comm *comm_ptr, int *errflag)
+                     MPI_Op op, int root, MPID_Comm *comm_ptr, mpir_errflag_t *errflag)
 {
     int mpi_errno = MPI_SUCCESS;
         
@@ -1132,7 +1132,7 @@ int MPI_Reduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datat
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_Comm *comm_ptr = NULL;
-    int errflag = FALSE;
+    mpir_errflag_t errflag = MPIR_ERR_NONE;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_REDUCE);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();

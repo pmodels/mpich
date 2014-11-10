@@ -766,7 +766,7 @@ MPID_Request * MPIDI_CH3U_Recvq_FDP_or_AEU(MPIDI_Message_match * match,
     MPID_Request * rreq;
     MPID_Request * prev_rreq;
     int channel_matched;
-    int error_bit_masked = 0;
+    int error_bit_masked = 0, proc_failure_bit_masked = 0;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3U_RECVQ_FDP_OR_AEU);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3U_RECVQ_FDP_OR_AEU);
@@ -777,8 +777,9 @@ MPID_Request * MPIDI_CH3U_Recvq_FDP_or_AEU(MPIDI_Message_match * match,
      * have to mask it every time. It will get reset at the end of the loop or
      * before the request is added to the unexpected queue if was set here. */
     if (MPIR_TAG_CHECK_ERROR_BIT(match->parts.tag)) {
-        MPIR_TAG_CLEAR_ERROR_BITS(match->parts.tag);
         error_bit_masked = 1;
+        if (MPIR_TAG_CHECK_PROC_FAILURE_BIT(match->parts.tag)) proc_failure_bit_masked = 1;
+        MPIR_TAG_CLEAR_ERROR_BITS(match->parts.tag);
     }
 
  top_loop:
@@ -843,9 +844,9 @@ MPID_Request * MPIDI_CH3U_Recvq_FDP_or_AEU(MPIDI_Message_match * match,
 				   found=FALSE;goto lock_exit );
         MPIU_Assert(mpi_errno == 0);
         rreq->dev.recv_pending_count = 1;
-        /* Reset the error bit if we unset it earlier. */
-        if (error_bit_masked)
-            MPIR_TAG_SET_ERROR_BIT(match->parts.tag);
+        /* Reset the error bits if we unset it earlier. */
+        if (error_bit_masked) MPIR_TAG_SET_ERROR_BIT(match->parts.tag);
+        if (proc_failure_bit_masked) MPIR_TAG_SET_PROC_FAILURE_BIT(match->parts.tag);
 	rreq->dev.match	= *match;
 	rreq->dev.next	= NULL;
 	if (recvq_unexpected_tail != NULL) {
@@ -862,9 +863,9 @@ MPID_Request * MPIDI_CH3U_Recvq_FDP_or_AEU(MPIDI_Message_match * match,
 
   lock_exit:
 
-    /* Reset the error bit if we unset it earlier. */
-    if (error_bit_masked)
-        MPIR_TAG_SET_ERROR_BIT(match->parts.tag);
+    /* Reset the error bits if we unset it earlier. */
+    if (error_bit_masked) MPIR_TAG_SET_ERROR_BIT(match->parts.tag);
+    if (proc_failure_bit_masked) MPIR_TAG_SET_PROC_FAILURE_BIT(match->parts.tag);
 
     *foundp = found;
 

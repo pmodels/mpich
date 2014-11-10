@@ -1011,7 +1011,7 @@ int MPID_PG_ForwardPGInfo( MPID_Comm *peer_ptr, MPID_Comm *comm_ptr,
     int i, allfound = 1, pgid, pgidWorld;
     MPIDI_PG_t *pg = 0;
     MPIDI_PG_iterator iter;
-    int errflag = FALSE;
+    mpir_errflag_t errflag = MPIR_ERR_NONE;
 
     if(mpidi_dynamic_tasking) {
     /* Get the pgid for CommWorld (always attached to the first process

@@ -252,7 +252,7 @@ int MPIC_Wait(MPID_Request * request_ptr)
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIC_Send(const void *buf, int count, MPI_Datatype datatype, int dest, int tag,
-                 MPI_Comm comm, int *errflag)
+                 MPI_Comm comm, mpir_errflag_t *errflag)
 {
     int mpi_errno = MPI_SUCCESS;
     int context_id;
@@ -262,13 +262,19 @@ int MPIC_Send(const void *buf, int count, MPI_Datatype datatype, int dest, int t
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIC_SEND);
 
-    MPIU_DBG_MSG_S(PT2PT, TYPICAL, "IN: errflag = %s", *errflag?"TRUE":"FALSE");
+    MPIU_DBG_MSG_D(PT2PT, TYPICAL, "IN: errflag = %d", *errflag);
 
     MPIU_ERR_CHKANDJUMP1((count < 0), mpi_errno, MPI_ERR_COUNT,
                          "**countneg", "**countneg %d", count);
 
-    if (*errflag)
-        MPIR_TAG_SET_ERROR_BIT(tag);
+    switch(*errflag) {
+        case MPIR_ERR_NONE:
+            break;
+        case MPIR_ERR_PROC_FAILED:
+            MPIR_TAG_SET_PROC_FAILURE_BIT(tag);
+        case MPIR_ERR_OTHER:
+            MPIR_TAG_SET_ERROR_BIT(tag);
+    }
 
     MPID_Comm_get_ptr(comm, comm_ptr);
     context_id = (comm_ptr->comm_kind == MPID_INTRACOMM) ?
@@ -298,7 +304,7 @@ int MPIC_Send(const void *buf, int count, MPI_Datatype datatype, int dest, int t
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIC_Recv(void *buf, int count, MPI_Datatype datatype, int source, int tag,
-                 MPI_Comm comm, MPI_Status *status, int *errflag)
+                 MPI_Comm comm, MPI_Status *status, mpir_errflag_t *errflag)
 {
     int mpi_errno = MPI_SUCCESS;
     int context_id;
@@ -309,7 +315,7 @@ int MPIC_Recv(void *buf, int count, MPI_Datatype datatype, int source, int tag,
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIC_RECV);
 
-    MPIU_DBG_MSG_S(PT2PT, TYPICAL, "IN: errflag = %s", *errflag?"TRUE":"FALSE");
+    MPIU_DBG_MSG_D(PT2PT, TYPICAL, "IN: errflag = %d", *errflag);
 
     MPIU_ERR_CHKANDJUMP1((count < 0), mpi_errno, MPI_ERR_COUNT,
                          "**countneg", "**countneg %d", count);
@@ -338,15 +344,20 @@ int MPIC_Recv(void *buf, int count, MPI_Datatype datatype, int source, int tag,
         if (MPIX_ERR_REVOKED == MPIR_ERR_GET_CLASS(status->MPI_ERROR) ||
             MPIX_ERR_PROC_FAILED == MPIR_ERR_GET_CLASS(status->MPI_ERROR) ||
             MPIR_TAG_CHECK_ERROR_BIT(status->MPI_TAG)) {
-            *errflag = TRUE;
-            MPIR_TAG_CLEAR_ERROR_BITS(status->MPI_TAG);
+            if (MPIR_TAG_CHECK_PROC_FAILURE_BIT(status->MPI_TAG)) {
+                *errflag = MPIR_ERR_PROC_FAILED;
+                MPIR_TAG_CLEAR_ERROR_BITS(status->MPI_TAG);
+            } else if (MPIR_TAG_CHECK_ERROR_BIT(status->MPI_TAG)) {
+                *errflag = MPIR_ERR_OTHER;
+                MPIR_TAG_CLEAR_ERROR_BITS(status->MPI_TAG);
+            }
         } else if (MPI_SUCCESS == MPIR_ERR_GET_CLASS(status->MPI_ERROR)) {
             MPIU_Assert(status->MPI_TAG == tag);
         }
     }
 
  fn_exit:
-    MPIU_DBG_MSG_S(PT2PT, TYPICAL, "OUT: errflag = %s", *errflag?"TRUE":"FALSE");
+    MPIU_DBG_MSG_D(PT2PT, TYPICAL, "OUT: errflag = %d", *errflag);
     MPIDI_FUNC_EXIT(MPID_STATE_MPIC_RECV);
     return mpi_errno;
  fn_fail:
@@ -361,7 +372,7 @@ int MPIC_Recv(void *buf, int count, MPI_Datatype datatype, int source, int tag,
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIC_Ssend(const void *buf, int count, MPI_Datatype datatype, int dest, int tag,
-                  MPI_Comm comm, int *errflag)
+                  MPI_Comm comm, mpir_errflag_t *errflag)
 {
     int mpi_errno = MPI_SUCCESS;
     int context_id;
@@ -371,7 +382,7 @@ int MPIC_Ssend(const void *buf, int count, MPI_Datatype datatype, int dest, int 
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIC_SSEND);
 
-    MPIU_DBG_MSG_S(PT2PT, TYPICAL, "IN: errflag = %s", *errflag?"TRUE":"FALSE");
+    MPIU_DBG_MSG_D(PT2PT, TYPICAL, "IN: errflag = %d", *errflag);
 
     MPIU_ERR_CHKANDJUMP1((count < 0), mpi_errno, MPI_ERR_COUNT,
             "**countneg", "**countneg %d", count);
@@ -409,7 +420,7 @@ int MPIC_Ssend(const void *buf, int count, MPI_Datatype datatype, int dest, int 
 int MPIC_Sendrecv(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                      int dest, int sendtag, void *recvbuf, int recvcount,
                      MPI_Datatype recvtype, int source, int recvtag,
-                     MPI_Comm comm, MPI_Status *status, int *errflag)
+                     MPI_Comm comm, MPI_Status *status, mpir_errflag_t *errflag)
 {
     int mpi_errno = MPI_SUCCESS;
     int context_id;
@@ -432,7 +443,14 @@ int MPIC_Sendrecv(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
         MPID_CONTEXT_INTRA_COLL : MPID_CONTEXT_INTER_COLL;
 
     if (status == MPI_STATUS_IGNORE) status = &mystatus;
-    if (*errflag) MPIR_TAG_SET_ERROR_BIT(sendtag);
+    switch(*errflag) {
+        case MPIR_ERR_NONE:
+            break;
+        case MPIR_ERR_PROC_FAILED:
+            MPIR_TAG_SET_PROC_FAILURE_BIT(sendtag);
+        case MPIR_ERR_OTHER:
+            MPIR_TAG_SET_ERROR_BIT(sendtag);
+    }
 
     mpi_errno = MPID_Irecv(recvbuf, recvcount, recvtype, source, recvtag,
                            comm_ptr, context_id, &recv_req_ptr);
@@ -456,15 +474,21 @@ int MPIC_Sendrecv(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
         if (MPIX_ERR_REVOKED == MPIR_ERR_GET_CLASS(status->MPI_ERROR) ||
             MPIX_ERR_PROC_FAILED == MPIR_ERR_GET_CLASS(status->MPI_ERROR) ||
             MPIR_TAG_CHECK_ERROR_BIT(status->MPI_TAG)) {
-            *errflag = TRUE;
-            MPIR_TAG_CLEAR_ERROR_BITS(status->MPI_TAG);
+            if (MPIR_TAG_CHECK_PROC_FAILURE_BIT(status->MPI_TAG)) {
+                *errflag = MPIR_ERR_PROC_FAILED;
+                MPIR_TAG_CLEAR_ERROR_BITS(status->MPI_TAG);
+            } else if (MPIR_TAG_CHECK_ERROR_BIT(status->MPI_TAG)) {
+                *errflag = MPIR_ERR_OTHER;
+                MPIR_TAG_CLEAR_ERROR_BITS(status->MPI_TAG);
+            }
         } else if (MPI_SUCCESS == MPIR_ERR_GET_CLASS(status->MPI_ERROR)) {
             MPIU_Assert(status->MPI_TAG == recvtag);
         }
     }
 
+
  fn_exit:
-    MPIU_DBG_MSG_S(PT2PT, TYPICAL, "OUT: errflag = %s", *errflag?"TRUE":"FALSE");
+    MPIU_DBG_MSG_D(PT2PT, TYPICAL, "OUT: errflag = %d", *errflag);
 
     MPIDI_FUNC_EXIT(MPID_STATE_MPIC_SENDRECV);
     return mpi_errno;
@@ -482,7 +506,7 @@ int MPIC_Sendrecv(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
 int MPIC_Sendrecv_replace(void *buf, int count, MPI_Datatype datatype,
                              int dest, int sendtag,
                              int source, int recvtag,
-                             MPI_Comm comm, MPI_Status *status, int *errflag)
+                             MPI_Comm comm, MPI_Status *status, mpir_errflag_t *errflag)
 {
     int mpi_errno = MPI_SUCCESS;
     MPI_Status mystatus;
@@ -502,13 +526,20 @@ int MPIC_Sendrecv_replace(void *buf, int count, MPI_Datatype datatype,
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIC_SENDRECV_REPLACE);
 
-    MPIU_DBG_MSG_S(PT2PT, TYPICAL, "IN: errflag = %s", *errflag?"TRUE":"FALSE");
+    MPIU_DBG_MSG_D(PT2PT, TYPICAL, "IN: errflag = %d", *errflag);
 
     MPIU_ERR_CHKANDJUMP1((count < 0), mpi_errno, MPI_ERR_COUNT,
                          "**countneg", "**countneg %d", count);
 
     if (status == MPI_STATUS_IGNORE) status = &mystatus;
-    if (*errflag) MPIR_TAG_SET_ERROR_BIT(sendtag);
+    switch(*errflag) {
+        case MPIR_ERR_NONE:
+            break;
+        case MPIR_ERR_PROC_FAILED:
+            MPIR_TAG_SET_PROC_FAILURE_BIT(sendtag);
+        case MPIR_ERR_OTHER:
+            MPIR_TAG_SET_ERROR_BIT(sendtag);
+    }
 
     MPID_Comm_get_ptr(comm, comm_ptr);
     context_id_offset = (comm_ptr->comm_kind == MPID_INTRACOMM) ?
@@ -572,16 +603,22 @@ int MPIC_Sendrecv_replace(void *buf, int count, MPI_Datatype datatype,
         if (MPIX_ERR_REVOKED == MPIR_ERR_GET_CLASS(status->MPI_ERROR) ||
             MPIX_ERR_PROC_FAILED == MPIR_ERR_GET_CLASS(status->MPI_ERROR) ||
             MPIR_TAG_CHECK_ERROR_BIT(status->MPI_TAG)) {
-            *errflag = TRUE;
-            MPIR_TAG_CLEAR_ERROR_BITS(status->MPI_TAG);
+            if (MPIR_TAG_CHECK_PROC_FAILURE_BIT(status->MPI_TAG)) {
+                *errflag = MPIR_ERR_PROC_FAILED;
+                MPIR_TAG_CLEAR_ERROR_BITS(status->MPI_TAG);
+            } else if (MPIR_TAG_CHECK_ERROR_BIT(status->MPI_TAG)) {
+                *errflag = MPIR_ERR_OTHER;
+                MPIR_TAG_CLEAR_ERROR_BITS(status->MPI_TAG);
+            }
         } else if (MPI_SUCCESS == MPIR_ERR_GET_CLASS(status->MPI_ERROR)) {
             MPIU_Assert(status->MPI_TAG == recvtag);
         }
     }
 
+
  fn_exit:
     MPIU_CHKLMEM_FREEALL();
-    MPIU_DBG_MSG_S(PT2PT, TYPICAL, "OUT: errflag = %s", *errflag?"TRUE":"FALSE");
+    MPIU_DBG_MSG_D(PT2PT, TYPICAL, "OUT: errflag = %d", *errflag);
     MPIDI_FUNC_EXIT(MPID_STATE_MPIC_SENDRECV_REPLACE);
     return mpi_errno;
  fn_fail:
@@ -593,7 +630,7 @@ int MPIC_Sendrecv_replace(void *buf, int count, MPI_Datatype datatype,
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIC_Isend(const void *buf, int count, MPI_Datatype datatype, int dest, int tag,
-                  MPI_Comm comm, MPI_Request *request, int *errflag)
+                  MPI_Comm comm, MPI_Request *request, mpir_errflag_t *errflag)
 {
     int mpi_errno = MPI_SUCCESS;
     int context_id;
@@ -603,13 +640,19 @@ int MPIC_Isend(const void *buf, int count, MPI_Datatype datatype, int dest, int 
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIC_ISEND);
 
-    MPIU_DBG_MSG_S(PT2PT, TYPICAL, "IN: errflag = %s", *errflag?"TRUE":"FALSE");
+    MPIU_DBG_MSG_D(PT2PT, TYPICAL, "IN: errflag = %d", *errflag);
 
     MPIU_ERR_CHKANDJUMP1((count < 0), mpi_errno, MPI_ERR_COUNT,
                          "**countneg", "**countneg %d", count);
 
-    if (*errflag)
-        MPIR_TAG_SET_ERROR_BIT(tag);
+    switch(*errflag) {
+        case MPIR_ERR_NONE:
+            break;
+        case MPIR_ERR_PROC_FAILED:
+            MPIR_TAG_SET_PROC_FAILURE_BIT(tag);
+        case MPIR_ERR_OTHER:
+            MPIR_TAG_SET_ERROR_BIT(tag);
+    }
 
     MPID_Comm_get_ptr(comm, comm_ptr);
     context_id = (comm_ptr->comm_kind == MPID_INTRACOMM) ?
@@ -668,7 +711,7 @@ int MPIC_Irecv(void *buf, int count, MPI_Datatype datatype, int source,
 #define FUNCNAME MPIC_Waitall
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPIC_Waitall(int numreq, MPI_Request requests[], MPI_Status statuses[], int *errflag)
+int MPIC_Waitall(int numreq, MPI_Request requests[], MPI_Status statuses[], mpir_errflag_t *errflag)
 {
     int mpi_errno = MPI_SUCCESS;
     int i;
@@ -692,15 +735,19 @@ int MPIC_Waitall(int numreq, MPI_Request requests[], MPI_Status statuses[], int 
     if (*errflag) goto fn_exit;
 
     for (i = 0; i < numreq; ++i) {
-        if (MPIR_TAG_CHECK_ERROR_BIT(statuses[i].MPI_TAG)) {
-            *errflag = TRUE;
+        if (MPIR_TAG_CHECK_PROC_FAILURE_BIT(statuses[i].MPI_TAG)) {
+            *errflag = MPIR_ERR_PROC_FAILED;
+            MPIR_TAG_CLEAR_ERROR_BITS(statuses[i].MPI_TAG);
+            break;
+        } else if (MPIR_TAG_CHECK_ERROR_BIT(statuses[i].MPI_TAG)) {
+            *errflag = MPIR_ERR_OTHER;
             MPIR_TAG_CLEAR_ERROR_BITS(statuses[i].MPI_TAG);
             break;
         }
     }
 
  fn_exit:
-    MPIU_DBG_MSG_S(PT2PT, TYPICAL, "OUT: errflag = %s", *errflag?"TRUE":"FALSE");
+    MPIU_DBG_MSG_D(PT2PT, TYPICAL, "OUT: errflag = %d", *errflag);
     MPIDI_FUNC_EXIT(MPID_STATE_MPIC_WAITALL);
     return mpi_errno;
  fn_fail:

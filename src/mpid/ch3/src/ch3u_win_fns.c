@@ -41,7 +41,7 @@ int MPIDI_CH3U_Win_create_gather( void *base, MPI_Aint size, int disp_unit,
 {
     int mpi_errno=MPI_SUCCESS, i, k, comm_size, rank;
     MPI_Aint *tmp_buf;
-    int errflag = FALSE;
+    mpir_errflag_t errflag = MPIR_ERR_NONE;
     MPIU_CHKPMEM_DECL(5);
     MPIU_CHKLMEM_DECL(1);
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3U_WIN_CREATE_GATHER);

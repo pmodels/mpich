@@ -74,7 +74,7 @@ int MPI_Scatter(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void 
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIR_Scatter_intra(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                        void *recvbuf, int recvcount, MPI_Datatype recvtype, int root,
-                       MPID_Comm *comm_ptr, int *errflag)
+                       MPID_Comm *comm_ptr, mpir_errflag_t *errflag)
 {
     MPI_Status status;
     MPI_Aint   extent=0;
@@ -424,7 +424,7 @@ int MPIR_Scatter_intra(const void *sendbuf, int sendcount, MPI_Datatype sendtype
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIR_Scatter_inter(const void *sendbuf, int sendcount, MPI_Datatype sendtype, void *recvbuf,
                        int recvcount, MPI_Datatype recvtype, int root, MPID_Comm *comm_ptr,
-                       int *errflag)
+                       mpir_errflag_t *errflag)
 {
 /*  Intercommunicator scatter.
     For short messages, root sends to rank 0 in remote group. rank 0
@@ -577,7 +577,7 @@ int MPIR_Scatter_inter(const void *sendbuf, int sendcount, MPI_Datatype sendtype
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIR_Scatter(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                  void *recvbuf, int recvcount, MPI_Datatype recvtype,
-                 int root, MPID_Comm *comm_ptr, int *errflag)
+                 int root, MPID_Comm *comm_ptr, mpir_errflag_t *errflag)
 {
     int mpi_errno = MPI_SUCCESS;
         
@@ -612,7 +612,7 @@ int MPIR_Scatter(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIR_Scatter_impl(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                       void *recvbuf, int recvcount, MPI_Datatype recvtype,
-                      int root, MPID_Comm *comm_ptr, int *errflag)
+                      int root, MPID_Comm *comm_ptr, mpir_errflag_t *errflag)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -677,7 +677,7 @@ int MPI_Scatter(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_Comm *comm_ptr = NULL;
-    int errflag = FALSE;
+    mpir_errflag_t errflag = MPIR_ERR_NONE;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_SCATTER);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();

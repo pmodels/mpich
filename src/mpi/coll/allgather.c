@@ -117,7 +117,7 @@ int MPIR_Allgather_intra (
     int recvcount,
     MPI_Datatype recvtype,
     MPID_Comm *comm_ptr,
-    int *errflag )
+    mpir_errflag_t *errflag )
 {
     int comm_size, rank;
     int mpi_errno = MPI_SUCCESS;
@@ -657,7 +657,7 @@ int MPIR_Allgather_inter (
     int recvcount,
     MPI_Datatype recvtype,
     MPID_Comm *comm_ptr,
-    int *errflag)
+    mpir_errflag_t *errflag)
 {
     /* Intercommunicator Allgather.
        Each group does a gather to local root with the local
@@ -789,7 +789,7 @@ int MPIR_Allgather_inter (
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIR_Allgather(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                    void *recvbuf, int recvcount, MPI_Datatype recvtype,
-                   MPID_Comm *comm_ptr, int *errflag)
+                   MPID_Comm *comm_ptr, mpir_errflag_t *errflag)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -823,7 +823,7 @@ fn_fail:
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIR_Allgather_impl(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                         void *recvbuf, int recvcount, MPI_Datatype recvtype,
-                        MPID_Comm *comm_ptr, int *errflag)
+                        MPID_Comm *comm_ptr, mpir_errflag_t *errflag)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -904,7 +904,7 @@ int MPI_Allgather(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_Comm *comm_ptr = NULL;
-    int errflag = FALSE;
+    mpir_errflag_t errflag = MPIR_ERR_NONE;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_ALLGATHER);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();

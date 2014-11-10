@@ -349,7 +349,7 @@ int MPIDI_Comm_connect(const char *port_name, MPID_Info *info, int root,
     pg_node *pg_list = NULL;
     MPIDI_PG_t **remote_pg = NULL;
     MPIR_Context_id_t recvcontext_id = MPIR_INVALID_CONTEXT_ID;
-    int errflag = FALSE;
+    mpir_errflag_t errflag = MPIR_ERR_NONE;
     MPIU_CHKLMEM_DECL(3);
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_COMM_CONNECT);
 
@@ -695,7 +695,7 @@ static int ReceivePGAndDistribute( MPID_Comm *tmp_comm, MPID_Comm *comm_ptr,
     int  rank = comm_ptr->rank;
     int  mpi_errno = 0;
     int  recvtag = *recvtag_p;
-    int errflag = FALSE;
+    mpir_errflag_t errflag = MPIR_ERR_NONE;
     MPIDI_STATE_DECL(MPID_STATE_RECEIVEPGANDDISTRIBUTE);
 
     MPIDI_FUNC_ENTER(MPID_STATE_RECEIVEPGANDDISTRIBUTE);
@@ -771,7 +771,7 @@ int MPID_PG_BCast( MPID_Comm *peercomm_p, MPID_Comm *comm_p, int root )
     pg_translation *local_translation = 0;
     pg_node *pg_list, *pg_next, *pg_head = 0;
     int rank, i, peer_comm_size;
-    int errflag = FALSE;
+    mpir_errflag_t errflag = MPIR_ERR_NONE;
     MPIU_CHKLMEM_DECL(1);
 
     peer_comm_size = comm_p->local_size;
@@ -875,7 +875,7 @@ static int SendPGtoPeerAndFree( MPID_Comm *tmp_comm, int *sendtag_p,
     int mpi_errno = 0;
     int sendtag = *sendtag_p, i;
     pg_node *pg_iter;
-    int errflag = FALSE;
+    mpir_errflag_t errflag = MPIR_ERR_NONE;
     MPIDI_STATE_DECL(MPID_STATE_SENDPGTOPEERANDFREE);
 
     MPIDI_FUNC_ENTER(MPID_STATE_SENDPGTOPEERANDFREE);
@@ -944,7 +944,7 @@ int MPIDI_Comm_accept(const char *port_name, MPID_Info *info, int root,
     pg_translation *local_translation = NULL, *remote_translation = NULL;
     pg_node *pg_list = NULL;
     MPIDI_PG_t **remote_pg = NULL;
-    int errflag = FALSE;
+    mpir_errflag_t errflag = MPIR_ERR_NONE;
     MPIU_CHKLMEM_DECL(3);
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_COMM_ACCEPT);
 
@@ -1154,7 +1154,7 @@ static int SetupNewIntercomm( MPID_Comm *comm_ptr, int remote_comm_size,
 			      MPID_Comm *intercomm )
 {
     int mpi_errno = MPI_SUCCESS, i;
-    int errflag = FALSE;
+    mpir_errflag_t errflag = MPIR_ERR_NONE;
     /* FIXME: How much of this could/should be common with the
        upper level (src/mpi/comm/ *.c) code? For best robustness, 
        this should use the same routine (not copy/paste code) as

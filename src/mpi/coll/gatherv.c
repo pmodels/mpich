@@ -83,7 +83,7 @@ int MPIR_Gatherv (
 	MPI_Datatype recvtype,
 	int root,
 	MPID_Comm *comm_ptr,
-        int *errflag )
+        mpir_errflag_t *errflag )
 {
     int        comm_size, rank;
     int        mpi_errno = MPI_SUCCESS;
@@ -219,7 +219,7 @@ fn_fail:
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIR_Gatherv_impl(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                       void *recvbuf, const int *recvcounts, const int *displs, MPI_Datatype recvtype,
-                      int root, MPID_Comm *comm_ptr, int *errflag)
+                      int root, MPID_Comm *comm_ptr, mpir_errflag_t *errflag)
 {
     int mpi_errno = MPI_SUCCESS;
         
@@ -289,7 +289,7 @@ int MPI_Gatherv(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_Comm *comm_ptr = NULL;
-    int errflag = FALSE;
+    mpir_errflag_t errflag = MPIR_ERR_NONE;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_GATHERV);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();

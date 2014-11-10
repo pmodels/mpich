@@ -510,7 +510,7 @@ int MPIDI_Comm_connect(const char *port_name, MPID_Info *info, int root,
     pg_node *pg_list = NULL;
     MPIDI_PG_t **remote_pg = NULL;
     MPIR_Context_id_t recvcontext_id = MPIR_INVALID_CONTEXT_ID;
-    int errflag = FALSE;
+    mpir_errflag_t errflag = MPIR_ERR_NONE;
     long long comm_cntr, lcomm_cntr;
 
     /* Get the context ID here because we need to send it to the remote side */
@@ -815,7 +815,7 @@ static int MPIDI_ReceivePGAndDistribute( struct MPID_Comm *tmp_comm, struct MPID
     int  rank = comm_ptr->rank;
     int  mpi_errno = 0;
     int  recvtag = *recvtag_p;
-    int errflag = FALSE;
+    mpir_errflag_t errflag = MPIR_ERR_NONE;
 
     TRACE_ERR("MPIDI_ReceivePGAndDistribute - n_remote_pgs=%d\n", n_remote_pgs);
     for (i=0; i<n_remote_pgs; i++) {
@@ -1088,7 +1088,7 @@ static int MPIDI_SendPGtoPeerAndFree( struct MPID_Comm *tmp_comm, int *sendtag_p
     int mpi_errno = 0;
     int sendtag = *sendtag_p, i;
     pg_node *pg_iter;
-    int errflag = FALSE;
+    mpir_errflag_t errflag = MPIR_ERR_NONE;
 
     while (pg_list != NULL) {
 	pg_iter = pg_list;
@@ -1149,7 +1149,7 @@ int MPIDI_Comm_accept(const char *port_name, MPID_Info *info, int root,
     pg_translation *local_translation = NULL, *remote_translation = NULL;
     pg_node *pg_list = NULL;
     MPIDI_PG_t **remote_pg = NULL;
-    int errflag = FALSE;
+    mpir_errflag_t errflag = MPIR_ERR_NONE;
     char send_char[16], recv_char[16], remote_taskids[16];
     long long comm_cntr, lcomm_cntr;
     int leader_taskid;
@@ -1384,7 +1384,7 @@ static int MPIDI_SetupNewIntercomm( struct MPID_Comm *comm_ptr, int remote_comm_
 			      struct MPID_Comm *intercomm )
 {
     int mpi_errno = MPI_SUCCESS, i, j, index=0;
-    int errflag = FALSE;
+    mpir_errflag_t errflag = MPIR_ERR_NONE;
     int total_rem_world_cnts, p=0;
     char *world_tasks, *cp1;
     conn_info *tmp_node;
@@ -1683,7 +1683,7 @@ int MPID_PG_BCast( MPID_Comm *peercomm_p, MPID_Comm *comm_p, int root )
     pg_translation *local_translation = 0;
     pg_node *pg_list, *pg_next, *pg_head = 0;
     int rank, i, peer_comm_size;
-    int errflag = FALSE;
+    mpir_errflag_t errflag = MPIR_ERR_NONE;
     MPIU_CHKLMEM_DECL(1);
 
     peer_comm_size = comm_p->local_size;

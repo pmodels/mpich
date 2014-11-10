@@ -201,7 +201,7 @@ int MPID_Comm_disconnect(MPID_Comm *comm_ptr)
     int rc, i,j, k, ref_count,mpi_errno=0, probe_flag=0;
     pami_task_t *local_list;
     MPI_Status status;
-    int errflag = FALSE;
+    mpir_errflag_t errflag = MPIR_ERR_NONE;
     MPIDI_PG_t *pg;
     int total_leaders=0, gsize;
     pami_task_t *leader_tids;

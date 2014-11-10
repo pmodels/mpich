@@ -98,7 +98,7 @@ int MPIR_Allgatherv_intra (
     const int *displs,
     MPI_Datatype recvtype,
     MPID_Comm *comm_ptr,
-    int *errflag )
+    mpir_errflag_t *errflag )
 {
     MPI_Comm comm;
     int        comm_size, rank, j, i, left, right;
@@ -771,7 +771,7 @@ int MPIR_Allgatherv_inter (
     const int *displs,
     MPI_Datatype recvtype,
     MPID_Comm *comm_ptr,
-    int *errflag )
+    mpir_errflag_t *errflag )
 {
 /* Intercommunicator Allgatherv.
    This is done differently from the intercommunicator allgather
@@ -894,7 +894,7 @@ int MPIR_Allgatherv_inter (
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIR_Allgatherv(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                     void *recvbuf, const int *recvcounts, const int *displs, MPI_Datatype recvtype,
-                    MPID_Comm *comm_ptr, int *errflag)
+                    MPID_Comm *comm_ptr, mpir_errflag_t *errflag)
 {
     int mpi_errno = MPI_SUCCESS;
         
@@ -930,7 +930,7 @@ int MPIR_Allgatherv(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIR_Allgatherv_impl(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                          void *recvbuf, const int *recvcounts, const int *displs,
-                         MPI_Datatype recvtype, MPID_Comm *comm_ptr, int *errflag)
+                         MPI_Datatype recvtype, MPID_Comm *comm_ptr, mpir_errflag_t *errflag)
 {
     int mpi_errno = MPI_SUCCESS;
         
@@ -1015,7 +1015,7 @@ int MPI_Allgatherv(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_Comm *comm_ptr = NULL;
-    int errflag = FALSE;
+    mpir_errflag_t errflag = MPIR_ERR_NONE;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_ALLGATHERV);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();

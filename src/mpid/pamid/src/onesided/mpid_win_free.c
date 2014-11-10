@@ -83,7 +83,7 @@ MPID_Win_free(MPID_Win **win_ptr)
 
   MPID_Win *win = *win_ptr;
   size_t rank = win->comm_ptr->rank;
-  int errflag = FALSE;
+  mpir_errflag_t errflag = MPIR_ERR_NONE;
 
   if(win->mpid.sync.origin_epoch_type != win->mpid.sync.target_epoch_type ||
      (win->mpid.sync.origin_epoch_type != MPID_EPOTYPE_NONE &&

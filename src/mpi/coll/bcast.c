@@ -127,7 +127,7 @@ static int MPIR_Bcast_binomial(
     MPI_Datatype datatype, 
     int root, 
     MPID_Comm *comm_ptr,
-    int *errflag)
+    mpir_errflag_t *errflag)
 {
     int        rank, comm_size, src, dst;
     int        relative_rank, mask;
@@ -340,7 +340,7 @@ static int scatter_for_bcast(
     void *tmp_buf,
     int is_contig,
     int is_homogeneous,
-    int *errflag)
+    mpir_errflag_t *errflag)
 {
     MPI_Status status;
     int        rank, comm_size, src, dst;
@@ -484,7 +484,7 @@ static int MPIR_Bcast_scatter_doubling_allgather(
     MPI_Datatype datatype, 
     int root, 
     MPID_Comm *comm_ptr,
-    int *errflag)
+    mpir_errflag_t *errflag)
 {
     MPI_Status status;
     int rank, comm_size, dst;
@@ -794,7 +794,7 @@ static int MPIR_Bcast_scatter_ring_allgather(
     MPI_Datatype datatype, 
     int root, 
     MPID_Comm *comm_ptr,
-    int *errflag)
+    mpir_errflag_t *errflag)
 {
     int rank, comm_size;
     int mpi_errno = MPI_SUCCESS;
@@ -1002,7 +1002,7 @@ static int MPIR_SMP_Bcast(
         MPI_Datatype datatype, 
         int root, 
         MPID_Comm *comm_ptr,
-        int *errflag)
+        mpir_errflag_t *errflag)
 {
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
@@ -1229,7 +1229,7 @@ int MPIR_Bcast_intra (
         MPI_Datatype datatype, 
         int root, 
         MPID_Comm *comm_ptr,
-        int *errflag )
+        mpir_errflag_t *errflag )
 {
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
@@ -1353,7 +1353,7 @@ int MPIR_Bcast_inter (
     MPI_Datatype datatype, 
     int root, 
     MPID_Comm *comm_ptr,
-    int *errflag)
+    mpir_errflag_t *errflag)
 {
 /*  Intercommunicator broadcast.
     Root sends to rank 0 in remote group. Remote group does local
@@ -1444,7 +1444,7 @@ fn_fail:
 #define FUNCNAME MPIR_Bcast_impl
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPIR_Bcast_impl(void *buffer, int count, MPI_Datatype datatype, int root, MPID_Comm *comm_ptr, int *errflag)
+int MPIR_Bcast_impl(void *buffer, int count, MPI_Datatype datatype, int root, MPID_Comm *comm_ptr, mpir_errflag_t *errflag)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -1476,7 +1476,7 @@ int MPIR_Bcast_impl(void *buffer, int count, MPI_Datatype datatype, int root, MP
 #define FUNCNAME MPIR_Bcast
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-inline int MPIR_Bcast(void *buffer, int count, MPI_Datatype datatype, int root, MPID_Comm *comm_ptr, int *errflag)
+inline int MPIR_Bcast(void *buffer, int count, MPI_Datatype datatype, int root, MPID_Comm *comm_ptr, mpir_errflag_t *errflag)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -1535,7 +1535,7 @@ int MPI_Bcast( void *buffer, int count, MPI_Datatype datatype, int root,
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_Comm *comm_ptr = NULL;
-    int errflag = FALSE;
+    mpir_errflag_t errflag = MPIR_ERR_NONE;
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_BCAST);
 
     MPIR_ERRTEST_INITIALIZED_ORDIE();

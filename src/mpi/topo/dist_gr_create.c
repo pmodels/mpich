@@ -92,7 +92,7 @@ int MPI_Dist_graph_create(MPI_Comm comm_old, int n, const int sources[],
     int *rout_idx;
     int *rs;
     int in_out_peers[2] = {-1, -1};
-    int errflag = FALSE;
+    mpir_errflag_t errflag = MPIR_ERR_NONE;
     MPIU_CHKLMEM_DECL(9);
     MPIU_CHKPMEM_DECL(1);
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_DIST_GRAPH_CREATE);
