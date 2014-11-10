@@ -36,6 +36,8 @@
    do not want mpi.h to depend on any other files or configure flags */
 #include "mpichconf.h"
 
+#include "opa_primitives.h"
+
 /* if we are defining this, we must define it before including mpl.h */
 #if defined(MPICH_DEBUG_MEMINIT)
 #define MPL_VG_ENABLED 1
