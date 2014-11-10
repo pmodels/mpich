@@ -47,9 +47,9 @@ int MPIDI_Rput(const void *origin_addr, int origin_count,
         /* This request is referenced by user and ch3 by default. */
         MPIU_Object_set_ref(ureq, 2);
 
-        mpi_errno = win_ptr->RMAFns.Put(origin_addr, origin_count,
-                                        origin_datatype, target_rank,
-                                        target_disp, target_count, target_datatype, win_ptr, ureq);
+        mpi_errno = MPIDI_CH3I_Put(origin_addr, origin_count,
+                                   origin_datatype, target_rank,
+                                   target_disp, target_count, target_datatype, win_ptr, ureq);
 
         if (mpi_errno != MPI_SUCCESS) {
             MPIU_ERR_POP(mpi_errno);
@@ -109,9 +109,9 @@ int MPIDI_Rget(void *origin_addr, int origin_count,
         /* This request is referenced by user and ch3 by default. */
         MPIU_Object_set_ref(ureq, 2);
 
-        mpi_errno = win_ptr->RMAFns.Get(origin_addr, origin_count,
-                                        origin_datatype, target_rank,
-                                        target_disp, target_count, target_datatype, win_ptr, ureq);
+        mpi_errno = MPIDI_CH3I_Get(origin_addr, origin_count,
+                                   origin_datatype, target_rank,
+                                   target_disp, target_count, target_datatype, win_ptr, ureq);
 
         if (mpi_errno != MPI_SUCCESS) {
             MPIU_ERR_POP(mpi_errno);
@@ -171,10 +171,10 @@ int MPIDI_Raccumulate(const void *origin_addr, int origin_count,
         /* This request is referenced by user and ch3 by default. */
         MPIU_Object_set_ref(ureq, 2);
 
-        mpi_errno = win_ptr->RMAFns.Accumulate(origin_addr, origin_count,
-                                               origin_datatype, target_rank,
-                                               target_disp, target_count,
-                                               target_datatype, op, win_ptr, ureq);
+        mpi_errno = MPIDI_CH3I_Accumulate(origin_addr, origin_count,
+                                          origin_datatype, target_rank,
+                                          target_disp, target_count,
+                                          target_datatype, op, win_ptr, ureq);
         if (mpi_errno != MPI_SUCCESS) {
             MPIU_ERR_POP(mpi_errno);
         }
@@ -236,12 +236,11 @@ int MPIDI_Rget_accumulate(const void *origin_addr, int origin_count,
         /* This request is referenced by user and ch3 by default. */
         MPIU_Object_set_ref(ureq, 2);
 
-        mpi_errno = win_ptr->RMAFns.Get_accumulate(origin_addr, origin_count,
-                                                   origin_datatype, result_addr,
-                                                   result_count, result_datatype,
-                                                   target_rank, target_disp,
-                                                   target_count, target_datatype,
-                                                   op, win_ptr, ureq);
+        mpi_errno = MPIDI_CH3I_Get_accumulate(origin_addr, origin_count,
+                                              origin_datatype, result_addr,
+                                              result_count, result_datatype,
+                                              target_rank, target_disp,
+                                              target_count, target_datatype, op, win_ptr, ureq);
         if (mpi_errno != MPI_SUCCESS) {
             MPIU_ERR_POP(mpi_errno);
         }

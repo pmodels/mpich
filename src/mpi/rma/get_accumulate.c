@@ -198,7 +198,7 @@ int MPI_Get_accumulate(const void *origin_addr, int origin_count,
                                          result_addr, result_count,
                                          result_datatype,
                                          target_rank, target_disp, target_count,
-                                         target_datatype, op, win_ptr, NULL));
+                                         target_datatype, op, win_ptr));
     if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 
     /* ... end of body of routine ... */

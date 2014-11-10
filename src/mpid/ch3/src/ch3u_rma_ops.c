@@ -36,13 +36,13 @@ cvars:
 */
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_Put
+#define FUNCNAME MPIDI_CH3I_Put
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-int MPIDI_Put(const void *origin_addr, int origin_count, MPI_Datatype
-              origin_datatype, int target_rank, MPI_Aint target_disp,
-              int target_count, MPI_Datatype target_datatype, MPID_Win * win_ptr,
-              MPID_Request * ureq)
+int MPIDI_CH3I_Put(const void *origin_addr, int origin_count, MPI_Datatype
+                   origin_datatype, int target_rank, MPI_Aint target_disp,
+                   int target_count, MPI_Datatype target_datatype, MPID_Win * win_ptr,
+                   MPID_Request * ureq)
 {
     int mpi_errno = MPI_SUCCESS;
     int dt_contig ATTRIBUTE((unused)), rank;
@@ -51,9 +51,9 @@ int MPIDI_Put(const void *origin_addr, int origin_count, MPI_Datatype
     MPIDI_msg_sz_t data_sz;
     MPIDI_VC_t *orig_vc = NULL, *target_vc = NULL;
     int made_progress = 0;
-    MPIDI_STATE_DECL(MPID_STATE_MPIDI_PUT);
+    MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3I_PUT);
 
-    MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_PUT);
+    MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_CH3I_PUT);
 
     MPIU_ERR_CHKANDJUMP(win_ptr->states.access_state == MPIDI_RMA_NONE,
                         mpi_errno, MPI_ERR_RMA_SYNC, "**rmasync");
@@ -210,7 +210,7 @@ int MPIDI_Put(const void *origin_addr, int origin_count, MPI_Datatype
     }
 
   fn_exit:
-    MPIDI_RMA_FUNC_EXIT(MPID_STATE_MPIDI_PUT);
+    MPIDI_RMA_FUNC_EXIT(MPID_STATE_MPIDI_CH3I_PUT);
     return mpi_errno;
 
     /* --BEGIN ERROR HANDLING-- */
@@ -219,16 +219,14 @@ int MPIDI_Put(const void *origin_addr, int origin_count, MPI_Datatype
     /* --END ERROR HANDLING-- */
 }
 
-
-
 #undef FUNCNAME
-#define FUNCNAME MPIDI_Get
+#define FUNCNAME MPIDI_CH3I_Get
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-int MPIDI_Get(void *origin_addr, int origin_count, MPI_Datatype
-              origin_datatype, int target_rank, MPI_Aint target_disp,
-              int target_count, MPI_Datatype target_datatype, MPID_Win * win_ptr,
-              MPID_Request * ureq)
+int MPIDI_CH3I_Get(void *origin_addr, int origin_count, MPI_Datatype
+                   origin_datatype, int target_rank, MPI_Aint target_disp,
+                   int target_count, MPI_Datatype target_datatype, MPID_Win * win_ptr,
+                   MPID_Request * ureq)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_msg_sz_t data_sz;
@@ -237,9 +235,9 @@ int MPIDI_Get(void *origin_addr, int origin_count, MPI_Datatype
     MPID_Datatype *dtp;
     MPIDI_VC_t *orig_vc = NULL, *target_vc = NULL;
     int made_progress = 0;
-    MPIDI_STATE_DECL(MPID_STATE_MPIDI_GET);
+    MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3I_GET);
 
-    MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_GET);
+    MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_CH3I_GET);
 
     MPIU_ERR_CHKANDJUMP(win_ptr->states.access_state == MPIDI_RMA_NONE,
                         mpi_errno, MPI_ERR_RMA_SYNC, "**rmasync");
@@ -372,7 +370,7 @@ int MPIDI_Get(void *origin_addr, int origin_count, MPI_Datatype
     }
 
   fn_exit:
-    MPIDI_RMA_FUNC_EXIT(MPID_STATE_MPIDI_GET);
+    MPIDI_RMA_FUNC_EXIT(MPID_STATE_MPIDI_CH3I_GET);
     return mpi_errno;
 
     /* --BEGIN ERROR HANDLING-- */
@@ -382,15 +380,14 @@ int MPIDI_Get(void *origin_addr, int origin_count, MPI_Datatype
 }
 
 
-
 #undef FUNCNAME
-#define FUNCNAME MPIDI_Accumulate
+#define FUNCNAME MPIDI_CH3I_Accumulate
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-int MPIDI_Accumulate(const void *origin_addr, int origin_count, MPI_Datatype
-                     origin_datatype, int target_rank, MPI_Aint target_disp,
-                     int target_count, MPI_Datatype target_datatype, MPI_Op op,
-                     MPID_Win * win_ptr, MPID_Request * ureq)
+int MPIDI_CH3I_Accumulate(const void *origin_addr, int origin_count, MPI_Datatype
+                          origin_datatype, int target_rank, MPI_Aint target_disp,
+                          int target_count, MPI_Datatype target_datatype, MPI_Op op,
+                          MPID_Win * win_ptr, MPID_Request * ureq)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_msg_sz_t data_sz;
@@ -399,9 +396,9 @@ int MPIDI_Accumulate(const void *origin_addr, int origin_count, MPI_Datatype
     MPID_Datatype *dtp;
     MPIDI_VC_t *orig_vc = NULL, *target_vc = NULL;
     int made_progress = 0;
-    MPIDI_STATE_DECL(MPID_STATE_MPIDI_ACCUMULATE);
+    MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3I_ACCUMULATE);
 
-    MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_ACCUMULATE);
+    MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_CH3I_ACCUMULATE);
 
     MPIU_ERR_CHKANDJUMP(win_ptr->states.access_state == MPIDI_RMA_NONE,
                         mpi_errno, MPI_ERR_RMA_SYNC, "**rmasync");
@@ -560,7 +557,7 @@ int MPIDI_Accumulate(const void *origin_addr, int origin_count, MPI_Datatype
     }
 
   fn_exit:
-    MPIDI_RMA_FUNC_EXIT(MPID_STATE_MPIDI_ACCUMULATE);
+    MPIDI_RMA_FUNC_EXIT(MPID_STATE_MPIDI_CH3I_ACCUMULATE);
     return mpi_errno;
 
     /* --BEGIN ERROR HANDLING-- */
@@ -571,14 +568,14 @@ int MPIDI_Accumulate(const void *origin_addr, int origin_count, MPI_Datatype
 
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_Get_accumulate
+#define FUNCNAME MPIDI_CH3I_Get_accumulate
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-int MPIDI_Get_accumulate(const void *origin_addr, int origin_count,
-                         MPI_Datatype origin_datatype, void *result_addr, int result_count,
-                         MPI_Datatype result_datatype, int target_rank, MPI_Aint target_disp,
-                         int target_count, MPI_Datatype target_datatype, MPI_Op op,
-                         MPID_Win * win_ptr, MPID_Request * ureq)
+int MPIDI_CH3I_Get_accumulate(const void *origin_addr, int origin_count,
+                              MPI_Datatype origin_datatype, void *result_addr, int result_count,
+                              MPI_Datatype result_datatype, int target_rank, MPI_Aint target_disp,
+                              int target_count, MPI_Datatype target_datatype, MPI_Op op,
+                              MPID_Win * win_ptr, MPID_Request * ureq)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_msg_sz_t data_sz;
@@ -588,9 +585,9 @@ int MPIDI_Get_accumulate(const void *origin_addr, int origin_count,
     MPID_Datatype *dtp;
     MPIDI_VC_t *orig_vc = NULL, *target_vc = NULL;
     int made_progress = 0;
-    MPIDI_STATE_DECL(MPID_STATE_MPIDI_GET_ACCUMULATE);
+    MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3I_GET_ACCUMULATE);
 
-    MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_GET_ACCUMULATE);
+    MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_CH3I_GET_ACCUMULATE);
 
     MPIU_ERR_CHKANDJUMP(win_ptr->states.access_state == MPIDI_RMA_NONE,
                         mpi_errno, MPI_ERR_RMA_SYNC, "**rmasync");
@@ -789,6 +786,118 @@ int MPIDI_Get_accumulate(const void *origin_addr, int origin_count,
             }
         }
     }
+
+  fn_exit:
+    MPIDI_RMA_FUNC_EXIT(MPID_STATE_MPIDI_CH3I_GET_ACCUMULATE);
+    return mpi_errno;
+
+    /* --BEGIN ERROR HANDLING-- */
+  fn_fail:
+    goto fn_exit;
+    /* --END ERROR HANDLING-- */
+}
+
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_Put
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
+int MPIDI_Put(const void *origin_addr, int origin_count, MPI_Datatype
+              origin_datatype, int target_rank, MPI_Aint target_disp,
+              int target_count, MPI_Datatype target_datatype, MPID_Win * win_ptr)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    MPIDI_STATE_DECL(MPID_STATE_MPIDI_PUT);
+    MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_PUT);
+
+    mpi_errno = MPIDI_CH3I_Put(origin_addr, origin_count, origin_datatype,
+                               target_rank, target_disp, target_count, target_datatype,
+                               win_ptr, NULL);
+
+  fn_exit:
+    MPIDI_RMA_FUNC_EXIT(MPID_STATE_MPIDI_PUT);
+    return mpi_errno;
+
+    /* --BEGIN ERROR HANDLING-- */
+  fn_fail:
+    goto fn_exit;
+    /* --END ERROR HANDLING-- */
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_Get
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
+int MPIDI_Get(void *origin_addr, int origin_count, MPI_Datatype
+              origin_datatype, int target_rank, MPI_Aint target_disp,
+              int target_count, MPI_Datatype target_datatype, MPID_Win * win_ptr)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    MPIDI_STATE_DECL(MPID_STATE_MPIDI_GET);
+    MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_GET);
+
+    mpi_errno = MPIDI_CH3I_Get(origin_addr, origin_count, origin_datatype,
+                               target_rank, target_disp, target_count, target_datatype,
+                               win_ptr, NULL);
+
+  fn_exit:
+    MPIDI_RMA_FUNC_EXIT(MPID_STATE_MPIDI_GET);
+    return mpi_errno;
+
+    /* --BEGIN ERROR HANDLING-- */
+  fn_fail:
+    goto fn_exit;
+    /* --END ERROR HANDLING-- */
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_Accumulate
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
+int MPIDI_Accumulate(const void *origin_addr, int origin_count, MPI_Datatype
+                     origin_datatype, int target_rank, MPI_Aint target_disp,
+                     int target_count, MPI_Datatype target_datatype, MPI_Op op, MPID_Win * win_ptr)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    MPIDI_STATE_DECL(MPID_STATE_MPIDI_ACCUMULATE);
+    MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_ACCUMULATE);
+
+    mpi_errno = MPIDI_CH3I_Accumulate(origin_addr, origin_count, origin_datatype,
+                                      target_rank, target_disp, target_count, target_datatype,
+                                      op, win_ptr, NULL);
+
+  fn_exit:
+    MPIDI_RMA_FUNC_EXIT(MPID_STATE_MPIDI_ACCUMULATE);
+    return mpi_errno;
+
+    /* --BEGIN ERROR HANDLING-- */
+  fn_fail:
+    goto fn_exit;
+    /* --END ERROR HANDLING-- */
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_Get_accumulate
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
+int MPIDI_Get_accumulate(const void *origin_addr, int origin_count,
+                         MPI_Datatype origin_datatype, void *result_addr, int result_count,
+                         MPI_Datatype result_datatype, int target_rank, MPI_Aint target_disp,
+                         int target_count, MPI_Datatype target_datatype, MPI_Op op,
+                         MPID_Win * win_ptr)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    MPIDI_STATE_DECL(MPID_STATE_MPIDI_GET_ACCUMULATE);
+    MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_GET_ACCUMULATE);
+
+    mpi_errno = MPIDI_CH3I_Get_accumulate(origin_addr, origin_count, origin_datatype,
+                                          result_addr, result_count, result_datatype,
+                                          target_rank, target_disp, target_count,
+                                          target_datatype, op, win_ptr, NULL);
 
   fn_exit:
     MPIDI_RMA_FUNC_EXIT(MPID_STATE_MPIDI_GET_ACCUMULATE);
