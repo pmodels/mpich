@@ -16,14 +16,17 @@ enum MPIDI_RMA_Datatype {
     MPIDI_RMA_DATATYPE_DERIVED = 51
 };
 
-/* We start with an arbitrarily chosen number (42), to help with
- * debugging when a packet type is not initialized or wrongly
+/* We start with an arbitrarily chosen number (60), to help with
+ * debugging when a lock state is not initialized or wrongly
  * initialized. */
 enum MPID_Lock_state {
-    MPID_LOCK_NONE = 42,
+    MPID_LOCK_NONE = 60,
     MPID_LOCK_SHARED_ALL
 };
 
+/* We start with an arbitrarily chosen number (23), to help with
+ * debugging when a lock type is not initialized or wrongly
+ * initialized. */
 enum MPIDI_RMA_Lock_type {
     MPIDI_RMA_LOCK_TYPE_NONE = 23,
     MPIDI_RMA_LOCK_TYPE_SHARED,

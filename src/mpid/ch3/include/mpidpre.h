@@ -224,22 +224,22 @@ typedef struct MPIDI_VC * MPID_VCR;
  * is a superset of FLUSH_LOCAL, and UNLOCK is a superset
  * of FLUSH.
  */
-/* We start with an arbitrarily chosen number (42), to help with
- * debugging when a packet type is not initialized or wrongly
+/* We start with an arbitrarily chosen number (58), to help with
+ * debugging when a sync type is not initialized or wrongly
  * initialized. */
 enum MPIDI_RMA_sync_types {
-    MPIDI_RMA_SYNC_NONE = 42,
+    MPIDI_RMA_SYNC_NONE = 58,
     MPIDI_RMA_SYNC_FLUSH_LOCAL,
     MPIDI_RMA_SYNC_FLUSH,
     MPIDI_RMA_SYNC_UNLOCK
 };
 
-/* We start with an arbitrarily chosen number (42), to help with
- * debugging when a packet type is not initialized or wrongly
+/* We start with an arbitrarily chosen number (63), to help with
+ * debugging when a window state is not initialized or wrongly
  * initialized. */
 enum MPIDI_RMA_states {
     /* window-wide states */
-    MPIDI_RMA_NONE = 42,
+    MPIDI_RMA_NONE = 63,
     MPIDI_RMA_FENCE_ISSUED,           /* access / exposure */
     MPIDI_RMA_FENCE_GRANTED,          /* access / exposure */
     MPIDI_RMA_PSCW_ISSUED,            /* access */
@@ -256,11 +256,11 @@ enum MPIDI_RMA_states {
     MPIDI_RMA_LOCK_GRANTED,           /* access */
 };
 
-/* We start with an arbitrarily chosen number (42), to help with
- * debugging when a packet type is not initialized or wrongly
+/* We start with an arbitrarily chosen number (19), to help with
+ * debugging when a lock state is not initialized or wrongly
  * initialized. */
 enum MPIDI_CH3_Lock_states {
-    MPIDI_CH3_WIN_LOCK_NONE = 42,
+    MPIDI_CH3_WIN_LOCK_NONE = 19,
     MPIDI_CH3_WIN_LOCK_CALLED,
     MPIDI_CH3_WIN_LOCK_REQUESTED,
     MPIDI_CH3_WIN_LOCK_GRANTED,
@@ -274,16 +274,19 @@ enum MPIDI_Win_info_arv_vals_accumulate_ordering {
     MPIDI_ACC_ORDER_WAW = 8
 };
 
+/* We start with an arbitrarily chosen number (11), to help with
+ * debugging when an window info is not initialized or wrongly
+ * initialized. */
 enum MPIDI_Win_info_arg_vals_accumulate_ops {
-    MPIDI_ACC_OPS_SAME_OP,
+    MPIDI_ACC_OPS_SAME_OP = 11,
     MPIDI_ACC_OPS_SAME_OP_NO_OP
 };
 
-/* We start with an arbitrarily chosen number (42), to help with
- * debugging when a packet type is not initialized or wrongly
+/* We start with an arbitrarily chosen number (27), to help with
+ * debugging when an epoch state is not initialized or wrongly
  * initialized. */
 enum MPIDI_Win_epoch_states {
-    MPIDI_EPOCH_NONE = 42,
+    MPIDI_EPOCH_NONE = 27,
     MPIDI_EPOCH_FENCE,
     MPIDI_EPOCH_POST,
     MPIDI_EPOCH_START,
