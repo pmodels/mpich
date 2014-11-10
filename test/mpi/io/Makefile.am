@@ -28,11 +28,19 @@ noinst_PROGRAMS = \
     hindexed_io
 
 if BUILD_MPIX_TESTS
-noinst_PROGRAMS += \
-    i_bigtype     \
-    i_hindexed_io \
-    i_rdwrord     \
-    i_setviewcur
+noinst_PROGRAMS +=      \
+    i_bigtype           \
+    i_hindexed_io       \
+    i_rdwrord           \
+    i_setviewcur        \
+    i_aggregation1      \
+    i_aggregation2      \
+    i_coll_test         \
+    i_darray_read       \
+    i_hindexed          \
+    i_noncontig_coll    \
+    i_noncontig_coll2   \
+    i_types_with_zeros
 endif
 
 clean-local:
