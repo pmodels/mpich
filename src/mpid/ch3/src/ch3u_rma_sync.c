@@ -1597,7 +1597,7 @@ int MPIDI_Win_unlock_all(MPID_Win * win_ptr)
     win_ptr->posted_ops_cnt = 0;
     MPIU_Assert(win_ptr->active_req_cnt == 0);
 
-    win_ptr->states.access_state = MPIDI_EPOCH_NONE;
+    win_ptr->states.access_state = MPIDI_RMA_NONE;
     num_passive_win--;
     MPIU_Assert(num_passive_win >= 0);
 
