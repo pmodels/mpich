@@ -200,6 +200,36 @@ int MPID_nem_ptl_lmt_handle_cookie(MPIDI_VC_t *vc, MPID_Request *req, MPID_IOV s
 int MPID_nem_ptl_lmt_done_send(MPIDI_VC_t *vc, MPID_Request *req);
 int MPID_nem_ptl_lmt_done_recv(MPIDI_VC_t *vc, MPID_Request *req);
 
+/* packet handlers */
+
+int MPID_nem_ptl_pkt_cancel_send_req_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
+                                             MPIDI_msg_sz_t *buflen, MPID_Request **rreqp);
+int MPID_nem_ptl_pkt_cancel_send_resp_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
+                                              MPIDI_msg_sz_t *buflen, MPID_Request **rreqp);
+
+/* local packet types */
+
+typedef enum MPIDI_nem_ptl_pkt_type {
+    MPIDI_NEM_PTL_PKT_CANCEL_SEND_REQ,
+    MPIDI_NEM_PTL_PKT_CANCEL_SEND_RESP,
+    MPIDI_NEM_TCP_PKT_INVALID = -1 /* force signed, to avoid warnings */
+} MPIDI_nem_ptl_pkt_type_t;
+
+typedef struct MPIDI_nem_ptl_pkt_cancel_send_req
+{
+    MPIDI_CH3_Pkt_type_t type;
+    unsigned subtype;
+    MPIDI_Message_match match;
+    MPI_Request sender_req_id;
+} MPIDI_nem_ptl_pkt_cancel_send_req_t;
+
+typedef struct MPIDI_nem_ptl_pkt_cancel_send_resp
+{
+    MPIDI_CH3_Pkt_type_t type;
+    unsigned subtype;
+    MPI_Request sender_req_id;
+    int ack;
+} MPIDI_nem_ptl_pkt_cancel_send_resp_t;
 
 /* debugging */
 const char *MPID_nem_ptl_strerror(int ret);

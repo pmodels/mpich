@@ -292,3 +292,116 @@ int MPID_nem_ptl_anysource_improbe(int tag, MPID_Comm * comm, int context_offset
     goto fn_exit;
 }
 
+#undef FUNCNAME
+#define FUNCNAME MPID_nem_ptl_pkt_cancel_send_req_handler
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+int MPID_nem_ptl_pkt_cancel_send_req_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
+                                                    MPIDI_msg_sz_t *buflen, MPID_Request **rreqp)
+{
+    int ret, mpi_errno = MPI_SUCCESS;
+    MPIDI_nem_ptl_pkt_cancel_send_req_t *req_pkt = (MPIDI_nem_ptl_pkt_cancel_send_req_t *)pkt;
+    MPID_PKT_DECL_CAST(upkt, MPIDI_nem_ptl_pkt_cancel_send_resp_t, resp_pkt);
+    MPID_Request *search_req, *resp_req;
+    ptl_me_t me;
+    MPID_nem_ptl_vc_area *const vc_ptl = VC_PTL(vc);
+
+    MPIU_DBG_MSG_FMT(CH3_OTHER,VERBOSE,(MPIU_DBG_FDEST,
+      "received cancel send req pkt, sreq=0x%08x, rank=%d, tag=%d, context=%d",
+                      req_pkt->sender_req_id, req_pkt->match.parts.rank,
+                      req_pkt->match.parts.tag, req_pkt->match.parts.context_id));
+
+    /* create a dummy request and search for the message */
+    /* create a request */
+    search_req = MPID_Request_create();
+    MPID_nem_ptl_init_req(search_req);
+    MPIU_ERR_CHKANDJUMP1(!search_req, mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s", "MPID_Request_create");
+    MPIU_Object_set_ref(search_req, 2); /* 1 ref for progress engine and 1 ref for us */
+    search_req->kind = MPID_REQUEST_MPROBE;
+
+    /* create a dummy ME to use for searching the list */
+    me.start = NULL;
+    me.length = 0;
+    me.ct_handle = PTL_CT_NONE;
+    me.uid = PTL_UID_ANY;
+    me.options = ( PTL_ME_OP_PUT | PTL_ME_USE_ONCE );
+    me.min_free = 0;
+    me.match_bits = NPTL_MATCH(req_pkt->match.parts.tag, req_pkt->match.parts.context_id, req_pkt->match.parts.rank);
+
+    me.match_id = vc_ptl->id;
+    me.ignore_bits = NPTL_MATCH_IGNORE;
+
+    /* FIXME: this should use a custom handler that throws the data away inline */
+    REQ_PTL(search_req)->event_handler = handle_mprobe;
+
+    /* submit a search request */
+    ret = PtlMESearch(MPIDI_nem_ptl_ni, MPIDI_nem_ptl_pt, &me, PTL_SEARCH_DELETE, search_req);
+    MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlmesearch", "**ptlmesearch %s", MPID_nem_ptl_strerror(ret));
+    DBG_MSG_MESearch("REG", vc ? vc->pg_rank : 0, me, search_req);
+
+    /* wait for search request to complete */
+    do {
+        mpi_errno = MPID_nem_ptl_poll(FALSE);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    } while (!MPID_Request_is_complete(search_req));
+
+    /* send response */
+    resp_pkt->type = MPIDI_NEM_PKT_NETMOD;
+    resp_pkt->subtype = MPIDI_NEM_PTL_PKT_CANCEL_SEND_RESP;
+    resp_pkt->ack = REQ_PTL(search_req)->found;
+    resp_pkt->sender_req_id = req_pkt->sender_req_id;
+
+    MPID_nem_ptl_iStartContigMsg(vc, resp_pkt, sizeof(*resp_pkt), NULL,
+                                 0, &resp_req);
+
+    /* if the message was found, free the temporary buffer used to copy the data */
+    if (REQ_PTL(search_req)->found)
+        MPIU_Free(search_req->dev.tmpbuf);
+
+    MPID_Request_release(search_req);
+    if (resp_req != NULL)
+        MPID_Request_release(resp_req);
+
+ fn_exit:
+    return mpi_errno;
+ fn_fail:
+    goto fn_exit;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPID_nem_ptl_pkt_cancel_send_resp_handler
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+int MPID_nem_ptl_pkt_cancel_send_resp_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,
+                                              MPIDI_msg_sz_t *buflen, MPID_Request **rreqp)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPID_Request *sreq;
+    MPIDI_nem_ptl_pkt_cancel_send_resp_t *resp_pkt = (MPIDI_nem_ptl_pkt_cancel_send_resp_t *)pkt;
+    int i, ret;
+
+    MPID_Request_get_ptr(resp_pkt->sender_req_id, sreq);
+
+    if (resp_pkt->ack) {
+        MPIR_STATUS_SET_CANCEL_BIT(sreq->status, TRUE);
+
+        /* remove any remaining get MEs */
+        for (i = 0; i < REQ_PTL(sreq)->num_gets; i++) {
+            ret = PtlMEUnlink(REQ_PTL(sreq)->get_me_p[i]);
+            MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlmeunlink", "**ptlmeunlink %s", MPID_nem_ptl_strerror(ret));
+        }
+        MPIU_DBG_MSG(CH3_OTHER,TYPICAL,"message cancelled");
+    } else {
+        MPIR_STATUS_SET_CANCEL_BIT(sreq->status, FALSE);
+        MPIU_DBG_MSG(CH3_OTHER,TYPICAL,"unable to cancel message");
+    }
+
+    MPIDI_CH3U_Request_complete(sreq);
+
+     *rreqp = NULL;
+
+ fn_exit:
+    return mpi_errno;
+ fn_fail:
+    goto fn_exit;
+}
