@@ -248,15 +248,17 @@ static int send_msg(ptl_hdr_data_t ssend_flag, struct MPIDI_VC *vc, const void *
 
     MPID_nem_ptl_request_create_sreq(sreq, mpi_errno, comm);
     sreq->dev.match.parts.rank = dest;
+    sreq->dev.match.parts.tag = tag;
+    sreq->dev.match.parts.context_id = comm->context_id + context_offset;
 
     if (!vc_ptl->id_initialized) {
         mpi_errno = MPID_nem_ptl_init_id(vc);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     }
-    
+
     MPIDI_Datatype_get_info(count, datatype, dt_contig, data_sz, dt_ptr, dt_true_lb);
     MPIU_DBG_MSG_FMT(CH3_CHANNEL, VERBOSE, (MPIU_DBG_FDEST, "count=%d datatype=%#x contig=%d data_sz=%lu", count, datatype, dt_contig, data_sz));
-    
+
     if (data_sz <= PTL_LARGE_THRESHOLD) {
         /* Small message.  Send all data eagerly */
         if (dt_contig) {
@@ -492,12 +494,37 @@ int MPID_nem_ptl_issend(struct MPIDI_VC *vc, const void *buf, int count, MPI_Dat
 int MPID_nem_ptl_cancel_send(struct MPIDI_VC *vc,  struct MPID_Request *sreq)
 {
     int mpi_errno = MPI_SUCCESS;
+    MPID_PKT_DECL_CAST(upkt, MPIDI_nem_ptl_pkt_cancel_send_req_t, csr_pkt);
+    MPID_Request *csr_sreq;
+    int was_incomplete;
+
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_PTL_CANCEL_SEND);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_PTL_CANCEL_SEND);
 
-    /* portals4 has no way of cancelling a send */
-    MPIU_ERR_SETFATAL(mpi_errno, MPI_ERR_OTHER, "**notimpl");
+    /* The completion counter and reference count are incremented to keep
+       the request around long enough to receive a
+       response regardless of what the user does (free the request before
+       waiting, etc.). */
+    MPIDI_CH3U_Request_increment_cc(sreq, &was_incomplete);
+    if (!was_incomplete) {
+        /* The reference count is incremented only if the request was
+           complete before the increment. */
+        MPIR_Request_add_ref(sreq);
+    }
+
+    csr_pkt->type = MPIDI_NEM_PKT_NETMOD;
+    csr_pkt->subtype = MPIDI_NEM_PTL_PKT_CANCEL_SEND_REQ;
+    csr_pkt->match.parts.rank = sreq->dev.match.parts.rank;
+    csr_pkt->match.parts.tag = sreq->dev.match.parts.tag;
+    csr_pkt->match.parts.context_id = sreq->dev.match.parts.context_id;
+    csr_pkt->sender_req_id = sreq->handle;
+
+    MPID_nem_ptl_iStartContigMsg(vc, csr_pkt, sizeof(*csr_pkt), NULL,
+                                 0, &csr_sreq);
+
+    if (csr_sreq != NULL)
+        MPID_Request_release(csr_sreq);
 
  fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_PTL_CANCEL_SEND);

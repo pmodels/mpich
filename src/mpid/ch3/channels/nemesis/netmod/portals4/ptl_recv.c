@@ -87,7 +87,7 @@ static int handler_recv_dequeue_complete(const ptl_event_t *e)
     MPIDI_STATE_DECL(MPID_STATE_HANDLER_RECV_DEQUEUE_COMPLETE);
 
     MPIDI_FUNC_ENTER(MPID_STATE_HANDLER_RECV_DEQUEUE_COMPLETE);
-    
+
     MPIU_Assert(e->type == PTL_EVENT_PUT || e->type == PTL_EVENT_PUT_OVERFLOW);
     
     dequeue_req(e);

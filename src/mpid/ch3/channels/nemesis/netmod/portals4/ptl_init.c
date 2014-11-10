@@ -76,6 +76,7 @@ static MPIDI_Comm_ops_t comm_ops = {
     MPID_nem_ptl_improbe        /* improbe */
 };
 
+static MPIDI_CH3_PktHandler_Fcn *MPID_nem_ptl_pkt_handlers[2]; /* for CANCEL_SEND_REQ and CANCEL_SEND_RESP */
 
 #undef FUNCNAME
 #define FUNCNAME get_target_info
@@ -411,6 +412,13 @@ static int vc_init(MPIDI_VC_t *vc)
     vc->sendNoncontig_fn   = MPID_nem_ptl_SendNoncontig;
     vc_ch->iStartContigMsg = MPID_nem_ptl_iStartContigMsg;
     vc_ch->iSendContig     = MPID_nem_ptl_iSendContig;
+
+    vc_ch->num_pkt_handlers = 2;
+    vc_ch->pkt_handler = MPID_nem_ptl_pkt_handlers;
+    MPID_nem_ptl_pkt_handlers[MPIDI_NEM_PTL_PKT_CANCEL_SEND_REQ] =
+        MPID_nem_ptl_pkt_cancel_send_req_handler;
+    MPID_nem_ptl_pkt_handlers[MPIDI_NEM_PTL_PKT_CANCEL_SEND_RESP] =
+        MPID_nem_ptl_pkt_cancel_send_resp_handler;
 
     vc_ch->lmt_initiate_lmt  = MPID_nem_ptl_lmt_initiate_lmt;
     vc_ch->lmt_start_recv    = MPID_nem_ptl_lmt_start_recv;
