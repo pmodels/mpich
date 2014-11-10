@@ -16,22 +16,7 @@ enum MPIDI_RMA_Datatype {
     MPIDI_RMA_DATATYPE_DERIVED = 51
 };
 
-/* We start with an arbitrarily chosen number (60), to help with
- * debugging when a lock state is not initialized or wrongly
- * initialized. */
-enum MPID_Lock_state {
-    MPID_LOCK_NONE = 60,
-    MPID_LOCK_SHARED_ALL
-};
-
-/* We start with an arbitrarily chosen number (23), to help with
- * debugging when a lock type is not initialized or wrongly
- * initialized. */
-enum MPIDI_RMA_Lock_type {
-    MPIDI_RMA_LOCK_TYPE_NONE = 23,
-    MPIDI_RMA_LOCK_TYPE_SHARED,
-    MPIDI_RMA_LOCK_TYPE_EXCLUSIVE
-};
+#define MPID_LOCK_NONE 60
 
 /*
  * RMA Declarations.  We should move these into something separate from
@@ -98,7 +83,7 @@ typedef struct MPIDI_RMA_Target {
     struct MPIDI_RMA_Target *next;
     int target_rank;
     enum MPIDI_RMA_states access_state;
-    enum MPIDI_RMA_Lock_type lock_type; /* SHARED, EXCLUSIVE */
+    int lock_type; /* NONE, SHARED, EXCLUSIVE */
     int lock_mode;              /* e.g., MODE_NO_CHECK */
     int outstanding_lock;
     int disable_flush_local;

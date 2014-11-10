@@ -113,7 +113,7 @@ static inline MPIDI_RMA_Target_t *MPIDI_CH3I_Win_target_alloc(MPID_Win * win_ptr
 
     e->target_rank = -1;
     e->access_state = MPIDI_RMA_NONE;
-    e->lock_type = MPIDI_RMA_LOCK_TYPE_NONE;
+    e->lock_type = MPID_LOCK_NONE;
     e->lock_mode = 0;
     e->outstanding_lock = 0;
     e->disable_flush_local = 0;
