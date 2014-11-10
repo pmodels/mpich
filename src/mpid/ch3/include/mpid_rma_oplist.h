@@ -119,7 +119,7 @@ static inline MPIDI_RMA_Target_t *MPIDI_CH3I_Win_target_alloc(MPID_Win * win_ptr
     e->disable_flush_local = 0;
     e->win_complete_flag = 0;
 
-    e->sync.sync_flag = MPIDI_RMA_NONE;
+    e->sync.sync_flag = MPIDI_RMA_SYNC_NONE;
     e->sync.outstanding_acks = 0;
     e->sync.have_remote_incomplete_ops = 1; /* When I create a new target, there must be
                                                incomplete ops until a FLUSH/UNLOCK packet
