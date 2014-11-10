@@ -3898,18 +3898,29 @@ int MPID_VCR_Get_lpid(MPID_VCR vcr, int * lpid_ptr);
  * be necessary to do so (for instance in the receive queue */
 #define MPIR_TAG_ERROR_BIT (1 << 30)
 
+/* This bitmask is used to differentiate between a process failure
+ * (MPIX_ERR_PROC_FAILED) and any other kind of failure (MPI_ERR_OTHER). */
+#define MPIR_TAG_PROC_FAILURE_BIT (1 << 29)
+
 /* This macro checks the value of the error bit in the MPI tag and returns 1
  * if the tag is set and 0 if it is not. */
-#define MPIR_TAG_CHECK_ERROR_BIT(tag) ((MPIR_TAG_ERROR_BIT & tag) == MPIR_TAG_ERROR_BIT ? 1 : 0)
+#define MPIR_TAG_CHECK_ERROR_BIT(tag) ((MPIR_TAG_ERROR_BIT & (tag)) == MPIR_TAG_ERROR_BIT ? 1 : 0)
+
+/* This macro checks the value of the process failure bit in the MPI tag and
+ * returns 1 if the tag is set and 0 if it is not. */
+#define MPIR_TAG_CHECK_PROC_FAILURE_BIT(tag) ((MPIR_TAG_PROC_FAILURE_BIT & (tag)) == MPIR_TAG_PROC_FAILURE_BIT ? 1 : 0)
 
 /* This macro sets the value of the error bit in the MPI tag to 1 */
-#define MPIR_TAG_SET_ERROR_BIT(tag) (tag |= MPIR_TAG_ERROR_BIT)
+#define MPIR_TAG_SET_ERROR_BIT(tag) ((tag) |= MPIR_TAG_ERROR_BIT)
 
-/* This macro clears the value of the error bit in the MPI tag */
-#define MPIR_TAG_CLEAR_ERROR_BIT(tag) (tag &= ~MPIR_TAG_ERROR_BIT)
+/* This macro sets the value of the process failure bit in the MPI tag to 1 */
+#define MPIR_TAG_SET_PROC_FAILURE_BIT(tag) ((tag) |= (MPIR_TAG_ERROR_BIT | MPIR_TAG_PROC_FAILURE_BIT))
 
-/* This macro masks the value of the error bit in the MPI tag */
-#define MPIR_TAG_MASK_ERROR_BIT(tag) (tag & ~MPIR_TAG_ERROR_BIT)
+/* This macro clears the value of the error bits in the MPI tag */
+#define MPIR_TAG_CLEAR_ERROR_BITS(tag) ((tag) &= ~(MPIR_TAG_ERROR_BIT ^ MPIR_TAG_PROC_FAILURE_BIT))
+
+/* This macro masks the value of the error bits in the MPI tag */
+#define MPIR_TAG_MASK_ERROR_BITS(tag) ((tag) & ~(MPIR_TAG_ERROR_BIT ^ MPIR_TAG_PROC_FAILURE_BIT))
 
 /* These functions are used in the implementation of collective and
    other internal operations. They are wrappers around MPID send/recv

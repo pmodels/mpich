@@ -339,7 +339,7 @@ int MPIC_Recv(void *buf, int count, MPI_Datatype datatype, int source, int tag,
             MPIX_ERR_PROC_FAILED == MPIR_ERR_GET_CLASS(status->MPI_ERROR) ||
             MPIR_TAG_CHECK_ERROR_BIT(status->MPI_TAG)) {
             *errflag = TRUE;
-            MPIR_TAG_CLEAR_ERROR_BIT(status->MPI_TAG);
+            MPIR_TAG_CLEAR_ERROR_BITS(status->MPI_TAG);
         } else if (MPI_SUCCESS == MPIR_ERR_GET_CLASS(status->MPI_ERROR)) {
             MPIU_Assert(status->MPI_TAG == tag);
         }
@@ -457,7 +457,7 @@ int MPIC_Sendrecv(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
             MPIX_ERR_PROC_FAILED == MPIR_ERR_GET_CLASS(status->MPI_ERROR) ||
             MPIR_TAG_CHECK_ERROR_BIT(status->MPI_TAG)) {
             *errflag = TRUE;
-            MPIR_TAG_CLEAR_ERROR_BIT(status->MPI_TAG);
+            MPIR_TAG_CLEAR_ERROR_BITS(status->MPI_TAG);
         } else if (MPI_SUCCESS == MPIR_ERR_GET_CLASS(status->MPI_ERROR)) {
             MPIU_Assert(status->MPI_TAG == recvtag);
         }
@@ -573,7 +573,7 @@ int MPIC_Sendrecv_replace(void *buf, int count, MPI_Datatype datatype,
             MPIX_ERR_PROC_FAILED == MPIR_ERR_GET_CLASS(status->MPI_ERROR) ||
             MPIR_TAG_CHECK_ERROR_BIT(status->MPI_TAG)) {
             *errflag = TRUE;
-            MPIR_TAG_CLEAR_ERROR_BIT(status->MPI_TAG);
+            MPIR_TAG_CLEAR_ERROR_BITS(status->MPI_TAG);
         } else if (MPI_SUCCESS == MPIR_ERR_GET_CLASS(status->MPI_ERROR)) {
             MPIU_Assert(status->MPI_TAG == recvtag);
         }
@@ -694,7 +694,7 @@ int MPIC_Waitall(int numreq, MPI_Request requests[], MPI_Status statuses[], int 
     for (i = 0; i < numreq; ++i) {
         if (MPIR_TAG_CHECK_ERROR_BIT(statuses[i].MPI_TAG)) {
             *errflag = TRUE;
-            MPIR_TAG_CLEAR_ERROR_BIT(statuses[i].MPI_TAG);
+            MPIR_TAG_CLEAR_ERROR_BITS(statuses[i].MPI_TAG);
             break;
         }
     }
