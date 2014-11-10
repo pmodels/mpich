@@ -282,19 +282,6 @@ enum MPIDI_Win_info_arg_vals_accumulate_ops {
     MPIDI_ACC_OPS_SAME_OP_NO_OP
 };
 
-/* We start with an arbitrarily chosen number (27), to help with
- * debugging when an epoch state is not initialized or wrongly
- * initialized. */
-enum MPIDI_Win_epoch_states {
-    MPIDI_EPOCH_NONE = 27,
-    MPIDI_EPOCH_FENCE,
-    MPIDI_EPOCH_POST,
-    MPIDI_EPOCH_START,
-    MPIDI_EPOCH_PSCW,           /* Both post and start have been called. */
-    MPIDI_EPOCH_LOCK,
-    MPIDI_EPOCH_LOCK_ALL
-};
-
 struct MPIDI_Win_info_args {
     int no_locks;               /* valid flavor = all */
     int accumulate_ordering;
