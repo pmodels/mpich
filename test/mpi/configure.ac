@@ -1521,6 +1521,7 @@ AC_OUTPUT(maint/testmerge \
           spawn/Makefile \
           topo/Makefile \
           io/Makefile \
+          io/testlist \
           f77/Makefile \
           f77/attr/Makefile \
           f77/attr/attraints.h \

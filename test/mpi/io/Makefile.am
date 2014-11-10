@@ -27,5 +27,13 @@ noinst_PROGRAMS = \
     bigtype       \
     hindexed_io
 
+if BUILD_MPIX_TESTS
+noinst_PROGRAMS += \
+    i_bigtype     \
+    i_hindexed_io \
+    i_rdwrord     \
+    i_setviewcur
+endif
+
 clean-local:
 	-rm -f testfile testfile.*
