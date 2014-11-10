@@ -10,6 +10,10 @@
 /*
 === BEGIN_MPI_T_CVAR_INFO_BLOCK ===
 
+categories:
+    - name        : CH3
+      description : cvars that control behavior of ch3
+
 cvars:
     - name        : MPIR_CVAR_CH3_RMA_OP_WIN_POOL_SIZE
       category    : CH3
