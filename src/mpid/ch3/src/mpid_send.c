@@ -72,6 +72,7 @@ int MPID_Send(const void * buf, int count, MPI_Datatype datatype, int rank,
     }
 
     MPIDI_Comm_get_vc_set_active(comm, rank, &vc);
+    MPIU_ERR_CHKANDJUMP1(vc->state == MPIDI_VC_STATE_MORIBUND, mpi_errno, MPIX_ERR_PROC_FAILED, "**comm_fail", "**comm_fail %d", rank);
 
 #ifdef ENABLE_COMM_OVERRIDES
     if (vc->comm_ops && vc->comm_ops->send)
