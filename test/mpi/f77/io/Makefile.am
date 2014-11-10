@@ -7,7 +7,7 @@
 
 include $(top_srcdir)/Makefile_f77.mtest
 
-EXTRA_DIST = testlist
+EXTRA_DIST = testlist.in
 
 # avoid having to write many "foo_SOURCES = foo.f" lines
 AM_DEFAULT_SOURCE_EXT = .f
@@ -34,10 +34,17 @@ noinst_PROGRAMS = \
     c2fmultio \
     c2f2ciof
 
+if BUILD_MPIX_TESTS
+noinst_PROGRAMS += \
+    i_setviewcurf  \
+    iwriteatallf
+endif
+
 
 # We don't want to distribute these source files because they are created by
 # "testmerge", hence "nodist_foo_SOURCES"
 nodist_iwriteatf_SOURCES     = iwriteatf.f
+nodist_iwriteatallf_SOURCES  = iwriteatallf.f
 nodist_iwritef_SOURCES       = iwritef.f
 nodist_iwriteshf_SOURCES     = iwriteshf.f
 nodist_writeallbef_SOURCES   = writeallbef.f
@@ -82,6 +89,7 @@ writeordf.$(OBJEXT): iooffset.h
 # these files are genereated using testmerge (see below)
 generated_io_sources = \
     iwriteatf.f        \
+    iwriteatallf.f     \
     iwritef.f          \
     iwriteshf.f        \
     writeallbef.f      \

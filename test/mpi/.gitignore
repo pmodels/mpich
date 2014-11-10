@@ -38,6 +38,7 @@
 /f77/init/checksizes.c
 /f90/datatype/allctypesf90.f90
 /io/test.ord
+/io/i_setviewcur
 /threads/pt2pt/greq_test
 /threads/pt2pt/greq_wait
 /threads/pt2pt/multisend
@@ -246,6 +247,7 @@
 /f77/io/writeordbef.f
 /f77/io/writeshf.f
 /f77/io/writeatallf.f
+/f77/io/iwriteatallf.f
 /f77/io/writeatallbef.f
 /f77/io/writeallbef.f
 /f77/io/iwritef
@@ -259,6 +261,7 @@
 /f77/io/writeatall
 /f77/io/writeatallbef
 /f77/io/writeallbef
+/f77/io/i_setviewcurf
 /f77/io/iooffset.h
 /f77/io/iodisp.h
 /f77/io/ioaint.h
@@ -343,6 +346,7 @@
 /f90/io/writeordbef90.f90
 /f90/io/writeshf90.f90
 /f90/io/writeatallf90.f90
+/f90/io/iwriteatallf90.f90
 /f90/io/writeatallbef90.f90
 /f90/io/writeallbef90.f90
 /f90/io/c2f2ciof90.f90
@@ -350,8 +354,10 @@
 /f90/io/c2f90multio.c
 /f90/io/Makefile.sm
 /f90/io/testlist
+/f90/io/testlist.in
 /f90/io/ioharness.defn
 /f90/io/ioharness.tlt
+/f90/io/i_setviewcurf90.f90
 /f90/misc/sizeof
 /f90/misc/f77tof90
 /f90/pt2pt/Makefile.sm
@@ -442,6 +448,9 @@
 /f08/datatype/get_elem_d
 /f08/datatype/get_elem_u
 /f08/rma/testlist
+/f08/io/iwriteatallf90.f90
+/f08/io/iwriteatallf90
+/f08/io/i_fcoll_test
 /group/errstring
 /group/grouptest
 /group/groupcreate
@@ -798,6 +807,8 @@
 /f77/io/setviewcurf
 /f77/io/shpositionf
 /f77/io/writeatallf
+/f77/io/iwriteatallf
+/f77/io/testlist
 /f77/pt2pt/allpairf
 /f77/pt2pt/greqf
 /f77/pt2pt/mprobef
@@ -866,6 +877,7 @@
 /f90/io/writeallf90
 /f90/io/writeatallbef90
 /f90/io/writeatallf90
+/f90/io/iwriteatallf90
 /f90/io/writeatf90
 /f90/io/writef90
 /f90/io/writeordbef90

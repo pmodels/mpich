@@ -246,6 +246,38 @@ enddo
 </readfile>
 </TESTDEFN>
 
+# This test uses nonblocking collective I/O with thread-safe, individual file pointers
+<TESTDEFN filename="iwriteatallf.f">
+<writefiledecl>
+integer status(MPI_STATUS_SIZE)
+integer request
+integer buf(MAX_BUFFER), ans
+include 'iooffset.h'
+</writefiledecl>
+<writefile>
+do k=1, b
+   <setContigBuffer/>
+   <findOffset/>
+   call mpix_file_iwrite_at_all( fh, offset, buf, n, MPI_INTEGER, request, ierr )
+   call mpi_wait(request, status, ierr)
+   <checkErr/>
+enddo
+</writefile>
+# No extra declarations are needed for the read step
+<readfiledecl>
+</readfiledecl>
+<readfile>
+do k=1, b
+   <clearContigBuffer/>
+   <findOffset/>
+   call mpix_file_iread_at_all( fh, offset, buf, n, MPI_INTEGER, request, ierr )
+   call mpi_wait(request, status, ierr)
+   <checkErr/>
+   <checkContigBuffer/>
+enddo
+</readfile>
+</TESTDEFN>
+
 # This test uses collective I/O with thread-safe, individual file pointers
 <TESTDEFN filename="writeatallbef.f">
 <writefiledecl>
