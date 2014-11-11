@@ -578,7 +578,7 @@ int MPIDI_Win_start(MPID_Group * group_ptr, int assert, MPID_Win * win_ptr)
     win_ptr->start_grp_size = group_ptr->size;
 
     if ((assert & MPI_MODE_NOCHECK) == 0) {
-        int i, intra_cnt, inter_cnt;
+        int i, intra_cnt;
         MPI_Request *intra_start_req = NULL;
         MPI_Status *intra_start_status = NULL;
         MPID_Comm *comm_ptr = win_ptr->comm_ptr;
@@ -626,7 +626,6 @@ int MPIDI_Win_start(MPID_Group * group_ptr, int assert, MPID_Win * win_ptr)
                 }
                 else {
                     win_ptr->start_req[i] = req_ptr->handle;
-                    inter_cnt++;
                 }
             }
             else {
