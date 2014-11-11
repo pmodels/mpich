@@ -302,9 +302,6 @@ static int MPID_nem_ib_iSendContig_core(MPIDI_VC_t * vc, MPID_Request * sreq, vo
     if (((MPIDI_CH3_Pkt_t *) hdr)->type == MPIDI_CH3_PKT_GET) {
         //printf("isendcontig_core,MPIDI_CH3_PKT_GET,ref_count=%d\n", sreq->ref_count);
     }
-    if (hdr && ((MPIDI_CH3_Pkt_t *) hdr)->type == MPIDI_CH3_PKT_ACCUM_IMMED) {
-        dprintf("isendcontig_core,MPIDI_CH3_PKT_ACCUM_IMMED,ref_count=%d\n", sreq->ref_count);
-    }
     if (hdr && ((MPIDI_CH3_Pkt_t *) hdr)->type == MPIDI_CH3_PKT_ACCUMULATE) {
         dprintf("isendcontig_core,MPIDI_CH3_PKT_ACCUMULATE,ref_count=%d\n", sreq->ref_count);
     }
