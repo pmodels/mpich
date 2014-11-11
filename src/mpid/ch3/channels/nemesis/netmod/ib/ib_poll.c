@@ -33,7 +33,7 @@ static int entered_drain_scq = 0;
                 mpi_errno = MPID_nem_ib_poll_eager(&MPID_nem_ib_ringbuf[n]); /*FIXME: perform send_progress for all sendqs */ \
                 MPIU_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**MPID_nem_ib_poll_eager"); \
             }                                                           \
-        } while (0)
+        } while (0);                                                    \
 }
 #if 0
    int n;                                         \
