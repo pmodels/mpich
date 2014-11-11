@@ -452,15 +452,17 @@ while (<FD>) {
     if (grep/void\s*\*/, @arglist) {
         $fname = "$routine";
         $fname =~ s/MPI_//g;
+        $fname =~ s/MPIX_//g;
         $fname =~ tr/A-Z/a-z/;
         $fname .= "_cdesc.c";
 
         print MAKEFD "\tsrc/binding/fortran/use_mpi_f08/wrappers_c/$fname \\\n";
         open(CFILE, ">$fname") || die "Could not open $fname\n";
 
-        # replace MPI_Foo with MPIR_Foo_cdesc
+        # replace MPI(X)_Foo with MPIR_Foo_cdesc
         $cdesc_routine = $routine;
         $cdesc_routine =~ s/MPI_/MPIR_/g;
+        $cdesc_routine =~ s/MPIX_/MPIR_/g;
         $cdesc_routine .= "_cdesc";
 
         print CFILE <<EOT;
