@@ -30,6 +30,11 @@
         }                                                               \
     }
 
+enum rptl_pt_type {
+    RPTL_PT_DATA,
+    RPTL_PT_CONTROL
+};
+
 struct rptl_target;
 struct rptl_op {
     enum {
@@ -59,7 +64,7 @@ struct rptl_op {
             /* internal variables store events */
             ptl_event_t *send;
             ptl_event_t *ack;
-            int flow_control;
+            enum rptl_pt_type pt_type;
         } put;
         struct {
             ptl_handle_md_t md_handle;

@@ -408,7 +408,7 @@ void free_op(struct rptl_op *op)
 static int rptl_put(ptl_handle_md_t md_handle, ptl_size_t local_offset, ptl_size_t length,
                     ptl_ack_req_t ack_req, ptl_process_t target_id, ptl_pt_index_t pt_index,
                     ptl_match_bits_t match_bits, ptl_size_t remote_offset, void *user_ptr,
-                    ptl_hdr_data_t hdr_data, int flow_control);
+                    ptl_hdr_data_t hdr_data, enum rptl_pt_type pt_type);
 
 #undef FUNCNAME
 #define FUNCNAME poke_progress
@@ -458,9 +458,8 @@ int poke_progress(void)
                 /* make sure the user setup a control portal */
                 assert(control_pt != PTL_PT_ANY);
 
-                /* disable flow control for control messages */
                 ret = rptl_put(rptl->md, 0, 0, PTL_NO_ACK_REQ, id, control_pt,
-                               0, 0, NULL, RPTL_CONTROL_MSG_UNPAUSE, 0);
+                               0, 0, NULL, RPTL_CONTROL_MSG_UNPAUSE, RPTL_PT_CONTROL);
                 RPTLU_ERR_POP(ret, "Error sending unpause message\n");
             }
         }
@@ -494,9 +493,8 @@ int poke_progress(void)
 
             target->state = RPTL_TARGET_STATE_PAUSE_ACKED;
 
-            /* disable flow control for control messages */
             ret = rptl_put(target->rptl->md, 0, 0, PTL_NO_ACK_REQ, id, control_pt, 0,
-                                        0, NULL, RPTL_CONTROL_MSG_PAUSE_ACK, 0);
+                           0, NULL, RPTL_CONTROL_MSG_PAUSE_ACK, RPTL_PT_CONTROL);
             RPTLU_ERR_POP(ret, "Error sending pause ack message\n");
 
             continue;
@@ -611,7 +609,7 @@ int poke_progress(void)
 static int rptl_put(ptl_handle_md_t md_handle, ptl_size_t local_offset, ptl_size_t length,
                     ptl_ack_req_t ack_req, ptl_process_t target_id, ptl_pt_index_t pt_index,
                     ptl_match_bits_t match_bits, ptl_size_t remote_offset, void *user_ptr,
-                    ptl_hdr_data_t hdr_data, int flow_control)
+                    ptl_hdr_data_t hdr_data, enum rptl_pt_type pt_type)
 {
     struct rptl_op *op;
     int ret = PTL_OK;
@@ -644,11 +642,11 @@ static int rptl_put(ptl_handle_md_t md_handle, ptl_size_t local_offset, ptl_size
     /* place to store the send and ack events */
     op->u.put.send = NULL;
     op->u.put.ack = NULL;
-    op->u.put.flow_control = flow_control;
+    op->u.put.pt_type = pt_type;
     op->events_ready = 0;
     op->target = target;
 
-    if (op->u.put.flow_control)
+    if (op->u.put.pt_type == RPTL_PT_DATA)
         MPL_DL_APPEND(target->data_op_list, op);
     else
         MPL_DL_APPEND(target->control_op_list, op);
@@ -675,7 +673,7 @@ int MPID_nem_ptl_rptl_put(ptl_handle_md_t md_handle, ptl_size_t local_offset, pt
                           ptl_hdr_data_t hdr_data)
 {
     return rptl_put(md_handle, local_offset, length, ack_req, target_id, pt_index, match_bits,
-                    remote_offset, user_ptr, hdr_data, 1);
+                    remote_offset, user_ptr, hdr_data, RPTL_PT_DATA);
 }
 
 
@@ -761,9 +759,8 @@ static int send_pause_messages(struct rptl *rptl)
         /* make sure the user setup a control portal */
         assert(control_pt != PTL_PT_ANY);
 
-        /* disable flow control for control messages */
         ret = rptl_put(rptl->md, 0, 0, PTL_NO_ACK_REQ, id, control_pt, 0, 0,
-                                    NULL, RPTL_CONTROL_MSG_PAUSE, 0);
+                                    NULL, RPTL_CONTROL_MSG_PAUSE, RPTL_PT_CONTROL);
         RPTLU_ERR_POP(ret, "Error sending pause message\n");
     }
 
@@ -1099,7 +1096,7 @@ int MPID_nem_ptl_rptl_eqget(ptl_handle_eq_t eq_handle, ptl_event_t * event)
 
             /* we should not get NACKs on the control portal */
             if (event->type == PTL_EVENT_ACK)
-                assert(op->u.put.flow_control);
+                assert(op->u.put.pt_type == RPTL_PT_DATA);
 
             op->state = RPTL_OP_STATE_NACKED;
 
@@ -1159,8 +1156,9 @@ int MPID_nem_ptl_rptl_eqget(ptl_handle_eq_t eq_handle, ptl_event_t * event)
             op->events_ready = 1;
             event->user_ptr = op->u.put.user_ptr;
 
-            /* if flow control is not set, ignore the ACK event */
-            if (op->u.put.flow_control == 0) {
+            /* if the message is over the control portal, ignore the
+             * ACK event */
+            if (op->u.put.pt_type == RPTL_PT_CONTROL) {
                 MPIU_Free(op->u.put.ack);
                 MPL_DL_DELETE(op->target->control_op_list, op);
                 free_op(op);
@@ -1177,8 +1175,9 @@ int MPID_nem_ptl_rptl_eqget(ptl_handle_eq_t eq_handle, ptl_event_t * event)
             op->events_ready = 1;
             event->user_ptr = op->u.put.user_ptr;
 
-            /* if flow control is not set, ignore ACK event */
-            if (op->u.put.flow_control == 0) {
+            /* if the message is over the control portal, ignore ACK
+             * event */
+            if (op->u.put.pt_type == RPTL_PT_CONTROL) {
                 MPIU_Free(op->u.put.send);
                 MPL_DL_DELETE(op->target->control_op_list, op);
                 free_op(op);
@@ -1190,7 +1189,7 @@ int MPID_nem_ptl_rptl_eqget(ptl_handle_eq_t eq_handle, ptl_event_t * event)
             else if (!(op->u.put.ack_req & PTL_ACK_REQ)) {
                 memcpy(event, op->u.put.send, sizeof(ptl_event_t));
                 MPIU_Free(op->u.put.send);
-                /* flow control is set, we should be in the data op list */
+                /* we should be in the data op list */
                 MPL_DL_DELETE(op->target->data_op_list, op);
                 free_op(op);
             }
