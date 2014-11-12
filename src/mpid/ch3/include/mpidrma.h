@@ -342,48 +342,42 @@ static inline int MPIDI_CH3I_RMA_Handle_flush_ack(MPID_Win * win_ptr, int target
 #define FUNCNAME do_accumulate_op
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-static inline int do_accumulate_op(MPID_Request *rreq)
+static inline int do_accumulate_op(void *source_buf, void *target_buf,
+                                   int acc_count, MPI_Datatype acc_dtp, MPI_Op acc_op)
 {
     int mpi_errno = MPI_SUCCESS;
-    MPI_Aint true_lb, true_extent;
     MPI_User_function *uop;
     MPIDI_STATE_DECL(MPID_STATE_DO_ACCUMULATE_OP);
 
     MPIDI_FUNC_ENTER(MPID_STATE_DO_ACCUMULATE_OP);
 
-    MPIU_Assert(rreq->dev.final_user_buf != NULL);
-
-    if (rreq->dev.op == MPI_REPLACE)
+    if (acc_op == MPI_REPLACE)
     {
         /* simply copy the data */
-        mpi_errno = MPIR_Localcopy(rreq->dev.final_user_buf, rreq->dev.user_count,
-                                   rreq->dev.datatype,
-                                   rreq->dev.real_user_buf,
-                                   rreq->dev.user_count,
-                                   rreq->dev.datatype);
+        mpi_errno = MPIR_Localcopy(source_buf, acc_count, acc_dtp,
+                                   target_buf, acc_count, acc_dtp);
         if (mpi_errno) {
 	    MPIU_ERR_POP(mpi_errno);
 	}
         goto fn_exit;
     }
 
-    if (HANDLE_GET_KIND(rreq->dev.op) == HANDLE_KIND_BUILTIN)
+    if (HANDLE_GET_KIND(acc_op) == HANDLE_KIND_BUILTIN)
     {
         /* get the function by indexing into the op table */
-        uop = MPIR_OP_HDL_TO_FN(rreq->dev.op);
+        uop = MPIR_OP_HDL_TO_FN(acc_op);
     }
     else
     {
 	/* --BEGIN ERROR HANDLING-- */
-        mpi_errno = MPIR_Err_create_code( MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OP, "**opnotpredefined", "**opnotpredefined %d", rreq->dev.op );
+        mpi_errno = MPIR_Err_create_code( MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_OP, "**opnotpredefined", "**opnotpredefined %d", acc_op );
         return mpi_errno;
 	/* --END ERROR HANDLING-- */
     }
 
-    if (MPIR_DATATYPE_IS_PREDEFINED(rreq->dev.datatype))
+    if (MPIR_DATATYPE_IS_PREDEFINED(acc_dtp))
     {
-        (*uop)(rreq->dev.final_user_buf, rreq->dev.real_user_buf,
-               &(rreq->dev.user_count), &(rreq->dev.datatype));
+        (*uop)(source_buf, target_buf, &acc_count, &acc_dtp);
     }
     else
     {
@@ -405,13 +399,13 @@ static inline int do_accumulate_op(MPID_Request *rreq)
             return mpi_errno;
         }
 	/* --END ERROR HANDLING-- */
-        MPID_Segment_init(NULL, rreq->dev.user_count,
-			  rreq->dev.datatype, segp, 0);
+        MPID_Segment_init(NULL, acc_count,
+			  acc_dtp, segp, 0);
         first = 0;
         last  = SEGMENT_IGNORE_LAST;
 
-        MPID_Datatype_get_ptr(rreq->dev.datatype, dtp);
-        vec_len = dtp->max_contig_blocks * rreq->dev.user_count + 1;
+        MPID_Datatype_get_ptr(acc_dtp, dtp);
+        vec_len = dtp->max_contig_blocks * acc_count + 1;
         /* +1 needed because Rob says so */
         dloop_vec = (DLOOP_VECTOR *)
             MPIU_Malloc(vec_len * sizeof(DLOOP_VECTOR));
@@ -431,8 +425,8 @@ static inline int do_accumulate_op(MPID_Request *rreq)
         for (i=0; i<vec_len; i++)
 	{
             MPIU_Assign_trunc(count, (dloop_vec[i].DLOOP_VECTOR_LEN)/type_size, int);
-            (*uop)((char *)rreq->dev.final_user_buf + MPIU_PtrToAint(dloop_vec[i].DLOOP_VECTOR_BUF),
-                   (char *)rreq->dev.real_user_buf + MPIU_PtrToAint(dloop_vec[i].DLOOP_VECTOR_BUF),
+            (*uop)((char *)source_buf + MPIU_PtrToAint(dloop_vec[i].DLOOP_VECTOR_BUF),
+                   (char *)target_buf + MPIU_PtrToAint(dloop_vec[i].DLOOP_VECTOR_BUF),
                    &count, &type);
         }
 
@@ -441,10 +435,6 @@ static inline int do_accumulate_op(MPID_Request *rreq)
     }
 
  fn_exit:
-    /* free the temporary buffer */
-    MPIR_Type_get_true_extent_impl(rreq->dev.datatype, &true_lb, &true_extent);
-    MPIU_Free((char *) rreq->dev.final_user_buf + true_lb);
-
     MPIDI_FUNC_EXIT(MPID_STATE_DO_ACCUMULATE_OP);
 
     return mpi_errno;

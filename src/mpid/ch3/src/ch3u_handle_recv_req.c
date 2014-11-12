@@ -139,6 +139,7 @@ int MPIDI_CH3_ReqHandler_AccumRecvComplete( MPIDI_VC_t *vc,
                                             int *complete )
 {
     int mpi_errno = MPI_SUCCESS;
+    MPI_Aint true_lb, true_extent;
     MPID_Win *win_ptr;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3_REQHANDLER_ACCUMRECVCOMPLETE);
 
@@ -151,12 +152,17 @@ int MPIDI_CH3_ReqHandler_AccumRecvComplete( MPIDI_VC_t *vc,
     if (win_ptr->shm_allocated == TRUE)
         MPIDI_CH3I_SHM_MUTEX_LOCK(win_ptr);
     /* accumulate data from tmp_buf into user_buf */
-    mpi_errno = do_accumulate_op(rreq);
+    mpi_errno = do_accumulate_op(rreq->dev.final_user_buf, rreq->dev.real_user_buf,
+                                 rreq->dev.user_count, rreq->dev.datatype, rreq->dev.op);
     if (win_ptr->shm_allocated == TRUE)
         MPIDI_CH3I_SHM_MUTEX_UNLOCK(win_ptr);
     if (mpi_errno) {
         MPIU_ERR_POP(mpi_errno);
     }
+
+    /* free the temporary buffer */
+    MPIR_Type_get_true_extent_impl(rreq->dev.datatype, &true_lb, &true_extent);
+    MPIU_Free((char *) rreq->dev.final_user_buf + true_lb);
 
     if (rreq->dev.flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK_GRANTED) {
         if (!(rreq->dev.flags & MPIDI_CH3_PKT_FLAG_RMA_FLUSH) &&
@@ -216,6 +222,7 @@ int MPIDI_CH3_ReqHandler_GaccumRecvComplete( MPIDI_VC_t *vc,
     MPIDI_CH3_Pkt_get_accum_resp_t *get_accum_resp_pkt = &upkt.get_accum_resp;
     MPID_Request *resp_req;
     MPID_IOV iov[MPID_IOV_LIMIT];
+    MPI_Aint true_lb, true_extent;
     MPIU_CHKPMEM_DECL(1);
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3_REQHANDLER_GACCUMRECVCOMPLETE);
 
@@ -287,12 +294,17 @@ int MPIDI_CH3_ReqHandler_GaccumRecvComplete( MPIDI_VC_t *vc,
     if (win_ptr->shm_allocated == TRUE)
         MPIDI_CH3I_SHM_MUTEX_LOCK(win_ptr);
     /* accumulate data from tmp_buf into user_buf */
-    mpi_errno = do_accumulate_op(rreq);
+    mpi_errno = do_accumulate_op(rreq->dev.final_user_buf, rreq->dev.real_user_buf,
+                                 rreq->dev.user_count, rreq->dev.datatype, rreq->dev.op);
     if (win_ptr->shm_allocated == TRUE)
         MPIDI_CH3I_SHM_MUTEX_UNLOCK(win_ptr);
     if (mpi_errno) {
         MPIU_ERR_POP(mpi_errno);
     }
+
+    /* free the temporary buffer */
+    MPIR_Type_get_true_extent_impl(rreq->dev.datatype, &true_lb, &true_extent);
+    MPIU_Free((char *) rreq->dev.final_user_buf + true_lb);
     
     /* mark data transfer as complete and decrement CC */
     MPIDI_CH3U_Request_complete(rreq);
