@@ -405,6 +405,11 @@ void free_op(struct rptl_op *op)
 }
 
 
+static int rptl_put(ptl_handle_md_t md_handle, ptl_size_t local_offset, ptl_size_t length,
+                    ptl_ack_req_t ack_req, ptl_process_t target_id, ptl_pt_index_t pt_index,
+                    ptl_match_bits_t match_bits, ptl_size_t remote_offset, void *user_ptr,
+                    ptl_hdr_data_t hdr_data, int flow_control);
+
 #undef FUNCNAME
 #define FUNCNAME poke_progress
 #undef FCNAME
@@ -454,8 +459,8 @@ int poke_progress(void)
                 assert(control_pt != PTL_PT_ANY);
 
                 /* disable flow control for control messages */
-                ret = MPID_nem_ptl_rptl_put(rptl->md, 0, 0, PTL_NO_ACK_REQ, id, control_pt,
-                                            0, 0, NULL, RPTL_CONTROL_MSG_UNPAUSE, 0);
+                ret = rptl_put(rptl->md, 0, 0, PTL_NO_ACK_REQ, id, control_pt,
+                               0, 0, NULL, RPTL_CONTROL_MSG_UNPAUSE, 0);
                 RPTLU_ERR_POP(ret, "Error sending unpause message\n");
             }
         }
@@ -490,7 +495,7 @@ int poke_progress(void)
             target->state = RPTL_TARGET_STATE_PAUSE_ACKED;
 
             /* disable flow control for control messages */
-            ret = MPID_nem_ptl_rptl_put(target->rptl->md, 0, 0, PTL_NO_ACK_REQ, id, control_pt, 0,
+            ret = rptl_put(target->rptl->md, 0, 0, PTL_NO_ACK_REQ, id, control_pt, 0,
                                         0, NULL, RPTL_CONTROL_MSG_PAUSE_ACK, 0);
             RPTLU_ERR_POP(ret, "Error sending pause ack message\n");
 
@@ -600,20 +605,20 @@ int poke_progress(void)
 
 
 #undef FUNCNAME
-#define FUNCNAME MPID_nem_ptl_rptl_put
+#define FUNCNAME rptl_put
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPID_nem_ptl_rptl_put(ptl_handle_md_t md_handle, ptl_size_t local_offset, ptl_size_t length,
-                          ptl_ack_req_t ack_req, ptl_process_t target_id, ptl_pt_index_t pt_index,
-                          ptl_match_bits_t match_bits, ptl_size_t remote_offset, void *user_ptr,
-                          ptl_hdr_data_t hdr_data, int flow_control)
+static int rptl_put(ptl_handle_md_t md_handle, ptl_size_t local_offset, ptl_size_t length,
+                    ptl_ack_req_t ack_req, ptl_process_t target_id, ptl_pt_index_t pt_index,
+                    ptl_match_bits_t match_bits, ptl_size_t remote_offset, void *user_ptr,
+                    ptl_hdr_data_t hdr_data, int flow_control)
 {
     struct rptl_op *op;
     int ret = PTL_OK;
     struct rptl_target *target;
-    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_PTL_RPTL_PUT);
+    MPIDI_STATE_DECL(MPID_STATE_RPTL_PUT);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_PTL_RPTL_PUT);
+    MPIDI_FUNC_ENTER(MPID_STATE_RPTL_PUT);
 
     ret = find_target(target_id, &target);
     RPTLU_ERR_POP(ret, "error finding target structure\n");
@@ -652,11 +657,25 @@ int MPID_nem_ptl_rptl_put(ptl_handle_md_t md_handle, ptl_size_t local_offset, pt
     RPTLU_ERR_POP(ret, "Error from poke_progress\n");
 
   fn_exit:
-    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_PTL_RPTL_PUT);
+    MPIDI_FUNC_EXIT(MPID_STATE_RPTL_PUT);
     return ret;
 
   fn_fail:
     goto fn_exit;
+}
+
+
+#undef FUNCNAME
+#define FUNCNAME rptl_put
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+int MPID_nem_ptl_rptl_put(ptl_handle_md_t md_handle, ptl_size_t local_offset, ptl_size_t length,
+                          ptl_ack_req_t ack_req, ptl_process_t target_id, ptl_pt_index_t pt_index,
+                          ptl_match_bits_t match_bits, ptl_size_t remote_offset, void *user_ptr,
+                          ptl_hdr_data_t hdr_data)
+{
+    return rptl_put(md_handle, local_offset, length, ack_req, target_id, pt_index, match_bits,
+                    remote_offset, user_ptr, hdr_data, 1);
 }
 
 
@@ -743,7 +762,7 @@ static int send_pause_messages(struct rptl *rptl)
         assert(control_pt != PTL_PT_ANY);
 
         /* disable flow control for control messages */
-        ret = MPID_nem_ptl_rptl_put(rptl->md, 0, 0, PTL_NO_ACK_REQ, id, control_pt, 0, 0,
+        ret = rptl_put(rptl->md, 0, 0, PTL_NO_ACK_REQ, id, control_pt, 0, 0,
                                     NULL, RPTL_CONTROL_MSG_PAUSE, 0);
         RPTLU_ERR_POP(ret, "Error sending pause message\n");
     }
