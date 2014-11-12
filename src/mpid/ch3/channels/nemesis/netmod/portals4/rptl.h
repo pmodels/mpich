@@ -171,7 +171,7 @@ int MPID_nem_ptl_rptl_ptfini(ptl_pt_index_t pt_index);
 int MPID_nem_ptl_rptl_put(ptl_handle_md_t md_handle, ptl_size_t local_offset, ptl_size_t length,
                           ptl_ack_req_t ack_req, ptl_process_t target_id, ptl_pt_index_t pt_index,
                           ptl_match_bits_t match_bits, ptl_size_t remote_offset, void *user_ptr,
-                          ptl_hdr_data_t hdr_data, int flow_control);
+                          ptl_hdr_data_t hdr_data);
 
 int MPID_nem_ptl_rptl_get(ptl_handle_md_t md_handle, ptl_size_t local_offset, ptl_size_t length,
                           ptl_process_t target_id, ptl_pt_index_t pt_index,
