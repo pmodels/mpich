@@ -923,7 +923,7 @@ int MPIDI_CH3_PktHandler_CAS(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
                (it is initialized to NULL by lower layer) */
             req->dev.target_win_handle = cas_pkt->target_win_handle;
             req->dev.flags = cas_pkt->flags;
-            req->dev.OnDataAvail = MPIDI_CH3_ReqHandler_GaccumLikeSendComplete;
+            req->dev.OnDataAvail = MPIDI_CH3_ReqHandler_CASSendComplete;
 
             /* here we increment the Active Target counter to guarantee the GET-like
                operation are completed when counter reaches zero. */
@@ -1081,7 +1081,7 @@ int MPIDI_CH3_PktHandler_FOP(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
                (it is initialized to NULL by lower layer) */
             resp_req->dev.target_win_handle = fop_pkt->target_win_handle;
             resp_req->dev.flags = fop_pkt->flags;
-            resp_req->dev.OnDataAvail = MPIDI_CH3_ReqHandler_GaccumLikeSendComplete;
+            resp_req->dev.OnDataAvail = MPIDI_CH3_ReqHandler_FOPSendComplete;
 
             /* here we increment the Active Target counter to guarantee the GET-like
                operation are completed when counter reaches zero. */

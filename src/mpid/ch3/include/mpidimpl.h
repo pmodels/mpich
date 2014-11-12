@@ -1923,8 +1923,12 @@ int MPIDI_CH3_ReqHandler_SendReloadIOV( MPIDI_VC_t *vc, MPID_Request *sreq,
 					int *complete );
 int MPIDI_CH3_ReqHandler_GetSendComplete( MPIDI_VC_t *, MPID_Request *,
                                           int * );
-int MPIDI_CH3_ReqHandler_GaccumLikeSendComplete( MPIDI_VC_t *, MPID_Request *,
-                                                 int * );
+int MPIDI_CH3_ReqHandler_GaccumSendComplete( MPIDI_VC_t *, MPID_Request *,
+                                             int * );
+int MPIDI_CH3_ReqHandler_CASSendComplete( MPIDI_VC_t *, MPID_Request *,
+                                          int * );
+int MPIDI_CH3_ReqHandler_FOPSendComplete( MPIDI_VC_t *, MPID_Request *,
+                                          int * );
 /* Request-based operation handler */
 int MPIDI_CH3_ReqHandler_ReqOpsComplete(MPIDI_VC_t *, MPID_Request *,
                                         int *);

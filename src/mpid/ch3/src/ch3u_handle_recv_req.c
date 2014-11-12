@@ -214,8 +214,8 @@ int MPIDI_CH3_ReqHandler_GaccumRecvComplete( MPIDI_VC_t *vc,
         MPID_Segment_free(seg);
     }
 
-    resp_req->dev.OnFinal = MPIDI_CH3_ReqHandler_GaccumLikeSendComplete;
-    resp_req->dev.OnDataAvail = MPIDI_CH3_ReqHandler_GaccumLikeSendComplete;
+    resp_req->dev.OnFinal = MPIDI_CH3_ReqHandler_GaccumSendComplete;
+    resp_req->dev.OnDataAvail = MPIDI_CH3_ReqHandler_GaccumSendComplete;
     resp_req->dev.target_win_handle = rreq->dev.target_win_handle;
     resp_req->dev.flags = rreq->dev.flags;
 
