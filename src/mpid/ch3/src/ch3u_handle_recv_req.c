@@ -86,35 +86,9 @@ int MPIDI_CH3_ReqHandler_PutRecvComplete( MPIDI_VC_t *vc,
 
     MPID_Win_get_ptr(rreq->dev.target_win_handle, win_ptr);
 
-    if (rreq->dev.flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK_GRANTED) {
-        if (!(rreq->dev.flags & MPIDI_CH3_PKT_FLAG_RMA_FLUSH) &&
-            !(rreq->dev.flags & MPIDI_CH3_PKT_FLAG_RMA_UNLOCK)) {
-            mpi_errno = MPIDI_CH3I_Send_lock_granted_pkt(vc, win_ptr, rreq->dev.source_win_handle);
-            if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
-            MPIDI_CH3_Progress_signal_completion();
-        }
-    }
-    if (rreq->dev.flags & MPIDI_CH3_PKT_FLAG_RMA_FLUSH) {
-        mpi_errno = MPIDI_CH3I_Send_flush_ack_pkt(vc, win_ptr, rreq->dev.flags,
-                                                  rreq->dev.source_win_handle);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-        MPIDI_CH3_Progress_signal_completion();
-    }
-    if (rreq->dev.flags & MPIDI_CH3_PKT_FLAG_RMA_DECR_AT_COUNTER) {
-        win_ptr->at_completion_counter--;
-        MPIU_Assert(win_ptr->at_completion_counter >= 0);
-        /* Signal the local process when the op counter reaches 0. */
-        if (win_ptr->at_completion_counter == 0)
-            MPIDI_CH3_Progress_signal_completion();
-    }
-    if (rreq->dev.flags & MPIDI_CH3_PKT_FLAG_RMA_UNLOCK) {
-        mpi_errno = MPIDI_CH3I_Release_lock(win_ptr);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-        mpi_errno = MPIDI_CH3I_Send_flush_ack_pkt(vc, win_ptr, rreq->dev.flags,
-                                                  rreq->dev.source_win_handle);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-        MPIDI_CH3_Progress_signal_completion();
-    }
+    mpi_errno = finish_op_on_target(win_ptr, vc, MPIDI_CH3_PKT_PUT,
+                                    rreq->dev.flags, rreq->dev.source_win_handle);
+    if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
 
     /* mark data transfer as complete and decrement CC */
     MPIDI_CH3U_Request_complete(rreq);
@@ -164,34 +138,9 @@ int MPIDI_CH3_ReqHandler_AccumRecvComplete( MPIDI_VC_t *vc,
     MPIR_Type_get_true_extent_impl(rreq->dev.datatype, &true_lb, &true_extent);
     MPIU_Free((char *) rreq->dev.final_user_buf + true_lb);
 
-    if (rreq->dev.flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK_GRANTED) {
-        if (!(rreq->dev.flags & MPIDI_CH3_PKT_FLAG_RMA_FLUSH) &&
-            !(rreq->dev.flags & MPIDI_CH3_PKT_FLAG_RMA_UNLOCK)) {
-            mpi_errno = MPIDI_CH3I_Send_lock_granted_pkt(vc, win_ptr, rreq->dev.source_win_handle);
-            if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
-            MPIDI_CH3_Progress_signal_completion();
-        }
-    }
-    if (rreq->dev.flags & MPIDI_CH3_PKT_FLAG_RMA_FLUSH) {
-        mpi_errno = MPIDI_CH3I_Send_flush_ack_pkt(vc, win_ptr, rreq->dev.flags,
-                                                  rreq->dev.source_win_handle);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-        MPIDI_CH3_Progress_signal_completion();
-    }
-    if (rreq->dev.flags & MPIDI_CH3_PKT_FLAG_RMA_DECR_AT_COUNTER) {
-        win_ptr->at_completion_counter--;
-        MPIU_Assert(win_ptr->at_completion_counter >= 0);
-        /* Signal the local process when the op counter reaches 0. */
-        if (win_ptr->at_completion_counter == 0)
-            MPIDI_CH3_Progress_signal_completion();
-    }
-    if (rreq->dev.flags & MPIDI_CH3_PKT_FLAG_RMA_UNLOCK) {
-        mpi_errno = MPIDI_CH3I_Release_lock(win_ptr);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-        mpi_errno = MPIDI_CH3I_Send_flush_ack_pkt(vc, win_ptr, rreq->dev.flags,
-                                                  rreq->dev.source_win_handle);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-    }
+    mpi_errno = finish_op_on_target(win_ptr, vc, MPIDI_CH3_PKT_ACCUMULATE,
+                                    rreq->dev.flags, rreq->dev.source_win_handle);
+    if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
 
     /* mark data transfer as complete and decrement CC */
     MPIDI_CH3U_Request_complete(rreq);

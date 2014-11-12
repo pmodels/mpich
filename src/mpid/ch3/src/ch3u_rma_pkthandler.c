@@ -936,18 +936,9 @@ int MPIDI_CH3_PktHandler_CAS(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
             MPID_Request_release(req);
     }
 
-    if (cas_pkt->flags & MPIDI_CH3_PKT_FLAG_RMA_UNLOCK) {
-        mpi_errno = MPIDI_CH3I_Release_lock(win_ptr);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-        MPIDI_CH3_Progress_signal_completion();
-    }
-    if (cas_pkt->flags & MPIDI_CH3_PKT_FLAG_RMA_DECR_AT_COUNTER) {
-        win_ptr->at_completion_counter--;
-        MPIU_Assert(win_ptr->at_completion_counter >= 0);
-        /* Signal the local process when the op counter reaches 0. */
-        if (win_ptr->at_completion_counter == 0)
-            MPIDI_CH3_Progress_signal_completion();
-    }
+    mpi_errno = finish_op_on_target(win_ptr, vc, MPIDI_CH3_PKT_CAS,
+                                    cas_pkt->flags, cas_pkt->source_win_handle);
+    if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
 
   fn_exit:
     MPIR_T_PVAR_TIMER_END(RMA, rma_rmapkt_cas);
@@ -1104,18 +1095,9 @@ int MPIDI_CH3_PktHandler_FOP(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
         }
     }
 
-    if (fop_pkt->flags & MPIDI_CH3_PKT_FLAG_RMA_UNLOCK) {
-        mpi_errno = MPIDI_CH3I_Release_lock(win_ptr);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-        MPIDI_CH3_Progress_signal_completion();
-    }
-
-    if (fop_pkt->flags & MPIDI_CH3_PKT_FLAG_RMA_DECR_AT_COUNTER) {
-        win_ptr->at_completion_counter--;
-        MPIU_Assert(win_ptr->at_completion_counter >= 0);
-        if (win_ptr->at_completion_counter == 0)
-            MPIDI_CH3_Progress_signal_completion();
-    }
+    mpi_errno = finish_op_on_target(win_ptr, vc, MPIDI_CH3_PKT_FOP,
+                                    fop_pkt->flags, fop_pkt->source_win_handle);
+    if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
 
   fn_exit:
     MPIR_T_PVAR_TIMER_END(RMA, rma_rmapkt_fop);
