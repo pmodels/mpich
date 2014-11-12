@@ -99,6 +99,7 @@ typedef struct {
     ptl_pt_index_t ptg;
     ptl_pt_index_t ptc;
     ptl_pt_index_t ptr;
+    ptl_pt_index_t ptrg;
     ptl_pt_index_t ptrc;
     int id_initialized; /* TRUE iff id and pt have been initialized */
     MPIDI_msg_sz_t num_queued_sends; /* number of reqs for this vc in sendq */
@@ -166,7 +167,7 @@ int MPID_nem_ptl_poll_finalize(void);
 int MPID_nem_ptl_poll(int is_blocking_poll);
 int MPID_nem_ptl_vc_terminated(MPIDI_VC_t *vc);
 int MPID_nem_ptl_get_id_from_bc(const char *business_card, ptl_process_t *id, ptl_pt_index_t *pt, ptl_pt_index_t *ptg,
-                                ptl_pt_index_t *ptc, ptl_pt_index_t *ptr, ptl_pt_index_t *ptrc);
+                                ptl_pt_index_t *ptc, ptl_pt_index_t *ptr, ptl_pt_index_t *ptrg, ptl_pt_index_t *ptrc);
 void MPI_nem_ptl_pack_byte(MPID_Segment *segment, MPI_Aint first, MPI_Aint last, void *buf,
                            MPID_nem_ptl_pack_overflow_t *overflow);
 int MPID_nem_ptl_unpack_byte(MPID_Segment *segment, MPI_Aint first, MPI_Aint last, void *buf,

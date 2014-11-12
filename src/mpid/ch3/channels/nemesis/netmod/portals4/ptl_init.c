@@ -20,6 +20,7 @@
 #define PTIG_KEY "PTIG"
 #define PTIC_KEY "PTIC"
 #define PTIR_KEY "PTIR"
+#define PTIRG_KEY "PTIRG"
 #define PTIRC_KEY "PTIRC"
 
 ptl_handle_ni_t MPIDI_nem_ptl_ni;
@@ -30,6 +31,7 @@ ptl_pt_index_t  MPIDI_nem_ptl_rpt_pt; /* portal for rportals control messages */
 ptl_handle_eq_t MPIDI_nem_ptl_target_eq;
 ptl_handle_eq_t MPIDI_nem_ptl_origin_eq;
 ptl_pt_index_t  MPIDI_nem_ptl_control_rpt_pt; /* portal for rportals control messages */
+ptl_pt_index_t  MPIDI_nem_ptl_get_rpt_pt; /* portal for rportals control messages */
 ptl_handle_md_t MPIDI_nem_ptl_global_md;
 ptl_ni_limits_t MPIDI_nem_ptl_ni_limits;
 
@@ -212,6 +214,11 @@ static int ptl_init(MPIDI_PG_t *pg_p, int pg_rank, char **bc_val_p, int *val_max
 
     /* allocate portal for MPICH control messages */
     ret = PtlPTAlloc(MPIDI_nem_ptl_ni, PTL_PT_ONLY_USE_ONCE | PTL_PT_ONLY_TRUNCATE | PTL_PT_FLOWCTRL, MPIDI_nem_ptl_target_eq,
+                     PTL_PT_ANY, &MPIDI_nem_ptl_get_rpt_pt);
+    MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlptalloc", "**ptlptalloc %s", MPID_nem_ptl_strerror(ret));
+
+    /* allocate portal for MPICH control messages */
+    ret = PtlPTAlloc(MPIDI_nem_ptl_ni, PTL_PT_ONLY_USE_ONCE | PTL_PT_ONLY_TRUNCATE | PTL_PT_FLOWCTRL, MPIDI_nem_ptl_target_eq,
                      PTL_PT_ANY, &MPIDI_nem_ptl_control_rpt_pt);
     MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlptalloc", "**ptlptalloc %s", MPID_nem_ptl_strerror(ret));
 
@@ -237,7 +244,7 @@ static int ptl_init(MPIDI_PG_t *pg_p, int pg_rank, char **bc_val_p, int *val_max
      * we pass PTL_PT_ANY as the dummy portal.  unfortunately, portals
      * does not have an "invalid" PT constant, which would have been
      * more appropriate to pass over here. */
-    ret = MPID_nem_ptl_rptl_ptinit(MPIDI_nem_ptl_ni, MPIDI_nem_ptl_origin_eq, MPIDI_nem_ptl_get_pt, PTL_PT_ANY);
+    ret = MPID_nem_ptl_rptl_ptinit(MPIDI_nem_ptl_ni, MPIDI_nem_ptl_origin_eq, MPIDI_nem_ptl_get_pt, MPIDI_nem_ptl_get_rpt_pt);
     MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlptalloc", "**ptlptalloc %s", MPID_nem_ptl_strerror(ret));
 
     ret = MPID_nem_ptl_rptl_ptinit(MPIDI_nem_ptl_ni, MPIDI_nem_ptl_origin_eq, MPIDI_nem_ptl_control_pt, MPIDI_nem_ptl_control_rpt_pt);
@@ -307,6 +314,9 @@ static int ptl_finalize(void)
     ret = PtlPTFree(MPIDI_nem_ptl_ni, MPIDI_nem_ptl_rpt_pt);
     MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlptfree", "**ptlptfree %s", MPID_nem_ptl_strerror(ret));
 
+    ret = PtlPTFree(MPIDI_nem_ptl_ni, MPIDI_nem_ptl_get_rpt_pt);
+    MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlptfree", "**ptlptfree %s", MPID_nem_ptl_strerror(ret));
+
     ret = PtlPTFree(MPIDI_nem_ptl_ni, MPIDI_nem_ptl_control_rpt_pt);
     MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlptfree", "**ptlptfree %s", MPID_nem_ptl_strerror(ret));
 
@@ -373,6 +383,12 @@ static int get_business_card(int my_rank, char **bc_val_p, int *val_max_sz_p)
     }
     str_errno = MPIU_Str_add_binary_arg(bc_val_p, val_max_sz_p, PTIR_KEY, (char *)&MPIDI_nem_ptl_rpt_pt,
                                         sizeof(MPIDI_nem_ptl_rpt_pt));
+    if (str_errno) {
+        MPIU_ERR_CHKANDJUMP(str_errno == MPIU_STR_NOMEM, mpi_errno, MPI_ERR_OTHER, "**buscard_len");
+        MPIU_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**buscard");
+    }
+    str_errno = MPIU_Str_add_binary_arg(bc_val_p, val_max_sz_p, PTIRG_KEY, (char *)&MPIDI_nem_ptl_get_rpt_pt,
+                                        sizeof(MPIDI_nem_ptl_get_rpt_pt));
     if (str_errno) {
         MPIU_ERR_CHKANDJUMP(str_errno == MPIU_STR_NOMEM, mpi_errno, MPI_ERR_OTHER, "**buscard_len");
         MPIU_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**buscard");
@@ -475,7 +491,7 @@ static int vc_destroy(MPIDI_VC_t *vc)
 #define FUNCNAME MPID_nem_ptl_get_id_from_bc
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPID_nem_ptl_get_id_from_bc(const char *business_card, ptl_process_t *id, ptl_pt_index_t *pt, ptl_pt_index_t *ptg, ptl_pt_index_t *ptc, ptl_pt_index_t *ptr, ptl_pt_index_t *ptrc)
+int MPID_nem_ptl_get_id_from_bc(const char *business_card, ptl_process_t *id, ptl_pt_index_t *pt, ptl_pt_index_t *ptg, ptl_pt_index_t *ptc, ptl_pt_index_t *ptr, ptl_pt_index_t *ptrg, ptl_pt_index_t *ptrc)
 {
     int mpi_errno = MPI_SUCCESS;
     int ret;
@@ -501,6 +517,9 @@ int MPID_nem_ptl_get_id_from_bc(const char *business_card, ptl_process_t *id, pt
 
     ret = MPIU_Str_get_binary_arg(business_card, PTIR_KEY, (char *)ptr, sizeof(ptr), &len);
     MPIU_ERR_CHKANDJUMP(ret != MPIU_STR_SUCCESS || len != sizeof(*ptr), mpi_errno, MPI_ERR_OTHER, "**badbusinesscard");
+
+    ret = MPIU_Str_get_binary_arg(business_card, PTIRG_KEY, (char *)ptrg, sizeof(ptr), &len);
+    MPIU_ERR_CHKANDJUMP(ret != MPIU_STR_SUCCESS || len != sizeof(*ptrc), mpi_errno, MPI_ERR_OTHER, "**badbusinesscard");
 
     ret = MPIU_Str_get_binary_arg(business_card, PTIRC_KEY, (char *)ptrc, sizeof(ptr), &len);
     MPIU_ERR_CHKANDJUMP(ret != MPIU_STR_SUCCESS || len != sizeof(*ptrc), mpi_errno, MPI_ERR_OTHER, "**badbusinesscard");
@@ -595,7 +614,7 @@ int MPID_nem_ptl_init_id(MPIDI_VC_t *vc)
     mpi_errno = vc->pg->getConnInfo(vc->pg_rank, bc, val_max_sz, vc->pg);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
-    mpi_errno = MPID_nem_ptl_get_id_from_bc(bc, &vc_ptl->id, &vc_ptl->pt, &vc_ptl->ptg, &vc_ptl->ptc, &vc_ptl->ptr, &vc_ptl->ptrc);
+    mpi_errno = MPID_nem_ptl_get_id_from_bc(bc, &vc_ptl->id, &vc_ptl->pt, &vc_ptl->ptg, &vc_ptl->ptc, &vc_ptl->ptr, &vc_ptl->ptrg, &vc_ptl->ptrc);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
     vc_ptl->id_initialized = TRUE;
