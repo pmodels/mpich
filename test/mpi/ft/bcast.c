@@ -84,6 +84,9 @@ int main(int argc, char **argv)
         fflush(stdout);
     }
 
+    MPI_Group_free(&world);
+    MPI_Group_free(&newgroup);
+    MPI_Comm_free(&newcomm);
     MPI_Finalize();
 
     return 0;
