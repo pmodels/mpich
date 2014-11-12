@@ -84,23 +84,24 @@ static int handler_recv_dequeue_complete(const ptl_event_t *e)
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_Request *const rreq = e->user_ptr;
+    int is_contig;
+    MPI_Aint last;
+    MPI_Aint dt_true_lb;
+    MPIDI_msg_sz_t data_sz;
+    MPID_Datatype *dt_ptr ATTRIBUTE((unused));
+
     MPIDI_STATE_DECL(MPID_STATE_HANDLER_RECV_DEQUEUE_COMPLETE);
 
     MPIDI_FUNC_ENTER(MPID_STATE_HANDLER_RECV_DEQUEUE_COMPLETE);
 
     MPIU_Assert(e->type == PTL_EVENT_PUT || e->type == PTL_EVENT_PUT_OVERFLOW);
+
+    MPIDI_Datatype_get_info(rreq->dev.user_count, rreq->dev.datatype, is_contig, data_sz, dt_ptr, dt_true_lb);
     
     dequeue_req(e);
 
     if (e->type == PTL_EVENT_PUT_OVERFLOW) {
         /* unpack the data from unexpected buffer */
-        int is_contig;
-        MPI_Aint last;
-        MPI_Aint dt_true_lb;
-        MPIDI_msg_sz_t data_sz ATTRIBUTE((unused));
-        MPID_Datatype *dt_ptr ATTRIBUTE((unused));
-
-        MPIDI_Datatype_get_info(rreq->dev.user_count, rreq->dev.datatype, is_contig, data_sz, dt_ptr, dt_true_lb);
         MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE, "is_contig = %d", is_contig);
 
         if (is_contig) {
@@ -108,8 +109,12 @@ static int handler_recv_dequeue_complete(const ptl_event_t *e)
         } else {
             last = e->mlength;
             MPID_Segment_unpack(rreq->dev.segment_ptr, rreq->dev.segment_first, &last, e->start);
-            MPIU_ERR_CHKANDJUMP(last != e->mlength, mpi_errno, MPI_ERR_OTHER, "**dtypemismatch");
+            if (last != e->mlength)
+                MPIU_ERR_SET(rreq->status.MPI_ERROR, MPI_ERR_TYPE, "**dtypemismatch");
         }
+    } else {
+        if (!is_contig && data_sz != e->mlength)
+            MPIU_ERR_SET(rreq->status.MPI_ERROR, MPI_ERR_TYPE, "**dtypemismatch");
     }
     
     mpi_errno = handler_recv_complete(e);
