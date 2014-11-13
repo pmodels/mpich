@@ -170,7 +170,6 @@ int MPID_nem_ptl_poll(int is_blocking_poll)
             }
         case PTL_EVENT_PUT_OVERFLOW:
         case PTL_EVENT_GET:
-        case PTL_EVENT_ACK:
         case PTL_EVENT_SEND:
         case PTL_EVENT_REPLY:
         case PTL_EVENT_SEARCH: {
@@ -193,6 +192,7 @@ int MPID_nem_ptl_poll(int is_blocking_poll)
         case PTL_EVENT_LINK:
             /* ignore */
             break;
+        case PTL_EVENT_ACK:
         default:
             MPIU_Error_printf("Received unexpected event type: %d %s", event.type, MPID_nem_ptl_strevent(&event));
             MPIU_ERR_INTERNALANDJUMP(mpi_errno, "Unexpected event type");
