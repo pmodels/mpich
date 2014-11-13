@@ -35,7 +35,11 @@ int rptli_post_control_buffer(ptl_handle_ni_t ni_handle, ptl_pt_index_t pt,
     me.ignore_bits = 0;
     me.min_free = 0;
 
-    ret = PtlMEAppend(ni_handle, pt, &me, PTL_PRIORITY_LIST, NULL, me_handle);
+    while (1) {
+        ret = PtlMEAppend(ni_handle, pt, &me, PTL_PRIORITY_LIST, NULL, me_handle);
+        if (ret != PTL_NO_SPACE)
+            break;
+    }
     RPTLU_ERR_POP(ret, "Error appending empty buffer to priority list\n");
 
   fn_exit:

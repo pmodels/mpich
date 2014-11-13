@@ -543,7 +543,13 @@ int MPID_nem_ptl_recv_posted(MPIDI_VC_t *vc, MPID_Request *rreq)
         
     }
 
-    ret = PtlMEAppend(MPIDI_nem_ptl_ni, MPIDI_nem_ptl_pt, &me, PTL_PRIORITY_LIST, rreq, &REQ_PTL(rreq)->put_me);
+    /* if there is no space to append the entry, process outstanding events and try again */
+    while (1) {
+        ret = PtlMEAppend(MPIDI_nem_ptl_ni, MPIDI_nem_ptl_pt, &me, PTL_PRIORITY_LIST, rreq, &REQ_PTL(rreq)->put_me);
+        if (ret != PTL_NO_SPACE)
+            break;
+        MPID_nem_ptl_poll(1);
+    }
     MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlmeappend", "**ptlmeappend %s", MPID_nem_ptl_strerror(ret));
     DBG_MSG_MEAPPEND("REG", vc ? vc->pg_rank : MPI_ANY_SOURCE, me, rreq);
     MPIU_DBG_MSG_P(CH3_CHANNEL, VERBOSE, "    buf=%p", me.start);
