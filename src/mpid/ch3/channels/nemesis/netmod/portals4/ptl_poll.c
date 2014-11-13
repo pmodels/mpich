@@ -105,8 +105,14 @@ static int append_overflow(int i)
     me.ignore_bits = ~((ptl_match_bits_t)0);
     me.min_free = PTL_MAX_EAGER;
     
-    ret = PtlMEAppend(MPIDI_nem_ptl_ni, MPIDI_nem_ptl_pt, &me, PTL_OVERFLOW_LIST, (void *)(size_t)i,
-                      &overflow_me_handle[i]);
+    /* if there is no space to append the entry, process outstanding events and try again */
+    while (1) {
+        ret = PtlMEAppend(MPIDI_nem_ptl_ni, MPIDI_nem_ptl_pt, &me, PTL_OVERFLOW_LIST, (void *)(size_t)i,
+                          &overflow_me_handle[i]);
+        if (ret != PTL_NO_SPACE)
+            break;
+        MPID_nem_ptl_poll(1);
+    }
     MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlmeappend", "**ptlmeappend %s", MPID_nem_ptl_strerror(ret));
 
  fn_exit:

@@ -134,8 +134,15 @@ static inline int meappend_large(ptl_process_t id, MPID_Request *req, ptl_match_
 
         ++REQ_PTL(req)->num_gets;
 
-        ret = PtlMEAppend(MPIDI_nem_ptl_ni, MPIDI_nem_ptl_control_pt, &me, PTL_PRIORITY_LIST, req,
-                          &foo_me_handle);
+        /* if there is no space to append the entry, process outstanding events and try again */
+        while (1) {
+            ret = PtlMEAppend(MPIDI_nem_ptl_ni, MPIDI_nem_ptl_control_pt, &me, PTL_PRIORITY_LIST, req,
+                              &foo_me_handle);
+            if (ret != PTL_NO_SPACE)
+                break;
+            MPID_nem_ptl_poll(1);
+        }
+
         MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlmeappend", "**ptlmeappend %s",
                              MPID_nem_ptl_strerror(ret));
         MPIU_DBG_MSG_FMT(CH3_CHANNEL, VERBOSE, (MPIU_DBG_FDEST, "PtlMEAppend(req=%p tag=%#lx)", req, tag));
@@ -443,8 +450,14 @@ int MPID_nem_ptl_nm_ctl_event_handler(const ptl_event_t *e)
             }
 
             /* Repost the recv buffer */
-            ret = PtlMEAppend(MPIDI_nem_ptl_ni, MPIDI_nem_ptl_control_pt, &mes[buf_idx],
-                              PTL_PRIORITY_LIST, e->user_ptr /* buf_idx */, &me_handles[buf_idx]);
+            /* if there is no space to append the entry, process outstanding events and try again */
+            while (1) {
+                ret = PtlMEAppend(MPIDI_nem_ptl_ni, MPIDI_nem_ptl_control_pt, &mes[buf_idx],
+                                  PTL_PRIORITY_LIST, e->user_ptr /* buf_idx */, &me_handles[buf_idx]);
+                if (ret != PTL_NO_SPACE)
+                    break;
+                MPID_nem_ptl_poll(1);
+            }
             MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlmeappend",
                                  "**ptlmeappend %s", MPID_nem_ptl_strerror(ret));
         }
