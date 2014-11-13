@@ -118,6 +118,7 @@ static inline MPIDI_RMA_Target_t *MPIDI_CH3I_Win_target_alloc(MPID_Win * win_ptr
     e->outstanding_lock = 0;
     e->disable_flush_local = 0;
     e->win_complete_flag = 0;
+    e->put_acc_issued = 0;
 
     e->sync.sync_flag = MPIDI_RMA_SYNC_NONE;
     e->sync.outstanding_acks = 0;

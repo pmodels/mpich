@@ -1519,9 +1519,11 @@ int MPIDI_CH3_PktHandler_Unlock(MPIDI_VC_t * vc ATTRIBUTE((unused)),
     mpi_errno = MPIDI_CH3I_Release_lock(win_ptr);
     MPIU_ERR_CHKANDJUMP(mpi_errno != MPI_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**ch3|rma_msg");
 
-    mpi_errno = MPIDI_CH3I_Send_flush_ack_pkt(vc, win_ptr, MPIDI_CH3_PKT_FLAG_NONE,
-                                              unlock_pkt->source_win_handle);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    if (!(unlock_pkt->flags & MPIDI_CH3_PKT_FLAG_RMA_UNLOCK_NO_ACK)) {
+        mpi_errno = MPIDI_CH3I_Send_flush_ack_pkt(vc, win_ptr, MPIDI_CH3_PKT_FLAG_NONE,
+                                                  unlock_pkt->source_win_handle);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    }
 
     MPIDI_CH3_Progress_signal_completion();
 

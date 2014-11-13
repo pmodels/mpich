@@ -1488,8 +1488,6 @@ int MPIDI_Win_unlock_all(MPID_Win * win_ptr)
         OPA_read_write_barrier();
     }
 
-    MPIU_Assert(win_ptr->outstanding_unlocks == 0);
-
     /* Unlock MYSELF and processes on SHM. */
     if (!(win_ptr->lock_all_assert & MPI_MODE_NOCHECK)) {
         mpi_errno = MPIDI_CH3I_Release_lock(win_ptr);
@@ -1503,8 +1501,7 @@ int MPIDI_Win_unlock_all(MPID_Win * win_ptr)
                 if (i == rank) continue;
                 MPIDI_Comm_get_vc(win_ptr->comm_ptr, i, &target_vc);
                 if (orig_vc->node_id == target_vc->node_id) {
-                    win_ptr->outstanding_unlocks++;
-                    mpi_errno = send_unlock_msg(i, win_ptr);
+                    mpi_errno = send_unlock_msg(i, win_ptr, MPIDI_CH3_PKT_FLAG_RMA_UNLOCK_NO_ACK);
                     if (mpi_errno != MPI_SUCCESS)
                         MPIU_ERR_POP(mpi_errno);
                 }
@@ -1561,8 +1558,7 @@ int MPIDI_Win_unlock_all(MPID_Win * win_ptr)
                         continue;
                 }
 
-                win_ptr->outstanding_unlocks++;
-                mpi_errno = send_unlock_msg(i, win_ptr);
+                mpi_errno = send_unlock_msg(i, win_ptr, MPIDI_CH3_PKT_FLAG_RMA_UNLOCK_NO_ACK);
                 if (mpi_errno != MPI_SUCCESS)
                     MPIU_ERR_POP(mpi_errno);
             }
@@ -1579,12 +1575,12 @@ int MPIDI_Win_unlock_all(MPID_Win * win_ptr)
         mpi_errno = MPIDI_CH3I_RMA_Cleanup_ops_win(win_ptr, &local_completed,
                                                    &remote_completed);
         if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
-        if (!remote_completed || win_ptr->outstanding_unlocks) {
+        if (!remote_completed) {
             mpi_errno = wait_progress_engine();
             if (mpi_errno != MPI_SUCCESS)
                 MPIU_ERR_POP(mpi_errno);
         }
-    } while (!remote_completed || win_ptr->outstanding_unlocks);
+    } while (!remote_completed);
 
     /* Cleanup all targets on this window. */
     mpi_errno = MPIDI_CH3I_RMA_Cleanup_targets_win(win_ptr);

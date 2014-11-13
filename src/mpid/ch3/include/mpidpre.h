@@ -351,7 +351,6 @@ extern MPIDI_RMA_Pkt_orderings_t *MPIDI_RMA_Pkt_orderings;
     int outstanding_locks; /* when issuing multiple lock requests in     \
                             MPI_WIN_LOCK_ALL, this counter keeps track   \
                             of number of locks not being granted yet. */ \
-    int outstanding_unlocks;                                             \
 
 #ifdef MPIDI_CH3_WIN_DECL
 #define MPID_DEV_WIN_DECL \

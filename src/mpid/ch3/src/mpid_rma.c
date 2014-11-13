@@ -336,7 +336,6 @@ static int win_init(MPI_Aint size, int disp_unit, int create_flavor, int model,
     (*win_ptr)->lock_all_assert = 0;
     (*win_ptr)->lock_epoch_count = 0;
     (*win_ptr)->outstanding_locks = 0;
-    (*win_ptr)->outstanding_unlocks = 0;
 
     /* Initialize the info flags */
     (*win_ptr)->info_args.no_locks = 0;

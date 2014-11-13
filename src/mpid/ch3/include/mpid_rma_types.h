@@ -88,6 +88,8 @@ typedef struct MPIDI_RMA_Target {
     int outstanding_lock;
     int disable_flush_local;
     int win_complete_flag;
+    int put_acc_issued; /* indicate if PUT/ACC is issued in this epoch
+                           after the previous synchronization calls. */
 
     /* The target structure is free to be cleaned up when all of the
      * following conditions hold true:

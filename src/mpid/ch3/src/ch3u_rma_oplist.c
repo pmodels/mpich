@@ -233,10 +233,21 @@ static inline int issue_ops_target(MPID_Win * win_ptr, MPIDI_RMA_Target_t *targe
                 target->sync.outstanding_acks--;
                 MPIU_Assert(target->sync.outstanding_acks == 0);
             }
+            else if (target->read_op_list == NULL &&
+                     target->write_op_list == NULL &&
+                     target->dt_op_list == NULL &&
+                     target->put_acc_issued == 0) {
+                /* both pending list and all waiting lists for
+                   this target are empty, we do not need to send
+                   FLUSH message then. */
+                target->sync.outstanding_acks--;
+                MPIU_Assert(target->sync.outstanding_acks >= 0);
+            }
             else {
                 mpi_errno = send_flush_msg(target->target_rank, win_ptr);
                 if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
             }
+
             (*made_progress) = 1;
             goto finish_issue;
         }
@@ -247,10 +258,22 @@ static inline int issue_ops_target(MPID_Win * win_ptr, MPIDI_RMA_Target_t *targe
                 target->sync.outstanding_acks--;
                 MPIU_Assert(target->sync.outstanding_acks == 0);
             }
+            else if (target->read_op_list == NULL &&
+                     target->write_op_list == NULL &&
+                     target->dt_op_list == NULL &&
+                     target->put_acc_issued == 0) {
+                /* send message to unlock target, but don't need ACK */
+                mpi_errno = send_unlock_msg(target->target_rank, win_ptr, MPIDI_CH3_PKT_FLAG_RMA_UNLOCK_NO_ACK);
+                if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
+
+                target->sync.outstanding_acks--;
+                MPIU_Assert(target->sync.outstanding_acks >= 0);
+            }
             else {
-                mpi_errno = send_unlock_msg(target->target_rank, win_ptr);
+                mpi_errno = send_unlock_msg(target->target_rank, win_ptr, MPIDI_CH3_PKT_FLAG_NONE);
                 if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
             }
+
             (*made_progress) = 1;
             goto finish_issue;
         }
@@ -327,6 +350,8 @@ static inline int issue_ops_target(MPID_Win * win_ptr, MPIDI_RMA_Target_t *targe
                      curr_op->pkt.type == MPIDI_CH3_PKT_ACCUMULATE) {
                 MPIDI_CH3I_RMA_Ops_append(&(target->write_op_list),
                                           &(target->write_op_list_tail), curr_op);
+                target->put_acc_issued = 1; /* set PUT_ACC_FLAG when sending
+                                               PUT/ACC operation. */
             }
             else {
                 MPIDI_CH3I_RMA_Ops_append(&(target->read_op_list),

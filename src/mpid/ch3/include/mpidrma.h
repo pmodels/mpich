@@ -60,7 +60,8 @@ static inline int send_lock_msg(int dest, int lock_type, MPID_Win * win_ptr)
 #define FUNCNAME send_unlock_msg
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-static inline int send_unlock_msg(int dest, MPID_Win * win_ptr)
+static inline int send_unlock_msg(int dest, MPID_Win * win_ptr,
+                                  MPIDI_CH3_Pkt_flags_t flags)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_CH3_Pkt_t upkt;
@@ -78,6 +79,7 @@ static inline int send_unlock_msg(int dest, MPID_Win * win_ptr)
     MPIDI_Pkt_init(unlock_pkt, MPIDI_CH3_PKT_UNLOCK);
     unlock_pkt->target_win_handle = win_ptr->all_win_handles[dest];
     unlock_pkt->source_win_handle = win_ptr->handle;
+    unlock_pkt->flags = flags;
 
     MPIU_THREAD_CS_ENTER(CH3COMM, vc);
     mpi_errno = MPIDI_CH3_iStartMsg(vc, unlock_pkt, sizeof(*unlock_pkt), &req);
@@ -324,14 +326,10 @@ static inline int MPIDI_CH3I_RMA_Handle_flush_ack(MPID_Win * win_ptr, int target
     mpi_errno = MPIDI_CH3I_Win_find_target(win_ptr, target_rank, &t);
     if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
 
-    if (t == NULL) {
-        win_ptr->outstanding_unlocks--;
-        MPIU_Assert(win_ptr->outstanding_unlocks >= 0);
-    }
-    else {
-        t->sync.outstanding_acks--;
-        MPIU_Assert(t->sync.outstanding_acks >= 0);
-    }
+    t->sync.outstanding_acks--;
+    MPIU_Assert(t->sync.outstanding_acks >= 0);
+
+    t->put_acc_issued = 0; /* reset PUT_ACC_FLAG after FLUSH is completed */
 
  fn_exit:
     return mpi_errno;

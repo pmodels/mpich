@@ -169,6 +169,24 @@ int MPIDI_Win_free(MPID_Win ** win_ptr)
                         (*win_ptr)->states.exposure_state != MPIDI_RMA_NONE,
                         mpi_errno, MPI_ERR_RMA_SYNC, "**rmasync");
 
+    /* 1. Here we must wait until all passive locks are released on this target,
+       because for some UNLOCK messages, we do not send ACK back to origin,
+       we must wait until lock is released so that we can free window.
+       2. We also need to wait until AT completion counter being zero, because
+       this counter is increment everytime we meet a GET-like operation, it is
+       possible that when target entering Win_free, passive epoch is not finished
+       yet and there are still GETs doing on this target.
+       3. We also need to wait until lock queue becomes empty. It is possible
+       that some lock requests is still waiting in the queue when target is
+       entering Win_free. */
+    while ((*win_ptr)->current_lock_type != MPID_LOCK_NONE ||
+           (*win_ptr)->at_completion_counter != 0 ||
+           (*win_ptr)->lock_queue != NULL) {
+        mpi_errno = wait_progress_engine();
+        if (mpi_errno != MPI_SUCCESS)
+            MPIU_ERR_POP(mpi_errno);
+    }
+
     if (!(*win_ptr)->shm_allocated) {
         /* when SHM is allocated, we already did a global barrier in
            MPIDI_CH3_SHM_Win_free, so we do not need to do it again here. */

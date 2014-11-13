@@ -118,7 +118,8 @@ typedef enum {
     MPIDI_CH3_PKT_FLAG_RMA_EXCLUSIVE = 128,
     MPIDI_CH3_PKT_FLAG_RMA_FLUSH_ACK = 256,
     MPIDI_CH3_PKT_FLAG_RMA_UNLOCK_ACK = 512,
-    MPIDI_CH3_PKT_FLAG_RMA_LOCK_GRANTED = 1024
+    MPIDI_CH3_PKT_FLAG_RMA_LOCK_GRANTED = 1024,
+    MPIDI_CH3_PKT_FLAG_RMA_UNLOCK_NO_ACK = 2048
 } MPIDI_CH3_Pkt_flags_t;
 
 typedef struct MPIDI_CH3_Pkt_send {
@@ -551,6 +552,7 @@ typedef struct MPIDI_CH3_Pkt_unlock {
     int target_rank;            /* Used in unluck/flush response to look up the
                                  * target state at the origin. */
     int origin_rank;
+    MPIDI_CH3_Pkt_flags_t flags;
 } MPIDI_CH3_Pkt_unlock_t;
 
 typedef struct MPIDI_CH3_Pkt_flush {
