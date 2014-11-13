@@ -1186,6 +1186,11 @@ int MPID_nem_ptl_rptl_eqget(ptl_handle_eq_t eq_handle, ptl_event_t * event)
             else if (!(op->u.put.ack_req & PTL_ACK_REQ)) {
                 memcpy(event, op->u.put.send, sizeof(ptl_event_t));
                 MPIU_Free(op->u.put.send);
+
+                /* set the event user pointer again, since we copied
+                 * over the original event */
+                event->user_ptr = op->u.put.user_ptr;
+
                 /* we should be in the data op list */
                 MPL_DL_DELETE(op->target->data_op_list, op);
                 free_op(op);
