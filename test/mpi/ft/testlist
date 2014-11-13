@@ -1,5 +1,5 @@
 die 4 env=MPIR_CVAR_ENABLE_FT=1 mpiexecarg=-disable-auto-cleanup timeLimit=10 strict=false resultTest=TestStatusNoErrors
-abort 2 env=MPIR_CVAR_ENABLE_FT=1 mpiexecarg=-disable-auto-cleanup timeLimit=10 strict=false xfail=ticket1537
+abort 2 env=MPIR_CVAR_ENABLE_FT=1 mpiexecarg=-disable-auto-cleanup timeLimit=10 strict=false resultTest=TestStatus
 sendalive 4 env=MPIR_CVAR_ENABLE_FT=1 mpiexecarg=-disable-auto-cleanup timeLimit=10 strict=false resultTest=TestStatusNoErrors
 isendalive 3 env=MPIR_CVAR_ENABLE_FT=1 mpiexecarg=-disable-auto-cleanup resultTest=TestStatusNoErrors strict=false
 multi_isendalive 4 env=MPIR_CVAR_ENABLE_FT=1 mpiexecarg=-disable-auto-cleanup resultTest=TestStatusNoErrors strict=false
