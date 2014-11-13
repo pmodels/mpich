@@ -807,20 +807,15 @@ int MPID_nem_ptl_rptl_eqget(ptl_handle_eq_t eq_handle, ptl_event_t * event)
                 assert(!(event->type == PTL_EVENT_SEND && op->u.put.send));
                 assert(!(event->type == PTL_EVENT_ACK && op->u.put.ack));
 
-                /* if we have received both events, discard them.
-                 * otherwise, stash the one we received while waiting
-                 * for the other. */
-                if (event->type == PTL_EVENT_SEND && op->u.put.ack) {
+                /* discard pending events, since we will retransmit
+                 * this op anyway */
+                if (op->u.put.ack) {
                     MPIU_Free(op->u.put.ack);
                     op->u.put.ack = NULL;
                 }
-                else if (event->type == PTL_EVENT_ACK && op->u.put.send) {
+                if (op->u.put.send) {
                     MPIU_Free(op->u.put.send);
                     op->u.put.send = NULL;
-                }
-                else {
-                    ret = stash_event(op, *event);
-                    RPTLU_ERR_POP(ret, "error stashing event\n");
                 }
             }
 
