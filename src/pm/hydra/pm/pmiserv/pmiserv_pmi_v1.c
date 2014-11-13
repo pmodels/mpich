@@ -760,6 +760,38 @@ static HYD_status fn_lookup_name(int fd, int pid, int pgid, char *args[])
     goto fn_exit;
 }
 
+static HYD_status fn_abort(int fd, int pid, int pgid, char *args[])
+{
+    int token_count;
+    struct HYD_pmcd_token *tokens;
+    /* set a default exit code of 1 */
+    int exitcode = 1;
+    HYD_status status = HYD_SUCCESS;
+
+    HYDU_FUNC_ENTER();
+
+    status = HYD_pmcd_pmi_args_to_tokens(args, &tokens, &token_count);
+    HYDU_ERR_POP(status, "unable to convert args to tokens\n");
+
+    if (HYD_pmcd_pmi_find_token_keyval(tokens, token_count, "exitcode") == NULL)
+        HYDU_ERR_POP(status, "cannot find token: exitcode\n");
+
+    exitcode = atoi(HYD_pmcd_pmi_find_token_keyval(tokens, token_count, "exitcode"));
+
+  fn_exit:
+    /* clean everything up and exit */
+    status = HYDT_bsci_wait_for_completion(0);
+    exit(exitcode);
+
+    /* never get here */
+    HYDU_FUNC_EXIT();
+    return status;
+
+  fn_fail:
+    goto fn_exit;
+}
+
+
 /* TODO: abort, create_kvs, destroy_kvs, getbyidx */
 static struct HYD_pmcd_pmi_handle pmi_v1_handle_fns_foo[] = {
     {"barrier_in", fn_barrier_in},
@@ -769,6 +801,7 @@ static struct HYD_pmcd_pmi_handle pmi_v1_handle_fns_foo[] = {
     {"publish_name", fn_publish_name},
     {"unpublish_name", fn_unpublish_name},
     {"lookup_name", fn_lookup_name},
+    {"abort", fn_abort},
     {"\0", NULL}
 };
 

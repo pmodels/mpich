@@ -322,8 +322,15 @@ int PMI_Finalize( void )
 
 int PMI_Abort(int exit_code, const char error_msg[])
 {
-    PMIU_printf(1, "aborting job:\n%s\n", error_msg);
-    MPIU_Exit(exit_code);
+    char buf[PMIU_MAXLINE];
+
+    /* include exit_code in the abort command */
+    MPIU_Snprintf( buf, PMIU_MAXLINE, "cmd=abort exitcode=%d\n", exit_code);
+
+    PMIU_printf(PMI_debug, "aborting job:\n%s\n", error_msg);
+    GetResponse( buf, "", 0 );
+
+    /* the above command should not return */
     return -1;
 }
 
