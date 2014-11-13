@@ -47,6 +47,8 @@ struct ADIOI_GEN_IreadStridedColl_vars {
     int *count_my_req_per_proc;
     int count_my_req_procs;
     int count_others_req_procs;
+    ADIO_Offset start_offset;
+    ADIO_Offset end_offset;
     ADIO_Offset orig_fp;
     ADIO_Offset fd_size;
     ADIO_Offset min_st_offset;
@@ -210,7 +212,6 @@ void ADIOI_GEN_IreadStridedColl(ADIO_File fd, void *buf, int count,
 #ifdef RDCOLL_DEBUG
     int i;
 #endif
-    ADIO_Offset start_offset, end_offset;
 
     /* FIXME: need an implementation of ADIOI_IOIstridedColl
     if (fd->hints->cb_pfr != ADIOI_HINT_DISABLE) {
@@ -266,7 +267,7 @@ void ADIOI_GEN_IreadStridedColl(ADIO_File fd, void *buf, int count,
 
         ADIOI_Calc_my_off_len(fd, count, datatype, file_ptr_type, offset,
                               &vars->offset_list, &vars->len_list,
-                              &start_offset, &end_offset,
+                              &vars->start_offset, &vars->end_offset,
                               &vars->contig_access_count);
 
 #ifdef RDCOLL_DEBUG
@@ -283,11 +284,11 @@ void ADIOI_GEN_IreadStridedColl(ADIO_File fd, void *buf, int count,
         vars->st_offsets = (ADIO_Offset *)ADIOI_Malloc(nprocs*sizeof(ADIO_Offset));
         vars->end_offsets = (ADIO_Offset *)ADIOI_Malloc(nprocs*sizeof(ADIO_Offset));
 
-        *error_code = MPI_Iallgather(&start_offset, 1, ADIO_OFFSET,
+        *error_code = MPI_Iallgather(&vars->start_offset, 1, ADIO_OFFSET,
                                      vars->st_offsets, 1, ADIO_OFFSET,
                                      fd->comm, &vars->req_offset[0]);
         if (*error_code != MPI_SUCCESS) return;
-        *error_code = MPI_Iallgather(&end_offset, 1, ADIO_OFFSET,
+        *error_code = MPI_Iallgather(&vars->end_offset, 1, ADIO_OFFSET,
                                      vars->end_offsets, 1, ADIO_OFFSET,
                                      fd->comm, &vars->req_offset[1]);
 
