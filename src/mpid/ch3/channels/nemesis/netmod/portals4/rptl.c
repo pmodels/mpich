@@ -128,7 +128,6 @@ int MPID_nem_ptl_rptl_init(int world_size, uint64_t max_origin_events,
                                                    ptl_pt_index_t * target_data_pt,
                                                    ptl_pt_index_t * target_control_pt))
 {
-    int mpi_errno = MPI_SUCCESS;
     int ret = PTL_OK;
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_PTL_RPTL_INIT);
 
@@ -393,7 +392,7 @@ static int alloc_op(struct rptl_op **op, struct rptl_target *target)
 #define FUNCNAME free_op
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-void free_op(struct rptl_op *op)
+static void free_op(struct rptl_op *op)
 {
     MPIDI_STATE_DECL(MPID_STATE_FREE_OP);
 
@@ -414,7 +413,7 @@ static int rptl_put(ptl_handle_md_t md_handle, ptl_size_t local_offset, ptl_size
 #define FUNCNAME poke_progress
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int poke_progress(void)
+static int poke_progress(void)
 {
     int ret = PTL_OK;
     struct rptl_target *target;
@@ -965,13 +964,11 @@ static int retrieve_event(ptl_event_t * event)
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPID_nem_ptl_rptl_eqget(ptl_handle_eq_t eq_handle, ptl_event_t * event)
 {
-    struct rptl_op *op;
-    struct rptl *rptl;
-    ptl_event_t e;
+    struct rptl_op *op = NULL;
+    struct rptl *rptl = NULL;
     int ret = PTL_OK, tmp_ret = PTL_OK;
     int mpi_errno = MPI_SUCCESS;
     struct rptl_target *target;
-    MPIU_CHKPMEM_DECL(1);
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_PTL_RPTL_EQGET);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_PTL_RPTL_EQGET);
@@ -1208,13 +1205,11 @@ int MPID_nem_ptl_rptl_eqget(ptl_handle_eq_t eq_handle, ptl_event_t * event)
     }
 
   fn_exit:
-    MPIU_CHKPMEM_COMMIT();
     MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_PTL_RPTL_EQGET);
     return ret;
 
   fn_fail:
     if (mpi_errno)
         ret = PTL_FAIL;
-    MPIU_CHKPMEM_REAP();
     goto fn_exit;
 }
