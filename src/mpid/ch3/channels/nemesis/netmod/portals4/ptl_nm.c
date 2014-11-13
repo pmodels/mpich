@@ -15,14 +15,11 @@
 #define SENDBUF_SIZE(sent_sz_) (offsetof(buf_t, packet) + sizeof(MPIDI_CH3_Pkt_t) + (sent_sz_))
 #define SENDBUF(req_) REQ_PTL(req_)->chunk_buffer[0]
 #define TMPBUF(req_) REQ_PTL(req_)->chunk_buffer[1]
-#define NEW_TAG(tag_) do {     \
-    global_tag += 2;           \
-    if (global_tag == CTL_TAG) \
-        global_tag += 2;       \
-    (tag_) = global_tag;       \
+#define NEW_TAG(tag_) do {       \
+    if (++global_tag == CTL_TAG) \
+        ++global_tag;            \
+    (tag_) = global_tag;         \
 } while(0)
-#define GET_TAG(tag_)  (((tag_) >> 1) << 1)
-#define DONE_TAG(tag_) ((tag_) | 0x1)
 
 typedef struct {
     size_t remaining;
@@ -34,7 +31,6 @@ static buf_t recvbufs[NUM_RECV_BUFS];
 static ptl_me_t mes[NUM_RECV_BUFS];
 static ptl_handle_me_t me_handles[NUM_RECV_BUFS];
 static unsigned long long put_cnt = 0;  /* required to not finalizing too early */
-static MPID_Request *done_req;
 static ptl_match_bits_t global_tag = 0;
 
 
@@ -73,12 +69,6 @@ int MPID_nem_ptl_nm_init(void)
                              MPID_nem_ptl_strerror(ret));
     }
 
-    done_req = MPID_Request_create();
-    MPIU_Assert(done_req != NULL);
-    done_req->dev.OnDataAvail = NULL;
-    SENDBUF(done_req) = NULL;
-    REQ_PTL(done_req)->event_handler = MPID_nem_ptl_nm_ctl_event_handler;
-
  fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_PTL_NM_INIT);
     return mpi_errno;
@@ -107,48 +97,8 @@ int MPID_nem_ptl_nm_finalize(void)
                              MPID_nem_ptl_strerror(ret));
     }
 
-    MPIDI_CH3_Request_destroy(done_req);
-
  fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_PTL_NM_FINALIZE);
-    return mpi_errno;
- fn_fail:
-    goto fn_exit;
-}
-
-#undef FUNCNAME
-#define FUNCNAME meappend_done
-#undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
-static inline int meappend_done(ptl_process_t id, MPID_Request *req, ptl_match_bits_t tag)
-{
-    int mpi_errno = MPI_SUCCESS;
-    int ret;
-    ptl_me_t me;
-    ptl_handle_me_t me_handle;
-    MPIDI_STATE_DECL(MPID_STATE_MEAPPEND_DONE);
-
-    MPIDI_FUNC_ENTER(MPID_STATE_MEAPPEND_DONE);
-
-    me.start = NULL;
-    me.length = 0;
-    me.ct_handle = PTL_CT_NONE;
-    me.uid = PTL_UID_ANY;
-    me.options = ( PTL_ME_OP_PUT | PTL_ME_USE_ONCE | PTL_ME_IS_ACCESSIBLE |
-                   PTL_ME_EVENT_LINK_DISABLE | PTL_ME_EVENT_UNLINK_DISABLE );
-    me.match_id = id;
-    me.match_bits = DONE_TAG(tag);
-    me.ignore_bits = 0;
-    me.min_free = 0;
-    ret = PtlMEAppend(MPIDI_nem_ptl_ni, MPIDI_nem_ptl_control_pt, &me, PTL_PRIORITY_LIST, req,
-                      &me_handle);
-    MPIU_DBG_MSG_FMT(CH3_CHANNEL, VERBOSE, (MPIU_DBG_FDEST, "PtlMEAppend(req=%p tag=%#lx)", req, DONE_TAG(tag)));
-    MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlmeappend", "**ptlmeappend %s",
-                         MPID_nem_ptl_strerror(ret));
-    ++put_cnt;
-
- fn_exit:
-    MPIDI_FUNC_EXIT(MPID_STATE_MEAPPEND_DONE);
     return mpi_errno;
  fn_fail:
     goto fn_exit;
@@ -175,21 +125,20 @@ static inline int meappend_large(ptl_process_t id, MPID_Request *req, ptl_match_
     me.options = ( PTL_ME_OP_GET | PTL_ME_USE_ONCE | PTL_ME_IS_ACCESSIBLE |
                    PTL_ME_EVENT_LINK_DISABLE | PTL_ME_EVENT_UNLINK_DISABLE );
     me.match_id = id;
-    me.match_bits = GET_TAG(tag);
+    me.match_bits = tag;
     me.ignore_bits = 0;
     me.min_free = 0;
 
     while (remaining) {
-        int incomplete;
         ptl_handle_me_t foo_me_handle;
 
-        MPIDI_CH3U_Request_increment_cc(req, &incomplete);  /* Cannot avoid GET events from poll infrastructure */
+        ++REQ_PTL(req)->num_gets;
 
         ret = PtlMEAppend(MPIDI_nem_ptl_ni, MPIDI_nem_ptl_control_pt, &me, PTL_PRIORITY_LIST, req,
                           &foo_me_handle);
         MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlmeappend", "**ptlmeappend %s",
                              MPID_nem_ptl_strerror(ret));
-        MPIU_DBG_MSG_FMT(CH3_CHANNEL, VERBOSE, (MPIU_DBG_FDEST, "PtlMEAppend(req=%p tag=%#lx)", req, GET_TAG(tag)));
+        MPIU_DBG_MSG_FMT(CH3_CHANNEL, VERBOSE, (MPIU_DBG_FDEST, "PtlMEAppend(req=%p tag=%#lx)", req, tag));
 
         me.start = (char *)me.start + me.length;
         remaining -= me.length;
@@ -227,6 +176,8 @@ static inline int send_pkt(MPIDI_VC_t *vc, void *hdr_p, void *data_p, MPIDI_msg_
     sendbuf->remaining = data_sz - sent_sz;
     NEW_TAG(sendbuf->tag);
     TMPBUF(sreq) = NULL;
+    REQ_PTL(sreq)->num_gets = 0;
+    REQ_PTL(sreq)->put_acked = 0;
 
     if (data_sz) {
         MPIU_Memcpy(sendbuf->packet + sizeof(MPIDI_CH3_Pkt_t), data_p, sent_sz);
@@ -239,11 +190,6 @@ static inline int send_pkt(MPIDI_VC_t *vc, void *hdr_p, void *data_p, MPIDI_msg_
     SENDBUF(sreq) = sendbuf;
     REQ_PTL(sreq)->event_handler = MPID_nem_ptl_nm_ctl_event_handler;
 
-    /* Post ME for the DONE message */
-    mpi_errno = meappend_done(vc_ptl->id, sreq, sendbuf->tag);
-    if (mpi_errno)
-        goto fn_fail;
-
     ret = MPID_nem_ptl_rptl_put(MPIDI_nem_ptl_global_md, (ptl_size_t)sendbuf, sendbuf_sz, PTL_NO_ACK_REQ,
                                 vc_ptl->id, vc_ptl->ptc, CTL_TAG, 0, sreq, MPIDI_Process.my_pg_rank);
     MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlput", "**ptlput %s",
@@ -251,6 +197,8 @@ static inline int send_pkt(MPIDI_VC_t *vc, void *hdr_p, void *data_p, MPIDI_msg_
     MPIU_DBG_MSG_FMT(CH3_CHANNEL, VERBOSE, (MPIU_DBG_FDEST, "PtlPut(size=%lu id=(%#x,%#x) pt=%#x)",
                                             sendbuf_sz, vc_ptl->id.phys.nid,
                                             vc_ptl->id.phys.pid, vc_ptl->ptc));
+    ++put_cnt;
+
  fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_SEND_PKT);
     return mpi_errno;
@@ -281,6 +229,8 @@ static int send_noncontig_pkt(MPIDI_VC_t *vc, MPID_Request *sreq, void *hdr_p)
     sendbuf->remaining = sreq->dev.segment_size - sent_sz;
     NEW_TAG(sendbuf->tag);
     TMPBUF(sreq) = NULL;
+    REQ_PTL(sreq)->num_gets = 0;
+    REQ_PTL(sreq)->put_acked = 0;
 
     if (sreq->dev.segment_size) {
         MPIDI_msg_sz_t last = sent_sz;
@@ -302,11 +252,6 @@ static int send_noncontig_pkt(MPIDI_VC_t *vc, MPID_Request *sreq, void *hdr_p)
     SENDBUF(sreq) = sendbuf;
     REQ_PTL(sreq)->event_handler = MPID_nem_ptl_nm_ctl_event_handler;
 
-    /* Post ME for the DONE message */
-    mpi_errno = meappend_done(vc_ptl->id, sreq, sendbuf->tag);
-    if (mpi_errno)
-        goto fn_fail;
-
     ret = MPID_nem_ptl_rptl_put(MPIDI_nem_ptl_global_md, (ptl_size_t)sendbuf, sendbuf_sz, PTL_NO_ACK_REQ,
                                 vc_ptl->id, vc_ptl->ptc, CTL_TAG, 0, sreq, MPIDI_Process.my_pg_rank);
     MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlput", "**ptlput %s",
@@ -314,6 +259,7 @@ static int send_noncontig_pkt(MPIDI_VC_t *vc, MPID_Request *sreq, void *hdr_p)
     MPIU_DBG_MSG_FMT(CH3_CHANNEL, VERBOSE, (MPIU_DBG_FDEST, "PtlPut(size=%lu id=(%#x,%#x) pt=%#x)",
                                             sendbuf_sz, vc_ptl->id.phys.nid,
                                             vc_ptl->id.phys.pid, vc_ptl->ptc));
+    ++put_cnt;
 
  fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_SEND_NONCONTIG_PKT);
@@ -405,10 +351,11 @@ int MPID_nem_ptl_iSendContig(MPIDI_VC_t *vc, MPID_Request *sreq, void *hdr, MPID
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 static inline void on_data_avail(MPID_Request * req)
 {
+    int (*reqFn) (MPIDI_VC_t *, MPID_Request *, int *);
     MPIDI_STATE_DECL(MPID_STATE_ON_DATA_AVAIL);
+
     MPIDI_FUNC_ENTER(MPID_STATE_ON_DATA_AVAIL);
 
-    int (*reqFn) (MPIDI_VC_t *, MPID_Request *, int *);
     reqFn = req->dev.OnDataAvail;
     if (!reqFn) {
         MPIDI_CH3U_Request_complete(req);
@@ -420,6 +367,9 @@ static inline void on_data_avail(MPID_Request * req)
         reqFn(vc, req, &complete);
         MPIU_Assert(complete == TRUE);
     }
+
+    --put_cnt;
+
     MPIDI_FUNC_EXIT(MPID_STATE_ON_DATA_AVAIL);
 }
 
@@ -437,13 +387,7 @@ int MPID_nem_ptl_nm_ctl_event_handler(const ptl_event_t *e)
     switch(e->type) {
 
     case PTL_EVENT_PUT:
-        if (e->match_bits != CTL_TAG) {
-            MPIU_Free(SENDBUF((MPID_Request *)e->user_ptr));
-            MPIU_Free(TMPBUF((MPID_Request *)e->user_ptr));
-            on_data_avail((MPID_Request *)e->user_ptr);
-            --put_cnt;
-        }
-        else {
+        {
             int ret;
             const uint64_t buf_idx = (uint64_t) e->user_ptr;
             const size_t packet_sz = e->mlength - offsetof(buf_t, packet);
@@ -459,15 +403,6 @@ int MPID_nem_ptl_nm_ctl_event_handler(const ptl_event_t *e)
                 mpi_errno = MPID_nem_handle_pkt(vc, recvbufs[buf_idx].packet, packet_sz);
                 if (mpi_errno)
                     MPIU_ERR_POP(mpi_errno);
-                /* Notify we're done */
-                ret = MPID_nem_ptl_rptl_put(MPIDI_nem_ptl_global_md, 0, 0, PTL_NO_ACK_REQ, vc_ptl->id, vc_ptl->ptc,
-                                            DONE_TAG(recvbufs[buf_idx].tag), 0, done_req, MPIDI_Process.my_pg_rank);
-                MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlput", "**ptlput %s",
-                                     MPID_nem_ptl_strerror(ret));
-                MPIU_DBG_MSG_FMT(CH3_CHANNEL, VERBOSE, (MPIU_DBG_FDEST,
-                                                        "PtlPut(size=0 id=(%#x,%#x) pt=%#x tag=%#lx)",
-                                                        vc_ptl->id.phys.nid, vc_ptl->id.phys.pid,
-                                                        vc_ptl->ptc, DONE_TAG(recvbufs[buf_idx].tag)));
             }
             else {
                 int incomplete;
@@ -493,13 +428,13 @@ int MPID_nem_ptl_nm_ctl_event_handler(const ptl_event_t *e)
                 while (recvbufs[buf_idx].remaining) {
                     MPIDI_CH3U_Request_increment_cc(req, &incomplete);  /* Will be decremented - and eventually freed in REPLY */
                     ret = MPID_nem_ptl_rptl_get(MPIDI_nem_ptl_global_md, (ptl_size_t)buf_ptr,
-                                                size, vc_ptl->id, vc_ptl->ptc, GET_TAG(recvbufs[buf_idx].tag), 0, req);
+                                                size, vc_ptl->id, vc_ptl->ptc, recvbufs[buf_idx].tag, 0, req);
                     MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlget", "**ptlget %s",
                                          MPID_nem_ptl_strerror(ret));
                     MPIU_DBG_MSG_FMT(CH3_CHANNEL, VERBOSE, (MPIU_DBG_FDEST,
                                                             "PtlGet(size=%lu id=(%#x,%#x) pt=%#x tag=%#lx)", size,
                                                             vc_ptl->id.phys.nid,
-                                                            vc_ptl->id.phys.pid, vc_ptl->ptc, GET_TAG(recvbufs[buf_idx].tag)));
+                                                            vc_ptl->id.phys.pid, vc_ptl->ptc, recvbufs[buf_idx].tag));
                     buf_ptr += size;
                     recvbufs[buf_idx].remaining -= size;
                     if (recvbufs[buf_idx].remaining < MPIDI_nem_ptl_ni_limits.max_msg_size)
@@ -515,39 +450,45 @@ int MPID_nem_ptl_nm_ctl_event_handler(const ptl_event_t *e)
         }
         break;
 
-    case PTL_EVENT_REPLY:
+    case PTL_EVENT_GET:
         {
-            int incomplete;
-            MPID_Request *const rreq = e->user_ptr;
+            MPID_Request *const req = e->user_ptr;
 
-            MPIDI_CH3U_Request_decrement_cc(rreq, &incomplete);
-            if (!incomplete) {
-                int ret;
-                MPID_nem_ptl_vc_area *const vc_ptl = VC_PTL(rreq->ch.vc);
-
-                mpi_errno = MPID_nem_handle_pkt(rreq->ch.vc, TMPBUF(rreq), REQ_PTL(rreq)->bytes_put);
-                if (mpi_errno)
-                    MPIU_ERR_POP(mpi_errno);
-
-                /* Notify we're done */
-                ret = MPID_nem_ptl_rptl_put(MPIDI_nem_ptl_global_md, 0, 0, PTL_NO_ACK_REQ, vc_ptl->id, vc_ptl->ptc,
-                                            DONE_TAG(rreq->dev.match.parts.tag), 0, done_req, MPIDI_Process.my_pg_rank);
-                MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlput", "**ptlput %s",
-                                     MPID_nem_ptl_strerror(ret));
-                MPIU_DBG_MSG_FMT(CH3_CHANNEL, VERBOSE, (MPIU_DBG_FDEST,
-                                                        "PtlPut(size=0 id=(%#x,%#x) pt=%#x tag=%#lx)",
-                                                        vc_ptl->id.phys.nid, vc_ptl->id.phys.pid,
-                                                        vc_ptl->ptc, DONE_TAG((ptl_match_bits_t)SENDBUF(rreq))));
-
-                /* Free resources */
-                MPIU_Free(TMPBUF(rreq));
-                MPID_Request_release(rreq);
+            if (--REQ_PTL(req)->num_gets == 0) {
+                MPIU_Free(TMPBUF(req));
+                if (REQ_PTL(req)->put_acked)
+                    on_data_avail(req);  /* Otherwise we'll do it on the SEND */
             }
         }
         break;
 
-    case PTL_EVENT_GET:
-        MPIDI_CH3U_Request_complete((MPID_Request *)e->user_ptr);
+    case PTL_EVENT_SEND:
+        {
+            MPID_Request *const req = e->user_ptr;
+
+            MPIU_Free(SENDBUF(req));
+            REQ_PTL(req)->put_acked = 1;
+            if (REQ_PTL(req)->num_gets == 0)  /* Otherwise GET will do it */
+                on_data_avail(req);
+        }
+        break;
+
+    case PTL_EVENT_REPLY:
+        {
+            int incomplete;
+            MPID_Request *const req = e->user_ptr;
+
+            MPIDI_CH3U_Request_decrement_cc(req, &incomplete);
+            if (!incomplete) {
+                mpi_errno = MPID_nem_handle_pkt(req->ch.vc, TMPBUF(req), REQ_PTL(req)->bytes_put);
+                if (mpi_errno)
+                    MPIU_ERR_POP(mpi_errno);
+
+                /* Free resources */
+                MPIU_Free(TMPBUF(req));
+                MPID_Request_release(req);
+            }
+        }
         break;
 
     default:

@@ -171,6 +171,7 @@ int MPID_nem_ptl_poll(int is_blocking_poll)
         case PTL_EVENT_PUT_OVERFLOW:
         case PTL_EVENT_GET:
         case PTL_EVENT_ACK:
+        case PTL_EVENT_SEND:
         case PTL_EVENT_REPLY:
         case PTL_EVENT_SEARCH: {
             MPID_Request * const req = event.user_ptr;
@@ -189,7 +190,6 @@ int MPID_nem_ptl_poll(int is_blocking_poll)
         case PTL_EVENT_AUTO_UNLINK:
             overflow_me_handle[(size_t)event.user_ptr] = PTL_INVALID_HANDLE;
             break;
-        case PTL_EVENT_SEND:
         case PTL_EVENT_LINK:
             /* ignore */
             break;

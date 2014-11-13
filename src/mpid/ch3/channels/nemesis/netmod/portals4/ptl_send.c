@@ -66,6 +66,9 @@ static int handler_send_complete(const ptl_event_t *e)
 
     MPIDI_FUNC_ENTER(MPID_STATE_HANDLER_SEND_COMPLETE);
 
+    if (e->type == PTL_EVENT_SEND)  /* Ignore */
+        goto fn_exit;
+
     MPIU_Assert(e->type == PTL_EVENT_ACK || e->type == PTL_EVENT_GET);
 
     if (REQ_PTL(sreq)->md != PTL_INVALID_HANDLE) {
@@ -100,6 +103,9 @@ static int handler_large(const ptl_event_t *e)
     MPIDI_STATE_DECL(MPID_STATE_HANDLER_LARGE);
 
     MPIDI_FUNC_ENTER(MPID_STATE_HANDLER_LARGE);
+
+    if (e->type == PTL_EVENT_SEND)  /* Ignore */
+        goto fn_exit;
 
     if (e->type != PTL_EVENT_ACK && e->type != PTL_EVENT_GET)
         MPIU_Error_printf("ACK event expected, received %s ni_fail=%s list=%s user_ptr=%p hdr_data=%#lx\n",
