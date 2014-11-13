@@ -5,6 +5,7 @@
 static dte_data_representation_t mpi_dtype_2_dte_dtype(MPI_Datatype datatype)
 {
     switch (datatype) {
+    case MPI_CHAR:
     case MPI_SIGNED_CHAR:
         return DTE_BYTE;
     case MPI_SHORT:

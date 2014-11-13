@@ -1,6 +1,7 @@
 #include "hcoll.h"
 
 static int hcoll_initialized = 0;
+static int hcoll_comm_world_initialized = 0;
 int hcoll_enable = 1;
 int hcoll_enable_barrier = 1;
 int hcoll_enable_bcast = 1;
@@ -22,10 +23,6 @@ int hcoll_destroy(void *param ATTRIBUTE((unused)))
 {
     if (1 == hcoll_initialized) {
         hcoll_finalize();
-        if (MPI_KEYVAL_INVALID != hcoll_comm_attr_keyval) {
-            MPIR_Comm_free_keyval_impl(hcoll_comm_attr_keyval);
-            hcoll_comm_attr_keyval = MPI_KEYVAL_INVALID;
-        }
     }
     hcoll_initialized = 0;
     return 0;
@@ -130,6 +127,13 @@ int hcoll_comm_create(MPID_Comm * comm_ptr, void *param)
     if (0 == hcoll_enable) {
         goto fn_exit;
     }
+    if (MPIR_Process.comm_world == comm_ptr) {
+        hcoll_comm_world_initialized = 1;
+    }
+    if (!hcoll_comm_world_initialized) {
+        comm_ptr->hcoll_priv.is_hcoll_init = 0;
+        goto fn_exit;
+    }
     num_ranks = comm_ptr->local_size;
     if ((MPID_INTRACOMM != comm_ptr->comm_kind) || (2 > num_ranks)) {
         comm_ptr->hcoll_priv.is_hcoll_init = 0;
@@ -185,6 +189,14 @@ int hcoll_comm_destroy(MPID_Comm * comm_ptr, void *param)
         goto fn_exit;
     }
     mpi_errno = MPI_SUCCESS;
+
+    if (comm_ptr == MPIR_Process.comm_world) {
+        if (MPI_KEYVAL_INVALID != hcoll_comm_attr_keyval) {
+            MPIR_Comm_free_keyval_impl(hcoll_comm_attr_keyval);
+            hcoll_comm_attr_keyval = MPI_KEYVAL_INVALID;
+        }
+    }
+
     context_destroyed = 0;
     if ((NULL != comm_ptr) && (0 != comm_ptr->hcoll_priv.is_hcoll_init)) {
         if (NULL != comm_ptr->coll_fns) {
@@ -193,7 +205,6 @@ int hcoll_comm_destroy(MPID_Comm * comm_ptr, void *param)
         comm_ptr->coll_fns = comm_ptr->hcoll_priv.hcoll_origin_coll_fns;
         hcoll_destroy_context(comm_ptr->hcoll_priv.hcoll_context,
                               (rte_grp_handle_t) comm_ptr, &context_destroyed);
-        MPIU_Assert(context_destroyed);
         comm_ptr->hcoll_priv.is_hcoll_init = 0;
     }
   fn_exit:
