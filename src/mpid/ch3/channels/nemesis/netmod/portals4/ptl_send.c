@@ -66,10 +66,7 @@ static int handler_send_complete(const ptl_event_t *e)
 
     MPIDI_FUNC_ENTER(MPID_STATE_HANDLER_SEND_COMPLETE);
 
-    if (e->type == PTL_EVENT_SEND)  /* Ignore */
-        goto fn_exit;
-
-    MPIU_Assert(e->type == PTL_EVENT_ACK || e->type == PTL_EVENT_GET);
+    MPIU_Assert(e->type == PTL_EVENT_SEND || e->type == PTL_EVENT_GET);
 
     if (REQ_PTL(sreq)->md != PTL_INVALID_HANDLE) {
         ret = PtlMDRelease(REQ_PTL(sreq)->md);
@@ -104,20 +101,9 @@ static int handler_large(const ptl_event_t *e)
 
     MPIDI_FUNC_ENTER(MPID_STATE_HANDLER_LARGE);
 
-    if (e->type == PTL_EVENT_SEND)  /* Ignore */
-        goto fn_exit;
+    MPIU_Assert(e->type == PTL_EVENT_SEND || e->type == PTL_EVENT_GET);
 
-    if (e->type != PTL_EVENT_ACK && e->type != PTL_EVENT_GET)
-        MPIU_Error_printf("ACK event expected, received %s ni_fail=%s list=%s user_ptr=%p hdr_data=%#lx\n",
-                          MPID_nem_ptl_strevent(e), MPID_nem_ptl_strnifail(e->ni_fail_type),
-                          MPID_nem_ptl_strlist(e->ptl_list), e->user_ptr, e->hdr_data);
-    MPIU_Assert(e->type == PTL_EVENT_ACK || e->type == PTL_EVENT_GET);
-    
-    if (e->type == PTL_EVENT_ACK && e->mlength < PTL_LARGE_THRESHOLD) {
-        /* truncated message */
-        mpi_errno = handler_send_complete(e);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-    } else if (e->type == PTL_EVENT_ACK) {
+    if (e->type == PTL_EVENT_SEND) {
         REQ_PTL(sreq)->put_acked = 1;
     } else if (e->type == PTL_EVENT_GET) {
         /* decrement the remaining get operations */
@@ -271,7 +257,7 @@ static int send_msg(ptl_hdr_data_t ssend_flag, struct MPIDI_VC *vc, const void *
             MPIU_DBG_MSG(CH3_CHANNEL, VERBOSE, "Small contig message");
             REQ_PTL(sreq)->event_handler = handler_send_complete;
             MPIU_DBG_MSG_P(CH3_CHANNEL, VERBOSE, "&REQ_PTL(sreq)->event_handler = %p", &(REQ_PTL(sreq)->event_handler));
-            ret = MPID_nem_ptl_rptl_put(MPIDI_nem_ptl_global_md, (ptl_size_t)((char *)buf + dt_true_lb), data_sz, PTL_ACK_REQ, vc_ptl->id, vc_ptl->pt,
+            ret = MPID_nem_ptl_rptl_put(MPIDI_nem_ptl_global_md, (ptl_size_t)((char *)buf + dt_true_lb), data_sz, PTL_NO_ACK_REQ, vc_ptl->id, vc_ptl->pt,
                          NPTL_MATCH(tag, comm->context_id + context_offset, comm->rank), 0, sreq,
                                         NPTL_HEADER(ssend_flag, data_sz));
             MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlput", "**ptlput %s", MPID_nem_ptl_strerror(ret));
@@ -308,7 +294,7 @@ static int send_msg(ptl_hdr_data_t ssend_flag, struct MPIDI_VC *vc, const void *
             MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlmdbind", "**ptlmdbind %s", MPID_nem_ptl_strerror(ret));
                 
             REQ_PTL(sreq)->event_handler = handler_send_complete;
-            ret = MPID_nem_ptl_rptl_put(REQ_PTL(sreq)->md, 0, data_sz, PTL_ACK_REQ, vc_ptl->id, vc_ptl->pt,
+            ret = MPID_nem_ptl_rptl_put(REQ_PTL(sreq)->md, 0, data_sz, PTL_NO_ACK_REQ, vc_ptl->id, vc_ptl->pt,
                          NPTL_MATCH(tag, comm->context_id + context_offset, comm->rank), 0, sreq,
                                         NPTL_HEADER(ssend_flag, data_sz));
             MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlput", "**ptlput %s", MPID_nem_ptl_strerror(ret));
@@ -325,7 +311,7 @@ static int send_msg(ptl_hdr_data_t ssend_flag, struct MPIDI_VC *vc, const void *
         MPID_Segment_pack(sreq->dev.segment_ptr, sreq->dev.segment_first, &last, REQ_PTL(sreq)->chunk_buffer[0]);
         MPIU_Assert(last == sreq->dev.segment_size);
         REQ_PTL(sreq)->event_handler = handler_send_complete;
-        ret = MPID_nem_ptl_rptl_put(MPIDI_nem_ptl_global_md, (ptl_size_t)REQ_PTL(sreq)->chunk_buffer[0], data_sz, PTL_ACK_REQ,
+        ret = MPID_nem_ptl_rptl_put(MPIDI_nem_ptl_global_md, (ptl_size_t)REQ_PTL(sreq)->chunk_buffer[0], data_sz, PTL_NO_ACK_REQ,
                      vc_ptl->id, vc_ptl->pt, NPTL_MATCH(tag, comm->context_id + context_offset, comm->rank), 0, sreq,
                                     NPTL_HEADER(ssend_flag, data_sz));
         MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlput", "**ptlput %s", MPID_nem_ptl_strerror(ret));
@@ -342,7 +328,7 @@ static int send_msg(ptl_hdr_data_t ssend_flag, struct MPIDI_VC *vc, const void *
         REQ_PTL(sreq)->large = TRUE;
 
         REQ_PTL(sreq)->event_handler = handler_large;
-        ret = MPID_nem_ptl_rptl_put(MPIDI_nem_ptl_global_md, (ptl_size_t)((char *)buf + dt_true_lb), PTL_LARGE_THRESHOLD, PTL_ACK_REQ, vc_ptl->id, vc_ptl->pt,
+        ret = MPID_nem_ptl_rptl_put(MPIDI_nem_ptl_global_md, (ptl_size_t)((char *)buf + dt_true_lb), PTL_LARGE_THRESHOLD, PTL_NO_ACK_REQ, vc_ptl->id, vc_ptl->pt,
                      NPTL_MATCH(tag, comm->context_id + context_offset, comm->rank), 0, sreq,
                                     NPTL_HEADER(ssend_flag | NPTL_LARGE, data_sz));
         MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlput", "**ptlput %s", MPID_nem_ptl_strerror(ret));
@@ -412,7 +398,7 @@ static int send_msg(ptl_hdr_data_t ssend_flag, struct MPIDI_VC *vc, const void *
                 REQ_PTL(sreq)->large = TRUE;
 
                 REQ_PTL(sreq)->event_handler = handler_large;
-                ret = MPID_nem_ptl_rptl_put(REQ_PTL(sreq)->md, 0, PTL_LARGE_THRESHOLD, PTL_ACK_REQ, vc_ptl->id, vc_ptl->pt,
+                ret = MPID_nem_ptl_rptl_put(REQ_PTL(sreq)->md, 0, PTL_LARGE_THRESHOLD, PTL_NO_ACK_REQ, vc_ptl->id, vc_ptl->pt,
                              NPTL_MATCH(tag, comm->context_id + context_offset, comm->rank), 0, sreq,
                                             NPTL_HEADER(ssend_flag | NPTL_LARGE, data_sz));
                 MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlput", "**ptlput %s", MPID_nem_ptl_strerror(ret));
@@ -437,7 +423,7 @@ static int send_msg(ptl_hdr_data_t ssend_flag, struct MPIDI_VC *vc, const void *
 
     REQ_PTL(sreq)->event_handler = handler_large;
     ret = MPID_nem_ptl_rptl_put(MPIDI_nem_ptl_global_md, (ptl_size_t)REQ_PTL(sreq)->chunk_buffer[0], PTL_LARGE_THRESHOLD,
-                                PTL_ACK_REQ, vc_ptl->id, vc_ptl->pt, NPTL_MATCH(tag, comm->context_id + context_offset, comm->rank),
+                                PTL_NO_ACK_REQ, vc_ptl->id, vc_ptl->pt, NPTL_MATCH(tag, comm->context_id + context_offset, comm->rank),
                                 0, sreq, NPTL_HEADER(ssend_flag | NPTL_LARGE, data_sz));
     MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlput", "**ptlput %s", MPID_nem_ptl_strerror(ret));
     DBG_MSG_PUT("global", PTL_LARGE_THRESHOLD, vc->pg_rank, NPTL_MATCH(tag, comm->context_id + context_offset, comm->rank), NPTL_HEADER(ssend_flag | NPTL_LARGE, data_sz));
