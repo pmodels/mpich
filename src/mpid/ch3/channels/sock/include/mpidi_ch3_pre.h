@@ -18,7 +18,6 @@
 
 /* FIXME: These should be removed */
 #define MPIDI_DEV_IMPLEMENTS_KVS
-#define MPIDI_DEV_IMPLEMENTS_ABORT
 
 /* FIXME: Are the following packet extensions?  Can the socket connect/accept
    packets be made part of the util/sock support? */
