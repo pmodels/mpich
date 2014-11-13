@@ -17,8 +17,6 @@ int main(int argc, char **argv)
 {
     int rank, size, newsize, rc, errclass, errs = 0;
     MPI_Comm newcomm;
-    int sendbuf = 0;
-    int recvbuf = 0;
 
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);

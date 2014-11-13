@@ -32,6 +32,10 @@ int main(int argc, char **argv)
         MPI_Abort( MPI_COMM_WORLD, 1 );
     }
 
+    MPI_Comm_group(MPI_COMM_WORLD, &world);
+    MPI_Group_excl(world, 1, deadprocs, &newgroup);
+    MPI_Comm_create_group(MPI_COMM_WORLD, newgroup, 0, &newcomm);
+
     if (rank == 1) {
         exit(EXIT_FAILURE);
     }
@@ -76,10 +80,6 @@ int main(int argc, char **argv)
     }
 #endif
 
-    MPI_Comm_group(MPI_COMM_WORLD, &world);
-    MPI_Group_excl(world, 1, deadprocs, &newgroup);
-    MPI_Comm_create_group(MPI_COMM_WORLD, newgroup, 0, &newcomm);
-
     rc = MPI_Reduce(&errs, &toterrs, 1, MPI_INT, MPI_SUM, 0, newcomm);
     if(rc)
         fprintf(stderr, "Failed to get errors from other processes\n");
@@ -95,6 +95,10 @@ int main(int argc, char **argv)
     }
 
     free(sendbuf);
+
+    MPI_Comm_free(&newcomm);
+    MPI_Group_free(&newgroup);
+    MPI_Group_free(&world);
 
     MPI_Finalize();
 

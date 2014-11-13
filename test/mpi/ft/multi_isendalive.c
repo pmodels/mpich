@@ -22,6 +22,8 @@ int main(int argc, char **argv)
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
+    MPI_Comm_set_errhandler(MPI_COMM_WORLD, MPI_ERRORS_RETURN);
+
     if (size < 4) {
         fprintf( stderr, "Must run with at least 4 processes\n" );
         MPI_Abort(MPI_COMM_WORLD, 1);
