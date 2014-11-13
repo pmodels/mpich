@@ -13,4 +13,4 @@ include $(top_srcdir)/Makefile.mtest
 noinst_PROGRAMS = die abort sendalive isendalive senddead recvdead isenddead \
 		  irecvdead barrier gather reduce bcast scatter failure_ack \
 		  anysource revoke_nofail shrink agree multi_isendalive \
-		  agree_shrink
+		  agree_shrink revoke_shrink
