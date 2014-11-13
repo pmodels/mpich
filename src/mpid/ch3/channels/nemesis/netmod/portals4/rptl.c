@@ -859,12 +859,15 @@ int MPID_nem_ptl_rptl_eqget(ptl_handle_eq_t eq_handle, ptl_event_t * event)
             op->events_ready = 1;
             event->user_ptr = op->u.put.user_ptr;
 
-            /* if the message is over the control portal, ignore the
-             * ACK event */
+            /* if the message is over the control portal, ignore both
+             * events */
             if (op->u.put.pt_type == RPTL_PT_CONTROL) {
+                /* drop the ack event */
                 MPIU_Free(op->u.put.ack);
                 MPL_DL_DELETE(op->target->control_op_list, op);
                 rptli_op_free(op);
+
+                /* drop the send event */
                 ret = PTL_EQ_EMPTY;
             }
         }
