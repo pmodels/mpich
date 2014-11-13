@@ -614,55 +614,8 @@ static int stash_event(struct rptl_op *op, ptl_event_t event)
 }
 
 
-#undef FUNCNAME
-#define FUNCNAME retrieve_event
-#undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
-static int retrieve_event(ptl_event_t * event)
-{
-    struct rptl_target *target;
-    struct rptl_op *op;
-    int have_event = 0;
-    MPIDI_STATE_DECL(MPID_STATE_RETRIEVE_EVENT);
-
-    MPIDI_FUNC_ENTER(MPID_STATE_RETRIEVE_EVENT);
-
-    /* FIXME: this is an expensive loop over all pending operations
-     * everytime the user does an eqget */
-    for (target = rptl_info.target_list; target; target = target->next) {
-        for (op = target->data_op_list; op; op = op->next) {
-            if (op->events_ready) {
-                assert(op->op_type == RPTL_OP_PUT);
-                assert(op->u.put.send || op->u.put.ack);
-
-                if (op->u.put.send) {
-                    memcpy(event, op->u.put.send, sizeof(ptl_event_t));
-                    MPIU_Free(op->u.put.send);
-                    op->u.put.send = NULL;
-                }
-                else {
-                    memcpy(event, op->u.put.ack, sizeof(ptl_event_t));
-                    MPIU_Free(op->u.put.ack);
-                    op->u.put.ack = NULL;
-                }
-                event->user_ptr = op->u.put.user_ptr;
-
-                MPL_DL_DELETE(target->data_op_list, op);
-                rptli_op_free(op);
-
-                have_event = 1;
-                goto fn_exit;
-            }
-        }
-    }
-
-  fn_exit:
-    MPIDI_FUNC_EXIT(MPID_STATE_RETRIEVE_EVENT);
-    return have_event;
-
-  fn_fail:
-    goto fn_exit;
-}
+static ptl_event_t pending_event;
+static int pending_event_valid = 0;
 
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_ptl_rptl_eqget
@@ -684,7 +637,9 @@ int MPID_nem_ptl_rptl_eqget(ptl_handle_eq_t eq_handle, ptl_event_t * event)
 
     /* before we poll the eq, we need to check if there are any
      * completed operations that need to be returned */
-    if (retrieve_event(event)) {
+    if (pending_event_valid) {
+        memcpy(event, &pending_event, sizeof(ptl_event_t));
+        pending_event_valid = 0;
         ret = PTL_OK;
         goto fn_exit;
     }
@@ -865,6 +820,21 @@ int MPID_nem_ptl_rptl_eqget(ptl_handle_eq_t eq_handle, ptl_event_t * event)
                 /* drop the send event */
                 ret = PTL_EQ_EMPTY;
             }
+            else {
+                /* if the message is over the data portal, we'll
+                 * return the send event.  if the user asked for an
+                 * ACK, we will enqueue the ack to be returned
+                 * next. */
+                if (op->u.put.ack_req & PTL_ACK_REQ) {
+                    /* only one event should be pending */
+                    assert(pending_event_valid == 0);
+                    memcpy(&pending_event, op->u.put.ack, sizeof(ptl_event_t));
+                    pending_event_valid = 1;
+                }
+                MPIU_Free(op->u.put.ack);
+                MPL_DL_DELETE(op->target->data_op_list, op);
+                rptli_op_free(op);
+            }
         }
 
         else if (event->type == PTL_EVENT_ACK && op->u.put.send) {
@@ -876,25 +846,40 @@ int MPID_nem_ptl_rptl_eqget(ptl_handle_eq_t eq_handle, ptl_event_t * event)
             op->events_ready = 1;
             event->user_ptr = op->u.put.user_ptr;
 
-            /* if the message is over the control portal, ignore ACK
-             * event */
+            /* if the message is over the control portal, ignore both
+             * events */
             if (op->u.put.pt_type == RPTL_PT_CONTROL) {
+                /* drop the send event */
                 MPIU_Free(op->u.put.send);
                 MPL_DL_DELETE(op->target->control_op_list, op);
                 rptli_op_free(op);
+
+                /* drop the ack event */
                 ret = PTL_EQ_EMPTY;
             }
+            else {
+                /* if the message is over the data portal, we'll
+                 * return the send event.  if the user asked for an
+                 * ACK, we will enqueue the ack to be returned
+                 * next. */
+                if (op->u.put.ack_req & PTL_ACK_REQ) {
+                    /* user asked for an ACK, so return it to the user
+                     * and queue up the SEND event for next time */
+                    memcpy(&pending_event, op->u.put.send, sizeof(ptl_event_t));
+                    MPIU_Free(op->u.put.send);
+                    assert(pending_event_valid == 0);
+                    pending_event_valid = 1;
+                }
+                else {
+                    /* user didn't ask for an ACK, overwrite the ACK
+                     * event with the pending send event */
+                    memcpy(event, op->u.put.send, sizeof(ptl_event_t));
+                    MPIU_Free(op->u.put.send);
 
-            /* if the user did not ask for an ACK discard this event
-             * and return the send event. */
-            else if (!(op->u.put.ack_req & PTL_ACK_REQ)) {
-                memcpy(event, op->u.put.send, sizeof(ptl_event_t));
-                MPIU_Free(op->u.put.send);
-
-                /* set the event user pointer again, since we copied
-                 * over the original event */
-                event->user_ptr = op->u.put.user_ptr;
-
+                    /* set the event user pointer again, since we
+                     * copied over the original event */
+                    event->user_ptr = op->u.put.user_ptr;
+                }
                 /* we should be in the data op list */
                 MPL_DL_DELETE(op->target->data_op_list, op);
                 rptli_op_free(op);
