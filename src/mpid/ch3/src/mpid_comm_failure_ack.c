@@ -158,6 +158,10 @@ int MPID_Request_is_pending_failure(MPID_Request *request_ptr)
     MPIDI_STATE_DECL(MPID_STATE_REQUEST_IS_PENDING_FAILURE);
     MPIDI_FUNC_ENTER(MPID_STATE_REQUEST_IS_PENDING_FAILURE);
 
+    if (NULL == request_ptr || NULL == request_ptr->comm) {
+        goto fn_exit;
+    }
+
     if (request_ptr->dev.match.parts.rank != MPI_ANY_SOURCE) {
         goto fn_exit;
     }
