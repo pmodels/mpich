@@ -882,6 +882,7 @@
 /init/finalized
 /init/library_version
 /io/resized
+/io/testlist
 /manual/mpi_t/mpit_test
 /manual/mpi_t/mpit_test2
 /manual/mpi_t/nem_fbox_fallback_to_queue_count
