@@ -17,7 +17,7 @@
 /* end of weak pragmas */
 #elif defined(HAVE_WEAK_ATTRIBUTE)
 int MPIX_File_iread_at_all(MPI_File fh, MPI_Offset offset, void * buf, int count,
-                          MPI_Datatype datatype, MPI_Rquest *request)
+                          MPI_Datatype datatype, MPI_Request *request)
     __attribute__((weak,alias("PMPIX_File_iread_at_all")));
 #endif
 
