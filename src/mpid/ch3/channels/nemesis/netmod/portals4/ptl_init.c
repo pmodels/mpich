@@ -14,6 +14,7 @@
 
 #define UNEXPECTED_HDR_COUNT 32768
 #define EQ_COUNT             32768
+#define LIST_SIZE            32768
 #define NID_KEY  "NID"
 #define PID_KEY  "PID"
 #define PTI_KEY  "PTI"
@@ -180,6 +181,8 @@ static int ptl_init(MPIDI_PG_t *pg_p, int pg_rank, char **bc_val_p, int *val_max
         desired.max_unexpected_headers = UNEXPECTED_HDR_COUNT;
     if (desired.max_eqs < EQ_COUNT && getenv("PTL_LIM_MAX_EQS") == NULL)
         desired.max_eqs = EQ_COUNT;
+    if (desired.max_list_size < LIST_SIZE && getenv("PTL_LIM_MAX_LIST_SIZE") == NULL)
+        desired.max_list_size = LIST_SIZE;
 
     /* do the real init */
     ret = PtlNIInit(PTL_IFACE_DEFAULT, PTL_NI_MATCHING | PTL_NI_PHYSICAL,
