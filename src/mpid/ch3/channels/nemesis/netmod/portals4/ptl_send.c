@@ -41,13 +41,8 @@ static void big_meappend(void *buf, ptl_size_t left_to_send, MPIDI_VC_t *vc, ptl
         else
             me.length = left_to_send;
 
-        /* if there is no space to append the entry, process outstanding events and try again */
-        while (1) {
-            ret = PtlMEAppend(MPIDI_nem_ptl_ni, MPIDI_nem_ptl_get_pt, &me, PTL_PRIORITY_LIST, sreq, &REQ_PTL(sreq)->get_me_p[i]);
-            if (ret != PTL_NO_SPACE)
-                break;
-            MPID_nem_ptl_poll(1);
-        }
+        ret = MPID_nem_ptl_me_append(MPIDI_nem_ptl_ni, MPIDI_nem_ptl_get_pt, &me, PTL_PRIORITY_LIST, sreq,
+                                     &REQ_PTL(sreq)->get_me_p[i]);
         DBG_MSG_MEAPPEND("CTL", vc->pg_rank, me, sreq);
         MPIU_Assert(ret == 0);
 
@@ -387,14 +382,8 @@ static int send_msg(ptl_hdr_data_t ssend_flag, struct MPIDI_VC *vc, const void *
                 MPIU_CHKPMEM_MALLOC(REQ_PTL(sreq)->get_me_p, ptl_handle_me_t *, sizeof(ptl_handle_me_t), mpi_errno, "get_me_p");
 
                 REQ_PTL(sreq)->num_gets = 1;
-                /* if there is no space to append the entry, process outstanding events and try again */
-                while (1) {
-                    ret = PtlMEAppend(MPIDI_nem_ptl_ni, MPIDI_nem_ptl_get_pt, &me, PTL_PRIORITY_LIST, sreq,
-                                      &REQ_PTL(sreq)->get_me_p[0]);
-                    if (ret != PTL_NO_SPACE)
-                        break;
-                    MPID_nem_ptl_poll(1);
-                }
+                ret = MPID_nem_ptl_me_append(MPIDI_nem_ptl_ni, MPIDI_nem_ptl_get_pt, &me, PTL_PRIORITY_LIST, sreq,
+                                             &REQ_PTL(sreq)->get_me_p[0]);
                 MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlmeappend", "**ptlmeappend %s", MPID_nem_ptl_strerror(ret));
                 DBG_MSG_MEAPPEND("CTL", vc->pg_rank, me, sreq);
 
