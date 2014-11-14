@@ -177,7 +177,7 @@ static inline int send_pkt(MPIDI_VC_t *vc, void *hdr_p, void *data_p, MPIDI_msg_
     NEW_TAG(sendbuf->tag);
     TMPBUF(sreq) = NULL;
     REQ_PTL(sreq)->num_gets = 0;
-    REQ_PTL(sreq)->put_acked = 0;
+    REQ_PTL(sreq)->put_done = 0;
 
     if (data_sz) {
         MPIU_Memcpy(sendbuf->packet + sizeof(MPIDI_CH3_Pkt_t), data_p, sent_sz);
@@ -230,7 +230,7 @@ static int send_noncontig_pkt(MPIDI_VC_t *vc, MPID_Request *sreq, void *hdr_p)
     NEW_TAG(sendbuf->tag);
     TMPBUF(sreq) = NULL;
     REQ_PTL(sreq)->num_gets = 0;
-    REQ_PTL(sreq)->put_acked = 0;
+    REQ_PTL(sreq)->put_done = 0;
 
     if (sreq->dev.segment_size) {
         MPIDI_msg_sz_t last = sent_sz;
@@ -456,7 +456,7 @@ int MPID_nem_ptl_nm_ctl_event_handler(const ptl_event_t *e)
 
             if (--REQ_PTL(req)->num_gets == 0) {
                 MPIU_Free(TMPBUF(req));
-                if (REQ_PTL(req)->put_acked)
+                if (REQ_PTL(req)->put_done)
                     on_data_avail(req);  /* Otherwise we'll do it on the SEND */
             }
         }
@@ -467,7 +467,7 @@ int MPID_nem_ptl_nm_ctl_event_handler(const ptl_event_t *e)
             MPID_Request *const req = e->user_ptr;
 
             MPIU_Free(SENDBUF(req));
-            REQ_PTL(req)->put_acked = 1;
+            REQ_PTL(req)->put_done = 1;
             if (REQ_PTL(req)->num_gets == 0)  /* Otherwise GET will do it */
                 on_data_avail(req);
         }
