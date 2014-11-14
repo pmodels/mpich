@@ -58,7 +58,9 @@ typedef struct {
 } MPID_nem_ptl_req_area;
 
 /* macro for ptl private in req */
-#define REQ_PTL(req) ((MPID_nem_ptl_req_area *)((req)->ch.netmod_area.padding))
+static inline MPID_nem_ptl_req_area * REQ_PTL(MPID_Request *req) {
+    return (MPID_nem_ptl_req_area *)req->ch.netmod_area.padding;
+}
 
 #define MPID_nem_ptl_init_req(req_) do {                        \
         int i;                                                  \
