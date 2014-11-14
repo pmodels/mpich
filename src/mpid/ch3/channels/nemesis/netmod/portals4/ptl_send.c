@@ -104,13 +104,13 @@ static int handler_large(const ptl_event_t *e)
     MPIU_Assert(e->type == PTL_EVENT_SEND || e->type == PTL_EVENT_GET);
 
     if (e->type == PTL_EVENT_SEND) {
-        REQ_PTL(sreq)->put_acked = 1;
+        REQ_PTL(sreq)->put_done = 1;
     } else if (e->type == PTL_EVENT_GET) {
         /* decrement the remaining get operations */
         REQ_PTL(sreq)->num_gets--;
     }
 
-    if (REQ_PTL(sreq)->num_gets == 0 && REQ_PTL(sreq)->put_acked)
+    if (REQ_PTL(sreq)->num_gets == 0 && REQ_PTL(sreq)->put_done)
         mpi_errno = handler_send_complete(e);
 
  fn_exit:
