@@ -1,4 +1,40 @@
 ===============================================================================
+                               Changes in 3.2
+===============================================================================
+
+ # Added support for proposed MPI-3.1 features including nonblocking
+   collective I/O, address manipulation routines, thread-safety for
+   MPI initialization and pre-init functionality.  Proposed MPI-3.1
+   features are implemented as MPIX_ functions and the MPI version
+   number is still set to 3.0.
+
+ # Fortran 2008 bindings are enabled by default and fully supported.
+
+ # Added support for the Mellanox MXM InfiniBand interface.  (thanks
+   to Mellanox for the code contribution).
+
+ # Added support for the Mellanox HCOLL interface for collectives.
+   (thanks to Mellanox for the code contribution).
+
+ # Added support for OFED IB on Xeon and Xeon Phi.  (thanks to RIKEN
+   and University of Tokyo for the contribution).
+
+ # Significant stability improvements to the MPICH/portals4
+   implementation.
+
+ # Several other minor bug fixes, memory leak fixes, and code cleanup.
+
+   A full list of changes is available at the following link:
+
+     http://git.mpich.org/mpich.git/shortlog/v3.1.2..v3.2a2
+
+   A full list of bugs that have been fixed is available at the
+   following link:
+
+     https://trac.mpich.org/projects/mpich/query?status=closed&group=resolution&milestone=mpich-3.2
+
+
+===============================================================================
                                Changes in 3.1.3
 ===============================================================================
 
