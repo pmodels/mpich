@@ -1,0 +1,42 @@
+**sfi_avmap:SFI get address vector map failed
+**sfi_avmap %s %d %s %s:SFI address vector map failed (%s:%d:%s:%s)
+**sfi_tsendto:SFI tagged sendto failed
+**sfi_tsendto %s %d %s %s:SFI tagged sendto failed (%s:%d:%s:%s)
+**sfi_trecvfrom:SFI tagged recvfrom failed
+**sfi_trecvfrom %s %d %s %s:SFI tagged recvfrom failed (%s:%d:%s:%s)
+**sfi_getinfo:SFI getinfo() failed
+**sfi_getinfo %s %d %s %s:SFI getinfo() failed (%s:%d:%s:%s)
+**sfi_openep:SFI endpoint open failed
+**sfi_openep %s %d %s %s:SFI endpoint open failed (%s:%d:%s:%s)
+**sfi_openfabric:SFI fabric open failure
+**sfi_openfabric %s %d %s %s:SFI fabric open failed (%s:%d:%s:%s)
+**sfi_opendomain:SFI domain open failure
+**sfi_opendomain %s %d %s %s:SFI domain open failed (%s:%d:%s:%s)
+**sfi_opencq:SFI event queue create failure
+**sfi_opencq %s %d %s %s:SFI event queue create failed (%s:%d:%s:%s)
+**sfi_avopen:SFI address vector open failed
+**sfi_avopen %s %d %s %s:SFI address vector open failed (%s:%d:%s:%s)
+**sfi_bind:SFI resource bind failure
+**sfi_bind %s %d %s %s:SFI resource bind failed (%s:%d:%s:%s)
+**sfi_ep_enable:SFI endpoint enable failed
+**sfi_ep_enable %s %d %s %s:SFI endpoint enable failed (%s:%d:%s:%s)
+**sfi_getname:SFI get endpoint name failed
+**sfi_getname %s %d %s %s:SFI get endpoint name failed (%s:%d:%s:%s)
+**sfi_avclose:SFI av close failed
+**sfi_avclose %s %d %s %s:SFI av close failed (%s:%d:%s:%s)
+**sfi_epclose:SFI endpoint close failed
+**sfi_epclose %s %d %s %s:SFI endpoint close failed (%s:%d:%s:%s)
+**sfi_cqclose:SFI cq close failed
+**sfi_cqclose %s %d %s %s:SFI cq close failed (%s:%d:%s:%s)
+**sfi_mrclose:SFI mr close failed
+**sfi_mrclose %s %d %s %s:SFI mr close failed (%s:%d:%s:%s)
+**sfi_fabricclose:SFI fabric close failed
+**sfi_fabricclose %s %d %s %s:SFI fabric close failed (%s:%d:%s:%s)
+**sfi_domainclose:SFI domain close failed
+**sfi_domainclose %s %d %s %s:SFI domain close failed (%s:%d:%s:%s)
+**sfi_tsearch:SFI tsearch failed
+**sfi_tsearch %s %d %s %s:SFI tsearch failed (%s:%d:%s:%s)
+**sfi_poll:SFI poll failed
+**sfi_poll %s %d %s %s:SFI poll failed (%s:%d:%s:%s)
+**sfi_cancel:SFI cancel failed
+**sfi_cancel %s %d %s %s:SFI cancel failed (%s:%d:%s:%s)
