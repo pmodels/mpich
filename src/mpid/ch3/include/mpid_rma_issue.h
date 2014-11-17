@@ -347,7 +347,7 @@ static int issue_put_op(MPIDI_RMA_Op_t * rma_op, MPID_Win *win_ptr,
     MPID_Datatype_get_size_macro(rma_op->origin_datatype, origin_type_size);
     MPIU_Assign_trunc(len, rma_op->origin_count * origin_type_size, size_t);
 
-    if (len == put_pkt->immed_len) {
+    if (len == (size_t)put_pkt->immed_len) {
         /* All origin data is in packet header, issue the header. */
         MPIU_THREAD_CS_ENTER(CH3COMM, vc);
         mpi_errno = MPIDI_CH3_iStartMsg(vc, put_pkt, sizeof(*put_pkt), &(rma_op->request));
@@ -408,7 +408,7 @@ static int issue_acc_op(MPIDI_RMA_Op_t *rma_op, MPID_Win *win_ptr,
     MPID_Datatype_get_size_macro(rma_op->origin_datatype, origin_type_size);
     MPIU_Assign_trunc(len, rma_op->origin_count * origin_type_size, size_t);
 
-    if (len == accum_pkt->immed_len) {
+    if (len == (size_t)accum_pkt->immed_len) {
         /* All origin data is in packet header, issue the header. */
         MPIU_THREAD_CS_ENTER(CH3COMM, vc);
         mpi_errno = MPIDI_CH3_iStartMsg(vc, accum_pkt, sizeof(*accum_pkt), &(rma_op->request));
@@ -493,7 +493,7 @@ static int issue_get_acc_op(MPIDI_RMA_Op_t *rma_op, MPID_Win *win_ptr,
     MPID_Datatype_get_size_macro(rma_op->origin_datatype, origin_type_size);
     MPIU_Assign_trunc(len, rma_op->origin_count * origin_type_size, size_t);
 
-    if (len == get_accum_pkt->immed_len) {
+    if (len == (size_t)get_accum_pkt->immed_len) {
         /* All origin data is in packet header, issue the header. */
         MPIU_THREAD_CS_ENTER(CH3COMM, vc);
         mpi_errno = MPIDI_CH3_iStartMsg(vc, get_accum_pkt, sizeof(*get_accum_pkt), &(rma_op->request));

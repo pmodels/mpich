@@ -237,7 +237,7 @@ int MPIDI_CH3_PktHandler_Put(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
 
         if (put_pkt->immed_len > 0) {
             /* See if we can receive some data from packet header. */
-            MPIU_Memcpy(req->dev.user_buf, put_pkt->data, put_pkt->immed_len);
+            MPIU_Memcpy(req->dev.user_buf, put_pkt->data, (size_t)put_pkt->immed_len);
             req->dev.user_buf = (void*)((char*)req->dev.user_buf + put_pkt->immed_len);
             req->dev.recv_data_sz -= put_pkt->immed_len;
         }
@@ -426,18 +426,18 @@ int MPIDI_CH3_PktHandler_Get(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
             /* Try to copy target data into packet header. */
             MPIU_Assign_trunc(get_resp_pkt->immed_len,
                               MPIR_MIN(len, (MPIDI_RMA_IMMED_BYTES / type_size) * type_size),
-                              size_t);
+                              int);
 
             if (get_resp_pkt->immed_len > 0) {
                 void *src = get_pkt->addr;
                 void *dest = (void*) get_resp_pkt->data;
                 /* copy data from origin buffer to immed area in packet header */
-                mpi_errno = immed_copy(src, dest, get_resp_pkt->immed_len);
+                mpi_errno = immed_copy(src, dest, (size_t)get_resp_pkt->immed_len);
                 if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
             }
         }
 
-        if (len == get_resp_pkt->immed_len) {
+        if (len == (size_t)get_resp_pkt->immed_len) {
             /* All origin data is in packet header, issue the header. */
             iov[0].MPID_IOV_BUF = (MPID_IOV_BUF_CAST) get_resp_pkt;
             iov[0].MPID_IOV_LEN = sizeof(*get_resp_pkt);
@@ -608,7 +608,7 @@ int MPIDI_CH3_PktHandler_Accumulate(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
 
         if (accum_pkt->immed_len > 0) {
             /* See if we can receive some data from packet header. */
-            MPIU_Memcpy(req->dev.user_buf, accum_pkt->data, accum_pkt->immed_len);
+            MPIU_Memcpy(req->dev.user_buf, accum_pkt->data, (size_t)accum_pkt->immed_len);
             req->dev.user_buf = (void*)((char*)req->dev.user_buf + accum_pkt->immed_len);
             req->dev.recv_data_sz -= accum_pkt->immed_len;
         }
@@ -783,7 +783,7 @@ int MPIDI_CH3_PktHandler_GetAccumulate(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
 
         if (get_accum_pkt->immed_len > 0) {
             /* See if we can receive some data from packet header. */
-            MPIU_Memcpy(req->dev.user_buf, get_accum_pkt->data, get_accum_pkt->immed_len);
+            MPIU_Memcpy(req->dev.user_buf, get_accum_pkt->data, (size_t)get_accum_pkt->immed_len);
             req->dev.user_buf = (void*)((char*)req->dev.user_buf + get_accum_pkt->immed_len);
             req->dev.recv_data_sz -= get_accum_pkt->immed_len;
         }
@@ -1102,7 +1102,7 @@ int MPIDI_CH3_PktHandler_FOP(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
 
     /* copy data to resp pkt header */
     void *src = fop_pkt->addr, *dest = fop_resp_pkt->data;
-    mpi_errno = immed_copy(src, dest, fop_resp_pkt->immed_len);
+    mpi_errno = immed_copy(src, dest, (size_t)fop_resp_pkt->immed_len);
     if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
 
     /* Apply the op */
@@ -1182,7 +1182,7 @@ int MPIDI_CH3_PktHandler_FOPResp(MPIDI_VC_t * vc ATTRIBUTE((unused)),
 
     /* Copy data to result buffer on orgin */
     MPID_Request_get_ptr(fop_resp_pkt->request_handle, req);
-    MPIU_Memcpy(req->dev.user_buf, fop_resp_pkt->data, fop_resp_pkt->immed_len);
+    MPIU_Memcpy(req->dev.user_buf, fop_resp_pkt->data, (size_t)fop_resp_pkt->immed_len);
 
     /* decrement ack_counter */
     if (fop_resp_pkt->flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK_GRANTED) {
@@ -1263,7 +1263,7 @@ int MPIDI_CH3_PktHandler_Get_AccumResp(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
 
     if (get_accum_resp_pkt->immed_len > 0) {
         /* first copy IMMED data from pkt header to origin buffer */
-        MPIU_Memcpy(req->dev.user_buf, get_accum_resp_pkt->data, get_accum_resp_pkt->immed_len);
+        MPIU_Memcpy(req->dev.user_buf, get_accum_resp_pkt->data, (size_t)get_accum_resp_pkt->immed_len);
         req->dev.user_buf = (void*)((char*)req->dev.user_buf + get_accum_resp_pkt->immed_len);
         req->dev.recv_data_sz -= get_accum_resp_pkt->immed_len;
         if (req->dev.recv_data_sz == 0)
@@ -1398,7 +1398,7 @@ int MPIDI_CH3_PktHandler_GetResp(MPIDI_VC_t * vc ATTRIBUTE((unused)),
 
     if (get_resp_pkt->immed_len > 0) {
         /* first copy IMMED data from pkt header to origin buffer */
-        MPIU_Memcpy(req->dev.user_buf, get_resp_pkt->data, get_resp_pkt->immed_len);
+        MPIU_Memcpy(req->dev.user_buf, get_resp_pkt->data, (size_t)get_resp_pkt->immed_len);
         req->dev.user_buf = (void*)((char*)req->dev.user_buf + get_resp_pkt->immed_len);
         req->dev.recv_data_sz -= get_resp_pkt->immed_len;
         if (req->dev.recv_data_sz == 0)

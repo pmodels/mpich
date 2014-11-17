@@ -186,12 +186,12 @@ int MPIDI_CH3I_Put(const void *origin_addr, int origin_count, MPI_Datatype
             /* length of origin data that can fit into immed area in pkt header */
             MPIU_Assign_trunc(put_pkt->immed_len,
                               MPIR_MIN(len, (MPIDI_RMA_IMMED_BYTES / origin_type_size) * origin_type_size),
-                              size_t);
+                              int);
 
             if (put_pkt->immed_len > 0) {
                 void *src = new_ptr->origin_addr, *dest = put_pkt->data;
                 /* copy data from origin buffer to immed area in packet header */
-                mpi_errno = immed_copy(src, dest, put_pkt->immed_len);
+                mpi_errno = immed_copy(src, dest, (size_t)put_pkt->immed_len);
                 if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
             }
 
@@ -536,12 +536,12 @@ int MPIDI_CH3I_Accumulate(const void *origin_addr, int origin_count, MPI_Datatyp
             /* length of origin data that can fit into immed areas in packet header */
             MPIU_Assign_trunc(accum_pkt->immed_len,
                               MPIR_MIN(len, (MPIDI_RMA_IMMED_BYTES / origin_type_size) * origin_type_size),
-                              size_t);
+                              int);
 
             if (accum_pkt->immed_len > 0) {
                 void *src = new_ptr->origin_addr, *dest = accum_pkt->data;
                 /* copy data from origin buffer to immed area in packet header */
-                mpi_errno = immed_copy(src, dest, accum_pkt->immed_len);
+                mpi_errno = immed_copy(src, dest, (size_t)accum_pkt->immed_len);
                 if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
             }
 
@@ -759,12 +759,12 @@ int MPIDI_CH3I_Get_accumulate(const void *origin_addr, int origin_count,
                 /* length of origin data that can fit into immed area in packet header */
                 MPIU_Assign_trunc(get_accum_pkt->immed_len,
                                   MPIR_MIN(len, (MPIDI_RMA_IMMED_BYTES / origin_type_size) * origin_type_size),
-                                  size_t);
+                                  int);
 
                 if (get_accum_pkt->immed_len > 0) {
                     void *src = new_ptr->origin_addr, *dest = get_accum_pkt->data;
                     /* copy data from origin buffer to immed area in packet header */
-                    mpi_errno = immed_copy(src, dest, get_accum_pkt->immed_len);
+                    mpi_errno = immed_copy(src, dest, (size_t)get_accum_pkt->immed_len);
                     if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
                 }
 
@@ -1178,12 +1178,12 @@ int MPIDI_Fetch_and_op(const void *origin_addr, void *result_addr,
             /* length of origin data that can fit into immed area in pkt header */
             MPIU_Assign_trunc(fop_pkt->immed_len,
                               MPIR_MIN(len, (MPIDI_RMA_IMMED_BYTES / origin_type_size) * origin_type_size),
-                              size_t);
+                              int);
 
             if (fop_pkt->immed_len > 0) {
                 void *src = new_ptr->origin_addr, *dest = fop_pkt->data;
                 /* copy data from origin buffer to immed area in packet header */
-                mpi_errno = immed_copy(src, dest, fop_pkt->immed_len);
+                mpi_errno = immed_copy(src, dest, (size_t)fop_pkt->immed_len);
                 if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
             }
         }

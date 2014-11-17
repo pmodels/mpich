@@ -444,7 +444,7 @@ typedef struct MPIDI_CH3_Pkt_put {
     int lock_type;
     int origin_rank;
     /* Followings are to piggyback IMMED data */
-    size_t immed_len;
+    int immed_len;
     char data[MPIDI_RMA_IMMED_BYTES];
 } MPIDI_CH3_Pkt_put_t;
 
@@ -481,7 +481,7 @@ typedef struct MPIDI_CH3_Pkt_accum {
     int lock_type;
     int origin_rank;
     /* Followings are to piggyback IMMED data */
-    size_t immed_len;
+    int immed_len;
     char data[MPIDI_RMA_IMMED_BYTES];
 } MPIDI_CH3_Pkt_accum_t;
 
@@ -503,7 +503,7 @@ typedef struct MPIDI_CH3_Pkt_get_accum {
     int lock_type;
     int origin_rank;
     /* Followings are to piggback IMMED data */
-    size_t immed_len;
+    int immed_len;
     char data[MPIDI_RMA_IMMED_BYTES];
 } MPIDI_CH3_Pkt_get_accum_t;
 
@@ -561,7 +561,7 @@ typedef struct MPIDI_CH3_Pkt_get_resp {
     MPI_Win source_win_handle;
     int target_rank;
     /* Followings are to piggyback IMMED data */
-    size_t immed_len;
+    int immed_len;
     char data[MPIDI_RMA_IMMED_BYTES];
 } MPIDI_CH3_Pkt_get_resp_t;
 
@@ -575,7 +575,7 @@ typedef struct MPIDI_CH3_Pkt_get_accum_resp {
     MPI_Win source_win_handle;
     int target_rank;
     /* Followings are to piggyback IMMED data */
-    size_t immed_len;
+    int immed_len;
     char data[MPIDI_RMA_IMMED_BYTES];
 } MPIDI_CH3_Pkt_get_accum_resp_t;
 

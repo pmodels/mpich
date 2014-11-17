@@ -255,7 +255,7 @@ static inline int enqueue_lock_origin(MPID_Win *win_ptr, MPIDI_VC_t *vc,
         MPID_Request *req = NULL;
         MPI_Datatype target_dtp;
         int target_count;
-        size_t immed_len = 0;
+        int immed_len = 0;
         void *immed_data = NULL;
         int complete = 0;
         MPIDI_msg_sz_t data_len;
@@ -302,7 +302,7 @@ static inline int enqueue_lock_origin(MPID_Win *win_ptr, MPIDI_VC_t *vc,
 
         if (immed_len > 0) {
             /* see if we can receive some data from packet header */
-            MPIU_Memcpy(req->dev.user_buf, immed_data, immed_len);
+            MPIU_Memcpy(req->dev.user_buf, immed_data, (size_t)immed_len);
             req->dev.user_buf = (void*)((char*)req->dev.user_buf + immed_len);
             req->dev.recv_data_sz -= immed_len;
         }
