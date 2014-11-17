@@ -86,11 +86,11 @@ typedef enum {
     MPIDI_CH3_PKT_FOP_RESP,
     MPIDI_CH3_PKT_CAS_RESP,
     MPIDI_CH3_PKT_LOCK,
-    MPIDI_CH3_PKT_LOCK_GRANTED,
     MPIDI_CH3_PKT_UNLOCK,
     MPIDI_CH3_PKT_FLUSH,
-    MPIDI_CH3_PKT_FLUSH_ACK,
     MPIDI_CH3_PKT_DECR_AT_COUNTER,
+    MPIDI_CH3_PKT_LOCK_GRANTED,
+    MPIDI_CH3_PKT_FLUSH_ACK,
     /* RMA Packets end here */
     MPIDI_CH3_PKT_FLOW_CNTL_UPDATE,     /* FIXME: Unused */
     MPIDI_CH3_PKT_CLOSE,
@@ -377,213 +377,236 @@ MPIDI_CH3_PKT_DEFS
         }                                                               \
     }
 
+/* RMA packets start here */
+
+/********************************************************************************/
+/* RMA packet (from origin to target, including PUT, GET, ACC, GACC, CAS, FOP)  */
+/********************************************************************************/
 
 typedef struct MPIDI_CH3_Pkt_put {
     MPIDI_CH3_Pkt_type_t type;
     MPIDI_CH3_Pkt_flags_t flags;
+    MPI_Win target_win_handle;
+    MPI_Win source_win_handle;
+    /* Followings are to describe target data */
     void *addr;
     int count;
     MPI_Datatype datatype;
-    int dataloop_size;          /* for derived datatypes */
-    MPI_Win target_win_handle;  /* Used in the last RMA operation in each
-                                 * epoch for decrementing rma op counter in
-                                 * active target rma and for unlocking window
-                                 * in passive target rma. Otherwise set to NULL*/
-    MPI_Win source_win_handle;  /* Used in the last RMA operation in an
-                                 * epoch in the case of passive target rma
-                                 * with shared locks. Otherwise set to NULL*/
-    char data[MPIDI_RMA_IMMED_BYTES];
+    int dataloop_size;
+    /* Followings are to piggyback LOCK */
+    int lock_type;
+    int origin_rank;
+    /* Followings are to piggyback IMMED data */
     size_t immed_len;
-    int lock_type;      /* used when piggybacking LOCK message. */
-    int origin_rank;    /* used when piggybacking LOCK message. */
+    char data[MPIDI_RMA_IMMED_BYTES];
 } MPIDI_CH3_Pkt_put_t;
 
 typedef struct MPIDI_CH3_Pkt_get {
     MPIDI_CH3_Pkt_type_t type;
     MPIDI_CH3_Pkt_flags_t flags;
+    MPI_Win target_win_handle;
+    MPI_Win source_win_handle;
+    /* Followings are to describe target data */
     void *addr;
     int count;
     MPI_Datatype datatype;
-    int dataloop_size;          /* for derived datatypes */
+    int dataloop_size;
+    /* Following is to complete request at origin */
     MPI_Request request_handle;
-    MPI_Win target_win_handle;  /* Used in the last RMA operation in each
-                                 * epoch for decrementing rma op counter in
-                                 * active target rma and for unlocking window
-                                 * in passive target rma. Otherwise set to NULL*/
-    MPI_Win source_win_handle;  /* Used in the last RMA operation in an
-                                 * epoch in the case of passive target rma
-                                 * with shared locks. Otherwise set to NULL*/
-    int lock_type;   /* used when piggybacking LOCK message. */
-    int origin_rank; /* used when piggybacking LOCK message. */
+    /* Followings are to piggyback LOCK */
+    int lock_type;
+    int origin_rank;
 } MPIDI_CH3_Pkt_get_t;
-
-typedef struct MPIDI_CH3_Pkt_get_resp {
-    MPIDI_CH3_Pkt_type_t type;
-    MPI_Request request_handle;
-    /* followings are used to decrement ack_counter at origin */
-    int target_rank;
-    MPI_Win source_win_handle;
-    MPIDI_CH3_Pkt_flags_t flags;
-} MPIDI_CH3_Pkt_get_resp_t;
 
 typedef struct MPIDI_CH3_Pkt_accum {
     MPIDI_CH3_Pkt_type_t type;
     MPIDI_CH3_Pkt_flags_t flags;
+    MPI_Win target_win_handle;
+    MPI_Win source_win_handle;
+    /* Followings are to describe target data */
     void *addr;
     int count;
     MPI_Datatype datatype;
-    int dataloop_size;          /* for derived datatypes */
+    int dataloop_size;
+    /* Following is to specify ACC op */
     MPI_Op op;
-    MPI_Win target_win_handle;  /* Used in the last RMA operation in each
-                                 * epoch for decrementing rma op counter in
-                                 * active target rma and for unlocking window
-                                 * in passive target rma. Otherwise set to NULL*/
-    MPI_Win source_win_handle;  /* Used in the last RMA operation in an
-                                 * epoch in the case of passive target rma
-                                 * with shared locks. Otherwise set to NULL*/
-    char data[MPIDI_RMA_IMMED_BYTES];
+    /* Followings are to piggyback LOCK */
+    int lock_type;
+    int origin_rank;
+    /* Followings are to piggyback IMMED data */
     size_t immed_len;
-    int lock_type;    /* used when piggybacking LOCK message. */
-    int origin_rank;  /* used when piggybacking LOCK message. */
+    char data[MPIDI_RMA_IMMED_BYTES];
 } MPIDI_CH3_Pkt_accum_t;
 
 typedef struct MPIDI_CH3_Pkt_get_accum {
     MPIDI_CH3_Pkt_type_t type;
     MPIDI_CH3_Pkt_flags_t flags;
-    MPI_Request request_handle; /* For get_accumulate response */
+    MPI_Win target_win_handle;
+    MPI_Win source_win_handle;
+    /* Followings are to describe target data */
     void *addr;
     int count;
     MPI_Datatype datatype;
-    int dataloop_size;          /* for derived datatypes */
+    int dataloop_size;
+    /* Following is to describe ACC op */
     MPI_Op op;
-    MPI_Win target_win_handle;  /* Used in the last RMA operation in each
-                                 * epoch for decrementing rma op counter in
-                                 * active target rma and for unlocking window
-                                 * in passive target rma. Otherwise set to NULL*/
-    MPI_Win source_win_handle;  /* Used in the last RMA operation in an
-                                 * epoch in the case of passive target rma
-                                 * with shared locks. Otherwise set to NULL*/
-    char data[MPIDI_RMA_IMMED_BYTES];
+    /* Following is to complete request on origin */
+    MPI_Request request_handle;
+    /* Followings are to piggyback LOCK */
+    int lock_type;
+    int origin_rank;
+    /* Followings are to piggback IMMED data */
     size_t immed_len;
-    int lock_type;     /* used when piggybacking LOCK message. */
-    int origin_rank;   /* used when piggybacking LOCK message. */
+    char data[MPIDI_RMA_IMMED_BYTES];
 } MPIDI_CH3_Pkt_get_accum_t;
-
-typedef struct MPIDI_CH3_Pkt_get_accum_resp {
-    MPIDI_CH3_Pkt_type_t type;
-    MPI_Request request_handle;
-    /* followings are used to decrement ack_counter at origin */
-    int target_rank;
-    MPI_Win source_win_handle;
-    MPIDI_CH3_Pkt_flags_t flags;
-} MPIDI_CH3_Pkt_get_accum_resp_t;
-
-typedef struct MPIDI_CH3_Pkt_cas {
-    MPIDI_CH3_Pkt_type_t type;
-    MPIDI_CH3_Pkt_flags_t flags;
-    MPI_Datatype datatype;
-    void *addr;
-    MPI_Request request_handle;
-    MPI_Win source_win_handle;
-    MPI_Win target_win_handle;  /* Used in the last RMA operation in each
-                                 * epoch for decrementing rma op counter in
-                                 * active target rma and for unlocking window
-                                 * in passive target rma. Otherwise set to NULL*/
-    MPIDI_CH3_CAS_Immed_u origin_data;
-    MPIDI_CH3_CAS_Immed_u compare_data;
-    int lock_type;     /* used when piggybacking LOCK message. */
-    int origin_rank;   /* used when piggybacking LOCK message. */
-} MPIDI_CH3_Pkt_cas_t;
-
-typedef struct MPIDI_CH3_Pkt_cas_resp {
-    MPIDI_CH3_Pkt_type_t type;
-    MPI_Request request_handle;
-    MPIDI_CH3_CAS_Immed_u data;
-    /* followings are used to decrement ack_counter at orign */
-    int target_rank;
-    MPI_Win source_win_handle;
-    MPIDI_CH3_Pkt_flags_t flags;
-} MPIDI_CH3_Pkt_cas_resp_t;
 
 typedef struct MPIDI_CH3_Pkt_fop {
     MPIDI_CH3_Pkt_type_t type;
     MPIDI_CH3_Pkt_flags_t flags;
-    MPI_Datatype datatype;
-    void *addr;
-    MPI_Op op;
-    MPI_Request request_handle;
     MPI_Win source_win_handle;
-    MPI_Win target_win_handle;  /* Used in the last RMA operation in each
-                                 * epoch for decrementing rma op counter in
-                                 * active target rma and for unlocking window
-                                 * in passive target rma. Otherwise set to NULL*/
-    char data[MPIDI_RMA_IMMED_BYTES];
+    MPI_Win target_win_handle;
+    /* Followings are to describe target data */
+    void *addr;
+    MPI_Datatype datatype;
+    /* Following is to speicfy ACC op */
+    MPI_Op op;
+    /* Following is to complete request at origin */
+    MPI_Request request_handle;
+    /* Followings are to piggyback IMMED data */
+    int lock_type;
+    int origin_rank;
+    /* Followings are to piggyback IMMED data */
     int immed_len;
-    int lock_type;     /* used when piggybacking LOCK message. */
-    int origin_rank;   /* used when piggybacking LOCK message. */
+    char data[MPIDI_RMA_IMMED_BYTES];
 } MPIDI_CH3_Pkt_fop_t;
+
+typedef struct MPIDI_CH3_Pkt_cas {
+    MPIDI_CH3_Pkt_type_t type;
+    MPIDI_CH3_Pkt_flags_t flags;
+    MPI_Win source_win_handle;
+    MPI_Win target_win_handle;
+    /* Followings are to describe target data */
+    void *addr;
+    MPI_Datatype datatype;
+    /* Following is to complete request on origin */
+    MPI_Request request_handle;
+    /* Followings are to piggyback LOCK */
+    int lock_type;
+    int origin_rank;
+    /* Followings are to piggyback IMMED data */
+    MPIDI_CH3_CAS_Immed_u origin_data;
+    MPIDI_CH3_CAS_Immed_u compare_data;
+} MPIDI_CH3_Pkt_cas_t;
+
+
+/*********************************************************************************/
+/* RMA response packet (from target to origin, including GET_RESP, GET_ACC_RESP, */
+/* CAS_RESP, FOP_RESP)                                                           */
+/*********************************************************************************/
+
+typedef struct MPIDI_CH3_Pkt_get_resp {
+    MPIDI_CH3_Pkt_type_t type;
+    MPIDI_CH3_Pkt_flags_t flags;
+    /* Following is to complete request at origin */
+    MPI_Request request_handle;
+    /* TODO: we should add IMMED data here */
+    /* Followings are used to decrement ack_counter at origin */
+    MPI_Win source_win_handle;
+    int target_rank;
+} MPIDI_CH3_Pkt_get_resp_t;
+
+typedef struct MPIDI_CH3_Pkt_get_accum_resp {
+    MPIDI_CH3_Pkt_type_t type;
+    MPIDI_CH3_Pkt_flags_t flags;
+    /* Following is to complete request at origin */
+    MPI_Request request_handle;
+    /* TODO: we should add IMMED data here */
+    /* Followings are used to decrement ack_counter at origin */
+    MPI_Win source_win_handle;
+    int target_rank;
+} MPIDI_CH3_Pkt_get_accum_resp_t;
 
 typedef struct MPIDI_CH3_Pkt_fop_resp {
     MPIDI_CH3_Pkt_type_t type;
-    MPI_Request request_handle;
-    char data[MPIDI_RMA_IMMED_BYTES];
-    int immed_len;
-    /* followings are used to decrement ack_counter at orign */
-    int target_rank;
-    MPI_Win source_win_handle;
     MPIDI_CH3_Pkt_flags_t flags;
+    /* Following is to complete request at origin */
+    MPI_Request request_handle;
+    /* Followings are used to decrement ack_counter at orign */
+    MPI_Win source_win_handle;
+    int target_rank;
+    /* Followings are to piggyback IMMED data */
+    int immed_len;
+    char data[MPIDI_RMA_IMMED_BYTES];
 } MPIDI_CH3_Pkt_fop_resp_t;
+
+typedef struct MPIDI_CH3_Pkt_cas_resp {
+    MPIDI_CH3_Pkt_type_t type;
+    MPIDI_CH3_Pkt_flags_t flags;
+    /* Following is to complete request at origin */
+    MPI_Request request_handle;
+    /* Followings are used to decrement ack_counter at orign */
+    MPI_Win source_win_handle;
+    int target_rank;
+    /* Following is to piggyback IMMED data */
+    MPIDI_CH3_CAS_Immed_u data;
+} MPIDI_CH3_Pkt_cas_resp_t;
+
+/*********************************************************************************/
+/* RMA control packet (from origin to target, including LOCK, UNLOCK, FLUSH)     */
+/*********************************************************************************/
 
 typedef struct MPIDI_CH3_Pkt_lock {
     MPIDI_CH3_Pkt_type_t type;
-    int lock_type;
     MPI_Win target_win_handle;
     MPI_Win source_win_handle;
-    int target_rank;            /* Used in unluck/flush response to look up the
-                                 * target state at the origin. */
+    int lock_type;
+    int target_rank;
     int origin_rank;
 } MPIDI_CH3_Pkt_lock_t;
 
 typedef struct MPIDI_CH3_Pkt_unlock {
     MPIDI_CH3_Pkt_type_t type;
-    int lock_type;
+    MPIDI_CH3_Pkt_flags_t flags;
     MPI_Win target_win_handle;
     MPI_Win source_win_handle;
-    int target_rank;            /* Used in unluck/flush response to look up the
-                                 * target state at the origin. */
+    int lock_type;
+    int target_rank;
     int origin_rank;
-    MPIDI_CH3_Pkt_flags_t flags;
 } MPIDI_CH3_Pkt_unlock_t;
 
 typedef struct MPIDI_CH3_Pkt_flush {
     MPIDI_CH3_Pkt_type_t type;
-    int lock_type;
     MPI_Win target_win_handle;
     MPI_Win source_win_handle;
-    int target_rank;            /* Used in unluck/flush response to look up the
-                                 * target state at the origin. */
+    int lock_type;
+    int target_rank;
     int origin_rank;
 } MPIDI_CH3_Pkt_flush_t;
-
-typedef struct MPIDI_CH3_Pkt_lock_granted {
-    MPIDI_CH3_Pkt_type_t type;
-    MPI_Win source_win_handle;
-    int target_rank;            /* Used in flush_ack response to look up the
-                                 * target state at the origin. */
-} MPIDI_CH3_Pkt_lock_granted_t;
-
-typedef struct MPIDI_CH3_Pkt_flush_ack {
-    MPIDI_CH3_Pkt_type_t type;
-    MPI_Win source_win_handle;
-    int target_rank;            /* Used in flush_ack response to look up the
-                                 * target state at the origin. */
-    MPIDI_CH3_Pkt_flags_t flags;
-} MPIDI_CH3_Pkt_flush_ack_t;
 
 typedef struct MPIDI_CH3_Pkt_decr_at_counter {
     MPIDI_CH3_Pkt_type_t type;
     MPI_Win target_win_handle;
 } MPIDI_CH3_Pkt_decr_at_counter_t;
+
+/*********************************************************************************/
+/* RMA control response packet (from target to origin, including LOCK_GRANTED,   */
+/* FLUSH_ACK)                                                                    */
+/*********************************************************************************/
+
+typedef struct MPIDI_CH3_Pkt_lock_granted {
+    MPIDI_CH3_Pkt_type_t type;
+    MPI_Win source_win_handle;
+    int target_rank;
+} MPIDI_CH3_Pkt_lock_granted_t;
+
+typedef struct MPIDI_CH3_Pkt_flush_ack {
+    MPIDI_CH3_Pkt_type_t type;
+    MPIDI_CH3_Pkt_flags_t flags;
+    MPI_Win source_win_handle;
+    int target_rank;
+} MPIDI_CH3_Pkt_flush_ack_t;
+
+/* RMA packets end here */
 
 typedef struct MPIDI_CH3_Pkt_close {
     MPIDI_CH3_Pkt_type_t type;
@@ -609,23 +632,25 @@ typedef union MPIDI_CH3_Pkt {
     MPIDI_CH3_Pkt_rndv_send_t rndv_send;
     MPIDI_CH3_Pkt_cancel_send_req_t cancel_send_req;
     MPIDI_CH3_Pkt_cancel_send_resp_t cancel_send_resp;
+    /* RMA packets start here */
     MPIDI_CH3_Pkt_put_t put;
     MPIDI_CH3_Pkt_get_t get;
-    MPIDI_CH3_Pkt_get_resp_t get_resp;
     MPIDI_CH3_Pkt_accum_t accum;
     MPIDI_CH3_Pkt_get_accum_t get_accum;
+    MPIDI_CH3_Pkt_fop_t fop;
+    MPIDI_CH3_Pkt_cas_t cas;
+    MPIDI_CH3_Pkt_get_resp_t get_resp;
+    MPIDI_CH3_Pkt_get_accum_resp_t get_accum_resp;
+    MPIDI_CH3_Pkt_fop_resp_t fop_resp;
+    MPIDI_CH3_Pkt_cas_resp_t cas_resp;
     MPIDI_CH3_Pkt_lock_t lock;
-    MPIDI_CH3_Pkt_lock_granted_t lock_granted;
     MPIDI_CH3_Pkt_unlock_t unlock;
     MPIDI_CH3_Pkt_flush_t flush;
-    MPIDI_CH3_Pkt_flush_ack_t flush_ack;
     MPIDI_CH3_Pkt_decr_at_counter_t decr_at_cnt;
+    MPIDI_CH3_Pkt_lock_granted_t lock_granted;
+    MPIDI_CH3_Pkt_flush_ack_t flush_ack;
+    /* RMA packets end here */
     MPIDI_CH3_Pkt_close_t close;
-    MPIDI_CH3_Pkt_cas_t cas;
-    MPIDI_CH3_Pkt_cas_resp_t cas_resp;
-    MPIDI_CH3_Pkt_fop_t fop;
-    MPIDI_CH3_Pkt_fop_resp_t fop_resp;
-    MPIDI_CH3_Pkt_get_accum_resp_t get_accum_resp;
     MPIDI_CH3_Pkt_revoke_t revoke;
 # if defined(MPIDI_CH3_PKT_DECL)
      MPIDI_CH3_PKT_DECL
