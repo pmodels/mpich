@@ -281,6 +281,11 @@ void MPIDI_CH3_RMA_Init_sync_pvars(void)
 #define SYNC_POST_TAG 100
 
 
+/********************************************************************************/
+/* Active Target synchronization (including WIN_FENCE, WIN_POST, WIN_START,     */
+/* WIN_COMPLETE, WIN_WAIT, WIN_TEST)                                            */
+/********************************************************************************/
+
 #undef FUNCNAME
 #define FUNCNAME MPIDI_Win_fence
 #undef FCNAME
@@ -421,39 +426,6 @@ int MPIDI_Win_fence(int assert, MPID_Win * win_ptr)
   fn_fail:
     goto fn_exit;
     /* --END ERROR HANDLING-- */
-}
-
-
-static int fill_ranks_in_win_grp(MPID_Win *win_ptr, MPID_Group *group_ptr, int *ranks_in_win_grp)
-{
-    int mpi_errno = MPI_SUCCESS;
-    int i, *ranks_in_grp;
-    MPID_Group *win_grp_ptr;
-    MPIU_CHKLMEM_DECL(1);
-    MPIDI_STATE_DECL(MPID_STATE_FILL_RANKS_IN_WIN_GRP);
-
-    MPIDI_RMA_FUNC_ENTER(MPID_STATE_FILL_RANKS_IN_WIN_GRP);
-
-    MPIU_CHKLMEM_MALLOC(ranks_in_grp, int *, group_ptr->size * sizeof(int),
-                        mpi_errno, "ranks_in_grp");
-    for (i = 0; i < group_ptr->size; i++) ranks_in_grp[i] = i;
-
-    mpi_errno = MPIR_Comm_group_impl(win_ptr->comm_ptr, &win_grp_ptr);
-    if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
-
-    mpi_errno = MPIR_Group_translate_ranks_impl(group_ptr, group_ptr->size,
-                                                ranks_in_grp, win_grp_ptr, ranks_in_win_grp);
-    if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
-
-    mpi_errno = MPIR_Group_free_impl(win_grp_ptr);
-    if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
-
-  fn_exit:
-    MPIU_CHKLMEM_FREEALL();
-    MPIDI_RMA_FUNC_EXIT(MPID_STATE_FILL_RANKS_IN_WIN_GRP);
-    return mpi_errno;
- fn_fail:
-    goto fn_exit;
 }
 
 
@@ -859,6 +831,12 @@ int MPIDI_Win_test(MPID_Win * win_ptr, int *flag)
 }
 
 
+/********************************************************************************/
+/* Passive Target synchronization (including WIN_LOCK, WIN_UNLOCK, WIN_FLUSH,   */
+/* WIN_FLUSH_LOCAL, WIN_LOCK_ALL, WIN_UNLOCK_ALL, WIN_FLUSH_ALL,                */
+/* WIN_FLUSH_LOCAL_ALL, WIN_SYNC)                                               */
+/********************************************************************************/
+
 #undef FUNCNAME
 #define FUNCNAME MPIDI_Win_lock
 #undef FCNAME
@@ -1065,82 +1043,6 @@ int MPIDI_Win_unlock(int dest, MPID_Win *win_ptr)
 
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_Win_flush_all
-#undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
-int MPIDI_Win_flush_all(MPID_Win * win_ptr)
-{
-    int i, made_progress = 0;
-    int local_completed = 0, remote_completed = 0;
-    MPIDI_RMA_Target_t *curr_target = NULL;
-    int mpi_errno = MPI_SUCCESS;
-    MPIDI_STATE_DECL(MPIDI_STATE_MPIDI_WIN_FLUSH_ALL);
-
-    MPIDI_RMA_FUNC_ENTER(MPIDI_STATE_MPIDI_WIN_FLUSH_ALL);
-
-    MPIU_ERR_CHKANDJUMP(win_ptr->states.access_state != MPIDI_RMA_PER_TARGET &&
-                        win_ptr->states.access_state != MPIDI_RMA_LOCK_ALL_CALLED &&
-                        win_ptr->states.access_state != MPIDI_RMA_LOCK_ALL_ISSUED &&
-                        win_ptr->states.access_state != MPIDI_RMA_LOCK_ALL_GRANTED,
-                        mpi_errno, MPI_ERR_RMA_SYNC, "**rmasync");
-
-    /* Ensure ordering of load/store operations. */
-    if (win_ptr->shm_allocated == TRUE) {
-        OPA_read_write_barrier();
-    }
-
-    /* When the process tries to acquire the lock on itself, it does not
-       go through the progress engine. Therefore, it is possible that
-       one process always grants the lock to itself but never process
-       events coming from other processes. This may cause deadlock in
-       applications where the program execution on target process depends
-       on the happening of events from other processes. Here we poke
-       the progress engine once to avoid such issue.  */
-    mpi_errno = poke_progress_engine();
-    if (mpi_errno != MPI_SUCCESS)
-        MPIU_ERR_POP(mpi_errno);
-
-    /* Set sync_flag in sync struct. */
-    for (i = 0; i < win_ptr->num_slots; i++) {
-        curr_target = win_ptr->slots[i].target_list;
-        while (curr_target != NULL) {
-            if (curr_target->sync.sync_flag < MPIDI_RMA_SYNC_FLUSH) {
-                curr_target->sync.sync_flag = MPIDI_RMA_SYNC_FLUSH;
-                curr_target->sync.have_remote_incomplete_ops = 0;
-                curr_target->sync.outstanding_acks++;
-            }
-            curr_target = curr_target->next;
-        }
-    }
-
-    /* Issue out all operations. */
-    mpi_errno = MPIDI_CH3I_RMA_Make_progress_win(win_ptr, &made_progress);
-    if (mpi_errno != MPI_SUCCESS)
-        MPIU_ERR_POP(mpi_errno);
-
-    /* Wait for remote completion. */
-    do {
-        mpi_errno = MPIDI_CH3I_RMA_Cleanup_ops_win(win_ptr, &local_completed,
-                                                   &remote_completed);
-        if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
-        if (!remote_completed) {
-            mpi_errno = wait_progress_engine();
-            if (mpi_errno != MPI_SUCCESS)
-                MPIU_ERR_POP(mpi_errno);
-        }
-    } while (!remote_completed);
-
-  fn_exit:
-    MPIDI_RMA_FUNC_EXIT(MPIDI_STATE_MPIDI_WIN_FLUSH_ALL);
-    return mpi_errno;
-    /* --BEGIN ERROR HANDLING-- */
-  fn_fail:
-    goto fn_exit;
-    /* --END ERROR HANDLING-- */
-}
-
-
-#undef FUNCNAME
 #define FUNCNAME MPIDI_Win_flush
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
@@ -1306,75 +1208,6 @@ int MPIDI_Win_flush_local(int dest, MPID_Win * win_ptr)
 
   fn_exit:
     MPIDI_RMA_FUNC_EXIT(MPID_STATE_MPIDI_WIN_FLUSH_LOCAL);
-    return mpi_errno;
-    /* --BEGIN ERROR HANDLING-- */
-  fn_fail:
-    goto fn_exit;
-    /* --END ERROR HANDLING-- */
-}
-
-
-#undef FUNCNAME
-#define FUNCNAME MPIDI_Win_flush_local_all
-#undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
-int MPIDI_Win_flush_local_all(MPID_Win * win_ptr)
-{
-    int i, made_progress = 0;
-    int local_completed = 0, remote_completed = 0;
-    MPIDI_RMA_Target_t *curr_target = NULL;
-    int mpi_errno = MPI_SUCCESS;
-    MPIDI_STATE_DECL(MPID_STATE_MPIDI_WIN_FLUSH_LOCAL_ALL);
-
-    MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_WIN_FLUSH_LOCAL_ALL);
-
-    MPIU_ERR_CHKANDJUMP(win_ptr->states.access_state != MPIDI_RMA_PER_TARGET &&
-                        win_ptr->states.access_state != MPIDI_RMA_LOCK_ALL_CALLED &&
-                        win_ptr->states.access_state != MPIDI_RMA_LOCK_ALL_ISSUED &&
-                        win_ptr->states.access_state != MPIDI_RMA_LOCK_ALL_GRANTED,
-                        mpi_errno, MPI_ERR_RMA_SYNC, "**rmasync");
-
-    /* When the process tries to acquire the lock on itself, it does not
-       go through the progress engine. Therefore, it is possible that
-       one process always grants the lock to itself but never process
-       events coming from other processes. This may cause deadlock in
-       applications where the program execution on target process depends
-       on the happening of events from other processes. Here we poke
-       the progress engine once to avoid such issue.  */
-    mpi_errno = poke_progress_engine();
-    if (mpi_errno != MPI_SUCCESS)
-        MPIU_ERR_POP(mpi_errno);
-
-    /* Set sync_flag in sync struct. */
-    for (i = 0; i < win_ptr->num_slots; i++) {
-        curr_target = win_ptr->slots[i].target_list;
-        while (curr_target != NULL) {
-            if (curr_target->sync.sync_flag < MPIDI_RMA_SYNC_FLUSH_LOCAL) {
-                curr_target->sync.sync_flag = MPIDI_RMA_SYNC_FLUSH_LOCAL;
-            }
-            curr_target = curr_target->next;
-        }
-    }
-
-    /* issue out all operations. */
-    mpi_errno = MPIDI_CH3I_RMA_Make_progress_win(win_ptr, &made_progress);
-    if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
-
-    /* Wait for local completion. */
-    do {
-        mpi_errno = MPIDI_CH3I_RMA_Cleanup_ops_win(win_ptr, &local_completed,
-                                                   &remote_completed);
-        if (mpi_errno != MPI_SUCCESS)
-            MPIU_ERR_POP(mpi_errno);
-        if (!local_completed) {
-            mpi_errno = wait_progress_engine();
-            if (mpi_errno != MPI_SUCCESS)
-                MPIU_ERR_POP(mpi_errno);
-        }
-    } while (!local_completed);
-
-  fn_exit:
-    MPIDI_RMA_FUNC_EXIT(MPID_STATE_MPIDI_WIN_FLUSH_LOCAL_ALL);
     return mpi_errno;
     /* --BEGIN ERROR HANDLING-- */
   fn_fail:
@@ -1598,6 +1431,151 @@ int MPIDI_Win_unlock_all(MPID_Win * win_ptr)
 
   fn_exit:
     MPIDI_RMA_FUNC_EXIT(MPID_STATE_MPIDI_WIN_UNLOCK_ALL);
+    return mpi_errno;
+    /* --BEGIN ERROR HANDLING-- */
+  fn_fail:
+    goto fn_exit;
+    /* --END ERROR HANDLING-- */
+}
+
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_Win_flush_all
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
+int MPIDI_Win_flush_all(MPID_Win * win_ptr)
+{
+    int i, made_progress = 0;
+    int local_completed = 0, remote_completed = 0;
+    MPIDI_RMA_Target_t *curr_target = NULL;
+    int mpi_errno = MPI_SUCCESS;
+    MPIDI_STATE_DECL(MPIDI_STATE_MPIDI_WIN_FLUSH_ALL);
+
+    MPIDI_RMA_FUNC_ENTER(MPIDI_STATE_MPIDI_WIN_FLUSH_ALL);
+
+    MPIU_ERR_CHKANDJUMP(win_ptr->states.access_state != MPIDI_RMA_PER_TARGET &&
+                        win_ptr->states.access_state != MPIDI_RMA_LOCK_ALL_CALLED &&
+                        win_ptr->states.access_state != MPIDI_RMA_LOCK_ALL_ISSUED &&
+                        win_ptr->states.access_state != MPIDI_RMA_LOCK_ALL_GRANTED,
+                        mpi_errno, MPI_ERR_RMA_SYNC, "**rmasync");
+
+    /* Ensure ordering of load/store operations. */
+    if (win_ptr->shm_allocated == TRUE) {
+        OPA_read_write_barrier();
+    }
+
+    /* When the process tries to acquire the lock on itself, it does not
+       go through the progress engine. Therefore, it is possible that
+       one process always grants the lock to itself but never process
+       events coming from other processes. This may cause deadlock in
+       applications where the program execution on target process depends
+       on the happening of events from other processes. Here we poke
+       the progress engine once to avoid such issue.  */
+    mpi_errno = poke_progress_engine();
+    if (mpi_errno != MPI_SUCCESS)
+        MPIU_ERR_POP(mpi_errno);
+
+    /* Set sync_flag in sync struct. */
+    for (i = 0; i < win_ptr->num_slots; i++) {
+        curr_target = win_ptr->slots[i].target_list;
+        while (curr_target != NULL) {
+            if (curr_target->sync.sync_flag < MPIDI_RMA_SYNC_FLUSH) {
+                curr_target->sync.sync_flag = MPIDI_RMA_SYNC_FLUSH;
+                curr_target->sync.have_remote_incomplete_ops = 0;
+                curr_target->sync.outstanding_acks++;
+            }
+            curr_target = curr_target->next;
+        }
+    }
+
+    /* Issue out all operations. */
+    mpi_errno = MPIDI_CH3I_RMA_Make_progress_win(win_ptr, &made_progress);
+    if (mpi_errno != MPI_SUCCESS)
+        MPIU_ERR_POP(mpi_errno);
+
+    /* Wait for remote completion. */
+    do {
+        mpi_errno = MPIDI_CH3I_RMA_Cleanup_ops_win(win_ptr, &local_completed,
+                                                   &remote_completed);
+        if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
+        if (!remote_completed) {
+            mpi_errno = wait_progress_engine();
+            if (mpi_errno != MPI_SUCCESS)
+                MPIU_ERR_POP(mpi_errno);
+        }
+    } while (!remote_completed);
+
+  fn_exit:
+    MPIDI_RMA_FUNC_EXIT(MPIDI_STATE_MPIDI_WIN_FLUSH_ALL);
+    return mpi_errno;
+    /* --BEGIN ERROR HANDLING-- */
+  fn_fail:
+    goto fn_exit;
+    /* --END ERROR HANDLING-- */
+}
+
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_Win_flush_local_all
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
+int MPIDI_Win_flush_local_all(MPID_Win * win_ptr)
+{
+    int i, made_progress = 0;
+    int local_completed = 0, remote_completed = 0;
+    MPIDI_RMA_Target_t *curr_target = NULL;
+    int mpi_errno = MPI_SUCCESS;
+    MPIDI_STATE_DECL(MPID_STATE_MPIDI_WIN_FLUSH_LOCAL_ALL);
+
+    MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_WIN_FLUSH_LOCAL_ALL);
+
+    MPIU_ERR_CHKANDJUMP(win_ptr->states.access_state != MPIDI_RMA_PER_TARGET &&
+                        win_ptr->states.access_state != MPIDI_RMA_LOCK_ALL_CALLED &&
+                        win_ptr->states.access_state != MPIDI_RMA_LOCK_ALL_ISSUED &&
+                        win_ptr->states.access_state != MPIDI_RMA_LOCK_ALL_GRANTED,
+                        mpi_errno, MPI_ERR_RMA_SYNC, "**rmasync");
+
+    /* When the process tries to acquire the lock on itself, it does not
+       go through the progress engine. Therefore, it is possible that
+       one process always grants the lock to itself but never process
+       events coming from other processes. This may cause deadlock in
+       applications where the program execution on target process depends
+       on the happening of events from other processes. Here we poke
+       the progress engine once to avoid such issue.  */
+    mpi_errno = poke_progress_engine();
+    if (mpi_errno != MPI_SUCCESS)
+        MPIU_ERR_POP(mpi_errno);
+
+    /* Set sync_flag in sync struct. */
+    for (i = 0; i < win_ptr->num_slots; i++) {
+        curr_target = win_ptr->slots[i].target_list;
+        while (curr_target != NULL) {
+            if (curr_target->sync.sync_flag < MPIDI_RMA_SYNC_FLUSH_LOCAL) {
+                curr_target->sync.sync_flag = MPIDI_RMA_SYNC_FLUSH_LOCAL;
+            }
+            curr_target = curr_target->next;
+        }
+    }
+
+    /* issue out all operations. */
+    mpi_errno = MPIDI_CH3I_RMA_Make_progress_win(win_ptr, &made_progress);
+    if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
+
+    /* Wait for local completion. */
+    do {
+        mpi_errno = MPIDI_CH3I_RMA_Cleanup_ops_win(win_ptr, &local_completed,
+                                                   &remote_completed);
+        if (mpi_errno != MPI_SUCCESS)
+            MPIU_ERR_POP(mpi_errno);
+        if (!local_completed) {
+            mpi_errno = wait_progress_engine();
+            if (mpi_errno != MPI_SUCCESS)
+                MPIU_ERR_POP(mpi_errno);
+        }
+    } while (!local_completed);
+
+  fn_exit:
+    MPIDI_RMA_FUNC_EXIT(MPID_STATE_MPIDI_WIN_FLUSH_LOCAL_ALL);
     return mpi_errno;
     /* --BEGIN ERROR HANDLING-- */
   fn_fail:

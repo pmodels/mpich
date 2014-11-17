@@ -538,6 +538,41 @@ static inline int finish_op_on_target(MPID_Win *win_ptr, MPIDI_VC_t *vc,
     goto fn_exit;
 }
 
+
+static inline int fill_ranks_in_win_grp(MPID_Win *win_ptr, MPID_Group *group_ptr,
+                                        int *ranks_in_win_grp)
+{
+    int mpi_errno = MPI_SUCCESS;
+    int i, *ranks_in_grp;
+    MPID_Group *win_grp_ptr;
+    MPIU_CHKLMEM_DECL(1);
+    MPIDI_STATE_DECL(MPID_STATE_FILL_RANKS_IN_WIN_GRP);
+
+    MPIDI_RMA_FUNC_ENTER(MPID_STATE_FILL_RANKS_IN_WIN_GRP);
+
+    MPIU_CHKLMEM_MALLOC(ranks_in_grp, int *, group_ptr->size * sizeof(int),
+                        mpi_errno, "ranks_in_grp");
+    for (i = 0; i < group_ptr->size; i++) ranks_in_grp[i] = i;
+
+    mpi_errno = MPIR_Comm_group_impl(win_ptr->comm_ptr, &win_grp_ptr);
+    if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
+
+    mpi_errno = MPIR_Group_translate_ranks_impl(group_ptr, group_ptr->size,
+                                                ranks_in_grp, win_grp_ptr, ranks_in_win_grp);
+    if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
+
+    mpi_errno = MPIR_Group_free_impl(win_grp_ptr);
+    if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
+
+  fn_exit:
+    MPIU_CHKLMEM_FREEALL();
+    MPIDI_RMA_FUNC_EXIT(MPID_STATE_FILL_RANKS_IN_WIN_GRP);
+    return mpi_errno;
+ fn_fail:
+    goto fn_exit;
+}
+
+
 static inline int wait_progress_engine(void)
 {
     int mpi_errno = MPI_SUCCESS;
