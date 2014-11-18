@@ -19,7 +19,7 @@
 #endif
 
 /* helper macros to improve code readability */
-/* we pessimistically assume that MPI_TYPE_NULL may be passed as a "valid" type
+/* we pessimistically assume that MPI_DATATYPE_NULL may be passed as a "valid" type
  * for send/recv when MPI_PROC_NULL is the destination/src */
 #define dtype_add_ref_if_not_builtin(datatype_)                    \
     do {                                                           \
