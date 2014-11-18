@@ -31,11 +31,11 @@
       errs = errs + f2ctype( MPI_LONG_INT, 14 )
       errs = errs + f2ctype( MPI_SHORT_INT, 15 )
       errs = errs + f2ctype( MPI_2INT, 16 )
-      if (MPI_LONG_DOUBLE .ne. MPI_TYPE_NULL) then
+      if (MPI_LONG_DOUBLE .ne. MPI_DATATYPE_NULL) then
           errs = errs + f2ctype( MPI_LONG_DOUBLE, 17 )
           errs = errs + f2ctype( MPI_LONG_DOUBLE_INT, 21 )
       endif
-      if (MPI_LONG_LONG .ne. MPI_TYPE_NULL) then
+      if (MPI_LONG_LONG .ne. MPI_DATATYPE_NULL) then
           errs = errs + f2ctype( MPI_LONG_LONG_INT, 18 )
           errs = errs + f2ctype( MPI_LONG_LONG, 19 )
           errs = errs + f2ctype( MPI_UNSIGNED_LONG_LONG, 20 )
