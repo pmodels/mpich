@@ -1557,11 +1557,11 @@ interface MPI_Comm_set_attr
 end interface MPI_Comm_set_attr
 
 interface MPI_Comm_set_info
-    subroutine MPI_Comm_set_info_f08(comm, info_used, ierror)
+    subroutine MPI_Comm_set_info_f08(comm, info, ierror)
         use :: mpi_f08_types, only : MPI_Comm, MPI_Info
         implicit none
         type(MPI_Comm), intent(in) :: comm
-        type(MPI_Info), intent(in) :: info_used
+        type(MPI_Info), intent(in) :: info
         integer, optional, intent(out) :: ierror
     end subroutine MPI_Comm_set_info_f08
 end interface MPI_Comm_set_info
