@@ -595,7 +595,7 @@ MPID_Request * MPIDI_CH3U_Recvq_FDU_or_AEP(int source, int tag,
                 prev_rreq = rreq;
                 rreq = rreq->dev.next;
             } while (rreq);
-        } while (false);
+        } while (0);
 	}
     }
     MPIR_T_PVAR_TIMER_END(RECVQ, time_matching_unexpectedq);
