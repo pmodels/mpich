@@ -237,12 +237,12 @@ subroutine MPI_TYPE_NULL_COPY_FN(oldtype,type_keyval,extra_state, &
     ierror = MPI_SUCCESS
 end subroutine
 
-subroutine MPI_TYPE_NULL_DELETE_FN(type,type_keyval, &
+subroutine MPI_TYPE_NULL_DELETE_FN(datatype,type_keyval, &
        attribute_val, extra_state, ierror)
     use mpi_f08_types, only : MPI_Datatype
     use mpi_f08_compile_constants, only : MPI_ADDRESS_KIND, MPI_SUCCESS
     implicit none
-    type(MPI_Datatype) :: type
+    type(MPI_Datatype) :: datatype
     integer :: type_keyval, ierror
     integer(kind=MPI_ADDRESS_KIND) :: attribute_val, extra_state
 
