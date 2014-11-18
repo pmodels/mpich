@@ -385,6 +385,30 @@ subroutine MPI_Sizeof_xcomplex128 (x, size, ierror)
     ierror = 0
 end subroutine MPI_Sizeof_xcomplex128
 
+subroutine MPI_Status_f2f08(f_status, f08_status, ierror)
+    integer, intent(in) :: f_status(MPI_STATUS_SIZE)
+    type(MPI_Status), intent(out) :: f08_status
+    integer, optional,  intent(out) :: ierror
+    f08_status%count_lo = f_status(1)
+    f08_status%count_hi_and_cancelled = f_status(2)
+    f08_status%MPI_SOURCE = f_status(MPI_SOURCE)
+    f08_status%MPI_TAG = f_status(MPI_TAG)
+    f08_status%MPI_ERROR = f_status(MPI_ERROR)
+    if (present(ierror)) ierror = 0
+end subroutine
+
+subroutine MPI_Status_f082f(f08_status, f_status, ierror)
+    type(MPI_Status), intent(in) :: f08_status
+    integer, intent(out) :: f_status(MPI_STATUS_SIZE)
+    integer, optional,  intent(out) :: ierror
+    f_status(1) = f08_status%count_lo
+    f_status(2) = f08_status%count_hi_and_cancelled
+    f_status(MPI_SOURCE) = f08_status%MPI_SOURCE
+    f_status(MPI_TAG) = f08_status%MPI_TAG
+    f_status(MPI_ERROR) = f08_status%MPI_ERROR
+    if (present(ierror)) ierror = 0
+end subroutine
+
 elemental subroutine MPI_Status_f08_assgn_c (status_f08, status_c)
     ! Defined status_f08 = status_c
     type(MPI_Status),intent(out) :: status_f08
