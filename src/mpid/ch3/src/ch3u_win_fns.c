@@ -132,7 +132,8 @@ int MPIDI_CH3U_Win_create(void *base, MPI_Aint size, int disp_unit, MPID_Info *i
     mpi_errno = MPIDI_CH3U_Win_create_gather(base, size, disp_unit, info, comm_ptr, win_ptr);
     if (mpi_errno != MPI_SUCCESS) { MPIU_ERR_POP(mpi_errno); }
 
-    if (MPIDI_CH3U_Win_fns.detect_shm != NULL) {
+    if ((*win_ptr)->info_args.alloc_shm == TRUE
+            && MPIDI_CH3U_Win_fns.detect_shm != NULL) {
         /* Detect if shared buffers are specified for the processes in the
          * current node. If so, enable shm RMA.*/
         mpi_errno = MPIDI_CH3U_Win_fns.detect_shm(win_ptr);
