@@ -49,12 +49,28 @@ int MPIDI_CH3_ReqHandler_GetSendComplete( MPIDI_VC_t *vc ATTRIBUTE((unused)),
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_Win *win_ptr;
+    MPI_Win source_win_handle = sreq->dev.source_win_handle;
+    MPIDI_CH3_Pkt_flags_t flags = sreq->dev.flags;
+
+    /* NOTE: It is possible that this request is already completed before
+       entering this handler. This happens when this req handler is called
+       within the same req handler on the same request.
+       Consider this case: req is queued up in SHM queue with ref count of 2:
+       one is for completing the request and another is for dequeueing from
+       the queue. The first called req handler on this request completed
+       this request and decrement ref counter to 1. Request is still in the
+       queue. Within this handler, we call the req handler on the same request
+       for the second time (for example when making progress on SHM queue),
+       and the second called handler also tries to complete this request,
+       which leads to wrong execution.
+       Here we check if req is already completed to prevent processing the
+       same request twice. */
+    if (MPID_Request_is_complete(sreq)) {
+        *complete = FALSE;
+        goto fn_exit;
+    }
 
     MPID_Win_get_ptr(sreq->dev.target_win_handle, win_ptr);
-
-    mpi_errno = finish_op_on_target(win_ptr, vc, MPIDI_CH3_PKT_GET,
-                                    sreq->dev.flags, sreq->dev.source_win_handle);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
     /* here we decrement the Active Target counter to guarantee the GET-like
        operation are completed when counter reaches zero. */
@@ -63,6 +79,15 @@ int MPIDI_CH3_ReqHandler_GetSendComplete( MPIDI_VC_t *vc ATTRIBUTE((unused)),
 
     /* mark data transfer as complete and decrement CC */
     MPIDI_CH3U_Request_complete(sreq);
+
+    /* NOTE: finish_op_on_target() must be called after we complete this request,
+       because inside finish_op_on_target() we may call this request handler
+       on the same request again (in release_lock()). Marking this request as
+       completed will prevent us from processing the same request twice. */
+    mpi_errno = finish_op_on_target(win_ptr, vc, MPIDI_CH3_PKT_GET,
+                                    flags, source_win_handle);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
     *complete = TRUE;
 
  fn_exit:
@@ -81,9 +106,30 @@ int MPIDI_CH3_ReqHandler_GaccumSendComplete( MPIDI_VC_t *vc,
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_Win *win_ptr;
+    MPI_Win source_win_handle = rreq->dev.source_win_handle;
+    MPIDI_CH3_Pkt_flags_t flags = rreq->dev.flags;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3_REQHANDLER_GACCUMSENDCOMPLETE);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3_REQHANDLER_GACCUMSENDCOMPLETE);
+
+    /* NOTE: It is possible that this request is already completed before
+       entering this handler. This happens when this req handler is called
+       within the same req handler on the same request.
+       Consider this case: req is queued up in SHM queue with ref count of 2:
+       one is for completing the request and another is for dequeueing from
+       the queue. The first called req handler on this request completed
+       this request and decrement ref counter to 1. Request is still in the
+       queue. Within this handler, we call the req handler on the same request
+       for the second time (for example when making progress on SHM queue),
+       and the second called handler also tries to complete this request,
+       which leads to wrong execution.
+       Here we check if req is already completed to prevent processing the
+       same request twice. */
+    if (MPID_Request_is_complete(rreq)) {
+        *complete = FALSE;
+        goto fn_exit;
+    }
+
     /* This function is triggered when sending back process of GACC/FOP/CAS
        is finished. Only GACC used user_buf. FOP and CAS can fit all data
        in response packet. */
@@ -92,17 +138,23 @@ int MPIDI_CH3_ReqHandler_GaccumSendComplete( MPIDI_VC_t *vc,
 
     MPID_Win_get_ptr(rreq->dev.target_win_handle, win_ptr);
 
-    mpi_errno = finish_op_on_target(win_ptr, vc, MPIDI_CH3_PKT_GET_ACCUM,
-                                    rreq->dev.flags, rreq->dev.source_win_handle);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-
     /* here we decrement the Active Target counter to guarantee the GET-like
        operation are completed when counter reaches zero. */
     win_ptr->at_completion_counter--;
     MPIU_Assert(win_ptr->at_completion_counter >= 0);
 
     MPIDI_CH3U_Request_complete(rreq);
+
+    /* NOTE: finish_op_on_target() must be called after we complete this request,
+       because inside finish_op_on_target() we may call this request handler
+       on the same request again (in release_lock()). Marking this request as
+       completed will prevent us from processing the same request twice. */
+    mpi_errno = finish_op_on_target(win_ptr, vc, MPIDI_CH3_PKT_GET_ACCUM,
+                                    flags, source_win_handle);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
     *complete = TRUE;
+
  fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3_REQHANDLER_GACCUMSENDCOMPLETE);
     return mpi_errno;
@@ -122,9 +174,30 @@ int MPIDI_CH3_ReqHandler_CASSendComplete( MPIDI_VC_t *vc,
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_Win *win_ptr;
+    MPI_Win source_win_handle = rreq->dev.source_win_handle;
+    MPIDI_CH3_Pkt_flags_t flags = rreq->dev.flags;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3_REQHANDLER_CASSENDCOMPLETE);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3_REQHANDLER_CASSENDCOMPLETE);
+
+    /* NOTE: It is possible that this request is already completed before
+       entering this handler. This happens when this req handler is called
+       within the same req handler on the same request.
+       Consider this case: req is queued up in SHM queue with ref count of 2:
+       one is for completing the request and another is for dequeueing from
+       the queue. The first called req handler on this request completed
+       this request and decrement ref counter to 1. Request is still in the
+       queue. Within this handler, we call the req handler on the same request
+       for the second time (for example when making progress on SHM queue),
+       and the second called handler also tries to complete this request,
+       which leads to wrong execution.
+       Here we check if req is already completed to prevent processing the
+       same request twice. */
+    if (MPID_Request_is_complete(rreq)) {
+        *complete = FALSE;
+        goto fn_exit;
+    }
+
     /* This function is triggered when sending back process of GACC/FOP/CAS
        is finished. Only GACC used user_buf. FOP and CAS can fit all data
        in response packet. */
@@ -133,17 +206,23 @@ int MPIDI_CH3_ReqHandler_CASSendComplete( MPIDI_VC_t *vc,
 
     MPID_Win_get_ptr(rreq->dev.target_win_handle, win_ptr);
 
-    mpi_errno = finish_op_on_target(win_ptr, vc, MPIDI_CH3_PKT_CAS,
-                                    rreq->dev.flags, rreq->dev.source_win_handle);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-
     /* here we decrement the Active Target counter to guarantee the GET-like
        operation are completed when counter reaches zero. */
     win_ptr->at_completion_counter--;
     MPIU_Assert(win_ptr->at_completion_counter >= 0);
 
     MPIDI_CH3U_Request_complete(rreq);
+
+    /* NOTE: finish_op_on_target() must be called after we complete this request,
+       because inside finish_op_on_target() we may call this request handler
+       on the same request again (in release_lock()). Marking this request as
+       completed will prevent us from processing the same request twice. */
+    mpi_errno = finish_op_on_target(win_ptr, vc, MPIDI_CH3_PKT_CAS,
+                                    flags, source_win_handle);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
     *complete = TRUE;
+
  fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3_REQHANDLER_CASSENDCOMPLETE);
     return mpi_errno;
@@ -161,9 +240,30 @@ int MPIDI_CH3_ReqHandler_FOPSendComplete( MPIDI_VC_t *vc,
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_Win *win_ptr;
+    MPI_Win source_win_handle = rreq->dev.source_win_handle;
+    MPIDI_CH3_Pkt_flags_t flags = rreq->dev.flags;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3_REQHANDLER_FOPSENDCOMPLETE);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3_REQHANDLER_FOPSENDCOMPLETE);
+
+    /* NOTE: It is possible that this request is already completed before
+       entering this handler. This happens when this req handler is called
+       within the same req handler on the same request.
+       Consider this case: req is queued up in SHM queue with ref count of 2:
+       one is for completing the request and another is for dequeueing from
+       the queue. The first called req handler on this request completed
+       this request and decrement ref counter to 1. Request is still in the
+       queue. Within this handler, we call the req handler on the same request
+       for the second time (for example when making progress on SHM queue),
+       and the second called handler also tries to complete this request,
+       which leads to wrong execution.
+       Here we check if req is already completed to prevent processing the
+       same request twice. */
+    if (MPID_Request_is_complete(rreq)) {
+        *complete = FALSE;
+        goto fn_exit;
+    }
+
     /* This function is triggered when sending back process of GACC/FOP/CAS
        is finished. Only GACC used user_buf. FOP and CAS can fit all data
        in response packet. */
@@ -172,17 +272,23 @@ int MPIDI_CH3_ReqHandler_FOPSendComplete( MPIDI_VC_t *vc,
 
     MPID_Win_get_ptr(rreq->dev.target_win_handle, win_ptr);
 
-    mpi_errno = finish_op_on_target(win_ptr, vc, MPIDI_CH3_PKT_FOP,
-                                    rreq->dev.flags, rreq->dev.source_win_handle);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-
     /* here we decrement the Active Target counter to guarantee the GET-like
        operation are completed when counter reaches zero. */
     win_ptr->at_completion_counter--;
     MPIU_Assert(win_ptr->at_completion_counter >= 0);
 
     MPIDI_CH3U_Request_complete(rreq);
+
+    /* NOTE: finish_op_on_target() must be called after we complete this request,
+       because inside finish_op_on_target() we may call this request handler
+       on the same request again (in release_lock()). Marking this request as
+       completed will prevent us from processing the same request twice. */
+    mpi_errno = finish_op_on_target(win_ptr, vc, MPIDI_CH3_PKT_FOP,
+                                    flags, source_win_handle);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
     *complete = TRUE;
+
  fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3_REQHANDLER_FOPSENDCOMPLETE);
     return mpi_errno;

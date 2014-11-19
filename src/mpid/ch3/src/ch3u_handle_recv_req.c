@@ -80,19 +80,45 @@ int MPIDI_CH3_ReqHandler_PutRecvComplete( MPIDI_VC_t *vc,
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_Win *win_ptr;
+    MPI_Win source_win_handle = rreq->dev.source_win_handle;
+    MPIDI_CH3_Pkt_flags_t flags = rreq->dev.flags;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3_REQHANDLER_PUTRECVCOMPLETE);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3_REQHANDLER_PUTRECVCOMPLETE);
 
-    MPID_Win_get_ptr(rreq->dev.target_win_handle, win_ptr);
+    /* NOTE: It is possible that this request is already completed before
+       entering this handler. This happens when this req handler is called
+       within the same req handler on the same request.
+       Consider this case: req is queued up in SHM queue with ref count of 2:
+       one is for completing the request and another is for dequeueing from
+       the queue. The first called req handler on this request completed
+       this request and decrement ref counter to 1. Request is still in the
+       queue. Within this handler, we call the req handler on the same request
+       for the second time (for example when making progress on SHM queue),
+       and the second called handler also tries to complete this request,
+       which leads to wrong execution.
+       Here we check if req is already completed to prevent processing the
+       same request twice. */
+    if (MPID_Request_is_complete(rreq)) {
+        *complete = FALSE;
+        goto fn_exit;
+    }
 
-    mpi_errno = finish_op_on_target(win_ptr, vc, MPIDI_CH3_PKT_PUT,
-                                    rreq->dev.flags, rreq->dev.source_win_handle);
-    if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
+    MPID_Win_get_ptr(rreq->dev.target_win_handle, win_ptr);
 
     /* mark data transfer as complete and decrement CC */
     MPIDI_CH3U_Request_complete(rreq);
+
+    /* NOTE: finish_op_on_target() must be called after we complete this request,
+       because inside finish_op_on_target() we may call this request handler
+       on the same request again (in release_lock()). Marking this request as
+       completed will prevent us from processing the same request twice. */
+    mpi_errno = finish_op_on_target(win_ptr, vc, MPIDI_CH3_PKT_PUT,
+                                    flags, source_win_handle);
+    if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
+
     *complete = TRUE;
+
  fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3_REQHANDLER_PUTRECVCOMPLETE);
     return MPI_SUCCESS;
@@ -115,9 +141,29 @@ int MPIDI_CH3_ReqHandler_AccumRecvComplete( MPIDI_VC_t *vc,
     int mpi_errno = MPI_SUCCESS;
     MPI_Aint true_lb, true_extent;
     MPID_Win *win_ptr;
+    MPI_Win source_win_handle = rreq->dev.source_win_handle;
+    MPIDI_CH3_Pkt_flags_t flags = rreq->dev.flags;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3_REQHANDLER_ACCUMRECVCOMPLETE);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3_REQHANDLER_ACCUMRECVCOMPLETE);
+
+    /* NOTE: It is possible that this request is already completed before
+       entering this handler. This happens when this req handler is called
+       within the same req handler on the same request.
+       Consider this case: req is queued up in SHM queue with ref count of 2:
+       one is for completing the request and another is for dequeueing from
+       the queue. The first called req handler on this request completed
+       this request and decrement ref counter to 1. Request is still in the
+       queue. Within this handler, we call the req handler on the same request
+       for the second time (for example when making progress on SHM queue),
+       and the second called handler also tries to complete this request,
+       which leads to wrong execution.
+       Here we check if req is already completed to prevent processing the
+       same request twice. */
+    if (MPID_Request_is_complete(rreq)) {
+        *complete = FALSE;
+        goto fn_exit;
+    }
 
     MPID_Win_get_ptr(rreq->dev.target_win_handle, win_ptr);
 
@@ -138,13 +184,19 @@ int MPIDI_CH3_ReqHandler_AccumRecvComplete( MPIDI_VC_t *vc,
     MPIR_Type_get_true_extent_impl(rreq->dev.datatype, &true_lb, &true_extent);
     MPIU_Free((char *) rreq->dev.final_user_buf + true_lb);
 
-    mpi_errno = finish_op_on_target(win_ptr, vc, MPIDI_CH3_PKT_ACCUMULATE,
-                                    rreq->dev.flags, rreq->dev.source_win_handle);
-    if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
-
     /* mark data transfer as complete and decrement CC */
     MPIDI_CH3U_Request_complete(rreq);
+
+    /* NOTE: finish_op_on_target() must be called after we complete this request,
+       because inside finish_op_on_target() we may call this request handler
+       on the same request again (in release_lock()). Marking this request as
+       completed will prevent us from processing the same request twice. */
+    mpi_errno = finish_op_on_target(win_ptr, vc, MPIDI_CH3_PKT_ACCUMULATE,
+                                    flags, source_win_handle);
+    if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
+
     *complete = TRUE;
+
  fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3_REQHANDLER_ACCUMRECVCOMPLETE);
     return MPI_SUCCESS;
