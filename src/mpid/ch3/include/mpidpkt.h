@@ -560,7 +560,6 @@ typedef struct MPIDI_CH3_Pkt_lock {
     MPI_Win target_win_handle;
     MPI_Win source_win_handle;
     int lock_type;
-    int target_rank;
     int origin_rank;
 } MPIDI_CH3_Pkt_lock_t;
 
@@ -569,18 +568,12 @@ typedef struct MPIDI_CH3_Pkt_unlock {
     MPIDI_CH3_Pkt_flags_t flags;
     MPI_Win target_win_handle;
     MPI_Win source_win_handle;
-    int lock_type;
-    int target_rank;
-    int origin_rank;
 } MPIDI_CH3_Pkt_unlock_t;
 
 typedef struct MPIDI_CH3_Pkt_flush {
     MPIDI_CH3_Pkt_type_t type;
     MPI_Win target_win_handle;
     MPI_Win source_win_handle;
-    int lock_type;
-    int target_rank;
-    int origin_rank;
 } MPIDI_CH3_Pkt_flush_t;
 
 typedef struct MPIDI_CH3_Pkt_decr_at_counter {
