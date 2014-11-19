@@ -92,6 +92,8 @@ noinst_PROGRAMS =          \
     win_shared_noncontig   \
     win_shared_noncontig_put \
     win_shared_zerobyte    \
+    win_shared_create_allocshm    \
+    win_shared_create_no_allocshm \
     win_zero               \
     win_large_shm          \
     win_dynamic_acc        \
@@ -214,3 +216,7 @@ mutex_bench_shm_ordered_SOURCES  = mutex_bench.c mcs-mutex.c mcs-mutex.h
 
 linked_list_bench_lock_shr_nocheck_SOURCES  = linked_list_bench_lock_shr.c
 linked_list_bench_lock_shr_nocheck_CPPFLAGS = -DUSE_MODE_NOCHECK $(AM_CPPFLAGS)
+
+win_shared_create_allocshm_SOURCES = win_shared_create.c
+win_shared_create_no_allocshm_SOURCES = win_shared_create.c
+win_shared_create_allocshm_CPPFLAGS = -DUSE_INFO_ALLOC_SHM $(AM_CPPFLAGS)
