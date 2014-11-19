@@ -75,6 +75,8 @@ manyrma2 2 timeLimit=500
 manyrma2_shm 2 timeLimit=500
 manyrma3 2
 win_shared 4 mpiversion=3.0
+win_shared_create_allocshm 4 mpiversion=3.0
+win_shared_create_no_allocshm 4 mpiversion=3.0
 win_shared_noncontig 4 mpiversion=3.0
 win_shared_noncontig_put 4 mpiversion=3.0
 win_zero 4 mpiversion=3.0
