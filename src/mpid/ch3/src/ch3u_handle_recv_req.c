@@ -224,6 +224,8 @@ int MPIDI_CH3_ReqHandler_GaccumRecvComplete( MPIDI_VC_t *vc,
     MPID_Request *resp_req;
     MPID_IOV iov[MPID_IOV_LIMIT];
     MPI_Aint true_lb, true_extent;
+    size_t len;
+    int iovcnt;
     MPIU_CHKPMEM_DECL(1);
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3_REQHANDLER_GACCUMRECVCOMPLETE);
 
@@ -242,6 +244,7 @@ int MPIDI_CH3_ReqHandler_GaccumRecvComplete( MPIDI_VC_t *vc,
         get_accum_resp_pkt->flags |= MPIDI_CH3_PKT_FLAG_RMA_FLUSH_ACK;
     if (rreq->dev.flags & MPIDI_CH3_PKT_FLAG_RMA_UNLOCK)
         get_accum_resp_pkt->flags |= MPIDI_CH3_PKT_FLAG_RMA_UNLOCK_ACK;
+    get_accum_resp_pkt->immed_len = 0;
 
     MPID_Datatype_get_size_macro(rreq->dev.datatype, type_size);
 
@@ -275,14 +278,42 @@ int MPIDI_CH3_ReqHandler_GaccumRecvComplete( MPIDI_VC_t *vc,
        operation are completed when counter reaches zero. */
     win_ptr->at_completion_counter++;
 
-    iov[0].MPID_IOV_BUF = (MPID_IOV_BUF_CAST) get_accum_resp_pkt;
-    iov[0].MPID_IOV_LEN = sizeof(*get_accum_resp_pkt);
+    /* length of target data */
+    MPIU_Assign_trunc(len, rreq->dev.user_count * type_size, size_t);
 
-    iov[1].MPID_IOV_BUF = (MPID_IOV_BUF_CAST)resp_req->dev.user_buf;
-    iov[1].MPID_IOV_LEN = type_size*rreq->dev.user_count;
+    /* both origin buffer and target buffer are basic datatype,
+       fill IMMED data area in response packet header. */
+    if (rreq->dev.flags & MPIDI_CH3_PKT_FLAG_RMA_IMMED_RESP) {
+        /* Try to copy target data into packet header. */
+        MPIU_Assign_trunc(get_accum_resp_pkt->immed_len,
+                          MPIR_MIN(len, (MPIDI_RMA_IMMED_BYTES / type_size) * type_size),
+                          size_t);
+
+        if (get_accum_resp_pkt->immed_len > 0) {
+            void *src = resp_req->dev.user_buf;
+            void *dest = (void*) get_accum_resp_pkt->data;
+            /* copy data from origin buffer to immed area in packet header */
+            mpi_errno = immed_copy(src, dest, get_accum_resp_pkt->immed_len);
+            if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
+        }
+    }
+
+    if (len == get_accum_resp_pkt->immed_len) {
+        /* All origin data is in packet header, issue the header. */
+        iov[0].MPID_IOV_BUF = (MPID_IOV_BUF_CAST) get_accum_resp_pkt;
+        iov[0].MPID_IOV_LEN = sizeof(*get_accum_resp_pkt);
+        iovcnt = 1;
+    }
+    else {
+        iov[0].MPID_IOV_BUF = (MPID_IOV_BUF_CAST) get_accum_resp_pkt;
+        iov[0].MPID_IOV_LEN = sizeof(*get_accum_resp_pkt);
+        iov[1].MPID_IOV_BUF = (MPID_IOV_BUF_CAST) ((char *)resp_req->dev.user_buf + get_accum_resp_pkt->immed_len);
+        iov[1].MPID_IOV_LEN = rreq->dev.user_count * type_size - get_accum_resp_pkt->immed_len;
+        iovcnt = 2;
+    }
 
     MPIU_THREAD_CS_ENTER(CH3COMM,vc);
-    mpi_errno = MPIDI_CH3_iSendv(vc, resp_req, iov, 2);
+    mpi_errno = MPIDI_CH3_iSendv(vc, resp_req, iov, iovcnt);
     MPIU_THREAD_CS_EXIT(CH3COMM,vc);
 
     MPIU_ERR_CHKANDJUMP(mpi_errno != MPI_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**ch3|rmamsg");
@@ -569,6 +600,7 @@ int MPIDI_CH3_ReqHandler_GetDerivedDTRecvComplete( MPIDI_VC_t *vc,
         get_resp_pkt->flags |= MPIDI_CH3_PKT_FLAG_RMA_FLUSH_ACK;
     if (rreq->dev.flags & MPIDI_CH3_PKT_FLAG_RMA_UNLOCK)
         get_resp_pkt->flags |= MPIDI_CH3_PKT_FLAG_RMA_UNLOCK_ACK;
+    get_resp_pkt->immed_len = 0;
     
     sreq->dev.segment_ptr = MPID_Segment_alloc( );
     MPIU_ERR_CHKANDJUMP1((sreq->dev.segment_ptr == NULL), mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s", "MPID_Segment_alloc");
@@ -836,6 +868,8 @@ static inline int perform_get_in_lock_queue(MPID_Win *win_ptr, MPIDI_Win_lock_qu
     MPID_Request *sreq = NULL;
     MPIDI_VC_t *vc = NULL;
     MPI_Aint type_size;
+    size_t len;
+    int iovcnt;
     MPID_IOV iov[MPID_IOV_LIMIT];
     int mpi_errno = MPI_SUCCESS;
 
@@ -868,18 +902,47 @@ static inline int perform_get_in_lock_queue(MPID_Win *win_ptr, MPIDI_Win_lock_qu
         get_resp_pkt->flags |= MPIDI_CH3_PKT_FLAG_RMA_UNLOCK_ACK;
     get_resp_pkt->target_rank = win_ptr->comm_ptr->rank;
     get_resp_pkt->source_win_handle = get_pkt->source_win_handle;
+    get_resp_pkt->immed_len = 0;
 
-    iov[0].MPID_IOV_BUF = (MPID_IOV_BUF_CAST) get_resp_pkt;
-    iov[0].MPID_IOV_LEN = sizeof(*get_resp_pkt);
-
-    iov[1].MPID_IOV_BUF = (MPID_IOV_BUF_CAST)get_pkt->addr;
+    /* length of target data */
     MPID_Datatype_get_size_macro(get_pkt->datatype, type_size);
-    iov[1].MPID_IOV_LEN = get_pkt->count * type_size;
+    MPIU_Assign_trunc(len, get_pkt->count * type_size, size_t);
+
+    /* both origin buffer and target buffer are basic datatype,
+       fill IMMED data area in response packet header. */
+    if (get_pkt->flags & MPIDI_CH3_PKT_FLAG_RMA_IMMED_RESP) {
+        /* Try to copy target data into packet header. */
+        MPIU_Assign_trunc(get_resp_pkt->immed_len,
+                          MPIR_MIN(len, (MPIDI_RMA_IMMED_BYTES / type_size) * type_size),
+                          size_t);
+
+        if (get_resp_pkt->immed_len > 0) {
+            void *src = get_pkt->addr;
+            void *dest = (void*) get_resp_pkt->data;
+            /* copy data from origin buffer to immed area in packet header */
+            mpi_errno = immed_copy(src, dest, get_resp_pkt->immed_len);
+            if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
+        }
+    }
+
+    if (len == get_resp_pkt->immed_len) {
+        /* All origin data is in packet header, issue the header. */
+        iov[0].MPID_IOV_BUF = (MPID_IOV_BUF_CAST) get_resp_pkt;
+        iov[0].MPID_IOV_LEN = sizeof(*get_resp_pkt);
+        iovcnt = 1;
+    }
+    else {
+        iov[0].MPID_IOV_BUF = (MPID_IOV_BUF_CAST) get_resp_pkt;
+        iov[0].MPID_IOV_LEN = sizeof(*get_resp_pkt);
+        iov[1].MPID_IOV_BUF = (MPID_IOV_BUF_CAST) ((char *)get_pkt->addr + get_resp_pkt->immed_len);
+        iov[1].MPID_IOV_LEN = get_pkt->count * type_size - get_resp_pkt->immed_len;
+        iovcnt = 2;
+    }
 
     /* get vc object */
     MPIDI_Comm_get_vc(win_ptr->comm_ptr, get_pkt->origin_rank, &vc);
 
-    mpi_errno = MPIDI_CH3_iSendv(vc, sreq, iov, 2);
+    mpi_errno = MPIDI_CH3_iSendv(vc, sreq, iov, iovcnt);
     if (mpi_errno != MPI_SUCCESS) {
         MPID_Request_release(sreq);
 	MPIU_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**ch3|rmamsg");
@@ -940,6 +1003,8 @@ static inline int perform_get_acc_in_lock_queue(MPID_Win *win_ptr, MPIDI_Win_loc
     MPID_Request *sreq = NULL;
     MPIDI_VC_t *vc = NULL;
     MPI_Aint type_size;
+    size_t len;
+    int iovcnt;
     MPID_IOV iov[MPID_IOV_LIMIT];
     int mpi_errno = MPI_SUCCESS;
 
@@ -990,17 +1055,46 @@ static inline int perform_get_acc_in_lock_queue(MPID_Win *win_ptr, MPIDI_Win_loc
         get_accum_resp_pkt->flags |= MPIDI_CH3_PKT_FLAG_RMA_UNLOCK_ACK;
     get_accum_resp_pkt->target_rank = win_ptr->comm_ptr->rank;
     get_accum_resp_pkt->source_win_handle = get_accum_pkt->source_win_handle;
+    get_accum_resp_pkt->immed_len = 0;
 
-    iov[0].MPID_IOV_BUF = (MPID_IOV_BUF_CAST) get_accum_resp_pkt;
-    iov[0].MPID_IOV_LEN = sizeof(*get_accum_resp_pkt);
+    /* length of target data */
+    MPIU_Assign_trunc(len, get_accum_pkt->count * type_size, size_t);
 
-    iov[1].MPID_IOV_BUF = (MPID_IOV_BUF_CAST) sreq->dev.user_buf;
-    iov[1].MPID_IOV_LEN = get_accum_pkt->count * type_size;
+    /* both origin buffer and target buffer are basic datatype,
+       fill IMMED data area in response packet header. */
+    if (get_accum_pkt->flags & MPIDI_CH3_PKT_FLAG_RMA_IMMED_RESP) {
+        /* Try to copy target data into packet header. */
+        MPIU_Assign_trunc(get_accum_resp_pkt->immed_len,
+                          MPIR_MIN(len, (MPIDI_RMA_IMMED_BYTES / type_size) * type_size),
+                          size_t);
+
+        if (get_accum_resp_pkt->immed_len > 0) {
+            void *src = sreq->dev.user_buf;
+            void *dest = (void*) get_accum_resp_pkt->data;
+            /* copy data from origin buffer to immed area in packet header */
+            mpi_errno = immed_copy(src, dest, get_accum_resp_pkt->immed_len);
+            if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
+        }
+    }
+
+    if (len == get_accum_resp_pkt->immed_len) {
+        /* All origin data is in packet header, issue the header. */
+        iov[0].MPID_IOV_BUF = (MPID_IOV_BUF_CAST) get_accum_resp_pkt;
+        iov[0].MPID_IOV_LEN = sizeof(*get_accum_resp_pkt);
+        iovcnt = 1;
+    }
+    else {
+        iov[0].MPID_IOV_BUF = (MPID_IOV_BUF_CAST) get_accum_resp_pkt;
+        iov[0].MPID_IOV_LEN = sizeof(*get_accum_resp_pkt);
+        iov[1].MPID_IOV_BUF = (MPID_IOV_BUF_CAST) ((char *)sreq->dev.user_buf + get_accum_resp_pkt->immed_len);
+        iov[1].MPID_IOV_LEN = get_accum_pkt->count * type_size - get_accum_resp_pkt->immed_len;
+        iovcnt = 2;
+    }
 
     /* get vc object */
     MPIDI_Comm_get_vc(win_ptr->comm_ptr, get_accum_pkt->origin_rank, &vc);
 
-    mpi_errno = MPIDI_CH3_iSendv(vc, sreq, iov, 2);
+    mpi_errno = MPIDI_CH3_iSendv(vc, sreq, iov, iovcnt);
     if (mpi_errno != MPI_SUCCESS) {
         MPID_Request_release(sreq);
 	MPIU_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**ch3|rmamsg");

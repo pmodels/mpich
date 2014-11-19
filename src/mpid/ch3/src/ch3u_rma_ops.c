@@ -358,6 +358,10 @@ int MPIDI_CH3I_Get(void *origin_addr, int origin_count, MPI_Datatype
 
         if (!new_ptr->is_dt) {
             new_ptr->piggyback_lock_candidate = 1;
+
+            /* Only fill IMMED data in response packet when both origin and target
+               buffers are basic datatype. */
+            get_pkt->flags |= MPIDI_CH3_PKT_FLAG_RMA_IMMED_RESP;
         }
 
         MPIR_T_PVAR_TIMER_END(RMA, rma_rmaqueue_set);
@@ -695,6 +699,10 @@ int MPIDI_CH3I_Get_accumulate(const void *origin_addr, int origin_count,
 
             if (!new_ptr->is_dt) {
                 new_ptr->piggyback_lock_candidate = 1;
+
+                /* Only fill IMMED data in response packet when both origin and target
+                   buffers are basic datatype. */
+                get_pkt->flags |= MPIDI_CH3_PKT_FLAG_RMA_IMMED_RESP;
             }
         }
 
@@ -763,6 +771,10 @@ int MPIDI_CH3I_Get_accumulate(const void *origin_addr, int origin_count,
                 if (len <= MPIR_MAX(MPIDI_RMA_IMMED_BYTES,
                                     MPIR_CVAR_CH3_RMA_OP_PIGGYBACK_LOCK_DATA_SIZE))
                     new_ptr->piggyback_lock_candidate = 1;
+
+                /* Only fill IMMED data in response packet when both origin and target
+                   buffers are basic datatype. */
+                get_accum_pkt->flags |= MPIDI_CH3_PKT_FLAG_RMA_IMMED_RESP;
             }
         }
 
@@ -1128,6 +1140,7 @@ int MPIDI_Fetch_and_op(const void *origin_addr, void *result_addr,
             get_pkt->source_win_handle = win_ptr->handle;
             get_pkt->origin_rank = rank;
             get_pkt->flags = MPIDI_CH3_PKT_FLAG_NONE;
+            get_pkt->flags |= MPIDI_CH3_PKT_FLAG_RMA_IMMED_RESP;
 
             new_ptr->origin_addr = result_addr;
             new_ptr->origin_count = 1;

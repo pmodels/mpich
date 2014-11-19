@@ -119,7 +119,8 @@ typedef enum {
     MPIDI_CH3_PKT_FLAG_RMA_FLUSH_ACK = 256,
     MPIDI_CH3_PKT_FLAG_RMA_UNLOCK_ACK = 512,
     MPIDI_CH3_PKT_FLAG_RMA_LOCK_GRANTED = 1024,
-    MPIDI_CH3_PKT_FLAG_RMA_UNLOCK_NO_ACK = 2048
+    MPIDI_CH3_PKT_FLAG_RMA_UNLOCK_NO_ACK = 2048,
+    MPIDI_CH3_PKT_FLAG_RMA_IMMED_RESP = 4096
 } MPIDI_CH3_Pkt_flags_t;
 
 typedef struct MPIDI_CH3_Pkt_send {
@@ -559,6 +560,9 @@ typedef struct MPIDI_CH3_Pkt_get_resp {
     /* Followings are used to decrement ack_counter at origin */
     MPI_Win source_win_handle;
     int target_rank;
+    /* Followings are to piggyback IMMED data */
+    size_t immed_len;
+    char data[MPIDI_RMA_IMMED_BYTES];
 } MPIDI_CH3_Pkt_get_resp_t;
 
 typedef struct MPIDI_CH3_Pkt_get_accum_resp {
@@ -570,6 +574,9 @@ typedef struct MPIDI_CH3_Pkt_get_accum_resp {
     /* Followings are used to decrement ack_counter at origin */
     MPI_Win source_win_handle;
     int target_rank;
+    /* Followings are to piggyback IMMED data */
+    size_t immed_len;
+    char data[MPIDI_RMA_IMMED_BYTES];
 } MPIDI_CH3_Pkt_get_accum_resp_t;
 
 typedef struct MPIDI_CH3_Pkt_fop_resp {
