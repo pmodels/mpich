@@ -46,7 +46,7 @@
 static int  not_initialized = 1;  /* This allows us to use atomic decr */
 static const char *(user_class_msgs[ERROR_MAX_NCLASS]) = { 0 };
 static const char *(user_code_msgs[ERROR_MAX_NCODE]) = { 0 };
-static int  first_free_class = 0;
+static int  first_free_class = 1;  /* class 0 is reserved */
 static int  first_free_code  = 1;  /* code 0 is reserved */
 static const char empty_error_string[1] = { 0 };
 

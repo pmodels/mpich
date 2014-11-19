@@ -455,9 +455,9 @@ static void handleFatalError( MPID_Comm *comm_ptr,
     MPIU_Snprintf(error_msg, MAX_ERRMSG_STRING, "Fatal error in %s: ", fcname);
     len = (int)strlen(error_msg);
     MPIR_Err_get_string(errcode, &error_msg[len], MAX_ERRMSG_STRING-len, NULL);
-    /* The third argument is a return code, a value of 1 usually indicates
-       an error */
-    MPID_Abort(comm_ptr, MPI_SUCCESS, 1, error_msg);
+
+    /* The third argument is a return code. We simply pass the error code. */
+    MPID_Abort(comm_ptr, MPI_SUCCESS, errcode, error_msg);
 }
 /* --END ERROR HANDLING-- */
 
