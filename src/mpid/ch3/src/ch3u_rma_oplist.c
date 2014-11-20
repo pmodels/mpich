@@ -233,13 +233,10 @@ static inline int issue_ops_target(MPID_Win * win_ptr, MPIDI_RMA_Target_t *targe
                 target->sync.outstanding_acks--;
                 MPIU_Assert(target->sync.outstanding_acks == 0);
             }
-            else if (target->read_op_list == NULL &&
-                     target->write_op_list == NULL &&
-                     target->dt_op_list == NULL &&
-                     target->put_acc_issued == 0) {
-                /* both pending list and all waiting lists for
-                   this target are empty, we do not need to send
-                   FLUSH message then. */
+            else if (target->put_acc_issued == 0) {
+                /* We did not issue PUT/ACC since the last
+                   synchronization call, therefore we do
+                   not need to issue FLUSH here. */
                 target->sync.outstanding_acks--;
                 MPIU_Assert(target->sync.outstanding_acks >= 0);
             }
@@ -258,11 +255,10 @@ static inline int issue_ops_target(MPID_Win * win_ptr, MPIDI_RMA_Target_t *targe
                 target->sync.outstanding_acks--;
                 MPIU_Assert(target->sync.outstanding_acks == 0);
             }
-            else if (target->read_op_list == NULL &&
-                     target->write_op_list == NULL &&
-                     target->dt_op_list == NULL &&
-                     target->put_acc_issued == 0) {
-                /* send message to unlock target, but don't need ACK */
+            else if (target->put_acc_issued == 0) {
+                /* We did not issue PUT/ACC since the last
+                   synchronization call, therefore here we
+                   don't need ACK back */
                 mpi_errno = send_unlock_msg(target->target_rank, win_ptr, MPIDI_CH3_PKT_FLAG_RMA_UNLOCK_NO_ACK);
                 if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
 
