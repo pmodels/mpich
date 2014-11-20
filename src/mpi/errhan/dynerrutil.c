@@ -256,7 +256,7 @@ int MPIR_Err_add_code( int class )
     /* --END ERROR HANDLING-- */
 
     /* Create the full error code */
-    new_code = class | ERROR_DYN_MASK | (new_code << ERROR_GENERIC_SHIFT);
+    new_code = class | (new_code << ERROR_GENERIC_SHIFT);
 
     /* FIXME: For robustness, we should make sure that the associated string
        is initialized to null */
