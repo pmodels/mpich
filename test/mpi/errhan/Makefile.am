@@ -19,7 +19,8 @@ noinst_PROGRAMS = \
     commcall      \
     errfatal      \
     predef_eh     \
-    errstring2
+    errstring2    \
+    dynamic_errcode_predefined_errclass
 
 EXTRA_PROGRAMS = errcode errring errstring
 
