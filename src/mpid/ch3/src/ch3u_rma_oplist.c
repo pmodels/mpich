@@ -466,30 +466,47 @@ int MPIDI_CH3I_RMA_Free_ops_before_completion(MPID_Win * win_ptr)
     int i, made_progress = 0;
     int mpi_errno = MPI_SUCCESS;
 
+    /* If we are in an free_ops_before_completion, the window must be holding
+     * up resources.  If it isn't, we are in the wrong window and
+     * incorrectly entered this function. */
     MPIU_ERR_CHKANDJUMP(win_ptr->non_empty_slots == 0, mpi_errno, MPI_ERR_OTHER,
                         "**rmanoop");
 
     /* make nonblocking progress once */
+    mpi_errno = MPIDI_CH3I_RMA_Make_progress_win(win_ptr, &made_progress);
+    if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
+
     if (win_ptr->states.access_state == MPIDI_RMA_FENCE_ISSUED ||
-        win_ptr->states.access_state == MPIDI_RMA_PSCW_ISSUED) {
-        mpi_errno = issue_ops_win(win_ptr, &made_progress);
-        if (mpi_errno != MPI_SUCCESS) {MPIU_ERR_POP(mpi_errno);}
-    }
-    if (win_ptr->states.access_state != MPIDI_RMA_FENCE_GRANTED)
+        win_ptr->states.access_state == MPIDI_RMA_PSCW_ISSUED ||
+        win_ptr->states.access_state == MPIDI_RMA_LOCK_ALL_ISSUED)
         goto fn_exit;
 
     /* find targets that have operations */
     for (i = 0; i < win_ptr->num_slots; i++) {
         if (win_ptr->slots[i].target_list != NULL) {
             curr_target = win_ptr->slots[i].target_list;
-            while (curr_target != NULL && curr_target->read_op_list == NULL
-                   && curr_target->write_op_list == NULL)
+            while (curr_target != NULL) {
+                if (curr_target->read_op_list != NULL ||
+                    curr_target->write_op_list != NULL) {
+                    if (win_ptr->states.access_state == MPIDI_RMA_PER_TARGET ||
+                        win_ptr->states.access_state == MPIDI_RMA_LOCK_ALL_CALLED) {
+                        if (curr_target->access_state == MPIDI_RMA_LOCK_GRANTED)
+                            break;
+                    }
+                    else {
+                        break;
+                    }
+                }
                 curr_target = curr_target->next;
+            }
             if (curr_target != NULL) break;
         }
     }
+
     if (curr_target == NULL) goto fn_exit;
 
+    /* After we do this, all following Win_flush_local
+       must do a Win_flush instead. */
     curr_target->disable_flush_local = 1;
 
     if (curr_target->read_op_list != NULL) {
@@ -507,6 +524,9 @@ int MPIDI_CH3I_RMA_Free_ops_before_completion(MPID_Win * win_ptr)
         MPID_Request_release(curr_op->request);
         MPL_LL_DELETE(*op_list, *op_list_tail, curr_op);
         MPIDI_CH3I_Win_op_free(win_ptr, curr_op);
+
+        win_ptr->active_req_cnt--;
+
         if (*op_list == NULL) {
             if (read_flag == 1) {
                 op_list = &curr_target->write_op_list;

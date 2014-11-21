@@ -1221,8 +1221,17 @@ int MPIDI_Win_flush_local(int dest, MPID_Win * win_ptr)
     }
 
     /* Set sync_flag in sync struct. */
-    if (target->sync.sync_flag < MPIDI_RMA_SYNC_FLUSH_LOCAL)
-        target->sync.sync_flag = MPIDI_RMA_SYNC_FLUSH_LOCAL;
+    if (target->disable_flush_local) {
+        if (target->sync.sync_flag < MPIDI_RMA_SYNC_FLUSH) {
+            target->sync.sync_flag = MPIDI_RMA_SYNC_FLUSH;
+            target->sync.have_remote_incomplete_ops = 0;
+            target->sync.outstanding_acks++;
+        }
+    }
+    else {
+        if (target->sync.sync_flag < MPIDI_RMA_SYNC_FLUSH_LOCAL)
+            target->sync.sync_flag = MPIDI_RMA_SYNC_FLUSH_LOCAL;
+    }
 
     /* Issue out all operations. */
     mpi_errno = MPIDI_CH3I_RMA_Make_progress_target(win_ptr, dest,
@@ -1237,15 +1246,20 @@ int MPIDI_Win_flush_local(int dest, MPID_Win * win_ptr)
                                                       &remote_completed);
         if (mpi_errno != MPI_SUCCESS)
             MPIU_ERR_POP(mpi_errno);
-        if (!local_completed) {
+        if ((target->disable_flush_local && !remote_completed) ||
+            (!target->disable_flush_local && !local_completed)) {
             mpi_errno = wait_progress_engine();
             if (mpi_errno != MPI_SUCCESS)
                 MPIU_ERR_POP(mpi_errno);
         }
-    } while (!local_completed);
+    } while ((target->disable_flush_local && !remote_completed) ||
+             (!target->disable_flush_local && !local_completed));
 
  finish_flush_local:
     if (target != NULL) {
+        /* reset disable_flush_local flag in target to 0 */
+        target->disable_flush_local = 0;
+
         /* ENDING synchronization: correctly decrement the following counters. */
         win_ptr->accumulated_ops_cnt -= target->accumulated_ops_cnt;
         target->accumulated_ops_cnt = 0;
@@ -1589,6 +1603,8 @@ int MPIDI_Win_flush_local_all(MPID_Win * win_ptr)
     int i, made_progress = 0;
     int local_completed = 0, remote_completed = 0;
     MPIDI_RMA_Target_t *curr_target = NULL;
+    int enable_flush_local_cnt = 0, disable_flush_local_cnt = 0;
+    int remote_completed_cnt = 0, local_completed_cnt = 0;
     int mpi_errno = MPI_SUCCESS;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_WIN_FLUSH_LOCAL_ALL);
 
@@ -1615,8 +1631,19 @@ int MPIDI_Win_flush_local_all(MPID_Win * win_ptr)
     for (i = 0; i < win_ptr->num_slots; i++) {
         curr_target = win_ptr->slots[i].target_list;
         while (curr_target != NULL) {
-            if (curr_target->sync.sync_flag < MPIDI_RMA_SYNC_FLUSH_LOCAL) {
-                curr_target->sync.sync_flag = MPIDI_RMA_SYNC_FLUSH_LOCAL;
+            if (curr_target->disable_flush_local) {
+                if (curr_target->sync.sync_flag < MPIDI_RMA_SYNC_FLUSH) {
+                    curr_target->sync.sync_flag = MPIDI_RMA_SYNC_FLUSH;
+                    curr_target->sync.have_remote_incomplete_ops = 0;
+                    curr_target->sync.outstanding_acks++;
+                }
+                disable_flush_local_cnt++;
+            }
+            else {
+                if (curr_target->sync.sync_flag < MPIDI_RMA_SYNC_FLUSH_LOCAL) {
+                    curr_target->sync.sync_flag = MPIDI_RMA_SYNC_FLUSH_LOCAL;
+                }
+                enable_flush_local_cnt++;
             }
 
             /* ENDING synchronization: correctly decrement the following counters. */
@@ -1630,20 +1657,51 @@ int MPIDI_Win_flush_local_all(MPID_Win * win_ptr)
     mpi_errno = MPIDI_CH3I_RMA_Make_progress_win(win_ptr, &made_progress);
     if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
 
-    /* Wait for local completion. */
+    /* wait for remote completion for those targets that disable flush_local,
+     * and wait for local completion for other targets */
     do {
-        mpi_errno = MPIDI_CH3I_RMA_Cleanup_ops_win(win_ptr, &local_completed,
-                                                   &remote_completed);
-        if (mpi_errno != MPI_SUCCESS)
-            MPIU_ERR_POP(mpi_errno);
-        if (!local_completed) {
+        for (i = 0; i < win_ptr->num_slots; i++) {
+            curr_target = win_ptr->slots[i].target_list;
+            while (curr_target != NULL) {
+                mpi_errno = MPIDI_CH3I_RMA_Cleanup_ops_target(win_ptr, curr_target,
+                                                              &local_completed,
+                                                              &remote_completed);
+                if (mpi_errno != MPI_SUCCESS)
+                    MPIU_ERR_POP(mpi_errno);
+
+                if (curr_target->disable_flush_local) {
+                    if (remote_completed) {
+                        remote_completed_cnt++;
+                    }
+                }
+                else {
+                    if (local_completed) {
+                        local_completed_cnt++;
+                    }
+                }
+                curr_target = curr_target->next;
+            }
+        }
+
+        if (remote_completed_cnt < disable_flush_local_cnt ||
+            local_completed_cnt < enable_flush_local_cnt) {
             mpi_errno = wait_progress_engine();
             if (mpi_errno != MPI_SUCCESS)
                 MPIU_ERR_POP(mpi_errno);
         }
-    } while (!local_completed);
+    } while (remote_completed_cnt < disable_flush_local_cnt ||
+             local_completed_cnt < enable_flush_local_cnt);
 
   finish_flush_local_all:
+    /* reset disable_flush_local flag in target to 0 */
+    for (i = 0; i < win_ptr->num_slots; i++) {
+        curr_target = win_ptr->slots[i].target_list;
+        while (curr_target != NULL) {
+            curr_target->disable_flush_local = 0;
+            curr_target = curr_target->next;
+        }
+    }
+
     /* ENDING synchronization: correctly decrement the following counter. */
     win_ptr->accumulated_ops_cnt = 0;
 
