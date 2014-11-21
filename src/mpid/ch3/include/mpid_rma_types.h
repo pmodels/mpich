@@ -132,6 +132,8 @@ extern MPIDI_RMA_Win_list_t *MPIDI_RMA_Win_list, *MPIDI_RMA_Win_list_tail;
 typedef struct MPIDI_Win_lock_queue {
     struct MPIDI_Win_lock_queue *next;
     MPIDI_CH3_Pkt_t pkt;    /* all information for this request packet */
+    void *data;             /* for queued PUTs / ACCs / GACCs, data is copied here */
+    int all_data_recved;    /* indicate if all data has been received */
 } MPIDI_Win_lock_queue;
 
 typedef MPIDI_RMA_Op_t *MPIDI_RMA_Ops_list_t;

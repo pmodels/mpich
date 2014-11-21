@@ -32,6 +32,25 @@ cvars:
           starts to poke progress engine when number of posted
           operations reaches that value.
 
+    - name        : MPIR_CVAR_CH3_RMA_OP_PIGGYBACK_LOCK_DATA_SIZE
+      category    : CH3
+      type        : int
+      default     : 65536
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+          Specify the threshold of data size of a RMA operation
+          which can be piggybacked with a LOCK message. It is
+          always a positive value and should not be smaller
+          than MPIDI_RMA_IMMED_BYTES.
+          If user sets it as a small value, for middle and large
+          data size, we will lose performance because of always
+          waiting for round-trip of LOCK synchronization; if
+          user sets it as a large value, we need to consume
+          more memory on target side to buffer this lock request
+          when lock is not satisfied.
+
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
@@ -174,12 +193,11 @@ int MPIDI_CH3I_Put(const void *origin_addr, int origin_count, MPI_Datatype
                 /* copy data from origin buffer to immed area in packet header */
                 mpi_errno = immed_copy(src, dest, put_pkt->immed_len);
                 if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
-
-                /* If all data is in pkt header, mark this op as a candidate
-                   for piggybacking LOCK. */
-                if (put_pkt->immed_len == len)
-                    new_ptr->piggyback_lock_candidate = 1;
             }
+
+            if (len <= MPIR_MAX(MPIDI_RMA_IMMED_BYTES,
+                                MPIR_CVAR_CH3_RMA_OP_PIGGYBACK_LOCK_DATA_SIZE))
+                new_ptr->piggyback_lock_candidate = 1;
         }
 
         MPIR_T_PVAR_TIMER_END(RMA, rma_rmaqueue_set);
@@ -521,12 +539,11 @@ int MPIDI_CH3I_Accumulate(const void *origin_addr, int origin_count, MPI_Datatyp
                 /* copy data from origin buffer to immed area in packet header */
                 mpi_errno = immed_copy(src, dest, accum_pkt->immed_len);
                 if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
-
-                /* If all data is in pkt header, mark this op as
-                   a candidate for piggybacking LOCK. */
-                if (accum_pkt->immed_len == len)
-                    new_ptr->piggyback_lock_candidate = 1;
             }
+
+            if (len <= MPIR_MAX(MPIDI_RMA_IMMED_BYTES,
+                                MPIR_CVAR_CH3_RMA_OP_PIGGYBACK_LOCK_DATA_SIZE))
+                new_ptr->piggyback_lock_candidate = 1;
         }
 
         MPIR_T_PVAR_TIMER_END(RMA, rma_rmaqueue_set);
@@ -741,12 +758,11 @@ int MPIDI_CH3I_Get_accumulate(const void *origin_addr, int origin_count,
                     /* copy data from origin buffer to immed area in packet header */
                     mpi_errno = immed_copy(src, dest, get_accum_pkt->immed_len);
                     if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
-
-                    /* If all data is in pkt header, mark this op as a candidate
-                       for piggybacking LOCK. */
-                    if (get_accum_pkt->immed_len == len)
-                        new_ptr->piggyback_lock_candidate = 1;
                 }
+
+                if (len <= MPIR_MAX(MPIDI_RMA_IMMED_BYTES,
+                                    MPIR_CVAR_CH3_RMA_OP_PIGGYBACK_LOCK_DATA_SIZE))
+                    new_ptr->piggyback_lock_candidate = 1;
             }
         }
 
