@@ -506,10 +506,10 @@ static inline int finish_op_on_target(MPID_Win *win_ptr, MPIDI_VC_t *vc,
                 MPIDI_CH3_Progress_signal_completion();
         }
         if (flags & MPIDI_CH3_PKT_FLAG_RMA_UNLOCK) {
-            mpi_errno = MPIDI_CH3I_Release_lock(win_ptr);
-            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
             mpi_errno = MPIDI_CH3I_Send_flush_ack_pkt(vc, win_ptr, flags,
                                                       source_win_handle);
+            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+            mpi_errno = MPIDI_CH3I_Release_lock(win_ptr);
             if (mpi_errno) MPIU_ERR_POP(mpi_errno);
             MPIDI_CH3_Progress_signal_completion();
         }
