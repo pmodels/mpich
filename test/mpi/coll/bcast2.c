@@ -39,10 +39,9 @@ int main( int argc, char *argv[] )
 
     MTEST_DATATYPE_FOR_EACH_COUNT(count) {
 
-        /* Only run full datatype tests in comm world to shorten test time. */
-        if (comm == MPI_COMM_WORLD) {
-            MTestInitFullDatatypes();
-        } else {
+        /* To shorten test time, only run the default version of datatype tests
+         * for comm world and run the minimum version for other communicators. */
+        if (comm != MPI_COMM_WORLD) {
             MTestInitMinDatatypes();
         }
 
