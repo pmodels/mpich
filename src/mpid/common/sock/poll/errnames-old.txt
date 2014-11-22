@@ -1,3 +1,0 @@
-# Unused error names
-**sock|poll|hostres %d %d %s:unable to resolve host name to an address (set=%d,sock=%d,host=%s)
-**sock|poll|oserror %s %d %s:unexpected operating system error from %s (errno=%d:%s)
