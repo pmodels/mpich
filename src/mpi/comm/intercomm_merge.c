@@ -21,6 +21,12 @@ int MPI_Intercomm_merge(MPI_Comm intercomm, int high, MPI_Comm *newintracomm) __
 /* -- End Profiling Symbol Block */
 
 
+/* Define MPICH_MPI_FROM_PMPI if weak symbols are not supported to build
+   the MPI routines */
+#ifndef MPICH_MPI_FROM_PMPI
+#undef MPI_Intercomm_merge
+#define MPI_Intercomm_merge PMPI_Intercomm_merge
+
 /* This function creates VCRT for new communicator
  * basing on VCRT of existing communicator.
  */
@@ -72,12 +78,6 @@ static int create_and_map_vcrt(MPID_Comm *comm_ptr, int local_high, MPID_Comm *n
 fn_fail:
     return mpi_errno;
 }
-
-/* Define MPICH_MPI_FROM_PMPI if weak symbols are not supported to build
-   the MPI routines */
-#ifndef MPICH_MPI_FROM_PMPI
-#undef MPI_Intercomm_merge
-#define MPI_Intercomm_merge PMPI_Intercomm_merge
 
 #undef FUNCNAME
 #define FUNCNAME MPIR_Intercomm_merge_impl
