@@ -20,19 +20,16 @@ int MPI_Intercomm_merge(MPI_Comm intercomm, int high, MPI_Comm *newintracomm) __
 #endif
 /* -- End Profiling Symbol Block */
 
-/* These functions help implement the merge procedure */
-static int MPIR_Intercomm_merge_create_and_map_vcrt(MPID_Comm *comm_ptr, int local_high, MPID_Comm *new_intracomm_ptr);
-
 
 /* This function creates VCRT for new communicator
  * basing on VCRT of existing communicator.
  */
 
 #undef FUNCNAME
-#define FUNCNAME MPIR_Intercomm_merge_create_and_map_vcrt
+#define FUNCNAME create_and_map_vcrt
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-static int MPIR_Intercomm_merge_create_and_map_vcrt(MPID_Comm *comm_ptr, int local_high, MPID_Comm *new_intracomm_ptr)
+static int create_and_map_vcrt(MPID_Comm *comm_ptr, int local_high, MPID_Comm *new_intracomm_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
     int i, j;
@@ -174,7 +171,7 @@ int MPIR_Intercomm_merge_impl(MPID_Comm *comm_ptr, int high, MPID_Comm **new_int
 
     /* Now we know which group comes first.  Build the new vcr
        from the existing vcrs */
-    mpi_errno = MPIR_Intercomm_merge_create_and_map_vcrt(comm_ptr, local_high, (*new_intracomm_ptr));
+    mpi_errno = create_and_map_vcrt(comm_ptr, local_high, (*new_intracomm_ptr));
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
     /* We've setup a temporary context id, based on the context id
@@ -208,7 +205,7 @@ int MPIR_Intercomm_merge_impl(MPID_Comm *comm_ptr, int high, MPID_Comm **new_int
     (*new_intracomm_ptr)->context_id = new_context_id;
     (*new_intracomm_ptr)->recvcontext_id = new_context_id;
 
-    mpi_errno = MPIR_Intercomm_merge_create_and_map_vcrt(comm_ptr, local_high, (*new_intracomm_ptr));
+    mpi_errno = create_and_map_vcrt(comm_ptr, local_high, (*new_intracomm_ptr));
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
     mpi_errno = MPIR_Comm_commit((*new_intracomm_ptr));
