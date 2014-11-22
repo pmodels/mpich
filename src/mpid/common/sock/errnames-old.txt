@@ -1,7 +1,0 @@
-# Unused error strings
-**sock|badbuf %d %d:the supplied buffer contains invalid memory (set=%d,sock=%d)
-**sock|closed:sock has been closed locally
-**sock|connfailed %d %d:connection failure (set=%d,sock=%d)
-**sock|hostres:unable to resolve host name to an address
-**sock|osnomem %d %d:operating system routine failed due to lack of memory (set=%d,sock=%d)
-
