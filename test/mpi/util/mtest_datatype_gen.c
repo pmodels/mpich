@@ -68,17 +68,26 @@ static int verbose = 0;         /* Message level (0 is none) */
  *    2. Add its create/init/check functions in file mtest_datatype.c
  *    3. Add its creator function to mtestDdtCreators variable
  *
- *  Following two datatype generators are defined.
- *    1. Full datatypes generator:
+ *  Following three test levels of datatype are defined.
+ *    1. Basic
+ *      All basic datatypes
+ *    2. Minimum
+ *      All basic datatypes | Vector | Indexed
+ *    3. Full
  *      All basic datatypes | Vector | Hvector | Indexed | Hindexed |
  *      Indexed-block | Hindexed-block | Subarray with order-C | Subarray with order-Fortran
- *    2. Minimum datatypes generator:
- *      All basic datatypes | Vector | Indexed
  *
- *  MPI test can initialize either generator by calling the corresponding init
- *  function before datatype loop, The full generator is set by default.
- *    Full generator : MTestInitFullDatatypes
- *    Minimum generator : MTestInitMinDatatypes
+ *  There are two ways to specify the test level of datatype. The second way has
+ *  higher priority (means the value specified by the first way will be overwritten
+ *  by that in the second way).
+ *  1. Specify global test level by setting the MPITEST_DATATYPE_TEST_LEVEL
+ *     environment variable before execution (basic,min,full|full by default).
+ *  2. Initialize a special level for a datatype loop by calling the corresponding
+ *     initialization function before that loop, otherwise the default value specified
+ *     in the first way is used.
+ *    Basic     : MTestInitBasicDatatypes
+ *    Minimum   : MTestInitMinDatatypes
+ *    Full      : MTestInitFullDatatypes
  */
 
 static int datatype_index = 0;
@@ -103,11 +112,17 @@ static int MTEST_RECV_DDT_NUM_TESTS = 0;
 static int MTEST_RECV_DDT_RANGE = 0;
 
 enum {
-    MTEST_DATATYPE_VERSION_FULL,
-    MTEST_DATATYPE_VERSION_MIN
+    MTEST_DATATYPE_TEST_LEVEL_FULL,
+    MTEST_DATATYPE_TEST_LEVEL_MIN,
+    MTEST_DATATYPE_TEST_LEVEL_BASIC,
 };
 
-static int MTEST_DATATYPE_VERSION = MTEST_DATATYPE_VERSION_FULL;
+/* current datatype test level */
+static int MTEST_DATATYPE_TEST_LEVEL = MTEST_DATATYPE_TEST_LEVEL_FULL;
+/* default datatype test level specified by environment variable */
+static int MTEST_DATATYPE_TEST_LEVEL_ENV = -1;
+/* default datatype initialization function */
+static void (*MTestInitDefaultTestFunc) (void) = NULL;
 
 static void MTestInitDatatypeGen(int basic_dt_num, int derived_dt_num)
 {
@@ -130,9 +145,9 @@ static int MTestIsDatatypeGenInited()
 
 static void MTestPrintDatatypeGen()
 {
-    MTestPrintfMsg(1, "MTest datatype version : %s. %d basic datatype tests, "
+    MTestPrintfMsg(1, "MTest datatype test level : %s. %d basic datatype tests, "
                    "%d derived datatype tests will be generated\n",
-                   (MTEST_DATATYPE_VERSION == MTEST_DATATYPE_VERSION_FULL) ? "FULL" : "MIN",
+                   (MTEST_DATATYPE_TEST_LEVEL == MTEST_DATATYPE_TEST_LEVEL_FULL) ? "FULL" : "MIN",
                    MTEST_BDT_NUM_TESTS, MTEST_SEND_DDT_NUM_TESTS + MTEST_RECV_DDT_NUM_TESTS);
 }
 
@@ -143,12 +158,12 @@ static void MTestResetDatatypeGen()
 
 void MTestInitFullDatatypes()
 {
-    /* Do not allow to change datatype version during loop.
+    /* Do not allow to change datatype test level during loop.
      * Otherwise indexes will be wrong.
      * Test must explicitly call reset or wait for current datatype loop being
-     * done before changing to another datatype version. */
+     * done before changing to another test level. */
     if (!MTestIsDatatypeGenInited()) {
-        MTEST_DATATYPE_VERSION = MTEST_DATATYPE_VERSION_FULL;
+        MTEST_DATATYPE_TEST_LEVEL = MTEST_DATATYPE_TEST_LEVEL_FULL;
         MTestTypeCreatorInit((MTestDdtCreator *) mtestDdtCreators);
         MTestInitDatatypeGen(MTEST_BDT_MAX, MTEST_DDT_MAX);
     }
@@ -159,12 +174,12 @@ void MTestInitFullDatatypes()
 
 void MTestInitMinDatatypes()
 {
-    /* Do not allow to change datatype version during loop.
+    /* Do not allow to change datatype test level during loop.
      * Otherwise indexes will be wrong.
      * Test must explicitly call reset or wait for current datatype loop being
-     * done before changing to another datatype version. */
+     * done before changing to another test level. */
     if (!MTestIsDatatypeGenInited()) {
-        MTEST_DATATYPE_VERSION = MTEST_DATATYPE_VERSION_MIN;
+        MTEST_DATATYPE_TEST_LEVEL = MTEST_DATATYPE_TEST_LEVEL_MIN;
         MTestTypeMinCreatorInit((MTestDdtCreator *) mtestDdtCreators);
         MTestInitDatatypeGen(MTEST_BDT_MAX, MTEST_MIN_DDT_MAX);
     }
@@ -173,6 +188,49 @@ void MTestInitMinDatatypes()
     }
 }
 
+void MTestInitBasicDatatypes()
+{
+    /* Do not allow to change datatype test level during loop.
+     * Otherwise indexes will be wrong.
+     * Test must explicitly call reset or wait for current datatype loop being
+     * done before changing to another test level. */
+    if (!MTestIsDatatypeGenInited()) {
+        MTEST_DATATYPE_TEST_LEVEL = MTEST_DATATYPE_TEST_LEVEL_BASIC;
+        MTestInitDatatypeGen(MTEST_BDT_MAX, 0);
+    }
+    else {
+        printf("Warning: trying to reinitialize mtest datatype during " "datatype iteration!");
+    }
+}
+
+static inline void MTestInitDatatypeEnv()
+{
+    char *envval = 0;
+
+    /* Read global test level specified by user environment variable.
+     * Only initialize once at the first time that test calls datatype routine. */
+    if (MTEST_DATATYPE_TEST_LEVEL_ENV > -1)
+        return;
+
+    /* default full */
+    MTEST_DATATYPE_TEST_LEVEL_ENV = MTEST_DATATYPE_TEST_LEVEL_FULL;
+    MTestInitDefaultTestFunc = MTestInitFullDatatypes;
+
+    envval = getenv("MPITEST_DATATYPE_TEST_LEVEL");
+    if (envval && strlen(envval)) {
+        if (!strncmp(envval, "min", strlen("min"))) {
+            MTEST_DATATYPE_TEST_LEVEL_ENV = MTEST_DATATYPE_TEST_LEVEL_MIN;
+            MTestInitDefaultTestFunc = MTestInitMinDatatypes;
+        }
+        else if (!strncmp(envval, "basic", strlen("basic"))) {
+            MTEST_DATATYPE_TEST_LEVEL_ENV = MTEST_DATATYPE_TEST_LEVEL_BASIC;
+            MTestInitDefaultTestFunc = MTestInitBasicDatatypes;
+        }
+        else if (strncmp(envval, "full", strlen("full"))) {
+            fprintf(stderr, "Unknown MPITEST_DATATYPE_TEST_LEVEL %s\n", envval);
+        }
+    }
+}
 
 /* -------------------------------------------------------------------------------*/
 /* Routine to define various sets of blocklen/count/stride for derived datatypes. */
@@ -407,11 +465,12 @@ int MTestGetDatatypes(MTestDatatype * sendtype, MTestDatatype * recvtype, MPI_Ai
     int merr = 0;
 
     MTestGetDbgInfo(&dbgflag, &verbose);
+    MTestInitDatatypeEnv();
     MPI_Comm_rank(MPI_COMM_WORLD, &wrank);
 
-    /* Initialize the full version if test does not specify. */
+    /* Initialize the default test level if test does not specify. */
     if (!MTestIsDatatypeGenInited()) {
-        MTestInitFullDatatypes();
+        MTestInitDefaultTestFunc();
     }
 
     if (datatype_index == 0) {
