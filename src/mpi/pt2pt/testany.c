@@ -168,7 +168,12 @@ int MPI_Testany(int count, MPI_Request array_of_requests[], int *indx,
                                                              status);
 	    if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 	}
-	if (request_ptrs[i] != NULL && MPID_Request_is_complete(request_ptrs[i]))
+        if (request_ptrs[i] != NULL && MPID_Request_is_pending_failure(request_ptrs[i])) {
+            mpi_errno = request_ptrs[i]->status.MPI_ERROR;
+            *flag = TRUE;
+            *indx = i;
+            goto fn_fail;
+        } else if (request_ptrs[i] != NULL && MPID_Request_is_complete(request_ptrs[i]))
 	{
 	    mpi_errno = MPIR_Request_complete(&array_of_requests[i], 
 					      request_ptrs[i], 
@@ -183,11 +188,6 @@ int MPI_Testany(int count, MPI_Request array_of_requests[], int *indx,
 	    {
 		n_inactive += 1;
 	    }
-        } else if (request_ptrs[i] != NULL && MPID_Request_is_pending_failure(request_ptrs[i])) {
-            mpi_errno = request_ptrs[i]->status.MPI_ERROR;
-            *flag = TRUE;
-            *indx = i;
-            goto fn_fail;
         }
     }
     

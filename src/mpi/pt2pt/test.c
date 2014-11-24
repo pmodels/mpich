@@ -60,16 +60,16 @@ int MPIR_Test_impl(MPI_Request *request, int *flag, MPI_Status *status)
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     }
 
-    if (MPID_Request_is_complete(request_ptr)) {
+    if (MPID_Request_is_pending_failure(request_ptr)) {
+        *flag = TRUE;
+        mpi_errno = request_ptr->status.MPI_ERROR;
+        goto fn_fail;
+    } else if (MPID_Request_is_complete(request_ptr)) {
 	mpi_errno = MPIR_Request_complete(request, request_ptr, status,
 					  &active_flag);
 	*flag = TRUE;
 	if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 	/* Fall through to the exit */
-    } else if (MPID_Request_is_pending_failure(request_ptr)) {
-        *flag = TRUE;
-        mpi_errno = request_ptr->status.MPI_ERROR;
-        goto fn_fail;
     }
         
  fn_exit:
