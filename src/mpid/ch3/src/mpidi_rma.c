@@ -63,6 +63,30 @@ cvars:
         targets) that stores information about RMA targets that
         could not be issued immediatly.  Requires a positive value.
 
+    - name        : MPIR_CVAR_CH3_RMA_LOCK_ENTRY_WIN_POOL_SIZE
+      category    : CH3
+      type        : int
+      default     : 256
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Size of the window-private RMA lock entries pool (in number of
+        lock entries) that stores information about RMA lock requests that
+        could not be satisfied immediatly.  Requires a positive value.
+
+    - name        : MPIR_CVAR_CH3_RMA_LOCK_ENTRY_GLOBAL_POOL_SIZE
+      category    : CH3
+      type        : int
+      default     : 16384
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Size of the Global RMA lock entries pool (in number of
+        lock entries) that stores information about RMA lock requests that
+        could not be satisfied immediatly.  Requires a positive value.
+
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
@@ -214,6 +238,7 @@ int MPIDI_Win_free(MPID_Win ** win_ptr)
     MPIU_Free((*win_ptr)->op_pool_start);
     MPIU_Free((*win_ptr)->target_pool_start);
     MPIU_Free((*win_ptr)->slots);
+    MPIU_Free((*win_ptr)->lock_entry_pool_start);
 
     /* Free the attached buffer for windows created with MPI_Win_allocate() */
     if ((*win_ptr)->create_flavor == MPI_WIN_FLAVOR_ALLOCATE ||

@@ -19,35 +19,46 @@ MPIR_T_PVAR_DOUBLE_TIMER_DECL_EXTERN(RMA, rma_winlock_getlocallock);
 #define FUNCNAME MPIDI_CH3I_Win_lock_entry_alloc
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-static inline int MPIDI_CH3I_Win_lock_entry_alloc(MPID_Win * win_ptr,
-                                                  MPIDI_CH3_Pkt_t *pkt,
-                                                  MPIDI_Win_lock_queue **lock_entry)
+static inline MPIDI_Win_lock_queue *MPIDI_CH3I_Win_lock_entry_alloc(MPID_Win * win_ptr,
+                                                                    MPIDI_CH3_Pkt_t *pkt)
 {
     MPIDI_Win_lock_queue *new_ptr = NULL;
-    int mpi_errno = MPI_SUCCESS;
 
-    /* FIXME: we should use a lock entry queue to manage all this. */
-
-    /* allocate lock queue entry */
-    MPIR_T_PVAR_TIMER_START(RMA, rma_lockqueue_alloc);
-    new_ptr = (MPIDI_Win_lock_queue *) MPIU_Malloc(sizeof(MPIDI_Win_lock_queue));
-    MPIR_T_PVAR_TIMER_END(RMA, rma_lockqueue_alloc);
-    if (!new_ptr) {
-        MPIU_ERR_SETANDJUMP1(mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s",
-                             "MPIDI_Win_lock_queue");
+    if (win_ptr->lock_entry_pool != NULL) {
+        new_ptr = win_ptr->lock_entry_pool;
+        MPL_LL_DELETE(win_ptr->lock_entry_pool, win_ptr->lock_entry_pool_tail, new_ptr);
     }
 
-    new_ptr->next = NULL;
-    new_ptr->pkt = (*pkt);
-    new_ptr->data = NULL;
-    new_ptr->all_data_recved = 0;
+    if (new_ptr != NULL) {
+        new_ptr->next = NULL;
+        new_ptr->pkt = (*pkt);
+        new_ptr->data = NULL;
+        new_ptr->all_data_recved = 0;
+    }
 
-    (*lock_entry) = new_ptr;
+    return new_ptr;
+}
 
- fn_exit:
+/* MPIDI_CH3I_Win_lock_entry_free(): put a lock queue entry back to
+ * the global pool. */
+#undef FUNCNAME
+#define FUNCNAME MPIDI_CH3I_Win_lock_entry_free
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
+static inline int MPIDI_CH3I_Win_lock_entry_free(MPID_Win * win_ptr,
+                                                 MPIDI_Win_lock_queue *lock_entry)
+{
+    int mpi_errno = MPI_SUCCESS;
+
+    if (lock_entry->data != NULL) {
+        MPIU_Free(lock_entry->data);
+    }
+
+    /* use PREPEND when return objects back to the pool
+       in order to improve cache performance */
+    MPL_LL_PREPEND(win_ptr->lock_entry_pool, win_ptr->lock_entry_pool_tail, lock_entry);
+
     return mpi_errno;
- fn_fail:
-    goto fn_exit;
 }
 
 #endif  /* MPID_RMA_ISSUE_H_INCLUDED */

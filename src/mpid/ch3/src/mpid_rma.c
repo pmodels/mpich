@@ -290,7 +290,7 @@ static int win_init(MPI_Aint size, int disp_unit, int create_flavor, int model,
     MPID_Comm *win_comm_ptr;
     int win_target_pool_size;
     MPIDI_RMA_Win_list_t *win_elem;
-    MPIU_CHKPMEM_DECL(4);
+    MPIU_CHKPMEM_DECL(5);
     MPIDI_STATE_DECL(MPID_STATE_WIN_INIT);
 
     MPIDI_FUNC_ENTER(MPID_STATE_WIN_INIT);
@@ -383,6 +383,18 @@ static int win_init(MPI_Aint size, int disp_unit, int create_flavor, int model,
     for (i = 0; i < (*win_ptr)->num_slots; i++) {
         (*win_ptr)->slots[i].target_list = NULL;
         (*win_ptr)->slots[i].target_list_tail = NULL;
+    }
+
+    /* FIXME: we can optimize by letting the user to pass WIN INFO hint if they will not use passive target,
+       in such case we do not need to allocate window pool for lock entries. */
+    MPIU_CHKPMEM_MALLOC((*win_ptr)->lock_entry_pool_start, struct MPIDI_Win_lock_queue *,
+                        sizeof(MPIDI_Win_lock_queue) * MPIR_CVAR_CH3_RMA_LOCK_ENTRY_WIN_POOL_SIZE,
+                        mpi_errno, "RMA lock entry pool");
+    (*win_ptr)->lock_entry_pool = NULL;
+    (*win_ptr)->lock_entry_pool_tail = NULL;
+    for (i = 0; i < MPIR_CVAR_CH3_RMA_LOCK_ENTRY_WIN_POOL_SIZE; i++) {
+        MPL_LL_APPEND((*win_ptr)->lock_entry_pool, (*win_ptr)->lock_entry_pool_tail,
+                      &((*win_ptr)->lock_entry_pool_start[i]));
     }
 
     MPID_WIN_FTABLE_SET_DEFAULTS(win_ptr);

@@ -235,9 +235,11 @@ static inline int enqueue_lock_origin(MPID_Win *win_ptr, MPIDI_VC_t *vc,
 
     (*reqp) = NULL;
 
-    mpi_errno = MPIDI_CH3I_Win_lock_entry_alloc(win_ptr, pkt, &new_ptr);
-    if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
-    MPIU_Assert(new_ptr != NULL);
+    new_ptr = MPIDI_CH3I_Win_lock_entry_alloc(win_ptr, pkt);
+    if (new_ptr == NULL) {
+        /* FIXME: we run out of resources of lock requests, needs to
+           send LOCK DISCARDED packet back to origin */
+    }
     MPL_LL_APPEND(win_ptr->lock_queue, win_ptr->lock_queue_tail, new_ptr);
 
     if (pkt->type == MPIDI_CH3_PKT_LOCK ||
@@ -386,9 +388,11 @@ static inline int acquire_local_lock(MPID_Win * win_ptr, int lock_type)
         lock_pkt->lock_type = lock_type;
         lock_pkt->origin_rank = win_ptr->comm_ptr->rank;
 
-        mpi_errno = MPIDI_CH3I_Win_lock_entry_alloc(win_ptr, &pkt, &new_ptr);
-        if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
-        MPIU_Assert(new_ptr != NULL);
+        new_ptr = MPIDI_CH3I_Win_lock_entry_alloc(win_ptr, &pkt);
+        if (new_ptr == NULL) {
+            /* FIXME: we run out of resources of lock requests, needs to
+               send LOCK DISCARDED packet back to origin */
+        }
         MPL_LL_APPEND(win_ptr->lock_queue, win_ptr->lock_queue_tail, new_ptr);
 
         new_ptr->all_data_recved = 1;

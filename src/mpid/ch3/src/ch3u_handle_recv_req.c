@@ -1417,13 +1417,12 @@ int MPIDI_CH3I_Release_lock(MPID_Win *win_ptr)
                     mpi_errno = perform_op_in_lock_queue(win_ptr, lock_entry);
                     if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
 
-                    /* free data buffer in lock queue entry */
-                    if (lock_entry->data != NULL)
-                        MPIU_Free(lock_entry->data);
-			    
                     /* dequeue entry from lock queue */
                     MPL_LL_DELETE(win_ptr->lock_queue, win_ptr->lock_queue_tail, lock_entry);
-                    MPIU_Free(lock_entry);
+
+                    /* free this entry */
+                    mpi_errno = MPIDI_CH3I_Win_lock_entry_free(win_ptr, lock_entry);
+                    if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
 
                     /* if the granted lock is exclusive,
                        no need to continue */
@@ -1482,13 +1481,12 @@ int MPIDI_CH3_ReqHandler_PiggybackLockOpRecvComplete( MPIDI_VC_t *vc,
         mpi_errno = perform_op_in_lock_queue(win_ptr, lock_queue_entry);
         if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
 
-        /* free data buffer in lock queue entry */
-        if (lock_queue_entry->data != NULL)
-            MPIU_Free(lock_queue_entry->data);
-
         /* dequeue entry from lock queue */
         MPL_LL_DELETE(win_ptr->lock_queue, win_ptr->lock_queue_tail, lock_queue_entry);
-        MPIU_Free(lock_queue_entry);
+
+        /* free this entry */
+        mpi_errno = MPIDI_CH3I_Win_lock_entry_free(win_ptr, lock_queue_entry);
+        if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
     }
     /* If try acquiring lock failed, just leave the lock queue entry in the queue with
        all_data_recved marked as 1, release_lock() function will traverse the queue
