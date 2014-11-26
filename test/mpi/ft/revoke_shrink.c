@@ -1,3 +1,10 @@
+/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
+/*
+ *
+ *  (C) 2014 by Argonne National Laboratory.
+ *      See COPYRIGHT in top-level directory.
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
@@ -19,7 +26,7 @@ void error_handler(MPI_Comm *communicator, int *error_code, ...) {
 }
 
 int main(int argc, char *argv[]) {
-    int rank, size;
+    int rank, size, i;
     int sum = 0, val = 1;
     int errs = 0;
     MPI_Errhandler errhandler;
@@ -38,7 +45,7 @@ int main(int argc, char *argv[]) {
     MPI_Comm_create_errhandler(&error_handler, &errhandler);
     MPI_Comm_set_errhandler(comm_all, errhandler);
 
-    for (int i = 0; i < 10; ++i) {
+    for (i = 0; i < 10; ++i) {
         MPI_Comm_size(comm_all, &size);
         sum = 0;
         if (i == 5 && rank == 1) {
