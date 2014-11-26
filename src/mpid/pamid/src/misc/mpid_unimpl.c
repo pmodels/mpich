@@ -104,6 +104,7 @@ int MPID_Comm_revoke(MPID_Comm *comm_ptr, int is_remote)
 
 int MPID_Request_is_pending_failure(MPID_Request *request_ptr)
 {
-  MPID_abort();
+  /* This function is necessary for MPICH to work correctly so it must always
+   * return 0. */
   return 0;
 }
