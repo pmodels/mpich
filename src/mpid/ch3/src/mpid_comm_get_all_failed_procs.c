@@ -33,7 +33,8 @@ static int *group_to_bitarray(MPID_Group *group, MPID_Comm *orig_comm) {
     MPIR_Group_translate_ranks_impl(group, group->size, group_ranks,
                                     orig_comm->local_group, comm_ranks);
 
-    for (i = 0; i < group->size && comm_ranks[i] != MPI_UNDEFINED; i++) {
+    for (i = 0; i < group->size ; i++) {
+        if (comm_ranks[i] == MPI_UNDEFINED) continue;
         index = comm_ranks[i] / 32;
         mask = 0x80000000 >> comm_ranks[i] % 32;
         bitarray[index] |= mask;
@@ -128,7 +129,7 @@ int MPID_Comm_get_all_failed_procs(MPID_Comm *comm_ptr, MPID_Group **failed_grou
             /* Send the list to each rank to be processed locally */
             mpi_errno = MPIC_Send(bitarray, bitarray_size, MPI_UINT32_T, i,
                 tag, comm_ptr->handle, &errflag);
-            if (mpi_errno) errflag = 1;
+            if (mpi_errno) errflag = MPIR_ERR_PROC_FAILED;
         }
 
         /* Convert the bitarray into a group */
@@ -137,12 +138,10 @@ int MPID_Comm_get_all_failed_procs(MPID_Comm *comm_ptr, MPID_Group **failed_grou
         /* Send my bitarray to rank 0 */
         mpi_errno = MPIC_Send(bitarray, bitarray_size, MPI_UINT32_T, 0,
             tag, comm_ptr->handle, &errflag);
-        if (mpi_errno) errflag = 1;
 
         /* Get the resulting bitarray back from rank 0 */
         mpi_errno = MPIC_Recv(remote_bitarray, bitarray_size, MPI_UINT32_T, 0,
             tag, comm_ptr->handle, MPI_STATUS_IGNORE, &errflag);
-        if (mpi_errno) errflag = 1;
 
         /* Convert the bitarray into a group */
         *failed_group = bitarray_to_group(comm_ptr, remote_bitarray);

@@ -50,7 +50,7 @@ int MPIR_Comm_shrink(MPID_Comm *comm_ptr, MPID_Comm **newcomm_ptr)
     int mpi_errno = MPI_SUCCESS;
     MPID_Group *global_failed, *comm_grp, *new_group_ptr;
     int attempts = 0;
-    mpir_errflag_t errflag = MPIR_ERR_NONE, tmp_errflag = MPIR_ERR_NONE;
+    mpir_errflag_t errflag = MPIR_ERR_NONE;
 
     MPID_MPI_STATE_DECL(MPID_STATE_MPIR_COMM_SHRINK);
     MPID_MPI_FUNC_ENTER(MPID_STATE_MPIR_COMM_SHRINK);
@@ -59,7 +59,9 @@ int MPIR_Comm_shrink(MPID_Comm *comm_ptr, MPID_Comm **newcomm_ptr)
     MPIR_Comm_group_impl(comm_ptr, &comm_grp);
 
     do {
-        mpi_errno = MPID_Comm_get_all_failed_procs(comm_ptr, &global_failed, MPIR_SHRINK_TAG);
+        errflag = MPIR_ERR_NONE;
+
+        MPID_Comm_get_all_failed_procs(comm_ptr, &global_failed, MPIR_SHRINK_TAG);
         /* Ignore the mpi_errno value here as it will definitely communicate
          * with failed procs */
 
@@ -68,10 +70,15 @@ int MPIR_Comm_shrink(MPID_Comm *comm_ptr, MPID_Comm **newcomm_ptr)
         if (MPID_Group_empty != global_failed) MPIR_Group_release(global_failed);
 
         mpi_errno = MPIR_Comm_create_group(comm_ptr, new_group_ptr, MPIR_SHRINK_TAG, newcomm_ptr);
-        errflag = mpi_errno || *newcomm_ptr == NULL;
+        if (*newcomm_ptr == NULL) {
+            errflag = MPIR_ERR_PROC_FAILED;
+        } else if (mpi_errno) {
+            errflag = MPIR_ERR_GET_CLASS(mpi_errno);
+            MPIR_Comm_release(*newcomm_ptr, 0);
+        }
 
         mpi_errno = MPIR_Allreduce_group(MPI_IN_PLACE, &errflag, 1, MPI_INT, MPI_MAX, comm_ptr,
-            new_group_ptr, MPIR_SHRINK_TAG, &tmp_errflag);
+            new_group_ptr, MPIR_SHRINK_TAG, &errflag);
         MPIR_Group_release(new_group_ptr);
 
         if (errflag) MPIU_Object_set_ref(new_group_ptr, 0);
