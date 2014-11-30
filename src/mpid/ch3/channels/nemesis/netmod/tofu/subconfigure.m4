@@ -23,7 +23,7 @@ AM_COND_IF([BUILD_NEMESIS_NETMOD_TOFU],[
     if test "${libmemcached_found}" = "yes" ; then
         AC_MSG_NOTICE([libmemcached is going to be linked.])
     else
-        AC_MSG_ERROR([Internal error: libmemcached was not found])
+        AC_MSG_NOTICE([libmemcached was not found])
     fi
 
     PAC_CHECK_HEADER_LIB([infiniband/verbs.h],ibverbs,ibv_open_device,ibverbs_found=yes,ibverbs_found=no)
