@@ -482,8 +482,8 @@ static int _mxm_process_rdtype(MPID_Request ** rreq_p, MPI_Datatype datatype,
         *iov_count = n_iov;
     }
     else {
-        int packsize = 0;
-        MPIR_Pack_size_impl(rreq->dev.user_count, rreq->dev.datatype, (MPI_Aint *) & packsize);
+        MPI_Aint packsize = 0;
+        MPIR_Pack_size_impl(rreq->dev.user_count, rreq->dev.datatype, &packsize);
         rreq->dev.tmpbuf = MPIU_Malloc((size_t) packsize);
         MPIU_Assert(rreq->dev.tmpbuf);
         rreq->dev.tmpbuf_sz = packsize;
