@@ -230,7 +230,7 @@ static inline int enqueue_lock_origin(MPID_Win *win_ptr, MPIDI_VC_t *vc,
                                       MPIDI_msg_sz_t *buflen,
                                       MPID_Request **reqp)
 {
-    MPIDI_Win_lock_queue *new_ptr = NULL;
+    MPIDI_RMA_Lock_entry *new_ptr = NULL;
     int mpi_errno = MPI_SUCCESS;
 
     (*reqp) = NULL;
@@ -382,7 +382,7 @@ static inline int acquire_local_lock(MPID_Win * win_ptr, int lock_type)
         /* Queue the lock information. */
         MPIDI_CH3_Pkt_t pkt;
         MPIDI_CH3_Pkt_lock_t *lock_pkt = &pkt.lock;
-        MPIDI_Win_lock_queue *new_ptr = NULL;
+        MPIDI_RMA_Lock_entry *new_ptr = NULL;
 
         MPIDI_Pkt_init(lock_pkt, MPIDI_CH3_PKT_LOCK);
         lock_pkt->lock_type = lock_type;

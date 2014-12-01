@@ -315,8 +315,8 @@ extern MPIDI_RMA_Pkt_orderings_t *MPIDI_RMA_Pkt_orderings;
     volatile int current_lock_type;   /* current lock type on this window (as target)   \
                               * (none, shared, exclusive) */             \
     volatile int shared_lock_ref_cnt;                                    \
-    struct MPIDI_Win_lock_queue volatile *lock_queue;  /* list of unsatisfied locks */  \
-    struct MPIDI_Win_lock_queue volatile *lock_queue_tail; /* tail of unstaisfied locks. */ \
+    struct MPIDI_RMA_Lock_entry volatile *lock_queue;  /* list of unsatisfied locks */  \
+    struct MPIDI_RMA_Lock_entry volatile *lock_queue_tail; /* tail of unstaisfied locks. */ \
                                                                          \
     MPI_Aint *sizes;      /* array of sizes of all windows */            \
     struct MPIDI_Win_info_args info_args;                                \
@@ -350,9 +350,9 @@ extern MPIDI_RMA_Pkt_orderings_t *MPIDI_RMA_Pkt_orderings;
     int outstanding_locks; /* when issuing multiple lock requests in     \
                             MPI_WIN_LOCK_ALL, this counter keeps track   \
                             of number of locks not being granted yet. */ \
-    struct MPIDI_Win_lock_queue *lock_entry_pool_start;                  \
-    struct MPIDI_Win_lock_queue *lock_entry_pool;                        \
-    struct MPIDI_Win_lock_queue *lock_entry_pool_tail;                   \
+    struct MPIDI_RMA_Lock_entry *lock_entry_pool_start;                  \
+    struct MPIDI_RMA_Lock_entry *lock_entry_pool;                        \
+    struct MPIDI_RMA_Lock_entry *lock_entry_pool_tail;                   \
 
 #ifdef MPIDI_CH3_WIN_DECL
 #define MPID_DEV_WIN_DECL \
@@ -443,7 +443,7 @@ typedef struct MPIDI_Request {
     MPI_Win     target_win_handle;
     MPI_Win     source_win_handle;
     MPIDI_CH3_Pkt_flags_t flags; /* flags that were included in the original RMA packet header */
-    struct MPIDI_Win_lock_queue *lock_queue_entry;
+    struct MPIDI_RMA_Lock_entry *lock_queue_entry;
     MPI_Request resp_request_handle; /* Handle for get_accumulate response */
 
     MPIDI_REQUEST_SEQNUM

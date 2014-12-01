@@ -828,7 +828,7 @@ static int create_derived_datatype(MPID_Request *req, MPID_Datatype **dtp)
 }
 
 
-static inline int perform_put_in_lock_queue(MPID_Win *win_ptr, MPIDI_Win_lock_queue *lock_entry)
+static inline int perform_put_in_lock_queue(MPID_Win *win_ptr, MPIDI_RMA_Lock_entry *lock_entry)
 {
     MPIDI_CH3_Pkt_put_t *put_pkt = &((lock_entry->pkt).put);
     MPIDI_VC_t *vc = NULL;
@@ -860,7 +860,7 @@ static inline int perform_put_in_lock_queue(MPID_Win *win_ptr, MPIDI_Win_lock_qu
     goto fn_exit;
 }
 
-static inline int perform_get_in_lock_queue(MPID_Win *win_ptr, MPIDI_Win_lock_queue *lock_entry)
+static inline int perform_get_in_lock_queue(MPID_Win *win_ptr, MPIDI_RMA_Lock_entry *lock_entry)
 {
     MPIDI_CH3_Pkt_t upkt;
     MPIDI_CH3_Pkt_get_resp_t *get_resp_pkt = &upkt.get_resp;
@@ -955,7 +955,7 @@ static inline int perform_get_in_lock_queue(MPID_Win *win_ptr, MPIDI_Win_lock_qu
 }
 
 
-static inline int perform_acc_in_lock_queue(MPID_Win *win_ptr, MPIDI_Win_lock_queue *lock_entry)
+static inline int perform_acc_in_lock_queue(MPID_Win *win_ptr, MPIDI_RMA_Lock_entry *lock_entry)
 {
     MPIDI_CH3_Pkt_accum_t *acc_pkt = &((lock_entry->pkt).accum);
     MPIDI_VC_t *vc = NULL;
@@ -995,7 +995,7 @@ static inline int perform_acc_in_lock_queue(MPID_Win *win_ptr, MPIDI_Win_lock_qu
 }
 
 
-static inline int perform_get_acc_in_lock_queue(MPID_Win *win_ptr, MPIDI_Win_lock_queue *lock_entry)
+static inline int perform_get_acc_in_lock_queue(MPID_Win *win_ptr, MPIDI_RMA_Lock_entry *lock_entry)
 {
     MPIDI_CH3_Pkt_t upkt;
     MPIDI_CH3_Pkt_get_accum_resp_t *get_accum_resp_pkt = &upkt.get_accum_resp;
@@ -1126,7 +1126,7 @@ static inline int perform_get_acc_in_lock_queue(MPID_Win *win_ptr, MPIDI_Win_loc
 }
 
 
-static inline int perform_fop_in_lock_queue(MPID_Win *win_ptr, MPIDI_Win_lock_queue *lock_entry)
+static inline int perform_fop_in_lock_queue(MPID_Win *win_ptr, MPIDI_RMA_Lock_entry *lock_entry)
 {
     MPIDI_CH3_Pkt_t upkt;
     MPIDI_CH3_Pkt_fop_resp_t *fop_resp_pkt = &upkt.fop_resp;
@@ -1208,7 +1208,7 @@ static inline int perform_fop_in_lock_queue(MPID_Win *win_ptr, MPIDI_Win_lock_qu
 }
 
 
-static inline int perform_cas_in_lock_queue(MPID_Win *win_ptr, MPIDI_Win_lock_queue *lock_entry)
+static inline int perform_cas_in_lock_queue(MPID_Win *win_ptr, MPIDI_RMA_Lock_entry *lock_entry)
 {
     MPIDI_CH3_Pkt_t upkt;
     MPIDI_CH3_Pkt_cas_resp_t *cas_resp_pkt = &upkt.cas_resp;
@@ -1288,7 +1288,7 @@ static inline int perform_cas_in_lock_queue(MPID_Win *win_ptr, MPIDI_Win_lock_qu
 }
 
 
-static inline int perform_op_in_lock_queue(MPID_Win *win_ptr, MPIDI_Win_lock_queue *lock_entry)
+static inline int perform_op_in_lock_queue(MPID_Win *win_ptr, MPIDI_RMA_Lock_entry *lock_entry)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -1361,7 +1361,7 @@ static int entered_count = 0;
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 int MPIDI_CH3I_Release_lock(MPID_Win *win_ptr)
 {
-    MPIDI_Win_lock_queue *lock_entry, *lock_entry_next;
+    MPIDI_RMA_Lock_entry *lock_entry, *lock_entry_next;
     int requested_lock, mpi_errno = MPI_SUCCESS, temp_entered_count;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3I_RELEASE_LOCK);
 
@@ -1405,7 +1405,7 @@ int MPIDI_CH3I_Release_lock(MPID_Win *win_ptr)
 	       only that one. */
 
 	    /* FIXME: MT: All queue accesses need to be made atomic */
-            lock_entry = (MPIDI_Win_lock_queue *) win_ptr->lock_queue;
+            lock_entry = (MPIDI_RMA_Lock_entry *) win_ptr->lock_queue;
             while (lock_entry) {
                 lock_entry_next = lock_entry->next;
 
@@ -1457,7 +1457,7 @@ int MPIDI_CH3_ReqHandler_PiggybackLockOpRecvComplete( MPIDI_VC_t *vc,
     int requested_lock;
     MPI_Win target_win_handle;
     MPID_Win *win_ptr = NULL;
-    MPIDI_Win_lock_queue *lock_queue_entry = rreq->dev.lock_queue_entry;
+    MPIDI_RMA_Lock_entry *lock_queue_entry = rreq->dev.lock_queue_entry;
     int mpi_errno = MPI_SUCCESS;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3_REQHANDLER_PIGGYBACKLOCKOPRECVCOMPLETE);
 

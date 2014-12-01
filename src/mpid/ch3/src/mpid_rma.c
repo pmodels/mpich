@@ -387,8 +387,8 @@ static int win_init(MPI_Aint size, int disp_unit, int create_flavor, int model,
 
     /* FIXME: we can optimize by letting the user to pass WIN INFO hint if they will not use passive target,
        in such case we do not need to allocate window pool for lock entries. */
-    MPIU_CHKPMEM_MALLOC((*win_ptr)->lock_entry_pool_start, struct MPIDI_Win_lock_queue *,
-                        sizeof(MPIDI_Win_lock_queue) * MPIR_CVAR_CH3_RMA_LOCK_ENTRY_WIN_POOL_SIZE,
+    MPIU_CHKPMEM_MALLOC((*win_ptr)->lock_entry_pool_start, struct MPIDI_RMA_Lock_entry *,
+                        sizeof(MPIDI_RMA_Lock_entry) * MPIR_CVAR_CH3_RMA_LOCK_ENTRY_WIN_POOL_SIZE,
                         mpi_errno, "RMA lock entry pool");
     (*win_ptr)->lock_entry_pool = NULL;
     (*win_ptr)->lock_entry_pool_tail = NULL;

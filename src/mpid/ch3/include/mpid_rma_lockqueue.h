@@ -19,10 +19,10 @@ MPIR_T_PVAR_DOUBLE_TIMER_DECL_EXTERN(RMA, rma_winlock_getlocallock);
 #define FUNCNAME MPIDI_CH3I_Win_lock_entry_alloc
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-static inline MPIDI_Win_lock_queue *MPIDI_CH3I_Win_lock_entry_alloc(MPID_Win * win_ptr,
+static inline MPIDI_RMA_Lock_entry *MPIDI_CH3I_Win_lock_entry_alloc(MPID_Win * win_ptr,
                                                                     MPIDI_CH3_Pkt_t *pkt)
 {
-    MPIDI_Win_lock_queue *new_ptr = NULL;
+    MPIDI_RMA_Lock_entry *new_ptr = NULL;
 
     if (win_ptr->lock_entry_pool != NULL) {
         new_ptr = win_ptr->lock_entry_pool;
@@ -46,7 +46,7 @@ static inline MPIDI_Win_lock_queue *MPIDI_CH3I_Win_lock_entry_alloc(MPID_Win * w
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 static inline int MPIDI_CH3I_Win_lock_entry_free(MPID_Win * win_ptr,
-                                                 MPIDI_Win_lock_queue *lock_entry)
+                                                 MPIDI_RMA_Lock_entry *lock_entry)
 {
     int mpi_errno = MPI_SUCCESS;
 
