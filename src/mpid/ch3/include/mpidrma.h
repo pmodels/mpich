@@ -100,30 +100,30 @@ static inline int send_unlock_msg(int dest, MPID_Win * win_ptr,
 
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_CH3I_Send_lock_granted_pkt
+#define FUNCNAME MPIDI_CH3I_Send_lock_ack_pkt
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-static inline int MPIDI_CH3I_Send_lock_granted_pkt(MPIDI_VC_t * vc, MPID_Win * win_ptr, MPI_Win source_win_handle)
+static inline int MPIDI_CH3I_Send_lock_ack_pkt(MPIDI_VC_t * vc, MPID_Win * win_ptr, MPI_Win source_win_handle)
 {
     MPIDI_CH3_Pkt_t upkt;
-    MPIDI_CH3_Pkt_lock_granted_t *lock_granted_pkt = &upkt.lock_granted;
+    MPIDI_CH3_Pkt_lock_ack_t *lock_ack_pkt = &upkt.lock_ack;
     MPID_Request *req = NULL;
     int mpi_errno;
-    MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3I_SEND_LOCK_GRANTED_PKT);
+    MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3I_SEND_LOCK_ACK_PKT);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3I_SEND_LOCK_GRANTED_PKT);
+    MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3I_SEND_LOCK_ACK_PKT);
 
-    /* send lock granted packet */
-    MPIDI_Pkt_init(lock_granted_pkt, MPIDI_CH3_PKT_LOCK_GRANTED);
-    lock_granted_pkt->source_win_handle = source_win_handle;
-    lock_granted_pkt->target_rank = win_ptr->comm_ptr->rank;
+    /* send lock ack packet */
+    MPIDI_Pkt_init(lock_ack_pkt, MPIDI_CH3_PKT_LOCK_ACK);
+    lock_ack_pkt->source_win_handle = source_win_handle;
+    lock_ack_pkt->target_rank = win_ptr->comm_ptr->rank;
 
     MPIU_DBG_MSG_FMT(CH3_OTHER, VERBOSE,
-                     (MPIU_DBG_FDEST, "sending lock granted pkt on vc=%p, source_win_handle=%#08x",
-                      vc, lock_granted_pkt->source_win_handle));
+                     (MPIU_DBG_FDEST, "sending lock ack pkt on vc=%p, source_win_handle=%#08x",
+                      vc, lock_ack_pkt->source_win_handle));
 
     MPIU_THREAD_CS_ENTER(CH3COMM, vc);
-    mpi_errno = MPIDI_CH3_iStartMsg(vc, lock_granted_pkt, sizeof(*lock_granted_pkt), &req);
+    mpi_errno = MPIDI_CH3_iStartMsg(vc, lock_ack_pkt, sizeof(*lock_ack_pkt), &req);
     MPIU_THREAD_CS_EXIT(CH3COMM, vc);
     if (mpi_errno) {
         MPIU_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**ch3|rmamsg");
@@ -134,7 +134,7 @@ static inline int MPIDI_CH3I_Send_lock_granted_pkt(MPIDI_VC_t * vc, MPID_Win * w
     }
 
   fn_fail:
-    MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3I_SEND_LOCK_GRANTED_PKT);
+    MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3I_SEND_LOCK_ACK_PKT);
 
     return mpi_errno;
 }
@@ -632,7 +632,7 @@ static inline int finish_op_on_target(MPID_Win *win_ptr, MPIDI_VC_t *vc,
         if (flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK) {
             if (!(flags & MPIDI_CH3_PKT_FLAG_RMA_FLUSH) &&
                 !(flags & MPIDI_CH3_PKT_FLAG_RMA_UNLOCK)) {
-                mpi_errno = MPIDI_CH3I_Send_lock_granted_pkt(vc, win_ptr, source_win_handle);
+                mpi_errno = MPIDI_CH3I_Send_lock_ack_pkt(vc, win_ptr, source_win_handle);
                 if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
                 MPIDI_CH3_Progress_signal_completion();
             }

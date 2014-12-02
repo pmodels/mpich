@@ -146,8 +146,8 @@ void MPIDI_DBG_Print_packet(MPIDI_CH3_Pkt_t *pkt)
 	    case MPIDI_CH3_PKT_FLUSH_ACK:
 		MPIDI_CH3_PktPrint_FlushAck( stdout, pkt );
 		break;
-	    case MPIDI_CH3_PKT_LOCK_GRANTED:
-		MPIDI_CH3_PktPrint_LockGranted( stdout, pkt );
+	    case MPIDI_CH3_PKT_LOCK_ACK:
+		MPIDI_CH3_PktPrint_LockAck( stdout, pkt );
 		break;
 		/*
 	    case MPIDI_CH3_PKT_SHARED_LOCK_OPS_DONE:
@@ -339,10 +339,10 @@ const char *MPIDI_Pkt_GetDescString( MPIDI_CH3_Pkt_t *pkt )
 		       "RMA_DONE - 0x%08X", 
 		       pkt->flush_ack.source_win_handle );
 	break;
-    case MPIDI_CH3_PKT_LOCK_GRANTED:
+    case MPIDI_CH3_PKT_LOCK_ACK:
 	MPIU_Snprintf( pktmsg, sizeof(pktmsg), 
-		       "LOCK_GRANTED - 0x%08X", 
-		       pkt->lock_granted.source_win_handle );
+		       "LOCK_ACK - 0x%08X",
+		       pkt->lock_ack.source_win_handle );
 		break;
     case MPIDI_CH3_PKT_FLOW_CNTL_UPDATE:
 	MPIU_Snprintf( pktmsg, sizeof(pktmsg), 

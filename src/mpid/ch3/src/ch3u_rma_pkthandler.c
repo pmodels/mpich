@@ -18,7 +18,7 @@ MPIR_T_PVAR_DOUBLE_TIMER_DECL(RMA, rma_rmapkt_get_accum_resp);
 MPIR_T_PVAR_DOUBLE_TIMER_DECL(RMA, rma_rmapkt_cas_resp);
 MPIR_T_PVAR_DOUBLE_TIMER_DECL(RMA, rma_rmapkt_fop_resp);
 MPIR_T_PVAR_DOUBLE_TIMER_DECL(RMA, rma_rmapkt_lock);
-MPIR_T_PVAR_DOUBLE_TIMER_DECL(RMA, rma_rmapkt_lock_granted);
+MPIR_T_PVAR_DOUBLE_TIMER_DECL(RMA, rma_rmapkt_lock_ack);
 MPIR_T_PVAR_DOUBLE_TIMER_DECL(RMA, rma_rmapkt_unlock);
 MPIR_T_PVAR_DOUBLE_TIMER_DECL(RMA, rma_rmapkt_flush);
 MPIR_T_PVAR_DOUBLE_TIMER_DECL(RMA, rma_rmapkt_flush_ack);
@@ -128,11 +128,11 @@ void MPIDI_CH3_RMA_Init_pkthandler_pvars(void)
     /* rma_rmapkt_lock_granted */
     MPIR_T_PVAR_TIMER_REGISTER_STATIC(RMA,
                                       MPI_DOUBLE,
-                                      rma_rmapkt_lock_granted,
+                                      rma_rmapkt_lock_ack,
                                       MPI_T_VERBOSITY_MPIDEV_DETAIL,
                                       MPI_T_BIND_NO_OBJECT,
                                       MPIR_T_PVAR_FLAG_READONLY,
-                                      "RMA", "RMA:PKTHANDLER for Lock-Granted (in seconds)");
+                                      "RMA", "RMA:PKTHANDLER for Lock-Ack (in seconds)");
 
     /* rma_rmapkt_unlock */
     MPIR_T_PVAR_TIMER_REGISTER_STATIC(RMA,
@@ -1328,7 +1328,7 @@ int MPIDI_CH3_PktHandler_Lock(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
 
     if (MPIDI_CH3I_Try_acquire_win_lock(win_ptr, lock_pkt->lock_type) == 1) {
         /* send lock granted packet. */
-        mpi_errno = MPIDI_CH3I_Send_lock_granted_pkt(vc, win_ptr, lock_pkt->source_win_handle);
+        mpi_errno = MPIDI_CH3I_Send_lock_ack_pkt(vc, win_ptr, lock_pkt->source_win_handle);
         if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
     }
 
@@ -1441,27 +1441,27 @@ int MPIDI_CH3_PktHandler_GetResp(MPIDI_VC_t * vc ATTRIBUTE((unused)),
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_CH3_PktHandler_LockGranted
+#define FUNCNAME MPIDI_CH3_PktHandler_LockAck
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-int MPIDI_CH3_PktHandler_LockGranted(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
+int MPIDI_CH3_PktHandler_LockAck(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
                                      MPIDI_msg_sz_t * buflen, MPID_Request ** rreqp)
 {
-    MPIDI_CH3_Pkt_lock_granted_t *lock_granted_pkt = &pkt->lock_granted;
+    MPIDI_CH3_Pkt_lock_ack_t *lock_ack_pkt = &pkt->lock_ack;
     MPID_Win *win_ptr = NULL;
-    int target_rank = lock_granted_pkt->target_rank;
+    int target_rank = lock_ack_pkt->target_rank;
     int mpi_errno = MPI_SUCCESS;
-    MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3_PKTHANDLER_LOCKGRANTED);
+    MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3_PKTHANDLER_LOCKACK);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3_PKTHANDLER_LOCKGRANTED);
+    MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3_PKTHANDLER_LOCKACK);
 
-    MPIU_DBG_MSG(CH3_OTHER, VERBOSE, "received lock granted pkt");
+    MPIU_DBG_MSG(CH3_OTHER, VERBOSE, "received lock ack pkt");
 
-    MPIR_T_PVAR_TIMER_START(RMA, rma_rmapkt_lock_granted);
+    MPIR_T_PVAR_TIMER_START(RMA, rma_rmapkt_lock_ack);
 
     *buflen = sizeof(MPIDI_CH3_Pkt_t);
 
-    MPID_Win_get_ptr(lock_granted_pkt->source_win_handle, win_ptr);
+    MPID_Win_get_ptr(lock_ack_pkt->source_win_handle, win_ptr);
 
     mpi_errno = set_lock_sync_counter(win_ptr, target_rank);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
@@ -1469,8 +1469,8 @@ int MPIDI_CH3_PktHandler_LockGranted(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
     *rreqp = NULL;
     MPIDI_CH3_Progress_signal_completion();
 
-    MPIR_T_PVAR_TIMER_END(RMA, rma_rmapkt_lock_granted);
-    MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3_PKTHANDLER_LOCKGRANTED);
+    MPIR_T_PVAR_TIMER_END(RMA, rma_rmapkt_lock_ack);
+    MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3_PKTHANDLER_LOCKACK);
  fn_exit:
     return MPI_SUCCESS;
  fn_fail:
@@ -1712,10 +1712,10 @@ int MPIDI_CH3_PktPrint_FlushAck(FILE * fp, MPIDI_CH3_Pkt_t * pkt)
     return MPI_SUCCESS;
 }
 
-int MPIDI_CH3_PktPrint_LockGranted(FILE * fp, MPIDI_CH3_Pkt_t * pkt)
+int MPIDI_CH3_PktPrint_LockAck(FILE * fp, MPIDI_CH3_Pkt_t * pkt)
 {
-    MPIU_DBG_PRINTF((" type ......... MPIDI_CH3_PKT_LOCK_GRANTED\n"));
-    MPIU_DBG_PRINTF((" source ....... 0x%08X\n", pkt->lock_granted.source_win_handle));
+    MPIU_DBG_PRINTF((" type ......... MPIDI_CH3_PKT_LOCK_ACK\n"));
+    MPIU_DBG_PRINTF((" source ....... 0x%08X\n", pkt->lock_ack.source_win_handle));
     return MPI_SUCCESS;
 }
 #endif

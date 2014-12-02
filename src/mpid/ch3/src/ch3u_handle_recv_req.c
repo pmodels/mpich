@@ -1305,7 +1305,7 @@ static inline int perform_op_in_lock_queue(MPID_Win *win_ptr, MPIDI_RMA_Lock_ent
             MPIDI_VC_t *vc = NULL;
             MPIDI_Comm_get_vc_set_active(win_ptr->comm_ptr,
                                          lock_pkt->origin_rank, &vc);
-            mpi_errno = MPIDI_CH3I_Send_lock_granted_pkt(vc, win_ptr,
+            mpi_errno = MPIDI_CH3I_Send_lock_ack_pkt(vc, win_ptr,
                                               lock_pkt->source_win_handle);
             if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
         }

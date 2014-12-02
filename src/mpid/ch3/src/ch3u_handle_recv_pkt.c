@@ -579,8 +579,8 @@ int MPIDI_CH3_PktHandler_Init( MPIDI_CH3_PktHandler_Fcn *pktArray[],
 	MPIDI_CH3_PktHandler_GetResp;
     pktArray[MPIDI_CH3_PKT_LOCK] =
 	MPIDI_CH3_PktHandler_Lock;
-    pktArray[MPIDI_CH3_PKT_LOCK_GRANTED] =
-	MPIDI_CH3_PktHandler_LockGranted;
+    pktArray[MPIDI_CH3_PKT_LOCK_ACK] =
+	MPIDI_CH3_PktHandler_LockAck;
     pktArray[MPIDI_CH3_PKT_UNLOCK] =
         MPIDI_CH3_PktHandler_Unlock;
     pktArray[MPIDI_CH3_PKT_FLUSH] =

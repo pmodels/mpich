@@ -89,7 +89,7 @@ typedef enum {
     MPIDI_CH3_PKT_UNLOCK,
     MPIDI_CH3_PKT_FLUSH,
     MPIDI_CH3_PKT_DECR_AT_COUNTER,
-    MPIDI_CH3_PKT_LOCK_GRANTED,
+    MPIDI_CH3_PKT_LOCK_ACK,
     MPIDI_CH3_PKT_FLUSH_ACK,
     /* RMA Packets end here */
     MPIDI_CH3_PKT_FLOW_CNTL_UPDATE,     /* FIXME: Unused */
@@ -638,15 +638,15 @@ typedef struct MPIDI_CH3_Pkt_decr_at_counter {
 } MPIDI_CH3_Pkt_decr_at_counter_t;
 
 /*********************************************************************************/
-/* RMA control response packet (from target to origin, including LOCK_GRANTED,   */
+/* RMA control response packet (from target to origin, including LOCK_ACK,       */
 /* FLUSH_ACK)                                                                    */
 /*********************************************************************************/
 
-typedef struct MPIDI_CH3_Pkt_lock_granted {
+typedef struct MPIDI_CH3_Pkt_lock_ack {
     MPIDI_CH3_Pkt_type_t type;
     MPI_Win source_win_handle;
     int target_rank;
-} MPIDI_CH3_Pkt_lock_granted_t;
+} MPIDI_CH3_Pkt_lock_ack_t;
 
 typedef struct MPIDI_CH3_Pkt_flush_ack {
     MPIDI_CH3_Pkt_type_t type;
@@ -696,7 +696,7 @@ typedef union MPIDI_CH3_Pkt {
     MPIDI_CH3_Pkt_unlock_t unlock;
     MPIDI_CH3_Pkt_flush_t flush;
     MPIDI_CH3_Pkt_decr_at_counter_t decr_at_cnt;
-    MPIDI_CH3_Pkt_lock_granted_t lock_granted;
+    MPIDI_CH3_Pkt_lock_ack_t lock_ack;
     MPIDI_CH3_Pkt_flush_ack_t flush_ack;
     /* RMA packets end here */
     MPIDI_CH3_Pkt_close_t close;
