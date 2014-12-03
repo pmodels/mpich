@@ -339,21 +339,34 @@ static inline int enqueue_lock_origin(MPID_Win *win_ptr, MPIDI_VC_t *vc,
 
 static inline int set_lock_sync_counter(MPID_Win *win_ptr, int target_rank)
 {
+    MPIDI_RMA_Target_t *t = NULL;
     int mpi_errno = MPI_SUCCESS;
 
-    if (win_ptr->outstanding_locks > 0) {
+    MPIU_Assert(win_ptr->states.access_state == MPIDI_RMA_PER_TARGET ||
+                win_ptr->states.access_state == MPIDI_RMA_LOCK_ALL_CALLED ||
+                win_ptr->states.access_state == MPIDI_RMA_LOCK_ALL_ISSUED);
+
+    if (win_ptr->states.access_state == MPIDI_RMA_LOCK_ALL_CALLED) {
+        MPIDI_VC_t *orig_vc = NULL, *target_vc = NULL;
+        MPIDI_Comm_get_vc(win_ptr->comm_ptr, win_ptr->comm_ptr->rank, &orig_vc);
+        MPIDI_Comm_get_vc(win_ptr->comm_ptr, target_rank, &target_vc);
+        if (win_ptr->comm_ptr->rank == target_rank ||
+            (win_ptr->shm_allocated == TRUE && orig_vc->node_id == target_vc->node_id)) {
+            win_ptr->outstanding_locks--;
+            MPIU_Assert(win_ptr->outstanding_locks >= 0);
+            goto fn_exit;
+        }
+    }
+    else if (win_ptr->states.access_state == MPIDI_RMA_LOCK_ALL_ISSUED) {
         win_ptr->outstanding_locks--;
         MPIU_Assert(win_ptr->outstanding_locks >= 0);
+        goto fn_exit;
     }
-    else {
-        MPIDI_RMA_Target_t *t = NULL;
-        mpi_errno = MPIDI_CH3I_Win_find_target(win_ptr, target_rank, &t);
-        if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
-        MPIU_Assert(t != NULL);
 
-        t->outstanding_lock--;
-        MPIU_Assert(t->outstanding_lock == 0);
-    }
+    mpi_errno = MPIDI_CH3I_Win_find_target(win_ptr, target_rank, &t);
+    if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
+    MPIU_Assert(t != NULL);
+    t->access_state = MPIDI_RMA_LOCK_GRANTED;
 
  fn_exit:
     return mpi_errno;

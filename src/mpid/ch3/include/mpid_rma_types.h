@@ -85,7 +85,6 @@ typedef struct MPIDI_RMA_Target {
     enum MPIDI_RMA_states access_state;
     int lock_type; /* NONE, SHARED, EXCLUSIVE */
     int lock_mode;              /* e.g., MODE_NO_CHECK */
-    int outstanding_lock;
     int accumulated_ops_cnt;
     int disable_flush_local;
     int win_complete_flag;
