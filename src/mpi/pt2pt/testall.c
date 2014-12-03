@@ -166,7 +166,7 @@ int MPI_Testall(int count, MPI_Request array_of_requests[], int *flag,
                                                              &(array_of_statuses[i]));
 	    if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 	}
-	if (request_ptrs[i] != NULL && (MPID_Request_is_complete(request_ptrs[i]) || MPID_Request_is_pending_failure(request_ptrs[i])))
+	if (request_ptrs[i] != NULL && (MPID_Request_is_complete(request_ptrs[i]))
 	{
 	    n_completed++;
             rc = MPIR_Request_get_error(request_ptrs[i]);

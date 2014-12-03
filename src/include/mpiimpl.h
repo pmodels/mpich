@@ -3631,23 +3631,6 @@ void MPID_Request_set_completed(MPID_Request *);
 @*/
 void MPID_Request_release(MPID_Request *);
 
-/*@
-  MPID_Request_is_pending_failure - Check if a request is pending because of a process failures
-
-  Input Parameter:
-  request - request to check
-
-  Return value:
-  0 - The request is not pending because of a failure
-  Non-zero - The request is pending because of a failure
-
-  Notes:
-  This routine checks to see if the communicator used in the request can
-  participate in MPI_ANY_SOURCE operations and if this request is already
-  pending due to a process failure.
-@*/
-int MPID_Request_is_pending_failure(MPID_Request *);
-
 typedef struct MPID_Grequest_class {
      MPIU_OBJECT_HEADER; /* adds handle and ref_count fields */
      MPI_Grequest_query_function *query_fn;

@@ -49,10 +49,6 @@ int MPID_Irecv(void * buf, int count, MPI_Datatype datatype, int rank, int tag,
 	MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**nomemreq");
     }
 
-    if (MPIR_ERR_GET_CLASS(rreq->status.MPI_ERROR) == MPIX_ERR_PROC_FAILED_PENDING) {
-        mpi_errno = rreq->status.MPI_ERROR;
-    }
-
     if (found)
     {
 	MPIDI_VC_t * vc;

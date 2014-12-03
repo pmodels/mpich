@@ -559,12 +559,6 @@ MPID_Request * MPIDI_CH3U_Recvq_FDU_or_AEP(int source, int tag,
             if (tag == MPI_ANY_TAG)
                 match.parts.tag = mask.parts.tag = 0;
             if (source == MPI_ANY_SOURCE) {
-                if (!MPIDI_CH3I_Comm_AS_enabled(comm)) {
-                    /* If MPI_ANY_SOURCE is disabled right now, we should
-                     * just add this request to the posted queue instead and
-                     * return the appropriate error. */
-                    continue;
-                }
                 match.parts.rank = mask.parts.rank = 0;
             }
             do {
@@ -639,17 +633,8 @@ MPID_Request * MPIDI_CH3U_Recvq_FDU_or_AEP(int source, int tag,
                 MPIDI_CH3U_Request_complete(rreq);
                 goto lock_exit;
             }
-        } else if (!MPIDI_CH3I_Comm_AS_enabled(comm)) {
-            /* If this receive is for MPI_ANY_SOURCE, we will still add the
-            * request to the queue for now, but we will also set the error
-            * class to MPIX_ERR_PROC_FAILED_PENDING since the request shouldn't
-            * be matched as long as there is a failure pending. This will get
-            * checked again later during the completion function to see if the
-            * request can be completed at that time. */
-            MPIU_ERR_SET(mpi_errno, MPIX_ERR_PROC_FAILED_PENDING, "**failure_pending");
-            rreq->status.MPI_ERROR = mpi_errno;
         }
-        
+
 	rreq->dev.next = NULL;
 	if (recvq_posted_tail != NULL) {
 	    recvq_posted_tail->dev.next = rreq;
@@ -1133,46 +1118,6 @@ int MPIDI_CH3U_Clean_recvq(MPID_Comm *comm_ptr)
 
     return mpi_errno;
 }
-
-#undef FUNCNAME
-#define FUNCNAME MPIDI_CH3U_Complete_disabled_anysources
-#undef FCNAME
-#define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPIDI_CH3U_Complete_disabled_anysources(void)
-{
-    int mpi_errno = MPI_SUCCESS;
-    MPID_Request *req, *prev_req;
-    int error = MPI_SUCCESS;
-    MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3U_COMPLETE_DISABLED_ANYSOURCES);
-
-    MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3U_COMPLETE_DISABLED_ANYSOURCES);
-    MPIU_THREAD_CS_ENTER(MSGQUEUE,);
-
-    MPIU_ERR_SETSIMPLE(error, MPIX_ERR_PROC_FAILED_PENDING, "**failure_pending");
-
-    /* Check each request in the posted queue, and complete-with-error any
-       anysource requests posted on communicators that have disabled
-       anysources */
-    req = recvq_posted_head;
-    prev_req = NULL;
-    while (req) {
-        if (req->dev.match.parts.rank == MPI_ANY_SOURCE && !MPIDI_CH3I_Comm_AS_enabled(req->comm)) {
-            dequeue_and_set_error(&req, prev_req, &recvq_posted_head, &recvq_posted_tail, &error, MPI_PROC_NULL); /* we don't know the rank of the failed proc */
-        } else {
-            prev_req = req;
-            req = req->dev.next;
-        }
-    }
-
- fn_exit:
-    MPIU_THREAD_CS_EXIT(MSGQUEUE,);
-
-    MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3U_COMPLETE_DISABLED_ANYSOURCES);
-    return mpi_errno;
- fn_fail:
-    goto fn_exit;
-}
-
 
 #undef FUNCNAME
 #define FUNCNAME MPIDU_Complete_posted_with_error

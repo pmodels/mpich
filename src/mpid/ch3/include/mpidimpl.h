@@ -1527,7 +1527,6 @@ MPID_Request * MPIDI_CH3U_Recvq_FDP_or_AEU(MPIDI_Message_match * match,
 					   int * found);
 int MPIDI_CH3U_Recvq_count_unexp(void);
 int MPIDI_CH3U_Complete_posted_with_error(MPIDI_VC_t *vc);
-int MPIDI_CH3U_Complete_disabled_anysources(void);
 int MPIDI_CH3U_Clean_recvq(MPID_Comm *comm_ptr);
 
 
