@@ -323,6 +323,12 @@ static inline int issue_ops_target(MPID_Win * win_ptr, MPIDI_RMA_Target_t *targe
         if (mpi_errno != MPI_SUCCESS)
             MPIU_ERR_POP(mpi_errno);
 
+        if (curr_op->pkt.type == MPIDI_CH3_PKT_PUT ||
+            curr_op->pkt.type == MPIDI_CH3_PKT_ACCUMULATE) {
+            target->put_acc_issued = 1; /* set PUT_ACC_FLAG when sending
+                                           PUT/ACC operation. */
+        }
+
         if (!curr_op->request) {
             if (curr_op->ureq) {
                 /* Complete user request and release the ch3 ref */
@@ -346,8 +352,6 @@ static inline int issue_ops_target(MPID_Win * win_ptr, MPIDI_RMA_Target_t *targe
                      curr_op->pkt.type == MPIDI_CH3_PKT_ACCUMULATE) {
                 MPIDI_CH3I_RMA_Ops_append(&(target->write_op_list),
                                           &(target->write_op_list_tail), curr_op);
-                target->put_acc_issued = 1; /* set PUT_ACC_FLAG when sending
-                                               PUT/ACC operation. */
             }
             else {
                 MPIDI_CH3I_RMA_Ops_append(&(target->read_op_list),
