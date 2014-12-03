@@ -32,7 +32,7 @@ int MPI_Add_error_code(int errorclass, int *errorcode) __attribute__((weak,alias
 #define FUNCNAME MPI_Add_error_code
 
 /*@
-   MPI_Add_error_code - Add and MPI error code to an MPI error class
+   MPI_Add_error_code - Add an MPI error code to an MPI error class
 
 Input Parameters:
 .  errorclass - Error class to add an error code.
