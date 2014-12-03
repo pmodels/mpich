@@ -356,7 +356,7 @@ static int win_init(MPI_Aint size, int disp_unit, int create_flavor, int model,
     (*win_ptr)->info_args.alloc_shared_noncontig = 0;
     (*win_ptr)->info_args.alloc_shm = FALSE;
 
-    MPIU_CHKPMEM_MALLOC((*win_ptr)->op_pool_start, struct MPIDI_RMA_Op *,
+    MPIU_CHKPMEM_MALLOC((*win_ptr)->op_pool_start, MPIDI_RMA_Op_t *,
                         sizeof(MPIDI_RMA_Op_t) * MPIR_CVAR_CH3_RMA_OP_WIN_POOL_SIZE, mpi_errno,
                         "RMA op pool");
     (*win_ptr)->op_pool = NULL;
@@ -367,7 +367,7 @@ static int win_init(MPI_Aint size, int disp_unit, int create_flavor, int model,
     }
 
     win_target_pool_size = MPIR_MIN(MPIR_CVAR_CH3_RMA_TARGET_WIN_POOL_SIZE, MPIR_Comm_size(win_comm_ptr));
-    MPIU_CHKPMEM_MALLOC((*win_ptr)->target_pool_start, struct MPIDI_RMA_Target *,
+    MPIU_CHKPMEM_MALLOC((*win_ptr)->target_pool_start, MPIDI_RMA_Target_t *,
                         sizeof(MPIDI_RMA_Target_t) * win_target_pool_size,
                         mpi_errno, "RMA target pool");
     (*win_ptr)->target_pool = NULL;
@@ -378,7 +378,7 @@ static int win_init(MPI_Aint size, int disp_unit, int create_flavor, int model,
     }
 
     (*win_ptr)->num_slots = MPIR_MIN(MPIR_CVAR_CH3_RMA_SLOTS_SIZE, MPIR_Comm_size(win_comm_ptr));
-    MPIU_CHKPMEM_MALLOC((*win_ptr)->slots, struct MPIDI_RMA_Slot *,
+    MPIU_CHKPMEM_MALLOC((*win_ptr)->slots, MPIDI_RMA_Slot_t *,
                         sizeof(MPIDI_RMA_Slot_t) * (*win_ptr)->num_slots, mpi_errno, "RMA slots");
     for (i = 0; i < (*win_ptr)->num_slots; i++) {
         (*win_ptr)->slots[i].target_list = NULL;
@@ -387,8 +387,8 @@ static int win_init(MPI_Aint size, int disp_unit, int create_flavor, int model,
 
     /* FIXME: we can optimize by letting the user to pass WIN INFO hint if they will not use passive target,
        in such case we do not need to allocate window pool for lock entries. */
-    MPIU_CHKPMEM_MALLOC((*win_ptr)->lock_entry_pool_start, struct MPIDI_RMA_Lock_entry *,
-                        sizeof(MPIDI_RMA_Lock_entry) * MPIR_CVAR_CH3_RMA_LOCK_ENTRY_WIN_POOL_SIZE,
+    MPIU_CHKPMEM_MALLOC((*win_ptr)->lock_entry_pool_start, MPIDI_RMA_Lock_entry_t *,
+                        sizeof(MPIDI_RMA_Lock_entry_t) * MPIR_CVAR_CH3_RMA_LOCK_ENTRY_WIN_POOL_SIZE,
                         mpi_errno, "RMA lock entry pool");
     (*win_ptr)->lock_entry_pool = NULL;
     (*win_ptr)->lock_entry_pool_tail = NULL;

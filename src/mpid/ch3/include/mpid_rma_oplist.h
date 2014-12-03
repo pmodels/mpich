@@ -16,8 +16,8 @@ int MPIDI_CH3I_RMA_Cleanup_target_aggressive(MPID_Win * win_ptr, MPIDI_RMA_Targe
 int MPIDI_CH3I_RMA_Make_progress_target(MPID_Win * win_ptr, int target_rank, int *made_progress);
 int MPIDI_CH3I_RMA_Make_progress_win(MPID_Win * win_ptr, int *made_progress);
 
-extern struct MPIDI_RMA_Op *global_rma_op_pool, *global_rma_op_pool_tail, *global_rma_op_pool_start;
-extern struct MPIDI_RMA_Target *global_rma_target_pool, *global_rma_target_pool_tail, *global_rma_target_pool_start;
+extern MPIDI_RMA_Op_t *global_rma_op_pool, *global_rma_op_pool_tail, *global_rma_op_pool_start;
+extern MPIDI_RMA_Target_t *global_rma_target_pool, *global_rma_target_pool_tail, *global_rma_target_pool_start;
 
 MPIR_T_PVAR_DOUBLE_TIMER_DECL_EXTERN(RMA, rma_rmaqueue_alloc);
 

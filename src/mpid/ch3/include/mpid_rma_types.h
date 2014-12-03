@@ -134,7 +134,7 @@ typedef struct MPIDI_RMA_Lock_entry {
     MPIDI_CH3_Pkt_t pkt;    /* all information for this request packet */
     void *data;             /* for queued PUTs / ACCs / GACCs, data is copied here */
     int all_data_recved;    /* indicate if all data has been received */
-} MPIDI_RMA_Lock_entry;
+} MPIDI_RMA_Lock_entry_t;
 
 typedef MPIDI_RMA_Op_t *MPIDI_RMA_Ops_list_t;
 

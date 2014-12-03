@@ -461,7 +461,7 @@ int MPIDI_CH3I_RMA_Free_ops_before_completion(MPID_Win * win_ptr)
 {
     MPIDI_RMA_Op_t *curr_op = NULL;
     MPIDI_RMA_Target_t *curr_target = NULL;
-    struct MPIDI_RMA_Op **op_list = NULL, **op_list_tail = NULL;
+    MPIDI_RMA_Op_t **op_list = NULL, **op_list_tail = NULL;
     int read_flag = 0;
     int i, made_progress = 0;
     int mpi_errno = MPI_SUCCESS;

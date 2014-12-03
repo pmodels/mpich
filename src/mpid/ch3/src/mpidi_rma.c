@@ -91,9 +91,9 @@ cvars:
 */
 
 
-struct MPIDI_RMA_Op *global_rma_op_pool = NULL, *global_rma_op_pool_tail = NULL, *global_rma_op_pool_start = NULL;
-struct MPIDI_RMA_Target *global_rma_target_pool = NULL, *global_rma_target_pool_tail = NULL, *global_rma_target_pool_start = NULL;
-struct MPIDI_RMA_Pkt_orderings *MPIDI_RMA_Pkt_orderings = NULL;
+MPIDI_RMA_Op_t *global_rma_op_pool = NULL, *global_rma_op_pool_tail = NULL, *global_rma_op_pool_start = NULL;
+MPIDI_RMA_Target_t *global_rma_target_pool = NULL, *global_rma_target_pool_tail = NULL, *global_rma_target_pool_start = NULL;
+MPIDI_RMA_Pkt_orderings_t *MPIDI_RMA_Pkt_orderings = NULL;
 
 #undef FUNCNAME
 #define FUNCNAME MPIDI_RMA_init
@@ -109,16 +109,16 @@ int MPIDI_RMA_init(void)
 
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_RMA_INIT);
 
-    MPIU_CHKPMEM_MALLOC(global_rma_op_pool_start, struct MPIDI_RMA_Op *,
-                        sizeof(struct MPIDI_RMA_Op) * MPIR_CVAR_CH3_RMA_OP_GLOBAL_POOL_SIZE,
+    MPIU_CHKPMEM_MALLOC(global_rma_op_pool_start, MPIDI_RMA_Op_t *,
+                        sizeof(MPIDI_RMA_Op_t) * MPIR_CVAR_CH3_RMA_OP_GLOBAL_POOL_SIZE,
                         mpi_errno, "RMA op pool");
     for (i = 0; i < MPIR_CVAR_CH3_RMA_OP_GLOBAL_POOL_SIZE; i++) {
         global_rma_op_pool_start[i].pool_type = MPIDI_RMA_POOL_GLOBAL;
         MPL_LL_APPEND(global_rma_op_pool, global_rma_op_pool_tail, &(global_rma_op_pool_start[i]));
     }
 
-    MPIU_CHKPMEM_MALLOC(global_rma_target_pool_start, struct MPIDI_RMA_Target *,
-                        sizeof(struct MPIDI_RMA_Target) * MPIR_CVAR_CH3_RMA_TARGET_GLOBAL_POOL_SIZE,
+    MPIU_CHKPMEM_MALLOC(global_rma_target_pool_start, MPIDI_RMA_Target_t *,
+                        sizeof(MPIDI_RMA_Target_t) * MPIR_CVAR_CH3_RMA_TARGET_GLOBAL_POOL_SIZE,
                         mpi_errno, "RMA target pool");
     for (i = 0; i < MPIR_CVAR_CH3_RMA_TARGET_GLOBAL_POOL_SIZE; i++) {
         global_rma_target_pool_start[i].pool_type = MPIDI_RMA_POOL_GLOBAL;
