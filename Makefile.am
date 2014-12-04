@@ -48,7 +48,7 @@ pkgconfigdir = @pkgconfigdir@
 errnames_txt_files = 
 
 external_subdirs = @mplsrcdir@ @opasrcdir@
-external_ldflags = -L@mpllibdir@ -L@opalibdir@
+external_ldflags = @mpllibdir@ @opalibdir@
 external_libs = @EXTERNAL_LIBS@
 mpi_convenience_libs =
 pmpi_convenience_libs = @mpllib@ @opalib@

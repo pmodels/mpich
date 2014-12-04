@@ -1167,7 +1167,6 @@ if test "$with_mpl_prefix" = "embedded" ; then
     PAC_APPEND_FLAG([-I${master_top_builddir}/src/mpl/include], [CPPFLAGS])
     PAC_APPEND_FLAG([-I${use_top_srcdir}/src/mpl/include], [CPPFLAGS])
 
-    mpllibdir="${master_top_builddir}/src/mpl"
     mplsrcdir="${master_top_builddir}/src/mpl"
     mpllib="src/mpl/lib${MPLLIBNAME}.la"
 else
@@ -1178,7 +1177,7 @@ else
     PAC_APPEND_FLAG([-I${with_mpl_prefix}/include],[CPPFLAGS])
     PAC_PREPEND_FLAG([-l${MPLLIBNAME}],[EXTERNAL_LIBS])
     PAC_APPEND_FLAG([-L${with_mpl_prefix}/lib],[WRAPPER_LDFLAGS])
-    mpllibdir="${with_mpl_prefix}/lib"
+    mpllibdir="-L${with_mpl_prefix}/lib"
 fi
 
 # OpenPA
@@ -1218,7 +1217,6 @@ AC_SUBST([opalib])
 if test "$with_openpa_prefix" = "embedded" ; then
     if test -e "${use_top_srcdir}/src/openpa" ; then
         opasrcdir="${master_top_builddir}/src/openpa"
-        opalibdir="${master_top_builddir}/src/openpa/src"
         opalib="${master_top_builddir}/src/openpa/src/lib${OPALIBNAME}.la"
         PAC_APPEND_FLAG([-I${use_top_srcdir}/src/openpa/src],[CPPFLAGS])
         PAC_APPEND_FLAG([-I${master_top_builddir}/src/openpa/src],[CPPFLAGS])
@@ -1254,9 +1252,9 @@ else
     PAC_PREPEND_FLAG([-l${OPALIBNAME}],[EXTERNAL_LIBS])
     if test -d ${with_openpa_prefix}/lib64 ; then
         PAC_APPEND_FLAG([-L${with_openpa_prefix}/lib64],[WRAPPER_LDFLAGS])
-        opalibdir="${with_openpa_prefix}/lib64"
+        opalibdir="-L${with_openpa_prefix}/lib64"
     else
-        opalibdir="${with_openpa_prefix}/lib"
+        opalibdir="-L${with_openpa_prefix}/lib"
     fi
     PAC_APPEND_FLAG([-L${with_openpa_prefix}/lib],[WRAPPER_LDFLAGS])
 fi
