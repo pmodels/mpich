@@ -142,6 +142,7 @@
       implicit none
       integer ierr
       integer errs, tv, rank
+      integer(MPI_ADDRESS_KIND) tmp
 
       errs = 0
       call MPI_INIT( ierr )
@@ -193,7 +194,8 @@
            & )
 !
 !     Create a window to use with the attribute tests in Fortran
-      call MPI_WIN_CREATE( MPI_BOTTOM, 0, 1, MPI_INFO_NULL,&
+      tmp = 0
+      call MPI_WIN_CREATE( MPI_BOTTOM, tmp, 1, MPI_INFO_NULL,&
            & MPI_COMM_WORLD, win, ierr )
 !
       if (fverbose) then
