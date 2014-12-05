@@ -71,6 +71,17 @@ int MPIR_Wait_impl(MPI_Request *request, MPI_Status *status)
                 MPIU_ERR_POP(mpi_errno);
 		/* --END ERROR HANDLING-- */
 	    }
+
+            if (unlikely(
+                        MPIR_CVAR_ENABLE_FT &&
+                        MPI_ANY_SOURCE == request_ptr->dev.match.parts.rank &&
+                        !MPID_Request_is_complete(request_ptr) &&
+                        !MPIDI_CH3I_Comm_AS_enabled(request_ptr->comm))) {
+                MPID_Progress_end(&progress_state);
+                MPIU_ERR_SET(mpi_errno, MPIX_ERR_PROC_FAILED_PENDING, "**failure_pending");
+                if (status != MPI_STATUS_IGNORE) status->MPI_ERROR = mpi_errno;
+                goto fn_fail;
+            }
 	}
 	MPID_Progress_end(&progress_state);
     }

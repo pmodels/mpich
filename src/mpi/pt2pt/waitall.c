@@ -47,7 +47,7 @@ int MPIR_Waitall_impl(int count, MPI_Request array_of_requests[],
     int active_flag;
     int rc;
     int n_greqs;
-    int proc_failure = 0;
+    int proc_failure = FALSE;
     const int ignoring_statuses = (array_of_statuses == MPI_STATUSES_IGNORE);
     int optimize = ignoring_statuses; /* see NOTE-O1 */
     MPIU_CHKLMEM_DECL(1);
@@ -117,6 +117,12 @@ int MPIR_Waitall_impl(int count, MPI_Request array_of_requests[],
                  * OK for the error case to be slower */
                 if (unlikely(mpi_errno)) {
                     /* --BEGIN ERROR HANDLING-- */
+                    if (unlikely(MPIR_CVAR_ENABLE_FT &&
+                                MPI_ANY_SOURCE == request_ptrs[i]->dev.match.parts.rank &&
+                                !MPID_Request_is_complete(request_ptrs[i]) &&
+                                !MPIDI_CH3I_Comm_AS_enabled(request_ptrs[i]->comm))) {
+                        MPIU_ERR_SET(mpi_errno, MPI_ERR_IN_STATUS, "**instatus");
+                    }
                     MPID_Progress_end(&progress_state);
                     MPIU_ERR_POP(mpi_errno);
                     /* --END ERROR HANDLING-- */
@@ -165,6 +171,17 @@ int MPIR_Waitall_impl(int count, MPI_Request array_of_requests[],
                 MPID_Progress_end(&progress_state);
                 MPIU_ERR_POP(mpi_errno);
                 /* --END ERROR HANDLING-- */
+            } else if (unlikely(MPIR_CVAR_ENABLE_FT &&
+                        MPI_ANY_SOURCE == request_ptrs[i]->dev.match.parts.rank &&
+                        !MPID_Request_is_complete(request_ptrs[i]) &&
+                        !MPIDI_CH3I_Comm_AS_enabled(request_ptrs[i]->comm))) {
+                /* Check for pending failures */
+                MPID_Progress_end(&progress_state);
+                MPIU_ERR_SET(rc, MPIX_ERR_PROC_FAILED_PENDING, "**failure_pending");
+                status_ptr = (ignoring_statuses) ? MPI_STATUS_IGNORE : &array_of_statuses[i];
+                if (status_ptr != MPI_STATUS_IGNORE) status_ptr->MPI_ERROR = mpi_errno;
+                proc_failure = TRUE;
+                break;
             }
         }
 
@@ -174,7 +191,6 @@ int MPIR_Waitall_impl(int count, MPI_Request array_of_requests[],
             rc = MPIR_Request_complete(&array_of_requests[i], request_ptrs[i], status_ptr, &active_flag);
         }
 
-        }
         if (rc == MPI_SUCCESS)
         {
             request_ptrs[i] = NULL;
@@ -184,11 +200,11 @@ int MPIR_Waitall_impl(int count, MPI_Request array_of_requests[],
         else
         {
             /* req completed with an error */
-            mpi_errno = MPI_ERR_IN_STATUS;
+            MPIU_ERR_SET(mpi_errno, MPI_ERR_IN_STATUS, "**instatus");
 
             if (!proc_failure) {
                 if (MPIX_ERR_PROC_FAILED == MPIR_ERR_GET_CLASS(rc))
-                    proc_failure = 1;
+                    proc_failure = TRUE;
             }
 
             if (!ignoring_statuses)

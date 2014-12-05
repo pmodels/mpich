@@ -73,6 +73,7 @@ int MPI_Testany(int count, MPI_Request array_of_requests[], int *indx,
     int i;
     int n_inactive;
     int active_flag;
+    int last_disabled_anysource = -1;
     int mpi_errno = MPI_SUCCESS;
     MPIU_CHKLMEM_DECL(1);
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_TESTANY);
@@ -168,22 +169,40 @@ int MPI_Testany(int count, MPI_Request array_of_requests[], int *indx,
                                                              status);
 	    if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 	}
-        if (request_ptrs[i] != NULL && MPID_Request_is_complete(request_ptrs[i]))
-	{
-	    mpi_errno = MPIR_Request_complete(&array_of_requests[i], 
-					      request_ptrs[i], 
-					      status, &active_flag);
-	    if (active_flag)
-	    {
-		*flag = TRUE;
-		*indx = i;
-		goto fn_exit;
-	    }
-	    else
-	    {
-		n_inactive += 1;
-	    }
+        if (request_ptrs[i] != NULL)
+        {
+            if (MPID_Request_is_complete(request_ptrs[i]))
+            {
+                mpi_errno = MPIR_Request_complete(&array_of_requests[i],
+                        request_ptrs[i],
+                        status, &active_flag);
+                if (active_flag)
+                {
+                    *flag = TRUE;
+                    *indx = i;
+                    goto fn_exit;
+                }
+                else
+                {
+                    n_inactive += 1;
+                }
+            } else if (unlikely(MPIR_CVAR_ENABLE_FT &&
+                        MPI_ANY_SOURCE == request_ptrs[i]->dev.match.parts.rank &&
+                        !MPIDI_CH3I_Comm_AS_enabled(request_ptrs[i]->comm)))
+            {
+                last_disabled_anysource = i;
+            }
         }
+    }
+
+    /* If none of the requests completed, mark the last anysource request as
+     * pending failure. */
+    if (unlikely(last_disabled_anysource != -1))
+    {
+        MPIU_ERR_SET(mpi_errno, MPIX_ERR_PROC_FAILED_PENDING, "**failure_pending");
+        if (status != MPI_STATUS_IGNORE) status->MPI_ERROR = mpi_errno;
+        *flag = TRUE;
+        goto fn_fail;
     }
     
     if (n_inactive == count)

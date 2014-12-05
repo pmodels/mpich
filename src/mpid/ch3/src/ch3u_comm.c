@@ -384,6 +384,10 @@ int MPIDI_CH3I_Comm_handle_failed_procs(MPID_Group *new_failed_procs)
         }
     }
 
+    /* Signal that something completed here to allow the progress engine to
+     * break out and return control to the user. */
+    MPIDI_CH3_Progress_signal_completion();
+
  fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3I_COMM_HANDLE_FAILED_PROCS);
     return mpi_errno;

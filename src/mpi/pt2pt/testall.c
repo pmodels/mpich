@@ -87,7 +87,7 @@ int MPI_Testall(int count, MPI_Request array_of_requests[], int *flag,
     int n_completed;
     int active_flag;
     int rc;
-    int proc_failure = 0;
+    int proc_failure = FALSE;
     int mpi_errno = MPI_SUCCESS;
     MPIU_CHKLMEM_DECL(1);
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_TESTALL);
@@ -166,18 +166,29 @@ int MPI_Testall(int count, MPI_Request array_of_requests[], int *flag,
                                                              &(array_of_statuses[i]));
 	    if (mpi_errno != MPI_SUCCESS) goto fn_fail;
 	}
-	if (request_ptrs[i] != NULL && (MPID_Request_is_complete(request_ptrs[i]))
-	{
-	    n_completed++;
-            rc = MPIR_Request_get_error(request_ptrs[i]);
-            if (rc != MPI_SUCCESS)
+        if (request_ptrs[i] != NULL)
+        {
+            if (MPID_Request_is_complete(request_ptrs[i]))
             {
-                if (MPIX_ERR_PROC_FAILED == MPIR_ERR_GET_CLASS(rc) ||
-                    MPIX_ERR_PROC_FAILED_PENDING == MPIR_ERR_GET_CLASS(rc))
-                    proc_failure = 1;
+                n_completed++;
+                rc = MPIR_Request_get_error(request_ptrs[i]);
+                if (rc != MPI_SUCCESS)
+                {
+                    if (MPIX_ERR_PROC_FAILED == MPIR_ERR_GET_CLASS(rc) || MPIX_ERR_PROC_FAILED_PENDING == MPIR_ERR_GET_CLASS(rc))
+                        proc_failure = TRUE;
+                    mpi_errno = MPI_ERR_IN_STATUS;
+                }
+            } else if (unlikely(MPIR_CVAR_ENABLE_FT &&
+                        MPI_ANY_SOURCE == request_ptrs[i]->dev.match.parts.rank &&
+                        !MPIDI_CH3I_Comm_AS_enabled(request_ptrs[i]->comm)))
+            {
                 mpi_errno = MPI_ERR_IN_STATUS;
+                MPIU_ERR_SET(rc, MPIX_ERR_PROC_FAILED_PENDING, "**failure_pending");
+                status_ptr = (array_of_statuses != MPI_STATUSES_IGNORE) ? &array_of_statuses[i] : MPI_STATUS_IGNORE;
+                if (status_ptr != MPI_STATUS_IGNORE) status_ptr->MPI_ERROR = rc;
+                proc_failure = TRUE;
             }
-	}
+        }
     }
     
     if (n_completed == count || mpi_errno == MPI_ERR_IN_STATUS)
