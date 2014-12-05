@@ -733,10 +733,10 @@ void ADIOI_P2PContigReadAggregation(ADIO_File fd,
 
 		    }
 		    if (currentReadBuf == 0) {
-			read_buf = read_buf0;
+			read_buf = read_buf1;
 		    }
 		    else {
-			read_buf = read_buf1;
+			read_buf = read_buf0;
 		    }
 
 		}
