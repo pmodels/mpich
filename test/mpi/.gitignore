@@ -451,6 +451,7 @@
 /f08/io/iwriteatallf90.f90
 /f08/io/iwriteatallf90
 /f08/io/i_fcoll_test
+/f08/io/testlist
 /group/errstring
 /group/grouptest
 /group/groupcreate
