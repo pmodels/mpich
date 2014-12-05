@@ -200,8 +200,9 @@ N*/
   non-negative; a count of zero is often valid.
 N*/
 /*N MPI_ERR_TYPE
-. MPI_ERR_TYPE - Invalid datatype argument.  May be an uncommitted 
-  MPI_Datatype (see 'MPI_Type_commit').
+. MPI_ERR_TYPE - Invalid datatype argument.  Additionally, this error can
+  occur if an uncommitted MPI_Datatype (see 'MPI_Type_commit') is used
+  in a communication call.
 N*/
 /*N MPI_ERR_TAG
 .  MPI_ERR_TAG - Invalid tag argument.  Tags must be non-negative; tags
