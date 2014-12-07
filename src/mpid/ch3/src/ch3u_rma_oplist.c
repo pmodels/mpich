@@ -37,8 +37,6 @@ static inline int check_window_state(MPID_Win *win_ptr, int *made_progress);
 static inline int issue_ops_target(MPID_Win * win_ptr, MPIDI_RMA_Target_t *target, int *made_progress);
 static inline int issue_ops_win(MPID_Win * win_ptr, int *made_progress);
 
-static int send_flush_msg(int dest, MPID_Win *win_ptr);
-
 /* check if we can switch window-wide state: FENCE_ISSUED, PSCW_ISSUED, LOCK_ALL_ISSUED */
 #undef FUNCNAME
 #define FUNCNAME check_window_state
@@ -825,44 +823,4 @@ int MPIDI_CH3I_RMA_Make_progress_global(int *made_progress)
     return mpi_errno;
   fn_fail:
     goto fn_exit;
-}
-
-
-#undef FUNCNAME
-#define FUNCNAME send_flush_msg
-#undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
-static int send_flush_msg(int dest, MPID_Win * win_ptr)
-{
-    int mpi_errno = MPI_SUCCESS;
-    MPIDI_CH3_Pkt_t upkt;
-    MPIDI_CH3_Pkt_flush_t *flush_pkt = &upkt.flush;
-    MPID_Request *req = NULL;
-    MPIDI_VC_t *vc;
-    MPIDI_STATE_DECL(MPID_STATE_SEND_FLUSH_MSG);
-    MPIDI_RMA_FUNC_ENTER(MPID_STATE_SEND_FLUSH_MSG);
-
-    MPIDI_Comm_get_vc_set_active(win_ptr->comm_ptr, dest, &vc);
-
-    MPIDI_Pkt_init(flush_pkt, MPIDI_CH3_PKT_FLUSH);
-    flush_pkt->target_win_handle = win_ptr->all_win_handles[dest];
-    flush_pkt->source_win_handle = win_ptr->handle;
-
-    MPIU_THREAD_CS_ENTER(CH3COMM, vc);
-    mpi_errno = MPIDI_CH3_iStartMsg(vc, flush_pkt, sizeof(*flush_pkt), &req);
-    MPIU_THREAD_CS_EXIT(CH3COMM, vc);
-    MPIU_ERR_CHKANDJUMP(mpi_errno != MPI_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**ch3|rma_msg");
-
-    /* Release the request returned by iStartMsg */
-    if (req != NULL) {
-        MPID_Request_release(req);
-    }
-
-  fn_exit:
-    MPIDI_RMA_FUNC_EXIT(MPID_STATE_SEND_FLUSH_MSG);
-    return mpi_errno;
-    /* --BEGIN ERROR HANDLING-- */
-  fn_fail:
-    goto fn_exit;
-    /* --END ERROR HANDLING-- */
 }
