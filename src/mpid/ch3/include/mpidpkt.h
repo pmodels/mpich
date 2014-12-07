@@ -647,6 +647,7 @@ typedef struct MPIDI_CH3_Pkt_decr_at_counter {
 
 typedef struct MPIDI_CH3_Pkt_lock_ack {
     MPIDI_CH3_Pkt_type_t type;
+    MPIDI_CH3_Pkt_flags_t flags;
     MPI_Win source_win_handle;
     int target_rank;
 } MPIDI_CH3_Pkt_lock_ack_t;

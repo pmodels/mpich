@@ -1328,7 +1328,8 @@ int MPIDI_CH3_PktHandler_Lock(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
 
     if (MPIDI_CH3I_Try_acquire_win_lock(win_ptr, lock_pkt->lock_type) == 1) {
         /* send lock granted packet. */
-        mpi_errno = MPIDI_CH3I_Send_lock_ack_pkt(vc, win_ptr, lock_pkt->source_win_handle);
+        mpi_errno = MPIDI_CH3I_Send_lock_ack_pkt(vc, win_ptr, MPIDI_CH3_PKT_FLAG_RMA_LOCK_GRANTED,
+                                                 lock_pkt->source_win_handle);
         if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
     }
 
