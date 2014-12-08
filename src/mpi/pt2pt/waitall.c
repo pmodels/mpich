@@ -48,6 +48,7 @@ int MPIR_Waitall_impl(int count, MPI_Request array_of_requests[],
     int rc;
     int n_greqs;
     int proc_failure = FALSE;
+    int disabled_anysource = FALSE;
     const int ignoring_statuses = (array_of_statuses == MPI_STATUSES_IGNORE);
     int optimize = ignoring_statuses; /* see NOTE-O1 */
     MPIU_CHKLMEM_DECL(1);
@@ -86,6 +87,16 @@ int MPIR_Waitall_impl(int count, MPI_Request array_of_requests[],
 
             if (request_ptrs[i]->kind == MPID_UREQUEST)
                 ++n_greqs;
+
+            /* If one of the requests is an anysource on a communicator that's
+             * disabled such communication, convert this operation to a testall
+             * instead to prevent getting stuck in the progress engine. */
+            if (unlikely(MPIR_CVAR_ENABLE_FT &&
+                        MPI_ANY_SOURCE == request_ptrs[i]->dev.match.parts.rank &&
+                        !MPID_Request_is_complete(request_ptrs[i]) &&
+                        !MPIDI_CH3I_Comm_AS_enabled(request_ptrs[i]->comm))) {
+                disabled_anysource = TRUE;
+            }
 	}
 	else
 	{
@@ -100,6 +111,11 @@ int MPIR_Waitall_impl(int count, MPI_Request array_of_requests[],
     if (n_completed == count)
     {
 	goto fn_exit;
+    }
+
+    if (unlikely(disabled_anysource)) {
+        mpi_errno = MPI_Testall(count, array_of_requests, &disabled_anysource, array_of_statuses);
+        goto fn_exit;
     }
 
     /* NOTE-O1: high-message-rate optimization.  For simple send and recv

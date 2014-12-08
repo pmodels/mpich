@@ -46,7 +46,17 @@ int MPIR_Wait_impl(MPI_Request *request, MPI_Status *status)
     if (!MPID_Request_is_complete(request_ptr))
     {
 	MPID_Progress_state progress_state;
-	    
+
+        /* If this is an anysource request including a communicator with
+         * anysource disabled, convert the call to an MPI_Test instead so we
+         * don't get stuck in the progress engine. */
+        if (unlikely(MPIR_CVAR_ENABLE_FT &&
+                    MPI_ANY_SOURCE == request_ptr->dev.match.parts.rank &&
+                    !MPIDI_CH3I_Comm_AS_enabled(request_ptr->comm))) {
+            mpi_errno = MPIR_Test_impl(request, &active_flag, status);
+            goto fn_exit;
+        }
+
 	MPID_Progress_start(&progress_state);
         while (!MPID_Request_is_complete(request_ptr))
 	{

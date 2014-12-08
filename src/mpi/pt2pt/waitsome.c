@@ -96,6 +96,7 @@ int MPI_Waitsome(int incount, MPI_Request array_of_requests[],
     int n_inactive;
     int active_flag;
     int rc;
+    int disabled_anysource = FALSE;
     int mpi_errno = MPI_SUCCESS;
     MPIU_CHKLMEM_DECL(1);
     MPID_MPI_STATE_DECL(MPID_STATE_MPI_WAITSOME);
@@ -159,6 +160,16 @@ int MPI_Waitsome(int incount, MPI_Request array_of_requests[],
 		MPID_END_ERROR_CHECKS;
 	    }
 #           endif	    
+
+            /* If one of the requests is an anysource on a communicator that's
+             * disabled such communication, convert this operation to a testall
+             * instead to prevent getting stuck in the progress engine. */
+            if (unlikely(MPIR_CVAR_ENABLE_FT &&
+                        MPI_ANY_SOURCE == request_ptrs[i]->dev.match.parts.rank &&
+                        !MPID_Request_is_complete(request_ptrs[i]) &&
+                        !MPIDI_CH3I_Comm_AS_enabled(request_ptrs[i]->comm))) {
+                disabled_anysource = TRUE;
+            }
 	}
 	else
 	{
@@ -172,7 +183,12 @@ int MPI_Waitsome(int incount, MPI_Request array_of_requests[],
 	*outcount = MPI_UNDEFINED;
 	goto fn_exit;
     }
-    
+
+    if (unlikely(disabled_anysource)) {
+        mpi_errno = MPI_Testsome(incount, array_of_requests, outcount, array_of_indices, array_of_statuses);
+        goto fn_exit;
+    }
+
     /* Bill Gropp says MPI_Waitsome() is expected to try to make
        progress even if some requests have already completed;  
        therefore, we kick the pipes once and then fall into a loop
