@@ -355,10 +355,23 @@ static inline int issue_ops_target(MPID_Win * win_ptr, MPIDI_RMA_Target_t *targe
         if (mpi_errno != MPI_SUCCESS)
             MPIU_ERR_POP(mpi_errno);
 
+        (*made_progress) = 1;
+
+        if (curr_op->request != NULL)
+            win_ptr->active_req_cnt++;
+
         if (curr_op->pkt.type == MPIDI_CH3_PKT_PUT ||
             curr_op->pkt.type == MPIDI_CH3_PKT_ACCUMULATE) {
             target->put_acc_issued = 1; /* set PUT_ACC_FLAG when sending
                                            PUT/ACC operation. */
+        }
+
+        if (flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK) {
+            /* If this operation is piggybacked with LOCK,
+               do not move it out of pending list, and do
+               not complete the user request, because we
+               may need to re-transmit it. */
+            break;
         }
 
         if (!curr_op->request) {
@@ -374,6 +387,7 @@ static inline int issue_ops_target(MPID_Win * win_ptr, MPIDI_RMA_Target_t *targe
         }
         else {
             /* Sending is not completed immediately. */
+
             MPIDI_CH3I_RMA_Ops_unlink(&(target->pending_op_list),
                                       &(target->pending_op_list_tail), curr_op);
             if (curr_op->is_dt) {
@@ -418,12 +432,9 @@ static inline int issue_ops_target(MPID_Win * win_ptr, MPIDI_RMA_Target_t *targe
                 }
                 curr_op->request->dev.OnFinal = MPIDI_CH3_ReqHandler_ReqOpsComplete;
             }
-            win_ptr->active_req_cnt++;
         }
 
         curr_op = target->next_op_to_issue;
-
-        (*made_progress) = 1;
 
     } /* end of while loop */
 

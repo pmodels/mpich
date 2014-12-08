@@ -90,6 +90,7 @@ typedef enum {
     MPIDI_CH3_PKT_FLUSH,
     MPIDI_CH3_PKT_DECR_AT_COUNTER,
     MPIDI_CH3_PKT_LOCK_ACK,
+    MPIDI_CH3_PKT_LOCK_OP_ACK,
     MPIDI_CH3_PKT_FLUSH_ACK,
     /* RMA Packets end here */
     MPIDI_CH3_PKT_FLOW_CNTL_UPDATE,     /* FIXME: Unused */
@@ -378,6 +379,63 @@ MPIDI_CH3_PKT_DEFS
         }                                                               \
     }
 
+#define MPIDI_CH3_PKT_RMA_ERASE_FLAGS(pkt_, err_)                       \
+    {                                                                   \
+        err_ = MPI_SUCCESS;                                             \
+        switch((pkt_).type) {                                           \
+        case (MPIDI_CH3_PKT_PUT):                                       \
+            (pkt_).put.flags = MPIDI_CH3_PKT_FLAG_NONE;                 \
+            break;                                                      \
+        case (MPIDI_CH3_PKT_GET):                                       \
+            (pkt_).get.flags = MPIDI_CH3_PKT_FLAG_NONE;                 \
+            break;                                                      \
+        case (MPIDI_CH3_PKT_ACCUMULATE):                                \
+            (pkt_).accum.flags = MPIDI_CH3_PKT_FLAG_NONE;               \
+            break;                                                      \
+        case (MPIDI_CH3_PKT_GET_ACCUM):                                 \
+            (pkt_).get_accum.flags = MPIDI_CH3_PKT_FLAG_NONE;           \
+            break;                                                      \
+        case (MPIDI_CH3_PKT_CAS):                                       \
+            (pkt_).cas.flags = MPIDI_CH3_PKT_FLAG_NONE;                 \
+            break;                                                      \
+        case (MPIDI_CH3_PKT_FOP):                                       \
+            (pkt_).fop.flags = MPIDI_CH3_PKT_FLAG_NONE;                 \
+            break;                                                      \
+        default:                                                        \
+            MPIU_ERR_SETANDJUMP1(err_, MPI_ERR_OTHER, "**invalidpkt", "**invalidpkt %d", (pkt_).type); \
+        }                                                               \
+    }
+
+#define MPIDI_CH3_PKT_RMA_GET_SOURCE_WIN_HANDLE(pkt_, win_hdl_, err_)   \
+    {                                                                   \
+        err_ = MPI_SUCCESS;                                             \
+        switch((pkt_).type) {                                           \
+        case (MPIDI_CH3_PKT_PUT):                                       \
+            win_hdl_ = (pkt_).put.source_win_handle;                    \
+            break;                                                      \
+        case (MPIDI_CH3_PKT_GET):                                       \
+            win_hdl_ = (pkt_).get.source_win_handle;                    \
+            break;                                                      \
+        case (MPIDI_CH3_PKT_ACCUMULATE):                                \
+            win_hdl_ = (pkt_).accum.source_win_handle;                  \
+            break;                                                      \
+        case (MPIDI_CH3_PKT_GET_ACCUM):                                 \
+            win_hdl_ = (pkt_).get_accum.source_win_handle;              \
+            break;                                                      \
+        case (MPIDI_CH3_PKT_CAS):                                       \
+            win_hdl_ = (pkt_).cas.source_win_handle;                    \
+            break;                                                      \
+        case (MPIDI_CH3_PKT_FOP):                                       \
+            win_hdl_ = (pkt_).fop.source_win_handle;                    \
+            break;                                                      \
+        case (MPIDI_CH3_PKT_LOCK):                                      \
+            win_hdl_ = (pkt_).lock.source_win_handle;                   \
+            break;                                                      \
+        default:                                                        \
+            MPIU_ERR_SETANDJUMP1(err_, MPI_ERR_OTHER, "**invalidpkt", "**invalidpkt %d", (pkt_).type); \
+        }                                                               \
+    }
+
 #define MPIDI_CH3_PKT_RMA_GET_TARGET_WIN_HANDLE(pkt_, win_hdl_, err_)   \
     {                                                                   \
         err_ = MPI_SUCCESS;                                             \
@@ -641,7 +699,7 @@ typedef struct MPIDI_CH3_Pkt_decr_at_counter {
 
 /*********************************************************************************/
 /* RMA control response packet (from target to origin, including LOCK_ACK,       */
-/* FLUSH_ACK)                                                                    */
+/* LOCK_OP_ACK, FLUSH_ACK)                                                       */
 /*********************************************************************************/
 
 typedef struct MPIDI_CH3_Pkt_lock_ack {
@@ -650,6 +708,13 @@ typedef struct MPIDI_CH3_Pkt_lock_ack {
     MPI_Win source_win_handle;
     int target_rank;
 } MPIDI_CH3_Pkt_lock_ack_t;
+
+typedef struct MPIDI_CH3_Pkt_lock_op_ack {
+    MPIDI_CH3_Pkt_type_t type;
+    MPIDI_CH3_Pkt_flags_t flags;
+    MPI_Win source_win_handle;
+    int target_rank;
+} MPIDI_CH3_Pkt_lock_op_ack_t;
 
 typedef struct MPIDI_CH3_Pkt_flush_ack {
     MPIDI_CH3_Pkt_type_t type;
@@ -699,6 +764,7 @@ typedef union MPIDI_CH3_Pkt {
     MPIDI_CH3_Pkt_flush_t flush;
     MPIDI_CH3_Pkt_decr_at_counter_t decr_at_cnt;
     MPIDI_CH3_Pkt_lock_ack_t lock_ack;
+    MPIDI_CH3_Pkt_lock_op_ack_t lock_op_ack;
     MPIDI_CH3_Pkt_flush_ack_t flush_ack;
     /* RMA packets end here */
     MPIDI_CH3_Pkt_close_t close;
