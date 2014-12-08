@@ -148,7 +148,6 @@ static inline int MPIDI_CH3I_Send_lock_ack_pkt(MPIDI_VC_t * vc, MPID_Win * win_p
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 static inline int MPIDI_CH3I_Send_flush_ack_pkt(MPIDI_VC_t *vc, MPID_Win *win_ptr,
-                                                MPIDI_CH3_Pkt_flags_t flags,
                                     MPI_Win source_win_handle)
 {
     MPIDI_CH3_Pkt_t upkt;
@@ -162,9 +161,6 @@ static inline int MPIDI_CH3I_Send_flush_ack_pkt(MPIDI_VC_t *vc, MPID_Win *win_pt
     MPIDI_Pkt_init(flush_ack_pkt, MPIDI_CH3_PKT_FLUSH_ACK);
     flush_ack_pkt->source_win_handle = source_win_handle;
     flush_ack_pkt->target_rank = win_ptr->comm_ptr->rank;
-    flush_ack_pkt->flags = MPIDI_CH3_PKT_FLAG_NONE;
-    if (flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK)
-        flush_ack_pkt->flags |= MPIDI_CH3_PKT_FLAG_RMA_LOCK_GRANTED;
 
     /* Because this is in a packet handler, it is already within a critical section */	
     /* MPIU_THREAD_CS_ENTER(CH3COMM,vc); */
@@ -633,19 +629,25 @@ static inline int finish_op_on_target(MPID_Win *win_ptr, MPIDI_VC_t *vc,
     if (type == MPIDI_CH3_PKT_PUT || type == MPIDI_CH3_PKT_ACCUMULATE) {
         /* This is PUT or ACC */
         if (flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK) {
-            if (!(flags & MPIDI_CH3_PKT_FLAG_RMA_FLUSH) &&
-                !(flags & MPIDI_CH3_PKT_FLAG_RMA_UNLOCK)) {
-                mpi_errno = MPIDI_CH3I_Send_lock_ack_pkt(vc, win_ptr,
-                                                         MPIDI_CH3_PKT_FLAG_RMA_LOCK_GRANTED,
-                                                         source_win_handle);
-                if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
-                MPIDI_CH3_Progress_signal_completion();
-            }
+            MPIDI_CH3_Pkt_flags_t pkt_flags = MPIDI_CH3_PKT_FLAG_RMA_LOCK_GRANTED;
+            if (flags & MPIDI_CH3_PKT_FLAG_RMA_FLUSH)
+                pkt_flags |= MPIDI_CH3_PKT_FLAG_RMA_FLUSH_ACK;
+            if (flags & MPIDI_CH3_PKT_FLAG_RMA_UNLOCK)
+                pkt_flags |= MPIDI_CH3_PKT_FLAG_RMA_UNLOCK_ACK;
+            mpi_errno = MPIDI_CH3I_Send_lock_ack_pkt(vc, win_ptr,
+                                                     pkt_flags,
+                                                     source_win_handle);
+            if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
+            MPIDI_CH3_Progress_signal_completion();
         }
         if (flags & MPIDI_CH3_PKT_FLAG_RMA_FLUSH) {
-            mpi_errno = MPIDI_CH3I_Send_flush_ack_pkt(vc, win_ptr, flags,
-                                                      source_win_handle);
-            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+            if (!(flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK)) {
+                /* If op is piggybacked with both LOCK and FLUSH,
+                   we only send LOCK ACK back, do not send FLUSH ACK. */
+                mpi_errno = MPIDI_CH3I_Send_flush_ack_pkt(vc, win_ptr,
+                                                          source_win_handle);
+                if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+            }
             MPIDI_CH3_Progress_signal_completion();
         }
         if (flags & MPIDI_CH3_PKT_FLAG_RMA_DECR_AT_COUNTER) {
@@ -656,9 +658,13 @@ static inline int finish_op_on_target(MPID_Win *win_ptr, MPIDI_VC_t *vc,
                 MPIDI_CH3_Progress_signal_completion();
         }
         if (flags & MPIDI_CH3_PKT_FLAG_RMA_UNLOCK) {
-            mpi_errno = MPIDI_CH3I_Send_flush_ack_pkt(vc, win_ptr, flags,
-                                                      source_win_handle);
-            if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+            if (!(flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK)) {
+                /* If op is piggybacked with both LOCK and UNLOCK,
+                   we only send LOCK ACK back, do not send FLUSH (UNLOCK) ACK. */
+                mpi_errno = MPIDI_CH3I_Send_flush_ack_pkt(vc, win_ptr,
+                                                          source_win_handle);
+                if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+            }
             mpi_errno = MPIDI_CH3I_Release_lock(win_ptr);
             if (mpi_errno) MPIU_ERR_POP(mpi_errno);
             MPIDI_CH3_Progress_signal_completion();

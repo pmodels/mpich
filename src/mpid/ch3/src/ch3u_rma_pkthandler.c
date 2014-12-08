@@ -1451,6 +1451,7 @@ int MPIDI_CH3_PktHandler_LockAck(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
     MPIDI_CH3_Pkt_lock_ack_t *lock_ack_pkt = &pkt->lock_ack;
     MPID_Win *win_ptr = NULL;
     int target_rank = lock_ack_pkt->target_rank;
+    MPIDI_CH3_Pkt_flags_t flags = lock_ack_pkt->flags;
     int mpi_errno = MPI_SUCCESS;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3_PKTHANDLER_LOCKACK);
 
@@ -1466,6 +1467,17 @@ int MPIDI_CH3_PktHandler_LockAck(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
 
     mpi_errno = set_lock_sync_counter(win_ptr, target_rank);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
+    if (flags & MPIDI_CH3_PKT_FLAG_RMA_FLUSH_ACK) {
+        MPIU_Assert(flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK_GRANTED);
+        mpi_errno = MPIDI_CH3I_RMA_Handle_flush_ack(win_ptr, target_rank);
+        if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
+    }
+    if (flags & MPIDI_CH3_PKT_FLAG_RMA_UNLOCK_ACK) {
+        MPIU_Assert(flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK_GRANTED);
+        mpi_errno = MPIDI_CH3I_RMA_Handle_flush_ack(win_ptr, target_rank);
+        if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
+    }
 
     *rreqp = NULL;
     MPIDI_CH3_Progress_signal_completion();
@@ -1500,11 +1512,6 @@ int MPIDI_CH3_PktHandler_FlushAck(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
     *buflen = sizeof(MPIDI_CH3_Pkt_t);
 
     MPID_Win_get_ptr(flush_ack_pkt->source_win_handle, win_ptr);
-
-    if (flush_ack_pkt->flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK_GRANTED) {
-        mpi_errno = set_lock_sync_counter(win_ptr, target_rank);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-    }
 
     /* decrement ack_counter on target */
     mpi_errno = MPIDI_CH3I_RMA_Handle_flush_ack(win_ptr, target_rank);
@@ -1583,7 +1590,7 @@ int MPIDI_CH3_PktHandler_Unlock(MPIDI_VC_t * vc ATTRIBUTE((unused)),
     MPIU_ERR_CHKANDJUMP(mpi_errno != MPI_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**ch3|rma_msg");
 
     if (!(unlock_pkt->flags & MPIDI_CH3_PKT_FLAG_RMA_UNLOCK_NO_ACK)) {
-        mpi_errno = MPIDI_CH3I_Send_flush_ack_pkt(vc, win_ptr, MPIDI_CH3_PKT_FLAG_NONE,
+        mpi_errno = MPIDI_CH3I_Send_flush_ack_pkt(vc, win_ptr,
                                                   unlock_pkt->source_win_handle);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     }
@@ -1623,7 +1630,7 @@ int MPIDI_CH3_PktHandler_Flush(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
 
     MPID_Win_get_ptr(flush_pkt->target_win_handle, win_ptr);
 
-    mpi_errno = MPIDI_CH3I_Send_flush_ack_pkt(vc, win_ptr, MPIDI_CH3_PKT_FLAG_NONE,
+    mpi_errno = MPIDI_CH3I_Send_flush_ack_pkt(vc, win_ptr,
                                               flush_pkt->source_win_handle);
     if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
 
