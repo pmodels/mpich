@@ -101,14 +101,14 @@ static inline int MPID_nem_sfi_conn_req_callback(cq_tagged_entry_t * wc, MPID_Re
     MPIU_Memcpy(bc, rreq->dev.user_buf, wc->len);
     bc[wc->len] = '\0';
     MPIU_Assert(gl_data.conn_req == rreq);
-    FI_RC(fi_trecvfrom(gl_data.endpoint,
+    FI_RC(fi_trecv(gl_data.endpoint,
                        gl_data.conn_req->dev.user_buf,
                        SFI_KVSAPPSTRLEN,
                        gl_data.mr,
                        0,
                        MPID_CONN_REQ,
                        ~MPID_PROTOCOL_MASK,
-                       (void *) &(REQ_SFI(gl_data.conn_req)->sfi_context)), trecvfrom);
+                       (void *) &(REQ_SFI(gl_data.conn_req)->sfi_context)), trecv);
 
     addr = MPIU_Malloc(gl_data.bound_addrlen);
     MPIU_Assertp(addr);
@@ -221,34 +221,34 @@ static inline int MPID_nem_sfi_preposted_callback(cq_tagged_entry_t * wc, MPID_R
     REQ_SFI(new_rreq)->vc = vc;
     REQ_SFI(new_rreq)->pack_buffer = pack_buffer;
     REQ_SFI(new_rreq)->pack_buffer_size = pkt_len;
-    FI_RC(fi_trecvfrom(gl_data.endpoint,
+    FI_RC(fi_trecv(gl_data.endpoint,
                        REQ_SFI(new_rreq)->pack_buffer,
                        REQ_SFI(new_rreq)->pack_buffer_size,
                        gl_data.mr,
                        VC_SFI(vc)->direct_addr,
-                       wc->tag | MPID_MSG_DATA, 0, &(REQ_SFI(new_rreq)->sfi_context)), trecvfrom);
+                       wc->tag | MPID_MSG_DATA, 0, &(REQ_SFI(new_rreq)->sfi_context)), trecv);
 
     MPID_nem_sfi_create_req(&sreq, 1);
     sreq->dev.OnDataAvail = NULL;
     sreq->dev.next = NULL;
     REQ_SFI(sreq)->event_callback = MPID_nem_sfi_cts_send_callback;
     REQ_SFI(sreq)->parent = new_rreq;
-    FI_RC(fi_tsendto(gl_data.endpoint,
+    FI_RC(fi_tsend(gl_data.endpoint,
                      NULL,
                      0,
                      gl_data.mr,
                      VC_SFI(vc)->direct_addr,
-                     wc->tag | MPID_MSG_CTS, &(REQ_SFI(sreq)->sfi_context)), tsendto);
+                     wc->tag | MPID_MSG_CTS, &(REQ_SFI(sreq)->sfi_context)), tsend);
     MPIU_Assert(gl_data.persistent_req == rreq);
 
     rreq->dev.user_count = 0;
-    FI_RC(fi_trecvfrom(gl_data.endpoint,
+    FI_RC(fi_trecv(gl_data.endpoint,
                        &rreq->dev.user_count,
                        sizeof rreq->dev.user_count,
                        gl_data.mr,
                        0,
                        MPID_MSG_RTS,
-                       ~MPID_PROTOCOL_MASK, &(REQ_SFI(rreq)->sfi_context)), trecvfrom);
+                       ~MPID_PROTOCOL_MASK, &(REQ_SFI(rreq)->sfi_context)), trecv);
     END_FUNC_RC(FCNAME);
 }
 
@@ -303,14 +303,14 @@ int MPID_nem_sfi_cm_init(MPIDI_PG_t * pg_p, int pg_rank ATTRIBUTE((unused)))
     persistent_req->dev.next = NULL;
     REQ_SFI(persistent_req)->vc = NULL;
     REQ_SFI(persistent_req)->event_callback = MPID_nem_sfi_preposted_callback;
-    FI_RC(fi_trecvfrom(gl_data.endpoint,
+    FI_RC(fi_trecv(gl_data.endpoint,
                        &persistent_req->dev.user_count,
                        sizeof persistent_req->dev.user_count,
                        gl_data.mr,
                        0,
                        MPID_MSG_RTS,
                        ~MPID_PROTOCOL_MASK,
-                       (void *) &(REQ_SFI(persistent_req)->sfi_context)), trecvfrom);
+                       (void *) &(REQ_SFI(persistent_req)->sfi_context)), trecv);
     gl_data.persistent_req = persistent_req;
 
     /* --------------------------------- */
@@ -322,13 +322,13 @@ int MPID_nem_sfi_cm_init(MPIDI_PG_t * pg_p, int pg_rank ATTRIBUTE((unused)))
     conn_req->dev.next = NULL;
     REQ_SFI(conn_req)->vc = NULL;       /* We don't know the source yet */
     REQ_SFI(conn_req)->event_callback = MPID_nem_sfi_conn_req_callback;
-    FI_RC(fi_trecvfrom(gl_data.endpoint,
+    FI_RC(fi_trecv(gl_data.endpoint,
                        conn_req->dev.user_buf,
                        SFI_KVSAPPSTRLEN,
                        gl_data.mr,
                        0,
                        MPID_CONN_REQ,
-                       ~MPID_PROTOCOL_MASK, (void *) &(REQ_SFI(conn_req)->sfi_context)), trecvfrom);
+                       ~MPID_PROTOCOL_MASK, (void *) &(REQ_SFI(conn_req)->sfi_context)), trecv);
     gl_data.conn_req = conn_req;
 
 
@@ -537,12 +537,12 @@ int MPID_nem_sfi_connect_to_root(const char *business_card, MPIDI_VC_t * new_vc)
     REQ_SFI(sreq)->event_callback = MPID_nem_sfi_connect_to_root_callback;
     REQ_SFI(sreq)->pack_buffer = my_bc;
     conn_req_send_bits = init_sendtag(0, MPIR_Process.comm_world->rank, 0, MPID_CONN_REQ);
-    FI_RC(fi_tsendto(gl_data.endpoint,
+    FI_RC(fi_tsend(gl_data.endpoint,
                      REQ_SFI(sreq)->pack_buffer,
                      my_bc_len,
                      gl_data.mr,
                      VC_SFI(new_vc)->direct_addr,
-                     conn_req_send_bits, &(REQ_SFI(sreq)->sfi_context)), tsendto);
+                     conn_req_send_bits, &(REQ_SFI(sreq)->sfi_context)), tsend);
     MPID_nem_sfi_poll(MPID_NONBLOCKING_POLL);
     VC_SFI(new_vc)->is_cmvc = 1;
     VC_SFI(new_vc)->next = gl_data.cm_vcs;

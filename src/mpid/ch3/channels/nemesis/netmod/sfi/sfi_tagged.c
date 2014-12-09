@@ -104,12 +104,12 @@ static inline int MPID_nem_sfi_recv_callback(cq_tagged_entry_t * wc, MPID_Reques
         sync_req->dev.next = NULL;
         REQ_SFI(sync_req)->event_callback = MPID_nem_sfi_sync_recv_callback;
         REQ_SFI(sync_req)->parent = rreq;
-        FI_RC(fi_tsendto(gl_data.endpoint,
+        FI_RC(fi_tsend(gl_data.endpoint,
                          NULL,
                          0,
                          gl_data.mr,
                          VC_SFI(vc)->direct_addr,
-                         ssend_bits, &(REQ_SFI(sync_req)->sfi_context)), tsendto);
+                         ssend_bits, &(REQ_SFI(sync_req)->sfi_context)), tsend);
     }
     else {
         /* ---------------------------------------------------- */
@@ -185,22 +185,22 @@ static inline int do_isend(struct MPIDI_VC *vc,
         REQ_SFI(sync_req)->parent = sreq;
         ssend_match = init_recvtag(&ssend_mask, comm->context_id + context_offset, dest, tag);
         ssend_match |= MPID_SYNC_SEND_ACK;
-        FI_RC(fi_trecvfrom(gl_data.endpoint,    /* endpoint    */
+        FI_RC(fi_trecv(gl_data.endpoint,    /* endpoint    */
                            NULL,        /* recvbuf     */
                            0,   /* data sz     */
                            gl_data.mr,  /* dynamic mr  */
                            VC_SFI(vc)->direct_addr,     /* remote proc */
                            ssend_match, /* match bits  */
                            0ULL,        /* mask bits   */
-                           &(REQ_SFI(sync_req)->sfi_context)), trecvfrom);
+                           &(REQ_SFI(sync_req)->sfi_context)), trecv);
     }
-    FI_RC(fi_tsendto(gl_data.endpoint,  /* Endpoint                       */
+    FI_RC(fi_tsend(gl_data.endpoint,  /* Endpoint                       */
                      send_buffer,       /* Send buffer(packed or user)    */
                      data_sz,   /* Size of the send               */
                      gl_data.mr,        /* Dynamic memory region          */
                      VC_SFI(vc)->direct_addr,   /* Use the address of this VC     */
                      match_bits,        /* Match bits                     */
-                     &(REQ_SFI(sreq)->sfi_context)), tsendto);
+                     &(REQ_SFI(sreq)->sfi_context)), tsend);
     *request = sreq;
     END_FUNC_RC(FCNAME);
 }
@@ -250,12 +250,12 @@ int MPID_nem_sfi_recv_posted(struct MPIDI_VC *vc, struct MPID_Request *rreq)
     /* ---------------- */
     /* Post the receive */
     /* ---------------- */
-    FI_RC(fi_trecvfrom(gl_data.endpoint,
+    FI_RC(fi_trecv(gl_data.endpoint,
                        recv_buffer,
                        data_sz,
                        gl_data.mr,
                        remote_proc,
-                       match_bits, mask_bits, &(REQ_SFI(rreq)->sfi_context)), trecvfrom);
+                       match_bits, mask_bits, &(REQ_SFI(rreq)->sfi_context)), trecv);
     MPID_nem_sfi_poll(MPID_NONBLOCKING_POLL);
     END_FUNC_RC(FCNAME);
 }
