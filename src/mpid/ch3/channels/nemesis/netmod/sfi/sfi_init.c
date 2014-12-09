@@ -75,7 +75,7 @@ int MPID_nem_sfi_init(MPIDI_PG_t * pg_p, int pg_rank, char **bc_val_p, int *val_
     domain_attr_t domain_attr;
     memset(&domain_attr, 0, sizeof(domain_attr));
 
-    tx_ctx_attr_t tx_attr;
+    tx_attr_t tx_attr;
     memset(&tx_attr, 0, sizeof(tx_attr));
 
     domain_attr.threading = FI_THREAD_PROGRESS;
@@ -334,8 +334,8 @@ static inline int compile_time_checking()
     /* ------------------------------------------------------------------------ */
 #if 0
     MPIU_ERR_SET2(e, MPI_ERR_OTHER, "**sfi_avmap", "**sfi_avmap %s %d %s %s", a, b, a, a);
-    MPIU_ERR_SET2(e, MPI_ERR_OTHER, "**sfi_tsendto", "**sfi_tsendto %s %d %s %s", a, b, a, a);
-    MPIU_ERR_SET2(e, MPI_ERR_OTHER, "**sfi_trecvfrom", "**sfi_trecvfrom %s %d %s %s", a, b, a, a);
+    MPIU_ERR_SET2(e, MPI_ERR_OTHER, "**sfi_tsend", "**sfi_tsend %s %d %s %s", a, b, a, a);
+    MPIU_ERR_SET2(e, MPI_ERR_OTHER, "**sfi_trecv", "**sfi_trecv %s %d %s %s", a, b, a, a);
     MPIU_ERR_SET2(e, MPI_ERR_OTHER, "**sfi_getinfo", "**sfi_getinfo %s %d %s %s", a, b, a, a);
     MPIU_ERR_SET2(e, MPI_ERR_OTHER, "**sfi_openep", "**sfi_openep %s %d %s %s", a, b, a, a);
     MPIU_ERR_SET2(e, MPI_ERR_OTHER, "**sfi_openfabric", "**sfi_openfabric %s %d %s %s", a, b, a, a);

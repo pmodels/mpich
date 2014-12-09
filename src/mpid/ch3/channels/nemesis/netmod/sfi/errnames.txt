@@ -1,9 +1,9 @@
 **sfi_avmap:SFI get address vector map failed
 **sfi_avmap %s %d %s %s:SFI address vector map failed (%s:%d:%s:%s)
-**sfi_tsendto:SFI tagged sendto failed
-**sfi_tsendto %s %d %s %s:SFI tagged sendto failed (%s:%d:%s:%s)
-**sfi_trecvfrom:SFI tagged recvfrom failed
-**sfi_trecvfrom %s %d %s %s:SFI tagged recvfrom failed (%s:%d:%s:%s)
+**sfi_tsend:SFI tagged sendto failed
+**sfi_tsend %s %d %s %s:SFI tagged sendto failed (%s:%d:%s:%s)
+**sfi_trecv:SFI tagged recvfrom failed
+**sfi_trecv %s %d %s %s:SFI tagged recvfrom failed (%s:%d:%s:%s)
 **sfi_getinfo:SFI getinfo() failed
 **sfi_getinfo %s %d %s %s:SFI getinfo() failed (%s:%d:%s:%s)
 **sfi_openep:SFI endpoint open failed

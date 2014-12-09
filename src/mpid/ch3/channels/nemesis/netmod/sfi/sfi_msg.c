@@ -73,21 +73,21 @@
     REQ_SFI(cts_req)->event_callback = MPID_nem_sfi_cts_recv_callback;  \
     REQ_SFI(cts_req)->parent         = sreq;                            \
                                                                         \
-    FI_RC(fi_trecvfrom(gl_data.endpoint,                                \
+    FI_RC(fi_trecv(gl_data.endpoint,                                \
                        NULL,                                            \
                        0,                                               \
                        gl_data.mr,                                      \
                        VC_SFI(vc)->direct_addr,                         \
                        match_bits | MPID_MSG_CTS,                       \
                        0, /* Exact tag match, no ignore bits */         \
-                       &(REQ_SFI(cts_req)->sfi_context)),trecvfrom);    \
-    FI_RC(fi_tsendto(gl_data.endpoint,                                  \
+                       &(REQ_SFI(cts_req)->sfi_context)),trecv);    \
+    FI_RC(fi_tsend(gl_data.endpoint,                                  \
                      &REQ_SFI(sreq)->pack_buffer_size,                  \
                      sizeof(REQ_SFI(sreq)->pack_buffer_size),           \
                      gl_data.mr,                                        \
                      VC_SFI(vc)->direct_addr,                           \
                      match_bits,                                        \
-                     &(REQ_SFI(sreq)->sfi_context)),tsendto);           \
+                     &(REQ_SFI(sreq)->sfi_context)),tsend);           \
   })
 
 
@@ -108,12 +108,12 @@ static int MPID_nem_sfi_data_callback(cq_tagged_entry_t * wc, MPID_Request * sre
     if (sreq->cc == 2) {
         vc = REQ_SFI(sreq)->vc;
         REQ_SFI(sreq)->tag = tag | MPID_MSG_DATA;
-        FI_RC(fi_tsendto(gl_data.endpoint,
+        FI_RC(fi_tsend(gl_data.endpoint,
                          REQ_SFI(sreq)->pack_buffer,
                          REQ_SFI(sreq)->pack_buffer_size,
                          gl_data.mr,
                          VC_SFI(vc)->direct_addr,
-                         wc->tag | MPID_MSG_DATA, (void *) &(REQ_SFI(sreq)->sfi_context)), tsendto);
+                         wc->tag | MPID_MSG_DATA, (void *) &(REQ_SFI(sreq)->sfi_context)), tsend);
     }
     if (sreq->cc == 1) {
         if (REQ_SFI(sreq)->pack_buffer)
