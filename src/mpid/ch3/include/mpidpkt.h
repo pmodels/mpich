@@ -398,6 +398,9 @@ MPIDI_CH3_PKT_DEFS
         case (MPIDI_CH3_PKT_FOP):                                       \
             win_hdl_ = (pkt_).fop.target_win_handle;                    \
             break;                                                      \
+        case (MPIDI_CH3_PKT_LOCK):                                      \
+            win_hdl_ = (pkt_).lock.target_win_handle;                   \
+            break;                                                      \
         default:                                                        \
             MPIU_ERR_SETANDJUMP1(err_, MPI_ERR_OTHER, "**invalidpkt", "**invalidpkt %d", (pkt_).type); \
         }                                                               \
