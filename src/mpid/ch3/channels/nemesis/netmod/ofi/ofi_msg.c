@@ -7,7 +7,7 @@
  *  to Argonne National Laboratory subject to Software Grant and Corporate
  *  Contributor License Agreement dated February 8, 2012.
  */
-#include "sfi_impl.h"
+#include "ofi_impl.h"
 
 /* ------------------------------------------------------------------------ */
 /* GET_PGID_AND_SET_MATCH macro looks up the process group to find the      */
@@ -44,7 +44,7 @@
 /* is based on a tagged rendezvous message.                                 */
 /* The rendezvous is implemented with an RTS-CTS-Data send protocol:        */
 /* CTS_POST()   |                                  |                        */
-/* RTS_SEND()   | -------------------------------> | ue_callback()(sfi_cm.c)*/
+/* RTS_SEND()   | -------------------------------> | ue_callback()(ofi_cm.c)*/
 /*              |                                  |   pack_buffer()        */
 /*              |                                  |   DATA_POST()          */
 /*              |                                  |   RTS_POST()           */
@@ -61,16 +61,16 @@
     c = 1;                                                              \
     MPID_cc_incr(sreq->cc_ptr, &c);                                     \
     MPID_cc_incr(sreq->cc_ptr, &c);                                     \
-    REQ_SFI(sreq)->event_callback   = MPID_nem_sfi_data_callback;       \
+    REQ_SFI(sreq)->event_callback   = MPID_nem_ofi_data_callback;       \
     REQ_SFI(sreq)->pack_buffer      = pack_buffer;                      \
     REQ_SFI(sreq)->pack_buffer_size = pkt_len;                          \
     REQ_SFI(sreq)->vc               = vc;                               \
     REQ_SFI(sreq)->tag              = match_bits;                       \
                                                                         \
-    MPID_nem_sfi_create_req(&cts_req, 1);                               \
+    MPID_nem_ofi_create_req(&cts_req, 1);                               \
     cts_req->dev.OnDataAvail         = NULL;                            \
     cts_req->dev.next                = NULL;                            \
-    REQ_SFI(cts_req)->event_callback = MPID_nem_sfi_cts_recv_callback;  \
+    REQ_SFI(cts_req)->event_callback = MPID_nem_ofi_cts_recv_callback;  \
     REQ_SFI(cts_req)->parent         = sreq;                            \
                                                                         \
     FI_RC(fi_trecv(gl_data.endpoint,                                \
@@ -80,14 +80,14 @@
                        VC_SFI(vc)->direct_addr,                         \
                        match_bits | MPID_MSG_CTS,                       \
                        0, /* Exact tag match, no ignore bits */         \
-                       &(REQ_SFI(cts_req)->sfi_context)),trecv);    \
+                       &(REQ_SFI(cts_req)->ofi_context)),trecv);    \
     FI_RC(fi_tsend(gl_data.endpoint,                                  \
                      &REQ_SFI(sreq)->pack_buffer_size,                  \
                      sizeof(REQ_SFI(sreq)->pack_buffer_size),           \
                      gl_data.mr,                                        \
                      VC_SFI(vc)->direct_addr,                           \
                      match_bits,                                        \
-                     &(REQ_SFI(sreq)->sfi_context)),tsend);           \
+                     &(REQ_SFI(sreq)->ofi_context)),tsend);           \
   })
 
 
@@ -97,8 +97,8 @@
 /* bulk data transfer.  On data send completion, the request can be freed   */
 /* ------------------------------------------------------------------------ */
 #undef FCNAME
-#define FCNAME DECL_FUNC(MPID_nem_sfi_data_callback)
-static int MPID_nem_sfi_data_callback(cq_tagged_entry_t * wc, MPID_Request * sreq)
+#define FCNAME DECL_FUNC(MPID_nem_ofi_data_callback)
+static int MPID_nem_ofi_data_callback(cq_tagged_entry_t * wc, MPID_Request * sreq)
 {
     int complete = 0, mpi_errno = MPI_SUCCESS;
     MPIDI_VC_t *vc;
@@ -113,7 +113,7 @@ static int MPID_nem_sfi_data_callback(cq_tagged_entry_t * wc, MPID_Request * sre
                          REQ_SFI(sreq)->pack_buffer_size,
                          gl_data.mr,
                          VC_SFI(vc)->direct_addr,
-                         wc->tag | MPID_MSG_DATA, (void *) &(REQ_SFI(sreq)->sfi_context)), tsend);
+                         wc->tag | MPID_MSG_DATA, (void *) &(REQ_SFI(sreq)->ofi_context)), tsend);
     }
     if (sreq->cc == 1) {
         if (REQ_SFI(sreq)->pack_buffer)
@@ -135,16 +135,16 @@ static int MPID_nem_sfi_data_callback(cq_tagged_entry_t * wc, MPID_Request * sre
 }
 
 /* ------------------------------------------------------------------------ */
-/* Signals the CTS has been received.  Call MPID_nem_sfi_data_callback on   */
+/* Signals the CTS has been received.  Call MPID_nem_ofi_data_callback on   */
 /* the parent send request to kick off the bulk data transfer               */
 /* ------------------------------------------------------------------------ */
 #undef FCNAME
-#define FCNAME DECL_FUNC(MPID_nem_sfi_cts_recv_callback)
-static int MPID_nem_sfi_cts_recv_callback(cq_tagged_entry_t * wc, MPID_Request * rreq)
+#define FCNAME DECL_FUNC(MPID_nem_ofi_cts_recv_callback)
+static int MPID_nem_ofi_cts_recv_callback(cq_tagged_entry_t * wc, MPID_Request * rreq)
 {
     int mpi_errno = MPI_SUCCESS;
     BEGIN_FUNC(FCNAME);
-    MPI_RC(MPID_nem_sfi_data_callback(wc, REQ_SFI(rreq)->parent));
+    MPI_RC(MPID_nem_ofi_data_callback(wc, REQ_SFI(rreq)->parent));
     MPIDI_CH3U_Request_complete(rreq);
     END_FUNC_RC(FCNAME);
 }
@@ -158,8 +158,8 @@ static int MPID_nem_sfi_cts_recv_callback(cq_tagged_entry_t * wc, MPID_Request *
 /* functions over a tagged msg interface                                    */
 /* ------------------------------------------------------------------------ */
 #undef FCNAME
-#define FCNAME DECL_FUNC(MPID_nem_sfi_iSendContig)
-int MPID_nem_sfi_iSendContig(MPIDI_VC_t * vc,
+#define FCNAME DECL_FUNC(MPID_nem_ofi_iSendContig)
+int MPID_nem_ofi_iSendContig(MPIDI_VC_t * vc,
                              MPID_Request * sreq,
                              void *hdr, MPIDI_msg_sz_t hdr_sz, void *data, MPIDI_msg_sz_t data_sz)
 {
@@ -170,7 +170,7 @@ int MPID_nem_sfi_iSendContig(MPIDI_VC_t * vc,
 
     BEGIN_FUNC(FCNAME);
     MPIU_Assert(hdr_sz <= (MPIDI_msg_sz_t) sizeof(MPIDI_CH3_Pkt_t));
-    MPID_nem_sfi_init_req(sreq);
+    MPID_nem_ofi_init_req(sreq);
     pkt_len = sizeof(MPIDI_CH3_Pkt_t) + data_sz;
     pack_buffer = MPIU_Malloc(pkt_len);
     MPIU_Assert(pack_buffer);
@@ -181,8 +181,8 @@ int MPID_nem_sfi_iSendContig(MPIDI_VC_t * vc,
 }
 
 #undef FCNAME
-#define FCNAME DECL_FUNC(MPID_nem_sfi_SendNoncontig)
-int MPID_nem_sfi_SendNoncontig(MPIDI_VC_t * vc,
+#define FCNAME DECL_FUNC(MPID_nem_ofi_SendNoncontig)
+int MPID_nem_ofi_SendNoncontig(MPIDI_VC_t * vc,
                                MPID_Request * sreq, void *hdr, MPIDI_msg_sz_t hdr_sz)
 {
     int c, pgid, pkt_len, mpi_errno = MPI_SUCCESS;
@@ -202,13 +202,13 @@ int MPID_nem_sfi_SendNoncontig(MPIDI_VC_t * vc,
     MPIU_Memcpy(pack_buffer, hdr, hdr_sz);
     MPID_Segment_pack(sreq->dev.segment_ptr, 0, &data_sz, pack_buffer + sizeof(MPIDI_CH3_Pkt_t));
     START_COMM();
-    MPID_nem_sfi_poll(MPID_NONBLOCKING_POLL);
+    MPID_nem_ofi_poll(MPID_NONBLOCKING_POLL);
     END_FUNC_RC(FCNAME);
 }
 
 #undef FCNAME
-#define FCNAME DECL_FUNC(MPID_nem_sfi_iStartContigMsg)
-int MPID_nem_sfi_iStartContigMsg(MPIDI_VC_t * vc,
+#define FCNAME DECL_FUNC(MPID_nem_ofi_iStartContigMsg)
+int MPID_nem_ofi_iStartContigMsg(MPIDI_VC_t * vc,
                                  void *hdr,
                                  MPIDI_msg_sz_t hdr_sz,
                                  void *data, MPIDI_msg_sz_t data_sz, MPID_Request ** sreq_ptr)
@@ -221,7 +221,7 @@ int MPID_nem_sfi_iStartContigMsg(MPIDI_VC_t * vc,
     BEGIN_FUNC(FCNAME);
     MPIU_Assert(hdr_sz <= (MPIDI_msg_sz_t) sizeof(MPIDI_CH3_Pkt_t));
 
-    MPID_nem_sfi_create_req(&sreq, 2);
+    MPID_nem_ofi_create_req(&sreq, 2);
     sreq->kind = MPID_REQUEST_SEND;
     sreq->dev.OnDataAvail = NULL;
     sreq->dev.next = NULL;

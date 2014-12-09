@@ -7,7 +7,7 @@
  *  to Argonne National Laboratory subject to Software Grant and Corporate
  *  Contributor License Agreement dated February 8, 2012.
  */
-#include "sfi_impl.h"
+#include "ofi_impl.h"
 
 #define TSEARCH_INIT      0
 #define TSEARCH_NOT_FOUND 1
@@ -16,9 +16,9 @@
 /* ------------------------------------------------------------------------ */
 /* This routine looks up the request that contains a context object         */
 /* ------------------------------------------------------------------------ */
-static inline MPID_Request *context_to_req(void *sfi_context)
+static inline MPID_Request *context_to_req(void *ofi_context)
 {
-    return (MPID_Request *) container_of(sfi_context, MPID_Request, ch.netmod_area.padding);
+    return (MPID_Request *) container_of(ofi_context, MPID_Request, ch.netmod_area.padding);
 }
 
 /* ------------------------------------------------------------------------ */
@@ -64,8 +64,8 @@ static int tsearch_callback(cq_tagged_entry_t * wc, MPID_Request * rreq)
 }
 
 #undef FCNAME
-#define FCNAME DECL_FUNC(MPID_nem_sfi_iprobe_impl)
-int MPID_nem_sfi_iprobe_impl(struct MPIDI_VC *vc,
+#define FCNAME DECL_FUNC(MPID_nem_ofi_iprobe_impl)
+int MPID_nem_ofi_iprobe_impl(struct MPIDI_VC *vc,
                              int source,
                              int tag,
                              MPID_Comm * comm,
@@ -110,7 +110,7 @@ int MPID_nem_sfi_iprobe_impl(struct MPIDI_VC *vc,
                      0, /* Flags                */
                      &remote_proc,      /* Remote Address       */
                      &len,      /* Out:  incoming msglen */
-                     &(REQ_SFI(rreq)->sfi_context));    /* Nonblocking context  */
+                     &(REQ_SFI(rreq)->ofi_context));    /* Nonblocking context  */
     if (ret == -FI_ENOMSG) {
         *flag = 0;
         goto fn_exit;
@@ -123,11 +123,11 @@ int MPID_nem_sfi_iprobe_impl(struct MPIDI_VC *vc,
     }
     else {
         MPIU_ERR_CHKANDJUMP4((ret < 0), mpi_errno, MPI_ERR_OTHER,
-                             "**sfi_tsearch", "**sfi_tsearch %s %d %s %s",
+                             "**ofi_tsearch", "**ofi_tsearch %s %d %s %s",
                              __SHORT_FILE__, __LINE__, FCNAME, fi_strerror(-ret));
     }
     while (TSEARCH_INIT == REQ_SFI(rreq)->match_state)
-        MPID_nem_sfi_poll(MPID_BLOCKING_POLL);
+        MPID_nem_ofi_poll(MPID_BLOCKING_POLL);
 
     if (REQ_SFI(rreq)->match_state == TSEARCH_NOT_FOUND) {
         if (rreq_ptr) {
@@ -144,22 +144,22 @@ int MPID_nem_sfi_iprobe_impl(struct MPIDI_VC *vc,
 }
 
 #undef FCNAME
-#define FCNAME DECL_FUNC(MPID_nem_sfi_iprobe)
-int MPID_nem_sfi_iprobe(struct MPIDI_VC *vc,
+#define FCNAME DECL_FUNC(MPID_nem_ofi_iprobe)
+int MPID_nem_ofi_iprobe(struct MPIDI_VC *vc,
                         int source,
                         int tag,
                         MPID_Comm * comm, int context_offset, int *flag, MPI_Status * status)
 {
     int rc;
     BEGIN_FUNC(FCNAME);
-    rc = MPID_nem_sfi_iprobe_impl(vc, source, tag, comm, context_offset, flag, status, NULL);
+    rc = MPID_nem_ofi_iprobe_impl(vc, source, tag, comm, context_offset, flag, status, NULL);
     END_FUNC(FCNAME);
     return rc;
 }
 
 #undef FCNAME
-#define FCNAME DECL_FUNC(MPID_nem_sfi_improbe)
-int MPID_nem_sfi_improbe(struct MPIDI_VC *vc,
+#define FCNAME DECL_FUNC(MPID_nem_ofi_improbe)
+int MPID_nem_ofi_improbe(struct MPIDI_VC *vc,
                          int source,
                          int tag,
                          MPID_Comm * comm,
@@ -169,7 +169,7 @@ int MPID_nem_sfi_improbe(struct MPIDI_VC *vc,
     int old_error = status->MPI_ERROR;
     int s;
     BEGIN_FUNC(FCNAME);
-    s = MPID_nem_sfi_iprobe_impl(vc, source, tag, comm, context_offset, flag, status, message);
+    s = MPID_nem_ofi_iprobe_impl(vc, source, tag, comm, context_offset, flag, status, message);
     if (flag && *flag) {
         status->MPI_ERROR = old_error;
         (*message)->kind = MPID_REQUEST_MPROBE;
@@ -179,36 +179,36 @@ int MPID_nem_sfi_improbe(struct MPIDI_VC *vc,
 }
 
 #undef FCNAME
-#define FCNAME DECL_FUNC(MPID_nem_sfi_anysource_iprobe)
-int MPID_nem_sfi_anysource_iprobe(int tag,
+#define FCNAME DECL_FUNC(MPID_nem_ofi_anysource_iprobe)
+int MPID_nem_ofi_anysource_iprobe(int tag,
                                   MPID_Comm * comm,
                                   int context_offset, int *flag, MPI_Status * status)
 {
     int rc;
     BEGIN_FUNC(FCNAME);
-    rc = MPID_nem_sfi_iprobe(NULL, MPI_ANY_SOURCE, tag, comm, context_offset, flag, status);
+    rc = MPID_nem_ofi_iprobe(NULL, MPI_ANY_SOURCE, tag, comm, context_offset, flag, status);
     END_FUNC(FCNAME);
     return rc;
 }
 
 #undef FCNAME
-#define FCNAME DECL_FUNC(MPID_nem_sfi_anysource_improbe)
-int MPID_nem_sfi_anysource_improbe(int tag,
+#define FCNAME DECL_FUNC(MPID_nem_ofi_anysource_improbe)
+int MPID_nem_ofi_anysource_improbe(int tag,
                                    MPID_Comm * comm,
                                    int context_offset,
                                    int *flag, MPID_Request ** message, MPI_Status * status)
 {
     int rc;
     BEGIN_FUNC(FCNAME);
-    rc = MPID_nem_sfi_improbe(NULL, MPI_ANY_SOURCE, tag, comm,
+    rc = MPID_nem_ofi_improbe(NULL, MPI_ANY_SOURCE, tag, comm,
                               context_offset, flag, message, status);
     END_FUNC(FCNAME);
     return rc;
 }
 
 #undef FCNAME
-#define FCNAME DECL_FUNC(MPID_nem_sfi_poll)
-int MPID_nem_sfi_poll(int in_blocking_poll)
+#define FCNAME DECL_FUNC(MPID_nem_ofi_poll)
+int MPID_nem_ofi_poll(int in_blocking_poll)
 {
     int complete = 0, mpi_errno = MPI_SUCCESS;
     ssize_t ret;
@@ -281,8 +281,8 @@ int MPID_nem_sfi_poll(int in_blocking_poll)
                 }
             }
             else {
-                MPIU_ERR_CHKANDJUMP4(1, mpi_errno, MPI_ERR_OTHER, "**sfi_poll",
-                                     "**sfi_poll %s %d %s %s", __SHORT_FILE__,
+                MPIU_ERR_CHKANDJUMP4(1, mpi_errno, MPI_ERR_OTHER, "**ofi_poll",
+                                     "**ofi_poll %s %d %s %s", __SHORT_FILE__,
                                      __LINE__, FCNAME, fi_strerror(-ret));
             }
         }

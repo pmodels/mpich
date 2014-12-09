@@ -7,14 +7,14 @@
  *  to Argonne National Laboratory subject to Software Grant and Corporate
  *  Contributor License Agreement dated February 8, 2012.
  */
-#include "sfi_impl.h"
+#include "ofi_impl.h"
 
 static inline int dump_and_choose_providers(info_t * prov, info_t ** prov_use);
 static inline int compile_time_checking();
 
 #undef FCNAME
-#define FCNAME DECL_FUNC(MPID_nem_sfi_init)
-int MPID_nem_sfi_init(MPIDI_PG_t * pg_p, int pg_rank, char **bc_val_p, int *val_max_sz_p)
+#define FCNAME DECL_FUNC(MPID_nem_ofi_init)
+int MPID_nem_ofi_init(MPIDI_PG_t * pg_p, int pg_rank, char **bc_val_p, int *val_max_sz_p)
 {
     int ret, fi_version, i, len, pmi_errno;
     int mpi_errno = MPI_SUCCESS;
@@ -92,7 +92,7 @@ int MPID_nem_sfi_init(MPIDI_PG_t * pg_p, int pg_rank, char **bc_val_p, int *val_
                      &prov_tagged),     /* Out: List of providers that match hints   */
           getinfo);
     MPIU_ERR_CHKANDJUMP4(prov_tagged == NULL, mpi_errno, MPI_ERR_OTHER,
-                         "**sfi_getinfo", "**sfi_getinfo %s %d %s %s",
+                         "**ofi_getinfo", "**ofi_getinfo %s %d %s %s",
                          __SHORT_FILE__, __LINE__, FCNAME, "No tag matching provider found");
     /* ------------------------------------------------------------------------ */
     /* Open fabric                                                              */
@@ -197,7 +197,7 @@ int MPID_nem_sfi_init(MPIDI_PG_t * pg_p, int pg_rank, char **bc_val_p, int *val_
     /* Get our business card            */
     /* -------------------------------- */
     my_bc = *bc_val_p;
-    MPI_RC(MPID_nem_sfi_get_business_card(pg_rank, bc_val_p, val_max_sz_p));
+    MPI_RC(MPID_nem_ofi_get_business_card(pg_rank, bc_val_p, val_max_sz_p));
 
     /* -------------------------------- */
     /* Publish the business card        */
@@ -273,7 +273,7 @@ int MPID_nem_sfi_init(MPIDI_PG_t * pg_p, int pg_rank, char **bc_val_p, int *val_
     /* required, like connection management and      */
     /* startcontig messages                          */
     /* --------------------------------------------- */
-    MPI_RC(MPID_nem_sfi_cm_init(pg_p, pg_rank));
+    MPI_RC(MPID_nem_ofi_cm_init(pg_p, pg_rank));
   fn_exit:
     if (fi_addrs)
         MPIU_Free(fi_addrs);
@@ -285,8 +285,8 @@ int MPID_nem_sfi_init(MPIDI_PG_t * pg_p, int pg_rank, char **bc_val_p, int *val_
 }
 
 #undef FCNAME
-#define FCNAME DECL_FUNC(MPID_nem_sfi_finalize)
-int MPID_nem_sfi_finalize(void)
+#define FCNAME DECL_FUNC(MPID_nem_ofi_finalize)
+int MPID_nem_ofi_finalize(void)
 {
     int mpi_errno = MPI_SUCCESS;
     int ret = 0;
@@ -303,7 +303,7 @@ int MPID_nem_sfi_finalize(void)
     /* Cancels any persistent/global requests and    */
     /* frees any resources from cm_init()            */
     /* --------------------------------------------- */
-    MPI_RC(MPID_nem_sfi_cm_finalize());
+    MPI_RC(MPID_nem_ofi_cm_finalize());
 
     FI_RC(fi_close((fid_t) gl_data.mr), mrclose);
     FI_RC(fi_close((fid_t) gl_data.av), avclose);
@@ -316,8 +316,8 @@ int MPID_nem_sfi_finalize(void)
 
 static inline int compile_time_checking()
 {
-    SFI_COMPILE_TIME_ASSERT(sizeof(MPID_nem_sfi_vc_t) <= MPID_NEM_VC_NETMOD_AREA_LEN);
-    SFI_COMPILE_TIME_ASSERT(sizeof(MPID_nem_sfi_req_t) <= MPID_NEM_REQ_NETMOD_AREA_LEN);
+    SFI_COMPILE_TIME_ASSERT(sizeof(MPID_nem_ofi_vc_t) <= MPID_NEM_VC_NETMOD_AREA_LEN);
+    SFI_COMPILE_TIME_ASSERT(sizeof(MPID_nem_ofi_req_t) <= MPID_NEM_REQ_NETMOD_AREA_LEN);
     SFI_COMPILE_TIME_ASSERT(sizeof(iovec_t) == sizeof(MPID_IOV));
     MPIU_Assert(((void *) &(((iovec_t *) 0)->iov_base)) ==
                 ((void *) &(((MPID_IOV *) 0)->MPID_IOV_BUF)));
@@ -333,28 +333,28 @@ static inline int compile_time_checking()
     /* likely needs a MPIU_ERR_REGISTER macro                                   */
     /* ------------------------------------------------------------------------ */
 #if 0
-    MPIU_ERR_SET2(e, MPI_ERR_OTHER, "**sfi_avmap", "**sfi_avmap %s %d %s %s", a, b, a, a);
-    MPIU_ERR_SET2(e, MPI_ERR_OTHER, "**sfi_tsend", "**sfi_tsend %s %d %s %s", a, b, a, a);
-    MPIU_ERR_SET2(e, MPI_ERR_OTHER, "**sfi_trecv", "**sfi_trecv %s %d %s %s", a, b, a, a);
-    MPIU_ERR_SET2(e, MPI_ERR_OTHER, "**sfi_getinfo", "**sfi_getinfo %s %d %s %s", a, b, a, a);
-    MPIU_ERR_SET2(e, MPI_ERR_OTHER, "**sfi_openep", "**sfi_openep %s %d %s %s", a, b, a, a);
-    MPIU_ERR_SET2(e, MPI_ERR_OTHER, "**sfi_openfabric", "**sfi_openfabric %s %d %s %s", a, b, a, a);
-    MPIU_ERR_SET2(e, MPI_ERR_OTHER, "**sfi_opendomain", "**sfi_opendomain %s %d %s %s", a, b, a, a);
-    MPIU_ERR_SET2(e, MPI_ERR_OTHER, "**sfi_opencq", "**sfi_opencq %s %d %s %s", a, b, a, a);
-    MPIU_ERR_SET2(e, MPI_ERR_OTHER, "**sfi_avopen", "**sfi_avopen %s %d %s %s", a, b, a, a);
-    MPIU_ERR_SET2(e, MPI_ERR_OTHER, "**sfi_bind", "**sfi_bind %s %d %s %s", a, b, a, a);
-    MPIU_ERR_SET2(e, MPI_ERR_OTHER, "**sfi_ep_enable", "**sfi_ep_enable %s %d %s %s", a, b, a, a);
-    MPIU_ERR_SET2(e, MPI_ERR_OTHER, "**sfi_getname", "**sfi_getname %s %d %s %s", a, b, a, a);
-    MPIU_ERR_SET2(e, MPI_ERR_OTHER, "**sfi_avclose", "**sfi_avclose %s %d %s %s", a, b, a, a);
-    MPIU_ERR_SET2(e, MPI_ERR_OTHER, "**sfi_epclose", "**sfi_epclose %s %d %s %s", a, b, a, a);
-    MPIU_ERR_SET2(e, MPI_ERR_OTHER, "**sfi_cqclose", "**sfi_cqclose %s %d %s %s", a, b, a, a);
-    MPIU_ERR_SET2(e, MPI_ERR_OTHER, "**sfi_fabricclose", "**sfi_fabricclose %s %d %s %s", a, b, a,
+    MPIU_ERR_SET2(e, MPI_ERR_OTHER, "**ofi_avmap", "**ofi_avmap %s %d %s %s", a, b, a, a);
+    MPIU_ERR_SET2(e, MPI_ERR_OTHER, "**ofi_tsend", "**ofi_tsend %s %d %s %s", a, b, a, a);
+    MPIU_ERR_SET2(e, MPI_ERR_OTHER, "**ofi_trecv", "**ofi_trecv %s %d %s %s", a, b, a, a);
+    MPIU_ERR_SET2(e, MPI_ERR_OTHER, "**ofi_getinfo", "**ofi_getinfo %s %d %s %s", a, b, a, a);
+    MPIU_ERR_SET2(e, MPI_ERR_OTHER, "**ofi_openep", "**ofi_openep %s %d %s %s", a, b, a, a);
+    MPIU_ERR_SET2(e, MPI_ERR_OTHER, "**ofi_openfabric", "**ofi_openfabric %s %d %s %s", a, b, a, a);
+    MPIU_ERR_SET2(e, MPI_ERR_OTHER, "**ofi_opendomain", "**ofi_opendomain %s %d %s %s", a, b, a, a);
+    MPIU_ERR_SET2(e, MPI_ERR_OTHER, "**ofi_opencq", "**ofi_opencq %s %d %s %s", a, b, a, a);
+    MPIU_ERR_SET2(e, MPI_ERR_OTHER, "**ofi_avopen", "**ofi_avopen %s %d %s %s", a, b, a, a);
+    MPIU_ERR_SET2(e, MPI_ERR_OTHER, "**ofi_bind", "**ofi_bind %s %d %s %s", a, b, a, a);
+    MPIU_ERR_SET2(e, MPI_ERR_OTHER, "**ofi_ep_enable", "**ofi_ep_enable %s %d %s %s", a, b, a, a);
+    MPIU_ERR_SET2(e, MPI_ERR_OTHER, "**ofi_getname", "**ofi_getname %s %d %s %s", a, b, a, a);
+    MPIU_ERR_SET2(e, MPI_ERR_OTHER, "**ofi_avclose", "**ofi_avclose %s %d %s %s", a, b, a, a);
+    MPIU_ERR_SET2(e, MPI_ERR_OTHER, "**ofi_epclose", "**ofi_epclose %s %d %s %s", a, b, a, a);
+    MPIU_ERR_SET2(e, MPI_ERR_OTHER, "**ofi_cqclose", "**ofi_cqclose %s %d %s %s", a, b, a, a);
+    MPIU_ERR_SET2(e, MPI_ERR_OTHER, "**ofi_fabricclose", "**ofi_fabricclose %s %d %s %s", a, b, a,
                   a);
-    MPIU_ERR_SET2(e, MPI_ERR_OTHER, "**sfi_domainclose", "**sfi_domainclose %s %d %s %s", a, b, a,
+    MPIU_ERR_SET2(e, MPI_ERR_OTHER, "**ofi_domainclose", "**ofi_domainclose %s %d %s %s", a, b, a,
                   a);
-    MPIU_ERR_SET2(e, MPI_ERR_OTHER, "**sfi_tsearch", "**sfi_tsearch %s %d %s %s", a, b, a, a);
-    MPIU_ERR_SET2(e, MPI_ERR_OTHER, "**sfi_poll", "**sfi_poll %s %d %s %s", a, b, a, a);
-    MPIU_ERR_SET2(e, MPI_ERR_OTHER, "**sfi_cancel", "**sfi_cancel %s %d %s %s", a, b, a, a);
+    MPIU_ERR_SET2(e, MPI_ERR_OTHER, "**ofi_tsearch", "**ofi_tsearch %s %d %s %s", a, b, a, a);
+    MPIU_ERR_SET2(e, MPI_ERR_OTHER, "**ofi_poll", "**ofi_poll %s %d %s %s", a, b, a, a);
+    MPIU_ERR_SET2(e, MPI_ERR_OTHER, "**ofi_cancel", "**ofi_cancel %s %d %s %s", a, b, a, a);
 #endif
     return 0;
 }
