@@ -2167,10 +2167,6 @@ int MPID_nem_ib_PktHandler_GetResp(MPIDI_VC_t * vc,
         mpi_errno = MPIDI_CH3I_RMA_Handle_flush_ack(win_ptr, target_rank);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     }
-    if (get_resp_pkt->flags & MPIDI_CH3_PKT_FLAG_RMA_UNLOCK_ACK) {
-        mpi_errno = MPIDI_CH3I_RMA_Handle_flush_ack(win_ptr, target_rank);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-    }
 
     void *write_to_buf;
 

@@ -240,10 +240,9 @@ int MPIDI_CH3_ReqHandler_GaccumRecvComplete( MPIDI_VC_t *vc,
     get_accum_resp_pkt->flags = MPIDI_CH3_PKT_FLAG_NONE;
     if (rreq->dev.flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK)
         get_accum_resp_pkt->flags |= MPIDI_CH3_PKT_FLAG_RMA_LOCK_GRANTED;
-    if (rreq->dev.flags & MPIDI_CH3_PKT_FLAG_RMA_FLUSH)
+    if ((rreq->dev.flags & MPIDI_CH3_PKT_FLAG_RMA_FLUSH) ||
+        (rreq->dev.flags & MPIDI_CH3_PKT_FLAG_RMA_UNLOCK))
         get_accum_resp_pkt->flags |= MPIDI_CH3_PKT_FLAG_RMA_FLUSH_ACK;
-    if (rreq->dev.flags & MPIDI_CH3_PKT_FLAG_RMA_UNLOCK)
-        get_accum_resp_pkt->flags |= MPIDI_CH3_PKT_FLAG_RMA_UNLOCK_ACK;
     get_accum_resp_pkt->immed_len = 0;
 
     MPID_Datatype_get_size_macro(rreq->dev.datatype, type_size);
@@ -596,10 +595,9 @@ int MPIDI_CH3_ReqHandler_GetDerivedDTRecvComplete( MPIDI_VC_t *vc,
     get_resp_pkt->flags = MPIDI_CH3_PKT_FLAG_NONE;
     if (rreq->dev.flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK)
         get_resp_pkt->flags |= MPIDI_CH3_PKT_FLAG_RMA_LOCK_GRANTED;
-    if (rreq->dev.flags & MPIDI_CH3_PKT_FLAG_RMA_FLUSH)
+    if ((rreq->dev.flags & MPIDI_CH3_PKT_FLAG_RMA_FLUSH) ||
+        (rreq->dev.flags & MPIDI_CH3_PKT_FLAG_RMA_UNLOCK))
         get_resp_pkt->flags |= MPIDI_CH3_PKT_FLAG_RMA_FLUSH_ACK;
-    if (rreq->dev.flags & MPIDI_CH3_PKT_FLAG_RMA_UNLOCK)
-        get_resp_pkt->flags |= MPIDI_CH3_PKT_FLAG_RMA_UNLOCK_ACK;
     get_resp_pkt->immed_len = 0;
     
     sreq->dev.segment_ptr = MPID_Segment_alloc( );
@@ -896,10 +894,9 @@ static inline int perform_get_in_lock_queue(MPID_Win *win_ptr, MPIDI_RMA_Lock_en
     get_resp_pkt->flags = MPIDI_CH3_PKT_FLAG_NONE;
     if (get_pkt->flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK)
         get_resp_pkt->flags |= MPIDI_CH3_PKT_FLAG_RMA_LOCK_GRANTED;
-    if (get_pkt->flags & MPIDI_CH3_PKT_FLAG_RMA_FLUSH)
+    if ((get_pkt->flags & MPIDI_CH3_PKT_FLAG_RMA_FLUSH) ||
+        (get_pkt->flags & MPIDI_CH3_PKT_FLAG_RMA_UNLOCK))
         get_resp_pkt->flags |= MPIDI_CH3_PKT_FLAG_RMA_FLUSH_ACK;
-    if (get_pkt->flags & MPIDI_CH3_PKT_FLAG_RMA_UNLOCK)
-        get_resp_pkt->flags |= MPIDI_CH3_PKT_FLAG_RMA_UNLOCK_ACK;
     get_resp_pkt->target_rank = win_ptr->comm_ptr->rank;
     get_resp_pkt->source_win_handle = get_pkt->source_win_handle;
     get_resp_pkt->immed_len = 0;
@@ -1049,10 +1046,9 @@ static inline int perform_get_acc_in_lock_queue(MPID_Win *win_ptr, MPIDI_RMA_Loc
     get_accum_resp_pkt->flags = MPIDI_CH3_PKT_FLAG_NONE;
     if (get_accum_pkt->flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK)
         get_accum_resp_pkt->flags |= MPIDI_CH3_PKT_FLAG_RMA_LOCK_GRANTED;
-    if (get_accum_pkt->flags & MPIDI_CH3_PKT_FLAG_RMA_FLUSH)
+    if ((get_accum_pkt->flags & MPIDI_CH3_PKT_FLAG_RMA_FLUSH) ||
+        (get_accum_pkt->flags & MPIDI_CH3_PKT_FLAG_RMA_UNLOCK))
         get_accum_resp_pkt->flags |= MPIDI_CH3_PKT_FLAG_RMA_FLUSH_ACK;
-    if (get_accum_pkt->flags & MPIDI_CH3_PKT_FLAG_RMA_UNLOCK)
-        get_accum_resp_pkt->flags |= MPIDI_CH3_PKT_FLAG_RMA_UNLOCK_ACK;
     get_accum_resp_pkt->target_rank = win_ptr->comm_ptr->rank;
     get_accum_resp_pkt->source_win_handle = get_accum_pkt->source_win_handle;
     get_accum_resp_pkt->immed_len = 0;
@@ -1148,10 +1144,9 @@ static inline int perform_fop_in_lock_queue(MPID_Win *win_ptr, MPIDI_RMA_Lock_en
     fop_resp_pkt->flags = MPIDI_CH3_PKT_FLAG_NONE;
     if (fop_pkt->flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK)
         fop_resp_pkt->flags |= MPIDI_CH3_PKT_FLAG_RMA_LOCK_GRANTED;
-    if (fop_pkt->flags & MPIDI_CH3_PKT_FLAG_RMA_FLUSH)
+    if ((fop_pkt->flags & MPIDI_CH3_PKT_FLAG_RMA_FLUSH) ||
+        (fop_pkt->flags & MPIDI_CH3_PKT_FLAG_RMA_UNLOCK))
         fop_resp_pkt->flags |= MPIDI_CH3_PKT_FLAG_RMA_FLUSH_ACK;
-    if (fop_pkt->flags & MPIDI_CH3_PKT_FLAG_RMA_UNLOCK)
-        fop_resp_pkt->flags |= MPIDI_CH3_PKT_FLAG_RMA_UNLOCK_ACK;
     fop_resp_pkt->immed_len = fop_pkt->immed_len;
 
     /* copy data to resp pkt header */
@@ -1228,10 +1223,9 @@ static inline int perform_cas_in_lock_queue(MPID_Win *win_ptr, MPIDI_RMA_Lock_en
     cas_resp_pkt->flags = MPIDI_CH3_PKT_FLAG_NONE;
     if (cas_pkt->flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK)
         cas_resp_pkt->flags |= MPIDI_CH3_PKT_FLAG_RMA_LOCK_GRANTED;
-    if (cas_pkt->flags & MPIDI_CH3_PKT_FLAG_RMA_FLUSH)
+    if ((cas_pkt->flags & MPIDI_CH3_PKT_FLAG_RMA_FLUSH) ||
+        (cas_pkt->flags & MPIDI_CH3_PKT_FLAG_RMA_UNLOCK))
         cas_resp_pkt->flags |= MPIDI_CH3_PKT_FLAG_RMA_FLUSH_ACK;
-    if (cas_pkt->flags & MPIDI_CH3_PKT_FLAG_RMA_UNLOCK)
-        cas_resp_pkt->flags |= MPIDI_CH3_PKT_FLAG_RMA_UNLOCK_ACK;
 
     /* Copy old value into the response packet */
     MPID_Datatype_get_size_macro(cas_pkt->datatype, len);

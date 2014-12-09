@@ -630,10 +630,9 @@ static inline int finish_op_on_target(MPID_Win *win_ptr, MPIDI_VC_t *vc,
         /* This is PUT or ACC */
         if (flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK) {
             MPIDI_CH3_Pkt_flags_t pkt_flags = MPIDI_CH3_PKT_FLAG_RMA_LOCK_GRANTED;
-            if (flags & MPIDI_CH3_PKT_FLAG_RMA_FLUSH)
+            if ((flags & MPIDI_CH3_PKT_FLAG_RMA_FLUSH) ||
+                (flags & MPIDI_CH3_PKT_FLAG_RMA_UNLOCK))
                 pkt_flags |= MPIDI_CH3_PKT_FLAG_RMA_FLUSH_ACK;
-            if (flags & MPIDI_CH3_PKT_FLAG_RMA_UNLOCK)
-                pkt_flags |= MPIDI_CH3_PKT_FLAG_RMA_UNLOCK_ACK;
             mpi_errno = MPIDI_CH3I_Send_lock_ack_pkt(vc, win_ptr,
                                                      pkt_flags,
                                                      source_win_handle);
