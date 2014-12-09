@@ -7,7 +7,7 @@
  *  to Argonne National Laboratory subject to Software Grant and Corporate
  *  Contributor License Agreement dated February 8, 2012.
  */
-#include "sfi_impl.h"
+#include "ofi_impl.h"
 
 #define MPID_NORMAL_SEND 0
 
@@ -15,8 +15,8 @@
 /* Receive callback called after sending a syncronous send acknowledgement. */
 /* ------------------------------------------------------------------------ */
 #undef FCNAME
-#define FCNAME DECL_FUNC(MPID_nem_sfi_sync_recv_callback)
-static inline int MPID_nem_sfi_sync_recv_callback(cq_tagged_entry_t * wc ATTRIBUTE((unused)),
+#define FCNAME DECL_FUNC(MPID_nem_ofi_sync_recv_callback)
+static inline int MPID_nem_ofi_sync_recv_callback(cq_tagged_entry_t * wc ATTRIBUTE((unused)),
                                                   MPID_Request * rreq)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -36,8 +36,8 @@ static inline int MPID_nem_sfi_sync_recv_callback(cq_tagged_entry_t * wc ATTRIBU
 /* Free any temporary/pack buffers and complete the send request            */
 /* ------------------------------------------------------------------------ */
 #undef FCNAME
-#define FCNAME DECL_FUNC(MPID_nem_sfi_send_callback)
-static inline int MPID_nem_sfi_send_callback(cq_tagged_entry_t * wc ATTRIBUTE((unused)),
+#define FCNAME DECL_FUNC(MPID_nem_ofi_send_callback)
+static inline int MPID_nem_ofi_send_callback(cq_tagged_entry_t * wc ATTRIBUTE((unused)),
                                              MPID_Request * sreq)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -54,8 +54,8 @@ static inline int MPID_nem_sfi_send_callback(cq_tagged_entry_t * wc ATTRIBUTE((u
 /* Handle an incoming receive completion event                              */
 /* ------------------------------------------------------------------------ */
 #undef FCNAME
-#define FCNAME DECL_FUNC(MPID_nem_sfi_recv_callback)
-static inline int MPID_nem_sfi_recv_callback(cq_tagged_entry_t * wc, MPID_Request * rreq)
+#define FCNAME DECL_FUNC(MPID_nem_ofi_recv_callback)
+static inline int MPID_nem_ofi_recv_callback(cq_tagged_entry_t * wc, MPID_Request * rreq)
 {
     int err0, err1, src, mpi_errno = MPI_SUCCESS;
     uint64_t ssend_bits;
@@ -99,17 +99,17 @@ static inline int MPID_nem_sfi_recv_callback(cq_tagged_entry_t * wc, MPID_Reques
         }
         ssend_bits = init_sendtag(rreq->dev.match.parts.context_id,
                                   rreq->comm->rank, rreq->status.MPI_TAG, MPID_SYNC_SEND_ACK);
-        MPID_nem_sfi_create_req(&sync_req, 1);
+        MPID_nem_ofi_create_req(&sync_req, 1);
         sync_req->dev.OnDataAvail = NULL;
         sync_req->dev.next = NULL;
-        REQ_SFI(sync_req)->event_callback = MPID_nem_sfi_sync_recv_callback;
+        REQ_SFI(sync_req)->event_callback = MPID_nem_ofi_sync_recv_callback;
         REQ_SFI(sync_req)->parent = rreq;
         FI_RC(fi_tsend(gl_data.endpoint,
                          NULL,
                          0,
                          gl_data.mr,
                          VC_SFI(vc)->direct_addr,
-                         ssend_bits, &(REQ_SFI(sync_req)->sfi_context)), tsend);
+                         ssend_bits, &(REQ_SFI(sync_req)->ofi_context)), tsend);
     }
     else {
         /* ---------------------------------------------------- */
@@ -147,10 +147,10 @@ static inline int do_isend(struct MPIDI_VC *vc,
     /* ---------------------------------------------------- */
     /* Create the MPI request                               */
     /* ---------------------------------------------------- */
-    MPID_nem_sfi_create_req(&sreq, 2);
+    MPID_nem_ofi_create_req(&sreq, 2);
     sreq->kind = MPID_REQUEST_SEND;
     sreq->dev.OnDataAvail = NULL;
-    REQ_SFI(sreq)->event_callback = MPID_nem_sfi_send_callback;
+    REQ_SFI(sreq)->event_callback = MPID_nem_ofi_send_callback;
     REQ_SFI(sreq)->vc = vc;
 
     /* ---------------------------------------------------- */
@@ -178,10 +178,10 @@ static inline int do_isend(struct MPIDI_VC *vc,
         /* ---------------------------------------------------- */
         int c = 1;
         MPID_cc_incr(sreq->cc_ptr, &c);
-        MPID_nem_sfi_create_req(&sync_req, 1);
+        MPID_nem_ofi_create_req(&sync_req, 1);
         sync_req->dev.OnDataAvail = NULL;
         sync_req->dev.next = NULL;
-        REQ_SFI(sync_req)->event_callback = MPID_nem_sfi_sync_recv_callback;
+        REQ_SFI(sync_req)->event_callback = MPID_nem_ofi_sync_recv_callback;
         REQ_SFI(sync_req)->parent = sreq;
         ssend_match = init_recvtag(&ssend_mask, comm->context_id + context_offset, dest, tag);
         ssend_match |= MPID_SYNC_SEND_ACK;
@@ -192,7 +192,7 @@ static inline int do_isend(struct MPIDI_VC *vc,
                            VC_SFI(vc)->direct_addr,     /* remote proc */
                            ssend_match, /* match bits  */
                            0ULL,        /* mask bits   */
-                           &(REQ_SFI(sync_req)->sfi_context)), trecv);
+                           &(REQ_SFI(sync_req)->ofi_context)), trecv);
     }
     FI_RC(fi_tsend(gl_data.endpoint,  /* Endpoint                       */
                      send_buffer,       /* Send buffer(packed or user)    */
@@ -200,14 +200,14 @@ static inline int do_isend(struct MPIDI_VC *vc,
                      gl_data.mr,        /* Dynamic memory region          */
                      VC_SFI(vc)->direct_addr,   /* Use the address of this VC     */
                      match_bits,        /* Match bits                     */
-                     &(REQ_SFI(sreq)->sfi_context)), tsend);
+                     &(REQ_SFI(sreq)->ofi_context)), tsend);
     *request = sreq;
     END_FUNC_RC(FCNAME);
 }
 
 #undef FCNAME
-#define FCNAME DECL_FUNC(MPID_nem_sfi_recv_posted)
-int MPID_nem_sfi_recv_posted(struct MPIDI_VC *vc, struct MPID_Request *rreq)
+#define FCNAME DECL_FUNC(MPID_nem_ofi_recv_posted)
+int MPID_nem_ofi_recv_posted(struct MPIDI_VC *vc, struct MPID_Request *rreq)
 {
     int mpi_errno = MPI_SUCCESS, dt_contig, src, tag;
     uint64_t match_bits = 0, mask_bits = 0;
@@ -222,8 +222,8 @@ int MPID_nem_sfi_recv_posted(struct MPIDI_VC *vc, struct MPID_Request *rreq)
     /* ------------------------ */
     /* Initialize the request   */
     /* ------------------------ */
-    MPID_nem_sfi_init_req(rreq);
-    REQ_SFI(rreq)->event_callback = MPID_nem_sfi_recv_callback;
+    MPID_nem_ofi_init_req(rreq);
+    REQ_SFI(rreq)->event_callback = MPID_nem_ofi_recv_callback;
     REQ_SFI(rreq)->vc = vc;
 
     /* ---------------------------------------------------- */
@@ -255,14 +255,14 @@ int MPID_nem_sfi_recv_posted(struct MPIDI_VC *vc, struct MPID_Request *rreq)
                        data_sz,
                        gl_data.mr,
                        remote_proc,
-                       match_bits, mask_bits, &(REQ_SFI(rreq)->sfi_context)), trecv);
-    MPID_nem_sfi_poll(MPID_NONBLOCKING_POLL);
+                       match_bits, mask_bits, &(REQ_SFI(rreq)->ofi_context)), trecv);
+    MPID_nem_ofi_poll(MPID_NONBLOCKING_POLL);
     END_FUNC_RC(FCNAME);
 }
 
 #undef FCNAME
-#define FCNAME DECL_FUNC(MPID_nem_sfi_send)
-int MPID_nem_sfi_send(struct MPIDI_VC *vc,
+#define FCNAME DECL_FUNC(MPID_nem_ofi_send)
+int MPID_nem_ofi_send(struct MPIDI_VC *vc,
                       const void *buf,
                       int count,
                       MPI_Datatype datatype,
@@ -279,8 +279,8 @@ int MPID_nem_sfi_send(struct MPIDI_VC *vc,
 }
 
 #undef FCNAME
-#define FCNAME DECL_FUNC(MPID_nem_sfi_isend)
-int MPID_nem_sfi_isend(struct MPIDI_VC *vc,
+#define FCNAME DECL_FUNC(MPID_nem_ofi_isend)
+int MPID_nem_ofi_isend(struct MPIDI_VC *vc,
                        const void *buf,
                        int count,
                        MPI_Datatype datatype,
@@ -296,8 +296,8 @@ int MPID_nem_sfi_isend(struct MPIDI_VC *vc,
 }
 
 #undef FCNAME
-#define FCNAME DECL_FUNC(MPID_nem_sfi_ssend)
-int MPID_nem_sfi_ssend(struct MPIDI_VC *vc,
+#define FCNAME DECL_FUNC(MPID_nem_ofi_ssend)
+int MPID_nem_ofi_ssend(struct MPIDI_VC *vc,
                        const void *buf,
                        int count,
                        MPI_Datatype datatype,
@@ -313,8 +313,8 @@ int MPID_nem_sfi_ssend(struct MPIDI_VC *vc,
 }
 
 #undef FCNAME
-#define FCNAME DECL_FUNC(MPID_nem_sfi_issend)
-int MPID_nem_sfi_issend(struct MPIDI_VC *vc,
+#define FCNAME DECL_FUNC(MPID_nem_ofi_issend)
+int MPID_nem_ofi_issend(struct MPIDI_VC *vc,
                         const void *buf,
                         int count,
                         MPI_Datatype datatype,
@@ -335,9 +335,9 @@ int MPID_nem_sfi_issend(struct MPIDI_VC *vc,
   int mpi_errno = MPI_SUCCESS;                          \
   int ret;                                              \
   BEGIN_FUNC(FCNAME);                                   \
-  MPID_nem_sfi_poll(MPID_NONBLOCKING_POLL);             \
+  MPID_nem_ofi_poll(MPID_NONBLOCKING_POLL);             \
   ret = fi_cancel((fid_t)gl_data.endpoint,              \
-                  &(REQ_SFI(req)->sfi_context));        \
+                  &(REQ_SFI(req)->ofi_context));        \
   if (ret == 0) {                                        \
     MPIR_STATUS_SET_CANCEL_BIT(req->status, TRUE);      \
   } else {                                              \
@@ -348,33 +348,33 @@ int MPID_nem_sfi_issend(struct MPIDI_VC *vc,
 })
 
 #undef FCNAME
-#define FCNAME DECL_FUNC(MPID_nem_sfi_cancel_send)
-int MPID_nem_sfi_cancel_send(struct MPIDI_VC *vc ATTRIBUTE((unused)), struct MPID_Request *sreq)
+#define FCNAME DECL_FUNC(MPID_nem_ofi_cancel_send)
+int MPID_nem_ofi_cancel_send(struct MPIDI_VC *vc ATTRIBUTE((unused)), struct MPID_Request *sreq)
 {
     DO_CANCEL(sreq);
 }
 
 #undef FCNAME
-#define FCNAME DECL_FUNC(MPID_nem_sfi_cancel_recv)
-int MPID_nem_sfi_cancel_recv(struct MPIDI_VC *vc ATTRIBUTE((unused)), struct MPID_Request *rreq)
+#define FCNAME DECL_FUNC(MPID_nem_ofi_cancel_recv)
+int MPID_nem_ofi_cancel_recv(struct MPIDI_VC *vc ATTRIBUTE((unused)), struct MPID_Request *rreq)
 {
     DO_CANCEL(rreq);
 }
 
 #undef FCNAME
-#define FCNAME DECL_FUNC(MPID_nem_sfi_anysource_posted)
-void MPID_nem_sfi_anysource_posted(MPID_Request * rreq)
+#define FCNAME DECL_FUNC(MPID_nem_ofi_anysource_posted)
+void MPID_nem_ofi_anysource_posted(MPID_Request * rreq)
 {
     int mpi_errno = MPI_SUCCESS;
     BEGIN_FUNC(FCNAME);
-    mpi_errno = MPID_nem_sfi_recv_posted(NULL, rreq);
+    mpi_errno = MPID_nem_ofi_recv_posted(NULL, rreq);
     MPIU_Assert(mpi_errno == MPI_SUCCESS);
     END_FUNC(FCNAME);
 }
 
 #undef FCNAME
-#define FCNAME DECL_FUNC(MPID_nem_sfi_anysource_matched)
-int MPID_nem_sfi_anysource_matched(MPID_Request * rreq)
+#define FCNAME DECL_FUNC(MPID_nem_ofi_anysource_matched)
+int MPID_nem_ofi_anysource_matched(MPID_Request * rreq)
 {
     int mpi_errno = FALSE;
     int ret;
@@ -384,7 +384,7 @@ int MPID_nem_sfi_anysource_matched(MPID_Request * rreq)
     /* source request on another device.  We have the chance */
     /* to cancel this shared request if it has been posted   */
     /* ----------------------------------------------------- */
-    ret = fi_cancel((fid_t) gl_data.endpoint, &(REQ_SFI(rreq)->sfi_context));
+    ret = fi_cancel((fid_t) gl_data.endpoint, &(REQ_SFI(rreq)->ofi_context));
     if (ret == 0) {
         /* --------------------------------------------------- */
         /* Request cancelled:  cancel and complete the request */
