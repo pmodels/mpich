@@ -144,7 +144,7 @@ static HYD_status match_arg(char ***argv_p, struct HYD_arg_match_table *match_ta
                 }
                 else {
                     m->help_fn();
-                    HYDU_ERR_SETANDJUMP(status, HYD_GRACEFUL_ABORT, "");
+                    HYDU_ERR_SETANDJUMP(status, HYD_GRACEFUL_ABORT, "%s", "");
                 }
             }
 

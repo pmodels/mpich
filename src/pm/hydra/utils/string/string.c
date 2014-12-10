@@ -89,7 +89,7 @@ HYD_status HYDU_strsplit(char *str, char **str1, char **str2, char sep)
     HYDU_FUNC_ENTER();
 
     if (str == NULL)
-        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "");
+        HYDU_ERR_SETANDJUMP(status, HYD_INTERNAL_ERROR, "%s", "");
 
     *str1 = HYDU_strdup(str);
     for (i = 0; (*str1)[i] && ((*str1)[i] != sep); i++);

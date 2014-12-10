@@ -151,7 +151,7 @@ static HYD_status help_fn(char *arg, char ***argv)
     HYD_status status = HYD_SUCCESS;
 
     help_help_fn();
-    HYDU_ERR_SETANDJUMP(status, HYD_GRACEFUL_ABORT, "");
+    HYDU_ERR_SETANDJUMP(status, HYD_GRACEFUL_ABORT, "%s", "");
 
   fn_exit:
     return status;
@@ -1227,7 +1227,7 @@ static HYD_status info_fn(char *arg, char ***argv)
                        "    Demux engines available:                 %s\n",
                        HYDRA_AVAILABLE_DEMUXES);
 
-    HYDU_ERR_SETANDJUMP(status, HYD_GRACEFUL_ABORT, "");
+    HYDU_ERR_SETANDJUMP(status, HYD_GRACEFUL_ABORT, "%s", "");
 
   fn_exit:
     return status;
