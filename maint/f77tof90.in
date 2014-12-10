@@ -332,7 +332,7 @@ sub ConvertMakefile {
         if (not m/^\s*#/) {
             while (m/\b(\w+f)\b/g) {
                 my $word = $1;
-                next if $word eq "if" or $word eq "rf"; # filter out some noise
+                next if $word eq "if" or $word eq "rf" or $word eq "endif"; # filter out some noise
                 if (-e "$indir/${word}.f" or
                     0 == system(qq(grep 'TESTDEFN filename="${word}\\.f"' '$indir/ioharness.defn' >/dev/null 2>&1)))
                 {
