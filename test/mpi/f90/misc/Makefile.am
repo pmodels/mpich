@@ -9,6 +9,8 @@ include $(top_srcdir)/Makefile_f90.mtest
 
 EXTRA_DIST = testlist
 
+EXTRA_DIST += testlist.ap
+
 noinst_PROGRAMS = sizeof2
 sizeof2_SOURCES = sizeof2.f90
 
