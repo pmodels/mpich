@@ -174,27 +174,12 @@ int MPIDI_CH3I_Put(const void *origin_addr, int origin_count, MPI_Datatype
             new_ptr->is_dt = 1;
         }
 
-        /* If both origin and target are basic datatype, try to
-           copy origin data to packet header as much as possible. */
+        /* Judge if this operation is an piggyback candidate */
         if (!new_ptr->is_dt) {
             size_t len;
             MPI_Aint origin_type_size;
-
             MPID_Datatype_get_size_macro(new_ptr->origin_datatype, origin_type_size);
-            /* length of origin data */
             MPIU_Assign_trunc(len, new_ptr->origin_count * origin_type_size, size_t);
-            /* length of origin data that can fit into immed area in pkt header */
-            MPIU_Assign_trunc(put_pkt->immed_len,
-                              MPIR_MIN(len, (MPIDI_RMA_IMMED_BYTES / origin_type_size) * origin_type_size),
-                              int);
-
-            if (put_pkt->immed_len > 0) {
-                void *src = new_ptr->origin_addr, *dest = put_pkt->data;
-                /* copy data from origin buffer to immed area in packet header */
-                mpi_errno = immed_copy(src, dest, (size_t)put_pkt->immed_len);
-                if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
-            }
-
             if (len <= MPIR_MAX(MPIDI_RMA_IMMED_BYTES,
                                 MPIR_CVAR_CH3_RMA_OP_PIGGYBACK_LOCK_DATA_SIZE))
                 new_ptr->piggyback_lock_candidate = 1;
@@ -356,12 +341,9 @@ int MPIDI_CH3I_Get(void *origin_addr, int origin_count, MPI_Datatype
             new_ptr->is_dt = 1;
         }
 
+        /* Judge if this operation is an piggyback candidate. */
         if (!new_ptr->is_dt) {
             new_ptr->piggyback_lock_candidate = 1;
-
-            /* Only fill IMMED data in response packet when both origin and target
-               buffers are basic datatype. */
-            get_pkt->flags |= MPIDI_CH3_PKT_FLAG_RMA_IMMED_RESP;
         }
 
         MPIR_T_PVAR_TIMER_END(RMA, rma_rmaqueue_set);
@@ -524,27 +506,12 @@ int MPIDI_CH3I_Accumulate(const void *origin_addr, int origin_count, MPI_Datatyp
             new_ptr->is_dt = 1;
         }
 
-        /* If both origin and target are basic datatype, try to
-           copy origin data to packet header as much as possible. */
+        /* Judge if this operation is an piggyback candidate. */
         if (!new_ptr->is_dt) {
             size_t len;
             MPI_Aint origin_type_size;
-
             MPID_Datatype_get_size_macro(new_ptr->origin_datatype, origin_type_size);
-            /* length of origin data */
             MPIU_Assign_trunc(len, new_ptr->origin_count * origin_type_size, size_t);
-            /* length of origin data that can fit into immed areas in packet header */
-            MPIU_Assign_trunc(accum_pkt->immed_len,
-                              MPIR_MIN(len, (MPIDI_RMA_IMMED_BYTES / origin_type_size) * origin_type_size),
-                              int);
-
-            if (accum_pkt->immed_len > 0) {
-                void *src = new_ptr->origin_addr, *dest = accum_pkt->data;
-                /* copy data from origin buffer to immed area in packet header */
-                mpi_errno = immed_copy(src, dest, (size_t)accum_pkt->immed_len);
-                if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
-            }
-
             if (len <= MPIR_MAX(MPIDI_RMA_IMMED_BYTES,
                                 MPIR_CVAR_CH3_RMA_OP_PIGGYBACK_LOCK_DATA_SIZE))
                 new_ptr->piggyback_lock_candidate = 1;
@@ -697,12 +664,9 @@ int MPIDI_CH3I_Get_accumulate(const void *origin_addr, int origin_count,
                 new_ptr->is_dt = 1;
             }
 
+            /* Judge if this operation is a piggyback candidate */
             if (!new_ptr->is_dt) {
                 new_ptr->piggyback_lock_candidate = 1;
-
-                /* Only fill IMMED data in response packet when both origin and target
-                   buffers are basic datatype. */
-                get_pkt->flags |= MPIDI_CH3_PKT_FLAG_RMA_IMMED_RESP;
             }
         }
 
@@ -747,34 +711,15 @@ int MPIDI_CH3I_Get_accumulate(const void *origin_addr, int origin_count,
                 new_ptr->is_dt = 1;
             }
 
-            /* If all buffers are basic datatype, try to copy origin data to
-               packet header as much as possible. */
+            /* Judge if this operation is a piggyback candidate */
             if (!new_ptr->is_dt) {
                 size_t len;
                 MPI_Aint origin_type_size;
-
                 MPID_Datatype_get_size_macro(new_ptr->origin_datatype, origin_type_size);
-                /* length of origin data */
                 MPIU_Assign_trunc(len, new_ptr->origin_count * origin_type_size, size_t);
-                /* length of origin data that can fit into immed area in packet header */
-                MPIU_Assign_trunc(get_accum_pkt->immed_len,
-                                  MPIR_MIN(len, (MPIDI_RMA_IMMED_BYTES / origin_type_size) * origin_type_size),
-                                  int);
-
-                if (get_accum_pkt->immed_len > 0) {
-                    void *src = new_ptr->origin_addr, *dest = get_accum_pkt->data;
-                    /* copy data from origin buffer to immed area in packet header */
-                    mpi_errno = immed_copy(src, dest, (size_t)get_accum_pkt->immed_len);
-                    if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
-                }
-
                 if (len <= MPIR_MAX(MPIDI_RMA_IMMED_BYTES,
                                     MPIR_CVAR_CH3_RMA_OP_PIGGYBACK_LOCK_DATA_SIZE))
                     new_ptr->piggyback_lock_candidate = 1;
-
-                /* Only fill IMMED data in response packet when both origin and target
-                   buffers are basic datatype. */
-                get_accum_pkt->flags |= MPIDI_CH3_PKT_FLAG_RMA_IMMED_RESP;
             }
         }
 
@@ -1140,7 +1085,6 @@ int MPIDI_Fetch_and_op(const void *origin_addr, void *result_addr,
             get_pkt->source_win_handle = win_ptr->handle;
             get_pkt->origin_rank = rank;
             get_pkt->flags = MPIDI_CH3_PKT_FLAG_NONE;
-            get_pkt->flags |= MPIDI_CH3_PKT_FLAG_RMA_IMMED_RESP;
 
             new_ptr->origin_addr = result_addr;
             new_ptr->origin_count = 1;
@@ -1150,8 +1094,6 @@ int MPIDI_Fetch_and_op(const void *origin_addr, void *result_addr,
         }
         else {
             MPIDI_CH3_Pkt_fop_t *fop_pkt = &(new_ptr->pkt.fop);
-            size_t len;
-            MPI_Aint origin_type_size;
 
             MPIDI_Pkt_init(fop_pkt, MPIDI_CH3_PKT_FOP);
             fop_pkt->addr = (char *) win_ptr->base_addrs[target_rank] +
@@ -1171,21 +1113,6 @@ int MPIDI_Fetch_and_op(const void *origin_addr, void *result_addr,
             new_ptr->result_datatype = datatype;
             new_ptr->target_rank = target_rank;
             new_ptr->piggyback_lock_candidate = 1;
-
-            MPID_Datatype_get_size_macro(new_ptr->origin_datatype, origin_type_size);
-            /* length of origin data */
-            MPIU_Assign_trunc(len, new_ptr->origin_count * origin_type_size, size_t);
-            /* length of origin data that can fit into immed area in pkt header */
-            MPIU_Assign_trunc(fop_pkt->immed_len,
-                              MPIR_MIN(len, (MPIDI_RMA_IMMED_BYTES / origin_type_size) * origin_type_size),
-                              int);
-
-            if (fop_pkt->immed_len > 0) {
-                void *src = new_ptr->origin_addr, *dest = fop_pkt->data;
-                /* copy data from origin buffer to immed area in packet header */
-                mpi_errno = immed_copy(src, dest, (size_t)fop_pkt->immed_len);
-                if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
-            }
         }
 
         new_ptr->ureq = NULL; /* reset user request */

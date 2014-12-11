@@ -342,10 +342,22 @@ static int issue_put_op(MPIDI_RMA_Op_t * rma_op, MPID_Win *win_ptr,
     if (flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK)
         put_pkt->lock_type = target_ptr->lock_type;
 
-    MPIDI_Comm_get_vc_set_active(comm_ptr, rma_op->target_rank, &vc);
-
     MPID_Datatype_get_size_macro(rma_op->origin_datatype, origin_type_size);
     MPIU_Assign_trunc(len, rma_op->origin_count * origin_type_size, size_t);
+
+    if (!rma_op->is_dt) {
+        /* Fill origin data into packet header IMMED area as much as possible */
+        MPIU_Assign_trunc(put_pkt->immed_len,
+                          MPIR_MIN(len, (MPIDI_RMA_IMMED_BYTES/origin_type_size)*origin_type_size),
+                          int);
+        if (put_pkt->immed_len > 0) {
+            void *src = rma_op->origin_addr, *dest = put_pkt->data;
+            mpi_errno = immed_copy(src, dest, (size_t)put_pkt->immed_len);
+            if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
+        }
+    }
+
+    MPIDI_Comm_get_vc_set_active(comm_ptr, rma_op->target_rank, &vc);
 
     if (len == (size_t)put_pkt->immed_len) {
         /* All origin data is in packet header, issue the header. */
@@ -400,13 +412,26 @@ static int issue_acc_op(MPIDI_RMA_Op_t *rma_op, MPID_Win *win_ptr,
     rma_op->request = NULL;
 
     accum_pkt->flags |= flags;
+
     if (flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK)
         accum_pkt->lock_type = target_ptr->lock_type;
 
-    MPIDI_Comm_get_vc_set_active(comm_ptr, rma_op->target_rank, &vc);
-
     MPID_Datatype_get_size_macro(rma_op->origin_datatype, origin_type_size);
     MPIU_Assign_trunc(len, rma_op->origin_count * origin_type_size, size_t);
+
+    if (!rma_op->is_dt) {
+        /* Fill origin data into packet header IMMED area as much as possible */
+        MPIU_Assign_trunc(accum_pkt->immed_len,
+                          MPIR_MIN(len, (MPIDI_RMA_IMMED_BYTES/origin_type_size)*origin_type_size),
+                          int);
+        if (accum_pkt->immed_len > 0) {
+            void *src = rma_op->origin_addr, *dest = accum_pkt->data;
+            mpi_errno = immed_copy(src, dest, (size_t)accum_pkt->immed_len);
+            if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
+        }
+    }
+
+    MPIDI_Comm_get_vc_set_active(comm_ptr, rma_op->target_rank, &vc);
 
     if (len == (size_t)accum_pkt->immed_len) {
         /* All origin data is in packet header, issue the header. */
@@ -485,13 +510,31 @@ static int issue_get_acc_op(MPIDI_RMA_Op_t *rma_op, MPID_Win *win_ptr,
     get_accum_pkt->request_handle = resp_req->handle;
 
     get_accum_pkt->flags |= flags;
+    if (!rma_op->is_dt) {
+        /* Only fill IMMED data in response packet when both origin and target
+           buffers are basic datatype. */
+        get_accum_pkt->flags |= MPIDI_CH3_PKT_FLAG_RMA_IMMED_RESP;
+    }
+
     if (flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK)
         get_accum_pkt->lock_type = target_ptr->lock_type;
 
-    MPIDI_Comm_get_vc_set_active(comm_ptr, rma_op->target_rank, &vc);
-
     MPID_Datatype_get_size_macro(rma_op->origin_datatype, origin_type_size);
     MPIU_Assign_trunc(len, rma_op->origin_count * origin_type_size, size_t);
+
+    if (!rma_op->is_dt) {
+        /* Fill origin data into packet header IMMED area as much as possible */
+        MPIU_Assign_trunc(get_accum_pkt->immed_len,
+                          MPIR_MIN(len, (MPIDI_RMA_IMMED_BYTES/origin_type_size)*origin_type_size),
+                          int);
+        if (get_accum_pkt->immed_len > 0) {
+            void *src = rma_op->origin_addr, *dest = get_accum_pkt->data;
+            mpi_errno = immed_copy(src, dest, (size_t)get_accum_pkt->immed_len);
+            if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
+        }
+    }
+
+    MPIDI_Comm_get_vc_set_active(comm_ptr, rma_op->target_rank, &vc);
 
     if (len == (size_t)get_accum_pkt->immed_len) {
         /* All origin data is in packet header, issue the header. */
@@ -599,7 +642,14 @@ static int issue_get_op(MPIDI_RMA_Op_t * rma_op, MPID_Win * win_ptr,
     }
 
     get_pkt->request_handle = rma_op->request->handle;
+
     get_pkt->flags |= flags;
+    if (!rma_op->is_dt) {
+        /* Only fill IMMED data in response packet when both origin and target
+           buffers are basic datatype. */
+        get_pkt->flags |= MPIDI_CH3_PKT_FLAG_RMA_IMMED_RESP;
+    }
+
     if (flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK)
         get_pkt->lock_type = target_ptr->lock_type;
 
@@ -745,6 +795,8 @@ static int issue_fop_op(MPIDI_RMA_Op_t * rma_op,
     MPID_Comm *comm_ptr = win_ptr->comm_ptr;
     MPIDI_CH3_Pkt_fop_t *fop_pkt = &rma_op->pkt.fop;
     MPID_Request *resp_req = NULL;
+    size_t len;
+    MPI_Aint origin_type_size;
     int mpi_errno = MPI_SUCCESS;
     MPIDI_STATE_DECL(MPID_STATE_ISSUE_FOP_OP);
 
@@ -771,6 +823,19 @@ static int issue_fop_op(MPIDI_RMA_Op_t * rma_op,
     fop_pkt->flags |= flags;
     if (flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK)
         fop_pkt->lock_type = target_ptr->lock_type;
+
+    MPID_Datatype_get_size_macro(rma_op->origin_datatype, origin_type_size);
+    MPIU_Assign_trunc(len, rma_op->origin_count * origin_type_size, size_t);
+
+    /* Fill origin data into packet header IMMED area as much as possible */
+    MPIU_Assign_trunc(fop_pkt->immed_len,
+                      MPIR_MIN(len, (MPIDI_RMA_IMMED_BYTES/origin_type_size)*origin_type_size),
+                      int);
+    if (fop_pkt->immed_len > 0) {
+        void *src = rma_op->origin_addr, *dest = fop_pkt->data;
+        mpi_errno = immed_copy(src, dest, (size_t)fop_pkt->immed_len);
+        if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
+    }
 
     MPIDI_Comm_get_vc_set_active(comm_ptr, rma_op->target_rank, &vc);
 
