@@ -1,7 +1,7 @@
 MPICH Test Suite
 
 This test suite is a *supplement* to other test suites, including the
-original MPICH testsuite, the Intel testsuite, and the IBM MPI test suite 
+original MPICH testsuite, the Intel testsuite, and the IBM MPI test suite
 (or test suites derived from that test, including the MPI C++ tests).
 
 Building the Test Suite
@@ -12,7 +12,7 @@ automatically.  In some cases, it will need some help.  For example:
 For IBM MPI, where the compilation commands are not mpicc and mpif77 etc.:
 
 ./configure CC=xlc MPICC=mpcc F77=xlf MPIF77=mpxlf CXX=xlC \
-                       MPICXX="mpCC -cpp" F90=xlf90 MPIF90=mpxlf90 \
+                       MPICXX="mpCC -cpp" FC=xlf90 MPIFC=mpxlf90 \
 		       --disable-spawn \
 		       --enable-strictmpi
 
@@ -82,13 +82,25 @@ to checktests:
 
 cd btest && ../checktests --ignorebogus
 
+See "More control over running tests" to see how to control how many
+processes per node on used.  For example, on a Cray XE-6, this command
+line to runtests can be used:
+
+  runtests -batch -tests=testlist -ppnarg="-N %d" -ppn=2 -showprogress \
+           -mpiexec=aprun
+
+This runs at most 2 processes per node.  Note that this can take a long
+time to execute because it builds all of the executables required for the
+tests (over 800 of them!).  The "-showprogress" flag lets you know that
+something is happening, but is not necessary.
+
 Controlling the Tests that are Run
 ==================================
-The tests are actually built and run by the script "runtests".  This script 
+The tests are actually built and run by the script "runtests".  This script
 can be given a file that contains a list of the tests to run.  This file has
 two primary types of entries:
 
-    directories:  Enter directory and look for the file "testlist".  
+    directories:  Enter directory and look for the file "testlist".
                   Recursively run the contents of that file
     program names: Build and run that program
 
@@ -153,3 +165,41 @@ resultTest=proc : This is used to change the way in which the success or
                   in fact handled.
 
 
+More control over running tests
+===============================
+
+You can provide a "processes per node" argument to the run command (typically
+mpiexec) with either options to "runtests" or environment variables.
+The two values are
+
+-ppnarg=string or MPITEST_PPNARG
+   The string used to specify the number of processes per node.  The number
+   of processes to use will be substituted for the %d in the string.  For
+   example,
+
+   export MPITEST_PPNARG="-ppn %d"
+
+-ppn=n or MPITEST_PPNMAX
+   The maximum number of processes per node.  For example
+
+   runtests ... -ppn=2
+
+   This allows the runtests script to ensure that the value of the
+   processes per node argument does not exceed the total number of processes;
+   some run commands (e.g., aprun on Cray) require that the number of
+   processes per node be no greater than the total number of processes.
+
+Note that for most systems it will be important to run the tests
+multiple times, using this option to ensure that the tests that
+involve more than one process are run each of the following cases:
+1) Multiple MPI processes per chip (likely using shared memory to
+communicate between processes)
+2) MPI processes on separate chips within the same node (also likely
+using shared memory between processes, but may use a different
+approach to handle the NUMA nature of this case)
+3) MPI processes on separate nodes (likely using the best available
+interconnect).
+Note, this depends on the nature of the MPI implementation; these
+options make it easier to run the necessary cases.  If you run only
+the first case, which is often the default case, you may not
+effectively test the MPI implementation.
