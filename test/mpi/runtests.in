@@ -44,6 +44,12 @@ use File::Copy qw(move);
 $MPIMajorVersion = "@MPI_VERSION@";
 $MPIMinorVersion = "@MPI_SUBVERSION@";
 $mpiexec = "@MPIEXEC@";    # Name of mpiexec program (including path, if necessary)
+# ppnMax is the maximum number of processes per node.  -1 means ignore.
+# ppnArg is the argument to use to mpiexec - format is "string%d"; e.g.,
+# "-ppn %d"
+$ppnArg  = "";
+$ppnMax  = -1;
+#
 $testIsStrict = "@MPI_IS_STRICT@";
 $MPIhasMPIX   = "@MPI_HAS_MPIX@";
 $runxfail     = "@RUN_XFAIL@";
@@ -147,6 +153,13 @@ if (defined($ENV{'MPITEST_BATCH'})) {
 if (defined($ENV{'MPITEST_BATCHDIR'})) {
     $batrundir = $ENV{'MPITEST_BATCHDIR'};
 }
+# PPN support
+if (defined($ENV{'MPITEST_PPNARG'})) {
+    $ppnArg = $ENV{'MPITEST_PPNARG'};
+}
+if (defined($ENV{'MPITEST_PPNMAX'})) {
+    $ppnMax = $ENV{'MPITEST_PPNMAX'};
+}
 
 #---------------------------------------------------------------------------
 # Process arguments and override any defaults
@@ -157,8 +170,10 @@ foreach $_ (@ARGV) {
 	# we don't want to bother to try and find it.
 	$mpiexec = $1; 
     }
-    elsif (/--?np=(.*)/)   { $np_default = $1; }
-    elsif (/--?maxnp=(.*)/) { $np_max = $1; }
+    elsif (/--?np=(\d+)/)   { $np_default = $1; }
+    elsif (/--?maxnp=(\d+)/) { $np_max = $1; }
+    elsif (/--?ppn=(\d+)/)  { $ppnMax = $1; }
+    elsif (/--?ppnarg=(.*)/) { $ppnArg = $1; }
     elsif (/--?tests=(.*)/) { $listfiles = $1; }
     elsif (/--?srcdir=(.*)/) { $srcdir = $1; }
     elsif (/--?verbose/) { $verbose = 1; }
@@ -229,6 +244,7 @@ foreach $_ (@ARGV) {
 	print STDERR "Unrecognized argument $_\n";
 	print STDERR "runtests [-tests=testfile] [-np=nprocesses] \
         [-maxnp=max-nprocesses] [-srcdir=location-of-tests] \
+        [-ppn=max-proc-per-node] [-ppnarg=string] \
         [-xmlfile=filename ] [-tapfile=filename ] \
         [-junitfile=filename ] [-noxmlclose] \
         [-verbose] [-showprogress] [-debug] [-batch]\n";
@@ -648,6 +664,7 @@ sub RunMPIProgram {
     my $found_error   = 0;
     my $found_noerror = 0;
     my $inline = "";
+    my $extraArgs = "";
 
     &RunPreMsg( $programname, $np, $curdir );
 
@@ -659,14 +676,27 @@ sub RunMPIProgram {
 	$timeout = $timeLimit;
     }
     $ENV{"MPIEXEC_TIMEOUT"} = $timeout;
-    
+
+    # Handle the ppn (processes per node) option.
+    $ppnargs = "";
+    if ($ppnArg ne "" && $ppnMax > 0) {
+	$ppnargs = $ppnArg;
+	$nn = $ppnMax;
+	# Some systems require setting the number of processes per node
+	# no greater than the total number of processes (e.g., aprun on Cray)
+	if ($nn > $np) { $nn = $np; }
+	$ppnargs =~ s/\%d/$nn/;
+	$extraArgs .= " " . $ppnargs;
+    }
+
+
     # Run the optional setup routine. For example, the timeout tests could
     # be set to a shorter timeout.
     if ($InitForTest ne "") {
 	&$InitForTest();
     }
     print STDOUT "Env includes $progEnv\n" if $verbose;
-    print STDOUT "$mpiexec $np_arg $np $program_wrapper ./$programname $progArgs\n" if $verbose;
+    print STDOUT "$mpiexec $np_arg $np $extraArgs $mpiexecArgs $program_wrapper ./$programname $progArgs\n" if $verbose;
     print STDOUT "." if $showProgress;
     # Save and restore the environment if necessary before running mpiexec.
     if ($progEnv ne "") {
@@ -680,7 +710,7 @@ sub RunMPIProgram {
 	    }
 	}
     }
-    open ( MPIOUT, "$mpiexec $np_arg $np $mpiexecArgs $program_wrapper ./$programname $progArgs 2>&1 |" ) ||
+    open ( MPIOUT, "$mpiexec $np_arg $np $extraArgs $mpiexecArgs $program_wrapper ./$programname $progArgs 2>&1 |" ) ||
 	die "Could not run ./$programname\n";
     if ($progEnv ne "") {
 	%ENV = %saveEnv;
@@ -691,7 +721,7 @@ sub RunMPIProgram {
     }
     else {
 	if ($verbose) {
-	    $inline = "$mpiexec $np_arg $np $program_wrapper ./$programname\n";
+	    $inline = "$mpiexec $np_arg $np $extraArgs $mpiexecArgs $program_wrapper ./$programname\n";
 	}
 	else {
 	    $inline = "";
@@ -787,6 +817,18 @@ sub AddMPIProgram {
 	my $timeArg = $timeoutArgPattern;
 	$timeoutArg =~ s/<SEC>/$timeout/;
 	$extraArgs .= $timeoutArg
+    }
+
+    # Handle the ppn (processes per node) option.
+    $ppnargs = "";
+    if ($ppnArg ne "" && $ppnMax > 0) {
+	$ppnargs = $ppnArg;
+	$nn = $ppnMax;
+	# Some systems require setting the number of processes per node
+	# no greater than the total number of processes (e.g., aprun on Cray)
+	if ($nn > $np) { $nn = $np; }
+	$ppnargs =~ s/\%d/$nn/;
+	$extraArgs .= " " . $ppnargs;
     }
 
     print STDOUT "Env includes $progEnv\n" if $verbose;
