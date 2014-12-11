@@ -1093,6 +1093,9 @@ int MPIDI_Win_flush(int dest, MPID_Win *win_ptr)
         OPA_read_write_barrier();
     }
 
+    if (dest == MPI_PROC_NULL)
+        goto finish_flush;
+
     /* When the process tries to acquire the lock on itself, it does not
        go through the progress engine. Therefore, it is possible that
        one process always grants the lock to itself but never process
@@ -1185,6 +1188,9 @@ int MPIDI_Win_flush_local(int dest, MPID_Win * win_ptr)
                         win_ptr->states.access_state != MPIDI_RMA_LOCK_ALL_ISSUED &&
                         win_ptr->states.access_state != MPIDI_RMA_LOCK_ALL_GRANTED,
                         mpi_errno, MPI_ERR_RMA_SYNC, "**rmasync");
+
+    if (dest == MPI_PROC_NULL)
+        goto finish_flush_local;
 
     /* When the process tries to acquire the lock on itself, it does not
        go through the progress engine. Therefore, it is possible that
