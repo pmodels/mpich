@@ -187,9 +187,8 @@ int MPIDI_CH3I_Put(const void *origin_addr, int origin_count, MPI_Datatype
         mpi_errno = MPIDI_CH3I_RMA_Make_progress_target(win_ptr, target_rank, &made_progress);
         if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
 
-        win_ptr->posted_ops_cnt++;
         if (MPIR_CVAR_CH3_RMA_OP_POKING_PROGRESS >= 0 &&
-            win_ptr->posted_ops_cnt >= MPIR_CVAR_CH3_RMA_OP_POKING_PROGRESS) {
+            win_ptr->accumulated_ops_cnt >= MPIR_CVAR_CH3_RMA_OP_POKING_PROGRESS) {
             mpi_errno = poke_progress_engine();
             if (mpi_errno != MPI_SUCCESS)
                 MPIU_ERR_POP(mpi_errno);
@@ -348,9 +347,8 @@ int MPIDI_CH3I_Get(void *origin_addr, int origin_count, MPI_Datatype
         mpi_errno = MPIDI_CH3I_RMA_Make_progress_target(win_ptr, target_rank, &made_progress);
         if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
 
-        win_ptr->posted_ops_cnt++;
         if (MPIR_CVAR_CH3_RMA_OP_POKING_PROGRESS >= 0 &&
-            win_ptr->posted_ops_cnt >= MPIR_CVAR_CH3_RMA_OP_POKING_PROGRESS) {
+            win_ptr->accumulated_ops_cnt >= MPIR_CVAR_CH3_RMA_OP_POKING_PROGRESS) {
             mpi_errno = poke_progress_engine();
             if (mpi_errno != MPI_SUCCESS)
                 MPIU_ERR_POP(mpi_errno);
@@ -536,9 +534,8 @@ int MPIDI_CH3I_Accumulate(const void *origin_addr, int origin_count, MPI_Datatyp
         mpi_errno = MPIDI_CH3I_RMA_Make_progress_target(win_ptr, target_rank, &made_progress);
         if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
 
-        win_ptr->posted_ops_cnt++;
         if (MPIR_CVAR_CH3_RMA_OP_POKING_PROGRESS >= 0 &&
-            win_ptr->posted_ops_cnt >= MPIR_CVAR_CH3_RMA_OP_POKING_PROGRESS) {
+            win_ptr->accumulated_ops_cnt >= MPIR_CVAR_CH3_RMA_OP_POKING_PROGRESS) {
             mpi_errno = poke_progress_engine();
             if (mpi_errno != MPI_SUCCESS)
                 MPIU_ERR_POP(mpi_errno);
@@ -769,9 +766,8 @@ int MPIDI_CH3I_Get_accumulate(const void *origin_addr, int origin_count,
         mpi_errno = MPIDI_CH3I_RMA_Make_progress_target(win_ptr, target_rank, &made_progress);
         if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
 
-        win_ptr->posted_ops_cnt++;
         if (MPIR_CVAR_CH3_RMA_OP_POKING_PROGRESS >= 0 &&
-            win_ptr->posted_ops_cnt >= MPIR_CVAR_CH3_RMA_OP_POKING_PROGRESS) {
+            win_ptr->accumulated_ops_cnt >= MPIR_CVAR_CH3_RMA_OP_POKING_PROGRESS) {
             mpi_errno = poke_progress_engine();
             if (mpi_errno != MPI_SUCCESS)
                 MPIU_ERR_POP(mpi_errno);
@@ -1009,9 +1005,8 @@ int MPIDI_Compare_and_swap(const void *origin_addr, const void *compare_addr,
         mpi_errno = MPIDI_CH3I_RMA_Make_progress_target(win_ptr, target_rank, &made_progress);
         if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
 
-        win_ptr->posted_ops_cnt++;
         if (MPIR_CVAR_CH3_RMA_OP_POKING_PROGRESS >= 0 &&
-            win_ptr->posted_ops_cnt >= MPIR_CVAR_CH3_RMA_OP_POKING_PROGRESS) {
+            win_ptr->accumulated_ops_cnt >= MPIR_CVAR_CH3_RMA_OP_POKING_PROGRESS) {
             mpi_errno = poke_progress_engine();
             if (mpi_errno != MPI_SUCCESS)
                 MPIU_ERR_POP(mpi_errno);
@@ -1175,9 +1170,8 @@ int MPIDI_Fetch_and_op(const void *origin_addr, void *result_addr,
         mpi_errno = MPIDI_CH3I_RMA_Make_progress_target(win_ptr, target_rank, &made_progress);
         if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
 
-        win_ptr->posted_ops_cnt++;
         if (MPIR_CVAR_CH3_RMA_OP_POKING_PROGRESS >= 0 &&
-            win_ptr->posted_ops_cnt >= MPIR_CVAR_CH3_RMA_OP_POKING_PROGRESS) {
+            win_ptr->accumulated_ops_cnt >= MPIR_CVAR_CH3_RMA_OP_POKING_PROGRESS) {
             mpi_errno = poke_progress_engine();
             if (mpi_errno != MPI_SUCCESS)
                 MPIU_ERR_POP(mpi_errno);

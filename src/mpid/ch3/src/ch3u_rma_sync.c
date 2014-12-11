@@ -307,11 +307,9 @@ int MPIDI_Win_fence(int assert, MPID_Win * win_ptr)
                         win_ptr->states.exposure_state != MPIDI_RMA_NONE,
                         mpi_errno, MPI_ERR_RMA_SYNC, "**rmasync");
 
-    win_ptr->posted_ops_cnt = 0;
-
     if (assert & MPI_MODE_NOPRECEDE) {
         if (assert & MPI_MODE_NOSUCCEED) {
-            goto fn_exit;
+            goto finish_fence;
         }
         else {
             /* It is possible that there is a IBARRIER in MPI_WIN_FENCE with
@@ -345,7 +343,7 @@ int MPIDI_Win_fence(int assert, MPID_Win * win_ptr)
             win_ptr->states.access_state = MPIDI_RMA_FENCE_ISSUED;
             num_active_issued_win++;
 
-            goto fn_exit;
+            goto finish_fence;
         }
     }
 
@@ -416,7 +414,16 @@ int MPIDI_Win_fence(int assert, MPID_Win * win_ptr)
         win_ptr->states.access_state = MPIDI_RMA_FENCE_GRANTED;
     }
 
-    /* There should be no active requests. */
+ finish_fence:
+    if (assert & MPI_MODE_NOPRECEDE) {
+        /* BEGINNING synchronization: the following counter should be zero. */
+        MPIU_Assert(win_ptr->accumulated_ops_cnt == 0);
+    }
+    else {
+        /* ENDING synchronization: correctly decrement the following counter. */
+        win_ptr->accumulated_ops_cnt = 0;
+    }
+
     MPIU_Assert(win_ptr->active_req_cnt == 0);
 
   fn_exit:
@@ -631,7 +638,10 @@ int MPIDI_Win_start(MPID_Group * group_ptr, int assert, MPID_Win * win_ptr)
     win_ptr->states.access_state = MPIDI_RMA_PSCW_ISSUED;
     num_active_issued_win++;
 
-    MPIU_Assert(win_ptr->posted_ops_cnt == 0);
+ finish_start:
+    /* BEGINNING synchronization: the following counter should be zero. */
+    MPIU_Assert(win_ptr->accumulated_ops_cnt == 0);
+
     MPIU_Assert(win_ptr->active_req_cnt == 0);
 
  fn_exit:
@@ -737,11 +747,15 @@ int MPIDI_Win_complete(MPID_Win * win_ptr)
     MPIU_Free(win_ptr->start_ranks_in_win_grp);
     win_ptr->start_ranks_in_win_grp = NULL;
 
-    win_ptr->posted_ops_cnt = 0;
     MPIU_Assert(win_ptr->active_req_cnt == 0);
     MPIU_Assert(win_ptr->start_req == NULL);
 
     win_ptr->states.access_state = MPIDI_RMA_NONE;
+
+ finish_complete:
+    /* ENDING synchronization: correctly decrement the following counter. */
+    win_ptr->accumulated_ops_cnt = 0;
+
 
   fn_exit:
     MPIDI_RMA_FUNC_EXIT(MPID_STATE_MPIDI_WIN_COMPLETE);
@@ -888,7 +902,7 @@ int MPIDI_Win_lock(int lock_type, int dest, int assert, MPID_Win * win_ptr)
     win_ptr->lock_epoch_count++;
 
     if (dest == MPI_PROC_NULL)
-        goto fn_exit;
+        goto finish_lock;
 
     if (win_ptr->shm_allocated == TRUE) {
         MPIDI_Comm_get_vc(win_ptr->comm_ptr, rank, &orig_vc);
@@ -922,6 +936,12 @@ int MPIDI_Win_lock(int lock_type, int dest, int assert, MPID_Win * win_ptr)
             if (mpi_errno != MPI_SUCCESS)
                 MPIU_ERR_POP(mpi_errno);
         }
+    }
+
+ finish_lock:
+    if (win_ptr->lock_epoch_count == 1) {
+        /* BEGINNING synchronization: the following counter should be zero. */
+        MPIU_Assert(win_ptr->accumulated_ops_cnt == 0);
     }
 
     /* Ensure ordering of load/store operations. */
@@ -1017,13 +1037,19 @@ int MPIDI_Win_unlock(int dest, MPID_Win *win_ptr)
         }
     } while (!remote_completed);
 
-    /* Cleanup the target. */
-    mpi_errno = MPIDI_CH3I_RMA_Cleanup_single_target(win_ptr, target);
-    if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
-
  finish_unlock:
-    win_ptr->posted_ops_cnt = 0;
     MPIU_Assert(win_ptr->active_req_cnt == 0);
+    if (target != NULL) {
+        /* ENDING synchronization: correctly decrement the following counter. */
+        win_ptr->accumulated_ops_cnt -= target->accumulated_ops_cnt;
+        if (win_ptr->lock_epoch_count == 0) {
+            MPIU_Assert(win_ptr->accumulated_ops_cnt == 0);
+        }
+
+        /* Cleanup the target. */
+        mpi_errno = MPIDI_CH3I_RMA_Cleanup_single_target(win_ptr, target);
+        if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
+    }
 
     win_ptr->lock_epoch_count--;
     if (win_ptr->lock_epoch_count == 0) {
@@ -1079,22 +1105,22 @@ int MPIDI_Win_flush(int dest, MPID_Win *win_ptr)
     if (mpi_errno != MPI_SUCCESS)
         MPIU_ERR_POP(mpi_errno);
 
+    mpi_errno = MPIDI_CH3I_Win_find_target(win_ptr, dest, &target);
+    if (mpi_errno != MPI_SUCCESS)
+        MPIU_ERR_POP(mpi_errno);
+    if (target == NULL)
+        goto finish_flush;
+
     if (rank == dest)
-        goto fn_exit;
+        goto finish_flush;
 
     if (win_ptr->shm_allocated) {
         MPIDI_VC_t *orig_vc = NULL, *target_vc = NULL;
         MPIDI_Comm_get_vc(win_ptr->comm_ptr, dest, &target_vc);
         MPIDI_Comm_get_vc(win_ptr->comm_ptr, rank, &orig_vc);
         if (orig_vc->node_id == target_vc->node_id)
-            goto fn_exit;
+            goto finish_flush;
     }
-
-    mpi_errno = MPIDI_CH3I_Win_find_target(win_ptr, dest, &target);
-    if (mpi_errno != MPI_SUCCESS)
-        MPIU_ERR_POP(mpi_errno);
-    if (target == NULL)
-        goto fn_exit;
 
     /* Set sync_flag in sync struct. */
     if (target->sync.sync_flag < MPIDI_RMA_SYNC_FLUSH) {
@@ -1122,6 +1148,13 @@ int MPIDI_Win_flush(int dest, MPID_Win *win_ptr)
                 MPIU_ERR_POP(mpi_errno);
         }
     } while (!remote_completed);
+
+ finish_flush:
+    if (target != NULL) {
+        /* ENDING synchronization: correctly decrement the following counters. */
+        win_ptr->accumulated_ops_cnt -= target->accumulated_ops_cnt;
+        target->accumulated_ops_cnt = 0;
+    }
 
   fn_exit:
     MPIDI_RMA_FUNC_EXIT(MPID_STATE_MPIDI_WIN_FLUSH);
@@ -1165,22 +1198,22 @@ int MPIDI_Win_flush_local(int dest, MPID_Win * win_ptr)
     if (mpi_errno != MPI_SUCCESS)
         MPIU_ERR_POP(mpi_errno);
 
+    mpi_errno = MPIDI_CH3I_Win_find_target(win_ptr, dest, &target);
+    if (mpi_errno != MPI_SUCCESS)
+        MPIU_ERR_POP(mpi_errno);
+    if (target == NULL)
+        goto finish_flush_local;
+
     if (rank == dest)
-        goto fn_exit;
+        goto finish_flush_local;
 
     if (win_ptr->shm_allocated) {
         MPIDI_VC_t *orig_vc = NULL, *target_vc = NULL;
         MPIDI_Comm_get_vc(win_ptr->comm_ptr, dest, &target_vc);
         MPIDI_Comm_get_vc(win_ptr->comm_ptr, rank, &orig_vc);
         if (orig_vc->node_id == target_vc->node_id)
-            goto fn_exit;
+            goto finish_flush_local;
     }
-
-    mpi_errno = MPIDI_CH3I_Win_find_target(win_ptr, dest, &target);
-    if (mpi_errno != MPI_SUCCESS)
-        MPIU_ERR_POP(mpi_errno);
-    if (target == NULL)
-        goto fn_exit;
 
     /* Set sync_flag in sync struct. */
     if (target->sync.sync_flag < MPIDI_RMA_SYNC_FLUSH_LOCAL)
@@ -1205,6 +1238,13 @@ int MPIDI_Win_flush_local(int dest, MPID_Win * win_ptr)
                 MPIU_ERR_POP(mpi_errno);
         }
     } while (!local_completed);
+
+ finish_flush_local:
+    if (target != NULL) {
+        /* ENDING synchronization: correctly decrement the following counters. */
+        win_ptr->accumulated_ops_cnt -= target->accumulated_ops_cnt;
+        target->accumulated_ops_cnt = 0;
+    }
 
   fn_exit:
     MPIDI_RMA_FUNC_EXIT(MPID_STATE_MPIDI_WIN_FLUSH_LOCAL);
@@ -1284,6 +1324,11 @@ int MPIDI_Win_lock_all(int assert, MPID_Win * win_ptr)
     if (win_ptr->shm_allocated == TRUE) {
         OPA_read_write_barrier();
     }
+
+ finish_lock_all:
+    /* BEGINNING synchronization: the following counter should be zero. */
+    MPIU_Assert(win_ptr->accumulated_ops_cnt == 0);
+
 
   fn_exit:
     MPIDI_RMA_FUNC_EXIT(MPID_STATE_MPIDI_WIN_LOCK_ALL);
@@ -1422,12 +1467,16 @@ int MPIDI_Win_unlock_all(MPID_Win * win_ptr)
     MPIU_Assert(win_ptr->non_empty_slots == 0);
 
     win_ptr->lock_all_assert = 0;
-    win_ptr->posted_ops_cnt = 0;
     MPIU_Assert(win_ptr->active_req_cnt == 0);
 
     win_ptr->states.access_state = MPIDI_RMA_NONE;
     num_passive_win--;
     MPIU_Assert(num_passive_win >= 0);
+
+ finish_unlock_all:
+    /* ENDING synchronization: correctly decrement the following counter. */
+    win_ptr->accumulated_ops_cnt = 0;
+
 
   fn_exit:
     MPIDI_RMA_FUNC_EXIT(MPID_STATE_MPIDI_WIN_UNLOCK_ALL);
@@ -1484,6 +1533,10 @@ int MPIDI_Win_flush_all(MPID_Win * win_ptr)
                 curr_target->sync.have_remote_incomplete_ops = 0;
                 curr_target->sync.outstanding_acks++;
             }
+
+            /* ENDING synchronization: correctly decrement the following counters. */
+            curr_target->accumulated_ops_cnt = 0;
+
             curr_target = curr_target->next;
         }
     }
@@ -1504,6 +1557,10 @@ int MPIDI_Win_flush_all(MPID_Win * win_ptr)
                 MPIU_ERR_POP(mpi_errno);
         }
     } while (!remote_completed);
+
+ finish_flush_all:
+    /* ENDING synchronization: correctly decrement the following counter. */
+    win_ptr->accumulated_ops_cnt = 0;
 
   fn_exit:
     MPIDI_RMA_FUNC_EXIT(MPIDI_STATE_MPIDI_WIN_FLUSH_ALL);
@@ -1553,6 +1610,10 @@ int MPIDI_Win_flush_local_all(MPID_Win * win_ptr)
             if (curr_target->sync.sync_flag < MPIDI_RMA_SYNC_FLUSH_LOCAL) {
                 curr_target->sync.sync_flag = MPIDI_RMA_SYNC_FLUSH_LOCAL;
             }
+
+            /* ENDING synchronization: correctly decrement the following counters. */
+            curr_target->accumulated_ops_cnt = 0;
+
             curr_target = curr_target->next;
         }
     }
@@ -1573,6 +1634,10 @@ int MPIDI_Win_flush_local_all(MPID_Win * win_ptr)
                 MPIU_ERR_POP(mpi_errno);
         }
     } while (!local_completed);
+
+  finish_flush_local_all:
+    /* ENDING synchronization: correctly decrement the following counter. */
+    win_ptr->accumulated_ops_cnt = 0;
 
   fn_exit:
     MPIDI_RMA_FUNC_EXIT(MPID_STATE_MPIDI_WIN_FLUSH_LOCAL_ALL);

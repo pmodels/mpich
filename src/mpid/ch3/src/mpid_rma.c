@@ -337,7 +337,7 @@ static int win_init(MPI_Aint size, int disp_unit, int create_flavor, int model,
     (*win_ptr)->states.access_state = MPIDI_RMA_NONE;
     (*win_ptr)->states.exposure_state = MPIDI_RMA_NONE;
     (*win_ptr)->non_empty_slots = 0;
-    (*win_ptr)->posted_ops_cnt = 0;
+    (*win_ptr)->accumulated_ops_cnt = 0;
     (*win_ptr)->active_req_cnt = 0;
     (*win_ptr)->fence_sync_req = MPI_REQUEST_NULL;
     (*win_ptr)->start_req = NULL;
