@@ -747,7 +747,6 @@ int MPIDI_Win_complete(MPID_Win * win_ptr)
     MPIU_Free(win_ptr->start_ranks_in_win_grp);
     win_ptr->start_ranks_in_win_grp = NULL;
 
-    MPIU_Assert(win_ptr->active_req_cnt == 0);
     MPIU_Assert(win_ptr->start_req == NULL);
 
     win_ptr->states.access_state = MPIDI_RMA_NONE;
@@ -756,6 +755,7 @@ int MPIDI_Win_complete(MPID_Win * win_ptr)
     /* ENDING synchronization: correctly decrement the following counter. */
     win_ptr->accumulated_ops_cnt = 0;
 
+    MPIU_Assert(win_ptr->active_req_cnt == 0);
 
   fn_exit:
     MPIDI_RMA_FUNC_EXIT(MPID_STATE_MPIDI_WIN_COMPLETE);
@@ -1038,7 +1038,6 @@ int MPIDI_Win_unlock(int dest, MPID_Win *win_ptr)
     } while (!remote_completed);
 
  finish_unlock:
-    MPIU_Assert(win_ptr->active_req_cnt == 0);
     if (target != NULL) {
         /* ENDING synchronization: correctly decrement the following counter. */
         win_ptr->accumulated_ops_cnt -= target->accumulated_ops_cnt;
@@ -1329,6 +1328,7 @@ int MPIDI_Win_lock_all(int assert, MPID_Win * win_ptr)
     /* BEGINNING synchronization: the following counter should be zero. */
     MPIU_Assert(win_ptr->accumulated_ops_cnt == 0);
 
+    MPIU_Assert(win_ptr->active_req_cnt == 0);
 
   fn_exit:
     MPIDI_RMA_FUNC_EXIT(MPID_STATE_MPIDI_WIN_LOCK_ALL);
@@ -1467,7 +1467,6 @@ int MPIDI_Win_unlock_all(MPID_Win * win_ptr)
     MPIU_Assert(win_ptr->non_empty_slots == 0);
 
     win_ptr->lock_all_assert = 0;
-    MPIU_Assert(win_ptr->active_req_cnt == 0);
 
     win_ptr->states.access_state = MPIDI_RMA_NONE;
     num_passive_win--;
@@ -1477,6 +1476,7 @@ int MPIDI_Win_unlock_all(MPID_Win * win_ptr)
     /* ENDING synchronization: correctly decrement the following counter. */
     win_ptr->accumulated_ops_cnt = 0;
 
+    MPIU_Assert(win_ptr->active_req_cnt == 0);
 
   fn_exit:
     MPIDI_RMA_FUNC_EXIT(MPID_STATE_MPIDI_WIN_UNLOCK_ALL);
@@ -1561,6 +1561,8 @@ int MPIDI_Win_flush_all(MPID_Win * win_ptr)
  finish_flush_all:
     /* ENDING synchronization: correctly decrement the following counter. */
     win_ptr->accumulated_ops_cnt = 0;
+
+    MPIU_Assert(win_ptr->active_req_cnt == 0);
 
   fn_exit:
     MPIDI_RMA_FUNC_EXIT(MPIDI_STATE_MPIDI_WIN_FLUSH_ALL);
