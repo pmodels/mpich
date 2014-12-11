@@ -296,6 +296,7 @@ int MPIDI_Win_fence(int assert, MPID_Win * win_ptr)
     int local_completed = 0, remote_completed = 0;
     MPIDI_RMA_Target_t *curr_target = NULL;
     mpir_errflag_t errflag = MPIR_ERR_NONE;
+    int progress_engine_triggered = 0;
     int mpi_errno = MPI_SUCCESS;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_WIN_FENCE);
 
@@ -333,6 +334,10 @@ int MPIDI_Win_fence(int assert, MPID_Win * win_ptr)
                 if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
                 MPIU_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
 
+                /* Mark that we triggered the progress engine
+                   in this function call. */
+                progress_engine_triggered = 1;
+
                 /* Ensure ordering of load/store operations. */
                 OPA_read_write_barrier();
             }
@@ -352,6 +357,10 @@ int MPIDI_Win_fence(int assert, MPID_Win * win_ptr)
             mpi_errno = wait_progress_engine();
             if (mpi_errno != MPI_SUCCESS)
                 MPIU_ERR_POP(mpi_errno);
+
+            /* Mark that we triggered the progress engine
+               in this function call. */
+            progress_engine_triggered = 1;
         }
     }
 
@@ -384,6 +393,10 @@ int MPIDI_Win_fence(int assert, MPID_Win * win_ptr)
             mpi_errno = wait_progress_engine();
             if (mpi_errno != MPI_SUCCESS)
                 MPIU_ERR_POP(mpi_errno);
+
+            /* Mark that we triggered the progress engine
+               in this function call. */
+            progress_engine_triggered = 1;
         }
     } while (!remote_completed);
 
@@ -401,6 +414,10 @@ int MPIDI_Win_fence(int assert, MPID_Win * win_ptr)
     mpi_errno = MPIR_Barrier_impl(win_ptr->comm_ptr, &errflag);
     if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
     MPIU_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
+
+    /* Mark that we triggered the progress engine
+       in this function call. */
+    progress_engine_triggered = 1;
 
     /* Ensure ordering of load/store operations. */
     if (win_ptr->shm_allocated == TRUE) {
@@ -425,6 +442,21 @@ int MPIDI_Win_fence(int assert, MPID_Win * win_ptr)
     }
 
     MPIU_Assert(win_ptr->active_req_cnt == 0);
+
+    if (!(assert & MPI_MODE_NOPRECEDE)) {
+        if (!progress_engine_triggered) {
+            /* In some cases (e.g. target is myself, or process on SHM),
+               this function call does not go through the progress engine.
+               Therefore, it is possible that this process never process
+               events coming from other processes. This may cause deadlock in
+               applications where the program execution on this process depends
+               on the happening of events from other processes. Here we poke
+               the progress engine once to avoid such issue.  */
+            mpi_errno = poke_progress_engine();
+            if (mpi_errno != MPI_SUCCESS)
+                MPIU_ERR_POP(mpi_errno);
+        }
+    }
 
   fn_exit:
     MPIDI_RMA_FUNC_EXIT(MPID_STATE_MPIDI_WIN_FENCE);
@@ -666,6 +698,7 @@ int MPIDI_Win_complete(MPID_Win * win_ptr)
     int local_completed = 0, remote_completed = 0;
     MPID_Comm *win_comm_ptr = win_ptr->comm_ptr;
     MPIDI_RMA_Target_t *curr_target;
+    int progress_engine_triggered = 0;
     int made_progress;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_WIN_COMPLETE);
 
@@ -681,6 +714,10 @@ int MPIDI_Win_complete(MPID_Win * win_ptr)
             mpi_errno = wait_progress_engine();
             if (mpi_errno != MPI_SUCCESS)
                 MPIU_ERR_POP(mpi_errno);
+
+            /* Mark that we triggered the progress engine
+               in this function call. */
+            progress_engine_triggered = 1;
         }
     }
 
@@ -729,6 +766,10 @@ int MPIDI_Win_complete(MPID_Win * win_ptr)
             mpi_errno = wait_progress_engine();
             if (mpi_errno != MPI_SUCCESS)
                 MPIU_ERR_POP(mpi_errno);
+
+            /* Mark that we triggered the progress engine
+               in this function call. */
+            progress_engine_triggered = 1;
         }
     } while (!remote_completed);
 
@@ -757,6 +798,19 @@ int MPIDI_Win_complete(MPID_Win * win_ptr)
 
     MPIU_Assert(win_ptr->active_req_cnt == 0);
 
+    if (!progress_engine_triggered) {
+        /* In some cases (e.g. target is myself, or process on SHM),
+           this function call does not go through the progress engine.
+           Therefore, it is possible that this process never process
+           events coming from other processes. This may cause deadlock in
+           applications where the program execution on this process depends
+           on the happening of events from other processes. Here we poke
+           the progress engine once to avoid such issue.  */
+        mpi_errno = poke_progress_engine();
+        if (mpi_errno != MPI_SUCCESS)
+            MPIU_ERR_POP(mpi_errno);
+    }
+
   fn_exit:
     MPIDI_RMA_FUNC_EXIT(MPID_STATE_MPIDI_WIN_COMPLETE);
     return mpi_errno;
@@ -774,6 +828,7 @@ int MPIDI_Win_complete(MPID_Win * win_ptr)
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 int MPIDI_Win_wait(MPID_Win * win_ptr)
 {
+    int progress_engine_triggered = 0;
     int mpi_errno = MPI_SUCCESS;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_WIN_WAIT);
 
@@ -787,6 +842,10 @@ int MPIDI_Win_wait(MPID_Win * win_ptr)
         mpi_errno = wait_progress_engine();
         if (mpi_errno != MPI_SUCCESS)
             MPIU_ERR_POP(mpi_errno);
+
+        /* Mark that we triggered the progress engine
+           in this function call. */
+        progress_engine_triggered = 1;
     }
 
     /* Ensure ordering of load/store operations. */
@@ -795,6 +854,20 @@ int MPIDI_Win_wait(MPID_Win * win_ptr)
     }
 
     win_ptr->states.exposure_state = MPIDI_RMA_NONE;
+
+ finish_wait:
+    if (!progress_engine_triggered) {
+        /* In some cases (e.g. target is myself, or process on SHM),
+           this function call does not go through the progress engine.
+           Therefore, it is possible that this process never process
+           events coming from other processes. This may cause deadlock in
+           applications where the program execution on this process depends
+           on the happening of events from other processes. Here we poke
+           the progress engine once to avoid such issue.  */
+        mpi_errno = poke_progress_engine();
+        if (mpi_errno != MPI_SUCCESS)
+            MPIU_ERR_POP(mpi_errno);
+    }
 
   fn_exit:
     MPIDI_RMA_FUNC_EXIT(MPID_STATE_MPIDI_WIN_WAIT);
@@ -968,6 +1041,7 @@ int MPIDI_Win_unlock(int dest, MPID_Win *win_ptr)
     int local_completed = 0, remote_completed = 0;
     MPIDI_RMA_Target_t *target = NULL;
     enum MPIDI_RMA_sync_types sync_flag;
+    int progress_engine_triggered = 0;
     int mpi_errno = MPI_SUCCESS;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_WIN_UNLOCK);
 
@@ -983,17 +1057,6 @@ int MPIDI_Win_unlock(int dest, MPID_Win *win_ptr)
 
     if (dest == MPI_PROC_NULL)
         goto finish_unlock;
-
-    /* When the process tries to acquire the lock on itself, it does not
-       go through the progress engine. Therefore, it is possible that
-       one process always grants the lock to itself but never process
-       events coming from other processes. This may cause deadlock in
-       applications where the program execution on target process depends
-       on the happening of events from other processes. Here we poke
-       the progress engine once to avoid such issue.  */
-    mpi_errno = poke_progress_engine();
-    if (mpi_errno != MPI_SUCCESS)
-        MPIU_ERR_POP(mpi_errno);
 
     /* Find or recreate target. */
     mpi_errno = MPIDI_CH3I_Win_find_target(win_ptr, dest, &target);
@@ -1034,6 +1097,10 @@ int MPIDI_Win_unlock(int dest, MPID_Win *win_ptr)
             mpi_errno = wait_progress_engine();
             if (mpi_errno != MPI_SUCCESS)
                 MPIU_ERR_POP(mpi_errno);
+
+            /* Mark that we triggered the progress engine
+               in this function call. */
+            progress_engine_triggered = 1;
         }
     } while (!remote_completed);
 
@@ -1057,6 +1124,19 @@ int MPIDI_Win_unlock(int dest, MPID_Win *win_ptr)
         MPIU_Assert(num_passive_win >= 0);
     }
 
+    if (!progress_engine_triggered) {
+        /* In some cases (e.g. target is myself, or process on SHM),
+           this function call does not go through the progress engine.
+           Therefore, it is possible that this process never process
+           events coming from other processes. This may cause deadlock in
+           applications where the program execution on this process depends
+           on the happening of events from other processes. Here we poke
+           the progress engine once to avoid such issue.  */
+        mpi_errno = poke_progress_engine();
+        if (mpi_errno != MPI_SUCCESS)
+            MPIU_ERR_POP(mpi_errno);
+    }
+
   fn_exit:
     MPIDI_RMA_FUNC_EXIT(MPID_STATE_MPIDI_WIN_UNLOCK);
     return mpi_errno;
@@ -1077,6 +1157,7 @@ int MPIDI_Win_flush(int dest, MPID_Win *win_ptr)
     int local_completed = 0, remote_completed = 0;
     int rank = win_ptr->comm_ptr->rank;
     MPIDI_RMA_Target_t *target = NULL;
+    int progress_engine_triggered = 0;
     int mpi_errno = MPI_SUCCESS;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_WIN_FLUSH);
 
@@ -1095,17 +1176,6 @@ int MPIDI_Win_flush(int dest, MPID_Win *win_ptr)
 
     if (dest == MPI_PROC_NULL)
         goto finish_flush;
-
-    /* When the process tries to acquire the lock on itself, it does not
-       go through the progress engine. Therefore, it is possible that
-       one process always grants the lock to itself but never process
-       events coming from other processes. This may cause deadlock in
-       applications where the program execution on target process depends
-       on the happening of events from other processes. Here we poke
-       the progress engine once to avoid such issue.  */
-    mpi_errno = poke_progress_engine();
-    if (mpi_errno != MPI_SUCCESS)
-        MPIU_ERR_POP(mpi_errno);
 
     mpi_errno = MPIDI_CH3I_Win_find_target(win_ptr, dest, &target);
     if (mpi_errno != MPI_SUCCESS)
@@ -1148,6 +1218,10 @@ int MPIDI_Win_flush(int dest, MPID_Win *win_ptr)
             mpi_errno = wait_progress_engine();
             if (mpi_errno != MPI_SUCCESS)
                 MPIU_ERR_POP(mpi_errno);
+
+            /* Mark that we triggered the progress engine
+               in this function call. */
+            progress_engine_triggered = 1;
         }
     } while (!remote_completed);
 
@@ -1156,6 +1230,19 @@ int MPIDI_Win_flush(int dest, MPID_Win *win_ptr)
         /* ENDING synchronization: correctly decrement the following counters. */
         win_ptr->accumulated_ops_cnt -= target->accumulated_ops_cnt;
         target->accumulated_ops_cnt = 0;
+    }
+
+    if (!progress_engine_triggered) {
+        /* In some cases (e.g. target is myself, or process on SHM),
+           this function call does not go through the progress engine.
+           Therefore, it is possible that this process never process
+           events coming from other processes. This may cause deadlock in
+           applications where the program execution on this process depends
+           on the happening of events from other processes. Here we poke
+           the progress engine once to avoid such issue.  */
+        mpi_errno = poke_progress_engine();
+        if (mpi_errno != MPI_SUCCESS)
+            MPIU_ERR_POP(mpi_errno);
     }
 
   fn_exit:
@@ -1178,6 +1265,7 @@ int MPIDI_Win_flush_local(int dest, MPID_Win * win_ptr)
     int local_completed = 0, remote_completed = 0;
     int rank = win_ptr->comm_ptr->rank;
     MPIDI_RMA_Target_t *target = NULL;
+    int progress_engine_triggered = 0;
     int mpi_errno = MPI_SUCCESS;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_WIN_FLUSH_LOCAL);
 
@@ -1191,17 +1279,6 @@ int MPIDI_Win_flush_local(int dest, MPID_Win * win_ptr)
 
     if (dest == MPI_PROC_NULL)
         goto finish_flush_local;
-
-    /* When the process tries to acquire the lock on itself, it does not
-       go through the progress engine. Therefore, it is possible that
-       one process always grants the lock to itself but never process
-       events coming from other processes. This may cause deadlock in
-       applications where the program execution on target process depends
-       on the happening of events from other processes. Here we poke
-       the progress engine once to avoid such issue.  */
-    mpi_errno = poke_progress_engine();
-    if (mpi_errno != MPI_SUCCESS)
-        MPIU_ERR_POP(mpi_errno);
 
     mpi_errno = MPIDI_CH3I_Win_find_target(win_ptr, dest, &target);
     if (mpi_errno != MPI_SUCCESS)
@@ -1251,6 +1328,10 @@ int MPIDI_Win_flush_local(int dest, MPID_Win * win_ptr)
             mpi_errno = wait_progress_engine();
             if (mpi_errno != MPI_SUCCESS)
                 MPIU_ERR_POP(mpi_errno);
+
+            /* Mark that we triggered the progress engine
+               in this function call. */
+            progress_engine_triggered = 1;
         }
     } while ((target->disable_flush_local && !remote_completed) ||
              (!target->disable_flush_local && !local_completed));
@@ -1263,6 +1344,19 @@ int MPIDI_Win_flush_local(int dest, MPID_Win * win_ptr)
         /* ENDING synchronization: correctly decrement the following counters. */
         win_ptr->accumulated_ops_cnt -= target->accumulated_ops_cnt;
         target->accumulated_ops_cnt = 0;
+    }
+
+    if (!progress_engine_triggered) {
+        /* In some cases (e.g. target is myself, or process on SHM),
+           this function call does not go through the progress engine.
+           Therefore, it is possible that this process never process
+           events coming from other processes. This may cause deadlock in
+           applications where the program execution on this process depends
+           on the happening of events from other processes. Here we poke
+           the progress engine once to avoid such issue.  */
+        mpi_errno = poke_progress_engine();
+        if (mpi_errno != MPI_SUCCESS)
+            MPIU_ERR_POP(mpi_errno);
     }
 
   fn_exit:
@@ -1370,6 +1464,7 @@ int MPIDI_Win_unlock_all(MPID_Win * win_ptr)
     int local_completed = 0,remote_completed = 0;
     int rank = win_ptr->comm_ptr->rank;
     MPIDI_RMA_Target_t *curr_target = NULL;
+    int progress_engine_triggered = 0;
     enum MPIDI_RMA_sync_types sync_flag;
     int mpi_errno = MPI_SUCCESS;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_WIN_UNLOCK_ALL);
@@ -1477,6 +1572,10 @@ int MPIDI_Win_unlock_all(MPID_Win * win_ptr)
             mpi_errno = wait_progress_engine();
             if (mpi_errno != MPI_SUCCESS)
                 MPIU_ERR_POP(mpi_errno);
+
+            /* Mark that we triggered the progress engine
+               in this function call. */
+            progress_engine_triggered = 1;
         }
     } while (!remote_completed);
 
@@ -1498,6 +1597,19 @@ int MPIDI_Win_unlock_all(MPID_Win * win_ptr)
 
     MPIU_Assert(win_ptr->active_req_cnt == 0);
 
+    if (!progress_engine_triggered) {
+        /* In some cases (e.g. target is myself, or process on SHM),
+           this function call does not go through the progress engine.
+           Therefore, it is possible that this process never process
+           events coming from other processes. This may cause deadlock in
+           applications where the program execution on this process depends
+           on the happening of events from other processes. Here we poke
+           the progress engine once to avoid such issue.  */
+        mpi_errno = poke_progress_engine();
+        if (mpi_errno != MPI_SUCCESS)
+            MPIU_ERR_POP(mpi_errno);
+    }
+
   fn_exit:
     MPIDI_RMA_FUNC_EXIT(MPID_STATE_MPIDI_WIN_UNLOCK_ALL);
     return mpi_errno;
@@ -1517,6 +1629,7 @@ int MPIDI_Win_flush_all(MPID_Win * win_ptr)
     int i, made_progress = 0;
     int local_completed = 0, remote_completed = 0;
     MPIDI_RMA_Target_t *curr_target = NULL;
+    int progress_engine_triggered = 0;
     int mpi_errno = MPI_SUCCESS;
     MPIDI_STATE_DECL(MPIDI_STATE_MPIDI_WIN_FLUSH_ALL);
 
@@ -1532,17 +1645,6 @@ int MPIDI_Win_flush_all(MPID_Win * win_ptr)
     if (win_ptr->shm_allocated == TRUE) {
         OPA_read_write_barrier();
     }
-
-    /* When the process tries to acquire the lock on itself, it does not
-       go through the progress engine. Therefore, it is possible that
-       one process always grants the lock to itself but never process
-       events coming from other processes. This may cause deadlock in
-       applications where the program execution on target process depends
-       on the happening of events from other processes. Here we poke
-       the progress engine once to avoid such issue.  */
-    mpi_errno = poke_progress_engine();
-    if (mpi_errno != MPI_SUCCESS)
-        MPIU_ERR_POP(mpi_errno);
 
     /* Set sync_flag in sync struct. */
     for (i = 0; i < win_ptr->num_slots; i++) {
@@ -1575,6 +1677,10 @@ int MPIDI_Win_flush_all(MPID_Win * win_ptr)
             mpi_errno = wait_progress_engine();
             if (mpi_errno != MPI_SUCCESS)
                 MPIU_ERR_POP(mpi_errno);
+
+            /* Mark that we triggered the progress engine
+               in this function call. */
+            progress_engine_triggered = 1;
         }
     } while (!remote_completed);
 
@@ -1583,6 +1689,19 @@ int MPIDI_Win_flush_all(MPID_Win * win_ptr)
     win_ptr->accumulated_ops_cnt = 0;
 
     MPIU_Assert(win_ptr->active_req_cnt == 0);
+
+    if (!progress_engine_triggered) {
+        /* In some cases (e.g. target is myself, or process on SHM),
+           this function call does not go through the progress engine.
+           Therefore, it is possible that this process never process
+           events coming from other processes. This may cause deadlock in
+           applications where the program execution on this process depends
+           on the happening of events from other processes. Here we poke
+           the progress engine once to avoid such issue.  */
+        mpi_errno = poke_progress_engine();
+        if (mpi_errno != MPI_SUCCESS)
+            MPIU_ERR_POP(mpi_errno);
+    }
 
   fn_exit:
     MPIDI_RMA_FUNC_EXIT(MPIDI_STATE_MPIDI_WIN_FLUSH_ALL);
@@ -1605,6 +1724,7 @@ int MPIDI_Win_flush_local_all(MPID_Win * win_ptr)
     MPIDI_RMA_Target_t *curr_target = NULL;
     int enable_flush_local_cnt = 0, disable_flush_local_cnt = 0;
     int remote_completed_cnt = 0, local_completed_cnt = 0;
+    int progress_engine_triggered = 0;
     int mpi_errno = MPI_SUCCESS;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_WIN_FLUSH_LOCAL_ALL);
 
@@ -1615,17 +1735,6 @@ int MPIDI_Win_flush_local_all(MPID_Win * win_ptr)
                         win_ptr->states.access_state != MPIDI_RMA_LOCK_ALL_ISSUED &&
                         win_ptr->states.access_state != MPIDI_RMA_LOCK_ALL_GRANTED,
                         mpi_errno, MPI_ERR_RMA_SYNC, "**rmasync");
-
-    /* When the process tries to acquire the lock on itself, it does not
-       go through the progress engine. Therefore, it is possible that
-       one process always grants the lock to itself but never process
-       events coming from other processes. This may cause deadlock in
-       applications where the program execution on target process depends
-       on the happening of events from other processes. Here we poke
-       the progress engine once to avoid such issue.  */
-    mpi_errno = poke_progress_engine();
-    if (mpi_errno != MPI_SUCCESS)
-        MPIU_ERR_POP(mpi_errno);
 
     /* Set sync_flag in sync struct. */
     for (i = 0; i < win_ptr->num_slots; i++) {
@@ -1688,6 +1797,10 @@ int MPIDI_Win_flush_local_all(MPID_Win * win_ptr)
             mpi_errno = wait_progress_engine();
             if (mpi_errno != MPI_SUCCESS)
                 MPIU_ERR_POP(mpi_errno);
+
+            /* Mark that we triggered the progress engine
+               in this function call. */
+            progress_engine_triggered = 1;
         }
     } while (remote_completed_cnt < disable_flush_local_cnt ||
              local_completed_cnt < enable_flush_local_cnt);
@@ -1704,6 +1817,19 @@ int MPIDI_Win_flush_local_all(MPID_Win * win_ptr)
 
     /* ENDING synchronization: correctly decrement the following counter. */
     win_ptr->accumulated_ops_cnt = 0;
+
+    if (!progress_engine_triggered) {
+        /* In some cases (e.g. target is myself, or process on SHM),
+           this function call does not go through the progress engine.
+           Therefore, it is possible that this process never process
+           events coming from other processes. This may cause deadlock in
+           applications where the program execution on this process depends
+           on the happening of events from other processes. Here we poke
+           the progress engine once to avoid such issue.  */
+        mpi_errno = poke_progress_engine();
+        if (mpi_errno != MPI_SUCCESS)
+            MPIU_ERR_POP(mpi_errno);
+    }
 
   fn_exit:
     MPIDI_RMA_FUNC_EXIT(MPID_STATE_MPIDI_WIN_FLUSH_LOCAL_ALL);
