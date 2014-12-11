@@ -7,7 +7,7 @@
 
 include $(top_srcdir)/Makefile_cxx.mtest
 
-EXTRA_DIST = testlist distgraphcxx.cxx
+EXTRA_DIST = testlist.in distgraphcxx.cxx
 
 # avoid having to write many "foo_SOURCES = foo.cxx" lines because
 # automake is too limited to figure this out for itself

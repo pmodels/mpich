@@ -7,7 +7,7 @@
 
 include $(top_srcdir)/Makefile.mtest
 
-EXTRA_DIST = testlist
+EXTRA_DIST = testlist.in
 
 ## For some reason, these tests were missing from both the simplemakefile and
 ## the testlist.  Leaving them disabled for now.

@@ -7,6 +7,8 @@
 
 include $(top_srcdir)/Makefile.mtest
 
+EXTRA_DIST = testlist.in
+
 # FIXME should "datatype" be included in this list?  It was not in the
 # simplemake version for some reason and is also missing from the testlist
 # file
