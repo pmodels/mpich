@@ -374,6 +374,7 @@ typedef struct MPIDI_Request {
     void        *user_buf;
     int          user_count;
     MPI_Datatype datatype;
+    int drop_data;
 
     /* segment, segment_first, and segment_size are used when processing 
        non-contiguous datatypes */

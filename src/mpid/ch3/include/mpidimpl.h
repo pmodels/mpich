@@ -345,6 +345,7 @@ extern MPIDI_Process_t MPIDI_Process;
     (sreq_)->dev.match.parts.context_id = comm->context_id + context_offset;	\
     (sreq_)->dev.user_buf = (void *) buf;			\
     (sreq_)->dev.user_count = count;				\
+    (sreq_)->dev.drop_data = FALSE;                             \
     (sreq_)->dev.datatype = datatype;				\
     (sreq_)->dev.datatype_ptr	   = NULL;                      \
     (sreq_)->dev.segment_ptr	   = NULL;                      \
@@ -384,6 +385,7 @@ extern MPIDI_Process_t MPIDI_Process;
     (rreq_)->dev.iov_offset   = 0;                              \
     (rreq_)->dev.OnDataAvail	   = NULL;                      \
     (rreq_)->dev.OnFinal	   = NULL;                      \
+    (rreq_)->dev.drop_data = FALSE;                             \
      MPIDI_CH3_REQUEST_INIT(rreq_);\
 }
 

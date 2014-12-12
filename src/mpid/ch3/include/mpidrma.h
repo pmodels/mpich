@@ -417,6 +417,7 @@ static inline int enqueue_lock_origin(MPID_Win *win_ptr, MPIDI_VC_t *vc,
 
         /* fill in area in req that will be used in Receive_data_found() */
         if (lock_discarded || data_discarded) {
+            req->dev.drop_data = TRUE;
             req->dev.user_buf = NULL;
             req->dev.user_count = target_count;
             req->dev.datatype = target_dtp;
