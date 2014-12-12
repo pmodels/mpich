@@ -2160,7 +2160,7 @@ int MPID_nem_ib_PktHandler_GetResp(MPIDI_VC_t * vc,
 
     /* decrement ack_counter on target */
     if (get_resp_pkt->flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK_GRANTED) {
-        mpi_errno = set_lock_sync_counter(win_ptr, target_rank,
+        mpi_errno = handle_lock_ack(win_ptr, target_rank,
                                           get_resp_pkt->flags);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     }

@@ -1292,7 +1292,7 @@ static inline int perform_op_in_lock_queue(MPID_Win *win_ptr, MPIDI_RMA_Lock_ent
 
         MPIDI_CH3_Pkt_lock_t *lock_pkt = &(lock_entry->pkt.lock);
         if (lock_pkt->origin_rank == win_ptr->comm_ptr->rank) {
-            mpi_errno = set_lock_sync_counter(win_ptr, lock_pkt->origin_rank,
+            mpi_errno = handle_lock_ack(win_ptr, lock_pkt->origin_rank,
                                               MPIDI_CH3_PKT_FLAG_RMA_LOCK_GRANTED);
             if (mpi_errno) MPIU_ERR_POP(mpi_errno);
         }

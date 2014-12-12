@@ -1016,7 +1016,7 @@ int MPIDI_CH3_PktHandler_CASResp(MPIDI_VC_t * vc ATTRIBUTE((unused)),
 
     /* decrement ack_counter on this target */
     if (cas_resp_pkt->flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK_GRANTED) {
-        mpi_errno = set_lock_sync_counter(win_ptr, target_rank,
+        mpi_errno = handle_lock_ack(win_ptr, target_rank,
                                           cas_resp_pkt->flags);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
@@ -1184,7 +1184,7 @@ int MPIDI_CH3_PktHandler_FOPResp(MPIDI_VC_t * vc ATTRIBUTE((unused)),
 
     /* decrement ack_counter */
     if (fop_resp_pkt->flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK_GRANTED) {
-        mpi_errno = set_lock_sync_counter(win_ptr, target_rank,
+        mpi_errno = handle_lock_ack(win_ptr, target_rank,
                                           fop_resp_pkt->flags);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
@@ -1240,7 +1240,7 @@ int MPIDI_CH3_PktHandler_Get_AccumResp(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
 
     /* decrement ack_counter on target */
     if (get_accum_resp_pkt->flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK_GRANTED) {
-        mpi_errno = set_lock_sync_counter(win_ptr, target_rank,
+        mpi_errno = handle_lock_ack(win_ptr, target_rank,
                                           get_accum_resp_pkt->flags);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
@@ -1377,7 +1377,7 @@ int MPIDI_CH3_PktHandler_GetResp(MPIDI_VC_t * vc ATTRIBUTE((unused)),
 
     /* decrement ack_counter on target */
     if (get_resp_pkt->flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK_GRANTED) {
-        mpi_errno = set_lock_sync_counter(win_ptr, target_rank,
+        mpi_errno = handle_lock_ack(win_ptr, target_rank,
                                           get_resp_pkt->flags);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
@@ -1465,7 +1465,7 @@ int MPIDI_CH3_PktHandler_LockAck(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
 
     MPID_Win_get_ptr(lock_ack_pkt->source_win_handle, win_ptr);
 
-    mpi_errno = set_lock_sync_counter(win_ptr, target_rank,
+    mpi_errno = handle_lock_ack(win_ptr, target_rank,
                                       lock_ack_pkt->flags);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
@@ -1500,7 +1500,7 @@ int MPIDI_CH3_PktHandler_LockOpAck(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
 
     MPID_Win_get_ptr(lock_op_ack_pkt->source_win_handle, win_ptr);
 
-    mpi_errno = set_lock_sync_counter(win_ptr, target_rank,
+    mpi_errno = handle_lock_ack(win_ptr, target_rank,
                                       lock_op_ack_pkt->flags);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 

@@ -498,7 +498,7 @@ static inline int enqueue_lock_origin(MPID_Win *win_ptr, MPIDI_VC_t *vc,
 }
 
 
-static inline int set_lock_sync_counter(MPID_Win *win_ptr, int target_rank,
+static inline int handle_lock_ack(MPID_Win *win_ptr, int target_rank,
                                         MPIDI_CH3_Pkt_flags_t flags)
 {
     MPIDI_RMA_Target_t *t = NULL;
@@ -654,7 +654,7 @@ static inline int acquire_local_lock(MPID_Win * win_ptr, int lock_type)
     MPIR_T_PVAR_TIMER_START(RMA, rma_winlock_getlocallock);
 
     if (MPIDI_CH3I_Try_acquire_win_lock(win_ptr, lock_type) == 1) {
-        mpi_errno = set_lock_sync_counter(win_ptr, win_ptr->comm_ptr->rank,
+        mpi_errno = handle_lock_ack(win_ptr, win_ptr->comm_ptr->rank,
                                           MPIDI_CH3_PKT_FLAG_RMA_LOCK_GRANTED);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     }
@@ -670,7 +670,7 @@ static inline int acquire_local_lock(MPID_Win * win_ptr, int lock_type)
 
         new_ptr = MPIDI_CH3I_Win_lock_entry_alloc(win_ptr, &pkt);
         if (new_ptr == NULL) {
-            mpi_errno = set_lock_sync_counter(win_ptr, win_ptr->comm_ptr->rank,
+            mpi_errno = handle_lock_ack(win_ptr, win_ptr->comm_ptr->rank,
                                               MPIDI_CH3_PKT_FLAG_RMA_LOCK_DISCARDED);
             if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
             goto fn_exit;
