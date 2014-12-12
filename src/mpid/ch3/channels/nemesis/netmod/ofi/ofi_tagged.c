@@ -23,8 +23,8 @@ static inline int MPID_nem_ofi_sync_recv_callback(cq_tagged_entry_t * wc ATTRIBU
 
     BEGIN_FUNC(FCNAME);
 
-    MPIDI_CH3U_Recvq_DP(REQ_SFI(rreq)->parent);
-    MPIDI_CH3U_Request_complete(REQ_SFI(rreq)->parent);
+    MPIDI_CH3U_Recvq_DP(REQ_OFI(rreq)->parent);
+    MPIDI_CH3U_Request_complete(REQ_OFI(rreq)->parent);
     MPIDI_CH3U_Request_complete(rreq);
 
     END_FUNC(FCNAME);
@@ -42,8 +42,8 @@ static inline int MPID_nem_ofi_send_callback(cq_tagged_entry_t * wc ATTRIBUTE((u
 {
     int mpi_errno = MPI_SUCCESS;
     BEGIN_FUNC(FCNAME);
-    if (REQ_SFI(sreq)->pack_buffer)
-        MPIU_Free(REQ_SFI(sreq)->pack_buffer);
+    if (REQ_OFI(sreq)->pack_buffer)
+        MPIU_Free(REQ_OFI(sreq)->pack_buffer);
     MPIDI_CH3U_Request_complete(sreq);
     END_FUNC(FCNAME);
     return mpi_errno;
@@ -69,16 +69,16 @@ static inline int MPID_nem_ofi_recv_callback(cq_tagged_entry_t * wc, MPID_Reques
     rreq->status.MPI_ERROR = MPI_SUCCESS;
     rreq->status.MPI_SOURCE = get_source(wc->tag);
     rreq->status.MPI_TAG = get_tag(wc->tag);
-    REQ_SFI(rreq)->req_started = 1;
+    REQ_OFI(rreq)->req_started = 1;
     MPIR_STATUS_SET_COUNT(rreq->status, wc->len);
 
-    if (REQ_SFI(rreq)->pack_buffer) {
-        MPIDI_CH3U_Buffer_copy(REQ_SFI(rreq)->pack_buffer,
+    if (REQ_OFI(rreq)->pack_buffer) {
+        MPIDI_CH3U_Buffer_copy(REQ_OFI(rreq)->pack_buffer,
                                MPIR_STATUS_GET_COUNT(rreq->status),
                                MPI_BYTE, &err0, rreq->dev.user_buf,
                                rreq->dev.user_count, rreq->dev.datatype, &sz, &err1);
         MPIR_STATUS_SET_COUNT(rreq->status, sz);
-        MPIU_Free(REQ_SFI(rreq)->pack_buffer);
+        MPIU_Free(REQ_OFI(rreq)->pack_buffer);
         if (err0 || err1) {
             rreq->status.MPI_ERROR = MPI_ERR_TYPE;
         }
@@ -91,7 +91,7 @@ static inline int MPID_nem_ofi_recv_callback(cq_tagged_entry_t * wc, MPID_Reques
         /* MPID_SYNC_SEND_ACK is set in the tag bits to provide */
         /* separation of MPI messages and protocol messages     */
         /* ---------------------------------------------------- */
-        vc = REQ_SFI(rreq)->vc;
+        vc = REQ_OFI(rreq)->vc;
         if (!vc) {      /* MPI_ANY_SOURCE -- Post message from status, complete the VC */
             src = get_source(wc->tag);
             vc = rreq->comm->vcr[src];
@@ -102,14 +102,14 @@ static inline int MPID_nem_ofi_recv_callback(cq_tagged_entry_t * wc, MPID_Reques
         MPID_nem_ofi_create_req(&sync_req, 1);
         sync_req->dev.OnDataAvail = NULL;
         sync_req->dev.next = NULL;
-        REQ_SFI(sync_req)->event_callback = MPID_nem_ofi_sync_recv_callback;
-        REQ_SFI(sync_req)->parent = rreq;
+        REQ_OFI(sync_req)->event_callback = MPID_nem_ofi_sync_recv_callback;
+        REQ_OFI(sync_req)->parent = rreq;
         FI_RC(fi_tsend(gl_data.endpoint,
                          NULL,
                          0,
                          gl_data.mr,
-                         VC_SFI(vc)->direct_addr,
-                         ssend_bits, &(REQ_SFI(sync_req)->ofi_context)), tsend);
+                         VC_OFI(vc)->direct_addr,
+                         ssend_bits, &(REQ_OFI(sync_req)->ofi_context)), tsend);
     }
     else {
         /* ---------------------------------------------------- */
@@ -150,8 +150,8 @@ static inline int do_isend(struct MPIDI_VC *vc,
     MPID_nem_ofi_create_req(&sreq, 2);
     sreq->kind = MPID_REQUEST_SEND;
     sreq->dev.OnDataAvail = NULL;
-    REQ_SFI(sreq)->event_callback = MPID_nem_ofi_send_callback;
-    REQ_SFI(sreq)->vc = vc;
+    REQ_OFI(sreq)->event_callback = MPID_nem_ofi_send_callback;
+    REQ_OFI(sreq)->vc = vc;
 
     /* ---------------------------------------------------- */
     /* Create the pack buffer (if required), and allocate   */
@@ -167,7 +167,7 @@ static inline int do_isend(struct MPIDI_VC *vc,
                              MPI_ERR_OTHER, "**nomem", "**nomem %s", "Send buffer alloc");
         MPIDI_CH3U_Buffer_copy(buf, count, datatype, &err0,
                                send_buffer, data_sz, MPI_BYTE, &data_sz, &err1);
-        REQ_SFI(sreq)->pack_buffer = send_buffer;
+        REQ_OFI(sreq)->pack_buffer = send_buffer;
     }
 
     if (type == MPID_SYNC_SEND) {
@@ -181,26 +181,26 @@ static inline int do_isend(struct MPIDI_VC *vc,
         MPID_nem_ofi_create_req(&sync_req, 1);
         sync_req->dev.OnDataAvail = NULL;
         sync_req->dev.next = NULL;
-        REQ_SFI(sync_req)->event_callback = MPID_nem_ofi_sync_recv_callback;
-        REQ_SFI(sync_req)->parent = sreq;
+        REQ_OFI(sync_req)->event_callback = MPID_nem_ofi_sync_recv_callback;
+        REQ_OFI(sync_req)->parent = sreq;
         ssend_match = init_recvtag(&ssend_mask, comm->context_id + context_offset, dest, tag);
         ssend_match |= MPID_SYNC_SEND_ACK;
         FI_RC(fi_trecv(gl_data.endpoint,    /* endpoint    */
                            NULL,        /* recvbuf     */
                            0,   /* data sz     */
                            gl_data.mr,  /* dynamic mr  */
-                           VC_SFI(vc)->direct_addr,     /* remote proc */
+                           VC_OFI(vc)->direct_addr,     /* remote proc */
                            ssend_match, /* match bits  */
                            0ULL,        /* mask bits   */
-                           &(REQ_SFI(sync_req)->ofi_context)), trecv);
+                           &(REQ_OFI(sync_req)->ofi_context)), trecv);
     }
     FI_RC(fi_tsend(gl_data.endpoint,  /* Endpoint                       */
                      send_buffer,       /* Send buffer(packed or user)    */
                      data_sz,   /* Size of the send               */
                      gl_data.mr,        /* Dynamic memory region          */
-                     VC_SFI(vc)->direct_addr,   /* Use the address of this VC     */
+                     VC_OFI(vc)->direct_addr,   /* Use the address of this VC     */
                      match_bits,        /* Match bits                     */
-                     &(REQ_SFI(sreq)->ofi_context)), tsend);
+                     &(REQ_OFI(sreq)->ofi_context)), tsend);
     *request = sreq;
     END_FUNC_RC(FCNAME);
 }
@@ -223,8 +223,8 @@ int MPID_nem_ofi_recv_posted(struct MPIDI_VC *vc, struct MPID_Request *rreq)
     /* Initialize the request   */
     /* ------------------------ */
     MPID_nem_ofi_init_req(rreq);
-    REQ_SFI(rreq)->event_callback = MPID_nem_ofi_recv_callback;
-    REQ_SFI(rreq)->vc = vc;
+    REQ_OFI(rreq)->event_callback = MPID_nem_ofi_recv_callback;
+    REQ_OFI(rreq)->vc = vc;
 
     /* ---------------------------------------------------- */
     /* Fill out the match info, and allocate the pack buffer */
@@ -234,7 +234,7 @@ int MPID_nem_ofi_recv_posted(struct MPIDI_VC *vc, struct MPID_Request *rreq)
     tag = rreq->dev.match.parts.tag;
     context_id = rreq->dev.match.parts.context_id;
     match_bits = init_recvtag(&mask_bits, context_id, src, tag);
-    SFI_ADDR_INIT(src, vc, remote_proc);
+    OFI_ADDR_INIT(src, vc, remote_proc);
     MPIDI_Datatype_get_info(rreq->dev.user_count, rreq->dev.datatype,
                             dt_contig, data_sz, dt_ptr, dt_true_lb);
     if (dt_contig) {
@@ -244,7 +244,7 @@ int MPID_nem_ofi_recv_posted(struct MPIDI_VC *vc, struct MPID_Request *rreq)
         recv_buffer = (char *) MPIU_Malloc(data_sz);
         MPIU_ERR_CHKANDJUMP1(recv_buffer == NULL, mpi_errno, MPI_ERR_OTHER,
                              "**nomem", "**nomem %s", "Recv Pack Buffer alloc");
-        REQ_SFI(rreq)->pack_buffer = recv_buffer;
+        REQ_OFI(rreq)->pack_buffer = recv_buffer;
     }
 
     /* ---------------- */
@@ -255,7 +255,7 @@ int MPID_nem_ofi_recv_posted(struct MPIDI_VC *vc, struct MPID_Request *rreq)
                        data_sz,
                        gl_data.mr,
                        remote_proc,
-                       match_bits, mask_bits, &(REQ_SFI(rreq)->ofi_context)), trecv);
+                       match_bits, mask_bits, &(REQ_OFI(rreq)->ofi_context)), trecv);
     MPID_nem_ofi_poll(MPID_NONBLOCKING_POLL);
     END_FUNC_RC(FCNAME);
 }
@@ -337,7 +337,7 @@ int MPID_nem_ofi_issend(struct MPIDI_VC *vc,
   BEGIN_FUNC(FCNAME);                                   \
   MPID_nem_ofi_poll(MPID_NONBLOCKING_POLL);             \
   ret = fi_cancel((fid_t)gl_data.endpoint,              \
-                  &(REQ_SFI(req)->ofi_context));        \
+                  &(REQ_OFI(req)->ofi_context));        \
   if (ret == 0) {                                        \
     MPIR_STATUS_SET_CANCEL_BIT(req->status, TRUE);      \
   } else {                                              \
@@ -384,7 +384,7 @@ int MPID_nem_ofi_anysource_matched(MPID_Request * rreq)
     /* source request on another device.  We have the chance */
     /* to cancel this shared request if it has been posted   */
     /* ----------------------------------------------------- */
-    ret = fi_cancel((fid_t) gl_data.endpoint, &(REQ_SFI(rreq)->ofi_context));
+    ret = fi_cancel((fid_t) gl_data.endpoint, &(REQ_OFI(rreq)->ofi_context));
     if (ret == 0) {
         /* --------------------------------------------------- */
         /* Request cancelled:  cancel and complete the request */

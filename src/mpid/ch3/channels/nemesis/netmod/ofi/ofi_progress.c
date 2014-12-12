@@ -50,14 +50,14 @@ static int tsearch_callback(cq_tagged_entry_t * wc, MPID_Request * rreq)
     int mpi_errno = MPI_SUCCESS;
     BEGIN_FUNC(FCNAME);
     if (wc->data) {
-        REQ_SFI(rreq)->match_state = TSEARCH_FOUND;
+        REQ_OFI(rreq)->match_state = TSEARCH_FOUND;
         rreq->status.MPI_SOURCE = get_source(wc->tag);
         rreq->status.MPI_TAG = get_tag(wc->tag);
         MPIR_STATUS_SET_COUNT(rreq->status, wc->len);
         rreq->status.MPI_ERROR = MPI_SUCCESS;
     }
     else {
-        REQ_SFI(rreq)->match_state = TSEARCH_NOT_FOUND;
+        REQ_OFI(rreq)->match_state = TSEARCH_NOT_FOUND;
     }
     END_FUNC(FCNAME);
     return mpi_errno;
@@ -92,9 +92,9 @@ int MPID_nem_ofi_iprobe_impl(struct MPIDI_VC *vc,
         rreq = &rreq_s;
         rreq->dev.OnDataAvail = NULL;
     }
-    REQ_SFI(rreq)->event_callback = tsearch_callback;
-    REQ_SFI(rreq)->match_state = TSEARCH_INIT;
-    SFI_ADDR_INIT(source, vc, remote_proc);
+    REQ_OFI(rreq)->event_callback = tsearch_callback;
+    REQ_OFI(rreq)->match_state = TSEARCH_INIT;
+    OFI_ADDR_INIT(source, vc, remote_proc);
     match_bits = init_recvtag(&mask_bits, comm->context_id + context_offset, source, tag);
 
     /* ------------------------------------------------------------------------ */
@@ -110,7 +110,7 @@ int MPID_nem_ofi_iprobe_impl(struct MPIDI_VC *vc,
                      0, /* Flags                */
                      &remote_proc,      /* Remote Address       */
                      &len,      /* Out:  incoming msglen */
-                     &(REQ_SFI(rreq)->ofi_context));    /* Nonblocking context  */
+                     &(REQ_OFI(rreq)->ofi_context));    /* Nonblocking context  */
     if (ret == -FI_ENOMSG) {
         *flag = 0;
         goto fn_exit;
@@ -126,10 +126,10 @@ int MPID_nem_ofi_iprobe_impl(struct MPIDI_VC *vc,
                              "**ofi_tsearch", "**ofi_tsearch %s %d %s %s",
                              __SHORT_FILE__, __LINE__, FCNAME, fi_strerror(-ret));
     }
-    while (TSEARCH_INIT == REQ_SFI(rreq)->match_state)
+    while (TSEARCH_INIT == REQ_OFI(rreq)->match_state)
         MPID_nem_ofi_poll(MPID_BLOCKING_POLL);
 
-    if (REQ_SFI(rreq)->match_state == TSEARCH_NOT_FOUND) {
+    if (REQ_OFI(rreq)->match_state == TSEARCH_NOT_FOUND) {
         if (rreq_ptr) {
             MPIDI_CH3_Request_destroy(rreq);
             *rreq_ptr = NULL;
@@ -233,16 +233,16 @@ int MPID_nem_ofi_poll(int in_blocking_poll)
         if (ret > 0) {
             if (NULL != wc.op_context) {
                 req = context_to_req(wc.op_context);
-                if (REQ_SFI(req)->event_callback) {
-                    MPI_RC(REQ_SFI(req)->event_callback(&wc, req));
+                if (REQ_OFI(req)->event_callback) {
+                    MPI_RC(REQ_OFI(req)->event_callback(&wc, req));
                     continue;
                 }
                 reqFn = req->dev.OnDataAvail;
                 if (reqFn) {
-                    if (REQ_SFI(req)->pack_buffer) {
-                        MPIU_Free(REQ_SFI(req)->pack_buffer);
+                    if (REQ_OFI(req)->pack_buffer) {
+                        MPIU_Free(REQ_OFI(req)->pack_buffer);
                     }
-                    vc = REQ_SFI(req)->vc;
+                    vc = REQ_OFI(req)->vc;
 
                     complete = 0;
                     MPI_RC(reqFn(vc, req, &complete));
@@ -268,10 +268,10 @@ int MPID_nem_ofi_poll(int in_blocking_poll)
                     /* ----------------------------------------------------- */
                     req = context_to_req(error.op_context);
                     if (req->kind == MPID_REQUEST_SEND) {
-                        mpi_errno = REQ_SFI(req)->event_callback(NULL, req);
+                        mpi_errno = REQ_OFI(req)->event_callback(NULL, req);
                     }
                     else if (req->kind == MPID_REQUEST_RECV) {
-                        mpi_errno = REQ_SFI(req)->event_callback(&wc, req);
+                        mpi_errno = REQ_OFI(req)->event_callback(&wc, req);
                         req->status.MPI_ERROR = MPI_ERR_TRUNCATE;
                         req->status.MPI_TAG = error.tag;
                     }

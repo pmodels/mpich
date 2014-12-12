@@ -21,7 +21,7 @@ int MPID_nem_ofi_init(MPIDI_PG_t * pg_p, int pg_rank, char **bc_val_p, int *val_
     info_t hints, *prov_tagged, *prov_use;
     cq_attr_t cq_attr;
     av_attr_t av_attr;
-    char kvsname[SFI_KVSAPPSTRLEN], key[SFI_KVSAPPSTRLEN], bc[SFI_KVSAPPSTRLEN];
+    char kvsname[OFI_KVSAPPSTRLEN], key[OFI_KVSAPPSTRLEN], bc[OFI_KVSAPPSTRLEN];
     char *my_bc, *addrs, *null_addr;
     fi_addr_t *fi_addrs = NULL;
     MPIDI_VC_t *vc;
@@ -39,11 +39,11 @@ int MPID_nem_ofi_init(MPIDI_PG_t * pg_p, int pg_rank, char **bc_val_p, int *val_
     /*        communication calls.                                              */
     /*        Note that we do not fill in FI_LOCAL_MR, which means this netmod  */
     /*        does not support exchange of memory regions on communication calls */
-    /*        SFI requires that all communication calls use a registered mr     */
+    /*        OFI requires that all communication calls use a registered mr     */
     /*        but in our case this netmod is written to only support transfers  */
     /*        on a dynamic memory region that spans all of memory.  So, we do   */
     /*        not set the FI_LOCAL_MR mode bit, and we set the FI_DYNAMIC_MR    */
-    /*        bit to tell SFI our requirement and filter providers appropriately */
+    /*        bit to tell OFI our requirement and filter providers appropriately */
     /* ep_type:  reliable datagram operation                                    */
     /* caps:     Capabilities required from the provider.  The bits specified   */
     /*           with buffered receive, cancel, and remote complete implements  */
@@ -62,7 +62,7 @@ int MPID_nem_ofi_init(MPIDI_PG_t * pg_p, int pg_rank, char **bc_val_p, int *val_
 
     /* ------------------------------------------------------------------------ */
     /* FI_VERSION provides binary backward and forward compatibility support    */
-    /* Specify the version of SFI is coded to, the provider will select struct  */
+    /* Specify the version of OFI is coded to, the provider will select struct  */
     /* layouts that are compatible with this version.                           */
     /* ------------------------------------------------------------------------ */
     fi_version = FI_VERSION(1, 0);
@@ -203,8 +203,8 @@ int MPID_nem_ofi_init(MPIDI_PG_t * pg_p, int pg_rank, char **bc_val_p, int *val_
     /* Publish the business card        */
     /* to the KVS                       */
     /* -------------------------------- */
-    PMI_RC(PMI_KVS_Get_my_name(kvsname, SFI_KVSAPPSTRLEN), pmi);
-    sprintf(key, "SFI-%d", pg_rank);
+    PMI_RC(PMI_KVS_Get_my_name(kvsname, OFI_KVSAPPSTRLEN), pmi);
+    sprintf(key, "OFI-%d", pg_rank);
 
     PMI_RC(PMI_KVS_Put(kvsname, key, my_bc), pmi);
     PMI_RC(PMI_KVS_Commit(kvsname), pmi);
@@ -228,10 +228,10 @@ int MPID_nem_ofi_init(MPIDI_PG_t * pg_p, int pg_rank, char **bc_val_p, int *val_
     MPIU_CHKLMEM_MALLOC(addrs, char *, pg_p->size * gl_data.bound_addrlen, mpi_errno, "addrs");
 
     for (i = 0; i < pg_p->size; ++i) {
-        sprintf(key, "SFI-%d", i);
+        sprintf(key, "OFI-%d", i);
 
-        PMI_RC(PMI_KVS_Get(kvsname, key, bc, SFI_KVSAPPSTRLEN), pmi);
-        ret = MPIU_Str_get_binary_arg(bc, "SFI",
+        PMI_RC(PMI_KVS_Get(kvsname, key, bc, OFI_KVSAPPSTRLEN), pmi);
+        ret = MPIU_Str_get_binary_arg(bc, "OFI",
                                       (char *) &addrs[i * gl_data.bound_addrlen],
                                       gl_data.bound_addrlen, &len);
         MPIU_ERR_CHKANDJUMP((ret != MPIU_STR_SUCCESS && ret != MPIU_STR_NOMEM) ||
@@ -261,8 +261,8 @@ int MPID_nem_ofi_init(MPIDI_PG_t * pg_p, int pg_rank, char **bc_val_p, int *val_
     /* --------------------------------- */
     for (i = 0; i < pg_p->size; ++i) {
         MPIDI_PG_Get_vc(pg_p, i, &vc);
-        VC_SFI(vc)->direct_addr = fi_addrs[i];
-        VC_SFI(vc)->ready = 1;
+        VC_OFI(vc)->direct_addr = fi_addrs[i];
+        VC_OFI(vc)->ready = 1;
     }
 
     /* --------------------------------------------- */
@@ -316,9 +316,9 @@ int MPID_nem_ofi_finalize(void)
 
 static inline int compile_time_checking()
 {
-    SFI_COMPILE_TIME_ASSERT(sizeof(MPID_nem_ofi_vc_t) <= MPID_NEM_VC_NETMOD_AREA_LEN);
-    SFI_COMPILE_TIME_ASSERT(sizeof(MPID_nem_ofi_req_t) <= MPID_NEM_REQ_NETMOD_AREA_LEN);
-    SFI_COMPILE_TIME_ASSERT(sizeof(iovec_t) == sizeof(MPID_IOV));
+    OFI_COMPILE_TIME_ASSERT(sizeof(MPID_nem_ofi_vc_t) <= MPID_NEM_VC_NETMOD_AREA_LEN);
+    OFI_COMPILE_TIME_ASSERT(sizeof(MPID_nem_ofi_req_t) <= MPID_NEM_REQ_NETMOD_AREA_LEN);
+    OFI_COMPILE_TIME_ASSERT(sizeof(iovec_t) == sizeof(MPID_IOV));
     MPIU_Assert(((void *) &(((iovec_t *) 0)->iov_base)) ==
                 ((void *) &(((MPID_IOV *) 0)->MPID_IOV_BUF)));
     MPIU_Assert(((void *) &(((iovec_t *) 0)->iov_len)) ==
