@@ -7,8 +7,8 @@
  *  to Argonne National Laboratory subject to Software Grant and Corporate
  *  Contributor License Agreement dated February 8, 2012.
  */
-#ifndef SFI_IMPL_H
-#define SFI_IMPL_H
+#ifndef OFI_IMPL_H
+#define OFI_IMPL_H
 
 #include "mpid_nem_impl.h"
 #include "mpihandlemem.h"
@@ -61,20 +61,20 @@ typedef struct {
 /* This is per destination          */
 /* ******************************** */
 typedef struct {
-    fi_addr_t direct_addr;      /* Remote SFI address */
+    fi_addr_t direct_addr;      /* Remote OFI address */
     int ready;                  /* VC ready state     */
     int is_cmvc;                /* Cleanup VC         */
     MPIDI_VC_t *next;           /* VC queue           */
 } MPID_nem_ofi_vc_t;
-#define VC_SFI(vc) ((MPID_nem_ofi_vc_t *)vc->ch.netmod_area.padding)
+#define VC_OFI(vc) ((MPID_nem_ofi_vc_t *)vc->ch.netmod_area.padding)
 
 /* ******************************** */
 /* Per request object data          */
-/* SFI/Netmod specific              */
+/* OFI/Netmod specific              */
 /* ******************************** */
 typedef struct {
     context_t ofi_context;      /* Context Object              */
-    void *addr;                 /* SFI Address                 */
+    void *addr;                 /* OFI Address                 */
     event_callback_fn event_callback;   /* Callback Event              */
     char *pack_buffer;          /* MPI Pack Buffer             */
     int pack_buffer_size;       /* Pack buffer size            */
@@ -84,7 +84,7 @@ typedef struct {
     uint64_t tag;               /* 64 bit tag request          */
     MPID_Request *parent;       /* Parent request              */
 } MPID_nem_ofi_req_t;
-#define REQ_SFI(req) ((MPID_nem_ofi_req_t *)((req)->ch.netmod_area.padding))
+#define REQ_OFI(req) ((MPID_nem_ofi_req_t *)((req)->ch.netmod_area.padding))
 
 /* ******************************** */
 /* Logging and function macros      */
@@ -109,7 +109,7 @@ fn_fail:                      \
    : __FILE__                                   \
 )
 #define DECL_FUNC(FUNCNAME)  MPIU_QUOTE(FUNCNAME)
-#define SFI_COMPILE_TIME_ASSERT(expr_)                                  \
+#define OFI_COMPILE_TIME_ASSERT(expr_)                                  \
   do { switch(0) { case 0: case (expr_): default: break; } } while (0)
 
 #define FI_RC(FUNC,STR)                                         \
@@ -151,17 +151,17 @@ fn_fail:                      \
 
 #define VC_READY_CHECK(vc)                      \
 ({                                              \
-  if (1 != VC_SFI(vc)->ready) {                 \
+  if (1 != VC_OFI(vc)->ready) {                 \
     MPI_RC(MPID_nem_ofi_vc_connect(vc));        \
   }                                             \
 })
 
-#define SFI_ADDR_INIT(src, vc, remote_proc) \
+#define OFI_ADDR_INIT(src, vc, remote_proc) \
 ({                                          \
   if (MPI_ANY_SOURCE != src) {              \
     MPIU_Assert(vc != NULL);                \
     VC_READY_CHECK(vc);                     \
-    remote_proc = VC_SFI(vc)->direct_addr;  \
+    remote_proc = VC_OFI(vc)->direct_addr;  \
   } else {                                  \
     MPIU_Assert(vc == NULL);                \
     remote_proc = gl_data.any_addr;         \
@@ -197,14 +197,14 @@ fn_fail:                      \
 #define MPID_TAG_SHIFT           (28)
 #define MPID_PSOURCE_SHIFT       (16)
 #define MPID_PORT_SHIFT          (32)
-#define SFI_KVSAPPSTRLEN         1024
+#define OFI_KVSAPPSTRLEN         1024
 
 /* ******************************** */
 /* Request manipulation inlines     */
 /* ******************************** */
 static inline void MPID_nem_ofi_init_req(MPID_Request * req)
 {
-    memset(REQ_SFI(req), 0, sizeof(MPID_nem_ofi_req_t));
+    memset(REQ_OFI(req), 0, sizeof(MPID_nem_ofi_req_t));
 }
 
 static inline int MPID_nem_ofi_create_req(MPID_Request ** request, int refcnt)
@@ -320,7 +320,7 @@ int MPID_nem_ofi_iSendContig(MPIDI_VC_t * vc, MPID_Request * sreq, void *hdr,
                              MPIDI_msg_sz_t hdr_sz, void *data, MPIDI_msg_sz_t data_sz);
 
 /* ************************************************************************** */
-/* SFI utility functions : not exposed as a netmod public API                 */
+/* OFI utility functions : not exposed as a netmod public API                 */
 /* ************************************************************************** */
 #define MPID_NONBLOCKING_POLL 0
 #define MPID_BLOCKING_POLL 1

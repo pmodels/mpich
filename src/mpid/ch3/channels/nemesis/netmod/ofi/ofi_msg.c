@@ -61,33 +61,33 @@
     c = 1;                                                              \
     MPID_cc_incr(sreq->cc_ptr, &c);                                     \
     MPID_cc_incr(sreq->cc_ptr, &c);                                     \
-    REQ_SFI(sreq)->event_callback   = MPID_nem_ofi_data_callback;       \
-    REQ_SFI(sreq)->pack_buffer      = pack_buffer;                      \
-    REQ_SFI(sreq)->pack_buffer_size = pkt_len;                          \
-    REQ_SFI(sreq)->vc               = vc;                               \
-    REQ_SFI(sreq)->tag              = match_bits;                       \
+    REQ_OFI(sreq)->event_callback   = MPID_nem_ofi_data_callback;       \
+    REQ_OFI(sreq)->pack_buffer      = pack_buffer;                      \
+    REQ_OFI(sreq)->pack_buffer_size = pkt_len;                          \
+    REQ_OFI(sreq)->vc               = vc;                               \
+    REQ_OFI(sreq)->tag              = match_bits;                       \
                                                                         \
     MPID_nem_ofi_create_req(&cts_req, 1);                               \
     cts_req->dev.OnDataAvail         = NULL;                            \
     cts_req->dev.next                = NULL;                            \
-    REQ_SFI(cts_req)->event_callback = MPID_nem_ofi_cts_recv_callback;  \
-    REQ_SFI(cts_req)->parent         = sreq;                            \
+    REQ_OFI(cts_req)->event_callback = MPID_nem_ofi_cts_recv_callback;  \
+    REQ_OFI(cts_req)->parent         = sreq;                            \
                                                                         \
     FI_RC(fi_trecv(gl_data.endpoint,                                \
                        NULL,                                            \
                        0,                                               \
                        gl_data.mr,                                      \
-                       VC_SFI(vc)->direct_addr,                         \
+                       VC_OFI(vc)->direct_addr,                         \
                        match_bits | MPID_MSG_CTS,                       \
                        0, /* Exact tag match, no ignore bits */         \
-                       &(REQ_SFI(cts_req)->ofi_context)),trecv);    \
+                       &(REQ_OFI(cts_req)->ofi_context)),trecv);    \
     FI_RC(fi_tsend(gl_data.endpoint,                                  \
-                     &REQ_SFI(sreq)->pack_buffer_size,                  \
-                     sizeof(REQ_SFI(sreq)->pack_buffer_size),           \
+                     &REQ_OFI(sreq)->pack_buffer_size,                  \
+                     sizeof(REQ_OFI(sreq)->pack_buffer_size),           \
                      gl_data.mr,                                        \
-                     VC_SFI(vc)->direct_addr,                           \
+                     VC_OFI(vc)->direct_addr,                           \
                      match_bits,                                        \
-                     &(REQ_SFI(sreq)->ofi_context)),tsend);           \
+                     &(REQ_OFI(sreq)->ofi_context)),tsend);           \
   })
 
 
@@ -106,25 +106,25 @@ static int MPID_nem_ofi_data_callback(cq_tagged_entry_t * wc, MPID_Request * sre
     uint64_t tag = 0;
     BEGIN_FUNC(FCNAME);
     if (sreq->cc == 2) {
-        vc = REQ_SFI(sreq)->vc;
-        REQ_SFI(sreq)->tag = tag | MPID_MSG_DATA;
+        vc = REQ_OFI(sreq)->vc;
+        REQ_OFI(sreq)->tag = tag | MPID_MSG_DATA;
         FI_RC(fi_tsend(gl_data.endpoint,
-                         REQ_SFI(sreq)->pack_buffer,
-                         REQ_SFI(sreq)->pack_buffer_size,
+                         REQ_OFI(sreq)->pack_buffer,
+                         REQ_OFI(sreq)->pack_buffer_size,
                          gl_data.mr,
-                         VC_SFI(vc)->direct_addr,
-                         wc->tag | MPID_MSG_DATA, (void *) &(REQ_SFI(sreq)->ofi_context)), tsend);
+                         VC_OFI(vc)->direct_addr,
+                         wc->tag | MPID_MSG_DATA, (void *) &(REQ_OFI(sreq)->ofi_context)), tsend);
     }
     if (sreq->cc == 1) {
-        if (REQ_SFI(sreq)->pack_buffer)
-            MPIU_Free(REQ_SFI(sreq)->pack_buffer);
+        if (REQ_OFI(sreq)->pack_buffer)
+            MPIU_Free(REQ_OFI(sreq)->pack_buffer);
 
         reqFn = sreq->dev.OnDataAvail;
         if (!reqFn) {
             MPIDI_CH3U_Request_complete(sreq);
         }
         else {
-            vc = REQ_SFI(sreq)->vc;
+            vc = REQ_OFI(sreq)->vc;
             MPI_RC(reqFn(vc, sreq, &complete));
         }
     }
@@ -144,7 +144,7 @@ static int MPID_nem_ofi_cts_recv_callback(cq_tagged_entry_t * wc, MPID_Request *
 {
     int mpi_errno = MPI_SUCCESS;
     BEGIN_FUNC(FCNAME);
-    MPI_RC(MPID_nem_ofi_data_callback(wc, REQ_SFI(rreq)->parent));
+    MPI_RC(MPID_nem_ofi_data_callback(wc, REQ_OFI(rreq)->parent));
     MPIDI_CH3U_Request_complete(rreq);
     END_FUNC_RC(FCNAME);
 }

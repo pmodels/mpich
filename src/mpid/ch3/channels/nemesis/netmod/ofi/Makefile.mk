@@ -4,7 +4,7 @@
 ## (C) 2011 by Argonne National Laboratory.
 ##     See COPYRIGHT in top-level directory.
 ##
-if BUILD_NEMESIS_NETMOD_SFI
+if BUILD_NEMESIS_NETMOD_OFI
 
 mpi_core_sources +=                                 		\
     src/mpid/ch3/channels/nemesis/netmod/ofi/ofi_init.c 	\
