@@ -344,6 +344,7 @@ int MPIDI_Win_fence(int assert, MPID_Win * win_ptr)
             mpi_errno = MPIR_Ibarrier_impl(win_ptr->comm_ptr, &(win_ptr->fence_sync_req));
             if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
 
+            /* Set window access state properly. */
             win_ptr->states.access_state = MPIDI_RMA_FENCE_ISSUED;
             num_active_issued_win++;
 
@@ -411,6 +412,7 @@ int MPIDI_Win_fence(int assert, MPID_Win * win_ptr)
        in this function call. */
     progress_engine_triggered = 1;
 
+    /* Set window access state properly. */
     if (assert & MPI_MODE_NOSUCCEED) {
         win_ptr->states.access_state = MPIDI_RMA_NONE;
     }
@@ -488,6 +490,7 @@ int MPIDI_Win_post(MPID_Group * post_grp_ptr, int assert, MPID_Win * win_ptr)
         OPA_read_write_barrier();
     }
 
+    /* Set window exposure state properly. */
     win_ptr->states.exposure_state = MPIDI_RMA_PSCW_EXPO;
 
     win_ptr->at_completion_counter += post_grp_ptr->size;
@@ -660,10 +663,11 @@ int MPIDI_Win_start(MPID_Group * group_ptr, int assert, MPID_Win * win_ptr)
         }
     }
 
+ finish_start:
+    /* Set window access state properly. */
     win_ptr->states.access_state = MPIDI_RMA_PSCW_ISSUED;
     num_active_issued_win++;
 
- finish_start:
     /* BEGINNING synchronization: the following counter should be zero. */
     MPIU_Assert(win_ptr->accumulated_ops_cnt == 0);
 
@@ -780,9 +784,10 @@ int MPIDI_Win_complete(MPID_Win * win_ptr)
     mpi_errno = MPIDI_CH3I_RMA_Cleanup_targets_win(win_ptr);
     if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
 
+ finish_complete:
+    /* Set window access state properly. */
     win_ptr->states.access_state = MPIDI_RMA_NONE;
 
- finish_complete:
     /* free start group stored in window */
     MPIU_Free(win_ptr->start_ranks_in_win_grp);
     win_ptr->start_ranks_in_win_grp = NULL;
@@ -846,9 +851,10 @@ int MPIDI_Win_wait(MPID_Win * win_ptr)
         progress_engine_triggered = 1;
     }
 
+ finish_wait:
+    /* Set window exposure state properly. */
     win_ptr->states.exposure_state = MPIDI_RMA_NONE;
 
- finish_wait:
     if (!progress_engine_triggered) {
         /* In some cases (e.g. target is myself, or process on SHM),
            this function call does not go through the progress engine.
@@ -898,6 +904,7 @@ int MPIDI_Win_test(MPID_Win * win_ptr, int *flag)
 
     *flag = (win_ptr->at_completion_counter) ? 0 : 1;
     if (*flag) {
+        /* Set window exposure state properly. */
         win_ptr->states.exposure_state = MPIDI_RMA_NONE;
 
         /* Ensure ordering of load/store operations. */
@@ -967,6 +974,7 @@ int MPIDI_Win_lock(int lock_type, int dest, int assert, MPID_Win * win_ptr)
     /* Error handling is finished. */
 
     if (win_ptr->lock_epoch_count == 0) {
+        /* Set window access state properly. */
         win_ptr->states.access_state = MPIDI_RMA_PER_TARGET;
         num_passive_win++;
     }
@@ -1103,6 +1111,14 @@ int MPIDI_Win_unlock(int dest, MPID_Win *win_ptr)
     } while (!remote_completed);
 
  finish_unlock:
+    win_ptr->lock_epoch_count--;
+    if (win_ptr->lock_epoch_count == 0) {
+        /* Set window access state properly. */
+        win_ptr->states.access_state = MPIDI_RMA_NONE;
+        num_passive_win--;
+        MPIU_Assert(num_passive_win >= 0);
+    }
+
     if (target != NULL) {
         /* ENDING synchronization: correctly decrement the following counter. */
         win_ptr->accumulated_ops_cnt -= target->accumulated_ops_cnt;
@@ -1113,13 +1129,6 @@ int MPIDI_Win_unlock(int dest, MPID_Win *win_ptr)
         /* Cleanup the target. */
         mpi_errno = MPIDI_CH3I_RMA_Cleanup_single_target(win_ptr, target);
         if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
-    }
-
-    win_ptr->lock_epoch_count--;
-    if (win_ptr->lock_epoch_count == 0) {
-        win_ptr->states.access_state = MPIDI_RMA_NONE;
-        num_passive_win--;
-        MPIU_Assert(num_passive_win >= 0);
     }
 
     if (!progress_engine_triggered) {
@@ -1394,6 +1403,7 @@ int MPIDI_Win_lock_all(int assert, MPID_Win * win_ptr)
                         win_ptr->states.access_state != MPIDI_RMA_FENCE_GRANTED,
                         mpi_errno, MPI_ERR_RMA_SYNC, "**rmasync");
 
+    /* Set window access state properly. */
     if (assert & MPI_MODE_NOCHECK)
         win_ptr->states.access_state = MPIDI_RMA_LOCK_ALL_GRANTED;
     else
@@ -1586,11 +1596,12 @@ int MPIDI_Win_unlock_all(MPID_Win * win_ptr)
     mpi_errno = MPIDI_CH3I_RMA_Cleanup_targets_win(win_ptr);
     if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
 
+ finish_unlock_all:
+    /* Set window access state properly. */
     win_ptr->states.access_state = MPIDI_RMA_NONE;
     num_passive_win--;
     MPIU_Assert(num_passive_win >= 0);
 
- finish_unlock_all:
     /* reset lock_all assert on window. */
     win_ptr->lock_all_assert = 0;
 
