@@ -308,6 +308,11 @@ int MPIDI_Win_fence(int assert, MPID_Win * win_ptr)
                         win_ptr->states.exposure_state != MPIDI_RMA_NONE,
                         mpi_errno, MPI_ERR_RMA_SYNC, "**rmasync");
 
+    /* Ensure ordering of load/store operations. */
+    if (win_ptr->shm_allocated == TRUE) {
+        OPA_read_write_barrier();
+    }
+
     if (assert & MPI_MODE_NOPRECEDE) {
         if (assert & MPI_MODE_NOSUCCEED) {
             goto finish_fence;
@@ -327,9 +332,6 @@ int MPIDI_Win_fence(int assert, MPID_Win * win_ptr)
             if (win_ptr->shm_allocated == TRUE) {
                 MPID_Comm *node_comm_ptr = win_ptr->comm_ptr->node_comm;
 
-                /* Ensure ordering of load/store operations. */
-                OPA_read_write_barrier();
-
                 mpi_errno = MPIR_Barrier_impl(node_comm_ptr, &errflag);
                 if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
                 MPIU_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
@@ -337,9 +339,6 @@ int MPIDI_Win_fence(int assert, MPID_Win * win_ptr)
                 /* Mark that we triggered the progress engine
                    in this function call. */
                 progress_engine_triggered = 1;
-
-                /* Ensure ordering of load/store operations. */
-                OPA_read_write_barrier();
             }
 
             mpi_errno = MPIR_Ibarrier_impl(win_ptr->comm_ptr, &(win_ptr->fence_sync_req));
@@ -406,11 +405,6 @@ int MPIDI_Win_fence(int assert, MPID_Win * win_ptr)
 
     MPIU_Assert(win_ptr->non_empty_slots == 0);
 
-    /* Ensure ordering of load/store operations. */
-    if (win_ptr->shm_allocated == TRUE) {
-        OPA_read_write_barrier();
-    }
-
     mpi_errno = MPIR_Barrier_impl(win_ptr->comm_ptr, &errflag);
     if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
     MPIU_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
@@ -418,11 +412,6 @@ int MPIDI_Win_fence(int assert, MPID_Win * win_ptr)
     /* Mark that we triggered the progress engine
        in this function call. */
     progress_engine_triggered = 1;
-
-    /* Ensure ordering of load/store operations. */
-    if (win_ptr->shm_allocated == TRUE) {
-        OPA_read_write_barrier();
-    }
 
     if (assert & MPI_MODE_NOSUCCEED) {
         win_ptr->states.access_state = MPIDI_RMA_NONE;
@@ -458,6 +447,11 @@ int MPIDI_Win_fence(int assert, MPID_Win * win_ptr)
         }
     }
 
+    /* Ensure ordering of load/store operations. */
+    if (win_ptr->shm_allocated == TRUE) {
+        OPA_read_write_barrier();
+    }
+
   fn_exit:
     MPIDI_RMA_FUNC_EXIT(MPID_STATE_MPIDI_WIN_FENCE);
     return mpi_errno;
@@ -488,14 +482,14 @@ int MPIDI_Win_post(MPID_Group * post_grp_ptr, int assert, MPID_Win * win_ptr)
     MPIU_ERR_CHKANDJUMP(win_ptr->states.exposure_state != MPIDI_RMA_NONE,
                         mpi_errno, MPI_ERR_RMA_SYNC, "**rmasync");
 
-    win_ptr->states.exposure_state = MPIDI_RMA_PSCW_EXPO;
-
-    win_ptr->at_completion_counter += post_grp_ptr->size;
-
     /* Ensure ordering of load/store operations. */
     if (win_ptr->shm_allocated == TRUE) {
         OPA_read_write_barrier();
     }
+
+    win_ptr->states.exposure_state = MPIDI_RMA_PSCW_EXPO;
+
+    win_ptr->at_completion_counter += post_grp_ptr->size;
 
     if ((assert & MPI_MODE_NOCHECK) == 0) {
         MPI_Request *req;
@@ -660,11 +654,6 @@ int MPIDI_Win_start(MPID_Group * group_ptr, int assert, MPID_Win * win_ptr)
             }
             /* --END ERROR HANDLING-- */
         }
-
-        if (win_ptr->shm_allocated == TRUE) {
-            /* Ensure ordering of load/store operations */
-            OPA_read_write_barrier();
-        }
     }
 
     win_ptr->states.access_state = MPIDI_RMA_PSCW_ISSUED;
@@ -675,6 +664,11 @@ int MPIDI_Win_start(MPID_Group * group_ptr, int assert, MPID_Win * win_ptr)
     MPIU_Assert(win_ptr->accumulated_ops_cnt == 0);
 
     MPIU_Assert(win_ptr->active_req_cnt == 0);
+
+    /* Ensure ordering of load/store operations. */
+    if (win_ptr->shm_allocated == TRUE) {
+        OPA_read_write_barrier();
+    }
 
  fn_exit:
     MPIU_CHKLMEM_FREEALL();
@@ -708,6 +702,11 @@ int MPIDI_Win_complete(MPID_Win * win_ptr)
     MPIU_ERR_CHKANDJUMP(win_ptr->states.access_state != MPIDI_RMA_PSCW_ISSUED &&
                         win_ptr->states.access_state != MPIDI_RMA_PSCW_GRANTED,
                         mpi_errno, MPI_ERR_RMA_SYNC, "**rmasync");
+
+    /* Ensure ordering of load/store operations. */
+    if (win_ptr->shm_allocated == TRUE) {
+        OPA_read_write_barrier();
+    }
 
     if (win_ptr->states.access_state == MPIDI_RMA_PSCW_ISSUED) {
         while (win_ptr->states.access_state != MPIDI_RMA_PSCW_GRANTED) {
@@ -779,11 +778,6 @@ int MPIDI_Win_complete(MPID_Win * win_ptr)
 
     MPIU_Assert(win_ptr->non_empty_slots == 0);
 
-    /* Ensure ordering of load/store operations. */
-    if (win_ptr->shm_allocated == TRUE) {
-        OPA_read_write_barrier();
-    }
-
     /* free start group stored in window */
     MPIU_Free(win_ptr->start_ranks_in_win_grp);
     win_ptr->start_ranks_in_win_grp = NULL;
@@ -848,11 +842,6 @@ int MPIDI_Win_wait(MPID_Win * win_ptr)
         progress_engine_triggered = 1;
     }
 
-    /* Ensure ordering of load/store operations. */
-    if (win_ptr->shm_allocated == TRUE) {
-        OPA_read_write_barrier();
-    }
-
     win_ptr->states.exposure_state = MPIDI_RMA_NONE;
 
  finish_wait:
@@ -867,6 +856,11 @@ int MPIDI_Win_wait(MPID_Win * win_ptr)
         mpi_errno = poke_progress_engine();
         if (mpi_errno != MPI_SUCCESS)
             MPIU_ERR_POP(mpi_errno);
+    }
+
+    /* Ensure ordering of load/store operations. */
+    if (win_ptr->shm_allocated == TRUE) {
+        OPA_read_write_barrier();
     }
 
   fn_exit:
@@ -900,12 +894,12 @@ int MPIDI_Win_test(MPID_Win * win_ptr, int *flag)
 
     *flag = (win_ptr->at_completion_counter) ? 0 : 1;
     if (*flag) {
+        win_ptr->states.exposure_state = MPIDI_RMA_NONE;
+
         /* Ensure ordering of load/store operations. */
         if (win_ptr->shm_allocated == TRUE) {
             OPA_read_write_barrier();
         }
-
-        win_ptr->states.exposure_state = MPIDI_RMA_NONE;
     }
 
   fn_exit:
@@ -1277,6 +1271,11 @@ int MPIDI_Win_flush_local(int dest, MPID_Win * win_ptr)
                         win_ptr->states.access_state != MPIDI_RMA_LOCK_ALL_GRANTED,
                         mpi_errno, MPI_ERR_RMA_SYNC, "**rmasync");
 
+    /* Ensure ordering of load/store operations. */
+    if (win_ptr->shm_allocated) {
+        OPA_read_write_barrier();
+    }
+
     if (dest == MPI_PROC_NULL)
         goto finish_flush_local;
 
@@ -1433,16 +1432,16 @@ int MPIDI_Win_lock_all(int assert, MPID_Win * win_ptr)
         }
     }
 
-    /* Ensure ordering of load/store operations. */
-    if (win_ptr->shm_allocated == TRUE) {
-        OPA_read_write_barrier();
-    }
-
  finish_lock_all:
     /* BEGINNING synchronization: the following counter should be zero. */
     MPIU_Assert(win_ptr->accumulated_ops_cnt == 0);
 
     MPIU_Assert(win_ptr->active_req_cnt == 0);
+
+    /* Ensure ordering of load/store operations. */
+    if (win_ptr->shm_allocated == TRUE) {
+        OPA_read_write_barrier();
+    }
 
   fn_exit:
     MPIDI_RMA_FUNC_EXIT(MPID_STATE_MPIDI_WIN_LOCK_ALL);
@@ -1735,6 +1734,11 @@ int MPIDI_Win_flush_local_all(MPID_Win * win_ptr)
                         win_ptr->states.access_state != MPIDI_RMA_LOCK_ALL_ISSUED &&
                         win_ptr->states.access_state != MPIDI_RMA_LOCK_ALL_GRANTED,
                         mpi_errno, MPI_ERR_RMA_SYNC, "**rmasync");
+
+    /* Ensure ordering of load/store operations. */
+    if (win_ptr->shm_allocated == TRUE) {
+        OPA_read_write_barrier();
+    }
 
     /* Set sync_flag in sync struct. */
     for (i = 0; i < win_ptr->num_slots; i++) {
