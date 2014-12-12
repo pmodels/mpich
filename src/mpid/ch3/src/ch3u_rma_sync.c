@@ -780,16 +780,14 @@ int MPIDI_Win_complete(MPID_Win * win_ptr)
     mpi_errno = MPIDI_CH3I_RMA_Cleanup_targets_win(win_ptr);
     if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
 
-
-    /* free start group stored in window */
-    MPIU_Free(win_ptr->start_ranks_in_win_grp);
-    win_ptr->start_ranks_in_win_grp = NULL;
-
-    MPIU_Assert(win_ptr->start_req == NULL);
-
     win_ptr->states.access_state = MPIDI_RMA_NONE;
 
  finish_complete:
+    /* free start group stored in window */
+    MPIU_Free(win_ptr->start_ranks_in_win_grp);
+    win_ptr->start_ranks_in_win_grp = NULL;
+    MPIU_Assert(win_ptr->start_req == NULL);
+
     /* Make sure that all targets are freed. */
     MPIU_Assert(win_ptr->non_empty_slots == 0);
 
@@ -1588,14 +1586,14 @@ int MPIDI_Win_unlock_all(MPID_Win * win_ptr)
     mpi_errno = MPIDI_CH3I_RMA_Cleanup_targets_win(win_ptr);
     if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
 
-
-    win_ptr->lock_all_assert = 0;
-
     win_ptr->states.access_state = MPIDI_RMA_NONE;
     num_passive_win--;
     MPIU_Assert(num_passive_win >= 0);
 
  finish_unlock_all:
+    /* reset lock_all assert on window. */
+    win_ptr->lock_all_assert = 0;
+
     /* Make sure that all targets are freed. */
     MPIU_Assert(win_ptr->non_empty_slots == 0);
 
