@@ -51,9 +51,6 @@ int MPIDI_CH3U_Win_create_gather( void *base, MPI_Aint size, int disp_unit,
     comm_size = (*win_ptr)->comm_ptr->local_size;
     rank      = (*win_ptr)->comm_ptr->rank;
 
-    /* RMA handlers should be set before calling this function */
-    mpi_errno = (*win_ptr)->RMAFns.Win_set_info(*win_ptr, info);
-
     MPIR_T_PVAR_TIMER_START(RMA, rma_wincreate_allgather);
     /* allocate memory for the base addresses, disp_units, and
        completion counters of all processes */
@@ -296,7 +293,50 @@ int MPIDI_Win_set_info(MPID_Win *win, MPID_Info *info)
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_WIN_SET_INFO);
 
-    /* No op, info arguments are ignored by default */
+    /********************************************************/
+    /*************** check for info alloc_shm ***************/
+    /********************************************************/
+
+    if (win->create_flavor == MPI_WIN_FLAVOR_CREATE)
+        win->info_args.alloc_shm = FALSE;
+    if (win->create_flavor == MPI_WIN_FLAVOR_ALLOCATE ||
+        win->create_flavor == MPI_WIN_FLAVOR_SHARED)
+        win->info_args.alloc_shm = TRUE;
+
+    if (info != NULL) {
+        int info_flag = 0;
+        char info_value[MPI_MAX_INFO_VAL+1];
+        MPIR_Info_get_impl(info, "alloc_shm", MPI_MAX_INFO_VAL,
+                           info_value, &info_flag);
+        if (info_flag) {
+            if (!strncmp(info_value, "true", sizeof("true")))
+                win->info_args.alloc_shm = TRUE;
+            if (!strncmp(info_value, "false", sizeof("false")))
+                win->info_args.alloc_shm = FALSE;
+        }
+    }
+
+    if (win->create_flavor == MPI_WIN_FLAVOR_DYNAMIC)
+        win->info_args.alloc_shm = FALSE;
+
+    /********************************************************/
+    /******* check for info alloc_shared_noncontig **********/
+    /********************************************************/
+
+    if (win->create_flavor == MPI_WIN_FLAVOR_ALLOCATE)
+        win->info_args.alloc_shared_noncontig = 1;
+    if (info != NULL) {
+        int info_flag = 0;
+        char info_value[MPI_MAX_INFO_VAL+1];
+        MPIR_Info_get_impl(info, "alloc_shared_noncontig", MPI_MAX_INFO_VAL,
+                           info_value, &info_flag);
+        if (info_flag) {
+            if (!strncmp(info_value, "true", strlen("true")))
+                win->info_args.alloc_shared_noncontig = 1;
+            if (!strncmp(info_value, "false", strlen("false")))
+                win->info_args.alloc_shared_noncontig = 0;
+        }
+    }
 
  fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_WIN_SET_INFO);

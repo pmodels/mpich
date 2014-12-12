@@ -43,7 +43,7 @@ MPIU_THREADSAFE_INIT_DECL(initRMAoptions);
 
 MPIDI_RMA_Win_list_t *MPIDI_RMA_Win_list = NULL, *MPIDI_RMA_Win_list_tail = NULL;
 
-static int win_init(MPI_Aint size, int disp_unit, int create_flavor, int model,
+static int win_init(MPI_Aint size, int disp_unit, int create_flavor, int model, MPID_Info *info,
                     MPID_Comm * comm_ptr, MPID_Win ** win_ptr);
 
 
@@ -110,21 +110,11 @@ int MPID_Win_create(void *base, MPI_Aint size, int disp_unit, MPID_Info * info,
     }
 
     mpi_errno =
-        win_init(size, disp_unit, MPI_WIN_FLAVOR_CREATE, MPI_WIN_UNIFIED, comm_ptr, win_ptr);
+        win_init(size, disp_unit, MPI_WIN_FLAVOR_CREATE, MPI_WIN_UNIFIED, info, comm_ptr, win_ptr);
     if (mpi_errno)
         MPIU_ERR_POP(mpi_errno);
 
     (*win_ptr)->base = base;
-
-    /* FOR CREATE, alloc_shm info is default to set to FALSE */
-    (*win_ptr)->info_args.alloc_shm = FALSE;
-    if (info != NULL) {
-        int alloc_shm_flag = 0;
-        char shm_alloc_value[MPI_MAX_INFO_VAL+1];
-        MPIR_Info_get_impl(info, "alloc_shm", MPI_MAX_INFO_VAL, shm_alloc_value, &alloc_shm_flag);
-        if ((alloc_shm_flag == 1) && (!strncmp(shm_alloc_value, "true", sizeof("true"))))
-            (*win_ptr)->info_args.alloc_shm = TRUE;
-    }
 
     mpi_errno = MPIDI_CH3U_Win_fns.create(base, size, disp_unit, info, comm_ptr, win_ptr);
     if (mpi_errno)
@@ -149,20 +139,9 @@ int MPID_Win_allocate(MPI_Aint size, int disp_unit, MPID_Info * info,
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPID_WIN_ALLOCATE);
 
     mpi_errno =
-        win_init(size, disp_unit, MPI_WIN_FLAVOR_ALLOCATE, MPI_WIN_UNIFIED, comm_ptr, win_ptr);
+        win_init(size, disp_unit, MPI_WIN_FLAVOR_ALLOCATE, MPI_WIN_UNIFIED, info, comm_ptr, win_ptr);
     if (mpi_errno != MPI_SUCCESS) {
         MPIU_ERR_POP(mpi_errno);
-    }
-
-    /* FOR ALLOCATE, alloc_shm info is default to set to TRUE */
-    (*win_ptr)->info_args.alloc_shm = TRUE;
-
-    if (info != NULL) {
-        int alloc_shm_flag = 0;
-        char shm_alloc_value[MPI_MAX_INFO_VAL + 1];
-        MPIR_Info_get_impl(info, "alloc_shm", MPI_MAX_INFO_VAL, shm_alloc_value, &alloc_shm_flag);
-        if ((alloc_shm_flag == 1) && (!strncmp(shm_alloc_value, "false", sizeof("false"))))
-            (*win_ptr)->info_args.alloc_shm = FALSE;
     }
 
     mpi_errno = MPIDI_CH3U_Win_fns.allocate(size, disp_unit, info, comm_ptr, baseptr, win_ptr);
@@ -190,7 +169,7 @@ int MPID_Win_create_dynamic(MPID_Info * info, MPID_Comm * comm_ptr, MPID_Win ** 
 
     mpi_errno = win_init(0 /* spec defines size to be 0 */ ,
                          1 /* spec defines disp_unit to be 1 */ ,
-                         MPI_WIN_FLAVOR_DYNAMIC, MPI_WIN_UNIFIED, comm_ptr, win_ptr);
+                         MPI_WIN_FLAVOR_DYNAMIC, MPI_WIN_UNIFIED, info, comm_ptr, win_ptr);
 
     if (mpi_errno)
         MPIU_ERR_POP(mpi_errno);
@@ -263,21 +242,9 @@ int MPID_Win_allocate_shared(MPI_Aint size, int disp_unit, MPID_Info * info, MPI
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPID_WIN_ALLOCATE_SHARED);
 
     mpi_errno =
-        win_init(size, disp_unit, MPI_WIN_FLAVOR_SHARED, MPI_WIN_UNIFIED, comm_ptr, win_ptr);
+        win_init(size, disp_unit, MPI_WIN_FLAVOR_SHARED, MPI_WIN_UNIFIED, info, comm_ptr, win_ptr);
     if (mpi_errno)
         MPIU_ERR_POP(mpi_errno);
-
-    /* FOR ALLOCATE_SHARED, alloc_shm info is default to set to TRUE */
-    (*win_ptr)->info_args.alloc_shm = TRUE;
-
-    if (info != NULL) {
-        int alloc_shm_flag = 0;
-        char shm_alloc_value[MPI_MAX_INFO_VAL + 1];
-        MPIR_Info_get_impl(info, "alloc_shm", MPI_MAX_INFO_VAL, shm_alloc_value, &alloc_shm_flag);
-        /* if value of 'alloc_shm' info is not set to true, throw an error */
-        if (alloc_shm_flag == 1 && strncmp(shm_alloc_value, "true", sizeof("true")))
-            MPIU_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**infoval");
-    }
 
     mpi_errno =
         MPIDI_CH3U_Win_fns.allocate_shared(size, disp_unit, info, comm_ptr, base_ptr, win_ptr);
@@ -294,7 +261,7 @@ int MPID_Win_allocate_shared(MPI_Aint size, int disp_unit, MPID_Info * info, MPI
 #define FUNCNAME win_init
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-static int win_init(MPI_Aint size, int disp_unit, int create_flavor, int model,
+static int win_init(MPI_Aint size, int disp_unit, int create_flavor, int model, MPID_Info *info,
                     MPID_Comm * comm_ptr, MPID_Win ** win_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -369,6 +336,13 @@ static int win_init(MPI_Aint size, int disp_unit, int create_flavor, int model,
     (*win_ptr)->info_args.alloc_shared_noncontig = 0;
     (*win_ptr)->info_args.alloc_shm = FALSE;
 
+    /* Set function pointers on window */
+    MPID_WIN_FTABLE_SET_DEFAULTS(win_ptr);
+
+    /* Set info_args on window based on info provided by user */
+    mpi_errno = (*win_ptr)->RMAFns.Win_set_info((*win_ptr), info);
+    if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
+
     MPIU_CHKPMEM_MALLOC((*win_ptr)->op_pool_start, MPIDI_RMA_Op_t *,
                         sizeof(MPIDI_RMA_Op_t) * MPIR_CVAR_CH3_RMA_OP_WIN_POOL_SIZE, mpi_errno,
                         "RMA op pool");
@@ -409,8 +383,6 @@ static int win_init(MPI_Aint size, int disp_unit, int create_flavor, int model,
         MPL_LL_APPEND((*win_ptr)->lock_entry_pool, (*win_ptr)->lock_entry_pool_tail,
                       &((*win_ptr)->lock_entry_pool_start[i]));
     }
-
-    MPID_WIN_FTABLE_SET_DEFAULTS(win_ptr);
 
     /* enqueue window into the global list */
     MPIU_CHKPMEM_MALLOC(win_elem, MPIDI_RMA_Win_list_t *, sizeof(MPIDI_RMA_Win_list_t), mpi_errno,

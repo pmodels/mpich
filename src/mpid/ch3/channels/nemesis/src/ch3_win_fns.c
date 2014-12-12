@@ -279,24 +279,6 @@ static int MPIDI_CH3I_Win_allocate_shm(MPI_Aint size, int disp_unit, MPID_Info *
         goto fn_exit;
     }
 
-    /* If create flavor is MPI_WIN_FLAVOR_ALLOCATE, alloc_shared_noncontig is set to 1 by default. */
-    if ((*win_ptr)->create_flavor == MPI_WIN_FLAVOR_ALLOCATE)
-        (*win_ptr)->info_args.alloc_shared_noncontig = 1;
-
-    /* Check if we are allowed to allocate space non-contiguously */
-    if (info != NULL) {
-        int alloc_shared_nctg_flag = 0;
-        char alloc_shared_nctg_value[MPI_MAX_INFO_VAL+1];
-        MPIR_Info_get_impl(info, "alloc_shared_noncontig", MPI_MAX_INFO_VAL,
-                           alloc_shared_nctg_value, &alloc_shared_nctg_flag);
-        if (alloc_shared_nctg_flag == 1) {
-            if (!strncmp(alloc_shared_nctg_value, "true", strlen("true")))
-                (*win_ptr)->info_args.alloc_shared_noncontig = 1;
-            if (!strncmp(alloc_shared_nctg_value, "false", strlen("false")))
-                (*win_ptr)->info_args.alloc_shared_noncontig = 0;
-        }
-    }
-
     /* see if we can allocate all windows contiguously */
     noncontig = (*win_ptr)->info_args.alloc_shared_noncontig;
 
