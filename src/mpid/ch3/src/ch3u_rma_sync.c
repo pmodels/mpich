@@ -403,8 +403,6 @@ int MPIDI_Win_fence(int assert, MPID_Win * win_ptr)
     mpi_errno = MPIDI_CH3I_RMA_Cleanup_targets_win(win_ptr);
     if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
 
-    MPIU_Assert(win_ptr->non_empty_slots == 0);
-
     mpi_errno = MPIR_Barrier_impl(win_ptr->comm_ptr, &errflag);
     if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
     MPIU_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
@@ -421,6 +419,9 @@ int MPIDI_Win_fence(int assert, MPID_Win * win_ptr)
     }
 
  finish_fence:
+    /* Make sure that all targets are freed. */
+    MPIU_Assert(win_ptr->non_empty_slots == 0);
+
     if (assert & MPI_MODE_NOPRECEDE) {
         /* BEGINNING synchronization: the following counter should be zero. */
         MPIU_Assert(win_ptr->accumulated_ops_cnt == 0);
@@ -776,7 +777,6 @@ int MPIDI_Win_complete(MPID_Win * win_ptr)
     mpi_errno = MPIDI_CH3I_RMA_Cleanup_targets_win(win_ptr);
     if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
 
-    MPIU_Assert(win_ptr->non_empty_slots == 0);
 
     /* free start group stored in window */
     MPIU_Free(win_ptr->start_ranks_in_win_grp);
@@ -787,6 +787,9 @@ int MPIDI_Win_complete(MPID_Win * win_ptr)
     win_ptr->states.access_state = MPIDI_RMA_NONE;
 
  finish_complete:
+    /* Make sure that all targets are freed. */
+    MPIU_Assert(win_ptr->non_empty_slots == 0);
+
     /* ENDING synchronization: correctly decrement the following counter. */
     win_ptr->accumulated_ops_cnt = 0;
 
@@ -1582,7 +1585,6 @@ int MPIDI_Win_unlock_all(MPID_Win * win_ptr)
     mpi_errno = MPIDI_CH3I_RMA_Cleanup_targets_win(win_ptr);
     if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
 
-    MPIU_Assert(win_ptr->non_empty_slots == 0);
 
     win_ptr->lock_all_assert = 0;
 
@@ -1591,6 +1593,9 @@ int MPIDI_Win_unlock_all(MPID_Win * win_ptr)
     MPIU_Assert(num_passive_win >= 0);
 
  finish_unlock_all:
+    /* Make sure that all targets are freed. */
+    MPIU_Assert(win_ptr->non_empty_slots == 0);
+
     /* ENDING synchronization: correctly decrement the following counter. */
     win_ptr->accumulated_ops_cnt = 0;
 
