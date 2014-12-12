@@ -294,6 +294,23 @@ int MPIDI_Win_set_info(MPID_Win *win, MPID_Info *info)
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_WIN_SET_INFO);
 
     /********************************************************/
+    /************** check for info no_locks *****************/
+    /********************************************************/
+
+    if (info != NULL) {
+        int info_flag = 0;
+        char info_value[MPI_MAX_INFO_VAL+1];
+        MPIR_Info_get_impl(info, "no_locks", MPI_MAX_INFO_VAL,
+                           info_value, &info_flag);
+        if (info_flag) {
+            if (!strncmp(info_value, "true", strlen("true")))
+                win->info_args.no_locks = 1;
+            if (!strncmp(info_value, "false", strlen("true")))
+                win->info_args.no_locks = 1;
+        }
+    }
+
+    /********************************************************/
     /*************** check for info alloc_shm ***************/
     /********************************************************/
 
