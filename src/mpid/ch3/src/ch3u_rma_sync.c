@@ -583,6 +583,13 @@ int MPIDI_Win_start(MPID_Group * group_ptr, int assert, MPID_Win * win_ptr)
 
     win_ptr->start_grp_size = group_ptr->size;
 
+    MPIU_CHKPMEM_MALLOC(win_ptr->start_ranks_in_win_grp, int *,
+                        win_ptr->start_grp_size * sizeof(int),
+                        mpi_errno, "win_ptr->start_ranks_in_win_grp");
+
+    mpi_errno = fill_ranks_in_win_grp(win_ptr, group_ptr, win_ptr->start_ranks_in_win_grp);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
     if ((assert & MPI_MODE_NOCHECK) == 0) {
         int i, intra_cnt;
         MPI_Request *intra_start_req = NULL;
@@ -591,10 +598,6 @@ int MPIDI_Win_start(MPID_Group * group_ptr, int assert, MPID_Win * win_ptr)
         int rank = comm_ptr->rank;
 
         /* wait for messages from local processes */
-        MPIU_CHKPMEM_MALLOC(win_ptr->start_ranks_in_win_grp, int *, win_ptr->start_grp_size * sizeof(int),
-                            mpi_errno, "win_ptr->start_ranks_in_win_grp");
-        mpi_errno = fill_ranks_in_win_grp(win_ptr, group_ptr, win_ptr->start_ranks_in_win_grp);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
         /* post IRECVs */
         MPIU_CHKPMEM_MALLOC(win_ptr->start_req, MPI_Request *,
