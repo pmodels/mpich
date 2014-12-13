@@ -106,6 +106,10 @@ static void MPID_nem_tofu_send_handler(void *cba,
          * and MPID_nem_tofu_iSendContig set req->dev.state to zero
          * because MPID_Request_create (in src/mpid/ch3/src/ch3u_request.c)
          * sets it to zero. In addition, eager-short message has req->comm of zero. */
+#ifndef	notdef_leak_0001_hack
+        /* See also MPIDI_CH3_Request_create and _destory() */
+        /*     in src/mpid/ch3/src/ch3u_request.c */
+#endif	/* notdef_leak_0001_hack */
         if (reqtype != MPIDI_REQUEST_TYPE_RECV && sreq->comm) {
             /* Exclude control messages which have MPIDI_REQUEST_TYPE_RECV.
              * Note that RMA messages should be included.

@@ -114,6 +114,9 @@ extern int llctofu_poll(int in_blocking_poll,
 
 typedef struct MPID_nem_tofu_netmod_hdr {
     int initiator_pg_rank;
+#ifndef	notdef_hsiz_hack
+    int reserved_for_alignment;
+#endif	/* notdef_hsiz_hack */
 } MPID_nem_tofu_netmod_hdr_t;
 
 #define MPID_nem_tofu_segv printf("%d\n", *(int32_t*)0);

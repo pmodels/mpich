@@ -52,7 +52,28 @@ int MPID_nem_tofu_isend(struct MPIDI_VC *vc, const void *buf, int count, MPI_Dat
     /* Don't save iov_offset because it's not used. */
 
     /* Save it because it's used in send_handler */
+#ifndef	notdef_leak_0002_hack
+    /*   See also MPIDI_Request_create_sreq() */
+    /*     in src/mpid/ch3/include/mpidimpl.h */
+    MPIDI_Request_set_type(sreq, MPIDI_REQUEST_TYPE_SEND);
+#endif	/* notdef_leak_0002_hack */
     sreq->dev.datatype = datatype;
+#ifndef	notdef_leak_0002_hack
+    sreq->comm = comm;
+    MPIR_Comm_add_ref(comm);
+#endif	/* notdef_leak_0002_hack */
+#ifndef	notdef_scan_hack
+
+    /* used for MPI_Cancel() */
+    sreq->status.MPI_ERROR = MPI_SUCCESS;
+    MPIR_STATUS_SET_CANCEL_BIT(sreq->status, FALSE);
+    sreq->dev.cancel_pending = FALSE;
+    /* Do not reset dev.state after calling MPIDI_Request_set_type() */
+    /* sreq->dev.state = 0; */
+    sreq->dev.match.parts.rank = dest;
+    sreq->dev.match.parts.tag = tag;
+    sreq->dev.match.parts.context_id = comm->context_id + context_offset;
+#endif	/* notdef_scan_hack */
 
     dprintf("tofu_isend,remote_endpoint_addr=%ld\n", VC_FIELD(vc, remote_endpoint_addr));
 
@@ -87,11 +108,19 @@ int MPID_nem_tofu_isend(struct MPIDI_VC *vc, const void *buf, int count, MPI_Dat
     const void *write_from_buf;
     if (dt_contig) {
         write_from_buf = buf + dt_true_lb;
+#ifndef	notdef_leak_0002_hack
+        REQ_FIELD(sreq, pack_buf) = 0;
+#endif	/* notdef_leak_0002_hack */
     }
     else {
         /* See MPIDI_CH3_EagerNoncontigSend (in ch3u_eager.c) */
         struct MPID_Segment *segment_ptr = MPID_Segment_alloc();
         MPIU_ERR_CHKANDJUMP(!segment_ptr, mpi_errno, MPI_ERR_OTHER, "**outofmemory");
+#ifndef	notdef_leak_0001_hack
+        /* See also MPIDI_CH3_Request_create and _destory() */
+        /*     in src/mpid/ch3/src/ch3u_request.c */
+        sreq->dev.segment_ptr = segment_ptr;
+#endif	/* notdef_leak_0001_hack */
 
         MPID_Segment_init(buf, count, datatype, segment_ptr, 0);
         MPIDI_msg_sz_t segment_first = 0;
@@ -456,13 +485,18 @@ ssize_t llctofu_writev(void *endpt, uint64_t raddr,
 {
     ssize_t nw = 0;
     LLC_cmd_t *lcmd = 0;
+#ifndef	notdef_hsiz_hack
+    uint32_t bsiz;
+#endif	/* notdef_hsiz_hack */
 
     dprintf("writev,raddr=%ld,niov=%d,sreq=%p", raddr, niov, cbarg);
 
     MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE, "llctofu_writev(%d)", (int)raddr);
     {
         uint8_t *buff = 0;
+#ifdef	notdef_hsiz_hack
         uint32_t bsiz;
+#endif	/* notdef_hsiz_hack */
 
         {
             int iv, nv = niov;
@@ -475,6 +509,7 @@ ssize_t llctofu_writev(void *endpt, uint64_t raddr,
                 }
                 bsiz += len;
             }
+#ifdef	notdef_hsiz_hack
             if (bsiz > 0) {
                 buff = MPIU_Malloc(bsiz + sizeof(MPID_nem_tofu_netmod_hdr_t));
                 if (buff == 0) {
@@ -482,6 +517,13 @@ ssize_t llctofu_writev(void *endpt, uint64_t raddr,
                     goto bad;
                 }
             }
+#else	/* notdef_hsiz_hack */
+            buff = MPIU_Malloc(bsiz + sizeof(MPID_nem_tofu_netmod_hdr_t));
+            if (buff == 0) {
+                nw = -1; /* ENOMEM */
+                goto bad;
+            }
+#endif	/* notdef_hsiz_hack */
         }
         
         lcmd = LLC_cmd_alloc(1);
@@ -527,6 +569,10 @@ ssize_t llctofu_writev(void *endpt, uint64_t raddr,
     /* Prepare netmod header */
     ((MPID_nem_tofu_netmod_hdr_t*)bp)->initiator_pg_rank = MPIDI_Process.my_pg_rank;
     bp += sizeof(MPID_nem_tofu_netmod_hdr_t);
+#ifndef	notdef_hsiz_hack
+    lcmd->iov_local[0].length += sizeof (MPID_nem_tofu_netmod_hdr_t);
+    lcmd->iov_remote[0].length += sizeof (MPID_nem_tofu_netmod_hdr_t);
+#endif	/* notdef_hsiz_hack */
 
     /* Pack iovs into buff */
 	for (iv = 0; iv < nv; iv++) {
@@ -572,7 +618,11 @@ ssize_t llctofu_writev(void *endpt, uint64_t raddr,
             }
         }
         else {
+#ifdef	notdef_hsiz_hack
             nw = (ssize_t)lcmd->iov_local[0].length;
+#else	/* notdef_hsiz_hack */
+            nw = bsiz;
+#endif	/* notdef_hsiz_hack */
         }
     }
     if (vpp_reqid != 0) {
@@ -669,6 +719,10 @@ int llctofu_poll(int in_blocking_poll,
             
             buff = events[0].side.responder.addr;
             bsiz = events[0].side.responder.length;
+#ifndef	notdef_hsiz_hack
+            MPIU_Assert(((uintptr_t)buff % 8) == 0);
+            MPIU_Assert(bsiz >= sizeof (MPID_nem_tofu_netmod_hdr_t));
+#endif	/* notdef_hsiz_hack */
             {
                 MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE,
                                "LLC_leng   = %d", (int)bsiz);
@@ -678,10 +732,17 @@ int llctofu_poll(int in_blocking_poll,
                     MPIDI_Process.my_pg_rank,
                     ((MPID_nem_tofu_netmod_hdr_t*)buff)->initiator_pg_rank
                     );
+#ifdef	notdef_hsiz_hack
             (*rfnc)(vp_vc,
                     ((MPID_nem_tofu_netmod_hdr_t*)buff)->initiator_pg_rank,
                     (uint8_t*)buff + sizeof(MPID_nem_tofu_netmod_hdr_t),
                     bsiz);
+#else	/* notdef_hsiz_hack */
+            (*rfnc)(vp_vc,
+                    ((MPID_nem_tofu_netmod_hdr_t*)buff)->initiator_pg_rank,
+                    (uint8_t*)buff + sizeof(MPID_nem_tofu_netmod_hdr_t),
+                    bsiz - sizeof(MPID_nem_tofu_netmod_hdr_t));
+#endif	/* notdef_hsiz_hack */
             llc_errno = LLC_release_buffer(&events[0]);
             MPIU_ERR_CHKANDJUMP(llc_errno, mpi_errno, MPI_ERR_OTHER, "**LLC_release_buffer");
             
