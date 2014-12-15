@@ -353,6 +353,7 @@ extern MPIDI_RMA_Pkt_orderings_t *MPIDI_RMA_Pkt_orderings;
     struct MPIDI_RMA_Lock_entry *lock_entry_pool_start;                  \
     struct MPIDI_RMA_Lock_entry *lock_entry_pool;                        \
     struct MPIDI_RMA_Lock_entry *lock_entry_pool_tail;                   \
+    int current_lock_data_bytes;                                         \
 
 #ifdef MPIDI_CH3_WIN_DECL
 #define MPID_DEV_WIN_DECL \

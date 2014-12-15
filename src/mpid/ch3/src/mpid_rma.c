@@ -23,6 +23,18 @@ cvars:
         a linked list of target elements. The distribution of ranks among
         slots follows a round-robin pattern. Requires a positive value.
 
+    - name        : MPIR_CVAR_CH3_RMA_LOCK_DATA_BYTES
+      category    : CH3
+      type        : int
+      default     : 655360
+      class       : none
+      verbosity   : MPI_T_VERBOSITY_USER_BASIC
+      scope       : MPI_T_SCOPE_ALL_EQ
+      description : >-
+        Size (in bytes) of available lock data this window can provided. If
+        current buffered lock data is more than this value, the process will
+        drop the upcoming operation data. Requires a positive calue.
+
 === END_MPI_T_CVAR_INFO_BLOCK ===
 */
 
@@ -346,6 +358,7 @@ static int win_init(MPI_Aint size, int disp_unit, int create_flavor, int model,
     (*win_ptr)->lock_all_assert = 0;
     (*win_ptr)->lock_epoch_count = 0;
     (*win_ptr)->outstanding_locks = 0;
+    (*win_ptr)->current_lock_data_bytes = 0;
 
     /* Initialize the info flags */
     (*win_ptr)->info_args.no_locks = 0;

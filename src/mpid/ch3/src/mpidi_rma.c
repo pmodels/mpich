@@ -205,7 +205,8 @@ int MPIDI_Win_free(MPID_Win ** win_ptr)
        entering Win_free. */
     while ((*win_ptr)->current_lock_type != MPID_LOCK_NONE ||
            (*win_ptr)->at_completion_counter != 0 ||
-           (*win_ptr)->lock_queue != NULL) {
+           (*win_ptr)->lock_queue != NULL ||
+           (*win_ptr)->current_lock_data_bytes != 0) {
         mpi_errno = wait_progress_engine();
         if (mpi_errno != MPI_SUCCESS)
             MPIU_ERR_POP(mpi_errno);
@@ -239,6 +240,7 @@ int MPIDI_Win_free(MPID_Win ** win_ptr)
     MPIU_Free((*win_ptr)->target_pool_start);
     MPIU_Free((*win_ptr)->slots);
     MPIU_Free((*win_ptr)->lock_entry_pool_start);
+    MPIU_Assert((*win_ptr)->current_lock_data_bytes == 0);
 
     /* Free the attached buffer for windows created with MPI_Win_allocate() */
     if ((*win_ptr)->create_flavor == MPI_WIN_FLAVOR_ALLOCATE ||
