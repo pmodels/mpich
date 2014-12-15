@@ -1163,7 +1163,9 @@ AC_SUBST([mpllibdir])
 mpllib=""
 AC_SUBST([mpllib])
 if test "$with_mpl_prefix" = "embedded" ; then
-    PAC_CONFIG_SUBDIR(src/mpl,,AC_MSG_ERROR(MPL configure failed))
+    # no need for libtool versioning when embedding MPL
+    mpl_subdir_args="--disable-versioning"
+    PAC_CONFIG_SUBDIR_ARGS([src/mpl],[$mpl_subdir_args],[],[AC_MSG_ERROR(MPL configure failed)])
     PAC_APPEND_FLAG([-I${master_top_builddir}/src/mpl/include], [CPPFLAGS])
     PAC_APPEND_FLAG([-I${use_top_srcdir}/src/mpl/include], [CPPFLAGS])
 
@@ -1229,9 +1231,10 @@ if test "$with_openpa_prefix" = "embedded" ; then
                                      implementation.  See the src/openpa directory
                                      for more info.])],
                     [],[with_atomic_primitives=not_specified])
-        opa_subdir_args=""
+        # no need for libtool versioning when embedding OPA
+        opa_subdir_args="--disable-versioning"
         if test "$with_atomic_primitives" = "not_specified" ; then
-            opa_subdir_args="--with-atomic-primitives=auto_allow_emulation"
+            PAC_APPEND_FLAG([--with-atomic-primitives=auto_allow_emulation], [opa_subdir_args])
         fi
         PAC_CONFIG_SUBDIR_ARGS([src/openpa],[$opa_subdir_args],[],[AC_MSG_ERROR([OpenPA configure failed])])
     else
