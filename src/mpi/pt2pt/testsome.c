@@ -200,7 +200,7 @@ int MPI_Testsome(int incount, MPI_Request array_of_requests[], int *outcount,
                 }
             } else if (unlikely(MPIR_CVAR_ENABLE_FT &&
                         MPI_ANY_SOURCE == request_ptrs[i]->dev.match.parts.rank &&
-                        !MPIDI_CH3I_Comm_AS_enabled(request_ptrs[i]->comm)))
+                        !MPID_Comm_AS_enabled(request_ptrs[i]->comm)))
             {
                 mpi_errno = MPI_ERR_IN_STATUS;
                 MPIU_ERR_SET(rc, MPIX_ERR_PROC_FAILED_PENDING, "**failure_pending");

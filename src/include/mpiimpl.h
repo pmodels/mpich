@@ -1283,6 +1283,9 @@ int MPIR_Comm_delete_internal(MPID_Comm * comm_ptr, int isDisconnect);
     do { MPIU_Object_add_ref((_comm)); } while (0)
 #define MPIR_Comm_release_ref( _comm, _inuse ) \
     do { MPIU_Object_release_ref( _comm, _inuse ); } while (0)
+#ifndef MPID_Comm_AS_enabled
+#define MPID_Comm_AS_enabled(comm) (1)
+#endif
 
 
 /* Release a reference to a communicator.  If there are no pending

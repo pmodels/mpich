@@ -52,7 +52,7 @@ int MPIR_Wait_impl(MPI_Request *request, MPI_Status *status)
          * don't get stuck in the progress engine. */
         if (unlikely(MPIR_CVAR_ENABLE_FT &&
                     MPI_ANY_SOURCE == request_ptr->dev.match.parts.rank &&
-                    !MPIDI_CH3I_Comm_AS_enabled(request_ptr->comm))) {
+                    !MPID_Comm_AS_enabled(request_ptr->comm))) {
             mpi_errno = MPIR_Test_impl(request, &active_flag, status);
             goto fn_exit;
         }
@@ -86,7 +86,7 @@ int MPIR_Wait_impl(MPI_Request *request, MPI_Status *status)
                         MPIR_CVAR_ENABLE_FT &&
                         MPI_ANY_SOURCE == request_ptr->dev.match.parts.rank &&
                         !MPID_Request_is_complete(request_ptr) &&
-                        !MPIDI_CH3I_Comm_AS_enabled(request_ptr->comm))) {
+                        !MPID_Comm_AS_enabled(request_ptr->comm))) {
                 MPID_Progress_end(&progress_state);
                 MPIU_ERR_SET(mpi_errno, MPIX_ERR_PROC_FAILED_PENDING, "**failure_pending");
                 if (status != MPI_STATUS_IGNORE) status->MPI_ERROR = mpi_errno;

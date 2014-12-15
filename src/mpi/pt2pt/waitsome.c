@@ -167,7 +167,7 @@ int MPI_Waitsome(int incount, MPI_Request array_of_requests[],
             if (unlikely(MPIR_CVAR_ENABLE_FT &&
                         MPI_ANY_SOURCE == request_ptrs[i]->dev.match.parts.rank &&
                         !MPID_Request_is_complete(request_ptrs[i]) &&
-                        !MPIDI_CH3I_Comm_AS_enabled(request_ptrs[i]->comm))) {
+                        !MPID_Comm_AS_enabled(request_ptrs[i]->comm))) {
                 disabled_anysource = TRUE;
             }
 	}
@@ -241,7 +241,7 @@ int MPI_Waitsome(int incount, MPI_Request array_of_requests[],
                     }
                 } else if (unlikely(MPIR_CVAR_ENABLE_FT &&
                             MPI_ANY_SOURCE == request_ptrs[i]->dev.match.parts.rank &&
-                            !MPIDI_CH3I_Comm_AS_enabled(request_ptrs[i]->comm)))
+                            !MPID_Comm_AS_enabled(request_ptrs[i]->comm)))
                 {
                     mpi_errno = MPI_ERR_IN_STATUS;
                     MPIU_ERR_SET(rc, MPIX_ERR_PROC_FAILED_PENDING, "**failure_pending");
