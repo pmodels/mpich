@@ -1463,8 +1463,7 @@ int MPIDI_CH3_ReqHandler_PiggybackLockOpRecvComplete( MPIDI_VC_t *vc,
 
     /* Note that if we decided to drop op data, here we just need to complete this
        request; otherwise we try to get the lock again in this handler. */
-    if (rreq->dev.drop_data == FALSE) {
-    MPIU_Assert(lock_queue_entry != NULL);
+    if (rreq->dev.lock_queue_entry != NULL) {
 
     /* Mark all data received in lock queue entry */
     lock_queue_entry->all_data_recved = 1;
