@@ -37,8 +37,9 @@ int main(int argc, char **argv)
     if (rank == 0) {
         char buf[10];
         err = MPI_Recv(buf, 10, MPI_CHAR, MPI_ANY_SOURCE, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-        if (MPI_SUCCESS == err) {
-            fprintf(stderr, "Expected a failure for receive from ANY_SOURCE\n");
+        MPI_Error_class(err, &ec);
+        if (MPIX_ERR_PROC_FAILED != ec) {
+            fprintf(stderr, "Expected MPIX_ERR_PROC_FAILED for receive from ANY_SOURCE: %d\n", ec);
             MPI_Abort(MPI_COMM_WORLD, 1);
         }
 
@@ -58,7 +59,6 @@ int main(int argc, char **argv)
         MPI_Error_class(err, &ec);
         if (MPIX_ERR_PROC_FAILED_PENDING != ec) {
             fprintf(stderr, "Expected a MPIX_ERR_PROC_FAILED_PENDING (%d) for receive from ANY_SOURCE: %d\n", MPIX_ERR_PROC_FAILED_PENDING, ec);
-            fprintf(stderr, "BUF: %s\n", buf);
             MPI_Abort(MPI_COMM_WORLD, 1);
         }
 
