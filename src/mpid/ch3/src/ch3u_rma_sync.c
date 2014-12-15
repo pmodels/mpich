@@ -957,10 +957,7 @@ int MPIDI_Win_lock(int lock_type, int dest, int assert, MPID_Win * win_ptr)
                             mpi_errno, MPI_ERR_RMA_SYNC, "**rmasync");
     }
     else {
-        MPIU_ERR_CHKANDJUMP(win_ptr->states.access_state != MPIDI_RMA_NONE &&
-                            win_ptr->states.access_state != MPIDI_RMA_FENCE_ISSUED &&
-                            win_ptr->states.access_state != MPIDI_RMA_FENCE_GRANTED &&
-                            win_ptr->states.access_state != MPIDI_RMA_PER_TARGET,
+        MPIU_ERR_CHKANDJUMP(win_ptr->states.access_state != MPIDI_RMA_PER_TARGET,
                             mpi_errno, MPI_ERR_RMA_SYNC, "**rmasync");
     }
 
