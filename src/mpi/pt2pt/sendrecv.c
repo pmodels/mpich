@@ -189,6 +189,23 @@ int MPI_Sendrecv(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
 		goto fn_fail;
 		/* --END ERROR HANDLING-- */
 	    }
+
+            if (unlikely(MPIR_CVAR_ENABLE_FT &&
+                        !MPID_Request_is_complete(rreq) &&
+                        rreq->dev.match.parts.rank == MPI_ANY_SOURCE &&
+                        !MPIDI_CH3I_Comm_AS_enabled(rreq->comm))) {
+                /* --BEGIN ERROR HANDLING-- */
+                MPID_Cancel_recv(rreq);
+                MPIR_STATUS_SET_CANCEL_BIT(rreq->status, FALSE);
+                MPIU_ERR_SET(rreq->status.MPI_ERROR, MPIX_ERR_PROC_FAILED, "**proc_failed");
+                mpi_errno = rreq->status.MPI_ERROR;
+                if (!MPID_Request_is_complete(sreq)) {
+                    MPID_Cancel_send(sreq);
+                    MPIR_STATUS_SET_CANCEL_BIT(sreq->status, FALSE);
+                }
+                goto fn_fail;
+                /* --END ERROR HANDLING-- */
+            }
 	}
 	MPID_Progress_end(&progress_state);
     }
