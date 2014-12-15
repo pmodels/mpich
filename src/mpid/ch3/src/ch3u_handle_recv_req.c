@@ -1408,13 +1408,12 @@ int MPIDI_CH3I_Release_lock(MPID_Win *win_ptr)
                 if (lock_entry->all_data_recved) {
                 MPIDI_CH3_PKT_RMA_GET_LOCK_TYPE(lock_entry->pkt, requested_lock, mpi_errno);
                 if (MPIDI_CH3I_Try_acquire_win_lock(win_ptr, requested_lock) == 1) {
-                    /* perform this OP */
-
-                    mpi_errno = perform_op_in_lock_queue(win_ptr, lock_entry);
-                    if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
-
                     /* dequeue entry from lock queue */
                     MPL_LL_DELETE(win_ptr->lock_queue, win_ptr->lock_queue_tail, lock_entry);
+
+                    /* perform this OP */
+                    mpi_errno = perform_op_in_lock_queue(win_ptr, lock_entry);
+                    if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
 
                     /* free this entry */
                     mpi_errno = MPIDI_CH3I_Win_lock_entry_free(win_ptr, lock_entry);
@@ -1476,12 +1475,12 @@ int MPIDI_CH3_ReqHandler_PiggybackLockOpRecvComplete( MPIDI_VC_t *vc,
     MPID_Win_get_ptr(target_win_handle, win_ptr);
 
     if (MPIDI_CH3I_Try_acquire_win_lock(win_ptr, requested_lock) == 1) {
+        /* dequeue entry from lock queue */
+        MPL_LL_DELETE(win_ptr->lock_queue, win_ptr->lock_queue_tail, lock_queue_entry);
+
         /* perform this OP */
         mpi_errno = perform_op_in_lock_queue(win_ptr, lock_queue_entry);
         if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
-
-        /* dequeue entry from lock queue */
-        MPL_LL_DELETE(win_ptr->lock_queue, win_ptr->lock_queue_tail, lock_queue_entry);
 
         /* free this entry */
         mpi_errno = MPIDI_CH3I_Win_lock_entry_free(win_ptr, lock_queue_entry);
