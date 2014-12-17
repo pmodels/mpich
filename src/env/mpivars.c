@@ -78,7 +78,7 @@ int main( int argc, char *argv[] )
     for (i=1; i<argc; i++) {
         /* Check for "no descriptions" */
         if (strcmp( argv[i], "--nodesc" ) == 0 ||
-            strcmp( argv[i], "-nodex" ) == 0) showDesc = 0;
+            strcmp( argv[i], "-nodesc" ) == 0) showDesc = 0;
         else {
             if (wrank == 0) {
                 fprintf( stderr, "Unrecognized command line argument %s\n",
