@@ -150,6 +150,7 @@ if BUILD_PROFILING_LIB
 lib_LTLIBRARIES += lib/lib@PMPILIBNAME@.la
 lib_lib@PMPILIBNAME@_la_SOURCES = $(mpi_sources) $(mpi_f77_sources) $(mpi_core_sources)
 lib_lib@PMPILIBNAME@_la_LDFLAGS = $(external_ldflags) $(ABIVERSIONFLAGS)
+lib_lib@PMPILIBNAME@_la_CPPFLAGS = $(AM_CPPFLAGS) -DF77_USE_PMPI
 lib_lib@PMPILIBNAME@_la_LIBADD = $(external_libs) $(pmpi_convenience_libs)
 EXTRA_lib_lib@PMPILIBNAME@_la_DEPENDENCIES = $(pmpi_convenience_libs)
 
