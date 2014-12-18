@@ -275,7 +275,7 @@ int MPID_nem_tofu_recv_posted(struct MPIDI_VC *vc, struct MPID_Request *req)
 
     dprintf("tofu_recv_posted,remote_endpoint_addr=%ld\n", VC_FIELD(vc, remote_endpoint_addr));
 
-    LLC_cmd_t *cmd = LLC_cmd_alloc(1);
+    LLC_cmd_t *cmd = LLC_cmd_alloc2(1, 1, 1);
 
     cmd[0].opcode = LLC_OPCODE_RECV;
     cmd[0].comm = LLC_COMM_MPICH;
@@ -298,12 +298,10 @@ int MPID_nem_tofu_recv_posted(struct MPIDI_VC *vc, struct MPID_Request *req)
     dprintf("\n");
 
  
-    cmd[0].iov_local = LLC_iov_alloc(1);
     cmd[0].iov_local[0].addr = (uint64_t)write_to_buf;
     cmd[0].iov_local[0].length = data_sz;
     cmd[0].niov_local = 1;
     
-    cmd[0].iov_remote = LLC_iov_alloc(1);
     cmd[0].iov_remote[0].addr = 0;
     cmd[0].iov_remote[0].length = data_sz;;
     cmd[0].niov_remote = 1;

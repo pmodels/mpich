@@ -77,7 +77,7 @@ int MPID_nem_tofu_isend(struct MPIDI_VC *vc, const void *buf, int count, MPI_Dat
 
     dprintf("tofu_isend,remote_endpoint_addr=%ld\n", VC_FIELD(vc, remote_endpoint_addr));
 
-    LLC_cmd_t *cmd = LLC_cmd_alloc(1);
+    LLC_cmd_t *cmd = LLC_cmd_alloc2(1, 1, 1);
     cmd[0].opcode = LLC_OPCODE_SEND;
     cmd[0].comm = LLC_COMM_MPICH;
     cmd[0].rank = VC_FIELD(vc, remote_endpoint_addr);
@@ -136,12 +136,10 @@ int MPID_nem_tofu_isend(struct MPIDI_VC *vc, const void *buf, int count, MPI_Dat
         write_from_buf = REQ_FIELD(sreq, pack_buf);
     }
 
-    cmd[0].iov_local = LLC_iov_alloc(1);
     cmd[0].iov_local[0].addr = (uint64_t)write_from_buf;
     cmd[0].iov_local[0].length = data_sz;
     cmd[0].niov_local = 1;
     
-    cmd[0].iov_remote = LLC_iov_alloc(1);
     cmd[0].iov_remote[0].addr = 0;
     cmd[0].iov_remote[0].length = data_sz;
     cmd[0].niov_remote = 1;
@@ -526,14 +524,12 @@ ssize_t llctofu_writev(void *endpt, uint64_t raddr,
 #endif	/* notdef_hsiz_hack */
         }
         
-        lcmd = LLC_cmd_alloc(1);
+        lcmd = LLC_cmd_alloc2(1, 1, 1);
         if (lcmd == 0) {
             if (buff != 0) { MPIU_Free(buff); buff = 0; }
             nw = -1; /* ENOMEM */
             goto bad;
         }
-        lcmd[0].iov_local = LLC_iov_alloc(1);
-        lcmd[0].iov_remote = LLC_iov_alloc(1);
 
         UNSOLICITED_NUM_INC(cbarg);
         lcmd->opcode = LLC_OPCODE_UNSOLICITED;
@@ -673,10 +669,6 @@ int llctofu_poll(int in_blocking_poll,
             
             /* Don't free iov_local[0].addr */
 
-            llc_errno = LLC_iov_free(lcmd[0].iov_remote, 1);
-            MPIU_ERR_CHKANDJUMP(llc_errno, mpi_errno, MPI_ERR_OTHER, "**LLC_iov_free");
-            llc_errno = LLC_iov_free(lcmd[0].iov_local, 1);
-            MPIU_ERR_CHKANDJUMP(llc_errno, mpi_errno, MPI_ERR_OTHER, "**LLC_iov_free");
             llc_errno = LLC_cmd_free(lcmd, 1);
             MPIU_ERR_CHKANDJUMP(llc_errno, mpi_errno, MPI_ERR_OTHER, "**LLC_cmd_free");
             break; }
@@ -703,10 +695,6 @@ int llctofu_poll(int in_blocking_poll,
                 MPIU_Free((void *)lcmd->iov_local[0].addr);
                 lcmd->iov_local[0].addr = 0;
             }
-            llc_errno = LLC_iov_free(lcmd[0].iov_remote, 1);
-            MPIU_ERR_CHKANDJUMP(llc_errno, mpi_errno, MPI_ERR_OTHER, "**LLC_iov_free");
-            llc_errno = LLC_iov_free(lcmd[0].iov_local, 1);
-            MPIU_ERR_CHKANDJUMP(llc_errno, mpi_errno, MPI_ERR_OTHER, "**LLC_iov_free");
             llc_errno = LLC_cmd_free(lcmd, 1);
             MPIU_ERR_CHKANDJUMP(llc_errno, mpi_errno, MPI_ERR_OTHER, "**LLC_cmd_free");
             
@@ -797,10 +785,6 @@ int llctofu_poll(int in_blocking_poll,
             /* Mark completion on rreq */
             MPIDI_CH3U_Request_complete(req);
 
-            llc_errno = LLC_iov_free(lcmd[0].iov_remote, 1);
-            MPIU_ERR_CHKANDJUMP(llc_errno, mpi_errno, MPI_ERR_OTHER, "**LLC_iov_free");
-            llc_errno = LLC_iov_free(lcmd[0].iov_local, 1);
-            MPIU_ERR_CHKANDJUMP(llc_errno, mpi_errno, MPI_ERR_OTHER, "**LLC_iov_free");
             llc_errno = LLC_cmd_free(lcmd, 1);
             MPIU_ERR_CHKANDJUMP(llc_errno, mpi_errno, MPI_ERR_OTHER, "**LLC_cmd_free");
             break; }
