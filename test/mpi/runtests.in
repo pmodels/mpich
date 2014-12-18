@@ -49,6 +49,9 @@ $mpiexec = "@MPIEXEC@";    # Name of mpiexec program (including path, if necessa
 # "-ppn %d"
 $ppnArg  = "";
 $ppnMax  = -1;
+# timelimitArg is the argument to use to mpiexec to set the timelimit
+# in seconds.  The format is "string%d", e.g., "-t %d" for Cray aprun
+$timelimitArg="";
 #
 $testIsStrict = "@MPI_IS_STRICT@";
 $MPIhasMPIX   = "@MPI_HAS_MPIX@";
@@ -160,6 +163,9 @@ if (defined($ENV{'MPITEST_PPNARG'})) {
 if (defined($ENV{'MPITEST_PPNMAX'})) {
     $ppnMax = $ENV{'MPITEST_PPNMAX'};
 }
+if (defined($ENV{'MPITEST_TIMELIMITARG'})) {
+    $timelimitArg = $ENV{'MPITEST_TIMELIMITARG'};
+}
 
 #---------------------------------------------------------------------------
 # Process arguments and override any defaults
@@ -174,6 +180,7 @@ foreach $_ (@ARGV) {
     elsif (/--?maxnp=(\d+)/) { $np_max = $1; }
     elsif (/--?ppn=(\d+)/)  { $ppnMax = $1; }
     elsif (/--?ppnarg=(.*)/) { $ppnArg = $1; }
+    elsif (/--?timelimitarg=(.*)/) { $timelimitArg = $1; }
     elsif (/--?tests=(.*)/) { $listfiles = $1; }
     elsif (/--?srcdir=(.*)/) { $srcdir = $1; }
     elsif (/--?verbose/) { $verbose = 1; }
@@ -245,6 +252,7 @@ foreach $_ (@ARGV) {
 	print STDERR "runtests [-tests=testfile] [-np=nprocesses] \
         [-maxnp=max-nprocesses] [-srcdir=location-of-tests] \
         [-ppn=max-proc-per-node] [-ppnarg=string] \
+        [-timelimitarg=string] \
         [-xmlfile=filename ] [-tapfile=filename ] \
         [-junitfile=filename ] [-noxmlclose] \
         [-verbose] [-showprogress] [-debug] [-batch]\n";
@@ -689,6 +697,13 @@ sub RunMPIProgram {
 	$extraArgs .= " " . $ppnargs;
     }
 
+    # Handle the timelimit option.
+    if ($timelimitArg ne "" && $timeout> 0) {
+        $tlargs = "";
+	$tlargs = $timelimitArg;
+	$tlargs =~ s/\%d/$timeout/;
+	$extraArgs .= " " . $tlargs;
+    }
 
     # Run the optional setup routine. For example, the timeout tests could
     # be set to a shorter timeout.
@@ -830,6 +845,15 @@ sub AddMPIProgram {
 	$ppnargs =~ s/\%d/$nn/;
 	$extraArgs .= " " . $ppnargs;
     }
+
+    # Handle the timelimit option.
+    if ($timelimitArg ne "" && $timeout> 0) {
+        $tlargs = "";
+	$tlargs = $timelimitArg;
+	$tlargs =~ s/\%d/$timeout/;
+	$extraArgs .= " " . $tlargs;
+    }
+
 
     print STDOUT "Env includes $progEnv\n" if $verbose;
     print STDOUT "$mpiexec $np_arg $np $extraArgs $program_wrapper ./$programname $progArgs\n" if $verbose;
