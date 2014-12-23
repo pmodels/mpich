@@ -950,7 +950,7 @@ nodist_noinst_HEADERS += \\
 
 # cause any .\$(MOD) files to be output in the f90 bindings directory instead of
 # the current directory
-AM_FCFLAGS += \$(FCMODOUTFLAG)src/binding/fortran/use_mpi
+FC_COMPILE_MODS += \$(FCMODOUTFLAG)src/binding/fortran/use_mpi
 
 mpi_fc_sources += \\
     src/binding/fortran/use_mpi/typef90cmplxf.c \\
