@@ -951,7 +951,22 @@ if [ "$do_build_configure" = "yes" ] ; then
                     fi
                 fi
 
-                if [ $powerpcle_patch_requires_rebuild = "yes" -o $nagfor_patch_requires_rebuild = "yes" ] ; then
+                # There is no need to patch if we're not going to use Fortran.
+                ifort_patch_requires_rebuild=no
+                if [ $do_bindings = "yes" ] ; then
+                    echo_n "Patching libtool.m4 for compatibility with ifort on OSX... "
+                    patch -N -s -l $amdir/confdb/libtool.m4 maint/darwin-ifort.patch
+                    if [ $? -eq 0 ] ; then
+                        ifort_patch_requires_rebuild=yes
+                        # Remove possible leftovers, which don't imply a failure
+                        rm -f $amdir/confdb/libtool.m4.orig
+                        echo "done"
+                    else
+                        echo "failed"
+                    fi
+                fi
+
+                if [ $powerpcle_patch_requires_rebuild = "yes" -o $nagfor_patch_requires_rebuild = "yes" -o $ifort_patch_requires_rebuild = "yes" ] ; then
                     # Rebuild configure
                     (cd $amdir && $autoconf -f) || exit 1
                     # Reset libtool.m4 timestamps to avoid confusing make
