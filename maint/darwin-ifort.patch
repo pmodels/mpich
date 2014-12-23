@@ -1,0 +1,14 @@
+--- confdb/libtool.m4~ 2014-12-23 10:59:38.000000000 -0600
++++ confdb/libtool.m4  2014-12-23 11:05:54.000000000 -0600
+@@ -1097,7 +1097,10 @@
+   _LT_TAGVAR(link_all_deplibs, $1)=yes
+   _LT_TAGVAR(allow_undefined_flag, $1)="$_lt_dar_allow_undefined"
+   case $cc_basename in
+-     ifort*) _lt_dar_can_shared=yes ;;
++     ifort*)
++        _LT_TAGVAR(lt_prog_compiler_wl, $1)='-Wl,'
++        _lt_dar_can_shared=yes
++      ;;
+      *) _lt_dar_can_shared=$GCC ;;
+   esac
+   if test "$_lt_dar_can_shared" = "yes"; then
