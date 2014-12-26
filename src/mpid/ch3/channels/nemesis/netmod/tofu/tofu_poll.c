@@ -255,8 +255,10 @@ int MPID_nem_tofu_recv_posted(struct MPIDI_VC *vc, struct MPID_Request *req)
     /* Save data size for llctofu_poll */
     req->dev.recv_data_sz = data_sz;
 
+#if 0 /* FIXME : vc is NULL when rank is MPI_ANY_SOURCE */
     dprintf("tofu_recv_posted,%d<-%d,vc=%p,req=%p,user_buf=%p,data_sz=%ld,datatype=%08x,dt_contig=%d\n",
             MPIDI_Process.my_pg_rank, vc->pg_rank, vc, req, req->dev.user_buf, req->dev.recv_data_sz, req->dev.datatype, dt_contig);
+#endif
 
     void *write_to_buf;
     if (dt_contig) {
@@ -273,18 +275,33 @@ int MPID_nem_tofu_recv_posted(struct MPIDI_VC *vc, struct MPID_Request *req)
     LLC_comm_rank(LLC_COMM_MPICH, &LLC_my_rank);
     dprintf("tofu_isend,LLC_my_rank=%d\n", LLC_my_rank);
 
+#if 0 /* FIXME : vc is NULL when rank is MPI_ANY_SOURCE */
     dprintf("tofu_recv_posted,remote_endpoint_addr=%ld\n", VC_FIELD(vc, remote_endpoint_addr));
+#endif
 
     LLC_cmd_t *cmd = LLC_cmd_alloc2(1, 1, 1);
 
     cmd[0].opcode = LLC_OPCODE_RECV;
     cmd[0].comm = LLC_COMM_MPICH;
-    cmd[0].rank = VC_FIELD(vc, remote_endpoint_addr);
     cmd[0].req_id = cmd;
     
+    if (req->dev.match.parts.rank == MPI_ANY_SOURCE) {
+        cmd[0].rank = LLC_ANY_SOURCE;
+        cmd[0].mask.rank = 0;
+    } else {
+        cmd[0].rank = VC_FIELD(vc, remote_endpoint_addr);
+    }
+
     /* req->comm is set in MPID_irecv --> MPIDI_CH3U_Recvq_FDU_or_AEP */
-    *(int32_t*)((uint8_t*)&cmd[0].tag) = req->dev.match.parts.tag;
- 	*(MPIR_Context_id_t*)((uint8_t*)&cmd[0].tag + sizeof(int32_t)) =
+    if (req->dev.match.parts.tag == MPI_ANY_TAG) {
+        *(int32_t*)((uint8_t*)&cmd[0].tag) = LLC_ANY_TAG;
+        *(int32_t*)((uint8_t*)&cmd[0].mask.tag) = 0;
+    }
+    else {
+        *(int32_t*)((uint8_t*)&cmd[0].tag) = req->dev.match.parts.tag;
+    }
+
+    *(MPIR_Context_id_t*)((uint8_t*)&cmd[0].tag + sizeof(int32_t)) =
         req->dev.match.parts.context_id;
     MPIU_Assert(sizeof(LLC_tag_t) >= sizeof(int32_t) + sizeof(MPIR_Context_id_t));
     memset((uint8_t*)&cmd[0].tag + sizeof(int32_t) + sizeof(MPIR_Context_id_t),
@@ -307,7 +324,13 @@ int MPID_nem_tofu_recv_posted(struct MPIDI_VC *vc, struct MPID_Request *req)
     cmd[0].niov_remote = 1;
     
     ((struct llctofu_cmd_area *)cmd[0].usr_area)->cbarg = req;
-    ((struct llctofu_cmd_area *)cmd[0].usr_area)->raddr = VC_FIELD(vc, remote_endpoint_addr);
+    if (req->dev.match.parts.rank == MPI_ANY_SOURCE) {
+        ((struct llctofu_cmd_area *)cmd[0].usr_area)->raddr = MPI_ANY_SOURCE; /* FIXME : should 0 ? */
+    } else {
+        ((struct llctofu_cmd_area *)cmd[0].usr_area)->raddr = VC_FIELD(vc, remote_endpoint_addr);
+    }
+
+    REQ_FIELD(req, cmds) = cmd;
 
     llc_errno = LLC_post(cmd, 1);
     MPIU_ERR_CHKANDJUMP(llc_errno != LLC_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**LLC_post");
@@ -317,4 +340,41 @@ int MPID_nem_tofu_recv_posted(struct MPIDI_VC *vc, struct MPID_Request *req)
     return mpi_errno;
   fn_fail:
     goto fn_exit;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPID_nem_tofu_anysource_posted
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
+void MPID_nem_tofu_anysource_posted(MPID_Request *req)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_TOFU_AYSOURCE_POSTED);
+    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_TOFU_AYSOURCE_POSTED);
+
+    mpi_errno = MPID_nem_tofu_recv_posted(NULL, req);
+    MPIU_Assert(mpi_errno == MPI_SUCCESS);
+
+    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_TOFU_AYSOURCE_POSTED);
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPID_nem_tofu_anysource_matched
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
+int MPID_nem_tofu_anysource_matched(MPID_Request *req)
+{
+    int matched = FALSE;
+
+    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_TOFU_ANYSOURCE_MATCHED);
+    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_TOFU_ANYSOURCE_MATCHED);
+
+    /* FIXME : How to call a cancel_recv function */
+    /* If LLC_postedq is still having this request, delete it.
+       Ohterwise, return TURE */
+    matched = LLC_req_approve_recv((LLC_cmd_t *)REQ_FIELD(req, cmds));
+
+    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_TOFU_ANYSOURCE_MATCHED);
+
+    return matched;
 }

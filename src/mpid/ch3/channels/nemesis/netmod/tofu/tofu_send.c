@@ -630,6 +630,25 @@ ssize_t llctofu_writev(void *endpt, uint64_t raddr,
     return nw;
 }
 
+int convert_rank_llc2mpi(MPID_Comm *comm, int llc_rank, int *mpi_rank)
+{
+    int size, rank;
+    int found = 0;
+    MPIDI_VC_t *vc;
+    size = MPIR_Comm_size(comm);
+
+    for (rank = 0; rank < size; rank++) {
+        MPIDI_Comm_get_vc(comm, rank, &vc);
+        if (llc_rank == VC_FIELD(vc, remote_endpoint_addr)) {
+            *mpi_rank = rank; // rank number in the req->comm
+            found = 1;
+            break;
+        }
+    }
+
+    return found;
+}
+
 int llctofu_poll(int in_blocking_poll,
             llctofu_send_f sfnc, llctofu_recv_f rfnc)
 {
@@ -773,8 +792,23 @@ int llctofu_poll(int in_blocking_poll,
                 MPIU_Free(REQ_FIELD(req, pack_buf));
             }
 
-            req->status.MPI_TAG = req->dev.match.parts.tag;
-            req->status.MPI_SOURCE = req->dev.match.parts.rank;
+            req->status.MPI_TAG = events[0].side.initiator.tag & 0xffffffff;;
+            if (req->dev.match.parts.rank != MPI_ANY_SOURCE) {
+                req->status.MPI_SOURCE = req->dev.match.parts.rank;
+            } else {
+                /* 'events[0].side.initiator.rank' is LLC rank.
+                 * Convert it to a rank number in the communicator. */
+                int found = 0;
+                found = convert_rank_llc2mpi(req->comm, events[0].side.initiator.rank, &req->status.MPI_SOURCE);
+                MPIU_Assert(found);
+            }
+            MPIR_STATUS_SET_COUNT(req->status, events[0].side.initiator.length);
+
+            /* Dequeue request from posted queue.  
+               It's posted in MPID_Irecv --> MPIDI_CH3U_Recvq_FDU_or_AEP */
+            int found = MPIDI_CH3U_Recvq_DP(req);
+            MPIU_Assert(found);
+
             MPIR_STATUS_SET_COUNT(req->status, events[0].side.initiator.length);
 
             /* Dequeue request from posted queue.  

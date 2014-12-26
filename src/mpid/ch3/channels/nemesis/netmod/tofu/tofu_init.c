@@ -155,6 +155,10 @@ MPID_nem_tofu_init (MPIDI_PG_t *pg_p, int pg_rank,
     pmi_errno = PMI_Barrier();
     MPIU_ERR_CHKANDJUMP(pmi_errno != PMI_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**PMI_Barrier");
 
+    mpi_errno =
+        MPIDI_CH3I_Register_anysource_notification(MPID_nem_tofu_anysource_posted,
+                                                   MPID_nem_tofu_anysource_matched);
+
  fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_TOFU_INIT);
     return mpi_errno;

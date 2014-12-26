@@ -96,6 +96,8 @@ int MPID_nem_tofu_recv_posted(struct MPIDI_VC *vc, struct MPID_Request *req);
 int MPID_nem_tofu_kvs_put_binary(int from, const char *postfix, const uint8_t * buf,
                                  int length);
 int MPID_nem_tofu_kvs_get_binary(int from, const char *postfix, char *buf, int length);
+void MPID_nem_tofu_anysource_posted(MPID_Request *req);
+int MPID_nem_tofu_anysource_matched(MPID_Request *req);
 
 /*
  * temporary llctofu api
@@ -112,6 +114,7 @@ extern int llctofu_unbind(void *endpt);
 extern int llctofu_poll(int in_blocking_poll,
 	    llctofu_send_f sfnc, llctofu_recv_f rfnc);
 
+extern int convert_rank_llc2mpi(MPID_Comm *comm, int llc_rank, int *mpi_rank);
 typedef struct MPID_nem_tofu_netmod_hdr {
     int initiator_pg_rank;
 #ifndef	notdef_hsiz_hack
