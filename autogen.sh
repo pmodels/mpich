@@ -105,6 +105,7 @@ done
 if [ -f maint/version.m4 ] ; then
     cp -pPR maint/version.m4 src/pm/hydra/version.m4
     cp -pPR maint/version.m4 src/mpi/romio/version.m4
+    cp -pPR maint/version.m4 test/mpi/version.m4
 fi
 
 # Now sanity check that some of the above sync was successful
