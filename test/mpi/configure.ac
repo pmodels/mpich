@@ -11,8 +11,13 @@ dnl
 dnl The file name here refers to a file in the source being configured
 dnl FIXME this is the old style, needs updating to new style
 dnl AC_INIT(include/mpitest.h)
-dnl FIXME duplication with VERSION variable below
-AC_INIT([mpich-testsuite],[1.2])
+m4_include([version.m4])
+AC_INIT([mpich-testsuite],
+        MPICH_VERSION_m4,
+        [discuss@mpich.org],
+        [mpich-testsuite],
+        [http://www.mpich.org/])
+
 AC_CONFIG_HEADER(include/mpitestconf.h)
 AH_TOP([/* -*- Mode: C; c-basic-offset:4 ; -*- */
 /*  
@@ -23,11 +28,8 @@ AH_TOP([/* -*- Mode: C; c-basic-offset:4 ; -*- */
 #define MPITESTCONF_H_INCLUDED
 ])
 AH_BOTTOM([#endif])
-# This version is the version of the test suite.
-# 1.0: Initial version (all versions) before independent release
-# 1.1: Initial version that is independent of MPICH  11/08
-# 1.2: Automake replaces simplemake
-VERSION=1.2
+
+VERSION=MPICH_VERSION_m4
 AC_SUBST(VERSION)
 AC_CONFIG_AUX_DIR([confdb])
 AC_CONFIG_MACRO_DIR([confdb])
