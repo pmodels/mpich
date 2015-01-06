@@ -759,62 +759,57 @@ int llctofu_poll(int in_blocking_poll,
             lcmd = events[0].side.initiator.req_id;
             MPID_Request *req =  ((struct llctofu_cmd_area*)lcmd->usr_area)->cbarg;
 
-            /* Unpack non-contiguous dt */
-            int is_contig;
-            MPID_Datatype_is_contig(req->dev.datatype, &is_contig);
-            if (!is_contig) {
-                dprintf("llctofu_poll,unpack noncontiguous data to user buffer\n");
+            if (req->kind != MPID_REQUEST_MPROBE) {
+                /* Unpack non-contiguous dt */
+                int is_contig;
+                MPID_Datatype_is_contig(req->dev.datatype, &is_contig);
+                if (!is_contig) {
+                    dprintf("llctofu_poll,unpack noncontiguous data to user buffer\n");
 
-                /* see MPIDI_CH3U_Request_unpack_uebuf (in /src/mpid/ch3/src/ch3u_request.c) */
-                /* or MPIDI_CH3U_Receive_data_found (in src/mpid/ch3/src/ch3u_handle_recv_pkt.c) */
-                MPIDI_msg_sz_t unpack_sz = req->dev.recv_data_sz;
-                MPID_Segment seg;
-                MPI_Aint last;
+                    /* see MPIDI_CH3U_Request_unpack_uebuf (in /src/mpid/ch3/src/ch3u_request.c) */
+                    /* or MPIDI_CH3U_Receive_data_found (in src/mpid/ch3/src/ch3u_handle_recv_pkt.c) */
+                    MPIDI_msg_sz_t unpack_sz = req->dev.recv_data_sz;
+                    MPID_Segment seg;
+                    MPI_Aint last;
 
-                /* user_buf etc. are set in MPID_irecv --> MPIDI_CH3U_Recvq_FDU_or_AEP */
-                MPID_Segment_init(req->dev.user_buf, req->dev.user_count, req->dev.datatype, &seg,
-                                  0);
-                last = unpack_sz;
-                MPID_Segment_unpack(&seg, 0, &last, REQ_FIELD(req, pack_buf));
-                if (last != unpack_sz) {
-                    /* --BEGIN ERROR HANDLING-- */
-                    /* received data was not entirely consumed by unpack()
-                     * because too few bytes remained to fill the next basic
-                     * datatype */
-                    MPIR_STATUS_SET_COUNT(req->status, last);
-                    req->status.MPI_ERROR =
-                        MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__,
-                                             MPI_ERR_TYPE, "**llctofu_poll", 0);
-                    /* --END ERROR HANDLING-- */
+                    /* user_buf etc. are set in MPID_irecv --> MPIDI_CH3U_Recvq_FDU_or_AEP */
+                    MPID_Segment_init(req->dev.user_buf, req->dev.user_count, req->dev.datatype, &seg,
+                                      0);
+                    last = unpack_sz;
+                    MPID_Segment_unpack(&seg, 0, &last, REQ_FIELD(req, pack_buf));
+                    if (last != unpack_sz) {
+                        /* --BEGIN ERROR HANDLING-- */
+                        /* received data was not entirely consumed by unpack()
+                         * because too few bytes remained to fill the next basic
+                         * datatype */
+                        MPIR_STATUS_SET_COUNT(req->status, last);
+                        req->status.MPI_ERROR =
+                            MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__,
+                                                 MPI_ERR_TYPE, "**llctofu_poll", 0);
+                        /* --END ERROR HANDLING-- */
+                    }
+                    dprintf("llctofu_poll,ref_count=%d,pack_buf=%p\n", req->ref_count,
+                            REQ_FIELD(req, pack_buf));
+                    MPIU_Free(REQ_FIELD(req, pack_buf));
                 }
-                dprintf("llctofu_poll,ref_count=%d,pack_buf=%p\n", req->ref_count,
-                        REQ_FIELD(req, pack_buf));
-                MPIU_Free(REQ_FIELD(req, pack_buf));
-            }
 
-            req->status.MPI_TAG = events[0].side.initiator.tag & 0xffffffff;;
-            if (req->dev.match.parts.rank != MPI_ANY_SOURCE) {
-                req->status.MPI_SOURCE = req->dev.match.parts.rank;
-            } else {
-                /* 'events[0].side.initiator.rank' is LLC rank.
-                 * Convert it to a rank number in the communicator. */
-                int found = 0;
-                found = convert_rank_llc2mpi(req->comm, events[0].side.initiator.rank, &req->status.MPI_SOURCE);
+                req->status.MPI_TAG = events[0].side.initiator.tag & 0xffffffff;;
+                if (req->dev.match.parts.rank != MPI_ANY_SOURCE) {
+                    req->status.MPI_SOURCE = req->dev.match.parts.rank;
+                } else {
+                    /* 'events[0].side.initiator.rank' is LLC rank.
+                     * Convert it to a rank number in the communicator. */
+                    int found = 0;
+                    found = convert_rank_llc2mpi(req->comm, events[0].side.initiator.rank, &req->status.MPI_SOURCE);
+                    MPIU_Assert(found);
+                }
+                MPIR_STATUS_SET_COUNT(req->status, events[0].side.initiator.length);
+
+                /* Dequeue request from posted queue.  
+                   It's posted in MPID_Irecv --> MPIDI_CH3U_Recvq_FDU_or_AEP */
+                int found = MPIDI_CH3U_Recvq_DP(req);
                 MPIU_Assert(found);
             }
-            MPIR_STATUS_SET_COUNT(req->status, events[0].side.initiator.length);
-
-            /* Dequeue request from posted queue.  
-               It's posted in MPID_Irecv --> MPIDI_CH3U_Recvq_FDU_or_AEP */
-            int found = MPIDI_CH3U_Recvq_DP(req);
-            MPIU_Assert(found);
-
-            MPIR_STATUS_SET_COUNT(req->status, events[0].side.initiator.length);
-
-            /* Dequeue request from posted queue.  
-               It's posted in MPID_Irecv --> MPIDI_CH3U_Recvq_FDU_or_AEP */
-            int found = MPIDI_CH3U_Recvq_DP(req);
-            MPIU_Assert(found);
 
             /* Mark completion on rreq */
             MPIDI_CH3U_Request_complete(req);

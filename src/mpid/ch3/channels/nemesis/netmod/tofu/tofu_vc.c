@@ -38,9 +38,9 @@ static MPIDI_Comm_ops_t comm_ops = {
     .cancel_send = NULL,
     .cancel_recv = NULL,
 
-    .probe = NULL,
-    .iprobe = NULL,
-    .improbe = NULL
+    .probe = MPID_nem_tofu_probe,
+    .iprobe = MPID_nem_tofu_iprobe,
+    .improbe = MPID_nem_tofu_improbe
 };
 
 #undef FUNCNAME

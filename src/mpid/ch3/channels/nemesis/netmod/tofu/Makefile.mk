@@ -15,6 +15,7 @@ lib_lib@MPILIBNAME@_la_SOURCES +=					\
 	src/mpid/ch3/channels/nemesis/netmod/tofu/tofu_vc.c		\
 	src/mpid/ch3/channels/nemesis/netmod/tofu/tofu_poll.c		\
 	src/mpid/ch3/channels/nemesis/netmod/tofu/tofu_send.c		\
+	src/mpid/ch3/channels/nemesis/netmod/tofu/tofu_probe.c		\
 	$(EOA)
 
 noinst_HEADERS +=							\

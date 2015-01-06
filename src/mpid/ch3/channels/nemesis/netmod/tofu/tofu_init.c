@@ -159,6 +159,8 @@ MPID_nem_tofu_init (MPIDI_PG_t *pg_p, int pg_rank,
         MPIDI_CH3I_Register_anysource_notification(MPID_nem_tofu_anysource_posted,
                                                    MPID_nem_tofu_anysource_matched);
 
+    MPIDI_Anysource_improbe_fn = MPID_nem_tofu_anysource_improbe;
+
  fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_TOFU_INIT);
     return mpi_errno;
@@ -214,7 +216,7 @@ MPID_nem_tofu_connect_to_root (const char *business_card, MPIDI_VC_t *new_vc)
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPID_nem_tofu_anysource_iprobe(int tag, MPID_Comm *comm, int context_offset, int *flag, MPI_Status *status)
 {
-    return MPI_SUCCESS;
+    return MPID_nem_tofu_iprobe(NULL, MPI_ANY_SOURCE, tag, comm, context_offset, flag, status);
 }
 
 
@@ -224,5 +226,5 @@ int MPID_nem_tofu_anysource_iprobe(int tag, MPID_Comm *comm, int context_offset,
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPID_nem_tofu_anysource_improbe(int tag, MPID_Comm *comm, int context_offset, int *flag, MPID_Request **message, MPI_Status *status)
 {
-    return MPI_SUCCESS;
+    return MPID_nem_tofu_improbe(NULL, MPI_ANY_SOURCE, tag, comm, context_offset, flag, message, status);
 }

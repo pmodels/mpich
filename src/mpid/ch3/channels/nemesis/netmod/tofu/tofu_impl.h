@@ -98,6 +98,12 @@ int MPID_nem_tofu_kvs_put_binary(int from, const char *postfix, const uint8_t * 
 int MPID_nem_tofu_kvs_get_binary(int from, const char *postfix, char *buf, int length);
 void MPID_nem_tofu_anysource_posted(MPID_Request *req);
 int MPID_nem_tofu_anysource_matched(MPID_Request *req);
+int MPID_nem_tofu_probe(MPIDI_VC_t *vc,  int source, int tag, MPID_Comm *comm, int context_offset,
+                        MPI_Status *status);
+int MPID_nem_tofu_iprobe(MPIDI_VC_t *vc, int source, int tag, MPID_Comm *comm, int context_offset,
+                         int *flag, MPI_Status *status);
+int MPID_nem_tofu_improbe(MPIDI_VC_t *vc,  int source, int tag, MPID_Comm *comm, int context_offset,
+                          int *flag, MPID_Request **message, MPI_Status *status);
 
 /*
  * temporary llctofu api
