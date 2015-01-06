@@ -24,10 +24,10 @@ static MPIDI_Comm_ops_t comm_ops = {
     .recv_posted = MPID_nem_tofu_recv_posted,
     .send = MPID_nem_tofu_isend, /* wait is performed separately after calling this */
     .rsend = NULL,
-    .ssend = NULL,
+    .ssend = MPID_nem_tofu_issend,
     .isend = MPID_nem_tofu_isend,
     .irsend = NULL,
-    .issend = NULL,
+    .issend = MPID_nem_tofu_issend,
     
     .send_init = NULL,
     .bsend_init = NULL,

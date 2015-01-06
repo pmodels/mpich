@@ -676,7 +676,7 @@ int llctofu_poll(int in_blocking_poll,
             dprintf("llctofu_poll,EVENT_SEND_LEFT\n");
             lcmd = events[0].side.initiator.req_id;
             MPIU_Assert(lcmd != 0);
-            MPIU_Assert(lcmd->opcode == LLC_OPCODE_SEND);
+            MPIU_Assert(lcmd->opcode == LLC_OPCODE_SEND || lcmd->opcode == LLC_OPCODE_SSEND);
             
             if(events[0].side.initiator.error_code != LLC_ERROR_SUCCESS) {
                 printf("llctofu_poll,error_code=%d\n", events[0].side.initiator.error_code);
@@ -826,5 +826,137 @@ int llctofu_poll(int in_blocking_poll,
  fn_exit:
     return mpi_errno;
  fn_fail:
+    goto fn_exit;
+}
+
+#undef FUNCNAME
+#define FUNCNAME MPID_nem_tofu_issend
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
+int MPID_nem_tofu_issend(struct MPIDI_VC *vc, const void *buf, int count, MPI_Datatype datatype,
+                         int dest, int tag, MPID_Comm *comm, int context_offset,
+                         struct MPID_Request **request)
+{
+    int mpi_errno = MPI_SUCCESS, llc_errno;
+    int dt_contig;
+    MPIDI_msg_sz_t data_sz;
+    MPID_Datatype *dt_ptr;
+    MPI_Aint dt_true_lb;
+    int i;
+
+    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_TOFU_ISSEND);
+    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_TOFU_ISSEND);
+
+    dprintf("tofu_isend,%d->%d,buf=%p,count=%d,datatype=%08x,dest=%d,tag=%08x,comm=%p,context_offset=%d\n",
+            MPIDI_Process.my_pg_rank, vc->pg_rank, buf, count, datatype, dest, tag, comm, context_offset);
+
+    int LLC_my_rank;
+    LLC_comm_rank(LLC_COMM_MPICH, &LLC_my_rank);
+    dprintf("tofu_isend,LLC_my_rank=%d\n", LLC_my_rank);
+
+    struct MPID_Request * sreq = MPID_Request_create();
+    MPIU_Assert(sreq != NULL);
+    MPIU_Object_set_ref(sreq, 2);
+    sreq->kind = MPID_REQUEST_SEND;
+
+    /* Used in tofullc_poll --> MPID_nem_tofu_send_handler */
+    sreq->ch.vc = vc;
+    sreq->dev.OnDataAvail = 0;
+    /* Don't save iov_offset because it's not used. */
+
+    /* Save it because it's used in send_handler */
+    /*   See also MPIDI_Request_create_sreq() */
+    /*     in src/mpid/ch3/include/mpidimpl.h */
+    MPIDI_Request_set_type(sreq, MPIDI_REQUEST_TYPE_SEND);
+    sreq->dev.datatype = datatype;
+    sreq->comm = comm;
+    MPIR_Comm_add_ref(comm);
+
+    /* used for MPI_Cancel() */
+    sreq->status.MPI_ERROR = MPI_SUCCESS;
+    MPIR_STATUS_SET_CANCEL_BIT(sreq->status, FALSE);
+    sreq->dev.cancel_pending = FALSE;
+    /* Do not reset dev.state after calling MPIDI_Request_set_type() */
+    /* sreq->dev.state = 0; */
+    sreq->dev.match.parts.rank = dest;
+    sreq->dev.match.parts.tag = tag;
+    sreq->dev.match.parts.context_id = comm->context_id + context_offset;
+
+    dprintf("tofu_isend,remote_endpoint_addr=%ld\n", VC_FIELD(vc, remote_endpoint_addr));
+
+    LLC_cmd_t *cmd = LLC_cmd_alloc2(1, 1, 1);
+    cmd[0].opcode = LLC_OPCODE_SSEND;
+    cmd[0].comm = LLC_COMM_MPICH;
+    cmd[0].rank = VC_FIELD(vc, remote_endpoint_addr);
+    cmd[0].req_id = cmd;
+
+    /* Prepare bit-vector to perform tag-match. We use the same bit-vector as in CH3 layer. */
+    /* See src/mpid/ch3/src/mpid_isend.c */
+    *(int32_t*)((uint8_t*)&cmd[0].tag) = tag;
+    *(MPIR_Context_id_t*)((uint8_t*)&cmd[0].tag + sizeof(int32_t)) =
+        comm->context_id + context_offset;
+    MPIU_Assert(sizeof(LLC_tag_t) >= sizeof(int32_t) + sizeof(MPIR_Context_id_t));
+    memset((uint8_t*)&cmd[0].tag + sizeof(int32_t) + sizeof(MPIR_Context_id_t),
+           0, sizeof(LLC_tag_t) - sizeof(int32_t) - sizeof(MPIR_Context_id_t));
+
+    dprintf("tofu_isend,tag=");
+    for(i = 0; i < sizeof(LLC_tag_t); i++) {
+        dprintf("%02x", (int)*((uint8_t*)&cmd[0].tag + i));
+    }
+    dprintf("\n");
+
+    /* Prepare RDMA-write from buffer */
+    MPIDI_Datatype_get_info(count, datatype, dt_contig, data_sz, dt_ptr,
+                            dt_true_lb);
+    dprintf("tofu_isend,dt_contig=%d,data_sz=%ld\n",
+            dt_contig, data_sz);
+
+
+    const void *write_from_buf;
+    if (dt_contig) {
+        write_from_buf = buf + dt_true_lb;
+        REQ_FIELD(sreq, pack_buf) = 0;
+    }
+    else {
+        /* See MPIDI_CH3_EagerNoncontigSend (in ch3u_eager.c) */
+        struct MPID_Segment *segment_ptr = MPID_Segment_alloc();
+        MPIU_ERR_CHKANDJUMP(!segment_ptr, mpi_errno, MPI_ERR_OTHER, "**outofmemory");
+        /* See also MPIDI_CH3_Request_create and _destory() */
+        /*     in src/mpid/ch3/src/ch3u_request.c */
+        sreq->dev.segment_ptr = segment_ptr;
+
+        MPID_Segment_init(buf, count, datatype, segment_ptr, 0);
+        MPIDI_msg_sz_t segment_first = 0;
+        MPIDI_msg_sz_t segment_size = data_sz;
+        MPIDI_msg_sz_t last = segment_size;
+        MPIU_Assert(last > 0);
+        REQ_FIELD(sreq, pack_buf) = MPIU_Malloc((size_t) data_sz);
+        MPIU_ERR_CHKANDJUMP(!REQ_FIELD(sreq, pack_buf), mpi_errno, MPI_ERR_OTHER,
+                            "**outofmemory");
+        MPID_Segment_pack(segment_ptr, segment_first, &last,
+                          (char *) (REQ_FIELD(sreq, pack_buf)));
+        MPIU_Assert(last == data_sz);
+        write_from_buf = REQ_FIELD(sreq, pack_buf);
+    }
+
+    cmd[0].iov_local[0].addr = (uint64_t)write_from_buf;
+    cmd[0].iov_local[0].length = data_sz;
+    cmd[0].niov_local = 1;
+
+    cmd[0].iov_remote[0].addr = 0;
+    cmd[0].iov_remote[0].length = data_sz;
+    cmd[0].niov_remote = 1;
+
+    ((struct llctofu_cmd_area *)cmd[0].usr_area)->cbarg = sreq;
+    ((struct llctofu_cmd_area *)cmd[0].usr_area)->raddr = VC_FIELD(vc, remote_endpoint_addr);
+
+    llc_errno = LLC_post(cmd, 1);
+    MPIU_ERR_CHKANDJUMP(llc_errno != LLC_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**LLC_post");
+
+  fn_exit:
+    *request = sreq;
+    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_TOFU_ISSEND);
+    return mpi_errno;
+  fn_fail:
     goto fn_exit;
 }

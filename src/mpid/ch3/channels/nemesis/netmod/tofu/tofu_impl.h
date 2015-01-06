@@ -92,6 +92,9 @@ int MPID_nem_tofu_send_queued(MPIDI_VC_t * vc, rque_t *send_queue);
 int MPID_nem_tofu_isend(struct MPIDI_VC *vc, const void *buf, int count, MPI_Datatype datatype,
                         int dest, int tag, MPID_Comm *comm, int context_offset,
                         struct MPID_Request **request );
+int MPID_nem_tofu_issend(struct MPIDI_VC *vc, const void *buf, int count, MPI_Datatype datatype,
+                         int dest, int tag, MPID_Comm *comm, int context_offset,
+                         struct MPID_Request **request);
 int MPID_nem_tofu_recv_posted(struct MPIDI_VC *vc, struct MPID_Request *req);
 int MPID_nem_tofu_kvs_put_binary(int from, const char *postfix, const uint8_t * buf,
                                  int length);
