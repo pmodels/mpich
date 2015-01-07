@@ -727,8 +727,9 @@ int llctofu_poll(int in_blocking_poll,
             buff = events[0].side.responder.addr;
             bsiz = events[0].side.responder.length;
 #ifndef	notdef_hsiz_hack
+#if defined(__sparc__)
             MPIU_Assert(((uintptr_t)buff % 8) == 0);
-            MPIU_Assert(bsiz >= sizeof (MPID_nem_tofu_netmod_hdr_t));
+#endif
 #endif	/* notdef_hsiz_hack */
             {
                 MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE,
