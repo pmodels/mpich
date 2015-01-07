@@ -23,10 +23,10 @@ static int	tofu_vc_init (MPIDI_VC_t *vc);
 static MPIDI_Comm_ops_t comm_ops = {
     .recv_posted = MPID_nem_tofu_recv_posted,
     .send = MPID_nem_tofu_isend, /* wait is performed separately after calling this */
-    .rsend = NULL,
+    .rsend = MPID_nem_tofu_isend,
     .ssend = MPID_nem_tofu_issend,
     .isend = MPID_nem_tofu_isend,
-    .irsend = NULL,
+    .irsend = MPID_nem_tofu_isend,
     .issend = MPID_nem_tofu_issend,
     
     .send_init = NULL,
