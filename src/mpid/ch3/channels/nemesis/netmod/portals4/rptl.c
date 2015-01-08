@@ -142,7 +142,7 @@ static int poke_progress(void)
         /* if we are in a local AWAITING PAUSE ACKS state, see if we
          * can send out the unpause message */
         if (rptl->local_state == RPTL_LOCAL_STATE_AWAITING_PAUSE_ACKS &&
-            rptl->pause_ack_counter == rptl_info.world_size) {
+            rptl->pause_ack_counter == rptl_info.world_size - 1) {
             /* if we are over the max count limit, do not send an
              * unpause message yet */
             if (rptl->data.ob_curr_count > rptl->data.ob_max_count)
@@ -154,6 +154,8 @@ static int poke_progress(void)
             rptl->local_state = RPTL_LOCAL_STATE_ACTIVE;
 
             for (i = 0; i < rptl_info.world_size; i++) {
+                if (i == MPIDI_Process.my_pg_rank)
+                    continue;
                 mpi_errno = rptl_info.get_target_info(i, &id, rptl->data.pt, &data_pt, &control_pt);
                 if (mpi_errno) {
                     ret = PTL_FAIL;
@@ -182,6 +184,8 @@ static int poke_progress(void)
             /* send a pause ack message */
             assert(target->rptl);
             for (i = 0; i < rptl_info.world_size; i++) {
+                if (i == MPIDI_Process.my_pg_rank)
+                    continue;
                 /* find the target that has this target id and get the
                  * control portal information for it */
                 mpi_errno = rptl_info.get_target_info(i, &id, target->rptl->data.pt, &data_pt, &control_pt);
@@ -455,6 +459,8 @@ static int send_pause_messages(struct rptl *rptl)
     rptl->data.ob_max_count = rptl->data.ob_curr_count / 2;
 
     for (i = 0; i < rptl_info.world_size; i++) {
+        if (i == MPIDI_Process.my_pg_rank)
+            continue;
         mpi_errno = rptl_info.get_target_info(i, &id, rptl->data.pt, &data_pt, &control_pt);
         if (mpi_errno) {
             ret = PTL_FAIL;
