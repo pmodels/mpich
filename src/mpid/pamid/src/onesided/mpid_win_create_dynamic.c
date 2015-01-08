@@ -43,6 +43,7 @@ MPID_Win_create_dynamic( MPID_Info  * info,
                   MPID_Win  ** win_ptr)
 {
   int mpi_errno  = MPI_SUCCESS;
+  mpir_errflag_t errflag = MPIR_ERR_NONE;
   int rc = MPI_SUCCESS;
   MPIDI_Win_info  *winfo;
   MPID_Win     *win;
@@ -83,7 +84,7 @@ MPID_Win_create_dynamic( MPID_Info  * info,
   if (rc != MPI_SUCCESS)
       return rc;
 
-  mpi_errno = MPIR_Barrier_impl(comm_ptr, &mpi_errno);
+  mpi_errno = MPIR_Barrier_impl(comm_ptr, (mpir_errflag_t *) &errflag);
 
   return mpi_errno;
 }

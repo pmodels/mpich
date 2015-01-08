@@ -484,6 +484,7 @@ MPID_Win_allocate_shared(MPI_Aint     size,
                          MPID_Win  ** win_ptr)
 {
   int mpi_errno  = MPI_SUCCESS;
+  mpir_errflag_t errflag = MPIR_ERR_NONE;
   int onNode     = 0;
   MPID_Win    *win = NULL;
   int rank, prev_size;
@@ -545,7 +546,7 @@ MPID_Win_allocate_shared(MPI_Aint     size,
 
   *(void**) base_ptr = (void *) win->mpid.info[rank].base_addr;
 
-  mpi_errno = MPIR_Barrier_impl(comm_ptr, &mpi_errno);
+  mpi_errno = MPIR_Barrier_impl(comm_ptr, &errflag);
 fn_exit:
     return mpi_errno;
     /* --BEGIN ERROR HANDLING-- */

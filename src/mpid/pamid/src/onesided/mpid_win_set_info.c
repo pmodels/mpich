@@ -93,9 +93,10 @@ int
 MPID_Win_set_info(MPID_Win     *win, MPID_Info    *info)
 {
     int mpi_errno = MPI_SUCCESS;
+    mpir_errflag_t errflag = MPIR_ERR_NONE;
 
     mpi_errno = MPIDI_Win_set_info(win, info);
     MPID_assert(mpi_errno == MPI_SUCCESS);
-    mpi_errno = MPIR_Barrier_impl(win->comm_ptr, &mpi_errno);
+    mpi_errno = MPIR_Barrier_impl(win->comm_ptr, &errflag);
     return mpi_errno;
 }

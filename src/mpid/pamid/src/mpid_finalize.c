@@ -63,7 +63,8 @@ int MPID_Finalize()
 {
   pami_result_t rc;
   int mpierrno = MPI_SUCCESS;
-  MPIR_Barrier_impl(MPIR_Process.comm_world, &mpierrno);
+  mpir_errflag_t errflag=MPIR_ERR_NONE;
+  MPIR_Barrier_impl(MPIR_Process.comm_world, &errflag);
 
 #ifdef MPIDI_STATISTICS
   if (MPIDI_Process.mp_statistics) {

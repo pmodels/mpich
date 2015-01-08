@@ -27,6 +27,7 @@ MPID_Win_fence(int       assert,
                MPID_Win *win)
 {
   int mpi_errno = MPI_SUCCESS;
+  mpir_errflag_t errflag = MPIR_ERR_NONE;
   static char FCNAME[] = "MPID_Win_fence";
 
   if(win->mpid.sync.origin_epoch_type != win->mpid.sync.target_epoch_type){
@@ -63,7 +64,7 @@ MPID_Win_fence(int       assert,
 
   if (!(assert & MPI_MODE_NOPRECEDE))
     {
-      mpi_errno = MPIR_Barrier_impl(win->comm_ptr, &mpi_errno);
+      mpi_errno = MPIR_Barrier_impl(win->comm_ptr, &errflag);
     }
 
   return mpi_errno;

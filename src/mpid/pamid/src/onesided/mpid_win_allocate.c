@@ -55,6 +55,7 @@ MPID_Win_allocate(MPI_Aint     size,
 {
   int mpi_errno  = MPI_SUCCESS;
   int rc = MPI_SUCCESS;
+  mpir_errflag_t errflag = MPIR_ERR_NONE;
   void *baseP; 
   static char FCNAME[] = "MPID_Win_allocate";
   MPIDI_Win_info  *winfo;
@@ -90,7 +91,7 @@ MPID_Win_allocate(MPI_Aint     size,
   if (rc != MPI_SUCCESS)
       return rc;
   *(void**) base_ptr = (void *) win->base;
-  mpi_errno = MPIR_Barrier_impl(comm_ptr, &mpi_errno);
+  mpi_errno = MPIR_Barrier_impl(comm_ptr, &errflag);
 
   fn_fail:
   return mpi_errno;

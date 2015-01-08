@@ -105,6 +105,7 @@ int
 MPIDI_Win_allgather( MPI_Aint size, MPID_Win **win_ptr )
 {
   int mpi_errno = MPI_SUCCESS;
+  mpir_errflag_t errflag=MPIR_ERR_NONE;
   MPID_Win *win;
   int rank;
   MPID_Comm *comm_ptr;
@@ -148,7 +149,7 @@ MPIDI_Win_allgather( MPI_Aint size, MPID_Win **win_ptr )
                                   sizeof(struct MPIDI_Win_info),
                                   MPI_BYTE,
                                   comm_ptr,
-                                  &mpi_errno);
+                                  &errflag);
 
 fn_fail:
    return mpi_errno;
@@ -186,6 +187,7 @@ MPID_Win_create(void       * base,
                 MPID_Win  ** win_ptr)
 {
   int mpi_errno  = MPI_SUCCESS;
+  mpir_errflag_t errflag = MPIR_ERR_NONE;
   int rc  = MPI_SUCCESS;
   MPID_Win *win;
   size_t  rank;
@@ -205,7 +207,7 @@ MPID_Win_create(void       * base,
       return rc;
 
 
-  mpi_errno = MPIR_Barrier_impl(comm_ptr, &mpi_errno);
+  mpi_errno = MPIR_Barrier_impl(comm_ptr, (mpir_errflag_t *) &errflag);
 
   return mpi_errno;
 }
