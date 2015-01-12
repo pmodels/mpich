@@ -199,7 +199,7 @@ int MPI_Testsome(int incount, MPI_Request array_of_requests[], int *outcount,
                     n_inactive += 1;
                 }
             } else if (unlikely(MPIR_CVAR_ENABLE_FT &&
-                        MPI_ANY_SOURCE == request_ptrs[i]->dev.match.parts.rank &&
+                        MPID_Request_is_anysource(request_ptrs[i]) &&
                         !MPID_Comm_AS_enabled(request_ptrs[i]->comm)))
             {
                 mpi_errno = MPI_ERR_IN_STATUS;

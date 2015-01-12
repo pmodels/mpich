@@ -165,7 +165,7 @@ int MPI_Recv(void *buf, int count, MPI_Datatype datatype, int source, int tag,
 
             if (unlikely(MPIR_CVAR_ENABLE_FT &&
                         !MPID_Request_is_complete(request_ptr) &&
-                        request_ptr->dev.match.parts.rank == MPI_ANY_SOURCE &&
+                        MPID_Request_is_anysource(request_ptr) &&
                         !MPID_Comm_AS_enabled(request_ptr->comm))) {
                 /* --BEGIN ERROR HANDLING-- */
                 MPID_Cancel_recv(request_ptr);

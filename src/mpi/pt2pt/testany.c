@@ -187,7 +187,7 @@ int MPI_Testany(int count, MPI_Request array_of_requests[], int *indx,
                     n_inactive += 1;
                 }
             } else if (unlikely(MPIR_CVAR_ENABLE_FT &&
-                        MPI_ANY_SOURCE == request_ptrs[i]->dev.match.parts.rank &&
+                        MPID_Request_is_anysource(request_ptrs[i]) &&
                         !MPID_Comm_AS_enabled(request_ptrs[i]->comm)))
             {
                 last_disabled_anysource = i;

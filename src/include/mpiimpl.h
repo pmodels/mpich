@@ -3415,6 +3415,20 @@ int MPID_Cancel_recv(MPID_Request *);
   @*/
 int MPID_Comm_AS_enabled(MPID_Comm *);
 
+/*@
+  MPID_Request_is_anysource - Query whether the request is an anysource receive
+
+  Input Parameter:
+  request - Receive request being queried
+
+  Return Value:
+  0 - The request is not anysource
+  1 - The request is anysource
+
+  @*/
+int MPID_Request_is_anysource(MPID_Request *);
+
+/*@
   MPID_Aint_add - Returns the sum of base and disp
 
   Input Parameters:

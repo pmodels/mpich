@@ -68,7 +68,7 @@ int MPIR_Test_impl(MPI_Request *request, int *flag, MPI_Status *status)
 	/* Fall through to the exit */
     } else if (unlikely(
                 MPIR_CVAR_ENABLE_FT &&
-                MPI_ANY_SOURCE == request_ptr->dev.match.parts.rank &&
+                MPID_Request_is_anysource(request_ptr) &&
                 !MPID_Comm_AS_enabled(request_ptr->comm))) {
         MPIU_ERR_SET(mpi_errno, MPIX_ERR_PROC_FAILED_PENDING, "**failure_pending");
         if (status != MPI_STATUS_IGNORE) status->MPI_ERROR = mpi_errno;

@@ -192,7 +192,7 @@ int MPI_Sendrecv(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
 
             if (unlikely(MPIR_CVAR_ENABLE_FT &&
                         !MPID_Request_is_complete(rreq) &&
-                        rreq->dev.match.parts.rank == MPI_ANY_SOURCE &&
+                        MPID_Request_is_anysource(rreq) &&
                         !MPID_Comm_AS_enabled(rreq->comm))) {
                 /* --BEGIN ERROR HANDLING-- */
                 MPID_Cancel_recv(rreq);

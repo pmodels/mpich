@@ -156,3 +156,11 @@ int MPID_Comm_AS_enabled(MPID_Comm *comm_ptr) {
     return comm_ptr->dev.anysource_enabled;
 }
 
+
+#undef FUNCNAME
+#define FUNCNAME MPID_Request_is_anysource
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+int MPID_Request_is_anysource(MPID_Request *request_ptr) {
+    return request_ptr->dev.match.parts.rank == MPI_ANY_SOURCE;
+}

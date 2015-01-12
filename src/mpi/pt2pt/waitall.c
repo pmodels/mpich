@@ -92,7 +92,7 @@ int MPIR_Waitall_impl(int count, MPI_Request array_of_requests[],
              * disabled such communication, convert this operation to a testall
              * instead to prevent getting stuck in the progress engine. */
             if (unlikely(MPIR_CVAR_ENABLE_FT &&
-                        MPI_ANY_SOURCE == request_ptrs[i]->dev.match.parts.rank &&
+                        MPID_Request_is_anysource(request_ptrs[i]) &&
                         !MPID_Request_is_complete(request_ptrs[i]) &&
                         !MPID_Comm_AS_enabled(request_ptrs[i]->comm))) {
                 disabled_anysource = TRUE;
@@ -134,7 +134,7 @@ int MPIR_Waitall_impl(int count, MPI_Request array_of_requests[],
                 if (unlikely(mpi_errno)) {
                     /* --BEGIN ERROR HANDLING-- */
                     if (unlikely(MPIR_CVAR_ENABLE_FT &&
-                                MPI_ANY_SOURCE == request_ptrs[i]->dev.match.parts.rank &&
+                                MPID_Request_is_anysource(request_ptrs[i]) &&
                                 !MPID_Request_is_complete(request_ptrs[i]) &&
                                 !MPID_Comm_AS_enabled(request_ptrs[i]->comm))) {
                         MPIU_ERR_SET(mpi_errno, MPI_ERR_IN_STATUS, "**instatus");
@@ -188,7 +188,7 @@ int MPIR_Waitall_impl(int count, MPI_Request array_of_requests[],
                 MPIU_ERR_POP(mpi_errno);
                 /* --END ERROR HANDLING-- */
             } else if (unlikely(MPIR_CVAR_ENABLE_FT &&
-                        MPI_ANY_SOURCE == request_ptrs[i]->dev.match.parts.rank &&
+                        MPID_Request_is_anysource(request_ptrs[i]) &&
                         !MPID_Request_is_complete(request_ptrs[i]) &&
                         !MPID_Comm_AS_enabled(request_ptrs[i]->comm))) {
                 /* Check for pending failures */
