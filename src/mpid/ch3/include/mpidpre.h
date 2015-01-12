@@ -166,9 +166,6 @@ typedef union {
 #define MPID_Dev_comm_create_hook(comm_) MPIDI_CH3I_Comm_create_hook(comm_)
 #define MPID_Dev_comm_destroy_hook(comm_) MPIDI_CH3I_Comm_destroy_hook(comm_)
 
-#undef MPID_Comm_AS_enabled
-#define MPID_Comm_AS_enabled(comm) ((comm)->dev.anysource_enabled)
-
 typedef struct MPIDI_CH3I_comm
 {
     int eager_max_msg_sz;   /* comm-wide eager/rendezvous message threshold */

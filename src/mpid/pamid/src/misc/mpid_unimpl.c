@@ -102,9 +102,9 @@ int MPID_Comm_revoke(MPID_Comm *comm_ptr, int is_remote)
   return 0;
 }
 
-int MPID_Request_is_pending_failure(MPID_Request *request_ptr)
+int MPID_Comm_AS_enabled(MPID_Comm *comm_ptr)
 {
-  /* This function is necessary for MPICH to work correctly so it must always
-   * return 0. */
-  return 0;
+  /* This function must return 1 in the default case and should not be ignored
+   * by the implementation. */
+  return 1;
 }

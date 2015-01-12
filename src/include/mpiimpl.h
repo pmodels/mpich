@@ -1283,9 +1283,6 @@ int MPIR_Comm_delete_internal(MPID_Comm * comm_ptr, int isDisconnect);
     do { MPIU_Object_add_ref((_comm)); } while (0)
 #define MPIR_Comm_release_ref( _comm, _inuse ) \
     do { MPIU_Object_release_ref( _comm, _inuse ); } while (0)
-#ifndef MPID_Comm_AS_enabled
-#define MPID_Comm_AS_enabled(comm) (1)
-#endif
 
 
 /* Release a reference to a communicator.  If there are no pending
@@ -3407,6 +3404,17 @@ int MPID_Cancel_send(MPID_Request *);
 int MPID_Cancel_recv(MPID_Request *);
 
 /*@
+  MPID_Comm_AS_enabled - Query whether anysource operations are enabled for a communicator
+
+  Input Parameter:
+  communicator - Communicator being queried
+
+  Return Value:
+  0 - The communicator will not currently permit anysource operations
+  1 - The communicator will currently permit anysource operations
+  @*/
+int MPID_Comm_AS_enabled(MPID_Comm *);
+
   MPID_Aint_add - Returns the sum of base and disp
 
   Input Parameters:
