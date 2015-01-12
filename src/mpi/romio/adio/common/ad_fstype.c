@@ -137,10 +137,6 @@ Output Parameters:
 */
 #ifdef ROMIO_NEEDS_ADIOPARENTDIR
 
-#ifndef PATH_MAX
-#define PATH_MAX 65535
-#endif
-
 /* In a strict ANSI environment, S_ISLNK may not be defined.  Fix that
    here.  We assume that S_ISLNK is *always* defined as a macro.  If
    that is not universally true, then add a test to the romio
