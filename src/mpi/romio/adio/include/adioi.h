@@ -1034,7 +1034,13 @@ typedef struct wcThreadFuncData {
 void *ADIOI_IO_Thread_Func(void *vptr_args);
 
 
+#ifdef HAVE_LIMITS_H
+#include <limits.h>
+#endif
 
+#ifndef PATH_MAX
+#define PATH_MAX 65535
+#endif
 
 #endif
 

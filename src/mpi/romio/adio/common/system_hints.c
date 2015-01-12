@@ -28,10 +28,6 @@
 #include <io.h>
 #endif
 
-#ifndef PATH_MAX
-#define PATH_MAX 65535
-#endif
-
 /*#define SYSHINT_DEBUG 1  */
 
 #define ROMIO_HINT_DEFAULT_CFG "/etc/romio-hints"
