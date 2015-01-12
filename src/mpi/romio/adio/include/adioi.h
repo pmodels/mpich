@@ -691,7 +691,7 @@ ADIO_Offset ADIOI_GEN_SeekIndividual(ADIO_File fd, ADIO_Offset offset,
 void ADIOI_GEN_Resize(ADIO_File fd, ADIO_Offset size, int *error_code);
 void ADIOI_GEN_SetInfo(ADIO_File fd, MPI_Info users_info, int *error_code);
 void ADIOI_GEN_Close(ADIO_File fd, int *error_code);
-void ADIOI_Shfp_fname(ADIO_File fd, int rank);
+void ADIOI_Shfp_fname(ADIO_File fd, int rank, int *error_code);
 void ADIOI_GEN_Prealloc(ADIO_File fd, ADIO_Offset size, int *error_code);
 int ADIOI_Error(ADIO_File fd, int error_code, char *string);
 int MPIR_Err_setmsg( int, int, const char *, const char *, const char *, ... );

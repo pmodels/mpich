@@ -179,7 +179,9 @@ int MPI_File_open(MPI_Comm comm, ROMIO_CONST char *filename, int amode,
     if ((error_code == MPI_SUCCESS) && 
 		    ADIO_Feature((*fh), ADIO_SHARED_FP)) {
 	MPI_Comm_rank(dupcomm, &rank);
-	ADIOI_Shfp_fname(*fh, rank);
+	ADIOI_Shfp_fname(*fh, rank, &error_code);
+	if (error_code != MPI_SUCCESS)
+	    goto fn_fail;
 
         /* if MPI_MODE_APPEND, set the shared file pointer to end of file.
            indiv. file pointer already set to end of file in ADIO_Open. 

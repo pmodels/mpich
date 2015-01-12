@@ -26,7 +26,7 @@
    file pointer functions are used and is deleted when the real
    file is closed. */
 
-void ADIOI_Shfp_fname(ADIO_File fd, int rank)
+void ADIOI_Shfp_fname(ADIO_File fd, int rank, int *error_code)
 {
     int i;
     int len;
@@ -40,7 +40,11 @@ void ADIOI_Shfp_fname(ADIO_File fd, int rank)
         i = rand();
 	pid = (int)getpid();
 	
-	ADIOI_Strncpy(fd->shared_fp_fname, fd->filename, 256);
+	if (ADIOI_Strncpy(fd->shared_fp_fname, fd->filename, 256)) {
+	    *error_code = ADIOI_Err_create_code("ADIOI_Shfp_fname",
+		    fd->filename, ENAMETOOLONG);
+	    return;
+	}
 	
 #ifdef ROMIO_NTFS
 	slash = strrchr(fd->filename, '\\');
@@ -48,8 +52,16 @@ void ADIOI_Shfp_fname(ADIO_File fd, int rank)
 	slash = strrchr(fd->filename, '/');
 #endif
 	if (!slash) {
-	    ADIOI_Strncpy(fd->shared_fp_fname, ".", 2);
-	    ADIOI_Strncpy(fd->shared_fp_fname + 1, fd->filename, 255);
+	    if (ADIOI_Strncpy(fd->shared_fp_fname, ".", 2)) {
+		*error_code = ADIOI_Err_create_code("ADIOI_Shfp_fname",
+			fd->filename, ENAMETOOLONG);
+		return;
+	    }
+	    if (ADIOI_Strncpy(fd->shared_fp_fname + 1, fd->filename, 255)) {
+		*error_code = ADIOI_Err_create_code("ADIOI_Shfp_fname",
+			fd->filename, ENAMETOOLONG);
+		return;
+	    }
 	}
 	else {
 	    ptr = slash;
@@ -58,13 +70,22 @@ void ADIOI_Shfp_fname(ADIO_File fd, int rank)
 #else
 	    slash = strrchr(fd->shared_fp_fname, '/');
 #endif
-	    ADIOI_Strncpy(slash + 1, ".", 2);
+	    if (ADIOI_Strncpy(slash + 1, ".", 2))  {
+		*error_code = ADIOI_Err_create_code("ADIOI_Shfp_fname",
+			fd->filename, ENAMETOOLONG);
+		return;
+	    }
 	    /* ok to cast: file names bounded by PATH_MAX and NAME_MAX */
 	    len = (int) (256 - (slash+2 - fd->shared_fp_fname));
-	    ADIOI_Strncpy(slash + 2, ptr + 1, len);
+	    if (ADIOI_Strncpy(slash + 2, ptr + 1, len)) {
+		*error_code = ADIOI_Err_create_code("ADIOI_Shfp_fname",
+			ptr + 1, ENAMETOOLONG);
+		return;
+	    }
 	}
 	    
 	ADIOI_Snprintf(tmp, 128, ".shfp.%d.%d", pid, i);
+	/* ADIOI_Strnapp will return non-zero if truncated.  That's ok */
 	ADIOI_Strnapp(fd->shared_fp_fname, tmp, 256);
 	
 	len = (int)strlen(fd->shared_fp_fname);
