@@ -77,6 +77,8 @@ int MPID_nem_tofu_isend(struct MPIDI_VC *vc, const void *buf, int count, MPI_Dat
 
     dprintf("tofu_isend,remote_endpoint_addr=%ld\n", VC_FIELD(vc, remote_endpoint_addr));
 
+    REQ_FIELD(sreq, rma_buf) = NULL;
+
     LLC_cmd_t *cmd = LLC_cmd_alloc2(1, 1, 1);
     cmd[0].opcode = LLC_OPCODE_SEND;
     cmd[0].comm = LLC_COMM_MPICH;
@@ -199,6 +201,8 @@ int MPID_nem_tofu_iStartContigMsg(MPIDI_VC_t *vc, void *hdr, MPIDI_msg_sz_t hdr_
     sreq->dev.OnDataAvail = 0;
     sreq->dev.iov_offset = 0;
 
+    REQ_FIELD(sreq, rma_buf) = NULL;
+
     /* sreq: src/mpid/ch3/include/mpidpre.h */
     sreq->dev.pending_pkt = *(MPIDI_CH3_Pkt_t *)hdr;
     sreq->dev.iov[0].MPID_IOV_BUF =
@@ -269,6 +273,9 @@ int MPID_nem_tofu_iSendContig(MPIDI_VC_t *vc, MPID_Request *sreq, void *hdr, MPI
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_TOFU_ISENDCONTIGMSG);
 
+    if (sreq->kind == MPID_REQUEST_UNDEFINED) {
+        sreq->kind = MPID_REQUEST_SEND;
+    }
     dprintf("tofu_iSendConitig,sreq=%p,hdr=%p,hdr_sz=%ld,data=%p,data_sz=%ld\n",
             sreq, hdr, hdr_sz, data, data_sz);
 
@@ -350,17 +357,71 @@ queue_it:
 int MPID_nem_tofu_SendNoncontig(MPIDI_VC_t *vc, MPID_Request *sreq, void *hdr, MPIDI_msg_sz_t hdr_sz)
 {
     int mpi_errno = MPI_SUCCESS;
-    /* MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_TOFU_SENDNONCONTIG); */
-
-    /* MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_TOFU_SENDNONCONTIG); */
+    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_TOFU_SENDNONCONTIG);
+    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_TOFU_SENDNONCONTIG);
     MPIU_DBG_MSG(CH3_CHANNEL, VERBOSE, "tofu_SendNoncontig");
 
     MPIU_Assert(hdr_sz <= sizeof(MPIDI_CH3_Pkt_t));
 
+    MPIDI_msg_sz_t data_sz;
+    MPID_nem_tofu_vc_area *vc_tofu = 0;
+    int need_to_queue = 0;
+
+    MPIU_Assert(sreq->dev.segment_first == 0);
+    REQ_FIELD(sreq, rma_buf) = NULL;
+
+    sreq->dev.pending_pkt = *(MPIDI_CH3_Pkt_t *)hdr;
+    sreq->dev.iov[0].MPID_IOV_BUF = (MPID_IOV_BUF_CAST) &sreq->dev.pending_pkt;
+    sreq->dev.iov[0].MPID_IOV_LEN = sizeof (MPIDI_CH3_Pkt_t);
+    sreq->dev.iov_count = 1;
+    MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE, "IOV_LEN = %d", (int)sreq->dev.iov[0].MPID_IOV_LEN);
+
+    data_sz = sreq->dev.segment_size;
+    if (data_sz > 0) {
+        REQ_FIELD(sreq, rma_buf) = MPIU_Malloc((size_t)sreq->dev.segment_size);
+        MPIU_ERR_CHKANDJUMP(!REQ_FIELD(sreq, rma_buf), mpi_errno, MPI_ERR_OTHER, "**outofmemory");
+        MPID_Segment_pack(sreq->dev.segment_ptr, sreq->dev.segment_first, &data_sz, (char *)REQ_FIELD(sreq, rma_buf));
+
+        sreq->dev.iov[1].MPID_IOV_BUF = REQ_FIELD(sreq, rma_buf);
+        sreq->dev.iov[1].MPID_IOV_LEN = data_sz;
+        sreq->dev.iov_count = 2;
+        MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE, "IOV_LEN = %d", (int)sreq->dev.iov[1].MPID_IOV_LEN);
+    }
+
+    sreq->ch.vc = vc;
+    vc_tofu = VC_TOFU(vc);
+    if ( ! MPIDI_CH3I_Sendq_empty(vc_tofu->send_queue) ) {
+        need_to_queue = 1;
+        goto queue_it;
+    }
+
+    {
+        int ret;
+
+        ret = llctofu_writev(vc_tofu->endpoint,
+                             vc_tofu->remote_endpoint_addr,
+                             sreq->dev.iov, sreq->dev.iov_count,
+                             sreq, &REQ_TOFU(sreq)->cmds);
+        if (ret < 0) {
+            mpi_errno = MPI_ERR_OTHER;
+            MPIU_ERR_POP(mpi_errno);
+        }
+
+        if ( ! MPIDI_nem_tofu_Rqst_iov_update(sreq, ret) ) {
+            need_to_queue = 2; /* YYY */
+        }
+    }
+
+ queue_it:
+    MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE, "need_to_que %d", need_to_queue);
+    if (need_to_queue > 0) {
+        MPIDI_CH3I_Sendq_enqueue(&vc_tofu->send_queue, sreq);
+    }
+
  fn_exit:
-    /* MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_TOFU_SENDNONCONTIG); */
+    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_TOFU_SENDNONCONTIG);
     return mpi_errno;
-    //fn_fail:
+ fn_fail:
     goto fn_exit;
 }
 

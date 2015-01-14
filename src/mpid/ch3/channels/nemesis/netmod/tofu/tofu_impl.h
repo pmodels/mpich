@@ -57,6 +57,7 @@ typedef struct
     void *cmds;
     void *pack_buf;         /* to pack non-contiguous data */
 
+    void *rma_buf;
 } MPID_nem_tofu_req_area;
 
 #define REQ_TOFU(req) \

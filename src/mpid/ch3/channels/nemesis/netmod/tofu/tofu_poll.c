@@ -95,7 +95,6 @@ static void MPID_nem_tofu_send_handler(void *cba,
     case MPID_REQUEST_SEND:
     case MPID_PREQUEST_SEND: {
         reqtype = MPIDI_Request_get_type(sreq);
-        MPIU_Assert(reqtype != MPIDI_REQUEST_TYPE_GET_RESP);
         
         /* Free temporal buffer for non-contiguous data.
          * MPIDI_Request_create_sreq (in mpid_isend.c) sets req->dev.datatype.
@@ -121,7 +120,12 @@ static void MPID_nem_tofu_send_handler(void *cba,
                 MPIU_Free(REQ_FIELD(sreq, pack_buf));
             }
         }
-        
+
+        if ((REQ_FIELD(sreq, rma_buf) != NULL && sreq->dev.datatype_ptr && sreq->dev.segment_size > 0)) {
+            MPIU_Free(REQ_FIELD(sreq, rma_buf)); // allocated in MPID_nem_tofu_SendNoncontig
+            REQ_FIELD(sreq, rma_buf) = NULL;
+        }
+
         /* sreq: src/mpid/ch3/include/mpidpre.h */
         {
             MPIDI_VC_t *vc;
@@ -134,6 +138,8 @@ static void MPID_nem_tofu_send_handler(void *cba,
             vc = sreq->ch.vc; /* before callback */
             reqFn = sreq->dev.OnDataAvail;
             if (reqFn == 0) {
+                MPIU_Assert(reqtype != MPIDI_REQUEST_TYPE_GET_RESP);
+
                 MPIDI_CH3U_Request_complete(sreq);
                 MPIU_DBG_MSG(CH3_CHANNEL, VERBOSE, ".... complete");
             }
