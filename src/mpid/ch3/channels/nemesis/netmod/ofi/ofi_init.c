@@ -78,7 +78,7 @@ int MPID_nem_ofi_init(MPIDI_PG_t * pg_p, int pg_rank, char **bc_val_p, int *val_
     tx_attr_t tx_attr;
     memset(&tx_attr, 0, sizeof(tx_attr));
 
-    domain_attr.threading = FI_THREAD_PROGRESS;
+    domain_attr.threading = FI_THREAD_ENDPOINT;
     domain_attr.control_progress = FI_PROGRESS_AUTO;
     tx_attr.op_flags = FI_REMOTE_COMPLETE;
     hints.domain_attr = &domain_attr;
