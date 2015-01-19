@@ -26,6 +26,9 @@ void MPIDI_Dataloop_dot_printf(MPID_Dataloop *loop_p, int depth, int header);
 void MPIDI_Datatype_contents_printf(MPI_Datatype type, int depth, int acount);
 static char *MPIDI_Datatype_depth_spacing(int depth) ATTRIBUTE((unused));
 
+#define NR_TYPE_CUTOFF 6 /* Number of types to display before truncating
+			    output. 6 picked as arbitrary cutoff */
+
 /* note: this isn't really "error handling" per se, but leave these comments
  * because Bill uses them for coverage analysis.
  */
@@ -65,7 +68,8 @@ void MPIDI_Dataloop_dot_printf(MPID_Dataloop *loop_p,
 
     if (header) {
 	MPIU_DBG_OUT_FMT(DATATYPE,(MPIU_DBG_FDEST,
-				   "digraph %p {   {", loop_p));
+		    /* graphviz does not like the 0xNNN format */
+				   "digraph %lld {   {", (long long int)loop_p));
     }
 
     switch (loop_p->kind & DLOOP_KIND_MASK) {
@@ -94,28 +98,27 @@ void MPIDI_Dataloop_dot_printf(MPID_Dataloop *loop_p,
 			    (int) loop_p->loop_params.i_t.count,
 			    (int) loop_p->loop_params.i_t.total_blocks));
 
-	    /* 3 picked as arbitrary cutoff */
-	    for (i=0; i < 3 && i < loop_p->loop_params.i_t.count; i++) {
+	    for (i=0; i < NR_TYPE_CUTOFF && i < loop_p->loop_params.i_t.count; i++) {
 		if (i + 1 < loop_p->loop_params.i_t.count) {
 		    /* more regions after this one */
 		    MPIU_DBG_OUT_FMT(DATATYPE,(MPIU_DBG_FDEST,
-		    "(" MPI_AINT_FMT_DEC_SPEC ", %d), ",
+		    "\\n(" MPI_AINT_FMT_DEC_SPEC ", %d), ",
 			  (MPI_Aint) loop_p->loop_params.i_t.offset_array[i],
 		          (int) loop_p->loop_params.i_t.blocksize_array[i]));
 		}
 		else {
 		    MPIU_DBG_OUT_FMT(DATATYPE,(MPIU_DBG_FDEST,
-		           "(" MPI_AINT_FMT_DEC_SPEC ", %d); ",
+		           "\\n(" MPI_AINT_FMT_DEC_SPEC ", %d); ",
 		           (MPI_Aint) loop_p->loop_params.i_t.offset_array[i],
 			   (int) loop_p->loop_params.i_t.blocksize_array[i]));
 		}
 	    }
 	    if (i < loop_p->loop_params.i_t.count) {
-		MPIU_DBG_OUT(DATATYPE,"...; ");
+		MPIU_DBG_OUT(DATATYPE,"\\n...; ");
 	    }
 
 	    MPIU_DBG_OUT_FMT(DATATYPE,(MPIU_DBG_FDEST,
-				       "el_sz = " MPI_AINT_FMT_DEC_SPEC "; el_ext = " MPI_AINT_FMT_DEC_SPEC " }\"];\n",
+				       "\\nel_sz = " MPI_AINT_FMT_DEC_SPEC "; el_ext = " MPI_AINT_FMT_DEC_SPEC " }\"];\n",
 				       (MPI_Aint) loop_p->el_size,
 				       (MPI_Aint) loop_p->el_extent));
 	    break;
@@ -126,12 +129,11 @@ void MPIDI_Dataloop_dot_printf(MPID_Dataloop *loop_p,
 			    (int) loop_p->loop_params.bi_t.count,
 			    (int) loop_p->loop_params.bi_t.blocksize));
 
-	    /* 3 picked as arbitrary cutoff */
-	    for (i=0; i < 3 && i < loop_p->loop_params.bi_t.count; i++) {
+	    for (i=0; i < NR_TYPE_CUTOFF && i < loop_p->loop_params.bi_t.count; i++) {
 		if (i + 1 < loop_p->loop_params.bi_t.count) {
 		    /* more regions after this one */
 		    MPIU_DBG_OUT_FMT(DATATYPE,(MPIU_DBG_FDEST,
-		        MPI_AINT_FMT_DEC_SPEC ", ",
+		        MPI_AINT_FMT_DEC_SPEC ",\\n ",
 			(MPI_Aint) loop_p->loop_params.bi_t.offset_array[i]));
 		}
 		else {
@@ -145,7 +147,7 @@ void MPIDI_Dataloop_dot_printf(MPID_Dataloop *loop_p,
 	    }
 
 	    MPIU_DBG_OUT_FMT(DATATYPE,(MPIU_DBG_FDEST,
-				      "el_sz = " MPI_AINT_FMT_DEC_SPEC "; el_ext = " MPI_AINT_FMT_DEC_SPEC " }\"];",
+				      "\\nel_sz = " MPI_AINT_FMT_DEC_SPEC "; el_ext = " MPI_AINT_FMT_DEC_SPEC " }\"];",
 				       (MPI_Aint) loop_p->el_size,
 				       (MPI_Aint) loop_p->el_extent));
 	    break;
@@ -154,7 +156,7 @@ void MPIDI_Dataloop_dot_printf(MPID_Dataloop *loop_p,
 	    "      dl%d [shape = record, label = \"struct | {ct = %d; blks = ",
 			    depth,
 			    (int) loop_p->loop_params.s_t.count));
-	    for (i=0; i < 3 && i < loop_p->loop_params.s_t.count; i++) {
+	    for (i=0; i < NR_TYPE_CUTOFF && i < loop_p->loop_params.s_t.count; i++) {
 		if (i + 1 < loop_p->loop_params.s_t.count) {
 		    MPIU_DBG_OUT_FMT(DATATYPE,(MPIU_DBG_FDEST,"%d, ",
 			    (int) loop_p->loop_params.s_t.blocksize_array[i]));
@@ -171,7 +173,7 @@ void MPIDI_Dataloop_dot_printf(MPID_Dataloop *loop_p,
 		MPIU_DBG_OUT(DATATYPE,"disps = ");
 	    }
 
-	    for (i=0; i < 3 && i < loop_p->loop_params.s_t.count; i++) {
+	    for (i=0; i < NR_TYPE_CUTOFF && i < loop_p->loop_params.s_t.count; i++) {
 		if (i + 1 < loop_p->loop_params.s_t.count) {
 		    MPIU_DBG_OUT_FMT(DATATYPE,(MPIU_DBG_FDEST,MPI_AINT_FMT_DEC_SPEC ", ",
 			    (MPI_Aint) loop_p->loop_params.s_t.offset_array[i]));
