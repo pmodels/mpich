@@ -25,8 +25,12 @@ static int type_create_contiguous_x(MPI_Count count,
     int blocklens[2];
     MPI_Datatype types[2];
 
-    MPI_Count c = count/INT_MAX;
-    MPI_Count r = count%INT_MAX;
+    /* truly stupendously large counts will overflow an integer with this math,
+     * but that is a problem for a few decades from now.  Sorry, few decades
+     * from now! */
+    ADIOI_Assert(count/INT_MAX == (int)(count/INT_MAX));
+    int c = (int)(count/INT_MAX); /* OK to cast until 'count' is 256 bits */
+    int r = count%INT_MAX;
 
     MPI_Type_vector(c, INT_MAX, INT_MAX, oldtype, &chunks);
     MPI_Type_contiguous(r, oldtype, &remainder);

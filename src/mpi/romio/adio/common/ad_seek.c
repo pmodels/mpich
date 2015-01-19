@@ -26,8 +26,8 @@ ADIO_Offset ADIOI_GEN_SeekIndividual(ADIO_File fd, ADIO_Offset offset,
     ADIO_Offset n_etypes_in_filetype, n_filetypes, etype_in_filetype;
     ADIO_Offset abs_off_in_filetype=0;
     ADIO_Offset size_in_filetype, sum;
-    MPI_Count filetype_size;
-    int etype_size, filetype_is_contig;
+    MPI_Count filetype_size, etype_size;
+    int filetype_is_contig;
     MPI_Aint filetype_extent;
 
     ADIOI_UNREFERENCED_ARG(whence);
@@ -35,7 +35,7 @@ ADIO_Offset ADIOI_GEN_SeekIndividual(ADIO_File fd, ADIO_Offset offset,
     ADIOI_Datatype_iscontig(fd->filetype, &filetype_is_contig);
     etype_size = fd->etype_size;
 
-    if (filetype_is_contig) off = fd->disp + (ADIO_Offset)etype_size * offset;
+    if (filetype_is_contig) off = fd->disp + etype_size * offset;
     else {
         flat_file = ADIOI_Flatlist;
         while (flat_file->type != fd->filetype) flat_file = flat_file->next;
