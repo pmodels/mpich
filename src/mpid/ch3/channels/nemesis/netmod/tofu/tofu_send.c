@@ -830,7 +830,11 @@ int llctofu_poll(int in_blocking_poll,
 
                     /* see MPIDI_CH3U_Request_unpack_uebuf (in /src/mpid/ch3/src/ch3u_request.c) */
                     /* or MPIDI_CH3U_Receive_data_found (in src/mpid/ch3/src/ch3u_handle_recv_pkt.c) */
-                    MPIDI_msg_sz_t unpack_sz = req->dev.recv_data_sz;
+
+                    /* set_request_info() sets req->dev.recv_data_sz to pkt->data_sz.
+                     * pkt->data_sz is sender's request size.
+                     */
+                    MPIDI_msg_sz_t unpack_sz = events[0].side.initiator.length;
                     MPID_Segment seg;
                     MPI_Aint last;
 
@@ -865,7 +869,13 @@ int llctofu_poll(int in_blocking_poll,
                     found = convert_rank_llc2mpi(req->comm, events[0].side.initiator.rank, &req->status.MPI_SOURCE);
                     MPIU_Assert(found);
                 }
-                MPIR_STATUS_SET_COUNT(req->status, events[0].side.initiator.length);
+
+                if (unlikely(events[0].side.initiator.error_code == LLC_ERROR_TRUNCATE)) {
+                    req->status.MPI_ERROR = MPI_ERR_TRUNCATE;
+                    MPIR_STATUS_SET_COUNT(req->status, lcmd->iov_local[0].length);
+                } else {
+                    MPIR_STATUS_SET_COUNT(req->status, events[0].side.initiator.length);
+                }
 
                 /* Dequeue request from posted queue.  
                    It's posted in MPID_Irecv --> MPIDI_CH3U_Recvq_FDU_or_AEP */
