@@ -203,7 +203,6 @@ int MPID_nem_tofu_improbe(MPIDI_VC_t *vc,  int source, int tag, MPID_Comm *comm,
         /* Wait until the reception of data is completed */
         do {
             mpi_errno = MPID_nem_tofu_poll(0);
-            MPIU_ERR_POP(mpi_errno);
         } while (!MPID_Request_is_complete(req));
 
 //        MPIDI_CH3U_Request_complete(req); // This operation is done in llctofu_poll.
