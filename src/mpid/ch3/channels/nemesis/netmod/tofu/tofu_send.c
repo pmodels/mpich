@@ -700,7 +700,22 @@ int convert_rank_llc2mpi(MPID_Comm *comm, int llc_rank, int *mpi_rank)
 
     for (rank = 0; rank < size; rank++) {
         MPIDI_Comm_get_vc(comm, rank, &vc);
-        if (llc_rank == VC_FIELD(vc, remote_endpoint_addr)) {
+        MPIDI_CH3I_VC *vc_ch = &vc->ch;
+
+        /* Self-vc isn't initialized, so vc_ch->is_local is 0.
+         *
+         * If vc_ch->is_local is 1, vc_init is not called.
+         *   - vc->comm_ops is not overridden, so send to / receive from this vc
+         *     are not via LLC_post.
+         *   - VC_FIELD(vc, remote_endpoint_addr) is 0.
+         */
+        if (vc->pg_rank == MPIDI_Process.my_pg_rank || vc_ch->is_local == 1) {
+            if (llc_rank == MPID_nem_tofu_my_llc_rank) {
+                *mpi_rank = rank;
+                found = 1;
+                break;
+            }
+        } else if (llc_rank == VC_FIELD(vc, remote_endpoint_addr)) {
             *mpi_rank = rank; // rank number in the req->comm
             found = 1;
             break;
