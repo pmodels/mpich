@@ -84,7 +84,7 @@ static MPID_Group *bitarray_to_group(MPID_Comm *comm_ptr, uint32_t *bitarray)
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPID_Comm_get_all_failed_procs(MPID_Comm *comm_ptr, MPID_Group **failed_group, int tag)
 {
-    int mpi_errno = MPI_SUCCESS;
+    int mpi_errno = MPI_SUCCESS, ret_errno;
     mpir_errflag_t errflag = MPIR_ERR_NONE;
     int i, j, bitarray_size;
     uint32_t *bitarray, *remote_bitarray;
@@ -113,9 +113,9 @@ int MPID_Comm_get_all_failed_procs(MPID_Comm *comm_ptr, MPID_Group **failed_grou
     if (comm_ptr->rank == 0) {
         for (i = 1; i < comm_ptr->local_size; i++) {
             /* Get everyone's list of failed processes to aggregate */
-            mpi_errno = MPIC_Recv(remote_bitarray, bitarray_size, MPI_UINT32_T,
+            ret_errno = MPIC_Recv(remote_bitarray, bitarray_size, MPI_UINT32_T,
                 i, tag, comm_ptr->handle, MPI_STATUS_IGNORE, &errflag);
-            if (mpi_errno) continue;
+            if (ret_errno) continue;
 
             /* Combine the received bitarray with my own */
             for (j = 0; j < bitarray_size; j++) {
@@ -127,9 +127,9 @@ int MPID_Comm_get_all_failed_procs(MPID_Comm *comm_ptr, MPID_Group **failed_grou
 
         for (i = 1; i < comm_ptr->local_size; i++) {
             /* Send the list to each rank to be processed locally */
-            mpi_errno = MPIC_Send(bitarray, bitarray_size, MPI_UINT32_T, i,
+            ret_errno = MPIC_Send(bitarray, bitarray_size, MPI_UINT32_T, i,
                 tag, comm_ptr->handle, &errflag);
-            if (mpi_errno) errflag = MPIR_ERR_PROC_FAILED;
+            if (ret_errno) continue;
         }
 
         /* Convert the bitarray into a group */
