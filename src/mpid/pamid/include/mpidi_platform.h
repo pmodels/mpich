@@ -86,6 +86,7 @@ typedef int32_t MPID_Node_id_t;
 #define PAMIX_IS_LOCAL_TASK_SHIFT   (6)
 #define MPIDI_SMP_DETECT_DEFAULT 1
 #define TOKEN_FLOW_CONTROL    0
+#define CUDA_AWARE_SUPPORT    0
 
 /*
  * Enable both the 'internal vs application' and the 'local vs remote'
@@ -142,6 +143,7 @@ static const char _ibm_release_version_[] = "V1R2M0";
 #define MPIDI_NO_ASSERT       1
 #define TOKEN_FLOW_CONTROL    1
 #define DYNAMIC_TASKING       1
+#define CUDA_AWARE_SUPPORT    1
 
 /* 'is local task' extension and limits */
 #define PAMIX_IS_LOCAL_TASK

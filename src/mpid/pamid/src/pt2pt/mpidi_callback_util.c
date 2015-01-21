@@ -175,7 +175,13 @@ MPIDI_Callback_process_userdefined_dt(pami_context_t      context,
       MPID_assert(rreq->mpid.uebuf    == NULL);
       MPID_assert(rreq->mpid.uebuflen == 0);
       void* rcvbuf = rreq->mpid.userbuf +  dt_true_lb;;
-
+#if CUDA_AWARE_SUPPORT
+    if(MPIDI_Process.cuda_aware_support_on && MPIDI_cuda_is_device_buf(rcvbuf))
+    {
+      cudaError_t cudaerr = cudaMemcpy(rcvbuf, sndbuf, (size_t)sndlen, cudaMemcpyHostToDevice);
+    }
+    else
+#endif
       memcpy(rcvbuf, sndbuf, sndlen);
       MPIDI_Request_complete(rreq);
       return;

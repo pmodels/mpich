@@ -266,6 +266,7 @@ pami_result_t MPIDI_Register_algorithms_ext(void                 *cookie,
                                             size_t               *num_algorithms);
 int MPIDI_collsel_pami_tune_parse_params(int argc, char ** argv);
 void MPIDI_collsel_pami_tune_cleanup();
+inline bool MPIDI_cuda_is_device_buf(const void* ptr);
 void MPIDI_Coll_Comm_create (MPID_Comm *comm);
 void MPIDI_Coll_Comm_destroy(MPID_Comm *comm);
 void MPIDI_Comm_coll_query  (MPID_Comm *comm);

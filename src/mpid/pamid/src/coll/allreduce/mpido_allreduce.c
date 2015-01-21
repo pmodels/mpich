@@ -117,6 +117,22 @@ int MPIDO_Allreduce(const void *sendbuf,
       fprintf(stderr,"Using MPICH allreduce type %u.\n",
               selected_type);
     MPIDI_Update_last_algorithm(comm_ptr, "ALLREDUCE_MPICH");
+#if CUDA_AWARE_SUPPORT
+    if(MPIDI_Process.cuda_aware_support_on && MPIDI_cuda_is_device_buf(sendbuf))
+    {
+       MPI_Aint dt_extent;
+       MPID_Datatype_get_extent_macro(dt, dt_extent);
+       char *buf =  MPIU_Malloc(dt_extent * count);
+       cudaError_t cudaerr = cudaMemcpy(buf, sendbuf, dt_extent * count, cudaMemcpyDeviceToHost);
+       if (cudaSuccess != cudaerr) {
+         fprintf(stderr, "cudaMalloc failed: %s\n", cudaGetErrorString(cudaerr));
+       }
+       int cuda_res =  MPIR_Allreduce(buf, recvbuf, count, dt, op, comm_ptr, mpierrno);
+       MPIU_Free(buf);
+       return cuda_res;
+    }
+    else 
+#endif
     return MPIR_Allreduce(sendbuf, recvbuf, count, dt, op, comm_ptr, mpierrno);
   }
 

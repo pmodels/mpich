@@ -135,6 +135,26 @@ int MPIDO_Doscan(const void *sendbuf, void *recvbuf,
    {
       if(unlikely(verbose))
          fprintf(stderr,"Using MPICH scan algorithm (exflag %d)\n",exflag);
+#if CUDA_AWARE_SUPPORT
+      if(MPIDI_Process.cuda_aware_support_on && MPIDI_cuda_is_device_buf(sendbuf))
+      {
+         MPI_Aint dt_extent;
+         MPID_Datatype_get_extent_macro(datatype, dt_extent);
+         char *buf =  MPIU_Malloc(dt_extent * count);
+         cudaError_t cudaerr = cudaMemcpy(buf, sendbuf, dt_extent * count, cudaMemcpyDeviceToHost);
+         if (cudaSuccess != cudaerr) {
+           fprintf(stderr, "cudaMalloc failed: %s\n", cudaGetErrorString(cudaerr));
+         }
+         int cuda_res;
+         if(exflag)
+           cuda_res =  MPIR_Exscan(buf, recvbuf, count, datatype, op, comm_ptr, mpierrno);
+         else
+           cuda_res =  MPIR_Scan(buf, recvbuf, count, datatype, op, comm_ptr, mpierrno);
+         MPIU_Free(buf);
+         return cuda_res;
+      }
+      else
+#endif
       if(exflag)
          return MPIR_Exscan(sendbuf, recvbuf, count, datatype, op, comm_ptr, mpierrno);
       else

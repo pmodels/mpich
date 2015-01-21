@@ -57,9 +57,11 @@ void MPIDI_Buffer_copy(
     MPID_Datatype * sdt_ptr;
     MPID_Datatype * rdt_ptr;
 
+    MPI_Aint  sdt_extent;
+    MPI_Aint  rdt_extent;
+
     *smpi_errno = MPI_SUCCESS;
     *rmpi_errno = MPI_SUCCESS;
-
 
     /* printf("bufcopy: src count=%d dt=%d\n", scount, sdt); */
     /* printf("bufcopy: dst count=%d dt=%d\n", rcount, rdt); */
@@ -83,11 +85,52 @@ void MPIDI_Buffer_copy(
 
     if (sdt_contig && rdt_contig)
     {
+#if CUDA_AWARE_SUPPORT
+      if(MPIDI_Process.cuda_aware_support_on && MPIDI_cuda_is_device_buf(rbuf))
+      {
+        cudaError_t cudaerr = cudaMemcpy(rbuf + rdt_true_lb, sbuf + sdt_true_lb, sdata_sz, cudaMemcpyHostToDevice);
+      }
+      else
+#endif
         memcpy((char*)rbuf + rdt_true_lb, (const char *)sbuf + sdt_true_lb, sdata_sz);
         *rsz = sdata_sz;
     }
     else if (sdt_contig)
     {
+#if CUDA_AWARE_SUPPORT
+      // This will need to be done in two steps:
+      // 1 - Allocate a temp buffer which is the same size as user buffer and unpack in it.
+      // 2 - Copy unpacked data into user buffer from temp buffer.
+      if(MPIDI_Process.cuda_aware_support_on && MPIDI_cuda_is_device_buf(rbuf))
+      {
+        MPID_Datatype_get_extent_macro(rdt, rdt_extent);
+        char *buf =  MPIU_Malloc(rdt_extent * rcount);
+        memset(buf, 0, rdt_extent * rcount);        
+        MPID_Segment seg;
+        DLOOP_Offset last;
+
+        MPID_Segment_init(buf, rcount, rdt, &seg, 0);
+        last = sdata_sz;
+        MPID_Segment_unpack(&seg, 0, &last, (char*)sbuf + sdt_true_lb);
+        /* --BEGIN ERROR HANDLING-- */
+        if (last != sdata_sz)
+        {
+            *rmpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, __FUNCTION__, __LINE__, MPI_ERR_TYPE, "**dtypemismatch", 0);
+        }
+        /* --END ERROR HANDLING-- */
+
+       *rsz = last;
+
+        
+        cudaError_t cudaerr = cudaMemcpy(rbuf + rdt_true_lb, buf, rdt_extent * rcount, cudaMemcpyHostToDevice);
+
+        MPIU_Free(buf);
+
+        goto fn_exit;
+
+      }
+#endif
+
         MPID_Segment seg;
         DLOOP_Offset last;
 

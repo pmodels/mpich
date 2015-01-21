@@ -107,6 +107,16 @@ MPIDI_RendezvousTransfer(pami_context_t   context,
   pami_endpoint_t dest;
   MPIDI_Context_endpoint(rreq, &dest);
 
+#if CUDA_AWARE_SUPPORT
+  if(MPIDI_Process.cuda_aware_support_on && MPIDI_cuda_is_device_buf(rcvbuf))
+  {
+    MPIDI_RendezvousTransfer_use_pami_get(context,dest,rcvbuf,rreq);
+  }
+  else
+  {
+#endif
+
+
 #ifdef USE_PAMI_RDMA
   size_t rcvlen_out;
   rc = PAMI_Memregion_create(context,
@@ -151,6 +161,10 @@ MPIDI_RendezvousTransfer(pami_context_t   context,
     } else {
       MPIDI_RendezvousTransfer_use_pami_get(context,dest,rcvbuf,rreq);
     }
+#endif
+
+#if CUDA_AWARE_SUPPORT
+  }
 #endif
 
   return PAMI_SUCCESS;

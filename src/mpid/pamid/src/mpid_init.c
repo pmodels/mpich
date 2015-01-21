@@ -119,6 +119,9 @@ MPIDI_Process_t  MPIDI_Process = {
 #ifdef QUEUE_BINARY_SEARCH_SUPPORT
   .queue_binary_search_support_on = 0,
 #endif
+#if CUDA_AWARE_SUPPORT
+  .cuda_aware_support_on = 0,
+#endif
   .rma_pending           = 1000,
   .shmem_pt2pt           = 1,
   .smp_detect            = MPIDI_SMP_DETECT_DEFAULT,

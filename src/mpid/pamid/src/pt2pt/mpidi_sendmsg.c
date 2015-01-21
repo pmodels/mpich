@@ -345,6 +345,26 @@ MPIDI_SendMsg_process_userdefined_dt(MPID_Request      * sreq,
    */
   else
     {
+      char *buf = NULL;
+#if CUDA_AWARE_SUPPORT
+      // This will need to be done in two steps:
+      // 1 - Allocate a temp buffer which is the same size as user buffer and copy in it.
+      // 2 - Pack data into ue buffer from temp buffer.
+      int on_device =  MPIDI_cuda_is_device_buf(sreq->mpid.userbuf);
+      if(MPIDI_Process.cuda_aware_support_on && on_device)
+      {
+        MPI_Aint dt_extent;
+        MPID_Datatype_get_extent_macro(sreq->mpid.datatype, dt_extent);
+        buf =  MPIU_Malloc(dt_extent * sreq->mpid.userbufcount);
+
+        cudaError_t cudaerr = cudaMemcpy(buf, sreq->mpid.userbuf, dt_extent * sreq->mpid.userbufcount, cudaMemcpyDeviceToHost);
+        if (cudaSuccess != cudaerr) {
+          fprintf(stderr, "cudaMalloc failed: %s\n", cudaGetErrorString(cudaerr));
+        }
+
+      }
+#endif
+
       MPID_Segment segment;
 
       if(data_sz != 0) {
@@ -359,13 +379,23 @@ MPIDI_SendMsg_process_userdefined_dt(MPID_Request      * sreq,
         sreq->mpid.uebuf_malloc = mpiuMalloc;
 
         DLOOP_Offset last = data_sz;
-        MPID_Segment_init(sreq->mpid.userbuf,
+#if CUDA_AWARE_SUPPORT
+        if(!MPIDI_Process.cuda_aware_support_on || !on_device)
+          buf = sreq->mpid.userbuf;
+#endif
+        MPID_assert(buf != NULL);
+
+        MPID_Segment_init(buf,
                           sreq->mpid.userbufcount,
                           sreq->mpid.datatype,
                           &segment,
                           0);
         MPID_Segment_pack(&segment, 0, &last, sndbuf);
         MPID_assert(last == data_sz);
+#if CUDA_AWARE_SUPPORT
+        if(MPIDI_Process.cuda_aware_support_on && on_device)
+          MPIU_Free(buf);
+#endif
       } else {
 	sndbuf = NULL;
       }

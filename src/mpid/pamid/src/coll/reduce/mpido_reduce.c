@@ -117,6 +117,22 @@ int MPIDO_Reduce(const void *sendbuf,
    {
       if(unlikely(verbose))
          fprintf(stderr,"Using MPICH reduce algorithm\n");
+#if CUDA_AWARE_SUPPORT
+      if(MPIDI_Process.cuda_aware_support_on && MPIDI_cuda_is_device_buf(sendbuf))
+      {
+         MPI_Aint dt_extent;
+         MPID_Datatype_get_extent_macro(datatype, dt_extent);
+         char *buf =  MPIU_Malloc(dt_extent * count);
+         cudaError_t cudaerr = cudaMemcpy(buf, sendbuf, dt_extent * count, cudaMemcpyDeviceToHost);
+         if (cudaSuccess != cudaerr) {
+           fprintf(stderr, "cudaMalloc failed: %s\n", cudaGetErrorString(cudaerr));
+         }
+         int cuda_res =  MPIR_Reduce(buf, recvbuf, count, datatype, op, root, comm_ptr, mpierrno); 
+         MPIU_Free(buf);
+         return cuda_res;
+      }
+      else
+#endif
       return MPIR_Reduce(sendbuf, recvbuf, count, datatype, op, root, comm_ptr, mpierrno);
    }
 

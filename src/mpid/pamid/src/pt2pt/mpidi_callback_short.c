@@ -195,7 +195,16 @@ MPIDI_RecvShortCB(pami_context_t    context,
   void* rcvbuf = rreq->mpid.userbuf;
 
   if (sndlen > 0)
-    memcpy(rcvbuf, sndbuf, sndlen);
+  {
+#if CUDA_AWARE_SUPPORT
+    if(MPIDI_Process.cuda_aware_support_on && MPIDI_cuda_is_device_buf(rcvbuf))
+    {
+      cudaError_t cudaerr = cudaMemcpy(rcvbuf, sndbuf, (size_t)sndlen, cudaMemcpyHostToDevice);
+    }
+    else
+#endif
+      memcpy(rcvbuf, sndbuf, sndlen);
+  }
   TRACE_SET_R_VAL(source,(rreq->mpid.idx),rlen,sndlen);
   TRACE_SET_R_BIT(source,(rreq->mpid.idx),fl.f.comp_in_HH);
   TRACE_SET_R_VAL(source,(rreq->mpid.idx),bufadd,rreq->mpid.userbuf);
