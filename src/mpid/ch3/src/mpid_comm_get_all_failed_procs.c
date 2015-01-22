@@ -107,6 +107,8 @@ int MPID_Comm_get_all_failed_procs(MPID_Comm *comm_ptr, MPID_Group **failed_grou
     bitarray = group_to_bitarray(local_fail, comm_ptr);
     bitarray_size = (comm_ptr->local_size / 8) + (comm_ptr->local_size % 8 ? 1 : 0);
     remote_bitarray = MPIU_Malloc(sizeof(uint32_t) * bitarray_size);
+    if (local_fail != MPID_Group_empty)
+        MPIR_Group_release(local_fail);
 
     /* For now, this will be implemented as a star with rank 0 serving as
      * the source */

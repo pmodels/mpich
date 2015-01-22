@@ -499,6 +499,10 @@ int MPIC_Sendrecv(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
     MPIDI_FUNC_EXIT(MPID_STATE_MPIC_SENDRECV);
     return mpi_errno;
  fn_fail:
+    if (send_req_ptr)
+        MPID_Request_release(send_req_ptr);
+    if (recv_req_ptr)
+        MPID_Request_release(recv_req_ptr);
     goto fn_exit;
 }
 
