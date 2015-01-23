@@ -3944,7 +3944,7 @@ int MPID_VCR_Get_lpid(MPID_VCR vcr, int * lpid_ptr);
    MPID_CONTEXT_INTRA(INTER)_COLL. */
 int MPIR_Localcopy(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                    void *recvbuf, int recvcount, MPI_Datatype recvtype);
-int MPIC_Wait(MPID_Request * request_ptr);
+int MPIC_Wait(MPID_Request * request_ptr, mpir_errflag_t *errflag);
 int MPIC_Probe(int source, int tag, MPI_Comm comm, MPI_Status *status);
 
 /* FT versions of te MPIC_ functions */
@@ -4556,6 +4556,29 @@ static inline int MPIR_Request_complete_fastpath(MPI_Request *request, MPID_Requ
 
     /* avoid normal fn_exit/fn_fail jump pattern to reduce jumps and compiler confusion */
     return mpi_errno;
+}
+
+/* Pull the error status out of the tag space and put it into an errflag. */
+#undef FUNCNAME
+#define FUNCNAME MPIR_process_status
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+static inline void MPIR_Process_status(MPI_Status *status, mpir_errflag_t *errflag)
+{
+    if ((MPIX_ERR_REVOKED == MPIR_ERR_GET_CLASS(status->MPI_ERROR) ||
+        MPIX_ERR_PROC_FAILED == MPIR_ERR_GET_CLASS(status->MPI_ERROR) ||
+        MPIR_TAG_CHECK_ERROR_BIT(status->MPI_TAG)) && !*errflag) {
+        /* If the receive was completed within the MPID_Recv, handle the
+        * errflag here. */
+        if (MPIR_TAG_CHECK_PROC_FAILURE_BIT(status->MPI_TAG) ||
+            MPIX_ERR_PROC_FAILED == MPIR_ERR_GET_CLASS(status->MPI_ERROR)) {
+            *errflag = MPIR_ERR_PROC_FAILED;
+            MPIR_TAG_CLEAR_ERROR_BITS(status->MPI_TAG);
+        } else {
+            *errflag = MPIR_ERR_OTHER;
+            MPIR_TAG_CLEAR_ERROR_BITS(status->MPI_TAG);
+        }
+    }
 }
 
 extern const char MPIR_Version_string[];

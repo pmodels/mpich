@@ -200,12 +200,18 @@ int MPIR_Localcopy(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
 #define FUNCNAME MPIC_Wait
 #undef FCNAME
 #define FCNAME "MPIC_Wait"
-int MPIC_Wait(MPID_Request * request_ptr)
+int MPIC_Wait(MPID_Request * request_ptr, mpir_errflag_t *errflag)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_STATE_DECL(MPID_STATE_MPIC_WAIT);
 
     MPIDI_PT2PT_FUNC_ENTER(MPID_STATE_MPIC_WAIT);
+
+    MPIU_DBG_MSG_S(PT2PT, TYPICAL, "IN: errflag = %s", *errflag?"TRUE":"FALSE");
+
+    if (request_ptr->kind == MPID_REQUEST_SEND)
+        request_ptr->status.MPI_TAG = 0;
+
     if (!MPID_Request_is_complete(request_ptr))
     {
 	MPID_Progress_state progress_state;
@@ -219,10 +225,19 @@ int MPIC_Wait(MPID_Request * request_ptr)
 	MPID_Progress_end(&progress_state);
     }
 
- fn_fail:
-    /* --BEGIN ERROR HANDLING-- */
+    if (request_ptr->kind == MPID_REQUEST_RECV &&
+        request_ptr->status.MPI_SOURCE == MPI_PROC_NULL)
+        goto fn_exit;
+
+    MPIR_Process_status(&request_ptr->status, errflag);
+
+ fn_exit:
+    MPIU_DBG_MSG_D(PT2PT, TYPICAL, "OUT: errflag = %d", *errflag);
     MPIDI_PT2PT_FUNC_EXIT(MPID_STATE_MPIC_WAIT);
     return mpi_errno;
+ fn_fail:
+    /* --BEGIN ERROR HANDLING-- */
+    goto fn_exit;
     /* --END ERROR HANDLING-- */
 }
 
@@ -284,17 +299,25 @@ int MPIC_Send(const void *buf, int count, MPI_Datatype datatype, int dest, int t
                           context_id, &request_ptr);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     if (request_ptr) {
-        mpi_errno = MPIC_Wait(request_ptr);
+        mpi_errno = MPIC_Wait(request_ptr, errflag);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
         MPID_Request_release(request_ptr);
     }
 
  fn_exit:
+    MPIU_DBG_MSG_D(PT2PT, TYPICAL, "OUT: errflag = %d", *errflag);
     MPIDI_FUNC_EXIT(MPID_STATE_MPIC_SEND);
     return mpi_errno;
  fn_fail:
     /* --BEGIN ERROR HANDLING-- */
     if (request_ptr) MPID_Request_release(request_ptr);
+    if (mpi_errno && !*errflag) {
+        if (MPIX_ERR_PROC_FAILED == MPIR_ERR_GET_CLASS(mpi_errno)) {
+            *errflag = MPIR_ERR_PROC_FAILED;
+        } else {
+            *errflag = MPIR_ERR_OTHER;
+        }
+    }
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }
@@ -331,29 +354,19 @@ int MPIC_Recv(void *buf, int count, MPI_Datatype datatype, int source, int tag,
                           context_id, status, &request_ptr);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     if (request_ptr) {
-        mpi_errno = MPIC_Wait(request_ptr);
+        mpi_errno = MPIC_Wait(request_ptr, errflag);
         if (mpi_errno != MPI_SUCCESS)
             MPIU_ERR_POP(mpi_errno);
 
         *status = request_ptr->status;
         mpi_errno = status->MPI_ERROR;
         MPID_Request_release(request_ptr);
+    } else {
+        MPIR_Process_status(status, errflag);
     }
 
-    if (source != MPI_PROC_NULL) {
-        if (MPIX_ERR_REVOKED == MPIR_ERR_GET_CLASS(status->MPI_ERROR) ||
-            MPIX_ERR_PROC_FAILED == MPIR_ERR_GET_CLASS(status->MPI_ERROR) ||
-            MPIR_TAG_CHECK_ERROR_BIT(status->MPI_TAG)) {
-            if (MPIR_TAG_CHECK_PROC_FAILURE_BIT(status->MPI_TAG)) {
-                *errflag = MPIR_ERR_PROC_FAILED;
-                MPIR_TAG_CLEAR_ERROR_BITS(status->MPI_TAG);
-            } else if (MPIR_TAG_CHECK_ERROR_BIT(status->MPI_TAG)) {
-                *errflag = MPIR_ERR_OTHER;
-                MPIR_TAG_CLEAR_ERROR_BITS(status->MPI_TAG);
-            }
-        } else if (MPI_SUCCESS == MPIR_ERR_GET_CLASS(status->MPI_ERROR)) {
-            MPIU_Assert(status->MPI_TAG == tag);
-        }
+    if (MPI_SUCCESS == MPIR_ERR_GET_CLASS(status->MPI_ERROR)) {
+        MPIU_Assert(status->MPI_TAG == tag);
     }
 
  fn_exit:
@@ -404,17 +417,25 @@ int MPIC_Ssend(const void *buf, int count, MPI_Datatype datatype, int dest, int 
                            context_id, &request_ptr);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     if (request_ptr) {
-        mpi_errno = MPIC_Wait(request_ptr);
+        mpi_errno = MPIC_Wait(request_ptr, errflag);
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
         MPID_Request_release(request_ptr);
     }
 
  fn_exit:
+    MPIU_DBG_MSG_D(PT2PT, TYPICAL, "OUT: errflag = %d", *errflag);
     MPIDI_FUNC_EXIT(MPID_STATE_MPIC_SSEND);
     return mpi_errno;
  fn_fail:
     /* --BEGIN ERROR HANDLING-- */
     if (request_ptr) MPID_Request_release(request_ptr);
+    if (mpi_errno && !*errflag) {
+        if (MPIX_ERR_PROC_FAILED == MPIR_ERR_GET_CLASS(mpi_errno)) {
+            *errflag = MPIR_ERR_PROC_FAILED;
+        } else {
+            *errflag = MPIR_ERR_OTHER;
+        }
+    }
     goto fn_exit;
     /* --END ERROR HANDLING-- */
 }
@@ -465,33 +486,23 @@ int MPIC_Sendrecv(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                            comm_ptr, context_id, &send_req_ptr);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
-    mpi_errno = MPIC_Wait(send_req_ptr);
+    mpi_errno = MPIC_Wait(send_req_ptr, errflag);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-    mpi_errno = MPIC_Wait(recv_req_ptr);
+    mpi_errno = MPIC_Wait(recv_req_ptr, errflag);
     if (mpi_errno) MPIU_ERR_POPFATAL(mpi_errno);
 
     *status = recv_req_ptr->status;
-    mpi_errno = recv_req_ptr->status.MPI_ERROR;
 
-    MPID_Request_release(send_req_ptr);
-    MPID_Request_release(recv_req_ptr);
+    if (mpi_errno == MPI_SUCCESS) {
+        mpi_errno = recv_req_ptr->status.MPI_ERROR;
 
-    if (source != MPI_PROC_NULL) {
-        if (MPIX_ERR_REVOKED == MPIR_ERR_GET_CLASS(status->MPI_ERROR) ||
-            MPIX_ERR_PROC_FAILED == MPIR_ERR_GET_CLASS(status->MPI_ERROR) ||
-            MPIR_TAG_CHECK_ERROR_BIT(status->MPI_TAG)) {
-            if (MPIR_TAG_CHECK_PROC_FAILURE_BIT(status->MPI_TAG)) {
-                *errflag = MPIR_ERR_PROC_FAILED;
-                MPIR_TAG_CLEAR_ERROR_BITS(status->MPI_TAG);
-            } else if (MPIR_TAG_CHECK_ERROR_BIT(status->MPI_TAG)) {
-                *errflag = MPIR_ERR_OTHER;
-                MPIR_TAG_CLEAR_ERROR_BITS(status->MPI_TAG);
-            }
-        } else if (MPI_SUCCESS == MPIR_ERR_GET_CLASS(status->MPI_ERROR)) {
-            MPIU_Assert(status->MPI_TAG == recvtag);
+        if (mpi_errno == MPI_SUCCESS) {
+            mpi_errno = send_req_ptr->status.MPI_ERROR;
         }
     }
 
+    MPID_Request_release(send_req_ptr);
+    MPID_Request_release(recv_req_ptr);
 
  fn_exit:
     MPIU_DBG_MSG_D(PT2PT, TYPICAL, "OUT: errflag = %d", *errflag);
@@ -521,8 +532,8 @@ int MPIC_Sendrecv_replace(void *buf, int count, MPI_Datatype datatype,
     int mpi_errno = MPI_SUCCESS;
     MPI_Status mystatus;
     MPIR_Context_id_t context_id_offset;
-    MPID_Request *sreq;
-    MPID_Request *rreq;
+    MPID_Request *sreq = NULL;
+    MPID_Request *rreq = NULL;
     void *tmpbuf = NULL;
     MPI_Aint tmpbuf_size = 0;
     MPI_Aint tmpbuf_count = 0;
@@ -578,21 +589,10 @@ int MPIC_Sendrecv_replace(void *buf, int count, MPI_Datatype datatype,
         /* --END ERROR HANDLING-- */
     }
 
-    if (!MPID_Request_is_complete(sreq) || !MPID_Request_is_complete(rreq)) {
-        MPID_Progress_state progress_state;
-
-        MPID_Progress_start(&progress_state);
-        while (!MPID_Request_is_complete(sreq) || !MPID_Request_is_complete(rreq)) {
-            mpi_errno = MPID_Progress_wait(&progress_state);
-            if (mpi_errno != MPI_SUCCESS) {
-                /* --BEGIN ERROR HANDLING-- */
-                MPID_Progress_end(&progress_state);
-                MPIU_ERR_POP(mpi_errno);
-                /* --END ERROR HANDLING-- */
-            }
-        }
-        MPID_Progress_end(&progress_state);
-    }
+    mpi_errno = MPIC_Wait(sreq, errflag);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    mpi_errno = MPIC_Wait(rreq, errflag);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
     *status = rreq->status;
 
@@ -607,31 +607,16 @@ int MPIC_Sendrecv_replace(void *buf, int count, MPI_Datatype datatype,
     MPID_Request_release(sreq);
     MPID_Request_release(rreq);
 
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-
-    if (source != MPI_PROC_NULL) {
-        if (MPIX_ERR_REVOKED == MPIR_ERR_GET_CLASS(status->MPI_ERROR) ||
-            MPIX_ERR_PROC_FAILED == MPIR_ERR_GET_CLASS(status->MPI_ERROR) ||
-            MPIR_TAG_CHECK_ERROR_BIT(status->MPI_TAG)) {
-            if (MPIR_TAG_CHECK_PROC_FAILURE_BIT(status->MPI_TAG)) {
-                *errflag = MPIR_ERR_PROC_FAILED;
-                MPIR_TAG_CLEAR_ERROR_BITS(status->MPI_TAG);
-            } else if (MPIR_TAG_CHECK_ERROR_BIT(status->MPI_TAG)) {
-                *errflag = MPIR_ERR_OTHER;
-                MPIR_TAG_CLEAR_ERROR_BITS(status->MPI_TAG);
-            }
-        } else if (MPI_SUCCESS == MPIR_ERR_GET_CLASS(status->MPI_ERROR)) {
-            MPIU_Assert(status->MPI_TAG == recvtag);
-        }
-    }
-
-
  fn_exit:
     MPIU_CHKLMEM_FREEALL();
     MPIU_DBG_MSG_D(PT2PT, TYPICAL, "OUT: errflag = %d", *errflag);
     MPIDI_FUNC_EXIT(MPID_STATE_MPIC_SENDRECV_REPLACE);
     return mpi_errno;
  fn_fail:
+     if (sreq)
+         MPID_Request_release(sreq);
+     if (rreq)
+         MPID_Request_release(rreq);
     goto fn_exit;
 }
 
@@ -738,22 +723,14 @@ int MPIC_Waitall(int numreq, MPI_Request requests[], MPI_Status statuses[], mpir
        tag fields here. */
     for (i = 0; i < numreq; ++i)
         statuses[i].MPI_TAG = 0;
-    
+
     mpi_errno = MPIR_Waitall_impl(numreq, requests, statuses);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
-    if (*errflag) goto fn_exit;
-
+    /* The errflag value here is for all requests, not just a single one.  If
+     * in the future, this function is used for multiple collectives at a
+     * single time, we may have to change that. */
     for (i = 0; i < numreq; ++i) {
-        if (MPIR_TAG_CHECK_PROC_FAILURE_BIT(statuses[i].MPI_TAG)) {
-            *errflag = MPIR_ERR_PROC_FAILED;
-            MPIR_TAG_CLEAR_ERROR_BITS(statuses[i].MPI_TAG);
-            break;
-        } else if (MPIR_TAG_CHECK_ERROR_BIT(statuses[i].MPI_TAG)) {
-            *errflag = MPIR_ERR_OTHER;
-            MPIR_TAG_CLEAR_ERROR_BITS(statuses[i].MPI_TAG);
-            break;
-        }
+        MPIR_Process_status(&statuses[i], errflag);
     }
 
  fn_exit:
