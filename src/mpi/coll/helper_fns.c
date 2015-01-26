@@ -461,7 +461,7 @@ int MPIC_Sendrecv(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
     mpi_errno = MPID_Irecv(recvbuf, recvcount, recvtype, source, recvtag,
                            comm_ptr, context_id, &recv_req_ptr);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-    mpi_errno = MPID_Isend(sendbuf, sendcount, sendtype, dest, recvtag,
+    mpi_errno = MPID_Isend(sendbuf, sendcount, sendtype, dest, sendtag,
                            comm_ptr, context_id, &send_req_ptr);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
