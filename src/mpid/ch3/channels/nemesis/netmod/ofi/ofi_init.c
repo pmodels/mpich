@@ -56,7 +56,6 @@ int MPID_nem_ofi_init(MPIDI_PG_t * pg_p, int pg_rank, char **bc_val_p, int *val_
     hints.ep_type = FI_EP_RDM;  /* Reliable datagram         */
     hints.caps = FI_TAGGED;     /* Tag matching interface    */
     hints.caps |= FI_BUFFERED_RECV;     /* Buffered receives         */
-    hints.caps |= FI_REMOTE_COMPLETE;   /* Remote completion         */
     hints.caps |= FI_CANCEL;    /* Support cancel            */
     hints.caps |= FI_DYNAMIC_MR;        /* Global dynamic mem region */
 
@@ -80,7 +79,7 @@ int MPID_nem_ofi_init(MPIDI_PG_t * pg_p, int pg_rank, char **bc_val_p, int *val_
 
     domain_attr.threading = FI_THREAD_ENDPOINT;
     domain_attr.control_progress = FI_PROGRESS_AUTO;
-    tx_attr.op_flags = FI_REMOTE_COMPLETE;
+    domain_attr.data_progress = FI_PROGRESS_AUTO;
     hints.domain_attr = &domain_attr;
     hints.tx_attr = &tx_attr;
 
@@ -250,10 +249,8 @@ int MPID_nem_ofi_init(MPIDI_PG_t * pg_p, int pg_rank, char **bc_val_p, int *val_
     /* ---------------------------------------------------- */
     /* Insert the ANY_SRC address                           */
     /* ---------------------------------------------------- */
-    MPIU_CHKLMEM_MALLOC(null_addr, char *, 1 * gl_data.bound_addrlen, mpi_errno, "null_addr");
-    memset(null_addr, 0, gl_data.bound_addrlen);
 
-    FI_RC(fi_av_insert(gl_data.av, null_addr, 1, &gl_data.any_addr, 0ULL, NULL), avmap);
+    gl_data.any_addr = FI_ADDR_UNSPEC;
 
     /* --------------------------------- */
     /* Store the direct addresses in     */

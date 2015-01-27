@@ -105,7 +105,7 @@ static inline int MPID_nem_ofi_conn_req_callback(cq_tagged_entry_t * wc, MPID_Re
                        gl_data.conn_req->dev.user_buf,
                        OFI_KVSAPPSTRLEN,
                        gl_data.mr,
-                       0,
+                       FI_ADDR_UNSPEC,
                        MPID_CONN_REQ,
                        ~MPID_PROTOCOL_MASK,
                        (void *) &(REQ_OFI(gl_data.conn_req)->ofi_context)), trecv);
@@ -246,7 +246,7 @@ static inline int MPID_nem_ofi_preposted_callback(cq_tagged_entry_t * wc, MPID_R
                        &rreq->dev.user_count,
                        sizeof rreq->dev.user_count,
                        gl_data.mr,
-                       0,
+                       FI_ADDR_UNSPEC,
                        MPID_MSG_RTS,
                        ~MPID_PROTOCOL_MASK, &(REQ_OFI(rreq)->ofi_context)), trecv);
     END_FUNC_RC(FCNAME);
@@ -307,7 +307,7 @@ int MPID_nem_ofi_cm_init(MPIDI_PG_t * pg_p, int pg_rank ATTRIBUTE((unused)))
                        &persistent_req->dev.user_count,
                        sizeof persistent_req->dev.user_count,
                        gl_data.mr,
-                       0,
+                       FI_ADDR_UNSPEC,
                        MPID_MSG_RTS,
                        ~MPID_PROTOCOL_MASK,
                        (void *) &(REQ_OFI(persistent_req)->ofi_context)), trecv);
@@ -326,7 +326,7 @@ int MPID_nem_ofi_cm_init(MPIDI_PG_t * pg_p, int pg_rank ATTRIBUTE((unused)))
                        conn_req->dev.user_buf,
                        OFI_KVSAPPSTRLEN,
                        gl_data.mr,
-                       0,
+                       FI_ADDR_UNSPEC,
                        MPID_CONN_REQ,
                        ~MPID_PROTOCOL_MASK, (void *) &(REQ_OFI(conn_req)->ofi_context)), trecv);
     gl_data.conn_req = conn_req;

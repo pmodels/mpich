@@ -40,7 +40,7 @@ typedef int (*req_fn) (MPIDI_VC_t *, MPID_Request *, int *);
 /* Global Object for state tracking */
 /* ******************************** */
 typedef struct {
-    fi_addr_t bound_addr;       /* This ranks bound address    */
+    char bound_addr[128];       /* This ranks bound address    */
     fi_addr_t any_addr;         /* Specifies any source        */
     size_t bound_addrlen;       /* length of the bound address */
     struct fid_fabric *fabric;  /* fabric object               */
