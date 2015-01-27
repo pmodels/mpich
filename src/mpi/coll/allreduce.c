@@ -198,14 +198,12 @@ int MPIR_Allreduce_intra (
         send_idx, recv_idx, last_idx, send_cnt, recv_cnt, *cnts, *disps; 
     MPI_Aint true_extent, true_lb, extent;
     void *tmp_buf;
-    MPI_Comm comm;
     MPIU_CHKLMEM_DECL(3);
     
     /* check if multiple threads are calling this collective function */
     MPIDU_ERR_CHECK_MULTIPLE_THREADS_ENTER( comm_ptr );
 
     if (count == 0) goto fn_exit;
-    comm = comm_ptr->handle;
 
     is_commutative = MPIR_Op_is_commutative(op);
 
@@ -349,7 +347,7 @@ int MPIR_Allreduce_intra (
             if (rank % 2 == 0) { /* even */
                 mpi_errno = MPIC_Send(recvbuf, count,
                                          datatype, rank+1,
-                                         MPIR_ALLREDUCE_TAG, comm, errflag);
+                                         MPIR_ALLREDUCE_TAG, comm_ptr, errflag);
                 if (mpi_errno) {
                     /* for communication errors, just record the error but continue */
                     *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
@@ -365,7 +363,7 @@ int MPIR_Allreduce_intra (
             else { /* odd */
                 mpi_errno = MPIC_Recv(tmp_buf, count,
                                          datatype, rank-1,
-                                         MPIR_ALLREDUCE_TAG, comm,
+                                         MPIR_ALLREDUCE_TAG, comm_ptr,
                                          MPI_STATUS_IGNORE, errflag);
                 if (mpi_errno) {
                     /* for communication errors, just record the error but continue */
@@ -411,7 +409,7 @@ int MPIR_Allreduce_intra (
                     mpi_errno = MPIC_Sendrecv(recvbuf, count, datatype,
                                                  dst, MPIR_ALLREDUCE_TAG, tmp_buf,
                                                  count, datatype, dst,
-                                                 MPIR_ALLREDUCE_TAG, comm,
+                                                 MPIR_ALLREDUCE_TAG, comm_ptr,
                                                  MPI_STATUS_IGNORE, errflag);
                     if (mpi_errno) {
                         /* for communication errors, just record the error but continue */
@@ -496,7 +494,7 @@ int MPIR_Allreduce_intra (
                                                  (char *) tmp_buf +
                                                  disps[recv_idx]*extent,
                                                  recv_cnt, datatype, dst,
-                                                 MPIR_ALLREDUCE_TAG, comm,
+                                                 MPIR_ALLREDUCE_TAG, comm_ptr,
                                                  MPI_STATUS_IGNORE, errflag);
                     if (mpi_errno) {
                         /* for communication errors, just record the error but continue */
@@ -561,7 +559,7 @@ int MPIR_Allreduce_intra (
                                                  (char *) recvbuf +
                                                  disps[recv_idx]*extent,
                                                  recv_cnt, datatype, dst,
-                                                 MPIR_ALLREDUCE_TAG, comm,
+                                                 MPIR_ALLREDUCE_TAG, comm_ptr,
                                                  MPI_STATUS_IGNORE, errflag);
                     if (mpi_errno) {
                         /* for communication errors, just record the error but continue */
@@ -584,11 +582,11 @@ int MPIR_Allreduce_intra (
             if (rank % 2)  /* odd */
                 mpi_errno = MPIC_Send(recvbuf, count,
                                          datatype, rank-1,
-                                         MPIR_ALLREDUCE_TAG, comm, errflag);
+                                         MPIR_ALLREDUCE_TAG, comm_ptr, errflag);
             else  /* even */
                 mpi_errno = MPIC_Recv(recvbuf, count,
                                          datatype, rank+1,
-                                         MPIR_ALLREDUCE_TAG, comm,
+                                         MPIR_ALLREDUCE_TAG, comm_ptr,
                                          MPI_STATUS_IGNORE, errflag);
             if (mpi_errno) {
                 /* for communication errors, just record the error but continue */
@@ -638,7 +636,6 @@ int MPIR_Allreduce_inter (
     MPI_Aint true_extent, true_lb, extent;
     void *tmp_buf=NULL;
     MPID_Comm *newcomm_ptr = NULL;
-    MPI_Comm comm;
     MPIU_CHKLMEM_DECL(1);
 
     MPIDU_ERR_CHECK_MULTIPLE_THREADS_ENTER( comm_ptr );
@@ -654,8 +651,6 @@ int MPIR_Allreduce_inter (
         /* adjust for potential negative lower bound in datatype */
         tmp_buf = (void *)((char*)tmp_buf - true_lb);
     }
-
-    comm = comm_ptr->handle;
 
     /* Get the local intracommunicator */
     if (!comm_ptr->local_comm)
@@ -677,7 +672,7 @@ int MPIR_Allreduce_inter (
     if (comm_ptr->rank == 0) {
         mpi_errno = MPIC_Sendrecv(tmp_buf, count, datatype, 0, MPIR_REDUCE_TAG,
                                   recvbuf, count, datatype, 0, MPIR_REDUCE_TAG,
-                                  comm, MPI_STATUS_IGNORE, errflag);
+                                  comm_ptr, MPI_STATUS_IGNORE, errflag);
         if (mpi_errno) {
             /* for communication errors, just record the error but continue */
             *errflag = MPIR_ERR_GET_CLASS(mpi_errno);

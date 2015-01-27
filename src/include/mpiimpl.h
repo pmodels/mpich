@@ -3949,24 +3949,24 @@ int MPIC_Probe(int source, int tag, MPI_Comm comm, MPI_Status *status);
 
 /* FT versions of te MPIC_ functions */
 int MPIC_Send(const void *buf, int count, MPI_Datatype datatype, int dest, int tag,
-                 MPI_Comm comm, mpir_errflag_t *errflag);
+                 MPID_Comm *comm_ptr, mpir_errflag_t *errflag);
 int MPIC_Recv(void *buf, int count, MPI_Datatype datatype, int source, int tag,
-                 MPI_Comm comm, MPI_Status *status, mpir_errflag_t *errflag);
+                 MPID_Comm *comm_ptr, MPI_Status *status, mpir_errflag_t *errflag);
 int MPIC_Ssend(const void *buf, int count, MPI_Datatype datatype, int dest, int tag,
-                  MPI_Comm comm, mpir_errflag_t *errflag);
+                  MPID_Comm *comm_ptr, mpir_errflag_t *errflag);
 int MPIC_Sendrecv(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                      int dest, int sendtag, void *recvbuf, int recvcount,
                      MPI_Datatype recvtype, int source, int recvtag,
-                     MPI_Comm comm, MPI_Status *status, mpir_errflag_t *errflag);
+                     MPID_Comm *comm_ptr, MPI_Status *status, mpir_errflag_t *errflag);
 int MPIC_Sendrecv_replace(void *buf, int count, MPI_Datatype datatype,
                              int dest, int sendtag,
                              int source, int recvtag,
-                             MPI_Comm comm, MPI_Status *status, mpir_errflag_t *errflag);
+                             MPID_Comm *comm_ptr, MPI_Status *status, mpir_errflag_t *errflag);
 int MPIC_Isend(const void *buf, int count, MPI_Datatype datatype, int dest, int tag,
-                  MPI_Comm comm, MPI_Request *request, mpir_errflag_t *errflag);
+                  MPID_Comm *comm_ptr, MPID_Request **request, mpir_errflag_t *errflag);
 int MPIC_Irecv(void *buf, int count, MPI_Datatype datatype, int source,
-                  int tag, MPI_Comm comm, MPI_Request *request);
-int MPIC_Waitall(int numreq, MPI_Request requests[], MPI_Status statuses[], mpir_errflag_t *errflag);
+                  int tag, MPID_Comm *comm_ptr, MPID_Request **request);
+int MPIC_Waitall(int numreq, MPID_Request *requests[], MPI_Status statuses[], mpir_errflag_t *errflag);
 
 
 void MPIR_MAXF  ( void *, void *, int *, MPI_Datatype * ) ;

@@ -88,15 +88,13 @@ int MPIR_Gatherv (
     int        comm_size, rank;
     int        mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
-    MPI_Comm comm;
     MPI_Aint       extent;
     int            i, reqs;
     int min_procs;
-    MPI_Request *reqarray;
+    MPID_Request **reqarray;
     MPI_Status *starray;
     MPIU_CHKLMEM_DECL(2);
-    
-    comm = comm_ptr->handle;
+
     rank = comm_ptr->rank;
     
     /* check if multiple threads are calling this collective function */
@@ -115,7 +113,7 @@ int MPIR_Gatherv (
         MPID_Ensure_Aint_fits_in_pointer(MPI_VOID_PTR_CAST_TO_MPI_AINT recvbuf +
 					 displs[rank] * extent);
 
-        MPIU_CHKLMEM_MALLOC(reqarray, MPI_Request *, comm_size * sizeof(MPI_Request), mpi_errno, "reqarray");
+        MPIU_CHKLMEM_MALLOC(reqarray, MPID_Request **, comm_size * sizeof(MPID_Request *), mpi_errno, "reqarray");
         MPIU_CHKLMEM_MALLOC(starray, MPI_Status *, comm_size * sizeof(MPI_Status), mpi_errno, "starray");
 
         reqs = 0;
@@ -132,7 +130,7 @@ int MPIR_Gatherv (
                 else {
                     mpi_errno = MPIC_Irecv(((char *)recvbuf+displs[i]*extent),
                                               recvcounts[i], recvtype, i,
-                                              MPIR_GATHERV_TAG, comm,
+                                              MPIR_GATHERV_TAG, comm_ptr,
                                               &reqarray[reqs++]);
                     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
                 }
@@ -174,7 +172,7 @@ int MPIR_Gatherv (
 
             if (comm_size >= min_procs) {
                 mpi_errno = MPIC_Ssend(sendbuf, sendcount, sendtype, root,
-                                          MPIR_GATHERV_TAG, comm, errflag);
+                                          MPIR_GATHERV_TAG, comm_ptr, errflag);
                 if (mpi_errno) {
                     /* for communication errors, just record the error but continue */
                     *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
@@ -184,7 +182,7 @@ int MPIR_Gatherv (
             }
             else {
                 mpi_errno = MPIC_Send(sendbuf, sendcount, sendtype, root,
-                                         MPIR_GATHERV_TAG, comm, errflag);
+                                         MPIR_GATHERV_TAG, comm_ptr, errflag);
                 if (mpi_errno) {
                     /* for communication errors, just record the error but continue */
                     *errflag = MPIR_ERR_GET_CLASS(mpi_errno);

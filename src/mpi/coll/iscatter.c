@@ -364,7 +364,7 @@ int MPIR_Iscatter_intra(const void *sendbuf, int sendcount, MPI_Datatype sendtyp
                 if (src < 0) src += comm_size;
 
                 mpi_errno = MPIC_Recv(tmp_buf, tmp_buf_size, MPI_BYTE, src,
-                                         MPIR_SCATTER_TAG, comm, &status, errflag);
+                                         MPIR_SCATTER_TAG, comm_ptr, &status, errflag);
                 if (mpi_errno) {
                     /* for communication errors, just record the error but continue */
                     *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
@@ -395,7 +395,7 @@ int MPIR_Iscatter_intra(const void *sendbuf, int sendcount, MPI_Datatype sendtyp
                 /* mask is also the size of this process's subtree */
                 mpi_errno = MPIC_Send(((char *)tmp_buf + nbytes*mask),
                                          send_subtree_cnt, MPI_BYTE, dst,
-                                         MPIR_SCATTER_TAG, comm, errflag);
+                                         MPIR_SCATTER_TAG, comm_ptr, errflag);
                 if (mpi_errno) {
                     /* for communication errors, just record the error but continue */
                     *errflag = MPIR_ERR_GET_CLASS(mpi_errno);

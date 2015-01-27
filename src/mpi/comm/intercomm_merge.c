@@ -107,7 +107,7 @@ int MPIR_Intercomm_merge_impl(MPID_Comm *comm_ptr, int high, MPID_Comm **new_int
         /* This routine allows use to use the collective communication
            context rather than the point-to-point context. */
         mpi_errno = MPIC_Sendrecv( &local_high, 1, MPI_INT, 0, 0,
-                                      &remote_high, 1, MPI_INT, 0, 0, comm_ptr->handle,
+                                      &remote_high, 1, MPI_INT, 0, 0, comm_ptr,
                                       MPI_STATUS_IGNORE, &errflag );
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
         
@@ -121,7 +121,7 @@ int MPIR_Intercomm_merge_impl(MPID_Comm *comm_ptr, int high, MPID_Comm **new_int
             if (mpi_errno) MPIU_ERR_POP(mpi_errno);
             
             mpi_errno = MPIC_Sendrecv( ingpid, 2, MPI_INT, 0, 1,
-                                          outgpid, 2, MPI_INT, 0, 1, comm_ptr->handle,
+                                          outgpid, 2, MPI_INT, 0, 1, comm_ptr,
                                           MPI_STATUS_IGNORE, &errflag );
             if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 

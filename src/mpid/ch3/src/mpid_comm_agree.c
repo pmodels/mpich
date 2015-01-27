@@ -77,7 +77,7 @@ int MPID_Comm_agree(MPID_Comm *comm_ptr, uint32_t *bitarray, int *flag, mpir_err
     for (i = 0; i < nchildren; i++) {
         if (children[i] == -1) continue;
         mpi_errno = MPIC_Recv(&tmp_flag, 1, MPI_INT, children[i], MPIR_AGREE_TAG,
-                comm_ptr->handle, MPI_STATUS_IGNORE, &errflag);
+                comm_ptr, MPI_STATUS_IGNORE, &errflag);
         if (mpi_errno) return mpi_errno;
         if (errflag) new_fail = 1;
 
@@ -88,12 +88,12 @@ int MPID_Comm_agree(MPID_Comm *comm_ptr, uint32_t *bitarray, int *flag, mpir_err
     if (-1 != parent) {
         /* Send my message to my parent */
         mpi_errno = MPIC_Send(flag, 1, MPI_INT, parent, MPIR_AGREE_TAG,
-                comm_ptr->handle, &errflag);
+                comm_ptr, &errflag);
         if (mpi_errno) return mpi_errno;
 
         /* Receive the result from my parent */
         mpi_errno = MPIC_Recv(flag, 1, MPI_INT, parent, MPIR_AGREE_TAG,
-                comm_ptr->handle, MPI_STATUS_IGNORE, &errflag);
+                comm_ptr, MPI_STATUS_IGNORE, &errflag);
         if (mpi_errno) return mpi_errno;
         if (errflag) new_fail = 1;
     }
@@ -102,7 +102,7 @@ int MPID_Comm_agree(MPID_Comm *comm_ptr, uint32_t *bitarray, int *flag, mpir_err
     for (i = 0; i < nchildren; i++) {
         if (children[i] == -1) continue;
         mpi_errno = MPIC_Send(flag, 1, MPI_INT, children[i], MPIR_AGREE_TAG,
-                comm_ptr->handle, &errflag);
+                comm_ptr, &errflag);
         if (mpi_errno) return mpi_errno;
     }
 

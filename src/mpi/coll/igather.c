@@ -319,7 +319,7 @@ int MPIR_Igather_binomial(const void *sendbuf, int sendcount, MPI_Datatype sendt
                     src = (src + root) % comm_size;
                     mpi_errno = MPIC_Recv(((char *)tmp_buf + curr_cnt),
                                              tmp_buf_size-curr_cnt, MPI_BYTE, src,
-                                             MPIR_GATHER_TAG, comm,
+                                             MPIR_GATHER_TAG, comm_ptr,
                                              &status, errflag);
                     /* the recv size is larger than what may be sent in
                        some cases. query amount of data actually received */
@@ -333,7 +333,7 @@ int MPIR_Igather_binomial(const void *sendbuf, int sendcount, MPI_Datatype sendt
                 dst = relative_rank ^ mask;
                 dst = (dst + root) % comm_size;
                 mpi_errno = MPIC_Send(tmp_buf, curr_cnt, MPI_BYTE, dst,
-                                         MPIR_GATHER_TAG, comm, errflag);
+                                         MPIR_GATHER_TAG, comm_ptr, errflag);
                 if (mpi_errno) MPIU_ERR_POP(mpi_errno);
                 break;
             }

@@ -230,7 +230,7 @@ int MPIR_Intercomm_create_impl(MPID_Comm *local_comm_ptr, int local_leader,
                                       remote_leader, cts_tag,
                                       &remote_size, 1, MPI_INT,
                                       remote_leader, cts_tag,
-                                      peer_comm_ptr->handle, MPI_STATUS_IGNORE, &errflag );
+                                      peer_comm_ptr, MPI_STATUS_IGNORE, &errflag );
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
         MPIU_DBG_MSG_FMT(COMM,VERBOSE,(MPIU_DBG_FDEST, "local size = %d, remote size = %d", local_size,
@@ -249,7 +249,7 @@ int MPIR_Intercomm_create_impl(MPID_Comm *local_comm_ptr, int local_leader,
         mpi_errno = MPIC_Sendrecv( local_gpids, 2*local_size, MPI_INT,
                                       remote_leader, cts_tag,
                                       remote_gpids, 2*remote_size, MPI_INT,
-                                      remote_leader, cts_tag, peer_comm_ptr->handle,
+                                      remote_leader, cts_tag, peer_comm_ptr,
                                       MPI_STATUS_IGNORE, &errflag );
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
@@ -307,7 +307,7 @@ int MPIR_Intercomm_create_impl(MPID_Comm *local_comm_ptr, int local_leader,
 
         mpi_errno = MPIC_Sendrecv( &recvcontext_id, 1, MPIR_CONTEXT_ID_T_DATATYPE, remote_leader, cts_tag,
                                       &remote_context_id, 1, MPIR_CONTEXT_ID_T_DATATYPE, remote_leader, cts_tag,
-                                      peer_comm_ptr->handle, MPI_STATUS_IGNORE, &errflag );
+                                      peer_comm_ptr, MPI_STATUS_IGNORE, &errflag );
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
         final_context_id = remote_context_id;

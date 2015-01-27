@@ -132,7 +132,6 @@ int MPIR_Barrier_intra( MPID_Comm *comm_ptr, mpir_errflag_t *errflag )
 {
     int size, rank, src, dst, mask, mpi_errno=MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
-    MPI_Comm comm;
 
     /* Only one collective operation per communicator can be active at any
        time */
@@ -155,7 +154,6 @@ int MPIR_Barrier_intra( MPID_Comm *comm_ptr, mpir_errflag_t *errflag )
     }
 
     rank = comm_ptr->rank;
-    comm = comm_ptr->handle;
 
     mask = 0x1;
     while (mask < size) {
@@ -163,7 +161,7 @@ int MPIR_Barrier_intra( MPID_Comm *comm_ptr, mpir_errflag_t *errflag )
         src = (rank - mask + size) % size;
         mpi_errno = MPIC_Sendrecv(NULL, 0, MPI_BYTE, dst,
                                      MPIR_BARRIER_TAG, NULL, 0, MPI_BYTE,
-                                     src, MPIR_BARRIER_TAG, comm,
+                                     src, MPIR_BARRIER_TAG, comm_ptr,
                                      MPI_STATUS_IGNORE, errflag);
         if (mpi_errno) {
             /* for communication errors, just record the error but continue */

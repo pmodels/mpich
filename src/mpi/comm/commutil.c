@@ -1632,7 +1632,7 @@ int MPIR_Get_intercomm_contextid( MPID_Comm *comm_ptr, MPIR_Context_id_t *contex
     if (comm_ptr->rank == 0) {
         mpi_errno = MPIC_Sendrecv( &mycontext_id, 1, MPIR_CONTEXT_ID_T_DATATYPE, 0, tag,
                                       &remote_context_id, 1, MPIR_CONTEXT_ID_T_DATATYPE, 0, tag,
-                                      comm_ptr->handle, MPI_STATUS_IGNORE, &errflag );
+                                      comm_ptr, MPI_STATUS_IGNORE, &errflag );
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
     }
 

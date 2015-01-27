@@ -75,7 +75,7 @@ int MPI_Dist_graph_create(MPI_Comm comm_old, int n, const int sources[],
     int mpi_errno = MPI_SUCCESS;
     MPID_Comm *comm_ptr = NULL;
     MPID_Comm *comm_dist_graph_ptr = NULL;
-    MPI_Request *reqs = NULL;
+    MPID_Request **reqs = NULL;
     MPIR_Topology *topo_ptr = NULL;
     MPIR_Dist_graph_topology *dist_graph_ptr = NULL;
     int i;
@@ -271,16 +271,16 @@ int MPI_Dist_graph_create(MPI_Comm comm_old, int n, const int sources[],
     idx = 0;
     /* must be 2*comm_size requests because we will possibly send inbound and
      * outbound edges to everyone in our communicator */
-    MPIU_CHKLMEM_MALLOC(reqs, MPI_Request *, 2*comm_size*sizeof(MPI_Request), mpi_errno, "temp request array");
+    MPIU_CHKLMEM_MALLOC(reqs, MPID_Request **, 2*comm_size*sizeof(MPID_Request *), mpi_errno, "temp request array");
     for (i = 0; i < comm_size; ++i) {
         if (rin_sizes[i]) {
             /* send edges where i is a destination to process i */
-            mpi_errno = MPIC_Isend(&rin[i][0], rin_sizes[i], MPI_INT, i, MPIR_TOPO_A_TAG, comm_old, &reqs[idx++], &errflag);
+            mpi_errno = MPIC_Isend(&rin[i][0], rin_sizes[i], MPI_INT, i, MPIR_TOPO_A_TAG, comm_ptr, &reqs[idx++], &errflag);
             if (mpi_errno) MPIU_ERR_POP(mpi_errno);
         }
         if (rout_sizes[i]) {
             /* send edges where i is a source to process i */
-            mpi_errno = MPIC_Isend(&rout[i][0], rout_sizes[i], MPI_INT, i, MPIR_TOPO_B_TAG, comm_old, &reqs[idx++], &errflag);
+            mpi_errno = MPIC_Isend(&rout[i][0], rout_sizes[i], MPI_INT, i, MPIR_TOPO_B_TAG, comm_ptr, &reqs[idx++], &errflag);
             if (mpi_errno) MPIU_ERR_POP(mpi_errno);
         }
     }
@@ -322,7 +322,7 @@ int MPI_Dist_graph_create(MPI_Comm comm_old, int n, const int sources[],
         buf = MPIU_Malloc(count*sizeof(int));
         MPIU_ERR_CHKANDJUMP(!buf, mpi_errno, MPI_ERR_OTHER, "**nomem");
 
-        mpi_errno = MPIC_Recv(buf, count, MPI_INT, MPI_ANY_SOURCE, MPIR_TOPO_A_TAG, comm_old, MPI_STATUS_IGNORE, &errflag);
+        mpi_errno = MPIC_Recv(buf, count, MPI_INT, MPI_ANY_SOURCE, MPIR_TOPO_A_TAG, comm_ptr, MPI_STATUS_IGNORE, &errflag);
         /* FIXME: buf is never freed on error! */
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
         
@@ -356,7 +356,7 @@ int MPI_Dist_graph_create(MPI_Comm comm_old, int n, const int sources[],
         buf = MPIU_Malloc(count*sizeof(int));
         MPIU_ERR_CHKANDJUMP(!buf, mpi_errno, MPI_ERR_OTHER, "**nomem");
 
-        mpi_errno = MPIC_Recv(buf, count, MPI_INT, MPI_ANY_SOURCE, MPIR_TOPO_B_TAG, comm_old, MPI_STATUS_IGNORE, &errflag);
+        mpi_errno = MPIC_Recv(buf, count, MPI_INT, MPI_ANY_SOURCE, MPIR_TOPO_B_TAG, comm_ptr, MPI_STATUS_IGNORE, &errflag);
         /* FIXME: buf is never freed on error! */
         if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
@@ -377,7 +377,7 @@ int MPI_Dist_graph_create(MPI_Comm comm_old, int n, const int sources[],
         MPIU_Free(buf);
     }
 
-    mpi_errno = MPIR_Waitall_impl(idx, reqs, MPI_STATUSES_IGNORE);
+    mpi_errno = MPIC_Waitall(idx, reqs, MPI_STATUSES_IGNORE, &errflag);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
     /* remove any excess memory allocation */

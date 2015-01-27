@@ -93,12 +93,10 @@ static int MPIR_Reduce_binomial (
     int mask, relrank, source, lroot;
     MPI_Aint true_lb, true_extent, extent; 
     void *tmp_buf;
-    MPI_Comm comm;
     MPIU_CHKLMEM_DECL(2);
 
     if (count == 0) return MPI_SUCCESS;
 
-    comm = comm_ptr->handle;
     comm_size = comm_ptr->local_size;
     rank = comm_ptr->rank;
 
@@ -181,7 +179,7 @@ static int MPIR_Reduce_binomial (
             if (source < comm_size) {
                 source = (source + lroot) % comm_size;
                 mpi_errno = MPIC_Recv(tmp_buf, count, datatype, source,
-                                         MPIR_REDUCE_TAG, comm, &status, errflag);
+                                         MPIR_REDUCE_TAG, comm_ptr, &status, errflag);
                 if (mpi_errno) {
                     /* for communication errors, just record the error but continue */
                     *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
@@ -210,7 +208,7 @@ static int MPIR_Reduce_binomial (
                my parent */
             source = ((relrank & (~ mask)) + lroot) % comm_size;
             mpi_errno  = MPIC_Send(recvbuf, count, datatype,
-                                      source, MPIR_REDUCE_TAG, comm, errflag);
+                                      source, MPIR_REDUCE_TAG, comm_ptr, errflag);
             if (mpi_errno) {
                 /* for communication errors, just record the error but continue */
                 *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
@@ -227,12 +225,12 @@ static int MPIR_Reduce_binomial (
         if (rank == 0)
         {
             mpi_errno  = MPIC_Send(recvbuf, count, datatype, root,
-                                      MPIR_REDUCE_TAG, comm, errflag);
+                                      MPIR_REDUCE_TAG, comm_ptr, errflag);
         }
         else if (rank == root)
         {
             mpi_errno = MPIC_Recv(recvbuf, count, datatype, 0,
-                                    MPIR_REDUCE_TAG, comm, &status, errflag);
+                                    MPIR_REDUCE_TAG, comm_ptr, &status, errflag);
         }
         if (mpi_errno) {
             /* for communication errors, just record the error but continue */
@@ -302,11 +300,10 @@ static int MPIR_Reduce_redscat_gather (
     int dst, send_cnt, recv_cnt, newroot, newdst_tree_root, newroot_tree_root; 
     MPI_Aint true_lb, true_extent, extent; 
     void *tmp_buf;
-    MPI_Comm comm;
+
     MPIU_CHKLMEM_DECL(4);
     MPIU_THREADPRIV_DECL;
 
-    comm = comm_ptr->handle;
     comm_size = comm_ptr->local_size;
     rank = comm_ptr->rank;
 
@@ -373,7 +370,7 @@ static int MPIR_Reduce_redscat_gather (
         if (rank % 2 != 0) { /* odd */
             mpi_errno = MPIC_Send(recvbuf, count,
                                      datatype, rank-1,
-                                     MPIR_REDUCE_TAG, comm, errflag);
+                                     MPIR_REDUCE_TAG, comm_ptr, errflag);
             if (mpi_errno) {
                 /* for communication errors, just record the error but continue */
                 *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
@@ -389,7 +386,7 @@ static int MPIR_Reduce_redscat_gather (
         else { /* even */
             mpi_errno = MPIC_Recv(tmp_buf, count,
                                      datatype, rank+1,
-                                     MPIR_REDUCE_TAG, comm,
+                                     MPIR_REDUCE_TAG, comm_ptr,
                                      MPI_STATUS_IGNORE, errflag);
             if (mpi_errno) {
                 /* for communication errors, just record the error but continue */
@@ -464,7 +461,7 @@ static int MPIR_Reduce_redscat_gather (
                                          (char *) tmp_buf +
                                          disps[recv_idx]*extent,
                                          recv_cnt, datatype, dst,
-                                         MPIR_REDUCE_TAG, comm,
+                                         MPIR_REDUCE_TAG, comm_ptr,
                                          MPI_STATUS_IGNORE, errflag);
             if (mpi_errno) {
                 /* for communication errors, just record the error but continue */
@@ -513,7 +510,7 @@ static int MPIR_Reduce_redscat_gather (
                     disps[i] = disps[i-1] + cnts[i-1];
                 
                 mpi_errno = MPIC_Recv(recvbuf, cnts[0], datatype,
-                                         0, MPIR_REDUCE_TAG, comm,
+                                         0, MPIR_REDUCE_TAG, comm_ptr,
                                          MPI_STATUS_IGNORE, errflag);
                 if (mpi_errno) {
                     /* for communication errors, just record the error but continue */
@@ -527,7 +524,7 @@ static int MPIR_Reduce_redscat_gather (
             }
             else if (newrank == 0) {  /* send */
                 mpi_errno = MPIC_Send(recvbuf, cnts[0], datatype,
-                                         root, MPIR_REDUCE_TAG, comm, errflag);
+                                         root, MPIR_REDUCE_TAG, comm_ptr, errflag);
                 if (mpi_errno) {
                     /* for communication errors, just record the error but continue */
                     *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
@@ -601,7 +598,7 @@ static int MPIR_Reduce_redscat_gather (
                                          disps[send_idx]*extent,
                                          send_cnt, datatype,
                                          dst, MPIR_REDUCE_TAG,
-                                         comm, errflag);
+                                         comm_ptr, errflag);
                 if (mpi_errno) {
                     /* for communication errors, just record the error but continue */
                     *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
@@ -617,7 +614,7 @@ static int MPIR_Reduce_redscat_gather (
                 mpi_errno = MPIC_Recv((char *) recvbuf +
                                          disps[recv_idx]*extent,
                                          recv_cnt, datatype, dst,
-                                         MPIR_REDUCE_TAG, comm,
+                                         MPIR_REDUCE_TAG, comm_ptr,
                                          MPI_STATUS_IGNORE, errflag);
                 if (mpi_errno) {
                     /* for communication errors, just record the error but continue */
@@ -929,7 +926,6 @@ int MPIR_Reduce_inter (
     MPI_Aint true_extent, true_lb, extent;
     void *tmp_buf=NULL;
     MPID_Comm *newcomm_ptr = NULL;
-    MPI_Comm comm;
     MPIU_CHKLMEM_DECL(1);
 
     if (root == MPI_PROC_NULL) {
@@ -938,13 +934,12 @@ int MPIR_Reduce_inter (
     }
 
     MPIDU_ERR_CHECK_MULTIPLE_THREADS_ENTER( comm_ptr );
-    
-    comm = comm_ptr->handle;
+
 
     if (root == MPI_ROOT) {
         /* root receives data from rank 0 on remote group */
         mpi_errno = MPIC_Recv(recvbuf, count, datatype, 0,
-                                 MPIR_REDUCE_TAG, comm, &status, errflag);
+                                 MPIR_REDUCE_TAG, comm_ptr, &status, errflag);
         if (mpi_errno) {
             /* for communication errors, just record the error but continue */
             *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
@@ -993,7 +988,7 @@ int MPIR_Reduce_inter (
         if (rank == 0)
 	{
             mpi_errno = MPIC_Send(tmp_buf, count, datatype, root,
-                                     MPIR_REDUCE_TAG, comm, errflag);
+                                     MPIR_REDUCE_TAG, comm_ptr, errflag);
             if (mpi_errno) {
                 /* for communication errors, just record the error but continue */
                 *errflag = MPIR_ERR_GET_CLASS(mpi_errno);

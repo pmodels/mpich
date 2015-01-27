@@ -37,7 +37,6 @@ int MPIR_Allreduce_group_intra(void *sendbuf, void *recvbuf, int count,
         send_idx, recv_idx, last_idx, send_cnt, recv_cnt, *cnts, *disps;
     MPI_Aint true_extent, true_lb, extent;
     void *tmp_buf;
-    MPI_Comm comm = comm_ptr->handle;
     int group_rank, group_size;
     int cdst, csrc;
     MPIU_CHKLMEM_DECL(3);
@@ -92,7 +91,7 @@ int MPIR_Allreduce_group_intra(void *sendbuf, void *recvbuf, int count,
             to_comm_rank(cdst, group_rank+1);
             mpi_errno = MPIC_Send(recvbuf, count,
                                      datatype, cdst,
-                                     tag, comm, errflag);
+                                     tag, comm_ptr, errflag);
             if (mpi_errno) {
                 /* for communication errors, just record the error but continue */
                 *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
@@ -109,7 +108,7 @@ int MPIR_Allreduce_group_intra(void *sendbuf, void *recvbuf, int count,
             to_comm_rank(csrc, group_rank-1);
             mpi_errno = MPIC_Recv(tmp_buf, count,
                                      datatype, csrc,
-                                     tag, comm,
+                                     tag, comm_ptr,
                                      MPI_STATUS_IGNORE, errflag);
             if (mpi_errno) {
                 /* for communication errors, just record the error but continue */
@@ -158,7 +157,7 @@ int MPIR_Allreduce_group_intra(void *sendbuf, void *recvbuf, int count,
                 mpi_errno = MPIC_Sendrecv(recvbuf, count, datatype,
                                              cdst, tag, tmp_buf,
                                              count, datatype, cdst,
-                                             tag, comm,
+                                             tag, comm_ptr,
                                              MPI_STATUS_IGNORE, errflag);
                 if (mpi_errno) {
                     /* for communication errors, just record the error but continue */
@@ -242,7 +241,7 @@ int MPIR_Allreduce_group_intra(void *sendbuf, void *recvbuf, int count,
                                              (char *) tmp_buf +
                                              disps[recv_idx]*extent,
                                              recv_cnt, datatype, cdst,
-                                             tag, comm,
+                                             tag, comm_ptr,
                                              MPI_STATUS_IGNORE, errflag);
                 if (mpi_errno) {
                     /* for communication errors, just record the error but continue */
@@ -308,7 +307,7 @@ int MPIR_Allreduce_group_intra(void *sendbuf, void *recvbuf, int count,
                                              (char *) recvbuf +
                                              disps[recv_idx]*extent,
                                              recv_cnt, datatype, cdst,
-                                             tag, comm,
+                                             tag, comm_ptr,
                                              MPI_STATUS_IGNORE, errflag);
                 if (mpi_errno) {
                     /* for communication errors, just record the error but continue */
@@ -332,13 +331,13 @@ int MPIR_Allreduce_group_intra(void *sendbuf, void *recvbuf, int count,
             to_comm_rank(cdst, group_rank-1);
             mpi_errno = MPIC_Send(recvbuf, count,
                                      datatype, cdst,
-                                     tag, comm, errflag);
+                                     tag, comm_ptr, errflag);
         }
         else { /* even */
             to_comm_rank(csrc, group_rank+1);
             mpi_errno = MPIC_Recv(recvbuf, count,
                                      datatype, csrc,
-                                     tag, comm,
+                                     tag, comm_ptr,
                                      MPI_STATUS_IGNORE, errflag);
         }
         if (mpi_errno) {

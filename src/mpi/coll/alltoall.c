@@ -147,8 +147,7 @@ int MPIR_Alltoall_intra(
     MPI_Aint pack_size, position;
     MPI_Datatype newtype = MPI_DATATYPE_NULL;
     void *tmp_buf;
-    MPI_Comm comm;
-    MPI_Request *reqarray;
+    MPID_Request **reqarray;
     MPI_Status *starray;
     MPIU_CHKLMEM_DECL(6);
 #ifdef MPIR_OLD_SHORT_ALLTOALL_ALG
@@ -159,7 +158,6 @@ int MPIR_Alltoall_intra(
 
     if (recvcount == 0) return MPI_SUCCESS;
 
-    comm = comm_ptr->handle;
     comm_size = comm_ptr->local_size;
     rank = comm_ptr->rank;
 
@@ -192,7 +190,7 @@ int MPIR_Alltoall_intra(
                                                          recvcount, recvtype,
                                                          j, MPIR_ALLTOALL_TAG,
                                                          j, MPIR_ALLTOALL_TAG,
-                                                         comm, &status, errflag);
+                                                         comm_ptr, &status, errflag);
                     if (mpi_errno) {
                         /* for communication errors, just record the error but continue */
                         *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
@@ -206,7 +204,7 @@ int MPIR_Alltoall_intra(
                                                          recvcount, recvtype,
                                                          i, MPIR_ALLTOALL_TAG,
                                                          i, MPIR_ALLTOALL_TAG,
-                                                         comm, &status, errflag);
+                                                         comm_ptr, &status, errflag);
                     if (mpi_errno) {
                         /* for communication errors, just record the error but continue */
                         *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
@@ -279,7 +277,7 @@ int MPIR_Alltoall_intra(
 
             mpi_errno = MPIC_Sendrecv(tmp_buf, position, MPI_PACKED, dst,
                                          MPIR_ALLTOALL_TAG, recvbuf, 1, newtype,
-                                         src, MPIR_ALLTOALL_TAG, comm,
+                                         src, MPIR_ALLTOALL_TAG, comm_ptr,
                                          MPI_STATUS_IGNORE, errflag);
             if (mpi_errno) {
                 /* for communication errors, just record the error but continue */
@@ -371,7 +369,7 @@ int MPIR_Alltoall_intra(
                                               dst_tree_root*sendbuf_extent),
                                              sendbuf_extent*(comm_size-dst_tree_root),
                                              sendtype, dst, MPIR_ALLTOALL_TAG, 
-                                             comm, &status, errflag);
+                                             comm_ptr, &status, errflag);
                 if (mpi_errno) {
                     /* for communication errors, just record the error but continue */
                     *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
@@ -425,7 +423,7 @@ int MPIR_Alltoall_intra(
                                                   dst_tree_root*sendbuf_extent),
                                                  last_recv_cnt, sendtype,
                                                  dst, MPIR_ALLTOALL_TAG,
-                                                 comm, errflag);  
+                                                 comm_ptr, errflag);
                         if (mpi_errno) {
                             /* for communication errors, just record the error but continue */
                             *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
@@ -443,7 +441,7 @@ int MPIR_Alltoall_intra(
                                                  sendbuf_extent*(comm_size-dst_tree_root),
                                                  sendtype,   
                                                  dst, MPIR_ALLTOALL_TAG,
-                                                 comm, &status, errflag); 
+                                                 comm_ptr, &status, errflag);
                         if (mpi_errno) {
                             /* for communication errors, just record the error but continue */
                             *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
@@ -498,7 +496,7 @@ int MPIR_Alltoall_intra(
         bblock = MPIR_CVAR_ALLTOALL_THROTTLE;
         if (bblock == 0) bblock = comm_size;
 
-        MPIU_CHKLMEM_MALLOC(reqarray, MPI_Request *, 2*bblock*sizeof(MPI_Request), mpi_errno, "reqarray");
+        MPIU_CHKLMEM_MALLOC(reqarray, MPID_Request **, 2*bblock*sizeof(MPID_Request*), mpi_errno, "reqarray");
 
         MPIU_CHKLMEM_MALLOC(starray, MPI_Status *, 2*bblock*sizeof(MPI_Status), mpi_errno, "starray");
 
@@ -510,7 +508,7 @@ int MPIR_Alltoall_intra(
                 mpi_errno = MPIC_Irecv((char *)recvbuf +
                                           dst*recvcount*recvtype_extent, 
                                           recvcount, recvtype, dst,
-                                          MPIR_ALLTOALL_TAG, comm,
+                                          MPIR_ALLTOALL_TAG, comm_ptr,
                                           &reqarray[i]);
                 if (mpi_errno) MPIU_ERR_POP(mpi_errno);
             }
@@ -520,7 +518,7 @@ int MPIR_Alltoall_intra(
                 mpi_errno = MPIC_Isend((char *)sendbuf +
                                           dst*sendcount*sendtype_extent, 
                                           sendcount, sendtype, dst,
-                                          MPIR_ALLTOALL_TAG, comm,
+                                          MPIR_ALLTOALL_TAG, comm_ptr,
                                           &reqarray[i+ss], errflag);
                 if (mpi_errno) MPIU_ERR_POP(mpi_errno);
             }
@@ -588,7 +586,7 @@ int MPIR_Alltoall_intra(
                                          ((char *)recvbuf +
                                           src*recvcount*recvtype_extent),
                                          recvcount, recvtype, src,
-                                         MPIR_ALLTOALL_TAG, comm, &status, errflag);
+                                         MPIR_ALLTOALL_TAG, comm_ptr, &status, errflag);
             if (mpi_errno) {
                 /* for communication errors, just record the error but continue */
                 *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
@@ -647,12 +645,10 @@ int MPIR_Alltoall_inter(
     MPI_Status status;
     int src, dst, rank;
     char *sendaddr, *recvaddr;
-    MPI_Comm comm;
-    
+
     local_size = comm_ptr->local_size; 
     remote_size = comm_ptr->remote_size;
     rank = comm_ptr->rank;
-    comm = comm_ptr->handle;
 
     /* Get extent of send and recv types */
     MPID_Datatype_get_extent_macro(sendtype, sendtype_extent);
@@ -688,7 +684,7 @@ int MPIR_Alltoall_inter(
         mpi_errno = MPIC_Sendrecv(sendaddr, sendcount, sendtype, dst,
                                      MPIR_ALLTOALL_TAG, recvaddr,
                                      recvcount, recvtype, src,
-                                     MPIR_ALLTOALL_TAG, comm, &status, errflag);
+                                     MPIR_ALLTOALL_TAG, comm_ptr, &status, errflag);
         if (mpi_errno) {
             /* for communication errors, just record the error but continue */
             *errflag = MPIR_ERR_GET_CLASS(mpi_errno);

@@ -86,7 +86,6 @@ static int MPIR_Scan_generic (
     MPI_Aint true_extent, true_lb, extent;
     void *partial_scan, *tmp_buf;
     MPID_Op *op_ptr;
-    MPI_Comm comm;
     MPIU_THREADPRIV_DECL;
     MPIU_CHKLMEM_DECL(2);
     
@@ -95,7 +94,6 @@ static int MPIR_Scan_generic (
     /* check if multiple threads are calling this collective function */
     MPIDU_ERR_CHECK_MULTIPLE_THREADS_ENTER( comm_ptr );
 
-    comm = comm_ptr->handle;
     comm_size = comm_ptr->local_size;
     rank = comm_ptr->rank;
 
@@ -157,7 +155,7 @@ static int MPIR_Scan_generic (
             mpi_errno = MPIC_Sendrecv(partial_scan, count, datatype,
                                          dst, MPIR_SCAN_TAG, tmp_buf,
                                          count, datatype, dst,
-                                         MPIR_SCAN_TAG, comm,
+                                         MPIR_SCAN_TAG, comm_ptr,
                                          &status, errflag);
             if (mpi_errno) {
                 /* for communication errors, just record the error but continue */
@@ -305,7 +303,7 @@ int MPIR_Scan(
     {
         mpi_errno = MPIC_Recv(localfulldata, count, datatype,
                                  comm_ptr->node_comm->local_size - 1, MPIR_SCAN_TAG, 
-                                 comm_ptr->node_comm->handle, &status, errflag);
+                                 comm_ptr, &status, errflag);
         if (mpi_errno) {
             /* for communication errors, just record the error but continue */
             *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
@@ -318,7 +316,7 @@ int MPIR_Scan(
              MPIU_Get_intranode_rank(comm_ptr, rank) == comm_ptr->node_comm->local_size - 1)
     {
         mpi_errno = MPIC_Send(recvbuf, count, datatype,
-                                 0, MPIR_SCAN_TAG, comm_ptr->node_comm->handle, errflag);
+                                 0, MPIR_SCAN_TAG, comm_ptr, errflag);
         if (mpi_errno) {
             /* for communication errors, just record the error but continue */
             *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
@@ -351,7 +349,7 @@ int MPIR_Scan(
         {
             mpi_errno = MPIC_Send(prefulldata, count, datatype,
                                      MPIU_Get_internode_rank(comm_ptr, rank) + 1,
-                                     MPIR_SCAN_TAG, comm_ptr->node_roots_comm->handle, errflag);
+                                     MPIR_SCAN_TAG, comm_ptr, errflag);
             if (mpi_errno) {
                 /* for communication errors, just record the error but continue */
                 *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
@@ -362,9 +360,8 @@ int MPIR_Scan(
         if (MPIU_Get_internode_rank(comm_ptr, rank) != 0)
         {
             mpi_errno = MPIC_Recv(tempbuf, count, datatype,
-                                     MPIU_Get_internode_rank(comm_ptr, rank) - 1, 
-                                     MPIR_SCAN_TAG, comm_ptr->node_roots_comm->handle, 
-                                     &status, errflag);
+                                     MPIU_Get_internode_rank(comm_ptr, rank) - 1,
+                                     MPIR_SCAN_TAG, comm_ptr, &status, errflag);
             noneed = 0;
             if (mpi_errno) {
                 /* for communication errors, just record the error but continue */

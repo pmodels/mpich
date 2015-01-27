@@ -9,6 +9,9 @@
 #include "datatype.h"
 
 #define COPY_BUFFER_SZ 16384
+#if !defined(MPIC_REQUEST_PTR_ARRAY_SIZE)
+#define MPIC_REQUEST_PTR_ARRAY_SIZE 64
+#endif
 
 /* These functions are used in the implementation of collective
    operations. They are wrappers around MPID send/recv functions. They do
@@ -267,12 +270,11 @@ int MPIC_Wait(MPID_Request * request_ptr, mpir_errflag_t *errflag)
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIC_Send(const void *buf, int count, MPI_Datatype datatype, int dest, int tag,
-                 MPI_Comm comm, mpir_errflag_t *errflag)
+                 MPID_Comm *comm_ptr, mpir_errflag_t *errflag)
 {
     int mpi_errno = MPI_SUCCESS;
     int context_id;
     MPID_Request *request_ptr = NULL;
-    MPID_Comm *comm_ptr = NULL;
     MPIDI_STATE_DECL(MPID_STATE_MPIC_SEND);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIC_SEND);
@@ -291,7 +293,6 @@ int MPIC_Send(const void *buf, int count, MPI_Datatype datatype, int dest, int t
             MPIR_TAG_SET_ERROR_BIT(tag);
     }
 
-    MPID_Comm_get_ptr(comm, comm_ptr);
     context_id = (comm_ptr->comm_kind == MPID_INTRACOMM) ?
         MPID_CONTEXT_INTRA_COLL : MPID_CONTEXT_INTER_COLL;
 
@@ -327,13 +328,12 @@ int MPIC_Send(const void *buf, int count, MPI_Datatype datatype, int dest, int t
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIC_Recv(void *buf, int count, MPI_Datatype datatype, int source, int tag,
-                 MPI_Comm comm, MPI_Status *status, mpir_errflag_t *errflag)
+                 MPID_Comm *comm_ptr, MPI_Status *status, mpir_errflag_t *errflag)
 {
     int mpi_errno = MPI_SUCCESS;
     int context_id;
     MPI_Status mystatus;
     MPID_Request *request_ptr = NULL;
-    MPID_Comm *comm_ptr = NULL;
     MPIDI_STATE_DECL(MPID_STATE_MPIC_RECV);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIC_RECV);
@@ -343,7 +343,6 @@ int MPIC_Recv(void *buf, int count, MPI_Datatype datatype, int source, int tag,
     MPIU_ERR_CHKANDJUMP1((count < 0), mpi_errno, MPI_ERR_COUNT,
                          "**countneg", "**countneg %d", count);
 
-    MPID_Comm_get_ptr(comm, comm_ptr);
     context_id = (comm_ptr->comm_kind == MPID_INTRACOMM) ?
         MPID_CONTEXT_INTRA_COLL : MPID_CONTEXT_INTER_COLL;
 
@@ -385,12 +384,11 @@ int MPIC_Recv(void *buf, int count, MPI_Datatype datatype, int source, int tag,
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIC_Ssend(const void *buf, int count, MPI_Datatype datatype, int dest, int tag,
-                  MPI_Comm comm, mpir_errflag_t *errflag)
+                  MPID_Comm *comm_ptr, mpir_errflag_t *errflag)
 {
     int mpi_errno = MPI_SUCCESS;
     int context_id;
     MPID_Request *request_ptr = NULL;
-    MPID_Comm *comm_ptr = NULL;
     MPIDI_STATE_DECL(MPID_STATE_MPIC_SSEND);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIC_SSEND);
@@ -400,7 +398,6 @@ int MPIC_Ssend(const void *buf, int count, MPI_Datatype datatype, int dest, int 
     MPIU_ERR_CHKANDJUMP1((count < 0), mpi_errno, MPI_ERR_COUNT,
             "**countneg", "**countneg %d", count);
 
-    MPID_Comm_get_ptr(comm, comm_ptr);
     context_id = (comm_ptr->comm_kind == MPID_INTRACOMM) ?
         MPID_CONTEXT_INTRA_COLL : MPID_CONTEXT_INTER_COLL;
 
@@ -447,13 +444,12 @@ int MPIC_Ssend(const void *buf, int count, MPI_Datatype datatype, int dest, int 
 int MPIC_Sendrecv(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
                      int dest, int sendtag, void *recvbuf, int recvcount,
                      MPI_Datatype recvtype, int source, int recvtag,
-                     MPI_Comm comm, MPI_Status *status, mpir_errflag_t *errflag)
+                     MPID_Comm *comm_ptr, MPI_Status *status, mpir_errflag_t *errflag)
 {
     int mpi_errno = MPI_SUCCESS;
     int context_id;
     MPI_Status mystatus;
     MPID_Request *recv_req_ptr = NULL, *send_req_ptr = NULL;
-    MPID_Comm *comm_ptr = NULL;
     MPIDI_STATE_DECL(MPID_STATE_MPIC_SENDRECV);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIC_SENDRECV);
@@ -465,7 +461,6 @@ int MPIC_Sendrecv(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
     MPIU_ERR_CHKANDJUMP1((recvcount < 0), mpi_errno, MPI_ERR_COUNT,
                          "**countneg", "**countneg %d", recvcount);
 
-    MPID_Comm_get_ptr(comm, comm_ptr);
     context_id = (comm_ptr->comm_kind == MPID_INTRACOMM) ?
         MPID_CONTEXT_INTRA_COLL : MPID_CONTEXT_INTER_COLL;
 
@@ -527,7 +522,7 @@ int MPIC_Sendrecv(const void *sendbuf, int sendcount, MPI_Datatype sendtype,
 int MPIC_Sendrecv_replace(void *buf, int count, MPI_Datatype datatype,
                              int dest, int sendtag,
                              int source, int recvtag,
-                             MPI_Comm comm, MPI_Status *status, mpir_errflag_t *errflag)
+                             MPID_Comm *comm_ptr, MPI_Status *status, mpir_errflag_t *errflag)
 {
     int mpi_errno = MPI_SUCCESS;
     MPI_Status mystatus;
@@ -537,7 +532,6 @@ int MPIC_Sendrecv_replace(void *buf, int count, MPI_Datatype datatype,
     void *tmpbuf = NULL;
     MPI_Aint tmpbuf_size = 0;
     MPI_Aint tmpbuf_count = 0;
-    MPID_Comm *comm_ptr;
     MPIU_CHKLMEM_DECL(1);
     MPIDI_STATE_DECL(MPID_STATE_MPIC_SENDRECV_REPLACE);
 #ifdef MPID_LOG_ARROWS
@@ -562,7 +556,6 @@ int MPIC_Sendrecv_replace(void *buf, int count, MPI_Datatype datatype,
             MPIR_TAG_SET_ERROR_BIT(sendtag);
     }
 
-    MPID_Comm_get_ptr(comm, comm_ptr);
     context_id_offset = (comm_ptr->comm_kind == MPID_INTRACOMM) ?
         MPID_CONTEXT_INTRA_COLL : MPID_CONTEXT_INTER_COLL;
 
@@ -625,12 +618,10 @@ int MPIC_Sendrecv_replace(void *buf, int count, MPI_Datatype datatype,
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIC_Isend(const void *buf, int count, MPI_Datatype datatype, int dest, int tag,
-                  MPI_Comm comm, MPI_Request *request, mpir_errflag_t *errflag)
+                  MPID_Comm *comm_ptr, MPID_Request **request_ptr, mpir_errflag_t *errflag)
 {
     int mpi_errno = MPI_SUCCESS;
     int context_id;
-    MPID_Request *request_ptr = NULL;
-    MPID_Comm *comm_ptr = NULL;
     MPIDI_STATE_DECL(MPID_STATE_MPIC_ISEND);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIC_ISEND);
@@ -649,15 +640,12 @@ int MPIC_Isend(const void *buf, int count, MPI_Datatype datatype, int dest, int 
             MPIR_TAG_SET_ERROR_BIT(tag);
     }
 
-    MPID_Comm_get_ptr(comm, comm_ptr);
     context_id = (comm_ptr->comm_kind == MPID_INTRACOMM) ?
         MPID_CONTEXT_INTRA_COLL : MPID_CONTEXT_INTER_COLL;
 
     mpi_errno = MPID_Isend(buf, count, datatype, dest, tag, comm_ptr,
-            context_id, &request_ptr);
+            context_id, request_ptr);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-
-    *request = request_ptr->handle;
 
  fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_MPIC_ISEND);
@@ -671,12 +659,10 @@ int MPIC_Isend(const void *buf, int count, MPI_Datatype datatype, int dest, int 
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPIC_Irecv(void *buf, int count, MPI_Datatype datatype, int source,
-                  int tag, MPI_Comm comm, MPI_Request *request)
+                  int tag, MPID_Comm *comm_ptr, MPID_Request **request_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
     int context_id;
-    MPID_Request *request_ptr = NULL;
-    MPID_Comm *comm_ptr = NULL;
     MPIDI_STATE_DECL(MPID_STATE_MPIC_IRECV);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIC_IRECV);
@@ -684,15 +670,12 @@ int MPIC_Irecv(void *buf, int count, MPI_Datatype datatype, int source,
     MPIU_ERR_CHKANDJUMP1((count < 0), mpi_errno, MPI_ERR_COUNT,
                          "**countneg", "**countneg %d", count);
 
-    MPID_Comm_get_ptr(comm, comm_ptr);
     context_id = (comm_ptr->comm_kind == MPID_INTRACOMM) ?
         MPID_CONTEXT_INTRA_COLL : MPID_CONTEXT_INTER_COLL;
 
     mpi_errno = MPID_Irecv(buf, count, datatype, source, tag, comm_ptr,
-            context_id, &request_ptr);
+            context_id, request_ptr);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-
-    *request = request_ptr->handle;
 
  fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_MPIC_IRECV);
@@ -706,34 +689,53 @@ int MPIC_Irecv(void *buf, int count, MPI_Datatype datatype, int source,
 #define FUNCNAME MPIC_Waitall
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPIC_Waitall(int numreq, MPI_Request requests[], MPI_Status statuses[], mpir_errflag_t *errflag)
+int MPIC_Waitall(int numreq, MPID_Request *requests[], MPI_Status statuses[], mpir_errflag_t *errflag)
 {
     int mpi_errno = MPI_SUCCESS;
     int i;
+    MPI_Request request_ptr_array[MPIC_REQUEST_PTR_ARRAY_SIZE];
+    MPI_Request *request_ptrs = request_ptr_array;
+    MPI_Status status_static_array[MPIC_REQUEST_PTR_ARRAY_SIZE];
+    MPI_Status *status_array = statuses;
     MPIDI_STATE_DECL(MPID_STATE_MPIC_WAITALL);
+    MPIU_CHKLMEM_DECL(2);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIC_WAITALL);
 
-    MPIU_Assert(statuses != MPI_STATUSES_IGNORE);
-
     MPIU_DBG_MSG_S(PT2PT, TYPICAL, "IN: errflag = %s", *errflag?"TRUE":"FALSE");
 
-    /* The MPI_TAG field is not set for send operations, so if we want
-       to check for the error bit in the tag below, we should initialize all
-       tag fields here. */
-    for (i = 0; i < numreq; ++i)
-        statuses[i].MPI_TAG = 0;
+    if (statuses == MPI_STATUSES_IGNORE) {
+        status_array = status_static_array;
+    }
 
-    mpi_errno = MPIR_Waitall_impl(numreq, requests, statuses);
+    if (numreq > MPIC_REQUEST_PTR_ARRAY_SIZE) {
+        MPIU_CHKLMEM_MALLOC(request_ptrs, MPI_Request *, numreq * sizeof(MPI_Request), mpi_errno, "request pointers");
+        MPIU_CHKLMEM_MALLOC(status_array, MPI_Status *, numreq * sizeof(MPI_Status), mpi_errno, "status objects");
+    }
+
+    for (i = 0; i < numreq; ++i) {
+        /* The MPI_TAG field is not set for send operations, so if we want
+        to check for the error bit in the tag below, we should initialize all
+        tag fields here. */
+        status_array[i].MPI_TAG = 0;
+
+        /* Convert the MPID_Request objects to MPI_Request objects */
+        request_ptrs[i] = requests[i]->handle;
+    }
+
+    mpi_errno = MPIR_Waitall_impl(numreq, request_ptrs, status_array);
 
     /* The errflag value here is for all requests, not just a single one.  If
      * in the future, this function is used for multiple collectives at a
      * single time, we may have to change that. */
     for (i = 0; i < numreq; ++i) {
-        MPIR_Process_status(&statuses[i], errflag);
+        MPIR_Process_status(&status_array[i], errflag);
     }
 
  fn_exit:
+    if (numreq > MPIC_REQUEST_PTR_ARRAY_SIZE)
+        MPIU_CHKLMEM_FREEALL();
+
     MPIU_DBG_MSG_D(PT2PT, TYPICAL, "OUT: errflag = %d", *errflag);
     MPIDI_FUNC_EXIT(MPID_STATE_MPIC_WAITALL);
     return mpi_errno;

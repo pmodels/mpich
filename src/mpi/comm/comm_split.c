@@ -256,7 +256,7 @@ int MPIR_Comm_split_impl(MPID_Comm *comm_ptr, int color, int key, MPID_Comm **ne
 	if (comm_ptr->rank == 0) {
 	    mpi_errno = MPIC_Sendrecv( &new_context_id, 1, MPIR_CONTEXT_ID_T_DATATYPE, 0, 0,
 				       &remote_context_id, 1, MPIR_CONTEXT_ID_T_DATATYPE, 
-				       0, 0, comm_ptr->handle, MPI_STATUS_IGNORE, &errflag );
+				       0, 0, comm_ptr, MPI_STATUS_IGNORE, &errflag );
 	    if (mpi_errno) { MPIU_ERR_POP( mpi_errno ); }
 	    mpi_errno = MPIR_Bcast_impl( &remote_context_id, 1, MPIR_CONTEXT_ID_T_DATATYPE, 0, local_comm_ptr, &errflag );
             if (mpi_errno) MPIU_ERR_POP(mpi_errno);

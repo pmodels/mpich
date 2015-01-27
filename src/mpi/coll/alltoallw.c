@@ -64,15 +64,13 @@ int MPIR_Alltoallw_intra(const void *sendbuf, const int sendcounts[], const int 
     int mpi_errno_ret = MPI_SUCCESS;
     MPI_Status status;
     MPI_Status *starray;
-    MPI_Request *reqarray;
+    MPID_Request **reqarray;
     int dst, rank;
-    MPI_Comm comm;
     int outstanding_requests;
     int ii, ss, bblock;
     int type_size;
     MPIU_CHKLMEM_DECL(2);
-    
-    comm = comm_ptr->handle;
+
     comm_size = comm_ptr->local_size;
     rank = comm_ptr->rank;
     
@@ -98,7 +96,7 @@ int MPIR_Alltoallw_intra(const void *sendbuf, const int sendcounts[], const int 
                                                          recvcounts[j], recvtypes[j],
                                                          j, MPIR_ALLTOALLW_TAG,
                                                          j, MPIR_ALLTOALLW_TAG,
-                                                         comm, &status, errflag);
+                                                         comm_ptr, &status, errflag);
                     if (mpi_errno) {
                         /* for communication errors, just record the error but continue */
                         *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
@@ -112,7 +110,7 @@ int MPIR_Alltoallw_intra(const void *sendbuf, const int sendcounts[], const int 
                                                          recvcounts[i], recvtypes[i],
                                                          i, MPIR_ALLTOALLW_TAG,
                                                          i, MPIR_ALLTOALLW_TAG,
-                                                         comm, &status, errflag);
+                                                         comm_ptr, &status, errflag);
                     if (mpi_errno) {
                         /* for communication errors, just record the error but continue */
                         *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
@@ -128,7 +126,7 @@ int MPIR_Alltoallw_intra(const void *sendbuf, const int sendcounts[], const int 
         if (bblock == 0) bblock = comm_size;
 
         MPIU_CHKLMEM_MALLOC(starray,  MPI_Status*,  2*bblock*sizeof(MPI_Status),  mpi_errno, "starray");
-        MPIU_CHKLMEM_MALLOC(reqarray, MPI_Request*, 2*bblock*sizeof(MPI_Request), mpi_errno, "reqarray");
+        MPIU_CHKLMEM_MALLOC(reqarray, MPID_Request**, 2*bblock*sizeof(MPID_Request *), mpi_errno, "reqarray");
 
         /* post only bblock isends/irecvs at a time as suggested by Tony Ladd */
         for (ii=0; ii<comm_size; ii+=bblock) {
@@ -143,7 +141,7 @@ int MPIR_Alltoallw_intra(const void *sendbuf, const int sendcounts[], const int 
                     if (type_size) {
                         mpi_errno = MPIC_Irecv((char *)recvbuf+rdispls[dst],
                                                   recvcounts[dst], recvtypes[dst], dst,
-                                                  MPIR_ALLTOALLW_TAG, comm,
+                                                  MPIR_ALLTOALLW_TAG, comm_ptr,
                                                   &reqarray[outstanding_requests]);
                         if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
 
@@ -159,7 +157,7 @@ int MPIR_Alltoallw_intra(const void *sendbuf, const int sendcounts[], const int 
                     if (type_size) {
                         mpi_errno = MPIC_Isend((char *)sendbuf+sdispls[dst],
                                                   sendcounts[dst], sendtypes[dst], dst,
-                                                  MPIR_ALLTOALLW_TAG, comm,
+                                                  MPIR_ALLTOALLW_TAG, comm_ptr,
                                                   &reqarray[outstanding_requests], errflag);
                         if (mpi_errno) { MPIU_ERR_POP(mpi_errno); }
 
@@ -206,7 +204,7 @@ int MPIR_Alltoallw_intra(const void *sendbuf, const int sendcounts[], const int 
                                          MPIR_ALLTOALLW_TAG, 
                                          ((char *)recvbuf+rdispls[src]), 
                                          recvcounts[src], recvtypes[dst], src,
-                                         MPIR_ALLTOALLW_TAG, comm, &status, errflag);
+                                         MPIR_ALLTOALLW_TAG, comm_ptr, &status, errflag);
             if (mpi_errno) {
                 /* for communication errors, just record the error but continue */
                 *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
@@ -301,7 +299,7 @@ int MPIR_Alltoallw_inter(const void *sendbuf, const int sendcounts[], const int 
         mpi_errno = MPIC_Sendrecv(sendaddr, sendcount, sendtype,
                                      dst, MPIR_ALLTOALLW_TAG, recvaddr,
                                      recvcount, recvtype, src,
-                                     MPIR_ALLTOALLW_TAG, comm, &status, errflag);
+                                     MPIR_ALLTOALLW_TAG, comm_ptr, &status, errflag);
         if (mpi_errno) {
             /* for communication errors, just record the error but continue */
             *errflag = MPIR_ERR_GET_CLASS(mpi_errno);

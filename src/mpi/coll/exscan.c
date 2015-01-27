@@ -101,15 +101,13 @@ int MPIR_Exscan (
     MPI_Aint true_extent, true_lb, extent;
     void *partial_scan, *tmp_buf;
     MPID_Op *op_ptr;
-    MPI_Comm comm;
     MPIU_CHKLMEM_DECL(2);
     MPIU_THREADPRIV_DECL;
     
     if (count == 0) return MPI_SUCCESS;
 
     MPIU_THREADPRIV_GET;
-    
-    comm = comm_ptr->handle;
+
     comm_size = comm_ptr->local_size;
     rank = comm_ptr->rank;
     
@@ -157,7 +155,7 @@ int MPIR_Exscan (
             mpi_errno = MPIC_Sendrecv(partial_scan, count, datatype,
                                          dst, MPIR_EXSCAN_TAG, tmp_buf,
                                          count, datatype, dst,
-                                         MPIR_EXSCAN_TAG, comm,
+                                         MPIR_EXSCAN_TAG, comm_ptr,
                                          &status, errflag);
             if (mpi_errno) {
                 /* for communication errors, just record the error but continue */

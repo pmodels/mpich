@@ -100,7 +100,6 @@ int MPIR_Allgatherv_intra (
     MPID_Comm *comm_ptr,
     mpir_errflag_t *errflag )
 {
-    MPI_Comm comm;
     int        comm_size, rank, j, i, left, right;
     int mpi_errno = MPI_SUCCESS;
     int mpi_errno_ret = MPI_SUCCESS;
@@ -121,7 +120,6 @@ int MPIR_Allgatherv_intra (
     /* check if multiple threads are calling this collective function */
     MPIDU_ERR_CHECK_MULTIPLE_THREADS_ENTER( comm_ptr );
 
-    comm = comm_ptr->handle;
     comm_size = comm_ptr->local_size;
     rank = comm_ptr->rank;
     
@@ -214,7 +212,7 @@ int MPIR_Allgatherv_intra (
                                                  ((char *)tmp_buf + recv_offset * recvtype_extent),
                                                  total_count - recv_offset, recvtype, dst,
                                                  MPIR_ALLGATHERV_TAG,
-                                                 comm, &status, errflag);
+                                                 comm_ptr, &status, errflag);
                     if (mpi_errno) {
                         /* for communication errors, just record the error but continue */
                         *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
@@ -282,7 +280,7 @@ int MPIR_Allgatherv_intra (
                             mpi_errno = MPIC_Send(((char *)tmp_buf + offset),
                                                      last_recv_cnt,
                                                      recvtype, dst,
-                                                     MPIR_ALLGATHERV_TAG, comm, errflag);
+                                                     MPIR_ALLGATHERV_TAG, comm_ptr, errflag);
                             if (mpi_errno) {
                                 /* for communication errors, just record the error but continue */
                                 *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
@@ -306,7 +304,7 @@ int MPIR_Allgatherv_intra (
                             mpi_errno = MPIC_Recv(((char *)tmp_buf + offset * recvtype_extent),
                                                      total_count - offset, recvtype,
                                                      dst, MPIR_ALLGATHERV_TAG,
-                                                     comm, &status, errflag);
+                                                     comm_ptr, &status, errflag);
                             if (mpi_errno) {
                                 /* for communication errors, just record the error but continue */
                                 *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
@@ -415,7 +413,7 @@ int MPIR_Allgatherv_intra (
                                                  MPIR_ALLGATHERV_TAG,  
                                                  ((char *)tmp_buf + recv_offset),
                                                  tmp_buf_size-recv_offset, MPI_BYTE, dst,
-                                                 MPIR_ALLGATHERV_TAG, comm, &status, errflag);
+                                                 MPIR_ALLGATHERV_TAG, comm_ptr, &status, errflag);
                     if (mpi_errno) {
                         /* for communication errors, just record the error but continue */
                         *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
@@ -475,7 +473,7 @@ int MPIR_Allgatherv_intra (
                             mpi_errno = MPIC_Send(((char *)tmp_buf + offset),
                                                      last_recv_cnt, MPI_BYTE,
                                                      dst, MPIR_ALLGATHERV_TAG,
-                                                     comm, errflag);
+                                                     comm_ptr, errflag);
                             if (mpi_errno) {
                                 /* for communication errors, just record the error but continue */
                                 *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
@@ -495,7 +493,7 @@ int MPIR_Allgatherv_intra (
                                                      tmp_buf_size-offset, MPI_BYTE,
                                                      dst,
                                                      MPIR_ALLGATHERV_TAG,
-                                                     comm, &status, errflag);
+                                                     comm_ptr, &status, errflag);
                             if (mpi_errno) {
                                 /* for communication errors, just record the error but continue */
                                 *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
@@ -577,7 +575,7 @@ int MPIR_Allgatherv_intra (
                                          MPIR_ALLGATHERV_TAG,
                                          ((char *)tmp_buf + curr_cnt*recvtype_extent),
                                          total_count - curr_cnt, recvtype,
-                                         src, MPIR_ALLGATHERV_TAG, comm, &status, errflag);
+                                         src, MPIR_ALLGATHERV_TAG, comm_ptr, &status, errflag);
             if (mpi_errno) {
                 /* for communication errors, just record the error but continue */
                 *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
@@ -606,7 +604,7 @@ int MPIR_Allgatherv_intra (
                                          dst, MPIR_ALLGATHERV_TAG,
                                          ((char *)tmp_buf + curr_cnt*recvtype_extent),
                                          total_count - curr_cnt, recvtype,
-                                         src, MPIR_ALLGATHERV_TAG, comm,
+                                         src, MPIR_ALLGATHERV_TAG, comm_ptr,
                                          MPI_STATUS_IGNORE, errflag);
             if (mpi_errno) {
                 /* for communication errors, just record the error but continue */
@@ -695,7 +693,7 @@ int MPIR_Allgatherv_intra (
 		 * consecutive processes contribute 0 bytes each. */
 	    }
 	    else if (!sendnow) { /* If there's no data to send, just do a recv call */
-		mpi_errno = MPIC_Recv(rbuf, recvnow, recvtype, left, MPIR_ALLGATHERV_TAG, comm, &status, errflag);
+		mpi_errno = MPIC_Recv(rbuf, recvnow, recvtype, left, MPIR_ALLGATHERV_TAG, comm_ptr, &status, errflag);
                 if (mpi_errno) {
                     /* for communication errors, just record the error but continue */
                     *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
@@ -705,7 +703,7 @@ int MPIR_Allgatherv_intra (
 		torecv -= recvnow;
 	    }
 	    else if (!recvnow) { /* If there's no data to receive, just do a send call */
-		mpi_errno = MPIC_Send(sbuf, sendnow, recvtype, right, MPIR_ALLGATHERV_TAG, comm, errflag);
+		mpi_errno = MPIC_Send(sbuf, sendnow, recvtype, right, MPIR_ALLGATHERV_TAG, comm_ptr, errflag);
                 if (mpi_errno) {
                     /* for communication errors, just record the error but continue */
                     *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
@@ -717,7 +715,7 @@ int MPIR_Allgatherv_intra (
 	    else { /* There's data to be sent and received */
 		mpi_errno = MPIC_Sendrecv(sbuf, sendnow, recvtype, right, MPIR_ALLGATHERV_TAG,
                                              rbuf, recvnow, recvtype, left, MPIR_ALLGATHERV_TAG,
-                                             comm, &status, errflag);
+                                             comm_ptr, &status, errflag);
                 if (mpi_errno) {
                     /* for communication errors, just record the error but continue */
                     *errflag = MPIR_ERR_GET_CLASS(mpi_errno);

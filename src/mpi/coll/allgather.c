@@ -127,7 +127,6 @@ int MPIR_Allgather_intra (
     int j, i, pof2, src, rem;
     void *tmp_buf = NULL;
     int curr_cnt, dst, type_size, left, right, jnext;
-    MPI_Comm comm;
     MPI_Status status;
     int mask, dst_tree_root, my_tree_root, is_homogeneous,  
         send_offset, recv_offset, last_recv_cnt = 0, nprocs_completed, k,
@@ -140,8 +139,7 @@ int MPIR_Allgather_intra (
 
     if (((sendcount == 0) && (sendbuf != MPI_IN_PLACE)) || (recvcount == 0))
         return MPI_SUCCESS;
-    
-    comm = comm_ptr->handle;
+
     comm_size = comm_ptr->local_size;
     rank = comm_ptr->rank;
 
@@ -209,7 +207,7 @@ int MPIR_Allgather_intra (
                                                  ((char *)recvbuf + recv_offset),
                                                  (comm_size-dst_tree_root)*recvcount,
                                                  recvtype, dst,
-                                                 MPIR_ALLGATHER_TAG, comm, &status, errflag);
+                                                 MPIR_ALLGATHER_TAG, comm_ptr, &status, errflag);
 		    if (mpi_errno) {
                         /* for communication errors, just record the error but continue */
                         *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
@@ -271,7 +269,7 @@ int MPIR_Allgather_intra (
                             mpi_errno = MPIC_Send(((char *)recvbuf + offset),
                                                      last_recv_cnt,
                                                      recvtype, dst,
-                                                     MPIR_ALLGATHER_TAG, comm, errflag); 
+                                                     MPIR_ALLGATHER_TAG, comm_ptr, errflag);
                             /* last_recv_cnt was set in the previous
                                receive. that's the amount of data to be
                                sent now. */
@@ -291,7 +289,7 @@ int MPIR_Allgather_intra (
                                                      (comm_size - (my_tree_root + mask))*recvcount,
                                                      recvtype, dst,
                                                      MPIR_ALLGATHER_TAG,
-                                                     comm, &status, errflag); 
+                                                     comm_ptr, &status, errflag);
                             /* nprocs_completed is also equal to the
                                no. of processes whose data we don't have */
                             if (mpi_errno) {
@@ -377,7 +375,7 @@ int MPIR_Allgather_intra (
                                                  ((char *)tmp_buf + recv_offset),
                                                  tmp_buf_size - recv_offset,
                                                  MPI_BYTE, dst,
-                                                 MPIR_ALLGATHER_TAG, comm, &status, errflag);
+                                                 MPIR_ALLGATHER_TAG, comm_ptr, &status, errflag);
                     if (mpi_errno) {
                         /* for communication errors, just record the error but continue */
                         *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
@@ -432,7 +430,7 @@ int MPIR_Allgather_intra (
                             mpi_errno = MPIC_Send(((char *)tmp_buf + offset),
                                                      last_recv_cnt, MPI_BYTE,
                                                      dst, MPIR_ALLGATHER_TAG,
-                                                     comm, errflag);
+                                                     comm_ptr, errflag);
                             if (mpi_errno) {
                                 /* for communication errors, just record the error but continue */
                                 *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
@@ -452,7 +450,7 @@ int MPIR_Allgather_intra (
                                                      tmp_buf_size - offset,
                                                      MPI_BYTE, dst,
                                                      MPIR_ALLGATHER_TAG,
-                                                     comm, &status, errflag); 
+                                                     comm_ptr, &status, errflag);
                             /* nprocs_completed is also equal to the
                                no. of processes whose data we don't have */
                             if (mpi_errno) {
@@ -528,7 +526,7 @@ int MPIR_Allgather_intra (
                                          MPIR_ALLGATHER_TAG,
                                          ((char *)tmp_buf + curr_cnt*recvtype_extent),
                                          curr_cnt, recvtype,
-                                         src, MPIR_ALLGATHER_TAG, comm,
+                                         src, MPIR_ALLGATHER_TAG, comm_ptr,
                                          MPI_STATUS_IGNORE, errflag);
             if (mpi_errno) {
                 /* for communication errors, just record the error but continue */
@@ -551,7 +549,7 @@ int MPIR_Allgather_intra (
                                          dst, MPIR_ALLGATHER_TAG,
                                          ((char *)tmp_buf + curr_cnt*recvtype_extent),
                                          rem * recvcount, recvtype,
-                                         src, MPIR_ALLGATHER_TAG, comm,
+                                         src, MPIR_ALLGATHER_TAG, comm_ptr,
                                          MPI_STATUS_IGNORE, errflag);
             if (mpi_errno) {
                 /* for communication errors, just record the error but continue */
@@ -613,7 +611,7 @@ int MPIR_Allgather_intra (
                                          ((char *)recvbuf +
                                           jnext*recvcount*recvtype_extent), 
                                          recvcount, recvtype, left, 
-                                         MPIR_ALLGATHER_TAG, comm,
+                                         MPIR_ALLGATHER_TAG, comm_ptr,
                                          MPI_STATUS_IGNORE, errflag);
             if (mpi_errno) {
                 /* for communication errors, just record the error but continue */
