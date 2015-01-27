@@ -72,8 +72,7 @@ int MPI_Type_create_subarray(int ndims,
 
     /* these variables are from the original version in ROMIO */
     MPI_Aint size, extent, disps[3];
-    int blklens[3];
-    MPI_Datatype tmp1, tmp2, types[3];
+    MPI_Datatype tmp1, tmp2;
 
 #   ifdef HAVE_ERROR_CHECKING
     MPI_Aint   size_with_aint;
@@ -278,29 +277,23 @@ int MPI_Type_create_subarray(int ndims,
     for (i=0; i<ndims; i++) disps[2] *= (MPI_Aint)(array_of_sizes[i]);
 
     disps[0] = 0;
-    blklens[0] = blklens[1] = blklens[2] = 1;
-    types[0] = MPI_LB;
-    types[1] = tmp1;
-    types[2] = MPI_UB;
 
-    /* TODO:
-     * if we were to do all this as an mpid function, we could just
-     * directly adjust the LB and UB in the MPID_Datatype structure
-     * instead of jumping through this hoop.
-     *
-     * i suppose we could do the same thing here...
-     *
-     * another alternative would be to use MPID_Type_create_resized()
-     * instead of building the struct.  that would also be cleaner.
-     */
-    mpi_errno = MPID_Type_struct(3,
-				 blklens,
-				 disps,
-				 types,
-				 &new_handle);
+/* Instead of using MPI_LB/MPI_UB, which have been removed from MPI in MPI-3,
+   use MPI_Type_create_resized. Use hindexed_block to set the starting displacement
+   of the datatype (disps[1]) and type_create_resized to set lb to 0 (disps[0])
+   and extent to disps[2], which makes ub = disps[2].
+ */
+
+    mpi_errno = MPID_Type_blockindexed(1, 1, &disps[1],
+                                       1, /* 1 means disp is in bytes */
+                                       tmp1, &tmp2);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
+    mpi_errno = MPID_Type_create_resized(tmp2, 0, disps[2], &new_handle);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
     MPIR_Type_free_impl(&tmp1);
+    MPIR_Type_free_impl(&tmp2);
 
     /* at this point we have the new type, and we've cleaned up any
      * intermediate types created in the process.  we just need to save
