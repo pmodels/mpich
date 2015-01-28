@@ -68,6 +68,14 @@ typedef uint16_t MPIR_Context_id_t;
 
 typedef MPIU_SIZE_T MPIU_Size_t;
 
+/* Define a typedef for the errflag value used by many internal functions.
+ * If an error needs to be returned, these values can be used to signal such.
+ * More details can be found further down in the code with the bitmasking logic */
+typedef enum {MPIR_ERR_NONE = MPI_SUCCESS,
+              MPIR_ERR_PROC_FAILED = MPIX_ERR_PROC_FAILED,
+              MPIR_ERR_OTHER = MPI_ERR_OTHER}
+mpir_errflag_t;
+
 /* Use the MPIU_PtrToXXX macros to convert pointers to and from integer types */
 
 /* The Microsoft compiler will not allow casting of different sized types 

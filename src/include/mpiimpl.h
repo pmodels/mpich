@@ -720,14 +720,6 @@ extern MPID_Errhandler MPID_Errhandler_direct[];
     } while (0)
 /* ------------------------------------------------------------------------- */
 
-/* Define a typedef for the errflag value used by many internal functions.
- * If an error needs to be returned, these values can be used to signal such.
- * More details can be found further down in the code with the bitmasking logic */
-typedef enum {MPIR_ERR_NONE = MPI_SUCCESS,
-              MPIR_ERR_PROC_FAILED = MPIX_ERR_PROC_FAILED,
-              MPIR_ERR_OTHER = MPI_ERR_OTHER}
-mpir_errflag_t;
-
 /* ------------------------------------------------------------------------- */
 /* Keyvals and attributes */
 /*TKyOverview.tex
