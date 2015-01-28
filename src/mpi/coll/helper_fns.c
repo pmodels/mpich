@@ -655,6 +655,47 @@ int MPIC_Isend(const void *buf, int count, MPI_Datatype datatype, int dest, int 
 }
 
 #undef FUNCNAME
+#define FUNCNAME MPIC_Issend
+#undef FCNAME
+#define FCNAME MPIU_QUOTE(FUNCNAME)
+int MPIC_Issend(const void *buf, int count, MPI_Datatype datatype, int dest, int tag,
+                  MPID_Comm *comm_ptr, MPID_Request **request_ptr, mpir_errflag_t *errflag)
+{
+    int mpi_errno = MPI_SUCCESS;
+    int context_id;
+    MPIDI_STATE_DECL(MPID_STATE_MPIC_ISSEND);
+
+    MPIDI_FUNC_ENTER(MPID_STATE_MPIC_ISSEND);
+
+    MPIU_DBG_MSG_D(PT2PT, TYPICAL, "IN: errflag = %d", *errflag);
+
+    MPIU_ERR_CHKANDJUMP1((count < 0), mpi_errno, MPI_ERR_COUNT,
+                         "**countneg", "**countneg %d", count);
+
+    switch(*errflag) {
+        case MPIR_ERR_NONE:
+            break;
+        case MPIR_ERR_PROC_FAILED:
+            MPIR_TAG_SET_PROC_FAILURE_BIT(tag);
+        default:
+            MPIR_TAG_SET_ERROR_BIT(tag);
+    }
+
+    context_id = (comm_ptr->comm_kind == MPID_INTRACOMM) ?
+        MPID_CONTEXT_INTRA_COLL : MPID_CONTEXT_INTER_COLL;
+
+    mpi_errno = MPID_Issend(buf, count, datatype, dest, tag, comm_ptr,
+            context_id, request_ptr);
+    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+
+ fn_exit:
+    MPIDI_FUNC_EXIT(MPID_STATE_MPIC_ISSEND);
+    return mpi_errno;
+ fn_fail:
+    goto fn_exit;
+}
+
+#undef FUNCNAME
 #define FUNCNAME MPIC_Irecv
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
