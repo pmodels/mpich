@@ -31,7 +31,7 @@ static inline MPIDI_RMA_Lock_entry_t *MPIDI_CH3I_Win_lock_entry_alloc(MPID_Win *
 
     if (new_ptr != NULL) {
         new_ptr->next = NULL;
-        new_ptr->pkt = (*pkt);
+        MPIU_Memcpy(&(new_ptr->pkt), pkt, sizeof(*pkt));
         new_ptr->vc = NULL;
         new_ptr->data = NULL;
         new_ptr->data_size = 0;
