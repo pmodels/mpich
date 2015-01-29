@@ -218,6 +218,7 @@ int MPIR_Request_complete(MPI_Request * request, MPID_Request * request_ptr,
         case MPID_COLL_REQUEST:
         case MPID_WIN_REQUEST:
         {
+            mpi_errno = request_ptr->status.MPI_ERROR;
             MPIR_Request_extract_status(request_ptr, status);
             MPID_Request_release(request_ptr);
             if (NULL != request) *request = MPI_REQUEST_NULL;
