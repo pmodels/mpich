@@ -4559,7 +4559,8 @@ static inline int MPIR_Request_complete_fastpath(MPI_Request *request, MPID_Requ
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 static inline void MPIR_Process_status(MPI_Status *status, mpir_errflag_t *errflag)
 {
-    if ((MPIX_ERR_REVOKED == MPIR_ERR_GET_CLASS(status->MPI_ERROR) ||
+    if (MPI_PROC_NULL != status->MPI_SOURCE &&
+        (MPIX_ERR_REVOKED == MPIR_ERR_GET_CLASS(status->MPI_ERROR) ||
         MPIX_ERR_PROC_FAILED == MPIR_ERR_GET_CLASS(status->MPI_ERROR) ||
         MPIR_TAG_CHECK_ERROR_BIT(status->MPI_TAG)) && !*errflag) {
         /* If the receive was completed within the MPID_Recv, handle the

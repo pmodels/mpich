@@ -228,10 +228,6 @@ int MPIC_Wait(MPID_Request * request_ptr, mpir_errflag_t *errflag)
 	MPID_Progress_end(&progress_state);
     }
 
-    if (request_ptr->kind == MPID_REQUEST_RECV &&
-        request_ptr->status.MPI_SOURCE == MPI_PROC_NULL)
-        goto fn_exit;
-
     MPIR_Process_status(&request_ptr->status, errflag);
 
  fn_exit:

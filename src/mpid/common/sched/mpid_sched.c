@@ -841,37 +841,29 @@ static int MPIDU_Sched_progress_state(struct MPIDU_Sched_state *state, int *made
                 case MPIDU_SCHED_ENTRY_SEND:
                     if (e->u.send.sreq != NULL && MPID_Request_is_complete(e->u.send.sreq)) {
                         MPIU_DBG_MSG_FMT(COMM, VERBOSE, (MPIU_DBG_FDEST, "completed SEND entry %d, sreq=%p\n", (int) i, e->u.send.sreq));
-                        e->status = MPIDU_SCHED_ENTRY_STATUS_COMPLETE;
-                        /* This wait call won't enter the progress engine.
-                         * It's just a convinient way to pull out the error
-                         * information from the tag. */
-                        MPIR_Process_status(&e->u.send.sreq->status, &s->req->dev.errflag);
+                        if (s->req->dev.errflag != MPIR_ERR_NONE)
+                            e->status = MPIDU_SCHED_ENTRY_STATUS_FAILED;
+                        else
+                            e->status = MPIDU_SCHED_ENTRY_STATUS_COMPLETE;
                         MPID_Request_release(e->u.send.sreq);
                         e->u.send.sreq = NULL;
                         MPIR_Comm_release(e->u.send.comm, /*isDisconnect=*/FALSE);
                         dtype_release_if_not_builtin(e->u.send.datatype);
-                        if (e->u.send.sreq->status.MPI_ERROR)
-                            e->status = MPIDU_SCHED_ENTRY_STATUS_FAILED;
-                        else
-                            e->status = MPIDU_SCHED_ENTRY_STATUS_COMPLETE;
                     }
                     break;
                 case MPIDU_SCHED_ENTRY_RECV:
                     if (e->u.recv.rreq != NULL && MPID_Request_is_complete(e->u.recv.rreq)) {
                         MPIU_DBG_MSG_FMT(COMM, VERBOSE, (MPIU_DBG_FDEST, "completed RECV entry %d, rreq=%p\n", (int) i, e->u.recv.rreq));
-                        /* This wait call won't enter the progress engine.
-                         * It's just a convinient way to pull out the error
-                         * information from the tag. */
                         MPIR_Process_status(&e->u.recv.rreq->status, &s->req->dev.errflag);
                         MPIR_Request_extract_status(e->u.recv.rreq, e->u.recv.status);
+                        if (s->req->dev.errflag != MPIR_ERR_NONE)
+                            e->status = MPIDU_SCHED_ENTRY_STATUS_FAILED;
+                        else
+                            e->status = MPIDU_SCHED_ENTRY_STATUS_COMPLETE;
                         MPID_Request_release(e->u.recv.rreq);
                         e->u.recv.rreq = NULL;
                         MPIR_Comm_release(e->u.recv.comm, /*isDisconnect=*/FALSE);
                         dtype_release_if_not_builtin(e->u.recv.datatype);
-                        if (e->u.recv.rreq->status.MPI_ERROR)
-                            e->status = MPIDU_SCHED_ENTRY_STATUS_FAILED;
-                        else
-                            e->status = MPIDU_SCHED_ENTRY_STATUS_COMPLETE;
                     }
                     break;
                 default:
