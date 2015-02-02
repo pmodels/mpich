@@ -73,6 +73,7 @@ MPID_Request * MPID_Request_create(void)
         MPIR_STATUS_SET_CANCEL_BIT(req->status, FALSE);
 	req->comm		   = NULL;
         req->greq_fns              = NULL;
+        req->errflag               = MPIR_ERR_NONE;
 	req->dev.datatype_ptr	   = NULL;
 	req->dev.segment_ptr	   = NULL;
 	/* Masks and flags for channel device state in an MPID_Request */
@@ -94,7 +95,6 @@ MPID_Request * MPID_Request_create(void)
         req->dev.user_buf          = NULL;
         req->dev.final_user_buf    = NULL;
         req->dev.drop_data         = FALSE;
-        req->dev.errflag           = MPIR_ERR_NONE;
 #ifdef MPIDI_CH3_REQUEST_INIT
 	MPIDI_CH3_REQUEST_INIT(req);
 #endif

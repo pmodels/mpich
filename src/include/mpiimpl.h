@@ -1509,6 +1509,9 @@ typedef struct MPID_Request {
 
     struct MPIR_Sendq *dbg_next;
 
+    /* Errflag for NBC requests. Not used by other requests. */
+    mpir_errflag_t errflag;
+
     /* Other, device-specific information */
 #ifdef MPID_DEV_REQUEST_DECL
     MPID_DEV_REQUEST_DECL

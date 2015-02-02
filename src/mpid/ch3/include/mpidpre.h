@@ -446,9 +446,6 @@ typedef struct MPIDI_Request {
     struct MPIDI_RMA_Lock_entry *lock_queue_entry;
     MPI_Request resp_request_handle; /* Handle for get_accumulate response */
 
-	/* Errflag for NBC requests. Not used by other requests. */
-	mpir_errflag_t errflag;
-
     MPIDI_REQUEST_SEQNUM
 
     /* Occasionally, when a message cannot be sent, we need to cache the
