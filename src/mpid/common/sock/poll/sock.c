@@ -7,8 +7,8 @@
 
 #include "mpishared.h"
 
+#include "mpiimpl.h"
 #include "mpidu_sock.h"
-/*#include "mpiimpl.h"*/
 #ifdef HAVE_STRING_H
 /* Include for memcpy and memset */
 #include <string.h>
