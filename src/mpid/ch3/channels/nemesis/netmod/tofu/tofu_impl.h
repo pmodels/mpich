@@ -108,6 +108,7 @@ int MPID_nem_tofu_iprobe(MPIDI_VC_t *vc, int source, int tag, MPID_Comm *comm, i
                          int *flag, MPI_Status *status);
 int MPID_nem_tofu_improbe(MPIDI_VC_t *vc,  int source, int tag, MPID_Comm *comm, int context_offset,
                           int *flag, MPID_Request **message, MPI_Status *status);
+int MPID_nem_tofu_cancel_recv(struct MPIDI_VC *vc,  struct MPID_Request *req);
 
 /*
  * temporary llctofu api
