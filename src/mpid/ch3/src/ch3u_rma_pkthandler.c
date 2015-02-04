@@ -1098,6 +1098,9 @@ int MPIDI_CH3_PktHandler_FOP(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
         fop_resp_pkt->flags |= MPIDI_CH3_PKT_FLAG_RMA_FLUSH_ACK;
     fop_resp_pkt->immed_len = fop_pkt->immed_len;
 
+    if (win_ptr->shm_allocated == TRUE)
+        MPIDI_CH3I_SHM_MUTEX_LOCK(win_ptr);
+
     /* copy data to resp pkt header */
     void *src = fop_pkt->addr, *dest = fop_resp_pkt->data;
     mpi_errno = immed_copy(src, dest, (size_t)fop_resp_pkt->immed_len);
@@ -1107,12 +1110,11 @@ int MPIDI_CH3_PktHandler_FOP(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
     if (fop_pkt->op != MPI_NO_OP) {
         MPI_User_function *uop = MPIR_OP_HDL_TO_FN(fop_pkt->op);
         int one = 1;
-        if (win_ptr->shm_allocated == TRUE)
-            MPIDI_CH3I_SHM_MUTEX_LOCK(win_ptr);
         (*uop)(fop_pkt->data, fop_pkt->addr, &one, &(fop_pkt->datatype));
-        if (win_ptr->shm_allocated == TRUE)
-            MPIDI_CH3I_SHM_MUTEX_UNLOCK(win_ptr);
     }
+
+    if (win_ptr->shm_allocated == TRUE)
+        MPIDI_CH3I_SHM_MUTEX_UNLOCK(win_ptr);
 
     /* send back the original data */
     MPIU_THREAD_CS_ENTER(CH3COMM,vc);
