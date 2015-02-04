@@ -112,6 +112,10 @@ int MPIDI_CH3_ReqHandler_PutAccumRespComplete( MPIDI_VC_t *vc,
         MPIU_CHKPMEM_MALLOC(resp_req->dev.user_buf, void *, rreq->dev.user_count * type_size,
                             mpi_errno, "GACC resp. buffer");
 
+        /* atomic read-modify-write for get_acc*/
+        if (win_ptr->shm_allocated == TRUE)
+            MPIDI_CH3I_SHM_MUTEX_LOCK(win_ptr);
+
         if (MPIR_DATATYPE_IS_PREDEFINED(rreq->dev.datatype)) {
             MPIU_Memcpy(resp_req->dev.user_buf, rreq->dev.real_user_buf, 
                         rreq->dev.user_count * type_size);
@@ -124,6 +128,10 @@ int MPIDI_CH3_ReqHandler_PutAccumRespComplete( MPIDI_VC_t *vc,
             MPID_Segment_pack(seg, 0, &last, resp_req->dev.user_buf);
             MPID_Segment_free(seg);
         }
+
+        mpi_errno = do_accumulate_op(rreq);
+        if (win_ptr->shm_allocated == TRUE)
+            MPIDI_CH3I_SHM_MUTEX_UNLOCK(win_ptr);
 
         resp_req->dev.OnFinal = MPIDI_CH3_ReqHandler_GetAccumRespComplete;
         resp_req->dev.OnDataAvail = MPIDI_CH3_ReqHandler_GetAccumRespComplete;
@@ -151,8 +159,7 @@ int MPIDI_CH3_ReqHandler_PutAccumRespComplete( MPIDI_VC_t *vc,
 
         get_acc_flag = 1;
     }
-
-    if (MPIDI_Request_get_type(rreq) == MPIDI_REQUEST_TYPE_ACCUM_RESP) {
+    else if (MPIDI_Request_get_type(rreq) == MPIDI_REQUEST_TYPE_ACCUM_RESP) {
 
 	if (win_ptr->shm_allocated == TRUE)
 	    MPIDI_CH3I_SHM_MUTEX_LOCK(win_ptr);
@@ -530,6 +537,10 @@ int MPIDI_CH3_ReqHandler_FOPComplete( MPIDI_VC_t *vc,
 
     MPID_Win_get_ptr(rreq->dev.target_win_handle, win_ptr);
 
+    /* Atomic read-modify-write for FOP */
+    if (win_ptr->shm_allocated == TRUE)
+        MPIDI_CH3I_SHM_MUTEX_LOCK(win_ptr);
+
     /* Copy original data into the send buffer.  If data will fit in the
        header, use that.  Otherwise allocate a temporary buffer.  */
     if (len <= sizeof(fop_resp_pkt->data)) {
@@ -558,12 +569,11 @@ int MPIDI_CH3_ReqHandler_FOPComplete( MPIDI_VC_t *vc,
         uop = MPIR_OP_HDL_TO_FN(rreq->dev.op);
         one = 1;
 
-        if (win_ptr->shm_allocated == TRUE)
-            MPIDI_CH3I_SHM_MUTEX_LOCK(win_ptr);
         (*uop)(rreq->dev.user_buf, rreq->dev.real_user_buf, &one, &rreq->dev.datatype);
-        if (win_ptr->shm_allocated == TRUE)
-            MPIDI_CH3I_SHM_MUTEX_UNLOCK(win_ptr);
     }
+
+    if (win_ptr->shm_allocated == TRUE)
+        MPIDI_CH3I_SHM_MUTEX_UNLOCK(win_ptr);
 
     /* Send back the original data.  We do this here to ensure that the
        operation is remote complete before responding to the origin. */
