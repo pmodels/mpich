@@ -29,28 +29,35 @@ int MPI_Info_get(MPI_Info info, const char *key, int valuelen, char *value, int 
 #define FUNCNAME MPIR_Info_get_impl
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-void MPIR_Info_get_impl(MPID_Info *info_ptr, const char *key, int valuelen, char *value, int *flag)
+int MPIR_Info_get_impl(MPID_Info *info_ptr, const char *key, int valuelen, char *value, int *flag)
 {
     MPID_Info *curr_ptr;
+    int err=0, mpi_errno=0;
+
     curr_ptr = info_ptr->next;
     *flag = 0;
 
     while (curr_ptr) {
         if (!strncmp(curr_ptr->key, key, MPI_MAX_INFO_KEY)) {
-            MPIU_Strncpy(value, curr_ptr->value, valuelen);
-            /* The following is problematic - if the user passes the
-               declared length, then this will access memory one
-               passed that point */
-            /* FIXME: The real fix is to change MPIU_Strncpy to
-               set the null at the end (always!) and return an error
-               if it had to truncate the result. */
-            /* value[valuelen] = '\0'; */
+            err = MPIU_Strncpy(value, curr_ptr->value, valuelen+1);
+            /* +1 because the MPI Standard says "In C, valuelen
+             * (passed to MPI_Info_get) should be one less than the
+             * amount of allocated space to allow for the null
+             * terminator*/
             *flag = 1;
             break;
         }
         curr_ptr = curr_ptr->next;
     }
-    return;
+
+    /* --BEGIN ERROR HANDLING-- */
+    if (err != 0)
+    {
+        mpi_errno = MPIR_Err_create_code(MPI_SUCCESS, MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, MPI_ERR_INFO_VALUE, "**infovallong", NULL);
+    }
+    /* --END ERROR HANDLING-- */
+
+    return mpi_errno;
 }
 
 #endif
@@ -61,7 +68,7 @@ void MPIR_Info_get_impl(MPID_Info *info_ptr, const char *key, int valuelen, char
 Input Parameters:
 + info - info object (handle)
 . key - key (string)
-- valuelen - length of value argument (integer)
+- valuelen - length of value argument, not including null terminator (integer)
 
 Output Parameters:
 + value - value (string)
@@ -139,8 +146,9 @@ int MPI_Info_get(MPI_Info info, const char *key, int valuelen, char *value,
 #   endif /* HAVE_ERROR_CHECKING */
 
     /* ... body of routine ...  */
-    MPIR_Info_get_impl(info_ptr, key, valuelen, value, flag);
+    mpi_errno = MPIR_Info_get_impl(info_ptr, key, valuelen, value, flag);
     /* ... end of body of routine ... */
+    if (mpi_errno) goto fn_fail;
 
 #ifdef HAVE_ERROR_CHECKING
   fn_exit:
