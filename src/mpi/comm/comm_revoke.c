@@ -17,6 +17,8 @@
 #pragma _HP_SECONDARY_DEF PMPIX_Comm_revoke  MPIX_Comm_revoke
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPIX_Comm_revoke as PMPIX_Comm_revoke
+#elif defined(HAVE_WEAK_ATTRIBUTE)
+int MPIX_Comm_revoke(MPI_Comm comm) __attribute__((weak,alias("PMPIX_Comm_revoke")));
 #endif
 /* -- End Profiling Symbol Block */
 
