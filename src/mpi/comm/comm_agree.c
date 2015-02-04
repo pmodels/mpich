@@ -15,6 +15,8 @@
 #pragma _HP_SECONDARY_DEF PMPIX_Comm_agree  MPIX_Comm_agree
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPIX_Comm_agree as PMPIX_Comm_agree
+#elif defined(HAVE_WEAK_ATTRIBUTE)
+int MPIX_Comm_agree(MPI_Comm comm, int *flag) __attribute__((weak,alias("PMPIX_Comm_agree")));
 #endif
 /* -- End Profiling Symbol Block */
 

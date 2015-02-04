@@ -22,6 +22,8 @@
 #pragma _HP_SECONDARY_DEF PMPIX_Mutex_create  MPIX_Mutex_create
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPIX_Mutex_create as PMPIX_Mutex_create
+#elif defined(HAVE_WEAK_ATTRIBUTE)
+int MPIX_Mutex_create(int my_count, MPI_Comm comm, MPIX_Mutex * hdl_out) __attribute__((weak,alias("MPIX_Mutex_create")));
 #endif
 /* -- End Profiling Symbol Block */
 
