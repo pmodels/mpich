@@ -47,8 +47,12 @@ int MPIDI_Win_free(MPID_Win **win_ptr)
     MPIU_ERR_CHKANDJUMP((*win_ptr)->epoch_state != MPIDI_EPOCH_NONE,
                         mpi_errno, MPI_ERR_RMA_SYNC, "**rmasync");
 
-    mpi_errno = MPIDI_CH3I_Wait_for_pt_ops_finish(*win_ptr);
-    if(mpi_errno) MPIU_ERR_POP(mpi_errno);
+    if (!(*win_ptr)->shm_allocated) {
+        /* when SHM is allocated, we already waited for operation completion in
+         MPIDI_CH3_SHM_Win_free, so we do not need to do it again here. */
+        mpi_errno = MPIDI_CH3I_Wait_for_pt_ops_finish(*win_ptr);
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    }
 
     comm_ptr = (*win_ptr)->comm_ptr;
     mpi_errno = MPIR_Comm_free_impl(comm_ptr);
