@@ -128,6 +128,9 @@ win_shared_zerobyte 4 mpiversion=3.0
 win_shared_put_flush_get 4 mpiversion=3.0
 get-struct 2
 at_complete 2
+atomic_rmw_fop 3
+atomic_rmw_cas 3
+atomic_rmw_gacc 3
 
 ## This test is not strictly correct.  This was meant to test out the
 ## case when MPI_Test is not nonblocking.  However, we ended up
