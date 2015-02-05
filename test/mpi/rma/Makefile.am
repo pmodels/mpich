@@ -140,7 +140,10 @@ noinst_PROGRAMS =          \
     get-struct             \
     rput_local_comp        \
     racc_local_comp        \
-    at_complete
+    at_complete            \
+    atomic_rmw_fop         \
+    atomic_rmw_cas         \
+    atomic_rmw_gacc
 
 if BUILD_MPIX_TESTS
 noinst_PROGRAMS += aint
