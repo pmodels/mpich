@@ -506,7 +506,7 @@ fi
 
 echo_n "Checking for automake version... "
 recreate_tmp
-ver=1.12.3
+ver=1.15
 cat > .tmp/configure.ac<<EOF
 AC_INIT(testver,1.0)
 AC_CONFIG_AUX_DIR([m4])
