@@ -217,6 +217,8 @@ static int MPIDU_Sched_start_entry(struct MPIDU_Sched *s, size_t idx, struct MPI
             MPIU_DBG_MSG_D(COMM, VERBOSE, "starting CB entry %d\n", (int) idx);
             if (e->u.cb.cb_type == MPIDU_SCHED_CB_TYPE_1) {
                 ret_errno = e->u.cb.u.cb_p(r->comm, s->tag, e->u.cb.cb_state);
+                /* Sched entries list can be reallocated inside callback */
+                e = &s->entries[idx];
                 if (unlikely(ret_errno)) {
                     if (MPIR_ERR_NONE == r->errflag) {
                         if (MPIX_ERR_PROC_FAILED == MPIR_ERR_GET_CLASS(ret_errno)) {
@@ -232,6 +234,8 @@ static int MPIDU_Sched_start_entry(struct MPIDU_Sched *s, size_t idx, struct MPI
             }
             else if (e->u.cb.cb_type == MPIDU_SCHED_CB_TYPE_2) {
                 ret_errno = e->u.cb.u.cb2_p(r->comm, s->tag, e->u.cb.cb_state, e->u.cb.cb_state2);
+                /* Sched entries list can be reallocated inside callback */
+                e = &s->entries[idx];
                 if (unlikely(ret_errno)) {
                     if (MPIR_ERR_NONE == r->errflag) {
                         if (MPIX_ERR_PROC_FAILED == MPIR_ERR_GET_CLASS(ret_errno)) {
@@ -281,6 +285,8 @@ static int MPIDU_Sched_continue(struct MPIDU_Sched *s)
 
         if (e->status == MPIDU_SCHED_ENTRY_STATUS_NOT_STARTED) {
             mpi_errno = MPIDU_Sched_start_entry(s, i, e);
+            /* Sched entries list can be reallocated inside callback */
+            e = &s->entries[i];
             if (mpi_errno) MPIU_ERR_POP(mpi_errno);
         }
 
