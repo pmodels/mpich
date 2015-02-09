@@ -89,8 +89,7 @@ typedef enum {
     MPIDI_CH3_PKT_UNLOCK,
     MPIDI_CH3_PKT_FLUSH,
     MPIDI_CH3_PKT_DECR_AT_COUNTER,
-    MPIDI_CH3_PKT_LOCK_ACK,
-    MPIDI_CH3_PKT_LOCK_OP_ACK,
+    MPIDI_CH3_PKT_LOCK_GRANTED,
     MPIDI_CH3_PKT_FLUSH_ACK,
     /* RMA Packets end here */
     MPIDI_CH3_PKT_FLOW_CNTL_UPDATE,     /* FIXME: Unused */
@@ -507,7 +506,7 @@ typedef struct MPIDI_CH3_Pkt_put {
     int lock_type;
     int origin_rank;
     /* Followings are to piggyback IMMED data */
-    int immed_len;
+    size_t immed_len;
     char data[MPIDI_RMA_IMMED_BYTES];
 } MPIDI_CH3_Pkt_put_t;
 
@@ -544,7 +543,7 @@ typedef struct MPIDI_CH3_Pkt_accum {
     int lock_type;
     int origin_rank;
     /* Followings are to piggyback IMMED data */
-    int immed_len;
+    size_t immed_len;
     char data[MPIDI_RMA_IMMED_BYTES];
 } MPIDI_CH3_Pkt_accum_t;
 
@@ -566,7 +565,7 @@ typedef struct MPIDI_CH3_Pkt_get_accum {
     int lock_type;
     int origin_rank;
     /* Followings are to piggback IMMED data */
-    int immed_len;
+    size_t immed_len;
     char data[MPIDI_RMA_IMMED_BYTES];
 } MPIDI_CH3_Pkt_get_accum_t;
 
@@ -623,9 +622,6 @@ typedef struct MPIDI_CH3_Pkt_get_resp {
     /* Followings are used to decrement ack_counter at origin */
     MPI_Win source_win_handle;
     int target_rank;
-    /* Followings are to piggyback IMMED data */
-    int immed_len;
-    char data[MPIDI_RMA_IMMED_BYTES];
 } MPIDI_CH3_Pkt_get_resp_t;
 
 typedef struct MPIDI_CH3_Pkt_get_accum_resp {
@@ -637,9 +633,6 @@ typedef struct MPIDI_CH3_Pkt_get_accum_resp {
     /* Followings are used to decrement ack_counter at origin */
     MPI_Win source_win_handle;
     int target_rank;
-    /* Followings are to piggyback IMMED data */
-    int immed_len;
-    char data[MPIDI_RMA_IMMED_BYTES];
 } MPIDI_CH3_Pkt_get_accum_resp_t;
 
 typedef struct MPIDI_CH3_Pkt_fop_resp {
@@ -676,6 +669,7 @@ typedef struct MPIDI_CH3_Pkt_lock {
     MPI_Win target_win_handle;
     MPI_Win source_win_handle;
     int lock_type;
+    int target_rank;
     int origin_rank;
 } MPIDI_CH3_Pkt_lock_t;
 
@@ -684,12 +678,18 @@ typedef struct MPIDI_CH3_Pkt_unlock {
     MPIDI_CH3_Pkt_flags_t flags;
     MPI_Win target_win_handle;
     MPI_Win source_win_handle;
+    int lock_type;
+    int target_rank;
+    int origin_rank;
 } MPIDI_CH3_Pkt_unlock_t;
 
 typedef struct MPIDI_CH3_Pkt_flush {
     MPIDI_CH3_Pkt_type_t type;
     MPI_Win target_win_handle;
     MPI_Win source_win_handle;
+    int lock_type;
+    int target_rank;
+    int origin_rank;
 } MPIDI_CH3_Pkt_flush_t;
 
 typedef struct MPIDI_CH3_Pkt_decr_at_counter {
@@ -698,23 +698,16 @@ typedef struct MPIDI_CH3_Pkt_decr_at_counter {
 } MPIDI_CH3_Pkt_decr_at_counter_t;
 
 /*********************************************************************************/
-/* RMA control response packet (from target to origin, including LOCK_ACK,       */
-/* LOCK_OP_ACK, FLUSH_ACK)                                                       */
+/* RMA control response packet (from target to origin, including LOCK_GRANTED,   */
+/* FLUSH_ACK)                                                                    */
 /*********************************************************************************/
 
-typedef struct MPIDI_CH3_Pkt_lock_ack {
+typedef struct MPIDI_CH3_Pkt_lock_granted {
     MPIDI_CH3_Pkt_type_t type;
     MPIDI_CH3_Pkt_flags_t flags;
     MPI_Win source_win_handle;
     int target_rank;
-} MPIDI_CH3_Pkt_lock_ack_t;
-
-typedef struct MPIDI_CH3_Pkt_lock_op_ack {
-    MPIDI_CH3_Pkt_type_t type;
-    MPIDI_CH3_Pkt_flags_t flags;
-    MPI_Win source_win_handle;
-    int target_rank;
-} MPIDI_CH3_Pkt_lock_op_ack_t;
+} MPIDI_CH3_Pkt_lock_granted_t;
 
 typedef struct MPIDI_CH3_Pkt_flush_ack {
     MPIDI_CH3_Pkt_type_t type;
@@ -763,8 +756,7 @@ typedef union MPIDI_CH3_Pkt {
     MPIDI_CH3_Pkt_unlock_t unlock;
     MPIDI_CH3_Pkt_flush_t flush;
     MPIDI_CH3_Pkt_decr_at_counter_t decr_at_cnt;
-    MPIDI_CH3_Pkt_lock_ack_t lock_ack;
-    MPIDI_CH3_Pkt_lock_op_ack_t lock_op_ack;
+    MPIDI_CH3_Pkt_lock_granted_t lock_granted;
     MPIDI_CH3_Pkt_flush_ack_t flush_ack;
     /* RMA packets end here */
     MPIDI_CH3_Pkt_close_t close;
