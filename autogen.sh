@@ -544,7 +544,7 @@ fi
 
 echo_n "Checking for libtool version... "
 recreate_tmp
-ver=2.4
+ver=2.4.3
 cat <<EOF >.tmp/configure.ac
 AC_INIT(testver,1.0)
 AC_CONFIG_AUX_DIR([m4])
@@ -924,33 +924,6 @@ if [ "$do_build_configure" = "yes" ] ; then
             # Older versions are not supported to build mpich.
             # Newer versions should have this patch already included.
             if [ -f $amdir/confdb/libtool.m4 ] ; then
-                echo_n "Patching libtool.m4 to enable support for powerpcle... "
-                powerpcle_patch_requires_rebuild=no
-                patch -N -s -l $amdir/confdb/libtool.m4 maint/0001-libtool-powerpc-le-linux-support.patch
-                if [ $? -eq 0 ] ; then
-                    powerpcle_patch_requires_rebuild=yes
-                    # Remove possible leftovers, which don't imply a failure
-                    rm -f $amdir/confdb/libtool.m4.orig
-                    echo "done"
-                else
-                    echo "failed"
-                fi
-
-                # There is no need to patch if we're not going to use Fortran.
-                nagfor_patch_requires_rebuild=no
-                if [ $do_bindings = "yes" ] ; then
-                    echo_n "Patching libtool.m4 for compatibility with nagfor shared libraries... "
-                    patch -N -s -l $amdir/confdb/libtool.m4 maint/libtool.m4.patch
-                    if [ $? -eq 0 ] ; then
-                        nagfor_patch_requires_rebuild=yes
-                        # Remove possible leftovers, which don't imply a failure
-                        rm -f $amdir/confdb/libtool.m4.orig
-                        echo "done"
-                    else
-                        echo "failed"
-                    fi
-                fi
-
                 # There is no need to patch if we're not going to use Fortran.
                 ifort_patch_requires_rebuild=no
                 if [ $do_bindings = "yes" ] ; then
@@ -966,7 +939,7 @@ if [ "$do_build_configure" = "yes" ] ; then
                     fi
                 fi
 
-                if [ $powerpcle_patch_requires_rebuild = "yes" -o $nagfor_patch_requires_rebuild = "yes" -o $ifort_patch_requires_rebuild = "yes" ] ; then
+                if [ $ifort_patch_requires_rebuild = "yes" ] ; then
                     # Rebuild configure
                     (cd $amdir && $autoconf -f) || exit 1
                     # Reset libtool.m4 timestamps to avoid confusing make
