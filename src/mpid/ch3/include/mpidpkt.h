@@ -86,7 +86,8 @@ typedef enum {
     MPIDI_CH3_PKT_FOP_RESP,
     MPIDI_CH3_PKT_CAS_RESP,
     MPIDI_CH3_PKT_LOCK,
-    MPIDI_CH3_PKT_LOCK_GRANTED,
+    MPIDI_CH3_PKT_LOCK_ACK,
+    MPIDI_CH3_PKT_LOCK_OP_ACK,
     MPIDI_CH3_PKT_UNLOCK,
     MPIDI_CH3_PKT_FLUSH,
     MPIDI_CH3_PKT_FLUSH_ACK,
@@ -502,7 +503,7 @@ typedef struct MPIDI_CH3_Pkt_put {
                                  * epoch in the case of passive target rma
                                  * with shared locks. Otherwise set to NULL*/
     char data[MPIDI_RMA_IMMED_BYTES];
-    size_t immed_len;
+    int immed_len;
     int lock_type;      /* used when piggybacking LOCK message. */
     int origin_rank;    /* used when piggybacking LOCK message. */
 } MPIDI_CH3_Pkt_put_t;
@@ -533,6 +534,9 @@ typedef struct MPIDI_CH3_Pkt_get_resp {
     int target_rank;
     MPI_Win source_win_handle;
     MPIDI_CH3_Pkt_flags_t flags;
+    /* Followings are to piggyback IMMED data */
+    int immed_len;
+    char data[MPIDI_RMA_IMMED_BYTES];
 } MPIDI_CH3_Pkt_get_resp_t;
 
 typedef struct MPIDI_CH3_Pkt_accum {
@@ -551,7 +555,7 @@ typedef struct MPIDI_CH3_Pkt_accum {
                                  * epoch in the case of passive target rma
                                  * with shared locks. Otherwise set to NULL*/
     char data[MPIDI_RMA_IMMED_BYTES];
-    size_t immed_len;
+    int immed_len;
     int lock_type;    /* used when piggybacking LOCK message. */
     int origin_rank;  /* used when piggybacking LOCK message. */
 } MPIDI_CH3_Pkt_accum_t;
@@ -573,7 +577,7 @@ typedef struct MPIDI_CH3_Pkt_get_accum {
                                  * epoch in the case of passive target rma
                                  * with shared locks. Otherwise set to NULL*/
     char data[MPIDI_RMA_IMMED_BYTES];
-    size_t immed_len;
+    int immed_len;
     int lock_type;     /* used when piggybacking LOCK message. */
     int origin_rank;   /* used when piggybacking LOCK message. */
 } MPIDI_CH3_Pkt_get_accum_t;
@@ -585,6 +589,9 @@ typedef struct MPIDI_CH3_Pkt_get_accum_resp {
     int target_rank;
     MPI_Win source_win_handle;
     MPIDI_CH3_Pkt_flags_t flags;
+    /* Followings are to piggyback IMMED data */
+    int immed_len;
+    char data[MPIDI_RMA_IMMED_BYTES];
 } MPIDI_CH3_Pkt_get_accum_resp_t;
 
 typedef struct MPIDI_CH3_Pkt_cas {
@@ -648,39 +655,36 @@ typedef struct MPIDI_CH3_Pkt_lock {
     int lock_type;
     MPI_Win target_win_handle;
     MPI_Win source_win_handle;
-    int target_rank;            /* Used in unluck/flush response to look up the
-                                 * target state at the origin. */
     int origin_rank;
 } MPIDI_CH3_Pkt_lock_t;
 
 typedef struct MPIDI_CH3_Pkt_unlock {
     MPIDI_CH3_Pkt_type_t type;
-    int lock_type;
     MPI_Win target_win_handle;
     MPI_Win source_win_handle;
-    int target_rank;            /* Used in unluck/flush response to look up the
-                                 * target state at the origin. */
-    int origin_rank;
     MPIDI_CH3_Pkt_flags_t flags;
 } MPIDI_CH3_Pkt_unlock_t;
 
 typedef struct MPIDI_CH3_Pkt_flush {
     MPIDI_CH3_Pkt_type_t type;
-    int lock_type;
     MPI_Win target_win_handle;
     MPI_Win source_win_handle;
-    int target_rank;            /* Used in unluck/flush response to look up the
-                                 * target state at the origin. */
-    int origin_rank;
 } MPIDI_CH3_Pkt_flush_t;
 
-typedef struct MPIDI_CH3_Pkt_lock_granted {
+typedef struct MPIDI_CH3_Pkt_lock_ack {
     MPIDI_CH3_Pkt_type_t type;
     MPIDI_CH3_Pkt_flags_t flags;
     MPI_Win source_win_handle;
     int target_rank;            /* Used in flush_ack response to look up the
                                  * target state at the origin. */
-} MPIDI_CH3_Pkt_lock_granted_t;
+} MPIDI_CH3_Pkt_lock_ack_t;
+
+typedef struct MPIDI_CH3_Pkt_lock_op_ack {
+    MPIDI_CH3_Pkt_type_t type;
+    MPIDI_CH3_Pkt_flags_t flags;
+    MPI_Win source_win_handle;
+    int target_rank;
+} MPIDI_CH3_Pkt_lock_op_ack_t;
 
 typedef struct MPIDI_CH3_Pkt_flush_ack {
     MPIDI_CH3_Pkt_type_t type;
@@ -725,7 +729,8 @@ typedef union MPIDI_CH3_Pkt {
     MPIDI_CH3_Pkt_accum_t accum;
     MPIDI_CH3_Pkt_get_accum_t get_accum;
     MPIDI_CH3_Pkt_lock_t lock;
-    MPIDI_CH3_Pkt_lock_granted_t lock_granted;
+    MPIDI_CH3_Pkt_lock_ack_t lock_ack;
+    MPIDI_CH3_Pkt_lock_op_ack_t lock_op_ack;
     MPIDI_CH3_Pkt_unlock_t unlock;
     MPIDI_CH3_Pkt_flush_t flush;
     MPIDI_CH3_Pkt_flush_ack_t flush_ack;
