@@ -225,7 +225,7 @@ int MPIDI_CH3_PktHandler_Put(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
         MPIU_Memcpy(put_pkt->addr, put_pkt->info.data, put_pkt->count*type_size);
 
         /* trigger final action */
-        mpi_errno = finish_op_on_target(win_ptr, vc, pkt->type,
+        mpi_errno = finish_op_on_target(win_ptr, vc, FALSE /* has no response data */,
                                         put_pkt->flags, put_pkt->source_win_handle);
         if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
 
@@ -577,7 +577,7 @@ int MPIDI_CH3_PktHandler_Accumulate(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
         }
 
         /* trigger final action */
-        mpi_errno = finish_op_on_target(win_ptr, vc, pkt->type,
+        mpi_errno = finish_op_on_target(win_ptr, vc, FALSE /* has no response data */,
                                         accum_pkt->flags, accum_pkt->source_win_handle);
         if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
 
@@ -1074,7 +1074,7 @@ int MPIDI_CH3_PktHandler_CAS(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
             MPID_Request_release(req);
     }
 
-    mpi_errno = finish_op_on_target(win_ptr, vc, cas_pkt->type,
+    mpi_errno = finish_op_on_target(win_ptr, vc, TRUE /* has response data */,
                                     cas_pkt->flags, cas_pkt->source_win_handle);
     if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
 
@@ -1247,7 +1247,7 @@ int MPIDI_CH3_PktHandler_FOP(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
         }
     }
 
-    mpi_errno = finish_op_on_target(win_ptr, vc, fop_pkt->type,
+    mpi_errno = finish_op_on_target(win_ptr, vc, TRUE /* has response data */,
                                     fop_pkt->flags, fop_pkt->source_win_handle);
     if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
     }

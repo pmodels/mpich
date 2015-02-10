@@ -851,13 +851,12 @@ static inline int check_piggyback_lock(MPID_Win *win_ptr, MPIDI_VC_t *vc,
 }
 
 static inline int finish_op_on_target(MPID_Win *win_ptr, MPIDI_VC_t *vc,
-                                      MPIDI_CH3_Pkt_type_t type,
+                                      int has_response_data,
                                       MPIDI_CH3_Pkt_flags_t flags,
                                       MPI_Win source_win_handle) {
     int mpi_errno = MPI_SUCCESS;
 
-    if (type == MPIDI_CH3_PKT_PUT || type == MPIDI_CH3_PKT_PUT_IMMED ||
-        type == MPIDI_CH3_PKT_ACCUMULATE_IMMED || type == MPIDI_CH3_PKT_ACCUMULATE) {
+    if (!has_response_data) {
         /* This is PUT or ACC */
         if (flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK_SHARED ||
             flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK_EXCLUSIVE) {

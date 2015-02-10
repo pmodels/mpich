@@ -84,7 +84,7 @@ int MPIDI_CH3_ReqHandler_GetSendComplete( MPIDI_VC_t *vc ATTRIBUTE((unused)),
        because inside finish_op_on_target() we may call this request handler
        on the same request again (in release_lock()). Marking this request as
        completed will prevent us from processing the same request twice. */
-    mpi_errno = finish_op_on_target(win_ptr, vc, MPIDI_CH3_PKT_GET,
+    mpi_errno = finish_op_on_target(win_ptr, vc, TRUE /* has response data */,
                                     flags, source_win_handle);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
@@ -149,7 +149,7 @@ int MPIDI_CH3_ReqHandler_GaccumSendComplete( MPIDI_VC_t *vc,
        because inside finish_op_on_target() we may call this request handler
        on the same request again (in release_lock()). Marking this request as
        completed will prevent us from processing the same request twice. */
-    mpi_errno = finish_op_on_target(win_ptr, vc, MPIDI_CH3_PKT_GET_ACCUM,
+    mpi_errno = finish_op_on_target(win_ptr, vc, TRUE /* has response data */,
                                     flags, source_win_handle);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
@@ -217,7 +217,7 @@ int MPIDI_CH3_ReqHandler_CASSendComplete( MPIDI_VC_t *vc,
        because inside finish_op_on_target() we may call this request handler
        on the same request again (in release_lock()). Marking this request as
        completed will prevent us from processing the same request twice. */
-    mpi_errno = finish_op_on_target(win_ptr, vc, MPIDI_CH3_PKT_CAS_IMMED,
+    mpi_errno = finish_op_on_target(win_ptr, vc, TRUE/* has response data */,
                                     flags, source_win_handle);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
@@ -283,7 +283,7 @@ int MPIDI_CH3_ReqHandler_FOPSendComplete( MPIDI_VC_t *vc,
        because inside finish_op_on_target() we may call this request handler
        on the same request again (in release_lock()). Marking this request as
        completed will prevent us from processing the same request twice. */
-    mpi_errno = finish_op_on_target(win_ptr, vc, MPIDI_CH3_PKT_FOP,
+    mpi_errno = finish_op_on_target(win_ptr, vc, TRUE /* has response data */,
                                     flags, source_win_handle);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 

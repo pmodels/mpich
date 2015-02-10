@@ -113,7 +113,7 @@ int MPIDI_CH3_ReqHandler_PutRecvComplete( MPIDI_VC_t *vc,
        because inside finish_op_on_target() we may call this request handler
        on the same request again (in release_lock()). Marking this request as
        completed will prevent us from processing the same request twice. */
-    mpi_errno = finish_op_on_target(win_ptr, vc, MPIDI_CH3_PKT_PUT,
+    mpi_errno = finish_op_on_target(win_ptr, vc, FALSE /* has no response data */,
                                     flags, source_win_handle);
     if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
 
@@ -191,7 +191,7 @@ int MPIDI_CH3_ReqHandler_AccumRecvComplete( MPIDI_VC_t *vc,
        because inside finish_op_on_target() we may call this request handler
        on the same request again (in release_lock()). Marking this request as
        completed will prevent us from processing the same request twice. */
-    mpi_errno = finish_op_on_target(win_ptr, vc, MPIDI_CH3_PKT_ACCUMULATE,
+    mpi_errno = finish_op_on_target(win_ptr, vc, FALSE /* has no response data */,
                                     flags, source_win_handle);
     if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
 
@@ -957,7 +957,7 @@ static inline int perform_put_in_lock_queue(MPID_Win *win_ptr, MPIDI_RMA_Lock_en
     }
 
     /* do final action */
-    mpi_errno = finish_op_on_target(win_ptr, lock_entry->vc, put_pkt->type,
+    mpi_errno = finish_op_on_target(win_ptr, lock_entry->vc, FALSE /* has no response data */,
                                     put_pkt->flags, put_pkt->source_win_handle);
     if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
 
@@ -1087,7 +1087,7 @@ static inline int perform_acc_in_lock_queue(MPID_Win *win_ptr, MPIDI_RMA_Lock_en
     if (win_ptr->shm_allocated == TRUE)
         MPIDI_CH3I_SHM_MUTEX_UNLOCK(win_ptr);
 
-    mpi_errno = finish_op_on_target(win_ptr, lock_entry->vc, acc_pkt->type,
+    mpi_errno = finish_op_on_target(win_ptr, lock_entry->vc, FALSE /* has no response data */,
                                     acc_pkt->flags, acc_pkt->source_win_handle);
     if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
 
@@ -1360,7 +1360,7 @@ static inline int perform_fop_in_lock_queue(MPID_Win *win_ptr, MPIDI_RMA_Lock_en
     }
 
     /* do final action */
-    mpi_errno = finish_op_on_target(win_ptr, lock_entry->vc, fop_pkt->type,
+    mpi_errno = finish_op_on_target(win_ptr, lock_entry->vc, TRUE /* has response data */,
                                     fop_pkt->flags, fop_pkt->source_win_handle);
     if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
 
@@ -1442,7 +1442,7 @@ static inline int perform_cas_in_lock_queue(MPID_Win *win_ptr, MPIDI_RMA_Lock_en
     }
 
     /* do final action */
-    mpi_errno = finish_op_on_target(win_ptr, lock_entry->vc, cas_pkt->type,
+    mpi_errno = finish_op_on_target(win_ptr, lock_entry->vc, TRUE /* has response data */,
                                     cas_pkt->flags, cas_pkt->source_win_handle);
     if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
 
