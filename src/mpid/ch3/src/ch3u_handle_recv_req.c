@@ -936,6 +936,12 @@ static inline int perform_put_in_lock_queue(MPID_Win *win_ptr, MPIDI_RMA_Lock_en
     MPIDI_CH3_Pkt_put_t *put_pkt = &((lock_entry->pkt).put);
     int mpi_errno = MPI_SUCCESS;
 
+    /* Piggyback candidate should have basic datatype for target datatype. */
+    MPIU_Assert(MPIR_DATATYPE_IS_PREDEFINED(put_pkt->datatype));
+
+    /* Make sure that all data is received for this op. */
+    MPIU_Assert(lock_entry->all_data_recved == 1);
+
     if (put_pkt->type == MPIDI_CH3_PKT_PUT_IMMED) {
         /* all data fits in packet header */
         mpi_errno = MPIR_Localcopy(put_pkt->info.data, put_pkt->count, put_pkt->datatype,
@@ -972,6 +978,12 @@ static inline int perform_get_in_lock_queue(MPID_Win *win_ptr, MPIDI_RMA_Lock_en
     int iovcnt;
     MPID_IOV iov[MPID_IOV_LIMIT];
     int mpi_errno = MPI_SUCCESS;
+
+    /* Piggyback candidate should have basic datatype for target datatype. */
+    MPIU_Assert(MPIR_DATATYPE_IS_PREDEFINED(get_pkt->datatype));
+
+    /* Make sure that all data is received for this op. */
+    MPIU_Assert(lock_entry->all_data_recved == 1);
 
     sreq = MPID_Request_create();
     if (sreq == NULL) {
@@ -1052,6 +1064,9 @@ static inline int perform_acc_in_lock_queue(MPID_Win *win_ptr, MPIDI_RMA_Lock_en
 
     MPIU_Assert(lock_entry->all_data_recved == 1);
 
+    /* Piggyback candidate should have basic datatype for target datatype. */
+    MPIU_Assert(MPIR_DATATYPE_IS_PREDEFINED(acc_pkt->datatype));
+
     if (win_ptr->shm_allocated == TRUE)
         MPIDI_CH3I_SHM_MUTEX_LOCK(win_ptr);
 
@@ -1094,6 +1109,12 @@ static inline int perform_get_acc_in_lock_queue(MPID_Win *win_ptr, MPIDI_RMA_Loc
     int iovcnt;
     MPID_IOV iov[MPID_IOV_LIMIT];
     int mpi_errno = MPI_SUCCESS;
+
+    /* Piggyback candidate should have basic datatype for target datatype. */
+    MPIU_Assert(MPIR_DATATYPE_IS_PREDEFINED(get_accum_pkt->datatype));
+
+    /* Make sure that all data is received for this op. */
+    MPIU_Assert(lock_entry->all_data_recved == 1);
 
     sreq = MPID_Request_create();
     if (sreq == NULL) {
@@ -1217,6 +1238,12 @@ static inline int perform_fop_in_lock_queue(MPID_Win *win_ptr, MPIDI_RMA_Lock_en
     MPID_IOV iov[MPID_IOV_LIMIT];
     int iovcnt;
     int mpi_errno = MPI_SUCCESS;
+
+    /* Piggyback candidate should have basic datatype for target datatype. */
+    MPIU_Assert(MPIR_DATATYPE_IS_PREDEFINED(fop_pkt->datatype));
+
+    /* Make sure that all data is received for this op. */
+    MPIU_Assert(lock_entry->all_data_recved == 1);
 
     /* FIXME: this function is same with PktHandler_FOP(), should
        do code refactoring on both of them. */
@@ -1352,6 +1379,12 @@ static inline int perform_cas_in_lock_queue(MPID_Win *win_ptr, MPIDI_RMA_Lock_en
     MPID_Request *send_req = NULL;
     MPI_Aint len;
     int mpi_errno = MPI_SUCCESS;
+
+    /* Piggyback candidate should have basic datatype for target datatype. */
+    MPIU_Assert(MPIR_DATATYPE_IS_PREDEFINED(cas_pkt->datatype));
+
+    /* Make sure that all data is received for this op. */
+    MPIU_Assert(lock_entry->all_data_recved == 1);
 
     MPIDI_Pkt_init(cas_resp_pkt, MPIDI_CH3_PKT_CAS_RESP_IMMED);
     cas_resp_pkt->request_handle = cas_pkt->request_handle;
