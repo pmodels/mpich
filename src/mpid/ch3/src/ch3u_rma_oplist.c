@@ -366,7 +366,9 @@ static inline int issue_ops_target(MPID_Win * win_ptr, MPIDI_RMA_Target_t *targe
             win_ptr->active_req_cnt++;
 
         if (curr_op->pkt.type == MPIDI_CH3_PKT_PUT ||
-            curr_op->pkt.type == MPIDI_CH3_PKT_ACCUMULATE) {
+            curr_op->pkt.type == MPIDI_CH3_PKT_PUT_IMMED ||
+            curr_op->pkt.type == MPIDI_CH3_PKT_ACCUMULATE ||
+            curr_op->pkt.type == MPIDI_CH3_PKT_ACCUMULATE_IMMED) {
             target->put_acc_issued = 1; /* set PUT_ACC_FLAG when sending
                                            PUT/ACC operation. */
         }
@@ -401,7 +403,9 @@ static inline int issue_ops_target(MPID_Win * win_ptr, MPIDI_RMA_Target_t *targe
                                           &(target->dt_op_list_tail), curr_op);
             }
             else if (curr_op->pkt.type == MPIDI_CH3_PKT_PUT ||
-                     curr_op->pkt.type == MPIDI_CH3_PKT_ACCUMULATE) {
+                     curr_op->pkt.type == MPIDI_CH3_PKT_PUT_IMMED ||
+                     curr_op->pkt.type == MPIDI_CH3_PKT_ACCUMULATE ||
+                     curr_op->pkt.type == MPIDI_CH3_PKT_ACCUMULATE_IMMED) {
                 MPIDI_CH3I_RMA_Ops_append(&(target->write_op_list),
                                           &(target->write_op_list_tail), curr_op);
             }

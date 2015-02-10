@@ -326,7 +326,6 @@ static int issue_put_op(MPIDI_RMA_Op_t * rma_op, MPID_Win *win_ptr,
                         MPIDI_CH3_Pkt_flags_t flags)
 {
     MPIDI_VC_t *vc = NULL;
-    size_t len;
     MPI_Aint origin_type_size;
     MPID_Comm *comm_ptr = win_ptr->comm_ptr;
     MPIDI_CH3_Pkt_put_t *put_pkt = &rma_op->pkt.put;
@@ -341,23 +340,10 @@ static int issue_put_op(MPIDI_RMA_Op_t * rma_op, MPID_Win *win_ptr,
     put_pkt->flags |= flags;
 
     MPID_Datatype_get_size_macro(rma_op->origin_datatype, origin_type_size);
-    MPIU_Assign_trunc(len, rma_op->origin_count * origin_type_size, size_t);
-
-    if (!rma_op->is_dt) {
-        /* Fill origin data into packet header IMMED area as much as possible */
-        MPIU_Assign_trunc(put_pkt->immed_len,
-                          MPIR_MIN(len, (MPIDI_RMA_IMMED_BYTES/origin_type_size)*origin_type_size),
-                          int);
-        if (put_pkt->immed_len > 0) {
-            void *src = rma_op->origin_addr, *dest = put_pkt->data;
-            mpi_errno = immed_copy(src, dest, (size_t)put_pkt->immed_len);
-            if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
-        }
-    }
 
     MPIDI_Comm_get_vc_set_active(comm_ptr, rma_op->target_rank, &vc);
 
-    if (len == (size_t)put_pkt->immed_len) {
+    if (rma_op->pkt.type == MPIDI_CH3_PKT_PUT_IMMED) {
         /* All origin data is in packet header, issue the header. */
         MPIU_THREAD_CS_ENTER(CH3COMM, vc);
         mpi_errno = MPIDI_CH3_iStartMsg(vc, put_pkt, sizeof(*put_pkt), &(rma_op->request));
@@ -368,10 +354,8 @@ static int issue_put_op(MPIDI_RMA_Op_t * rma_op, MPID_Win *win_ptr,
         /* We still need to issue from origin buffer. */
         iov[0].MPID_IOV_BUF = (MPID_IOV_BUF_CAST) put_pkt;
         iov[0].MPID_IOV_LEN = sizeof(*put_pkt);
-        if (!rma_op->is_dt) {
-            iov[1].MPID_IOV_BUF = (MPID_IOV_BUF_CAST) ((char *)rma_op->origin_addr + put_pkt->immed_len);
-            iov[1].MPID_IOV_LEN = rma_op->origin_count * origin_type_size - put_pkt->immed_len;
-        }
+        iov[1].MPID_IOV_BUF = (MPID_IOV_BUF_CAST) ((char *)rma_op->origin_addr);
+        iov[1].MPID_IOV_LEN = rma_op->origin_count * origin_type_size;
 
         mpi_errno = issue_from_origin_buffer(rma_op, iov, vc);
         if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
@@ -397,7 +381,6 @@ static int issue_acc_op(MPIDI_RMA_Op_t *rma_op, MPID_Win *win_ptr,
                         MPIDI_CH3_Pkt_flags_t flags)
 {
     MPIDI_VC_t *vc = NULL;
-    size_t len;
     MPI_Aint origin_type_size;
     MPID_Comm *comm_ptr = win_ptr->comm_ptr;
     MPIDI_CH3_Pkt_accum_t *accum_pkt = &rma_op->pkt.accum;
@@ -412,23 +395,10 @@ static int issue_acc_op(MPIDI_RMA_Op_t *rma_op, MPID_Win *win_ptr,
     accum_pkt->flags |= flags;
 
     MPID_Datatype_get_size_macro(rma_op->origin_datatype, origin_type_size);
-    MPIU_Assign_trunc(len, rma_op->origin_count * origin_type_size, size_t);
-
-    if (!rma_op->is_dt) {
-        /* Fill origin data into packet header IMMED area as much as possible */
-        MPIU_Assign_trunc(accum_pkt->immed_len,
-                          MPIR_MIN(len, (MPIDI_RMA_IMMED_BYTES/origin_type_size)*origin_type_size),
-                          int);
-        if (accum_pkt->immed_len > 0) {
-            void *src = rma_op->origin_addr, *dest = accum_pkt->data;
-            mpi_errno = immed_copy(src, dest, (size_t)accum_pkt->immed_len);
-            if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
-        }
-    }
 
     MPIDI_Comm_get_vc_set_active(comm_ptr, rma_op->target_rank, &vc);
 
-    if (len == (size_t)accum_pkt->immed_len) {
+    if (rma_op->pkt.type == MPIDI_CH3_PKT_ACCUMULATE_IMMED) {
         /* All origin data is in packet header, issue the header. */
         MPIU_THREAD_CS_ENTER(CH3COMM, vc);
         mpi_errno = MPIDI_CH3_iStartMsg(vc, accum_pkt, sizeof(*accum_pkt), &(rma_op->request));
@@ -439,10 +409,8 @@ static int issue_acc_op(MPIDI_RMA_Op_t *rma_op, MPID_Win *win_ptr,
         /* We still need to issue from origin buffer. */
         iov[0].MPID_IOV_BUF = (MPID_IOV_BUF_CAST) accum_pkt;
         iov[0].MPID_IOV_LEN = sizeof(*accum_pkt);
-        if (!rma_op->is_dt) {
-            iov[1].MPID_IOV_BUF = (MPID_IOV_BUF_CAST) ((char *)rma_op->origin_addr + accum_pkt->immed_len);
-            iov[1].MPID_IOV_LEN = rma_op->origin_count * origin_type_size - accum_pkt->immed_len;
-        }
+        iov[1].MPID_IOV_BUF = (MPID_IOV_BUF_CAST) ((char *)rma_op->origin_addr);
+        iov[1].MPID_IOV_LEN = rma_op->origin_count * origin_type_size;
 
         mpi_errno = issue_from_origin_buffer(rma_op, iov, vc);
         if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
@@ -466,7 +434,6 @@ static int issue_get_acc_op(MPIDI_RMA_Op_t *rma_op, MPID_Win *win_ptr,
                             MPIDI_CH3_Pkt_flags_t flags)
 {
     MPIDI_VC_t *vc = NULL;
-    size_t len;
     MPI_Aint origin_type_size;
     MPID_Comm *comm_ptr = win_ptr->comm_ptr;
     MPIDI_CH3_Pkt_get_accum_t *get_accum_pkt = &rma_op->pkt.get_accum;
@@ -505,30 +472,12 @@ static int issue_get_acc_op(MPIDI_RMA_Op_t *rma_op, MPID_Win *win_ptr,
     get_accum_pkt->request_handle = resp_req->handle;
 
     get_accum_pkt->flags |= flags;
-    if (!rma_op->is_dt) {
-        /* Only fill IMMED data in response packet when both origin and target
-           buffers are basic datatype. */
-        get_accum_pkt->flags |= MPIDI_CH3_PKT_FLAG_RMA_IMMED_RESP;
-    }
 
     MPID_Datatype_get_size_macro(rma_op->origin_datatype, origin_type_size);
-    MPIU_Assign_trunc(len, rma_op->origin_count * origin_type_size, size_t);
-
-    if (!rma_op->is_dt) {
-        /* Fill origin data into packet header IMMED area as much as possible */
-        MPIU_Assign_trunc(get_accum_pkt->immed_len,
-                          MPIR_MIN(len, (MPIDI_RMA_IMMED_BYTES/origin_type_size)*origin_type_size),
-                          int);
-        if (get_accum_pkt->immed_len > 0) {
-            void *src = rma_op->origin_addr, *dest = get_accum_pkt->data;
-            mpi_errno = immed_copy(src, dest, (size_t)get_accum_pkt->immed_len);
-            if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
-        }
-    }
 
     MPIDI_Comm_get_vc_set_active(comm_ptr, rma_op->target_rank, &vc);
 
-    if (len == (size_t)get_accum_pkt->immed_len) {
+    if (rma_op->pkt.type == MPIDI_CH3_PKT_GET_ACCUM_IMMED) {
         /* All origin data is in packet header, issue the header. */
         MPIU_THREAD_CS_ENTER(CH3COMM, vc);
         mpi_errno = MPIDI_CH3_iStartMsg(vc, get_accum_pkt, sizeof(*get_accum_pkt), &(rma_op->request));
@@ -539,10 +488,8 @@ static int issue_get_acc_op(MPIDI_RMA_Op_t *rma_op, MPID_Win *win_ptr,
         /* We still need to issue from origin buffer. */
         iov[0].MPID_IOV_BUF = (MPID_IOV_BUF_CAST) get_accum_pkt;
         iov[0].MPID_IOV_LEN = sizeof(*get_accum_pkt);
-        if (!rma_op->is_dt) {
-            iov[1].MPID_IOV_BUF = (MPID_IOV_BUF_CAST) ((char *)rma_op->origin_addr + get_accum_pkt->immed_len);
-            iov[1].MPID_IOV_LEN = rma_op->origin_count * origin_type_size - get_accum_pkt->immed_len;
-        }
+        iov[1].MPID_IOV_BUF = (MPID_IOV_BUF_CAST) ((char *)rma_op->origin_addr);
+        iov[1].MPID_IOV_LEN = rma_op->origin_count * origin_type_size;
 
         mpi_errno = issue_from_origin_buffer(rma_op, iov, vc);
         if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
@@ -636,11 +583,6 @@ static int issue_get_op(MPIDI_RMA_Op_t * rma_op, MPID_Win * win_ptr,
     get_pkt->request_handle = rma_op->request->handle;
 
     get_pkt->flags |= flags;
-    if (!rma_op->is_dt) {
-        /* Only fill IMMED data in response packet when both origin and target
-           buffers are basic datatype. */
-        get_pkt->flags |= MPIDI_CH3_PKT_FLAG_RMA_IMMED_RESP;
-    }
 
     comm_ptr = win_ptr->comm_ptr;
     MPIDI_Comm_get_vc_set_active(comm_ptr, rma_op->target_rank, &vc);
@@ -705,7 +647,6 @@ static int issue_cas_op(MPIDI_RMA_Op_t * rma_op,
                         MPID_Win * win_ptr, MPIDI_RMA_Target_t *target_ptr,
                         MPIDI_CH3_Pkt_flags_t flags)
 {
-    MPI_Aint len;
     MPIDI_VC_t *vc = NULL;
     MPID_Comm *comm_ptr = win_ptr->comm_ptr;
     MPIDI_CH3_Pkt_cas_t *cas_pkt = &rma_op->pkt.cas;
@@ -729,19 +670,11 @@ static int issue_cas_op(MPIDI_RMA_Op_t * rma_op,
     rma_op->request->dev.user_count = rma_op->result_count;
     rma_op->request->dev.datatype = rma_op->result_datatype;
 
-    /* REQUIRE: All datatype arguments must be of the same, builtin
-     * type and counts must be 1. */
-    MPID_Datatype_get_size_macro(rma_op->origin_datatype, len);
-    MPIU_Assert(len <= sizeof(MPIDI_CH3_CAS_Immed_u));
-
     rma_op->request->dev.target_win_handle = cas_pkt->target_win_handle;
     rma_op->request->dev.source_win_handle = cas_pkt->source_win_handle;
 
     cas_pkt->request_handle = rma_op->request->handle;
     cas_pkt->flags |= flags;
-
-    MPIU_Memcpy((void *) &cas_pkt->origin_data, rma_op->origin_addr, len);
-    MPIU_Memcpy((void *) &cas_pkt->compare_data, rma_op->compare_addr, len);
 
     MPIDI_Comm_get_vc_set_active(comm_ptr, rma_op->target_rank, &vc);
     MPIU_THREAD_CS_ENTER(CH3COMM, vc);
@@ -782,8 +715,8 @@ static int issue_fop_op(MPIDI_RMA_Op_t * rma_op,
     MPID_Comm *comm_ptr = win_ptr->comm_ptr;
     MPIDI_CH3_Pkt_fop_t *fop_pkt = &rma_op->pkt.fop;
     MPID_Request *resp_req = NULL;
-    size_t len;
     MPI_Aint origin_type_size;
+    MPID_IOV iov[MPID_IOV_LIMIT];
     int mpi_errno = MPI_SUCCESS;
     MPIDI_STATE_DECL(MPID_STATE_ISSUE_FOP_OP);
 
@@ -809,26 +742,27 @@ static int issue_fop_op(MPIDI_RMA_Op_t * rma_op,
 
     fop_pkt->flags |= flags;
 
-    MPID_Datatype_get_size_macro(rma_op->origin_datatype, origin_type_size);
-    MPIU_Assign_trunc(len, rma_op->origin_count * origin_type_size, size_t);
-
-    /* Fill origin data into packet header IMMED area as much as possible */
-    MPIU_Assign_trunc(fop_pkt->immed_len,
-                      MPIR_MIN(len, (MPIDI_RMA_IMMED_BYTES/origin_type_size)*origin_type_size),
-                      int);
-    if (fop_pkt->immed_len > 0) {
-        void *src = rma_op->origin_addr, *dest = fop_pkt->data;
-        mpi_errno = immed_copy(src, dest, (size_t)fop_pkt->immed_len);
-        if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
-    }
-
     MPIDI_Comm_get_vc_set_active(comm_ptr, rma_op->target_rank, &vc);
 
+    MPID_Datatype_get_size_macro(rma_op->origin_datatype, origin_type_size);
+
+    if (rma_op->pkt.type == MPIDI_CH3_PKT_FOP_IMMED) {
     /* All origin data is in packet header, issue the header. */
     MPIU_THREAD_CS_ENTER(CH3COMM, vc);
     mpi_errno = MPIDI_CH3_iStartMsg(vc, fop_pkt, sizeof(*fop_pkt), &(rma_op->request));
     MPIU_THREAD_CS_EXIT(CH3COMM, vc);
     MPIU_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**ch3|rmamsg");
+    }
+    else {
+        /* We still need to issue from origin buffer. */
+        iov[0].MPID_IOV_BUF = (MPID_IOV_BUF_CAST) fop_pkt;
+        iov[0].MPID_IOV_LEN = sizeof(*fop_pkt);
+        iov[1].MPID_IOV_BUF = (MPID_IOV_BUF_CAST) ((char *)rma_op->origin_addr);
+        iov[1].MPID_IOV_LEN = origin_type_size;
+
+        mpi_errno = issue_from_origin_buffer(rma_op, iov, vc);
+        if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
+    }
 
     /* This operation can generate two requests; one for inbound and one for
      * outbound data. */
@@ -888,21 +822,25 @@ static inline int issue_rma_op(MPIDI_RMA_Op_t * op_ptr, MPID_Win * win_ptr,
 
     switch (op_ptr->pkt.type) {
     case (MPIDI_CH3_PKT_PUT):
+    case (MPIDI_CH3_PKT_PUT_IMMED):
         mpi_errno = issue_put_op(op_ptr, win_ptr, target_ptr, flags);
         break;
     case (MPIDI_CH3_PKT_ACCUMULATE):
+    case (MPIDI_CH3_PKT_ACCUMULATE_IMMED):
         mpi_errno = issue_acc_op(op_ptr, win_ptr, target_ptr, flags);
         break;
     case (MPIDI_CH3_PKT_GET_ACCUM):
+    case (MPIDI_CH3_PKT_GET_ACCUM_IMMED):
         mpi_errno = issue_get_acc_op(op_ptr, win_ptr, target_ptr, flags);
         break;
     case (MPIDI_CH3_PKT_GET):
         mpi_errno = issue_get_op(op_ptr, win_ptr, target_ptr, flags);
         break;
-    case (MPIDI_CH3_PKT_CAS):
+    case (MPIDI_CH3_PKT_CAS_IMMED):
         mpi_errno = issue_cas_op(op_ptr, win_ptr, target_ptr, flags);
         break;
     case (MPIDI_CH3_PKT_FOP):
+    case (MPIDI_CH3_PKT_FOP_IMMED):
         mpi_errno = issue_fop_op(op_ptr, win_ptr, target_ptr, flags);
         break;
     default:

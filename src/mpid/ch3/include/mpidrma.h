@@ -333,9 +333,12 @@ static inline int enqueue_lock_origin(MPID_Win *win_ptr, MPIDI_VC_t *vc,
     }
 
     if (pkt->type == MPIDI_CH3_PKT_LOCK ||
+        pkt->type == MPIDI_CH3_PKT_PUT_IMMED ||
+        pkt->type == MPIDI_CH3_PKT_ACCUMULATE_IMMED ||
         pkt->type == MPIDI_CH3_PKT_GET ||
-        pkt->type == MPIDI_CH3_PKT_FOP ||
-        pkt->type == MPIDI_CH3_PKT_CAS) {
+        pkt->type == MPIDI_CH3_PKT_GET_ACCUM_IMMED ||
+        pkt->type == MPIDI_CH3_PKT_FOP_IMMED ||
+        pkt->type == MPIDI_CH3_PKT_CAS_IMMED) {
 
         /* return bytes of data processed in this pkt handler */
         (*buflen) = sizeof(MPIDI_CH3_Pkt_t);
@@ -351,8 +354,6 @@ static inline int enqueue_lock_origin(MPID_Win *win_ptr, MPIDI_VC_t *vc,
         MPID_Request *req = NULL;
         MPI_Datatype target_dtp;
         int target_count;
-        int immed_len = 0;
-        void *immed_data = NULL;
         int complete = 0;
         MPIDI_msg_sz_t data_len;
         char *data_buf = NULL;
@@ -364,17 +365,6 @@ static inline int enqueue_lock_origin(MPID_Win *win_ptr, MPIDI_VC_t *vc,
 
         MPID_Datatype_get_size_macro(target_dtp, type_size);
         recv_data_sz = type_size * target_count;
-
-        if (recv_data_sz <= MPIDI_RMA_IMMED_BYTES) {
-
-            /* return bytes of data processed in this pkt handler */
-            (*buflen) = sizeof(MPIDI_CH3_Pkt_t);
-
-            if (new_ptr != NULL)
-                new_ptr->all_data_recved = 1;
-
-            goto issue_ack;
-        }
 
         if (new_ptr != NULL) {
             if (win_ptr->current_lock_data_bytes + recv_data_sz
@@ -430,10 +420,6 @@ static inline int enqueue_lock_origin(MPID_Win *win_ptr, MPIDI_VC_t *vc,
             req->dev.OnFinal = MPIDI_CH3_ReqHandler_PiggybackLockOpRecvComplete;
             req->dev.lock_queue_entry = new_ptr;
 
-            MPIDI_CH3_PKT_RMA_GET_IMMED_LEN((*pkt), immed_len, mpi_errno);
-            if (immed_len > 0) {
-                req->dev.recv_data_sz -= immed_len;
-            }
             data_len = *buflen - sizeof(MPIDI_CH3_Pkt_t);
             data_buf = (char *) pkt + sizeof(MPIDI_CH3_Pkt_t);
             MPIU_Assert(req->dev.recv_data_sz > 0);
@@ -447,15 +433,6 @@ static inline int enqueue_lock_origin(MPID_Win *win_ptr, MPIDI_VC_t *vc,
             req->dev.OnFinal = MPIDI_CH3_ReqHandler_PiggybackLockOpRecvComplete;
             req->dev.lock_queue_entry = new_ptr;
 
-            MPIDI_CH3_PKT_RMA_GET_IMMED_LEN((*pkt), immed_len, mpi_errno);
-            MPIDI_CH3_PKT_RMA_GET_IMMED_DATA_PTR((*pkt), immed_data, mpi_errno);
-
-            if (immed_len > 0) {
-                /* see if we can receive some data from packet header */
-                MPIU_Memcpy(req->dev.user_buf, immed_data, (size_t)immed_len);
-                req->dev.user_buf = (void*)((char*)req->dev.user_buf + immed_len);
-                req->dev.recv_data_sz -= immed_len;
-            }
             data_len = *buflen - sizeof(MPIDI_CH3_Pkt_t);
             data_buf = (char *) pkt + sizeof(MPIDI_CH3_Pkt_t);
             MPIU_Assert(req->dev.recv_data_sz > 0);
@@ -597,7 +574,9 @@ static inline int adjust_op_piggybacked_with_lock (MPID_Win *win_ptr,
                                               &(target->dt_op_list_tail), op);
                 }
                 else if (op->pkt.type == MPIDI_CH3_PKT_PUT ||
-                         op->pkt.type == MPIDI_CH3_PKT_ACCUMULATE) {
+                         op->pkt.type == MPIDI_CH3_PKT_PUT_IMMED ||
+                         op->pkt.type == MPIDI_CH3_PKT_ACCUMULATE ||
+                         op->pkt.type == MPIDI_CH3_PKT_ACCUMULATE_IMMED) {
                     MPIDI_CH3I_RMA_Ops_append(&(target->write_op_list),
                                               &(target->write_op_list_tail), op);
                 }
@@ -877,7 +856,8 @@ static inline int finish_op_on_target(MPID_Win *win_ptr, MPIDI_VC_t *vc,
                                       MPI_Win source_win_handle) {
     int mpi_errno = MPI_SUCCESS;
 
-    if (type == MPIDI_CH3_PKT_PUT || type == MPIDI_CH3_PKT_ACCUMULATE) {
+    if (type == MPIDI_CH3_PKT_PUT || type == MPIDI_CH3_PKT_PUT_IMMED ||
+        type == MPIDI_CH3_PKT_ACCUMULATE_IMMED || type == MPIDI_CH3_PKT_ACCUMULATE) {
         /* This is PUT or ACC */
         if (flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK_SHARED ||
             flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK_EXCLUSIVE) {

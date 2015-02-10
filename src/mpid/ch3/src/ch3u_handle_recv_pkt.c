@@ -573,11 +573,17 @@ int MPIDI_CH3_PktHandler_Init( MPIDI_CH3_PktHandler_Fcn *pktArray[],
        We could even do lazy initialization (make this part of win_create) */
     pktArray[MPIDI_CH3_PKT_PUT] = 
 	MPIDI_CH3_PktHandler_Put;
+    pktArray[MPIDI_CH3_PKT_PUT_IMMED] =
+	MPIDI_CH3_PktHandler_Put;
     pktArray[MPIDI_CH3_PKT_ACCUMULATE] = 
+	MPIDI_CH3_PktHandler_Accumulate;
+    pktArray[MPIDI_CH3_PKT_ACCUMULATE_IMMED] =
 	MPIDI_CH3_PktHandler_Accumulate;
     pktArray[MPIDI_CH3_PKT_GET] = 
 	MPIDI_CH3_PktHandler_Get;
     pktArray[MPIDI_CH3_PKT_GET_RESP] = 
+	MPIDI_CH3_PktHandler_GetResp;
+    pktArray[MPIDI_CH3_PKT_GET_RESP_IMMED] =
 	MPIDI_CH3_PktHandler_GetResp;
     pktArray[MPIDI_CH3_PKT_LOCK] =
 	MPIDI_CH3_PktHandler_Lock;
@@ -593,17 +599,25 @@ int MPIDI_CH3_PktHandler_Init( MPIDI_CH3_PktHandler_Fcn *pktArray[],
 	MPIDI_CH3_PktHandler_FlushAck;
     pktArray[MPIDI_CH3_PKT_DECR_AT_COUNTER] =
         MPIDI_CH3_PktHandler_DecrAtCnt;
-    pktArray[MPIDI_CH3_PKT_CAS] =
+    pktArray[MPIDI_CH3_PKT_CAS_IMMED] =
         MPIDI_CH3_PktHandler_CAS;
-    pktArray[MPIDI_CH3_PKT_CAS_RESP] =
+    pktArray[MPIDI_CH3_PKT_CAS_RESP_IMMED] =
         MPIDI_CH3_PktHandler_CASResp;
     pktArray[MPIDI_CH3_PKT_FOP] =
         MPIDI_CH3_PktHandler_FOP;
+    pktArray[MPIDI_CH3_PKT_FOP_IMMED] =
+        MPIDI_CH3_PktHandler_FOP;
     pktArray[MPIDI_CH3_PKT_FOP_RESP] =
+        MPIDI_CH3_PktHandler_FOPResp;
+    pktArray[MPIDI_CH3_PKT_FOP_RESP_IMMED] =
         MPIDI_CH3_PktHandler_FOPResp;
     pktArray[MPIDI_CH3_PKT_GET_ACCUM] =
         MPIDI_CH3_PktHandler_GetAccumulate;
+    pktArray[MPIDI_CH3_PKT_GET_ACCUM_IMMED] =
+        MPIDI_CH3_PktHandler_GetAccumulate;
     pktArray[MPIDI_CH3_PKT_GET_ACCUM_RESP] =
+        MPIDI_CH3_PktHandler_Get_AccumResp;
+    pktArray[MPIDI_CH3_PKT_GET_ACCUM_RESP_IMMED] =
         MPIDI_CH3_PktHandler_Get_AccumResp;
     /* End of default RMA operations */
 

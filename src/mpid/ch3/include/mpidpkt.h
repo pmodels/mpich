@@ -76,15 +76,22 @@ typedef enum {
     MPIDI_CH3_PKT_CANCEL_SEND_RESP,
     /* RMA Packets begin here */
     MPIDI_CH3_PKT_PUT,
+    MPIDI_CH3_PKT_PUT_IMMED,
     MPIDI_CH3_PKT_GET,
     MPIDI_CH3_PKT_ACCUMULATE,
+    MPIDI_CH3_PKT_ACCUMULATE_IMMED,
     MPIDI_CH3_PKT_GET_ACCUM,
+    MPIDI_CH3_PKT_GET_ACCUM_IMMED,
     MPIDI_CH3_PKT_FOP,
-    MPIDI_CH3_PKT_CAS,
+    MPIDI_CH3_PKT_FOP_IMMED,
+    MPIDI_CH3_PKT_CAS_IMMED,
     MPIDI_CH3_PKT_GET_RESP,
+    MPIDI_CH3_PKT_GET_RESP_IMMED,
     MPIDI_CH3_PKT_GET_ACCUM_RESP,
+    MPIDI_CH3_PKT_GET_ACCUM_RESP_IMMED,
     MPIDI_CH3_PKT_FOP_RESP,
-    MPIDI_CH3_PKT_CAS_RESP,
+    MPIDI_CH3_PKT_FOP_RESP_IMMED,
+    MPIDI_CH3_PKT_CAS_RESP_IMMED,
     MPIDI_CH3_PKT_LOCK,
     MPIDI_CH3_PKT_LOCK_ACK,
     MPIDI_CH3_PKT_LOCK_OP_ACK,
@@ -198,21 +205,25 @@ MPIDI_CH3_PKT_DEFS
         err_ = MPI_SUCCESS;                                             \
         switch((pkt_).type) {                                           \
         case (MPIDI_CH3_PKT_PUT):                                       \
+        case (MPIDI_CH3_PKT_PUT_IMMED):                                 \
             datatype_ = (pkt_).put.datatype;                            \
             break;                                                      \
         case (MPIDI_CH3_PKT_GET):                                       \
             datatype_ = (pkt_).get.datatype;                            \
             break;                                                      \
         case (MPIDI_CH3_PKT_ACCUMULATE):                                \
+        case (MPIDI_CH3_PKT_ACCUMULATE_IMMED):                          \
             datatype_ = (pkt_).accum.datatype;                          \
             break;                                                      \
         case (MPIDI_CH3_PKT_GET_ACCUM):                                 \
+        case (MPIDI_CH3_PKT_GET_ACCUM_IMMED):                           \
             datatype_ = (pkt_).get_accum.datatype;                      \
             break;                                                      \
-        case (MPIDI_CH3_PKT_CAS):                                       \
+        case (MPIDI_CH3_PKT_CAS_IMMED):                                 \
             datatype_ = (pkt_).cas.datatype;                            \
             break;                                                      \
         case (MPIDI_CH3_PKT_FOP):                                       \
+        case (MPIDI_CH3_PKT_FOP_IMMED):                                 \
             datatype_ = (pkt_).fop.datatype;                            \
             break;                                                      \
         default:                                                        \
@@ -227,61 +238,24 @@ MPIDI_CH3_PKT_DEFS
         err_ = MPI_SUCCESS;                                             \
         switch((pkt_).type) {                                           \
         case (MPIDI_CH3_PKT_PUT):                                       \
+        case (MPIDI_CH3_PKT_PUT_IMMED):                                 \
             count_ = (pkt_).put.count;                                  \
             break;                                                      \
         case (MPIDI_CH3_PKT_GET):                                       \
             count_ = (pkt_).get.count;                                  \
             break;                                                      \
         case (MPIDI_CH3_PKT_ACCUMULATE):                                \
+        case (MPIDI_CH3_PKT_ACCUMULATE_IMMED):                          \
             count_ = (pkt_).accum.count;                                \
             break;                                                      \
         case (MPIDI_CH3_PKT_GET_ACCUM):                                 \
+        case (MPIDI_CH3_PKT_GET_ACCUM_IMMED):                           \
             count_ = (pkt_).get_accum.count;                            \
             break;                                                      \
-        case (MPIDI_CH3_PKT_CAS):                                       \
+        case (MPIDI_CH3_PKT_CAS_IMMED):                                 \
         case (MPIDI_CH3_PKT_FOP):                                       \
+        case (MPIDI_CH3_PKT_FOP_IMMED):                                 \
             count_ = 1;                                                 \
-            break;                                                      \
-        default:                                                        \
-            MPIU_ERR_SETANDJUMP1(err_, MPI_ERR_OTHER, "**invalidpkt", "**invalidpkt %d", (pkt_).type); \
-        }                                                               \
-    }
-
-#define MPIDI_CH3_PKT_RMA_GET_IMMED_LEN(pkt_, immed_len_, err_)         \
-    {                                                                   \
-        /* This macro returns immed_len in RMA operation                \
-           packets (PUT, ACC, GACC, FOP, CAS) and RMA response          \
-           packets (GET_RESP, GACC_RESP, FOP_RESP, CAS_RESP). */        \
-        err_ = MPI_SUCCESS;                                             \
-        switch((pkt_).type) {                                           \
-        case (MPIDI_CH3_PKT_PUT):                                       \
-            immed_len_ = (pkt_).put.immed_len;                          \
-            break;                                                      \
-        case (MPIDI_CH3_PKT_ACCUMULATE):                                \
-            immed_len_ = (pkt_).accum.immed_len;                        \
-            break;                                                      \
-        case (MPIDI_CH3_PKT_GET_ACCUM):                                 \
-            immed_len_ = (pkt_).get_accum.immed_len;                    \
-            break;                                                      \
-        case (MPIDI_CH3_PKT_FOP):                                       \
-            immed_len_ = (pkt_).fop.immed_len;                          \
-            break;                                                      \
-        case (MPIDI_CH3_PKT_CAS):                                       \
-            /* Note that here we return size of origin data, not        \
-               size of compare data. */                                 \
-            immed_len_ = sizeof(MPIDI_CH3_CAS_Immed_u);                 \
-            break;                                                      \
-        case (MPIDI_CH3_PKT_GET_RESP):                                  \
-            immed_len_ = (pkt_).get_resp.immed_len;                     \
-            break;                                                      \
-        case (MPIDI_CH3_PKT_GET_ACCUM_RESP):                            \
-            immed_len_ = (pkt_).get_accum_resp.immed_len;               \
-            break;                                                      \
-        case (MPIDI_CH3_PKT_FOP_RESP):                                  \
-            immed_len_ = (pkt_).fop_resp.immed_len;                     \
-            break;                                                      \
-        case (MPIDI_CH3_PKT_CAS_RESP):                                  \
-            immed_len_ = sizeof(MPIDI_CH3_CAS_Immed_u);                 \
             break;                                                      \
         default:                                                        \
             MPIU_ERR_SETANDJUMP1(err_, MPI_ERR_OTHER, "**invalidpkt", "**invalidpkt %d", (pkt_).type); \
@@ -295,34 +269,34 @@ MPIDI_CH3_PKT_DEFS
            packets (GET_RESP, GACC_RESP, FOP_RESP, CAS_RESP). */        \
         err_ = MPI_SUCCESS;                                             \
         switch((pkt_).type) {                                           \
-        case (MPIDI_CH3_PKT_PUT):                                       \
-            immed_data_ = (pkt_).put.data;                              \
+        case (MPIDI_CH3_PKT_PUT_IMMED):                                 \
+            immed_data_ = (pkt_).put.info.data;                         \
             break;                                                      \
-        case (MPIDI_CH3_PKT_ACCUMULATE):                                \
-            immed_data_ = (pkt_).accum.data;                            \
+        case (MPIDI_CH3_PKT_ACCUMULATE_IMMED):                          \
+            immed_data_ = (pkt_).accum.info.data;                       \
             break;                                                      \
-        case (MPIDI_CH3_PKT_GET_ACCUM):                                 \
-            immed_data_ = (pkt_).get_accum.data;                        \
+        case (MPIDI_CH3_PKT_GET_ACCUM_IMMED):                           \
+            immed_data_ = (pkt_).get_accum.info.data;                   \
             break;                                                      \
-        case (MPIDI_CH3_PKT_FOP):                                       \
-            immed_data_ = (pkt_).fop.data;                              \
+        case (MPIDI_CH3_PKT_FOP_IMMED):                                 \
+            immed_data_ = (pkt_).fop.info.data;                         \
             break;                                                      \
-        case (MPIDI_CH3_PKT_CAS):                                       \
+        case (MPIDI_CH3_PKT_CAS_IMMED):                                 \
             /* Note that here we return pointer of origin data, not     \
                pointer of compare data. */                              \
             immed_data_ = &((pkt_).cas.origin_data);                    \
             break;                                                      \
-        case (MPIDI_CH3_PKT_GET_RESP):                                  \
-            immed_data_ = (pkt_).get_resp.data;                         \
+        case (MPIDI_CH3_PKT_GET_RESP_IMMED):                            \
+            immed_data_ = (pkt_).get_resp.info.data;                    \
             break;                                                      \
-        case (MPIDI_CH3_PKT_GET_ACCUM_RESP):                            \
-            immed_data_ = (pkt_).get_accum_resp.data;                   \
+        case (MPIDI_CH3_PKT_GET_ACCUM_RESP_IMMED):                      \
+            immed_data_ = (pkt_).get_accum_resp.info.data;              \
             break;                                                      \
-        case (MPIDI_CH3_PKT_FOP_RESP):                                  \
-            immed_data_ = (pkt_).fop_resp.data;                         \
+        case (MPIDI_CH3_PKT_FOP_RESP_IMMED):                            \
+            immed_data_ = (pkt_).fop_resp.info.data;                    \
             break;                                                      \
-        case (MPIDI_CH3_PKT_CAS_RESP):                                  \
-            immed_data_ = &((pkt_).cas_resp.data);                      \
+        case (MPIDI_CH3_PKT_CAS_RESP_IMMED):                            \
+            immed_data_ = &((pkt_).cas_resp.info.data);                 \
             break;                                                      \
         default:                                                        \
             MPIU_ERR_SETANDJUMP1(err_, MPI_ERR_OTHER, "**invalidpkt", "**invalidpkt %d", (pkt_).type); \
@@ -339,33 +313,40 @@ MPIDI_CH3_PKT_DEFS
         err_ = MPI_SUCCESS;                                             \
         switch((pkt_).type) {                                           \
         case (MPIDI_CH3_PKT_PUT):                                       \
+        case (MPIDI_CH3_PKT_PUT_IMMED):                                 \
             flags_ = (pkt_).put.flags;                                  \
             break;                                                      \
         case (MPIDI_CH3_PKT_GET):                                       \
             flags_ = (pkt_).get.flags;                                  \
             break;                                                      \
         case (MPIDI_CH3_PKT_ACCUMULATE):                                \
+        case (MPIDI_CH3_PKT_ACCUMULATE_IMMED):                          \
             flags_ = (pkt_).accum.flags;                                \
             break;                                                      \
         case (MPIDI_CH3_PKT_GET_ACCUM):                                 \
+        case (MPIDI_CH3_PKT_GET_ACCUM_IMMED):                           \
             flags_ = (pkt_).get_accum.flags;                            \
             break;                                                      \
-        case (MPIDI_CH3_PKT_CAS):                                       \
+        case (MPIDI_CH3_PKT_CAS_IMMED):                                 \
             flags_ = (pkt_).cas.flags;                                  \
             break;                                                      \
         case (MPIDI_CH3_PKT_FOP):                                       \
+        case (MPIDI_CH3_PKT_FOP_IMMED):                                 \
             flags_ = (pkt_).fop.flags;                                  \
             break;                                                      \
         case (MPIDI_CH3_PKT_GET_RESP):                                  \
+        case (MPIDI_CH3_PKT_GET_RESP_IMMED):                            \
             flags_ = (pkt_).get_resp.flags;                             \
             break;                                                      \
         case (MPIDI_CH3_PKT_GET_ACCUM_RESP):                            \
+        case (MPIDI_CH3_PKT_GET_ACCUM_RESP_IMMED):                      \
             flags_ = (pkt_).get_accum_resp.flags;                       \
             break;                                                      \
         case (MPIDI_CH3_PKT_FOP_RESP):                                  \
+        case (MPIDI_CH3_PKT_FOP_RESP_IMMED):                            \
             flags_ = (pkt_).fop_resp.flags;                             \
             break;                                                      \
-        case (MPIDI_CH3_PKT_CAS_RESP):                                  \
+        case (MPIDI_CH3_PKT_CAS_RESP_IMMED):                            \
             flags_ = (pkt_).cas_resp.flags;                             \
             break;                                                      \
         case (MPIDI_CH3_PKT_LOCK):                                      \
@@ -395,33 +376,40 @@ MPIDI_CH3_PKT_DEFS
         err_ = MPI_SUCCESS;                                             \
         switch((pkt_).type) {                                           \
         case (MPIDI_CH3_PKT_PUT):                                       \
+        case (MPIDI_CH3_PKT_PUT_IMMED):                                 \
             (pkt_).put.flags = MPIDI_CH3_PKT_FLAG_NONE;                 \
             break;                                                      \
         case (MPIDI_CH3_PKT_GET):                                       \
             (pkt_).get.flags = MPIDI_CH3_PKT_FLAG_NONE;                 \
             break;                                                      \
         case (MPIDI_CH3_PKT_ACCUMULATE):                                \
+        case (MPIDI_CH3_PKT_ACCUMULATE_IMMED):                          \
             (pkt_).accum.flags = MPIDI_CH3_PKT_FLAG_NONE;               \
             break;                                                      \
         case (MPIDI_CH3_PKT_GET_ACCUM):                                 \
+        case (MPIDI_CH3_PKT_GET_ACCUM_IMMED):                           \
             (pkt_).get_accum.flags = MPIDI_CH3_PKT_FLAG_NONE;           \
             break;                                                      \
-        case (MPIDI_CH3_PKT_CAS):                                       \
+        case (MPIDI_CH3_PKT_CAS_IMMED):                                 \
             (pkt_).cas.flags = MPIDI_CH3_PKT_FLAG_NONE;                 \
             break;                                                      \
         case (MPIDI_CH3_PKT_FOP):                                       \
+        case (MPIDI_CH3_PKT_FOP_IMMED):                                 \
             (pkt_).fop.flags = MPIDI_CH3_PKT_FLAG_NONE;                 \
             break;                                                      \
         case (MPIDI_CH3_PKT_GET_RESP):                                  \
+        case (MPIDI_CH3_PKT_GET_RESP_IMMED):                            \
             (pkt_).get_resp.flags = MPIDI_CH3_PKT_FLAG_NONE;            \
             break;                                                      \
         case (MPIDI_CH3_PKT_GET_ACCUM_RESP):                            \
+        case (MPIDI_CH3_PKT_GET_ACCUM_RESP_IMMED):                      \
             (pkt_).get_accum_resp.flags = MPIDI_CH3_PKT_FLAG_NONE;      \
             break;                                                      \
         case (MPIDI_CH3_PKT_FOP_RESP):                                  \
+        case (MPIDI_CH3_PKT_FOP_RESP_IMMED):                            \
             (pkt_).fop_resp.flags = MPIDI_CH3_PKT_FLAG_NONE;            \
             break;                                                      \
-        case (MPIDI_CH3_PKT_CAS_RESP):                                  \
+        case (MPIDI_CH3_PKT_CAS_RESP_IMMED):                            \
             (pkt_).cas_resp.flags = MPIDI_CH3_PKT_FLAG_NONE;            \
             break;                                                      \
         case (MPIDI_CH3_PKT_LOCK):                                      \
@@ -451,33 +439,40 @@ MPIDI_CH3_PKT_DEFS
         err_ = MPI_SUCCESS;                                             \
         switch((pkt_).type) {                                           \
         case (MPIDI_CH3_PKT_PUT):                                       \
+        case (MPIDI_CH3_PKT_PUT_IMMED):                                 \
             win_hdl_ = (pkt_).put.source_win_handle;                    \
             break;                                                      \
         case (MPIDI_CH3_PKT_GET):                                       \
             win_hdl_ = (pkt_).get.source_win_handle;                    \
             break;                                                      \
         case (MPIDI_CH3_PKT_ACCUMULATE):                                \
+        case (MPIDI_CH3_PKT_ACCUMULATE_IMMED):                          \
             win_hdl_ = (pkt_).accum.source_win_handle;                  \
             break;                                                      \
         case (MPIDI_CH3_PKT_GET_ACCUM):                                 \
+        case (MPIDI_CH3_PKT_GET_ACCUM_IMMED):                           \
             win_hdl_ = (pkt_).get_accum.source_win_handle;              \
             break;                                                      \
-        case (MPIDI_CH3_PKT_CAS):                                       \
+        case (MPIDI_CH3_PKT_CAS_IMMED):                                 \
             win_hdl_ = (pkt_).cas.source_win_handle;                    \
             break;                                                      \
         case (MPIDI_CH3_PKT_FOP):                                       \
+        case (MPIDI_CH3_PKT_FOP_IMMED):                                 \
             win_hdl_ = (pkt_).fop.source_win_handle;                    \
             break;                                                      \
         case (MPIDI_CH3_PKT_GET_RESP):                                  \
+        case (MPIDI_CH3_PKT_GET_RESP_IMMED):                            \
             win_hdl_ = (pkt_).get_resp.source_win_handle;               \
             break;                                                      \
         case (MPIDI_CH3_PKT_GET_ACCUM_RESP):                            \
+        case (MPIDI_CH3_PKT_GET_ACCUM_RESP_IMMED):                      \
             win_hdl_ = (pkt_).get_accum_resp.source_win_handle;         \
             break;                                                      \
         case (MPIDI_CH3_PKT_FOP_RESP):                                  \
+        case (MPIDI_CH3_PKT_FOP_RESP_IMMED):                            \
             win_hdl_ = (pkt_).fop_resp.source_win_handle;               \
             break;                                                      \
-        case (MPIDI_CH3_PKT_CAS_RESP):                                  \
+        case (MPIDI_CH3_PKT_CAS_RESP_IMMED):                            \
             win_hdl_ = (pkt_).cas_resp.source_win_handle;               \
             break;                                                      \
         case (MPIDI_CH3_PKT_LOCK):                                      \
@@ -511,21 +506,25 @@ MPIDI_CH3_PKT_DEFS
         err_ = MPI_SUCCESS;                                             \
         switch((pkt_).type) {                                           \
         case (MPIDI_CH3_PKT_PUT):                                       \
+        case (MPIDI_CH3_PKT_PUT_IMMED):                                 \
             win_hdl_ = (pkt_).put.target_win_handle;                    \
             break;                                                      \
         case (MPIDI_CH3_PKT_GET):                                       \
             win_hdl_ = (pkt_).get.target_win_handle;                    \
             break;                                                      \
         case (MPIDI_CH3_PKT_ACCUMULATE):                                \
+        case (MPIDI_CH3_PKT_ACCUMULATE_IMMED):                          \
             win_hdl_ = (pkt_).accum.target_win_handle;                  \
             break;                                                      \
         case (MPIDI_CH3_PKT_GET_ACCUM):                                 \
+        case (MPIDI_CH3_PKT_GET_ACCUM_IMMED):                           \
             win_hdl_ = (pkt_).get_accum.target_win_handle;              \
             break;                                                      \
-        case (MPIDI_CH3_PKT_CAS):                                       \
+        case (MPIDI_CH3_PKT_CAS_IMMED):                                 \
             win_hdl_ = (pkt_).cas.target_win_handle;                    \
             break;                                                      \
         case (MPIDI_CH3_PKT_FOP):                                       \
+        case (MPIDI_CH3_PKT_FOP_IMMED):                                 \
             win_hdl_ = (pkt_).fop.target_win_handle;                    \
             break;                                                      \
         case (MPIDI_CH3_PKT_LOCK):                                      \
@@ -552,22 +551,21 @@ MPIDI_CH3_PKT_DEFS
         err_ = MPI_SUCCESS;                                             \
         switch((pkt_).type) {                                           \
         case (MPIDI_CH3_PKT_PUT):                                       \
-            (pkt_).put.dataloop_size = (dataloop_size_);                \
+            (pkt_).put.info.dataloop_size = (dataloop_size_);           \
             break;                                                      \
         case (MPIDI_CH3_PKT_GET):                                       \
-            (pkt_).get.dataloop_size = (dataloop_size_);                \
+            (pkt_).get.info.dataloop_size = (dataloop_size_);           \
             break;                                                      \
         case (MPIDI_CH3_PKT_ACCUMULATE):                                \
-            (pkt_).accum.dataloop_size = (dataloop_size_);              \
+            (pkt_).accum.info.dataloop_size = (dataloop_size_);         \
             break;                                                      \
         case (MPIDI_CH3_PKT_GET_ACCUM):                                 \
-            (pkt_).get_accum.dataloop_size = (dataloop_size_);          \
+            (pkt_).get_accum.info.dataloop_size = (dataloop_size_);     \
             break;                                                      \
         default:                                                        \
             MPIU_ERR_SETANDJUMP1(err_, MPI_ERR_OTHER, "**invalidpkt", "**invalidpkt %d", (pkt_).type); \
         }                                                               \
     }
-
 
 typedef struct MPIDI_CH3_Pkt_put {
     MPIDI_CH3_Pkt_type_t type;
@@ -575,7 +573,6 @@ typedef struct MPIDI_CH3_Pkt_put {
     void *addr;
     int count;
     MPI_Datatype datatype;
-    int dataloop_size;          /* for derived datatypes */
     MPI_Win target_win_handle;  /* Used in the last RMA operation in each
                                  * epoch for decrementing rma op counter in
                                  * active target rma and for unlocking window
@@ -583,8 +580,10 @@ typedef struct MPIDI_CH3_Pkt_put {
     MPI_Win source_win_handle;  /* Used in the last RMA operation in an
                                  * epoch in the case of passive target rma
                                  * with shared locks. Otherwise set to NULL*/
-    char data[MPIDI_RMA_IMMED_BYTES];
-    int immed_len;
+    union {
+        int dataloop_size;
+        char data[MPIDI_RMA_IMMED_BYTES];
+    } info;
 } MPIDI_CH3_Pkt_put_t;
 
 typedef struct MPIDI_CH3_Pkt_get {
@@ -593,7 +592,12 @@ typedef struct MPIDI_CH3_Pkt_get {
     void *addr;
     int count;
     MPI_Datatype datatype;
-    int dataloop_size;          /* for derived datatypes */
+    struct {
+        /* note that we use struct here in order
+           to consistently access dataloop_size
+           by "pkt->info.dataloop_size". */
+        int dataloop_size;          /* for derived datatypes */
+    } info;
     MPI_Request request_handle;
     MPI_Win target_win_handle;  /* Used in the last RMA operation in each
                                  * epoch for decrementing rma op counter in
@@ -612,8 +616,12 @@ typedef struct MPIDI_CH3_Pkt_get_resp {
     MPI_Win source_win_handle;
     MPIDI_CH3_Pkt_flags_t flags;
     /* Followings are to piggyback IMMED data */
-    int immed_len;
-    char data[MPIDI_RMA_IMMED_BYTES];
+    struct {
+        /* note that we use struct here in order
+           to consistently access data
+           by "pkt->info.data". */
+        char data[MPIDI_RMA_IMMED_BYTES];
+    } info;
 } MPIDI_CH3_Pkt_get_resp_t;
 
 typedef struct MPIDI_CH3_Pkt_accum {
@@ -622,7 +630,6 @@ typedef struct MPIDI_CH3_Pkt_accum {
     void *addr;
     int count;
     MPI_Datatype datatype;
-    int dataloop_size;          /* for derived datatypes */
     MPI_Op op;
     MPI_Win target_win_handle;  /* Used in the last RMA operation in each
                                  * epoch for decrementing rma op counter in
@@ -631,8 +638,10 @@ typedef struct MPIDI_CH3_Pkt_accum {
     MPI_Win source_win_handle;  /* Used in the last RMA operation in an
                                  * epoch in the case of passive target rma
                                  * with shared locks. Otherwise set to NULL*/
-    char data[MPIDI_RMA_IMMED_BYTES];
-    int immed_len;
+    union {
+        int dataloop_size;
+        char data[MPIDI_RMA_IMMED_BYTES];
+    } info;
 } MPIDI_CH3_Pkt_accum_t;
 
 typedef struct MPIDI_CH3_Pkt_get_accum {
@@ -642,7 +651,6 @@ typedef struct MPIDI_CH3_Pkt_get_accum {
     void *addr;
     int count;
     MPI_Datatype datatype;
-    int dataloop_size;          /* for derived datatypes */
     MPI_Op op;
     MPI_Win target_win_handle;  /* Used in the last RMA operation in each
                                  * epoch for decrementing rma op counter in
@@ -651,8 +659,10 @@ typedef struct MPIDI_CH3_Pkt_get_accum {
     MPI_Win source_win_handle;  /* Used in the last RMA operation in an
                                  * epoch in the case of passive target rma
                                  * with shared locks. Otherwise set to NULL*/
-    char data[MPIDI_RMA_IMMED_BYTES];
-    int immed_len;
+    union {
+        int dataloop_size;
+        char data[MPIDI_RMA_IMMED_BYTES];
+    } info;
 } MPIDI_CH3_Pkt_get_accum_t;
 
 typedef struct MPIDI_CH3_Pkt_get_accum_resp {
@@ -663,8 +673,12 @@ typedef struct MPIDI_CH3_Pkt_get_accum_resp {
     MPI_Win source_win_handle;
     MPIDI_CH3_Pkt_flags_t flags;
     /* Followings are to piggyback IMMED data */
-    int immed_len;
-    char data[MPIDI_RMA_IMMED_BYTES];
+    struct {
+        /* note that we use struct here in order
+           to consistently access data
+           by "pkt->info.data". */
+        char data[MPIDI_RMA_IMMED_BYTES];
+    } info;
 } MPIDI_CH3_Pkt_get_accum_resp_t;
 
 typedef struct MPIDI_CH3_Pkt_cas {
@@ -685,7 +699,12 @@ typedef struct MPIDI_CH3_Pkt_cas {
 typedef struct MPIDI_CH3_Pkt_cas_resp {
     MPIDI_CH3_Pkt_type_t type;
     MPI_Request request_handle;
-    MPIDI_CH3_CAS_Immed_u data;
+    struct {
+        /* note that we use struct here in order
+           to consistently access data
+           by "pkt->info.data". */
+        MPIDI_CH3_CAS_Immed_u data;
+    } info;
     /* followings are used to decrement ack_counter at orign */
     int target_rank;
     MPI_Win source_win_handle;
@@ -704,15 +723,23 @@ typedef struct MPIDI_CH3_Pkt_fop {
                                  * epoch for decrementing rma op counter in
                                  * active target rma and for unlocking window
                                  * in passive target rma. Otherwise set to NULL*/
-    char data[MPIDI_RMA_IMMED_BYTES];
-    int immed_len;
+    struct {
+        /* note that we use struct here in order
+           to consistently access data
+           by "pkt->info.data". */
+        char data[MPIDI_RMA_IMMED_BYTES];
+    } info;
 } MPIDI_CH3_Pkt_fop_t;
 
 typedef struct MPIDI_CH3_Pkt_fop_resp {
     MPIDI_CH3_Pkt_type_t type;
     MPI_Request request_handle;
-    char data[MPIDI_RMA_IMMED_BYTES];
-    int immed_len;
+    struct {
+        /* note that we use struct here in order
+           to consistently access data
+           by "pkt->info.data". */
+        char data[MPIDI_RMA_IMMED_BYTES];
+    } info;
     /* followings are used to decrement ack_counter at orign */
     int target_rank;
     MPI_Win source_win_handle;

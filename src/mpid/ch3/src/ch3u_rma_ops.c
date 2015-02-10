@@ -121,6 +121,9 @@ int MPIDI_CH3I_Put(const void *origin_addr, int origin_count, MPI_Datatype
     else {
         MPIDI_RMA_Op_t *new_ptr = NULL;
         MPIDI_CH3_Pkt_put_t *put_pkt = NULL;
+        MPI_Aint origin_type_size;
+        size_t immed_len, len;
+        int use_immed_pkt = FALSE;
 
         /* queue it up */
         mpi_errno = MPIDI_CH3I_Win_get_op(win_ptr, &new_ptr);
@@ -155,30 +158,48 @@ int MPIDI_CH3I_Put(const void *origin_addr, int origin_count, MPI_Datatype
             new_ptr->is_dt = 1;
         }
 
+        MPID_Datatype_get_size_macro(origin_datatype, origin_type_size);
+        MPIU_Assign_trunc(len, origin_count * origin_type_size, size_t);
+
+        /* Judge if we can use IMMED data packet */
+        if (!new_ptr->is_dt) {
+            MPIU_Assign_trunc(immed_len,
+                              (MPIDI_RMA_IMMED_BYTES/origin_type_size)*origin_type_size,
+                              size_t);
+            if (len <= immed_len)
+                use_immed_pkt = TRUE;
+        }
+
         /* Judge if this operation is an piggyback candidate */
         if (!new_ptr->is_dt) {
-            size_t len;
-            MPI_Aint origin_type_size;
-            MPID_Datatype_get_size_macro(new_ptr->origin_datatype, origin_type_size);
-            MPIU_Assign_trunc(len, new_ptr->origin_count * origin_type_size, size_t);
-            if (len <= MPIR_MAX(MPIDI_RMA_IMMED_BYTES,
-                                MPIR_CVAR_CH3_RMA_OP_PIGGYBACK_LOCK_DATA_SIZE))
+            if (len <= MPIR_CVAR_CH3_RMA_OP_PIGGYBACK_LOCK_DATA_SIZE)
                 new_ptr->piggyback_lock_candidate = 1;
         }
 
         /************** Setting packet struct areas in operation ****************/
 
         put_pkt = &(new_ptr->pkt.put);
-        MPIDI_Pkt_init(put_pkt, MPIDI_CH3_PKT_PUT);
+
+        if (use_immed_pkt) {
+            MPIDI_Pkt_init(put_pkt, MPIDI_CH3_PKT_PUT_IMMED);
+        }
+        else {
+            MPIDI_Pkt_init(put_pkt, MPIDI_CH3_PKT_PUT);
+        }
+
         put_pkt->addr = (char *) win_ptr->base_addrs[target_rank] +
             win_ptr->disp_units[target_rank] * target_disp;
         put_pkt->count = target_count;
         put_pkt->datatype = target_datatype;
-        put_pkt->dataloop_size = 0;
+        put_pkt->info.dataloop_size = 0;
         put_pkt->target_win_handle = win_ptr->all_win_handles[target_rank];
         put_pkt->source_win_handle = win_ptr->handle;
-        put_pkt->immed_len = 0;
         put_pkt->flags = MPIDI_CH3_PKT_FLAG_NONE;
+        if (use_immed_pkt) {
+            void *src = (void *)origin_addr, *dest = (void *)(put_pkt->info.data);
+            mpi_errno = immed_copy(src, dest, len);
+            if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
+        }
 
         MPIR_T_PVAR_TIMER_END(RMA, rma_rmaqueue_set);
 
@@ -288,6 +309,9 @@ int MPIDI_CH3I_Get(void *origin_addr, int origin_count, MPI_Datatype
     else {
         MPIDI_RMA_Op_t *new_ptr = NULL;
         MPIDI_CH3_Pkt_get_t *get_pkt = NULL;
+        MPI_Aint target_type_size;
+        size_t immed_len, len;
+        int use_immed_resp_pkt = FALSE;
 
         /* queue it up */
         mpi_errno = MPIDI_CH3I_Win_get_op(win_ptr, &new_ptr);
@@ -322,6 +346,18 @@ int MPIDI_CH3I_Get(void *origin_addr, int origin_count, MPI_Datatype
             new_ptr->is_dt = 1;
         }
 
+        MPID_Datatype_get_size_macro(target_datatype, target_type_size);
+        MPIU_Assign_trunc(len, target_count * target_type_size, size_t);
+
+        /* Judge if we can use IMMED data response packet */
+        if (!new_ptr->is_dt) {
+            MPIU_Assign_trunc(immed_len,
+                              (MPIDI_RMA_IMMED_BYTES/target_type_size)*target_type_size,
+                              size_t);
+            if (len <= immed_len)
+                use_immed_resp_pkt = TRUE;
+        }
+
         /* Judge if this operation is an piggyback candidate. */
         if (!new_ptr->is_dt) {
             new_ptr->piggyback_lock_candidate = 1;
@@ -335,10 +371,12 @@ int MPIDI_CH3I_Get(void *origin_addr, int origin_count, MPI_Datatype
             win_ptr->disp_units[target_rank] * target_disp;
         get_pkt->count = target_count;
         get_pkt->datatype = target_datatype;
-        get_pkt->dataloop_size = 0;
+        get_pkt->info.dataloop_size = 0;
         get_pkt->target_win_handle = win_ptr->all_win_handles[target_rank];
         get_pkt->source_win_handle = win_ptr->handle;
         get_pkt->flags = MPIDI_CH3_PKT_FLAG_NONE;
+        if (use_immed_resp_pkt)
+            get_pkt->flags |= MPIDI_CH3_PKT_FLAG_RMA_IMMED_RESP;
 
         MPIR_T_PVAR_TIMER_END(RMA, rma_rmaqueue_set);
 
@@ -450,6 +488,9 @@ int MPIDI_CH3I_Accumulate(const void *origin_addr, int origin_count, MPI_Datatyp
     else {
         MPIDI_RMA_Op_t *new_ptr = NULL;
         MPIDI_CH3_Pkt_accum_t *accum_pkt = NULL;
+        MPI_Aint origin_type_size;
+        size_t immed_len, len;
+        int use_immed_pkt = FALSE;
 
         /* queue it up */
         mpi_errno = MPIDI_CH3I_Win_get_op(win_ptr, &new_ptr);
@@ -483,14 +524,21 @@ int MPIDI_CH3I_Accumulate(const void *origin_addr, int origin_count, MPI_Datatyp
             new_ptr->is_dt = 1;
         }
 
+        MPID_Datatype_get_size_macro(origin_datatype, origin_type_size);
+        MPIU_Assign_trunc(len, origin_count * origin_type_size, size_t);
+
+        /* Judge if we can use IMMED data packet */
+        if (!new_ptr->is_dt) {
+            MPIU_Assign_trunc(immed_len,
+                              (MPIDI_RMA_IMMED_BYTES/origin_type_size)*origin_type_size,
+                              size_t);
+            if (len <= immed_len)
+                use_immed_pkt = TRUE;
+        }
+
         /* Judge if this operation is an piggyback candidate. */
         if (!new_ptr->is_dt) {
-            size_t len;
-            MPI_Aint origin_type_size;
-            MPID_Datatype_get_size_macro(new_ptr->origin_datatype, origin_type_size);
-            MPIU_Assign_trunc(len, new_ptr->origin_count * origin_type_size, size_t);
-            if (len <= MPIR_MAX(MPIDI_RMA_IMMED_BYTES,
-                                MPIR_CVAR_CH3_RMA_OP_PIGGYBACK_LOCK_DATA_SIZE))
+            if (len <= MPIR_CVAR_CH3_RMA_OP_PIGGYBACK_LOCK_DATA_SIZE)
                 new_ptr->piggyback_lock_candidate = 1;
         }
 
@@ -498,17 +546,27 @@ int MPIDI_CH3I_Accumulate(const void *origin_addr, int origin_count, MPI_Datatyp
 
         accum_pkt = &(new_ptr->pkt.accum);
 
-        MPIDI_Pkt_init(accum_pkt, MPIDI_CH3_PKT_ACCUMULATE);
+        if (use_immed_pkt) {
+            MPIDI_Pkt_init(accum_pkt, MPIDI_CH3_PKT_ACCUMULATE_IMMED);
+        }
+        else {
+            MPIDI_Pkt_init(accum_pkt, MPIDI_CH3_PKT_ACCUMULATE);
+        }
+
         accum_pkt->addr = (char *) win_ptr->base_addrs[target_rank] +
             win_ptr->disp_units[target_rank] * target_disp;
         accum_pkt->count = target_count;
         accum_pkt->datatype = target_datatype;
-        accum_pkt->dataloop_size = 0;
+        accum_pkt->info.dataloop_size = 0;
         accum_pkt->op = op;
         accum_pkt->target_win_handle = win_ptr->all_win_handles[target_rank];
         accum_pkt->source_win_handle = win_ptr->handle;
-        accum_pkt->immed_len = 0;
         accum_pkt->flags = MPIDI_CH3_PKT_FLAG_NONE;
+        if (use_immed_pkt) {
+            void *src = (void *)origin_addr, *dest = (void *)(accum_pkt->info.data);
+            mpi_errno = immed_copy(src, dest, len);
+            if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
+        }
 
         MPIR_T_PVAR_TIMER_END(RMA, rma_rmaqueue_set);
 
@@ -634,6 +692,9 @@ int MPIDI_CH3I_Get_accumulate(const void *origin_addr, int origin_count,
         if (op == MPI_NO_OP) {
             /* Convert GAcc to a Get */
             MPIDI_CH3_Pkt_get_t *get_pkt;
+            MPI_Aint target_type_size;
+            size_t len, immed_len;
+            int use_immed_resp_pkt = FALSE;
 
             /******************** Setting operation struct areas ***********************/
 
@@ -659,6 +720,18 @@ int MPIDI_CH3I_Get_accumulate(const void *origin_addr, int origin_count,
                 new_ptr->is_dt = 1;
             }
 
+            MPID_Datatype_get_size_macro(target_datatype, target_type_size);
+            MPIU_Assign_trunc(len, target_count * target_type_size, size_t);
+
+            /* Judge if we can use IMMED data response packet */
+            if (!new_ptr->is_dt) {
+                MPIU_Assign_trunc(immed_len,
+                                  (MPIDI_RMA_IMMED_BYTES/target_type_size)*target_type_size,
+                                  size_t);
+                if (len <= immed_len)
+                    use_immed_resp_pkt = TRUE;
+            }
+
             /* Judge if this operation is a piggyback candidate */
             if (!new_ptr->is_dt) {
                 new_ptr->piggyback_lock_candidate = 1;
@@ -672,14 +745,19 @@ int MPIDI_CH3I_Get_accumulate(const void *origin_addr, int origin_count,
                 win_ptr->disp_units[target_rank] * target_disp;
             get_pkt->count = target_count;
             get_pkt->datatype = target_datatype;
-            get_pkt->dataloop_size = 0;
+            get_pkt->info.dataloop_size = 0;
             get_pkt->target_win_handle = win_ptr->all_win_handles[target_rank];
             get_pkt->source_win_handle = win_ptr->handle;
             get_pkt->flags = MPIDI_CH3_PKT_FLAG_NONE;
+            if (use_immed_resp_pkt == TRUE)
+                get_pkt->flags |= MPIDI_CH3_PKT_FLAG_RMA_IMMED_RESP;
         }
 
         else {
             MPIDI_CH3_Pkt_get_accum_t *get_accum_pkt;
+            MPI_Aint origin_type_size, target_type_size;
+            size_t immed_len, orig_len, tar_len;
+            int use_immed_pkt = FALSE, use_immed_resp_pkt = FALSE;
 
             /******************** Setting operation struct areas ***********************/
 
@@ -715,31 +793,60 @@ int MPIDI_CH3I_Get_accumulate(const void *origin_addr, int origin_count,
                 new_ptr->is_dt = 1;
             }
 
+            MPID_Datatype_get_size_macro(origin_datatype, origin_type_size);
+            MPIU_Assign_trunc(orig_len, origin_count * origin_type_size, size_t);
+
+            MPID_Datatype_get_size_macro(target_datatype, target_type_size);
+            MPIU_Assign_trunc(tar_len, target_count * target_type_size, size_t);
+
+            /* Judge if we can use IMMED data packet */
+            if (!new_ptr->is_dt) {
+                MPIU_Assign_trunc(immed_len,
+                                  (MPIDI_RMA_IMMED_BYTES/origin_type_size)*origin_type_size,
+                                  size_t);
+                if (orig_len <= immed_len)
+                    use_immed_pkt = TRUE;
+
+                MPIU_Assign_trunc(immed_len,
+                                  (MPIDI_RMA_IMMED_BYTES/target_type_size)*target_type_size,
+                                  size_t);
+                if (tar_len <= immed_len)
+                    use_immed_resp_pkt = TRUE;
+            }
+
             /* Judge if this operation is a piggyback candidate */
             if (!new_ptr->is_dt) {
-                size_t len;
-                MPI_Aint origin_type_size;
-                MPID_Datatype_get_size_macro(new_ptr->origin_datatype, origin_type_size);
-                MPIU_Assign_trunc(len, new_ptr->origin_count * origin_type_size, size_t);
-                if (len <= MPIR_MAX(MPIDI_RMA_IMMED_BYTES,
-                                    MPIR_CVAR_CH3_RMA_OP_PIGGYBACK_LOCK_DATA_SIZE))
+                if (orig_len <= MPIR_CVAR_CH3_RMA_OP_PIGGYBACK_LOCK_DATA_SIZE)
                     new_ptr->piggyback_lock_candidate = 1;
             }
 
             /************** Setting packet struct areas in operation ****************/
 
             get_accum_pkt = &(new_ptr->pkt.get_accum);
-            MPIDI_Pkt_init(get_accum_pkt, MPIDI_CH3_PKT_GET_ACCUM);
+
+            if (use_immed_pkt) {
+                MPIDI_Pkt_init(get_accum_pkt, MPIDI_CH3_PKT_GET_ACCUM_IMMED);
+            }
+            else {
+                MPIDI_Pkt_init(get_accum_pkt, MPIDI_CH3_PKT_GET_ACCUM);
+            }
+
             get_accum_pkt->addr = (char *) win_ptr->base_addrs[target_rank] +
                 win_ptr->disp_units[target_rank] * target_disp;
             get_accum_pkt->count = target_count;
             get_accum_pkt->datatype = target_datatype;
-            get_accum_pkt->dataloop_size = 0;
+            get_accum_pkt->info.dataloop_size = 0;
             get_accum_pkt->op = op;
             get_accum_pkt->target_win_handle = win_ptr->all_win_handles[target_rank];
             get_accum_pkt->source_win_handle = win_ptr->handle;
-            get_accum_pkt->immed_len = 0;
             get_accum_pkt->flags = MPIDI_CH3_PKT_FLAG_NONE;
+            if (use_immed_pkt) {
+                void *src = (void *)origin_addr, *dest = (void *)(get_accum_pkt->info.data);
+                mpi_errno = immed_copy(src, dest, orig_len);
+                if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
+            }
+            if (use_immed_resp_pkt)
+                get_accum_pkt->flags |= MPIDI_CH3_PKT_FLAG_RMA_IMMED_RESP;
         }
 
         MPIR_T_PVAR_TIMER_END(RMA, rma_rmaqueue_set);
@@ -953,6 +1060,8 @@ int MPIDI_Compare_and_swap(const void *origin_addr, const void *compare_addr,
     else {
         MPIDI_RMA_Op_t *new_ptr = NULL;
         MPIDI_CH3_Pkt_cas_t *cas_pkt = NULL;
+        MPI_Aint type_size;
+        void *src = NULL, *dest = NULL;
 
         /* Append this operation to the RMA ops queue */
         mpi_errno = MPIDI_CH3I_Win_get_op(win_ptr, &new_ptr);
@@ -976,13 +1085,26 @@ int MPIDI_Compare_and_swap(const void *origin_addr, const void *compare_addr,
         /************** Setting packet struct areas in operation ****************/
 
         cas_pkt = &(new_ptr->pkt.cas);
-        MPIDI_Pkt_init(cas_pkt, MPIDI_CH3_PKT_CAS);
+        MPIDI_Pkt_init(cas_pkt, MPIDI_CH3_PKT_CAS_IMMED);
         cas_pkt->addr = (char *) win_ptr->base_addrs[target_rank] +
             win_ptr->disp_units[target_rank] * target_disp;
         cas_pkt->datatype = datatype;
         cas_pkt->target_win_handle = win_ptr->all_win_handles[target_rank];
         cas_pkt->source_win_handle = win_ptr->handle;
         cas_pkt->flags = MPIDI_CH3_PKT_FLAG_NONE;
+
+        /* REQUIRE: All datatype arguments must be of the same, builtin
+         * type and counts must be 1. */
+        MPID_Datatype_get_size_macro(datatype, type_size);
+        MPIU_Assert(type_size <= sizeof(MPIDI_CH3_CAS_Immed_u));
+
+        src = (void *)origin_addr, dest = (void *)(&(cas_pkt->origin_data));
+        mpi_errno = immed_copy(src, dest, type_size);
+        if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
+
+        src = (void *)compare_addr, dest = (void *)(&(cas_pkt->compare_data));
+        mpi_errno = immed_copy(src, dest, type_size);
+        if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
 
         MPIR_T_PVAR_TIMER_END(RMA, rma_rmaqueue_set);
 
@@ -1090,6 +1212,9 @@ int MPIDI_Fetch_and_op(const void *origin_addr, void *result_addr,
         if (op == MPI_NO_OP) {
             /* Convert FOP to a Get */
             MPIDI_CH3_Pkt_get_t *get_pkt;
+            MPI_Aint target_type_size;
+            size_t immed_len;
+            int use_immed_resp_pkt = FALSE;
 
             /******************** Setting operation struct areas ***********************/
 
@@ -1102,19 +1227,34 @@ int MPIDI_Fetch_and_op(const void *origin_addr, void *result_addr,
 
             /************** Setting packet struct areas in operation ****************/
 
+            MPID_Datatype_get_size_macro(datatype, target_type_size);
+            MPIU_Assert(target_type_size <= sizeof(MPIDI_CH3_FOP_Immed_u));
+
+            /* Judege if we can use IMMED data for response packet */
+            MPIU_Assign_trunc(immed_len,
+                              (MPIDI_RMA_IMMED_BYTES/target_type_size)*target_type_size,
+                              size_t);
+            if (target_type_size <= immed_len)
+                use_immed_resp_pkt = TRUE;
+
             get_pkt = &(new_ptr->pkt.get);
             MPIDI_Pkt_init(get_pkt, MPIDI_CH3_PKT_GET);
             get_pkt->addr = (char *) win_ptr->base_addrs[target_rank] +
                 win_ptr->disp_units[target_rank] * target_disp;
             get_pkt->count = 1;
             get_pkt->datatype = datatype;
-            get_pkt->dataloop_size = 0;
+            get_pkt->info.dataloop_size = 0;
             get_pkt->target_win_handle = win_ptr->all_win_handles[target_rank];
             get_pkt->source_win_handle = win_ptr->handle;
             get_pkt->flags = MPIDI_CH3_PKT_FLAG_NONE;
+            if (use_immed_resp_pkt == TRUE)
+                get_pkt->flags |= MPIDI_CH3_PKT_FLAG_RMA_IMMED_RESP;
         }
         else {
             MPIDI_CH3_Pkt_fop_t *fop_pkt;
+            MPI_Aint type_size;
+            size_t immed_len;
+            int use_immed_pkt = FALSE, use_immed_resp_pkt = FALSE;
 
             /******************** Setting operation struct areas ***********************/
 
@@ -1129,17 +1269,40 @@ int MPIDI_Fetch_and_op(const void *origin_addr, void *result_addr,
 
             /************** Setting packet struct areas in operation ****************/
 
+            MPID_Datatype_get_size_macro(datatype, type_size);
+            MPIU_Assert(type_size <= sizeof(MPIDI_CH3_FOP_Immed_u));
+
+            /* Judge if we can use IMMED data packet */
+            MPIU_Assign_trunc(immed_len,
+                              (MPIDI_RMA_IMMED_BYTES/type_size)*type_size,
+                              size_t);
+            if (type_size <= immed_len) {
+                use_immed_pkt = TRUE;
+                use_immed_resp_pkt = TRUE;
+            }
+
             fop_pkt = &(new_ptr->pkt.fop);
 
-            MPIDI_Pkt_init(fop_pkt, MPIDI_CH3_PKT_FOP);
+            if (use_immed_pkt) {
+                MPIDI_Pkt_init(fop_pkt, MPIDI_CH3_PKT_FOP_IMMED);
+            }
+            else {
+                MPIDI_Pkt_init(fop_pkt, MPIDI_CH3_PKT_FOP);
+            }
             fop_pkt->addr = (char *) win_ptr->base_addrs[target_rank] +
                 win_ptr->disp_units[target_rank] * target_disp;
             fop_pkt->datatype = datatype;
             fop_pkt->op = op;
             fop_pkt->source_win_handle = win_ptr->handle;
             fop_pkt->target_win_handle = win_ptr->all_win_handles[target_rank];
-            fop_pkt->immed_len = 0;
             fop_pkt->flags = MPIDI_CH3_PKT_FLAG_NONE;
+            if (use_immed_pkt) {
+                void *src = (void *)origin_addr, *dest = (void *)(fop_pkt->info.data);
+                mpi_errno = immed_copy(src, dest, type_size);
+                if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
+            }
+            if (use_immed_resp_pkt)
+                fop_pkt->flags |= MPIDI_CH3_PKT_FLAG_RMA_IMMED_RESP;
         }
 
         MPIR_T_PVAR_TIMER_END(RMA, rma_rmaqueue_set);

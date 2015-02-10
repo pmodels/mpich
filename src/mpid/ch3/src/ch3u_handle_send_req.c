@@ -217,7 +217,7 @@ int MPIDI_CH3_ReqHandler_CASSendComplete( MPIDI_VC_t *vc,
        because inside finish_op_on_target() we may call this request handler
        on the same request again (in release_lock()). Marking this request as
        completed will prevent us from processing the same request twice. */
-    mpi_errno = finish_op_on_target(win_ptr, vc, MPIDI_CH3_PKT_CAS,
+    mpi_errno = finish_op_on_target(win_ptr, vc, MPIDI_CH3_PKT_CAS_IMMED,
                                     flags, source_win_handle);
     if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
