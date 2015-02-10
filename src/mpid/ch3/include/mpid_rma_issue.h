@@ -339,8 +339,6 @@ static int issue_put_op(MPIDI_RMA_Op_t * rma_op, MPID_Win *win_ptr,
     rma_op->request = NULL;
 
     put_pkt->flags |= flags;
-    if (flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK)
-        put_pkt->lock_type = target_ptr->lock_type;
 
     MPID_Datatype_get_size_macro(rma_op->origin_datatype, origin_type_size);
     MPIU_Assign_trunc(len, rma_op->origin_count * origin_type_size, size_t);
@@ -412,9 +410,6 @@ static int issue_acc_op(MPIDI_RMA_Op_t *rma_op, MPID_Win *win_ptr,
     rma_op->request = NULL;
 
     accum_pkt->flags |= flags;
-
-    if (flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK)
-        accum_pkt->lock_type = target_ptr->lock_type;
 
     MPID_Datatype_get_size_macro(rma_op->origin_datatype, origin_type_size);
     MPIU_Assign_trunc(len, rma_op->origin_count * origin_type_size, size_t);
@@ -515,9 +510,6 @@ static int issue_get_acc_op(MPIDI_RMA_Op_t *rma_op, MPID_Win *win_ptr,
            buffers are basic datatype. */
         get_accum_pkt->flags |= MPIDI_CH3_PKT_FLAG_RMA_IMMED_RESP;
     }
-
-    if (flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK)
-        get_accum_pkt->lock_type = target_ptr->lock_type;
 
     MPID_Datatype_get_size_macro(rma_op->origin_datatype, origin_type_size);
     MPIU_Assign_trunc(len, rma_op->origin_count * origin_type_size, size_t);
@@ -650,9 +642,6 @@ static int issue_get_op(MPIDI_RMA_Op_t * rma_op, MPID_Win * win_ptr,
         get_pkt->flags |= MPIDI_CH3_PKT_FLAG_RMA_IMMED_RESP;
     }
 
-    if (flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK)
-        get_pkt->lock_type = target_ptr->lock_type;
-
     comm_ptr = win_ptr->comm_ptr;
     MPIDI_Comm_get_vc_set_active(comm_ptr, rma_op->target_rank, &vc);
 
@@ -750,8 +739,6 @@ static int issue_cas_op(MPIDI_RMA_Op_t * rma_op,
 
     cas_pkt->request_handle = rma_op->request->handle;
     cas_pkt->flags |= flags;
-    if (flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK)
-        cas_pkt->lock_type = target_ptr->lock_type;
 
     MPIU_Memcpy((void *) &cas_pkt->origin_data, rma_op->origin_addr, len);
     MPIU_Memcpy((void *) &cas_pkt->compare_data, rma_op->compare_addr, len);
@@ -821,8 +808,6 @@ static int issue_fop_op(MPIDI_RMA_Op_t * rma_op,
     fop_pkt->request_handle = resp_req->handle;
 
     fop_pkt->flags |= flags;
-    if (flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK)
-        fop_pkt->lock_type = target_ptr->lock_type;
 
     MPID_Datatype_get_size_macro(rma_op->origin_datatype, origin_type_size);
     MPIU_Assign_trunc(len, rma_op->origin_count * origin_type_size, size_t);

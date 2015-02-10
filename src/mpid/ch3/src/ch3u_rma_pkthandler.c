@@ -406,7 +406,8 @@ int MPIDI_CH3_PktHandler_Get(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
         MPIDI_Pkt_init(get_resp_pkt, MPIDI_CH3_PKT_GET_RESP);
         get_resp_pkt->request_handle = get_pkt->request_handle;
         get_resp_pkt->flags = MPIDI_CH3_PKT_FLAG_NONE;
-        if (get_pkt->flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK)
+        if (get_pkt->flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK_SHARED ||
+            get_pkt->flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK_EXCLUSIVE)
             get_resp_pkt->flags |= MPIDI_CH3_PKT_FLAG_RMA_LOCK_GRANTED;
         if ((get_pkt->flags & MPIDI_CH3_PKT_FLAG_RMA_FLUSH) ||
             (get_pkt->flags & MPIDI_CH3_PKT_FLAG_RMA_UNLOCK))
@@ -927,7 +928,8 @@ int MPIDI_CH3_PktHandler_CAS(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
     cas_resp_pkt->source_win_handle = cas_pkt->source_win_handle;
     cas_resp_pkt->target_rank = win_ptr->comm_ptr->rank;
     cas_resp_pkt->flags = MPIDI_CH3_PKT_FLAG_NONE;
-    if (cas_pkt->flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK)
+    if (cas_pkt->flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK_SHARED ||
+        cas_pkt->flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK_EXCLUSIVE)
         cas_resp_pkt->flags |= MPIDI_CH3_PKT_FLAG_RMA_LOCK_GRANTED;
     if ((cas_pkt->flags & MPIDI_CH3_PKT_FLAG_RMA_FLUSH) ||
         (cas_pkt->flags & MPIDI_CH3_PKT_FLAG_RMA_UNLOCK))
@@ -1091,7 +1093,8 @@ int MPIDI_CH3_PktHandler_FOP(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
     fop_resp_pkt->source_win_handle = fop_pkt->source_win_handle;
     fop_resp_pkt->target_rank = win_ptr->comm_ptr->rank;
     fop_resp_pkt->flags = MPIDI_CH3_PKT_FLAG_NONE;
-    if (fop_pkt->flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK)
+    if (fop_pkt->flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK_SHARED ||
+        fop_pkt->flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK_EXCLUSIVE)
         fop_resp_pkt->flags |= MPIDI_CH3_PKT_FLAG_RMA_LOCK_GRANTED;
     if ((fop_pkt->flags & MPIDI_CH3_PKT_FLAG_RMA_FLUSH) ||
         (fop_pkt->flags & MPIDI_CH3_PKT_FLAG_RMA_UNLOCK))
@@ -1315,6 +1318,7 @@ int MPIDI_CH3_PktHandler_Lock(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
 {
     MPIDI_CH3_Pkt_lock_t *lock_pkt = &pkt->lock;
     MPID_Win *win_ptr = NULL;
+    int lock_type;
     int mpi_errno = MPI_SUCCESS;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3_PKTHANDLER_LOCK);
 
@@ -1328,7 +1332,14 @@ int MPIDI_CH3_PktHandler_Lock(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
 
     MPID_Win_get_ptr(lock_pkt->target_win_handle, win_ptr);
 
-    if (MPIDI_CH3I_Try_acquire_win_lock(win_ptr, lock_pkt->lock_type) == 1) {
+    if (lock_pkt->flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK_SHARED)
+        lock_type = MPI_LOCK_SHARED;
+    else {
+        MPIU_Assert(lock_pkt->flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK_EXCLUSIVE);
+        lock_type = MPI_LOCK_EXCLUSIVE;
+    }
+
+    if (MPIDI_CH3I_Try_acquire_win_lock(win_ptr, lock_type) == 1) {
         /* send lock granted packet. */
         mpi_errno = MPIDI_CH3I_Send_lock_ack_pkt(vc, win_ptr, MPIDI_CH3_PKT_FLAG_RMA_LOCK_GRANTED,
                                                  lock_pkt->source_win_handle);

@@ -32,8 +32,13 @@ static inline int send_lock_msg(int dest, int lock_type, MPID_Win * win_ptr)
     MPIDI_Pkt_init(lock_pkt, MPIDI_CH3_PKT_LOCK);
     lock_pkt->target_win_handle = win_ptr->all_win_handles[dest];
     lock_pkt->source_win_handle = win_ptr->handle;
-    lock_pkt->lock_type = lock_type;
-    lock_pkt->origin_rank = win_ptr->comm_ptr->rank;
+    lock_pkt->flags = MPIDI_CH3_PKT_FLAG_NONE;
+    if (lock_type == MPI_LOCK_SHARED)
+        lock_pkt->flags |= MPIDI_CH3_PKT_FLAG_RMA_LOCK_SHARED;
+    else {
+        MPIU_Assert(lock_type == MPI_LOCK_EXCLUSIVE);
+        lock_pkt->flags |= MPIDI_CH3_PKT_FLAG_RMA_LOCK_EXCLUSIVE;
+    }
 
     MPIU_THREAD_CS_ENTER(CH3COMM, vc);
     mpi_errno = MPIDI_CH3_iStartMsg(vc, lock_pkt, sizeof(*lock_pkt), &req);
@@ -321,6 +326,7 @@ static inline int enqueue_lock_origin(MPID_Win *win_ptr, MPIDI_VC_t *vc,
     new_ptr = MPIDI_CH3I_Win_lock_entry_alloc(win_ptr, pkt);
     if (new_ptr != NULL) {
         MPL_LL_APPEND(win_ptr->lock_queue, win_ptr->lock_queue_tail, new_ptr);
+        new_ptr->vc = vc;
     }
     else {
         lock_discarded = 1;
@@ -386,18 +392,16 @@ static inline int enqueue_lock_origin(MPID_Win *win_ptr, MPIDI_VC_t *vc,
                 MPIDI_CH3_Pkt_t new_pkt;
                 MPIDI_CH3_Pkt_lock_t *lock_pkt = &new_pkt.lock;
                 MPI_Win target_win_handle;
-                int lock_type, origin_rank;
+                MPIDI_CH3_Pkt_flags_t flags;
 
                 MPIDI_CH3_PKT_RMA_GET_TARGET_WIN_HANDLE((*pkt), target_win_handle, mpi_errno);
                 MPIDI_CH3_PKT_RMA_GET_SOURCE_WIN_HANDLE((*pkt), source_win_handle, mpi_errno);
-                MPIDI_CH3_PKT_RMA_GET_ORIGIN_RANK((*pkt), origin_rank, mpi_errno);
-                MPIDI_CH3_PKT_RMA_GET_LOCK_TYPE((*pkt), lock_type, mpi_errno);
+                MPIDI_CH3_PKT_RMA_GET_FLAGS((*pkt), flags, mpi_errno);
 
                 MPIDI_Pkt_init(lock_pkt, MPIDI_CH3_PKT_LOCK);
                 lock_pkt->target_win_handle = target_win_handle;
                 lock_pkt->source_win_handle = source_win_handle;
-                lock_pkt->lock_type = lock_type;
-                lock_pkt->origin_rank = origin_rank;
+                lock_pkt->flags = flags;
 
                 /* replace original pkt with lock pkt */
                 new_ptr->pkt = new_pkt;
@@ -571,7 +575,8 @@ static inline int adjust_op_piggybacked_with_lock (MPID_Win *win_ptr,
     op = target->pending_op_list;
     if (op != NULL) MPIDI_CH3_PKT_RMA_GET_FLAGS(op->pkt, op_flags, mpi_errno);
 
-    if (op_flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK) {
+    if (op_flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK_SHARED ||
+        op_flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK_EXCLUSIVE) {
         if (flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK_GRANTED ||
             flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK_QUEUED_DATA_QUEUED) {
             if (!op->request) {
@@ -664,10 +669,16 @@ static inline int acquire_local_lock(MPID_Win * win_ptr, int lock_type)
         MPIDI_CH3_Pkt_t pkt;
         MPIDI_CH3_Pkt_lock_t *lock_pkt = &pkt.lock;
         MPIDI_RMA_Lock_entry_t *new_ptr = NULL;
+        MPIDI_VC_t *my_vc;
 
         MPIDI_Pkt_init(lock_pkt, MPIDI_CH3_PKT_LOCK);
-        lock_pkt->lock_type = lock_type;
-        lock_pkt->origin_rank = win_ptr->comm_ptr->rank;
+        lock_pkt->flags = MPIDI_CH3_PKT_FLAG_NONE;
+        if (lock_type == MPI_LOCK_SHARED)
+            lock_pkt->flags |= MPIDI_CH3_PKT_FLAG_RMA_LOCK_SHARED;
+        else {
+            MPIU_Assert(lock_type == MPI_LOCK_EXCLUSIVE);
+            lock_pkt->flags |= MPIDI_CH3_PKT_FLAG_RMA_LOCK_EXCLUSIVE;
+        }
 
         new_ptr = MPIDI_CH3I_Win_lock_entry_alloc(win_ptr, &pkt);
         if (new_ptr == NULL) {
@@ -677,6 +688,8 @@ static inline int acquire_local_lock(MPID_Win * win_ptr, int lock_type)
             goto fn_exit;
         }
         MPL_LL_APPEND(win_ptr->lock_queue, win_ptr->lock_queue_tail, new_ptr);
+        MPIDI_Comm_get_vc_set_active(win_ptr->comm_ptr, win_ptr->comm_ptr->rank, &my_vc);
+        new_ptr->vc = my_vc;
 
         new_ptr->all_data_recved = 1;
     }
@@ -834,9 +847,16 @@ static inline int check_piggyback_lock(MPID_Win *win_ptr, MPIDI_VC_t *vc,
     (*reqp) = NULL;
 
     MPIDI_CH3_PKT_RMA_GET_FLAGS((*pkt), flags, mpi_errno);
-    MPIDI_CH3_PKT_RMA_GET_LOCK_TYPE((*pkt), lock_type, mpi_errno);
+    if (flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK_SHARED ||
+        flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK_EXCLUSIVE) {
 
-    if (flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK) {
+        if (flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK_SHARED)
+            lock_type = MPI_LOCK_SHARED;
+        else {
+            MPIU_Assert(flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK_EXCLUSIVE);
+            lock_type = MPI_LOCK_EXCLUSIVE;
+        }
+
         if (MPIDI_CH3I_Try_acquire_win_lock(win_ptr, lock_type) == 0) {
             /* cannot acquire the lock, queue up this operation. */
             mpi_errno = enqueue_lock_origin(win_ptr, vc, pkt, buflen, reqp);
@@ -859,7 +879,8 @@ static inline int finish_op_on_target(MPID_Win *win_ptr, MPIDI_VC_t *vc,
 
     if (type == MPIDI_CH3_PKT_PUT || type == MPIDI_CH3_PKT_ACCUMULATE) {
         /* This is PUT or ACC */
-        if (flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK) {
+        if (flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK_SHARED ||
+            flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK_EXCLUSIVE) {
             MPIDI_CH3_Pkt_flags_t pkt_flags = MPIDI_CH3_PKT_FLAG_RMA_LOCK_GRANTED;
             if ((flags & MPIDI_CH3_PKT_FLAG_RMA_FLUSH) ||
                 (flags & MPIDI_CH3_PKT_FLAG_RMA_UNLOCK))
@@ -871,7 +892,8 @@ static inline int finish_op_on_target(MPID_Win *win_ptr, MPIDI_VC_t *vc,
             MPIDI_CH3_Progress_signal_completion();
         }
         if (flags & MPIDI_CH3_PKT_FLAG_RMA_FLUSH) {
-            if (!(flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK)) {
+            if (!(flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK_SHARED ||
+                  flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK_EXCLUSIVE)) {
                 /* If op is piggybacked with both LOCK and FLUSH,
                    we only send LOCK ACK back, do not send FLUSH ACK. */
                 mpi_errno = MPIDI_CH3I_Send_flush_ack_pkt(vc, win_ptr,
@@ -888,7 +910,8 @@ static inline int finish_op_on_target(MPID_Win *win_ptr, MPIDI_VC_t *vc,
                 MPIDI_CH3_Progress_signal_completion();
         }
         if (flags & MPIDI_CH3_PKT_FLAG_RMA_UNLOCK) {
-            if (!(flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK)) {
+            if (!(flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK_SHARED ||
+                  flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK_EXCLUSIVE)) {
                 /* If op is piggybacked with both LOCK and UNLOCK,
                    we only send LOCK ACK back, do not send FLUSH (UNLOCK) ACK. */
                 mpi_errno = MPIDI_CH3I_Send_flush_ack_pkt(vc, win_ptr,

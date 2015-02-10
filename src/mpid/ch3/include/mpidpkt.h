@@ -109,21 +109,20 @@ typedef enum {
 /* These flags can be "OR'ed" together */
 typedef enum {
     MPIDI_CH3_PKT_FLAG_NONE = 0,
-    MPIDI_CH3_PKT_FLAG_RMA_LOCK = 1,
-    MPIDI_CH3_PKT_FLAG_RMA_UNLOCK = 2,
-    MPIDI_CH3_PKT_FLAG_RMA_FLUSH = 4,
-    MPIDI_CH3_PKT_FLAG_RMA_REQ_ACK = 8,
-    MPIDI_CH3_PKT_FLAG_RMA_DECR_AT_COUNTER = 16,
-    MPIDI_CH3_PKT_FLAG_RMA_NOCHECK = 32,
-    MPIDI_CH3_PKT_FLAG_RMA_SHARED = 64,
-    MPIDI_CH3_PKT_FLAG_RMA_EXCLUSIVE = 128,
-    MPIDI_CH3_PKT_FLAG_RMA_FLUSH_ACK = 256,
-    MPIDI_CH3_PKT_FLAG_RMA_LOCK_GRANTED = 512,
-    MPIDI_CH3_PKT_FLAG_RMA_LOCK_QUEUED_DATA_QUEUED = 1024,
-    MPIDI_CH3_PKT_FLAG_RMA_LOCK_QUEUED_DATA_DISCARDED = 2048,
-    MPIDI_CH3_PKT_FLAG_RMA_LOCK_DISCARDED = 4096,
-    MPIDI_CH3_PKT_FLAG_RMA_UNLOCK_NO_ACK = 8192,
-    MPIDI_CH3_PKT_FLAG_RMA_IMMED_RESP = 16384
+    MPIDI_CH3_PKT_FLAG_RMA_LOCK_SHARED = 1,
+    MPIDI_CH3_PKT_FLAG_RMA_LOCK_EXCLUSIVE = 2,
+    MPIDI_CH3_PKT_FLAG_RMA_UNLOCK = 4,
+    MPIDI_CH3_PKT_FLAG_RMA_FLUSH = 8,
+    MPIDI_CH3_PKT_FLAG_RMA_REQ_ACK = 16,
+    MPIDI_CH3_PKT_FLAG_RMA_DECR_AT_COUNTER = 32,
+    MPIDI_CH3_PKT_FLAG_RMA_NOCHECK = 64,
+    MPIDI_CH3_PKT_FLAG_RMA_FLUSH_ACK = 128,
+    MPIDI_CH3_PKT_FLAG_RMA_LOCK_GRANTED = 256,
+    MPIDI_CH3_PKT_FLAG_RMA_LOCK_QUEUED_DATA_QUEUED = 512,
+    MPIDI_CH3_PKT_FLAG_RMA_LOCK_QUEUED_DATA_DISCARDED = 1024,
+    MPIDI_CH3_PKT_FLAG_RMA_LOCK_DISCARDED = 2048,
+    MPIDI_CH3_PKT_FLAG_RMA_UNLOCK_NO_ACK = 4096,
+    MPIDI_CH3_PKT_FLAG_RMA_IMMED_RESP = 8192
 } MPIDI_CH3_Pkt_flags_t;
 
 typedef struct MPIDI_CH3_Pkt_send {
@@ -330,72 +329,6 @@ MPIDI_CH3_PKT_DEFS
         }                                                               \
     }
 
-#define MPIDI_CH3_PKT_RMA_GET_LOCK_TYPE(pkt_, lock_type_, err_)         \
-    {                                                                   \
-        /* This macro returns lock type in RMA operation                \
-           packets (PUT, GET, ACC, GACC, FOP, CAS) and RMA control      \
-           packets (LOCK). */                                           \
-        err_ = MPI_SUCCESS;                                             \
-        switch((pkt_).type) {                                           \
-        case (MPIDI_CH3_PKT_PUT):                                       \
-            lock_type_ = (pkt_).put.lock_type;                          \
-            break;                                                      \
-        case (MPIDI_CH3_PKT_GET):                                       \
-            lock_type_ = (pkt_).get.lock_type;                          \
-            break;                                                      \
-        case (MPIDI_CH3_PKT_ACCUMULATE):                                \
-            lock_type_ = (pkt_).accum.lock_type;                        \
-            break;                                                      \
-        case (MPIDI_CH3_PKT_GET_ACCUM):                                 \
-            lock_type_ = (pkt_).get_accum.lock_type;                    \
-            break;                                                      \
-        case (MPIDI_CH3_PKT_CAS):                                       \
-            lock_type_ = (pkt_).cas.lock_type;                          \
-            break;                                                      \
-        case (MPIDI_CH3_PKT_FOP):                                       \
-            lock_type_ = (pkt_).fop.lock_type;                          \
-            break;                                                      \
-        case (MPIDI_CH3_PKT_LOCK):                                      \
-            lock_type_ = (pkt_).lock.lock_type;                         \
-            break;                                                      \
-        default:                                                        \
-            MPIU_ERR_SETANDJUMP1(err_, MPI_ERR_OTHER, "**invalidpkt", "**invalidpkt %d", (pkt_).type); \
-        }                                                               \
-    }
-
-#define MPIDI_CH3_PKT_RMA_GET_ORIGIN_RANK(pkt_, origin_rank_, err_)     \
-    {                                                                   \
-        /* This macro returns origin rank (used in acquiring lock) in   \
-           RMA operation packets (PUT, GET, ACC, GACC, FOP, CAS) and    \
-           RMA control packets (LOCK). */                               \
-        err_ = MPI_SUCCESS;                                             \
-        switch((pkt_).type) {                                           \
-        case (MPIDI_CH3_PKT_PUT):                                       \
-            origin_rank_ = (pkt_).put.origin_rank;                      \
-            break;                                                      \
-        case (MPIDI_CH3_PKT_GET):                                       \
-            origin_rank_ = (pkt_).get.origin_rank;                      \
-            break;                                                      \
-        case (MPIDI_CH3_PKT_ACCUMULATE):                                \
-            origin_rank_ = (pkt_).accum.origin_rank;                    \
-            break;                                                      \
-        case (MPIDI_CH3_PKT_GET_ACCUM):                                 \
-            origin_rank_ = (pkt_).get_accum.origin_rank;                \
-            break;                                                      \
-        case (MPIDI_CH3_PKT_CAS):                                       \
-            origin_rank_ = (pkt_).cas.origin_rank;                      \
-            break;                                                      \
-        case (MPIDI_CH3_PKT_FOP):                                       \
-            origin_rank_ = (pkt_).fop.origin_rank;                      \
-            break;                                                      \
-        case (MPIDI_CH3_PKT_LOCK):                                      \
-            origin_rank_ = (pkt_).lock.origin_rank;                     \
-            break;                                                      \
-        default:                                                        \
-            MPIU_ERR_SETANDJUMP1(err_, MPI_ERR_OTHER, "**invalidpkt", "**invalidpkt %d", (pkt_).type); \
-        }                                                               \
-    }
-
 #define MPIDI_CH3_PKT_RMA_GET_FLAGS(pkt_, flags_, err_)                 \
     {                                                                   \
         /* This macro returns flags in RMA operation packets (PUT, GET, \
@@ -434,6 +367,9 @@ MPIDI_CH3_PKT_DEFS
             break;                                                      \
         case (MPIDI_CH3_PKT_CAS_RESP):                                  \
             flags_ = (pkt_).cas_resp.flags;                             \
+            break;                                                      \
+        case (MPIDI_CH3_PKT_LOCK):                                      \
+            flags_ = (pkt_).lock.flags;                                 \
             break;                                                      \
         case (MPIDI_CH3_PKT_UNLOCK):                                    \
             flags_ = (pkt_).unlock.flags;                               \
@@ -487,6 +423,9 @@ MPIDI_CH3_PKT_DEFS
             break;                                                      \
         case (MPIDI_CH3_PKT_CAS_RESP):                                  \
             (pkt_).cas_resp.flags = MPIDI_CH3_PKT_FLAG_NONE;            \
+            break;                                                      \
+        case (MPIDI_CH3_PKT_LOCK):                                      \
+            (pkt_).lock.flags = MPIDI_CH3_PKT_FLAG_NONE;                \
             break;                                                      \
         case (MPIDI_CH3_PKT_UNLOCK):                                    \
             (pkt_).unlock.flags = MPIDI_CH3_PKT_FLAG_NONE;              \
@@ -646,8 +585,6 @@ typedef struct MPIDI_CH3_Pkt_put {
                                  * with shared locks. Otherwise set to NULL*/
     char data[MPIDI_RMA_IMMED_BYTES];
     int immed_len;
-    int lock_type;      /* used when piggybacking LOCK message. */
-    int origin_rank;    /* used when piggybacking LOCK message. */
 } MPIDI_CH3_Pkt_put_t;
 
 typedef struct MPIDI_CH3_Pkt_get {
@@ -665,8 +602,6 @@ typedef struct MPIDI_CH3_Pkt_get {
     MPI_Win source_win_handle;  /* Used in the last RMA operation in an
                                  * epoch in the case of passive target rma
                                  * with shared locks. Otherwise set to NULL*/
-    int lock_type;   /* used when piggybacking LOCK message. */
-    int origin_rank; /* used when piggybacking LOCK message. */
 } MPIDI_CH3_Pkt_get_t;
 
 typedef struct MPIDI_CH3_Pkt_get_resp {
@@ -698,8 +633,6 @@ typedef struct MPIDI_CH3_Pkt_accum {
                                  * with shared locks. Otherwise set to NULL*/
     char data[MPIDI_RMA_IMMED_BYTES];
     int immed_len;
-    int lock_type;    /* used when piggybacking LOCK message. */
-    int origin_rank;  /* used when piggybacking LOCK message. */
 } MPIDI_CH3_Pkt_accum_t;
 
 typedef struct MPIDI_CH3_Pkt_get_accum {
@@ -720,8 +653,6 @@ typedef struct MPIDI_CH3_Pkt_get_accum {
                                  * with shared locks. Otherwise set to NULL*/
     char data[MPIDI_RMA_IMMED_BYTES];
     int immed_len;
-    int lock_type;     /* used when piggybacking LOCK message. */
-    int origin_rank;   /* used when piggybacking LOCK message. */
 } MPIDI_CH3_Pkt_get_accum_t;
 
 typedef struct MPIDI_CH3_Pkt_get_accum_resp {
@@ -749,8 +680,6 @@ typedef struct MPIDI_CH3_Pkt_cas {
                                  * in passive target rma. Otherwise set to NULL*/
     MPIDI_CH3_CAS_Immed_u origin_data;
     MPIDI_CH3_CAS_Immed_u compare_data;
-    int lock_type;     /* used when piggybacking LOCK message. */
-    int origin_rank;   /* used when piggybacking LOCK message. */
 } MPIDI_CH3_Pkt_cas_t;
 
 typedef struct MPIDI_CH3_Pkt_cas_resp {
@@ -777,8 +706,6 @@ typedef struct MPIDI_CH3_Pkt_fop {
                                  * in passive target rma. Otherwise set to NULL*/
     char data[MPIDI_RMA_IMMED_BYTES];
     int immed_len;
-    int lock_type;     /* used when piggybacking LOCK message. */
-    int origin_rank;   /* used when piggybacking LOCK message. */
 } MPIDI_CH3_Pkt_fop_t;
 
 typedef struct MPIDI_CH3_Pkt_fop_resp {
@@ -794,10 +721,9 @@ typedef struct MPIDI_CH3_Pkt_fop_resp {
 
 typedef struct MPIDI_CH3_Pkt_lock {
     MPIDI_CH3_Pkt_type_t type;
-    int lock_type;
+    MPIDI_CH3_Pkt_flags_t flags;
     MPI_Win target_win_handle;
     MPI_Win source_win_handle;
-    int origin_rank;
 } MPIDI_CH3_Pkt_lock_t;
 
 typedef struct MPIDI_CH3_Pkt_unlock {

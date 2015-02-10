@@ -238,7 +238,8 @@ int MPIDI_CH3_ReqHandler_GaccumRecvComplete( MPIDI_VC_t *vc,
     get_accum_resp_pkt->target_rank = win_ptr->comm_ptr->rank;
     get_accum_resp_pkt->source_win_handle = rreq->dev.source_win_handle;
     get_accum_resp_pkt->flags = MPIDI_CH3_PKT_FLAG_NONE;
-    if (rreq->dev.flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK)
+    if (rreq->dev.flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK_SHARED ||
+        rreq->dev.flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK_EXCLUSIVE)
         get_accum_resp_pkt->flags |= MPIDI_CH3_PKT_FLAG_RMA_LOCK_GRANTED;
     if ((rreq->dev.flags & MPIDI_CH3_PKT_FLAG_RMA_FLUSH) ||
         (rreq->dev.flags & MPIDI_CH3_PKT_FLAG_RMA_UNLOCK))
@@ -595,7 +596,8 @@ int MPIDI_CH3_ReqHandler_GetDerivedDTRecvComplete( MPIDI_VC_t *vc,
     get_resp_pkt->target_rank = win_ptr->comm_ptr->rank;
     get_resp_pkt->source_win_handle = rreq->dev.source_win_handle;
     get_resp_pkt->flags = MPIDI_CH3_PKT_FLAG_NONE;
-    if (rreq->dev.flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK)
+    if (rreq->dev.flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK_SHARED ||
+        rreq->dev.flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK_EXCLUSIVE)
         get_resp_pkt->flags |= MPIDI_CH3_PKT_FLAG_RMA_LOCK_GRANTED;
     if ((rreq->dev.flags & MPIDI_CH3_PKT_FLAG_RMA_FLUSH) ||
         (rreq->dev.flags & MPIDI_CH3_PKT_FLAG_RMA_UNLOCK))
@@ -831,7 +833,6 @@ static int create_derived_datatype(MPID_Request *req, MPID_Datatype **dtp)
 static inline int perform_put_in_lock_queue(MPID_Win *win_ptr, MPIDI_RMA_Lock_entry_t *lock_entry)
 {
     MPIDI_CH3_Pkt_put_t *put_pkt = &((lock_entry->pkt).put);
-    MPIDI_VC_t *vc = NULL;
     int mpi_errno = MPI_SUCCESS;
 
     if (lock_entry->data == NULL) {
@@ -846,11 +847,8 @@ static inline int perform_put_in_lock_queue(MPID_Win *win_ptr, MPIDI_RMA_Lock_en
         if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
     }
 
-    /* get vc object */
-    MPIDI_Comm_get_vc(win_ptr->comm_ptr, put_pkt->origin_rank, &vc);
-
     /* do final action */
-    mpi_errno = finish_op_on_target(win_ptr, vc, MPIDI_CH3_PKT_PUT,
+    mpi_errno = finish_op_on_target(win_ptr, lock_entry->vc, MPIDI_CH3_PKT_PUT,
                                     put_pkt->flags, put_pkt->source_win_handle);
     if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
 
@@ -866,7 +864,6 @@ static inline int perform_get_in_lock_queue(MPID_Win *win_ptr, MPIDI_RMA_Lock_en
     MPIDI_CH3_Pkt_get_resp_t *get_resp_pkt = &upkt.get_resp;
     MPIDI_CH3_Pkt_get_t *get_pkt = &((lock_entry->pkt).get);
     MPID_Request *sreq = NULL;
-    MPIDI_VC_t *vc = NULL;
     MPI_Aint type_size;
     size_t len;
     int iovcnt;
@@ -894,7 +891,8 @@ static inline int perform_get_in_lock_queue(MPID_Win *win_ptr, MPIDI_RMA_Lock_en
     MPIDI_Pkt_init(get_resp_pkt, MPIDI_CH3_PKT_GET_RESP);
     get_resp_pkt->request_handle = get_pkt->request_handle;
     get_resp_pkt->flags = MPIDI_CH3_PKT_FLAG_NONE;
-    if (get_pkt->flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK)
+    if (get_pkt->flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK_SHARED ||
+        get_pkt->flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK_EXCLUSIVE)
         get_resp_pkt->flags |= MPIDI_CH3_PKT_FLAG_RMA_LOCK_GRANTED;
     if ((get_pkt->flags & MPIDI_CH3_PKT_FLAG_RMA_FLUSH) ||
         (get_pkt->flags & MPIDI_CH3_PKT_FLAG_RMA_UNLOCK))
@@ -938,10 +936,7 @@ static inline int perform_get_in_lock_queue(MPID_Win *win_ptr, MPIDI_RMA_Lock_en
         iovcnt = 2;
     }
 
-    /* get vc object */
-    MPIDI_Comm_get_vc(win_ptr->comm_ptr, get_pkt->origin_rank, &vc);
-
-    mpi_errno = MPIDI_CH3_iSendv(vc, sreq, iov, iovcnt);
+    mpi_errno = MPIDI_CH3_iSendv(lock_entry->vc, sreq, iov, iovcnt);
     if (mpi_errno != MPI_SUCCESS) {
         MPID_Request_release(sreq);
 	MPIU_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**ch3|rmamsg");
@@ -957,7 +952,6 @@ static inline int perform_get_in_lock_queue(MPID_Win *win_ptr, MPIDI_RMA_Lock_en
 static inline int perform_acc_in_lock_queue(MPID_Win *win_ptr, MPIDI_RMA_Lock_entry_t *lock_entry)
 {
     MPIDI_CH3_Pkt_accum_t *acc_pkt = &((lock_entry->pkt).accum);
-    MPIDI_VC_t *vc = NULL;
     int mpi_errno = MPI_SUCCESS;
 
     MPIU_Assert(lock_entry->all_data_recved == 1);
@@ -980,10 +974,7 @@ static inline int perform_acc_in_lock_queue(MPID_Win *win_ptr, MPIDI_RMA_Lock_en
     if (win_ptr->shm_allocated == TRUE)
         MPIDI_CH3I_SHM_MUTEX_UNLOCK(win_ptr);
 
-    /* get vc object */
-    MPIDI_Comm_get_vc(win_ptr->comm_ptr, acc_pkt->origin_rank, &vc);
-
-    mpi_errno = finish_op_on_target(win_ptr, vc, MPIDI_CH3_PKT_ACCUMULATE,
+    mpi_errno = finish_op_on_target(win_ptr, lock_entry->vc, MPIDI_CH3_PKT_ACCUMULATE,
                                     acc_pkt->flags, acc_pkt->source_win_handle);
     if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
 
@@ -1000,7 +991,6 @@ static inline int perform_get_acc_in_lock_queue(MPID_Win *win_ptr, MPIDI_RMA_Loc
     MPIDI_CH3_Pkt_get_accum_resp_t *get_accum_resp_pkt = &upkt.get_accum_resp;
     MPIDI_CH3_Pkt_get_accum_t *get_accum_pkt = &((lock_entry->pkt).get_accum);
     MPID_Request *sreq = NULL;
-    MPIDI_VC_t *vc = NULL;
     MPI_Aint type_size;
     size_t len;
     int iovcnt;
@@ -1065,7 +1055,8 @@ static inline int perform_get_acc_in_lock_queue(MPID_Win *win_ptr, MPIDI_RMA_Loc
     MPIDI_Pkt_init(get_accum_resp_pkt, MPIDI_CH3_PKT_GET_ACCUM_RESP);
     get_accum_resp_pkt->request_handle = get_accum_pkt->request_handle;
     get_accum_resp_pkt->flags = MPIDI_CH3_PKT_FLAG_NONE;
-    if (get_accum_pkt->flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK)
+    if (get_accum_pkt->flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK_SHARED ||
+        get_accum_pkt->flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK_EXCLUSIVE)
         get_accum_resp_pkt->flags |= MPIDI_CH3_PKT_FLAG_RMA_LOCK_GRANTED;
     if ((get_accum_pkt->flags & MPIDI_CH3_PKT_FLAG_RMA_FLUSH) ||
         (get_accum_pkt->flags & MPIDI_CH3_PKT_FLAG_RMA_UNLOCK))
@@ -1108,10 +1099,7 @@ static inline int perform_get_acc_in_lock_queue(MPID_Win *win_ptr, MPIDI_RMA_Loc
         iovcnt = 2;
     }
 
-    /* get vc object */
-    MPIDI_Comm_get_vc(win_ptr->comm_ptr, get_accum_pkt->origin_rank, &vc);
-
-    mpi_errno = MPIDI_CH3_iSendv(vc, sreq, iov, iovcnt);
+    mpi_errno = MPIDI_CH3_iSendv(lock_entry->vc, sreq, iov, iovcnt);
     if (mpi_errno != MPI_SUCCESS) {
         MPID_Request_release(sreq);
 	MPIU_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**ch3|rmamsg");
@@ -1130,21 +1118,18 @@ static inline int perform_fop_in_lock_queue(MPID_Win *win_ptr, MPIDI_RMA_Lock_en
     MPIDI_CH3_Pkt_fop_resp_t *fop_resp_pkt = &upkt.fop_resp;
     MPIDI_CH3_Pkt_fop_t *fop_pkt = &((lock_entry->pkt).fop);
     MPID_Request *resp_req = NULL;
-    MPIDI_VC_t *vc = NULL;
     int mpi_errno = MPI_SUCCESS;
 
     /* FIXME: this function is same with PktHandler_FOP(), should
        do code refactoring on both of them. */
-
-    /* get vc object */
-    MPIDI_Comm_get_vc(win_ptr->comm_ptr, fop_pkt->origin_rank, &vc);
 
     MPIDI_Pkt_init(fop_resp_pkt, MPIDI_CH3_PKT_FOP_RESP);
     fop_resp_pkt->request_handle = fop_pkt->request_handle;
     fop_resp_pkt->source_win_handle = fop_pkt->source_win_handle;
     fop_resp_pkt->target_rank = win_ptr->comm_ptr->rank;
     fop_resp_pkt->flags = MPIDI_CH3_PKT_FLAG_NONE;
-    if (fop_pkt->flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK)
+    if (fop_pkt->flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK_SHARED ||
+        fop_pkt->flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK_EXCLUSIVE)
         fop_resp_pkt->flags |= MPIDI_CH3_PKT_FLAG_RMA_LOCK_GRANTED;
     if ((fop_pkt->flags & MPIDI_CH3_PKT_FLAG_RMA_FLUSH) ||
         (fop_pkt->flags & MPIDI_CH3_PKT_FLAG_RMA_UNLOCK))
@@ -1170,9 +1155,9 @@ static inline int perform_fop_in_lock_queue(MPID_Win *win_ptr, MPIDI_RMA_Lock_en
         MPIDI_CH3I_SHM_MUTEX_UNLOCK(win_ptr);
 
     /* send back the original data */
-    MPIU_THREAD_CS_ENTER(CH3COMM,vc);
-    mpi_errno = MPIDI_CH3_iStartMsg(vc, fop_resp_pkt, sizeof(*fop_resp_pkt), &resp_req);
-    MPIU_THREAD_CS_EXIT(CH3COMM,vc);
+    MPIU_THREAD_CS_ENTER(CH3COMM,lock_entry->vc);
+    mpi_errno = MPIDI_CH3_iStartMsg(lock_entry->vc, fop_resp_pkt, sizeof(*fop_resp_pkt), &resp_req);
+    MPIU_THREAD_CS_EXIT(CH3COMM,lock_entry->vc);
     MPIU_ERR_CHKANDJUMP(mpi_errno != MPI_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**ch3|rmamsg");
 
     if (resp_req != NULL) {
@@ -1196,7 +1181,7 @@ static inline int perform_fop_in_lock_queue(MPID_Win *win_ptr, MPIDI_RMA_Lock_en
     }
 
     /* do final action */
-    mpi_errno = finish_op_on_target(win_ptr, vc, MPIDI_CH3_PKT_FOP,
+    mpi_errno = finish_op_on_target(win_ptr, lock_entry->vc, MPIDI_CH3_PKT_FOP,
                                     fop_pkt->flags, fop_pkt->source_win_handle);
     if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
 
@@ -1213,19 +1198,16 @@ static inline int perform_cas_in_lock_queue(MPID_Win *win_ptr, MPIDI_RMA_Lock_en
     MPIDI_CH3_Pkt_cas_resp_t *cas_resp_pkt = &upkt.cas_resp;
     MPIDI_CH3_Pkt_cas_t *cas_pkt = &((lock_entry->pkt).cas);
     MPID_Request *send_req = NULL;
-    MPIDI_VC_t *vc = NULL;
     MPI_Aint len;
     int mpi_errno = MPI_SUCCESS;
-
-    /* get vc object */
-    MPIDI_Comm_get_vc(win_ptr->comm_ptr, cas_pkt->origin_rank, &vc);
 
     MPIDI_Pkt_init(cas_resp_pkt, MPIDI_CH3_PKT_CAS_RESP);
     cas_resp_pkt->request_handle = cas_pkt->request_handle;
     cas_resp_pkt->source_win_handle = cas_pkt->source_win_handle;
     cas_resp_pkt->target_rank = win_ptr->comm_ptr->rank;
     cas_resp_pkt->flags = MPIDI_CH3_PKT_FLAG_NONE;
-    if (cas_pkt->flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK)
+    if (cas_pkt->flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK_SHARED ||
+        cas_pkt->flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK_EXCLUSIVE)
         cas_resp_pkt->flags |= MPIDI_CH3_PKT_FLAG_RMA_LOCK_GRANTED;
     if ((cas_pkt->flags & MPIDI_CH3_PKT_FLAG_RMA_FLUSH) ||
         (cas_pkt->flags & MPIDI_CH3_PKT_FLAG_RMA_UNLOCK))
@@ -1249,9 +1231,9 @@ static inline int perform_cas_in_lock_queue(MPID_Win *win_ptr, MPIDI_RMA_Lock_en
         MPIDI_CH3I_SHM_MUTEX_UNLOCK(win_ptr);
 
     /* Send the response packet */
-    MPIU_THREAD_CS_ENTER(CH3COMM, vc);
-    mpi_errno = MPIDI_CH3_iStartMsg(vc, cas_resp_pkt, sizeof(*cas_resp_pkt), &send_req);
-    MPIU_THREAD_CS_EXIT(CH3COMM, vc);
+    MPIU_THREAD_CS_ENTER(CH3COMM, lock_entry->vc);
+    mpi_errno = MPIDI_CH3_iStartMsg(lock_entry->vc, cas_resp_pkt, sizeof(*cas_resp_pkt), &send_req);
+    MPIU_THREAD_CS_EXIT(CH3COMM, lock_entry->vc);
 
     MPIU_ERR_CHKANDJUMP(mpi_errno != MPI_SUCCESS, mpi_errno, MPI_ERR_OTHER, "**ch3|rmamsg");
 
@@ -1275,7 +1257,7 @@ static inline int perform_cas_in_lock_queue(MPID_Win *win_ptr, MPIDI_RMA_Lock_en
     }
 
     /* do final action */
-    mpi_errno = finish_op_on_target(win_ptr, vc, MPIDI_CH3_PKT_CAS,
+    mpi_errno = finish_op_on_target(win_ptr, lock_entry->vc, MPIDI_CH3_PKT_CAS,
                                     cas_pkt->flags, cas_pkt->source_win_handle);
     if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
 
@@ -1295,16 +1277,17 @@ static inline int perform_op_in_lock_queue(MPID_Win *win_ptr, MPIDI_RMA_Lock_ent
         /* single LOCK request */
 
         MPIDI_CH3_Pkt_lock_t *lock_pkt = &(lock_entry->pkt.lock);
-        if (lock_pkt->origin_rank == win_ptr->comm_ptr->rank) {
-            mpi_errno = handle_lock_ack(win_ptr, lock_pkt->origin_rank,
+        MPIDI_VC_t *my_vc = NULL;
+
+        MPIDI_Comm_get_vc_set_active(win_ptr->comm_ptr, win_ptr->comm_ptr->rank, &my_vc);
+
+        if (lock_entry->vc == my_vc) {
+            mpi_errno = handle_lock_ack(win_ptr, win_ptr->comm_ptr->rank,
                                               MPIDI_CH3_PKT_FLAG_RMA_LOCK_GRANTED);
             if (mpi_errno) MPIU_ERR_POP(mpi_errno);
         }
         else {
-            MPIDI_VC_t *vc = NULL;
-            MPIDI_Comm_get_vc_set_active(win_ptr->comm_ptr,
-                                         lock_pkt->origin_rank, &vc);
-            mpi_errno = MPIDI_CH3I_Send_lock_ack_pkt(vc, win_ptr,
+            mpi_errno = MPIDI_CH3I_Send_lock_ack_pkt(lock_entry->vc, win_ptr,
                                                      MPIDI_CH3_PKT_FLAG_RMA_LOCK_GRANTED,
                                               lock_pkt->source_win_handle);
             if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
@@ -1410,7 +1393,14 @@ int MPIDI_CH3I_Release_lock(MPID_Win *win_ptr)
                 lock_entry_next = lock_entry->next;
 
                 if (lock_entry->all_data_recved) {
-                MPIDI_CH3_PKT_RMA_GET_LOCK_TYPE(lock_entry->pkt, requested_lock, mpi_errno);
+                MPIDI_CH3_Pkt_flags_t flags;
+                MPIDI_CH3_PKT_RMA_GET_FLAGS(lock_entry->pkt, flags, mpi_errno);
+                if (flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK_SHARED)
+                    requested_lock = MPI_LOCK_SHARED;
+                else {
+                    MPIU_Assert(flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK_EXCLUSIVE);
+                    requested_lock = MPI_LOCK_EXCLUSIVE;
+                }
                 if (MPIDI_CH3I_Try_acquire_win_lock(win_ptr, requested_lock) == 1) {
                     /* dequeue entry from lock queue */
                     MPL_LL_DELETE(win_ptr->lock_queue, win_ptr->lock_queue_tail, lock_entry);
@@ -1456,6 +1446,7 @@ int MPIDI_CH3_ReqHandler_PiggybackLockOpRecvComplete( MPIDI_VC_t *vc,
     int requested_lock;
     MPI_Win target_win_handle;
     MPID_Win *win_ptr = NULL;
+    MPIDI_CH3_Pkt_flags_t flags;
     MPIDI_RMA_Lock_entry_t *lock_queue_entry = rreq->dev.lock_queue_entry;
     int mpi_errno = MPI_SUCCESS;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3_REQHANDLER_PIGGYBACKLOCKOPRECVCOMPLETE);
@@ -1473,9 +1464,17 @@ int MPIDI_CH3_ReqHandler_PiggybackLockOpRecvComplete( MPIDI_VC_t *vc,
     lock_queue_entry->all_data_recved = 1;
 
     /* try to acquire the lock here */
-    MPIDI_CH3_PKT_RMA_GET_LOCK_TYPE(lock_queue_entry->pkt, requested_lock, mpi_errno);
+    MPIDI_CH3_PKT_RMA_GET_FLAGS(lock_queue_entry->pkt, flags, mpi_errno);
     MPIDI_CH3_PKT_RMA_GET_TARGET_WIN_HANDLE(lock_queue_entry->pkt, target_win_handle, mpi_errno);
     MPID_Win_get_ptr(target_win_handle, win_ptr);
+
+    if (flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK_SHARED) {
+        requested_lock = MPI_LOCK_SHARED;
+    }
+    else {
+        MPIU_Assert(flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK_EXCLUSIVE);
+        requested_lock = MPI_LOCK_EXCLUSIVE;
+    }
 
     if (MPIDI_CH3I_Try_acquire_win_lock(win_ptr, requested_lock) == 1) {
         /* dequeue entry from lock queue */
