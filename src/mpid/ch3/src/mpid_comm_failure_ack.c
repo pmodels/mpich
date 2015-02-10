@@ -162,5 +162,10 @@ int MPID_Comm_AS_enabled(MPID_Comm *comm_ptr) {
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPID_Request_is_anysource(MPID_Request *request_ptr) {
-    return request_ptr->dev.match.parts.rank == MPI_ANY_SOURCE;
+    int ret = 0;
+
+    if (request_ptr->kind == MPID_REQUEST_RECV)
+        ret = request_ptr->dev.match.parts.rank == MPI_ANY_SOURCE;
+
+    return ret;
 }
