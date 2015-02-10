@@ -261,7 +261,21 @@ MPIDI_CH3_PKT_DEFS
             immed_len_ = (pkt_).fop.immed_len;                          \
             break;                                                      \
         case (MPIDI_CH3_PKT_CAS):                                       \
-            /* FIXME: we should deal with CAS here */                   \
+            /* Note that here we return size of origin data, not        \
+               size of compare data. */                                 \
+            immed_len_ = sizeof(MPIDI_CH3_CAS_Immed_u);                 \
+            break;                                                      \
+        case (MPIDI_CH3_PKT_GET_RESP):                                  \
+            immed_len_ = (pkt_).get_resp.immed_len;                     \
+            break;                                                      \
+        case (MPIDI_CH3_PKT_GET_ACCUM_RESP):                            \
+            immed_len_ = (pkt_).get_accum_resp.immed_len;               \
+            break;                                                      \
+        case (MPIDI_CH3_PKT_FOP_RESP):                                  \
+            immed_len_ = (pkt_).fop_resp.immed_len;                     \
+            break;                                                      \
+        case (MPIDI_CH3_PKT_CAS_RESP):                                  \
+            immed_len_ = sizeof(MPIDI_CH3_CAS_Immed_u);                 \
             break;                                                      \
         default:                                                        \
             MPIU_ERR_SETANDJUMP1(err_, MPI_ERR_OTHER, "**invalidpkt", "**invalidpkt %d", (pkt_).type); \
@@ -285,7 +299,21 @@ MPIDI_CH3_PKT_DEFS
             immed_data_ = (pkt_).fop.data;                              \
             break;                                                      \
         case (MPIDI_CH3_PKT_CAS):                                       \
-            /* FIXME: we should deal with CAS here */                   \
+            /* Note that here we return pointer of origin data, not     \
+               pointer of compare data. */                              \
+            immed_data_ = &((pkt_).cas.origin_data);                    \
+            break;                                                      \
+        case (MPIDI_CH3_PKT_GET_RESP):                                  \
+            immed_data_ = (pkt_).get_resp.data;                         \
+            break;                                                      \
+        case (MPIDI_CH3_PKT_GET_ACCUM_RESP):                            \
+            immed_data_ = (pkt_).get_accum_resp.data;                   \
+            break;                                                      \
+        case (MPIDI_CH3_PKT_FOP_RESP):                                  \
+            immed_data_ = (pkt_).fop_resp.data;                         \
+            break;                                                      \
+        case (MPIDI_CH3_PKT_CAS_RESP):                                  \
+            immed_data_ = &((pkt_).cas_resp.data);                      \
             break;                                                      \
         default:                                                        \
             MPIU_ERR_SETANDJUMP1(err_, MPI_ERR_OTHER, "**invalidpkt", "**invalidpkt %d", (pkt_).type); \
@@ -374,6 +402,27 @@ MPIDI_CH3_PKT_DEFS
         case (MPIDI_CH3_PKT_FOP):                                       \
             flags_ = (pkt_).fop.flags;                                  \
             break;                                                      \
+        case (MPIDI_CH3_PKT_GET_RESP):                                  \
+            flags_ = (pkt_).get_resp.flags;                             \
+            break;                                                      \
+        case (MPIDI_CH3_PKT_GET_ACCUM_RESP):                            \
+            flags_ = (pkt_).get_accum_resp.flags;                       \
+            break;                                                      \
+        case (MPIDI_CH3_PKT_FOP_RESP):                                  \
+            flags_ = (pkt_).fop_resp.flags;                             \
+            break;                                                      \
+        case (MPIDI_CH3_PKT_CAS_RESP):                                  \
+            flags_ = (pkt_).cas_resp.flags;                             \
+            break;                                                      \
+        case (MPIDI_CH3_PKT_UNLOCK):                                    \
+            flags_ = (pkt_).unlock.flags;                               \
+            break;                                                      \
+        case (MPIDI_CH3_PKT_LOCK_ACK):                                  \
+            flags_ = (pkt_).lock_ack.flags;                             \
+            break;                                                      \
+        case (MPIDI_CH3_PKT_LOCK_OP_ACK):                               \
+            flags_ = (pkt_).lock_op_ack.flags;                          \
+            break;                                                      \
         default:                                                        \
             MPIU_ERR_SETANDJUMP1(err_, MPI_ERR_OTHER, "**invalidpkt", "**invalidpkt %d", (pkt_).type); \
         }                                                               \
@@ -400,6 +449,27 @@ MPIDI_CH3_PKT_DEFS
             break;                                                      \
         case (MPIDI_CH3_PKT_FOP):                                       \
             (pkt_).fop.flags = MPIDI_CH3_PKT_FLAG_NONE;                 \
+            break;                                                      \
+        case (MPIDI_CH3_PKT_GET_RESP):                                  \
+            (pkt_).get_resp.flags = MPIDI_CH3_PKT_FLAG_NONE;            \
+            break;                                                      \
+        case (MPIDI_CH3_PKT_GET_ACCUM_RESP):                            \
+            (pkt_).get_accum_resp.flags = MPIDI_CH3_PKT_FLAG_NONE;      \
+            break;                                                      \
+        case (MPIDI_CH3_PKT_FOP_RESP):                                  \
+            (pkt_).fop_resp.flags = MPIDI_CH3_PKT_FLAG_NONE;            \
+            break;                                                      \
+        case (MPIDI_CH3_PKT_CAS_RESP):                                  \
+            (pkt_).cas_resp.flags = MPIDI_CH3_PKT_FLAG_NONE;            \
+            break;                                                      \
+        case (MPIDI_CH3_PKT_UNLOCK):                                    \
+            (pkt_).unlock.flags = MPIDI_CH3_PKT_FLAG_NONE;              \
+            break;                                                      \
+        case (MPIDI_CH3_PKT_LOCK_ACK):                                  \
+            (pkt_).lock_ack.flags = MPIDI_CH3_PKT_FLAG_NONE;            \
+            break;                                                      \
+        case (MPIDI_CH3_PKT_LOCK_OP_ACK):                               \
+            (pkt_).lock_op_ack.flags = MPIDI_CH3_PKT_FLAG_NONE;         \
             break;                                                      \
         default:                                                        \
             MPIU_ERR_SETANDJUMP1(err_, MPI_ERR_OTHER, "**invalidpkt", "**invalidpkt %d", (pkt_).type); \
@@ -428,8 +498,35 @@ MPIDI_CH3_PKT_DEFS
         case (MPIDI_CH3_PKT_FOP):                                       \
             win_hdl_ = (pkt_).fop.source_win_handle;                    \
             break;                                                      \
+        case (MPIDI_CH3_PKT_GET_RESP):                                  \
+            win_hdl_ = (pkt_).get_resp.source_win_handle;               \
+            break;                                                      \
+        case (MPIDI_CH3_PKT_GET_ACCUM_RESP):                            \
+            win_hdl_ = (pkt_).get_accum_resp.source_win_handle;         \
+            break;                                                      \
+        case (MPIDI_CH3_PKT_FOP_RESP):                                  \
+            win_hdl_ = (pkt_).fop_resp.source_win_handle;               \
+            break;                                                      \
+        case (MPIDI_CH3_PKT_CAS_RESP):                                  \
+            win_hdl_ = (pkt_).cas_resp.source_win_handle;               \
+            break;                                                      \
         case (MPIDI_CH3_PKT_LOCK):                                      \
             win_hdl_ = (pkt_).lock.source_win_handle;                   \
+            break;                                                      \
+        case (MPIDI_CH3_PKT_UNLOCK):                                    \
+            win_hdl_ = (pkt_).unlock.source_win_handle;                 \
+            break;                                                      \
+        case (MPIDI_CH3_PKT_FLUSH):                                     \
+            win_hdl_ = (pkt_).flush.source_win_handle;                  \
+            break;                                                      \
+        case (MPIDI_CH3_PKT_LOCK_ACK):                                  \
+            win_hdl_ = (pkt_).lock_ack.source_win_handle;               \
+            break;                                                      \
+        case (MPIDI_CH3_PKT_LOCK_OP_ACK):                               \
+            win_hdl_ = (pkt_).lock_op_ack.source_win_handle;            \
+            break;                                                      \
+        case (MPIDI_CH3_PKT_FLUSH_ACK):                                 \
+            win_hdl_ = (pkt_).flush_ack.source_win_handle;              \
             break;                                                      \
         default:                                                        \
             MPIU_ERR_SETANDJUMP1(err_, MPI_ERR_OTHER, "**invalidpkt", "**invalidpkt %d", (pkt_).type); \
@@ -460,6 +557,15 @@ MPIDI_CH3_PKT_DEFS
             break;                                                      \
         case (MPIDI_CH3_PKT_LOCK):                                      \
             win_hdl_ = (pkt_).lock.target_win_handle;                   \
+            break;                                                      \
+        case (MPIDI_CH3_PKT_UNLOCK):                                    \
+            win_hdl_ = (pkt_).unlock.target_win_handle;                 \
+            break;                                                      \
+        case (MPIDI_CH3_PKT_FLUSH):                                     \
+            win_hdl_ = (pkt_).flush.target_win_handle;                  \
+            break;                                                      \
+        case (MPIDI_CH3_PKT_DECR_AT_COUNTER):                           \
+            win_hdl_ = (pkt_).decr_at_cnt.target_win_handle;            \
             break;                                                      \
         default:                                                        \
             MPIU_ERR_SETANDJUMP1(err_, MPI_ERR_OTHER, "**invalidpkt", "**invalidpkt %d", (pkt_).type); \
