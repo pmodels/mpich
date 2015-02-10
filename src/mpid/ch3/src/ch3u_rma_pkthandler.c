@@ -382,7 +382,6 @@ int MPIDI_CH3_PktHandler_Get(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
 
     req = MPID_Request_create();
     req->dev.target_win_handle = get_pkt->target_win_handle;
-    req->dev.source_win_handle = get_pkt->source_win_handle;
     req->dev.flags = get_pkt->flags;
 
     /* get start location of data and length of data */
@@ -424,7 +423,6 @@ int MPIDI_CH3_PktHandler_Get(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
             (get_pkt->flags & MPIDI_CH3_PKT_FLAG_RMA_UNLOCK))
             get_resp_pkt->flags |= MPIDI_CH3_PKT_FLAG_RMA_FLUSH_ACK;
         get_resp_pkt->target_rank = win_ptr->comm_ptr->rank;
-        get_resp_pkt->source_win_handle = get_pkt->source_win_handle;
 
         /* length of target data */
         MPID_Datatype_get_size_macro(get_pkt->datatype, type_size);
@@ -764,7 +762,6 @@ int MPIDI_CH3_PktHandler_GetAccumulate(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
 
         resp_req = MPID_Request_create();
         resp_req->dev.target_win_handle = get_accum_pkt->target_win_handle;
-        resp_req->dev.source_win_handle = get_accum_pkt->source_win_handle;
         resp_req->dev.flags = get_accum_pkt->flags;
 
         MPIDI_Request_set_type(resp_req, MPIDI_REQUEST_TYPE_GET_ACCUM_RESP);
@@ -796,7 +793,6 @@ int MPIDI_CH3_PktHandler_GetAccumulate(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
 
         get_accum_resp_pkt->request_handle = get_accum_pkt->request_handle;
         get_accum_resp_pkt->target_rank = win_ptr->comm_ptr->rank;
-        get_accum_resp_pkt->source_win_handle = get_accum_pkt->source_win_handle;
         get_accum_resp_pkt->flags = MPIDI_CH3_PKT_FLAG_NONE;
         if (get_accum_pkt->flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK_SHARED ||
             get_accum_pkt->flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK_EXCLUSIVE)
@@ -868,7 +864,6 @@ int MPIDI_CH3_PktHandler_GetAccumulate(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
     req->dev.op = get_accum_pkt->op;
     req->dev.real_user_buf = get_accum_pkt->addr;
     req->dev.target_win_handle = get_accum_pkt->target_win_handle;
-    req->dev.source_win_handle = get_accum_pkt->source_win_handle;
     req->dev.flags = get_accum_pkt->flags;
 
     req->dev.resp_request_handle = get_accum_pkt->request_handle;
@@ -1024,7 +1019,6 @@ int MPIDI_CH3_PktHandler_CAS(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
 
     MPIDI_Pkt_init(cas_resp_pkt, MPIDI_CH3_PKT_CAS_RESP_IMMED);
     cas_resp_pkt->request_handle = cas_pkt->request_handle;
-    cas_resp_pkt->source_win_handle = cas_pkt->source_win_handle;
     cas_resp_pkt->target_rank = win_ptr->comm_ptr->rank;
     cas_resp_pkt->flags = MPIDI_CH3_PKT_FLAG_NONE;
     if (cas_pkt->flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK_SHARED ||
@@ -1078,7 +1072,7 @@ int MPIDI_CH3_PktHandler_CAS(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
     }
 
     mpi_errno = finish_op_on_target(win_ptr, vc, TRUE /* has response data */,
-                                    cas_pkt->flags, cas_pkt->source_win_handle);
+                                    cas_pkt->flags, MPI_WIN_NULL);
     if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
 
   fn_exit:
@@ -1113,7 +1107,8 @@ int MPIDI_CH3_PktHandler_CASResp(MPIDI_VC_t * vc ATTRIBUTE((unused)),
 
     MPIR_T_PVAR_TIMER_START(RMA, rma_rmapkt_cas_resp);
 
-    MPID_Win_get_ptr(cas_resp_pkt->source_win_handle, win_ptr);
+    MPID_Request_get_ptr(cas_resp_pkt->request_handle, req);
+    MPID_Win_get_ptr(req->dev.source_win_handle, win_ptr);
 
     /* decrement ack_counter on this target */
     if (cas_resp_pkt->flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK_GRANTED) {
@@ -1130,7 +1125,6 @@ int MPIDI_CH3_PktHandler_CASResp(MPIDI_VC_t * vc ATTRIBUTE((unused)),
         if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
     }
 
-    MPID_Request_get_ptr(cas_resp_pkt->request_handle, req);
     MPID_Datatype_get_size_macro(req->dev.datatype, len);
 
     MPIU_Memcpy(req->dev.user_buf, (void *) &cas_resp_pkt->info.data, len);
@@ -1196,7 +1190,6 @@ int MPIDI_CH3_PktHandler_FOP(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
 
     MPIDI_Pkt_init(fop_resp_pkt, MPIDI_CH3_PKT_FOP_RESP_IMMED);
     fop_resp_pkt->request_handle = fop_pkt->request_handle;
-    fop_resp_pkt->source_win_handle = fop_pkt->source_win_handle;
     fop_resp_pkt->target_rank = win_ptr->comm_ptr->rank;
     fop_resp_pkt->flags = MPIDI_CH3_PKT_FLAG_NONE;
     if (fop_pkt->flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK_SHARED ||
@@ -1256,7 +1249,7 @@ int MPIDI_CH3_PktHandler_FOP(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
     }
 
     mpi_errno = finish_op_on_target(win_ptr, vc, TRUE /* has response data */,
-                                    fop_pkt->flags, fop_pkt->source_win_handle);
+                                    fop_pkt->flags, MPI_WIN_NULL);
     if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
     }
     else {
@@ -1277,7 +1270,6 @@ int MPIDI_CH3_PktHandler_FOP(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
         req->dev.op = fop_pkt->op;
         req->dev.real_user_buf = fop_pkt->addr;
         req->dev.target_win_handle = fop_pkt->target_win_handle;
-        req->dev.source_win_handle = fop_pkt->source_win_handle;
         req->dev.flags = fop_pkt->flags;
         req->dev.resp_request_handle = fop_pkt->request_handle;
         req->dev.OnDataAvail = MPIDI_CH3_ReqHandler_FOPRecvComplete;
@@ -1354,9 +1346,8 @@ int MPIDI_CH3_PktHandler_FOPResp(MPIDI_VC_t * vc ATTRIBUTE((unused)),
 
     MPIR_T_PVAR_TIMER_START(RMA, rma_rmapkt_fop_resp);
 
-    MPID_Win_get_ptr(fop_resp_pkt->source_win_handle, win_ptr);
-
     MPID_Request_get_ptr(fop_resp_pkt->request_handle, req);
+    MPID_Win_get_ptr(req->dev.source_win_handle, win_ptr);
 
     /* decrement ack_counter */
     if (fop_resp_pkt->flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK_GRANTED) {
@@ -1440,7 +1431,8 @@ int MPIDI_CH3_PktHandler_Get_AccumResp(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
 
     MPIR_T_PVAR_TIMER_START(RMA, rma_rmapkt_get_accum_resp);
 
-    MPID_Win_get_ptr(get_accum_resp_pkt->source_win_handle, win_ptr);
+    MPID_Request_get_ptr(get_accum_resp_pkt->request_handle, req);
+    MPID_Win_get_ptr(req->dev.source_win_handle, win_ptr);
 
     /* decrement ack_counter on target */
     if (get_accum_resp_pkt->flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK_GRANTED) {
@@ -1459,8 +1451,6 @@ int MPIDI_CH3_PktHandler_Get_AccumResp(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
 
     data_len = *buflen - sizeof(MPIDI_CH3_Pkt_t);
     data_buf = (char *) pkt + sizeof(MPIDI_CH3_Pkt_t);
-
-    MPID_Request_get_ptr(get_accum_resp_pkt->request_handle, req);
 
     MPID_Datatype_get_size_macro(req->dev.datatype, type_size);
     req->dev.recv_data_sz = type_size * req->dev.user_count;
@@ -1538,7 +1528,8 @@ int MPIDI_CH3_PktHandler_Lock(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
     if (MPIDI_CH3I_Try_acquire_win_lock(win_ptr, lock_type) == 1) {
         /* send lock granted packet. */
         mpi_errno = MPIDI_CH3I_Send_lock_ack_pkt(vc, win_ptr, MPIDI_CH3_PKT_FLAG_RMA_LOCK_GRANTED,
-                                                 lock_pkt->source_win_handle);
+                                                 lock_pkt->source_win_handle,
+                                                 lock_pkt->request_handle);
         if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
     }
 
@@ -1582,7 +1573,8 @@ int MPIDI_CH3_PktHandler_GetResp(MPIDI_VC_t * vc ATTRIBUTE((unused)),
 
     MPIR_T_PVAR_TIMER_START(RMA, rma_rmapkt_get_resp);
 
-    MPID_Win_get_ptr(get_resp_pkt->source_win_handle, win_ptr);
+    MPID_Request_get_ptr(get_resp_pkt->request_handle, req);
+    MPID_Win_get_ptr(req->dev.source_win_handle, win_ptr);
 
     /* decrement ack_counter on target */
     if (get_resp_pkt->flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK_GRANTED) {
@@ -1601,8 +1593,6 @@ int MPIDI_CH3_PktHandler_GetResp(MPIDI_VC_t * vc ATTRIBUTE((unused)),
 
     data_len = *buflen - sizeof(MPIDI_CH3_Pkt_t);
     data_buf = (char *) pkt + sizeof(MPIDI_CH3_Pkt_t);
-
-    MPID_Request_get_ptr(get_resp_pkt->request_handle, req);
 
     MPID_Datatype_get_size_macro(req->dev.datatype, type_size);
     req->dev.recv_data_sz = type_size * req->dev.user_count;
@@ -1670,7 +1660,17 @@ int MPIDI_CH3_PktHandler_LockAck(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
 
     *buflen = sizeof(MPIDI_CH3_Pkt_t);
 
+    if (lock_ack_pkt->source_win_handle != MPI_WIN_NULL) {
     MPID_Win_get_ptr(lock_ack_pkt->source_win_handle, win_ptr);
+    }
+    else {
+        MPIU_Assert(lock_ack_pkt->request_handle != MPI_REQUEST_NULL);
+
+        MPID_Request *req_ptr = NULL;
+        MPID_Request_get_ptr(lock_ack_pkt->request_handle, req_ptr);
+        MPIU_Assert(req_ptr->dev.source_win_handle != MPI_REQUEST_NULL);
+        MPID_Win_get_ptr(req_ptr->dev.source_win_handle, win_ptr);
+    }
 
     mpi_errno = handle_lock_ack(win_ptr, target_rank,
                                       lock_ack_pkt->flags);
@@ -1705,7 +1705,17 @@ int MPIDI_CH3_PktHandler_LockOpAck(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
 
     *buflen = sizeof(MPIDI_CH3_Pkt_t);
 
+    if (lock_op_ack_pkt->source_win_handle != MPI_WIN_NULL) {
     MPID_Win_get_ptr(lock_op_ack_pkt->source_win_handle, win_ptr);
+    }
+    else {
+        MPIU_Assert(lock_op_ack_pkt->request_handle != MPI_REQUEST_NULL);
+
+        MPID_Request *req_ptr = NULL;
+        MPID_Request_get_ptr(lock_op_ack_pkt->request_handle, req_ptr);
+        MPIU_Assert(req_ptr->dev.source_win_handle != MPI_REQUEST_NULL);
+        MPID_Win_get_ptr(req_ptr->dev.source_win_handle, win_ptr);
+    }
 
     mpi_errno = handle_lock_ack(win_ptr, target_rank,
                                       lock_op_ack_pkt->flags);

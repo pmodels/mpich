@@ -442,38 +442,9 @@ MPIDI_CH3_PKT_DEFS
         case (MPIDI_CH3_PKT_PUT_IMMED):                                 \
             win_hdl_ = (pkt_).put.source_win_handle;                    \
             break;                                                      \
-        case (MPIDI_CH3_PKT_GET):                                       \
-            win_hdl_ = (pkt_).get.source_win_handle;                    \
-            break;                                                      \
         case (MPIDI_CH3_PKT_ACCUMULATE):                                \
         case (MPIDI_CH3_PKT_ACCUMULATE_IMMED):                          \
             win_hdl_ = (pkt_).accum.source_win_handle;                  \
-            break;                                                      \
-        case (MPIDI_CH3_PKT_GET_ACCUM):                                 \
-        case (MPIDI_CH3_PKT_GET_ACCUM_IMMED):                           \
-            win_hdl_ = (pkt_).get_accum.source_win_handle;              \
-            break;                                                      \
-        case (MPIDI_CH3_PKT_CAS_IMMED):                                 \
-            win_hdl_ = (pkt_).cas.source_win_handle;                    \
-            break;                                                      \
-        case (MPIDI_CH3_PKT_FOP):                                       \
-        case (MPIDI_CH3_PKT_FOP_IMMED):                                 \
-            win_hdl_ = (pkt_).fop.source_win_handle;                    \
-            break;                                                      \
-        case (MPIDI_CH3_PKT_GET_RESP):                                  \
-        case (MPIDI_CH3_PKT_GET_RESP_IMMED):                            \
-            win_hdl_ = (pkt_).get_resp.source_win_handle;               \
-            break;                                                      \
-        case (MPIDI_CH3_PKT_GET_ACCUM_RESP):                            \
-        case (MPIDI_CH3_PKT_GET_ACCUM_RESP_IMMED):                      \
-            win_hdl_ = (pkt_).get_accum_resp.source_win_handle;         \
-            break;                                                      \
-        case (MPIDI_CH3_PKT_FOP_RESP):                                  \
-        case (MPIDI_CH3_PKT_FOP_RESP_IMMED):                            \
-            win_hdl_ = (pkt_).fop_resp.source_win_handle;               \
-            break;                                                      \
-        case (MPIDI_CH3_PKT_CAS_RESP_IMMED):                            \
-            win_hdl_ = (pkt_).cas_resp.source_win_handle;               \
             break;                                                      \
         case (MPIDI_CH3_PKT_LOCK):                                      \
             win_hdl_ = (pkt_).lock.source_win_handle;                   \
@@ -567,6 +538,53 @@ MPIDI_CH3_PKT_DEFS
         }                                                               \
     }
 
+#define MPIDI_CH3_PKT_RMA_GET_REQUEST_HANDLE(pkt_, request_hdl_, err_)  \
+    {                                                                   \
+        err_ = MPI_SUCCESS;                                             \
+        switch((pkt_).type) {                                           \
+        case (MPIDI_CH3_PKT_GET):                                       \
+            request_hdl_ = (pkt_).get.request_handle;                   \
+            break;                                                      \
+        case (MPIDI_CH3_PKT_GET_ACCUM):                                 \
+        case (MPIDI_CH3_PKT_GET_ACCUM_IMMED):                           \
+            request_hdl_ = (pkt_).get_accum.request_handle;             \
+            break;                                                      \
+        case (MPIDI_CH3_PKT_CAS_IMMED):                                 \
+            request_hdl_ = (pkt_).cas.request_handle;                   \
+            break;                                                      \
+        case (MPIDI_CH3_PKT_FOP):                                       \
+        case (MPIDI_CH3_PKT_FOP_IMMED):                                 \
+            request_hdl_ = (pkt_).fop.request_handle;                   \
+            break;                                                      \
+        case (MPIDI_CH3_PKT_GET_RESP):                                  \
+        case (MPIDI_CH3_PKT_GET_RESP_IMMED):                            \
+            request_hdl_ = (pkt_).get_resp.request_handle;              \
+            break;                                                      \
+        case (MPIDI_CH3_PKT_GET_ACCUM_RESP):                            \
+        case (MPIDI_CH3_PKT_GET_ACCUM_RESP_IMMED):                      \
+            request_hdl_ = (pkt_).get_accum_resp.request_handle;        \
+            break;                                                      \
+        case (MPIDI_CH3_PKT_FOP_RESP):                                  \
+        case (MPIDI_CH3_PKT_FOP_RESP_IMMED):                            \
+            request_hdl_ = (pkt_).fop_resp.request_handle;              \
+            break;                                                      \
+        case (MPIDI_CH3_PKT_CAS_RESP_IMMED):                            \
+            request_hdl_ = (pkt_).cas_resp.request_handle;              \
+            break;                                                      \
+        case (MPIDI_CH3_PKT_LOCK):                                      \
+            request_hdl_ = (pkt_).lock.request_handle;                  \
+            break;                                                      \
+        case (MPIDI_CH3_PKT_LOCK_ACK):                                  \
+            request_hdl_ = (pkt_).lock_ack.request_handle;              \
+            break;                                                      \
+        case (MPIDI_CH3_PKT_LOCK_OP_ACK):                               \
+            request_hdl_ = (pkt_).lock_op_ack.request_handle;           \
+            break;                                                      \
+        default:                                                        \
+            MPIU_ERR_SETANDJUMP1(err_, MPI_ERR_OTHER, "**invalidpkt", "**invalidpkt %d", (pkt_).type); \
+        }                                                               \
+    }
+
 typedef struct MPIDI_CH3_Pkt_put {
     MPIDI_CH3_Pkt_type_t type;
     MPIDI_CH3_Pkt_flags_t flags;
@@ -603,9 +621,6 @@ typedef struct MPIDI_CH3_Pkt_get {
                                  * epoch for decrementing rma op counter in
                                  * active target rma and for unlocking window
                                  * in passive target rma. Otherwise set to NULL*/
-    MPI_Win source_win_handle;  /* Used in the last RMA operation in an
-                                 * epoch in the case of passive target rma
-                                 * with shared locks. Otherwise set to NULL*/
 } MPIDI_CH3_Pkt_get_t;
 
 typedef struct MPIDI_CH3_Pkt_get_resp {
@@ -613,7 +628,6 @@ typedef struct MPIDI_CH3_Pkt_get_resp {
     MPI_Request request_handle;
     /* followings are used to decrement ack_counter at origin */
     int target_rank;
-    MPI_Win source_win_handle;
     MPIDI_CH3_Pkt_flags_t flags;
     /* Followings are to piggyback IMMED data */
     struct {
@@ -656,9 +670,6 @@ typedef struct MPIDI_CH3_Pkt_get_accum {
                                  * epoch for decrementing rma op counter in
                                  * active target rma and for unlocking window
                                  * in passive target rma. Otherwise set to NULL*/
-    MPI_Win source_win_handle;  /* Used in the last RMA operation in an
-                                 * epoch in the case of passive target rma
-                                 * with shared locks. Otherwise set to NULL*/
     union {
         int dataloop_size;
         char data[MPIDI_RMA_IMMED_BYTES];
@@ -670,7 +681,6 @@ typedef struct MPIDI_CH3_Pkt_get_accum_resp {
     MPI_Request request_handle;
     /* followings are used to decrement ack_counter at origin */
     int target_rank;
-    MPI_Win source_win_handle;
     MPIDI_CH3_Pkt_flags_t flags;
     /* Followings are to piggyback IMMED data */
     struct {
@@ -687,7 +697,6 @@ typedef struct MPIDI_CH3_Pkt_cas {
     MPI_Datatype datatype;
     void *addr;
     MPI_Request request_handle;
-    MPI_Win source_win_handle;
     MPI_Win target_win_handle;  /* Used in the last RMA operation in each
                                  * epoch for decrementing rma op counter in
                                  * active target rma and for unlocking window
@@ -707,7 +716,6 @@ typedef struct MPIDI_CH3_Pkt_cas_resp {
     } info;
     /* followings are used to decrement ack_counter at orign */
     int target_rank;
-    MPI_Win source_win_handle;
     MPIDI_CH3_Pkt_flags_t flags;
 } MPIDI_CH3_Pkt_cas_resp_t;
 
@@ -718,7 +726,6 @@ typedef struct MPIDI_CH3_Pkt_fop {
     void *addr;
     MPI_Op op;
     MPI_Request request_handle;
-    MPI_Win source_win_handle;
     MPI_Win target_win_handle;  /* Used in the last RMA operation in each
                                  * epoch for decrementing rma op counter in
                                  * active target rma and for unlocking window
@@ -742,7 +749,6 @@ typedef struct MPIDI_CH3_Pkt_fop_resp {
     } info;
     /* followings are used to decrement ack_counter at orign */
     int target_rank;
-    MPI_Win source_win_handle;
     MPIDI_CH3_Pkt_flags_t flags;
 } MPIDI_CH3_Pkt_fop_resp_t;
 
@@ -750,7 +756,14 @@ typedef struct MPIDI_CH3_Pkt_lock {
     MPIDI_CH3_Pkt_type_t type;
     MPIDI_CH3_Pkt_flags_t flags;
     MPI_Win target_win_handle;
+    /* Note that either source_win_handle
+       or request_handle will be used. Here
+       we need both of them because PUT/GET
+       may be converted to LOCK packet,
+       PUT has source_win_handle area and
+       GET has request_handle area. */
     MPI_Win source_win_handle;
+    MPI_Request request_handle;
 } MPIDI_CH3_Pkt_lock_t;
 
 typedef struct MPIDI_CH3_Pkt_unlock {
@@ -769,7 +782,10 @@ typedef struct MPIDI_CH3_Pkt_flush {
 typedef struct MPIDI_CH3_Pkt_lock_ack {
     MPIDI_CH3_Pkt_type_t type;
     MPIDI_CH3_Pkt_flags_t flags;
+    /* note that either source_win_handle
+       or request_handle is used. */
     MPI_Win source_win_handle;
+    MPI_Request request_handle;
     int target_rank;            /* Used in flush_ack response to look up the
                                  * target state at the origin. */
 } MPIDI_CH3_Pkt_lock_ack_t;
@@ -777,7 +793,10 @@ typedef struct MPIDI_CH3_Pkt_lock_ack {
 typedef struct MPIDI_CH3_Pkt_lock_op_ack {
     MPIDI_CH3_Pkt_type_t type;
     MPIDI_CH3_Pkt_flags_t flags;
+    /* note that either source_win_handle
+       or request_handle is used. */
     MPI_Win source_win_handle;
+    MPI_Request request_handle;
     int target_rank;
 } MPIDI_CH3_Pkt_lock_op_ack_t;
 
