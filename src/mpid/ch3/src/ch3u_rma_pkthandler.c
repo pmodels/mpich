@@ -812,7 +812,11 @@ int MPIDI_CH3_PktHandler_GetAccumulate(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
             /* copy data from target buffer to response packet header */
             src = (void *) (get_accum_pkt->addr), dest = (void *) (get_accum_resp_pkt->info.data);
             mpi_errno = immed_copy(src, dest, len);
-            if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
+            if (mpi_errno != MPI_SUCCESS) {
+                if (win_ptr->shm_allocated == TRUE)
+                    MPIDI_CH3I_SHM_MUTEX_UNLOCK(win_ptr);
+                MPIU_ERR_POP(mpi_errno);
+            }
         }
         else {
             MPIU_Memcpy(resp_req->dev.user_buf, get_accum_pkt->addr,
@@ -823,12 +827,11 @@ int MPIDI_CH3_PktHandler_GetAccumulate(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
         mpi_errno = do_accumulate_op(get_accum_pkt->info.data, get_accum_pkt->addr,
                                      get_accum_pkt->count, get_accum_pkt->datatype,
                                      get_accum_pkt->op);
-        if (mpi_errno) {
-            MPIU_ERR_POP(mpi_errno);
-        }
 
         if (win_ptr->shm_allocated == TRUE)
             MPIDI_CH3I_SHM_MUTEX_UNLOCK(win_ptr);
+
+        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
         if (get_accum_resp_pkt->type == MPIDI_CH3_PKT_GET_ACCUM_RESP_IMMED) {
             iov[0].MPID_IOV_BUF = (MPID_IOV_BUF_CAST) get_accum_resp_pkt;
@@ -1209,19 +1212,22 @@ int MPIDI_CH3_PktHandler_FOP(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
     /* copy data to resp pkt header */
     void *src = fop_pkt->addr, *dest = fop_resp_pkt->info.data;
     mpi_errno = immed_copy(src, dest, type_size);
-    if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
+    if (mpi_errno != MPI_SUCCESS) {
+        if (win_ptr->shm_allocated == TRUE)
+            MPIDI_CH3I_SHM_MUTEX_UNLOCK(win_ptr);
+        MPIU_ERR_POP(mpi_errno);
+    }
 
     /* Apply the op */
     if (fop_pkt->op != MPI_NO_OP) {
         mpi_errno = do_accumulate_op(fop_pkt->info.data, fop_pkt->addr,
                                      1, fop_pkt->datatype, fop_pkt->op);
-        if (mpi_errno != MPI_SUCCESS) {
-            MPIU_ERR_POP(mpi_errno);
-        }
     }
 
     if (win_ptr->shm_allocated == TRUE)
         MPIDI_CH3I_SHM_MUTEX_UNLOCK(win_ptr);
+
+    if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
 
     /* send back the original data */
     MPIU_THREAD_CS_ENTER(CH3COMM,vc);
