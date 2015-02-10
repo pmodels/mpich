@@ -1304,14 +1304,15 @@ static inline int perform_fop_in_lock_queue(MPID_Win *win_ptr, MPIDI_RMA_Lock_en
 
     /* Apply the op */
     if (fop_pkt->op != MPI_NO_OP) {
-        MPI_User_function *uop = MPIR_OP_HDL_TO_FN(fop_pkt->op);
-        int one = 1;
         if (fop_pkt->type == MPIDI_CH3_PKT_FOP_IMMED) {
-        (*uop)(fop_pkt->info.data, fop_pkt->addr, &one, &(fop_pkt->datatype));
+        mpi_errno = do_accumulate_op(fop_pkt->info.data, fop_pkt->addr,
+                                     1, fop_pkt->datatype, fop_pkt->op);
         }
         else {
-        (*uop)(lock_entry->data, fop_pkt->addr, &one, &(fop_pkt->datatype));
+        mpi_errno = do_accumulate_op(lock_entry->data, fop_pkt->addr,
+                                     1, fop_pkt->datatype, fop_pkt->op);
         }
+        if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
     }
 
     if (win_ptr->shm_allocated == TRUE)
