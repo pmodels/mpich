@@ -667,7 +667,6 @@ static int issue_cas_op(MPIDI_RMA_Op_t * rma_op,
     MPIU_Object_set_ref(rma_op->request, 2);
 
     rma_op->request->dev.user_buf = rma_op->result_addr;
-    rma_op->request->dev.user_count = rma_op->result_count;
     rma_op->request->dev.datatype = rma_op->result_datatype;
 
     rma_op->request->dev.target_win_handle = MPI_WIN_NULL;
@@ -733,7 +732,6 @@ static int issue_fop_op(MPIDI_RMA_Op_t * rma_op,
     MPIU_Object_set_ref(resp_req, 2);
 
     resp_req->dev.user_buf = rma_op->result_addr;
-    resp_req->dev.user_count = rma_op->result_count;
     resp_req->dev.datatype = rma_op->result_datatype;
     resp_req->dev.target_win_handle = MPI_WIN_NULL;
     resp_req->dev.source_win_handle = win_ptr->handle;
