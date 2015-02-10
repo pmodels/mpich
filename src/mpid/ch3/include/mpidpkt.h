@@ -194,6 +194,8 @@ MPIDI_CH3_PKT_DEFS
 
 #define MPIDI_CH3_PKT_RMA_GET_TARGET_DATATYPE(pkt_, datatype_, err_)    \
     {                                                                   \
+        /* This macro returns target_datatype in RMA operation          \
+           packets. (PUT, GET, ACC, GACC, CAS, FOP) */                  \
         err_ = MPI_SUCCESS;                                             \
         switch((pkt_).type) {                                           \
         case (MPIDI_CH3_PKT_PUT):                                       \
@@ -221,6 +223,8 @@ MPIDI_CH3_PKT_DEFS
 
 #define MPIDI_CH3_PKT_RMA_GET_TARGET_COUNT(pkt_, count_, err_)          \
     {                                                                   \
+        /* This macro returns target_count in RMA operation             \
+           packets. (PUT, GET, ACC, GACC, CAS, FOP) */                  \
         err_ = MPI_SUCCESS;                                             \
         switch((pkt_).type) {                                           \
         case (MPIDI_CH3_PKT_PUT):                                       \
@@ -246,6 +250,9 @@ MPIDI_CH3_PKT_DEFS
 
 #define MPIDI_CH3_PKT_RMA_GET_IMMED_LEN(pkt_, immed_len_, err_)         \
     {                                                                   \
+        /* This macro returns immed_len in RMA operation                \
+           packets (PUT, ACC, GACC, FOP, CAS) and RMA response          \
+           packets (GET_RESP, GACC_RESP, FOP_RESP, CAS_RESP). */        \
         err_ = MPI_SUCCESS;                                             \
         switch((pkt_).type) {                                           \
         case (MPIDI_CH3_PKT_PUT):                                       \
@@ -284,6 +291,9 @@ MPIDI_CH3_PKT_DEFS
 
 #define MPIDI_CH3_PKT_RMA_GET_IMMED_DATA_PTR(pkt_, immed_data_, err_)   \
     {                                                                   \
+        /* This macro returns pointer to immed data in RMA operation    \
+           packets (PUT, ACC, GACC, FOP, CAS) and RMA response          \
+           packets (GET_RESP, GACC_RESP, FOP_RESP, CAS_RESP). */        \
         err_ = MPI_SUCCESS;                                             \
         switch((pkt_).type) {                                           \
         case (MPIDI_CH3_PKT_PUT):                                       \
@@ -322,6 +332,9 @@ MPIDI_CH3_PKT_DEFS
 
 #define MPIDI_CH3_PKT_RMA_GET_LOCK_TYPE(pkt_, lock_type_, err_)         \
     {                                                                   \
+        /* This macro returns lock type in RMA operation                \
+           packets (PUT, GET, ACC, GACC, FOP, CAS) and RMA control      \
+           packets (LOCK). */                                           \
         err_ = MPI_SUCCESS;                                             \
         switch((pkt_).type) {                                           \
         case (MPIDI_CH3_PKT_PUT):                                       \
@@ -352,6 +365,9 @@ MPIDI_CH3_PKT_DEFS
 
 #define MPIDI_CH3_PKT_RMA_GET_ORIGIN_RANK(pkt_, origin_rank_, err_)     \
     {                                                                   \
+        /* This macro returns origin rank (used in acquiring lock) in   \
+           RMA operation packets (PUT, GET, ACC, GACC, FOP, CAS) and    \
+           RMA control packets (LOCK). */                               \
         err_ = MPI_SUCCESS;                                             \
         switch((pkt_).type) {                                           \
         case (MPIDI_CH3_PKT_PUT):                                       \
@@ -382,6 +398,11 @@ MPIDI_CH3_PKT_DEFS
 
 #define MPIDI_CH3_PKT_RMA_GET_FLAGS(pkt_, flags_, err_)                 \
     {                                                                   \
+        /* This macro returns flags in RMA operation packets (PUT, GET, \
+           ACC, GACC, FOP, CAS), RMA operation response packets         \
+           (GET_RESP, GET_ACCUM_RESP, FOP_RESP, CAS_RESP), RMA control  \
+           packets (UNLOCK) and RMA control response packets (LOCK_ACK, \
+           LOCK_OP_ACK) */                                              \
         err_ = MPI_SUCCESS;                                             \
         switch((pkt_).type) {                                           \
         case (MPIDI_CH3_PKT_PUT):                                       \
@@ -430,6 +451,11 @@ MPIDI_CH3_PKT_DEFS
 
 #define MPIDI_CH3_PKT_RMA_ERASE_FLAGS(pkt_, err_)                       \
     {                                                                   \
+        /* This macro erases flags in RMA operation packets (PUT, GET,  \
+           ACC, GACC, FOP, CAS), RMA operation response packets         \
+           (GET_RESP, GET_ACCUM_RESP, FOP_RESP, CAS_RESP), RMA control  \
+           packets (UNLOCK) and RMA control response packets (LOCK_ACK, \
+           LOCK_OP_ACK) */                                              \
         err_ = MPI_SUCCESS;                                             \
         switch((pkt_).type) {                                           \
         case (MPIDI_CH3_PKT_PUT):                                       \
@@ -478,6 +504,11 @@ MPIDI_CH3_PKT_DEFS
 
 #define MPIDI_CH3_PKT_RMA_GET_SOURCE_WIN_HANDLE(pkt_, win_hdl_, err_)   \
     {                                                                   \
+        /* This macro returns source_win_handle in RMA operation        \
+           packets (PUT, GET, ACC, GACC, CAS, FOP), RMA operation       \
+           response packets (GET_RESP, GACC_RESP, CAS_RESP, FOP_RESP),  \
+           RMA control packets (LOCK, UNLOCK, FLUSH), and RMA control   \
+           response packets (LOCK_ACK, LOCK_OP_ACK, FLUSH_ACK). */      \
         err_ = MPI_SUCCESS;                                             \
         switch((pkt_).type) {                                           \
         case (MPIDI_CH3_PKT_PUT):                                       \
@@ -535,6 +566,9 @@ MPIDI_CH3_PKT_DEFS
 
 #define MPIDI_CH3_PKT_RMA_GET_TARGET_WIN_HANDLE(pkt_, win_hdl_, err_)   \
     {                                                                   \
+        /* This macro returns target_win_handle in RMA operation        \
+           packets (PUT, GET, ACC, GACC, CAS, FOP) and RMA control      \
+           packets (LOCK, UNLOCK, FLUSH, DECR_AT_CNT) */                \
         err_ = MPI_SUCCESS;                                             \
         switch((pkt_).type) {                                           \
         case (MPIDI_CH3_PKT_PUT):                                       \
@@ -574,6 +608,8 @@ MPIDI_CH3_PKT_DEFS
 
 #define MPIDI_CH3_PKT_RMA_SET_DATALOOP_SIZE(pkt_, dataloop_size_, err_) \
     {                                                                   \
+        /* This macro sets dataloop_size in RMA operation packets       \
+           (PUT, GET, ACC, GACC) */                                     \
         err_ = MPI_SUCCESS;                                             \
         switch((pkt_).type) {                                           \
         case (MPIDI_CH3_PKT_PUT):                                       \
