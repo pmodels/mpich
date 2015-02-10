@@ -591,13 +591,8 @@ typedef struct MPIDI_CH3_Pkt_put {
     void *addr;
     int count;
     MPI_Datatype datatype;
-    MPI_Win target_win_handle;  /* Used in the last RMA operation in each
-                                 * epoch for decrementing rma op counter in
-                                 * active target rma and for unlocking window
-                                 * in passive target rma. Otherwise set to NULL*/
-    MPI_Win source_win_handle;  /* Used in the last RMA operation in an
-                                 * epoch in the case of passive target rma
-                                 * with shared locks. Otherwise set to NULL*/
+    MPI_Win target_win_handle;
+    MPI_Win source_win_handle;
     union {
         int dataloop_size;
         char data[MPIDI_RMA_IMMED_BYTES];
@@ -617,10 +612,7 @@ typedef struct MPIDI_CH3_Pkt_get {
         int dataloop_size;          /* for derived datatypes */
     } info;
     MPI_Request request_handle;
-    MPI_Win target_win_handle;  /* Used in the last RMA operation in each
-                                 * epoch for decrementing rma op counter in
-                                 * active target rma and for unlocking window
-                                 * in passive target rma. Otherwise set to NULL*/
+    MPI_Win target_win_handle;
 } MPIDI_CH3_Pkt_get_t;
 
 typedef struct MPIDI_CH3_Pkt_get_resp {
@@ -645,13 +637,8 @@ typedef struct MPIDI_CH3_Pkt_accum {
     int count;
     MPI_Datatype datatype;
     MPI_Op op;
-    MPI_Win target_win_handle;  /* Used in the last RMA operation in each
-                                 * epoch for decrementing rma op counter in
-                                 * active target rma and for unlocking window
-                                 * in passive target rma. Otherwise set to NULL*/
-    MPI_Win source_win_handle;  /* Used in the last RMA operation in an
-                                 * epoch in the case of passive target rma
-                                 * with shared locks. Otherwise set to NULL*/
+    MPI_Win target_win_handle;
+    MPI_Win source_win_handle;
     union {
         int dataloop_size;
         char data[MPIDI_RMA_IMMED_BYTES];
@@ -666,10 +653,7 @@ typedef struct MPIDI_CH3_Pkt_get_accum {
     int count;
     MPI_Datatype datatype;
     MPI_Op op;
-    MPI_Win target_win_handle;  /* Used in the last RMA operation in each
-                                 * epoch for decrementing rma op counter in
-                                 * active target rma and for unlocking window
-                                 * in passive target rma. Otherwise set to NULL*/
+    MPI_Win target_win_handle;
     union {
         int dataloop_size;
         char data[MPIDI_RMA_IMMED_BYTES];
@@ -697,10 +681,7 @@ typedef struct MPIDI_CH3_Pkt_cas {
     MPI_Datatype datatype;
     void *addr;
     MPI_Request request_handle;
-    MPI_Win target_win_handle;  /* Used in the last RMA operation in each
-                                 * epoch for decrementing rma op counter in
-                                 * active target rma and for unlocking window
-                                 * in passive target rma. Otherwise set to NULL*/
+    MPI_Win target_win_handle;
     MPIDI_CH3_CAS_Immed_u origin_data;
     MPIDI_CH3_CAS_Immed_u compare_data;
 } MPIDI_CH3_Pkt_cas_t;
@@ -726,10 +707,7 @@ typedef struct MPIDI_CH3_Pkt_fop {
     void *addr;
     MPI_Op op;
     MPI_Request request_handle;
-    MPI_Win target_win_handle;  /* Used in the last RMA operation in each
-                                 * epoch for decrementing rma op counter in
-                                 * active target rma and for unlocking window
-                                 * in passive target rma. Otherwise set to NULL*/
+    MPI_Win target_win_handle;
     struct {
         /* note that we use struct here in order
            to consistently access data
@@ -786,8 +764,7 @@ typedef struct MPIDI_CH3_Pkt_lock_ack {
        or request_handle is used. */
     MPI_Win source_win_handle;
     MPI_Request request_handle;
-    int target_rank;            /* Used in flush_ack response to look up the
-                                 * target state at the origin. */
+    int target_rank;
 } MPIDI_CH3_Pkt_lock_ack_t;
 
 typedef struct MPIDI_CH3_Pkt_lock_op_ack {
@@ -803,8 +780,7 @@ typedef struct MPIDI_CH3_Pkt_lock_op_ack {
 typedef struct MPIDI_CH3_Pkt_flush_ack {
     MPIDI_CH3_Pkt_type_t type;
     MPI_Win source_win_handle;
-    int target_rank;            /* Used in flush_ack response to look up the
-                                 * target state at the origin. */
+    int target_rank;
     MPIDI_CH3_Pkt_flags_t flags;
 } MPIDI_CH3_Pkt_flush_ack_t;
 
