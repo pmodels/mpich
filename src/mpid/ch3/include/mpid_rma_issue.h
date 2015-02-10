@@ -457,7 +457,7 @@ static int issue_get_acc_op(MPIDI_RMA_Op_t *rma_op, MPID_Win *win_ptr,
     resp_req->dev.user_buf = rma_op->result_addr;
     resp_req->dev.user_count = rma_op->result_count;
     resp_req->dev.datatype = rma_op->result_datatype;
-    resp_req->dev.target_win_handle = get_accum_pkt->target_win_handle;
+    resp_req->dev.target_win_handle = MPI_WIN_NULL;
     resp_req->dev.source_win_handle = win_ptr->handle;
 
     if (!MPIR_DATATYPE_IS_PREDEFINED(resp_req->dev.datatype)) {
@@ -670,7 +670,7 @@ static int issue_cas_op(MPIDI_RMA_Op_t * rma_op,
     rma_op->request->dev.user_count = rma_op->result_count;
     rma_op->request->dev.datatype = rma_op->result_datatype;
 
-    rma_op->request->dev.target_win_handle = cas_pkt->target_win_handle;
+    rma_op->request->dev.target_win_handle = MPI_WIN_NULL;
     rma_op->request->dev.source_win_handle = win_ptr->handle;
 
     cas_pkt->request_handle = rma_op->request->handle;
@@ -735,7 +735,7 @@ static int issue_fop_op(MPIDI_RMA_Op_t * rma_op,
     resp_req->dev.user_buf = rma_op->result_addr;
     resp_req->dev.user_count = rma_op->result_count;
     resp_req->dev.datatype = rma_op->result_datatype;
-    resp_req->dev.target_win_handle = fop_pkt->target_win_handle;
+    resp_req->dev.target_win_handle = MPI_WIN_NULL;
     resp_req->dev.source_win_handle = win_ptr->handle;
 
     fop_pkt->request_handle = resp_req->handle;
