@@ -11,19 +11,14 @@
 
 #define NUM_RECV_BUFS 50
 #define CTL_TAG 0
+#define GET_TAG 1
 #define PAYLOAD_SIZE  (PTL_MAX_EAGER - offsetof(buf_t, packet) - sizeof(MPIDI_CH3_Pkt_t))
 #define SENDBUF_SIZE(sent_sz_) (offsetof(buf_t, packet) + sizeof(MPIDI_CH3_Pkt_t) + (sent_sz_))
 #define SENDBUF(req_) REQ_PTL(req_)->chunk_buffer[0]
 #define TMPBUF(req_) REQ_PTL(req_)->chunk_buffer[1]
-#define NEW_TAG(tag_) do {       \
-    if (++global_tag == CTL_TAG) \
-        ++global_tag;            \
-    (tag_) = global_tag;         \
-} while(0)
 
 typedef struct {
     size_t remaining;
-    ptl_match_bits_t tag;
     char packet[PTL_MAX_EAGER];
 } buf_t;
 
@@ -31,8 +26,6 @@ static buf_t recvbufs[NUM_RECV_BUFS];
 static ptl_me_t mes[NUM_RECV_BUFS];
 static ptl_handle_me_t me_handles[NUM_RECV_BUFS];
 static unsigned long long put_cnt = 0;  /* required to not finalizing too early */
-static ptl_match_bits_t global_tag = 0;
-
 
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_ptl_nm_init
@@ -174,7 +167,6 @@ static inline int send_pkt(MPIDI_VC_t *vc, void *hdr_p, void *data_p, MPIDI_msg_
     MPIU_Assert(sendbuf != NULL);
     MPIU_Memcpy(sendbuf->packet, hdr_p, sizeof(MPIDI_CH3_Pkt_t));
     sendbuf->remaining = data_sz - sent_sz;
-    NEW_TAG(sendbuf->tag);
     TMPBUF(sreq) = NULL;
     REQ_PTL(sreq)->num_gets = 0;
     REQ_PTL(sreq)->put_done = 0;
@@ -182,7 +174,7 @@ static inline int send_pkt(MPIDI_VC_t *vc, void *hdr_p, void *data_p, MPIDI_msg_
     if (data_sz) {
         MPIU_Memcpy(sendbuf->packet + sizeof(MPIDI_CH3_Pkt_t), data_p, sent_sz);
         if (sendbuf->remaining)  /* Post MEs for the remote gets */
-            mpi_errno = meappend_large(vc_ptl->id, sreq, sendbuf->tag, (char *)data_p + sent_sz, sendbuf->remaining);
+            mpi_errno = meappend_large(vc_ptl->id, sreq, GET_TAG, (char *)data_p + sent_sz, sendbuf->remaining);
             if (mpi_errno)
                 goto fn_fail;
     }
@@ -227,7 +219,6 @@ static int send_noncontig_pkt(MPIDI_VC_t *vc, MPID_Request *sreq, void *hdr_p)
     MPIU_Assert(sendbuf != NULL);
     MPIU_Memcpy(sendbuf->packet, hdr_p, sizeof(MPIDI_CH3_Pkt_t));
     sendbuf->remaining = sreq->dev.segment_size - sent_sz;
-    NEW_TAG(sendbuf->tag);
     TMPBUF(sreq) = NULL;
     REQ_PTL(sreq)->num_gets = 0;
     REQ_PTL(sreq)->put_done = 0;
@@ -243,7 +234,7 @@ static int send_noncontig_pkt(MPIDI_VC_t *vc, MPID_Request *sreq, void *hdr_p)
             MPID_Segment_pack(sreq->dev.segment_ptr, sreq->dev.segment_first, &last, TMPBUF(sreq));
             MPIU_Assert(last == sreq->dev.segment_size);
 
-            mpi_errno = meappend_large(vc_ptl->id, sreq, sendbuf->tag, TMPBUF(sreq), sendbuf->remaining);
+            mpi_errno = meappend_large(vc_ptl->id, sreq, GET_TAG, TMPBUF(sreq), sendbuf->remaining);
             if (mpi_errno)
                 goto fn_fail;
         }
@@ -420,21 +411,19 @@ int MPID_nem_ptl_nm_ctl_event_handler(const ptl_event_t *e)
 
                 req->ch.vc = vc;
 
-                req->dev.match.parts.tag = recvbufs[buf_idx].tag;
-
                 size = recvbufs[buf_idx].remaining < MPIDI_nem_ptl_ni_limits.max_msg_size ?
                            recvbufs[buf_idx].remaining : MPIDI_nem_ptl_ni_limits.max_msg_size;
                 buf_ptr = (char *)TMPBUF(req) + packet_sz;
                 while (recvbufs[buf_idx].remaining) {
                     MPIDI_CH3U_Request_increment_cc(req, &incomplete);  /* Will be decremented - and eventually freed in REPLY */
                     ret = MPID_nem_ptl_rptl_get(MPIDI_nem_ptl_global_md, (ptl_size_t)buf_ptr,
-                                                size, vc_ptl->id, vc_ptl->ptc, recvbufs[buf_idx].tag, 0, req);
+                                                size, vc_ptl->id, vc_ptl->ptc, GET_TAG, 0, req);
                     MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlget", "**ptlget %s",
                                          MPID_nem_ptl_strerror(ret));
                     MPIU_DBG_MSG_FMT(CH3_CHANNEL, VERBOSE, (MPIU_DBG_FDEST,
                                                             "PtlGet(size=%lu id=(%#x,%#x) pt=%#x tag=%#lx)", size,
                                                             vc_ptl->id.phys.nid,
-                                                            vc_ptl->id.phys.pid, vc_ptl->ptc, recvbufs[buf_idx].tag));
+                                                            vc_ptl->id.phys.pid, vc_ptl->ptc, GET_TAG));
                     buf_ptr += size;
                     recvbufs[buf_idx].remaining -= size;
                     if (recvbufs[buf_idx].remaining < MPIDI_nem_ptl_ni_limits.max_msg_size)
