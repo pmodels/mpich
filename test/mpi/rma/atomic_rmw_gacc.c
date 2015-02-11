@@ -149,7 +149,9 @@ int main (int argc, char *argv[]) {
             MPI_Win_unlock(rank, win);
         }
 
-                MPI_Win_lock_all(0, win);
+        MPI_Barrier(MPI_COMM_WORLD);
+
+        MPI_Win_lock_all(0, win);
         if (rank != dest) {
             for (i = 0; i < my_buf_num; i++) {
                 MPI_Get_accumulate(&(orig_buf[i*OP_COUNT]), 1, origin_dtp,
@@ -176,7 +178,9 @@ int main (int argc, char *argv[]) {
             MPI_Win_unlock(rank, win);
         }
 
-                MPI_Win_lock_all(0, win);
+        MPI_Barrier(MPI_COMM_WORLD);
+
+        MPI_Win_lock_all(0, win);
         if (rank != dest) {
             for (i = 0; i < my_buf_num; i++) {
                 MPI_Get_accumulate(&(orig_buf[i*OP_COUNT]), OP_COUNT, MPI_INT,
@@ -203,7 +207,9 @@ int main (int argc, char *argv[]) {
             MPI_Win_unlock(rank, win);
         }
 
-                MPI_Win_lock_all(0, win);
+        MPI_Barrier(MPI_COMM_WORLD);
+
+        MPI_Win_lock_all(0, win);
         if (rank != dest) {
             for (i = 0; i < my_buf_num; i++) {
                 MPI_Get_accumulate(&(orig_buf[i*OP_COUNT]), 1, origin_dtp,
