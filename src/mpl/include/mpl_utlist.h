@@ -391,11 +391,11 @@ do {                                                                            
       (tail)=(head);                                                                           \
   } else {                                                                                     \
     char *_tmp = (char*)(head);                                                                \
-    while (head->_next && (head->_next != (del))) {                                            \
-      head = head->_next;                                                                      \
+    while ((head)->_next && ((head)->_next != (del))) {                                        \
+      (head) = (head)->_next;                                                                  \
     }                                                                                          \
-    if (head->_next) {                                                                         \
-      head->_next = ((del)->_next);                                                            \
+    if ((head)->_next) {                                                                       \
+      (head)->_next = ((del)->_next);                                                          \
       if ((tail) == (del))                                                                     \
         (tail)=(head);                                                                         \
     }                                                                                          \
