@@ -395,16 +395,13 @@ static inline int MTestGetSendDerivedDatatypes(MTestDatatype * sendtype,
         return merr;
 
     sendtype->count = 1;
-    merr = MPI_Type_size_x(sendtype->datatype, &tsize);
-    if (merr)
-        MTestPrintError(merr);
 
     /* Create receive datatype */
-    merr = MTestTypeBasicCreate(MPI_CHAR, recvtype);
+    merr = MTestTypeBasicCreate(old_type, recvtype);
     if (merr)
         return merr;
 
-    recvtype->count = sendtype->count * tsize;
+    recvtype->count = sendtype->count * align_tot_count;
 
     return merr;
 }
@@ -443,16 +440,13 @@ static inline int MTestGetRecvDerivedDatatypes(MTestDatatype * sendtype,
         return merr;
 
     recvtype->count = 1;
-    merr = MPI_Type_size_x(recvtype->datatype, &tsize);
-    if (merr)
-        MTestPrintError(merr);
 
     /* Create send datatype */
-    merr = MTestTypeBasicCreate(MPI_CHAR, sendtype);
+    merr = MTestTypeBasicCreate(old_type, sendtype);
     if (merr)
         return merr;
 
-    sendtype->count = recvtype->count * tsize;
+    sendtype->count = recvtype->count * align_tot_count;
 
     return merr;
 }
