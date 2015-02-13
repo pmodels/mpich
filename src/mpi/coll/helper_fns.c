@@ -228,7 +228,8 @@ int MPIC_Wait(MPID_Request * request_ptr, mpir_errflag_t *errflag)
 	MPID_Progress_end(&progress_state);
     }
 
-    MPIR_Process_status(&request_ptr->status, errflag);
+    if (request_ptr->kind == MPID_REQUEST_RECV)
+        MPIR_Process_status(&request_ptr->status, errflag);
 
  fn_exit:
     MPIU_DBG_MSG_D(PT2PT, TYPICAL, "OUT: errflag = %d", *errflag);
