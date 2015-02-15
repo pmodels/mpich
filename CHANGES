@@ -1,4 +1,31 @@
 ===============================================================================
+                               Changes in 3.1.4
+===============================================================================
+
+ # Bug fixes to MPI-3 shared memory functionality.
+
+ # Fixed a bug that prevented Fortran programs from being profiled by PMPI
+   libraries written in C.
+
+ # Fixed support for building MPICH on OSX with Intel C/C++ and Fortran compilers.
+
+ # Several bug fixes in ROMIO.
+
+ # Enhancements to the testsuite.
+
+ # Backports support for the Mellanox MXM InfiniBand interface.
+
+ # Backports support for the Mellanox HCOLL interface for collectives.
+
+ # Several other minor bug fixes, memory leak fixes, and code cleanup.
+
+   A full list of changes is available at the following link:
+
+     http://git.mpich.org/mpich.git/shortlog/v3.1.3..v3.1.4
+
+ 
+
+===============================================================================
                                Changes in 3.1.3
 ===============================================================================
 
