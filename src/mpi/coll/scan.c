@@ -303,7 +303,7 @@ int MPIR_Scan(
     {
         mpi_errno = MPIC_Recv(localfulldata, count, datatype,
                                  comm_ptr->node_comm->local_size - 1, MPIR_SCAN_TAG, 
-                                 comm_ptr, &status, errflag);
+                                 comm_ptr->node_comm, &status, errflag);
         if (mpi_errno) {
             /* for communication errors, just record the error but continue */
             *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
@@ -316,7 +316,7 @@ int MPIR_Scan(
              MPIU_Get_intranode_rank(comm_ptr, rank) == comm_ptr->node_comm->local_size - 1)
     {
         mpi_errno = MPIC_Send(recvbuf, count, datatype,
-                                 0, MPIR_SCAN_TAG, comm_ptr, errflag);
+                                 0, MPIR_SCAN_TAG, comm_ptr->node_comm, errflag);
         if (mpi_errno) {
             /* for communication errors, just record the error but continue */
             *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
@@ -349,7 +349,7 @@ int MPIR_Scan(
         {
             mpi_errno = MPIC_Send(prefulldata, count, datatype,
                                      MPIU_Get_internode_rank(comm_ptr, rank) + 1,
-                                     MPIR_SCAN_TAG, comm_ptr, errflag);
+                                     MPIR_SCAN_TAG, comm_ptr->node_roots_comm, errflag);
             if (mpi_errno) {
                 /* for communication errors, just record the error but continue */
                 *errflag = MPIR_ERR_GET_CLASS(mpi_errno);
@@ -361,7 +361,7 @@ int MPIR_Scan(
         {
             mpi_errno = MPIC_Recv(tempbuf, count, datatype,
                                      MPIU_Get_internode_rank(comm_ptr, rank) - 1,
-                                     MPIR_SCAN_TAG, comm_ptr, &status, errflag);
+                                     MPIR_SCAN_TAG, comm_ptr->node_roots_comm, &status, errflag);
             noneed = 0;
             if (mpi_errno) {
                 /* for communication errors, just record the error but continue */
