@@ -53,6 +53,7 @@ int MPIR_Ext_init(void);
 
 void MPIR_Ext_cs_enter_allfunc(void);
 void MPIR_Ext_cs_exit_allfunc(void);
+void MPIR_Ext_cs_yield_allfunc_if_progress_blocked(void);
 
 /* to facilitate error checking */
 int MPIR_Ext_datatype_iscommitted(MPI_Datatype datatype);

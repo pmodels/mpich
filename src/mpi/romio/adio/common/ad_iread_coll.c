@@ -7,6 +7,7 @@
 #include "adio.h"
 #include "adio_extern.h"
 #include "mpiu_greq.h"
+#include "mpioimpl.h"
 
 #ifdef USE_DBG_LOGGING
   #define RDCOLL_DEBUG 1
@@ -1303,6 +1304,10 @@ static int ADIOI_GEN_irc_wait_fn(int count, void **array_of_states,
 
             if ((timeout > 0) && (timeout < (MPI_Wtime() - starttime)))
                 goto fn_exit;
+
+            /* If the progress engine is blocked, we have to yield for another
+               thread to be able to unblock the progress engine. */
+            MPIU_THREAD_CS_YIELD(ALLFUNC,_if_progress_blocked);
         }
     }
 
