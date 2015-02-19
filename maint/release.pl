@@ -153,8 +153,8 @@ print("\n");
 ## breakage. So make sure the ABI string in the release tarball is
 ## updated when you do that.
 check_autotools_version("autoconf", "2.69");
-check_autotools_version("automake", "1.14");
-check_autotools_version("libtool", "2.4.2");
+check_autotools_version("automake", "1.15");
+check_autotools_version("libtool", "2.4.5");
 print("\n");
 
 
