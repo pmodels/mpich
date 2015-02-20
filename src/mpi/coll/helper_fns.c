@@ -231,6 +231,8 @@ int MPIC_Wait(MPID_Request * request_ptr, mpir_errflag_t *errflag)
     if (request_ptr->kind == MPID_REQUEST_RECV)
         MPIR_Process_status(&request_ptr->status, errflag);
 
+    MPIR_TAG_CLEAR_ERROR_BITS(request_ptr->status.MPI_TAG);
+
  fn_exit:
     MPIU_DBG_MSG_D(PT2PT, TYPICAL, "OUT: errflag = %d", *errflag);
     MPIDI_PT2PT_FUNC_EXIT(MPID_STATE_MPIC_WAIT);
@@ -359,6 +361,8 @@ int MPIC_Recv(void *buf, int count, MPI_Datatype datatype, int source, int tag,
         MPID_Request_release(request_ptr);
     } else {
         MPIR_Process_status(status, errflag);
+
+        MPIR_TAG_CLEAR_ERROR_BITS(status->MPI_TAG);
     }
 
     if (MPI_SUCCESS == MPIR_ERR_GET_CLASS(status->MPI_ERROR)) {
@@ -768,6 +772,8 @@ int MPIC_Waitall(int numreq, MPID_Request *requests[], MPI_Status statuses[], mp
      * single time, we may have to change that. */
     for (i = 0; i < numreq; ++i) {
         MPIR_Process_status(&status_array[i], errflag);
+
+        MPIR_TAG_CLEAR_ERROR_BITS(status_array[i].MPI_TAG);
     }
 
  fn_exit:
