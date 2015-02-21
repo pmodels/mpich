@@ -27,8 +27,7 @@ int MPIDI_CH3_ReqHandler_ReqOpsComplete(MPIDI_VC_t * vc, MPID_Request * sreq, in
 
     /* Complete user request and release ref of completion handler.
      * Note that ch3 ref is released by later clean_up call. */
-    MPID_Request_set_completed(ureq);
-    MPID_Request_release(ureq);
+    MPIDI_CH3U_Request_complete(ureq);
 
     MPIDI_CH3U_Request_complete(sreq);
     *complete = TRUE;
