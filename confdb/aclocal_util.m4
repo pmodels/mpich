@@ -64,7 +64,7 @@ dnl argument is already present in the variable
 AC_DEFUN([PAC_APPEND_FLAG],[
 	AC_REQUIRE([AC_PROG_FGREP])
 	AS_IF(
-		[echo "$$2" | $FGREP -e '$1' >/dev/null 2>&1],
+		[echo "$$2" | $FGREP -e "\<$1\>" >/dev/null 2>&1],
 		[echo "$2(='$$2') contains '$1', not appending" >&AS_MESSAGE_LOG_FD],
 		[echo "$2(='$$2') does not contain '$1', appending" >&AS_MESSAGE_LOG_FD
 		$2="$$2 $1"]
@@ -80,7 +80,7 @@ dnl should be added in reverse order.
 AC_DEFUN([PAC_PREPEND_FLAG],[
         AC_REQUIRE([AC_PROG_FGREP])
         AS_IF(
-                [echo "$$2" | $FGREP -e '$1' >/dev/null 2>&1],
+                [echo "$$2" | $FGREP -e "\<$1\>" >/dev/null 2>&1],
                 [echo "$2(='$$2') contains '$1', not prepending" >&AS_MESSAGE_LOG_FD],
                 [echo "$2(='$$2') does not contain '$1', prepending" >&AS_MESSAGE_LOG_FD
                 $2="$1 $$2"]
