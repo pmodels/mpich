@@ -83,7 +83,7 @@ int MPID_nem_tofu_isend(struct MPIDI_VC *vc, const void *buf, int count, MPI_Dat
     cmd[0].opcode = LLC_OPCODE_SEND;
     cmd[0].comm = LLC_COMM_MPICH;
     cmd[0].rank = VC_FIELD(vc, remote_endpoint_addr);
-    cmd[0].req_id = cmd;
+    cmd[0].req_id = (uint64_t)cmd;
     
     /* Prepare bit-vector to perform tag-match. We use the same bit-vector as in CH3 layer. */
     /* See src/mpid/ch3/src/mpid_isend.c */
@@ -109,7 +109,7 @@ int MPID_nem_tofu_isend(struct MPIDI_VC *vc, const void *buf, int count, MPI_Dat
 
     const void *write_from_buf;
     if (dt_contig) {
-        write_from_buf = buf + dt_true_lb;
+        write_from_buf = (void *)((char *)buf + dt_true_lb);
 #ifndef	notdef_leak_0002_hack
         REQ_FIELD(sreq, pack_buf) = 0;
 #endif	/* notdef_leak_0002_hack */
@@ -531,7 +531,7 @@ int MPIDI_nem_tofu_Rqst_iov_update(MPID_Request *mreq, MPIDI_msg_sz_t consume)
     mreq->dev.iov_offset = iv;
 
     MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE,
-	"iov_update() : iov_offset %d", mreq->dev.iov_offset);
+	"iov_update() : iov_offset %ld", mreq->dev.iov_offset);
     MPIU_DBG_MSG_D(CH3_CHANNEL, VERBOSE,
 	"iov_update() = %d", ret);
 
@@ -596,7 +596,7 @@ ssize_t llctofu_writev(void *endpt, uint64_t raddr,
         lcmd->opcode = LLC_OPCODE_UNSOLICITED;
         lcmd->comm = LLC_COMM_MPICH;
         lcmd->rank = (uint32_t)raddr; /* XXX */
-        lcmd->req_id = lcmd;
+        lcmd->req_id = (uint64_t)lcmd;
         
         lcmd->iov_local[0].addr = (uintptr_t)buff;
         lcmd->iov_local[0].length = bsiz;
@@ -750,7 +750,7 @@ int llctofu_poll(int in_blocking_poll,
         switch(events[0].type) {
         case LLC_EVENT_SEND_LEFT: {
             dprintf("llctofu_poll,EVENT_SEND_LEFT\n");
-            lcmd = events[0].side.initiator.req_id;
+            lcmd = (LLC_cmd_t *)events[0].side.initiator.req_id;
             MPIU_Assert(lcmd != 0);
             MPIU_Assert(lcmd->opcode == LLC_OPCODE_SEND || lcmd->opcode == LLC_OPCODE_SSEND);
             
@@ -770,7 +770,7 @@ int llctofu_poll(int in_blocking_poll,
 
         case LLC_EVENT_UNSOLICITED_LEFT: {
             dprintf("llctofu_poll,EVENT_UNSOLICITED_LEFT\n");
-            lcmd = events[0].side.initiator.req_id;
+            lcmd = (LLC_cmd_t *)events[0].side.initiator.req_id;
             MPIU_Assert(lcmd != 0);
             MPIU_Assert(lcmd->opcode == LLC_OPCODE_UNSOLICITED);
             
@@ -796,7 +796,6 @@ int llctofu_poll(int in_blocking_poll,
             break; }
         case LLC_EVENT_UNSOLICITED_ARRIVED: {
             void *vp_vc = 0;
-            uint64_t addr;
             void *buff;
             size_t bsiz;
             
@@ -833,7 +832,7 @@ int llctofu_poll(int in_blocking_poll,
             break; }
         case LLC_EVENT_RECV_MATCHED: {
             dprintf("llctofu_poll,EVENT_RECV_MATCHED\n");
-            lcmd = events[0].side.initiator.req_id;
+            lcmd = (LLC_cmd_t *)events[0].side.initiator.req_id;
             MPID_Request *req =  ((struct llctofu_cmd_area*)lcmd->usr_area)->cbarg;
 
             if (req->kind != MPID_REQUEST_MPROBE) {
@@ -975,7 +974,7 @@ int MPID_nem_tofu_issend(struct MPIDI_VC *vc, const void *buf, int count, MPI_Da
     cmd[0].opcode = LLC_OPCODE_SSEND;
     cmd[0].comm = LLC_COMM_MPICH;
     cmd[0].rank = VC_FIELD(vc, remote_endpoint_addr);
-    cmd[0].req_id = cmd;
+    cmd[0].req_id = (uint64_t)cmd;
 
     /* Prepare bit-vector to perform tag-match. We use the same bit-vector as in CH3 layer. */
     /* See src/mpid/ch3/src/mpid_isend.c */
@@ -1001,7 +1000,7 @@ int MPID_nem_tofu_issend(struct MPIDI_VC *vc, const void *buf, int count, MPI_Da
 
     const void *write_from_buf;
     if (dt_contig) {
-        write_from_buf = buf + dt_true_lb;
+        write_from_buf = (void *)((char *)buf + dt_true_lb);
         REQ_FIELD(sreq, pack_buf) = 0;
     }
     else {

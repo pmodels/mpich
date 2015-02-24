@@ -179,7 +179,7 @@ int MPID_nem_tofu_improbe(MPIDI_VC_t *vc,  int source, int tag, MPID_Comm *comm,
 
         cmd[0].opcode = 0; // not use
         cmd[0].comm = LLC_COMM_MPICH;
-        cmd[0].req_id = cmd;
+        cmd[0].req_id = (uint64_t)cmd;
         cmd[0].rank = msg->rank;
         // cmd[0].tag = 0; // not use
 

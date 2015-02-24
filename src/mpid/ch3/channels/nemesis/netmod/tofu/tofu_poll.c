@@ -289,7 +289,7 @@ int MPID_nem_tofu_recv_posted(struct MPIDI_VC *vc, struct MPID_Request *req)
 
     cmd[0].opcode = LLC_OPCODE_RECV;
     cmd[0].comm = LLC_COMM_MPICH;
-    cmd[0].req_id = cmd;
+    cmd[0].req_id = (uint64_t)cmd;
     
     if (req->dev.match.parts.rank == MPI_ANY_SOURCE) {
         cmd[0].rank = LLC_ANY_SOURCE;

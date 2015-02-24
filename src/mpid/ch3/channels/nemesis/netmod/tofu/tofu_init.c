@@ -127,9 +127,6 @@ MPID_nem_tofu_init (MPIDI_PG_t *pg_p, int pg_rank,
 		  char **bc_val_p, int *val_max_sz_p)
 {
     int mpi_errno = MPI_SUCCESS, pmi_errno, llc_errno;
-    int rc;
-    int i;
-    int llc_rank;
 
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_TOFU_INIT);
 

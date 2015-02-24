@@ -187,6 +187,7 @@ static int tofu_vc_init (MPIDI_VC_t *vc)
     goto fn_exit;
 }
 
+#if 0 /* not use */
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_tofu_vc_prnt
 #undef FCNAME
@@ -220,4 +221,4 @@ static int MPID_nem_tofu_vc_prnt(MPIDI_VC_t *vc)
 
     return mpi_errno;
 }
-
+#endif
