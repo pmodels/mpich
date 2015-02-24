@@ -168,7 +168,7 @@ int MPID_nem_mxm_SendNoncontig(MPIDI_VC_t * vc, MPID_Request * sreq, void *hdr,
     _dbg_mxm_output(5,
                     "SendNoncontig ========> Sending ADI msg (to=%d type=%d) for req %p (data_size %d, %d) \n",
                     vc->pg_rank, sreq->dev.pending_pkt.type, sreq, sizeof(MPIDI_CH3_Pkt_t),
-                    sreq->dev.segment_size);
+                    sreq->dev.segment_size-sreq->dev.segment_first);
 
     vc_area = VC_BASE(vc);
     req_area = REQ_BASE(sreq);
@@ -179,17 +179,16 @@ int MPID_nem_mxm_SendNoncontig(MPIDI_VC_t * vc, MPID_Request * sreq, void *hdr,
     req_area->iov_buf[0].ptr = (void *) &(sreq->dev.pending_pkt);
     req_area->iov_buf[0].length = sizeof(MPIDI_CH3_Pkt_t);
 
-    MPIU_Assert(sreq->dev.segment_first == 0);
     last = sreq->dev.segment_size;
     if (last > 0) {
-        sreq->dev.tmpbuf = MPIU_Malloc((size_t) sreq->dev.segment_size);
+        sreq->dev.tmpbuf = MPIU_Malloc((size_t) (sreq->dev.segment_size - sreq->dev.segment_first));
         MPIU_Assert(sreq->dev.tmpbuf);
         MPID_Segment_pack(sreq->dev.segment_ptr, sreq->dev.segment_first, &last, sreq->dev.tmpbuf);
         MPIU_Assert(last == sreq->dev.segment_size);
 
         req_area->iov_count = 2;
         req_area->iov_buf[1].ptr = sreq->dev.tmpbuf;
-        req_area->iov_buf[1].length = last;
+        req_area->iov_buf[1].length = last - sreq->dev.segment_first;
     }
 
     vc_area->pending_sends += 1;

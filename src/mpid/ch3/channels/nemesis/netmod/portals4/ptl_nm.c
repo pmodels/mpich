@@ -205,14 +205,13 @@ static int send_noncontig_pkt(MPIDI_VC_t *vc, MPID_Request *sreq, void *hdr_p)
     MPID_nem_ptl_vc_area *const vc_ptl = VC_PTL(vc);
     int ret;
     char *sendbuf;
-    const size_t sent_sz = sreq->dev.segment_size < PAYLOAD_SIZE ? sreq->dev.segment_size : PAYLOAD_SIZE;
+    const size_t data_sz = sreq->dev.segment_size - sreq->dev.segment_first;
+    const size_t sent_sz = data_sz < PAYLOAD_SIZE ? data_sz : PAYLOAD_SIZE;
     const size_t sendbuf_sz = SENDBUF_SIZE(sent_sz);
-    const size_t remaining = sreq->dev.segment_size - sent_sz;
+    const size_t remaining = data_sz - sent_sz;
     ptl_match_bits_t match_bits = NPTL_MATCH(CTL_TAG, 0, MPIDI_Process.my_pg_rank);
     MPIDI_STATE_DECL(MPID_STATE_SEND_NONCONTIG_PKT);
     MPIDI_FUNC_ENTER(MPID_STATE_SEND_NONCONTIG_PKT);
-
-    MPIU_Assert(sreq->dev.segment_first == 0);
 
     sendbuf = MPIU_Malloc(sendbuf_sz);
     MPIU_Assert(sendbuf != NULL);
@@ -221,15 +220,16 @@ static int send_noncontig_pkt(MPIDI_VC_t *vc, MPID_Request *sreq, void *hdr_p)
     REQ_PTL(sreq)->num_gets = 0;
     REQ_PTL(sreq)->put_done = 0;
 
-    if (sreq->dev.segment_size) {
-        MPIDI_msg_sz_t last = sent_sz;
-        MPID_Segment_pack(sreq->dev.segment_ptr, 0, &last, sendbuf + sizeof(MPIDI_CH3_Pkt_t));
+    if (data_sz) {
+        MPIDI_msg_sz_t first = sreq->dev.segment_first;
+        MPIDI_msg_sz_t last = sreq->dev.segment_first + sent_sz;
+        MPID_Segment_pack(sreq->dev.segment_ptr, first, &last, sendbuf + sizeof(MPIDI_CH3_Pkt_t));
 
         if (remaining) {  /* Post MEs for the remote gets */
             TMPBUF(sreq) = MPIU_Malloc(remaining);
-            sreq->dev.segment_first = last;
+            first = last;
             last = sreq->dev.segment_size;
-            MPID_Segment_pack(sreq->dev.segment_ptr, sreq->dev.segment_first, &last, TMPBUF(sreq));
+            MPID_Segment_pack(sreq->dev.segment_ptr, first, &last, TMPBUF(sreq));
             MPIU_Assert(last == sreq->dev.segment_size);
 
             mpi_errno = meappend_large(vc_ptl->id, sreq, NPTL_MATCH(GET_TAG, 0, MPIDI_Process.my_pg_rank), TMPBUF(sreq), remaining);

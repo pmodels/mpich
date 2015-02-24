@@ -127,6 +127,7 @@ int MPID_nem_newmad_SendNoncontig(MPIDI_VC_t *vc, MPID_Request *sreq, void *head
     struct iovec   newmad_iov[2];
     int            num_iov = 1;
     MPIDI_msg_sz_t last;
+    MPIDI_msg_sz_t data_sz;
 
     /*
     struct iovec  *newmad_iov = (struct iovec *)MPIU_Malloc(NMAD_IOV_MAX_DEPTH*sizeof(struct iovec));
@@ -147,11 +148,11 @@ int MPID_nem_newmad_SendNoncontig(MPIDI_VC_t *vc, MPID_Request *sreq, void *head
     newmad_iov[0].iov_base = (char *)&(sreq->dev.pending_pkt);
     newmad_iov[0].iov_len  = sizeof(MPIDI_CH3_Pkt_t);
 
-    MPIU_Assert(sreq->dev.segment_first == 0);
+    data_sz = sreq->dev.segment_size - sreq->dev.segment_first;
     last = sreq->dev.segment_size;
-    if (last > 0)
+    if (data_sz > 0)
     {
-	sreq->dev.tmpbuf = MPIU_Malloc((size_t)sreq->dev.segment_size);
+	sreq->dev.tmpbuf = MPIU_Malloc((size_t) data_sz);
         REQ_FIELD(sreq,deltmpbuf) = TMP_DEL_VALUE;
         MPID_Segment_pack(sreq->dev.segment_ptr,sreq->dev.segment_first, &last,(char *)(sreq->dev.tmpbuf));
 	MPIU_Assert(last == sreq->dev.segment_size);

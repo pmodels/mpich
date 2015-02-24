@@ -431,7 +431,6 @@ MPID_nem_mpich_send_seg_header (MPID_Segment *segment, MPIDI_msg_sz_t *segment_f
 
     MPIU_Assert(vc_ch->is_local); /* netmods will have their own implementation */
     MPIU_Assert(header_sz <= sizeof(MPIDI_CH3_Pkt_t));
-    MPIU_Assert(*segment_first == 0); /* this routine is only called for new messages */
     
     
     DO_PAPI (PAPI_reset (PAPI_EventSet));

@@ -190,17 +190,19 @@ int MPID_nem_ofi_SendNoncontig(MPIDI_VC_t * vc,
     MPI_Aint data_sz;
     uint64_t match_bits;
     MPID_Request *cts_req;
+    MPIDI_msg_sz_t first, last;
 
     BEGIN_FUNC(FCNAME);
     MPIU_Assert(hdr_sz <= (MPIDI_msg_sz_t) sizeof(MPIDI_CH3_Pkt_t));
-    MPIU_Assert(sreq->dev.segment_first == 0);
 
-    data_sz = sreq->dev.segment_size;
+    first = sreq->dev.segment_first;
+    last = sreq->dev.segment_size;
+    data_sz = sreq->dev.segment_size - sreq->dev.segment_first;
     pkt_len = sizeof(MPIDI_CH3_Pkt_t) + data_sz;
     pack_buffer = MPIU_Malloc(pkt_len);
     MPIU_Assert(pack_buffer);
     MPIU_Memcpy(pack_buffer, hdr, hdr_sz);
-    MPID_Segment_pack(sreq->dev.segment_ptr, 0, &data_sz, pack_buffer + sizeof(MPIDI_CH3_Pkt_t));
+    MPID_Segment_pack(sreq->dev.segment_ptr, first, &last, pack_buffer + sizeof(MPIDI_CH3_Pkt_t));
     START_COMM();
     MPID_nem_ofi_poll(MPID_NONBLOCKING_POLL);
     END_FUNC_RC(FCNAME);

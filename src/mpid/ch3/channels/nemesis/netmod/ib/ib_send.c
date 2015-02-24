@@ -772,10 +772,9 @@ static int MPID_nem_ib_SendNoncontig_core(MPIDI_VC_t * vc, MPID_Request * sreq, 
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_IB_SENDNONCONTIG_CORE);
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_IB_SENDNONCONTIG_CORE);
 
-    MPIU_Assert(sreq->dev.segment_first == 0);
     last = sreq->dev.segment_size;      /* segment_size is byte offset */
     if (last > 0) {
-        REQ_FIELD(sreq, lmt_pack_buf) = MPIU_Malloc((size_t) sreq->dev.segment_size);
+        REQ_FIELD(sreq, lmt_pack_buf) = MPIU_Malloc((size_t) (sreq->dev.segment_size - sreq->dev.segment_first));
         MPIU_ERR_CHKANDJUMP(!REQ_FIELD(sreq, lmt_pack_buf), mpi_errno, MPI_ERR_OTHER,
                             "**outofmemory");
         MPID_Segment_pack(sreq->dev.segment_ptr, sreq->dev.segment_first, &last,
@@ -792,7 +791,7 @@ static int MPID_nem_ib_SendNoncontig_core(MPIDI_VC_t * vc, MPID_Request * sreq, 
             || (((MPIDI_CH3_Pkt_t *) hdr)->type == MPIDI_CH3_PKT_ACCUMULATE))) {
 	/* If request length is too long, create LMT packet */
 	if ( MPID_NEM_IB_NETMOD_HDR_SIZEOF(vc_ib->ibcom->local_ringbuf_type)
-               + sizeof(MPIDI_CH3_Pkt_t) + sreq->dev.segment_size
+               + sizeof(MPIDI_CH3_Pkt_t) + sreq->dev.segment_size - sreq->dev.segment_first
                  > MPID_NEM_IB_COM_RDMABUF_SZSEG - sizeof(MPID_nem_ib_netmod_trailer_t)) {
             pkt_netmod.type = MPIDI_NEM_PKT_NETMOD;
 
