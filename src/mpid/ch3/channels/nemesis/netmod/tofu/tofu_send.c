@@ -903,6 +903,54 @@ int llctofu_poll(int in_blocking_poll,
             llc_errno = LLC_cmd_free(lcmd, 1);
             MPIU_ERR_CHKANDJUMP(llc_errno, mpi_errno, MPI_ERR_OTHER, "**LLC_cmd_free");
             break; }
+        case LLC_EVENT_TARGET_PROC_FAIL: {
+            MPID_Request *req;
+
+            lcmd = (LLC_cmd_t *)events[0].side.initiator.req_id;
+            MPIU_Assert(lcmd != 0);
+
+            req =  ((struct llctofu_cmd_area*)lcmd->usr_area)->cbarg;
+
+            if (lcmd->opcode == LLC_OPCODE_UNSOLICITED) {
+                struct llctofu_cmd_area *usr;
+                usr = (void *)lcmd->usr_area;
+                vp_sreq = usr->cbarg;
+
+                UNSOLICITED_NUM_DEC(vp_sreq);
+
+                req->status.MPI_ERROR = MPI_SUCCESS;
+                MPIU_ERR_SET(req->status.MPI_ERROR, MPIX_ERR_PROC_FAIL_STOP, "**comm_fail");
+
+                MPID_Request_release(req); /* ref count was incremented when added to queue */
+                MPIDI_CH3U_Request_complete(req);
+
+                if (lcmd->iov_local[0].addr != 0) {
+                    MPIU_Free((void *)lcmd->iov_local[0].addr);
+                    lcmd->iov_local[0].addr = 0;
+                }
+            } else if (lcmd->opcode == LLC_OPCODE_SEND || lcmd->opcode == LLC_OPCODE_SSEND) {
+                req->status.MPI_ERROR = MPI_SUCCESS;
+                MPIU_ERR_SET(req->status.MPI_ERROR, MPIX_ERR_PROC_FAIL_STOP, "**comm_fail");
+
+                MPID_Request_release(req); /* ref count was incremented when added to queue */
+                MPIDI_CH3U_Request_complete(req);
+            } else if (lcmd->opcode == LLC_OPCODE_RECV) {
+                /* Probably ch3 dequeued and completed this request. */
+#if 0
+                MPIDI_CH3U_Recvq_DP(req);
+                req->status.MPI_ERROR = MPI_SUCCESS;
+                MPIU_ERR_SET(req->status.MPI_ERROR, MPIX_ERR_PROC_FAIL_STOP, "**comm_fail");
+                MPIDI_CH3U_Request_complete(req);
+#endif
+            } else {
+                printf("llctofu_poll,target dead, unknown opcode=%d\n", lcmd->opcode);
+                MPID_nem_tofu_segv;
+            }
+
+            llc_errno = LLC_cmd_free(lcmd, 1);
+            MPIU_ERR_CHKANDJUMP(llc_errno, mpi_errno, MPI_ERR_OTHER, "**LLC_cmd_free");
+
+            break; }
         default:
             printf("llctofu_poll,unknown event type=%d\n", events[0].type);
             MPID_nem_tofu_segv;
