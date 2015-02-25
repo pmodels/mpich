@@ -53,8 +53,8 @@ int MPID_nem_ptl_nm_init(void)
         mes[i].options = (PTL_ME_OP_PUT | PTL_ME_USE_ONCE | PTL_ME_EVENT_UNLINK_DISABLE |
                          PTL_ME_EVENT_LINK_DISABLE | PTL_ME_IS_ACCESSIBLE);
         mes[i].match_id = id_any;
-        mes[i].match_bits = CTL_TAG;
-        mes[i].ignore_bits = 0;
+        mes[i].match_bits = NPTL_MATCH(CTL_TAG, 0, MPI_ANY_SOURCE);
+        mes[i].ignore_bits = NPTL_MATCH_IGNORE;
 
         ret = MPID_nem_ptl_me_append(MPIDI_nem_ptl_ni, MPIDI_nem_ptl_control_pt, &mes[i],
                                      PTL_PRIORITY_LIST, (void *)(uint64_t)i, &me_handles[i]);
@@ -119,7 +119,7 @@ static inline int meappend_large(ptl_process_t id, MPID_Request *req, ptl_match_
                    PTL_ME_EVENT_LINK_DISABLE | PTL_ME_EVENT_UNLINK_DISABLE );
     me.match_id = id;
     me.match_bits = tag;
-    me.ignore_bits = 0;
+    me.ignore_bits = NPTL_MATCH_IGNORE;
     me.min_free = 0;
 
     while (remaining) {
@@ -159,6 +159,7 @@ static inline int send_pkt(MPIDI_VC_t *vc, void *hdr_p, void *data_p, MPIDI_msg_
     buf_t *sendbuf;
     const size_t sent_sz = data_sz < PAYLOAD_SIZE ? data_sz : PAYLOAD_SIZE;
     const size_t sendbuf_sz = SENDBUF_SIZE(sent_sz);
+    ptl_match_bits_t match_bits = NPTL_MATCH(CTL_TAG, 0, MPIDI_Process.my_pg_rank);
     MPIDI_STATE_DECL(MPID_STATE_SEND_PKT);
 
     MPIDI_FUNC_ENTER(MPID_STATE_SEND_PKT);
@@ -174,7 +175,8 @@ static inline int send_pkt(MPIDI_VC_t *vc, void *hdr_p, void *data_p, MPIDI_msg_
     if (data_sz) {
         MPIU_Memcpy(sendbuf->packet + sizeof(MPIDI_CH3_Pkt_t), data_p, sent_sz);
         if (sendbuf->remaining)  /* Post MEs for the remote gets */
-            mpi_errno = meappend_large(vc_ptl->id, sreq, GET_TAG, (char *)data_p + sent_sz, sendbuf->remaining);
+            mpi_errno = meappend_large(vc_ptl->id, sreq, NPTL_MATCH(GET_TAG, 0, MPIDI_Process.my_pg_rank),
+                                       (char *)data_p + sent_sz, sendbuf->remaining);
             if (mpi_errno)
                 goto fn_fail;
     }
@@ -183,7 +185,7 @@ static inline int send_pkt(MPIDI_VC_t *vc, void *hdr_p, void *data_p, MPIDI_msg_
     REQ_PTL(sreq)->event_handler = MPID_nem_ptl_nm_ctl_event_handler;
 
     ret = MPID_nem_ptl_rptl_put(MPIDI_nem_ptl_global_md, (ptl_size_t)sendbuf, sendbuf_sz, PTL_NO_ACK_REQ,
-                                vc_ptl->id, vc_ptl->ptc, CTL_TAG, 0, sreq, MPIDI_Process.my_pg_rank);
+                                vc_ptl->id, vc_ptl->ptc, match_bits, 0, sreq, 0);
     MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlput", "**ptlput %s",
                          MPID_nem_ptl_strerror(ret));
     MPIU_DBG_MSG_FMT(CH3_CHANNEL, VERBOSE, (MPIU_DBG_FDEST, "PtlPut(size=%lu id=(%#x,%#x) pt=%#x)",
@@ -210,6 +212,7 @@ static int send_noncontig_pkt(MPIDI_VC_t *vc, MPID_Request *sreq, void *hdr_p)
     buf_t *sendbuf;
     const size_t sent_sz = sreq->dev.segment_size < PAYLOAD_SIZE ? sreq->dev.segment_size : PAYLOAD_SIZE;
     size_t sendbuf_sz = SENDBUF_SIZE(sent_sz);
+    ptl_match_bits_t match_bits = NPTL_MATCH(CTL_TAG, 0, MPIDI_Process.my_pg_rank);
     MPIDI_STATE_DECL(MPID_STATE_SEND_NONCONTIG_PKT);
     MPIDI_FUNC_ENTER(MPID_STATE_SEND_NONCONTIG_PKT);
 
@@ -234,7 +237,7 @@ static int send_noncontig_pkt(MPIDI_VC_t *vc, MPID_Request *sreq, void *hdr_p)
             MPID_Segment_pack(sreq->dev.segment_ptr, sreq->dev.segment_first, &last, TMPBUF(sreq));
             MPIU_Assert(last == sreq->dev.segment_size);
 
-            mpi_errno = meappend_large(vc_ptl->id, sreq, GET_TAG, TMPBUF(sreq), sendbuf->remaining);
+            mpi_errno = meappend_large(vc_ptl->id, sreq, NPTL_MATCH(GET_TAG, 0, MPIDI_Process.my_pg_rank), TMPBUF(sreq), sendbuf->remaining);
             if (mpi_errno)
                 goto fn_fail;
         }
@@ -244,7 +247,7 @@ static int send_noncontig_pkt(MPIDI_VC_t *vc, MPID_Request *sreq, void *hdr_p)
     REQ_PTL(sreq)->event_handler = MPID_nem_ptl_nm_ctl_event_handler;
 
     ret = MPID_nem_ptl_rptl_put(MPIDI_nem_ptl_global_md, (ptl_size_t)sendbuf, sendbuf_sz, PTL_NO_ACK_REQ,
-                                vc_ptl->id, vc_ptl->ptc, CTL_TAG, 0, sreq, MPIDI_Process.my_pg_rank);
+                                vc_ptl->id, vc_ptl->ptc, match_bits, 0, sreq, 0);
     MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlput", "**ptlput %s",
                          MPID_nem_ptl_strerror(ret));
     MPIU_DBG_MSG_FMT(CH3_CHANNEL, VERBOSE, (MPIU_DBG_FDEST, "PtlPut(size=%lu id=(%#x,%#x) pt=%#x)",
@@ -387,7 +390,7 @@ int MPID_nem_ptl_nm_ctl_event_handler(const ptl_event_t *e)
 
             MPIU_Assert(e->start == &recvbufs[buf_idx]);
 
-            MPIDI_PG_Get_vc(MPIDI_Process.my_pg, (uint64_t)e->hdr_data, &vc);
+            MPIDI_PG_Get_vc(MPIDI_Process.my_pg, NPTL_MATCH_GET_RANK(e->match_bits), &vc);
             vc_ptl = VC_PTL(vc);
 
             if (recvbufs[buf_idx].remaining == 0) {
@@ -417,11 +420,11 @@ int MPID_nem_ptl_nm_ctl_event_handler(const ptl_event_t *e)
                 while (recvbufs[buf_idx].remaining) {
                     MPIDI_CH3U_Request_increment_cc(req, &incomplete);  /* Will be decremented - and eventually freed in REPLY */
                     ret = MPID_nem_ptl_rptl_get(MPIDI_nem_ptl_global_md, (ptl_size_t)buf_ptr,
-                                                size, vc_ptl->id, vc_ptl->ptc, GET_TAG, 0, req);
+                                                size, vc_ptl->id, vc_ptl->ptc, NPTL_MATCH(GET_TAG, 0, MPIDI_Process.my_pg_rank), 0, req);
                     MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlget", "**ptlget %s",
                                          MPID_nem_ptl_strerror(ret));
                     MPIU_DBG_MSG_FMT(CH3_CHANNEL, VERBOSE, (MPIU_DBG_FDEST,
-                                                            "PtlGet(size=%lu id=(%#x,%#x) pt=%#x tag=%#lx)", size,
+                                                            "PtlGet(size=%lu id=(%#x,%#x) pt=%#x tag=%d)", size,
                                                             vc_ptl->id.phys.nid,
                                                             vc_ptl->id.phys.pid, vc_ptl->ptc, GET_TAG));
                     buf_ptr += size;
