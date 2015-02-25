@@ -258,11 +258,9 @@ int MPIR_Alltoallw_inter(const void *sendbuf, const int sendcounts[], const int 
     int src, dst, rank, sendcount, recvcount;
     char *sendaddr, *recvaddr;
     MPI_Datatype sendtype, recvtype;
-    MPI_Comm comm;
-    
-    local_size = comm_ptr->local_size; 
+
+    local_size = comm_ptr->local_size;
     remote_size = comm_ptr->remote_size;
-    comm = comm_ptr->handle;
     rank = comm_ptr->rank;
 
     /* check if multiple threads are calling this collective function */
