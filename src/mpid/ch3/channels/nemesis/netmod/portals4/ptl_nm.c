@@ -96,7 +96,7 @@ int MPID_nem_ptl_nm_finalize(void)
 #define FUNCNAME meappend_large
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-static inline int meappend_large(ptl_process_t id, MPID_Request *req, ptl_match_bits_t tag, void *buf, size_t remaining)
+static inline int meappend_large(ptl_process_t id, MPID_Request *req, ptl_match_bits_t match_bits, void *buf, size_t remaining)
 {
     int mpi_errno = MPI_SUCCESS;
     int ret;
@@ -113,7 +113,7 @@ static inline int meappend_large(ptl_process_t id, MPID_Request *req, ptl_match_
     me.options = ( PTL_ME_OP_GET | PTL_ME_USE_ONCE | PTL_ME_IS_ACCESSIBLE |
                    PTL_ME_EVENT_LINK_DISABLE | PTL_ME_EVENT_UNLINK_DISABLE );
     me.match_id = id;
-    me.match_bits = tag;
+    me.match_bits = match_bits;
     me.ignore_bits = NPTL_MATCH_IGNORE;
     me.min_free = 0;
 
@@ -126,7 +126,7 @@ static inline int meappend_large(ptl_process_t id, MPID_Request *req, ptl_match_
                                      &foo_me_handle);
         MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlmeappend", "**ptlmeappend %s",
                              MPID_nem_ptl_strerror(ret));
-        MPIU_DBG_MSG_FMT(CH3_CHANNEL, VERBOSE, (MPIU_DBG_FDEST, "PtlMEAppend(req=%p tag=%#lx)", req, tag));
+        MPIU_DBG_MSG_FMT(CH3_CHANNEL, VERBOSE, (MPIU_DBG_FDEST, "PtlMEAppend(req=%p tag=%#lx)", req, NPTL_MATCH_GET_TAG(match_bits)));
 
         me.start = (char *)me.start + me.length;
         remaining -= me.length;
