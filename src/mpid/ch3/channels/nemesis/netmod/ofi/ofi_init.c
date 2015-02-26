@@ -52,12 +52,11 @@ int MPID_nem_ofi_init(MPIDI_PG_t * pg_p, int pg_rank, char **bc_val_p, int *val_
     /*           endpoint, so the netmod requires dynamic memory regions        */
     /* ------------------------------------------------------------------------ */
     memset(&hints, 0, sizeof(hints));
-    hints.mode = FI_CONTEXT;
-    hints.ep_type = FI_EP_RDM;  /* Reliable datagram         */
-    hints.caps = FI_TAGGED;     /* Tag matching interface    */
-    hints.caps |= FI_BUFFERED_RECV;     /* Buffered receives         */
-    hints.caps |= FI_CANCEL;    /* Support cancel            */
-    hints.caps |= FI_DYNAMIC_MR;        /* Global dynamic mem region */
+    hints.mode    = FI_CONTEXT;
+    hints.ep_type = FI_EP_RDM;     /* Reliable datagram         */
+    hints.caps    = FI_TAGGED;     /* Tag matching interface    */
+    hints.caps   |= FI_CANCEL;     /* Support cancel            */
+    hints.caps   |= FI_DYNAMIC_MR; /* Global dynamic mem region */
 
     /* ------------------------------------------------------------------------ */
     /* FI_VERSION provides binary backward and forward compatibility support    */
@@ -83,12 +82,12 @@ int MPID_nem_ofi_init(MPIDI_PG_t * pg_p, int pg_rank, char **bc_val_p, int *val_
     hints.domain_attr = &domain_attr;
     hints.tx_attr = &tx_attr;
 
-    FI_RC(fi_getinfo(fi_version,        /* Interface version requested               */
-                     NULL,      /* Optional name or fabric to resolve        */
-                     NULL,      /* Service name or port number to request    */
-                     0ULL,      /* Flag:  node/service specify local address */
-                     &hints,    /* In:  Hints to filter available providers  */
-                     &prov_tagged),     /* Out: List of providers that match hints   */
+    FI_RC(fi_getinfo(fi_version,    /* Interface version requested               */
+                     NULL,          /* Optional name or fabric to resolve        */
+                     NULL,          /* Service name or port number to request    */
+                     0ULL,          /* Flag:  node/service specify local address */
+                     &hints,        /* In:  Hints to filter available providers  */
+                     &prov_tagged), /* Out: List of providers that match hints   */
           getinfo);
     MPIU_ERR_CHKANDJUMP4(prov_tagged == NULL, mpi_errno, MPI_ERR_OTHER,
                          "**ofi_getinfo", "**ofi_getinfo %s %d %s %s",
@@ -375,84 +374,15 @@ cvars:
 */
 static inline int dump_and_choose_providers(info_t * prov, info_t ** prov_use)
 {
-    info_t *p = prov;
-    int i = 0;
-    *prov_use = prov;
-    if (MPIR_CVAR_DUMP_PROVIDERS) {
-        fprintf(stdout, "Dumping Providers(first=%p):\n", prov);
-        while (p) {
-            fprintf(stdout, " ********** Provider %d (%p) *********\n", i++, p);
-            fprintf(stdout, "%-18s: %-#20" PRIx64 "\n", "caps", p->caps);
-            fprintf(stdout, "%-18s: %-#20" PRIx64 "\n", "mode", p->mode);
-            fprintf(stdout, "%-18s: %-#20" PRIx32 "\n", "ep_type", p->ep_type);
-            fprintf(stdout, "%-18s: %-#20" PRIx32 "\n", "addr_format", p->addr_format);
-            fprintf(stdout, "%-18s: %-20lu\n", "src_addrlen", p->src_addrlen);
-            fprintf(stdout, "%-18s: %-20lu\n", "dest_addrlen", p->dest_addrlen);
-            fprintf(stdout, "%-18s: %-20p\n", "src_addr", p->src_addr);
-            fprintf(stdout, "%-18s: %-20p\n", "dest_addr", p->dest_addr);
-            fprintf(stdout, "%-18s: %-20p\n", "connreq", p->connreq);
-            fprintf(stdout, "%-18s: %-20p\n", "tx_attr", p->tx_attr);
-            fprintf(stdout, "       %-18s: %-#20" PRIx64 "\n", ".caps", p->tx_attr->caps);
-            fprintf(stdout, "       %-18s: %-#20" PRIx64 "\n", ".mode", p->tx_attr->mode);
-            fprintf(stdout, "       %-18s: %-#20" PRIx64 "\n", ".op_flags", p->tx_attr->op_flags);
-            fprintf(stdout, "       %-18s: %-#20" PRIx64 "\n", ".msg_order", p->tx_attr->msg_order);
-            fprintf(stdout, "       %-18s: %-20lu\n", ".inject_size", p->tx_attr->inject_size);
-            fprintf(stdout, "       %-18s: %-20lu\n", ".size", p->tx_attr->size);
-            fprintf(stdout, "       %-18s: %-20lu\n", ".iov_limit", p->tx_attr->iov_limit);
-            fprintf(stdout, "%-18s: %-20p\n", "rx_attr", p->rx_attr);
-            fprintf(stdout, "       %-18s: %-#20" PRIx64 "\n", ".caps", p->rx_attr->caps);
-            fprintf(stdout, "       %-18s: %-#20" PRIx64 "\n", ".mode", p->rx_attr->mode);
-            fprintf(stdout, "       %-18s: %-#20" PRIx64 "\n", ".op_flags", p->rx_attr->op_flags);
-            fprintf(stdout, "       %-18s: %-#20" PRIx64 "\n", ".msg_order", p->rx_attr->msg_order);
-            fprintf(stdout, "       %-18s: %-20lu\n", ".total_buffered_recv",
-                    p->rx_attr->total_buffered_recv);
-            fprintf(stdout, "       %-18s: %-20lu\n", ".size", p->rx_attr->size);
-            fprintf(stdout, "       %-18s: %-20lu\n", ".iov_limit", p->rx_attr->iov_limit);
-            fprintf(stdout, "%-18s: %-20p\n", "ep_attr", p->ep_attr);
-            fprintf(stdout, "       %-18s: %-#20" PRIx32 "\n", ".protocol", p->ep_attr->protocol);
-            fprintf(stdout, "       %-18s: %-20lu\n", ".max_msg_size", p->ep_attr->max_msg_size);
-            fprintf(stdout, "       %-18s: %-20lu\n", ".inject_size", p->ep_attr->inject_size);
-            fprintf(stdout, "       %-18s: %-20lu\n", ".total_buffered_recv",
-                    p->ep_attr->total_buffered_recv);
-            fprintf(stdout, "       %-18s: %-20lu\n", ".max_order_raw_size",
-                    p->ep_attr->max_order_raw_size);
-            fprintf(stdout, "       %-18s: %-20lu\n", ".max_order_war_size",
-                    p->ep_attr->max_order_war_size);
-            fprintf(stdout, "       %-18s: %-20lu\n", ".max_order_waw_size",
-                    p->ep_attr->max_order_waw_size);
-            fprintf(stdout, "       %-18s: %-20lu\n", ".mem_tag_format",
-                    p->ep_attr->mem_tag_format);
-            fprintf(stdout, "       %-18s: %-20lu\n", ".msg_order", p->ep_attr->msg_order);
-            fprintf(stdout, "       %-18s: %-20lu\n", ".tx_ctx_cnt", p->ep_attr->tx_ctx_cnt);
-            fprintf(stdout, "       %-18s: %-20lu\n", ".rx_ctx_cnt", p->ep_attr->rx_ctx_cnt);
-            fprintf(stdout, "%-18s: %-20p\n", "domain_attr", p->domain_attr);
-            fprintf(stdout, "           %-18s: %-20s\n", ".name", p->domain_attr->name);
-            fprintf(stdout, "           %-18s: %-#20" PRIx32 "\n", ".threading",
-                    p->domain_attr->threading);
-            fprintf(stdout, "           %-18s: %-#20" PRIx32 "\n", ".control_progress",
-                    p->domain_attr->control_progress);
-            fprintf(stdout, "           %-18s: %-#20" PRIx32 "\n", ".data_progress",
-                    p->domain_attr->data_progress);
-            fprintf(stdout, "           %-18s: %-20lu\n", ".mr_key_size",
-                    p->domain_attr->mr_key_size);
-            fprintf(stdout, "           %-18s: %-20lu\n", ".cq_data_size",
-                    p->domain_attr->cq_data_size);
-            fprintf(stdout, "           %-18s: %-20lu\n", ".ep_cnt", p->domain_attr->ep_cnt);
-            fprintf(stdout, "           %-18s: %-20lu\n", ".tx_ctx_cnt",
-                    p->domain_attr->tx_ctx_cnt);
-            fprintf(stdout, "           %-18s: %-20lu\n", ".rx_ctx_cnt",
-                    p->domain_attr->rx_ctx_cnt);
-            fprintf(stdout, "           %-18s: %-20lu\n", ".max_ep_tx_ctx",
-                    p->domain_attr->max_ep_tx_ctx);
-            fprintf(stdout, "           %-18s: %-20lu\n", ".max_ep_rx_ctx",
-                    p->domain_attr->max_ep_rx_ctx);
-            fprintf(stdout, "%-18s: %-20p\n", "fabric_attr", p->fabric_attr);
-            fprintf(stdout, "           %-18s: %-20s\n", ".name", p->fabric_attr->name);
-            fprintf(stdout, "           %-18s: %-20s\n", ".prov_name", p->fabric_attr->prov_name);
-            fprintf(stdout, "           %-18s: %-#20" PRIx32 "\n", ".prov_version",
-                    p->fabric_attr->prov_version);
-            p = p->next;
-        }
+  info_t *p = prov;
+  int     i = 0;
+  *prov_use = prov;
+  if (MPIR_CVAR_DUMP_PROVIDERS) {
+    fprintf(stdout, "Dumping Providers(first=%p):\n", prov);
+    while(p) {
+      fprintf(stdout, "%s", fi_tostr(p, FI_TYPE_INFO));
+      p=p->next;
     }
-    return i;
+  }
+  return i;
 }
