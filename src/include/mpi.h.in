@@ -866,12 +866,13 @@ typedef int (MPIX_Grequest_wait_function)(int, void **, double, MPI_Status *);
 #define MPI_T_ERR_PVAR_NO_WRITE     71  /* Pvar can't be written or reset */
 #define MPI_T_ERR_PVAR_NO_ATOMIC    72  /* Pvar can't be R/W atomically */
 #define MPI_T_ERR_INVALID_NAME      73  /* Name doesn't match */
+#define MPI_T_ERR_INVALID           74  /* Generic error code for MPI_T added in MPI-3.1 */
 
 
 #define MPI_ERR_LASTCODE    0x3fffffff  /* Last valid error code for a 
 					   predefined error class */
 /* WARNING: this is also defined in mpishared.h.  Update both locations */
-#define MPICH_ERR_LAST_CLASS 73     /* It is also helpful to know the
+#define MPICH_ERR_LAST_CLASS 74     /* It is also helpful to know the
 				       last valid class */
 
 #define MPICH_ERR_FIRST_MPIX 100 /* Define a gap here because sock is
