@@ -52,11 +52,11 @@ int MPID_nem_ofi_init(MPIDI_PG_t * pg_p, int pg_rank, char **bc_val_p, int *val_
     /*           endpoint, so the netmod requires dynamic memory regions        */
     /* ------------------------------------------------------------------------ */
     memset(&hints, 0, sizeof(hints));
-    hints.mode    = FI_CONTEXT;
-    hints.ep_type = FI_EP_RDM;     /* Reliable datagram         */
-    hints.caps    = FI_TAGGED;     /* Tag matching interface    */
-    hints.caps   |= FI_CANCEL;     /* Support cancel            */
-    hints.caps   |= FI_DYNAMIC_MR; /* Global dynamic mem region */
+    hints.mode         = FI_CONTEXT;
+    hints.caps         = FI_TAGGED;     /* Tag matching interface    */
+    hints.caps        |= FI_CANCEL;     /* Support cancel            */
+    hints.caps        |= FI_DYNAMIC_MR; /* Global dynamic mem region */
+
 
     /* ------------------------------------------------------------------------ */
     /* FI_VERSION provides binary backward and forward compatibility support    */
@@ -73,14 +73,20 @@ int MPID_nem_ofi_init(MPIDI_PG_t * pg_p, int pg_rank, char **bc_val_p, int *val_
     domain_attr_t domain_attr;
     memset(&domain_attr, 0, sizeof(domain_attr));
 
+    ep_attr_t ep_attr;
+    memset(&ep_attr, 0, sizeof(ep_attr));
+
     tx_attr_t tx_attr;
     memset(&tx_attr, 0, sizeof(tx_attr));
 
-    domain_attr.threading = FI_THREAD_ENDPOINT;
-    domain_attr.control_progress = FI_PROGRESS_AUTO;
-    domain_attr.data_progress = FI_PROGRESS_AUTO;
-    hints.domain_attr = &domain_attr;
-    hints.tx_attr = &tx_attr;
+    hints.ep_attr       = &ep_attr;
+    hints.ep_attr->type =  FI_EP_RDM;
+
+    domain_attr.threading        =  FI_THREAD_ENDPOINT;
+    domain_attr.control_progress =  FI_PROGRESS_AUTO;
+    domain_attr.data_progress    =  FI_PROGRESS_AUTO;
+    hints.domain_attr            = &domain_attr;
+    hints.tx_attr                = &tx_attr;
 
     FI_RC(fi_getinfo(fi_version,    /* Interface version requested               */
                      NULL,          /* Optional name or fabric to resolve        */
@@ -285,7 +291,7 @@ int MPID_nem_ofi_init(MPIDI_PG_t * pg_p, int pg_rank, char **bc_val_p, int *val_
 int MPID_nem_ofi_finalize(void)
 {
     int mpi_errno = MPI_SUCCESS;
-    int ret = 0;
+    mpir_errflag_t ret = MPIR_ERR_NONE;
     BEGIN_FUNC(FCNAME);
 
     /* --------------------------------------------- */

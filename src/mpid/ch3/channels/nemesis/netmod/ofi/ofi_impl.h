@@ -29,6 +29,7 @@ typedef struct fi_info info_t;
 typedef struct fi_cq_attr cq_attr_t;
 typedef struct fi_av_attr av_attr_t;
 typedef struct fi_domain_attr domain_attr_t;
+typedef struct fi_ep_attr ep_attr_t;
 typedef struct fi_tx_attr tx_attr_t;
 typedef struct fi_cq_tagged_entry cq_tagged_entry_t;
 typedef struct fi_cq_err_entry cq_err_entry_t;
