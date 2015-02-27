@@ -33,7 +33,10 @@ mpi_sources +=                \
         src/mpi_t/pvar_session_free.c   \
         src/mpi_t/pvar_start.c          \
         src/mpi_t/pvar_stop.c           \
-        src/mpi_t/pvar_write.c
+        src/mpi_t/pvar_write.c          \
+        src/mpi_t/cat_get_index.c       \
+        src/mpi_t/cvar_get_index.c      \
+        src/mpi_t/pvar_get_index.c
 
 
 mpi_core_sources += src/mpi_t/mpit.c
