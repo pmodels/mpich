@@ -79,7 +79,7 @@ int main(int argc, char **argv)
 
     for (i = 0; i < SIZE; i++)
         buf[i] = i + mynod * SIZE;
-    MPIX_File_iwrite_all(fh, buf, 1, newtype, &request);
+    MPI_File_iwrite_all(fh, buf, 1, newtype, &request);
 
     MPI_Barrier(MPI_COMM_WORLD);
     MPI_Wait(&request, &status);
@@ -87,7 +87,7 @@ int main(int argc, char **argv)
     for (i = 0; i < SIZE; i++)
         buf[i] = -1;
 
-    MPIX_File_iread_at_all(fh, 0, buf, 1, newtype, &request);
+    MPI_File_iread_at_all(fh, 0, buf, 1, newtype, &request);
     MPI_Wait(&request, &status);
 
     for (i = 0; i < SIZE; i++) {
@@ -134,7 +134,7 @@ int main(int argc, char **argv)
                   MPI_INFO_NULL, &fh);
 
     for (i = 0; i < SIZE; i++) buf[i] = i + mynod * SIZE;
-    MPIX_File_iwrite_at_all(fh, mynod * (SIZE / 2) * sizeof(int), buf, 1,
+    MPI_File_iwrite_at_all(fh, mynod * (SIZE / 2) * sizeof(int), buf, 1,
                            newtype, &request);
 
     MPI_Barrier(MPI_COMM_WORLD);
@@ -142,7 +142,7 @@ int main(int argc, char **argv)
 
     for (i = 0; i < SIZE; i++) buf[i] = -1;
 
-    MPIX_File_iread_at_all(fh, mynod * (SIZE / 2) * sizeof(int), buf, 1,
+    MPI_File_iread_at_all(fh, mynod * (SIZE / 2) * sizeof(int), buf, 1,
                            newtype, &request);
     MPI_Wait(&request, &status);
 
@@ -192,7 +192,7 @@ int main(int argc, char **argv)
     MPI_File_set_view(fh, 0, MPI_INT, newtype, "native", MPI_INFO_NULL);
 
     for (i = 0; i < SIZE; i++) buf[i] = i + mynod * SIZE;
-    MPIX_File_iwrite_all(fh, buf, SIZE, MPI_INT, &request);
+    MPI_File_iwrite_all(fh, buf, SIZE, MPI_INT, &request);
 
     MPI_Barrier(MPI_COMM_WORLD);
     MPI_Wait(&request, &status);
@@ -200,7 +200,7 @@ int main(int argc, char **argv)
     for (i = 0; i < SIZE; i++)
         buf[i] = -1;
 
-    MPIX_File_iread_at_all(fh, 0, buf, SIZE, MPI_INT, &request);
+    MPI_File_iread_at_all(fh, 0, buf, SIZE, MPI_INT, &request);
     MPI_Wait(&request, &status);
 
     for (i = 0; i < SIZE; i++) {

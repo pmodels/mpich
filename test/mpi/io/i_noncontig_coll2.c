@@ -402,9 +402,9 @@ int test_file(char *filename, int mynod, int nprocs, char *cb_hosts,
     MPI_File_set_view(fh, 0, MPI_INT, newtype, "native", info);
 
     for (i = 0; i < SIZE; i++) buf[i] = SEEDER(mynod, i, SIZE);
-    errcode = MPIX_File_iwrite_all(fh, buf, 1, newtype, &request);
+    errcode = MPI_File_iwrite_all(fh, buf, 1, newtype, &request);
     if (errcode != MPI_SUCCESS) {
-        handle_error(errcode, "nc mem - nc file: MPIX_File_iwrite_all");
+        handle_error(errcode, "nc mem - nc file: MPI_File_iwrite_all");
     }
 
     MPI_Barrier(MPI_COMM_WORLD);
@@ -412,9 +412,9 @@ int test_file(char *filename, int mynod, int nprocs, char *cb_hosts,
 
     for (i = 0; i < SIZE; i++) buf[i] = -1;
 
-    errcode = MPIX_File_iread_at_all(fh, 0, buf, 1, newtype, &request);
+    errcode = MPI_File_iread_at_all(fh, 0, buf, 1, newtype, &request);
     if (errcode != MPI_SUCCESS) {
-        handle_error(errcode, "nc mem - nc file: MPIX_File_iread_at_all");
+        handle_error(errcode, "nc mem - nc file: MPI_File_iread_at_all");
     }
     MPI_Wait(&request, &status);
 
@@ -467,10 +467,10 @@ int test_file(char *filename, int mynod, int nprocs, char *cb_hosts,
                   info, &fh);
 
     for (i = 0; i < SIZE; i++) buf[i] = SEEDER(mynod, i, SIZE);
-    errcode = MPIX_File_iwrite_at_all(fh, mynod * (SIZE / nprocs) * sizeof(int),
+    errcode = MPI_File_iwrite_at_all(fh, mynod * (SIZE / nprocs) * sizeof(int),
                                      buf, 1, newtype, &request);
     if (errcode != MPI_SUCCESS)
-        handle_error(errcode, "nc mem - c file: MPIX_File_iwrite_at_all");
+        handle_error(errcode, "nc mem - c file: MPI_File_iwrite_at_all");
 
     MPI_Barrier(MPI_COMM_WORLD);
     MPI_Wait(&request, &status);
@@ -478,10 +478,10 @@ int test_file(char *filename, int mynod, int nprocs, char *cb_hosts,
     for (i = 0; i < SIZE; i++)
         buf[i] = -1;
 
-    errcode = MPIX_File_iread_at_all(fh, mynod * (SIZE / nprocs) * sizeof(int),
+    errcode = MPI_File_iread_at_all(fh, mynod * (SIZE / nprocs) * sizeof(int),
                                     buf, 1, newtype, &request);
     if (errcode != MPI_SUCCESS)
-        handle_error(errcode, "nc mem - c file: MPIX_File_iread_at_all");
+        handle_error(errcode, "nc mem - c file: MPI_File_iread_at_all");
     MPI_Wait(&request, &status);
 
     /* just like as above */
@@ -527,18 +527,18 @@ int test_file(char *filename, int mynod, int nprocs, char *cb_hosts,
 
     for (i = 0; i < SIZE; i++)
         buf[i] = SEEDER(mynod, i, SIZE);
-    errcode = MPIX_File_iwrite_all(fh, buf, SIZE, MPI_INT, &request);
+    errcode = MPI_File_iwrite_all(fh, buf, SIZE, MPI_INT, &request);
     if (errcode != MPI_SUCCESS)
-        handle_error(errcode, "c mem - nc file: MPIX_File_iwrite_all");
+        handle_error(errcode, "c mem - nc file: MPI_File_iwrite_all");
 
     MPI_Barrier(MPI_COMM_WORLD);
     MPI_Wait(&request, &status);
 
     for (i = 0; i < SIZE; i++) buf[i] = -1;
 
-    errcode = MPIX_File_iread_at_all(fh, 0, buf, SIZE, MPI_INT, &request);
+    errcode = MPI_File_iread_at_all(fh, 0, buf, SIZE, MPI_INT, &request);
     if (errcode != MPI_SUCCESS)
-        handle_error(errcode, "c mem - nc file: MPIX_File_iread_at_all");
+        handle_error(errcode, "c mem - nc file: MPI_File_iread_at_all");
     MPI_Wait(&request, &status);
 
     /* same crazy checking */

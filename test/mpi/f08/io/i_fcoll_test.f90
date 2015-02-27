@@ -108,7 +108,7 @@ call MPI_FILE_OPEN(MPI_COMM_WORLD, str, MPI_MODE_CREATE+MPI_MODE_RDWR, MPI_INFO_
 
 disp = 0
 call MPI_FILE_SET_VIEW(fh, disp, MPI_INTEGER, newtype, "native", MPI_INFO_NULL, ierr)
-call MPIX_FILE_IWRITE_ALL(fh, writebuf, bufcount, MPI_INTEGER, request, ierr)
+call MPI_FILE_IWRITE_ALL(fh, writebuf, bufcount, MPI_INTEGER, request, ierr)
 call MPI_WAIT(request, status, ierr)
 call MPI_FILE_CLOSE(fh, ierr)
 
@@ -117,7 +117,7 @@ call MPI_FILE_CLOSE(fh, ierr)
 call MPI_FILE_OPEN(MPI_COMM_WORLD, str, MPI_MODE_CREATE+MPI_MODE_RDWR, MPI_INFO_NULL, fh, ierr)
 
 call MPI_FILE_SET_VIEW(fh, disp, MPI_INTEGER, newtype, "native", MPI_INFO_NULL, ierr)
-call MPIX_FILE_IREAD_ALL(fh, readbuf, bufcount, MPI_INTEGER, request, ierr)
+call MPI_FILE_IREAD_ALL(fh, readbuf, bufcount, MPI_INTEGER, request, ierr)
 call MPI_WAIT(request, status, ierr)
 call MPI_FILE_CLOSE(fh, ierr)
 

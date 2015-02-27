@@ -112,7 +112,7 @@ static void write_file(char *target, int rank, MPI_Info *info)
         buffer[i] = (char *)malloc(OBJ_SIZE);
         fill_buffer(buffer[i], OBJ_SIZE, rank, offset);
         if (debug) printf("%s", buffer[i]);
-        if ((mpi_ret = MPIX_File_iwrite_at_all(wfh, offset, buffer[i], OBJ_SIZE,
+        if ((mpi_ret = MPI_File_iwrite_at_all(wfh, offset, buffer[i], OBJ_SIZE,
                                               MPI_CHAR, &request[i]))
             != MPI_SUCCESS) {
             fatal_error(mpi_ret, NULL, "write");
@@ -176,7 +176,7 @@ static void read_file(char *target, int rank, MPI_Info *info, int *corrupt_block
         verify_buf[i] = (char *)malloc(OBJ_SIZE);
         fill_buffer(verify_buf[i], OBJ_SIZE, rank, offset[i]);
         if (debug) printf("Expecting %s", verify_buf[i]);
-        if ((mpi_ret = MPIX_File_iread_at_all(rfh, offset[i], buffer[i],
+        if ((mpi_ret = MPI_File_iread_at_all(rfh, offset[i], buffer[i],
                                              OBJ_SIZE, MPI_CHAR, &request[i]))
             != MPI_SUCCESS) {
             fatal_error(mpi_ret, NULL, "read");

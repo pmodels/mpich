@@ -71,13 +71,13 @@ int main(int argc, char **argv)
                             MPI_INFO_NULL));
 
     /* write everything */
-    CHECK(MPIX_File_iwrite_at_all(fh, 0, data, 1, mem_type, &request));
+    CHECK(MPI_File_iwrite_at_all(fh, 0, data, 1, mem_type, &request));
     MPI_Wait(&request, &status);
 
     /* verify */
     CHECK(MPI_File_set_view(fh, 0, MPI_BYTE, MPI_BYTE, "native",
           MPI_INFO_NULL));
-    CHECK(MPIX_File_iread_at_all(fh, 0,
+    CHECK(MPI_File_iread_at_all(fh, 0,
           verify, (HEADER + PAD + BLK_COUNT * DATA_SIZE) / sizeof(int),
           MPI_INT, &request));
     MPI_Wait(&request, &status);
