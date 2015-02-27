@@ -15,4 +15,5 @@ EXTRA_DIST = testlist
 noinst_PROGRAMS =     \
     mpi_t_str   \
     mpit_vars   \
-    cvarwrite
+    cvarwrite   \
+    getindex
