@@ -3,7 +3,7 @@
 !   (C) 2014 by Argonne National Laboratory.
 !   See COPYRIGHT in top-level directory.
 !
-function MPIX_Aint_add_f08(base, disp) result(res)
+function MPI_Aint_add_f08(base, disp) result(res)
     use :: mpi_f08_compile_constants, only : MPI_ADDRESS_KIND
     use :: mpi_c_interface_nobuf, only : MPIR_Aint_add_c
     implicit none
@@ -11,4 +11,4 @@ function MPIX_Aint_add_f08(base, disp) result(res)
     integer(MPI_ADDRESS_KIND) :: res
 
     res = MPIR_Aint_add_c(base, disp)
-end function MPIX_Aint_add_f08
+end function MPI_Aint_add_f08
