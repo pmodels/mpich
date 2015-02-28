@@ -66,6 +66,7 @@ extern int 	gpfsmpio_tuneblocking;
 extern long bglocklessmpio_f_type;
 extern int      gpfsmpio_pthreadio;
 extern int      gpfsmpio_p2pcontig;
+extern int      gpfsmpio_aggmethod;
 extern int  gpfsmpio_balancecontig;
 extern int      gpfsmpio_devnullio;
 extern int      gpfsmpio_bridgeringagg;

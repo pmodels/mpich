@@ -37,6 +37,7 @@ long    bglocklessmpio_f_type;
 int     gpfsmpio_bg_nagg_pset;
 int     gpfsmpio_pthreadio;
 int     gpfsmpio_p2pcontig;
+int     gpfsmpio_aggmethod;
 int	gpfsmpio_balancecontig;
 int     gpfsmpio_devnullio;
 int     gpfsmpio_bridgeringagg;
@@ -105,6 +106,22 @@ double	gpfsmpio_prof_cr    [GPFSMPIO_CIO_LAST+1];
  * 3.) There are no gaps between the offsets.
  * 4.) No single rank has a data size which spans multiple file domains.
  *
+ * - GPFSMPIO_AGGMETHOD -  Replaces the two-phase collective IO aggregation with a one-
+ *   sided algorithm, significantly reducing communication and memory overhead.  Fully
+ *   supports all datasets and datatypes, the only caveat is that any holes in the data
+ *   when writing to a pre-existing file are ignored -- there is no read-modify-write
+ *   support to maintain the correctness of regions of pre-existing data so every byte
+ *   must be explicitly written to maintain correctness.  Users must beware of middle-ware
+ *   libraries like PNETCDF which may count on read-modify-write functionality for certain
+ *   features (like fill values).  Possible values:
+ *   - 0 - Normal two-phase collective IO is used.
+ *   - 1 - A separate one-sided MPI_Put or MPI_Get is used for each contigous chunk of data
+ *         for a compute to write to or read from the collective buffer on the aggregator.
+ *   - 2 - An MPI derived datatype is created using all the contigous chunks and just one
+ *         call to MPI_Put or MPI_Get is done with the derived datatype.  On Blue Gene /Q
+ *         optimal performance for this is achieved when paired with PAMID_TYPED_ONESIDED=1.
+ *   - Default is 0
+ *
  * - GPFSMPIO_BALANCECONTIG -  Relevant only to BGQ.  File domain blocks are assigned
  *   to aggregators in a breadth-first fashion relative to the ions - additionally,
  *   file domains on the aggregators sharing the same bridgeset and ion have contiguous
@@ -164,6 +181,10 @@ void ad_gpfs_get_env_vars() {
     gpfsmpio_p2pcontig = 0;
     x = getenv( "GPFSMPIO_P2PCONTIG" );
     if (x) gpfsmpio_p2pcontig = atoi(x);
+
+    gpfsmpio_aggmethod = 0;
+    x = getenv( "GPFSMPIO_AGGMETHOD" );
+    if (x) gpfsmpio_aggmethod = atoi(x);
 
     gpfsmpio_balancecontig = 0;
     x = getenv( "GPFSMPIO_BALANCECONTIG" );

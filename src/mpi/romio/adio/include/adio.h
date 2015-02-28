@@ -236,6 +236,7 @@ typedef struct ADIOI_FileD {
     MPI_Datatype *file_realm_types;  /* file realm datatypes */
     int my_cb_nodes_index; /* my index into cb_config_list. -1 if N/A */
     char *io_buf;          /* two-phase buffer allocated out of i/o path */
+    MPI_Win io_buf_window; /* Window over the io_buf to support one-sided aggregation */
     /* External32 */
     int is_external32;      /* bool:  0 means native view */
 
