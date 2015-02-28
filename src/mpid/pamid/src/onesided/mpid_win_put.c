@@ -61,6 +61,39 @@ MPIDI_Put(pami_context_t   context,
 static inline int
 MPIDI_Put_use_pami_rput(pami_context_t context, MPIDI_Win_request * req)
 {
+  int use_typed_rdma = 0;
+  if (!req->target.dt.contig || !req->origin.dt.contig) {
+    use_typed_rdma = 0;
+    if (MPIDI_Process.typed_onesided == 1)
+      use_typed_rdma = 1;
+  }
+
+  if (use_typed_rdma) {
+    pami_result_t rc;
+    pami_rput_typed_t params;
+    /* params need to zero out to avoid passing garbage to PAMI */
+    params=zero_rput_typed_parms;
+
+    params.rma.dest=req->dest;
+    params.rma.hints.buffer_registered = PAMI_HINT_ENABLE;
+    params.rma.hints.use_rdma          = PAMI_HINT_ENABLE;
+    params.rma.bytes   = req->target.dt.size;
+    params.rma.cookie  = req;
+    params.rma.done_fn = NULL;
+    params.rdma.local.mr=&req->origin.memregion;
+    params.rdma.remote.mr=&req->win->mpid.info[req->target.rank].memregion;
+    params.rdma.remote.offset= req->offset;
+    params.rdma.local.offset  = req->state.local_offset;
+    params.put.rdone_fn= MPIDI_Win_DoneCB;
+
+    params.type.local = *(pami_type_t *)(req->origin.dt.pointer->device_datatype);
+    params.type.remote = *(pami_type_t *)(req->target.dt.pointer->device_datatype);
+
+    rc = PAMI_Rput_typed(context, &params);
+    MPID_assert(rc == PAMI_SUCCESS);
+
+  }
+  else {
   pami_result_t rc;
   pami_rput_simple_t params;
   /* params need to zero out to avoid passing garbage to PAMI */
@@ -112,6 +145,7 @@ MPIDI_Put_use_pami_rput(pami_context_t context, MPIDI_Win_request * req)
           req->state.local_offset += params.rma.bytes;
           ++req->state.index;
     }
+  }
   }
   return PAMI_SUCCESS;
 }
@@ -296,10 +330,17 @@ MPID_Put(const void   *origin_addr,
   req->target.rank = target_rank;
 
 
-  if (req->origin.dt.contig)
+  /* Only pack the origin data if the origin is non-contiguous and we are using the simple PAMI_Rput.
+   * If we are using the typed PAMI_Rput_typed use the origin address as-is, if we are using the simple
+   * PAMI_Rput with contiguous data use the origin address with the lower-bound adjustment.
+   */
+  if (req->origin.dt.contig || (!req->origin.dt.contig && (MPIDI_Process.typed_onesided == 1)))
     {
       req->buffer_free = 0;
-      req->buffer      = (void *) ((uintptr_t) origin_addr + req->origin.dt.true_lb);
+      if ((req->origin.dt.contig && req->target.dt.contig && (MPIDI_Process.typed_onesided == 1)) || (!(MPIDI_Process.typed_onesided == 1)))
+        req->buffer      = (void *) ((uintptr_t) origin_addr + req->origin.dt.true_lb);
+      else
+        req->buffer      = (void *) ((uintptr_t) origin_addr);
     }
   else
     {
@@ -357,7 +398,13 @@ MPID_Put(const void   *origin_addr,
 
 
   MPIDI_Win_datatype_map(&req->target.dt);
-  win->mpid.sync.total += req->target.dt.num_contig;
+  if ((!req->target.dt.contig || !req->origin.dt.contig) && (MPIDI_Process.typed_onesided == 1))
+    /* If the datatype is non-contiguous and the PAMID typed_onesided optimization
+     * is enabled then we will be using the typed interface and will only make 1 call.
+     */
+    win->mpid.sync.total = 1;
+  else
+    win->mpid.sync.total += req->target.dt.num_contig;
 
   /* The pamid one-sided design requires context post in order to handle the
    * case where the number of pending rma operation exceeds the

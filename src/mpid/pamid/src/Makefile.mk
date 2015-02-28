@@ -59,7 +59,8 @@ mpi_core_sources +=               \
     src/mpid/pamid/src/mpid_imrecv.c            \
     src/mpid/pamid/src/mpid_improbe.c           \
     src/mpid/pamid/src/mpid_aint.c              \
-    src/mpid/pamid/src/mpidi_nbc_sched.c
+    src/mpid/pamid/src/mpidi_nbc_sched.c        \
+    src/mpid/pamid/src/mpidi_pami_datatype.c
 
 if QUEUE_BINARY_SEARCH_SUPPORT
 mpi_core_sources +=                             \

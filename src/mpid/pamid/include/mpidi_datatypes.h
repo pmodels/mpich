@@ -148,6 +148,7 @@ typedef struct
 
   unsigned mpir_nbc;         /**< Enable MPIR_* non-blocking collectives implementations. */
   int  numTasks;             /* total number of tasks on a job                            */
+  unsigned typed_onesided;       /**< Enable typed PAMI calls for derived types within MPID_Put and MPID_Get. */
 #ifdef DYNAMIC_TASKING
   struct MPIDI_PG_t * my_pg; /**< Process group I belong to */
   int                 my_pg_rank; /**< Rank in process group */

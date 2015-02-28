@@ -82,7 +82,6 @@ int MPID_Type_dup(MPI_Datatype oldtype,
 	new_dtp->hetero_dloop       = NULL;
 	new_dtp->hetero_dloop_size  = old_dtp->hetero_dloop_size;
 	new_dtp->hetero_dloop_depth = old_dtp->hetero_dloop_depth;
-
 	*newtype = new_dtp->handle;
 
 	if (old_dtp->is_committed) {
@@ -98,7 +97,11 @@ int MPID_Type_dup(MPI_Datatype oldtype,
 				  old_dtp->hetero_dloop_size,
 				  &new_dtp->hetero_dloop);
 	    }
-	}
+
+#ifdef MPID_Dev_datatype_commit_hook
+            MPID_Dev_datatype_dup_hook(new_dtp);
+#endif /* MPID_Dev_datatype_commit_hook */
+      }
     }
 
     MPIU_DBG_MSG_D(DATATYPE,VERBOSE, "dup type %x created.", *newtype);

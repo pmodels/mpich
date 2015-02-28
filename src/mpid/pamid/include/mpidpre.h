@@ -70,5 +70,13 @@
 #define MPID_MAX_SMP_BCAST_MSG_SIZE (16384)
 #define MPID_MAX_SMP_REDUCE_MSG_SIZE (16384)
 #define MPID_MAX_SMP_ALLREDUCE_MSG_SIZE (16384)
+#ifdef MPID_DEV_DATATYPE_DECL
+#error 'Conflicting definitions of MPID_DEV_DATATYPE_DECL'
+#else
+#define MPID_DEV_DATATYPE_DECL void *device_datatype;
+#endif
+#define MPID_Dev_datatype_commit_hook(ptr) MPIDI_PAMI_datatype_commit_hook(ptr)
+#define MPID_Dev_datatype_destroy_hook(ptr) MPIDI_PAMI_datatype_destroy_hook(ptr)
+#define MPID_Dev_datatype_dup_hook(ptr) MPIDI_PAMI_datatype_dup_hook(ptr)
 
 #endif

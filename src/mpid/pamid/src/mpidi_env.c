@@ -938,6 +938,11 @@ MPIDI_Env_setup(int rank, int requested)
     ENV_Unsigned(names, &MPIDI_Process.mpir_nbc, 1, &found_deprecated_env_var, rank);
   }
 
+  /* Enable typed PAMI calls for derived types within MPID_Put and MPID_Get. */
+  {
+    char* names[] = {"PAMID_TYPED_ONESIDED", NULL};
+    ENV_Unsigned(names, &MPIDI_Process.typed_onesided, 1, &found_deprecated_env_var, rank);
+  }
   /* Check for deprecated collectives environment variables. These variables are
    * used in src/mpid/pamid/src/comm/mpid_selectcolls.c */
   {

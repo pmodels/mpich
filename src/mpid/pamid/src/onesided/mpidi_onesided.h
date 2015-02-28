@@ -29,6 +29,8 @@ pami_rget_simple_t zero_rget_parms;
 pami_get_simple_t zero_get_parms;
 pami_rput_simple_t zero_rput_parms;
 pami_put_simple_t zero_put_parms;
+pami_rput_typed_t zero_rput_typed_parms;
+pami_rget_typed_t zero_rget_typed_parms;
 pami_send_t   zero_send_parms;
 pami_send_immediate_t   zero_send_immediate_parms;
 pami_recv_t   zero_recv_parms;
