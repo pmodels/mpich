@@ -126,6 +126,11 @@ MPI_File ADIO_Open(MPI_Comm orig_comm,
      * (e.g. Blue Gene) more efficent */
     fd->io_buf = ADIOI_Malloc(fd->hints->cb_buffer_size);
 
+    /* If one-sided aggregation is chosen then create the window over the io_buf.
+     */
+    if ((gpfsmpio_aggmethod == 1) || (gpfsmpio_aggmethod == 2)) {
+      MPI_Win_create(fd->io_buf,fd->hints->cb_buffer_size,1,MPI_INFO_NULL,fd->comm, &fd->io_buf_window);
+    }
      /* deferred open: 
      * we can only do this optimization if 'fd->hints->deferred_open' is set
      * (which means the user hinted 'no_indep_rw' and collective buffering).

@@ -263,6 +263,20 @@ void ADIOI_GPFS_WriteStridedColl(ADIO_File fd, const void *buf, int count,
 
     GPFSMPIO_T_CIO_SET_GET( w, 1, 1, GPFSMPIO_CIO_T_MYREQ, GPFSMPIO_CIO_T_FD_PART );
 
+    if ((gpfsmpio_aggmethod == 1) || (gpfsmpio_aggmethod == 2)) {
+    /* If the user has specified to use a one-sided aggregation method then do that at
+     * this point instead of the two-phase I/O.
+     */
+      ADIOI_OneSidedWriteAggregation(fd, offset_list, len_list, contig_access_count, buf, datatype, error_code, st_offsets, end_offsets, fd_start, fd_end);
+      GPFSMPIO_T_CIO_REPORT( 1, fd, myrank, nprocs)
+      ADIOI_Free(offset_list);
+      ADIOI_Free(len_list);
+      ADIOI_Free(st_offsets);
+      ADIOI_Free(end_offsets);
+      ADIOI_Free(fd_start);
+      ADIOI_Free(fd_end);
+	  goto fn_exit;
+    }
     if (gpfsmpio_p2pcontig==1) {
 	/* For some simple yet common(?) workloads, full-on two-phase I/O is overkill.  We can establish sub-groups of processes and their aggregator, and then these sub-groups will carry out a simplified two-phase over that sub-group.
 	 *
