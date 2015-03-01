@@ -19,4 +19,4 @@ setviewcurf 4
 c2f2ciof 1
 c2fmultio 1
 i_setviewcurf 4
-iwriteatallf 4
+iwriteatallf 4 xfail=2201
