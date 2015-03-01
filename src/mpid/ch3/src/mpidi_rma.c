@@ -304,7 +304,7 @@ void *MPIDI_Alloc_mem(size_t size, MPID_Info * info_ptr)
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_ALLOC_MEM);
 
-    ap = MPIU_Malloc(size);
+    ap = MPIDI_CH3I_Alloc_mem(size, info_ptr);
 
     MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_ALLOC_MEM);
     return ap;
@@ -322,7 +322,7 @@ int MPIDI_Free_mem(void *ptr)
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_FREE_MEM);
 
-    MPIU_Free(ptr);
+    MPIDI_CH3I_Free_mem(ptr);
 
     MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_FREE_MEM);
     return mpi_errno;

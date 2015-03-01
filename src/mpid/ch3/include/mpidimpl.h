@@ -1226,6 +1226,19 @@ int MPIDI_Win_sync(MPID_Win *win);
 void *MPIDI_Alloc_mem(size_t size, MPID_Info *info_ptr);
 int MPIDI_Free_mem(void *ptr);
 
+#ifdef MPIDI_CH3I_HAS_ALLOC_MEM
+void* MPIDI_CH3I_Alloc_mem(size_t size, MPID_Info *info_ptr);
+/* fallback to MPIU_Malloc if channel does not have its own RMA memory allocator */
+#else
+#define MPIDI_CH3I_Alloc_mem(size, info_ptr)    MPIU_Malloc(size)
+#endif
+
+#ifdef MPIDI_CH3I_HAS_FREE_MEM
+int MPIDI_CH3I_Free_mem(void *ptr);
+#else
+#define MPIDI_CH3I_Free_mem(ptr)    MPIU_Free(ptr);
+#endif
+
 /* Pvars */
 void MPIDI_CH3_RMA_Init_sync_pvars(void);
 void MPIDI_CH3_RMA_Init_pkthandler_pvars(void);
