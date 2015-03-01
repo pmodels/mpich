@@ -8,13 +8,13 @@ recvdead 2 env=MPIR_CVAR_ENABLE_FT=1 mpiexecarg=-disable-auto-cleanup resultTest
 isenddead 2 env=MPIR_CVAR_ENABLE_FT=1 mpiexecarg=-disable-auto-cleanup resultTest=TestStatusNoErrors strict=false timeLimit=10
 irecvdead 2 env=MPIR_CVAR_ENABLE_FT=1 mpiexecarg=-disable-auto-cleanup resultTest=TestStatusNoErrors strict=false timeLimit=10
 barrier 4 env=MPIR_CVAR_ENABLE_FT=1 mpiexecarg=-disable-auto-cleanup resultTest=TestStatusNoErrors strict=false timeLimit=10
-gather 4 env=MPIR_CVAR_ENABLE_FT=1 mpiexecarg=-disable-auto-cleanup resultTest=TestStatusNoErrors strict=false timeLimit=10
+gather 4 env=MPIR_CVAR_ENABLE_FT=1 mpiexecarg=-disable-auto-cleanup resultTest=TestStatusNoErrors strict=false timeLimit=10 xfail=2237
 reduce 4 env=MPIR_CVAR_ENABLE_FT=1 mpiexecarg=-disable-auto-cleanup resultTest=TestStatusNoErrors strict=false timeLimit=10
 bcast 4 env=MPIR_CVAR_ENABLE_FT=1 mpiexecarg=-disable-auto-cleanup resultTest=TestStatusNoErrors strict=false timeLimit=10
 scatter 4 env=MPIR_CVAR_ENABLE_FT=1 mpiexecarg=-disable-auto-cleanup resultTest=TestStatusNoErrors strict=false timeLimit=10
-anysource 3 env=MPIR_CVAR_ENABLE_FT=1 mpiexecarg=-disable-auto-cleanup resultTest=TestStatusNoErrors strict=false timeLimit=10
-revoke_nofail 2 env=MPIR_CVAR_ENABLE_FT=1 strict=false timeLimit=10
-shrink 8 env=MPIR_CVAR_ENABLE_FT=1 mpiexecarg=-disable-auto-cleanup resultTest=TestStatusNoErrors strict=false timeLimit=10
+anysource 3 env=MPIR_CVAR_ENABLE_FT=1 mpiexecarg=-disable-auto-cleanup resultTest=TestStatusNoErrors strict=false timeLimit=10 xfail=2237
+revoke_nofail 2 env=MPIR_CVAR_ENABLE_FT=1 strict=false timeLimit=10 xfail=2237
+shrink 8 env=MPIR_CVAR_ENABLE_FT=1 mpiexecarg=-disable-auto-cleanup resultTest=TestStatusNoErrors strict=false timeLimit=10 xfail=2237
 agree 4 env=MPIR_CVAR_ENABLE_FT=1 mpiexecarg=-disable-auto-cleanup resultTest=TestStatusNoErrors strict=false timeLimit=10
 agree_shrink 4 env=MPIR_CVAR_ENABLE_FT=1 mpiexecarg=-disable-auto-cleanup resultTest=TestStatusNoErrors strict=false timeLimit=10
 revoke_shrink 4 env=MPIR_CVAR_ENABLE_FT=1 mpiexecarg=-disable-auto-cleanup resultTest=TestStatusNoErrors strict=false timeLimit=10 xfail=2198
