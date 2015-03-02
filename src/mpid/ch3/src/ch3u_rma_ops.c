@@ -188,12 +188,12 @@ int MPIDI_CH3I_Put(const void *origin_addr, int origin_count, MPI_Datatype
             MPIDI_Pkt_init(put_pkt, MPIDI_CH3_PKT_PUT);
         }
 
-        put_pkt->addr = (char *) win_ptr->base_addrs[target_rank] +
-            win_ptr->disp_units[target_rank] * target_disp;
+        put_pkt->addr = (char *) win_ptr->basic_info_table[target_rank].base_addr +
+            win_ptr->basic_info_table[target_rank].disp_unit * target_disp;
         put_pkt->count = target_count;
         put_pkt->datatype = target_datatype;
         put_pkt->info.dataloop_size = 0;
-        put_pkt->target_win_handle = win_ptr->all_win_handles[target_rank];
+        put_pkt->target_win_handle = win_ptr->basic_info_table[target_rank].win_handle;
         put_pkt->source_win_handle = win_ptr->handle;
         put_pkt->flags = MPIDI_CH3_PKT_FLAG_NONE;
         if (use_immed_pkt) {
@@ -371,12 +371,12 @@ int MPIDI_CH3I_Get(void *origin_addr, int origin_count, MPI_Datatype
 
         get_pkt = &(new_ptr->pkt.get);
         MPIDI_Pkt_init(get_pkt, MPIDI_CH3_PKT_GET);
-        get_pkt->addr = (char *) win_ptr->base_addrs[target_rank] +
-            win_ptr->disp_units[target_rank] * target_disp;
+        get_pkt->addr = (char *) win_ptr->basic_info_table[target_rank].base_addr +
+            win_ptr->basic_info_table[target_rank].disp_unit * target_disp;
         get_pkt->count = target_count;
         get_pkt->datatype = target_datatype;
         get_pkt->info.dataloop_size = 0;
-        get_pkt->target_win_handle = win_ptr->all_win_handles[target_rank];
+        get_pkt->target_win_handle = win_ptr->basic_info_table[target_rank].win_handle;
         get_pkt->flags = MPIDI_CH3_PKT_FLAG_NONE;
         if (use_immed_resp_pkt)
             get_pkt->flags |= MPIDI_CH3_PKT_FLAG_RMA_IMMED_RESP;
@@ -558,13 +558,13 @@ int MPIDI_CH3I_Accumulate(const void *origin_addr, int origin_count, MPI_Datatyp
             MPIDI_Pkt_init(accum_pkt, MPIDI_CH3_PKT_ACCUMULATE);
         }
 
-        accum_pkt->addr = (char *) win_ptr->base_addrs[target_rank] +
-            win_ptr->disp_units[target_rank] * target_disp;
+        accum_pkt->addr = (char *) win_ptr->basic_info_table[target_rank].base_addr +
+            win_ptr->basic_info_table[target_rank].disp_unit * target_disp;
         accum_pkt->count = target_count;
         accum_pkt->datatype = target_datatype;
         accum_pkt->info.dataloop_size = 0;
         accum_pkt->op = op;
-        accum_pkt->target_win_handle = win_ptr->all_win_handles[target_rank];
+        accum_pkt->target_win_handle = win_ptr->basic_info_table[target_rank].win_handle;
         accum_pkt->source_win_handle = win_ptr->handle;
         accum_pkt->flags = MPIDI_CH3_PKT_FLAG_NONE;
         if (use_immed_pkt) {
@@ -749,12 +749,12 @@ int MPIDI_CH3I_Get_accumulate(const void *origin_addr, int origin_count,
 
             get_pkt = &(new_ptr->pkt.get);
             MPIDI_Pkt_init(get_pkt, MPIDI_CH3_PKT_GET);
-            get_pkt->addr = (char *) win_ptr->base_addrs[target_rank] +
-                win_ptr->disp_units[target_rank] * target_disp;
+            get_pkt->addr = (char *) win_ptr->basic_info_table[target_rank].base_addr +
+                win_ptr->basic_info_table[target_rank].disp_unit * target_disp;
             get_pkt->count = target_count;
             get_pkt->datatype = target_datatype;
             get_pkt->info.dataloop_size = 0;
-            get_pkt->target_win_handle = win_ptr->all_win_handles[target_rank];
+            get_pkt->target_win_handle = win_ptr->basic_info_table[target_rank].win_handle;
             get_pkt->flags = MPIDI_CH3_PKT_FLAG_NONE;
             if (use_immed_resp_pkt == TRUE)
                 get_pkt->flags |= MPIDI_CH3_PKT_FLAG_RMA_IMMED_RESP;
@@ -838,13 +838,13 @@ int MPIDI_CH3I_Get_accumulate(const void *origin_addr, int origin_count,
                 MPIDI_Pkt_init(get_accum_pkt, MPIDI_CH3_PKT_GET_ACCUM);
             }
 
-            get_accum_pkt->addr = (char *) win_ptr->base_addrs[target_rank] +
-                win_ptr->disp_units[target_rank] * target_disp;
+            get_accum_pkt->addr = (char *) win_ptr->basic_info_table[target_rank].base_addr +
+                win_ptr->basic_info_table[target_rank].disp_unit * target_disp;
             get_accum_pkt->count = target_count;
             get_accum_pkt->datatype = target_datatype;
             get_accum_pkt->info.dataloop_size = 0;
             get_accum_pkt->op = op;
-            get_accum_pkt->target_win_handle = win_ptr->all_win_handles[target_rank];
+            get_accum_pkt->target_win_handle = win_ptr->basic_info_table[target_rank].win_handle;
             get_accum_pkt->flags = MPIDI_CH3_PKT_FLAG_NONE;
             if (use_immed_pkt) {
                 void *src = (void *) origin_addr, *dest = (void *) (get_accum_pkt->info.data);
@@ -1095,10 +1095,10 @@ int MPIDI_Compare_and_swap(const void *origin_addr, const void *compare_addr,
 
         cas_pkt = &(new_ptr->pkt.cas);
         MPIDI_Pkt_init(cas_pkt, MPIDI_CH3_PKT_CAS_IMMED);
-        cas_pkt->addr = (char *) win_ptr->base_addrs[target_rank] +
-            win_ptr->disp_units[target_rank] * target_disp;
+        cas_pkt->addr = (char *) win_ptr->basic_info_table[target_rank].base_addr +
+            win_ptr->basic_info_table[target_rank].disp_unit * target_disp;
         cas_pkt->datatype = datatype;
-        cas_pkt->target_win_handle = win_ptr->all_win_handles[target_rank];
+        cas_pkt->target_win_handle = win_ptr->basic_info_table[target_rank].win_handle;
         cas_pkt->flags = MPIDI_CH3_PKT_FLAG_NONE;
 
         /* REQUIRE: All datatype arguments must be of the same, builtin
@@ -1251,12 +1251,12 @@ int MPIDI_Fetch_and_op(const void *origin_addr, void *result_addr,
 
             get_pkt = &(new_ptr->pkt.get);
             MPIDI_Pkt_init(get_pkt, MPIDI_CH3_PKT_GET);
-            get_pkt->addr = (char *) win_ptr->base_addrs[target_rank] +
-                win_ptr->disp_units[target_rank] * target_disp;
+            get_pkt->addr = (char *) win_ptr->basic_info_table[target_rank].base_addr +
+                win_ptr->basic_info_table[target_rank].disp_unit * target_disp;
             get_pkt->count = 1;
             get_pkt->datatype = datatype;
             get_pkt->info.dataloop_size = 0;
-            get_pkt->target_win_handle = win_ptr->all_win_handles[target_rank];
+            get_pkt->target_win_handle = win_ptr->basic_info_table[target_rank].win_handle;
             get_pkt->flags = MPIDI_CH3_PKT_FLAG_NONE;
             if (use_immed_resp_pkt == TRUE)
                 get_pkt->flags |= MPIDI_CH3_PKT_FLAG_RMA_IMMED_RESP;
@@ -1298,11 +1298,11 @@ int MPIDI_Fetch_and_op(const void *origin_addr, void *result_addr,
             else {
                 MPIDI_Pkt_init(fop_pkt, MPIDI_CH3_PKT_FOP);
             }
-            fop_pkt->addr = (char *) win_ptr->base_addrs[target_rank] +
-                win_ptr->disp_units[target_rank] * target_disp;
+            fop_pkt->addr = (char *) win_ptr->basic_info_table[target_rank].base_addr +
+                win_ptr->basic_info_table[target_rank].disp_unit * target_disp;
             fop_pkt->datatype = datatype;
             fop_pkt->op = op;
-            fop_pkt->target_win_handle = win_ptr->all_win_handles[target_rank];
+            fop_pkt->target_win_handle = win_ptr->basic_info_table[target_rank].win_handle;
             fop_pkt->flags = MPIDI_CH3_PKT_FLAG_NONE;
             if (use_immed_pkt) {
                 void *src = (void *) origin_addr, *dest = (void *) (fop_pkt->info.data);

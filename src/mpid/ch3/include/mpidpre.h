@@ -291,6 +291,13 @@ struct MPIDI_Win_info_args {
 
 struct MPIDI_RMA_op;            /* forward decl from mpidrma.h */
 
+typedef struct MPIDI_Win_basic_info {
+    void *base_addr;
+    MPI_Aint size;
+    int disp_unit;
+    MPI_Win win_handle;
+} MPIDI_Win_basic_info_t;
+
 typedef struct MPIDI_RMA_Pkt_orderings {
     int flush_remote; /* ordered FLUSH, for remote completion */
     /* FIXME: in future we should also add local completin
@@ -302,21 +309,16 @@ extern MPIDI_RMA_Pkt_orderings_t *MPIDI_RMA_Pkt_orderings;
 #define MPIDI_DEV_WIN_DECL                                               \
     volatile int at_completion_counter;  /* completion counter for operations \
                                  targeting this window */                \
-    void **base_addrs;     /* array of base addresses of the windows of  \
-                              all processes */                           \
     void **shm_base_addrs; /* shared memory windows -- array of base     \
                               addresses of the windows of all processes  \
                               in this process's address space */         \
-    int *disp_units;      /* array of displacement units of all windows */\
-    MPI_Win *all_win_handles;    /* array of handles to the window objects\
-                                          of all processes */            \
+    MPIDI_Win_basic_info_t *basic_info_table;                            \
     volatile int current_lock_type;   /* current lock type on this window (as target)   \
                               * (none, shared, exclusive) */             \
     volatile int shared_lock_ref_cnt;                                    \
     struct MPIDI_RMA_Lock_entry volatile *lock_queue;  /* list of unsatisfied locks */  \
     struct MPIDI_RMA_Lock_entry volatile *lock_queue_tail; /* tail of unstaisfied locks. */ \
                                                                          \
-    MPI_Aint *sizes;      /* array of sizes of all windows */            \
     struct MPIDI_Win_info_args info_args;                                \
     int shm_allocated; /* flag: TRUE iff this window has a shared memory \
                           region associated with it */                   \

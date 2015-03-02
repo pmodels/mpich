@@ -154,7 +154,8 @@ static int MPIDI_CH3I_SHM_Wins_match(MPID_Win ** win_ptr, MPID_Win ** matched_wi
                 MPIU_Assert(i_node_rank < node_size);
 
                 if (base_shm_offs[i_node_rank] < 0 ||
-                    base_shm_offs[i_node_rank] + (*win_ptr)->sizes[i] > shm_win->shm_segment_len) {
+                    base_shm_offs[i_node_rank] + (*win_ptr)->basic_info_table[i].size >
+                    shm_win->shm_segment_len) {
                     base_diff = 1;
                     break;
                 }
@@ -274,7 +275,7 @@ static int MPIDI_CH3I_Win_allocate_shm(MPI_Aint size, int disp_unit, MPID_Info *
     MPI_Aint *tmp_buf;
     mpir_errflag_t errflag = MPIR_ERR_NONE;
     int noncontig = FALSE;
-    MPIU_CHKPMEM_DECL(6);
+    MPIU_CHKPMEM_DECL(2);
     MPIU_CHKLMEM_DECL(3);
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3I_WIN_ALLOCATE_SHM);
 
@@ -306,20 +307,12 @@ static int MPIDI_CH3I_Win_allocate_shm(MPI_Aint size, int disp_unit, MPID_Info *
     MPIR_T_PVAR_TIMER_START(RMA, rma_wincreate_allgather);
     /* allocate memory for the base addresses, disp_units, and
      * completion counters of all processes */
-    MPIU_CHKPMEM_MALLOC((*win_ptr)->base_addrs, void **,
-                        comm_size * sizeof(void *), mpi_errno, "(*win_ptr)->base_addrs");
-
     MPIU_CHKPMEM_MALLOC((*win_ptr)->shm_base_addrs, void **,
                         comm_size * sizeof(void *), mpi_errno, "(*win_ptr)->shm_base_addrs");
 
-    MPIU_CHKPMEM_MALLOC((*win_ptr)->sizes, MPI_Aint *, comm_size * sizeof(MPI_Aint),
-                        mpi_errno, "(*win_ptr)->sizes");
-
-    MPIU_CHKPMEM_MALLOC((*win_ptr)->disp_units, int *, comm_size * sizeof(int),
-                        mpi_errno, "(*win_ptr)->disp_units");
-
-    MPIU_CHKPMEM_MALLOC((*win_ptr)->all_win_handles, MPI_Win *,
-                        comm_size * sizeof(MPI_Win), mpi_errno, "(*win_ptr)->all_win_handles");
+    MPIU_CHKPMEM_MALLOC((*win_ptr)->basic_info_table, MPIDI_Win_basic_info_t *,
+                        comm_size * sizeof(MPIDI_Win_basic_info_t),
+                        mpi_errno, "(*win_ptr)->base_info_table");
 
     /* get the sizes of the windows and window objectsof
      * all processes.  allocate temp. buffer for communication */
@@ -575,10 +568,10 @@ static int MPIDI_CH3I_Win_allocate_shm(MPI_Aint size, int disp_unit, MPID_Info *
 
     k = 0;
     for (i = 0; i < comm_size; ++i) {
-        (*win_ptr)->base_addrs[i] = MPIU_AintToPtr(tmp_buf[k++]);
-        (*win_ptr)->sizes[i] = tmp_buf[k++];
-        (*win_ptr)->disp_units[i] = (int) tmp_buf[k++];
-        (*win_ptr)->all_win_handles[i] = (MPI_Win) tmp_buf[k++];
+        (*win_ptr)->basic_info_table[i].base_addr = MPIU_AintToPtr(tmp_buf[k++]);
+        (*win_ptr)->basic_info_table[i].size = tmp_buf[k++];
+        (*win_ptr)->basic_info_table[i].disp_unit = (int) tmp_buf[k++];
+        (*win_ptr)->basic_info_table[i].win_handle = (MPI_Win) tmp_buf[k++];
     }
 
     *base_pp = (*win_ptr)->base;

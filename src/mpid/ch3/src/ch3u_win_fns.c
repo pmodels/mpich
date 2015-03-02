@@ -42,7 +42,7 @@ int MPIDI_CH3U_Win_gather_info(void *base, MPI_Aint size, int disp_unit,
     int mpi_errno = MPI_SUCCESS, i, k, comm_size, rank;
     MPI_Aint *tmp_buf;
     mpir_errflag_t errflag = MPIR_ERR_NONE;
-    MPIU_CHKPMEM_DECL(5);
+    MPIU_CHKPMEM_DECL(1);
     MPIU_CHKLMEM_DECL(1);
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3U_WIN_GATHER_INFO);
 
@@ -54,17 +54,9 @@ int MPIDI_CH3U_Win_gather_info(void *base, MPI_Aint size, int disp_unit,
     MPIR_T_PVAR_TIMER_START(RMA, rma_wincreate_allgather);
     /* allocate memory for the base addresses, disp_units, and
      * completion counters of all processes */
-    MPIU_CHKPMEM_MALLOC((*win_ptr)->base_addrs, void **,
-                        comm_size * sizeof(void *), mpi_errno, "(*win_ptr)->base_addrs");
-
-    MPIU_CHKPMEM_MALLOC((*win_ptr)->sizes, MPI_Aint *, comm_size * sizeof(MPI_Aint),
-                        mpi_errno, "(*win_ptr)->sizes");
-
-    MPIU_CHKPMEM_MALLOC((*win_ptr)->disp_units, int *, comm_size * sizeof(int),
-                        mpi_errno, "(*win_ptr)->disp_units");
-
-    MPIU_CHKPMEM_MALLOC((*win_ptr)->all_win_handles, MPI_Win *,
-                        comm_size * sizeof(MPI_Win), mpi_errno, "(*win_ptr)->all_win_handles");
+    MPIU_CHKPMEM_MALLOC((*win_ptr)->basic_info_table, MPIDI_Win_basic_info_t *,
+                        comm_size * sizeof(MPIDI_Win_basic_info_t),
+                        mpi_errno, "(*win_ptr)->basic_info_table");
 
     /* get the addresses of the windows, window objects, and completion
      * counters of all processes.  allocate temp. buffer for communication */
@@ -89,10 +81,10 @@ int MPIDI_CH3U_Win_gather_info(void *base, MPI_Aint size, int disp_unit,
 
     k = 0;
     for (i = 0; i < comm_size; i++) {
-        (*win_ptr)->base_addrs[i] = MPIU_AintToPtr(tmp_buf[k++]);
-        (*win_ptr)->sizes[i] = tmp_buf[k++];
-        (*win_ptr)->disp_units[i] = (int) tmp_buf[k++];
-        (*win_ptr)->all_win_handles[i] = (MPI_Win) tmp_buf[k++];
+        (*win_ptr)->basic_info_table[i].base_addr = MPIU_AintToPtr(tmp_buf[k++]);
+        (*win_ptr)->basic_info_table[i].size = tmp_buf[k++];
+        (*win_ptr)->basic_info_table[i].disp_unit = (int) tmp_buf[k++];
+        (*win_ptr)->basic_info_table[i].win_handle = (MPI_Win) tmp_buf[k++];
     }
 
   fn_exit:

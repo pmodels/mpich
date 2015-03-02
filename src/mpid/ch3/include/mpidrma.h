@@ -30,7 +30,7 @@ static inline int send_lock_msg(int dest, int lock_type, MPID_Win * win_ptr)
     MPIDI_Comm_get_vc_set_active(win_ptr->comm_ptr, dest, &vc);
 
     MPIDI_Pkt_init(lock_pkt, MPIDI_CH3_PKT_LOCK);
-    lock_pkt->target_win_handle = win_ptr->all_win_handles[dest];
+    lock_pkt->target_win_handle = win_ptr->basic_info_table[dest].win_handle;
     lock_pkt->source_win_handle = win_ptr->handle;
     lock_pkt->request_handle = MPI_REQUEST_NULL;
     lock_pkt->flags = MPIDI_CH3_PKT_FLAG_NONE;
@@ -80,7 +80,7 @@ static inline int send_unlock_msg(int dest, MPID_Win * win_ptr, MPIDI_CH3_Pkt_fl
      * reply. Then do all the RMA ops. */
 
     MPIDI_Pkt_init(unlock_pkt, MPIDI_CH3_PKT_UNLOCK);
-    unlock_pkt->target_win_handle = win_ptr->all_win_handles[dest];
+    unlock_pkt->target_win_handle = win_ptr->basic_info_table[dest].win_handle;
     unlock_pkt->source_win_handle = win_ptr->handle;
     unlock_pkt->flags = flags;
 
@@ -250,7 +250,7 @@ static inline int send_decr_at_cnt_msg(int dst, MPID_Win * win_ptr)
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_SEND_DECR_AT_CNT_MSG);
 
     MPIDI_Pkt_init(decr_at_cnt_pkt, MPIDI_CH3_PKT_DECR_AT_COUNTER);
-    decr_at_cnt_pkt->target_win_handle = win_ptr->all_win_handles[dst];
+    decr_at_cnt_pkt->target_win_handle = win_ptr->basic_info_table[dst].win_handle;
 
     MPIDI_Comm_get_vc_set_active(win_ptr->comm_ptr, dst, &vc);
 
@@ -292,7 +292,7 @@ static inline int send_flush_msg(int dest, MPID_Win * win_ptr)
     MPIDI_Comm_get_vc_set_active(win_ptr->comm_ptr, dest, &vc);
 
     MPIDI_Pkt_init(flush_pkt, MPIDI_CH3_PKT_FLUSH);
-    flush_pkt->target_win_handle = win_ptr->all_win_handles[dest];
+    flush_pkt->target_win_handle = win_ptr->basic_info_table[dest].win_handle;
     flush_pkt->source_win_handle = win_ptr->handle;
 
     MPIU_THREAD_CS_ENTER(CH3COMM, vc);

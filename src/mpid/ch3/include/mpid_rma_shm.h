@@ -261,7 +261,7 @@ static inline int MPIDI_CH3I_Shm_put_op(const void *origin_addr, int origin_coun
 
     if (win_ptr->shm_allocated == TRUE) {
         base = win_ptr->shm_base_addrs[target_rank];
-        disp_unit = win_ptr->disp_units[target_rank];
+        disp_unit = win_ptr->basic_info_table[target_rank].disp_unit;
     }
     else {
         base = win_ptr->base;
@@ -306,7 +306,7 @@ static inline int MPIDI_CH3I_Shm_acc_op(const void *origin_addr, int origin_coun
     if (win_ptr->shm_allocated == TRUE) {
         shm_op = 1;
         base = win_ptr->shm_base_addrs[target_rank];
-        disp_unit = win_ptr->disp_units[target_rank];
+        disp_unit = win_ptr->basic_info_table[target_rank].disp_unit;
     }
     else {
         base = win_ptr->base;
@@ -460,7 +460,7 @@ static inline int MPIDI_CH3I_Shm_get_acc_op(const void *origin_addr, int origin_
 
     if (win_ptr->shm_allocated == TRUE) {
         base = win_ptr->shm_base_addrs[target_rank];
-        disp_unit = win_ptr->disp_units[target_rank];
+        disp_unit = win_ptr->basic_info_table[target_rank].disp_unit;
         MPIDI_CH3I_SHM_MUTEX_LOCK(win_ptr);
         shm_locked = 1;
     }
@@ -625,7 +625,7 @@ static inline int MPIDI_CH3I_Shm_get_op(void *origin_addr, int origin_count,
 
     if (win_ptr->shm_allocated == TRUE) {
         base = win_ptr->shm_base_addrs[target_rank];
-        disp_unit = win_ptr->disp_units[target_rank];
+        disp_unit = win_ptr->basic_info_table[target_rank].disp_unit;
     }
     else {
         base = win_ptr->base;
@@ -667,7 +667,7 @@ static inline int MPIDI_CH3I_Shm_cas_op(const void *origin_addr, const void *com
 
     if (win_ptr->shm_allocated == TRUE) {
         base = win_ptr->shm_base_addrs[target_rank];
-        disp_unit = win_ptr->disp_units[target_rank];
+        disp_unit = win_ptr->basic_info_table[target_rank].disp_unit;
 
         MPIDI_CH3I_SHM_MUTEX_LOCK(win_ptr);
         shm_locked = 1;
@@ -724,7 +724,7 @@ static inline int MPIDI_CH3I_Shm_fop_op(const void *origin_addr, void *result_ad
 
     if (win_ptr->shm_allocated == TRUE) {
         base = win_ptr->shm_base_addrs[target_rank];
-        disp_unit = win_ptr->disp_units[target_rank];
+        disp_unit = win_ptr->basic_info_table[target_rank].disp_unit;
 
         MPIDI_CH3I_SHM_MUTEX_LOCK(win_ptr);
         shm_locked = 1;

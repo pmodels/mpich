@@ -34,9 +34,9 @@ int MPIDI_CH3_SHM_Win_shared_query(MPID_Win * win_ptr, int target_rank, MPI_Aint
         *((void **) baseptr) = NULL;
 
         for (i = 0; i < comm_size; i++) {
-            if (win_ptr->sizes[i] > 0) {
-                *size = win_ptr->sizes[i];
-                *disp_unit = win_ptr->disp_units[i];
+            if (win_ptr->basic_info_table[i].size > 0) {
+                *size = win_ptr->basic_info_table[i].size;
+                *disp_unit = win_ptr->basic_info_table[i].disp_unit;
                 *((void **) baseptr) = win_ptr->shm_base_addrs[i];
                 break;
             }
@@ -44,8 +44,8 @@ int MPIDI_CH3_SHM_Win_shared_query(MPID_Win * win_ptr, int target_rank, MPI_Aint
 
     }
     else {
-        *size = win_ptr->sizes[target_rank];
-        *disp_unit = win_ptr->disp_units[target_rank];
+        *size = win_ptr->basic_info_table[target_rank].size;
+        *disp_unit = win_ptr->basic_info_table[target_rank].disp_unit;
         *((void **) baseptr) = win_ptr->shm_base_addrs[target_rank];
     }
 
