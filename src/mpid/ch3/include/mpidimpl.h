@@ -465,6 +465,8 @@ extern MPIDI_Process_t MPIDI_Process;
 #define MPIDI_REQUEST_TYPE_GET_ACCUM_RECV 11             /* target is receiving GACC data */
 #define MPIDI_REQUEST_TYPE_GET_ACCUM_RECV_DERIVED_DT 12  /* target is receiving derived DT info for GACC data */
 #define MPIDI_REQUEST_TYPE_GET_ACCUM_RESP 13             /* target is sending GACC response data */
+#define MPIDI_REQUEST_TYPE_FOP_RECV 14                   /* target is receiving FOP data */
+#define MPIDI_REQUEST_TYPE_FOP_RESP 15                   /* target is sending FOP response data */
 
 
 #define MPIDI_Request_get_type(req_)						\

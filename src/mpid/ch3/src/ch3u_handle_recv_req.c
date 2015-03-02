@@ -350,6 +350,8 @@ int MPIDI_CH3_ReqHandler_FOPRecvComplete(MPIDI_VC_t * vc, MPID_Request * rreq, i
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3_REQHANDLER_FOPRECVCOMPLETE);
 
+    MPIU_Assert(MPIDI_Request_get_type(rreq) == MPIDI_REQUEST_TYPE_FOP_RECV);
+
     MPID_Win_get_ptr(rreq->dev.target_win_handle, win_ptr);
 
     MPID_Datatype_get_size_macro(rreq->dev.datatype, type_size);
@@ -359,6 +361,7 @@ int MPIDI_CH3_ReqHandler_FOPRecvComplete(MPIDI_VC_t * vc, MPID_Request * rreq, i
     /* Create response request */
     resp_req = MPID_Request_create();
     MPIU_ERR_CHKANDJUMP(resp_req == NULL, mpi_errno, MPI_ERR_OTHER, "**nomemreq");
+    MPIDI_Request_set_type(resp_req, MPIDI_REQUEST_TYPE_FOP_RESP);
     MPIU_Object_set_ref(resp_req, 1);
     resp_req->dev.OnFinal = MPIDI_CH3_ReqHandler_FOPSendComplete;
     resp_req->dev.OnDataAvail = MPIDI_CH3_ReqHandler_FOPSendComplete;
@@ -766,6 +769,9 @@ int MPIDI_CH3_ReqHandler_UnpackSRBufComplete(MPIDI_VC_t * vc, MPID_Request * rre
     }
     else if (MPIDI_Request_get_type(rreq) == MPIDI_REQUEST_TYPE_GET_ACCUM_RECV) {
         mpi_errno = MPIDI_CH3_ReqHandler_GaccumRecvComplete(vc, rreq, complete);
+    }
+    else if (MPIDI_Request_get_type(rreq) == MPIDI_REQUEST_TYPE_FOP_RECV) {
+        mpi_errno = MPIDI_CH3_ReqHandler_FOPRecvComplete(vc, rreq, complete);
     }
     else {
         /* mark data transfer as complete and decrement CC */

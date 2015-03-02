@@ -1281,6 +1281,7 @@ int MPIDI_CH3_PktHandler_FOP(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
 
         req = MPID_Request_create();
         MPIU_Object_set_ref(req, 1);
+        MPIDI_Request_set_type(req, MPIDI_REQUEST_TYPE_FOP_RECV);
         *rreqp = req;
 
         req->dev.op = fop_pkt->op;
