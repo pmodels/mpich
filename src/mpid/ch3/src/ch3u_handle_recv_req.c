@@ -1099,24 +1099,7 @@ static inline int perform_get_acc_in_lock_queue(MPID_Win * win_ptr,
         }
     }
     else {
-        if (MPIR_DATATYPE_IS_PREDEFINED(get_accum_pkt->datatype)) {
-            MPIU_Memcpy(sreq->dev.user_buf, get_accum_pkt->addr, get_accum_pkt->count * type_size);
-        }
-        else {
-            MPID_Segment *seg = MPID_Segment_alloc();
-            MPI_Aint last = type_size * get_accum_pkt->count;
-
-            if (seg == NULL) {
-                if (win_ptr->shm_allocated == TRUE)
-                    MPIDI_CH3I_SHM_MUTEX_UNLOCK(win_ptr);
-            }
-            MPIU_ERR_CHKANDJUMP1(seg == NULL, mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s",
-                                 "MPID_Segment");
-            MPID_Segment_init(get_accum_pkt->addr, get_accum_pkt->count, get_accum_pkt->datatype,
-                              seg, 0);
-            MPID_Segment_pack(seg, 0, &last, sreq->dev.user_buf);
-            MPID_Segment_free(seg);
-        }
+        MPIU_Memcpy(sreq->dev.user_buf, get_accum_pkt->addr, get_accum_pkt->count * type_size);
     }
 
     if (get_accum_pkt->type == MPIDI_CH3_PKT_GET_ACCUM_IMMED) {
