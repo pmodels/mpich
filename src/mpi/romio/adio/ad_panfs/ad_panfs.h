@@ -15,14 +15,20 @@
 #include "adio.h"
 
 #ifndef NO_AIO
-#ifdef AIO_SUN
-#include <sys/asynch.h>
-#else
-#include <aio.h>
-#ifdef NEEDS_ADIOCB_T
-typedef struct adiocb adiocb_t;
-#endif
-#endif
+# ifdef AIO_SUN
+# include <sys/asynch.h>
+# else
+  #ifdef HAVE_AIO_LITE_H
+  #include <aio-lite.h>
+  #else
+   #ifdef  HAVE_AIO_H
+   #include <aio.h>
+   #endif
+   #ifdef HAVE_SYS_AIO_H
+   #include <sys/aio.h>
+   #endif
+  #endif
+# endif
 #endif
 
 void ADIOI_PANFS_Open(ADIO_File fd, int *error_code);

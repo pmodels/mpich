@@ -24,7 +24,9 @@
 #ifdef HAVE_SIGNAL_H
 #include <signal.h>
 #endif
-#ifdef HAVE_AIO_H
+#ifdef HAVE_AIO_LITE_H
+#include <aio-lite.h>
+#elif defined  HAVE_AIO_H
 #include <aio.h>
 #endif
 

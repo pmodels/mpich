@@ -1137,6 +1137,22 @@ if test "$ac_cv_header_aio_h" = "yes" -o "$ac_cv_header_sys_aio_h" = "yes" -o "x
 		       #endif] ]  )
 fi
 
+# the aio-lite package provides an aio facility in case system aio library is
+# buggy or does not perform well.  for example, one fortran test does not pass
+# its non-blocking collective I/O test
+# See http://trac.mpich.org/projects/mpich/ticket/2201 for one such failure.
+
+AC_ARG_WITH([aio-lite],
+	    [AS_HELP_STRING([--with-aio-lite],
+			    [use alternate external aio implementation])],
+	    [with_aiolite=yes],
+	    [])
+AS_IF([test "x$with_aiolite" == xyes],
+      AC_CHECK_LIB([aio-lite], [lio_listio],
+		   [], [], [-lpthread]
+		   )
+      AC_CHECK_HEADERS([aio-lite.h])
+     )
 # End of aio-related tests
 
 #

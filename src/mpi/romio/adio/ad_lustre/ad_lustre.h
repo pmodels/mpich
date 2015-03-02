@@ -35,12 +35,16 @@
 #include <signal.h>
 #endif
 
-#ifdef HAVE_AIO_H
-#include <aio.h>
-#ifdef HAVE_SYS_AIO_H
-#include <sys/aio.h>
-#endif
-#endif /* End of HAVE_SYS_AIO_H */
+#ifdef HAVE_AIO_LITE_H
+#include <aio-lite.h>
+#else
+ #ifdef  HAVE_AIO_H
+ #include <aio.h>
+ #endif
+ #ifdef HAVE_SYS_AIO_H
+ #include <sys/aio.h>
+ #endif
+#endif /* End of HAVE_AIO_LITE_H */
 
 void ADIOI_LUSTRE_Open(ADIO_File fd, int *error_code);
 void ADIOI_LUSTRE_Close(ADIO_File fd, int *error_code);
