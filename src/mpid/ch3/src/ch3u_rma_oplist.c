@@ -393,7 +393,8 @@ static inline int issue_ops_target(MPID_Win * win_ptr, MPIDI_RMA_Target_t * targ
                 MPIU_ERR_POP(mpi_errno);
         }
 
-        if (!curr_op->request) {
+        if (curr_op->reqs_size == 0) {
+            MPIU_Assert(curr_op->reqs == NULL);
             /* Sending is completed immediately. */
             MPIDI_CH3I_RMA_Ops_free_elem(win_ptr, &(target->pending_op_list),
                                          &(target->pending_op_list_tail), curr_op);
@@ -560,11 +561,23 @@ int MPIDI_CH3I_RMA_Free_ops_before_completion(MPID_Win * win_ptr)
 
     /* free all ops in the list since we do not need to maintain them anymore */
     for (curr_op = *op_list; curr_op != NULL;) {
-        MPID_Request_release(curr_op->request);
+        if (curr_op->reqs_size > 0) {
+            MPIU_Assert(curr_op->reqs != NULL);
+            for (i = 0; i < curr_op->reqs_size; i++) {
+                if (curr_op->reqs[i] != NULL) {
+                    MPID_Request_release(curr_op->reqs[i]);
+                    curr_op->reqs[i] = NULL;
+                    win_ptr->active_req_cnt--;
+                }
+            }
+
+            /* free req array in this op */
+            MPIU_Free(curr_op->reqs);
+            curr_op->reqs = NULL;
+            curr_op->reqs_size = 0;
+        }
         MPL_LL_DELETE(*op_list, *op_list_tail, curr_op);
         MPIDI_CH3I_Win_op_free(win_ptr, curr_op);
-
-        win_ptr->active_req_cnt--;
 
         if (*op_list == NULL) {
             if (read_flag == 1) {

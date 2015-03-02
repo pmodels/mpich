@@ -47,7 +47,8 @@ static inline MPIDI_RMA_Op_t *MPIDI_CH3I_Win_op_alloc(MPID_Win * win_ptr)
     }
 
     e->dataloop = NULL;
-    e->request = NULL;
+    e->reqs = NULL;
+    e->reqs_size = 0;
     e->ureq = NULL;
     e->is_dt = 0;
     e->piggyback_lock_candidate = 0;
@@ -334,6 +335,7 @@ static inline int MPIDI_CH3I_RMA_Cleanup_ops_target(MPID_Win * win_ptr, MPIDI_RM
     MPIDI_RMA_Op_t **op_list = NULL, **op_list_tail = NULL;
     int read_flag = 0, write_flag = 0;
     int mpi_errno = MPI_SUCCESS;
+    int i;
 
     (*local_completed) = 0;
     (*remote_completed) = 0;
@@ -375,14 +377,27 @@ static inline int MPIDI_CH3I_RMA_Cleanup_ops_target(MPID_Win * win_ptr, MPIDI_RM
 
     curr_op = *op_list;
     while (curr_op != NULL) {
-        if (MPID_Request_is_complete(curr_op->request)) {
-            /* If there's an error, return it */
-            mpi_errno = curr_op->request->status.MPI_ERROR;
-            MPIU_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**ch3|rma_msg");
+        for (i = 0; i < curr_op->reqs_size; i++) {
+            if (curr_op->reqs[i] == NULL)
+                continue;
 
-            /* No errors, free the request */
-            MPID_Request_release(curr_op->request);
+            if (MPID_Request_is_complete(curr_op->reqs[i])) {
+                /* If there's an error, return it */
+                mpi_errno = curr_op->reqs[i]->status.MPI_ERROR;
+                MPIU_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**ch3|rma_msg");
 
+                /* No errors, free the request */
+                MPID_Request_release(curr_op->reqs[i]);
+
+                curr_op->reqs[i] = NULL;
+
+                win_ptr->active_req_cnt--;
+            }
+            else
+                break;
+        }
+
+        if (i == curr_op->reqs_size) {
             /* Release user request */
             if (curr_op->ureq) {
                 /* User request must be completed by progress engine */
@@ -392,10 +407,14 @@ static inline int MPIDI_CH3I_RMA_Cleanup_ops_target(MPID_Win * win_ptr, MPIDI_RM
                 MPID_Request_release(curr_op->ureq);
             }
 
+            /* free request array in op struct */
+            MPIU_Free(curr_op->reqs);
+            curr_op->reqs = NULL;
+            curr_op->reqs_size = 0;
+
             /* dequeue the operation and free it */
             MPL_LL_DELETE(*op_list, *op_list_tail, curr_op);
             MPIDI_CH3I_Win_op_free(win_ptr, curr_op);
-            win_ptr->active_req_cnt--;
 
             if (*op_list == NULL) {
                 if (read_flag == 1) {

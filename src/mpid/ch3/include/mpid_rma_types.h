@@ -60,7 +60,9 @@ typedef struct MPIDI_RMA_Op {
     int result_count;
     MPI_Datatype result_datatype;
 
-    struct MPID_Request *request;
+    struct MPID_Request **reqs;
+    int reqs_size;
+
     MPIDI_RMA_dtype_info dtype_info;
     void *dataloop;
 
