@@ -601,13 +601,13 @@ static inline int adjust_op_piggybacked_with_lock(MPID_Win * win_ptr,
         if (flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK_GRANTED ||
             flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK_QUEUED_DATA_QUEUED) {
 
-            if (!op->request) {
-                if (op->ureq) {
-                    /* Complete user request and release the ch3 ref */
-                    MPID_Request_set_completed(op->ureq);
-                    MPID_Request_release(op->ureq);
-                }
+            if (op->ureq != NULL) {
+                mpi_errno = set_user_req_after_issuing_op(op);
+                if (mpi_errno != MPI_SUCCESS)
+                    MPIU_ERR_POP(mpi_errno);
+            }
 
+            if (!op->request) {
                 MPIDI_CH3I_RMA_Ops_free_elem(win_ptr, &(target->pending_op_list),
                                              &(target->pending_op_list_tail), op);
             }
@@ -628,23 +628,6 @@ static inline int adjust_op_piggybacked_with_lock(MPID_Win * win_ptr,
                 else {
                     MPIDI_CH3I_RMA_Ops_append(&(target->read_op_list),
                                               &(target->read_op_list_tail), op);
-                }
-
-                if (op->ureq) {
-                    if (MPID_Request_is_complete(op->request)) {
-                        /* Complete user request, let cleanup function to release
-                         * ch3 ref */
-                        MPID_Request_set_completed(op->ureq);
-                    }
-                    else {
-                        /* Increase ref for completion handler */
-                        MPIU_Object_add_ref(op->ureq);
-                        op->request->dev.request_handle = op->ureq->handle;
-                        if (op->request->dev.OnDataAvail == NULL) {
-                            op->request->dev.OnDataAvail = MPIDI_CH3_ReqHandler_ReqOpsComplete;
-                        }
-                        op->request->dev.OnFinal = MPIDI_CH3_ReqHandler_ReqOpsComplete;
-                    }
                 }
             }
         }

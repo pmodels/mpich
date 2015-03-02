@@ -840,4 +840,65 @@ static inline int issue_rma_op(MPIDI_RMA_Op_t * op_ptr, MPID_Win * win_ptr,
     /* --END ERROR HANDLING-- */
 }
 
+#undef FUNCNAME
+#define FUNCNAME set_user_req_after_issuing_op
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
+static inline int set_user_req_after_issuing_op(MPIDI_RMA_Op_t * op)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIDI_STATE_DECL(MPID_STATE_SET_USER_REQ_AFTER_ISSUING_OP);
+
+    MPIDI_RMA_FUNC_ENTER(MPID_STATE_SET_USER_REQ_AFTER_ISSUING_OP);
+
+    if (op->ureq == NULL)
+        goto fn_exit;
+
+    if (!op->request) {
+        /* Sending is completed immediately, complete user request
+         * and release ch3 ref. */
+
+        /* Complete user request and release the ch3 ref */
+        MPID_Request_set_completed(op->ureq);
+        MPID_Request_release(op->ureq);
+    }
+    else {
+        /* Sending is not completed immediately. */
+
+        /* Setup user request info in order to be completed following send request. */
+
+        /* Increase ref for completion handler */
+        MPIU_Object_add_ref(op->ureq);
+        op->request->dev.request_handle = op->ureq->handle;
+
+        /* Setup user request completion handler.
+         *
+         * The handler is triggered when send request is completed at
+         * following places:
+         * - progress engine: complete PUT/ACC req.
+         * - GET/GET_ACC packet handler: complete GET/GET_ACC reqs.
+         *
+         * We always set OnFinal which should be called when sending or
+         * receiving the last segment. However, short put/acc ops are
+         * issued in one packet and the lower layer only check OnDataAvail
+         * so we have to set OnDataAvail as well.
+         *
+         * Note that a noncontig send also uses OnDataAvail to loop all
+         * segments but it must be changed to OnFinal when sending the
+         * last segment, so it is also correct for us.
+         *
+         * TODO: implement stack for overriding functions*/
+        if (op->request->dev.OnDataAvail == NULL) {
+            op->request->dev.OnDataAvail = MPIDI_CH3_ReqHandler_ReqOpsComplete;
+        }
+        op->request->dev.OnFinal = MPIDI_CH3_ReqHandler_ReqOpsComplete;
+    }
+
+  fn_exit:
+    MPIDI_RMA_FUNC_EXIT(MPID_STATE_SET_USER_REQ_AFTER_ISSUING_OP);
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
 #endif /* MPID_RMA_ISSUE_H_INCLUDED */
