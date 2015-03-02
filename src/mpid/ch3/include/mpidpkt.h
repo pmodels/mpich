@@ -10,10 +10,10 @@
 #include "oputil.h"
 
 #ifdef HAVE_STDINT_H
-#  include <stdint.h>
+#include <stdint.h>
 #endif
 #ifdef HAVE_INTTYPES_H
-#  include <inttypes.h>
+#include <inttypes.h>
 #endif
 
 /* Enable the use of data within the message packet for small messages */
@@ -106,9 +106,9 @@ typedef enum {
     MPIDI_CH3_PKT_END_CH3,
     /* The channel can define additional types by defining the value
      * MPIDI_CH3_PKT_ENUM */
-# if defined(MPIDI_CH3_PKT_ENUM)
+#if defined(MPIDI_CH3_PKT_ENUM)
     MPIDI_CH3_PKT_ENUM,
-# endif
+#endif
     MPIDI_CH3_PKT_END_ALL,
     MPIDI_CH3_PKT_INVALID = -1  /* forces a signed enum to quash warnings */
 } MPIDI_CH3_Pkt_type_t;
@@ -607,9 +607,9 @@ typedef struct MPIDI_CH3_Pkt_get {
     MPI_Datatype datatype;
     struct {
         /* note that we use struct here in order
-           to consistently access dataloop_size
-           by "pkt->info.dataloop_size". */
-        int dataloop_size;          /* for derived datatypes */
+         * to consistently access dataloop_size
+         * by "pkt->info.dataloop_size". */
+        int dataloop_size;      /* for derived datatypes */
     } info;
     MPI_Request request_handle;
     MPI_Win target_win_handle;
@@ -624,8 +624,8 @@ typedef struct MPIDI_CH3_Pkt_get_resp {
     /* Followings are to piggyback IMMED data */
     struct {
         /* note that we use struct here in order
-           to consistently access data
-           by "pkt->info.data". */
+         * to consistently access data
+         * by "pkt->info.data". */
         char data[MPIDI_RMA_IMMED_BYTES];
     } info;
 } MPIDI_CH3_Pkt_get_resp_t;
@@ -669,8 +669,8 @@ typedef struct MPIDI_CH3_Pkt_get_accum_resp {
     /* Followings are to piggyback IMMED data */
     struct {
         /* note that we use struct here in order
-           to consistently access data
-           by "pkt->info.data". */
+         * to consistently access data
+         * by "pkt->info.data". */
         char data[MPIDI_RMA_IMMED_BYTES];
     } info;
 } MPIDI_CH3_Pkt_get_accum_resp_t;
@@ -691,8 +691,8 @@ typedef struct MPIDI_CH3_Pkt_cas_resp {
     MPI_Request request_handle;
     struct {
         /* note that we use struct here in order
-           to consistently access data
-           by "pkt->info.data". */
+         * to consistently access data
+         * by "pkt->info.data". */
         MPIDI_CH3_CAS_Immed_u data;
     } info;
     /* followings are used to decrement ack_counter at orign */
@@ -710,8 +710,8 @@ typedef struct MPIDI_CH3_Pkt_fop {
     MPI_Win target_win_handle;
     struct {
         /* note that we use struct here in order
-           to consistently access data
-           by "pkt->info.data". */
+         * to consistently access data
+         * by "pkt->info.data". */
         char data[MPIDI_RMA_IMMED_BYTES];
     } info;
 } MPIDI_CH3_Pkt_fop_t;
@@ -721,8 +721,8 @@ typedef struct MPIDI_CH3_Pkt_fop_resp {
     MPI_Request request_handle;
     struct {
         /* note that we use struct here in order
-           to consistently access data
-           by "pkt->info.data". */
+         * to consistently access data
+         * by "pkt->info.data". */
         char data[MPIDI_RMA_IMMED_BYTES];
     } info;
     /* followings are used to decrement ack_counter at orign */
@@ -735,11 +735,11 @@ typedef struct MPIDI_CH3_Pkt_lock {
     MPIDI_CH3_Pkt_flags_t flags;
     MPI_Win target_win_handle;
     /* Note that either source_win_handle
-       or request_handle will be used. Here
-       we need both of them because PUT/GET
-       may be converted to LOCK packet,
-       PUT has source_win_handle area and
-       GET has request_handle area. */
+     * or request_handle will be used. Here
+     * we need both of them because PUT/GET
+     * may be converted to LOCK packet,
+     * PUT has source_win_handle area and
+     * GET has request_handle area. */
     MPI_Win source_win_handle;
     MPI_Request request_handle;
 } MPIDI_CH3_Pkt_lock_t;
@@ -761,7 +761,7 @@ typedef struct MPIDI_CH3_Pkt_lock_ack {
     MPIDI_CH3_Pkt_type_t type;
     MPIDI_CH3_Pkt_flags_t flags;
     /* note that either source_win_handle
-       or request_handle is used. */
+     * or request_handle is used. */
     MPI_Win source_win_handle;
     MPI_Request request_handle;
     int target_rank;
@@ -771,7 +771,7 @@ typedef struct MPIDI_CH3_Pkt_lock_op_ack {
     MPIDI_CH3_Pkt_type_t type;
     MPIDI_CH3_Pkt_flags_t flags;
     /* note that either source_win_handle
-       or request_handle is used. */
+     * or request_handle is used. */
     MPI_Win source_win_handle;
     MPI_Request request_handle;
     int target_rank;
@@ -832,9 +832,9 @@ typedef union MPIDI_CH3_Pkt {
     MPIDI_CH3_Pkt_fop_resp_t fop_resp;
     MPIDI_CH3_Pkt_get_accum_resp_t get_accum_resp;
     MPIDI_CH3_Pkt_revoke_t revoke;
-# if defined(MPIDI_CH3_PKT_DECL)
+#if defined(MPIDI_CH3_PKT_DECL)
      MPIDI_CH3_PKT_DECL
-# endif
+#endif
 } MPIDI_CH3_Pkt_t;
 
 #if defined(MPID_USE_SEQUENCE_NUMBERS)

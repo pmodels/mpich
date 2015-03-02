@@ -25,7 +25,8 @@
 #define LOOP_SIZE 10000
 #define CHECK_TAG 123
 
-int main (int argc, char *argv[]) {
+int main(int argc, char *argv[])
+{
     int rank, size, i, j, k;
     int errors = 0;
     int origin_shm, origin_am, dest;
@@ -54,10 +55,9 @@ int main (int argc, char *argv[]) {
         MPI_Alloc_mem(sizeof(int), MPI_INFO_NULL, &compare_buf);
     }
 
-    MPI_Win_allocate(sizeof(int), sizeof(int), MPI_INFO_NULL,
-                     MPI_COMM_WORLD, &target_buf, &win);
+    MPI_Win_allocate(sizeof(int), sizeof(int), MPI_INFO_NULL, MPI_COMM_WORLD, &target_buf, &win);
 
-    for (k = 0; k < LOOP_SIZE; k++)  {
+    for (k = 0; k < LOOP_SIZE; k++) {
 
         /* init buffers */
         if (rank == origin_shm) {
@@ -96,14 +96,18 @@ int main (int argc, char *argv[]) {
             MPI_Alloc_mem(sizeof(int) * 3, MPI_INFO_NULL, &check_buf);
             MPI_Gather(target_buf, 1, MPI_INT, check_buf, 1, MPI_INT, dest, MPI_COMM_WORLD);
 
-            if (!(check_buf[dest] == 0 && check_buf[origin_shm] == 0 && check_buf[origin_am] == 1) &&
-                !(check_buf[dest] == 1 && check_buf[origin_shm] == 0 && check_buf[origin_am] == 0)) {
+            if (!(check_buf[dest] == 0 && check_buf[origin_shm] == 0 && check_buf[origin_am] == 1)
+                && !(check_buf[dest] == 1 && check_buf[origin_shm] == 0 &&
+                     check_buf[origin_am] == 0)) {
 
-                printf("Wrong results: target result = %d, origin_shm result = %d, origin_am result = %d\n",
-                       check_buf[dest], check_buf[origin_shm], check_buf[origin_am]);
+                printf
+                    ("Wrong results: target result = %d, origin_shm result = %d, origin_am result = %d\n",
+                     check_buf[dest], check_buf[origin_shm], check_buf[origin_am]);
 
-                printf("Expected results (1): target result = 1, origin_shm result = 0, origin_am result = 0\n");
-                printf("Expected results (2): target result = 0, origin_shm result = 0, origin_am result = 1\n");
+                printf
+                    ("Expected results (1): target result = 1, origin_shm result = 0, origin_am result = 0\n");
+                printf
+                    ("Expected results (2): target result = 0, origin_shm result = 0, origin_am result = 1\n");
 
                 errors++;
             }
@@ -120,7 +124,7 @@ int main (int argc, char *argv[]) {
         MPI_Free_mem(compare_buf);
     }
 
- exit_test:
+  exit_test:
     if (rank == dest && errors == 0)
         printf(" No Errors\n");
 

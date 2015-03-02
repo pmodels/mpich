@@ -18,8 +18,8 @@ MPIR_T_PVAR_DOUBLE_TIMER_DECL_EXTERN(RMA, rma_wincreate_allgather);
 
 MPIDI_SHM_Wins_list_t shm_wins_list;
 
-static int MPIDI_CH3I_Win_allocate_shm(MPI_Aint size, int disp_unit, MPID_Info *info, MPID_Comm *comm_ptr,
-                                       void *base_ptr, MPID_Win **win_ptr);
+static int MPIDI_CH3I_Win_allocate_shm(MPI_Aint size, int disp_unit, MPID_Info * info,
+                                       MPID_Comm * comm_ptr, void *base_ptr, MPID_Win ** win_ptr);
 
 static int MPIDI_CH3I_Win_detect_shm(MPID_Win ** win_ptr);
 
@@ -27,7 +27,7 @@ static int MPIDI_CH3I_Win_detect_shm(MPID_Win ** win_ptr);
 #define FUNCNAME MPIDI_CH3_Win_fns_init
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-int MPIDI_CH3_Win_fns_init(MPIDI_CH3U_Win_fns_t *win_fns)
+int MPIDI_CH3_Win_fns_init(MPIDI_CH3U_Win_fns_t * win_fns)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3_WIN_FNS_INIT);
@@ -87,7 +87,8 @@ static int MPIDI_CH3I_SHM_Wins_match(MPID_Win ** win_ptr, MPID_Win ** matched_wi
     }
 
     mpi_errno = MPIR_Comm_group_impl(node_comm_ptr, &node_group_ptr);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    if (mpi_errno)
+        MPIU_ERR_POP(mpi_errno);
 
     while (elem != NULL) {
         MPID_Win *shm_win = elem->win;
@@ -107,15 +108,18 @@ static int MPIDI_CH3I_SHM_Wins_match(MPID_Win ** win_ptr, MPID_Win ** matched_wi
             MPIDI_SHM_Wins_next_and_continue(elem);
 
         mpi_errno = MPIR_Comm_group_impl(shm_win->comm_ptr, &shm_node_group_ptr);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        if (mpi_errno)
+            MPIU_ERR_POP(mpi_errno);
 
         mpi_errno = MPIR_Group_translate_ranks_impl(node_group_ptr, node_size,
                                                     node_ranks, shm_node_group_ptr,
                                                     node_ranks_in_shm_node);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        if (mpi_errno)
+            MPIU_ERR_POP(mpi_errno);
 
         mpi_errno = MPIR_Group_free_impl(shm_node_group_ptr);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        if (mpi_errno)
+            MPIU_ERR_POP(mpi_errno);
         shm_node_group_ptr = NULL;
 
         group_diff = 0;
@@ -139,7 +143,8 @@ static int MPIDI_CH3I_SHM_Wins_match(MPID_Win ** win_ptr, MPID_Win ** matched_wi
             - (MPI_Aint) (shm_win->shm_base_addr);
         mpi_errno = MPIR_Allgather_impl(MPI_IN_PLACE, 0, MPI_DATATYPE_NULL,
                                         base_shm_offs, 1, MPI_AINT, node_comm_ptr, &errflag);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        if (mpi_errno)
+            MPIU_ERR_POP(mpi_errno);
         MPIU_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
 
         base_diff = 0;
@@ -211,7 +216,8 @@ static int MPIDI_CH3I_Win_detect_shm(MPID_Win ** win_ptr)
      * stored in every local process in the same order, hence the first matched
      * shared window on every local process should be the same. */
     mpi_errno = MPIDI_CH3I_SHM_Wins_match(win_ptr, &shm_win_ptr, &base_shm_offs);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    if (mpi_errno)
+        MPIU_ERR_POP(mpi_errno);
     if (shm_win_ptr == NULL)
         goto fn_exit;
 
@@ -255,13 +261,13 @@ static int MPIDI_CH3I_Win_detect_shm(MPID_Win ** win_ptr)
 #define FUNCNAME MPIDI_CH3I_Win_allocate_shm
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-static int MPIDI_CH3I_Win_allocate_shm(MPI_Aint size, int disp_unit, MPID_Info *info,
-                                       MPID_Comm *comm_ptr, void *base_ptr, MPID_Win **win_ptr)
+static int MPIDI_CH3I_Win_allocate_shm(MPI_Aint size, int disp_unit, MPID_Info * info,
+                                       MPID_Comm * comm_ptr, void *base_ptr, MPID_Win ** win_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
     void **base_pp = (void **) base_ptr;
     int i, k, comm_size, rank;
-    int  node_size, node_rank;
+    int node_size, node_rank;
     MPID_Comm *node_comm_ptr;
     MPI_Aint *node_sizes;
     void **node_shm_base_addrs;
@@ -275,7 +281,8 @@ static int MPIDI_CH3I_Win_allocate_shm(MPI_Aint size, int disp_unit, MPID_Info *
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_CH3I_WIN_ALLOCATE_SHM);
 
     if ((*win_ptr)->comm_ptr->node_comm == NULL) {
-        mpi_errno = MPIDI_CH3U_Win_allocate_no_shm(size, disp_unit, info, comm_ptr, base_ptr, win_ptr);
+        mpi_errno =
+            MPIDI_CH3U_Win_allocate_no_shm(size, disp_unit, info, comm_ptr, base_ptr, win_ptr);
         goto fn_exit;
     }
 
@@ -285,12 +292,12 @@ static int MPIDI_CH3I_Win_allocate_shm(MPI_Aint size, int disp_unit, MPID_Info *
     (*win_ptr)->shm_allocated = TRUE;
 
     comm_size = (*win_ptr)->comm_ptr->local_size;
-    rank      = (*win_ptr)->comm_ptr->rank;
+    rank = (*win_ptr)->comm_ptr->rank;
 
     /* When allocating shared memory region segment, we need comm of processes
-       that are on the same node as this process (node_comm).
-       If node_comm == NULL, this process is the only one on this node, therefore
-       we use comm_self as node comm. */
+     * that are on the same node as this process (node_comm).
+     * If node_comm == NULL, this process is the only one on this node, therefore
+     * we use comm_self as node comm. */
     node_comm_ptr = (*win_ptr)->comm_ptr->node_comm;
     MPIU_Assert(node_comm_ptr != NULL);
     node_size = node_comm_ptr->local_size;
@@ -298,37 +305,36 @@ static int MPIDI_CH3I_Win_allocate_shm(MPI_Aint size, int disp_unit, MPID_Info *
 
     MPIR_T_PVAR_TIMER_START(RMA, rma_wincreate_allgather);
     /* allocate memory for the base addresses, disp_units, and
-       completion counters of all processes */
+     * completion counters of all processes */
     MPIU_CHKPMEM_MALLOC((*win_ptr)->base_addrs, void **,
-                        comm_size*sizeof(void *),
-                        mpi_errno, "(*win_ptr)->base_addrs");
+                        comm_size * sizeof(void *), mpi_errno, "(*win_ptr)->base_addrs");
 
     MPIU_CHKPMEM_MALLOC((*win_ptr)->shm_base_addrs, void **,
-                        comm_size*sizeof(void *),
-                        mpi_errno, "(*win_ptr)->shm_base_addrs");
+                        comm_size * sizeof(void *), mpi_errno, "(*win_ptr)->shm_base_addrs");
 
-    MPIU_CHKPMEM_MALLOC((*win_ptr)->sizes, MPI_Aint *, comm_size*sizeof(MPI_Aint),
+    MPIU_CHKPMEM_MALLOC((*win_ptr)->sizes, MPI_Aint *, comm_size * sizeof(MPI_Aint),
                         mpi_errno, "(*win_ptr)->sizes");
 
-    MPIU_CHKPMEM_MALLOC((*win_ptr)->disp_units, int *, comm_size*sizeof(int),
+    MPIU_CHKPMEM_MALLOC((*win_ptr)->disp_units, int *, comm_size * sizeof(int),
                         mpi_errno, "(*win_ptr)->disp_units");
 
     MPIU_CHKPMEM_MALLOC((*win_ptr)->all_win_handles, MPI_Win *,
-                        comm_size*sizeof(MPI_Win),
-                        mpi_errno, "(*win_ptr)->all_win_handles");
+                        comm_size * sizeof(MPI_Win), mpi_errno, "(*win_ptr)->all_win_handles");
 
     /* get the sizes of the windows and window objectsof
-       all processes.  allocate temp. buffer for communication */
-    MPIU_CHKLMEM_MALLOC(node_sizes, MPI_Aint *, node_size*sizeof(MPI_Aint), mpi_errno, "node_sizes");
+     * all processes.  allocate temp. buffer for communication */
+    MPIU_CHKLMEM_MALLOC(node_sizes, MPI_Aint *, node_size * sizeof(MPI_Aint), mpi_errno,
+                        "node_sizes");
 
     /* FIXME: This needs to be fixed for heterogeneous systems */
-    node_sizes[node_rank]   = (MPI_Aint) size;
+    node_sizes[node_rank] = (MPI_Aint) size;
 
     mpi_errno = MPIR_Allgather_impl(MPI_IN_PLACE, 0, MPI_DATATYPE_NULL,
                                     node_sizes, sizeof(MPI_Aint), MPI_BYTE,
                                     node_comm_ptr, &errflag);
     MPIR_T_PVAR_TIMER_END(RMA, rma_wincreate_allgather);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+    if (mpi_errno)
+        MPIU_ERR_POP(mpi_errno);
     MPIU_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
 
     (*win_ptr)->shm_segment_len = 0;
@@ -346,176 +352,225 @@ static int MPIDI_CH3I_Win_allocate_shm(MPI_Aint size, int disp_unit, MPID_Info *
     }
 
     else {
-    mpi_errno = MPIU_SHMW_Hnd_init(&(*win_ptr)->shm_segment_handle);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+        mpi_errno = MPIU_SHMW_Hnd_init(&(*win_ptr)->shm_segment_handle);
+        if (mpi_errno)
+            MPIU_ERR_POP(mpi_errno);
 
-    if (node_rank == 0) {
-        char *serialized_hnd_ptr = NULL;
+        if (node_rank == 0) {
+            char *serialized_hnd_ptr = NULL;
 
-        /* create shared memory region for all processes in win and map */
-        mpi_errno = MPIU_SHMW_Seg_create_and_attach((*win_ptr)->shm_segment_handle, (*win_ptr)->shm_segment_len,
-                                                    (char **)&(*win_ptr)->shm_base_addr, 0);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+            /* create shared memory region for all processes in win and map */
+            mpi_errno =
+                MPIU_SHMW_Seg_create_and_attach((*win_ptr)->shm_segment_handle,
+                                                (*win_ptr)->shm_segment_len,
+                                                (char **) &(*win_ptr)->shm_base_addr, 0);
+            if (mpi_errno)
+                MPIU_ERR_POP(mpi_errno);
 
-        /* serialize handle and broadcast it to the other processes in win */
-        mpi_errno = MPIU_SHMW_Hnd_get_serialized_by_ref((*win_ptr)->shm_segment_handle, &serialized_hnd_ptr);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+            /* serialize handle and broadcast it to the other processes in win */
+            mpi_errno =
+                MPIU_SHMW_Hnd_get_serialized_by_ref((*win_ptr)->shm_segment_handle,
+                                                    &serialized_hnd_ptr);
+            if (mpi_errno)
+                MPIU_ERR_POP(mpi_errno);
 
-        mpi_errno = MPIR_Bcast_impl(serialized_hnd_ptr, MPIU_SHMW_GHND_SZ, MPI_CHAR, 0, node_comm_ptr, &errflag);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-        MPIU_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
+            mpi_errno =
+                MPIR_Bcast_impl(serialized_hnd_ptr, MPIU_SHMW_GHND_SZ, MPI_CHAR, 0, node_comm_ptr,
+                                &errflag);
+            if (mpi_errno)
+                MPIU_ERR_POP(mpi_errno);
+            MPIU_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
 
-        /* wait for other processes to attach to win */
-        mpi_errno = MPIR_Barrier_impl(node_comm_ptr, &errflag);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-        MPIU_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
+            /* wait for other processes to attach to win */
+            mpi_errno = MPIR_Barrier_impl(node_comm_ptr, &errflag);
+            if (mpi_errno)
+                MPIU_ERR_POP(mpi_errno);
+            MPIU_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
 
-        /* unlink shared memory region so it gets deleted when all processes exit */
-        mpi_errno = MPIU_SHMW_Seg_remove((*win_ptr)->shm_segment_handle);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+            /* unlink shared memory region so it gets deleted when all processes exit */
+            mpi_errno = MPIU_SHMW_Seg_remove((*win_ptr)->shm_segment_handle);
+            if (mpi_errno)
+                MPIU_ERR_POP(mpi_errno);
 
-    } else {
-        char serialized_hnd[MPIU_SHMW_GHND_SZ] = {0};
-
-        /* get serialized handle from rank 0 and deserialize it */
-        mpi_errno = MPIR_Bcast_impl(serialized_hnd, MPIU_SHMW_GHND_SZ, MPI_CHAR, 0, node_comm_ptr, &errflag);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-        MPIU_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
-
-        mpi_errno = MPIU_SHMW_Hnd_deserialize((*win_ptr)->shm_segment_handle, serialized_hnd, strlen(serialized_hnd));
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-
-        /* attach to shared memory region created by rank 0 */
-        mpi_errno = MPIU_SHMW_Seg_attach((*win_ptr)->shm_segment_handle, (*win_ptr)->shm_segment_len,
-                                         (char **)&(*win_ptr)->shm_base_addr, 0);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-
-        mpi_errno = MPIR_Barrier_impl(node_comm_ptr, &errflag);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-        MPIU_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
-    }
-
-    /* Allocated the interprocess mutex segment. */
-    mpi_errno = MPIU_SHMW_Hnd_init(&(*win_ptr)->shm_mutex_segment_handle);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-
-    if (node_rank == 0) {
-        char *serialized_hnd_ptr = NULL;
-
-        /* create shared memory region for all processes in win and map */
-        mpi_errno = MPIU_SHMW_Seg_create_and_attach((*win_ptr)->shm_mutex_segment_handle, sizeof(MPIDI_CH3I_SHM_MUTEX),
-                                                    (char **)&(*win_ptr)->shm_mutex, 0);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-
-        MPIDI_CH3I_SHM_MUTEX_INIT(*win_ptr);
-
-        /* serialize handle and broadcast it to the other processes in win */
-        mpi_errno = MPIU_SHMW_Hnd_get_serialized_by_ref((*win_ptr)->shm_mutex_segment_handle, &serialized_hnd_ptr);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-
-        mpi_errno = MPIR_Bcast_impl(serialized_hnd_ptr, MPIU_SHMW_GHND_SZ, MPI_CHAR, 0, node_comm_ptr, &errflag);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-        MPIU_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
-
-        /* wait for other processes to attach to win */
-        mpi_errno = MPIR_Barrier_impl(node_comm_ptr, &errflag);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-        MPIU_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
-
-        /* unlink shared memory region so it gets deleted when all processes exit */
-        mpi_errno = MPIU_SHMW_Seg_remove((*win_ptr)->shm_mutex_segment_handle);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-    } else {
-        char serialized_hnd[MPIU_SHMW_GHND_SZ] = {0};
-
-        /* get serialized handle from rank 0 and deserialize it */
-        mpi_errno = MPIR_Bcast_impl(serialized_hnd, MPIU_SHMW_GHND_SZ, MPI_CHAR, 0, node_comm_ptr, &errflag);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-        MPIU_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
-
-        mpi_errno = MPIU_SHMW_Hnd_deserialize((*win_ptr)->shm_mutex_segment_handle, serialized_hnd, strlen(serialized_hnd));
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-
-        /* attach to shared memory region created by rank 0 */
-        mpi_errno = MPIU_SHMW_Seg_attach((*win_ptr)->shm_mutex_segment_handle, sizeof(MPIDI_CH3I_SHM_MUTEX),
-                                         (char **)&(*win_ptr)->shm_mutex, 0);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-
-        mpi_errno = MPIR_Barrier_impl(node_comm_ptr, &errflag);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-        MPIU_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
-    }
-
-    /* compute the base addresses of each process within the shared memory segment */
-    {
-        char *cur_base;
-        int cur_rank;
-        if ((*win_ptr)->create_flavor != MPI_WIN_FLAVOR_SHARED) {
-            /* If create flavor is not MPI_WIN_FLAVOR_SHARED, all processes on this
-               window may not be on the same node. Because we only need to calculate
-               local processes' shm_base_addrs using local processes's sizes,
-               we allocate a temporary array to place results and copy results
-               back to shm_base_addrs on the window at last. */
-            MPIU_CHKLMEM_MALLOC(node_shm_base_addrs, void **, node_size*sizeof(void*),
-                                mpi_errno, "node_shm_base_addrs");
         }
         else {
-            node_shm_base_addrs = (*win_ptr)->shm_base_addrs;
+            char serialized_hnd[MPIU_SHMW_GHND_SZ] = { 0 };
+
+            /* get serialized handle from rank 0 and deserialize it */
+            mpi_errno =
+                MPIR_Bcast_impl(serialized_hnd, MPIU_SHMW_GHND_SZ, MPI_CHAR, 0, node_comm_ptr,
+                                &errflag);
+            if (mpi_errno)
+                MPIU_ERR_POP(mpi_errno);
+            MPIU_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
+
+            mpi_errno =
+                MPIU_SHMW_Hnd_deserialize((*win_ptr)->shm_segment_handle, serialized_hnd,
+                                          strlen(serialized_hnd));
+            if (mpi_errno)
+                MPIU_ERR_POP(mpi_errno);
+
+            /* attach to shared memory region created by rank 0 */
+            mpi_errno =
+                MPIU_SHMW_Seg_attach((*win_ptr)->shm_segment_handle, (*win_ptr)->shm_segment_len,
+                                     (char **) &(*win_ptr)->shm_base_addr, 0);
+            if (mpi_errno)
+                MPIU_ERR_POP(mpi_errno);
+
+            mpi_errno = MPIR_Barrier_impl(node_comm_ptr, &errflag);
+            if (mpi_errno)
+                MPIU_ERR_POP(mpi_errno);
+            MPIU_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
         }
 
-        cur_base = (*win_ptr)->shm_base_addr;
-        cur_rank = 0;
-        node_shm_base_addrs[0] = (*win_ptr)->shm_base_addr;
-        for (i = 1; i < node_size; ++i) {
-            if (node_sizes[i]) {
-                /* For the base addresses, we track the previous
-                 * process that has allocated non-zero bytes of shared
-                 * memory.  We can not simply use "i-1" for the
-                 * previous process because rank "i-1" might not have
-                 * allocated any memory. */
-                if (noncontig) {
-                    node_shm_base_addrs[i] = cur_base + MPIDI_CH3_ROUND_UP_PAGESIZE(node_sizes[cur_rank]);
-                } else {
-                    node_shm_base_addrs[i] = cur_base + node_sizes[cur_rank];
+        /* Allocated the interprocess mutex segment. */
+        mpi_errno = MPIU_SHMW_Hnd_init(&(*win_ptr)->shm_mutex_segment_handle);
+        if (mpi_errno)
+            MPIU_ERR_POP(mpi_errno);
+
+        if (node_rank == 0) {
+            char *serialized_hnd_ptr = NULL;
+
+            /* create shared memory region for all processes in win and map */
+            mpi_errno =
+                MPIU_SHMW_Seg_create_and_attach((*win_ptr)->shm_mutex_segment_handle,
+                                                sizeof(MPIDI_CH3I_SHM_MUTEX),
+                                                (char **) &(*win_ptr)->shm_mutex, 0);
+            if (mpi_errno)
+                MPIU_ERR_POP(mpi_errno);
+
+            MPIDI_CH3I_SHM_MUTEX_INIT(*win_ptr);
+
+            /* serialize handle and broadcast it to the other processes in win */
+            mpi_errno =
+                MPIU_SHMW_Hnd_get_serialized_by_ref((*win_ptr)->shm_mutex_segment_handle,
+                                                    &serialized_hnd_ptr);
+            if (mpi_errno)
+                MPIU_ERR_POP(mpi_errno);
+
+            mpi_errno =
+                MPIR_Bcast_impl(serialized_hnd_ptr, MPIU_SHMW_GHND_SZ, MPI_CHAR, 0, node_comm_ptr,
+                                &errflag);
+            if (mpi_errno)
+                MPIU_ERR_POP(mpi_errno);
+            MPIU_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
+
+            /* wait for other processes to attach to win */
+            mpi_errno = MPIR_Barrier_impl(node_comm_ptr, &errflag);
+            if (mpi_errno)
+                MPIU_ERR_POP(mpi_errno);
+            MPIU_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
+
+            /* unlink shared memory region so it gets deleted when all processes exit */
+            mpi_errno = MPIU_SHMW_Seg_remove((*win_ptr)->shm_mutex_segment_handle);
+            if (mpi_errno)
+                MPIU_ERR_POP(mpi_errno);
+        }
+        else {
+            char serialized_hnd[MPIU_SHMW_GHND_SZ] = { 0 };
+
+            /* get serialized handle from rank 0 and deserialize it */
+            mpi_errno =
+                MPIR_Bcast_impl(serialized_hnd, MPIU_SHMW_GHND_SZ, MPI_CHAR, 0, node_comm_ptr,
+                                &errflag);
+            if (mpi_errno)
+                MPIU_ERR_POP(mpi_errno);
+            MPIU_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
+
+            mpi_errno =
+                MPIU_SHMW_Hnd_deserialize((*win_ptr)->shm_mutex_segment_handle, serialized_hnd,
+                                          strlen(serialized_hnd));
+            if (mpi_errno)
+                MPIU_ERR_POP(mpi_errno);
+
+            /* attach to shared memory region created by rank 0 */
+            mpi_errno =
+                MPIU_SHMW_Seg_attach((*win_ptr)->shm_mutex_segment_handle,
+                                     sizeof(MPIDI_CH3I_SHM_MUTEX), (char **) &(*win_ptr)->shm_mutex,
+                                     0);
+            if (mpi_errno)
+                MPIU_ERR_POP(mpi_errno);
+
+            mpi_errno = MPIR_Barrier_impl(node_comm_ptr, &errflag);
+            if (mpi_errno)
+                MPIU_ERR_POP(mpi_errno);
+            MPIU_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
+        }
+
+        /* compute the base addresses of each process within the shared memory segment */
+        {
+            char *cur_base;
+            int cur_rank;
+            if ((*win_ptr)->create_flavor != MPI_WIN_FLAVOR_SHARED) {
+                /* If create flavor is not MPI_WIN_FLAVOR_SHARED, all processes on this
+                 * window may not be on the same node. Because we only need to calculate
+                 * local processes' shm_base_addrs using local processes's sizes,
+                 * we allocate a temporary array to place results and copy results
+                 * back to shm_base_addrs on the window at last. */
+                MPIU_CHKLMEM_MALLOC(node_shm_base_addrs, void **, node_size * sizeof(void *),
+                                    mpi_errno, "node_shm_base_addrs");
+            }
+            else {
+                node_shm_base_addrs = (*win_ptr)->shm_base_addrs;
+            }
+
+            cur_base = (*win_ptr)->shm_base_addr;
+            cur_rank = 0;
+            node_shm_base_addrs[0] = (*win_ptr)->shm_base_addr;
+            for (i = 1; i < node_size; ++i) {
+                if (node_sizes[i]) {
+                    /* For the base addresses, we track the previous
+                     * process that has allocated non-zero bytes of shared
+                     * memory.  We can not simply use "i-1" for the
+                     * previous process because rank "i-1" might not have
+                     * allocated any memory. */
+                    if (noncontig) {
+                        node_shm_base_addrs[i] =
+                            cur_base + MPIDI_CH3_ROUND_UP_PAGESIZE(node_sizes[cur_rank]);
+                    }
+                    else {
+                        node_shm_base_addrs[i] = cur_base + node_sizes[cur_rank];
+                    }
+                    cur_base = node_shm_base_addrs[i];
+                    cur_rank = i;
                 }
-                cur_base = node_shm_base_addrs[i];
-                cur_rank = i;
-            } else {
-                node_shm_base_addrs[i] = NULL;
+                else {
+                    node_shm_base_addrs[i] = NULL;
+                }
+            }
+
+            if ((*win_ptr)->create_flavor != MPI_WIN_FLAVOR_SHARED) {
+                /* if MPI_WIN_FLAVOR_SHARED is not set, copy from node_shm_base_addrs to
+                 * (*win_ptr)->shm_base_addrs */
+                for (i = 0; i < comm_size; i++) {
+                    if ((*win_ptr)->comm_ptr->intranode_table[i] >= 0) {
+                        MPIU_Assert((*win_ptr)->comm_ptr->intranode_table[i] < node_size);
+                        (*win_ptr)->shm_base_addrs[i] =
+                            node_shm_base_addrs[(*win_ptr)->comm_ptr->intranode_table[i]];
+                    }
+                    else
+                        (*win_ptr)->shm_base_addrs[i] = NULL;
+                }
             }
         }
 
-        if ((*win_ptr)->create_flavor != MPI_WIN_FLAVOR_SHARED) {
-            /* if MPI_WIN_FLAVOR_SHARED is not set, copy from node_shm_base_addrs to
-               (*win_ptr)->shm_base_addrs */
-            for (i = 0; i < comm_size; i++) {
-                if ((*win_ptr)->comm_ptr->intranode_table[i] >= 0) {
-                    MPIU_Assert((*win_ptr)->comm_ptr->intranode_table[i] < node_size);
-                    (*win_ptr)->shm_base_addrs[i] = node_shm_base_addrs[(*win_ptr)->comm_ptr->intranode_table[i]];
-                }
-                else
-                    (*win_ptr)->shm_base_addrs[i] = NULL;
-            }
-        }
+        (*win_ptr)->base = (*win_ptr)->shm_base_addrs[rank];
     }
 
-    (*win_ptr)->base = (*win_ptr)->shm_base_addrs[rank];
-    }
-
-    MPIU_CHKLMEM_MALLOC(tmp_buf, MPI_Aint *, 4*comm_size*sizeof(MPI_Aint),
+    MPIU_CHKLMEM_MALLOC(tmp_buf, MPI_Aint *, 4 * comm_size * sizeof(MPI_Aint),
                         mpi_errno, "tmp_buf");
 
     /* get the base addresses of the windows.  Note we reuse tmp_buf from above
-       since it's at least as large as we need it for this allgather. */
-    tmp_buf[4*rank] = MPIU_PtrToAint((*win_ptr)->base);
-    tmp_buf[4*rank+1] = size;
-    tmp_buf[4*rank+2] = (MPI_Aint) disp_unit;
-    tmp_buf[4*rank+3] = (MPI_Aint) (*win_ptr)->handle;
+     * since it's at least as large as we need it for this allgather. */
+    tmp_buf[4 * rank] = MPIU_PtrToAint((*win_ptr)->base);
+    tmp_buf[4 * rank + 1] = size;
+    tmp_buf[4 * rank + 2] = (MPI_Aint) disp_unit;
+    tmp_buf[4 * rank + 3] = (MPI_Aint) (*win_ptr)->handle;
 
     mpi_errno = MPIR_Allgather_impl(MPI_IN_PLACE, 0, MPI_DATATYPE_NULL,
-                                    tmp_buf, 4, MPI_AINT,
-                                    (*win_ptr)->comm_ptr, &errflag);
-    if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+                                    tmp_buf, 4, MPI_AINT, (*win_ptr)->comm_ptr, &errflag);
+    if (mpi_errno)
+        MPIU_ERR_POP(mpi_errno);
     MPIU_ERR_CHKANDJUMP(errflag, mpi_errno, MPI_ERR_OTHER, "**coll_fail");
 
     k = 0;
@@ -530,17 +585,17 @@ static int MPIDI_CH3I_Win_allocate_shm(MPI_Aint size, int disp_unit, MPID_Info *
 
     /* Provide operation overrides for this window flavor */
     (*win_ptr)->RMAFns.Win_shared_query = MPIDI_CH3_SHM_Win_shared_query;
-    (*win_ptr)->RMAFns.Win_free         = MPIDI_CH3_SHM_Win_free;
+    (*win_ptr)->RMAFns.Win_free = MPIDI_CH3_SHM_Win_free;
 
     /* Cache SHM windows */
     MPIDI_CH3I_SHM_Wins_append(&shm_wins_list, (*win_ptr));
 
-fn_exit:
+  fn_exit:
     MPIU_CHKLMEM_FREEALL();
     MPIDI_RMA_FUNC_EXIT(MPID_STATE_MPIDI_CH3I_WIN_ALLOCATE_SHM);
     return mpi_errno;
     /* --BEGIN ERROR HANDLING-- */
-fn_fail:
+  fn_fail:
     MPIU_CHKPMEM_REAP();
     goto fn_exit;
     /* --END ERROR HANDLING-- */

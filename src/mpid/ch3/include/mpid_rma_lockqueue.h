@@ -20,7 +20,7 @@ MPIR_T_PVAR_DOUBLE_TIMER_DECL_EXTERN(RMA, rma_winlock_getlocallock);
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 static inline MPIDI_RMA_Lock_entry_t *MPIDI_CH3I_Win_lock_entry_alloc(MPID_Win * win_ptr,
-                                                                      MPIDI_CH3_Pkt_t *pkt)
+                                                                      MPIDI_CH3_Pkt_t * pkt)
 {
     MPIDI_RMA_Lock_entry_t *new_ptr = NULL;
 
@@ -48,7 +48,7 @@ static inline MPIDI_RMA_Lock_entry_t *MPIDI_CH3I_Win_lock_entry_alloc(MPID_Win *
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 static inline int MPIDI_CH3I_Win_lock_entry_free(MPID_Win * win_ptr,
-                                                 MPIDI_RMA_Lock_entry_t *lock_entry)
+                                                 MPIDI_RMA_Lock_entry_t * lock_entry)
 {
     int mpi_errno = MPI_SUCCESS;
 
@@ -58,10 +58,10 @@ static inline int MPIDI_CH3I_Win_lock_entry_free(MPID_Win * win_ptr,
     }
 
     /* use PREPEND when return objects back to the pool
-       in order to improve cache performance */
+     * in order to improve cache performance */
     MPL_LL_PREPEND(win_ptr->lock_entry_pool, win_ptr->lock_entry_pool_tail, lock_entry);
 
     return mpi_errno;
 }
 
-#endif  /* MPID_RMA_ISSUE_H_INCLUDED */
+#endif /* MPID_RMA_ISSUE_H_INCLUDED */

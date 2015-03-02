@@ -44,10 +44,10 @@ static inline int immed_copy(void *src, void *dest, size_t len)
         MPIU_Memcpy(dest, (void *) src, len);
     }
 
- fn_exit:
+  fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_IMMED_COPY);
     return mpi_errno;
- fn_fail:
+  fn_fail:
     goto fn_exit;
 }
 
@@ -58,7 +58,7 @@ static inline int immed_copy(void *src, void *dest, size_t len)
 #define FUNCNAME fill_in_derived_dtp_info
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-static int fill_in_derived_dtp_info(MPIDI_RMA_Op_t *rma_op, MPID_Datatype *dtp)
+static int fill_in_derived_dtp_info(MPIDI_RMA_Op_t * rma_op, MPID_Datatype * dtp)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIU_CHKPMEM_DECL(1);
@@ -82,19 +82,18 @@ static int fill_in_derived_dtp_info(MPIDI_RMA_Op_t *rma_op, MPID_Datatype *dtp)
     rma_op->dtype_info.has_sticky_ub = dtp->has_sticky_ub;
     rma_op->dtype_info.has_sticky_lb = dtp->has_sticky_lb;
 
-    MPIU_CHKPMEM_MALLOC(rma_op->dataloop, void *, dtp->dataloop_size,
-                        mpi_errno, "dataloop");
+    MPIU_CHKPMEM_MALLOC(rma_op->dataloop, void *, dtp->dataloop_size, mpi_errno, "dataloop");
 
     MPIU_Memcpy(rma_op->dataloop, dtp->dataloop, dtp->dataloop_size);
     /* The dataloop can have undefined padding sections, so we need to let
      * valgrind know that it is OK to pass this data to writev later on. */
     MPL_VG_MAKE_MEM_DEFINED(rma_op->dataloop, dtp->dataloop_size);
 
- fn_exit:
+  fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_FILL_IN_DERIVED_DTP_INFO);
     MPIU_CHKPMEM_COMMIT();
     return mpi_errno;
- fn_fail:
+  fn_fail:
     MPIU_CHKPMEM_REAP();
     goto fn_exit;
 }
@@ -146,8 +145,7 @@ static int create_datatype(const MPIDI_RMA_dtype_info * dtype_info,
     ints[0] = count;
 
     MPID_Datatype_get_ptr(combined_datatype, *combined_dtp);
-    mpi_errno = MPID_Datatype_set_contents(*combined_dtp, MPI_COMBINER_STRUCT,
-                                           count + 1,       /* ints (cnt,blklen) */
+    mpi_errno = MPID_Datatype_set_contents(*combined_dtp, MPI_COMBINER_STRUCT, count + 1,       /* ints (cnt,blklen) */
                                            count,       /* aints (disps) */
                                            count,       /* types */
                                            ints, displaces, datatypes);
@@ -185,7 +183,7 @@ static int create_datatype(const MPIDI_RMA_dtype_info * dtype_info,
 #define FUNCNAME issue_from_origin_buffer
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-static int issue_from_origin_buffer(MPIDI_RMA_Op_t *rma_op, MPID_IOV *iov, MPIDI_VC_t *vc)
+static int issue_from_origin_buffer(MPIDI_RMA_Op_t * rma_op, MPID_IOV * iov, MPIDI_VC_t * vc)
 {
     MPI_Aint origin_type_size;
     MPI_Datatype target_datatype;
@@ -202,7 +200,8 @@ static int issue_from_origin_buffer(MPIDI_RMA_Op_t *rma_op, MPID_IOV *iov, MPIDI
 
         /* Fill derived datatype info. */
         mpi_errno = fill_in_derived_dtp_info(rma_op, target_dtp);
-        if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
+        if (mpi_errno != MPI_SUCCESS)
+            MPIU_ERR_POP(mpi_errno);
 
         /* Set dataloop size in pkt header */
         MPIDI_CH3_PKT_RMA_SET_DATALOOP_SIZE(rma_op->pkt, target_dtp->dataloop_size, mpi_errno);
@@ -276,9 +275,9 @@ static int issue_from_origin_buffer(MPIDI_RMA_Op_t *rma_op, MPID_IOV *iov, MPIDI
         mpi_errno = create_datatype(&rma_op->dtype_info, rma_op->dataloop,
                                     target_dtp->dataloop_size,
                                     rma_op->origin_addr, rma_op->origin_count,
-                                    rma_op->origin_datatype,
-                                    &combined_dtp);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
+                                    rma_op->origin_datatype, &combined_dtp);
+        if (mpi_errno)
+            MPIU_ERR_POP(mpi_errno);
 
         rma_op->request->dev.datatype_ptr = combined_dtp;
         /* combined_datatype will be freed when request is freed */
@@ -302,10 +301,10 @@ static int issue_from_origin_buffer(MPIDI_RMA_Op_t *rma_op, MPID_IOV *iov, MPIDI
         MPID_Datatype_release(target_dtp);
     }
 
- fn_exit:
+  fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_ISSUE_FROM_ORIGIN_BUFFER);
     return mpi_errno;
- fn_fail:
+  fn_fail:
     if (rma_op->request) {
         if (rma_op->request->dev.datatype_ptr)
             MPID_Datatype_release(rma_op->request->dev.datatype_ptr);
@@ -321,9 +320,8 @@ static int issue_from_origin_buffer(MPIDI_RMA_Op_t *rma_op, MPID_IOV *iov, MPIDI
 #define FUNCNAME issue_put_op
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-static int issue_put_op(MPIDI_RMA_Op_t * rma_op, MPID_Win *win_ptr,
-                        MPIDI_RMA_Target_t *target_ptr,
-                        MPIDI_CH3_Pkt_flags_t flags)
+static int issue_put_op(MPIDI_RMA_Op_t * rma_op, MPID_Win * win_ptr,
+                        MPIDI_RMA_Target_t * target_ptr, MPIDI_CH3_Pkt_flags_t flags)
 {
     MPIDI_VC_t *vc = NULL;
     MPI_Aint origin_type_size;
@@ -354,11 +352,12 @@ static int issue_put_op(MPIDI_RMA_Op_t * rma_op, MPID_Win *win_ptr,
         /* We still need to issue from origin buffer. */
         iov[0].MPID_IOV_BUF = (MPID_IOV_BUF_CAST) put_pkt;
         iov[0].MPID_IOV_LEN = sizeof(*put_pkt);
-        iov[1].MPID_IOV_BUF = (MPID_IOV_BUF_CAST) ((char *)rma_op->origin_addr);
+        iov[1].MPID_IOV_BUF = (MPID_IOV_BUF_CAST) ((char *) rma_op->origin_addr);
         iov[1].MPID_IOV_LEN = rma_op->origin_count * origin_type_size;
 
         mpi_errno = issue_from_origin_buffer(rma_op, iov, vc);
-        if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
+        if (mpi_errno != MPI_SUCCESS)
+            MPIU_ERR_POP(mpi_errno);
     }
 
   fn_exit:
@@ -376,9 +375,8 @@ static int issue_put_op(MPIDI_RMA_Op_t * rma_op, MPID_Win *win_ptr,
 #define FUNCNAME issue_acc_op
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-static int issue_acc_op(MPIDI_RMA_Op_t *rma_op, MPID_Win *win_ptr,
-                        MPIDI_RMA_Target_t *target_ptr,
-                        MPIDI_CH3_Pkt_flags_t flags)
+static int issue_acc_op(MPIDI_RMA_Op_t * rma_op, MPID_Win * win_ptr,
+                        MPIDI_RMA_Target_t * target_ptr, MPIDI_CH3_Pkt_flags_t flags)
 {
     MPIDI_VC_t *vc = NULL;
     MPI_Aint origin_type_size;
@@ -409,17 +407,18 @@ static int issue_acc_op(MPIDI_RMA_Op_t *rma_op, MPID_Win *win_ptr,
         /* We still need to issue from origin buffer. */
         iov[0].MPID_IOV_BUF = (MPID_IOV_BUF_CAST) accum_pkt;
         iov[0].MPID_IOV_LEN = sizeof(*accum_pkt);
-        iov[1].MPID_IOV_BUF = (MPID_IOV_BUF_CAST) ((char *)rma_op->origin_addr);
+        iov[1].MPID_IOV_BUF = (MPID_IOV_BUF_CAST) ((char *) rma_op->origin_addr);
         iov[1].MPID_IOV_LEN = rma_op->origin_count * origin_type_size;
 
         mpi_errno = issue_from_origin_buffer(rma_op, iov, vc);
-        if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
+        if (mpi_errno != MPI_SUCCESS)
+            MPIU_ERR_POP(mpi_errno);
     }
 
- fn_exit:
+  fn_exit:
     MPIDI_RMA_FUNC_EXIT(MPID_STATE_ISSUE_ACC_OP);
     return mpi_errno;
- fn_fail:
+  fn_fail:
     goto fn_exit;
 }
 
@@ -429,9 +428,8 @@ static int issue_acc_op(MPIDI_RMA_Op_t *rma_op, MPID_Win *win_ptr,
 #define FUNCNAME issue_get_acc_op
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-static int issue_get_acc_op(MPIDI_RMA_Op_t *rma_op, MPID_Win *win_ptr,
-                            MPIDI_RMA_Target_t *target_ptr,
-                            MPIDI_CH3_Pkt_flags_t flags)
+static int issue_get_acc_op(MPIDI_RMA_Op_t * rma_op, MPID_Win * win_ptr,
+                            MPIDI_RMA_Target_t * target_ptr, MPIDI_CH3_Pkt_flags_t flags)
 {
     MPIDI_VC_t *vc = NULL;
     MPI_Aint origin_type_size;
@@ -461,11 +459,11 @@ static int issue_get_acc_op(MPIDI_RMA_Op_t *rma_op, MPID_Win *win_ptr,
     resp_req->dev.source_win_handle = win_ptr->handle;
 
     if (!MPIR_DATATYPE_IS_PREDEFINED(resp_req->dev.datatype)) {
-      MPID_Datatype *result_dtp = NULL;
-      MPID_Datatype_get_ptr(resp_req->dev.datatype, result_dtp);
-      resp_req->dev.datatype_ptr = result_dtp;
-      /* this will cause the datatype to be freed when the
-       * request is freed. */
+        MPID_Datatype *result_dtp = NULL;
+        MPID_Datatype_get_ptr(resp_req->dev.datatype, result_dtp);
+        resp_req->dev.datatype_ptr = result_dtp;
+        /* this will cause the datatype to be freed when the
+         * request is freed. */
     }
 
     /* Note: Get_accumulate uses the same packet type as accumulate */
@@ -480,7 +478,8 @@ static int issue_get_acc_op(MPIDI_RMA_Op_t *rma_op, MPID_Win *win_ptr,
     if (rma_op->pkt.type == MPIDI_CH3_PKT_GET_ACCUM_IMMED) {
         /* All origin data is in packet header, issue the header. */
         MPIU_THREAD_CS_ENTER(CH3COMM, vc);
-        mpi_errno = MPIDI_CH3_iStartMsg(vc, get_accum_pkt, sizeof(*get_accum_pkt), &(rma_op->request));
+        mpi_errno =
+            MPIDI_CH3_iStartMsg(vc, get_accum_pkt, sizeof(*get_accum_pkt), &(rma_op->request));
         MPIU_THREAD_CS_EXIT(CH3COMM, vc);
         MPIU_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**ch3|rmamsg");
     }
@@ -488,11 +487,12 @@ static int issue_get_acc_op(MPIDI_RMA_Op_t *rma_op, MPID_Win *win_ptr,
         /* We still need to issue from origin buffer. */
         iov[0].MPID_IOV_BUF = (MPID_IOV_BUF_CAST) get_accum_pkt;
         iov[0].MPID_IOV_LEN = sizeof(*get_accum_pkt);
-        iov[1].MPID_IOV_BUF = (MPID_IOV_BUF_CAST) ((char *)rma_op->origin_addr);
+        iov[1].MPID_IOV_BUF = (MPID_IOV_BUF_CAST) ((char *) rma_op->origin_addr);
         iov[1].MPID_IOV_LEN = rma_op->origin_count * origin_type_size;
 
         mpi_errno = issue_from_origin_buffer(rma_op, iov, vc);
-        if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
+        if (mpi_errno != MPI_SUCCESS)
+            MPIU_ERR_POP(mpi_errno);
     }
 
     /* This operation can generate two requests; one for inbound and one for
@@ -524,11 +524,11 @@ static int issue_get_acc_op(MPIDI_RMA_Op_t *rma_op, MPID_Win *win_ptr,
     /* For error checking */
     resp_req = NULL;
 
- fn_exit:
+  fn_exit:
     MPIDI_RMA_FUNC_EXIT(MPID_STATE_ISSUE_GET_ACC_OP);
     return mpi_errno;
     /* --BEGIN ERROR HANDLING-- */
- fn_fail:
+  fn_fail:
     if (resp_req != NULL) {
         MPID_Request_release(resp_req);
     }
@@ -542,8 +542,7 @@ static int issue_get_acc_op(MPIDI_RMA_Op_t *rma_op, MPID_Win *win_ptr,
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 static int issue_get_op(MPIDI_RMA_Op_t * rma_op, MPID_Win * win_ptr,
-                        MPIDI_RMA_Target_t *target_ptr,
-                        MPIDI_CH3_Pkt_flags_t flags)
+                        MPIDI_RMA_Target_t * target_ptr, MPIDI_CH3_Pkt_flags_t flags)
 {
     MPIDI_CH3_Pkt_get_t *get_pkt = &rma_op->pkt.get;
     int mpi_errno = MPI_SUCCESS;
@@ -600,7 +599,8 @@ static int issue_get_op(MPIDI_RMA_Op_t * rma_op, MPID_Win * win_ptr,
         MPID_Datatype_get_ptr(target_datatype, dtp);
 
         mpi_errno = fill_in_derived_dtp_info(rma_op, dtp);
-        if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
+        if (mpi_errno != MPI_SUCCESS)
+            MPIU_ERR_POP(mpi_errno);
 
         /* Set dataloop size in pkt header */
         MPIDI_CH3_PKT_RMA_SET_DATALOOP_SIZE(rma_op->pkt, dtp->dataloop_size, mpi_errno);
@@ -644,7 +644,7 @@ static int issue_get_op(MPIDI_RMA_Op_t * rma_op, MPID_Win * win_ptr,
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 static int issue_cas_op(MPIDI_RMA_Op_t * rma_op,
-                        MPID_Win * win_ptr, MPIDI_RMA_Target_t *target_ptr,
+                        MPID_Win * win_ptr, MPIDI_RMA_Target_t * target_ptr,
                         MPIDI_CH3_Pkt_flags_t flags)
 {
     MPIDI_VC_t *vc = NULL;
@@ -707,7 +707,7 @@ static int issue_cas_op(MPIDI_RMA_Op_t * rma_op,
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 static int issue_fop_op(MPIDI_RMA_Op_t * rma_op,
-                        MPID_Win * win_ptr, MPIDI_RMA_Target_t *target_ptr,
+                        MPID_Win * win_ptr, MPIDI_RMA_Target_t * target_ptr,
                         MPIDI_CH3_Pkt_flags_t flags)
 {
     MPIDI_VC_t *vc = NULL;
@@ -745,21 +745,22 @@ static int issue_fop_op(MPIDI_RMA_Op_t * rma_op,
     MPID_Datatype_get_size_macro(rma_op->origin_datatype, origin_type_size);
 
     if (rma_op->pkt.type == MPIDI_CH3_PKT_FOP_IMMED) {
-    /* All origin data is in packet header, issue the header. */
-    MPIU_THREAD_CS_ENTER(CH3COMM, vc);
-    mpi_errno = MPIDI_CH3_iStartMsg(vc, fop_pkt, sizeof(*fop_pkt), &(rma_op->request));
-    MPIU_THREAD_CS_EXIT(CH3COMM, vc);
-    MPIU_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**ch3|rmamsg");
+        /* All origin data is in packet header, issue the header. */
+        MPIU_THREAD_CS_ENTER(CH3COMM, vc);
+        mpi_errno = MPIDI_CH3_iStartMsg(vc, fop_pkt, sizeof(*fop_pkt), &(rma_op->request));
+        MPIU_THREAD_CS_EXIT(CH3COMM, vc);
+        MPIU_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**ch3|rmamsg");
     }
     else {
         /* We still need to issue from origin buffer. */
         iov[0].MPID_IOV_BUF = (MPID_IOV_BUF_CAST) fop_pkt;
         iov[0].MPID_IOV_LEN = sizeof(*fop_pkt);
-        iov[1].MPID_IOV_BUF = (MPID_IOV_BUF_CAST) ((char *)rma_op->origin_addr);
+        iov[1].MPID_IOV_BUF = (MPID_IOV_BUF_CAST) ((char *) rma_op->origin_addr);
         iov[1].MPID_IOV_LEN = origin_type_size;
 
         mpi_errno = issue_from_origin_buffer(rma_op, iov, vc);
-        if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
+        if (mpi_errno != MPI_SUCCESS)
+            MPIU_ERR_POP(mpi_errno);
     }
 
     /* This operation can generate two requests; one for inbound and one for
@@ -790,11 +791,11 @@ static int issue_fop_op(MPIDI_RMA_Op_t * rma_op,
     /* For error checking */
     resp_req = NULL;
 
- fn_exit:
+  fn_exit:
     MPIDI_RMA_FUNC_EXIT(MPID_STATE_ISSUE_FOP_OP);
     return mpi_errno;
     /* --BEGIN ERROR HANDLING-- */
- fn_fail:
+  fn_fail:
     if (resp_req != NULL) {
         MPID_Request_release(resp_req);
     }
@@ -810,8 +811,7 @@ static int issue_fop_op(MPIDI_RMA_Op_t * rma_op,
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 static inline int issue_rma_op(MPIDI_RMA_Op_t * op_ptr, MPID_Win * win_ptr,
-                               MPIDI_RMA_Target_t * target_ptr,
-                               MPIDI_CH3_Pkt_flags_t flags)
+                               MPIDI_RMA_Target_t * target_ptr, MPIDI_CH3_Pkt_flags_t flags)
 {
     int mpi_errno = MPI_SUCCESS;
     MPIDI_STATE_DECL(MPID_STATE_ISSUE_RMA_OP);
@@ -857,4 +857,4 @@ static inline int issue_rma_op(MPIDI_RMA_Op_t * op_ptr, MPID_Win * win_ptr,
     /* --END ERROR HANDLING-- */
 }
 
-#endif  /* MPID_RMA_ISSUE_H_INCLUDED */
+#endif /* MPID_RMA_ISSUE_H_INCLUDED */

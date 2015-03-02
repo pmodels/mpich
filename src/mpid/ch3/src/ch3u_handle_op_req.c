@@ -40,4 +40,3 @@ int MPIDI_CH3_ReqHandler_ReqOpsComplete(MPIDI_VC_t * vc, MPID_Request * sreq, in
   fn_fail:
     goto fn_exit;
 }
-

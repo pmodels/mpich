@@ -23,7 +23,8 @@
 #define LOOP_SIZE 15
 #define CHECK_TAG 123
 
-int main (int argc, char *argv[]) {
+int main(int argc, char *argv[])
+{
     int rank, size, i, j, k;
     int errors = 0, all_errors = 0;
     int origin_shm, origin_am, dest;
@@ -46,8 +47,10 @@ int main (int argc, char *argv[]) {
     origin_shm = 0;
     origin_am = 1;
 
-    if (rank == origin_am) my_buf_size = AM_BUF_SIZE;
-    else if (rank == origin_shm) my_buf_size = SHM_BUF_SIZE;
+    if (rank == origin_am)
+        my_buf_size = AM_BUF_SIZE;
+    else if (rank == origin_shm)
+        my_buf_size = SHM_BUF_SIZE;
 
     if (rank != dest) {
         MPI_Alloc_mem(sizeof(int) * my_buf_size, MPI_INFO_NULL, &orig_buf);
@@ -57,15 +60,20 @@ int main (int argc, char *argv[]) {
     MPI_Win_allocate(sizeof(int) * WIN_BUF_SIZE, sizeof(int), MPI_INFO_NULL,
                      MPI_COMM_WORLD, &target_buf, &win);
 
-    for (k = 0; k < LOOP_SIZE; k++)  {
+    for (k = 0; k < LOOP_SIZE; k++) {
 
         /* init buffers */
         if (rank != dest) {
-            for (i = 0; i < my_buf_size; i++) {orig_buf[i] = 1; result_buf[i] = 0;}
+            for (i = 0; i < my_buf_size; i++) {
+                orig_buf[i] = 1;
+                result_buf[i] = 0;
+            }
         }
         else {
             MPI_Win_lock(MPI_LOCK_SHARED, rank, 0, win);
-            for (i = 0; i < WIN_BUF_SIZE; i++) {target_buf[i] = 0;}
+            for (i = 0; i < WIN_BUF_SIZE; i++) {
+                target_buf[i] = 0;
+            }
             MPI_Win_unlock(rank, win);
         }
 
@@ -90,12 +98,14 @@ int main (int argc, char *argv[]) {
             }
             else if (rank == origin_shm) {
                 MPI_Alloc_mem(sizeof(int) * AM_BUF_SIZE, MPI_INFO_NULL, &check_buf);
-                MPI_Recv(check_buf, AM_BUF_SIZE, MPI_INT, origin_am, CHECK_TAG, MPI_COMM_WORLD, &status);
+                MPI_Recv(check_buf, AM_BUF_SIZE, MPI_INT, origin_am, CHECK_TAG, MPI_COMM_WORLD,
+                         &status);
                 for (i = 0; i < AM_BUF_SIZE; i++) {
                     for (j = 0; j < SHM_BUF_SIZE; j++) {
                         if (check_buf[i] == result_buf[j]) {
-                            printf("LOOP=%d, rank=%d, FOP, both check_buf[%d] and result_buf[%d] equal to %d, expected to be different. \n",
-                                   k, rank, i, j, check_buf[i]);
+                            printf
+                                ("LOOP=%d, rank=%d, FOP, both check_buf[%d] and result_buf[%d] equal to %d, expected to be different. \n",
+                                 k, rank, i, j, check_buf[i]);
                             errors++;
                         }
                     }
@@ -107,7 +117,7 @@ int main (int argc, char *argv[]) {
             /* check results on P1 */
             if (target_buf[0] != AM_BUF_SIZE + SHM_BUF_SIZE) {
                 printf("LOOP=%d, rank=%d, FOP, target_buf[0] = %d, expected %d. \n",
-                       k, rank, target_buf[0], AM_BUF_SIZE+SHM_BUF_SIZE);
+                       k, rank, target_buf[0], AM_BUF_SIZE + SHM_BUF_SIZE);
                 errors++;
             }
         }
@@ -120,7 +130,7 @@ int main (int argc, char *argv[]) {
         MPI_Free_mem(result_buf);
     }
 
- exit_test:
+  exit_test:
     MPI_Reduce(&errors, &all_errors, 1, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
 
     if (rank == 0 && all_errors == 0)

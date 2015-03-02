@@ -83,13 +83,13 @@ typedef struct MPIDI_RMA_Target {
     struct MPIDI_RMA_Target *next;
     int target_rank;
     enum MPIDI_RMA_states access_state;
-    int lock_type; /* NONE, SHARED, EXCLUSIVE */
+    int lock_type;              /* NONE, SHARED, EXCLUSIVE */
     int lock_mode;              /* e.g., MODE_NO_CHECK */
     int accumulated_ops_cnt;
     int disable_flush_local;
     int win_complete_flag;
-    int put_acc_issued; /* indicate if PUT/ACC is issued in this epoch
-                           after the previous synchronization calls. */
+    int put_acc_issued;         /* indicate if PUT/ACC is issued in this epoch
+                                 * after the previous synchronization calls. */
 
     /* The target structure is free to be cleaned up when all of the
      * following conditions hold true:
@@ -130,11 +130,11 @@ extern MPIDI_RMA_Win_list_t *MPIDI_RMA_Win_list, *MPIDI_RMA_Win_list_tail;
 
 typedef struct MPIDI_RMA_Lock_entry {
     struct MPIDI_RMA_Lock_entry *next;
-    MPIDI_CH3_Pkt_t pkt;    /* all information for this request packet */
+    MPIDI_CH3_Pkt_t pkt;        /* all information for this request packet */
     MPIDI_VC_t *vc;
-    void *data;             /* for queued PUTs / ACCs / GACCs, data is copied here */
+    void *data;                 /* for queued PUTs / ACCs / GACCs, data is copied here */
     int data_size;
-    int all_data_recved;    /* indicate if all data has been received */
+    int all_data_recved;        /* indicate if all data has been received */
 } MPIDI_RMA_Lock_entry_t;
 
 typedef MPIDI_RMA_Op_t *MPIDI_RMA_Ops_list_t;
