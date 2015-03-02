@@ -254,7 +254,7 @@ int MPIDI_CH3_PktHandler_Put(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
         req->dev.OnFinal = MPIDI_CH3_ReqHandler_PutRecvComplete;
 
         if (MPIR_DATATYPE_IS_PREDEFINED(put_pkt->datatype)) {
-            MPIDI_Request_set_type(req, MPIDI_REQUEST_TYPE_PUT_RESP);
+            MPIDI_Request_set_type(req, MPIDI_REQUEST_TYPE_PUT_RECV);
             req->dev.datatype = put_pkt->datatype;
 
             req->dev.recv_data_sz = type_size * put_pkt->count;
@@ -279,7 +279,7 @@ int MPIDI_CH3_PktHandler_Put(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
         }
         else {
             /* derived datatype */
-            MPIDI_Request_set_type(req, MPIDI_REQUEST_TYPE_PUT_RESP_DERIVED_DT);
+            MPIDI_Request_set_type(req, MPIDI_REQUEST_TYPE_PUT_RECV_DERIVED_DT);
             req->dev.datatype = MPI_DATATYPE_NULL;
 
             req->dev.dtype_info = (MPIDI_RMA_dtype_info *)
@@ -500,7 +500,7 @@ int MPIDI_CH3_PktHandler_Get(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
     else {
         /* derived datatype. first get the dtype_info and dataloop. */
 
-        MPIDI_Request_set_type(req, MPIDI_REQUEST_TYPE_GET_RESP_DERIVED_DT);
+        MPIDI_Request_set_type(req, MPIDI_REQUEST_TYPE_GET_RECV_DERIVED_DT);
         req->dev.OnDataAvail = MPIDI_CH3_ReqHandler_GetDerivedDTRecvComplete;
         req->dev.OnFinal = 0;
         req->dev.user_buf = get_pkt->addr;
@@ -645,7 +645,7 @@ int MPIDI_CH3_PktHandler_Accumulate(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
         data_buf = (char *) pkt + sizeof(MPIDI_CH3_Pkt_t);
 
         if (MPIR_DATATYPE_IS_PREDEFINED(accum_pkt->datatype)) {
-            MPIDI_Request_set_type(req, MPIDI_REQUEST_TYPE_ACCUM_RESP);
+            MPIDI_Request_set_type(req, MPIDI_REQUEST_TYPE_ACCUM_RECV);
             req->dev.datatype = accum_pkt->datatype;
 
             MPIR_Type_get_true_extent_impl(accum_pkt->datatype, &true_lb, &true_extent);
@@ -684,7 +684,7 @@ int MPIDI_CH3_PktHandler_Accumulate(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
             }
         }
         else {
-            MPIDI_Request_set_type(req, MPIDI_REQUEST_TYPE_ACCUM_RESP_DERIVED_DT);
+            MPIDI_Request_set_type(req, MPIDI_REQUEST_TYPE_ACCUM_RECV_DERIVED_DT);
             req->dev.OnDataAvail = MPIDI_CH3_ReqHandler_AccumDerivedDTRecvComplete;
             req->dev.datatype = MPI_DATATYPE_NULL;
 
@@ -888,7 +888,7 @@ int MPIDI_CH3_PktHandler_GetAccumulate(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
         data_buf = (char *) pkt + sizeof(MPIDI_CH3_Pkt_t);
 
         if (MPIR_DATATYPE_IS_PREDEFINED(get_accum_pkt->datatype)) {
-            MPIDI_Request_set_type(req, MPIDI_REQUEST_TYPE_GET_ACCUM_RESP);
+            MPIDI_Request_set_type(req, MPIDI_REQUEST_TYPE_GET_ACCUM_RECV);
             req->dev.datatype = get_accum_pkt->datatype;
 
             MPIR_Type_get_true_extent_impl(get_accum_pkt->datatype, &true_lb, &true_extent);
@@ -926,7 +926,7 @@ int MPIDI_CH3_PktHandler_GetAccumulate(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
             }
         }
         else {
-            MPIDI_Request_set_type(req, MPIDI_REQUEST_TYPE_GET_ACCUM_RESP_DERIVED_DT);
+            MPIDI_Request_set_type(req, MPIDI_REQUEST_TYPE_GET_ACCUM_RECV_DERIVED_DT);
             req->dev.OnDataAvail = MPIDI_CH3_ReqHandler_GaccumDerivedDTRecvComplete;
             req->dev.datatype = MPI_DATATYPE_NULL;
 

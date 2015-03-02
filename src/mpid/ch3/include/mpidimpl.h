@@ -456,16 +456,15 @@ extern MPIDI_Process_t MPIDI_Process;
 #define MPIDI_REQUEST_TYPE_SSEND 3
 /* We need a BSEND type for persistent bsends (see mpid_startall.c) */
 #define MPIDI_REQUEST_TYPE_BSEND 4
-#define MPIDI_REQUEST_TYPE_PUT_RESP 5
-#define MPIDI_REQUEST_TYPE_GET_RESP 6
-#define MPIDI_REQUEST_TYPE_ACCUM_RESP 7
-#define MPIDI_REQUEST_TYPE_PUT_RESP_DERIVED_DT 8
-#define MPIDI_REQUEST_TYPE_GET_RESP_DERIVED_DT 9
-#define MPIDI_REQUEST_TYPE_ACCUM_RESP_DERIVED_DT 10
-#define MPIDI_REQUEST_TYPE_PT_SINGLE_PUT 11
-#define MPIDI_REQUEST_TYPE_PT_SINGLE_ACCUM 12
-#define MPIDI_REQUEST_TYPE_GET_ACCUM_RESP 13
-#define MPIDI_REQUEST_TYPE_GET_ACCUM_RESP_DERIVED_DT 14
+#define MPIDI_REQUEST_TYPE_PUT_RECV 5                    /* target is receiving PUT data */
+#define MPIDI_REQUEST_TYPE_GET_RESP 6                    /* target is sending GET response data */
+#define MPIDI_REQUEST_TYPE_ACCUM_RECV 7                  /* target is receiving ACC data */
+#define MPIDI_REQUEST_TYPE_PUT_RECV_DERIVED_DT 8         /* target is receiving derived DT info for PUT data */
+#define MPIDI_REQUEST_TYPE_GET_RECV_DERIVED_DT 9         /* target is receiving derived DT info for GET data */
+#define MPIDI_REQUEST_TYPE_ACCUM_RECV_DERIVED_DT 10      /* target is receiving derived DT info for ACC data */
+#define MPIDI_REQUEST_TYPE_GET_ACCUM_RECV 11             /* target is receiving GACC data */
+#define MPIDI_REQUEST_TYPE_GET_ACCUM_RECV_DERIVED_DT 12  /* target is receiving derived DT info for GACC data */
+#define MPIDI_REQUEST_TYPE_GET_ACCUM_RESP 13             /* target is sending GACC response data */
 
 
 #define MPIDI_Request_get_type(req_)						\

@@ -162,7 +162,7 @@ int MPIDI_CH3_ReqHandler_AccumRecvComplete(MPIDI_VC_t * vc, MPID_Request * rreq,
 
     MPID_Win_get_ptr(rreq->dev.target_win_handle, win_ptr);
 
-    MPIU_Assert(MPIDI_Request_get_type(rreq) == MPIDI_REQUEST_TYPE_ACCUM_RESP);
+    MPIU_Assert(MPIDI_Request_get_type(rreq) == MPIDI_REQUEST_TYPE_ACCUM_RECV);
 
     if (win_ptr->shm_allocated == TRUE)
         MPIDI_CH3I_SHM_MUTEX_LOCK(win_ptr);
@@ -246,6 +246,7 @@ int MPIDI_CH3_ReqHandler_GaccumRecvComplete(MPIDI_VC_t * vc, MPID_Request * rreq
     resp_req = MPID_Request_create();
     MPIU_ERR_CHKANDJUMP(resp_req == NULL, mpi_errno, MPI_ERR_OTHER, "**nomemreq");
     MPIU_Object_set_ref(resp_req, 1);
+    MPIDI_Request_set_type(resp_req, MPIDI_REQUEST_TYPE_GET_ACCUM_RESP);
 
     MPIU_CHKPMEM_MALLOC(resp_req->dev.user_buf, void *, rreq->dev.user_count * type_size,
                         mpi_errno, "GACC resp. buffer");
@@ -307,7 +308,7 @@ int MPIDI_CH3_ReqHandler_GaccumRecvComplete(MPIDI_VC_t * vc, MPID_Request * rreq
     /* Mark get portion as handled */
     rreq->dev.resp_request_handle = MPI_REQUEST_NULL;
 
-    MPIU_Assert(MPIDI_Request_get_type(rreq) == MPIDI_REQUEST_TYPE_GET_ACCUM_RESP);
+    MPIU_Assert(MPIDI_Request_get_type(rreq) == MPIDI_REQUEST_TYPE_GET_ACCUM_RECV);
 
     /* free the temporary buffer */
     MPIR_Type_get_true_extent_impl(rreq->dev.datatype, &true_lb, &true_extent);
@@ -464,7 +465,7 @@ int MPIDI_CH3_ReqHandler_PutDerivedDTRecvComplete(MPIDI_VC_t * vc ATTRIBUTE((unu
     create_derived_datatype(rreq, &new_dtp);
 
     /* update request to get the data */
-    MPIDI_Request_set_type(rreq, MPIDI_REQUEST_TYPE_PUT_RESP);
+    MPIDI_Request_set_type(rreq, MPIDI_REQUEST_TYPE_PUT_RECV);
     rreq->dev.datatype = new_dtp->handle;
     rreq->dev.recv_data_sz = new_dtp->size * rreq->dev.user_count;
 
@@ -514,7 +515,7 @@ int MPIDI_CH3_ReqHandler_AccumDerivedDTRecvComplete(MPIDI_VC_t * vc ATTRIBUTE((u
     create_derived_datatype(rreq, &new_dtp);
 
     /* update new request to get the data */
-    MPIDI_Request_set_type(rreq, MPIDI_REQUEST_TYPE_ACCUM_RESP);
+    MPIDI_Request_set_type(rreq, MPIDI_REQUEST_TYPE_ACCUM_RECV);
 
     /* first need to allocate tmp_buf to recv the data into */
 
@@ -580,7 +581,7 @@ int MPIDI_CH3_ReqHandler_GaccumDerivedDTRecvComplete(MPIDI_VC_t * vc ATTRIBUTE((
     create_derived_datatype(rreq, &new_dtp);
 
     /* update new request to get the data */
-    MPIDI_Request_set_type(rreq, MPIDI_REQUEST_TYPE_GET_ACCUM_RESP);
+    MPIDI_Request_set_type(rreq, MPIDI_REQUEST_TYPE_GET_ACCUM_RECV);
 
     /* first need to allocate tmp_buf to recv the data into */
 
@@ -757,13 +758,13 @@ int MPIDI_CH3_ReqHandler_UnpackSRBufComplete(MPIDI_VC_t * vc, MPID_Request * rre
 
     MPIDI_CH3U_Request_unpack_srbuf(rreq);
 
-    if (MPIDI_Request_get_type(rreq) == MPIDI_REQUEST_TYPE_PUT_RESP) {
+    if (MPIDI_Request_get_type(rreq) == MPIDI_REQUEST_TYPE_PUT_RECV) {
         mpi_errno = MPIDI_CH3_ReqHandler_PutRecvComplete(vc, rreq, complete);
     }
-    else if (MPIDI_Request_get_type(rreq) == MPIDI_REQUEST_TYPE_ACCUM_RESP) {
+    else if (MPIDI_Request_get_type(rreq) == MPIDI_REQUEST_TYPE_ACCUM_RECV) {
         mpi_errno = MPIDI_CH3_ReqHandler_AccumRecvComplete(vc, rreq, complete);
     }
-    else if (MPIDI_Request_get_type(rreq) == MPIDI_REQUEST_TYPE_GET_ACCUM_RESP) {
+    else if (MPIDI_Request_get_type(rreq) == MPIDI_REQUEST_TYPE_GET_ACCUM_RECV) {
         mpi_errno = MPIDI_CH3_ReqHandler_GaccumRecvComplete(vc, rreq, complete);
     }
     else {
