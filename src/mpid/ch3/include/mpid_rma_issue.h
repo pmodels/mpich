@@ -85,6 +85,7 @@ static int fill_in_derived_dtp_info(MPIDI_RMA_Op_t * rma_op, MPID_Datatype * dtp
     rma_op->dtype_info.has_sticky_ub = dtp->has_sticky_ub;
     rma_op->dtype_info.has_sticky_lb = dtp->has_sticky_lb;
 
+    MPIU_Assert(rma_op->dataloop == NULL);
     MPIU_CHKPMEM_MALLOC(rma_op->dataloop, void *, dtp->dataloop_size, mpi_errno, "dataloop");
 
     MPIU_Memcpy(rma_op->dataloop, dtp->dataloop, dtp->dataloop_size);
