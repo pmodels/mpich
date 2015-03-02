@@ -1122,22 +1122,26 @@ static inline int perform_get_acc_in_lock_queue(MPID_Win * win_ptr,
 
     /* Copy data into a temporary buffer */
     MPID_Datatype_get_size_macro(get_accum_pkt->datatype, type_size);
-    if (get_accum_pkt->type == MPIDI_CH3_PKT_GET_ACCUM)
-        sreq->dev.user_buf = (void *) MPIU_Malloc(get_accum_pkt->count * type_size);
-    else {
-        MPIDI_Pkt_init(get_accum_resp_pkt, MPIDI_CH3_PKT_GET_ACCUM_RESP_IMMED);
-    }
-
-    MPID_Datatype_is_contig(get_accum_pkt->datatype, &is_contig);
 
     /* length of target data */
     MPIU_Assign_trunc(len, get_accum_pkt->count * type_size, size_t);
 
-    /* Perform ACCUMULATE OP */
-    if (win_ptr->shm_allocated == TRUE)
-        MPIDI_CH3I_SHM_MUTEX_LOCK(win_ptr);
-
     if (get_accum_pkt->type == MPIDI_CH3_PKT_GET_ACCUM_IMMED) {
+        MPIDI_Pkt_init(get_accum_resp_pkt, MPIDI_CH3_PKT_GET_ACCUM_RESP_IMMED);
+        get_accum_resp_pkt->request_handle = get_accum_pkt->request_handle;
+        get_accum_resp_pkt->flags = MPIDI_CH3_PKT_FLAG_NONE;
+        if (get_accum_pkt->flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK_SHARED ||
+            get_accum_pkt->flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK_EXCLUSIVE)
+            get_accum_resp_pkt->flags |= MPIDI_CH3_PKT_FLAG_RMA_LOCK_GRANTED;
+        if ((get_accum_pkt->flags & MPIDI_CH3_PKT_FLAG_RMA_FLUSH) ||
+            (get_accum_pkt->flags & MPIDI_CH3_PKT_FLAG_RMA_UNLOCK))
+            get_accum_resp_pkt->flags |= MPIDI_CH3_PKT_FLAG_RMA_FLUSH_ACK;
+        get_accum_resp_pkt->target_rank = win_ptr->comm_ptr->rank;
+
+        /* Perform ACCUMULATE OP */
+        if (win_ptr->shm_allocated == TRUE)
+            MPIDI_CH3I_SHM_MUTEX_LOCK(win_ptr);
+
         void *src = (void *) (get_accum_pkt->addr), *dest =
             (void *) (get_accum_resp_pkt->info.data);
         mpi_errno = immed_copy(src, dest, len);
@@ -1146,8 +1150,47 @@ static inline int perform_get_acc_in_lock_queue(MPID_Win * win_ptr,
                 MPIDI_CH3I_SHM_MUTEX_UNLOCK(win_ptr);
             MPIU_ERR_POP(mpi_errno);
         }
+
+        /* All data fits in packet header */
+        mpi_errno = do_accumulate_op(get_accum_pkt->info.data, get_accum_pkt->addr,
+                                     get_accum_pkt->count, get_accum_pkt->datatype,
+                                     get_accum_pkt->op);
+
+        if (win_ptr->shm_allocated == TRUE)
+            MPIDI_CH3I_SHM_MUTEX_UNLOCK(win_ptr);
+
+        if (mpi_errno != MPI_SUCCESS)
+            MPIU_ERR_POP(mpi_errno);
+
+        /* here we increment the Active Target counter to guarantee the GET-like
+         * operation are completed when counter reaches zero. */
+        win_ptr->at_completion_counter++;
+
+        /* All origin data is in packet header, issue the header. */
+        iov[0].MPID_IOV_BUF = (MPID_IOV_BUF_CAST) get_accum_resp_pkt;
+        iov[0].MPID_IOV_LEN = sizeof(*get_accum_resp_pkt);
+        iovcnt = 1;
+
+        mpi_errno = MPIDI_CH3_iSendv(lock_entry->vc, sreq, iov, iovcnt);
+        if (mpi_errno != MPI_SUCCESS) {
+            MPID_Request_release(sreq);
+            MPIU_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**ch3|rmamsg");
+        }
+
+        goto fn_exit;
     }
-    else if (is_contig) {
+
+    MPIU_Assert(get_accum_pkt->type == MPIDI_CH3_PKT_GET_ACCUM);
+
+    sreq->dev.user_buf = (void *) MPIU_Malloc(get_accum_pkt->count * type_size);
+
+    MPID_Datatype_is_contig(get_accum_pkt->datatype, &is_contig);
+
+    /* Perform ACCUMULATE OP */
+    if (win_ptr->shm_allocated == TRUE)
+        MPIDI_CH3I_SHM_MUTEX_LOCK(win_ptr);
+
+    if (is_contig) {
         MPIU_Memcpy(sreq->dev.user_buf, get_accum_pkt->addr, get_accum_pkt->count * type_size);
     }
     else {
@@ -1166,19 +1209,8 @@ static inline int perform_get_acc_in_lock_queue(MPID_Win * win_ptr,
         MPID_Segment_free(seg);
     }
 
-    if (get_accum_pkt->type == MPIDI_CH3_PKT_GET_ACCUM_IMMED) {
-        /* All data fits in packet header */
-        mpi_errno = do_accumulate_op(get_accum_pkt->info.data, get_accum_pkt->addr,
-                                     get_accum_pkt->count, get_accum_pkt->datatype,
-                                     get_accum_pkt->op);
-    }
-    else {
-        MPIU_Assert(get_accum_pkt->type == MPIDI_CH3_PKT_GET_ACCUM);
-
-        mpi_errno = do_accumulate_op(lock_entry->data, get_accum_pkt->addr,
-                                     get_accum_pkt->count, get_accum_pkt->datatype,
-                                     get_accum_pkt->op);
-    }
+    mpi_errno = do_accumulate_op(lock_entry->data, get_accum_pkt->addr,
+                                 get_accum_pkt->count, get_accum_pkt->datatype, get_accum_pkt->op);
 
     if (win_ptr->shm_allocated == TRUE)
         MPIDI_CH3I_SHM_MUTEX_UNLOCK(win_ptr);
@@ -1190,9 +1222,7 @@ static inline int perform_get_acc_in_lock_queue(MPID_Win * win_ptr,
      * operation are completed when counter reaches zero. */
     win_ptr->at_completion_counter++;
 
-    if (get_accum_pkt->type == MPIDI_CH3_PKT_GET_ACCUM) {
-        MPIDI_Pkt_init(get_accum_resp_pkt, MPIDI_CH3_PKT_GET_ACCUM_RESP);
-    }
+    MPIDI_Pkt_init(get_accum_resp_pkt, MPIDI_CH3_PKT_GET_ACCUM_RESP);
     get_accum_resp_pkt->request_handle = get_accum_pkt->request_handle;
     get_accum_resp_pkt->flags = MPIDI_CH3_PKT_FLAG_NONE;
     if (get_accum_pkt->flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK_SHARED ||
@@ -1203,19 +1233,11 @@ static inline int perform_get_acc_in_lock_queue(MPID_Win * win_ptr,
         get_accum_resp_pkt->flags |= MPIDI_CH3_PKT_FLAG_RMA_FLUSH_ACK;
     get_accum_resp_pkt->target_rank = win_ptr->comm_ptr->rank;
 
-    if (get_accum_pkt->type == MPIDI_CH3_PKT_GET_ACCUM_IMMED) {
-        /* All origin data is in packet header, issue the header. */
-        iov[0].MPID_IOV_BUF = (MPID_IOV_BUF_CAST) get_accum_resp_pkt;
-        iov[0].MPID_IOV_LEN = sizeof(*get_accum_resp_pkt);
-        iovcnt = 1;
-    }
-    else {
-        iov[0].MPID_IOV_BUF = (MPID_IOV_BUF_CAST) get_accum_resp_pkt;
-        iov[0].MPID_IOV_LEN = sizeof(*get_accum_resp_pkt);
-        iov[1].MPID_IOV_BUF = (MPID_IOV_BUF_CAST) ((char *) sreq->dev.user_buf);
-        iov[1].MPID_IOV_LEN = get_accum_pkt->count * type_size;
-        iovcnt = 2;
-    }
+    iov[0].MPID_IOV_BUF = (MPID_IOV_BUF_CAST) get_accum_resp_pkt;
+    iov[0].MPID_IOV_LEN = sizeof(*get_accum_resp_pkt);
+    iov[1].MPID_IOV_BUF = (MPID_IOV_BUF_CAST) ((char *) sreq->dev.user_buf);
+    iov[1].MPID_IOV_LEN = get_accum_pkt->count * type_size;
+    iovcnt = 2;
 
     mpi_errno = MPIDI_CH3_iSendv(lock_entry->vc, sreq, iov, iovcnt);
     if (mpi_errno != MPI_SUCCESS) {
