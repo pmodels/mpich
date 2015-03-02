@@ -317,7 +317,9 @@ int MPIDI_CH3U_Request_load_recv_iov(MPID_Request * const rreq)
     {
 	/* still reading data that needs to go into the user buffer */
 	
-	if (MPIDI_Request_get_srbuf_flag(rreq))
+	if (MPIDI_Request_get_type(rreq) != MPIDI_REQUEST_TYPE_ACCUM_RECV &&
+            MPIDI_Request_get_type(rreq) != MPIDI_REQUEST_TYPE_GET_ACCUM_RECV &&
+            MPIDI_Request_get_srbuf_flag(rreq))
 	{
 	    MPIDI_msg_sz_t data_sz;
 	    MPIDI_msg_sz_t tmpbuf_sz;
@@ -406,8 +408,10 @@ int MPIDI_CH3U_Request_load_recv_iov(MPID_Request * const rreq)
 	    /* Eventually, use OnFinal for this instead */
 	    rreq->dev.OnDataAvail = rreq->dev.OnFinal;
 	}
-	else if (last == rreq->dev.segment_size || 
-		 (last - rreq->dev.segment_first) / rreq->dev.iov_count >= MPIDI_IOV_DENSITY_MIN)
+	else if (MPIDI_Request_get_type(rreq) == MPIDI_REQUEST_TYPE_ACCUM_RECV ||
+                 MPIDI_Request_get_type(rreq) == MPIDI_REQUEST_TYPE_GET_ACCUM_RECV ||
+                 (last == rreq->dev.segment_size ||
+                  (last - rreq->dev.segment_first) / rreq->dev.iov_count >= MPIDI_IOV_DENSITY_MIN))
 	{
 	    MPIU_DBG_MSG(CH3_CHANNEL,VERBOSE,
 	     "updating rreq to read more data directly into the user buffer");
