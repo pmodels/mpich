@@ -730,6 +730,8 @@ static int issue_acc_op(MPIDI_RMA_Op_t * rma_op, MPID_Win * win_ptr,
         stream_size = MPIR_MIN(stream_elem_count * predefined_dtp_size, rest_len);
         rest_len -= stream_size;
 
+        accum_pkt->info.metadata.stream_offset = stream_offset;
+
         mpi_errno =
             issue_from_origin_buffer_stream(rma_op, vc, stream_offset, stream_size, &curr_req);
         if (mpi_errno != MPI_SUCCESS)
@@ -936,6 +938,10 @@ static int issue_get_acc_op(MPIDI_RMA_Op_t * rma_op, MPID_Win * win_ptr,
         stream_offset = j * stream_elem_count * predefined_dtp_size;
         stream_size = MPIR_MIN(stream_elem_count * predefined_dtp_size, rest_len);
         rest_len -= stream_size;
+
+        get_accum_pkt->info.metadata.stream_offset = stream_offset;
+
+        resp_req->dev.stream_offset = stream_offset;
 
         mpi_errno =
             issue_from_origin_buffer_stream(rma_op, vc, stream_offset, stream_size, &curr_req);
