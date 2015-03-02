@@ -354,12 +354,7 @@ static inline int issue_ops_target(MPID_Win * win_ptr, MPIDI_RMA_Target_t * targ
             else if (target->sync.sync_flag == MPIDI_RMA_SYNC_UNLOCK) {
                 flags |= MPIDI_CH3_PKT_FLAG_RMA_UNLOCK;
             }
-
-            /* We are done with ending sync, unset target's sync_flag. */
-            target->sync.sync_flag = MPIDI_RMA_SYNC_NONE;
         }
-
-        target->next_op_to_issue = curr_op->next;
 
         mpi_errno = issue_rma_op(curr_op, win_ptr, target, flags);
         if (mpi_errno != MPI_SUCCESS)
@@ -376,6 +371,14 @@ static inline int issue_ops_target(MPID_Win * win_ptr, MPIDI_RMA_Target_t * targ
             curr_op->pkt.type == MPIDI_CH3_PKT_ACCUMULATE_IMMED) {
             target->put_acc_issued = 1; /* set PUT_ACC_FLAG when sending
                                          * PUT/ACC operation. */
+        }
+
+        target->next_op_to_issue = curr_op->next;
+        if (target->next_op_to_issue == NULL) {
+            if (flags & MPIDI_CH3_PKT_FLAG_RMA_FLUSH || flags & MPIDI_CH3_PKT_FLAG_RMA_UNLOCK) {
+                /* We are done with ending sync, unset target's sync_flag. */
+                target->sync.sync_flag = MPIDI_RMA_SYNC_NONE;
+            }
         }
 
         if (flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK_SHARED ||

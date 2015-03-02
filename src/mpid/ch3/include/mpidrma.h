@@ -600,6 +600,7 @@ static inline int adjust_op_piggybacked_with_lock(MPID_Win * win_ptr,
         op_flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK_EXCLUSIVE) {
         if (flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK_GRANTED ||
             flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK_QUEUED_DATA_QUEUED) {
+
             if (!op->request) {
                 if (op->ureq) {
                     /* Complete user request and release the ch3 ref */
@@ -660,6 +661,10 @@ static inline int adjust_op_piggybacked_with_lock(MPID_Win * win_ptr,
             MPIDI_CH3_PKT_RMA_ERASE_FLAGS(op->pkt, mpi_errno);
 
             target->next_op_to_issue = op;
+            if (op_flags & MPIDI_CH3_PKT_FLAG_RMA_FLUSH)
+                target->sync.sync_flag = MPIDI_RMA_SYNC_FLUSH;
+            else if (op_flags & MPIDI_RMA_SYNC_UNLOCK)
+                target->sync.sync_flag = MPIDI_RMA_SYNC_UNLOCK;
         }
     }
 
