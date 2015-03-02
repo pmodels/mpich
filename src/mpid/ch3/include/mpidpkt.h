@@ -538,6 +538,21 @@ MPIDI_CH3_PKT_DEFS
         }                                                               \
     }
 
+#define MPIDI_CH3_PKT_RMA_GET_STREAM_OFFSET(pkt_, stream_offset_, err_) \
+    {                                                                   \
+        err_ = MPI_SUCCESS;                                             \
+        switch((pkt_).type) {                                           \
+        case (MPIDI_CH3_PKT_ACCUMULATE):                                \
+            (stream_offset_) = (pkt_).accum.info.metadata.stream_offset; \
+            break;                                                      \
+        case (MPIDI_CH3_PKT_GET_ACCUM):                                 \
+            (stream_offset_) = (pkt_).get_accum.info.metadata.stream_offset; \
+            break;                                                      \
+        default:                                                        \
+            MPIU_ERR_SETANDJUMP1(err_, MPI_ERR_OTHER, "**invalidpkt", "**invalidpkt %d", (pkt_).type); \
+        }                                                               \
+    }
+
 #define MPIDI_CH3_PKT_RMA_GET_REQUEST_HANDLE(pkt_, request_hdl_, err_)  \
     {                                                                   \
         err_ = MPI_SUCCESS;                                             \
