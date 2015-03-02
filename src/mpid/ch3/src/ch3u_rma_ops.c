@@ -508,6 +508,10 @@ int MPIDI_CH3I_Accumulate(const void *origin_addr, int origin_count, MPI_Datatyp
         size_t immed_len, len;
         int use_immed_pkt = FALSE;
         int is_origin_contig, is_target_contig;
+        MPI_Aint stream_elem_count, stream_unit_count;
+        MPI_Aint predefined_dtp_size, predefined_dtp_count, predefined_dtp_extent;
+        MPID_Datatype *origin_dtp = NULL, *target_dtp = NULL;
+        int i;
 
         /* queue it up */
         mpi_errno = MPIDI_CH3I_Win_get_op(win_ptr, &new_ptr);
@@ -531,18 +535,46 @@ int MPIDI_CH3I_Accumulate(const void *origin_addr, int origin_count, MPI_Datatyp
         /* if source or target datatypes are derived, increment their
          * reference counts */
         if (!MPIR_DATATYPE_IS_PREDEFINED(origin_datatype)) {
-            MPID_Datatype_get_ptr(origin_datatype, dtp);
-            MPID_Datatype_add_ref(dtp);
+            MPID_Datatype_get_ptr(origin_datatype, origin_dtp);
             new_ptr->is_dt = 1;
         }
         if (!MPIR_DATATYPE_IS_PREDEFINED(target_datatype)) {
-            MPID_Datatype_get_ptr(target_datatype, dtp);
-            MPID_Datatype_add_ref(dtp);
+            MPID_Datatype_get_ptr(target_datatype, target_dtp);
             new_ptr->is_dt = 1;
         }
 
         MPID_Datatype_get_size_macro(origin_datatype, origin_type_size);
         MPIU_Assign_trunc(len, origin_count * origin_type_size, size_t);
+
+        /* Get size and count for predefined datatype elements */
+        if (MPIR_DATATYPE_IS_PREDEFINED(origin_datatype)) {
+            predefined_dtp_size = origin_type_size;
+            predefined_dtp_count = origin_count;
+            MPID_Datatype_get_extent_macro(origin_datatype, predefined_dtp_extent);
+        }
+        else {
+            MPIU_Assert(origin_dtp->eltype != MPI_DATATYPE_NULL);
+            MPID_Datatype_get_size_macro(origin_dtp->eltype, predefined_dtp_size);
+            predefined_dtp_count = len / predefined_dtp_size;
+            MPID_Datatype_get_extent_macro(origin_dtp->eltype, predefined_dtp_extent);
+        }
+        MPIU_Assert(predefined_dtp_count > 0 && predefined_dtp_size > 0 &&
+                    predefined_dtp_extent > 0);
+
+        /* Calculate number of predefined elements in each stream unit, and
+         * total number of stream units. */
+        stream_elem_count = MPIDI_CH3U_Acc_stream_size / predefined_dtp_extent;
+        stream_unit_count = (predefined_dtp_count - 1) / stream_elem_count + 1;
+        MPIU_Assert(stream_elem_count > 0 && stream_unit_count > 0);
+
+        for (i = 0; i < stream_unit_count; i++) {
+            if (origin_dtp != NULL) {
+                MPID_Datatype_add_ref(origin_dtp);
+            }
+            if (target_dtp != NULL) {
+                MPID_Datatype_add_ref(target_dtp);
+            }
+        }
 
         MPID_Datatype_is_contig(origin_datatype, &is_origin_contig);
         MPID_Datatype_is_contig(target_datatype, &is_target_contig);
@@ -790,6 +822,10 @@ int MPIDI_CH3I_Get_accumulate(const void *origin_addr, int origin_count,
             size_t immed_len, orig_len;
             int use_immed_pkt = FALSE;
             int is_origin_contig, is_target_contig, is_result_contig;
+            MPI_Aint stream_elem_count, stream_unit_count;
+            MPI_Aint predefined_dtp_size, predefined_dtp_count, predefined_dtp_extent;
+            MPID_Datatype *origin_dtp = NULL, *target_dtp = NULL, *result_dtp = NULL;
+            int i;
 
             /******************** Setting operation struct areas ***********************/
 
@@ -809,23 +845,53 @@ int MPIDI_CH3I_Get_accumulate(const void *origin_addr, int origin_count,
             /* if source or target datatypes are derived, increment their
              * reference counts */
             if (!MPIR_DATATYPE_IS_PREDEFINED(origin_datatype)) {
-                MPID_Datatype_get_ptr(origin_datatype, dtp);
-                MPID_Datatype_add_ref(dtp);
+                MPID_Datatype_get_ptr(origin_datatype, origin_dtp);
                 new_ptr->is_dt = 1;
             }
             if (!MPIR_DATATYPE_IS_PREDEFINED(result_datatype)) {
-                MPID_Datatype_get_ptr(result_datatype, dtp);
-                MPID_Datatype_add_ref(dtp);
+                MPID_Datatype_get_ptr(result_datatype, target_dtp);
                 new_ptr->is_dt = 1;
             }
             if (!MPIR_DATATYPE_IS_PREDEFINED(target_datatype)) {
-                MPID_Datatype_get_ptr(target_datatype, dtp);
-                MPID_Datatype_add_ref(dtp);
+                MPID_Datatype_get_ptr(target_datatype, result_dtp);
                 new_ptr->is_dt = 1;
             }
 
             MPID_Datatype_get_size_macro(origin_datatype, origin_type_size);
             MPIU_Assign_trunc(orig_len, origin_count * origin_type_size, size_t);
+
+            /* Get size and count for predefined datatype elements */
+            if (MPIR_DATATYPE_IS_PREDEFINED(origin_datatype)) {
+                predefined_dtp_size = origin_type_size;
+                predefined_dtp_count = origin_count;
+                MPID_Datatype_get_extent_macro(origin_datatype, predefined_dtp_extent);
+            }
+            else {
+                MPIU_Assert(origin_dtp->eltype != MPI_DATATYPE_NULL);
+                MPID_Datatype_get_size_macro(origin_dtp->eltype, predefined_dtp_size);
+                predefined_dtp_count = orig_len / predefined_dtp_size;
+                MPID_Datatype_get_extent_macro(origin_dtp->eltype, predefined_dtp_extent);
+            }
+            MPIU_Assert(predefined_dtp_count > 0 && predefined_dtp_size > 0 &&
+                        predefined_dtp_extent > 0);
+
+            /* Calculate number of predefined elements in each stream unit, and
+             * total number of stream units. */
+            stream_elem_count = MPIDI_CH3U_Acc_stream_size / predefined_dtp_extent;
+            stream_unit_count = (predefined_dtp_count - 1) / stream_elem_count + 1;
+            MPIU_Assert(stream_elem_count > 0 && stream_unit_count > 0);
+
+            for (i = 0; i < stream_unit_count; i++) {
+                if (origin_dtp != NULL) {
+                    MPID_Datatype_add_ref(origin_dtp);
+                }
+                if (target_dtp != NULL) {
+                    MPID_Datatype_add_ref(target_dtp);
+                }
+                if (result_dtp != NULL) {
+                    MPID_Datatype_add_ref(result_dtp);
+                }
+            }
 
             MPID_Datatype_is_contig(origin_datatype, &is_origin_contig);
             MPID_Datatype_is_contig(target_datatype, &is_target_contig);
