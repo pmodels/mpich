@@ -706,9 +706,13 @@ static int issue_acc_op(MPIDI_RMA_Op_t * rma_op, MPID_Win * win_ptr,
     MPIU_Assert(stream_elem_count > 0 && stream_unit_count > 0);
 
     rest_len = total_len;
+    MPIU_Assert(rma_op->issued_stream_count >= 0);
     for (j = 0; j < stream_unit_count; j++) {
         MPIDI_msg_sz_t stream_offset, stream_size;
         MPID_Request *curr_req = NULL;
+
+        if (j < rma_op->issued_stream_count)
+            continue;
 
         accum_pkt->flags |= flags;
 
@@ -746,6 +750,8 @@ static int issue_acc_op(MPIDI_RMA_Op_t * rma_op, MPID_Win * win_ptr,
             win_ptr->active_req_cnt++;
         }
 
+        rma_op->issued_stream_count++;
+
         if (accum_pkt->flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK_SHARED ||
             accum_pkt->flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK_EXCLUSIVE) {
             /* if piggybacked with LOCK flag, we
@@ -754,6 +760,9 @@ static int issue_acc_op(MPIDI_RMA_Op_t * rma_op, MPID_Win * win_ptr,
             break;
         }
     }   /* end of for loop */
+
+    /* Mark that all stream units have been issued */
+    rma_op->issued_stream_count = -1;
 
   fn_exit:
     MPIDI_RMA_FUNC_EXIT(MPID_STATE_ISSUE_ACC_OP);
@@ -877,10 +886,15 @@ static int issue_get_acc_op(MPIDI_RMA_Op_t * rma_op, MPID_Win * win_ptr,
     for (i = 0; i < rma_op->reqs_size; i++)
         rma_op->reqs[i] = NULL;
 
+    MPIU_Assert(rma_op->issued_stream_count >= 0);
+
     for (j = 0; j < stream_unit_count; j++) {
         MPIDI_msg_sz_t stream_offset, stream_size;
         MPID_Request *resp_req = NULL;
         MPID_Request *curr_req = NULL;
+
+        if (j < rma_op->issued_stream_count)
+            continue;
 
         get_accum_pkt->flags |= flags;
 
@@ -959,6 +973,8 @@ static int issue_get_acc_op(MPIDI_RMA_Op_t * rma_op, MPID_Win * win_ptr,
         rma_op->reqs[j] = curr_req;
         win_ptr->active_req_cnt++;
 
+        rma_op->issued_stream_count++;
+
         if (get_accum_pkt->flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK_SHARED ||
             get_accum_pkt->flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK_EXCLUSIVE) {
             /* if piggybacked with LOCK flag, we
@@ -967,6 +983,9 @@ static int issue_get_acc_op(MPIDI_RMA_Op_t * rma_op, MPID_Win * win_ptr,
             break;
         }
     }   /* end of for loop */
+
+    /* Mark that all stream units have been issued */
+    rma_op->issued_stream_count = -1;
 
   fn_exit:
     MPIDI_RMA_FUNC_EXIT(MPID_STATE_ISSUE_GET_ACC_OP);

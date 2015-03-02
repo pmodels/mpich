@@ -73,6 +73,9 @@ typedef struct MPIDI_RMA_Op {
     int is_dt;
     int piggyback_lock_candidate;
 
+    int issued_stream_count;    /* when >= 0, it specifies number of stream units that have been issued;
+                                 * when < 0, it means all stream units of this operation haven been issued. */
+
     MPID_Request *ureq;
 } MPIDI_RMA_Op_t;
 

@@ -370,7 +370,16 @@ static inline int issue_ops_target(MPID_Win * win_ptr, MPIDI_RMA_Target_t * targ
                                          * PUT/ACC operation. */
         }
 
-        target->next_op_to_issue = curr_op->next;
+        if ((curr_op->pkt.type == MPIDI_CH3_PKT_ACCUMULATE ||
+             curr_op->pkt.type == MPIDI_CH3_PKT_GET_ACCUM) && curr_op->issued_stream_count > 0) {
+            /* For ACC-like operations, if not all stream units
+             * are issued out, we stick to the current operation,
+             * otherwise we move on to the next operation. */
+            target->next_op_to_issue = curr_op;
+        }
+        else
+            target->next_op_to_issue = curr_op->next;
+
         if (target->next_op_to_issue == NULL) {
             if (flags & MPIDI_CH3_PKT_FLAG_RMA_FLUSH || flags & MPIDI_CH3_PKT_FLAG_RMA_UNLOCK) {
                 /* We are done with ending sync, unset target's sync_flag. */

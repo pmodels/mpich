@@ -655,6 +655,9 @@ static inline int adjust_op_piggybacked_with_lock(MPID_Win * win_ptr,
             MPIDI_CH3_PKT_RMA_ERASE_FLAGS(op->pkt, mpi_errno);
 
             target->next_op_to_issue = op;
+
+            op->issued_stream_count = 0;
+
             if (op_flags & MPIDI_CH3_PKT_FLAG_RMA_FLUSH)
                 target->sync.sync_flag = MPIDI_RMA_SYNC_FLUSH;
             else if (op_flags & MPIDI_RMA_SYNC_UNLOCK)

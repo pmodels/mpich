@@ -52,6 +52,7 @@ static inline MPIDI_RMA_Op_t *MPIDI_CH3I_Win_op_alloc(MPID_Win * win_ptr)
     e->ureq = NULL;
     e->is_dt = 0;
     e->piggyback_lock_candidate = 0;
+    e->issued_stream_count = 0;
 
     return e;
 }
