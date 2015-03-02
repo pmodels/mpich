@@ -762,9 +762,9 @@ int MPIDI_CH3I_Get_accumulate(const void *origin_addr, int origin_count,
 
         else {
             MPIDI_CH3_Pkt_get_accum_t *get_accum_pkt;
-            MPI_Aint origin_type_size, target_type_size;
-            size_t immed_len, orig_len, tar_len;
-            int use_immed_pkt = FALSE, use_immed_resp_pkt = FALSE;
+            MPI_Aint origin_type_size;
+            size_t immed_len, orig_len;
+            int use_immed_pkt = FALSE;
 
             /******************** Setting operation struct areas ***********************/
 
@@ -803,9 +803,6 @@ int MPIDI_CH3I_Get_accumulate(const void *origin_addr, int origin_count,
             MPID_Datatype_get_size_macro(origin_datatype, origin_type_size);
             MPIU_Assign_trunc(orig_len, origin_count * origin_type_size, size_t);
 
-            MPID_Datatype_get_size_macro(target_datatype, target_type_size);
-            MPIU_Assign_trunc(tar_len, target_count * target_type_size, size_t);
-
             /* Judge if we can use IMMED data packet */
             if (!new_ptr->is_dt) {
                 MPIU_Assign_trunc(immed_len,
@@ -813,12 +810,6 @@ int MPIDI_CH3I_Get_accumulate(const void *origin_addr, int origin_count,
                                   size_t);
                 if (orig_len <= immed_len)
                     use_immed_pkt = TRUE;
-
-                MPIU_Assign_trunc(immed_len,
-                                  (MPIDI_RMA_IMMED_BYTES / target_type_size) * target_type_size,
-                                  size_t);
-                if (tar_len <= immed_len)
-                    use_immed_resp_pkt = TRUE;
             }
 
             /* Judge if this operation is a piggyback candidate */
@@ -852,8 +843,6 @@ int MPIDI_CH3I_Get_accumulate(const void *origin_addr, int origin_count,
                 if (mpi_errno != MPI_SUCCESS)
                     MPIU_ERR_POP(mpi_errno);
             }
-            if (use_immed_resp_pkt)
-                get_accum_pkt->flags |= MPIDI_CH3_PKT_FLAG_RMA_IMMED_RESP;
         }
 
         MPIR_T_PVAR_TIMER_END(RMA, rma_rmaqueue_set);
@@ -1265,7 +1254,7 @@ int MPIDI_Fetch_and_op(const void *origin_addr, void *result_addr,
             MPIDI_CH3_Pkt_fop_t *fop_pkt;
             MPI_Aint type_size;
             size_t immed_len;
-            int use_immed_pkt = FALSE, use_immed_resp_pkt = FALSE;
+            int use_immed_pkt = FALSE;
 
             /******************** Setting operation struct areas ***********************/
 
@@ -1287,7 +1276,6 @@ int MPIDI_Fetch_and_op(const void *origin_addr, void *result_addr,
             MPIU_Assign_trunc(immed_len, (MPIDI_RMA_IMMED_BYTES / type_size) * type_size, size_t);
             if (type_size <= immed_len) {
                 use_immed_pkt = TRUE;
-                use_immed_resp_pkt = TRUE;
             }
 
             fop_pkt = &(new_ptr->pkt.fop);
@@ -1310,8 +1298,6 @@ int MPIDI_Fetch_and_op(const void *origin_addr, void *result_addr,
                 if (mpi_errno != MPI_SUCCESS)
                     MPIU_ERR_POP(mpi_errno);
             }
-            if (use_immed_resp_pkt)
-                fop_pkt->flags |= MPIDI_CH3_PKT_FLAG_RMA_IMMED_RESP;
         }
 
         MPIR_T_PVAR_TIMER_END(RMA, rma_rmaqueue_set);
