@@ -34,7 +34,7 @@ static inline MPIDI_RMA_Lock_entry_t *MPIDI_CH3I_Win_lock_entry_alloc(MPID_Win *
         MPIU_Memcpy(&(new_ptr->pkt), pkt, sizeof(*pkt));
         new_ptr->vc = NULL;
         new_ptr->data = NULL;
-        new_ptr->data_size = 0;
+        new_ptr->buf_size = 0;
         new_ptr->all_data_recved = 0;
     }
 
@@ -53,7 +53,7 @@ static inline int MPIDI_CH3I_Win_lock_entry_free(MPID_Win * win_ptr,
     int mpi_errno = MPI_SUCCESS;
 
     if (lock_entry->data != NULL) {
-        win_ptr->current_lock_data_bytes -= lock_entry->data_size;
+        win_ptr->current_lock_data_bytes -= lock_entry->buf_size;
         MPIU_Free(lock_entry->data);
     }
 

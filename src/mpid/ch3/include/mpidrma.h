@@ -418,7 +418,7 @@ static inline int enqueue_lock_origin(MPID_Win * win_ptr, MPIDI_VC_t * vc,
             }
             else {
                 win_ptr->current_lock_data_bytes += buf_size;
-                new_ptr->data_size = buf_size;
+                new_ptr->buf_size = buf_size;
             }
         }
 
