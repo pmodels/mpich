@@ -194,7 +194,7 @@ static int MPIDI_CH3I_Win_detect_shm(MPID_Win ** win_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_Win *shm_win_ptr = NULL;
-    int i, comm_size, node_size;
+    int i, node_size;
     MPI_Aint *base_shm_offs;
 
     MPIU_CHKPMEM_DECL(1);
@@ -207,7 +207,6 @@ static int MPIDI_CH3I_Win_detect_shm(MPID_Win ** win_ptr)
     }
 
     node_size = (*win_ptr)->comm_ptr->node_comm->local_size;
-    comm_size = (*win_ptr)->comm_ptr->local_size;
 
     MPIU_CHKLMEM_MALLOC(base_shm_offs, MPI_Aint *, node_size * sizeof(MPI_Aint),
                         mpi_errno, "base_shm_offs");
@@ -224,22 +223,13 @@ static int MPIDI_CH3I_Win_detect_shm(MPID_Win ** win_ptr)
 
     (*win_ptr)->shm_allocated = TRUE;
     MPIU_CHKPMEM_MALLOC((*win_ptr)->shm_base_addrs, void **,
-                        comm_size * sizeof(void *), mpi_errno, "(*win_ptr)->shm_base_addrs");
+                        node_size * sizeof(void *), mpi_errno, "(*win_ptr)->shm_base_addrs");
 
     /* Compute the base address of shm buffer on each process.
      * shm_base_addrs[i] = my_shm_base_addr + off[i] */
-    for (i = 0; i < comm_size; i++) {
-        int i_node_rank;
-        i_node_rank = (*win_ptr)->comm_ptr->intranode_table[i];
-        if (i_node_rank >= 0) {
-            MPIU_Assert(i_node_rank < node_size);
-
-            (*win_ptr)->shm_base_addrs[i] =
-                (void *) ((MPI_Aint) shm_win_ptr->shm_base_addr + base_shm_offs[i_node_rank]);
-        }
-        else {
-            (*win_ptr)->shm_base_addrs[i] = NULL;
-        }
+    for (i = 0; i < node_size; i++) {
+        (*win_ptr)->shm_base_addrs[i] =
+            (void *) ((MPI_Aint) shm_win_ptr->shm_base_addr + base_shm_offs[i]);
     }
 
     /* TODO: should we use the same mutex or create a new one ?
@@ -271,12 +261,11 @@ static int MPIDI_CH3I_Win_allocate_shm(MPI_Aint size, int disp_unit, MPID_Info *
     int node_size, node_rank;
     MPID_Comm *node_comm_ptr;
     MPI_Aint *node_sizes;
-    void **node_shm_base_addrs;
     MPI_Aint *tmp_buf;
     mpir_errflag_t errflag = MPIR_ERR_NONE;
     int noncontig = FALSE;
     MPIU_CHKPMEM_DECL(2);
-    MPIU_CHKLMEM_DECL(3);
+    MPIU_CHKLMEM_DECL(2);
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3I_WIN_ALLOCATE_SHM);
 
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_CH3I_WIN_ALLOCATE_SHM);
@@ -308,7 +297,7 @@ static int MPIDI_CH3I_Win_allocate_shm(MPI_Aint size, int disp_unit, MPID_Info *
     /* allocate memory for the base addresses, disp_units, and
      * completion counters of all processes */
     MPIU_CHKPMEM_MALLOC((*win_ptr)->shm_base_addrs, void **,
-                        comm_size * sizeof(void *), mpi_errno, "(*win_ptr)->shm_base_addrs");
+                        node_size * sizeof(void *), mpi_errno, "(*win_ptr)->shm_base_addrs");
 
     MPIU_CHKPMEM_MALLOC((*win_ptr)->basic_info_table, MPIDI_Win_basic_info_t *,
                         comm_size * sizeof(MPIDI_Win_basic_info_t),
@@ -494,22 +483,10 @@ static int MPIDI_CH3I_Win_allocate_shm(MPI_Aint size, int disp_unit, MPID_Info *
         {
             char *cur_base;
             int cur_rank;
-            if ((*win_ptr)->create_flavor != MPI_WIN_FLAVOR_SHARED) {
-                /* If create flavor is not MPI_WIN_FLAVOR_SHARED, all processes on this
-                 * window may not be on the same node. Because we only need to calculate
-                 * local processes' shm_base_addrs using local processes's sizes,
-                 * we allocate a temporary array to place results and copy results
-                 * back to shm_base_addrs on the window at last. */
-                MPIU_CHKLMEM_MALLOC(node_shm_base_addrs, void **, node_size * sizeof(void *),
-                                    mpi_errno, "node_shm_base_addrs");
-            }
-            else {
-                node_shm_base_addrs = (*win_ptr)->shm_base_addrs;
-            }
 
             cur_base = (*win_ptr)->shm_base_addr;
             cur_rank = 0;
-            node_shm_base_addrs[0] = (*win_ptr)->shm_base_addr;
+            ((*win_ptr)->shm_base_addrs)[0] = (*win_ptr)->shm_base_addr;
             for (i = 1; i < node_size; ++i) {
                 if (node_sizes[i]) {
                     /* For the base addresses, we track the previous
@@ -518,36 +495,22 @@ static int MPIDI_CH3I_Win_allocate_shm(MPI_Aint size, int disp_unit, MPID_Info *
                      * previous process because rank "i-1" might not have
                      * allocated any memory. */
                     if (noncontig) {
-                        node_shm_base_addrs[i] =
+                        ((*win_ptr)->shm_base_addrs)[i] =
                             cur_base + MPIDI_CH3_ROUND_UP_PAGESIZE(node_sizes[cur_rank]);
                     }
                     else {
-                        node_shm_base_addrs[i] = cur_base + node_sizes[cur_rank];
+                        ((*win_ptr)->shm_base_addrs)[i] = cur_base + node_sizes[cur_rank];
                     }
-                    cur_base = node_shm_base_addrs[i];
+                    cur_base = ((*win_ptr)->shm_base_addrs)[i];
                     cur_rank = i;
                 }
                 else {
-                    node_shm_base_addrs[i] = NULL;
-                }
-            }
-
-            if ((*win_ptr)->create_flavor != MPI_WIN_FLAVOR_SHARED) {
-                /* if MPI_WIN_FLAVOR_SHARED is not set, copy from node_shm_base_addrs to
-                 * (*win_ptr)->shm_base_addrs */
-                for (i = 0; i < comm_size; i++) {
-                    if ((*win_ptr)->comm_ptr->intranode_table[i] >= 0) {
-                        MPIU_Assert((*win_ptr)->comm_ptr->intranode_table[i] < node_size);
-                        (*win_ptr)->shm_base_addrs[i] =
-                            node_shm_base_addrs[(*win_ptr)->comm_ptr->intranode_table[i]];
-                    }
-                    else
-                        (*win_ptr)->shm_base_addrs[i] = NULL;
+                    ((*win_ptr)->shm_base_addrs)[i] = NULL;
                 }
             }
         }
 
-        (*win_ptr)->base = (*win_ptr)->shm_base_addrs[rank];
+        (*win_ptr)->base = (*win_ptr)->shm_base_addrs[node_rank];
     }
 
     MPIU_CHKLMEM_MALLOC(tmp_buf, MPI_Aint *, 4 * comm_size * sizeof(MPI_Aint),

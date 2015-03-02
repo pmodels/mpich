@@ -260,7 +260,9 @@ static inline int MPIDI_CH3I_Shm_put_op(const void *origin_addr, int origin_coun
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_CH3I_SHM_PUT_OP);
 
     if (win_ptr->shm_allocated == TRUE) {
-        base = win_ptr->shm_base_addrs[target_rank];
+        int local_target_rank = win_ptr->comm_ptr->intranode_table[target_rank];
+        MPIU_Assert(local_target_rank >= 0);
+        base = win_ptr->shm_base_addrs[local_target_rank];
         disp_unit = win_ptr->basic_info_table[target_rank].disp_unit;
     }
     else {
@@ -304,8 +306,10 @@ static inline int MPIDI_CH3I_Shm_acc_op(const void *origin_addr, int origin_coun
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_CH3I_SHM_ACC_OP);
 
     if (win_ptr->shm_allocated == TRUE) {
+        int local_target_rank = win_ptr->comm_ptr->intranode_table[target_rank];
+        MPIU_Assert(local_target_rank >= 0);
         shm_op = 1;
-        base = win_ptr->shm_base_addrs[target_rank];
+        base = win_ptr->shm_base_addrs[local_target_rank];
         disp_unit = win_ptr->basic_info_table[target_rank].disp_unit;
     }
     else {
@@ -459,7 +463,9 @@ static inline int MPIDI_CH3I_Shm_get_acc_op(const void *origin_addr, int origin_
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_CH3I_SHM_GET_ACC_OP);
 
     if (win_ptr->shm_allocated == TRUE) {
-        base = win_ptr->shm_base_addrs[target_rank];
+        int local_target_rank = win_ptr->comm_ptr->intranode_table[target_rank];
+        MPIU_Assert(local_target_rank >= 0);
+        base = win_ptr->shm_base_addrs[local_target_rank];
         disp_unit = win_ptr->basic_info_table[target_rank].disp_unit;
         MPIDI_CH3I_SHM_MUTEX_LOCK(win_ptr);
         shm_locked = 1;
@@ -624,7 +630,9 @@ static inline int MPIDI_CH3I_Shm_get_op(void *origin_addr, int origin_count,
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_CH3I_SHM_GET_OP);
 
     if (win_ptr->shm_allocated == TRUE) {
-        base = win_ptr->shm_base_addrs[target_rank];
+        int local_target_rank = win_ptr->comm_ptr->intranode_table[target_rank];
+        MPIU_Assert(local_target_rank >= 0);
+        base = win_ptr->shm_base_addrs[local_target_rank];
         disp_unit = win_ptr->basic_info_table[target_rank].disp_unit;
     }
     else {
@@ -666,7 +674,9 @@ static inline int MPIDI_CH3I_Shm_cas_op(const void *origin_addr, const void *com
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_CH3I_SHM_CAS_OP);
 
     if (win_ptr->shm_allocated == TRUE) {
-        base = win_ptr->shm_base_addrs[target_rank];
+        int local_target_rank = win_ptr->comm_ptr->intranode_table[target_rank];
+        MPIU_Assert(local_target_rank >= 0);
+        base = win_ptr->shm_base_addrs[local_target_rank];
         disp_unit = win_ptr->basic_info_table[target_rank].disp_unit;
 
         MPIDI_CH3I_SHM_MUTEX_LOCK(win_ptr);
@@ -723,7 +733,9 @@ static inline int MPIDI_CH3I_Shm_fop_op(const void *origin_addr, void *result_ad
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_CH3I_SHM_FOP_OP);
 
     if (win_ptr->shm_allocated == TRUE) {
-        base = win_ptr->shm_base_addrs[target_rank];
+        int local_target_rank = win_ptr->comm_ptr->intranode_table[target_rank];
+        MPIU_Assert(local_target_rank >= 0);
+        base = win_ptr->shm_base_addrs[local_target_rank];
         disp_unit = win_ptr->basic_info_table[target_rank].disp_unit;
 
         MPIDI_CH3I_SHM_MUTEX_LOCK(win_ptr);
