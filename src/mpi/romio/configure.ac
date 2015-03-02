@@ -133,8 +133,6 @@ MPI_OFFSET_KIND2="!"
 TEST_CC=""
 TEST_F77=""
 #
-have_aio=no
-#
 known_mpi_impls="mpich_mpi mpich_mpi sgi_mpi hp_mpi cray_mpi lam_mpi open_mpi_mpi"
 
 dnl An m4 macro for use with m4_foreach_w and friends.  You should modify this
@@ -1123,123 +1121,20 @@ if test "$ac_cv_header_aio_h" = "yes" -o "$ac_cv_header_sys_aio_h" = "yes" -o "x
 	AC_DEFINE(ROMIO_HAVE_AIO_SUSPEND_TWO_ARGS, 1, Define if aio_suspend needs two arguments)
     fi
 
-    AC_MSG_CHECKING([for aio_fildes member of aiocb structure])
-    AC_TRY_COMPILE([
-#ifdef HAVE_SIGNAL_H
-#include <signal.h>
-#endif
-#ifdef HAVE_SYS_TYPES_H
-#include <sys/types.h>
-#endif
-#ifdef HAVE_AIO_H
-#include <aio.h>
-#endif
-#ifdef HAVE_SYS_AIO_H
-#include <sys/aio.h>
-#endif
-	],[
-	struct aiocb a;
-	a.aio_fildes = 0;
-	],
-	AC_MSG_RESULT(yes)
-	AC_DEFINE(ROMIO_HAVE_STRUCT_AIOCB_WITH_AIO_FILDES, 1, [Define if aiocb has aio_fildes member]),
-	AC_MSG_RESULT(no)
-    )
-    AC_MSG_CHECKING(for aio_whence member of aiocb structure)
-    AC_TRY_COMPILE([
-#ifdef HAVE_SIGNAL_H
-#include <signal.h>
-#endif
-#ifdef HAVE_SYS_TYPES_H
-#include <sys/types.h>
-#endif
-#ifdef HAVE_AIO_H
-#include <aio.h>
-#endif
-#ifdef HAVE_SYS_AIO_H
-#include <sys/aio.h>
-#endif
-#include <sys/types.h>
-#include <unistd.h>
-	],[
-	struct aiocb a;
-	a.aio_whence = SEEK_SET;
-	],
-	AC_MSG_RESULT(yes)
-	AC_DEFINE(ROMIO_HAVE_STRUCT_AIOCB_WITH_AIO_WHENCE, 1, [Define if aiocb has aio_whence member]),
-	AC_MSG_RESULT(no)
-    )
-    AC_MSG_CHECKING(for aio_handle member of aiocb structure)
-    AC_TRY_COMPILE([
-#ifdef HAVE_SIGNAL_H
-#include <signal.h>
-#endif
-#ifdef HAVE_SYS_TYPES_H
-#include <sys/types.h>
-#endif
-#ifdef HAVE_AIO_H
-#include <aio.h>
-#endif
-#ifdef HAVE_SYS_AIO_H
-#include <sys/aio.h>
-#endif
-	],[
-	struct aiocb a;
-	aio_handle_t h;
-
-	a.aio_handle = h;
-	],
-	AC_MSG_RESULT(yes)
-	AC_DEFINE(ROMIO_HAVE_STRUCT_AIOCB_WITH_AIO_HANDLE, 1, [Define if aiocb has aio_handle member]),
-	AC_MSG_RESULT(no)
-    )
-    AC_MSG_CHECKING(for aio_reqprio member of aiocb structure)
-    AC_TRY_COMPILE([
-#ifdef HAVE_SIGNAL_H
-#include <signal.h>
-#endif
-#ifdef HAVE_SYS_TYPES_H
-#include <sys/types.h>
-#endif
-#ifdef HAVE_AIO_H
-#include <aio.h>
-#endif
-#ifdef HAVE_SYS_AIO_H
-#include <sys/aio.h>
-#endif
-	],[
-	struct aiocb a;
-
-	a.aio_reqprio = 0;
-	],
-	AC_MSG_RESULT(yes)
-	AC_DEFINE(ROMIO_HAVE_STRUCT_AIOCB_WITH_AIO_REQPRIO, 1, [Define if aiocb has aio_reqprio member]),
-	AC_MSG_RESULT(no)
-    )	
-    AC_MSG_CHECKING(for aio_sigevent member of aiocb structure)
-    AC_TRY_COMPILE([
-#ifdef HAVE_SIGNAL_H
-#include <signal.h>
-#endif
-#ifdef HAVE_SYS_TYPES_H
-#include <sys/types.h>
-#endif
-#ifdef HAVE_AIO_H
-#include <aio.h>
-#endif
-#ifdef HAVE_SYS_AIO_H
-#include <sys/aio.h>
-#endif
-	],[
-	struct aiocb a;
-
-	a.aio_sigevent.sigev_signo = 0;
-	],
-	AC_MSG_RESULT(yes)
-	AC_DEFINE(ROMIO_HAVE_STRUCT_AIOCB_WITH_AIO_SIGEVENT, 1, [Define if aiocb has aio_sigevent member]),
-	AC_MSG_RESULT(no)
-    )
-	
+    AC_CHECK_MEMBERS(
+		     [struct aiocb.aio_fildes,
+		      struct aiocb.aio_whence,
+		      struct aiocb.aio_handle,
+		      struct aiocb.aio_reqprio,
+		      struct aiocb.aio_sigevent],
+		      [],
+		      [],
+		      [[#ifdef HAVE_AIO_H
+		       #include <aio.h>
+		       #endif
+		       #ifdef HAVE_SYS_AIO_H
+		       #include <sys/aio.h>
+		       #endif] ]  )
 fi
 
 # End of aio-related tests

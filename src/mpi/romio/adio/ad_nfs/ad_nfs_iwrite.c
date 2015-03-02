@@ -69,19 +69,19 @@ int ADIOI_NFS_aio(ADIO_File fd, void *buf, int len, ADIO_Offset offset,
     aiocbp->aio_buf    = buf;
     aiocbp->aio_nbytes = len;
 
-#ifdef ROMIO_HAVE_STRUCT_AIOCB_WITH_AIO_WHENCE
+#ifdef HAVE_STRUCT_AIOCB_AIO_WHENCE
     aiocbp->aio_whence = SEEK_SET;
 #endif
-#ifdef ROMIO_HAVE_STRUCT_AIOCB_WITH_AIO_FILDES
+#ifdef HAVE_STRUCT_AIOCB_AIO_FILDES
     aiocbp->aio_fildes = fd_sys;
 #endif
-#ifdef ROMIO_HAVE_STRUCT_AIOCB_WITH_AIO_SIGEVENT
+#ifdef HAVE_STRUCT_AIOCB_AIO_SIGEVENT
 # ifdef AIO_SIGNOTIFY_NONE
     aiocbp->aio_sigevent.sigev_notify = SIGEV_NONE;
 # endif
     aiocbp->aio_sigevent.sigev_signo = 0;
 #endif
-#ifdef ROMIO_HAVE_STRUCT_AIOCB_WITH_AIO_REQPRIO
+#ifdef HAVE_STRUCT_AIOCB_AIO_REQPRIO
 # ifdef AIO_PRIO_DFL
     aiocbp->aio_reqprio = AIO_PRIO_DFL;   /* not needed in DEC Unix 4.0 */
 # else
