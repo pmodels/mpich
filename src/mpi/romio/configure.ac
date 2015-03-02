@@ -1001,34 +1001,13 @@ if test "x$disable_aio" = "xno" ; then
 fi
 
 if test "x$disable_aio" = "xno" -a -n "$aio_write_found" ; then
-    AC_CHECK_HEADERS(signal.h)
-    # Just because aio.h is found by CPP doesn't mean that we can use it
-    # We try to compile it, not just read it.
-    AC_MSG_CHECKING([if aio.h exists and can be compiled])
-    AC_TRY_COMPILE([
-#include <sys/types.h>
-#include <aio.h>],
-[],have_aio_h=yes,have_aio_h=no)
-    AC_MSG_RESULT($have_aio_h)
-    if test "$have_aio_h" = yes ; then
-        AC_DEFINE(HAVE_AIO_H,1,[Define if aio.h exists and can be compiled])
-    fi
-
-    AC_MSG_CHECKING([if sys/aio.h exists and can be compiled])
-    AC_TRY_COMPILE([
-#include <sys/types.h>
-#include <sys/aio.h>],
-[],have_sys_aio_h=yes,have_sys_aio_h=no)
-    AC_MSG_RESULT($have_sys_aio_h)
-    if test "$have_sys_aio_h" = yes ; then
-        AC_DEFINE(HAVE_SYS_AIO_H,1,[Define if sys/aio.h exists and can be compiled])
-    fi
-    if test "$have_aio_h" = "no" -a "$have_sys_aio_h" = "no" ; then
+    AC_CHECK_HEADERS([signal.h aio.h sys/aio.h] )
+    if test "$ac_cv_header_aio_h" = "no" -a "$ac_cv_header_sys_aio_h" = "no" ; then
     	disable_aio=yes
     fi
 fi
 
-if test "$have_aio_h" = "yes" -o "$have_sys_aio_h" = "yes" -o "x$disable_aio" = "xno"; then
+if test "$ac_cv_header_aio_h" = "yes" -o "$ac_cv_header_sys_aio_h" = "yes" -o "x$disable_aio" = "xno"; then
 
     # Check that aio is available (many systems appear to have aio
     # either installed improperly or turned off).
