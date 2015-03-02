@@ -140,7 +140,6 @@ int MPIDI_CH3I_Put(const void *origin_addr, int origin_count, MPI_Datatype
         new_ptr->origin_count = origin_count;
         new_ptr->origin_datatype = origin_datatype;
         new_ptr->target_rank = target_rank;
-        new_ptr->ureq = NULL;   /* reset user request */
 
         /* Remember user request */
         if (ureq) {
@@ -338,7 +337,6 @@ int MPIDI_CH3I_Get(void *origin_addr, int origin_count, MPI_Datatype
         new_ptr->origin_count = origin_count;
         new_ptr->origin_datatype = origin_datatype;
         new_ptr->target_rank = target_rank;
-        new_ptr->ureq = NULL;   /* reset user request */
 
         /* Remember user request */
         if (ureq) {
@@ -524,7 +522,6 @@ int MPIDI_CH3I_Accumulate(const void *origin_addr, int origin_count, MPI_Datatyp
         new_ptr->origin_count = origin_count;
         new_ptr->origin_datatype = origin_datatype;
         new_ptr->target_rank = target_rank;
-        new_ptr->ureq = NULL;   /* reset user request */
 
         /* Remember user request */
         if (ureq) {
@@ -732,7 +729,6 @@ int MPIDI_CH3I_Get_accumulate(const void *origin_addr, int origin_count,
             new_ptr->origin_count = result_count;
             new_ptr->origin_datatype = result_datatype;
             new_ptr->target_rank = target_rank;
-            new_ptr->ureq = NULL;       /* reset user request */
 
             /* Remember user request */
             if (ureq) {
@@ -804,7 +800,6 @@ int MPIDI_CH3I_Get_accumulate(const void *origin_addr, int origin_count,
             new_ptr->result_count = result_count;
             new_ptr->result_datatype = result_datatype;
             new_ptr->target_rank = target_rank;
-            new_ptr->ureq = NULL;       /* reset user request */
 
             /* Remember user request */
             if (ureq) {
@@ -1114,7 +1109,6 @@ int MPIDI_Compare_and_swap(const void *origin_addr, const void *compare_addr,
         new_ptr->compare_datatype = datatype;
         new_ptr->target_rank = target_rank;
         new_ptr->piggyback_lock_candidate = 1;  /* CAS is always able to piggyback LOCK */
-        new_ptr->ureq = NULL;   /* reset user request */
 
         /************** Setting packet struct areas in operation ****************/
 
@@ -1261,7 +1255,6 @@ int MPIDI_Fetch_and_op(const void *origin_addr, void *result_addr,
             new_ptr->origin_datatype = datatype;
             new_ptr->target_rank = target_rank;
             new_ptr->piggyback_lock_candidate = 1;
-            new_ptr->ureq = NULL;       /* reset user request */
 
             /************** Setting packet struct areas in operation ****************/
 
@@ -1307,7 +1300,6 @@ int MPIDI_Fetch_and_op(const void *origin_addr, void *result_addr,
             new_ptr->result_datatype = datatype;
             new_ptr->target_rank = target_rank;
             new_ptr->piggyback_lock_candidate = 1;
-            new_ptr->ureq = NULL;       /* reset user request */
 
             /************** Setting packet struct areas in operation ****************/
 
