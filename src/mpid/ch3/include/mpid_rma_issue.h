@@ -99,15 +99,11 @@ static int fill_in_derived_dtp_info(MPIDI_RMA_Op_t * rma_op, MPID_Datatype * dtp
 }
 
 
-/* create_datatype() creates a new struct datatype for the dtype_info
-   and the dataloop of the target datatype together with the user data */
 #undef FUNCNAME
 #define FUNCNAME create_datatype
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-static int create_datatype(const MPIDI_RMA_dtype_info * dtype_info,
-                           const void *dataloop, MPI_Aint dataloop_sz,
-                           const void *o_addr, int o_count, MPI_Datatype o_datatype,
+static int create_datatype(int *ints, MPI_Aint * displaces, MPI_Datatype * datatypes,
                            MPID_Datatype ** combined_dtp)
 {
     int mpi_errno = MPI_SUCCESS;
@@ -115,34 +111,16 @@ static int create_datatype(const MPIDI_RMA_dtype_info * dtype_info,
      * blocklens array with count prepended to it.  So blocklens
      * points to the 2nd element of ints to avoid having to copy
      * blocklens into ints later. */
-    int ints[4];
     int *blocklens = &ints[1];
-    MPI_Aint displaces[3];
-    MPI_Datatype datatypes[3];
-    const int count = 3;
     MPI_Datatype combined_datatype;
+    int count = ints[0];
     MPIDI_STATE_DECL(MPID_STATE_CREATE_DATATYPE);
 
     MPIDI_FUNC_ENTER(MPID_STATE_CREATE_DATATYPE);
 
-    /* create datatype */
-    displaces[0] = MPIU_PtrToAint(dtype_info);
-    blocklens[0] = sizeof(*dtype_info);
-    datatypes[0] = MPI_BYTE;
-
-    displaces[1] = MPIU_PtrToAint(dataloop);
-    MPIU_Assign_trunc(blocklens[1], dataloop_sz, int);
-    datatypes[1] = MPI_BYTE;
-
-    displaces[2] = MPIU_PtrToAint(o_addr);
-    blocklens[2] = o_count;
-    datatypes[2] = o_datatype;
-
     mpi_errno = MPID_Type_struct(count, blocklens, displaces, datatypes, &combined_datatype);
     if (mpi_errno)
         MPIU_ERR_POP(mpi_errno);
-
-    ints[0] = count;
 
     MPID_Datatype_get_ptr(combined_datatype, *combined_dtp);
     mpi_errno = MPID_Datatype_set_contents(*combined_dtp, MPI_COMBINER_STRUCT, count + 1,       /* ints (cnt,blklen) */
@@ -192,6 +170,11 @@ static int issue_from_origin_buffer(MPIDI_RMA_Op_t * rma_op, MPIDI_VC_t * vc,
     int is_origin_contig;
     MPID_IOV iov[MPID_IOV_LIMIT];
     MPID_Request *req = NULL;
+    int count;
+    int *ints = NULL;
+    int *blocklens = NULL;
+    MPI_Aint *displaces = NULL;
+    MPI_Datatype *datatypes = NULL;
     int mpi_errno = MPI_SUCCESS;
     MPIDI_STATE_DECL(MPID_STATE_ISSUE_FROM_ORIGIN_BUFFER);
 
@@ -296,10 +279,27 @@ static int issue_from_origin_buffer(MPIDI_RMA_Op_t * rma_op, MPIDI_VC_t * vc,
 
         /* create a new datatype containing the dtype_info, dataloop, and origin data */
 
-        mpi_errno = create_datatype(&rma_op->dtype_info, rma_op->dataloop,
-                                    target_dtp->dataloop_size,
-                                    rma_op->origin_addr, rma_op->origin_count,
-                                    rma_op->origin_datatype, &combined_dtp);
+        count = 3;
+        ints = (int *) MPIU_Malloc(sizeof(int) * (count + 1));
+        blocklens = &ints[1];
+        displaces = (MPI_Aint *) MPIU_Malloc(sizeof(MPI_Aint) * count);
+        datatypes = (MPI_Datatype *) MPIU_Malloc(sizeof(MPI_Datatype) * count);
+
+        ints[0] = count;
+
+        displaces[0] = MPIU_PtrToAint(&(rma_op->dtype_info));
+        blocklens[0] = sizeof(MPIDI_RMA_dtype_info);
+        datatypes[0] = MPI_BYTE;
+
+        displaces[1] = MPIU_PtrToAint(rma_op->dataloop);
+        MPIU_Assign_trunc(blocklens[1], target_dtp->dataloop_size, int);
+        datatypes[1] = MPI_BYTE;
+
+        displaces[2] = MPIU_PtrToAint(rma_op->origin_addr);
+        blocklens[2] = rma_op->origin_count;
+        datatypes[2] = rma_op->origin_datatype;
+
+        mpi_errno = create_datatype(ints, displaces, datatypes, &combined_dtp);
         if (mpi_errno)
             MPIU_ERR_POP(mpi_errno);
 
@@ -317,6 +317,10 @@ static int issue_from_origin_buffer(MPIDI_RMA_Op_t * rma_op, MPIDI_VC_t * vc,
         mpi_errno = vc->sendNoncontig_fn(vc, req, iov[0].MPID_IOV_BUF, iov[0].MPID_IOV_LEN);
         MPIU_THREAD_CS_EXIT(CH3COMM, vc);
         MPIU_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**ch3|rmamsg");
+
+        MPIU_Free(ints);
+        MPIU_Free(displaces);
+        MPIU_Free(datatypes);
 
         /* we're done with the datatypes */
         if (origin_dtp != NULL)
