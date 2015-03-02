@@ -6,7 +6,7 @@ sendself 1
 sendall 4
 anyall 2
 eagerdt 2
-pingping 2 xfail=ticket2239
+pingping 2 timeLimit=500
 bottom 2
 bsend1 1
 bsend2 1
