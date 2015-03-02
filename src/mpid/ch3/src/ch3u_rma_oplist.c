@@ -362,9 +362,6 @@ static inline int issue_ops_target(MPID_Win * win_ptr, MPIDI_RMA_Target_t * targ
 
         (*made_progress) = 1;
 
-        if (curr_op->request != NULL)
-            win_ptr->active_req_cnt++;
-
         if (curr_op->pkt.type == MPIDI_CH3_PKT_PUT ||
             curr_op->pkt.type == MPIDI_CH3_PKT_PUT_IMMED ||
             curr_op->pkt.type == MPIDI_CH3_PKT_ACCUMULATE ||

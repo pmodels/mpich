@@ -375,6 +375,9 @@ static int issue_put_op(MPIDI_RMA_Op_t * rma_op, MPID_Win * win_ptr,
             MPIU_ERR_POP(mpi_errno);
     }
 
+    if (rma_op->request != NULL)
+        win_ptr->active_req_cnt++;
+
   fn_exit:
     MPIDI_RMA_FUNC_EXIT(MPID_STATE_ISSUE_PUT_OP);
     return mpi_errno;
@@ -419,6 +422,9 @@ static int issue_acc_op(MPIDI_RMA_Op_t * rma_op, MPID_Win * win_ptr,
         if (mpi_errno != MPI_SUCCESS)
             MPIU_ERR_POP(mpi_errno);
     }
+
+    if (rma_op->request != NULL)
+        win_ptr->active_req_cnt++;
 
   fn_exit:
     MPIDI_RMA_FUNC_EXIT(MPID_STATE_ISSUE_ACC_OP);
@@ -518,6 +524,9 @@ static int issue_get_acc_op(MPIDI_RMA_Op_t * rma_op, MPID_Win * win_ptr,
 
     /* For error checking */
     resp_req = NULL;
+
+    if (rma_op->request != NULL)
+        win_ptr->active_req_cnt++;
 
   fn_exit:
     MPIDI_RMA_FUNC_EXIT(MPID_STATE_ISSUE_GET_ACC_OP);
@@ -624,6 +633,9 @@ static int issue_get_op(MPIDI_RMA_Op_t * rma_op, MPID_Win * win_ptr,
         MPID_Request_release(req);
     }
 
+    if (rma_op->request != NULL)
+        win_ptr->active_req_cnt++;
+
   fn_exit:
     MPIDI_RMA_FUNC_EXIT(MPID_STATE_ISSUE_GET_OP);
     return mpi_errno;
@@ -679,6 +691,9 @@ static int issue_cas_op(MPIDI_RMA_Op_t * rma_op,
     if (rmw_req != NULL) {
         MPID_Request_release(rmw_req);
     }
+
+    if (rma_op->request != NULL)
+        win_ptr->active_req_cnt++;
 
   fn_exit:
     MPIDI_RMA_FUNC_EXIT(MPID_STATE_ISSUE_CAS_OP);
@@ -775,6 +790,9 @@ static int issue_fop_op(MPIDI_RMA_Op_t * rma_op,
 
     /* For error checking */
     resp_req = NULL;
+
+    if (rma_op->request != NULL)
+        win_ptr->active_req_cnt++;
 
   fn_exit:
     MPIDI_RMA_FUNC_EXIT(MPID_STATE_ISSUE_FOP_OP);
