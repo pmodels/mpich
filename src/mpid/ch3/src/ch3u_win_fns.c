@@ -33,20 +33,20 @@ int MPIDI_Win_fns_init(MPIDI_CH3U_Win_fns_t * win_fns)
 
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_CH3U_Win_create_gather
+#define FUNCNAME MPIDI_CH3U_Win_gather_info
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-int MPIDI_CH3U_Win_create_gather(void *base, MPI_Aint size, int disp_unit,
-                                 MPID_Info * info, MPID_Comm * comm_ptr, MPID_Win ** win_ptr)
+int MPIDI_CH3U_Win_gather_info(void *base, MPI_Aint size, int disp_unit,
+                               MPID_Info * info, MPID_Comm * comm_ptr, MPID_Win ** win_ptr)
 {
     int mpi_errno = MPI_SUCCESS, i, k, comm_size, rank;
     MPI_Aint *tmp_buf;
     mpir_errflag_t errflag = MPIR_ERR_NONE;
     MPIU_CHKPMEM_DECL(5);
     MPIU_CHKLMEM_DECL(1);
-    MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3U_WIN_CREATE_GATHER);
+    MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3U_WIN_GATHER_INFO);
 
-    MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_CH3U_WIN_CREATE_GATHER);
+    MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_CH3U_WIN_GATHER_INFO);
 
     comm_size = (*win_ptr)->comm_ptr->local_size;
     rank = (*win_ptr)->comm_ptr->rank;
@@ -97,7 +97,7 @@ int MPIDI_CH3U_Win_create_gather(void *base, MPI_Aint size, int disp_unit,
 
   fn_exit:
     MPIU_CHKLMEM_FREEALL();
-    MPIDI_RMA_FUNC_EXIT(MPID_STATE_MPIDI_CH3U_WIN_CREATE_GATHER);
+    MPIDI_RMA_FUNC_EXIT(MPID_STATE_MPIDI_CH3U_WIN_GATHER_INFO);
     return mpi_errno;
     /* --BEGIN ERROR HANDLING-- */
   fn_fail:
@@ -119,7 +119,7 @@ int MPIDI_CH3U_Win_create(void *base, MPI_Aint size, int disp_unit, MPID_Info * 
 
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_CH3U_WIN_CREATE);
 
-    mpi_errno = MPIDI_CH3U_Win_create_gather(base, size, disp_unit, info, comm_ptr, win_ptr);
+    mpi_errno = MPIDI_CH3U_Win_gather_info(base, size, disp_unit, info, comm_ptr, win_ptr);
     if (mpi_errno != MPI_SUCCESS) {
         MPIU_ERR_POP(mpi_errno);
     }
@@ -154,7 +154,7 @@ int MPIDI_CH3U_Win_create_dynamic(MPID_Info * info, MPID_Comm * comm_ptr, MPID_W
 
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_CH3U_WIN_CREATE_DYNAMIC);
 
-    mpi_errno = MPIDI_CH3U_Win_create_gather(MPI_BOTTOM, 0, 1, info, comm_ptr, win_ptr);
+    mpi_errno = MPIDI_CH3U_Win_gather_info(MPI_BOTTOM, 0, 1, info, comm_ptr, win_ptr);
     if (mpi_errno != MPI_SUCCESS) {
         MPIU_ERR_POP(mpi_errno);
     }
@@ -275,7 +275,7 @@ int MPIDI_CH3U_Win_allocate_no_shm(MPI_Aint size, int disp_unit, MPID_Info * inf
 
     (*win_ptr)->base = *base_pp;
 
-    mpi_errno = MPIDI_CH3U_Win_create_gather(*base_pp, size, disp_unit, info, comm_ptr, win_ptr);
+    mpi_errno = MPIDI_CH3U_Win_gather_info(*base_pp, size, disp_unit, info, comm_ptr, win_ptr);
     if (mpi_errno != MPI_SUCCESS) {
         MPIU_ERR_POP(mpi_errno);
     }
