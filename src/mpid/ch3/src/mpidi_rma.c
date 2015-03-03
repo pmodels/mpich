@@ -233,7 +233,8 @@ int MPIDI_Win_free(MPID_Win ** win_ptr)
     if (mpi_errno)
         MPIU_ERR_POP(mpi_errno);
 
-    MPIU_Free((*win_ptr)->basic_info_table);
+    if ((*win_ptr)->basic_info_table != NULL)
+        MPIU_Free((*win_ptr)->basic_info_table);
     MPIU_Free((*win_ptr)->op_pool_start);
     MPIU_Free((*win_ptr)->target_pool_start);
     MPIU_Free((*win_ptr)->slots);

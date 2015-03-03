@@ -134,6 +134,19 @@ int MPIDI_CH3_SHM_Win_free(MPID_Win ** win_ptr)
         MPIU_SHMW_Hnd_finalize(&(*win_ptr)->shm_mutex_segment_handle);
     }
 
+    /* Free shared memory region for window info */
+    if ((*win_ptr)->info_shm_base_addr != NULL) {
+        mpi_errno = MPIU_SHMW_Seg_detach((*win_ptr)->info_shm_segment_handle,
+                                         (char **) &(*win_ptr)->info_shm_base_addr,
+                                         (*win_ptr)->info_shm_segment_len);
+        if (mpi_errno != MPI_SUCCESS)
+            MPIU_ERR_POP(mpi_errno);
+
+        MPIU_SHMW_Hnd_finalize(&(*win_ptr)->info_shm_segment_handle);
+
+        (*win_ptr)->basic_info_table = NULL;
+    }
+
     /* Unlink from global SHM window list if it is original shared window */
     if ((*win_ptr)->create_flavor == MPI_WIN_FLAVOR_SHARED ||
         (*win_ptr)->create_flavor == MPI_WIN_FLAVOR_ALLOCATE) {

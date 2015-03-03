@@ -25,6 +25,7 @@ int MPIDI_Win_fns_init(MPIDI_CH3U_Win_fns_t * win_fns)
     win_fns->allocate = MPIDI_CH3U_Win_allocate;
     win_fns->allocate_shared = MPIDI_CH3U_Win_allocate;
     win_fns->create_dynamic = MPIDI_CH3U_Win_create_dynamic;
+    win_fns->gather_info = MPIDI_CH3U_Win_gather_info;
 
     MPIDI_RMA_FUNC_EXIT(MPID_STATE_MPIDI_WIN_FNS_INIT);
 
@@ -111,10 +112,9 @@ int MPIDI_CH3U_Win_create(void *base, MPI_Aint size, int disp_unit, MPID_Info * 
 
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_CH3U_WIN_CREATE);
 
-    mpi_errno = MPIDI_CH3U_Win_gather_info(base, size, disp_unit, info, comm_ptr, win_ptr);
-    if (mpi_errno != MPI_SUCCESS) {
+    mpi_errno = MPIDI_CH3U_Win_fns.gather_info(base, size, disp_unit, info, comm_ptr, win_ptr);
+    if (mpi_errno != MPI_SUCCESS)
         MPIU_ERR_POP(mpi_errno);
-    }
 
     if ((*win_ptr)->info_args.alloc_shm == TRUE && MPIDI_CH3U_Win_fns.detect_shm != NULL) {
         /* Detect if shared buffers are specified for the processes in the
@@ -146,10 +146,9 @@ int MPIDI_CH3U_Win_create_dynamic(MPID_Info * info, MPID_Comm * comm_ptr, MPID_W
 
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_CH3U_WIN_CREATE_DYNAMIC);
 
-    mpi_errno = MPIDI_CH3U_Win_gather_info(MPI_BOTTOM, 0, 1, info, comm_ptr, win_ptr);
-    if (mpi_errno != MPI_SUCCESS) {
+    mpi_errno = MPIDI_CH3U_Win_fns.gather_info(MPI_BOTTOM, 0, 1, info, comm_ptr, win_ptr);
+    if (mpi_errno != MPI_SUCCESS)
         MPIU_ERR_POP(mpi_errno);
-    }
 
   fn_exit:
     MPIDI_RMA_FUNC_EXIT(MPID_STATE_MPIDI_CH3U_WIN_CREATE_DYNAMIC);
@@ -267,7 +266,7 @@ int MPIDI_CH3U_Win_allocate_no_shm(MPI_Aint size, int disp_unit, MPID_Info * inf
 
     (*win_ptr)->base = *base_pp;
 
-    mpi_errno = MPIDI_CH3U_Win_gather_info(*base_pp, size, disp_unit, info, comm_ptr, win_ptr);
+    mpi_errno = MPIDI_CH3U_Win_fns.gather_info(*base_pp, size, disp_unit, info, comm_ptr, win_ptr);
     if (mpi_errno != MPI_SUCCESS) {
         MPIU_ERR_POP(mpi_errno);
     }

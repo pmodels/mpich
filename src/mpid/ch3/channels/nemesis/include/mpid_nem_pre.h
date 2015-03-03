@@ -25,6 +25,9 @@ typedef pthread_mutex_t MPIDI_CH3I_SHM_MUTEX;
                                            accumulate/atomic operations */              \
     MPIU_SHMW_Hnd_t shm_mutex_segment_handle; /* handle to interprocess mutex memory    \
                                                  region */                              \
-
+                                                                                        \
+    void *info_shm_base_addr; /* base address of shared memory region for window info */          \
+    MPI_Aint info_shm_segment_len; /* size of shared memory region for window info */             \
+    MPIU_SHMW_Hnd_t info_shm_segment_handle; /* handle to shared memory region for window info */ \
 
 #endif /* MPID_NEM_PRE_H */
