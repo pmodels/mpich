@@ -11,7 +11,7 @@ barrier 4 env=MPIR_CVAR_ENABLE_FT=1 mpiexecarg=-disable-auto-cleanup resultTest=
 gather 4 env=MPIR_CVAR_ENABLE_FT=1 mpiexecarg=-disable-auto-cleanup resultTest=TestStatusNoErrors strict=false timeLimit=10 xfail=2237
 reduce 4 env=MPIR_CVAR_ENABLE_FT=1 mpiexecarg=-disable-auto-cleanup resultTest=TestStatusNoErrors strict=false timeLimit=10
 bcast 4 env=MPIR_CVAR_ENABLE_FT=1 mpiexecarg=-disable-auto-cleanup resultTest=TestStatusNoErrors strict=false timeLimit=10
-scatter 4 env=MPIR_CVAR_ENABLE_FT=1 mpiexecarg=-disable-auto-cleanup resultTest=TestStatusNoErrors strict=false timeLimit=10
+scatter 4 env=MPIR_CVAR_ENABLE_FT=1 mpiexecarg=-disable-auto-cleanup resultTest=TestStatusNoErrors strict=false timeLimit=10 xfail=2237
 anysource 3 env=MPIR_CVAR_ENABLE_FT=1 mpiexecarg=-disable-auto-cleanup resultTest=TestStatusNoErrors strict=false timeLimit=10 xfail=2237
 revoke_nofail 2 env=MPIR_CVAR_ENABLE_FT=1 strict=false timeLimit=10 xfail=2237
 shrink 8 env=MPIR_CVAR_ENABLE_FT=1 mpiexecarg=-disable-auto-cleanup resultTest=TestStatusNoErrors strict=false timeLimit=10 xfail=2237
