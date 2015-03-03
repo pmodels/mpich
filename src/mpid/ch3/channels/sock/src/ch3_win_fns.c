@@ -25,3 +25,21 @@ int MPIDI_CH3_Win_fns_init(MPIDI_CH3U_Win_fns_t *win_fns)
 
     return mpi_errno;
 }
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_CH3_Win_hooks_init
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
+int MPIDI_CH3_Win_hooks_init(MPIDI_CH3U_Win_hooks_t *win_hooks)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3_WIN_HOOKS_INIT);
+
+    MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_CH3_WIN_HOOKS_INIT);
+
+    /* Sock doesn't implement any of the Window hooks */
+
+    MPIDI_RMA_FUNC_EXIT(MPID_STATE_MPIDI_CH3_WIN_HOOKS_INIT);
+
+    return mpi_errno;
+}

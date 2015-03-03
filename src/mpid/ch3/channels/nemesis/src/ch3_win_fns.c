@@ -18,6 +18,9 @@ MPIR_T_PVAR_DOUBLE_TIMER_DECL_EXTERN(RMA, rma_wincreate_allgather);
 
 MPIDI_SHM_Wins_list_t shm_wins_list;
 
+static int MPIDI_CH3I_Win_init(MPI_Aint size, int disp_unit, int create_flavor, int model,
+                               MPID_Info * info, MPID_Comm * comm_ptr, MPID_Win ** win_ptr);
+
 static int MPIDI_CH3I_Win_allocate_shm(MPI_Aint size, int disp_unit, MPID_Info * info,
                                        MPID_Comm * comm_ptr, void *base_ptr, MPID_Win ** win_ptr);
 
@@ -43,6 +46,54 @@ int MPIDI_CH3_Win_fns_init(MPIDI_CH3U_Win_fns_t * win_fns)
 
     return mpi_errno;
 }
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_CH3_Win_hooks_init
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
+int MPIDI_CH3_Win_hooks_init(MPIDI_CH3U_Win_hooks_t * win_hooks)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3_WIN_HOOKS_INIT);
+
+    MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_CH3_WIN_HOOKS_INIT);
+
+    if (MPIDI_CH3I_Shm_supported()) {
+        win_hooks->win_init = MPIDI_CH3I_Win_init;
+    }
+
+    MPIDI_RMA_FUNC_EXIT(MPID_STATE_MPIDI_CH3_WIN_HOOKS_INIT);
+
+    return mpi_errno;
+}
+
+
+#undef FUNCNAME
+#define FUNCNAME MPIDI_CH3_Win_init
+#undef FCNAME
+#define FCNAME MPIDI_QUOTE(FUNCNAME)
+static int MPIDI_CH3I_Win_init(MPI_Aint size, int disp_unit, int create_flavor, int model,
+                               MPID_Info * info, MPID_Comm * comm_ptr, MPID_Win ** win_ptr)
+{
+    int mpi_errno = MPI_SUCCESS;
+    MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3I_WIN_INIT);
+
+    MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_CH3I_WIN_INIT);
+
+    (*win_ptr)->shm_base_addr = NULL;
+    (*win_ptr)->shm_segment_len = 0;
+    (*win_ptr)->shm_segment_handle = 0;
+    (*win_ptr)->shm_mutex = NULL;
+    (*win_ptr)->shm_mutex_segment_handle = 0;
+
+  fn_exit:
+    MPIDI_RMA_FUNC_EXIT(MPID_STATE_MPIDI_CH3I_WIN_INIT);
+    return mpi_errno;
+  fn_fail:
+    goto fn_exit;
+
+}
+
 
 #undef FUNCNAME
 #define FUNCNAME MPIDI_CH3I_SHM_Wins_match

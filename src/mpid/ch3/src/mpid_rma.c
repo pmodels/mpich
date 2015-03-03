@@ -394,6 +394,14 @@ static int win_init(MPI_Aint size, int disp_unit, int create_flavor, int model, 
     win_elem->win_ptr = *win_ptr;
     MPL_LL_APPEND(MPIDI_RMA_Win_list, MPIDI_RMA_Win_list_tail, win_elem);
 
+    if (MPIDI_CH3U_Win_hooks.win_init != NULL) {
+        mpi_errno =
+            MPIDI_CH3U_Win_hooks.win_init(size, disp_unit, create_flavor, model, info, comm_ptr,
+                                          win_ptr);
+        if (mpi_errno != MPI_SUCCESS)
+            MPIU_ERR_POP(mpi_errno);
+    }
+
   fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_WIN_INIT);
     return mpi_errno;

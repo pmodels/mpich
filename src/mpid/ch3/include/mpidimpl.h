@@ -1129,9 +1129,18 @@ typedef struct {
 
 extern MPIDI_CH3U_Win_fns_t MPIDI_CH3U_Win_fns;
 
+typedef struct {
+    int (*win_init)(MPI_Aint, int, int, int, MPID_Info *, MPID_Comm *, MPID_Win **);
+} MPIDI_CH3U_Win_hooks_t;
+
+extern MPIDI_CH3U_Win_hooks_t MPIDI_CH3U_Win_hooks;
+
 /* CH3 and Channel window functions initializers */
 int MPIDI_Win_fns_init(MPIDI_CH3U_Win_fns_t *win_fns);
 int MPIDI_CH3_Win_fns_init(MPIDI_CH3U_Win_fns_t *win_fns);
+
+/* Channel window hooks initializer */
+int MPIDI_CH3_Win_hooks_init(MPIDI_CH3U_Win_hooks_t *win_hooks);
 
 /* Default window creation functions provided by CH3 */
 int MPIDI_CH3U_Win_create(void *, MPI_Aint, int, MPID_Info *, MPID_Comm *,

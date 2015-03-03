@@ -40,6 +40,7 @@ static int set_eager_threshold(MPID_Comm *comm_ptr, MPID_Info *info, void *state
 MPIDI_Process_t MPIDI_Process = { NULL };
 MPIDI_CH3U_SRBuf_element_t * MPIDI_CH3U_SRBuf_pool = NULL;
 MPIDI_CH3U_Win_fns_t MPIDI_CH3U_Win_fns = { NULL };
+MPIDI_CH3U_Win_hooks_t MPIDI_CH3U_Win_hooks = { NULL };
 
 
 #undef FUNCNAME
@@ -175,6 +176,7 @@ int MPID_Init(int *argc, char ***argv, int requested, int *provided,
        init function. */
     MPIDI_Win_fns_init(&MPIDI_CH3U_Win_fns);
     MPIDI_CH3_Win_fns_init(&MPIDI_CH3U_Win_fns);
+    MPIDI_CH3_Win_hooks_init(&MPIDI_CH3U_Win_hooks);
 
     /*
      * Let the channel perform any necessary initialization
