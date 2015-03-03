@@ -173,6 +173,9 @@ int MPIDI_CH3I_Put(const void *origin_addr, int origin_count, MPI_Datatype
 
         /* Judge if this operation is an piggyback candidate */
         if (!new_ptr->is_dt) {
+            /* FIXME: currently we only piggyback LOCK flag with op using predefined datatypes
+             * for both origin and target data. We should extend this optimization to derived
+             * datatypes as well. */
             if (len <= MPIR_CVAR_CH3_RMA_OP_PIGGYBACK_LOCK_DATA_SIZE)
                 new_ptr->piggyback_lock_candidate = 1;
         }
@@ -364,6 +367,9 @@ int MPIDI_CH3I_Get(void *origin_addr, int origin_count, MPI_Datatype
 
         /* Judge if this operation is an piggyback candidate. */
         if (!new_ptr->is_dt) {
+            /* FIXME: currently we only piggyback LOCK flag with op using predefined datatypes
+             * for both origin and target data. We should extend this optimization to derived
+             * datatypes as well. */
             new_ptr->piggyback_lock_candidate = 1;
         }
 
@@ -543,6 +549,9 @@ int MPIDI_CH3I_Accumulate(const void *origin_addr, int origin_count, MPI_Datatyp
 
         /* Judge if this operation is an piggyback candidate. */
         if (!new_ptr->is_dt) {
+            /* FIXME: currently we only piggyback LOCK flag with op using predefined datatypes
+             * for both origin and target data. We should extend this optimization to derived
+             * datatypes as well. */
             if (len <= MPIR_CVAR_CH3_RMA_OP_PIGGYBACK_LOCK_DATA_SIZE)
                 new_ptr->piggyback_lock_candidate = 1;
         }
@@ -742,6 +751,9 @@ int MPIDI_CH3I_Get_accumulate(const void *origin_addr, int origin_count,
 
             /* Judge if this operation is a piggyback candidate */
             if (!new_ptr->is_dt) {
+                /* FIXME: currently we only piggyback LOCK flag with op using predefined datatypes
+                 * for both origin and target data. We should extend this optimization to derived
+                 * datatypes as well. */
                 new_ptr->piggyback_lock_candidate = 1;
             }
 
@@ -814,6 +826,9 @@ int MPIDI_CH3I_Get_accumulate(const void *origin_addr, int origin_count,
 
             /* Judge if this operation is a piggyback candidate */
             if (!new_ptr->is_dt) {
+                /* FIXME: currently we only piggyback LOCK flag with op using predefined datatypes
+                 * for origin, target and result data. We should extend this optimization to derived
+                 * datatypes as well. */
                 if (orig_len <= MPIR_CVAR_CH3_RMA_OP_PIGGYBACK_LOCK_DATA_SIZE)
                     new_ptr->piggyback_lock_candidate = 1;
             }
