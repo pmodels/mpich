@@ -213,11 +213,14 @@ int MPIDI_Win_free(MPID_Win ** win_ptr)
             MPIU_ERR_POP(mpi_errno);
     }
 
-    if (!(*win_ptr)->shm_allocated) {
-        /* when SHM is allocated, we already did a global barrier in
-         * MPIDI_CH3_SHM_Win_free, so we do not need to do it again here. */
-        mpi_errno = MPIR_Barrier_impl((*win_ptr)->comm_ptr, &errflag);
-        if (mpi_errno)
+    mpi_errno = MPIR_Barrier_impl((*win_ptr)->comm_ptr, &errflag);
+    if (mpi_errno)
+        MPIU_ERR_POP(mpi_errno);
+
+    /* Free window resources in lower layer. */
+    if (MPIDI_CH3U_Win_hooks.win_free != NULL) {
+        mpi_errno = MPIDI_CH3U_Win_hooks.win_free(win_ptr);
+        if (mpi_errno != MPI_SUCCESS)
             MPIU_ERR_POP(mpi_errno);
     }
 

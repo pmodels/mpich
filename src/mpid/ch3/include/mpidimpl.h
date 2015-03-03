@@ -1132,6 +1132,7 @@ extern MPIDI_CH3U_Win_fns_t MPIDI_CH3U_Win_fns;
 
 typedef struct {
     int (*win_init)(MPI_Aint, int, int, int, MPID_Info *, MPID_Comm *, MPID_Win **);
+    int (*win_free)(MPID_Win **);
 } MPIDI_CH3U_Win_hooks_t;
 
 extern MPIDI_CH3U_Win_hooks_t MPIDI_CH3U_Win_hooks;

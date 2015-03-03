@@ -64,6 +64,7 @@ int MPIDI_CH3_Win_hooks_init(MPIDI_CH3U_Win_hooks_t * win_hooks)
 
     if (MPIDI_CH3I_Shm_supported()) {
         win_hooks->win_init = MPIDI_CH3I_Win_init;
+        win_hooks->win_free = MPIDI_CH3_SHM_Win_free;
     }
 
     MPIDI_RMA_FUNC_EXIT(MPID_STATE_MPIDI_CH3_WIN_HOOKS_INIT);
@@ -294,7 +295,6 @@ static int MPIDI_CH3I_Win_detect_shm(MPID_Win ** win_ptr)
     /* TODO: should we use the same mutex or create a new one ?
      * It causes unnecessary synchronization.*/
     (*win_ptr)->shm_mutex = shm_win_ptr->shm_mutex;
-    (*win_ptr)->RMAFns.Win_free = MPIDI_CH3_SHM_Win_free;
 
   fn_exit:
     MPIU_CHKLMEM_FREEALL();
@@ -440,8 +440,6 @@ static int MPIDI_CH3I_Win_gather_info(void *base, MPI_Aint size, int disp_unit, 
     mpi_errno = MPIR_Barrier_impl(node_comm_ptr, &errflag);
     if (mpi_errno != MPI_SUCCESS)
         MPIU_ERR_POP(mpi_errno);
-
-    (*win_ptr)->RMAFns.Win_free = MPIDI_CH3_SHM_Win_free;
 
   fn_exit:
     MPIU_CHKLMEM_FREEALL();
@@ -718,7 +716,6 @@ static int MPIDI_CH3I_Win_allocate_shm(MPI_Aint size, int disp_unit, MPID_Info *
 
     /* Provide operation overrides for this window flavor */
     (*win_ptr)->RMAFns.Win_shared_query = MPIDI_CH3_SHM_Win_shared_query;
-    (*win_ptr)->RMAFns.Win_free = MPIDI_CH3_SHM_Win_free;
 
     /* Cache SHM windows */
     MPIDI_CH3I_SHM_Wins_append(&shm_wins_list, (*win_ptr));

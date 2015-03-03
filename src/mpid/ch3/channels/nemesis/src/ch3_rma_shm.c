@@ -70,19 +70,13 @@ int MPIDI_CH3_SHM_Win_shared_query(MPID_Win * win_ptr, int target_rank, MPI_Aint
 int MPIDI_CH3_SHM_Win_free(MPID_Win ** win_ptr)
 {
     int mpi_errno = MPI_SUCCESS;
-    mpir_errflag_t errflag = MPIR_ERR_NONE;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3_SHM_WIN_FREE);
 
     MPIDI_RMA_FUNC_ENTER(MPID_STATE_MPIDI_CH3_SHM_WIN_FREE);
 
     if ((*win_ptr)->comm_ptr->node_comm == NULL) {
-        mpi_errno = MPIDI_Win_free(win_ptr);
         goto fn_exit;
     }
-
-    mpi_errno = MPIR_Barrier_impl((*win_ptr)->comm_ptr, &errflag);
-    if (mpi_errno)
-        MPIU_ERR_POP(mpi_errno);
 
     /* Free shared memory region */
     if ((*win_ptr)->shm_allocated) {
@@ -151,11 +145,6 @@ int MPIDI_CH3_SHM_Win_free(MPID_Win ** win_ptr)
     if ((*win_ptr)->create_flavor == MPI_WIN_FLAVOR_SHARED ||
         (*win_ptr)->create_flavor == MPI_WIN_FLAVOR_ALLOCATE) {
         MPIDI_CH3I_SHM_Wins_unlink(&shm_wins_list, (*win_ptr));
-    }
-
-    mpi_errno = MPIDI_Win_free(win_ptr);
-    if (mpi_errno != MPI_SUCCESS) {
-        MPIU_ERR_POP(mpi_errno);
     }
 
   fn_exit:
