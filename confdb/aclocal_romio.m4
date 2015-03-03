@@ -856,3 +856,17 @@ EOF
   fi
   rm -f conftest$EXEEXT mpitest.c
 ])dnl
+
+define(PAC_TEST_NEEDS_CONST,[
+   AC_MSG_CHECKING([const declarations needed in MPI routines])
+   AC_COMPILE_IFELSE([AC_LANG_SOURCE(
+   [ #include <mpi.h>
+     int MPI_File_delete(char *filename, MPI_Info info) { return (0); }
+   ] )],
+   [
+    AC_MSG_RESULT(no)
+   ],[
+    AC_MSG_RESULT(yes)
+    AC_DEFINE(HAVE_MPIIO_CONST, const, [Define if MPI-IO routines need a const qualifier])
+   ])
+   ])
