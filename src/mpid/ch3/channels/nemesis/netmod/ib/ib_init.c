@@ -954,10 +954,13 @@ int MPID_nem_ib_vc_init(MPIDI_VC_t * vc)
 #if 0   /* modification of mpid_nem_lmt.c is required */
     MPID_nem_ib_pkt_handler[MPIDI_NEM_IB_PKT_LMT_RTS] = MPID_nem_ib_pkt_RTS_handler;
 #endif
+    MPID_nem_ib_pkt_handler[MPIDI_NEM_IB_PKT_RMA_LMT_RTS] = MPID_nem_ib_PktHandler_rma_lmt_rts;
+#if 0
     MPID_nem_ib_pkt_handler[MPIDI_NEM_IB_PKT_PUT] = MPID_nem_ib_PktHandler_Put;
     MPID_nem_ib_pkt_handler[MPIDI_NEM_IB_PKT_GET] = MPID_nem_ib_PktHandler_Get;
     MPID_nem_ib_pkt_handler[MPIDI_NEM_IB_PKT_GET_RESP] = MPID_nem_ib_PktHandler_GetResp;
     MPID_nem_ib_pkt_handler[MPIDI_NEM_IB_PKT_ACCUMULATE] = MPID_nem_ib_PktHandler_Accumulate;
+#endif
     MPID_nem_ib_pkt_handler[MPIDI_NEM_IB_PKT_LMT_GET_DONE] = MPID_nem_ib_pkt_GET_DONE_handler;
     MPID_nem_ib_pkt_handler[MPIDI_NEM_IB_PKT_LMT_RTS] = MPID_nem_ib_pkt_RTS_handler;
     MPID_nem_ib_pkt_handler[MPIDI_NEM_IB_PKT_REQ_SEQ_NUM] = MPID_nem_ib_PktHandler_req_seq_num;

@@ -222,22 +222,28 @@ static int MPID_nem_ib_iSendContig_core(MPIDI_VC_t * vc, MPID_Request * sreq, vo
     s_data = data;
     s_data_sz = data_sz;
 
+#if 0
     if (hdr &&
           ((((MPIDI_CH3_Pkt_t *) hdr)->type == MPIDI_CH3_PKT_PUT)
             || (((MPIDI_CH3_Pkt_t *) hdr)->type == MPIDI_CH3_PKT_GET_RESP)
             || (((MPIDI_CH3_Pkt_t *) hdr)->type == MPIDI_CH3_PKT_ACCUMULATE))) {
+#endif
         /* If request length is too long, create LMT packet */
         if (MPID_NEM_IB_NETMOD_HDR_SIZEOF(vc_ib->ibcom->local_ringbuf_type)
                + sizeof(MPIDI_CH3_Pkt_t) + data_sz
                  > MPID_NEM_IB_COM_RDMABUF_SZSEG - sizeof(MPID_nem_ib_netmod_trailer_t)) {
             pkt_netmod.type = MPIDI_NEM_PKT_NETMOD;
 
+#if 0
             if (((MPIDI_CH3_Pkt_t *) hdr)->type == MPIDI_CH3_PKT_PUT)
                 pkt_netmod.subtype = MPIDI_NEM_IB_PKT_PUT;
             else if (((MPIDI_CH3_Pkt_t *) hdr)->type == MPIDI_CH3_PKT_GET_RESP)
                 pkt_netmod.subtype = MPIDI_NEM_IB_PKT_GET_RESP;
             else if (((MPIDI_CH3_Pkt_t *) hdr)->type == MPIDI_CH3_PKT_ACCUMULATE)
                 pkt_netmod.subtype = MPIDI_NEM_IB_PKT_ACCUMULATE;
+#else
+            pkt_netmod.subtype = MPIDI_NEM_IB_PKT_RMA_LMT_RTS;
+#endif
 
             void *write_from_buf = data;
 
@@ -245,8 +251,10 @@ static int MPID_nem_ib_iSendContig_core(MPIDI_VC_t * vc, MPID_Request * sreq, vo
             MPID_nem_ib_com_get_info_conn(vc_ib->sc->fd, MPID_NEM_IB_COM_INFOKEY_PATTR_MAX_MSG_SZ,
                                           &max_msg_sz, sizeof(uint32_t));
 
+#if 0
             /* RMA : Netmod IB supports only smaller size than max_msg_sz. */
             MPIU_Assert(data_sz <= max_msg_sz);
+#endif
 
             MPID_nem_ib_rma_lmt_cookie_t *s_cookie_buf = (MPID_nem_ib_rma_lmt_cookie_t *) MPIU_Malloc(sizeof(MPID_nem_ib_rma_lmt_cookie_t));
 
@@ -281,7 +289,9 @@ static int MPID_nem_ib_iSendContig_core(MPIDI_VC_t * vc, MPID_Request * sreq, vo
             int incomplete;
             MPIDI_CH3U_Request_increment_cc(sreq, &incomplete); // decrement in drain_scq and pkt_rma_lmt_getdone
         }
+#if 0
     }
+#endif
 
     /* packet handlers including MPIDI_CH3_PktHandler_EagerSend and MPID_nem_handle_pkt assume this */
     hdr_sz = sizeof(MPIDI_CH3_Pkt_t);
@@ -785,22 +795,28 @@ static int MPID_nem_ib_SendNoncontig_core(MPIDI_VC_t * vc, MPID_Request * sreq, 
     data = (void *)REQ_FIELD(sreq, lmt_pack_buf);
     data_sz = last;
 
+#if 0
     if (hdr &&
           ((((MPIDI_CH3_Pkt_t *) hdr)->type == MPIDI_CH3_PKT_PUT)
             || (((MPIDI_CH3_Pkt_t *) hdr)->type == MPIDI_CH3_PKT_GET_RESP)
             || (((MPIDI_CH3_Pkt_t *) hdr)->type == MPIDI_CH3_PKT_ACCUMULATE))) {
+#endif
 	/* If request length is too long, create LMT packet */
 	if ( MPID_NEM_IB_NETMOD_HDR_SIZEOF(vc_ib->ibcom->local_ringbuf_type)
                + sizeof(MPIDI_CH3_Pkt_t) + sreq->dev.segment_size - sreq->dev.segment_first
                  > MPID_NEM_IB_COM_RDMABUF_SZSEG - sizeof(MPID_nem_ib_netmod_trailer_t)) {
             pkt_netmod.type = MPIDI_NEM_PKT_NETMOD;
 
+#if 0
             if (((MPIDI_CH3_Pkt_t *) hdr)->type == MPIDI_CH3_PKT_PUT)
                 pkt_netmod.subtype = MPIDI_NEM_IB_PKT_PUT;
             else if (((MPIDI_CH3_Pkt_t *) hdr)->type == MPIDI_CH3_PKT_GET_RESP)
                 pkt_netmod.subtype = MPIDI_NEM_IB_PKT_GET_RESP;
             else if (((MPIDI_CH3_Pkt_t *) hdr)->type == MPIDI_CH3_PKT_ACCUMULATE)
                 pkt_netmod.subtype = MPIDI_NEM_IB_PKT_ACCUMULATE;
+#else
+            pkt_netmod.subtype = MPIDI_NEM_IB_PKT_RMA_LMT_RTS;
+#endif
 
             void *write_from_buf = REQ_FIELD(sreq, lmt_pack_buf);
 
@@ -808,8 +824,10 @@ static int MPID_nem_ib_SendNoncontig_core(MPIDI_VC_t * vc, MPID_Request * sreq, 
             MPID_nem_ib_com_get_info_conn(vc_ib->sc->fd, MPID_NEM_IB_COM_INFOKEY_PATTR_MAX_MSG_SZ,
                                           &max_msg_sz, sizeof(uint32_t));
 
+#if 0
             /* RMA : Netmod IB supports only smaller size than max_msg_sz. */
             MPIU_Assert(data_sz <= max_msg_sz);
+#endif
 
             MPID_nem_ib_rma_lmt_cookie_t *s_cookie_buf = (MPID_nem_ib_rma_lmt_cookie_t *) MPIU_Malloc(sizeof(MPID_nem_ib_rma_lmt_cookie_t));
 
@@ -844,7 +862,9 @@ static int MPID_nem_ib_SendNoncontig_core(MPIDI_VC_t * vc, MPID_Request * sreq, 
             int incomplete;
             MPIDI_CH3U_Request_increment_cc(sreq, &incomplete); // decrement in drain_scq and pkt_rma_lmt_getdone
         }
+#if 0
     }
+#endif
 
     /* packet handlers assume this */
     hdr_sz = sizeof(MPIDI_CH3_Pkt_t);

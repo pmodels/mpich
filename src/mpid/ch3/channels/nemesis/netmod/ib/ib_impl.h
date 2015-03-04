@@ -721,6 +721,7 @@ typedef enum MPID_nem_ib_pkt_subtype {
 #if 0                           /* modification of mpid_nem_lmt.c is required */
     MPIDI_NEM_IB_PKT_LMT_RTS,
 #endif
+    MPIDI_NEM_IB_PKT_RMA_LMT_RTS,
     MPIDI_NEM_IB_PKT_PUT,
     MPIDI_NEM_IB_PKT_ACCUMULATE,
     MPIDI_NEM_IB_PKT_GET,
@@ -795,6 +796,10 @@ int MPID_nem_ib_pkt_RTS_handler(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
                                 MPIDI_msg_sz_t * buflen /* out */ ,
                                 MPID_Request ** rreqp /* out */);
 #endif
+int MPID_nem_ib_PktHandler_rma_lmt_rts(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
+                                       MPIDI_msg_sz_t * buflen /* out */ ,
+                                       MPID_Request ** rreqp /* out */);
+#if 0
 int MPID_nem_ib_PktHandler_Put(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
                                MPIDI_msg_sz_t * buflen /* out */ ,
                                MPID_Request ** rreqp /* out */);
@@ -807,6 +812,7 @@ int MPID_nem_ib_PktHandler_Get(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
 int MPID_nem_ib_PktHandler_GetResp(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
                                    MPIDI_msg_sz_t * buflen /* out */ ,
                                    MPID_Request ** rreqp /* out */);
+#endif
 int MPID_nem_ib_PktHandler_lmt_done(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
                                     MPIDI_msg_sz_t * buflen, MPID_Request ** rreqp);
 int MPID_nem_ib_pkt_GET_DONE_handler(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
