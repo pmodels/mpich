@@ -374,12 +374,15 @@ typedef struct MPID_Datatype {
     int is_committed;
 
     /* element information; used for accumulate and get elements
-     *
-     * if type is composed of more than one element type, then
-     * basic_type == MPI_DATATYPE_NULL and builtin_element_size == -1
+     * basic_type: describes basic type (predefined type). If the
+     *             type is composed of the same basic type, it is
+     *             set to that type, otherwise it is set to MPI_DATATYPE_NULL.
+     * n_builtin_elements: refers to the number of builtin type elements.
+     * builtin_element_size: refers to the size of builtin type. If the
+     *                       type is composed of the same builtin type,
+     *                       it is set to size of that type, otherwise it
+     *                       is set to -1.
      */
-    /* Note that here basic_type refers to predefined type, not the builtin
-       type, whereas n_builtin_elements and builtin_element_size refers to builtin type. */
     int      basic_type;
     MPI_Aint n_builtin_elements;
     MPI_Aint builtin_element_size;
