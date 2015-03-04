@@ -4,9 +4,10 @@
 
  # Added support for proposed MPI-3.1 features including nonblocking
    collective I/O, address manipulation routines, thread-safety for
-   MPI initialization and pre-init functionality.  Proposed MPI-3.1
-   features are implemented as MPIX_ functions and the MPI version
-   number is still set to 3.0.
+   MPI initialization, pre-init functionality, and new MPI_T routines
+   to look up variables by name. Proposed MPI-3.1 features are
+   implemented as MPIX_ functions and the MPI version number is still
+   set to 3.0.
 
  # Fortran 2008 bindings are enabled by default and fully supported.
 
@@ -22,11 +23,14 @@
  # Significant stability improvements to the MPICH/portals4
    implementation.
 
+ # Completely revamped RMA infrastructure including several
+   scalability improvements, performance improvements, and bug fixes.
+
  # Several other minor bug fixes, memory leak fixes, and code cleanup.
 
    A full list of changes is available at the following link:
 
-     http://git.mpich.org/mpich.git/shortlog/v3.1.2..v3.2a2
+     http://git.mpich.org/mpich.git/shortlog/v3.1.3..v3.2b1
 
    A full list of bugs that have been fixed is available at the
    following link:
