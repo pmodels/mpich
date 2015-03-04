@@ -13,16 +13,17 @@
 /* PAIRTYPE_SIZE_EXTENT - calculates size, extent, etc. for pairtype by
  * defining the appropriate C type.
  */
-#define PAIRTYPE_SIZE_EXTENT(mt1_,ut1_,mt2_,ut2_)			\
+#define PAIRTYPE_SIZE_EXTENT(mt1_,ut1_,mt2_,ut2_, type_size_, type_extent_, \
+                             el_size_, true_ub_, alignsize_)            \
     {									\
 	struct { ut1_ a; ut2_ b; } foo;					\
-	type_size   = sizeof(foo.a) + sizeof(foo.b);			\
-	type_extent = (MPI_Aint) sizeof(foo);				\
-	el_size = (sizeof(foo.a) == sizeof(foo.b)) ? (int) sizeof(foo.a) : -1; \
-	true_ub = (MPI_VOID_PTR_CAST_TO_MPI_AINT ((char *) &foo.b -     \
+	type_size_   = sizeof(foo.a) + sizeof(foo.b);			\
+	type_extent_ = (MPI_Aint) sizeof(foo);				\
+	el_size_ = (sizeof(foo.a) == sizeof(foo.b)) ? (int) sizeof(foo.a) : -1; \
+	true_ub_ = (MPI_VOID_PTR_CAST_TO_MPI_AINT ((char *) &foo.b -     \
                                                   (char *) &foo.a)) +   \
                   (MPI_Aint) sizeof(foo.b);                             \
-	alignsize = MPIR_MAX(MPID_Datatype_get_basic_size(mt1_),	\
+	alignsize_ = MPIR_MAX(MPID_Datatype_get_basic_size(mt1_),	\
                              MPID_Datatype_get_basic_size(mt2_));	\
     }
 
@@ -87,19 +88,24 @@ int MPID_Type_create_pairtype(MPI_Datatype type,
 
     switch(type) {
 	case MPI_FLOAT_INT:
-	    PAIRTYPE_SIZE_EXTENT(MPI_FLOAT, float, MPI_INT, int);
+            PAIRTYPE_SIZE_EXTENT(MPI_FLOAT, float, MPI_INT, int,
+                                 type_size, type_extent, el_size, true_ub, alignsize);
 	    break;
 	case MPI_DOUBLE_INT:
-	    PAIRTYPE_SIZE_EXTENT(MPI_DOUBLE, double, MPI_INT, int);
+            PAIRTYPE_SIZE_EXTENT(MPI_DOUBLE, double, MPI_INT, int,
+                                 type_size, type_extent, el_size, true_ub, alignsize);
 	    break;
 	case MPI_LONG_INT:
-	    PAIRTYPE_SIZE_EXTENT(MPI_LONG, long, MPI_INT, int);
+            PAIRTYPE_SIZE_EXTENT(MPI_LONG, long, MPI_INT, int,
+                                 type_size, type_extent, el_size, true_ub, alignsize);
 	    break;
 	case MPI_SHORT_INT:
-	    PAIRTYPE_SIZE_EXTENT(MPI_SHORT, short, MPI_INT, int);
+            PAIRTYPE_SIZE_EXTENT(MPI_SHORT, short, MPI_INT, int,
+                                 type_size, type_extent, el_size, true_ub, alignsize);
 	    break;
 	case MPI_LONG_DOUBLE_INT:
-	    PAIRTYPE_SIZE_EXTENT(MPI_LONG_DOUBLE, long double, MPI_INT, int);
+            PAIRTYPE_SIZE_EXTENT(MPI_LONG_DOUBLE, long double, MPI_INT, int,
+                                 type_size, type_extent, el_size, true_ub, alignsize);
 	    break;
 	default:
 	    /* --BEGIN ERROR HANDLING-- */
