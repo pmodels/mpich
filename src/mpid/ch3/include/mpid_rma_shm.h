@@ -306,7 +306,7 @@ static inline int MPIDI_CH3I_Shm_acc_op(const void *origin_addr, int origin_coun
     int disp_unit, shm_op = 0;
     int mpi_errno = MPI_SUCCESS;
     int i;
-    MPI_Datatype predefined_type;
+    MPI_Datatype basic_type;
     MPI_Aint stream_elem_count, stream_unit_count;
     MPI_Aint predefined_dtp_size, predefined_dtp_extent, predefined_dtp_count;
     MPI_Aint total_len, rest_len;
@@ -350,10 +350,10 @@ static inline int MPIDI_CH3I_Shm_acc_op(const void *origin_addr, int origin_coun
 
     MPID_Datatype_get_ptr(origin_datatype, origin_dtp_ptr);
     MPIU_Assert(origin_dtp_ptr != NULL && origin_dtp_ptr->basic_type != MPI_DATATYPE_NULL);
-    predefined_type = origin_dtp_ptr->basic_type;
-    MPID_Datatype_get_size_macro(predefined_type, predefined_dtp_size);
+    basic_type = origin_dtp_ptr->basic_type;
+    MPID_Datatype_get_size_macro(basic_type, predefined_dtp_size);
     predefined_dtp_count = total_len / predefined_dtp_size;
-    MPID_Datatype_get_extent_macro(predefined_type, predefined_dtp_extent);
+    MPID_Datatype_get_extent_macro(basic_type, predefined_dtp_extent);
     MPIU_Assert(predefined_dtp_count > 0 && predefined_dtp_size > 0 && predefined_dtp_extent > 0);
 
     stream_elem_count = MPIDI_CH3U_Acc_stream_size / predefined_dtp_extent;
@@ -384,11 +384,11 @@ static inline int MPIDI_CH3I_Shm_acc_op(const void *origin_addr, int origin_coun
         MPID_Segment_pack(seg, first, &last, packed_buf);
         MPID_Segment_free(seg);
 
-        MPID_Datatype_is_contig(predefined_type, &is_predef_contig);
+        MPID_Datatype_is_contig(basic_type, &is_predef_contig);
 
         if (!is_predef_contig) {
             void *tmpbuf = MPIU_Malloc(stream_count * predefined_dtp_extent);
-            mpi_errno = MPIR_Localcopy(tmpbuf, stream_count, predefined_type,
+            mpi_errno = MPIR_Localcopy(tmpbuf, stream_count, basic_type,
                                        packed_buf, stream_size, MPI_BYTE);
             if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
             MPIU_Free(packed_buf);
@@ -399,7 +399,7 @@ static inline int MPIDI_CH3I_Shm_acc_op(const void *origin_addr, int origin_coun
             MPIDI_CH3I_SHM_MUTEX_LOCK(win_ptr);
         }
 
-        mpi_errno = do_accumulate_op((void*)packed_buf, stream_count, predefined_type,
+        mpi_errno = do_accumulate_op((void*)packed_buf, stream_count, basic_type,
                                      (void*)((char*)base+disp_unit*target_disp), target_count, target_datatype,
                                      stream_offset, op);
 
@@ -436,7 +436,7 @@ static inline int MPIDI_CH3I_Shm_get_acc_op(const void *origin_addr, int origin_
     int disp_unit, shm_locked = 0;
     void *base = NULL;
     int i;
-    MPI_Datatype predefined_type;
+    MPI_Datatype basic_type;
     MPI_Aint stream_elem_count, stream_unit_count;
     MPI_Aint predefined_dtp_size, predefined_dtp_extent, predefined_dtp_count;
     MPI_Aint total_len, rest_len;
@@ -497,10 +497,10 @@ static inline int MPIDI_CH3I_Shm_get_acc_op(const void *origin_addr, int origin_
 
     MPID_Datatype_get_ptr(origin_datatype, origin_dtp_ptr);
     MPIU_Assert(origin_dtp_ptr != NULL && origin_dtp_ptr->basic_type != MPI_DATATYPE_NULL);
-    predefined_type = origin_dtp_ptr->basic_type;
-    MPID_Datatype_get_size_macro(predefined_type, predefined_dtp_size);
+    basic_type = origin_dtp_ptr->basic_type;
+    MPID_Datatype_get_size_macro(basic_type, predefined_dtp_size);
     predefined_dtp_count = total_len / predefined_dtp_size;
-    MPID_Datatype_get_extent_macro(predefined_type, predefined_dtp_extent);
+    MPID_Datatype_get_extent_macro(basic_type, predefined_dtp_extent);
     MPIU_Assert(predefined_dtp_count > 0 && predefined_dtp_size > 0 && predefined_dtp_extent > 0);
 
     stream_elem_count = MPIDI_CH3U_Acc_stream_size / predefined_dtp_extent;
@@ -531,18 +531,18 @@ static inline int MPIDI_CH3I_Shm_get_acc_op(const void *origin_addr, int origin_
         MPID_Segment_pack(seg, first, &last, packed_buf);
         MPID_Segment_free(seg);
 
-        MPID_Datatype_is_contig(predefined_type, &is_predef_contig);
+        MPID_Datatype_is_contig(basic_type, &is_predef_contig);
 
         if (!is_predef_contig) {
             void *tmpbuf = MPIU_Malloc(stream_count * predefined_dtp_extent);
-            mpi_errno = MPIR_Localcopy(tmpbuf, stream_count, predefined_type,
+            mpi_errno = MPIR_Localcopy(tmpbuf, stream_count, basic_type,
                                        packed_buf, stream_size, MPI_BYTE);
             if (mpi_errno != MPI_SUCCESS) MPIU_ERR_POP(mpi_errno);
             MPIU_Free(packed_buf);
             packed_buf = tmpbuf;
         }
 
-        mpi_errno = do_accumulate_op((void*)packed_buf, stream_count, predefined_type,
+        mpi_errno = do_accumulate_op((void*)packed_buf, stream_count, basic_type,
                                      (void*)((char*)base+disp_unit*target_disp), target_count, target_datatype,
                                      stream_offset, op);
 

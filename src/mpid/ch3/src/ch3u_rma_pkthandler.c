@@ -1505,29 +1505,29 @@ int MPIDI_CH3_PktHandler_Get_AccumResp(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
     else {
         MPIU_Assert(pkt->type == MPIDI_CH3_PKT_GET_ACCUM_RESP);
 
-        MPI_Datatype predef_type;
-        MPI_Aint predef_type_extent, predef_type_size;
+        MPI_Datatype basic_type;
+        MPI_Aint basic_type_extent, basic_type_size;
         MPI_Aint stream_elem_count;
         MPI_Aint total_len, rest_len;
         MPI_Aint real_stream_offset;
 
         if (MPIR_DATATYPE_IS_PREDEFINED(req->dev.datatype)) {
-            predef_type = req->dev.datatype;
+            basic_type = req->dev.datatype;
         }
         else {
             MPIU_Assert(req->dev.datatype_ptr != NULL);
-            predef_type = req->dev.datatype_ptr->basic_type;
+            basic_type = req->dev.datatype_ptr->basic_type;
         }
 
-        MPID_Datatype_get_extent_macro(predef_type, predef_type_extent);
-        MPID_Datatype_get_size_macro(predef_type, predef_type_size);
+        MPID_Datatype_get_extent_macro(basic_type, basic_type_extent);
+        MPID_Datatype_get_size_macro(basic_type, basic_type_size);
 
         total_len = type_size * req->dev.user_count;
         rest_len = total_len - req->dev.stream_offset;
-        stream_elem_count = MPIDI_CH3U_SRBuf_size / predef_type_extent;
+        stream_elem_count = MPIDI_CH3U_SRBuf_size / basic_type_extent;
 
-        req->dev.recv_data_sz = MPIR_MIN(rest_len, stream_elem_count * predef_type_size);
-        real_stream_offset = (req->dev.stream_offset / predef_type_size) * predef_type_extent;
+        req->dev.recv_data_sz = MPIR_MIN(rest_len, stream_elem_count * basic_type_size);
+        real_stream_offset = (req->dev.stream_offset / basic_type_size) * basic_type_extent;
 
         if (MPIR_DATATYPE_IS_PREDEFINED(req->dev.datatype)) {
             req->dev.user_buf = (void *) ((char *) req->dev.user_buf + real_stream_offset);
