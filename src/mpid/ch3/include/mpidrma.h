@@ -868,7 +868,7 @@ static inline int do_accumulate_op(void *source_buf, int source_count, MPI_Datat
 
         MPID_Segment_pack_vector(segp, first, &last, dloop_vec, &vec_len);
 
-        type = dtp->eltype;
+        type = dtp->basic_type;
         MPIU_Assert(type != MPI_DATATYPE_NULL);
 
         MPIU_Assert(type == source_dtp);

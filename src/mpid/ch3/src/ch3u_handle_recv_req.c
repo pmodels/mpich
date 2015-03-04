@@ -168,7 +168,7 @@ int MPIDI_CH3_ReqHandler_AccumRecvComplete(MPIDI_VC_t * vc, MPID_Request * rreq,
     if (MPIR_DATATYPE_IS_PREDEFINED(rreq->dev.datatype))
         predef_datatype = rreq->dev.datatype;
     else {
-        predef_datatype = rreq->dev.datatype_ptr->eltype;
+        predef_datatype = rreq->dev.datatype_ptr->basic_type;
     }
     MPIU_Assert(predef_datatype != MPI_DATATYPE_NULL);
 
@@ -242,7 +242,7 @@ int MPIDI_CH3_ReqHandler_GaccumRecvComplete(MPIDI_VC_t * vc, MPID_Request * rreq
     if (MPIR_DATATYPE_IS_PREDEFINED(rreq->dev.datatype))
         predef_datatype = rreq->dev.datatype;
     else {
-        predef_datatype = rreq->dev.datatype_ptr->eltype;
+        predef_datatype = rreq->dev.datatype_ptr->basic_type;
     }
     MPIU_Assert(predef_datatype != MPI_DATATYPE_NULL);
 
@@ -544,8 +544,8 @@ int MPIDI_CH3_ReqHandler_AccumDerivedDTRecvComplete(MPIDI_VC_t * vc ATTRIBUTE((u
     /* update new request to get the data */
     MPIDI_Request_set_type(rreq, MPIDI_REQUEST_TYPE_ACCUM_RECV);
 
-    MPID_Datatype_get_size_macro(new_dtp->eltype, predef_type_size);
-    MPID_Datatype_get_extent_macro(new_dtp->eltype, predef_type_extent);
+    MPID_Datatype_get_size_macro(new_dtp->basic_type, predef_type_size);
+    MPID_Datatype_get_extent_macro(new_dtp->basic_type, predef_type_extent);
 
     MPIU_Assert(!MPIDI_Request_get_srbuf_flag(rreq));
     /* allocate a SRBuf for receiving stream unit */
@@ -580,7 +580,7 @@ int MPIDI_CH3_ReqHandler_AccumDerivedDTRecvComplete(MPIDI_VC_t * vc ATTRIBUTE((u
 
     MPID_Segment_init(rreq->dev.user_buf,
                       (rreq->dev.recv_data_sz / predef_type_size),
-                      new_dtp->eltype, rreq->dev.segment_ptr, 0);
+                      new_dtp->basic_type, rreq->dev.segment_ptr, 0);
     rreq->dev.segment_first = 0;
     rreq->dev.segment_size = rreq->dev.recv_data_sz;
 
@@ -619,8 +619,8 @@ int MPIDI_CH3_ReqHandler_GaccumDerivedDTRecvComplete(MPIDI_VC_t * vc ATTRIBUTE((
     /* update new request to get the data */
     MPIDI_Request_set_type(rreq, MPIDI_REQUEST_TYPE_GET_ACCUM_RECV);
 
-    MPID_Datatype_get_size_macro(new_dtp->eltype, predef_type_size);
-    MPID_Datatype_get_extent_macro(new_dtp->eltype, predef_type_extent);
+    MPID_Datatype_get_size_macro(new_dtp->basic_type, predef_type_size);
+    MPID_Datatype_get_extent_macro(new_dtp->basic_type, predef_type_extent);
 
     MPIU_Assert(!MPIDI_Request_get_srbuf_flag(rreq));
     /* allocate a SRBuf for receiving stream unit */
@@ -655,7 +655,7 @@ int MPIDI_CH3_ReqHandler_GaccumDerivedDTRecvComplete(MPIDI_VC_t * vc ATTRIBUTE((
 
     MPID_Segment_init(rreq->dev.user_buf,
                       (rreq->dev.recv_data_sz / predef_type_size),
-                      new_dtp->eltype, rreq->dev.segment_ptr, 0);
+                      new_dtp->basic_type, rreq->dev.segment_ptr, 0);
     rreq->dev.segment_first = 0;
     rreq->dev.segment_size = rreq->dev.recv_data_sz;
 
@@ -911,7 +911,7 @@ static int create_derived_datatype(MPID_Request * req, MPID_Datatype ** dtp)
     new_dtp->extent = dtype_info->extent;
     new_dtp->dataloop_size = dtype_info->dataloop_size;
     new_dtp->dataloop_depth = dtype_info->dataloop_depth;
-    new_dtp->eltype = dtype_info->eltype;
+    new_dtp->basic_type = dtype_info->basic_type;
     /* set dataloop pointer */
     new_dtp->dataloop = req->dev.dataloop;
 

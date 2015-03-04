@@ -1516,7 +1516,7 @@ int MPIDI_CH3_PktHandler_Get_AccumResp(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
         }
         else {
             MPIU_Assert(req->dev.datatype_ptr != NULL);
-            predef_type = req->dev.datatype_ptr->eltype;
+            predef_type = req->dev.datatype_ptr->basic_type;
         }
 
         MPID_Datatype_get_extent_macro(predef_type, predef_type_extent);

@@ -72,9 +72,9 @@ int MPID_Type_dup(MPI_Datatype oldtype,
 	new_dtp->cache_id      = -1;   /* ??? */
 	new_dtp->name[0]       = 0;    /* The Object name is not copied on
 					  a dup */
-	new_dtp->n_elements    = old_dtp->n_elements;
-	new_dtp->element_size  = old_dtp->element_size;
-	new_dtp->eltype        = old_dtp->eltype;
+	new_dtp->n_builtin_elements    = old_dtp->n_builtin_elements;
+	new_dtp->builtin_element_size  = old_dtp->builtin_element_size;
+	new_dtp->basic_type        = old_dtp->basic_type;
 	
 	new_dtp->dataloop       = NULL;
 	new_dtp->dataloop_size  = old_dtp->dataloop_size;

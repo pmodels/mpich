@@ -35,7 +35,7 @@ typedef struct MPIDI_RMA_dtype_info {   /* for derived datatypes */
     void *dataloop;             /* pointer needed to update pointers
                                  * within dataloop on remote side */
     int dataloop_depth;
-    int eltype;
+    int basic_type;
     MPI_Aint ub, lb, true_ub, true_lb;
     int has_sticky_ub, has_sticky_lb;
 } MPIDI_RMA_dtype_info;

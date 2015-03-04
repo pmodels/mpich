@@ -175,11 +175,11 @@ PMPI_LOCAL MPI_Count MPIR_Type_get_elements(MPI_Count *bytes_p,
     {
         return MPIR_Type_get_basic_type_elements(bytes_p, count, datatype);
     }
-    else if (datatype_ptr->element_size >= 0) {
+    else if (datatype_ptr->builtin_element_size >= 0) {
         MPI_Datatype basic_type = MPI_DATATYPE_NULL;
-        MPID_Datatype_get_basic_type(datatype_ptr->eltype, basic_type);
+        MPID_Datatype_get_basic_type(datatype_ptr->basic_type, basic_type);
         return MPIR_Type_get_basic_type_elements(bytes_p,
-                                                 count * datatype_ptr->n_elements,
+                                                 count * datatype_ptr->n_builtin_elements,
                                                  basic_type);
     }
     else {
@@ -295,7 +295,7 @@ int MPIR_Get_elements_x_impl(const MPI_Status *status, MPI_Datatype datatype, MP
      * - type with multiple element types (nastiest)
      */
     if (HANDLE_GET_KIND(datatype) == HANDLE_KIND_BUILTIN ||
-        (datatype_ptr->element_size != -1 && datatype_ptr->size > 0))
+        (datatype_ptr->builtin_element_size != -1 && datatype_ptr->size > 0))
     {
         byte_count = MPIR_STATUS_GET_COUNT(*status);
 
@@ -307,7 +307,7 @@ int MPIR_Get_elements_x_impl(const MPI_Status *status, MPI_Datatype datatype, MP
          */
         if (HANDLE_GET_KIND(datatype) != HANDLE_KIND_BUILTIN) {
             MPI_Datatype basic_type = MPI_DATATYPE_NULL;
-            MPID_Datatype_get_basic_type(datatype_ptr->eltype, basic_type);
+            MPID_Datatype_get_basic_type(datatype_ptr->basic_type, basic_type);
             *elements = MPIR_Type_get_basic_type_elements(&byte_count,
                                                           -1,
                                                           basic_type);
@@ -343,7 +343,7 @@ int MPIR_Get_elements_x_impl(const MPI_Status *status, MPI_Datatype datatype, MP
         }
     }
     else /* derived type with weird element type or weird size */ {
-        MPIU_Assert(datatype_ptr->element_size == -1);
+        MPIU_Assert(datatype_ptr->builtin_element_size == -1);
 
         byte_count = MPIR_STATUS_GET_COUNT(*status);
         *elements = MPIR_Type_get_elements(&byte_count, -1, datatype);

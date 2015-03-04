@@ -82,9 +82,9 @@ int MPID_Type_contiguous(int count,
 	new_dtp->extent        = new_dtp->ub - new_dtp->lb;
 
 	new_dtp->alignsize     = el_sz;
-	new_dtp->n_elements    = count;
-	new_dtp->element_size  = el_sz;
-        new_dtp->eltype        = el_type;
+	new_dtp->n_builtin_elements    = count;
+	new_dtp->builtin_element_size  = el_sz;
+        new_dtp->basic_type        = el_type;
 	new_dtp->is_contig     = 1;
         new_dtp->max_contig_blocks = 1;
 
@@ -95,8 +95,8 @@ int MPID_Type_contiguous(int count,
 	MPID_Datatype *old_dtp;
 
 	MPID_Datatype_get_ptr(oldtype, old_dtp);
-	el_sz   = old_dtp->element_size;
-	el_type = old_dtp->eltype;
+	el_sz   = old_dtp->builtin_element_size;
+	el_type = old_dtp->basic_type;
 
 	new_dtp->size           = count * old_dtp->size;
 	new_dtp->has_sticky_ub  = old_dtp->has_sticky_ub;
@@ -117,9 +117,9 @@ int MPID_Type_contiguous(int count,
 	new_dtp->extent  = new_dtp->ub - new_dtp->lb;
 
 	new_dtp->alignsize    = old_dtp->alignsize;
-	new_dtp->n_elements   = count * old_dtp->n_elements;
-	new_dtp->element_size = old_dtp->element_size;
-        new_dtp->eltype       = el_type;
+	new_dtp->n_builtin_elements   = count * old_dtp->n_builtin_elements;
+	new_dtp->builtin_element_size = old_dtp->builtin_element_size;
+        new_dtp->basic_type       = el_type;
 
 	new_dtp->is_contig    = old_dtp->is_contig;
         if(old_dtp->is_contig)

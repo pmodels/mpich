@@ -24,24 +24,24 @@
 
 #define MPID_Datatype_add_ref(datatype_ptr) MPIU_Object_add_ref((datatype_ptr))
 
-#define MPID_Datatype_get_basic_type(a,eltype_) do {                    \
+#define MPID_Datatype_get_basic_type(a,basic_type_) do {                    \
     void *ptr;								\
     switch (HANDLE_GET_KIND(a)) {					\
         case HANDLE_KIND_DIRECT:					\
             ptr = MPID_Datatype_direct+HANDLE_INDEX(a);			\
-            eltype_ = ((MPID_Datatype *) ptr)->eltype;			\
+            basic_type_ = ((MPID_Datatype *) ptr)->basic_type;			\
             break;							\
         case HANDLE_KIND_INDIRECT:					\
             ptr = ((MPID_Datatype *)					\
 		   MPIU_Handle_get_ptr_indirect(a,&MPID_Datatype_mem));	\
-            eltype_ = ((MPID_Datatype *) ptr)->eltype;			\
+            basic_type_ = ((MPID_Datatype *) ptr)->basic_type;			\
             break;							\
         case HANDLE_KIND_BUILTIN:					\
-            eltype_ = a;						\
+            basic_type_ = a;						\
             break;							\
         case HANDLE_KIND_INVALID:					\
         default:							\
-	    eltype_ = 0;						\
+	    basic_type_ = 0;						\
 	    break;							\
  									\
     }									\
@@ -49,8 +49,8 @@
      * a builtin type, it must be a pair type composed of different     \
      * builtin types, so we return MPI_DATATYPE_NULL here.              \
      */                                                                 \
-    if (HANDLE_GET_KIND(eltype_) != HANDLE_KIND_BUILTIN)                \
-        eltype_ = MPI_DATATYPE_NULL;                                    \
+    if (HANDLE_GET_KIND(basic_type_) != HANDLE_KIND_BUILTIN)                \
+        basic_type_ = MPI_DATATYPE_NULL;                                    \
  } while(0)
 
 /* MPID_Datatype_release decrements the reference count on the MPID_Datatype
@@ -376,13 +376,13 @@ typedef struct MPID_Datatype {
     /* element information; used for accumulate and get elements
      *
      * if type is composed of more than one element type, then
-     * eltype == MPI_DATATYPE_NULL and element_size == -1
+     * basic_type == MPI_DATATYPE_NULL and builtin_element_size == -1
      */
-    /* Note that here eltype refers to predefined type, not the builtin
-       type, whereas n_elements and element_size refers to builtin type. */
-    int      eltype;
-    MPI_Aint n_elements;
-    MPI_Aint element_size;
+    /* Note that here basic_type refers to predefined type, not the builtin
+       type, whereas n_builtin_elements and builtin_element_size refers to builtin type. */
+    int      basic_type;
+    MPI_Aint n_builtin_elements;
+    MPI_Aint builtin_element_size;
 
     /* information on contiguity of type, for processing shortcuts.
      *

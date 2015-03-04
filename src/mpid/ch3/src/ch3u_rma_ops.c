@@ -553,10 +553,10 @@ int MPIDI_CH3I_Accumulate(const void *origin_addr, int origin_count, MPI_Datatyp
             MPID_Datatype_get_extent_macro(origin_datatype, predefined_dtp_extent);
         }
         else {
-            MPIU_Assert(origin_dtp->eltype != MPI_DATATYPE_NULL);
-            MPID_Datatype_get_size_macro(origin_dtp->eltype, predefined_dtp_size);
+            MPIU_Assert(origin_dtp->basic_type != MPI_DATATYPE_NULL);
+            MPID_Datatype_get_size_macro(origin_dtp->basic_type, predefined_dtp_size);
             predefined_dtp_count = len / predefined_dtp_size;
-            MPID_Datatype_get_extent_macro(origin_dtp->eltype, predefined_dtp_extent);
+            MPID_Datatype_get_extent_macro(origin_dtp->basic_type, predefined_dtp_extent);
         }
         MPIU_Assert(predefined_dtp_count > 0 && predefined_dtp_size > 0 &&
                     predefined_dtp_extent > 0);
@@ -868,10 +868,10 @@ int MPIDI_CH3I_Get_accumulate(const void *origin_addr, int origin_count,
                 MPID_Datatype_get_extent_macro(origin_datatype, predefined_dtp_extent);
             }
             else {
-                MPIU_Assert(origin_dtp->eltype != MPI_DATATYPE_NULL);
-                MPID_Datatype_get_size_macro(origin_dtp->eltype, predefined_dtp_size);
+                MPIU_Assert(origin_dtp->basic_type != MPI_DATATYPE_NULL);
+                MPID_Datatype_get_size_macro(origin_dtp->basic_type, predefined_dtp_size);
                 predefined_dtp_count = orig_len / predefined_dtp_size;
-                MPID_Datatype_get_extent_macro(origin_dtp->eltype, predefined_dtp_extent);
+                MPID_Datatype_get_extent_macro(origin_dtp->basic_type, predefined_dtp_extent);
             }
             MPIU_Assert(predefined_dtp_count > 0 && predefined_dtp_size > 0 &&
                         predefined_dtp_extent > 0);

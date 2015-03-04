@@ -56,10 +56,10 @@ int MPID_Type_create_resized(MPI_Datatype oldtype,
 	new_dtp->ub             = lb + extent;
 	new_dtp->extent         = extent;
 	new_dtp->alignsize      = oldsize; /* FIXME ??? */
-	new_dtp->n_elements     = 1;
-	new_dtp->element_size   = oldsize;
+	new_dtp->n_builtin_elements     = 1;
+	new_dtp->builtin_element_size   = oldsize;
 	new_dtp->is_contig      = (extent == oldsize) ? 1 : 0;
-        new_dtp->eltype         = oldtype;
+        new_dtp->basic_type         = oldtype;
 	new_dtp->max_contig_blocks = 3;  /* lb, data, ub */
     }
     else
@@ -79,9 +79,9 @@ int MPID_Type_create_resized(MPI_Datatype oldtype,
 	new_dtp->ub             = lb + extent;
 	new_dtp->extent         = extent;
 	new_dtp->alignsize      = old_dtp->alignsize;
-	new_dtp->n_elements     = old_dtp->n_elements;
-	new_dtp->element_size   = old_dtp->element_size;
-        new_dtp->eltype         = old_dtp->eltype;
+	new_dtp->n_builtin_elements     = old_dtp->n_builtin_elements;
+	new_dtp->builtin_element_size   = old_dtp->builtin_element_size;
+        new_dtp->basic_type         = old_dtp->basic_type;
 
 	new_dtp->is_contig      =
 	    (extent == old_dtp->size) ? old_dtp->is_contig : 0;

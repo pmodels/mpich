@@ -474,9 +474,9 @@ void MPIDU_Datatype_debug(MPI_Datatype type,
 		    (MPI_Aint) dtp->ub,
 		    (dtp->has_sticky_ub) ? "(sticky)" : "",
 		    (MPI_Aint) dtp->extent,
-		    (MPI_Aint) dtp->element_size,
-		    dtp->element_size == -1 ? "multiple types" :
-		    MPIDU_Datatype_builtin_to_string(dtp->eltype),
+		    (MPI_Aint) dtp->builtin_element_size,
+		    dtp->builtin_element_size == -1 ? "multiple types" :
+		    MPIDU_Datatype_builtin_to_string(dtp->basic_type),
 		    dtp->is_contig ? "is N contig" : "is not N contig"));
 
     MPIU_DBG_OUT(DATATYPE,"# Contents:");

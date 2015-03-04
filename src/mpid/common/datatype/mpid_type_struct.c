@@ -248,11 +248,11 @@ int MPID_Type_struct(int count,
 	{
 	    MPID_Datatype_get_ptr(oldtype_array[i], old_dtp);
 
-	    /* Ensure that "element_size" fits into an int datatype. */
-	    MPID_Ensure_Aint_fits_in_int(old_dtp->element_size);
+	    /* Ensure that "builtin_element_size" fits into an int datatype. */
+	    MPID_Ensure_Aint_fits_in_int(old_dtp->builtin_element_size);
 
-	    tmp_el_sz   = old_dtp->element_size;
-	    tmp_el_type = old_dtp->eltype;
+	    tmp_el_sz   = old_dtp->builtin_element_size;
+	    tmp_el_type = old_dtp->basic_type;
 
 	    MPID_DATATYPE_BLOCK_LB_UB((MPI_Aint) blocklength_array[i],
 				      displacement_array[i],
@@ -386,9 +386,9 @@ int MPID_Type_struct(int count,
 	}
     }
 
-    new_dtp->n_elements = -1; /* TODO */
-    new_dtp->element_size = el_sz;
-    new_dtp->eltype = el_type;
+    new_dtp->n_builtin_elements = -1; /* TODO */
+    new_dtp->builtin_element_size = el_sz;
+    new_dtp->basic_type = el_type;
 
     new_dtp->has_sticky_lb = found_sticky_lb;
     new_dtp->true_lb       = true_lb_disp;

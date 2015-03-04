@@ -103,7 +103,7 @@ static inline int count_total_dte_repeat_entries(struct dte_data_representation_
     struct dte_generalized_iovec_t *dte_iovec = data->rep.general_rep->data_representation.data;
     int total_entries_number = 0;
     for (i = 0; i < dte_iovec->repeat_count; i++) {
-        total_entries_number += dte_iovec->repeat[i].n_elements;
+        total_entries_number += dte_iovec->repeat[i].n_builtin_elements;
     }
     return total_entries_number;
 }
@@ -161,7 +161,7 @@ static int recv_nb(struct dte_data_representation_t data,
         repeat = data.rep.general_rep->data_representation.data->repeat;
         repeat_count = data.rep.general_rep->data_representation.data->repeat_count;
         for (i = 0; i < repeat_count; i++) {
-            for (j = 0; j < repeat[i].n_elements; j++) {
+            for (j = 0; j < repeat[i].n_builtin_elements; j++) {
                 char *repeat_unit = (char *) &repeat[i];
                 buf = (void *) (repeat_unit + repeat[i].elements[j].base_offset);
                 len = repeat[i].elements[j].packed_size;
@@ -228,7 +228,7 @@ static int send_nb(dte_data_representation_t data,
         repeat = data.rep.general_rep->data_representation.data->repeat;
         repeat_count = data.rep.general_rep->data_representation.data->repeat_count;
         for (i = 0; i < repeat_count; i++) {
-            for (j = 0; j < repeat[i].n_elements; j++) {
+            for (j = 0; j < repeat[i].n_builtin_elements; j++) {
                 char *repeat_unit = (char *) &repeat[i];
                 buf = (void *) (repeat_unit + repeat[i].elements[j].base_offset);
                 len = repeat[i].elements[j].packed_size;

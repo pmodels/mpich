@@ -76,7 +76,7 @@ static int fill_in_derived_dtp_info(MPIDI_RMA_Op_t * rma_op, MPID_Datatype * dtp
     rma_op->dtype_info.extent = dtp->extent;
     rma_op->dtype_info.dataloop_size = dtp->dataloop_size;
     rma_op->dtype_info.dataloop_depth = dtp->dataloop_depth;
-    rma_op->dtype_info.eltype = dtp->eltype;
+    rma_op->dtype_info.basic_type = dtp->basic_type;
     rma_op->dtype_info.dataloop = dtp->dataloop;
     rma_op->dtype_info.ub = dtp->ub;
     rma_op->dtype_info.lb = dtp->lb;
@@ -692,10 +692,10 @@ static int issue_acc_op(MPIDI_RMA_Op_t * rma_op, MPID_Win * win_ptr,
     }
     else {
         MPID_Datatype_get_ptr(rma_op->origin_datatype, origin_dtp_ptr);
-        MPIU_Assert(origin_dtp_ptr != NULL && origin_dtp_ptr->eltype != MPI_DATATYPE_NULL);
-        MPID_Datatype_get_size_macro(origin_dtp_ptr->eltype, predefined_dtp_size);
+        MPIU_Assert(origin_dtp_ptr != NULL && origin_dtp_ptr->basic_type != MPI_DATATYPE_NULL);
+        MPID_Datatype_get_size_macro(origin_dtp_ptr->basic_type, predefined_dtp_size);
         predefined_dtp_count = total_len / predefined_dtp_size;
-        MPID_Datatype_get_extent_macro(origin_dtp_ptr->eltype, predefined_dtp_extent);
+        MPID_Datatype_get_extent_macro(origin_dtp_ptr->basic_type, predefined_dtp_extent);
     }
     MPIU_Assert(predefined_dtp_count > 0 && predefined_dtp_size > 0 && predefined_dtp_extent > 0);
 
@@ -867,10 +867,10 @@ static int issue_get_acc_op(MPIDI_RMA_Op_t * rma_op, MPID_Win * win_ptr,
     }
     else {
         MPID_Datatype_get_ptr(rma_op->origin_datatype, origin_dtp_ptr);
-        MPIU_Assert(origin_dtp_ptr != NULL && origin_dtp_ptr->eltype != MPI_DATATYPE_NULL);
-        MPID_Datatype_get_size_macro(origin_dtp_ptr->eltype, predefined_dtp_size);
+        MPIU_Assert(origin_dtp_ptr != NULL && origin_dtp_ptr->basic_type != MPI_DATATYPE_NULL);
+        MPID_Datatype_get_size_macro(origin_dtp_ptr->basic_type, predefined_dtp_size);
         predefined_dtp_count = total_len / predefined_dtp_size;
-        MPID_Datatype_get_extent_macro(origin_dtp_ptr->eltype, predefined_dtp_extent);
+        MPID_Datatype_get_extent_macro(origin_dtp_ptr->basic_type, predefined_dtp_extent);
     }
     MPIU_Assert(predefined_dtp_count > 0 && predefined_dtp_size > 0 && predefined_dtp_extent > 0);
 

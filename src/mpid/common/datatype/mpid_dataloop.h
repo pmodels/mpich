@@ -64,8 +64,8 @@
 #define DLOOP_Handle_get_size_macro(handle_,size_) \
     MPID_Datatype_get_size_macro(handle_,size_)
 
-#define DLOOP_Handle_get_basic_type_macro(handle_,eltype_) \
-    MPID_Datatype_get_basic_type(handle_, eltype_)
+#define DLOOP_Handle_get_basic_type_macro(handle_,basic_type_) \
+    MPID_Datatype_get_basic_type(handle_, basic_type_)
 
 #define DLOOP_Handle_get_extent_macro(handle_,extent_) \
     MPID_Datatype_get_extent_macro(handle_,extent_)
