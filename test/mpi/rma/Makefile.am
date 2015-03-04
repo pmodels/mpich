@@ -143,7 +143,8 @@ noinst_PROGRAMS =          \
     at_complete            \
     atomic_rmw_fop         \
     atomic_rmw_cas         \
-    atomic_rmw_gacc
+    atomic_rmw_gacc	   \
+    acc-pairtype
 
 if BUILD_MPIX_TESTS
 noinst_PROGRAMS += aint
