@@ -219,6 +219,7 @@ int MPIDI_CH3_ReqHandler_GaccumRecvComplete(MPIDI_VC_t * vc, MPID_Request * rreq
     MPID_IOV iov[MPID_IOV_LIMIT];
     MPI_Aint true_lb, true_extent;
     int iovcnt;
+    int is_contig;
     MPIU_CHKPMEM_DECL(1);
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3_REQHANDLER_GACCUMRECVCOMPLETE);
 
@@ -239,6 +240,8 @@ int MPIDI_CH3_ReqHandler_GaccumRecvComplete(MPIDI_VC_t * vc, MPID_Request * rreq
 
     MPID_Datatype_get_size_macro(rreq->dev.datatype, type_size);
 
+    MPID_Datatype_is_contig(rreq->dev.datatype, &is_contig);
+
     /* Copy data into a temporary buffer */
     resp_req = MPID_Request_create();
     MPIU_ERR_CHKANDJUMP(resp_req == NULL, mpi_errno, MPI_ERR_OTHER, "**nomemreq");
@@ -250,7 +253,7 @@ int MPIDI_CH3_ReqHandler_GaccumRecvComplete(MPIDI_VC_t * vc, MPID_Request * rreq
     if (win_ptr->shm_allocated == TRUE)
         MPIDI_CH3I_SHM_MUTEX_LOCK(win_ptr);
 
-    if (MPIR_DATATYPE_IS_PREDEFINED(rreq->dev.datatype)) {
+    if (is_contig) {
         MPIU_Memcpy(resp_req->dev.user_buf, rreq->dev.real_user_buf,
                     rreq->dev.user_count * type_size);
     }
@@ -340,6 +343,7 @@ int MPIDI_CH3_ReqHandler_FOPRecvComplete(MPIDI_VC_t * vc, MPID_Request * rreq, i
     int iovcnt;
     MPIDI_CH3_Pkt_t upkt;
     MPIDI_CH3_Pkt_fop_resp_t *fop_resp_pkt = &upkt.fop_resp;
+    int is_contig;
     MPIU_CHKPMEM_DECL(1);
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3_REQHANDLER_FOPRECVCOMPLETE);
 
@@ -348,6 +352,8 @@ int MPIDI_CH3_ReqHandler_FOPRecvComplete(MPIDI_VC_t * vc, MPID_Request * rreq, i
     MPID_Win_get_ptr(rreq->dev.target_win_handle, win_ptr);
 
     MPID_Datatype_get_size_macro(rreq->dev.datatype, type_size);
+
+    MPID_Datatype_is_contig(rreq->dev.datatype, &is_contig);
 
     /* Create response request */
     resp_req = MPID_Request_create();
@@ -368,7 +374,23 @@ int MPIDI_CH3_ReqHandler_FOPRecvComplete(MPIDI_VC_t * vc, MPID_Request * rreq, i
         MPIDI_CH3I_SHM_MUTEX_LOCK(win_ptr);
 
     /* Copy data into a temporary buffer in response request */
-    MPIU_Memcpy(resp_req->dev.user_buf, rreq->dev.real_user_buf, type_size);
+    if (is_contig) {
+        MPIU_Memcpy(resp_req->dev.user_buf, rreq->dev.real_user_buf, type_size);
+    }
+    else {
+        MPID_Segment *seg = MPID_Segment_alloc();
+        MPI_Aint last = type_size;
+
+        if (seg == NULL) {
+            if (win_ptr->shm_allocated == TRUE)
+                MPIDI_CH3I_SHM_MUTEX_UNLOCK(win_ptr);
+        }
+        MPIU_ERR_CHKANDJUMP1(seg == NULL, mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s",
+                             "MPID_Segment");
+        MPID_Segment_init(rreq->dev.real_user_buf, 1, rreq->dev.datatype, seg, 0);
+        MPID_Segment_pack(seg, 0, &last, resp_req->dev.user_buf);
+        MPID_Segment_free(seg);
+    }
 
     /* Perform accumulate computation */
     if (rreq->dev.op != MPI_NO_OP) {
@@ -917,6 +939,7 @@ static inline int perform_get_in_lock_queue(MPID_Win * win_ptr, MPIDI_RMA_Lock_e
     size_t len;
     int iovcnt;
     MPID_IOV iov[MPID_IOV_LIMIT];
+    int is_contig;
     int mpi_errno = MPI_SUCCESS;
 
     /* Piggyback candidate should have basic datatype for target datatype. */
@@ -963,31 +986,54 @@ static inline int perform_get_in_lock_queue(MPID_Win * win_ptr, MPIDI_RMA_Lock_e
     MPID_Datatype_get_size_macro(get_pkt->datatype, type_size);
     MPIU_Assign_trunc(len, get_pkt->count * type_size, size_t);
 
+    MPID_Datatype_is_contig(get_pkt->datatype, &is_contig);
+
     if (get_pkt->flags & MPIDI_CH3_PKT_FLAG_RMA_IMMED_RESP) {
         void *src = (void *) (get_pkt->addr), *dest = (void *) (get_resp_pkt->info.data);
         mpi_errno = immed_copy(src, dest, len);
         if (mpi_errno != MPI_SUCCESS)
             MPIU_ERR_POP(mpi_errno);
-    }
 
-    if (get_pkt->flags & MPIDI_CH3_PKT_FLAG_RMA_IMMED_RESP) {
         /* All origin data is in packet header, issue the header. */
         iov[0].MPID_IOV_BUF = (MPID_IOV_BUF_CAST) get_resp_pkt;
         iov[0].MPID_IOV_LEN = sizeof(*get_resp_pkt);
         iovcnt = 1;
+
+        mpi_errno = MPIDI_CH3_iSendv(lock_entry->vc, sreq, iov, iovcnt);
+        if (mpi_errno != MPI_SUCCESS) {
+            MPID_Request_release(sreq);
+            MPIU_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**ch3|rmamsg");
+        }
     }
-    else {
+    else if (is_contig) {
         iov[0].MPID_IOV_BUF = (MPID_IOV_BUF_CAST) get_resp_pkt;
         iov[0].MPID_IOV_LEN = sizeof(*get_resp_pkt);
         iov[1].MPID_IOV_BUF = (MPID_IOV_BUF_CAST) (get_pkt->addr);
         iov[1].MPID_IOV_LEN = get_pkt->count * type_size;
         iovcnt = 2;
-    }
 
-    mpi_errno = MPIDI_CH3_iSendv(lock_entry->vc, sreq, iov, iovcnt);
-    if (mpi_errno != MPI_SUCCESS) {
-        MPID_Request_release(sreq);
-        MPIU_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**ch3|rmamsg");
+        mpi_errno = MPIDI_CH3_iSendv(lock_entry->vc, sreq, iov, iovcnt);
+        if (mpi_errno != MPI_SUCCESS) {
+            MPID_Request_release(sreq);
+            MPIU_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**ch3|rmamsg");
+        }
+    }
+    else {
+        iov[0].MPID_IOV_BUF = (MPID_IOV_BUF_CAST) get_resp_pkt;
+        iov[0].MPID_IOV_LEN = sizeof(*get_resp_pkt);
+
+        sreq->dev.segment_ptr = MPID_Segment_alloc();
+        MPIU_ERR_CHKANDJUMP1(sreq->dev.segment_ptr == NULL, mpi_errno,
+                             MPI_ERR_OTHER, "**nomem", "**nomem %s", "MPID_Segment_alloc");
+
+        MPID_Segment_init(get_pkt->addr, get_pkt->count,
+                          get_pkt->datatype, sreq->dev.segment_ptr, 0);
+        sreq->dev.segment_first = 0;
+        sreq->dev.segment_size = get_pkt->count * type_size;
+
+        mpi_errno = lock_entry->vc->sendNoncontig_fn(lock_entry->vc, sreq,
+                                                     iov[0].MPID_IOV_BUF, iov[0].MPID_IOV_LEN);
+        MPIU_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**ch3|rmamsg");
     }
 
   fn_exit:
@@ -1051,6 +1097,7 @@ static inline int perform_get_acc_in_lock_queue(MPID_Win * win_ptr,
     size_t len;
     int iovcnt;
     MPID_IOV iov[MPID_IOV_LIMIT];
+    int is_contig;
     int mpi_errno = MPI_SUCCESS;
 
     /* Piggyback candidate should have basic datatype for target datatype. */
@@ -1081,6 +1128,8 @@ static inline int perform_get_acc_in_lock_queue(MPID_Win * win_ptr,
         MPIDI_Pkt_init(get_accum_resp_pkt, MPIDI_CH3_PKT_GET_ACCUM_RESP_IMMED);
     }
 
+    MPID_Datatype_is_contig(get_accum_pkt->datatype, &is_contig);
+
     /* length of target data */
     MPIU_Assign_trunc(len, get_accum_pkt->count * type_size, size_t);
 
@@ -1098,8 +1147,23 @@ static inline int perform_get_acc_in_lock_queue(MPID_Win * win_ptr,
             MPIU_ERR_POP(mpi_errno);
         }
     }
-    else {
+    else if (is_contig) {
         MPIU_Memcpy(sreq->dev.user_buf, get_accum_pkt->addr, get_accum_pkt->count * type_size);
+    }
+    else {
+        MPID_Segment *seg = MPID_Segment_alloc();
+        MPI_Aint last = type_size * get_accum_pkt->count;
+
+        if (seg == NULL) {
+            if (win_ptr->shm_allocated == TRUE)
+                MPIDI_CH3I_SHM_MUTEX_UNLOCK(win_ptr);
+        }
+        MPIU_ERR_CHKANDJUMP1(seg == NULL, mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s",
+                             "MPID_Segment");
+        MPID_Segment_init(get_accum_pkt->addr, get_accum_pkt->count, get_accum_pkt->datatype, seg,
+                          0);
+        MPID_Segment_pack(seg, 0, &last, sreq->dev.user_buf);
+        MPID_Segment_free(seg);
     }
 
     if (get_accum_pkt->type == MPIDI_CH3_PKT_GET_ACCUM_IMMED) {
@@ -1175,6 +1239,7 @@ static inline int perform_fop_in_lock_queue(MPID_Win * win_ptr, MPIDI_RMA_Lock_e
     MPI_Aint type_size;
     MPID_IOV iov[MPID_IOV_LIMIT];
     int iovcnt;
+    int is_contig;
     int mpi_errno = MPI_SUCCESS;
 
     /* Piggyback candidate should have basic datatype for target datatype. */
@@ -1187,6 +1252,8 @@ static inline int perform_fop_in_lock_queue(MPID_Win * win_ptr, MPIDI_RMA_Lock_e
      * do code refactoring on both of them. */
 
     MPID_Datatype_get_size_macro(fop_pkt->datatype, type_size);
+
+    MPID_Datatype_is_contig(fop_pkt->datatype, &is_contig);
 
     if (fop_pkt->flags & MPIDI_CH3_PKT_FOP_IMMED) {
         MPIDI_Pkt_init(fop_resp_pkt, MPIDI_CH3_PKT_FOP_RESP_IMMED);
@@ -1238,8 +1305,22 @@ static inline int perform_fop_in_lock_queue(MPID_Win * win_ptr, MPIDI_RMA_Lock_e
             MPIU_ERR_POP(mpi_errno);
         }
     }
-    else {
+    else if (is_contig) {
         MPIU_Memcpy(resp_req->dev.user_buf, fop_pkt->addr, type_size);
+    }
+    else {
+        MPID_Segment *seg = MPID_Segment_alloc();
+        MPI_Aint last = type_size;
+
+        if (seg == NULL) {
+            if (win_ptr->shm_allocated == TRUE)
+                MPIDI_CH3I_SHM_MUTEX_UNLOCK(win_ptr);
+        }
+        MPIU_ERR_CHKANDJUMP1(seg == NULL, mpi_errno, MPI_ERR_OTHER, "**nomem", "**nomem %s",
+                             "MPID_Segment");
+        MPID_Segment_init(fop_pkt->addr, 1, fop_pkt->datatype, seg, 0);
+        MPID_Segment_pack(seg, 0, &last, resp_req->dev.user_buf);
+        MPID_Segment_free(seg);
     }
 
     /* Apply the op */

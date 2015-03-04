@@ -124,6 +124,7 @@ int MPIDI_CH3I_Put(const void *origin_addr, int origin_count, MPI_Datatype
         MPI_Aint origin_type_size;
         size_t immed_len, len;
         int use_immed_pkt = FALSE;
+        int is_origin_contig, is_target_contig;
 
         /* queue it up */
         mpi_errno = MPIDI_CH3I_Win_get_op(win_ptr, &new_ptr);
@@ -159,11 +160,14 @@ int MPIDI_CH3I_Put(const void *origin_addr, int origin_count, MPI_Datatype
             new_ptr->is_dt = 1;
         }
 
+        MPID_Datatype_is_contig(origin_datatype, &is_origin_contig);
+        MPID_Datatype_is_contig(target_datatype, &is_target_contig);
+
         MPID_Datatype_get_size_macro(origin_datatype, origin_type_size);
         MPIU_Assign_trunc(len, origin_count * origin_type_size, size_t);
 
         /* Judge if we can use IMMED data packet */
-        if (!new_ptr->is_dt) {
+        if (!new_ptr->is_dt && is_origin_contig && is_target_contig) {
             MPIU_Assign_trunc(immed_len,
                               (MPIDI_RMA_IMMED_BYTES / origin_type_size) * origin_type_size,
                               size_t);
@@ -318,6 +322,7 @@ int MPIDI_CH3I_Get(void *origin_addr, int origin_count, MPI_Datatype
         MPI_Aint target_type_size;
         size_t immed_len, len;
         int use_immed_resp_pkt = FALSE;
+        int is_origin_contig, is_target_contig;
 
         /* queue it up */
         mpi_errno = MPIDI_CH3I_Win_get_op(win_ptr, &new_ptr);
@@ -353,11 +358,14 @@ int MPIDI_CH3I_Get(void *origin_addr, int origin_count, MPI_Datatype
             new_ptr->is_dt = 1;
         }
 
+        MPID_Datatype_is_contig(origin_datatype, &is_origin_contig);
+        MPID_Datatype_is_contig(target_datatype, &is_target_contig);
+
         MPID_Datatype_get_size_macro(target_datatype, target_type_size);
         MPIU_Assign_trunc(len, target_count * target_type_size, size_t);
 
         /* Judge if we can use IMMED data response packet */
-        if (!new_ptr->is_dt) {
+        if (!new_ptr->is_dt && is_origin_contig && is_target_contig) {
             MPIU_Assign_trunc(immed_len,
                               (MPIDI_RMA_IMMED_BYTES / target_type_size) * target_type_size,
                               size_t);
@@ -501,6 +509,7 @@ int MPIDI_CH3I_Accumulate(const void *origin_addr, int origin_count, MPI_Datatyp
         MPI_Aint origin_type_size;
         size_t immed_len, len;
         int use_immed_pkt = FALSE;
+        int is_origin_contig, is_target_contig;
 
         /* queue it up */
         mpi_errno = MPIDI_CH3I_Win_get_op(win_ptr, &new_ptr);
@@ -538,8 +547,11 @@ int MPIDI_CH3I_Accumulate(const void *origin_addr, int origin_count, MPI_Datatyp
         MPID_Datatype_get_size_macro(origin_datatype, origin_type_size);
         MPIU_Assign_trunc(len, origin_count * origin_type_size, size_t);
 
+        MPID_Datatype_is_contig(origin_datatype, &is_origin_contig);
+        MPID_Datatype_is_contig(target_datatype, &is_target_contig);
+
         /* Judge if we can use IMMED data packet */
-        if (!new_ptr->is_dt) {
+        if (!new_ptr->is_dt && is_origin_contig && is_target_contig) {
             MPIU_Assign_trunc(immed_len,
                               (MPIDI_RMA_IMMED_BYTES / origin_type_size) * origin_type_size,
                               size_t);
@@ -712,6 +724,7 @@ int MPIDI_CH3I_Get_accumulate(const void *origin_addr, int origin_count,
             MPI_Aint target_type_size;
             size_t len, immed_len;
             int use_immed_resp_pkt = FALSE;
+            int is_result_contig, is_target_contig;
 
             /******************** Setting operation struct areas ***********************/
 
@@ -740,8 +753,11 @@ int MPIDI_CH3I_Get_accumulate(const void *origin_addr, int origin_count,
             MPID_Datatype_get_size_macro(target_datatype, target_type_size);
             MPIU_Assign_trunc(len, target_count * target_type_size, size_t);
 
+            MPID_Datatype_is_contig(result_datatype, &is_result_contig);
+            MPID_Datatype_is_contig(target_datatype, &is_target_contig);
+
             /* Judge if we can use IMMED data response packet */
-            if (!new_ptr->is_dt) {
+            if (!new_ptr->is_dt && is_result_contig && is_target_contig) {
                 MPIU_Assign_trunc(immed_len,
                                   (MPIDI_RMA_IMMED_BYTES / target_type_size) * target_type_size,
                                   size_t);
@@ -777,6 +793,7 @@ int MPIDI_CH3I_Get_accumulate(const void *origin_addr, int origin_count,
             MPI_Aint origin_type_size;
             size_t immed_len, orig_len;
             int use_immed_pkt = FALSE;
+            int is_origin_contig, is_target_contig, is_result_contig;
 
             /******************** Setting operation struct areas ***********************/
 
@@ -815,8 +832,12 @@ int MPIDI_CH3I_Get_accumulate(const void *origin_addr, int origin_count,
             MPID_Datatype_get_size_macro(origin_datatype, origin_type_size);
             MPIU_Assign_trunc(orig_len, origin_count * origin_type_size, size_t);
 
+            MPID_Datatype_is_contig(origin_datatype, &is_origin_contig);
+            MPID_Datatype_is_contig(target_datatype, &is_target_contig);
+            MPID_Datatype_is_contig(result_datatype, &is_result_contig);
+
             /* Judge if we can use IMMED data packet */
-            if (!new_ptr->is_dt) {
+            if (!new_ptr->is_dt && is_origin_contig && is_target_contig && is_result_contig) {
                 MPIU_Assign_trunc(immed_len,
                                   (MPIDI_RMA_IMMED_BYTES / origin_type_size) * origin_type_size,
                                   size_t);
@@ -1231,6 +1252,7 @@ int MPIDI_Fetch_and_op(const void *origin_addr, void *result_addr,
             MPI_Aint target_type_size;
             size_t immed_len;
             int use_immed_resp_pkt = FALSE;
+            int is_contig;
 
             /******************** Setting operation struct areas ***********************/
 
@@ -1246,12 +1268,16 @@ int MPIDI_Fetch_and_op(const void *origin_addr, void *result_addr,
             MPID_Datatype_get_size_macro(datatype, target_type_size);
             MPIU_Assert(target_type_size <= sizeof(MPIDI_CH3_FOP_Immed_u));
 
-            /* Judege if we can use IMMED data for response packet */
-            MPIU_Assign_trunc(immed_len,
-                              (MPIDI_RMA_IMMED_BYTES / target_type_size) * target_type_size,
-                              size_t);
-            if (target_type_size <= immed_len)
-                use_immed_resp_pkt = TRUE;
+            MPID_Datatype_is_contig(datatype, &is_contig);
+
+            if (is_contig) {
+                /* Judege if we can use IMMED data for response packet */
+                MPIU_Assign_trunc(immed_len,
+                                  (MPIDI_RMA_IMMED_BYTES / target_type_size) * target_type_size,
+                                  size_t);
+                if (target_type_size <= immed_len)
+                    use_immed_resp_pkt = TRUE;
+            }
 
             get_pkt = &(new_ptr->pkt.get);
             MPIDI_Pkt_init(get_pkt, MPIDI_CH3_PKT_GET);
@@ -1270,6 +1296,7 @@ int MPIDI_Fetch_and_op(const void *origin_addr, void *result_addr,
             MPI_Aint type_size;
             size_t immed_len;
             int use_immed_pkt = FALSE;
+            int is_contig;
 
             /******************** Setting operation struct areas ***********************/
 
@@ -1287,10 +1314,15 @@ int MPIDI_Fetch_and_op(const void *origin_addr, void *result_addr,
             MPID_Datatype_get_size_macro(datatype, type_size);
             MPIU_Assert(type_size <= sizeof(MPIDI_CH3_FOP_Immed_u));
 
-            /* Judge if we can use IMMED data packet */
-            MPIU_Assign_trunc(immed_len, (MPIDI_RMA_IMMED_BYTES / type_size) * type_size, size_t);
-            if (type_size <= immed_len) {
-                use_immed_pkt = TRUE;
+            MPID_Datatype_is_contig(datatype, &is_contig);
+
+            if (is_contig) {
+                /* Judge if we can use IMMED data packet */
+                MPIU_Assign_trunc(immed_len,
+                                  (MPIDI_RMA_IMMED_BYTES / type_size) * type_size, size_t);
+                if (type_size <= immed_len) {
+                    use_immed_pkt = TRUE;
+                }
             }
 
             fop_pkt = &(new_ptr->pkt.fop);

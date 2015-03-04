@@ -188,6 +188,7 @@ static int issue_from_origin_buffer(MPIDI_RMA_Op_t * rma_op, MPIDI_VC_t * vc)
     MPI_Aint origin_type_size;
     MPI_Datatype target_datatype;
     MPID_Datatype *target_dtp = NULL, *origin_dtp = NULL;
+    int is_origin_contig;
     MPID_IOV iov[MPID_IOV_LIMIT];
     int mpi_errno = MPI_SUCCESS;
     MPIDI_STATE_DECL(MPID_STATE_ISSUE_FROM_ORIGIN_BUFFER);
@@ -214,13 +215,14 @@ static int issue_from_origin_buffer(MPIDI_RMA_Op_t * rma_op, MPIDI_VC_t * vc)
     }
 
     MPID_Datatype_get_size_macro(rma_op->origin_datatype, origin_type_size);
+    MPID_Datatype_is_contig(rma_op->origin_datatype, &is_origin_contig);
 
     iov[0].MPID_IOV_BUF = (MPID_IOV_BUF_CAST) & (rma_op->pkt);
     iov[0].MPID_IOV_LEN = sizeof(rma_op->pkt);
 
     if (target_dtp == NULL) {
         /* basic datatype on target */
-        if (origin_dtp == NULL) {
+        if (is_origin_contig) {
             /* basic datatype on origin */
             int iovcnt = 2;
 
@@ -231,6 +233,17 @@ static int issue_from_origin_buffer(MPIDI_RMA_Op_t * rma_op, MPIDI_VC_t * vc)
             mpi_errno = MPIDI_CH3_iStartMsgv(vc, iov, iovcnt, &rma_op->request);
             MPIU_THREAD_CS_EXIT(CH3COMM, vc);
             MPIU_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**ch3|rmamsg");
+
+            if (origin_dtp != NULL) {
+                if (rma_op->request == NULL) {
+                    MPID_Datatype_release(origin_dtp);
+                }
+                else {
+                    /* this will cause the datatype to be freed when the request
+                     * is freed. */
+                    rma_op->request->dev.datatype_ptr = origin_dtp;
+                }
+            }
         }
         else {
             /* derived datatype on origin */
@@ -244,9 +257,11 @@ static int issue_from_origin_buffer(MPIDI_RMA_Op_t * rma_op, MPIDI_VC_t * vc)
             MPIU_ERR_CHKANDJUMP1(rma_op->request->dev.segment_ptr == NULL, mpi_errno,
                                  MPI_ERR_OTHER, "**nomem", "**nomem %s", "MPID_Segment_alloc");
 
-            rma_op->request->dev.datatype_ptr = origin_dtp;
-            /* this will cause the datatype to be freed when the request
-             * is freed. */
+            if (origin_dtp != NULL) {
+                rma_op->request->dev.datatype_ptr = origin_dtp;
+                /* this will cause the datatype to be freed when the request
+                 * is freed. */
+            }
             MPID_Segment_init(rma_op->origin_addr, rma_op->origin_count,
                               rma_op->origin_datatype, rma_op->request->dev.segment_ptr, 0);
             rma_op->request->dev.segment_first = 0;

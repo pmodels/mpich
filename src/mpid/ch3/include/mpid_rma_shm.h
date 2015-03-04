@@ -355,10 +355,13 @@ static inline int MPIDI_CH3I_Shm_acc_op(const void *origin_addr, int origin_coun
         DLOOP_VECTOR *dloop_vec;
         MPI_Aint first, last;
         int vec_len, i, type_size, count;
+        MPI_Aint type_extent;
         MPI_Datatype type;
         MPI_Aint true_lb, true_extent, extent;
         void *tmp_buf = NULL, *target_buf;
         const void *source_buf;
+        MPI_Aint curr_len;
+        void *curr_loc;
 
         if (origin_datatype != target_datatype) {
             /* first copy the data into a temporary buffer with
@@ -411,16 +414,44 @@ static inline int MPIDI_CH3I_Shm_acc_op(const void *origin_addr, int origin_coun
             source_buf = (tmp_buf != NULL) ? (const void *) tmp_buf : origin_addr;
             target_buf = (char *) base + disp_unit * target_disp;
             type = dtp->eltype;
-            type_size = MPID_Datatype_get_basic_size(type);
+
+            MPIU_Assert(type != MPI_DATATYPE_NULL);
+
+            MPID_Datatype_get_size_macro(type, type_size);
+            MPID_Datatype_get_extent_macro(type, type_extent);
+
             if (shm_op)
                 MPIDI_CH3I_SHM_MUTEX_LOCK(win_ptr);
-            for (i = 0; i < vec_len; i++) {
-                MPIU_Assign_trunc(count, (dloop_vec[i].DLOOP_VECTOR_LEN) / type_size, int);
 
-                (*uop) ((char *) source_buf + MPIU_PtrToAint(dloop_vec[i].DLOOP_VECTOR_BUF),
-                        (char *) target_buf + MPIU_PtrToAint(dloop_vec[i].DLOOP_VECTOR_BUF),
-                        &count, &type);
+            i = 0;
+            curr_loc = dloop_vec[0].DLOOP_VECTOR_BUF;
+            curr_len = dloop_vec[0].DLOOP_VECTOR_LEN;
+            while (i != vec_len) {
+                if (curr_len < type_size) {
+                    MPIU_Assert(i != vec_len);
+                    i++;
+                    curr_len += dloop_vec[i].DLOOP_VECTOR_LEN;
+                    continue;
+                }
+
+                MPIU_Assign_trunc(count, curr_len/type_size, int);
+                (*uop)((char *)source_buf + MPIU_PtrToAint(curr_loc),
+                       (char *)target_buf + MPIU_PtrToAint(curr_loc),
+                       &count, &type);
+
+                if (curr_len % type_size == 0) {
+                    i++;
+                    if (i != vec_len) {
+                        curr_loc = dloop_vec[i].DLOOP_VECTOR_BUF;
+                        curr_len = dloop_vec[i].DLOOP_VECTOR_LEN;
+                    }
+                }
+                else {
+                    curr_loc = (void *)((char *)curr_loc + type_extent * count);
+                    curr_len -= type_size * count;
+                }
             }
+
             if (shm_op)
                 MPIDI_CH3I_SHM_MUTEX_UNLOCK(win_ptr);
 
@@ -533,6 +564,9 @@ static inline int MPIDI_CH3I_Shm_get_acc_op(const void *origin_addr, int origin_
         MPI_Aint true_lb, true_extent, extent;
         void *tmp_buf = NULL, *target_buf;
         const void *source_buf;
+        MPI_Aint type_extent;
+        MPI_Aint curr_len;
+        void *curr_loc;
 
         if (origin_datatype != target_datatype) {
             /* first copy the data into a temporary buffer with
@@ -581,13 +615,39 @@ static inline int MPIDI_CH3I_Shm_get_acc_op(const void *origin_addr, int origin_
             source_buf = (tmp_buf != NULL) ? (const void *) tmp_buf : origin_addr;
             target_buf = (char *) base + disp_unit * target_disp;
             type = dtp->eltype;
-            type_size = MPID_Datatype_get_basic_size(type);
 
-            for (i = 0; i < vec_len; i++) {
-                MPIU_Assign_trunc(count, (dloop_vec[i].DLOOP_VECTOR_LEN) / type_size, int);
-                (*uop) ((char *) source_buf + MPIU_PtrToAint(dloop_vec[i].DLOOP_VECTOR_BUF),
-                        (char *) target_buf + MPIU_PtrToAint(dloop_vec[i].DLOOP_VECTOR_BUF),
-                        &count, &type);
+            MPIU_Assert(type != MPI_DATATYPE_NULL);
+
+            MPID_Datatype_get_size_macro(type, type_size);
+            MPID_Datatype_get_extent_macro(type, type_extent);
+
+            i = 0;
+            curr_loc = dloop_vec[0].DLOOP_VECTOR_BUF;
+            curr_len = dloop_vec[0].DLOOP_VECTOR_LEN;
+            while (i != vec_len) {
+                if (curr_len < type_size) {
+                    MPIU_Assert(i != vec_len);
+                    i++;
+                    curr_len += dloop_vec[i].DLOOP_VECTOR_LEN;
+                    continue;
+                }
+
+                MPIU_Assign_trunc(count, curr_len/type_size, int);
+                (*uop)((char *)source_buf + MPIU_PtrToAint(curr_loc),
+                       (char *)target_buf + MPIU_PtrToAint(curr_loc),
+                       &count, &type);
+
+                if (curr_len % type_size == 0) {
+                    i++;
+                    if (i != vec_len) {
+                        curr_loc = dloop_vec[i].DLOOP_VECTOR_BUF;
+                        curr_len = dloop_vec[i].DLOOP_VECTOR_LEN;
+                    }
+                }
+                else {
+                    curr_loc = (void *)((char *)curr_loc + type_extent * count);
+                    curr_len -= type_size * count;
+                }
             }
 
             MPID_Segment_free(segp);

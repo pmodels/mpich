@@ -407,6 +407,7 @@ int MPIDI_CH3_PktHandler_Get(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
         MPIDI_CH3_Pkt_get_resp_t *get_resp_pkt = &upkt.get_resp;
         size_t len;
         int iovcnt;
+        int is_contig;
 
         MPIDI_Request_set_type(req, MPIDI_REQUEST_TYPE_GET_RESP);
         req->dev.OnDataAvail = MPIDI_CH3_ReqHandler_GetSendComplete;
@@ -432,6 +433,8 @@ int MPIDI_CH3_PktHandler_Get(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
         /* length of target data */
         MPID_Datatype_get_size_macro(get_pkt->datatype, type_size);
 
+        MPID_Datatype_is_contig(get_pkt->datatype, &is_contig);
+
         if (get_pkt->flags & MPIDI_CH3_PKT_FLAG_RMA_IMMED_RESP) {
             MPIU_Assign_trunc(len, get_pkt->count * type_size, size_t);
             void *src = (void *) (get_pkt->addr), *dest = (void *) (get_resp_pkt->info.data);
@@ -442,25 +445,54 @@ int MPIDI_CH3_PktHandler_Get(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
             iov[0].MPID_IOV_BUF = (MPID_IOV_BUF_CAST) get_resp_pkt;
             iov[0].MPID_IOV_LEN = sizeof(*get_resp_pkt);
             iovcnt = 1;
+
+            MPIU_THREAD_CS_ENTER(CH3COMM, vc);
+            mpi_errno = MPIDI_CH3_iSendv(vc, req, iov, iovcnt);
+            MPIU_THREAD_CS_EXIT(CH3COMM, vc);
+            /* --BEGIN ERROR HANDLING-- */
+            if (mpi_errno != MPI_SUCCESS) {
+                MPIU_Object_set_ref(req, 0);
+                MPIDI_CH3_Request_destroy(req);
+                MPIU_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**ch3|rmamsg");
+            }
+            /* --END ERROR HANDLING-- */
         }
-        else {
+        else if (is_contig) {
             iov[0].MPID_IOV_BUF = (MPID_IOV_BUF_CAST) get_resp_pkt;
             iov[0].MPID_IOV_LEN = sizeof(*get_resp_pkt);
             iov[1].MPID_IOV_BUF = (MPID_IOV_BUF_CAST) ((char *) get_pkt->addr);
             iov[1].MPID_IOV_LEN = get_pkt->count * type_size;
             iovcnt = 2;
-        }
 
-        MPIU_THREAD_CS_ENTER(CH3COMM, vc);
-        mpi_errno = MPIDI_CH3_iSendv(vc, req, iov, iovcnt);
-        MPIU_THREAD_CS_EXIT(CH3COMM, vc);
-        /* --BEGIN ERROR HANDLING-- */
-        if (mpi_errno != MPI_SUCCESS) {
-            MPIU_Object_set_ref(req, 0);
-            MPIDI_CH3_Request_destroy(req);
-            MPIU_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**ch3|rmamsg");
+            MPIU_THREAD_CS_ENTER(CH3COMM, vc);
+            mpi_errno = MPIDI_CH3_iSendv(vc, req, iov, iovcnt);
+            MPIU_THREAD_CS_EXIT(CH3COMM, vc);
+            /* --BEGIN ERROR HANDLING-- */
+            if (mpi_errno != MPI_SUCCESS) {
+                MPIU_Object_set_ref(req, 0);
+                MPIDI_CH3_Request_destroy(req);
+                MPIU_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**ch3|rmamsg");
+            }
+            /* --END ERROR HANDLING-- */
         }
-        /* --END ERROR HANDLING-- */
+        else {
+            iov[0].MPID_IOV_BUF = (MPID_IOV_BUF_CAST) get_resp_pkt;
+            iov[0].MPID_IOV_LEN = sizeof(*get_resp_pkt);
+
+            req->dev.segment_ptr = MPID_Segment_alloc();
+            MPIU_ERR_CHKANDJUMP1(req->dev.segment_ptr == NULL, mpi_errno,
+                                 MPI_ERR_OTHER, "**nomem", "**nomem %s", "MPID_Segment_alloc");
+
+            MPID_Segment_init(get_pkt->addr, get_pkt->count,
+                              get_pkt->datatype, req->dev.segment_ptr, 0);
+            req->dev.segment_first = 0;
+            req->dev.segment_size = get_pkt->count * type_size;
+
+            MPIU_THREAD_CS_ENTER(CH3COMM, vc);
+            mpi_errno = vc->sendNoncontig_fn(vc, req, iov[0].MPID_IOV_BUF, iov[0].MPID_IOV_LEN);
+            MPIU_THREAD_CS_EXIT(CH3COMM, vc);
+            MPIU_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**ch3|rmamsg");
+        }
 
         *buflen = sizeof(MPIDI_CH3_Pkt_t);
         *rreqp = NULL;

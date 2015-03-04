@@ -355,7 +355,9 @@ static inline int enqueue_lock_origin(MPID_Win * win_ptr, MPIDI_VC_t * vc,
     }
     else {
         MPI_Aint type_size = 0;
+        MPI_Aint type_extent;
         MPIDI_msg_sz_t recv_data_sz = 0;
+        MPIDI_msg_sz_t buf_size;
         MPID_Request *req = NULL;
         MPI_Datatype target_dtp;
         int target_count;
@@ -368,18 +370,20 @@ static inline int enqueue_lock_origin(MPID_Win * win_ptr, MPIDI_VC_t * vc,
         MPIDI_CH3_PKT_RMA_GET_TARGET_DATATYPE((*pkt), target_dtp, mpi_errno);
         MPIDI_CH3_PKT_RMA_GET_TARGET_COUNT((*pkt), target_count, mpi_errno);
 
+        MPID_Datatype_get_extent_macro(target_dtp, type_extent);
         MPID_Datatype_get_size_macro(target_dtp, type_size);
         recv_data_sz = type_size * target_count;
+        buf_size = type_extent * target_count;
 
         if (new_ptr != NULL) {
-            if (win_ptr->current_lock_data_bytes + recv_data_sz < MPIR_CVAR_CH3_RMA_LOCK_DATA_BYTES) {
-                new_ptr->data = MPIU_Malloc(recv_data_sz);
+            if (win_ptr->current_lock_data_bytes + buf_size < MPIR_CVAR_CH3_RMA_LOCK_DATA_BYTES) {
+                new_ptr->data = MPIU_Malloc(buf_size);
             }
 
             if (new_ptr->data == NULL) {
                 /* Note that there are two possible reasons to make new_ptr->data to be NULL:
-                 * (1) win_ptr->current_lock_data_bytes + recv_data_sz >= MPIR_CVAR_CH3_RMA_LOCK_DATA_BYTES;
-                 * (2) MPIU_Malloc(recv_data_sz) failed.
+                 * (1) win_ptr->current_lock_data_bytes + buf_size >= MPIR_CVAR_CH3_RMA_LOCK_DATA_BYTES;
+                 * (2) MPIU_Malloc(buf_size) failed.
                  * In such cases, we cannot allocate memory for lock data, so we give up
                  * buffering lock data, however, we still buffer lock request.
                  */
@@ -413,8 +417,8 @@ static inline int enqueue_lock_origin(MPID_Win * win_ptr, MPIDI_VC_t * vc,
                 data_discarded = 1;
             }
             else {
-                win_ptr->current_lock_data_bytes += recv_data_sz;
-                new_ptr->data_size = recv_data_sz;
+                win_ptr->current_lock_data_bytes += buf_size;
+                new_ptr->data_size = buf_size;
             }
         }
 
@@ -795,9 +799,11 @@ static inline int do_accumulate_op(void *source_buf, void *target_buf,
         DLOOP_VECTOR *dloop_vec;
         MPI_Aint first, last;
         int vec_len, i, count;
-        MPI_Aint type_size;
+        MPI_Aint type_extent, type_size;
         MPI_Datatype type;
         MPID_Datatype *dtp;
+        MPI_Aint curr_len;
+        void *curr_loc;
 
         segp = MPID_Segment_alloc();
         /* --BEGIN ERROR HANDLING-- */
@@ -831,12 +837,37 @@ static inline int do_accumulate_op(void *source_buf, void *target_buf,
         MPID_Segment_pack_vector(segp, first, &last, dloop_vec, &vec_len);
 
         type = dtp->eltype;
+        MPIU_Assert(type != MPI_DATATYPE_NULL);
+
         MPID_Datatype_get_size_macro(type, type_size);
-        for (i = 0; i < vec_len; i++) {
-            MPIU_Assign_trunc(count, (dloop_vec[i].DLOOP_VECTOR_LEN) / type_size, int);
-            (*uop) ((char *) source_buf + MPIU_PtrToAint(dloop_vec[i].DLOOP_VECTOR_BUF),
-                    (char *) target_buf + MPIU_PtrToAint(dloop_vec[i].DLOOP_VECTOR_BUF),
-                    &count, &type);
+        MPID_Datatype_get_extent_macro(type, type_extent);
+
+        i = 0;
+        curr_loc = dloop_vec[0].DLOOP_VECTOR_BUF;
+        curr_len = dloop_vec[0].DLOOP_VECTOR_LEN;
+        while (i != vec_len) {
+            if (curr_len < type_size) {
+                MPIU_Assert(i != vec_len);
+                i++;
+                curr_len += dloop_vec[i].DLOOP_VECTOR_LEN;
+                continue;
+            }
+
+            MPIU_Assign_trunc(count, curr_len / type_size, int);
+            (*uop) ((char *) source_buf + MPIU_PtrToAint(curr_loc),
+                    (char *) target_buf + MPIU_PtrToAint(curr_loc), &count, &type);
+
+            if (curr_len % type_size == 0) {
+                i++;
+                if (i != vec_len) {
+                    curr_loc = dloop_vec[i].DLOOP_VECTOR_BUF;
+                    curr_len = dloop_vec[i].DLOOP_VECTOR_LEN;
+                }
+            }
+            else {
+                curr_loc = (void *) ((char *) curr_loc + type_extent * count);
+                curr_len -= type_size * count;
+            }
         }
 
         MPID_Segment_free(segp);
