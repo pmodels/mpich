@@ -176,9 +176,11 @@ PMPI_LOCAL MPI_Count MPIR_Type_get_elements(MPI_Count *bytes_p,
         return MPIR_Type_get_basic_type_elements(bytes_p, count, datatype);
     }
     else if (datatype_ptr->element_size >= 0) {
+        MPI_Datatype basic_type = MPI_DATATYPE_NULL;
+        MPID_Datatype_get_basic_type(datatype_ptr->eltype, basic_type);
         return MPIR_Type_get_basic_type_elements(bytes_p,
                                                  count * datatype_ptr->n_elements,
-                                                 datatype_ptr->eltype);
+                                                 basic_type);
     }
     else {
         /* we have bytes left and still don't have a single element size; must
@@ -304,9 +306,11 @@ int MPIR_Get_elements_x_impl(const MPI_Status *status, MPI_Datatype datatype, MP
          * be in bytes
          */
         if (HANDLE_GET_KIND(datatype) != HANDLE_KIND_BUILTIN) {
+            MPI_Datatype basic_type = MPI_DATATYPE_NULL;
+            MPID_Datatype_get_basic_type(datatype_ptr->eltype, basic_type);
             *elements = MPIR_Type_get_basic_type_elements(&byte_count,
                                                           -1,
-                                                          datatype_ptr->eltype);
+                                                          basic_type);
         }
         else {
             /* Behaves just like MPI_Get_Count in the predefined case */

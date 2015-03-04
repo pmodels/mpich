@@ -121,7 +121,7 @@ int MPID_Type_create_pairtype(MPI_Datatype type,
 
     new_dtp->n_elements      = 2;
     new_dtp->element_size    = el_size;
-    new_dtp->eltype          = MPI_DATATYPE_NULL;
+    new_dtp->eltype          = type;
 
     new_dtp->has_sticky_lb   = 0;
     new_dtp->true_lb         = 0;

@@ -45,6 +45,12 @@
 	    break;							\
  									\
     }									\
+    /* This macro returns the builtin type, if 'basic_type' is not      \
+     * a builtin type, it must be a pair type composed of different     \
+     * builtin types, so we return MPI_DATATYPE_NULL here.              \
+     */                                                                 \
+    if (HANDLE_GET_KIND(eltype_) != HANDLE_KIND_BUILTIN)                \
+        eltype_ = MPI_DATATYPE_NULL;                                    \
  } while(0)
 
 /* MPID_Datatype_release decrements the reference count on the MPID_Datatype
@@ -372,6 +378,8 @@ typedef struct MPID_Datatype {
      * if type is composed of more than one element type, then
      * eltype == MPI_DATATYPE_NULL and element_size == -1
      */
+    /* Note that here eltype refers to predefined type, not the builtin
+       type, whereas n_elements and element_size refers to builtin type. */
     int      eltype;
     MPI_Aint n_elements;
     MPI_Aint element_size;
