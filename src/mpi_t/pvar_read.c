@@ -35,11 +35,12 @@ int MPIR_T_pvar_read_impl(MPI_T_pvar_session session, MPI_T_pvar_handle handle, 
     int i, mpi_errno = MPI_SUCCESS;
 
     /* Reading a never started pvar, or a stopped and then reset wartermark,
-     * will run into this nasty situation. Return a generic MPI_T error code,
-     * which is defined in MPI-3.1.
+     * will run into this nasty situation. MPI-3.0 does not define what error
+     * code should be returned. We return a generic MPI error code. Once MPI-3.1
+     * is approved, it should be changed to MPI_T_ERR_INVALID.
      */
     if (!MPIR_T_pvar_is_oncestarted(handle)) {
-        mpi_errno = MPI_T_ERR_INVALID;
+        mpi_errno = MPI_ERR_OTHER;
         goto fn_fail;
     }
 

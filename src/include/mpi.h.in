@@ -865,14 +865,12 @@ typedef int (MPIX_Grequest_wait_function)(int, void **, double, MPI_Status *);
 #define MPI_T_ERR_PVAR_NO_STARTSTOP 70  /* Pvar can't be started or stopped */
 #define MPI_T_ERR_PVAR_NO_WRITE     71  /* Pvar can't be written or reset */
 #define MPI_T_ERR_PVAR_NO_ATOMIC    72  /* Pvar can't be R/W atomically */
-#define MPI_T_ERR_INVALID_NAME      73  /* Name doesn't match */
-#define MPI_T_ERR_INVALID           74  /* Generic error code for MPI_T added in MPI-3.1 */
 
 
 #define MPI_ERR_LASTCODE    0x3fffffff  /* Last valid error code for a 
 					   predefined error class */
 /* WARNING: this is also defined in mpishared.h.  Update both locations */
-#define MPICH_ERR_LAST_CLASS 74     /* It is also helpful to know the
+#define MPICH_ERR_LAST_CLASS 72     /* It is also helpful to know the
 				       last valid class */
 
 #define MPICH_ERR_FIRST_MPIX 100 /* Define a gap here because sock is
@@ -884,8 +882,10 @@ typedef int (MPIX_Grequest_wait_function)(int, void **, double, MPI_Status *);
 #define MPIX_ERR_PROC_FAILED_PENDING  MPICH_ERR_FIRST_MPIX+2 /* A failure has caused this request
                                                               * to be pending */
 #define MPIX_ERR_REVOKED              MPICH_ERR_FIRST_MPIX+3 /* The communciation object has been revoked */
+#define MPIX_T_ERR_INVALID_NAME       MPICH_ERR_FIRST_MPIX+4 /* Name doesn't match */
+#define MPIX_T_ERR_INVALID            MPICH_ERR_FIRST_MPIX+5 /* Generic error code for MPI_T added in MPI-3.1 */
 
-#define MPICH_ERR_LAST_MPIX           MPICH_ERR_FIRST_MPIX+3
+#define MPICH_ERR_LAST_MPIX           MPICH_ERR_FIRST_MPIX+5
 
 
 /* End of MPI's error classes */
@@ -1532,9 +1532,9 @@ int MPI_T_category_get_cvars(int cat_index, int len, int indices[]);
 int MPI_T_category_get_pvars(int cat_index, int len, int indices[]);
 int MPI_T_category_get_categories(int cat_index, int len, int indices[]);
 int MPI_T_category_changed(int *stamp);
-int MPI_T_cvar_get_index(const char *name, int *cvar_index);
-int MPI_T_pvar_get_index(const char *name, int var_class, int *pvar_index);
-int MPI_T_category_get_index(const char *name, int *cat_index);
+int MPIX_T_cvar_get_index(const char *name, int *cvar_index);
+int MPIX_T_pvar_get_index(const char *name, int var_class, int *pvar_index);
+int MPIX_T_category_get_index(const char *name, int *cat_index);
 /* End Skip Prototypes */
 
 
@@ -2178,9 +2178,9 @@ int PMPI_T_category_get_cvars(int cat_index, int len, int indices[]);
 int PMPI_T_category_get_pvars(int cat_index, int len, int indices[]);
 int PMPI_T_category_get_categories(int cat_index, int len, int indices[]);
 int PMPI_T_category_changed(int *stamp);
-int PMPI_T_cvar_get_index(const char *name, int *cvar_index);
-int PMPI_T_pvar_get_index(const char *name, int var_class, int *pvar_index);
-int PMPI_T_category_get_index(const char *name, int *cat_index);
+int PMPIX_T_cvar_get_index(const char *name, int *cvar_index);
+int PMPIX_T_pvar_get_index(const char *name, int var_class, int *pvar_index);
+int PMPIX_T_category_get_index(const char *name, int *cat_index);
 /* End Skip Prototypes */
 
 
