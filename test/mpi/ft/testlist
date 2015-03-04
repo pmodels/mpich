@@ -7,7 +7,7 @@ senddead 2 env=MPIR_CVAR_ENABLE_FT=1 mpiexecarg=-disable-auto-cleanup resultTest
 recvdead 2 env=MPIR_CVAR_ENABLE_FT=1 mpiexecarg=-disable-auto-cleanup resultTest=TestStatusNoErrors strict=false timeLimit=10
 isenddead 2 env=MPIR_CVAR_ENABLE_FT=1 mpiexecarg=-disable-auto-cleanup resultTest=TestStatusNoErrors strict=false timeLimit=10
 irecvdead 2 env=MPIR_CVAR_ENABLE_FT=1 mpiexecarg=-disable-auto-cleanup resultTest=TestStatusNoErrors strict=false timeLimit=10
-barrier 4 env=MPIR_CVAR_ENABLE_FT=1 mpiexecarg=-disable-auto-cleanup resultTest=TestStatusNoErrors strict=false timeLimit=10
+barrier 4 env=MPIR_CVAR_ENABLE_FT=1 mpiexecarg=-disable-auto-cleanup resultTest=TestStatusNoErrors strict=false timeLimit=10 xfail=2237
 gather 4 env=MPIR_CVAR_ENABLE_FT=1 mpiexecarg=-disable-auto-cleanup resultTest=TestStatusNoErrors strict=false timeLimit=10 xfail=2237
 reduce 4 env=MPIR_CVAR_ENABLE_FT=1 mpiexecarg=-disable-auto-cleanup resultTest=TestStatusNoErrors strict=false timeLimit=10
 bcast 4 env=MPIR_CVAR_ENABLE_FT=1 mpiexecarg=-disable-auto-cleanup resultTest=TestStatusNoErrors strict=false timeLimit=10
