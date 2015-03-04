@@ -314,8 +314,10 @@ void *ib_malloc_hook(size_t size, const void *caller)
 
     pow = powoftwo(size);
 
-    if (pow < 0 || pow >= ARRAY_SIZE)
+    if (pow < 0 || pow >= ARRAY_SIZE) {
+        pthread_mutex_unlock(&mutex);
         return NULL;
+    }
 
     if (is_list_empty(&arena_flist[pow])) {
         char *tmp;
