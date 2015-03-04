@@ -55,10 +55,10 @@ int main(int argc, char **argv)
     /* Do MPI_Aint addressing arithmetic */
     if (rank == 0) {
         disp = sizeof(int)*511;
-        offset = MPI_Aint_add(bases[1], disp); /* offset points to array[1023]*/
+        offset = MPIX_Aint_add(bases[1], disp); /* offset points to array[1023]*/
     } else if (rank == 1) {
         disp = sizeof(int)*512;
-        offset = MPI_Aint_diff(bases[0], disp); /* offset points to array[0] */
+        offset = MPIX_Aint_diff(bases[0], disp); /* offset points to array[0] */
     }
 
     /* Get val and verify it */

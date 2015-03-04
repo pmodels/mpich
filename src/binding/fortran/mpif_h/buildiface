@@ -4345,27 +4345,27 @@ sub build_specials {
     }
     $returnType = "void";
 
-    # MPI_Aint_add/diff do not have the ierror argument.
+    # MPIX_Aint_add/diff do not have the ierror argument.
     $OUTFD = "AINTADD";
     $filename = "aint_addf.c";
     open( $OUTFD, ">$filename.new" ) || die "Cannot open $filename.new\n";
     $files[$#files+1] = $filename;
     $returnType = "MPI_Aint";
-    &set_weak_decl( "MPI_Aint_add", "MPI_Aint *, MPI_Aint *", "MPI_Aint" );
-    &set_weak_decl( "PMPI_Aint_add", "MPI_Aint *, MPI_Aint *", "MPI_Aint" );
-    &print_header( "mpi_", "MPI_Aint_add", "aint_add", "MPI_Aint *, MPI_Aint *");
-    &print_routine_type_decl( $OUTFD, "mpi_", "aint_add" );
+    &set_weak_decl( "MPIX_Aint_add", "MPI_Aint *, MPI_Aint *", "MPI_Aint" );
+    &set_weak_decl( "PMPIX_Aint_add", "MPI_Aint *, MPI_Aint *", "MPI_Aint" );
+    &print_header( "mpix_", "MPIX_Aint_add", "aint_add", "MPI_Aint *, MPI_Aint *");
+    &print_routine_type_decl( $OUTFD, "mpix_", "aint_add" );
     print $OUTFD "(MPI_Aint *base, MPI_Aint *disp)\n";
     print $OUTFD "{\n";
-    print $OUTFD "    return MPI_Aint_add(*base, *disp);\n";
+    print $OUTFD "    return MPIX_Aint_add(*base, *disp);\n";
     print $OUTFD "}\n";
     close ($OUTFD);
     &ReplaceIfDifferent( $filename, $filename . ".new" );
     if ($build_prototypes) {
         print PROTOFD "extern ";
-        &print_routine_type_decl( PROTOFD, "mpi_", "aint_add" );
+        &print_routine_type_decl( PROTOFD, "mpix_", "aint_add" );
         print PROTOFD "( MPI_Aint *, MPI_Aint * )";
-        &print_attr( PROTOFD, "mpi_"."aint_add_" );
+        &print_attr( PROTOFD, "mpix_"."aint_add_" );
         print PROTOFD ";\n";
     }
     $returnType = "void";
@@ -4375,21 +4375,21 @@ sub build_specials {
     open( $OUTFD, ">$filename.new" ) || die "Cannot open $filename.new\n";
     $files[$#files+1] = $filename;
     $returnType = "MPI_Aint";
-    &set_weak_decl( "MPI_Aint_diff", "MPI_Aint *, MPI_Aint *", "MPI_Aint" );
-    &set_weak_decl( "PMPI_Aint_diff", "MPI_Aint *, MPI_Aint *", "MPI_Aint" );
-    &print_header( "mpi_", "MPI_Aint_diff", "aint_diff", "MPI_Aint *, MPI_Aint *");
-    &print_routine_type_decl( $OUTFD, "mpi_", "aint_diff" );
+    &set_weak_decl( "MPIX_Aint_diff", "MPI_Aint *, MPI_Aint *", "MPI_Aint" );
+    &set_weak_decl( "PMPIX_Aint_diff", "MPI_Aint *, MPI_Aint *", "MPI_Aint" );
+    &print_header( "mpix_", "MPIX_Aint_diff", "aint_diff", "MPI_Aint *, MPI_Aint *");
+    &print_routine_type_decl( $OUTFD, "mpix_", "aint_diff" );
     print $OUTFD "(MPI_Aint *addr1, MPI_Aint *addr2)\n";
     print $OUTFD "{\n";
-    print $OUTFD "    return MPI_Aint_diff(*addr1, *addr2);\n";
+    print $OUTFD "    return MPIX_Aint_diff(*addr1, *addr2);\n";
     print $OUTFD "}\n";
     close ($OUTFD);
     &ReplaceIfDifferent( $filename, $filename . ".new" );
     if ($build_prototypes) {
         print PROTOFD "extern ";
-        &print_routine_type_decl( PROTOFD, "mpi_", "aint_diff" );
+        &print_routine_type_decl( PROTOFD, "mpix_", "aint_diff" );
         print PROTOFD "( MPI_Aint *, MPI_Aint * )";
-        &print_attr( PROTOFD, "mpi_"."aint_diff_" );
+        &print_attr( PROTOFD, "mpix_"."aint_diff_" );
         print PROTOFD ";\n";
     }
     $returnType = "void";

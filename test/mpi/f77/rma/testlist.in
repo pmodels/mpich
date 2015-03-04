@@ -10,4 +10,4 @@ c2f2cwinf 1
 baseattrwinf 1
 winattrf 1
 winattr2f 1
-aintf 2 strict=false xfail=ticket1877
+@mpix@ aintf 2 strict=false xfail=ticket1877

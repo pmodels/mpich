@@ -2524,7 +2524,7 @@ function MPIR_Comm_spawn_multiple_c(count, array_of_commands, array_of_argv, arr
 end function MPIR_Comm_spawn_multiple_c
 
 function  MPIR_Aint_add_c(base, disp) &
-    bind(C, name="PMPI_Aint_add") result(res)
+    bind(C, name="PMPIX_Aint_add") result(res)
     use :: mpi_f08_compile_constants, only : MPI_ADDRESS_KIND
     implicit none
     integer(MPI_ADDRESS_KIND), value, intent(in) :: base, disp
@@ -2532,7 +2532,7 @@ function  MPIR_Aint_add_c(base, disp) &
 end function MPIR_Aint_add_c
 
 function  MPIR_Aint_diff_c(addr1, addr2) &
-    bind(C, name="PMPI_Aint_diff") result(res)
+    bind(C, name="PMPIX_Aint_diff") result(res)
     use :: mpi_f08_compile_constants, only : MPI_ADDRESS_KIND
     implicit none
     integer(MPI_ADDRESS_KIND), value, intent(in) :: addr1, addr2

@@ -52,10 +52,10 @@ program main
 ! Do MPI_Aint addressing arithmetic
     if (rank == 0) then
         disp = intsize*511
-        offset = MPI_Aint_add(bases(1), disp) ! offset points to array(1023)
+        offset = MPIX_Aint_add(bases(1), disp) ! offset points to array(1023)
     else if (rank == 1) then
         disp = intsize*512
-        offset = MPI_Aint_diff(bases(0), disp) ! offset points to array(0)
+        offset = MPIX_Aint_diff(bases(0), disp) ! offset points to array(0)
     endif
 
 ! Get value and verify it
