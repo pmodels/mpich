@@ -239,16 +239,16 @@ int MPI_File_get_errhandler(MPI_File file, MPI_Errhandler *errhandler);
 #endif
 
 /* For MPI 3.1 */
-int MPI_File_iread_at_all(MPI_File fh, MPI_Offset offset, void *buf, int count,
+int MPIX_File_iread_at_all(MPI_File fh, MPI_Offset offset, void *buf, int count,
                            MPI_Datatype datatype, MPI_Request *request)
     MPICH_ATTR_POINTER_WITH_TYPE_TAG(3,5);
-int MPI_File_iwrite_at_all(MPI_File fh, MPI_Offset offset, const void *buf, int count,
+int MPIX_File_iwrite_at_all(MPI_File fh, MPI_Offset offset, const void *buf, int count,
                             MPI_Datatype datatype, MPI_Request *request)
     MPICH_ATTR_POINTER_WITH_TYPE_TAG(3,5);
-int MPI_File_iread_all(MPI_File fh, void *buf, int count, MPI_Datatype datatype,
+int MPIX_File_iread_all(MPI_File fh, void *buf, int count, MPI_Datatype datatype,
                         MPI_Request *request)
     MPICH_ATTR_POINTER_WITH_TYPE_TAG(2,4);
-int MPI_File_iwrite_all(MPI_File fh, const void *buf, int count, MPI_Datatype datatype,
+int MPIX_File_iwrite_all(MPI_File fh, const void *buf, int count, MPI_Datatype datatype,
                          MPI_Request *request)
     MPICH_ATTR_POINTER_WITH_TYPE_TAG(2,4);
 /* End Prototypes */
@@ -468,16 +468,16 @@ int PMPI_File_get_errhandler( MPI_File, MPI_Errhandler * );
 #endif
 
 /* For MPI 3.1 */
-int PMPI_File_iread_at_all(MPI_File fh, MPI_Offset offset, void *buf, int count,
+int PMPIX_File_iread_at_all(MPI_File fh, MPI_Offset offset, void *buf, int count,
                             MPI_Datatype datatype, MPI_Request *request)
     MPICH_ATTR_POINTER_WITH_TYPE_TAG(3,5);
-int PMPI_File_iwrite_at_all(MPI_File fh, MPI_Offset offset, const void *buf, int count,
+int PMPIX_File_iwrite_at_all(MPI_File fh, MPI_Offset offset, const void *buf, int count,
                              MPI_Datatype datatype, MPI_Request *request)
     MPICH_ATTR_POINTER_WITH_TYPE_TAG(3,5);
-int PMPI_File_iread_all(MPI_File fh, void *buf, int count, MPI_Datatype datatype,
+int PMPIX_File_iread_all(MPI_File fh, void *buf, int count, MPI_Datatype datatype,
                          MPI_Request *request)
     MPICH_ATTR_POINTER_WITH_TYPE_TAG(2,4);
-int PMPI_File_iwrite_all(MPI_File fh, const void *buf, int count, MPI_Datatype datatype,
+int PMPIX_File_iwrite_all(MPI_File fh, const void *buf, int count, MPI_Datatype datatype,
                           MPI_Request *request)
     MPICH_ATTR_POINTER_WITH_TYPE_TAG(2,4);
 

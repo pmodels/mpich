@@ -70,14 +70,14 @@
 #undef MPI_File_get_byte_offset
 #define MPI_File_get_byte_offset PMPI_File_get_byte_offset
 
-#undef MPI_File_iread_at_all
-#define MPI_File_iread_at_all PMPI_File_iread_at_all
-#undef MPI_File_iwrite_at_all
-#define MPI_File_iwrite_at_all PMPI_File_iwrite_at_all
-#undef MPI_File_iread_all
-#define MPI_File_iread_all  PMPI_File_iread_all
-#undef MPI_File_iwrite_all
-#define MPI_File_iwrite_all PMPI_File_iwrite_all
+#undef MPIX_File_iread_at_all
+#define MPIX_File_iread_at_all PMPIX_File_iread_at_all
+#undef MPIX_File_iwrite_at_all
+#define MPIX_File_iwrite_at_all PMPIX_File_iwrite_at_all
+#undef MPIX_File_iread_all
+#define MPIX_File_iread_all  PMPIX_File_iread_all
+#undef MPIX_File_iwrite_all
+#define MPIX_File_iwrite_all PMPIX_File_iwrite_all
 
 #undef MPI_File_read_shared
 #define MPI_File_read_shared PMPI_File_read_shared

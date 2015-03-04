@@ -60,9 +60,9 @@ int main(int argc, char **argv)
     errcode = MPI_File_open(MPI_COMM_WORLD, filename,
                             MPI_MODE_WRONLY | MPI_MODE_CREATE, info, &fh);
     if (errcode != MPI_SUCCESS) handle_error(errcode, "MPI_File_open");
-    errcode = MPI_File_iwrite_at_all(fh, off, buffer, BUFSIZE, MPI_INT,
+    errcode = MPIX_File_iwrite_at_all(fh, off, buffer, BUFSIZE, MPI_INT,
                                      &request);
-    if (errcode != MPI_SUCCESS) handle_error(errcode, "MPI_File_iwrite_at_all");
+    if (errcode != MPI_SUCCESS) handle_error(errcode, "MPIX_File_iwrite_at_all");
     MPI_Wait(&request, &status);
     errcode = MPI_File_close(&fh);
     if (errcode != MPI_SUCCESS) handle_error(errcode, "MPI_File_close");
@@ -70,9 +70,9 @@ int main(int argc, char **argv)
     errcode = MPI_File_open(MPI_COMM_WORLD, filename, MPI_MODE_RDONLY, info,
                             &fh);
     if (errcode != MPI_SUCCESS) handle_error(errcode, "MPI_File_open");
-    errcode = MPI_File_iread_at_all(fh, off, buf2, BUFSIZE, MPI_INT,
+    errcode = MPIX_File_iread_at_all(fh, off, buf2, BUFSIZE, MPI_INT,
                                      &request);
-    if (errcode != MPI_SUCCESS) handle_error(errcode, "MPI_File_iread_at_all");
+    if (errcode != MPI_SUCCESS) handle_error(errcode, "MPIX_File_iread_at_all");
     MPI_Wait(&request, &status);
     errcode = MPI_File_close(&fh);
     if (errcode != MPI_SUCCESS) handle_error(errcode, "MPI_File_close");

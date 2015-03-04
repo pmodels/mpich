@@ -92,7 +92,7 @@ int main(int argc, char *argv[])
                         MPI_INFO_NULL, &mpi_fh));
     CHECK(MPI_File_set_view(mpi_fh, 0, MPI_DOUBLE, darray, "native",
                             MPI_INFO_NULL));
-    CHECK(MPI_File_iread_all(mpi_fh, ldata, nelem, MPI_DOUBLE, &request));
+    CHECK(MPIX_File_iread_all(mpi_fh, ldata, nelem, MPI_DOUBLE, &request));
     CHECK(MPI_Wait(&request, &status));
     CHECK(MPI_File_close(&mpi_fh));
 

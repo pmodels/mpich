@@ -146,10 +146,10 @@ my %bufpos = (
     "MPI_Win_attach" => [1, -1, -1],
     "MPI_Win_create" => [0, -1, -1],
     "MPI_Win_detach" => [1, -1, -1],
-    "MPI_File_iread_all" => [1, 2, 3],
-    "MPI_File_iread_at_all" => [2, 3, 4],
-    "MPI_File_iwrite_all" => [1, 2, 3],
-    "MPI_File_iwrite_at_all" => [2, 3, 4]
+    "MPIX_File_iread_all" => [1, 2, 3],
+    "MPIX_File_iread_at_all" => [2, 3, 4],
+    "MPIX_File_iwrite_all" => [1, 2, 3],
+    "MPIX_File_iwrite_at_all" => [2, 3, 4]
 );
 
 # Choice buffers in some functions can be passed in MPI_IN_PLACE. We store such

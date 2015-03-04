@@ -42,7 +42,7 @@ int main(int argc, char *argv[])
 
     /* Set the individual pointer to 0, since we want to use a iread_all */
     MPI_File_seek(fh, 0, MPI_SEEK_SET);
-    rc = MPI_File_iread_all(fh, buf, size, MPI_INT, &request);
+    rc = MPIX_File_iread_all(fh, buf, size, MPI_INT, &request);
     if (rc != MPI_SUCCESS) {
         MTestPrintErrorMsg("File_iread_all", rc);
         errs++;

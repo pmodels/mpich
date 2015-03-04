@@ -258,7 +258,7 @@ include 'iooffset.h'
 do k=1, b
    <setContigBuffer/>
    <findOffset/>
-   call mpi_file_iwrite_at_all( fh, offset, buf, n, MPI_INTEGER, request, ierr )
+   call mpix_file_iwrite_at_all( fh, offset, buf, n, MPI_INTEGER, request, ierr )
    call mpi_wait(request, status, ierr)
    <checkErr/>
 enddo
@@ -270,7 +270,7 @@ enddo
 do k=1, b
    <clearContigBuffer/>
    <findOffset/>
-   call mpi_file_iread_at_all( fh, offset, buf, n, MPI_INTEGER, request, ierr )
+   call mpix_file_iread_at_all( fh, offset, buf, n, MPI_INTEGER, request, ierr )
    call mpi_wait(request, status, ierr)
    <checkErr/>
    <checkContigBuffer/>

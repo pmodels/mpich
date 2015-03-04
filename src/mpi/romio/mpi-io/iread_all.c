@@ -9,16 +9,16 @@
 #ifdef HAVE_WEAK_SYMBOLS
 
 #if defined(HAVE_PRAGMA_WEAK)
-#pragma weak MPI_File_iread_all = PMPI_File_iread_all
+#pragma weak MPIX_File_iread_all = PMPIX_File_iread_all
 #elif defined(HAVE_PRAGMA_HP_SEC_DEF)
-#pragma _HP_SECONDARY_DEF PMPI_File_iread_all MPI_File_iread_all
+#pragma _HP_SECONDARY_DEF PMPIX_File_iread_all MPIX_File_iread_all
 #elif defined(HAVE_PRAGMA_CRI_DUP)
-#pragma _CRI duplicate MPI_File_iread_all as PMPI_File_iread_all
+#pragma _CRI duplicate MPIX_File_iread_all as PMPIX_File_iread_all
 /* end of weak pragmas */
 #elif defined(HAVE_WEAK_ATTRIBUTE)
-int MPI_File_iread_all(MPI_File fh, void *buf, int count, MPI_Datatype datatype,
+int MPIX_File_iread_all(MPI_File fh, void *buf, int count, MPI_Datatype datatype,
                        MPI_Request *request)
-    __attribute__((weak,alias("PMPI_File_iread_all")));
+    __attribute__((weak,alias("PMPIX_File_iread_all")));
 #endif
 
 /* Include mapping from MPI->PMPI */
@@ -31,7 +31,7 @@ int MPI_File_iread_all(MPI_File fh, void *buf, int count, MPI_Datatype datatype,
 #endif
 
 /*@
-    MPI_File_iread_all - Nonblocking collective read using individual file pointer
+    MPIX_File_iread_all - Nonblocking collective read using individual file pointer
 
 Input Parameters:
 . fh - file handle (handle)
@@ -44,11 +44,11 @@ Output Parameters:
 
 .N fortran
 @*/
-int MPI_File_iread_all(MPI_File fh, void *buf, int count,
+int MPIX_File_iread_all(MPI_File fh, void *buf, int count,
                        MPI_Datatype datatype, MPI_Request *request)
 {
     int error_code;
-    static char myname[] = "MPI_FILE_IREAD_ALL";
+    static char myname[] = "MPIX_FILE_IREAD_ALL";
 #ifdef MPI_hpux
     int fl_xmpi;
 
@@ -72,7 +72,7 @@ int MPI_File_iread_all(MPI_File fh, void *buf, int count,
     return error_code;
 }
 
-/* Note: MPIOI_File_iread_all also used by MPI_File_iread_at_all */
+/* Note: MPIOI_File_iread_all also used by MPIX_File_iread_at_all */
 /* prevent multiple definitions of this routine */
 #ifdef MPIO_BUILD_PROFILING
 int MPIOI_File_iread_all(MPI_File fh,

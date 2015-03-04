@@ -3,7 +3,7 @@
 !   (C) 2014 by Argonne National Laboratory.
 !   See COPYRIGHT in top-level directory.
 !
-subroutine MPI_File_iread_at_all_f08ts(fh, offset, buf, count, datatype, request, ierror)
+subroutine MPIX_File_iread_at_all_f08ts(fh, offset, buf, count, datatype, request, ierror)
     use, intrinsic :: iso_c_binding, only : c_loc, c_associated
     use, intrinsic :: iso_c_binding, only : c_int, c_ptr
     use :: mpi_f08, only : MPI_File, MPI_Datatype, MPI_Request
@@ -43,4 +43,4 @@ subroutine MPI_File_iread_at_all_f08ts(fh, offset, buf, count, datatype, request
 
     if (present(ierror)) ierror = ierror_c
 
-end subroutine MPI_File_iread_at_all_f08ts
+end subroutine MPIX_File_iread_at_all_f08ts

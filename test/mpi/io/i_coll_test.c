@@ -122,8 +122,8 @@ int main(int argc, char **argv)
     errcode = MPI_File_set_view(fh, 0, MPI_INT, newtype, "native", info);
     if (errcode != MPI_SUCCESS) handle_error(errcode, "MPI_File_set_view");
 
-    errcode = MPI_File_iwrite_all(fh, writebuf, bufcount, MPI_INT, &request);
-    if (errcode != MPI_SUCCESS) handle_error(errcode, "MPI_File_iwrite_all");
+    errcode = MPIX_File_iwrite_all(fh, writebuf, bufcount, MPI_INT, &request);
+    if (errcode != MPI_SUCCESS) handle_error(errcode, "MPIX_File_iwrite_all");
     MPI_Wait(&request, &status);
 
     errcode = MPI_File_close(&fh);
@@ -163,8 +163,8 @@ int main(int argc, char **argv)
 
     errcode = MPI_File_set_view(fh, 0, MPI_INT, newtype, "native", info);
     if (errcode != MPI_SUCCESS) handle_error(errcode, "MPI_File_set_view");
-    errcode = MPI_File_iread_all(fh, readbuf, bufcount, MPI_INT, &request);
-    if (errcode != MPI_SUCCESS) handle_error(errcode, "MPI_File_iread_all");
+    errcode = MPIX_File_iread_all(fh, readbuf, bufcount, MPI_INT, &request);
+    if (errcode != MPI_SUCCESS) handle_error(errcode, "MPIX_File_iread_all");
     MPI_Wait(&request, &status);
     errcode = MPI_File_close(&fh);
     if (errcode != MPI_SUCCESS) handle_error(errcode, "MPI_File_close");
