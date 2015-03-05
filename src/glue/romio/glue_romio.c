@@ -52,20 +52,10 @@ void MPIR_Ext_cs_exit_allfunc(void)
 /* This routine is for a thread to yield control when the thread is waiting for
  * the completion of communication inside a ROMIO routine but the progress
  * engine is blocked by another thread. */
-#ifdef MPICH_IS_THREADED
-extern volatile int MPIDI_CH3I_progress_blocked;
-#endif
 void MPIR_Ext_cs_yield_allfunc_if_progress_blocked(void)
 {
-#ifdef MPICH_IS_THREADED
-    MPIU_THREAD_CHECK_BEGIN;
-    {
-        if (MPIDI_CH3I_progress_blocked == TRUE) {
-            MPIU_THREAD_CS_YIELD(ALLFUNC,);
-        }
-    }
-    MPIU_THREAD_CHECK_END;
-#endif
+    /* TODO: check whether the progress engine is blocked */
+    MPIU_THREAD_CS_YIELD(ALLFUNC,);
 }
 
 /* will consider MPI_DATATYPE_NULL to be an error */
