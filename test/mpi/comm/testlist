@@ -24,10 +24,10 @@ comm_group_half 8 mpiversion=3.0
 comm_group_rand 2 mpiversion=3.0
 comm_group_rand 4 mpiversion=3.0
 comm_group_rand 8 mpiversion=3.0
-comm_idup 2 mpiversion=3.0
-comm_idup 4 mpiversion=3.0
-comm_idup 9 mpiversion=3.0
-comm_idup_mul 2 mpiversion=3.0
+comm_idup 2 mpiversion=3.0 xfail=ticket2243
+comm_idup 4 mpiversion=3.0 xfail=ticket2243
+comm_idup 9 mpiversion=3.0 xfail=ticket2243
+comm_idup_mul 2 mpiversion=3.0 xfail=ticket2243
 comm_idup_overlap 2 mpiversion=3.0 xfail=ticket2238
 dup_with_info 2 mpiversion=3.0
 dup_with_info 4 mpiversion=3.0
