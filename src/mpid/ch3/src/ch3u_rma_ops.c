@@ -139,9 +139,7 @@ int MPIDI_CH3I_Put(const void *origin_addr, int origin_count, MPI_Datatype
         op_ptr->target_rank = target_rank;
 
         /* Remember user request */
-        if (ureq) {
-            op_ptr->ureq = ureq;
-        }
+        op_ptr->ureq = ureq;
 
         /* if source or target datatypes are derived, increment their
          * reference counts */
@@ -336,9 +334,7 @@ int MPIDI_CH3I_Get(void *origin_addr, int origin_count, MPI_Datatype
         op_ptr->target_rank = target_rank;
 
         /* Remember user request */
-        if (ureq) {
-            op_ptr->ureq = ureq;
-        }
+        op_ptr->ureq = ureq;
 
         /* if source or target datatypes are derived, increment their
          * reference counts */
@@ -525,9 +521,7 @@ int MPIDI_CH3I_Accumulate(const void *origin_addr, int origin_count, MPI_Datatyp
         op_ptr->target_rank = target_rank;
 
         /* Remember user request */
-        if (ureq) {
-            op_ptr->ureq = ureq;
-        }
+        op_ptr->ureq = ureq;
 
         /* if source or target datatypes are derived, increment their
          * reference counts */
@@ -760,9 +754,7 @@ int MPIDI_CH3I_Get_accumulate(const void *origin_addr, int origin_count,
             op_ptr->target_rank = target_rank;
 
             /* Remember user request */
-            if (ureq) {
-                op_ptr->ureq = ureq;
-            }
+            op_ptr->ureq = ureq;
 
             if (!MPIR_DATATYPE_IS_PREDEFINED(result_datatype)) {
                 MPID_Datatype_get_ptr(result_datatype, dtp);
@@ -835,9 +827,7 @@ int MPIDI_CH3I_Get_accumulate(const void *origin_addr, int origin_count,
             op_ptr->target_rank = target_rank;
 
             /* Remember user request */
-            if (ureq) {
-                op_ptr->ureq = ureq;
-            }
+            op_ptr->ureq = ureq;
 
             /* if source or target datatypes are derived, increment their
              * reference counts */
