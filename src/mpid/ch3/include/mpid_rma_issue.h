@@ -1321,7 +1321,7 @@ static int issue_fop_op(MPIDI_RMA_Op_t * rma_op,
 }
 
 
-/* issue_rma_op() is called by ch3u_rma_oplist.c, it triggers
+/* issue_rma_op() is called by ch3u_rma_progress.c, it triggers
    proper issuing functions according to packet type. */
 #undef FUNCNAME
 #define FUNCNAME issue_rma_op

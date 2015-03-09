@@ -18,7 +18,7 @@ mpi_core_sources +=                          \
     src/mpid/ch3/src/ch3u_port.c                           \
     src/mpid/ch3/src/ch3u_recvq.c                          \
     src/mpid/ch3/src/ch3u_request.c                        \
-    src/mpid/ch3/src/ch3u_rma_oplist.c                     \
+    src/mpid/ch3/src/ch3u_rma_progress.c                   \
     src/mpid/ch3/src/ch3u_rma_ops.c                        \
     src/mpid/ch3/src/ch3u_rma_reqops.c                     \
     src/mpid/ch3/src/ch3u_rma_sync.c                       \
