@@ -409,11 +409,26 @@ static inline int issue_ops_target(MPID_Win * win_ptr, MPIDI_RMA_Target_t * targ
                                          &(target->pending_op_list_tail), curr_op);
         }
         else {
+            MPI_Datatype target_datatype;
+            int is_derived = FALSE;
+
             /* Sending is not completed immediately. */
 
             MPIDI_CH3I_RMA_Ops_unlink(&(target->pending_op_list),
                                       &(target->pending_op_list_tail), curr_op);
-            if (curr_op->is_dt) {
+
+            MPIDI_CH3_PKT_RMA_GET_TARGET_DATATYPE(curr_op->pkt, target_datatype, mpi_errno);
+
+            if ((target_datatype != MPI_DATATYPE_NULL &&
+                 !MPIR_DATATYPE_IS_PREDEFINED(target_datatype)) ||
+                (curr_op->origin_datatype != MPI_DATATYPE_NULL &&
+                 !MPIR_DATATYPE_IS_PREDEFINED(curr_op->origin_datatype)) ||
+                (curr_op->result_datatype != MPI_DATATYPE_NULL &&
+                 !MPIR_DATATYPE_IS_PREDEFINED(curr_op->result_datatype))) {
+                is_derived = TRUE;
+            }
+
+            if (is_derived) {
                 MPIDI_CH3I_RMA_Ops_append(&(target->dt_op_list),
                                           &(target->dt_op_list_tail), curr_op);
             }

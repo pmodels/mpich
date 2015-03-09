@@ -70,7 +70,6 @@ typedef struct MPIDI_RMA_Op {
 
     MPIDI_CH3_Pkt_t pkt;
     MPIDI_RMA_Pool_type_t pool_type;
-    int is_dt;
     int piggyback_lock_candidate;
 
     int issued_stream_count;    /* when >= 0, it specifies number of stream units that have been issued;

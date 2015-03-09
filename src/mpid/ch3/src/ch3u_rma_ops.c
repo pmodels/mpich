@@ -145,12 +145,10 @@ int MPIDI_CH3I_Put(const void *origin_addr, int origin_count, MPI_Datatype
         if (!MPIR_DATATYPE_IS_PREDEFINED(origin_datatype)) {
             MPID_Datatype_get_ptr(origin_datatype, dtp);
             MPID_Datatype_add_ref(dtp);
-            op_ptr->is_dt = 1;
         }
         if (!MPIR_DATATYPE_IS_PREDEFINED(target_datatype)) {
             MPID_Datatype_get_ptr(target_datatype, dtp);
             MPID_Datatype_add_ref(dtp);
-            op_ptr->is_dt = 1;
         }
 
         MPID_Datatype_is_contig(origin_datatype, &is_origin_contig);
@@ -160,13 +158,15 @@ int MPIDI_CH3I_Put(const void *origin_addr, int origin_count, MPI_Datatype
         MPIU_Assign_trunc(len, origin_count * origin_type_size, size_t);
 
         /* Judge if we can use IMMED data packet */
-        if (!op_ptr->is_dt && is_origin_contig && is_target_contig) {
+        if (MPIR_DATATYPE_IS_PREDEFINED(origin_datatype) &&
+            MPIR_DATATYPE_IS_PREDEFINED(target_datatype) && is_origin_contig && is_target_contig) {
             if (len <= MPIDI_RMA_IMMED_BYTES)
                 use_immed_pkt = TRUE;
         }
 
         /* Judge if this operation is an piggyback candidate */
-        if (!op_ptr->is_dt) {
+        if (MPIR_DATATYPE_IS_PREDEFINED(origin_datatype) &&
+            MPIR_DATATYPE_IS_PREDEFINED(target_datatype)) {
             /* FIXME: currently we only piggyback LOCK flag with op using predefined datatypes
              * for both origin and target data. We should extend this optimization to derived
              * datatypes as well. */
@@ -336,12 +336,10 @@ int MPIDI_CH3I_Get(void *origin_addr, int origin_count, MPI_Datatype
         if (!MPIR_DATATYPE_IS_PREDEFINED(origin_datatype)) {
             MPID_Datatype_get_ptr(origin_datatype, dtp);
             MPID_Datatype_add_ref(dtp);
-            op_ptr->is_dt = 1;
         }
         if (!MPIR_DATATYPE_IS_PREDEFINED(target_datatype)) {
             MPID_Datatype_get_ptr(target_datatype, dtp);
             MPID_Datatype_add_ref(dtp);
-            op_ptr->is_dt = 1;
         }
 
         MPID_Datatype_is_contig(origin_datatype, &is_origin_contig);
@@ -351,13 +349,15 @@ int MPIDI_CH3I_Get(void *origin_addr, int origin_count, MPI_Datatype
         MPIU_Assign_trunc(len, target_count * target_type_size, size_t);
 
         /* Judge if we can use IMMED data response packet */
-        if (!op_ptr->is_dt && is_origin_contig && is_target_contig) {
+        if (MPIR_DATATYPE_IS_PREDEFINED(origin_datatype) &&
+            MPIR_DATATYPE_IS_PREDEFINED(target_datatype) && is_origin_contig && is_target_contig) {
             if (len <= MPIDI_RMA_IMMED_BYTES)
                 use_immed_resp_pkt = TRUE;
         }
 
         /* Judge if this operation is an piggyback candidate. */
-        if (!op_ptr->is_dt) {
+        if (MPIR_DATATYPE_IS_PREDEFINED(origin_datatype) &&
+            MPIR_DATATYPE_IS_PREDEFINED(target_datatype)) {
             /* FIXME: currently we only piggyback LOCK flag with op using predefined datatypes
              * for both origin and target data. We should extend this optimization to derived
              * datatypes as well. */
@@ -518,11 +518,9 @@ int MPIDI_CH3I_Accumulate(const void *origin_addr, int origin_count, MPI_Datatyp
          * reference counts */
         if (!MPIR_DATATYPE_IS_PREDEFINED(origin_datatype)) {
             MPID_Datatype_get_ptr(origin_datatype, origin_dtp);
-            op_ptr->is_dt = 1;
         }
         if (!MPIR_DATATYPE_IS_PREDEFINED(target_datatype)) {
             MPID_Datatype_get_ptr(target_datatype, target_dtp);
-            op_ptr->is_dt = 1;
         }
 
         MPID_Datatype_get_size_macro(origin_datatype, origin_type_size);
@@ -562,13 +560,15 @@ int MPIDI_CH3I_Accumulate(const void *origin_addr, int origin_count, MPI_Datatyp
         MPID_Datatype_is_contig(target_datatype, &is_target_contig);
 
         /* Judge if we can use IMMED data packet */
-        if (!op_ptr->is_dt && is_origin_contig && is_target_contig) {
+        if (MPIR_DATATYPE_IS_PREDEFINED(origin_datatype) &&
+            MPIR_DATATYPE_IS_PREDEFINED(target_datatype) && is_origin_contig && is_target_contig) {
             if (len <= MPIDI_RMA_IMMED_BYTES)
                 use_immed_pkt = TRUE;
         }
 
         /* Judge if this operation is an piggyback candidate. */
-        if (!op_ptr->is_dt) {
+        if (MPIR_DATATYPE_IS_PREDEFINED(origin_datatype) &&
+            MPIR_DATATYPE_IS_PREDEFINED(target_datatype)) {
             /* FIXME: currently we only piggyback LOCK flag with op using predefined datatypes
              * for both origin and target data. We should extend this optimization to derived
              * datatypes as well. */
@@ -746,12 +746,10 @@ int MPIDI_CH3I_Get_accumulate(const void *origin_addr, int origin_count,
             if (!MPIR_DATATYPE_IS_PREDEFINED(result_datatype)) {
                 MPID_Datatype_get_ptr(result_datatype, dtp);
                 MPID_Datatype_add_ref(dtp);
-                op_ptr->is_dt = 1;
             }
             if (!MPIR_DATATYPE_IS_PREDEFINED(target_datatype)) {
                 MPID_Datatype_get_ptr(target_datatype, dtp);
                 MPID_Datatype_add_ref(dtp);
-                op_ptr->is_dt = 1;
             }
 
             MPID_Datatype_get_size_macro(target_datatype, target_type_size);
@@ -761,13 +759,16 @@ int MPIDI_CH3I_Get_accumulate(const void *origin_addr, int origin_count,
             MPID_Datatype_is_contig(target_datatype, &is_target_contig);
 
             /* Judge if we can use IMMED data response packet */
-            if (!op_ptr->is_dt && is_result_contig && is_target_contig) {
+            if (MPIR_DATATYPE_IS_PREDEFINED(result_datatype) &&
+                MPIR_DATATYPE_IS_PREDEFINED(target_datatype) &&
+                is_result_contig && is_target_contig) {
                 if (len <= MPIDI_RMA_IMMED_BYTES)
                     use_immed_resp_pkt = TRUE;
             }
 
             /* Judge if this operation is a piggyback candidate */
-            if (!op_ptr->is_dt) {
+            if (MPIR_DATATYPE_IS_PREDEFINED(result_datatype) &&
+                MPIR_DATATYPE_IS_PREDEFINED(target_datatype)) {
                 /* FIXME: currently we only piggyback LOCK flag with op using predefined datatypes
                  * for both origin and target data. We should extend this optimization to derived
                  * datatypes as well. */
@@ -817,15 +818,12 @@ int MPIDI_CH3I_Get_accumulate(const void *origin_addr, int origin_count,
              * reference counts */
             if (!MPIR_DATATYPE_IS_PREDEFINED(origin_datatype)) {
                 MPID_Datatype_get_ptr(origin_datatype, origin_dtp);
-                op_ptr->is_dt = 1;
             }
             if (!MPIR_DATATYPE_IS_PREDEFINED(result_datatype)) {
                 MPID_Datatype_get_ptr(result_datatype, target_dtp);
-                op_ptr->is_dt = 1;
             }
             if (!MPIR_DATATYPE_IS_PREDEFINED(target_datatype)) {
                 MPID_Datatype_get_ptr(target_datatype, result_dtp);
-                op_ptr->is_dt = 1;
             }
 
             MPID_Datatype_get_size_macro(origin_datatype, origin_type_size);
@@ -869,13 +867,18 @@ int MPIDI_CH3I_Get_accumulate(const void *origin_addr, int origin_count,
             MPID_Datatype_is_contig(result_datatype, &is_result_contig);
 
             /* Judge if we can use IMMED data packet */
-            if (!op_ptr->is_dt && is_origin_contig && is_target_contig && is_result_contig) {
+            if (MPIR_DATATYPE_IS_PREDEFINED(origin_datatype) &&
+                MPIR_DATATYPE_IS_PREDEFINED(result_datatype) &&
+                MPIR_DATATYPE_IS_PREDEFINED(target_datatype) &&
+                is_origin_contig && is_target_contig && is_result_contig) {
                 if (orig_len <= MPIDI_RMA_IMMED_BYTES)
                     use_immed_pkt = TRUE;
             }
 
             /* Judge if this operation is a piggyback candidate */
-            if (!op_ptr->is_dt) {
+            if (MPIR_DATATYPE_IS_PREDEFINED(origin_datatype) &&
+                MPIR_DATATYPE_IS_PREDEFINED(result_datatype) &&
+                MPIR_DATATYPE_IS_PREDEFINED(target_datatype)) {
                 /* FIXME: currently we only piggyback LOCK flag with op using predefined datatypes
                  * for origin, target and result data. We should extend this optimization to derived
                  * datatypes as well. */

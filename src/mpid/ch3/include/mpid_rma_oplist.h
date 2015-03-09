@@ -50,9 +50,11 @@ static inline MPIDI_RMA_Op_t *MPIDI_CH3I_Win_op_alloc(MPID_Win * win_ptr)
     e->reqs = NULL;
     e->reqs_size = 0;
     e->ureq = NULL;
-    e->is_dt = 0;
     e->piggyback_lock_candidate = 0;
     e->issued_stream_count = 0;
+
+    e->origin_datatype = MPI_DATATYPE_NULL;
+    e->result_datatype = MPI_DATATYPE_NULL;
 
     return e;
 }

@@ -640,9 +640,24 @@ static inline int adjust_op_piggybacked_with_lock(MPID_Win * win_ptr,
                                              &(target->pending_op_list_tail), op);
             }
             else {
+                MPI_Datatype target_datatype;
+                int is_derived = FALSE;
+
                 MPIDI_CH3I_RMA_Ops_unlink(&(target->pending_op_list),
                                           &(target->pending_op_list_tail), op);
-                if (op->is_dt) {
+
+                MPIDI_CH3_PKT_RMA_GET_TARGET_DATATYPE(op->pkt, target_datatype, mpi_errno);
+
+                if ((target_datatype != MPI_DATATYPE_NULL &&
+                     !MPIR_DATATYPE_IS_PREDEFINED(target_datatype)) ||
+                    (op->origin_datatype != MPI_DATATYPE_NULL &&
+                     !MPIR_DATATYPE_IS_PREDEFINED(op->origin_datatype)) ||
+                    (op->result_datatype != MPI_DATATYPE_NULL &&
+                     !MPIR_DATATYPE_IS_PREDEFINED(op->result_datatype))) {
+                    is_derived = TRUE;
+                }
+
+                if (is_derived) {
                     MPIDI_CH3I_RMA_Ops_append(&(target->dt_op_list),
                                               &(target->dt_op_list_tail), op);
                 }
