@@ -1,4 +1,6 @@
 noalias 2
+noalias2 4 mpiversion=2.2
+noalias3 4 mpiversion=3.0
 rerr 2
 reduce_local 1
 # MPICH currently fails the bcastlength test because it needs to do more

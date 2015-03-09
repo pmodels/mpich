@@ -64,11 +64,6 @@ int main( int argc, char **argv )
 	    }
 	}
     }
-
-    MPI_Comm_set_errhandler(MPI_COMM_WORLD, MPI_ERRORS_RETURN);
-    if (rank == 0 && MPI_SUCCESS ==
-            MPI_Scatter(vecin, 1, MPI_DOUBLE, vecin, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD))
-        err++;
     
     free(vecin);
     free(vecout);

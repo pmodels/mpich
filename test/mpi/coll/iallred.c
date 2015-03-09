@@ -15,7 +15,6 @@ int main(int argc, char *argv[])
     MPI_Request request;
     int size, rank;
     int one = 1, two = 2, isum, sum;
-    int errs = 0;
 
     MPI_Init(&argc,&argv);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
@@ -27,12 +26,7 @@ int main(int argc, char *argv[])
 
     assert(isum == 2);
     assert(sum == 4);
-
-    MPI_Comm_set_errhandler(MPI_COMM_WORLD, MPI_ERRORS_RETURN);
-    if (MPI_SUCCESS == MPI_Iallreduce(&one, &one, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD, &request))
-        errs++;
-
-    if (rank == 0 && errs == 0)
+    if (rank == 0)
         printf(" No errors\n");
 
     MPI_Finalize();

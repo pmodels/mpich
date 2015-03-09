@@ -212,6 +212,8 @@
 /errhan/errring
 /errors/testlist
 /errors/coll/noalias
+/errors/coll/noalias2
+/errors/coll/noalias3
 /errors/coll/rerr
 /errors/coll/bcastlength
 /errors/cxx/testlist

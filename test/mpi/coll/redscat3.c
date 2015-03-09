@@ -96,10 +96,6 @@ int main( int argc, char **argv )
             }
         }
     }
-
-    MPI_Comm_set_errhandler(MPI_COMM_WORLD, MPI_ERRORS_RETURN);
-    if (MPI_SUCCESS == MPI_Reduce_scatter(sendbuf, sendbuf, recvcounts, MPI_INT, MPI_SUM, comm))
-        err++;
 #endif
 
     free(sendbuf);
