@@ -131,7 +131,7 @@ at_complete 2
 atomic_rmw_fop 3
 atomic_rmw_cas 3
 atomic_rmw_gacc 3
-@mpix@ aint 2 strict=false
+@mpix@aint 2 strict=false
 acc-pairtype 2
 
 ## This test is not strictly correct.  This was meant to test out the
