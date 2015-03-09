@@ -118,7 +118,7 @@ int MPIDI_CH3I_Put(const void *origin_addr, int origin_count, MPI_Datatype
         MPIDI_RMA_Op_t *op_ptr = NULL;
         MPIDI_CH3_Pkt_put_t *put_pkt = NULL;
         MPI_Aint origin_type_size;
-        size_t immed_len, len;
+        size_t len;
         int use_immed_pkt = FALSE;
         int is_origin_contig, is_target_contig;
 
@@ -161,10 +161,7 @@ int MPIDI_CH3I_Put(const void *origin_addr, int origin_count, MPI_Datatype
 
         /* Judge if we can use IMMED data packet */
         if (!op_ptr->is_dt && is_origin_contig && is_target_contig) {
-            MPIU_Assign_trunc(immed_len,
-                              (MPIDI_RMA_IMMED_BYTES / origin_type_size) * origin_type_size,
-                              size_t);
-            if (len <= immed_len)
+            if (len <= MPIDI_RMA_IMMED_BYTES)
                 use_immed_pkt = TRUE;
         }
 
@@ -312,7 +309,7 @@ int MPIDI_CH3I_Get(void *origin_addr, int origin_count, MPI_Datatype
         MPIDI_RMA_Op_t *op_ptr = NULL;
         MPIDI_CH3_Pkt_get_t *get_pkt = NULL;
         MPI_Aint target_type_size;
-        size_t immed_len, len;
+        size_t len;
         int use_immed_resp_pkt = FALSE;
         int is_origin_contig, is_target_contig;
 
@@ -355,10 +352,7 @@ int MPIDI_CH3I_Get(void *origin_addr, int origin_count, MPI_Datatype
 
         /* Judge if we can use IMMED data response packet */
         if (!op_ptr->is_dt && is_origin_contig && is_target_contig) {
-            MPIU_Assign_trunc(immed_len,
-                              (MPIDI_RMA_IMMED_BYTES / target_type_size) * target_type_size,
-                              size_t);
-            if (len <= immed_len)
+            if (len <= MPIDI_RMA_IMMED_BYTES)
                 use_immed_resp_pkt = TRUE;
         }
 
@@ -495,7 +489,7 @@ int MPIDI_CH3I_Accumulate(const void *origin_addr, int origin_count, MPI_Datatyp
         MPIDI_RMA_Op_t *op_ptr = NULL;
         MPIDI_CH3_Pkt_accum_t *accum_pkt = NULL;
         MPI_Aint origin_type_size;
-        size_t immed_len, len;
+        size_t len;
         int use_immed_pkt = FALSE;
         int is_origin_contig, is_target_contig;
         MPI_Aint stream_elem_count, stream_unit_count;
@@ -569,10 +563,7 @@ int MPIDI_CH3I_Accumulate(const void *origin_addr, int origin_count, MPI_Datatyp
 
         /* Judge if we can use IMMED data packet */
         if (!op_ptr->is_dt && is_origin_contig && is_target_contig) {
-            MPIU_Assign_trunc(immed_len,
-                              (MPIDI_RMA_IMMED_BYTES / origin_type_size) * origin_type_size,
-                              size_t);
-            if (len <= immed_len)
+            if (len <= MPIDI_RMA_IMMED_BYTES)
                 use_immed_pkt = TRUE;
         }
 
@@ -738,7 +729,7 @@ int MPIDI_CH3I_Get_accumulate(const void *origin_addr, int origin_count,
             /* Convert GAcc to a Get */
             MPIDI_CH3_Pkt_get_t *get_pkt;
             MPI_Aint target_type_size;
-            size_t len, immed_len;
+            size_t len;
             int use_immed_resp_pkt = FALSE;
             int is_result_contig, is_target_contig;
 
@@ -771,10 +762,7 @@ int MPIDI_CH3I_Get_accumulate(const void *origin_addr, int origin_count,
 
             /* Judge if we can use IMMED data response packet */
             if (!op_ptr->is_dt && is_result_contig && is_target_contig) {
-                MPIU_Assign_trunc(immed_len,
-                                  (MPIDI_RMA_IMMED_BYTES / target_type_size) * target_type_size,
-                                  size_t);
-                if (len <= immed_len)
+                if (len <= MPIDI_RMA_IMMED_BYTES)
                     use_immed_resp_pkt = TRUE;
             }
 
@@ -804,7 +792,7 @@ int MPIDI_CH3I_Get_accumulate(const void *origin_addr, int origin_count,
         else {
             MPIDI_CH3_Pkt_get_accum_t *get_accum_pkt;
             MPI_Aint origin_type_size;
-            size_t immed_len, orig_len;
+            size_t orig_len;
             int use_immed_pkt = FALSE;
             int is_origin_contig, is_target_contig, is_result_contig;
             MPI_Aint stream_elem_count, stream_unit_count;
@@ -882,10 +870,7 @@ int MPIDI_CH3I_Get_accumulate(const void *origin_addr, int origin_count,
 
             /* Judge if we can use IMMED data packet */
             if (!op_ptr->is_dt && is_origin_contig && is_target_contig && is_result_contig) {
-                MPIU_Assign_trunc(immed_len,
-                                  (MPIDI_RMA_IMMED_BYTES / origin_type_size) * origin_type_size,
-                                  size_t);
-                if (orig_len <= immed_len)
+                if (orig_len <= MPIDI_RMA_IMMED_BYTES)
                     use_immed_pkt = TRUE;
             }
 
@@ -1293,7 +1278,6 @@ int MPIDI_Fetch_and_op(const void *origin_addr, void *result_addr,
             /* Convert FOP to a Get */
             MPIDI_CH3_Pkt_get_t *get_pkt;
             MPI_Aint target_type_size;
-            size_t immed_len;
             int use_immed_resp_pkt = FALSE;
             int is_contig;
 
@@ -1314,10 +1298,7 @@ int MPIDI_Fetch_and_op(const void *origin_addr, void *result_addr,
 
             if (is_contig) {
                 /* Judege if we can use IMMED data for response packet */
-                MPIU_Assign_trunc(immed_len,
-                                  (MPIDI_RMA_IMMED_BYTES / target_type_size) * target_type_size,
-                                  size_t);
-                if (target_type_size <= immed_len)
+                if (target_type_size <= MPIDI_RMA_IMMED_BYTES)
                     use_immed_resp_pkt = TRUE;
             }
 
@@ -1336,7 +1317,6 @@ int MPIDI_Fetch_and_op(const void *origin_addr, void *result_addr,
         else {
             MPIDI_CH3_Pkt_fop_t *fop_pkt;
             MPI_Aint type_size;
-            size_t immed_len;
             int use_immed_pkt = FALSE;
             int is_contig;
 
@@ -1359,9 +1339,7 @@ int MPIDI_Fetch_and_op(const void *origin_addr, void *result_addr,
 
             if (is_contig) {
                 /* Judge if we can use IMMED data packet */
-                MPIU_Assign_trunc(immed_len,
-                                  (MPIDI_RMA_IMMED_BYTES / type_size) * type_size, size_t);
-                if (type_size <= immed_len) {
+                if (type_size <= MPIDI_RMA_IMMED_BYTES) {
                     use_immed_pkt = TRUE;
                 }
             }
