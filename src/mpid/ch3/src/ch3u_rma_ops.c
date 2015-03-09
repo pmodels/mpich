@@ -111,8 +111,7 @@ int MPIDI_CH3I_Put(const void *origin_addr, int origin_count, MPI_Datatype
 
         if (ureq) {
             /* Complete user request and release the ch3 ref */
-            MPID_Request_set_completed(ureq);
-            MPID_Request_release(ureq);
+            MPIDI_CH3U_Request_complete(ureq);
         }
     }
     else {
@@ -306,8 +305,7 @@ int MPIDI_CH3I_Get(void *origin_addr, int origin_count, MPI_Datatype
 
         if (ureq) {
             /* Complete user request and release the ch3 ref */
-            MPID_Request_set_completed(ureq);
-            MPID_Request_release(ureq);
+            MPIDI_CH3U_Request_complete(ureq);
         }
     }
     else {
@@ -490,8 +488,7 @@ int MPIDI_CH3I_Accumulate(const void *origin_addr, int origin_count, MPI_Datatyp
 
         if (ureq) {
             /* Complete user request and release the ch3 ref */
-            MPID_Request_set_completed(ureq);
-            MPID_Request_release(ureq);
+            MPIDI_CH3U_Request_complete(ureq);
         }
     }
     else {
@@ -722,8 +719,7 @@ int MPIDI_CH3I_Get_accumulate(const void *origin_addr, int origin_count,
 
         if (ureq) {
             /* Complete user request and release the ch3 ref */
-            MPID_Request_set_completed(ureq);
-            MPID_Request_release(ureq);
+            MPIDI_CH3U_Request_complete(ureq);
         }
     }
     else {
