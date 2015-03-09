@@ -715,7 +715,6 @@ int MPIDI_CH3I_RMA_Cleanup_target_aggressive(MPID_Win * win_ptr, MPIDI_RMA_Targe
         curr_target = win_ptr->slots[i].target_list;
         if (curr_target->sync.sync_flag < MPIDI_RMA_SYNC_FLUSH) {
             curr_target->sync.sync_flag = MPIDI_RMA_SYNC_FLUSH;
-            curr_target->sync.have_remote_incomplete_ops = 0;
             curr_target->sync.outstanding_acks++;
         }
 

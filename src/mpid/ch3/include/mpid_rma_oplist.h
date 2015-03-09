@@ -126,9 +126,7 @@ static inline MPIDI_RMA_Target_t *MPIDI_CH3I_Win_target_alloc(MPID_Win * win_ptr
 
     e->sync.sync_flag = MPIDI_RMA_SYNC_NONE;
     e->sync.outstanding_acks = 0;
-    e->sync.have_remote_incomplete_ops = 1;     /* When I create a new target, there must be
-                                                 * incomplete ops until a FLUSH/UNLOCK packet
-                                                 * is sent. */
+
     return e;
 }
 
@@ -459,8 +457,7 @@ static inline int MPIDI_CH3I_RMA_Cleanup_ops_target(MPID_Win * win_ptr, MPIDI_RM
         /* for the conditions that need to be satisfied before we free the
          * target, see the MPIDI_RMA_Target definition in
          * mpid_rma_types.h */
-        if (target->sync.sync_flag == MPIDI_RMA_SYNC_NONE &&
-            target->sync.outstanding_acks == 0 && target->sync.have_remote_incomplete_ops == 0) {
+        if (target->sync.sync_flag == MPIDI_RMA_SYNC_NONE && target->sync.outstanding_acks == 0) {
             (*remote_completed) = 1;
         }
     }

@@ -100,7 +100,6 @@ typedef struct MPIDI_RMA_Target {
      * following conditions hold true:
      *   - No operations are queued up (op_list == NULL)
      *   - There are no outstanding acks (outstanding_acks == 0)
-     *   - There are no incomplete ops (have_remote_incomplete_ops == 0)
      *   - There are no sync messages to be sent (sync_flag == NONE)
      */
     struct {
@@ -110,12 +109,6 @@ typedef struct MPIDI_RMA_Target {
 
         /* packets sent out that we are expecting an ack for */
         int outstanding_acks;
-
-        /* if we sent out any operations, but have not waited for
-         * their remote completion, this flag is set.  When the next
-         * FLUSH or UNLOCK sync flag is set, we will clear this
-         * variable. */
-        int have_remote_incomplete_ops; /* have ops that have not completed remotely */
     } sync;
 
     MPIDI_RMA_Pool_type_t pool_type;

@@ -374,7 +374,6 @@ int MPIDI_Win_fence(int assert, MPID_Win * win_ptr)
             /* set sync_flag in sync struct */
             if (curr_target->sync.sync_flag < MPIDI_RMA_SYNC_FLUSH) {
                 curr_target->sync.sync_flag = MPIDI_RMA_SYNC_FLUSH;
-                curr_target->sync.have_remote_incomplete_ops = 0;
                 curr_target->sync.outstanding_acks++;
             }
             curr_target = curr_target->next;
@@ -754,7 +753,6 @@ int MPIDI_Win_complete(MPID_Win * win_ptr)
             /* set sync_flag in sync struct */
             if (curr_target->sync.sync_flag < MPIDI_RMA_SYNC_FLUSH) {
                 curr_target->sync.sync_flag = MPIDI_RMA_SYNC_FLUSH;
-                curr_target->sync.have_remote_incomplete_ops = 0;
                 curr_target->sync.outstanding_acks++;
             }
             curr_target->win_complete_flag = 1;
@@ -1090,7 +1088,6 @@ int MPIDI_Win_unlock(int dest, MPID_Win * win_ptr)
         sync_flag = MPIDI_RMA_SYNC_UNLOCK;
     if (target->sync.sync_flag < sync_flag) {
         target->sync.sync_flag = sync_flag;
-        target->sync.have_remote_incomplete_ops = 0;
         target->sync.outstanding_acks++;
     }
 
@@ -1211,7 +1208,6 @@ int MPIDI_Win_flush(int dest, MPID_Win * win_ptr)
     /* Set sync_flag in sync struct. */
     if (target->sync.sync_flag < MPIDI_RMA_SYNC_FLUSH) {
         target->sync.sync_flag = MPIDI_RMA_SYNC_FLUSH;
-        target->sync.have_remote_incomplete_ops = 0;
         target->sync.outstanding_acks++;
     }
 
@@ -1318,7 +1314,6 @@ int MPIDI_Win_flush_local(int dest, MPID_Win * win_ptr)
     if (target->disable_flush_local) {
         if (target->sync.sync_flag < MPIDI_RMA_SYNC_FLUSH) {
             target->sync.sync_flag = MPIDI_RMA_SYNC_FLUSH;
-            target->sync.have_remote_incomplete_ops = 0;
             target->sync.outstanding_acks++;
         }
     }
@@ -1531,7 +1526,6 @@ int MPIDI_Win_unlock_all(MPID_Win * win_ptr)
             while (curr_target != NULL) {
                 if (curr_target->sync.sync_flag < sync_flag) {
                     curr_target->sync.sync_flag = sync_flag;
-                    curr_target->sync.have_remote_incomplete_ops = 0;
                     curr_target->sync.outstanding_acks++;
                 }
                 curr_target = curr_target->next;
@@ -1551,7 +1545,6 @@ int MPIDI_Win_unlock_all(MPID_Win * win_ptr)
             if (curr_target != NULL) {
                 if (curr_target->sync.sync_flag < sync_flag) {
                     curr_target->sync.sync_flag = sync_flag;
-                    curr_target->sync.have_remote_incomplete_ops = 0;
                     curr_target->sync.outstanding_acks++;
                 }
             }
@@ -1673,7 +1666,6 @@ int MPIDI_Win_flush_all(MPID_Win * win_ptr)
         while (curr_target != NULL) {
             if (curr_target->sync.sync_flag < MPIDI_RMA_SYNC_FLUSH) {
                 curr_target->sync.sync_flag = MPIDI_RMA_SYNC_FLUSH;
-                curr_target->sync.have_remote_incomplete_ops = 0;
                 curr_target->sync.outstanding_acks++;
             }
 
@@ -1769,7 +1761,6 @@ int MPIDI_Win_flush_local_all(MPID_Win * win_ptr)
             if (curr_target->disable_flush_local) {
                 if (curr_target->sync.sync_flag < MPIDI_RMA_SYNC_FLUSH) {
                     curr_target->sync.sync_flag = MPIDI_RMA_SYNC_FLUSH;
-                    curr_target->sync.have_remote_incomplete_ops = 0;
                     curr_target->sync.outstanding_acks++;
                 }
                 disable_flush_local_cnt++;
