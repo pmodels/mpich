@@ -222,7 +222,7 @@ int MPIDO_Scatterv(const void *sendbuf,
     return -1;
   }
 #endif
-  int tmp, pamidt = 1;
+  int tmp, i, pamidt = 1;
   int contig ATTRIBUTE((unused));
   int ssize ATTRIBUTE((unused));
   int rsize ATTRIBUTE((unused));
@@ -231,6 +231,7 @@ int MPIDO_Scatterv(const void *sendbuf,
   char *sbuf, *rbuf;
   pami_type_t stype, rtype;
   const int rank = comm_ptr->rank;
+  const int size = comm_ptr->local_size;
 #if ASSERT_LEVEL==0
    /* We can't afford the tracing in ndebug/performance libraries */
     const unsigned verbose = 0;
@@ -245,6 +246,58 @@ int MPIDO_Scatterv(const void *sendbuf,
     if(unlikely(verbose))
       fprintf(stderr,"Using MPICH scatterv algorithm\n");
     MPIDI_Update_last_algorithm(comm_ptr, "SCATTERV_MPICH");
+#if CUDA_AWARE_SUPPORT
+    if(MPIDI_Process.cuda_aware_support_on)
+    {
+       MPI_Aint sdt_extent,rdt_extent;
+       MPID_Datatype_get_extent_macro(sendtype, sdt_extent);
+       MPID_Datatype_get_extent_macro(recvtype, rdt_extent);
+       char *scbuf = NULL;
+       char *rcbuf = NULL;
+       int is_send_dev_buf = (rank == root) ? MPIDI_cuda_is_device_buf(sendbuf) : 0;
+       int is_recv_dev_buf = MPIDI_cuda_is_device_buf(recvbuf);
+       if(is_send_dev_buf)
+       {
+         //Since displs can be non-continous, we need to calculate max buffer size 
+         int highest_displs = displs[size - 1];
+         int highest_sendcount = sendcounts[size - 1];
+         size_t stotal_buf;
+         for(i = 0; i < size; i++)
+         {
+           if(displs[i]+sendcounts[i] > highest_displs+highest_sendcount)
+           {
+             highest_displs = displs[i];
+             highest_sendcount = sendcounts[i];
+           }
+         }
+         stotal_buf = (highest_displs+highest_sendcount)*sdt_extent;
+         scbuf = MPIU_Malloc(stotal_buf);
+         cudaError_t cudaerr = cudaMemcpy(scbuf, sendbuf, stotal_buf, cudaMemcpyDeviceToHost);
+         if (cudaSuccess != cudaerr)
+           fprintf(stderr, "cudaMemcpy failed: %s\n", cudaGetErrorString(cudaerr));
+       }
+       else
+         scbuf = sendbuf;
+       if(is_recv_dev_buf)
+       {
+         rcbuf = MPIU_Malloc(recvcount * rdt_extent);
+         memset(rcbuf, 0, recvcount * rdt_extent);
+       }
+       else
+         rcbuf = recvbuf;
+       int cuda_res =  MPIR_Scatterv(scbuf, sendcounts, displs, sendtype, rcbuf, recvcount, recvtype, root, comm_ptr, mpierrno);
+       if(is_send_dev_buf)MPIU_Free(scbuf);
+       if(is_recv_dev_buf)
+         {
+           cudaError_t cudaerr = cudaMemcpy(recvbuf, rcbuf, recvcount * rdt_extent, cudaMemcpyHostToDevice);
+           if (cudaSuccess != cudaerr)
+             fprintf(stderr, "cudaMemcpy failed: %s\n", cudaGetErrorString(cudaerr));
+           MPIU_Free(rcbuf);
+         }
+       return cuda_res;
+    }
+    else
+#endif
     return MPIR_Scatterv(sendbuf, sendcounts, displs, sendtype,
                          recvbuf, recvcount, recvtype,
                          root, comm_ptr, mpierrno);

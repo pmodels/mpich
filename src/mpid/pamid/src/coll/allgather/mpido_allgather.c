@@ -356,6 +356,45 @@ MPIDO_Allgather(const void *sendbuf,
        fprintf(stderr,"Using MPICH allgather algorithm\n");
       TRACE_ERR("No options set/available; using MPICH for allgather\n");
       MPIDI_Update_last_algorithm(comm_ptr, "ALLGATHER_MPICH");
+#if CUDA_AWARE_SUPPORT
+    if(MPIDI_Process.cuda_aware_support_on)
+    {
+       MPI_Aint sdt_extent,rdt_extent;
+       MPID_Datatype_get_extent_macro(sendtype, sdt_extent);
+       MPID_Datatype_get_extent_macro(recvtype, rdt_extent);
+       char *scbuf = NULL;
+       char *rcbuf = NULL;
+       int is_send_dev_buf = MPIDI_cuda_is_device_buf(sendbuf);
+       int is_recv_dev_buf = MPIDI_cuda_is_device_buf(recvbuf);
+       if(is_send_dev_buf)
+       {
+         scbuf = MPIU_Malloc(sdt_extent * sendcount);
+         cudaError_t cudaerr = cudaMemcpy(scbuf, sendbuf, sdt_extent * sendcount, cudaMemcpyDeviceToHost);
+         if (cudaSuccess != cudaerr)
+           fprintf(stderr, "cudaMemcpy failed: %s\n", cudaGetErrorString(cudaerr));
+       }
+       else
+         scbuf = sendbuf;
+       if(is_recv_dev_buf)
+       {
+         rcbuf = MPIU_Malloc(rdt_extent * recvcount);
+         memset(rcbuf, 0, rdt_extent * recvcount);
+       }
+       else
+         rcbuf = recvbuf;
+       int cuda_res =  MPIR_Allgather(scbuf, sendcount, sendtype, rcbuf, recvcount, recvtype, comm_ptr, mpierrno);
+       if(is_send_dev_buf)MPIU_Free(scbuf);
+       if(is_recv_dev_buf)
+         {
+           cudaError_t cudaerr = cudaMemcpy(recvbuf, rcbuf, rdt_extent * recvcount, cudaMemcpyHostToDevice);
+           if (cudaSuccess != cudaerr)
+             fprintf(stderr, "cudaMemcpy failed: %s\n", cudaGetErrorString(cudaerr));
+           MPIU_Free(rcbuf);
+         }
+       return cuda_res;
+    }
+    else
+#endif
       return MPIR_Allgather(sendbuf, sendcount, sendtype,
                             recvbuf, recvcount, recvtype,
                             comm_ptr, mpierrno);

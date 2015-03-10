@@ -118,17 +118,39 @@ int MPIDO_Allreduce(const void *sendbuf,
               selected_type);
     MPIDI_Update_last_algorithm(comm_ptr, "ALLREDUCE_MPICH");
 #if CUDA_AWARE_SUPPORT
-    if(MPIDI_Process.cuda_aware_support_on && MPIDI_cuda_is_device_buf(sendbuf))
+    if(MPIDI_Process.cuda_aware_support_on)
     {
        MPI_Aint dt_extent;
        MPID_Datatype_get_extent_macro(dt, dt_extent);
-       char *buf =  MPIU_Malloc(dt_extent * count);
-       cudaError_t cudaerr = cudaMemcpy(buf, sendbuf, dt_extent * count, cudaMemcpyDeviceToHost);
-       if (cudaSuccess != cudaerr) {
-         fprintf(stderr, "cudaMalloc failed: %s\n", cudaGetErrorString(cudaerr));
+       char *scbuf = NULL;
+       char *rcbuf = NULL;
+       int is_send_dev_buf = MPIDI_cuda_is_device_buf(sendbuf);
+       int is_recv_dev_buf = MPIDI_cuda_is_device_buf(recvbuf);
+       if(is_send_dev_buf)
+       {
+         scbuf = MPIU_Malloc(dt_extent * count);
+         cudaError_t cudaerr = cudaMemcpy(scbuf, sendbuf, dt_extent * count, cudaMemcpyDeviceToHost);
+         if (cudaSuccess != cudaerr) 
+           fprintf(stderr, "cudaMemcpy failed: %s\n", cudaGetErrorString(cudaerr));
        }
-       int cuda_res =  MPIR_Allreduce(buf, recvbuf, count, dt, op, comm_ptr, mpierrno);
-       MPIU_Free(buf);
+       else
+         scbuf = sendbuf;
+       if(is_recv_dev_buf)
+       {
+         rcbuf = MPIU_Malloc(dt_extent * count);
+         memset(rcbuf, 0, dt_extent * count);
+       }
+       else
+         rcbuf = recvbuf;
+       int cuda_res =  MPIR_Allreduce(scbuf, rcbuf, count, dt, op, comm_ptr, mpierrno);
+       if(is_send_dev_buf)MPIU_Free(scbuf);
+       if(is_recv_dev_buf)
+         {
+           cudaError_t cudaerr = cudaMemcpy(recvbuf, rcbuf, dt_extent * count, cudaMemcpyHostToDevice);
+           if (cudaSuccess != cudaerr)
+             fprintf(stderr, "cudaMemcpy failed: %s\n", cudaGetErrorString(cudaerr));
+           MPIU_Free(rcbuf);
+         }
        return cuda_res;
     }
     else 

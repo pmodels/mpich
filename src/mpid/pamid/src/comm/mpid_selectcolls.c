@@ -690,6 +690,8 @@ void MPIDI_Comm_coll_query(MPID_Comm *comm)
    comm->coll_fns->Reduce       = MPIDO_Reduce;
    comm->coll_fns->Scan         = MPIDO_Scan;
    comm->coll_fns->Exscan       = MPIDO_Exscan;
+   comm->coll_fns->Reduce_scatter_block = MPIDO_Reduce_scatter_block;
+   comm->coll_fns->Reduce_scatter = MPIDO_Reduce_scatter;
 
    /* MPI-3 Support, no optimized collectives hooked in yet */
    comm->coll_fns->Ibarrier_sched              = MPIR_Ibarrier_intra;

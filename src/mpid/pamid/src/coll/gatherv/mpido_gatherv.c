@@ -50,6 +50,7 @@ int MPIDO_Gatherv(const void *sendbuf,
   }
 #endif
    TRACE_ERR("Entering MPIDO_Gatherv\n");
+   int i;
    int contig ATTRIBUTE((unused)), rsize ATTRIBUTE((unused)), ssize ATTRIBUTE((unused));
    int pamidt = 1;
    MPID_Datatype *dt_ptr = NULL;
@@ -59,6 +60,7 @@ int MPIDO_Gatherv(const void *sendbuf,
    int tmp;
    volatile unsigned gatherv_active = 1;
    const int rank = comm_ptr->rank;
+   const int size = comm_ptr->local_size;
 #if ASSERT_LEVEL==0
    /* We can't afford the tracing in ndebug/performance libraries */
     const unsigned verbose = 0;
@@ -82,6 +84,58 @@ int MPIDO_Gatherv(const void *sendbuf,
          fprintf(stderr,"Using MPICH gatherv algorithm\n");
       TRACE_ERR("GATHERV using MPICH\n");
       MPIDI_Update_last_algorithm(comm_ptr, "GATHERV_MPICH");
+#if CUDA_AWARE_SUPPORT
+    if(MPIDI_Process.cuda_aware_support_on)
+    {
+       MPI_Aint sdt_extent,rdt_extent;
+       MPID_Datatype_get_extent_macro(sendtype, sdt_extent);
+       MPID_Datatype_get_extent_macro(recvtype, rdt_extent);
+       char *scbuf = NULL;
+       char *rcbuf = NULL;
+       int is_send_dev_buf = MPIDI_cuda_is_device_buf(sendbuf);
+       int is_recv_dev_buf = (rank == root) ? MPIDI_cuda_is_device_buf(recvbuf) : 0;
+       if(is_send_dev_buf)
+       {
+         scbuf = MPIU_Malloc(sdt_extent * sendcount);
+         cudaError_t cudaerr = cudaMemcpy(scbuf, sendbuf, sdt_extent * sendcount, cudaMemcpyDeviceToHost);
+         if (cudaSuccess != cudaerr)
+           fprintf(stderr, "cudaMemcpy failed: %s\n", cudaGetErrorString(cudaerr));
+       }
+       else
+         scbuf = sendbuf;
+       size_t rtotal_buf;
+       if(is_recv_dev_buf)
+       {
+         //Since displs can be non-continous, we need to calculate max buffer size 
+         int highest_displs = displs[size - 1];
+         int highest_recvcount = recvcounts[size - 1];
+         for(i = 0; i < size; i++)
+         {
+           if(displs[i]+recvcounts[i] > highest_displs+highest_recvcount)
+           {
+             highest_displs = displs[i];
+             highest_recvcount = recvcounts[i];
+           }
+         }
+         rtotal_buf = (highest_displs+highest_recvcount)*rdt_extent;
+         rcbuf = MPIU_Malloc(rtotal_buf);
+         memset(rcbuf, 0, rtotal_buf);
+       }
+       else
+         rcbuf = recvbuf;
+       int cuda_res =  MPIR_Gatherv(scbuf, sendcount, sendtype, rcbuf, recvcounts, displs, recvtype, root, comm_ptr, mpierrno);
+       if(is_send_dev_buf)MPIU_Free(scbuf);
+       if(is_recv_dev_buf)
+         {
+           cudaError_t cudaerr = cudaMemcpy(recvbuf, rcbuf, rtotal_buf, cudaMemcpyHostToDevice);
+           if (cudaSuccess != cudaerr)
+             fprintf(stderr, "cudaMemcpy failed: %s\n", cudaGetErrorString(cudaerr));
+           MPIU_Free(rcbuf);
+         }
+       return cuda_res;
+    }
+    else
+#endif
       return MPIR_Gatherv(sendbuf, sendcount, sendtype,
                recvbuf, recvcounts, displs, recvtype,
                root, comm_ptr, mpierrno);

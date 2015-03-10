@@ -417,6 +417,12 @@ int MPIDO_Ialltoallw(const void *sendbuf, const int *sendcounts, const int *send
                      const MPI_Datatype * recvtypes,
                      MPID_Comm *comm_ptr, MPID_Request **request);
 
+int MPIDO_Reduce_scatter(const void *sendbuf, void *recvbuf, int *recvcounts, MPI_Datatype datatype,
+                 MPI_Op op, MPID_Comm *comm_ptr, int *mpierrno);
+
+int MPIDO_Reduce_scatter_block(const void *sendbuf, void *recvbuf, int recvcount, 
+                 MPI_Datatype datatype, MPI_Op op, MPID_Comm *comm_ptr, int *mpierrno);
+
 int MPIDO_Ireduce_scatter_block(const void *sendbuf, void *recvbuf, int recvcount,
                                 MPI_Datatype datatype, MPI_Op op, MPID_Comm *comm_ptr,
                                 MPID_Request **request);
