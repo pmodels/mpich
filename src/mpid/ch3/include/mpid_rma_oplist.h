@@ -111,10 +111,10 @@ static inline MPIDI_RMA_Target_t *MPIDI_CH3I_Win_target_alloc(MPID_Win * win_ptr
         MPL_LL_DELETE(win_ptr->target_pool, win_ptr->target_pool_tail, e);
     }
 
-    e->read_op_list = e->read_op_list_tail = NULL;
-    e->write_op_list = e->write_op_list_tail = NULL;
-    e->dt_op_list = e->dt_op_list_tail = NULL;
-    e->pending_op_list = e->pending_op_list_tail = NULL;
+    e->read_op_list_head = e->read_op_list_tail = NULL;
+    e->write_op_list_head = e->write_op_list_tail = NULL;
+    e->dt_op_list_head = e->dt_op_list_tail = NULL;
+    e->pending_op_list_head = e->pending_op_list_tail = NULL;
     e->next_op_to_issue = NULL;
 
     e->target_rank = -1;
@@ -145,10 +145,10 @@ static inline int MPIDI_CH3I_Win_target_free(MPID_Win * win_ptr, MPIDI_RMA_Targe
     /* We enqueue elements to the right pool, so when they get freed
      * at window free time, they won't conflict with the global pool
      * or other windows */
-    MPIU_Assert(e->read_op_list == NULL);
-    MPIU_Assert(e->write_op_list == NULL);
-    MPIU_Assert(e->dt_op_list == NULL);
-    MPIU_Assert(e->pending_op_list == NULL);
+    MPIU_Assert(e->read_op_list_head == NULL);
+    MPIU_Assert(e->write_op_list_head == NULL);
+    MPIU_Assert(e->dt_op_list_head == NULL);
+    MPIU_Assert(e->pending_op_list_head == NULL);
 
     /* use PREPEND when return objects back to the pool
      * in order to improve cache performance */
@@ -187,11 +187,11 @@ static inline int MPIDI_CH3I_Win_create_target(MPID_Win * win_ptr, int target_ra
 
     t->target_rank = target_rank;
 
-    if (slot->target_list == NULL)
+    if (slot->target_list_head == NULL)
         win_ptr->non_empty_slots++;
 
     /* Enqueue target into target list. */
-    MPL_LL_APPEND(slot->target_list, slot->target_list_tail, t);
+    MPL_LL_APPEND(slot->target_list_head, slot->target_list_tail, t);
 
     assert(t != NULL);
 
@@ -221,7 +221,7 @@ static inline int MPIDI_CH3I_Win_find_target(MPID_Win * win_ptr, int target_rank
     else
         slot = &(win_ptr->slots[target_rank]);
 
-    t = slot->target_list;
+    t = slot->target_list_head;
     while (t != NULL) {
         if (t->target_rank == target_rank)
             break;
@@ -277,7 +277,7 @@ static inline int MPIDI_CH3I_Win_enqueue_op(MPID_Win * win_ptr, MPIDI_RMA_Op_t *
     }
 
     /* Enqueue operation into pending list. */
-    MPL_LL_APPEND(target->pending_op_list, target->pending_op_list_tail, op);
+    MPL_LL_APPEND(target->pending_op_list_head, target->pending_op_list_tail, op);
     if (target->next_op_to_issue == NULL)
         target->next_op_to_issue = op;
 
@@ -309,13 +309,13 @@ static inline int MPIDI_CH3I_Win_target_dequeue_and_free(MPID_Win * win_ptr, MPI
     else
         slot = &(win_ptr->slots[target_rank]);
 
-    MPL_LL_DELETE(slot->target_list, slot->target_list_tail, e);
+    MPL_LL_DELETE(slot->target_list_head, slot->target_list_tail, e);
 
     mpi_errno = MPIDI_CH3I_Win_target_free(win_ptr, e);
     if (mpi_errno != MPI_SUCCESS)
         MPIU_ERR_POP(mpi_errno);
 
-    if (slot->target_list == NULL)
+    if (slot->target_list_head == NULL)
         win_ptr->non_empty_slots--;
 
   fn_exit:
@@ -333,7 +333,7 @@ static inline int MPIDI_CH3I_RMA_Cleanup_ops_target(MPID_Win * win_ptr, MPIDI_RM
                                                     int *local_completed, int *remote_completed)
 {
     MPIDI_RMA_Op_t *curr_op = NULL;
-    MPIDI_RMA_Op_t **op_list = NULL, **op_list_tail = NULL;
+    MPIDI_RMA_Op_t **op_list_head = NULL, **op_list_tail = NULL;
     int read_flag = 0, write_flag = 0;
     int mpi_errno = MPI_SUCCESS;
     int i;
@@ -353,22 +353,23 @@ static inline int MPIDI_CH3I_RMA_Cleanup_ops_target(MPID_Win * win_ptr, MPIDI_RM
         target->access_state == MPIDI_RMA_LOCK_ISSUED)
         goto fn_exit;
 
-    if (target->pending_op_list == NULL &&
-        target->read_op_list == NULL && target->write_op_list == NULL && target->dt_op_list == NULL)
+    if (target->pending_op_list_head == NULL &&
+        target->read_op_list_head == NULL && target->write_op_list_head == NULL &&
+        target->dt_op_list_head == NULL)
         goto cleanup_target;
 
-    if (target->read_op_list != NULL) {
-        op_list = &(target->read_op_list);
+    if (target->read_op_list_head != NULL) {
+        op_list_head = &(target->read_op_list_head);
         op_list_tail = &(target->read_op_list_tail);
         read_flag = 1;
     }
-    else if (target->write_op_list != NULL) {
-        op_list = &(target->write_op_list);
+    else if (target->write_op_list_head != NULL) {
+        op_list_head = &(target->write_op_list_head);
         op_list_tail = &(target->write_op_list_tail);
         write_flag = 1;
     }
-    else if (target->dt_op_list != NULL) {
-        op_list = &(target->dt_op_list);
+    else if (target->dt_op_list_head != NULL) {
+        op_list_head = &(target->dt_op_list_head);
         op_list_tail = &(target->dt_op_list_tail);
     }
     else {
@@ -376,7 +377,7 @@ static inline int MPIDI_CH3I_RMA_Cleanup_ops_target(MPID_Win * win_ptr, MPIDI_RM
         goto fn_exit;
     }
 
-    curr_op = *op_list;
+    curr_op = *op_list_head;
     while (curr_op != NULL) {
         for (i = 0; i < curr_op->reqs_size; i++) {
             if (curr_op->reqs[i] == NULL)
@@ -414,19 +415,19 @@ static inline int MPIDI_CH3I_RMA_Cleanup_ops_target(MPID_Win * win_ptr, MPIDI_RM
             curr_op->reqs_size = 0;
 
             /* dequeue the operation and free it */
-            MPL_LL_DELETE(*op_list, *op_list_tail, curr_op);
+            MPL_LL_DELETE(*op_list_head, *op_list_tail, curr_op);
             MPIDI_CH3I_Win_op_free(win_ptr, curr_op);
 
-            if (*op_list == NULL) {
+            if (*op_list_head == NULL) {
                 if (read_flag == 1) {
                     read_flag = 0;
-                    if (target->write_op_list != NULL) {
-                        op_list = &(target->write_op_list);
+                    if (target->write_op_list_head != NULL) {
+                        op_list_head = &(target->write_op_list_head);
                         op_list_tail = &(target->write_op_list_tail);
                         write_flag = 1;
                     }
-                    else if (target->dt_op_list != NULL) {
-                        op_list = &(target->dt_op_list);
+                    else if (target->dt_op_list_head != NULL) {
+                        op_list_head = &(target->dt_op_list_head);
                         op_list_tail = &(target->dt_op_list_tail);
                     }
                     else
@@ -434,8 +435,8 @@ static inline int MPIDI_CH3I_RMA_Cleanup_ops_target(MPID_Win * win_ptr, MPIDI_RM
                 }
                 else if (write_flag == 1) {
                     write_flag = 0;
-                    if (target->dt_op_list != NULL) {
-                        op_list = &(target->dt_op_list);
+                    if (target->dt_op_list_head != NULL) {
+                        op_list_head = &(target->dt_op_list_head);
                         op_list_tail = &(target->dt_op_list_tail);
                     }
                     else
@@ -443,16 +444,16 @@ static inline int MPIDI_CH3I_RMA_Cleanup_ops_target(MPID_Win * win_ptr, MPIDI_RM
                 }
             }
             /* next op */
-            curr_op = *op_list;
+            curr_op = *op_list_head;
         }
         else
             break;
     }
 
   cleanup_target:
-    if (target->pending_op_list == NULL &&
-        target->read_op_list == NULL && target->write_op_list == NULL &&
-        target->dt_op_list == NULL) {
+    if (target->pending_op_list_head == NULL &&
+        target->read_op_list_head == NULL && target->write_op_list_head == NULL &&
+        target->dt_op_list_head == NULL) {
 
         (*local_completed) = 1;
 
@@ -486,7 +487,7 @@ static inline int MPIDI_CH3I_RMA_Cleanup_ops_win(MPID_Win * win_ptr,
     (*remote_completed) = 0;
 
     for (i = 0; i < win_ptr->num_slots; i++) {
-        for (target = win_ptr->slots[i].target_list; target;) {
+        for (target = win_ptr->slots[i].target_list_head; target;) {
             int local = 0, remote = 0;
 
             mpi_errno = MPIDI_CH3I_RMA_Cleanup_ops_target(win_ptr, target, &local, &remote);
@@ -544,7 +545,7 @@ static inline int MPIDI_CH3I_RMA_Cleanup_targets_win(MPID_Win * win_ptr)
     int i, mpi_errno = MPI_SUCCESS;
 
     for (i = 0; i < win_ptr->num_slots; i++) {
-        for (target = win_ptr->slots[i].target_list; target;) {
+        for (target = win_ptr->slots[i].target_list_head; target;) {
             next_target = target->next;
             mpi_errno = MPIDI_CH3I_RMA_Cleanup_single_target(win_ptr, target);
             if (mpi_errno != MPI_SUCCESS)

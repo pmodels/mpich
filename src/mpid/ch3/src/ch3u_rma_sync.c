@@ -368,7 +368,7 @@ int MPIDI_Win_fence(int assert, MPID_Win * win_ptr)
 
     /* Set sync_flag in target structs. */
     for (i = 0; i < win_ptr->num_slots; i++) {
-        curr_target = win_ptr->slots[i].target_list;
+        curr_target = win_ptr->slots[i].target_list_head;
         while (curr_target != NULL) {
 
             /* set sync_flag in sync struct */
@@ -742,9 +742,9 @@ int MPIDI_Win_complete(MPID_Win * win_ptr)
         }
 
         if (win_comm_ptr->local_size <= win_ptr->num_slots)
-            curr_target = win_ptr->slots[dst].target_list;
+            curr_target = win_ptr->slots[dst].target_list_head;
         else {
-            curr_target = win_ptr->slots[dst % win_ptr->num_slots].target_list;
+            curr_target = win_ptr->slots[dst % win_ptr->num_slots].target_list_head;
             while (curr_target != NULL && curr_target->target_rank != dst)
                 curr_target = curr_target->next;
         }
@@ -1522,7 +1522,7 @@ int MPIDI_Win_unlock_all(MPID_Win * win_ptr)
 
     if (win_ptr->states.access_state == MPIDI_RMA_LOCK_ALL_CALLED) {
         for (i = 0; i < win_ptr->num_slots; i++) {
-            curr_target = win_ptr->slots[i].target_list;
+            curr_target = win_ptr->slots[i].target_list_head;
             while (curr_target != NULL) {
                 if (curr_target->sync.sync_flag < sync_flag) {
                     curr_target->sync.sync_flag = sync_flag;
@@ -1535,9 +1535,9 @@ int MPIDI_Win_unlock_all(MPID_Win * win_ptr)
     else {
         for (i = 0; i < win_ptr->comm_ptr->local_size; i++) {
             if (win_ptr->comm_ptr->local_size <= win_ptr->num_slots)
-                curr_target = win_ptr->slots[i].target_list;
+                curr_target = win_ptr->slots[i].target_list_head;
             else {
-                curr_target = win_ptr->slots[i % win_ptr->num_slots].target_list;
+                curr_target = win_ptr->slots[i % win_ptr->num_slots].target_list_head;
                 while (curr_target != NULL && curr_target->target_rank != i)
                     curr_target = curr_target->next;
             }
@@ -1662,7 +1662,7 @@ int MPIDI_Win_flush_all(MPID_Win * win_ptr)
 
     /* Set sync_flag in sync struct. */
     for (i = 0; i < win_ptr->num_slots; i++) {
-        curr_target = win_ptr->slots[i].target_list;
+        curr_target = win_ptr->slots[i].target_list_head;
         while (curr_target != NULL) {
             if (curr_target->sync.sync_flag < MPIDI_RMA_SYNC_FLUSH) {
                 curr_target->sync.sync_flag = MPIDI_RMA_SYNC_FLUSH;
@@ -1756,7 +1756,7 @@ int MPIDI_Win_flush_local_all(MPID_Win * win_ptr)
 
     /* Set sync_flag in sync struct. */
     for (i = 0; i < win_ptr->num_slots; i++) {
-        curr_target = win_ptr->slots[i].target_list;
+        curr_target = win_ptr->slots[i].target_list_head;
         while (curr_target != NULL) {
             if (curr_target->disable_flush_local) {
                 if (curr_target->sync.sync_flag < MPIDI_RMA_SYNC_FLUSH) {
@@ -1788,7 +1788,7 @@ int MPIDI_Win_flush_local_all(MPID_Win * win_ptr)
      * and wait for local completion for other targets */
     do {
         for (i = 0; i < win_ptr->num_slots; i++) {
-            curr_target = win_ptr->slots[i].target_list;
+            curr_target = win_ptr->slots[i].target_list_head;
             while (curr_target != NULL) {
                 mpi_errno = MPIDI_CH3I_RMA_Cleanup_ops_target(win_ptr, curr_target,
                                                               &local_completed, &remote_completed);
@@ -1825,7 +1825,7 @@ int MPIDI_Win_flush_local_all(MPID_Win * win_ptr)
   finish_flush_local_all:
     /* reset disable_flush_local flag in target to 0 */
     for (i = 0; i < win_ptr->num_slots; i++) {
-        curr_target = win_ptr->slots[i].target_list;
+        curr_target = win_ptr->slots[i].target_list_head;
         while (curr_target != NULL) {
             curr_target->disable_flush_local = 0;
             curr_target = curr_target->next;

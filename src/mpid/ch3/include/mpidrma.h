@@ -619,7 +619,7 @@ static inline int adjust_op_piggybacked_with_lock(MPID_Win * win_ptr,
         MPIU_ERR_POP(mpi_errno);
     MPIU_Assert(target != NULL);
 
-    op = target->pending_op_list;
+    op = target->pending_op_list_head;
     if (op != NULL)
         MPIDI_CH3_PKT_RMA_GET_FLAGS(op->pkt, op_flags, mpi_errno);
 
@@ -636,14 +636,14 @@ static inline int adjust_op_piggybacked_with_lock(MPID_Win * win_ptr,
 
             if (op->reqs_size == 0) {
                 MPIU_Assert(op->reqs == NULL);
-                MPIDI_CH3I_RMA_Ops_free_elem(win_ptr, &(target->pending_op_list),
+                MPIDI_CH3I_RMA_Ops_free_elem(win_ptr, &(target->pending_op_list_head),
                                              &(target->pending_op_list_tail), op);
             }
             else {
                 MPI_Datatype target_datatype;
                 int is_derived = FALSE;
 
-                MPIDI_CH3I_RMA_Ops_unlink(&(target->pending_op_list),
+                MPIDI_CH3I_RMA_Ops_unlink(&(target->pending_op_list_head),
                                           &(target->pending_op_list_tail), op);
 
                 MPIDI_CH3_PKT_RMA_GET_TARGET_DATATYPE(op->pkt, target_datatype, mpi_errno);
@@ -658,18 +658,18 @@ static inline int adjust_op_piggybacked_with_lock(MPID_Win * win_ptr,
                 }
 
                 if (is_derived) {
-                    MPIDI_CH3I_RMA_Ops_append(&(target->dt_op_list),
+                    MPIDI_CH3I_RMA_Ops_append(&(target->dt_op_list_head),
                                               &(target->dt_op_list_tail), op);
                 }
                 else if (op->pkt.type == MPIDI_CH3_PKT_PUT ||
                          op->pkt.type == MPIDI_CH3_PKT_PUT_IMMED ||
                          op->pkt.type == MPIDI_CH3_PKT_ACCUMULATE ||
                          op->pkt.type == MPIDI_CH3_PKT_ACCUMULATE_IMMED) {
-                    MPIDI_CH3I_RMA_Ops_append(&(target->write_op_list),
+                    MPIDI_CH3I_RMA_Ops_append(&(target->write_op_list_head),
                                               &(target->write_op_list_tail), op);
                 }
                 else {
-                    MPIDI_CH3I_RMA_Ops_append(&(target->read_op_list),
+                    MPIDI_CH3I_RMA_Ops_append(&(target->read_op_list_head),
                                               &(target->read_op_list_tail), op);
                 }
             }

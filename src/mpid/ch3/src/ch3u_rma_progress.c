@@ -159,8 +159,8 @@ static inline int check_target_state(MPID_Win * win_ptr, MPIDI_RMA_Target_t * ta
         if (target->sync.sync_flag == MPIDI_RMA_SYNC_NONE ||
             target->sync.sync_flag == MPIDI_RMA_SYNC_FLUSH_LOCAL ||
             target->sync.sync_flag == MPIDI_RMA_SYNC_FLUSH) {
-            if (target->pending_op_list == NULL ||
-                !target->pending_op_list->piggyback_lock_candidate) {
+            if (target->pending_op_list_head == NULL ||
+                !target->pending_op_list_head->piggyback_lock_candidate) {
                 /* issue lock request */
                 target->access_state = MPIDI_RMA_LOCK_ISSUED;
                 if (target->target_rank == rank) {
@@ -178,7 +178,7 @@ static inline int check_target_state(MPID_Win * win_ptr, MPIDI_RMA_Target_t * ta
             }
         }
         else if (target->sync.sync_flag == MPIDI_RMA_SYNC_UNLOCK) {
-            if (target->pending_op_list == NULL) {
+            if (target->pending_op_list_head == NULL) {
                 /* No RMA operation has ever been posted to this target,
                  * finish issuing, no need to acquire the lock. Cleanup
                  * function will clean it up. */
@@ -196,8 +196,8 @@ static inline int check_target_state(MPID_Win * win_ptr, MPIDI_RMA_Target_t * ta
                 /* if we reach WIN_UNLOCK and there is still operation existing
                  * in pending list, this operation must be the only operation
                  * and it is prepared to piggyback LOCK and UNLOCK. */
-                MPIU_Assert(target->pending_op_list->next == NULL);
-                MPIU_Assert(target->pending_op_list->piggyback_lock_candidate);
+                MPIU_Assert(target->pending_op_list_head->next == NULL);
+                MPIU_Assert(target->pending_op_list_head->piggyback_lock_candidate);
             }
         }
         break;
@@ -205,7 +205,7 @@ static inline int check_target_state(MPID_Win * win_ptr, MPIDI_RMA_Target_t * ta
     case MPIDI_RMA_LOCK_GRANTED:
     case MPIDI_RMA_NONE:
         if (target->sync.sync_flag == MPIDI_RMA_SYNC_FLUSH) {
-            if (target->pending_op_list == NULL) {
+            if (target->pending_op_list_head == NULL) {
                 if (target->target_rank == rank) {
                     target->sync.outstanding_acks--;
                     MPIU_Assert(target->sync.outstanding_acks >= 0);
@@ -232,7 +232,7 @@ static inline int check_target_state(MPID_Win * win_ptr, MPIDI_RMA_Target_t * ta
             }
         }
         else if (target->sync.sync_flag == MPIDI_RMA_SYNC_UNLOCK) {
-            if (target->pending_op_list == NULL) {
+            if (target->pending_op_list_head == NULL) {
                 if (target->target_rank == rank) {
                     target->sync.outstanding_acks--;
                     MPIU_Assert(target->sync.outstanding_acks >= 0);
@@ -405,7 +405,7 @@ static inline int issue_ops_target(MPID_Win * win_ptr, MPIDI_RMA_Target_t * targ
         if (curr_op->reqs_size == 0) {
             MPIU_Assert(curr_op->reqs == NULL);
             /* Sending is completed immediately. */
-            MPIDI_CH3I_RMA_Ops_free_elem(win_ptr, &(target->pending_op_list),
+            MPIDI_CH3I_RMA_Ops_free_elem(win_ptr, &(target->pending_op_list_head),
                                          &(target->pending_op_list_tail), curr_op);
         }
         else {
@@ -414,7 +414,7 @@ static inline int issue_ops_target(MPID_Win * win_ptr, MPIDI_RMA_Target_t * targ
 
             /* Sending is not completed immediately. */
 
-            MPIDI_CH3I_RMA_Ops_unlink(&(target->pending_op_list),
+            MPIDI_CH3I_RMA_Ops_unlink(&(target->pending_op_list_head),
                                       &(target->pending_op_list_tail), curr_op);
 
             MPIDI_CH3_PKT_RMA_GET_TARGET_DATATYPE(curr_op->pkt, target_datatype, mpi_errno);
@@ -429,18 +429,18 @@ static inline int issue_ops_target(MPID_Win * win_ptr, MPIDI_RMA_Target_t * targ
             }
 
             if (is_derived) {
-                MPIDI_CH3I_RMA_Ops_append(&(target->dt_op_list),
+                MPIDI_CH3I_RMA_Ops_append(&(target->dt_op_list_head),
                                           &(target->dt_op_list_tail), curr_op);
             }
             else if (curr_op->pkt.type == MPIDI_CH3_PKT_PUT ||
                      curr_op->pkt.type == MPIDI_CH3_PKT_PUT_IMMED ||
                      curr_op->pkt.type == MPIDI_CH3_PKT_ACCUMULATE ||
                      curr_op->pkt.type == MPIDI_CH3_PKT_ACCUMULATE_IMMED) {
-                MPIDI_CH3I_RMA_Ops_append(&(target->write_op_list),
+                MPIDI_CH3I_RMA_Ops_append(&(target->write_op_list_head),
                                           &(target->write_op_list_tail), curr_op);
             }
             else {
-                MPIDI_CH3I_RMA_Ops_append(&(target->read_op_list),
+                MPIDI_CH3I_RMA_Ops_append(&(target->read_op_list_head),
                                           &(target->read_op_list_tail), curr_op);
             }
         }
@@ -487,7 +487,7 @@ static inline int issue_ops_win(MPID_Win * win_ptr, int *made_progress)
         else
             idx = i - win_ptr->num_slots;
 
-        target = win_ptr->slots[idx].target_list;
+        target = win_ptr->slots[idx].target_list_head;
         while (target != NULL) {
             int temp_progress = 0;
 
@@ -524,7 +524,7 @@ int MPIDI_CH3I_RMA_Free_ops_before_completion(MPID_Win * win_ptr)
 {
     MPIDI_RMA_Op_t *curr_op = NULL;
     MPIDI_RMA_Target_t *curr_target = NULL;
-    MPIDI_RMA_Op_t **op_list = NULL, **op_list_tail = NULL;
+    MPIDI_RMA_Op_t **op_list_head = NULL, **op_list_tail = NULL;
     int read_flag = 0;
     int i, made_progress = 0;
     int mpi_errno = MPI_SUCCESS;
@@ -546,10 +546,11 @@ int MPIDI_CH3I_RMA_Free_ops_before_completion(MPID_Win * win_ptr)
 
     /* find targets that have operations */
     for (i = 0; i < win_ptr->num_slots; i++) {
-        if (win_ptr->slots[i].target_list != NULL) {
-            curr_target = win_ptr->slots[i].target_list;
+        if (win_ptr->slots[i].target_list_head != NULL) {
+            curr_target = win_ptr->slots[i].target_list_head;
             while (curr_target != NULL) {
-                if (curr_target->read_op_list != NULL || curr_target->write_op_list != NULL) {
+                if (curr_target->read_op_list_head != NULL ||
+                    curr_target->write_op_list_head != NULL) {
                     if (win_ptr->states.access_state == MPIDI_RMA_PER_TARGET ||
                         win_ptr->states.access_state == MPIDI_RMA_LOCK_ALL_CALLED) {
                         if (curr_target->access_state == MPIDI_RMA_LOCK_GRANTED)
@@ -573,18 +574,18 @@ int MPIDI_CH3I_RMA_Free_ops_before_completion(MPID_Win * win_ptr)
      * must do a Win_flush instead. */
     curr_target->disable_flush_local = 1;
 
-    if (curr_target->read_op_list != NULL) {
-        op_list = &curr_target->read_op_list;
+    if (curr_target->read_op_list_head != NULL) {
+        op_list_head = &curr_target->read_op_list_head;
         op_list_tail = &curr_target->read_op_list_tail;
         read_flag = 1;
     }
     else {
-        op_list = &curr_target->write_op_list;
+        op_list_head = &curr_target->write_op_list_head;
         op_list_tail = &curr_target->write_op_list_tail;
     }
 
     /* free all ops in the list since we do not need to maintain them anymore */
-    for (curr_op = *op_list; curr_op != NULL;) {
+    for (curr_op = *op_list_head; curr_op != NULL;) {
         if (curr_op->reqs_size > 0) {
             MPIU_Assert(curr_op->reqs != NULL);
             for (i = 0; i < curr_op->reqs_size; i++) {
@@ -600,17 +601,17 @@ int MPIDI_CH3I_RMA_Free_ops_before_completion(MPID_Win * win_ptr)
             curr_op->reqs = NULL;
             curr_op->reqs_size = 0;
         }
-        MPL_LL_DELETE(*op_list, *op_list_tail, curr_op);
+        MPL_LL_DELETE(*op_list_head, *op_list_tail, curr_op);
         MPIDI_CH3I_Win_op_free(win_ptr, curr_op);
 
-        if (*op_list == NULL) {
+        if (*op_list_head == NULL) {
             if (read_flag == 1) {
-                op_list = &curr_target->write_op_list;
-                op_list = &curr_target->write_op_list_tail;
+                op_list_head = &curr_target->write_op_list_head;
+                op_list_head = &curr_target->write_op_list_tail;
                 read_flag = 0;
             }
         }
-        curr_op = *op_list;
+        curr_op = *op_list_head;
     }
 
   fn_exit:
@@ -638,9 +639,9 @@ int MPIDI_CH3I_RMA_Cleanup_ops_aggressive(MPID_Win * win_ptr)
 
     /* find the first target that has something to issue */
     for (i = 0; i < win_ptr->num_slots; i++) {
-        if (win_ptr->slots[i].target_list != NULL) {
-            curr_target = win_ptr->slots[i].target_list;
-            while (curr_target != NULL && curr_target->pending_op_list == NULL)
+        if (win_ptr->slots[i].target_list_head != NULL) {
+            curr_target = win_ptr->slots[i].target_list_head;
+            while (curr_target != NULL && curr_target->pending_op_list_head == NULL)
                 curr_target = curr_target->next;
             if (curr_target != NULL)
                 break;
@@ -725,9 +726,9 @@ int MPIDI_CH3I_RMA_Cleanup_target_aggressive(MPID_Win * win_ptr, MPIDI_RMA_Targe
          * target */
         /* TODO: we should think about better strategies on selecting the target */
         for (i = 0; i < win_ptr->num_slots; i++)
-            if (win_ptr->slots[i].target_list != NULL)
+            if (win_ptr->slots[i].target_list_head != NULL)
                 break;
-        curr_target = win_ptr->slots[i].target_list;
+        curr_target = win_ptr->slots[i].target_list_head;
         if (curr_target->sync.sync_flag < MPIDI_RMA_SYNC_FLUSH) {
             curr_target->sync.sync_flag = MPIDI_RMA_SYNC_FLUSH;
             curr_target->sync.outstanding_acks++;

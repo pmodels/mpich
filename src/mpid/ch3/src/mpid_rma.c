@@ -371,7 +371,7 @@ static int win_init(MPI_Aint size, int disp_unit, int create_flavor, int model, 
     MPIU_CHKPMEM_MALLOC((*win_ptr)->slots, MPIDI_RMA_Slot_t *,
                         sizeof(MPIDI_RMA_Slot_t) * (*win_ptr)->num_slots, mpi_errno, "RMA slots");
     for (i = 0; i < (*win_ptr)->num_slots; i++) {
-        (*win_ptr)->slots[i].target_list = NULL;
+        (*win_ptr)->slots[i].target_list_head = NULL;
         (*win_ptr)->slots[i].target_list_tail = NULL;
     }
 
