@@ -2803,21 +2803,6 @@ int MPID_Comm_failure_ack(MPID_Comm *comm);
 int MPID_Comm_failure_get_acked(MPID_Comm *comm, MPID_Group **failed_group_ptr);
 
 /*@
-  MPID_Comm_failed_bitarray - MPID function to get the bitarray including all of the failed processes
-
-  Input Parameters:
-. comm - communicator
-. acked - true if bitarray should contain only acked procs
-
-  Output Parameter:
-. bitarray - Bit array containing all of the failed processes in comm
-
-  Return Value:
-  'MPI_SUCCESS' or a valid MPI error code.
-@*/
-int MPID_Comm_failed_bitarray(MPID_Comm *comm, uint32_t **bitarray, int acked);
-
-/*@
   MPID_Comm_get_all_failed_procs - Constructs a group of failed processes that it uniform over a communicator
 
   Input Parameters:
