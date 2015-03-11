@@ -2845,23 +2845,6 @@ int MPID_Comm_get_all_failed_procs(MPID_Comm *comm_ptr, MPID_Group **failed_grou
 int MPID_Comm_revoke(MPID_Comm *comm, int is_remote);
 
 /*@
-  MPID_Comm_agree - MPID implementation of the last phase of the agreement
-
-  Input Parameters:
-. comm - communicator
-. bitarray - Bit array of all of the failures that have been discovered in comm
-. flag - flag input for agree from MPIX_Comm_agree
-. new_fail - If there is a new failure that we need to propagate, this should be true
-
-  Output Parameters:
-. flag - Bitwise AND of all of the flag input values
-
-  Return Value:
-  'MPI_SUCCESS' or a valid MPI error code.
-@*/
-int MPID_Comm_agree(MPID_Comm *comm, uint32_t *bitarray, int *flag, mpir_errflag_t new_fail);
-
-/*@
   MPID_Send - MPID entry point for MPI_Send
 
   Notes:

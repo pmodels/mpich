@@ -35,7 +35,6 @@ mpi_core_sources +=                          \
     src/mpid/ch3/src/mpid_comm_failure_ack.c               \
     src/mpid/ch3/src/mpid_comm_get_all_failed_procs.c      \
     src/mpid/ch3/src/mpid_comm_revoke.c                    \
-    src/mpid/ch3/src/mpid_comm_agree.c                     \
     src/mpid/ch3/src/mpid_finalize.c                       \
     src/mpid/ch3/src/mpid_get_universe_size.c              \
     src/mpid/ch3/src/mpid_getpname.c                       \
