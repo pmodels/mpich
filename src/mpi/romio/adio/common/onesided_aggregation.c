@@ -17,7 +17,7 @@
 typedef struct NonContigSourceBufOffset {
   int dataTypeExtent;
   int flatBufIndice;
-  ADIO_Offset remLen;
+  ADIO_Offset indiceOffset;
 } NonContigSourceBufOffset;
 
 void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
@@ -74,20 +74,30 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
       flatBuf = ADIOI_Flatlist;
       while (flatBuf->type != datatype) flatBuf = flatBuf->next;
       MPI_Type_extent(datatype, &bufTypeExtent);
+#ifdef onesidedtrace
+      printf("flatBuf->count is %d bufTypeExtent is %d\n", flatBuf->count,bufTypeExtent);
+      for (i=0;i<flatBuf->count;i++)
+        printf("flatBuf->blocklens[%d] is %d flatBuf->indices[%d] is %ld\n",i,flatBuf->blocklens[i],i,flatBuf->indices[i]);
+#endif
     }
 
 #ifdef onesidedtrace
-    printf(" ADIOI_OneSidedWriteAggregation bufTypeIsContig is %d maxNumContigOperations is %d\n",bufTypeIsContig,maxNumContigOperations);
+    printf(" ADIOI_OneSidedWriteAggregation bufTypeIsContig is %d contig_access_count is %d\n",bufTypeIsContig,contig_access_count);
 #endif
 
-    ADIO_Offset myOffsetStart = st_offsets[myrank], myOffsetEnd = end_offsets[myrank], currentRoundOffsetStart = st_offsets[myrank];
-
-    ADIO_Offset lastFileOffset = 0, firstFileOffset = myOffsetEnd;
+    ADIO_Offset lastFileOffset = 0, firstFileOffset = -1;
     /* Get the total range being written.
      */
     for (j=0;j<nprocs;j++) {
-      lastFileOffset = ADIOI_MAX(lastFileOffset,end_offsets[j]);
-      firstFileOffset = ADIOI_MIN(firstFileOffset,st_offsets[j]);
+      if (end_offsets[j] > st_offsets[j]) {
+        /* Guard against ranks with empty data.
+         */
+        lastFileOffset = ADIOI_MAX(lastFileOffset,end_offsets[j]);
+        if (firstFileOffset == -1)
+          firstFileOffset = st_offsets[j];
+        else
+          firstFileOffset = ADIOI_MIN(firstFileOffset,st_offsets[j]);
+      }
     }
 
     int myAggRank = -1; /* if I am an aggregor this is my index into fd->hints->ranklist */
@@ -195,7 +205,7 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
 
     int currentDataTypeExtent = 0;
     int currentFlatBufIndice=0;
-    ADIO_Offset currentRemLen = 0;
+    ADIO_Offset currentIndiceOffset = 0;
 
 #ifdef onesidedtrace
    printf("NumberOfRounds is %d\n",numberOfRounds);
@@ -206,6 +216,7 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
 #endif
 
     int currentAggRankListIndex = 0;
+    int maxNumNonContigSourceChunks = 0;
 
     /* This denotes the coll_bufsize boundaries within the source buffer for writing for the same round.
      */
@@ -232,31 +243,44 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
           /* Non-contiguous source datatype, count up the extents and indices to this point
            * in the blocks for use in computing the source buffer offset.
            */
-          ADIO_Offset sourceBlockTotal = 0-currentRemLen;
+          ADIO_Offset sourceBlockTotal = 0;
+          int lastIndiceUsed = currentFlatBufIndice;
+          int numNonContigSourceChunks = 0;
+#ifdef onesidedtrace
+          printf("blockIter %d len_list[blockIter-1] is %d currentIndiceOffset is %ld currentFlatBufIndice is %d\n",blockIter,len_list[blockIter-1],currentIndiceOffset,currentFlatBufIndice);
+#endif
           while (sourceBlockTotal < len_list[blockIter-1]) {
-            maxNumContigOperations++;
-            sourceBlockTotal += flatBuf->blocklens[currentFlatBufIndice];
+            numNonContigSourceChunks++;
+            sourceBlockTotal += (flatBuf->blocklens[currentFlatBufIndice] - currentIndiceOffset);
+            lastIndiceUsed = currentFlatBufIndice;
             currentFlatBufIndice++;
             if (currentFlatBufIndice == flatBuf->count) {
               currentFlatBufIndice = 0;
               currentDataTypeExtent++;
             }
+            currentIndiceOffset = 0;
           }
           if (sourceBlockTotal > len_list[blockIter-1]) {
             currentFlatBufIndice--;
             if (currentFlatBufIndice < 0 ) {
               currentDataTypeExtent--;
-              currentFlatBufIndice = flatBuf->count;
+              currentFlatBufIndice = flatBuf->count-1;
             }
+            currentIndiceOffset =  len_list[blockIter-1] - (sourceBlockTotal - flatBuf->blocklens[lastIndiceUsed]);
+            ADIOI_Assert((currentIndiceOffset >= 0) && (currentIndiceOffset < flatBuf->blocklens[currentFlatBufIndice]));
           }
-          currentRemLen = len_list[blockIter-1] - sourceBlockTotal;
+          else
+            currentIndiceOffset = 0;
+          maxNumContigOperations += numNonContigSourceChunks;
+          if (numNonContigSourceChunks > maxNumNonContigSourceChunks)
+            maxNumNonContigSourceChunks = numNonContigSourceChunks;
 #ifdef onesidedtrace
-          printf("contig_access_count iter %d currentFlatBufIndice is now %d currentDataTypeExtent is now %d currentRemLen is now %ld\n",blockIter,currentFlatBufIndice,currentDataTypeExtent,currentRemLen);
+          printf("blockiter %d currentFlatBufIndice is now %d currentDataTypeExtent is now %d currentIndiceOffset is now %ld maxNumContigOperations is now %d\n",blockIter,currentFlatBufIndice,currentDataTypeExtent,currentIndiceOffset,maxNumContigOperations);
 #endif
         } // !bufTypeIsContig
       } // blockIter > 0
 
-      /* For the first iteration we need to include these maxNumContigOperations
+      /* For the first iteration we need to include these maxNumContigOperations and maxNumNonContigSourceChunks
        * for non-contig case even though we did not need to compute the starting offset.
        */
       if ((blockIter == 0) && (!bufTypeIsContig)) {
@@ -264,6 +288,7 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
         int tmpCurrentFlatBufIndice = currentFlatBufIndice;
         while (sourceBlockTotal < len_list[0]) {
           maxNumContigOperations++;
+          maxNumNonContigSourceChunks++;
           sourceBlockTotal += flatBuf->blocklens[tmpCurrentFlatBufIndice];
           tmpCurrentFlatBufIndice++;
           if (tmpCurrentFlatBufIndice == flatBuf->count) {
@@ -272,7 +297,7 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
         }
       }
 
-      ADIO_Offset blockStart = offset_list[blockIter], blockLen = len_list[blockIter], blockEnd = offset_list[blockIter]+len_list[blockIter]-(ADIO_Offset)1;
+      ADIO_Offset blockStart = offset_list[blockIter], blockEnd = offset_list[blockIter]+len_list[blockIter]-(ADIO_Offset)1;
 
       /* Find the starting target agg for this block - normally it will be the current agg so guard the expensive
        * while loop with a cheap if-check which for large numbers of small blocks will usually be false.
@@ -317,7 +342,7 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
         else {
           baseNonContigSourceBufferOffset[targetAggsForMyDataCurrentRoundIter[numTargetAggs]][numTargetAggs].flatBufIndice = currentFlatBufIndice;
           baseNonContigSourceBufferOffset[targetAggsForMyDataCurrentRoundIter[numTargetAggs]][numTargetAggs].dataTypeExtent = currentDataTypeExtent;
-          baseNonContigSourceBufferOffset[targetAggsForMyDataCurrentRoundIter[numTargetAggs]][numTargetAggs].remLen = currentRemLen;
+          baseNonContigSourceBufferOffset[targetAggsForMyDataCurrentRoundIter[numTargetAggs]][numTargetAggs].indiceOffset = currentIndiceOffset;
         }
 
         intraRoundCollBufsizeOffset = fd_start[currentAggRankListIndex] + ((targetAggsForMyDataCurrentRoundIter[numTargetAggs]+1) * coll_bufsize);
@@ -349,7 +374,7 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
               else {
                 baseNonContigSourceBufferOffset[targetAggsForMyDataCurrentRoundIter[numTargetAggs]][numTargetAggs].flatBufIndice = currentFlatBufIndice;
                 baseNonContigSourceBufferOffset[targetAggsForMyDataCurrentRoundIter[numTargetAggs]][numTargetAggs].dataTypeExtent = currentDataTypeExtent;
-                baseNonContigSourceBufferOffset[targetAggsForMyDataCurrentRoundIter[numTargetAggs]][numTargetAggs].remLen = currentRemLen;
+                baseNonContigSourceBufferOffset[targetAggsForMyDataCurrentRoundIter[numTargetAggs]][numTargetAggs].indiceOffset = currentIndiceOffset;
               }
 
               targetAggsForMyDataLastOffLenIndex[targetAggsForMyDataCurrentRoundIter[numTargetAggs]][numTargetAggs] = blockIter;
@@ -382,7 +407,7 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
             else {
               baseNonContigSourceBufferOffset[targetAggsForMyDataCurrentRoundIter[numTargetAggs]][numTargetAggs].flatBufIndice = currentFlatBufIndice;
               baseNonContigSourceBufferOffset[targetAggsForMyDataCurrentRoundIter[numTargetAggs]][numTargetAggs].dataTypeExtent = currentDataTypeExtent;
-              baseNonContigSourceBufferOffset[targetAggsForMyDataCurrentRoundIter[numTargetAggs]][numTargetAggs].remLen = currentRemLen;
+              baseNonContigSourceBufferOffset[targetAggsForMyDataCurrentRoundIter[numTargetAggs]][numTargetAggs].indiceOffset = currentIndiceOffset;
             }
 #ifdef onesidedtrace
             printf("large block init settings numTargetAggs %d offset_list[%d] with value %ld past fd border %ld with len %ld\n",numTargetAggs,i,offset_list[blockIter],fd_start[currentAggRankListIndex],len_list[blockIter]);
@@ -407,7 +432,7 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
           else {
             baseNonContigSourceBufferOffset[targetAggsForMyDataCurrentRoundIter[numTargetAggs]][numTargetAggs].flatBufIndice = currentFlatBufIndice;
             baseNonContigSourceBufferOffset[targetAggsForMyDataCurrentRoundIter[numTargetAggs]][numTargetAggs].dataTypeExtent = currentDataTypeExtent;
-            baseNonContigSourceBufferOffset[targetAggsForMyDataCurrentRoundIter[numTargetAggs]][numTargetAggs].remLen = currentRemLen;
+            baseNonContigSourceBufferOffset[targetAggsForMyDataCurrentRoundIter[numTargetAggs]][numTargetAggs].indiceOffset = currentIndiceOffset;
           }
           targetAggsForMyDataLastOffLenIndex[targetAggsForMyDataCurrentRoundIter[numTargetAggs]][numTargetAggs] = blockIter;
 #ifdef onesidedtrace
@@ -475,6 +500,16 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
 
     ADIO_Offset currentBaseSourceBufferOffset = 0;
 
+    /* These data structures are used to track the offset/len pairs for non-contiguous source buffers that are
+     * to be used for each block of data in the offset list.  Allocate them once with the maximum size and then 
+     * reuse the space throughout the algoritm below.
+     */
+    ADIO_Offset *nonContigSourceOffsets;
+    int *nonContigSourceLens;
+    if (!bufTypeIsContig) {
+      nonContigSourceOffsets = (ADIO_Offset *)ADIOI_Malloc((maxNumNonContigSourceChunks+2) * sizeof(ADIO_Offset));
+      nonContigSourceLens = (int *)ADIOI_Malloc((maxNumNonContigSourceChunks+2) * sizeof(int));
+    }
     /* This is the second main loop of the algorithm, actually nested loop of target aggs within rounds.  There are 2 flavors of this.
      * For gpfsmpio_aggmethod of 1 each nested iteration for the target agg does an mpi_put on a contiguous chunk using a primative datatype
      * determined using the data structures from the first main loop.  For gpfsmpio_aggmethod of 2 each nested iteration for the target agg
@@ -513,7 +548,7 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
        */
       int offsetIter;
       int startingOffLenIndex = targetAggsForMyDataFirstOffLenIndex[roundIter][aggIter], endingOffLenIndex = targetAggsForMyDataLastOffLenIndex[roundIter][aggIter];
-         for (offsetIter=startingOffLenIndex;offsetIter<=endingOffLenIndex;offsetIter++) {
+      for (offsetIter=startingOffLenIndex;offsetIter<=endingOffLenIndex;offsetIter++) {
         if (currentRoundFDEndForMyTargetAgg > targetAggsForMyDataFDEnd[aggIter])
             currentRoundFDEndForMyTargetAgg = targetAggsForMyDataFDEnd[aggIter];
 
@@ -527,7 +562,7 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
           if (bufTypeIsContig)
             currentBaseSourceBufferOffset = baseSourceBufferOffset[roundIter][aggIter];
           else {
-            currentRemLen = baseNonContigSourceBufferOffset[roundIter][aggIter].remLen;
+            currentIndiceOffset = baseNonContigSourceBufferOffset[roundIter][aggIter].indiceOffset;
             currentDataTypeExtent = baseNonContigSourceBufferOffset[roundIter][aggIter].dataTypeExtent;
             currentFlatBufIndice = baseNonContigSourceBufferOffset[roundIter][aggIter].flatBufIndice;
           }
@@ -537,22 +572,35 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
             currentBaseSourceBufferOffset += len_list[offsetIter-1];
           else {
 
-          /* For non-contiguous source datatype count up the extents and indices to this point.
+          /* For non-contiguous source datatype advance the flattened buffer machinery to this offset.
+           * Note that currentDataTypeExtent, currentFlatBufIndice and currentIndiceOffset are used and
+           * advanced across the offsetIters.
            */
-          ADIO_Offset sourceBlockTotal = 0-currentRemLen;
+          ADIO_Offset sourceBlockTotal = 0;
+          int lastIndiceUsed = currentFlatBufIndice;
           while (sourceBlockTotal < len_list[offsetIter-1]) {
-            sourceBlockTotal += flatBuf->blocklens[currentFlatBufIndice];
+            sourceBlockTotal += (flatBuf->blocklens[currentFlatBufIndice] - currentIndiceOffset);
+            lastIndiceUsed = currentFlatBufIndice;
             currentFlatBufIndice++;
             if (currentFlatBufIndice == flatBuf->count) {
               currentFlatBufIndice = 0;
               currentDataTypeExtent++;
             }
+            currentIndiceOffset = 0;
           } // while
-          if (sourceBlockTotal > len_list[offsetIter-1])
+          if (sourceBlockTotal > len_list[offsetIter-1]) {
             currentFlatBufIndice--;
-          currentRemLen = len_list[offsetIter-1] - sourceBlockTotal;
+            if (currentFlatBufIndice < 0 ) {
+              currentDataTypeExtent--;
+              currentFlatBufIndice = flatBuf->count-1;
+            }
+            currentIndiceOffset =  len_list[offsetIter-1] - (sourceBlockTotal - flatBuf->blocklens[lastIndiceUsed]);
+            ADIOI_Assert((currentIndiceOffset >= 0) && (currentIndiceOffset < flatBuf->blocklens[currentFlatBufIndice]));
+          }
+          else
+            currentIndiceOffset = 0;
 #ifdef onesidedtrace
-          printf("contig_access_count target agg %d currentFlatBufIndice is now %d currentDataTypeExtent is now %d currentRemLen is now %ld\n",aggIter,currentFlatBufIndice,currentDataTypeExtent,currentRemLen);
+          printf("offsetIter %d contig_access_count target agg %d currentFlatBufIndice is now %d currentDataTypeExtent is now %d currentIndiceOffset is now %ld\n",offsetIter,aggIter,currentFlatBufIndice,currentDataTypeExtent,currentIndiceOffset);
 #endif
           }
         }
@@ -597,6 +645,9 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
             offsetStart = currentRoundFDStartForMyTargetAgg;
         }
 
+#ifdef onesidedtrace
+        printf("bufferAmountToSend is %d\n",bufferAmountToSend);
+#endif
         if (bufferAmountToSend > 0) { /* we have data to send this round */
           if (gpfsmpio_aggmethod == 2) {
             /* Only allocate these arrays if we are using method 2 and only do it once for this round/target agg.
@@ -613,73 +664,55 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
            * from the source buffer to be sent to this contiguous chunk defined by the round/agg/iter in the target.
            */
           int numNonContigSourceChunks = 0;
-          ADIO_Offset *nonContigSourceOffsets;
-          int *nonContigSourceLens;
           ADIO_Offset baseDatatypeInstanceOffset = 0;
 
           if (!bufTypeIsContig) {
 
-            currentSourceBufferOffset = (ADIO_Offset)((ADIO_Offset)currentDataTypeExtent * (ADIO_Offset)bufTypeExtent) + flatBuf->indices[currentFlatBufIndice] + currentRemLen;
+            currentSourceBufferOffset = (ADIO_Offset)((ADIO_Offset)currentDataTypeExtent * (ADIO_Offset)bufTypeExtent) + flatBuf->indices[currentFlatBufIndice] + currentIndiceOffset;
 #ifdef onesidedtrace
-            printf("!bufTypeIsContig currentSourceBufferOffset set to %ld for roundIter %d target %d currentDataTypeExtent %d flatBuf->indices[currentFlatBufIndice] %ld currentRemLen %ld currentFlatBufIndice %d\n",currentSourceBufferOffset,roundIter,aggIter,currentDataTypeExtent,flatBuf->indices[currentFlatBufIndice],currentRemLen,currentFlatBufIndice);
+            printf("!bufTypeIsContig currentSourceBufferOffset set to %ld for roundIter %d target %d currentDataTypeExtent %d flatBuf->indices[currentFlatBufIndice] %ld currentIndiceOffset %ld currentFlatBufIndice %d\n",currentSourceBufferOffset,roundIter,aggIter,currentDataTypeExtent,flatBuf->indices[currentFlatBufIndice],currentIndiceOffset,currentFlatBufIndice);
 #endif
 
-            /* Count the chunks first to see how much to malloc from the ending point from above code.
+            /* Use a tmp variable for the currentFlatBufIndice and currentIndiceOffset as they are used across the offsetIters
+             * to compute the starting point for this iteration and will be modified now to compute the data chunks for
+             * this iteration.
              */
-            int sendBytesCounted = 0;
             int tmpFlatBufIndice = currentFlatBufIndice;
-            int maxNumNonContigSourceChunks = 2; // over-initialize for potential remnants on both ends
-
-            while (sendBytesCounted < bufferAmountToSend) {
-              maxNumNonContigSourceChunks++;
-              if (tmpFlatBufIndice == flatBuf->count) {
-                tmpFlatBufIndice = 0;
-              }
-              sendBytesCounted += flatBuf->blocklens[tmpFlatBufIndice];
-              tmpFlatBufIndice++;
-            }
-
-            nonContigSourceOffsets = (ADIO_Offset *)ADIOI_Malloc(maxNumNonContigSourceChunks * sizeof(ADIO_Offset));
-            nonContigSourceLens = (int *)ADIOI_Malloc(maxNumNonContigSourceChunks * sizeof(int));
+            ADIO_Offset tmpIndiceOffset = currentIndiceOffset;
 
             /* now populate the nonContigSourceOffsets and nonContigSourceLens arrays for use in the one-sided operations.
              */
             int ncArrayIndex = 0;
             int remainingBytesToLoadedIntoNCArrays = bufferAmountToSend;
-            ADIO_Offset indexIntoCurrentIndice = 0;
-            if (currentRemLen > 0)
-              indexIntoCurrentIndice = flatBuf->blocklens[currentFlatBufIndice] - currentRemLen;
-
             int datatypeInstances = currentDataTypeExtent;
-            tmpFlatBufIndice = currentFlatBufIndice;
             while (remainingBytesToLoadedIntoNCArrays > 0) {
-             nonContigSourceOffsets[ncArrayIndex] = currentSourceBufferOffset;
+              ADIOI_Assert(ncArrayIndex < (maxNumNonContigSourceChunks+2));
+              nonContigSourceOffsets[ncArrayIndex] = currentSourceBufferOffset;
 
-              if ((flatBuf->blocklens[tmpFlatBufIndice] - indexIntoCurrentIndice) > remainingBytesToLoadedIntoNCArrays) {
+              if ((flatBuf->blocklens[tmpFlatBufIndice] - tmpIndiceOffset) >= remainingBytesToLoadedIntoNCArrays) {
                 nonContigSourceLens[ncArrayIndex] = remainingBytesToLoadedIntoNCArrays;
                 remainingBytesToLoadedIntoNCArrays = 0;
               }
               else {
-                nonContigSourceLens[ncArrayIndex] = (int)(flatBuf->blocklens[tmpFlatBufIndice] - indexIntoCurrentIndice);
-                remainingBytesToLoadedIntoNCArrays -= (flatBuf->blocklens[tmpFlatBufIndice] - indexIntoCurrentIndice);
+                nonContigSourceLens[ncArrayIndex] = (int)(flatBuf->blocklens[tmpFlatBufIndice] - tmpIndiceOffset);
+                remainingBytesToLoadedIntoNCArrays -= (flatBuf->blocklens[tmpFlatBufIndice] - tmpIndiceOffset);
+                tmpIndiceOffset = 0;
+                tmpFlatBufIndice++;
+                if (tmpFlatBufIndice == flatBuf->count) {
+                  tmpFlatBufIndice = 0;
+                  datatypeInstances++;
+                  baseDatatypeInstanceOffset = datatypeInstances * bufTypeExtent;
+                }
+                currentSourceBufferOffset = baseDatatypeInstanceOffset + flatBuf->indices[tmpFlatBufIndice];
               }
-              indexIntoCurrentIndice = 0; // only worry about beginning remnant for first iter
-
-              tmpFlatBufIndice++;
-              if (tmpFlatBufIndice == flatBuf->count) {
-                tmpFlatBufIndice = 0;
-                datatypeInstances++;
-                baseDatatypeInstanceOffset = datatypeInstances * bufTypeExtent;
-              }
-              currentSourceBufferOffset = baseDatatypeInstanceOffset + flatBuf->indices[tmpFlatBufIndice];
+#ifdef onesidedtrace
+              printf("currentSourceBufferOffset set to %ld off of baseDatatypeInstanceOffset of %ld + tmpFlatBufIndice %d with value %ld\n ncArrayIndex is %d nonContigSourceOffsets[ncArrayIndex] is %ld nonContigSourceLens[ncArrayIndex] is %ld\n",currentSourceBufferOffset,baseDatatypeInstanceOffset, tmpFlatBufIndice, flatBuf->indices[tmpFlatBufIndice],ncArrayIndex,nonContigSourceOffsets[ncArrayIndex],nonContigSourceLens[ncArrayIndex]);
+#endif
               ncArrayIndex++;
               numNonContigSourceChunks++;
             } // while
-#ifdef onesidedtrace
-            printf("CurrentSourceBufferOffset finally set to %ld\n",currentSourceBufferOffset);
-#endif
-          } // !bufTypeIsContig
 
+          } // !bufTypeIsContig
 
           /* Determine the offset into the target window.
            */
@@ -698,13 +731,14 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
             MPI_Win_lock(MPI_LOCK_SHARED, targetAggsForMyData[aggIter], 0, write_buf_window);
 #endif
             if (bufTypeIsContig) {
-              MPI_Put(&((char*)buf)[sourceBufferOffset],bufferAmountToSend, MPI_BYTE,targetAggsForMyData[aggIter],targetDisplacementToUseThisRound, bufferAmountToSend,MPI_BYTE,write_buf_window);
+              MPI_Put(((char*)buf) + sourceBufferOffset,bufferAmountToSend, MPI_BYTE,targetAggsForMyData[aggIter],targetDisplacementToUseThisRound, bufferAmountToSend,MPI_BYTE,write_buf_window);
             }
             else {
               for (i=0;i<numNonContigSourceChunks;i++) {
-                MPI_Put(&((char*)buf)[nonContigSourceOffsets[i]],nonContigSourceLens[i], MPI_BYTE,targetAggsForMyData[aggIter],targetDisplacementToUseThisRound, nonContigSourceLens[i],MPI_BYTE,write_buf_window);
+                MPI_Put(((char*)buf) + nonContigSourceOffsets[i],nonContigSourceLens[i], MPI_BYTE,targetAggsForMyData[aggIter],targetDisplacementToUseThisRound, nonContigSourceLens[i],MPI_BYTE,write_buf_window);
+
 #ifdef onesidedtrace
-                printf("mpi_put[%d] nonContigSourceOffsets is %d of nonContigSourceLens %d to target disp %d\n",i,nonContigSourceOffsets[i],nonContigSourceLens[i],targetDisplacementToUseThisRound);
+                printf("mpi_put[%d] nonContigSourceOffsets is %d of nonContigSourceLens %d to target disp %d first int of data: %d\n ",i,nonContigSourceOffsets[i],nonContigSourceLens[i],targetDisplacementToUseThisRound, ((int*)(((char*)buf) + nonContigSourceOffsets[i]))[0]);
 #endif
                 targetDisplacementToUseThisRound += nonContigSourceLens[i];
               }
@@ -729,6 +763,7 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
             }
             else {
               for (i=0;i<numNonContigSourceChunks;i++) {
+              if (nonContigSourceLens[i] > 0) {
                 targetAggBlockLengths[targetAggContigAccessCount]= nonContigSourceLens[i];
                 targetAggDataTypes[targetAggContigAccessCount] = MPI_BYTE;
                 targetAggDisplacements[targetAggContigAccessCount] = targetDisplacementToUseThisRound;
@@ -739,16 +774,13 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
                 targetAggContigAccessCount++;
                 targetDisplacementToUseThisRound += nonContigSourceLens[i];
               }
+              }
             }
           }
 #ifdef onesidedtrace
         printf("roundIter %d bufferAmountToSend is %d sourceBufferOffset is %d offsetStart is %ld currentRoundFDStartForMyTargetAgg is %ld targetDisplacementToUseThisRound is %ld targetAggsForMyDataFDStart[aggIter] is %ld\n",roundIter, bufferAmountToSend,sourceBufferOffset, offsetStart,currentRoundFDStartForMyTargetAgg,targetDisplacementToUseThisRound,targetAggsForMyDataFDStart[aggIter]);
 #endif
 
-          if (!bufTypeIsContig) {
-            ADIOI_Free(nonContigSourceOffsets);
-            ADIOI_Free(nonContigSourceLens);
-          }
         } // bufferAmountToSend > 0
       } // contig list
 
@@ -756,6 +788,20 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
        */
       if (gpfsmpio_aggmethod == 2) {
         MPI_Datatype sourceBufferDerivedDataType, targetBufferDerivedDataType;
+        if (targetAggContigAccessCount > 0) {
+        /* Rebase source buffer offsets to 0 if there are any negative offsets for safety
+         * when iteracting with PAMI.
+         */
+        MPI_Aint lowestDisplacement = 0;
+        for (i=0;i<targetAggContigAccessCount;i++) {
+          if (sourceBufferDisplacements[i] < lowestDisplacement)
+            lowestDisplacement = sourceBufferDisplacements[i];
+        }
+        if (lowestDisplacement  < 0) {
+          lowestDisplacement *= -1;
+          for (i=0;i<targetAggContigAccessCount;i++)
+            sourceBufferDisplacements[i] += lowestDisplacement;
+        }
         MPI_Type_create_struct(targetAggContigAccessCount, targetAggBlockLengths, sourceBufferDisplacements, targetAggDataTypes, &sourceBufferDerivedDataType);
         MPI_Type_commit(&sourceBufferDerivedDataType);
         MPI_Type_create_struct(targetAggContigAccessCount, targetAggBlockLengths, targetAggDisplacements, targetAggDataTypes, &targetBufferDerivedDataType);
@@ -768,20 +814,23 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
         MPI_Win_lock(MPI_LOCK_SHARED, targetAggsForMyData[aggIter], 0, write_buf_window);
 #endif
 
-        MPI_Put(((char*)buf),1, sourceBufferDerivedDataType,targetAggsForMyData[aggIter],0, 1,targetBufferDerivedDataType,write_buf_window);
+        MPI_Put((((char*)buf) - lowestDisplacement),1, sourceBufferDerivedDataType,targetAggsForMyData[aggIter],0, 1,targetBufferDerivedDataType,write_buf_window);
 
 #ifndef ACTIVE_TARGET
         MPI_Win_unlock(targetAggsForMyData[aggIter], write_buf_window);
 #endif
 
+        }
         if (allocatedDerivedTypeArrays) {
           ADIOI_Free(targetAggBlockLengths);
           ADIOI_Free(targetAggDisplacements);
           ADIOI_Free(targetAggDataTypes);
           ADIOI_Free(sourceBufferDisplacements);
         }
+        if (targetAggContigAccessCount > 0) {
         MPI_Type_free(&sourceBufferDerivedDataType);
         MPI_Type_free(&targetBufferDerivedDataType);
+        }
       }
       } // baseoffset != -1
     } // target aggs
@@ -817,7 +866,6 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
         if (!useIOBuffer) {
           ADIO_WriteContig(fd, write_buf, (int)(currentRoundFDEnd - currentRoundFDStart)+1,
             MPI_BYTE, ADIO_EXPLICIT_OFFSET,currentRoundFDStart, &status, error_code);
-          int numBytesWritten= (int)(currentRoundFDEnd - currentRoundFDStart)+1;
 
 /* For now this algorithm cannot handle holes in the source data and does not do any data sieving.
  * One possible approach would be to initialize the write buffer with some value and then check to
@@ -825,7 +873,7 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
  * default initialized value and if that was still unchanged then you would know where a hole was.
  * Here is some initial sample code for that:
  *       if (roundIter<(numberOfRounds-1)) {
- *         for (i=0;i<numBytesWritten;i++)
+ *         for (i=0;i<((currentRoundFDEnd - currentRoundFDStart)+1);i++)
  *           write_buf[i] = '\0';
  *       }
 */
@@ -885,6 +933,11 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
 
     } /* for-loop roundIter */
 
+    if (!bufTypeIsContig) {
+      ADIOI_Free(nonContigSourceOffsets);
+      ADIOI_Free(nonContigSourceLens);
+    }
+
 #ifdef ROMIO_GPFS
     endTimeBase = MPI_Wtime();
     gpfsmpio_prof_cw[GPFSMPIO_CIO_T_DEXCH] += (endTimeBase-startTimeBase);
@@ -918,6 +971,8 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
     else
       ADIOI_Free(baseNonContigSourceBufferOffset);
 
+    if (!bufTypeIsContig)
+      ADIOI_Delete_flattened(datatype);
     return;
 }
 
@@ -978,18 +1033,23 @@ void ADIOI_OneSidedReadAggregation(ADIO_File fd,
       MPI_Type_extent(datatype, &bufTypeExtent);
     }
 #ifdef onesidedtrace
-      printf("ADIOI_OneSidedReadAggregation bufTypeIsContig is %d maxNumContigOperations is %d\n",bufTypeIsContig,maxNumContigOperations);
+      printf("ADIOI_OneSidedReadAggregation bufTypeIsContig is %d contig_access_count is %d\n",bufTypeIsContig,contig_access_count);
 #endif
 
-    ADIO_Offset myOffsetStart = st_offsets[myrank], myOffsetEnd = end_offsets[myrank], currentRoundOffsetStart = st_offsets[myrank];
-
-    ADIO_Offset lastFileOffset = 0, firstFileOffset = myOffsetEnd;
+    ADIO_Offset lastFileOffset = 0, firstFileOffset = -1;
 
     /* Get the total range being read.
      */
     for (j=0;j<nprocs;j++) {
-      lastFileOffset = ADIOI_MAX(lastFileOffset,end_offsets[j]);
-      firstFileOffset = ADIOI_MIN(firstFileOffset,st_offsets[j]);
+      if (end_offsets[j] > st_offsets[j]) {
+        /* Guard against ranks with empty data.
+         */
+        lastFileOffset = ADIOI_MAX(lastFileOffset,end_offsets[j]);
+        if (firstFileOffset == -1)
+          firstFileOffset = st_offsets[j];
+        else
+          firstFileOffset = ADIOI_MIN(firstFileOffset,st_offsets[j]);
+      }
     }
 
     int myAggRank = -1; /* if I am an aggregor this is my index into fd->hints->ranklist */
@@ -1095,7 +1155,7 @@ void ADIOI_OneSidedReadAggregation(ADIO_File fd,
 
     int currentDataTypeExtent = 0;
     int currentFlatBufIndice=0;
-    ADIO_Offset currentRemLen = 0;
+    ADIO_Offset currentIndiceOffset = 0;
 
 #ifdef onesidedtrace
     printf("NumberOfRounds is %d\n",numberOfRounds);
@@ -1106,6 +1166,7 @@ void ADIOI_OneSidedReadAggregation(ADIO_File fd,
 #endif
 
     int currentAggRankListIndex = 0;
+    int maxNumNonContigSourceChunks = 0;
 
     /* This denotes the coll_bufsize boundaries within the source buffer for reading for 1 round.
      */
@@ -1133,31 +1194,41 @@ void ADIOI_OneSidedReadAggregation(ADIO_File fd,
           /* Non-contiguous source datatype, count up the extents and indices to this point
            * in the blocks.
            */
-          ADIO_Offset sourceBlockTotal = 0-currentRemLen;
+          ADIO_Offset sourceBlockTotal = 0;
+          int lastIndiceUsed;
+          int numNonContigSourceChunks = 0;
           while (sourceBlockTotal < len_list[blockIter-1]) {
-            maxNumContigOperations++;
-            sourceBlockTotal += flatBuf->blocklens[currentFlatBufIndice];
+            numNonContigSourceChunks++;
+            sourceBlockTotal += (flatBuf->blocklens[currentFlatBufIndice] - currentIndiceOffset);
+            lastIndiceUsed = currentFlatBufIndice;
             currentFlatBufIndice++;
             if (currentFlatBufIndice == flatBuf->count) {
               currentFlatBufIndice = 0;
               currentDataTypeExtent++;
             }
+            currentIndiceOffset = 0;
           }
           if (sourceBlockTotal > len_list[blockIter-1]) {
             currentFlatBufIndice--;
             if (currentFlatBufIndice < 0 ) {
               currentDataTypeExtent--;
-              currentFlatBufIndice = flatBuf->count;
+              currentFlatBufIndice = flatBuf->count-1;
             }
+            currentIndiceOffset =  len_list[blockIter-1] - (sourceBlockTotal - flatBuf->blocklens[lastIndiceUsed]);
+            ADIOI_Assert((currentIndiceOffset >= 0) && (currentIndiceOffset < flatBuf->blocklens[currentFlatBufIndice]));
           }
-          currentRemLen = len_list[blockIter-1] - sourceBlockTotal;
+          else
+            currentIndiceOffset = 0;
+          maxNumContigOperations += numNonContigSourceChunks;
+          if (numNonContigSourceChunks > maxNumNonContigSourceChunks)
+            maxNumNonContigSourceChunks = numNonContigSourceChunks;
 #ifdef onesidedtrace
-          printf("contig_access_count iter %d currentFlatBufIndice is now %d currentDataTypeExtent is now %d currentRemLen is now %ld\n",blockIter,currentFlatBufIndice,currentDataTypeExtent,currentRemLen);
+          printf("block iter %d currentFlatBufIndice is now %d currentDataTypeExtent is now %d currentIndiceOffset is now %ld maxNumContigOperations is now %d\n",blockIter,currentFlatBufIndice,currentDataTypeExtent,currentIndiceOffset,maxNumContigOperations);
 #endif
         } // !bufTypeIsContig
       } // blockIter > 0
 
-      /* For the first iteration we need to include these maxNumContigOperations
+      /* For the first iteration we need to include these maxNumContigOperations and maxNumNonContigSourceChunks
        * for non-contig case even though we did not need to compute the starting offset.
        */
       if ((blockIter == 0) && (!bufTypeIsContig)) {
@@ -1165,6 +1236,7 @@ void ADIOI_OneSidedReadAggregation(ADIO_File fd,
         int tmpCurrentFlatBufIndice = currentFlatBufIndice;
         while (sourceBlockTotal < len_list[0]) {
           maxNumContigOperations++;
+          maxNumNonContigSourceChunks++;
           sourceBlockTotal += flatBuf->blocklens[tmpCurrentFlatBufIndice];
           tmpCurrentFlatBufIndice++;
           if (tmpCurrentFlatBufIndice == flatBuf->count) {
@@ -1173,7 +1245,7 @@ void ADIOI_OneSidedReadAggregation(ADIO_File fd,
         }
       }
 
-      ADIO_Offset blockStart = offset_list[blockIter], blockLen = len_list[blockIter], blockEnd = offset_list[blockIter]+len_list[blockIter]-(ADIO_Offset)1;
+      ADIO_Offset blockStart = offset_list[blockIter], blockEnd = offset_list[blockIter]+len_list[blockIter]-(ADIO_Offset)1;
 
       /* Find the starting source agg for this block - normally it will be the current agg so guard the expensive
        * while loop with a cheap if-check which for large numbers of small blocks will usually be false.
@@ -1214,7 +1286,7 @@ void ADIOI_OneSidedReadAggregation(ADIO_File fd,
         else {
           baseNonContigSourceBufferOffset[sourceAggsForMyDataCurrentRoundIter[numSourceAggs]][numSourceAggs].flatBufIndice = currentFlatBufIndice;
           baseNonContigSourceBufferOffset[sourceAggsForMyDataCurrentRoundIter[numSourceAggs]][numSourceAggs].dataTypeExtent = currentDataTypeExtent;
-          baseNonContigSourceBufferOffset[sourceAggsForMyDataCurrentRoundIter[numSourceAggs]][numSourceAggs].remLen = currentRemLen;
+          baseNonContigSourceBufferOffset[sourceAggsForMyDataCurrentRoundIter[numSourceAggs]][numSourceAggs].indiceOffset = currentIndiceOffset;
         }
 
         intraRoundCollBufsizeOffset = fd_start[currentAggRankListIndex] + ((sourceAggsForMyDataCurrentRoundIter[numSourceAggs]+1) * coll_bufsize);
@@ -1246,7 +1318,7 @@ void ADIOI_OneSidedReadAggregation(ADIO_File fd,
               else {
                 baseNonContigSourceBufferOffset[sourceAggsForMyDataCurrentRoundIter[numSourceAggs]][numSourceAggs].flatBufIndice = currentFlatBufIndice;
                 baseNonContigSourceBufferOffset[sourceAggsForMyDataCurrentRoundIter[numSourceAggs]][numSourceAggs].dataTypeExtent = currentDataTypeExtent;
-                baseNonContigSourceBufferOffset[sourceAggsForMyDataCurrentRoundIter[numSourceAggs]][numSourceAggs].remLen = currentRemLen;
+                baseNonContigSourceBufferOffset[sourceAggsForMyDataCurrentRoundIter[numSourceAggs]][numSourceAggs].indiceOffset = currentIndiceOffset;
               }
 
               sourceAggsForMyDataLastOffLenIndex[sourceAggsForMyDataCurrentRoundIter[numSourceAggs]][numSourceAggs] = blockIter;
@@ -1279,7 +1351,7 @@ void ADIOI_OneSidedReadAggregation(ADIO_File fd,
             else {
               baseNonContigSourceBufferOffset[sourceAggsForMyDataCurrentRoundIter[numSourceAggs]][numSourceAggs].flatBufIndice = currentFlatBufIndice;
               baseNonContigSourceBufferOffset[sourceAggsForMyDataCurrentRoundIter[numSourceAggs]][numSourceAggs].dataTypeExtent = currentDataTypeExtent;
-              baseNonContigSourceBufferOffset[sourceAggsForMyDataCurrentRoundIter[numSourceAggs]][numSourceAggs].remLen = currentRemLen;
+              baseNonContigSourceBufferOffset[sourceAggsForMyDataCurrentRoundIter[numSourceAggs]][numSourceAggs].indiceOffset = currentIndiceOffset;
             }
 
 #ifdef onesidedtrace
@@ -1305,7 +1377,7 @@ void ADIOI_OneSidedReadAggregation(ADIO_File fd,
           else {
             baseNonContigSourceBufferOffset[sourceAggsForMyDataCurrentRoundIter[numSourceAggs]][numSourceAggs].flatBufIndice = currentFlatBufIndice;
             baseNonContigSourceBufferOffset[sourceAggsForMyDataCurrentRoundIter[numSourceAggs]][numSourceAggs].dataTypeExtent = currentDataTypeExtent;
-            baseNonContigSourceBufferOffset[sourceAggsForMyDataCurrentRoundIter[numSourceAggs]][numSourceAggs].remLen = currentRemLen;
+            baseNonContigSourceBufferOffset[sourceAggsForMyDataCurrentRoundIter[numSourceAggs]][numSourceAggs].indiceOffset = currentIndiceOffset;
           }
           sourceAggsForMyDataLastOffLenIndex[sourceAggsForMyDataCurrentRoundIter[numSourceAggs]][numSourceAggs] = blockIter;
 #ifdef onesidedtrace
@@ -1377,6 +1449,16 @@ void ADIOI_OneSidedReadAggregation(ADIO_File fd,
 
     ADIO_Offset currentBaseRecvBufferOffset = 0;
 
+    /* These data structures are used to track the offset/len pairs for non-contiguous source buffers that are
+     * to be used for each block of data in the offset list.  Allocate them once with the maximum size and then 
+     * reuse the space throughout the algoritm below.
+     */
+    ADIO_Offset *nonContigSourceOffsets;
+    int *nonContigSourceLens;
+    if (!bufTypeIsContig) {
+      nonContigSourceOffsets = (ADIO_Offset *)ADIOI_Malloc((maxNumNonContigSourceChunks+2) * sizeof(ADIO_Offset));
+      nonContigSourceLens = (int *)ADIOI_Malloc((maxNumNonContigSourceChunks+2) * sizeof(int));
+    }
     /* This is the second main loop of the algorithm, actually nested loop of source aggs within rounds.  There are 2 flavors of this.
      * For gpfsmpio_aggmethod of 1 each nested iteration for the source agg does an mpi_put on a contiguous chunk using a primative datatype
      * determined using the data structures from the first main loop.  For gpfsmpio_aggmethod of 2 each nested iteration for the source agg
@@ -1542,7 +1624,7 @@ void ADIOI_OneSidedReadAggregation(ADIO_File fd,
           else {
             currentFlatBufIndice = baseNonContigSourceBufferOffset[roundIter][aggIter].flatBufIndice;
             currentDataTypeExtent = baseNonContigSourceBufferOffset[roundIter][aggIter].dataTypeExtent;
-            currentRemLen = baseNonContigSourceBufferOffset[roundIter][aggIter].remLen;
+            currentIndiceOffset = baseNonContigSourceBufferOffset[roundIter][aggIter].indiceOffset;
 #ifdef onesidedtrace
             printf("currentFlatBufIndice initially set to %d starting this round/agg %d/%d\n",currentFlatBufIndice,roundIter,aggIter);
 #endif
@@ -1553,22 +1635,35 @@ void ADIOI_OneSidedReadAggregation(ADIO_File fd,
             currentBaseRecvBufferOffset += len_list[offsetIter-1];
           else {
 
-          /* For non-contiguous source datatype count up the extents and indices to this point.
+          /* For non-contiguous source datatype advance the flattened buffer machinery to this offset.
+           * Note that currentDataTypeExtent, currentFlatBufIndice and currentIndiceOffset are used and
+           * advanced across the offsetIters.
            */
-          ADIO_Offset sourceBlockTotal = 0-currentRemLen;
+          ADIO_Offset sourceBlockTotal = 0;
+          int lastIndiceUsed;
           while (sourceBlockTotal < len_list[offsetIter-1]) {
-            sourceBlockTotal += flatBuf->blocklens[currentFlatBufIndice];
+            sourceBlockTotal += (flatBuf->blocklens[currentFlatBufIndice] - currentIndiceOffset);
+            lastIndiceUsed = currentFlatBufIndice;
             currentFlatBufIndice++;
             if (currentFlatBufIndice == flatBuf->count) {
               currentFlatBufIndice = 0;
               currentDataTypeExtent++;
             }
+            currentIndiceOffset = 0;
           } // while
-          if (sourceBlockTotal > len_list[offsetIter-1])
+          if (sourceBlockTotal > len_list[offsetIter-1]) {
             currentFlatBufIndice--;
-          currentRemLen = len_list[offsetIter-1] - sourceBlockTotal;
+            if (currentFlatBufIndice < 0 ) {
+              currentDataTypeExtent--;
+              currentFlatBufIndice = flatBuf->count-1;
+            }
+            currentIndiceOffset =  len_list[offsetIter-1] - (sourceBlockTotal - flatBuf->blocklens[lastIndiceUsed]);
+            ADIOI_Assert((currentIndiceOffset >= 0) && (currentIndiceOffset < flatBuf->blocklens[currentFlatBufIndice]));
+          }
+          else
+            currentIndiceOffset = 0;
 #ifdef onesidedtrace
-          printf("contig_access_count source agg %d currentFlatBufIndice is now %d currentDataTypeExtent is now %d currentRemLen is now %ld\n",aggIter,currentFlatBufIndice,currentDataTypeExtent,currentRemLen);
+          printf("contig_access_count source agg %d currentFlatBufIndice is now %d currentDataTypeExtent is now %d currentIndiceOffset is now %ld\n",aggIter,currentFlatBufIndice,currentDataTypeExtent,currentIndiceOffset);
 #endif
           }
 
@@ -1632,65 +1727,48 @@ void ADIOI_OneSidedReadAggregation(ADIO_File fd,
            * from the source buffer to be sent to this contiguous chunk defined by the round/agg/iter in the source.
            */
           int numNonContigSourceChunks = 0;
-          ADIO_Offset *nonContigSourceOffsets;
-          int *nonContigSourceLens;
           ADIO_Offset baseDatatypeInstanceOffset = 0;
 
           if (!bufTypeIsContig) {
 
-            currentRecvBufferOffset = (ADIO_Offset)((ADIO_Offset)currentDataTypeExtent * (ADIO_Offset)bufTypeExtent) + flatBuf->indices[currentFlatBufIndice] + currentRemLen;
+            currentRecvBufferOffset = (ADIO_Offset)((ADIO_Offset)currentDataTypeExtent * (ADIO_Offset)bufTypeExtent) + flatBuf->indices[currentFlatBufIndice] + currentIndiceOffset;
 #ifdef onesidedtrace
-            printf("!bufTypeIsContig currentRecvBufferOffset set to %ld for roundIter %d source %d currentDataTypeExtent %d flatBuf->indices[currentFlatBufIndice] %ld currentRemLen %ld currentFlatBufIndice %d\n",currentRecvBufferOffset,roundIter,aggIter,currentDataTypeExtent,flatBuf->indices[currentFlatBufIndice],currentRemLen,currentFlatBufIndice);
+            printf("!bufTypeIsContig currentRecvBufferOffset set to %ld for roundIter %d source %d currentDataTypeExtent %d flatBuf->indices[currentFlatBufIndice] %ld currentIndiceOffset %ld currentFlatBufIndice %d\n",currentRecvBufferOffset,roundIter,aggIter,currentDataTypeExtent,flatBuf->indices[currentFlatBufIndice],currentIndiceOffset,currentFlatBufIndice);
 #endif
 
-            /* Count the chunks first to see how much to malloc from the ending point from above code.
+            /* Use a tmp variable for the currentFlatBufIndice and currentIndiceOffset as they are used across the offsetIters
+             * to compute the starting point for this iteration and will be modified now to compute the data chunks for
+             * this iteration.
              */
-            int recvBytesCounted = 0;
             int tmpFlatBufIndice = currentFlatBufIndice;
-            int maxNumNonContigSourceChunks = 2; // over-initialize for potential remnants on both ends
-
-            while (recvBytesCounted < bufferAmountToRecv) {
-              maxNumNonContigSourceChunks++;
-              if (tmpFlatBufIndice == flatBuf->count) {
-                tmpFlatBufIndice = 0;
-              }
-              recvBytesCounted += flatBuf->blocklens[tmpFlatBufIndice];
-              tmpFlatBufIndice++;
-            }
-
-            nonContigSourceOffsets = (ADIO_Offset *)ADIOI_Malloc(maxNumNonContigSourceChunks * sizeof(ADIO_Offset));
-            nonContigSourceLens = (int *)ADIOI_Malloc(maxNumNonContigSourceChunks * sizeof(int));
+            ADIO_Offset tmpIndiceOffset = currentIndiceOffset;
 
             /* now populate the nonContigSourceOffsets and nonContigSourceLens arrays for use in the one-sided operations.
              */
             int ncArrayIndex = 0;
             int remainingBytesToLoadedIntoNCArrays = bufferAmountToRecv;
-            ADIO_Offset indexIntoCurrentIndice = 0;
-            if (currentRemLen > 0)
-              indexIntoCurrentIndice = flatBuf->blocklens[currentFlatBufIndice] - currentRemLen;
 
             int datatypeInstances = currentDataTypeExtent;
-            tmpFlatBufIndice = currentFlatBufIndice;
             while (remainingBytesToLoadedIntoNCArrays > 0) {
-             nonContigSourceOffsets[ncArrayIndex] = currentRecvBufferOffset;
+              ADIOI_Assert(ncArrayIndex < (maxNumNonContigSourceChunks+2));
+              nonContigSourceOffsets[ncArrayIndex] = currentRecvBufferOffset;
 
-              if ((flatBuf->blocklens[tmpFlatBufIndice] - indexIntoCurrentIndice) > remainingBytesToLoadedIntoNCArrays) {
+              if ((flatBuf->blocklens[tmpFlatBufIndice] - tmpIndiceOffset) >= remainingBytesToLoadedIntoNCArrays) {
                 nonContigSourceLens[ncArrayIndex] = remainingBytesToLoadedIntoNCArrays;
                 remainingBytesToLoadedIntoNCArrays = 0;
               }
               else {
-                nonContigSourceLens[ncArrayIndex] = (int)(flatBuf->blocklens[tmpFlatBufIndice] - indexIntoCurrentIndice);
-                remainingBytesToLoadedIntoNCArrays -= (flatBuf->blocklens[tmpFlatBufIndice] - indexIntoCurrentIndice);
+                nonContigSourceLens[ncArrayIndex] = (int)(flatBuf->blocklens[tmpFlatBufIndice] - tmpIndiceOffset);
+                remainingBytesToLoadedIntoNCArrays -= (flatBuf->blocklens[tmpFlatBufIndice] - tmpIndiceOffset);
+                tmpIndiceOffset = 0;
+                tmpFlatBufIndice++;
+                if (tmpFlatBufIndice == flatBuf->count) {
+                  tmpFlatBufIndice = 0;
+                  datatypeInstances++;
+                  baseDatatypeInstanceOffset = datatypeInstances * bufTypeExtent;
+                }
+                currentRecvBufferOffset = baseDatatypeInstanceOffset + flatBuf->indices[tmpFlatBufIndice];
               }
-              indexIntoCurrentIndice = 0; // only worry about beginning remnant for first iter
-
-              tmpFlatBufIndice++;
-              if (tmpFlatBufIndice == flatBuf->count) {
-                tmpFlatBufIndice = 0;
-                datatypeInstances++;
-                baseDatatypeInstanceOffset = datatypeInstances * bufTypeExtent;
-              }
-              currentRecvBufferOffset = baseDatatypeInstanceOffset + flatBuf->indices[tmpFlatBufIndice];
               ncArrayIndex++;
               numNonContigSourceChunks++;
             } // while
@@ -1703,7 +1781,7 @@ void ADIOI_OneSidedReadAggregation(ADIO_File fd,
            */
           MPI_Aint sourceDisplacementToUseThisRound = (MPI_Aint) ((ADIO_Offset)offsetStart - currentRoundFDStartForMySourceAgg);
 
-          /* If using the thread readr select the appropriate side of the split window.
+          /* If using the thread reader select the appropriate side of the split window.
            */
           if (useIOBuffer && (read_buf == read_buf1)) {
             sourceDisplacementToUseThisRound += coll_bufsize;
@@ -1716,11 +1794,11 @@ void ADIOI_OneSidedReadAggregation(ADIO_File fd,
             MPI_Win_lock(MPI_LOCK_SHARED, sourceAggsForMyData[aggIter], 0, read_buf_window);
 #endif
             if (bufTypeIsContig) {
-              MPI_Get(&((char*)buf)[recvBufferOffset],bufferAmountToRecv, MPI_BYTE,sourceAggsForMyData[aggIter],sourceDisplacementToUseThisRound, bufferAmountToRecv,MPI_BYTE,read_buf_window);
+              MPI_Get(((char*)buf) + recvBufferOffset,bufferAmountToRecv, MPI_BYTE,sourceAggsForMyData[aggIter],sourceDisplacementToUseThisRound, bufferAmountToRecv,MPI_BYTE,read_buf_window);
             }
             else {
               for (i=0;i<numNonContigSourceChunks;i++) {
-                MPI_Get(&((char*)buf)[nonContigSourceOffsets[i]],nonContigSourceLens[i], MPI_BYTE,sourceAggsForMyData[aggIter],sourceDisplacementToUseThisRound, nonContigSourceLens[i],MPI_BYTE,read_buf_window);
+                MPI_Get(((char*)buf) + nonContigSourceOffsets[i],nonContigSourceLens[i], MPI_BYTE,sourceAggsForMyData[aggIter],sourceDisplacementToUseThisRound, nonContigSourceLens[i],MPI_BYTE,read_buf_window);
 #ifdef onesidedtrace
                 printf("mpi_put[%d] nonContigSourceOffsets is %d of nonContigSourceLens %d to source disp %d\n",i,nonContigSourceOffsets[i],nonContigSourceLens[i],sourceDisplacementToUseThisRound);
 #endif
@@ -1764,10 +1842,6 @@ void ADIOI_OneSidedReadAggregation(ADIO_File fd,
         printf("roundIter %d bufferAmountToRecv is %d recvBufferOffset is %d offsetStart is %ld currentRoundFDStartForMySourceAgg is %ld sourceDisplacementToUseThisRound is %ld sourceAggsForMyDataFDStart[aggIter] is %ld\n",roundIter, bufferAmountToRecv,recvBufferOffset, offsetStart,currentRoundFDStartForMySourceAgg,sourceDisplacementToUseThisRound,sourceAggsForMyDataFDStart[aggIter]);
 #endif
 
-          if (!bufTypeIsContig) {
-            ADIOI_Free(nonContigSourceOffsets);
-            ADIOI_Free(nonContigSourceLens);
-          }
           } // bufferAmountToRecv > 0
       } // contig list
 
@@ -1775,19 +1849,33 @@ void ADIOI_OneSidedReadAggregation(ADIO_File fd,
        */
       if (gpfsmpio_aggmethod == 2) {
         MPI_Datatype recvBufferDerivedDataType, sourceBufferDerivedDataType;
+        if (sourceAggContigAccessCount > 0) {
+        /* Rebase source buffer offsets to 0 if there are any negative offsets for safety
+         * when iteracting with PAMI.
+         */
+        MPI_Aint lowestDisplacement = 0;
+        for (i=0;i<sourceAggContigAccessCount;i++) {
+          if (recvBufferDisplacements[i] < lowestDisplacement)
+            lowestDisplacement = recvBufferDisplacements[i];
+        }
+        if (lowestDisplacement  < 0) {
+          lowestDisplacement *= -1;
+          for (i=0;i<sourceAggContigAccessCount;i++)
+           recvBufferDisplacements[i] += lowestDisplacement;
+        }
         MPI_Type_create_struct(sourceAggContigAccessCount, sourceAggBlockLengths, recvBufferDisplacements, sourceAggDataTypes, &recvBufferDerivedDataType);
         MPI_Type_commit(&recvBufferDerivedDataType);
         MPI_Type_create_struct(sourceAggContigAccessCount, sourceAggBlockLengths, sourceAggDisplacements, sourceAggDataTypes, &sourceBufferDerivedDataType);
         MPI_Type_commit(&sourceBufferDerivedDataType);
-// printf("round %d mpi_put of derived type to agg %d sourceAggContigAccessCount is %d\n",roundIter, sourceAggsForMyData[aggIter],sourceAggContigAccessCount);
 #ifndef ACTIVE_TARGET
         MPI_Win_lock(MPI_LOCK_SHARED, sourceAggsForMyData[aggIter], 0, read_buf_window);
 #endif
-        MPI_Get(((char*)buf),1, recvBufferDerivedDataType,sourceAggsForMyData[aggIter],0, 1,sourceBufferDerivedDataType,read_buf_window);
+        MPI_Get((((char*)buf) - lowestDisplacement),1, recvBufferDerivedDataType,sourceAggsForMyData[aggIter],0, 1,sourceBufferDerivedDataType,read_buf_window);
 
 #ifndef ACTIVE_TARGET
         MPI_Win_unlock(sourceAggsForMyData[aggIter], read_buf_window);
 #endif
+        }
 
         if (allocatedDerivedTypeArrays) {
           ADIOI_Free(sourceAggBlockLengths);
@@ -1795,8 +1883,10 @@ void ADIOI_OneSidedReadAggregation(ADIO_File fd,
           ADIOI_Free(sourceAggDataTypes);
           ADIOI_Free(recvBufferDisplacements);
         }
+        if (sourceAggContigAccessCount > 0) {
         MPI_Type_free(&recvBufferDerivedDataType);
         MPI_Type_free(&sourceBufferDerivedDataType);
+        }
       }
       } // baseoffset != -1
     } // source aggs
@@ -1813,6 +1903,10 @@ void ADIOI_OneSidedReadAggregation(ADIO_File fd,
 
     } /* for-loop roundIter */
 
+    if (!bufTypeIsContig) {
+      ADIOI_Free(nonContigSourceOffsets);
+      ADIOI_Free(nonContigSourceLens);
+    }
 #ifdef ROMIO_GPFS
     endTimeBase = MPI_Wtime();
     gpfsmpio_prof_cw[GPFSMPIO_CIO_T_DEXCH] += (endTimeBase-startTimeBase);
@@ -1846,5 +1940,7 @@ void ADIOI_OneSidedReadAggregation(ADIO_File fd,
     else
       ADIOI_Free(baseNonContigSourceBufferOffset);
 
+    if (!bufTypeIsContig)
+      ADIOI_Delete_flattened(datatype);
     return;
 }
