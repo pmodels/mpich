@@ -58,14 +58,6 @@ int MPID_nem_tofu_iprobe(MPIDI_VC_t *vc, int source, int tag, MPID_Comm *comm, i
     mask.rank = ~0;
     mask.tag = ~0;
 
-    if (source == MPI_ANY_SOURCE) {
-        rank = LLC_ANY_SOURCE;
-        mask.rank = 0;
-    } else {
-        MPIU_Assert(vc);
-        rank = VC_FIELD(vc, remote_endpoint_addr);
-    }
-
     if (tag == MPI_ANY_TAG) {
         *(int32_t*)((uint8_t *)&_tag) = LLC_ANY_TAG;
         *(int32_t*)((uint8_t *)&mask.tag) = 0;
@@ -77,6 +69,14 @@ int MPID_nem_tofu_iprobe(MPIDI_VC_t *vc, int source, int tag, MPID_Comm *comm, i
         comm->recvcontext_id + context_offset;
     memset((uint8_t*)&_tag + sizeof(int32_t) + sizeof(MPIR_Context_id_t),
            0, sizeof(LLC_tag_t) - sizeof(int32_t) - sizeof(MPIR_Context_id_t));
+
+    if (source == MPI_ANY_SOURCE) {
+        rank = LLC_ANY_SOURCE;
+        mask.rank = 0;
+    } else {
+        MPIU_Assert(vc);
+        rank = VC_FIELD(vc, remote_endpoint_addr);
+    }
 
     llc_errno = LLC_probe(LLC_COMM_MPICH, rank, _tag, &mask, &probe);
     if (llc_errno == LLC_SUCCESS) {
@@ -125,14 +125,6 @@ int MPID_nem_tofu_improbe(MPIDI_VC_t *vc,  int source, int tag, MPID_Comm *comm,
     mask.rank = ~0;
     mask.tag = ~0;
 
-    if (source == MPI_ANY_SOURCE) {
-        rank = LLC_ANY_SOURCE;
-        mask.rank = 0;
-    } else {
-        MPIU_Assert(vc);
-        rank = VC_FIELD(vc, remote_endpoint_addr);
-    }
-
     if (tag == MPI_ANY_TAG) {
         *(int32_t*)((uint8_t *)&_tag) = LLC_ANY_TAG;
         *(int32_t*)((uint8_t *)&mask.tag) = 0;
@@ -144,6 +136,14 @@ int MPID_nem_tofu_improbe(MPIDI_VC_t *vc,  int source, int tag, MPID_Comm *comm,
         comm->recvcontext_id + context_offset;
     memset((uint8_t*)&_tag + sizeof(int32_t) + sizeof(MPIR_Context_id_t),
            0, sizeof(LLC_tag_t) - sizeof(int32_t) - sizeof(MPIR_Context_id_t));
+
+    if (source == MPI_ANY_SOURCE) {
+        rank = LLC_ANY_SOURCE;
+        mask.rank = 0;
+    } else {
+        MPIU_Assert(vc);
+        rank = VC_FIELD(vc, remote_endpoint_addr);
+    }
 
     msg = LLC_mprobe(LLC_COMM_MPICH, rank, _tag, &mask, &probe);
     if (msg) {
