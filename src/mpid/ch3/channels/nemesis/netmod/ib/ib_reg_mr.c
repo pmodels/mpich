@@ -132,8 +132,7 @@ static inline void __lru_queue_display()
     int i = 0;
     for (i = 0; i < MPID_NEM_IB_COM_REG_MR_NLINE; i++) {
         dprintf("---- hash %d\n", i);
-        for (p =
-             (struct MPID_nem_ib_com_reg_mr_cache_entry_t *)
+        for (p = (struct MPID_nem_ib_com_reg_mr_cache_entry_t *)
              MPID_nem_ib_com_reg_mr_cache[i].lru_next;
              p != (struct MPID_nem_ib_com_reg_mr_cache_entry_t *) &MPID_nem_ib_com_reg_mr_cache[i];
              p = (struct MPID_nem_ib_com_reg_mr_cache_entry_t *) p->lru_next) {
@@ -357,8 +356,7 @@ int MPID_nem_ib_com_register_cache_release()
     }
 
     for (i = 0; i < MPID_NEM_IB_COM_REG_MR_NLINE; i++) {
-        for (p =
-             (struct MPID_nem_ib_com_reg_mr_cache_entry_t *)
+        for (p = (struct MPID_nem_ib_com_reg_mr_cache_entry_t *)
              MPID_nem_ib_com_reg_mr_cache[i].lru_next;
              p !=
              (struct MPID_nem_ib_com_reg_mr_cache_entry_t *) &MPID_nem_ib_com_reg_mr_cache[i];) {

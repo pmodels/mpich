@@ -484,7 +484,7 @@ static inline int MPID_nem_ib_cbf_hash1(uint64_t addr)
         (((addr >> (MPID_nem_ib_cbf_lognslot * 0)) & (MPID_nem_ib_cbf_nslot - 1)) ^
          ((addr >> (MPID_nem_ib_cbf_lognslot * 3)) & (MPID_nem_ib_cbf_nslot - 1)) ^
          (((addr >> (MPID_nem_ib_cbf_lognslot * 6)) & (MPID_nem_ib_cbf_nslot - 1))
-         + 1)) & (MPID_nem_ib_cbf_nslot - 1);
+          + 1)) & (MPID_nem_ib_cbf_nslot - 1);
 }
 
 static inline int MPID_nem_ib_cbf_hash2(uint64_t addr)
@@ -494,7 +494,7 @@ static inline int MPID_nem_ib_cbf_hash2(uint64_t addr)
         (((addr >> (MPID_nem_ib_cbf_lognslot * 1)) & (MPID_nem_ib_cbf_nslot - 1)) ^
          ((addr >> (MPID_nem_ib_cbf_lognslot * 4)) & (MPID_nem_ib_cbf_nslot - 1)) ^
          (((addr >> (MPID_nem_ib_cbf_lognslot * 7)) & (MPID_nem_ib_cbf_nslot - 1))
-         + 1)) & (MPID_nem_ib_cbf_nslot - 1);
+          + 1)) & (MPID_nem_ib_cbf_nslot - 1);
 }
 
 static inline int MPID_nem_ib_cbf_hash3(uint64_t addr)
@@ -504,7 +504,7 @@ static inline int MPID_nem_ib_cbf_hash3(uint64_t addr)
         (((addr >> (MPID_nem_ib_cbf_lognslot * 2)) & (MPID_nem_ib_cbf_nslot - 1)) ^
          ((addr >> (MPID_nem_ib_cbf_lognslot * 5)) & (MPID_nem_ib_cbf_nslot - 1)) ^
          (((addr >> (MPID_nem_ib_cbf_lognslot * 8)) & (MPID_nem_ib_cbf_nslot - 1))
-         + 2)) & (MPID_nem_ib_cbf_nslot - 1);
+          + 2)) & (MPID_nem_ib_cbf_nslot - 1);
 
 }
 

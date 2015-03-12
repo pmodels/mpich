@@ -1270,20 +1270,14 @@ int MPID_nem_ib_recv_buf_released(struct MPIDI_VC *vc, void *user_data)
     MPID_nem_ib_ringbuf_headtail_t *headtail =
         (MPID_nem_ib_ringbuf_headtail_t *) ((uint8_t *) MPID_nem_ib_scratch_pad +
                                             MPID_NEM_IB_RINGBUF_OFF_HEAD);
-    uint16_t index_tail =
-        vc_ib->ibcom->remote_ringbuf->type ==
-        MPID_NEM_IB_RINGBUF_EXCLUSIVE ? ((uint16_t) (vc_ib->ibcom->rsr_seq_num_tail + 1) %
-                                         vc_ib->ibcom->
-                                         remote_ringbuf->nslot) : ((uint16_t) (headtail->tail +
-                                                                               1) %
-                                                                   vc_ib->ibcom->remote_ringbuf->
-                                                                   nslot);
+    uint16_t index_tail = vc_ib->ibcom->remote_ringbuf->type == MPID_NEM_IB_RINGBUF_EXCLUSIVE ?
+        ((uint16_t) (vc_ib->ibcom->rsr_seq_num_tail + 1) % vc_ib->ibcom->remote_ringbuf-> nslot) :
+        ((uint16_t) (headtail->tail + 1) % vc_ib->ibcom->remote_ringbuf->nslot);
     dprintf("released,index_tail=%d\n", index_tail);
     dprintf("released,%016lx\n", vc_ib->ibcom->remote_ringbuf->remote_released[index_tail / 64]);
     if (1 || (index_tail & 7) || MPID_nem_ib_diff16(index_slot, index_tail) >= vc_ib->ibcom->remote_ringbuf->nslot - 8) {       /* avoid wrap-around */
         while (1) {
-            if (((vc_ib->ibcom->remote_ringbuf->
-                  remote_released[index_tail / 64] >> (index_tail & 63)) & 1) == 1) {
+            if (((vc_ib->ibcom-> remote_ringbuf->remote_released[index_tail / 64] >> (index_tail & 63)) & 1) == 1) {
                 if (vc_ib->ibcom->remote_ringbuf->type == MPID_NEM_IB_RINGBUF_EXCLUSIVE) {
                     vc_ib->ibcom->rsr_seq_num_tail += 1;
                     dprintf("exclusive ringbuf,remote_tail,incremented to %d\n",
@@ -1414,7 +1408,7 @@ int MPID_nem_ib_PktHandler_EagerSend(MPIDI_VC_t * vc,
      * see MPID_nem_ib_iSendContig
      */
     //ch3_pkt->type = MPIDI_CH3_PKT_EAGER_SEND;
-        dprintf("ib_poll.c,before PktHandler_EagerSend,buflen=%ld\n", *buflen);
+    dprintf("ib_poll.c,before PktHandler_EagerSend,buflen=%ld\n", *buflen);
     MPIDI_msg_sz_t ch3_buflen = *buflen - sizeof(MPID_nem_ib_pkt_prefix_t);
     mpi_errno = MPIDI_CH3_PktHandler_EagerSend(vc, (MPIDI_CH3_Pkt_t *) ch3_pkt, &ch3_buflen, rreqp);
     dprintf("ib_poll.c,after PktHandler_EagerSend,buflen=%ld\n", ch3_buflen);
@@ -1660,8 +1654,7 @@ int MPID_nem_ib_pkt_RTS_handler(MPIDI_VC_t * vc,
         MPID_nem_ib_ncqe < MPID_NEM_IB_COM_MAX_CQ_CAPACITY - slack) {
         mpi_errno =
             MPID_nem_ib_lmt_start_recv_core(req, rts_pkt->addr, rts_pkt->rkey, length,
-                                            write_to_buf, REQ_FIELD(req, max_msg_sz),
-                                            last);
+                                            write_to_buf, REQ_FIELD(req, max_msg_sz), last);
         if (mpi_errno) {
             MPIU_ERR_POP(mpi_errno);
         }
@@ -1955,8 +1948,8 @@ int MPID_nem_ib_cm_drain_scq()
                                                MPID_nem_ib_cm_ringbuf_tail) < MPID_NEM_IB_CM_NSEG) {
 
                             MPID_nem_ib_cm_cmd_syn_t *cmd =
-                                (MPID_nem_ib_cm_cmd_syn_t *) shadow_cm->req->ibcom->
-                                icom_mem[MPID_NEM_IB_COM_SCRATCH_PAD_FROM];
+                                (MPID_nem_ib_cm_cmd_syn_t *) shadow_cm->req->
+                                ibcom->icom_mem[MPID_NEM_IB_COM_SCRATCH_PAD_FROM];
                             MPID_NEM_IB_CM_COMPOSE_SYN(cmd, shadow_cm->req);
                             cmd->responder_ringbuf_index =
                                 shadow_cm->req->responder_ringbuf_index =
@@ -2481,8 +2474,8 @@ int MPID_nem_ib_cm_poll_syn()
                                    MPID_nem_ib_cm_ringbuf_tail) < MPID_NEM_IB_CM_NSEG) {
 
                 MPID_nem_ib_cm_cmd_synack_t *cmd =
-                    (MPID_nem_ib_cm_cmd_synack_t *) req->ibcom->
-                    icom_mem[MPID_NEM_IB_COM_SCRATCH_PAD_FROM];
+                    (MPID_nem_ib_cm_cmd_synack_t *) req->
+                    ibcom->icom_mem[MPID_NEM_IB_COM_SCRATCH_PAD_FROM];
                 if (is_synack) {
                     dprintf("cm_poll_syn,sending synack,%d->%d[%d],connection_tx=%d\n",
                             MPID_nem_ib_myrank, syn->initiator_rank, req->ringbuf_index,
@@ -2722,8 +2715,8 @@ int MPID_nem_ib_cm_poll()
                     dprintf("cm_poll,sending ack1,req=%p,ringbuf_index=%d\n", req,
                             req->ringbuf_index);
                     MPID_nem_ib_cm_cmd_ack1_t *cmd =
-                        (MPID_nem_ib_cm_cmd_ack1_t *) req->ibcom->
-                        icom_mem[MPID_NEM_IB_COM_SCRATCH_PAD_FROM];
+                        (MPID_nem_ib_cm_cmd_ack1_t *) req->
+                        ibcom->icom_mem[MPID_NEM_IB_COM_SCRATCH_PAD_FROM];
                     MPID_NEM_IB_CM_COMPOSE_ACK1(cmd, req, synack->responder_req);
                     dprintf
                         ("cm_poll,composing ack1,cmd->responder_req=%p,cmd->rmem=%p,rkey=%08x,ringbuf_nslot=%d,remote_vc=%p\n",
@@ -2863,8 +2856,8 @@ int MPID_nem_ib_cm_poll()
                          req, req->ringbuf_index, req->initiator_rank,
                          req->ibcom->outstanding_connection_tx);
                     MPID_nem_ib_cm_cmd_ack2_t *cmd =
-                        (MPID_nem_ib_cm_cmd_ack2_t *) req->ibcom->
-                        icom_mem[MPID_NEM_IB_COM_SCRATCH_PAD_FROM];
+                        (MPID_nem_ib_cm_cmd_ack2_t *) req->
+                        ibcom->icom_mem[MPID_NEM_IB_COM_SCRATCH_PAD_FROM];
                     MPID_NEM_IB_CM_COMPOSE_ACK2(cmd, ack1->initiator_req);
                     MPID_nem_ib_cm_cmd_shadow_t *shadow = (MPID_nem_ib_cm_cmd_shadow_t *)
                         MPIU_Malloc(sizeof(MPID_nem_ib_cm_cmd_shadow_t));

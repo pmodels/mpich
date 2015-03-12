@@ -323,8 +323,8 @@ int MPID_nem_ib_lmt_start_recv(struct MPIDI_VC *vc, struct MPID_Request *req, MP
         length = s_cookie_buf->max_msg_sz;
     }
 
-    REQ_FIELD(req, max_msg_sz) = s_cookie_buf->max_msg_sz; /* store initiator's max_msg_sz */
-    REQ_FIELD(req, seg_num) = s_cookie_buf->seg_num; /* store number of segments */
+    REQ_FIELD(req, max_msg_sz) = s_cookie_buf->max_msg_sz;      /* store initiator's max_msg_sz */
+    REQ_FIELD(req, seg_num) = s_cookie_buf->seg_num;    /* store number of segments */
 
     /* try to issue RDMA-read command */
     int slack = 1;              /* slack for control packet bringing sequence number */

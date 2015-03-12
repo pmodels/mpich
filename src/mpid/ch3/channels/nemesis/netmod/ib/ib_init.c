@@ -494,7 +494,8 @@ int MPID_nem_ib_init(MPIDI_PG_t * pg_p, int pg_rank, char **bc_val_p, int *val_m
     for (i = 0; i < MPID_nem_ib_nranks; i++) {
         if (i != MPID_nem_ib_myrank) {
             for (j = 0; j < MPID_NEM_IB_COM_MAX_RQ_CAPACITY; j++) {
-                MPID_nem_ib_com_scratch_pad_recv(MPID_nem_ib_scratch_pad_fds[i], sizeof(MPID_nem_ib_cm_notify_send_t));
+                MPID_nem_ib_com_scratch_pad_recv(MPID_nem_ib_scratch_pad_fds[i],
+                                                 sizeof(MPID_nem_ib_cm_notify_send_t));
             }
         }
     }
@@ -855,11 +856,9 @@ int MPID_nem_ib_vc_init(MPIDI_VC_t * vc)
     MPIU_ERR_CHKANDJUMP(ibcom_errno, mpi_errno, MPI_ERR_OTHER, "**MPID_nem_ib_com_obtain_pointer");
 
     int ntrial = 0;
-    volatile MPID_nem_ib_com_qp_state_t *rstate =
-        (MPID_nem_ib_com_qp_state_t *) ((uint8_t *)
-                                        MPID_nem_ib_com_scratch_pad->icom_mem
-                                        [MPID_NEM_IB_COM_SCRATCH_PAD_TO] +
-                                        vc->pg_rank * sizeof(MPID_nem_ib_com_qp_state_t));
+    volatile MPID_nem_ib_com_qp_state_t *rstate = (MPID_nem_ib_com_qp_state_t *)
+        ((uint8_t *) MPID_nem_ib_com_scratch_pad->icom_mem[MPID_NEM_IB_COM_SCRATCH_PAD_TO]
+            + vc->pg_rank * sizeof(MPID_nem_ib_com_qp_state_t));
     dprintf("ib_init,rstate=%p,*rstate=%08x\n", rstate, *((uint32_t *) rstate));
     while (rstate->state != MPID_NEM_IB_COM_QP_STATE_RTR) {
         __asm__ __volatile__("pause;":::"memory");
@@ -1005,8 +1004,8 @@ int MPID_nem_ib_vc_terminate(MPIDI_VC_t * vc)
     dprintf
         ("vc_terminate,before,%d->%d,diff-rsr=%d,l diff-lsr=%d,sendq_empty=%d,ncqe=%d,pending_sends=%d\n",
          MPID_nem_ib_myrank, vc->pg_rank, MPID_nem_ib_diff16(vc_ib->ibcom->rsr_seq_num_tail,
-                                                             vc_ib->ibcom->
-                                                             rsr_seq_num_tail_last_sent),
+                                                             vc_ib->
+                                                             ibcom->rsr_seq_num_tail_last_sent),
          MPID_nem_ib_diff16(vc_ib->ibcom->sseq_num, vc_ib->ibcom->lsr_seq_num_tail),
          MPID_nem_ib_sendq_empty(vc_ib->sendq), MPID_nem_ib_ncqe, VC_FIELD(vc, pending_sends));
 

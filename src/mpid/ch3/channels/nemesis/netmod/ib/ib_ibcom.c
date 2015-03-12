@@ -1900,8 +1900,8 @@ int MPID_nem_ib_com_put_scratch_pad(int condesc, uint64_t wr_id, uint64_t offset
     /* rkey is defined in MPID_nem_ib_com_reg_mr_connect */
 
     dprintf("MPID_nem_ib_com_put_scratch_pad,wr.rdma.remote_addr=%llx\n",
-            (unsigned long long) conp->icom_sr[MPID_NEM_IB_COM_SCRATCH_PAD_INITIATOR].wr.
-            rdma.remote_addr);
+            (unsigned long long) conp->icom_sr[MPID_NEM_IB_COM_SCRATCH_PAD_INITIATOR].wr.rdma.
+            remote_addr);
 
 #ifdef HAVE_LIBDCFA
     ib_errno = ibv_post_send(conp->icom_qp, &conp->icom_sr[MPID_NEM_IB_COM_SCRATCH_PAD_INITIATOR]);
@@ -1965,8 +1965,8 @@ int MPID_nem_ib_com_get_scratch_pad(int condesc,
     /* rkey is defined in MPID_nem_ib_com_reg_mr_connect */
 
     dprintf("MPID_nem_ib_com_get_scratch_pad,wr.rdma.remote_addr=%llx\n",
-            (unsigned long long) conp->icom_sr[MPID_NEM_IB_COM_SCRATCH_PAD_GET].wr.
-            rdma.remote_addr);
+            (unsigned long long) conp->icom_sr[MPID_NEM_IB_COM_SCRATCH_PAD_GET].wr.rdma.
+            remote_addr);
 
 #ifdef HAVE_LIBDCFA
     ib_errno = ibv_post_send(conp->icom_qp, &conp->icom_sr[MPID_NEM_IB_COM_SCRATCH_PAD_GET]);
@@ -2032,8 +2032,8 @@ int MPID_nem_ib_com_cas_scratch_pad(int condesc,
     conp->icom_sr[MPID_NEM_IB_COM_SCRATCH_PAD_CAS].wr.atomic.swap = swap;
 
     dprintf("MPID_nem_ib_com_cas_scratch_pad,wr.rdma.remote_addr=%llx\n",
-            (unsigned long long) conp->icom_sr[MPID_NEM_IB_COM_SCRATCH_PAD_CAS].wr.
-            rdma.remote_addr);
+            (unsigned long long) conp->icom_sr[MPID_NEM_IB_COM_SCRATCH_PAD_CAS].wr.rdma.
+            remote_addr);
 
 #ifdef HAVE_LIBDCFA
     ib_errno = ibv_post_send(conp->icom_qp, &conp->icom_sr[MPID_NEM_IB_COM_SCRATCH_PAD_CAS]);
@@ -2456,7 +2456,7 @@ char *MPID_nem_ib_com_strerror(int err)
         goto fn_exit;
     }
     else {
-        r = (char *)strerror_tbl[-err];
+        r = (char *) strerror_tbl[-err];
     }
   fn_exit:
     return r;
