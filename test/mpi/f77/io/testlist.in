@@ -19,4 +19,4 @@ setviewcurf 4
 c2f2ciof 1
 c2fmultio 1
 @mpix@i_setviewcurf 4
-@mpix@iwriteatallf 4 xfail=2201
+@mpix@iwriteatallf 4 xfail=ticket2201
