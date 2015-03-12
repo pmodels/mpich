@@ -34,10 +34,6 @@ static int ref_count;
 typedef struct {
     char *next;
 } free_list_t;
-#if 0
-static char *free_list_front[MPID_NEM_IB_NIALLOCID] = { 0 };
-static char *arena_flist[MPID_NEM_IB_NIALLOCID] = { 0 };
-#endif
 
 #define MPID_NEM_IB_SZARENA 4096
 #define MPID_NEM_IB_CLUSTER_SIZE (MPID_NEM_IB_SZARENA/sz)
@@ -155,35 +151,16 @@ static inline void __lru_queue_display()
 void *MPID_nem_ib_com_reg_mr_fetch(void *addr, long len,
                                    enum ibv_access_flags additional_flags, int mode)
 {
-#if 0   /* debug */
-    struct ibv_mr *mr;
-    int ibcom_errno = MPID_nem_ib_com_reg_mr(addr, len, &mr);
-    printf("mrcache,MPID_nem_ib_com_reg_mr,error,addr=%p,len=%d,lkey=%08x,rkey=%08x\n", addr, len,
-           mr->lkey, mr->rkey);
-    if (ibcom_errno != 0) {
-        goto fn_fail;
-    }
-  fn_exit:
-    return mr;
-  fn_fail:
-    goto fn_exit;
-#else
     int ibcom_errno;
     int key;
     struct MPID_nem_ib_com_reg_mr_cache_entry_t *e;
     static unsigned long long num_global_cache = 0ULL;
 
-#if 1   /*def HAVE_LIBDCFA */
     /* we can't change addr because ibv_post_send assumes mr->host_addr (output of this function)
      * must have an exact mirror value of addr (input of this function) */
     void *addr_aligned = addr;
     long len_aligned = len;
-#else
-    void *addr_aligned = (void *) ((unsigned long) addr & ~(MPID_NEM_IB_COM_REG_MR_SZPAGE - 1));
-    long len_aligned =
-        ((((unsigned long) addr + len) - (unsigned long) addr_aligned +
-          MPID_NEM_IB_COM_REG_MR_SZPAGE - 1) & ~(MPID_NEM_IB_COM_REG_MR_SZPAGE - 1));
-#endif
+
     key = MPID_nem_ib_com_hash_func(addr);
 
     dprintf("[MrCache] addr=%p, len=%ld\n", addr, len);
@@ -208,24 +185,6 @@ void *MPID_nem_ib_com_reg_mr_fetch(void *addr, long len,
 
     // miss
 
-#if 0
-    // evict an entry and de-register its MR when the cache-set is full
-    if (way > MPID_NEM_IB_COM_REG_MR_NWAY) {
-        struct MPID_nem_ib_com_reg_mr_cache_entry_t *victim =
-            (struct MPID_nem_ib_com_reg_mr_cache_entry_t *) e->lru_prev;
-        MPID_nem_ib_com_reg_mr_unlink((struct MPID_nem_ib_com_reg_mr_listnode_t *) victim);
-
-        //dprintf("MPID_nem_ib_com_reg_mr,evict,entry addr=%p,len=%d,mr addr=%p,len=%ld\n", e->addr, e->len,
-        //e->mr->addr, e->mr->length);
-        ibcom_errno = MPID_nem_ib_com_dereg_mr(victim->mr);
-        if (ibcom_errno) {
-            printf("mrcache,MPID_nem_ib_com_dereg_mr\n");
-            goto fn_fail;
-        }
-        afree(victim, MPID_NEM_IB_COM_AALLOC_ID_MRCACHE);
-    }
-#endif
-
     e = aalloc(sizeof(struct MPID_nem_ib_com_reg_mr_cache_entry_t),
                MPID_NEM_IB_COM_AALLOC_ID_MRCACHE);
     /* reference counter is used when evicting entry */
@@ -237,7 +196,6 @@ void *MPID_nem_ib_com_reg_mr_fetch(void *addr, long len,
     if (ibcom_errno != 0) {
         /* ib_com_reg_mr returns the errno of ibv_reg_mr */
         if (ibcom_errno == ENOMEM) {
-#if 1
             /* deregister memory region unused and re-register new one */
             struct MPID_nem_ib_com_reg_mr_listnode_t *ptr;
             struct MPID_nem_ib_com_reg_mr_cache_entry_t *victim;
@@ -287,40 +245,6 @@ void *MPID_nem_ib_com_reg_mr_fetch(void *addr, long len,
                 afree(e, MPID_NEM_IB_COM_AALLOC_ID_MRCACHE);
                 goto fn_fail;
             }
-#else
-            /* deregister memory region. The value of 'num_global_cache' means the number of global-cached.
-             * delete 5 percents of global-cached */
-            int i;
-            int del_num = (num_global_cache + 19) / 20;
-            struct MPID_nem_ib_com_reg_mr_cache_entry_t *victim;
-
-            dprintf("mrcache,MPID_nem_ib_com_reg_mr,ENOMEM,del_num(%d)\n", del_num);
-
-            for (i = 0; i < del_num; i++) {
-                /* get LRU data from MPID_nem_ib_com_reg_mr_global_cache */
-                victim = list_entry(MPID_nem_ib_com_reg_mr_global_cache.lru_prev, struct MPID_nem_ib_com_reg_mr_cache_entry_t, g_lru);
-
-                MPID_nem_ib_com_reg_mr_unlink((struct MPID_nem_ib_com_reg_mr_listnode_t *)victim);
-                MPID_nem_ib_com_reg_mr_unlink(&(victim->g_lru));
-
-                ibcom_errno = MPID_nem_ib_com_dereg_mr(victim->mr);
-                if (ibcom_errno) {
-                    printf("mrcache,MPID_nem_ib_com_dereg_mr\n");
-                    afree(e, MPID_NEM_IB_COM_AALLOC_ID_MRCACHE);
-                    goto fn_fail;
-                }
-                afree(victim, MPID_NEM_IB_COM_AALLOC_ID_MRCACHE);
-                num_global_cache--;
-            }
-
-            /* re-registraion */
-            ibcom_errno = MPID_nem_ib_com_reg_mr(addr_aligned, len_aligned, &e->mr, additional_flags);
-            if (ibcom_errno != 0) {
-                fprintf(stderr, "mrcache,MPID_nem_ib_com_reg_mr,retry,errno=%d\n", ibcom_errno);
-                afree(e, MPID_NEM_IB_COM_AALLOC_ID_MRCACHE);
-                goto fn_fail;
-            }
-#endif
         }
         else {
             /* errno is not ENOMEM */
@@ -352,7 +276,7 @@ void *MPID_nem_ib_com_reg_mr_fetch(void *addr, long len,
 
     /* reference counter is used when evicting entry */
     e->refc++;
-#if 1
+
     /* move to head of the list */
     if (e !=
         (struct MPID_nem_ib_com_reg_mr_cache_entry_t *) MPID_nem_ib_com_reg_mr_cache[key].lru_next)
@@ -361,7 +285,7 @@ void *MPID_nem_ib_com_reg_mr_fetch(void *addr, long len,
         MPID_nem_ib_com_reg_mr_insert(&MPID_nem_ib_com_reg_mr_cache[key],
                                       (struct MPID_nem_ib_com_reg_mr_listnode_t *) e);
     }
-#endif
+
     if (mode != MPID_NEM_IB_COM_REG_MR_STICKY) {
         /* move to head of the list in global-cache */
         MPID_nem_ib_com_reg_mr_unlink(&(e->g_lru));
@@ -379,23 +303,8 @@ void *MPID_nem_ib_com_reg_mr_fetch(void *addr, long len,
         return e;
   fn_fail:
     goto fn_exit;
-#endif
 }
 
-#if 0
-static void MPID_nem_ib_com_reg_mr_dereg(struct ibv_mr *mr)
-{
-
-    struct MPID_nem_ib_com_reg_mr_cache_entry_t *e;
-    struct MPID_nem_ib_com_reg_mr_cache_entry_t *zero = 0;
-    unsigned long offset = (unsigned long) zero->mr;
-    e = (struct MPID_nem_ib_com_reg_mr_cache_entry_t *) ((unsigned long) mr - offset);
-    e->refc--;
-
-    //dprintf("MPID_nem_ib_com_reg_mr_dereg,entry=%p,mr=%p,addr=%p,refc=%d,offset=%lx\n", e, mr, e->mr->addr,
-    //e->refc, offset);
-}
-#endif
 void MPID_nem_ib_com_reg_mr_release(struct MPID_nem_ib_com_reg_mr_cache_entry_t *entry)
 {
     entry->refc--;

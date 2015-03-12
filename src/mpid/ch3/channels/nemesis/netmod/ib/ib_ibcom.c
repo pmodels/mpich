@@ -221,7 +221,6 @@ static int modify_qp_to_rtr(struct ibv_qp *qp, uint32_t remote_qpn, uint16_t dli
     attr.ah_attr.port_num = ib_port;
 
     /* In dcfa gid is not set and for testing here it is also not set */
-#if 1
 #ifdef HAVE_LIBDCFA     /* DCFA doesn't use gid */
 #else
     if (gid_idx >= 0) {
@@ -233,7 +232,6 @@ static int modify_qp_to_rtr(struct ibv_qp *qp, uint32_t remote_qpn, uint16_t dli
         attr.ah_attr.grh.sgid_index = gid_idx;
         attr.ah_attr.grh.traffic_class = 0;
     }
-#endif
 #endif
 
     flags = IBV_QP_STATE | IBV_QP_AV | IBV_QP_PATH_MTU | IBV_QP_DEST_QPN
@@ -392,15 +390,7 @@ static int MPID_nem_ib_com_clean(MPID_nem_ib_com_t * conp)
 
                 MPID_nem_ib_rc_shared_rcq = NULL;
             }
-#if 0   /* It's not used */
-            retval =
-                munmap(conp->icom_mem[MPID_NEM_IB_COM_RDMAWR_FROM], MPID_NEM_IB_COM_RDMABUF_SZ);
-            MPID_NEM_IB_COM_ERR_CHKANDJUMP(retval, -1, dprintf("munmap"));
-#endif
-#if 0   /* Don't free it because it's managed through VC_FILED(vc, ibcom->remote_ringbuf) */
-            retval = munmap(conp->icom_mem[MPID_NEM_IB_COM_RDMAWR_TO], MPID_NEM_IB_COM_RDMABUF_SZ);
-            MPID_NEM_IB_COM_ERR_CHKANDJUMP(retval, -1, dprintf("munmap"));
-#endif
+
             MPIU_Free(conp->icom_mrlist);
             MPIU_Free(conp->icom_mem);
             MPIU_Free(conp->icom_msize);
@@ -729,17 +719,7 @@ int MPID_nem_ib_com_open(int ib_port, int open_flag, int *condesc)
 
         /* RDMA-write-to local memory area */
         conp->icom_msize[MPID_NEM_IB_COM_RDMAWR_TO] = MPID_NEM_IB_COM_RDMABUF_SZ;
-#if 0
-        int shmid = shmget(2, MPID_NEM_IB_COM_RDMABUF_SZ, SHM_HUGETLB | IPC_CREAT | SHM_R | SHM_W);
-        MPID_NEM_IB_COM_ERR_CHKANDJUMP(shmid < 0, -1, perror("shmget"));
-        conp->icom_mem[MPID_NEM_IB_COM_RDMAWR_TO] = shmat(shmid, 0, 0);
-        if (conp->icom_mem[MPID_NEM_IB_COM_RDMAWR_TO] == (char *) -1) {
-            perror("Shared memory attach failure");
-            shmctl(shmid, IPC_RMID, NULL);
-            ibcom_errno = -1;
-            goto fn_fail;
-        }
-#else
+
         /* ibv_reg_mr all memory area for all ring buffers
          * including shared and exclusive ones */
         if (!MPID_nem_ib_rdmawr_to_alloc_start) {
@@ -755,7 +735,6 @@ int MPID_nem_ib_com_open(int ib_port, int open_flag, int *condesc)
         //-1, 0);
         dprintf("MPID_nem_ib_com_open,mmap=%p,len=%d\n", conp->icom_mem[MPID_NEM_IB_COM_RDMAWR_TO],
                 MPID_NEM_IB_COM_RDMABUF_SZ);
-#endif
 
 #ifdef HAVE_LIBDCFA
         dprintf("MPID_nem_ib_com_open,fd=%d,rmem=%p\n", *condesc,
@@ -1130,14 +1109,6 @@ int MPID_nem_ib_com_open(int ib_port, int open_flag, int *condesc)
         conp->icom_ah_attr[MPID_NEM_IB_COM_UD_INITIATOR].static_rate = 0;       /* not limit on static rate (100% port speed) */
         conp->icom_ah_attr[MPID_NEM_IB_COM_UD_INITIATOR].is_global = 0;
         conp->icom_ah_attr[MPID_NEM_IB_COM_UD_INITIATOR].port_num = conp->icom_port;
-
-#if 0
-        conp->icom_ah_attr[MPID_NEM_IB_COM_UD_INITIATOR].is_global = 1;
-        conp->icom_ah_attr[MPID_NEM_IB_COM_UD_INITIATOR].grh.flow_label = 0;
-        conp->icom_ah_attr[MPID_NEM_IB_COM_UD_INITIATOR].grh.sgid_index = 0;    /* what is this? */
-        conp->icom_ah_attr[MPID_NEM_IB_COM_UD_INITIATOR].grh.hop_limit = 1;
-        conp->icom_ah_attr[MPID_NEM_IB_COM_UD_INITIATOR].grh.traffic_class = 0;
-#endif
 
         /* SR (send request) template for MPID_NEM_IB_COM_UD_INITIATOR */
         conp->icom_sr =
@@ -1521,16 +1492,12 @@ int MPID_nem_ib_com_isend(int condesc,
             off_pow2_aligned, sz_pad, num_sge);
 
     conp->icom_sr[MPID_NEM_IB_COM_SMT_NOINLINE].num_sge = num_sge;
-#if 1
     MPID_nem_ib_rc_send_request *wrap_wr_id = MPIU_Malloc(sizeof(MPID_nem_ib_rc_send_request));
     wrap_wr_id->wr_id = wr_id;
     wrap_wr_id->mf = MPID_NEM_IB_LAST_PKT;
     wrap_wr_id->mr_cache = (void *) mr_cache;
 
     conp->icom_sr[MPID_NEM_IB_COM_SMT_NOINLINE].wr_id = (uint64_t) wrap_wr_id;
-#else
-    conp->icom_sr[MPID_NEM_IB_COM_SMT_NOINLINE].wr_id = wr_id;
-#endif
     conp->icom_sr[MPID_NEM_IB_COM_SMT_NOINLINE].wr.rdma.remote_addr =
         (uint64_t) conp->local_ringbuf_start +
         MPID_NEM_IB_COM_RDMABUF_SZSEG * ((uint16_t) (conp->sseq_num % conp->local_ringbuf_nslot));
@@ -1549,13 +1516,6 @@ int MPID_nem_ib_com_isend(int condesc,
 
     //dprintf("MPID_nem_ib_com_isend,condesc=%d,num_sge=%d,opcode=%08x,imm_data=%08x,wr_id=%016lx, raddr=%p, rkey=%08x\n", condesc, conp->icom_sr[MPID_NEM_IB_COM_SMT_NOINLINE].num_sge, conp->icom_sr[MPID_NEM_IB_COM_SMT_NOINLINE].opcode, conp->icom_sr[MPID_NEM_IB_COM_SMT_NOINLINE].imm_data, conp->icom_sr[MPID_NEM_IB_COM_SMT_NOINLINE].wr_id, conp->icom_sr[MPID_NEM_IB_COM_SMT_NOINLINE].wr.rdma.remote_addr, conp->icom_sr[MPID_NEM_IB_COM_SMT_NOINLINE].wr.rdma.rkey);
 
-    /* other commands can executed RDMA-rd command */
-    /* see the "Ordering and the Fence Indicator" section in "InfiniBand Architecture" by William T. Futral */
-#if 0
-    if (conp->after_rdma_rd) {
-        conp->icom_sr[MPID_NEM_IB_COM_SMT_NOINLINE].send_flags |= IBV_SEND_FENCE;
-    }
-#endif
 #ifdef MPID_NEM_IB_ENABLE_INLINE
     if (sumsz <= conp->max_inline_data) {
         conp->icom_sr[MPID_NEM_IB_COM_SMT_NOINLINE].send_flags |= IBV_SEND_INLINE;
@@ -1582,12 +1542,6 @@ int MPID_nem_ib_com_isend(int condesc,
         conp->icom_sr[MPID_NEM_IB_COM_SMT_NOINLINE].send_flags &= ~IBV_SEND_INLINE;
     }
 #endif
-#if 0
-    if (conp->after_rdma_rd) {
-        conp->icom_sr[MPID_NEM_IB_COM_SMT_NOINLINE].send_flags &= ~IBV_SEND_FENCE;
-        conp->after_rdma_rd = 0;
-    }
-#endif
 
     conp->sseq_num += 1;
     conp->ncom += 1;
@@ -1596,237 +1550,6 @@ int MPID_nem_ib_com_isend(int condesc,
   fn_fail:
     goto fn_exit;
 }
-
-#if 0
-int MPID_nem_ib_com_isend_chain(int condesc, uint64_t wr_id, void *hdr, int sz_hdr, void *data,
-                                int sz_data)
-{
-    MPID_nem_ib_com_t *conp;
-    int ibcom_errno = 0;
-    struct ibv_send_wr *bad_wr;
-    int ib_errno;
-    int sz_data_rem = sz_data;
-    int i;
-    struct ibv_mr *mr_data;
-    uint32_t sumsz =
-        sizeof(MPID_nem_ib_netmod_hdr_t) + sz_hdr + sz_data + sizeof(MPID_nem_ib_netmod_trailer_t);
-    unsigned long tscs, tsce;
-
-    dprintf("MPID_nem_ib_com_isend_chain,enter\n");
-    MPID_NEM_IB_RANGE_CHECK_WITH_ERROR(condesc, conp);
-    MPID_NEM_IB_COM_ERR_CHKANDJUMP(conp->icom_connected == 0, -1,
-                                   printf("MPID_nem_ib_com_isend_chain,icom_connected==0\n"));
-
-    void *buf_from =
-        (uint8_t *) conp->icom_mem[MPID_NEM_IB_COM_RDMAWR_FROM] +
-        MPID_NEM_IB_COM_RDMABUF_SZSEG *
-        ((uint16_t) (conp->sseq_num % MPID_NEM_IB_COM_RDMABUF_NSEG));
-
-    /* make a tail-magic position is in a fixed set */
-    int off_pow2_aligned;
-    MPID_NEM_IB_OFF_POW2_ALIGNED(sizeof(MPID_nem_ib_netmod_hdr_t) + sz_hdr + sz_data);
-
-    /* let the last command icom_sr[MPID_NEM_IB_COM_SMT_INLINE_CHAIN-1] which has IBV_WR_RDMA_WRITE_WITH_IMM */
-    int s =
-        MPID_NEM_IB_COM_SMT_INLINE_NCHAIN - (sizeof(MPID_nem_ib_netmod_hdr_t) + sz_hdr +
-                                             off_pow2_aligned +
-                                             sizeof(MPID_nem_ib_netmod_trailer_t) +
-                                             MPID_NEM_IB_COM_INLINE_DATA -
-                                             1) / MPID_NEM_IB_COM_INLINE_DATA;
-    MPID_NEM_IB_COM_ERR_CHKANDJUMP((sizeof(MPID_nem_ib_netmod_hdr_t) + sz_hdr +
-                                    off_pow2_aligned) % 4 != 0, -1,
-                                   printf
-                                   ("MPID_nem_ib_com_isend_chain,tail-magic gets over packet-boundary\n"));
-    MPID_NEM_IB_COM_ERR_CHKANDJUMP(s < 0 ||
-                                   s >= MPID_NEM_IB_COM_SMT_INLINE_NCHAIN, -1,
-                                   printf("MPID_nem_ib_com_isend_chain,s\n"));
-    dprintf("MPID_nem_ib_com_isend_chain,sz_hdr=%d,sz_data=%d,s=%d\n", sz_hdr, sz_data, s);
-
-    for (i = s; i < MPID_NEM_IB_COM_SMT_INLINE_NCHAIN; i++) {
-
-        //tscs = MPID_nem_ib_rdtsc();
-        int sz_used = 0;        /* how much of the payload of a IB packet is used? */
-        int num_sge = 0;
-        if (i == s) {
-            MPID_nem_ib_netmod_hdr_t *netmod_hdr = (MPID_nem_ib_netmod_hdr_t *) buf_from;
-            MPID_NEM_IB_NETMOD_HDR_SZ_SET(netmod_hdr, sumsz);
-            memcpy((uint8_t *) buf_from + sizeof(MPID_nem_ib_netmod_hdr_t), hdr, sz_hdr);
-#ifdef HAVE_LIBDCFA
-            conp->icom_sr[MPID_NEM_IB_COM_SMT_INLINE_CHAINED0 + i].sg_list[num_sge].mic_addr =
-                (uint64_t) buf_from;
-            conp->icom_sr[MPID_NEM_IB_COM_SMT_INLINE_CHAINED0 + i].sg_list[num_sge].addr =
-                conp->icom_mrlist[MPID_NEM_IB_COM_RDMAWR_FROM]->host_addr + ((uint64_t) buf_from -
-                                                                             (uint64_t)
-                                                                             conp->icom_mem
-                                                                             [MPID_NEM_IB_COM_RDMAWR_FROM]);
-#else
-            conp->icom_sr[MPID_NEM_IB_COM_SMT_INLINE_CHAINED0 + i].sg_list[num_sge].addr =
-                (uint64_t) buf_from;
-#endif
-            buf_from = (uint8_t *) buf_from + sizeof(MPID_nem_ib_netmod_hdr_t) + sz_hdr;
-            conp->icom_sr[MPID_NEM_IB_COM_SMT_INLINE_CHAINED0 + i].sg_list[num_sge].length =
-                sizeof(MPID_nem_ib_netmod_hdr_t) + sz_hdr;
-            sz_used += sizeof(MPID_nem_ib_netmod_hdr_t) + sz_hdr;
-            conp->icom_sr[MPID_NEM_IB_COM_SMT_INLINE_CHAINED0 + i].sg_list[num_sge].lkey =
-                conp->icom_mrlist[MPID_NEM_IB_COM_RDMAWR_FROM]->lkey;
-            num_sge += 1;
-            dprintf("MPID_nem_ib_com_isend_chain,i=%d,sz_used=%d\n", i, sz_used);
-        }
-        //tsce = MPID_nem_ib_rdtsc(); printf("0,%ld\n", tsce-tscs);
-
-        //tscs = MPID_nem_ib_rdtsc();
-        if (sz_data_rem > 0) {
-#ifdef HAVE_LIBDCFA
-#else
-            conp->icom_sr[MPID_NEM_IB_COM_SMT_INLINE_CHAINED0 + i].sg_list[num_sge].addr =
-                (uint64_t) data + sz_data - sz_data_rem;
-#endif
-            int sz_data_red =
-                sz_used + sz_data_rem + sizeof(MPID_nem_ib_netmod_trailer_t) <=
-                MPID_NEM_IB_COM_INLINE_DATA ? sz_data_rem : sz_data_rem <=
-                MPID_NEM_IB_COM_INLINE_DATA - sz_used ? sz_data_rem : MPID_NEM_IB_COM_INLINE_DATA -
-                sz_used;
-            conp->icom_sr[MPID_NEM_IB_COM_SMT_INLINE_CHAINED0 + i].sg_list[num_sge].length =
-                sz_data_red;
-            sz_used += sz_data_red;
-            sz_data_rem -= sz_data_red;
-            MPID_NEM_IB_COM_ERR_CHKANDJUMP(sz_data_rem < 0, -1,
-                                           printf("MPID_nem_ib_com_isend_chain,sz_data_rem\n"));
-
-            if (i == s) {
-                MPID_NEM_IB_COM_ERR_CHKANDJUMP(!sz_data, -1,
-                                               printf("MPID_nem_ib_com_isend_chain,sz_data==0\n"));
-                mr_data = MPID_nem_ib_com_reg_mr_fetch(data, sz_data, 0);
-                MPID_NEM_IB_COM_ERR_CHKANDJUMP(!mr_data, -1,
-                                               printf
-                                               ("MPID_nem_ib_com_isend,ibv_reg_mr_fetch failed\n"));
-            }
-#ifdef HAVE_LIBDCFA
-            conp->icom_sr[MPID_NEM_IB_COM_SMT_INLINE_CHAINED0 + i].sg_list[num_sge].mic_addr =
-                (uint64_t) data + sz_data - sz_data_rem;
-            conp->icom_sr[MPID_NEM_IB_COM_SMT_INLINE_CHAINED0 + i].sg_list[num_sge].addr =
-                mr_data->host_addr + ((uint64_t) data + sz_data - sz_data_rem - (uint64_t) data);
-#endif
-            conp->icom_sr[MPID_NEM_IB_COM_SMT_INLINE_CHAINED0 + i].sg_list[num_sge].lkey =
-                mr_data->lkey;
-            num_sge += 1;
-            dprintf("MPID_nem_ib_com_isend_chain,i=%d,sz_used=%d,sz_data_rem=%d\n", i, sz_used,
-                    sz_data_rem);
-        }
-        else {  /* netmod_trailer only packet is being generated */
-
-        }
-        //tsce = MPID_nem_ib_rdtsc(); printf("1,%ld\n", tsce-tscs);
-
-        //tscs = MPID_nem_ib_rdtsc();
-        if (i == MPID_NEM_IB_COM_SMT_INLINE_NCHAIN - 1) {       /* append netmod_trailer */
-            int sz_pad = off_pow2_aligned - sz_data;
-            MPID_nem_ib_netmod_trailer_t *netmod_trailer =
-                (MPID_nem_ib_netmod_trailer_t *) ((uint8_t *) buf_from + sz_pad);
-            netmod_trailer->tail_flag = MPID_NEM_IB_COM_MAGIC;
-#ifdef HAVE_LIBDCFA
-            conp->icom_sr[MPID_NEM_IB_COM_SMT_INLINE_CHAINED0 + i].sg_list[num_sge].mic_addr =
-                (uint64_t) buf_from;
-            conp->icom_sr[MPID_NEM_IB_COM_SMT_INLINE_CHAINED0 + i].sg_list[num_sge].addr =
-                conp->icom_mrlist[MPID_NEM_IB_COM_RDMAWR_FROM]->host_addr + ((uint64_t) buf_from -
-                                                                             (uint64_t)
-                                                                             conp->icom_mem
-                                                                             [MPID_NEM_IB_COM_RDMAWR_FROM]);
-#else
-            conp->icom_sr[MPID_NEM_IB_COM_SMT_INLINE_CHAINED0 + i].sg_list[num_sge].addr =
-                (uint64_t) buf_from;
-#endif
-            conp->icom_sr[MPID_NEM_IB_COM_SMT_INLINE_CHAINED0 + i].sg_list[num_sge].length =
-                sz_pad + sizeof(MPID_nem_ib_netmod_trailer_t);
-            sz_used += sz_pad + sizeof(MPID_nem_ib_netmod_trailer_t);
-            MPID_NEM_IB_COM_ERR_CHKANDJUMP(sz_data_rem != 0, -1,
-                                           printf("MPID_nem_ib_com_isend_chain, sz_data_rem\n"));
-            conp->icom_sr[MPID_NEM_IB_COM_SMT_INLINE_CHAINED0 + i].sg_list[num_sge].lkey =
-                conp->icom_mrlist[MPID_NEM_IB_COM_RDMAWR_FROM]->lkey;
-            num_sge += 1;
-
-            conp->icom_sr[MPID_NEM_IB_COM_SMT_INLINE_CHAINED0 + i].imm_data = conp->sseq_num;
-            dprintf("MPID_nem_ib_com_isend_chain,i=%d,sz_pad=%d,sz_used=%d,num_sge=%d\n", i, sz_pad,
-                    sz_used, num_sge);
-        }
-        else if (MPID_NEM_IB_COM_INLINE_DATA - sz_used > 0) {   /* data fell short of the packet, so pad */
-            MPID_NEM_IB_COM_ERR_CHKANDJUMP(1, -1,
-                                           printf
-                                           ("MPID_nem_ib_com_isend_chain,tail-magic gets over packet-boundary\n"));
-            int sz_pad = MPID_NEM_IB_COM_INLINE_DATA - sz_used;
-#ifdef HAVE_LIBDCFA
-            conp->icom_sr[MPID_NEM_IB_COM_SMT_INLINE_CHAINED0 + i].sg_list[num_sge].mic_addr =
-                (uint64_t) buf_from;
-            conp->icom_sr[MPID_NEM_IB_COM_SMT_INLINE_CHAINED0 + i].sg_list[num_sge].addr =
-                conp->icom_mrlist[MPID_NEM_IB_COM_RDMAWR_FROM]->host_addr + ((uint64_t) buf_from -
-                                                                             (uint64_t)
-                                                                             conp->icom_mem
-                                                                             [MPID_NEM_IB_COM_RDMAWR_FROM]);
-#else
-            conp->icom_sr[MPID_NEM_IB_COM_SMT_INLINE_CHAINED0 + i].sg_list[num_sge].addr =
-                (uint64_t) buf_from;
-#endif
-            buf_from = (uint8_t *) buf_from + sz_pad;
-            conp->icom_sr[MPID_NEM_IB_COM_SMT_INLINE_CHAINED0 + i].sg_list[num_sge].length = sz_pad;
-            sz_used += sz_pad;
-            MPID_NEM_IB_COM_ERR_CHKANDJUMP(sz_used != MPID_NEM_IB_COM_INLINE_DATA, -1,
-                                           printf("MPID_nem_ib_com_isend_chain, sz_used\n"));
-            conp->icom_sr[MPID_NEM_IB_COM_SMT_INLINE_CHAINED0 + i].sg_list[num_sge].lkey =
-                conp->icom_mrlist[MPID_NEM_IB_COM_RDMAWR_FROM]->lkey;
-            num_sge += 1;
-            dprintf("MPID_nem_ib_com_isend_chain,i=%d,sz_pad=%d,sz_used=%d\n", i, sz_pad, sz_used);
-        }
-        else {  /* packet is full with data */
-            MPID_NEM_IB_COM_ERR_CHKANDJUMP(sz_used != MPID_NEM_IB_COM_INLINE_DATA, -1,
-                                           printf("MPID_nem_ib_com_isend_chain, sz_used\n"));
-        }
-        //tsce = MPID_nem_ib_rdtsc(); printf("2,%ld\n", tsce-tscs);
-
-        conp->icom_sr[MPID_NEM_IB_COM_SMT_INLINE_CHAINED0 + i].num_sge = num_sge;
-        conp->icom_sr[MPID_NEM_IB_COM_SMT_INLINE_CHAINED0 + i].wr_id = wr_id;
-        conp->icom_sr[MPID_NEM_IB_COM_SMT_INLINE_CHAINED0 + i].wr.rdma.remote_addr =
-            (uint64_t) conp->icom_rmem[MPID_NEM_IB_COM_RDMAWR_TO] +
-            MPID_NEM_IB_COM_RDMABUF_SZSEG *
-            ((uint16_t) (conp->sseq_num % MPID_NEM_IB_COM_RDMABUF_NSEG)) +
-            MPID_NEM_IB_COM_INLINE_DATA * (i - s);
-    }
-#if 0
-    if (conp->after_rdma_rd) {
-        conp->icom_sr[MPID_NEM_IB_COM_SMT_INLINE_CHAINED0 + s].send_flags |= IBV_SEND_FENCE;
-    }
-#endif
-#ifdef HAVE_LIBDCFA
-    ib_errno =
-        ibv_post_send(conp->icom_qp, &conp->icom_sr[MPID_NEM_IB_COM_SMT_INLINE_CHAINED0 + s]);
-#else
-    ib_errno =
-        ibv_post_send(conp->icom_qp, &conp->icom_sr[MPID_NEM_IB_COM_SMT_INLINE_CHAINED0 + s],
-                      &bad_wr);
-#endif
-#if 0
-    if (i == 0 && conp->after_rdma_rd) {
-        conp->icom_sr[MPID_NEM_IB_COM_SMT_INLINE_CHAINED0 + s].send_flags &= ~IBV_SEND_FENCE;
-        conp->after_rdma_rd = 0;
-    }
-#endif
-#ifdef HAVE_LIBDCFA
-    MPID_NEM_IB_COM_ERR_CHKANDJUMP(ib_errno, -1,
-                                   dprintf("MPID_nem_ib_com_isend, ibv_post_send, rc=%d\n",
-                                           ib_errno));
-#else
-    MPID_NEM_IB_COM_ERR_CHKANDJUMP(ib_errno, -1,
-                                   dprintf
-                                   ("MPID_nem_ib_com_isend, ibv_post_send, rc=%d, bad_wr=%p\n",
-                                    ib_errno, bad_wr));
-#endif
-    conp->ncom += (MPID_NEM_IB_COM_SMT_INLINE_NCHAIN - s);
-    conp->sseq_num += 1;
-  fn_exit:
-    return ibcom_errno;
-  fn_fail:
-    goto fn_exit;
-}
-#endif
 
 int MPID_nem_ib_com_irecv(int condesc, uint64_t wr_id)
 {
@@ -1880,9 +1603,6 @@ int MPID_nem_ib_com_udsend(int condesc, union ibv_gid *remote_gid, uint16_t remo
 #else
     /* prepare ibv_ah_attr */
     conp->icom_ah_attr[MPID_NEM_IB_COM_UD_INITIATOR].dlid = remote_lid;
-#if 0
-    conp->icom_ah_attr[MPID_NEM_IB_COM_UD_INITIATOR].grh.dgid = *remote_gid;
-#endif
 
     /* prepare ibv_ah */
     struct ibv_ah *ah;
@@ -1901,12 +1621,6 @@ int MPID_nem_ib_com_udsend(int condesc, union ibv_gid *remote_gid, uint16_t remo
 
     conp->icom_sr[MPID_NEM_IB_COM_UD_INITIATOR].wr_id = wr_id;
     conp->icom_sr[MPID_NEM_IB_COM_UD_INITIATOR].imm_data = imm_data;
-
-#if 0
-    if (length <= qpinfo->max_inline_data) {
-        conp->icom_sr[MPID_NEM_IB_COM_UD_INITIATOR].send_flags |= IBV_SEND_INLINE;
-    }
-#endif
 
 #ifdef HAVE_LIBDCFA
     ib_errno = ibv_post_send(conp->icom_qp, &conp->icom_sr[MPID_NEM_IB_COM_UD_INITIATOR]);
@@ -2010,11 +1724,6 @@ int MPID_nem_ib_com_lrecv(int condesc, uint64_t wr_id, void *raddr, long sz_data
                                     ib_errno, bad_wr));
 #endif
 
-    /* other commands can be executed before RDMA-rd command */
-    /* see the "Ordering and the Fence Indicator" section in "InfiniBand Architecture" by William T. Futral */
-#if 0
-    conp->after_rdma_rd = 1;
-#endif
     conp->ncom += 1;
 
   fn_exit:
@@ -2061,16 +1770,12 @@ int MPID_nem_ib_com_put_lmt(int condesc, uint64_t wr_id, void *raddr, int sz_dat
     num_sge += 1;
 
     conp->icom_sr[MPID_NEM_IB_COM_LMT_PUT].num_sge = num_sge;
-#if 1
     MPID_nem_ib_rc_send_request *wrap_wr_id = MPIU_Malloc(sizeof(MPID_nem_ib_rc_send_request));
     wrap_wr_id->wr_id = wr_id;
     wrap_wr_id->mf = MPID_NEM_IB_LAST_PKT;
     wrap_wr_id->mr_cache = (void *) mr_cache;
 
     conp->icom_sr[MPID_NEM_IB_COM_LMT_PUT].wr_id = (uint64_t) wrap_wr_id;
-#else
-    conp->icom_sr[MPID_NEM_IB_COM_LMT_PUT].wr_id = wr_id;
-#endif
     conp->icom_sr[MPID_NEM_IB_COM_LMT_PUT].wr.rdma.remote_addr = (uint64_t) raddr;
     conp->icom_sr[MPID_NEM_IB_COM_LMT_PUT].wr.rdma.rkey = rkey;
 
@@ -2639,24 +2344,6 @@ int MPID_nem_ib_com_mem_rdmawr_from(int condesc, void **out)
     goto fn_exit;
 }
 
-#if 0
-int MPID_nem_ib_com_mem_rdmawr_to(int condesc, int seq_num, void **out)
-{
-    MPID_nem_ib_com_t *conp;
-    int ibcom_errno = 0;
-
-    MPID_NEM_IB_RANGE_CHECK_WITH_ERROR(condesc, conp);
-    *out =
-        (uint8_t *) conp->icom_mem[MPID_NEM_IB_COM_RDMAWR_TO] +
-        MPID_NEM_IB_COM_RDMABUF_SZSEG * (seq_num % MPID_NEM_IB_COM_RDMABUF_NSEG);
-
-  fn_exit:
-    return ibcom_errno;
-  fn_fail:
-    goto fn_exit;
-}
-#endif
-
 int MPID_nem_ib_com_mem_udwr_from(int condesc, void **out)
 {
     MPID_nem_ib_com_t *conp;
@@ -2752,29 +2439,6 @@ int MPID_nem_ib_com_obtain_pointer(int condesc, MPID_nem_ib_com_t ** MPID_nem_ib
   fn_fail:
     goto fn_exit;
 }
-
-#if 0
-static void MPID_nem_ib_comShow(int condesc)
-{
-    MPID_nem_ib_com_t *conp;
-    uint8_t *p;
-    int i;
-
-    MPID_NEM_IB_RANGE_CHECK(condesc, conp);
-    fprintf(stdout, "qp_num = %d\n", conp->icom_qp->qp_num);
-#ifdef HAVE_LIBDCFA
-    fprintf(stdout, "lid    = %d\n", ib_ctx->lid);
-#else
-    fprintf(stdout, "lid    = %d\n", conp->icom_pattr.lid);
-#endif
-    p = (uint8_t *) & conp->icom_gid;
-    fprintf(stdout, "gid    = %02x", p[0]);
-    for (i = 1; i < 16; i++) {
-        fprintf(stdout, ":%02x", p[i]);
-    }
-    fprintf(stdout, "\n");
-}
-#endif
 
 static const char *strerror_tbl[] = {
     [0] = "zero",

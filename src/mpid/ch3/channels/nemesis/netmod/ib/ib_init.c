@@ -499,12 +499,6 @@ int MPID_nem_ib_init(MPIDI_PG_t * pg_p, int pg_rank, char **bc_val_p, int *val_m
         }
     }
 
-#if 0
-    MPIU_CHKPMEM_MALLOC(MPID_nem_ib_pollingset, MPIDI_VC_t **,
-                        MPID_NEM_IB_MAX_POLLINGSET * sizeof(MPIDI_VC_t *), mpi_errno,
-                        "connection table");
-    memset(MPID_nem_ib_pollingset, 0, MPID_NEM_IB_MAX_POLLINGSET * sizeof(MPIDI_VC_t *));
-#endif
 #ifndef MPID_NEM_IB_ONDEMAND
     /* prepare eager-send QP */
     for (i = 0; i < MPID_nem_ib_nranks; i++) {
@@ -596,12 +590,6 @@ int MPID_nem_ib_init(MPIDI_PG_t * pg_p, int pg_rank, char **bc_val_p, int *val_m
 
         }
     }
-
-#if 0   /* debug */
-    for (i = 0; i < MPID_nem_ib_nranks; i++) {
-        dprintf("init,fd[%d]=%d\n", i, MPID_nem_ib_conns[i].fd);
-    }
-#endif
 #else /* define(MPID_NEM_IB_ONDEMAND)  */
     /* We need to communicate with all other ranks in close sequence.  */
     MPID_nem_ib_conns_ref_count = MPID_nem_ib_nranks - MPID_nem_mem_region.num_local;
@@ -821,13 +809,6 @@ int MPID_nem_ib_vc_onconnect(MPIDI_VC_t * vc)
         MPID_nem_ib_com_obtain_pointer(MPID_nem_ib_conns[vc->pg_rank].fd, &VC_FIELD(vc, ibcom));
     MPIU_ERR_CHKANDJUMP(ibcom_errno, mpi_errno, MPI_ERR_OTHER, "**MPID_nem_ib_com_obtain_pointer");
 
-#if 0
-    /* Insert into polling set */
-    MPIU_ERR_CHKANDJUMP(MPID_nem_ib_npollingset + 1 > MPID_NEM_IB_MAX_POLLINGSET, mpi_errno,
-                        MPI_ERR_OTHER, "**MPID_nem_ib_npollingset");
-    MPID_nem_ib_pollingset[MPID_nem_ib_npollingset++] = vc;
-    //printf("vc_init,%d->%d,vc=%p,npollingset=%d\n", MPID_nem_ib_myrank, vc->pg_rank, vc, MPID_nem_ib_npollingset);
-#endif
   fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_IB_VC_ONCONNECT);
     return mpi_errno;
@@ -903,29 +884,12 @@ int MPID_nem_ib_vc_init(MPIDI_VC_t * vc)
 #endif
     MPIDI_CHANGE_VC_STATE(vc, ACTIVE);
 
-#if 0   /* dead code */
-    uint32_t max_msg_sz;
-    MPID_nem_ib_com_get_info_conn(MPID_nem_ib_conns[vc->pg_rank].fd,
-                                  MPID_NEM_IB_COM_INFOKEY_PATTR_MAX_MSG_SZ, &max_msg_sz,
-                                  sizeof(max_msg_sz));
-#endif
     VC_FIELD(vc, pending_sends) = 0;
 
     //MPIU_Assert(sizeof(MPID_nem_ib_netmod_hdr_t) == 8);    /* assumption in ib_ibcom.h */
     MPIU_Assert(sizeof(MPID_nem_ib_netmod_trailer_t) == 1);     /* assumption in ib_ibcom.h */
 
     uint32_t sz;
-#if 0
-    /* assumption in released(), must be power of two  */
-    sz = MPID_NEM_IB_COM_RDMABUF_NSEG;
-    while ((sz & 1) == 0) {
-        sz >>= 1;
-    }
-    sz >>= 1;
-    if (sz) {
-        MPIU_Assert(0);
-    }
-#endif
 
     /* assumption in ib_poll.c, must be power of two */
     for (sz = MPID_NEM_IB_COM_RDMABUF_SZSEG; sz > 0; sz >>= 1) {
@@ -951,16 +915,7 @@ int MPID_nem_ib_vc_init(MPIDI_VC_t * vc)
     vc_ch->pkt_handler = MPID_nem_ib_pkt_handler;
     vc_ch->num_pkt_handlers = MPIDI_NEM_IB_PKT_NUM_PKT_HANDLERS;
     MPID_nem_ib_pkt_handler[MPIDI_NEM_IB_PKT_EAGER_SEND] = MPID_nem_ib_PktHandler_EagerSend;
-#if 0   /* modification of mpid_nem_lmt.c is required */
-    MPID_nem_ib_pkt_handler[MPIDI_NEM_IB_PKT_LMT_RTS] = MPID_nem_ib_pkt_RTS_handler;
-#endif
     MPID_nem_ib_pkt_handler[MPIDI_NEM_IB_PKT_RMA_LMT_RTS] = MPID_nem_ib_PktHandler_rma_lmt_rts;
-#if 0
-    MPID_nem_ib_pkt_handler[MPIDI_NEM_IB_PKT_PUT] = MPID_nem_ib_PktHandler_Put;
-    MPID_nem_ib_pkt_handler[MPIDI_NEM_IB_PKT_GET] = MPID_nem_ib_PktHandler_Get;
-    MPID_nem_ib_pkt_handler[MPIDI_NEM_IB_PKT_GET_RESP] = MPID_nem_ib_PktHandler_GetResp;
-    MPID_nem_ib_pkt_handler[MPIDI_NEM_IB_PKT_ACCUMULATE] = MPID_nem_ib_PktHandler_Accumulate;
-#endif
     MPID_nem_ib_pkt_handler[MPIDI_NEM_IB_PKT_LMT_GET_DONE] = MPID_nem_ib_pkt_GET_DONE_handler;
     MPID_nem_ib_pkt_handler[MPIDI_NEM_IB_PKT_LMT_RTS] = MPID_nem_ib_pkt_RTS_handler;
     MPID_nem_ib_pkt_handler[MPIDI_NEM_IB_PKT_REQ_SEQ_NUM] = MPID_nem_ib_PktHandler_req_seq_num;
@@ -1055,21 +1010,6 @@ int MPID_nem_ib_vc_terminate(MPIDI_VC_t * vc)
          MPID_nem_ib_diff16(vc_ib->ibcom->sseq_num, vc_ib->ibcom->lsr_seq_num_tail),
          MPID_nem_ib_sendq_empty(vc_ib->sendq), MPID_nem_ib_ncqe, VC_FIELD(vc, pending_sends));
 
-    /* update remote RDMA-write-to buffer occupancy */
-#if 0   /* we can't send it when the other party has closed QP */
-    while (MPID_nem_ib_diff16
-           (vc_ib->ibcom->rsr_seq_num_tail, vc_ib->ibcom->rsr_seq_num_tail_last_sent) > 0) {
-        MPID_nem_ib_send_reply_seq_num(vc);
-    }
-#endif
-
-    /* update local RDMA-write-to buffer occupancy */
-#if 0
-    while (MPID_nem_ib_diff16(vc_ib->ibcom->sseq_num, vc_ib->ibcom->lsr_seq_num_tail) > 0) {
-        MPID_nem_ib_poll_eager(vc);
-    }
-#endif
-
 #ifdef MPID_NEM_IB_ONDEMAND
     MPID_nem_ib_cm_notify_send_req_t *req = MPIU_Malloc(sizeof(MPID_nem_ib_cm_notify_send_req_t));
     req->ibcom = MPID_nem_ib_scratch_pad_ibcoms[vc->pg_rank];
@@ -1116,13 +1056,6 @@ int MPID_nem_ib_vc_terminate(MPIDI_VC_t * vc)
             MPID_nem_ib_diff16(vc_ib->ibcom->sseq_num, vc_ib->ibcom->lsr_seq_num_tail),
             MPID_nem_ib_sendq_empty(vc_ib->sendq), MPID_nem_ib_ncqe, VC_FIELD(vc, pending_sends));
 
-#if 0
-    if (MPID_nem_ib_ncqe > 0 || VC_FIELD(vc, pending_sends) > 0) {
-        usleep(1000);
-        MPID_nem_ib_drain_scq(0);
-    }
-#endif
-
     dprintf("init,middle2,%d->%d,r rdmaocc=%d,l rdmaocc=%d,sendq=%d,ncqe=%d,pending_sends=%d\n",
             MPID_nem_ib_myrank, vc->pg_rank,
             MPID_nem_ib_diff16(vc_ib->ibcom->rsr_seq_num_tail,
@@ -1134,15 +1067,6 @@ int MPID_nem_ib_vc_terminate(MPIDI_VC_t * vc)
         usleep(1000);
         MPID_nem_ib_drain_scq(0);
     }
-#if 0
-    /* drain scq */
-    while (MPID_nem_ib_ncqe > 0 || VC_FIELD(vc, pending_sends) > 0) {
-        usleep(1000);
-        MPID_nem_ib_drain_scq(0);
-        //printf("%d\n", VC_FIELD(vc, pending_sends));
-        //printf("%d\n", MPID_nem_ib_ncqe);
-    }
-#endif
 
     dprintf("init,after ,%d->%d,r rdmaocc=%d,l rdmaocc=%d,sendq=%d,ncqe=%d,pending_sends=%d\n",
             MPID_nem_ib_myrank, vc->pg_rank,
@@ -1170,50 +1094,6 @@ int MPID_nem_ib_vc_terminate(MPIDI_VC_t * vc)
         MPIU_ERR_POP(mpi_errno);
     }
 
-#if 0   /* We move this code to the end of poll_eager. */
-    /* Destroy VC QP */
-
-    /* Destroy ring-buffer */
-    ibcom_errno = MPID_nem_ib_ringbuf_free(vc);
-    MPIU_ERR_CHKANDJUMP(ibcom_errno, mpi_errno, MPI_ERR_OTHER, "**MPID_nem_ib_ringbuf_free");
-
-    /* Check connection status stored in VC when on-demand connection is used */
-    dprintf("vc_terminate,%d->%d,close\n", MPID_nem_ib_myrank, vc->pg_rank);
-    ibcom_errno = MPID_nem_ib_com_close(vc_ib->sc->fd);
-    MPIU_ERR_CHKANDJUMP(ibcom_errno, mpi_errno, MPI_ERR_OTHER, "**MPID_nem_ib_com_close");
-
-    /* Destroy array of scratch-pad QPs */
-    MPIU_Assert(MPID_nem_ib_conns_ref_count > 0);
-    if (--MPID_nem_ib_conns_ref_count == 0) {
-        MPIU_Free(MPID_nem_ib_conns);
-    }
-
-    /* TODO don't create them for shared memory vc */
-
-    /* Destroy scratch-pad */
-    ibcom_errno = MPID_nem_ib_com_free(MPID_nem_ib_scratch_pad_fds[vc->pg_rank],
-#ifdef MPID_NEM_IB_ONDEMAND
-                                       MPID_NEM_IB_CM_OFF_CMD +
-                                       MPID_NEM_IB_CM_NSEG * sizeof(MPID_nem_ib_cm_cmd_t) +
-                                       sizeof(MPID_nem_ib_ringbuf_headtail_t)
-#else
-                                       MPID_nem_ib_nranks * sizeof(MPID_nem_ib_com_qp_state_t)
-#endif
-);
-
-    MPIU_ERR_CHKANDJUMP(ibcom_errno, mpi_errno, MPI_ERR_OTHER, "**MPID_nem_ib_com_free");
-
-    /* Destroy scratch-pad QP */
-    ibcom_errno = MPID_nem_ib_com_close(MPID_nem_ib_scratch_pad_fds[vc->pg_rank]);
-    MPIU_ERR_CHKANDJUMP(ibcom_errno, mpi_errno, MPI_ERR_OTHER, "**MPID_nem_ib_com_close");
-
-    /* Destroy array of scratch-pad QPs */
-    MPIU_Assert(MPID_nem_ib_scratch_pad_fds_ref_count > 0);
-    if (--MPID_nem_ib_scratch_pad_fds_ref_count == 0) {
-        MPIU_Free(MPID_nem_ib_scratch_pad_fds);
-        MPIU_Free(MPID_nem_ib_scratch_pad_ibcoms);
-    }
-#endif
     dprintf("vc_terminate,exit\n");
 
   fn_exit:

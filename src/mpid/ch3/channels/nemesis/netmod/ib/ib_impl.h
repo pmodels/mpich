@@ -698,9 +698,6 @@ extern uint8_t MPID_nem_ib_lmt_tail_addr_cbf[MPID_nem_ib_cbf_nslot *
 typedef struct {
     void *addr;
     uint32_t rkey;
-#if 0                           /* moving to packet header */
-    int seq_num_tail;           /* notify RDMA-write-to buffer occupation */
-#endif
     uint8_t tail;               /* last word of payload */
     uint32_t max_msg_sz;        /* max message size */
     int seg_seq_num;
@@ -718,9 +715,6 @@ typedef struct {
 
 typedef enum MPID_nem_ib_pkt_subtype {
     MPIDI_NEM_IB_PKT_EAGER_SEND,
-#if 0                           /* modification of mpid_nem_lmt.c is required */
-    MPIDI_NEM_IB_PKT_LMT_RTS,
-#endif
     MPIDI_NEM_IB_PKT_RMA_LMT_RTS,
     MPIDI_NEM_IB_PKT_PUT,
     MPIDI_NEM_IB_PKT_ACCUMULATE,
@@ -791,28 +785,9 @@ typedef struct MPID_nem_ib_pkt_change_rdmabuf_occupancy_notify_state_t {
 int MPID_nem_ib_PktHandler_EagerSend(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
                                      MPIDI_msg_sz_t * buflen /* out */ ,
                                      MPID_Request ** rreqp /* out */);
-#if 0   /* modification of mpid_nem_lmt.c is required */
-int MPID_nem_ib_pkt_RTS_handler(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
-                                MPIDI_msg_sz_t * buflen /* out */ ,
-                                MPID_Request ** rreqp /* out */);
-#endif
 int MPID_nem_ib_PktHandler_rma_lmt_rts(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
                                        MPIDI_msg_sz_t * buflen /* out */ ,
                                        MPID_Request ** rreqp /* out */);
-#if 0
-int MPID_nem_ib_PktHandler_Put(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
-                               MPIDI_msg_sz_t * buflen /* out */ ,
-                               MPID_Request ** rreqp /* out */);
-int MPID_nem_ib_PktHandler_Accumulate(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
-                                      MPIDI_msg_sz_t * buflen /* out */ ,
-                                      MPID_Request ** rreqp /* out */);
-int MPID_nem_ib_PktHandler_Get(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
-                               MPIDI_msg_sz_t * buflen /* out */ ,
-                               MPID_Request ** rreqp /* out */);
-int MPID_nem_ib_PktHandler_GetResp(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
-                                   MPIDI_msg_sz_t * buflen /* out */ ,
-                                   MPID_Request ** rreqp /* out */);
-#endif
 int MPID_nem_ib_PktHandler_lmt_done(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
                                     MPIDI_msg_sz_t * buflen, MPID_Request ** rreqp);
 int MPID_nem_ib_pkt_GET_DONE_handler(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,

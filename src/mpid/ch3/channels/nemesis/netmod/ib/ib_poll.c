@@ -20,9 +20,6 @@
 
 static int entered_drain_scq = 0;
 
-#if 0
-#define MPID_NEM_IB_SEND_PROGRESS_POLLINGSET MPID_nem_ib_send_progress(vc);
-#else
 #define MPID_NEM_IB_SEND_PROGRESS_POLLINGSET {     \
         do {                                                        \
             int n;                                                      \
@@ -35,29 +32,13 @@ static int entered_drain_scq = 0;
             }                                                           \
         } while (0);                                                    \
 }
-#if 0
-   int n;                                         \
-   for(n = 0; n < MPID_nem_ib_npollingset; n++) {  \
-       MPIDI_VC_t *vc_n = MPID_nem_ib_pollingset[n];  \
-       /*MPID_nem_ib_debug_current_vc_ib = vc_ib;*/   \
-       MPID_nem_ib_send_progress(vc_n);               \
-   }                                                  \
 
-#endif
-#endif
-#if 1
 #define MPID_NEM_IB_CHECK_AND_SEND_PROGRESS \
     do {                                                                \
         if (!MPID_nem_ib_sendq_empty(vc_ib->sendq) && MPID_nem_ib_sendq_ready_to_send_head(vc_ib)) { \
             MPID_nem_ib_send_progress(vc);                              \
         }                                                               \
     } while (0)
-#else
-#define MPID_NEM_IB_CHECK_AND_SEND_PROGRESS \
-    do { \
-        MPID_NEM_IB_SEND_PROGRESS_POLLINGSET; \
-    } while (0)
-#endif
 
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_ib_drain_scq
@@ -90,12 +71,8 @@ int MPID_nem_ib_drain_scq(int dont_call_progress)
     }
 #endif
 
-#if 0   /*def HAVE_LIBDCFA */
-    result = ibv_poll_cq(MPID_nem_ib_rc_shared_scq, 1, &cqe[0]);
-#else
     result =
         ibv_poll_cq(MPID_nem_ib_rc_shared_scq, /*3 */ MPID_NEM_IB_COM_MAX_CQ_HEIGHT_DRAIN, &cqe[0]);
-#endif
 
     MPIU_ERR_CHKANDJUMP(result < 0, mpi_errno, MPI_ERR_OTHER, "**netmod,ib,ibv_poll_cq");
 
@@ -457,191 +434,6 @@ int MPID_nem_ib_drain_scq(int dont_call_progress)
             //MPID_NEM_IB_SEND_PROGRESS_POLLINGSET
             //}
         }
-#if 0
-        else if (req_type == 13 && cqe[i].opcode == IBV_WC_RDMA_READ) {
-            MPID_nem_ib_vc_area *vc_ib = VC_IB(req->ch.vc);
-
-            /* end of packet */
-            if (req_wrap->mf == MPID_NEM_IB_LMT_LAST_PKT) {
-                MPIDI_msg_sz_t data_len = req->ch.lmt_data_sz;
-                MPI_Aint type_size;
-
-                MPID_Datatype_get_size_macro(req->dev.datatype, type_size);
-                req->dev.recv_data_sz = type_size * req->dev.user_count;
-
-                int complete = 0;
-                int (*reqFn) (MPIDI_VC_t *, MPID_Request *, int *);
-                mpi_errno =
-                    MPIDI_CH3U_Receive_data_found(req, REQ_FIELD(req, lmt_pack_buf), &data_len,
-                                                  &complete);
-
-                /* Data receive must be completed */
-                MPIU_Assert(complete == TRUE);
-
-                MPIU_Free(REQ_FIELD(req, lmt_pack_buf));
-
-                MPID_nem_ib_lmt_send_PKT_LMT_DONE(req->ch.vc, req);
-                reqFn = req->dev.OnFinal;
-                if (reqFn) {
-                    reqFn(req->ch.vc, req, &complete);
-                } else {
-                    MPIDI_CH3U_Request_complete(req);
-                }
-            }
-
-            /* decrement the number of entries in IB command queue */
-            vc_ib->ibcom->ncom -= 1;
-            MPID_nem_ib_ncqe -= 1;
-
-            MPIU_Free(req_wrap);
-        }
-        else if (req_type == MPIDI_REQUEST_TYPE_PUT_RESP && cqe[i].opcode == IBV_WC_RDMA_READ) {
-            MPID_nem_ib_vc_area *vc_ib = VC_IB(req->ch.vc);
-
-            /* end of packet */
-            if (req_wrap->mf == MPID_NEM_IB_LMT_LAST_PKT) {
-                MPIDI_msg_sz_t data_len = req->ch.lmt_data_sz;
-                int complete = 0;
-                mpi_errno =
-                    MPIDI_CH3U_Receive_data_found(req, REQ_FIELD(req, lmt_pack_buf), &data_len,
-                                                  &complete);
-
-                /* Data receive must be completed */
-                MPIU_Assert(complete == TRUE);
-
-                MPIU_Free(REQ_FIELD(req, lmt_pack_buf));
-
-                complete = 0;
-                mpi_errno = MPIDI_CH3_ReqHandler_PutRecvComplete(req->ch.vc, req, &complete);      // call MPIDI_CH3U_Request_complete()
-                if (mpi_errno)
-                    MPIU_ERR_POP(mpi_errno);
-                MPIU_Assert(complete == TRUE);
-
-                MPID_nem_ib_lmt_send_PKT_LMT_DONE(req->ch.vc, req);
-                MPIDI_CH3U_Request_complete(req);
-            }
-
-            /* decrement the number of entries in IB command queue */
-            vc_ib->ibcom->ncom -= 1;
-            MPID_nem_ib_ncqe -= 1;
-
-            MPIU_Free(req_wrap);
-        }
-        else if (req_type == MPIDI_REQUEST_TYPE_PUT_RESP_DERIVED_DT &&
-                 cqe[i].opcode == IBV_WC_RDMA_READ) {
-            MPID_nem_ib_vc_area *vc_ib = VC_IB(req->ch.vc);
-            /* end of packet */
-            if (req_wrap->mf == MPID_NEM_IB_LMT_LAST_PKT) {
-                MPIDI_msg_sz_t buflen = req->ch.lmt_data_sz;
-                char *buf = (char *) REQ_FIELD(req, lmt_pack_buf);
-                int complete = 0;
-                int dataloop_size = *(int *) req->dev.dtype_info;       /* copy from temp store area */
-
-                /* copy all of dtype_info and dataloop */
-                MPIU_Memcpy(req->dev.dtype_info, buf, sizeof(MPIDI_RMA_dtype_info));
-                MPIU_Memcpy(req->dev.dataloop, buf + sizeof(MPIDI_RMA_dtype_info), dataloop_size);
-
-
-                /* All dtype data has been received, call req handler */
-                mpi_errno =
-                    MPIDI_CH3_ReqHandler_PutDerivedDTRecvComplete(req->ch.vc, req, &complete);
-                MPIU_ERR_CHKANDJUMP1(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**ch3|postrecv",
-                                     "**ch3|postrecv %s", "MPIDI_CH3_PKT_PUT");
-                /* return 'complete == FALSE' */
-
-                buflen -= (sizeof(MPIDI_RMA_dtype_info) + dataloop_size);
-                buf += (sizeof(MPIDI_RMA_dtype_info) + dataloop_size);
-
-                mpi_errno = MPID_nem_ib_handle_pkt_bh(req->ch.vc, req, buf, buflen);
-                MPIU_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER,
-                                    "**MPID_nem_ib_handle_pkt_bh");
-
-                MPID_nem_ib_lmt_send_PKT_LMT_DONE(req->ch.vc, req);
-
-                MPIU_Free(REQ_FIELD(req, lmt_pack_buf));
-                MPIDI_CH3U_Request_complete(req);
-            }
-
-            /* decrement the number of entries in IB command queue */
-            vc_ib->ibcom->ncom -= 1;
-            MPID_nem_ib_ncqe -= 1;
-
-            MPIU_Free(req_wrap);
-        }
-        else if (req_type == MPIDI_REQUEST_TYPE_ACCUM_RESP && cqe[i].opcode == IBV_WC_RDMA_READ) {
-            MPID_nem_ib_vc_area *vc_ib = VC_IB(req->ch.vc);
-
-            /* end of packet */
-            if (req_wrap->mf == MPID_NEM_IB_LMT_LAST_PKT) {
-                MPIDI_msg_sz_t data_len = req->ch.lmt_data_sz;
-                int complete = 0;
-                mpi_errno =
-                    MPIDI_CH3U_Receive_data_found(req, REQ_FIELD(req, lmt_pack_buf), &data_len,
-                                                  &complete);
-
-                /* Data receive must be completed */
-                MPIU_Assert(complete == TRUE);
-
-                MPIU_Free(REQ_FIELD(req, lmt_pack_buf));
-
-                complete = 0;
-                mpi_errno = MPIDI_CH3_ReqHandler_AccumRecvComplete(req->ch.vc, req, &complete);      // call MPIDI_CH3U_Request_complete()
-                if (mpi_errno)
-                    MPIU_ERR_POP(mpi_errno);
-                MPIU_Assert(complete == TRUE);
-
-                MPID_nem_ib_lmt_send_PKT_LMT_DONE(req->ch.vc, req);
-                MPIDI_CH3U_Request_complete(req);
-            }
-
-            /* decrement the number of entries in IB command queue */
-            vc_ib->ibcom->ncom -= 1;
-            MPID_nem_ib_ncqe -= 1;
-
-            MPIU_Free(req_wrap);
-        }
-        else if (req_type == MPIDI_REQUEST_TYPE_ACCUM_RESP_DERIVED_DT &&
-                 cqe[i].opcode == IBV_WC_RDMA_READ) {
-            MPID_nem_ib_vc_area *vc_ib = VC_IB(req->ch.vc);
-            /* end of packet */
-            if (req_wrap->mf == MPID_NEM_IB_LMT_LAST_PKT) {
-                MPIDI_msg_sz_t buflen = req->ch.lmt_data_sz;
-                char *buf = (char *) REQ_FIELD(req, lmt_pack_buf);
-                int complete = 0;
-                int dataloop_size = *(int *) req->dev.dtype_info;       /* copy from temp store area */
-
-                /* copy all of dtype_info and dataloop */
-                MPIU_Memcpy(req->dev.dtype_info, buf, sizeof(MPIDI_RMA_dtype_info));
-                MPIU_Memcpy(req->dev.dataloop, buf + sizeof(MPIDI_RMA_dtype_info), dataloop_size);
-
-
-                /* All dtype data has been received, call req handler */
-                mpi_errno =
-                    MPIDI_CH3_ReqHandler_AccumDerivedDTRecvComplete(req->ch.vc, req, &complete);
-                MPIU_ERR_CHKANDJUMP1(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**ch3|postrecv",
-                                     "**ch3|postrecv %s", "MPIDI_CH3_ACCUMULATE");
-                /* return 'complete == FALSE' */
-
-                buflen -= (sizeof(MPIDI_RMA_dtype_info) + dataloop_size);
-                buf += (sizeof(MPIDI_RMA_dtype_info) + dataloop_size);
-
-                mpi_errno = MPID_nem_ib_handle_pkt_bh(req->ch.vc, req, buf, buflen);
-                MPIU_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER,
-                                    "**MPID_nem_ib_handle_pkt_bh");
-
-                MPID_nem_ib_lmt_send_PKT_LMT_DONE(req->ch.vc, req);
-
-                MPIU_Free(REQ_FIELD(req, lmt_pack_buf));
-                MPIDI_CH3U_Request_complete(req);
-            }
-
-            /* decrement the number of entries in IB command queue */
-            vc_ib->ibcom->ncom -= 1;
-            MPID_nem_ib_ncqe -= 1;
-
-            MPIU_Free(req_wrap);
-        }
-#endif
         else if (req_type == MPIDI_REQUEST_TYPE_SEND && msg_type == MPIDI_REQUEST_RNDV_MSG &&
                  cqe[i].opcode == IBV_WC_RDMA_READ) {
             MPID_nem_ib_vc_area *vc_ib = VC_IB(req->ch.vc);
@@ -666,11 +458,7 @@ int MPID_nem_ib_drain_scq(int dont_call_progress)
         else {
             printf("drain_scq,unknown kind=%d,req_type=%d,msg_type=%d\n", kind, req_type, msg_type);
             assert(0);
-#if 1   // lazy consulting of completion queue
             MPIU_ERR_CHKANDJUMP(1, mpi_errno, MPI_ERR_OTHER, "**MPID_nem_ib_drain_scq");
-#else
-            //printf("kind=%d\n", kind);
-#endif
             MPIU_Free(req_wrap);
         }
     }
@@ -774,13 +562,9 @@ int MPID_nem_ib_drain_scq_scratch_pad()
         goto fn_exit;
     }
 
-#if 0   /*def HAVE_LIBDCFA */
-    result = ibv_poll_cq(MPID_nem_ib_rc_shared_scq_scratch_pad, 1, &cqe[0]);
-#else
     result =
         ibv_poll_cq(MPID_nem_ib_rc_shared_scq_scratch_pad, MPID_NEM_IB_COM_MAX_CQ_HEIGHT_DRAIN,
                     &cqe[0]);
-#endif
     MPIU_ERR_CHKANDJUMP(result < 0, mpi_errno, MPI_ERR_OTHER, "**netmod,ib,ibv_poll_cq");
 
     if (result > 0) {
@@ -856,10 +640,6 @@ int MPID_nem_ib_poll_eager(MPID_nem_ib_ringbuf_t * ringbuf)
     dprintf("ib_poll_eager,remote_poll=%d,buf=%p,sz=%d\n", *remote_poll, buf,
             MPID_NEM_IB_NETMOD_HDR_SZ_GET(buf));
 
-#if 0
-    ibcom_errno = MPID_nem_ib_com_poll_cq(MPID_NEM_IB_COM_RC_SHARED_RCQ, &cqe, &result);
-    MPIU_ERR_CHKANDJUMP(ibcom_errno, mpi_errno, MPI_ERR_OTHER, "**MPID_nem_ib_com_poll_cq");
-#endif
     dprintf("ib_poll_eager,eager-send,found\n");
     fflush(stdout);
 
@@ -879,15 +659,6 @@ int MPID_nem_ib_poll_eager(MPID_nem_ib_ringbuf_t * ringbuf)
     int tlb_pref_ahd = (uint64_t) tailmagic + 4096 * MPID_NEM_IB_TLBPREF_POLL - (uint64_t) buf;
 #endif
     while (netmod_trailer->tail_flag != MPID_NEM_IB_COM_MAGIC) {
-        //k++;
-#if 0   /* pre-fetch next RDMA-write-buf slot to cover TLB miss latency */
-        __asm__ __volatile__
-            ("movq %0, %%rsi;"
-             "movq 0(%%rsi), %%rsi;"::"r"(ringbuf->start + MPID_NEM_IB_COM_RDMABUF_SZSEG *
-                                          ((uint16_t)
-                                            ((*remote_poll + 1) % MPID_NEM_IB_COM_RDMABUF_NSEG)))
-             :"%rsi");
-#endif
 #ifdef MPID_NEM_IB_TLBPREF_POLL
         __asm__ __volatile__
             ("movq %0, %%rsi;" "movq 0(%%rsi), %%rax;"::"r"(buf + tlb_pref_ahd):"%rsi", "%rax");
@@ -906,7 +677,6 @@ int MPID_nem_ib_poll_eager(MPID_nem_ib_ringbuf_t * ringbuf)
      * 600 cycle for 512B!!! --> 284 cycle with prefetch
      */
 
-#if 1
     void *rsi;
     for (rsi = (void *) buf; rsi < (void *) ((uint8_t *) buf + MPID_NEM_IB_NETMOD_HDR_SZ_GET(buf));
          rsi = (uint8_t *) rsi + 64 * 4) {
@@ -925,7 +695,6 @@ int MPID_nem_ib_poll_eager(MPID_nem_ib_ringbuf_t * ringbuf)
              :"%rsi");
 #endif
     }
-#endif
 
     /* Increment here because handle_pkt of CLOSE calls poll_eager recursively */
     (*remote_poll) += 1;
@@ -968,7 +737,6 @@ int MPID_nem_ib_poll_eager(MPID_nem_ib_ringbuf_t * ringbuf)
     /* this includes local RDMA-wr-to buf occupation
      * because MPID_nem_handle_pkt releases RDMA-wr-to buf by copying data out */
     /* responder releases resource and then embed largest sequence number into MPI message bound to initiator */
-#if 1
     if ((vc->state != MPIDI_VC_STATE_INACTIVE) ||
         (vc->state == MPIDI_VC_STATE_INACTIVE && vc_ib->vc_terminate_buf == buf)) {
         dprintf
@@ -1031,7 +799,6 @@ int MPID_nem_ib_poll_eager(MPID_nem_ib_ringbuf_t * ringbuf)
             }
         }
     }
-#endif
 
     if ((vc->state != MPIDI_VC_STATE_INACTIVE) ||
         (vc->state == MPIDI_VC_STATE_INACTIVE && vc_ib->vc_terminate_buf == buf)) {
@@ -1049,7 +816,6 @@ int MPID_nem_ib_poll_eager(MPID_nem_ib_ringbuf_t * ringbuf)
         (vc->state == MPIDI_VC_STATE_INACTIVE && vc_ib->vc_terminate_buf == buf))
         MPID_NEM_IB_NETMOD_HDR_HEAD_FLAG_SET(buf, 0);
 
-#if 1   /* We move this code from the end of vc_terminate. */
     if (vc->state == MPIDI_VC_STATE_INACTIVE && vc_ib->vc_terminate_buf == buf) {
         /* clear stored data */
         vc_ib->vc_terminate_buf = NULL;
@@ -1095,7 +861,6 @@ int MPID_nem_ib_poll_eager(MPID_nem_ib_ringbuf_t * ringbuf)
             MPIU_Free(MPID_nem_ib_scratch_pad_ibcoms);
         }
     }
-#endif
 
   fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_IB_POLL_EAGER);
@@ -1118,9 +883,7 @@ int MPID_nem_ib_poll(int in_blocking_poll)
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_IB_POLL);
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_IB_POLL);
 
-#if 1
     unsigned int progress_completion_count_old = MPIDI_CH3I_progress_completion_count.v;
-#endif
 
     /* poll lmt */
     /* when receiver side sends CTS to sender side
@@ -1200,16 +963,9 @@ int MPID_nem_ib_poll(int in_blocking_poll)
                                              MPI_ERR_TYPE, "**MPID_nem_ib_poll", 0);
                     /* --END ERROR HANDLING-- */
                 }
-#if 1   /* debug, enable again later, polling waits forever when freeing it here. */
-                //if (rreq->ref_count == 1) {
                 dprintf("ib_poll,lmt,ref_count=%d,lmt_pack_buf=%p\n", rreq->ref_count,
                         REQ_FIELD(rreq, lmt_pack_buf));
-                //MPIU_Free(REQ_FIELD(rreq, lmt_pack_buf));
                 MPID_nem_ib_stfree(REQ_FIELD(rreq, lmt_pack_buf), (size_t) rreq->ch.lmt_data_sz);
-                //} else {
-                // dprintf("ib_poll,lmt,ref_count=%d,lmt_pack_buf=%p\n", rreq->ref_count, REQ_FIELD(rreq, lmt_pack_buf));
-                //}
-#endif
             }
 
             /* send done to sender. vc is stashed in MPID_nem_ib_lmt_start_recv (in ib_lmt.c) */
@@ -1309,12 +1065,6 @@ int MPID_nem_ib_poll(int in_blocking_poll)
                 (VC_FIELD(MPID_nem_ib_ringbuf[i].vc, ibcom->ncom) >=
                  MPID_NEM_IB_COM_MAX_SQ_HEIGHT_DRAIN);
         }
-
-
-#if 0
-        /* aggressively perform drain_scq */
-        ncom_almost_full |= !(MPID_nem_ib_sendq_empty(VC_FIELD(MPID_nem_ib_ringbuf[i].vc, sendq)));
-#endif
     }
 #if defined (MPID_NEM_IB_TIMER_WAIT_IB_POLL)
     if (in_blocking_poll) {
@@ -1346,11 +1096,10 @@ int MPID_nem_ib_poll(int in_blocking_poll)
             }
 #endif
         }
-#if 1
     /* aggressively perform drain_scq */
     ibcom_errno = MPID_nem_ib_drain_scq(0);
     MPIU_ERR_CHKANDJUMP(ibcom_errno, mpi_errno, MPI_ERR_OTHER, "**MPID_nem_ib_drain_scq");
-#endif
+
 #ifdef MPID_NEM_IB_ONDEMAND
     /* process incoming connection request */
     MPID_nem_ib_cm_poll_syn();
@@ -1369,13 +1118,11 @@ int MPID_nem_ib_poll(int in_blocking_poll)
 #endif
     MPID_nem_ib_ringbuf_progress();
     MPID_nem_ib_progress_engine_vt += 1;        /* Progress virtual time */
-#if 1
+
     /* if polling on eager-send and lmt would repeat frequently, perform "pause" to yield instruction issue bandwitdh to other logical-core */
     if (in_blocking_poll && progress_completion_count_old == MPIDI_CH3I_progress_completion_count.v) {
         __asm__ __volatile__("pause;":::"memory");
     }
-#endif
-    //if (in_blocking_poll) { goto prev; }
 
   fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_IB_POLL);
@@ -1406,12 +1153,6 @@ int MPID_nem_ib_recv_posted(struct MPIDI_VC *vc, struct MPID_Request *req)
     }
 #endif
 
-#if 0
-    int ibcom_errno;
-    ibcom_errno = MPID_nem_ib_com_irecv(vc_ib->sc->fd, (uint64_t) vc->pg_rank);
-    MPIU_ERR_CHKANDJUMP(ibcom_errno, mpi_errno, MPI_ERR_OTHER, "**MPID_nem_ib_com_irecv");
-#endif
-#if 1   /*takagi */
     MPIDI_msg_sz_t data_sz;
     int dt_contig;
     MPI_Aint dt_true_lb;
@@ -1422,37 +1163,23 @@ int MPID_nem_ib_recv_posted(struct MPIDI_VC *vc, struct MPID_Request *req)
     /* anticipating received message finds maching request in the posted-queue */
     if (data_sz + sizeof(MPIDI_CH3_Pkt_eager_send_t) > vc->eager_max_msg_sz) {
         //if (MPID_nem_ib_tsc_poll - MPID_nem_ib_rdtsc() > MPID_NEM_IB_POLL_PERIOD_RECV_POSTED) {
-//#if 1
         if (VC_FIELD(vc, ibcom->remote_ringbuf)) {
             mpi_errno = MPID_nem_ib_poll_eager(VC_FIELD(vc, ibcom->remote_ringbuf));
-//#else
-//        mpi_errno = MPID_nem_ib_poll(0);
-//#endif
             if (mpi_errno) {
                 MPIU_ERR_POP(mpi_errno);
             }
         }
-        //}
     }
 
     else {
-#if 1
         /* anticipating received message finds maching request in the posted-queue */
-        //if (MPID_nem_ib_tsc_poll - MPID_nem_ib_rdtsc() > MPID_NEM_IB_POLL_PERIOD_RECV_POSTED) {
         if (VC_FIELD(vc, ibcom->remote_ringbuf)) {
-#if 1
             mpi_errno = MPID_nem_ib_poll_eager(VC_FIELD(vc, ibcom->remote_ringbuf));
-#else
-            mpi_errno = MPID_nem_ib_poll(0);
-#endif
             if (mpi_errno) {
                 MPIU_ERR_POP(mpi_errno);
             }
         }
-        //}
-#endif
     }
-#endif
 
   fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_IB_RECV_POSTED);
@@ -1480,7 +1207,7 @@ int MPID_nem_ib_recv_buf_released(struct MPIDI_VC *vc, void *user_data)
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_IB_RECV_BUF_RELEASED);
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_IB_RECV_BUF_RELEASED);
     dprintf("recv_buf_released,%d<-%d,user_data=%p\n", MPID_nem_ib_myrank, vc->pg_rank, user_data);
-#if 1   /* moving from ib_poll */
+
     /* Clear all possible tail flag slots */
     /* tail flag is located at MPID_NEM_IB_COM_INLINE_DATA boundary and variable length entails multiple prospective locations for the future use */
     /* see MPIDI_CH3_PktHandler_EagerShortSend (in src/mpid/ch3/src/ch3u_eager.c */
@@ -1506,7 +1233,6 @@ int MPID_nem_ib_recv_buf_released(struct MPIDI_VC *vc, void *user_data)
     int off_pow2_aligned;
     MPID_NEM_IB_OFF_POW2_ALIGNED(MPID_NEM_IB_NETMOD_HDR_SZ_GET(buf));
     //dprintf("recv_buf_released,sz=%d,pow2=%d\n", MPID_NEM_IB_NETMOD_HDR_SZ_GET(buf), off_pow2_aligned);
-#if 1
     uint32_t offset;
     for (offset = 15;;
          offset =
@@ -1524,10 +1250,7 @@ int MPID_nem_ib_recv_buf_released(struct MPIDI_VC *vc, void *user_data)
             break;
         }
     }
-#endif
-#endif
 
-#if 1   /* moving from ib_poll */
     /* mark that one eager-send RDMA-write-to buffer has been released */
     uint16_t index_slot =
         (unsigned long) ((uint8_t *) user_data -
@@ -1625,7 +1348,6 @@ int MPID_nem_ib_recv_buf_released(struct MPIDI_VC *vc, void *user_data)
         MPID_nem_ib_send_reply_seq_num(vc);
       skip:;
     }
-#endif
 
   fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_IB_RECV_BUF_RELEASED);
@@ -1633,54 +1355,6 @@ int MPID_nem_ib_recv_buf_released(struct MPIDI_VC *vc, void *user_data)
   fn_fail:
     goto fn_exit;
 }
-
-#if 0
-/* packet handler for wrapper packet of MPIDI_NEM_PKT_LMT_DONE */
-/* see pkt_DONE_handler (in src/mpid/ch3/channels/nemesis/src/mpid_nem_lmt.c) */
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_ib_PktHandler_lmt_done
-#undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
-int MPID_nem_ib_PktHandler_lmt_done(MPIDI_VC_t * vc,
-                                    MPIDI_CH3_Pkt_t * pkt,
-                                    MPIDI_msg_sz_t * buflen, MPID_Request ** rreqp)
-{
-    int mpi_errno = MPI_SUCCESS;
-    int ibcom_errno;
-    MPID_nem_ib_pkt_lmt_done_t *const done_pkt = (MPID_nem_ib_pkt_lmt_done_t *) pkt;
-    MPID_Request *req;
-    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_IB_PKTHANDLER_LMT_DONE);
-    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_IB_PKTHANDLER_LMT_DONE);
-    /* Check the assumption on sizeof(MPIDI_CH3_Pkt_t).
-     * It is utilized in pkt_DONE_handler (in src/mpid/ch3/channels/nemesis/src/mpid_nem_lmt.c)
-     * that must be larger than sizeof(MPID_nem_ib_pkt_lmt_done_t) */
-    if (sizeof(MPID_nem_ib_pkt_lmt_done_t) > sizeof(MPIDI_CH3_Pkt_t)) {
-        MPIU_ERR_SETFATALANDJUMP(mpi_errno, MPI_ERR_INTERN, "**sizeof(MPIDI_CH3_Pkt_t)");
-    }
-
-    /* fall back to the original handler */
-    /* we don't need to worry about the difference caused by embedding seq_num
-     * because the handler does not use it (e.g. applying sizeof operator to it) */
-    MPID_nem_pkt_lmt_done_t *pkt_parent_class = (MPID_nem_pkt_lmt_done_t *) pkt;
-    pkt_parent_class->type = MPIDI_NEM_PKT_LMT_DONE;
-#if 0
-    mpi_errno = MPID_nem_handle_pkt(vc, (char *) pkt_parent_class, *buflen);
-#else
-    MPIU_ERR_CHKANDJUMP(1, mpi_errno, MPI_ERR_OTHER, "**notimplemented");
-    /* you need to modify mpid_nem_lmt.c to make pkt_DONE_handler visible to me */
-    //mpi_errno = pkt_DONE_handler(vc, pkt, buflen, rreqp);
-#endif
-    if (mpi_errno) {
-        MPIU_ERR_POP(mpi_errno);
-    }
-
-  fn_exit:
-    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_IB_PKTHANDLER_LMT_DONE);
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-#endif
 
 /* packet handler for wrapper packet of MPIDI_CH3_PKT_EAGER_SEND */
 /* see MPIDI_CH3_PktHandler_EagerSend (in src/mpid/ch3/src/ch3u_eager.c) */
@@ -1740,16 +1414,12 @@ int MPID_nem_ib_PktHandler_EagerSend(MPIDI_VC_t * vc,
      * see MPID_nem_ib_iSendContig
      */
     //ch3_pkt->type = MPIDI_CH3_PKT_EAGER_SEND;
-#if 0
-        mpi_errno = MPID_nem_handle_pkt(vc, (char *) pkt_parent_class, *buflen);
-#else
         dprintf("ib_poll.c,before PktHandler_EagerSend,buflen=%ld\n", *buflen);
     MPIDI_msg_sz_t ch3_buflen = *buflen - sizeof(MPID_nem_ib_pkt_prefix_t);
     mpi_errno = MPIDI_CH3_PktHandler_EagerSend(vc, (MPIDI_CH3_Pkt_t *) ch3_pkt, &ch3_buflen, rreqp);
     dprintf("ib_poll.c,after PktHandler_EagerSend,buflen=%ld\n", ch3_buflen);
     *buflen = ch3_buflen + sizeof(MPID_nem_ib_pkt_prefix_t);
     dprintf("ib_poll.c,after addition,buflen=%ld\n", *buflen);
-#endif
     if (mpi_errno) {
         MPIU_ERR_POP(mpi_errno);
     }
@@ -1760,70 +1430,6 @@ int MPID_nem_ib_PktHandler_EagerSend(MPIDI_VC_t * vc,
   fn_fail:
     goto fn_exit;
 }
-
-#if 0   /* modification of mpid_nem_lmt.c is required */
-
-/* Temporary fix because it's static */
-int pkt_RTS_handler(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
-                    MPIDI_msg_sz_t * buflen, MPID_Request ** rreqp);
-/* packet handler for wrapper packet of MPIDI_NEM_PKT_LMT_RTS */
-/* see pkt_RTS_handler (in src/mpid/ch3/channels/nemesis/src/mpid_nem_lmt.c) */
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_ib_pkt_RTS_handler
-#undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
-int MPID_nem_ib_pkt_RTS_handler(MPIDI_VC_t * vc,
-                                MPIDI_CH3_Pkt_t * pkt, MPIDI_msg_sz_t * buflen /* out */ ,
-                                MPID_Request ** rreqp /* out */)
-{
-    MPID_nem_ib_pkt_prefix_t *netmod_pkt = (MPID_nem_ib_pkt_prefix_t *) pkt;
-    MPIDI_CH3_Pkt_t *ch3_pkt =
-        (MPIDI_CH3_Pkt_t *) ((uint8_t *) pkt + sizeof(MPID_nem_ib_pkt_prefix_t));
-    int mpi_errno = MPI_SUCCESS;
-    int ibcom_errno;
-    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_IB_PKT_RTS_HANDLER);
-    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_IB_PKT_RTS_HANDLER);
-    /* Update occupation status of local SR (send request) queue */
-    MPID_nem_ib_vc_area *vc_ib = VC_IB(vc);
-    dprintf
-        ("MPID_nem_ib_pkt_RTS_handler,lsr_seq_num_tail=%d,netmod_pkt->seq_num_tail=%d\n",
-         vc_ib->ibcom->lsr_seq_num_tail, netmod_pkt->seq_num_tail);
-    vc_ib->ibcom->lsr_seq_num_tail = netmod_pkt->seq_num_tail;
-    dprintf
-        ("MPID_nem_ib_pkt_RTS_handler,lsr_seq_num_tail updated to %d\n",
-         vc_ib->ibcom->lsr_seq_num_tail);
-#ifndef MPID_NEM_IB_DISABLE_VAR_OCC_NOTIFY_RATE
-    /* change remote notification policy of RDMA-write-to buf */
-    dprintf("pkthandler,rts,old rstate=%d\n", vc_ib->ibcom->rdmabuf_occupancy_notify_rstate);
-    MPID_nem_ib_change_rdmabuf_occupancy_notify_policy_lw(vc_ib, &vc_ib->ibcom->lsr_seq_num_tail);
-    dprintf("pkthandler,rts,new rstate=%d\n", vc_ib->ibcom->rdmabuf_occupancy_notify_rstate);
-#endif
-    dprintf("pkthandler,rts,sendq_empty=%d,ncom=%d,rdmabuf_occ=%d\n",
-            MPID_nem_ib_sendq_empty(vc_ib->sendq), vc_ib->ibcom->ncom,
-            MPID_nem_ib_diff16(vc_ib->ibcom->sseq_num, vc_ib->ibcom->lsr_seq_num_tail));
-    /* try to send from sendq because at least one RDMA-write-to buffer has been released */
-    dprintf("pkthandler,eagersend,send_progress\n");
-    fflush(stdout);
-    MPID_NEM_IB_CHECK_AND_SEND_PROGRESS;
-    /* fall back to the original handler */
-    /* we don't need to worry about the difference caused by embedding seq_num
-     * because size of MPI-header of MPIDI_CH3_PKT_EAGER_SEND equals to sizeof(MPIDI_CH3_Pkt_t)
-     * see MPID_nem_ib_iSendContig
-     */
-    MPIDI_msg_sz_t ch3_buflen = *buflen - sizeof(MPID_nem_ib_pkt_prefix_t);
-    mpi_errno = pkt_RTS_handler(vc, ch3_pkt, &ch3_buflen, rreqp);
-    *buflen = ch3_buflen + sizeof(MPID_nem_ib_pkt_prefix_t);
-    if (mpi_errno) {
-        MPIU_ERR_POP(mpi_errno);
-    }
-
-  fn_exit:
-    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_IB_PKT_RTS_HANDLER);
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-#endif
 
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_ib_PktHandler_rma_lmt_rts
@@ -1915,443 +1521,6 @@ int MPID_nem_ib_PktHandler_rma_lmt_rts(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
     goto fn_exit;
 }
 
-#if 0
-/* packet handler for wrapper packet of MPIDI_CH3_PKT_PUT */
-/* see MPIDI_CH3_PktHandler_EagerSend (in src/mpid/ch3/src/ch3u_rma_sync.c) */
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_ib_PktHandler_Put
-#undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
-int MPID_nem_ib_PktHandler_Put(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
-                               MPIDI_msg_sz_t * buflen /* out */ ,
-                               MPID_Request ** rreqp /* out */)
-{
-    MPID_nem_ib_vc_area *vc_ib = VC_IB(vc);
-    int mpi_errno = MPI_SUCCESS;
-    MPID_Request *req = NULL;
-    MPIDI_CH3_Pkt_put_t *put_pkt =
-        (MPIDI_CH3_Pkt_put_t *) ((uint8_t *) pkt + sizeof(MPIDI_CH3_Pkt_t));
-    MPID_nem_ib_rma_lmt_cookie_t *s_cookie_buf =
-        (MPID_nem_ib_rma_lmt_cookie_t *) ((uint8_t *) pkt + sizeof(MPIDI_CH3_Pkt_t) +
-                                          sizeof(MPIDI_CH3_Pkt_t));
-
-    /* ref. MPIDI_CH3_PktHandler_Put (= pktArray[MPIDI_CH3_PKT_PUT]) */
-    MPI_Aint type_size;
-
-    MPID_Win *win_ptr;
-
-    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_IB_PKTHANDLER_PUT);
-    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_IB_PKTHANDLER_PUT);
-
-    MPIU_Assert(put_pkt->target_win_handle != MPI_WIN_NULL);
-    MPID_Win_get_ptr(put_pkt->target_win_handle, win_ptr);
-
-    req = MPID_Request_create();
-    MPIU_Object_set_ref(req, 1);        /* decrement only in drain_scq ? */
-    int incomplete;
-    MPIDI_CH3U_Request_increment_cc(req, &incomplete);  // decrement in drain_scq
-
-    req->dev.user_buf = put_pkt->addr;
-    req->dev.user_count = put_pkt->count;
-    req->dev.target_win_handle = put_pkt->target_win_handle;
-    req->dev.source_win_handle = put_pkt->source_win_handle;
-    req->dev.flags = put_pkt->flags;
-    req->dev.OnFinal = MPIDI_CH3_ReqHandler_PutRecvComplete;
-
-    if (MPIR_DATATYPE_IS_PREDEFINED(put_pkt->datatype)) {
-        MPIDI_Request_set_type(req, MPIDI_REQUEST_TYPE_PUT_RESP);
-        req->dev.datatype = put_pkt->datatype;
-
-        MPID_Datatype_get_size_macro(put_pkt->datatype, type_size);
-        req->dev.recv_data_sz = type_size * put_pkt->count;
-        if (put_pkt->immed_len > 0) {
-            /* See if we can receive some data from packet header. */
-            MPIU_Memcpy(req->dev.user_buf, put_pkt->data, put_pkt->immed_len);
-            req->dev.user_buf = (void*)((char*)req->dev.user_buf + put_pkt->immed_len);
-            req->dev.recv_data_sz -= put_pkt->immed_len;
-        }
-    }
-    else {
-        /* derived datatype */
-        MPIDI_Request_set_type(req, MPIDI_REQUEST_TYPE_PUT_RESP_DERIVED_DT);
-        req->dev.datatype = MPI_DATATYPE_NULL;
-
-        req->dev.dtype_info = (MPIDI_RMA_dtype_info *) MPIU_Malloc(sizeof(MPIDI_RMA_dtype_info));
-        req->dev.dataloop = MPIU_Malloc(put_pkt->dataloop_size);
-
-        /* We have to store the value of 'put_pkt->dataloop_size' which we use in drain_scq.
-         * Temporarily, put it in req->dev.dtype_info.
-         */
-        *(int *) req->dev.dtype_info = put_pkt->dataloop_size;
-    }
-
-    /* ref. pkt_RTS_handler (= pktArray[MPIDI_NEM_PKT_LMT_RTS]) */
-
-    void *write_to_buf;
-
-    req->ch.lmt_data_sz = s_cookie_buf->len;
-    req->ch.lmt_req_id = s_cookie_buf->sender_req_id;
-
-    REQ_FIELD(req, lmt_pack_buf) = MPIU_Malloc((size_t) req->ch.lmt_data_sz);
-    write_to_buf = REQ_FIELD(req, lmt_pack_buf);
-
-    /* stash vc for ib_poll */
-    req->ch.vc = vc;
-
-    REQ_FIELD(req, lmt_tail) = s_cookie_buf->tail;
-
-    /* try to issue RDMA-read command */
-    int slack = 1;              /* slack for control packet bringing sequence number */
-    if (MPID_nem_ib_sendq_empty(vc_ib->sendq) &&
-        vc_ib->ibcom->ncom < MPID_NEM_IB_COM_MAX_SQ_CAPACITY - slack &&
-        MPID_nem_ib_ncqe < MPID_NEM_IB_COM_MAX_CQ_CAPACITY - slack) {
-        mpi_errno =
-            MPID_nem_ib_lmt_start_recv_core(req, s_cookie_buf->addr, s_cookie_buf->rkey,
-                                            s_cookie_buf->len, write_to_buf,
-                                            s_cookie_buf->max_msg_sz, 1);
-        if (mpi_errno) {
-            MPIU_ERR_POP(mpi_errno);
-        }
-    }
-    else {
-        /* enqueue command into send_queue */
-        dprintf("lmt_start_recv, enqueuing,sendq_empty=%d,ncom=%d,ncqe=%d\n",
-                MPID_nem_ib_sendq_empty(vc_ib->sendq),
-                vc_ib->ibcom->ncom < MPID_NEM_IB_COM_MAX_SQ_CAPACITY,
-                MPID_nem_ib_ncqe < MPID_NEM_IB_COM_MAX_CQ_CAPACITY);
-
-        /* make raddr, (sz is in rreq->ch.lmt_data_sz), rkey, (user_buf is in req->dev.user_buf) survive enqueue, free cookie, dequeue */
-        REQ_FIELD(req, lmt_raddr) = s_cookie_buf->addr;
-        REQ_FIELD(req, lmt_rkey) = s_cookie_buf->rkey;
-        REQ_FIELD(req, lmt_write_to_buf) = write_to_buf;
-        REQ_FIELD(req, lmt_szsend) = s_cookie_buf->len;
-        REQ_FIELD(req, max_msg_sz) = s_cookie_buf->max_msg_sz;
-        REQ_FIELD(req, last) = 1;       /* not support segmentation */
-
-        /* set for send_progress */
-        MPIDI_Request_set_msg_type(req, MPIDI_REQUEST_RNDV_MSG);
-        req->kind = MPID_REQUEST_RECV;
-
-        MPID_nem_ib_sendq_enqueue(&vc_ib->sendq, req);
-    }
-
-    /* prefix + header + data */
-    *buflen =
-        sizeof(MPIDI_CH3_Pkt_t) + sizeof(MPIDI_CH3_Pkt_t) + sizeof(MPID_nem_ib_rma_lmt_cookie_t);
-    *rreqp = NULL;
-
-  fn_exit:
-    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_IB_PKTHANDLER_PUT);
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-#endif
-
-#if 0
-/* packet handler for wrapper packet of MPIDI_CH3_PKT_ACCUMULATE */
-/* see MPIDI_CH3_PktHandler_Accumulate (in src/mpid/ch3/src/ch3u_rma_sync.c) */
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_ib_PktHandler_Accumulate
-#undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
-int MPID_nem_ib_PktHandler_Accumulate(MPIDI_VC_t * vc,
-                                      MPIDI_CH3_Pkt_t * pkt, MPIDI_msg_sz_t * buflen /* out */ ,
-                                      MPID_Request ** rreqp /* out */)
-{
-    MPID_nem_ib_vc_area *vc_ib = VC_IB(vc);
-    int mpi_errno = MPI_SUCCESS;
-    MPID_Request *req = NULL;
-    MPIDI_CH3_Pkt_accum_t *accum_pkt =
-        (MPIDI_CH3_Pkt_accum_t *) ((uint8_t *) pkt + sizeof(MPIDI_CH3_Pkt_t));
-    MPID_nem_ib_rma_lmt_cookie_t *s_cookie_buf =
-        (MPID_nem_ib_rma_lmt_cookie_t *) ((uint8_t *) pkt + sizeof(MPIDI_CH3_Pkt_t) +
-                                          sizeof(MPIDI_CH3_Pkt_t));
-
-    /* ref. MPIDI_CH3_PktHandler_Accumulate */
-    MPI_Aint true_lb, true_extent, extent;
-    MPI_Aint type_size;
-    MPID_Win *win_ptr;
-
-    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_IB_PKTHANDLER_ACCUMULATE);
-    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_IB_PKTHANDLER_ACCUMULATE);
-
-    MPIU_Assert(accum_pkt->target_win_handle != MPI_WIN_NULL);
-    MPID_Win_get_ptr(accum_pkt->target_win_handle, win_ptr);
-
-    req = MPID_Request_create();
-    MPIU_Object_set_ref(req, 1);
-
-    int incomplete;
-    MPIDI_CH3U_Request_increment_cc(req, &incomplete);  // decrement in drain_scq
-
-    req->dev.user_count = accum_pkt->count;
-    req->dev.op = accum_pkt->op;
-    req->dev.real_user_buf = accum_pkt->addr;
-    req->dev.target_win_handle = accum_pkt->target_win_handle;
-    req->dev.source_win_handle = accum_pkt->source_win_handle;
-    req->dev.flags = accum_pkt->flags;
-
-    req->dev.resp_request_handle = MPI_REQUEST_NULL;
-    req->dev.OnFinal = MPIDI_CH3_ReqHandler_AccumRecvComplete;
-
-    if (MPIR_DATATYPE_IS_PREDEFINED(accum_pkt->datatype)) {
-        MPIDI_Request_set_type(req, MPIDI_REQUEST_TYPE_ACCUM_RESP);
-        req->dev.datatype = accum_pkt->datatype;
-
-        MPIR_Type_get_true_extent_impl(accum_pkt->datatype, &true_lb, &true_extent);
-        MPID_Datatype_get_extent_macro(accum_pkt->datatype, extent);
-
-        /* Predefined types should always have zero lb */
-        MPIU_Assert(true_lb == 0);
-
-        req->dev.user_buf = MPIU_Malloc(accum_pkt->count * (MPIR_MAX(extent, true_extent)));
-        req->dev.final_user_buf = req->dev.user_buf;
-
-        MPID_Datatype_get_size_macro(accum_pkt->datatype, type_size);
-        req->dev.recv_data_sz = type_size * accum_pkt->count;
-
-        if (accum_pkt->immed_len > 0) {
-            /* See if we can receive some data from packet header. */
-            MPIU_Memcpy(req->dev.user_buf, accum_pkt->data, accum_pkt->immed_len);
-            req->dev.user_buf = (void*)((char*)req->dev.user_buf + accum_pkt->immed_len);
-            req->dev.recv_data_sz -= accum_pkt->immed_len;
-        }
-
-    }
-    else {
-        MPIDI_Request_set_type(req, MPIDI_REQUEST_TYPE_ACCUM_RESP_DERIVED_DT);
-        req->dev.OnDataAvail = MPIDI_CH3_ReqHandler_AccumDerivedDTRecvComplete;
-        req->dev.datatype = MPI_DATATYPE_NULL;
-
-        req->dev.dtype_info = (MPIDI_RMA_dtype_info *) MPIU_Malloc(sizeof(MPIDI_RMA_dtype_info));
-        req->dev.dataloop = MPIU_Malloc(accum_pkt->dataloop_size);
-
-        /* We have to store the value of 'put_pkt->dataloop_size' which we use in drain_scq.
-         * Temporarily, put it in req->dev.dtype_info.
-         */
-        *(int *) req->dev.dtype_info = accum_pkt->dataloop_size;
-    }
-
-    /* ref. pkt_RTS_handler (= pktArray[MPIDI_NEM_PKT_LMT_RTS]) */
-    void *write_to_buf;
-
-    req->ch.lmt_data_sz = s_cookie_buf->len;
-    req->ch.lmt_req_id = s_cookie_buf->sender_req_id;
-
-    REQ_FIELD(req, lmt_pack_buf) = MPIU_Malloc((size_t) req->ch.lmt_data_sz);
-    write_to_buf = REQ_FIELD(req, lmt_pack_buf);
-
-    /* stash vc for ib_poll */
-    req->ch.vc = vc;
-
-    REQ_FIELD(req, lmt_tail) = s_cookie_buf->tail;
-
-    /* try to issue RDMA-read command */
-    int slack = 1;              /* slack for control packet bringing sequence number */
-    if (MPID_nem_ib_sendq_empty(vc_ib->sendq) &&
-        vc_ib->ibcom->ncom < MPID_NEM_IB_COM_MAX_SQ_CAPACITY - slack &&
-        MPID_nem_ib_ncqe < MPID_NEM_IB_COM_MAX_CQ_CAPACITY - slack) {
-        mpi_errno =
-            MPID_nem_ib_lmt_start_recv_core(req, s_cookie_buf->addr, s_cookie_buf->rkey,
-                                            s_cookie_buf->len, write_to_buf,
-                                            s_cookie_buf->max_msg_sz, 1);
-        if (mpi_errno) {
-            MPIU_ERR_POP(mpi_errno);
-        }
-    }
-    else {
-        /* enqueue command into send_queue */
-        dprintf("lmt_start_recv, enqueuing,sendq_empty=%d,ncom=%d,ncqe=%d\n",
-                MPID_nem_ib_sendq_empty(vc_ib->sendq),
-                vc_ib->ibcom->ncom < MPID_NEM_IB_COM_MAX_SQ_CAPACITY,
-                MPID_nem_ib_ncqe < MPID_NEM_IB_COM_MAX_CQ_CAPACITY);
-
-        /* make raddr, (sz is in rreq->ch.lmt_data_sz), rkey, (user_buf is in req->dev.user_buf) survive enqueue, free cookie, dequeue */
-        REQ_FIELD(req, lmt_raddr) = s_cookie_buf->addr;
-        REQ_FIELD(req, lmt_rkey) = s_cookie_buf->rkey;
-        REQ_FIELD(req, lmt_write_to_buf) = write_to_buf;
-        REQ_FIELD(req, lmt_szsend) = s_cookie_buf->len;
-        REQ_FIELD(req, max_msg_sz) = s_cookie_buf->max_msg_sz;
-        REQ_FIELD(req, last) = 1;       /* not support segmentation */
-
-        /* set for send_progress */
-        MPIDI_Request_set_msg_type(req, MPIDI_REQUEST_RNDV_MSG);
-        req->kind = MPID_REQUEST_RECV;
-
-        MPID_nem_ib_sendq_enqueue(&vc_ib->sendq, req);
-    }
-
-    /* prefix + header + data */
-    *buflen =
-        sizeof(MPIDI_CH3_Pkt_t) + sizeof(MPIDI_CH3_Pkt_t) + sizeof(MPID_nem_ib_rma_lmt_cookie_t);
-    *rreqp = NULL;
-
-  fn_exit:
-    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_IB_PKTHANDLER_ACCUMULATE);
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-#endif
-
-#if 0
-/* packet handler for wrapper packet of MPIDI_CH3_PKT_GET */
-/* see MPIDI_CH3_PktHandler_Get (in src/mpid/ch3/src/ch3u_rma_sync.c) */
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_ib_PktHandler_Get
-#undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
-int MPID_nem_ib_PktHandler_Get(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
-                               MPIDI_msg_sz_t * buflen /* out */ ,
-                               MPID_Request ** rreqp /* out */)
-{
-    MPID_nem_ib_pkt_prefix_t *netmod_pkt = (MPID_nem_ib_pkt_prefix_t *) pkt;
-    MPIDI_CH3_Pkt_get_t *ch3_pkt =
-        (MPIDI_CH3_Pkt_get_t *) ((uint8_t *) pkt + sizeof(MPID_nem_ib_pkt_prefix_t));
-    int mpi_errno = MPI_SUCCESS;
-    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_IB_PKTHANDLER_GET);
-    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_IB_PKTHANDLER_GET);
-    /* Update occupation status of local SR (send request) queue */
-    MPID_nem_ib_vc_area *vc_ib = VC_IB(vc);
-    dprintf
-        ("MPID_nem_ib_Pkthandler_Get,lsr_seq_num_tail=%d,get_pkt->seq_num_tail=%d\n",
-         vc_ib->ibcom->lsr_seq_num_tail, netmod_pkt->seq_num_tail);
-    vc_ib->ibcom->lsr_seq_num_tail = netmod_pkt->seq_num_tail;
-    dprintf("MPID_nem_ib_Pkthandler_Get,lsr_seq_num_tail updated to %d\n",
-            vc_ib->ibcom->lsr_seq_num_tail);
-#ifndef MPID_NEM_IB_DISABLE_VAR_OCC_NOTIFY_RATE
-    /* change remote notification policy of RDMA-write-to buf */
-    dprintf("pkthandler,put,old rstate=%d\n", vc_ib->ibcom->rdmabuf_occupancy_notify_rstate);
-    MPID_nem_ib_change_rdmabuf_occupancy_notify_policy_lw(vc_ib, &vc_ib->ibcom->lsr_seq_num_tail);
-    dprintf("pkthandler,put,new rstate=%d\n", vc_ib->ibcom->rdmabuf_occupancy_notify_rstate);
-#endif
-    dprintf("pkthandler,put,sendq_empty=%d,ncom=%d,rdmabuf_occ=%d\n",
-            MPID_nem_ib_sendq_empty(vc_ib->sendq), vc_ib->ibcom->ncom,
-            MPID_nem_ib_diff16(vc_ib->ibcom->sseq_num, vc_ib->ibcom->lsr_seq_num_tail));
-    /* try to send from sendq because at least one RDMA-write-to buffer has been released */
-    dprintf("pkthandler,get,send_progress\n");
-    fflush(stdout);
-    MPID_NEM_IB_SEND_PROGRESS_POLLINGSET
-        /* fall back to the original handler */
-        /* we don't need to worry about the difference caused by embedding seq_num
-         * because size of MPI-header of MPIDI_CH3_PKT_PUT equals to sizeof(MPIDI_CH3_Pkt_t)
-         * see MPID_nem_ib_iSendContig
-         */
-        MPIDI_msg_sz_t ch3_buflen = *buflen - sizeof(MPID_nem_ib_pkt_prefix_t);
-    mpi_errno = MPIDI_CH3_PktHandler_Get(vc, (MPIDI_CH3_Pkt_t *) ch3_pkt, &ch3_buflen, rreqp);
-    *buflen = ch3_buflen + sizeof(MPID_nem_ib_pkt_prefix_t);
-    if (mpi_errno) {
-        MPIU_ERR_POP(mpi_errno);
-    }
-
-  fn_exit:
-    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_IB_PKTHANDLER_GET);
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-
-/* packet handler for wrapper packet of MPIDI_CH3_PKT_GET_RESP */
-/* see MPIDI_CH3_PktHandler_GetResp (in src/mpid/ch3/src/ch3u_rma_sync.c) */
-#undef FUNCNAME
-#define FUNCNAME MPID_nem_ib_PktHandler_GetResp
-#undef FCNAME
-#define FCNAME MPIDI_QUOTE(FUNCNAME)
-int MPID_nem_ib_PktHandler_GetResp(MPIDI_VC_t * vc,
-                                   MPIDI_CH3_Pkt_t * pkt, MPIDI_msg_sz_t * buflen /* out */ ,
-                                   MPID_Request ** rreqp /* out */)
-{
-    MPID_nem_ib_vc_area *vc_ib = VC_IB(vc);
-    int mpi_errno = MPI_SUCCESS;
-    MPID_Request *req = NULL;
-    MPIDI_CH3_Pkt_get_resp_t *get_resp_pkt =
-        (MPIDI_CH3_Pkt_get_resp_t *) ((uint8_t *) pkt + sizeof(MPIDI_CH3_Pkt_t));
-    MPID_nem_ib_rma_lmt_cookie_t *s_cookie_buf =
-        (MPID_nem_ib_rma_lmt_cookie_t *) ((uint8_t *) pkt + sizeof(MPIDI_CH3_Pkt_t) +
-                                          sizeof(MPIDI_CH3_Pkt_t));
-
-    MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_IB_PKTHANDLER_GETRESP);
-    MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_IB_PKTHANDLER_GETRESP);
-
-    MPID_Request_get_ptr(get_resp_pkt->request_handle, req);
-
-    MPID_Win *win_ptr;
-    int target_rank = get_resp_pkt->target_rank;
-
-    MPID_Win_get_ptr(get_resp_pkt->source_win_handle, win_ptr);
-
-    /* decrement ack_counter on target */
-    if (get_resp_pkt->flags & MPIDI_CH3_PKT_FLAG_RMA_LOCK_GRANTED) {
-        mpi_errno = handle_lock_ack(win_ptr, target_rank,
-                                          get_resp_pkt->flags);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-    }
-    if (get_resp_pkt->flags & MPIDI_CH3_PKT_FLAG_RMA_FLUSH_ACK) {
-        mpi_errno = MPIDI_CH3I_RMA_Handle_flush_ack(win_ptr, target_rank);
-        if (mpi_errno) MPIU_ERR_POP(mpi_errno);
-    }
-
-    void *write_to_buf;
-
-    req->ch.lmt_data_sz = s_cookie_buf->len;
-    req->ch.lmt_req_id = s_cookie_buf->sender_req_id;
-
-    REQ_FIELD(req, lmt_pack_buf) = MPIU_Malloc((size_t) req->ch.lmt_data_sz);
-    write_to_buf = REQ_FIELD(req, lmt_pack_buf);
-
-    /* This is magic number to pick up request in drain_scq */
-    MPIDI_Request_set_type(req, 13);    // currently Request-type is defined from 1 to 12.
-
-    /* stash vc for ib_poll */
-    req->ch.vc = vc;
-
-    REQ_FIELD(req, lmt_tail) = s_cookie_buf->tail;
-
-    /* try to issue RDMA-read command */
-    int slack = 1;              /* slack for control packet bringing sequence number */
-    if (MPID_nem_ib_sendq_empty(vc_ib->sendq) &&
-        vc_ib->ibcom->ncom < MPID_NEM_IB_COM_MAX_SQ_CAPACITY - slack &&
-        MPID_nem_ib_ncqe < MPID_NEM_IB_COM_MAX_CQ_CAPACITY - slack) {
-        mpi_errno =
-            MPID_nem_ib_lmt_start_recv_core(req, s_cookie_buf->addr, s_cookie_buf->rkey,
-                                            s_cookie_buf->len, write_to_buf,
-                                            s_cookie_buf->max_msg_sz, 1);
-        if (mpi_errno) {
-            MPIU_ERR_POP(mpi_errno);
-        }
-    }
-    else {
-        /* enqueue command into send_queue */
-        dprintf("lmt_start_recv, enqueuing,sendq_empty=%d,ncom=%d,ncqe=%d\n",
-                MPID_nem_ib_sendq_empty(vc_ib->sendq),
-                vc_ib->ibcom->ncom < MPID_NEM_IB_COM_MAX_SQ_CAPACITY,
-                MPID_nem_ib_ncqe < MPID_NEM_IB_COM_MAX_CQ_CAPACITY);
-
-        /* make raddr, (sz is in rreq->ch.lmt_data_sz), rkey, (user_buf is in req->dev.user_buf) survive enqueue, free cookie, dequeue */
-        REQ_FIELD(req, lmt_raddr) = s_cookie_buf->addr;
-        REQ_FIELD(req, lmt_rkey) = s_cookie_buf->rkey;
-        REQ_FIELD(req, lmt_write_to_buf) = write_to_buf;
-        REQ_FIELD(req, lmt_szsend) = s_cookie_buf->len;
-        REQ_FIELD(req, max_msg_sz) = s_cookie_buf->max_msg_sz;
-        REQ_FIELD(req, last) = 1;       /* not support segmentation */
-
-        MPID_nem_ib_sendq_enqueue(&vc_ib->sendq, req);
-    }
-
-    /* prefix + header + data */
-    *buflen =
-        sizeof(MPIDI_CH3_Pkt_t) + sizeof(MPIDI_CH3_Pkt_t) + sizeof(MPID_nem_ib_rma_lmt_cookie_t);
-    *rreqp = NULL;
-
-  fn_exit:
-    MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_IB_PKTHANDLER_GETRESP);
-    return mpi_errno;
-  fn_fail:
-    goto fn_exit;
-}
-#endif
-
 /* MPI_Isend set req-type to MPIDI_REQUEST_TYPE_RECV */
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_ib_pkt_GET_DONE_handler
@@ -2381,23 +1550,6 @@ int MPID_nem_ib_pkt_GET_DONE_handler(MPIDI_VC_t * vc,
     case MPIDI_REQUEST_TYPE_RSEND:
     case MPIDI_REQUEST_TYPE_SSEND:
     case MPIDI_REQUEST_TYPE_BSEND:
-#if 0   /* obsolete, it's in netmod header now */
-        /* extract embeded RDMA-write-to buffer occupancy information */
-        dprintf
-            ("get_done_handler,old lsr_seq_num_tail=%d,done_pkt->seq_num_tail=%d\n",
-             vc_ib->ibcom->lsr_seq_num_tail, done_pkt->seq_num_tail);
-        vc_ib->ibcom->lsr_seq_num_tail = done_pkt->seq_num_tail;
-        //dprintf("lmt_start_recv,new lsr_seq_num=%d\n", vc_ib->ibcom->lsr_seq_num_tail);
-#ifndef MPID_NEM_IB_DISABLE_VAR_OCC_NOTIFY_RATE
-        /* change remote notification policy of RDMA-write-to buf */
-        //dprintf("lmt_start_recv,reply_seq_num,old rstate=%d\n", vc_ib->ibcom->rdmabuf_occupancy_notify_rstate);
-        MPID_nem_ib_change_rdmabuf_occupancy_notify_policy_lw(vc_ib,
-                                                              &vc_ib->ibcom->lsr_seq_num_tail);
-        //dprintf("lmt_start_recv,reply_seq_num,new rstate=%d\n", vc_ib->ibcom->rdmabuf_occupancy_notify_rstate);
-#endif
-        //dprintf("lmt_start_recv,reply_seq_num,sendq_empty=%d,ncom=%d,ncqe=%d,rdmabuf_occ=%d\n", MPID_nem_ib_sendq_empty(vc_ib->sendq), vc_ib->ibcom->ncom, MPID_nem_ib_ncqe, MPID_nem_ib_diff16(vc_ib->ibcom->sseq_num, vc_ib->ibcom->lsr_seq_num_tail));
-#endif
-
         /* decrement reference counter of mr_cache_entry */
         MPID_nem_ib_com_reg_mr_release(REQ_FIELD(req, lmt_mr_cache));
 
@@ -2773,7 +1925,6 @@ int MPID_nem_ib_cm_drain_scq()
 
                     dprintf("cm_drain_scq,cm_cas,succeeded\n");
                     if (is_conn_established(shadow_cm->req->responder_rank)) {
-#if 1
                         /* Explicitly release CAS word because
                          * ConnectX-3 doesn't support safe CAS with PCI device and CPU */
                         MPID_nem_ib_cm_cas_release(MPID_nem_ib_conns
@@ -2789,49 +1940,6 @@ int MPID_nem_ib_cm_drain_scq()
                         /* free memory : req->ref_count is 3, so call MPIU_Free() directly */
                         //MPID_nem_ib_cm_request_release(shadow_cm->req);
                         MPIU_Free(shadow_cm->req);
-#else
-                        /* Connection is already established.
-                         * In this case, responder may already have performed vc_terminate.
-                         * However, since initiator has to release responder's CAS word,
-                         * initiator sends CM_CAS_RELEASE2. */
-                        dprintf("cm_drain_scq,cm_cas,established,%d->%d\n",
-                                MPID_nem_ib_myrank, shadow_cm->req->responder_rank);
-                        shadow_cm->req->state = MPID_NEM_IB_CM_CAS_RELEASE2;
-                        if (MPID_nem_ib_ncqe_scratch_pad < MPID_NEM_IB_COM_MAX_CQ_CAPACITY &&
-                            shadow_cm->req->ibcom->ncom_scratch_pad <
-                            MPID_NEM_IB_COM_MAX_SQ_CAPACITY) {
-
-                            MPID_nem_ib_cm_cmd_syn_t *cmd =
-                                (MPID_nem_ib_cm_cmd_syn_t *) shadow_cm->req->ibcom->
-                                icom_mem[MPID_NEM_IB_COM_SCRATCH_PAD_FROM];
-                            MPID_NEM_IB_CM_COMPOSE_CAS_RELEASE2(cmd, shadow_cm->req);
-                            cmd->initiator_rank = MPID_nem_ib_myrank;
-                            MPID_nem_ib_cm_cmd_shadow_t *shadow_syn =
-                                (MPID_nem_ib_cm_cmd_shadow_t *)
-                                MPIU_Malloc(sizeof(MPID_nem_ib_cm_cmd_shadow_t));
-                            shadow_syn->type = shadow_cm->req->state;
-                            shadow_syn->req = shadow_cm->req;
-                            dprintf("shadow_syn=%p,shadow_syn->req=%p\n", shadow_syn,
-                                    shadow_syn->req);
-                            dprintf("cm_drain_scq,cm_cas,established,sending cas_release2,%d->%d\n",
-                                    MPID_nem_ib_myrank, shadow_cm->req->responder_rank);
-                            mpi_errno =
-                                MPID_nem_ib_cm_cmd_core(shadow_cm->req->responder_rank, shadow_syn,
-                                                        (void *) cmd,
-                                                        sizeof(MPID_nem_ib_cm_cmd_syn_t),
-                                                        1 /* syn:1 */ , 0);
-                            MPIU_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER,
-                                                "**MPID_nem_ib_cm_send_core");
-                        }
-                        else {
-                            MPID_NEM_IB_CM_COMPOSE_CAS_RELEASE2((MPID_nem_ib_cm_cmd_syn_t *) &
-                                                                (shadow_cm->req->cmd),
-                                                                shadow_cm->req);
-                            ((MPID_nem_ib_cm_cmd_syn_t *) & shadow_cm->req->cmd)->initiator_rank =
-                                MPID_nem_ib_myrank;
-                            MPID_nem_ib_cm_sendq_enqueue(&MPID_nem_ib_cm_sendq, shadow_cm->req);
-                        }
-#endif
                     }
                     else {
                         /* Increment receiving transaction counter. Initiator receives SYNACK and ACK2 */
@@ -3878,14 +2986,6 @@ int MPID_nem_ib_ringbuf_alloc(MPIDI_VC_t * vc)
         MPID_nem_ib_ringbuf = MPIU_Calloc(1, sizeof(MPID_nem_ib_ringbuf_t) * MPID_NEM_IB_NRINGBUF);
         MPIU_ERR_CHKANDJUMP(!MPID_nem_ib_ringbuf, mpi_errno, MPI_ERR_OTHER, "**malloc");
     }
-
-#if 0   /* Degug, "#if 1" to make exclusive ring-buffers not available */
-    //if (MPID_nem_ib_myrank == 0) {
-    for (i = 0; i < MPID_NEM_IB_NRINGBUF - 1; i++) {
-        MPID_nem_ib_ringbuf_acquired[i / 64] |= (1ULL << (i & 63));
-    }
-    //}
-#endif
 
     int found = 0;
     /* [MPID_NEM_IB_NRINGBUF-1] holds shared ring buffer */
