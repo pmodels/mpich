@@ -921,7 +921,6 @@ int llctofu_poll(int in_blocking_poll,
                 req->status.MPI_ERROR = MPI_SUCCESS;
                 MPIU_ERR_SET(req->status.MPI_ERROR, MPIX_ERR_PROC_FAIL_STOP, "**comm_fail");
 
-                MPID_Request_release(req); /* ref count was incremented when added to queue */
                 MPIDI_CH3U_Request_complete(req);
 
                 if (lcmd->iov_local[0].addr != 0) {
@@ -932,7 +931,6 @@ int llctofu_poll(int in_blocking_poll,
                 req->status.MPI_ERROR = MPI_SUCCESS;
                 MPIU_ERR_SET(req->status.MPI_ERROR, MPIX_ERR_PROC_FAIL_STOP, "**comm_fail");
 
-                MPID_Request_release(req); /* ref count was incremented when added to queue */
                 MPIDI_CH3U_Request_complete(req);
             } else if (lcmd->opcode == LLC_OPCODE_RECV) {
                 /* Probably ch3 dequeued and completed this request. */
