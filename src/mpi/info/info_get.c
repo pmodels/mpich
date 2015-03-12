@@ -150,16 +150,14 @@ int MPI_Info_get(MPI_Info info, const char *key, int valuelen, char *value,
     /* ... end of body of routine ... */
     if (mpi_errno) goto fn_fail;
 
-#ifdef HAVE_ERROR_CHECKING
   fn_exit:
-#endif
     MPID_MPI_FUNC_EXIT(MPID_STATE_MPI_INFO_GET);
     MPIU_THREAD_CS_EXIT(ALLFUNC,);
     return mpi_errno;
 
     /* --BEGIN ERROR HANDLING-- */
-#   ifdef HAVE_ERROR_CHECKING
   fn_fail:
+#   ifdef HAVE_ERROR_CHECKING
     {
 	mpi_errno = MPIR_Err_create_code( mpi_errno, MPIR_ERR_RECOVERABLE,
 	    FCNAME, __LINE__, MPI_ERR_OTHER, 
@@ -167,7 +165,7 @@ int MPI_Info_get(MPI_Info info, const char *key, int valuelen, char *value,
 	    "**mpi_info_get %I %s %d %p %p", info, key, valuelen, value, flag);
     }
     mpi_errno = MPIR_Err_return_comm( NULL, FCNAME, mpi_errno );
-    goto fn_exit;
 #   endif
+    goto fn_exit;
     /* --END ERROR HANDLING-- */
 }
