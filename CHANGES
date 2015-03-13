@@ -26,6 +26,9 @@
  # Completely revamped RMA infrastructure including several
    scalability improvements, performance improvements, and bug fixes.
 
+ # The Myrinet MX network module, which had a life cyle from 1.1 till
+   3.1.2, has now been deprecated.
+
  # Several other minor bug fixes, memory leak fixes, and code cleanup.
 
    A full list of changes is available at the following link:
