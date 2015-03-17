@@ -47,8 +47,11 @@ AC_DEFUN([PAC_SET_HEADER_LIB_PATH],[
           [AS_IF([test -n "${with_$1}"],
                  dnl is adding lib64 by default really the right thing to do?  What if
                  dnl we are on a 32-bit host that happens to have both lib dirs available?
-                 [PAC_APPEND_FLAG([-L${with_$1}/lib64],[LDFLAGS])
-                  PAC_APPEND_FLAG([-L${with_$1}/lib],[LDFLAGS])])])
+                 [PAC_APPEND_FLAG([-L${with_$1}/lib],[LDFLAGS])
+                  AS_IF([test -d "${with_$1}/lib64}"],
+		        [PAC_APPEND_FLAG([-L${with_$1}/lib64],[LDFLAGS])])
+                 ])
+          ])
 ])
 
 
