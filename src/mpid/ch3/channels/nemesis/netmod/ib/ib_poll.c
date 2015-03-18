@@ -153,9 +153,7 @@ int MPID_nem_ib_drain_scq(int dont_call_progress)
             if (req_type == MPIDI_REQUEST_TYPE_SEND && req->comm) {
                 /* exclude control messages by requiring MPIDI_REQUEST_TYPE_SEND
                  * exclude eager-short by requiring req->comm != 0 */
-                int is_contig;
-                MPID_Datatype_is_contig(req->dev.datatype, &is_contig);
-                if (!is_contig && REQ_FIELD(req, lmt_pack_buf)) {
+                if (REQ_FIELD(req, lmt_pack_buf)) {
                     dprintf("drain_scq,eager-send,non-contiguous,free lmt_pack_buf=%p\n",
                             REQ_FIELD(req, lmt_pack_buf));
                     MPIU_Free(REQ_FIELD(req, lmt_pack_buf));

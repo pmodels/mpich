@@ -111,6 +111,8 @@ static int MPID_nem_ib_iSendContig_core(MPIDI_VC_t * vc, MPID_Request * sreq, vo
         MPIDI_CH3U_Request_increment_cc(sreq, &incomplete);     // decrement in drain_scq and pkt_rma_lmt_getdone
     }
 
+    REQ_FIELD(sreq, lmt_pack_buf) = NULL;
+
     /* packet handlers including MPIDI_CH3_PktHandler_EagerSend and MPID_nem_handle_pkt assume this */
     hdr_sz = sizeof(MPIDI_CH3_Pkt_t);
 
@@ -481,6 +483,9 @@ static int MPID_nem_ib_SendNoncontig_core(MPIDI_VC_t * vc, MPID_Request * sreq, 
         MPID_Segment_pack(sreq->dev.segment_ptr, sreq->dev.segment_first, &last,
                           (char *) REQ_FIELD(sreq, lmt_pack_buf));
         MPIU_Assert(last == sreq->dev.segment_size);
+    }
+    else {
+        REQ_FIELD(sreq, lmt_pack_buf) = NULL;
     }
 
     data = (void *) REQ_FIELD(sreq, lmt_pack_buf);
