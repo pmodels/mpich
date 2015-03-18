@@ -985,10 +985,16 @@ static inline void *MPID_nem_ib_stmalloc(size_t _sz)
         sz >>= 1;
     } while (sz > 0);
     if (i < 12) {
-        return MPIU_Malloc(sz);
+        return MPIU_Malloc(_sz);
     }
     if (i > 30) {
-        return mmap(0, sz, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, -1, 0);
+        void *addr = mmap(0, _sz, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, -1, 0);
+        if (addr == (void *) -1) {
+            return NULL;
+        }
+        else {
+            return addr;
+        }
     }
     int ndx = i - 12;
     void *slot;
@@ -1008,12 +1014,13 @@ static inline void *MPID_nem_ib_stmalloc(size_t _sz)
     return slot;
 }
 
-static inline void MPID_nem_ib_stfree(void *ptr, size_t sz)
+static inline void MPID_nem_ib_stfree(void *ptr, size_t _sz)
 {
     if (MPID_nem_ib_myrank == 1) {
         //printf("stfree,%p,%08x\n", ptr, (int)sz);
     }
     int i = 0;
+    size_t sz = _sz;
     do {
         i++;
         sz >>= 1;
@@ -1023,7 +1030,7 @@ static inline void MPID_nem_ib_stfree(void *ptr, size_t sz)
         goto fn_exit;
     }
     if (i > 30) {
-        munmap(ptr, sz);
+        munmap(ptr, _sz);
         goto fn_exit;
     }
     int ndx = i - 12;
