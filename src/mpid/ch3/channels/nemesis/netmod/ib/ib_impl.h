@@ -55,8 +55,12 @@ typedef struct {
 
 /* macro for secret area in vc */
 #define VC_CH(vc) ((MPIDI_CH3I_VC *)&(vc)->ch)
-#define VC_IB(vc) ((MPID_nem_ib_vc_area *)VC_CH((vc))->netmod_area.padding)
-#define VC_FIELD(vcp, field) (((MPID_nem_ib_vc_area *)VC_CH(((vcp)))->netmod_area.padding)->field)
+static inline MPID_nem_ib_vc_area *VC_IB(MPIDI_VC_t * vc)
+{
+    return (MPID_nem_ib_vc_area *) vc->ch.netmod_area.padding;
+}
+
+#define VC_FIELD(vcp, field) VC_IB(vcp)->field
 
 /* The req provides a generic buffer in which network modules can store
    private fields This removes all dependencies from the req structure
@@ -88,8 +92,12 @@ typedef struct {
 } MPID_nem_ib_req_area;
 
 /* macro for secret area in req */
-#define REQ_IB(req) ((MPID_nem_ib_req_area *)(&(req)->ch.netmod_area.padding))
-#define REQ_FIELD(reqp, field) (((MPID_nem_ib_req_area *)((reqp)->ch.netmod_area.padding))->field)
+static inline MPID_nem_ib_req_area *REQ_IB(MPID_Request * req)
+{
+    return (MPID_nem_ib_req_area *) req->ch.netmod_area.padding;
+}
+
+#define REQ_FIELD(reqp, field) (REQ_IB(reqp)->field)
 
 /* see src/mpid/ch3/channels/nemesis/include/mpidi_ch3_impl.h */
 /* sreq is never enqueued into posted-queue nor unexpected-queue, so we can reuse sreq->dev.next */
