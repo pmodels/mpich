@@ -476,8 +476,8 @@ static int MPID_nem_ib_SendNoncontig_core(MPIDI_VC_t * vc, MPID_Request * sreq, 
 
     last = sreq->dev.segment_size;      /* segment_size is byte offset */
     if (last > 0) {
-        REQ_FIELD(sreq, lmt_pack_buf) =
-            MPIU_Malloc((size_t) (sreq->dev.segment_size - sreq->dev.segment_first));
+        data_sz = sreq->dev.segment_size - sreq->dev.segment_first;
+        REQ_FIELD(sreq, lmt_pack_buf) = MPIU_Malloc((size_t) data_sz);
         MPIU_ERR_CHKANDJUMP(!REQ_FIELD(sreq, lmt_pack_buf), mpi_errno, MPI_ERR_OTHER,
                             "**outofmemory");
         MPID_Segment_pack(sreq->dev.segment_ptr, sreq->dev.segment_first, &last,
@@ -486,14 +486,14 @@ static int MPID_nem_ib_SendNoncontig_core(MPIDI_VC_t * vc, MPID_Request * sreq, 
     }
     else {
         REQ_FIELD(sreq, lmt_pack_buf) = NULL;
+        data_sz = 0;
     }
 
     data = (void *) REQ_FIELD(sreq, lmt_pack_buf);
-    data_sz = last;
 
     /* If request length is too long, create LMT packet */
     if (MPID_NEM_IB_NETMOD_HDR_SIZEOF(vc_ib->ibcom->local_ringbuf_type)
-        + sizeof(MPIDI_CH3_Pkt_t) + sreq->dev.segment_size - sreq->dev.segment_first
+        + sizeof(MPIDI_CH3_Pkt_t) + data_sz
         > MPID_NEM_IB_COM_RDMABUF_SZSEG - sizeof(MPID_nem_ib_netmod_trailer_t)) {
         pkt_netmod.type = MPIDI_NEM_PKT_NETMOD;
 
@@ -510,10 +510,11 @@ static int MPID_nem_ib_SendNoncontig_core(MPIDI_VC_t * vc, MPID_Request * sreq, 
 
         sreq->ch.s_cookie = s_cookie_buf;
 
-        s_cookie_buf->tail = *((uint8_t *) ((uint8_t *) write_from_buf + last - sizeof(uint8_t)));
+        s_cookie_buf->tail =
+            *((uint8_t *) ((uint8_t *) write_from_buf + data_sz - sizeof(uint8_t)));
         /* put IB rkey */
         struct MPID_nem_ib_com_reg_mr_cache_entry_t *mr_cache =
-            MPID_nem_ib_com_reg_mr_fetch(write_from_buf, last, 0,
+            MPID_nem_ib_com_reg_mr_fetch(write_from_buf, data_sz, 0,
                                          MPID_NEM_IB_COM_REG_MR_GLOBAL);
         MPIU_ERR_CHKANDJUMP(!mr_cache, mpi_errno, MPI_ERR_OTHER, "**MPID_nem_ib_com_reg_mr_fetch");
         struct ibv_mr *mr = mr_cache->mr;
@@ -524,7 +525,7 @@ static int MPID_nem_ib_SendNoncontig_core(MPIDI_VC_t * vc, MPID_Request * sreq, 
         s_cookie_buf->addr = write_from_buf;
 #endif
         s_cookie_buf->rkey = mr->rkey;
-        s_cookie_buf->len = last;
+        s_cookie_buf->len = data_sz;
         s_cookie_buf->sender_req_id = sreq->handle;
         s_cookie_buf->max_msg_sz = max_msg_sz;
 
