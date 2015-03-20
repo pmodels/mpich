@@ -119,16 +119,20 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
     ADIO_Offset greatestFileDomainOffset = 0;
     ADIO_Offset smallestFileDomainOffset = lastFileOffset;
     for (j=0;j<naggs;j++) {
+      /* Find the actual lowest and highest offsets to be written.
+         The non-aggs need to know this too to adjust the mpi_put
+         window displacement accordingly.
+       */
+      if (fd_end[j] > greatestFileDomainOffset) {
+        greatestFileDomainOffset = fd_end[j];
+        greatestFileDomainAggRank = j;
+      }
+      if (fd_start[j] < smallestFileDomainOffset) {
+        smallestFileDomainOffset = fd_start[j];
+        smallestFileDomainAggRank = j;
+      }
       if (fd->hints->ranklist[j] == myrank) {
         myAggRank = j;
-        if (fd_end[j] > greatestFileDomainOffset) {
-          greatestFileDomainOffset = fd_end[j];
-          greatestFileDomainAggRank = j;
-        }
-        if (fd_start[j] < smallestFileDomainOffset) {
-          smallestFileDomainOffset = fd_start[j];
-          smallestFileDomainAggRank = j;
-        }
         if (fd_end[j] > fd_start[j]) {
           iAmUsedAgg = 1;
         }
@@ -333,8 +337,14 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
       /* Initialize the data structures if this is the first offset in the round/target agg.
        */
       if (targetAggsForMyDataFirstOffLenIndex[targetAggsForMyDataCurrentRoundIter[numTargetAggs]][numTargetAggs] == -1) {
-         targetAggsForMyData[numTargetAggs] = fd->hints->ranklist[currentAggRankListIndex];
+        targetAggsForMyData[numTargetAggs] = fd->hints->ranklist[currentAggRankListIndex];
         targetAggsForMyDataFDStart[numTargetAggs] = fd_start[currentAggRankListIndex];
+        /* Round up file domain to the first actual offset used if this is the first file domain.
+         */
+        if (currentAggRankListIndex == smallestFileDomainAggRank) {
+          if (targetAggsForMyDataFDStart[numTargetAggs] < firstFileOffset)
+            targetAggsForMyDataFDStart[numTargetAggs] = firstFileOffset;
+        }
         targetAggsForMyDataFDEnd[numTargetAggs] = fd_end[currentAggRankListIndex];
         targetAggsForMyDataFirstOffLenIndex[targetAggsForMyDataCurrentRoundIter[numTargetAggs]][numTargetAggs] = blockIter;
         if (bufTypeIsContig)
@@ -398,8 +408,14 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
            */
           if (blockEnd >= fd_start[currentAggRankListIndex]) {
             numTargetAggs++;
-             targetAggsForMyData[numTargetAggs] = fd->hints->ranklist[currentAggRankListIndex];
+            targetAggsForMyData[numTargetAggs] = fd->hints->ranklist[currentAggRankListIndex];
             targetAggsForMyDataFDStart[numTargetAggs] = fd_start[currentAggRankListIndex];
+            /* Round up file domain to the first actual offset used if this is the first file domain.
+             */
+            if (currentAggRankListIndex == smallestFileDomainAggRank) {
+              if (targetAggsForMyDataFDStart[numTargetAggs] < firstFileOffset)
+                targetAggsForMyDataFDStart[numTargetAggs] = firstFileOffset;
+            }
             targetAggsForMyDataFDEnd[numTargetAggs] = fd_end[currentAggRankListIndex];
             targetAggsForMyDataFirstOffLenIndex[targetAggsForMyDataCurrentRoundIter[numTargetAggs]][numTargetAggs] = blockIter;
             if (bufTypeIsContig)
@@ -1071,16 +1087,20 @@ void ADIOI_OneSidedReadAggregation(ADIO_File fd,
     ADIO_Offset greatestFileDomainOffset = 0;
     ADIO_Offset smallestFileDomainOffset = lastFileOffset;
     for (j=0;j<naggs;j++) {
+      /* Find the actual lowest and highest offsets to be written.
+         The non-aggs need to know this too to adjust the mpi_get
+         window displacement accordingly.
+       */
+      if (fd_end[j] > greatestFileDomainOffset) {
+        greatestFileDomainOffset = fd_end[j];
+        greatestFileDomainAggRank = j;
+      }
+      if (fd_start[j] < smallestFileDomainOffset) {
+        smallestFileDomainOffset = fd_start[j];
+        smallestFileDomainAggRank = j;
+      }
       if (fd->hints->ranklist[j] == myrank) {
         myAggRank = j;
-        if (fd_end[j] > greatestFileDomainOffset) {
-          greatestFileDomainOffset = fd_end[j];
-          greatestFileDomainAggRank = j;
-        }
-        if (fd_start[j] < smallestFileDomainOffset) {
-          smallestFileDomainOffset = fd_start[j];
-          smallestFileDomainAggRank = j;
-        }
         if (fd_end[j] > fd_start[j]) {
           iAmUsedAgg = 1;
         }
@@ -1277,8 +1297,14 @@ void ADIOI_OneSidedReadAggregation(ADIO_File fd,
       /* Initialize the data structures if this is the first offset in the round/source agg.
        */
       if (sourceAggsForMyDataFirstOffLenIndex[sourceAggsForMyDataCurrentRoundIter[numSourceAggs]][numSourceAggs] == -1) {
-         sourceAggsForMyData[numSourceAggs] = fd->hints->ranklist[currentAggRankListIndex];
+        sourceAggsForMyData[numSourceAggs] = fd->hints->ranklist[currentAggRankListIndex];
         sourceAggsForMyDataFDStart[numSourceAggs] = fd_start[currentAggRankListIndex];
+        /* Round up file domain to the first actual offset used if this is the first file domain.
+         */
+        if (currentAggRankListIndex == smallestFileDomainAggRank) {
+          if (sourceAggsForMyDataFDStart[numSourceAggs] < firstFileOffset)
+            sourceAggsForMyDataFDStart[numSourceAggs] = firstFileOffset;
+        }
         sourceAggsForMyDataFDEnd[numSourceAggs] = fd_end[currentAggRankListIndex];
         sourceAggsForMyDataFirstOffLenIndex[sourceAggsForMyDataCurrentRoundIter[numSourceAggs]][numSourceAggs] = blockIter;
         if (bufTypeIsContig)
@@ -1342,8 +1368,14 @@ void ADIOI_OneSidedReadAggregation(ADIO_File fd,
            */
           if (blockEnd >= fd_start[currentAggRankListIndex]) {
             numSourceAggs++;
-             sourceAggsForMyData[numSourceAggs] = fd->hints->ranklist[currentAggRankListIndex];
+            sourceAggsForMyData[numSourceAggs] = fd->hints->ranklist[currentAggRankListIndex];
             sourceAggsForMyDataFDStart[numSourceAggs] = fd_start[currentAggRankListIndex];
+            /* Round up file domain to the first actual offset used if this is the first file domain.
+             */
+            if (currentAggRankListIndex == smallestFileDomainAggRank) {
+              if (sourceAggsForMyDataFDStart[numSourceAggs] < firstFileOffset)
+                sourceAggsForMyDataFDStart[numSourceAggs] = firstFileOffset;
+            }
             sourceAggsForMyDataFDEnd[numSourceAggs] = fd_end[currentAggRankListIndex];
             sourceAggsForMyDataFirstOffLenIndex[sourceAggsForMyDataCurrentRoundIter[numSourceAggs]][numSourceAggs] = blockIter;
             if (bufTypeIsContig)
