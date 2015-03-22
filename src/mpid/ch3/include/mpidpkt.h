@@ -522,31 +522,16 @@ MPIDI_CH3_PKT_DEFS
         err_ = MPI_SUCCESS;                                             \
         switch((pkt_).type) {                                           \
         case (MPIDI_CH3_PKT_PUT):                                       \
-            (pkt_).put.info.metadata.dataloop_size = (dataloop_size_);  \
+            (pkt_).put.info.dataloop_size = (dataloop_size_);           \
             break;                                                      \
         case (MPIDI_CH3_PKT_GET):                                       \
-            (pkt_).get.info.metadata.dataloop_size = (dataloop_size_);  \
+            (pkt_).get.info.dataloop_size = (dataloop_size_);           \
             break;                                                      \
         case (MPIDI_CH3_PKT_ACCUMULATE):                                \
-            (pkt_).accum.info.metadata.dataloop_size = (dataloop_size_); \
+            (pkt_).accum.info.dataloop_size = (dataloop_size_);         \
             break;                                                      \
         case (MPIDI_CH3_PKT_GET_ACCUM):                                 \
-            (pkt_).get_accum.info.metadata.dataloop_size = (dataloop_size_); \
-            break;                                                      \
-        default:                                                        \
-            MPIU_ERR_SETANDJUMP1(err_, MPI_ERR_OTHER, "**invalidpkt", "**invalidpkt %d", (pkt_).type); \
-        }                                                               \
-    }
-
-#define MPIDI_CH3_PKT_RMA_GET_STREAM_OFFSET(pkt_, stream_offset_, err_) \
-    {                                                                   \
-        err_ = MPI_SUCCESS;                                             \
-        switch((pkt_).type) {                                           \
-        case (MPIDI_CH3_PKT_ACCUMULATE):                                \
-            (stream_offset_) = (pkt_).accum.info.metadata.stream_offset; \
-            break;                                                      \
-        case (MPIDI_CH3_PKT_GET_ACCUM):                                 \
-            (stream_offset_) = (pkt_).get_accum.info.metadata.stream_offset; \
+            (pkt_).get_accum.info.dataloop_size = (dataloop_size_);     \
             break;                                                      \
         default:                                                        \
             MPIU_ERR_SETANDJUMP1(err_, MPI_ERR_OTHER, "**invalidpkt", "**invalidpkt %d", (pkt_).type); \
@@ -609,12 +594,7 @@ typedef struct MPIDI_CH3_Pkt_put {
     MPI_Win target_win_handle;
     MPI_Win source_win_handle;
     union {
-        /* note that we use struct here in order
-         * to consistently access dataloop_size
-         * by "pkt->info.metadata.dataloop_size". */
-        struct {
-            int dataloop_size;
-        } metadata;
+        int dataloop_size;
         char data[MPIDI_RMA_IMMED_BYTES];
     } info;
 } MPIDI_CH3_Pkt_put_t;
@@ -628,10 +608,8 @@ typedef struct MPIDI_CH3_Pkt_get {
     struct {
         /* note that we use struct here in order
          * to consistently access dataloop_size
-         * by "pkt->info.metadata.dataloop_size". */
-        struct {
-            int dataloop_size;  /* for derived datatypes */
-        } metadata;
+         * by "pkt->info.dataloop_size". */
+        int dataloop_size;      /* for derived datatypes */
     } info;
     MPI_Request request_handle;
     MPI_Win target_win_handle;
@@ -662,10 +640,7 @@ typedef struct MPIDI_CH3_Pkt_accum {
     MPI_Win target_win_handle;
     MPI_Win source_win_handle;
     union {
-        struct {
-            int dataloop_size;
-            MPI_Aint stream_offset;
-        } metadata;
+        int dataloop_size;
         char data[MPIDI_RMA_IMMED_BYTES];
     } info;
 } MPIDI_CH3_Pkt_accum_t;
@@ -680,10 +655,7 @@ typedef struct MPIDI_CH3_Pkt_get_accum {
     MPI_Op op;
     MPI_Win target_win_handle;
     union {
-        struct {
-            int dataloop_size;
-            MPI_Aint stream_offset;
-        } metadata;
+        int dataloop_size;
         char data[MPIDI_RMA_IMMED_BYTES];
     } info;
 } MPIDI_CH3_Pkt_get_accum_t;

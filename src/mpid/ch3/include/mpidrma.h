@@ -373,21 +373,8 @@ static inline int enqueue_lock_origin(MPID_Win * win_ptr, MPIDI_VC_t * vc,
         MPID_Datatype_get_extent_macro(target_dtp, type_extent);
         MPID_Datatype_get_size_macro(target_dtp, type_size);
 
-        if (pkt->type == MPIDI_CH3_PKT_PUT) {
-            recv_data_sz = type_size * target_count;
-            buf_size = type_extent * target_count;
-        }
-        else {
-            MPI_Aint stream_offset, stream_elem_count;
-            MPI_Aint total_len, rest_len;
-
-            MPIDI_CH3_PKT_RMA_GET_STREAM_OFFSET((*pkt), stream_offset, mpi_errno);
-            stream_elem_count = MPIDI_CH3U_SRBuf_size / type_extent;
-            total_len = type_size * target_count;
-            rest_len = total_len - stream_offset;
-            recv_data_sz = MPIR_MIN(rest_len, type_size * stream_elem_count);
-            buf_size = type_extent * (recv_data_sz / type_size);
-        }
+        recv_data_sz = type_size * target_count;
+        buf_size = type_extent * target_count;
 
         if (new_ptr != NULL) {
             if (win_ptr->current_lock_data_bytes + buf_size < MPIR_CVAR_CH3_RMA_LOCK_DATA_BYTES) {

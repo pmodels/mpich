@@ -60,6 +60,9 @@ typedef struct MPIDI_RMA_Op {
     int result_count;
     MPI_Datatype result_datatype;
 
+    /* used in streaming ACCs */
+    void *original_target_addr;
+
     struct MPID_Request **reqs;
     int reqs_size;
 

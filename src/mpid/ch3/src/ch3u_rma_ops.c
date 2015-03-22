@@ -198,7 +198,7 @@ int MPIDI_CH3I_Put(const void *origin_addr, int origin_count, MPI_Datatype
             win_ptr->basic_info_table[target_rank].disp_unit * target_disp;
         put_pkt->count = target_count;
         put_pkt->datatype = target_datatype;
-        put_pkt->info.metadata.dataloop_size = 0;
+        put_pkt->info.dataloop_size = 0;
         put_pkt->target_win_handle = win_ptr->basic_info_table[target_rank].win_handle;
         put_pkt->source_win_handle = win_ptr->handle;
         put_pkt->flags = MPIDI_CH3_PKT_FLAG_NONE;
@@ -387,7 +387,7 @@ int MPIDI_CH3I_Get(void *origin_addr, int origin_count, MPI_Datatype
             win_ptr->basic_info_table[target_rank].disp_unit * target_disp;
         get_pkt->count = target_count;
         get_pkt->datatype = target_datatype;
-        get_pkt->info.metadata.dataloop_size = 0;
+        get_pkt->info.dataloop_size = 0;
         get_pkt->target_win_handle = win_ptr->basic_info_table[target_rank].win_handle;
         get_pkt->flags = MPIDI_CH3_PKT_FLAG_NONE;
         if (use_immed_resp_pkt)
@@ -612,11 +612,10 @@ int MPIDI_CH3I_Accumulate(const void *origin_addr, int origin_count, MPI_Datatyp
             win_ptr->basic_info_table[target_rank].disp_unit * target_disp;
         accum_pkt->count = target_count;
         accum_pkt->datatype = target_datatype;
-        accum_pkt->info.metadata.dataloop_size = 0;
+        accum_pkt->info.dataloop_size = 0;
         accum_pkt->op = op;
         accum_pkt->target_win_handle = win_ptr->basic_info_table[target_rank].win_handle;
         accum_pkt->source_win_handle = win_ptr->handle;
-        accum_pkt->info.metadata.stream_offset = 0;
         accum_pkt->flags = MPIDI_CH3_PKT_FLAG_NONE;
         if (use_immed_pkt) {
             void *src = (void *) origin_addr, *dest = (void *) (accum_pkt->info.data);
@@ -624,6 +623,12 @@ int MPIDI_CH3I_Accumulate(const void *origin_addr, int origin_count, MPI_Datatyp
             if (mpi_errno != MPI_SUCCESS)
                 MPIU_ERR_POP(mpi_errno);
         }
+
+        /* NOTE: here we backup the original starting address for the entire operation
+           on target window in 'original_target_addr', because when actually issuing
+           this operation, we may stream this operation and overwrite 'addr' with the
+           starting address for the streaming unit. */
+        new_ptr->original_target_addr = accum_pkt->addr;
 
         MPIR_T_PVAR_TIMER_END(RMA, rma_rmaqueue_set);
 
@@ -810,7 +815,7 @@ int MPIDI_CH3I_Get_accumulate(const void *origin_addr, int origin_count,
                 win_ptr->basic_info_table[target_rank].disp_unit * target_disp;
             get_pkt->count = target_count;
             get_pkt->datatype = target_datatype;
-            get_pkt->info.metadata.dataloop_size = 0;
+            get_pkt->info.dataloop_size = 0;
             get_pkt->target_win_handle = win_ptr->basic_info_table[target_rank].win_handle;
             get_pkt->flags = MPIDI_CH3_PKT_FLAG_NONE;
             if (use_immed_resp_pkt == TRUE)
@@ -931,10 +936,9 @@ int MPIDI_CH3I_Get_accumulate(const void *origin_addr, int origin_count,
                 win_ptr->basic_info_table[target_rank].disp_unit * target_disp;
             get_accum_pkt->count = target_count;
             get_accum_pkt->datatype = target_datatype;
-            get_accum_pkt->info.metadata.dataloop_size = 0;
+            get_accum_pkt->info.dataloop_size = 0;
             get_accum_pkt->op = op;
             get_accum_pkt->target_win_handle = win_ptr->basic_info_table[target_rank].win_handle;
-            get_accum_pkt->info.metadata.stream_offset = 0;
             get_accum_pkt->flags = MPIDI_CH3_PKT_FLAG_NONE;
             if (use_immed_pkt) {
                 void *src = (void *) origin_addr, *dest = (void *) (get_accum_pkt->info.data);
@@ -942,6 +946,12 @@ int MPIDI_CH3I_Get_accumulate(const void *origin_addr, int origin_count,
                 if (mpi_errno != MPI_SUCCESS)
                     MPIU_ERR_POP(mpi_errno);
             }
+
+            /* NOTE: here we backup the original starting address for the entire operation
+               on target window in 'original_target_addr', because when actually issuing
+               this operation, we may stream this operation and overwrite 'addr' with the
+               starting address for the streaming unit. */
+            new_ptr->original_target_addr = get_accum_pkt->addr;
         }
 
         MPIR_T_PVAR_TIMER_END(RMA, rma_rmaqueue_set);
@@ -1346,7 +1356,7 @@ int MPIDI_Fetch_and_op(const void *origin_addr, void *result_addr,
                 win_ptr->basic_info_table[target_rank].disp_unit * target_disp;
             get_pkt->count = 1;
             get_pkt->datatype = datatype;
-            get_pkt->info.metadata.dataloop_size = 0;
+            get_pkt->info.dataloop_size = 0;
             get_pkt->target_win_handle = win_ptr->basic_info_table[target_rank].win_handle;
             get_pkt->flags = MPIDI_CH3_PKT_FLAG_NONE;
             if (use_immed_resp_pkt == TRUE)

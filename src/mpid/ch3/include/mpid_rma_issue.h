@@ -497,7 +497,7 @@ static int issue_from_origin_buffer_stream(MPIDI_RMA_Op_t * rma_op, MPIDI_VC_t *
 
         MPID_Segment_pack_vector(segp, first, &last, dloop_vec, &vec_len);
 
-        count = 2 + vec_len;
+        count = 3 + vec_len;
 
         ints = (int *) MPIU_Malloc(sizeof(int) * (count + 1));
         blocklens = &ints[1];
@@ -514,10 +514,16 @@ static int issue_from_origin_buffer_stream(MPIDI_RMA_Op_t * rma_op, MPIDI_VC_t *
         MPIU_Assign_trunc(blocklens[1], target_dtp->dataloop_size, int);
         datatypes[1] = MPI_BYTE;
 
+        req->dev.stream_offset = stream_offset;
+
+        displaces[2] = MPIU_PtrToAint(&(req->dev.stream_offset));
+        blocklens[2] = sizeof(req->dev.stream_offset);
+        datatypes[2] = MPI_BYTE;
+
         for (i = 0; i < vec_len; i++) {
-            displaces[i + 2] = MPIU_PtrToAint(dloop_vec[i].DLOOP_VECTOR_BUF);
-            MPIU_Assign_trunc(blocklens[i + 2], dloop_vec[i].DLOOP_VECTOR_LEN, int);
-            datatypes[i + 2] = MPI_BYTE;
+            displaces[i + 3] = MPIU_PtrToAint(dloop_vec[i].DLOOP_VECTOR_BUF);
+            MPIU_Assign_trunc(blocklens[i + 3], dloop_vec[i].DLOOP_VECTOR_LEN, int);
+            datatypes[i + 3] = MPI_BYTE;
         }
 
         MPID_Segment_free(segp);
@@ -730,7 +736,11 @@ static int issue_acc_op(MPIDI_RMA_Op_t * rma_op, MPID_Win * win_ptr,
         stream_size = MPIR_MIN(stream_elem_count * predefined_dtp_size, rest_len);
         rest_len -= stream_size;
 
-        accum_pkt->info.metadata.stream_offset = stream_offset;
+        if (MPIR_DATATYPE_IS_PREDEFINED(accum_pkt->datatype)) {
+            accum_pkt->addr = (void *) ((char *) rma_op->original_target_addr
+                                        + j * stream_elem_count * predefined_dtp_extent);
+            accum_pkt->count = stream_size / predefined_dtp_size;
+        }
 
         mpi_errno =
             issue_from_origin_buffer_stream(rma_op, vc, stream_offset, stream_size, &curr_req);
@@ -939,7 +949,11 @@ static int issue_get_acc_op(MPIDI_RMA_Op_t * rma_op, MPID_Win * win_ptr,
         stream_size = MPIR_MIN(stream_elem_count * predefined_dtp_size, rest_len);
         rest_len -= stream_size;
 
-        get_accum_pkt->info.metadata.stream_offset = stream_offset;
+        if (MPIR_DATATYPE_IS_PREDEFINED(get_accum_pkt->datatype)) {
+            get_accum_pkt->addr = (void *) ((char *) rma_op->original_target_addr
+                                            + j * stream_elem_count * predefined_dtp_extent);
+            get_accum_pkt->count = stream_size / predefined_dtp_size;
+        }
 
         resp_req->dev.stream_offset = stream_offset;
 

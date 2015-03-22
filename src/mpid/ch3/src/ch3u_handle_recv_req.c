@@ -1107,26 +1107,20 @@ static inline int perform_acc_in_lock_queue(MPID_Win * win_ptr, MPIDI_RMA_Lock_e
 
     if (acc_pkt->type == MPIDI_CH3_PKT_ACCUMULATE_IMMED) {
         /* All data fits in packet header */
+        /* NOTE: here we pass 0 as stream_offset to do_accumulate_op(), because the unit
+           that is piggybacked with LOCK flag must be the first stream unit */
         mpi_errno = do_accumulate_op(acc_pkt->info.data, acc_pkt->count, acc_pkt->datatype,
                                      acc_pkt->addr, acc_pkt->count, acc_pkt->datatype,
-                                     0, acc_pkt->op);
+                                     0/* stream offset */, acc_pkt->op);
     }
     else {
         MPIU_Assert(acc_pkt->type == MPIDI_CH3_PKT_ACCUMULATE);
-        MPI_Aint type_size, type_extent;
-        MPI_Aint total_len, rest_len, recv_count;
 
-        MPID_Datatype_get_size_macro(acc_pkt->datatype, type_size);
-        MPID_Datatype_get_extent_macro(acc_pkt->datatype, type_extent);
-
-        total_len = type_size * acc_pkt->count;
-        rest_len = total_len - acc_pkt->info.metadata.stream_offset;
-        recv_count = MPIR_MIN((rest_len / type_size), (MPIDI_CH3U_SRBuf_size / type_extent));
-        MPIU_Assert(recv_count > 0);
-
-        mpi_errno = do_accumulate_op(lock_entry->data, recv_count, acc_pkt->datatype,
+        /* NOTE: here we pass 0 as stream_offset to do_accumulate_op(), because the unit
+           that is piggybacked with LOCK flag must be the first stream unit */
+        mpi_errno = do_accumulate_op(lock_entry->data, acc_pkt->count, acc_pkt->datatype,
                                      acc_pkt->addr, acc_pkt->count, acc_pkt->datatype,
-                                     acc_pkt->info.metadata.stream_offset, acc_pkt->op);
+                                     0/* stream offset */, acc_pkt->op);
     }
 
     if (win_ptr->shm_allocated == TRUE)
@@ -1160,8 +1154,6 @@ static inline int perform_get_acc_in_lock_queue(MPID_Win * win_ptr,
     MPID_IOV iov[MPID_IOV_LIMIT];
     int is_contig;
     int mpi_errno = MPI_SUCCESS;
-    MPI_Aint type_extent;
-    MPI_Aint total_len, rest_len, recv_count;
 
     /* Piggyback candidate should have basic datatype for target datatype. */
     MPIU_Assert(MPIR_DATATYPE_IS_PREDEFINED(get_accum_pkt->datatype));
@@ -1215,10 +1207,12 @@ static inline int perform_get_acc_in_lock_queue(MPID_Win * win_ptr,
         }
 
         /* All data fits in packet header */
+        /* NOTE: here we pass 0 as stream_offset to do_accumulate_op(), because the unit
+           that is piggybacked with LOCK flag must be the first stream unit */
         mpi_errno =
             do_accumulate_op(get_accum_pkt->info.data, get_accum_pkt->count,
                              get_accum_pkt->datatype, get_accum_pkt->addr, get_accum_pkt->count,
-                             get_accum_pkt->datatype, 0, get_accum_pkt->op);
+                             get_accum_pkt->datatype, 0/* stream offset */, get_accum_pkt->op);
 
         if (win_ptr->shm_allocated == TRUE)
             MPIDI_CH3I_SHM_MUTEX_UNLOCK(win_ptr);
@@ -1246,14 +1240,7 @@ static inline int perform_get_acc_in_lock_queue(MPID_Win * win_ptr,
 
     MPIU_Assert(get_accum_pkt->type == MPIDI_CH3_PKT_GET_ACCUM);
 
-    MPID_Datatype_get_extent_macro(get_accum_pkt->datatype, type_extent);
-
-    total_len = type_size * get_accum_pkt->count;
-    rest_len = total_len - get_accum_pkt->info.metadata.stream_offset;
-    recv_count = MPIR_MIN((rest_len / type_size), (MPIDI_CH3U_SRBuf_size / type_extent));
-    MPIU_Assert(recv_count > 0);
-
-    sreq->dev.user_buf = (void *) MPIU_Malloc(recv_count * type_size);
+    sreq->dev.user_buf = (void *) MPIU_Malloc(get_accum_pkt->count * type_size);
 
     MPID_Datatype_is_contig(get_accum_pkt->datatype, &is_contig);
 
@@ -1261,15 +1248,16 @@ static inline int perform_get_acc_in_lock_queue(MPID_Win * win_ptr,
     if (win_ptr->shm_allocated == TRUE)
         MPIDI_CH3I_SHM_MUTEX_LOCK(win_ptr);
 
+    /* NOTE: here we copy data from stream_offset = 0, because
+       the unit that is piggybacked with LOCK flag must be the
+       first stream unit. */
     if (is_contig) {
-        MPIU_Memcpy(sreq->dev.user_buf,
-                    (void *) ((char *) get_accum_pkt->addr +
-                              get_accum_pkt->info.metadata.stream_offset), recv_count * type_size);
+        MPIU_Memcpy(sreq->dev.user_buf, get_accum_pkt->addr, get_accum_pkt->count * type_size);
     }
     else {
         MPID_Segment *seg = MPID_Segment_alloc();
-        MPI_Aint first = get_accum_pkt->info.metadata.stream_offset;
-        MPI_Aint last = first + type_size * recv_count;
+        MPI_Aint first = 0;
+        MPI_Aint last = first + type_size * get_accum_pkt->count;
 
         if (seg == NULL) {
             if (win_ptr->shm_allocated == TRUE)
@@ -1283,9 +1271,11 @@ static inline int perform_get_acc_in_lock_queue(MPID_Win * win_ptr,
         MPID_Segment_free(seg);
     }
 
-    mpi_errno = do_accumulate_op(lock_entry->data, recv_count, get_accum_pkt->datatype,
+    /* NOTE: here we pass 0 as stream_offset to do_accumulate_op(), because the unit
+       that is piggybacked with LOCK flag must be the first stream unit */
+    mpi_errno = do_accumulate_op(lock_entry->data, get_accum_pkt->count, get_accum_pkt->datatype,
                                  get_accum_pkt->addr, get_accum_pkt->count, get_accum_pkt->datatype,
-                                 get_accum_pkt->info.metadata.stream_offset, get_accum_pkt->op);
+                                 0/* stream offset */, get_accum_pkt->op);
 
     if (win_ptr->shm_allocated == TRUE)
         MPIDI_CH3I_SHM_MUTEX_UNLOCK(win_ptr);
@@ -1311,7 +1301,7 @@ static inline int perform_get_acc_in_lock_queue(MPID_Win * win_ptr,
     iov[0].MPID_IOV_BUF = (MPID_IOV_BUF_CAST) get_accum_resp_pkt;
     iov[0].MPID_IOV_LEN = sizeof(*get_accum_resp_pkt);
     iov[1].MPID_IOV_BUF = (MPID_IOV_BUF_CAST) ((char *) sreq->dev.user_buf);
-    iov[1].MPID_IOV_LEN = recv_count * type_size;
+    iov[1].MPID_IOV_LEN = get_accum_pkt->count * type_size;
     iovcnt = 2;
 
     mpi_errno = MPIDI_CH3_iSendv(lock_entry->vc, sreq, iov, iovcnt);
