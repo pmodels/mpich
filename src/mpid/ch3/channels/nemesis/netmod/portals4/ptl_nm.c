@@ -5,7 +5,6 @@
  */
 
 #include "ptl_impl.h"
-#include "stddef.h"  /* C99; for offsetof */
 #include <mpl_utlist.h>
 #include "rptl.h"
 
