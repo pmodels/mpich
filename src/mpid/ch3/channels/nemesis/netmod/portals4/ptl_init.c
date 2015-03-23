@@ -13,7 +13,7 @@
 #endif
 
 #define UNEXPECTED_HDR_COUNT 32768
-#define EQ_COUNT             32768
+#define EVENT_COUNT          32768
 #define LIST_SIZE            32768
 #define NID_KEY  "NID"
 #define PID_KEY  "PID"
@@ -179,8 +179,6 @@ static int ptl_init(MPIDI_PG_t *pg_p, int pg_rank, char **bc_val_p, int *val_max
     /* set higher limits if they are determined to be too low */
     if (desired.max_unexpected_headers < UNEXPECTED_HDR_COUNT && getenv("PTL_LIM_MAX_UNEXPECTED_HEADERS") == NULL)
         desired.max_unexpected_headers = UNEXPECTED_HDR_COUNT;
-    if (desired.max_eqs < EQ_COUNT && getenv("PTL_LIM_MAX_EQS") == NULL)
-        desired.max_eqs = EQ_COUNT;
     if (desired.max_list_size < LIST_SIZE && getenv("PTL_LIM_MAX_LIST_SIZE") == NULL)
         desired.max_list_size = LIST_SIZE;
 
@@ -190,18 +188,18 @@ static int ptl_init(MPIDI_PG_t *pg_p, int pg_rank, char **bc_val_p, int *val_max
     MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlniinit", "**ptlniinit %s", MPID_nem_ptl_strerror(ret));
 
     /* allocate EQs for each portal */
-    ret = PtlEQAlloc(MPIDI_nem_ptl_ni, MPIDI_nem_ptl_ni_limits.max_eqs, &MPIDI_nem_ptl_eq);
+    ret = PtlEQAlloc(MPIDI_nem_ptl_ni, EVENT_COUNT, &MPIDI_nem_ptl_eq);
     MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptleqalloc", "**ptleqalloc %s", MPID_nem_ptl_strerror(ret));
 
-    ret = PtlEQAlloc(MPIDI_nem_ptl_ni, MPIDI_nem_ptl_ni_limits.max_eqs, &MPIDI_nem_ptl_get_eq);
+    ret = PtlEQAlloc(MPIDI_nem_ptl_ni, EVENT_COUNT, &MPIDI_nem_ptl_get_eq);
     MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptleqalloc", "**ptleqalloc %s", MPID_nem_ptl_strerror(ret));
 
-    ret = PtlEQAlloc(MPIDI_nem_ptl_ni, MPIDI_nem_ptl_ni_limits.max_eqs, &MPIDI_nem_ptl_control_eq);
+    ret = PtlEQAlloc(MPIDI_nem_ptl_ni, EVENT_COUNT, &MPIDI_nem_ptl_control_eq);
     MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptleqalloc", "**ptleqalloc %s", MPID_nem_ptl_strerror(ret));
 
     /* allocate a separate EQ for origin events. with this, we can implement rate-limit operations
        to prevent a locally triggered flow control even */
-    ret = PtlEQAlloc(MPIDI_nem_ptl_ni, MPIDI_nem_ptl_ni_limits.max_eqs, &MPIDI_nem_ptl_origin_eq);
+    ret = PtlEQAlloc(MPIDI_nem_ptl_ni, EVENT_COUNT, &MPIDI_nem_ptl_origin_eq);
     MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptleqalloc", "**ptleqalloc %s", MPID_nem_ptl_strerror(ret));
 
     /* allocate portal for matching messages */
