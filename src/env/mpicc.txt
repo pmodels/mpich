@@ -60,16 +60,16 @@
     Examples:
 To compile a single file 'foo.c', use
 .vb
-   mpicc \-c foo.c
+   mpicc -c foo.c
 .ve
 
 To link the output and make an executable, use
 .vb
-   mpicc \-o foo foo.o
+   mpicc -o foo foo.o
 .ve
 Combining compilation and linking in a single command
 .vb
-   mpicc \-o foo foo.c
+   mpicc -o foo foo.c
 .ve
 is a convenient way to build simple programs.
 
@@ -95,8 +95,8 @@ is a convenient way to build simple programs.
  you could create the file 'myprof.conf' with the lines
 
 .vb
-    PROFILE_PRELIB="\-L/usr/local/myprof/lib \-lmyprof"
-    PROFILE_INCPATHS="\-I/usr/local/myprof/include"
+    PROFILE_PRELIB="-L/usr/local/myprof/lib -lmyprof"
+    PROFILE_INCPATHS="-I/usr/local/myprof/include"
 .ve
  and place it in the sysconfdir directory (this directory is set at
  configure time when MPICH is built).  Then using the command-line 

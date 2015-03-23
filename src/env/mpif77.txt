@@ -55,16 +55,16 @@
     Examples:
 To compile a single file 'foo.f', use
 .vb
-   mpif77 \-c foo.f
+   mpif77 -c foo.f
 .ve
 
 To link the output and make an executable, use
 .vb
-   mpif77 \-o foo foo.o
+   mpif77 -o foo foo.o
 .ve
 Combining compilation and linking in a single command
 .vb
-   mpif77 \-o foo foo.f
+   mpif77 -o foo foo.f
 .ve
 is a convenient way to build simple programs.
 
@@ -90,8 +90,8 @@ is a convenient way to build simple programs.
  you could create the file 'myprof.conf' with the lines
 
 .vb
-    PROFILE_PRELIB="\-L/usr/local/myprof/lib \-lmyprof"
-    PROFILE_INCPATHS="\-I/usr/local/myprof/include"
+    PROFILE_PRELIB="-L/usr/local/myprof/lib -lmyprof"
+    PROFILE_INCPATHS="-I/usr/local/myprof/include"
 .ve
  and place it in the sysconfdir directory (this directory is set at
  configure time when MPICH is built).  Then using the command-line 

@@ -11,7 +11,7 @@
    Multiple Data applications).   For example, the following command will run
    the MPI program 'a.out' on 4 processes\:
 .vb
-    mpiexec \-n 4 a.out
+    mpiexec -n 4 a.out
 .ve
 
 The MPI standard specifies the following arguments and their meanings\:
@@ -27,7 +27,7 @@ The MPI standard specifies the following arguments and their meanings\:
 - \-configfile <name> - file containing specifications of host/program,
    one per line, with # as a comment indicator, e.g., the usual
    mpiexec input, but with ":" replaced with a newline.  That is,
-   the configfile contains lines with \-soft, \-n etc.
+   the configfile contains lines with -soft, -n etc.
 
    Additional arguments that are specific to the MPICH implementation
    are discussed below.
@@ -42,7 +42,7 @@ The MPI standard specifies the following arguments and their meanings\:
    to run the program 'ocean' on 4 processes and 'air' on 8 processes, use\:
 
 .vb
-    mpiexec \-n 4 ocean : \-n 8 air
+    mpiexec -n 4 ocean : -n 8 air
 .ve
 
          
