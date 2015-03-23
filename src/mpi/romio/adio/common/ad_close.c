@@ -8,6 +8,7 @@
 #include "adio.h"
 #include "adio_extern.h"
 extern int      gpfsmpio_aggmethod;
+extern int      gpfsmpio_onesided_no_rmw;
 
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
@@ -118,8 +119,13 @@ void ADIO_Close(ADIO_File fd, int *error_code)
     if (fd->io_buf != NULL) ADIOI_Free(fd->io_buf);
     /* If one-sided aggregation is chosen then free the window over the io_buf.
      */
-    if ((gpfsmpio_aggmethod == 1) || (gpfsmpio_aggmethod == 2))
+    if ((gpfsmpio_aggmethod == 1) || (gpfsmpio_aggmethod == 2)) {
 	  MPI_Win_free(&fd->io_buf_window);
+	  if (!gpfsmpio_onesided_no_rmw) {
+	    MPI_Win_free(&fd->io_buf_put_amounts_window);
+	    ADIOI_Free(fd->io_buf_put_amounts);
+	  }
+	}
 
     /* memory for fd is freed in MPI_File_close */
 }

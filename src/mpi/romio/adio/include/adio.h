@@ -237,6 +237,9 @@ typedef struct ADIOI_FileD {
     int my_cb_nodes_index; /* my index into cb_config_list. -1 if N/A */
     char *io_buf;          /* two-phase buffer allocated out of i/o path */
     MPI_Win io_buf_window; /* Window over the io_buf to support one-sided aggregation */
+    int *io_buf_put_amounts; /* array tracking the amount of data mpi_put into the io_buf
+                                during the same round of one-sided write aggregation */
+    MPI_Win io_buf_put_amounts_window; /* Window over the io_buf_put_amounts */
     /* External32 */
     int is_external32;      /* bool:  0 means native view */
 

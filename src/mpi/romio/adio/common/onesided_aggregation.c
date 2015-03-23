@@ -30,9 +30,10 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
     ADIO_Offset *st_offsets,
     ADIO_Offset *end_offsets,
     ADIO_Offset *fd_start,
-    ADIO_Offset* fd_end)
-{
+    ADIO_Offset* fd_end,
+    int *hole_found)
 
+{
     *error_code = MPI_SUCCESS; /* initialize to success */
 
 #ifdef ROMIO_GPFS
@@ -119,10 +120,6 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
     ADIO_Offset greatestFileDomainOffset = 0;
     ADIO_Offset smallestFileDomainOffset = lastFileOffset;
     for (j=0;j<naggs;j++) {
-      /* Find the actual lowest and highest offsets to be written.
-         The non-aggs need to know this too to adjust the mpi_put
-         window displacement accordingly.
-       */
       if (fd_end[j] > greatestFileDomainOffset) {
         greatestFileDomainOffset = fd_end[j];
         greatestFileDomainAggRank = j;
@@ -346,6 +343,12 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
             targetAggsForMyDataFDStart[numTargetAggs] = firstFileOffset;
         }
         targetAggsForMyDataFDEnd[numTargetAggs] = fd_end[currentAggRankListIndex];
+        /* Round down file domain to the last actual offset used if this is the last file domain.
+         */
+        if (currentAggRankListIndex == greatestFileDomainAggRank) {
+          if (targetAggsForMyDataFDEnd[numTargetAggs] > lastFileOffset)
+            targetAggsForMyDataFDEnd[numTargetAggs] = lastFileOffset;
+        }
         targetAggsForMyDataFirstOffLenIndex[targetAggsForMyDataCurrentRoundIter[numTargetAggs]][numTargetAggs] = blockIter;
         if (bufTypeIsContig)
           baseSourceBufferOffset[targetAggsForMyDataCurrentRoundIter[numTargetAggs]][numTargetAggs] = currentSourceBufferOffset;
@@ -417,6 +420,12 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
                 targetAggsForMyDataFDStart[numTargetAggs] = firstFileOffset;
             }
             targetAggsForMyDataFDEnd[numTargetAggs] = fd_end[currentAggRankListIndex];
+            /* Round down file domain to the last actual offset used if this is the last file domain.
+             */
+            if (currentAggRankListIndex == greatestFileDomainAggRank) {
+              if (targetAggsForMyDataFDEnd[numTargetAggs] > lastFileOffset)
+                targetAggsForMyDataFDEnd[numTargetAggs] = lastFileOffset;
+            }
             targetAggsForMyDataFirstOffLenIndex[targetAggsForMyDataCurrentRoundIter[numTargetAggs]][numTargetAggs] = blockIter;
             if (bufTypeIsContig)
               baseSourceBufferOffset[targetAggsForMyDataCurrentRoundIter[numTargetAggs]][numTargetAggs] = currentSourceBufferOffset;
@@ -493,8 +502,16 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
     char *write_buf = write_buf0;
     MPI_Win write_buf_window = fd->io_buf_window;
 
+    int *write_buf_put_amounts = fd->io_buf_put_amounts;
+    if(!gpfsmpio_onesided_no_rmw) {
+      *hole_found = 0;
+      for (i=0;i<nprocs;i++)
+        write_buf_put_amounts[i] = 0;
+    }
 #ifdef ACTIVE_TARGET
     MPI_Win_fence(0, write_buf_window);
+    if (!gpfsmpio_onesided_no_rmw)
+      MPI_Win_fence(0, fd->io_buf_put_amounts_window);
 #endif
 
     ADIO_Offset currentRoundFDStart = 0;
@@ -505,6 +522,10 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
       if (myAggRank == smallestFileDomainAggRank) {
         if (currentRoundFDStart < firstFileOffset)
           currentRoundFDStart = firstFileOffset;
+      }
+      else if (myAggRank == greatestFileDomainAggRank) {
+        if (currentRoundFDEnd > lastFileOffset)
+          currentRoundFDEnd = lastFileOffset;
       }
     }
 
@@ -537,6 +558,7 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
     int aggIter;
     for (aggIter=0;aggIter<numTargetAggs;aggIter++) {
 
+    int numBytesPutThisAggRound = 0;
     /* If we have data for the round/agg process it.
      */
     if ((bufTypeIsContig && (baseSourceBufferOffset[roundIter][aggIter] != -1)) || (!bufTypeIsContig && (baseNonContigSourceBufferOffset[roundIter][aggIter].flatBufIndice != -1))) {
@@ -661,6 +683,7 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
             offsetStart = currentRoundFDStartForMyTargetAgg;
         }
 
+        numBytesPutThisAggRound += bufferAmountToSend;
 #ifdef onesidedtrace
         printf("bufferAmountToSend is %d\n",bufferAmountToSend);
 #endif
@@ -848,6 +871,16 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
         MPI_Type_free(&targetBufferDerivedDataType);
         }
       }
+      if (!gpfsmpio_onesided_no_rmw) {
+#ifndef ACTIVE_TARGET
+        MPI_Win_lock(MPI_LOCK_SHARED, targetAggsForMyData[aggIter], 0, fd->io_buf_put_amounts_window);
+#endif
+        MPI_Put(&numBytesPutThisAggRound,1, MPI_INT,targetAggsForMyData[aggIter],myrank, 1,MPI_INT,fd->io_buf_put_amounts_window);
+
+#ifndef ACTIVE_TARGET
+        MPI_Win_unlock(targetAggsForMyData[aggIter], fd->io_buf_put_amounts_window);
+#endif
+      }
       } // baseoffset != -1
     } // target aggs
 
@@ -855,6 +888,8 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
 
 #ifdef ACTIVE_TARGET
     MPI_Win_fence(0, write_buf_window);
+    if (!gpfsmpio_onesided_no_rmw)
+      MPI_Win_fence(0, fd->io_buf_put_amounts_window);
 #else
     MPI_Barrier(fd->comm);
 #endif
@@ -879,20 +914,24 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
         printf("currentRoundFDStart is %ld currentRoundFDEnd is %ld within file domeain %ld to %ld\n",currentRoundFDStart,currentRoundFDEnd,fd_start[myAggRank],fd_end[myAggRank]);
 #endif
 
-        if (!useIOBuffer) {
-          ADIO_WriteContig(fd, write_buf, (int)(currentRoundFDEnd - currentRoundFDStart)+1,
-            MPI_BYTE, ADIO_EXPLICIT_OFFSET,currentRoundFDStart, &status, error_code);
+        int doWriteContig = 1;
+        if (!gpfsmpio_onesided_no_rmw) {
+          int numBytesPutIntoBuf = 0;
+          for (i=0;i<nprocs;i++) {
+            numBytesPutIntoBuf += write_buf_put_amounts[i];
+            write_buf_put_amounts[i] = 0;
+          }
+          if (numBytesPutIntoBuf != ((int)(currentRoundFDEnd - currentRoundFDStart)+1)) {
+            doWriteContig = 0;
+            *hole_found = 1;
+          }
+        }
 
-/* For now this algorithm cannot handle holes in the source data and does not do any data sieving.
- * One possible approach would be to initialize the write buffer with some value and then check to
- * see if the mpi_put operations changed the values, if they were unchanged then retry with some other
- * default initialized value and if that was still unchanged then you would know where a hole was.
- * Here is some initial sample code for that:
- *       if (roundIter<(numberOfRounds-1)) {
- *         for (i=0;i<((currentRoundFDEnd - currentRoundFDStart)+1);i++)
- *           write_buf[i] = '\0';
- *       }
-*/
+        if (!useIOBuffer) {
+          if (doWriteContig)
+            ADIO_WriteContig(fd, write_buf, (int)(currentRoundFDEnd - currentRoundFDStart)+1,
+              MPI_BYTE, ADIO_EXPLICIT_OFFSET,currentRoundFDStart, &status, error_code);
+
         } else { /* use the thread writer */
 
         if(!pthread_equal(io_thread, pthread_self())) {
@@ -916,6 +955,7 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
             currentWriteBuf = 0;
             write_buf = write_buf0;
         }
+        if (doWriteContig) {
         io_thread_args.io_kind = ADIOI_WRITE;
         io_thread_args.size = (currentRoundFDEnd-currentRoundFDStart) + 1;
         io_thread_args.offset = currentRoundFDStart;
@@ -925,7 +965,7 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
         if ( (pthread_create(&io_thread, NULL,
                 ADIOI_IO_Thread_Func, &(io_thread_args))) != 0)
             io_thread = pthread_self();
-
+        }
         } // useIOBuffer
 
     } // iAmUsedAgg
@@ -1087,10 +1127,6 @@ void ADIOI_OneSidedReadAggregation(ADIO_File fd,
     ADIO_Offset greatestFileDomainOffset = 0;
     ADIO_Offset smallestFileDomainOffset = lastFileOffset;
     for (j=0;j<naggs;j++) {
-      /* Find the actual lowest and highest offsets to be written.
-         The non-aggs need to know this too to adjust the mpi_get
-         window displacement accordingly.
-       */
       if (fd_end[j] > greatestFileDomainOffset) {
         greatestFileDomainOffset = fd_end[j];
         greatestFileDomainAggRank = j;
@@ -1306,6 +1342,12 @@ void ADIOI_OneSidedReadAggregation(ADIO_File fd,
             sourceAggsForMyDataFDStart[numSourceAggs] = firstFileOffset;
         }
         sourceAggsForMyDataFDEnd[numSourceAggs] = fd_end[currentAggRankListIndex];
+        /* Round down file domain to the last actual offset used if this is the last file domain.
+         */
+        if (currentAggRankListIndex == greatestFileDomainAggRank) {
+          if (sourceAggsForMyDataFDEnd[numSourceAggs] > lastFileOffset)
+            sourceAggsForMyDataFDEnd[numSourceAggs] = lastFileOffset;
+        }
         sourceAggsForMyDataFirstOffLenIndex[sourceAggsForMyDataCurrentRoundIter[numSourceAggs]][numSourceAggs] = blockIter;
         if (bufTypeIsContig)
           baseRecvBufferOffset[sourceAggsForMyDataCurrentRoundIter[numSourceAggs]][numSourceAggs] = currentRecvBufferOffset;
@@ -1377,6 +1419,12 @@ void ADIOI_OneSidedReadAggregation(ADIO_File fd,
                 sourceAggsForMyDataFDStart[numSourceAggs] = firstFileOffset;
             }
             sourceAggsForMyDataFDEnd[numSourceAggs] = fd_end[currentAggRankListIndex];
+            /* Round down file domain to the last actual offset used if this is the last file domain.
+             */
+            if (currentAggRankListIndex == greatestFileDomainAggRank) {
+              if (sourceAggsForMyDataFDEnd[numSourceAggs] > lastFileOffset)
+                sourceAggsForMyDataFDEnd[numSourceAggs] = lastFileOffset;
+            }
             sourceAggsForMyDataFirstOffLenIndex[sourceAggsForMyDataCurrentRoundIter[numSourceAggs]][numSourceAggs] = blockIter;
             if (bufTypeIsContig)
               baseRecvBufferOffset[sourceAggsForMyDataCurrentRoundIter[numSourceAggs]][numSourceAggs] = currentRecvBufferOffset;
@@ -1469,6 +1517,12 @@ void ADIOI_OneSidedReadAggregation(ADIO_File fd,
           currentRoundFDStart = firstFileOffset;
         if (nextRoundFDStart < firstFileOffset)
           nextRoundFDStart = firstFileOffset;
+      }
+      else if (myAggRank == greatestFileDomainAggRank) {
+        if (currentRoundFDEnd > lastFileOffset)
+          currentRoundFDEnd = lastFileOffset;
+        if (nextRoundFDEnd > lastFileOffset)
+          nextRoundFDEnd = lastFileOffset;
       }
     }
 

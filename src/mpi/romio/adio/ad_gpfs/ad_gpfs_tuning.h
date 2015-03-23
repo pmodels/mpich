@@ -23,6 +23,7 @@
  *  Global variables for the control of
  *  1.  timing
  *  2.  select specific optimizations
+ *  3.  global flags for certain optimizations
  *-----------------------------------------*/
 
 /* timing fields */
@@ -56,7 +57,6 @@ enum {
 extern double 	gpfsmpio_prof_cw    [GPFSMPIO_CIO_LAST+1];
 extern double 	gpfsmpio_prof_cr    [GPFSMPIO_CIO_LAST+1];
 
-
 /* corresponds to environment variables to select optimizations and timing level */
 extern int 	gpfsmpio_timing;
 extern int      gpfsmpio_timing_cw_level;
@@ -70,6 +70,8 @@ extern int      gpfsmpio_aggmethod;
 extern int  gpfsmpio_balancecontig;
 extern int      gpfsmpio_devnullio;
 extern int      gpfsmpio_bridgeringagg;
+extern int      gpfsmpio_onesided_no_rmw;
+extern int      gpfsmpio_onesided_inform_rmw;
 
 /* Default is, well, kind of complicated. Blue Gene /L and /P had "psets": one
  * i/o node and all compute nodes wired to it.  On Blue Gene /Q that

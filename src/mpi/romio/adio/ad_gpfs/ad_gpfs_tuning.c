@@ -41,6 +41,8 @@ int     gpfsmpio_aggmethod;
 int	gpfsmpio_balancecontig;
 int     gpfsmpio_devnullio;
 int     gpfsmpio_bridgeringagg;
+int     gpfsmpio_onesided_no_rmw;
+int     gpfsmpio_onesided_inform_rmw;
 
 double	gpfsmpio_prof_cw    [GPFSMPIO_CIO_LAST+1];
 double	gpfsmpio_prof_cr    [GPFSMPIO_CIO_LAST+1];
@@ -122,6 +124,22 @@ double	gpfsmpio_prof_cr    [GPFSMPIO_CIO_LAST+1];
  *         optimal performance for this is achieved when paired with PAMID_TYPED_ONESIDED=1.
  *   - Default is 0
  *
+ * - GPFSMPIO_ONESIDED_NO_RMW - For one-sided aggregation (GPFSMPIO_AGGMETHOD = 1 or 2)
+ *   disable the detection of holes in the data when writing to a pre-existing
+ *   file requiring a read-modify-write, thereby avoiding the communication
+ *   overhead for this detection.
+ *   - 0 (hole detection enabled) or 1 (hole detection disabled)
+ *   - Default is 0
+ *
+ * - GPFSMPIO_ONESIDED_INFORM_RMW - For one-sided aggregation
+ *   (GPFSMPIO_AGGMETHOD = 1 or 2) generate an informational message informing
+ *   the user whether holes exist in the data when writing to a pre-existing
+ *   file requiring a read-modify-write, thereby educating the user to set
+ *   GPFSMPIO_ONESIDED_NO_RMW=1 on a future run to avoid the communication
+ *   overhead for this detection.
+ *   - 0 (disabled) or 1 (enabled)
+ *   - Default is 0
+ *
  * - GPFSMPIO_BALANCECONTIG -  Relevant only to BGQ.  File domain blocks are assigned
  *   to aggregators in a breadth-first fashion relative to the ions - additionally,
  *   file domains on the aggregators sharing the same bridgeset and ion have contiguous
@@ -197,6 +215,14 @@ void ad_gpfs_get_env_vars() {
     gpfsmpio_bridgeringagg = 0;
     x = getenv( "GPFSMPIO_BRIDGERINGAGG" );
     if (x) gpfsmpio_bridgeringagg = atoi(x);
+
+    gpfsmpio_onesided_no_rmw = 0;
+    x = getenv( "GPFSMPIO_ONESIDED_NO_RMW" );
+    if (x) gpfsmpio_onesided_no_rmw = atoi(x);
+
+    gpfsmpio_onesided_inform_rmw = 0;
+    x = getenv( "GPFSMPIO_ONESIDED_INFORM_RMW" );
+    if (x) gpfsmpio_onesided_inform_rmw = atoi(x);
 }
 
 /* report timing breakdown for MPI I/O collective call */

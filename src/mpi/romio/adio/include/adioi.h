@@ -696,7 +696,8 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
         ADIO_Offset *st_offsets,
         ADIO_Offset *end_offsets,
         ADIO_Offset *fd_start,
-        ADIO_Offset* fd_end);
+        ADIO_Offset* fd_end,
+        int *hole_found);
 void ADIOI_OneSidedReadAggregation(ADIO_File fd,
         ADIO_Offset *offset_list,
         ADIO_Offset *len_list,

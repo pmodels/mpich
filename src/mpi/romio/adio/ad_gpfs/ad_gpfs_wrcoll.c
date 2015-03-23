@@ -267,7 +267,12 @@ void ADIOI_GPFS_WriteStridedColl(ADIO_File fd, const void *buf, int count,
     /* If the user has specified to use a one-sided aggregation method then do that at
      * this point instead of the two-phase I/O.
      */
-      ADIOI_OneSidedWriteAggregation(fd, offset_list, len_list, contig_access_count, buf, datatype, error_code, st_offsets, end_offsets, fd_start, fd_end);
+      int holeFound = 0;
+      ADIOI_OneSidedWriteAggregation(fd, offset_list, len_list, contig_access_count, buf, datatype, error_code, st_offsets, end_offsets, fd_start, fd_end, &holeFound);
+      int anyHolesFound = 0;
+      if (!gpfsmpio_onesided_no_rmw)
+        MPI_Allreduce(&holeFound, &anyHolesFound, 1, MPI_INT, MPI_MAX, fd->comm);
+      if (anyHolesFound == 0) {
       GPFSMPIO_T_CIO_REPORT( 1, fd, myrank, nprocs)
       ADIOI_Free(offset_list);
       ADIOI_Free(len_list);
@@ -276,6 +281,15 @@ void ADIOI_GPFS_WriteStridedColl(ADIO_File fd, const void *buf, int count,
       ADIOI_Free(fd_start);
       ADIOI_Free(fd_end);
 	  goto fn_exit;
+	  }
+      else {
+        /* Holes are found in the data and the user has not set gpfsmpio_onesided_no_rmw ---
+         * fall thru and perform the two-phase aggregation and if the user has gpfsmpio_onesided_inform_rmw
+         * set then inform him of this condition and behavior.
+         */
+        if (gpfsmpio_onesided_inform_rmw && (myrank ==0))
+          FPRINTF(stderr,"Information: Holes found during one-sided write aggregation algorithm --- additionally performing default two-phase aggregation algorithm\n");
+      }
     }
     if (gpfsmpio_p2pcontig==1) {
 	/* For some simple yet common(?) workloads, full-on two-phase I/O is overkill.  We can establish sub-groups of processes and their aggregator, and then these sub-groups will carry out a simplified two-phase over that sub-group.

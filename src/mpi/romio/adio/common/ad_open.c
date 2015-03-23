@@ -11,6 +11,7 @@
 
 #include "mpio.h"
 extern int      gpfsmpio_aggmethod;
+extern int      gpfsmpio_onesided_no_rmw;
 static int is_aggregator(int rank, ADIO_File fd);
 static int uses_generic_read(ADIO_File fd);
 static int uses_generic_write(ADIO_File fd);
@@ -124,12 +125,16 @@ MPI_File ADIO_Open(MPI_Comm orig_comm,
     /* Instead of repeatedly allocating this buffer in collective read/write,
      * allocating up-front might make memory management on small platforms
      * (e.g. Blue Gene) more efficent */
-    fd->io_buf = ADIOI_Malloc(fd->hints->cb_buffer_size);
 
+    fd->io_buf = ADIOI_Malloc(fd->hints->cb_buffer_size);
     /* If one-sided aggregation is chosen then create the window over the io_buf.
      */
     if ((gpfsmpio_aggmethod == 1) || (gpfsmpio_aggmethod == 2)) {
       MPI_Win_create(fd->io_buf,fd->hints->cb_buffer_size,1,MPI_INFO_NULL,fd->comm, &fd->io_buf_window);
+      if (!gpfsmpio_onesided_no_rmw) {
+        fd->io_buf_put_amounts = (int *) ADIOI_Malloc(procs*sizeof(int));
+        MPI_Win_create(fd->io_buf_put_amounts,procs*sizeof(int),sizeof(int),MPI_INFO_NULL,fd->comm, &fd->io_buf_put_amounts_window);
+      }
     }
      /* deferred open: 
      * we can only do this optimization if 'fd->hints->deferred_open' is set
