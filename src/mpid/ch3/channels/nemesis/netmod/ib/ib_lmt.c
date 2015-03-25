@@ -101,8 +101,16 @@ int MPID_nem_ib_lmt_initiate_lmt(struct MPIDI_VC *vc, union MPIDI_CH3_Pkt *rts_p
     int post_num;
     uint32_t max_msg_sz;
     MPID_nem_ib_vc_area *vc_ib = VC_IB(vc);
-    MPID_nem_ib_com_get_info_conn(vc_ib->sc->fd, MPID_NEM_IB_COM_INFOKEY_PATTR_MAX_MSG_SZ,
-                                  &max_msg_sz, sizeof(uint32_t));
+
+    if (vc_ib->connection_state == MPID_NEM_IB_CM_ESTABLISHED) {
+        MPID_nem_ib_com_get_info_conn(vc_ib->sc->fd, MPID_NEM_IB_COM_INFOKEY_PATTR_MAX_MSG_SZ,
+                                      &max_msg_sz, sizeof(uint32_t));
+    }
+    else {
+        /* If connection is not established, get max_msg_sz from the global value. */
+        MPID_nem_ib_com_get_info_pattr(MPID_NEM_IB_COM_INFOKEY_PATTR_MAX_MSG_SZ, &max_msg_sz,
+                                       sizeof(uint32_t));
+    }
 
     /* Type of max_msg_sz is uint32_t. */
     post_num = (data_sz + (long) max_msg_sz - 1) / (long) max_msg_sz;

@@ -559,6 +559,7 @@ extern int MPID_nem_ib_com_reg_mr(void *addr, long len, struct ibv_mr **mr,
 extern int MPID_nem_ib_com_dereg_mr(struct ibv_mr *mr);
 
 extern int MPID_nem_ib_com_get_info_conn(int condesc, int key, void *out, uint32_t out_len);
+extern int MPID_nem_ib_com_get_info_pattr(int key, void *out, uint32_t out_len);
 extern int MPID_nem_ib_com_get_info_mr(int condesc, int memid, int key, void *out, int out_len);
 
 extern int MPID_nem_ib_com_rdmabuf_occupancy_notify_rate_get(int condesc, int *notify_rate);

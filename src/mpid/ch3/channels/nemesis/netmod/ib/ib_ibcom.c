@@ -36,6 +36,7 @@ static int maxcon;
 static struct ibv_device **ib_devlist;
 static struct ibv_context *ib_ctx;
 struct ibv_context *MPID_nem_ib_ctx_export;     /* for SC13 demo connector */
+static struct ibv_port_attr ib_pattr;
 static struct ibv_pd *ib_pd;
 struct ibv_pd *MPID_nem_ib_pd_export;   /* for SC13 demo connector */
 struct ibv_cq *MPID_nem_ib_rc_shared_scq;
@@ -275,6 +276,7 @@ static int MPID_nem_ib_com_device_init()
     int dev_num;
     char *dev_name;
     int i;
+    int ib_port = 1;
 
     if (ib_initialized == 1) {
         dprintf("MPID_nem_ib_com_device_init,already initialized\n");
@@ -314,6 +316,14 @@ static int MPID_nem_ib_com_device_init()
     }
     else {
         ib_ctx = ibv_open_device(ib_devlist[i]);
+
+        if (ib_ctx) {
+            /* get port attribute */
+            if (ibv_query_port(ib_ctx, ib_port, &ib_pattr)) {
+                dprintf("ibv_query_port on port %d failed\n", ib_port);
+                goto err_exit;
+            }
+        }
     }
     dprintf("MPID_nem_ib_com_device_init,MPID_nem_ib_ctx_export=%p,ib_ctx=%p\n",
             MPID_nem_ib_ctx_export, ib_ctx);
@@ -2269,6 +2279,30 @@ int MPID_nem_ib_com_get_info_conn(int condesc, int key, void *out, uint32_t out_
             memcpy(out, &max_msg_sz, out_len);
 #else
             memcpy(out, &conp->icom_pattr.max_msg_sz, out_len);
+#endif
+            break;
+        }
+    default:
+        ibcom_errno = -1;
+        break;
+    }
+  fn_exit:
+    return ibcom_errno;
+  fn_fail:
+    goto fn_exit;
+}
+
+int MPID_nem_ib_com_get_info_pattr(int key, void *out, uint32_t out_len)
+{
+    int ibcom_errno = 0;
+
+    switch (key) {
+    case MPID_NEM_IB_COM_INFOKEY_PATTR_MAX_MSG_SZ:{
+#ifdef HAVE_LIBDCFA
+            uint32_t max_msg_sz = 1073741824;   /* ConnectX-3 */
+            memcpy(out, &max_msg_sz, out_len);
+#else
+            memcpy(out, &ib_pattr.max_msg_sz, out_len);
 #endif
             break;
         }
