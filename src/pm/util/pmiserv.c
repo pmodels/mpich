@@ -412,6 +412,14 @@ static int fPMI_Handle_finalize( PMIProcess *pentry )
 }
 static int fPMI_Handle_abort( PMIProcess *pentry )
 {
+    char exitcodestr[MAXVALLEN];
+    int  exitcode = 1; /* non-zero default */
+
+    exitcode = atoi(PMIU_getval( "exitcode", exitcodestr, MAXVALLEN ));
+
+    exit(exitcode);
+
+    /* should never reach here */
     return 1;
 }
 /* 
