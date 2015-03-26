@@ -417,6 +417,9 @@ static int fPMI_Handle_abort( PMIProcess *pentry )
 
     exitcode = atoi(PMIU_getval( "exitcode", exitcodestr, MAXVALLEN ));
 
+    /* cleanup all MPI processes */
+    MPIE_KillUniverse( &pUniv );
+
     exit(exitcode);
 
     /* should never reach here */
