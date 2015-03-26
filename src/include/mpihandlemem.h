@@ -300,25 +300,10 @@ typedef OPA_int_t MPIU_Handle_ref_count;
         MPIU_HANDLE_LOG_REFCOUNT_CHANGE(objptr_, "incr"); \
         MPIU_HANDLE_CHECK_REFCOUNT(objptr_,"incr");       \
     } while (0)
-
-/* Special optimization: when the reference count touches one, we are
- * about to free the object.  In this case, it is illegal for another
- * thread to either increment the reference (i.e., create a new object
- * that depends on this object) or decrement the references (i.e.,
- * free the object simultaneously).  We, however, have to ensure that
- * our load is atomic.  OPA does this for us, while optimizing it to a
- * simple load for cases where the architecture already provides us
- * with load atomicity and no need for load memory barriers. */
 #define MPIU_Object_release_ref_always(objptr_,inuse_ptr)               \
     do {                                                                \
-        if (likely(OPA_load_int((objptr_)->ref_count.v) == 1)) {        \
-            (objptr_)->ref_count.v = 0;                                 \
-            *(inuse_ptr) = 0;                                           \
-        }                                                               \
-        else {                                                          \
-            int got_zero_ = OPA_decr_and_test_int(&((objptr_)->ref_count)); \
-            *(inuse_ptr) = got_zero_ ? 0 : 1;                           \
-        }                                                               \
+        int got_zero_ = OPA_decr_and_test_int(&((objptr_)->ref_count)); \
+        *(inuse_ptr) = got_zero_ ? 0 : 1;                               \
         MPIU_HANDLE_LOG_REFCOUNT_CHANGE(objptr_, "decr");               \
         MPIU_HANDLE_CHECK_REFCOUNT(objptr_,"decr");                     \
     } while (0)
