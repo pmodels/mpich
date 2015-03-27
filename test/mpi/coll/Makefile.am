@@ -70,7 +70,6 @@ noinst_PROGRAMS =      \
     nonblocking        \
     nonblocking2       \
     nonblocking3       \
-    nonblocking4       \
     op_commutative     \
     opband             \
     opbor              \
