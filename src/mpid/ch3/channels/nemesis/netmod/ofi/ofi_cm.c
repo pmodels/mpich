@@ -158,7 +158,7 @@ static inline int MPID_nem_ofi_handle_packet(cq_tagged_entry_t * wc ATTRIBUTE((u
     MPIDI_VC_t *vc;
 
     BEGIN_FUNC(FCNAME);
-    if (rreq->cc == 1) {
+    if (MPID_cc_get(rreq->cc) == 1) {
         vc = REQ_OFI(rreq)->vc;
         MPIU_Assert(vc);
         MPI_RC(MPID_nem_handle_pkt(vc, REQ_OFI(rreq)->pack_buffer, REQ_OFI(rreq)->pack_buffer_size))

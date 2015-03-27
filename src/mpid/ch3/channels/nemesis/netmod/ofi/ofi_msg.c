@@ -105,7 +105,7 @@ static int MPID_nem_ofi_data_callback(cq_tagged_entry_t * wc, MPID_Request * sre
     req_fn reqFn;
     uint64_t tag = 0;
     BEGIN_FUNC(FCNAME);
-    if (sreq->cc == 2) {
+    if (MPID_cc_get(sreq->cc) == 2) {
         vc = REQ_OFI(sreq)->vc;
         REQ_OFI(sreq)->tag = tag | MPID_MSG_DATA;
         FI_RC(fi_tsend(gl_data.endpoint,
@@ -115,7 +115,7 @@ static int MPID_nem_ofi_data_callback(cq_tagged_entry_t * wc, MPID_Request * sre
                          VC_OFI(vc)->direct_addr,
                          wc->tag | MPID_MSG_DATA, (void *) &(REQ_OFI(sreq)->ofi_context)), tsend);
     }
-    if (sreq->cc == 1) {
+    if (MPID_cc_get(sreq->cc) == 1) {
         if (REQ_OFI(sreq)->pack_buffer)
             MPIU_Free(REQ_OFI(sreq)->pack_buffer);
 

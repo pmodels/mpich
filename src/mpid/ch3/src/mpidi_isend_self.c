@@ -59,7 +59,7 @@ int MPIDI_Isend_self(const void * buf, int count, MPI_Datatype datatype, int ran
     /* If the completion counter is 0, that means that the communicator to
      * which this message is being sent has been revoked and we shouldn't
      * bother finishing this. */
-    if (!found && rreq->cc == 0) {
+    if (!found && MPID_cc_get(rreq->cc) == 0) {
         MPIU_Object_set_ref(sreq, 0);
         MPIDI_CH3_Request_destroy(sreq);
         sreq = NULL;

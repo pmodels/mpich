@@ -131,7 +131,7 @@ int MPIDI_CH3_iStartMsg(MPIDI_VC_t * vc, void * hdr, MPIDI_msg_sz_t hdr_sz,
 		    MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**nomem");
 		}
 		sreq->kind = MPID_REQUEST_SEND;
-		sreq->cc = 0;
+		MPID_cc_set(&(sreq->cc), 0);
 		sreq->status.MPI_ERROR = MPIR_Err_create_code( rc,
 			       MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, 
 			       MPI_ERR_INTERN, "**ch3|sock|writefailed",
@@ -199,7 +199,7 @@ int MPIDI_CH3_iStartMsg(MPIDI_VC_t * vc, void * hdr, MPIDI_msg_sz_t hdr_sz,
 	    MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,"**nomem");
 	}
 	sreq->kind = MPID_REQUEST_SEND;
-	sreq->cc   = 0;
+	MPID_cc_set(&sreq->cc, 0);
 	
 	sreq->status.MPI_ERROR = MPIR_Err_create_code( MPI_SUCCESS,
 		       MPIR_ERR_RECOVERABLE, FCNAME, __LINE__, 

@@ -56,7 +56,7 @@ int MPID_Send(const void * buf, int count, MPI_Datatype datatype, int rank,
 	   will not be made (long-term FIXME) */
 #       ifndef MPICH_IS_THREADED
 	{
-	    if (sreq != NULL && sreq->cc != 0) {
+	    if (sreq != NULL && MPID_cc_get(sreq->cc) != 0) {
 		MPIU_ERR_SETANDJUMP(mpi_errno,MPI_ERR_OTHER,
 				    "**dev|selfsenddeadlock");
 	    }

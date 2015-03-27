@@ -910,6 +910,7 @@ do {                                           \
 do {                                           \
     *(was_incomplete_) = (*(cc_ptr_))++;       \
 } while (0)
+#define MPID_cc_get(cc_) (cc_)
 
 # elif MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_PER_OBJECT
 
@@ -977,6 +978,8 @@ static MPIU_DBG_INLINE_KEYWORD int MPID_cc_is_complete(MPID_cc_t *cc_ptr)
         *(was_incomplete_) = OPA_fetch_and_incr_int(cc_ptr_);               \
     } while (0)
 
+#define MPID_cc_get(cc_) OPA_load_int(&(cc_))
+
 # else
 #  error "unexpected thread granularity"
 # endif /* granularity */
@@ -993,6 +996,7 @@ do {                                           \
 do {                                           \
     *(was_incomplete_) = (*(cc_ptr_))++;       \
 } while (0)
+#define MPID_cc_get(cc_) (cc_)
 
 #endif /* defined(MPICH_IS_THREADED) */
 
