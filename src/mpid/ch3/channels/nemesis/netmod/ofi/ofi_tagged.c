@@ -102,7 +102,7 @@ int MPID_nem_ofi_cancel_recv(struct MPIDI_VC *vc ATTRIBUTE((unused)), struct MPI
 #define FCNAME DECL_FUNC(MPID_nem_ofi_anysource_matched)
 int MPID_nem_ofi_anysource_matched(MPID_Request * rreq)
 {
-    int mpi_errno = TRUE;
+    int matched = FALSE;
     int ret;
     BEGIN_FUNC(FCNAME);
     /* ----------------------------------------------------- */
@@ -112,11 +112,23 @@ int MPID_nem_ofi_anysource_matched(MPID_Request * rreq)
     /* ----------------------------------------------------- */
     ret = fi_cancel((fid_t) gl_data.endpoint, &(REQ_OFI(rreq)->ofi_context));
     if (ret == 0) {
-        /* --------------------------------------------------- */
-        /* Request cancelled:  cancel and complete the request */
-        /* --------------------------------------------------- */
-        mpi_errno = FALSE;
+        /* Cancel succeded. This means that the actual message has been
+         *  received via nemesis shared memory. We need to return
+         *  matched=False. The request will be completed at the nemesis level.
+         *
+         * If anysource was posted for non-contig dtype then don't forget
+         * to clean up tmp space.
+         */
+        if (REQ_OFI(rreq)->pack_buffer) {
+            MPIU_Free(REQ_OFI(rreq)->pack_buffer);
+        }
+        matched = FALSE;
+    }else{
+        /* Cancel failed. We can only fail in the case of the message
+         *  being already actually received via ofi fabric. return TRUE.
+         */
+        matched = TRUE;
     }
     END_FUNC(FCNAME);
-    return mpi_errno;
+    return matched;
 }
