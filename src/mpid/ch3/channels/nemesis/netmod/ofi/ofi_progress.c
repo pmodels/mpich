@@ -256,6 +256,8 @@ int MPID_nem_ofi_poll(int in_blocking_poll)
                 MPIU_Assert(0);
             }
         }
+        else if (ret == -FI_EAGAIN)
+          ;
         else if (ret < 0) {
             if (ret == -FI_EAVAIL) {
                 ret = fi_cq_readerr(gl_data.cq, (void *) &error, 0);
