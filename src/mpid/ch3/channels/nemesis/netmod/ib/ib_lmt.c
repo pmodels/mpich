@@ -271,7 +271,7 @@ int MPID_nem_ib_lmt_start_recv(struct MPIDI_VC *vc, struct MPID_Request *req, MP
 {
     int mpi_errno = MPI_SUCCESS;
     int dt_contig;
-    MPIDI_msg_sz_t data_sz;
+    MPIDI_msg_sz_t data_sz _UNUSED_;
     MPID_Datatype *dt_ptr;
     MPI_Aint dt_true_lb;
     MPID_nem_ib_vc_area *vc_ib = VC_IB(vc);

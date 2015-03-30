@@ -128,7 +128,7 @@ static int MPID_nem_ib_rdmawr_to_init(uint64_t sz)
 void *MPID_nem_ib_rdmawr_to_alloc(int nslots)
 {
     dprintf("rdmawr_to_alloc,nslots=%d\n", nslots);
-    void *start;
+    void *start = NULL;
     int i;
     for (i = 0; i < nslots; i++) {
         //dprintf("MPID_nem_ib_rdmawr_to_alloc,free_list=%p\n", MPID_nem_ib_rdmawr_to_alloc_free_list);
@@ -505,7 +505,6 @@ int MPID_nem_ib_com_open(int ib_port, int open_flag, int *condesc)
     MPID_nem_ib_com_t *conp;
     struct ibv_qp_init_attr qp_init_attr;
     struct ibv_sge *sge;
-    int mr_flags;
     int i;
 
     dprintf("MPID_nem_ib_com_open,port=%d,flag=%08x\n", ib_port, open_flag);
@@ -725,7 +724,6 @@ int MPID_nem_ib_com_open(int ib_port, int open_flag, int *condesc)
         memset(conp->icom_mem, 0, sizeof(void **) * MPID_NEM_IB_COM_NBUF_RDMA);
         conp->icom_msize = (int *) MPIU_Malloc(sizeof(int *) * MPID_NEM_IB_COM_NBUF_RDMA);
         memset(conp->icom_msize, 0, sizeof(int *) * MPID_NEM_IB_COM_NBUF_RDMA);
-        mr_flags = IBV_ACCESS_LOCAL_WRITE | IBV_ACCESS_REMOTE_READ | IBV_ACCESS_REMOTE_WRITE;
 
         /* RDMA-write-to local memory area */
         conp->icom_msize[MPID_NEM_IB_COM_RDMAWR_TO] = MPID_NEM_IB_COM_RDMABUF_SZ;
@@ -783,7 +781,6 @@ int MPID_nem_ib_com_open(int ib_port, int open_flag, int *condesc)
         memset(conp->icom_mem, 0, sizeof(void *) * MPID_NEM_IB_COM_NBUF_SCRATCH_PAD);
         conp->icom_msize = (int *) MPIU_Malloc(sizeof(int) * MPID_NEM_IB_COM_NBUF_SCRATCH_PAD);
         memset(conp->icom_msize, 0, sizeof(int) * MPID_NEM_IB_COM_NBUF_SCRATCH_PAD);
-        mr_flags = IBV_ACCESS_LOCAL_WRITE | IBV_ACCESS_REMOTE_READ | IBV_ACCESS_REMOTE_WRITE;
 
         /* RDMA-write-from local memory area */
         conp->icom_msize[MPID_NEM_IB_COM_SCRATCH_PAD_FROM] = MPID_NEM_IB_COM_SCRATCH_PAD_FROM_SZ;
@@ -824,7 +821,6 @@ int MPID_nem_ib_com_open(int ib_port, int open_flag, int *condesc)
         memset(conp->icom_mem, 0, sizeof(void **) * MPID_NEM_IB_COM_NBUF_UD);
         conp->icom_msize = (int *) MPIU_Malloc(sizeof(int *) * MPID_NEM_IB_COM_NBUF_UD);
         memset(conp->icom_msize, 0, sizeof(int *) * MPID_NEM_IB_COM_NBUF_UD);
-        mr_flags = IBV_ACCESS_LOCAL_WRITE | IBV_ACCESS_REMOTE_READ | IBV_ACCESS_REMOTE_WRITE;
 
         /* UD-write-from local memory area */
         MPID_NEM_IB_COM_ERR_CHKANDJUMP(MPID_NEM_IB_COM_UDBUF_SZ <= 40, -1,
@@ -845,7 +841,7 @@ int MPID_nem_ib_com_open(int ib_port, int open_flag, int *condesc)
                                          conp->icom_msize[MPID_NEM_IB_COM_UDWR_FROM], 0,
                                          MPID_NEM_IB_COM_REG_MR_STICKY);
         MPID_NEM_IB_COM_ERR_CHKANDJUMP(!conp->icom_mrlist[MPID_NEM_IB_COM_UDWR_FROM], -1,
-                                       dprintf("ibv_reg_mr failed with mr_flags=0x%x\n", mr_flags));
+                                       printf("ibv_reg_mr failed\n"));
 
         /* UD-write-to local memory area */
         /* addr to addr+39 are not filled, addr+40 to addr+length-1 are filled with payload */

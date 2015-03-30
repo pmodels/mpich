@@ -23,6 +23,12 @@
 */
 #define MPID_NEM_IB_ONDEMAND
 
+#ifdef __GNUC__
+#define _UNUSED_ __attribute__ ((__unused__))
+#else
+#define _UNUSED_
+#endif
+
 typedef struct {
     union ibv_gid gid;
     uint16_t lid;

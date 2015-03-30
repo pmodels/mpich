@@ -716,7 +716,7 @@ int MPID_nem_ib_send_progress(MPIDI_VC_t * vc)
     int mpi_errno = MPI_SUCCESS;
     MPID_nem_ib_vc_area *vc_ib = VC_IB(vc);
     MPID_Request *sreq, *prev_sreq;
-    int req_type, msg_type;
+    int msg_type;
 
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_IB_SEND_PROGRESS);
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_IB_SEND_PROGRESS);
@@ -740,7 +740,6 @@ int MPID_nem_ib_send_progress(MPIDI_VC_t * vc)
     if (sreq) {
         prev_sreq = NULL;
         do {
-            req_type = MPIDI_Request_get_type(sreq);
             msg_type = MPIDI_Request_get_msg_type(sreq);
 
             MPIDI_CH3_Pkt_t *ch3_hdr = (MPIDI_CH3_Pkt_t *) sreq->dev.iov[0].MPID_IOV_BUF;

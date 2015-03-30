@@ -605,7 +605,7 @@ int MPID_nem_ib_poll_eager(MPID_nem_ib_ringbuf_t * ringbuf)
 
     int mpi_errno = MPI_SUCCESS;
     int ibcom_errno;
-    struct MPIDI_VC *vc;
+    struct MPIDI_VC *vc = NULL;
     MPID_nem_ib_vc_area *vc_ib;
     //int result;
     //struct ibv_wc cqe[MPID_NEM_IB_COM_MAX_CQ_HEIGHT_DRAIN];
@@ -616,7 +616,7 @@ int MPID_nem_ib_poll_eager(MPID_nem_ib_ringbuf_t * ringbuf)
 
     //MPID_nem_ib_tsc_poll = MPID_nem_ib_rdtsc();
 
-    uint16_t *remote_poll;
+    uint16_t *remote_poll = NULL;
     switch (ringbuf->type) {
     case MPID_NEM_IB_RINGBUF_EXCLUSIVE:
         remote_poll = &VC_FIELD(ringbuf->vc, ibcom->rsr_seq_num_poll);
@@ -1152,8 +1152,8 @@ int MPID_nem_ib_recv_posted(struct MPIDI_VC *vc, struct MPID_Request *req)
 #endif
 
     MPIDI_msg_sz_t data_sz;
-    int dt_contig;
-    MPI_Aint dt_true_lb;
+    int dt_contig _UNUSED_;
+    MPI_Aint dt_true_lb _UNUSED_;
     MPID_Datatype *dt_ptr;
     MPIDI_Datatype_get_info(req->dev.user_count, req->dev.datatype,
                             dt_contig, data_sz, dt_ptr, dt_true_lb);
@@ -1839,9 +1839,9 @@ int MPID_nem_ib_pkt_rma_lmt_getdone(MPIDI_VC_t * vc,
     if (*req->cc_ptr == 1 &&
         (reqFn == MPIDI_CH3_ReqHandler_ReqOpsComplete
          || reqFn == MPIDI_CH3_ReqHandler_GetSendComplete)) {
-        MPIDI_VC_t *vc = req->ch.vc;
+        MPIDI_VC_t *_vc = req->ch.vc;
         int complete = 0;
-        mpi_errno = reqFn(vc, req, &complete);
+        mpi_errno = reqFn(_vc, req, &complete);
     }
     else {
         MPIDI_CH3U_Request_complete(req);

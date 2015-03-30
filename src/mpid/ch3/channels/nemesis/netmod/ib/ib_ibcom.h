@@ -772,7 +772,7 @@ static inline void *MPID_nem_ib_rdmawr_from_alloc(uint32_t _sz)
 static inline void MPID_nem_ib_rdmawr_from_free(const void *p, uint32_t _sz)
 {
     int clz;
-    uint32_t sz;
+    uint32_t sz _UNUSED_;
     assert(_sz <= (1ULL << 31));
     MPID_NEM_IB_RDMAWR_FROM_ALLOC_PREPROCESS_SZ;
     void *q = MPID_NEM_IB_RDMAWR_FROM_ALLOC_ARENA_START(p);
