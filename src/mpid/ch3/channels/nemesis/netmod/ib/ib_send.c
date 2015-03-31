@@ -29,11 +29,11 @@ static int MPID_nem_ib_iSendContig_core(MPIDI_VC_t * vc, MPID_Request * sreq, vo
     int mpi_errno = MPI_SUCCESS;
     int ibcom_errno;
     MPID_nem_ib_vc_area *vc_ib = VC_IB(vc);
-    MPID_nem_ib_pkt_prefix_t pkt_netmod;
+    MPID_nem_ib_pkt_lmt_rts_t pkt_rts;
     void *prefix;
     int sz_prefix;
     void *s_data;
-    int s_data_sz;
+    long s_data_sz;
 
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_IB_ISENDCONTIG_CORE);
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_IB_ISENDCONTIG_CORE);
@@ -66,9 +66,9 @@ static int MPID_nem_ib_iSendContig_core(MPIDI_VC_t * vc, MPID_Request * sreq, vo
     if (MPID_NEM_IB_NETMOD_HDR_SIZEOF(vc_ib->ibcom->local_ringbuf_type)
         + sizeof(MPIDI_CH3_Pkt_t) + data_sz
         > MPID_NEM_IB_COM_RDMABUF_SZSEG - sizeof(MPID_nem_ib_netmod_trailer_t)) {
-        pkt_netmod.type = MPIDI_NEM_PKT_NETMOD;
+        pkt_rts.type = MPIDI_NEM_PKT_NETMOD;
 
-        pkt_netmod.subtype = MPIDI_NEM_IB_PKT_RMA_LMT_RTS;
+        pkt_rts.subtype = MPIDI_NEM_IB_PKT_RMA_LMT_RTS;
 
         void *write_from_buf = data;
 
@@ -83,9 +83,19 @@ static int MPID_nem_ib_iSendContig_core(MPIDI_VC_t * vc, MPID_Request * sreq, vo
 
         s_cookie_buf->tail =
             *((uint8_t *) ((uint8_t *) write_from_buf + data_sz - sizeof(uint8_t)));
+
+        int post_num = (data_sz + (long) max_msg_sz - 1) / (long) max_msg_sz;
+        long length;
+        if (post_num > 1) {
+            length = max_msg_sz;
+        }
+        else {
+            length = data_sz;
+        }
+
         /* put IB rkey */
         struct MPID_nem_ib_com_reg_mr_cache_entry_t *mr_cache =
-            MPID_nem_ib_com_reg_mr_fetch(write_from_buf, data_sz, 0,
+            MPID_nem_ib_com_reg_mr_fetch(write_from_buf, length, 0,
                                          MPID_NEM_IB_COM_REG_MR_GLOBAL);
         MPIU_ERR_CHKANDJUMP(!mr_cache, mpi_errno, MPI_ERR_OTHER, "**MPID_nem_ib_com_reg_mr_fetch");
         struct ibv_mr *mr = mr_cache->mr;
@@ -99,9 +109,19 @@ static int MPID_nem_ib_iSendContig_core(MPIDI_VC_t * vc, MPID_Request * sreq, vo
         s_cookie_buf->len = data_sz;
         s_cookie_buf->sender_req_id = sreq->handle;
         s_cookie_buf->max_msg_sz = max_msg_sz;
+        s_cookie_buf->seg_seq_num = 1;
+        s_cookie_buf->seg_num = post_num;
+
+        pkt_rts.seg_seq_num = 1;
+
+        REQ_FIELD(sreq, buf.from) = write_from_buf;
+        REQ_FIELD(sreq, data_sz) = data_sz;
+        REQ_FIELD(sreq, seg_seq_num) = 1;       // only send 1st-segment, even if there are some segments.
+        REQ_FIELD(sreq, seg_num) = post_num;
+        REQ_FIELD(sreq, max_msg_sz) = max_msg_sz;
 
         /* set for ib_com_isend */
-        prefix = (void *) &pkt_netmod;
+        prefix = (void *) &pkt_rts;
         sz_prefix = sizeof(MPIDI_CH3_Pkt_t);
         s_data = (void *) s_cookie_buf;
         s_data_sz = sizeof(MPID_nem_ib_rma_lmt_cookie_t);
@@ -465,8 +485,8 @@ static int MPID_nem_ib_SendNoncontig_core(MPIDI_VC_t * vc, MPID_Request * sreq, 
     void *prefix;
     int prefix_sz;
     void *data;
-    int data_sz;
-    MPID_nem_ib_pkt_prefix_t pkt_netmod;
+    long data_sz;
+    MPID_nem_ib_pkt_lmt_rts_t pkt_rts;
 
     prefix = NULL;
     prefix_sz = 0;
@@ -495,9 +515,9 @@ static int MPID_nem_ib_SendNoncontig_core(MPIDI_VC_t * vc, MPID_Request * sreq, 
     if (MPID_NEM_IB_NETMOD_HDR_SIZEOF(vc_ib->ibcom->local_ringbuf_type)
         + sizeof(MPIDI_CH3_Pkt_t) + data_sz
         > MPID_NEM_IB_COM_RDMABUF_SZSEG - sizeof(MPID_nem_ib_netmod_trailer_t)) {
-        pkt_netmod.type = MPIDI_NEM_PKT_NETMOD;
+        pkt_rts.type = MPIDI_NEM_PKT_NETMOD;
 
-        pkt_netmod.subtype = MPIDI_NEM_IB_PKT_RMA_LMT_RTS;
+        pkt_rts.subtype = MPIDI_NEM_IB_PKT_RMA_LMT_RTS;
 
         void *write_from_buf = REQ_FIELD(sreq, lmt_pack_buf);
 
@@ -512,9 +532,19 @@ static int MPID_nem_ib_SendNoncontig_core(MPIDI_VC_t * vc, MPID_Request * sreq, 
 
         s_cookie_buf->tail =
             *((uint8_t *) ((uint8_t *) write_from_buf + data_sz - sizeof(uint8_t)));
+
+        int post_num = (data_sz + (long) max_msg_sz - 1) / (long) max_msg_sz;
+        long length;
+        if (post_num > 1) {
+            length = max_msg_sz;
+        }
+        else {
+            length = data_sz;
+        }
+
         /* put IB rkey */
         struct MPID_nem_ib_com_reg_mr_cache_entry_t *mr_cache =
-            MPID_nem_ib_com_reg_mr_fetch(write_from_buf, data_sz, 0,
+            MPID_nem_ib_com_reg_mr_fetch(write_from_buf, length, 0,
                                          MPID_NEM_IB_COM_REG_MR_GLOBAL);
         MPIU_ERR_CHKANDJUMP(!mr_cache, mpi_errno, MPI_ERR_OTHER, "**MPID_nem_ib_com_reg_mr_fetch");
         struct ibv_mr *mr = mr_cache->mr;
@@ -528,9 +558,19 @@ static int MPID_nem_ib_SendNoncontig_core(MPIDI_VC_t * vc, MPID_Request * sreq, 
         s_cookie_buf->len = data_sz;
         s_cookie_buf->sender_req_id = sreq->handle;
         s_cookie_buf->max_msg_sz = max_msg_sz;
+        s_cookie_buf->seg_seq_num = 1;
+        s_cookie_buf->seg_num = post_num;
+
+        pkt_rts.seg_seq_num = 1;
+
+        REQ_FIELD(sreq, buf.from) = write_from_buf;
+        REQ_FIELD(sreq, data_sz) = data_sz;
+        REQ_FIELD(sreq, seg_seq_num) = 1;       // only send 1st-segment, even if there are some segments.
+        REQ_FIELD(sreq, seg_num) = post_num;
+        REQ_FIELD(sreq, max_msg_sz) = max_msg_sz;
 
         /* set for ib_com_isend */
-        prefix = (void *) &pkt_netmod;
+        prefix = (void *) &pkt_rts;
         prefix_sz = sizeof(MPIDI_CH3_Pkt_t);
         data = (void *) s_cookie_buf;
         data_sz = sizeof(MPID_nem_ib_rma_lmt_cookie_t);

@@ -186,7 +186,7 @@ int MPID_nem_ib_lmt_start_recv_core(struct MPID_Request *req, void *raddr, uint3
     MPID_nem_ib_com_get_info_conn(vc_ib->sc->fd, MPID_NEM_IB_COM_INFOKEY_PATTR_MAX_MSG_SZ,
                                   &r_max_msg_sz, sizeof(uint32_t));
 
-    divide = (max_msg_sz + r_max_msg_sz - 1) / r_max_msg_sz;
+    divide = (len + r_max_msg_sz - 1) / r_max_msg_sz;
 
     write_pos = write_to_buf;
     posted_num = 0;
@@ -196,7 +196,7 @@ int MPID_nem_ib_lmt_start_recv_core(struct MPID_Request *req, void *raddr, uint3
 
     for (i = 0; i < divide; i++) {
         if (i == divide - 1)
-            data_sz = max_msg_sz - i * r_max_msg_sz;
+            data_sz = len - i * r_max_msg_sz;
         else
             data_sz = r_max_msg_sz;
 
@@ -206,8 +206,7 @@ int MPID_nem_ib_lmt_start_recv_core(struct MPID_Request *req, void *raddr, uint3
             else
                 last = MPID_NEM_IB_LMT_SEGMENT_LAST;    /* last part of this segment */
 
-            /* last data may be smaller than initiator's max_msg_sz */
-            if (rest_data_sz < max_msg_sz)
+            if (rest_data_sz < r_max_msg_sz)
                 data_sz = rest_data_sz;
         }
 

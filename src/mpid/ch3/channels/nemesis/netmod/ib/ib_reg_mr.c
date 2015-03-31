@@ -223,7 +223,7 @@ void *MPID_nem_ib_com_reg_mr_fetch(void *addr, long len,
                     num_global_cache--;
 
                     /* end loop if the total length released exceeds the requested */
-                    if (dereg_total > len_aligned) {
+                    if (dereg_total >= len_aligned) {
                         dprintf("ib_com_reg_mr_fetch,dereg=%llu,len=%ld\n", dereg_total,
                                 len_aligned);
                         /* re-registraion */
