@@ -1,3 +1,10 @@
+/* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
+/*
+ *  (C) 2014-2015 RIKEN AICS
+ *
+ *      See COPYRIGHT in top-level directory.
+ */
+
 #define _GNU_SOURCE 1
 #include <stdio.h>
 #include <stdlib.h>

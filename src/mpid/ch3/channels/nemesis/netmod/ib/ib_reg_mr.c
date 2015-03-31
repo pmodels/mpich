@@ -1,9 +1,10 @@
 /* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
+ *  (C) 2001-2009 University of Tokyo
  *  (C) 2012 NEC Corporation
- *      Author: Masamichi Takagi
- *  (C) 2012 Oct 10 Min Si
- *  (C) 2001-2009 Yutaka Ishikawa
+ *  (C) 2012 University of Tokyo
+ *  (C) 2014-2015 RIKEN AICS
+ *
  *      See COPYRIGHT in top-level directory.
  */
 

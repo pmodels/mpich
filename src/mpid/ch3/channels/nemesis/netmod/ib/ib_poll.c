@@ -1,7 +1,9 @@
 /* -*- Mode: C; c-basic-offset:4 ; indent-tabs-mode:nil ; -*- */
 /*
  *  (C) 2012 NEC Corporation
- *      Author: Masamichi Takagi
+ *  (C) 2014 RIKEN AICS
+ *  (C) 2014-2015 RIKEN AICS
+ *
  *      See COPYRIGHT in top-level directory.
  */
 
