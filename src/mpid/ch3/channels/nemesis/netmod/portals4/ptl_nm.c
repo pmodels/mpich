@@ -19,7 +19,6 @@
 static char recvbufs[NUM_RECV_BUFS * PTL_MAX_EAGER];
 static ptl_me_t mes[NUM_RECV_BUFS];
 static ptl_handle_me_t me_handles[NUM_RECV_BUFS];
-static unsigned long long put_cnt = 0;  /* required to not finalizing too early */
 
 #undef FUNCNAME
 #define FUNCNAME MPID_nem_ptl_nm_init
@@ -75,8 +74,6 @@ int MPID_nem_ptl_nm_finalize(void)
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_PTL_NM_FINALIZE);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_PTL_NM_FINALIZE);
-
-    while (put_cnt) MPID_nem_ptl_poll(1);  /* Wait for puts to finish */
 
     for (i = 0; i < NUM_RECV_BUFS; ++i) {
         ret = PtlMEUnlink(me_handles[i]);
@@ -176,6 +173,7 @@ static inline int send_pkt(MPIDI_VC_t *vc, void *hdr_p, void *data_p, MPIDI_msg_
     }
 
     SENDBUF(sreq) = sendbuf;
+    sreq->ch.vc = vc;
     REQ_PTL(sreq)->event_handler = MPID_nem_ptl_nm_ctl_event_handler;
 
     ret = MPID_nem_ptl_rptl_put(MPIDI_nem_ptl_global_md, (ptl_size_t)sendbuf, sendbuf_sz, PTL_NO_ACK_REQ,
@@ -185,7 +183,8 @@ static inline int send_pkt(MPIDI_VC_t *vc, void *hdr_p, void *data_p, MPIDI_msg_
     MPIU_DBG_MSG_FMT(CH3_CHANNEL, VERBOSE, (MPIU_DBG_FDEST, "PtlPut(size=%lu id=(%#x,%#x) pt=%#x)",
                                             sendbuf_sz, vc_ptl->id.phys.nid,
                                             vc_ptl->id.phys.pid, vc_ptl->ptc));
-    ++put_cnt;
+
+    vc_ptl->num_queued_sends++;
 
  fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_SEND_PKT);
@@ -238,6 +237,7 @@ static int send_noncontig_pkt(MPIDI_VC_t *vc, MPID_Request *sreq, void *hdr_p)
     }
 
     SENDBUF(sreq) = sendbuf;
+    sreq->ch.vc = vc;
     REQ_PTL(sreq)->event_handler = MPID_nem_ptl_nm_ctl_event_handler;
 
     ret = MPID_nem_ptl_rptl_put(MPIDI_nem_ptl_global_md, (ptl_size_t)sendbuf, sendbuf_sz, PTL_NO_ACK_REQ,
@@ -247,7 +247,8 @@ static int send_noncontig_pkt(MPIDI_VC_t *vc, MPID_Request *sreq, void *hdr_p)
     MPIU_DBG_MSG_FMT(CH3_CHANNEL, VERBOSE, (MPIU_DBG_FDEST, "PtlPut(size=%lu id=(%#x,%#x) pt=%#x)",
                                             sendbuf_sz, vc_ptl->id.phys.nid,
                                             vc_ptl->id.phys.pid, vc_ptl->ptc));
-    ++put_cnt;
+
+    vc_ptl->num_queued_sends++;
 
  fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_SEND_NONCONTIG_PKT);
@@ -340,6 +341,9 @@ int MPID_nem_ptl_iSendContig(MPIDI_VC_t *vc, MPID_Request *sreq, void *hdr, MPID
 static inline void on_data_avail(MPID_Request * req)
 {
     int (*reqFn) (MPIDI_VC_t *, MPID_Request *, int *);
+    MPIDI_VC_t *vc = req->ch.vc;
+    MPID_nem_ptl_vc_area *const vc_ptl = VC_PTL(vc);
+
     MPIDI_STATE_DECL(MPID_STATE_ON_DATA_AVAIL);
 
     MPIDI_FUNC_ENTER(MPID_STATE_ON_DATA_AVAIL);
@@ -351,12 +355,14 @@ static inline void on_data_avail(MPID_Request * req)
     }
     else {
         int complete;
-        MPIDI_VC_t *vc = req->ch.vc;
         reqFn(vc, req, &complete);
         MPIU_Assert(complete == TRUE);
     }
 
-    --put_cnt;
+    vc_ptl->num_queued_sends--;
+
+    if (vc->state == MPIDI_VC_STATE_CLOSED && vc_ptl->num_queued_sends == 0)
+        MPID_nem_ptl_vc_terminated(vc);
 
     MPIDI_FUNC_EXIT(MPID_STATE_ON_DATA_AVAIL);
 }

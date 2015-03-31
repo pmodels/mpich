@@ -64,6 +64,9 @@ static int handler_send(const ptl_event_t *e)
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_Request *const sreq = e->user_ptr;
+    MPIDI_VC_t *vc = sreq->ch.vc;
+    MPID_nem_ptl_vc_area *const vc_ptl = VC_PTL(vc);
+
     int i, ret, incomplete;
 
     MPIDI_STATE_DECL(MPID_STATE_HANDLER_SEND);
@@ -87,6 +90,10 @@ static int handler_send(const ptl_event_t *e)
             MPIU_Free(REQ_PTL(sreq)->get_me_p);
     
         MPIDI_CH3U_Request_complete(sreq);
+        vc_ptl->num_queued_sends--;
+
+        if (vc->state == MPIDI_VC_STATE_CLOSED && vc_ptl->num_queued_sends == 0)
+            MPID_nem_ptl_vc_terminated(vc);
     } else {
         MPIDI_CH3U_Request_decrement_cc(sreq, &incomplete);
     }
@@ -127,6 +134,8 @@ static int send_msg(ptl_hdr_data_t ssend_flag, struct MPIDI_VC *vc, const void *
     sreq->dev.match.parts.rank = dest;
     sreq->dev.match.parts.tag = tag;
     sreq->dev.match.parts.context_id = comm->context_id + context_offset;
+    sreq->ch.vc = vc;
+    vc_ptl->num_queued_sends++;
 
     if (!vc_ptl->id_initialized) {
         mpi_errno = MPID_nem_ptl_init_id(vc);
