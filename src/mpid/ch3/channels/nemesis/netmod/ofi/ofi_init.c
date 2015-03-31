@@ -308,8 +308,8 @@ int MPID_nem_ofi_finalize(void)
     MPI_RC(MPID_nem_ofi_cm_finalize());
 
     FI_RC(fi_close((fid_t) gl_data.mr), mrclose);
-    FI_RC(fi_close((fid_t) gl_data.av), avclose);
     FI_RC(fi_close((fid_t) gl_data.endpoint), epclose);
+    FI_RC(fi_close((fid_t) gl_data.av), avclose);
     FI_RC(fi_close((fid_t) gl_data.cq), cqclose);
     FI_RC(fi_close((fid_t) gl_data.domain), domainclose);
     FI_RC(fi_close((fid_t) gl_data.fabric), fabricclose);
