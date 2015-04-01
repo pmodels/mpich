@@ -35,7 +35,6 @@
 #include "mpidi_util.h"
 
 #define PAMI_TUNE_MAX_ITER 2000
-#define _DEBUG  1
 /* Short hand for sizes */
 #define ONE  (1)
 #define ONEK (1<<10)
@@ -706,13 +705,6 @@ int MPIDI_Print_mpenv(int rank,int size)
                 memset(gatherer,0,task_count*sizeof(MPIDI_printenv_t));
         }
 
-        #ifdef _DEBUG
-        printf("task_count = %d\n", task_count);
-        printf("calling _mpi_gather(%p,%d,%d,%p,%d,%d,%d,%d,%p,%d)\n",
-            &sender,sizeof(MPIDI_printenv_t),MPI_BYTE,gatherer,sizeof(MPIDI_printenv_t),MPI_BYTE,
-            0, MPI_COMM_WORLD,NULL,0);
-        fflush(stdout);
-        #endif
 
         mpi_errno = MPI_SUCCESS;
         MPID_Comm_get_ptr( comm, comm_ptr );
@@ -723,11 +715,6 @@ int MPIDI_Print_mpenv(int rank,int size)
             /* for communication errors, just record the error but continue */
             errflag = TRUE;
         }
-
-        #ifdef _DEBUG
-        printf("returned from _mpi_gather\n");
-        fflush(stdout);
-        #endif
 
         /* work through results and compare */
 
