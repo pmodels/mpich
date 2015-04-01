@@ -357,9 +357,9 @@ MPIDI_SendMsg_process_userdefined_dt(MPID_Request      * sreq,
         MPID_Datatype_get_extent_macro(sreq->mpid.datatype, dt_extent);
         buf =  MPIU_Malloc(dt_extent * sreq->mpid.userbufcount);
 
-        cudaError_t cudaerr = cudaMemcpy(buf, sreq->mpid.userbuf, dt_extent * sreq->mpid.userbufcount, cudaMemcpyDeviceToHost);
+        cudaError_t cudaerr = CudaMemcpy(buf, sreq->mpid.userbuf, dt_extent * sreq->mpid.userbufcount, cudaMemcpyDeviceToHost);
         if (cudaSuccess != cudaerr) {
-          fprintf(stderr, "cudaMalloc failed: %s\n", cudaGetErrorString(cudaerr));
+          fprintf(stderr, "cudaMalloc failed: %s\n", CudaGetErrorString(cudaerr));
         }
 
       }

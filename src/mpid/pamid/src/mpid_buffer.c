@@ -88,7 +88,7 @@ void MPIDI_Buffer_copy(
 #if CUDA_AWARE_SUPPORT
       if(MPIDI_Process.cuda_aware_support_on && MPIDI_cuda_is_device_buf(rbuf))
       {
-        cudaError_t cudaerr = cudaMemcpy(rbuf + rdt_true_lb, sbuf + sdt_true_lb, sdata_sz, cudaMemcpyHostToDevice);
+        cudaError_t cudaerr = CudaMemcpy(rbuf + rdt_true_lb, sbuf + sdt_true_lb, sdata_sz, cudaMemcpyHostToDevice);
       }
       else
 #endif
@@ -122,7 +122,7 @@ void MPIDI_Buffer_copy(
        *rsz = last;
 
         
-        cudaError_t cudaerr = cudaMemcpy(rbuf + rdt_true_lb, buf, rdt_extent * rcount, cudaMemcpyHostToDevice);
+        cudaError_t cudaerr = CudaMemcpy(rbuf + rdt_true_lb, buf, rdt_extent * rcount, cudaMemcpyHostToDevice);
 
         MPIU_Free(buf);
 

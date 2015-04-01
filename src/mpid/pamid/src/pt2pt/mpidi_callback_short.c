@@ -199,7 +199,7 @@ MPIDI_RecvShortCB(pami_context_t    context,
 #if CUDA_AWARE_SUPPORT
     if(MPIDI_Process.cuda_aware_support_on && MPIDI_cuda_is_device_buf(rcvbuf))
     {
-      cudaError_t cudaerr = cudaMemcpy(rcvbuf, sndbuf, (size_t)sndlen, cudaMemcpyHostToDevice);
+      cudaError_t cudaerr = CudaMemcpy(rcvbuf, sndbuf, (size_t)sndlen, cudaMemcpyHostToDevice);
     }
     else
 #endif

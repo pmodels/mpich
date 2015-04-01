@@ -24,7 +24,7 @@
 /*
  * \brief
  */
-
+#include <dlfcn.h>
 #include <sys/time.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -43,6 +43,9 @@
 
 #define PAMI_ASYNC_EXT_ATTR 2000
 
+#if CUDA_AWARE_SUPPORT
+void * pamidCudaPtr = NULL;
+#endif
 #if (MPIDI_PRINTENV || MPIDI_STATISTICS || MPIDI_BANNER)
 MPIDI_printenv_t  *mpich_env=NULL;
 extern char* mp_euilib;
@@ -1913,13 +1916,63 @@ void MPIDI_collsel_pami_tune_cleanup()
 /**********************************************************/
 /*                 CUDA Utilities                         */
 /**********************************************************/
+#if CUDA_AWARE_SUPPORT
+int CudaMemcpy(void* dst, const void* src, size_t count, int kind)
+{
+  return (*pamidCudaMemcpy)(dst, src, count, kind);
+}
+int CudaPointerGetAttributes(struct cudaPointerAttributes* attributes, const void* ptr)
+{
+  return  (*pamidCudaPointerGetAttributes)(attributes, ptr);
+}
+const char*  CudaGetErrorString( int error)
+{
+  return (*pamidCudaGetErrorString)(error);
+}
+#endif
+
+inline bool MPIDI_enable_cuda()
+{
+  bool result = false;
+#if CUDA_AWARE_SUPPORT
+  pamidCudaPtr = dlopen("libcudart.so", RTLD_NOW|RTLD_GLOBAL);
+  if(pamidCudaPtr == NULL)
+  {
+    TRACE_ERR("failed to open libcudart.so error=%s\n", dlerror());
+    return result;
+  }
+  else
+  {
+    pamidCudaMemcpy =  (int (*)())dlsym(pamidCudaPtr, "cudaMemcpy");
+    if(pamidCudaMemcpy == NULL)
+    {
+      dlclose(pamidCudaPtr);
+      return result;
+    }
+    pamidCudaPointerGetAttributes = (int (*)())dlsym(pamidCudaPtr, "cudaPointerGetAttributes");
+    if(pamidCudaPointerGetAttributes == NULL)
+    {
+      dlclose(pamidCudaPtr);
+      return result;
+    }
+    pamidCudaGetErrorString = (const char* (*)())dlsym(pamidCudaPtr, "cudaGetErrorString");
+    if(pamidCudaGetErrorString == NULL)
+    {
+      dlclose(pamidCudaPtr);
+      return result;
+    }
+    result = true;
+  }
+#endif
+  return result;
+}
 
 inline bool MPIDI_cuda_is_device_buf(const void* ptr)
 {
     bool result = false;
 #if CUDA_AWARE_SUPPORT
     struct cudaPointerAttributes cuda_attr;
-    cudaError_t e= cudaPointerGetAttributes  ( & cuda_attr, ptr);
+    cudaError_t e= CudaPointerGetAttributes  ( & cuda_attr, ptr);
 
     if (e != cudaSuccess)
         result = false;

@@ -28,6 +28,10 @@
 #ifndef __include_mpidi_prototypes_h__
 #define __include_mpidi_prototypes_h__
 
+#if CUDA_AWARE_SUPPORT
+#include <cuda_runtime_api.h>
+#endif
+
 
 /**
  * \addtogroup MPID_RECVQ
@@ -266,6 +270,12 @@ pami_result_t MPIDI_Register_algorithms_ext(void                 *cookie,
                                             size_t               *num_algorithms);
 int MPIDI_collsel_pami_tune_parse_params(int argc, char ** argv);
 void MPIDI_collsel_pami_tune_cleanup();
+#if CUDA_AWARE_SUPPORT
+int CudaMemcpy( void* dst, const void* src, size_t count, int kind );
+int CudaPointerGetAttributes( struct cudaPointerAttributes* attributes, const void* ptr );
+const char * CudaGetErrorString( int error);
+#endif
+inline bool MPIDI_enable_cuda();
 inline bool MPIDI_cuda_is_device_buf(const void* ptr);
 void MPIDI_Coll_Comm_create (MPID_Comm *comm);
 void MPIDI_Coll_Comm_destroy(MPID_Comm *comm);

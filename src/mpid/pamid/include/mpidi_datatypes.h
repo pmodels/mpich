@@ -38,9 +38,6 @@
 
 #include "opa_primitives.h"
 
-#if CUDA_AWARE_SUPPORT
-#include <cuda_runtime_api.h>
-#endif
 
 
 #if (MPIU_HANDLE_ALLOCATION_METHOD == MPIU_HANDLE_ALLOCATION_THREAD_LOCAL) && defined(__BGQ__)

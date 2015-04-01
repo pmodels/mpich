@@ -1143,6 +1143,14 @@ MPIDI_Env_setup(int rank, int requested)
 #if CUDA_AWARE_SUPPORT
     char* names[] = {"MP_CUDA_AWARE", NULL};
     ENV_Char(names, &MPIDI_Process.cuda_aware_support_on);
+    if(MPIDI_Process.cuda_aware_support_on && MPIDI_enable_cuda() == false)
+    {
+      MPIDI_Process.cuda_aware_support_on = false;
+      if(rank == 0)
+      {
+        fprintf(stderr, "Error loading libcudart\n");fflush(stderr);sleep(1);exit(1);
+      }
+    }
 #endif
 
   /* Exit if any deprecated environment variables were specified. */

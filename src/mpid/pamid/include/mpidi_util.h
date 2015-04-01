@@ -157,6 +157,13 @@ extern void set_mpich_env(int *,int*);
 extern void MPIDI_open_pe_extension();
 extern void MPIDI_close_pe_extension();
 extern MPIDI_Statistics_write(FILE *);
+
+#if CUDA_AWARE_SUPPORT
+int (*pamidCudaMemcpy)( void* dst, const void* src, size_t count, int kind );
+int (*pamidCudaPointerGetAttributes)( struct cudaPointerAttributes* attributes, const void* ptr );
+const char* (*pamidCudaGetErrorString)( int error );
+extern void * pamidCudaPtr;
+#endif
 /*************************************************************
  *    MPIDI_STATISTICS
  *************************************************************/

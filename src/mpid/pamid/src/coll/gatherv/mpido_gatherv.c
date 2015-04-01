@@ -97,9 +97,9 @@ int MPIDO_Gatherv(const void *sendbuf,
        if(is_send_dev_buf)
        {
          scbuf = MPIU_Malloc(sdt_extent * sendcount);
-         cudaError_t cudaerr = cudaMemcpy(scbuf, sendbuf, sdt_extent * sendcount, cudaMemcpyDeviceToHost);
+         cudaError_t cudaerr = CudaMemcpy(scbuf, sendbuf, sdt_extent * sendcount, cudaMemcpyDeviceToHost);
          if (cudaSuccess != cudaerr)
-           fprintf(stderr, "cudaMemcpy failed: %s\n", cudaGetErrorString(cudaerr));
+           fprintf(stderr, "cudaMemcpy failed: %s\n", CudaGetErrorString(cudaerr));
        }
        else
          scbuf = sendbuf;
@@ -127,9 +127,9 @@ int MPIDO_Gatherv(const void *sendbuf,
        if(is_send_dev_buf)MPIU_Free(scbuf);
        if(is_recv_dev_buf)
          {
-           cudaError_t cudaerr = cudaMemcpy(recvbuf, rcbuf, rtotal_buf, cudaMemcpyHostToDevice);
+           cudaError_t cudaerr = CudaMemcpy(recvbuf, rcbuf, rtotal_buf, cudaMemcpyHostToDevice);
            if (cudaSuccess != cudaerr)
-             fprintf(stderr, "cudaMemcpy failed: %s\n", cudaGetErrorString(cudaerr));
+             fprintf(stderr, "cudaMemcpy failed: %s\n", CudaGetErrorString(cudaerr));
            MPIU_Free(rcbuf);
          }
        return cuda_res;
