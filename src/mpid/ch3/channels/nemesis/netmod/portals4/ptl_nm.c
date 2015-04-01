@@ -8,7 +8,8 @@
 #include <mpl_utlist.h>
 #include "rptl.h"
 
-#define NUM_RECV_BUFS 50
+#define NUM_RECV_BUFS 8
+#define BUFSIZE (1024*1024)
 #define CTL_TAG 0
 #define GET_TAG 1
 #define PAYLOAD_SIZE  (PTL_MAX_EAGER - sizeof(MPIDI_CH3_Pkt_t))
@@ -16,8 +17,8 @@
 #define SENDBUF(req_) REQ_PTL(req_)->chunk_buffer[0]
 #define TMPBUF(req_) REQ_PTL(req_)->chunk_buffer[1]
 
-static char recvbufs[NUM_RECV_BUFS * PTL_MAX_EAGER];
-static ptl_me_t mes[NUM_RECV_BUFS];
+static char *recvbufs;
+static ptl_me_t overflow_me;
 static ptl_handle_me_t me_handles[NUM_RECV_BUFS];
 
 #undef FUNCNAME
@@ -29,28 +30,29 @@ int MPID_nem_ptl_nm_init(void)
     int mpi_errno = MPI_SUCCESS;
     int i;
     int ret;
-    ptl_process_t id_any;
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_PTL_NM_INIT);
 
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_PTL_NM_INIT);
 
     /* init recv */
-    id_any.phys.pid = PTL_PID_ANY;
-    id_any.phys.nid = PTL_NID_ANY;
-    
-    for (i = 0; i < NUM_RECV_BUFS; ++i) {
-        mes[i].start = &recvbufs[i * PTL_MAX_EAGER];
-        mes[i].length = PTL_MAX_EAGER;
-        mes[i].ct_handle = PTL_CT_NONE;
-        mes[i].uid = PTL_UID_ANY;
-        mes[i].options = (PTL_ME_OP_PUT | PTL_ME_USE_ONCE | PTL_ME_EVENT_UNLINK_DISABLE |
-                         PTL_ME_EVENT_LINK_DISABLE | PTL_ME_IS_ACCESSIBLE);
-        mes[i].match_id = id_any;
-        mes[i].match_bits = NPTL_MATCH(CTL_TAG, 0, MPI_ANY_SOURCE);
-        mes[i].ignore_bits = NPTL_MATCH_IGNORE;
+    overflow_me.length = BUFSIZE;
+    overflow_me.ct_handle = PTL_CT_NONE;
+    overflow_me.uid = PTL_UID_ANY;
+    overflow_me.options = ( PTL_ME_OP_PUT | PTL_ME_MANAGE_LOCAL | PTL_ME_NO_TRUNCATE | PTL_ME_MAY_ALIGN |
+                   PTL_ME_IS_ACCESSIBLE | PTL_ME_EVENT_LINK_DISABLE );
+    overflow_me.match_id.phys.pid = PTL_PID_ANY;
+    overflow_me.match_id.phys.nid = PTL_NID_ANY;
+    overflow_me.match_bits = NPTL_MATCH(CTL_TAG, 0, MPI_ANY_SOURCE);
+    overflow_me.ignore_bits = NPTL_MATCH_IGNORE;
+    overflow_me.min_free = PTL_MAX_EAGER;
 
-        ret = MPID_nem_ptl_me_append(MPIDI_nem_ptl_ni, MPIDI_nem_ptl_control_pt, &mes[i],
-                                     PTL_PRIORITY_LIST, (void *)(uint64_t)i, &me_handles[i]);
+    /* allocate all overflow space at once */
+    recvbufs = MPIU_Malloc(NUM_RECV_BUFS * BUFSIZE);
+
+    for (i = 0; i < NUM_RECV_BUFS; ++i) {
+        overflow_me.start = recvbufs + (i * BUFSIZE);
+        ret = MPID_nem_ptl_me_append(MPIDI_nem_ptl_ni, MPIDI_nem_ptl_control_pt, &overflow_me,
+                                     PTL_OVERFLOW_LIST, (void *)(size_t)i, &me_handles[i]);
         MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlmeappend", "**ptlmeappend %s",
                              MPID_nem_ptl_strerror(ret));
     }
@@ -80,6 +82,8 @@ int MPID_nem_ptl_nm_finalize(void)
         MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlmeunlink", "**ptlmeunlink %s",
                              MPID_nem_ptl_strerror(ret));
     }
+
+    MPIU_Free(recvbufs);
 
  fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_PTL_NM_FINALIZE);
@@ -383,19 +387,17 @@ int MPID_nem_ptl_nm_ctl_event_handler(const ptl_event_t *e)
     case PTL_EVENT_PUT:
         {
             int ret;
-            const uint64_t buf_idx = (uint64_t) e->user_ptr;
             const size_t packet_sz = e->mlength;
             MPIDI_VC_t *vc;
             MPID_nem_ptl_vc_area * vc_ptl;
             ptl_size_t remaining = NPTL_HEADER_GET_LENGTH(e->hdr_data);
-
-            MPIU_Assert(e->start == &recvbufs[buf_idx * PTL_MAX_EAGER]);
+            ptl_me_t search_me;
 
             MPIDI_PG_Get_vc(MPIDI_Process.my_pg, NPTL_MATCH_GET_RANK(e->match_bits), &vc);
             vc_ptl = VC_PTL(vc);
 
             if (remaining == 0) {
-                mpi_errno = MPID_nem_handle_pkt(vc, &recvbufs[buf_idx * PTL_MAX_EAGER], packet_sz);
+                mpi_errno = MPID_nem_handle_pkt(vc, e->start, packet_sz);
                 if (mpi_errno)
                     MPIU_ERR_POP(mpi_errno);
             }
@@ -411,7 +413,7 @@ int MPID_nem_ptl_nm_ctl_event_handler(const ptl_event_t *e)
                 REQ_PTL(req)->bytes_put = packet_sz + remaining;
                 TMPBUF(req) = MPIU_Malloc(REQ_PTL(req)->bytes_put);
                 MPIU_Assert(TMPBUF(req) != NULL);
-                MPIU_Memcpy(TMPBUF(req), &recvbufs[buf_idx * PTL_MAX_EAGER], packet_sz);
+                MPIU_Memcpy(TMPBUF(req), e->start, packet_sz);
 
                 req->ch.vc = vc;
 
@@ -434,11 +436,13 @@ int MPID_nem_ptl_nm_ctl_event_handler(const ptl_event_t *e)
                 }
             }
 
-            /* Repost the recv buffer */
-            ret = MPID_nem_ptl_me_append(MPIDI_nem_ptl_ni, MPIDI_nem_ptl_control_pt, &mes[buf_idx],
-                                         PTL_PRIORITY_LIST, e->user_ptr /* buf_idx */, &me_handles[buf_idx]);
-            MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlmeappend",
-                                 "**ptlmeappend %s", MPID_nem_ptl_strerror(ret));
+            /* FIXME: this search/delete not be necessary if we set PTL_ME_UNEXPECTED_HDR_DISABLE
+               on the overflow list entries. However, doing so leads to PTL_IN_USE errors
+               during finalize in rare cases, even though all messages are handled. */
+            memcpy(&search_me, &overflow_me, sizeof(ptl_me_t));
+            search_me.options |= PTL_ME_USE_ONCE;
+            /* find and delete the header for this message in the overflow list */
+            PtlMESearch(MPIDI_nem_ptl_ni, MPIDI_nem_ptl_control_pt, &search_me, PTL_SEARCH_DELETE, NULL);
         }
         break;
 
@@ -481,6 +485,23 @@ int MPID_nem_ptl_nm_ctl_event_handler(const ptl_event_t *e)
                 MPID_Request_release(req);
             }
         }
+        break;
+
+    case PTL_EVENT_AUTO_FREE:
+        {
+            size_t buf_idx = (size_t)e->user_ptr;
+            int ret;
+
+            overflow_me.start = recvbufs + (buf_idx * BUFSIZE);
+
+            ret = MPID_nem_ptl_me_append(MPIDI_nem_ptl_ni, MPIDI_nem_ptl_control_pt, &overflow_me,
+                                         PTL_OVERFLOW_LIST, e->user_ptr, &me_handles[buf_idx]);
+            MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlmeappend", "**ptlmeappend %s",
+                                 MPID_nem_ptl_strerror(ret));
+        }
+
+    case PTL_EVENT_AUTO_UNLINK:
+    case PTL_EVENT_PUT_OVERFLOW:
         break;
 
     default:
