@@ -242,7 +242,7 @@ static int ptl_init(MPIDI_PG_t *pg_p, int pg_rank, char **bc_val_p, int *val_max
     MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlmdbind", "**ptlmdbind %s", MPID_nem_ptl_strerror(ret));
 
     /* currently, rportlas only works with a single NI and EQ */
-    ret = MPID_nem_ptl_rptl_init(MPIDI_Process.my_pg->size, MPIDI_nem_ptl_ni_limits.max_eqs, get_target_info);
+    ret = MPID_nem_ptl_rptl_init(MPIDI_Process.my_pg->size, EVENT_COUNT, get_target_info);
     MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlniinit", "**ptlniinit %s", MPID_nem_ptl_strerror(ret));
 
     /* allow rportal to manage the primary portal and retransmit if needed */
