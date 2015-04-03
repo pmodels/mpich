@@ -686,6 +686,7 @@ void ADIOI_P2PContigReadAggregation(ADIO_File fd,
 				     ADIO_Offset *fd_start,
 				     ADIO_Offset *fd_end);
 
+int ADIOI_OneSidedCleanup(ADIO_File fd);
 void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
         ADIO_Offset *offset_list,
         ADIO_Offset *len_list,

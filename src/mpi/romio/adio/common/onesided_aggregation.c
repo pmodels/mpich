@@ -1,6 +1,12 @@
 #include "adio.h"
 #include "adio_extern.h"
+#ifdef ROMIO_GPFS
+/* right now this is GPFS only but TODO: extend this to all file systems */
 #include "../ad_gpfs/ad_gpfs_tuning.h"
+#else
+int gpfsmpio_onesided_no_rmw = 0;
+int gpfsmpio_aggmethod = 0;
+#endif
 
 #include <pthread.h>
 
@@ -19,6 +25,32 @@ typedef struct NonContigSourceBufOffset {
   int flatBufIndice;
   ADIO_Offset indiceOffset;
 } NonContigSourceBufOffset;
+
+static int ADIOI_OneSidedSetup(ADIO_File fd, int procs) {
+    int ret = MPI_SUCCESS;
+
+    ret = MPI_Win_create(fd->io_buf,fd->hints->cb_buffer_size,1,
+	    MPI_INFO_NULL,fd->comm, &fd->io_buf_window);
+    if (ret != MPI_SUCCESS) goto fn_exit;
+    fd->io_buf_put_amounts = (int *) ADIOI_Malloc(procs*sizeof(int));
+    ret =MPI_Win_create(fd->io_buf_put_amounts,procs*sizeof(int),sizeof(int),
+	    MPI_INFO_NULL,fd->comm, &fd->io_buf_put_amounts_window);
+fn_exit:
+    return ret;
+}
+
+int ADIOI_OneSidedCleanup(ADIO_File fd)
+{
+    int ret = MPI_SUCCESS;
+    if (fd->io_buf_window != MPI_WIN_NULL)
+	ret = MPI_Win_free(&fd->io_buf_window);
+    if (fd->io_buf_put_amounts_window != MPI_WIN_NULL)
+	ret = MPI_Win_free(&fd->io_buf_put_amounts_window);
+    if (fd->io_buf_put_amounts != NULL)
+	ADIOI_Free(fd->io_buf_put_amounts);
+
+    return ret;
+}
 
 void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
     ADIO_Offset *offset_list,
@@ -50,6 +82,12 @@ void ADIOI_OneSidedWriteAggregation(ADIO_File fd,
     int nprocs,myrank;
     MPI_Comm_size(fd->comm, &nprocs);
     MPI_Comm_rank(fd->comm, &myrank);
+
+    if (fd->io_buf_window == MPI_WIN_NULL ||
+	    fd->io_buf_put_amounts_window == MPI_WIN_NULL)
+    {
+	ADIOI_OneSidedSetup(fd, nprocs);
+    }
 
     /* This flag denotes whether the source datatype is contiguous, which is referenced throughout the algorithm
      * and defines how the source buffer offsets and data chunks are determined.  If the value is 1 (true - contiguous data)
@@ -1063,6 +1101,11 @@ void ADIOI_OneSidedReadAggregation(ADIO_File fd,
     MPI_Comm_size(fd->comm, &nprocs);
     MPI_Comm_rank(fd->comm, &myrank);
 
+    if (fd->io_buf_window == MPI_WIN_NULL ||
+	    fd->io_buf_put_amounts_window == MPI_WIN_NULL)
+    {
+	ADIOI_OneSidedSetup(fd, nprocs);
+    }
     /* This flag denotes whether the source datatype is contiguus, which is referenced throughout the algorithm
      * and defines how the source buffer offsets and data chunks are determined.  If the value is 1 (true - contiguous data)
      * things are profoundly simpler in that the source buffer offset for a given source offset simply linearly increases
