@@ -83,6 +83,9 @@ int MPID_nem_ofi_init(MPIDI_PG_t * pg_p, int pg_rank, char **bc_val_p, int *val_
     hints->caps             = FI_TAGGED;      /* Tag matching interface    */
     hints->caps            |= FI_DYNAMIC_MR;  /* Global dynamic mem region */
 
+    hints->ep_attr->mem_tag_format = MEM_TAG_FORMAT;
+    MPIU_Assert(pg_p->size < ((1 << MPID_RANK_BITS) - 1));
+
     /* ------------------------------------------------------------------------ */
     /* FI_VERSION provides binary backward and forward compatibility support    */
     /* Specify the version of OFI is coded to, the provider will select struct  */
@@ -123,6 +126,8 @@ int MPID_nem_ofi_init(MPIDI_PG_t * pg_p, int pg_rank, char **bc_val_p, int *val_
     FI_RC(fi_fabric(prov_use->fabric_attr,      /* In:   Fabric attributes */
                     &gl_data.fabric,    /* Out:  Fabric descriptor */
                     NULL), openfabric); /* Context: fabric events  */
+
+    gl_data.api_set = API_SET_1;
 
     /* ------------------------------------------------------------------------ */
     /* Create the access domain, which is the physical or virtual network or    */
@@ -236,7 +241,7 @@ int MPID_nem_ofi_init(MPIDI_PG_t * pg_p, int pg_rank, char **bc_val_p, int *val_
     /* -------------------------------- */
     /* Set the MPI maximum tag value    */
     /* -------------------------------- */
-    MPIR_Process.attrs.tag_ub = (1 << MPID_TAG_SHIFT) - 1;
+    MPIR_Process.attrs.tag_ub = (1 << MPID_TAG_BITS) - 1;
 
     /* --------------------------------- */
     /* Wait for all the ranks to publish */

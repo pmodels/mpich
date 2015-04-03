@@ -24,13 +24,18 @@
   } else {                                                              \
     pgid = NO_PGID;                                                     \
   }                                                                     \
-  match_bits = (uint64_t)MPIR_Process.comm_world->rank <<               \
-    (MPID_PORT_SHIFT);                                                  \
-  if (0 == pgid) {                                                      \
-    match_bits |= (uint64_t)vc->port_name_tag<<                         \
-      (MPID_PORT_SHIFT+MPID_PSOURCE_SHIFT);                             \
+  if (gl_data.api_set == API_SET_1){                                    \
+      match_bits = ((uint64_t)pgid << MPID_PGID_SHIFT);                 \
+  }else{                                                                \
+      match_bits = 0;                                                   \
   }                                                                     \
-  match_bits |= pgid;                                                   \
+  if (NO_PGID == pgid) {                                                \
+    match_bits |= (uint64_t)vc->port_name_tag<<                         \
+        (MPID_PORT_SHIFT);                                              \
+  }else{                                                                \
+      match_bits |= (uint64_t)MPIR_Process.comm_world->rank <<          \
+          (MPID_PSOURCE_SHIFT);                                         \
+  }                                                                     \
   match_bits |= MPID_MSG_RTS;                                           \
 })
 
@@ -80,15 +85,26 @@
                        VC_OFI(vc)->direct_addr,                         \
                        match_bits | MPID_MSG_CTS,                       \
                        0, /* Exact tag match, no ignore bits */         \
-                       &(REQ_OFI(cts_req)->ofi_context)),trecv);    \
-    FI_RC(fi_tsend(gl_data.endpoint,                                  \
-                     &REQ_OFI(sreq)->pack_buffer_size,                  \
-                     sizeof(REQ_OFI(sreq)->pack_buffer_size),           \
-                     gl_data.mr,                                        \
-                     VC_OFI(vc)->direct_addr,                           \
-                     match_bits,                                        \
-                     &(REQ_OFI(sreq)->ofi_context)),tsend);           \
-  })
+                       &(REQ_OFI(cts_req)->ofi_context)),trecv);        \
+        if (gl_data.api_set == API_SET_1){                              \
+            FI_RC(fi_tsend(gl_data.endpoint,                            \
+                           &REQ_OFI(sreq)->pack_buffer_size,            \
+                           sizeof(REQ_OFI(sreq)->pack_buffer_size),     \
+                           gl_data.mr,                                  \
+                           VC_OFI(vc)->direct_addr,                     \
+                           match_bits,                                  \
+                           &(REQ_OFI(sreq)->ofi_context)),tsend);       \
+        }else{                                                          \
+            FI_RC(fi_tsenddata(gl_data.endpoint,                        \
+                               &REQ_OFI(sreq)->pack_buffer_size,        \
+                               sizeof(REQ_OFI(sreq)->pack_buffer_size), \
+                               gl_data.mr,                              \
+                               pgid,                                    \
+                               VC_OFI(vc)->direct_addr,                 \
+                               match_bits,                              \
+                               &(REQ_OFI(sreq)->ofi_context)),tsend);   \
+        }                                                               \
+    })
 
 
 /* ------------------------------------------------------------------------ */
@@ -109,13 +125,13 @@ static int MPID_nem_ofi_data_callback(cq_tagged_entry_t * wc, MPID_Request * sre
         vc = REQ_OFI(sreq)->vc;
         REQ_OFI(sreq)->tag = tag | MPID_MSG_DATA;
         FI_RC(fi_tsend(gl_data.endpoint,
-                         REQ_OFI(sreq)->pack_buffer,
-                         REQ_OFI(sreq)->pack_buffer_size,
-                         gl_data.mr,
-                         VC_OFI(vc)->direct_addr,
-                         wc->tag | MPID_MSG_DATA, (void *) &(REQ_OFI(sreq)->ofi_context)), tsend);
-    }
-    if (MPID_cc_get(sreq->cc) == 1) {
+                       REQ_OFI(sreq)->pack_buffer,
+                       REQ_OFI(sreq)->pack_buffer_size,
+                       gl_data.mr,
+                       VC_OFI(vc)->direct_addr,
+                       MPID_MSG_DATA, (void *) &(REQ_OFI(sreq)->ofi_context)), tsend);
+        break;
+    case MPID_MSG_DATA:
         if (REQ_OFI(sreq)->pack_buffer)
             MPIU_Free(REQ_OFI(sreq)->pack_buffer);
 
