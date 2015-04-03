@@ -208,26 +208,6 @@ int MPID_nem_ptl_lmt_handle_cookie(MPIDI_VC_t *vc, MPID_Request *req, MPID_IOV s
 int MPID_nem_ptl_lmt_done_send(MPIDI_VC_t *vc, MPID_Request *req);
 int MPID_nem_ptl_lmt_done_recv(MPIDI_VC_t *vc, MPID_Request *req);
 
-/* a safe PtlMEAppend for when there is no space available */
-static inline int MPID_nem_ptl_me_append(ptl_handle_ni_t  ni_handle,
-                                         ptl_pt_index_t   pt_index,
-                                         const ptl_me_t  *me,
-                                         ptl_list_t       ptl_list,
-                                         void            *user_ptr,
-                                         ptl_handle_me_t *me_handle)
-{
-    int ret;
-
-    while (1) {
-        ret = PtlMEAppend(ni_handle, pt_index, me, ptl_list, user_ptr, me_handle);
-        if (ret != PTL_NO_SPACE)
-            break;
-        MPID_nem_ptl_poll(1);
-    }
-
-    return ret;
-}
-
 /* packet handlers */
 
 int MPID_nem_ptl_pkt_cancel_send_req_handler(MPIDI_VC_t *vc, MPIDI_CH3_Pkt_t *pkt,

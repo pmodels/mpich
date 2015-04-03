@@ -51,8 +51,8 @@ int MPID_nem_ptl_nm_init(void)
 
     for (i = 0; i < NUM_RECV_BUFS; ++i) {
         overflow_me.start = recvbufs + (i * BUFSIZE);
-        ret = MPID_nem_ptl_me_append(MPIDI_nem_ptl_ni, MPIDI_nem_ptl_control_pt, &overflow_me,
-                                     PTL_OVERFLOW_LIST, (void *)(size_t)i, &me_handles[i]);
+        ret = PtlMEAppend(MPIDI_nem_ptl_ni, MPIDI_nem_ptl_control_pt, &overflow_me,
+                          PTL_OVERFLOW_LIST, (void *)(size_t)i, &me_handles[i]);
         MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlmeappend", "**ptlmeappend %s",
                              MPID_nem_ptl_strerror(ret));
     }
@@ -122,8 +122,8 @@ static inline int meappend_large(ptl_process_t id, MPID_Request *req, ptl_match_
 
         ++REQ_PTL(req)->num_gets;
 
-        ret = MPID_nem_ptl_me_append(MPIDI_nem_ptl_ni, MPIDI_nem_ptl_control_pt, &me, PTL_PRIORITY_LIST, req,
-                                     &foo_me_handle);
+        ret = PtlMEAppend(MPIDI_nem_ptl_ni, MPIDI_nem_ptl_control_pt, &me, PTL_PRIORITY_LIST, req,
+                          &foo_me_handle);
         MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlmeappend", "**ptlmeappend %s",
                              MPID_nem_ptl_strerror(ret));
         MPIU_DBG_MSG_FMT(CH3_CHANNEL, VERBOSE, (MPIU_DBG_FDEST, "PtlMEAppend(req=%p tag=%#lx)", req, NPTL_MATCH_GET_TAG(match_bits)));
@@ -494,8 +494,8 @@ int MPID_nem_ptl_nm_ctl_event_handler(const ptl_event_t *e)
 
             overflow_me.start = recvbufs + (buf_idx * BUFSIZE);
 
-            ret = MPID_nem_ptl_me_append(MPIDI_nem_ptl_ni, MPIDI_nem_ptl_control_pt, &overflow_me,
-                                         PTL_OVERFLOW_LIST, e->user_ptr, &me_handles[buf_idx]);
+            ret = PtlMEAppend(MPIDI_nem_ptl_ni, MPIDI_nem_ptl_control_pt, &overflow_me,
+                              PTL_OVERFLOW_LIST, e->user_ptr, &me_handles[buf_idx]);
             MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlmeappend", "**ptlmeappend %s",
                                  MPID_nem_ptl_strerror(ret));
         }
