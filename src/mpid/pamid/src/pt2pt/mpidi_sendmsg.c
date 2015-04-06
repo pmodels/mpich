@@ -382,6 +382,8 @@ MPIDI_SendMsg_process_userdefined_dt(MPID_Request      * sreq,
 #if CUDA_AWARE_SUPPORT
         if(!MPIDI_Process.cuda_aware_support_on || !on_device)
           buf = sreq->mpid.userbuf;
+#else
+        buf = sreq->mpid.userbuf;
 #endif
         MPID_assert(buf != NULL);
 
