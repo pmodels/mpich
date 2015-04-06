@@ -60,17 +60,18 @@
 /*              v                                  v                        */
 /* ------------------------------------------------------------------------ */
 #define START_COMM()                                                    \
-  ({                                                                    \
-    GET_PGID_AND_SET_MATCH();                                           \
-    VC_READY_CHECK(vc);                                                 \
-    c = 1;                                                              \
-    MPID_cc_incr(sreq->cc_ptr, &c);                                     \
-    MPID_cc_incr(sreq->cc_ptr, &c);                                     \
-    REQ_OFI(sreq)->event_callback   = MPID_nem_ofi_data_callback;       \
-    REQ_OFI(sreq)->pack_buffer      = pack_buffer;                      \
-    REQ_OFI(sreq)->pack_buffer_size = pkt_len;                          \
-    REQ_OFI(sreq)->vc               = vc;                               \
-    REQ_OFI(sreq)->tag              = match_bits;                       \
+    ({                                                                  \
+        gl_data.rts_cts_in_flight++;                                    \
+        GET_PGID_AND_SET_MATCH();                                       \
+        VC_READY_CHECK(vc);                                             \
+        c = 1;                                                          \
+        MPID_cc_incr(sreq->cc_ptr, &c);                                 \
+        MPID_cc_incr(sreq->cc_ptr, &c);                                 \
+        REQ_OFI(sreq)->event_callback   = MPID_nem_ofi_data_callback;   \
+        REQ_OFI(sreq)->pack_buffer      = pack_buffer;                  \
+        REQ_OFI(sreq)->pack_buffer_size = pkt_len;                      \
+        REQ_OFI(sreq)->vc               = vc;                           \
+        REQ_OFI(sreq)->tag              = match_bits;                   \
                                                                         \
     MPID_nem_ofi_create_req(&cts_req, 1);                               \
     cts_req->dev.OnDataAvail         = NULL;                            \
@@ -143,8 +144,9 @@ static int MPID_nem_ofi_data_callback(cq_tagged_entry_t * wc, MPID_Request * sre
             vc = REQ_OFI(sreq)->vc;
             MPI_RC(reqFn(vc, sreq, &complete));
         }
-    }
-    else {
+        gl_data.rts_cts_in_flight--;
+        break;
+    case MPID_MSG_RTS:
         MPIDI_CH3U_Request_complete(sreq);
     }
     END_FUNC_RC(FCNAME);

@@ -57,6 +57,7 @@ typedef struct {
     MPID_Request *persistent_req;       /* Unexpected request queue    */
     MPID_Request *conn_req;     /* Connection request          */
     MPIDI_Comm_ops_t comm_ops;
+    int rts_cts_in_flight;
     int api_set;
 } MPID_nem_ofi_global_t;
 

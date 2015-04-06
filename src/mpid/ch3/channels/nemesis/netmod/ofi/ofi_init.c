@@ -235,6 +235,7 @@ int MPID_nem_ofi_init(MPIDI_PG_t * pg_p, int pg_rank, char **bc_val_p, int *val_
     /* Wait for all the ranks to publish */
     /* their business card               */
     /* --------------------------------- */
+    gl_data.rts_cts_in_flight = 0;
     PMI_Barrier();
 
     /* --------------------------------- */
@@ -307,12 +308,9 @@ int MPID_nem_ofi_finalize(void)
     mpir_errflag_t ret = MPIR_ERR_NONE;
     BEGIN_FUNC(FCNAME);
 
-    /* --------------------------------------------- */
-    /* Syncronization                                */
-    /* Barrier across all ranks in this world        */
-    /* --------------------------------------------- */
-    MPIR_Barrier_impl(MPIR_Process.comm_world, &ret);
-
+    while(gl_data.rts_cts_in_flight) {
+        MPID_nem_ofi_poll(0);
+    }
     /* --------------------------------------------- */
     /* Finalize connection management routines       */
     /* Cancels any persistent/global requests and    */
