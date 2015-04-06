@@ -73,18 +73,18 @@
         REQ_OFI(sreq)->vc               = vc;                           \
         REQ_OFI(sreq)->tag              = match_bits;                   \
                                                                         \
-    MPID_nem_ofi_create_req(&cts_req, 1);                               \
-    cts_req->dev.OnDataAvail         = NULL;                            \
-    cts_req->dev.next                = NULL;                            \
-    REQ_OFI(cts_req)->event_callback = MPID_nem_ofi_cts_recv_callback;  \
-    REQ_OFI(cts_req)->parent         = sreq;                            \
+        MPID_nem_ofi_create_req(&cts_req, 1);                           \
+        cts_req->dev.OnDataAvail         = NULL;                        \
+        cts_req->dev.next                = NULL;                        \
+        REQ_OFI(cts_req)->event_callback = MPID_nem_ofi_cts_recv_callback; \
+        REQ_OFI(cts_req)->parent         = sreq;                        \
                                                                         \
-    FI_RC(fi_trecv(gl_data.endpoint,                                \
+        FI_RC(fi_trecv(gl_data.endpoint,                                \
                        NULL,                                            \
                        0,                                               \
                        gl_data.mr,                                      \
                        VC_OFI(vc)->direct_addr,                         \
-                       match_bits | MPID_MSG_CTS,                       \
+                       MPID_MSG_CTS,                                    \
                        0, /* Exact tag match, no ignore bits */         \
                        &(REQ_OFI(cts_req)->ofi_context)),trecv);        \
         if (gl_data.api_set == API_SET_1){                              \
@@ -122,15 +122,16 @@ static int MPID_nem_ofi_data_callback(cq_tagged_entry_t * wc, MPID_Request * sre
     req_fn reqFn;
     uint64_t tag = 0;
     BEGIN_FUNC(FCNAME);
-    if (MPID_cc_get(sreq->cc) == 2) {
+    switch (wc->tag & MPID_PROTOCOL_MASK) {
+    case MPID_MSG_CTS:
         vc = REQ_OFI(sreq)->vc;
-        REQ_OFI(sreq)->tag = tag | MPID_MSG_DATA;
         FI_RC(fi_tsend(gl_data.endpoint,
                        REQ_OFI(sreq)->pack_buffer,
                        REQ_OFI(sreq)->pack_buffer_size,
                        gl_data.mr,
                        VC_OFI(vc)->direct_addr,
                        MPID_MSG_DATA, (void *) &(REQ_OFI(sreq)->ofi_context)), tsend);
+        MPIDI_CH3U_Request_complete(sreq);
         break;
     case MPID_MSG_DATA:
         if (REQ_OFI(sreq)->pack_buffer)
@@ -148,6 +149,7 @@ static int MPID_nem_ofi_data_callback(cq_tagged_entry_t * wc, MPID_Request * sre
         break;
     case MPID_MSG_RTS:
         MPIDI_CH3U_Request_complete(sreq);
+        break;
     }
     END_FUNC_RC(FCNAME);
 }
