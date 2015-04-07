@@ -74,14 +74,14 @@ int main(int argc, char **argv)
     create_info = MPI_INFO_NULL;
 #endif
 
-    MPI_Win_create(my_base, sizeof(int) * ELEM_PER_PROC, sizeof(int), create_info, MPI_COMM_WORLD,
-                   &win);
-
     /* Reset data */
     for (i = 0; i < ELEM_PER_PROC; i++) {
         my_base[i] = 0;
         local_buf[i] = i + 1;
     }
+
+    MPI_Win_create(my_base, sizeof(int) * ELEM_PER_PROC, sizeof(int), create_info, MPI_COMM_WORLD,
+                   &win);
 
     /* Do RMA through global window, then check value through shared window */
     MPI_Win_lock_all(0, win);
