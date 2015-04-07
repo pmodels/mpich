@@ -36,6 +36,12 @@ int main(int argc, char **argv) {
     int i, j, rank, nranks, peer, bufsize, errors;
     double  *win_buf, *src_buf, *dst_buf;
     MPI_Win buf_win;
+    MPI_Aint idx_loc[SUB_YDIM];
+    int idx_rem[SUB_YDIM];
+    int blk_len[SUB_YDIM];
+    MPI_Datatype src_type, dst_type;
+    void *base_ptr;
+    MPI_Aint base_int;
 
     MTest_Init(&argc, &argv);
 
@@ -58,41 +64,34 @@ int main(int argc, char **argv) {
 
     peer = (rank+1) % nranks;
 
-    /* Perform ITERATIONS strided put operations */
+    base_ptr = dst_buf;
 
-    for (i = 0; i < ITERATIONS; i++) {
-      MPI_Aint idx_loc[SUB_YDIM];
-      int idx_rem[SUB_YDIM];
-      int blk_len[SUB_YDIM];
-      MPI_Datatype src_type, dst_type;
+    MPI_Get_address(base_ptr, &base_int);
 
-      void *base_ptr = dst_buf;
-      MPI_Aint base_int;
-
-      MPI_Get_address(base_ptr, &base_int);
-
-      for (j = 0; j < SUB_YDIM; j++) {
+    for (j = 0; j < SUB_YDIM; j++) {
         MPI_Get_address(&src_buf[j*XDIM], &idx_loc[j]);
         idx_loc[j] = idx_loc[j] - base_int;
         idx_rem[j] = j*XDIM*sizeof(double);
         blk_len[j] = SUB_XDIM*sizeof(double);
-      }
+    }
 
-      MPI_Type_create_hindexed(SUB_YDIM, blk_len, idx_loc, MPI_BYTE, &src_type);
-      MPI_Type_create_indexed_block(SUB_YDIM, SUB_XDIM*sizeof(double), idx_rem, MPI_BYTE, &dst_type);
+    MPI_Type_create_hindexed(SUB_YDIM, blk_len, idx_loc, MPI_BYTE, &src_type);
+    MPI_Type_create_indexed_block(SUB_YDIM, SUB_XDIM*sizeof(double), idx_rem, MPI_BYTE, &dst_type);
 
-      MPI_Type_commit(&src_type);
-      MPI_Type_commit(&dst_type);
+    MPI_Type_commit(&src_type);
+    MPI_Type_commit(&dst_type);
 
+    /* Perform ITERATIONS strided put operations */
+    for (i = 0; i < ITERATIONS; i++) {
       MPI_Win_lock(MPI_LOCK_EXCLUSIVE, peer, 0, buf_win);
       MPI_Put(base_ptr, 1, src_type, peer, 0, 1, dst_type, buf_win);
       MPI_Win_unlock(peer, buf_win);
-
-      MPI_Type_free(&src_type);
-      MPI_Type_free(&dst_type);
     }
 
     MPI_Barrier(MPI_COMM_WORLD);
+
+    MPI_Type_free(&src_type);
+    MPI_Type_free(&dst_type);
 
     /* Verify that the results are correct */
 
