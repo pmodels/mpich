@@ -158,6 +158,8 @@ struct rptl_target {
 
     struct rptl_target *next;
     struct rptl_target *prev;
+
+    int issued_data_ops;
 };
 
 struct rptl_info {

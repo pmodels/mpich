@@ -12,10 +12,13 @@
 #error Checkpointing not implemented
 #endif
 
-#define UNEXPECTED_HDR_COUNT 32768
-#define EVENT_COUNT          32768
-#define LIST_SIZE            32768
-#define ENTRY_COUNT          32768
+#define UNEXPECTED_HDR_COUNT (1024*64)
+#define EVENT_COUNT          (1024*64)
+#define LIST_SIZE            (1024*64)
+#define MAX_ENTRIES          (1024*64)
+#define ENTRY_COUNT          (1024*64)
+/* FIXME: turn ORIGIN_EVENTS into a CVAR */
+#define ORIGIN_EVENTS        (500)
 #define NID_KEY  "NID"
 #define PID_KEY  "PID"
 #define PTI_KEY  "PTI"
@@ -245,7 +248,7 @@ static int ptl_init(MPIDI_PG_t *pg_p, int pg_rank, char **bc_val_p, int *val_max
     MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlmdbind", "**ptlmdbind %s", MPID_nem_ptl_strerror(ret));
 
     /* currently, rportlas only works with a single NI and EQ */
-    ret = MPID_nem_ptl_rptl_init(MPIDI_Process.my_pg->size, EVENT_COUNT, get_target_info);
+    ret = MPID_nem_ptl_rptl_init(MPIDI_Process.my_pg->size, ORIGIN_EVENTS, get_target_info);
     MPIU_ERR_CHKANDJUMP1(ret, mpi_errno, MPI_ERR_OTHER, "**ptlniinit", "**ptlniinit %s", MPID_nem_ptl_strerror(ret));
 
     /* allow rportal to manage the primary portal and retransmit if needed */

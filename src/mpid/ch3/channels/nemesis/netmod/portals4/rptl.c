@@ -7,6 +7,10 @@
 #include "ptl_impl.h"
 #include "rptl.h"
 
+/* FIXME: turn this into a CVAR, or fraction of the event limit from
+   rptl_init */
+#define PER_TARGET_THRESHOLD 50
+
 /*
  * Prereqs:
  *
@@ -93,6 +97,7 @@ static int find_target(ptl_process_t id, struct rptl_target **target)
         t->op_pool = NULL;
         t->data_op_list = NULL;
         t->control_op_list = NULL;
+        t->issued_data_ops = 0;
     }
 
     *target = t;
@@ -220,7 +225,7 @@ static int poke_progress(void)
             /* we should not get any NACKs on the control portal */
             assert(op->state != RPTL_OP_STATE_NACKED);
 
-            if (rptl_info.origin_events_left < 2) {
+            if (rptl_info.origin_events_left < 2 || target->issued_data_ops > PER_TARGET_THRESHOLD) {
                 /* too few origin events left.  we can't issue this op
                  * or any following op to this target in order to
                  * maintain ordering */
@@ -228,6 +233,7 @@ static int poke_progress(void)
             }
 
             rptl_info.origin_events_left -= 2;
+            target->issued_data_ops++;
 
             /* force request for an ACK even if the user didn't ask
              * for it.  replace the user pointer with the OP id. */
@@ -255,7 +261,7 @@ static int poke_progress(void)
                 if (op->state == RPTL_OP_STATE_NACKED)
                     break;
 
-                if (rptl_info.origin_events_left < 2) {
+                if (rptl_info.origin_events_left < 2 || target->issued_data_ops > PER_TARGET_THRESHOLD) {
                     /* too few origin events left.  we can't issue
                      * this op or any following op to this target in
                      * order to maintain ordering */
@@ -263,6 +269,7 @@ static int poke_progress(void)
                 }
 
                 rptl_info.origin_events_left -= 2;
+                target->issued_data_ops++;
 
                 /* force request for an ACK even if the user didn't
                  * ask for it.  replace the user pointer with the OP
@@ -283,7 +290,7 @@ static int poke_progress(void)
                 if (op->state == RPTL_OP_STATE_NACKED)
                     break;
 
-                if (rptl_info.origin_events_left < 1) {
+                if (rptl_info.origin_events_left < 1 || target->issued_data_ops > PER_TARGET_THRESHOLD) {
                     /* too few origin events left.  we can't issue
                      * this op or any following op to this target in
                      * order to maintain ordering */
@@ -291,6 +298,7 @@ static int poke_progress(void)
                 }
 
                 rptl_info.origin_events_left--;
+                target->issued_data_ops++;
 
                 ret = PtlGet(op->u.get.md_handle, op->u.get.local_offset, op->u.get.length,
                              op->u.get.target_id, op->u.get.pt_index, op->u.get.match_bits,
@@ -539,6 +547,7 @@ static int get_event_info(ptl_event_t * event, struct rptl **ret_rptl, struct rp
         op = (struct rptl_op *) event->user_ptr;
 
         rptl_info.origin_events_left++;
+        op->target->issued_data_ops--;
 
         /* see if there are any pending ops to be issued */
         ret = poke_progress();

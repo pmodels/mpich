@@ -8,8 +8,8 @@
 #include <mpl_utlist.h>
 #include "rptl.h"
 
-#define NUM_RECV_BUFS 8
-#define BUFSIZE (1024*1024)
+#define NUM_RECV_BUFS 2
+#define BUFSIZE (1024*1024*50)
 #define CTL_TAG 0
 #define GET_TAG 1
 #define PAYLOAD_SIZE  (PTL_MAX_EAGER - sizeof(MPIDI_CH3_Pkt_t))

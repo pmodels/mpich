@@ -103,7 +103,7 @@ static int append_overflow(int i)
     me.match_id = id_any;
     me.match_bits = 0;
     me.ignore_bits = ~((ptl_match_bits_t)0);
-    me.min_free = PTL_MAX_EAGER;
+    me.min_free = PTL_LARGE_THRESHOLD;
     
     /* if there is no space to append the entry, process outstanding events and try again */
     ret = PtlMEAppend(MPIDI_nem_ptl_ni, MPIDI_nem_ptl_pt, &me, PTL_OVERFLOW_LIST, (void *)(size_t)i,
