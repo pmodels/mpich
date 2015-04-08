@@ -31,7 +31,9 @@ noinst_PROGRAMS =      \
     alltoallw1         \
     alltoallw2         \
     alltoallw_zeros    \
-    bcast              \
+    bcast_full         \
+    bcast_min_datatypes \
+    bcast_comm_world   \
     bcasttest          \
     bcastzerotype      \
     coll2              \
@@ -107,6 +109,14 @@ noinst_PROGRAMS =      \
     nbcoll2            
 
 allgatherv4_LDADD = $(LDADD) -lm
+
+bcast_full_SOURCES = bcast.c
+
+bcast_min_datatypes_CPPFLAGS = -DBCAST_MIN_DATATYPES_ONLY $(AM_CPPFLAGS)
+bcast_min_datatypes_SOURCES = bcast.c
+
+bcast_comm_world_CPPFLAGS = -DBCAST_COMM_WORLD_ONLY $(AM_CPPFLAGS)
+bcast_comm_world_SOURCES = bcast.c
 
 # Create tests of the nonblocking collectives by reusing the blocking tests,
 # using the MPI profiling interface to intercept the blocking call and

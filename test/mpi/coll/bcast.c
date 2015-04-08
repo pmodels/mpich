@@ -30,6 +30,11 @@ int main(int argc, char *argv[])
         if (comm == MPI_COMM_NULL)
             continue;
 
+#if defined BCAST_COMM_WORLD_ONLY
+        if (comm != MPI_COMM_WORLD)
+            continue;
+#endif /* BCAST_COMM_WORLD_ONLY */
+
         /* Determine the sender and receiver */
         MPI_Comm_rank(comm, &rank);
         MPI_Comm_size(comm, &size);
@@ -42,9 +47,9 @@ int main(int argc, char *argv[])
 
             /* To shorten test time, only run the default version of datatype tests
              * for comm world and run the minimum version for other communicators. */
-            if (comm != MPI_COMM_WORLD) {
-                MTestInitMinDatatypes();
-            }
+#if defined BCAST_MIN_DATATYPES_ONLY
+            MTestInitMinDatatypes();
+#endif /* BCAST_MIN_DATATYPES_ONLY */
 
             while (MTestGetDatatypes(&sendtype, &recvtype, count)) {
                 for (root = 0; root < size; root++) {
