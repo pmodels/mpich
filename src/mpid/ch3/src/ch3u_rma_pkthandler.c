@@ -190,7 +190,6 @@ int MPIDI_CH3_PktHandler_Put(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
 {
     MPIDI_CH3_Pkt_put_t *put_pkt = &pkt->put;
     MPID_Request *req = NULL;
-    MPI_Aint type_size;
     int complete = 0;
     char *data_buf = NULL;
     MPIDI_msg_sz_t data_len;
@@ -217,12 +216,13 @@ int MPIDI_CH3_PktHandler_Put(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
         goto fn_exit;
     }
 
-    MPID_Datatype_get_size_macro(put_pkt->datatype, type_size);
-
     if (pkt->type == MPIDI_CH3_PKT_PUT_IMMED) {
+        MPI_Aint type_size;
 
         /* Immed packet type is used when target datatype is predefined datatype. */
         MPIU_Assert(MPIR_DATATYPE_IS_PREDEFINED(put_pkt->datatype));
+
+        MPID_Datatype_get_size_macro(put_pkt->datatype, type_size);
 
         /* copy data from packet header to target buffer */
         MPIU_Memcpy(put_pkt->addr, put_pkt->info.data, put_pkt->count * type_size);
@@ -254,8 +254,12 @@ int MPIDI_CH3_PktHandler_Put(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
         req->dev.OnFinal = MPIDI_CH3_ReqHandler_PutRecvComplete;
 
         if (MPIR_DATATYPE_IS_PREDEFINED(put_pkt->datatype)) {
+            MPI_Aint type_size;
+
             MPIDI_Request_set_type(req, MPIDI_REQUEST_TYPE_PUT_RECV);
             req->dev.datatype = put_pkt->datatype;
+
+            MPID_Datatype_get_size_macro(put_pkt->datatype, type_size);
 
             req->dev.recv_data_sz = type_size * put_pkt->count;
             MPIU_Assert(req->dev.recv_data_sz > 0);
@@ -772,7 +776,6 @@ int MPIDI_CH3_PktHandler_GetAccumulate(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
     MPID_Win *win_ptr;
     int acquire_lock_fail = 0;
     int mpi_errno = MPI_SUCCESS;
-    MPI_Aint type_size;
     MPI_Aint stream_elem_count, rest_len, total_len;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3_PKTHANDLER_GETACCUMULATE);
 
@@ -794,8 +797,6 @@ int MPIDI_CH3_PktHandler_GetAccumulate(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
         goto fn_exit;
     }
 
-    MPID_Datatype_get_size_macro(get_accum_pkt->datatype, type_size);
-
     if (pkt->type == MPIDI_CH3_PKT_GET_ACCUM_IMMED) {
         size_t len;
         void *src = NULL, *dest = NULL;
@@ -804,6 +805,7 @@ int MPIDI_CH3_PktHandler_GetAccumulate(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
         MPIDI_CH3_Pkt_get_accum_resp_t *get_accum_resp_pkt = &upkt.get_accum_resp;
         MPID_IOV iov[MPID_IOV_LIMIT];
         int iovcnt;
+        MPI_Aint type_size;
 
         *buflen = sizeof(MPIDI_CH3_Pkt_t);
         *rreqp = NULL;
@@ -825,6 +827,7 @@ int MPIDI_CH3_PktHandler_GetAccumulate(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
         win_ptr->at_completion_counter++;
 
         /* Calculate the length of reponse data, ensure that it fits into immed packet. */
+        MPID_Datatype_get_size_macro(get_accum_pkt->datatype, type_size);
         MPIU_Assign_trunc(len, get_accum_pkt->count * type_size, size_t);
 
         MPIDI_Pkt_init(get_accum_resp_pkt, MPIDI_CH3_PKT_GET_ACCUM_RESP_IMMED);
@@ -899,6 +902,8 @@ int MPIDI_CH3_PktHandler_GetAccumulate(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
         data_buf = (char *) pkt + sizeof(MPIDI_CH3_Pkt_t);
 
         if (MPIR_DATATYPE_IS_PREDEFINED(get_accum_pkt->datatype)) {
+            MPI_Aint type_size;
+
             MPIDI_Request_set_type(req, MPIDI_REQUEST_TYPE_GET_ACCUM_RECV);
             req->dev.datatype = get_accum_pkt->datatype;
 
@@ -920,6 +925,7 @@ int MPIDI_CH3_PktHandler_GetAccumulate(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
 
             req->dev.user_buf = req->dev.tmpbuf;
 
+            MPID_Datatype_get_size_macro(get_accum_pkt->datatype, type_size);
             total_len = type_size * get_accum_pkt->count;
             rest_len = total_len - req->dev.stream_offset;
             stream_elem_count = MPIDI_CH3U_SRBuf_size / extent;
