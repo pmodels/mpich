@@ -32,10 +32,6 @@ int main(int argc, char **argv) {
     int itr, i, j, rank, nranks, peer, bufsize, errors;
     double *win_buf, *src_buf;
     MPI_Win buf_win;
-    MPI_Aint idx_loc[SUB_YDIM];
-    int idx_rem[SUB_YDIM];
-    int blk_len[SUB_YDIM];
-    MPI_Datatype src_type, dst_type;
 
     MTest_Init(&argc, &argv);
 
@@ -55,24 +51,30 @@ int main(int argc, char **argv) {
 
     peer = (rank+1) % nranks;
 
-    for (i = 0; i < SUB_YDIM; i++) {
+    /* Perform ITERATIONS strided accumulate operations */
+
+    for (itr = 0; itr < ITERATIONS; itr++) {
+      MPI_Aint idx_loc[SUB_YDIM];
+      int idx_rem[SUB_YDIM];
+      int blk_len[SUB_YDIM];
+      MPI_Datatype src_type, dst_type;
+
+      for (i = 0; i < SUB_YDIM; i++) {
         MPI_Get_address(&src_buf[i*XDIM], &idx_loc[i]);
         idx_rem[i] = i*XDIM;
         blk_len[i] = SUB_XDIM;
-    }
+      }
 
 #ifdef ABSOLUTE
-    MPI_Type_hindexed(SUB_YDIM, blk_len, idx_loc, MPI_DOUBLE, &src_type);
+      MPI_Type_hindexed(SUB_YDIM, blk_len, idx_loc, MPI_DOUBLE, &src_type);
 #else
-    MPI_Type_indexed(SUB_YDIM, blk_len, idx_rem, MPI_DOUBLE, &src_type);
+      MPI_Type_indexed(SUB_YDIM, blk_len, idx_rem, MPI_DOUBLE, &src_type);
 #endif
-    MPI_Type_indexed(SUB_YDIM, blk_len, idx_rem, MPI_DOUBLE, &dst_type);
+      MPI_Type_indexed(SUB_YDIM, blk_len, idx_rem, MPI_DOUBLE, &dst_type);
 
-    MPI_Type_commit(&src_type);
-    MPI_Type_commit(&dst_type);
+      MPI_Type_commit(&src_type);
+      MPI_Type_commit(&dst_type);
 
-    /* Perform ITERATIONS strided accumulate operations */
-    for (itr = 0; itr < ITERATIONS; itr++) {
       MPI_Win_lock(MPI_LOCK_EXCLUSIVE, peer, 0, buf_win);
 
 #ifdef ABSOLUTE
@@ -82,12 +84,12 @@ int main(int argc, char **argv) {
 #endif
 
       MPI_Win_unlock(peer, buf_win);
+
+      MPI_Type_free(&src_type);
+      MPI_Type_free(&dst_type);
     }
 
     MPI_Barrier(MPI_COMM_WORLD);
-
-    MPI_Type_free(&src_type);
-    MPI_Type_free(&dst_type);
 
     /* Verify that the results are correct */
 

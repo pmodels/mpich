@@ -78,10 +78,10 @@ int main(int argc, char **argv) {
 
     MPI_Win_unlock(peer, buf_win);
 
-    MPI_Barrier(MPI_COMM_WORLD);
-
     MPI_Type_free(&loc_type);
     MPI_Type_free(&rem_type);
+
+    MPI_Barrier(MPI_COMM_WORLD);
 
     /* Verify that the results are correct */
 
