@@ -101,8 +101,9 @@
 /coll/scatterv
 /coll/scattern
 /coll/rerr
-/coll/bcast2
-/coll/bcast3
+/coll/bcast_full
+/coll/bcast_min_datatypes
+/coll/bcast_comm_world
 /coll/exscan2
 /coll/exscan
 /coll/icallgather
