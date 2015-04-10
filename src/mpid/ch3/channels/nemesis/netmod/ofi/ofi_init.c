@@ -18,7 +18,7 @@ int MPID_nem_ofi_init(MPIDI_PG_t * pg_p, int pg_rank, char **bc_val_p, int *val_
 {
     int ret, fi_version, i, len, pmi_errno;
     int mpi_errno = MPI_SUCCESS;
-    info_t hints, *prov_tagged, *prov_use;
+    info_t *hints, *prov_tagged, *prov_use;
     cq_attr_t cq_attr;
     av_attr_t av_attr;
     char kvsname[OFI_KVSAPPSTRLEN], key[OFI_KVSAPPSTRLEN], bc[OFI_KVSAPPSTRLEN];
@@ -51,12 +51,12 @@ int MPID_nem_ofi_init(MPIDI_PG_t * pg_p, int pg_rank, char **bc_val_p, int *val_
     /*           We expect to register all memory up front for use with this    */
     /*           endpoint, so the netmod requires dynamic memory regions        */
     /* ------------------------------------------------------------------------ */
-    memset(&hints, 0, sizeof(hints));
-    hints.mode         = FI_CONTEXT;
-    hints.caps         = FI_TAGGED;     /* Tag matching interface    */
-    hints.caps        |= FI_CANCEL;     /* Support cancel            */
-    hints.caps        |= FI_DYNAMIC_MR; /* Global dynamic mem region */
-
+    hints = fi_allocinfo();
+    hints->mode             = FI_CONTEXT;
+    hints->ep_attr->type    = FI_EP_RDM;      /* Reliable datagram         */
+    hints->caps             = FI_TAGGED;      /* Tag matching interface    */
+    hints->caps            |= FI_CANCEL;      /* Support cancel            */
+    hints->caps            |= FI_DYNAMIC_MR;  /* Global dynamic mem region */
 
     /* ------------------------------------------------------------------------ */
     /* FI_VERSION provides binary backward and forward compatibility support    */
@@ -70,29 +70,15 @@ int MPID_nem_ofi_init(MPIDI_PG_t * pg_p, int pg_rank, char **bc_val_p, int *val_
     /* remote node or service.  this does not necessarily allocate resources.   */
     /* Pass NULL for name/service because we want a list of providers supported */
     /* ------------------------------------------------------------------------ */
-    domain_attr_t domain_attr;
-    memset(&domain_attr, 0, sizeof(domain_attr));
-
-    ep_attr_t ep_attr;
-    memset(&ep_attr, 0, sizeof(ep_attr));
-
-    tx_attr_t tx_attr;
-    memset(&tx_attr, 0, sizeof(tx_attr));
-
-    hints.ep_attr       = &ep_attr;
-    hints.ep_attr->type =  FI_EP_RDM;
-
-    domain_attr.threading        =  FI_THREAD_ENDPOINT;
-    domain_attr.control_progress =  FI_PROGRESS_AUTO;
-    domain_attr.data_progress    =  FI_PROGRESS_AUTO;
-    hints.domain_attr            = &domain_attr;
-    hints.tx_attr                = &tx_attr;
+    hints->domain_attr->threading        = FI_THREAD_ENDPOINT;
+    hints->domain_attr->control_progress = FI_PROGRESS_AUTO;
+    hints->domain_attr->data_progress    = FI_PROGRESS_AUTO;
 
     FI_RC(fi_getinfo(fi_version,    /* Interface version requested               */
                      NULL,          /* Optional name or fabric to resolve        */
                      NULL,          /* Service name or port number to request    */
                      0ULL,          /* Flag:  node/service specify local address */
-                     &hints,        /* In:  Hints to filter available providers  */
+                     hints,         /* In:  Hints to filter available providers  */
                      &prov_tagged), /* Out: List of providers that match hints   */
           getinfo);
     MPIU_ERR_CHKANDJUMP4(prov_tagged == NULL, mpi_errno, MPI_ERR_OTHER,
@@ -187,6 +173,7 @@ int MPID_nem_ofi_init(MPIDI_PG_t * pg_p, int pg_rank, char **bc_val_p, int *val_
     /* --------------------------- */
     /* Free providers info         */
     /* --------------------------- */
+    fi_freeinfo(hints);
     fi_freeinfo(prov_use);
 
     /* ---------------------------------------------------- */
