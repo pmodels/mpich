@@ -31,8 +31,10 @@ int main(int argc, char *argv[])
             continue;
 
 #if defined BCAST_COMM_WORLD_ONLY
-        if (comm != MPI_COMM_WORLD)
+        if (comm != MPI_COMM_WORLD) {
+            MTestFreeComm(&comm);
             continue;
+        }
 #endif /* BCAST_COMM_WORLD_ONLY */
 
         /* Determine the sender and receiver */
