@@ -187,6 +187,7 @@ Makefile.am-stamp
 /src/binding/fortran/use_mpi/mpi_base.mod-stamp
 /src/binding/fortran/use_mpi/mpi_constants.mod-stamp
 /src/binding/fortran/use_mpi/mpi_sizeofs.mod-stamp
+/src/binding/fortran/use_mpi_f08/*.stamp
 
 /src/mpe2/src/callstack/bin/bt2line
 
