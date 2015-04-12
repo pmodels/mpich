@@ -1220,6 +1220,6 @@ if test "$f08_works" = "yes" ; then
 else
    $2
 fi
-rm -f conftest1.$OBJEXT
+rm -f conftest1.$OBJEXT F08TS_MODULE.* f08ts_module.*
 AC_MSG_RESULT([$f08_works])
 ])
