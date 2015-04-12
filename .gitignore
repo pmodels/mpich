@@ -431,9 +431,9 @@ Makefile.am-stamp
 /src/binding/fortran/use_mpi/mpifnoext.h
 
 # /src/binding/fortran/use_mpi_f08
-/src/binding/fortran/use_mpi_f08/pmpi_f08.F90
+/src/binding/fortran/use_mpi_f08/pmpi_f08.f90
 
-/src/binding/fortran/use_mpi_f08/wrappers_f/profiling/*.F90
+/src/binding/fortran/use_mpi_f08/wrappers_f/profiling/*.f90
 
 /src/binding/fortran/use_mpi_f08/wrappers_c/cdesc.c
 /src/binding/fortran/use_mpi_f08/wrappers_c/cdesc.h
