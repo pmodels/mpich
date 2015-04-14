@@ -433,6 +433,8 @@ Makefile.am-stamp
 
 # /src/binding/fortran/use_mpi_f08
 /src/binding/fortran/use_mpi_f08/pmpi_f08.f90
+/src/binding/fortran/use_mpi_f08/mpi_f08_compile_constants.f90
+/src/binding/fortran/use_mpi_f08/mpi_f08_compile_constants.f90.in
 
 /src/binding/fortran/use_mpi_f08/wrappers_f/profiling/*.f90
 

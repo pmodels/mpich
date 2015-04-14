@@ -6133,6 +6133,104 @@ if test "X$enable_shared" = "Xyes" ; then
     )
 fi
 
+# Set F08 versions of datatypes, which have type MPI_Datatype and are not integers anymore.
+# If the correspoinding F77 datatypes exist, i.e., not MPI_DATATYPE_NULL, we simply use their
+# integer value (already converted into decimal) in F08 counterparts. Otherwise, we use
+# MPI_VAL value of F08 MPI_DATATYPE_NULL.
+# We put the code at the end to ensure all F77 datatypes have been set.
+
+if test "X$f08_works" = "Xyes"; then
+    for type in INTEGER1 INTEGER2 INTEGER4 INTEGER8 INTEGER16 \
+                REAL4 REAL8 REAL16 \
+                COMPLEX8 COMPLEX16 COMPLEX32; do
+        eval f77typename=F77_$type
+        eval f77typevalue=\$$f77typename
+        if test "$f77typevalue" = MPI_DATATYPE_NULL ; then
+            eval F08_$type=MPI_DATATYPE_NULL%MPI_VAL
+        else
+            eval F08_$type=$f77typevalue
+        fi
+    done
+    AC_SUBST(F08_INTEGER1)
+    AC_SUBST(F08_INTEGER2)
+    AC_SUBST(F08_INTEGER4)
+    AC_SUBST(F08_INTEGER8)
+    AC_SUBST(F08_INTEGER16)
+    AC_SUBST(F08_REAL4)
+    AC_SUBST(F08_REAL8)
+    AC_SUBST(F08_REAL16)
+    AC_SUBST(F08_COMPLEX8)
+    AC_SUBST(F08_COMPLEX16)
+    AC_SUBST(F08_COMPLEX32)
+
+    for type in PACKED UB LB BYTE \
+                CHAR SIGNED_CHAR UNSIGNED_CHAR WCHAR SHORT \
+                UNSIGNED_SHORT UNSIGNED INT LONG UNSIGNED_INT UNSIGNED_LONG \
+                FLOAT DOUBLE LONG_DOUBLE LONG_LONG_INT \
+                UNSIGNED_LONG_LONG LONG_LONG FLOAT_INT DOUBLE_INT \
+                LONG_INT SHORT_INT "2INT" LONG_DOUBLE_INT \
+                INT8_T INT16_T INT32_T INT64_T            \
+                UINT8_T UINT16_T UINT32_T UINT64_T        \
+                C_BOOL C_FLOAT_COMPLEX C_COMPLEX C_DOUBLE_COMPLEX  C_LONG_DOUBLE_COMPLEX \
+                AINT OFFSET COUNT \
+                CXX_BOOL CXX_FLOAT_COMPLEX CXX_DOUBLE_COMPLEX CXX_LONG_DOUBLE_COMPLEX; do
+        eval f77typename=MPI_F77_$type
+        eval f77typevalue=\$$f77typename
+        if test "$f77typevalue" = MPI_DATATYPE_NULL ; then
+            eval F08_$type=MPI_DATATYPE_NULL%MPI_VAL
+        else
+            eval F08_$type=$f77typevalue
+        fi
+    done
+    AC_SUBST(F08_PACKED)
+    AC_SUBST(F08_UB)
+    AC_SUBST(F08_LB)
+    AC_SUBST(F08_BYTE)
+    AC_SUBST(F08_CHAR)
+    AC_SUBST(F08_SIGNED_CHAR)
+    AC_SUBST(F08_UNSIGNED_CHAR)
+    AC_SUBST(F08_WCHAR)
+    AC_SUBST(F08_SHORT)
+    AC_SUBST(F08_UNSIGNED_SHORT)
+    AC_SUBST(F08_UNSIGNED)
+    AC_SUBST(F08_INT)
+    AC_SUBST(F08_LONG)
+    AC_SUBST(F08_UNSIGNED_INT)
+    AC_SUBST(F08_UNSIGNED_LONG)
+    AC_SUBST(F08_FLOAT)
+    AC_SUBST(F08_DOUBLE)
+    AC_SUBST(F08_LONG_DOUBLE)
+    AC_SUBST(F08_LONG_LONG_INT)
+    AC_SUBST(F08_UNSIGNED_LONG_LONG)
+    AC_SUBST(F08_LONG_LONG)
+    AC_SUBST(F08_FLOAT_INT)
+    AC_SUBST(F08_DOUBLE_INT)
+    AC_SUBST(F08_LONG_INT)
+    AC_SUBST(F08_SHORT_INT)
+    AC_SUBST(F08_2INT)
+    AC_SUBST(F08_LONG_DOUBLE_INT)
+    AC_SUBST(F08_INT8_T)
+    AC_SUBST(F08_INT16_T)
+    AC_SUBST(F08_INT32_T)
+    AC_SUBST(F08_INT64_T)
+    AC_SUBST(F08_UINT8_T)
+    AC_SUBST(F08_UINT16_T)
+    AC_SUBST(F08_UINT32_T)
+    AC_SUBST(F08_UINT64_T)
+    AC_SUBST(F08_C_BOOL)
+    AC_SUBST(F08_C_FLOAT_COMPLEX)
+    AC_SUBST(F08_C_COMPLEX)
+    AC_SUBST(F08_C_DOUBLE_COMPLEX)
+    AC_SUBST(F08_C_LONG_DOUBLE_COMPLEX)
+    AC_SUBST(F08_AINT)
+    AC_SUBST(F08_OFFSET)
+    AC_SUBST(F08_COUNT)
+    AC_SUBST(F08_CXX_BOOL)
+    AC_SUBST(F08_CXX_FLOAT_COMPLEX)
+    AC_SUBST(F08_CXX_DOUBLE_COMPLEX)
+    AC_SUBST(F08_CXX_LONG_DOUBLE_COMPLEX)
+fi
+
 ########################################################################
 
 if test -z "$pkgconfigdir" ; then
@@ -6159,6 +6257,7 @@ AC_OUTPUT(Makefile \
 	  src/binding/fortran/use_mpi/mpi_sizeofs.f90 \
 	  src/binding/fortran/use_mpi/mpi_base.f90 \
 	  src/binding/fortran/use_mpi/mpi_constants.f90 \
+	  src/binding/fortran/use_mpi_f08/mpi_f08_compile_constants.f90 \
 	  src/packaging/pkgconfig/mpich.pc \
 	  src/packaging/envmods/mpich.module \
           src/env/mpixxx_opts.conf \
