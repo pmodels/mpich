@@ -34,6 +34,7 @@ typedef struct fi_tx_attr tx_attr_t;
 typedef struct fi_cq_tagged_entry cq_tagged_entry_t;
 typedef struct fi_cq_err_entry cq_err_entry_t;
 typedef struct fi_context context_t;
+typedef struct fi_msg_tagged msg_tagged_t;
 typedef int (*event_callback_fn) (cq_tagged_entry_t * wc, MPID_Request *);
 typedef int (*req_fn) (MPIDI_VC_t *, MPID_Request *, int *);
 
@@ -199,6 +200,9 @@ fn_fail:                      \
 #define MPID_PSOURCE_SHIFT       (16)
 #define MPID_PORT_SHIFT          (32)
 #define OFI_KVSAPPSTRLEN         1024
+
+#define PEEK_INIT      0
+#define PEEK_FOUND     1
 
 /* ******************************** */
 /* Request manipulation inlines     */

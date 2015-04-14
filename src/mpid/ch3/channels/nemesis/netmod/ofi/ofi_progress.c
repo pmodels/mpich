@@ -9,9 +9,8 @@
  */
 #include "ofi_impl.h"
 
-#define TSEARCH_INIT      0
-#define TSEARCH_NOT_FOUND 1
-#define TSEARCH_FOUND     2
+#define NORMAL_PEEK    0
+#define CLAIM_PEEK     1
 
 /* ------------------------------------------------------------------------ */
 /* This routine looks up the request that contains a context object         */
@@ -22,43 +21,19 @@ static inline MPID_Request *context_to_req(void *ofi_context)
 }
 
 /* ------------------------------------------------------------------------ */
-/* Populate the status object from the return of the tsearch                */
+/* peek_callback called when a successful peek is completed                 */
 /* ------------------------------------------------------------------------ */
 #undef FCNAME
-#define FCNAME DECL_FUNC(search_complete)
-static int search_complete(uint64_t tag, size_t msglen, MPID_Request * rreq)
+#define FCNAME DECL_FUNC(peek_callback)
+static int peek_callback(cq_tagged_entry_t * wc, MPID_Request * rreq)
 {
     int mpi_errno = MPI_SUCCESS;
     BEGIN_FUNC(FCNAME);
-    rreq->status.MPI_SOURCE = get_source(tag);
-    rreq->status.MPI_TAG = get_tag(tag);
-    rreq->status.MPI_ERROR = MPI_SUCCESS;
-    MPIR_STATUS_SET_COUNT(rreq->status, msglen);
-    END_FUNC(FCNAME);
-    return mpi_errno;
-}
-
-/* ------------------------------------------------------------------------ */
-/* Check if wc->data is filled.  If wc->data a message was found            */
-/* and we fill out the status.  Otherwise, it's not found, and we set the   */
-/* state of the search request to 1, not found                              */
-/* ------------------------------------------------------------------------ */
-#undef FCNAME
-#define FCNAME DECL_FUNC(tsearch_callback)
-static int tsearch_callback(cq_tagged_entry_t * wc, MPID_Request * rreq)
-{
-    int mpi_errno = MPI_SUCCESS;
-    BEGIN_FUNC(FCNAME);
-    if (wc->data) {
-        REQ_OFI(rreq)->match_state = TSEARCH_FOUND;
-        rreq->status.MPI_SOURCE = get_source(wc->tag);
-        rreq->status.MPI_TAG = get_tag(wc->tag);
-        MPIR_STATUS_SET_COUNT(rreq->status, wc->len);
-        rreq->status.MPI_ERROR = MPI_SUCCESS;
-    }
-    else {
-        REQ_OFI(rreq)->match_state = TSEARCH_NOT_FOUND;
-    }
+    REQ_OFI(rreq)->match_state = PEEK_FOUND;
+    rreq->status.MPI_SOURCE    = get_source(wc->tag);
+    rreq->status.MPI_TAG       = get_tag(wc->tag);
+    MPIR_STATUS_SET_COUNT(rreq->status, wc->len);
+    rreq->status.MPI_ERROR     = MPI_SUCCESS;
     END_FUNC(FCNAME);
     return mpi_errno;
 }
@@ -92,54 +67,49 @@ int MPID_nem_ofi_iprobe_impl(struct MPIDI_VC *vc,
         rreq = &rreq_s;
         rreq->dev.OnDataAvail = NULL;
     }
-    REQ_OFI(rreq)->event_callback = tsearch_callback;
-    REQ_OFI(rreq)->match_state = TSEARCH_INIT;
+    REQ_OFI(rreq)->event_callback = peek_callback;
+    REQ_OFI(rreq)->match_state    = PEEK_INIT;
     OFI_ADDR_INIT(source, vc, remote_proc);
     match_bits = init_recvtag(&mask_bits, comm->context_id + context_offset, source, tag);
 
-    /* ------------------------------------------------------------------------ */
-    /* fi_tsearch:                                                              */
-    /* Initiate a search for a match in the hardware or software queue.         */
-    /* The search can complete immediately with a match found (or not, ENOMSG). */
-    /* It can also enqueue a context entry into the completion queue to make the */
-    /* search nonblocking.  This code will poll until the entry is complete.    */
-    /* ------------------------------------------------------------------------ */
-    ret = fi_tsearch(gl_data.endpoint,  /* Tagged Endpoint      */
-                     &match_bits,       /* Match bits           */
-                     mask_bits, /* Bits to ignore       */
-                     0, /* Flags                */
-                     &remote_proc,      /* Remote Address       */
-                     &len,      /* Out:  incoming msglen */
-                     &(REQ_OFI(rreq)->ofi_context));    /* Nonblocking context  */
-    if (ret == -FI_ENOMSG) {
+    /* ------------------------------------------------------------------------- */
+    /* fi_recvmsg with FI_PEEK:                                                  */
+    /* Initiate a search for a match in the hardware or software queue.          */
+    /* The search can complete immediately with -ENOMSG.                         */
+    /* I successful, libfabric will enqueue a context entry into the completion  */
+    /* queue to make the search nonblocking.  This code will poll until the      */
+    /* entry is enqueued.                                                        */
+    /* ------------------------------------------------------------------------- */
+    msg_tagged_t msg;
+    uint64_t     msgflags = FI_PEEK;
+    msg.msg_iov   = NULL;
+    msg.desc      = NULL;
+    msg.iov_count = 0;
+    msg.addr      = remote_proc;
+    msg.tag       = match_bits;
+    msg.ignore    = mask_bits;
+    msg.context   = (void *) &(REQ_OFI(rreq)->ofi_context);
+    msg.data      = 0;
+    if(*flag == CLAIM_PEEK)
+      msgflags|=FI_CLAIM;
+    ret = fi_trecvmsg(gl_data.endpoint,&msg,msgflags);
+    if(ret == -ENOMSG) {
+      if (rreq_ptr) {
+        MPIDI_CH3_Request_destroy(rreq);
+        *rreq_ptr = NULL;
         *flag = 0;
-        goto fn_exit;
+      }
+      MPID_nem_ofi_poll(MPID_NONBLOCKING_POLL);
+      goto fn_exit;
     }
-    else if (ret == 1) {
-        *flag = 1;
-        search_complete(match_bits, len, rreq);
-        *status = rreq->status;
-        goto fn_exit;
-    }
-    else {
-        MPIU_ERR_CHKANDJUMP4((ret < 0), mpi_errno, MPI_ERR_OTHER,
-                             "**ofi_tsearch", "**ofi_tsearch %s %d %s %s",
-                             __SHORT_FILE__, __LINE__, FCNAME, fi_strerror(-ret));
-    }
-    while (TSEARCH_INIT == REQ_OFI(rreq)->match_state)
-        MPID_nem_ofi_poll(MPID_BLOCKING_POLL);
+    MPIU_ERR_CHKANDJUMP4((ret < 0), mpi_errno, MPI_ERR_OTHER,
+                         "**ofi_peek", "**ofi_peek %s %d %s %s",
+                         __SHORT_FILE__, __LINE__, FCNAME, fi_strerror(-ret));
 
-    if (REQ_OFI(rreq)->match_state == TSEARCH_NOT_FOUND) {
-        if (rreq_ptr) {
-            MPIDI_CH3_Request_destroy(rreq);
-            *rreq_ptr = NULL;
-        }
-        *flag = 0;
-    }
-    else {
-        *status = rreq->status;
-        *flag = 1;
-    }
+    while (PEEK_INIT == REQ_OFI(rreq)->match_state)
+        MPID_nem_ofi_poll(MPID_BLOCKING_POLL);
+    *status = rreq->status;
+    *flag = 1;
     END_FUNC_RC(FCNAME);
 }
 
@@ -152,6 +122,7 @@ int MPID_nem_ofi_iprobe(struct MPIDI_VC *vc,
 {
     int rc;
     BEGIN_FUNC(FCNAME);
+    *flag = 0;
     rc = MPID_nem_ofi_iprobe_impl(vc, source, tag, comm, context_offset, flag, status, NULL);
     END_FUNC(FCNAME);
     return rc;
@@ -169,8 +140,9 @@ int MPID_nem_ofi_improbe(struct MPIDI_VC *vc,
     int old_error = status->MPI_ERROR;
     int s;
     BEGIN_FUNC(FCNAME);
+    *flag = NORMAL_PEEK;
     s = MPID_nem_ofi_iprobe_impl(vc, source, tag, comm, context_offset, flag, status, message);
-    if (flag && *flag) {
+    if (*flag) {
         status->MPI_ERROR = old_error;
         (*message)->kind = MPID_REQUEST_MPROBE;
     }
@@ -186,6 +158,7 @@ int MPID_nem_ofi_anysource_iprobe(int tag,
 {
     int rc;
     BEGIN_FUNC(FCNAME);
+    *flag = NORMAL_PEEK;
     rc = MPID_nem_ofi_iprobe(NULL, MPI_ANY_SOURCE, tag, comm, context_offset, flag, status);
     END_FUNC(FCNAME);
     return rc;
@@ -200,6 +173,7 @@ int MPID_nem_ofi_anysource_improbe(int tag,
 {
     int rc;
     BEGIN_FUNC(FCNAME);
+    *flag = CLAIM_PEEK;
     rc = MPID_nem_ofi_improbe(NULL, MPI_ANY_SOURCE, tag, comm,
                               context_offset, flag, message, status);
     END_FUNC(FCNAME);

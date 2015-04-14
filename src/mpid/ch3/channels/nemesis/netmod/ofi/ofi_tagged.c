@@ -250,13 +250,25 @@ int MPID_nem_ofi_recv_posted(struct MPIDI_VC *vc, struct MPID_Request *rreq)
     /* ---------------- */
     /* Post the receive */
     /* ---------------- */
-    FI_RC(fi_trecv(gl_data.endpoint,
-                       recv_buffer,
-                       data_sz,
-                       gl_data.mr,
-                       remote_proc,
-                       match_bits, mask_bits, &(REQ_OFI(rreq)->ofi_context)), trecv);
-    MPID_nem_ofi_poll(MPID_NONBLOCKING_POLL);
+    uint64_t     msgflags;
+    iovec_t      iov;
+    msg_tagged_t msg;
+    iov.iov_base = recv_buffer;
+    iov.iov_len  = data_sz;
+    if(REQ_OFI(rreq)->match_state == PEEK_FOUND)
+      msgflags = FI_CLAIM;
+    else
+      msgflags = 0ULL;
+
+    msg.msg_iov   = &iov;
+    msg.desc      = NULL;
+    msg.iov_count = 1;
+    msg.addr      = remote_proc;
+    msg.tag       = match_bits;
+    msg.ignore    = mask_bits;
+    msg.context   = (void *) &(REQ_OFI(rreq)->ofi_context);
+    msg.data      = 0;
+    FI_RC(fi_trecvmsg(gl_data.endpoint,&msg,msgflags), trecv);
     END_FUNC_RC(FCNAME);
 }
 

@@ -34,8 +34,8 @@
 **ofi_fabricclose %s %d %s %s:OFI fabric close failed (%s:%d:%s:%s)
 **ofi_domainclose:OFI domain close failed
 **ofi_domainclose %s %d %s %s:OFI domain close failed (%s:%d:%s:%s)
-**ofi_tsearch:OFI tsearch failed
-**ofi_tsearch %s %d %s %s:OFI tsearch failed (%s:%d:%s:%s)
+**ofi_peek:OFI peek failed
+**ofi_peek %s %d %s %s:OFI peek failed (%s:%d:%s:%s)
 **ofi_poll:OFI poll failed
 **ofi_poll %s %d %s %s:OFI poll failed (%s:%d:%s:%s)
 **ofi_cancel:OFI cancel failed
