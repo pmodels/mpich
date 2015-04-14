@@ -84,7 +84,7 @@ extern "C" {
 #define MPI_DATATYPE_NULL  ((MPI_Datatype)0x0c000000)
 #define MPI_REQUEST_NULL   ((MPI_Request)0x2c000000)
 #define MPI_ERRHANDLER_NULL ((MPI_Errhandler)0x14000000)
-#define MPI_MESSAGE_NULL   ((MPI_Message)MPI_REQUEST_NULL)
+#define MPI_MESSAGE_NULL   ((MPI_Message)0x2c000000)
 #define MPI_MESSAGE_NO_PROC ((MPI_Message)0x6c000000)
 
 /* Results of the compare operations. */
