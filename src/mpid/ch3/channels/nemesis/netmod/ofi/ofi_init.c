@@ -81,7 +81,6 @@ int MPID_nem_ofi_init(MPIDI_PG_t * pg_p, int pg_rank, char **bc_val_p, int *val_
     hints->mode             = FI_CONTEXT;
     hints->ep_attr->type    = FI_EP_RDM;      /* Reliable datagram         */
     hints->caps             = FI_TAGGED;      /* Tag matching interface    */
-    hints->caps            |= FI_DYNAMIC_MR;  /* Global dynamic mem region */
 
     hints->ep_attr->mem_tag_format = MEM_TAG_FORMAT;
     MPIU_Assert(pg_p->size < ((1 << MPID_RANK_BITS) - 1));
@@ -161,21 +160,11 @@ int MPID_nem_ofi_init(MPIDI_PG_t * pg_p, int pg_rank, char **bc_val_p, int *val_
     /* The objects include:                                                     */
     /*     * completion queue for events                                        */
     /*     * address vector of other endpoint addresses                         */
-    /*     * dynamic memory-spanning memory region                              */
     /* Other objects could be created (for example), but are unused in netmod   */
     /*     * counters for incoming writes                                       */
     /*     * completion counters for put and get                                */
     /* ------------------------------------------------------------------------ */
-    FI_RC(fi_mr_reg(gl_data.domain,     /* In:  Domain Object              */
-                    0,  /* In:  Lower memory address       */
-                    UINTPTR_MAX,        /* In:  Upper memory address       */
-                    FI_SEND | FI_RECV,  /* In:  Expose MR for read/write   */
-                    0ULL,       /* In:  base MR offset             */
-                    0ULL,       /* In:  requested key              */
-                    0ULL,       /* In:  No flags                   */
-                    &gl_data.mr,        /* Out: memregion object           */
-                    NULL), mr_reg);     /* Context: memregion events       */
-
+    gl_data.mr = NULL;
     memset(&cq_attr, 0, sizeof(cq_attr));
     cq_attr.format = FI_CQ_FORMAT_TAGGED;
     FI_RC(fi_cq_open(gl_data.domain,    /* In:  Domain Object         */
@@ -193,7 +182,6 @@ int MPID_nem_ofi_init(MPIDI_PG_t * pg_p, int pg_rank, char **bc_val_p, int *val_
     /* --------------------------------------------- */
     /* Bind the MR, CQ and AV to the endpoint object */
     /* --------------------------------------------- */
-    FI_RC(fi_ep_bind(gl_data.endpoint, (fid_t) gl_data.mr, 0), bind);
     FI_RC(fi_ep_bind(gl_data.endpoint, (fid_t) gl_data.cq, FI_SEND | FI_RECV), bind);
     FI_RC(fi_ep_bind(gl_data.endpoint, (fid_t) gl_data.av, 0), bind);
 
@@ -332,7 +320,6 @@ int MPID_nem_ofi_finalize(void)
     /* --------------------------------------------- */
     MPI_RC(MPID_nem_ofi_cm_finalize());
 
-    FI_RC(fi_close((fid_t) gl_data.mr), mrclose);
     FI_RC(fi_close((fid_t) gl_data.endpoint), epclose);
     FI_RC(fi_close((fid_t) gl_data.av), avclose);
     FI_RC(fi_close((fid_t) gl_data.cq), cqclose);
