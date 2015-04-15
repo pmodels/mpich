@@ -6229,6 +6229,31 @@ if test "X$f08_works" = "Xyes"; then
     AC_SUBST(F08_CXX_FLOAT_COMPLEX)
     AC_SUBST(F08_CXX_DOUBLE_COMPLEX)
     AC_SUBST(F08_CXX_LONG_DOUBLE_COMPLEX)
+
+    AS_CASE([$MPI_AINT],
+        [short],       [F08_C_AINT="c_short"],
+        [int],         [F08_C_AINT="c_int"],
+        [long],        [F08_C_AINT="c_long"],
+        ['long long'], [F08_C_AINT="c_long_long"],
+        [AC_MSG_ERROR([unable to determine C MPI_AINT type in Fortran 2008])])
+
+    AS_CASE([$MPI_COUNT],
+        [short],       [F08_C_COUNT="c_short"],
+        [int],         [F08_C_COUNT="c_int"],
+        [long],        [F08_C_COUNT="c_long"],
+        ['long long'], [F08_C_COUNT="c_long_long"],
+        [AC_MSG_ERROR([unable to determine C MPI_COUNT type in Fortran 2008])])
+
+    AS_CASE([$MPI_OFFSET],
+        [short],       [F08_C_OFFSET="c_short"],
+        [int],         [F08_C_OFFSET="c_int"],
+        [long],        [F08_C_OFFSET="c_long"],
+        ['long long'], [F08_C_OFFSET="c_long_long"],
+        [AC_MSG_ERROR([unable to determine C MPI_OFFSET type in Fortran 2008])])
+
+    AC_SUBST(F08_C_AINT)
+    AC_SUBST(F08_C_COUNT)
+    AC_SUBST(F08_C_OFFSET)
 fi
 
 ########################################################################
@@ -6258,6 +6283,7 @@ AC_OUTPUT(Makefile \
 	  src/binding/fortran/use_mpi/mpi_base.f90 \
 	  src/binding/fortran/use_mpi/mpi_constants.f90 \
 	  src/binding/fortran/use_mpi_f08/mpi_f08_compile_constants.f90 \
+	  src/binding/fortran/use_mpi_f08/mpi_c_interface_types.f90 \
 	  src/packaging/pkgconfig/mpich.pc \
 	  src/packaging/envmods/mpich.module \
           src/env/mpixxx_opts.conf \
