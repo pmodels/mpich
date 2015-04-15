@@ -156,7 +156,14 @@ int MPIDO_Doscan(const void *sendbuf, void *recvbuf,
          if(is_recv_dev_buf)
          {
            rcbuf = MPIU_Malloc(dt_extent * count);
-           memset(rcbuf, 0, dt_extent * count);
+           if(sendbuf == MPI_IN_PLACE)
+           {
+           cudaError_t cudaerr = CudaMemcpy(rcbuf, recvbuf, dt_extent * count, cudaMemcpyDeviceToHost);
+           if (cudaSuccess != cudaerr)
+             fprintf(stderr, "cudaMemcpy failed: %s\n", CudaGetErrorString(cudaerr));
+           }
+           else
+             memset(rcbuf, 0, dt_extent * count);
          }
          else
            rcbuf = recvbuf;

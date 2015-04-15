@@ -257,7 +257,7 @@ void MPIDI_Comm_coll_envvars(MPID_Comm *comm)
       comm->mpid.user_selected_type[i] = MPID_COLL_NOSELECTION;
          if(MPIDI_Process.verbose >= MPIDI_VERBOSE_DETAILS_0 && comm->rank == 0)
             fprintf(stderr,"Setting up collective %d on comm %p\n", i, comm);
-	 if((comm->mpid.coll_count[i][0] == 0) && (comm->mpid.coll_count[i][1] == 0))
+	 if(((comm->mpid.coll_count[i][0] == 0) && (comm->mpid.coll_count[i][1] == 0)) || MPIDI_Process.optimized.collectives == MPID_COLL_CUDA)
       {
          comm->mpid.user_selected_type[i] = MPID_COLL_USE_MPICH;
          comm->mpid.user_selected[i] = 0;

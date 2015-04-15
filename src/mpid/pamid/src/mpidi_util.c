@@ -1969,19 +1969,25 @@ inline bool MPIDI_enable_cuda()
 
 inline bool MPIDI_cuda_is_device_buf(const void* ptr)
 {
-    bool result = false;
+  bool result = false;
 #if CUDA_AWARE_SUPPORT
-    struct cudaPointerAttributes cuda_attr;
-    cudaError_t e= CudaPointerGetAttributes  ( & cuda_attr, ptr);
+  if(MPIDI_Process.cuda_aware_support_on)
+  {
+    if(ptr != MPI_IN_PLACE)
+    {
+      struct cudaPointerAttributes cuda_attr;
+      cudaError_t e= CudaPointerGetAttributes  ( & cuda_attr, ptr);
 
-    if (e != cudaSuccess)
-        result = false;
-    else if (cuda_attr.memoryType ==  cudaMemoryTypeDevice)
-        result = true;
-    else
-        result = false;
+      if (e != cudaSuccess)
+          result = false;
+      else if (cuda_attr.memoryType ==  cudaMemoryTypeDevice)
+          result = true;
+      else
+          result = false;
+    }
+  }
 #endif
-    return result;
+  return result;
 }
 
 

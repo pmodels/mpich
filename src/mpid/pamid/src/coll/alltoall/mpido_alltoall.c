@@ -113,7 +113,14 @@ int MPIDO_Alltoall(const void *sendbuf,
        if(is_recv_dev_buf)
        {
          rcbuf = MPIU_Malloc(recvcount * rdt_extent);
-         memset(rcbuf, 0, recvcount * rdt_extent);
+         if(sendbuf == MPI_IN_PLACE)
+         {
+           cudaError_t cudaerr = CudaMemcpy(rcbuf, recvbuf, recvcount * rdt_extent, cudaMemcpyDeviceToHost);
+           if (cudaSuccess != cudaerr)
+             fprintf(stderr, "cudaMemcpy failed: %s\n", CudaGetErrorString(cudaerr));
+         }
+         else
+           memset(rcbuf, 0, recvcount * rdt_extent);
        }
        else
          rcbuf = recvbuf;

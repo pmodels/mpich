@@ -1156,6 +1156,17 @@ MPIDI_Env_setup(int rank, int requested)
         fprintf(stderr, "Error loading libcudart\n");fflush(stderr);sleep(1);exit(1);
       }
     }
+    else if(MPIDI_Process.cuda_aware_support_on)
+    {
+      if(MPIDI_Process.optimized.collectives == MPID_COLL_FCA)
+        if(rank == 0)
+        {
+          fprintf(stderr, "Warning: FCA is not supported with CUDA Aware support\n");fflush(stderr);
+        }
+
+      MPIDI_Process.optimized.collectives = MPID_COLL_CUDA;
+      MPIDI_Process.optimized.select_colls = 0;
+    }
 #endif
 
   /* Exit if any deprecated environment variables were specified. */

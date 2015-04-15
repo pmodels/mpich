@@ -81,6 +81,7 @@ enum
    MPID_COLL_OFF = 0,
    MPID_COLL_ON  = 1,
    MPID_COLL_FCA = 2, /* Selecting these is fairly easy so special case */
+   MPID_COLL_CUDA = 3, /* This is used to enable PAMI geometry but sets default to MPICH */
  };
 /** \} */
 

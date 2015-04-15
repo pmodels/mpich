@@ -119,7 +119,14 @@ int MPIDO_Gatherv(const void *sendbuf,
          }
          rtotal_buf = (highest_displs+highest_recvcount)*rdt_extent;
          rcbuf = MPIU_Malloc(rtotal_buf);
-         memset(rcbuf, 0, rtotal_buf);
+         if(sendbuf == MPI_IN_PLACE)
+         {
+           cudaError_t cudaerr = CudaMemcpy(rcbuf, recvbuf, rtotal_buf, cudaMemcpyDeviceToHost);
+           if (cudaSuccess != cudaerr)
+             fprintf(stderr, "cudaMemcpy failed: %s\n", CudaGetErrorString(cudaerr));
+         }
+         else
+           memset(rcbuf, 0, rtotal_buf);
        }
        else
          rcbuf = recvbuf;

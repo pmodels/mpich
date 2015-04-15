@@ -161,7 +161,7 @@ int MPIDO_Scatter(const void *sendbuf,
        if(is_recv_dev_buf)
        {
          rcbuf = MPIU_Malloc(rdt_extent * recvcount);
-         memset(rcbuf, 0, rdt_extent * recvcount);
+         CudaMemcpy(rcbuf, recvbuf, rdt_extent * recvcount, cudaMemcpyDeviceToHost);
        }
        else
          rcbuf = recvbuf;
