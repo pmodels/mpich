@@ -1,6 +1,6 @@
 threads 2 timeLimit=600
 threaded_sr 2
-alltoall 4 xfail=ticket2199
+alltoall 4
 sendselfth 1
 multisend 2
 multisend2 5

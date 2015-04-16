@@ -22,7 +22,10 @@ static void dequeue_req(const ptl_event_t *e)
     REQ_PTL(rreq)->put_me = PTL_INVALID_HANDLE;
 
     found = MPIDI_CH3U_Recvq_DP(rreq);
-    MPIU_Assert(found);
+    /* an MPI_ANY_SOURCE request may have been previously removed from the
+       CH3 queue by an FDP (find and dequeue posted) operation */
+    if (rreq->dev.match.parts.rank != MPI_ANY_SOURCE)
+        MPIU_Assert(found);
 
     rreq->status.MPI_ERROR = MPI_SUCCESS;
     rreq->status.MPI_SOURCE = NPTL_MATCH_GET_RANK(e->match_bits);
@@ -597,15 +600,12 @@ static int cancel_recv(MPID_Request *rreq, int *cancelled)
     /* An invalid handle indicates the operation has been completed
        and the matching list entry unlinked. At that point, the operation
        cannot be cancelled. */
-    if (REQ_PTL(rreq)->put_me != PTL_INVALID_HANDLE) {
-        ptl_err = PtlMEUnlink(REQ_PTL(rreq)->put_me);
-        if (ptl_err == PTL_OK)
-            *cancelled = TRUE;
-        /* FIXME: if we properly invalidate matching list entry handles, we should be
-           able to ensure an unlink operation results in either PTL_OK or PTL_IN_USE.
-           Anything else would be an error. For now, though, we assume anything but PTL_OK
-           is uncancelable and return. */
-    }
+    if (REQ_PTL(rreq)->put_me == PTL_INVALID_HANDLE)
+        goto fn_exit;
+
+    ptl_err = PtlMEUnlink(REQ_PTL(rreq)->put_me);
+    if (ptl_err == PTL_OK)
+        *cancelled = TRUE;
 
  fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_CANCEL_RECV);
@@ -635,7 +635,7 @@ int MPID_nem_ptl_anysource_matched(MPID_Request *rreq)
 
  fn_exit:
     MPIDI_FUNC_EXIT(MPID_STATE_MPID_NEM_PTL_ANYSOURCE_MATCHED);
-    return MPI_SUCCESS;
+    return !cancelled;
  fn_fail:
     goto fn_exit;
 }
