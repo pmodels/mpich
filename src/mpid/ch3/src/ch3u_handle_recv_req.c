@@ -1342,7 +1342,7 @@ static inline int perform_fop_in_lock_queue(MPID_Win * win_ptr, MPIDI_RMA_Lock_e
 
     MPID_Datatype_is_contig(fop_pkt->datatype, &is_contig);
 
-    if (fop_pkt->flags & MPIDI_CH3_PKT_FOP_IMMED) {
+    if (fop_pkt->type == MPIDI_CH3_PKT_FOP_IMMED) {
         MPIDI_Pkt_init(fop_resp_pkt, MPIDI_CH3_PKT_FOP_RESP_IMMED);
     }
     else {
