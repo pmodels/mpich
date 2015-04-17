@@ -1,14 +1,12 @@
 winerr 2
 winerr2 2
-cas_type_check 2 mpiversion=3.0 xfail=ticket1906
+cas_type_check 2 mpiversion=3.0
 win_sync_unlock 2
 win_sync_free_pt 2
 win_sync_free_at 2
 win_sync_complete 2
 win_sync_lock_at 2
 win_sync_lock_pt 2
-# FIXME - MPICH currently does not detect the erroneous synchronization in
-#         win_sync_lock_fence.
-#win_sync_lock_fence 2
+win_sync_lock_fence 2
 win_sync_nested 2
 win_sync_op 2

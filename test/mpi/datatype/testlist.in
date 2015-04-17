@@ -29,7 +29,7 @@ subarray-pack 1
 subarray 2
 darray-pack 1
 darray-pack 9
-# darray-pack 72
+darray-pack 72
 darray-cyclic 12
 pairtype-size-extent 1
 simple-commit 1
@@ -54,7 +54,7 @@ vecblklen 1
 hvecblklen 1
 longdouble 1
 dataalign 2
-@largetest@large-count 1 mpiversion=3.0 xfail=ticket1767
+@largetest@large-count 1 mpiversion=3.0
 cxx-types 1 mpiversion=3.0
 @largetest@large_type 1 mpiversion=3.0
 @largetest@large_type_sendrec 2 arg=31 mpiversion=3.0
