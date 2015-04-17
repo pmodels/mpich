@@ -23,7 +23,7 @@
 #define MPIDI_EAGER_SHORT_SIZE 16
 
 /* This is the number of ints that can be carried within an RMA packet */
-#define MPIDI_RMA_IMMED_BYTES 16
+#define MPIDI_RMA_IMMED_BYTES 8
 
 /* Union over all types (integer, logical, and multi-language types) that are
    allowed in a CAS operation.  This is used to allocate enough space in the
