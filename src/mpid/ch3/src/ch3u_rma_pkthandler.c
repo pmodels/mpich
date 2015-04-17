@@ -1209,8 +1209,6 @@ int MPIDI_CH3_PktHandler_FOP(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
     if (mpi_errno != MPI_SUCCESS)
         MPIU_ERR_POP(mpi_errno);
 
-    MPIU_Assert(rreq == NULL);  /* FOP should not have request because all data
-                                 * can fit in packet header */
     if (acquire_lock_fail) {
         (*rreqp) = rreq;
         goto fn_exit;
