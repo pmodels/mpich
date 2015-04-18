@@ -289,9 +289,6 @@ int MPIDI_CH3I_Shm_send_progress(void)
 int MPIDI_CH3I_Progress (MPID_Progress_state *progress_state, int is_blocking)
 {
     int mpi_errno = MPI_SUCCESS;
-#ifdef MPICH_IS_THREADED
-    int pollcount = 0;
-#endif
     int made_progress = FALSE;
     MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3I_PROGRESS);
 
@@ -503,28 +500,23 @@ int MPIDI_CH3I_Progress (MPID_Progress_state *progress_state, int is_blocking)
 #ifdef MPICH_IS_THREADED
         MPIU_THREAD_CHECK_BEGIN;
         {
-	    /* In the case of threads, we poll for lesser number of
-	     * iterations than the case with only processes, as
-	     * threads contend for CPU and the lock, while processes
-	     * only contend for the CPU. */
-            if (pollcount >= MPID_NEM_THREAD_POLLS_BEFORE_YIELD)
-            {
-                pollcount = 0;
+            if (is_blocking) {
                 MPIDI_CH3I_progress_blocked = TRUE;
                 MPIU_THREAD_CS_YIELD(ALLFUNC,);
-                /* MPIDCOMM yield is needed because at least the send functions
-                 * acquire MPIDCOMM to put things into the send queues.  Failure
-                 * to yield could result in a deadlock.  This thread needs the
-                 * send from another thread to be posted, but the other thread
-                 * can't post it while this CS is held. */
+                /* MPIDCOMM yield is needed because at least the send
+                 * functions acquire MPIDCOMM to put things into the send
+                 * queues.  Failure to yield could result in a deadlock.
+                 * This thread needs the send from another thread to be
+                 * posted, but the other thread can't post it while this
+                 * CS is held. */
                 /* assertion: we currently do not hold any other critical
-                 * sections besides the MPIDCOMM CS at this point.  Violating
-                 * this will probably lead to lock-ordering deadlocks. */
+                 * sections besides the MPIDCOMM CS at this point.
+                 * Violating this will probably lead to lock-ordering
+                 * deadlocks. */
                 MPIU_THREAD_CS_YIELD(MPIDCOMM,);
                 MPIDI_CH3I_progress_blocked = FALSE;
                 MPIDI_CH3I_progress_wakeup_signalled = FALSE;
             }
-            ++pollcount;
         }
         MPIU_THREAD_CHECK_END;
 #else
