@@ -278,9 +278,9 @@ do {                                               \
     MPIU_Thread_same((id1_), (id2_), (same_));	\
 } while (0)
 
-#define MPID_Thread_yield()			\
+#define MPID_Thread_yield(mutex_ptr)               \
 do {                                               \
-    MPIU_Thread_yield();				\
+    MPIU_Thread_yield(mutex_ptr);                  \
 } while (0)
 
 

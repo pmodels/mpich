@@ -69,9 +69,7 @@ MPIU_Thread_CS_yield_lockname_impl_(enum MPIU_Nest_mutexes kind,
     MPIU_THREADPRIV_DECL;
     MPIU_THREADPRIV_GET;
     MPIU_THREAD_CHECKDEPTH(kind, lockname, 1);
-    MPID_Thread_mutex_unlock(mutex);
-    MPID_Thread_yield();
-    MPID_Thread_mutex_lock(mutex);
+    MPID_Thread_yield(mutex);
 }
 
 /* ------------------------------------------------------------------- */
@@ -189,9 +187,7 @@ MPIU_Thread_CS_yield_lockname_recursive_impl_(enum MPIU_Nest_mutexes kind,
     MPIU_Assert(depth > 0 && depth < 10); /* we must hold the mutex */
     /* no need to update depth, this is a thread-local value */
 
-    MPID_Thread_mutex_unlock(mutex);
-    MPID_Thread_yield();
-    MPID_Thread_mutex_lock(mutex);
+    MPID_Thread_yield(mutex);
 }
 
 /* undef for safety, this is a commonly-included header */

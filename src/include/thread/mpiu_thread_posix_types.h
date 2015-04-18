@@ -7,8 +7,12 @@
 
 #include <errno.h>
 #include <pthread.h>
+#include "opa_primitives.h"
 
-typedef pthread_mutex_t MPIU_Thread_mutex_t;
+typedef struct {
+    pthread_mutex_t mutex;
+    OPA_int_t num_queued_threads;
+} MPIU_Thread_mutex_t;
 typedef pthread_cond_t  MPIU_Thread_cond_t;
 typedef pthread_t       MPIU_Thread_id_t;
 typedef pthread_key_t   MPIU_Thread_tls_t;

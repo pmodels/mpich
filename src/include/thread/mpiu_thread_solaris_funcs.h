@@ -26,9 +26,12 @@ do {                                                       \
     *(same_ptr_) = (*(id1_ptr_) == *(id2_ptr_)) ? TRUE : FALSE;		\
 } while (0)
 
-#define MPIU_Thread_yield()			\
+#define MPIU_Thread_yield(mutex_ptr_)              \
 do {                                               \
-    thr_yield();				\
+    int err;                                            \
+    MPIU_Thread_mutex_unlock(mutex_ptr_, &err);         \
+    thr_yield();                                   \
+    MPIU_Thread_mutex_lock(mutex_ptr_, &err);      \
 } while (0)
 
 

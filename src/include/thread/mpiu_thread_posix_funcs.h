@@ -46,12 +46,17 @@ do {                                                               \
     *(same_) = pthread_equal(*(id1_), *(id2_)) ? TRUE : FALSE;	\
 } while (0)
 
-#define MPIU_Thread_yield()						\
-do {                                                                       \
-    MPIU_DBG_MSG(THREAD,VERBOSE,"enter MPIU_Thread_yield");    \
-    MPIU_PW_Sched_yield();                                     \
-    MPIU_DBG_MSG(THREAD,VERBOSE,"exit MPIU_Thread_yield");     \
-} while (0)
+#define MPIU_Thread_yield(mutex_ptr_)                                   \
+    do {                                                                \
+        int err;                                                        \
+        MPIU_DBG_MSG(THREAD,VERBOSE,"enter MPIU_Thread_yield");         \
+        if (OPA_load_int(&(mutex_ptr_)->num_queued_threads) == 0)       \
+            break;                                                      \
+        MPIU_Thread_mutex_unlock(mutex_ptr_, &err);                     \
+        MPIU_PW_Sched_yield();                                          \
+        MPIU_Thread_mutex_lock(mutex_ptr_, &err);                       \
+        MPIU_DBG_MSG(THREAD,VERBOSE,"exit MPIU_Thread_yield");          \
+    } while (0)
 
 
 /*
@@ -70,7 +75,7 @@ do {                                                                       \
 do {                                                                       \
     int err__;                                                          \
                                                                         \
-    err__ = pthread_mutex_init((mutex_ptr_), NULL);			\
+    err__ = pthread_mutex_init(&(mutex_ptr_)->mutex, NULL);             \
     /* FIXME: convert error to an MPIU_THREAD_ERR value */              \
     *(int *)(err_ptr_) = err__;                                         \
     MPIU_DBG_MSG_P(THREAD,TYPICAL,"Created MPIU_Thread_mutex %p", (mutex_ptr_));    \
@@ -87,7 +92,7 @@ do {                                                                       \
        error checked versions with the recursive mutexes. */ \
     pthread_mutexattr_init(&attr__);                                    \
     pthread_mutexattr_settype(&attr__, PTHREAD_MUTEX_ERRORCHECK_VALUE); \
-    err__ = pthread_mutex_init((mutex_ptr_), &attr__);                  \
+    err__ = pthread_mutex_init(&(mutex_ptr_)->mutex, &attr__);          \
     if (err__)                                                          \
         MPIU_Internal_sys_error_printf("pthread_mutex_init", err__,     \
                                        "    %s:%d\n", __FILE__, __LINE__);\
@@ -102,7 +107,7 @@ do {                                                               \
     int err__;							\
 								\
     MPIU_DBG_MSG_P(THREAD,TYPICAL,"About to destroy MPIU_Thread_mutex %p", (mutex_ptr_));    \
-    err__ = pthread_mutex_destroy(mutex_ptr_);			\
+    err__ = pthread_mutex_destroy(&(mutex_ptr_)->mutex);                \
     /* FIXME: convert error to an MPIU_THREAD_ERR value */	\
     *(int *)(err_ptr_) = err__;                                 \
 } while (0)
@@ -112,7 +117,9 @@ do {                                                               \
 do {                                                               \
     int err__;                                                  \
     MPIU_DBG_MSG_P(THREAD,VERBOSE,"enter MPIU_Thread_mutex_lock %p", (mutex_ptr_));      \
-    err__ = pthread_mutex_lock(mutex_ptr_);                     \
+    OPA_add_int(&(mutex_ptr_)->num_queued_threads, 1);                  \
+    err__ = pthread_mutex_lock(&(mutex_ptr_)->mutex);                   \
+    OPA_add_int(&(mutex_ptr_)->num_queued_threads, -1);                 \
     /* FIXME: convert error to an MPIU_THREAD_ERR value */      \
     *(int *)(err_ptr_) = err__;                                 \
     MPIU_DBG_MSG_P(THREAD,VERBOSE,"exit MPIU_Thread_mutex_lock %p", (mutex_ptr_));      \
@@ -122,7 +129,9 @@ do {                                                               \
 do {                                                               \
     int err__;                                                  \
     MPIU_DBG_MSG_P(THREAD,VERBOSE,"enter MPIU_Thread_mutex_lock %p", (mutex_ptr_));      \
-    err__ = pthread_mutex_lock(mutex_ptr_);                     \
+    OPA_add_int(&(mutex_ptr_)->num_queued_threads, 1);                  \
+    err__ = pthread_mutex_lock(&(mutex_ptr_)->mutex);                   \
+    OPA_add_int(&(mutex_ptr_)->num_queued_threads, -1);                 \
     if (err__)                                                  \
     {                                                           \
         MPIU_DBG_MSG_S(THREAD,TERSE,"  mutex lock error: %s", MPIU_Strerror(err__));       \
@@ -141,7 +150,7 @@ do {                                                               \
     int err__;                                                  \
                                                                 \
     MPIU_DBG_MSG_P(THREAD,TYPICAL,"MPIU_Thread_mutex_unlock %p", (mutex_ptr_));    \
-    err__ = pthread_mutex_unlock(mutex_ptr_);                   \
+    err__ = pthread_mutex_unlock(&(mutex_ptr_)->mutex);                 \
     /* FIXME: convert error to an MPIU_THREAD_ERR value */      \
     *(int *)(err_ptr_) = err__;                                 \
 } while (0)
@@ -151,7 +160,7 @@ do {                                                               \
     int err__;                                                  \
                                                                 \
     MPIU_DBG_MSG_P(THREAD,VERBOSE,"MPIU_Thread_mutex_unlock %p", (mutex_ptr_));    \
-    err__ = pthread_mutex_unlock(mutex_ptr_);                   \
+    err__ = pthread_mutex_unlock(&(mutex_ptr_)->mutex);                 \
     if (err__)                                                  \
     {                                                           \
         MPIU_DBG_MSG_S(THREAD,TERSE,"  mutex unlock error: %s", MPIU_Strerror(err__));     \
@@ -168,7 +177,7 @@ do {                                                               \
 do {                                                                    \
     int err__;                                                       \
                                                                      \
-    err__ = pthread_mutex_trylock(mutex_ptr_);                       \
+    err__ = pthread_mutex_trylock(&(mutex_ptr_)->mutex);             \
     *(flag_ptr_) = (err__ == 0) ? TRUE : FALSE;                      \
     MPIU_DBG_MSG_FMT(THREAD,VERBOSE,(MPIU_DBG_FDEST, "MPIU_Thread_mutex_trylock mutex=%p result=%s", (mutex_ptr_), (*(flag_ptr_) ? "success" : "failure")));    \
     *(int *)(err_ptr_) = (err__ == EBUSY) ? MPIU_THREAD_SUCCESS : err__; \
@@ -179,7 +188,7 @@ do {                                                                    \
 do {                                                                    \
     int err__;                                                       \
                                                                      \
-    err__ = pthread_mutex_trylock(mutex_ptr_);                       \
+    err__ = pthread_mutex_trylock(&(mutex_ptr_)->mutex);             \
     if (err__ && err__ != EBUSY)                                     \
     {                                                                \
         MPIU_DBG_MSG_S(THREAD,TERSE,"  mutex trylock error: %s", MPIU_Strerror(err__));    \
@@ -227,7 +236,9 @@ do {                                                                       \
     MPIU_DBG_MSG_FMT(THREAD,TYPICAL,(MPIU_DBG_FDEST,"Enter cond_wait on cond=%p mutex=%p",(cond_ptr_),(mutex_ptr_))) \
     do									\
     {									\
-	err__ = pthread_cond_wait((cond_ptr_), (mutex_ptr_));		\
+        OPA_add_int(&(mutex_ptr_)->num_queued_threads, 1);              \
+	err__ = pthread_cond_wait((cond_ptr_), &(mutex_ptr_)->mutex);   \
+        OPA_add_int(&(mutex_ptr_)->num_queued_threads, -1);             \
     }									\
     while (err__ == EINTR);						\
 									\
