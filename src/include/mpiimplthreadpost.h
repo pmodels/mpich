@@ -191,13 +191,7 @@ MPIU_Thread_CS_yield_lockname_recursive_impl_(enum MPIU_Nest_mutexes kind,
 
     MPID_Thread_mutex_unlock(mutex);
     MPID_Thread_yield();
-
-/* Use low priority here because this thread has a lower probability
- * to do useful work compared to others outside the progress engine.
- * This is only effective with the priority lock.
- * The other lock types implement a plain lock underneath.
- */
-   MPID_Thread_mutex_lock_low(mutex);
+    MPID_Thread_mutex_lock(mutex);
 }
 
 /* undef for safety, this is a commonly-included header */

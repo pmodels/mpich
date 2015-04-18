@@ -8,10 +8,8 @@
 /*
  * Threads
  */
-#include <limits.h>
+
 #include "mpiu_process_wrappers.h" /* for MPIU_PW_Sched_yield */
-#include "mpidbg.h"
-#include "opa_primitives.h"
 
 /* 
    One of PTHREAD_MUTEX_RECURSIVE_NP and PTHREAD_MUTEX_RECURSIVE seem to be 
@@ -55,443 +53,144 @@ do {                                                                       \
     MPIU_DBG_MSG(THREAD,VERBOSE,"exit MPIU_Thread_yield");     \
 } while (0)
 
-/*----------------------*/
-/* Ticket Lock Routines */
-/*----------------------*/
-
-static inline int ticket_lock_init(ticket_lock_t *lock)
-{
-    OPA_store_int(&lock->next_ticket, 0);
-    OPA_store_int(&lock->now_serving, 0);
-    return 0;
-}
-
-/* Atomically increment the nex_ticket counter and get my ticket.
-   Then spin on now_serving until it equals my ticket.
-   */
-static inline int ticket_acquire_lock(ticket_lock_t* lock)
-{
-    int my_ticket = OPA_fetch_and_add_int(&lock->next_ticket, 1);
-    while(OPA_load_int(&lock->now_serving) != my_ticket)
-            ;
-    return 0;
-}
-
-/* Release the lock
-   */
-static inline int ticket_release_lock(ticket_lock_t* lock)
-{
-    /* Avoid compiler reordering before releasing the lock*/
-    OPA_compiler_barrier();
-    OPA_incr_int(&lock->now_serving);
-    return 0;
-}
-
-/*------------------------*/
-/* Priority Lock Routines */
-/*------------------------*/
-
-static inline int priority_lock_init(priority_lock_t *lock)
-{
-    OPA_store_int(&lock->next_ticket_H, 0);
-    OPA_store_int(&lock->now_serving_H, 0);
-    OPA_store_int(&lock->next_ticket_L, 0);
-    OPA_store_int(&lock->now_serving_L, 0);
-    OPA_store_int(&lock->next_ticket_B, 0);
-    OPA_store_int(&lock->now_serving_B, 0);
-    lock->already_blocked = 0;
-    return 0;
-}
-
-/* First wait my turn in this priority level, Then if I am the first
-   one to block the LPRs, wait for the last LPR to terminate.
-   */
-static inline int priority_acquire_lock(priority_lock_t* lock)
-{
-    int my_ticket = OPA_fetch_and_add_int(&lock->next_ticket_H, 1);
-    while(OPA_load_int(&lock->now_serving_H) != my_ticket)
-            ;
-    int B_ticket;
-    if(!lock->already_blocked)
-    {
-      B_ticket = OPA_fetch_and_add_int(&lock->next_ticket_B, 1);
-      while(OPA_load_int(&lock->now_serving_B) != B_ticket)
-            ;
-      lock->already_blocked = 1;
-    }
-    lock->last_acquisition_priority = HIGH_PRIORITY;
-    return 0;
-}
-static inline int priority_acquire_lock_low(priority_lock_t* lock)
-{
-    int my_ticket = OPA_fetch_and_add_int(&lock->next_ticket_L, 1);
-    while(OPA_load_int(&lock->now_serving_L) != my_ticket)
-           ;
-    int  B_ticket = OPA_fetch_and_add_int(&lock->next_ticket_B, 1);
-    while(OPA_load_int(&lock->now_serving_B) != B_ticket)
-           ;
-    lock->last_acquisition_priority = LOW_PRIORITY;
-    return 0;
-}
-
-/* Release the lock
-   */
-static inline int priority_release_lock(priority_lock_t* lock)
-{
-    int err=0;
-    if(lock->last_acquisition_priority==HIGH_PRIORITY)
-         err = priority_release_lock_high(lock);
-    else
-         err = priority_release_lock_low(lock);
-    return err;
-}
-
-static inline int priority_release_lock_high(priority_lock_t* lock)
-{
-    /* Avoid compiler reordering before releasing the lock*/
-    OPA_compiler_barrier();
-    /* Only me in the HPRs queue -> let the LPRs pass */
-    if(OPA_load_int(&lock->now_serving_H) == OPA_load_int(&lock->next_ticket_H) - 1)
-    {
-       lock->already_blocked = 0;
-       OPA_incr_int(&lock->now_serving_B);
-    }
-    OPA_incr_int(&lock->now_serving_H);
-    return 0;
-}
-
-static inline int priority_release_lock_low(priority_lock_t* lock)
-{
-    /* Avoid compiler reordering before releasing the lock*/
-    OPA_compiler_barrier();
-    OPA_incr_int(&lock->now_serving_B);
-    OPA_incr_int(&lock->now_serving_L);
-    return 0;
-}
 
 /*
- *    MPIU Mutexes: encapsulate lower level locks like pthread mutexes
- *    and ticket locks
+ *    Mutexes
  */
 
+/* FIXME: mutex creation and destruction should be implemented as routines
+   because there is no reason to use macros (these are not on the performance
+   critical path).  Making these macros requires that any code that might use
+   these must load all of the pthread.h (or other thread library) support.
+ */
+
+/* FIXME: using constant initializer if available */
 #if !defined(MPICH_DEBUG_MUTEX) || !defined(PTHREAD_MUTEX_ERRORCHECK_VALUE)
-static inline void MPIU_Thread_mutex_create(MPIU_Thread_mutex_t* mutex_ptr_, int* err_ptr_)
-{
-    int err__=0;
-    switch(MPIU_lock_type){
-      case MPIU_MUTEX:
-      {
-         err__ = pthread_mutex_init(&mutex_ptr_->pthread_lock, NULL);
-         break;
-      }
-      case MPIU_TICKET:
-      {
-         err__ = ticket_lock_init(&mutex_ptr_->ticket_lock);
-         break;
-      }
-      case MPIU_PRIORITY:
-      {
-         err__ = priority_lock_init(&mutex_ptr_->priority_lock);
-         break;
-      }
-    }
-    /* FIXME: convert error to an MPIU_THREAD_ERR value */
-    *(int *)(err_ptr_) = err__;
-    MPIU_DBG_MSG_P(THREAD,TYPICAL,"Created MPIU_Thread_mutex %p", (mutex_ptr_));
-}
+#define MPIU_Thread_mutex_create(mutex_ptr_, err_ptr_)                   \
+do {                                                                       \
+    int err__;                                                          \
+                                                                        \
+    err__ = pthread_mutex_init((mutex_ptr_), NULL);			\
+    /* FIXME: convert error to an MPIU_THREAD_ERR value */              \
+    *(int *)(err_ptr_) = err__;                                         \
+    MPIU_DBG_MSG_P(THREAD,TYPICAL,"Created MPIU_Thread_mutex %p", (mutex_ptr_));    \
+} while (0)
 #else /* MPICH_DEBUG_MUTEX */
-static inline void MPIU_Thread_mutex_create(MPIU_Thread_mutex_t* mutex_ptr_, int* err_ptr_)
-{
-    int err__=0;
-    switch(MPIU_lock_type){
-      case MPIU_MUTEX:
-      {
-         pthread_mutexattr_t attr__;
-         /* FIXME this used to be PTHREAD_MUTEX_ERRORCHECK_NP, but we had to change
-          it for the thread granularity work when we needed recursive mutexes.  We
-          should go through this code and see if there's any good way to implement
-          error checked versions with the recursive mutexes. */
-         pthread_mutexattr_init(&attr__);
-         pthread_mutexattr_settype(&attr__, PTHREAD_MUTEX_ERRORCHECK_VALUE);
-         err__ = pthread_mutex_init(&mutex_ptr_->pthread_lock, &attr__);
-         break;
-      }
-      case MPIU_TICKET:
-      {
-         err__ = ticket_lock_init(&mutex_ptr_->ticket_lock);
-         break;
-      }
-      case MPIU_PRIORITY:
-      {
-         err__ = priority_lock_init(&mutex_ptr_->priority_lock);
-         break;
-      }
-    }
-    if (err__)
+#define MPIU_Thread_mutex_create(mutex_ptr_, err_ptr_)                   \
+do {                                                                       \
+    int err__;                                                          \
+    pthread_mutexattr_t attr__;                                         \
+                                                                        \
+    /* FIXME this used to be PTHREAD_MUTEX_ERRORCHECK_NP, but we had to change
+       it for the thread granularity work when we needed recursive mutexes.  We
+       should go through this code and see if there's any good way to implement
+       error checked versions with the recursive mutexes. */ \
+    pthread_mutexattr_init(&attr__);                                    \
+    pthread_mutexattr_settype(&attr__, PTHREAD_MUTEX_ERRORCHECK_VALUE); \
+    err__ = pthread_mutex_init((mutex_ptr_), &attr__);                  \
+    if (err__)                                                          \
         MPIU_Internal_sys_error_printf("pthread_mutex_init", err__,     \
-                                       "    %s:%d\n", __FILE__, __LINE__);
-    /* FIXME: convert error to an MPIU_THREAD_ERR value */
-    *(int *)(err_ptr_) = err__;
-    MPIU_DBG_MSG_P(THREAD,TYPICAL,"Created MPIU_Thread_mutex %p", (mutex_ptr_));
-}
+                                       "    %s:%d\n", __FILE__, __LINE__);\
+    /* FIXME: convert error to an MPIU_THREAD_ERR value */                  \
+    *(int *)(err_ptr_) = err__;                                             \
+    MPIU_DBG_MSG_P(THREAD,TYPICAL,"Created MPIU_Thread_mutex %p", (mutex_ptr_));    \
+} while (0)
 #endif
 
-static inline void MPIU_Thread_mutex_destroy(MPIU_Thread_mutex_t* mutex_ptr_, int* err_ptr_)
-{
-    int err__=0;
-
-    MPIU_DBG_MSG_P(THREAD,TYPICAL,"About to destroy MPIU_Thread_mutex %p", (mutex_ptr_));
-
-    switch(MPIU_lock_type){
-      case MPIU_MUTEX:
-      {
-         err__ = pthread_mutex_destroy(&mutex_ptr_->pthread_lock);
-         break;
-      }
-      case MPIU_TICKET:
-      {
-         /* FIXME Should we do something here ?*/
-         err__ = 0;
-         break;
-      }
-      case MPIU_PRIORITY:
-      {
-         /* FIXME Should we do something here ?*/
-         err__ = 0;
-         break;
-      }
-    }
-    /* FIXME: convert error to an MPIU_THREAD_ERR value */
-    *(int *)(err_ptr_) = err__;
-}
+#define MPIU_Thread_mutex_destroy(mutex_ptr_, err_ptr_)		\
+do {                                                               \
+    int err__;							\
+								\
+    MPIU_DBG_MSG_P(THREAD,TYPICAL,"About to destroy MPIU_Thread_mutex %p", (mutex_ptr_));    \
+    err__ = pthread_mutex_destroy(mutex_ptr_);			\
+    /* FIXME: convert error to an MPIU_THREAD_ERR value */	\
+    *(int *)(err_ptr_) = err__;                                 \
+} while (0)
 
 #ifndef MPICH_DEBUG_MUTEX
-static inline void MPIU_Thread_mutex_lock(MPIU_Thread_mutex_t* mutex_ptr_, int* err_ptr_)
-{
-    int err__=0;
-    MPIU_DBG_MSG_P(THREAD,VERBOSE,"enter MPIU_Thread_mutex_lock %p", (mutex_ptr_));
-
-    switch(MPIU_lock_type){
-      case MPIU_MUTEX:
-      {
-         err__ = pthread_mutex_lock(&mutex_ptr_->pthread_lock);
-         break;
-      }
-      case MPIU_TICKET:
-      {
-         err__ = ticket_acquire_lock(&mutex_ptr_->ticket_lock);
-         break;
-      }
-      case MPIU_PRIORITY:
-      {
-         err__ = priority_acquire_lock(&mutex_ptr_->priority_lock);
-         break;
-      }
-    }
-
-    /* FIXME: convert error to an MPIU_THREAD_ERR value */
-    *(int *)(err_ptr_) = err__;
-    MPIU_DBG_MSG_P(THREAD,VERBOSE,"exit MPIU_Thread_mutex_lock %p", (mutex_ptr_));
-}
+#define MPIU_Thread_mutex_lock(mutex_ptr_, err_ptr_)             \
+do {                                                               \
+    int err__;                                                  \
+    MPIU_DBG_MSG_P(THREAD,VERBOSE,"enter MPIU_Thread_mutex_lock %p", (mutex_ptr_));      \
+    err__ = pthread_mutex_lock(mutex_ptr_);                     \
+    /* FIXME: convert error to an MPIU_THREAD_ERR value */      \
+    *(int *)(err_ptr_) = err__;                                 \
+    MPIU_DBG_MSG_P(THREAD,VERBOSE,"exit MPIU_Thread_mutex_lock %p", (mutex_ptr_));      \
+} while (0)
 #else /* MPICH_DEBUG_MUTEX */
-static inline void MPIU_Thread_mutex_lock(MPIU_Thread_mutex_t* mutex_ptr_, int* err_ptr_)
-{
-    int err__=0;
-    MPIU_DBG_MSG_P(THREAD,VERBOSE,"enter MPIU_Thread_mutex_lock %p", (mutex_ptr_));
-    switch(MPIU_lock_type){
-      case MPIU_MUTEX:
-      {
-         err__ = pthread_mutex_lock(&mutex_ptr_->pthread_lock);
-         break;
-      }
-      case MPIU_TICKET:
-      {
-         err__ = ticket_acquire_lock(&mutex_ptr_->ticket_lock);
-         break;
-      }
-      case MPIU_PRIORITY:
-      {
-         err__ = priority_acquire_lock(&mutex_ptr_->priority_lock);
-         break;
-      }
-    }
-
-    if (err__)
-    {
-        MPIU_DBG_MSG_S(THREAD,TERSE,"  mutex lock error: %s", MPIU_Strerror(err__));
+#define MPIU_Thread_mutex_lock(mutex_ptr_, err_ptr_)             \
+do {                                                               \
+    int err__;                                                  \
+    MPIU_DBG_MSG_P(THREAD,VERBOSE,"enter MPIU_Thread_mutex_lock %p", (mutex_ptr_));      \
+    err__ = pthread_mutex_lock(mutex_ptr_);                     \
+    if (err__)                                                  \
+    {                                                           \
+        MPIU_DBG_MSG_S(THREAD,TERSE,"  mutex lock error: %s", MPIU_Strerror(err__));       \
         MPIU_Internal_sys_error_printf("pthread_mutex_lock", err__,\
-                                       "    %s:%d\n", __FILE__, __LINE__);
-    }
-    /* FIXME: convert error to an MPIU_THREAD_ERR value */
-    *(int *)(err_ptr_) = err__;
-    MPIU_DBG_MSG_P(THREAD,VERBOSE,"exit MPIU_Thread_mutex_lock %p", (mutex_ptr_));
-}
+                                       "    %s:%d\n", __FILE__, __LINE__);\
+    }                                                          \
+    /* FIXME: convert error to an MPIU_THREAD_ERR value */     \
+    *(int *)(err_ptr_) = err__;                                \
+    MPIU_DBG_MSG_P(THREAD,VERBOSE,"exit MPIU_Thread_mutex_lock %p", (mutex_ptr_));      \
+} while (0)
 #endif
 
 #ifndef MPICH_DEBUG_MUTEX
-static inline void MPIU_Thread_mutex_lock_low(MPIU_Thread_mutex_t* mutex_ptr_, int* err_ptr_)
-{
-    int err__=0;
-    MPIU_DBG_MSG_P(THREAD,VERBOSE,"enter MPIU_Thread_mutex_lock %p", (mutex_ptr_));
-
-    switch(MPIU_lock_type){
-      case MPIU_MUTEX:
-      {
-         err__ = pthread_mutex_lock(&mutex_ptr_->pthread_lock);
-         break;
-      }
-      case MPIU_TICKET:
-      {
-         err__ = ticket_acquire_lock(&mutex_ptr_->ticket_lock);
-         break;
-      }
-      case MPIU_PRIORITY:
-      {
-         err__ = priority_acquire_lock_low(&mutex_ptr_->priority_lock);
-         break;
-      }
-    }
-
-    /* FIXME: convert error to an MPIU_THREAD_ERR value */
-    *(int *)(err_ptr_) = err__;
-    MPIU_DBG_MSG_P(THREAD,VERBOSE,"exit MPIU_Thread_mutex_lock %p", (mutex_ptr_));
-}
+#define MPIU_Thread_mutex_unlock(mutex_ptr_, err_ptr_)           \
+do {                                                               \
+    int err__;                                                  \
+                                                                \
+    MPIU_DBG_MSG_P(THREAD,TYPICAL,"MPIU_Thread_mutex_unlock %p", (mutex_ptr_));    \
+    err__ = pthread_mutex_unlock(mutex_ptr_);                   \
+    /* FIXME: convert error to an MPIU_THREAD_ERR value */      \
+    *(int *)(err_ptr_) = err__;                                 \
+} while (0)
 #else /* MPICH_DEBUG_MUTEX */
-static inline void MPIU_Thread_mutex_lock_low(MPIU_Thread_mutex_t* mutex_ptr_, int* err_ptr_)
-{
-    int err__=0;
-    MPIU_DBG_MSG_P(THREAD,VERBOSE,"enter MPIU_Thread_mutex_lock %p", (mutex_ptr_));
-    switch(MPIU_lock_type){
-      case MPIU_MUTEX:
-      {
-         err__ = pthread_mutex_lock(&mutex_ptr_->pthread_lock);
-         break;
-      }
-      case MPIU_TICKET:
-      {
-         err__ = ticket_acquire_lock(&mutex_ptr_->ticket_lock);
-         break;
-      }
-      case MPIU_PRIORITY:
-      {
-         err__ = priority_acquire_lock_low(&mutex_ptr_->priority_lock);
-         break;
-      }
-    }
-
-    if (err__)
-    {
-        MPIU_DBG_MSG_S(THREAD,TERSE,"  mutex lock error: %s", MPIU_Strerror(err__));
-        MPIU_Internal_sys_error_printf("pthread_mutex_lock", err__,\
-                                       "    %s:%d\n", __FILE__, __LINE__);
-    }
-    /* FIXME: convert error to an MPIU_THREAD_ERR value */
-    *(int *)(err_ptr_) = err__;
-    MPIU_DBG_MSG_P(THREAD,VERBOSE,"exit MPIU_Thread_mutex_lock %p", (mutex_ptr_));
-}
+#define MPIU_Thread_mutex_unlock(mutex_ptr_, err_ptr_)           \
+do {                                                               \
+    int err__;                                                  \
+                                                                \
+    MPIU_DBG_MSG_P(THREAD,VERBOSE,"MPIU_Thread_mutex_unlock %p", (mutex_ptr_));    \
+    err__ = pthread_mutex_unlock(mutex_ptr_);                   \
+    if (err__)                                                  \
+    {                                                           \
+        MPIU_DBG_MSG_S(THREAD,TERSE,"  mutex unlock error: %s", MPIU_Strerror(err__));     \
+        MPIU_Internal_sys_error_printf("pthread_mutex_unlock", err__,         \
+                                       "    %s:%d\n", __FILE__, __LINE__);    \
+    }                                                           \
+    /* FIXME: convert error to an MPIU_THREAD_ERR value */      \
+    *(int *)(err_ptr_) = err__;                                 \
+} while (0)
 #endif
 
 #ifndef MPICH_DEBUG_MUTEX
-static inline void MPIU_Thread_mutex_unlock(MPIU_Thread_mutex_t* mutex_ptr_, int* err_ptr_)
-{
-    int err__=0;
-
-    MPIU_DBG_MSG_P(THREAD,TYPICAL,"MPIU_Thread_mutex_unlock %p", (mutex_ptr_));
-
-    switch(MPIU_lock_type){
-      case MPIU_MUTEX:
-      {
-         err__ = pthread_mutex_unlock(&mutex_ptr_->pthread_lock);
-         break;
-      }
-      case MPIU_TICKET:
-      {
-         err__ = ticket_release_lock(&mutex_ptr_->ticket_lock);
-         break;
-      }
-      case MPIU_PRIORITY:
-      {
-         err__ = priority_release_lock(&mutex_ptr_->priority_lock);
-         break;
-      }
-    }
-
-    /* FIXME: convert error to an MPIU_THREAD_ERR value */
-    *(int *)(err_ptr_) = err__;
-}
+#define MPIU_Thread_mutex_trylock(mutex_ptr_, flag_ptr_, err_ptr_)    \
+do {                                                                    \
+    int err__;                                                       \
+                                                                     \
+    err__ = pthread_mutex_trylock(mutex_ptr_);                       \
+    *(flag_ptr_) = (err__ == 0) ? TRUE : FALSE;                      \
+    MPIU_DBG_MSG_FMT(THREAD,VERBOSE,(MPIU_DBG_FDEST, "MPIU_Thread_mutex_trylock mutex=%p result=%s", (mutex_ptr_), (*(flag_ptr_) ? "success" : "failure")));    \
+    *(int *)(err_ptr_) = (err__ == EBUSY) ? MPIU_THREAD_SUCCESS : err__; \
+    /* FIXME: convert error to an MPIU_THREAD_ERR value */              \
+} while (0)
 #else /* MPICH_DEBUG_MUTEX */
-static inline void MPIU_Thread_mutex_unlock(MPIU_Thread_mutex_t* mutex_ptr_, int* err_ptr_)
-{
-    int err__=0;
-
-    MPIU_DBG_MSG_P(THREAD,VERBOSE,"MPIU_Thread_mutex_unlock %p", (mutex_ptr_));
-
-    switch(MPIU_lock_type){
-      case MPIU_MUTEX:
-      {
-         err__ = pthread_mutex_unlock(&mutex_ptr_->pthread_lock);
-         break;
-      }
-      case MPIU_TICKET:
-      {
-         err__ = ticket_release_lock(&mutex_ptr_->ticket_lock);
-         break;
-      }
-      case MPIU_PRIORITY:
-      {
-         err__ = priority_release_lock(&mutex_ptr_->priority_lock);
-         break;
-      }
-    }
-    if (err__)
-    {
-        MPIU_DBG_MSG_S(THREAD,TERSE,"  mutex unlock error: %s", MPIU_Strerror(err__));
-        MPIU_Internal_sys_error_printf("pthread_mutex_unlock", err__,\
-                                       "    %s:%d\n", __FILE__, __LINE__);
-    }
-    /* FIXME: convert error to an MPIU_THREAD_ERR value */
-    *(int *)(err_ptr_) = err__;
-}
-#endif
-
-#ifndef MPICH_DEBUG_MUTEX
-static inline void MPIU_Thread_mutex_trylock(MPIU_Thread_mutex_t* mutex_ptr_, int* flag_ptr_, int* err_ptr_)
-{
-    int err__=0;
-
-    if(MPIU_lock_type == MPIU_MUTEX)
-      err__ = pthread_mutex_trylock(&mutex_ptr_->pthread_lock);
-    else
-      /*No trylock routine for ticket-based locks*/
-      err__ = 1;
-
-    *(flag_ptr_) = (err__ == 0) ? TRUE : FALSE;
-    MPIU_DBG_MSG_FMT(THREAD,VERBOSE,(MPIU_DBG_FDEST, "MPIU_Thread_mutex_trylock mutex=%p result=%s", (mutex_ptr_), (*(flag_ptr_) ? "success" : "failure")));
-    *(int *)(err_ptr_) = (err__ == EBUSY) ? MPIU_THREAD_SUCCESS : err__;
-    /* FIXME: convert error to an MPIU_THREAD_ERR value */
-}
-#else /* MPICH_DEBUG_MUTEX */
-static inline void MPIU_Thread_mutex_trylock(MPIU_Thread_mutex_t* mutex_ptr_, int* flag_ptr_, int* err_ptr_)
-{
-    int err__=0;
-
-    if(MPIU_lock_type == MPIU_MUTEX)
-      err__ = pthread_mutex_trylock(&mutex_ptr_->pthread_lock);
-    else
-      /*No trylock routine for ticket-based locks*/
-      err__ = 1;
-
-    if (err__ && err__ != EBUSY)
-    {
-        MPIU_DBG_MSG_S(THREAD,TERSE,"  mutex trylock error: %s", MPIU_Strerror(err__));
+#define MPIU_Thread_mutex_trylock(mutex_ptr_, flag_ptr_, err_ptr_)    \
+do {                                                                    \
+    int err__;                                                       \
+                                                                     \
+    err__ = pthread_mutex_trylock(mutex_ptr_);                       \
+    if (err__ && err__ != EBUSY)                                     \
+    {                                                                \
+        MPIU_DBG_MSG_S(THREAD,TERSE,"  mutex trylock error: %s", MPIU_Strerror(err__));    \
         MPIU_Internal_sys_error_printf("pthread_mutex_trylock", err__,\
-                                       "    %s:%d\n", __FILE__, __LINE__);
-    }
-    *(flag_ptr_) = (err__ == 0) ? TRUE : FALSE;
-    MPIU_DBG_MSG_FMT(THREAD,VERBOSE,(MPIU_DBG_FDEST, "MPIU_Thread_mutex_trylock mutex=%p result=%s", (mutex_ptr_), (*(flag_ptr_) ? "success" : "failure")));
-    *(int *)(err_ptr_) = (err__ == EBUSY) ? MPIU_THREAD_SUCCESS : err__;
-    /* FIXME: convert error to an MPIU_THREAD_ERR value */
-}
+                                       "    %s:%d\n", __FILE__, __LINE__);\
+    }                                                                \
+    *(flag_ptr_) = (err__ == 0) ? TRUE : FALSE;                      \
+    MPIU_DBG_MSG_FMT(THREAD,VERBOSE,(MPIU_DBG_FDEST, "MPIU_Thread_mutex_trylock mutex=%p result=%s", (mutex_ptr_), (*(flag_ptr_) ? "success" : "failure")));    \
+    *(int *)(err_ptr_) = (err__ == EBUSY) ? MPIU_THREAD_SUCCESS : err__; \
+    /* FIXME: convert error to an MPIU_THREAD_ERR value */              \
+} while (0)
 #endif
 
 /*

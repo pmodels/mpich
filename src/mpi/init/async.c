@@ -61,10 +61,9 @@ static void progress_fn(void * data)
 
     MPIU_Thread_mutex_unlock(&progress_mutex, &mpi_errno);
     MPIU_Assert(!mpi_errno);
-    if(MPIU_lock_type==MPIU_MUTEX){
-      MPIU_Thread_cond_signal(&progress_cond, &mpi_errno);
-      MPIU_Assert(!mpi_errno);
-    } /* Else: busy loop will automatically break*/
+
+    MPIU_Thread_cond_signal(&progress_cond, &mpi_errno);
+    MPIU_Assert(!mpi_errno);
 
     MPIU_THREAD_CS_EXIT(ALLFUNC,);
 
@@ -138,21 +137,16 @@ int MPIR_Finalize_async_thread(void)
     /* XXX DJG why is this unlock/lock necessary?  Should we just YIELD here or later?  */
     MPIU_THREAD_CS_EXIT(ALLFUNC,);
 
-    if(MPIU_lock_type==MPIU_MUTEX){
-      MPIU_Thread_mutex_lock(&progress_mutex, &mpi_errno);
-      MPIU_Assert(!mpi_errno);
+    MPIU_Thread_mutex_lock(&progress_mutex, &mpi_errno);
+    MPIU_Assert(!mpi_errno);
 
-      while (!progress_thread_done) {
-          MPIU_Thread_cond_wait(&progress_cond, &progress_mutex.pthread_lock, &mpi_errno);
-          MPIU_Assert(!mpi_errno);
-      }
+    while (!progress_thread_done) {
+        MPIU_Thread_cond_wait(&progress_cond, &progress_mutex, &mpi_errno);
+        MPIU_Assert(!mpi_errno);
+    }
 
-      MPIU_Thread_mutex_unlock(&progress_mutex, &mpi_errno);
-      MPIU_Assert(!mpi_errno);
-   }
-   else
-     while (!progress_thread_done) ; /* busy loop */
-     /* No need to unlock the mutex */
+    MPIU_Thread_mutex_unlock(&progress_mutex, &mpi_errno);
+    MPIU_Assert(!mpi_errno);
 
     mpi_errno = MPIR_Comm_free_impl(progress_comm_ptr);
     MPIU_Assert(!mpi_errno);

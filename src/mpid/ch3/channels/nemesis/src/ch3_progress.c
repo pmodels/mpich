@@ -563,24 +563,13 @@ static int MPIDI_CH3I_Progress_delay(unsigned int completion_count)
     /* FIXME should be appropriately abstracted somehow */
 #   if defined(MPICH_IS_THREADED) && (MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_GLOBAL)
     {
-      if(MPIU_lock_type==MPIU_MUTEX){
 	while (1)
 	{
             if (completion_count != OPA_load_int(&MPIDI_CH3I_progress_completion_count) ||
                 MPIDI_CH3I_progress_blocked != TRUE)
                 break;
-	    MPID_Thread_cond_wait(&MPIDI_CH3I_progress_completion_cond, &MPIR_ThreadInfo.global_mutex.pthread_lock/*MPIDCOMM*/);
+	    MPID_Thread_cond_wait(&MPIDI_CH3I_progress_completion_cond, &MPIR_ThreadInfo.global_mutex/*MPIDCOMM*/);
 	}
-      }
-      else{
-        /* First release the lock and then enter a busy loop*/
-        MPID_Thread_mutex_unlock(&MPIR_ThreadInfo.global_mutex/*MPIDCOMM*/);
-	while (completion_count == OPA_load_int(&MPIDI_CH3I_progress_completion_count) &&
-                MPIDI_CH3I_progress_blocked == TRUE)
-              ; /* wait in a busy loop*/
-        /* Hold the lock again*/
-        MPID_Thread_mutex_lock(&MPIR_ThreadInfo.global_mutex/*MPIDCOMM*/);
-      }
     }
 #   endif
 
@@ -604,9 +593,7 @@ static int MPIDI_CH3I_Progress_continue(unsigned int completion_count/*unused*/)
 #   if defined(MPICH_IS_THREADED) && (MPIU_THREAD_GRANULARITY == MPIU_THREAD_GRANULARITY_GLOBAL)
     {
         /* we currently hold the MPIDCOMM CS */
-      if(MPIU_lock_type==MPIU_MUTEX)
 	MPID_Thread_cond_broadcast(&MPIDI_CH3I_progress_completion_cond);
-      /* Else, the condition shoul be satisfied to break the busy loop*/
     }
 #   endif
 
