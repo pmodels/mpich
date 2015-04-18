@@ -314,6 +314,14 @@ do {                                               \
                         ("mutex_unlock failed, err_=%d (%s)",err_,MPIU_Strerror(err_))); \
 } while (0)
 
+#define MPID_Thread_mutex_lock_low(mutex_)              \
+do {                                               \
+    int err_;                                   \
+    MPIU_Thread_mutex_lock_low((mutex_), &err_);        \
+    MPIU_Assert_fmt_msg(err_ == MPIU_THREAD_SUCCESS,                                   \
+                        ("mutex_lock failed, err_=%d (%s)",err_,MPIU_Strerror(err_))); \
+} while (0)
+
 #define MPID_Thread_mutex_trylock(mutex_, flag_)		\
 do {                                                               \
     int err_;							\

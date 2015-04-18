@@ -190,6 +190,16 @@ static int MPIR_Thread_CS_Init( void )
     int err;
     MPIU_THREADPRIV_DECL;
 
+    MPIU_lock_type = MPIU_MUTEX;
+    char *s;
+    s = getenv( "MPICH_LOCK_TYPE" );
+    if(s){
+      if(strcmp( "ticket", s ) == 0)
+         MPIU_lock_type = MPIU_TICKET;
+      else if (strcmp( "priority", s ) == 0)
+         MPIU_lock_type = MPIU_PRIORITY;
+    }
+
     MPIU_Assert(MPICH_MAX_LOCKS >= MPIU_Nest_NUM_MUTEXES);
 
     /* we create this at all granularities right now */
@@ -558,6 +568,30 @@ int MPIR_Init_thread(int * argc, char ***argv, int required, int * provided)
     if (mpi_errno == MPI_SUCCESS) 
 	mpi_errno = MPID_InitCompleted();
 
+    const char *s;
+
+    switch(MPIU_lock_type){
+      case MPIU_MUTEX:
+      {
+        s = "mutex";
+        break;
+      }
+      case MPIU_TICKET:
+      {
+        s = "ticket";
+        break;
+      }
+      case MPIU_PRIORITY:
+      {
+        s = "priority";
+        break;
+      }
+    }
+
+    if(MPIR_Process.comm_world->rank==0){
+      printf("\n[MPICH INFO] Critical section(s) based on %s \n\n", s);
+    }
+
 fn_exit:
     MPIU_THREAD_CS_EXIT(INIT,required);
     /* Make fields of MPIR_Process global visible and set mpich_state
@@ -626,6 +660,7 @@ int MPI_Init_thread( int *argc, char ***argv, int required, int *provided )
 {
     int mpi_errno = MPI_SUCCESS;
     int rc ATTRIBUTE((unused)), reqd = required;
+
     MPID_MPI_INIT_STATE_DECL(MPID_STATE_MPI_INIT_THREAD);
 
     rc = MPID_Wtime_init();
