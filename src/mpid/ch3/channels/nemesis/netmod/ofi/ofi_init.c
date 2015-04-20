@@ -81,7 +81,6 @@ int MPID_nem_ofi_init(MPIDI_PG_t * pg_p, int pg_rank, char **bc_val_p, int *val_
     hints->mode             = FI_CONTEXT;
     hints->ep_attr->type    = FI_EP_RDM;      /* Reliable datagram         */
     hints->caps             = FI_TAGGED;      /* Tag matching interface    */
-    hints->caps            |= FI_CANCEL;      /* Support cancel            */
     hints->caps            |= FI_DYNAMIC_MR;  /* Global dynamic mem region */
 
     /* ------------------------------------------------------------------------ */
