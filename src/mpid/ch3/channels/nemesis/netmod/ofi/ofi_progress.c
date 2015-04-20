@@ -97,9 +97,9 @@ int MPID_nem_ofi_iprobe_impl(struct MPIDI_VC *vc,
       if (rreq_ptr) {
         MPIDI_CH3_Request_destroy(rreq);
         *rreq_ptr = NULL;
-        *flag = 0;
       }
       MPID_nem_ofi_poll(MPID_NONBLOCKING_POLL);
+      *flag = 0;
       goto fn_exit;
     }
     MPIU_ERR_CHKANDJUMP4((ret < 0), mpi_errno, MPI_ERR_OTHER,

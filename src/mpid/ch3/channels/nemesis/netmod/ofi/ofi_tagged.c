@@ -68,10 +68,9 @@ static inline int MPID_nem_ofi_recv_callback(cq_tagged_entry_t * wc, MPID_Reques
     /* ---------------------------------------------------- */
     rreq->status.MPI_ERROR = MPI_SUCCESS;
     rreq->status.MPI_SOURCE = get_source(wc->tag);
-    rreq->status.MPI_TAG = get_tag(wc->tag);
+    rreq->status.MPI_TAG    = get_tag(wc->tag);
     REQ_OFI(rreq)->req_started = 1;
     MPIR_STATUS_SET_COUNT(rreq->status, wc->len);
-
     if (REQ_OFI(rreq)->pack_buffer) {
         MPIDI_CH3U_Buffer_copy(REQ_OFI(rreq)->pack_buffer,
                                MPIR_STATUS_GET_COUNT(rreq->status),
@@ -388,7 +387,7 @@ void MPID_nem_ofi_anysource_posted(MPID_Request * rreq)
 #define FCNAME DECL_FUNC(MPID_nem_ofi_anysource_matched)
 int MPID_nem_ofi_anysource_matched(MPID_Request * rreq)
 {
-    int mpi_errno = FALSE;
+    int mpi_errno = TRUE;
     int ret;
     BEGIN_FUNC(FCNAME);
     /* ----------------------------------------------------- */
@@ -401,10 +400,7 @@ int MPID_nem_ofi_anysource_matched(MPID_Request * rreq)
         /* --------------------------------------------------- */
         /* Request cancelled:  cancel and complete the request */
         /* --------------------------------------------------- */
-        mpi_errno = TRUE;
-        MPIR_STATUS_SET_CANCEL_BIT(rreq->status, TRUE);
-        MPIR_STATUS_SET_COUNT(rreq->status, 0);
-        MPIDI_CH3U_Request_complete(rreq);
+        mpi_errno = FALSE;
     }
     END_FUNC(FCNAME);
     return mpi_errno;
