@@ -263,7 +263,6 @@ int MPIDI_CH3_ReqHandler_GaccumRecvComplete(MPIDI_VC_t * vc, MPID_Request * rreq
 
     MPID_Datatype_is_contig(rreq->dev.datatype, &is_contig);
 
-    /* Copy data into a temporary buffer */
     resp_req = MPID_Request_create();
     MPIU_ERR_CHKANDJUMP(resp_req == NULL, mpi_errno, MPI_ERR_OTHER, "**nomemreq");
     MPIU_Object_set_ref(resp_req, 1);
@@ -272,8 +271,12 @@ int MPIDI_CH3_ReqHandler_GaccumRecvComplete(MPIDI_VC_t * vc, MPID_Request * rreq
     MPIU_CHKPMEM_MALLOC(resp_req->dev.user_buf, void *, rreq->dev.recv_data_sz,
                         mpi_errno, "GACC resp. buffer");
 
+    /* NOTE: 'copy data + ACC' needs to be atomic */
+
     if (win_ptr->shm_allocated == TRUE)
         MPIDI_CH3I_SHM_MUTEX_LOCK(win_ptr);
+
+    /* Copy data from target window to temporary buffer */
 
     if (is_contig) {
         MPIU_Memcpy(resp_req->dev.user_buf,
@@ -396,6 +399,8 @@ int MPIDI_CH3_ReqHandler_FOPRecvComplete(MPIDI_VC_t * vc, MPID_Request * rreq, i
     /* here we increment the Active Target counter to guarantee the GET-like
      * operation are completed when counter reaches zero. */
     win_ptr->at_completion_counter++;
+
+    /* NOTE: 'copy data + ACC' needs to be atomic */
 
     if (win_ptr->shm_allocated == TRUE)
         MPIDI_CH3I_SHM_MUTEX_LOCK(win_ptr);
@@ -1193,9 +1198,13 @@ static inline int perform_get_acc_in_lock_queue(MPID_Win * win_ptr,
             get_accum_resp_pkt->flags |= MPIDI_CH3_PKT_FLAG_RMA_FLUSH_ACK;
         get_accum_resp_pkt->target_rank = win_ptr->comm_ptr->rank;
 
-        /* Perform ACCUMULATE OP */
+
+        /* NOTE: copy 'data + ACC' needs to be atomic */
+
         if (win_ptr->shm_allocated == TRUE)
             MPIDI_CH3I_SHM_MUTEX_LOCK(win_ptr);
+
+        /* Copy data from target window to response packet header */
 
         void *src = (void *) (get_accum_pkt->addr), *dest =
             (void *) (get_accum_resp_pkt->info.data);
@@ -1205,6 +1214,8 @@ static inline int perform_get_acc_in_lock_queue(MPID_Win * win_ptr,
                 MPIDI_CH3I_SHM_MUTEX_UNLOCK(win_ptr);
             MPIU_ERR_POP(mpi_errno);
         }
+
+        /* Perform ACCUMULATE OP */
 
         /* All data fits in packet header */
         /* NOTE: here we pass 0 as stream_offset to do_accumulate_op(), because the unit
@@ -1244,9 +1255,12 @@ static inline int perform_get_acc_in_lock_queue(MPID_Win * win_ptr,
 
     MPID_Datatype_is_contig(get_accum_pkt->datatype, &is_contig);
 
-    /* Perform ACCUMULATE OP */
+    /* NOTE: 'copy data + ACC' needs to be atomic */
+
     if (win_ptr->shm_allocated == TRUE)
         MPIDI_CH3I_SHM_MUTEX_LOCK(win_ptr);
+
+    /* Copy data from target window to temporary buffer */
 
     /* NOTE: here we copy data from stream_offset = 0, because
        the unit that is piggybacked with LOCK flag must be the
@@ -1270,6 +1284,8 @@ static inline int perform_get_acc_in_lock_queue(MPID_Win * win_ptr,
         MPID_Segment_pack(seg, first, &last, sreq->dev.user_buf);
         MPID_Segment_free(seg);
     }
+
+    /* Perform ACCUMULATE OP */
 
     /* NOTE: here we pass 0 as stream_offset to do_accumulate_op(), because the unit
        that is piggybacked with LOCK flag must be the first stream unit */
@@ -1379,8 +1395,12 @@ static inline int perform_fop_in_lock_queue(MPID_Win * win_ptr, MPIDI_RMA_Lock_e
         win_ptr->at_completion_counter++;
     }
 
+    /* NOTE: 'copy data + ACC' needs to be atomic */
+
     if (win_ptr->shm_allocated == TRUE)
         MPIDI_CH3I_SHM_MUTEX_LOCK(win_ptr);
+
+    /* Copy data from target window to temporary buffer / response packet header */
 
     if (fop_pkt->type == MPIDI_CH3_PKT_FOP_IMMED) {
         /* copy data to resp pkt header */

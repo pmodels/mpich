@@ -836,6 +836,8 @@ int MPIDI_CH3_PktHandler_GetAccumulate(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
             (get_accum_pkt->flags & MPIDI_CH3_PKT_FLAG_RMA_UNLOCK))
             get_accum_resp_pkt->flags |= MPIDI_CH3_PKT_FLAG_RMA_FLUSH_ACK;
 
+        /* NOTE: 'copy data + ACC' needs to be atomic */
+
         if (win_ptr->shm_allocated == TRUE)
             MPIDI_CH3I_SHM_MUTEX_LOCK(win_ptr);
 
@@ -1231,6 +1233,8 @@ int MPIDI_CH3_PktHandler_FOP(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
         if ((fop_pkt->flags & MPIDI_CH3_PKT_FLAG_RMA_FLUSH) ||
             (fop_pkt->flags & MPIDI_CH3_PKT_FLAG_RMA_UNLOCK))
             fop_resp_pkt->flags |= MPIDI_CH3_PKT_FLAG_RMA_FLUSH_ACK;
+
+        /* NOTE: 'copy data + ACC' needs to be atomic */
 
         if (win_ptr->shm_allocated == TRUE)
             MPIDI_CH3I_SHM_MUTEX_LOCK(win_ptr);
