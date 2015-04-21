@@ -44,9 +44,9 @@ MTEST_THREAD_RETURN_TYPE run_test_sendrecv(void *arg)
 	fprintf( stderr, "Panic wsize = %d nthreads = %d\n",
 		 wsize, nthreads );
 
-    buf = (int *) malloc(2 * MAX_CNT * sizeof(int));
-
     for (cnt=1; cnt < MAX_CNT; cnt = 2*cnt) {
+	buf = (int *)malloc( 2*cnt * sizeof(int) );
+
 	/* Wait for all senders to be ready */
 	MTest_thread_barrier(nthreads);
 
@@ -72,11 +72,10 @@ MTEST_THREAD_RETURN_TYPE run_test_sendrecv(void *arg)
 	t = MPI_Wtime() - t;
 	/* can't free the buffers until the requests are completed */
 	MTest_thread_barrier(nthreads);
+	free( buf );
 	if (thread_num == 1)
 	    MTestPrintfMsg( 1, "buf size %d: time %f\n", cnt, t / MAX_LOOP );
     }
-
-    free(buf);
     return (MTEST_THREAD_RETURN_TYPE)NULL;
 }
 
