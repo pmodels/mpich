@@ -515,6 +515,8 @@ static int _mxm_fini(void)
         if (_mxm_obj.endpoint)
             MPIU_Free(_mxm_obj.endpoint);
 
+        _mxm_barrier();
+
         if (_mxm_obj.mxm_ep)
             mxm_ep_destroy(_mxm_obj.mxm_ep);
 
