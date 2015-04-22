@@ -133,7 +133,7 @@ int MPID_nem_mxm_anysource_matched(MPID_Request * req)
     req_area = REQ_BASE(req);
     ret = mxm_req_cancel_recv(&req_area->mxm_req->item.recv);
     mxm_req_wait(&req_area->mxm_req->item.base);
-    if ((MXM_OK != ret) && (MXM_ERR_NO_PROGRESS != ret)) {
+    if (req_area->mxm_req->item.base.error != MXM_ERR_CANCELED) {
         matched = TRUE;
     }
 
@@ -225,7 +225,7 @@ int MPID_nem_mxm_recv(MPIDI_VC_t * vc, MPID_Request * rreq)
 
 static int _mxm_handle_rreq(MPID_Request * req)
 {
-    int complete = FALSE;
+    int complete = FALSE, found = FALSE;
     int dt_contig;
     MPI_Aint dt_true_lb ATTRIBUTE((unused));
     MPIDI_msg_sz_t userbuf_sz;
@@ -236,10 +236,12 @@ static int _mxm_handle_rreq(MPID_Request * req)
     void *tmp_buf = NULL;
 
     MPIU_THREAD_CS_ENTER(MSGQUEUE, req);
-    complete = MPIDI_CH3U_Recvq_DP(req);
+    found = MPIDI_CH3U_Recvq_DP(req);
     MPIU_THREAD_CS_EXIT(MSGQUEUE, req);
-    if (!complete) {
-        return TRUE;
+    /* an MPI_ANY_SOURCE request may have been previously removed from the
+       CH3 queue by an FDP (find and dequeue posted) operation */
+    if (req->dev.match.parts.rank != MPI_ANY_SOURCE) {
+        MPIU_Assert(found);
     }
 
     MPIDI_Datatype_get_info(req->dev.user_count, req->dev.datatype, dt_contig, userbuf_sz, dt_ptr,
