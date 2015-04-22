@@ -11,7 +11,8 @@
 #include <string.h>
 #include "mpitest.h"
 
-static int cases[3][2] = {{3,10},{3,MPI_UNDEFINED},{MPI_UNDEFINED,10}};
+static int cases[6][2] = {{3,10},{3,MPI_UNDEFINED},{MPI_UNDEFINED,10},
+                          {7,30},{7,MPI_UNDEFINED},{MPI_UNDEFINED,30}};
 
 /*
 static char MTEST_Descrip[] = "Test the routines to access the Fortran 90 datatypes from C";
@@ -149,16 +150,16 @@ int main( int argc, char *argv[] )
 
     for (i=0; i<nLoop; i++) {
         
-	/* These should be a valid type similar to MPI_REAL */
-        for (j=0; j<3; j++) {
+	/* These should be a valid type similar to MPI_REAL and MPI_REAL8 */
+        for (j=0; j<6; j++) {
             p = cases[j][0];
             r = cases[j][1];
             err = MPI_Type_create_f90_real( p, r, &newtype );
             errs += checkType( "REAL", p, r, MPI_COMBINER_F90_REAL, err, newtype );
         }
 
-	/* These should be a valid type similar to MPI_COMPLEX */
-        for (j=0; j<3; j++) {
+	/* These should be a valid type similar to MPI_COMPLEX and MPI_COMPLEX8 */
+        for (j=0; j<6; j++) {
             p = cases[j][0];
             r = cases[j][1];
             err = MPI_Type_create_f90_complex( p, r, &newtype );
