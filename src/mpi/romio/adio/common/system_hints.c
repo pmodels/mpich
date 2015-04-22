@@ -38,8 +38,8 @@
 void ADIOI_Info_print_keyvals(MPI_Info info)
 {
     int i, nkeys, flag;
-    char key[MPI_MAX_INFO_KEY];
-    char value[MPI_MAX_INFO_VAL];
+    char key[MPI_MAX_INFO_KEY+1];
+    char value[MPI_MAX_INFO_VAL+1];
 
     if (info == MPI_INFO_NULL)
 	return;
@@ -48,7 +48,7 @@ void ADIOI_Info_print_keyvals(MPI_Info info)
 
     for (i=0; i<nkeys; i++) {
 	MPI_Info_get_nthkey(info, i, key);
-	ADIOI_Info_get(info, key, MPI_MAX_INFO_VAL-1, value, &flag);
+	ADIOI_Info_get(info, key, MPI_MAX_INFO_VAL, value, &flag);
 	printf("key = %-25s value = %-10s\n", key, value);
     }
     return;
@@ -91,7 +91,7 @@ static int file_to_info_all(int fd, MPI_Info info, int rank, MPI_Comm comm)
     char *pos1=NULL, *pos2=NULL;
     int flag;
     ssize_t ret;
-    char dummy;
+    int valuelen;
 
     /* assumption: config files will be small */
 #define HINTFILE_MAX_SIZE 1024*4
@@ -128,7 +128,7 @@ static int file_to_info_all(int fd, MPI_Info info, int rank, MPI_Comm comm)
 #endif
 	/* don't actually care what the value is. only want to know if key
 	 * exists: we leave it alone if so*/
-	ADIOI_Info_get(info, key, 1, &dummy, &flag);
+	ADIOI_Info_get_valuelen(info, key, &valuelen, &flag);
 	if (flag == 1) continue;
 	ADIOI_Info_set(info, key, val);
     } while ((token = strtok_r(NULL, "\n", &pos1)) != NULL);
@@ -159,9 +159,10 @@ void ADIOI_incorporate_system_hints(MPI_Info info,
 	MPI_Info sysinfo, 
 	MPI_Info *new_info) 
 {
-    int i, nkeys_sysinfo, flag=0; /* must initialize flag to 0 */
+    int i, nkeys_sysinfo, nkeys_info=0, flag=0; /* must initialize flag to 0 */
+    int valuelen;
 
-    char  val[MPI_MAX_INFO_VAL], key[MPI_MAX_INFO_KEY];
+    char  val[MPI_MAX_INFO_VAL+1], key[MPI_MAX_INFO_KEY+1];
 
     if (sysinfo == MPI_INFO_NULL)
 	nkeys_sysinfo = 0;
@@ -176,15 +177,21 @@ void ADIOI_incorporate_system_hints(MPI_Info info,
 
     if (info == MPI_INFO_NULL) 
 	MPI_Info_create(new_info);
-    else
+    else {
+	/* tiny optimization: if 'info' has no keys, we can skip the check if a
+	 * hint is set: no keys means nothing has been set, and there's nothing
+	 * we might step on */
+	MPI_Info_get_nkeys(info, &nkeys_info);
 	MPI_Info_dup(info, new_info);
+    }
 
     for (i=0; i<nkeys_sysinfo; i++) {
 	MPI_Info_get_nthkey(sysinfo, i, key);
 	/* don't care about the value, just want to know if hint set already*/
-	if (info != MPI_INFO_NULL) ADIOI_Info_get(info, key, 1, val, &flag); 
+	if (info != MPI_INFO_NULL && nkeys_info)
+	    ADIOI_Info_get_valuelen(info, key, &valuelen, &flag);
 	if (flag == 1) continue;  /* skip any hints already set by user */
-	ADIOI_Info_get(sysinfo, key, MPI_MAX_INFO_VAL-1, val, &flag);
+	ADIOI_Info_get(sysinfo, key, MPI_MAX_INFO_VAL, val, &flag);
 	ADIOI_Info_set(*new_info, key, val);
 	flag = 0;
     }

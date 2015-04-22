@@ -25,7 +25,7 @@ AM_FFLAGS = $(USER_FFLAGS)
 CTESTS = simple perf async coll_test coll_perf misc file_info excl large_array \
      atomicity noncontig i_noncontig noncontig_coll split_coll shared_fp \
      large_file psimple error status noncontig_coll2 aggregation1 aggregation2 \
-     async-multiple ordered_fp hindexed external32 types_with_zeros darray_read
+     async-multiple ordered_fp hindexed external32 types_with_zeros darray_read syshints
 FTESTS = fcoll_test fperf fmisc pfcoll_test 
 
 

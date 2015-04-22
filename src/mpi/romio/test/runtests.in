@@ -386,6 +386,11 @@ MakeExe darray_read
 echo '**** Testing darray_read ****'
 $mpirun -np 4 ./darray_read $FILENAME
 CleanExe darray_read
+MakeExe syshints
+echo '**** Testing syshints ****'
+$mpirun -np 1 ./syshints $srcdir/test_hintfile
+CleanExe syshints
+
 #
 if [ @NOF77@ = 0 ] ; then 
     echo ""
