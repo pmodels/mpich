@@ -236,7 +236,7 @@ int MPIX_Grequest_class_create(MPI_Grequest_query_function *query_fn,
         MPI_Grequest_cancel_function *cancel_fn,
         MPIX_Grequest_poll_function *poll_fn,
         MPIX_Grequest_wait_function *wait_fn,
-        MPIX_Grequest_class *greq_class) __attribute__((weak,alias("MPIX_Grequest_class_create")));
+        MPIX_Grequest_class *greq_class) __attribute__((weak,alias("PMPIX_Grequest_class_create")));
 #endif
 /* -- End Profiling Symbol Block */
 
@@ -324,11 +324,11 @@ fn_fail:
 #if defined(HAVE_PRAGMA_WEAK)
 #pragma weak MPIX_Grequest_class_allocate = PMPIX_Grequest_class_allocate
 #elif defined(HAVE_PRAGMA_HP_SEC_DEF)
-#pragma _HP_SECONDARY_DEF PMPI_Grequest_class_allocate MPIX_Grequest_class_allocate
+#pragma _HP_SECONDARY_DEF PMPIX_Grequest_class_allocate MPIX_Grequest_class_allocate
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPIX_Grequest_class_allocate as PMPIX_Grequest_class_allocate
 #elif defined(HAVE_WEAK_ATTRIBUTE)
-int MPIX_Grequest_class_allocate(MPIX_Grequest_class greq_class, void *extra_state, MPI_Request *request) __attribute__((weak,alias("MPIX_Grequest_class_allocate")));
+int MPIX_Grequest_class_allocate(MPIX_Grequest_class greq_class, void *extra_state, MPI_Request *request) __attribute__((weak,alias("PMPIX_Grequest_class_allocate")));
 #endif
 /* -- End Profiling Symbol Block */
 
@@ -369,7 +369,7 @@ int MPIX_Grequest_class_allocate(MPIX_Grequest_class greq_class,
 #if defined(HAVE_PRAGMA_WEAK)
 #pragma weak MPIX_Grequest_start = PMPIX_Grequest_start
 #elif defined(HAVE_PRAGMA_HP_SEC_DEF)
-#pragma _HP_SECONDARY_DEF PMPI_Grequest_start MPIX_Grequest_start
+#pragma _HP_SECONDARY_DEF PMPIX_Grequest_start MPIX_Grequest_start
 #elif defined(HAVE_PRAGMA_CRI_DUP)
 #pragma _CRI duplicate MPIX_Grequest_start as PMPIX_Grequest_start
 #elif defined(HAVE_WEAK_ATTRIBUTE)
@@ -379,7 +379,7 @@ int MPIX_Grequest_start( MPI_Grequest_query_function *query_fn,
         MPIX_Grequest_poll_function *poll_fn,
         MPIX_Grequest_wait_function *wait_fn,
         void *extra_state,
-        MPI_Request *request ) __attribute__((weak,alias("MPIX_Grequest_start")));
+        MPI_Request *request ) __attribute__((weak,alias("PMPIX_Grequest_start")));
 #endif
 /* -- End Profiling Symbol Block */
 
