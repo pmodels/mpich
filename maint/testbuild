@@ -33,7 +33,7 @@ fi
 date=`date "+%Y-%m-%d"`
 # default outfile
 outfile=testbuild.xml
-tests="mpich:mpicxx:intel:testmpio:mpich2"
+tests="mpich:mpicxx:intel:testmpio" # Optional: mpich2
 #
 # Option options to checkbuild
 other_opts=""
