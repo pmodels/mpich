@@ -75,6 +75,7 @@ do {                                                               \
 do {                                                                       \
     int err__;                                                          \
                                                                         \
+    OPA_store_int(&(mutex_ptr_)->num_queued_threads,0);                  \
     err__ = pthread_mutex_init(&(mutex_ptr_)->mutex, NULL);             \
     /* FIXME: convert error to an MPIU_THREAD_ERR value */              \
     *(int *)(err_ptr_) = err__;                                         \
@@ -84,6 +85,7 @@ do {                                                                       \
 #define MPIU_Thread_mutex_create(mutex_ptr_, err_ptr_)                   \
 do {                                                                       \
     int err__;                                                          \
+    OPA_store_int(&(mutex_ptr_)->num_queued_threads,0);                  \
     pthread_mutexattr_t attr__;                                         \
                                                                         \
     /* FIXME this used to be PTHREAD_MUTEX_ERRORCHECK_NP, but we had to change
@@ -117,9 +119,9 @@ do {                                                               \
 do {                                                               \
     int err__;                                                  \
     MPIU_DBG_MSG_P(THREAD,VERBOSE,"enter MPIU_Thread_mutex_lock %p", (mutex_ptr_));      \
-    OPA_add_int(&(mutex_ptr_)->num_queued_threads, 1);                  \
+    OPA_incr_int(&(mutex_ptr_)->num_queued_threads);                  \
     err__ = pthread_mutex_lock(&(mutex_ptr_)->mutex);                   \
-    OPA_add_int(&(mutex_ptr_)->num_queued_threads, -1);                 \
+    OPA_decr_int(&(mutex_ptr_)->num_queued_threads);                 \
     /* FIXME: convert error to an MPIU_THREAD_ERR value */      \
     *(int *)(err_ptr_) = err__;                                 \
     MPIU_DBG_MSG_P(THREAD,VERBOSE,"exit MPIU_Thread_mutex_lock %p", (mutex_ptr_));      \
@@ -129,9 +131,9 @@ do {                                                               \
 do {                                                               \
     int err__;                                                  \
     MPIU_DBG_MSG_P(THREAD,VERBOSE,"enter MPIU_Thread_mutex_lock %p", (mutex_ptr_));      \
-    OPA_add_int(&(mutex_ptr_)->num_queued_threads, 1);                  \
+    OPA_incr_int(&(mutex_ptr_)->num_queued_threads);                  \
     err__ = pthread_mutex_lock(&(mutex_ptr_)->mutex);                   \
-    OPA_add_int(&(mutex_ptr_)->num_queued_threads, -1);                 \
+    OPA_decr_int(&(mutex_ptr_)->num_queued_threads);                 \
     if (err__)                                                  \
     {                                                           \
         MPIU_DBG_MSG_S(THREAD,TERSE,"  mutex lock error: %s", MPIU_Strerror(err__));       \
@@ -236,9 +238,9 @@ do {                                                                       \
     MPIU_DBG_MSG_FMT(THREAD,TYPICAL,(MPIU_DBG_FDEST,"Enter cond_wait on cond=%p mutex=%p",(cond_ptr_),(mutex_ptr_))) \
     do									\
     {									\
-        OPA_add_int(&(mutex_ptr_)->num_queued_threads, 1);              \
+        OPA_incr_int(&(mutex_ptr_)->num_queued_threads);              \
 	err__ = pthread_cond_wait((cond_ptr_), &(mutex_ptr_)->mutex);   \
-        OPA_add_int(&(mutex_ptr_)->num_queued_threads, -1);             \
+        OPA_decr_int(&(mutex_ptr_)->num_queued_threads);             \
     }									\
     while (err__ == EINTR);						\
 									\
