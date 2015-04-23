@@ -5,7 +5,7 @@
 #define FUNCNAME hcoll_Barrier
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int hcoll_Barrier(MPID_Comm * comm_ptr, int *err)
+int hcoll_Barrier(MPID_Comm * comm_ptr, mpir_errflag_t *err)
 {
     int rc;
     MPI_Comm comm = comm_ptr->handle;
@@ -29,7 +29,7 @@ int hcoll_Barrier(MPID_Comm * comm_ptr, int *err)
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 int hcoll_Bcast(void *buffer, int count, MPI_Datatype datatype, int root,
-                MPID_Comm * comm_ptr, int *err)
+                MPID_Comm * comm_ptr, mpir_errflag_t *err)
 {
     dte_data_representation_t dtype;
     int rc;
@@ -73,7 +73,7 @@ int hcoll_Bcast(void *buffer, int count, MPI_Datatype datatype, int root,
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 int hcoll_Allreduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype datatype,
-                    MPI_Op op, MPID_Comm * comm_ptr, int *err)
+                    MPI_Op op, MPID_Comm * comm_ptr, mpir_errflag_t *err)
 {
     dte_data_representation_t Dtype;
     hcoll_dte_op_t *Op;
@@ -97,7 +97,7 @@ int hcoll_Allreduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype 
         use_fallback = 1;
     }
     else {
-        rc = hcoll_collectives.coll_allreduce(sendbuf, recvbuf, count, Dtype, Op,
+        rc = hcoll_collectives.coll_allreduce((void *)sendbuf, recvbuf, count, Dtype, Op,
                                               comm_ptr->hcoll_priv.hcoll_context);
         if (HCOLL_SUCCESS != rc) {
             use_fallback = 1;
@@ -124,7 +124,7 @@ int hcoll_Allreduce(const void *sendbuf, void *recvbuf, int count, MPI_Datatype 
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 int hcoll_Allgather(const void *sbuf, int scount, MPI_Datatype sdtype,
-                    void *rbuf, int rcount, MPI_Datatype rdtype, MPID_Comm * comm_ptr, int *err)
+                    void *rbuf, int rcount, MPI_Datatype rdtype, MPID_Comm * comm_ptr, mpir_errflag_t *err)
 {
     int is_homogeneous = 1, use_fallback = 0;
     MPI_Comm comm = comm_ptr->handle;
@@ -149,7 +149,7 @@ int hcoll_Allgather(const void *sbuf, int scount, MPI_Datatype sdtype,
         use_fallback = 1;
     }
     else {
-        rc = hcoll_collectives.coll_allgather(sbuf, scount, stype, rbuf, rcount, rtype,
+        rc = hcoll_collectives.coll_allgather((void *)sbuf, scount, stype, rbuf, rcount, rtype,
                                               comm_ptr->hcoll_priv.hcoll_context);
         if (HCOLL_SUCCESS != rc) {
             use_fallback = 1;
@@ -282,7 +282,7 @@ int hcoll_Iallgather_req(const void *sendbuf, int sendcount, MPI_Datatype sendty
         use_fallback = 1;
     }
     else {
-        rc = hcoll_collectives.coll_iallgather(sendbuf, sendcount, stype, recvbuf, recvcount, rtype,
+        rc = hcoll_collectives.coll_iallgather((void *)sendbuf, sendcount, stype, recvbuf, recvcount, rtype,
                                                comm_ptr->hcoll_priv.hcoll_context, rt_handle);
         if (HCOLL_SUCCESS != rc) {
             use_fallback = 1;
@@ -337,7 +337,7 @@ int hcoll_Iallreduce_req(const void *sendbuf, void *recvbuf, int count, MPI_Data
         use_fallback = 1;
     }
     else {
-        rc = hcoll_collectives.coll_iallreduce(sendbuf, recvbuf, count, Dtype, Op,
+        rc = hcoll_collectives.coll_iallreduce((void *)sendbuf, recvbuf, count, Dtype, Op,
                                                comm_ptr->hcoll_priv.hcoll_context, rt_handle);
         if (HCOLL_SUCCESS != rc) {
             use_fallback = 1;
