@@ -144,7 +144,8 @@ noinst_PROGRAMS =          \
     atomic_rmw_fop         \
     atomic_rmw_cas         \
     atomic_rmw_gacc	   \
-    acc-pairtype
+    acc-pairtype           \
+    manyget
 
 if BUILD_MPIX_TESTS
 noinst_PROGRAMS += aint
