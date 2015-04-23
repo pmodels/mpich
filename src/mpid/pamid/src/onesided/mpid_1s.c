@@ -82,6 +82,15 @@ MPIDI_Win_DoneCB(pami_context_t  context,
           MPID_cc_set(req_handle->cc_ptr, 0);
       }
     }
+  if ((MPIDI_Process.typed_onesided == 1) && (!req->target.dt.contig || !req->origin.dt.contig)) {
+    /* We used the PAMI_Rput/Rget_typed call and added a ref so any MPI_Type_free before the context
+     * executes the put/get would not free the MPID_Datatype, which would also free the associated PAMI datatype
+     * which was still needed for communication -- that communication has completed, so now release the ref
+     * in the callback to allow the MPID_Datatype to be freed.
+     */
+    MPID_Datatype_release(req->origin.dt.pointer);
+    MPID_Datatype_release(req->target.dt.pointer);
+  }
   MPIDI_Progress_signal();
 }
 

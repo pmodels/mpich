@@ -396,16 +396,25 @@ MPID_Get(void         *origin_addr,
 #endif
 
 
-  MPIDI_Win_datatype_map(&req->target.dt);
-
   if ((!req->target.dt.contig || !req->origin.dt.contig) && (MPIDI_Process.typed_onesided == 1))
     /* If the datatype is non-contiguous and the PAMID typed_onesided optimization
      * is enabled then we will be using the typed interface and will only make 1 call.
      */
     win->mpid.sync.total = 1;
-  else
+  else {
+    MPIDI_Win_datatype_map(&req->target.dt);
     win->mpid.sync.total += req->target.dt.num_contig;
+  }
 
+  if ((MPIDI_Process.typed_onesided == 1) && (!req->target.dt.contig || !req->origin.dt.contig)) {
+    /* We will use the PAMI_Rget_typed call so we need to make sure any MPI_Type_free before the context
+     * executes the get does not free the MPID_Datatype, which would also free the associated PAMI datatype which
+     * is still needed for communication -- decrement the ref in the callback to allow the MPID_Datatype
+     * to be freed once the PAMI communication has completed.
+     */
+    MPID_Datatype_add_ref(req->origin.dt.pointer);
+    MPID_Datatype_add_ref(req->target.dt.pointer);
+  }
   /* The pamid one-sided design requires context post in order to handle the
    * case where the number of pending rma operation exceeds the
    * 'PAMID_RMA_PENDING' threshold. When there are too many pending requests the
