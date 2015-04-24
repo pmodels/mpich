@@ -248,7 +248,7 @@ cvars:
         }                                                               \
     }
 
-#define MPIR_ERRTEST_TYPE_RMA_ATOMIC(datatype_, name_, err_)            \
+#define MPIR_ERRTEST_TYPE_RMA_ATOMIC(datatype_, err_)                   \
     do {                                                                \
         if (!MPIR_Type_is_rma_atomic(datatype_)) {                      \
             err_ = MPIR_Err_create_code(MPI_SUCCESS,                    \
@@ -257,7 +257,7 @@ cvars:
                                         MPI_ERR_TYPE,                   \
                                         "**rmatypenotatomic",           \
                                         "**rmatypenotatomic %D",        \
-                                        name_);                         \
+                                        datatype);                      \
             goto fn_fail;                                               \
         }                                                               \
     } while (0)

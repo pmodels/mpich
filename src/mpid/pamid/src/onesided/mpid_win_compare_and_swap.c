@@ -85,7 +85,7 @@ int MPID_Compare_and_swap(const void *origin_addr, const void *compare_addr,
     }
   /* Check if datatype is a C integer, Fortran Integer,
      logical, or byte, per the classes given on page 165. */
-  MPIR_ERRTEST_TYPE_RMA_ATOMIC(datatype, "datatype", mpi_errno);
+  MPIR_ERRTEST_TYPE_RMA_ATOMIC(datatype, mpi_errno);
 
   req = (MPIDI_Win_request *) MPIU_Calloc0(1, MPIDI_Win_request);
   req->win          = win;
