@@ -34,8 +34,8 @@ extern "C" {
 #endif
 /* *INDENT-OFF* */
 
-int MPL_large_writev(int fd, const struct iovec *iov, int iovcnt);
-int MPL_large_readv(int fd, const struct iovec *iov, int iovcnt);
+ssize_t MPL_large_writev(int fd, const struct iovec *iov, int iovcnt);
+ssize_t MPL_large_readv(int fd, const struct iovec *iov, int iovcnt);
 
 /* *INDENT-ON* */
 #if defined(__cplusplus)

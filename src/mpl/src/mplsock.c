@@ -16,7 +16,7 @@
  * negligible compared to the system call overhead for small messages
  * and compared to the data transmission overhead for large
  * messages. */
-int MPL_large_writev(int fd, const struct iovec *iov, int iovcnt)
+ssize_t MPL_large_writev(int fd, const struct iovec *iov, int iovcnt)
 {
     ssize_t total_size, tmp;
     struct iovec dummy;
@@ -68,7 +68,7 @@ int MPL_large_writev(int fd, const struct iovec *iov, int iovcnt)
 }
 
 
-int MPL_large_readv(int fd, const struct iovec *iov, int iovcnt)
+ssize_t MPL_large_readv(int fd, const struct iovec *iov, int iovcnt)
 {
     ssize_t total_size, tmp;
     struct iovec dummy;
