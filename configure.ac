@@ -269,21 +269,39 @@ PAC_PREFIX_ALL_FLAGS(USER)
 # as include paths).
 #
 # All libraries that are detected by MPICH as needed for some of its
-# functionality (such as -lpthread) should be added to EXTERNAL_LIBS
+# functionality (such as -lpthread) should be added to WRAPPER_LIBS
 # so executables built within MPICH use them.  If inter-library
 # dependencies are not supported on the platform, these libraries are
 # added to the MPICH wrappers (mpicc and friends) as well.
-PAC_PREFIX_ALL_FLAGS(WRAPPER)
-WRAPPER_CFLAGS="$CFLAGS $MPICH_MPICC_FLAGS"
-WRAPPER_CPPFLAGS="$CPPFLAGS $MPICH_MPICPP_FLAGS"
-WRAPPER_CXXFLAGS="$CXXFLAGS $MPICH_MPICXX_FLAGS"
-WRAPPER_FFLAGS="$FFLAGS $MPICH_MPIF77_FLAGS"
-WRAPPER_FCFLAGS="$FCFLAGS $MPICH_MPIFC_FLAGS"
-WRAPPER_LDFLAGS="$MPICH_LDFLAGS"
-WRAPPER_LIBS="$MPICH_LIBS"
-EXTERNAL_LIBS=""
-export EXTERNAL_LIBS
-AC_SUBST(EXTERNAL_LIBS)
+AC_SUBST(WRAPPER_CFLAGS)
+AC_SUBST(WRAPPER_CPPFLAGS)
+AC_SUBST(WRAPPER_CXXFLAGS)
+AC_SUBST(WRAPPER_FFLAGS)
+AC_SUBST(WRAPPER_FCFLAGS)
+AC_SUBST(WRAPPER_LDFLAGS)
+AC_SUBST(WRAPPER_LIBS)
+
+# MPICH_MPIx_FLAGS are used by mpicc and friends.  They are like
+# WRAPPER flags, but these are provided by the user.
+AC_SUBST(MPICH_MPICC_CPPFLAGS)
+AC_SUBST(MPICH_MPICC_CFLAGS)
+AC_SUBST(MPICH_MPICC_LDFLAGS)
+AC_SUBST(MPICH_MPICC_LIBS)
+
+AC_SUBST(MPICH_MPICXX_CPPFLAGS)
+AC_SUBST(MPICH_MPICXX_CXXFLAGS)
+AC_SUBST(MPICH_MPICXX_LDFLAGS)
+AC_SUBST(MPICH_MPICXX_LIBS)
+
+AC_SUBST(MPICH_MPIF77_CPPFLAGS)
+AC_SUBST(MPICH_MPIF77_FFLAGS)
+AC_SUBST(MPICH_MPIF77_LDFLAGS)
+AC_SUBST(MPICH_MPIF77_LIBS)
+
+AC_SUBST(MPICH_MPIFORT_CPPFLAGS)
+AC_SUBST(MPICH_MPIFORT_FCFLAGS)
+AC_SUBST(MPICH_MPIFORT_LDFLAGS)
+AC_SUBST(MPICH_MPIFORT_LIBS)
 
 # Add MPICHLIB_* to the appropriate flags
 AC_ARG_VAR(MPICHLIB_CFLAGS,
@@ -1171,7 +1189,7 @@ else
     AS_IF([test -s "${with_mpl_prefix}/include/mplconfig.h"],
           [:],[AC_MSG_ERROR([the MPL installation in "${with_mpl_prefix}" appears broken])])
     PAC_APPEND_FLAG([-I${with_mpl_prefix}/include],[CPPFLAGS])
-    PAC_PREPEND_FLAG([-l${MPLLIBNAME}],[EXTERNAL_LIBS])
+    PAC_PREPEND_FLAG([-l${MPLLIBNAME}],[WRAPPER_LIBS])
     PAC_APPEND_FLAG([-L${with_mpl_prefix}/lib],[WRAPPER_LDFLAGS])
     mpllibdir="-L${with_mpl_prefix}/lib"
 fi
@@ -1235,7 +1253,7 @@ if test "$with_openpa_prefix" = "embedded" ; then
         AC_MSG_WARN([Attempted to use the embedded OpenPA source tree in "src/openpa", but it is missing.  Configuration or compilation may fail later.])
     fi
 elif test "$with_openpa_prefix" = "system" ; then
-    PAC_PREPEND_FLAG([-l${OPALIBNAME}],[EXTERNAL_LIBS])
+    PAC_PREPEND_FLAG([-l${OPALIBNAME}],[WRAPPER_LIBS])
 elif test "$with_openpa_prefix" = "no" ; then
     # The user doesn't want to use OPA.  This may or may not cause MPICH to
     # fail to configure/build, depending on many other factors.
@@ -1246,7 +1264,7 @@ else
     AS_IF([test -s "${with_openpa_prefix}/include/opa_primitives.h" -a -s "${with_openpa_prefix}/include/opa_config.h"],
           [:],[AC_MSG_ERROR([the OpenPA installation in "${with_openpa_prefix}" appears broken])])
     PAC_APPEND_FLAG([-I${with_openpa_prefix}/include],[CPPFLAGS])
-    PAC_PREPEND_FLAG([-l${OPALIBNAME}],[EXTERNAL_LIBS])
+    PAC_PREPEND_FLAG([-l${OPALIBNAME}],[WRAPPER_LIBS])
     if test -d ${with_openpa_prefix}/lib64 ; then
         PAC_APPEND_FLAG([-L${with_openpa_prefix}/lib64],[WRAPPER_LDFLAGS])
         opalibdir="-L${with_openpa_prefix}/lib64"
@@ -5331,7 +5349,6 @@ case $with_thread_package in
         AC_CHECK_LIB([pthread],[pthread_key_create],have_pthreads=yes)
 	if test "$have_pthreads" = "yes" ; then
 	   PAC_PREPEND_FLAG([-lpthread],[LIBS])
-	   PAC_PREPEND_FLAG([-lpthread],[EXTERNAL_LIBS])
 	fi
 
         AC_CHECK_FUNCS(pthread_yield)
@@ -5555,7 +5572,7 @@ AC_ARG_ENABLE(checkpointing,
         PAC_SET_HEADER_LIB_PATH(blcr)
 	PAC_PUSH_FLAG([LIBS])
 	PAC_CHECK_HEADER_LIB_FATAL(blcr, libcr.h, cr, cr_init)
-	PAC_APPEND_FLAG([-lblcr],[EXTERNAL_LIBS])
+	PAC_APPEND_FLAG([-lblcr],[WRAPPER_LIBS])
 	PAC_POP_FLAG([LIBS])
         AC_DEFINE(ENABLE_CHECKPOINTING,1,[Application checkpointing enabled])
       fi ],
@@ -6020,13 +6037,6 @@ AC_OUTPUT_COMMANDS([chmod a+x test/commands/cmdtests])
 
 
 AC_DEFINE(HAVE_MPICHCONF,1,[Define so that we can test whether the mpichconf.h file has been included])
-
-# If the platform does not support inter-library dependencies,
-# add the LDFLAGS/LIBS we got so far to WRAPPERs
-if test "$INTERLIB_DEPS" = "no" ; then
-   WRAPPER_LDFLAGS="$WRAPPER_LDFLAGS $LDFLAGS"
-   WRAPPER_LIBS="$WRAPPER_LIBS $EXTERNAL_LIBS"
-fi
 
 if test "$USE_PMI2_API" = "yes" ; then
    AC_DEFINE(USE_PMI2_API, 1, [Define if PMI2 API must be used])

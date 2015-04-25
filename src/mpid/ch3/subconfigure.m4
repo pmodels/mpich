@@ -78,7 +78,7 @@ AC_ARG_ENABLE([ftb],
    PAC_SET_HEADER_LIB_PATH([ftb])
    PAC_PUSH_FLAG(LIBS)
    PAC_CHECK_HEADER_LIB_FATAL([ftb], [libftb.h], [ftb], [FTB_Connect])
-   PAC_APPEND_FLAG([-lftb],[EXTERNAL_LIBS])
+   PAC_APPEND_FLAG([-lftb],[WRAPPER_LIBS])
    PAC_POP_FLAG(LIBS)]
 )
 

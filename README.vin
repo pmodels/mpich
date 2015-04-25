@@ -297,11 +297,11 @@ them. This is a temporary hack for certain cases that advanced
 developers might be interested in, but which break existing configure
 tests (e.g., -Werror). These are NOT recommended for regular users.
 
-(d) MPICH_MPICC_FLAGS, MPICH_MPICPP_FLAGS, MPICH_MPICXX_FLAGS,
-MPICH_MPIFC_FLAGS, MPICH_LDFLAGS and MPICH_LIBS (abbreviated as
-MPICH_MPIX_FLAGS): These flags do *not* affect the compilation of the
-MPICH library itself, but will be internally used by mpicc and
-friends.
+(d) MPICH_MPICC_CFLAGS, MPICH_MPICC_CPPFLAGS, MPICH_MPICC_LDFLAGS,
+MPICH_MPICC_LIBS, and so on for MPICXX, MPIF77 and MPIFORT
+(abbreviated as MPICH_MPIX_FLAGS): These flags do *not* affect the
+compilation of the MPICH library itself, but will be internally used
+by mpicc and friends.
 
 
   +--------------------------------------------------------------------+

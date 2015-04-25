@@ -23,14 +23,14 @@ AM_COND_IF([BUILD_NEMESIS_NETMOD_IB],[
     PAC_POP_FLAG(LIBS)
     if test "${dcfa_found}" = "yes" ; then
         AC_MSG_NOTICE([libdcfa is going to be linked.])
-	PAC_APPEND_FLAG([-ldcfa],[EXTERNAL_LIBS])
+	PAC_APPEND_FLAG([-ldcfa],[WRAPPER_LIBS])
     else
 	PAC_PUSH_FLAG(LIBS)
         PAC_CHECK_HEADER_LIB([infiniband/verbs.h],ibverbs,ibv_open_device,ibverbs_found=yes,ibverbs_found=no)
 	PAC_POP_FLAG(LIBS)
         if test "${ibverbs_found}" = "yes" ; then
             AC_MSG_NOTICE([libibverbs is going to be linked.])
-	    PAC_APPEND_FLAG([-libverbs],[EXTERNAL_LIBS])
+	    PAC_APPEND_FLAG([-libverbs],[WRAPPER_LIBS])
         else
             AC_MSG_ERROR([Internal error: neither ibverbs nor dcfa was found])
         fi

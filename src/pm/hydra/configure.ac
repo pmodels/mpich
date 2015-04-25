@@ -44,9 +44,9 @@ m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 
 # Reset link flags
 PAC_RESET_LINK_FLAGS()
-EXTERNAL_LIBS=""
-export EXTERNAL_LIBS
-AC_SUBST(EXTERNAL_LIBS)
+WRAPPER_LIBS=""
+export WRAPPER_LIBS
+AC_SUBST(WRAPPER_LIBS)
 
 PAC_ARG_STRICT
 
@@ -277,7 +277,7 @@ for hydra_bss_name in ${hydra_bss_names}; do
 		PAC_POP_FLAG(LIBS)
                 if test "$have_pbs_launcher" = "yes" ; then
 		    available_launchers="$available_launchers pbs"
-		    PAC_APPEND_FLAG([-ltorque],[EXTERNAL_LIBS])
+		    PAC_APPEND_FLAG([-ltorque],[WRAPPER_LIBS])
                 fi
 		available_rmks="$available_rmks pbs"
 		;;
@@ -518,7 +518,7 @@ for hydra_ckpointlib in ${hydra_ckpointlibs}; do
 	    if test "$have_blcr" = "yes" ; then
 	       AC_DEFINE(HAVE_BLCR,1,[Define if blcr is available])
 	       available_ckpointlibs="$available_ckpointlibs blcr"
-	       PAC_APPEND_FLAG([-lcr],[EXTERNAL_LIBS])
+	       PAC_APPEND_FLAG([-lcr],[WRAPPER_LIBS])
 	    fi
 	    ;;		
 	*)
@@ -691,7 +691,7 @@ if test "$have_ftb" = "yes" ; then
    # FIXME: We need to test to make sure FTB works correctly
    PAC_APPEND_FLAG([-lpthread],[LIBS])
    AC_DEFINE(ENABLE_FTB,1,[Define if FTB is enabled])
-   PAC_APPEND_FLAG([-lftb],[EXTERNAL_LIBS])
+   PAC_APPEND_FLAG([-lftb],[WRAPPER_LIBS])
 fi
 AM_CONDITIONAL([hydra_have_ftb], [test "${have_ftb}" = "yes"])
 

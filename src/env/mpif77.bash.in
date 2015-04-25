@@ -262,6 +262,14 @@ if [ -n "$profConf" ] ; then
     fi
 fi
 
+final_fflags="@MPICH_MPIF77_FFLAGS@ @WRAPPER_FFLAGS@"
+final_ldflags="@MPICH_MPIF77_LDFLAGS@"
+final_libs="@MPICH_MPIF77_LIBS@"
+if test "@INTERLIB_DEPS@" = "no" ; then
+    final_ldflags="$ldflags @LDFLAGS@ @WRAPPER_LDFLAGS@"
+    final_libs="$libs @LIBS@ @WRAPPER_LIBS@"
+fi
+
 # A temporary statement to invoke the compiler
 # Place the -L before any args incase there are any mpi libraries in there.
 # Eventually, we'll want to move this after any non-MPI implementation 
@@ -280,14 +288,14 @@ if [ "$linking" = yes ] ; then
     fi
 
     if [ "$nativelinking" = yes ] ; then
-        $Show $F77 $PROFILE_INCPATHS @WRAPPER_FFLAGS@ @WRAPPER_LDFLAGS@ "${allargs[@]}" -I$includedir
+        $Show $F77 $PROFILE_INCPATHS ${final_fflags} ${final_ldflags} "${allargs[@]}" -I$includedir
         rc=$?
     else
-        $Show $F77 $PROFILE_INCPATHS @WRAPPER_FFLAGS@ @WRAPPER_LDFLAGS@ "${allargs[@]}" -I$includedir -L$libdir $f77libs $PROFILE_PRELIB $PROFILE_FOO $rpath_flags -l@MPILIBNAME@ @LPMPILIBNAME@ $PROFILE_POSTLIB @WRAPPER_LIBS@ @F77_OTHER_LIBS@
+        $Show $F77 $PROFILE_INCPATHS ${final_fflags} ${final_ldflags} "${allargs[@]}" -I$includedir -L$libdir $f77libs $PROFILE_PRELIB $PROFILE_FOO $rpath_flags -l@MPILIBNAME@ @LPMPILIBNAME@ $PROFILE_POSTLIB ${final_libs} @F77_OTHER_LIBS@
         rc=$?
     fi
 else
-    $Show $F77 $PROFILE_INCPATHS @WRAPPER_FFLAGS@ "${allargs[@]}" -I$includedir
+    $Show $F77 $PROFILE_INCPATHS ${final_fflags} "${allargs[@]}" -I$includedir
     rc=$?
 fi
 if [ -n "$rmfiles" ] ; then

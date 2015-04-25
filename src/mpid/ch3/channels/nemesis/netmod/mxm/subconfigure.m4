@@ -37,7 +37,7 @@ AM_COND_IF([BUILD_NEMESIS_NETMOD_MXM],[
         AC_MSG_ERROR(['MXM API version Problem.  Are you running a recent version of MXM (at least 3.1)?'])
      fi;
      AC_DEFINE([ENABLE_COMM_OVERRIDES], 1, [define to add per-vc function pointers to override send and recv functions])
-     PAC_APPEND_FLAG([-lmxm],[EXTERNAL_LIBS])
+     PAC_APPEND_FLAG([-lmxm],[WRAPPER_LIBS])
 
 ])dnl end AM_COND_IF(BUILD_NEMESIS_NETMOD_MXM,...)
 ])dnl end _BODY

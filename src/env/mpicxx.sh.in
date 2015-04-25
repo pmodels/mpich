@@ -219,6 +219,15 @@ if [ -n "$profConf" ] ; then
     fi
 fi
 
+final_cxxflags="@MPICH_MPICXX_CXXFLAGS@ @WRAPPER_CXXFLAGS@"
+final_cppflags="@MPICH_MPICXX_CPPFLAGS@ @WRAPPER_CPPFLAGS@"
+final_ldflags="@MPICH_MPICXX_LDFLAGS@"
+final_libs="@MPICH_MPICXX_LIBS@"
+if test "@INTERLIB_DEPS@" = "no" ; then
+    final_ldflags="$ldflags @LDFLAGS@ @WRAPPER_LDFLAGS@"
+    final_libs="$libs @LIBS@ @WRAPPER_LIBS@"
+fi
+
 # A temporary statement to invoke the compiler
 # Place the -L before any args incase there are any mpi libraries in there.
 # Eventually, we'll want to move this after any non-MPI implementation 
@@ -236,14 +245,14 @@ if [ "$linking" = yes ] ; then
     fi
 
     if [ "$nativelinking" = yes ] ; then
-        $Show $CXX $PROFILE_INCPATHS @WRAPPER_CXXFLAGS@ @WRAPPER_LDFLAGS@ $allargs -I$includedir
+        $Show $CXX ${final_cppflags} $PROFILE_INCPATHS ${final_cxxflags} ${final_ldflags} $allargs -I$includedir
         rc=$?
     else
-        $Show $CXX $PROFILE_INCPATHS @WRAPPER_CXXFLAGS@ @WRAPPER_LDFLAGS@ $allargs -I$includedir -L$libdir $cxxlibs $PROFILE_PRELIB $PROFILE_FOO $rpath_flags -l@MPILIBNAME@ @LPMPILIBNAME@ $PROFILE_POSTLIB @WRAPPER_LIBS@
+        $Show $CXX ${final_cppflags} $PROFILE_INCPATHS ${final_cxxflags} ${final_ldflags} $allargs -I$includedir -L$libdir $cxxlibs $PROFILE_PRELIB $PROFILE_FOO $rpath_flags -l@MPILIBNAME@ @LPMPILIBNAME@ $PROFILE_POSTLIB ${final_libs}
         rc=$?
     fi
 else
-    $Show $CXX $PROFILE_INCPATHS @WRAPPER_CXXFLAGS@ $allargs -I$includedir
+    $Show $CXX ${final_cppflags} $PROFILE_INCPATHS ${final_cxxflags} $allargs -I$includedir
     rc=$?
 fi
 

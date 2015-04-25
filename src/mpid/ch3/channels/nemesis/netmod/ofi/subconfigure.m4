@@ -17,7 +17,7 @@ AM_COND_IF([BUILD_NEMESIS_NETMOD_OFI],[
     PAC_SET_HEADER_LIB_PATH(ofi)
     PAC_PUSH_FLAG(LIBS)
     PAC_CHECK_HEADER_LIB_FATAL(ofi, rdma/fabric.h, fabric, fi_getinfo)
-    PAC_APPEND_FLAG([-lfabric],[EXTERNAL_LIBS])
+    PAC_APPEND_FLAG([-lfabric],[WRAPPER_LIBS])
     PAC_POP_FLAG(LIBS)
 
     AC_DEFINE([ENABLE_COMM_OVERRIDES], 1, [define to add per-vc function pointers to override send and recv functions])

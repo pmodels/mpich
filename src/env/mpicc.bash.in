@@ -204,6 +204,15 @@ if [ -n "$profConf" ] ; then
     fi
 fi
 
+final_cflags="@MPICH_MPICC_CFLAGS@ @WRAPPER_CFLAGS@"
+final_cppflags="@MPICH_MPICC_CPPFLAGS@ @WRAPPER_CPPFLAGS@"
+final_ldflags="@MPICH_MPICC_LDFLAGS@"
+final_libs="@MPICH_MPICC_LIBS@"
+if test "@INTERLIB_DEPS@" = "no" ; then
+    final_ldflags="$ldflags @LDFLAGS@ @WRAPPER_LDFLAGS@"
+    final_libs="$libs @LIBS@ @WRAPPER_LIBS@"
+fi
+
 # -----------------------------------------------------------------------
 #
 # A temporary statement to invoke the compiler
@@ -229,14 +238,14 @@ if [ "$linking" = yes ] ; then
     fi
 
     if [ "$nativelinking" = yes ] ; then
-        $Show $CC @WRAPPER_CPPFLAGS@ $PROFILE_INCPATHS @WRAPPER_CFLAGS@ @WRAPPER_LDFLAGS@ "${allargs[@]}" -I$includedir
+        $Show $CC ${final_cppflags} $PROFILE_INCPATHS ${final_cflags} ${final_ldflags} "${allargs[@]}" -I$includedir
         rc=$?
     else
-        $Show $CC @WRAPPER_CPPFLAGS@ $PROFILE_INCPATHS @WRAPPER_CFLAGS@ @WRAPPER_LDFLAGS@ "${allargs[@]}" -I$includedir -L$libdir $PROFILE_PRELIB $PROFILE_FOO $rpath_flags -l@MPILIBNAME@ @LPMPILIBNAME@ $PROFILE_POSTLIB @WRAPPER_LIBS@
+        $Show $CC ${final_cppflags} $PROFILE_INCPATHS ${final_cflags} ${final_ldflags} "${allargs[@]}" -I$includedir -L$libdir $PROFILE_PRELIB $PROFILE_FOO $rpath_flags -l@MPILIBNAME@ @LPMPILIBNAME@ $PROFILE_POSTLIB ${final_libs}
         rc=$?
     fi
 else
-    $Show $CC @WRAPPER_CPPFLAGS@ $PROFILE_INCPATHS @WRAPPER_CFLAGS@ "${allargs[@]}" -I$includedir
+    $Show $CC ${final_cppflags} $PROFILE_INCPATHS ${final_cflags} "${allargs[@]}" -I$includedir
     rc=$?
 fi
 
