@@ -286,10 +286,10 @@ MPICH library being compiled/linked with these flags and the flags
 internally being used in mpicc and friends.
 
 (b) MPICHLIB_CFLAGS, MPICHLIB_CPPFLAGS, MPICHLIB_CXXFLAGS,
-MPICHLIB_FFLAGS, MPICHLIB_FCFLAGS, MPICHLIB_LDFLAGS and
-MPICHLIB_LIBS (abbreviated as MPICHLIB_xFLAGS): Setting these flags
-would result in the MPICH library being compiled/linked with these
-flags. However, these flags will *not* be used by mpicc and friends.
+MPICHLIB_FFLAGS, and MPICHLIB_FCFLAGS (abbreviated as
+MPICHLIB_xFLAGS): Setting these flags would result in the MPICH
+library being compiled with these flags.  However, these flags will
+*not* be used by mpicc and friends.
 
 (c) MPICH_MAKE_CFLAGS: Setting these flags would result in MPICH's
 configure tests to not use these flags, but the makefile's to use
