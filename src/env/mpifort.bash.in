@@ -103,6 +103,7 @@ linking=yes
 allargs=("$@")
 argno=0
 cppflags=()
+interlib_deps=yes
 for arg in "$@" ; do
     # Set addarg to no if this arg should be ignored by the C compiler
     addarg=yes
@@ -116,6 +117,9 @@ for arg in "$@" ; do
 	# ----------------------------------------------------------------
 	# Options that control how we use mpifort (e.g., -show,
 	# -fc=* -config=*
+    -static)
+    interlib_deps=no
+    ;;
     -echo)
     addarg=no
     set -x
@@ -306,7 +310,7 @@ fi
 final_fcflags="@MPICH_MPIFORT_FCFLAGS@ @WRAPPER_FCFLAGS@"
 final_ldflags="@MPICH_MPIFORT_LDFLAGS@"
 final_libs="@MPICH_MPIFORT_LIBS@"
-if test "@INTERLIB_DEPS@" = "no" ; then
+if test "@INTERLIB_DEPS@" = "no" -o "${interlib_deps}" = "no" ; then
     final_ldflags="$ldflags @LDFLAGS@ @WRAPPER_LDFLAGS@"
     final_libs="$libs @LIBS@ @WRAPPER_LIBS@"
 fi

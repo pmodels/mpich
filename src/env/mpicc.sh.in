@@ -85,6 +85,7 @@ fi
 
 linking=yes
 allargs=""
+interlib_deps=yes
 for arg in "$@" ; do
     # Set addarg to no if this arg should be ignored by the C compiler
     addarg=yes
@@ -99,6 +100,9 @@ for arg in "$@" ; do
 	# ----------------------------------------------------------------
 	# Options that control how we use mpicc (e.g., -show, 
 	# -cc=* -config=*
+    -static)
+    interlib_deps=no
+    ;;
     -echo)
     addarg=no
     set -x
@@ -217,7 +221,7 @@ final_cflags="@MPICH_MPICC_CFLAGS@ @WRAPPER_CFLAGS@"
 final_cppflags="@MPICH_MPICC_CPPFLAGS@ @WRAPPER_CPPFLAGS@"
 final_ldflags="@MPICH_MPICC_LDFLAGS@"
 final_libs="@MPICH_MPICC_LIBS@"
-if test "@INTERLIB_DEPS@" = "no" ; then
+if test "@INTERLIB_DEPS@" = "no" -o "${interlib_deps}" = "no" ; then
     final_ldflags="$ldflags @LDFLAGS@ @WRAPPER_LDFLAGS@"
     final_libs="$libs @LIBS@ @WRAPPER_LIBS@"
 fi

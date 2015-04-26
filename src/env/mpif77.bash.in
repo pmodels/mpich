@@ -90,6 +90,7 @@ linking=yes
 allargs=("$@")
 argno=0
 cppflags=()
+interlib_deps=yes
 for arg in "$@" ; do
     # Set addarg to no if this arg should be ignored by the C compiler
     addarg=yes
@@ -103,6 +104,9 @@ for arg in "$@" ; do
 	# ----------------------------------------------------------------
 	# Options that control how we use mpif77 (e.g., -show, 
 	# -f77=* -config=*
+    -static)
+    interlib_deps=no
+    ;;
     -echo)
     addarg=no
     set -x
@@ -265,7 +269,7 @@ fi
 final_fflags="@MPICH_MPIF77_FFLAGS@ @WRAPPER_FFLAGS@"
 final_ldflags="@MPICH_MPIF77_LDFLAGS@"
 final_libs="@MPICH_MPIF77_LIBS@"
-if test "@INTERLIB_DEPS@" = "no" ; then
+if test "@INTERLIB_DEPS@" = "no" -o "${interlib_deps}" = "no" ; then
     final_ldflags="$ldflags @LDFLAGS@ @WRAPPER_LDFLAGS@"
     final_libs="$libs @LIBS@ @WRAPPER_LIBS@"
 fi
