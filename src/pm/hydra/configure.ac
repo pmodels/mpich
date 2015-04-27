@@ -157,7 +157,7 @@ PAC_ENABLE_COVERAGE
 # Check if the necessary headers are available
 AC_HEADER_STDC
 AC_CHECK_HEADERS(unistd.h strings.h sys/types.h sys/socket.h sched.h sys/stat.h sys/param.h \
-		 netinet/in.h netinet/tcp.h sys/un.h netdb.h sys/time.h time.h ifaddrs.h arpa/inet.h \
+		 netinet/in.h netinet/tcp.h sys/un.h sys/time.h time.h ifaddrs.h arpa/inet.h \
 		 poll.h fcntl.h netdb.h winsock2.h windows.h)
 
 # These functions are in additional libraries on some platforms (like Solaris).
