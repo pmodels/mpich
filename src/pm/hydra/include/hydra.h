@@ -157,6 +157,10 @@ extern char *HYD_dbg_prefix;
 extern char **environ;
 #endif /* MANUAL_EXTERN_ENVIRON */
 
+#if defined NEEDS_HSTRERROR_DECL
+const char * hstrerror(int err);
+#endif /* NEEDS_HSTRERROR_DECL */
+
 #if defined NEEDS_GETTIMEOFDAY_DECL
 int gettimeofday(struct timeval *tv, struct timezone *tz);
 #endif /* NEEDS_GETTIMEOFDAY_DECL */

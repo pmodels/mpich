@@ -169,7 +169,11 @@ AC_SEARCH_LIBS(hstrerror, resolv,)
 # Check for necessary functions
 AC_CHECK_FUNCS(gettimeofday time strdup sigaction signal usleep alloca unsetenv \
 	       strerror strsignal stat fcntl alarm isatty inet_ntop getpgid \
-	       setsid killpg)
+	       setsid killpg hstrerror)
+
+if test "$ac_cv_func_hstrerror" = "yes" ; then
+   PAC_FUNC_NEEDS_DECL([#include <netdb.h>],hstrerror)
+fi
 
 if test "$ac_cv_func_gettimeofday" = "yes" ; then
    PAC_FUNC_NEEDS_DECL([#include <sys/time.h>],gettimeofday)
