@@ -925,12 +925,12 @@ if [ "$do_build_configure" = "yes" ] ; then
             # Newer versions should have this patch already included.
             if [ -f $amdir/confdb/libtool.m4 ] ; then
                 # There is no need to patch if we're not going to use Fortran.
-                ifort_patch_requires_rebuild=no
+                libtool_patch_requires_rebuild=no
                 if [ $do_bindings = "yes" ] ; then
                     echo_n "Patching libtool.m4 for compatibility with ifort on OSX... "
                     patch -N -s -l $amdir/confdb/libtool.m4 maint/darwin-ifort.patch
                     if [ $? -eq 0 ] ; then
-                        ifort_patch_requires_rebuild=yes
+                        libtool_patch_requires_rebuild=yes
                         # Remove possible leftovers, which don't imply a failure
                         rm -f $amdir/confdb/libtool.m4.orig
                         echo "done"
@@ -939,7 +939,22 @@ if [ "$do_build_configure" = "yes" ] ; then
                     fi
                 fi
 
-                if [ $ifort_patch_requires_rebuild = "yes" ] ; then
+                # Set deplibs_check_method to unknown instead of pass_all on FreeBSD.
+                # Because the inter-library dependency is broken on the latest
+                # FreeBSD production release (10.1-RELEASE), but libtool cannot detect
+                # it correctly.
+                echo_n "Patching libtool.m4 for compatibility with inter-library dependency on FreeBSD... "
+                patch -N -s -l $amdir/confdb/libtool.m4 maint/freebsd.patch
+                if [ $? -eq 0 ] ; then
+                        libtool_patch_requires_rebuild=yes
+                        # Remove possible leftovers, which don't imply a failure
+                        rm -f $amdir/confdb/libtool.m4.orig
+                        echo "done"
+                else
+                        echo "failed"
+                fi
+
+                if [ $libtool_patch_requires_rebuild = "yes" ] ; then
                     # Rebuild configure
                     (cd $amdir && $autoconf -f) || exit 1
                     # Reset libtool.m4 timestamps to avoid confusing make
