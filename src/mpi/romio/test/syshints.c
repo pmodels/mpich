@@ -14,7 +14,7 @@ static void handle_error(int errcode, const char *str)
 
 #define CHECK(fn) {int errcode; errcode = (fn); if (errcode != MPI_SUCCESS) handle_error(errcode, #fn); }
 
-static int hint_check(MPI_Info info_used, char * key, char *expected) {
+static int hint_check(MPI_Info info_used, const char * key, const char *expected) {
     char value[MPI_MAX_INFO_VAL+1];
     int flag;
 
