@@ -415,6 +415,11 @@ if test "$FROM_MPICH" = yes ; then
     if test -n "$MPICH_ENABLE_CXX" ; then
         enable_cxx=$MPICH_ENABLE_CXX
     fi
+    namepub_tests="#"
+    if test -n "$nameserv_name" ; then
+        namepub_tests=""
+    fi
+    AC_SUBST(namepub_tests)
 fi
 
 # Some MPI-2 implementations (including some of the MPICH shared-memory
@@ -1521,6 +1526,7 @@ AC_OUTPUT(maint/testmerge \
           rma/Makefile \
           rma/testlist \
           spawn/Makefile \
+          spawn/testlist \
           topo/Makefile \
           io/Makefile \
           io/testlist \
@@ -1587,6 +1593,7 @@ AC_OUTPUT(maint/testmerge \
           f08/init/Makefile \
           f08/info/Makefile \
           f08/spawn/Makefile \
+          f08/spawn/testlist \
           f08/timer/Makefile \
           f08/ext/Makefile \
           f08/misc/Makefile \
@@ -1604,6 +1611,7 @@ AC_OUTPUT(maint/testmerge \
           cxx/init/Makefile \
           cxx/rma/Makefile \
           cxx/spawn/Makefile \
+          cxx/spawn/testlist \
 	  cxx/topo/Makefile \
           threads/Makefile \
           threads/pt2pt/Makefile \
@@ -1624,6 +1632,7 @@ AC_OUTPUT(maint/testmerge \
           errors/pt2pt/Makefile \
           errors/rma/Makefile \
           errors/spawn/Makefile \
+          errors/spawn/testlist \
           errors/topo/Makefile \
           errors/io/Makefile \
           errors/cxx/Makefile \

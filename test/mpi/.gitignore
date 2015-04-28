@@ -187,6 +187,7 @@
 /cxx/io/writeatallbenosx
 /cxx/io/writeallbenosx
 /cxx/pt2pt/bsend1cxx
+/cxx/spawn/testlist
 /cxx/spawn/namepubx
 /cxx/spawn/spawnintrax
 /cxx/spawn/spawnintrax
@@ -231,6 +232,7 @@
 /errors/pt2pt/proberank
 /errors/pt2pt/truncmsg2
 /errors/spawn/badport
+/errors/spawn/testlist
 /errors/topo/cartsmall
 /f77/testlist
 /f77/attr/baseattr
@@ -451,6 +453,7 @@
 /f08/datatype/get_elem_d
 /f08/datatype/get_elem_u
 /f08/rma/testlist
+/f08/spawn/testlist
 /f08/io/iwriteatallf90.f90
 /f08/io/iwriteatallf90
 /f08/io/i_fcoll_test
@@ -1030,6 +1033,7 @@
 /rma/win_shared_noncontig_put
 /rma/wincall
 /rma/window_creation
+/spawn/testlist
 /spawn/concurrent_spawns
 /spawn/disconnect
 /spawn/disconnect2
