@@ -52,6 +52,7 @@ noinst_PROGRAMS =      \
     exscan2            \
     gather             \
     gather2            \
+    gather_big         \
     iallred            \
     ibarrier           \
     icallgather        \

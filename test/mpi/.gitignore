@@ -575,6 +575,7 @@
 /coll/bcastzerotype
 /coll/gather
 /coll/gather2
+/coll/gather_big
 /coll/iallred
 /coll/ibarrier
 /coll/icalltoallv
