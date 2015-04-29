@@ -365,7 +365,7 @@ static inline int enqueue_lock_origin(MPID_Win * win_ptr, MPIDI_VC_t * vc,
         MPIDI_msg_sz_t data_len;
         char *data_buf = NULL;
 
-        /* This is PUT, ACC, GACC */
+        /* This is PUT, ACC, GACC, FOP */
 
         MPIDI_CH3_PKT_RMA_GET_TARGET_DATATYPE((*pkt), target_dtp, mpi_errno);
         MPIDI_CH3_PKT_RMA_GET_TARGET_COUNT((*pkt), target_count, mpi_errno);
