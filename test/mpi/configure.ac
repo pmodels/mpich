@@ -695,6 +695,7 @@ if test "$spawndir" = "spawn" ; then
     AC_SUBST(nslib)
 fi
 
+threadlib=""
 # Headers needed for threads tests
 if test "$threadsdir" = "threads" ; then
     # Check for needed threads headers and needed and optional routines
@@ -703,7 +704,7 @@ if test "$threadsdir" = "threads" ; then
     # we shouldn't actually need to do this, but we are dodging the chicken/egg
     # problem b/c we don't have a working mpicc yet and we temporarily discarded
     # the MPICH-set LIBS (probably the wrong thing to do)
-    AC_SEARCH_LIBS([pthread_create],[pthread])
+    AC_SEARCH_LIBS([pthread_create],[pthread],[threadlib="-lpthread"])
     AC_SEARCH_LIBS([pthread_barrier_init],[pthread])
 
     AC_CHECK_FUNCS(pthread_create pthread_yield pthread_barrier_init pthread_barrier_wait)
@@ -711,6 +712,7 @@ if test "$threadsdir" = "threads" ; then
         AC_CHECK_FUNCS(MPI_Init_thread)
     fi    
 fi
+AC_SUBST(threadlib)
 
 # Check for h_addr or h_addr_list.  This is needed for the singjoin test
 # in manual/singjoin.c
