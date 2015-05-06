@@ -70,9 +70,9 @@ int ADD_SUFFIX(MPID_nem_ofi_recv_callback)(cq_tagged_entry_t * wc, MPID_Request 
         REQ_OFI(sync_req)->event_callback = MPID_nem_ofi_sync_recv_callback;
         REQ_OFI(sync_req)->parent = rreq;
 #if API_SET == API_SET_1
-        FI_RC(fi_tsend(gl_data.endpoint,
+        FI_RC_RETRY(fi_tsend(gl_data.endpoint,
 #elif API_SET == API_SET_2
-        FI_RC(fi_tsenddata(gl_data.endpoint,
+        FI_RC_RETRY(fi_tsenddata(gl_data.endpoint,
 #endif
                          NULL,
                          0,
@@ -168,7 +168,7 @@ ADD_SUFFIX(do_isend)(struct MPIDI_VC *vc,
         ssend_match = init_recvtag_2(&ssend_mask, comm->context_id + context_offset, tag);
 #endif
         ssend_match |= MPID_SYNC_SEND_ACK;
-        FI_RC(fi_trecv(gl_data.endpoint,    /* endpoint    */
+        FI_RC_RETRY(fi_trecv(gl_data.endpoint,    /* endpoint    */
                            NULL,        /* recvbuf     */
                            0,   /* data sz     */
                            gl_data.mr,  /* dynamic mr  */
@@ -178,9 +178,9 @@ ADD_SUFFIX(do_isend)(struct MPIDI_VC *vc,
                            &(REQ_OFI(sync_req)->ofi_context)), trecv);
     }
 #if API_SET == API_SET_1
-    FI_RC(fi_tsend(gl_data.endpoint,  /* Endpoint                       */
+    FI_RC_RETRY(fi_tsend(gl_data.endpoint,  /* Endpoint                       */
 #elif API_SET == API_SET_2
-    FI_RC(fi_tsenddata(gl_data.endpoint,  /* Endpoint                       */
+    FI_RC_RETRY(fi_tsenddata(gl_data.endpoint,  /* Endpoint                       */
 #endif
         send_buffer,       /* Send buffer(packed or user)    */
         data_sz,   /* Size of the send               */
@@ -333,7 +333,7 @@ int ADD_SUFFIX(MPID_nem_ofi_recv_posted)(struct MPIDI_VC *vc, struct MPID_Reques
     msg.ignore    = mask_bits;
     msg.context   = (void *) &(REQ_OFI(rreq)->ofi_context);
     msg.data      = 0;
-    FI_RC(fi_trecvmsg(gl_data.endpoint,&msg,msgflags), trecv);
+    FI_RC_RETRY(fi_trecvmsg(gl_data.endpoint,&msg,msgflags), trecv);
     END_FUNC_RC(FCNAME);
 }
 

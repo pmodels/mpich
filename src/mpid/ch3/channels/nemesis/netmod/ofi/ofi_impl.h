@@ -132,6 +132,28 @@ fn_fail:                      \
                            fi_strerror(-_ret));                 \
     } while (0)
 
+#define FI_RC_RETRY(FUNC,STR)						\
+	do {								\
+		ssize_t _ret;                                           \
+		do {							\
+			_ret = FUNC;                                    \
+			if(likely(_ret==0)) break;			\
+			MPIU_ERR_##CHKANDJUMP4(_ret != -FI_EAGAIN,	\
+					       mpi_errno,		\
+					       MPI_ERR_OTHER,		\
+					       "**ofi_"#STR,		\
+					       "**ofi_"#STR" %s %d %s %s", \
+					       __SHORT_FILE__,		\
+					       __LINE__,		\
+					       FCNAME,			\
+					       fi_strerror(-_ret));	\
+				mpi_errno = MPID_nem_ofi_poll(0);	\
+				if(mpi_errno != MPI_SUCCESS)		\
+					MPIU_ERR_POP(mpi_errno);	\
+		} while (_ret == -FI_EAGAIN);				\
+	} while (0)
+
+
 #define PMI_RC(FUNC,STR)                                        \
   do                                                            \
     {                                                           \

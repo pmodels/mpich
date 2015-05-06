@@ -79,7 +79,7 @@
         REQ_OFI(cts_req)->event_callback = MPID_nem_ofi_cts_recv_callback; \
         REQ_OFI(cts_req)->parent         = sreq;                        \
                                                                         \
-        FI_RC(fi_trecv(gl_data.endpoint,                                \
+        FI_RC_RETRY(fi_trecv(gl_data.endpoint,                                \
                        NULL,                                            \
                        0,                                               \
                        gl_data.mr,                                      \
@@ -88,7 +88,7 @@
                        0, /* Exact tag match, no ignore bits */         \
                        &(REQ_OFI(cts_req)->ofi_context)),trecv);        \
         if (gl_data.api_set == API_SET_1){                              \
-            FI_RC(fi_tsend(gl_data.endpoint,                            \
+            FI_RC_RETRY(fi_tsend(gl_data.endpoint,                            \
                            &REQ_OFI(sreq)->pack_buffer_size,            \
                            sizeof(REQ_OFI(sreq)->pack_buffer_size),     \
                            gl_data.mr,                                  \
@@ -96,7 +96,7 @@
                            match_bits,                                  \
                            &(REQ_OFI(sreq)->ofi_context)),tsend);       \
         }else{                                                          \
-            FI_RC(fi_tsenddata(gl_data.endpoint,                        \
+            FI_RC_RETRY(fi_tsenddata(gl_data.endpoint,                        \
                                &REQ_OFI(sreq)->pack_buffer_size,        \
                                sizeof(REQ_OFI(sreq)->pack_buffer_size), \
                                gl_data.mr,                              \
@@ -125,7 +125,7 @@ static int MPID_nem_ofi_data_callback(cq_tagged_entry_t * wc, MPID_Request * sre
     switch (wc->tag & MPID_PROTOCOL_MASK) {
     case MPID_MSG_CTS:
         vc = REQ_OFI(sreq)->vc;
-        FI_RC(fi_tsend(gl_data.endpoint,
+        FI_RC_RETRY(fi_tsend(gl_data.endpoint,
                        REQ_OFI(sreq)->pack_buffer,
                        REQ_OFI(sreq)->pack_buffer_size,
                        gl_data.mr,
