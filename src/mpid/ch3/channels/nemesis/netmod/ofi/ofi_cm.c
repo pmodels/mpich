@@ -595,7 +595,7 @@ int MPID_nem_ofi_get_business_card(int my_rank ATTRIBUTE((unused)),
     str_errno = MPIU_Str_add_binary_arg(bc_val_p,
                                         val_max_sz_p,
                                         "OFI",
-                                        (char *) &gl_data.bound_addr, sizeof(gl_data.bound_addr));
+                                        (char *) &gl_data.bound_addr, gl_data.bound_addrlen);
     if (str_errno) {
         MPIU_ERR_CHKANDJUMP(str_errno == MPIU_STR_NOMEM, mpi_errno, MPI_ERR_OTHER, "**buscard_len");
         MPIU_ERR_SETANDJUMP(mpi_errno, MPI_ERR_OTHER, "**buscard");
