@@ -117,7 +117,6 @@ static int did_err_init = FALSE; /* helps us solve a bootstrapping problem */
    with a valid value.  */
 
 static int checkValidErrcode( int, const char [], int * );
-static void handleFatalError( MPID_Comm *, const char [], int );
 
 #if MPICH_ERROR_MSG_LEVEL >= MPICH_ERROR_MSG_ALL
 static int ErrGetInstanceString( int, char [], int );
@@ -249,7 +248,7 @@ int MPIR_Err_return_comm( MPID_Comm  *comm_ptr, const char fcname[],
     {
         /* for whatever reason, we aren't initialized (perhaps error 
 	   during MPI_Init) */
-        handleFatalError(MPIR_Process.comm_world, fcname, errcode);
+        MPIR_Handle_fatal_error(MPIR_Process.comm_world, fcname, errcode);
         return MPI_ERR_INTERN;
     }
     /* --END ERROR HANDLING-- */
@@ -275,7 +274,7 @@ int MPIR_Err_return_comm( MPID_Comm  *comm_ptr, const char fcname[],
     /* --BEGIN ERROR HANDLING-- */
     if (MPIR_Err_is_fatal(errcode) || comm_ptr == NULL) {
 	/* Calls MPID_Abort */
-	handleFatalError( comm_ptr, fcname, errcode );
+	MPIR_Handle_fatal_error( comm_ptr, fcname, errcode );
         /* never get here */
     }
     /* --END ERROR HANDLING-- */
@@ -292,7 +291,7 @@ int MPIR_Err_return_comm( MPID_Comm  *comm_ptr, const char fcname[],
     if (errhandler == NULL || errhandler->handle == MPI_ERRORS_ARE_FATAL) {
         MPIU_THREAD_CS_EXIT(MPI_OBJ, comm_ptr);
 	/* Calls MPID_Abort */
-	handleFatalError( comm_ptr, fcname, errcode );
+	MPIR_Handle_fatal_error( comm_ptr, fcname, errcode );
         /* never get here */
     }
     /* --END ERROR HANDLING-- */
@@ -365,7 +364,7 @@ int MPIR_Err_return_win( MPID_Win  *win_ptr, const char fcname[], int errcode )
 	win_ptr == NULL || win_ptr->errhandler == NULL || 
 	win_ptr->errhandler->handle == MPI_ERRORS_ARE_FATAL) {
 	/* Calls MPID_Abort */
-	handleFatalError( NULL, fcname, errcode );
+	MPIR_Handle_fatal_error( NULL, fcname, errcode );
     }
     /* --END ERROR HANDLING-- */
 
@@ -432,8 +431,7 @@ static void CombineSpecificCodes( int, int, int );
 static const char *get_class_msg( int );
 
 /* --BEGIN ERROR HANDLING-- */
-/* This routine is called when there is a fatal error */
-static void handleFatalError( MPID_Comm *comm_ptr, 
+void MPIR_Handle_fatal_error( MPID_Comm *comm_ptr,
 			      const char fcname[], int errcode )
 {
     /* Define length of the the maximum error message line (or string with 

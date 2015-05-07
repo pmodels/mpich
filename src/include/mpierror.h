@@ -178,6 +178,12 @@ void MPIR_Err_get_string( int, char *, int, MPIR_Err_get_class_string_func_t );
 
 int MPIR_Err_set_msg( int code, const char *msg_string );
 
+/* This routine is called when there is a fatal error. Now public because file
+ * error handling is defined in a separate file from comm and win, but all
+ * three need to call it */
+void MPIR_Handle_fatal_error(struct MPID_Comm *comm_ptr,
+	const char fcname[], int errcode);
+
 #define MPIR_ERR_CLASS_MASK 0x0000007f
 #define MPIR_ERR_CLASS_SIZE 128
 #define MPIR_ERR_GET_CLASS(mpi_errno_) (mpi_errno_ & MPIR_ERR_CLASS_MASK)
