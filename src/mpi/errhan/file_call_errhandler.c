@@ -95,7 +95,6 @@ int MPI_File_call_errhandler(MPI_File fh, int errorcode)
        not integers.  */
 
     if (e->handle == MPI_ERRORS_RETURN) {
-	mpi_errno = errorcode;
 	goto fn_exit;
     }
 

@@ -5,3 +5,4 @@ predef_eh 1
 predef_eh 2
 errstring2 1
 dynamic_errcode_predefined_errclass 1
+file_errhdl 1
