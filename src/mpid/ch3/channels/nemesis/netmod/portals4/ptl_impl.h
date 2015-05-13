@@ -95,6 +95,7 @@ static inline MPID_nem_ptl_req_area * REQ_PTL(MPID_Request *req) {
         (sreq_)->dev.state          = 0;                                                                        \
         (sreq_)->dev.datatype_ptr   = NULL;                                                                     \
         (sreq_)->dev.segment_ptr    = NULL;                                                                     \
+        (sreq_)->dev.tmpbuf         = NULL;                                                                     \
                                                                                                                 \
         MPID_nem_ptl_init_req(sreq_);                                                                           \
     } while (0)

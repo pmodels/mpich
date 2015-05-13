@@ -353,6 +353,7 @@ extern MPIDI_Process_t MPIDI_Process;
     (sreq_)->dev.OnFinal	   = NULL;                      \
     (sreq_)->dev.iov_count	   = 0;                         \
     (sreq_)->dev.iov_offset	   = 0;                         \
+    (sreq_)->dev.tmpbuf            = NULL;                      \
     MPIDI_Request_clear_dbg(sreq_);                             \
 }
 
@@ -386,6 +387,7 @@ extern MPIDI_Process_t MPIDI_Process;
     (rreq_)->dev.OnDataAvail	   = NULL;                      \
     (rreq_)->dev.OnFinal	   = NULL;                      \
     (rreq_)->dev.drop_data = FALSE;                             \
+    (rreq_)->dev.tmpbuf            = NULL;                      \
      MPIDI_CH3_REQUEST_INIT(rreq_);\
 }
 

@@ -95,6 +95,7 @@ MPID_Request * MPID_Request_create(void)
         req->dev.user_buf          = NULL;
         req->dev.drop_data         = FALSE;
         req->dev.stream_offset     = 0;
+        req->dev.tmpbuf            = NULL;
 #ifdef MPIDI_CH3_REQUEST_INIT
 	MPIDI_CH3_REQUEST_INIT(req);
 #endif
