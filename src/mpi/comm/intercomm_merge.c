@@ -101,31 +101,31 @@ int MPIR_Intercomm_merge_impl(MPID_Comm *comm_ptr, int high, MPID_Comm **new_int
            we use the gpids of the rank 0 member of the local and remote
            groups to choose an order in this case. */
         if (local_high == remote_high) {
-            int ingpid[2], outgpid[2];
+            MPID_Gpid ingpid, outgpid;
             
-            mpi_errno = MPID_GPID_Get( comm_ptr, 0, ingpid );
+            mpi_errno = MPID_GPID_Get( comm_ptr, 0, &ingpid );
             if (mpi_errno) MPIU_ERR_POP(mpi_errno);
             
-            mpi_errno = MPIC_Sendrecv( ingpid, 2, MPI_INT, 0, 1,
-                                          outgpid, 2, MPI_INT, 0, 1, comm_ptr,
+            mpi_errno = MPIC_Sendrecv( &ingpid, sizeof(MPID_Gpid), MPI_BYTE, 0, 1,
+                                          &outgpid, sizeof(MPID_Gpid), MPI_BYTE, 0, 1, comm_ptr,
                                           MPI_STATUS_IGNORE, &errflag );
             if (mpi_errno) MPIU_ERR_POP(mpi_errno);
 
             /* Note that the gpids cannot be the same because we are
                starting from a valid intercomm */
-            if (ingpid[0] < outgpid[0] ||
-                (ingpid[0] == outgpid[0] && ingpid[1] < outgpid[1])) {
-                local_high = 0;
-            }
-            else {
+            int rc = memcmp(&ingpid,&outgpid,sizeof(MPID_Gpid));
+            if(rc < 0)
                 local_high = 1;
-
-                /* req#3930: The merge algorithm will deadlock if the gpids are inadvertently the
-                   same due to implementation bugs in the MPID_GPID_Get() function */
-                MPIU_Assert( !(ingpid[0] == outgpid[0] && ingpid[1] == outgpid[1]) );
+            else if(rc > 0)
+                local_high = 0;
+            else
+                {
+                    /* req#3930: The merge algorithm will deadlock if the gpids are inadvertently the
+                       same due to implementation bugs in the MPID_GPID_Get() function */
+                    MPIU_Assert(rc != 0);
+                }
             }
         }
-    }
 
     /*
        All processes in the local group now need to get the

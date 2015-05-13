@@ -328,11 +328,11 @@ int MPID_Comm_get_lpid(MPID_Comm *comm_ptr, int idx, int * lpid_ptr, MPIU_BOOL i
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPID_GPID_GetAllInComm( MPID_Comm *comm_ptr, int local_size, 
-			    int local_gpids[], int *singlePG )
+			    MPID_Gpid local_gpids[], int *singlePG )
 {
     int mpi_errno = MPI_SUCCESS;
     int i;
-    int *gpid = local_gpids;
+    int *gpid = (int*)&local_gpids[0];
     int lastPGID = -1, pgid;
     MPIDI_VCR vc;
     MPIDI_STATE_DECL(MPID_STATE_MPID_GPID_GETALLINCOMM);
@@ -369,11 +369,11 @@ int MPID_GPID_GetAllInComm( MPID_Comm *comm_ptr, int local_size,
 #define FUNCNAME MPID_GPID_Get
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPID_GPID_Get( MPID_Comm *comm_ptr, int rank, int gpid[] )
+int MPID_GPID_Get( MPID_Comm *comm_ptr, int rank, MPID_Gpid *in_gpid )
 {
     int      pgid;
     MPIDI_VCR vc;
-    
+    int*     gpid = (int*)in_gpid;
     vc = comm_ptr->dev.vcrt->vcr_table[rank];
 
     /* Get the process group id as an int */
@@ -394,12 +394,13 @@ int MPID_GPID_Get( MPID_Comm *comm_ptr, int rank, int gpid[] )
 #define FUNCNAME MPID_GPID_ToLpidArray
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
-int MPID_GPID_ToLpidArray( int size, int gpid[], int lpid[] )
+int MPID_GPID_ToLpidArray( int size, MPID_Gpid in_gpid[], int lpid[] )
 {
     int i, mpi_errno = MPI_SUCCESS;
     int pgid;
     MPIDI_PG_t *pg = 0;
     MPIDI_PG_iterator iter;
+    int *gpid = (int*)&in_gpid[0];
 
     for (i=0; i<size; i++) {
         MPIDI_PG_Get_iterator(&iter);
@@ -545,7 +546,7 @@ fn_fail:
 #undef FCNAME
 #define FCNAME MPIU_QUOTE(FUNCNAME)
 int MPID_PG_ForwardPGInfo( MPID_Comm *peer_ptr, MPID_Comm *comm_ptr, 
-			   int nPGids, const int gpids[], 
+			   int nPGids, const MPID_Gpid in_gpids[],
 			   int root )
 {
     int mpi_errno = MPI_SUCCESS;
@@ -554,6 +555,8 @@ int MPID_PG_ForwardPGInfo( MPID_Comm *peer_ptr, MPID_Comm *comm_ptr,
     MPIDI_PG_iterator iter;
     MPIR_Errflag_t errflag = MPIR_ERR_NONE;
     
+    const int *gpids = (const int*)&in_gpids[0];
+
     /* Get the pgid for CommWorld (always attached to the first process 
        group) */
     MPIDI_PG_Get_iterator(&iter);

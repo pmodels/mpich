@@ -494,6 +494,8 @@ MPID_REQUEST_DECL
 #endif
 #endif
 
+#define MPID_DEV_GPID_DECL int gpid[2];
+
 /* Tell initthread to prepare a private comm_world */
 #define MPID_NEEDS_ICOMM_WORLD
 
