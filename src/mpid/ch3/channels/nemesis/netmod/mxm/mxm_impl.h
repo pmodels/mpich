@@ -132,7 +132,7 @@ static inline list_item_t *list_dequeue(list_head_t * list_head)
 #define MXM_MPICH_MAX_ADDR_SIZE 512
 #define MXM_MPICH_ENDPOINT_KEY "endpoint_id"
 #define MXM_MPICH_MAX_REQ 100
-#define MXM_MPICH_MAX_IOV 2
+#define MXM_MPICH_MAX_IOV 3
 
 
 /* The vc provides a generic buffer in which network modules can store

@@ -152,8 +152,8 @@ static inline int send_pkt(MPIDI_VC_t *vc, void *hdr_p, void *data_p, MPIDI_msg_
     MPID_nem_ptl_vc_area *const vc_ptl = VC_PTL(vc);
     int ret;
     char *sendbuf;
-    const size_t sent_sz = data_sz < PAYLOAD_SIZE ? data_sz : PAYLOAD_SIZE;
-    const size_t sendbuf_sz = SENDBUF_SIZE(sent_sz);
+    const size_t sent_sz = data_sz < (PAYLOAD_SIZE-sreq->dev.ext_hdr_sz) ? data_sz : (PAYLOAD_SIZE-sreq->dev.ext_hdr_sz);
+    const size_t sendbuf_sz = SENDBUF_SIZE(sent_sz+sreq->dev.ext_hdr_sz);
     const size_t remaining = data_sz - sent_sz;
     ptl_match_bits_t match_bits = NPTL_MATCH(CTL_TAG, 0, MPIDI_Process.my_pg_rank);
     MPIDI_STATE_DECL(MPID_STATE_SEND_PKT);
@@ -163,12 +163,19 @@ static inline int send_pkt(MPIDI_VC_t *vc, void *hdr_p, void *data_p, MPIDI_msg_
     sendbuf = MPIU_Malloc(sendbuf_sz);
     MPIU_Assert(sendbuf != NULL);
     MPIU_Memcpy(sendbuf, hdr_p, sizeof(MPIDI_CH3_Pkt_t));
+
+    if (sreq->dev.ext_hdr_sz > 0) {
+        /* copy extended packet header to send buf */
+        MPIU_Memcpy(sendbuf + sizeof(MPIDI_CH3_Pkt_t),
+                    sreq->dev.ext_hdr_ptr, sreq->dev.ext_hdr_sz);
+    }
+
     TMPBUF(sreq) = NULL;
     REQ_PTL(sreq)->num_gets = 0;
     REQ_PTL(sreq)->put_done = 0;
 
     if (data_sz) {
-        MPIU_Memcpy(sendbuf + sizeof(MPIDI_CH3_Pkt_t), data_p, sent_sz);
+        MPIU_Memcpy(sendbuf + sizeof(MPIDI_CH3_Pkt_t) + sreq->dev.ext_hdr_sz, data_p, sent_sz);
         if (remaining)  /* Post MEs for the remote gets */
             mpi_errno = meappend_large(vc_ptl->id, sreq, NPTL_MATCH(GET_TAG, 0, MPIDI_Process.my_pg_rank),
                                        (char *)data_p + sent_sz, remaining);
@@ -208,8 +215,8 @@ static int send_noncontig_pkt(MPIDI_VC_t *vc, MPID_Request *sreq, void *hdr_p)
     int ret;
     char *sendbuf;
     const size_t data_sz = sreq->dev.segment_size - sreq->dev.segment_first;
-    const size_t sent_sz = data_sz < PAYLOAD_SIZE ? data_sz : PAYLOAD_SIZE;
-    const size_t sendbuf_sz = SENDBUF_SIZE(sent_sz);
+    const size_t sent_sz = data_sz < (PAYLOAD_SIZE-sreq->dev.ext_hdr_sz) ? data_sz : (PAYLOAD_SIZE-sreq->dev.ext_hdr_sz);
+    const size_t sendbuf_sz = SENDBUF_SIZE(sent_sz+sreq->dev.ext_hdr_sz);
     const size_t remaining = data_sz - sent_sz;
     ptl_match_bits_t match_bits = NPTL_MATCH(CTL_TAG, 0, MPIDI_Process.my_pg_rank);
     MPIDI_STATE_DECL(MPID_STATE_SEND_NONCONTIG_PKT);
@@ -218,6 +225,13 @@ static int send_noncontig_pkt(MPIDI_VC_t *vc, MPID_Request *sreq, void *hdr_p)
     sendbuf = MPIU_Malloc(sendbuf_sz);
     MPIU_Assert(sendbuf != NULL);
     MPIU_Memcpy(sendbuf, hdr_p, sizeof(MPIDI_CH3_Pkt_t));
+
+    if (sreq->dev.ext_hdr_sz > 0) {
+        /* copy extended packet header to send buf */
+        MPIU_Memcpy(sendbuf + sizeof(MPIDI_CH3_Pkt_t),
+                    sreq->dev.ext_hdr_ptr, sreq->dev.ext_hdr_sz);
+    }
+
     TMPBUF(sreq) = NULL;
     REQ_PTL(sreq)->num_gets = 0;
     REQ_PTL(sreq)->put_done = 0;
@@ -225,7 +239,7 @@ static int send_noncontig_pkt(MPIDI_VC_t *vc, MPID_Request *sreq, void *hdr_p)
     if (data_sz) {
         MPIDI_msg_sz_t first = sreq->dev.segment_first;
         MPIDI_msg_sz_t last = sreq->dev.segment_first + sent_sz;
-        MPID_Segment_pack(sreq->dev.segment_ptr, first, &last, sendbuf + sizeof(MPIDI_CH3_Pkt_t));
+        MPID_Segment_pack(sreq->dev.segment_ptr, first, &last, sendbuf + sizeof(MPIDI_CH3_Pkt_t) + sreq->dev.ext_hdr_sz);
 
         if (remaining) {  /* Post MEs for the remote gets */
             TMPBUF(sreq) = MPIU_Malloc(remaining);

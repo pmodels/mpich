@@ -19,15 +19,17 @@ static inline int MPID_nem_mpich_send_header (void* buf, int size, MPIDI_VC_t *v
 static inline int MPID_nem_mpich_sendv (MPID_IOV **iov, int *n_iov, MPIDI_VC_t *vc, int *again);
 static inline void MPID_nem_mpich_dequeue_fastbox (int local_rank);
 static inline void MPID_nem_mpich_enqueue_fastbox (int local_rank);
-static inline int MPID_nem_mpich_sendv_header (MPID_IOV **iov, int *n_iov, MPIDI_VC_t *vc, int *again);
+static inline int MPID_nem_mpich_sendv_header (MPID_IOV **iov, int *n_iov,
+                                               void *ext_header, MPIDI_msg_sz_t ext_header_sz,
+                                               MPIDI_VC_t *vc, int *again);
 static inline int MPID_nem_recv_seqno_matches (MPID_nem_queue_ptr_t qhead);
 static inline int MPID_nem_mpich_test_recv (MPID_nem_cell_ptr_t *cell, int *in_fbox, int in_blocking_progress);
 static inline int MPID_nem_mpich_blocking_recv (MPID_nem_cell_ptr_t *cell, int *in_fbox, int completions);
 static inline int MPID_nem_mpich_test_recv_wait (MPID_nem_cell_ptr_t *cell, int *in_fbox, int timeout);
 static inline int MPID_nem_mpich_release_cell (MPID_nem_cell_ptr_t cell, MPIDI_VC_t *vc);
 static inline void MPID_nem_mpich_send_seg_header (MPID_Segment *segment, MPIDI_msg_sz_t *segment_first,
-                                                           MPIDI_msg_sz_t segment_size, void *header, MPIDI_msg_sz_t header_sz,
-                                                           MPIDI_VC_t *vc, int *again);
+                                                   MPIDI_msg_sz_t segment_size, void *header, MPIDI_msg_sz_t header_sz,
+                                                   void *ext_header, MPIDI_msg_sz_t ext_header_sz, MPIDI_VC_t *vc, int *again);
 static inline void MPID_nem_mpich_send_seg (MPID_Segment *segment, MPIDI_msg_sz_t *segment_first, MPIDI_msg_sz_t segment_size,
                                                     MPIDI_VC_t *vc, int *again);
 
@@ -271,7 +273,9 @@ MPID_nem_mpich_sendv (MPID_IOV **iov, int *n_iov, MPIDI_VC_t *vc, int *again)
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 static inline int
-MPID_nem_mpich_sendv_header (MPID_IOV **iov, int *n_iov, MPIDI_VC_t *vc, int *again)
+MPID_nem_mpich_sendv_header (MPID_IOV **iov, int *n_iov,
+                             void *ext_hdr_ptr, MPIDI_msg_sz_t ext_hdr_sz,
+                             MPIDI_VC_t *vc, int *again)
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_nem_cell_ptr_t el;
@@ -279,6 +283,7 @@ MPID_nem_mpich_sendv_header (MPID_IOV **iov, int *n_iov, MPIDI_VC_t *vc, int *ag
     MPIDI_msg_sz_t payload_len;    
     int my_rank;
     MPIDI_CH3I_VC *vc_ch = &vc->ch;
+    MPI_Aint buf_offset = 0;
     MPIDI_STATE_DECL(MPID_STATE_MPID_NEM_MPICH_SENDV_HEADER);
     
     MPIDI_FUNC_ENTER(MPID_STATE_MPID_NEM_MPICH_SENDV_HEADER);
@@ -291,7 +296,8 @@ MPID_nem_mpich_sendv_header (MPID_IOV **iov, int *n_iov, MPIDI_VC_t *vc, int *ag
     my_rank = MPID_nem_mem_region.rank;
 
 #ifdef USE_FASTBOX
-    if (*n_iov == 2 && (*iov)[1].MPID_IOV_LEN + sizeof(MPIDI_CH3_Pkt_t) <= MPID_NEM_FBOX_DATALEN)
+    /* Note: use fastbox only when there is no streaming optimization. */
+    if (ext_hdr_sz == 0 && *n_iov == 2 && (*iov)[1].MPID_IOV_LEN + sizeof(MPIDI_CH3_Pkt_t) <= MPID_NEM_FBOX_DATALEN)
     {
 	MPID_nem_fbox_mpich_t *pbox = vc_ch->fbox_out;
 
@@ -343,12 +349,19 @@ MPID_nem_mpich_sendv_header (MPID_IOV **iov, int *n_iov, MPIDI_VC_t *vc, int *ag
 #endif /*PREFETCH_CELL */
 
     MPIU_Memcpy((void *)el->pkt.mpich.p.payload, (*iov)->MPID_IOV_BUF, sizeof(MPIDI_CH3_Pkt_t));
+    buf_offset += sizeof(MPIDI_CH3_Pkt_t);
 
-    cell_buf = (char *)(el->pkt.mpich.p.payload) + sizeof(MPIDI_CH3_Pkt_t);
+    if (ext_hdr_sz > 0) {
+        /* when extended packet header exists, copy it */
+        MPIU_Memcpy((void *)((char *)(el->pkt.mpich.p.payload) + buf_offset), ext_hdr_ptr, ext_hdr_sz);
+        buf_offset += ext_hdr_sz;
+    }
+
+    cell_buf = (char *)(el->pkt.mpich.p.payload) + buf_offset;
     ++(*iov);
     --(*n_iov);
 
-    payload_len = MPID_NEM_MPICH_DATA_LEN - sizeof(MPIDI_CH3_Pkt_t);
+    payload_len = MPID_NEM_MPICH_DATA_LEN - buf_offset;
     while (*n_iov && payload_len >= (*iov)->MPID_IOV_LEN)
     {
 	size_t _iov_len = (*iov)->MPID_IOV_LEN;
@@ -419,13 +432,15 @@ MPID_nem_mpich_sendv_header (MPID_IOV **iov, int *n_iov, MPIDI_VC_t *vc, int *ag
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
 static inline void
 MPID_nem_mpich_send_seg_header (MPID_Segment *segment, MPIDI_msg_sz_t *segment_first, MPIDI_msg_sz_t segment_size,
-                                 void *header, MPIDI_msg_sz_t header_sz, MPIDI_VC_t *vc, int *again)
+                                void *header, MPIDI_msg_sz_t header_sz, void *ext_header, MPIDI_msg_sz_t ext_header_sz,
+                                MPIDI_VC_t *vc, int *again)
 {
     MPID_nem_cell_ptr_t el;
     MPIDI_msg_sz_t datalen;
     int my_rank;
     MPIDI_msg_sz_t last;
     MPIDI_CH3I_VC *vc_ch = &vc->ch;
+    MPI_Aint buf_offset = 0;
 
     MPIU_Assert(vc_ch->is_local); /* netmods will have their own implementation */
     MPIU_Assert(header_sz <= sizeof(MPIDI_CH3_Pkt_t));
@@ -436,7 +451,7 @@ MPID_nem_mpich_send_seg_header (MPID_Segment *segment, MPIDI_msg_sz_t *segment_f
     my_rank = MPID_nem_mem_region.rank;
 
 #ifdef USE_FASTBOX
-    if (sizeof(MPIDI_CH3_Pkt_t) + segment_size <= MPID_NEM_FBOX_DATALEN)
+    if (ext_header_sz == 0 && sizeof(MPIDI_CH3_Pkt_t) + segment_size <= MPID_NEM_FBOX_DATALEN)
     {
 	MPID_nem_fbox_mpich_t *pbox = vc_ch->fbox_out;
 
@@ -508,14 +523,22 @@ MPID_nem_mpich_send_seg_header (MPID_Segment *segment, MPIDI_msg_sz_t *segment_f
     /* copy header */
     MPIU_Memcpy((void *)el->pkt.mpich.p.payload, header, header_sz);
     
+    buf_offset += sizeof(MPIDI_CH3_Pkt_t);
+
+    if (ext_header_sz > 0) {
+        /* when extended packet header exists, copy it */
+        MPIU_Memcpy((void *)((char *)(el->pkt.mpich.p.payload) + buf_offset), ext_header, ext_header_sz);
+        buf_offset += ext_header_sz;
+    }
+
     /* copy data */
-    if (segment_size - *segment_first <= MPID_NEM_MPICH_DATA_LEN - sizeof(MPIDI_CH3_Pkt_t))
+    if (segment_size - *segment_first <= MPID_NEM_MPICH_DATA_LEN - buf_offset)
         last = segment_size;
     else
-        last = *segment_first + MPID_NEM_MPICH_DATA_LEN - sizeof(MPIDI_CH3_Pkt_t);
-    
-    MPID_Segment_pack(segment, *segment_first, &last, (char *)el->pkt.mpich.p.payload + sizeof(MPIDI_CH3_Pkt_t));
-    datalen = sizeof(MPIDI_CH3_Pkt_t) + last - *segment_first;
+        last = *segment_first + MPID_NEM_MPICH_DATA_LEN - buf_offset;
+
+    MPID_Segment_pack(segment, *segment_first, &last, (char *)el->pkt.mpich.p.payload + buf_offset);
+    datalen = buf_offset + last - *segment_first;
     *segment_first = last;
     
     el->pkt.mpich.source  = my_rank;

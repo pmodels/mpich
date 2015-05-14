@@ -195,7 +195,8 @@ int MPIDI_CH3I_Shm_send_progress(void)
             iov = &sreq->dev.iov[sreq->dev.iov_offset];
             n_iov = sreq->dev.iov_count;
 
-            mpi_errno = MPID_nem_mpich_sendv_header(&iov, &n_iov, sreq->ch.vc, &again);
+            mpi_errno = MPID_nem_mpich_sendv_header(&iov, &n_iov, sreq->dev.ext_hdr_ptr,
+                                                    sreq->dev.ext_hdr_sz, sreq->ch.vc, &again);
             if (mpi_errno) MPIU_ERR_POP (mpi_errno);
             if (!again)
             {
@@ -219,7 +220,8 @@ int MPIDI_CH3I_Shm_send_progress(void)
         else
         {
             MPID_nem_mpich_send_seg_header(sreq->dev.segment_ptr, &sreq->dev.segment_first, sreq->dev.segment_size,
-                                            &sreq->dev.pending_pkt, sreq->ch.header_sz, sreq->ch.vc, &again);
+                                           &sreq->dev.pending_pkt, sreq->ch.header_sz, sreq->dev.ext_hdr_ptr,
+                                           sreq->dev.ext_hdr_sz, sreq->ch.vc, &again);
             if (!again)
             {
                 MPIDI_CH3I_shm_active_send = sreq;

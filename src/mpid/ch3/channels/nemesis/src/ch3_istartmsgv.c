@@ -89,7 +89,8 @@ int MPIDI_CH3_iStartMsgv (MPIDI_VC_t *vc, MPID_IOV *iov, int n_iov, MPID_Request
 
                 MPIU_DBG_MSG_D (CH3_CHANNEL, VERBOSE, "   + len=%d ", total);
             });
-	mpi_errno = MPID_nem_mpich_sendv_header (&remaining_iov, &remaining_n_iov, vc, &again);
+	mpi_errno = MPID_nem_mpich_sendv_header (&remaining_iov, &remaining_n_iov,
+	                                         NULL, 0, vc, &again);
         if (mpi_errno) MPIU_ERR_POP (mpi_errno);
 	while (!again && (remaining_n_iov > 0))
 	{

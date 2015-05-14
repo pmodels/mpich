@@ -72,7 +72,9 @@ int MPIDI_CH3_iSendv (MPIDI_VC_t *vc, MPID_Request *sreq, MPID_IOV *iov, int n_i
 	int remaining_n_iov = n_iov;
 
         MPIU_DBG_MSG (CH3_CHANNEL, VERBOSE, "iSendv");
-	mpi_errno = MPID_nem_mpich_sendv_header (&remaining_iov, &remaining_n_iov, vc, &again);
+	mpi_errno = MPID_nem_mpich_sendv_header (&remaining_iov, &remaining_n_iov,
+	                                         sreq->dev.ext_hdr_ptr, sreq->dev.ext_hdr_sz,
+	                                         vc, &again);
         if (mpi_errno) MPIU_ERR_POP (mpi_errno);
 	while (!again && remaining_n_iov > 0)
 	{
