@@ -358,96 +358,79 @@ static inline int MPIDI_CH3I_RMA_Cleanup_ops_target(MPID_Win * win_ptr, MPIDI_RM
         target->issued_dt_op_list_head == NULL)
         goto cleanup_target;
 
-    if (target->issued_read_op_list_head != NULL) {
-        op_list_head = &(target->issued_read_op_list_head);
-        op_list_tail = &(target->issued_read_op_list_tail);
-        read_flag = 1;
-    }
-    else if (target->issued_write_op_list_head != NULL) {
-        op_list_head = &(target->issued_write_op_list_head);
-        op_list_tail = &(target->issued_write_op_list_tail);
-        write_flag = 1;
-    }
-    else if (target->issued_dt_op_list_head != NULL) {
-        op_list_head = &(target->issued_dt_op_list_head);
-        op_list_tail = &(target->issued_dt_op_list_tail);
-    }
-    else {
-        /* only pending op list is not NULL, nothing we can do here. */
-        goto fn_exit;
-    }
+    /* go over issued_read_op_list, issued_write_op_list,
+     * issued_dt_op_list, start from issued_read_op_list. */
+    op_list_head = &(target->issued_read_op_list_head);
+    op_list_tail = &(target->issued_read_op_list_tail);
+    read_flag = 1;
 
     curr_op = *op_list_head;
-    while (curr_op != NULL) {
-        for (i = 0; i < curr_op->reqs_size; i++) {
-            if (curr_op->reqs[i] == NULL)
-                continue;
+    while (1) {
+        if (curr_op != NULL) {
+            for (i = 0; i < curr_op->reqs_size; i++) {
+                if (curr_op->reqs[i] == NULL)
+                    continue;
 
-            if (MPID_Request_is_complete(curr_op->reqs[i])) {
-                /* If there's an error, return it */
-                mpi_errno = curr_op->reqs[i]->status.MPI_ERROR;
-                MPIU_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**ch3|rma_msg");
+                if (MPID_Request_is_complete(curr_op->reqs[i])) {
+                    /* If there's an error, return it */
+                    mpi_errno = curr_op->reqs[i]->status.MPI_ERROR;
+                    MPIU_ERR_CHKANDJUMP(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**ch3|rma_msg");
 
-                /* No errors, free the request */
-                MPID_Request_release(curr_op->reqs[i]);
+                    /* No errors, free the request */
+                    MPID_Request_release(curr_op->reqs[i]);
 
-                curr_op->reqs[i] = NULL;
+                    curr_op->reqs[i] = NULL;
 
-                win_ptr->active_req_cnt--;
+                    win_ptr->active_req_cnt--;
+                }
+                else
+                    break;
+            }
+
+            if (i == curr_op->reqs_size) {
+                /* Release user request */
+                if (curr_op->ureq) {
+                    /* User request must be completed by progress engine */
+                    MPIU_Assert(MPID_Request_is_complete(curr_op->ureq));
+
+                    /* Release the ch3 ref */
+                    MPID_Request_release(curr_op->ureq);
+                }
+
+                /* free request array in op struct */
+                MPIU_Free(curr_op->reqs);
+                curr_op->reqs = NULL;
+                curr_op->reqs_size = 0;
+
+                /* dequeue the operation and free it */
+                MPL_LL_DELETE(*op_list_head, *op_list_tail, curr_op);
+                MPIDI_CH3I_Win_op_free(win_ptr, curr_op);
             }
             else
                 break;
         }
-
-        if (i == curr_op->reqs_size) {
-            /* Release user request */
-            if (curr_op->ureq) {
-                /* User request must be completed by progress engine */
-                MPIU_Assert(MPID_Request_is_complete(curr_op->ureq));
-
-                /* Release the ch3 ref */
-                MPID_Request_release(curr_op->ureq);
+        else {
+            /* current op ptr reaches NULL, move on to the next list */
+            if (read_flag == 1) {
+                read_flag = 0;
+                op_list_head = &(target->issued_write_op_list_head);
+                op_list_tail = &(target->issued_write_op_list_tail);
+                write_flag = 1;
             }
-
-            /* free request array in op struct */
-            MPIU_Free(curr_op->reqs);
-            curr_op->reqs = NULL;
-            curr_op->reqs_size = 0;
-
-            /* dequeue the operation and free it */
-            MPL_LL_DELETE(*op_list_head, *op_list_tail, curr_op);
-            MPIDI_CH3I_Win_op_free(win_ptr, curr_op);
-
-            if (*op_list_head == NULL) {
-                if (read_flag == 1) {
-                    read_flag = 0;
-                    if (target->issued_write_op_list_head != NULL) {
-                        op_list_head = &(target->issued_write_op_list_head);
-                        op_list_tail = &(target->issued_write_op_list_tail);
-                        write_flag = 1;
-                    }
-                    else if (target->issued_dt_op_list_head != NULL) {
-                        op_list_head = &(target->issued_dt_op_list_head);
-                        op_list_tail = &(target->issued_dt_op_list_tail);
-                    }
-                    else
-                        break;
-                }
-                else if (write_flag == 1) {
-                    write_flag = 0;
-                    if (target->issued_dt_op_list_head != NULL) {
-                        op_list_head = &(target->issued_dt_op_list_head);
-                        op_list_tail = &(target->issued_dt_op_list_tail);
-                    }
-                    else
-                        break;
-                }
+            else if (write_flag == 1) {
+                write_flag = 0;
+                op_list_head = &(target->issued_dt_op_list_head);
+                op_list_tail = &(target->issued_dt_op_list_tail);
             }
-            /* next op */
-            curr_op = *op_list_head;
+            else {
+                /* we reach the tail of the last operation list (dt_op_list),
+                 * break out. */
+                break;
+            }
         }
-        else
-            break;
+
+        /* next op */
+        curr_op = *op_list_head;
     }
 
   cleanup_target:

@@ -574,41 +574,42 @@ int MPIDI_CH3I_RMA_Free_ops_before_completion(MPID_Win * win_ptr)
      * must do a Win_flush instead. */
     curr_target->sync.upgrade_flush_local = 1;
 
-    if (curr_target->issued_read_op_list_head != NULL) {
-        op_list_head = &curr_target->issued_read_op_list_head;
-        op_list_tail = &curr_target->issued_read_op_list_tail;
-        read_flag = 1;
-    }
-    else {
-        op_list_head = &curr_target->issued_write_op_list_head;
-        op_list_tail = &curr_target->issued_write_op_list_tail;
-    }
+    op_list_head = &curr_target->issued_read_op_list_head;
+    op_list_tail = &curr_target->issued_read_op_list_tail;
+    read_flag = 1;
+
+    curr_op = *op_list_head;
 
     /* free all ops in the list since we do not need to maintain them anymore */
-    for (curr_op = *op_list_head; curr_op != NULL;) {
-        if (curr_op->reqs_size > 0) {
-            MPIU_Assert(curr_op->reqs != NULL);
-            for (i = 0; i < curr_op->reqs_size; i++) {
-                if (curr_op->reqs[i] != NULL) {
-                    MPID_Request_release(curr_op->reqs[i]);
-                    curr_op->reqs[i] = NULL;
-                    win_ptr->active_req_cnt--;
+    while (1) {
+        if (curr_op != NULL) {
+            if (curr_op->reqs_size > 0) {
+                MPIU_Assert(curr_op->reqs != NULL);
+                for (i = 0; i < curr_op->reqs_size; i++) {
+                    if (curr_op->reqs[i] != NULL) {
+                        MPID_Request_release(curr_op->reqs[i]);
+                        curr_op->reqs[i] = NULL;
+                        win_ptr->active_req_cnt--;
+                    }
                 }
+
+                /* free req array in this op */
+                MPIU_Free(curr_op->reqs);
+                curr_op->reqs = NULL;
+                curr_op->reqs_size = 0;
             }
-
-            /* free req array in this op */
-            MPIU_Free(curr_op->reqs);
-            curr_op->reqs = NULL;
-            curr_op->reqs_size = 0;
+            MPL_LL_DELETE(*op_list_head, *op_list_tail, curr_op);
+            MPIDI_CH3I_Win_op_free(win_ptr, curr_op);
         }
-        MPL_LL_DELETE(*op_list_head, *op_list_tail, curr_op);
-        MPIDI_CH3I_Win_op_free(win_ptr, curr_op);
-
-        if (*op_list_head == NULL) {
+        else {
             if (read_flag == 1) {
                 op_list_head = &curr_target->issued_write_op_list_head;
                 op_list_head = &curr_target->issued_write_op_list_tail;
                 read_flag = 0;
+            }
+            else {
+                /* we reach the tail of write_op_list, break out. */
+                break;
             }
         }
         curr_op = *op_list_head;
