@@ -572,7 +572,7 @@ int MPIDI_CH3I_RMA_Free_ops_before_completion(MPID_Win * win_ptr)
 
     /* After we do this, all following Win_flush_local
      * must do a Win_flush instead. */
-    curr_target->disable_flush_local = 1;
+    curr_target->sync.upgrade_flush_local = 1;
 
     if (curr_target->issued_read_op_list_head != NULL) {
         op_list_head = &curr_target->issued_read_op_list_head;

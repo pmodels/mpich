@@ -90,7 +90,6 @@ typedef struct MPIDI_RMA_Target {
     int lock_type;              /* NONE, SHARED, EXCLUSIVE */
     int lock_mode;              /* e.g., MODE_NO_CHECK */
     int accumulated_ops_cnt;
-    int disable_flush_local;
     int win_complete_flag;
     int put_acc_issued;         /* indicate if PUT/ACC is issued in this epoch
                                  * after the previous synchronization calls. */
@@ -108,6 +107,9 @@ typedef struct MPIDI_RMA_Target {
 
         /* packets sent out that we are expecting an ack for */
         int outstanding_acks;
+
+        /* Marked when FLUSH_LOCAL is upgraded to FLUSH */
+        int upgrade_flush_local;
     } sync;
 
     MPIDI_RMA_Pool_type_t pool_type;
