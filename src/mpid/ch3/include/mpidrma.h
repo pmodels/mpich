@@ -658,19 +658,19 @@ static inline int adjust_op_piggybacked_with_lock(MPID_Win * win_ptr,
                 }
 
                 if (is_derived) {
-                    MPIDI_CH3I_RMA_Ops_append(&(target->dt_op_list_head),
-                                              &(target->dt_op_list_tail), op);
+                    MPIDI_CH3I_RMA_Ops_append(&(target->issued_dt_op_list_head),
+                                              &(target->issued_dt_op_list_tail), op);
                 }
                 else if (op->pkt.type == MPIDI_CH3_PKT_PUT ||
                          op->pkt.type == MPIDI_CH3_PKT_PUT_IMMED ||
                          op->pkt.type == MPIDI_CH3_PKT_ACCUMULATE ||
                          op->pkt.type == MPIDI_CH3_PKT_ACCUMULATE_IMMED) {
-                    MPIDI_CH3I_RMA_Ops_append(&(target->write_op_list_head),
-                                              &(target->write_op_list_tail), op);
+                    MPIDI_CH3I_RMA_Ops_append(&(target->issued_write_op_list_head),
+                                              &(target->issued_write_op_list_tail), op);
                 }
                 else {
-                    MPIDI_CH3I_RMA_Ops_append(&(target->read_op_list_head),
-                                              &(target->read_op_list_tail), op);
+                    MPIDI_CH3I_RMA_Ops_append(&(target->issued_read_op_list_head),
+                                              &(target->issued_read_op_list_tail), op);
                 }
             }
         }

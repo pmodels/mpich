@@ -429,19 +429,19 @@ static inline int issue_ops_target(MPID_Win * win_ptr, MPIDI_RMA_Target_t * targ
             }
 
             if (is_derived) {
-                MPIDI_CH3I_RMA_Ops_append(&(target->dt_op_list_head),
-                                          &(target->dt_op_list_tail), curr_op);
+                MPIDI_CH3I_RMA_Ops_append(&(target->issued_dt_op_list_head),
+                                          &(target->issued_dt_op_list_tail), curr_op);
             }
             else if (curr_op->pkt.type == MPIDI_CH3_PKT_PUT ||
                      curr_op->pkt.type == MPIDI_CH3_PKT_PUT_IMMED ||
                      curr_op->pkt.type == MPIDI_CH3_PKT_ACCUMULATE ||
                      curr_op->pkt.type == MPIDI_CH3_PKT_ACCUMULATE_IMMED) {
-                MPIDI_CH3I_RMA_Ops_append(&(target->write_op_list_head),
-                                          &(target->write_op_list_tail), curr_op);
+                MPIDI_CH3I_RMA_Ops_append(&(target->issued_write_op_list_head),
+                                          &(target->issued_write_op_list_tail), curr_op);
             }
             else {
-                MPIDI_CH3I_RMA_Ops_append(&(target->read_op_list_head),
-                                          &(target->read_op_list_tail), curr_op);
+                MPIDI_CH3I_RMA_Ops_append(&(target->issued_read_op_list_head),
+                                          &(target->issued_read_op_list_tail), curr_op);
             }
         }
 
@@ -549,8 +549,8 @@ int MPIDI_CH3I_RMA_Free_ops_before_completion(MPID_Win * win_ptr)
         if (win_ptr->slots[i].target_list_head != NULL) {
             curr_target = win_ptr->slots[i].target_list_head;
             while (curr_target != NULL) {
-                if (curr_target->read_op_list_head != NULL ||
-                    curr_target->write_op_list_head != NULL) {
+                if (curr_target->issued_read_op_list_head != NULL ||
+                    curr_target->issued_write_op_list_head != NULL) {
                     if (win_ptr->states.access_state == MPIDI_RMA_PER_TARGET ||
                         win_ptr->states.access_state == MPIDI_RMA_LOCK_ALL_CALLED) {
                         if (curr_target->access_state == MPIDI_RMA_LOCK_GRANTED)
@@ -574,14 +574,14 @@ int MPIDI_CH3I_RMA_Free_ops_before_completion(MPID_Win * win_ptr)
      * must do a Win_flush instead. */
     curr_target->disable_flush_local = 1;
 
-    if (curr_target->read_op_list_head != NULL) {
-        op_list_head = &curr_target->read_op_list_head;
-        op_list_tail = &curr_target->read_op_list_tail;
+    if (curr_target->issued_read_op_list_head != NULL) {
+        op_list_head = &curr_target->issued_read_op_list_head;
+        op_list_tail = &curr_target->issued_read_op_list_tail;
         read_flag = 1;
     }
     else {
-        op_list_head = &curr_target->write_op_list_head;
-        op_list_tail = &curr_target->write_op_list_tail;
+        op_list_head = &curr_target->issued_write_op_list_head;
+        op_list_tail = &curr_target->issued_write_op_list_tail;
     }
 
     /* free all ops in the list since we do not need to maintain them anymore */
@@ -606,8 +606,8 @@ int MPIDI_CH3I_RMA_Free_ops_before_completion(MPID_Win * win_ptr)
 
         if (*op_list_head == NULL) {
             if (read_flag == 1) {
-                op_list_head = &curr_target->write_op_list_head;
-                op_list_head = &curr_target->write_op_list_tail;
+                op_list_head = &curr_target->issued_write_op_list_head;
+                op_list_head = &curr_target->issued_write_op_list_tail;
                 read_flag = 0;
             }
         }

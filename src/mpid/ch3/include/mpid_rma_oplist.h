@@ -111,9 +111,9 @@ static inline MPIDI_RMA_Target_t *MPIDI_CH3I_Win_target_alloc(MPID_Win * win_ptr
         MPL_LL_DELETE(win_ptr->target_pool, win_ptr->target_pool_tail, e);
     }
 
-    e->read_op_list_head = e->read_op_list_tail = NULL;
-    e->write_op_list_head = e->write_op_list_tail = NULL;
-    e->dt_op_list_head = e->dt_op_list_tail = NULL;
+    e->issued_read_op_list_head = e->issued_read_op_list_tail = NULL;
+    e->issued_write_op_list_head = e->issued_write_op_list_tail = NULL;
+    e->issued_dt_op_list_head = e->issued_dt_op_list_tail = NULL;
     e->pending_op_list_head = e->pending_op_list_tail = NULL;
     e->next_op_to_issue = NULL;
 
@@ -145,9 +145,9 @@ static inline int MPIDI_CH3I_Win_target_free(MPID_Win * win_ptr, MPIDI_RMA_Targe
     /* We enqueue elements to the right pool, so when they get freed
      * at window free time, they won't conflict with the global pool
      * or other windows */
-    MPIU_Assert(e->read_op_list_head == NULL);
-    MPIU_Assert(e->write_op_list_head == NULL);
-    MPIU_Assert(e->dt_op_list_head == NULL);
+    MPIU_Assert(e->issued_read_op_list_head == NULL);
+    MPIU_Assert(e->issued_write_op_list_head == NULL);
+    MPIU_Assert(e->issued_dt_op_list_head == NULL);
     MPIU_Assert(e->pending_op_list_head == NULL);
 
     /* use PREPEND when return objects back to the pool
@@ -354,23 +354,23 @@ static inline int MPIDI_CH3I_RMA_Cleanup_ops_target(MPID_Win * win_ptr, MPIDI_RM
         goto fn_exit;
 
     if (target->pending_op_list_head == NULL &&
-        target->read_op_list_head == NULL && target->write_op_list_head == NULL &&
-        target->dt_op_list_head == NULL)
+        target->issued_read_op_list_head == NULL && target->issued_write_op_list_head == NULL &&
+        target->issued_dt_op_list_head == NULL)
         goto cleanup_target;
 
-    if (target->read_op_list_head != NULL) {
-        op_list_head = &(target->read_op_list_head);
-        op_list_tail = &(target->read_op_list_tail);
+    if (target->issued_read_op_list_head != NULL) {
+        op_list_head = &(target->issued_read_op_list_head);
+        op_list_tail = &(target->issued_read_op_list_tail);
         read_flag = 1;
     }
-    else if (target->write_op_list_head != NULL) {
-        op_list_head = &(target->write_op_list_head);
-        op_list_tail = &(target->write_op_list_tail);
+    else if (target->issued_write_op_list_head != NULL) {
+        op_list_head = &(target->issued_write_op_list_head);
+        op_list_tail = &(target->issued_write_op_list_tail);
         write_flag = 1;
     }
-    else if (target->dt_op_list_head != NULL) {
-        op_list_head = &(target->dt_op_list_head);
-        op_list_tail = &(target->dt_op_list_tail);
+    else if (target->issued_dt_op_list_head != NULL) {
+        op_list_head = &(target->issued_dt_op_list_head);
+        op_list_tail = &(target->issued_dt_op_list_tail);
     }
     else {
         /* only pending op list is not NULL, nothing we can do here. */
@@ -421,23 +421,23 @@ static inline int MPIDI_CH3I_RMA_Cleanup_ops_target(MPID_Win * win_ptr, MPIDI_RM
             if (*op_list_head == NULL) {
                 if (read_flag == 1) {
                     read_flag = 0;
-                    if (target->write_op_list_head != NULL) {
-                        op_list_head = &(target->write_op_list_head);
-                        op_list_tail = &(target->write_op_list_tail);
+                    if (target->issued_write_op_list_head != NULL) {
+                        op_list_head = &(target->issued_write_op_list_head);
+                        op_list_tail = &(target->issued_write_op_list_tail);
                         write_flag = 1;
                     }
-                    else if (target->dt_op_list_head != NULL) {
-                        op_list_head = &(target->dt_op_list_head);
-                        op_list_tail = &(target->dt_op_list_tail);
+                    else if (target->issued_dt_op_list_head != NULL) {
+                        op_list_head = &(target->issued_dt_op_list_head);
+                        op_list_tail = &(target->issued_dt_op_list_tail);
                     }
                     else
                         break;
                 }
                 else if (write_flag == 1) {
                     write_flag = 0;
-                    if (target->dt_op_list_head != NULL) {
-                        op_list_head = &(target->dt_op_list_head);
-                        op_list_tail = &(target->dt_op_list_tail);
+                    if (target->issued_dt_op_list_head != NULL) {
+                        op_list_head = &(target->issued_dt_op_list_head);
+                        op_list_tail = &(target->issued_dt_op_list_tail);
                     }
                     else
                         break;
@@ -452,8 +452,8 @@ static inline int MPIDI_CH3I_RMA_Cleanup_ops_target(MPID_Win * win_ptr, MPIDI_RM
 
   cleanup_target:
     if (target->pending_op_list_head == NULL &&
-        target->read_op_list_head == NULL && target->write_op_list_head == NULL &&
-        target->dt_op_list_head == NULL) {
+        target->issued_read_op_list_head == NULL && target->issued_write_op_list_head == NULL &&
+        target->issued_dt_op_list_head == NULL) {
 
         (*local_completed) = 1;
 

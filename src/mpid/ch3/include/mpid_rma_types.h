@@ -79,9 +79,9 @@ typedef struct MPIDI_RMA_Op {
 } MPIDI_RMA_Op_t;
 
 typedef struct MPIDI_RMA_Target {
-    struct MPIDI_RMA_Op *read_op_list_head, *read_op_list_tail;
-    struct MPIDI_RMA_Op *write_op_list_head, *write_op_list_tail;
-    struct MPIDI_RMA_Op *dt_op_list_head, *dt_op_list_tail;
+    struct MPIDI_RMA_Op *issued_read_op_list_head, *issued_read_op_list_tail;
+    struct MPIDI_RMA_Op *issued_write_op_list_head, *issued_write_op_list_tail;
+    struct MPIDI_RMA_Op *issued_dt_op_list_head, *issued_dt_op_list_tail;
     struct MPIDI_RMA_Op *pending_op_list_head, *pending_op_list_tail;
     struct MPIDI_RMA_Op *next_op_to_issue;
     struct MPIDI_RMA_Target *next;
