@@ -1951,12 +1951,12 @@ int MPIDI_CH3_ReqHandler_GaccumRecvComplete( MPIDI_VC_t *, MPID_Request *,
                                              int * );
 int MPIDI_CH3_ReqHandler_FOPRecvComplete( MPIDI_VC_t *, MPID_Request *,
                                           int * );
-int MPIDI_CH3_ReqHandler_AccumDerivedDTRecvComplete( MPIDI_VC_t *,
-						     MPID_Request *,
-						     int * );
-int MPIDI_CH3_ReqHandler_GaccumDerivedDTRecvComplete( MPIDI_VC_t *,
-                                                      MPID_Request *,
-                                                      int * );
+int MPIDI_CH3_ReqHandler_AccumMetadataRecvComplete( MPIDI_VC_t *,
+                                                    MPID_Request *,
+                                                    int * );
+int MPIDI_CH3_ReqHandler_GaccumMetadataRecvComplete( MPIDI_VC_t *,
+                                                     MPID_Request *,
+                                                     int * );
 int MPIDI_CH3_ReqHandler_GetDerivedDTRecvComplete( MPIDI_VC_t *,
 						   MPID_Request *, int * );
 int MPIDI_CH3_ReqHandler_PiggybackLockOpRecvComplete( MPIDI_VC_t *,

@@ -549,11 +549,11 @@ int MPIDI_CH3_ReqHandler_PutDerivedDTRecvComplete(MPIDI_VC_t * vc ATTRIBUTE((unu
 }
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_CH3_ReqHandler_AccumDerivedDTRecvComplete
+#define FUNCNAME MPIDI_CH3_ReqHandler_AccumMetadataRecvComplete
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-int MPIDI_CH3_ReqHandler_AccumDerivedDTRecvComplete(MPIDI_VC_t * vc ATTRIBUTE((unused)),
-                                                    MPID_Request * rreq, int *complete)
+int MPIDI_CH3_ReqHandler_AccumMetadataRecvComplete(MPIDI_VC_t * vc ATTRIBUTE((unused)),
+                                                   MPID_Request * rreq, int *complete)
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_Datatype *new_dtp = NULL;
@@ -562,9 +562,9 @@ int MPIDI_CH3_ReqHandler_AccumDerivedDTRecvComplete(MPIDI_VC_t * vc ATTRIBUTE((u
     MPI_Aint stream_offset;
     MPI_Aint type_size;
     MPI_Datatype basic_dtp;
-    MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3_REQHANDLER_ACCUMDERIVEDDTRECVCOMPLETE);
+    MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3_REQHANDLER_ACCUMMETADATARECVCOMPLETE);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3_REQHANDLER_ACCUMDERIVEDDTRECVCOMPLETE);
+    MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3_REQHANDLER_ACCUMMETADATARECVCOMPLETE);
 
     if (rreq->dev.flags & MPIDI_CH3_PKT_FLAG_RMA_STREAM) {
         MPIU_Assert(rreq->dev.ext_hdr_ptr != NULL);
@@ -644,17 +644,17 @@ int MPIDI_CH3_ReqHandler_AccumDerivedDTRecvComplete(MPIDI_VC_t * vc ATTRIBUTE((u
 
     *complete = FALSE;
   fn_fail:
-    MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3_REQHANDLER_ACCUMDERIVEDDTRECVCOMPLETE);
+    MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3_REQHANDLER_ACCUMMETADATARECVCOMPLETE);
     return mpi_errno;
 }
 
 
 #undef FUNCNAME
-#define FUNCNAME MPIDI_CH3_ReqHandler_GaccumDerivedDTRecvComplete
+#define FUNCNAME MPIDI_CH3_ReqHandler_GaccumMetadataRecvComplete
 #undef FCNAME
 #define FCNAME MPIDI_QUOTE(FUNCNAME)
-int MPIDI_CH3_ReqHandler_GaccumDerivedDTRecvComplete(MPIDI_VC_t * vc ATTRIBUTE((unused)),
-                                                     MPID_Request * rreq, int *complete)
+int MPIDI_CH3_ReqHandler_GaccumMetadataRecvComplete(MPIDI_VC_t * vc ATTRIBUTE((unused)),
+                                                    MPID_Request * rreq, int *complete)
 {
     int mpi_errno = MPI_SUCCESS;
     MPID_Datatype *new_dtp = NULL;
@@ -663,9 +663,9 @@ int MPIDI_CH3_ReqHandler_GaccumDerivedDTRecvComplete(MPIDI_VC_t * vc ATTRIBUTE((
     MPI_Aint stream_offset;
     MPI_Aint type_size;
     MPI_Datatype basic_dtp;
-    MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3_REQHANDLER_GACCUMDERIVEDDTRECVCOMPLETE);
+    MPIDI_STATE_DECL(MPID_STATE_MPIDI_CH3_REQHANDLER_GACCUMMETADATARECVCOMPLETE);
 
-    MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3_REQHANDLER_GACCUMDERIVEDDTRECVCOMPLETE);
+    MPIDI_FUNC_ENTER(MPID_STATE_MPIDI_CH3_REQHANDLER_GACCUMMETADATARECVCOMPLETE);
 
     if (rreq->dev.flags & MPIDI_CH3_PKT_FLAG_RMA_STREAM) {
         MPIU_Assert(rreq->dev.ext_hdr_ptr != NULL);
@@ -745,7 +745,7 @@ int MPIDI_CH3_ReqHandler_GaccumDerivedDTRecvComplete(MPIDI_VC_t * vc ATTRIBUTE((
 
     *complete = FALSE;
   fn_fail:
-    MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3_REQHANDLER_GACCUMDERIVEDDTRECVCOMPLETE);
+    MPIDI_FUNC_EXIT(MPID_STATE_MPIDI_CH3_REQHANDLER_GACCUMMETADATARECVCOMPLETE);
     return mpi_errno;
 }
 

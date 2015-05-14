@@ -662,7 +662,7 @@ int MPIDI_CH3_PktHandler_Accumulate(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
             req->dev.datatype = accum_pkt->datatype;
 
             if (req->dev.flags & MPIDI_CH3_PKT_FLAG_RMA_STREAM) {
-                req->dev.OnDataAvail = MPIDI_CH3_ReqHandler_AccumDerivedDTRecvComplete;
+                req->dev.OnDataAvail = MPIDI_CH3_ReqHandler_AccumMetadataRecvComplete;
 
                 /* if this is a streamed op pkt, set iov to receive extended pkt header. */
                 req->dev.iov[0].MPID_IOV_BUF = (MPID_IOV_BUF_CAST) req->dev.ext_hdr_ptr;
@@ -722,7 +722,7 @@ int MPIDI_CH3_PktHandler_Accumulate(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
             int metadata_sz = 0;
 
             MPIDI_Request_set_type(req, MPIDI_REQUEST_TYPE_ACCUM_RECV_DERIVED_DT);
-            req->dev.OnDataAvail = MPIDI_CH3_ReqHandler_AccumDerivedDTRecvComplete;
+            req->dev.OnDataAvail = MPIDI_CH3_ReqHandler_AccumMetadataRecvComplete;
             req->dev.datatype = MPI_DATATYPE_NULL;
 
             if (accum_pkt->flags & MPIDI_CH3_PKT_FLAG_RMA_STREAM)
@@ -765,7 +765,7 @@ int MPIDI_CH3_PktHandler_Accumulate(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
                 *buflen = sizeof(MPIDI_CH3_Pkt_t) + metadata_sz;
 
                 /* All dtype data has been received, call req handler */
-                mpi_errno = MPIDI_CH3_ReqHandler_AccumDerivedDTRecvComplete(vc, req, &complete);
+                mpi_errno = MPIDI_CH3_ReqHandler_AccumMetadataRecvComplete(vc, req, &complete);
                 MPIU_ERR_CHKANDJUMP1(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**ch3|postrecv",
                                      "**ch3|postrecv %s", "MPIDI_CH3_ACCUMULATE");
                 if (complete) {
@@ -969,7 +969,7 @@ int MPIDI_CH3_PktHandler_GetAccumulate(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
             req->dev.datatype = get_accum_pkt->datatype;
 
             if (req->dev.flags & MPIDI_CH3_PKT_FLAG_RMA_STREAM) {
-                req->dev.OnDataAvail = MPIDI_CH3_ReqHandler_GaccumDerivedDTRecvComplete;
+                req->dev.OnDataAvail = MPIDI_CH3_ReqHandler_GaccumMetadataRecvComplete;
 
                 /* if this is a streamed op pkt, set iov to receive extended pkt header. */
                 req->dev.iov[0].MPID_IOV_BUF = (MPID_IOV_BUF_CAST) req->dev.ext_hdr_ptr;
@@ -1028,7 +1028,7 @@ int MPIDI_CH3_PktHandler_GetAccumulate(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
             int metadata_sz = 0;
 
             MPIDI_Request_set_type(req, MPIDI_REQUEST_TYPE_GET_ACCUM_RECV_DERIVED_DT);
-            req->dev.OnDataAvail = MPIDI_CH3_ReqHandler_GaccumDerivedDTRecvComplete;
+            req->dev.OnDataAvail = MPIDI_CH3_ReqHandler_GaccumMetadataRecvComplete;
             req->dev.datatype = MPI_DATATYPE_NULL;
 
             if (get_accum_pkt->flags & MPIDI_CH3_PKT_FLAG_RMA_STREAM)
@@ -1071,7 +1071,7 @@ int MPIDI_CH3_PktHandler_GetAccumulate(MPIDI_VC_t * vc, MPIDI_CH3_Pkt_t * pkt,
                 *buflen = sizeof(MPIDI_CH3_Pkt_t) + metadata_sz;
 
                 /* All dtype data has been received, call req handler */
-                mpi_errno = MPIDI_CH3_ReqHandler_GaccumDerivedDTRecvComplete(vc, req, &complete);
+                mpi_errno = MPIDI_CH3_ReqHandler_GaccumMetadataRecvComplete(vc, req, &complete);
                 MPIU_ERR_CHKANDJUMP1(mpi_errno, mpi_errno, MPI_ERR_OTHER, "**ch3|postrecv",
                                      "**ch3|postrecv %s", "MPIDI_CH3_ACCUMULATE");
                 if (complete) {
