@@ -27,6 +27,9 @@ static inline int immed_copy(void *src, void *dest, size_t len)
 
     MPIDI_FUNC_ENTER(MPID_STATE_IMMED_COPY);
 
+    if (src == NULL || dest == NULL || len == 0)
+        goto fn_exit;
+
     switch (len) {
     case 1:
         *(uint8_t *) dest = *(uint8_t *) src;
